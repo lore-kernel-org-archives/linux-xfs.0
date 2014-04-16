@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id D2A2B7F37
-	for <xfs@oss.sgi.com>; Wed, 16 Apr 2014 01:17:40 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 056C67F37
+	for <xfs@oss.sgi.com>; Wed, 16 Apr 2014 01:18:42 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 8D65E304071
-	for <xfs@oss.sgi.com>; Tue, 15 Apr 2014 23:17:37 -0700 (PDT)
-Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id blGgjLdvAvBJlWpV (version=TLSv1 cipher=AES256-SHA
-	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 15 Apr 2014 23:17:36 -0700 (PDT)
-Date: Wed, 16 Apr 2014 16:17:26 +1000
-From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH 04/19] Make effect of PF_FSTRANS to disable __GFP_FS
-	universal.
-Message-ID: <20140416161726.51b506e2@notabene.brown>
-In-Reply-To: <20140416053756.GC15995@dastard>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id C5A718F8039
+	for <xfs@oss.sgi.com>; Tue, 15 Apr 2014 23:18:38 -0700 (PDT)
+Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
+	[150.101.137.145]) by cuda.sgi.com with ESMTP id
+	LE1ExLfccMlWi5LA for <xfs@oss.sgi.com>;
+	Tue, 15 Apr 2014 23:18:35 -0700 (PDT)
+Date: Wed, 16 Apr 2014 16:18:20 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 19/19] XFS: set PF_FSTRANS while ilock is held in
+	xfs_free_eofblocks
+Message-ID: <20140416061819.GF15995@dastard>
 References: <20140416033623.10604.69237.stgit@notabene.brown>
-	<20140416040336.10604.58240.stgit@notabene.brown>
-	<20140416053756.GC15995@dastard>
-Mime-Version: 1.0
+	<20140416040337.10604.7488.stgit@notabene.brown>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20140416040337.10604.7488.stgit@notabene.brown>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,142 +27,43 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============0319282207301790858=="
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-mm@kvack.org, linux-nfs@vger.kernel.org, linux-kernel@vger.kernel.org, Ming Lei <ming.lei@canonical.com>, xfs@oss.sgi.com
+To: NeilBrown <neilb@suse.de>
+Cc: linux-mm@kvack.org, linux-nfs@vger.kernel.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
---===============0319282207301790858==
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/Oo0=qxWoYRMUFxVoAOmvLbc"; protocol="application/pgp-signature"
+On Wed, Apr 16, 2014 at 02:03:37PM +1000, NeilBrown wrote:
+> memory allocates can happen while the xfs ilock is held in
+> xfs_free_eofblocks, particularly
+> 
+>   [<ffffffff813e6667>] kmem_zone_alloc+0x67/0xc0
+>   [<ffffffff813e5945>] xfs_trans_add_item+0x25/0x50
+>   [<ffffffff8143d64c>] xfs_trans_ijoin+0x2c/0x60
+>   [<ffffffff8142275e>] xfs_itruncate_extents+0xbe/0x400
+>   [<ffffffff813c72f4>] xfs_free_eofblocks+0x1c4/0x240
+> 
+> So set PF_FSTRANS to avoid this causing a deadlock.
 
---Sig_/Oo0=qxWoYRMUFxVoAOmvLbc
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+Another "You broke KM_NOFS" moment. You win a Kit Kat. ;)
 
-On Wed, 16 Apr 2014 15:37:56 +1000 Dave Chinner <david@fromorbit.com> wrote:
+xfs_trans_add_item():
 
-> On Wed, Apr 16, 2014 at 02:03:36PM +1000, NeilBrown wrote:
-> > Currently both xfs and nfs will handle PF_FSTRANS by disabling
-> > __GFP_FS.
-> >=20
-> > Make this effect global by repurposing memalloc_noio_flags (which
-> > does the same thing for PF_MEMALLOC_NOIO and __GFP_IO) to generally
-> > impost the task flags on a gfp_t.
-> > Due to this repurposing we change the name of memalloc_noio_flags
-> > to gfp_from_current().
-> >=20
-> > As PF_FSTRANS now uniformly removes __GFP_FS we can remove special
-> > code for this from xfs and nfs.
-> >=20
-> > As we can now expect other code to set PF_FSTRANS, its meaning is more
-> > general, so the WARN_ON in xfs_vm_writepage() which checks PF_FSTRANS
-> > is not set is no longer appropriate.  PF_FSTRANS may be set for other
-> > reasons than an XFS transaction.
->=20
-> So PF_FSTRANS no longer means "filesystem in transaction context".
-> Are you going to rename to match whatever it's meaning is now?
-> I'm not exactly clear on what it means now...
+	lidp = kmem_zone_zalloc(xfs_log_item_desc_zone, KM_SLEEP | KM_NOFS);
 
-I did consider renaming it to "PF_MEMALLOC_NOFS" as it is similar to
-"PF_MEMALLOC_NOIO", except that it disables __GFP_FS rather than __GFP_IO.
-Maybe I should go ahead with that.
+KM_NOFS needs to work, otherwise XFS is just a huge steaming pile of
+memory reclaim deadlocks regardless of whether you are using
+loopback NFS or not.
 
->=20
->=20
-> > As lockdep cares about __GFP_FS, we need to translate PF_FSTRANS to
-> > __GFP_FS before calling lockdep_alloc_trace() in various places.
-> >=20
-> > Signed-off-by: NeilBrown <neilb@suse.de>
-> ....
-> > diff --git a/fs/xfs/kmem.h b/fs/xfs/kmem.h
-> > index 64db0e53edea..882b86270ebe 100644
-> > --- a/fs/xfs/kmem.h
-> > +++ b/fs/xfs/kmem.h
-> > @@ -50,8 +50,6 @@ kmem_flags_convert(xfs_km_flags_t flags)
-> >  		lflags =3D GFP_ATOMIC | __GFP_NOWARN;
-> >  	} else {
-> >  		lflags =3D GFP_KERNEL | __GFP_NOWARN;
-> > -		if ((current->flags & PF_FSTRANS) || (flags & KM_NOFS))
-> > -			lflags &=3D ~__GFP_FS;
-> >  	}
->=20
-> I think KM_NOFS needs to remain here, as it has use outside of
-> transaction contexts that set PF_FSTRANS....
+Cheers,
 
-Argh, yes of course.
-I'll have to re-test the other xfs changes now to see if they are really
-needed.
-
-Thanks!
-
-
->=20
-> >  	if (flags & KM_ZERO)
-> > diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-> > index db2cfb067d0b..207a7f86d5d7 100644
-> > --- a/fs/xfs/xfs_aops.c
-> > +++ b/fs/xfs/xfs_aops.c
-> > @@ -952,13 +952,6 @@ xfs_vm_writepage(
-> >  			PF_MEMALLOC))
-> >  		goto redirty;
-> > =20
-> > -	/*
-> > -	 * Given that we do not allow direct reclaim to call us, we should
-> > -	 * never be called while in a filesystem transaction.
-> > -	 */
-> > -	if (WARN_ON(current->flags & PF_FSTRANS))
-> > -		goto redirty;
->=20
-> We still need to ensure this rule isn't broken. If it is, the
-> filesystem will silently deadlock in delayed allocation rather than
-> gracefully handle the problem with a warning....
-
-Hmm... that might be tricky.  The 'new' PF_FSTRANS can definitely be set wh=
-en
-xfs_vm_writepage is called and we really want the write to happen.
-I don't suppose there is any other way to detect if a transaction is
-happening?
-
-Thanks,
-NeilBrown
-
-
---Sig_/Oo0=qxWoYRMUFxVoAOmvLbc
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.22 (GNU/Linux)
-
-iQIVAwUBU04gdjnsnt1WYoG5AQJjow//evh86FCU/MZNvwJIfgaA7CJS8ZBO2vac
-JkRsYYSmmSyFY4gWC9gDQfRJD01TaQRR55toAqxbZg8L1HbbL5i4ZBEpJQVYel8Y
-pdI2N75oZ6GCufLuivZ0hw6TGotfcwtGQFXjewpcpBDrx2Dr0+yxhObkKAh8W1ae
-f5dvKrZ0sYAaEGYj+XHzPb6STEYspdmnflzOOzRXLsCWOeM/uKEt9Cv0l12TXvyr
-kBYoY3HBMnKCBsvJPakCGZB+eSyR9PKLL5t846/ZL0Pfwic8OdCU6nBTncGbf2w/
-TCWWLxF2trF2f1aMx9TZef+IulH2KdZm5s1HALZ/edGnto8Wz2wgMGNpoj95rhT1
-3n5Qn7+P+B491bBGNVbbw2ObPl+aB1k5FgDwy++M7wSBUVjqqGaGAjqEXcgQJ9RV
-zBM6mMZyICqnSqy/3h5ACDK9xmCcb/lVXscSMFuGlEIcqiz9ehnmZWWJrsWjvLa7
-gOpO51fbFepKaA6MbhGlyOiOLH3XOpwuGQcsvpxCgT6vRs8C2yRutFbtbtVliaPQ
-I+g/hpkMJEqUvsRu/Dk44ndA3U64gnQuoFzgcYxZoFdCbzq/xP7w5LH7MbNeSSvH
-SvgiEpGCVhHsOfP8Z1pt01kCsnONRkMTQP8KxGDycDLnKAEC1YPvWCFB0Za5acJ6
-YVnpDRofW5g=
-=0rPl
------END PGP SIGNATURE-----
-
---Sig_/Oo0=qxWoYRMUFxVoAOmvLbc--
-
-
---===============0319282207301790858==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============0319282207301790858==--
