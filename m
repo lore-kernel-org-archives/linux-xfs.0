@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 4974629DF7
-	for <xfs@oss.sgi.com>; Tue, 15 Apr 2014 23:19:32 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id C808FAC001
-	for <xfs@oss.sgi.com>; Tue, 15 Apr 2014 21:19:31 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id 7556F29E1A
+	for <xfs@oss.sgi.com>; Tue, 15 Apr 2014 23:19:39 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 0FE1AAC001
+	for <xfs@oss.sgi.com>; Tue, 15 Apr 2014 21:19:39 -0700 (PDT)
 Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id iYfGcsgyrWUCBmz3 (version=TLSv1 cipher=AES256-SHA
+	with ESMTP id yAtZfxp6V6Y8pFPt (version=TLSv1 cipher=AES256-SHA
 	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 15 Apr 2014 21:19:30 -0700 (PDT)
+	Tue, 15 Apr 2014 21:19:37 -0700 (PDT)
 From: NeilBrown <neilb@suse.de>
-Date: Wed, 16 Apr 2014 14:03:36 +1000
-Subject: [PATCH 14/19] driver core: set PF_FSTRANS while holding gdp_mutex
-Message-ID: <20140416040336.10604.223.stgit@notabene.brown>
+Date: Wed, 16 Apr 2014 14:03:37 +1000
+Subject: [PATCH 15/19] nfsd: set PF_FSTRANS when client_mutex is held.
+Message-ID: <20140416040336.10604.67828.stgit@notabene.brown>
 In-Reply-To: <20140416033623.10604.69237.stgit@notabene.brown>
 References: <20140416033623.10604.69237.stgit@notabene.brown>
 MIME-Version: 1.0
@@ -31,49 +31,43 @@ Sender: xfs-bounces@oss.sgi.com
 To: linux-mm@kvack.org, linux-nfs@vger.kernel.org, linux-kernel@vger.kernel.org
 Cc: xfs@oss.sgi.com
 
-lockdep reports a locking chain:
-
-  sk_lock-AF_INET --> rtnl_mutex --> gdp_mutex
-
-As sk_lock can be needed for memory reclaim (when loop-back NFS is in
-use at least), any memory allocation under gdp_mutex needs to
-be protected by PF_FSTRANS.
-
-The path frome rtnl_mutex to gdp_mutex is
-
-    [<ffffffff81841ecc>] get_device_parent+0x4c/0x1f0
-    [<ffffffff81842496>] device_add+0xe6/0x610
-    [<ffffffff81ac5f2a>] netdev_register_kobject+0x7a/0x130
-    [<ffffffff81aaf5d4>] register_netdevice+0x354/0x550
-    [<ffffffff81aaf7e5>] register_netdev+0x15/0x30
+When loop-back NFS with NFSv4 is in use, client_mutex might be needed
+to reclaim memory, so any memory allocation while client_mutex is held
+must avoid __GFP_FS, so best to set PF_FSTRANS.
 
 Signed-off-by: NeilBrown <neilb@suse.de>
 ---
- drivers/base/core.c |    3 +++
+ fs/nfsd/nfs4state.c |    3 +++
  1 file changed, 3 insertions(+)
 
-diff --git a/drivers/base/core.c b/drivers/base/core.c
-index 2b567177ef78..1a2735237650 100644
---- a/drivers/base/core.c
-+++ b/drivers/base/core.c
-@@ -750,6 +750,7 @@ static struct kobject *get_device_parent(struct device *dev,
- 		struct kobject *kobj = NULL;
- 		struct kobject *parent_kobj;
- 		struct kobject *k;
-+		unsigned int pflags;
+diff --git a/fs/nfsd/nfs4state.c b/fs/nfsd/nfs4state.c
+index d5d070fbeb35..7b7fbcbe20cb 100644
+--- a/fs/nfsd/nfs4state.c
++++ b/fs/nfsd/nfs4state.c
+@@ -75,6 +75,7 @@ static int check_for_locks(struct nfs4_file *filp, struct nfs4_lockowner *lowner
  
- #ifdef CONFIG_BLOCK
- 		/* block disks show up in /sys/block */
-@@ -788,7 +789,9 @@ static struct kobject *get_device_parent(struct device *dev,
- 		}
+ /* Currently used for almost all code touching nfsv4 state: */
+ static DEFINE_MUTEX(client_mutex);
++static unsigned int client_mutex_pflags;
  
- 		/* or create a new class-directory at the parent device */
-+		current_set_flags_nested(&pflags, PF_FSTRANS);
- 		k = class_dir_create_and_add(dev->class, parent_kobj);
-+		current_restore_flags_nested(&pflags, PF_FSTRANS);
- 		/* do not emit an uevent for this simple "glue" directory */
- 		mutex_unlock(&gdp_mutex);
- 		return k;
+ /*
+  * Currently used for the del_recall_lru and file hash table.  In an
+@@ -93,6 +94,7 @@ void
+ nfs4_lock_state(void)
+ {
+ 	mutex_lock(&client_mutex);
++	current_set_flags_nested(&client_mutex_pflags, PF_FSTRANS);
+ }
+ 
+ static void free_session(struct nfsd4_session *);
+@@ -127,6 +129,7 @@ static __be32 nfsd4_get_session_locked(struct nfsd4_session *ses)
+ void
+ nfs4_unlock_state(void)
+ {
++	current_restore_flags_nested(&client_mutex_pflags, PF_FSTRANS);
+ 	mutex_unlock(&client_mutex);
+ }
+ 
 
 
 _______________________________________________
