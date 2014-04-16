@@ -1,23 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id D97FE7F54
-	for <xfs@oss.sgi.com>; Wed, 16 Apr 2014 17:29:04 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id A5E978F8039
-	for <xfs@oss.sgi.com>; Wed, 16 Apr 2014 15:29:01 -0700 (PDT)
-Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
-	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	K16Y7yW3PhCkF4XC for <xfs@oss.sgi.com>;
-	Wed, 16 Apr 2014 15:28:59 -0700 (PDT)
-Date: Thu, 17 Apr 2014 08:28:27 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 2/2] xfs: Nuke XFS_ERROR macro
-Message-ID: <20140416222827.GP15995@dastard>
-References: <534EC073.8090006@sandeen.net> <534EC282.7010905@sandeen.net>
-	<20140416175117.GA23643@infradead.org>
+	by oss.sgi.com (Postfix) with ESMTP id A313B7F67
+	for <xfs@oss.sgi.com>; Wed, 16 Apr 2014 17:30:49 -0500 (CDT)
+Message-ID: <534F0498.4010902@sgi.com>
+Date: Wed, 16 Apr 2014 17:30:48 -0500
+From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20140416175117.GA23643@infradead.org>
+Subject: Re: [PATCH] xfs: fix 32bit __divdi3 undefined
+References: <534EAB41.60901@windriver.com> <20140416215223.512644029@sgi.com>
+	<20140416221000.GO15995@dastard>
+In-Reply-To: <20140416221000.GO15995@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,53 +18,55 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Eric Sandeen <sandeen@sandeen.net>, xfs-oss <xfs@oss.sgi.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: Paul Gortmaker <paul.gortmaker@windriver.com>, XFS Filesystem <xfs@oss.sgi.com>
 
-On Wed, Apr 16, 2014 at 10:51:17AM -0700, Christoph Hellwig wrote:
-> On Wed, Apr 16, 2014 at 12:48:50PM -0500, Eric Sandeen wrote:
-> > XFS_ERROR was designed long ago to trap return values,
-> > but it's not runtime configurable, it's not consistently used,
-> > and we can do the same thing today with systemtap, using
-> > something like:
-> > 
-> > probe module("xfs").function("xfs_*").return { if (@defined($return) && $return == VALUE) { ... } }
-> 
-> Gives me a version just using ftrace, or at least a kprobes based module
-> that we can merged in the kernel tree and this would be fine for me.
-> 
-> Requiring a massive blob of questionable out of tree module code and a
-> compiler is an absolute no-go.
-> 
-> NAK for now.
+On 04/16/14 17:10, Dave Chinner wrote:
+> On Wed, Apr 16, 2014 at 04:51:56PM -0500, Mark Tinguely wrote:
+>> The roundup in commit 68c1fb5d should be a roundup_64()
+>> because it is desired to round a 64 bit type by an integer
+>> and that will result in a 64 bit value. On 32 bit machines
+>> using roundup() in this case will result in the error:
+>>
+>>   ERROR: "__divdi3" [fs/xfs/xfs.ko] undefined!
+>>
+>> Reported-by: Paul Gortmaker<paul.gortmaker@windriver.com>
+>> Tested-by: Paul Gortmaker<paul.gortmaker@windriver.com>
+>> Signed-off-by: Mark Tinguely<tinguely@sgi.com>
+>> ---
+>>   fs/xfs/xfs_aops.c |    2 +-
+>>   1 file changed, 1 insertion(+), 1 deletion(-)
+>>
+>> Index: b/fs/xfs/xfs_aops.c
+>> ===================================================================
+>> --- a/fs/xfs/xfs_aops.c
+>> +++ b/fs/xfs/xfs_aops.c
+>> @@ -1365,7 +1365,7 @@ __xfs_get_blocks(
+>>   		if (offset<  i_size_read(inode)&&
+>>   		offset + mapping_size>= i_size_read(inode)) {
+>>   			/* limit mapping to block that spans EOF */
+>> -			mapping_size = roundup(i_size_read(inode) - offset,
+>> +			mapping_size = roundup_64(i_size_read(inode) - offset,
+>>   					       1<<  inode->i_blkbits);
+>>   		}
+>>   		if (mapping_size>  LONG_MAX)
+>
+> I'm not going to apply this as a patch - I'm going to rebase the
+> branch with the fix in the original patch so we don't have a bisect
+> breakage in the branch. Don't worry, I'll add the fact you fixed the
+> bug into the commit message...
+>
+> Cheers,
+>
+> Dave.
 
-I think regardless of the systemtap/ftrace replacement, nobody uses
-this at the moment, and it's not been used for a long time. It's a
-compile time configurable, debug only error trap that is far
-less useful than adding printk() or tracepoints at the appropriate
-points.
+Makes sense.
 
-If you've got to recompile the kernel to use it, then you may as
-well add meaningful debug rather than hope an error trap that panics
-the kernel tells you what you need.  i.e. the error trap code as it
-stands is only useful for those running kernel debuggers, and very
-few developers actually do that these days.
-
-And, FWIW, it only allows detection of then initial error instance -
-too bad if you want the second or third occurrence of the error.
-
-IOWs, I can't see how this is at all useful anymore....
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+--Mark.
 
 _______________________________________________
 xfs mailing list
