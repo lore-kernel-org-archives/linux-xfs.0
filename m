@@ -1,23 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id D214B7F58
-	for <xfs@oss.sgi.com>; Wed, 16 Apr 2014 00:52:40 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id E397E7F54
+	for <xfs@oss.sgi.com>; Wed, 16 Apr 2014 01:05:10 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id A5CF2304077
-	for <xfs@oss.sgi.com>; Tue, 15 Apr 2014 22:52:40 -0700 (PDT)
-Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id XtplvLST19mHBqDI (version=TLSv1 cipher=AES256-SHA
-	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 15 Apr 2014 22:52:38 -0700 (PDT)
-Date: Wed, 16 Apr 2014 15:52:30 +1000
-From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH 17/19] VFS: set PF_FSTRANS while namespace_sem is held.
-Message-ID: <20140416155230.4d02e4b9@notabene.brown>
-In-Reply-To: <20140416044618.GX18016@ZenIV.linux.org.uk>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 5F1E4AC003
+	for <xfs@oss.sgi.com>; Tue, 15 Apr 2014 23:05:07 -0700 (PDT)
+Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
+	[150.101.137.145]) by cuda.sgi.com with ESMTP id
+	tKAaJeQ8STYRANox for <xfs@oss.sgi.com>;
+	Tue, 15 Apr 2014 23:05:02 -0700 (PDT)
+Date: Wed, 16 Apr 2014 16:04:59 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 09/19] XFS: ensure xfs_file_*_read cannot deadlock in
+	memory allocation.
+Message-ID: <20140416060459.GE15995@dastard>
 References: <20140416033623.10604.69237.stgit@notabene.brown>
-	<20140416040337.10604.86740.stgit@notabene.brown>
-	<20140416044618.GX18016@ZenIV.linux.org.uk>
-Mime-Version: 1.0
+	<20140416040336.10604.90380.stgit@notabene.brown>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20140416040336.10604.90380.stgit@notabene.brown>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,133 +27,91 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============3247653865310843989=="
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Al Viro <viro@ZenIV.linux.org.uk>
+To: NeilBrown <neilb@suse.de>
 Cc: linux-mm@kvack.org, linux-nfs@vger.kernel.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
---===============3247653865310843989==
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/AHIx/=TRorm595oyDqzGVg8"; protocol="application/pgp-signature"
+On Wed, Apr 16, 2014 at 02:03:36PM +1000, NeilBrown wrote:
+> xfs_file_*_read holds an inode lock while calling a generic 'read'
+> function.  These functions perform read-ahead and are quite likely to
+> allocate memory.
 
---Sig_/AHIx/=TRorm595oyDqzGVg8
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+Yes, that's what reading data from disk requires.
 
-On Wed, 16 Apr 2014 05:46:18 +0100 Al Viro <viro@ZenIV.linux.org.uk> wrote:
+> So set PF_FSTRANS to ensure they avoid __GFP_FS and so don't recurse
+> into a filesystem to free memory.
 
-> On Wed, Apr 16, 2014 at 02:03:37PM +1000, NeilBrown wrote:
-> > namespace_sem can be taken while various i_mutex locks are held, so we
-> > need to avoid reclaim from blocking on an FS (particularly loop-back
-> > NFS).
->=20
-> I would really prefer to deal with that differently - by explicit change =
-of
-> gfp_t arguments of allocators.
->=20
-> The thing is, namespace_sem is held *only* over allocations, and not a lot
-> of them, at that - only mnt_alloc_id(), mnt_alloc_group_id(), alloc_vfsmn=
-t()
-> and new_mountpoint().  That is all that is allowed.
->=20
-> Again, actual work with filesystems (setup, shutdown, remount, pathname
-> resolution, etc.) is all done outside of namespace_sem; it's held only
-> for manipulations of fs/{namespace,pnode}.c data structures and the only
-> reason it isn't a spinlock is that we need to do some allocations.
->=20
-> So I'd rather slap GFP_NOFS on those few allocations...
+We already have that protection via the
+> 
+> This can be a problem with loop-back NFS mounts, if free_pages ends up
+> wating in nfs_release_page(), and nfsd is blocked waiting for the lock
+> that this code holds.
+> 
+> This was found both by lockdep and as a real deadlock during testing.
+> 
+> Signed-off-by: NeilBrown <neilb@suse.de>
+> ---
+>  fs/xfs/xfs_file.c |   12 ++++++++++++
+>  1 file changed, 12 insertions(+)
+> 
+> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+> index 64b48eade91d..88b33ef64668 100644
+> --- a/fs/xfs/xfs_file.c
+> +++ b/fs/xfs/xfs_file.c
+> @@ -243,6 +243,7 @@ xfs_file_aio_read(
+>  	ssize_t			ret = 0;
+>  	int			ioflags = 0;
+>  	xfs_fsize_t		n;
+> +	unsigned int		pflags;
+>  
+>  	XFS_STATS_INC(xs_read_calls);
+>  
+> @@ -290,6 +291,10 @@ xfs_file_aio_read(
+>  	 * proceeed concurrently without serialisation.
+>  	 */
+>  	xfs_rw_ilock(ip, XFS_IOLOCK_SHARED);
+> +	/* As we hold a lock, we must ensure that any allocation
+> +	 * in generic_file_aio_read avoid __GFP_FS
+> +	 */
+> +	current_set_flags_nested(&pflags, PF_FSTRANS);
 
-So something like this?  I put that in to my testing instead.
+Ugh. No. This is Simply Wrong.
 
-Thanks,
-NeilBrown
+We handle the memory allocations in the IO path with
+GFP_NOFS/KM_NOFS where necessary.
 
-diff --git a/fs/namespace.c b/fs/namespace.c
-index 83dcd5083dbb..8e103b8c8323 100644
---- a/fs/namespace.c
-+++ b/fs/namespace.c
-@@ -103,7 +103,7 @@ static int mnt_alloc_id(struct mount *mnt)
- 	int res;
-=20
- retry:
--	ida_pre_get(&mnt_id_ida, GFP_KERNEL);
-+	ida_pre_get(&mnt_id_ida, GFP_NOFS);
- 	spin_lock(&mnt_id_lock);
- 	res =3D ida_get_new_above(&mnt_id_ida, mnt_id_start, &mnt->mnt_id);
- 	if (!res)
-@@ -134,7 +134,7 @@ static int mnt_alloc_group_id(struct mount *mnt)
- {
- 	int res;
-=20
--	if (!ida_pre_get(&mnt_group_ida, GFP_KERNEL))
-+	if (!ida_pre_get(&mnt_group_ida, GFP_NOFS))
- 		return -ENOMEM;
-=20
- 	res =3D ida_get_new_above(&mnt_group_ida,
-@@ -193,7 +193,7 @@ unsigned int mnt_get_count(struct mount *mnt)
-=20
- static struct mount *alloc_vfsmnt(const char *name)
- {
--	struct mount *mnt =3D kmem_cache_zalloc(mnt_cache, GFP_KERNEL);
-+	struct mount *mnt =3D kmem_cache_zalloc(mnt_cache, GFP_NOFS);
- 	if (mnt) {
- 		int err;
-=20
-@@ -202,7 +202,7 @@ static struct mount *alloc_vfsmnt(const char *name)
- 			goto out_free_cache;
-=20
- 		if (name) {
--			mnt->mnt_devname =3D kstrdup(name, GFP_KERNEL);
-+			mnt->mnt_devname =3D kstrdup(name, GFP_NOFS);
- 			if (!mnt->mnt_devname)
- 				goto out_free_id;
- 		}
-@@ -682,7 +682,7 @@ static struct mountpoint *new_mountpoint(struct dentry =
-*dentry)
- 		}
- 	}
-=20
--	mp =3D kmalloc(sizeof(struct mountpoint), GFP_KERNEL);
-+	mp =3D kmalloc(sizeof(struct mountpoint), GFP_NOFS);
- 	if (!mp)
- 		return ERR_PTR(-ENOMEM);
-=20
+We also do this when setting up regular file inodes in
+xfs_setup_inode():
 
---Sig_/AHIx/=TRorm595oyDqzGVg8
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
+        /*
+         * Ensure all page cache allocations are done from GFP_NOFS context to
+         * prevent direct reclaim recursion back into the filesystem and blowing
+         * stacks or deadlocking.
+         */
+        gfp_mask = mapping_gfp_mask(inode->i_mapping);
+        mapping_set_gfp_mask(inode->i_mapping, (gfp_mask & ~(__GFP_FS)));
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.22 (GNU/Linux)
+Which handles all of the mapping allocations that occur within the
+page cache read/write paths.
 
-iQIVAwUBU04anjnsnt1WYoG5AQIhrg/8CkSLV3X4c4pMegKcWjixLvjggV9C0nmD
-Ki7J2WYAcQLErKW3y+NMuIGWo5ZHNizwEeaSIFbqdzSiMzebtGI5lreK3Vgm6Kom
-yxHsQgu528mbaZj1W29ifjwd6qyaDjmx8hgIEkBZOz1/SrRJ0QiphaQS5/VaZF4j
-25qwbmPyTA92q75q7eOdy+n4y/hpZj6gPAAwjKOmLPFw7YnG1hajhUKReU7z86X1
-cLCX/9ppr+KM8sHpBQfNkzIdC7+PXsHSy38R+ZRLlsdNYuIIxKHJBu1M5EsZejI4
-uPAhNgws4bQohRmPQ0wDzjoiYPeYvPOM1lgln3w3JQuQ9H5/4Nr0EMRBx+BZuIAs
-iUNjLNSxh7I+5Xb+kTH5ea7O75mhmDg6h0KnsFIyL7585/ve872HwTeWnjqhkaRk
-B/gSXw7j6a6CUjGhk8Vpl6aKEgdyieoG0oxIU6xgkUzIjh7V54N+qRNbijGEIrXX
-XwExDi31ptdiBoX8OYTpL5dtKIpJFI3+M9brUs/OHEiMTGxP+gBBoZjygvqQnooD
-/UBY2sdOBQaDS843VQnYUlIhv4XpmwNGZrp7P+lgsTZmgnL39Mt2hfTC3iGvvw4o
-/9lAjXcUCg19a0llfGfqMWXNWEHH8Bjo5OovO4DpN7wWccy6GhXI6U+yd0WNI4k5
-Rte0ii4ppow=
-=vIwc
------END PGP SIGNATURE-----
+Remember, you removed the KM_NOFS code from the XFS allocator that
+caused it to clear __GFP_FS in an earlier patch - the read Io path
+is one of the things you broke by doing that....
 
---Sig_/AHIx/=TRorm595oyDqzGVg8--
+If there are places where we don't use GFP_NOFS context allocations
+that we should, then we need to fix them individually....
 
+Cheers,
 
---===============3247653865310843989==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============3247653865310843989==--
