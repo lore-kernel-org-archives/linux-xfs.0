@@ -1,25 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id EEA237F60
-	for <xfs@oss.sgi.com>; Wed, 16 Apr 2014 01:31:32 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 72EDFAC001
-	for <xfs@oss.sgi.com>; Tue, 15 Apr 2014 23:31:32 -0700 (PDT)
-Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
-	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	PX8a1iBBSTT4mHiv for <xfs@oss.sgi.com>;
-	Tue, 15 Apr 2014 23:31:30 -0700 (PDT)
-Date: Wed, 16 Apr 2014 16:31:29 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 09/19] XFS: ensure xfs_file_*_read cannot deadlock in
-	memory allocation.
-Message-ID: <20140416063129.GI15995@dastard>
-References: <20140416033623.10604.69237.stgit@notabene.brown>
-	<20140416040336.10604.90380.stgit@notabene.brown>
-	<20140416060459.GE15995@dastard>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 37A097F6B
+	for <xfs@oss.sgi.com>; Wed, 16 Apr 2014 01:36:30 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 1140130404E
+	for <xfs@oss.sgi.com>; Tue, 15 Apr 2014 23:36:30 -0700 (PDT)
+Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
+	ESMTP id RMzBkWVQtELj0LK3 (version=TLSv1 cipher=AES256-SHA
+	bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 15 Apr 2014 23:36:28 -0700 (PDT)
+Date: Tue, 15 Apr 2014 23:36:18 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 0/6][RFC] Introduce FALLOC_FL_ZERO_RANGE flag for fallocate
+Message-ID: <20140416063618.GA12498@infradead.org>
+References: <1392649703-10772-1-git-send-email-lczerner@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20140416060459.GE15995@dastard>
+In-Reply-To: <1392649703-10772-1-git-send-email-lczerner@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,28 +29,33 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: NeilBrown <neilb@suse.de>
-Cc: linux-mm@kvack.org, linux-nfs@vger.kernel.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: Lukas Czerner <lczerner@redhat.com>
+Cc: linux-man@vger.kernel.org, tytso@mit.edu, xfs@oss.sgi.com, Michael Kerrisk <mtk.manpages@gmail.com>, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org
 
-On Wed, Apr 16, 2014 at 04:04:59PM +1000, Dave Chinner wrote:
-> On Wed, Apr 16, 2014 at 02:03:36PM +1000, NeilBrown wrote:
-> > xfs_file_*_read holds an inode lock while calling a generic 'read'
-> > function.  These functions perform read-ahead and are quite likely to
-> > allocate memory.
-> 
-> Yes, that's what reading data from disk requires.
-> 
-> > So set PF_FSTRANS to ensure they avoid __GFP_FS and so don't recurse
-> > into a filesystem to free memory.
-> 
-> We already have that protection via the
+On Mon, Feb 17, 2014 at 04:08:17PM +0100, Lukas Czerner wrote:
+> Introduce new FALLOC_FL_ZERO_RANGE flag for fallocate. This has the same
+> functionality as xfs ioctl XFS_IOC_ZERO_RANGE.
 
-Oops, stray paste. Ignore that comment.
+Lukas, can you please also send a man page update for
+FALLOC_FL_ZERO_RANGE now that is has been merged?
 
--Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> 
+> It can be used to convert a range of file to zeros preferably without
+> issuing data IO. Blocks should be preallocated for the regions that span
+> holes in the file, and the entire range is preferable converted to
+> unwritten extents - even though file system may choose to zero out the
+> extent or do whatever which will result in reading zeros from the range
+> while the range remains allocated for the file.
+> 
+> This can be also used to preallocate blocks past EOF in the same way as
+> with fallocate. Flag FALLOC_FL_KEEP_SIZE which should cause the inode
+> size to remain the same.
+> 
+> You can test this feature yourself using xfstests, of fallocate(1) however
+> you'll need patches for util_linux, xfsprogs and xfstests which you
+> can find here:
+> 
+> http://people.redhat.com/lczerner/zero_range/
 
 _______________________________________________
 xfs mailing list
