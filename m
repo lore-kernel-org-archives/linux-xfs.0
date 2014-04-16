@@ -1,22 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id E75C67F3F
-	for <xfs@oss.sgi.com>; Tue, 15 Apr 2014 19:32:18 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id D29FA30407A
-	for <xfs@oss.sgi.com>; Tue, 15 Apr 2014 17:32:18 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 7898F7F3F
+	for <xfs@oss.sgi.com>; Tue, 15 Apr 2014 19:34:36 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 5BE2E8F8065
+	for <xfs@oss.sgi.com>; Tue, 15 Apr 2014 17:34:36 -0700 (PDT)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	X8zSv6zFj32oFxcs for <xfs@oss.sgi.com>;
-	Tue, 15 Apr 2014 17:32:17 -0700 (PDT)
-Date: Wed, 16 Apr 2014 10:32:02 +1000
+	GVsl9V3zpJtmpyIv for <xfs@oss.sgi.com>;
+	Tue, 15 Apr 2014 17:34:31 -0700 (PDT)
+Date: Wed, 16 Apr 2014 10:34:17 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] renameat2: add system call number for i386
-Message-ID: <20140416003202.GY15995@dastard>
-References: <1397344384-15302-1-git-send-email-tytso@mit.edu>
+Subject: Re: [PATCH] check: add support for an external test expunging file
+Message-ID: <20140416003417.GZ15995@dastard>
+References: <1397530320-20579-1-git-send-email-tytso@mit.edu>
+	<20140416001530.GU15995@dastard> <20140416002550.GB12078@thunk.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1397344384-15302-1-git-send-email-tytso@mit.edu>
+In-Reply-To: <20140416002550.GB12078@thunk.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,35 +31,26 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Theodore Ts'o <tytso@mit.edu>
-Cc: Ext4 Developers List <linux-ext4@vger.kernel.org>, Miklos Szeredi <mszeredi@suse.cz>, xfs@oss.sgi.com
+Cc: Ext4 Developers List <linux-ext4@vger.kernel.org>, xfs@oss.sgi.com
 
-On Sat, Apr 12, 2014 at 07:13:04PM -0400, Theodore Ts'o wrote:
-> Signed-off-by: "Theodore Ts'o" <tytso@mit.edu>
-> Cc: Miklos Szeredi <mszeredi@suse.cz>
-> ---
->  src/renameat2.c | 4 ++++
->  1 file changed, 4 insertions(+)
+On Tue, Apr 15, 2014 at 08:25:50PM -0400, Theodore Ts'o wrote:
+> On Wed, Apr 16, 2014 at 10:15:30AM +1000, Dave Chinner wrote:
+> > > If the argument to the -X option is a pathname (that is, includes a
+> > > '/' character), treat it as the latter case.  If it the argument to
+> > > the -X option is just a bare filename (that is, does not include '/'
+> > > character), treat it as the former.
+> > 
+> > Can you add a new option rather than overloading the existing one
+> > with new meanings and semantics?
 > 
-> diff --git a/src/renameat2.c b/src/renameat2.c
-> index 5145959..8613aa9 100644
-> --- a/src/renameat2.c
-> +++ b/src/renameat2.c
-> @@ -14,6 +14,10 @@
->  #define SYS_renameat2 316
->  #endif
->  
-> +#if !defined(SYS_renameat2) && defined(__i386__)
-> +#define SYS_renameat2 353
-> +#endif
-> +
->  static int renameat2(int dfd1, const char *path1,
->  		     int dfd2, const char *path2,
->  		     unsigned int flags)
+> If that's your preference, sure.  How does --expunge-list-file strike
+> you?  Or would you prefer something else?  I'm easy.  :-)
 
-Yup, matches the kernel code.  Looks good.
+-E/--expunge-file is fine by me.
 
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
+Cheers,
 
+Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
