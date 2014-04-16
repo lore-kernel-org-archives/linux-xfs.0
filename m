@@ -1,22 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 84B4229E06
-	for <xfs@oss.sgi.com>; Tue, 15 Apr 2014 23:20:07 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 1853129DFD
+	for <xfs@oss.sgi.com>; Tue, 15 Apr 2014 23:46:25 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 0FA81AC001
-	for <xfs@oss.sgi.com>; Tue, 15 Apr 2014 21:20:06 -0700 (PDT)
-Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id rHHIgX2DFDGxCr5i (version=TLSv1 cipher=AES256-SHA
-	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 15 Apr 2014 21:20:05 -0700 (PDT)
-From: NeilBrown <neilb@suse.de>
-Date: Wed, 16 Apr 2014 14:03:37 +1000
-Subject: [PATCH 19/19] XFS: set PF_FSTRANS while ilock is held in
-	xfs_free_eofblocks
-Message-ID: <20140416040337.10604.7488.stgit@notabene.brown>
-In-Reply-To: <20140416033623.10604.69237.stgit@notabene.brown>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id E959330404E
+	for <xfs@oss.sgi.com>; Tue, 15 Apr 2014 21:46:24 -0700 (PDT)
+Received: from ZenIV.linux.org.uk (zeniv.linux.org.uk [195.92.253.2]) by
+	cuda.sgi.com with ESMTP id D8SGEm6zxQN8Az3P (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 15 Apr 2014 21:46:23 -0700 (PDT)
+Date: Wed, 16 Apr 2014 05:46:18 +0100
+From: Al Viro <viro@ZenIV.linux.org.uk>
+Subject: Re: [PATCH 17/19] VFS: set PF_FSTRANS while namespace_sem is held.
+Message-ID: <20140416044618.GX18016@ZenIV.linux.org.uk>
 References: <20140416033623.10604.69237.stgit@notabene.brown>
+	<20140416040337.10604.86740.stgit@notabene.brown>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20140416040337.10604.86740.stgit@notabene.brown>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,65 +30,27 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: linux-mm@kvack.org, linux-nfs@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: xfs@oss.sgi.com
+To: NeilBrown <neilb@suse.de>
+Cc: linux-mm@kvack.org, linux-nfs@vger.kernel.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-memory allocates can happen while the xfs ilock is held in
-xfs_free_eofblocks, particularly
+On Wed, Apr 16, 2014 at 02:03:37PM +1000, NeilBrown wrote:
+> namespace_sem can be taken while various i_mutex locks are held, so we
+> need to avoid reclaim from blocking on an FS (particularly loop-back
+> NFS).
 
-  [<ffffffff813e6667>] kmem_zone_alloc+0x67/0xc0
-  [<ffffffff813e5945>] xfs_trans_add_item+0x25/0x50
-  [<ffffffff8143d64c>] xfs_trans_ijoin+0x2c/0x60
-  [<ffffffff8142275e>] xfs_itruncate_extents+0xbe/0x400
-  [<ffffffff813c72f4>] xfs_free_eofblocks+0x1c4/0x240
+I would really prefer to deal with that differently - by explicit change of
+gfp_t arguments of allocators.
 
-So set PF_FSTRANS to avoid this causing a deadlock.
+The thing is, namespace_sem is held *only* over allocations, and not a lot
+of them, at that - only mnt_alloc_id(), mnt_alloc_group_id(), alloc_vfsmnt()
+and new_mountpoint().  That is all that is allowed.
 
-Care is needed here as xfs_trans_reserve() also sets PF_FSTRANS, while
-xfs_trans_cancel and xfs_trans_commit will clear it.
-So our extra setting must fully nest these calls.
+Again, actual work with filesystems (setup, shutdown, remount, pathname
+resolution, etc.) is all done outside of namespace_sem; it's held only
+for manipulations of fs/{namespace,pnode}.c data structures and the only
+reason it isn't a spinlock is that we need to do some allocations.
 
-Signed-off-by: NeilBrown <neilb@suse.de>
----
- fs/xfs/xfs_bmap_util.c |    4 ++++
- 1 file changed, 4 insertions(+)
-
-diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-index f264616080ca..53761fe4fada 100644
---- a/fs/xfs/xfs_bmap_util.c
-+++ b/fs/xfs/xfs_bmap_util.c
-@@ -889,6 +889,7 @@ xfs_free_eofblocks(
- 	xfs_filblks_t	map_len;
- 	int		nimaps;
- 	xfs_bmbt_irec_t	imap;
-+	unsigned int pflags;
- 
- 	/*
- 	 * Figure out if there are any blocks beyond the end
-@@ -929,12 +930,14 @@ xfs_free_eofblocks(
- 			}
- 		}
- 
-+		current_set_flags_nested(&pflags, PF_FSTRANS);
- 		error = xfs_trans_reserve(tp, &M_RES(mp)->tr_itruncate, 0, 0);
- 		if (error) {
- 			ASSERT(XFS_FORCED_SHUTDOWN(mp));
- 			xfs_trans_cancel(tp, 0);
- 			if (need_iolock)
- 				xfs_iunlock(ip, XFS_IOLOCK_EXCL);
-+			current_restore_flags_nested(&pflags, PF_FSTRANS);
- 			return error;
- 		}
- 
-@@ -964,6 +967,7 @@ xfs_free_eofblocks(
- 				xfs_inode_clear_eofblocks_tag(ip);
- 		}
- 
-+		current_restore_flags_nested(&pflags, PF_FSTRANS);
- 		xfs_iunlock(ip, XFS_ILOCK_EXCL);
- 		if (need_iolock)
- 			xfs_iunlock(ip, XFS_IOLOCK_EXCL);
-
+So I'd rather slap GFP_NOFS on those few allocations...
 
 _______________________________________________
 xfs mailing list
