@@ -1,19 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id E8C437F50
-	for <xfs@oss.sgi.com>; Tue, 15 Apr 2014 23:18:41 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id CF74F30407F
-	for <xfs@oss.sgi.com>; Tue, 15 Apr 2014 21:18:41 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 0B0D329DF7
+	for <xfs@oss.sgi.com>; Tue, 15 Apr 2014 23:18:49 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id D9C038F8052
+	for <xfs@oss.sgi.com>; Tue, 15 Apr 2014 21:18:48 -0700 (PDT)
 Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id Iqpb414RH3g9ylok (version=TLSv1 cipher=AES256-SHA
+	with ESMTP id lFD1bxrC6IYOAH36 (version=TLSv1 cipher=AES256-SHA
 	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 15 Apr 2014 21:18:40 -0700 (PDT)
+	Tue, 15 Apr 2014 21:18:48 -0700 (PDT)
 From: NeilBrown <neilb@suse.de>
 Date: Wed, 16 Apr 2014 14:03:36 +1000
-Subject: [PATCH 07/19] nfsd and VM: use PF_LESS_THROTTLE to avoid throttle
-	in shrink_inactive_list.
-Message-ID: <20140416040336.10604.55772.stgit@notabene.brown>
+Subject: [PATCH 08/19] Set PF_FSTRANS while write_cache_pages calls ->writepage
+Message-ID: <20140416040336.10604.34673.stgit@notabene.brown>
 In-Reply-To: <20140416033623.10604.69237.stgit@notabene.brown>
 References: <20140416033623.10604.69237.stgit@notabene.brown>
 MIME-Version: 1.0
@@ -32,87 +31,50 @@ Sender: xfs-bounces@oss.sgi.com
 To: linux-mm@kvack.org, linux-nfs@vger.kernel.org, linux-kernel@vger.kernel.org
 Cc: xfs@oss.sgi.com
 
-nfsd already uses PF_LESS_THROTTLE (and is the only user) to avoid
-throttling while dirtying pages.  Use it also to avoid throttling while
-doing direct reclaim as this can stall nfsd in the same way.
+It is normally safe for direct reclaim to enter filesystems
+even when a page is locked - as can happen if ->writepage
+allocates memory with GFP_KERNEL (which xfs does).
 
-Also only set PF_LESS_THROTTLE when handling a 'write' request for a
-local connection.  This is the only time when the throttling can cause
-a problem.  In other cases we should throttle if the system is busy.
+However if a localhost NFS mount is present, then a flush-*
+thread might hold a page locked and then in direct reclaim,
+ask nfs to commit an inode (nfs_release_page).  When nfsd
+performs the fsync it might try to lock the same page, which leads to
+a deadlock.
 
-Signed-off-by: NeilBrown <neilb@suse.de>
+A ->writepage should not allocate much memory, or do so very often, so
+it is safe to set PF_FSTRANS, and this removes the possible deadlock.
+
+This was not detected by lockdep as it doesn't monitor the page lock.
+It was found as a real deadlock in testing.
+
+Signed-off-by: NeilBrown  <neilb@suse.de>
 ---
- fs/nfsd/nfssvc.c |    6 ------
- fs/nfsd/vfs.c    |    6 ++++++
- mm/vmscan.c      |    7 +++++--
- 3 files changed, 11 insertions(+), 8 deletions(-)
+ mm/page-writeback.c |    3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/fs/nfsd/nfssvc.c b/fs/nfsd/nfssvc.c
-index 6af8bc2daf7d..cd24aa76e58d 100644
---- a/fs/nfsd/nfssvc.c
-+++ b/fs/nfsd/nfssvc.c
-@@ -593,12 +593,6 @@ nfsd(void *vrqstp)
- 	nfsdstats.th_cnt++;
- 	mutex_unlock(&nfsd_mutex);
+diff --git a/mm/page-writeback.c b/mm/page-writeback.c
+index 7106cb1aca8e..572e70b9a3f7 100644
+--- a/mm/page-writeback.c
++++ b/mm/page-writeback.c
+@@ -1909,6 +1909,7 @@ retry:
  
--	/*
--	 * We want less throttling in balance_dirty_pages() so that nfs to
--	 * localhost doesn't cause nfsd to lock up due to all the client's
--	 * dirty pages.
--	 */
--	current->flags |= PF_LESS_THROTTLE;
- 	set_freezable();
+ 		for (i = 0; i < nr_pages; i++) {
+ 			struct page *page = pvec.pages[i];
++			unsigned int pflags;
  
- 	/*
-diff --git a/fs/nfsd/vfs.c b/fs/nfsd/vfs.c
-index 6d7be3f80356..be2d7af3beee 100644
---- a/fs/nfsd/vfs.c
-+++ b/fs/nfsd/vfs.c
-@@ -913,6 +913,10 @@ nfsd_vfs_write(struct svc_rqst *rqstp, struct svc_fh *fhp, struct file *file,
- 	int			stable = *stablep;
- 	int			use_wgather;
- 	loff_t			pos = offset;
-+	unsigned int		pflags;
-+
-+	if (rqstp->rq_local)
-+		current_set_flags_nested(&pflags, PF_LESS_THROTTLE);
+ 			/*
+ 			 * At this point, the page may be truncated or
+@@ -1960,8 +1961,10 @@ continue_unlock:
+ 			if (!clear_page_dirty_for_io(page))
+ 				goto continue_unlock;
  
- 	dentry = file->f_path.dentry;
- 	inode = dentry->d_inode;
-@@ -950,6 +954,8 @@ out_nfserr:
- 		err = 0;
- 	else
- 		err = nfserrno(host_err);
-+	if (rqstp->rq_local)
-+		current_restore_flags_nested(&pflags, PF_LESS_THROTTLE);
- 	return err;
- }
- 
-diff --git a/mm/vmscan.c b/mm/vmscan.c
-index 05de3289d031..1b7c4e44f0a1 100644
---- a/mm/vmscan.c
-+++ b/mm/vmscan.c
-@@ -1552,7 +1552,8 @@ shrink_inactive_list(unsigned long nr_to_scan, struct lruvec *lruvec,
- 		 * implies that pages are cycling through the LRU faster than
- 		 * they are written so also forcibly stall.
- 		 */
--		if (nr_unqueued_dirty == nr_taken || nr_immediate)
-+		if ((nr_unqueued_dirty == nr_taken || nr_immediate)
-+		    && !current_test_flags(PF_LESS_THROTTLE))
- 			congestion_wait(BLK_RW_ASYNC, HZ/10);
- 	}
- 
-@@ -1561,7 +1562,9 @@ shrink_inactive_list(unsigned long nr_to_scan, struct lruvec *lruvec,
- 	 * is congested. Allow kswapd to continue until it starts encountering
- 	 * unqueued dirty pages or cycling through the LRU too quickly.
- 	 */
--	if (!sc->hibernation_mode && !current_is_kswapd())
-+	if (!sc->hibernation_mode &&
-+	    !current_is_kswapd() &&
-+	    !current_test_flags(PF_LESS_THROTTLE))
- 		wait_iff_congested(zone, BLK_RW_ASYNC, HZ/10);
- 
- 	trace_mm_vmscan_lru_shrink_inactive(zone->zone_pgdat->node_id,
++			current_set_flags_nested(&pflags, PF_FSTRANS);
+ 			trace_wbc_writepage(wbc, mapping->backing_dev_info);
+ 			ret = (*writepage)(page, wbc, data);
++			current_restore_flags_nested(&pflags, PF_FSTRANS);
+ 			if (unlikely(ret)) {
+ 				if (ret == AOP_WRITEPAGE_ACTIVATE) {
+ 					unlock_page(page);
 
 
 _______________________________________________
