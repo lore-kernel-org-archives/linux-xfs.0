@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 17E307F3F
-	for <xfs@oss.sgi.com>; Wed, 16 Apr 2014 01:40:22 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id D26F2304071
-	for <xfs@oss.sgi.com>; Tue, 15 Apr 2014 23:40:21 -0700 (PDT)
-Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
-	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	0ATlTk4SO6FpKCOC for <xfs@oss.sgi.com>;
-	Tue, 15 Apr 2014 23:40:19 -0700 (PDT)
-Date: Wed, 16 Apr 2014 16:40:18 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH -v2] check: add support for an external file containing
-	tests to exclude
-Message-ID: <20140416064018.GJ15995@dastard>
-References: <20140416001530.GU15995@dastard>
-	<1397624302-9577-1-git-send-email-tytso@mit.edu>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1397624302-9577-1-git-send-email-tytso@mit.edu>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id D05587F75
+	for <xfs@oss.sgi.com>; Wed, 16 Apr 2014 01:49:51 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id ADCE98F8052
+	for <xfs@oss.sgi.com>; Tue, 15 Apr 2014 23:49:51 -0700 (PDT)
+Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
+	with ESMTP id TQEQT6wP1ou1dYxl (version=TLSv1 cipher=AES256-SHA
+	bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 15 Apr 2014 23:49:50 -0700 (PDT)
+Date: Wed, 16 Apr 2014 16:49:41 +1000
+From: NeilBrown <neilb@suse.de>
+Subject: Re: [PATCH 16/19] VFS: use GFP_NOFS rather than GFP_KERNEL in
+	__d_alloc.
+Message-ID: <20140416164941.37587da6@notabene.brown>
+In-Reply-To: <20140416062520.GG15995@dastard>
+References: <20140416033623.10604.69237.stgit@notabene.brown>
+	<20140416040337.10604.61837.stgit@notabene.brown>
+	<20140416062520.GG15995@dastard>
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,74 +27,98 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============1383443001161456828=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Theodore Ts'o <tytso@mit.edu>
-Cc: Ext4 Developers List <linux-ext4@vger.kernel.org>, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-mm@kvack.org, linux-nfs@vger.kernel.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-On Wed, Apr 16, 2014 at 12:58:22AM -0400, Theodore Ts'o wrote:
-> Currently the -X option is intended to specify a set of expunging
-> files which are stored in each test/* subdirectory.  As described in
-> the commit description for 0b1e8abd4, in order to exclude the test
-> generic/280, the -X option is used as follows:
-> 
->     $ cat tests/generic/3.0-stable-avoid
->     280
->     $ sudo ./check -X 3.0-stable-avoid generic/280
-> 
-> However, it is sometimes useful to store the set of expunged tests in
-> a single file, outside of tests/* subdirectories.  This commit enables
-> the following:
-> 
->     $ cat /root/conf/data_journal.exclude
->     generic/068
->     ext4/301
->     $ sudo ./check -E /root/conf/data_journal.exclude -g auto
-> 
-> Signed-off-by: "Theodore Ts'o" <tytso@mit.edu>
-> ---
->  check | 6 ++++++
->  1 file changed, 6 insertions(+)
-> 
-> diff --git a/check b/check
-> index e7ace63..b1eaed2 100755
-> --- a/check
-> +++ b/check
-> @@ -81,6 +81,7 @@ testlist options
->      -g group[,group...]	include tests from these groups
->      -x group[,group...]	exclude tests from these groups
->      -X file		exclude individual tests
-> +    -E external_file	exclude individual tests
->      [testlist]		include tests matching names in testlist
->  '
->  	    exit 0
-> @@ -222,6 +223,11 @@ while [ $# -gt 0 ]; do
->  			done
->  		done
->  		;;
-> +	-E)	xfile=$2; shift ;
-> +		if [ -f $xfile ]; then
-> +			cat "$xfile" >> $tmp.xlist
-> +	        fi
-> +		;;
->  	-s)	RUN_SECTION="$RUN_SECTION $2"; shift ;;
->  	-l)	diff="diff" ;;
->  	-udiff)	diff="$diff -u" ;;
+--===============1383443001161456828==
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/EPq.7eSTqOBYBZMF/T4NZ0K"; protocol="application/pgp-signature"
 
-Looks good.
+--Sig_/EPq.7eSTqOBYBZMF/T4NZ0K
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
+On Wed, 16 Apr 2014 16:25:20 +1000 Dave Chinner <david@fromorbit.com> wrote:
 
-Cheers,
+> On Wed, Apr 16, 2014 at 02:03:37PM +1000, NeilBrown wrote:
+> > __d_alloc can be called with i_mutex held, so it is safer to
+> > use GFP_NOFS.
+> >=20
+> > lockdep reports this can deadlock when loop-back NFS is in use,
+> > as nfsd may be required to write out for reclaim, and nfsd certainly
+> > takes i_mutex.
+>=20
+> But not the same i_mutex as is currently held. To me, this seems
+> like a false positive? If you are holding the i_mutex on an inode,
+> then you have a reference to the inode and hence memory reclaim
+> won't ever take the i_mutex on that inode.
+>=20
+> FWIW, this sort of false positive was a long stabding problem for
+> XFS - we managed to get rid of most of the false positives like this
+> by ensuring that only the ilock is taken within memory reclaim and
+> memory reclaim can't be entered while we hold the ilock.
+>=20
+> You can't do that with the i_mutex, though....
+>=20
+> Cheers,
+>=20
+> Dave.
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+I'm not sure this is a false positive.
+You can call __d_alloc when creating a file and so are holding i_mutex on t=
+he
+directory.
+nfsd might also want to access that directory.
+
+If there was only 1 nfsd thread, it would need to get i_mutex and do it's
+thing before replying to that request and so before it could handle the
+COMMIT which __d_alloc is waiting for.
+
+Obviously we would normally have multiple nfsd threads but if they were all
+blocked on an i_mutex which itself was blocked on nfs_release_page which was
+waiting for an nfsd thread to handling its COMMIT request, this could be a
+real deadlock.
+
+Thanks,
+NeilBrown
+
+--Sig_/EPq.7eSTqOBYBZMF/T4NZ0K
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.22 (GNU/Linux)
+
+iQIVAwUBU04oBTnsnt1WYoG5AQIv2A/+JHPHOXvvSEvBvND3/I/bvU7038Xt9P09
+ROQ9m01KrCbUdCBztnzYFBBQRHb+TGX7/oqNbgR5xz5xQp5udSIOGfW50DvPsmRj
+evA2RwwB24XWG4TpZcfAnZXNXNGmjNXYzKcSrrD3Jr1hh54BnYkSmvxk1rjZb77V
+lPAtmazM12wyG3OTAP9iKMeNohqzKmL8ZAF3NXBtA7VvAx3Q/bW5Ouk3NDO9sMjP
+fP9rvVgZqGBGraTBp/j7hAliuwMdR47OvUvtmlj2Yu8BLwWdmK4uLcgCtiASvhox
+IOCQQ/mKw8d0c/vC1kl759kwgXuK87rRQ136xBpcgogBd7g8ER9Z+WmfBHUVndg6
+9HjduCoAju0ruvnfHD3Ky4GcMEPPmbwe7nV7LMY8VkLTDjUBLLnoBROdgsbLL2bj
+at1fyaeJxQ/lRt3FzQ3ep0n4n366FM1kyHs84J3EiRMImrxAedb/wdZmDN7rQi0s
+g4ubAThts0zmUrYsTO+beqxVGNYqmnUdJVWMBX513HBGZ6kZ+sjFIpD2sBkCRIgK
+98bXu9ZEz2ZqAACq42uYdNvEIgPrcog80+yLZJQ7GJaPHsdfOWEMrAJPrO5iaSQH
+vUbfbjwe722ZicSNlEgw5b5ZWMGb9ssZVeP28fJt0i8k5XNBa13+svkK+6ITOoJz
+FZOwEWIhv2A=
+=6+ZP
+-----END PGP SIGNATURE-----
+
+--Sig_/EPq.7eSTqOBYBZMF/T4NZ0K--
+
+
+--===============1383443001161456828==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============1383443001161456828==--
