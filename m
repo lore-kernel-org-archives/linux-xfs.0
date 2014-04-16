@@ -1,19 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 32DA429DFD
-	for <xfs@oss.sgi.com>; Wed, 16 Apr 2014 11:09:48 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 1940E304077
-	for <xfs@oss.sgi.com>; Wed, 16 Apr 2014 09:09:44 -0700 (PDT)
-Received: from mail.windriver.com (mail.windriver.com [147.11.1.11]) by
-	cuda.sgi.com with ESMTP id mTMCp0YIhg77zK1C (version=TLSv1
+	by oss.sgi.com (Postfix) with ESMTP id 65C3D7F61
+	for <xfs@oss.sgi.com>; Wed, 16 Apr 2014 11:37:47 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 57272304062
+	for <xfs@oss.sgi.com>; Wed, 16 Apr 2014 09:37:47 -0700 (PDT)
+Received: from ZenIV.linux.org.uk (zeniv.linux.org.uk [195.92.253.2]) by
+	cuda.sgi.com with ESMTP id hOQLax1QNLKd42y6 (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 16 Apr 2014 09:09:33 -0700 (PDT)
-Message-ID: <534EAB41.60901@windriver.com>
-Date: Wed, 16 Apr 2014 12:09:37 -0400
-From: Paul Gortmaker <paul.gortmaker@windriver.com>
+	Wed, 16 Apr 2014 09:37:45 -0700 (PDT)
+Date: Wed, 16 Apr 2014 17:37:41 +0100
+From: Al Viro <viro@ZenIV.linux.org.uk>
+Subject: Re: [PATCH 17/19] VFS: set PF_FSTRANS while namespace_sem is held.
+Message-ID: <20140416163741.GY18016@ZenIV.linux.org.uk>
+References: <20140416033623.10604.69237.stgit@notabene.brown>
+	<20140416040337.10604.86740.stgit@notabene.brown>
+	<20140416044618.GX18016@ZenIV.linux.org.uk>
+	<20140416155230.4d02e4b9@notabene.brown>
 MIME-Version: 1.0
-Subject: new 64 bit math link fail in xfs in linux-next today
+Content-Disposition: inline
+In-Reply-To: <20140416155230.4d02e4b9@notabene.brown>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,17 +32,25 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: "linux-next@vger.kernel.org" <linux-next@vger.kernel.org>, xfs@oss.sgi.com
+To: NeilBrown <neilb@suse.de>
+Cc: linux-mm@kvack.org, linux-nfs@vger.kernel.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-Hi Dave,
+On Wed, Apr 16, 2014 at 03:52:30PM +1000, NeilBrown wrote:
 
-Not sure if this has been reported yet, but this new failure showed
-up in the xtensa link of today's linux-next builds.
+> So something like this?  I put that in to my testing instead.
 
-http://kisskb.ellerman.id.au/kisskb/buildresult/10938384/
+Something like this, yes...  And TBH I would prefer the same approach
+elsewhere - this kind of hidden state makes it hard to do any kind of
+analysis.
 
-Paul.
+Put it that way - the simplest situation is when the allocation flags
+depend only on the call site.  Next one is when it's a function of
+call chain - somewhat harder to review.  And the worst is when it's
+a function of previous history of execution - not just the call chain,
+but the things that had been called (and returned) prior to that one.
+
+How many of those locations need to be of the third kind?  All fs/namespace.c
+ones are of the first one...
 
 _______________________________________________
 xfs mailing list
