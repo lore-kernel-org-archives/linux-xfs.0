@@ -1,23 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 2C8D17F73
-	for <xfs@oss.sgi.com>; Wed, 16 Apr 2014 12:51:19 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 1A471304084
-	for <xfs@oss.sgi.com>; Wed, 16 Apr 2014 10:51:19 -0700 (PDT)
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.9])
-	by cuda.sgi.com with ESMTP id KGlriEPoJSKYDWn0 (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 16 Apr 2014 10:51:18 -0700 (PDT)
-Date: Wed, 16 Apr 2014 10:51:17 -0700
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 2/2] xfs: Nuke XFS_ERROR macro
-Message-ID: <20140416175117.GA23643@infradead.org>
-References: <534EC073.8090006@sandeen.net>
- <534EC282.7010905@sandeen.net>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id D79AB7F73
+	for <xfs@oss.sgi.com>; Wed, 16 Apr 2014 12:55:55 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 950E8AC004
+	for <xfs@oss.sgi.com>; Wed, 16 Apr 2014 10:55:55 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id ANFETHK1DXLCfI7t for <xfs@oss.sgi.com>;
+	Wed, 16 Apr 2014 10:55:54 -0700 (PDT)
+Message-ID: <534EC42D.1080704@sandeen.net>
+Date: Wed, 16 Apr 2014 12:55:57 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <534EC282.7010905@sandeen.net>
+Subject: Re: [PATCH 2/2] xfs: Nuke XFS_ERROR macro
+References: <534EC073.8090006@sandeen.net> <534EC282.7010905@sandeen.net>
+	<20140416175117.GA23643@infradead.org>
+In-Reply-To: <20140416175117.GA23643@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,24 +28,35 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
+To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs-oss <xfs@oss.sgi.com>
 
-On Wed, Apr 16, 2014 at 12:48:50PM -0500, Eric Sandeen wrote:
-> XFS_ERROR was designed long ago to trap return values,
-> but it's not runtime configurable, it's not consistently used,
-> and we can do the same thing today with systemtap, using
-> something like:
+On 4/16/14, 12:51 PM, Christoph Hellwig wrote:
+> On Wed, Apr 16, 2014 at 12:48:50PM -0500, Eric Sandeen wrote:
+>> XFS_ERROR was designed long ago to trap return values,
+>> but it's not runtime configurable, it's not consistently used,
+>> and we can do the same thing today with systemtap, using
+>> something like:
+>>
+>> probe module("xfs").function("xfs_*").return { if (@defined($return) && $return == VALUE) { ... } }
 > 
-> probe module("xfs").function("xfs_*").return { if (@defined($return) && $return == VALUE) { ... } }
+> Gives me a version just using ftrace, or at least a kprobes based module
+> that we can merged in the kernel tree and this would be fine for me.
+> 
+> Requiring a massive blob of questionable out of tree module code and a
+> compiler is an absolute no-go.
 
-Gives me a version just using ftrace, or at least a kprobes based module
-that we can merged in the kernel tree and this would be fine for me.
+Ok, fair point.
+ 
+> NAK for now.
 
-Requiring a massive blob of questionable out of tree module code and a
-compiler is an absolute no-go.
+Even if we don't have a replacement, I have yet to find anyone who has
+ever used it...
 
-NAK for now.
+Anyway, I'll look into options besides systemtap.
+
+Thanks,
+-Eric
 
 _______________________________________________
 xfs mailing list
