@@ -1,18 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id B0DC329E01
-	for <xfs@oss.sgi.com>; Tue, 15 Apr 2014 23:18:35 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 7E4B28F8052
-	for <xfs@oss.sgi.com>; Tue, 15 Apr 2014 21:18:35 -0700 (PDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id E8C437F50
+	for <xfs@oss.sgi.com>; Tue, 15 Apr 2014 23:18:41 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id CF74F30407F
+	for <xfs@oss.sgi.com>; Tue, 15 Apr 2014 21:18:41 -0700 (PDT)
 Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id xhnY1PRYw1Pc1G4e (version=TLSv1 cipher=AES256-SHA
+	with ESMTP id Iqpb414RH3g9ylok (version=TLSv1 cipher=AES256-SHA
 	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 15 Apr 2014 21:18:33 -0700 (PDT)
+	Tue, 15 Apr 2014 21:18:40 -0700 (PDT)
 From: NeilBrown <neilb@suse.de>
 Date: Wed, 16 Apr 2014 14:03:36 +1000
-Subject: [PATCH 06/19] nfsd: set PF_FSTRANS for nfsd threads.
-Message-ID: <20140416040336.10604.60493.stgit@notabene.brown>
+Subject: [PATCH 07/19] nfsd and VM: use PF_LESS_THROTTLE to avoid throttle
+	in shrink_inactive_list.
+Message-ID: <20140416040336.10604.55772.stgit@notabene.brown>
 In-Reply-To: <20140416033623.10604.69237.stgit@notabene.brown>
 References: <20140416033623.10604.69237.stgit@notabene.brown>
 MIME-Version: 1.0
@@ -29,103 +30,89 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: linux-mm@kvack.org, linux-nfs@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: Peter Zijlstra <peterz@infradead.org>, Ingo Molnar <mingo@redhat.com>, xfs@oss.sgi.com
+Cc: xfs@oss.sgi.com
 
-If a localhost mount is present, then it is easy to deadlock NFS by
-nfsd entering direct reclaim and calling nfs_release_page() which
-requires nfsd to perform an fsync() (which it cannot do because it is
-reclaiming memory).
+nfsd already uses PF_LESS_THROTTLE (and is the only user) to avoid
+throttling while dirtying pages.  Use it also to avoid throttling while
+doing direct reclaim as this can stall nfsd in the same way.
 
-By setting PF_FSTRANS we stop the memory allocator from ever
-attempting any FS operation would could deadlock.
-
-We need this flag set for any thread which is handling a request from
-the local host, but we also need to always have it for at least 1 or 2
-threads so that we don't end up with all threads blocked in allocation.
-
-When we set PF_FSTRANS we also tell lockdep that we are handling
-reclaim so that it can detect deadlocks for us.
+Also only set PF_LESS_THROTTLE when handling a 'write' request for a
+local connection.  This is the only time when the throttling can cause
+a problem.  In other cases we should throttle if the system is busy.
 
 Signed-off-by: NeilBrown <neilb@suse.de>
 ---
- fs/nfsd/nfssvc.c           |   18 ++++++++++++++++++
- include/linux/sunrpc/svc.h |    1 +
- net/sunrpc/svc.c           |    6 ++++++
- 3 files changed, 25 insertions(+)
+ fs/nfsd/nfssvc.c |    6 ------
+ fs/nfsd/vfs.c    |    6 ++++++
+ mm/vmscan.c      |    7 +++++--
+ 3 files changed, 11 insertions(+), 8 deletions(-)
 
 diff --git a/fs/nfsd/nfssvc.c b/fs/nfsd/nfssvc.c
-index 9a4a5f9e7468..6af8bc2daf7d 100644
+index 6af8bc2daf7d..cd24aa76e58d 100644
 --- a/fs/nfsd/nfssvc.c
 +++ b/fs/nfsd/nfssvc.c
-@@ -565,6 +565,8 @@ nfsd(void *vrqstp)
- 	struct svc_xprt *perm_sock = list_entry(rqstp->rq_server->sv_permsocks.next, typeof(struct svc_xprt), xpt_list);
- 	struct net *net = perm_sock->xpt_net;
- 	int err;
-+	unsigned int pflags = 0;
-+	gfp_t reclaim_state = 0;
+@@ -593,12 +593,6 @@ nfsd(void *vrqstp)
+ 	nfsdstats.th_cnt++;
+ 	mutex_unlock(&nfsd_mutex);
  
- 	/* Lock module and set up kernel thread */
- 	mutex_lock(&nfsd_mutex);
-@@ -611,14 +613,30 @@ nfsd(void *vrqstp)
- 			;
- 		if (err == -EINTR)
- 			break;
-+		if (rqstp->rq_local && !current_test_flags(PF_FSTRANS)) {
-+			current_set_flags_nested(&pflags, PF_FSTRANS);
-+			atomic_inc(&rqstp->rq_pool->sp_nr_fstrans);
-+			reclaim_state = lockdep_set_current_reclaim_state(GFP_KERNEL);
-+		}
- 		validate_process_creds();
- 		svc_process(rqstp);
- 		validate_process_creds();
-+		if (current_test_flags(PF_FSTRANS) &&
-+		    atomic_dec_if_positive(&rqstp->rq_pool->sp_nr_fstrans) >= 0) {
-+			current_restore_flags_nested(&pflags, PF_FSTRANS);
-+			lockdep_restore_current_reclaim_state(reclaim_state);
-+		}
- 	}
+-	/*
+-	 * We want less throttling in balance_dirty_pages() so that nfs to
+-	 * localhost doesn't cause nfsd to lock up due to all the client's
+-	 * dirty pages.
+-	 */
+-	current->flags |= PF_LESS_THROTTLE;
+ 	set_freezable();
  
- 	/* Clear signals before calling svc_exit_thread() */
- 	flush_signals(current);
- 
-+	if (current_test_flags(PF_FSTRANS)) {
-+		current_restore_flags_nested(&pflags, PF_FSTRANS);
-+		lockdep_restore_current_reclaim_state(reclaim_state);
-+		atomic_dec(&rqstp->rq_pool->sp_nr_fstrans);
-+	}
+ 	/*
+diff --git a/fs/nfsd/vfs.c b/fs/nfsd/vfs.c
+index 6d7be3f80356..be2d7af3beee 100644
+--- a/fs/nfsd/vfs.c
++++ b/fs/nfsd/vfs.c
+@@ -913,6 +913,10 @@ nfsd_vfs_write(struct svc_rqst *rqstp, struct svc_fh *fhp, struct file *file,
+ 	int			stable = *stablep;
+ 	int			use_wgather;
+ 	loff_t			pos = offset;
++	unsigned int		pflags;
 +
- 	mutex_lock(&nfsd_mutex);
- 	nfsdstats.th_cnt --;
++	if (rqstp->rq_local)
++		current_set_flags_nested(&pflags, PF_LESS_THROTTLE);
  
-diff --git a/include/linux/sunrpc/svc.h b/include/linux/sunrpc/svc.h
-index a0dbbd1e00e9..4b274aba51dd 100644
---- a/include/linux/sunrpc/svc.h
-+++ b/include/linux/sunrpc/svc.h
-@@ -48,6 +48,7 @@ struct svc_pool {
- 	struct list_head	sp_threads;	/* idle server threads */
- 	struct list_head	sp_sockets;	/* pending sockets */
- 	unsigned int		sp_nrthreads;	/* # of threads in pool */
-+	atomic_t		sp_nr_fstrans;	/* # threads with PF_FSTRANS */
- 	struct list_head	sp_all_threads;	/* all server threads */
- 	struct svc_pool_stats	sp_stats;	/* statistics on pool operation */
- 	int			sp_task_pending;/* has pending task */
-diff --git a/net/sunrpc/svc.c b/net/sunrpc/svc.c
-index 5de6801cd924..8b13f35b6cbb 100644
---- a/net/sunrpc/svc.c
-+++ b/net/sunrpc/svc.c
-@@ -477,6 +477,12 @@ __svc_create(struct svc_program *prog, unsigned int bufsize, int npools,
- 		INIT_LIST_HEAD(&pool->sp_threads);
- 		INIT_LIST_HEAD(&pool->sp_sockets);
- 		INIT_LIST_HEAD(&pool->sp_all_threads);
-+		/* The number of threads with PF_FSTRANS set
-+		 * should never be reduced below 2, except when
-+		 * threads exit.  So we use atomic_dec_if_positive()
-+		 * on this value.
-+		 */
-+		atomic_set(&pool->sp_nr_fstrans, -2);
- 		spin_lock_init(&pool->sp_lock);
+ 	dentry = file->f_path.dentry;
+ 	inode = dentry->d_inode;
+@@ -950,6 +954,8 @@ out_nfserr:
+ 		err = 0;
+ 	else
+ 		err = nfserrno(host_err);
++	if (rqstp->rq_local)
++		current_restore_flags_nested(&pflags, PF_LESS_THROTTLE);
+ 	return err;
+ }
+ 
+diff --git a/mm/vmscan.c b/mm/vmscan.c
+index 05de3289d031..1b7c4e44f0a1 100644
+--- a/mm/vmscan.c
++++ b/mm/vmscan.c
+@@ -1552,7 +1552,8 @@ shrink_inactive_list(unsigned long nr_to_scan, struct lruvec *lruvec,
+ 		 * implies that pages are cycling through the LRU faster than
+ 		 * they are written so also forcibly stall.
+ 		 */
+-		if (nr_unqueued_dirty == nr_taken || nr_immediate)
++		if ((nr_unqueued_dirty == nr_taken || nr_immediate)
++		    && !current_test_flags(PF_LESS_THROTTLE))
+ 			congestion_wait(BLK_RW_ASYNC, HZ/10);
  	}
  
+@@ -1561,7 +1562,9 @@ shrink_inactive_list(unsigned long nr_to_scan, struct lruvec *lruvec,
+ 	 * is congested. Allow kswapd to continue until it starts encountering
+ 	 * unqueued dirty pages or cycling through the LRU too quickly.
+ 	 */
+-	if (!sc->hibernation_mode && !current_is_kswapd())
++	if (!sc->hibernation_mode &&
++	    !current_is_kswapd() &&
++	    !current_test_flags(PF_LESS_THROTTLE))
+ 		wait_iff_congested(zone, BLK_RW_ASYNC, HZ/10);
+ 
+ 	trace_mm_vmscan_lru_shrink_inactive(zone->zone_pgdat->node_id,
 
 
 _______________________________________________
