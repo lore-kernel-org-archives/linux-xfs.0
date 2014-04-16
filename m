@@ -1,21 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id ABDBA7F76
-	for <xfs@oss.sgi.com>; Tue, 15 Apr 2014 23:58:30 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 90B118F8039
-	for <xfs@oss.sgi.com>; Tue, 15 Apr 2014 21:58:30 -0700 (PDT)
-Received: from imap.thunk.org (imap.thunk.org [74.207.234.97]) by cuda.sgi.com
-	with ESMTP id pIHCBaZaEtlH65Ns (version=TLSv1 cipher=AES128-SHA
-	bits=128 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 15 Apr 2014 21:58:28 -0700 (PDT)
-From: Theodore Ts'o <tytso@mit.edu>
-Subject: [PATCH -v2] check: add support for an external file containing tests
-	to exclude
-Date: Wed, 16 Apr 2014 00:58:22 -0400
-Message-Id: <1397624302-9577-1-git-send-email-tytso@mit.edu>
-In-Reply-To: <20140416001530.GU15995@dastard>
-References: <20140416001530.GU15995@dastard>
+	by oss.sgi.com (Postfix) with ESMTP id D35E37F5F
+	for <xfs@oss.sgi.com>; Wed, 16 Apr 2014 00:14:01 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id B96FC8F8068
+	for <xfs@oss.sgi.com>; Tue, 15 Apr 2014 22:13:49 -0700 (PDT)
+Received: from mail-pd0-f181.google.com (mail-pd0-f181.google.com
+	[209.85.192.181]) by cuda.sgi.com with ESMTP id
+	5TUCLaOuYQAHjro1 (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 15 Apr 2014 22:13:48 -0700 (PDT)
+Received: by mail-pd0-f181.google.com with SMTP id p10so10249902pdj.40
+	for <xfs@oss.sgi.com>; Tue, 15 Apr 2014 22:13:48 -0700 (PDT)
+Message-ID: <1397625226.4222.113.camel@edumazet-glaptop2.roam.corp.google.com>
+Subject: Re: [PATCH 10/19] NET: set PF_FSTRANS while holding sk_lock
+From: Eric Dumazet <eric.dumazet@gmail.com>
+Date: Tue, 15 Apr 2014 22:13:46 -0700
+In-Reply-To: <20140416040336.10604.96000.stgit@notabene.brown>
+References: <20140416033623.10604.69237.stgit@notabene.brown>
+	<20140416040336.10604.96000.stgit@notabene.brown>
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,63 +28,34 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: Ext4 Developers List <linux-ext4@vger.kernel.org>, Theodore Ts'o <tytso@mit.edu>
+To: NeilBrown <neilb@suse.de>
+Cc: linux-mm@kvack.org, linux-nfs@vger.kernel.org, netdev@vger.kernel.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-Currently the -X option is intended to specify a set of expunging
-files which are stored in each test/* subdirectory.  As described in
-the commit description for 0b1e8abd4, in order to exclude the test
-generic/280, the -X option is used as follows:
+On Wed, 2014-04-16 at 14:03 +1000, NeilBrown wrote:
+> sk_lock can be taken while reclaiming memory (in nfsd for loop-back
+> NFS mounts, and presumably in nfs), and memory can be allocated while
+> holding sk_lock, at least via:
+> 
+>  inet_listen -> inet_csk_listen_start ->reqsk_queue_alloc
+> 
+> So to avoid deadlocks, always set PF_FSTRANS while holding sk_lock.
+> 
+> This deadlock was found by lockdep.
 
-    $ cat tests/generic/3.0-stable-avoid
-    280
-    $ sudo ./check -X 3.0-stable-avoid generic/280
+Wow, this is adding expensive stuff in fast path, only for nfsd :(
 
-However, it is sometimes useful to store the set of expunged tests in
-a single file, outside of tests/* subdirectories.  This commit enables
-the following:
+BTW, why should the current->flags should be saved on a socket field,
+and not a current->save_flags. This really looks a thread property, not
+a socket one.
 
-    $ cat /root/conf/data_journal.exclude
-    generic/068
-    ext4/301
-    $ sudo ./check -E /root/conf/data_journal.exclude -g auto
+Why nfsd could not have PF_FSTRANS in its current->flags ?
 
-Signed-off-by: "Theodore Ts'o" <tytso@mit.edu>
----
- check | 6 ++++++
- 1 file changed, 6 insertions(+)
+For applications handling millions of sockets, this makes a difference.
 
-diff --git a/check b/check
-index e7ace63..b1eaed2 100755
---- a/check
-+++ b/check
-@@ -81,6 +81,7 @@ testlist options
-     -g group[,group...]	include tests from these groups
-     -x group[,group...]	exclude tests from these groups
-     -X file		exclude individual tests
-+    -E external_file	exclude individual tests
-     [testlist]		include tests matching names in testlist
- '
- 	    exit 0
-@@ -222,6 +223,11 @@ while [ $# -gt 0 ]; do
- 			done
- 		done
- 		;;
-+	-E)	xfile=$2; shift ;
-+		if [ -f $xfile ]; then
-+			cat "$xfile" >> $tmp.xlist
-+	        fi
-+		;;
- 	-s)	RUN_SECTION="$RUN_SECTION $2"; shift ;;
- 	-l)	diff="diff" ;;
- 	-udiff)	diff="$diff -u" ;;
--- 
-1.9.0
 
 _______________________________________________
 xfs mailing list
