@@ -1,22 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id A327C7F4E
-	for <xfs@oss.sgi.com>; Wed, 16 Apr 2014 19:21:02 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 4E2DC7F58
+	for <xfs@oss.sgi.com>; Wed, 16 Apr 2014 19:23:17 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 86BCB30408D
-	for <xfs@oss.sgi.com>; Wed, 16 Apr 2014 17:20:59 -0700 (PDT)
-Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id E0QIU2WHS8s3L8Ql (version=TLSv1 cipher=AES256-SHA
-	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 16 Apr 2014 17:20:58 -0700 (PDT)
-Date: Thu, 17 Apr 2014 10:20:48 +1000
-From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH/RFC 00/19] Support loop-back NFS mounts
-Message-ID: <20140417102048.2fc8275c@notabene.brown>
-In-Reply-To: <20140416104207.75b044e8@tlielax.poochiereds.net>
-References: <20140416033623.10604.69237.stgit@notabene.brown>
-	<20140416104207.75b044e8@tlielax.poochiereds.net>
-Mime-Version: 1.0
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 2592D8F8049
+	for <xfs@oss.sgi.com>; Wed, 16 Apr 2014 17:23:14 -0700 (PDT)
+Received: from mail-la0-f53.google.com (mail-la0-f53.google.com
+	[209.85.215.53]) by cuda.sgi.com with ESMTP id 9VQstFwPEN3j7h9K
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Wed, 16 Apr 2014 17:23:12 -0700 (PDT)
+Received: by mail-la0-f53.google.com with SMTP id b8so8812935lan.12
+	for <xfs@oss.sgi.com>; Wed, 16 Apr 2014 17:23:10 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20140416231333.GQ15995@dastard>
+References: <1397580201-27475-1-git-send-email-fdmanana@gmail.com>
+	<20140416002349.GV15995@dastard>
+	<CAL3q7H75Da9uvLnE7HVam9ue-yayw=SgePbLszVWvnPbMwkd4Q@mail.gmail.com>
+	<20140416231333.GQ15995@dastard>
+Date: Thu, 17 Apr 2014 01:23:10 +0100
+Message-ID: <CAL3q7H6bh+jkguj_QJ6F0Ce42SSMjoOUVwUR4MEU--+J-gZrAQ@mail.gmail.com>
+Subject: Re: [PATCH] xfstests: btrfs, test send's ability to punch holes and
+	prealloc extents
+From: Filipe David Manana <fdmanana@gmail.com>
+Reply-To: fdmanana@gmail.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,142 +31,150 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============6047043044285991574=="
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Jeff Layton <jlayton@redhat.com>
-Cc: linux-nfs@vger.kernel.org, Peter Zijlstra <peterz@infradead.org>, netdev@vger.kernel.org, Ming Lei <ming.lei@canonical.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, linux-mm@kvack.org, Ingo Molnar <mingo@redhat.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: Josef Bacik <jbacik@fb.com>, "linux-btrfs@vger.kernel.org" <linux-btrfs@vger.kernel.org>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
---===============6047043044285991574==
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/ZiKmG43mXH3JoeDwPbs7CZV"; protocol="application/pgp-signature"
+On Thu, Apr 17, 2014 at 12:13 AM, Dave Chinner <david@fromorbit.com> wrote:
+> On Wed, Apr 16, 2014 at 03:39:18PM +0100, Filipe David Manana wrote:
+>> On Wed, Apr 16, 2014 at 1:23 AM, Dave Chinner <david@fromorbit.com> wrote:
+>> > On Tue, Apr 15, 2014 at 05:43:21PM +0100, Filipe David Borba Manana wrote:
+>> >> This test verifies that after an incremental btrfs send the replicated file has
+>> >> the same exact hole and data structure as in the origin filesystem. This didn't
+>> >> use to be the case before the send stream version 2 - holes were sent as write
+>> >> operations of 0 valued bytes instead of punching holes with the fallocate system
+>> >> call, and pre-allocated extents were sent as well as write operations of 0 valued
+>> >> bytes instead of intructions for the receiver to use the fallocate system call.
+>> >> Also checks that prealloc extents that lie beyond the file's size are replicated
+>> >> by an incremental send.
+>> >
+>> > Can you wrap commit messages at 68 columns?
+>> >
+>> > ....
+>> >> +md5sum $SCRATCH_MNT/mysnap2/foo | _filter_scratch
+>> >> +# List all hole and data segments.
+>> >> +$XFS_IO_PROG -r -c "seek -r -a 0" $SCRATCH_MNT/mysnap2/foo
+>> >> +# List all extents, we're interested here in prealloc extents that lie beyond
+>> >> +# the file's size.
+>> >> +$XFS_IO_PROG -r -c "fiemap -l" $SCRATCH_MNT/mysnap2/foo | _filter_scratch
+>> >
+>> > That dumps raw block numbers into the golden output. _filter_fiemap
+>> > is probably needed here.
+>>
+>> Hum, just tried it and uploaded a v2.
+>> However I'm now noticing it doesn't do everything I had in mind.
+>> _filter_fiemap is not showing the extents falloc -k created, only a
+>> collapsed range of holes.
+>>
+>> So my intention is to verify not just holes, but also the extents
+>> created by 'falloc -k'. The following filter I just made locally gives
+>> me that:
+>>
+>> _filter_all_fiemap()
+>> {
+>> awk --posix '
+>> $3 ~ /hole/ {
+>> print $1, $2, $3;
+>> next;
+>> }
+>> $3 ~ /[[:xdigit:]]*..[[:xdigit:]]/ {
+>> print $1, $2, "extent";
+>> next;
+>> }'
+>> }
+>
+> Which is effectively _filter_hole_fiemap(), except it coalesces
+> adjacent extents into a single range.
+>
+> I'd suggest moving the _filter_* functions from common/punch to
+> common/filter, and using _filter_hole_fiemap() as there's no
+> guarantee that you'll get individual extents for each falloc -k
+> range - they coul dbe allocated contiguously, and hence the number
+> of extents reported can change from run to run. That's the reason
+> why the filters coalesce adjacent file offsets of the same type - we
+> care whether the range of the file contains the correct extent type,
+> not how fragmented the range is....
 
---Sig_/ZiKmG43mXH3JoeDwPbs7CZV
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+Right. Thanks for pointing it out Dave.
 
-On Wed, 16 Apr 2014 10:42:07 -0400 Jeff Layton <jlayton@redhat.com> wrote:
+>
+>> (nicely printed/indented at
+>> https://friendpaste.com/1JtG5bts2Sz0LWhUutCpzE, as e-mail is not good
+>> for code pasting)
+>
+> Pasting code works fine for me ;)
+>
+>> Which gives me:
+>>
+>> 0: [0..191]: extent
+>> 1: [192..199]: extent
+>> 2: [200..231]: extent
+>> 3: [232..239]: extent
+>> 4: [240..287]: extent
+>> 5: [288..295]: extent
+>> 6: [296..487]: extent
+>> 7: [488..495]: extent
+>> 8: [496..519]: hole
+>> 9: [520..527]: extent
+>> 10: [528..583]: extent
+>> 11: [584..591]: extent
+>> 12: [592..2543]: extent
+>> 13: [2544..17575]: hole
+>> 14: [17576..21487]: extent
+>
+> Also, you're trimming of the block count, so you can drop the "-l"
+> option to the fiemap command....
+>
+>> Versus only (from _filter_fiemap):
+>>
+>> 0: [496..17575]: hole
+>
+> Maybe the "-l" option is confusing the filter, it should be giving:
+>
+> 0: [0..495]: data
+> 1: [496..519]: hole
+> 2: [520..2543]: data
+> 3: [2544..17575]: hole
+> 4: [17576..21487]: data
+>
+> Though if there are unwritten extents, it will say "unwritten"
+> rather than "data". _filter_hole_fiemap should give:
+>
+> 0: [0..495]: extent
+> 1: [496..519]: hole
+> 2: [520..2543]: extent
+> 3: [2544..17575]: hole
+> 4: [17576..21487]: extent
+>
+> Which tells you that everything you asked for was allocated...
 
-> On Wed, 16 Apr 2014 14:03:35 +1000
-> NeilBrown <neilb@suse.de> wrote:
->=20
+Ok, figured out my mistake. _filter_fiemap works just fine, it gives
+me all the information I wanted (as in your last example) as long as I
+pass the -v option (and not -l, or no options at all).
 
-> > Comments, criticisms, etc most welcome.
-> >=20
-> > Thanks,
-> > NeilBrown
-> >=20
->=20
-> I've only given this a once-over, but the basic concept seems a bit
-> flawed. IIUC, the basic idea is to disallow allocations done in knfsd
-> threads context from doing fs-based reclaim.
->=20
-> This seems very heavy-handed, and like it could cause problems on a
-> busy NFS server. Those sorts of servers are likely to have a lot of
-> data in pagecache and thus we generally want to allow them to do do
-> writeback when memory is tight.
->=20
-> It's generally acceptable for knfsd to recurse into local filesystem
-> code for writeback. What you want to avoid in this situation is reclaim
-> on NFS filesystems that happen to be from knfsd on the same box.
->=20
-> If you really want to fix this, what may make more sense is trying to
-> plumb that information down more granularly. Maybe GFP_NONETFS and/or
-> PF_NETFSTRANS flags?
+Thank you very much Dave :)
 
-Hi Jeff,
- a few clarifications first:
-
- 1/ These changes probably won't affect a "busy NFS server" at all.  The
-    PF_FSTRANS flag only get set in nfsd when it sees a request from the lo=
-cal
-    host.  Most busy NFS servers would never see that, and so would never s=
-et
-    PF_FSTRANS.
-
- 2/ Setting PF_FSTRANS does not affect where writeback is done.  Direct
-    reclaim hasn't performed filesystem writeback since 3.2, it is all done
-    by kswapd (I think direct reclaim still writes to swap sometimes).
-    The main effects of setting PF_FSTRANS (as modified by this page set)
-    are:
-      - when reclaim calls ->releasepage  __GFP_FS is not set in the gfp_t =
-arg
-      - various caches like dcache, icache etc are not shrunk from
-        direct reclaim
-    There are other effects, but I'm less clear on exactly what they mean.
-
-A flag specific to network filesystems might make sense, but I don't think =
-it
-would solve all the deadlocks.
-
-A good example is the deadlock with the flush-* threads.
-flush-* will lock a page, and  then call ->writepage.  If ->writepage
-allocates memory it can enter reclaim, call ->releasepage on NFS, and block
-waiting for a COMMIT to complete.
-The COMMIT might already be running, performing fsync on that same file that
-flush-* is flushing.  It locks each page in turn.  When it  gets to the page
-that flush-* has locked, it will deadlock.
-
-xfs_vm_writepage does allocate memory with __GFP_FS set
-   xfs_vm_writepage -> xfs_setfilesize_trans_alloc -> xfs_trans_alloc ->
-   _xfs_trans_allo
-
-and I have had this deadlock happen.  To avoid this we need flush-* to ensu=
-re
-that no memory allocation blocks on NFS.  We could set a PF_NETFSTRANS ther=
-e,
-but as that code really has nothing to do with networks it would seem an odd
-place to put a network-fs-specific flag.
-
-In general, if nfsd is allowed to block on local filesystem, and local
-filesystem is allowed to block on NFS, then a deadlock can happen.
-We would need a clear hierarchy
-
-   __GFP_NETFS > __GFP_FS > __GFP_IO
-
-for it to work.  I'm not sure the extra level really helps a lot and it wou=
-ld
-be a lot of churn.
+>
+> Cheers,
+>
+> Dave.
+> --
+> Dave Chinner
+> david@fromorbit.com
 
 
-Thanks,
-NeilBrown
 
+-- 
+Filipe David Manana,
 
---Sig_/ZiKmG43mXH3JoeDwPbs7CZV
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.22 (GNU/Linux)
-
-iQIVAwUBU08eYDnsnt1WYoG5AQI3mQ//b09b32kYZg134oqC28wk4GuKXD4068sE
-Vcj1k1jm+zz0nHfY1XbLA2PYmLGeNc1bUSGwtOwVwNvbI1xrae4Da2J6sfQ600nO
-8ozsbNXA32Bwp9h4LySPfpvJFatGmW5Kad/88qFc0a9vxXFFjIlm2hmhCuIopTCt
-PnwHRuTudFWi+Uu2JeqvmNRzcCTt0udNsc7xXlEwk5IXlYj/Qj7WVat40NjQd84E
-We+y6vTsMkHd2G/yoGdBNTQQedOgrAwyiGudq3VHPUpXgbkpnrnU0tikA2dssL10
-XlY37WlZeuqS7NKCAhLJbrJijHI8Js+cUbAhb/zNGW3llCFddYXBjWzWHT07/ISv
-A8+vuItTa0f/PsI8VkXbJ5P1QMmMtkgsbE+UOJ573v3v9Z2CKemZVrUBmCuOX/x7
-iY8eSdU0SsBWTu6OO6TS4BvIu5yvX4PYdt3MvjF1LspLv6ggZ93LUr1+KV0TyUs2
-ugbsf9Mq7vrnDdYR3z4Xb38xnAwz+5OmDgaDHTaA67VMYA2Y5K9IoVxMwTdEwGQ5
-WOy/KviX2JBbOKLmwcQeZgiTaEpr4CRY6rDA6fIqORBysrGqkujiY1e2OkX8sd30
-yo+WHWp7DIeWiJXEUTaRXewa8CgcUY3CXATuj+bsilLTVOhxT28rK5FwtAq6y00N
-Go80SPlCYvY=
-=Ornx
------END PGP SIGNATURE-----
-
---Sig_/ZiKmG43mXH3JoeDwPbs7CZV--
-
-
---===============6047043044285991574==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+"Reasonable men adapt themselves to the world.
+ Unreasonable men adapt the world to themselves.
+ That's why all progress depends on unreasonable men."
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============6047043044285991574==--
