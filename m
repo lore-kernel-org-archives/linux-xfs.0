@@ -1,27 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id DC9327F53
-	for <xfs@oss.sgi.com>; Wed, 16 Apr 2014 19:50:16 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 0E9157F53
+	for <xfs@oss.sgi.com>; Wed, 16 Apr 2014 19:51:17 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 95FE98F804B
-	for <xfs@oss.sgi.com>; Wed, 16 Apr 2014 17:50:16 -0700 (PDT)
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	I0HnW0BRfR88YdwZ for <xfs@oss.sgi.com>;
-	Wed, 16 Apr 2014 17:50:13 -0700 (PDT)
-Date: Thu, 17 Apr 2014 10:49:15 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 2/2] xfs: Nuke XFS_ERROR macro
-Message-ID: <20140417004915.GT15995@dastard>
-References: <534EC073.8090006@sandeen.net> <534EC282.7010905@sandeen.net>
-	<20140416175117.GA23643@infradead.org>
-	<534EC42D.1080704@sandeen.net> <534ED5E4.60903@sandeen.net>
-	<20140416220807.GN15995@dastard>
-	<20140416194444.50176f0f@gandalf.local.home>
-	<20140417003956.GS15995@dastard>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20140417003956.GS15995@dastard>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id B7721304089
+	for <xfs@oss.sgi.com>; Wed, 16 Apr 2014 17:51:16 -0700 (PDT)
+Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
+	with ESMTP id 6KUvAfAAHhUv2CUz (version=TLSv1 cipher=AES256-SHA
+	bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 16 Apr 2014 17:51:14 -0700 (PDT)
+Date: Thu, 17 Apr 2014 10:51:05 +1000
+From: NeilBrown <neilb@suse.de>
+Subject: Re: [PATCH 16/19] VFS: use GFP_NOFS rather than GFP_KERNEL in
+	__d_alloc.
+Message-ID: <20140417105105.7772d09d@notabene.brown>
+In-Reply-To: <20140416090051.GK15995@dastard>
+References: <20140416033623.10604.69237.stgit@notabene.brown>
+	<20140416040337.10604.61837.stgit@notabene.brown>
+	<20140416062520.GG15995@dastard>
+	<20140416164941.37587da6@notabene.brown>
+	<20140416090051.GK15995@dastard>
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,127 +29,160 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: multipart/mixed; boundary="===============4940557451424554017=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Steven Rostedt <rostedt@goodmis.org>
-Cc: Christoph Hellwig <hch@infradead.org>, Eric Sandeen <sandeen@sandeen.net>, xfs-oss <xfs@oss.sgi.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-mm@kvack.org, linux-nfs@vger.kernel.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-On Thu, Apr 17, 2014 at 10:39:56AM +1000, Dave Chinner wrote:
-> On Wed, Apr 16, 2014 at 07:44:44PM -0400, Steven Rostedt wrote:
-> > On Thu, 17 Apr 2014 08:08:08 +1000
-> > Dave Chinner <david@fromorbit.com> wrote:
-> > > Steve, we want to be able to trap specific return codes from
-> > > functions. Say, for example, the first function that returns
-> > > EINVAL/-EINVAL in XFS under a given workload.
-> > > =
+--===============4940557451424554017==
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/IOui8nzd.ykBR2y_BhCeNCV"; protocol="application/pgp-signature"
 
-> > > What's the most efficient way to do that with ftrace?
-> > > =
+--Sig_/IOui8nzd.ykBR2y_BhCeNCV
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-> > > And can that be set up as a trigger so we can use it to dump a
-> > > snapshot of the last N events into the trace buffer or do other
-> > > interesting things with that event?
-> > =
+On Wed, 16 Apr 2014 19:00:51 +1000 Dave Chinner <david@fromorbit.com> wrote:
 
-> > Well, after you do the above, you could also do a while loop to all
-> > those events and update the filter:
-> > =
+> On Wed, Apr 16, 2014 at 04:49:41PM +1000, NeilBrown wrote:
+> > On Wed, 16 Apr 2014 16:25:20 +1000 Dave Chinner <david@fromorbit.com> w=
+rote:
+> >=20
+> > > On Wed, Apr 16, 2014 at 02:03:37PM +1000, NeilBrown wrote:
+> > > > __d_alloc can be called with i_mutex held, so it is safer to
+> > > > use GFP_NOFS.
+> > > >=20
+> > > > lockdep reports this can deadlock when loop-back NFS is in use,
+> > > > as nfsd may be required to write out for reclaim, and nfsd certainly
+> > > > takes i_mutex.
+> > >=20
+> > > But not the same i_mutex as is currently held. To me, this seems
+> > > like a false positive? If you are holding the i_mutex on an inode,
+> > > then you have a reference to the inode and hence memory reclaim
+> > > won't ever take the i_mutex on that inode.
+> > >=20
+> > > FWIW, this sort of false positive was a long stabding problem for
+> > > XFS - we managed to get rid of most of the false positives like this
+> > > by ensuring that only the ilock is taken within memory reclaim and
+> > > memory reclaim can't be entered while we hold the ilock.
+> > >=20
+> > > You can't do that with the i_mutex, though....
+> > >=20
+> > > Cheers,
+> > >=20
+> > > Dave.
+> >=20
+> > I'm not sure this is a false positive.
+> > You can call __d_alloc when creating a file and so are holding i_mutex =
+on the
+> > directory.
+> > nfsd might also want to access that directory.
+> >=20
+> > If there was only 1 nfsd thread, it would need to get i_mutex and do it=
+'s
+> > thing before replying to that request and so before it could handle the
+> > COMMIT which __d_alloc is waiting for.
+>=20
+> That seems wrong - the NFS client in __d_alloc holds a mutex on a
+> NFS client directory inode. The NFS server can't access that
+> specific mutex - it's on the other side of the "network". The NFS
+> server accesses mutexs from local filesystems, so __d_alloc would
+> have to be blocked on a local filesystem inode i_mutex for the nfsd
+> to get hung up behind it...
 
-> > echo 'arg1 > 0xffffffffffffff00' > /debug/tracing/events/kprobes/filter
-> > =
+I'm not thinking of mutexes on the NFS inodes but the local filesystem inod=
+es
+exactly as you describe below.
 
-> > Which would trace only those functions that had an error code (assuming
-> > the error code is less than 256). You could also use the trigger files:
-> > =
+>=20
+> However, my confusion comes from the fact that we do GFP_KERNEL
+> memory allocation with the i_mutex held all over the place.
 
-> > echo 'traceoff if arg1 > 0xffffffffffffff00' > /debug/tracing/events/kp=
-robes/*/trigger
-> > =
+Do we?  Should we?  Isn't the whole point of GFP_NOFS to use it when holding
+any filesystem lock?
 
-> > The above wont actually work as is, you would need to do another while
-> > loop of trigger files and set them each individually.
-> =
+>           If the
+> problem is:
+>=20
+> 	local fs access -> i_mutex
+> .....
+> 	nfsd -> i_mutex (blocked)
+> .....
+> 	local fs access -> kmalloc(GFP_KERNEL)
+> 			-> direct reclaim
+> 			-> nfs_release_page
+> 			-> <send write/commit request to blocked nfsds>
+> 			   <deadlock>
+>=20
+> then why is it just __d_alloc that needs this fix?  Either this is a
+> problem *everywhere* or it's not a problem at all.
 
-> so, basically a script that does:
-> =
+I think it is a problem everywhere that it is a problem :-)
+If you are holding an FS lock, then you should be using GFP_NOFS.
+Currently a given filesystem can get away with sometimes using GFP_KERNEL
+because that particular lock never causes contention during reclaim for that
+particular filesystem.
 
-> #!/bin/bash
-> =
+Adding loop-back NFS into the mix broadens the number of locks which can
+cause a problem as it creates interdependencies between different filesyste=
+ms.
 
-> TRACEDIR=3D/sys/kernel/debug/tracing
-> =
+>=20
+> If it's a problem everywhere it means that we simply can't allow
+> reclaim from localhost NFS mounts to run from contexts that could
+> block an NFSD. i.e. you cannot run NFS client memory reclaim from
+> filesystems that are NFS server exported filesystems.....
 
-> grep -i 't xfs_' /proc/kallsyms | awk '{print $3}' ; while read F; do
-> 	echo "r:ret_$F $F \$retval" >> $TRACEDIR/kprobe_events
-> done
-> =
+Well.. you cannot allow NFS client memory reclaim *while holding locks in*
+filesystems that are NFS exported.
 
-> for E in $TRACEDIR/events/kprobes/ret_xfs_*/enable; do
-> 	echo 1 > $E
-> done;
-> =
+I think this is most effectively generalised to:
+  you cannot allow FS memory reclaim while holding locks in filesystems whi=
+ch
+  can be NFS exported
 
-> echo 'arg1 > 0xffffffffffffff00' > $TRACEDIR/events/kprobes/filter
-> =
+which I think is largely the case already - and lockdep can help us find
+those places where we currently do allow FS reclaim while holding an FS loc=
+k.
 
-> for T in $TRACEDIR/events/kprobes/ret_xfs_*/trigger; do
-> 	echo 'traceoff if arg1 > 0xffffffffffffff00' > $T
-> done
-> =
+Thanks,
+NeilBrown
 
-> And that gives:
-> =
+--Sig_/IOui8nzd.ykBR2y_BhCeNCV
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
 
-> # dd if=3D/dev/zero of=3D/mnt/scratch/newfile bs=3D513 oflag=3Ddirect
-> dd: error writing =BF/mnt/scratch/newfile=BF: Invalid argument
-> 1+0 records in
-> 0+0 records out
-> 0 bytes (0 B) copied, 0.000259882 s, 0.0 kB/s
-> root@test4:~# cat /sys/kernel/debug/tracing/trace
-> # tracer: nop
-> #
-> # entries-in-buffer/entries-written: 1/1   #P:16
-> #
-> #                              _-----=3D> irqs-off
-> #                             / _----=3D> need-resched
-> #                            | / _---=3D> hardirq/softirq
-> #                            || / _--=3D> preempt-depth
-> #                            ||| /     delay
-> #           TASK-PID   CPU#  ||||    TIMESTAMP  FUNCTION
-> #              | |       |   ||||       |         |
->            <...>-8073  [006] d... 145740.460546: ret_xfs_file_dio_aio_wri=
-te: (xfs_file_aio_write+0x170/0x180 <- xfs_file_dio_aio_write) arg1=3D0xfff=
-fffffffffffea
-> =
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.22 (GNU/Linux)
 
-> Which is precisely the detection that XFS_ERROR would have given us.
-> Ok, so I guess we can now add whatever need need to that trigger...
-> =
+iQIVAwUBU08leTnsnt1WYoG5AQJQzA/8Cvoi/4unSULSSR/yD8Bso7yrf/66DY4Y
+5BknlIQnXLLRnQKRYFbTeMA/Vku/rPyQeWPbX22ealsi2+p7uStAhaqSnAJPPPj/
+e+nfkJilCswjWqbuvcwU3oPHGxOA234vHiueT1uIvGyylFUuXvOtL1vPgtaFjlPs
+KUYjS36XSD17u/UfTEm8jcTyV1z/QdEbu+jhGGB8/wNGqA9mQDar7ykdcUI37iPf
+4YJtGQuzU2NvX+JMVMZtbkRZBn4LPP983oo+2+JSFNDeIDeBlVxOfzErJ1QKLpNq
+CJYC86j+baIkf92M1mpOFEanXgIlvitHofxSCcJ29k0YQDhLZUF0DPrQhdKtSnoK
+kVcF5pnUwLbcu7jHkHT/8Uip1CijkpqSg920ZhYJAnMseLWM+er2gQIUXkXRzWJd
+062RpdhKK5/m0MTbXZJ8crAycFQFLep1vG++jrbYQ0VAQ7TzCF4+iREBxmLiH1sd
+Oh3l4DdIcDqXchSocKyDAiFA+O8CHCKoBPTyA3YKCNBtmmyIouWjylLOeGMiD4AD
+yuCks0tlZdtfvZMaqV43yxEkNUsLybnxf3StilD0zJFkQZtWAq43efcIt2XOeiR/
+R9BUs3QNOao2ockixg+9T1LV1l1G9RNvcSkrF+j6x0/9uINhcfffqrusqBK5V7FW
+4Oc/mEI+igY=
+=2sPU
+-----END PGP SIGNATURE-----
 
-> Basically, pass in teh XFs function names you want to trace, the
-> sets up teh events, whatever trigger beahviour you want, and
-> we're off to the races...
+--Sig_/IOui8nzd.ykBR2y_BhCeNCV--
 
-FWIW, this strikes me as something that would be useful for
-trace-cmd to be able to control, creating the kprobes dynamically
-based on the function name specification given on the command
-line similar to how we specify the events we want it to trace..
 
-I'm sure there's more people that just us that want to know what
-function a specific error first comes from and how it propagates
-back up through the code....
-
-Cheers,
-
-Dave.
--- =
-
-Dave Chinner
-david@fromorbit.com
+--===============4940557451424554017==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============4940557451424554017==--
