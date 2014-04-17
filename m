@@ -1,24 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 6CDD87F53
-	for <xfs@oss.sgi.com>; Wed, 16 Apr 2014 21:38:52 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 262077F56
+	for <xfs@oss.sgi.com>; Wed, 16 Apr 2014 23:17:06 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 40EA08F8039
-	for <xfs@oss.sgi.com>; Wed, 16 Apr 2014 19:38:49 -0700 (PDT)
-Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id zXvD964HAS6v2ywe (version=TLSv1 cipher=AES256-SHA
-	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 16 Apr 2014 19:38:47 -0700 (PDT)
-Date: Thu, 17 Apr 2014 12:38:37 +1000
-From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH 10/19] NET: set PF_FSTRANS while holding sk_lock
-Message-ID: <20140417123837.5987e5e9@notabene.brown>
-In-Reply-To: <20140416.090002.2186526865564557549.davem@davemloft.net>
-References: <20140416033623.10604.69237.stgit@notabene.brown>
-	<20140416040336.10604.96000.stgit@notabene.brown>
-	<1397625226.4222.113.camel@edumazet-glaptop2.roam.corp.google.com>
-	<20140416.090002.2186526865564557549.davem@davemloft.net>
-Mime-Version: 1.0
+	by relay3.corp.sgi.com (Postfix) with ESMTP id AEC62AC001
+	for <xfs@oss.sgi.com>; Wed, 16 Apr 2014 21:17:02 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id yyaJGqOM98eczHBA for
+	<xfs@oss.sgi.com>; Wed, 16 Apr 2014 21:17:01 -0700 (PDT)
+Received: from int-mx09.intmail.prod.int.phx2.redhat.com
+	(int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id s3H4H0eH023843
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256
+	verify=OK) for <xfs@oss.sgi.com>; Thu, 17 Apr 2014 00:17:00 -0400
+From: Eryu Guan <eguan@redhat.com>
+Subject: [PATCH 1/3] common: set _fs_has_crcs=0 as default in _filter_mkfs()
+Date: Thu, 17 Apr 2014 12:16:52 +0800
+Message-Id: <1397708214-8197-1-git-send-email-eguan@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,79 +25,55 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============8009023064719903036=="
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: David Miller <davem@davemloft.net>
-Cc: linux-nfs@vger.kernel.org, eric.dumazet@gmail.com, netdev@vger.kernel.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, linux-mm@kvack.org
+To: xfs@oss.sgi.com
+Cc: Eryu Guan <eguan@redhat.com>
 
---===============8009023064719903036==
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/SSVtvNA+Qn7U/.GV8.0daYz"; protocol="application/pgp-signature"
+xfsprogs without crc support won't print crc=0/crc=1, so
+_filter_mkfs() leaves _fs_has_crcs variable unset, and xfs/033 fails
+because of that.
 
---Sig_/SSVtvNA+Qn7U/.GV8.0daYz
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+xfs/033 4s ... - output mismatch (see /root/xfstests/results//xfs/033.out.bad)
+    --- tests/xfs/033.out       2014-04-16 22:31:49.818350450 -0400
+    +++ /root/xfstests/results//xfs/033.out.bad 2014-04-16 22:35:08.264401190 -0400
+    @@ -5,6 +5,7 @@
+     naming   =VERN bsize=XXX
+     log      =LDEV bsize=XXX blocks=XXX
+     realtime =RDEV extsz=XXX blocks=XXX, rtextents=XXX
+    +./tests/xfs/033: line 87: [: -eq: unary operator expected
+     Corrupting root inode - setting bits to 0
+     Wrote X.XXKb (value 0x0)
+     Phase 1 - find and verify superblock...
 
-On Wed, 16 Apr 2014 09:00:02 -0400 (EDT) David Miller <davem@davemloft.net>
-wrote:
+Print _fs_has_crcs=0 to stderr by default, so old xfsprogs could have
+this variable set too, and a latter _fs_has_crcs=1 could overwrite it
+if the fs does have crc support.
 
-> From: Eric Dumazet <eric.dumazet@gmail.com>
-> Date: Tue, 15 Apr 2014 22:13:46 -0700
->=20
-> > For applications handling millions of sockets, this makes a difference.
->=20
-> Indeed, this really is not acceptable.
+Signed-off-by: Eryu Guan <eguan@redhat.com>
+---
+ common/filter | 1 +
+ 1 file changed, 1 insertion(+)
 
-As you say...
-I've just discovered that I can get rid of the lockdep message (and hence
-presumably the deadlock risk) with a well placed:
-
-		newsock->sk->sk_allocation =3D GFP_NOFS;
-
-which surprised me as it seemed to be an explicit GFP_KERNEL allocation that
-was mentioned in the lockdep trace.  Obviously these traces require quite
-some sophistication to understand.
-
-So - thanks for the feedback, patch can be ignored.
-
-Thanks,
-NeilBrown
-
---Sig_/SSVtvNA+Qn7U/.GV8.0daYz
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.22 (GNU/Linux)
-
-iQIVAwUBU08+rTnsnt1WYoG5AQLRZhAAw2OqHGStjcH4tCI4w3eDMVb87MK1AVtQ
-U3pUF/WbzPSl0yhxDaa3vIg6L2ogkASESK6Oiiu8PZbG3TunCNwq63XXTKvE6EIY
-nABc2yOb9u/cixXtIuMC9E8ydnZa/dEkIyFY9oMXBjuOwb3L/ugKFm0upzBUVokw
-VtyZs8rl9s9IwgvuErpFbDR3ZxEk0VaMdREFwGCpkUD6DjknMTpGdaUelPxe+DEd
-Ffy6B7fjrkdG/8B4vYZKlW2c5on1lLqc+hgY24LrLUpLxHwu4HCuIrAuhzILDex/
-X5hZbQQhj2reLB8rsqJWOjmKn19/y8EbapUwa6BUMkSVHDCf0voCUjkHI8dOYcvM
-TnrmEzJS3Ym/x5rbenUCr2hEOEbZ80UEcMbdbrVm3rhPoMDtSifdtU2LEKro8oCk
-GPoOR3fYSLyxXNGQTlGiG3vSuSAIxF8tznBLnuCPIAPXK8LtXIn3oIOxNsN1J/LK
-TxZJsdA+I9YmV5uIn7cJarNYKdXvhR6x0YPoxUFzQZkngChosN3ZkGOHQeG2moyA
-JewuEtWT5Z1n1as19big3XukdBNnhJ/B11DpyI3TlfhIYN0mROFEAQkvXuOYYO+o
-CqkHfQp765IaTt0WOiVFu9bibhdxWwt1jwfasn1TE9LtvVlwlUlbPVL/8NrMXnOa
-Nkz7UZ1IxWU=
-=WfY/
------END PGP SIGNATURE-----
-
---Sig_/SSVtvNA+Qn7U/.GV8.0daYz--
-
-
---===============8009023064719903036==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+diff --git a/common/filter b/common/filter
+index a7d2aa9..05dbae6 100644
+--- a/common/filter
++++ b/common/filter
+@@ -143,6 +143,7 @@ _filter_mkfs()
+ 	return ;;
+     esac
+ 
++    echo "_fs_has_crcs=0" >&2
+     set -
+     perl -ne '
+     if (/^meta-data=([\w,|\/.-]+)\s+isize=(\d+)\s+agcount=(\d+), agsize=(\d+) blks/) {
+-- 
+1.9.0
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============8009023064719903036==--
