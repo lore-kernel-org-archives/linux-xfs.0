@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 96F3C7F55
-	for <xfs@oss.sgi.com>; Wed, 16 Apr 2014 20:50:33 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 67EFC30408F
-	for <xfs@oss.sgi.com>; Wed, 16 Apr 2014 18:50:33 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 6CDD87F53
+	for <xfs@oss.sgi.com>; Wed, 16 Apr 2014 21:38:52 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 40EA08F8039
+	for <xfs@oss.sgi.com>; Wed, 16 Apr 2014 19:38:49 -0700 (PDT)
 Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id FiBkBKUQddEmxqhH (version=TLSv1 cipher=AES256-SHA
+	with ESMTP id zXvD964HAS6v2ywe (version=TLSv1 cipher=AES256-SHA
 	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 16 Apr 2014 18:50:29 -0700 (PDT)
-Date: Thu, 17 Apr 2014 11:50:18 +1000
+	Wed, 16 Apr 2014 19:38:47 -0700 (PDT)
+Date: Thu, 17 Apr 2014 12:38:37 +1000
 From: NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH/RFC 00/19] Support loop-back NFS mounts
-Message-ID: <20140417115018.460345d0@notabene.brown>
-In-Reply-To: <20140417012739.GU15995@dastard>
+Subject: Re: [PATCH 10/19] NET: set PF_FSTRANS while holding sk_lock
+Message-ID: <20140417123837.5987e5e9@notabene.brown>
+In-Reply-To: <20140416.090002.2186526865564557549.davem@davemloft.net>
 References: <20140416033623.10604.69237.stgit@notabene.brown>
-	<20140416104207.75b044e8@tlielax.poochiereds.net>
-	<20140417102048.2fc8275c@notabene.brown>
-	<20140417012739.GU15995@dastard>
+	<20140416040336.10604.96000.stgit@notabene.brown>
+	<1397625226.4222.113.camel@edumazet-glaptop2.roam.corp.google.com>
+	<20140416.090002.2186526865564557549.davem@davemloft.net>
 Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -27,107 +27,71 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============0730402071432109317=="
+Content-Type: multipart/mixed; boundary="===============8009023064719903036=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-nfs@vger.kernel.org, Jeff Layton <jlayton@redhat.com>, Peter Zijlstra <peterz@infradead.org>, netdev@vger.kernel.org, Ming Lei <ming.lei@canonical.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, linux-mm@kvack.org, Ingo Molnar <mingo@redhat.com>
+To: David Miller <davem@davemloft.net>
+Cc: linux-nfs@vger.kernel.org, eric.dumazet@gmail.com, netdev@vger.kernel.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, linux-mm@kvack.org
 
---===============0730402071432109317==
+--===============8009023064719903036==
 Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/aR.nJzAOWD3tAtDyjyGs6Ar"; protocol="application/pgp-signature"
+ boundary="Sig_/SSVtvNA+Qn7U/.GV8.0daYz"; protocol="application/pgp-signature"
 
---Sig_/aR.nJzAOWD3tAtDyjyGs6Ar
+--Sig_/SSVtvNA+Qn7U/.GV8.0daYz
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-On Thu, 17 Apr 2014 11:27:39 +1000 Dave Chinner <david@fromorbit.com> wrote:
+On Wed, 16 Apr 2014 09:00:02 -0400 (EDT) David Miller <davem@davemloft.net>
+wrote:
 
-> On Thu, Apr 17, 2014 at 10:20:48AM +1000, NeilBrown wrote:
-> > A good example is the deadlock with the flush-* threads.
-> > flush-* will lock a page, and  then call ->writepage.  If ->writepage
-> > allocates memory it can enter reclaim, call ->releasepage on NFS, and b=
-lock
-> > waiting for a COMMIT to complete.
-> > The COMMIT might already be running, performing fsync on that same file=
- that
-> > flush-* is flushing.  It locks each page in turn.  When it  gets to the=
- page
-> > that flush-* has locked, it will deadlock.
+> From: Eric Dumazet <eric.dumazet@gmail.com>
+> Date: Tue, 15 Apr 2014 22:13:46 -0700
 >=20
-> It's nfs_release_page() again....
+> > For applications handling millions of sockets, this makes a difference.
 >=20
-> > In general, if nfsd is allowed to block on local filesystem, and local
-> > filesystem is allowed to block on NFS, then a deadlock can happen.
-> > We would need a clear hierarchy
-> >=20
-> >    __GFP_NETFS > __GFP_FS > __GFP_IO
-> >=20
-> > for it to work.  I'm not sure the extra level really helps a lot and it=
- would
-> > be a lot of churn.
->=20
-> I think you are looking at this the wrong way - it's not the other
-> filesystems that have to avoid memory reclaim recursion, it's the
-> NFS client mount that is on loopback that needs to avoid recursion.
->=20
-> IMO, the fix should be that the NFS client cannot block on messages sent =
-to the NFSD
-> on the same host during memory reclaim. That is, nfs_release_page()
-> cannot send commit messages to the server if the server is on
-> localhost. Instead, it just tells memory reclaim that it can't
-> reclaim that page.
->=20
-> If nfs_release_page() no longer blocks in memory reclaim, and all
-> these nfsd-gets-blocked-in-GFP_KERNEL-memory-allocation recursion
-> problems go away. Do the same for all the other memory reclaim
-> operations in the NFS client, and you've got a solution that should
-> work without needing to walk all over the rest of the kernel....
+> Indeed, this really is not acceptable.
 
-Maybe.
-It is nfs_release_page() today. I wonder if it could be other things another
-day.  I want to be sure I have a solution that really makes sense.
+As you say...
+I've just discovered that I can get rid of the lockdep message (and hence
+presumably the deadlock risk) with a well placed:
 
-However ... the thing that nfs_release_page is doing it sending a COMMIT to
-tell the server to flush to stable storage.  It does that so that if the
-server crashes, then the client can re-send.
-Of course when it is a loop-back mount the client is the server so the COMM=
-IT
-is completely pointless.  If the client notices that it is sending a COMMIT
-to itself, it can simply assume a positive reply.
+		newsock->sk->sk_allocation =3D GFP_NOFS;
 
-You are right, that would make the patch set a lot less intrusive.  I'll gi=
-ve
-it some serious thought - thanks.
+which surprised me as it seemed to be an explicit GFP_KERNEL allocation that
+was mentioned in the lockdep trace.  Obviously these traces require quite
+some sophistication to understand.
 
+So - thanks for the feedback, patch can be ignored.
+
+Thanks,
 NeilBrown
 
---Sig_/aR.nJzAOWD3tAtDyjyGs6Ar
+--Sig_/SSVtvNA+Qn7U/.GV8.0daYz
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Disposition: attachment; filename=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.22 (GNU/Linux)
 
-iQIVAwUBU08zWjnsnt1WYoG5AQKfQw//WIl8Mf1G0vzy816TBvi7fx3VCp6SUV7s
-jQeCJSD0IPRzCFmxH1ZJFzy3jIK8J3dbT8cSGjxXYegOq+kyyVjbHXOG2msC1riY
-ytOGUQnOS8MHscbcAOR7r61t/1t7FZiSJ51Th7pykepQmbm9QNEna+U0wzna3poK
-NNRDrs1J0eySpLTydegKoyg4w6KP6MLXqlYQm1FigvkreDEZ9mvBW7NrGycwDQF8
-NZgq8+dGCL3MAq+uZ7WMqAoCZwZUrusVZBc3zvXYWepSMFSW1FOmQP971QZ9DgI2
-KzarhdGOSFTbVHLhZafYV0X2k/hATVoIJpXh3Kl2ak0qdnuuUPJ/s64zxvQ3N4wo
-3zBU0/TvcEVs6toQfcT/Zi91rCIvVvl8BOssIosbwknfLyi/JEYtnDJ+MxWBlg1G
-xlaEF1pDaQYEix5Ocg1qyU7oroFv98+pZ4BZeDI7Y/A6gasVvR3NKBOFcadozYuo
-FBTuYO6ZTSVPZ1+ASqykb5hh3GGKO5oM4x7xX0dQRSADk4qo4FLfv6ONKK2OfjQo
-r6FBlpw9OU6su26F4XzDkFLPb3xUDgfY7gMG6vIZYmCS7JGOvTg2rpk6inZxzATb
-40mX+gFDXs5oE9XGaqz2Fl7Lw/BNluPNDEpkmWJX42+7cdClnc2XPSJyvpFx7nLH
-lfrN+yaHFBM=
-=c/XS
+iQIVAwUBU08+rTnsnt1WYoG5AQLRZhAAw2OqHGStjcH4tCI4w3eDMVb87MK1AVtQ
+U3pUF/WbzPSl0yhxDaa3vIg6L2ogkASESK6Oiiu8PZbG3TunCNwq63XXTKvE6EIY
+nABc2yOb9u/cixXtIuMC9E8ydnZa/dEkIyFY9oMXBjuOwb3L/ugKFm0upzBUVokw
+VtyZs8rl9s9IwgvuErpFbDR3ZxEk0VaMdREFwGCpkUD6DjknMTpGdaUelPxe+DEd
+Ffy6B7fjrkdG/8B4vYZKlW2c5on1lLqc+hgY24LrLUpLxHwu4HCuIrAuhzILDex/
+X5hZbQQhj2reLB8rsqJWOjmKn19/y8EbapUwa6BUMkSVHDCf0voCUjkHI8dOYcvM
+TnrmEzJS3Ym/x5rbenUCr2hEOEbZ80UEcMbdbrVm3rhPoMDtSifdtU2LEKro8oCk
+GPoOR3fYSLyxXNGQTlGiG3vSuSAIxF8tznBLnuCPIAPXK8LtXIn3oIOxNsN1J/LK
+TxZJsdA+I9YmV5uIn7cJarNYKdXvhR6x0YPoxUFzQZkngChosN3ZkGOHQeG2moyA
+JewuEtWT5Z1n1as19big3XukdBNnhJ/B11DpyI3TlfhIYN0mROFEAQkvXuOYYO+o
+CqkHfQp765IaTt0WOiVFu9bibhdxWwt1jwfasn1TE9LtvVlwlUlbPVL/8NrMXnOa
+Nkz7UZ1IxWU=
+=WfY/
 -----END PGP SIGNATURE-----
 
---Sig_/aR.nJzAOWD3tAtDyjyGs6Ar--
+--Sig_/SSVtvNA+Qn7U/.GV8.0daYz--
 
 
---===============0730402071432109317==
+--===============8009023064719903036==
 Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
@@ -138,4 +102,4 @@ xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
 
---===============0730402071432109317==--
+--===============8009023064719903036==--
