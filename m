@@ -1,28 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id B49A97F5F
-	for <xfs@oss.sgi.com>; Thu, 17 Apr 2014 00:58:24 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 87A0B8F804B
-	for <xfs@oss.sgi.com>; Wed, 16 Apr 2014 22:58:21 -0700 (PDT)
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	uuJespy3hJUZnfai for <xfs@oss.sgi.com>;
-	Wed, 16 Apr 2014 22:58:18 -0700 (PDT)
-Date: Thu, 17 Apr 2014 15:58:11 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 16/19] VFS: use GFP_NOFS rather than GFP_KERNEL in
-	__d_alloc.
-Message-ID: <20140417055811.GX15995@dastard>
-References: <20140416033623.10604.69237.stgit@notabene.brown>
-	<20140416040337.10604.61837.stgit@notabene.brown>
-	<20140416062520.GG15995@dastard>
-	<20140416164941.37587da6@notabene.brown>
-	<20140416090051.GK15995@dastard>
-	<20140417105105.7772d09d@notabene.brown>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20140417105105.7772d09d@notabene.brown>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 6DADC7F53
+	for <xfs@oss.sgi.com>; Thu, 17 Apr 2014 05:36:03 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id CD63AAC004
+	for <xfs@oss.sgi.com>; Thu, 17 Apr 2014 03:35:59 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id rtsrkLwjLjjg7735 for
+	<xfs@oss.sgi.com>; Thu, 17 Apr 2014 03:35:58 -0700 (PDT)
+Received: from int-mx11.intmail.prod.int.phx2.redhat.com
+	(int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id s3HAZw9Z014053
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256
+	verify=OK) for <xfs@oss.sgi.com>; Thu, 17 Apr 2014 06:35:58 -0400
+From: Lukas Czerner <lczerner@redhat.com>
+Subject: [PATCH] xfstests: Remove unused functions
+Date: Thu, 17 Apr 2014 12:35:53 +0200
+Message-Id: <1397730953-11008-1-git-send-email-lczerner@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,183 +25,142 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: NeilBrown <neilb@suse.de>
-Cc: linux-mm@kvack.org, linux-nfs@vger.kernel.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
+Cc: Lukas Czerner <lczerner@redhat.com>
 
-On Thu, Apr 17, 2014 at 10:51:05AM +1000, NeilBrown wrote:
-> On Wed, 16 Apr 2014 19:00:51 +1000 Dave Chinner <david@fromorbit.com> wrote:
-> 
-> > On Wed, Apr 16, 2014 at 04:49:41PM +1000, NeilBrown wrote:
-> > > On Wed, 16 Apr 2014 16:25:20 +1000 Dave Chinner <david@fromorbit.com> wrote:
-> > > 
-> > > > On Wed, Apr 16, 2014 at 02:03:37PM +1000, NeilBrown wrote:
-> > > > > __d_alloc can be called with i_mutex held, so it is safer to
-> > > > > use GFP_NOFS.
-> > > > > 
-> > > > > lockdep reports this can deadlock when loop-back NFS is in use,
-> > > > > as nfsd may be required to write out for reclaim, and nfsd certainly
-> > > > > takes i_mutex.
-> > > > 
-> > > > But not the same i_mutex as is currently held. To me, this seems
-> > > > like a false positive? If you are holding the i_mutex on an inode,
-> > > > then you have a reference to the inode and hence memory reclaim
-> > > > won't ever take the i_mutex on that inode.
-> > > > 
-> > > > FWIW, this sort of false positive was a long stabding problem for
-> > > > XFS - we managed to get rid of most of the false positives like this
-> > > > by ensuring that only the ilock is taken within memory reclaim and
-> > > > memory reclaim can't be entered while we hold the ilock.
-> > > > 
-> > > > You can't do that with the i_mutex, though....
-> > > > 
-> > > > Cheers,
-> > > > 
-> > > > Dave.
-> > > 
-> > > I'm not sure this is a false positive.
-> > > You can call __d_alloc when creating a file and so are holding i_mutex on the
-> > > directory.
-> > > nfsd might also want to access that directory.
-> > > 
-> > > If there was only 1 nfsd thread, it would need to get i_mutex and do it's
-> > > thing before replying to that request and so before it could handle the
-> > > COMMIT which __d_alloc is waiting for.
-> > 
-> > That seems wrong - the NFS client in __d_alloc holds a mutex on a
-> > NFS client directory inode. The NFS server can't access that
-> > specific mutex - it's on the other side of the "network". The NFS
-> > server accesses mutexs from local filesystems, so __d_alloc would
-> > have to be blocked on a local filesystem inode i_mutex for the nfsd
-> > to get hung up behind it...
-> 
-> I'm not thinking of mutexes on the NFS inodes but the local filesystem inodes
-> exactly as you describe below.
-> 
-> > 
-> > However, my confusion comes from the fact that we do GFP_KERNEL
-> > memory allocation with the i_mutex held all over the place.
-> 
-> Do we? 
+Functions like _mount_opts(), _mkfs_opts() and _fsck_opts() are
+defined both in common/rc and common/config while used only in
+common/config.
 
-Yes.
+Remove those functions from common/rc and update _mount_opts() to match
+the superior version of the function.
 
-A simple example: fs/xattr.c. Setting or removing an xattr is done
-under the i_mutex, yet have a look and the simple_xattr_*
-implementation that in memory/psuedo filesystems can use. They use
-GFP_KERNEL for all their allocations....
+Signed-off-by: Lukas Czerner <lczerner@redhat.com>
+---
+ common/config |  4 +++
+ common/rc     | 87 -----------------------------------------------------------
+ 2 files changed, 4 insertions(+), 87 deletions(-)
 
-> Should we?
-
-No, I don't think so, because it means that under heavy filesystem
-memory pressure workloads, direct reclaim can effectively shut off
-and only kswapd can free memory. 
-
-> Isn't the whole point of GFP_NOFS to use it when holding
-> any filesystem lock?
-
-Not the way I understand it - we've always used it in XFS to prevent
-known deadlocks due to recursion, not as a big hammer that we hit
-everything with. Every filesystem has different recursion deadlock
-triggers, so use GFP_NOFS differently.  using t as a big hammer
-doesn't play well with memory reclaim on filesystem memory pressure
-generating workloads...
-
-> >           If the
-> > problem is:
-> > 
-> > 	local fs access -> i_mutex
-> > .....
-> > 	nfsd -> i_mutex (blocked)
-> > .....
-> > 	local fs access -> kmalloc(GFP_KERNEL)
-> > 			-> direct reclaim
-> > 			-> nfs_release_page
-> > 			-> <send write/commit request to blocked nfsds>
-> > 			   <deadlock>
-> > 
-> > then why is it just __d_alloc that needs this fix?  Either this is a
-> > problem *everywhere* or it's not a problem at all.
-> 
-> I think it is a problem everywhere that it is a problem :-)
-
-<head implosion>
-
-> If you are holding an FS lock, then you should be using GFP_NOFS.
-
-Only if reclaim recursion can cause a deadlock.
-
-> Currently a given filesystem can get away with sometimes using GFP_KERNEL
-> because that particular lock never causes contention during reclaim for that
-> particular filesystem.
-
-Right, be cause we directly control what recursion can happen.
-
-What you are doing is changing the global reclaim recursion context.
-You're introducing recursion loops between filesystems *of different
-types*. IOWs, at no point is it safe for anyone to allow any
-recursion because we don't have the state available to determine if
-recursion is safe or not.
-
-> Adding loop-back NFS into the mix broadens the number of locks which can
-> cause a problem as it creates interdependencies between different filesystems.
-
-And that's a major architectural change to the memory reclaim
-heirarchy and that means we're going to be breaking assumptions all
-over the place, including in places we didn't know we had
-dependencies...
-
-> > If it's a problem everywhere it means that we simply can't allow
-> > reclaim from localhost NFS mounts to run from contexts that could
-> > block an NFSD. i.e. you cannot run NFS client memory reclaim from
-> > filesystems that are NFS server exported filesystems.....
-> 
-> Well.. you cannot allow NFS client memory reclaim *while holding locks in*
-> filesystems that are NFS exported.
->
-> I think this is most effectively generalised to:
->   you cannot allow FS memory reclaim while holding locks in filesystems which
->   can be NFS exported
-
-Yes, that's exactly what I said yesterday.
-
-> which I think is largely the case already
-
-It most definitely isn't.
-
-> - and lockdep can help us find
-> those places where we currently do allow FS reclaim while holding an FS lock.
-
-A pox on lockdep. Lockdep is not a crutch that we can to wave away
-problems a architectural change doesn't identify. We need to think
-about the architectural impact of the change - if we can't see all
-the assumptions we're breaking and the downstream impacts, then we
-nee dto think about the problem harder. We should not not wave away
-concerns by saying "lockdep will find the things we missed"...
-
-For example, if you make all filesystem allocations GFP_NOFS, then
-the only thing that will be able to do reclaim of inodes and
-dentries is kswapd, because the shrinkers don't run in GFP_NOFS
-context. Hence filesystem memory pressure (e.g. find) won't be able
-to directly reclaim the objects that it is generating, and that will
-significantly change the behaviour and performance of the system.
-
-IOWs, there are lots of nasty, subtle downstream affects of making a
-blanket "filesystems must use GFP_NOFS is they hold any lock" rule
-that I can see, so I really think thatwe shoul dbe looking to solve
-this problem in the NFS client and exhausting all possibilities
-there before we even consider changing something as fundamental as
-memory reclaim recursion heirarchies....
-
-Cheers,
-
-Dave.
+diff --git a/common/config b/common/config
+index 49f34cf..0ff9d14 100644
+--- a/common/config
++++ b/common/config
+@@ -249,6 +249,10 @@ _mount_opts()
+ 		# acls aren't turned on by default on gfs2
+ 		export MOUNT_OPTIONS="-o acl $GFS2_MOUNT_OPTIONS"
+ 		;;
++	ttmpfs)
++		# We need to specify the size at mount, use 512 MB by default
++		export MOUNT_OPTIONS="-o size=512M $TMPFS_MOUNT_OPTIONS"
++		;;
+ 	*)
+ 		;;
+ 	esac
+diff --git a/common/rc b/common/rc
+index acf419b..c78b904 100644
+--- a/common/rc
++++ b/common/rc
+@@ -81,93 +81,6 @@ _ls_l()
+ 	ls -l $* | sed "s/\(^[-rwxdlbcpsStT]*\)\. /\1 /" | grep -v 'lost+found'
+ }
+ 
+-_mount_opts()
+-{
+-    # SELinux adds extra xattrs which can mess up our expected output.
+-    # So, mount with a context, and they won't be created
+-    # nfs_t is a "liberal" context so we can use it.
+-    if [ -x /usr/sbin/selinuxenabled ] && /usr/sbin/selinuxenabled; then
+-	SELINUX_MOUNT_OPTIONS="-o context=system_u:object_r:nfs_t:s0"
+-	export SELINUX_MOUNT_OPTIONS
+-    fi
+-
+-    case $FSTYP in
+-    xfs)
+-	export MOUNT_OPTIONS=$XFS_MOUNT_OPTIONS
+-	;;
+-    udf)
+-	export MOUNT_OPTIONS=$UDF_MOUNT_OPTIONS
+-	;;
+-    nfs)
+-	export MOUNT_OPTIONS=$NFS_MOUNT_OPTIONS
+-	;;
+-    ext2|ext3|ext4|ext4dev)
+-	# acls & xattrs aren't turned on by default on ext$FOO
+-	export MOUNT_OPTIONS="-o acl,user_xattr $EXT_MOUNT_OPTIONS"
+-	;;
+-    reiserfs)
+-	# acls & xattrs aren't turned on by default on reiserfs
+-	export MOUNT_OPTIONS="-o acl,user_xattr $REISERFS_MOUNT_OPTIONS"
+-	;;
+-    gfs2)
+-	# acls aren't turned on by default on gfs2
+-	export MOUNT_OPTIONS="-o acl $GFS2_MOUNT_OPTIONS"
+-	;;
+-    tmpfs)
+-	# We need to specify the size at mount, use 512 MB by default
+-	export MOUNT_OPTIONS="-o size=512M $TMPFS_MOUNT_OPTIONS"
+-	;;
+-    *)
+-	;;
+-    esac
+-}
+-
+-_mkfs_opts()
+-{
+-    case $FSTYP in
+-    xfs)
+-	export MKFS_OPTIONS=$XFS_MKFS_OPTIONS
+-	;;
+-    udf)
+-	[ ! -z "$udf_fsize" ] && \
+-	    UDF_MKFS_OPTIONS="$UDF_MKFS_OPTIONS -s $udf_fsize"
+-	export MKFS_OPTIONS=$UDF_MKFS_OPTIONS
+-	;;
+-    nfs)
+-	export MKFS_OPTIONS=$NFS_MKFS_OPTIONS
+-	;;
+-    reiserfs)
+-	export MKFS_OPTIONS="$REISERFS_MKFS_OPTIONS -q"
+-	;;
+-    gfs2)
+-	export MKFS_OPTIONS="$GFS2_MKFS_OPTIONS -O -p lock_nolock"
+-	;;
+-    jfs)
+-	export MKFS_OPTIONS="$JFS_MKFS_OPTIONS -q"
+-	;;
+-    tmpfs)
+-	export MKFS_OPTIONS="$TMPFS_MKFS_OPTIONS"
+-	;;
+-    *)
+-	;;
+-    esac
+-}
+-
+-_fsck_opts()
+-{
+-    case $FSTYP in
+-    ext2|ext3|ext4|ext4dev)
+-	export FSCK_OPTIONS="-nf"
+-	;;
+-    reiserfs)
+-	export FSCK_OPTIONS="--yes"
+-	;;
+-    *)
+-	export FSCK_OPTIONS="-n"
+-	;;
+-    esac
+-}
+-
+ # we need common/config
+ if [ "$iam" != "check" ]
+ then
 -- 
-Dave Chinner
-david@fromorbit.com
+1.8.3.1
 
 _______________________________________________
 xfs mailing list
