@@ -1,22 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 262077F56
-	for <xfs@oss.sgi.com>; Wed, 16 Apr 2014 23:17:06 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 00B557F56
+	for <xfs@oss.sgi.com>; Wed, 16 Apr 2014 23:18:36 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id AEC62AC001
-	for <xfs@oss.sgi.com>; Wed, 16 Apr 2014 21:17:02 -0700 (PDT)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id BE0C98F8049
+	for <xfs@oss.sgi.com>; Wed, 16 Apr 2014 21:18:32 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id yyaJGqOM98eczHBA for
-	<xfs@oss.sgi.com>; Wed, 16 Apr 2014 21:17:01 -0700 (PDT)
-Received: from int-mx09.intmail.prod.int.phx2.redhat.com
-	(int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id s3H4H0eH023843
+	cuda.sgi.com with ESMTP id sLMUtVQrps4JG5TF for
+	<xfs@oss.sgi.com>; Wed, 16 Apr 2014 21:18:31 -0700 (PDT)
+Received: from int-mx14.intmail.prod.int.phx2.redhat.com
+	(int-mx14.intmail.prod.int.phx2.redhat.com [10.5.11.27])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id s3H4IVgt018342
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256
-	verify=OK) for <xfs@oss.sgi.com>; Thu, 17 Apr 2014 00:17:00 -0400
+	verify=OK) for <xfs@oss.sgi.com>; Thu, 17 Apr 2014 00:18:31 -0400
 From: Eryu Guan <eguan@redhat.com>
-Subject: [PATCH 1/3] common: set _fs_has_crcs=0 as default in _filter_mkfs()
-Date: Thu, 17 Apr 2014 12:16:52 +0800
-Message-Id: <1397708214-8197-1-git-send-email-eguan@redhat.com>
+Subject: [PATCH 2/3] generic/009: fix _require_xfs_io_command
+Date: Thu, 17 Apr 2014 12:16:53 +0800
+Message-Id: <1397708214-8197-2-git-send-email-eguan@redhat.com>
+In-Reply-To: <1397708214-8197-1-git-send-email-eguan@redhat.com>
+References: <1397708214-8197-1-git-send-email-eguan@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,43 +35,30 @@ Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 Cc: Eryu Guan <eguan@redhat.com>
 
-xfsprogs without crc support won't print crc=0/crc=1, so
-_filter_mkfs() leaves _fs_has_crcs variable unset, and xfs/033 fails
-because of that.
+_require_xfs_io_falloc "fzero" should be a typo, it requires falloc command.
+Use the correct _require_xfs_io_command "fzero".
 
-xfs/033 4s ... - output mismatch (see /root/xfstests/results//xfs/033.out.bad)
-    --- tests/xfs/033.out       2014-04-16 22:31:49.818350450 -0400
-    +++ /root/xfstests/results//xfs/033.out.bad 2014-04-16 22:35:08.264401190 -0400
-    @@ -5,6 +5,7 @@
-     naming   =VERN bsize=XXX
-     log      =LDEV bsize=XXX blocks=XXX
-     realtime =RDEV extsz=XXX blocks=XXX, rtextents=XXX
-    +./tests/xfs/033: line 87: [: -eq: unary operator expected
-     Corrupting root inode - setting bits to 0
-     Wrote X.XXKb (value 0x0)
-     Phase 1 - find and verify superblock...
-
-Print _fs_has_crcs=0 to stderr by default, so old xfsprogs could have
-this variable set too, and a latter _fs_has_crcs=1 could overwrite it
-if the fs does have crc support.
+fiemap is also needed, add that too.
 
 Signed-off-by: Eryu Guan <eguan@redhat.com>
 ---
- common/filter | 1 +
- 1 file changed, 1 insertion(+)
+ tests/generic/009 | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/common/filter b/common/filter
-index a7d2aa9..05dbae6 100644
---- a/common/filter
-+++ b/common/filter
-@@ -143,6 +143,7 @@ _filter_mkfs()
- 	return ;;
-     esac
+diff --git a/tests/generic/009 b/tests/generic/009
+index b7b0b3f..1e487b4 100644
+--- a/tests/generic/009
++++ b/tests/generic/009
+@@ -44,7 +44,8 @@ trap "_cleanup ; exit \$status" 0 1 2 3 15
  
-+    echo "_fs_has_crcs=0" >&2
-     set -
-     perl -ne '
-     if (/^meta-data=([\w,|\/.-]+)\s+isize=(\d+)\s+agcount=(\d+), agsize=(\d+) blks/) {
+ # real QA test starts here
+ _supported_os Linux
+-_require_xfs_io_falloc "fzero"
++_require_xfs_io_fiemap
++_require_xfs_io_command "fzero"
+ 
+ testfile=$TEST_DIR/009.$$
+ 
 -- 
 1.9.0
 
