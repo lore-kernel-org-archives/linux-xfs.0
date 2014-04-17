@@ -1,28 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 4E2DC7F58
-	for <xfs@oss.sgi.com>; Wed, 16 Apr 2014 19:23:17 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 1107D7F58
+	for <xfs@oss.sgi.com>; Wed, 16 Apr 2014 19:23:49 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 2592D8F8049
-	for <xfs@oss.sgi.com>; Wed, 16 Apr 2014 17:23:14 -0700 (PDT)
-Received: from mail-la0-f53.google.com (mail-la0-f53.google.com
-	[209.85.215.53]) by cuda.sgi.com with ESMTP id 9VQstFwPEN3j7h9K
+	by relay1.corp.sgi.com (Postfix) with ESMTP id DBCF48F8037
+	for <xfs@oss.sgi.com>; Wed, 16 Apr 2014 17:23:48 -0700 (PDT)
+Received: from mail-we0-f172.google.com (mail-we0-f172.google.com
+	[74.125.82.172]) by cuda.sgi.com with ESMTP id 5jsCPV3eFQpYrqEt
 	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 16 Apr 2014 17:23:12 -0700 (PDT)
-Received: by mail-la0-f53.google.com with SMTP id b8so8812935lan.12
-	for <xfs@oss.sgi.com>; Wed, 16 Apr 2014 17:23:10 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20140416231333.GQ15995@dastard>
+	<xfs@oss.sgi.com>; Wed, 16 Apr 2014 17:23:47 -0700 (PDT)
+Received: by mail-we0-f172.google.com with SMTP id t61so11644034wes.3
+	for <xfs@oss.sgi.com>; Wed, 16 Apr 2014 17:23:46 -0700 (PDT)
+From: Filipe David Borba Manana <fdmanana@gmail.com>
+Subject: [PATCH v3] xfstests: btrfs,
+	test send's ability to punch holes and prealloc extents
+Date: Thu, 17 Apr 2014 02:23:33 +0100
+Message-Id: <1397697813-23641-1-git-send-email-fdmanana@gmail.com>
+In-Reply-To: <1397580201-27475-1-git-send-email-fdmanana@gmail.com>
 References: <1397580201-27475-1-git-send-email-fdmanana@gmail.com>
-	<20140416002349.GV15995@dastard>
-	<CAL3q7H75Da9uvLnE7HVam9ue-yayw=SgePbLszVWvnPbMwkd4Q@mail.gmail.com>
-	<20140416231333.GQ15995@dastard>
-Date: Thu, 17 Apr 2014 01:23:10 +0100
-Message-ID: <CAL3q7H6bh+jkguj_QJ6F0Ce42SSMjoOUVwUR4MEU--+J-gZrAQ@mail.gmail.com>
-Subject: Re: [PATCH] xfstests: btrfs, test send's ability to punch holes and
-	prealloc extents
-From: Filipe David Manana <fdmanana@gmail.com>
-Reply-To: fdmanana@gmail.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,148 +26,245 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Josef Bacik <jbacik@fb.com>, "linux-btrfs@vger.kernel.org" <linux-btrfs@vger.kernel.org>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
+Cc: jbacik@fb.com, Filipe David Borba Manana <fdmanana@gmail.com>, linux-btrfs@vger.kernel.org
 
-On Thu, Apr 17, 2014 at 12:13 AM, Dave Chinner <david@fromorbit.com> wrote:
-> On Wed, Apr 16, 2014 at 03:39:18PM +0100, Filipe David Manana wrote:
->> On Wed, Apr 16, 2014 at 1:23 AM, Dave Chinner <david@fromorbit.com> wrote:
->> > On Tue, Apr 15, 2014 at 05:43:21PM +0100, Filipe David Borba Manana wrote:
->> >> This test verifies that after an incremental btrfs send the replicated file has
->> >> the same exact hole and data structure as in the origin filesystem. This didn't
->> >> use to be the case before the send stream version 2 - holes were sent as write
->> >> operations of 0 valued bytes instead of punching holes with the fallocate system
->> >> call, and pre-allocated extents were sent as well as write operations of 0 valued
->> >> bytes instead of intructions for the receiver to use the fallocate system call.
->> >> Also checks that prealloc extents that lie beyond the file's size are replicated
->> >> by an incremental send.
->> >
->> > Can you wrap commit messages at 68 columns?
->> >
->> > ....
->> >> +md5sum $SCRATCH_MNT/mysnap2/foo | _filter_scratch
->> >> +# List all hole and data segments.
->> >> +$XFS_IO_PROG -r -c "seek -r -a 0" $SCRATCH_MNT/mysnap2/foo
->> >> +# List all extents, we're interested here in prealloc extents that lie beyond
->> >> +# the file's size.
->> >> +$XFS_IO_PROG -r -c "fiemap -l" $SCRATCH_MNT/mysnap2/foo | _filter_scratch
->> >
->> > That dumps raw block numbers into the golden output. _filter_fiemap
->> > is probably needed here.
->>
->> Hum, just tried it and uploaded a v2.
->> However I'm now noticing it doesn't do everything I had in mind.
->> _filter_fiemap is not showing the extents falloc -k created, only a
->> collapsed range of holes.
->>
->> So my intention is to verify not just holes, but also the extents
->> created by 'falloc -k'. The following filter I just made locally gives
->> me that:
->>
->> _filter_all_fiemap()
->> {
->> awk --posix '
->> $3 ~ /hole/ {
->> print $1, $2, $3;
->> next;
->> }
->> $3 ~ /[[:xdigit:]]*..[[:xdigit:]]/ {
->> print $1, $2, "extent";
->> next;
->> }'
->> }
->
-> Which is effectively _filter_hole_fiemap(), except it coalesces
-> adjacent extents into a single range.
->
-> I'd suggest moving the _filter_* functions from common/punch to
-> common/filter, and using _filter_hole_fiemap() as there's no
-> guarantee that you'll get individual extents for each falloc -k
-> range - they coul dbe allocated contiguously, and hence the number
-> of extents reported can change from run to run. That's the reason
-> why the filters coalesce adjacent file offsets of the same type - we
-> care whether the range of the file contains the correct extent type,
-> not how fragmented the range is....
+This test verifies that after an incremental btrfs send the
+replicated file has the same exact hole and data structure as in
+the origin filesystem. This didn't use to be the case before the
+send stream version 2 - holes were sent as write operations of 0
+valued bytes instead of punching holes with the fallocate system
+call, and pre-allocated extents were sent as well as write
+operations of 0 valued bytes instead of intructions for the
+receiver to use the fallocate system call.
 
-Right. Thanks for pointing it out Dave.
+It also checks that prealloc extents that lie beyond the file's
+size are replicated by an incremental send.
 
->
->> (nicely printed/indented at
->> https://friendpaste.com/1JtG5bts2Sz0LWhUutCpzE, as e-mail is not good
->> for code pasting)
->
-> Pasting code works fine for me ;)
->
->> Which gives me:
->>
->> 0: [0..191]: extent
->> 1: [192..199]: extent
->> 2: [200..231]: extent
->> 3: [232..239]: extent
->> 4: [240..287]: extent
->> 5: [288..295]: extent
->> 6: [296..487]: extent
->> 7: [488..495]: extent
->> 8: [496..519]: hole
->> 9: [520..527]: extent
->> 10: [528..583]: extent
->> 11: [584..591]: extent
->> 12: [592..2543]: extent
->> 13: [2544..17575]: hole
->> 14: [17576..21487]: extent
->
-> Also, you're trimming of the block count, so you can drop the "-l"
-> option to the fiemap command....
->
->> Versus only (from _filter_fiemap):
->>
->> 0: [496..17575]: hole
->
-> Maybe the "-l" option is confusing the filter, it should be giving:
->
-> 0: [0..495]: data
-> 1: [496..519]: hole
-> 2: [520..2543]: data
-> 3: [2544..17575]: hole
-> 4: [17576..21487]: data
->
-> Though if there are unwritten extents, it will say "unwritten"
-> rather than "data". _filter_hole_fiemap should give:
->
-> 0: [0..495]: extent
-> 1: [496..519]: hole
-> 2: [520..2543]: extent
-> 3: [2544..17575]: hole
-> 4: [17576..21487]: extent
->
-> Which tells you that everything you asked for was allocated...
+Signed-off-by: Filipe David Borba Manana <fdmanana@gmail.com>
+---
 
-Ok, figured out my mistake. _filter_fiemap works just fine, it gives
-me all the information I wanted (as in your last example) as long as I
-pass the -v option (and not -l, or no options at all).
+V2: Addressed Dave's comments, and updated btrfs send invocation, by specifying
+    the new command line option (-a) that enables use of fallocate - added
+    function _require_btrfs_send_fallocate_flag() to skip the test when an old
+    version of btrfs-progs is found.
+V3: Corrected use of fiemap with _filter_fiemap. Was passing -l instead of -v
+    to fiemap, which resulted in output consisting only of a single line related
+    to a hole instead of all holes and data extents (and I wanted to verify the
+    falloc -k extents were preserved after the btrfs send).
 
-Thank you very much Dave :)
+ common/rc           |   9 ++++
+ tests/btrfs/047     | 121 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/btrfs/047.out |  35 +++++++++++++++
+ tests/btrfs/group   |   1 +
+ 4 files changed, 166 insertions(+)
+ create mode 100755 tests/btrfs/047
+ create mode 100644 tests/btrfs/047.out
 
->
-> Cheers,
->
-> Dave.
-> --
-> Dave Chinner
-> david@fromorbit.com
-
-
-
+diff --git a/common/rc b/common/rc
+index acf419b..e94e51c 100644
+--- a/common/rc
++++ b/common/rc
+@@ -2262,6 +2262,15 @@ _run_btrfs_util_prog()
+ 	run_check $BTRFS_UTIL_PROG $*
+ }
+ 
++_require_btrfs_send_fallocate_flag()
++{
++	$BTRFS_UTIL_PROG send 2>&1 | \
++		grep '^[ \t]*\-a[ \t]\+.* fallocate ' > /dev/null 2>&1
++	if [ $? -ne 0 ]; then
++		_notrun "Missing btrfs-progs send -a command line option, skipped this test"
++	fi
++}
++
+ init_rc()
+ {
+ 	if [ "$iam" == new ]
+diff --git a/tests/btrfs/047 b/tests/btrfs/047
+new file mode 100755
+index 0000000..e39b019
+--- /dev/null
++++ b/tests/btrfs/047
+@@ -0,0 +1,121 @@
++#! /bin/bash
++# FS QA Test No. btrfs/047
++#
++# Verify that after an incremental btrfs send the replicated file has
++# the same exact hole and data structure as in the origin filesystem.
++# This didn't use to be the case before the send stream version 2 -
++# holes were sent as write operations of 0 valued bytes instead of punching
++# holes with the fallocate system call, and pre-allocated extents were sent
++# as well as write operations of 0 valued bytes instead of intructions for
++# the receiver to use the fallocate system call. Also check that prealloc
++# extents that lie beyond the file's size are replicated by an incremental
++# send.
++#
++# More specifically, this structure preserving guarantee was added by the
++# following linux kernel commits:
++#
++#    Btrfs: send, use fallocate command to punch holes
++#    Btrfs: send, use fallocate command to allocate extents
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2014 Filipe Manana.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#-----------------------------------------------------------------------
++#
++
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++tmp=/tmp/$$
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 15
++
++_cleanup()
++{
++    rm -fr $send_files_dir
++    rm -fr $tmp
++}
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++. ./common/punch
++
++# real QA test starts here
++_supported_fs btrfs
++_supported_os Linux
++_require_scratch
++_require_fssum
++_require_xfs_io_fiemap
++_require_btrfs_send_fallocate_flag
++_need_to_be_root
++
++send_files_dir=$TEST_DIR/btrfs-test-$seq
++
++rm -f $seqres.full
++rm -fr $send_files_dir
++mkdir $send_files_dir
++
++_scratch_mkfs >/dev/null 2>&1
++_scratch_mount
++
++$XFS_IO_PROG -f -c "pwrite -S 0x01 -b 300000 0 300000" $SCRATCH_MNT/foo \
++	| _filter_xfs_io
++
++_run_btrfs_util_prog subvolume snapshot -r $SCRATCH_MNT $SCRATCH_MNT/mysnap1
++
++$XFS_IO_PROG -c "fpunch 100000 50000" $SCRATCH_MNT/foo
++$XFS_IO_PROG -c "falloc 100000 50000" $SCRATCH_MNT/foo
++$XFS_IO_PROG -c "pwrite -S 0xff -b 1000 120000 1000" $SCRATCH_MNT/foo \
++	| _filter_xfs_io
++$XFS_IO_PROG -c "fpunch 250000 20000" $SCRATCH_MNT/foo
++
++$XFS_IO_PROG -c "falloc -k 300000 1000000" $SCRATCH_MNT/foo
++$XFS_IO_PROG -c "falloc -k 9000000 2000000" $SCRATCH_MNT/foo
++
++_run_btrfs_util_prog subvolume snapshot -r $SCRATCH_MNT $SCRATCH_MNT/mysnap2
++
++_run_btrfs_util_prog send -a $SCRATCH_MNT/mysnap1 -f $send_files_dir/1.snap
++_run_btrfs_util_prog send -a -p $SCRATCH_MNT/mysnap1 $SCRATCH_MNT/mysnap2 \
++	-f $send_files_dir/2.snap
++
++md5sum $SCRATCH_MNT/mysnap2/foo | _filter_scratch
++# List all hole and data segments.
++$XFS_IO_PROG -r -c "seek -r -a 0" $SCRATCH_MNT/mysnap2/foo
++# List all extents, we're interested here in prealloc extents that lie beyond
++# the file's size.
++$XFS_IO_PROG -r -c "fiemap -v" $SCRATCH_MNT/mysnap2/foo | _filter_fiemap
++
++_scratch_unmount
++_check_scratch_fs
++
++_scratch_mkfs >/dev/null 2>&1
++_scratch_mount
++
++_run_btrfs_util_prog receive $SCRATCH_MNT -f $send_files_dir/1.snap
++_run_btrfs_util_prog receive $SCRATCH_MNT -f $send_files_dir/2.snap
++
++md5sum $SCRATCH_MNT/mysnap2/foo | _filter_scratch
++# List all hole and data segments.
++$XFS_IO_PROG -r -c "seek -r -a 0" $SCRATCH_MNT/mysnap2/foo
++# List all extents, we're interested here in prealloc extents that lie beyond
++# the file's size.
++$XFS_IO_PROG -r -c "fiemap -v" $SCRATCH_MNT/mysnap2/foo | _filter_fiemap
++
++_check_scratch_fs
++
++status=0
++exit
+diff --git a/tests/btrfs/047.out b/tests/btrfs/047.out
+new file mode 100644
+index 0000000..be39edc
+--- /dev/null
++++ b/tests/btrfs/047.out
+@@ -0,0 +1,35 @@
++QA output created by 047
++wrote 300000/300000 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++wrote 1000/1000 bytes at offset 120000
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++5a88aa0da62c8999c16515050947a70a  SCRATCH_MNT/mysnap2/foo
++Whence	Result
++DATA	0
++HOLE	102400
++DATA	118784
++HOLE	122880
++DATA	147456
++HOLE	253952
++DATA	266240
++HOLE	300000
++0: [0..495]: data
++1: [496..519]: hole
++2: [520..2543]: data
++3: [2544..17575]: hole
++4: [17576..21487]: data
++5a88aa0da62c8999c16515050947a70a  SCRATCH_MNT/mysnap2/foo
++Whence	Result
++DATA	0
++HOLE	102400
++DATA	118784
++HOLE	122880
++DATA	147456
++HOLE	253952
++DATA	266240
++HOLE	300000
++0: [0..495]: data
++1: [496..519]: hole
++2: [520..2543]: data
++3: [2544..17575]: hole
++4: [17576..21487]: data
+diff --git a/tests/btrfs/group b/tests/btrfs/group
+index 3a6d34e..d4e3fc1 100644
+--- a/tests/btrfs/group
++++ b/tests/btrfs/group
+@@ -49,3 +49,4 @@
+ 044 auto quick
+ 045 auto quick
+ 046 auto quick
++047 auto quick
 -- 
-Filipe David Manana,
-
-"Reasonable men adapt themselves to the world.
- Unreasonable men adapt the world to themselves.
- That's why all progress depends on unreasonable men."
+1.9.1
 
 _______________________________________________
 xfs mailing list
