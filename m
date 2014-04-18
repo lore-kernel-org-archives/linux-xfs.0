@@ -1,32 +1,33 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 126827F53
-	for <xfs@oss.sgi.com>; Thu, 17 Apr 2014 19:58:13 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id A6D557F53
+	for <xfs@oss.sgi.com>; Thu, 17 Apr 2014 19:58:25 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 93354AC003
-	for <xfs@oss.sgi.com>; Thu, 17 Apr 2014 17:58:09 -0700 (PDT)
-Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id NE3GSkkBdTmTptEA (version=TLSv1
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 8B3578F8040
+	for <xfs@oss.sgi.com>; Thu, 17 Apr 2014 17:58:25 -0700 (PDT)
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
+	cuda.sgi.com with ESMTP id 5pEwy2dKl0RYCkvv (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 17 Apr 2014 17:58:07 -0700 (PDT)
-Received: from ucsinet22.oracle.com (ucsinet22.oracle.com [156.151.31.94])
-	by aserp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with
-	ESMTP id s3I0w64e015529
+	Thu, 17 Apr 2014 17:58:24 -0700 (PDT)
+Received: from acsinet22.oracle.com (acsinet22.oracle.com [141.146.126.238])
+	by userp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with
+	ESMTP id s3I0wMKO010888
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Fri, 18 Apr 2014 00:58:07 GMT
-Received: from aserz7022.oracle.com (aserz7022.oracle.com [141.146.126.231])
-	by ucsinet22.oracle.com (8.14.5+Sun/8.14.5) with ESMTP id
-	s3I0w5UE024336
+	for <xfs@oss.sgi.com>; Fri, 18 Apr 2014 00:58:23 GMT
+Received: from userz7022.oracle.com (userz7022.oracle.com [156.151.31.86])
+	by acsinet22.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
+	s3I0wLD8015652
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <xfs@oss.sgi.com>; Fri, 18 Apr 2014 00:58:06 GMT
-Received: from abhmp0002.oracle.com (abhmp0002.oracle.com [141.146.116.8])
-	by aserz7022.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
-	s3I0w5Er015327 for <xfs@oss.sgi.com>; Fri, 18 Apr 2014 00:58:05 GMT
-Message-ID: <53507899.9030804@oracle.com>
-Date: Fri, 18 Apr 2014 08:58:01 +0800
+	for <xfs@oss.sgi.com>; Fri, 18 Apr 2014 00:58:22 GMT
+Received: from abhmp0010.oracle.com (abhmp0010.oracle.com [141.146.116.16])
+	by userz7022.oracle.com (8.14.5+Sun/8.14.4) with ESMTP id
+	s3I0wLYQ024743 for <xfs@oss.sgi.com>; Fri, 18 Apr 2014 00:58:21 GMT
+Message-ID: <535078A9.409@oracle.com>
+Date: Fri, 18 Apr 2014 08:58:17 +0800
 From: Jeff Liu <jeff.liu@oracle.com>
 MIME-Version: 1.0
-Subject: [PATCH v2 00/10] xfs_ioc_bulkstat code refactoring and consolidation
+Subject: [PATCH v2 01/10] xfs: remove redundant stat assignment in
+	xfs_bulkstat_one_int
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -41,26 +42,42 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-Hi folk,
+From: Jie Liu <jeff.liu@oracle.com>
 
-This is the v2 patch set for xfs_ioc_bulkstat consolidation and code refactoring.
+Remove the redundant BULKSTAT_RV_NOTHING assignment in case of call
+xfs_iget() failed at xfs_bulkstat_one_int().
 
-v2->v1:
+Signed-off-by: Jie Liu <jeff.liu@oracle.com>
+---
+ fs/xfs/xfs_itable.c | 5 +----
+ 1 file changed, 1 insertion(+), 4 deletions(-)
 
-- As per Brain's comment, don't call xfs_inobt_lookup() once again after the
-  btree cursor initialization, and only increment through the records via
-  xfs_btree_increment() at xfs_inumbers(), i.e, [patch 03/10].
-
-- Don't call XFS_WANT_CORRUPTED_GOTO() against empty allocation group at
-  xfs_perag_bulkstat() [ found by Mark ].
-
-
-v1: http://oss.sgi.com/archives/xfs/2013-12/msg00901.html
-
-As usual, any comments are welcome!
-
-Thanks,
--Jeff
+diff --git a/fs/xfs/xfs_itable.c b/fs/xfs/xfs_itable.c
+index f463382..b5bb7b6 100644
+--- a/fs/xfs/xfs_itable.c
++++ b/fs/xfs/xfs_itable.c
+@@ -76,10 +76,8 @@ xfs_bulkstat_one_int(
+ 	error = xfs_iget(mp, NULL, ino,
+ 			 (XFS_IGET_DONTCACHE | XFS_IGET_UNTRUSTED),
+ 			 XFS_ILOCK_SHARED, &ip);
+-	if (error) {
+-		*stat = BULKSTAT_RV_NOTHING;
++	if (error)
+ 		goto out_free;
+-	}
+ 
+ 	ASSERT(ip != NULL);
+ 	ASSERT(ip->i_imap.im_blkno != 0);
+@@ -136,7 +134,6 @@ xfs_bulkstat_one_int(
+ 	IRELE(ip);
+ 
+ 	error = formatter(buffer, ubsize, ubused, buf);
+-
+ 	if (!error)
+ 		*stat = BULKSTAT_RV_DIDONE;
+ 
+-- 
+1.8.3.2
 
 _______________________________________________
 xfs mailing list
