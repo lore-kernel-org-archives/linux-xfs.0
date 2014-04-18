@@ -1,20 +1,32 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 660E47F52
-	for <xfs@oss.sgi.com>; Thu, 17 Apr 2014 19:16:01 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 126827F53
+	for <xfs@oss.sgi.com>; Thu, 17 Apr 2014 19:58:13 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 498018F8035
-	for <xfs@oss.sgi.com>; Thu, 17 Apr 2014 17:15:58 -0700 (PDT)
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	KOsdRiMLt1sGxdEM for <xfs@oss.sgi.com>;
-	Thu, 17 Apr 2014 17:15:56 -0700 (PDT)
-Date: Fri, 18 Apr 2014 10:15:52 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: [GIT PULL] xfs: fixes for 3.15-rc2
-Message-ID: <20140418001552.GZ15995@dastard>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 93354AC003
+	for <xfs@oss.sgi.com>; Thu, 17 Apr 2014 17:58:09 -0700 (PDT)
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
+	cuda.sgi.com with ESMTP id NE3GSkkBdTmTptEA (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 17 Apr 2014 17:58:07 -0700 (PDT)
+Received: from ucsinet22.oracle.com (ucsinet22.oracle.com [156.151.31.94])
+	by aserp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with
+	ESMTP id s3I0w64e015529
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <xfs@oss.sgi.com>; Fri, 18 Apr 2014 00:58:07 GMT
+Received: from aserz7022.oracle.com (aserz7022.oracle.com [141.146.126.231])
+	by ucsinet22.oracle.com (8.14.5+Sun/8.14.5) with ESMTP id
+	s3I0w5UE024336
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <xfs@oss.sgi.com>; Fri, 18 Apr 2014 00:58:06 GMT
+Received: from abhmp0002.oracle.com (abhmp0002.oracle.com [141.146.116.8])
+	by aserz7022.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
+	s3I0w5Er015327 for <xfs@oss.sgi.com>; Fri, 18 Apr 2014 00:58:05 GMT
+Message-ID: <53507899.9030804@oracle.com>
+Date: Fri, 18 Apr 2014 08:58:01 +0800
+From: Jeff Liu <jeff.liu@oracle.com>
 MIME-Version: 1.0
-Content-Disposition: inline
+Subject: [PATCH v2 00/10] xfs_ioc_bulkstat code refactoring and consolidation
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,78 +39,28 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: torvalds@linux-foundation.org
-Cc: akpm@linux-foundation.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-Hi Linus,
+Hi folk,
 
-Can you please pull the updates listed below? The fixes are for data
-corruption issues, memory corruption and regressions for changes
-merged in -rc1. More detail is in the tag below.
+This is the v2 patch set for xfs_ioc_bulkstat consolidation and code refactoring.
 
-FYI, there have been some recent problems with oss.sgi.com resetting
-connections on git pulls. Hopefully that has been resolved, but if
-you have problems pulling the changes please let me know.
+v2->v1:
 
--Dave.
+- As per Brain's comment, don't call xfs_inobt_lookup() once again after the
+  btree cursor initialization, and only increment through the records via
+  xfs_btree_increment() at xfs_inumbers(), i.e, [patch 03/10].
 
-The following changes since commit c9eaa447e77efe77b7fa4c953bd62de8297fd6c5:
+- Don't call XFS_WANT_CORRUPTED_GOTO() against empty allocation group at
+  xfs_perag_bulkstat() [ found by Mark ].
 
-  Linux 3.15-rc1 (2014-04-13 14:18:35 -0700)
 
-are available in the git repository at:
+v1: http://oss.sgi.com/archives/xfs/2013-12/msg00901.html
 
-  git://oss.sgi.com/xfs/xfs.git tags/xfs-for-linus-3.15-rc2
+As usual, any comments are welcome!
 
-for you to fetch changes up to 330033d697ed8d296fa52b5303db9d802ad901cc:
-
-  xfs: fix tmpfile/selinux deadlock and initialize security (2014-04-17 08:15:30 +1000)
-
-----------------------------------------------------------------
-xfs: bug fixes for 3.15-rc2
-
-Data corruption fixes:
-- fix a bunch of delayed allocation state mismatches
-- fix collapse/zero range bugs
-- fix a direct IO block mapping bug @ EOF
-
-Other fixes:
-- fix a use after free on metadata IO error
-- fix a use after free on IO error during unmount
-- fix an incorrect error sign on direct IO write errors
-- add missing O_TMPFILE inode security context initialisation
-
-----------------------------------------------------------------
-Brian Foster (1):
-      xfs: fix tmpfile/selinux deadlock and initialize security
-
-Dave Chinner (8):
-      xfs: kill buffers over failed write ranges properly
-      xfs: write failure beyond EOF truncates too much data
-      xfs: xfs_vm_write_end truncates too much on failure
-      xfs: zeroing space needs to punch delalloc blocks
-      xfs: don't map ranges that span EOF for direct IO
-      xfs: collapse range is delalloc challenged
-      xfs: unmount does not wait for shutdown during unmount
-      xfs: wrong error sign conversion during failed DIO writes
-
-Eric Sandeen (1):
-      xfs: fix buffer use after free on IO error
-
- fs/xfs/xfs_aops.c      |   51 ++++++++++++++++++++++++++++++++++++++++------
- fs/xfs/xfs_bmap.c      |   17 ++++++++++------
- fs/xfs/xfs_bmap_util.c |   13 +++++++++++-
- fs/xfs/xfs_buf.c       |   16 +++++++++++----
- fs/xfs/xfs_file.c      |    2 +-
- fs/xfs/xfs_inode.c     |    5 +++--
- fs/xfs/xfs_inode.h     |    2 +-
- fs/xfs/xfs_iops.c      |   20 +++++++++++++++---
- fs/xfs/xfs_log.c       |   53 ++++++++++++++++++++++++++++++++++++++++--------
- fs/xfs/xfs_trace.h     |    1 +
- 10 files changed, 147 insertions(+), 33 deletions(-)
--- 
-Dave Chinner
-david@fromorbit.com
+Thanks,
+-Jeff
 
 _______________________________________________
 xfs mailing list
