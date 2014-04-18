@@ -1,32 +1,32 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 20A9E7F86
-	for <xfs@oss.sgi.com>; Thu, 17 Apr 2014 19:59:00 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id E9899304043
-	for <xfs@oss.sgi.com>; Thu, 17 Apr 2014 17:58:59 -0700 (PDT)
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id KHRu1Cq9Bd5h1bdQ (version=TLSv1
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 488A27F8A
+	for <xfs@oss.sgi.com>; Thu, 17 Apr 2014 19:59:08 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id D9555AC001
+	for <xfs@oss.sgi.com>; Thu, 17 Apr 2014 17:59:07 -0700 (PDT)
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
+	cuda.sgi.com with ESMTP id FLtyd6VxxEB7Zf4E (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 17 Apr 2014 17:58:58 -0700 (PDT)
-Received: from ucsinet21.oracle.com (ucsinet21.oracle.com [156.151.31.93])
-	by userp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with
-	ESMTP id s3I0wvYV011248
+	Thu, 17 Apr 2014 17:59:06 -0700 (PDT)
+Received: from ucsinet22.oracle.com (ucsinet22.oracle.com [156.151.31.94])
+	by aserp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with
+	ESMTP id s3I0x4Dl016458
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Fri, 18 Apr 2014 00:58:57 GMT
+	for <xfs@oss.sgi.com>; Fri, 18 Apr 2014 00:59:05 GMT
 Received: from aserz7021.oracle.com (aserz7021.oracle.com [141.146.126.230])
-	by ucsinet21.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
-	s3I0wubm025258
+	by ucsinet22.oracle.com (8.14.5+Sun/8.14.5) with ESMTP id
+	s3I0x3a8025545
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <xfs@oss.sgi.com>; Fri, 18 Apr 2014 00:58:57 GMT
-Received: from abhmp0008.oracle.com (abhmp0008.oracle.com [141.146.116.14])
+	for <xfs@oss.sgi.com>; Fri, 18 Apr 2014 00:59:04 GMT
+Received: from abhmp0015.oracle.com (abhmp0015.oracle.com [141.146.116.21])
 	by aserz7021.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
-	s3I0wurr020917 for <xfs@oss.sgi.com>; Fri, 18 Apr 2014 00:58:56 GMT
-Message-ID: <535078CD.6050500@oracle.com>
-Date: Fri, 18 Apr 2014 08:58:53 +0800
+	s3I0x3fx021160 for <xfs@oss.sgi.com>; Fri, 18 Apr 2014 00:59:03 GMT
+Message-ID: <535078D4.4000802@oracle.com>
+Date: Fri, 18 Apr 2014 08:59:00 +0800
 From: Jeff Liu <jeff.liu@oracle.com>
 MIME-Version: 1.0
-Subject: [PATCH v2 09/10] xfs: introduce per allocation group bulkstat
+Subject: [PATCH v2 10/10] xfs: isolate xfs_qm_quotacheck to its source file
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -43,412 +43,240 @@ To: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
 From: Jie Liu <jeff.liu@oracle.com>
 
-Introduce xfs_perag_bulkstat(), we can return stat information in bulk by
-inode as per the given allocation group number and start inode number in
-it via a new ioctl(2) in the future.  Similar to the per allocation group
-inumbers, we could perform bulkstat in parallel with that.
-
-Refactor xfs_bulkstat() with it.
+Isolate xfs_qm_quotacheck() to xfs_qm.c as there is no other users of it.
 
 Signed-off-by: Jie Liu <jeff.liu@oracle.com>
 ---
- fs/xfs/xfs_itable.c | 288 +++++++++++++++++++++++++++++-----------------------
- fs/xfs/xfs_itable.h |  20 ++++
- 2 files changed, 180 insertions(+), 128 deletions(-)
+ fs/xfs/xfs_qm.c | 189 ++++++++++++++++++++++++++++----------------------------
+ fs/xfs/xfs_qm.h |   1 -
+ 2 files changed, 94 insertions(+), 96 deletions(-)
 
-diff --git a/fs/xfs/xfs_itable.c b/fs/xfs/xfs_itable.c
-index 56e1d5f..58dc182 100644
---- a/fs/xfs/xfs_itable.c
-+++ b/fs/xfs/xfs_itable.c
-@@ -337,86 +337,44 @@ xfs_bulkstat_ag_ichunk(
+diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
+index 348e4d2..4c70732 100644
+--- a/fs/xfs/xfs_qm.c
++++ b/fs/xfs/xfs_qm.c
+@@ -272,100 +272,6 @@ xfs_qm_unmount(
+ 	}
+ }
+ 
+-
+-/*
+- * This is called from xfs_mountfs to start quotas and initialize all
+- * necessary data structures like quotainfo.  This is also responsible for
+- * running a quotacheck as necessary.  We are guaranteed that the superblock
+- * is consistently read in at this point.
+- *
+- * If we fail here, the mount will continue with quota turned off. We don't
+- * need to inidicate success or failure at all.
+- */
+-void
+-xfs_qm_mount_quotas(
+-	xfs_mount_t	*mp)
+-{
+-	int		error = 0;
+-	uint		sbf;
+-
+-	/*
+-	 * If quotas on realtime volumes is not supported, we disable
+-	 * quotas immediately.
+-	 */
+-	if (mp->m_sb.sb_rextents) {
+-		xfs_notice(mp, "Cannot turn on quotas for realtime filesystem");
+-		mp->m_qflags = 0;
+-		goto write_changes;
+-	}
+-
+-	ASSERT(XFS_IS_QUOTA_RUNNING(mp));
+-
+-	/*
+-	 * Allocate the quotainfo structure inside the mount struct, and
+-	 * create quotainode(s), and change/rev superblock if necessary.
+-	 */
+-	error = xfs_qm_init_quotainfo(mp);
+-	if (error) {
+-		/*
+-		 * We must turn off quotas.
+-		 */
+-		ASSERT(mp->m_quotainfo == NULL);
+-		mp->m_qflags = 0;
+-		goto write_changes;
+-	}
+-	/*
+-	 * If any of the quotas are not consistent, do a quotacheck.
+-	 */
+-	if (XFS_QM_NEED_QUOTACHECK(mp)) {
+-		error = xfs_qm_quotacheck(mp);
+-		if (error) {
+-			/* Quotacheck failed and disabled quotas. */
+-			return;
+-		}
+-	}
+-	/* 
+-	 * If one type of quotas is off, then it will lose its
+-	 * quotachecked status, since we won't be doing accounting for
+-	 * that type anymore.
+-	 */
+-	if (!XFS_IS_UQUOTA_ON(mp))
+-		mp->m_qflags &= ~XFS_UQUOTA_CHKD;
+-	if (!XFS_IS_GQUOTA_ON(mp))
+-		mp->m_qflags &= ~XFS_GQUOTA_CHKD;
+-	if (!XFS_IS_PQUOTA_ON(mp))
+-		mp->m_qflags &= ~XFS_PQUOTA_CHKD;
+-
+- write_changes:
+-	/*
+-	 * We actually don't have to acquire the m_sb_lock at all.
+-	 * This can only be called from mount, and that's single threaded. XXX
+-	 */
+-	spin_lock(&mp->m_sb_lock);
+-	sbf = mp->m_sb.sb_qflags;
+-	mp->m_sb.sb_qflags = mp->m_qflags & XFS_MOUNT_QUOTA_ALL;
+-	spin_unlock(&mp->m_sb_lock);
+-
+-	if (sbf != (mp->m_qflags & XFS_MOUNT_QUOTA_ALL)) {
+-		if (xfs_qm_write_sb_changes(mp, XFS_SB_QFLAGS)) {
+-			/*
+-			 * We could only have been turning quotas off.
+-			 * We aren't in very good shape actually because
+-			 * the incore structures are convinced that quotas are
+-			 * off, but the on disk superblock doesn't know that !
+-			 */
+-			ASSERT(!(XFS_IS_QUOTA_RUNNING(mp)));
+-			xfs_alert(mp, "%s: Superblock update failed!",
+-				__func__);
+-		}
+-	}
+-
+-	if (error) {
+-		xfs_warn(mp, "Failed to initialize disk quotas.");
+-		return;
+-	}
+-}
+-
+ /*
+  * Called from the vfsops layer.
+  */
+@@ -1501,7 +1407,7 @@ out_unlock:
+  * Walk thru all the filesystem inodes and construct a consistent view
+  * of the disk quota world. If the quotacheck fails, disable quotas.
+  */
+-int
++STATIC int
+ xfs_qm_quotacheck(
+ 	xfs_mount_t	*mp)
+ {
+@@ -1638,6 +1544,99 @@ xfs_qm_quotacheck(
  }
  
  /*
-- * Return stat information in bulk (by-inode) for the filesystem.
-+ * Return stat information in bulk (by-inode) in an allocation group until
-+ * we run out of the AG or user buffers.
-  */
--int					/* error status */
--xfs_bulkstat(
--	xfs_mount_t		*mp,	/* mount point for filesystem */
--	xfs_ino_t		*lastinop, /* last inode returned */
--	int			*ubcountp, /* size of buffer/count returned */
--	bulkstat_one_pf		formatter, /* func that'd fill a single buf */
--	size_t			statstruct_size, /* sizeof struct filling */
--	char			__user *ubuffer, /* buffer with inode stats */
--	int			*done)	/* 1 if there are more stats to get */
-+int
-+xfs_perag_bulkstat(
-+	struct xfs_mount		*mp,
-+	struct xfs_agbulkstat		*agbulkp,
-+	struct xfs_inobt_rec_incore	*irbuf,
-+	size_t				nirbuf,
-+	bulkstat_one_pf			formatter,
-+	size_t				statstruct_size)
- {
--	xfs_buf_t		*agbp;	/* agi header buffer */
--	xfs_agi_t		*agi;	/* agi header data */
--	xfs_agino_t		agino;	/* inode # in allocation group */
--	xfs_agnumber_t		agno;	/* allocation group number */
--	xfs_btree_cur_t		*cur;	/* btree cursor for ialloc btree */
--	int			end_of_ag; /* set if we've seen the ag end */
--	int			error;	/* error code */
--	int                     fmterror;/* bulkstat formatter result */
--	int			i;	/* loop index */
--	int			icount;	/* count of inodes good in irbuf */
--	size_t			irbsize; /* size of irec buffer in bytes */
--	xfs_ino_t		ino;	/* inode number (filesystem) */
--	xfs_inobt_rec_incore_t	*irbp;	/* current irec buffer pointer */
--	xfs_inobt_rec_incore_t	*irbuf;	/* start of irec buffer */
--	xfs_inobt_rec_incore_t	*irbufend; /* end of good irec buffer entries */
--	xfs_ino_t		lastino; /* last inode number returned */
--	int			nirbuf;	/* size of irbuf */
--	int			rval;	/* return value error code */
--	int			tmp;	/* result value from btree calls */
--	int			ubcount; /* size of user's buffer */
--	int			ubleft;	/* bytes left in user's buffer */
--	char			__user *ubufp;	/* pointer into user's buffer */
--	int			ubelem;	/* spaces used in user's buffer */
--
--	/*
--	 * Get the last inode value, see if there's nothing to do.
--	 */
--	ino = (xfs_ino_t)*lastinop;
--	lastino = ino;
--	agno = XFS_INO_TO_AGNO(mp, ino);
--	agino = XFS_INO_TO_AGINO(mp, ino);
--	if (agno >= mp->m_sb.sb_agcount ||
--	    ino != XFS_AGINO_TO_INO(mp, agno, agino)) {
--		*done = 1;
--		*ubcountp = 0;
--		return 0;
--	}
--	ubcount = *ubcountp; /* statstruct's */
--	ubleft = ubcount * statstruct_size; /* bytes */
--	*ubcountp = ubelem = 0;
--	*done = 0;
--	fmterror = 0;
--	ubufp = ubuffer;
--	irbuf = kmem_zalloc_greedy(&irbsize, PAGE_SIZE, PAGE_SIZE * 4);
--	if (!irbuf)
--		return ENOMEM;
--
--	nirbuf = irbsize / sizeof(*irbuf);
-+	xfs_agnumber_t			agno = agbulkp->ab_agno;
-+	xfs_agino_t			agino = *(agbulkp->ab_aginop);
-+	xfs_ino_t			lastino = XFS_AGINO_TO_INO(mp, agno,
-+								   agino);
-+	char				__user *ubuffer = agbulkp->ab_ubuffer;
-+	int				ubcount = agbulkp->ab_icount;
-+	int				ubelem = 0;/* # elements written */
-+	struct xfs_btree_cur		*cur = NULL;
-+	struct xfs_buf			*agbp = NULL;
-+	int				ubleft_bytes;
-+	int				error;
++ * This is called from xfs_mountfs to start quotas and initialize all
++ * necessary data structures like quotainfo.  This is also responsible for
++ * running a quotacheck as necessary.  We are guaranteed that the superblock
++ * is consistently read in at this point.
++ *
++ * If we fail here, the mount will continue with quota turned off. We don't
++ * need to inidicate success or failure at all.
++ */
++void
++xfs_qm_mount_quotas(
++	struct xfs_mount	*mp)
++{
++	int			error = 0;
++	uint			sbf;
 +
-+	ubleft_bytes = ubcount * statstruct_size;
-+	for (;;) {
-+		struct xfs_inobt_rec_incore	*irbp = irbuf;
-+		struct xfs_inobt_rec_incore	*irbufend = irbuf + nirbuf;
-+		struct xfs_agi			*agi;
-+		int				stat;
-+		int				icount = 0;/* # inodes in irbuf */
-+		bool				end_of_ag = false;
- 
--	/*
--	 * Loop over the allocation groups, starting from the last
--	 * inode returned; 0 means start of the allocation group.
--	 */
--	rval = 0;
--	while (XFS_BULKSTAT_UBLEFT(ubleft) && agno < mp->m_sb.sb_agcount) {
--		cond_resched();
- 		error = xfs_ialloc_read_agi(mp, NULL, agno, &agbp);
- 		if (error)
- 			break;
- 		agi = XFS_BUF_TO_AGI(agbp);
--		/*
--		 * Allocate and initialize a btree cursor for ialloc btree.
--		 */
- 		cur = xfs_inobt_init_cursor(mp, NULL, agbp, agno);
--		irbp = irbuf;
--		irbufend = irbuf + nirbuf;
--		end_of_ag = 0;
--		icount = 0;
- 		if (agino > 0) {
- 			/*
- 			 * In the middle of an allocation group, we need to get
-@@ -434,32 +392,34 @@ xfs_bulkstat(
- 				irbp++;
- 				agino += r.ir_startino + XFS_INODES_PER_CHUNK;
- 			}
--			/* Increment to the next record */
--			error = xfs_btree_increment(cur, 0, &tmp);
-+			error = xfs_btree_increment(cur, 0, &stat);
-+			if (error)
-+				break;
-+			if (!stat)
-+				end_of_ag = true;
- 		} else {
- 			/* Start of ag.  Lookup the first inode chunk */
--			error = xfs_inobt_lookup(cur, 0, XFS_LOOKUP_GE, &tmp);
-+			error = xfs_inobt_lookup(cur, 0, XFS_LOOKUP_GE, &stat);
-+			if (error || !stat)
-+				break;
- 		}
--		if (error)
--			break;
- 
- 		/*
--		 * Loop through inode btree records in this ag,
--		 * until we run out of inodes or space in the buffer.
-+		 * Loop over inode btree records in this AG until we run out of
-+		 * inodes or space in the buffer.
- 		 */
- 		while (irbp < irbufend && icount < ubcount) {
- 			struct xfs_inobt_rec_incore	r;
- 
--			error = xfs_inobt_get_rec(cur, &r, &i);
--			if (error || i == 0) {
--				end_of_ag = 1;
-+			error = xfs_inobt_get_rec(cur, &r, &stat);
-+			if (error)
-+				break;
-+			if (!stat) {
-+				end_of_ag = true;
- 				break;
- 			}
- 
--			/*
--			 * If this chunk has any allocated inodes, save it.
--			 * Also start read-ahead now for this chunk.
--			 */
-+			/* If this chunk has any allocated inodes, save it */
- 			if (r.ir_freecount < XFS_INODES_PER_CHUNK) {
- 				xfs_bulkstat_ichunk_ra(mp, agno, &r);
- 				irbp->ir_startino = r.ir_startino;
-@@ -468,77 +428,149 @@ xfs_bulkstat(
- 				irbp++;
- 				icount += XFS_INODES_PER_CHUNK - r.ir_freecount;
- 			}
--			/*
--			 * Set agino to after this chunk and bump the cursor.
--			 */
-+
-+			/* Set agino to after this chunk and bump the cursor */
- 			agino = r.ir_startino + XFS_INODES_PER_CHUNK;
--			error = xfs_btree_increment(cur, 0, &tmp);
-+			error = xfs_btree_increment(cur, 0, &stat);
-+			if (error)
-+				break;
-+			if (!stat) {
-+				end_of_ag = true;
-+				break;
-+			}
-+
- 			cond_resched();
- 		}
-+
-+		/* Break if previously there is any error has happened */
-+		if (error)
-+			break;
- 		/*
--		 * Drop the btree buffers and the agi buffer.
--		 * We can't hold any of the locks these represent
--		 * when calling iget.
-+		 * Drop the btree buffers and the agi buffer.  We can't hold
-+		 * any of the locks these represent when calling iget.
- 		 */
- 		xfs_btree_del_cursor(cur, XFS_BTREE_NOERROR);
-+		cur = NULL;
- 		xfs_buf_relse(agbp);
--		/*
--		 * Now format all the good inodes into the user's buffer.
--		 */
-+		agbp = NULL;
-+
- 		irbufend = irbp;
- 		for (irbp = irbuf;
--		     irbp < irbufend && XFS_BULKSTAT_UBLEFT(ubleft); irbp++) {
--			struct xfs_bulkstat_agichunk ac;
-+		     irbp < irbufend && XFS_BULKSTAT_UBLEFT(ubleft_bytes);
-+		     irbp++) {
-+			struct xfs_bulkstat_agichunk	ac;
- 
- 			ac.ac_lastino = lastino;
- 			ac.ac_ubuffer = ubuffer;
--			ac.ac_ubleft = ubleft;
-+			ac.ac_ubleft = ubleft_bytes;
- 			ac.ac_ubelem = ubelem;
- 			error = xfs_bulkstat_ag_ichunk(mp, agno, irbp,
- 					formatter, statstruct_size, &ac);
- 			if (error)
--				rval = error;
--
-+				break;
- 			lastino = ac.ac_lastino;
--			ubleft = ac.ac_ubleft;
-+			ubleft_bytes = ac.ac_ubleft;
- 			ubelem = ac.ac_ubelem;
- 
- 			cond_resched();
- 		}
--		/*
--		 * Set up for the next loop iteration.
--		 */
--		if (XFS_BULKSTAT_UBLEFT(ubleft)) {
--			if (end_of_ag) {
--				agno++;
--				agino = 0;
--			} else
--				agino = XFS_INO_TO_AGINO(mp, lastino);
--		} else
-+
-+		if (error || end_of_ag || !XFS_BULKSTAT_UBLEFT(ubleft_bytes))
- 			break;
-+
-+		/* Set up for the next loop iteration */
-+		agino = XFS_INO_TO_AGINO(mp, lastino);
- 	}
-+
-+	if (!error) {
-+		agbulkp->ab_ocount = ubelem;
-+		*(agbulkp->ab_aginop) = XFS_INO_TO_AGINO(mp, lastino);
++	/*
++	 * If quotas on realtime volumes is not supported, we disable
++	 * quotas immediately.
++	 */
++	if (mp->m_sb.sb_rextents) {
++		xfs_notice(mp, "Cannot turn on quotas for realtime filesystem");
++		mp->m_qflags = 0;
++		goto write_changes;
 +	}
 +
-+	if (cur) {
-+		xfs_btree_del_cursor(cur, error ? XFS_BTREE_ERROR :
-+						  XFS_BTREE_NOERROR);
-+	}
-+	if (agbp)
-+		xfs_buf_relse(agbp);
++	ASSERT(XFS_IS_QUOTA_RUNNING(mp));
 +
-+	return error;
++	/*
++	 * Allocate the quotainfo structure inside the mount struct, and
++	 * create quotainode(s), and change/rev superblock if necessary.
++	 */
++	error = xfs_qm_init_quotainfo(mp);
++	if (error) {
++		/*
++		 * We must turn off quotas.
++		 */
++		ASSERT(mp->m_quotainfo == NULL);
++		mp->m_qflags = 0;
++		goto write_changes;
++	}
++	/*
++	 * If any of the quotas are not consistent, do a quotacheck.
++	 */
++	if (XFS_QM_NEED_QUOTACHECK(mp)) {
++		error = xfs_qm_quotacheck(mp);
++		if (error) {
++			/* Quotacheck failed and disabled quotas. */
++			return;
++		}
++	}
++	/*
++	 * If one type of quotas is off, then it will lose its
++	 * quotachecked status, since we won't be doing accounting for
++	 * that type anymore.
++	 */
++	if (!XFS_IS_UQUOTA_ON(mp))
++		mp->m_qflags &= ~XFS_UQUOTA_CHKD;
++	if (!XFS_IS_GQUOTA_ON(mp))
++		mp->m_qflags &= ~XFS_GQUOTA_CHKD;
++	if (!XFS_IS_PQUOTA_ON(mp))
++		mp->m_qflags &= ~XFS_PQUOTA_CHKD;
++
++ write_changes:
++	/*
++	 * We actually don't have to acquire the m_sb_lock at all.
++	 * This can only be called from mount, and that's single threaded. XXX
++	 */
++	spin_lock(&mp->m_sb_lock);
++	sbf = mp->m_sb.sb_qflags;
++	mp->m_sb.sb_qflags = mp->m_qflags & XFS_MOUNT_QUOTA_ALL;
++	spin_unlock(&mp->m_sb_lock);
++
++	if (sbf != (mp->m_qflags & XFS_MOUNT_QUOTA_ALL)) {
++		if (xfs_qm_write_sb_changes(mp, XFS_SB_QFLAGS)) {
++			/*
++			 * We could only have been turning quotas off.
++			 * We aren't in very good shape actually because
++			 * the incore structures are convinced that quotas are
++			 * off, but the on disk superblock doesn't know that !
++			 */
++			ASSERT(!(XFS_IS_QUOTA_RUNNING(mp)));
++			xfs_alert(mp, "%s: Superblock update failed!",
++				__func__);
++		}
++	}
++
++	if (error) {
++		xfs_warn(mp, "Failed to initialize disk quotas.");
++		return;
++	}
 +}
 +
 +/*
-+ * Return stat information in bulk (by-inode) for the filesystem.
-+ */
-+int
-+xfs_bulkstat(
-+	struct xfs_mount	*mp,	/* mount point for filesystem */
-+	xfs_ino_t		*lastinop, /* last inode returned */
-+	int			*ubcountp, /* size of buffer/count returned */
-+	bulkstat_one_pf		formatter, /* func that'd fill a single buf */
-+	size_t			statstruct_size, /* sizeof struct filling */
-+	char			__user *ubuffer, /* buffer with inode stats */
-+	int			*done)	/* 1 if there are more stats to get */
-+{
-+	xfs_ino_t		lastino = *lastinop;/* last inode number */
-+	xfs_agnumber_t		agno = XFS_INO_TO_AGNO(mp, lastino);
-+	xfs_agino_t		agino = XFS_INO_TO_AGINO(mp, lastino);
-+	int			ubleft = *ubcountp;/* size of user's buffer */
-+	size_t			irbsize;/* size of irec buffer in bytes */
-+	int			nirbuf;	/* size of irbuf */
-+	int			error;	/* error code */
-+	struct xfs_inobt_rec_incore *irbuf;/* start of irec buffer */
-+
-+	/* The given last inode number is beyond file system range, done */
-+	if (agno >= mp->m_sb.sb_agcount ||
-+	    lastino != XFS_AGINO_TO_INO(mp, agno, agino)) {
-+		*ubcountp = 0;
-+		*done = 1;
-+		return 0;
-+	}
-+
-+	irbuf = kmem_zalloc_greedy(&irbsize, PAGE_SIZE, PAGE_SIZE * 4);
-+	if (!irbuf)
-+		return ENOMEM;
-+	nirbuf = irbsize / sizeof(*irbuf);
-+
-+	*done = 0;
- 	/*
--	 * Done, we're either out of filesystem or space to put the data.
--	 */
--	kmem_free(irbuf);
--	*ubcountp = ubelem;
--	/*
--	 * Found some inodes, return them now and return the error next time.
-+	 * Loop over the allocation groups, starting from the last inode
-+	 * returned; 0 means start of the allocation group.
- 	 */
--	if (ubelem)
--		rval = 0;
--	if (agno >= mp->m_sb.sb_agcount) {
-+	do {
-+		struct xfs_agbulkstat	agbulk;
-+
-+		agbulk.ab_agno = agno;
-+		agbulk.ab_aginop = &agino;
-+		agbulk.ab_ubuffer = ubuffer;
-+		agbulk.ab_icount = ubleft;
-+		agbulk.ab_ocount = 0;
-+		error = xfs_perag_bulkstat(mp, &agbulk, irbuf, nirbuf,
-+					   formatter, statstruct_size);
-+		if (error)
-+			break;
-+
-+		ubleft -= agbulk.ab_ocount;
-+		ASSERT(ubleft >= 0);
-+		if (!ubleft)
-+			break;
-+
- 		/*
--		 * If we ran out of filesystem, mark lastino as off
--		 * the end of the filesystem, so the next call
--		 * will return immediately.
-+		 * No more inodes in current allocation group, however the user
-+		 * requires more.  Proceed to loop over the next one.
- 		 */
--		*lastinop = (xfs_ino_t)XFS_AGINO_TO_INO(mp, agno, 0);
-+		agino = 0;
-+	} while (++agno < mp->m_sb.sb_agcount);
-+
-+	kmem_free(irbuf);
-+
-+	if (!error) {
-+		*ubcountp -= ubleft;
-+		*lastinop = XFS_AGINO_TO_INO(mp, agno, agino);
- 		*done = 1;
--	} else
--		*lastinop = (xfs_ino_t)lastino;
-+	}
- 
--	return rval;
-+	return error;
- }
- 
- /*
-diff --git a/fs/xfs/xfs_itable.h b/fs/xfs/xfs_itable.h
-index d3e004e..0488960 100644
---- a/fs/xfs/xfs_itable.h
-+++ b/fs/xfs/xfs_itable.h
-@@ -47,6 +47,26 @@ xfs_bulkstat_ag_ichunk(
- 	struct xfs_bulkstat_agichunk	*acp);
- 
- /*
-+ * Structures returned stat information in bulk (by-inode) per AG.
-+ */
-+struct xfs_agbulkstat {
-+	xfs_agnumber_t	ab_agno;	/* AG number */
-+	xfs_agino_t	*ab_aginop;	/* last agino returned */
-+	char		__user *ab_ubuffer; /* pointer into user's buffer */
-+	__uint32_t	ab_icount;	/* count of entries in buffer */
-+	__uint32_t	ab_ocount;	/* output counter */
-+};
-+
-+int
-+xfs_perag_bulkstat(
-+	struct xfs_mount		*mp,
-+	struct xfs_agbulkstat		*agbulkp,
-+	struct xfs_inobt_rec_incore	*irbuf,
-+	size_t				nirbuf,
-+	bulkstat_one_pf			formatter,
-+	size_t				statstruct_size);
-+
-+/*
-  * Values for stat return value.
+  * This is called after the superblock has been read in and we're ready to
+  * iget the quota inodes.
   */
- #define BULKSTAT_RV_NOTHING	0
+diff --git a/fs/xfs/xfs_qm.h b/fs/xfs/xfs_qm.h
+index 797fd46..3a07a93 100644
+--- a/fs/xfs/xfs_qm.h
++++ b/fs/xfs/xfs_qm.h
+@@ -157,7 +157,6 @@ struct xfs_dquot_acct {
+ #define XFS_QM_RTBWARNLIMIT	5
+ 
+ extern void		xfs_qm_destroy_quotainfo(struct xfs_mount *);
+-extern int		xfs_qm_quotacheck(struct xfs_mount *);
+ extern int		xfs_qm_write_sb_changes(struct xfs_mount *, __int64_t);
+ 
+ /* dquot stuff */
 -- 
 1.8.3.2
 
