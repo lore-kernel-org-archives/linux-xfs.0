@@ -1,32 +1,32 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 935D97F5F
-	for <xfs@oss.sgi.com>; Thu, 17 Apr 2014 19:58:29 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 1DD30AC005
-	for <xfs@oss.sgi.com>; Thu, 17 Apr 2014 17:58:29 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 6583A7F66
+	for <xfs@oss.sgi.com>; Thu, 17 Apr 2014 19:58:32 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 4C0998F8049
+	for <xfs@oss.sgi.com>; Thu, 17 Apr 2014 17:58:32 -0700 (PDT)
 Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id Nuq5IlunfTDSCF4o (version=TLSv1
+	cuda.sgi.com with ESMTP id 2u2DgDo1kkXc4eSH (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 17 Apr 2014 17:58:27 -0700 (PDT)
-Received: from acsinet22.oracle.com (acsinet22.oracle.com [141.146.126.238])
+	Thu, 17 Apr 2014 17:58:31 -0700 (PDT)
+Received: from acsinet21.oracle.com (acsinet21.oracle.com [141.146.126.237])
 	by aserp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with
-	ESMTP id s3I0wPme015792
+	ESMTP id s3I0wUjK015829
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Fri, 18 Apr 2014 00:58:26 GMT
-Received: from userz7021.oracle.com (userz7021.oracle.com [156.151.31.85])
-	by acsinet22.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
-	s3I0wPrJ015738
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=FAIL)
-	for <xfs@oss.sgi.com>; Fri, 18 Apr 2014 00:58:25 GMT
-Received: from abhmp0008.oracle.com (abhmp0008.oracle.com [141.146.116.14])
-	by userz7021.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
-	s3I0wOMx024635 for <xfs@oss.sgi.com>; Fri, 18 Apr 2014 00:58:24 GMT
-Message-ID: <535078AD.5050209@oracle.com>
-Date: Fri, 18 Apr 2014 08:58:21 +0800
+	for <xfs@oss.sgi.com>; Fri, 18 Apr 2014 00:58:30 GMT
+Received: from userz7022.oracle.com (userz7022.oracle.com [156.151.31.86])
+	by acsinet21.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
+	s3I0wTSW020459
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <xfs@oss.sgi.com>; Fri, 18 Apr 2014 00:58:30 GMT
+Received: from abhmp0011.oracle.com (abhmp0011.oracle.com [141.146.116.17])
+	by userz7022.oracle.com (8.14.5+Sun/8.14.4) with ESMTP id
+	s3I0wT7j024913 for <xfs@oss.sgi.com>; Fri, 18 Apr 2014 00:58:29 GMT
+Message-ID: <535078B2.8010601@oracle.com>
+Date: Fri, 18 Apr 2014 08:58:26 +0800
 From: Jeff Liu <jeff.liu@oracle.com>
 MIME-Version: 1.0
-Subject: [PATCH v2 02/10] xfs: consolidate xfs_bulkstat_single
+Subject: [PATCH v2 03/10] xfs: consolidate xfs_inumbers
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -43,135 +43,232 @@ To: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
 From: Jie Liu <jeff.liu@oracle.com>
 
-In xfs_bulkstat_single(), call xfs_bulkstat_one() and xfs_bulkstat()
-would return different error if either failed, we'd better return the
-proper error in this case.  Moreover, the function argument done is
-useless in terms of xfs_ioc_bulkstat(), hence we can get rid of it.
+To fetch the file system number tables, we currently just ignore the
+errors and proceed to loop over the next AG or bump agino to the next
+chunk in case of btree operations failed, that is not properly because
+those errors might hint us potential file system problems.
+
+This patch rework xfs_inumbers() to handle the btree operation errors
+as well as the loop conditions.  Also, add pre-checkups for the given
+inode, we can save alloc/free the format buffer once against an invalid
+inode number.
 
 Signed-off-by: Jie Liu <jeff.liu@oracle.com>
 ---
- fs/xfs/xfs_ioctl.c  |  3 +--
- fs/xfs/xfs_itable.c | 60 ++++++++++++++++++++++++++---------------------------
- fs/xfs/xfs_itable.h |  5 ++---
- 3 files changed, 33 insertions(+), 35 deletions(-)
+ fs/xfs/xfs_itable.c | 159 ++++++++++++++++++++++------------------------------
+ 1 file changed, 67 insertions(+), 92 deletions(-)
 
-diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-index 0b18776..f9c4512 100644
---- a/fs/xfs/xfs_ioctl.c
-+++ b/fs/xfs/xfs_ioctl.c
-@@ -798,8 +798,7 @@ xfs_ioc_bulkstat(
- 		error = xfs_inumbers(mp, &inlast, &count,
- 					bulkreq.ubuffer, xfs_inumbers_fmt);
- 	else if (cmd == XFS_IOC_FSBULKSTAT_SINGLE)
--		error = xfs_bulkstat_single(mp, &inlast,
--						bulkreq.ubuffer, &done);
-+		error = xfs_bulkstat_single(mp, &inlast, bulkreq.ubuffer);
- 	else	/* XFS_IOC_FSBULKSTAT */
- 		error = xfs_bulkstat(mp, &inlast, &count, xfs_bulkstat_one,
- 				     sizeof(xfs_bstat_t), bulkreq.ubuffer,
 diff --git a/fs/xfs/xfs_itable.c b/fs/xfs/xfs_itable.c
-index b5bb7b6..f34e95a 100644
+index f34e95a..2025bd0 100644
 --- a/fs/xfs/xfs_itable.c
 +++ b/fs/xfs/xfs_itable.c
-@@ -509,51 +509,51 @@ xfs_bulkstat(
- }
- 
- /*
-- * Return stat information in bulk (by-inode) for the filesystem.
-- * Special case for non-sequential one inode bulkstat.
-+ * Return stat information in bulk (by-inode) for the filesystem.  Special case
-+ * for non-sequential one inode bulkstat.
-  */
--int					/* error status */
-+int
- xfs_bulkstat_single(
--	xfs_mount_t		*mp,	/* mount point for filesystem */
-+	struct xfs_mount	*mp,	/* mount point for filesystem */
- 	xfs_ino_t		*lastinop, /* inode to return */
--	char			__user *buffer, /* buffer with inode stats */
--	int			*done)	/* 1 if there are more stats to get */
-+	char			__user *buffer) /* buffer with inode stats */
- {
--	int			count;	/* count value for bulkstat call */
--	int			error;	/* return value */
--	xfs_ino_t		ino;	/* filesystem inode number */
-+	xfs_ino_t		ino = *lastinop;
- 	int			res;	/* result from bs1 */
-+	int			error;
- 
- 	/*
--	 * note that requesting valid inode numbers which are not allocated
-+	 * Note that requesting valid inode numbers which are not allocated
- 	 * to inodes will most likely cause xfs_imap_to_bp to generate warning
--	 * messages about bad magic numbers. This is ok. The fact that
--	 * the inode isn't actually an inode is handled by the
--	 * error check below. Done this way to make the usual case faster
--	 * at the expense of the error case.
-+	 * messages about bad magic numbers. This is ok. The fact that the
-+	 * inode isn't actually an inode is handled by the error check below.
-+	 * Done this way to make the usual case faster at the expense of the
-+	 * error case.
- 	 */
--
--	ino = *lastinop;
--	error = xfs_bulkstat_one(mp, ino, buffer, sizeof(xfs_bstat_t),
-+	error = xfs_bulkstat_one(mp, ino, buffer, sizeof(struct xfs_bstat),
- 				 NULL, &res);
- 	if (error) {
-+		int		count = 1;
-+		int		done, error2;
-+
- 		/*
--		 * Special case way failed, do it the "long" way
--		 * to see if that works.
-+		 * Special case way failed, do it the "long" way to see if
-+		 * that works.
- 		 */
- 		(*lastinop)--;
--		count = 1;
--		if (xfs_bulkstat(mp, lastinop, &count, xfs_bulkstat_one,
--				sizeof(xfs_bstat_t), buffer, done))
--			return error;
--		if (count == 0 || (xfs_ino_t)*lastinop != ino)
--			return error == EFSCORRUPTED ?
--				XFS_ERROR(EINVAL) : error;
--		else
--			return 0;
-+		error2 = xfs_bulkstat(mp, lastinop, &count, xfs_bulkstat_one,
-+				      sizeof(struct xfs_bstat), buffer, &done);
-+		if (error2)
-+			return error2;
-+
-+		if (count == 0 || *lastinop != ino) {
-+			if (error == EFSCORRUPTED)
-+				error = XFS_ERROR(EINVAL);
-+		} else
-+			error = 0;
- 	}
--	*done = 0;
--	return 0;
-+
-+	return error;
- }
- 
+@@ -559,12 +559,12 @@ xfs_bulkstat_single(
  int
-diff --git a/fs/xfs/xfs_itable.h b/fs/xfs/xfs_itable.h
-index 97295d9..21dbbd7 100644
---- a/fs/xfs/xfs_itable.h
-+++ b/fs/xfs/xfs_itable.h
-@@ -52,10 +52,9 @@ xfs_bulkstat(
- 
- int
- xfs_bulkstat_single(
--	xfs_mount_t		*mp,
-+	struct xfs_mount	*mp,
- 	xfs_ino_t		*lastinop,
--	char			__user *buffer,
--	int			*done);
-+	char			__user *buffer);
- 
- typedef int (*bulkstat_one_fmt_pf)(  /* used size in bytes or negative error */
+ xfs_inumbers_fmt(
  	void			__user *ubuffer, /* buffer to write to */
+-	const xfs_inogrp_t	*buffer,	/* buffer to read from */
++	const struct xfs_inogrp	*buffer,	/* buffer to read from */
+ 	long			count,		/* # of elements to read */
+ 	long			*written)	/* # of bytes written */
+ {
+ 	if (copy_to_user(ubuffer, buffer, count * sizeof(*buffer)))
+-		return -EFAULT;
++		return XFS_ERROR(EFAULT);
+ 	*written = count * sizeof(*buffer);
+ 	return 0;
+ }
+@@ -574,126 +574,101 @@ xfs_inumbers_fmt(
+  */
+ int					/* error status */
+ xfs_inumbers(
+-	xfs_mount_t	*mp,		/* mount point for filesystem */
+-	xfs_ino_t	*lastino,	/* last inode returned */
+-	int		*count,		/* size of buffer/count returned */
+-	void		__user *ubuffer,/* buffer with inode descriptions */
+-	inumbers_fmt_pf	formatter)
++	struct xfs_mount	*mp,/* mount point for filesystem */
++	xfs_ino_t		*lastino,/* last inode returned */
++	int			*count,/* size of buffer/count returned */
++	void			__user *ubuffer,/* buffer with inode desc */
++	inumbers_fmt_pf		formatter)
+ {
+-	xfs_buf_t	*agbp;
+-	xfs_agino_t	agino;
+-	xfs_agnumber_t	agno;
+-	int		bcount;
+-	xfs_inogrp_t	*buffer;
+-	int		bufidx;
+-	xfs_btree_cur_t	*cur;
+-	int		error;
+-	xfs_inobt_rec_incore_t r;
+-	int		i;
+-	xfs_ino_t	ino;
+-	int		left;
+-	int		tmp;
+-
+-	ino = (xfs_ino_t)*lastino;
+-	agno = XFS_INO_TO_AGNO(mp, ino);
+-	agino = XFS_INO_TO_AGINO(mp, ino);
+-	left = *count;
++	xfs_agnumber_t		agno = XFS_INO_TO_AGNO(mp, *lastino);
++	xfs_agino_t		agino = XFS_INO_TO_AGINO(mp, *lastino);
++	struct xfs_btree_cur	*cur = NULL;
++	struct xfs_buf		*agbp = NULL;
++	struct xfs_inogrp	*buffer;
++	int			left = *count;
++	int			bcount;
++	int			bufidx;
++	int			error;
++
+ 	*count = 0;
++	if (agno >= mp->m_sb.sb_agcount ||
++	    *lastino != XFS_AGINO_TO_INO(mp, agno, agino))
++		return 0;
++
+ 	bcount = MIN(left, (int)(PAGE_SIZE / sizeof(*buffer)));
+ 	buffer = kmem_alloc(bcount * sizeof(*buffer), KM_SLEEP);
+-	error = bufidx = 0;
+-	cur = NULL;
+-	agbp = NULL;
+-	while (left > 0 && agno < mp->m_sb.sb_agcount) {
+-		if (agbp == NULL) {
++	bufidx = error = 0;
++	do {
++		struct xfs_inobt_rec_incore	r;
++		int				stat;
++
++		if (!agbp) {
+ 			error = xfs_ialloc_read_agi(mp, NULL, agno, &agbp);
+-			if (error) {
+-				/*
+-				 * If we can't read the AGI of this ag,
+-				 * then just skip to the next one.
+-				 */
+-				ASSERT(cur == NULL);
+-				agbp = NULL;
+-				agno++;
+-				agino = 0;
+-				continue;
+-			}
++			if (error)
++				break;
+ 			cur = xfs_inobt_init_cursor(mp, NULL, agbp, agno);
+ 			error = xfs_inobt_lookup(cur, agino, XFS_LOOKUP_GE,
+-						 &tmp);
+-			if (error) {
+-				xfs_btree_del_cursor(cur, XFS_BTREE_ERROR);
+-				cur = NULL;
+-				xfs_buf_relse(agbp);
+-				agbp = NULL;
+-				/*
+-				 * Move up the last inode in the current
+-				 * chunk.  The lookup_ge will always get
+-				 * us the first inode in the next chunk.
+-				 */
+-				agino += XFS_INODES_PER_CHUNK - 1;
+-				continue;
+-			}
+-		}
+-		error = xfs_inobt_get_rec(cur, &r, &i);
+-		if (error || i == 0) {
+-			xfs_buf_relse(agbp);
+-			agbp = NULL;
+-			xfs_btree_del_cursor(cur, XFS_BTREE_NOERROR);
+-			cur = NULL;
+-			agno++;
+-			agino = 0;
+-			continue;
++						 &stat);
++			if (error)
++				break;
++			if (!stat)
++				goto next_ag;
+ 		}
++
++		error = xfs_inobt_get_rec(cur, &r, &stat);
++		if (error || !stat)
++			break;
++
+ 		agino = r.ir_startino + XFS_INODES_PER_CHUNK - 1;
+ 		buffer[bufidx].xi_startino =
+ 			XFS_AGINO_TO_INO(mp, agno, r.ir_startino);
+ 		buffer[bufidx].xi_alloccount =
+ 			XFS_INODES_PER_CHUNK - r.ir_freecount;
+ 		buffer[bufidx].xi_allocmask = ~r.ir_free;
+-		bufidx++;
+-		left--;
+-		if (bufidx == bcount) {
+-			long written;
+-			if (formatter(ubuffer, buffer, bufidx, &written)) {
+-				error = XFS_ERROR(EFAULT);
++		if (++bufidx == bcount) {
++			long	written;
++
++			error = formatter(ubuffer, buffer, bufidx, &written);
++			if (error)
+ 				break;
+-			}
+ 			ubuffer += written;
+ 			*count += bufidx;
+ 			bufidx = 0;
+ 		}
+-		if (left) {
+-			error = xfs_btree_increment(cur, 0, &tmp);
+-			if (error) {
+-				xfs_btree_del_cursor(cur, XFS_BTREE_ERROR);
+-				cur = NULL;
+-				xfs_buf_relse(agbp);
+-				agbp = NULL;
+-				/*
+-				 * The agino value has already been bumped.
+-				 * Just try to skip up to it.
+-				 */
+-				agino += XFS_INODES_PER_CHUNK;
+-				continue;
+-			}
+-		}
+-	}
++		if (!--left)
++			break;
++
++		error = xfs_btree_increment(cur, 0, &stat);
++		if (error)
++			break;
++		if (stat)
++			continue;
++
++next_ag:
++		xfs_btree_del_cursor(cur, XFS_BTREE_NOERROR);
++		cur = NULL;
++		xfs_buf_relse(agbp);
++		agbp = NULL;
++		agino = 0;
++	} while (++agno < mp->m_sb.sb_agcount);
++
+ 	if (!error) {
+ 		if (bufidx) {
+-			long written;
+-			if (formatter(ubuffer, buffer, bufidx, &written))
+-				error = XFS_ERROR(EFAULT);
+-			else
++			long	written;
++
++			error = formatter(ubuffer, buffer, bufidx, &written);
++			if (!error)
+ 				*count += bufidx;
+ 		}
+ 		*lastino = XFS_AGINO_TO_INO(mp, agno, agino);
+ 	}
++
+ 	kmem_free(buffer);
+ 	if (cur)
+ 		xfs_btree_del_cursor(cur, (error ? XFS_BTREE_ERROR :
+ 					   XFS_BTREE_NOERROR));
+ 	if (agbp)
+ 		xfs_buf_relse(agbp);
++
+ 	return error;
+ }
 -- 
 1.8.3.2
 
