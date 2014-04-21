@@ -1,24 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id B575B7F3F
-	for <xfs@oss.sgi.com>; Mon, 21 Apr 2014 18:35:16 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 345FDAC007
-	for <xfs@oss.sgi.com>; Mon, 21 Apr 2014 16:35:16 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 44E337F3F
+	for <xfs@oss.sgi.com>; Mon, 21 Apr 2014 18:44:01 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id F06DF8F8068
+	for <xfs@oss.sgi.com>; Mon, 21 Apr 2014 16:44:00 -0700 (PDT)
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	sr4cTuQKfJJEMmHz for <xfs@oss.sgi.com>;
-	Mon, 21 Apr 2014 16:35:14 -0700 (PDT)
-Date: Tue, 22 Apr 2014 09:35:12 +1000
+	ySB31F3UwMTIoKqX for <xfs@oss.sgi.com>;
+	Mon, 21 Apr 2014 16:43:58 -0700 (PDT)
+Date: Tue, 22 Apr 2014 09:43:17 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 5/9] repair: detect CRC errors in AG headers
-Message-ID: <20140421233512.GE18672@dastard>
-References: <1397550301-31883-1-git-send-email-david@fromorbit.com>
-	<1397550301-31883-6-git-send-email-david@fromorbit.com>
-	<20140421071106.GF20384@infradead.org>
+Subject: Re: [PATCH 2/2] xfs: Nuke XFS_ERROR macro
+Message-ID: <20140421234317.GF18672@dastard>
+References: <534EC073.8090006@sandeen.net> <534EC282.7010905@sandeen.net>
+	<20140416175117.GA23643@infradead.org>
+	<534EC42D.1080704@sandeen.net> <534ED5E4.60903@sandeen.net>
+	<20140416220807.GN15995@dastard>
+	<20140416194444.50176f0f@gandalf.local.home>
+	<20140417003956.GS15995@dastard>
+	<20140421065746.GA20384@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20140421071106.GF20384@infradead.org>
+In-Reply-To: <20140421065746.GA20384@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,34 +36,57 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+Cc: Eric Sandeen <sandeen@sandeen.net>, Steven Rostedt <rostedt@goodmis.org>, xfs-oss <xfs@oss.sgi.com>
 
-On Mon, Apr 21, 2014 at 12:11:06AM -0700, Christoph Hellwig wrote:
-> On Tue, Apr 15, 2014 at 06:24:57PM +1000, Dave Chinner wrote:
-> > From: Dave Chinner <dchinner@redhat.com>
+On Sun, Apr 20, 2014 at 11:57:46PM -0700, Christoph Hellwig wrote:
+> On Thu, Apr 17, 2014 at 10:39:56AM +1000, Dave Chinner wrote:
+> > so, basically a script that does:
 > > 
-> > repair doesn't currently detect verifier errors in AG header
-> > blocks - apart from the primary superblock they are not detected.
-> > They are, fortunately, corrected in the important cases (AGF, AGI
-> > and AGFL) because these structures are rebuilt in phase 5, but if
-> > you run xfs_repair in checking mode it won't report them as bad.
+> > #!/bin/bash
+> > 
+> > TRACEDIR=/sys/kernel/debug/tracing
+> > 
+> > grep -i 't xfs_' /proc/kallsyms | awk '{print $3}' ; while read F; do
+> > 	echo "r:ret_$F $F \$retval" >> $TRACEDIR/kprobe_events
+> > done
+> > 
+> > for E in $TRACEDIR/events/kprobes/ret_xfs_*/enable; do
+> > 	echo 1 > $E
+> > done;
+> > 
+> > echo 'arg1 > 0xffffffffffffff00' > $TRACEDIR/events/kprobes/filter
+> > 
+> > for T in $TRACEDIR/events/kprobes/ret_xfs_*/trigger; do
+> > 	echo 'traceoff if arg1 > 0xffffffffffffff00' > $T
+> > done
 > 
-> Shouldn't we apply the same scheme as for directories here, that is if
-> it fails with a verifier error re-read without the verifier and then
-> still do the full check as well?
+> This looks incredibly useful!  Can we throw this into Documentation/ as
+> a helper script (and make the xfs a command line parameter so it's
+> genericly useful)?
 
-The directory code is the special case - it uses xfs_trans_read_buf*
-interfaces, which return either a good buffer with no error or an
-error with no buffer. Hence for the directory code, we have to
-re-read the buffer without the verifier to grab the unchecked buffer
-from the cache when the verifier detects an error.
+So does that mean you have no more objections to removing
+XFS_ERROR()?
 
-> Btw, it might make sense to have special read_buf variants in libxfs
-> that always return a valid buffer even if the verifier fails, just
-> telling us about it without having to re-read.
+The thing is, that's a quick hack that spews errors all over the
+place, especially if you run it twice. It needs a counterpart to
+turn off the tracing, clean up the triggers, etc....
 
-That's exactly what they do now - you get the xfs_buf, the data in
-bp->b_addr and the verifier error in bp->b_error all in one call.
+FWIW, what I'd really like is a trace event trigger that triggers
+a BUG(), so that we can use it to drop into kernel debuggers or get
+kdump to generate a core that can be analysed offline...
+
+> One think that would be nice is to specify a module instead of relying
+> on a clean namespace, but to replace the XFS functionality the one above
+> is more than enough.
+
+My current hack is invoked like this:
+
+$ grep -i 't xfs_' /proc/kallsyms | retval_filter.sh
+
+Makes it completely independent of how you supply the symbols to the
+function. Hence my coments about how it'd be really cool to have
+this built into in trace-cmd, because the mechanism is independent
+of how you specify the function list...
 
 Cheers,
 
