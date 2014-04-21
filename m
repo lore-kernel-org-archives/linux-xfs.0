@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 3DBFE7F3F
-	for <xfs@oss.sgi.com>; Mon, 21 Apr 2014 09:01:58 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 1ED158F8035
-	for <xfs@oss.sgi.com>; Mon, 21 Apr 2014 07:01:55 -0700 (PDT)
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id 8o1hkAIZUt9fufuo (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 21 Apr 2014 07:01:53 -0700 (PDT)
-Message-ID: <535524BE.7070704@oracle.com>
-Date: Mon, 21 Apr 2014 22:01:34 +0800
-From: Jeff Liu <jeff.liu@oracle.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 4F3CC7F4E
+	for <xfs@oss.sgi.com>; Mon, 21 Apr 2014 09:11:50 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 0C8D2304051
+	for <xfs@oss.sgi.com>; Mon, 21 Apr 2014 07:11:49 -0700 (PDT)
+Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
+	ESMTP id 41hO0uXxR3pyiDOt (version=TLSv1 cipher=AES256-SHA
+	bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Mon, 21 Apr 2014 07:11:48 -0700 (PDT)
+Date: Mon, 21 Apr 2014 07:11:48 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH v2 02/10] xfs: consolidate xfs_bulkstat_single
+Message-ID: <20140421141148.GA27064@infradead.org>
+References: <535078AD.5050209@oracle.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfs: Fix wrong error codes being returned
-References: <1398074687-26548-1-git-send-email-tuomas.tynkkynen@iki.fi>	<5355132F.4070303@oracle.com>
-	<20140421130931.GB24813@bfoster.bfoster>
-In-Reply-To: <20140421130931.GB24813@bfoster.bfoster>
+Content-Disposition: inline
+In-Reply-To: <535078AD.5050209@oracle.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,55 +29,131 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
-Cc: Tuomas Tynkkynen <tuomas.tynkkynen@iki.fi>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: Jeff Liu <jeff.liu@oracle.com>
+Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-
-On 04/21 2014 21:09 PM, Brian Foster wrote:
-> On Mon, Apr 21, 2014 at 08:46:39PM +0800, Jeff Liu wrote:
->> Hi Tuomas,
->>
->> On 04/21 2014 18:04 PM, Tuomas Tynkkynen wrote:
->>> xfs_{compat_,}attrmulti_by_handle could return an errno with incorrect
->>> sign in some cases. While at it, make sure ENOMEM is returned instead of
->>> E2BIG if kmalloc fails.
->>>
->>> Signed-off-by: Tuomas Tynkkynen <tuomas.tynkkynen@iki.fi>
->>> ---
->>> Compile tested only. For the ERANGE case, I also wonder if it should
->>> be assigning to ops[i].am_error instead of error, and/or have a break.
->>
->> If I understand right, ops[i].am_error is used to save the internal operation result,
->> i.e, xfs_attrmult_attr_get{set}... but error is used for the ioctl call results.
->> Therefore, assign ERANGE to error is compatible with the VFS set{get}xattr syscalls in
->> case of "if (ops[i].am_error == 0 || ops[i].am_error == MAXNAMELEN)".
->>
+On Fri, Apr 18, 2014 at 08:58:21AM +0800, Jeff Liu wrote:
+> From: Jie Liu <jeff.liu@oracle.com>
 > 
-> But we set 'error' in this case and effectively try to continue the operation
-> whereas the traditional vfs path returns...
+> In xfs_bulkstat_single(), call xfs_bulkstat_one() and xfs_bulkstat()
+> would return different error if either failed, we'd better return the
+> proper error in this case.  Moreover, the function argument done is
+> useless in terms of xfs_ioc_bulkstat(), hence we can get rid of it.
 
-So the error would always be set to ERANGE if one or more attrname is/are invalid.
+I've looked at xfs_bulkstat_single I really can't see how falling back
+to the full xfs_bulkstat could fix any error.  We probably should just
+get rid of the fallback and instead do something like the (lightly tested)
+patch below:
 
-> 
->> It seems that we don't need to have a break in this case because xfs_attrmulti_by_handle()
->> is used to process multiple attrs.  Hence if a given attrname in ops array is invalid,
->> the am_error will indicate that with ENOATTR or EFAULT...but it should proceed to loop
->> through the left array members.
->>
-> 
-> Perhaps so if am_error == 0, but it depends on what attr_name contains
-> at that point (stale data?). Otherwise, we try to proceed with a
-> truncated name. It looks like the consistent thing to do would be set
-> am_error to ERANGE and continue (i.e., skip the op and move on to the
-> next).
+---
+From: Christoph Hellwig <hch@lst.de>
+Subject: xfs: remove xfs_bulkstat_single
 
-If we continue to process a truncated name in case of MAXNAMELEN, it would return
-EFAULT for SET/REMOVE operations, and ENOATTR for GET operation, which would be
-set back to am_error, but error still keep as ERANGE which is consistently.
+xfs_bukstat_one doesn't have any failure case that would go away when
+called through xfs_bulkstat, so remove the fallback and the now unessecary
+xfs_bulkstat_single function.
 
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/xfs/xfs_ioctl.c  |    4 ++--
+ fs/xfs/xfs_itable.c |   48 ------------------------------------------------
+ fs/xfs/xfs_itable.h |    7 -------
+ 3 files changed, 2 insertions(+), 57 deletions(-)
 
-Thanks,
--Jeff
+diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+index bcfe612..c6e32d1 100644
+--- a/fs/xfs/xfs_ioctl.c
++++ b/fs/xfs/xfs_ioctl.c
+@@ -824,8 +824,8 @@ xfs_ioc_bulkstat(
+ 		error = xfs_inumbers(mp, &inlast, &count,
+ 					bulkreq.ubuffer, xfs_inumbers_fmt);
+ 	else if (cmd == XFS_IOC_FSBULKSTAT_SINGLE)
+-		error = xfs_bulkstat_single(mp, &inlast,
+-						bulkreq.ubuffer, &done);
++		error = xfs_bulkstat_one(mp, inlast, bulkreq.ubuffer,
++					sizeof(xfs_bstat_t), NULL, &done);
+ 	else	/* XFS_IOC_FSBULKSTAT */
+ 		error = xfs_bulkstat(mp, &inlast, &count, xfs_bulkstat_one,
+ 				     sizeof(xfs_bstat_t), bulkreq.ubuffer,
+diff --git a/fs/xfs/xfs_itable.c b/fs/xfs/xfs_itable.c
+index f463382..58fcae0 100644
+--- a/fs/xfs/xfs_itable.c
++++ b/fs/xfs/xfs_itable.c
+@@ -511,54 +511,6 @@ xfs_bulkstat(
+ 	return rval;
+ }
+ 
+-/*
+- * Return stat information in bulk (by-inode) for the filesystem.
+- * Special case for non-sequential one inode bulkstat.
+- */
+-int					/* error status */
+-xfs_bulkstat_single(
+-	xfs_mount_t		*mp,	/* mount point for filesystem */
+-	xfs_ino_t		*lastinop, /* inode to return */
+-	char			__user *buffer, /* buffer with inode stats */
+-	int			*done)	/* 1 if there are more stats to get */
+-{
+-	int			count;	/* count value for bulkstat call */
+-	int			error;	/* return value */
+-	xfs_ino_t		ino;	/* filesystem inode number */
+-	int			res;	/* result from bs1 */
+-
+-	/*
+-	 * note that requesting valid inode numbers which are not allocated
+-	 * to inodes will most likely cause xfs_imap_to_bp to generate warning
+-	 * messages about bad magic numbers. This is ok. The fact that
+-	 * the inode isn't actually an inode is handled by the
+-	 * error check below. Done this way to make the usual case faster
+-	 * at the expense of the error case.
+-	 */
+-
+-	ino = *lastinop;
+-	error = xfs_bulkstat_one(mp, ino, buffer, sizeof(xfs_bstat_t),
+-				 NULL, &res);
+-	if (error) {
+-		/*
+-		 * Special case way failed, do it the "long" way
+-		 * to see if that works.
+-		 */
+-		(*lastinop)--;
+-		count = 1;
+-		if (xfs_bulkstat(mp, lastinop, &count, xfs_bulkstat_one,
+-				sizeof(xfs_bstat_t), buffer, done))
+-			return error;
+-		if (count == 0 || (xfs_ino_t)*lastinop != ino)
+-			return error == EFSCORRUPTED ?
+-				XFS_ERROR(EINVAL) : error;
+-		else
+-			return 0;
+-	}
+-	*done = 0;
+-	return 0;
+-}
+-
+ int
+ xfs_inumbers_fmt(
+ 	void			__user *ubuffer, /* buffer to write to */
+diff --git a/fs/xfs/xfs_itable.h b/fs/xfs/xfs_itable.h
+index 97295d9..6ea8b39 100644
+--- a/fs/xfs/xfs_itable.h
++++ b/fs/xfs/xfs_itable.h
+@@ -50,13 +50,6 @@ xfs_bulkstat(
+ 	char		__user *ubuffer,/* buffer with inode stats */
+ 	int		*done);		/* 1 if there are more stats to get */
+ 
+-int
+-xfs_bulkstat_single(
+-	xfs_mount_t		*mp,
+-	xfs_ino_t		*lastinop,
+-	char			__user *buffer,
+-	int			*done);
+-
+ typedef int (*bulkstat_one_fmt_pf)(  /* used size in bytes or negative error */
+ 	void			__user *ubuffer, /* buffer to write to */
+ 	int			ubsize,		 /* remaining user buffer sz */
+-- 
+1.7.10.4
 
 _______________________________________________
 xfs mailing list
