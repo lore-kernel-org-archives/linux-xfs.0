@@ -1,26 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 9C46A7F3F
-	for <xfs@oss.sgi.com>; Mon, 21 Apr 2014 11:43:13 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 8969730404E
-	for <xfs@oss.sgi.com>; Mon, 21 Apr 2014 09:43:10 -0700 (PDT)
-Received: from mailout1.w1.samsung.com (mailout1.w1.samsung.com
-	[210.118.77.11]) by cuda.sgi.com with ESMTP id Lwudvfxm9D3di3Nt
-	(version=TLSv1 cipher=RC4-MD5 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 21 Apr 2014 09:43:09 -0700 (PDT)
-Received: from eucpsbgm2.samsung.com (unknown [203.254.199.245])
-	by mailout1.w1.samsung.com
-	(Oracle Communications Messaging Server 7u4-24.01(7.0.4.24.0) 64bit
-	(built Nov
-	17 2011)) with ESMTP id <0N4E00LQ53RUWD30@mailout1.w1.samsung.com> for
-	xfs@oss.sgi.com; Mon, 21 Apr 2014 17:43:06 +0100 (BST)
-Subject: [PATCH] xfstests: generic/285: fix seek_sanity_test for generic
-	SEEK_HOLE/DATA
-From: Konstantin Khlebnikov <k.khlebnikov@samsung.com>
-Date: Mon, 21 Apr 2014 20:43:05 +0400
-Message-id: <20140421164305.22404.92195.stgit@buzz>
-MIME-version: 1.0
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 99CD729DF7
+	for <xfs@oss.sgi.com>; Mon, 21 Apr 2014 13:20:38 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 8AF888F8049
+	for <xfs@oss.sgi.com>; Mon, 21 Apr 2014 11:20:38 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id OxlYJBbq2Rg4LuR1 for
+	<xfs@oss.sgi.com>; Mon, 21 Apr 2014 11:20:34 -0700 (PDT)
+Message-ID: <5355478C.8070905@redhat.com>
+Date: Mon, 21 Apr 2014 11:30:04 -0500
+From: Eric Sandeen <sandeen@redhat.com>
+MIME-Version: 1.0
+Subject: [PATCH] xfstests: introduce FSX_AVOID env var
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,52 +25,142 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: xfs-oss <xfs@oss.sgi.com>
+Cc: ext4 development <linux-ext4@vger.kernel.org>, Theodore Tso <tytso@mit.edu>
 
-Generic implementation of SEEK_HOLE/DATA reports whole file as data chunk with
-virtual hole at the end (generic_file_llseek, used by ext2/ext3/reiserfs/nfs).
+Just like FSSTRESS_AVOID, FSX_AVOID can be used to add
+options at the end of the default fsx runs in each test.
+i.e. FSX_AVOID="-H -z -C" will disable punch hole, zero range,
+and collapse range calls in all tests which run fsx.
 
-Currently test prepares file smaller than expected for "huge file" testcases
-(testcases 10-12). This patch fixes test file layout, now second data chunk
-ends right at the expected end of file.
+This should handle Ted's concerns about buggy ext4 fallocate
+code without needing to add tunables to the kernel to reject
+these operations during xfstests runs.
 
-Plus it fixes type of 'filesz' argument, it should be off_t.
-
-Signed-off-by: Konstantin Khlebnikov <k.khlebnikov@samsung.com>
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 ---
- src/seek_sanity_test.c |    5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
 
-diff --git a/src/seek_sanity_test.c b/src/seek_sanity_test.c
-index fbf5a8c..7cf45c0 100644
---- a/src/seek_sanity_test.c
-+++ b/src/seek_sanity_test.c
-@@ -157,7 +157,7 @@ static int do_create(const char *filename)
- 	return fd;
- }
+diff --git a/README b/README
+index 295d67f..b299c8f 100644
+--- a/README
++++ b/README
+@@ -68,6 +68,11 @@ Preparing system for tests (IRIX and Linux):
+              - setenv FSTYP "the filesystem you want to test", the filesystem
+                type is devised from the TEST_DEV device, but you may want to
+                override it; if unset, the default is 'xfs'
++             - setenv FSSTRESS_AVOID and/or FSX_AVOID, which contain options
++               added to the end of fsstresss and fsx invocations, respectively,
++               in case you wish to exclude certain operational modes from these
++               tests.
++
+         - or add a case to the switch in common/config assigning
+           these variables based on the hostname of your test
+           machine
+diff --git a/tests/generic/075 b/tests/generic/075
+index 8b4ab39..af4f34b 100755
+--- a/tests/generic/075
++++ b/tests/generic/075
+@@ -75,7 +75,7 @@ _do_test()
  
--static int do_lseek(int testnum, int subtest, int fd, int filsz, int origin,
-+static int do_lseek(int testnum, int subtest, int fd, off_t filsz, int origin,
- 		    off_t set, off_t exp)
+     # This cd and use of -P gets full debug on $here (not TEST_DEV)
+     cd $out
+-    if ! $here/ltp/fsx $_param -P $here $seq.$_n &>/dev/null
++    if ! $here/ltp/fsx $_param -P $here $seq.$_n $FSX_AVOID &>/dev/null
+     then
+ 	echo "    fsx ($_param) failed, $? - compare $seqres.$_n.{good,bad,fsxlog}"
+ 	mv $out/$seq.$_n $seqres.$_n.full
+diff --git a/tests/generic/091 b/tests/generic/091
+index bb176f1..e7b60fe 100755
+--- a/tests/generic/091
++++ b/tests/generic/091
+@@ -46,7 +46,7 @@ run_fsx()
+ 	echo fsx $@ | tee -a $seqres.full
+ 	args=`echo $@ | sed -e "s/ BSIZE / $bsize /g" -e "s/ PSIZE / $psize /g"`
+ 	rm -f $TEST_DIR/junk
+-	$here/ltp/fsx $args $TEST_DIR/junk >>$seqres.full 2>&1
++	$here/ltp/fsx $args $FSX_AVOID $TEST_DIR/junk >>$seqres.full 2>&1
+ 	if [ $? -ne 0 ]; then
+ 		cat $seqres.full
+ 		exit 1
+diff --git a/tests/generic/112 b/tests/generic/112
+index 4918f75..1e34d99 100755
+--- a/tests/generic/112
++++ b/tests/generic/112
+@@ -75,7 +75,7 @@ _do_test()
+ 
+     # This cd and use of -P gets full debug on $here (not TEST_DEV)
+     cd $out
+-    if ! $here/ltp/fsx $_param -P $here $seq.$_n &>/dev/null
++    if ! $here/ltp/fsx $_param -P $here $FSX_AVOID $seq.$_n &>/dev/null
+     then
+ 	echo "    fsx ($_param) returned $? - see $seq.$_n.full"
+ 	mv $seq.$_n.fsxlog $seqres.$_n.full
+diff --git a/tests/generic/127 b/tests/generic/127
+index 58ca91e..f6b7f95 100755
+--- a/tests/generic/127
++++ b/tests/generic/127
+@@ -51,7 +51,7 @@ _fsx_lite_nommap()
  {
- 	off_t pos, exp2;
-@@ -203,7 +203,7 @@ static int huge_file_test(int fd, int testnum, off_t filsz)
+     echo "=== FSX Light Mode, No Memory Mapping ==="
+     dd if=/dev/zero of=$TEST_DIR/fsx_lite_nommap bs=${FSX_FILE_SIZE} count=1 > /dev/null 2>&1
+-    if ! ltp/fsx $FSX_ARGS -L -R -W $TEST_DIR/fsx_lite_nommap > $tmp.output 2>&1
++    if ! ltp/fsx $FSX_ARGS -L -R -W $FSX_AVOID $TEST_DIR/fsx_lite_nommap > $tmp.output 2>&1
+     then
+         echo "ltp/fsx $FSX_ARGS -L -R -W $TEST_DIR/fsx_lite_nommap"
+         cat $tmp.output
+@@ -65,7 +65,7 @@ _fsx_lite_mmap()
  {
- 	char *buf = NULL;
- 	int bufsz = alloc_size * 16;	/* XFS seems to round allocated size */
--	off_t off = filsz - 2*bufsz;
-+	off_t off = filsz - bufsz;
- 	int ret = -1;
+     echo "=== FSX Light Mode, Memory Mapping ==="
+     dd if=/dev/zero of=$TEST_DIR/fsx_lite_mmap bs=${FSX_FILE_SIZE} count=1 > /dev/null 2>&1
+-    if ! ltp/fsx $FSX_ARGS -L $TEST_DIR/fsx_lite_mmap > $tmp.output 2>&1
++    if ! ltp/fsx $FSX_ARGS -L $FSX_AVOID $TEST_DIR/fsx_lite_mmap > $tmp.output 2>&1
+     then
+     	echo "ltp/fsx $FSX_ARGS -L fsx_lite_mmap"
+ 	cat $tmp.output
+@@ -78,7 +78,7 @@ _fsx_lite_mmap()
+ _fsx_std_nommap()
+ {
+     echo "=== FSX Standard Mode, No Memory Mapping ==="
+-    if ! ltp/fsx $FSX_ARGS -R -W $TEST_DIR/fsx_std_nommap > $tmp.output 2>&1
++    if ! ltp/fsx $FSX_ARGS -R -W $FSX_AVOID $TEST_DIR/fsx_std_nommap > $tmp.output 2>&1
+     then
+         echo "ltp/fsx $FSX_ARGS -R -W fsx_std_nommap"
+         cat $tmp.output
+@@ -91,7 +91,7 @@ _fsx_std_nommap()
+ _fsx_std_mmap()
+ {
+     echo "=== FSX Standard Mode, Memory Mapping ==="
+-    if ! ltp/fsx $FSX_ARGS $TEST_DIR/fsx_std_mmap > $tmp.output 2>&1
++    if ! ltp/fsx $FSX_ARGS $FSX_AVOID $TEST_DIR/fsx_std_mmap > $tmp.output 2>&1
+     then
+     	echo "ltp/fsx $FSX_ARGS fsx_std_mmap"
+ 	cat $tmp.output
+diff --git a/tests/generic/231 b/tests/generic/231
+index a7cff35..df7d76c 100755
+--- a/tests/generic/231
++++ b/tests/generic/231
+@@ -48,7 +48,7 @@ _fsx()
+ 		SEED=$RANDOM
+ 		echo "ltp/fsx $FSX_ARGS -S $SEED $SCRATCH_MNT/fsx_file$i" >>$seqres.full
+ 		su $qa_user -c "ltp/fsx $FSX_ARGS -S $SEED \
+-			$SCRATCH_MNT/fsx_file$i" >$tmp.output$i 2>&1 &
++			$FSX_AVOID $SCRATCH_MNT/fsx_file$i" >$tmp.output$i 2>&1 &
+ 	done
  
- 	buf = do_malloc(bufsz);
-@@ -211,6 +211,7 @@ static int huge_file_test(int fd, int testnum, off_t filsz)
- 		goto out;
- 	memset(buf, 'a', bufsz);
- 
-+	/* |- DATA -|- HUGE HOLE -|- DATA -| */
- 	ret = do_pwrite(fd, buf, bufsz, 0);
- 	if (ret)
- 		goto out;
+ 	for (( i = 1; i <= $tasks; i++ )); do
+diff --git a/tests/generic/263 b/tests/generic/263
+index bc59865..6ecb74d 100755
+--- a/tests/generic/263
++++ b/tests/generic/263
+@@ -46,7 +46,7 @@ run_fsx()
+ 	echo fsx $@ | tee -a $seqres.full
+ 	args=`echo $@ | sed -e "s/ BSIZE / $bsize /g" -e "s/ PSIZE / $psize /g"`
+ 	rm -f $TEST_DIR/junk
+-	$here/ltp/fsx $args $TEST_DIR/junk >>$seqres.full 2>&1
++	$here/ltp/fsx $args $FSX_AVOID $TEST_DIR/junk >>$seqres.full 2>&1
+ 	if [ $? -ne 0 ]; then
+ 		cat $seqres.full
+ 		exit 1
 
 _______________________________________________
 xfs mailing list
