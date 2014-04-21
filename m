@@ -1,24 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 6DA1F7F3F
-	for <xfs@oss.sgi.com>; Mon, 21 Apr 2014 09:36:50 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 04B2DAC001
-	for <xfs@oss.sgi.com>; Mon, 21 Apr 2014 07:36:46 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id fHvrB9ekHySZu9Jp for
-	<xfs@oss.sgi.com>; Mon, 21 Apr 2014 07:36:46 -0700 (PDT)
-Date: Mon, 21 Apr 2014 10:36:30 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH] xfs: Fix wrong error codes being returned
-Message-ID: <20140421143629.GB4371@laptop.bfoster>
-References: <1398074687-26548-1-git-send-email-tuomas.tynkkynen@iki.fi>
-	<5355132F.4070303@oracle.com>
-	<20140421130931.GB24813@bfoster.bfoster>
-	<535524BE.7070704@oracle.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <535524BE.7070704@oracle.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 9C46A7F3F
+	for <xfs@oss.sgi.com>; Mon, 21 Apr 2014 11:43:13 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 8969730404E
+	for <xfs@oss.sgi.com>; Mon, 21 Apr 2014 09:43:10 -0700 (PDT)
+Received: from mailout1.w1.samsung.com (mailout1.w1.samsung.com
+	[210.118.77.11]) by cuda.sgi.com with ESMTP id Lwudvfxm9D3di3Nt
+	(version=TLSv1 cipher=RC4-MD5 bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Mon, 21 Apr 2014 09:43:09 -0700 (PDT)
+Received: from eucpsbgm2.samsung.com (unknown [203.254.199.245])
+	by mailout1.w1.samsung.com
+	(Oracle Communications Messaging Server 7u4-24.01(7.0.4.24.0) 64bit
+	(built Nov
+	17 2011)) with ESMTP id <0N4E00LQ53RUWD30@mailout1.w1.samsung.com> for
+	xfs@oss.sgi.com; Mon, 21 Apr 2014 17:43:06 +0100 (BST)
+Subject: [PATCH] xfstests: generic/285: fix seek_sanity_test for generic
+	SEEK_HOLE/DATA
+From: Konstantin Khlebnikov <k.khlebnikov@samsung.com>
+Date: Mon, 21 Apr 2014 20:43:05 +0400
+Message-id: <20140421164305.22404.92195.stgit@buzz>
+MIME-version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,77 +33,52 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Jeff Liu <jeff.liu@oracle.com>
-Cc: Tuomas Tynkkynen <tuomas.tynkkynen@iki.fi>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Mon, Apr 21, 2014 at 10:01:34PM +0800, Jeff Liu wrote:
-> 
-> On 04/21 2014 21:09 PM, Brian Foster wrote:
-> > On Mon, Apr 21, 2014 at 08:46:39PM +0800, Jeff Liu wrote:
-> >> Hi Tuomas,
-> >>
-> >> On 04/21 2014 18:04 PM, Tuomas Tynkkynen wrote:
-> >>> xfs_{compat_,}attrmulti_by_handle could return an errno with incorrect
-> >>> sign in some cases. While at it, make sure ENOMEM is returned instead of
-> >>> E2BIG if kmalloc fails.
-> >>>
-> >>> Signed-off-by: Tuomas Tynkkynen <tuomas.tynkkynen@iki.fi>
-> >>> ---
-> >>> Compile tested only. For the ERANGE case, I also wonder if it should
-> >>> be assigning to ops[i].am_error instead of error, and/or have a break.
-> >>
-> >> If I understand right, ops[i].am_error is used to save the internal operation result,
-> >> i.e, xfs_attrmult_attr_get{set}... but error is used for the ioctl call results.
-> >> Therefore, assign ERANGE to error is compatible with the VFS set{get}xattr syscalls in
-> >> case of "if (ops[i].am_error == 0 || ops[i].am_error == MAXNAMELEN)".
-> >>
-> > 
-> > But we set 'error' in this case and effectively try to continue the operation
-> > whereas the traditional vfs path returns...
-> 
-> So the error would always be set to ERANGE if one or more attrname is/are invalid.
-> 
+Generic implementation of SEEK_HOLE/DATA reports whole file as data chunk with
+virtual hole at the end (generic_file_llseek, used by ext2/ext3/reiserfs/nfs).
 
-Right...
+Currently test prepares file smaller than expected for "huge file" testcases
+(testcases 10-12). This patch fixes test file layout, now second data chunk
+ends right at the expected end of file.
 
-> > 
-> >> It seems that we don't need to have a break in this case because xfs_attrmulti_by_handle()
-> >> is used to process multiple attrs.  Hence if a given attrname in ops array is invalid,
-> >> the am_error will indicate that with ENOATTR or EFAULT...but it should proceed to loop
-> >> through the left array members.
-> >>
-> > 
-> > Perhaps so if am_error == 0, but it depends on what attr_name contains
-> > at that point (stale data?). Otherwise, we try to proceed with a
-> > truncated name. It looks like the consistent thing to do would be set
-> > am_error to ERANGE and continue (i.e., skip the op and move on to the
-> > next).
-> 
-> If we continue to process a truncated name in case of MAXNAMELEN, it would return
-> EFAULT for SET/REMOVE operations, and ENOATTR for GET operation, which would be
-> set back to am_error, but error still keep as ERANGE which is consistently.
-> 
+Plus it fixes type of 'filesz' argument, it should be off_t.
 
-Ah, we should hit an error in the xfs_attr_name_to_xname() call
-deeper in the callchain, so the truncated name case should not be an
-issue. The am_error == 0 case still looks weird to me.
+Signed-off-by: Konstantin Khlebnikov <k.khlebnikov@samsung.com>
+---
+ src/seek_sanity_test.c |    5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-So we return an error and set am_error if there's an issue with the attr
-name. If there's another error in the op path, we set am_error only and
-continue on. Not being familiar with the interface, I'm curious if there
-is any particular reason for that difference in behavior. It seems like
-the caller should process all of the return codes anyways.
-
-Brian
-
-> 
-> Thanks,
-> -Jeff
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+diff --git a/src/seek_sanity_test.c b/src/seek_sanity_test.c
+index fbf5a8c..7cf45c0 100644
+--- a/src/seek_sanity_test.c
++++ b/src/seek_sanity_test.c
+@@ -157,7 +157,7 @@ static int do_create(const char *filename)
+ 	return fd;
+ }
+ 
+-static int do_lseek(int testnum, int subtest, int fd, int filsz, int origin,
++static int do_lseek(int testnum, int subtest, int fd, off_t filsz, int origin,
+ 		    off_t set, off_t exp)
+ {
+ 	off_t pos, exp2;
+@@ -203,7 +203,7 @@ static int huge_file_test(int fd, int testnum, off_t filsz)
+ {
+ 	char *buf = NULL;
+ 	int bufsz = alloc_size * 16;	/* XFS seems to round allocated size */
+-	off_t off = filsz - 2*bufsz;
++	off_t off = filsz - bufsz;
+ 	int ret = -1;
+ 
+ 	buf = do_malloc(bufsz);
+@@ -211,6 +211,7 @@ static int huge_file_test(int fd, int testnum, off_t filsz)
+ 		goto out;
+ 	memset(buf, 'a', bufsz);
+ 
++	/* |- DATA -|- HUGE HOLE -|- DATA -| */
+ 	ret = do_pwrite(fd, buf, bufsz, 0);
+ 	if (ret)
+ 		goto out;
 
 _______________________________________________
 xfs mailing list
