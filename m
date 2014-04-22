@@ -1,9 +1,9 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 From: xfs@oss.sgi.com
-Subject: [XFS updates] XFS development tree branch, xfs-unused-args-cleanup,
-	created. xfs-for-linus-3.15-rc1-14846-g5e06d14
-Message-Id: <20140422222917.53BF17F4E@oss.sgi.com>
-Date: Tue, 22 Apr 2014 17:29:16 -0500 (CDT)
+Subject: [XFS updates] XFS development tree branch, xfs-filestreams-lookup,
+	created. xfs-for-linus-3.15-rc1-14835-gb94acd4
+Message-Id: <20140422222935.B180B7F52@oss.sgi.com>
+Date: Tue, 22 Apr 2014 17:29:35 -0500 (CDT)
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,246 +23,132 @@ This is an automated email from the git hooks/post-receive script. It was
 generated because a ref change was pushed to the repository containing
 the project "XFS development tree".
 
-The branch, xfs-unused-args-cleanup has been created
-        at  5e06d148949bb79af429c46afb4b81bc31308f6e (commit)
+The branch, xfs-filestreams-lookup has been created
+        at  b94acd4786dce4379e986e6d58bdd74f8986af2f (commit)
 
 - Log -----------------------------------------------------------------
-commit 5e06d148949bb79af429c46afb4b81bc31308f6e
-Author: Eric Sandeen <sandeen@sandeen.net>
-Date:   Mon Apr 14 19:07:23 2014 +1000
+commit b94acd4786dce4379e986e6d58bdd74f8986af2f
+Author: Christoph Hellwig <hch@lst.de>
+Date:   Wed Apr 23 07:11:52 2014 +1000
 
-    xfs: remove unused calculation in xfs_dir2_sf_addname()
+    xfs: add filestream allocator tracepoints
     
-    The "add_entsize" calculated here is never used.
-    "incr_isize" accounts for the inode expansion of the
-    old entries + parent + new entry all by itself.
-    
-    Once we've removed add_entsize there, it's just a pointless
-    intermediate variable elsewhere, so remove it.
-    For that matter, old_isize is gratuitous too, so nuke that.
-    
-    And add a few comments so the magic "+1's" and "+2's" make
-    a bit more sense.
-    
-    Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+    Signed-off-by: Christoph Hellwig <hch@lst.de>
     Reviewed-by: Dave Chinner <dchinner@redhat.com>
     Signed-off-by: Dave Chinner <david@fromorbit.com>
 
-commit e5e98bc64df122c3c0fb562c53dac5c5dfc64975
-Author: Eric Sandeen <sandeen@redhat.com>
-Date:   Mon Apr 14 19:06:46 2014 +1000
+commit 3b8d90766a85e079fefaee74ca9dde43ce75edea
+Author: Christoph Hellwig <hch@lst.de>
+Date:   Wed Apr 23 07:11:52 2014 +1000
 
-    xfs: remove pointless pointer increment in xfs_dir2_block_compact()
+    xfs: remove xfs_filestream_associate
     
-    xfs_dir2_block_compact() is passed a pointer to *blp, and
-    advances it locally - but nobody uses the pointer (locally)
-    after that.
+    There is no good reason to create a filestream when a directory entry
+    is created.  Delay it until the first allocation happens to simply
+    the code and reduce the amount of mru cache lookups we do.
     
-    This behavior came about as part of prior refactoring,
-    
-    20f7e9f xfs: factor dir2 block read operations
-    
-    and looking at the code as it was before, it seems quite clear
-    that this change introduced a bug; the pre-refactoring code
-    expects blp to be modified after compaction.
-    And indeed it did; see this commit which fixed it:
-    
-    37f1356 xfs: recalculate leaf entry pointer after compacting a dir2 block
-    
-    So the bug was introduced & resolved in the 3.8 cycle.
-    
-    Whoops.  Well, it's fixed now, and mystery solved; just remove
-    the now-pointless local increment of the blp pointer.
-    
-    (I guess we should have run clang earlier!)
-    
-    Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+    Signed-off-by: Christoph Hellwig <hch@lst.de>
     Reviewed-by: Dave Chinner <dchinner@redhat.com>
     Signed-off-by: Dave Chinner <david@fromorbit.com>
 
-commit bbe4c668694cb22a6016d3845c9b362c44e8341f
-Author: Eric Sandeen <sandeen@redhat.com>
-Date:   Mon Apr 14 19:06:25 2014 +1000
+commit 1919adda0732e661c6163a6505dddb0bc423b8d8
+Author: Christoph Hellwig <hch@lst.de>
+Date:   Wed Apr 23 07:11:51 2014 +1000
 
-    xfs: remove unused trans pointer arg from xlog_recover_unmount_trans()
+    xfs: don't create a slab cache for filestream items
     
-    Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+    We only have very few of these around, and allocation isn't that
+    much of a hot path.  Remove the slab cache to simplify the code,
+    and to not waste any resources for the usual case of not having
+    any inodes that use the filestream allocator.
+    
+    Signed-off-by: Christoph Hellwig <hch@lst.de>
     Reviewed-by: Dave Chinner <dchinner@redhat.com>
     Signed-off-by: Dave Chinner <david@fromorbit.com>
 
-commit e4a1e29cb0ace3a322c5c07d33dd1f4ab50dbbb8
-Author: Eric Sandeen <sandeen@redhat.com>
-Date:   Mon Apr 14 19:06:05 2014 +1000
+commit 2cd2ef6a300b1ac912bb515b75451585c3d33ea9
+Author: Christoph Hellwig <hch@lst.de>
+Date:   Wed Apr 23 07:11:51 2014 +1000
 
-    xfs: remove unused ail pointer arg from xfs_trans_ail_cursor_done()
+    xfs: rewrite the filestream allocator using the dentry cache
     
-    Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+    In Linux we will always be able to find a parent inode for file that are
+    undergoing I/O.  Use this to simply the file stream allocator by only
+    keeping track of parent inodes.
+    
+    Signed-off-by: Christoph Hellwig <hch@lst.de>
+
+commit f37211c336d722805493aec8b13afdbb92bbfd98
+Author: Christoph Hellwig <hch@lst.de>
+Date:   Wed Apr 23 07:11:51 2014 +1000
+
+    xfs: remove XFS_IFILESTREAM
+    
+    We never test the flag except in xfs_inode_is_filestream, but that
+    function already tests the on-disk flag or filesystem wide flags,
+    and is used to decide if we want to set XFS_IFILESTREAM in the
+    first place.
+    
+    Signed-off-by: Christoph Hellwig <hch@lst.de>
     Reviewed-by: Dave Chinner <dchinner@redhat.com>
     Signed-off-by: Dave Chinner <david@fromorbit.com>
 
-commit bda65ef8a8ab8944628b7ff1182902612efd8bc3
-Author: Eric Sandeen <sandeen@redhat.com>
-Date:   Mon Apr 14 19:05:43 2014 +1000
+commit 22328d712dd7fdc984d17da2121be840d1f844cd
+Author: Christoph Hellwig <hch@lst.de>
+Date:   Wed Apr 23 07:11:51 2014 +1000
 
-    xfs: remove unused xfs_mount arg from xfs_symlink_hdr_ok()
+    xfs: embedd mru_elem into parent structure
     
-    Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+    There is no need to do a separate allocation for each mru element, just
+    embedd the structure into the parent one in the user.  Besides saving
+    a memory allocation and the infrastructure required for it this also
+    simplifies the API.
+    
+    While we do major surgery on xfs_mru_cache.c also de-typedef it and
+    make struct mru_cache private to the implementation file.
+    
+    Signed-off-by: Christoph Hellwig <hch@lst.de>
     Reviewed-by: Dave Chinner <dchinner@redhat.com>
     Signed-off-by: Dave Chinner <david@fromorbit.com>
 
-commit fd9fdba6c366f6a1606572e46eebf770462ff484
-Author: Eric Sandeen <sandeen@redhat.com>
-Date:   Mon Apr 14 19:04:46 2014 +1000
+commit ce695c6551f9488e75247ac1eefcd173fda0c029
+Author: Christoph Hellwig <hch@lst.de>
+Date:   Wed Apr 23 07:11:50 2014 +1000
 
-    xfs: remove unused bp arg from xfs_iflush_fork()
+    xfs: handle duplicate entries in xfs_mru_cache_insert
     
-    Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+    The radix tree code can detect and reject duplicate keys at insert
+    time.  Make xfs_mru_cache_insert handle this case so that future
+    changes to the filestream allocator can take advantage of this.
+    
+    Signed-off-by: Christoph Hellwig <hch@lst.de>
     Reviewed-by: Dave Chinner <dchinner@redhat.com>
     Signed-off-by: Dave Chinner <david@fromorbit.com>
 
-commit e009400870c16c2003b2183b2daa9f1e80ff516b
-Author: Eric Sandeen <sandeen@redhat.com>
-Date:   Mon Apr 14 19:04:19 2014 +1000
+commit c977eb1065612bf64e18c61437e290c22183add8
+Author: Christoph Hellwig <hch@lst.de>
+Date:   Wed Apr 23 07:11:41 2014 +1000
 
-    xfs: remove unused pag ptr arg from iterator execute functions
+    xfs: split xfs_bmap_btalloc_nullfb
     
-    Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-    Reviewed-by: Dave Chinner <dchinner@redhat.com>
-    Signed-off-by: Dave Chinner <david@fromorbit.com>
-
-commit 6f8950cd731432508859ef0c054b026270095b2e
-Author: Eric Sandeen <sandeen@redhat.com>
-Date:   Mon Apr 14 19:03:53 2014 +1000
-
-    xfs: remove unused length arg from alloc_block ops
+    Split xfs_bmap_btalloc_nullfb into one function for filestream allocations
+    and one for everything else that share a few helpers.  This dramatically
+    simplifies the control flow.
     
-    Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-    Reviewed-by: Dave Chinner <dchinner@redhat.com>
-    Signed-off-by: Dave Chinner <david@fromorbit.com>
+    Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-commit 6ea94bb5b30f14717e349f4e3ea4a6df03e1ee67
-Author: Eric Sandeen <sandeen@redhat.com>
-Date:   Mon Apr 14 19:03:34 2014 +1000
+commit 8b90a33f476436ad6a49b7138d8a00ecbc62f9a6
+Author: Christoph Hellwig <hch@lst.de>
+Date:   Mon Apr 14 19:37:42 2014 +1000
 
-    xfs: remove unused mp arg from xfs_calc_dquots_per_chunk()
+    xfs: don't try to use the filestream allocator for metadata allocations
     
-    Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-    Reviewed-by: Dave Chinner <dchinner@redhat.com>
-    Signed-off-by: Dave Chinner <david@fromorbit.com>
-
-commit 25994053745be958aa8455a753a5c965a9006ba4
-Author: Eric Sandeen <sandeen@redhat.com>
-Date:   Mon Apr 14 19:02:30 2014 +1000
-
-    xfs: remove unused mp arg from xfs_dir2 dataptr/byte functions
+    xfs_bmap_btalloc_nullfb has two entirely different control flows when
+    using the filestream allocator vs the regular one, but it get the
+    conditionals wrong and ends up mixing the two for metadata allocations.
+    Fix this by adding a missing userdata check and slight refactoring.
     
-    Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-    Reviewed-by: Dave Chinner <dchinner@redhat.com>
-    Signed-off-by: Dave Chinner <david@fromorbit.com>
-
-commit 9df2dd0b0d2aad3ce2480e0618bfe14d37c017a3
-Author: Eric Sandeen <sandeen@redhat.com>
-Date:   Mon Apr 14 19:01:59 2014 +1000
-
-    xfs: remove unused tp arg from xfs_da_reada_buf & callers
-    
-    This one hits a few functions as we unravel the unused arg
-    up through the callers.
-    
-    Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-    Reviewed-by: Dave Chinner <dchinner@redhat.com>
-    Signed-off-by: Dave Chinner <david@fromorbit.com>
-
-commit 72b0636bb7aca50978da60dfbaefc44020e1600e
-Author: Eric Sandeen <sandeen@redhat.com>
-Date:   Mon Apr 14 19:01:34 2014 +1000
-
-    xfs: remove unused bip arg from xfs_buf_item_log_segment()
-    
-    Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-    Reviewed-by: Dave Chinner <dchinner@redhat.com>
-    Signed-off-by: Dave Chinner <david@fromorbit.com>
-
-commit 87937bf8cae495d4eafdae226e0726c25c3ff9f9
-Author: Eric Sandeen <sandeen@redhat.com>
-Date:   Mon Apr 14 19:01:20 2014 +1000
-
-    xfs: remove unused flags arg from _xfs_buf_get_pages()
-    
-    Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-    Reviewed-by: Dave Chinner <dchinner@redhat.com>
-    Signed-off-by: Dave Chinner <david@fromorbit.com>
-
-commit 34dcefd717dea161182c18e2622cd9bed4bb4835
-Author: Eric Sandeen <sandeen@redhat.com>
-Date:   Mon Apr 14 19:01:00 2014 +1000
-
-    xfs: remove unused args from xfs_alloc_buftarg()
-    
-    Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-    Reviewed-by: Dave Chinner <dchinner@redhat.com>
-    Signed-off-by: Dave Chinner <david@fromorbit.com>
-
-commit a96c41519ac95bd7e8c798d235d6c98ca846090a
-Author: Eric Sandeen <sandeen@redhat.com>
-Date:   Mon Apr 14 19:00:29 2014 +1000
-
-    xfs: remove unused blocksize arg from xfs_setsize_buftarg()
-    
-    Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-    Reviewed-by: Dave Chinner <dchinner@redhat.com>
-    Signed-off-by: Dave Chinner <david@fromorbit.com>
-
-commit 0d7409b142472dda73939add752e0815900b3df9
-Author: Eric Sandeen <sandeen@redhat.com>
-Date:   Mon Apr 14 18:59:56 2014 +1000
-
-    xfs: remove unused level arg from xfs_btree_read_buf_block()
-    
-    Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-    Reviewed-by: Dave Chinner <dchinner@redhat.com>
-    Signed-off-by: Dave Chinner <david@fromorbit.com>
-
-commit 6a9edd3d548f074c484802134e719390d9585ed6
-Author: Eric Sandeen <sandeen@redhat.com>
-Date:   Mon Apr 14 18:59:26 2014 +1000
-
-    xfs: remove unused mp arg from xfs_bmap_forkoff_reset()
-    
-    Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-    Reviewed-by: Dave Chinner <dchinner@redhat.com>
-    Signed-off-by: Dave Chinner <david@fromorbit.com>
-
-commit 152d93b732d4d15a10db03b660b07ed5c44b4e0d
-Author: Eric Sandeen <sandeen@redhat.com>
-Date:   Mon Apr 14 18:58:51 2014 +1000
-
-    xfs: remove unused mp arg from xfs_bmdr_maxrecs()
-    
-    Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-    Reviewed-by: Dave Chinner <dchinner@redhat.com>
-    Signed-off-by: Dave Chinner <david@fromorbit.com>
-
-commit 6d0081a3da32c9a9e480ae2796588508347bdb9e
-Author: Eric Sandeen <sandeen@redhat.com>
-Date:   Mon Apr 14 18:58:29 2014 +1000
-
-    xfs: remove unused mp arg from xfs_attr3_rmt_hdr_ok()
-    
-    Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-    Reviewed-by: Dave Chinner <dchinner@redhat.com>
-    Signed-off-by: Dave Chinner <david@fromorbit.com>
-
-commit 7fb2cd4d32fed48d5fd88e0e922f162c182f5f8c
-Author: Eric Sandeen <sandeen@redhat.com>
-Date:   Mon Apr 14 18:58:05 2014 +1000
-
-    xfs: remove unused tp arg from xfs_bmap_last_offset() and callers
-    
-    remove unused transaction pointer from various
-    callchains leading to xfs_bmap_last_offset().
-    
-    Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+    Signed-off-by: Christoph Hellwig <hch@lst.de>
     Reviewed-by: Dave Chinner <dchinner@redhat.com>
     Signed-off-by: Dave Chinner <david@fromorbit.com>
 
