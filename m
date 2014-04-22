@@ -1,23 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 7A0957F4E
-	for <xfs@oss.sgi.com>; Tue, 22 Apr 2014 04:14:51 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id E71D17F55
+	for <xfs@oss.sgi.com>; Tue, 22 Apr 2014 04:16:23 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 3C7988F8049
-	for <xfs@oss.sgi.com>; Tue, 22 Apr 2014 02:14:48 -0700 (PDT)
-Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
-	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	oowRsFHs2g9USuIA for <xfs@oss.sgi.com>;
-	Tue, 22 Apr 2014 02:14:46 -0700 (PDT)
-Date: Tue, 22 Apr 2014 19:14:43 +1000
-From: Dave Chinner <david@fromorbit.com>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 9924B8F8065
+	for <xfs@oss.sgi.com>; Tue, 22 Apr 2014 02:16:23 -0700 (PDT)
+Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
+	ESMTP id FQ3vGXfb0hrqMFkE (version=TLSv1 cipher=AES256-SHA
+	bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 22 Apr 2014 02:16:22 -0700 (PDT)
+Date: Tue, 22 Apr 2014 02:16:20 -0700
+From: Christoph Hellwig <hch@infradead.org>
 Subject: Re: [PATCH 1/3] xfstests: add helper for zero range support check
-Message-ID: <20140422091443.GG15995@dastard>
+Message-ID: <20140422091620.GA4980@infradead.org>
 References: <20140421204023.GB960@wallace>
 	<20140422062816.GB31337@infradead.org>
+	<20140422091443.GG15995@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20140422062816.GB31337@infradead.org>
+In-Reply-To: <20140422091443.GG15995@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,29 +31,16 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-ext4@vger.kernel.org, xfs@oss.sgi.com, Eric Whitney <enwlinux@gmail.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-ext4@vger.kernel.org, xfs@oss.sgi.com, Eric Whitney <enwlinux@gmail.com>
 
-On Mon, Apr 21, 2014 at 11:28:16PM -0700, Christoph Hellwig wrote:
-> > +# check that xfs_io, kernel, and filesystem all support fallocate with zero
-> > +# range
-> > +_require_xfs_io_falloc_zero()
-> > +{
-> > +	_require_xfs_io_command "fzero"
-> > +}
-> 
-> I'd rather remove all the wrappers around _require_xfs_io_command, they
-> don't actually add any value.
+On Tue, Apr 22, 2014 at 07:14:43PM +1000, Dave Chinner wrote:
+> I don't really care either way, as long as all the checks are done
+> consistently. Send a patch to change them all... :)
 
-I don't really care either way, as long as all the checks are done
-consistently. Send a patch to change them all... :)
+My flink test already avoids the wrapper :)
 
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+So how about we stop adding them for now at least.
 
 _______________________________________________
 xfs mailing list
