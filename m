@@ -1,23 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 671117F3F
-	for <xfs@oss.sgi.com>; Tue, 22 Apr 2014 02:03:00 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 56E2E304032
-	for <xfs@oss.sgi.com>; Tue, 22 Apr 2014 00:02:57 -0700 (PDT)
-Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
-	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	bHEM0ySjadAb1aSO for <xfs@oss.sgi.com>;
-	Tue, 22 Apr 2014 00:02:55 -0700 (PDT)
-Received: from dave by dastard with local (Exim 4.80)
-	(envelope-from <david@fromorbit.com>) id 1WcUiu-000844-Ea
-	for xfs@oss.sgi.com; Tue, 22 Apr 2014 17:02:32 +1000
-Date: Tue, 22 Apr 2014 17:02:32 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: [ANNOUNCE] xfstests: master branch updated to 6f55bbd
-Message-ID: <20140422070232.GE15995@dastard>
+	by oss.sgi.com (Postfix) with ESMTP id BCB947F3F
+	for <xfs@oss.sgi.com>; Tue, 22 Apr 2014 03:19:19 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 84ECA30404E
+	for <xfs@oss.sgi.com>; Tue, 22 Apr 2014 01:19:16 -0700 (PDT)
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
+	cuda.sgi.com with ESMTP id v6y02C6umJn38Kam (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 22 Apr 2014 01:19:15 -0700 (PDT)
+Message-ID: <535625AC.2030807@oracle.com>
+Date: Tue, 22 Apr 2014 16:17:48 +0800
+From: Jeff Liu <jeff.liu@oracle.com>
 MIME-Version: 1.0
-Content-Disposition: inline
+Subject: Re: [PATCH] xfs: Fix wrong error codes being returned
+References: <1398074687-26548-1-git-send-email-tuomas.tynkkynen@iki.fi>	<5355132F.4070303@oracle.com>	<20140421130931.GB24813@bfoster.bfoster>	<535524BE.7070704@oracle.com>
+	<20140421143629.GB4371@laptop.bfoster>
+In-Reply-To: <20140421143629.GB4371@laptop.bfoster>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,89 +29,87 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-
-Hi Folks,
-
-The xfstests repository at git://oss.sgi.com/xfs/cmds/xfstests has
-just been updated. Patches often get missed, so please check if your
-outstanding patches were in this update. If they have not been in
-this update, please resubmit them to xfs@oss.sgi.com so they can be
-picked up in the next update.
-
-The new head of the master branch is commit:
-
-6f55bbd xfs/167: need at least 10GB of scratch space to run
-
-New Commits:
-
-Dave Chinner (1):
-      [6f55bbd] xfs/167: need at least 10GB of scratch space to run
-
-Eric Sandeen (2):
-      [c365b11] fsx: introduce FSX_AVOID env var
-      [de876b9] xfs: test X_QUOTARM functionality
-
-Eric Whitney (3):
-      [b90e14f] common: add helper for zero range support check
-      [9c04c84] ext4/001: fix check for zero range support
-      [fbd6c52] generic/009: fix check for zero range support
-
-Eryu Guan (1):
-      [7f783df] common: set _fs_has_crcs=0 as default in _filter_mkfs()
-
-Filipe David Borba Manana (4):
-      [f81be18] btrfs: punch holes and prealloc extents with send
-      [57e801d] btrfs: add test for btrfs properties
-      [73d9443] btrfs/004: fix filefrag filter for files with 1 block only
-      [6fcbf58] btrfs/004: fix failure with inlined file extents
-
-Konstantin Khlebnikov (1):
-      [35ee392] generic/285: fix test for generic SEEK_HOLE/DATA implementations
-
-Lukas Czerner (1):
-      [9631a1f] common: Remove unused functions
-
-Namjae Jeon (1):
-      [d37388c] fsstress: remove duplicate COLLAPSE_RANGE flags
+To: Brian Foster <bfoster@redhat.com>
+Cc: Tuomas Tynkkynen <tuomas.tynkkynen@iki.fi>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
 
-Code Diffstat:
+On 04/12 2014 22:36 PM, Brian Foster wrote:
+> On Mon, Apr 21, 2014 at 10:01:34PM +0800, Jeff Liu wrote:
+>>
+>> On 04/21 2014 21:09 PM, Brian Foster wrote:
+>>> On Mon, Apr 21, 2014 at 08:46:39PM +0800, Jeff Liu wrote:
+>>>> Hi Tuomas,
+>>>>
+>>>> On 04/21 2014 18:04 PM, Tuomas Tynkkynen wrote:
+>>>>> xfs_{compat_,}attrmulti_by_handle could return an errno with incorrect
+>>>>> sign in some cases. While at it, make sure ENOMEM is returned instead of
+>>>>> E2BIG if kmalloc fails.
+>>>>>
+>>>>> Signed-off-by: Tuomas Tynkkynen <tuomas.tynkkynen@iki.fi>
+>>>>> ---
+>>>>> Compile tested only. For the ERANGE case, I also wonder if it should
+>>>>> be assigning to ops[i].am_error instead of error, and/or have a break.
+>>>>
+>>>> If I understand right, ops[i].am_error is used to save the internal operation result,
+>>>> i.e, xfs_attrmult_attr_get{set}... but error is used for the ioctl call results.
+>>>> Therefore, assign ERANGE to error is compatible with the VFS set{get}xattr syscalls in
+>>>> case of "if (ops[i].am_error == 0 || ops[i].am_error == MAXNAMELEN)".
+>>>>
+>>>
+>>> But we set 'error' in this case and effectively try to continue the operation
+>>> whereas the traditional vfs path returns...
+>>
+>> So the error would always be set to ERANGE if one or more attrname is/are invalid.
+>>
+> 
+> Right...
+> 
+>>>
+>>>> It seems that we don't need to have a break in this case because xfs_attrmulti_by_handle()
+>>>> is used to process multiple attrs.  Hence if a given attrname in ops array is invalid,
+>>>> the am_error will indicate that with ENOATTR or EFAULT...but it should proceed to loop
+>>>> through the left array members.
+>>>>
+>>>
+>>> Perhaps so if am_error == 0, but it depends on what attr_name contains
+>>> at that point (stale data?). Otherwise, we try to proceed with a
+>>> truncated name. It looks like the consistent thing to do would be set
+>>> am_error to ERANGE and continue (i.e., skip the op and move on to the
+>>> next).
+>>
+>> If we continue to process a truncated name in case of MAXNAMELEN, it would return
+>> EFAULT for SET/REMOVE operations, and ENOATTR for GET operation, which would be
+>> set back to am_error, but error still keep as ERANGE which is consistently.
+>>
+> 
+> Ah, we should hit an error in the xfs_attr_name_to_xname() call
+> deeper in the callchain, so the truncated name case should not be an
+> issue. The am_error == 0 case still looks weird to me.
 
- README                 |   5 ++
- common/config          |   4 +
- common/filter          |   1 +
- common/rc              | 103 ++++-------------------
- ltp/fsstress.c         |   1 -
- src/seek_sanity_test.c |   5 +-
- tests/btrfs/004        |  36 +++++---
- tests/btrfs/047        | 122 +++++++++++++++++++++++++++
- tests/btrfs/047.out    |  35 ++++++++
- tests/btrfs/048        | 220 +++++++++++++++++++++++++++++++++++++++++++++++++
- tests/btrfs/048.out    |  78 ++++++++++++++++++
- tests/btrfs/group      |   2 +
- tests/ext4/001         |   2 +-
- tests/generic/009      |   2 +-
- tests/generic/075      |   2 +-
- tests/generic/091      |   2 +-
- tests/generic/112      |   2 +-
- tests/generic/127      |   8 +-
- tests/generic/231      |   2 +-
- tests/generic/263      |   2 +-
- tests/xfs/007          |  79 ++++++++++++++++++
- tests/xfs/007.out      |  10 +++
- tests/xfs/167          |   6 ++
- tests/xfs/group        |   1 +
- 24 files changed, 617 insertions(+), 113 deletions(-)
- create mode 100755 tests/btrfs/047
- create mode 100644 tests/btrfs/047.out
- create mode 100755 tests/btrfs/048
- create mode 100644 tests/btrfs/048.out
- create mode 100755 tests/xfs/007
- create mode 100644 tests/xfs/007.out
--- 
-Dave Chinner
-david@fromorbit.com
+IMO am_error == 0 case means that the supplied attrname is NULL, and this would be
+detected by xfs_attr_name_to_xname() as well, i.e,
+
+if (!aname)
+	return EINVAL;
+
+> 
+> So we return an error and set am_error if there's an issue with the attr
+> name. 
+
+But the am_error would be replaced with another errno if any operation
+is failed thereafter, or 0 on success.  So the error is only used to indicate
+the ioctl call status anyway.
+
+> If there's another error in the op path, we set am_error only and
+> continue on. Not being familiar with the interface, I'm curious if there
+> is any particular reason for that difference in behavior. It seems like
+> the caller should process all of the return codes anyways.
+
+It seems to me that the design is convenient to the user space as the user could
+get more precise call status for one/more particular attrname{s} operations.
+
+Thanks,
+-Jeff
 
 _______________________________________________
 xfs mailing list
