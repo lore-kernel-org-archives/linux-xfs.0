@@ -1,20 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 565977F56
-	for <xfs@oss.sgi.com>; Tue, 22 Apr 2014 10:54:38 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id A32C47F56
+	for <xfs@oss.sgi.com>; Tue, 22 Apr 2014 10:56:25 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 120D28F8065
-	for <xfs@oss.sgi.com>; Tue, 22 Apr 2014 08:54:34 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id ml2hGzL7cweEncca for
-	<xfs@oss.sgi.com>; Tue, 22 Apr 2014 08:54:34 -0700 (PDT)
-Message-ID: <535690A3.3080609@redhat.com>
-Date: Tue, 22 Apr 2014 10:54:11 -0500
-From: Eric Sandeen <sandeen@redhat.com>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 35C2AAC00F
+	for <xfs@oss.sgi.com>; Tue, 22 Apr 2014 08:56:21 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id l14IfobKmD47krxc for <xfs@oss.sgi.com>;
+	Tue, 22 Apr 2014 08:56:20 -0700 (PDT)
+Message-ID: <53569123.2080807@sandeen.net>
+Date: Tue, 22 Apr 2014 10:56:19 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfs: fix Q_XQUOTARM ioctl
-References: <535580A1.20806@redhat.com> <20140422064316.GA30375@infradead.org>
-In-Reply-To: <20140422064316.GA30375@infradead.org>
+Subject: Re: [PATCH] xfs: bulletfproof xfs_qm_scall_trunc_qfiles()
+References: <53558354.5040309@redhat.com>	<20140422062736.GA31337@infradead.org>
+	<535663CB.5080309@oracle.com>
+In-Reply-To: <535663CB.5080309@oracle.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,36 +28,25 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: Jeff Liu <jeff.liu@oracle.com>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs-oss <xfs@oss.sgi.com>
 
-On 4/22/14, 1:43 AM, Christoph Hellwig wrote:
-> On Mon, Apr 21, 2014 at 03:33:37PM -0500, Eric Sandeen wrote:
->> The Q_XQUOTARM quotactl was not working properly, because
->> we weren't passing around proper flags.  The xfs_fs_set_xstate()
->> ioctl handler used the same flags for Q_XQUOTAON/OFF as
->> well as for Q_XQUOTARM, but Q_XQUOTAON/OFF look for
->> XFS_UQUOTA_ACCT, XFS_UQUOTA_ENFD, XFS_GQUOTA_ACCT etc,
->> i.e. quota type + state, while Q_XQUOTARM looks only for
->> the type of quota, i.e. XFS_DQ_USER, XFS_DQ_GROUP etc.
->>
->> Unfortunately these flag spaces overlap a bit, so we
->> got semi-random results for Q_XQUOTARM; i.e. the value
->> for XFS_DQ_USER == XFS_UQUOTA_ACCT, etc.  yeargh.
->>
->> Split out the flag conversion from userspace to kernelspace,
->> depending on the quotactl that is being executed; add 2 new
->> helpers to do this, so that we send the right flags to the
->> lower-level functions.
->>
->> This has been broken more or less forever, AFAICT.
+On 4/22/14, 7:42 AM, Jeff Liu wrote:
 > 
-> So if this isn't very urgent I'd rather replace ->set_xstate with one
-> operation per ioctl, so that we don't multiple different kinds of flags
-> over the same operation.
+> On 04/22 2014 14:27 PM, Christoph Hellwig wrote:
+>> On Mon, Apr 21, 2014 at 03:45:08PM -0500, Eric Sandeen wrote:
+>>> Coverity noticed that if we sent junk into
+>>> xfs_qm_scall_trunc_qfiles(), we could get back an
+>>> uninitialized error value.  So sanitize the flags we
+>>> will accept, and initialize error anyway for good measure.
+>>>
+>>> (This bug may have been introduced via c61a9e39).
 > 
+> Indeed, my mistake.
 
-eh, that's probably better, I'll take a look.
+No worries, it's a very small thing, and programatically
+impossible.  Not trying to point fingers, just looking for
+whether it's a new warning or an old one.
 
 Thanks,
 -Eric
