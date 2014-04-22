@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 09D947F3F
-	for <xfs@oss.sgi.com>; Tue, 22 Apr 2014 01:27:42 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id EC1CD8F804B
-	for <xfs@oss.sgi.com>; Mon, 21 Apr 2014 23:27:38 -0700 (PDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id EA1057F3F
+	for <xfs@oss.sgi.com>; Tue, 22 Apr 2014 01:28:21 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id B98CF304053
+	for <xfs@oss.sgi.com>; Mon, 21 Apr 2014 23:28:21 -0700 (PDT)
 Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id AqwKVzDrBbunZxiD (version=TLSv1 cipher=AES256-SHA
+	ESMTP id PWCPibAmplYD0xiL (version=TLSv1 cipher=AES256-SHA
 	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 21 Apr 2014 23:27:37 -0700 (PDT)
-Date: Mon, 21 Apr 2014 23:27:36 -0700
+	Mon, 21 Apr 2014 23:28:17 -0700 (PDT)
+Date: Mon, 21 Apr 2014 23:28:16 -0700
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] xfs: bulletfproof xfs_qm_scall_trunc_qfiles()
-Message-ID: <20140422062736.GA31337@infradead.org>
-References: <53558354.5040309@redhat.com>
+Subject: Re: [PATCH 1/3] xfstests: add helper for zero range support check
+Message-ID: <20140422062816.GB31337@infradead.org>
+References: <20140421204023.GB960@wallace>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <53558354.5040309@redhat.com>
+In-Reply-To: <20140421204023.GB960@wallace>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,24 +29,18 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: Eric Whitney <enwlinux@gmail.com>
+Cc: linux-ext4@vger.kernel.org, xfs@oss.sgi.com
 
-On Mon, Apr 21, 2014 at 03:45:08PM -0500, Eric Sandeen wrote:
-> Coverity noticed that if we sent junk into
-> xfs_qm_scall_trunc_qfiles(), we could get back an
-> uninitialized error value.  So sanitize the flags we
-> will accept, and initialize error anyway for good measure.
-> 
-> (This bug may have been introduced via c61a9e39).
-> 
-> Should resolve Coverity CID 1163872.
-> 
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> +# check that xfs_io, kernel, and filesystem all support fallocate with zero
+> +# range
+> +_require_xfs_io_falloc_zero()
+> +{
+> +	_require_xfs_io_command "fzero"
+> +}
 
-Looks good,
-
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+I'd rather remove all the wrappers around _require_xfs_io_command, they
+don't actually add any value.
 
 _______________________________________________
 xfs mailing list
