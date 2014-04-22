@@ -1,23 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id E30977F52
-	for <xfs@oss.sgi.com>; Tue, 22 Apr 2014 16:48:34 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 81A94AC00D
-	for <xfs@oss.sgi.com>; Tue, 22 Apr 2014 14:48:34 -0700 (PDT)
-Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id I37s5WYaqCEmEDxU (version=TLSv1 cipher=AES256-SHA
-	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 22 Apr 2014 14:48:32 -0700 (PDT)
-Date: Tue, 22 Apr 2014 23:48:28 +0200
-From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH V2] xfs: fix Q_XQUOTARM ioctl
-Message-ID: <20140422214828.GL366@quack.suse.cz>
-References: <535580A1.20806@redhat.com> <5356B986.2060906@sandeen.net>
-	<20140422213051.GL18672@dastard>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20140422213051.GL18672@dastard>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 0716A7F3F
+	for <xfs@oss.sgi.com>; Tue, 22 Apr 2014 17:04:45 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 7D920304032
+	for <xfs@oss.sgi.com>; Tue, 22 Apr 2014 15:04:44 -0700 (PDT)
+Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
+	[150.101.137.143]) by cuda.sgi.com with ESMTP id
+	6LKU8jOC0kOLYYYV for <xfs@oss.sgi.com>;
+	Tue, 22 Apr 2014 15:04:42 -0700 (PDT)
+Received: from disappointment.disaster.area ([192.168.1.110]
+	helo=disappointment) by dastard with esmtp (Exim 4.80)
+	(envelope-from <dave@fromorbit.com>) id 1Wcinv-0002PL-DU
+	for xfs@oss.sgi.com; Wed, 23 Apr 2014 08:04:39 +1000
+Received: from dave by disappointment with local (Exim 4.82)
+	(envelope-from <dave@disappointment.disaster>) id 1Wcinv-0000oC-Ci
+	for xfs@oss.sgi.com; Wed, 23 Apr 2014 08:04:39 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: [PATCH 4/6] generic: cleanup space after test in TESTDIR
+Date: Wed, 23 Apr 2014 08:04:32 +1000
+Message-Id: <1398204274-2113-5-git-send-email-david@fromorbit.com>
+In-Reply-To: <1398204274-2113-1-git-send-email-david@fromorbit.com>
+References: <1398204274-2113-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,43 +30,53 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Eric Sandeen <sandeen@redhat.com>, Jan Kara <jack@suse.cz>, Eric Sandeen <sandeen@sandeen.net>, xfs-oss <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
-On Wed 23-04-14 07:30:51, Dave Chinner wrote:
-> On Tue, Apr 22, 2014 at 01:48:38PM -0500, Eric Sandeen wrote:
-> > The Q_XQUOTARM quotactl was not working properly, because
-> > we weren't passing around proper flags.  The xfs_fs_set_xstate()
-> > ioctl handler used the same flags for Q_XQUOTAON/OFF as
-> > well as for Q_XQUOTARM, but Q_XQUOTAON/OFF look for
-> > XFS_UQUOTA_ACCT, XFS_UQUOTA_ENFD, XFS_GQUOTA_ACCT etc,
-> > i.e. quota type + state, while Q_XQUOTARM looks only for
-> > the type of quota, i.e. XFS_DQ_USER, XFS_DQ_GROUP etc.
-> > 
-> > Unfortunately these flag spaces overlap a bit, so we
-> > got semi-random results for Q_XQUOTARM; i.e. the value
-> > for XFS_DQ_USER == XFS_UQUOTA_ACCT, etc.  yeargh.
-> > 
-> > Add a new quotactl op vector specifically for the QUOTARM
-> > operation, since it operates with a different flag space.
-> > 
-> > This has been broken more or less forever, AFAICT.
-> > 
-> > Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-> > ---
-> 
-> Looks fine to me, but I'll need Jan to ack it before I pull it in.
-  The patch looks good to me as well. So feel free to add:
-Acked-by: Jan Kara <jack@suse.cz>
+From: Dave Chinner <dchinner@redhat.com>
 
-								Honza
+A couple of tests leave behind large files or directory structures
+when they complete, which leads to small TEST_DEVs running out of
+space during other tests. Make those space hogs clean up after
+themselves so that random tests don't fail with ENOSPC errors.
+
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ tests/generic/070 | 1 +
+ tests/xfs/292     | 2 ++
+ 2 files changed, 3 insertions(+)
+
+diff --git a/tests/generic/070 b/tests/generic/070
+index 3c88df0..f593d84 100755
+--- a/tests/generic/070
++++ b/tests/generic/070
+@@ -34,6 +34,7 @@ trap "_cleanup; exit \$status" 0 1 2 3 15
+ _cleanup()
+ {
+     cd /
++    rm -rf $TEST_DIR/fsstress
+     rm -f $tmp.*
+ }
+ 
+diff --git a/tests/xfs/292 b/tests/xfs/292
+index d67db47..2910118 100755
+--- a/tests/xfs/292
++++ b/tests/xfs/292
+@@ -57,6 +57,8 @@ mkfs.xfs -f $fsfile 2>&1 | sed -e "s:$fsfile:FILENAME:g" | grep meta-data
+ echo "mkfs.xfs with cmdline geometry"
+ mkfs.xfs -f -d su=16k,sw=5 $fsfile 2>&1 | sed -e "s:$fsfile:FILENAME:g" | grep meta-data
+ 
++rm -f $fsfile
++
+ # success, all done
+ status=0
+ exit
 -- 
-Jan Kara <jack@suse.cz>
-SUSE Labs, CR
+1.9.0
 
 _______________________________________________
 xfs mailing list
