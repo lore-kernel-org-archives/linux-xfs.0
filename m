@@ -1,23 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 08BEC7F3F
-	for <xfs@oss.sgi.com>; Tue, 22 Apr 2014 00:11:05 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 09D947F3F
+	for <xfs@oss.sgi.com>; Tue, 22 Apr 2014 01:27:42 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id E3A338F8064
-	for <xfs@oss.sgi.com>; Mon, 21 Apr 2014 22:11:01 -0700 (PDT)
-Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
-	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	hiQkCrCpAVXy9j0M for <xfs@oss.sgi.com>;
-	Mon, 21 Apr 2014 22:10:56 -0700 (PDT)
-Date: Tue, 22 Apr 2014 15:10:51 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] common: new function to get real device path name and
-	basename
-Message-ID: <20140422051051.GI18672@dastard>
-References: <1398137247-4883-1-git-send-email-eguan@redhat.com>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id EC1CD8F804B
+	for <xfs@oss.sgi.com>; Mon, 21 Apr 2014 23:27:38 -0700 (PDT)
+Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
+	ESMTP id AqwKVzDrBbunZxiD (version=TLSv1 cipher=AES256-SHA
+	bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Mon, 21 Apr 2014 23:27:37 -0700 (PDT)
+Date: Mon, 21 Apr 2014 23:27:36 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] xfs: bulletfproof xfs_qm_scall_trunc_qfiles()
+Message-ID: <20140422062736.GA31337@infradead.org>
+References: <53558354.5040309@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1398137247-4883-1-git-send-email-eguan@redhat.com>
+In-Reply-To: <53558354.5040309@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,67 +29,24 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eryu Guan <eguan@redhat.com>
-Cc: xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-On Tue, Apr 22, 2014 at 11:27:27AM +0800, Eryu Guan wrote:
-> If TEST_DEV or SCRATCH_DEV is symlink(mostly a lvm lv), a simple
-> basename is not enough, symlink should be followed.
+On Mon, Apr 21, 2014 at 03:45:08PM -0500, Eric Sandeen wrote:
+> Coverity noticed that if we sent junk into
+> xfs_qm_scall_trunc_qfiles(), we could get back an
+> uninitialized error value.  So sanitize the flags we
+> will accept, and initialize error anyway for good measure.
 > 
-> This task is common enough, so introduce new helper functions and
-> replace all readlink calls in
+> (This bug may have been introduced via c61a9e39).
 > 
-> ext4/305
-> generic/009
-> generic/019
-> generic/285
-> generic/312
+> Should resolve Coverity CID 1163872.
 > 
-> Signed-off-by: Eryu Guan <eguan@redhat.com>
-> ---
->  common/rc         | 16 ++++++++++++++++
->  tests/ext4/305    |  2 +-
->  tests/generic/009 |  2 +-
->  tests/generic/019 |  4 +---
->  tests/generic/285 |  2 +-
->  tests/generic/312 |  2 +-
->  6 files changed, 21 insertions(+), 7 deletions(-)
-> 
-> diff --git a/common/rc b/common/rc
-> index acf419b..68b040d 100644
-> --- a/common/rc
-> +++ b/common/rc
-> @@ -2302,6 +2302,22 @@ init_rc()
->  	export XFS_IO_PROG="$XFS_IO_PROG -F"
->  }
->  
-> +# get real device path name by following link
-> +_real_dev()
-> +{
-> +	local _dev=$1
-> +	if [ -b "$_dev" ] && [ -L "$_dev" ]; then
-> +		_dev=`readlink -f "$_dev"`
-> +	fi
-> +	echo $_dev
-> +}
-> +
-> +# basename of a device
-> +_basename_dev()
-> +{
-> +	echo `basename $(_real_dev $1)`
-> +}
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 
-I don't really like that function name.  It describes the
-implementation, not what the function actually returns. i.e. we're
-getting the -short- device names here, basename is the implemenation
-used to turn a full device name to a short device name...
+Looks good,
 
-Cheers,
-
-Dave
--- 
-Dave Chinner
-david@fromorbit.com
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
 _______________________________________________
 xfs mailing list
