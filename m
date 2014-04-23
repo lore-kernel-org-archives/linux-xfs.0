@@ -1,24 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id A8A857F52
-	for <xfs@oss.sgi.com>; Wed, 23 Apr 2014 10:39:59 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 8E7738F8049
-	for <xfs@oss.sgi.com>; Wed, 23 Apr 2014 08:39:59 -0700 (PDT)
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.9])
-	by cuda.sgi.com with ESMTP id UsYC4dUNd7R4UTJW (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 23 Apr 2014 08:39:58 -0700 (PDT)
-Date: Wed, 23 Apr 2014 08:39:56 -0700
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH V2] xfs: fix Q_XQUOTARM ioctl
-Message-ID: <20140423153956.GA11809@infradead.org>
-References: <535580A1.20806@redhat.com> <5356B986.2060906@sandeen.net>
-	<20140423152708.GA3326@infradead.org>
-	<5357DC3A.6060702@sandeen.net>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id A19F77F52
+	for <xfs@oss.sgi.com>; Wed, 23 Apr 2014 14:05:12 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 158C1AC004
+	for <xfs@oss.sgi.com>; Wed, 23 Apr 2014 12:05:09 -0700 (PDT)
+Received: from mail-we0-f181.google.com (mail-we0-f181.google.com
+	[74.125.82.181]) by cuda.sgi.com with ESMTP id LT7vvgvSVrDrIQZh
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Wed, 23 Apr 2014 12:05:02 -0700 (PDT)
+Received: by mail-we0-f181.google.com with SMTP id q58so1237222wes.26
+	for <xfs@oss.sgi.com>; Wed, 23 Apr 2014 12:05:01 -0700 (PDT)
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <5357DC3A.6060702@sandeen.net>
+In-Reply-To: <20140423054719.GJ15995@dastard>
+References: <CAJhmKHmwvCBx=arJ6m2ZhuQVq=Jj-XbBGvEPjTPY5a1QtWRTCQ@mail.gmail.com>
+	<20140408015012.GB22917@dastard>
+	<CAJhmKHnap0vu8m4AXBxJr9L0RKoquFrm3NjKQdDBJwpRTYmfpw@mail.gmail.com>
+	<20140408053117.GJ27017@dastard>
+	<CAJhmKHk5fWVaDTEfL_oESULspavk83eBEsyw7=qEp8bC7f2S2g@mail.gmail.com>
+	<20140423054719.GJ15995@dastard>
+Date: Wed, 23 Apr 2014 15:05:00 -0400
+Message-ID: <CAJhmKHmtXwncWJDmFOUCXEHcZphDPu7LgomAer2dCKhsSU81ZQ@mail.gmail.com>
+Subject: Re: XFS fragmentation on file append
+From: Keyur Govande <keyurgovande@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,15 +35,191 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Christoph Hellwig <hch@infradead.org>, Eric Sandeen <sandeen@redhat.com>, Jan Kara <jack@suse.cz>, xfs-oss <xfs@oss.sgi.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com
 
-On Wed, Apr 23, 2014 at 10:28:58AM -0500, Eric Sandeen wrote:
-> Just out of curiousity, for what reason - just parity w/ the non-xfs
-> ops?
+< re-sending to the distribution list for future reference >
 
-Because it's just cleaner to have one methods for one operation instead
-of overloading them with different opts like an ioctl.
+On Wed, Apr 23, 2014 at 1:47 AM, Dave Chinner <david@fromorbit.com> wrote:
+> On Tue, Apr 22, 2014 at 07:35:34PM -0400, Keyur Govande wrote:
+>> On Tue, Apr 8, 2014 at 1:31 AM, Dave Chinner <david@fromorbit.com> wrote:
+>> > On Mon, Apr 07, 2014 at 11:42:02PM -0400, Keyur Govande wrote:
+>> >> On Mon, Apr 7, 2014 at 9:50 PM, Dave Chinner <david@fromorbit.com> wrote:
+>> >> > [cc the XFS mailing list <xfs@oss.sgi.com>]
+>> >> >
+>> >> > On Mon, Apr 07, 2014 at 06:53:46PM -0400, Keyur Govande wrote:
+>> >> >> Hello,
+>> >> >>
+>> >> >> I'm currently investigating a MySQL performance degradation on XFS due
+>> >> >> to file fragmentation.
+> .....
+>> >> > Alternatively, set an extent size hint on the log files to define
+>> >> > the minimum sized allocation (e.g. 32MB) and this will limit
+>> >> > fragmentation without you having to modify the MySQL code at all...
+> .....
+>> I spent some more time figuring out the MySQL write semantics and it
+>> doesn't open/close files often and initial test script was incorrect.
+>>
+>> It uses O_DIRECT and appends to the file; I modified my test binary to
+> .....
+>> [root@dbtest09 linux-3.10.37]# xfs_io -c "extsize " /var/lib/mysql/xfs/
+>> [0] /var/lib/mysql/xfs/
+>
+> So you aren't using extent size hints....
+>
+>>
+>> Here's how the first 3 AG's look like:
+>> https://gist.github.com/keyurdg/82b955fb96b003930e4f
+>>
+>> After a run of the dpwrite program, here's how the bmap looks like:
+>> https://gist.github.com/keyurdg/11196897
+>>
+>> The files have nicely interleaved with each other, mostly
+>> XFS_IEXT_BUFSZ size extents.
+>
+> XFS_IEXT_BUFSZ Has nothing to do with the size of allocations. It's
+> the size of the in memory array buffer used to hold extent records.
+>
+> What you are seeing is allocation interleaving according to the
+> pattern and size of the direct IOs being done by the application.
+> Which happen to be 512KB (1024 basic blocks) and the file being
+> written to is randomly selected.
+>
+
+I misspoke; I meant to say XFS_IEXT_BUFSZ (4096) blocks per extent. As
+long as each pwrite is less than 2 MB, the extents do lay out in 4096
+blocks every time.
+
+>> The average read speed is 724 MBps. After
+>> defragmenting the file to 1 extent, the speed improves 30% to 1.09
+>> GBps.
+>
+> Sure. Now set an extent size hint of 32MB and try again.
+
+I did these runs as well going by your last email suggestion, but I
+was more interested in what you thought about the other ideas so
+didn't include the results.
+
+32MB gives 850 MBps and 64MB hits 980MBps. The peak read rate from the
+hardware for a contiguous file is 1.45 GBps. I could keep on
+increasing it until I hit a number I like, but I was looking to see if
+it could be globally optimized.
+
+>
+>> I noticed that XFS chooses the AG based on the parent directory's AG
+>> and only the next sequential one if there's no space available.
+>
+> Yes, that's what the inode64 allocator does. It tries to keep files
+> in the same directory close together.
+>
+>> A
+>> small patch that chooses the AG randomly fixes the fragmentation issue
+>> very nicely. All of the MySQL data files are in a single directory and
+>> we see this in Production where a parent inode AG is filled, then the
+>> sequential next, and so on.
+>>
+>> diff --git a/fs/xfs/xfs_ialloc.c b/fs/xfs/xfs_ialloc.c
+>> index c8f5ae1..7841509 100644
+>> --- a/fs/xfs/xfs_ialloc.c
+>> +++ b/fs/xfs/xfs_ialloc.c
+>> @@ -517,7 +517,7 @@ xfs_ialloc_ag_select(
+>>          * to mean that blocks must be allocated for them,
+>>          * if none are currently free.
+>>          */
+>> -       agno = pagno;
+>> +       agno = ((xfs_agnumber_t) prandom_u32()) % agcount;
+>>         flags = XFS_ALLOC_FLAG_TRYLOCK;
+>>         for (;;) {
+>>                 pag = xfs_perag_get(mp, agno);
+>
+> Ugh. That might fix the interleaving, but it randomly distributes
+> related files over the entire filesystem. Hence if you have random
+> access to the files (like a database does) you now have random seeks
+> across the entire filesystem rather than within AGs. You basically
+> destroy any concept of data locality that the filesystem has.
+
+I realize this is terrible for small files like a source code tree,
+but for a database which usually has a many large files in the same
+directory the seek cost is amortized by the benefit from a large
+contiguous read. Would it be terrible to have this modifiable as a
+setting (like extsize is) with the default being the inode64 behavior?
+
+>
+>> I couldn't find guidance on the internet on how many allocation groups
+>> to use for a 2 TB partition,
+>
+> I've already given guidance on that. Choose to ignore it if you
+> will...
+>
+
+Could you repeat it or post a link? The only relevant info I found via
+Google is using as many AGs as hardware threads
+(http://blog.tsunanet.net/2011/08/mkfsxfs-raid10-optimal-performance.html).
+
+>> but this random selection won't scale for
+>> many hundreds of concurrently written files, but for a few heavily
+>> writtent-to files it works nicely.
+>>
+>> I noticed that for non-DIRECT_IO + every write fsync'd, XFS would
+>> cleverly keep doubling the allocation block size as the file kept
+>> growing.
+>
+> That's the behaviour of delayed allocation.  By using buffered IO,
+> the application has delegated all responisbility of optimal layout
+> of the file to the filesystem, and this is the method XFS uses to
+> minimise fragmentation in that case.
+>
+> Direct IO does not have delayed allocation - it allocates for the
+> current IO according to the bounds given by the IO, inode extent size
+> hints and alignment characteristic of the filesystem. It does not do
+> specualtive allocation at all.
+>
+> The principle of direct IO to do exactly what the application asked,
+> not to second guess what the application *might* need. Either the
+> application delegates everything to the filesystem (i.e. buffered
+> IO) or it assumes full responsibility for allocation behaviour and
+> IO coherency (i.e. direct IO).
+>
+> IOWs, If you need to preallocate  space beyond EOF that doubles in
+> size as the file grows to prevent fragmentation, then the
+> application should be calling fallocate(FALLOC_FL_KEEP_SIZE) at
+> the appropriate times or using extent size hints to define the
+> minimum allocation sizes for the direct IO.
+>
+>> The "extsize" option seems to me a bit too static because the size of
+>> tables we use varies widely and large new tables come and goe
+>
+> You can set the extsize per file at create time, but really, you
+> only need to set the extent size just large enough to obtain maximal
+> read speeds.
+>
+>> Could the same doubling logic be applied for DIRECT_IO writes as well?
+>
+> I don't think so. It would break many carefully tuned production
+> systems out there that rely directly  on the fact that XFS does
+> exactly what the application asks it to do when using direct IO.
+>
+> IOWs, I think you are trying to optimise the wrong layer - put your
+> effort into making fallocate() do what the application needs to
+> prevent fragmentation rather trying to hack the filesystem to do it
+> for you.  Not only will that improve performance on XFS, but it will
+> also improve performance on ext4 and any other filesystem that
+> supports fallocate and direct IO.
+>
+
+I've been experimenting with patches to MySQL to use fallocate with
+FALLOC_FL_KEEP_SIZE and measuring the performance and fragmentation.
+
+I also poked at the kernel because I assumed other DBs may also
+benefit from the heuristic (speculative) allocation. Point taken about
+doing the optimization in the application layer.
+
+> Cheers,
+>
+> Dave.
+> --
+> Dave Chinner
+> david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
