@@ -1,22 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 40B337F3F
-	for <xfs@oss.sgi.com>; Wed, 23 Apr 2014 01:36:04 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 23639304051
-	for <xfs@oss.sgi.com>; Tue, 22 Apr 2014 23:36:03 -0700 (PDT)
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	E6qUAVgLFVeWxKCr for <xfs@oss.sgi.com>;
-	Tue, 22 Apr 2014 23:36:02 -0700 (PDT)
-Date: Wed, 23 Apr 2014 16:35:59 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v3 00/20] xfsprogs: introduce the free inode btree
-Message-ID: <20140423063559.GQ15995@dastard>
-References: <1397146270-42993-1-git-send-email-bfoster@redhat.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 2D4597F3F
+	for <xfs@oss.sgi.com>; Wed, 23 Apr 2014 02:23:51 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id DFB5D8F804B
+	for <xfs@oss.sgi.com>; Wed, 23 Apr 2014 00:23:47 -0700 (PDT)
+Received: from mail-ee0-f46.google.com (mail-ee0-f46.google.com
+	[74.125.83.46]) by cuda.sgi.com with ESMTP id DmBzMKhHRNx8JAXm
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Wed, 23 Apr 2014 00:23:46 -0700 (PDT)
+Received: by mail-ee0-f46.google.com with SMTP id t10so400610eei.19
+	for <xfs@oss.sgi.com>; Wed, 23 Apr 2014 00:23:44 -0700 (PDT)
+Message-ID: <53576A7D.9020303@gmail.com>
+Date: Wed, 23 Apr 2014 09:23:41 +0200
+From: Ivan Pantovic <gyro.ivan@gmail.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1397146270-42993-1-git-send-email-bfoster@redhat.com>
+Subject: Re: rm -f * on large files very slow on XFS + MD RAID 6 volume of
+	15x 4TB of HDDs (52TB)
+References: <CAHuzUScfp19c_th_pfsZs05+yDz34MuEH-P1f+FF1dcivfH=5Q@mail.gmail.com>
+	<20140423021835.GI15995@dastard>
+In-Reply-To: <20140423021835.GI15995@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,43 +28,61 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
-Cc: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-kernel@vger.kernel.org, Speedy Milan <speedy.milan@gmail.com>, xfs@oss.sgi.com
 
-On Thu, Apr 10, 2014 at 12:10:50PM -0400, Brian Foster wrote:
-> Hi all,
-> 
-> This is the v3 userspace portion of finobt support corresponding to v5
-> of the kernel series.
-> 
-> Patches 1-10 are straight application of the corresponding kernel patches
-> with omissions where appropriate.
 
-I haven't done anything more than passed a quick eye over them and
-tested them. I'll review them fully in the kernel context, and we
-can apply any changes to the kernel code directly to them...
+> [root@drive-b ~]# xfs_db -r /dev/md0
+> xfs_db> frag
+> actual 11157932, ideal 11015175, fragmentation factor 1.28%
+> xfs_db>
 
-> Patch 11 adds mkfs support. Patches 12 and 13 provide a couple minor db
-> and repair fixes to support the new agi fields and calculate the fs
-> format respectively. Patches 14-18 add real repair support for the
-> finobt. Patch 19 adds support to report finobt state in xfs_info. Patch
-> 20 adds support for metadump.
-> 
-> Thoughts, reviews, flames appreciated.
+this is current level of fragmentation ... is it bad?
 
-I've made comments on the patches that i think need a bit of work,
-but all the remainder (11-20) I haven't made any direct comment on
-you can consider:
+some say over 1% is candidate for defrag? ...
 
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
+we can leave it like this and wait for a next full backup and then check 
+on the fragmentation of that file.
 
--- 
-Dave Chinner
-david@fromorbit.com
+On 04/23/2014 04:18 AM, Dave Chinner wrote:
+> [cc xfs@oss.sgi.com]
+>
+> On Mon, Apr 21, 2014 at 10:58:53PM +0200, Speedy Milan wrote:
+>> I want to report very slow deletion of 24 50GB files (in total 12 TB),
+>> all present in the same folder.
+> total = 1.2TB?
+>
+>> OS is CentOS 6.4, with upgraded kernel 3.13.1.
+>>
+>> The hardware is a Supermicro server with 15x 4TB WD Se drives in MD
+>> RAID 6, totalling 52TB of free space.
+>>
+>> XFS is formated directly on the RAID volume, without LVM layers.
+>>
+>> Deletion was done with rm -f * command, and it took upwards of 1 hour
+>> to delete the files.
+>>
+>> File system was filled completely prior to deletion.
+> Oh, that's bad. it's likely you fragmented the files into
+> millions of extents?
+>
+>> rm was mostly waiting (D state), probably for kworker threads, and
+> No, waiting for IO.
+>
+>> iostat was showing big HDD utilization numbers and very low throughput
+>> so it looked like a random HDD workload was in effect.
+> Yup, smells like file fragmentation. Non-fragmented 50GB files
+> should be removed in a few milliseconds. but if you've badly
+> fragmented the files, there could be 10 million extents in a 50GB
+> file. A few milliseconds per extent removal gives you....
+>
+> Cheers,
+>
+> Dave.
 
 _______________________________________________
 xfs mailing list
