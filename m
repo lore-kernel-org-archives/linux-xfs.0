@@ -1,24 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id C447F7F3F
-	for <xfs@oss.sgi.com>; Wed, 23 Apr 2014 00:54:25 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 4C489AC00A
-	for <xfs@oss.sgi.com>; Tue, 22 Apr 2014 22:54:22 -0700 (PDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id E23BE7F3F
+	for <xfs@oss.sgi.com>; Wed, 23 Apr 2014 01:04:01 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id C62C0304043
+	for <xfs@oss.sgi.com>; Tue, 22 Apr 2014 23:03:58 -0700 (PDT)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	iBCspkjgM1fEbpW8 for <xfs@oss.sgi.com>;
-	Tue, 22 Apr 2014 22:54:19 -0700 (PDT)
-Date: Wed, 23 Apr 2014 15:54:17 +1000
+	RvA7pvTML2RHQtbh for <xfs@oss.sgi.com>;
+	Tue, 22 Apr 2014 23:03:56 -0700 (PDT)
+Date: Wed, 23 Apr 2014 16:03:53 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs: remote attribute overwrite causes transaction overrun
-Message-ID: <20140423055417.GK15995@dastard>
-References: <1398149949-11324-1-git-send-email-david@fromorbit.com>
-	<535659F7.4060702@oracle.com> <20140422234628.GN18672@dastard>
-	<20140423000042.GO18672@dastard> <53572DDA.8080302@sandeen.net>
+Subject: Re: [PATCH v3 11/20] xfsprogs/mkfs: finobt mkfs support
+Message-ID: <20140423060352.GL15995@dastard>
+References: <1397146270-42993-1-git-send-email-bfoster@redhat.com>
+	<1397146270-42993-12-git-send-email-bfoster@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <53572DDA.8080302@sandeen.net>
+In-Reply-To: <1397146270-42993-12-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,37 +30,43 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Jeff Liu <jeff.liu@oracle.com>, xfs@oss.sgi.com
+To: Brian Foster <bfoster@redhat.com>
+Cc: xfs@oss.sgi.com
 
-On Tue, Apr 22, 2014 at 10:04:58PM -0500, Eric Sandeen wrote:
-> On 4/22/14, 7:00 PM, Dave Chinner wrote:
-> > On Wed, Apr 23, 2014 at 09:46:28AM +1000, Dave Chinner wrote:
-> >> On Tue, Apr 22, 2014 at 08:00:55PM +0800, Jeff Liu wrote:
-> >>>
-> >>> On 04/22 2014 14:59 PM, Dave Chinner wrote:
-....
-> >>>> +	/* remote value might be different size to the buffer supplied. */
-> >>>> +	if (args->rmtvaluelen = args->valuelen)
-> >>> 			     ^^^
-> >>> Here is a typo...
-> >>
-> >> Oh, well spotted.
-> >>
-> >> But, hold on a minute, shouldn't gcc be catching those sorts of
-> >> typos?
-....
-> > Time to add ccflags-y += -Werror to the makefile....
+On Thu, Apr 10, 2014 at 12:11:01PM -0400, Brian Foster wrote:
+> Add the 'finobt' metadata option to mkfs to format an fs with free
+> inode btree support. If enabled, initialize the associated AGI
+> header fields and btree root block.
 > 
-> Probably only under a couple specific arches...?  How are we for i.e.
-> stupid printf format warnings about long vs. longlong on 32/64 arches...?
+> Also, do the initialization of the superblock version and feature
+> bits (including the new finobt flag) a bit earlier. These fields
+> must now be initialized prior to the use of XFS_PREALLOC_BLOCKS(),
+> as the latter returns a value that depends on whether a finobt root
+> btree block is reserved.
 > 
-> Or maybe you can -Werror, -Wno$FOO?
+> Signed-off-by: Brian Foster <bfoster@redhat.com>
 
-Personally, if other arches are throwing warnings that we don't know
-about, they need to be fixed. The only way I'll get to know about
-them is to have somebody else's build break, because nobody is
-reporting warnings to us right now....
+$ sudo mkfs.xfs -f -mcrc=1,finobt=1 -m crc=0 -d size=128m /dev/ram1
+meta-data=/dev/ram1              isize=256    agcount=4, agsize=8192 blks
+         =                       sectsz=512   attr=2, projid32bit=1
+	 =                       crc=0        finobt=1
+	                         ^^^^^        ^^^^^^^^
+.....
+$ mount /dev/ram1 /mnt/scratch
+[ 4727.269080] XFS (ram1): Mounting Filesystem
+[ 4727.270077] XFS (ram1): Log inconsistent or not a log (last==0, first!=1)
+[ 4727.271227] XFS (ram1): empty log check failed
+[ 4727.271970] XFS (ram1): log mount/recovery failed: error 22
+[ 4727.273097] XFS (ram1): log mount failed
+
+If "-mcrc=0" is seen on the command line, it needs to turn off
+finobt....
+
+xfs/001 and xfs/002 trip over this when run like:
+
+$ MKFS_OPTIONS="-mcrc=1,finobt=1" ./check xfs/00[12]
+
+Otherwise, everything seems to be working ;)
 
 Cheers,
 
