@@ -1,27 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 8222C7F3F
-	for <xfs@oss.sgi.com>; Wed, 23 Apr 2014 03:11:58 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 743E2304051
-	for <xfs@oss.sgi.com>; Wed, 23 Apr 2014 01:11:55 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id F147C7F3F
+	for <xfs@oss.sgi.com>; Wed, 23 Apr 2014 03:26:11 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id B77EA8F8039
+	for <xfs@oss.sgi.com>; Wed, 23 Apr 2014 01:26:08 -0700 (PDT)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	cI0iBQP0XFvfgFMG for <xfs@oss.sgi.com>;
-	Wed, 23 Apr 2014 01:11:53 -0700 (PDT)
-Date: Wed, 23 Apr 2014 18:11:50 +1000
+	UhqPQnWWDWGf1TyJ for <xfs@oss.sgi.com>;
+	Wed, 23 Apr 2014 01:26:06 -0700 (PDT)
+Date: Wed, 23 Apr 2014 18:25:38 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: XFS fragmentation on file append
-Message-ID: <20140423081150.GQ18672@dastard>
-References: <CAJhmKHmwvCBx=arJ6m2ZhuQVq=Jj-XbBGvEPjTPY5a1QtWRTCQ@mail.gmail.com>
-	<20140408015012.GB22917@dastard>
-	<CAJhmKHnap0vu8m4AXBxJr9L0RKoquFrm3NjKQdDBJwpRTYmfpw@mail.gmail.com>
-	<20140408053117.GJ27017@dastard>
-	<CAJhmKHk5fWVaDTEfL_oESULspavk83eBEsyw7=qEp8bC7f2S2g@mail.gmail.com>
-	<20140423054719.GJ15995@dastard>
+Subject: Re: rm -f * on large files very slow on XFS + MD RAID 6 volume of
+	15x 4TB of HDDs (52TB)
+Message-ID: <20140423082538.GR18672@dastard>
+References: <CAHuzUScfp19c_th_pfsZs05+yDz34MuEH-P1f+FF1dcivfH=5Q@mail.gmail.com>
+	<20140423021835.GI15995@dastard> <53576A7D.9020303@gmail.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20140423054719.GJ15995@dastard>
+In-Reply-To: <53576A7D.9020303@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,37 +31,39 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Keyur Govande <keyurgovande@gmail.com>
-Cc: linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com
+To: Ivan Pantovic <gyro.ivan@gmail.com>
+Cc: linux-kernel@vger.kernel.org, Speedy Milan <speedy.milan@gmail.com>, xfs@oss.sgi.com
 
-On Wed, Apr 23, 2014 at 03:47:19PM +1000, Dave Chinner wrote:
-> On Tue, Apr 22, 2014 at 07:35:34PM -0400, Keyur Govande wrote:
-> > I noticed that XFS chooses the AG based on the parent directory's AG
-> > and only the next sequential one if there's no space available.
+On Wed, Apr 23, 2014 at 09:23:41AM +0200, Ivan Pantovic wrote:
 > 
-> Yes, that's what the inode64 allocator does. It tries to keep files
-> in the same directory close together.
-> > @@ -517,7 +517,7 @@ xfs_ialloc_ag_select(
-> >          * to mean that blocks must be allocated for them,
-> >          * if none are currently free.
-> >          */
-> > -       agno = pagno;
-> > +       agno = ((xfs_agnumber_t) prandom_u32()) % agcount;
-> >         flags = XFS_ALLOC_FLAG_TRYLOCK;
-> >         for (;;) {
-> >                 pag = xfs_perag_get(mp, agno);
+> >[root@drive-b ~]# xfs_db -r /dev/md0
+> >xfs_db> frag
+> >actual 11157932, ideal 11015175, fragmentation factor 1.28%
+> >xfs_db>
 > 
-> Ugh. That might fix the interleaving, but it randomly distributes
-> related files over the entire filesystem. Hence if you have random
-> access to the files (like a database does) you now have random seeks
-> across the entire filesystem rather than within AGs. You basically
-> destroy any concept of data locality that the filesystem has.
+> this is current level of fragmentation ... is it bad?
 
-BTW, the inode32 allocator (it's a mount option) does this. it's no
-longer the default because a) it's always had terrible behaviour for
-general workloads compared to inode64 and b) we don't care enough
-about 32 bit applications failing to use stat64() anymore to stay
-with inode32 by default...
+http://xfs.org/index.php/XFS_FAQ#Q:_The_xfs_db_.22frag.22_command_says_I.27m_over_50.25._Is_that_bad.3F
+
+> some say over 1% is candidate for defrag? ...
+
+Some say that over 70% is usually not a problem:
+
+http://www.mythtv.org/wiki/XFS_Filesystem#Defragmenting_XFS_Partitions
+
+i.e. the level that becomes are problem is highly workload specific.
+So, you can't read *anything* in that number without know exactly
+what is in your filesystem, how the application(s) interact with it
+and so on. 
+
+Besides, I was asking specifically about the files you removed, not
+the files that remain in the filesystem. Given that you have 11
+million inodes in the filesystem, you probably removed the only
+significantly large files in the filesystem....
+
+So, the files your removed are now free space, so free space
+fragmentation is what we need to look at.  i.e. use the freesp
+command to dump the histogram and summary of the free space...
 
 Cheers,
 
