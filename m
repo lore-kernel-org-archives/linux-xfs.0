@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 1FDB97F52
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 950A37F52
 	for <xfs@oss.sgi.com>; Wed, 23 Apr 2014 15:02:00 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 93DDAAC015
-	for <xfs@oss.sgi.com>; Wed, 23 Apr 2014 13:01:56 -0700 (PDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 692138F8052
+	for <xfs@oss.sgi.com>; Wed, 23 Apr 2014 13:01:57 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id KIZOy7ZCrziHI7pu for
-	<xfs@oss.sgi.com>; Wed, 23 Apr 2014 13:01:55 -0700 (PDT)
-Date: Wed, 23 Apr 2014 16:01:52 -0400
+	cuda.sgi.com with ESMTP id Yb1SgYVicTC9CONI for
+	<xfs@oss.sgi.com>; Wed, 23 Apr 2014 13:01:45 -0700 (PDT)
+Date: Wed, 23 Apr 2014 16:01:36 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH v3 14/20] xfsprogs/repair: phase 2 finobt scan
-Message-ID: <20140423200151.GD5225@bfoster.bfoster>
+Subject: Re: [PATCH v3 11/20] xfsprogs/mkfs: finobt mkfs support
+Message-ID: <20140423200135.GC5225@bfoster.bfoster>
 References: <1397146270-42993-1-git-send-email-bfoster@redhat.com>
-	<1397146270-42993-15-git-send-email-bfoster@redhat.com>
-	<20140423061945.GO15995@dastard>
+	<1397146270-42993-12-git-send-email-bfoster@redhat.com>
+	<20140423060352.GL15995@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20140423061945.GO15995@dastard>
+In-Reply-To: <20140423060352.GL15995@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,162 +33,45 @@ Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On Wed, Apr 23, 2014 at 04:19:45PM +1000, Dave Chinner wrote:
-> On Thu, Apr 10, 2014 at 12:11:04PM -0400, Brian Foster wrote:
-> > If one exists, scan the free inode btree in phase 2 of xfs_repair.
-> > We use the same general infrastructure as for the inobt scan, but
-> > trigger finobt chunk scan logic in in scan_inobt() via the magic
-> > value.
+On Wed, Apr 23, 2014 at 04:03:53PM +1000, Dave Chinner wrote:
+> On Thu, Apr 10, 2014 at 12:11:01PM -0400, Brian Foster wrote:
+> > Add the 'finobt' metadata option to mkfs to format an fs with free
+> > inode btree support. If enabled, initialize the associated AGI
+> > header fields and btree root block.
 > > 
-> > The new scan_single_finobt_chunk() function is similar to the inobt
-> > equivalent with some finobt specific logic. We can expect that
-> > underlying inode chunk blocks are already marked used due to the
-> > previous inobt scan. We can also expect to find every record
-> > tracked by the finobt already accounted for in the in-core tree
-> > with equivalent (and internally consistent) inobt record data.
-> > 
-> > Spit out a warning on any divergences from the above and add the
-> > inodes referenced by the current finobt record to the appropriate
-> > in-core tree.
+> > Also, do the initialization of the superblock version and feature
+> > bits (including the new finobt flag) a bit earlier. These fields
+> > must now be initialized prior to the use of XFS_PREALLOC_BLOCKS(),
+> > as the latter returns a value that depends on whether a finobt root
+> > btree block is reserved.
 > > 
 > > Signed-off-by: Brian Foster <bfoster@redhat.com>
-> ....
-> > +	/*
-> > +	 * on multi-block block chunks, all chunks start
-> > +	 * at the beginning of the block.  with multi-chunk
-> > +	 * blocks, all chunks must start on 64-inode boundaries
-> > +	 * since each block can hold N complete chunks. if
-> > +	 * fs has aligned inodes, all chunks must start
-> > +	 * at a fs_ino_alignment*N'th agbno.  skip recs
-> > +	 * with badly aligned starting inodes.
-> > +	 */
 > 
-> Use all 80 columns for the comment ;)
+> $ sudo mkfs.xfs -f -mcrc=1,finobt=1 -m crc=0 -d size=128m /dev/ram1
+> meta-data=/dev/ram1              isize=256    agcount=4, agsize=8192 blks
+>          =                       sectsz=512   attr=2, projid32bit=1
+> 	 =                       crc=0        finobt=1
+> 	                         ^^^^^        ^^^^^^^^
+> .....
+> $ mount /dev/ram1 /mnt/scratch
+> [ 4727.269080] XFS (ram1): Mounting Filesystem
+> [ 4727.270077] XFS (ram1): Log inconsistent or not a log (last==0, first!=1)
+> [ 4727.271227] XFS (ram1): empty log check failed
+> [ 4727.271970] XFS (ram1): log mount/recovery failed: error 22
+> [ 4727.273097] XFS (ram1): log mount failed
 > 
-
-Yep, I'll fix this and the others...
-
-...
-> > +
-> > +	if (!suspect) {
-> > +		/*
-> > +		 * inodes previously inserted into the uncertain tree should be
-> > +		 * superceded by these when the uncertain tree is processed
-> > +		 */
-> > +		nfree = 0;
-> > +		if (XFS_INOBT_IS_FREE_DISK(rp, 0)) {
-> > +			nfree++;
-> > +			ino_rec = set_inode_free_alloc(mp, agno, ino);
-> > +		} else  {
-> > +			ino_rec = set_inode_used_alloc(mp, agno, ino);
-> > +		}
-> > +		for (j = 1; j < XFS_INODES_PER_CHUNK; j++) {
-> > +			if (XFS_INOBT_IS_FREE_DISK(rp, j)) {
-> > +				nfree++;
-> > +				set_inode_free(ino_rec, j);
-> > +			} else  {
-> > +				set_inode_used(ino_rec, j);
-> > +			}
-> > +		}
-> > +	} else {
-> > +		/*
-> > +		 * this should handle the case where the inobt scan may have
-> > +		 * already added uncertain inodes
-> > +		 */
-> > +		nfree = 0;
-> > +		for (j = 0; j < XFS_INODES_PER_CHUNK; j++) {
-> > +			if (XFS_INOBT_IS_FREE_DISK(rp, j)) {
-> > +				add_aginode_uncertain(mp, agno, ino + j, 1);
-> > +				nfree++;
-> > +			} else {
-> > +				add_aginode_uncertain(mp, agno, ino + j, 0);
-> > +			}
-> > +		}
-> > +	}
-> > +
-> > +check_freecount:
-> > +
-> > +	if (nfree != be32_to_cpu(rp->ir_freecount)) {
-> > +		do_warn(
-> > +_("finobt ir_freecount/free mismatch, inode chunk %d/%u, freecount %d nfree %d\n"),
-> > +			agno, ino, be32_to_cpu(rp->ir_freecount), nfree);
-> > +	}
-> > +
-> > +	if (!nfree) {
-> > +		do_warn(
-> > +_("finobt record with no free inodes, inode chunk %d/%u\n"), agno, ino);
-> > +	}
+> If "-mcrc=0" is seen on the command line, it needs to turn off
+> finobt....
 > 
-> Shouldn't both of these increment suspect?
+> xfs/001 and xfs/002 trip over this when run like:
+> 
+> $ MKFS_OPTIONS="-mcrc=1,finobt=1" ./check xfs/00[12]
+> 
+> Otherwise, everything seems to be working ;)
 > 
 
-So at this point of the scan, we're processing through finobt leaf
-blocks. Setting suspect has two side effects that I can see:
-
-1.) Suppressing the additional, more granular checks for the
-records/inodes that make up the remainder of the block.
-
-2.) Setting bad_ino_btree, which causes us to skip phases 6 and 7.
-
-I think my thought process was that side effect #2 was generally too
-heavy handed for a scenario where the freecount doesn't happen to match
-or we've failed to remove a fully allocated record from the finobt.
-
-Furthermore, we already increment suspect in this function if either the
-allocation state of the inode chunk blocks or the allocation state of
-any individual inode is unexpected based on the inobt state. The
-additional value of the freecount checks is to catch any kind of
-intra-record corruption or inter-freecount corruption across the trees,
-which IIUC would be fixed naturally provided nothing else is wrong
-(e.g., suspect remains 0) when the trees are regenerated.
-
-In other words, if inode allocation state does differ between the trees,
-we already do set suspect. If these warnings fire without suspect being
-set, it means we just need to fix up the freecount and there is no
-broader tree corruption. Thoughts?
-
-NOTE:
-
-When looking through this again, I think there is a hole in the
-allocation state logic in that we don't catch a case where the finobt
-inode could be allocated and the inobt inode marked as free:
-
-	if (first_rec) {
-		...
-
-		nfree = 0;
-		for (j = 0; j < XFS_INODES_PER_CHUNK; j++) {
-			if (XFS_INOBT_IS_FREE_DISK(rp, j)) {
-				nfree++;
-				if (!suspect && !is_inode_free(first_rec, j))
-					suspect++;
-			}
-			/*
-			 * XXX: else if the finobt inode is allocated, confirm
-			 * here that the inobt inode is allocated as well!
-			 */
-		}
-		goto check_freecount;
-	}
-
-I think something like this might work:
-
-	if (first_rec) {
-		...
-
-		nfree = 0;
-		for (j = 0; j < XFS_INODES_PER_CHUNK; j++) {
-			int isfree = XFS_INOBT_IS_FREE_DISK(rp, j);
-
-			if (isfree) 
-				nfree++;
-
-			if (!suspect &&
-			    isfree != is_inode_free(first_rec, j))
-				suspect++;
-		}
-		goto check_freecount;
-	}
+Yeah, I've hit this. Which reminds me... I should probably detect this
+and fail outright in mkfs as well.
 
 Brian
 
