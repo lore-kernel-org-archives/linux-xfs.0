@@ -1,23 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 5A7BA7F3F
-	for <xfs@oss.sgi.com>; Tue, 22 Apr 2014 21:18:42 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 50187304059
-	for <xfs@oss.sgi.com>; Tue, 22 Apr 2014 19:18:42 -0700 (PDT)
-Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
-	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	SEx1V2TF5H3ECdi0 for <xfs@oss.sgi.com>;
-	Tue, 22 Apr 2014 19:18:37 -0700 (PDT)
-Date: Wed, 23 Apr 2014 12:18:35 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: rm -f * on large files very slow on XFS + MD RAID 6 volume of
-	15x 4TB of HDDs (52TB)
-Message-ID: <20140423021835.GI15995@dastard>
-References: <CAHuzUScfp19c_th_pfsZs05+yDz34MuEH-P1f+FF1dcivfH=5Q@mail.gmail.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id C3DEA7F3F
+	for <xfs@oss.sgi.com>; Tue, 22 Apr 2014 22:05:07 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 66F63AC00A
+	for <xfs@oss.sgi.com>; Tue, 22 Apr 2014 20:05:04 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id ZGGpZTJgLq8PZsYA for <xfs@oss.sgi.com>;
+	Tue, 22 Apr 2014 20:04:59 -0700 (PDT)
+Message-ID: <53572DDA.8080302@sandeen.net>
+Date: Tue, 22 Apr 2014 22:04:58 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <CAHuzUScfp19c_th_pfsZs05+yDz34MuEH-P1f+FF1dcivfH=5Q@mail.gmail.com>
+Subject: Re: [PATCH] xfs: remote attribute overwrite causes transaction overrun
+References: <1398149949-11324-1-git-send-email-david@fromorbit.com>	<535659F7.4060702@oracle.com>
+	<20140422234628.GN18672@dastard> <20140423000042.GO18672@dastard>
+In-Reply-To: <20140423000042.GO18672@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,54 +24,72 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Speedy Milan <speedy.milan@gmail.com>
-Cc: xfs@oss.sgi.com, linux-kernel@vger.kernel.org, Ivan Pantovic <gyro.ivan@gmail.com>
+To: Dave Chinner <david@fromorbit.com>, Jeff Liu <jeff.liu@oracle.com>
+Cc: xfs@oss.sgi.com
 
-[cc xfs@oss.sgi.com]
+On 4/22/14, 7:00 PM, Dave Chinner wrote:
+> On Wed, Apr 23, 2014 at 09:46:28AM +1000, Dave Chinner wrote:
+>> On Tue, Apr 22, 2014 at 08:00:55PM +0800, Jeff Liu wrote:
+>>>
+>>> On 04/22 2014 14:59 PM, Dave Chinner wrote:
 
-On Mon, Apr 21, 2014 at 10:58:53PM +0200, Speedy Milan wrote:
-> I want to report very slow deletion of 24 50GB files (in total 12 TB),
-> all present in the same folder.
+...
+  =
 
-total = 1.2TB?
+>>>> +	/* remote value might be different size to the buffer supplied. */
+>>>> +	if (args->rmtvaluelen =3D args->valuelen)
+>>> 			     ^^^
+>>> Here is a typo...
+>>
+>> Oh, well spotted.
+>>
+>> But, hold on a minute, shouldn't gcc be catching those sorts of
+>> typos?
+>>
+>> /me groans
+>>
+>> $ gcc t.c
+>> $ gcc -Wall t.c
+>> t.c: In function =BFmain=BF:
+>> t.c:10:2: warning: suggest parentheses around assignment used as truth v=
+alue [-Wparentheses]
+>>   if (foo =3D bar)
+>>   ^
+>> $
+>>
+>> Only if -Wparentheses is specified.
+>>
+>> Why the hell are we suppressing useful warnings on the kernel build?
+> =
 
-> OS is CentOS 6.4, with upgraded kernel 3.13.1.
-> 
-> The hardware is a Supermicro server with 15x 4TB WD Se drives in MD
-> RAID 6, totalling 52TB of free space.
-> 
-> XFS is formated directly on the RAID volume, without LVM layers.
-> 
-> Deletion was done with rm -f * command, and it took upwards of 1 hour
-> to delete the files.
-> 
-> File system was filled completely prior to deletion.
+> Hmmm - looks like I missed the output of the warning when I built
+> against 3.15-rc2 because it was a rebuild the world and there's tons
+> of output when that happens...
+> =
 
-Oh, that's bad. it's likely you fragmented the files into
-millions of extents?
+> <sigh>
+> =
 
-> rm was mostly waiting (D state), probably for kworker threads, and
+> Time to add ccflags-y +=3D -Werror to the makefile....
 
-No, waiting for IO.
+Probably only under a couple specific arches...?  How are we for i.e.
+stupid printf format warnings about long vs. longlong on 32/64 arches...?
 
-> iostat was showing big HDD utilization numbers and very low throughput
-> so it looked like a random HDD workload was in effect.
+Or maybe you can -Werror, -Wno$FOO?
 
-Yup, smells like file fragmentation. Non-fragmented 50GB files
-should be removed in a few milliseconds. but if you've badly
-fragmented the files, there could be 10 million extents in a 50GB
-file. A few milliseconds per extent removal gives you....
+-Eric
+ =
 
-Cheers,
+> Cheers,
+> =
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> Dave.
+> =
+
 
 _______________________________________________
 xfs mailing list
