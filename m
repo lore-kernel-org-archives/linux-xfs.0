@@ -1,21 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 1E5FD7F52
-	for <xfs@oss.sgi.com>; Wed, 23 Apr 2014 10:28:59 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 2DB057F52
+	for <xfs@oss.sgi.com>; Wed, 23 Apr 2014 10:36:41 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 041968F8066
-	for <xfs@oss.sgi.com>; Wed, 23 Apr 2014 08:28:58 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id yyjIwkG7txczCVSG for <xfs@oss.sgi.com>;
-	Wed, 23 Apr 2014 08:28:57 -0700 (PDT)
-Message-ID: <5357DC3A.6060702@sandeen.net>
-Date: Wed, 23 Apr 2014 10:28:58 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id F2F55304043
+	for <xfs@oss.sgi.com>; Wed, 23 Apr 2014 08:36:40 -0700 (PDT)
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.9])
+	by cuda.sgi.com with ESMTP id R7yIKy0lBlsZQf52 (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 23 Apr 2014 08:36:39 -0700 (PDT)
+Date: Wed, 23 Apr 2014 08:36:39 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH v2 03/10] xfs: consolidate xfs_inumbers
+Message-ID: <20140423153639.GB3326@infradead.org>
+References: <535078B2.8010601@oracle.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH V2] xfs: fix Q_XQUOTARM ioctl
-References: <535580A1.20806@redhat.com> <5356B986.2060906@sandeen.net>
-	<20140423152708.GA3326@infradead.org>
-In-Reply-To: <20140423152708.GA3326@infradead.org>
+Content-Disposition: inline
+In-Reply-To: <535078B2.8010601@oracle.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,41 +29,58 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Eric Sandeen <sandeen@redhat.com>, Jan Kara <jack@suse.cz>, xfs-oss <xfs@oss.sgi.com>
+To: Jeff Liu <jeff.liu@oracle.com>
+Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-On 4/23/14, 10:27 AM, Christoph Hellwig wrote:
-> On Tue, Apr 22, 2014 at 01:48:38PM -0500, Eric Sandeen wrote:
->> The Q_XQUOTARM quotactl was not working properly, because
->> we weren't passing around proper flags.  The xfs_fs_set_xstate()
->> ioctl handler used the same flags for Q_XQUOTAON/OFF as
->> well as for Q_XQUOTARM, but Q_XQUOTAON/OFF look for
->> XFS_UQUOTA_ACCT, XFS_UQUOTA_ENFD, XFS_GQUOTA_ACCT etc,
->> i.e. quota type + state, while Q_XQUOTARM looks only for
->> the type of quota, i.e. XFS_DQ_USER, XFS_DQ_GROUP etc.
->>
->> Unfortunately these flag spaces overlap a bit, so we
->> got semi-random results for Q_XQUOTARM; i.e. the value
->> for XFS_DQ_USER == XFS_UQUOTA_ACCT, etc.  yeargh.
->>
->> Add a new quotactl op vector specifically for the QUOTARM
->> operation, since it operates with a different flag space.
->>
->> This has been broken more or less forever, AFAICT.
->>
->> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+On Fri, Apr 18, 2014 at 08:58:26AM +0800, Jeff Liu wrote:
+> From: Jie Liu <jeff.liu@oracle.com>
 > 
-> Looks good for now:
+> To fetch the file system number tables, we currently just ignore the
+> errors and proceed to loop over the next AG or bump agino to the next
+> chunk in case of btree operations failed, that is not properly because
+> those errors might hint us potential file system problems.
 > 
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
-> 
-> If you have a spare cycle or two I think splitting quotaon and quotaoff might
-> not be an all that bad idea either.
+> This patch rework xfs_inumbers() to handle the btree operation errors
+> as well as the loop conditions.  Also, add pre-checkups for the given
+> inode, we can save alloc/free the format buffer once against an invalid
+> inode number.
 
-Just out of curiousity, for what reason - just parity w/ the non-xfs
-ops?
+The patch looks mostly good to me, but I really think it should be
+split into two patches: one to do the formatting changes and code
+consolidation, and then one that does the actual logic changes for
+better error handling.  It's not easy to understand and verify with
+these two different changes combined.
 
--Eric
+>  xfs_inumbers_fmt(
+>  	void			__user *ubuffer, /* buffer to write to */
+> -	const xfs_inogrp_t	*buffer,	/* buffer to read from */
+> +	const struct xfs_inogrp	*buffer,	/* buffer to read from */
+>  	long			count,		/* # of elements to read */
+>  	long			*written)	/* # of bytes written */
+>  {
+>  	if (copy_to_user(ubuffer, buffer, count * sizeof(*buffer)))
+> -		return -EFAULT;
+> +		return XFS_ERROR(EFAULT);
+
+xfs_inumbers_fmt_compat will need the same treatment.
+
+>  	*count = 0;
+> +	if (agno >= mp->m_sb.sb_agcount ||
+> +	    *lastino != XFS_AGINO_TO_INO(mp, agno, agino))
+> +		return 0;
+
+Where is the lastino check coming from?
+
+>  	buffer = kmem_alloc(bcount * sizeof(*buffer), KM_SLEEP);
+> +	bufidx = error = 0;
+
+Why not initialize bufidx and error at declaration time?
+
+> +		error = xfs_inobt_get_rec(cur, &r, &stat);
+> +		if (error || !stat)
+> +			break;
+
+The old code moved on to the next AG here, why has this changed?
 
 _______________________________________________
 xfs mailing list
