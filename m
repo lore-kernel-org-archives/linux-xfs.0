@@ -1,9 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-From: xfs@oss.sgi.com
-Subject: [XFS updates] XFS development tree branch, for-next,
-	updated. xfs-for-linus-3.15-rc2-43-gb8b39d3
-Message-Id: <20140424061624.8B9BC7F53@oss.sgi.com>
-Date: Thu, 24 Apr 2014 01:16:24 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id D79127F52
+	for <xfs@oss.sgi.com>; Thu, 24 Apr 2014 01:55:00 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 56A1BAC007
+	for <xfs@oss.sgi.com>; Wed, 23 Apr 2014 23:54:57 -0700 (PDT)
+Received: from mail-wi0-f182.google.com (mail-wi0-f182.google.com
+	[209.85.212.182]) by cuda.sgi.com with ESMTP id
+	EW8q4vsMy1135TuL (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 23 Apr 2014 23:54:55 -0700 (PDT)
+Received: by mail-wi0-f182.google.com with SMTP id d1so540421wiv.9
+	for <xfs@oss.sgi.com>; Wed, 23 Apr 2014 23:54:54 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CAJhmKHk5fWVaDTEfL_oESULspavk83eBEsyw7=qEp8bC7f2S2g@mail.gmail.com>
+References: <CAJhmKHmwvCBx=arJ6m2ZhuQVq=Jj-XbBGvEPjTPY5a1QtWRTCQ@mail.gmail.com>
+	<20140408015012.GB22917@dastard>
+	<CAJhmKHnap0vu8m4AXBxJr9L0RKoquFrm3NjKQdDBJwpRTYmfpw@mail.gmail.com>
+	<20140408053117.GJ27017@dastard>
+	<CAJhmKHk5fWVaDTEfL_oESULspavk83eBEsyw7=qEp8bC7f2S2g@mail.gmail.com>
+Date: Thu, 24 Apr 2014 08:54:54 +0200
+Message-ID: <CAAxjCEzdYRug8CUjhmB7AHJCNAJs4ERRTLXGAHXqi1sw-vOriw@mail.gmail.com>
+Subject: Re: XFS fragmentation on file append
+From: Stefan Ring <stefanrin@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -12,71 +31,29 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Keyur Govande <keyurgovande@gmail.com>
+Cc: linux-fsdevel@vger.kernel.org, Linux fs XFS <xfs@oss.sgi.com>
 
-This is an automated email from the git hooks/post-receive script. It was
-generated because a ref change was pushed to the repository containing
-the project "XFS development tree".
+I've become interested in this topic, as I'm also running MySQL with
+O_DIRECT and innodb_file_per_table. Out of curiosity, I immediately
+ran xfs_bmap on a moderately sized table space (34GB). It listed
+around 30000 fragments, on average one for every MB.
 
-The branch, for-next has been updated
-  b8b39d3 Merge branch 'xfs-free-inode-btree' into for-next
-  53801fd xfs: enable the finobt feature on v5 superblocks
-  0c153c1 xfs: report finobt status in fs geometry
-  a3fa516 xfs: add finobt support to growfs
-  3efa4ff xfs: update the finobt on inode free
-  2b64ee5 xfs: refactor xfs_difree() inobt bits into xfs_difree_inobt() helper
-  6dd8638 xfs: use and update the finobt on inode allocation
-  0aa0a75 xfs: insert newly allocated inode chunks into the finobt
-  9d43b18 xfs: update inode allocation/free transaction reservations for finobt
-  aafc3c2 xfs: support the XFS_BTNUM_FINOBT free inode btree type
-  8e2c84d xfs: reserve v5 superblock read-only compat. feature bit for finobt
-  57bd3db xfs: refactor xfs_ialloc_btree.c to support multiple inobt numbers
-      from  7043507bfa1af648512e36d95cca484757df0b64 (commit)
+I want to report what happened then: A flurry of activity started on
+both disks (root/swap lives on one of them, the data volume containing
+the MySQL files on another) and lasted for about two minutes.
+Afterwards, all memory previously allocated to the file cache has
+become free, and also everything XFS seems to keep buffered internally
+(I think it's called SReclaimable) was released. Swap usage increased
+only slightly. dmesg was silent during that time.
 
-Those revisions listed above that are new to this repository have
-not appeared on any other notification email; so we list those
-revisions in full, below.
-
-- Log -----------------------------------------------------------------
-commit b8b39d39f94c0d3ea5771d1df3151c569599c20a
-Merge: 7043507 53801fd
-Author: Dave Chinner <david@fromorbit.com>
-Date:   Thu Apr 24 16:11:57 2014 +1000
-
-    Merge branch 'xfs-free-inode-btree' into for-next
-
------------------------------------------------------------------------
-
-Summary of changes:
- fs/xfs/xfs_ag.h           |  36 ++-
- fs/xfs/xfs_btree.c        |   6 +-
- fs/xfs/xfs_btree.h        |   3 +
- fs/xfs/xfs_format.h       |  14 +-
- fs/xfs/xfs_fs.h           |   1 +
- fs/xfs/xfs_fsops.c        |  36 ++-
- fs/xfs/xfs_ialloc.c       | 695 +++++++++++++++++++++++++++++++++++++++-------
- fs/xfs/xfs_ialloc_btree.c |  68 ++++-
- fs/xfs/xfs_ialloc_btree.h |   3 +-
- fs/xfs/xfs_inode.c        |  28 +-
- fs/xfs/xfs_itable.c       |   6 +-
- fs/xfs/xfs_log_recover.c  |   2 +
- fs/xfs/xfs_sb.h           |  10 +-
- fs/xfs/xfs_stats.c        |   1 +
- fs/xfs/xfs_stats.h        |  18 +-
- fs/xfs/xfs_trans_resv.c   |  53 +++-
- fs/xfs/xfs_trans_space.h  |   7 +-
- fs/xfs/xfs_types.h        |   2 +-
- 18 files changed, 852 insertions(+), 137 deletions(-)
-
-
-hooks/post-receive
--- 
-XFS development tree
+This is a 2.6.32-358.2.1.el6.x86_64 kernel with xfsprogs 3.1.1 (CentOS
+6.4). The machine has 64GB of RAM (2 NUMA nodes) and 24 (virtual)
+cores. Is this known behavior of xfs_bmap?
 
 _______________________________________________
 xfs mailing list
