@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 0FE877F56
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id C34887F56
 	for <xfs@oss.sgi.com>; Thu, 24 Apr 2014 00:02:52 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id D8CFE304059
-	for <xfs@oss.sgi.com>; Wed, 23 Apr 2014 22:02:51 -0700 (PDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 49AF7AC007
+	for <xfs@oss.sgi.com>; Wed, 23 Apr 2014 22:02:52 -0700 (PDT)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	ZPrFrQOdiO4IuAll for <xfs@oss.sgi.com>;
+	LPnn50XjDHNdPChz for <xfs@oss.sgi.com>;
 	Wed, 23 Apr 2014 22:02:50 -0700 (PDT)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.80)
-	(envelope-from <dave@fromorbit.com>) id 1WdBnQ-0006xt-P3
+	(envelope-from <dave@fromorbit.com>) id 1WdBnQ-0006xu-PQ
 	for xfs@oss.sgi.com; Thu, 24 Apr 2014 15:02:04 +1000
 Received: from dave by disappointment with local (Exim 4.82)
-	(envelope-from <dave@disappointment.disaster>) id 1WdBnQ-0005g2-ON
+	(envelope-from <dave@disappointment.disaster>) id 1WdBnQ-0005g7-Om
 	for xfs@oss.sgi.com; Thu, 24 Apr 2014 15:02:04 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 2/9] db: verify buffer on type change
-Date: Thu, 24 Apr 2014 15:01:55 +1000
-Message-Id: <1398315722-20870-3-git-send-email-david@fromorbit.com>
+Subject: [PATCH 3/9] repair: ensure prefetched buffers have CRCs validated
+Date: Thu, 24 Apr 2014 15:01:56 +1000
+Message-Id: <1398315722-20870-4-git-send-email-david@fromorbit.com>
 In-Reply-To: <1398315722-20870-1-git-send-email-david@fromorbit.com>
 References: <1398315722-20870-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,86 +39,134 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Currently when the type command is run, we simply change the type
-associated with the buffer, but don't verify it. This results in
-unchecked CRCs being displayed. Hence when changing the type, run
-the verifier associated with the type to determine if the buffer
-contents is valid or not.
+Prefetch currently does not do CRC validation when the IO completes
+due to the optimisation it performs and the fact that it does not
+know what the type of metadata into the buffer is supposed to be.
+Hence, mark all prefetched buffers as "suspect" so that when the
+end user tries to read it with a supplied validation function the
+validation is run even though the buffer was already in the cache.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- db/io.c   | 24 ++++++++++++++++++++++++
- db/io.h   |  1 +
- db/type.c |  9 +++++----
- 3 files changed, 30 insertions(+), 4 deletions(-)
+ libxfs/rdwr.c     | 43 ++++++++++++++++++++++++++++++++++++++-----
+ repair/prefetch.c |  3 +++
+ 2 files changed, 41 insertions(+), 5 deletions(-)
 
-diff --git a/db/io.c b/db/io.c
-index 387f171..7f1b76a 100644
---- a/db/io.c
-+++ b/db/io.c
-@@ -552,6 +552,30 @@ set_cur(
- 		ring_add();
+diff --git a/libxfs/rdwr.c b/libxfs/rdwr.c
+index 7208a2f..92b1182 100644
+--- a/libxfs/rdwr.c
++++ b/libxfs/rdwr.c
+@@ -718,12 +718,32 @@ libxfs_readbuf(struct xfs_buftarg *btp, xfs_daddr_t blkno, int len, int flags,
+ 	bp = libxfs_getbuf(btp, blkno, len);
+ 	if (!bp)
+ 		return NULL;
+-	if ((bp->b_flags & (LIBXFS_B_UPTODATE|LIBXFS_B_DIRTY)))
++
++	/*
++	 * if the buffer was prefetched, it is likely that it was not validated.
++	 * Hence if we are supplied an ops function and the buffer is marked as
++	 * unchecked, we need to validate it now.
++	 *
++	 * We do this verification even if the buffer is dirty - the
++	 * verification is almost certainly going to fail the CRC check in this
++	 * case as a dirty buffer has not had the CRC recalculated. However, we
++	 * should not be dirtying unchecked buffers and therefore failing it
++	 * here because it's dirty and unchecked indicates we've screwed up
++	 * somewhere else.
++	 */
++	if ((bp->b_flags & (LIBXFS_B_UPTODATE|LIBXFS_B_DIRTY))) {
++		if (ops && (bp->b_flags & LIBXFS_B_UNCHECKED)) {
++			bp->b_error = 0;
++			bp->b_ops = ops;
++			bp->b_ops->verify_read(bp);
++			bp->b_flags &= ~LIBXFS_B_UNCHECKED;
++		}
+ 		return bp;
++	}
+ 
+ 	/*
+-	 * only set the ops on a cache miss (i.e. first physical read) as the
+-	 * verifier may change the ops to match the typ eof buffer it contains.
++	 * Set the ops on a cache miss (i.e. first physical read) as the
++	 * verifier may change the ops to match the type of buffer it contains.
+ 	 * A cache hit might reset the verifier to the original type if we set
+ 	 * it again, but it won't get called again and set to match the buffer
+ 	 * contents. *cough* xfs_da_node_buf_ops *cough*.
+@@ -733,8 +753,10 @@ libxfs_readbuf(struct xfs_buftarg *btp, xfs_daddr_t blkno, int len, int flags,
+ 	error = libxfs_readbufr(btp, blkno, bp, len, flags);
+ 	if (error)
+ 		bp->b_error = error;
+-	else if (bp->b_ops)
++	else if (bp->b_ops) {
+ 		bp->b_ops->verify_read(bp);
++		bp->b_flags &= ~LIBXFS_B_UNCHECKED;
++	}
+ 	return bp;
  }
  
-+void
-+set_iocur_type(
-+	const typ_t	*t)
-+{
-+	struct xfs_buf	*bp = iocur_top->bp;
-+
-+	iocur_top->typ = t;
-+
-+	/* verify the buffer if the type has one. */
-+	if (!bp)
-+		return;
-+	if (!t->bops) {
-+		bp->b_ops = NULL;
-+		bp->b_flags |= LIBXFS_B_UNCHECKED;
-+		return;
-+	}
-+	if (!(bp->b_flags & LIBXFS_B_UPTODATE))
-+		return;
-+	bp->b_error = 0;
-+	bp->b_ops = t->bops;
-+	bp->b_ops->verify_read(bp);
-+	bp->b_flags &= ~LIBXFS_B_UNCHECKED;
-+}
-+
- static void
- stack_help(void)
- {
-diff --git a/db/io.h b/db/io.h
-index 7875119..71082e6 100644
---- a/db/io.h
-+++ b/db/io.h
-@@ -62,6 +62,7 @@ extern void     write_cur(void);
- extern void	set_cur(const struct typ *t, __int64_t d, int c, int ring_add,
- 			bbmap_t *bbmap);
- extern void     ring_add(void);
-+extern void	set_iocur_type(const struct typ *t);
+@@ -786,6 +808,14 @@ libxfs_readbuf_map(struct xfs_buftarg *btp, struct xfs_buf_map *map, int nmaps,
+ 		return NULL;
  
- /*
-  * returns -1 for unchecked, 0 for bad and 1 for good
-diff --git a/db/type.c b/db/type.c
-index 04d0d56..b29f2a4 100644
---- a/db/type.c
-+++ b/db/type.c
-@@ -162,10 +162,11 @@ type_f(
- 		if (tt == NULL) {
- 			dbprintf(_("no such type %s\n"), argv[1]);
- 		} else {
--			if (iocur_top->typ == NULL) {
--			    dbprintf(_("no current object\n"));
--			} else {
--			    iocur_top->typ = cur_typ = tt;
-+			if (iocur_top->typ == NULL)
-+				dbprintf(_("no current object\n"));
-+			else {
-+				cur_typ = tt;
-+				set_iocur_type(tt);
- 			}
- 		}
+ 	bp->b_error = 0;
++	if ((bp->b_flags & (LIBXFS_B_UPTODATE|LIBXFS_B_DIRTY))) {
++		if (ops && (bp->b_flags & LIBXFS_B_UNCHECKED)) {
++			bp->b_ops = ops;
++			bp->b_ops->verify_read(bp);
++			bp->b_flags &= ~LIBXFS_B_UNCHECKED;
++		}
++		return bp;
++	}
+ 	bp->b_ops = ops;
+ 	if ((bp->b_flags & (LIBXFS_B_UPTODATE|LIBXFS_B_DIRTY)))
+ 		return bp;
+@@ -793,8 +823,10 @@ libxfs_readbuf_map(struct xfs_buftarg *btp, struct xfs_buf_map *map, int nmaps,
+ 	error = libxfs_readbufr_map(btp, bp, flags);
+ 	if (!error) {
+ 		bp->b_flags |= LIBXFS_B_UPTODATE;
+-		if (bp->b_ops)
++		if (bp->b_ops) {
+ 			bp->b_ops->verify_read(bp);
++			bp->b_flags &= ~LIBXFS_B_UNCHECKED;
++		}
  	}
+ #ifdef IO_DEBUG
+ 	printf("%lx: %s: read %lu bytes, error %d, blkno=%llu(%llu), %p\n",
+@@ -889,6 +921,7 @@ libxfs_writebufr(xfs_buf_t *bp)
+ 	if (!error) {
+ 		bp->b_flags |= LIBXFS_B_UPTODATE;
+ 		bp->b_flags &= ~(LIBXFS_B_DIRTY | LIBXFS_B_EXIT);
++		bp->b_flags &= ~LIBXFS_B_UNCHECKED;
+ 	}
+ 	return error;
+ }
+diff --git a/repair/prefetch.c b/repair/prefetch.c
+index 6d6d344..d794ba3 100644
+--- a/repair/prefetch.c
++++ b/repair/prefetch.c
+@@ -389,6 +389,7 @@ pf_read_inode_dirs(
+ 
+ 	bp->b_ops = &xfs_inode_buf_ops;
+ 	bp->b_ops->verify_read(bp);
++	bp->b_flags &= ~LIBXFS_B_UNCHECKED;
+ 	if (bp->b_error)
+ 		return;
+ 
+@@ -460,6 +461,7 @@ pf_read_discontig(
+ 
+ 	pthread_mutex_unlock(&args->lock);
+ 	libxfs_readbufr_map(mp->m_ddev_targp, bp, 0);
++	bp->b_flags |= LIBXFS_B_UNCHECKED;
+ 	libxfs_putbuf(bp);
+ 	pthread_mutex_lock(&args->lock);
+ }
+@@ -583,6 +585,7 @@ pf_batch_read(
+ 					break;
+ 				memcpy(XFS_BUF_PTR(bplist[i]), pbuf, size);
+ 				bplist[i]->b_flags |= LIBXFS_B_UPTODATE;
++				bplist[i]->b_flags |= LIBXFS_B_UNCHECKED;
+ 				len -= size;
+ 				if (B_IS_INODE(XFS_BUF_PRIORITY(bplist[i])))
+ 					pf_read_inode_dirs(args, bplist[i]);
 -- 
 1.9.0
 
