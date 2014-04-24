@@ -1,25 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 3B86D7F52
-	for <xfs@oss.sgi.com>; Wed, 23 Apr 2014 19:39:16 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id DE3DA7F52
+	for <xfs@oss.sgi.com>; Thu, 24 Apr 2014 00:02:49 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id CE337AC00E
-	for <xfs@oss.sgi.com>; Wed, 23 Apr 2014 17:39:15 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id Y9R8HGyOw41syAor for
-	<xfs@oss.sgi.com>; Wed, 23 Apr 2014 17:39:11 -0700 (PDT)
-Date: Wed, 23 Apr 2014 20:39:05 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH v3 14/20] xfsprogs/repair: phase 2 finobt scan
-Message-ID: <20140424003905.GA3435@laptop.bfoster>
-References: <1397146270-42993-1-git-send-email-bfoster@redhat.com>
-	<1397146270-42993-15-git-send-email-bfoster@redhat.com>
-	<20140423061945.GO15995@dastard>
-	<20140423200151.GD5225@bfoster.bfoster>
-	<20140423230643.GU15995@dastard>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20140423230643.GU15995@dastard>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id AEB378F8052
+	for <xfs@oss.sgi.com>; Wed, 23 Apr 2014 22:02:49 -0700 (PDT)
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	Fz0JikWvYG29eCc1 for <xfs@oss.sgi.com>;
+	Wed, 23 Apr 2014 22:02:47 -0700 (PDT)
+Received: from disappointment.disaster.area ([192.168.1.110]
+	helo=disappointment) by dastard with esmtp (Exim 4.80)
+	(envelope-from <dave@fromorbit.com>) id 1WdBnQ-0006xx-Rb
+	for xfs@oss.sgi.com; Thu, 24 Apr 2014 15:02:04 +1000
+Received: from dave by disappointment with local (Exim 4.82)
+	(envelope-from <dave@disappointment.disaster>) id 1WdBnQ-0005gM-QV
+	for xfs@oss.sgi.com; Thu, 24 Apr 2014 15:02:04 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: [PATCH 6/9] repair: report AG btree verifier errors
+Date: Thu, 24 Apr 2014 15:01:59 +1000
+Message-Id: <1398315722-20870-7-git-send-email-david@fromorbit.com>
+In-Reply-To: <1398315722-20870-1-git-send-email-david@fromorbit.com>
+References: <1398315722-20870-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,180 +30,92 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Thu, Apr 24, 2014 at 09:06:43AM +1000, Dave Chinner wrote:
-> On Wed, Apr 23, 2014 at 04:01:52PM -0400, Brian Foster wrote:
-> > On Wed, Apr 23, 2014 at 04:19:45PM +1000, Dave Chinner wrote:
-> > > On Thu, Apr 10, 2014 at 12:11:04PM -0400, Brian Foster wrote:
-> > > > If one exists, scan the free inode btree in phase 2 of xfs_repair.
-> > > > We use the same general infrastructure as for the inobt scan, but
-> > > > trigger finobt chunk scan logic in in scan_inobt() via the magic
-> > > > value.
-> > > > 
-> > > > The new scan_single_finobt_chunk() function is similar to the inobt
-> > > > equivalent with some finobt specific logic. We can expect that
-> > > > underlying inode chunk blocks are already marked used due to the
-> > > > previous inobt scan. We can also expect to find every record
-> > > > tracked by the finobt already accounted for in the in-core tree
-> > > > with equivalent (and internally consistent) inobt record data.
-> > > > 
-> > > > Spit out a warning on any divergences from the above and add the
-> > > > inodes referenced by the current finobt record to the appropriate
-> > > > in-core tree.
-> > > > 
-> > > > Signed-off-by: Brian Foster <bfoster@redhat.com>
-> > > ....
-> > > > +
-> > > > +	if (!suspect) {
-> > > > +		/*
-> > > > +		 * inodes previously inserted into the uncertain tree should be
-> > > > +		 * superceded by these when the uncertain tree is processed
-> > > > +		 */
-> > > > +		nfree = 0;
-> > > > +		if (XFS_INOBT_IS_FREE_DISK(rp, 0)) {
-> > > > +			nfree++;
-> > > > +			ino_rec = set_inode_free_alloc(mp, agno, ino);
-> > > > +		} else  {
-> > > > +			ino_rec = set_inode_used_alloc(mp, agno, ino);
-> > > > +		}
-> > > > +		for (j = 1; j < XFS_INODES_PER_CHUNK; j++) {
-> > > > +			if (XFS_INOBT_IS_FREE_DISK(rp, j)) {
-> > > > +				nfree++;
-> > > > +				set_inode_free(ino_rec, j);
-> > > > +			} else  {
-> > > > +				set_inode_used(ino_rec, j);
-> > > > +			}
-> > > > +		}
-> > > > +	} else {
-> > > > +		/*
-> > > > +		 * this should handle the case where the inobt scan may have
-> > > > +		 * already added uncertain inodes
-> > > > +		 */
-> > > > +		nfree = 0;
-> > > > +		for (j = 0; j < XFS_INODES_PER_CHUNK; j++) {
-> > > > +			if (XFS_INOBT_IS_FREE_DISK(rp, j)) {
-> > > > +				add_aginode_uncertain(mp, agno, ino + j, 1);
-> > > > +				nfree++;
-> > > > +			} else {
-> > > > +				add_aginode_uncertain(mp, agno, ino + j, 0);
-> > > > +			}
-> > > > +		}
-> > > > +	}
-> > > > +
-> > > > +check_freecount:
-> > > > +
-> > > > +	if (nfree != be32_to_cpu(rp->ir_freecount)) {
-> > > > +		do_warn(
-> > > > +_("finobt ir_freecount/free mismatch, inode chunk %d/%u, freecount %d nfree %d\n"),
-> > > > +			agno, ino, be32_to_cpu(rp->ir_freecount), nfree);
-> > > > +	}
-> > > > +
-> > > > +	if (!nfree) {
-> > > > +		do_warn(
-> > > > +_("finobt record with no free inodes, inode chunk %d/%u\n"), agno, ino);
-> > > > +	}
-> > > 
-> > > Shouldn't both of these increment suspect?
-> > > 
-> > 
-> > So at this point of the scan, we're processing through finobt leaf
-> > blocks. Setting suspect has two side effects that I can see:
-> > 
-> > 1.) Suppressing the additional, more granular checks for the
-> > records/inodes that make up the remainder of the block.
-> > 
-> > 2.) Setting bad_ino_btree, which causes us to skip phases 6 and 7.
-> > 
-> > I think my thought process was that side effect #2 was generally too
-> > heavy handed for a scenario where the freecount doesn't happen to match
-> > or we've failed to remove a fully allocated record from the finobt.
-> 
-> Yes, that's true.
-> 
-> > Furthermore, we already increment suspect in this function if either the
-> > allocation state of the inode chunk blocks or the allocation state of
-> > any individual inode is unexpected based on the inobt state. The
-> > additional value of the freecount checks is to catch any kind of
-> > intra-record corruption or inter-freecount corruption across the trees,
-> > which IIUC would be fixed naturally provided nothing else is wrong
-> > (e.g., suspect remains 0) when the trees are regenerated.
-> > 
-> > In other words, if inode allocation state does differ between the trees,
-> > we already do set suspect. If these warnings fire without suspect being
-> > set, it means we just need to fix up the freecount and there is no
-> > broader tree corruption. Thoughts?
-> 
-> Seems reasonable. Perhaps a comment explaining this would be a good
-> idea - we dont have nearly enough comments in repair explaining how
-> it is cross-validating different pieces of metadata...
-> 
+From: Dave Chinner <dchinner@redhat.com>
 
-Indeed. I had to rethink through that a bit myself, and I wrote the
-code. ;) So it's not really clear in and of itself. The assumptions
-being documented also helps clarify the correctness of the previous
-checks, as demonstrated by the bug below. I'll add some comments to help
-clear this up.
+When we scan the filesystem freespace and inode maps in phase 2, we
+don't report CRC errors that are found. We don't really care from a
+repair perspective, because the trees are completely rebuilt from
+the ground up in phase 5, but froma checking perspective we need to
+inform the user that we found inconsistencies.
 
-Brian
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ repair/scan.c | 25 ++++++++++++++++++++++++-
+ 1 file changed, 24 insertions(+), 1 deletion(-)
 
-> > NOTE:
-> > 
-> > When looking through this again, I think there is a hole in the
-> > allocation state logic in that we don't catch a case where the finobt
-> > inode could be allocated and the inobt inode marked as free:
-> > 
-> > 	if (first_rec) {
-> > 		...
-> > 
-> > 		nfree = 0;
-> > 		for (j = 0; j < XFS_INODES_PER_CHUNK; j++) {
-> > 			if (XFS_INOBT_IS_FREE_DISK(rp, j)) {
-> > 				nfree++;
-> > 				if (!suspect && !is_inode_free(first_rec, j))
-> > 					suspect++;
-> > 			}
-> > 			/*
-> > 			 * XXX: else if the finobt inode is allocated, confirm
-> > 			 * here that the inobt inode is allocated as well!
-> > 			 */
-> > 		}
-> > 		goto check_freecount;
-> > 	}
-> > 
-> > I think something like this might work:
-> > 
-> > 	if (first_rec) {
-> > 		...
-> > 
-> > 		nfree = 0;
-> > 		for (j = 0; j < XFS_INODES_PER_CHUNK; j++) {
-> > 			int isfree = XFS_INOBT_IS_FREE_DISK(rp, j);
-> > 
-> > 			if (isfree) 
-> > 				nfree++;
-> > 
-> > 			if (!suspect &&
-> > 			    isfree != is_inode_free(first_rec, j))
-> > 				suspect++;
-> > 		}
-> > 		goto check_freecount;
-> > 	}
-> 
-> Yes, that makes sense - we need to validate in both directions.
-> Again, a comment would be a useful reminder here. ;)
-> 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+diff --git a/repair/scan.c b/repair/scan.c
+index d022723..9cd0e7d 100644
+--- a/repair/scan.c
++++ b/repair/scan.c
+@@ -82,6 +82,12 @@ scan_sbtree(
+ 		do_error(_("can't read btree block %d/%d\n"), agno, root);
+ 		return;
+ 	}
++	if (bp->b_error == EFSBADCRC || bp->b_error == EFSCORRUPTED) {
++		do_warn(_("btree block %d/%d is suspect, error %d\n"),
++			agno, root, bp->b_error);
++		suspect = 1;
++	}
++
+ 	(*func)(XFS_BUF_TO_BLOCK(bp), nlevels - 1, root, agno, suspect,
+ 							isroot, magic, priv);
+ 	libxfs_putbuf(bp);
+@@ -123,6 +129,7 @@ scan_lbtree(
+ 	xfs_buf_t	*bp;
+ 	int		err;
+ 	int		dirty = 0;
++	bool		badcrc = false;
+ 
+ 	bp = libxfs_readbuf(mp->m_dev, XFS_FSB_TO_DADDR(mp, root),
+ 		      XFS_FSB_TO_BB(mp, 1), 0, ops);
+@@ -132,6 +139,19 @@ scan_lbtree(
+ 			XFS_FSB_TO_AGBNO(mp, root));
+ 		return(1);
+ 	}
++
++	/*
++	 * only check for bad CRC here - caller will determine if there
++	 * is a corruption or not and whether it got corrected and so needs
++	 * writing back. CRC errors always imply we need to write the block.
++	 */
++	if (bp->b_error == EFSBADCRC) {
++		do_warn(_("btree block %d/%d is suspect, error %d\n"),
++			XFS_FSB_TO_AGNO(mp, root),
++			XFS_FSB_TO_AGBNO(mp, root), bp->b_error);
++		badcrc = true;
++	}
++
+ 	err = (*func)(XFS_BUF_TO_BLOCK(bp), nlevels - 1,
+ 			type, whichfork, root, ino, tot, nex, blkmapp,
+ 			bm_cursor, isroot, check_dups, &dirty,
+@@ -139,7 +159,7 @@ scan_lbtree(
+ 
+ 	ASSERT(dirty == 0 || (dirty && !no_modify));
+ 
+-	if (dirty && !no_modify)
++	if ((dirty || badcrc) && !no_modify)
+ 		libxfs_writebuf(bp, 0);
+ 	else
+ 		libxfs_putbuf(bp);
+@@ -1066,6 +1086,9 @@ scan_freelist(
+ 		do_abort(_("can't read agfl block for ag %d\n"), agno);
+ 		return;
+ 	}
++	if (agflbuf->b_error == EFSBADCRC)
++		do_warn(_("agfl has bad CRC for ag %d\n"), agno);
++
+ 	freelist = XFS_BUF_TO_AGFL_BNO(mp, agflbuf);
+ 	i = be32_to_cpu(agf->agf_flfirst);
+ 
+-- 
+1.9.0
 
 _______________________________________________
 xfs mailing list
