@@ -1,28 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id D79127F52
-	for <xfs@oss.sgi.com>; Thu, 24 Apr 2014 01:55:00 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 727547F52
+	for <xfs@oss.sgi.com>; Thu, 24 Apr 2014 02:36:46 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 56A1BAC007
-	for <xfs@oss.sgi.com>; Wed, 23 Apr 2014 23:54:57 -0700 (PDT)
-Received: from mail-wi0-f182.google.com (mail-wi0-f182.google.com
-	[209.85.212.182]) by cuda.sgi.com with ESMTP id
-	EW8q4vsMy1135TuL (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 23 Apr 2014 23:54:55 -0700 (PDT)
-Received: by mail-wi0-f182.google.com with SMTP id d1so540421wiv.9
-	for <xfs@oss.sgi.com>; Wed, 23 Apr 2014 23:54:54 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAJhmKHk5fWVaDTEfL_oESULspavk83eBEsyw7=qEp8bC7f2S2g@mail.gmail.com>
-References: <CAJhmKHmwvCBx=arJ6m2ZhuQVq=Jj-XbBGvEPjTPY5a1QtWRTCQ@mail.gmail.com>
-	<20140408015012.GB22917@dastard>
-	<CAJhmKHnap0vu8m4AXBxJr9L0RKoquFrm3NjKQdDBJwpRTYmfpw@mail.gmail.com>
-	<20140408053117.GJ27017@dastard>
-	<CAJhmKHk5fWVaDTEfL_oESULspavk83eBEsyw7=qEp8bC7f2S2g@mail.gmail.com>
-Date: Thu, 24 Apr 2014 08:54:54 +0200
-Message-ID: <CAAxjCEzdYRug8CUjhmB7AHJCNAJs4ERRTLXGAHXqi1sw-vOriw@mail.gmail.com>
-Subject: Re: XFS fragmentation on file append
-From: Stefan Ring <stefanrin@gmail.com>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 60A0F304051
+	for <xfs@oss.sgi.com>; Thu, 24 Apr 2014 00:36:46 -0700 (PDT)
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	iZrBFSdbXWoGzniR for <xfs@oss.sgi.com>;
+	Thu, 24 Apr 2014 00:36:41 -0700 (PDT)
+Received: from disappointment.disaster.area ([192.168.1.110]
+	helo=disappointment) by dastard with esmtp (Exim 4.80)
+	(envelope-from <dave@fromorbit.com>) id 1WdED0-0007M8-7f
+	for xfs@oss.sgi.com; Thu, 24 Apr 2014 17:36:38 +1000
+Received: from dave by disappointment with local (Exim 4.82)
+	(envelope-from <dave@disappointment.disaster>) id 1WdED0-0000gQ-6T
+	for xfs@oss.sgi.com; Thu, 24 Apr 2014 17:36:38 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: [3.15-rc4 PATCH] xfs: fully support v5 format filesystems
+Date: Thu, 24 Apr 2014 17:36:38 +1000
+Message-Id: <1398324998-2592-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,29 +28,86 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Keyur Govande <keyurgovande@gmail.com>
-Cc: linux-fsdevel@vger.kernel.org, Linux fs XFS <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
-I've become interested in this topic, as I'm also running MySQL with
-O_DIRECT and innodb_file_per_table. Out of curiosity, I immediately
-ran xfs_bmap on a moderately sized table space (34GB). It listed
-around 30000 fragments, on average one for every MB.
+From: Dave Chinner <dchinner@redhat.com>
 
-I want to report what happened then: A flurry of activity started on
-both disks (root/swap lives on one of them, the data volume containing
-the MySQL files on another) and lasted for about two minutes.
-Afterwards, all memory previously allocated to the file cache has
-become free, and also everything XFS seems to keep buffered internally
-(I think it's called SReclaimable) was released. Swap usage increased
-only slightly. dmesg was silent during that time.
+We have had this code in the kernel for over a year now and have
+shaken all the known issues out of the code over the past few
+releases. It's now time to remove the experimental warnings during
+mount and fully support the new filesystem format in production
+systems.
 
-This is a 2.6.32-358.2.1.el6.x86_64 kernel with xfsprogs 3.1.1 (CentOS
-6.4). The machine has 64GB of RAM (2 NUMA nodes) and 24 (virtual)
-cores. Is this known behavior of xfs_bmap?
+Remove the experimental warning, and add a version number to the
+initial "mounting filesystem" message to tell use what type of
+filesystem is being mounted. Also, remove the temporary inode
+cluster size output at mount time now we know that this code works
+fine.
+
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/xfs_log.c   | 10 ++++++----
+ fs/xfs/xfs_mount.c |  2 --
+ fs/xfs/xfs_sb.c    |  4 ----
+ 3 files changed, 6 insertions(+), 10 deletions(-)
+
+diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+index 08624dc..a5f8bd9 100644
+--- a/fs/xfs/xfs_log.c
++++ b/fs/xfs/xfs_log.c
+@@ -616,11 +616,13 @@ xfs_log_mount(
+ 	int		error = 0;
+ 	int		min_logfsbs;
+ 
+-	if (!(mp->m_flags & XFS_MOUNT_NORECOVERY))
+-		xfs_notice(mp, "Mounting Filesystem");
+-	else {
++	if (!(mp->m_flags & XFS_MOUNT_NORECOVERY)) {
++		xfs_notice(mp, "Mounting V%d Filesystem",
++			   XFS_SB_VERSION_NUM(&mp->m_sb));
++	} else {
+ 		xfs_notice(mp,
+-"Mounting filesystem in no-recovery mode.  Filesystem will be inconsistent.");
++"Mounting V%d filesystem in no-recovery mode. Filesystem will be inconsistent.",
++			   XFS_SB_VERSION_NUM(&mp->m_sb));
+ 		ASSERT(mp->m_flags & XFS_MOUNT_RDONLY);
+ 	}
+ 
+diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+index 993cb19..944f3d9 100644
+--- a/fs/xfs/xfs_mount.c
++++ b/fs/xfs/xfs_mount.c
+@@ -743,8 +743,6 @@ xfs_mountfs(
+ 		new_size *= mp->m_sb.sb_inodesize / XFS_DINODE_MIN_SIZE;
+ 		if (mp->m_sb.sb_inoalignmt >= XFS_B_TO_FSBT(mp, new_size))
+ 			mp->m_inode_cluster_size = new_size;
+-		xfs_info(mp, "Using inode cluster size of %d bytes",
+-			 mp->m_inode_cluster_size);
+ 	}
+ 
+ 	/*
+diff --git a/fs/xfs/xfs_sb.c b/fs/xfs/xfs_sb.c
+index 0c0e41b..8baf61a 100644
+--- a/fs/xfs/xfs_sb.c
++++ b/fs/xfs/xfs_sb.c
+@@ -201,10 +201,6 @@ xfs_mount_validate_sb(
+ 	 * write validation, we don't need to check feature masks.
+ 	 */
+ 	if (check_version && XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5) {
+-		xfs_alert(mp,
+-"Version 5 superblock detected. This kernel has EXPERIMENTAL support enabled!\n"
+-"Use of these features in this kernel is at your own risk!");
+-
+ 		if (xfs_sb_has_compat_feature(sbp,
+ 					XFS_SB_FEAT_COMPAT_UNKNOWN)) {
+ 			xfs_warn(mp,
+-- 
+1.9.0
 
 _______________________________________________
 xfs mailing list
