@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 3FB3E7F69
-	for <xfs@oss.sgi.com>; Thu, 24 Apr 2014 00:02:54 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id AAD13AC015
-	for <xfs@oss.sgi.com>; Wed, 23 Apr 2014 22:02:50 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id 03B617F5F
+	for <xfs@oss.sgi.com>; Thu, 24 Apr 2014 00:02:55 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 6F78AAC014
+	for <xfs@oss.sgi.com>; Wed, 23 Apr 2014 22:02:54 -0700 (PDT)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	lEpSFm32zSf6Dwhg for <xfs@oss.sgi.com>;
-	Wed, 23 Apr 2014 22:02:45 -0700 (PDT)
+	B6hSo7MFmUdSMVIk for <xfs@oss.sgi.com>;
+	Wed, 23 Apr 2014 22:02:50 -0700 (PDT)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.80)
-	(envelope-from <dave@fromorbit.com>) id 1WdBnQ-0006xw-Qm
+	(envelope-from <dave@fromorbit.com>) id 1WdBnQ-0006xs-Of
 	for xfs@oss.sgi.com; Thu, 24 Apr 2014 15:02:04 +1000
 Received: from dave by disappointment with local (Exim 4.82)
-	(envelope-from <dave@disappointment.disaster>) id 1WdBnQ-0005gH-Q3
+	(envelope-from <dave@disappointment.disaster>) id 1WdBnQ-0005fx-O2
 	for xfs@oss.sgi.com; Thu, 24 Apr 2014 15:02:04 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 5/9] repair: detect CRC errors in AG headers
-Date: Thu, 24 Apr 2014 15:01:58 +1000
-Message-Id: <1398315722-20870-6-git-send-email-david@fromorbit.com>
+Subject: [PATCH 1/9] db: don't claim unchecked CRCs are correct
+Date: Thu, 24 Apr 2014 15:01:54 +1000
+Message-Id: <1398315722-20870-2-git-send-email-david@fromorbit.com>
 In-Reply-To: <1398315722-20870-1-git-send-email-david@fromorbit.com>
 References: <1398315722-20870-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,183 +39,103 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-repair doesn't currently detect verifier errors in AG header
-blocks - apart from the primary superblock they are not detected.
-They are, fortunately, corrected in the important cases (AGF, AGI
-and AGFL) because these structures are rebuilt in phase 5, but if
-you run xfs_repair in checking mode it won't report them as bad.
+Currently xfs_db will claim the CRC on a structure is correct if the
+buffer is not marked with an error. However, buffers may have been
+read without a verifier, and hence have not had their CRCs
+validated. in this case, we shoul dreport "unchecked" rather than
+"correct". For example:
+
+xfs_db> fsb 0x6003f
+xfs_db> type dir3
+xfs_db> p
+dhdr.hdr.magic = 0x58444433
+dhdr.hdr.crc = 0x2d0f9c9d (unchecked)
+....
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- repair/scan.c | 81 ++++++++++++++++++++++++++++++++++++-----------------------
- 1 file changed, 49 insertions(+), 32 deletions(-)
+ db/fprint.c      | 15 ++++++++++++++-
+ db/io.c          |  2 ++
+ db/io.h          | 12 +++++++++---
+ include/libxfs.h |  1 +
+ 4 files changed, 26 insertions(+), 4 deletions(-)
 
-diff --git a/repair/scan.c b/repair/scan.c
-index 1744c32..d022723 100644
---- a/repair/scan.c
-+++ b/repair/scan.c
-@@ -1207,28 +1207,29 @@ scan_ag(
- 	void		*arg)
- {
- 	struct aghdr_cnts *agcnts = arg;
--	xfs_agf_t	*agf;
--	xfs_buf_t	*agfbuf;
-+	struct xfs_agf	*agf;
-+	struct xfs_buf	*agfbuf = NULL;
- 	int		agf_dirty = 0;
--	xfs_agi_t	*agi;
--	xfs_buf_t	*agibuf;
-+	struct xfs_agi	*agi;
-+	struct xfs_buf	*agibuf = NULL;
- 	int		agi_dirty = 0;
--	xfs_sb_t	*sb;
--	xfs_buf_t	*sbbuf;
-+	struct xfs_sb	*sb = NULL;
-+	struct xfs_buf	*sbbuf = NULL;
- 	int		sb_dirty = 0;
- 	int		status;
-+	char		*objname = NULL;
+diff --git a/db/fprint.c b/db/fprint.c
+index 435d984..52782e2 100644
+--- a/db/fprint.c
++++ b/db/fprint.c
+@@ -206,7 +206,20 @@ fp_crc(
+ 	__int64_t	val;
+ 	char		*ok;
  
- 	sbbuf = libxfs_readbuf(mp->m_dev, XFS_AG_DADDR(mp, agno, XFS_SB_DADDR),
- 				XFS_FSS_TO_BB(mp, 1), 0, &xfs_sb_buf_ops);
- 	if (!sbbuf)  {
--		do_error(_("can't get root superblock for ag %d\n"), agno);
--		return;
-+		objname = _("root superblock");
-+		goto out_free;
- 	}
-+
- 	sb = (xfs_sb_t *)calloc(BBSIZE, 1);
- 	if (!sb) {
- 		do_error(_("can't allocate memory for superblock\n"));
--		libxfs_putbuf(sbbuf);
--		return;
-+		goto out_free;
- 	}
- 	libxfs_sb_from_disk(sb, XFS_BUF_TO_SBP(sbbuf));
- 
-@@ -1236,10 +1237,8 @@ scan_ag(
- 			XFS_AG_DADDR(mp, agno, XFS_AGF_DADDR(mp)),
- 			XFS_FSS_TO_BB(mp, 1), 0, &xfs_agf_buf_ops);
- 	if (!agfbuf)  {
--		do_error(_("can't read agf block for ag %d\n"), agno);
--		libxfs_putbuf(sbbuf);
--		free(sb);
--		return;
-+		objname = _("agf block");
-+		goto out_free;
- 	}
- 	agf = XFS_BUF_TO_AGF(agfbuf);
- 
-@@ -1247,11 +1246,8 @@ scan_ag(
- 			XFS_AG_DADDR(mp, agno, XFS_AGI_DADDR(mp)),
- 			XFS_FSS_TO_BB(mp, 1), 0, &xfs_agi_buf_ops);
- 	if (!agibuf)  {
--		do_error(_("can't read agi block for ag %d\n"), agno);
--		libxfs_putbuf(agfbuf);
--		libxfs_putbuf(sbbuf);
--		free(sb);
--		return;
-+		objname = _("agi block");
-+		goto out_free;
- 	}
- 	agi = XFS_BUF_TO_AGI(agibuf);
- 
-@@ -1277,7 +1273,7 @@ scan_ag(
- 			do_warn(_("would reset bad sb for ag %d\n"), agno);
- 		}
- 	}
--	if (status & XR_AG_AGF)  {
-+	if (agf_dirty || status & XR_AG_AGF)  {
- 		if (!no_modify) {
- 			do_warn(_("reset bad agf for ag %d\n"), agno);
- 			agf_dirty = 1;
-@@ -1285,7 +1281,7 @@ scan_ag(
- 			do_warn(_("would reset bad agf for ag %d\n"), agno);
- 		}
- 	}
--	if (status & XR_AG_AGI)  {
-+	if (agi_dirty || status & XR_AG_AGI)  {
- 		if (!no_modify) {
- 			do_warn(_("reset bad agi for ag %d\n"), agno);
- 			agi_dirty = 1;
-@@ -1295,15 +1291,9 @@ scan_ag(
- 	}
- 
- 	if (status && no_modify)  {
--		libxfs_putbuf(agibuf);
--		libxfs_putbuf(agfbuf);
--		libxfs_putbuf(sbbuf);
--		free(sb);
--
- 		do_warn(_("bad uncorrected agheader %d, skipping ag...\n"),
- 			agno);
--
--		return;
-+		goto out_free;
- 	}
- 
- 	scan_freelist(agf, agcnts);
-@@ -1312,21 +1302,34 @@ scan_ag(
- 	validate_agi(agi, agno, agcnts);
- 
- 	ASSERT(agi_dirty == 0 || (agi_dirty && !no_modify));
-+	ASSERT(agf_dirty == 0 || (agf_dirty && !no_modify));
-+	ASSERT(sb_dirty == 0 || (sb_dirty && !no_modify));
-+
-+	/*
-+	 * Only pay attention to CRC/verifier errors if we can correct them.
-+	 * While there, ensure that we corrected a corruption error if the
-+	 * verifier detected one.
-+	 */
-+	if (!no_modify) {
-+		ASSERT(agi_dirty || agibuf->b_error != EFSCORRUPTED);
-+		ASSERT(agf_dirty || agfbuf->b_error != EFSCORRUPTED);
-+		ASSERT(sb_dirty || sbbuf->b_error != EFSCORRUPTED);
-+
-+		agi_dirty += (agibuf->b_error == EFSBADCRC);
-+		agf_dirty += (agfbuf->b_error == EFSBADCRC);
-+		sb_dirty += (sbbuf->b_error == EFSBADCRC);
+-	ok = iocur_crc_valid() ? "correct" : "bad";
++	switch (iocur_crc_valid()) {
++	case -1:
++		ok = "unchecked";
++		break;
++	case 0:
++		ok = "bad";
++		break;
++	case 1:
++		ok = "correct";
++		break;
++	default:
++		ok = "unknown state";
++		break;
 +	}
  
- 	if (agi_dirty && !no_modify)
- 		libxfs_writebuf(agibuf, 0);
- 	else
- 		libxfs_putbuf(agibuf);
+ 	for (i = 0, bitpos = bit;
+ 	     i < count && !seenint();
+diff --git a/db/io.c b/db/io.c
+index 5eb61d9..387f171 100644
+--- a/db/io.c
++++ b/db/io.c
+@@ -531,6 +531,8 @@ set_cur(
+ 		return;
+ 	iocur_top->buf = bp->b_addr;
+ 	iocur_top->bp = bp;
++	if (!ops)
++		bp->b_flags |= LIBXFS_B_UNCHECKED;
  
--	ASSERT(agf_dirty == 0 || (agf_dirty && !no_modify));
--
- 	if (agf_dirty && !no_modify)
- 		libxfs_writebuf(agfbuf, 0);
- 	else
- 		libxfs_putbuf(agfbuf);
+ 	iocur_top->bb = d;
+ 	iocur_top->blen = c;
+diff --git a/db/io.h b/db/io.h
+index ad39bee..7875119 100644
+--- a/db/io.h
++++ b/db/io.h
+@@ -63,10 +63,16 @@ extern void	set_cur(const struct typ *t, __int64_t d, int c, int ring_add,
+ 			bbmap_t *bbmap);
+ extern void     ring_add(void);
  
--	ASSERT(sb_dirty == 0 || (sb_dirty && !no_modify));
--
- 	if (sb_dirty && !no_modify) {
- 		if (agno == 0)
- 			memcpy(&mp->m_sb, sb, sizeof(xfs_sb_t));
-@@ -1341,6 +1344,20 @@ scan_ag(
- 	print_inode_list(i);
- #endif
- 	return;
-+
-+out_free:
-+	if (sb)
-+		free(sb);
-+	if (agibuf)
-+		libxfs_putbuf(agibuf);
-+	if (agfbuf)
-+		libxfs_putbuf(agfbuf);
-+	if (sbbuf)
-+		libxfs_putbuf(sbbuf);
-+	if (objname)
-+		do_error(_("can't get %s for ag %d\n"), objname, agno);
-+	return;
-+
+-static inline bool
++/*
++ * returns -1 for unchecked, 0 for bad and 1 for good
++ */
++static inline int
+ iocur_crc_valid()
+ {
+-	return (iocur_top->bp &&
+-		iocur_top->bp->b_error != EFSBADCRC &&
++	if (!iocur_top->bp)
++		return -1;
++	if (iocur_top->bp->b_flags & LIBXFS_B_UNCHECKED)
++		return -1;
++	return (iocur_top->bp->b_error != EFSBADCRC &&
+ 		(!iocur_top->ino_buf || iocur_top->ino_crc_ok));
  }
+diff --git a/include/libxfs.h b/include/libxfs.h
+index 6bc6c94..6b1e276 100644
+--- a/include/libxfs.h
++++ b/include/libxfs.h
+@@ -333,6 +333,7 @@ enum xfs_buf_flags_t {	/* b_flags bits */
+ 	LIBXFS_B_STALE		= 0x0004,	/* buffer marked as invalid */
+ 	LIBXFS_B_UPTODATE	= 0x0008,	/* buffer is sync'd to disk */
+ 	LIBXFS_B_DISCONTIG	= 0x0010,	/* discontiguous buffer */
++	LIBXFS_B_UNCHECKED	= 0x0020,	/* needs verification */
+ };
  
- #define SCAN_THREADS 32
+ #define XFS_BUF_DADDR_NULL		((xfs_daddr_t) (-1LL))
 -- 
 1.9.0
 
