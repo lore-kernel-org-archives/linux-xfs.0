@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id E0FD47F52
-	for <xfs@oss.sgi.com>; Fri, 25 Apr 2014 01:43:38 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id B6606304043
-	for <xfs@oss.sgi.com>; Thu, 24 Apr 2014 23:43:35 -0700 (PDT)
-Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id LHCgDseDO9XL9Q1X (version=TLSv1 cipher=AES256-SHA
-	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 24 Apr 2014 23:43:33 -0700 (PDT)
-Date: Thu, 24 Apr 2014 23:43:33 -0700
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 9D2EA7F52
+	for <xfs@oss.sgi.com>; Fri, 25 Apr 2014 01:48:20 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 79A938F8040
+	for <xfs@oss.sgi.com>; Thu, 24 Apr 2014 23:48:20 -0700 (PDT)
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.9])
+	by cuda.sgi.com with ESMTP id IC5oOP29fwQoAv3S (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 24 Apr 2014 23:48:15 -0700 (PDT)
+Date: Thu, 24 Apr 2014 23:48:15 -0700
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH v2 04/10] xfs: introduce per allocation group inumbers
-Message-ID: <20140425064333.GA20871@infradead.org>
-References: <535078B5.4010700@oracle.com>
+Subject: Re: [PATCH v2 05/10] xfs: fix error handling in xfs_bulkstat
+Message-ID: <20140425064815.GB20871@infradead.org>
+References: <535078B8.4020905@oracle.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <535078B5.4010700@oracle.com>
+In-Reply-To: <535078B8.4020905@oracle.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,20 +32,34 @@ Sender: xfs-bounces@oss.sgi.com
 To: Jeff Liu <jeff.liu@oracle.com>
 Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-On Fri, Apr 18, 2014 at 08:58:29AM +0800, Jeff Liu wrote:
-> From: Jie Liu <jeff.liu@oracle.com>
-> 
-> Introduce xfs_perag_inumbers(), it could be used to fetch the inode number
-> tables per allocation group via a new ioctl(2) in the future.  Also, that
-> would be a net win considering the scalability for a file system with huge
-> number of inodes as multiple allocation groups can be scanned in parallel,
-> refactor xfs_inumbers() with it.
+> Moreover, this fix also get rid of the redundant user buffer count
+> pre-checkups as it has already been validated in upper callers.
 
-Given that you don't actually introduce a per-ag inumbers interface in
-this series I'd prefer if you just refactor the inumbers code to
-add a helper that operates on an AG with xfs_inumbers moving on to
-the next one, but not adding the xfs_aginumbers structure that just
-makes the move less obvious for now. 
+> -	if (!ubcountp || *ubcountp <= 0) {
+> -		return EINVAL;
+> -	}
+
+Probably better to have this as a separate patch.
+
+> -			/*
+> -			 * Loop as long as we're unable to read the
+> -			 * inode btree.
+> -			 */
+> -			while (error) {
+> -				agino += XFS_INODES_PER_CHUNK;
+> -				if (XFS_AGINO_TO_AGBNO(mp, agino) >=
+> -						be32_to_cpu(agi->agi_length))
+> -					break;
+> -				error = xfs_inobt_lookup(cur, agino,
+> -							 XFS_LOOKUP_GE, &tmp);
+> -				cond_resched();
+> -			}
+
+This code goes back to 1995, but I still can't see how it would make
+sense.  I think we should get rid of this, but I'd also love to have
+Dave and Eric double check it as well.
+
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 
 _______________________________________________
 xfs mailing list
