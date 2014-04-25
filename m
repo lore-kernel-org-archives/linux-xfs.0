@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 842E87F52
-	for <xfs@oss.sgi.com>; Fri, 25 Apr 2014 02:22:10 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 0D0A0AC006
-	for <xfs@oss.sgi.com>; Fri, 25 Apr 2014 00:22:09 -0700 (PDT)
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id tXMVzcCWGypxpNTk (version=TLSv1
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id C09B07F52
+	for <xfs@oss.sgi.com>; Fri, 25 Apr 2014 02:55:36 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 9A5308F8049
+	for <xfs@oss.sgi.com>; Fri, 25 Apr 2014 00:55:36 -0700 (PDT)
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
+	cuda.sgi.com with ESMTP id mcfXkivlnnkEP9Sj (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 25 Apr 2014 00:22:08 -0700 (PDT)
-Message-ID: <535A0D05.1090004@oracle.com>
-Date: Fri, 25 Apr 2014 15:21:41 +0800
+	Fri, 25 Apr 2014 00:55:31 -0700 (PDT)
+Message-ID: <535A14D5.30203@oracle.com>
+Date: Fri, 25 Apr 2014 15:55:01 +0800
 From: Jeff Liu <jeff.liu@oracle.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH v2 05/10] xfs: fix error handling in xfs_bulkstat
-References: <535078B8.4020905@oracle.com>
-	<20140425064815.GB20871@infradead.org>
-In-Reply-To: <20140425064815.GB20871@infradead.org>
+Subject: Re: [PATCH v2 07/10] xfs: introduce xfs_bulkstat_grab_ichunk
+References: <535078C5.5060107@oracle.com>
+	<20140425065301.GD20871@infradead.org>
+In-Reply-To: <20140425065301.GD20871@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,40 +33,14 @@ To: Christoph Hellwig <hch@infradead.org>
 Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
 
-On 04/25 2014 14:48 PM, Christoph Hellwig wrote:
->> Moreover, this fix also get rid of the redundant user buffer count
->> pre-checkups as it has already been validated in upper callers.
+On 04/25 2014 14:53 PM, Christoph Hellwig wrote:
+>> -				agino = r.ir_startino + XFS_INODES_PER_CHUNK;
 > 
->> -	if (!ubcountp || *ubcountp <= 0) {
->> -		return EINVAL;
->> -	}
+>> +				agino += r.ir_startino + XFS_INODES_PER_CHUNK;
 > 
-> Probably better to have this as a separate patch.
+> why did this turns from a = into a += ?
 
-Sometimes, I'd to put such kind of trivial fixes into a relative effective patch
-if possible. But from another point of view, yep, have it as a separate patch would
-make it more convenient for reviewer.
-
-> 
->> -			/*
->> -			 * Loop as long as we're unable to read the
->> -			 * inode btree.
->> -			 */
->> -			while (error) {
->> -				agino += XFS_INODES_PER_CHUNK;
->> -				if (XFS_AGINO_TO_AGBNO(mp, agino) >=
->> -						be32_to_cpu(agi->agi_length))
->> -					break;
->> -				error = xfs_inobt_lookup(cur, agino,
->> -							 XFS_LOOKUP_GE, &tmp);
->> -				cond_resched();
->> -			}
-> 
-> This code goes back to 1995, but I still can't see how it would make
-> sense.  I think we should get rid of this, but I'd also love to have
-> Dave and Eric double check it as well.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+Ah, this should be "a = ", will fix it.
 
 Thanks,
 -Jeff
