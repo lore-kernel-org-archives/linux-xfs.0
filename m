@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 1C1AE7F52
-	for <xfs@oss.sgi.com>; Fri, 25 Apr 2014 01:53:03 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id A4BC7AC006
-	for <xfs@oss.sgi.com>; Thu, 24 Apr 2014 23:53:02 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id A5C667F52
+	for <xfs@oss.sgi.com>; Fri, 25 Apr 2014 01:55:46 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 7F19D8F8040
+	for <xfs@oss.sgi.com>; Thu, 24 Apr 2014 23:55:46 -0700 (PDT)
 Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id MVW701eSw8CmOX18 (version=TLSv1 cipher=AES256-SHA
+	ESMTP id b5u0JYmpNIgSGppa (version=TLSv1 cipher=AES256-SHA
 	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 24 Apr 2014 23:53:01 -0700 (PDT)
-Date: Thu, 24 Apr 2014 23:53:01 -0700
+	Thu, 24 Apr 2014 23:55:45 -0700 (PDT)
+Date: Thu, 24 Apr 2014 23:55:45 -0700
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH v2 07/10] xfs: introduce xfs_bulkstat_grab_ichunk
-Message-ID: <20140425065301.GD20871@infradead.org>
-References: <535078C5.5060107@oracle.com>
+Subject: Re: [PATCH v2 10/10] xfs: isolate xfs_qm_quotacheck to its source file
+Message-ID: <20140425065545.GE20871@infradead.org>
+References: <535078D4.4000802@oracle.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <535078C5.5060107@oracle.com>
+In-Reply-To: <535078D4.4000802@oracle.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,11 +32,22 @@ Sender: xfs-bounces@oss.sgi.com
 To: Jeff Liu <jeff.liu@oracle.com>
 Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-> -				agino = r.ir_startino + XFS_INODES_PER_CHUNK;
+On Fri, Apr 18, 2014 at 08:59:00AM +0800, Jeff Liu wrote:
+> From: Jie Liu <jeff.liu@oracle.com>
+> 
+> Isolate xfs_qm_quotacheck() to xfs_qm.c as there is no other users of it.
+> 
+> Signed-off-by: Jie Liu <jeff.liu@oracle.com>
 
-> +				agino += r.ir_startino + XFS_INODES_PER_CHUNK;
+Looks good, but the description is a bit confusing, we'd normallay say
+something like:
 
-why did this turns from a = into a += ?
+"xfs: mark xfs_qm_quotacheck as static
+
+xfs_qm_quotacheck is not used outside of xfs_qm.c.  Mark it static and
+move it around in the file to avoid a forward declaration."
+
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
 _______________________________________________
 xfs mailing list
