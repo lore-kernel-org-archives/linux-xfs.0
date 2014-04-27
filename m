@@ -1,23 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id AC6917F3F
-	for <xfs@oss.sgi.com>; Sun, 27 Apr 2014 16:27:02 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 7DE137F3F
+	for <xfs@oss.sgi.com>; Sun, 27 Apr 2014 16:56:11 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 8C379304032
-	for <xfs@oss.sgi.com>; Sun, 27 Apr 2014 14:27:02 -0700 (PDT)
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	JQFGSqV8KXg1iGzc for <xfs@oss.sgi.com>;
-	Sun, 27 Apr 2014 14:27:00 -0700 (PDT)
-Date: Mon, 28 Apr 2014 07:26:44 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v2 05/10] xfs: fix error handling in xfs_bulkstat
-Message-ID: <20140427212643.GY18672@dastard>
-References: <535078B8.4020905@oracle.com>
-	<20140425064815.GB20871@infradead.org>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 6BC278F8033
+	for <xfs@oss.sgi.com>; Sun, 27 Apr 2014 14:56:09 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id UVPj2pALIMaCA4dA for <xfs@oss.sgi.com>;
+	Sun, 27 Apr 2014 14:56:08 -0700 (PDT)
+Message-ID: <535D7CF7.2070409@sandeen.net>
+Date: Sun, 27 Apr 2014 16:56:07 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20140425064815.GB20871@infradead.org>
+Subject: Re: [PATCH, RFC] xfs: add heuristic to flush on rename
+References: <535ABA9D.2060305@redhat.com> <20140427212026.GX18672@dastard>
+In-Reply-To: <20140427212026.GX18672@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,50 +27,68 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Jeff Liu <jeff.liu@oracle.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: Dave Chinner <david@fromorbit.com>, Eric Sandeen <sandeen@redhat.com>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-On Thu, Apr 24, 2014 at 11:48:15PM -0700, Christoph Hellwig wrote:
-> > Moreover, this fix also get rid of the redundant user buffer count
-> > pre-checkups as it has already been validated in upper callers.
+On 4/27/14, 4:20 PM, Dave Chinner wrote:
+> On Fri, Apr 25, 2014 at 02:42:21PM -0500, Eric Sandeen wrote:
+>> Add a heuristic to flush data to a file which looks like it's
+>> going through a tmpfile/rename dance, but not fsynced.
+>>
+>> I had a report of a system with many 0-length files after
+>> package updates; as it turns out, the user had basically
+>> done 'yum update' and punched the power button when it was
+>> done.
 > 
-> > -	if (!ubcountp || *ubcountp <= 0) {
-> > -		return EINVAL;
-> > -	}
+> So yum didn't run sync() on completion of the update? That seems
+> rather dangerous to me - IMO system updates need to be guaranteed to
+> be stable by the update mechanisms, not to leave the system state to
+> chance if power fails or the system crashes immediately after an
+> update...
 > 
-> Probably better to have this as a separate patch.
 > 
-> > -			/*
-> > -			 * Loop as long as we're unable to read the
-> > -			 * inode btree.
-> > -			 */
-> > -			while (error) {
-> > -				agino += XFS_INODES_PER_CHUNK;
-> > -				if (XFS_AGINO_TO_AGBNO(mp, agino) >=
-> > -						be32_to_cpu(agi->agi_length))
-> > -					break;
-> > -				error = xfs_inobt_lookup(cur, agino,
-> > -							 XFS_LOOKUP_GE, &tmp);
-> > -				cond_resched();
-> > -			}
+>> Granted, the admin should not do this.  Granted, the package
+>> manager should ensure persistence of files it updated.
 > 
-> This code goes back to 1995, but I still can't see how it would make
-> sense.  I think we should get rid of this, but I'd also love to have
-> Dave and Eric double check it as well.
+> Yes, yes it should. Problem solved without needing to touch XFS.
 
-I can't see it makes much sense, except for handling IO errors
-that occur during something like a path failover where a retry would
-then succeed. However, I think that we'd do better for userspace to
-handle this problem - a short bulkstat followed by userspace retry
-rather than a potential endless loop in the kernel is a much better
-way to handle the problem...
+Right, I first suggested it 5 years or so ago for RPM.  But hey, who
+knows, someday maybe.
 
-Cheers,
+So no need to touch XFS, just every godawful userspace app out there...
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Somebody should bring up the topic to wider audience, I'm sure they'll
+all get fixed in short order.  Wait, or did we try that already?  :)
+
+>> Ext4, however, added a heuristic like this for just this case;
+>> someone who writes file.tmp, then renames over file, but
+>> never issues an fsync.
+> 
+> You mean like rsync does all the time for every file it copies?
+
+Yeah, I guess rsync doesn't fsync either.  ;)
+
+>> Now, this does smack of O_PONIES, but I would hope that it's
+>> fairly benign.  If someone already synced the tmpfile, it's
+>> a no-op.
+> 
+> I'd suggest it will greatly impact rsync speed and have impact on
+> the resultant filesystem layout as it guarantees interleaving of
+> metadata and data on disk....
+
+Ok, well, based on the responses thus far, sounds like a non-starter.
+
+I'm not wedded to it, just thought I'd float the idea.
+
+OTOH, it is an interesting juxtaposition to say the open O_TRUNC case
+is worth catching, but the tempfile overwrite case is not.
+
+-Eric
+
+> Cheers,
+> 
+> Dave.
+> 
 
 _______________________________________________
 xfs mailing list
