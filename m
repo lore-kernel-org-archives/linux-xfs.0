@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id A2D7429DF9
-	for <xfs@oss.sgi.com>; Mon, 28 Apr 2014 16:05:09 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 1936029DF8
+	for <xfs@oss.sgi.com>; Mon, 28 Apr 2014 16:05:11 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 97B548F804B
-	for <xfs@oss.sgi.com>; Mon, 28 Apr 2014 14:05:09 -0700 (PDT)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id F178530404E
+	for <xfs@oss.sgi.com>; Mon, 28 Apr 2014 14:05:10 -0700 (PDT)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	4WozEkcThA73ReGe for <xfs@oss.sgi.com>;
-	Mon, 28 Apr 2014 14:05:08 -0700 (PDT)
+	6VYg15raavHuDH9j for <xfs@oss.sgi.com>;
+	Mon, 28 Apr 2014 14:05:09 -0700 (PDT)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.80)
-	(envelope-from <dave@fromorbit.com>) id 1WesjV-00050v-I2
+	(envelope-from <dave@fromorbit.com>) id 1WesjV-000511-JZ
 	for xfs@oss.sgi.com; Tue, 29 Apr 2014 07:05:01 +1000
 Received: from dave by disappointment with local (Exim 4.82)
-	(envelope-from <dave@disappointment.disaster>) id 1WesjV-00050f-HH
+	(envelope-from <dave@disappointment.disaster>) id 1WesjV-00050u-Ik
 	for xfs@oss.sgi.com; Tue, 29 Apr 2014 07:05:01 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 2/9] db: verify buffer on type change
-Date: Tue, 29 Apr 2014 07:04:52 +1000
-Message-Id: <1398719099-19194-3-git-send-email-david@fromorbit.com>
+Subject: [PATCH 5/9] repair: detect CRC errors in AG headers
+Date: Tue, 29 Apr 2014 07:04:55 +1000
+Message-Id: <1398719099-19194-6-git-send-email-david@fromorbit.com>
 In-Reply-To: <1398719099-19194-1-git-send-email-david@fromorbit.com>
 References: <1398719099-19194-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,87 +39,167 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Currently when the type command is run, we simply change the type
-associated with the buffer, but don't verify it. This results in
-unchecked CRCs being displayed. Hence when changing the type, run
-the verifier associated with the type to determine if the buffer
-contents is valid or not.
+repair doesn't currently detect verifier errors in AG header
+blocks - apart from the primary superblock they are not detected.
+They are, fortunately, corrected in the important cases (AGF, AGI
+and AGFL) because these structures are rebuilt in phase 5, but if
+you run xfs_repair in checking mode it won't report them as bad.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- db/io.c   | 24 ++++++++++++++++++++++++
- db/io.h   |  1 +
- db/type.c |  9 +++++----
- 3 files changed, 30 insertions(+), 4 deletions(-)
+ repair/scan.c | 83 +++++++++++++++++++++++++++++++++++------------------------
+ 1 file changed, 49 insertions(+), 34 deletions(-)
 
-diff --git a/db/io.c b/db/io.c
-index 387f171..7f1b76a 100644
---- a/db/io.c
-+++ b/db/io.c
-@@ -552,6 +552,30 @@ set_cur(
- 		ring_add();
+diff --git a/repair/scan.c b/repair/scan.c
+index 1744c32..dec84ed 100644
+--- a/repair/scan.c
++++ b/repair/scan.c
+@@ -1207,39 +1207,38 @@ scan_ag(
+ 	void		*arg)
+ {
+ 	struct aghdr_cnts *agcnts = arg;
+-	xfs_agf_t	*agf;
+-	xfs_buf_t	*agfbuf;
++	struct xfs_agf	*agf;
++	struct xfs_buf	*agfbuf = NULL;
+ 	int		agf_dirty = 0;
+-	xfs_agi_t	*agi;
+-	xfs_buf_t	*agibuf;
++	struct xfs_agi	*agi;
++	struct xfs_buf	*agibuf = NULL;
+ 	int		agi_dirty = 0;
+-	xfs_sb_t	*sb;
+-	xfs_buf_t	*sbbuf;
++	struct xfs_sb	*sb = NULL;
++	struct xfs_buf	*sbbuf = NULL;
+ 	int		sb_dirty = 0;
+ 	int		status;
++	char		*objname = NULL;
+ 
+-	sbbuf = libxfs_readbuf(mp->m_dev, XFS_AG_DADDR(mp, agno, XFS_SB_DADDR),
+-				XFS_FSS_TO_BB(mp, 1), 0, &xfs_sb_buf_ops);
+-	if (!sbbuf)  {
+-		do_error(_("can't get root superblock for ag %d\n"), agno);
+-		return;
+-	}
+-	sb = (xfs_sb_t *)calloc(BBSIZE, 1);
++	sb = (struct xfs_sb *)calloc(BBSIZE, 1);
+ 	if (!sb) {
+ 		do_error(_("can't allocate memory for superblock\n"));
+-		libxfs_putbuf(sbbuf);
+ 		return;
+ 	}
++
++	sbbuf = libxfs_readbuf(mp->m_dev, XFS_AG_DADDR(mp, agno, XFS_SB_DADDR),
++				XFS_FSS_TO_BB(mp, 1), 0, &xfs_sb_buf_ops);
++	if (!sbbuf)  {
++		objname = _("root superblock");
++		goto out_free_sb;
++	}
+ 	libxfs_sb_from_disk(sb, XFS_BUF_TO_SBP(sbbuf));
+ 
+ 	agfbuf = libxfs_readbuf(mp->m_dev,
+ 			XFS_AG_DADDR(mp, agno, XFS_AGF_DADDR(mp)),
+ 			XFS_FSS_TO_BB(mp, 1), 0, &xfs_agf_buf_ops);
+ 	if (!agfbuf)  {
+-		do_error(_("can't read agf block for ag %d\n"), agno);
+-		libxfs_putbuf(sbbuf);
+-		free(sb);
+-		return;
++		objname = _("agf block");
++		goto out_free_sbbuf;
+ 	}
+ 	agf = XFS_BUF_TO_AGF(agfbuf);
+ 
+@@ -1247,11 +1246,8 @@ scan_ag(
+ 			XFS_AG_DADDR(mp, agno, XFS_AGI_DADDR(mp)),
+ 			XFS_FSS_TO_BB(mp, 1), 0, &xfs_agi_buf_ops);
+ 	if (!agibuf)  {
+-		do_error(_("can't read agi block for ag %d\n"), agno);
+-		libxfs_putbuf(agfbuf);
+-		libxfs_putbuf(sbbuf);
+-		free(sb);
+-		return;
++		objname = _("agi block");
++		goto out_free_agfbuf;
+ 	}
+ 	agi = XFS_BUF_TO_AGI(agibuf);
+ 
+@@ -1295,15 +1291,9 @@ scan_ag(
+ 	}
+ 
+ 	if (status && no_modify)  {
+-		libxfs_putbuf(agibuf);
+-		libxfs_putbuf(agfbuf);
+-		libxfs_putbuf(sbbuf);
+-		free(sb);
+-
+ 		do_warn(_("bad uncorrected agheader %d, skipping ag...\n"),
+ 			agno);
+-
+-		return;
++		goto out_free_agibuf;
+ 	}
+ 
+ 	scan_freelist(agf, agcnts);
+@@ -1312,21 +1302,34 @@ scan_ag(
+ 	validate_agi(agi, agno, agcnts);
+ 
+ 	ASSERT(agi_dirty == 0 || (agi_dirty && !no_modify));
++	ASSERT(agf_dirty == 0 || (agf_dirty && !no_modify));
++	ASSERT(sb_dirty == 0 || (sb_dirty && !no_modify));
++
++	/*
++	 * Only pay attention to CRC/verifier errors if we can correct them.
++	 * While there, ensure that we corrected a corruption error if the
++	 * verifier detected one.
++	 */
++	if (!no_modify) {
++		ASSERT(agi_dirty || agibuf->b_error != EFSCORRUPTED);
++		ASSERT(agf_dirty || agfbuf->b_error != EFSCORRUPTED);
++		ASSERT(sb_dirty || sbbuf->b_error != EFSCORRUPTED);
++
++		agi_dirty += (agibuf->b_error == EFSBADCRC);
++		agf_dirty += (agfbuf->b_error == EFSBADCRC);
++		sb_dirty += (sbbuf->b_error == EFSBADCRC);
++	}
+ 
+ 	if (agi_dirty && !no_modify)
+ 		libxfs_writebuf(agibuf, 0);
+ 	else
+ 		libxfs_putbuf(agibuf);
+ 
+-	ASSERT(agf_dirty == 0 || (agf_dirty && !no_modify));
+-
+ 	if (agf_dirty && !no_modify)
+ 		libxfs_writebuf(agfbuf, 0);
+ 	else
+ 		libxfs_putbuf(agfbuf);
+ 
+-	ASSERT(sb_dirty == 0 || (sb_dirty && !no_modify));
+-
+ 	if (sb_dirty && !no_modify) {
+ 		if (agno == 0)
+ 			memcpy(&mp->m_sb, sb, sizeof(xfs_sb_t));
+@@ -1341,6 +1344,18 @@ scan_ag(
+ 	print_inode_list(i);
+ #endif
+ 	return;
++
++out_free_agibuf:
++	libxfs_putbuf(agibuf);
++out_free_agfbuf:
++	libxfs_putbuf(agfbuf);
++out_free_sbbuf:
++	libxfs_putbuf(sbbuf);
++out_free_sb:
++	free(sb);
++
++	if (objname)
++		do_error(_("can't get %s for ag %d\n"), objname, agno);
  }
  
-+void
-+set_iocur_type(
-+	const typ_t	*t)
-+{
-+	struct xfs_buf	*bp = iocur_top->bp;
-+
-+	iocur_top->typ = t;
-+
-+	/* verify the buffer if the type has one. */
-+	if (!bp)
-+		return;
-+	if (!t->bops) {
-+		bp->b_ops = NULL;
-+		bp->b_flags |= LIBXFS_B_UNCHECKED;
-+		return;
-+	}
-+	if (!(bp->b_flags & LIBXFS_B_UPTODATE))
-+		return;
-+	bp->b_error = 0;
-+	bp->b_ops = t->bops;
-+	bp->b_ops->verify_read(bp);
-+	bp->b_flags &= ~LIBXFS_B_UNCHECKED;
-+}
-+
- static void
- stack_help(void)
- {
-diff --git a/db/io.h b/db/io.h
-index 7875119..71082e6 100644
---- a/db/io.h
-+++ b/db/io.h
-@@ -62,6 +62,7 @@ extern void     write_cur(void);
- extern void	set_cur(const struct typ *t, __int64_t d, int c, int ring_add,
- 			bbmap_t *bbmap);
- extern void     ring_add(void);
-+extern void	set_iocur_type(const struct typ *t);
- 
- /*
-  * returns -1 for unchecked, 0 for bad and 1 for good
-diff --git a/db/type.c b/db/type.c
-index 04d0d56..b29f2a4 100644
---- a/db/type.c
-+++ b/db/type.c
-@@ -162,10 +162,11 @@ type_f(
- 		if (tt == NULL) {
- 			dbprintf(_("no such type %s\n"), argv[1]);
- 		} else {
--			if (iocur_top->typ == NULL) {
--			    dbprintf(_("no current object\n"));
--			} else {
--			    iocur_top->typ = cur_typ = tt;
-+			if (iocur_top->typ == NULL)
-+				dbprintf(_("no current object\n"));
-+			else {
-+				cur_typ = tt;
-+				set_iocur_type(tt);
- 			}
- 		}
- 	}
+ #define SCAN_THREADS 32
 -- 
 1.9.0
 
