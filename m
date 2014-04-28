@@ -1,24 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 533A37F3F
-	for <xfs@oss.sgi.com>; Sun, 27 Apr 2014 19:48:38 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 515BB7F3F
+	for <xfs@oss.sgi.com>; Sun, 27 Apr 2014 19:50:50 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 4D2958F8054
-	for <xfs@oss.sgi.com>; Sun, 27 Apr 2014 17:48:38 -0700 (PDT)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 50B8B304048
+	for <xfs@oss.sgi.com>; Sun, 27 Apr 2014 17:50:47 -0700 (PDT)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	UOKBsWwy6i9hLSDm for <xfs@oss.sgi.com>;
-	Sun, 27 Apr 2014 17:48:36 -0700 (PDT)
-Date: Mon, 28 Apr 2014 10:48:32 +1000
+	lzHBrEdt7xEpp2lf for <xfs@oss.sgi.com>;
+	Sun, 27 Apr 2014 17:50:45 -0700 (PDT)
+Date: Mon, 28 Apr 2014 10:50:43 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH, RFC] xfs: add heuristic to flush on rename
-Message-ID: <20140428004832.GJ15995@dastard>
-References: <535ABA9D.2060305@redhat.com> <20140427212026.GX18672@dastard>
-	<535D7CF7.2070409@sandeen.net> <20140427231523.GZ18672@dastard>
-	<535D9EB9.50902@sandeen.net>
+Subject: Re: 3.15.0-rc2: RECLAIM_FS-safe -> RECLAIM_FS-unsafe lock order
+	detected
+Message-ID: <20140428005043.GK15995@dastard>
+References: <alpine.DEB.2.19.4.1404250316560.6018@trent.utfs.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <535D9EB9.50902@sandeen.net>
+In-Reply-To: <alpine.DEB.2.19.4.1404250316560.6018@trent.utfs.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,74 +30,76 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Eric Sandeen <sandeen@redhat.com>, xfs-oss <xfs@oss.sgi.com>
+To: Christian Kujau <lists@nerdbynature.de>
+Cc: xfs@oss.sgi.com
 
-On Sun, Apr 27, 2014 at 07:20:09PM -0500, Eric Sandeen wrote:
-> On 4/27/14, 6:15 PM, Dave Chinner wrote:
-> > On Sun, Apr 27, 2014 at 04:56:07PM -0500, Eric Sandeen wrote:
-> >> On 4/27/14, 4:20 PM, Dave Chinner wrote:
-> >>> On Fri, Apr 25, 2014 at 02:42:21PM -0500, Eric Sandeen wrote:
-> >>>> Ext4, however, added a heuristic like this for just this case;
-> >>>> someone who writes file.tmp, then renames over file, but
-> >>>> never issues an fsync.
-> >>>
-> >>> You mean like rsync does all the time for every file it copies?
-> >>
-> >> Yeah, I guess rsync doesn't fsync either.  ;)
-> > 
-> > That's because rsync doesn't need to sync until it completes all of
-> > the data writes. A failed
-> > rsync can simply be re-run after the system comes back up and
-> > nothing is lost. That's a very different situation to a package
-> > manager replacing binaries that the system may need to boot, yes?
+On Fri, Apr 25, 2014 at 03:21:16AM -0700, Christian Kujau wrote:
+> Hi,
 > 
-> yeah, my point is that rsync overwrites exiting files and _never_ syncs.
-> Not per-file, not at the end, not with any available option, AFAICT.
-
-But which a user can easily add.
-
-> Different situation, yes, but arguably just as bad under the
-> wrong circumstances.
-
-Which is why rsync provides this:
-
-$ zcat /usr/share/doc/rsync/scripts/atomic-rsync.gz
-....
-This script lets you update a hierarchy of files in an atomic way by first
-creating a new hierarchy (using hard-links to leverage the existing files),
-and then swapping the new hierarchy into place.
-....
-
-Yes, it doesn't have a sync in it but, again, that can easily be
-added. The point being is that rename safety and atomic renames are
-something that can be solved at the application level....
-
-> >>>> Now, this does smack of O_PONIES, but I would hope that it's
-> >>>> fairly benign.  If someone already synced the tmpfile, it's
-> >>>> a no-op.
-> >>>
-> >>> I'd suggest it will greatly impact rsync speed and have impact on
-> >>> the resultant filesystem layout as it guarantees interleaving of
-> >>> metadata and data on disk....
-> >>
-> >> Ok, well, based on the responses thus far, sounds like a non-starter.
-> >>
-> >> I'm not wedded to it, just thought I'd float the idea.
-> >>
-> >> OTOH, it is an interesting juxtaposition to say the open O_TRUNC case
-> >> is worth catching, but the tempfile overwrite case is not.
-> > 
-> > We went through this years ago - the O_TRUNC case is dealing with
-> > direct overwrite of data which we can reliably detect, usually only
-> > occurs one file at a time, has no major performance impact and data
-> > loss is almost entirely mitigated by the flush-on-close behaviour.
-> > It's a pretty reliable mitigation mechanism.
+> I haven't run vanilla for a while, so this is pretty much a copy of
+> what I reported[0] back with 3.14-rc2, but now with 3.15-rc2. Full
+> dmesg & .config can be found here:
 > 
-> [citation needed] for a some of that, but *shrug*
+>    http://nerdbynature.de/bits/3.15-rc2/
+> 
+> 
+> ======================================================
+> [ INFO: RECLAIM_FS-safe -> RECLAIM_FS-unsafe lock order detected ]
+> 3.15.0-rc2 #1 Not tainted
+> ------------------------------------------------------
+> rm/8288 [HC0[0]:SC0[0]:HE1:SE1] is trying to acquire:
+>  (&mm->mmap_sem){++++++}, at: [<c00b16ac>] might_fault+0x58/0xa0
+> 
+> and this task is already holding:
+>  (&xfs_dir_ilock_class){++++-.}, at: [<c020f790>] 
+> xfs_ilock_data_map_shared+0x28/0x70
+> which would create a new lock dependency:
+>  (&xfs_dir_ilock_class){++++-.} -> (&mm->mmap_sem){++++++}
+> 
+> but this new dependency connects a RECLAIM_FS-irq-safe lock:
+>  (&xfs_dir_ilock_class){++++-.}
+> ... which became RECLAIM_FS-irq-safe at:
+>   [<c00658a4>] lock_acquire+0x54/0x70
+>   [<c00600f0>] down_write_nested+0x50/0xa0
+>   [<c01cef9c>] xfs_reclaim_inode+0x108/0x318
+>   [<c01cf360>] xfs_reclaim_inodes_ag+0x1b4/0x360
+>   [<c01cfea4>] xfs_reclaim_inodes_nr+0x38/0x4c
+>   [<c00d2d00>] super_cache_scan+0x150/0x158
+>   [<c00a2110>] shrink_slab_node+0x138/0x228
+>   [<c00a2874>] shrink_slab+0x124/0x13c
+>   [<c00a53f4>] kswapd+0x3f8/0x884
+>   [<c004e654>] kthread+0xbc/0xd0
+>   [<c0010b7c>] ret_from_kernel_thread+0x5c/0x64
+> to a RECLAIM_FS-irq-unsafe lock:
+>  (&mm->mmap_sem){++++++}
+> ... which became RECLAIM_FS-irq-unsafe at:
+> ...  [<c0065f94>] lockdep_trace_alloc+0x84/0x104
+>   [<c00cb630>] kmem_cache_alloc+0x30/0x148
+>   [<c00ba038>] mmap_region+0x2fc/0x578
+>   [<c00ba5a0>] do_mmap_pgoff+0x2ec/0x378
+>   [<c00aacf8>] vm_mmap_pgoff+0x58/0x94
+>   [<c012124c>] load_elf_binary+0x488/0x11f4
+>   [<c00d5b48>] search_binary_handler+0x98/0x1f4
+>   [<c00d6abc>] do_execve+0x484/0x580
+>   [<c000425c>] try_to_run_init_process+0x18/0x58
+>   [<c0004a5c>] kernel_init+0xac/0x110
+>   [<c0010b7c>] ret_from_kernel_thread+0x5c/0x64
+> 
+> other info that might help us debug this:
+>
+>  Possible interrupt unsafe locking scenario:
+> 
+>        CPU0                    CPU1
+>        ----                    ----
+>   lock(&mm->mmap_sem);
+>                                local_irq_disable();
+>                                lock(&xfs_dir_ilock_class);
+>                                lock(&mm->mmap_sem);
+>   <Interrupt>
+>     lock(&xfs_dir_ilock_class);
 
-It was internal to SGI, mainly related to Irix, unfortunately, which
-is where all this "avoid NULL files" stuff came from originally...
+Known false positive. Directory inodes can't be mmap()d or execv()d,
+nor can referenced inodes be reclaimed.
 
 Cheers,
 
