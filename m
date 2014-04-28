@@ -1,22 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 0CE7B29DF8
-	for <xfs@oss.sgi.com>; Mon, 28 Apr 2014 11:47:57 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 8BFA5AC003
-	for <xfs@oss.sgi.com>; Mon, 28 Apr 2014 09:47:56 -0700 (PDT)
-Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id KjyalzGxLGTFrWPX (version=TLSv1 cipher=AES256-SHA
-	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 28 Apr 2014 09:47:55 -0700 (PDT)
-Date: Mon, 28 Apr 2014 09:47:54 -0700
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] xfs: test for shut down fs in xfs_dir_fsync()
-Message-ID: <20140428164754.GA17472@infradead.org>
-References: <535E8344.2070209@redhat.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 9508929DF8
+	for <xfs@oss.sgi.com>; Mon, 28 Apr 2014 12:18:59 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 8A2928F8033
+	for <xfs@oss.sgi.com>; Mon, 28 Apr 2014 10:18:56 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id S24gqh08EfEf5CBN for
+	<xfs@oss.sgi.com>; Mon, 28 Apr 2014 10:18:55 -0700 (PDT)
+Message-ID: <535E8D67.3010504@redhat.com>
+Date: Mon, 28 Apr 2014 12:18:31 -0500
+From: Eric Sandeen <sandeen@redhat.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <535E8344.2070209@redhat.com>
+Subject: Re: [PATCH] xfs: test for shut down fs in xfs_dir_fsync()
+References: <535E8344.2070209@redhat.com>
+	<20140428164754.GA17472@infradead.org>
+In-Reply-To: <20140428164754.GA17472@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,22 +28,27 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@redhat.com>
+To: Christoph Hellwig <hch@infradead.org>
 Cc: Boris Ranto <branto@redhat.com>, xfs-oss <xfs@oss.sgi.com>
 
-On Mon, Apr 28, 2014 at 11:35:16AM -0500, Eric Sandeen wrote:
-> Similar to xfs_file_fsync(), I think xfs_dir_fsync() needs
-> to test for a shut down fs,
+On 4/28/14, 11:47 AM, Christoph Hellwig wrote:
+> On Mon, Apr 28, 2014 at 11:35:16AM -0500, Eric Sandeen wrote:
+>> Similar to xfs_file_fsync(), I think xfs_dir_fsync() needs
+>> to test for a shut down fs,
+> 
+> It probably should.
+> 
+>> lest we go down paths we'll
+>> never be able to complete; Boris reported that during some
+>> stress tests he had threads stuck in xlog_cil_force_lsn
+>> via xfs_dir_fsync().
+> 
+> But this could still happen if we get a shutdown coming in after that
+> test.
 
-It probably should.
+True... that looked a bit hairier to sort out.  :(
 
-> lest we go down paths we'll
-> never be able to complete; Boris reported that during some
-> stress tests he had threads stuck in xlog_cil_force_lsn
-> via xfs_dir_fsync().
-
-But this could still happen if we get a shutdown coming in after that
-test.
+-Eric
 
 _______________________________________________
 xfs mailing list
