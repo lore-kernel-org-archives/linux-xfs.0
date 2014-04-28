@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 8B60F29DFE
-	for <xfs@oss.sgi.com>; Mon, 28 Apr 2014 16:05:11 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 80CD88F804B
-	for <xfs@oss.sgi.com>; Mon, 28 Apr 2014 14:05:11 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id 28D3F29E0B
+	for <xfs@oss.sgi.com>; Mon, 28 Apr 2014 16:05:12 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 0FA838F804B
+	for <xfs@oss.sgi.com>; Mon, 28 Apr 2014 14:05:12 -0700 (PDT)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	eXvnumS548ifTTm0 for <xfs@oss.sgi.com>;
-	Mon, 28 Apr 2014 14:05:09 -0700 (PDT)
+	Njkdd5FKhLVPB16R for <xfs@oss.sgi.com>;
+	Mon, 28 Apr 2014 14:05:05 -0700 (PDT)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.80)
-	(envelope-from <dave@fromorbit.com>) id 1WesjV-00050x-J5
+	(envelope-from <dave@fromorbit.com>) id 1WesjV-00050u-HX
 	for xfs@oss.sgi.com; Tue, 29 Apr 2014 07:05:01 +1000
 Received: from dave by disappointment with local (Exim 4.82)
-	(envelope-from <dave@disappointment.disaster>) id 1WesjV-00050p-IH
+	(envelope-from <dave@disappointment.disaster>) id 1WesjV-00050a-Gh
 	for xfs@oss.sgi.com; Tue, 29 Apr 2014 07:05:01 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 4/9] repair: detect and correct CRC errors in directory blocks
-Date: Tue, 29 Apr 2014 07:04:54 +1000
-Message-Id: <1398719099-19194-5-git-send-email-david@fromorbit.com>
+Subject: [PATCH 1/9] db: don't claim unchecked CRCs are correct
+Date: Tue, 29 Apr 2014 07:04:51 +1000
+Message-Id: <1398719099-19194-2-git-send-email-david@fromorbit.com>
 In-Reply-To: <1398719099-19194-1-git-send-email-david@fromorbit.com>
 References: <1398719099-19194-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,212 +39,103 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-repair doesn't currently verifier errors in directory blocks - they
-cause repair to ignore blocks and hence fail because it can't read
-critical blocks from the directory.
+Currently xfs_db will claim the CRC on a structure is correct if the
+buffer is not marked with an error. However, buffers may have been
+read without a verifier, and hence have not had their CRCs
+validated. in this case, we shoul dreport "unchecked" rather than
+"correct". For example:
 
-Fix this by having the directory buffer read code detect a verifier
-error and retry the read without the verifier if the verifier has
-detected an error. Then pass the verifer error with the successfully
-read buffer back to the caller, so the caller can handle the error
-appropriately. In most cases, this is simply marking the directory
-as needing a rebuild, so once the directory entries have been
-checked and repaired, it will rewrite all the directory buffers
-(including the clean ones) and in the process recalculate all the
-the CRC on the directory blocks.
-
-Hence pure CRC errors in directory blocks are now handled correctly
-by xfs_repair.
+xfs_db> fsb 0x6003f
+xfs_db> type dir3
+xfs_db> p
+dhdr.hdr.magic = 0x58444433
+dhdr.hdr.crc = 0x2d0f9c9d (unchecked)
+....
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- repair/phase6.c | 94 +++++++++++++++++++++++++++++++++++++++++++++------------
- 1 file changed, 75 insertions(+), 19 deletions(-)
+ db/fprint.c      | 15 ++++++++++++++-
+ db/io.c          |  2 ++
+ db/io.h          | 12 +++++++++---
+ include/libxfs.h |  1 +
+ 4 files changed, 26 insertions(+), 4 deletions(-)
 
-diff --git a/repair/phase6.c b/repair/phase6.c
-index 0c35e1c..5ae6a3d 100644
---- a/repair/phase6.c
-+++ b/repair/phase6.c
-@@ -125,6 +125,45 @@ typedef struct freetab {
- #define	DIR_HASH_CK_TOTAL	6
+diff --git a/db/fprint.c b/db/fprint.c
+index 435d984..52782e2 100644
+--- a/db/fprint.c
++++ b/db/fprint.c
+@@ -206,7 +206,20 @@ fp_crc(
+ 	__int64_t	val;
+ 	char		*ok;
  
- /*
-+ * Need to handle CRC and validation errors specially here. If there is a
-+ * validator error, re-read without the verifier so that we get a buffer we can
-+ * check and repair. Re-attach the ops to the buffer after the read so that when
-+ * it is rewritten the CRC is recalculated.
-+ *
-+ * If the buffer was not read, we return an error. If the buffer was read but
-+ * had a CRC or corruption error, we reread it without the verifier and if it is
-+ * read successfully we increment *crc_error and return 0. Otherwise we
-+ * return the read error.
-+ */
-+static int
-+dir_read_buf(
-+	struct xfs_inode	*ip,
-+	xfs_dablk_t		bno,
-+	xfs_daddr_t		mappedbno,
-+	struct xfs_buf		**bpp,
-+	const struct xfs_buf_ops *ops,
-+	int			*crc_error)
-+{
-+	int error;
-+	int error2;
-+
-+	error = libxfs_da_read_buf(NULL, ip, bno, mappedbno, bpp,
-+				   XFS_DATA_FORK, ops);
-+
-+	if (error != EFSBADCRC && error != EFSCORRUPTED)
-+		return error;
-+
-+	error2 = libxfs_da_read_buf(NULL, ip, bno, mappedbno, bpp,
-+				   XFS_DATA_FORK, NULL);
-+	if (error2)
-+		return error2;
-+
-+	(*crc_error)++;
-+	(*bpp)->b_ops = ops;
-+	return 0;
-+}
-+
+-	ok = iocur_crc_valid() ? "correct" : "bad";
++	switch (iocur_crc_valid()) {
++	case -1:
++		ok = "unchecked";
++		break;
++	case 0:
++		ok = "bad";
++		break;
++	case 1:
++		ok = "correct";
++		break;
++	default:
++		ok = "unknown state";
++		break;
++	}
+ 
+ 	for (i = 0, bitpos = bit;
+ 	     i < count && !seenint();
+diff --git a/db/io.c b/db/io.c
+index 5eb61d9..387f171 100644
+--- a/db/io.c
++++ b/db/io.c
+@@ -531,6 +531,8 @@ set_cur(
+ 		return;
+ 	iocur_top->buf = bp->b_addr;
+ 	iocur_top->bp = bp;
++	if (!ops)
++		bp->b_flags |= LIBXFS_B_UNCHECKED;
+ 
+ 	iocur_top->bb = d;
+ 	iocur_top->blen = c;
+diff --git a/db/io.h b/db/io.h
+index ad39bee..7875119 100644
+--- a/db/io.h
++++ b/db/io.h
+@@ -63,10 +63,16 @@ extern void	set_cur(const struct typ *t, __int64_t d, int c, int ring_add,
+ 			bbmap_t *bbmap);
+ extern void     ring_add(void);
+ 
+-static inline bool
 +/*
-  * Returns 0 if the name already exists (ie. a duplicate)
-  */
- static int
-@@ -1906,15 +1945,19 @@ longform_dir2_check_leaf(
- 	int			seeval;
- 	struct xfs_dir2_leaf_entry *ents;
- 	struct xfs_dir3_icleaf_hdr leafhdr;
-+	int			error;
-+	int			fixit = 0;
- 
- 	da_bno = mp->m_dirleafblk;
--	if (libxfs_da_read_buf(NULL, ip, da_bno, -1, &bp, XFS_DATA_FORK,
--				&xfs_dir3_leaf1_buf_ops)) {
-+	error = dir_read_buf(ip, da_bno, -1, &bp, &xfs_dir3_leaf1_buf_ops,
-+			     &fixit);
-+	if (error) {
- 		do_error(
--	_("can't read block %u for directory inode %" PRIu64 "\n"),
--			da_bno, ip->i_ino);
-+	_("can't read block %u for directory inode %" PRIu64 ", error %d\n"),
-+			da_bno, ip->i_ino, error);
- 		/* NOTREACHED */
- 	}
-+
- 	leaf = bp->b_addr;
- 	xfs_dir3_leaf_hdr_from_disk(&leafhdr, leaf);
- 	ents = xfs_dir3_leaf_ents_p(leaf);
-@@ -1951,7 +1994,7 @@ longform_dir2_check_leaf(
- 		return 1;
- 	}
- 	libxfs_putbuf(bp);
--	return 0;
-+	return fixit;
++ * returns -1 for unchecked, 0 for bad and 1 for good
++ */
++static inline int
+ iocur_crc_valid()
+ {
+-	return (iocur_top->bp &&
+-		iocur_top->bp->b_error != EFSBADCRC &&
++	if (!iocur_top->bp)
++		return -1;
++	if (iocur_top->bp->b_flags & LIBXFS_B_UNCHECKED)
++		return -1;
++	return (iocur_top->bp->b_error != EFSBADCRC &&
+ 		(!iocur_top->ino_buf || iocur_top->ino_crc_ok));
  }
+diff --git a/include/libxfs.h b/include/libxfs.h
+index 6bc6c94..6b1e276 100644
+--- a/include/libxfs.h
++++ b/include/libxfs.h
+@@ -333,6 +333,7 @@ enum xfs_buf_flags_t {	/* b_flags bits */
+ 	LIBXFS_B_STALE		= 0x0004,	/* buffer marked as invalid */
+ 	LIBXFS_B_UPTODATE	= 0x0008,	/* buffer is sync'd to disk */
+ 	LIBXFS_B_DISCONTIG	= 0x0010,	/* discontiguous buffer */
++	LIBXFS_B_UNCHECKED	= 0x0020,	/* needs verification */
+ };
  
- /*
-@@ -1978,6 +2021,8 @@ longform_dir2_check_node(
- 	struct xfs_dir3_icleaf_hdr leafhdr;
- 	struct xfs_dir3_icfree_hdr freehdr;
- 	__be16			*bests;
-+	int			error;
-+	int			fixit = 0;
- 
- 	for (da_bno = mp->m_dirleafblk, next_da_bno = 0;
- 			next_da_bno != NULLFILEOFF && da_bno < mp->m_dirfreeblk;
-@@ -1993,11 +2038,12 @@ longform_dir2_check_node(
- 		 * a node block, then we'll skip it below based on a magic
- 		 * number check.
- 		 */
--		if (libxfs_da_read_buf(NULL, ip, da_bno, -1, &bp,
--				XFS_DATA_FORK, &xfs_da3_node_buf_ops)) {
-+		error = dir_read_buf(ip, da_bno, -1, &bp,
-+				     &xfs_da3_node_buf_ops, &fixit);
-+		if (error) {
- 			do_warn(
--	_("can't read leaf block %u for directory inode %" PRIu64 "\n"),
--				da_bno, ip->i_ino);
-+	_("can't read leaf block %u for directory inode %" PRIu64 ", error %d\n"),
-+				da_bno, ip->i_ino, error);
- 			return 1;
- 		}
- 		leaf = bp->b_addr;
-@@ -2016,6 +2062,12 @@ longform_dir2_check_node(
- 			libxfs_putbuf(bp);
- 			return 1;
- 		}
-+
-+		/*
-+		 * If there's a validator error, we need to ensure that we got
-+		 * the right ops on the buffer for when we write it back out.
-+		 */
-+		bp->b_ops = &xfs_dir3_leafn_buf_ops;
- 		if (leafhdr.count > xfs_dir3_max_leaf_ents(mp, leaf) ||
- 		    leafhdr.count < leafhdr.stale) {
- 			do_warn(
-@@ -2039,11 +2091,13 @@ longform_dir2_check_node(
- 		next_da_bno = da_bno + mp->m_dirblkfsbs - 1;
- 		if (bmap_next_offset(NULL, ip, &next_da_bno, XFS_DATA_FORK))
- 			break;
--		if (libxfs_da_read_buf(NULL, ip, da_bno, -1, &bp,
--				XFS_DATA_FORK, &xfs_dir3_free_buf_ops)) {
-+
-+		error = dir_read_buf(ip, da_bno, -1, &bp,
-+				     &xfs_dir3_free_buf_ops, &fixit);
-+		if (error) {
- 			do_warn(
--	_("can't read freespace block %u for directory inode %" PRIu64 "\n"),
--				da_bno, ip->i_ino);
-+	_("can't read freespace block %u for directory inode %" PRIu64 ", error %d\n"),
-+				da_bno, ip->i_ino, error);
- 			return 1;
- 		}
- 		free = bp->b_addr;
-@@ -2093,7 +2147,7 @@ longform_dir2_check_node(
- 			return 1;
- 		}
- 	}
--	return 0;
-+	return fixit;
- }
- 
- /*
-@@ -2148,6 +2202,7 @@ longform_dir2_entry_check(xfs_mount_t	*mp,
- 	     next_da_bno != NULLFILEOFF && da_bno < mp->m_dirleafblk;
- 	     da_bno = (xfs_dablk_t)next_da_bno) {
- 		const struct xfs_buf_ops *ops;
-+		int			 error;
- 
- 		next_da_bno = da_bno + mp->m_dirblkfsbs - 1;
- 		if (bmap_next_offset(NULL, ip, &next_da_bno, XFS_DATA_FORK))
-@@ -2167,11 +2222,12 @@ longform_dir2_entry_check(xfs_mount_t	*mp,
- 			ops = &xfs_dir3_block_buf_ops;
- 		else
- 			ops = &xfs_dir3_data_buf_ops;
--		if (libxfs_da_read_buf(NULL, ip, da_bno, -1, &bplist[db],
--				       XFS_DATA_FORK, ops)) {
-+
-+		error = dir_read_buf(ip, da_bno, -1, &bplist[db], ops, &fixit);
-+		if (error) {
- 			do_warn(
--	_("can't read data block %u for directory inode %" PRIu64 "\n"),
--				da_bno, ino);
-+	_("can't read data block %u for directory inode %" PRIu64 " error %d\n"),
-+				da_bno, ino, error);
- 			*num_illegal += 1;
- 
- 			/*
-@@ -2189,7 +2245,7 @@ longform_dir2_entry_check(xfs_mount_t	*mp,
- 				irec, ino_offset, &bplist[db], hashtab,
- 				&freetab, da_bno, isblock);
- 	}
--	fixit = (*num_illegal != 0) || dir2_is_badino(ino) || *need_dot;
-+	fixit |= (*num_illegal != 0) || dir2_is_badino(ino) || *need_dot;
- 
- 	if (!dotdot_update) {
- 		/* check btree and freespace */
+ #define XFS_BUF_DADDR_NULL		((xfs_daddr_t) (-1LL))
 -- 
 1.9.0
 
