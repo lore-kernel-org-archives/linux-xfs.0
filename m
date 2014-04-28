@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 28D3F29E0B
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 963AD29DFE
 	for <xfs@oss.sgi.com>; Mon, 28 Apr 2014 16:05:12 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 0FA838F804B
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 893DA304064
 	for <xfs@oss.sgi.com>; Mon, 28 Apr 2014 14:05:12 -0700 (PDT)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	Njkdd5FKhLVPB16R for <xfs@oss.sgi.com>;
-	Mon, 28 Apr 2014 14:05:05 -0700 (PDT)
+	SA6VPCdCp9iNOxEu for <xfs@oss.sgi.com>;
+	Mon, 28 Apr 2014 14:05:10 -0700 (PDT)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.80)
-	(envelope-from <dave@fromorbit.com>) id 1WesjV-00050u-HX
+	(envelope-from <dave@fromorbit.com>) id 1WesjV-000516-Lo
 	for xfs@oss.sgi.com; Tue, 29 Apr 2014 07:05:01 +1000
 Received: from dave by disappointment with local (Exim 4.82)
-	(envelope-from <dave@disappointment.disaster>) id 1WesjV-00050a-Gh
+	(envelope-from <dave@disappointment.disaster>) id 1WesjV-00051E-L4
 	for xfs@oss.sgi.com; Tue, 29 Apr 2014 07:05:01 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 1/9] db: don't claim unchecked CRCs are correct
-Date: Tue, 29 Apr 2014 07:04:51 +1000
-Message-Id: <1398719099-19194-2-git-send-email-david@fromorbit.com>
+Subject: [PATCH 9/9] repair: detect and handle attribute tree CRC errors
+Date: Tue, 29 Apr 2014 07:04:59 +1000
+Message-Id: <1398719099-19194-10-git-send-email-david@fromorbit.com>
 In-Reply-To: <1398719099-19194-1-git-send-email-david@fromorbit.com>
 References: <1398719099-19194-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,103 +39,150 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Currently xfs_db will claim the CRC on a structure is correct if the
-buffer is not marked with an error. However, buffers may have been
-read without a verifier, and hence have not had their CRCs
-validated. in this case, we shoul dreport "unchecked" rather than
-"correct". For example:
-
-xfs_db> fsb 0x6003f
-xfs_db> type dir3
-xfs_db> p
-dhdr.hdr.magic = 0x58444433
-dhdr.hdr.crc = 0x2d0f9c9d (unchecked)
-....
+Currently the attribute code will not detect and correct errors in
+the attribute tree. It also fails to validate the CRCs and headers
+on remote attribute blocks. Ensure that all the attribute blocks are
+CRC checked and that the processing functions understand the correct
+block formats for decoding.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- db/fprint.c      | 15 ++++++++++++++-
- db/io.c          |  2 ++
- db/io.h          | 12 +++++++++---
- include/libxfs.h |  1 +
- 4 files changed, 26 insertions(+), 4 deletions(-)
+ repair/attr_repair.c | 45 +++++++++++++++++++++++++++++++++++++--------
+ 1 file changed, 37 insertions(+), 8 deletions(-)
 
-diff --git a/db/fprint.c b/db/fprint.c
-index 435d984..52782e2 100644
---- a/db/fprint.c
-+++ b/db/fprint.c
-@@ -206,7 +206,20 @@ fp_crc(
- 	__int64_t	val;
- 	char		*ok;
+diff --git a/repair/attr_repair.c b/repair/attr_repair.c
+index ba85ac2..9b57960 100644
+--- a/repair/attr_repair.c
++++ b/repair/attr_repair.c
+@@ -604,6 +604,7 @@ verify_da_path(xfs_mount_t	*mp,
+ 			libxfs_putbuf(bp);
+ 			return(1);
+ 		}
++
+ 		/*
+ 		 * update cursor, write out the *current* level if
+ 		 * required.  don't write out the descendant level
+@@ -615,6 +616,8 @@ verify_da_path(xfs_mount_t	*mp,
+ 			libxfs_writebuf(cursor->level[this_level].bp, 0);
+ 		else
+ 			libxfs_putbuf(cursor->level[this_level].bp);
++
++		/* switch cursor to point at the new buffer we just read */
+ 		cursor->level[this_level].bp = bp;
+ 		cursor->level[this_level].dirty = 0;
+ 		cursor->level[this_level].bno = dabno;
+@@ -624,6 +627,14 @@ verify_da_path(xfs_mount_t	*mp,
+ 		cursor->level[this_level].n = newnode;
+ #endif
+ 		entry = cursor->level[this_level].index = 0;
++
++		/*
++		 * We want to rewrite the buffer a CRC error seeing as it
++		 * contains what appears to be a valid node block, but only if
++		 * we are fixing errors.
++		 */
++		if (bp->b_error == EFSBADCRC && !no_modify)
++			cursor->level[this_level].dirty++;
+ 	}
+ 	/*
+ 	 * ditto for block numbers
+@@ -974,6 +985,10 @@ rmtval_get(xfs_mount_t *mp, xfs_ino_t ino, blkmap_t *blkmap,
+ 	xfs_dfsbno_t	bno;
+ 	xfs_buf_t	*bp;
+ 	int		clearit = 0, i = 0, length = 0, amountdone = 0;
++	int		hdrsize = 0;
++
++	if (xfs_sb_version_hascrc(&mp->m_sb))
++		hdrsize = sizeof(struct xfs_attr3_rmt_hdr);
  
--	ok = iocur_crc_valid() ? "correct" : "bad";
-+	switch (iocur_crc_valid()) {
-+	case -1:
-+		ok = "unchecked";
-+		break;
-+	case 0:
-+		ok = "bad";
-+		break;
-+	case 1:
-+		ok = "correct";
-+		break;
-+	default:
-+		ok = "unknown state";
-+		break;
-+	}
+ 	/* ASSUMPTION: valuelen is a valid number, so use it for looping */
+ 	/* Note that valuelen is not a multiple of blocksize */
+@@ -986,16 +1001,26 @@ rmtval_get(xfs_mount_t *mp, xfs_ino_t ino, blkmap_t *blkmap,
+ 			break;
+ 		}
+ 		bp = libxfs_readbuf(mp->m_dev, XFS_FSB_TO_DADDR(mp, bno),
+-				XFS_FSB_TO_BB(mp, 1), 0, NULL);
++				    XFS_FSB_TO_BB(mp, 1), 0,
++				    &xfs_attr3_rmt_buf_ops);
+ 		if (!bp) {
+ 			do_warn(
+ 	_("can't read remote block for attributes of inode %" PRIu64 "\n"), ino);
+ 			clearit = 1;
+ 			break;
+ 		}
++
++		if (bp->b_error == EFSBADCRC || bp->b_error == EFSCORRUPTED) {
++			do_warn(
++	_("Corrupt remote block for attributes of inode %" PRIu64 "\n"), ino);
++			clearit = 1;
++			break;
++		}
++
+ 		ASSERT(mp->m_sb.sb_blocksize == XFS_BUF_COUNT(bp));
+-		length = MIN(XFS_BUF_COUNT(bp), valuelen - amountdone);
+-		memmove(value, XFS_BUF_PTR(bp), length);
++
++		length = MIN(XFS_BUF_COUNT(bp) - hdrsize, valuelen - amountdone);
++		memmove(value, XFS_BUF_PTR(bp) + hdrsize, length);
+ 		amountdone += length;
+ 		value += length;
+ 		i++;
+@@ -1143,7 +1168,6 @@ process_leaf_attr_block(
  
- 	for (i = 0, bitpos = bit;
- 	     i < count && !seenint();
-diff --git a/db/io.c b/db/io.c
-index 5eb61d9..387f171 100644
---- a/db/io.c
-+++ b/db/io.c
-@@ -531,6 +531,8 @@ set_cur(
- 		return;
- 	iocur_top->buf = bp->b_addr;
- 	iocur_top->bp = bp;
-+	if (!ops)
-+		bp->b_flags |= LIBXFS_B_UNCHECKED;
+ 	xfs_attr3_leaf_hdr_from_disk(&leafhdr, leaf);
+ 	clearit = usedbs = 0;
+-	*repair = 0;
+ 	firstb = mp->m_sb.sb_blocksize;
+ 	stop = xfs_attr3_leaf_hdr_size(leaf);
  
- 	iocur_top->bb = d;
- 	iocur_top->blen = c;
-diff --git a/db/io.h b/db/io.h
-index ad39bee..7875119 100644
---- a/db/io.h
-+++ b/db/io.h
-@@ -63,10 +63,16 @@ extern void	set_cur(const struct typ *t, __int64_t d, int c, int ring_add,
- 			bbmap_t *bbmap);
- extern void     ring_add(void);
+@@ -1320,13 +1344,16 @@ process_leaf_attr_level(xfs_mount_t	*mp,
+ 		}
  
--static inline bool
-+/*
-+ * returns -1 for unchecked, 0 for bad and 1 for good
-+ */
-+static inline int
- iocur_crc_valid()
- {
--	return (iocur_top->bp &&
--		iocur_top->bp->b_error != EFSBADCRC &&
-+	if (!iocur_top->bp)
-+		return -1;
-+	if (iocur_top->bp->b_flags & LIBXFS_B_UNCHECKED)
-+		return -1;
-+	return (iocur_top->bp->b_error != EFSBADCRC &&
- 		(!iocur_top->ino_buf || iocur_top->ino_crc_ok));
- }
-diff --git a/include/libxfs.h b/include/libxfs.h
-index 6bc6c94..6b1e276 100644
---- a/include/libxfs.h
-+++ b/include/libxfs.h
-@@ -333,6 +333,7 @@ enum xfs_buf_flags_t {	/* b_flags bits */
- 	LIBXFS_B_STALE		= 0x0004,	/* buffer marked as invalid */
- 	LIBXFS_B_UPTODATE	= 0x0008,	/* buffer is sync'd to disk */
- 	LIBXFS_B_DISCONTIG	= 0x0010,	/* discontiguous buffer */
-+	LIBXFS_B_UNCHECKED	= 0x0020,	/* needs verification */
- };
+ 		bp = libxfs_readbuf(mp->m_dev, XFS_FSB_TO_DADDR(mp, dev_bno),
+-					XFS_FSB_TO_BB(mp, 1), 0, NULL);
++				    XFS_FSB_TO_BB(mp, 1), 0,
++				    &xfs_attr3_leaf_buf_ops);
+ 		if (!bp) {
+ 			do_warn(
+ 	_("can't read file block %u (fsbno %" PRIu64 ") for attribute fork of inode %" PRIu64 "\n"),
+ 				da_bno, dev_bno, ino);
+ 			goto error_out;
+ 		}
++		if (bp->b_error == EFSBADCRC)
++			repair++;
  
- #define XFS_BUF_DADDR_NULL		((xfs_daddr_t) (-1LL))
+ 		leaf = bp->b_addr;
+ 		xfs_attr3_leaf_hdr_from_disk(&leafhdr, leaf);
+@@ -1382,9 +1409,9 @@ process_leaf_attr_level(xfs_mount_t	*mp,
+ 
+ 		current_hashval = greatest_hashval;
+ 
+-		if (repair && !no_modify) 
++		if (repair && !no_modify)
+ 			libxfs_writebuf(bp, 0);
+-		else 
++		else
+ 			libxfs_putbuf(bp);
+ 	} while (da_bno != 0);
+ 
+@@ -1512,6 +1539,8 @@ process_longform_attr(
+ 			ino);
+ 		return(1);
+ 	}
++	if (bp->b_error == EFSBADCRC)
++		(*repair)++;
+ 
+ 	/* verify leaf block */
+ 	leaf = (xfs_attr_leafblock_t *)XFS_BUF_PTR(bp);
+@@ -1555,7 +1584,7 @@ process_longform_attr(
+ 	case XFS_DA_NODE_MAGIC:		/* btree-form attribute */
+ 	case XFS_DA3_NODE_MAGIC:
+ 		/* must do this now, to release block 0 before the traversal */
+-		if (repairlinks) {
++		if (*repair || repairlinks) {
+ 			*repair = 1;
+ 			libxfs_writebuf(bp, 0);
+ 		} else
 -- 
 1.9.0
 
