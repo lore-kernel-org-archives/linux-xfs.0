@@ -1,23 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 515BB7F3F
-	for <xfs@oss.sgi.com>; Sun, 27 Apr 2014 19:50:50 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 50B8B304048
-	for <xfs@oss.sgi.com>; Sun, 27 Apr 2014 17:50:47 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id F21997F3F
+	for <xfs@oss.sgi.com>; Sun, 27 Apr 2014 20:00:20 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id D0A888F806F
+	for <xfs@oss.sgi.com>; Sun, 27 Apr 2014 18:00:20 -0700 (PDT)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	lzHBrEdt7xEpp2lf for <xfs@oss.sgi.com>;
-	Sun, 27 Apr 2014 17:50:45 -0700 (PDT)
-Date: Mon, 28 Apr 2014 10:50:43 +1000
+	zZ0NBqj4HeRWrksM for <xfs@oss.sgi.com>;
+	Sun, 27 Apr 2014 18:00:18 -0700 (PDT)
+Date: Mon, 28 Apr 2014 11:00:15 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: 3.15.0-rc2: RECLAIM_FS-safe -> RECLAIM_FS-unsafe lock order
-	detected
-Message-ID: <20140428005043.GK15995@dastard>
-References: <alpine.DEB.2.19.4.1404250316560.6018@trent.utfs.org>
+Subject: [ANNOUNCE] xfstests: master branch updated to ce0aa2b
+Message-ID: <20140428010015.GL15995@dastard>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <alpine.DEB.2.19.4.1404250316560.6018@trent.utfs.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,89 +22,134 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============8046966459538027536=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christian Kujau <lists@nerdbynature.de>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
+Cc: linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org
 
-On Fri, Apr 25, 2014 at 03:21:16AM -0700, Christian Kujau wrote:
-> Hi,
-> 
-> I haven't run vanilla for a while, so this is pretty much a copy of
-> what I reported[0] back with 3.14-rc2, but now with 3.15-rc2. Full
-> dmesg & .config can be found here:
-> 
->    http://nerdbynature.de/bits/3.15-rc2/
-> 
-> 
-> ======================================================
-> [ INFO: RECLAIM_FS-safe -> RECLAIM_FS-unsafe lock order detected ]
-> 3.15.0-rc2 #1 Not tainted
-> ------------------------------------------------------
-> rm/8288 [HC0[0]:SC0[0]:HE1:SE1] is trying to acquire:
->  (&mm->mmap_sem){++++++}, at: [<c00b16ac>] might_fault+0x58/0xa0
-> 
-> and this task is already holding:
->  (&xfs_dir_ilock_class){++++-.}, at: [<c020f790>] 
-> xfs_ilock_data_map_shared+0x28/0x70
-> which would create a new lock dependency:
->  (&xfs_dir_ilock_class){++++-.} -> (&mm->mmap_sem){++++++}
-> 
-> but this new dependency connects a RECLAIM_FS-irq-safe lock:
->  (&xfs_dir_ilock_class){++++-.}
-> ... which became RECLAIM_FS-irq-safe at:
->   [<c00658a4>] lock_acquire+0x54/0x70
->   [<c00600f0>] down_write_nested+0x50/0xa0
->   [<c01cef9c>] xfs_reclaim_inode+0x108/0x318
->   [<c01cf360>] xfs_reclaim_inodes_ag+0x1b4/0x360
->   [<c01cfea4>] xfs_reclaim_inodes_nr+0x38/0x4c
->   [<c00d2d00>] super_cache_scan+0x150/0x158
->   [<c00a2110>] shrink_slab_node+0x138/0x228
->   [<c00a2874>] shrink_slab+0x124/0x13c
->   [<c00a53f4>] kswapd+0x3f8/0x884
->   [<c004e654>] kthread+0xbc/0xd0
->   [<c0010b7c>] ret_from_kernel_thread+0x5c/0x64
-> to a RECLAIM_FS-irq-unsafe lock:
->  (&mm->mmap_sem){++++++}
-> ... which became RECLAIM_FS-irq-unsafe at:
-> ...  [<c0065f94>] lockdep_trace_alloc+0x84/0x104
->   [<c00cb630>] kmem_cache_alloc+0x30/0x148
->   [<c00ba038>] mmap_region+0x2fc/0x578
->   [<c00ba5a0>] do_mmap_pgoff+0x2ec/0x378
->   [<c00aacf8>] vm_mmap_pgoff+0x58/0x94
->   [<c012124c>] load_elf_binary+0x488/0x11f4
->   [<c00d5b48>] search_binary_handler+0x98/0x1f4
->   [<c00d6abc>] do_execve+0x484/0x580
->   [<c000425c>] try_to_run_init_process+0x18/0x58
->   [<c0004a5c>] kernel_init+0xac/0x110
->   [<c0010b7c>] ret_from_kernel_thread+0x5c/0x64
-> 
-> other info that might help us debug this:
->
->  Possible interrupt unsafe locking scenario:
-> 
->        CPU0                    CPU1
->        ----                    ----
->   lock(&mm->mmap_sem);
->                                local_irq_disable();
->                                lock(&xfs_dir_ilock_class);
->                                lock(&mm->mmap_sem);
->   <Interrupt>
->     lock(&xfs_dir_ilock_class);
 
-Known false positive. Directory inodes can't be mmap()d or execv()d,
-nor can referenced inodes be reclaimed.
+--===============8046966459538027536==
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="WBsA/oQW3eTA3LlM"
+Content-Disposition: inline
 
-Cheers,
 
-Dave.
--- 
+--WBsA/oQW3eTA3LlM
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+
+Hi folks,
+
+The xfstests repository at git://oss.sgi.com/xfs/cmds/xfstests has
+just been updated. Patches often get missed, so please check if your
+outstanding patches were in this update. If they have not been in
+this update, please resubmit them to xfs@oss.sgi.com so they can be
+picked up in the next update.
+
+The new head of the master branch is commit:
+
+ce0aa2b common: Use _require_xfs_io_command() instead of helpers
+
+New Commits:
+
+Dave Chinner (6):
+      [31a50c7] generic/204: tweak reserve pool size
+      [ca93123] generic: cleanup space after test in TESTDIR
+      [9d7807d] xfs: remove dmapi tests from the auto group
+      [03227f9] filter: xfs_repair emits new corruption messagse
+      [a12a56f] shared/051: remove ACL count subtest
+      [a841a6d] generic: introduce new large ACL test
+
+Lukas Czerner (1):
+      [ce0aa2b] common: Use _require_xfs_io_command() instead of helpers
+
+
+Code Diffstat:
+
+ common/attr           |  31 ++++++++++++
+ common/defrag         |   2 +-
+ common/rc             |  41 ---------------
+ common/repair         |   3 ++
+ tests/btrfs/026       |   2 +-
+ tests/btrfs/027       |   2 +-
+ tests/btrfs/028       |   2 +-
+ tests/btrfs/047       |   2 +-
+ tests/ext4/001        |   2 +-
+ tests/ext4/002        |   2 +-
+ tests/generic/009     |   2 +-
+ tests/generic/012     |   8 +--
+ tests/generic/016     |   8 +--
+ tests/generic/017     |   4 +-
+ tests/generic/021     |   8 +--
+ tests/generic/022     |   8 +--
+ tests/generic/026     | 132 ++++++++++++++++++++++++++++++++++++++++++++++=
+++
+ tests/generic/026.out |   9 ++++
+ tests/generic/070     |   1 +
+ tests/generic/204     |   2 -
+ tests/generic/213     |   2 +-
+ tests/generic/214     |   2 +-
+ tests/generic/223     |   2 +-
+ tests/generic/228     |   2 +-
+ tests/generic/255     |   6 +--
+ tests/generic/256     |   2 +-
+ tests/generic/274     |   2 +-
+ tests/generic/300     |   4 +-
+ tests/generic/311     |   2 +-
+ tests/generic/312     |   2 +-
+ tests/generic/316     |   4 +-
+ tests/generic/group   |   1 +
+ tests/shared/051      |  45 -----------------
+ tests/shared/051.out  | 135 ----------------------------------------------=
+----
+ tests/shared/298      |   2 +-
+ tests/xfs/252         |   4 +-
+ tests/xfs/290         |   2 +-
+ tests/xfs/292         |   2 +
+ tests/xfs/group       |  50 +++++++++----------
+ 39 files changed, 249 insertions(+), 293 deletions(-)
+ create mode 100644 tests/generic/026
+ create mode 100644 tests/generic/026.out
+--=20
 Dave Chinner
 david@fromorbit.com
+
+--WBsA/oQW3eTA3LlM
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
+
+iQIcBAEBAgAGBQJTXagfAAoJEK3oKUf0dfodi9AP/iWS0robDYMnjkzFaSfYadSa
+pQUL0K1j1Pq9lZXLwpVOSHVQp863QWCU6LefPN4u0e8sMVKuqmRgdKNb8aMIGdNr
+oxTPPsWIZdoUQCGMUTG3rtre9uATtSJwtJMp43JeSCVzuU3D1D2UHC1MOZvfE3aH
+B2JG2qF6j9q5IIxzJbAJqz/miAhOk8YrGYpHxkNNJ/w7OdZMBPxfxkmpub9xzYwo
+e3c+okmEcBOkNW6COy008gZcmaBFhmptlNBsu67rXCS9S7K19Nh9gyygTgI3iwbW
+9JaBEm8pjd9GzroP/Vbw4SKyOmeYqrztzWCwVXZc2i5SvONau1QcI0i21eHY2DbT
+ATsCbAD88ASjr9HhM3ZdG9VjniHOIDPdwkDBk9thc9Aqnj8UPVLIdssKf9LLDPFk
+hc0Sb8EucSk2yTILcW6W2FKE5NAz47twkr0xDRU+wc6hlqa4yXqRIcn/u24cwEek
+Lti0mZ6jR+Yjou2hdIk+8yO5mNM13ZWJpuDsbPhc0kHqgul9RwmF9Nf/IhCfIXMP
+E2yOuA990MBUY7bXFgLs7DWimxGJ/EC4kKSnlH610u6FbjD278FNt79gmR9jTghT
+/jRSV4pARvKCGcLl76tPqDgzJSzeBW4SWgduHufUIqIZPbKfncNfDVubBdXQz1cu
+OVtkKF8F4zAlVWqAB6DV
+=rKnH
+-----END PGP SIGNATURE-----
+
+--WBsA/oQW3eTA3LlM--
+
+
+--===============8046966459538027536==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============8046966459538027536==--
