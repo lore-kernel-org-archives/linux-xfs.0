@@ -1,25 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 13B0E29DF8
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id A2D7429DF9
 	for <xfs@oss.sgi.com>; Mon, 28 Apr 2014 16:05:09 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 8EEF0AC002
-	for <xfs@oss.sgi.com>; Mon, 28 Apr 2014 14:05:05 -0700 (PDT)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 97B548F804B
+	for <xfs@oss.sgi.com>; Mon, 28 Apr 2014 14:05:09 -0700 (PDT)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	jWNKj9w2ce5BvEvi for <xfs@oss.sgi.com>;
-	Mon, 28 Apr 2014 14:05:03 -0700 (PDT)
+	4WozEkcThA73ReGe for <xfs@oss.sgi.com>;
+	Mon, 28 Apr 2014 14:05:08 -0700 (PDT)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.80)
-	(envelope-from <dave@fromorbit.com>) id 1WesjV-00050t-Gz
+	(envelope-from <dave@fromorbit.com>) id 1WesjV-00050v-I2
 	for xfs@oss.sgi.com; Tue, 29 Apr 2014 07:05:01 +1000
 Received: from dave by disappointment with local (Exim 4.82)
-	(envelope-from <dave@disappointment.disaster>) id 1WesjV-00050X-Fu
+	(envelope-from <dave@disappointment.disaster>) id 1WesjV-00050f-HH
 	for xfs@oss.sgi.com; Tue, 29 Apr 2014 07:05:01 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 0/9 v3] xfs_db, xfs_repair: improve CRC error detection
-Date: Tue, 29 Apr 2014 07:04:50 +1000
-Message-Id: <1398719099-19194-1-git-send-email-david@fromorbit.com>
+Subject: [PATCH 2/9] db: verify buffer on type change
+Date: Tue, 29 Apr 2014 07:04:52 +1000
+Message-Id: <1398719099-19194-3-git-send-email-david@fromorbit.com>
+In-Reply-To: <1398719099-19194-1-git-send-email-david@fromorbit.com>
+References: <1398719099-19194-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,39 +37,91 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Hi folks,
+From: Dave Chinner <dchinner@redhat.com>
 
-This is the third version of the patchset originally posted here:
+Currently when the type command is run, we simply change the type
+associated with the buffer, but don't verify it. This results in
+unchecked CRCs being displayed. Hence when changing the type, run
+the verifier associated with the type to determine if the buffer
+contents is valid or not.
 
-http://oss.sgi.com/archives/xfs/2014-04/msg00374.html
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+---
+ db/io.c   | 24 ++++++++++++++++++++++++
+ db/io.h   |  1 +
+ db/type.c |  9 +++++----
+ 3 files changed, 30 insertions(+), 4 deletions(-)
 
-This version corrects the issues that Christoph commented on in the
-second version.
-
-Version 3:
-- factored out libxfs_readbuf_verify()
-- LIBXFS_B_UNCHECKED flag setting/clearing cleaned up
-- cleaned up dirty checks on AG header scan
-- cleaned up error path goto stack on AG header scan
-- added no_modify check to remote symlink buffer bad CRC rewrite.
-
-Version 2:
-- move LIBXFS_B_UNCHECKED to the correct patch (patch 1)
-- set_cur_iotype assumes a valid type (patch 2)
-- comments added to explain the way LIBXFS_B_UNCHECKED and dirty
-  buffers are supposed to interact (patch 3)
-- fixed comment flow and added separate "crc_error" return variable
-  to dir_read_buf() (patch 4)
-- reworked CRC error handling of AG headers (patch 5)
-- readded missing dirty/no_modify assert (patch 6)
-- fixed typos (patch 8)
-- fixed "repair" variable initialisation flow (patch 9)
-- fixed dirty buffer accounting on the cursor to dirty the correct
-  buffer on CRC errors, added some clarifying comments (patch 9)
-
-Comments and testing welcome!
-
--Dave.
+diff --git a/db/io.c b/db/io.c
+index 387f171..7f1b76a 100644
+--- a/db/io.c
++++ b/db/io.c
+@@ -552,6 +552,30 @@ set_cur(
+ 		ring_add();
+ }
+ 
++void
++set_iocur_type(
++	const typ_t	*t)
++{
++	struct xfs_buf	*bp = iocur_top->bp;
++
++	iocur_top->typ = t;
++
++	/* verify the buffer if the type has one. */
++	if (!bp)
++		return;
++	if (!t->bops) {
++		bp->b_ops = NULL;
++		bp->b_flags |= LIBXFS_B_UNCHECKED;
++		return;
++	}
++	if (!(bp->b_flags & LIBXFS_B_UPTODATE))
++		return;
++	bp->b_error = 0;
++	bp->b_ops = t->bops;
++	bp->b_ops->verify_read(bp);
++	bp->b_flags &= ~LIBXFS_B_UNCHECKED;
++}
++
+ static void
+ stack_help(void)
+ {
+diff --git a/db/io.h b/db/io.h
+index 7875119..71082e6 100644
+--- a/db/io.h
++++ b/db/io.h
+@@ -62,6 +62,7 @@ extern void     write_cur(void);
+ extern void	set_cur(const struct typ *t, __int64_t d, int c, int ring_add,
+ 			bbmap_t *bbmap);
+ extern void     ring_add(void);
++extern void	set_iocur_type(const struct typ *t);
+ 
+ /*
+  * returns -1 for unchecked, 0 for bad and 1 for good
+diff --git a/db/type.c b/db/type.c
+index 04d0d56..b29f2a4 100644
+--- a/db/type.c
++++ b/db/type.c
+@@ -162,10 +162,11 @@ type_f(
+ 		if (tt == NULL) {
+ 			dbprintf(_("no such type %s\n"), argv[1]);
+ 		} else {
+-			if (iocur_top->typ == NULL) {
+-			    dbprintf(_("no current object\n"));
+-			} else {
+-			    iocur_top->typ = cur_typ = tt;
++			if (iocur_top->typ == NULL)
++				dbprintf(_("no current object\n"));
++			else {
++				cur_typ = tt;
++				set_iocur_type(tt);
+ 			}
+ 		}
+ 	}
+-- 
+1.9.0
 
 _______________________________________________
 xfs mailing list
