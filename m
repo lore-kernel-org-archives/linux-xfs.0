@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 963AD29DFE
-	for <xfs@oss.sgi.com>; Mon, 28 Apr 2014 16:05:12 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 893DA304064
-	for <xfs@oss.sgi.com>; Mon, 28 Apr 2014 14:05:12 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 38F5029DFE
+	for <xfs@oss.sgi.com>; Mon, 28 Apr 2014 16:05:13 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 2E9B88F804B
+	for <xfs@oss.sgi.com>; Mon, 28 Apr 2014 14:05:13 -0700 (PDT)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	SA6VPCdCp9iNOxEu for <xfs@oss.sgi.com>;
-	Mon, 28 Apr 2014 14:05:10 -0700 (PDT)
+	O9QZVZ0yoqEC7EUT for <xfs@oss.sgi.com>;
+	Mon, 28 Apr 2014 14:05:11 -0700 (PDT)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.80)
-	(envelope-from <dave@fromorbit.com>) id 1WesjV-000516-Lo
+	(envelope-from <dave@fromorbit.com>) id 1WesjV-000514-LQ
 	for xfs@oss.sgi.com; Tue, 29 Apr 2014 07:05:01 +1000
 Received: from dave by disappointment with local (Exim 4.82)
-	(envelope-from <dave@disappointment.disaster>) id 1WesjV-00051E-L4
+	(envelope-from <dave@disappointment.disaster>) id 1WesjV-000519-Kh
 	for xfs@oss.sgi.com; Tue, 29 Apr 2014 07:05:01 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 9/9] repair: detect and handle attribute tree CRC errors
-Date: Tue, 29 Apr 2014 07:04:59 +1000
-Message-Id: <1398719099-19194-10-git-send-email-david@fromorbit.com>
+Subject: [PATCH 8/9] repair: handle remote symlink CRC errors
+Date: Tue, 29 Apr 2014 07:04:58 +1000
+Message-Id: <1398719099-19194-9-git-send-email-david@fromorbit.com>
 In-Reply-To: <1398719099-19194-1-git-send-email-david@fromorbit.com>
 References: <1398719099-19194-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,150 +39,52 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Currently the attribute code will not detect and correct errors in
-the attribute tree. It also fails to validate the CRCs and headers
-on remote attribute blocks. Ensure that all the attribute blocks are
-CRC checked and that the processing functions understand the correct
-block formats for decoding.
+We can't really repair broken symlink buffer contents, but we can at
+least warn about it and correct the CRC error so the symlink is
+again readable.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- repair/attr_repair.c | 45 +++++++++++++++++++++++++++++++++++++--------
- 1 file changed, 37 insertions(+), 8 deletions(-)
+ repair/dinode.c | 12 +++++++++++-
+ 1 file changed, 11 insertions(+), 1 deletion(-)
 
-diff --git a/repair/attr_repair.c b/repair/attr_repair.c
-index ba85ac2..9b57960 100644
---- a/repair/attr_repair.c
-+++ b/repair/attr_repair.c
-@@ -604,6 +604,7 @@ verify_da_path(xfs_mount_t	*mp,
- 			libxfs_putbuf(bp);
- 			return(1);
- 		}
-+
- 		/*
- 		 * update cursor, write out the *current* level if
- 		 * required.  don't write out the descendant level
-@@ -615,6 +616,8 @@ verify_da_path(xfs_mount_t	*mp,
- 			libxfs_writebuf(cursor->level[this_level].bp, 0);
- 		else
- 			libxfs_putbuf(cursor->level[this_level].bp);
-+
-+		/* switch cursor to point at the new buffer we just read */
- 		cursor->level[this_level].bp = bp;
- 		cursor->level[this_level].dirty = 0;
- 		cursor->level[this_level].bno = dabno;
-@@ -624,6 +627,14 @@ verify_da_path(xfs_mount_t	*mp,
- 		cursor->level[this_level].n = newnode;
- #endif
- 		entry = cursor->level[this_level].index = 0;
-+
-+		/*
-+		 * We want to rewrite the buffer a CRC error seeing as it
-+		 * contains what appears to be a valid node block, but only if
-+		 * we are fixing errors.
-+		 */
-+		if (bp->b_error == EFSBADCRC && !no_modify)
-+			cursor->level[this_level].dirty++;
- 	}
- 	/*
- 	 * ditto for block numbers
-@@ -974,6 +985,10 @@ rmtval_get(xfs_mount_t *mp, xfs_ino_t ino, blkmap_t *blkmap,
- 	xfs_dfsbno_t	bno;
- 	xfs_buf_t	*bp;
- 	int		clearit = 0, i = 0, length = 0, amountdone = 0;
-+	int		hdrsize = 0;
-+
-+	if (xfs_sb_version_hascrc(&mp->m_sb))
-+		hdrsize = sizeof(struct xfs_attr3_rmt_hdr);
+diff --git a/repair/dinode.c b/repair/dinode.c
+index b086bec..8891e84 100644
+--- a/repair/dinode.c
++++ b/repair/dinode.c
+@@ -1254,6 +1254,7 @@ process_symlink_remote(
+ 	while (pathlen > 0) {
+ 		int	blk_cnt = 1;
+ 		int	byte_cnt;
++		int	badcrc = 0;
  
- 	/* ASSUMPTION: valuelen is a valid number, so use it for looping */
- 	/* Note that valuelen is not a multiple of blocksize */
-@@ -986,16 +1001,26 @@ rmtval_get(xfs_mount_t *mp, xfs_ino_t ino, blkmap_t *blkmap,
- 			break;
+ 		fsbno = blkmap_get(blkmap, i);
+ 		if (fsbno == NULLDFSBNO) {
+@@ -1284,6 +1285,12 @@ _("cannot read inode %" PRIu64 ", file block %d, disk block %" PRIu64 "\n"),
+ 				lino, i, fsbno);
+ 			return 1;
  		}
- 		bp = libxfs_readbuf(mp->m_dev, XFS_FSB_TO_DADDR(mp, bno),
--				XFS_FSB_TO_BB(mp, 1), 0, NULL);
-+				    XFS_FSB_TO_BB(mp, 1), 0,
-+				    &xfs_attr3_rmt_buf_ops);
- 		if (!bp) {
- 			do_warn(
- 	_("can't read remote block for attributes of inode %" PRIu64 "\n"), ino);
- 			clearit = 1;
- 			break;
- 		}
-+
-+		if (bp->b_error == EFSBADCRC || bp->b_error == EFSCORRUPTED) {
++		if (bp->b_error == EFSBADCRC) {
 +			do_warn(
-+	_("Corrupt remote block for attributes of inode %" PRIu64 "\n"), ino);
-+			clearit = 1;
-+			break;
++_("Bad symlink buffer CRC, block %" PRIu64 ", inode %" PRIu64 ".\n"
++  "Correcting CRC, but symlink may be bad.\n"), fsbno, lino);
++			badcrc = 1;
 +		}
-+
- 		ASSERT(mp->m_sb.sb_blocksize == XFS_BUF_COUNT(bp));
--		length = MIN(XFS_BUF_COUNT(bp), valuelen - amountdone);
--		memmove(value, XFS_BUF_PTR(bp), length);
-+
-+		length = MIN(XFS_BUF_COUNT(bp) - hdrsize, valuelen - amountdone);
-+		memmove(value, XFS_BUF_PTR(bp) + hdrsize, length);
- 		amountdone += length;
- 		value += length;
+ 
+ 		byte_cnt = XFS_SYMLINK_BUF_SPACE(mp, byte_cnt);
+ 		byte_cnt = MIN(pathlen, byte_cnt);
+@@ -1307,7 +1314,10 @@ _("bad symlink header ino %" PRIu64 ", file block %d, disk block %" PRIu64 "\n")
+ 		offset += byte_cnt;
  		i++;
-@@ -1143,7 +1168,6 @@ process_leaf_attr_block(
  
- 	xfs_attr3_leaf_hdr_from_disk(&leafhdr, leaf);
- 	clearit = usedbs = 0;
--	*repair = 0;
- 	firstb = mp->m_sb.sb_blocksize;
- 	stop = xfs_attr3_leaf_hdr_size(leaf);
- 
-@@ -1320,13 +1344,16 @@ process_leaf_attr_level(xfs_mount_t	*mp,
- 		}
- 
- 		bp = libxfs_readbuf(mp->m_dev, XFS_FSB_TO_DADDR(mp, dev_bno),
--					XFS_FSB_TO_BB(mp, 1), 0, NULL);
-+				    XFS_FSB_TO_BB(mp, 1), 0,
-+				    &xfs_attr3_leaf_buf_ops);
- 		if (!bp) {
- 			do_warn(
- 	_("can't read file block %u (fsbno %" PRIu64 ") for attribute fork of inode %" PRIu64 "\n"),
- 				da_bno, dev_bno, ino);
- 			goto error_out;
- 		}
-+		if (bp->b_error == EFSBADCRC)
-+			repair++;
- 
- 		leaf = bp->b_addr;
- 		xfs_attr3_leaf_hdr_from_disk(&leafhdr, leaf);
-@@ -1382,9 +1409,9 @@ process_leaf_attr_level(xfs_mount_t	*mp,
- 
- 		current_hashval = greatest_hashval;
- 
--		if (repair && !no_modify) 
-+		if (repair && !no_modify)
- 			libxfs_writebuf(bp, 0);
--		else 
+-		libxfs_putbuf(bp);
++		if (badcrc && !no_modify)
++			libxfs_writebuf(bp, 0);
 +		else
- 			libxfs_putbuf(bp);
- 	} while (da_bno != 0);
- 
-@@ -1512,6 +1539,8 @@ process_longform_attr(
- 			ino);
- 		return(1);
++			libxfs_putbuf(bp);
  	}
-+	if (bp->b_error == EFSBADCRC)
-+		(*repair)++;
- 
- 	/* verify leaf block */
- 	leaf = (xfs_attr_leafblock_t *)XFS_BUF_PTR(bp);
-@@ -1555,7 +1584,7 @@ process_longform_attr(
- 	case XFS_DA_NODE_MAGIC:		/* btree-form attribute */
- 	case XFS_DA3_NODE_MAGIC:
- 		/* must do this now, to release block 0 before the traversal */
--		if (repairlinks) {
-+		if (*repair || repairlinks) {
- 			*repair = 1;
- 			libxfs_writebuf(bp, 0);
- 		} else
+ 	return 0;
+ }
 -- 
 1.9.0
 
