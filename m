@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 1936029DF8
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 6E36829DF8
 	for <xfs@oss.sgi.com>; Mon, 28 Apr 2014 16:05:11 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id F178530404E
-	for <xfs@oss.sgi.com>; Mon, 28 Apr 2014 14:05:10 -0700 (PDT)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 633C18F804B
+	for <xfs@oss.sgi.com>; Mon, 28 Apr 2014 14:05:08 -0700 (PDT)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	6VYg15raavHuDH9j for <xfs@oss.sgi.com>;
-	Mon, 28 Apr 2014 14:05:09 -0700 (PDT)
+	3kmmJFyZKr5H4gHO for <xfs@oss.sgi.com>;
+	Mon, 28 Apr 2014 14:05:04 -0700 (PDT)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.80)
-	(envelope-from <dave@fromorbit.com>) id 1WesjV-000511-JZ
+	(envelope-from <dave@fromorbit.com>) id 1WesjV-000512-KR
 	for xfs@oss.sgi.com; Tue, 29 Apr 2014 07:05:01 +1000
 Received: from dave by disappointment with local (Exim 4.82)
-	(envelope-from <dave@disappointment.disaster>) id 1WesjV-00050u-Ik
+	(envelope-from <dave@disappointment.disaster>) id 1WesjV-00050z-JB
 	for xfs@oss.sgi.com; Tue, 29 Apr 2014 07:05:01 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 5/9] repair: detect CRC errors in AG headers
-Date: Tue, 29 Apr 2014 07:04:55 +1000
-Message-Id: <1398719099-19194-6-git-send-email-david@fromorbit.com>
+Subject: [PATCH 6/9] repair: report AG btree verifier errors
+Date: Tue, 29 Apr 2014 07:04:56 +1000
+Message-Id: <1398719099-19194-7-git-send-email-david@fromorbit.com>
 In-Reply-To: <1398719099-19194-1-git-send-email-david@fromorbit.com>
 References: <1398719099-19194-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,167 +39,82 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-repair doesn't currently detect verifier errors in AG header
-blocks - apart from the primary superblock they are not detected.
-They are, fortunately, corrected in the important cases (AGF, AGI
-and AGFL) because these structures are rebuilt in phase 5, but if
-you run xfs_repair in checking mode it won't report them as bad.
+When we scan the filesystem freespace and inode maps in phase 2, we
+don't report CRC errors that are found. We don't really care from a
+repair perspective, because the trees are completely rebuilt from
+the ground up in phase 5, but froma checking perspective we need to
+inform the user that we found inconsistencies.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- repair/scan.c | 83 +++++++++++++++++++++++++++++++++++------------------------
- 1 file changed, 49 insertions(+), 34 deletions(-)
+ repair/scan.c | 25 ++++++++++++++++++++++++-
+ 1 file changed, 24 insertions(+), 1 deletion(-)
 
 diff --git a/repair/scan.c b/repair/scan.c
-index 1744c32..dec84ed 100644
+index dec84ed..4b0ea04 100644
 --- a/repair/scan.c
 +++ b/repair/scan.c
-@@ -1207,39 +1207,38 @@ scan_ag(
- 	void		*arg)
- {
- 	struct aghdr_cnts *agcnts = arg;
--	xfs_agf_t	*agf;
--	xfs_buf_t	*agfbuf;
-+	struct xfs_agf	*agf;
-+	struct xfs_buf	*agfbuf = NULL;
- 	int		agf_dirty = 0;
--	xfs_agi_t	*agi;
--	xfs_buf_t	*agibuf;
-+	struct xfs_agi	*agi;
-+	struct xfs_buf	*agibuf = NULL;
- 	int		agi_dirty = 0;
--	xfs_sb_t	*sb;
--	xfs_buf_t	*sbbuf;
-+	struct xfs_sb	*sb = NULL;
-+	struct xfs_buf	*sbbuf = NULL;
- 	int		sb_dirty = 0;
- 	int		status;
-+	char		*objname = NULL;
- 
--	sbbuf = libxfs_readbuf(mp->m_dev, XFS_AG_DADDR(mp, agno, XFS_SB_DADDR),
--				XFS_FSS_TO_BB(mp, 1), 0, &xfs_sb_buf_ops);
--	if (!sbbuf)  {
--		do_error(_("can't get root superblock for ag %d\n"), agno);
--		return;
--	}
--	sb = (xfs_sb_t *)calloc(BBSIZE, 1);
-+	sb = (struct xfs_sb *)calloc(BBSIZE, 1);
- 	if (!sb) {
- 		do_error(_("can't allocate memory for superblock\n"));
--		libxfs_putbuf(sbbuf);
+@@ -82,6 +82,12 @@ scan_sbtree(
+ 		do_error(_("can't read btree block %d/%d\n"), agno, root);
  		return;
  	}
-+
-+	sbbuf = libxfs_readbuf(mp->m_dev, XFS_AG_DADDR(mp, agno, XFS_SB_DADDR),
-+				XFS_FSS_TO_BB(mp, 1), 0, &xfs_sb_buf_ops);
-+	if (!sbbuf)  {
-+		objname = _("root superblock");
-+		goto out_free_sb;
++	if (bp->b_error == EFSBADCRC || bp->b_error == EFSCORRUPTED) {
++		do_warn(_("btree block %d/%d is suspect, error %d\n"),
++			agno, root, bp->b_error);
++		suspect = 1;
 +	}
- 	libxfs_sb_from_disk(sb, XFS_BUF_TO_SBP(sbbuf));
++
+ 	(*func)(XFS_BUF_TO_BLOCK(bp), nlevels - 1, root, agno, suspect,
+ 							isroot, magic, priv);
+ 	libxfs_putbuf(bp);
+@@ -123,6 +129,7 @@ scan_lbtree(
+ 	xfs_buf_t	*bp;
+ 	int		err;
+ 	int		dirty = 0;
++	bool		badcrc = false;
  
- 	agfbuf = libxfs_readbuf(mp->m_dev,
- 			XFS_AG_DADDR(mp, agno, XFS_AGF_DADDR(mp)),
- 			XFS_FSS_TO_BB(mp, 1), 0, &xfs_agf_buf_ops);
- 	if (!agfbuf)  {
--		do_error(_("can't read agf block for ag %d\n"), agno);
--		libxfs_putbuf(sbbuf);
--		free(sb);
--		return;
-+		objname = _("agf block");
-+		goto out_free_sbbuf;
+ 	bp = libxfs_readbuf(mp->m_dev, XFS_FSB_TO_DADDR(mp, root),
+ 		      XFS_FSB_TO_BB(mp, 1), 0, ops);
+@@ -132,6 +139,19 @@ scan_lbtree(
+ 			XFS_FSB_TO_AGBNO(mp, root));
+ 		return(1);
  	}
- 	agf = XFS_BUF_TO_AGF(agfbuf);
- 
-@@ -1247,11 +1246,8 @@ scan_ag(
- 			XFS_AG_DADDR(mp, agno, XFS_AGI_DADDR(mp)),
- 			XFS_FSS_TO_BB(mp, 1), 0, &xfs_agi_buf_ops);
- 	if (!agibuf)  {
--		do_error(_("can't read agi block for ag %d\n"), agno);
--		libxfs_putbuf(agfbuf);
--		libxfs_putbuf(sbbuf);
--		free(sb);
--		return;
-+		objname = _("agi block");
-+		goto out_free_agfbuf;
- 	}
- 	agi = XFS_BUF_TO_AGI(agibuf);
- 
-@@ -1295,15 +1291,9 @@ scan_ag(
- 	}
- 
- 	if (status && no_modify)  {
--		libxfs_putbuf(agibuf);
--		libxfs_putbuf(agfbuf);
--		libxfs_putbuf(sbbuf);
--		free(sb);
--
- 		do_warn(_("bad uncorrected agheader %d, skipping ag...\n"),
- 			agno);
--
--		return;
-+		goto out_free_agibuf;
- 	}
- 
- 	scan_freelist(agf, agcnts);
-@@ -1312,21 +1302,34 @@ scan_ag(
- 	validate_agi(agi, agno, agcnts);
- 
- 	ASSERT(agi_dirty == 0 || (agi_dirty && !no_modify));
-+	ASSERT(agf_dirty == 0 || (agf_dirty && !no_modify));
-+	ASSERT(sb_dirty == 0 || (sb_dirty && !no_modify));
 +
 +	/*
-+	 * Only pay attention to CRC/verifier errors if we can correct them.
-+	 * While there, ensure that we corrected a corruption error if the
-+	 * verifier detected one.
++	 * only check for bad CRC here - caller will determine if there
++	 * is a corruption or not and whether it got corrected and so needs
++	 * writing back. CRC errors always imply we need to write the block.
 +	 */
-+	if (!no_modify) {
-+		ASSERT(agi_dirty || agibuf->b_error != EFSCORRUPTED);
-+		ASSERT(agf_dirty || agfbuf->b_error != EFSCORRUPTED);
-+		ASSERT(sb_dirty || sbbuf->b_error != EFSCORRUPTED);
-+
-+		agi_dirty += (agibuf->b_error == EFSBADCRC);
-+		agf_dirty += (agfbuf->b_error == EFSBADCRC);
-+		sb_dirty += (sbbuf->b_error == EFSBADCRC);
++	if (bp->b_error == EFSBADCRC) {
++		do_warn(_("btree block %d/%d is suspect, error %d\n"),
++			XFS_FSB_TO_AGNO(mp, root),
++			XFS_FSB_TO_AGBNO(mp, root), bp->b_error);
++		badcrc = true;
 +	}
- 
- 	if (agi_dirty && !no_modify)
- 		libxfs_writebuf(agibuf, 0);
- 	else
- 		libxfs_putbuf(agibuf);
- 
--	ASSERT(agf_dirty == 0 || (agf_dirty && !no_modify));
--
- 	if (agf_dirty && !no_modify)
- 		libxfs_writebuf(agfbuf, 0);
- 	else
- 		libxfs_putbuf(agfbuf);
- 
--	ASSERT(sb_dirty == 0 || (sb_dirty && !no_modify));
--
- 	if (sb_dirty && !no_modify) {
- 		if (agno == 0)
- 			memcpy(&mp->m_sb, sb, sizeof(xfs_sb_t));
-@@ -1341,6 +1344,18 @@ scan_ag(
- 	print_inode_list(i);
- #endif
- 	return;
 +
-+out_free_agibuf:
-+	libxfs_putbuf(agibuf);
-+out_free_agfbuf:
-+	libxfs_putbuf(agfbuf);
-+out_free_sbbuf:
-+	libxfs_putbuf(sbbuf);
-+out_free_sb:
-+	free(sb);
-+
-+	if (objname)
-+		do_error(_("can't get %s for ag %d\n"), objname, agno);
- }
+ 	err = (*func)(XFS_BUF_TO_BLOCK(bp), nlevels - 1,
+ 			type, whichfork, root, ino, tot, nex, blkmapp,
+ 			bm_cursor, isroot, check_dups, &dirty,
+@@ -139,7 +159,7 @@ scan_lbtree(
  
- #define SCAN_THREADS 32
+ 	ASSERT(dirty == 0 || (dirty && !no_modify));
+ 
+-	if (dirty && !no_modify)
++	if ((dirty || badcrc) && !no_modify)
+ 		libxfs_writebuf(bp, 0);
+ 	else
+ 		libxfs_putbuf(bp);
+@@ -1066,6 +1086,9 @@ scan_freelist(
+ 		do_abort(_("can't read agfl block for ag %d\n"), agno);
+ 		return;
+ 	}
++	if (agflbuf->b_error == EFSBADCRC)
++		do_warn(_("agfl has bad CRC for ag %d\n"), agno);
++
+ 	freelist = XFS_BUF_TO_AGFL_BNO(mp, agflbuf);
+ 	i = be32_to_cpu(agf->agf_flfirst);
+ 
 -- 
 1.9.0
 
