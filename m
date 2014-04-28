@@ -1,15 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 3F76329DF8
-	for <xfs@oss.sgi.com>; Mon, 28 Apr 2014 18:00:14 -0500 (CDT)
-Message-ID: <535EDD7F.9000002@sgi.com>
-Date: Mon, 28 Apr 2014 18:00:15 -0500
-From: Mark Tinguely <tinguely@sgi.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 46B1829DF8
+	for <xfs@oss.sgi.com>; Mon, 28 Apr 2014 18:46:08 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 1C5988F8054
+	for <xfs@oss.sgi.com>; Mon, 28 Apr 2014 16:46:07 -0700 (PDT)
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	LNfM7fvIUy3Rle7K for <xfs@oss.sgi.com>;
+	Mon, 28 Apr 2014 16:46:02 -0700 (PDT)
+Date: Tue, 29 Apr 2014 09:45:58 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: xfs umount hang in xfs_ail_push_all_sync on i/o error
+Message-ID: <20140428234558.GD18672@dastard>
+References: <CALjwKZDsGBxTDLvy7-W76FRpHRuki_ZjOXLWZ70fut4hmDkTSQ@mail.gmail.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfs: test for shut down fs in xfs_dir_fsync()
-References: <535E8344.2070209@redhat.com> <20140428205420.GB18672@dastard>
-	<535ECAA6.3050200@sgi.com> <20140428221849.GC18672@dastard>
-In-Reply-To: <20140428221849.GC18672@dastard>
+Content-Disposition: inline
+In-Reply-To: <CALjwKZDsGBxTDLvy7-W76FRpHRuki_ZjOXLWZ70fut4hmDkTSQ@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -18,64 +25,67 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Eric Sandeen <sandeen@redhat.com>, Boris Ranto <branto@redhat.com>, xfs-oss <xfs@oss.sgi.com>
+To: Bob Mastors <bob.mastors@solidfire.com>
+Cc: xfs@oss.sgi.com
 
-On 04/28/14 17:18, Dave Chinner wrote:
-> On Mon, Apr 28, 2014 at 04:39:50PM -0500, Mark Tinguely wrote:
->> >  On 04/28/14 15:54, Dave Chinner wrote:
->>> >  >On Mon, Apr 28, 2014 at 11:35:16AM -0500, Eric Sandeen wrote:
->>>> >  >>Similar to xfs_file_fsync(), I think xfs_dir_fsync() needs
->>>> >  >>to test for a shut down fs, lest we go down paths we'll
->>>> >  >>never be able to complete; Boris reported that during some
->>>> >  >>stress tests he had threads stuck in xlog_cil_force_lsn
->>>> >  >>via xfs_dir_fsync().
->>>> >  >>
->>>> >  >>[ 3663.361709] sfsuspend-par   D ffff88042f0b4540     0  3981   3947 0x00000080
->>>> >  >>
->>>> >  >>[ 3663.394472] Call Trace:
->>>> >  >>[ 3663.397199]  [<ffffffff815f1889>] schedule+0x29/0x70
->>>> >  >>[ 3663.402743]  [<ffffffffa01feda5>] xlog_cil_force_lsn+0x185/0x1a0 [xfs]
->>>> >  >>[ 3663.416249]  [<ffffffffa01fd3af>] _xfs_log_force_lsn+0x6f/0x2f0 [xfs]
->>>> >  >>[ 3663.429271]  [<ffffffffa01a339d>] xfs_dir_fsync+0x7d/0xe0 [xfs]
->>>> >  >>[ 3663.435873]  [<ffffffff811df8c5>] do_fsync+0x65/0xa0
->>>> >  >>[ 3663.441408]  [<ffffffff811dfbc0>] SyS_fsync+0x10/0x20
->>>> >  >>[ 3663.447043]  [<ffffffff815fc7d9>] system_call_fastpath+0x16/0x1b
->>> >  >
->>> >  >Wow, I believe it's taken this long for us to notice that we can't
->>> >  >break out of xlog_cil_force_lsn() if we fail on xlog_write()
->> >  >from a CIL push.
-> ....
->
->> >  Similar to what Jeff Liu mention in Dec:
->> >
->> >     http://oss.sgi.com/archives/xfs/2013-12/msg00870.html
-> Which fell through the cracks because of objections to calling
-> wake_up_all(&ctx->cil->xc_commit_wait) from xlog_cil_committed().
->
-> FYI, I just independently wrote a patch to fix this, and part of the
-> fix is that it calls wake_up_all(&ctx->cil->xc_commit_wait) from
-> xlog_cil_committed(). The rest of the fix indicates that the above
-> patch wasn't sufficient. Patch below.
->
-> This time it isn't going to fall through the cracks because I don't
-> think the objections are valid...
->
-> Cheers,
->
-> Dave.
-> --
+On Mon, Apr 28, 2014 at 04:29:02PM -0600, Bob Mastors wrote:
+> Greetings,
+> 
+> I have an xfs umount hang caused by forcing the block device to return
+> i/o errors while copying files to the filesystem.
+> Detailed steps to reproduce the problem on virtualbox are below.
+> 
+> The linux version is a recent pull and reports as 3.15.0-rc3.
+> 
+> [ 2040.248096] INFO: task umount:10303 blocked for more than 120 seconds.
+> [ 2040.323947]       Not tainted 3.15.0-rc3 #4
+> [ 2040.343423] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables
+> this message.
+> [ 2040.352665] umount          D ffffffff8180fe40     0 10303   8691
+> 0x00000000
+> [ 2040.404918]  ffff88001e33dd58 0000000000000086 ffff88001e33dd48
+> ffffffff81080f82
+> [ 2040.489901]  ffff88001b311900 0000000000013180 ffff88001e33dfd8
+> 0000000000013180
+> [ 2040.534772]  ffff88003daa3200 ffff88001b311900 ffff88002421aec0
+> ffff88002421ae80
+> [ 2040.587450] Call Trace:
+> [ 2040.592176]  [<ffffffff81080f82>] ? try_to_wake_up+0x232/0x2b0
+> [ 2040.620212]  [<ffffffff816c54d9>] schedule+0x29/0x70
+> [ 2040.627685]  [<ffffffffa04c4cd6>] xfs_ail_push_all_sync+0x96/0xd0 [xfs]
+> [ 2040.632236]  [<ffffffff81092230>] ? __wake_up_sync+0x20/0x20
+> [ 2040.659105]  [<ffffffffa04731a3>] xfs_unmountfs+0x63/0x160 [xfs]
+> [ 2040.691774]  [<ffffffffa0478f65>] ? kmem_free+0x35/0x40 [xfs]
+> [ 2040.698610]  [<ffffffffa0474cf5>] xfs_fs_put_super+0x25/0x60 [xfs]
+> [ 2040.706838]  [<ffffffff8119561e>] generic_shutdown_super+0x7e/0x100
+> [ 2040.723958]  [<ffffffff811956d0>] kill_block_super+0x30/0x80
+> [ 2040.734963]  [<ffffffff8119591d>] deactivate_locked_super+0x4d/0x80
+> [ 2040.745485]  [<ffffffff8119652e>] deactivate_super+0x4e/0x70
+> [ 2040.751274]  [<ffffffff811b1d42>] mntput_no_expire+0xd2/0x160
+> [ 2040.755894]  [<ffffffff811b2fff>] SyS_umount+0xaf/0x3b0
+> [ 2040.761032]  [<ffffffff816d1592>] system_call_fastpath+0x16/0x1b
+> [ .060058] XFS (sdb): xfs_log_force: error 5 returned.
+> [ 268059] XFS (sdb): xfs_log_force: error 5 returned.
+> 
+> I took a look at xfs_ail_push_all_sync and it is pretty easy to see
+> the hang. But it is not obvious to me how to fix it.
+> Any ideas would be appreciated.
+> 
+> I am available to run additional tests or capture more logging
+> or whatever if that would help.
 
-I did not intend to stall out the patch.
+What's the entire log output from the first shutdown message?
 
-I came to like the idea of always notifying the waiters on an lsn after 
-the iclog is successfully written out not just when we start the IO.
+Cheers,
 
---Mark.
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
