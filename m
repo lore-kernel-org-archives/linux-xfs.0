@@ -1,19 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 542D429DF8
-	for <xfs@oss.sgi.com>; Tue, 29 Apr 2014 07:57:06 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 42D3E304043
-	for <xfs@oss.sgi.com>; Tue, 29 Apr 2014 05:57:03 -0700 (PDT)
-Date: Tue, 29 Apr 2014 08:56:49 -0400
+	by oss.sgi.com (Postfix) with ESMTP id 9056E29DF8
+	for <xfs@oss.sgi.com>; Tue, 29 Apr 2014 09:05:24 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 81B88304066
+	for <xfs@oss.sgi.com>; Tue, 29 Apr 2014 07:05:21 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id cP3iSZPXN71BvJoy for
+	<xfs@oss.sgi.com>; Tue, 29 Apr 2014 07:05:17 -0700 (PDT)
+Date: Tue, 29 Apr 2014 10:05:13 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH] xfs: test for shut down fs in xfs_dir_fsync()
-Message-ID: <20140429125648.GA59046@bfoster.bfoster>
-References: <535E8344.2070209@redhat.com> <20140428205420.GB18672@dastard>
-	<535ECAA6.3050200@sgi.com> <20140428221849.GC18672@dastard>
+Subject: Re: [PATCH 3/9] repair: ensure prefetched buffers have CRCs validated
+Message-ID: <20140429140512.GB59046@bfoster.bfoster>
+References: <1398719099-19194-1-git-send-email-david@fromorbit.com>
+	<1398719099-19194-4-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20140428221849.GC18672@dastard>
+In-Reply-To: <1398719099-19194-4-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,168 +30,179 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
-Cc: Eric Sandeen <sandeen@redhat.com>, Mark Tinguely <tinguely@sgi.com>, Boris Ranto <branto@redhat.com>, xfs-oss <xfs@oss.sgi.com>
+Cc: xfs@oss.sgi.com
 
-On Tue, Apr 29, 2014 at 08:18:49AM +1000, Dave Chinner wrote:
-> On Mon, Apr 28, 2014 at 04:39:50PM -0500, Mark Tinguely wrote:
-> > On 04/28/14 15:54, Dave Chinner wrote:
-> > >On Mon, Apr 28, 2014 at 11:35:16AM -0500, Eric Sandeen wrote:
-...
-> 
-> xfs: don't sleep in xlog_cil_force_lsn on shutdown
-> 
+On Tue, Apr 29, 2014 at 07:04:53AM +1000, Dave Chinner wrote:
 > From: Dave Chinner <dchinner@redhat.com>
 > 
-> Reports of a shutdown hang when fsyncing a directory have surfaced,
-> such as this:
-> 
-> [ 3663.394472] Call Trace:
-> [ 3663.397199]  [<ffffffff815f1889>] schedule+0x29/0x70
-> [ 3663.402743]  [<ffffffffa01feda5>] xlog_cil_force_lsn+0x185/0x1a0 [xfs]
-> [ 3663.416249]  [<ffffffffa01fd3af>] _xfs_log_force_lsn+0x6f/0x2f0 [xfs]
-> [ 3663.429271]  [<ffffffffa01a339d>] xfs_dir_fsync+0x7d/0xe0 [xfs]
-> [ 3663.435873]  [<ffffffff811df8c5>] do_fsync+0x65/0xa0
-> [ 3663.441408]  [<ffffffff811dfbc0>] SyS_fsync+0x10/0x20
-> [ 3663.447043]  [<ffffffff815fc7d9>] system_call_fastpath+0x16/0x1b
-> 
-> If we trigger a shutdown in xlog_cil_push() from xlog_write(), we
-> will never wake waiters on the current push sequence number, so
-> anything waiting in xlog_cil_force_lsn() for that push sequence
-> number to come up will not get woken and hence stall the shutdown.
-> 
-> Fix this by ensuring we call wake_up_all(&cil->xc_commit_wait) in
-> the push abort handling, in the log shutdown code when waking all
-> waiters, and adding a shutdown check in the sequence completion wait
-> loops to ensure they abort when a wakeup due to a shutdown occurs.
+> Prefetch currently does not do CRC validation when the IO completes
+> due to the optimisation it performs and the fact that it does not
+> know what the type of metadata into the buffer is supposed to be.
+> Hence, mark all prefetched buffers as "suspect" so that when the
+> end user tries to read it with a supplied validation function the
+> validation is run even though the buffer was already in the cache.
 > 
 > Signed-off-by: Dave Chinner <dchinner@redhat.com>
 > ---
->  fs/xfs/xfs_log.c     |  7 +++++--
->  fs/xfs/xfs_log_cil.c | 50 ++++++++++++++++++++++++++++++++++++++++++--------
->  2 files changed, 47 insertions(+), 10 deletions(-)
+
+Looks good to me. Thanks for the comments.
+
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+
+>  include/libxfs.h  |  2 ++
+>  libxfs/rdwr.c     | 58 ++++++++++++++++++++++++++++++++++++++++---------------
+>  repair/prefetch.c |  7 ++++---
+>  3 files changed, 48 insertions(+), 19 deletions(-)
 > 
-> diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-> index a5f8bd9..dbba2d7 100644
-> --- a/fs/xfs/xfs_log.c
-> +++ b/fs/xfs/xfs_log.c
-> @@ -3952,11 +3952,14 @@ xfs_log_force_umount(
->  		retval = xlog_state_ioerror(log);
->  		spin_unlock(&log->l_icloglock);
->  	}
-> +
->  	/*
-> -	 * Wake up everybody waiting on xfs_log_force.
-> -	 * Callback all log item committed functions as if the
-> +	 * Wake up everybody waiting on xfs_log_force. This needs to wake anyone
-> +	 * waiting on a CIL push that is issued as part of a log force first
-> +	 * before running the log item committed callback functions as if the
->  	 * log writes were completed.
->  	 */
-> +	wake_up_all(&log->l_cilp->xc_commit_wait);
->  	xlog_state_do_callback(log, XFS_LI_ABORTED, NULL);
+> diff --git a/include/libxfs.h b/include/libxfs.h
+> index 6b1e276..9c10957 100644
+> --- a/include/libxfs.h
+> +++ b/include/libxfs.h
+> @@ -436,6 +436,8 @@ extern void	libxfs_putbuf (xfs_buf_t *);
 >  
-
-Why is this necessary? It looks like xlog_state_do_callback() will hit
-the xlog_cil_committed() callback with the aborted flag...
-
->  #ifdef XFSERRORDEBUG
-> diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
-> index 7e54553..3a68ddf 100644
-> --- a/fs/xfs/xfs_log_cil.c
-> +++ b/fs/xfs/xfs_log_cil.c
-> @@ -385,7 +385,15 @@ xlog_cil_committed(
->  	xfs_extent_busy_clear(mp, &ctx->busy_extents,
->  			     (mp->m_flags & XFS_MOUNT_DISCARD) && !abort);
+>  #endif
 >  
-> +	/*
-> +	 * If we are aborting the commit, wake up anyone waiting on the
-> +	 * committing list.  If we don't, then a shutdown we can leave processes
-> +	 * waiting in xlog_cil_force_lsn() waiting on a sequence commit that
-> +	 * will never happen because we aborted it.
-> +	 */
->  	spin_lock(&ctx->cil->xc_push_lock);
-> +	if (abort)
-> +		wake_up_all(&cil->xc_commit_wait);
-
-There's a compile error here. The parameter should be '&ctx->cil->...'
-
-Brian
-
->  	list_del(&ctx->committing);
->  	spin_unlock(&ctx->cil->xc_push_lock);
->  
-> @@ -564,8 +572,18 @@ restart:
->  	spin_lock(&cil->xc_push_lock);
->  	list_for_each_entry(new_ctx, &cil->xc_committing, committing) {
->  		/*
-> +		 * Avoid getting stuck in this loop because we were woken by the
-> +		 * shutdown, but then went back to sleep once already in the
-> +		 * shutdown state.
-> +		 */
-> +		if (XLOG_FORCED_SHUTDOWN(log)) {
-> +			spin_unlock(&cil->xc_push_lock);
-> +			goto out_abort_free_ticket;
-> +		}
-> +
-> +		/*
->  		 * Higher sequences will wait for this one so skip them.
-> -		 * Don't wait for own own sequence, either.
-> +		 * Don't wait for our own sequence, either.
->  		 */
->  		if (new_ctx->sequence >= ctx->sequence)
->  			continue;
-> @@ -810,6 +828,13 @@ restart:
->  	 */
->  	spin_lock(&cil->xc_push_lock);
->  	list_for_each_entry(ctx, &cil->xc_committing, committing) {
-> +		/*
-> +		 * Avoid getting stuck in this loop because we were woken by the
-> +		 * shutdown, but then went back to sleep once already in the
-> +		 * shutdown state.
-> +		 */
-> +		if (XLOG_FORCED_SHUTDOWN(log))
-> +			goto out_shutdown;
->  		if (ctx->sequence > sequence)
->  			continue;
->  		if (!ctx->commit_lsn) {
-> @@ -833,14 +858,12 @@ restart:
->  	 * push sequence after the above wait loop and the CIL still contains
->  	 * dirty objects.
->  	 *
-> -	 * When the push occurs, it will empty the CIL and
-> -	 * atomically increment the currect sequence past the push sequence and
-> -	 * move it into the committing list. Of course, if the CIL is clean at
-> -	 * the time of the push, it won't have pushed the CIL at all, so in that
-> -	 * case we should try the push for this sequence again from the start
-> -	 * just in case.
-> +	 * When the push occurs, it will empty the CIL and atomically increment
-> +	 * the currect sequence past the push sequence and move it into the
-> +	 * committing list. Of course, if the CIL is clean at the time of the
-> +	 * push, it won't have pushed the CIL at all, so in that case we should
-> +	 * try the push for this sequence again from the start just in case.
->  	 */
-> -
->  	if (sequence == cil->xc_current_sequence &&
->  	    !list_empty(&cil->xc_cil)) {
->  		spin_unlock(&cil->xc_push_lock);
-> @@ -849,6 +872,17 @@ restart:
->  
->  	spin_unlock(&cil->xc_push_lock);
->  	return commit_lsn;
-> +
-> +	/*
-> +	 * We detected a shutdown in progress. We need to trigger the log force
-> +	 * to pass through it's iclog state machine error handling, even though
-> +	 * we are already in a shutdown state. Hence we can't return
-> +	 * NULLCOMMITLSN here as that has special meaning to log forces (i.e.
-> +	 * LSN is already stable), so we return a zero LSN instead.
-> +	 */
-> +out_shutdown:
-> +	spin_unlock(&cil->xc_push_lock);
-> +	return 0;
+> +extern void	libxfs_readbuf_verify(struct xfs_buf *bp,
+> +			const struct xfs_buf_ops *ops);
+>  extern xfs_buf_t *libxfs_getsb(xfs_mount_t *, int);
+>  extern void	libxfs_bcache_purge(void);
+>  extern void	libxfs_bcache_flush(void);
+> diff --git a/libxfs/rdwr.c b/libxfs/rdwr.c
+> index 7208a2f..ea4bdfd 100644
+> --- a/libxfs/rdwr.c
+> +++ b/libxfs/rdwr.c
+> @@ -708,6 +708,17 @@ libxfs_readbufr(struct xfs_buftarg *btp, xfs_daddr_t blkno, xfs_buf_t *bp,
+>  	return error;
 >  }
 >  
->  /*
+> +void
+> +libxfs_readbuf_verify(struct xfs_buf *bp, const struct xfs_buf_ops *ops)
+> +{
+> +	if (!ops)
+> +		return;
+> +	bp->b_ops = ops;
+> +	bp->b_ops->verify_read(bp);
+> +	bp->b_flags &= ~LIBXFS_B_UNCHECKED;
+> +}
+> +
+> +
+>  xfs_buf_t *
+>  libxfs_readbuf(struct xfs_buftarg *btp, xfs_daddr_t blkno, int len, int flags,
+>  		const struct xfs_buf_ops *ops)
+> @@ -718,23 +729,38 @@ libxfs_readbuf(struct xfs_buftarg *btp, xfs_daddr_t blkno, int len, int flags,
+>  	bp = libxfs_getbuf(btp, blkno, len);
+>  	if (!bp)
+>  		return NULL;
+> -	if ((bp->b_flags & (LIBXFS_B_UPTODATE|LIBXFS_B_DIRTY)))
+> +
+> +	/*
+> +	 * if the buffer was prefetched, it is likely that it was not validated.
+> +	 * Hence if we are supplied an ops function and the buffer is marked as
+> +	 * unchecked, we need to validate it now.
+> +	 *
+> +	 * We do this verification even if the buffer is dirty - the
+> +	 * verification is almost certainly going to fail the CRC check in this
+> +	 * case as a dirty buffer has not had the CRC recalculated. However, we
+> +	 * should not be dirtying unchecked buffers and therefore failing it
+> +	 * here because it's dirty and unchecked indicates we've screwed up
+> +	 * somewhere else.
+> +	 */
+> +	bp->b_error = 0;
+> +	if ((bp->b_flags & (LIBXFS_B_UPTODATE|LIBXFS_B_DIRTY))) {
+> +		if (bp->b_flags & LIBXFS_B_UNCHECKED)
+> +			libxfs_readbuf_verify(bp, ops);
+>  		return bp;
+> +	}
+>  
+>  	/*
+> -	 * only set the ops on a cache miss (i.e. first physical read) as the
+> -	 * verifier may change the ops to match the typ eof buffer it contains.
+> +	 * Set the ops on a cache miss (i.e. first physical read) as the
+> +	 * verifier may change the ops to match the type of buffer it contains.
+>  	 * A cache hit might reset the verifier to the original type if we set
+>  	 * it again, but it won't get called again and set to match the buffer
+>  	 * contents. *cough* xfs_da_node_buf_ops *cough*.
+>  	 */
+> -	bp->b_error = 0;
+> -	bp->b_ops = ops;
+>  	error = libxfs_readbufr(btp, blkno, bp, len, flags);
+>  	if (error)
+>  		bp->b_error = error;
+> -	else if (bp->b_ops)
+> -		bp->b_ops->verify_read(bp);
+> +	else
+> +		libxfs_readbuf_verify(bp, ops);
+>  	return bp;
+>  }
+>  
+> @@ -786,16 +812,15 @@ libxfs_readbuf_map(struct xfs_buftarg *btp, struct xfs_buf_map *map, int nmaps,
+>  		return NULL;
+>  
+>  	bp->b_error = 0;
+> -	bp->b_ops = ops;
+> -	if ((bp->b_flags & (LIBXFS_B_UPTODATE|LIBXFS_B_DIRTY)))
+> +	if ((bp->b_flags & (LIBXFS_B_UPTODATE|LIBXFS_B_DIRTY))) {
+> +		if (bp->b_flags & LIBXFS_B_UNCHECKED)
+> +			libxfs_readbuf_verify(bp, ops);
+>  		return bp;
+> -
+> -	error = libxfs_readbufr_map(btp, bp, flags);
+> -	if (!error) {
+> -		bp->b_flags |= LIBXFS_B_UPTODATE;
+> -		if (bp->b_ops)
+> -			bp->b_ops->verify_read(bp);
+>  	}
+> +	error = libxfs_readbufr_map(btp, bp, flags);
+> +	if (!error)
+> +		libxfs_readbuf_verify(bp, ops);
+> +
+>  #ifdef IO_DEBUG
+>  	printf("%lx: %s: read %lu bytes, error %d, blkno=%llu(%llu), %p\n",
+>  		pthread_self(), __FUNCTION__, buf - (char *)bp->b_addr, error,
+> @@ -888,7 +913,8 @@ libxfs_writebufr(xfs_buf_t *bp)
+>  #endif
+>  	if (!error) {
+>  		bp->b_flags |= LIBXFS_B_UPTODATE;
+> -		bp->b_flags &= ~(LIBXFS_B_DIRTY | LIBXFS_B_EXIT);
+> +		bp->b_flags &= ~(LIBXFS_B_DIRTY | LIBXFS_B_EXIT |
+> +				 LIBXFS_B_UNCHECKED);
+>  	}
+>  	return error;
+>  }
+> diff --git a/repair/prefetch.c b/repair/prefetch.c
+> index 6d6d344..65fedf5 100644
+> --- a/repair/prefetch.c
+> +++ b/repair/prefetch.c
+> @@ -387,8 +387,7 @@ pf_read_inode_dirs(
+>  	int			hasdir = 0;
+>  	int			isadir;
+>  
+> -	bp->b_ops = &xfs_inode_buf_ops;
+> -	bp->b_ops->verify_read(bp);
+> +	libxfs_readbuf_verify(bp, &xfs_inode_buf_ops);
+>  	if (bp->b_error)
+>  		return;
+>  
+> @@ -460,6 +459,7 @@ pf_read_discontig(
+>  
+>  	pthread_mutex_unlock(&args->lock);
+>  	libxfs_readbufr_map(mp->m_ddev_targp, bp, 0);
+> +	bp->b_flags |= LIBXFS_B_UNCHECKED;
+>  	libxfs_putbuf(bp);
+>  	pthread_mutex_lock(&args->lock);
+>  }
+> @@ -582,7 +582,8 @@ pf_batch_read(
+>  				if (len < size)
+>  					break;
+>  				memcpy(XFS_BUF_PTR(bplist[i]), pbuf, size);
+> -				bplist[i]->b_flags |= LIBXFS_B_UPTODATE;
+> +				bplist[i]->b_flags |= (LIBXFS_B_UPTODATE |
+> +						       LIBXFS_B_UNCHECKED);
+>  				len -= size;
+>  				if (B_IS_INODE(XFS_BUF_PRIORITY(bplist[i])))
+>  					pf_read_inode_dirs(args, bplist[i]);
+> -- 
+> 1.9.0
 > 
 > _______________________________________________
 > xfs mailing list
