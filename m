@@ -1,23 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 2E73029DF8
-	for <xfs@oss.sgi.com>; Tue, 29 Apr 2014 05:25:01 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id C94ABAC002
-	for <xfs@oss.sgi.com>; Tue, 29 Apr 2014 03:24:57 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id DkSRGhqEhh0GJO9C for
-	<xfs@oss.sgi.com>; Tue, 29 Apr 2014 03:24:53 -0700 (PDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 542D429DF8
+	for <xfs@oss.sgi.com>; Tue, 29 Apr 2014 07:57:06 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 42D3E304043
+	for <xfs@oss.sgi.com>; Tue, 29 Apr 2014 05:57:03 -0700 (PDT)
+Date: Tue, 29 Apr 2014 08:56:49 -0400
+From: Brian Foster <bfoster@redhat.com>
 Subject: Re: [PATCH] xfs: test for shut down fs in xfs_dir_fsync()
-From: Boris Ranto <branto@redhat.com>
-In-Reply-To: <535E94A4.2060701@sgi.com>
-References: <535E8344.2070209@redhat.com>
-	<20140428164754.GA17472@infradead.org>	<535E8D67.3010504@redhat.com>
-	<535E8E47.2040701@sgi.com> <535E8F4C.8000003@sandeen.net>
-	<535E94A4.2060701@sgi.com>
-Date: Tue, 29 Apr 2014 12:24:27 +0200
-Message-ID: <1398767067.15380.26.camel@dhcp-31-223.brq.redhat.com>
-Mime-Version: 1.0
+Message-ID: <20140429125648.GA59046@bfoster.bfoster>
+References: <535E8344.2070209@redhat.com> <20140428205420.GB18672@dastard>
+	<535ECAA6.3050200@sgi.com> <20140428221849.GC18672@dastard>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20140428221849.GC18672@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,87 +26,174 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Mark Tinguely <tinguely@sgi.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Eric Sandeen <sandeen@redhat.com>, Eric Sandeen <sandeen@sandeen.net>, xfs-oss <xfs@oss.sgi.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: Eric Sandeen <sandeen@redhat.com>, Mark Tinguely <tinguely@sgi.com>, Boris Ranto <branto@redhat.com>, xfs-oss <xfs@oss.sgi.com>
 
-On Mon, 2014-04-28 at 12:49 -0500, Mark Tinguely wrote:
-> On 04/28/14 12:26, Eric Sandeen wrote:
-> > On 4/28/14, 12:22 PM, Mark Tinguely wrote:
-> >> On 04/28/14 12:18, Eric Sandeen wrote:
-> >>> On 4/28/14, 11:47 AM, Christoph Hellwig wrote:
-> >>>> On Mon, Apr 28, 2014 at 11:35:16AM -0500, Eric Sandeen wrote:
-> >>>>> Similar to xfs_file_fsync(), I think xfs_dir_fsync() needs
-> >>>>> to test for a shut down fs,
-> >>>>
-> >>>> It probably should.
-> >>>>
-> >>>>> lest we go down paths we'll
-> >>>>> never be able to complete; Boris reported that during some
-> >>>>> stress tests he had threads stuck in xlog_cil_force_lsn
-> >>>>> via xfs_dir_fsync().
-> >>>>
-> >>>> But this could still happen if we get a shutdown coming in after that
-> >>>> test.
-> >>>
-> >>> True... that looked a bit hairier to sort out.  :(
-> >>>
-> >>> -Eric
-> >>>
-> >>
-> >>
-> >> Are the sync lsn look okay? Was there an error writing the iclog buffer?
-> >>
-> >> xfs_do_force_shutdown() will also do a xlog_cil_force_lsn() via the
-> >> xfs_log_force_umount if the log buffer write was not in error. That
-> >> should be the same or later than this lsn.
-> >
-> > I don't have full details, unfortunately, just the sysrq backtraces.
-> >
-> > -Eric
-> >
-> >> --Mark.
+On Tue, Apr 29, 2014 at 08:18:49AM +1000, Dave Chinner wrote:
+> On Mon, Apr 28, 2014 at 04:39:50PM -0500, Mark Tinguely wrote:
+> > On 04/28/14 15:54, Dave Chinner wrote:
+> > >On Mon, Apr 28, 2014 at 11:35:16AM -0500, Eric Sandeen wrote:
+...
 > 
-> anything in the log as to what caused the hang? You mention a forced 
-> shutdown; what caused the forced shutdown?
-
-Hi,
-
-I used src/godown utility from xfstests to simulate a power failure and
-cause the forced shutdown. The kernel does not report much. All I get is
-this kernel message (it repeats every few seconds):
-
-[498704.267273] XFS (dm-3): xfs_log_force: error 5 returned.
-
-Nothing else is reported by the kernel albeit ls /mnt/point already
-returns EIO.
-
-The whole test is fairly simple to describe: It runs several threads
-that ~randomly create/delete/truncate/mmap/fdatasync files in several
-iterations, then (after ~2 minutes) the src/godown utility is run and
-when the program gets the message from all the threads that they got
-some I/O errors, it will remount the fs and tell all the threads to
-continue with verification of fsynced data.
-
-The trouble is that the program will never get the message from all the
-threads because some of them are stuck in D state on fsync/fdatasync
-syscall after the src/godown utility is run
-
-
-> Is this the latest bits (3.15)?
+> xfs: don't sleep in xlog_cil_force_lsn on shutdown
 > 
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> Reports of a shutdown hang when fsyncing a directory have surfaced,
+> such as this:
+> 
+> [ 3663.394472] Call Trace:
+> [ 3663.397199]  [<ffffffff815f1889>] schedule+0x29/0x70
+> [ 3663.402743]  [<ffffffffa01feda5>] xlog_cil_force_lsn+0x185/0x1a0 [xfs]
+> [ 3663.416249]  [<ffffffffa01fd3af>] _xfs_log_force_lsn+0x6f/0x2f0 [xfs]
+> [ 3663.429271]  [<ffffffffa01a339d>] xfs_dir_fsync+0x7d/0xe0 [xfs]
+> [ 3663.435873]  [<ffffffff811df8c5>] do_fsync+0x65/0xa0
+> [ 3663.441408]  [<ffffffff811dfbc0>] SyS_fsync+0x10/0x20
+> [ 3663.447043]  [<ffffffff815fc7d9>] system_call_fastpath+0x16/0x1b
+> 
+> If we trigger a shutdown in xlog_cil_push() from xlog_write(), we
+> will never wake waiters on the current push sequence number, so
+> anything waiting in xlog_cil_force_lsn() for that push sequence
+> number to come up will not get woken and hence stall the shutdown.
+> 
+> Fix this by ensuring we call wake_up_all(&cil->xc_commit_wait) in
+> the push abort handling, in the log shutdown code when waking all
+> waiters, and adding a shutdown check in the sequence completion wait
+> loops to ensure they abort when a wakeup due to a shutdown occurs.
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> ---
+>  fs/xfs/xfs_log.c     |  7 +++++--
+>  fs/xfs/xfs_log_cil.c | 50 ++++++++++++++++++++++++++++++++++++++++++--------
+>  2 files changed, 47 insertions(+), 10 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+> index a5f8bd9..dbba2d7 100644
+> --- a/fs/xfs/xfs_log.c
+> +++ b/fs/xfs/xfs_log.c
+> @@ -3952,11 +3952,14 @@ xfs_log_force_umount(
+>  		retval = xlog_state_ioerror(log);
+>  		spin_unlock(&log->l_icloglock);
+>  	}
+> +
+>  	/*
+> -	 * Wake up everybody waiting on xfs_log_force.
+> -	 * Callback all log item committed functions as if the
+> +	 * Wake up everybody waiting on xfs_log_force. This needs to wake anyone
+> +	 * waiting on a CIL push that is issued as part of a log force first
+> +	 * before running the log item committed callback functions as if the
+>  	 * log writes were completed.
+>  	 */
+> +	wake_up_all(&log->l_cilp->xc_commit_wait);
+>  	xlog_state_do_callback(log, XFS_LI_ABORTED, NULL);
+>  
 
-As Eric mentioned earlier, it is 3.10 with a lot of backports from later
-kernels.
+Why is this necessary? It looks like xlog_state_do_callback() will hit
+the xlog_cil_committed() callback with the aborted flag...
 
-Boris
+>  #ifdef XFSERRORDEBUG
+> diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
+> index 7e54553..3a68ddf 100644
+> --- a/fs/xfs/xfs_log_cil.c
+> +++ b/fs/xfs/xfs_log_cil.c
+> @@ -385,7 +385,15 @@ xlog_cil_committed(
+>  	xfs_extent_busy_clear(mp, &ctx->busy_extents,
+>  			     (mp->m_flags & XFS_MOUNT_DISCARD) && !abort);
+>  
+> +	/*
+> +	 * If we are aborting the commit, wake up anyone waiting on the
+> +	 * committing list.  If we don't, then a shutdown we can leave processes
+> +	 * waiting in xlog_cil_force_lsn() waiting on a sequence commit that
+> +	 * will never happen because we aborted it.
+> +	 */
+>  	spin_lock(&ctx->cil->xc_push_lock);
+> +	if (abort)
+> +		wake_up_all(&cil->xc_commit_wait);
 
-> --Mark.
+There's a compile error here. The parameter should be '&ctx->cil->...'
+
+Brian
+
+>  	list_del(&ctx->committing);
+>  	spin_unlock(&ctx->cil->xc_push_lock);
+>  
+> @@ -564,8 +572,18 @@ restart:
+>  	spin_lock(&cil->xc_push_lock);
+>  	list_for_each_entry(new_ctx, &cil->xc_committing, committing) {
+>  		/*
+> +		 * Avoid getting stuck in this loop because we were woken by the
+> +		 * shutdown, but then went back to sleep once already in the
+> +		 * shutdown state.
+> +		 */
+> +		if (XLOG_FORCED_SHUTDOWN(log)) {
+> +			spin_unlock(&cil->xc_push_lock);
+> +			goto out_abort_free_ticket;
+> +		}
+> +
+> +		/*
+>  		 * Higher sequences will wait for this one so skip them.
+> -		 * Don't wait for own own sequence, either.
+> +		 * Don't wait for our own sequence, either.
+>  		 */
+>  		if (new_ctx->sequence >= ctx->sequence)
+>  			continue;
+> @@ -810,6 +828,13 @@ restart:
+>  	 */
+>  	spin_lock(&cil->xc_push_lock);
+>  	list_for_each_entry(ctx, &cil->xc_committing, committing) {
+> +		/*
+> +		 * Avoid getting stuck in this loop because we were woken by the
+> +		 * shutdown, but then went back to sleep once already in the
+> +		 * shutdown state.
+> +		 */
+> +		if (XLOG_FORCED_SHUTDOWN(log))
+> +			goto out_shutdown;
+>  		if (ctx->sequence > sequence)
+>  			continue;
+>  		if (!ctx->commit_lsn) {
+> @@ -833,14 +858,12 @@ restart:
+>  	 * push sequence after the above wait loop and the CIL still contains
+>  	 * dirty objects.
+>  	 *
+> -	 * When the push occurs, it will empty the CIL and
+> -	 * atomically increment the currect sequence past the push sequence and
+> -	 * move it into the committing list. Of course, if the CIL is clean at
+> -	 * the time of the push, it won't have pushed the CIL at all, so in that
+> -	 * case we should try the push for this sequence again from the start
+> -	 * just in case.
+> +	 * When the push occurs, it will empty the CIL and atomically increment
+> +	 * the currect sequence past the push sequence and move it into the
+> +	 * committing list. Of course, if the CIL is clean at the time of the
+> +	 * push, it won't have pushed the CIL at all, so in that case we should
+> +	 * try the push for this sequence again from the start just in case.
+>  	 */
+> -
+>  	if (sequence == cil->xc_current_sequence &&
+>  	    !list_empty(&cil->xc_cil)) {
+>  		spin_unlock(&cil->xc_push_lock);
+> @@ -849,6 +872,17 @@ restart:
+>  
+>  	spin_unlock(&cil->xc_push_lock);
+>  	return commit_lsn;
+> +
+> +	/*
+> +	 * We detected a shutdown in progress. We need to trigger the log force
+> +	 * to pass through it's iclog state machine error handling, even though
+> +	 * we are already in a shutdown state. Hence we can't return
+> +	 * NULLCOMMITLSN here as that has special meaning to log forces (i.e.
+> +	 * LSN is already stable), so we return a zero LSN instead.
+> +	 */
+> +out_shutdown:
+> +	spin_unlock(&cil->xc_push_lock);
+> +	return 0;
+>  }
+>  
+>  /*
 > 
 > _______________________________________________
 > xfs mailing list
 > xfs@oss.sgi.com
 > http://oss.sgi.com/mailman/listinfo/xfs
-
 
 _______________________________________________
 xfs mailing list
