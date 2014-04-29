@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 51DE029DF8
-	for <xfs@oss.sgi.com>; Tue, 29 Apr 2014 13:17:37 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 4D6D129DF8
+	for <xfs@oss.sgi.com>; Tue, 29 Apr 2014 13:18:50 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 371898F8039
-	for <xfs@oss.sgi.com>; Tue, 29 Apr 2014 11:17:34 -0700 (PDT)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 308588F8037
+	for <xfs@oss.sgi.com>; Tue, 29 Apr 2014 11:18:50 -0700 (PDT)
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.9])
-	by cuda.sgi.com with ESMTP id f62WEhMoRvWW1tYd (version=TLSv1
+	by cuda.sgi.com with ESMTP id 6S3CHatE12fbaOUm (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 29 Apr 2014 11:17:33 -0700 (PDT)
-Date: Tue, 29 Apr 2014 11:17:33 -0700
+	Tue, 29 Apr 2014 11:18:47 -0700 (PDT)
+Date: Tue, 29 Apr 2014 11:18:47 -0700
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 8/9] repair: handle remote symlink CRC errors
-Message-ID: <20140429181733.GD9267@infradead.org>
+Subject: Re: [PATCH 9/9] repair: detect and handle attribute tree CRC errors
+Message-ID: <20140429181847.GE9267@infradead.org>
 References: <1398719099-19194-1-git-send-email-david@fromorbit.com>
-	<1398719099-19194-9-git-send-email-david@fromorbit.com>
+	<1398719099-19194-10-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1398719099-19194-9-git-send-email-david@fromorbit.com>
+In-Reply-To: <1398719099-19194-10-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,12 +33,14 @@ Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On Tue, Apr 29, 2014 at 07:04:58AM +1000, Dave Chinner wrote:
+On Tue, Apr 29, 2014 at 07:04:59AM +1000, Dave Chinner wrote:
 > From: Dave Chinner <dchinner@redhat.com>
 > 
-> We can't really repair broken symlink buffer contents, but we can at
-> least warn about it and correct the CRC error so the symlink is
-> again readable.
+> Currently the attribute code will not detect and correct errors in
+> the attribute tree. It also fails to validate the CRCs and headers
+> on remote attribute blocks. Ensure that all the attribute blocks are
+> CRC checked and that the processing functions understand the correct
+> block formats for decoding.
 > 
 > Signed-off-by: Dave Chinner <dchinner@redhat.com>
 
