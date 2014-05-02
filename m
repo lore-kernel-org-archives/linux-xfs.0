@@ -1,15 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id CAB1E7F55
-	for <xfs@oss.sgi.com>; Fri,  2 May 2014 10:06:53 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 1823D7F37
+	for <xfs@oss.sgi.com>; Fri,  2 May 2014 10:09:32 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 60382AC002
-	for <xfs@oss.sgi.com>; Fri,  2 May 2014 08:06:52 -0700 (PDT)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id B0E2FAC002
+	for <xfs@oss.sgi.com>; Fri,  2 May 2014 08:09:31 -0700 (PDT)
 Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id WQ7CC3vYqTXRCTtC for <xfs@oss.sgi.com>;
-	Fri, 02 May 2014 08:06:46 -0700 (PDT)
-Message-ID: <5363B416.2010905@sandeen.net>
-Date: Fri, 02 May 2014 10:04:54 -0500
+	ESMTP id TLvAXteJq9g1Z3SG for <xfs@oss.sgi.com>;
+	Fri, 02 May 2014 08:09:30 -0700 (PDT)
+Message-ID: <5363B4C9.4000900@sandeen.net>
+Date: Fri, 02 May 2014 10:07:53 -0500
 From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
 Subject: Re: XFS filesystem claims to be mounted after a disconnect
@@ -40,7 +40,6 @@ On 5/2/14, 8:47 AM, Martin Papik wrote:
 > message saying the file system is mounted writable. There is no entry
 > in /etc/mtab or /proc/mounts. However I see messages in the kernel log
 > (dmesg) about write failures to the disconnected drive.
-> 
 
 platform_check_iswritable() and platform_check_ismounted() in xfsprogs check
 these things.
@@ -56,9 +55,11 @@ so something, somewhere thinks it's mounted.  Check /proc/mounts?
 > believe would result in some data loss.
 
 Hate to say it, but a reboot may be simplest.  Zeroing the log won't
-help.
+help.  OTOH, if you lost USB connectivity, you already lost some data.
 
 - -Eric
+
+
 
 > Martin
 > 
@@ -144,19 +145,19 @@ Version: GnuPG/MacGPG2 v2.0.17 (Darwin)
 Comment: GPGTools - http://gpgtools.org
 Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
 
-iQIcBAEBAgAGBQJTY7QVAAoJECCuFpLhPd7gh8sP/3etms+dvasiiUX6dEwoGf4C
-uiZarjqYG6liwMgBgtsfBfHs35p5r70kab55kf6keAx0zIvFewQbyCGKZ931Ok1B
-c0XgXaBVrSCzEtgRAJjJMDnIguEOCn0E/duIkjRcq7Gp8lcb1C83yr9fJ16HMYaz
-xdYy1Gc3VeDmVAZ3Bf3ojXu1Uqeaa0QZjFSTx7cdUXtsftxtIO906snqU+xc8+pr
-BPwzneWntEYiR8Fy5ZyjFCwnhlLnfRwu/EivUkLCcNIBHANko12Uzf/0t0xvcTGQ
-z+VZzmZF5Us8ytFsTqfP6a55jQeWU5p2jr7flRSLnjDZ3RK3wUXIK1Yvngq+zTc6
-57o2EhNNBTjqLkIzqDG5rAJYVNsv/9gIR3u7QzbdpzquwSHborfUDLS9Ss3saK8D
-Qk7FgyM72sNyI5KntO0/HFc443Qvj3ptWfgFengCSd8pDklnIGMC2ykT2MRVazm4
-QmeX9XCQ40SZ6y/X67dMrR6hLMSbij7XXZkRjOAFTWkePLNvo2RjzHBW8gFEybHM
-d/uFP5HWGtKqUEgwUoQWQ+U/MENv878UqT1Hq7XRNtt+TCWNQQOzuAMbdUSniuCG
-V1WFVZEKsKqmzBJ5bdOLXmkUPXcV73Ou2vvTfRqDCHcPIKJTd9Yq/lNZAE5I6NiE
-mM4LhitVZUvUn/94NGvX
-=m/u5
+iQIcBAEBAgAGBQJTY7TIAAoJECCuFpLhPd7gXMYP/1ZAyFdFXLxGUh8aFjN6R38J
+hguYWXYWgsZFYc4bl1tLrph74AiPdYFZ3GusNdot9+RL0lW3Fxv1WpXZxvgaKKcV
+v7eZ8BtI88Gq5JwwnjkozOPCgc7CBifN8AYYWawgGearaTauHRZAwB7WhKkCY3dc
+0JGJ7M0OnYHkTti1YluhB01f8zAhdFgjiMp9eQpg+2QgdYE3VJa451ZWG1hcAuQU
+QCCl/N517GoNMIXo/iq7q0l9BDFyF7Ck8uFjxY3DjT3OG8rg7wjyDnECQf5/qUU2
+A7UIOte+7cfnfOaHnkZFHD2OtJSyZVAY31fSVUrJZSR2dQ1hiAVQrVv3IJwCMZW/
+euD7geYmFR4WHi2Sqy0uerM9n/2YluVDHSn56DqXU7ttJOlmrgJjsapxUnMSAa1J
+fRay12deZMP02o9sZsIa0CbaeW74fZkUUPMxBrn6SbicjwjbGpab/KqAOMZdZ6G/
+241jR83km9MceBv+I9CqkA4V8eH0jTBxNzzQhRkIhjMn4FbdU/e3OxUlzz+gwkly
+dB5sGtJpb1yRs+btKuaD7HeA6ta98Id4J6GISA76HvyPIdqa6753sycC62JI+HhI
+YJeG4p8G52QH0tB8rP7sPYuifGkKYlFXGa0qufWDMKoYvPkMe+ikJdUiKghsaFzX
+Qrw28Kc6weAYMMTEpi9f
+=YSyU
 -----END PGP SIGNATURE-----
 
 _______________________________________________
