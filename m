@@ -1,26 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 74F377F78
-	for <xfs@oss.sgi.com>; Fri,  2 May 2014 18:38:55 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id F176DAC002
-	for <xfs@oss.sgi.com>; Fri,  2 May 2014 16:38:51 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id E537C7F6F
+	for <xfs@oss.sgi.com>; Fri,  2 May 2014 18:48:53 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id C22EC8F8040
+	for <xfs@oss.sgi.com>; Fri,  2 May 2014 16:48:53 -0700 (PDT)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	KUc514kLZL35O5Lf for <xfs@oss.sgi.com>;
-	Fri, 02 May 2014 16:38:49 -0700 (PDT)
-Date: Sat, 3 May 2014 09:38:23 +1000
+	UF7ht0IW4CSzBtMQ for <xfs@oss.sgi.com>;
+	Fri, 02 May 2014 16:48:51 -0700 (PDT)
+Date: Sat, 3 May 2014 09:48:31 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: XFS filesystem claims to be mounted after a disconnect
-Message-ID: <20140502233823.GF26353@dastard>
-References: <5363A1D8.2020402@gmail.com> <5363B4C9.4000900@sandeen.net>
-	<5363CB5E.3090008@gmail.com> <5363CD70.3000006@sandeen.net>
-	<5363DBD7.4060002@gmail.com> <5363E65C.6010006@sandeen.net>
-	<5363ECE8.6030706@gmail.com> <5363EEF4.7020200@sandeen.net>
-	<5363F22E.2060404@gmail.com>
+Subject: Re: [PATCH 0/5] xfstests: fixes for the free inode btree
+Message-ID: <20140502234831.GG26353@dastard>
+References: <1399050842-19633-1-git-send-email-bfoster@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <5363F22E.2060404@gmail.com>
+In-Reply-To: <1399050842-19633-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,37 +29,40 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Martin Papik <mp6058@gmail.com>
-Cc: Eric Sandeen <sandeen@sandeen.net>, xfs@oss.sgi.com
+To: Brian Foster <bfoster@redhat.com>
+Cc: xfs@oss.sgi.com
 
-On Fri, May 02, 2014 at 10:29:50PM +0300, Martin Papik wrote:
-> -----BEGIN PGP SIGNED MESSAGE-----
-> Hash: SHA512
+On Fri, May 02, 2014 at 01:13:57PM -0400, Brian Foster wrote:
+> Hi all,
 > 
+> This series is a few xfstests fixes and addons for the finobt. Patch 1
+> fixes xfs/030 to work correctly on finobt-enabled filesystems. Patches 2
+> and 3 add support for finobt-oriented tests via require functions and
+> repair filter updates. Patch 4 adds a new test for targeted repair of
+> finobt filesystems. Patch 5 adds a stress test that creates/modifies a
+> sparsely allocated set of inodes to effectively exercise the finobt in
+> conjunction with an fsstress workload.
 > 
-> > We have a lot of docs at 
-> > http://xfs.org/index.php/XFS_Papers_and_Documentation in 
-> > publican/xml format, but Dave has been making noises about 
-> > converting that to asciidoc.  In any case, the goal is 
-> > documentation which is readily available, version-controlled, for 
-> > which patches may be submitted...
-> 
-> Unless this documentation is part of the installable package, its
-> utility is limited. My expectation was for the manual pages to be the
-> reference. There could be a snippet in each man page saying "for more
-> information go to http://....", which would help locate this
-> additional documentation. :-)
+> xfs/010 runs very quickly. xfs/013 runs for 5-10 minutes on my smallish
+> VM running against a single spindle, so I've been back and forth on
+> whether it should be part of the auto group. Thoughts, reviews, flames
+> appreciated...
 
-Eventually it will become exactly that - an installable XFS
-documentation package that ends up in /usr/share/doc/xfs.  Other
-parts of it will end up as the source for the wiki pages e.g.  the
-FAQ. As I do stuff, it ends up here:
+5-10 minutes is probably right at the edge for auto, but I think
+that most people won't be testing this any time soon. Hence I'd
+include it by default in the auto group, and if people complain
+about the runtime when they start testing it, we can revist that
+choice. FWIW, I'd also include it in the metadata group so that it
+gets exercised when people run that group....
 
-http://oss.sgi.com/cgi-bin/gitweb.cgi?p=xfs/xfs-documentation.git
+I had a quick eyeball of the changes, and nothing major stood out.
+The only thing I noticed was a missing "wait" in the _cleanup
+function of xfs/013 after killing all the fsstress processes. It
+should probably using killall -9 as well. If we don't wait, then the
+unmount will fail and if the fsstress processes don't die it will
+affect every test after that...
 
-But right now it's time and resources that limit the conversion and
-development of that repository, so don't hold your breathe too long
-waiting for it.
+I'll probably have more suggestions once I've run the tests ;)
 
 Cheers,
 
