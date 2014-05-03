@@ -1,28 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 6F5DC7F37
-	for <xfs@oss.sgi.com>; Fri,  2 May 2014 19:05:29 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 5D89030405F
-	for <xfs@oss.sgi.com>; Fri,  2 May 2014 17:05:29 -0700 (PDT)
-Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
-	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	ueIrxnkRROD6yAW0 for <xfs@oss.sgi.com>;
-	Fri, 02 May 2014 17:05:27 -0700 (PDT)
-Date: Sat, 3 May 2014 10:05:13 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: xfs umount hang in xfs_ail_push_all_sync on i/o error
-Message-ID: <20140503000512.GH26353@dastard>
-References: <CALjwKZDsGBxTDLvy7-W76FRpHRuki_ZjOXLWZ70fut4hmDkTSQ@mail.gmail.com>
-	<20140428234558.GD18672@dastard>
-	<CALjwKZCZrpHNnqCWyotiYvLNa8yJMRoBgNp4NShSj0j2hLJ9DQ@mail.gmail.com>
-	<20140429010121.GE18672@dastard>
-	<CALjwKZBj0f_y7MPp-PLqhLDOnfmf2OWsvv_vbnX08ubevqM+Bg@mail.gmail.com>
-	<20140430032209.GA22353@dastard>
-	<CALjwKZDeTcOSJDtRcNa3KtLraPKvWUB0jvQrwSANxB0RHds0Rg@mail.gmail.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 4E0577F37
+	for <xfs@oss.sgi.com>; Fri,  2 May 2014 19:26:28 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id DFBCDAC002
+	for <xfs@oss.sgi.com>; Fri,  2 May 2014 17:26:24 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id thJSG9kHb1KSdOvN for <xfs@oss.sgi.com>;
+	Fri, 02 May 2014 17:26:22 -0700 (PDT)
+Message-ID: <536437AD.9020303@sandeen.net>
+Date: Fri, 02 May 2014 19:26:21 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <CALjwKZDeTcOSJDtRcNa3KtLraPKvWUB0jvQrwSANxB0RHds0Rg@mail.gmail.com>
+Subject: Re: [ANNOUNCE] xfsprogs: 3.2.0-rc2 release tagged
+References: <20140502000508.GA26353@dastard>
+In-Reply-To: <20140502000508.GA26353@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,82 +27,99 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Bob Mastors <bob.mastors@solidfire.com>
-Cc: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>, xfs@oss.sgi.com
 
-On Fri, May 02, 2014 at 11:32:19AM -0600, Bob Mastors wrote:
-> On Tue, Apr 29, 2014 at 9:22 PM, Dave Chinner <david@fromorbit.com> wrote:
-> > Well, I guess I should been more specific. ftrace is pretty much
-> > useless here - we need the information taht is recorded by the
-> > events, not the timing of the events.
-> >
-> Heh, I have been trying to bluff my way through this.
-> I have hacked on file systems but am new to linux and xfs.
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
 
-I wouldn't have guessed that. Most of the time the response is
-"trace events? what are they?". :)
-
-> Output file attached but it all looks like this:
+On 5/1/14, 7:05 PM, Dave Chinner wrote:
+> Hi folks,
 > 
->      xfsaild/sdb-3613  [001]   445.757616: xfs_ail_flushing:     dev 8:16
-> lip 0x0xffff88001d3017b8 lsn 32/3573 type XFS_LI_INODE flags IN_AIL
->      xfsaild/sdb-3613  [001]   445.757617: xfs_ail_flushing:     dev 8:16
-> lip 0x0xffff88001d301850 lsn 32/3573 type XFS_LI_INODE flags IN_AIL
->      xfsaild/sdb-3613  [001]   445.757618: xfs_ail_flushing:     dev 8:16
-> lip 0x0xffff88001de63ed8 lsn 32/3573 type XFS_LI_INODE flags IN_AIL
->      xfsaild/sdb-3613  [001]   445.757618: xfs_ail_flushing:     dev 8:16
-> lip 0x0xffff88001cd24720 lsn 32/3573 type XFS_LI_INODE flags IN_AIL
->      xfsaild/sdb-3613  [001]   445.757618: xfs_ail_flushing:     dev 8:16
-> lip 0x0xffff88001cd248e8 lsn 32/3573 type XFS_LI_INODE flags IN_AIL
->      xfsaild/sdb-3613  [001]   445.757619: xfs_ail_flushing:     dev 8:16
-> lip 0x0xffff88002c435ab0 lsn 32/3573 type XFS_LI_INODE flags IN_AIL
-
-That's very enlightening - a bunch of inodes returning
-XFS_ITEM_FLUSHING from attempts to push them.
-
-> The addresses repeat.
-> I started the record as soon as I noticed the umount hanging, probably
-> within 20 seconds or so.
-> Also attached is the console output.
+> The xfsprogs repository at git://oss.sgi.com/xfs/cmds/xfsprogs has
+> just been updated.
 > 
-> This was done with your patch applied.
+> The new head of the master branch is commit:
 > 
-> Seems like xfsaild_push is missing a check that the file system is
-> XFS_FORCED_SHUTDOWN.
+> 67fcc94 xfsprogs: v3.2.0-rc2 release
+> 
+> This commit has been tagged with v3.2.0-rc2. I'd like everyone who
+> can test this to test it, as all the issues that needed to be solved
+> before a release coul dbe made have now been addressed. If there are
+> no new regressions or critical issues reported in the next week or
+> so, I will make an official 3.2.0 release. So, please test. :)
 
-It might look that way, but what is supposed to happen is that
-everything else is supposed to handle shutdown situations and empty
-the AIL. i.e. the act of issuing IO by the AIL is supposed to
-trigger shutdown processing on the objects, and so having the AIL
-shut down itself won't help.
+Any chance for a signed tarball?
 
-So, what's the problem? Well, the inodes have been flushed,
-triggering the inode buffer to be written. However, then inode
-buffer has had an IO error (i.e. the async write error), is retried,
-and then we stop retrying the IO. The idea is that the AIL will push
-it again soon and the IO will be retried.
+- -Eric
 
-What is happening is that the inodes in the buffer are already
-marked as "being flushed" and hence the AIL does not push the inode
-buffer again, and hence the IO completion callbacks on the buffer
-that will remove the inodes from the AIL are never called. Not sure
-how to fix this one yet....
+> -Dave.
+> 
+> New Commits:
+> 
+> Dave Chinner (10):
+>       [b511ff4] db: don't claim unchecked CRCs are correct
+>       [9ba69ce] db: verify buffer on type change
+>       [adbb357] repair: ensure prefetched buffers have CRCs validated
+>       [8e7e14b] repair: detect and correct CRC errors in directory blocks
+>       [8f657d7] repair: detect CRC errors in AG headers
+>       [a76a5a7] repair: report AG btree verifier errors
+>       [641e65b] repair: remove more dirv1 leftovers
+>       [7cb3f7f] repair: handle remote symlink CRC errors
+>       [3a1d34e] repair: detect and handle attribute tree CRC errors
+>       [67fcc94] xfsprogs: v3.2.0-rc2 release
+> 
+> Eric Sandeen (2):
+>       [847bbbe] xfs_logprint: Fix error handling in xlog_print_trans_efi
+>       [aabc02b] mkfs.xfs: prevent close(-1) on protofile error path
+> 
+> 
+> Code Diffstat:
+> 
+>  VERSION              |   2 +-
+>  db/fprint.c          |  15 ++-
+>  db/io.c              |  26 ++++++
+>  db/io.h              |  13 ++-
+>  db/type.c            |   9 +-
+>  doc/CHANGES          |   5 +
+>  include/libxfs.h     |   3 +
+>  libxfs/rdwr.c        |  58 ++++++++----
+>  logprint/log_misc.c  |   5 +-
+>  mkfs/proto.c         |   3 +-
+>  repair/attr_repair.c |  45 +++++++--
+>  repair/dinode.c      | 251 +++------------------------------------------------
+>  repair/dinode.h      |   6 --
+>  repair/phase6.c      |  94 +++++++++++++++----
+>  repair/prefetch.c    |   7 +-
+>  repair/scan.c        | 108 +++++++++++++++-------
+>  16 files changed, 311 insertions(+), 339 deletions(-)
+> 
+> 
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+> 
 
-> Let me know if there is any other info I can capture that would be
-> interesting.
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG/MacGPG2 v2.0.17 (Darwin)
+Comment: GPGTools - http://gpgtools.org
+Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
 
-I know what the problem is now, so testing a fix will be the next
-step. But I need to think about how to fix this, and that can wait
-till Monday. ;)
-
-Thanks for following up with the trace information, Bob!
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+iQIcBAEBAgAGBQJTZDesAAoJECCuFpLhPd7gYR4P/idUYSSHbppJClmu7JreDlja
+yh8RvNxLxopQ96y4CrPmEqupT/n8ZO/T9xElr0mPEIltoFrFL1CTALa/u3cBNkf0
+MOHdPmLB1t6JvavMSjSMzBoPmbkH6v2FH8TjZvuIDMJOeYgWPKspYKHGNesT2t+b
+nKfnyn00Z2hROSjHJozYNSYcmcXIZUI7RhlTaA+eXa2j8PrPBgqd+qmzN9NBUzmM
+NH8zkHerNrZLknMlZrTA4gKUaHYXgR1kPEdXC5IzBtlVqjVWv4o2ASDAlAUO1KAR
+mxCOdVcCxKBjbzn2pu4LgdNKhe7XFYenFwXxbxHs2gLwOaHnFlwCa45wEDm0g40W
+U60lwX2zlvmOP5QwqXUN13xeixR0Qsu/mAhuj5gXsj2SBPKPHvK1i9IC1pwvMwZE
+fSa8Al/0TTjZ2IwRfLSaLX5xruC486pdCCEVEYxkpdh4F6baSSbMsE6BsXDUJMs+
+ouQXecjtmMA437o2h4stExKx2VVHrVpst/p7nPsR+1RISuqmyyOLq79riRHgGm5l
+YNQiwfmmxoXpdIcnh0QQ2WHvCed8zZA3YT6gLVG/KW8vEUB2/zFtfSS8jm2FKXKz
+rb2cPqOJ3KjMnMXu1QGZUb/UozS5jRls3LmYPRdQVo+/C1ceY2J6zLqdPeVI3Com
+bozat+0vW2lahDB8SVFi
+=SWEH
+-----END PGP SIGNATURE-----
 
 _______________________________________________
 xfs mailing list
