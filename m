@@ -1,26 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id F0C837F37
-	for <xfs@oss.sgi.com>; Fri,  2 May 2014 19:04:55 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id C54AA8F804B
-	for <xfs@oss.sgi.com>; Fri,  2 May 2014 17:04:52 -0700 (PDT)
-Received: from mail-ee0-f50.google.com (mail-ee0-f50.google.com
-	[74.125.83.50]) by cuda.sgi.com with ESMTP id 7P1xPAbTd6caG6Cv
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Fri, 02 May 2014 17:04:47 -0700 (PDT)
-Received: by mail-ee0-f50.google.com with SMTP id c13so3520582eek.23
-	for <xfs@oss.sgi.com>; Fri, 02 May 2014 17:04:46 -0700 (PDT)
-Message-ID: <536432A0.6000405@gmail.com>
-Date: Sat, 03 May 2014 03:04:48 +0300
-From: Martin Papik <mp6058@gmail.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 6F5DC7F37
+	for <xfs@oss.sgi.com>; Fri,  2 May 2014 19:05:29 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 5D89030405F
+	for <xfs@oss.sgi.com>; Fri,  2 May 2014 17:05:29 -0700 (PDT)
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	ueIrxnkRROD6yAW0 for <xfs@oss.sgi.com>;
+	Fri, 02 May 2014 17:05:27 -0700 (PDT)
+Date: Sat, 3 May 2014 10:05:13 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: xfs umount hang in xfs_ail_push_all_sync on i/o error
+Message-ID: <20140503000512.GH26353@dastard>
+References: <CALjwKZDsGBxTDLvy7-W76FRpHRuki_ZjOXLWZ70fut4hmDkTSQ@mail.gmail.com>
+	<20140428234558.GD18672@dastard>
+	<CALjwKZCZrpHNnqCWyotiYvLNa8yJMRoBgNp4NShSj0j2hLJ9DQ@mail.gmail.com>
+	<20140429010121.GE18672@dastard>
+	<CALjwKZBj0f_y7MPp-PLqhLDOnfmf2OWsvv_vbnX08ubevqM+Bg@mail.gmail.com>
+	<20140430032209.GA22353@dastard>
+	<CALjwKZDeTcOSJDtRcNa3KtLraPKvWUB0jvQrwSANxB0RHds0Rg@mail.gmail.com>
 MIME-Version: 1.0
-Subject: Re: XFS filesystem claims to be mounted after a disconnect
-References: <5363A1D8.2020402@gmail.com> <5363B4C9.4000900@sandeen.net>
-	<5363CB5E.3090008@gmail.com> <5363CD70.3000006@sandeen.net>
-	<5363DBD7.4060002@gmail.com> <5363E65C.6010006@sandeen.net>
-	<5363ECE8.6030706@gmail.com> <20140502233512.GE26353@dastard>
-In-Reply-To: <20140502233512.GE26353@dastard>
+Content-Disposition: inline
+In-Reply-To: <CALjwKZDeTcOSJDtRcNa3KtLraPKvWUB0jvQrwSANxB0RHds0Rg@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,90 +35,82 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
+To: Bob Mastors <bob.mastors@solidfire.com>
 Cc: xfs@oss.sgi.com
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA512
+On Fri, May 02, 2014 at 11:32:19AM -0600, Bob Mastors wrote:
+> On Tue, Apr 29, 2014 at 9:22 PM, Dave Chinner <david@fromorbit.com> wrote:
+> > Well, I guess I should been more specific. ftrace is pretty much
+> > useless here - we need the information taht is recorded by the
+> > events, not the timing of the events.
+> >
+> Heh, I have been trying to bluff my way through this.
+> I have hacked on file systems but am new to linux and xfs.
 
+I wouldn't have guessed that. Most of the time the response is
+"trace events? what are they?". :)
 
-> It's called a lazy unmount: "umount -l". It disconnects the 
-> filesystem from the namespace, but it still lives on in the kernel 
-> until all references to the filesystem go away. Given that the 
-> hot-unplug proceedure can call back into the filesystem to sync it
-> (once it's been disconnected!) the hot unplug can deadlock on
-> filesystem locks that can't be released until the hot-unplug errors
-> everything out.
+> Output file attached but it all looks like this:
 > 
-> So you can end up with the system in an unrecoverable state when
-> USB unplugs.
+>      xfsaild/sdb-3613  [001]   445.757616: xfs_ail_flushing:     dev 8:16
+> lip 0x0xffff88001d3017b8 lsn 32/3573 type XFS_LI_INODE flags IN_AIL
+>      xfsaild/sdb-3613  [001]   445.757617: xfs_ail_flushing:     dev 8:16
+> lip 0x0xffff88001d301850 lsn 32/3573 type XFS_LI_INODE flags IN_AIL
+>      xfsaild/sdb-3613  [001]   445.757618: xfs_ail_flushing:     dev 8:16
+> lip 0x0xffff88001de63ed8 lsn 32/3573 type XFS_LI_INODE flags IN_AIL
+>      xfsaild/sdb-3613  [001]   445.757618: xfs_ail_flushing:     dev 8:16
+> lip 0x0xffff88001cd24720 lsn 32/3573 type XFS_LI_INODE flags IN_AIL
+>      xfsaild/sdb-3613  [001]   445.757618: xfs_ail_flushing:     dev 8:16
+> lip 0x0xffff88001cd248e8 lsn 32/3573 type XFS_LI_INODE flags IN_AIL
+>      xfsaild/sdb-3613  [001]   445.757619: xfs_ail_flushing:     dev 8:16
+> lip 0x0xffff88002c435ab0 lsn 32/3573 type XFS_LI_INODE flags IN_AIL
 
-And the disconnect from the namespace is what removes it from
-/proc/mounts?
+That's very enlightening - a bunch of inodes returning
+XFS_ITEM_FLUSHING from attempts to push them.
 
-By hot unplug, do you mean a user initiated "remove device" or a pull
-out of the USB cable? I'm sorry, I don't understand your example.
-Would you be kind enough to elaborate?
-
->>> If xfs encounters an insurmountable error, it will shut down,
->>> and all operations will return EIO or EUCLEAN.  You are right
->>> that there is no errors=* mount option; the behavior is not
->>> configurable on xfs.
->> 
->> IMHO it should be, but since the last email I've glanced at some 
->> mailing lists and understand that there's some reluctance, in the
->> name of not polluting the FS after an error. But at least a R/O
->> remount should be possible, to prevent yanking libraries from
->> under applications (root FS).
+> The addresses repeat.
+> I started the record as soon as I noticed the umount hanging, probably
+> within 20 seconds or so.
+> Also attached is the console output.
 > 
-> What you see here has nothing to do with XFS's shutdown behaviour. 
-> The filesystem is already unmounted, it just can't be destroyed 
-> because there are still kernel internal references to it.
-
-How can I detect this situation? I mean I didn't see anything in
-/proc/mounts or references to the mount point from /proc/<pid>/*, so I
-only managed to correct it (chdir elsewhere) by chance on a hunch.
-Would it not be desirable to know that there's a phantom FS referenced
-by a number of processes?
-
-Also, do you know if this affects other filesystems? I never saw this
-with ext3/4 or reiser, I don't have much practical experience with
-other filesystems. I ask because your explanation sounds like it's vfs
-rather than xfs, but as I said, I never saw this before.
-
->>> documentation, that's probably something we should address.
->> 
->> Yup, any idea when? .... Also, I think it would be good to have
->> a section on what to do when things go south and what to expect.
->> E.g. I found out the hard way that xfs_check on a 2TB disk
->> allocates 16G of memory, so now I'm running it with cgroup based
->> limitations, otherwise
+> This was done with your patch applied.
 > 
-> $ man xfs_check .... Note that xfs_check is deprecated and
-> scheduled for removal in June 2014. Please use xfs_repair -n
-> instead.
+> Seems like xfsaild_push is missing a check that the file system is
+> XFS_FORCED_SHUTDOWN.
 
-Thanks, I didn't know that.
+It might look that way, but what is supposed to happen is that
+everything else is supposed to handle shutdown situations and empty
+the AIL. i.e. the act of issuing IO by the AIL is supposed to
+trigger shutdown processing on the objects, and so having the AIL
+shut down itself won't help.
 
-Martin
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
-Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
+So, what's the problem? Well, the inodes have been flushed,
+triggering the inode buffer to be written. However, then inode
+buffer has had an IO error (i.e. the async write error), is retried,
+and then we stop retrying the IO. The idea is that the AIL will push
+it again soon and the IO will be retried.
 
-iQIcBAEBCgAGBQJTZDKTAAoJELsEaSRwbVYr5T4QAJ+10OjafQUnX6zvG0Lrhs1C
-G+4Liuxm5aUmINKfUEeuhPJOsNfrdrSs+/SW6G9u5Lhu6FSrll/+O1BLa4Ld6Mxx
-3IADom8RQl0rcEMpBGnPNi1hTY0RycYk+Pzug1GzCz2nDE6zCojobvGoW8a02BaL
-pEdfh0NXDVAjSbTubHKXSqxWydIkVJacbshEy/BhySQuZmPSiu1BOIV1DTvGLqIz
-VIsYDkv7UvuZyKsBL+0ux/9gPVPNP78hIIvUU9hLomjfnUum02vV6ps6RJZtGjVt
-OKZ02qaIjaRPtlFCU21YTFr/x0WIGFsh7Zzfma4sDs4tXCqB7FEs+NA4Fq0zoHV0
-OSCiiBgCTTtkph0Bn5/WycoVfkxm9eCru5eCLY1NeBRCIFi5rlRNX/Uvo9YO3twA
-PvvGMHFROYtNl0u+/e1Tkniylwtanx7esMgVb0rC4IYHeovxZkHIuFkjHv5/PMNs
-p+w8u6ZOfKOARUfYiFHOLVR/QAhp4ubhpTegD7d6Eqqtea/d/vGrUj6Bu/4svZ9j
-YsVmYqsnUe1Uisz+NarmH/t7KeeRJBqEPLvJ9rZ2P7ixQLOTxsnuyU7kOdZKpwIM
-jHAzaAIfxcntyL76hPbnkAdSZU//zOv3qfyfkD/NuqnKi1BOsQKZMMb9NEcA4OOg
-QoWmXdMC64OlWv1Buxdr
-=qP6z
------END PGP SIGNATURE-----
+What is happening is that the inodes in the buffer are already
+marked as "being flushed" and hence the AIL does not push the inode
+buffer again, and hence the IO completion callbacks on the buffer
+that will remove the inodes from the AIL are never called. Not sure
+how to fix this one yet....
+
+> Let me know if there is any other info I can capture that would be
+> interesting.
+
+I know what the problem is now, so testing a fix will be the next
+step. But I need to think about how to fix this, and that can wait
+till Monday. ;)
+
+Thanks for following up with the trace information, Bob!
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
