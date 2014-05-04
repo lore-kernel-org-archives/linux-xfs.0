@@ -1,30 +1,31 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 5AEB07F3F
-	for <xfs@oss.sgi.com>; Sun,  4 May 2014 01:19:01 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id DDDACAC002
-	for <xfs@oss.sgi.com>; Sat,  3 May 2014 23:18:57 -0700 (PDT)
-Received: from skeena.net ([199.60.222.33]) by cuda.sgi.com with ESMTP id
-	74ay0UAHT8iZKA6A (version=TLSv1 cipher=AES256-SHA bits=256
-	verify=NO) for <xfs@oss.sgi.com>;
-	Sat, 03 May 2014 23:18:52 -0700 (PDT)
-Received: from innuk.localdomain (S01061caff7de9d56.gv.shawcable.net
-	[184.66.28.75])
-	(using SSLv3 with cipher DHE-RSA-AES128-SHA (128/128 bits))
-	(No client certificate requested)
-	(Authenticated sender: felix@skeena.net)
-	by skeena.net (Postfix) with ESMTPSA id 02185125BDA5
-	for <xfs@oss.sgi.com>; Sat,  3 May 2014 23:18:52 -0700 (PDT)
-Date: Sat, 3 May 2014 23:18:38 -0700
-From: Marcel (Felix) Giannelia <info@skeena.net>
-Subject: Re: xfs_iflush_int: Bad inode, xfs_do_force_shutdown from
-	xfs_inode.c during file copy
-Message-ID: <20140503231838.219df8ac@innuk.localdomain>
-In-Reply-To: <20140504001746.GL26353@dastard>
-References: <20140503124933.7ed0ff3e@innuk.localdomain>
-	<20140504001746.GL26353@dastard>
-Mime-Version: 1.0
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 0C1617F3F
+	for <xfs@oss.sgi.com>; Sun,  4 May 2014 02:43:18 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id EE3C3304059
+	for <xfs@oss.sgi.com>; Sun,  4 May 2014 00:43:17 -0700 (PDT)
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
+	cuda.sgi.com with ESMTP id YJjHZg7m9iYBoRTo (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Sun, 04 May 2014 00:43:16 -0700 (PDT)
+Received: from ucsinet22.oracle.com (ucsinet22.oracle.com [156.151.31.94])
+	by aserp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with
+	ESMTP id s447hF4l023980
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <xfs@oss.sgi.com>; Sun, 4 May 2014 07:43:16 GMT
+Received: from userz7022.oracle.com (userz7022.oracle.com [156.151.31.86])
+	by ucsinet22.oracle.com (8.14.5+Sun/8.14.5) with ESMTP id
+	s447hEhB027507
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <xfs@oss.sgi.com>; Sun, 4 May 2014 07:43:15 GMT
+Received: from abhmp0012.oracle.com (abhmp0012.oracle.com [141.146.116.18])
+	by userz7022.oracle.com (8.14.5+Sun/8.14.4) with ESMTP id
+	s447hDFb027498 for <xfs@oss.sgi.com>; Sun, 4 May 2014 07:43:14 GMT
+From: Junxiao Bi <junxiao.bi@oracle.com>
+Subject: [PATCH] xfsprogs: xfs_copy: use exit() to replace killall()
+Date: Sun,  4 May 2014 15:44:15 +0800
+Message-Id: <1399189455-29890-1-git-send-email-junxiao.bi@oracle.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,93 +34,94 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
+Cc: joe.jin@oracle.com
 
-On Sun, 4 May 2014 10:17:46 +1000
-Dave Chinner <david@fromorbit.com> wrote:
+Sending a SIGKILL signal to child thread will terminate the whole process,
+xfs_copy will return an error value 137. This cause confuse for script to
+know whether the copy successes.
 
-> > 
-> > - Distribution & kernel version: Debian 7, uname -a returns:
-> > 
-> > Linux hostname 3.2.0-4-686-pae #1 SMP Debian 3.2.41-2+deb7u2 i686
-> > GNU/Linux
-> 
-> So, old hardware...
+Calling exit() in main thread can terminate the whole process and return the
+right value.
 
-Actually no, fairly new underlying hardware -- but this is for a
-not-for-profit with no hardware budget, and that one new machine is
-the exception. At the time they had a lot more 32-bit hardware lying
-around to build spares with, so I built it to run on that if needed :)
+Cc: Joe Jin <joe.jin@oracle.com>
+Signed-off-by: Junxiao Bi <junxiao.bi@oracle.com>
+---
+ copy/xfs_copy.c |   33 +++------------------------------
+ 1 files changed, 3 insertions(+), 30 deletions(-)
 
-> 
-> > dmesg entries:
-> > 
-> > > Immediately after the cp command exited with "i/o error":
-> > 
-> > XFS (md126): xfs_iflush_int: Bad inode 939480132, ptr 0xd12fa080,
-> > magic number 0x494d
-> 
-> The magic number has a single bit error in it.
-> 
-> #define XFS_DINODE_MAGIC                0x494e  /* 'IN' */
-> 
-> That's the in-memory inode, not the on-disk inode. It caught the
-> problem before writing the bad magic number to disk - the in-memory
-> disk buffer was checked immediately before the in-memory copy, and
-> it checked out OK...
-> 
-> > After this, I ran xfs_repair with -L. xfs_repair noted the same bad
-> > inode number and deleted the file I had tried to copy, but
-> > otherwise made no changes that I could see. After this, the
-> > filesystem mounted normally and there were no further issues.
-> 
-> What was the error that xfs_repair returned? There may have been
-> other things wrong with the inode that weren't caught when it was
-> loaded into memory.
-
-Sorry; I didn't capture that output. From what I remember, the only
-line different from a clean xfs_repair run was a line quite similar to
-what was in the dmesg, about inode # 939480132.
-
-> 
-> However, I'd almost certainly be checking you hardware at this
-> point, as software doesn't usually cause random single bit flips...
-
-Yeah, going to take that server offline for a full memtest next time
-I'm out there.
-
-I also discovered that the third disk I mentioned from that RAID array
-was actually having serious problems (hardware ECC recovery and
-reallocated sectors through the roof), which explains the performance
-issues it was causing -- and that disk was still part of the array
-containing the root filesystem.
-
-Since mdadm RAID1 reads from whichever individual disk is least busy
-(and doesn't read from all disks in the array and compare, during
-normal I/O), is it conceivable that this is what happened?:
-
-Copying that file busied out the two healthy disks, which were both in
-the array I was writing to. So of the three disks backing the root
-filesystem, the only one not busy was the failing one. During the file
-copy, some piece of code was needed that was not in the memory cache
-and had to be read from disk, so mdadm read it from the failing drive,
-which silently flipped a bit (or several).
-
-A memory problem still seems more likely to me, as I wouldn't expect
-the part of the xfs filesystem driver containing the definition of that
-magic number to ever need to be re-read from disk after boot -- but I
-don't know. Memory load on this system is always very high; there's
-almost no room for cache, so maybe... And is there a definition of
-that constant someplace that might only be needed when creating a file
-bigger than 2 or 4 GB (a very infrequent operation on this filesystem)?
-
-Thanks,
-
-~Felix.
+diff --git a/copy/xfs_copy.c b/copy/xfs_copy.c
+index 39517da..1419ce7 100644
+--- a/copy/xfs_copy.c
++++ b/copy/xfs_copy.c
+@@ -217,25 +217,6 @@ handle_error:
+ }
+ 
+ void
+-killall(void)
+-{
+-	int i;
+-
+-	/* only the parent gets to kill things */
+-
+-	if (getpid() != parent_pid)
+-		return;
+-
+-	for (i = 0; i < num_targets; i++)  {
+-		if (target[i].state == ACTIVE)  {
+-			/* kill up target threads */
+-			pthread_kill(target[i].pid, SIGKILL);
+-			pthread_mutex_unlock(&targ[i].wait);
+-		}
+-	}
+-}
+-
+-void
+ handler(int sig)
+ {
+ 	pid_t	pid = getpid();
+@@ -400,8 +381,7 @@ read_wbuf(int fd, wbuf *buf, xfs_mount_t *mp)
+ 	if (buf->length > buf->size)  {
+ 		do_warn(_("assert error:  buf->length = %d, buf->size = %d\n"),
+ 			buf->length, buf->size);
+-		killall();
+-		abort();
++		exit(1);
+ 	}
+ 
+ 	if ((res = read(fd, buf->data, buf->length)) < 0)  {
+@@ -591,11 +571,6 @@ main(int argc, char **argv)
+ 
+ 	parent_pid = getpid();
+ 
+-	if (atexit(killall))  {
+-		do_log(_("%s: couldn't register atexit function.\n"), progname);
+-		die_perror();
+-	}
+-
+ 	/* open up source -- is it a file? */
+ 
+ 	open_flags = O_RDONLY;
+@@ -1154,10 +1129,8 @@ main(int argc, char **argv)
+ 	}
+ 
+ 	check_errors();
+-	killall();
+-	pthread_exit(NULL);
+-	/*NOTREACHED*/
+-	return 0;
++
++	exit(0);
+ }
+ 
+ xfs_caddr_t
+-- 
+1.7.1
 
 _______________________________________________
 xfs mailing list
