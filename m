@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id A5C8D7F3F
-	for <xfs@oss.sgi.com>; Sun,  4 May 2014 04:42:23 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 6DE8C8F8039
-	for <xfs@oss.sgi.com>; Sun,  4 May 2014 02:42:20 -0700 (PDT)
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.9])
-	by cuda.sgi.com with ESMTP id l2ZbhoJcbNB2znGA (version=TLSv1
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id E43EE7F3F
+	for <xfs@oss.sgi.com>; Sun,  4 May 2014 05:16:30 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 661CAAC002
+	for <xfs@oss.sgi.com>; Sun,  4 May 2014 03:16:27 -0700 (PDT)
+Received: from newverein.lst.de (verein.lst.de [213.95.11.211]) by
+	cuda.sgi.com with ESMTP id Di54fZ0Gwnlu72gJ (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Sun, 04 May 2014 02:42:18 -0700 (PDT)
-Received: from hch by bombadil.infradead.org with local (Exim 4.80.1 #2 (Red
-	Hat Linux)) id 1Wgsw6-0000mI-7e
-	for xfs@oss.sgi.com; Sun, 04 May 2014 09:42:18 +0000
-Date: Sun, 4 May 2014 02:42:18 -0700
-From: Christoph Hellwig <hch@infradead.org>
-Subject: repating 208 failures
-Message-ID: <20140504094218.GA2920@infradead.org>
+	Sun, 04 May 2014 03:16:26 -0700 (PDT)
+Date: Sun, 4 May 2014 12:16:23 +0200
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: attr cleanups
+Message-ID: <20140504101623.GA4947@lst.de>
+References: <1399130415-5382-1-git-send-email-hch@lst.de>
+	<53651375.9080305@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
+In-Reply-To: <53651375.9080305@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,17 +30,15 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Mark Tinguely <tinguely@sgi.com>
+Cc: Christoph Hellwig <hch@lst.de>, xfs@oss.sgi.com
 
-Did anyone see failure like:
+On Sat, May 03, 2014 at 11:04:05AM -0500, Mark Tinguely wrote:
+> Depends on how parent inode pointers are implemented, this folding the 
+> internal version of get and set attributes could be undone.
 
-generic/208 201s ... 200s
-umount: /mnt/test: device is busy.
-        (In some cases useful info about processes that use
-         the device is found by lsof(8) or fuser(1))
-
-which then abort xfstests?  I've seen them occasionally for a long time,
-but these days they seem to happen more than 50% of the time.
+We might have to introduce _locked version at that point.  But I'd like
+to keep the xfs_name removal and other assorted cleanups.
 
 _______________________________________________
 xfs mailing list
