@@ -1,32 +1,32 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 6D13F7F6D
-	for <xfs@oss.sgi.com>; Mon,  5 May 2014 07:32:14 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 5711630405F
-	for <xfs@oss.sgi.com>; Mon,  5 May 2014 05:32:14 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 018D67F75
+	for <xfs@oss.sgi.com>; Mon,  5 May 2014 07:32:22 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id BE4CF8F8039
+	for <xfs@oss.sgi.com>; Mon,  5 May 2014 05:32:21 -0700 (PDT)
 Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id j3sNU8EABsnHKcSc (version=TLSv1
+	cuda.sgi.com with ESMTP id u03acjT1dAoeFtms (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 05 May 2014 05:32:13 -0700 (PDT)
+	Mon, 05 May 2014 05:32:20 -0700 (PDT)
 Received: from ucsinet22.oracle.com (ucsinet22.oracle.com [156.151.31.94])
 	by userp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with
-	ESMTP id s45CWCtq022557
+	ESMTP id s45CWJ7J022720
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Mon, 5 May 2014 12:32:12 GMT
-Received: from aserz7021.oracle.com (aserz7021.oracle.com [141.146.126.230])
+	for <xfs@oss.sgi.com>; Mon, 5 May 2014 12:32:19 GMT
+Received: from userz7021.oracle.com (userz7021.oracle.com [156.151.31.85])
 	by ucsinet22.oracle.com (8.14.5+Sun/8.14.5) with ESMTP id
-	s45CWBiq014435
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <xfs@oss.sgi.com>; Mon, 5 May 2014 12:32:11 GMT
+	s45CWIAk014949
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=FAIL)
+	for <xfs@oss.sgi.com>; Mon, 5 May 2014 12:32:18 GMT
 Received: from abhmp0018.oracle.com (abhmp0018.oracle.com [141.146.116.24])
-	by aserz7021.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
-	s45CWBwV029967 for <xfs@oss.sgi.com>; Mon, 5 May 2014 12:32:11 GMT
-Message-ID: <536784C6.8000009@oracle.com>
-Date: Mon, 05 May 2014 20:32:06 +0800
+	by userz7021.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
+	s45CWInK009388 for <xfs@oss.sgi.com>; Mon, 5 May 2014 12:32:18 GMT
+Message-ID: <536784CD.60900@oracle.com>
+Date: Mon, 05 May 2014 20:32:13 +0800
 From: Jeff Liu <jeff.liu@oracle.com>
 MIME-Version: 1.0
-Subject: [PATCH 2/6] xfsprogs: get rid of XFS_INODE_CLUSTER_SIZE macros
+Subject: [PATCH 3/6] xfsprogs: get rid of XFS_IALLOC_BLOCKS macros
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -43,140 +43,309 @@ To: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
 From: Jie Liu <jeff.liu@oracle.com>
 
-Get rid of XFS_INODE_CLUSTER_SIZE() macros, use mp->m_inode_cluster_size
-directly.
+Get rid of XFS_IALLOC_BLOCKS() macros, use mp->m_ialloc_blks directly.
 
 Signed-off-by: Jie Liu <jeff.liu@oracle.com>
 ---
- include/xfs_ialloc.h    |  1 -
- libxfs/xfs_ialloc.c     | 10 +++++-----
- libxfs/xfs_trans_resv.c |  2 +-
- repair/dino_chunks.c    |  2 +-
- repair/prefetch.c       |  6 +++---
- repair/xfs_repair.c     |  2 +-
- 6 files changed, 11 insertions(+), 12 deletions(-)
+ db/check.c                |  2 +-
+ db/frag.c                 |  2 +-
+ db/metadump.c             |  2 +-
+ include/xfs_ialloc.h      |  5 -----
+ include/xfs_trans_space.h |  2 +-
+ libxfs/xfs_ialloc.c       |  8 ++++----
+ libxfs/xfs_trans_resv.c   |  8 ++++----
+ mkfs/proto.c              |  2 +-
+ repair/dino_chunks.c      | 24 ++++++++++++------------
+ repair/prefetch.c         |  2 +-
+ repair/xfs_repair.c       |  4 ++--
+ 11 files changed, 28 insertions(+), 33 deletions(-)
 
+diff --git a/db/check.c b/db/check.c
+index 4fd9fd0..df98cc6 100644
+--- a/db/check.c
++++ b/db/check.c
+@@ -4223,7 +4223,7 @@ scanfunc_ino(
+ 			set_cur(&typtab[TYP_INODE],
+ 				XFS_AGB_TO_DADDR(mp, seqno,
+ 						 XFS_AGINO_TO_AGBNO(mp, agino)),
+-				(int)XFS_FSB_TO_BB(mp, XFS_IALLOC_BLOCKS(mp)),
++				(int)XFS_FSB_TO_BB(mp, mp->m_ialloc_blks),
+ 				DB_RING_IGN, NULL);
+ 			if (iocur_top->data == NULL) {
+ 				if (!sflag)
+diff --git a/db/frag.c b/db/frag.c
+index 2eb33d8..38b77e0 100644
+--- a/db/frag.c
++++ b/db/frag.c
+@@ -484,7 +484,7 @@ scanfunc_ino(
+ 			set_cur(&typtab[TYP_INODE],
+ 				XFS_AGB_TO_DADDR(mp, seqno,
+ 						 XFS_AGINO_TO_AGBNO(mp, agino)),
+-				XFS_FSB_TO_BB(mp, XFS_IALLOC_BLOCKS(mp)),
++				XFS_FSB_TO_BB(mp, mp->m_ialloc_blks),
+ 				DB_RING_IGN, NULL);
+ 			if (iocur_top->data == NULL) {
+ 				dbprintf(_("can't read inode block %u/%u\n"),
+diff --git a/db/metadump.c b/db/metadump.c
+index 09bb85a..bae08cd 100644
+--- a/db/metadump.c
++++ b/db/metadump.c
+@@ -1848,7 +1848,7 @@ copy_inode_chunk(
+ 
+ 	push_cur();
+ 	set_cur(&typtab[TYP_INODE], XFS_AGB_TO_DADDR(mp, agno, agbno),
+-			XFS_FSB_TO_BB(mp, XFS_IALLOC_BLOCKS(mp)),
++			XFS_FSB_TO_BB(mp, mp->m_ialloc_blks),
+ 			DB_RING_IGN, NULL);
+ 	if (iocur_top->data == NULL) {
+ 		print_warning("cannot read inode block %u/%u", agno, agbno);
 diff --git a/include/xfs_ialloc.h b/include/xfs_ialloc.h
-index 4689b02..4026933 100644
+index 4026933..0498f20 100644
 --- a/include/xfs_ialloc.h
 +++ b/include/xfs_ialloc.h
-@@ -34,7 +34,6 @@ struct xfs_btree_cur;
+@@ -26,11 +26,6 @@ struct xfs_trans;
+ struct xfs_btree_cur;
+ 
+ /*
+- * Allocation parameters for inode allocation.
+- */
+-#define	XFS_IALLOC_BLOCKS(mp)	(mp)->m_ialloc_blks
+-
+-/*
   * Move inodes in clusters of this size.
   */
  #define	XFS_INODE_BIG_CLUSTER_SIZE	8192
--#define	XFS_INODE_CLUSTER_SIZE(mp)	(mp)->m_inode_cluster_size
+diff --git a/include/xfs_trans_space.h b/include/xfs_trans_space.h
+index 7d2c920..af5dbe0 100644
+--- a/include/xfs_trans_space.h
++++ b/include/xfs_trans_space.h
+@@ -47,7 +47,7 @@
+ #define	XFS_DIRREMOVE_SPACE_RES(mp)	\
+ 	XFS_DAREMOVE_SPACE_RES(mp, XFS_DATA_FORK)
+ #define	XFS_IALLOC_SPACE_RES(mp)	\
+-	(XFS_IALLOC_BLOCKS(mp) + (mp)->m_in_maxlevels - 1)
++	((mp)->m_ialloc_blks + (mp)->m_in_maxlevels - 1)
  
  /*
-  * Make an inode pointer out of the buffer/offset.
+  * Space reservation values for various transactions.
 diff --git a/libxfs/xfs_ialloc.c b/libxfs/xfs_ialloc.c
-index 108f6f2..bd47971 100644
+index bd47971..a3a1c75 100644
 --- a/libxfs/xfs_ialloc.c
 +++ b/libxfs/xfs_ialloc.c
-@@ -28,7 +28,7 @@ xfs_ialloc_cluster_alignment(
- {
- 	if (xfs_sb_version_hasalign(&args->mp->m_sb) &&
- 	    args->mp->m_sb.sb_inoalignmt >=
--	     XFS_B_TO_FSBT(args->mp, XFS_INODE_CLUSTER_SIZE(args->mp)))
-+	     XFS_B_TO_FSBT(args->mp, args->mp->m_inode_cluster_size))
- 		return args->mp->m_sb.sb_inoalignmt;
- 	return 1;
- }
-@@ -157,12 +157,12 @@ xfs_ialloc_inode_init(
- 	 * For small block sizes, manipulate the inodes in buffers
- 	 * which are multiples of the blocks size.
- 	 */
--	if (mp->m_sb.sb_blocksize >= XFS_INODE_CLUSTER_SIZE(mp)) {
-+	if (mp->m_sb.sb_blocksize >= mp->m_inode_cluster_size) {
- 		blks_per_cluster = 1;
- 		nbufs = length;
- 		ninodes = mp->m_sb.sb_inopblock;
- 	} else {
--		blks_per_cluster = XFS_INODE_CLUSTER_SIZE(mp) /
-+		blks_per_cluster = mp->m_inode_cluster_size /
- 				   mp->m_sb.sb_blocksize;
- 		nbufs = length / blks_per_cluster;
- 		ninodes = blks_per_cluster * mp->m_sb.sb_inopblock;
-@@ -1360,7 +1360,7 @@ xfs_imap(
- 		return XFS_ERROR(EINVAL);
- 	}
- 
--	blks_per_cluster = XFS_INODE_CLUSTER_SIZE(mp) >> mp->m_sb.sb_blocklog;
-+	blks_per_cluster = mp->m_inode_cluster_size >> mp->m_sb.sb_blocklog;
- 
+@@ -309,7 +309,7 @@ xfs_ialloc_ag_alloc(
+ 	if (args.mp->m_maxicount &&
+ 	    args.mp->m_sb.sb_icount + newlen > args.mp->m_maxicount)
+ 		return XFS_ERROR(ENOSPC);
+-	args.minlen = args.maxlen = XFS_IALLOC_BLOCKS(args.mp);
++	args.minlen = args.maxlen = args.mp->m_ialloc_blks;
  	/*
- 	 * For bulkstat and handle lookups, we have an untrusted inode number
-@@ -1381,7 +1381,7 @@ xfs_imap(
- 	 * If the inode cluster size is the same as the blocksize or
- 	 * smaller we get to the buffer by simple arithmetics.
- 	 */
--	if (XFS_INODE_CLUSTER_SIZE(mp) <= mp->m_sb.sb_blocksize) {
-+	if (mp->m_inode_cluster_size <= mp->m_sb.sb_blocksize) {
- 		offset = XFS_INO_TO_OFFSET(mp, ino);
- 		ASSERT(offset < mp->m_sb.sb_inopblock);
+ 	 * First try to allocate inodes contiguous with the last-allocated
+ 	 * chunk of inodes.  If the filesystem is striped, this will fill
+@@ -319,7 +319,7 @@ xfs_ialloc_ag_alloc(
+ 	newino = be32_to_cpu(agi->agi_newino);
+ 	agno = be32_to_cpu(agi->agi_seqno);
+ 	args.agbno = XFS_AGINO_TO_AGBNO(args.mp, newino) +
+-			XFS_IALLOC_BLOCKS(args.mp);
++			args.mp->m_ialloc_blks;
+ 	if (likely(newino != NULLAGINO &&
+ 		  (args.agbno < be32_to_cpu(agi->agi_length)))) {
+ 		args.fsbno = XFS_AGB_TO_FSB(args.mp, agno, args.agbno);
+@@ -561,7 +561,7 @@ xfs_ialloc_ag_select(
+ 		 * Is there enough free space for the file plus a block of
+ 		 * inodes? (if we need to allocate some)?
+ 		 */
+-		ineed = XFS_IALLOC_BLOCKS(mp);
++		ineed = mp->m_ialloc_blks;
+ 		longest = pag->pagf_longest;
+ 		if (!longest)
+ 			longest = pag->pagf_flcount > 0;
+@@ -1206,7 +1206,7 @@ xfs_difree(
+ 
+ 		xfs_bmap_add_free(XFS_AGB_TO_FSB(mp,
+ 				agno, XFS_INO_TO_AGBNO(mp,rec.ir_startino)),
+-				XFS_IALLOC_BLOCKS(mp), flist, mp);
++				mp->m_ialloc_blks, flist, mp);
+ 	} else {
+ 		*delete = 0;
  
 diff --git a/libxfs/xfs_trans_resv.c b/libxfs/xfs_trans_resv.c
-index 1e59fad..ba9c7b0 100644
+index ba9c7b0..93261f1 100644
 --- a/libxfs/xfs_trans_resv.c
 +++ b/libxfs/xfs_trans_resv.c
-@@ -369,7 +369,7 @@ xfs_calc_ifree_reservation(
- 		xfs_calc_buf_res(2, mp->m_sb.sb_sectsize) +
- 		xfs_calc_buf_res(1, XFS_FSB_TO_B(mp, 1)) +
+@@ -157,7 +157,7 @@ xfs_calc_itruncate_reservation(
+ 		    xfs_calc_buf_res(5, 0) +
+ 		    xfs_calc_buf_res(XFS_ALLOCFREE_LOG_COUNT(mp, 1),
+ 				     XFS_FSB_TO_B(mp, 1)) +
+-		    xfs_calc_buf_res(2 + XFS_IALLOC_BLOCKS(mp) +
++		    xfs_calc_buf_res(2 + mp->m_ialloc_blks +
+ 				     mp->m_in_maxlevels, 0)));
+ }
+ 
+@@ -265,7 +265,7 @@ xfs_calc_create_resv_modify(
+  * For create we can allocate some inodes giving:
+  *    the agi and agf of the ag getting the new inodes: 2 * sectorsize
+  *    the superblock for the nlink flag: sector size
+- *    the inode blocks allocated: XFS_IALLOC_BLOCKS * blocksize
++ *    the inode blocks allocated: mp->m_ialloc_blks * blocksize
+  *    the inode btree: max depth * blocksize
+  *    the allocation btrees: 2 trees * (max depth - 1) * block size
+  */
+@@ -275,7 +275,7 @@ xfs_calc_create_resv_alloc(
+ {
+ 	return xfs_calc_buf_res(2, mp->m_sb.sb_sectsize) +
+ 		mp->m_sb.sb_sectsize +
+-		xfs_calc_buf_res(XFS_IALLOC_BLOCKS(mp), XFS_FSB_TO_B(mp, 1)) +
++		xfs_calc_buf_res(mp->m_ialloc_blks, XFS_FSB_TO_B(mp, 1)) +
+ 		xfs_calc_buf_res(mp->m_in_maxlevels, XFS_FSB_TO_B(mp, 1)) +
+ 		xfs_calc_buf_res(XFS_ALLOCFREE_LOG_COUNT(mp, 1),
+ 				 XFS_FSB_TO_B(mp, 1));
+@@ -371,7 +371,7 @@ xfs_calc_ifree_reservation(
  		MAX((__uint16_t)XFS_FSB_TO_B(mp, 1),
--		    XFS_INODE_CLUSTER_SIZE(mp)) +
-+		    mp->m_inode_cluster_size) +
+ 		    mp->m_inode_cluster_size) +
  		xfs_calc_buf_res(1, 0) +
- 		xfs_calc_buf_res(2 + XFS_IALLOC_BLOCKS(mp) +
+-		xfs_calc_buf_res(2 + XFS_IALLOC_BLOCKS(mp) +
++		xfs_calc_buf_res(2 + mp->m_ialloc_blks +
  				 mp->m_in_maxlevels, 0) +
+ 		xfs_calc_buf_res(XFS_ALLOCFREE_LOG_COUNT(mp, 1),
+ 				 XFS_FSB_TO_B(mp, 1));
+diff --git a/mkfs/proto.c b/mkfs/proto.c
+index 5a47e27..2689f75 100644
+--- a/mkfs/proto.c
++++ b/mkfs/proto.c
+@@ -39,7 +39,7 @@ static long filesize(int fd);
+  * (basically no fragmentation).
+  */
+ #define	MKFS_BLOCKRES_INODE	\
+-	((uint)(XFS_IALLOC_BLOCKS(mp) + ((mp)->m_in_maxlevels - 1)))
++	((uint)(mp->m_ialloc_blks + ((mp)->m_in_maxlevels - 1)))
+ #define	MKFS_BLOCKRES(rb)	\
+ 	((uint)(MKFS_BLOCKRES_INODE + XFS_DA_NODE_MAXDEPTH + \
+ 	(XFS_BM_MAXLEVELS(mp, XFS_DATA_FORK) - 1) + (rb)))
 diff --git a/repair/dino_chunks.c b/repair/dino_chunks.c
-index 15aa4f8..2c2fd79 100644
+index 2c2fd79..1bf1fca 100644
 --- a/repair/dino_chunks.c
 +++ b/repair/dino_chunks.c
-@@ -598,7 +598,7 @@ process_inode_chunk(
- 	*bogus = 0;
- 	ASSERT(XFS_IALLOC_BLOCKS(mp) > 0);
+@@ -117,7 +117,7 @@ verify_inode_chunk(xfs_mount_t		*mp,
+ 	agbno = XFS_INO_TO_AGBNO(mp, ino);
+ 	*start_ino = NULLFSINO;
  
--	blks_per_cluster = XFS_INODE_CLUSTER_SIZE(mp) >> mp->m_sb.sb_blocklog;
-+	blks_per_cluster = mp->m_inode_cluster_size >> mp->m_sb.sb_blocklog;
- 	if (blks_per_cluster == 0)
- 		blks_per_cluster = 1;
- 	cluster_count = XFS_INODES_PER_CHUNK / inodes_per_cluster;
-diff --git a/repair/prefetch.c b/repair/prefetch.c
-index 2cd3d5a..25ceb34 100644
---- a/repair/prefetch.c
-+++ b/repair/prefetch.c
-@@ -682,7 +682,7 @@ pf_queuing_worker(
- 	int			i;
- 	int			err;
+-	ASSERT(XFS_IALLOC_BLOCKS(mp) > 0);
++	ASSERT(mp->m_ialloc_blks > 0);
  
--	blks_per_cluster =  XFS_INODE_CLUSTER_SIZE(mp) >> mp->m_sb.sb_blocklog;
-+	blks_per_cluster = mp->m_inode_cluster_size >> mp->m_sb.sb_blocklog;
- 	if (blks_per_cluster == 0)
- 		blks_per_cluster = 1;
- 
-@@ -844,8 +844,8 @@ start_inode_prefetch(
+ 	if (agno == mp->m_sb.sb_agcount - 1)
+ 		max_agbno = mp->m_sb.sb_dblocks -
+@@ -135,7 +135,7 @@ verify_inode_chunk(xfs_mount_t		*mp,
+ 	 * check for the easy case, inodes per block >= XFS_INODES_PER_CHUNK
+ 	 * (multiple chunks per block)
  	 */
+-	if (XFS_IALLOC_BLOCKS(mp) == 1)  {
++	if (mp->m_ialloc_blks == 1)  {
+ 		if (agbno > max_agbno)
+ 			return 0;
+ 		if (check_aginode_block(mp, agno, agino) == 0)
+@@ -208,7 +208,7 @@ verify_inode_chunk(xfs_mount_t		*mp,
+ 		 */
+ 		start_agbno = rounddown(XFS_INO_TO_AGBNO(mp, ino),
+ 					fs_ino_alignment);
+-		end_agbno = start_agbno + XFS_IALLOC_BLOCKS(mp);
++		end_agbno = start_agbno + mp->m_ialloc_blks;
  
- 	max_queue = libxfs_bcache->c_maxcount / thread_count / 8;
--	if (XFS_INODE_CLUSTER_SIZE(mp) > mp->m_sb.sb_blocksize)
--		max_queue = max_queue * (XFS_INODE_CLUSTER_SIZE(mp) >>
-+	if (mp->m_inode_cluster_size > mp->m_sb.sb_blocksize)
-+		max_queue = max_queue * (mp->m_inode_cluster_size >>
- 				mp->m_sb.sb_blocklog) / XFS_IALLOC_BLOCKS(mp);
+ 		/*
+ 		 * if this fs has aligned inodes but the end of the
+@@ -266,14 +266,14 @@ verify_inode_chunk(xfs_mount_t		*mp,
+ 	 * a discovered inode chunk completely within that range
+ 	 * would include the inode passed into us.
+ 	 */
+-	if (XFS_IALLOC_BLOCKS(mp) > 1)  {
++	if (mp->m_ialloc_blks > 1)  {
+ 		if (agino > mp->m_ialloc_inos)
+-			start_agbno = agbno - XFS_IALLOC_BLOCKS(mp) + 1;
++			start_agbno = agbno - mp->m_ialloc_blks + 1;
+ 		else
+ 			start_agbno = 1;
+ 	}
  
- 	sem_init(&args->ra_count, 0, max_queue);
-diff --git a/repair/xfs_repair.c b/repair/xfs_repair.c
-index 08b25f0..b6d070b 100644
---- a/repair/xfs_repair.c
-+++ b/repair/xfs_repair.c
-@@ -618,7 +618,7 @@ main(int argc, char **argv)
- 	chunks_pblock = mp->m_sb.sb_inopblock / XFS_INODES_PER_CHUNK;
- 	max_symlink_blocks = libxfs_symlink_blocks(mp, MAXPATHLEN);
- 	inodes_per_cluster = MAX(mp->m_sb.sb_inopblock,
--			XFS_INODE_CLUSTER_SIZE(mp) >> mp->m_sb.sb_inodelog);
-+			mp->m_inode_cluster_size >> mp->m_sb.sb_inodelog);
+-	end_agbno = agbno + XFS_IALLOC_BLOCKS(mp);
++	end_agbno = agbno + mp->m_ialloc_blks;
+ 
+ 	if (end_agbno > max_agbno)
+ 		end_agbno = max_agbno;
+@@ -328,7 +328,7 @@ verify_inode_chunk(xfs_mount_t		*mp,
+ 
+ 			start_agbno = XFS_AGINO_TO_AGBNO(mp,
+ 						irec_p->ino_startnum) +
+-						XFS_IALLOC_BLOCKS(mp);
++						mp->m_ialloc_blks;
+ 
+ 			/*
+ 			 * we know that the inode we're trying to verify isn't
+@@ -351,7 +351,7 @@ verify_inode_chunk(xfs_mount_t		*mp,
+ 	 * the inode in question and that the space between them
+ 	 * is too small for a legal inode chunk
+ 	 */
+-	if (end_agbno - start_agbno < XFS_IALLOC_BLOCKS(mp))
++	if (end_agbno - start_agbno < mp->m_ialloc_blks)
+ 		return(0);
  
  	/*
- 	 * Automatic striding for high agcount filesystems.
+@@ -395,7 +395,7 @@ verify_inode_chunk(xfs_mount_t		*mp,
+ 
+ 	num_blks = chunk_stop_agbno - chunk_start_agbno;
+ 
+-	if (num_blks < XFS_IALLOC_BLOCKS(mp) || ino_cnt == 0)
++	if (num_blks < mp->m_ialloc_blks || ino_cnt == 0)
+ 		return(0);
+ 
+ 	/*
+@@ -411,8 +411,8 @@ verify_inode_chunk(xfs_mount_t		*mp,
+ 	 * the chunk
+ 	 */
+ 
+-	if (num_blks % XFS_IALLOC_BLOCKS(mp) != 0)  {
+-		num_blks = rounddown(num_blks, XFS_IALLOC_BLOCKS(mp));
++	if (num_blks % mp->m_ialloc_blks != 0)  {
++		num_blks = rounddown(num_blks, mp->m_ialloc_blks);
+ 		chunk_stop_agbno = chunk_start_agbno + num_blks;
+ 	}
+ 
+@@ -596,7 +596,7 @@ process_inode_chunk(
+ 	ASSERT(XFS_AGINO_TO_OFFSET(mp, first_irec->ino_startnum) == 0);
+ 
+ 	*bogus = 0;
+-	ASSERT(XFS_IALLOC_BLOCKS(mp) > 0);
++	ASSERT(mp->m_ialloc_blks > 0);
+ 
+ 	blks_per_cluster = mp->m_inode_cluster_size >> mp->m_sb.sb_blocklog;
+ 	if (blks_per_cluster == 0)
+diff --git a/repair/prefetch.c b/repair/prefetch.c
+index 25ceb34..e3dfd08 100644
+--- a/repair/prefetch.c
++++ b/repair/prefetch.c
+@@ -846,7 +846,7 @@ start_inode_prefetch(
+ 	max_queue = libxfs_bcache->c_maxcount / thread_count / 8;
+ 	if (mp->m_inode_cluster_size > mp->m_sb.sb_blocksize)
+ 		max_queue = max_queue * (mp->m_inode_cluster_size >>
+-				mp->m_sb.sb_blocklog) / XFS_IALLOC_BLOCKS(mp);
++				mp->m_sb.sb_blocklog) / mp->m_ialloc_blks;
+ 
+ 	sem_init(&args->ra_count, 0, max_queue);
+ 
+diff --git a/repair/xfs_repair.c b/repair/xfs_repair.c
+index b6d070b..5515de8 100644
+--- a/repair/xfs_repair.c
++++ b/repair/xfs_repair.c
+@@ -441,9 +441,9 @@ calc_mkfs(xfs_mount_t *mp)
+ 		first_prealloc_ino = XFS_OFFBNO_TO_AGINO(mp, fino_bno, 0);
+ 	}
+ 
+-	ASSERT(XFS_IALLOC_BLOCKS(mp) > 0);
++	ASSERT(mp->m_ialloc_blks > 0);
+ 
+-	if (XFS_IALLOC_BLOCKS(mp) > 1)
++	if (mp->m_ialloc_blks > 1)
+ 		last_prealloc_ino = first_prealloc_ino + XFS_INODES_PER_CHUNK;
+ 	else
+ 		last_prealloc_ino = XFS_OFFBNO_TO_AGINO(mp, fino_bno + 1, 0);
 -- 
 1.8.3.2
 
