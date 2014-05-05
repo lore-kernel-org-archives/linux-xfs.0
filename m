@@ -1,21 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 0A30929DF8
-	for <xfs@oss.sgi.com>; Mon,  5 May 2014 15:26:31 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id E8F8E30405F
-	for <xfs@oss.sgi.com>; Mon,  5 May 2014 13:26:30 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id Y2qcRZ0k12gMrilb for
-	<xfs@oss.sgi.com>; Mon, 05 May 2014 13:26:29 -0700 (PDT)
-Date: Mon, 5 May 2014 15:30:09 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [V2] xfs: remote attribute overwrite causes transaction overrun
-Message-ID: <20140505193009.GA12448@laptop.bfoster>
-References: <1399275948-27752-1-git-send-email-david@fromorbit.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id F074729DF8
+	for <xfs@oss.sgi.com>; Mon,  5 May 2014 15:36:58 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 81C58AC006
+	for <xfs@oss.sgi.com>; Mon,  5 May 2014 13:36:58 -0700 (PDT)
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	6MxnWcJTFEKgrBWM for <xfs@oss.sgi.com>;
+	Mon, 05 May 2014 13:36:56 -0700 (PDT)
+Date: Tue, 6 May 2014 06:36:33 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: Fatigue for XFS
+Message-ID: <20140505203633.GW26353@dastard>
+References: <CABYiri9j=2ipPhvRtn1g=omEDpTz5VD8O0fPWrBGCm=UsgNavw@mail.gmail.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1399275948-27752-1-git-send-email-david@fromorbit.com>
+In-Reply-To: <CABYiri9j=2ipPhvRtn1g=omEDpTz5VD8O0fPWrBGCm=UsgNavw@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,277 +29,66 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: Andrey Korolyov <andrey@xdel.ru>
+Cc: "ceph-users@lists.ceph.com" <ceph-users@lists.ceph.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-On Mon, May 05, 2014 at 05:45:48PM +1000, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
+On Mon, May 05, 2014 at 11:49:05PM +0400, Andrey Korolyov wrote:
+> Hello,
 > 
-> Commit e461fcb ("xfs: remote attribute lookups require the value
-> length") passes the remote attribute length in the xfs_da_args
-> structure on lookup so that CRC calculations and validity checking
-> can be performed correctly by related code. This, unfortunately has
-> the side effect of changing the args->valuelen parameter in cases
-> where it shouldn't.
+> We are currently exploring issue which can be related to Ceph itself
+> or to the XFS - any help is very appreciated.
 > 
-> That is, when we replace a remote attribute, the incoming
-> replacement stores the value and length in args->value and
-> args->valuelen, but then the lookup which finds the existing remote
-> attribute overwrites args->valuelen with the length of the remote
-> attribute being replaced. Hence when we go to create the new
-> attribute, we create it of the size of the existing remote
-> attribute, not the size it is supposed to be. When the new attribute
-> is much smaller than the old attribute, this results in a
-> transaction overrun and an ASSERT() failure on a debug kernel:
-> 
-> XFS: Assertion failed: tp->t_blk_res_used <= tp->t_blk_res, file: fs/xfs/xfs_trans.c, line: 331
-> 
-> Fix this by keeping the remote attribute value length separate to
-> the attribute value length in the xfs_da_args structure. The enables
-> us to pass the length of the remote attribute to be removed without
-> overwriting the new attribute's length.
-> 
-> Also, ensure that when we save remote block contexts for a later
-> rename we zero the original state variables so that we don't confuse
-> the state of the attribute to be removes with the state of the new
-> attribute that we just added. [Spotted by Brain Foster.]
-> 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> ---
+> First, the picture: relatively old cluster w/ two years uptime and ten
+> months after fs recreation on every OSD, one of daemons started to
+> flap approximately once per day for couple of weeks, with no external
+> reason (bandwidth/IOPS/host issues). It looks almost the same every
+> time - OSD suddenly stop serving requests for a short period, gets
+> kicked out by peers report, then returns in a couple of seconds. Of
+> course, small but sensitive amount of requests are delayed by 15-30
+> seconds twice, which is bad for us. The only thing which correlates
+> with this kick is a peak of I/O, not too large, even not consuming all
+> underlying disk utilization, but alone in the cluster and clearly
+> visible. Also there are at least two occasions *without* correlated
+> iowait peak.
 
-Looks good to me..
+So, actual numbers and traces are the only thing that tell us what
+is happening during these events. See here:
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+http://xfs.org/index.php/XFS_FAQ#Q:_What_information_should_I_include_when_reporting_a_problem.3F
 
->  fs/xfs/xfs_attr.c        | 24 +++++++++++++++++++++++-
->  fs/xfs/xfs_attr_leaf.c   | 21 +++++++++++----------
->  fs/xfs/xfs_attr_list.c   |  1 +
->  fs/xfs/xfs_attr_remote.c |  8 +++++---
->  fs/xfs/xfs_da_btree.h    |  2 ++
->  5 files changed, 42 insertions(+), 14 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_attr.c b/fs/xfs/xfs_attr.c
-> index 95de302..30482c9 100644
-> --- a/fs/xfs/xfs_attr.c
-> +++ b/fs/xfs/xfs_attr.c
-> @@ -213,7 +213,7 @@ xfs_attr_calc_size(
->  		 * Out of line attribute, cannot double split, but
->  		 * make room for the attribute value itself.
->  		 */
-> -		uint	dblocks = XFS_B_TO_FSB(mp, valuelen);
-> +		uint	dblocks = xfs_attr3_rmt_blocks(mp, valuelen);
->  		nblks += dblocks;
->  		nblks += XFS_NEXTENTADD_SPACE_RES(mp, dblocks, XFS_ATTR_FORK);
->  	}
-> @@ -698,11 +698,22 @@ xfs_attr_leaf_addname(xfs_da_args_t *args)
->  
->  		trace_xfs_attr_leaf_replace(args);
->  
-> +		/* save the attribute state for later removal*/
->  		args->op_flags |= XFS_DA_OP_RENAME;	/* an atomic rename */
->  		args->blkno2 = args->blkno;		/* set 2nd entry info*/
->  		args->index2 = args->index;
->  		args->rmtblkno2 = args->rmtblkno;
->  		args->rmtblkcnt2 = args->rmtblkcnt;
-> +		args->rmtvaluelen2 = args->rmtvaluelen;
-> +
-> +		/*
-> +		 * clear the remote attr state now that it is saved so that the
-> +		 * values reflect the state of the attribute we are about to
-> +		 * add, not the attribute we just found and will remove later.
-> +		 */
-> +		args->rmtblkno = 0;
-> +		args->rmtblkcnt = 0;
-> +		args->rmtvaluelen = 0;
->  	}
->  
->  	/*
-> @@ -794,6 +805,7 @@ xfs_attr_leaf_addname(xfs_da_args_t *args)
->  		args->blkno = args->blkno2;
->  		args->rmtblkno = args->rmtblkno2;
->  		args->rmtblkcnt = args->rmtblkcnt2;
-> +		args->rmtvaluelen = args->rmtvaluelen2;
->  		if (args->rmtblkno) {
->  			error = xfs_attr_rmtval_remove(args);
->  			if (error)
-> @@ -999,13 +1011,22 @@ restart:
->  
->  		trace_xfs_attr_node_replace(args);
->  
-> +		/* save the attribute state for later removal*/
->  		args->op_flags |= XFS_DA_OP_RENAME;	/* atomic rename op */
->  		args->blkno2 = args->blkno;		/* set 2nd entry info*/
->  		args->index2 = args->index;
->  		args->rmtblkno2 = args->rmtblkno;
->  		args->rmtblkcnt2 = args->rmtblkcnt;
-> +		args->rmtvaluelen2 = args->rmtvaluelen;
-> +
-> +		/*
-> +		 * clear the remote attr state now that it is saved so that the
-> +		 * values reflect the state of the attribute we are about to
-> +		 * add, not the attribute we just found and will remove later.
-> +		 */
->  		args->rmtblkno = 0;
->  		args->rmtblkcnt = 0;
-> +		args->rmtvaluelen = 0;
->  	}
->  
->  	retval = xfs_attr3_leaf_add(blk->bp, state->args);
-> @@ -1133,6 +1154,7 @@ restart:
->  		args->blkno = args->blkno2;
->  		args->rmtblkno = args->rmtblkno2;
->  		args->rmtblkcnt = args->rmtblkcnt2;
-> +		args->rmtvaluelen = args->rmtvaluelen2;
->  		if (args->rmtblkno) {
->  			error = xfs_attr_rmtval_remove(args);
->  			if (error)
-> diff --git a/fs/xfs/xfs_attr_leaf.c b/fs/xfs/xfs_attr_leaf.c
-> index b9d9170..17ec23f 100644
-> --- a/fs/xfs/xfs_attr_leaf.c
-> +++ b/fs/xfs/xfs_attr_leaf.c
-> @@ -1229,6 +1229,7 @@ xfs_attr3_leaf_add_work(
->  		name_rmt->valueblk = 0;
->  		args->rmtblkno = 1;
->  		args->rmtblkcnt = xfs_attr3_rmt_blocks(mp, args->valuelen);
-> +		args->rmtvaluelen = args->valuelen;
->  	}
->  	xfs_trans_log_buf(args->trans, bp,
->  	     XFS_DA_LOGRANGE(leaf, xfs_attr3_leaf_name(leaf, args->index),
-> @@ -2167,11 +2168,11 @@ xfs_attr3_leaf_lookup_int(
->  			if (!xfs_attr_namesp_match(args->flags, entry->flags))
->  				continue;
->  			args->index = probe;
-> -			args->valuelen = be32_to_cpu(name_rmt->valuelen);
-> +			args->rmtvaluelen = be32_to_cpu(name_rmt->valuelen);
->  			args->rmtblkno = be32_to_cpu(name_rmt->valueblk);
->  			args->rmtblkcnt = xfs_attr3_rmt_blocks(
->  							args->dp->i_mount,
-> -							args->valuelen);
-> +							args->rmtvaluelen);
->  			return XFS_ERROR(EEXIST);
->  		}
->  	}
-> @@ -2220,19 +2221,19 @@ xfs_attr3_leaf_getvalue(
->  		name_rmt = xfs_attr3_leaf_name_remote(leaf, args->index);
->  		ASSERT(name_rmt->namelen == args->namelen);
->  		ASSERT(memcmp(args->name, name_rmt->name, args->namelen) == 0);
-> -		valuelen = be32_to_cpu(name_rmt->valuelen);
-> +		args->rmtvaluelen = be32_to_cpu(name_rmt->valuelen);
->  		args->rmtblkno = be32_to_cpu(name_rmt->valueblk);
->  		args->rmtblkcnt = xfs_attr3_rmt_blocks(args->dp->i_mount,
-> -						       valuelen);
-> +						       args->rmtvaluelen);
->  		if (args->flags & ATTR_KERNOVAL) {
-> -			args->valuelen = valuelen;
-> +			args->valuelen = args->rmtvaluelen;
->  			return 0;
->  		}
-> -		if (args->valuelen < valuelen) {
-> -			args->valuelen = valuelen;
-> +		if (args->valuelen < args->rmtvaluelen) {
-> +			args->valuelen = args->rmtvaluelen;
->  			return XFS_ERROR(ERANGE);
->  		}
-> -		args->valuelen = valuelen;
-> +		args->valuelen = args->rmtvaluelen;
->  	}
->  	return 0;
->  }
-> @@ -2519,7 +2520,7 @@ xfs_attr3_leaf_clearflag(
->  		ASSERT((entry->flags & XFS_ATTR_LOCAL) == 0);
->  		name_rmt = xfs_attr3_leaf_name_remote(leaf, args->index);
->  		name_rmt->valueblk = cpu_to_be32(args->rmtblkno);
-> -		name_rmt->valuelen = cpu_to_be32(args->valuelen);
-> +		name_rmt->valuelen = cpu_to_be32(args->rmtvaluelen);
->  		xfs_trans_log_buf(args->trans, bp,
->  			 XFS_DA_LOGRANGE(leaf, name_rmt, sizeof(*name_rmt)));
->  	}
-> @@ -2677,7 +2678,7 @@ xfs_attr3_leaf_flipflags(
->  		ASSERT((entry1->flags & XFS_ATTR_LOCAL) == 0);
->  		name_rmt = xfs_attr3_leaf_name_remote(leaf1, args->index);
->  		name_rmt->valueblk = cpu_to_be32(args->rmtblkno);
-> -		name_rmt->valuelen = cpu_to_be32(args->valuelen);
-> +		name_rmt->valuelen = cpu_to_be32(args->rmtvaluelen);
->  		xfs_trans_log_buf(args->trans, bp1,
->  			 XFS_DA_LOGRANGE(leaf1, name_rmt, sizeof(*name_rmt)));
->  	}
-> diff --git a/fs/xfs/xfs_attr_list.c b/fs/xfs/xfs_attr_list.c
-> index 3e9a65a..0bba7c3 100644
-> --- a/fs/xfs/xfs_attr_list.c
-> +++ b/fs/xfs/xfs_attr_list.c
-> @@ -447,6 +447,7 @@ xfs_attr3_leaf_list_int(
->  				args.dp = context->dp;
->  				args.whichfork = XFS_ATTR_FORK;
->  				args.valuelen = valuelen;
-> +				args.rmtvaluelen = valuelen;
->  				args.value = kmem_alloc(valuelen, KM_SLEEP | KM_NOFS);
->  				args.rmtblkno = be32_to_cpu(name_rmt->valueblk);
->  				args.rmtblkcnt = xfs_attr3_rmt_blocks(
-> diff --git a/fs/xfs/xfs_attr_remote.c b/fs/xfs/xfs_attr_remote.c
-> index 44a57c8..6a70e7e 100644
-> --- a/fs/xfs/xfs_attr_remote.c
-> +++ b/fs/xfs/xfs_attr_remote.c
-> @@ -337,7 +337,7 @@ xfs_attr_rmtval_get(
->  	struct xfs_buf		*bp;
->  	xfs_dablk_t		lblkno = args->rmtblkno;
->  	__uint8_t		*dst = args->value;
-> -	int			valuelen = args->valuelen;
-> +	int			valuelen;
->  	int			nmap;
->  	int			error;
->  	int			blkcnt = args->rmtblkcnt;
-> @@ -347,7 +347,9 @@ xfs_attr_rmtval_get(
->  	trace_xfs_attr_rmtval_get(args);
->  
->  	ASSERT(!(args->flags & ATTR_KERNOVAL));
-> +	ASSERT(args->rmtvaluelen == args->valuelen);
->  
-> +	valuelen = args->rmtvaluelen;
->  	while (valuelen > 0) {
->  		nmap = ATTR_RMTVALUE_MAPSIZE;
->  		error = xfs_bmapi_read(args->dp, (xfs_fileoff_t)lblkno,
-> @@ -415,7 +417,7 @@ xfs_attr_rmtval_set(
->  	 * attributes have headers, we can't just do a straight byte to FSB
->  	 * conversion and have to take the header space into account.
->  	 */
-> -	blkcnt = xfs_attr3_rmt_blocks(mp, args->valuelen);
-> +	blkcnt = xfs_attr3_rmt_blocks(mp, args->rmtvaluelen);
->  	error = xfs_bmap_first_unused(args->trans, args->dp, blkcnt, &lfileoff,
->  						   XFS_ATTR_FORK);
->  	if (error)
-> @@ -480,7 +482,7 @@ xfs_attr_rmtval_set(
->  	 */
->  	lblkno = args->rmtblkno;
->  	blkcnt = args->rmtblkcnt;
-> -	valuelen = args->valuelen;
-> +	valuelen = args->rmtvaluelen;
->  	while (valuelen > 0) {
->  		struct xfs_buf	*bp;
->  		xfs_daddr_t	dblkno;
-> diff --git a/fs/xfs/xfs_da_btree.h b/fs/xfs/xfs_da_btree.h
-> index 6e95ea7..201c609 100644
-> --- a/fs/xfs/xfs_da_btree.h
-> +++ b/fs/xfs/xfs_da_btree.h
-> @@ -60,10 +60,12 @@ typedef struct xfs_da_args {
->  	int		index;		/* index of attr of interest in blk */
->  	xfs_dablk_t	rmtblkno;	/* remote attr value starting blkno */
->  	int		rmtblkcnt;	/* remote attr value block count */
-> +	int		rmtvaluelen;	/* remote attr value length in bytes */
->  	xfs_dablk_t	blkno2;		/* blkno of 2nd attr leaf of interest */
->  	int		index2;		/* index of 2nd attr in blk */
->  	xfs_dablk_t	rmtblkno2;	/* remote attr value starting blkno */
->  	int		rmtblkcnt2;	/* remote attr value block count */
-> +	int		rmtvaluelen2;	/* remote attr value length in bytes */
->  	int		op_flags;	/* operation flags */
->  	enum xfs_dacmp	cmpresult;	/* name compare result for lookups */
->  } xfs_da_args_t;
-> -- 
-> 1.9.0
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+If it happens at almost the same time every day, then I'd be looking
+at the crontabs to find what starts up about that time. output of
+top will also probably tell you what process is running, too. topio
+might be instructive, and blktrace almost certainly will be....
+
+> I have two versions - we`re touching some sector on disk which is
+> about to be marked as dead but not displayed in SMART statistics or (I
+
+Doubt it - SMART doesn't cause OS visible IO dispatch spikes.
+
+> believe so) some kind of XFS fatigue, which can be more likely in this
+> case, since near-bad sector should be touched more frequently and
+> related impact could leave traces in dmesg/SMART from my experience. I
+
+I doubt that, too, because XFS doesn't have anything that is
+triggered on a daily basis inside it. Maybe you've got xfs_fsr set
+up on a cron job, though...
+
+> would like to ask if anyone has a simular experience before or can
+> suggest to poke existing file system in some way. If no suggestion
+> appear, I`ll probably reformat disk and, if problem will remain after
+> refill, replace it, but I think less destructive actions can be done
+> before.
+
+Yeah, monitoring and determining the process that is issuing the IO
+is what you need to find first.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
