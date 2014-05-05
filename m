@@ -1,29 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id E4B717F56
-	for <xfs@oss.sgi.com>; Mon,  5 May 2014 00:20:04 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 83EF57F58
+	for <xfs@oss.sgi.com>; Mon,  5 May 2014 01:13:17 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id C92D58F8033
-	for <xfs@oss.sgi.com>; Sun,  4 May 2014 22:20:01 -0700 (PDT)
-Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
-	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	tvyMSJ2bBv4jye9S for <xfs@oss.sgi.com>;
-	Sun, 04 May 2014 22:19:59 -0700 (PDT)
-Date: Mon, 5 May 2014 15:19:42 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH V3] xfs: truncate_setsize should be outside transactions
-Message-ID: <20140505051941.GU26353@dastard>
-References: <1398983979-23696-1-git-send-email-david@fromorbit.com>
-	<20140502045443.GA8867@infradead.org>
-	<20140502050053.GA17578@infradead.org>
-	<20140502064700.GB26353@dastard> <20140502070054.GC26353@dastard>
-	<20140502100802.GB14028@infradead.org>
-	<20140502232339.GD26353@dastard>
-	<20140503151601.GB28608@infradead.org>
-	<20140504000618.GK26353@dastard>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 71BB08F8035
+	for <xfs@oss.sgi.com>; Sun,  4 May 2014 23:13:14 -0700 (PDT)
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
+	cuda.sgi.com with ESMTP id VcB5i4w5FaAgfXRg (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Sun, 04 May 2014 23:13:13 -0700 (PDT)
+Message-ID: <53672C12.10600@oracle.com>
+Date: Mon, 05 May 2014 14:13:38 +0800
+From: Junxiao Bi <junxiao.bi@oracle.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20140504000618.GK26353@dastard>
+Subject: Re: [PATCH] xfsprogs: xfs_copy: use exit() to replace killall()
+References: <1399189455-29890-1-git-send-email-junxiao.bi@oracle.com>
+	<20140504103443.GA25154@infradead.org>
+In-Reply-To: <20140504103443.GA25154@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -37,96 +30,54 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+Cc: joe.jin@oracle.com, xfs@oss.sgi.com
 
+On 05/04/2014 06:34 PM, Christoph Hellwig wrote:
+> On Sun, May 04, 2014 at 03:44:15PM +0800, Junxiao Bi wrote:
+>> Sending a SIGKILL signal to child thread will terminate the whole process,
+>> xfs_copy will return an error value 137. This cause confuse for script to
+>> know whether the copy successes.
+>>
+>> Calling exit() in main thread can terminate the whole process and return the
+>> right value.
+> Looks generally good to me, but the changelog should have some more
+> details:
+Yes, will update.
+>
+>>  	if (buf->length > buf->size)  {
+>>  		do_warn(_("assert error:  buf->length = %d, buf->size = %d\n"),
+>>  			buf->length, buf->size);
+>> -		killall();
+>> -		abort();
+>> +		exit(1);
+> You're replacing the killall with an exit here and removing the abort()
+> call.  I can see arguments for keeping either the abort or exit, but please
+> document why you did in the patch description.  If the exit was
+> intentional should we return a different value for an assertation
+> failure?
+I think exit() is more clear than killall()+abort(). And xfs_copy uses
+exit(1) to exit before creating threads.
+I think 1 is OK, since all values except 0 means xfs_copy fail.
+>
+>> -	killall();
+>> -	pthread_exit(NULL);
+>> -	/*NOTREACHED*/
+>> -	return 0;
+>> +
+>> +	exit(0);
+> You're also replacing the return 0 from main with an exit which
+> seem superflous.
+Yes, return 0 is OK. Will update the patch.
+>
+> Btw, I think the reason for this cruft is that xfs_copy was originally
+> written using the IRIX sproc interface, and the port to pthreads didn't
+> remove this gem:
+Thanks for point the reason.
 
-From: Dave Chinner <dchinner@redhat.com>
-
-truncate_setsize() removes pages from the page cache, and hence
-requires page locks to be held. It is not valid to lock a page cache
-page inside a transaction context as we can hold page locks when we
-we reserve space for a transaction. If we do, then we expose an ABBA
-deadlock between log space reservation and page locks.
-
-That is, both the write path and writeback lock a page, then start a
-transaction for block allocation, which means they can block waiting
-for a log reservation with the page lock held. If we hold a log
-reservation and then do something that locks a page (e.g.
-truncate_setsize in xfs_setattr_size) then that page lock can block
-on the page locked and waiting for a log reservation. If the
-transaction that is waiting for the page lock is the only active
-transaction in the system that can free log space via a commit,
-then writeback will never make progress and so log space will never
-free up.
-
-This issue with xfs_setattr_size() was introduced back in 2010 by
-commit fa9b227 ("xfs: new truncate sequence") which moved the page
-cache truncate from outside the transaction context (what was
-xfs_itruncate_data()) to inside the transaction context as a call to
-truncate_setsize().
-
-The reason truncate_setsize() was located where in this place was
-that we can't shouldn't change the file size until after we are in
-the transaction context and the operation will either succeed or
-shut down the filesystem on failure. However, block_truncate_page()
-already modifies the file contents before we enter the transaction
-context, so we can't really fulfill this guarantee in any way. Hence
-we may as well ensure that on success or failure, the in-memory
-inode and data is truncated away and that the application cleans up
-the mess appropriately.
-
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
-
-V3 - revert back to original fix but expand the comment to explain
-why the truncate is done this way.
-
- fs/xfs/xfs_iops.c | 20 ++++++++++++++++----
- 1 file changed, 16 insertions(+), 4 deletions(-)
-
-diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-index ef1ca01..9ef6394 100644
---- a/fs/xfs/xfs_iops.c
-+++ b/fs/xfs/xfs_iops.c
-@@ -808,22 +808,34 @@ xfs_setattr_size(
- 	 */
- 	inode_dio_wait(inode);
- 
-+	/*
-+	 * Do all the page cache truncate work outside the transaction context
-+	 * as the "lock" order is page lock->log space reservation.  i.e.
-+	 * locking pages inside the transaction can ABBA deadlock with
-+	 * writeback. We have to do the VFS inode size update before we truncate
-+	 * the pagecache, however, to avoid racing with page faults beyond the
-+	 * new EOF they are not serialised against truncate operations except by
-+	 * page locks and size updates.
-+	 *
-+	 * Hence we are in a situation where a truncate can fail with ENOMEM
-+	 * from xfs_trans_reserve(), but having already truncated the in-memory
-+	 * version of the file (i.e. made user visible changes). There's not
-+	 * much we can do about this, except to hope that the caller sees ENOMEM
-+	 * and retries the truncate operation.
-+	 */
- 	error = -block_truncate_page(inode->i_mapping, newsize, xfs_get_blocks);
- 	if (error)
- 		return error;
-+	truncate_setsize(inode, newsize);
- 
- 	tp = xfs_trans_alloc(mp, XFS_TRANS_SETATTR_SIZE);
- 	error = xfs_trans_reserve(tp, &M_RES(mp)->tr_itruncate, 0, 0);
- 	if (error)
- 		goto out_trans_cancel;
- 
--	truncate_setsize(inode, newsize);
--
- 	commit_flags = XFS_TRANS_RELEASE_LOG_RES;
- 	lock_flags |= XFS_ILOCK_EXCL;
--
- 	xfs_ilock(ip, XFS_ILOCK_EXCL);
--
- 	xfs_trans_ijoin(tp, ip, 0);
- 
- 	/*
+Thanks,
+Junxiao.
+>
+> http://marc.info/?l=linux-xfs&m=99535721110020&w=2
 
 _______________________________________________
 xfs mailing list
