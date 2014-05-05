@@ -1,23 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 05A967F7B
-	for <xfs@oss.sgi.com>; Mon,  5 May 2014 07:51:14 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id DB2E68F8039
-	for <xfs@oss.sgi.com>; Mon,  5 May 2014 05:51:13 -0700 (PDT)
-Received: from buxtehude.debian.org (buxtehude.debian.org [140.211.166.26]) by
-	cuda.sgi.com with ESMTP id ZB5Sqn96cvnOhgMp (version=TLSv1
-	cipher=AES128-SHA bits=128 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 05 May 2014 05:51:09 -0700 (PDT)
-Subject: Bug#747080: xfsprogs: new upstream release (2013-05-08 v3.1.11)
-Resent-To: debian-bugs-dist@lists.debian.org
-Resent-Message-ID: <handler.747080.B.13992941477445@bugs.debian.org>
-Date: Mon, 5 May 2014 14:48:59 +0200
-From: Florian Ernst <florian_ernst@gmx.net>
-Message-ID: <20140505124859.GA19836@fernst.no-ip.org>
+	by oss.sgi.com (Postfix) with ESMTP id EE71D7F7E
+	for <xfs@oss.sgi.com>; Mon,  5 May 2014 08:17:53 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id C92BC8F8039
+	for <xfs@oss.sgi.com>; Mon,  5 May 2014 06:17:50 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id qu4gllVp0zuCXulG for
+	<xfs@oss.sgi.com>; Mon, 05 May 2014 06:17:50 -0700 (PDT)
+Date: Mon, 5 May 2014 09:17:46 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH] xfs: initialize default acls for ->tmpfile()
+Message-ID: <20140505131745.GB11622@laptop.bfoster>
+References: <1398951487-15462-1-git-send-email-bfoster@redhat.com>
+	<20140505102403.GV26353@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-Reply-To: Florian Ernst <florian_ernst@gmx.net>, 747080@bugs.debian.org
+In-Reply-To: <20140505102403.GV26353@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,46 +29,99 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Debian Bug Tracking System <submit@bugs.debian.org>
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-Package: xfsprogs
-Version: 3.1.9
-Severity: wishlist
+On Mon, May 05, 2014 at 08:24:03PM +1000, Dave Chinner wrote:
+> On Thu, May 01, 2014 at 09:38:07AM -0400, Brian Foster wrote:
+> > The current tmpfile handler does not initialize default ACLs. Doing so
+> > within xfs_vn_tmpfile() makes it roughly equivalent to xfs_vn_mknod(),
+> > which is already used as a common create handler.
+> > 
+> > xfs_vn_mknod() does not currently have a mechanism to determine whether
+> > to link the file into the namespace. Therefore, further abstract
+> > xfs_vn_mknod() into a new xfs_generic_create() handler with a tmpfile
+> > parameter. This new handler passes a NULL xname to the create and calls
+> > d_tmpfile() on the dentry when called via ->tmpfile().
+> > 
+> > Signed-off-by: Brian Foster <bfoster@redhat.com>
+> > ---
+> > 
+> > Hi all,
+> > 
+> > It appears that we want to initialize default ACLs for ->tmpfile() after
+> > all. This patch reintroduces the refactoring to initialize security and
+> > ACLs through the current xfs_vn_mknod(). This is based on top of the
+> > previously posted series:
+> > 
+> > 	http://oss.sgi.com/archives/xfs/2014-04/msg00396.html
+> > 
+> > Brian
+> .....
+> > @@ -1053,25 +1074,7 @@ xfs_vn_tmpfile(
+> >  	struct dentry	*dentry,
+> >  	umode_t		mode)
+> >  {
+> > -	int			error;
+> > -	struct xfs_inode	*ip;
+> > -	struct inode		*inode;
+> > -
+> > -	error = xfs_create(XFS_I(dir), NULL, mode, 0, &ip);
+> > -	if (unlikely(error))
+> > -		return -error;
+> > -
+> > -	inode = VFS_I(ip);
+> > -
+> > -	error = xfs_init_security(inode, dir, &dentry->d_name);
+> > -	if (unlikely(error)) {
+> > -		iput(inode);
+> > -		return -error;
+> > -	}
+> > -
+> > -	d_tmpfile(dentry, inode);
+> > -
+> > -	return 0;
+> > +	return xfs_generic_create(dir, dentry, mode, 0, true);
+> >  }
+> 
+> This hunk doesn't apply to a 3.15-rc2 kernel - it calls
+> xfs_create_tmpfile(). Just applying it as is after fixing the hunk
+> causes a crash in xfs-create(), because the code in the patch is
+> calling xfs-create ratehr than xfs_create_tmpfile().
+> 
 
-Hello there,
+Right, this is based on the previously posted series (link above), which
+fixes up xfs_create() such that we can use it from xfs_generic_create()
+via all associated codepaths. Sorry, I probably should have posted this
+as a [5/4 ...] patch to make that more clear...
 
-please consider updating the package to the newest upstream release, see
-http://oss.sgi.com/cgi-bin/gitweb.cgi?p=xfs/cmds/xfsprogs.git;a=tags
+> Brian, can you regenerate this patch against a current linus tree
+> (3.15-rc4)?
+> 
 
-Cheers,
-Flo
+It isn't clear to me what the expectation is with this series at this
+point, beyond the agreement that we do want to initialize the acls. It
+looks like the v1 patch that only initialized security is merged, so
+we're Ok as far as that goes. v2 added the bits to initialize the acls
+as well:
 
--- System Information:
-Debian Release: jessie/sid
-  APT prefers testing
-  APT policy: (990, 'testing'), (50, 'testing-proposed-updates'), (50, 'unstable'), (1, 'experimental')
-Architecture: amd64 (x86_64)
-Foreign Architectures: i386
+http://oss.sgi.com/archives/xfs/2014-04/msg00182.html
 
-Kernel: Linux 3.11-2-amd64 (SMP w/4 CPU cores)
-Locale: LANG=en_US.UTF-8, LC_CTYPE=en_US.UTF-8 (charmap=UTF-8)
-Shell: /bin/sh linked to /bin/dash
+... and followed up with the xfs_create_tmpfile() removal. Is that
+(minus the already merged selinux fix) what you're asking for here?
 
-Versions of packages xfsprogs depends on:
-ii  libblkid1     2.20.1-5.7
-ii  libc6         2.18-5
-ii  libreadline5  5.2+dfsg-2
-ii  libuuid1      2.20.1-5.7
+v3 dropped the default acl bits and thus the xfs_generic_create()
+handler as well. The xfs_create_tmpfile() cleanup persisted, and now the
+default acl bits are required, so it's added back in this 5/4.
 
-xfsprogs recommends no packages.
+Brian
 
-Versions of packages xfsprogs suggests:
-ii  acl      2.2.52-1
-ii  attr     1:2.4.47-1
-ii  quota    4.01-3
-ii  xfsdump  3.1.1
-
--- no debconf information
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
