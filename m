@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 6681829DFD
-	for <xfs@oss.sgi.com>; Mon,  5 May 2014 16:05:47 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id B4E1029DFD
+	for <xfs@oss.sgi.com>; Mon,  5 May 2014 16:08:42 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 502988F8035
-	for <xfs@oss.sgi.com>; Mon,  5 May 2014 14:05:44 -0700 (PDT)
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	072HB7PguZGq0b0u for <xfs@oss.sgi.com>;
-	Mon, 05 May 2014 14:05:42 -0700 (PDT)
-Date: Tue, 6 May 2014 07:05:40 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs: initialize default acls for ->tmpfile()
-Message-ID: <20140505210540.GF32204@dastard>
-References: <1398951487-15462-1-git-send-email-bfoster@redhat.com>
-	<20140505102403.GV26353@dastard>
-	<20140505131745.GB11622@laptop.bfoster>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 3B430AC002
+	for <xfs@oss.sgi.com>; Mon,  5 May 2014 14:08:39 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id Y9FbnMjbH1I3ppZ0 for
+	<xfs@oss.sgi.com>; Mon, 05 May 2014 14:08:38 -0700 (PDT)
+Date: Mon, 5 May 2014 17:08:32 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 3/5] xfs: fold xfs_attr_remove_int into xfs_attr_remove
+Message-ID: <20140505210832.GA13973@laptop.bfoster>
+References: <1399130415-5382-1-git-send-email-hch@lst.de>
+	<1399130415-5382-4-git-send-email-hch@lst.de>
+	<20140505202127.GD12448@laptop.bfoster>
+	<20140505205653.GY26353@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20140505131745.GB11622@laptop.bfoster>
+In-Reply-To: <20140505205653.GY26353@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,103 +31,51 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
-Cc: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: Christoph Hellwig <hch@lst.de>, xfs@oss.sgi.com
 
-On Mon, May 05, 2014 at 09:17:46AM -0400, Brian Foster wrote:
-> On Mon, May 05, 2014 at 08:24:03PM +1000, Dave Chinner wrote:
-> > On Thu, May 01, 2014 at 09:38:07AM -0400, Brian Foster wrote:
-> > > The current tmpfile handler does not initialize default ACLs. Doing so
-> > > within xfs_vn_tmpfile() makes it roughly equivalent to xfs_vn_mknod(),
-> > > which is already used as a common create handler.
+On Tue, May 06, 2014 at 06:56:53AM +1000, Dave Chinner wrote:
+> On Mon, May 05, 2014 at 04:21:28PM -0400, Brian Foster wrote:
+> > On Sat, May 03, 2014 at 05:20:13PM +0200, Christoph Hellwig wrote:
+> > > Also remove a useless ilock roundtrip for the first attr fork check, it's
+> > > racy anyway and we redo it later under the ilock before we start the removal.
 > > > 
-> > > xfs_vn_mknod() does not currently have a mechanism to determine whether
-> > > to link the file into the namespace. Therefore, further abstract
-> > > xfs_vn_mknod() into a new xfs_generic_create() handler with a tmpfile
-> > > parameter. This new handler passes a NULL xname to the create and calls
-> > > d_tmpfile() on the dentry when called via ->tmpfile().
+> > > Plus various minor style fixes to the new xfs_attr_remove.
 > > > 
-> > > Signed-off-by: Brian Foster <bfoster@redhat.com>
-> > > ---
-> > > 
-> > > Hi all,
-> > > 
-> > > It appears that we want to initialize default ACLs for ->tmpfile() after
-> > > all. This patch reintroduces the refactoring to initialize security and
-> > > ACLs through the current xfs_vn_mknod(). This is based on top of the
-> > > previously posted series:
-> > > 
-> > > 	http://oss.sgi.com/archives/xfs/2014-04/msg00396.html
-> > > 
-> > > Brian
-> > .....
-> > > @@ -1053,25 +1074,7 @@ xfs_vn_tmpfile(
-> > >  	struct dentry	*dentry,
-> > >  	umode_t		mode)
-> > >  {
-> > > -	int			error;
-> > > -	struct xfs_inode	*ip;
-> > > -	struct inode		*inode;
-> > > -
-> > > -	error = xfs_create(XFS_I(dir), NULL, mode, 0, &ip);
-> > > -	if (unlikely(error))
-> > > -		return -error;
-> > > -
-> > > -	inode = VFS_I(ip);
-> > > -
-> > > -	error = xfs_init_security(inode, dir, &dentry->d_name);
-> > > -	if (unlikely(error)) {
-> > > -		iput(inode);
-> > > -		return -error;
-> > > -	}
-> > > -
-> > > -	d_tmpfile(dentry, inode);
-> > > -
-> > > -	return 0;
-> > > +	return xfs_generic_create(dir, dentry, mode, 0, true);
-> > >  }
+> > > Signed-off-by: Christoph Hellwig <hch@lst.de>
+> .....
+> > > @@ -487,35 +497,26 @@ xfs_attr_remove_int(xfs_inode_t *dp, struct xfs_name *name, int flags)
+> > >  	 */
+> > >  	xfs_trans_ijoin(args.trans, dp, 0);
+> > >  
+> > > -	/*
+> > > -	 * Decide on what work routines to call based on the inode size.
+> > > -	 */
+> > >  	if (!xfs_inode_hasattr(dp)) {
+> > >  		error = XFS_ERROR(ENOATTR);
 > > 
-> > This hunk doesn't apply to a 3.15-rc2 kernel - it calls
-> > xfs_create_tmpfile(). Just applying it as is after fixing the hunk
-> > causes a crash in xfs-create(), because the code in the patch is
-> > calling xfs-create ratehr than xfs_create_tmpfile().
-> > 
+> > I suppose we probably want to nuke the XFS_ERROR() while we're here..?
+> > Otherwise, it looks good.
 > 
-> Right, this is based on the previously posted series (link above), which
-> fixes up xfs_create() such that we can use it from xfs_generic_create()
-> via all associated codepaths. Sorry, I probably should have posted this
-> as a [5/4 ...] patch to make that more clear...
+> No need, I'll do that at the end of the dev cycle for everything.
 > 
-> > Brian, can you regenerate this patch against a current linus tree
-> > (3.15-rc4)?
-> > 
-> 
-> It isn't clear to me what the expectation is with this series at this
-> point, beyond the agreement that we do want to initialize the acls. It
-> looks like the v1 patch that only initialized security is merged, so
-> we're Ok as far as that goes. v2 added the bits to initialize the acls
-> as well:
-> 
-> http://oss.sgi.com/archives/xfs/2014-04/msg00182.html
-> 
-> ... and followed up with the xfs_create_tmpfile() removal. Is that
-> (minus the already merged selinux fix) what you're asking for here?
-> 
-> v3 dropped the default acl bits and thus the xfs_generic_create()
-> handler as well. The xfs_create_tmpfile() cleanup persisted, and now the
-> default acl bits are required, so it's added back in this 5/4.
 
-Basically, cleanups and factoring, etc, are beyond the scope of
-adding the missing default acl initialisation to 3.15-rc4. i.e. the
-cleanups and refactoring will go into 3.16, so will end up layered
-on top of this bug fix....
+Sounds good.
 
-Cheers,
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> Cheers,
+> 
+> Dave.
+> 
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
