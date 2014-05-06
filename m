@@ -1,16 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id CC3CC7F37
-	for <xfs@oss.sgi.com>; Tue,  6 May 2014 14:40:58 -0500 (CDT)
-Message-ID: <53693AC8.8020605@sgi.com>
-Date: Tue, 06 May 2014 14:40:56 -0500
-From: Mark Tinguely <tinguely@sgi.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 726F67F37
+	for <xfs@oss.sgi.com>; Tue,  6 May 2014 15:09:29 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 633EA8F8033
+	for <xfs@oss.sgi.com>; Tue,  6 May 2014 13:09:26 -0700 (PDT)
+Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
+	[150.101.137.129]) by cuda.sgi.com with ESMTP id
+	OrUGDCsam5sDGlnW for <xfs@oss.sgi.com>;
+	Tue, 06 May 2014 13:09:21 -0700 (PDT)
+Date: Wed, 7 May 2014 06:09:17 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: XFS tune to adaptec ASR71605
+Message-ID: <20140506200917.GM5421@dastard>
+References: <alpine.LRH.2.02.1405061104580.24742@becks.mcs.st-and.ac.uk>
+	<20140506130008.13a1a7ee@harpe.intellique.com>
+	<alpine.LRH.2.02.1405061408480.24742@becks.mcs.st-and.ac.uk>
+	<20140506155149.5cf056b5@harpe.intellique.com>
 MIME-Version: 1.0
-Subject: Re: attr cleanups
-References: <1399130415-5382-1-git-send-email-hch@lst.de>
-	<53651375.9080305@sgi.com> <20140504101623.GA4947@lst.de>
-	<53679113.8000209@sgi.com> <20140505205552.GX26353@dastard>
-In-Reply-To: <20140505205552.GX26353@dastard>
+Content-Disposition: inline
+In-Reply-To: <20140506155149.5cf056b5@harpe.intellique.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -19,51 +28,41 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Christoph Hellwig <hch@lst.de>, xfs@oss.sgi.com
+To: Emmanuel Florac <eflorac@intellique.com>
+Cc: Steve Brooks <steveb@mcs.st-and.ac.uk>, xfs@oss.sgi.com
 
-On 05/05/14 15:55, Dave Chinner wrote:
-> On Mon, May 05, 2014 at 08:24:35AM -0500, Mark Tinguely wrote:
->> On 05/04/14 05:16, Christoph Hellwig wrote:
->>> On Sat, May 03, 2014 at 11:04:05AM -0500, Mark Tinguely wrote:
->>>> Depends on how parent inode pointers are implemented, this folding the
->>>> internal version of get and set attributes could be undone.
->>>
->>> We might have to introduce _locked version at that point.  But I'd like
->>> to keep the xfs_name removal and other assorted cleanups.
->>>
->>
->> locking is only one issue, xfs_attr_(get/set/remove) are asciii only
->> whereas the xfs_attr_(get/set/remove)_int versions are more generic.
->> I am thinking of not just parent inode pointers but a non-ascii
->> character set.
->
-> I fail to see how they are different. The attribute name is just an
-> opaque binary blob - only when it is compared externally does it
-> have any meaning at all.
->
-> Character sets are meaningless unless you are doing case
-> manipulation, in which case we would need to apply the same
-> treatment as the directory code deep in the internal attribute cod.
-> i.e It needs case aware compare and hash algorithms. However, the
-> outer layers are completely unchanged - they just pass through the
-> blob that was passed to them...
->
-> Cheers,
->
-> Dave.
+On Tue, May 06, 2014 at 03:51:49PM +0200, Emmanuel Florac wrote:
+> Le Tue, 6 May 2014 14:14:35 +0100 (BST)
+> Steve Brooks <steveb@mcs.st-and.ac.uk> =E9crivait:
+> =
 
-Right now xfs_attr_get(), xfs_attr_set, xfs_attr_remove() expect the 
-name to be a NULL terminate character array.
+> > Thanks for the reply Emmanuel, I installed and rua bonnie++ although
+> > I will need to research the results
+> =
 
-The internal versions of these functions have a more useful interface, 
-they use a blob for the name (the array/length xfs_name structure).
+> Yup, they're... weird :) Write speed is abysmal, but random seeks very
+> high. Please try my settings so that we can compare the numbers more
+> directly:
 
---Mark.
+Friends don't let friends use bonnie++ for benchmarking storage.
+The numbers you get will be irrelevant to you application, and it's
+so synthetic is doesn't reflect any real-world workload at all.
+
+The only useful benchmark for determining if changes are going to
+improve application performance is to measure your application's
+performance.
+
+Cheers,
+
+Dave.
+-- =
+
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
