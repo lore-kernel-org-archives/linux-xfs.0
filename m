@@ -1,28 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 3307D7F58
-	for <xfs@oss.sgi.com>; Tue,  6 May 2014 11:03:14 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 2107D8F8035
-	for <xfs@oss.sgi.com>; Tue,  6 May 2014 09:03:11 -0700 (PDT)
-Received: from belhaven.mcs.st-and.ac.uk (belhaven.mcs.st-and.ac.uk
-	[138.251.201.57]) by cuda.sgi.com with ESMTP id
-	sYk4hxM99PO9Bgvw for <xfs@oss.sgi.com>;
-	Tue, 06 May 2014 09:03:09 -0700 (PDT)
-Date: Tue, 6 May 2014 17:03:06 +0100 (BST)
-From: Steve Brooks <steveb@mcs.st-and.ac.uk>
-Subject: Re: XFS tune to adaptec ASR71605 [SOLVED]
-In-Reply-To: <20140506165933.65fc95e9@harpe.intellique.com>
-Message-ID: <alpine.LRH.2.02.1405061652320.24742@becks.mcs.st-and.ac.uk>
-References: <alpine.LRH.2.02.1405061104580.24742@becks.mcs.st-and.ac.uk>
-	<20140506130008.13a1a7ee@harpe.intellique.com>
-	<alpine.LRH.2.02.1405061408480.24742@becks.mcs.st-and.ac.uk>
-	<20140506155149.5cf056b5@harpe.intellique.com>
-	<alpine.LRH.2.02.1405061520020.24742@becks.mcs.st-and.ac.uk>
-	<20140506165933.65fc95e9@harpe.intellique.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id CC3CC7F37
+	for <xfs@oss.sgi.com>; Tue,  6 May 2014 14:40:58 -0500 (CDT)
+Message-ID: <53693AC8.8020605@sgi.com>
+Date: Tue, 06 May 2014 14:40:56 -0500
+From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Content-Type: MULTIPART/MIXED;
-	BOUNDARY="-74825271-1999177172-1399392186=:24742"
+Subject: Re: attr cleanups
+References: <1399130415-5382-1-git-send-email-hch@lst.de>
+	<53651375.9080305@sgi.com> <20140504101623.GA4947@lst.de>
+	<53679113.8000209@sgi.com> <20140505205552.GX26353@dastard>
+In-Reply-To: <20140505205552.GX26353@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,109 +19,53 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Emmanuel Florac <eflorac@intellique.com>
-Cc: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: Christoph Hellwig <hch@lst.de>, xfs@oss.sgi.com
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
-
----74825271-1999177172-1399392186=:24742
-Content-Type: TEXT/PLAIN; charset=iso-8859-1; format=flowed
-Content-Transfer-Encoding: 8BIT
-
-> Le Tue, 6 May 2014 15:40:37 +0100 (BST)
-> Steve Brooks <steveb@mcs.st-and.ac.uk> écrivait:
+On 05/05/14 15:55, Dave Chinner wrote:
+> On Mon, May 05, 2014 at 08:24:35AM -0500, Mark Tinguely wrote:
+>> On 05/04/14 05:16, Christoph Hellwig wrote:
+>>> On Sat, May 03, 2014 at 11:04:05AM -0500, Mark Tinguely wrote:
+>>>> Depends on how parent inode pointers are implemented, this folding the
+>>>> internal version of get and set attributes could be undone.
+>>>
+>>> We might have to introduce _locked version at that point.  But I'd like
+>>> to keep the xfs_name removal and other assorted cleanups.
+>>>
+>>
+>> locking is only one issue, xfs_attr_(get/set/remove) are asciii only
+>> whereas the xfs_attr_(get/set/remove)_int versions are more generic.
+>> I am thinking of not just parent inode pointers but a non-ascii
+>> character set.
 >
->> Yes the write speed is very poor.. I am running "bonnie++" again with
->> your params but no sure how long it will take.
->>
->>>  bonnie++ -f -d ./ -n 50
->>
->> Will thisno be different for our two machines as it seems to generate
->> other params depending on the size of the RAM. All ours have 64G RAM.
->>
+> I fail to see how they are different. The attribute name is just an
+> opaque binary blob - only when it is compared externally does it
+> have any meaning at all.
 >
-> You MUST test with a dataset bigger than RAM, else you're mostly testing
-> your RAM speed :) If you've got 64 GB, by default bonnie will test with
-> 128 GB of data. The small size probably explains the very fast seek
-> speed... You're seeking in the RAM cache :)
+> Character sets are meaningless unless you are doing case
+> manipulation, in which case we would need to apply the same
+> treatment as the directory code deep in the internal attribute cod.
+> i.e It needs case aware compare and hash algorithms. However, the
+> outer layers are completely unchanged - they just pass through the
+> blob that was passed to them...
 >
->>
->> I disabled write cache on the controller as there is no ZMM flash
->> backup module and it seems to be advised that way. I could enable it
->> and try another test to see if that is a contribution to the poor
->> write performance. I do have "arcconf" on all our adaptec raid
->> machines.
+> Cheers,
 >
-> Modern RAIDs need write cache or perform abysmally. Do yourself a
-> service and buy a ZMM. Without write cache it'll be so slow it will be
-> nearly unusable, really. Did you see the numbers? your RAID is more
-> than 12x slower than mine... actually slower than a single disk! You'll
-> simply fail at filling it up at these speeds.
->
->> I have not tuned the IO scheduler, read ahead, and queue length?  I
->> guess I can try this.
->>
->>> echo none > /sys/block/sda/queue/scheduler
->>> echo 1024 > /sys/block/sda/queue/nr_requests
->>> echo 65536 > /sys/block/sda/queue/read_ahead_kb
->>
->> Will this need to be done after every reboot? I guess it could go in
->> "/etc/rc.local" ?
->>
->
-> Yep. You can tweak the settings and try various configurations.
-> However these work fine for me in most cases (particularly the noop
-> scheduler). Of course replace sda with the RAID array device or you may
-> end up tuning your boot drive instead :)
+> Dave.
 
+Right now xfs_attr_get(), xfs_attr_set, xfs_attr_remove() expect the 
+name to be a NULL terminate character array.
 
-Thanks loads! As you stated it seems to have all been down to having write 
-cache disabled. The new results from "bonnie++" show that sequential 
-writes when the "write cach" is enabled have massively improved to
-1642324 K/s ...
+The internal versions of these functions have a more useful interface, 
+they use a blob for the name (the array/length xfs_name structure).
 
-
-[root@sraid2v tmp]# bonnie++ -f -d ./ -n 50 -u root
-Using uid:0, gid:0.
-Writing intelligently...done
-Rewriting...done
-Reading intelligently...done
-start 'em...done...done...done...done...done...
-Create files in sequential order...done.
-Stat files in sequential order...done.
-Delete files in sequential order...done.
-Create files in random order...done.
-Stat files in random order...done.
-Delete files in random order...done.
-Version  1.96 ------Sequential Output------ --Sequential Input- --Random-
-Concurrency 1 -Per Chr- --Block-- -Rewrite- -Per Chr- --Block-- --Seeks--
-Machine  Size K/sec %CP K/sec %CP K/sec %CP K/sec %CP K/sec %CP  /sec %CP
-sraid2v  126G           1642324  96 704219  51           2005711  81 529.8  36
-Latency                 29978us     131ms             93836us   47600us
-Version  1.96 ------Sequential Create------ --------Random Create--------
-sraid2v       -Create-- --Read--- -Delete-- -Create-- --Read--- -Delete--
-         files  /sec %CP  /sec %CP  /sec %CP  /sec %CP  /sec %CP  /sec %CP
-            50 45494  75 +++++ +++ 58252  84 51635  80 +++++ +++ 53103  81
-Latency       15964us     191us      98us      80us      14us      60us
-1.96,1.96,sraid2v,1,1399398521,126G,,,,1642324,96,704219,51,,,2005711,81,529.8,36,50,,,,,45494,75,+++++,+++,58252,84,51635,80,+++++,+++,53103,81,,29978us,131ms,,93836us,47600us,15964us,191us,98us,80us,14us,60us
-
-
-Thanks again Emmanuel for your help!
-
-
-Steve
----74825271-1999177172-1399392186=:24742
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+--Mark.
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
----74825271-1999177172-1399392186=:24742--
