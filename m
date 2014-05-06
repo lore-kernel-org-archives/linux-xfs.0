@@ -1,23 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id CE3037FAD
-	for <xfs@oss.sgi.com>; Tue,  6 May 2014 04:16:06 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id BBAC08F8037
-	for <xfs@oss.sgi.com>; Tue,  6 May 2014 02:16:06 -0700 (PDT)
-Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
-	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	NvW1DDBQTkSfARUM for <xfs@oss.sgi.com>;
-	Tue, 06 May 2014 02:16:04 -0700 (PDT)
-Date: Tue, 6 May 2014 19:16:02 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Fwd: New Defects reported by Coverity Scan for xfsprogs
-Message-ID: <20140506091602.GL5421@dastard>
-References: <5362fbfc78ad5_2dbacf387045986@209.249.196.67.mail>
-	<5368A578.7070201@oracle.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 6BF687FD5
+	for <xfs@oss.sgi.com>; Tue,  6 May 2014 04:37:46 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 428CA304032
+	for <xfs@oss.sgi.com>; Tue,  6 May 2014 02:37:46 -0700 (PDT)
+Received: from heian.cn.fujitsu.com (cn.fujitsu.com [59.151.112.132]) by
+	cuda.sgi.com with ESMTP id tAPlrAVCoaceWuek for
+	<xfs@oss.sgi.com>; Tue, 06 May 2014 02:37:44 -0700 (PDT)
+From: Wang Shilong <wangsl.fnst@cn.fujitsu.com>
+Subject: [PATCH] xfstests: add regression test for inode cache vs tree log
+Date: Tue, 6 May 2014 17:31:24 +0800
+Message-ID: <1399368684-1585-1-git-send-email-wangsl.fnst@cn.fujitsu.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <5368A578.7070201@oracle.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,71 +25,157 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Jeff Liu <jeff.liu@oracle.com>
-Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
+Cc: linux-btrfs@vger.kernel.org
 
-On Tue, May 06, 2014 at 05:03:52PM +0800, Jeff Liu wrote:
-> Hi Folks,
-> 
-> I'm not sure if someone else has also noticed the following reports from Coverity.
+This patch adds a regression test to verify btrfs can not
+reuse inode id until we have committed transaction. Which was
+addressed by the following kernel patch:
 
-yup, saw it - it not a regression from a recent checkin, so it must
-some new check they've added to Coverity. However, i ignored it
-because it looked completely bogus....
+ Btrfs: fix inode cache vs tree log
 
-> It seems like a false alarm, but maybe we can just remove the out0 label as below?
+Signed-off-by: Wang Shilong <wangsl.fnst@cn.fujitsu.com>
+---
+ tests/btrfs/049     | 109 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/btrfs/049.out |   1 +
+ tests/btrfs/group   |   1 +
+ 3 files changed, 111 insertions(+)
+ create mode 100644 tests/btrfs/049
+ create mode 100644 tests/btrfs/049.out
 
-Yup, it must be getting confused with the assignment of *stat = 0
-after checking that it is already zero...
-
-> From: Jie Liu <jeff.liu@oracle.com>
-> Subject: xfs: get rid of out0 goto label from xfs_btree_new_root
-> 
-> Get rid of the useless out0 goto label and return 0 directly in case
-> of falling to alloate the new block.
-> 
-> Signed-off-by: Jie Liu <jeff.liu@oracle.com>
-> ---
->  fs/xfs/xfs_btree.c | 11 +++++------
->  1 file changed, 5 insertions(+), 6 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_btree.c b/fs/xfs/xfs_btree.c
-> index 182bac2..f162dc9 100644
-> --- a/fs/xfs/xfs_btree.c
-> +++ b/fs/xfs/xfs_btree.c
-> @@ -2653,8 +2653,11 @@ xfs_btree_new_root(
->  	error = cur->bc_ops->alloc_block(cur, &rptr, &lptr, stat);
->  	if (error)
->  		goto error0;
-> -	if (*stat == 0)
-> -		goto out0;
-> +	if (*stat == 0) {
-> +		XFS_BTREE_TRACE_CURSOR(cur, XBT_EXIT);
-> +		return 0;
-> +	}
-> +
->  	XFS_BTREE_STATS_INC(cur, alloc);
->  
->  	/* Set up the new block. */
-> @@ -2743,10 +2746,6 @@ xfs_btree_new_root(
->  error0:
->  	XFS_BTREE_TRACE_CURSOR(cur, XBT_ERROR);
->  	return error;
-> -out0:
-> -	XFS_BTREE_TRACE_CURSOR(cur, XBT_EXIT);
-> -	*stat = 0;
-> -	return 0;
->  }
-
-Looks fine. It's not obviously a problem, so I'll queue it up for
-after then 3.2.0 release.
-
-Cheers,
-
-Dave.
+diff --git a/tests/btrfs/049 b/tests/btrfs/049
+new file mode 100644
+index 0000000..3101d09
+--- /dev/null
++++ b/tests/btrfs/049
+@@ -0,0 +1,109 @@
++#! /bin/bash
++# FS QA Test No. btrfs/049
++#
++# Regression test for btrfs inode caching vs tree log which was
++# addressed by the following kernel patch.
++#
++# Btrfs: fix inode caching vs tree log
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2014 Fujitsu.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#-----------------------------------------------------------------------
++#
++
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 15
++
++_cleanup()
++{
++	_cleanup_flakey
++	rm -rf $tmp
++}
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++. ./common/dmflakey
++
++# real QA test starts here
++_supported_fs generic
++_supported_os Linux
++_need_to_be_root
++_require_scratch
++_require_dm_flakey
++
++rm -f $seqres.full
++
++_scratch_mkfs >> $seqres.full 2>&1
++
++SAVE_MOUNT_OPTIONS="$MOUNT_OPTIONS"
++MOUNT_OPTIONS="$MOUNT_OPTIONS -o inode_cache,commit=100"
++
++# create a basic flakey device that will never error out
++_init_flakey
++_mount_flakey
++
++_get_inode_id()
++{
++	local inode_id
++	inode_id=`stat $1 | grep Inode: | $AWK_PROG '{print $4}'`
++	echo $inode_id
++}
++
++$XFS_IO_PROG -f -c "pwrite 0 10M" -c "fsync" \
++	$SCRATCH_MNT/data >& /dev/null
++
++inode_id=`_get_inode_id "$SCRATCH_MNT/data"`
++rm -f $SCRATCH_MNT/data
++
++for i in `seq 1 5`;
++do
++	mkdir $SCRATCH_MNT/dir_$i
++	new_inode_id=`_get_inode_id $SCRATCH_MNT/dir_$i`
++	if [ $new_inode_id -eq $inode_id ]
++	then
++		$XFS_IO_PROG -f -c "pwrite 0 1M" -c "fsync" \
++			$SCRATCH_MNT/dir_$i/data1 >& /dev/null
++		_load_flakey_table 1
++		_unmount_flakey
++		need_umount=1
++		break
++	fi
++	sleep 1
++done
++
++# restore previous mount options
++export MOUNT_OPTIONS="$SAVE_MOUNT_OPTIONS"
++
++# ok mount so that any recovery that needs to happen is done
++if [ $new_inode_id -eq $inode_id ];then
++	_load_flakey_table $FLAKEY_ALLOW_WRITES
++	_mount_flakey
++	_unmount_flakey
++fi
++
++# make sure we got a valid fs after replay
++_check_scratch_fs $FLAKEY_DEV
++
++status=0
++exit
+diff --git a/tests/btrfs/049.out b/tests/btrfs/049.out
+new file mode 100644
+index 0000000..cb0061b
+--- /dev/null
++++ b/tests/btrfs/049.out
+@@ -0,0 +1 @@
++QA output created by 049
+diff --git a/tests/btrfs/group b/tests/btrfs/group
+index af60c79..59b0c98 100644
+--- a/tests/btrfs/group
++++ b/tests/btrfs/group
+@@ -51,3 +51,4 @@
+ 046 auto quick
+ 047 auto quick
+ 048 auto quick
++049 auto quick
 -- 
-Dave Chinner
-david@fromorbit.com
+1.8.2.1
 
 _______________________________________________
 xfs mailing list
