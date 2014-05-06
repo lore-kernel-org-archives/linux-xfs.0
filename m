@@ -1,18 +1,9 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 79E1A7FAA
-	for <xfs@oss.sgi.com>; Tue,  6 May 2014 01:54:12 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 535BB304059
-	for <xfs@oss.sgi.com>; Mon,  5 May 2014 23:54:12 -0700 (PDT)
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id RXh9g1v0f4AGQAP1 (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 05 May 2014 23:54:11 -0700 (PDT)
-From: Junxiao Bi <junxiao.bi@oracle.com>
-Subject: [PATCH V2] xfsprogs: xfs_copy: use exit() to replace killall()
-Date: Tue,  6 May 2014 14:54:44 +0800
-Message-Id: <1399359284-20536-1-git-send-email-junxiao.bi@oracle.com>
+From: xfs@oss.sgi.com
+Subject: [XFS updates] XFS development tree branch, xfs-libxfs-in-kernel-RFC,
+	created. xfs-for-linus-3.15-rc2-52-g6579dd8
+Message-Id: <20140506071855.F152E7FBC@oss.sgi.com>
+Date: Tue,  6 May 2014 02:18:55 -0500 (CDT)
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,95 +18,116 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
-Cc: hch@infradead.org, joe.jin@oracle.com, junxiao.bi@oracle.com
 
-Sending a SIGKILL signal to child thread will terminate the whole process,
-xfs_copy will return an error value 137. This cause confuse for script to
-know whether the copy successes.
+This is an automated email from the git hooks/post-receive script. It was
+generated because a ref change was pushed to the repository containing
+the project "XFS development tree".
 
-Calling exit() in main thread can terminate the whole process and return the
-right value. Replace killall()+abort() with exit(1) to match the old way
-exit in error case. Also remove killall()+pthread_exit(NULL) since return 0
-will be followed by an exit(0) to terminate the process.
+The branch, xfs-libxfs-in-kernel-RFC has been created
+        at  6579dd808ddf0ddc10e59e715dc8f2eb09705203 (commit)
 
-Bug story from Chrisoph Hellwig:
-Btw, I think the reason for this cruft is that xfs_copy was originally
-written using the IRIX sproc interface, and the port to pthreads didn't
-remove this gem:
+- Log -----------------------------------------------------------------
+commit 6579dd808ddf0ddc10e59e715dc8f2eb09705203
+Author: Dave Chinner <dchinner@redhat.com>
+Date:   Tue May 6 17:13:06 2014 +1000
 
-http://marc.info/?l=linux-xfs&m=99535721110020&w=2
+    libxfs: provide extern include file
+    
+    There will be different include files for userspace and
+    kernel versions of the library as userspace needs to stub out or
+    provide it's own versions of kernel only functionality. The header
+    file that external libxfs users will need to include is libxfs.h,
+    and there will be different implementations for both user and kernel
+    space.
+    
+    All external users of libxfs will include this header file, thereby
+    eliminating the need for direct knowledge of the internal dependency
+    structure of the libxfs code. This significantly reduces the
+    complexity of including libxfs functioanlity into the kernel code,
+    and brings it in line with the way libxfs is used in userspace.
+    
+    This also allows us to untangle some of the mess with kernel only
+    header files including shared header files directly, but does come
+    with one piece of baggage - the dependency that libxfs has on the
+    kernel xfs_mount.h. We'll deal with that at a later time, though.
+    
+    Signed-off-by: Dave Chinner <dchinner@redhat.com>
 
-Signed-off-by: Junxiao Bi <junxiao.bi@oracle.com>
-Cc: Joe jin <joe.jin@oracle.com>
-Cc: Chrisoph Hellwig <hch@infradead.org>
----
- copy/xfs_copy.c |   30 +-----------------------------
- 1 files changed, 1 insertions(+), 29 deletions(-)
+commit 5e51adf5d9bba8f91fb5a99551878781bcc392f9
+Author: Dave Chinner <dchinner@redhat.com>
+Date:   Tue May 6 16:23:33 2014 +1000
 
-diff --git a/copy/xfs_copy.c b/copy/xfs_copy.c
-index 39517da..39bb9d7 100644
---- a/copy/xfs_copy.c
-+++ b/copy/xfs_copy.c
-@@ -217,25 +217,6 @@ handle_error:
- }
- 
- void
--killall(void)
--{
--	int i;
--
--	/* only the parent gets to kill things */
--
--	if (getpid() != parent_pid)
--		return;
--
--	for (i = 0; i < num_targets; i++)  {
--		if (target[i].state == ACTIVE)  {
--			/* kill up target threads */
--			pthread_kill(target[i].pid, SIGKILL);
--			pthread_mutex_unlock(&targ[i].wait);
--		}
--	}
--}
--
--void
- handler(int sig)
- {
- 	pid_t	pid = getpid();
-@@ -400,8 +381,7 @@ read_wbuf(int fd, wbuf *buf, xfs_mount_t *mp)
- 	if (buf->length > buf->size)  {
- 		do_warn(_("assert error:  buf->length = %d, buf->size = %d\n"),
- 			buf->length, buf->size);
--		killall();
--		abort();
-+		exit(1);
- 	}
- 
- 	if ((res = read(fd, buf->data, buf->length)) < 0)  {
-@@ -591,11 +571,6 @@ main(int argc, char **argv)
- 
- 	parent_pid = getpid();
- 
--	if (atexit(killall))  {
--		do_log(_("%s: couldn't register atexit function.\n"), progname);
--		die_perror();
--	}
--
- 	/* open up source -- is it a file? */
- 
- 	open_flags = O_RDONLY;
-@@ -1154,9 +1129,6 @@ main(int argc, char **argv)
- 	}
- 
- 	check_errors();
--	killall();
--	pthread_exit(NULL);
--	/*NOTREACHED*/
- 	return 0;
- }
- 
+    libxfs: consolidate internal include files
+    
+    There will be different include files for userspace and
+    kernel versions of the library as userspace needs to stub out or
+    provide it's own versions of kernel only functionality, convert all
+    the internal libxfs source code to use the same single header file
+    infrastructure that userspace currently contains. This means all the
+    C source files will be identical, and only the header file will need
+    to change. Call this internal consolidated header file libxfs_int.h
+    to discriminate it from any other kernel or userspace header file.
+    
+    Signed-off-by: Dave Chinner <dchinner@redhat.com>
+
+commit 612480ce6bf4f96535f766eb27eb1b360a5a0714
+Author: Dave Chinner <david@fromorbit.com>
+Date:   Tue May 6 14:55:30 2014 +1000
+
+    libxfs: move source files
+    
+    Move all the source files that are shared with userspace into
+    libxfs/include. This is done as one big chunk simpy to get it done
+    quickly.
+    
+    Signed-off-by: Dave Chinner <dchinner@redhat.com>
+
+commit 22b8ea8e926ea378a1066174a02147b90caebc12
+Author: Dave Chinner <dchinner@redhat.com>
+Date:   Tue May 6 14:54:32 2014 +1000
+
+    libxfs: move header files
+    
+    Move all the header files that are shared with userspace into
+    libxfs/include. This is done as one big chunk simpy to get it done
+    quickly.
+    
+    Signed-off-by: Dave Chinner <dchinner@redhat.com>
+
+commit 20c53cba45be9da5a49a19042ec151abbf4b365e
+Author: Dave Chinner <dchinner@redhat.com>
+Date:   Tue May 6 14:54:24 2014 +1000
+
+    xfs: create libxfs infrastructure
+    
+    TO minimise the differences between kernel and userspace code,
+    split the kernel code into the same structure as the userspace code.
+    That is, the gneric core functionality of XFS is moved to a libxfs/
+    directory and treat it as a layering barrier in the XFS code.
+    
+    This patch introduces the libxfs and libxfs/include directories,
+    the build infrastructure and an initial source and header file to
+    build. The libxfs/include directory will contain the header files
+    that are needed to build libxfs - most of userspace does not care
+    about the location of these header files as they are accessed
+    indirectly. Hence keeping them inside libxfs makes it easy to track
+    the changes and script the sync process as the directory structure
+    will be identical.
+    
+    TO allow this changeover to occur in the kernel code, there are some
+    temporary infrastructure in the makefiles to grab the header
+    filesystem from both locations. Once all the files are moved,
+    modifications will be made in the source code that will make the
+    need for these include directives go away.
+    
+    Signed-off-by: Dave Chinner <dchinner@redhat.com>
+
+-----------------------------------------------------------------------
+
+
+hooks/post-receive
 -- 
-1.7.1
+XFS development tree
 
 _______________________________________________
 xfs mailing list
