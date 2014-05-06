@@ -1,23 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id E9B3F7F37
-	for <xfs@oss.sgi.com>; Tue,  6 May 2014 15:36:06 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 319E97F37
+	for <xfs@oss.sgi.com>; Tue,  6 May 2014 15:51:36 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id E333F304048
-	for <xfs@oss.sgi.com>; Tue,  6 May 2014 13:36:06 -0700 (PDT)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id E43E88F8033
+	for <xfs@oss.sgi.com>; Tue,  6 May 2014 13:51:35 -0700 (PDT)
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	RzXzJJnScwUzhWzd for <xfs@oss.sgi.com>;
-	Tue, 06 May 2014 13:36:04 -0700 (PDT)
-Date: Wed, 7 May 2014 06:35:45 +1000
+	r2YoWTLAJUTWXZDq for <xfs@oss.sgi.com>;
+	Tue, 06 May 2014 13:51:33 -0700 (PDT)
+Date: Wed, 7 May 2014 06:51:31 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs: don't sleep in xlog_cil_force_lsn on shutdown
-Message-ID: <20140506203545.GN5421@dastard>
-References: <1399338280-10013-1-git-send-email-david@fromorbit.com>
-	<20140506132745.GA14154@bfoster.bfoster>
+Subject: Re: attr cleanups
+Message-ID: <20140506205131.GO5421@dastard>
+References: <1399130415-5382-1-git-send-email-hch@lst.de>
+	<53651375.9080305@sgi.com> <20140504101623.GA4947@lst.de>
+	<53679113.8000209@sgi.com> <20140505205552.GX26353@dastard>
+	<53693AC8.8020605@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20140506132745.GA14154@bfoster.bfoster>
+In-Reply-To: <53693AC8.8020605@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,94 +32,59 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
-Cc: xfs@oss.sgi.com
+To: Mark Tinguely <tinguely@sgi.com>
+Cc: Christoph Hellwig <hch@lst.de>, xfs@oss.sgi.com
 
-On Tue, May 06, 2014 at 09:27:46AM -0400, Brian Foster wrote:
-> On Tue, May 06, 2014 at 11:04:40AM +1000, Dave Chinner wrote:
-> > From: Dave Chinner <dchinner@redhat.com>
-> > 
-> > Reports of a shutdown hang when fsyncing a directory have surfaced,
-> > such as this:
-> > 
-> > [ 3663.394472] Call Trace:
-> > [ 3663.397199]  [<ffffffff815f1889>] schedule+0x29/0x70
-> > [ 3663.402743]  [<ffffffffa01feda5>] xlog_cil_force_lsn+0x185/0x1a0 [xfs]
-> > [ 3663.416249]  [<ffffffffa01fd3af>] _xfs_log_force_lsn+0x6f/0x2f0 [xfs]
-> > [ 3663.429271]  [<ffffffffa01a339d>] xfs_dir_fsync+0x7d/0xe0 [xfs]
-> > [ 3663.435873]  [<ffffffff811df8c5>] do_fsync+0x65/0xa0
-> > [ 3663.441408]  [<ffffffff811dfbc0>] SyS_fsync+0x10/0x20
-> > [ 3663.447043]  [<ffffffff815fc7d9>] system_call_fastpath+0x16/0x1b
-> > 
-> > If we trigger a shutdown in xlog_cil_push() from xlog_write(), we
-> > will never wake waiters on the current push sequence number, so
-> > anything waiting in xlog_cil_force_lsn() for that push sequence
-> > number to come up will not get woken and hence stall the shutdown.
-> > 
-> > Fix this by ensuring we call wake_up_all(&cil->xc_commit_wait) in
-> > the push abort handling, in the log shutdown code when waking all
-> > waiters, and adding a shutdown check in the sequence completion wait
-> > loops to ensure they abort when a wakeup due to a shutdown occurs.
-> > 
-> > Reported-by: Boris Ranto <branto@redhat.com>
-> > Reported-by: Eric Sandeen <esandeen@redhat.com>
-> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> > ---
+On Tue, May 06, 2014 at 02:40:56PM -0500, Mark Tinguely wrote:
+> On 05/05/14 15:55, Dave Chinner wrote:
+> >On Mon, May 05, 2014 at 08:24:35AM -0500, Mark Tinguely wrote:
+> >>On 05/04/14 05:16, Christoph Hellwig wrote:
+> >>>On Sat, May 03, 2014 at 11:04:05AM -0500, Mark Tinguely wrote:
+> >>>>Depends on how parent inode pointers are implemented, this folding the
+> >>>>internal version of get and set attributes could be undone.
+> >>>
+> >>>We might have to introduce _locked version at that point.  But I'd like
+> >>>to keep the xfs_name removal and other assorted cleanups.
+> >>>
+> >>
+> >>locking is only one issue, xfs_attr_(get/set/remove) are asciii only
+> >>whereas the xfs_attr_(get/set/remove)_int versions are more generic.
+> >>I am thinking of not just parent inode pointers but a non-ascii
+> >>character set.
+> >
+> >I fail to see how they are different. The attribute name is just an
+> >opaque binary blob - only when it is compared externally does it
+> >have any meaning at all.
+> >
+> >Character sets are meaningless unless you are doing case
+> >manipulation, in which case we would need to apply the same
+> >treatment as the directory code deep in the internal attribute cod.
+> >i.e It needs case aware compare and hash algorithms. However, the
+> >outer layers are completely unchanged - they just pass through the
+> >blob that was passed to them...
+> >
+> >Cheers,
+> >
+> >Dave.
 > 
-> Previously posted here, for reference:
-> 
-> http://oss.sgi.com/archives/xfs/2014-04/msg00801.html
-> 
-> >  fs/xfs/xfs_log.c     |  7 +++++--
-> >  fs/xfs/xfs_log_cil.c | 50 ++++++++++++++++++++++++++++++++++++++++++--------
-> >  2 files changed, 47 insertions(+), 10 deletions(-)
-> > 
-> > diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-> > index a5f8bd9..dbba2d7 100644
-> > --- a/fs/xfs/xfs_log.c
-> > +++ b/fs/xfs/xfs_log.c
-> > @@ -3952,11 +3952,14 @@ xfs_log_force_umount(
-> >  		retval = xlog_state_ioerror(log);
-> >  		spin_unlock(&log->l_icloglock);
-> >  	}
-> > +
-> >  	/*
-> > -	 * Wake up everybody waiting on xfs_log_force.
-> > -	 * Callback all log item committed functions as if the
-> > +	 * Wake up everybody waiting on xfs_log_force. This needs to wake anyone
-> > +	 * waiting on a CIL push that is issued as part of a log force first
-> > +	 * before running the log item committed callback functions as if the
-> >  	 * log writes were completed.
-> >  	 */
-> > +	wake_up_all(&log->l_cilp->xc_commit_wait);
-> >  	xlog_state_do_callback(log, XFS_LI_ABORTED, NULL);
-> >  
-> 
-> This looks fine to me with the defensive reasoning described in the
-> aforementioned link, but it also looks like it could race with a force
-> and sleep because we don't take xc_push_lock. We take the lock for the
-> same wake up down in xlog_cil_committed(), so a hang seems unlikely at
-> this point.
+> Right now xfs_attr_get(), xfs_attr_set, xfs_attr_remove() expect the
+> name to be a NULL terminate character array.
 
-We can't really race in any meaningful way- the filesystem and log
-are already marked as shut down. Hence any new sleeper at this point
-will detect a shutdown before trying to sleep. Even if we do race,
-the xlog_cil_committed() will catch any stragglers...
+Sure. The obvious solution is simply moving xfs_attr_name_to_xname()
+to the callers and passing an xfs_name rather than a char *, as you
+have pointed out:
 
-> Given that the comment is kind of wordy (and unless we want to do the
-> locking here as well), could we update the comment to reflect this?
-> E.g., something like:
-> 
-> 	/*
-> 	 * Wake up everybody waiting on a CIL push and/or log force. Wake the
-> 	 * CIL push first as if the log writes were completed. The abort
-> 	 * handling in the log item committed callback functions will do this
-> 	 * again under lock to avoid races.
-> 	 */
-> 
-> Thoughts?
+> The internal versions of these functions have a more useful
+> interface, they use a blob for the name (the array/length xfs_name
+> structure).
 
-Makes sense. I'll change it.
+... there is nothing that inherently makes those functions only
+support character strings.
+
+Like I said, it needs to become more like the directory code - we do
+this "convert to opaque xfs_name" via xfs_dentry_to_name() at the
+VFS entry layer for directory operations (see xfs_iops.c), and all
+the code that uses xattrs should do the same...
 
 Cheers,
 
