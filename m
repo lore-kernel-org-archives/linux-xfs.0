@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 223167F93
-	for <xfs@oss.sgi.com>; Mon,  5 May 2014 22:42:16 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id ABD5DAC003
-	for <xfs@oss.sgi.com>; Mon,  5 May 2014 20:42:15 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id 515FC7F99
+	for <xfs@oss.sgi.com>; Mon,  5 May 2014 22:56:10 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id DD8AAAC002
+	for <xfs@oss.sgi.com>; Mon,  5 May 2014 20:56:09 -0700 (PDT)
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	rM7REAzFnJ8SEGi7 for <xfs@oss.sgi.com>;
-	Mon, 05 May 2014 20:42:13 -0700 (PDT)
+	6Y4Uh8ADYJZ36nCC for <xfs@oss.sgi.com>;
+	Mon, 05 May 2014 20:56:03 -0700 (PDT)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.80)
-	(envelope-from <dave@fromorbit.com>) id 1WhWGf-0002TP-0y
-	for xfs@oss.sgi.com; Tue, 06 May 2014 13:42:09 +1000
+	(envelope-from <dave@fromorbit.com>) id 1WhWU5-0002Us-G9
+	for xfs@oss.sgi.com; Tue, 06 May 2014 13:56:01 +1000
 Received: from dave by disappointment with local (Exim 4.82)
-	(envelope-from <dave@disappointment.disaster>) id 1WhWGf-00059B-00
-	for xfs@oss.sgi.com; Tue, 06 May 2014 13:42:09 +1000
+	(envelope-from <dave@disappointment.disaster>) id 1WhWU5-0005IY-F1
+	for xfs@oss.sgi.com; Tue, 06 May 2014 13:56:01 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH] xfs: fix directory readahead offset off-by-one
-Date: Tue,  6 May 2014 13:42:08 +1000
-Message-Id: <1399347728-19752-1-git-send-email-david@fromorbit.com>
+Subject: [PATCH 0/5] xfs: sanitise supberlock feature bit support
+Date: Tue,  6 May 2014 13:55:54 +1000
+Message-Id: <1399348559-19889-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,56 +35,38 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-From: Dave Chinner <dchinner@redhat.com>
+Hi folks,
 
-Directory readahead can throw loud scary but harmless warnings
-when multiblock directories are in use a specific pattern of
-discontiguous blocks are found in the directory. That is, if a hole
-follows a discontiguous block, it will throw a warning like:
+This patchset is a followup to the original feature bit cleanup
+patch I sent here:
 
-XFS (dm-1): xfs_da_do_buf: bno 637 dir: inode 34363923462
-XFS (dm-1): [00] br_startoff 637 br_startblock 1917954575 br_blockcount 1 br_state 0
-XFS (dm-1): [01] br_startoff 638 br_startblock -2 br_blockcount 1 br_state 0
+http://oss.sgi.com/archives/xfs/2014-03/msg00101.html
 
-And dump a stack trace.
+It basically removes all the old cruft that we inherited from Irix
+(such as tests and conversion to/from v1-3 superblocks) that we've
+never supported on Linux.  On Linux, we've ony ever supported V2
+directories, and so anything that doesn't know about V2 directories
+is simply going to be rejected at mount time. Hence we don't need
+all the code to handle versions older than this.
 
-This is because the readahead offset increment loop does a double
-increment of the block index - it does an increment for the loop
-iteration as well as increase the loop counter by the number of
-blocks in the extent. As a result, the readahead offset does not get
-incremented correctly for discontiguous blocks and hence can ask for
-readahead of a directory block from an offset part way through a
-directory block.  If that directory block is followed by a hole, it
-will trigger a mapping warning like the above.
+Nor do we care about Irix bootloader feature bit masks (the SASH
+feature bits) or about things that were never implemented like
+shared readonly superblock support. Hence we can remove a fairly
+large chunk of complexity out of the feature bit testing if we
+only test for things that we can support.
 
-The bad readahead will be ignored, though, because the main
-directory block read loop uses the correct mapping offsets rather
-than the readahead offset and so will ignore the bad readahead
-altogether.
+Further, we should really always use to v2 inodes these days
+on v4 superblock filesystems. We've been setting the NLINK feature
+bit by default at mkfs time since 2007, so no we make the kernel set
+it by default at mount time, too. This means that we always convert
+v1 inodes to v2 inodes, and so reduce the number of different code
+paths we need to test and support.
 
-Fix the warning by ensuring that the readahead offset is correctly
-incremented.
+Thoughts, comments?
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- fs/xfs/xfs_dir2_readdir.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Cheers,
 
-diff --git a/fs/xfs/xfs_dir2_readdir.c b/fs/xfs/xfs_dir2_readdir.c
-index 50b72f7..fe2db98 100644
---- a/fs/xfs/xfs_dir2_readdir.c
-+++ b/fs/xfs/xfs_dir2_readdir.c
-@@ -456,7 +456,7 @@ xfs_dir2_leaf_readbuf(
- 		/*
- 		 * Advance offset through the mapping table.
- 		 */
--		for (j = 0; j < mp->m_dirblkfsbs; j++) {
-+		for (j = 0; j < mp->m_dirblkfsbs; ) {
- 			/*
- 			 * The rest of this extent but not more than a dir
- 			 * block.
--- 
-1.9.0
+Dave.
 
 _______________________________________________
 xfs mailing list
