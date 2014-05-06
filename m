@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id EEB7D7F37
-	for <xfs@oss.sgi.com>; Tue,  6 May 2014 17:49:48 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 58DB67F37
+	for <xfs@oss.sgi.com>; Tue,  6 May 2014 18:20:51 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 806E9AC003
-	for <xfs@oss.sgi.com>; Tue,  6 May 2014 15:49:45 -0700 (PDT)
-Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
-	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	UPMoh3uUXBIr0rDa for <xfs@oss.sgi.com>;
-	Tue, 06 May 2014 15:49:42 -0700 (PDT)
-Date: Wed, 7 May 2014 08:49:40 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: xf kernel trace , what is the cause ?
-Message-ID: <20140506224940.GP5421@dastard>
-References: <CAJzjPK=YF3=xx5dSGzw4S44Nf01o6d1tcqiiofE4m-nuWdOKTQ@mail.gmail.com>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id DD524AC003
+	for <xfs@oss.sgi.com>; Tue,  6 May 2014 16:20:47 -0700 (PDT)
+Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
+	[65.41.216.221]) by cuda.sgi.com with ESMTP id gNKke1TkqkmgCVy8
+	for <xfs@oss.sgi.com>; Tue, 06 May 2014 16:20:46 -0700 (PDT)
+Message-ID: <53696E4E.5030404@hardwarefreak.com>
+Date: Tue, 06 May 2014 18:20:46 -0500
+From: Stan Hoeppner <stan@hardwarefreak.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <CAJzjPK=YF3=xx5dSGzw4S44Nf01o6d1tcqiiofE4m-nuWdOKTQ@mail.gmail.com>
+Subject: Re: XFS tune to adaptec ASR71605
+References: <alpine.LRH.2.02.1405061104580.24742@becks.mcs.st-and.ac.uk>	<20140506130008.13a1a7ee@harpe.intellique.com>	<alpine.LRH.2.02.1405061408480.24742@becks.mcs.st-and.ac.uk>	<20140506155149.5cf056b5@harpe.intellique.com>
+	<20140506200917.GM5421@dastard>
+In-Reply-To: <20140506200917.GM5421@dastard>
+Reply-To: stan@hardwarefreak.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,35 +25,58 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Gregory Machin <gdm@linuxpro.co.za>
-Cc: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>, Emmanuel Florac <eflorac@intellique.com>
+Cc: Steve Brooks <steveb@mcs.st-and.ac.uk>, xfs@oss.sgi.com
 
-On Wed, May 07, 2014 at 09:18:46AM +1200, Gregory Machin wrote:
-> Hi.
-> 
-> I have a file server that has had 2 xfs Kernel trace dumps about 2 weeks
-> apart.
-> 
-> The RAID 60 data store is mounted as /home with xfs as the file system. The
-> /home space is shares via NFS export and CIFS share.  At the time of
-> the Trace dumps NFS access hangs and crashed users sessions on the client
-> side.  The output of the last traces is below.
-> 
-> Can you advise as to the cause of this dump and possible resolution ?
+On 5/6/2014 3:09 PM, Dave Chinner wrote:
+> On Tue, May 06, 2014 at 03:51:49PM +0200, Emmanuel Florac wrote:
+>> Le Tue, 6 May 2014 14:14:35 +0100 (BST)
+>> Steve Brooks <steveb@mcs.st-and.ac.uk> =E9crivait:
+>>
+>>> Thanks for the reply Emmanuel, I installed and rua bonnie++ although
+>>> I will need to research the results
+>>
+>> Yup, they're... weird :) Write speed is abysmal, but random seeks very
+>> high. Please try my settings so that we can compare the numbers more
+>> directly:
+> =
 
-Commit 2732036 ("xfs: xfs_remove deadlocks due to inverted AGF vs AGI
-lock ordering") fixed it.
+> Friends don't let friends use bonnie++ for benchmarking storage.
+> The numbers you get will be irrelevant to you application, and it's
+> so synthetic is doesn't reflect any real-world workload at all.
+> =
 
-Cheers,
+> The only useful benchmark for determining if changes are going to
+> improve application performance is to measure your application's
+> performance.
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Exactly.  The OP's post begins with:
+
+"After much reading around this is what I came up with...  All hosts
+have 16x4TB WD RE WD4000FYYZ drives and will run RAID 6...
+
+Stripe-unit size                         : 512 KB"
+
+That's a 7 MB stripe width.  Such a setup is suitable for large
+streaming workloads which generate no RMW, and that's about it.  For
+anything involving random writes the performance will be very low, even
+with write cache enabled, because each writeback operation will involve
+reading and writing 1.5 MB minimum.  Depending on the ARC firmware, if
+it does scrubbing, it may read/write 7 MB for each RMW operation.
+
+"Everything begins and ends with the workload".
+
+Describe the workload on each machine, if not all the same, and we'll be
+in a far better position to advise what RAID level and stripe unit size
+you should use, and how best to configure XFS.
+
+All the best,
+
+Stan
 
 _______________________________________________
 xfs mailing list
