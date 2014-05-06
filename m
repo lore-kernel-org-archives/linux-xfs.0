@@ -1,19 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 506B329E19
-	for <xfs@oss.sgi.com>; Tue,  6 May 2014 10:22:40 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 3307D7F58
+	for <xfs@oss.sgi.com>; Tue,  6 May 2014 11:03:14 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 3DE44304051
-	for <xfs@oss.sgi.com>; Tue,  6 May 2014 08:22:37 -0700 (PDT)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 2107D8F8035
+	for <xfs@oss.sgi.com>; Tue,  6 May 2014 09:03:11 -0700 (PDT)
 Received: from belhaven.mcs.st-and.ac.uk (belhaven.mcs.st-and.ac.uk
 	[138.251.201.57]) by cuda.sgi.com with ESMTP id
-	ABiUfPBKFwYdwJho for <xfs@oss.sgi.com>;
-	Tue, 06 May 2014 08:22:32 -0700 (PDT)
-Date: Tue, 6 May 2014 16:22:29 +0100 (BST)
+	sYk4hxM99PO9Bgvw for <xfs@oss.sgi.com>;
+	Tue, 06 May 2014 09:03:09 -0700 (PDT)
+Date: Tue, 6 May 2014 17:03:06 +0100 (BST)
 From: Steve Brooks <steveb@mcs.st-and.ac.uk>
-Subject: Re: XFS tune to adaptec ASR71605
+Subject: Re: XFS tune to adaptec ASR71605 [SOLVED]
 In-Reply-To: <20140506165933.65fc95e9@harpe.intellique.com>
-Message-ID: <alpine.LRH.2.02.1405061603370.24742@becks.mcs.st-and.ac.uk>
+Message-ID: <alpine.LRH.2.02.1405061652320.24742@becks.mcs.st-and.ac.uk>
 References: <alpine.LRH.2.02.1405061104580.24742@becks.mcs.st-and.ac.uk>
 	<20140506130008.13a1a7ee@harpe.intellique.com>
 	<alpine.LRH.2.02.1405061408480.24742@becks.mcs.st-and.ac.uk>
@@ -21,6 +21,8 @@ References: <alpine.LRH.2.02.1405061104580.24742@becks.mcs.st-and.ac.uk>
 	<alpine.LRH.2.02.1405061520020.24742@becks.mcs.st-and.ac.uk>
 	<20140506165933.65fc95e9@harpe.intellique.com>
 MIME-Version: 1.0
+Content-Type: MULTIPART/MIXED;
+	BOUNDARY="-74825271-1999177172-1399392186=:24742"
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,60 +31,75 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Emmanuel Florac <eflorac@intellique.com>
 Cc: xfs@oss.sgi.com
 
-On Tue, 6 May 2014, Emmanuel Florac wrote:
+  This message is in MIME format.  The first part should be readable text,
+  while the remaining parts are likely unreadable without MIME-aware tools.
 
-Hi,
+---74825271-1999177172-1399392186=:24742
+Content-Type: TEXT/PLAIN; charset=iso-8859-1; format=flowed
+Content-Transfer-Encoding: 8BIT
 
+> Le Tue, 6 May 2014 15:40:37 +0100 (BST)
+> Steve Brooks <steveb@mcs.st-and.ac.uk> écrivait:
+>
+>> Yes the write speed is very poor.. I am running "bonnie++" again with
+>> your params but no sure how long it will take.
+>>
+>>>  bonnie++ -f -d ./ -n 50
+>>
+>> Will thisno be different for our two machines as it seems to generate
+>> other params depending on the size of the RAM. All ours have 64G RAM.
+>>
+>
 > You MUST test with a dataset bigger than RAM, else you're mostly testing
 > your RAM speed :) If you've got 64 GB, by default bonnie will test with
 > 128 GB of data. The small size probably explains the very fast seek
 > speed... You're seeking in the RAM cache :)
-
-Yes that makes sense, reading the man page is should auto pick up the 
-amount of RAM and adjust appropriately. Still running at the moment.
-
-I did pipe your results into "bon_csv2html" and used firefox to inspect 
-the results, a neat tool :-)..
-
+>
+>>
+>> I disabled write cache on the controller as there is no ZMM flash
+>> backup module and it seems to be advised that way. I could enable it
+>> and try another test to see if that is a contribution to the poor
+>> write performance. I do have "arcconf" on all our adaptec raid
+>> machines.
+>
 > Modern RAIDs need write cache or perform abysmally. Do yourself a
 > service and buy a ZMM. Without write cache it'll be so slow it will be
 > nearly unusable, really. Did you see the numbers? your RAID is more
 > than 12x slower than mine... actually slower than a single disk! You'll
 > simply fail at filling it up at these speeds.
-
-Ok so maybe the abysmal write speeds are a symptom of the disabled cache, 
-I hope so, once the current " bonnie++ -f -d ./ -n 50" finishes I will 
-enable the write cache on the controller and repeat the benchmark, 
-fingers crossed.
-
+>
+>> I have not tuned the IO scheduler, read ahead, and queue length?  I
+>> guess I can try this.
+>>
+>>> echo none > /sys/block/sda/queue/scheduler
+>>> echo 1024 > /sys/block/sda/queue/nr_requests
+>>> echo 65536 > /sys/block/sda/queue/read_ahead_kb
+>>
+>> Will this need to be done after every reboot? I guess it could go in
+>> "/etc/rc.local" ?
+>>
+>
 > Yep. You can tweak the settings and try various configurations.
 > However these work fine for me in most cases (particularly the noop
 > scheduler). Of course replace sda with the RAID array device or you may
 > end up tuning your boot drive instead :)
 
-Yes I noticed that too :-) .. the controllers here also  post on 
-"/dev/sda" so would have been luck anyways..
 
-Write just checked and the bonnie++ benchmark finished, and the results 
-below.. So without cache yours are eight times faster at writes :-/  ..
-My reads seem ok though :-) .. Ok will try with write cache on..
-
+Thanks loads! As you stated it seems to have all been down to having write 
+cache disabled. The new results from "bonnie++" show that sequential 
+writes when the "write cach" is enabled have massively improved to
+1642324 K/s ...
 
 
-
--sh-4.1$ bonnie++ -f -d ./ -n 50
+[root@sraid2v tmp]# bonnie++ -f -d ./ -n 50 -u root
+Using uid:0, gid:0.
 Writing intelligently...done
-Rewriting...
-Message from syslogd@sraid2v at May  6 15:50:30 ...
-  kernel:do_IRQ: 0.135 No irq handler for vector (irq -1)
-done
+Rewriting...done
 Reading intelligently...done
 start 'em...done...done...done...done...done...
 Create files in sequential order...done.
@@ -91,25 +108,32 @@ Delete files in sequential order...done.
 Create files in random order...done.
 Stat files in random order...done.
 Delete files in random order...done.
-Version  1.96  ------Sequential Output------ --Sequential Input- --Random-
-Concurrency  1 -Per Chr- --Block-- -Rewrite- -Per Chr- --Block-- --Seeks--
-Machine   Size K/sec %CP K/sec %CP K/sec %CP K/sec %CP K/sec %CP  /sec %CP
-sraid2v   126G           112961   7 56056   4           1843032  80 491.8  33
-Latency                    460ms     566ms             50148us   42171us
-Version  1.96  ------Sequential Create------ --------Random Create--------
-sraid2v        -Create-- --Read--- -Delete-- -Create-- --Read--- -Delete--
-          files  /sec %CP  /sec %CP  /sec %CP  /sec %CP  /sec %CP  /sec %CP
-             50 14833  25 +++++ +++ 30047  47 27391  49 +++++ +++ 44988  76
-Latency        11256us      70us     519ms   21504us      56us      72us
-1.96,1.96,sraid2v,1,1399384651,126G,,,,112961,7,56056,4,,,1843032,80,491.8,33,50,,,,,14833,25,+++++,+++,30047,47,27391,49,+++++,+++,44988,76,,460ms,566ms,,50148us,42171us,11256us,70us,519ms,21504us,56us,72us
+Version  1.96 ------Sequential Output------ --Sequential Input- --Random-
+Concurrency 1 -Per Chr- --Block-- -Rewrite- -Per Chr- --Block-- --Seeks--
+Machine  Size K/sec %CP K/sec %CP K/sec %CP K/sec %CP K/sec %CP  /sec %CP
+sraid2v  126G           1642324  96 704219  51           2005711  81 529.8  36
+Latency                 29978us     131ms             93836us   47600us
+Version  1.96 ------Sequential Create------ --------Random Create--------
+sraid2v       -Create-- --Read--- -Delete-- -Create-- --Read--- -Delete--
+         files  /sec %CP  /sec %CP  /sec %CP  /sec %CP  /sec %CP  /sec %CP
+            50 45494  75 +++++ +++ 58252  84 51635  80 +++++ +++ 53103  81
+Latency       15964us     191us      98us      80us      14us      60us
+1.96,1.96,sraid2v,1,1399398521,126G,,,,1642324,96,704219,51,,,2005711,81,529.8,36,50,,,,,45494,75,+++++,+++,58252,84,51635,80,+++++,+++,53103,81,,29978us,131ms,,93836us,47600us,15964us,191us,98us,80us,14us,60us
 
 
+Thanks again Emmanuel for your help!
 
-Many Thanks!
 
 Steve
+---74825271-1999177172-1399392186=:24742
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+---74825271-1999177172-1399392186=:24742--
