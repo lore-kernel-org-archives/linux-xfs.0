@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 651467FBD
-	for <xfs@oss.sgi.com>; Tue,  6 May 2014 02:56:42 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id DE4C8AC007
-	for <xfs@oss.sgi.com>; Tue,  6 May 2014 00:56:38 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 30EBF7FC0
+	for <xfs@oss.sgi.com>; Tue,  6 May 2014 02:57:44 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 02C9A8F8033
+	for <xfs@oss.sgi.com>; Tue,  6 May 2014 00:57:43 -0700 (PDT)
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.9])
-	by cuda.sgi.com with ESMTP id 79Fps9xH1GdAON2J (version=TLSv1
+	by cuda.sgi.com with ESMTP id 3gaCCMOyu9ZgjNau (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 06 May 2014 00:56:37 -0700 (PDT)
-Date: Tue, 6 May 2014 00:56:37 -0700
+	Tue, 06 May 2014 00:57:43 -0700 (PDT)
+Date: Tue, 6 May 2014 00:57:42 -0700
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] xfs: fix directory readahead offset off-by-one
-Message-ID: <20140506075637.GA13191@infradead.org>
-References: <1399347728-19752-1-git-send-email-david@fromorbit.com>
+Subject: Re: [PATCH V2] xfsprogs: xfs_copy: use exit() to replace killall()
+Message-ID: <20140506075742.GB13191@infradead.org>
+References: <1399359284-20536-1-git-send-email-junxiao.bi@oracle.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1399347728-19752-1-git-send-email-david@fromorbit.com>
+In-Reply-To: <1399359284-20536-1-git-send-email-junxiao.bi@oracle.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,38 +29,33 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: Junxiao Bi <junxiao.bi@oracle.com>
+Cc: hch@infradead.org, joe.jin@oracle.com, xfs@oss.sgi.com
 
-On Tue, May 06, 2014 at 01:42:08PM +1000, Dave Chinner wrote:
-> Fix the warning by ensuring that the readahead offset is correctly
-> incremented.
+On Tue, May 06, 2014 at 02:54:44PM +0800, Junxiao Bi wrote:
+> Sending a SIGKILL signal to child thread will terminate the whole process,
+> xfs_copy will return an error value 137. This cause confuse for script to
+> know whether the copy successes.
 > 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> ---
->  fs/xfs/xfs_dir2_readdir.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+> Calling exit() in main thread can terminate the whole process and return the
+> right value. Replace killall()+abort() with exit(1) to match the old way
+> exit in error case. Also remove killall()+pthread_exit(NULL) since return 0
+> will be followed by an exit(0) to terminate the process.
 > 
-> diff --git a/fs/xfs/xfs_dir2_readdir.c b/fs/xfs/xfs_dir2_readdir.c
-> index 50b72f7..fe2db98 100644
-> --- a/fs/xfs/xfs_dir2_readdir.c
-> +++ b/fs/xfs/xfs_dir2_readdir.c
-> @@ -456,7 +456,7 @@ xfs_dir2_leaf_readbuf(
->  		/*
->  		 * Advance offset through the mapping table.
->  		 */
-> -		for (j = 0; j < mp->m_dirblkfsbs; j++) {
-> +		for (j = 0; j < mp->m_dirblkfsbs; ) {
->  			/*
->  			 * The rest of this extent but not more than a dir
->  			 * block.
+> Bug story from Chrisoph Hellwig:
+> Btw, I think the reason for this cruft is that xfs_copy was originally
+> written using the IRIX sproc interface, and the port to pthreads didn't
+> remove this gem:
+> 
+> http://marc.info/?l=linux-xfs&m=99535721110020&w=2
+> 
+> Signed-off-by: Junxiao Bi <junxiao.bi@oracle.com>
+> Cc: Joe jin <joe.jin@oracle.com>
+> Cc: Chrisoph Hellwig <hch@infradead.org>
 
-This looks correct, but it would seem a little more idiomatic to write
-this as:
+Looks good (except that you misspelled by name :))
 
-		for (j = 0; j < mp->m_dirblkfsbs; j += length) {
-
-and remove the j increment from the body.
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
 _______________________________________________
 xfs mailing list
