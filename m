@@ -1,24 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 49B8C7F60
-	for <xfs@oss.sgi.com>; Mon,  5 May 2014 20:42:18 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 06EFD7F66
+	for <xfs@oss.sgi.com>; Mon,  5 May 2014 20:51:02 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 2198230404E
-	for <xfs@oss.sgi.com>; Mon,  5 May 2014 18:42:14 -0700 (PDT)
-Received: from buxtehude.debian.org (buxtehude.debian.org [140.211.166.26]) by
-	cuda.sgi.com with ESMTP id 3Hb99FTfkqc6hElg (version=TLSv1
-	cipher=AES128-SHA bits=128 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 05 May 2014 18:42:10 -0700 (PDT)
-Subject: Bug#747080: xfsprogs: new upstream release (2013-05-08 v3.1.11)
-Resent-To: debian-bugs-dist@lists.debian.org
-Resent-Message-ID: <handler.747080.B747080.139934036021068@bugs.debian.org>
-Date: Mon, 5 May 2014 21:39:17 -0400 (EDT)
-From: Nathan Scott <nathans@debian.org>
-Message-ID: <173952161.1236134.1399340357830.JavaMail.zimbra@redhat.com>
-In-Reply-To: <20140505124859.GA19836@fernst.no-ip.org>
-References: <20140505124859.GA19836@fernst.no-ip.org>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 68D89AC003
+	for <xfs@oss.sgi.com>; Mon,  5 May 2014 18:51:01 -0700 (PDT)
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
+	cuda.sgi.com with ESMTP id 2y60icDUo2U3F6ro (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Mon, 05 May 2014 18:51:00 -0700 (PDT)
+Message-ID: <53683FFE.2080909@oracle.com>
+Date: Tue, 06 May 2014 09:50:54 +0800
+From: Jeff Liu <jeff.liu@oracle.com>
 MIME-Version: 1.0
-Reply-To: Nathan Scott <nathans@debian.org>, 747080@bugs.debian.org
+Subject: Re: [PATCH 3/6] xfsprogs: get rid of XFS_IALLOC_BLOCKS macros
+References: <536784CD.60900@oracle.com> <20140505211009.GD13973@laptop.bfoster>
+In-Reply-To: <20140505211009.GD13973@laptop.bfoster>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,30 +28,52 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Florian Ernst <florian_ernst@gmx.net>, 747080@bugs.debian.org
+To: Brian Foster <bfoster@redhat.com>
+Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
 
+On 05/06 2014 05:10 AM, Brian Foster wrote:
+> On Mon, May 05, 2014 at 08:32:13PM +0800, Jeff Liu wrote:
+>> From: Jie Liu <jeff.liu@oracle.com>
+>>
+>> Get rid of XFS_IALLOC_BLOCKS() macros, use mp->m_ialloc_blks directly.
+>>
+>> Signed-off-by: Jie Liu <jeff.liu@oracle.com>
+>> ---
+>>  db/check.c                |  2 +-
+>>  db/frag.c                 |  2 +-
+>>  db/metadump.c             |  2 +-
+>>  include/xfs_ialloc.h      |  5 -----
+>>  include/xfs_trans_space.h |  2 +-
+>>  libxfs/xfs_ialloc.c       |  8 ++++----
+>>  libxfs/xfs_trans_resv.c   |  8 ++++----
+>>  mkfs/proto.c              |  2 +-
+>>  repair/dino_chunks.c      | 24 ++++++++++++------------
+>>  repair/prefetch.c         |  2 +-
+>>  repair/xfs_repair.c       |  4 ++--
+>>  11 files changed, 28 insertions(+), 33 deletions(-)
+>>
+<snip>
 
------ Original Message -----
-> Package: xfsprogs
-> Version: 3.1.9
-> Severity: wishlist
+>> diff --git a/mkfs/proto.c b/mkfs/proto.c
+>> index 5a47e27..2689f75 100644
+>> --- a/mkfs/proto.c
+>> +++ b/mkfs/proto.c
+>> @@ -39,7 +39,7 @@ static long filesize(int fd);
+>>   * (basically no fragmentation).
+>>   */
+>>  #define	MKFS_BLOCKRES_INODE	\
+>> -	((uint)(XFS_IALLOC_BLOCKS(mp) + ((mp)->m_in_maxlevels - 1)))
+>> +	((uint)(mp->m_ialloc_blks + ((mp)->m_in_maxlevels - 1)))
+> Nit:		(mp) 
 > 
-> Hello there,
-> 
-> please consider updating the package to the newest upstream release, see
-> 
+> Probably not necessary here anyways...
 
-Hi Flo,
+Nice catch, thanks for your review.
 
-There is a pending xfsprogs-3.2.0 release - I've been working on ensuring
-the build and packaging and clean there.  I'm planning to upload that right
-after its released, which I'm led to believe is just days away.
 
-cheers.
-
---
-Nathan
+Cheers,
+-Jeff
 
 _______________________________________________
 xfs mailing list
