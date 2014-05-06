@@ -1,24 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 238E57FE0
-	for <xfs@oss.sgi.com>; Tue,  6 May 2014 03:29:13 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id BE08F7FE0
+	for <xfs@oss.sgi.com>; Tue,  6 May 2014 03:29:51 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 04AD88F8033
-	for <xfs@oss.sgi.com>; Tue,  6 May 2014 01:29:12 -0700 (PDT)
-Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
-	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	giNyEkyArfsAma4Q for <xfs@oss.sgi.com>;
-	Tue, 06 May 2014 01:28:59 -0700 (PDT)
-Date: Tue, 6 May 2014 18:28:57 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 5/5] xfs: remove shared supberlock feature checking
-Message-ID: <20140506082857.GE5421@dastard>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id AF6438F8035
+	for <xfs@oss.sgi.com>; Tue,  6 May 2014 01:29:51 -0700 (PDT)
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.9])
+	by cuda.sgi.com with ESMTP id hufxLEa99k90wKvy (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 06 May 2014 01:29:49 -0700 (PDT)
+Date: Tue, 6 May 2014 01:29:48 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 1/5] xfs: make superblock version checks reflect reality
+Message-ID: <20140506082948.GA18865@infradead.org>
 References: <1399348559-19889-1-git-send-email-david@fromorbit.com>
-	<1399348559-19889-6-git-send-email-david@fromorbit.com>
-	<20140506081820.GD24143@infradead.org>
+	<1399348559-19889-2-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20140506081820.GD24143@infradead.org>
+In-Reply-To: <1399348559-19889-2-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,40 +30,44 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
+To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On Tue, May 06, 2014 at 01:18:20AM -0700, Christoph Hellwig wrote:
-> On Tue, May 06, 2014 at 01:55:59PM +1000, Dave Chinner wrote:
-> > 
-> > We reject any filesystem that is mounted with this feature bit set,
-> > so we don't need to check for it anywhere else. Remove the function
-> > for checking if the feature bit is set and any code that uses it.
-> > 
-> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> 
-> Looks good,
-> 
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
-> 
-> If someone at SGI has some spare time for a BugWorks search I'd really
-> love to figure out of the story behind the shared superblock feature..
+> +/*
+> + * The first XFS version we support is a v4 superblock with V2 directories.
+> + */
+> +static inline bool xfs_sb_good_v4_features(struct xfs_sb *sbp)
+>  {
+> +	if (!(sbp->sb_versionnum & XFS_SB_VERSION_DIRV2BIT))
+> +		return false;
+>  
+> +	/* check for unknown features in the fs */
+> +	if ((sbp->sb_versionnum & ~XFS_SB_VERSION_OKBITS) ||
 
-http://oss.sgi.com/cgi-bin/gitweb.cgi?p=archive/xfs-import.git;a=commitdiff;h=9ea7d56d2db84bd45183c4ab11903b97c5b9a8e9
+Given that sb_versionnum is a __uint16_t and XFS_SB_VERSION_OKBITS is
+0xffff this will never evaluate to false and a sane compiler should warn
+about it.  How about remove this check and XFS_SB_VERSION_OKBITS?
 
-tells us that the PV to start looking at is 522678. It's something
-to do with shared read-only filesystems - I suspect the sb_shared_vn
-field counts the number of read-only mounts - and my guess is it was
-for Cellular Irix. i.e. SGI's aborted attempt to make a distributed
-operating system that left useless crap all through the Irix 6.5
-codebase...
+The various has_ macros are a bit confusing to me, as some explicitly
+check for 5 superblocks, and some assume the caller handles them in
+some way, but I think this is something we can leave for later cleanups.
 
-Cheers,
+>   * For example, for a bit defined as XFS_SB_VERSION2_FUNBIT, has a macro:
+>   *
+> - * SB_VERSION_HASFUNBIT(xfs_sb_t *sbp)
+> + * SB_VERSION_HASFUNBIT(struct xfs_sb *sbp)
 
-Dve.
--- 
-Dave Chinner
-david@fromorbit.com
+>   *	((xfs_sb_version_hasmorebits(sbp) &&
+>   *	 ((sbp)->sb_features2 & XFS_SB_VERSION2_FUNBIT)
+>   */
+
+This should be updated to the lowe case convention inlines we've used
+for a long time.  Or just removed as new features should go into v5
+superblocks..
+
+Modulo these minor bits:
+
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
 _______________________________________________
 xfs mailing list
