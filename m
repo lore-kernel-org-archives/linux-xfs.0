@@ -1,27 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id B3B7E7F77
-	for <xfs@oss.sgi.com>; Wed,  7 May 2014 07:22:05 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 84AAD8F8035
-	for <xfs@oss.sgi.com>; Wed,  7 May 2014 05:22:02 -0700 (PDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 8262A7F5E
+	for <xfs@oss.sgi.com>; Wed,  7 May 2014 07:22:03 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 1BE4AAC009
+	for <xfs@oss.sgi.com>; Wed,  7 May 2014 05:22:03 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id 9XmhUtQtN9bDsJrh for
-	<xfs@oss.sgi.com>; Wed, 07 May 2014 05:22:01 -0700 (PDT)
-Received: from int-mx02.intmail.prod.int.phx2.redhat.com
-	(int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id s47CM0Qg019327
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Wed, 7 May 2014 08:22:00 -0400
+	cuda.sgi.com with ESMTP id HLc0YYbJoCyIbxhN for
+	<xfs@oss.sgi.com>; Wed, 07 May 2014 05:22:02 -0700 (PDT)
+Received: from int-mx10.intmail.prod.int.phx2.redhat.com
+	(int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id s47CM1NJ019346
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256
+	verify=OK) for <xfs@oss.sgi.com>; Wed, 7 May 2014 08:22:01 -0400
 Received: from bfoster.bfoster ([10.18.41.237])
-	by int-mx02.intmail.prod.int.phx2.redhat.com (8.13.8/8.13.8) with ESMTP
-	id s47CM0U5032617
-	for <xfs@oss.sgi.com>; Wed, 7 May 2014 08:22:00 -0400
+	by int-mx10.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id s47CM06I028665
+	for <xfs@oss.sgi.com>; Wed, 7 May 2014 08:22:01 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH v4 04/20] xfs: update inode allocation/free transaction
-	reservations for finobt
-Date: Wed,  7 May 2014 08:21:43 -0400
-Message-Id: <1399465319-65066-5-git-send-email-bfoster@redhat.com>
+Subject: [PATCH v4 16/20] xfsprogs/repair: pull the build_agi() call up out of
+	the inode tree build
+Date: Wed,  7 May 2014 08:21:55 -0400
+Message-Id: <1399465319-65066-17-git-send-email-bfoster@redhat.com>
 In-Reply-To: <1399465319-65066-1-git-send-email-bfoster@redhat.com>
 References: <1399465319-65066-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,157 +39,115 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Create the xfs_calc_finobt_res() helper to calculate the finobt log
-reservation for inode allocation and free. Update
-XFS_IALLOC_SPACE_RES() to reserve blocks for the additional finobt
-insertion on inode allocation. Create XFS_IFREE_SPACE_RES() to
-reserve blocks for the potential finobt record insertion on inode
-free (i.e., if an inode chunk was previously fully allocated).
+Pull the build_agi() call out of build_ino_tree() in phase 5. This
+is to prepare for finobt support, in which build_agi() will require
+context from multiple inode tree reconstructions (both the inode
+allocation tree and free inode tree, when it exists).
+
+Create the new 'agi_stat' structure to carry the requisite state
+from the build_ino_tree() operation to build_agi().
 
 Signed-off-by: Brian Foster <bfoster@redhat.com>
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
 ---
- include/xfs_trans_space.h |  7 ++++++-
- libxfs/xfs_trans_resv.c   | 47 +++++++++++++++++++++++++++++++++++++++++++----
- 2 files changed, 49 insertions(+), 5 deletions(-)
+ repair/phase5.c | 36 +++++++++++++++++++++++++++---------
+ 1 file changed, 27 insertions(+), 9 deletions(-)
 
-diff --git a/include/xfs_trans_space.h b/include/xfs_trans_space.h
-index 7d2c920..a7d1721 100644
---- a/include/xfs_trans_space.h
-+++ b/include/xfs_trans_space.h
-@@ -47,7 +47,9 @@
- #define	XFS_DIRREMOVE_SPACE_RES(mp)	\
- 	XFS_DAREMOVE_SPACE_RES(mp, XFS_DATA_FORK)
- #define	XFS_IALLOC_SPACE_RES(mp)	\
--	(XFS_IALLOC_BLOCKS(mp) + (mp)->m_in_maxlevels - 1)
-+	(XFS_IALLOC_BLOCKS(mp) + \
-+	 (xfs_sb_version_hasfinobt(&mp->m_sb) ? 2 : 1 * \
-+	  ((mp)->m_in_maxlevels - 1)))
+diff --git a/repair/phase5.c b/repair/phase5.c
+index 2c02e40..4778e08 100644
+--- a/repair/phase5.c
++++ b/repair/phase5.c
+@@ -74,6 +74,15 @@ typedef struct bt_status  {
+ 	bt_stat_level_t		level[XFS_BTREE_MAXLEVELS];
+ } bt_status_t;
  
- /*
-  * Space reservation values for various transactions.
-@@ -82,5 +84,8 @@
- 	(XFS_DIRREMOVE_SPACE_RES(mp) + XFS_DIRENTER_SPACE_RES(mp,nl))
- #define	XFS_SYMLINK_SPACE_RES(mp,nl,b)	\
- 	(XFS_IALLOC_SPACE_RES(mp) + XFS_DIRENTER_SPACE_RES(mp,nl) + (b))
-+#define XFS_IFREE_SPACE_RES(mp)		\
-+	(xfs_sb_version_hasfinobt(&mp->m_sb) ? (mp)->m_in_maxlevels : 0)
-+
- 
- #endif	/* __XFS_TRANS_SPACE_H__ */
-diff --git a/libxfs/xfs_trans_resv.c b/libxfs/xfs_trans_resv.c
-index 1e59fad..870d4fc 100644
---- a/libxfs/xfs_trans_resv.c
-+++ b/libxfs/xfs_trans_resv.c
-@@ -81,6 +81,37 @@ xfs_calc_inode_res(
- }
- 
- /*
-+ * The free inode btree is a conditional feature and the log reservation
-+ * requirements differ slightly from that of the traditional inode allocation
-+ * btree. The finobt tracks records for inode chunks with at least one free inode.
-+ * Therefore, a record can be removed from the tree for an inode allocation or
-+ * free and the associated merge reservation is unconditional. This also covers
-+ * the possibility of a split on record insertion.
-+ *
-+ * the free inode btree: max depth * block size
-+ * the free inode btree entry: block size
-+ *
-+ * TODO: is the modify res really necessary? covered by the merge/split res?
-+ * This seems to be the pattern of ifree, but not create_resv_alloc. Why?
-+ */
-+STATIC uint
-+xfs_calc_finobt_res(
-+	struct xfs_mount 	*mp,
-+	int			modify)
-+{
-+	uint res;
-+
-+	if (!xfs_sb_version_hasfinobt(&mp->m_sb))
-+		return 0;
-+
-+	res = xfs_calc_buf_res(mp->m_in_maxlevels, XFS_FSB_TO_B(mp, 1));
-+	if (modify)
-+		res += (uint)XFS_FSB_TO_B(mp, 1);
-+
-+	return res;
-+}
-+
 +/*
-  * Various log reservation values.
-  *
-  * These are based on the size of the file system block because that is what
-@@ -250,6 +281,7 @@ xfs_calc_remove_reservation(
-  *    the superblock for the nlink flag: sector size
-  *    the directory btree: (max depth + v2) * dir block size
-  *    the directory inode's bmap btree: (max depth + v2) * block size
-+ *    the finobt
++ * extra metadata for the agi
++ */
++struct agi_stat {
++	xfs_agino_t		first_agino;
++	xfs_agino_t		count;
++	xfs_agino_t		freecount;
++};
++
+ static __uint64_t	*sb_icount_ag;		/* allocated inodes per ag */
+ static __uint64_t	*sb_ifree_ag;		/* free inodes per ag */
+ static __uint64_t	*sb_fdblocks_ag;	/* free data blocks per ag */
+@@ -1050,8 +1059,7 @@ prop_ino_cursor(xfs_mount_t *mp, xfs_agnumber_t agno, bt_status_t *btree_curs,
   */
- STATIC uint
- xfs_calc_create_resv_modify(
-@@ -258,7 +290,8 @@ xfs_calc_create_resv_modify(
- 	return xfs_calc_inode_res(mp, 2) +
- 		xfs_calc_buf_res(1, mp->m_sb.sb_sectsize) +
- 		(uint)XFS_FSB_TO_B(mp, 1) +
--		xfs_calc_buf_res(XFS_DIROP_LOG_COUNT(mp), XFS_FSB_TO_B(mp, 1));
-+		xfs_calc_buf_res(XFS_DIROP_LOG_COUNT(mp), XFS_FSB_TO_B(mp, 1)) +
-+		xfs_calc_finobt_res(mp, 1);
+ static void
+ build_agi(xfs_mount_t *mp, xfs_agnumber_t agno,
+-		bt_status_t *btree_curs, xfs_agino_t first_agino,
+-		xfs_agino_t count, xfs_agino_t freecount)
++		bt_status_t *btree_curs, struct agi_stat *agi_stat)
+ {
+ 	xfs_buf_t	*agi_buf;
+ 	xfs_agi_t	*agi;
+@@ -1072,11 +1080,11 @@ build_agi(xfs_mount_t *mp, xfs_agnumber_t agno,
+ 	else
+ 		agi->agi_length = cpu_to_be32(mp->m_sb.sb_dblocks -
+ 			(xfs_drfsbno_t) mp->m_sb.sb_agblocks * agno);
+-	agi->agi_count = cpu_to_be32(count);
++	agi->agi_count = cpu_to_be32(agi_stat->count);
+ 	agi->agi_root = cpu_to_be32(btree_curs->root);
+ 	agi->agi_level = cpu_to_be32(btree_curs->num_levels);
+-	agi->agi_freecount = cpu_to_be32(freecount);
+-	agi->agi_newino = cpu_to_be32(first_agino);
++	agi->agi_freecount = cpu_to_be32(agi_stat->freecount);
++	agi->agi_newino = cpu_to_be32(agi_stat->first_agino);
+ 	agi->agi_dirino = cpu_to_be32(NULLAGINO);
+ 
+ 	for (i = 0; i < XFS_AGI_UNLINKED_BUCKETS; i++)  
+@@ -1094,7 +1102,8 @@ build_agi(xfs_mount_t *mp, xfs_agnumber_t agno,
+  */
+ static void
+ build_ino_tree(xfs_mount_t *mp, xfs_agnumber_t agno,
+-		bt_status_t *btree_curs, __uint32_t magic)
++		bt_status_t *btree_curs, __uint32_t magic,
++		struct agi_stat *agi_stat)
+ {
+ 	xfs_agnumber_t		i;
+ 	xfs_agblock_t		j;
+@@ -1224,7 +1233,11 @@ build_ino_tree(xfs_mount_t *mp, xfs_agnumber_t agno,
+ 		}
+ 	}
+ 
+-	build_agi(mp, agno, btree_curs, first_agino, count, freecount);
++	if (agi_stat) {
++		agi_stat->first_agino = first_agino;
++		agi_stat->count = count;
++		agi_stat->freecount = freecount;
++	}
  }
  
  /*
-@@ -268,6 +301,7 @@ xfs_calc_create_resv_modify(
-  *    the inode blocks allocated: XFS_IALLOC_BLOCKS * blocksize
-  *    the inode btree: max depth * blocksize
-  *    the allocation btrees: 2 trees * (max depth - 1) * block size
-+ *    the finobt
-  */
- STATIC uint
- xfs_calc_create_resv_alloc(
-@@ -278,7 +312,8 @@ xfs_calc_create_resv_alloc(
- 		xfs_calc_buf_res(XFS_IALLOC_BLOCKS(mp), XFS_FSB_TO_B(mp, 1)) +
- 		xfs_calc_buf_res(mp->m_in_maxlevels, XFS_FSB_TO_B(mp, 1)) +
- 		xfs_calc_buf_res(XFS_ALLOCFREE_LOG_COUNT(mp, 1),
--				 XFS_FSB_TO_B(mp, 1));
-+				 XFS_FSB_TO_B(mp, 1)) +
-+		xfs_calc_finobt_res(mp, 0);
- }
+@@ -1481,6 +1494,7 @@ phase5_func(
+ #endif
+ 	xfs_agblock_t	num_extents;
+ 	__uint32_t	magic;
++	struct agi_stat	agi_stat = {0,};
  
- STATIC uint
-@@ -296,6 +331,7 @@ __xfs_calc_create_reservation(
-  *    the superblock for the nlink flag: sector size
-  *    the inode btree: max depth * blocksize
-  *    the allocation btrees: 2 trees * (max depth - 1) * block size
-+ *    the finobt
-  */
- STATIC uint
- xfs_calc_icreate_resv_alloc(
-@@ -305,7 +341,8 @@ xfs_calc_icreate_resv_alloc(
- 		mp->m_sb.sb_sectsize +
- 		xfs_calc_buf_res(mp->m_in_maxlevels, XFS_FSB_TO_B(mp, 1)) +
- 		xfs_calc_buf_res(XFS_ALLOCFREE_LOG_COUNT(mp, 1),
--				 XFS_FSB_TO_B(mp, 1));
-+				 XFS_FSB_TO_B(mp, 1)) +
-+		xfs_calc_finobt_res(mp, 0);
- }
- 
- STATIC uint
-@@ -359,6 +396,7 @@ xfs_calc_symlink_reservation(
-  *    the on disk inode before ours in the agi hash list: inode cluster size
-  *    the inode btree: max depth * blocksize
-  *    the allocation btrees: 2 trees * (max depth - 1) * block size
-+ *    the finobt
-  */
- STATIC uint
- xfs_calc_ifree_reservation(
-@@ -374,7 +412,8 @@ xfs_calc_ifree_reservation(
- 		xfs_calc_buf_res(2 + XFS_IALLOC_BLOCKS(mp) +
- 				 mp->m_in_maxlevels, 0) +
- 		xfs_calc_buf_res(XFS_ALLOCFREE_LOG_COUNT(mp, 1),
--				 XFS_FSB_TO_B(mp, 1));
-+				 XFS_FSB_TO_B(mp, 1)) +
-+		xfs_calc_finobt_res(mp, 1);
- }
- 
- /*
+ 	if (verbose)
+ 		do_log(_("        - agno = %d\n"), agno);
+@@ -1612,12 +1626,16 @@ phase5_func(
+ 		build_agf_agfl(mp, agno, &bno_btree_curs,
+ 				&bcnt_btree_curs, freeblks1, extra_blocks);
+ 		/*
+-		 * build inode allocation tree.  this also build the agi
++		 * build inode allocation tree.
+ 		 */
+ 		magic = xfs_sb_version_hascrc(&mp->m_sb) ?
+ 				XFS_IBT_CRC_MAGIC : XFS_IBT_MAGIC;
+-		build_ino_tree(mp, agno, &ino_btree_curs, magic);
++		build_ino_tree(mp, agno, &ino_btree_curs, magic, &agi_stat);
+ 		write_cursor(&ino_btree_curs);
++
++		/* build the agi */
++		build_agi(mp, agno, &ino_btree_curs, &agi_stat);
++
+ 		/*
+ 		 * tear down cursors
+ 		 */
 -- 
 1.8.3.1
 
