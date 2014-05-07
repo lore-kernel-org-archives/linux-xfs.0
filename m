@@ -1,26 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 1881A7F55
-	for <xfs@oss.sgi.com>; Wed,  7 May 2014 07:22:06 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id C3ADEAC001
+	by oss.sgi.com (Postfix) with ESMTP id B64D07F78
+	for <xfs@oss.sgi.com>; Wed,  7 May 2014 07:22:05 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 5D657AC006
 	for <xfs@oss.sgi.com>; Wed,  7 May 2014 05:22:02 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id BYbBbpa3Bvp2c4PH for
+	cuda.sgi.com with ESMTP id kPYTWbdJv4ptz0kD for
 	<xfs@oss.sgi.com>; Wed, 07 May 2014 05:22:01 -0700 (PDT)
-Received: from int-mx10.intmail.prod.int.phx2.redhat.com
-	(int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id s47CM1PO002576
+Received: from int-mx12.intmail.prod.int.phx2.redhat.com
+	(int-mx12.intmail.prod.int.phx2.redhat.com [10.5.11.25])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id s47CM0GK023429
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256
-	verify=OK) for <xfs@oss.sgi.com>; Wed, 7 May 2014 08:22:01 -0400
+	verify=OK) for <xfs@oss.sgi.com>; Wed, 7 May 2014 08:22:00 -0400
 Received: from bfoster.bfoster ([10.18.41.237])
-	by int-mx10.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id s47CM1l7028694
-	for <xfs@oss.sgi.com>; Wed, 7 May 2014 08:22:01 -0400
+	by int-mx12.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id s47CM0Hb014593
+	for <xfs@oss.sgi.com>; Wed, 7 May 2014 08:22:00 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH v4 12/20] xfsprogs/db: finobt support
-Date: Wed,  7 May 2014 08:21:51 -0400
-Message-Id: <1399465319-65066-13-git-send-email-bfoster@redhat.com>
+Subject: [PATCH v4 02/20] xfs: reserve v5 superblock read-only compat. feature
+	bit for finobt
+Date: Wed,  7 May 2014 08:21:41 -0400
+Message-Id: <1399465319-65066-3-git-send-email-bfoster@redhat.com>
 In-Reply-To: <1399465319-65066-1-git-send-email-bfoster@redhat.com>
 References: <1399465319-65066-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -38,58 +39,49 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Add the AGI finobt fields and fibt layouts.
+Reserve a v5 read-only compatibility feature bit for the finobt and
+create the xfs_sb_version_hasfinobt() helper to determine whether
+an fs has the feature enabled.
+
+The finobt does not change existing on-disk structures, but must
+remain consistent with the ialloc btree. Modifications from older
+kernels would violate that constrant. Therefore, we restrict older
+kernels to read-only mounts of finobt-enabled filesystems.
+
+Note that this does not yet enable the ability to rw mount a finobt
+fs (by setting the feature bit in the XFS_SB_FEAT_RO_COMPAT_ALL
+mask).
 
 Signed-off-by: Brian Foster <bfoster@redhat.com>
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
 ---
- db/agi.c     |  2 ++
- db/btblock.c | 12 ++++++++++++
- 2 files changed, 14 insertions(+)
+ include/xfs_sb.h | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
-diff --git a/db/agi.c b/db/agi.c
-index 398bdbb..6f167ac 100644
---- a/db/agi.c
-+++ b/db/agi.c
-@@ -57,6 +57,8 @@ const field_t	agi_flds[] = {
- 	{ "uuid", FLDT_UUID, OI(OFF(uuid)), C1, 0, TYP_NONE },
- 	{ "lsn", FLDT_UINT64X, OI(OFF(lsn)), C1, 0, TYP_NONE },
- 	{ "crc", FLDT_CRC, OI(OFF(crc)), C1, 0, TYP_NONE },
-+	{ "free_root", FLDT_AGBLOCK, OI(OFF(free_root)), C1, 0, TYP_INOBT },
-+	{ "free_level", FLDT_UINT32D, OI(OFF(free_level)), C1, 0, TYP_NONE },
- 	{ NULL }
- };
+diff --git a/include/xfs_sb.h b/include/xfs_sb.h
+index f7b2fe7..7f53a85 100644
+--- a/include/xfs_sb.h
++++ b/include/xfs_sb.h
+@@ -587,6 +587,7 @@ xfs_sb_has_compat_feature(
+ 	return (sbp->sb_features_compat & feature) != 0;
+ }
  
-diff --git a/db/btblock.c b/db/btblock.c
-index 1ea0cff..cdb8b1d 100644
---- a/db/btblock.c
-+++ b/db/btblock.c
-@@ -60,6 +60,12 @@ struct xfs_db_btree {
- 		sizeof(xfs_inobt_rec_t),
- 		sizeof(__be32),
- 	},
-+	{	XFS_FIBT_MAGIC,
-+		XFS_BTREE_SBLOCK_LEN,
-+		sizeof(xfs_inobt_key_t),
-+		sizeof(xfs_inobt_rec_t),
-+		sizeof(__be32),
-+	},
- 	{	XFS_BMAP_CRC_MAGIC,
- 		XFS_BTREE_LBLOCK_CRC_LEN,
- 		sizeof(xfs_bmbt_key_t),
-@@ -84,6 +90,12 @@ struct xfs_db_btree {
- 		sizeof(xfs_inobt_rec_t),
- 		sizeof(__be32),
- 	},
-+	{	XFS_FIBT_CRC_MAGIC,
-+		XFS_BTREE_SBLOCK_CRC_LEN,
-+		sizeof(xfs_inobt_key_t),
-+		sizeof(xfs_inobt_rec_t),
-+		sizeof(__be32),
-+	},
- 	{	0,
- 	},
- };
++#define XFS_SB_FEAT_RO_COMPAT_FINOBT   (1 << 0)		/* free inode btree */
+ #define XFS_SB_FEAT_RO_COMPAT_ALL 0
+ #define XFS_SB_FEAT_RO_COMPAT_UNKNOWN	~XFS_SB_FEAT_RO_COMPAT_ALL
+ static inline bool
+@@ -641,6 +642,12 @@ static inline int xfs_sb_version_hasftype(struct xfs_sb *sbp)
+ 		 (sbp->sb_features2 & XFS_SB_VERSION2_FTYPE));
+ }
+ 
++static inline int xfs_sb_version_hasfinobt(xfs_sb_t *sbp)
++{
++	return (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5) &&
++		(sbp->sb_features_ro_compat & XFS_SB_FEAT_RO_COMPAT_FINOBT);
++}
++
+ /*
+  * end of superblock version macros
+  */
 -- 
 1.8.3.1
 
