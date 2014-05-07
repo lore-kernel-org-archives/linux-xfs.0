@@ -1,26 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id C311F7F52
-	for <xfs@oss.sgi.com>; Wed,  7 May 2014 17:48:02 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 98B83304051
-	for <xfs@oss.sgi.com>; Wed,  7 May 2014 15:47:59 -0700 (PDT)
-Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
-	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	0qWja4wVIWJmr3tX for <xfs@oss.sgi.com>;
-	Wed, 07 May 2014 15:47:57 -0700 (PDT)
-Date: Thu, 8 May 2014 08:47:55 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [RFC] libxfs kernel infrastructure (was [XFS updates] XFS
-	development tree branch, xfs-libxfs-in-kernel-RFC, created.
-	xfs-for-linus-3.15-rc2-52-g6579dd8)
-Message-ID: <20140507224755.GR5421@dastard>
-References: <20140506071855.F152E7FBC@oss.sgi.com>
-	<20140506075905.GA5421@dastard>
-	<20140507144822.GA4061@bfoster.bfoster>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id C425A7F52
+	for <xfs@oss.sgi.com>; Wed,  7 May 2014 18:29:21 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 54CD7AC003
+	for <xfs@oss.sgi.com>; Wed,  7 May 2014 16:29:18 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id ab8S71IuG5GO9GSL for
+	<xfs@oss.sgi.com>; Wed, 07 May 2014 16:29:17 -0700 (PDT)
+Received: from int-mx14.intmail.prod.int.phx2.redhat.com
+	(int-mx14.intmail.prod.int.phx2.redhat.com [10.5.11.27])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id s47NTGDo027647
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256
+	verify=OK) for <xfs@oss.sgi.com>; Wed, 7 May 2014 19:29:16 -0400
+Received: from liberator.sandeen.net (ovpn01.gateway.prod.ext.phx2.redhat.com
+	[10.5.9.1])
+	by int-mx14.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id s47NTEsN031711
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES128-SHA bits=128 verify=NO)
+	for <xfs@oss.sgi.com>; Wed, 7 May 2014 19:29:16 -0400
+Message-ID: <536AC1CB.8060601@redhat.com>
+Date: Wed, 07 May 2014 18:29:15 -0500
+From: Eric Sandeen <sandeen@redhat.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20140507144822.GA4061@bfoster.bfoster>
+Subject: [PATCH] xfs_repair: don't unlock prefetch tree to read discontig
+	buffers
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,149 +37,149 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
-Cc: xfs@oss.sgi.com
+To: xfs-oss <xfs@oss.sgi.com>
 
-On Wed, May 07, 2014 at 10:48:22AM -0400, Brian Foster wrote:
-> On Tue, May 06, 2014 at 05:59:05PM +1000, Dave Chinner wrote:
-> > On Tue, May 06, 2014 at 02:18:55AM -0500, xfs@oss.sgi.com wrote:
-> > > This is an automated email from the git hooks/post-receive script. It was
-> > > generated because a ref change was pushed to the repository containing
-> > > the project "XFS development tree".
-> > > 
-> > > The branch, xfs-libxfs-in-kernel-RFC has been created
-> > >         at  6579dd808ddf0ddc10e59e715dc8f2eb09705203 (commit)
-> > 
-> > No doubt you are all wondering what this is by now. :)
-> > 
-> > I spent a couple of hours doing what I'd been talking about for a
-> > while now - converting the xfs kernel source tree to have a libxfs
-> > abstraction. It's based on the current for-next branch, so it's
-> > completely up-to-date.
-> > 
-> > The commits in this series move all the files used by userspace to:
-> > 
-> > 	- fs/xfs/libxfs for .c and private.h files
-> > 	- fs/xfs/libxfs/include for public .h files
-> > 
-> > It converts all the libxfs includes to makes the userspace libxfs
-> > includes (just a single #include) for both internal (libxfs_int.h)
-> > and external (libxfs.h). These will not be shared with userspace;
-> > userspace will provide it's own just like it does now.
-> > 
-> > The core idea around this code layout is that we can now extract all
-> > the changes to the libxfs code in the kernel in a simple manner
-> > (commit by commit or as a single aggregate patch), and apply it to
-> > the userspace libxfs code with the right pathname filter to the
-> > patch command. That's all a sync will require in future, and should
-> > make it scriptable and easy for anyone to do. It means, ideally,
-> > that we can do libxfs updates at the same time we do kernel updates
-> > with almost no effort.
-> > 
-> > There's still a few little messy corners, but I'm seriously tempted
-> > just to merge this into for-next right now because it's all good. :)"
-> > 
-> > [ Seriously, it removes almost a thousand #include lines from the
-> > kernel code, requires almost no extra infrastructure in the kernel,
-> > already has passed several full xfstests runs and will make our life
-> > so much easier. ]
-> > 
-> > Things that need to be done:
-> > 
-> > 	- xfs_dir2_priv.h is included in places that it shouldn't
-> > 	  be. Whatever those callers need from that header file
-> > 	  should be moved to xfs_dir2.h and into libxfs proper.
-> > 	- the Makefiles still have a little bit of messy include
-> > 	  rules (i.e. -I$(src) -I$(src)/libxfs/include) bit I can
-> > 	  live with that I think.
-> > 	- some of the libxfs header files have a dependency on
-> > 	  xfs_mount.h for things like inode cluster and directory
-> > 	  block sizes. These need to be untangled, but it's not a
-> > 	  critical issue right now.
-> > 	- xfs_vnode.h needs to die.
-> > 	- the kernel only header files that include libxfs header
-> > 	  files can now drop those includes.
-> > 
-> > Overall, though, this was surprisingly easy to do. All of the recent
-> > header file consolidation and cleanup that we've done made this
-> > pretty much a case of git mv of all the files and little bit of
-> > infrastructure, and not much else...
-> > 
-> > I suspect the next thing that needs to be done is consolidate libxfs
-> > and libxlog in userspace, and split the log recovery code in the
-> > kernel and put the shared part into fs/xfs/libxfs.....
-> > 
-> > I've put it up as a git branch rather than patches, because nobody
-> > wants me posting a patchset with a diffstat like this:
-> > 
-> > $ git diff --stat for-next..
-> > ....
-> > 164 files changed, 47250 insertions(+), 48036 deletions(-)
-> > 
-> > However, when you tell git to be smart about renames (i.e file
-> > movement is ignored), the actual diffstat looks like this:
-> > 
-> > $ git diff --stat --summary -C -M for-next..
-> > ....
-> > 108 files changed, 291 insertions(+), 1077 deletions(-)
-> > 
-> > If you want to look at it, pull from this branch:
-> > 
-> > git://oss.sgi.com/xfs/xfs xfs-libxfs-in-kernel-RFC
-> > 
-> > And check it out. The head is here:
-> > 
-> > 6579dd8 libxfs: provide extern include file
-> > 
-> 
-> It looks like a nice cleanup to me from the perspective of maintaining
-> synchronization between kernel and userspace. I suppose it gets more
-> interesting if we want to consider libxfs as something potentially
-> externally consumable, particularly whether we have broken things out at
-> the right interfaces. This certainly gets the ball rolling in that
-> direction. I have no major objections given that this mostly looks like
-> a mechanical code restructure.
+The way discontiguous buffers are currently handled in
+prefetch is by unlocking the prefetch tree and reading
+them one at a time in pf_read_discontig(), inside the
+normal loop of searching for buffers to read in a more
+optimized fashion.
 
-Yes, it is a mechanical code restructure. It's pretty straight
-forward, the only thing that consumed any amount of time was the
-include file changes.
+But by unlocking the tree, we allow other threads to come
+in and find buffers which we've already stashed locally
+on our bplist[].  If 2 threads think they own the same
+set of buffers, they may both try to delete them from
+the prefetch btree, and the second one to arrive will not
+find it, resulting in:
 
-> Note that the Makefile structure between the core and libxfs/ subdir
-> appears to be busted for module compiles. It attempts to create a
-> libxfs.ko and doesn't appear to create any real link dependency between
-> the logical modules:
+	fatal error -- prefetch corruption
 
-Ok, I hadn't tested that. I'll look into it.
+Fix this by maintaining 2 lists; the original bplist,
+and a new one containing only discontiguous buffers.
 
-> ...
-> WARNING: "__tracepoint_xfs_dir2_sf_create" [fs/xfs/libxfs/libxfs.ko]
-> undefined!
-> WARNING: "__tracepoint_xfs_da_root_join" [fs/xfs/libxfs/libxfs.ko]
-> undefined!
-> WARNING: "xfs_trans_mod_sb" [fs/xfs/libxfs/libxfs.ko] undefined!
-> WARNING: "xfs_extent_busy_insert" [fs/xfs/libxfs/libxfs.ko] undefined!
-> WARNING: "__tracepoint_xfs_dir2_sf_addname" [fs/xfs/libxfs/libxfs.ko]
-> undefined!
+The original list can be seek-optimized as before,
+and the discontiguous list can be read one by one
+before we do the seek-optimized reads, after all of the
+tree manipulation has been completed.
 
-That tends to imply I didn't do the right thing with the tracing,
-either.
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
 
->   CC      fs/xfs/xfs.mod.o
->   CC      fs/xfs/libxfs/libxfs.mod.o
->   LD [M]  fs/xfs/xfs.ko
->   LD [M]  fs/xfs/libxfs/libxfs.ko
-> 
-> I played with it a bit but didn't get anywhere without just pulling the
-> source file dependency up into fs/xfs/Makefile. :/
+diff --git a/repair/prefetch.c b/repair/prefetch.c
+index 65fedf5..2a8008f 100644
+--- a/repair/prefetch.c
++++ b/repair/prefetch.c
+@@ -444,28 +444,7 @@ pf_read_inode_dirs(
+ }
+ 
+ /*
+- * Discontiguous buffers require multiple IOs to fill, so we can't use any
+- * linearising, hole filling algorithms on them to avoid seeks. Just remove them
+- * for the prefetch queue and read them straight into the cache and release
+- * them.
+- */
+-static void
+-pf_read_discontig(
+-	struct prefetch_args	*args,
+-	struct xfs_buf		*bp)
+-{
+-	if (!btree_delete(args->io_queue, XFS_DADDR_TO_FSB(mp, bp->b_bn)))
+-		do_error(_("prefetch corruption\n"));
+-
+-	pthread_mutex_unlock(&args->lock);
+-	libxfs_readbufr_map(mp->m_ddev_targp, bp, 0);
+-	bp->b_flags |= LIBXFS_B_UNCHECKED;
+-	libxfs_putbuf(bp);
+-	pthread_mutex_lock(&args->lock);
+-}
+-
+-/*
+- * pf_batch_read must be called with the lock locked.
++ * pf_batch_read must be called with the args->lock mutex locked.
+  */
+ static void
+ pf_batch_read(
+@@ -474,7 +453,8 @@ pf_batch_read(
+ 	void			*buf)
+ {
+ 	xfs_buf_t		*bplist[MAX_BUFS];
+-	unsigned int		num;
++	xfs_buf_t		*bplist_disc[MAX_BUFS];
++	unsigned int		num, num_disc;
+ 	off64_t			first_off, last_off, next_off;
+ 	int			len, size;
+ 	int			i;
+@@ -484,7 +464,7 @@ pf_batch_read(
+ 	char			*pbuf;
+ 
+ 	for (;;) {
+-		num = 0;
++		num = num_disc = 0;
+ 		if (which == PF_SECONDARY) {
+ 			bplist[0] = btree_find(args->io_queue, 0, &fsbno);
+ 			max_fsbno = MIN(fsbno + pf_max_fsbs,
+@@ -494,18 +474,22 @@ pf_batch_read(
+ 						args->last_bno_read, &fsbno);
+ 			max_fsbno = fsbno + pf_max_fsbs;
+ 		}
++
+ 		while (bplist[num] && num < MAX_BUFS && fsbno < max_fsbno) {
+ 			/*
+-			 * Handle discontiguous buffers outside the seek
+-			 * optimised IO loop below.
++ 			 * Discontiguous buffers require multiple IOs to fill,
++ 			 * so we can't use any linearising, hole filling
++ 			 * algorithms on them to avoid seeks. Just move them
++ 			 * to their own list and read them individually later.
+ 			 */
+ 			if ((bplist[num]->b_flags & LIBXFS_B_DISCONTIG)) {
+-				pf_read_discontig(args, bplist[num]);
+-				bplist[num] = NULL;
++				bplist_disc[num_disc] = bplist[num];
++				num_disc++;
+ 			} else if (which != PF_META_ONLY ||
+ 				   !B_IS_INODE(XFS_BUF_PRIORITY(bplist[num])))
+ 				num++;
+-			if (num == MAX_BUFS)
++
++			if (num == MAX_BUFS || num_disc == MAX_BUFS)
+ 				break;
+ 			bplist[num] = btree_lookup_next(args->io_queue, &fsbno);
+ 		}
+@@ -541,12 +525,19 @@ pf_batch_read(
+ 			num = i;
+ 		}
+ 
++		/* Take everything we found out of the tree */
+ 		for (i = 0; i < num; i++) {
+ 			if (btree_delete(args->io_queue, XFS_DADDR_TO_FSB(mp,
+ 					XFS_BUF_ADDR(bplist[i]))) == NULL)
+ 				do_error(_("prefetch corruption\n"));
+ 		}
+ 
++		for (i = 0; i < num_disc; i++) {
++			if (btree_delete(args->io_queue, XFS_DADDR_TO_FSB(mp,
++					XFS_BUF_ADDR(bplist_disc[i]))) == NULL)
++				do_error(_("prefetch corruption\n"));
++		}
++
+ 		if (which == PF_PRIMARY) {
+ 			for (inode_bufs = 0, i = 0; i < num; i++) {
+ 				if (B_IS_INODE(XFS_BUF_PRIORITY(bplist[i])))
+@@ -566,6 +557,12 @@ pf_batch_read(
+ #endif
+ 		pthread_mutex_unlock(&args->lock);
+ 
++		/* Read discontig buffers individually, if any */
++		for (i = 0; i < num_disc; i++) {
++			libxfs_readbufr_map(mp->m_ddev_targp, bplist_disc[i], 0);
++			bplist_disc[i]->b_flags |= LIBXFS_B_UNCHECKED;
++			libxfs_putbuf(bplist_disc[i]);
++		}
+ 		/*
+ 		 * now read the data and put into the xfs_but_t's
+ 		 */
 
-I'll see what I can dig up.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
