@@ -1,26 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id F18607F5F
-	for <xfs@oss.sgi.com>; Wed,  7 May 2014 07:22:03 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id A6E7D7F76
+	for <xfs@oss.sgi.com>; Wed,  7 May 2014 07:22:05 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 88E76AC00B
-	for <xfs@oss.sgi.com>; Wed,  7 May 2014 05:22:03 -0700 (PDT)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 954298F8037
+	for <xfs@oss.sgi.com>; Wed,  7 May 2014 05:22:02 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id w0IgotVLHIy9OI2O for
-	<xfs@oss.sgi.com>; Wed, 07 May 2014 05:22:02 -0700 (PDT)
-Received: from int-mx01.intmail.prod.int.phx2.redhat.com
-	(int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id s47CM1rv002578
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Wed, 7 May 2014 08:22:01 -0400
+	cuda.sgi.com with ESMTP id 1ftuJZ9ENUeG3tSk for
+	<xfs@oss.sgi.com>; Wed, 07 May 2014 05:22:01 -0700 (PDT)
+Received: from int-mx10.intmail.prod.int.phx2.redhat.com
+	(int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id s47CM103032500
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256
+	verify=OK) for <xfs@oss.sgi.com>; Wed, 7 May 2014 08:22:01 -0400
 Received: from bfoster.bfoster ([10.18.41.237])
-	by int-mx01.intmail.prod.int.phx2.redhat.com (8.13.8/8.13.8) with ESMTP
-	id s47CM1Te013102
+	by int-mx10.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id s47CM02e028667
 	for <xfs@oss.sgi.com>; Wed, 7 May 2014 08:22:01 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH v4 11/20] xfsprogs/mkfs: finobt mkfs support
-Date: Wed,  7 May 2014 08:21:50 -0400
-Message-Id: <1399465319-65066-12-git-send-email-bfoster@redhat.com>
+Subject: [PATCH v4 08/20] xfs: update the finobt on inode free
+Date: Wed,  7 May 2014 08:21:47 -0400
+Message-Id: <1399465319-65066-9-git-send-email-bfoster@redhat.com>
 In-Reply-To: <1399465319-65066-1-git-send-email-bfoster@redhat.com>
 References: <1399465319-65066-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -38,202 +38,147 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Add the 'finobt' metadata option to mkfs to format an fs with free
-inode btree support. If enabled, initialize the associated AGI
-header fields and btree root block.
+An inode free operation can have several effects on the finobt. If
+all inodes have been freed and the chunk deallocated, we remove the
+finobt record. If the inode chunk was previously full, we must
+insert a new record based on the existing inobt record. Otherwise,
+we modify the record in place.
 
-Also, do the initialization of the superblock version and feature
-bits (including the new finobt flag) a bit earlier. These fields
-must now be initialized prior to the use of XFS_PREALLOC_BLOCKS(),
-as the latter returns a value that depends on whether a finobt root
-btree block is reserved.
+Create the xfs_ifree_finobt() function to identify the potential
+scenarios and update the finobt appropriately.
 
 Signed-off-by: Brian Foster <bfoster@redhat.com>
 ---
- mkfs/xfs_mkfs.c | 93 ++++++++++++++++++++++++++++++++++++++++++++-------------
- 1 file changed, 73 insertions(+), 20 deletions(-)
+ libxfs/xfs_ialloc.c | 109 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 109 insertions(+)
 
-diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index 37c05a9..188b6b3 100644
---- a/mkfs/xfs_mkfs.c
-+++ b/mkfs/xfs_mkfs.c
-@@ -183,6 +183,8 @@ char	*sopts[] = {
- char	*mopts[] = {
- #define	M_CRC		0
- 	"crc",
-+#define M_FINOBT	1
-+	"finobt",
- 	NULL
- };
+diff --git a/libxfs/xfs_ialloc.c b/libxfs/xfs_ialloc.c
+index f0d6397..21af5b3 100644
+--- a/libxfs/xfs_ialloc.c
++++ b/libxfs/xfs_ialloc.c
+@@ -1454,6 +1454,106 @@ error0:
+ }
  
-@@ -962,6 +964,7 @@ main(
- 	struct fs_topology	ft;
- 	int			lazy_sb_counters;
- 	int			crcs_enabled;
-+	int			finobt;
- 
- 	progname = basename(argv[0]);
- 	setlocale(LC_ALL, "");
-@@ -995,6 +998,7 @@ main(
- 	worst_freelist = 0;
- 	lazy_sb_counters = 1;
- 	crcs_enabled = 0;
-+	finobt = 0;
- 	memset(&fsx, 0, sizeof(fsx));
- 
- 	memset(&xi, 0, sizeof(xi));
-@@ -1486,6 +1490,14 @@ _("cannot specify both crc and ftype\n"));
- 						usage();
- 					}
- 					break;
-+				case M_FINOBT:
-+					if (!value || *value == '\0')
-+						reqval('m', mopts, M_CRC);
-+					c = atoi(value);
-+					if (c < 0 || c > 1)
-+						illegal(value, "m finobt");
-+					finobt = c;
-+					break;
- 				default:
- 					unknown('m', value);
- 				}
-@@ -1827,6 +1839,16 @@ _("32 bit Project IDs always enabled on CRC enabled filesytems\n"));
- 		}
- 	}
- 
-+	/*
-+	 * The kernel doesn't currently support crc=0,finobt=1 filesystems.
-+	 * Catch it here, disable finobt and warn the user.
-+	 */
-+	if (finobt && !crcs_enabled) {
-+		fprintf(stderr,
-+_("warning: finobt not supported without CRC support, disabled.\n"));
-+		finobt = 0;
+ /*
++ * Free an inode in the free inode btree.
++ */
++STATIC int
++xfs_difree_finobt(
++	struct xfs_mount		*mp,
++	struct xfs_trans		*tp,
++	struct xfs_buf			*agbp,
++	xfs_agino_t			agino,
++	struct xfs_inobt_rec_incore	*ibtrec) /* inobt record */
++{
++	struct xfs_agi			*agi = XFS_BUF_TO_AGI(agbp);
++	xfs_agnumber_t			agno = be32_to_cpu(agi->agi_seqno);
++	struct xfs_btree_cur		*cur;
++	struct xfs_inobt_rec_incore	rec;
++	int				offset = agino - ibtrec->ir_startino;
++	int				error;
++	int				i;
++
++	cur = xfs_inobt_init_cursor(mp, tp, agbp, agno, XFS_BTNUM_FINO);
++
++	error = xfs_inobt_lookup(cur, ibtrec->ir_startino, XFS_LOOKUP_EQ, &i);
++	if (error)
++		goto error;
++	if (i == 0) {
++		/*
++		 * If the record does not exist in the finobt, we must have just
++		 * freed an inode in a previously fully allocated chunk. If not,
++		 * something is out of sync.
++		 */
++		XFS_WANT_CORRUPTED_GOTO(ibtrec->ir_freecount == 1, error);
++
++		error = xfs_inobt_insert_rec(cur, ibtrec->ir_freecount,
++					     ibtrec->ir_free, &i);
++		if (error)
++			goto error;
++		ASSERT(i == 1);
++
++		goto out;
 +	}
 +
- 	if (nsflag || nlflag) {
- 		if (dirblocksize < blocksize ||
- 					dirblocksize > XFS_MAX_BLOCKSIZE) {
-@@ -2413,6 +2435,30 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
- 	mp->m_blkbb_log = sbp->sb_blocklog - BBSHIFT;
- 	mp->m_sectbb_log = sbp->sb_sectlog - BBSHIFT;
- 
 +	/*
-+	 * sb_versionnum and finobt flags must be set before we use
-+	 * XFS_PREALLOC_BLOCKS().
++	 * Read and update the existing record.
 +	 */
-+	sbp->sb_features2 = XFS_SB_VERSION2_MKFS(crcs_enabled, lazy_sb_counters,
-+					attrversion == 2, !projid16bit, 0,
-+					(!crcs_enabled && dirftype));
-+	sbp->sb_versionnum = XFS_SB_VERSION_MKFS(crcs_enabled, iaflag,
-+					dsunit != 0,
-+					logversion == 2, attrversion == 1,
-+					(sectorsize != BBSIZE ||
-+							lsectorsize != BBSIZE),
-+					nci, sbp->sb_features2 != 0);
++	error = xfs_inobt_get_rec(cur, &rec, &i);
++	if (error)
++		goto error;
++	XFS_WANT_CORRUPTED_GOTO(i == 1, error);
++
++	rec.ir_free |= XFS_INOBT_MASK(offset);
++	rec.ir_freecount++;
++
++	XFS_WANT_CORRUPTED_GOTO((rec.ir_free == ibtrec->ir_free) &&
++				(rec.ir_freecount == ibtrec->ir_freecount),
++				error);
++
 +	/*
-+	 * Due to a structure alignment issue, sb_features2 ended up in one
-+	 * of two locations, the second "incorrect" location represented by
-+	 * the sb_bad_features2 field. To avoid older kernels mounting
-+	 * filesystems they shouldn't, set both field to the same value.
++	 * The content of inobt records should always match between the inobt
++	 * and finobt. The lifecycle of records in the finobt is different from
++	 * the inobt in that the finobt only tracks records with at least one
++	 * free inode. This is to optimize lookup for inode allocation purposes.
++	 * The following checks determine whether to update the existing record or
++	 * remove it entirely.
 +	 */
-+	sbp->sb_bad_features2 = sbp->sb_features2;
 +
-+	if (finobt)
-+		sbp->sb_features_ro_compat = XFS_SB_FEAT_RO_COMPAT_FINOBT;
-+
- 	if (loginternal) {
- 		/*
- 		 * Readjust the log size to fit within an AG if it was sized
-@@ -2475,7 +2521,7 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
- 		printf(_(
- 		   "meta-data=%-22s isize=%-6d agcount=%lld, agsize=%lld blks\n"
- 		   "         =%-22s sectsz=%-5u attr=%u, projid32bit=%u\n"
--		   "         =%-22s crc=%u\n"
-+		   "         =%-22s crc=%-8u finobt=%u\n"
- 		   "data     =%-22s bsize=%-6u blocks=%llu, imaxpct=%u\n"
- 		   "         =%-22s sunit=%-6u swidth=%u blks\n"
- 		   "naming   =version %-14u bsize=%-6u ascii-ci=%d ftype=%d\n"
-@@ -2484,7 +2530,7 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
- 		   "realtime =%-22s extsz=%-6d blocks=%lld, rtextents=%lld\n"),
- 			dfile, isize, (long long)agcount, (long long)agsize,
- 			"", sectorsize, attrversion, !projid16bit,
--			"", crcs_enabled,
-+			"", crcs_enabled, finobt,
- 			"", blocksize, (long long)dblocks, imaxpct,
- 			"", dsunit, dswidth,
- 			dirversion, dirblocksize, nci, dirftype,
-@@ -2553,23 +2599,6 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
- 		sbp->sb_logsectsize = 0;
- 	}
- 
--	sbp->sb_features2 = XFS_SB_VERSION2_MKFS(crcs_enabled, lazy_sb_counters,
--				   attrversion == 2, !projid16bit, 0,
--				   (!crcs_enabled && dirftype));
--	sbp->sb_versionnum = XFS_SB_VERSION_MKFS(crcs_enabled, iaflag,
--					dsunit != 0,
--					logversion == 2, attrversion == 1,
--					(sectorsize != BBSIZE ||
--							lsectorsize != BBSIZE),
--					nci, sbp->sb_features2 != 0);
--	/*
--	 * Due to a structure alignment issue, sb_features2 ended up in one
--	 * of two locations, the second "incorrect" location represented by
--	 * the sb_bad_features2 field. To avoid older kernels mounting
--	 * filesystems they shouldn't, set both field to the same value.
--	 */
--	sbp->sb_bad_features2 = sbp->sb_features2;
--
- 	if (force_overwrite)
- 		zero_old_xfs_structures(&xi, sbp);
- 
-@@ -2726,6 +2755,10 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
- 		agi->agi_count = 0;
- 		agi->agi_root = cpu_to_be32(XFS_IBT_BLOCK(mp));
- 		agi->agi_level = cpu_to_be32(1);
-+		if (finobt) {
-+			agi->agi_free_root = cpu_to_be32(XFS_FIBT_BLOCK(mp));
-+			agi->agi_free_level = cpu_to_be32(1);
-+		}
- 		agi->agi_freecount = 0;
- 		agi->agi_newino = cpu_to_be32(NULLAGINO);
- 		agi->agi_dirino = cpu_to_be32(NULLAGINO);
-@@ -2851,6 +2884,26 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
- 			xfs_btree_init_block(mp, buf, XFS_IBT_MAGIC, 0, 0,
- 						agno, 0);
- 		libxfs_writebuf(buf, LIBXFS_EXIT_ON_FAILURE);
-+
++	if (rec.ir_freecount == XFS_IALLOC_INODES(mp) &&
++	    !(mp->m_flags & XFS_MOUNT_IKEEP)) {
 +		/*
-+		 * Free INO btree root block
++		 * If all inodes are free and we're in !ikeep mode, the entire
++		 * inode chunk has been deallocated. Remove the record from the
++		 * finobt.
 +		 */
-+		if (!finobt)
-+			continue;
++		error = xfs_btree_delete(cur, &i);
++		if (error)
++			goto error;
++		ASSERT(i == 1);
++	} else {
++		/*
++		 * The existing finobt record was modified and has a combination
++		 * of allocated and free inodes or is completely free and ikeep
++		 * is enabled. Update the record.
++		 */
++		error = xfs_inobt_update(cur, &rec);
++		if (error)
++			goto error;
++	}
 +
-+		buf = libxfs_getbuf(mp->m_ddev_targp,
-+				XFS_AGB_TO_DADDR(mp, agno, XFS_FIBT_BLOCK(mp)),
-+				bsize);
-+		buf->b_ops = &xfs_inobt_buf_ops;
-+		block = XFS_BUF_TO_BLOCK(buf);
-+		memset(block, 0, blocksize);
-+		if (xfs_sb_version_hascrc(&mp->m_sb))
-+			xfs_btree_init_block(mp, buf, XFS_FIBT_CRC_MAGIC, 0, 0,
-+						agno, XFS_BTREE_CRC_BLOCKS);
-+		else
-+			xfs_btree_init_block(mp, buf, XFS_FIBT_MAGIC, 0, 0,
-+						agno, 0);
-+		libxfs_writebuf(buf, LIBXFS_EXIT_ON_FAILURE);
- 	}
++out:
++	error = xfs_check_agi_freecount(cur, agi);
++	if (error)
++		goto error;
++
++	xfs_btree_del_cursor(cur, XFS_BTREE_NOERROR);
++	return 0;
++
++error:
++	xfs_btree_del_cursor(cur, XFS_BTREE_ERROR);
++	return error;
++}
++
++/*
+  * Free disk inode.  Carefully avoids touching the incore inode, all
+  * manipulations incore are the caller's responsibility.
+  * The on-disk inode is not changed by this operation, only the
+@@ -1521,6 +1621,15 @@ xfs_difree(
+ 	if (error)
+ 		goto error0;
  
- 	/*
-@@ -3087,7 +3140,7 @@ usage( void )
- {
- 	fprintf(stderr, _("Usage: %s\n\
- /* blocksize */		[-b log=n|size=num]\n\
--/* metadata */		[-m crc=[0|1]\n\
-+/* metadata */		[-m crc=0|1,finobt=0|1]\n\
- /* data subvol */	[-d agcount=n,agsize=n,file,name=xxx,size=num,\n\
- 			    (sunit=value,swidth=value|su=num,sw=num|noalign),\n\
- 			    sectlog=n|sectsize=num\n\
++	/*
++	 * Fix up the free inode btree.
++	 */
++	if (xfs_sb_version_hasfinobt(&mp->m_sb)) {
++		error = xfs_difree_finobt(mp, tp, agbp, agino, &rec);
++		if (error)
++			goto error0;
++	}
++
+ 	return 0;
+ 
+ error0:
 -- 
 1.8.3.1
 
