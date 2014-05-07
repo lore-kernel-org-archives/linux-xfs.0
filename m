@@ -1,27 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 8262A7F5E
-	for <xfs@oss.sgi.com>; Wed,  7 May 2014 07:22:03 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 1BE4AAC009
-	for <xfs@oss.sgi.com>; Wed,  7 May 2014 05:22:03 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id D36947F51
+	for <xfs@oss.sgi.com>; Wed,  7 May 2014 07:22:05 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 6B688AC007
+	for <xfs@oss.sgi.com>; Wed,  7 May 2014 05:22:02 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id HLc0YYbJoCyIbxhN for
-	<xfs@oss.sgi.com>; Wed, 07 May 2014 05:22:02 -0700 (PDT)
-Received: from int-mx10.intmail.prod.int.phx2.redhat.com
-	(int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id s47CM1NJ019346
+	cuda.sgi.com with ESMTP id 8VTTNwCAT3I4ZNh6 for
+	<xfs@oss.sgi.com>; Wed, 07 May 2014 05:22:01 -0700 (PDT)
+Received: from int-mx09.intmail.prod.int.phx2.redhat.com
+	(int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id s47CM0Db023462
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256
-	verify=OK) for <xfs@oss.sgi.com>; Wed, 7 May 2014 08:22:01 -0400
+	verify=OK) for <xfs@oss.sgi.com>; Wed, 7 May 2014 08:22:00 -0400
 Received: from bfoster.bfoster ([10.18.41.237])
-	by int-mx10.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id s47CM06I028665
-	for <xfs@oss.sgi.com>; Wed, 7 May 2014 08:22:01 -0400
+	by int-mx09.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id s47CM0pQ025550
+	for <xfs@oss.sgi.com>; Wed, 7 May 2014 08:22:00 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH v4 16/20] xfsprogs/repair: pull the build_agi() call up out of
-	the inode tree build
-Date: Wed,  7 May 2014 08:21:55 -0400
-Message-Id: <1399465319-65066-17-git-send-email-bfoster@redhat.com>
+Subject: [PATCH v4 01/20] xfs: refactor xfs_ialloc_btree.c to support multiple
+	inobt numbers
+Date: Wed,  7 May 2014 08:21:40 -0400
+Message-Id: <1399465319-65066-2-git-send-email-bfoster@redhat.com>
 In-Reply-To: <1399465319-65066-1-git-send-email-bfoster@redhat.com>
 References: <1399465319-65066-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,115 +39,105 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Pull the build_agi() call out of build_ino_tree() in phase 5. This
-is to prepare for finobt support, in which build_agi() will require
-context from multiple inode tree reconstructions (both the inode
-allocation tree and free inode tree, when it exists).
-
-Create the new 'agi_stat' structure to carry the requisite state
-from the build_ino_tree() operation to build_agi().
+The introduction of the free inode btree (finobt) requires that
+xfs_ialloc_btree.c handle multiple trees. Refactor xfs_ialloc_btree.c
+so the caller specifies the btree type on cursor initialization to
+prepare for addition of the finobt.
 
 Signed-off-by: Brian Foster <bfoster@redhat.com>
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
 ---
- repair/phase5.c | 36 +++++++++++++++++++++++++++---------
- 1 file changed, 27 insertions(+), 9 deletions(-)
+ include/xfs_ialloc_btree.h | 3 ++-
+ libxfs/xfs_ialloc.c        | 8 ++++----
+ libxfs/xfs_ialloc_btree.c  | 8 +++++---
+ 3 files changed, 11 insertions(+), 8 deletions(-)
 
-diff --git a/repair/phase5.c b/repair/phase5.c
-index 2c02e40..4778e08 100644
---- a/repair/phase5.c
-+++ b/repair/phase5.c
-@@ -74,6 +74,15 @@ typedef struct bt_status  {
- 	bt_stat_level_t		level[XFS_BTREE_MAXLEVELS];
- } bt_status_t;
+diff --git a/include/xfs_ialloc_btree.h b/include/xfs_ialloc_btree.h
+index f38b220..d7ebea7 100644
+--- a/include/xfs_ialloc_btree.h
++++ b/include/xfs_ialloc_btree.h
+@@ -58,7 +58,8 @@ struct xfs_mount;
+ 		 ((index) - 1) * sizeof(xfs_inobt_ptr_t)))
  
-+/*
-+ * extra metadata for the agi
-+ */
-+struct agi_stat {
-+	xfs_agino_t		first_agino;
-+	xfs_agino_t		count;
-+	xfs_agino_t		freecount;
-+};
-+
- static __uint64_t	*sb_icount_ag;		/* allocated inodes per ag */
- static __uint64_t	*sb_ifree_ag;		/* free inodes per ag */
- static __uint64_t	*sb_fdblocks_ag;	/* free data blocks per ag */
-@@ -1050,8 +1059,7 @@ prop_ino_cursor(xfs_mount_t *mp, xfs_agnumber_t agno, bt_status_t *btree_curs,
-  */
- static void
- build_agi(xfs_mount_t *mp, xfs_agnumber_t agno,
--		bt_status_t *btree_curs, xfs_agino_t first_agino,
--		xfs_agino_t count, xfs_agino_t freecount)
-+		bt_status_t *btree_curs, struct agi_stat *agi_stat)
+ extern struct xfs_btree_cur *xfs_inobt_init_cursor(struct xfs_mount *,
+-		struct xfs_trans *, struct xfs_buf *, xfs_agnumber_t);
++		struct xfs_trans *, struct xfs_buf *, xfs_agnumber_t,
++		xfs_btnum_t);
+ extern int xfs_inobt_maxrecs(struct xfs_mount *, int, int);
+ 
+ #endif	/* __XFS_IALLOC_BTREE_H__ */
+diff --git a/libxfs/xfs_ialloc.c b/libxfs/xfs_ialloc.c
+index c19d84a..d4a4511 100644
+--- a/libxfs/xfs_ialloc.c
++++ b/libxfs/xfs_ialloc.c
+@@ -432,7 +432,7 @@ xfs_ialloc_ag_alloc(
+ 	/*
+ 	 * Insert records describing the new inode chunk into the btree.
+ 	 */
+-	cur = xfs_inobt_init_cursor(args.mp, tp, agbp, agno);
++	cur = xfs_inobt_init_cursor(args.mp, tp, agbp, agno, XFS_BTNUM_INO);
+ 	for (thisino = newino;
+ 	     thisino < newino + newlen;
+ 	     thisino += XFS_INODES_PER_CHUNK) {
+@@ -678,7 +678,7 @@ xfs_dialloc_ag(
+ 	ASSERT(pag->pagi_freecount > 0);
+ 
+  restart_pagno:
+-	cur = xfs_inobt_init_cursor(mp, tp, agbp, agno);
++	cur = xfs_inobt_init_cursor(mp, tp, agbp, agno, XFS_BTNUM_INO);
+ 	/*
+ 	 * If pagino is 0 (this is the root inode allocation) use newino.
+ 	 * This must work because we've just allocated some.
+@@ -1140,7 +1140,7 @@ xfs_difree(
+ 	/*
+ 	 * Initialize the cursor.
+ 	 */
+-	cur = xfs_inobt_init_cursor(mp, tp, agbp, agno);
++	cur = xfs_inobt_init_cursor(mp, tp, agbp, agno, XFS_BTNUM_INO);
+ 
+ 	error = xfs_check_agi_freecount(cur, agi);
+ 	if (error)
+@@ -1271,7 +1271,7 @@ xfs_imap_lookup(
+ 	 * we have a record, we need to ensure it contains the inode number
+ 	 * we are looking up.
+ 	 */
+-	cur = xfs_inobt_init_cursor(mp, tp, agbp, agno);
++	cur = xfs_inobt_init_cursor(mp, tp, agbp, agno, XFS_BTNUM_INO);
+ 	error = xfs_inobt_lookup(cur, agino, XFS_LOOKUP_LE, &i);
+ 	if (!error) {
+ 		if (i)
+diff --git a/libxfs/xfs_ialloc_btree.c b/libxfs/xfs_ialloc_btree.c
+index 0a29d73..2027bc6 100644
+--- a/libxfs/xfs_ialloc_btree.c
++++ b/libxfs/xfs_ialloc_btree.c
+@@ -30,7 +30,8 @@ xfs_inobt_dup_cursor(
+ 	struct xfs_btree_cur	*cur)
  {
- 	xfs_buf_t	*agi_buf;
- 	xfs_agi_t	*agi;
-@@ -1072,11 +1080,11 @@ build_agi(xfs_mount_t *mp, xfs_agnumber_t agno,
- 	else
- 		agi->agi_length = cpu_to_be32(mp->m_sb.sb_dblocks -
- 			(xfs_drfsbno_t) mp->m_sb.sb_agblocks * agno);
--	agi->agi_count = cpu_to_be32(count);
-+	agi->agi_count = cpu_to_be32(agi_stat->count);
- 	agi->agi_root = cpu_to_be32(btree_curs->root);
- 	agi->agi_level = cpu_to_be32(btree_curs->num_levels);
--	agi->agi_freecount = cpu_to_be32(freecount);
--	agi->agi_newino = cpu_to_be32(first_agino);
-+	agi->agi_freecount = cpu_to_be32(agi_stat->freecount);
-+	agi->agi_newino = cpu_to_be32(agi_stat->first_agino);
- 	agi->agi_dirino = cpu_to_be32(NULLAGINO);
- 
- 	for (i = 0; i < XFS_AGI_UNLINKED_BUCKETS; i++)  
-@@ -1094,7 +1102,8 @@ build_agi(xfs_mount_t *mp, xfs_agnumber_t agno,
-  */
- static void
- build_ino_tree(xfs_mount_t *mp, xfs_agnumber_t agno,
--		bt_status_t *btree_curs, __uint32_t magic)
-+		bt_status_t *btree_curs, __uint32_t magic,
-+		struct agi_stat *agi_stat)
- {
- 	xfs_agnumber_t		i;
- 	xfs_agblock_t		j;
-@@ -1224,7 +1233,11 @@ build_ino_tree(xfs_mount_t *mp, xfs_agnumber_t agno,
- 		}
- 	}
- 
--	build_agi(mp, agno, btree_curs, first_agino, count, freecount);
-+	if (agi_stat) {
-+		agi_stat->first_agino = first_agino;
-+		agi_stat->count = count;
-+		agi_stat->freecount = freecount;
-+	}
+ 	return xfs_inobt_init_cursor(cur->bc_mp, cur->bc_tp,
+-			cur->bc_private.a.agbp, cur->bc_private.a.agno);
++			cur->bc_private.a.agbp, cur->bc_private.a.agno,
++			cur->bc_btnum);
  }
  
- /*
-@@ -1481,6 +1494,7 @@ phase5_func(
- #endif
- 	xfs_agblock_t	num_extents;
- 	__uint32_t	magic;
-+	struct agi_stat	agi_stat = {0,};
+ STATIC void
+@@ -379,7 +380,8 @@ xfs_inobt_init_cursor(
+ 	struct xfs_mount	*mp,		/* file system mount point */
+ 	struct xfs_trans	*tp,		/* transaction pointer */
+ 	struct xfs_buf		*agbp,		/* buffer for agi structure */
+-	xfs_agnumber_t		agno)		/* allocation group number */
++	xfs_agnumber_t		agno,		/* allocation group number */
++	xfs_btnum_t		btnum)		/* ialloc or free ino btree */
+ {
+ 	struct xfs_agi		*agi = XFS_BUF_TO_AGI(agbp);
+ 	struct xfs_btree_cur	*cur;
+@@ -389,7 +391,7 @@ xfs_inobt_init_cursor(
+ 	cur->bc_tp = tp;
+ 	cur->bc_mp = mp;
+ 	cur->bc_nlevels = be32_to_cpu(agi->agi_level);
+-	cur->bc_btnum = XFS_BTNUM_INO;
++	cur->bc_btnum = btnum;
+ 	cur->bc_blocklog = mp->m_sb.sb_blocklog;
  
- 	if (verbose)
- 		do_log(_("        - agno = %d\n"), agno);
-@@ -1612,12 +1626,16 @@ phase5_func(
- 		build_agf_agfl(mp, agno, &bno_btree_curs,
- 				&bcnt_btree_curs, freeblks1, extra_blocks);
- 		/*
--		 * build inode allocation tree.  this also build the agi
-+		 * build inode allocation tree.
- 		 */
- 		magic = xfs_sb_version_hascrc(&mp->m_sb) ?
- 				XFS_IBT_CRC_MAGIC : XFS_IBT_MAGIC;
--		build_ino_tree(mp, agno, &ino_btree_curs, magic);
-+		build_ino_tree(mp, agno, &ino_btree_curs, magic, &agi_stat);
- 		write_cursor(&ino_btree_curs);
-+
-+		/* build the agi */
-+		build_agi(mp, agno, &ino_btree_curs, &agi_stat);
-+
- 		/*
- 		 * tear down cursors
- 		 */
+ 	cur->bc_ops = &xfs_inobt_ops;
 -- 
 1.8.3.1
 
