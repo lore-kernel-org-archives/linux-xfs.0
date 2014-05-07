@@ -1,29 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id B64D07F78
-	for <xfs@oss.sgi.com>; Wed,  7 May 2014 07:22:05 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 5D657AC006
-	for <xfs@oss.sgi.com>; Wed,  7 May 2014 05:22:02 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id kPYTWbdJv4ptz0kD for
-	<xfs@oss.sgi.com>; Wed, 07 May 2014 05:22:01 -0700 (PDT)
-Received: from int-mx12.intmail.prod.int.phx2.redhat.com
-	(int-mx12.intmail.prod.int.phx2.redhat.com [10.5.11.25])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id s47CM0GK023429
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256
-	verify=OK) for <xfs@oss.sgi.com>; Wed, 7 May 2014 08:22:00 -0400
-Received: from bfoster.bfoster ([10.18.41.237])
-	by int-mx12.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id s47CM0Hb014593
-	for <xfs@oss.sgi.com>; Wed, 7 May 2014 08:22:00 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH v4 02/20] xfs: reserve v5 superblock read-only compat. feature
-	bit for finobt
-Date: Wed,  7 May 2014 08:21:41 -0400
-Message-Id: <1399465319-65066-3-git-send-email-bfoster@redhat.com>
-In-Reply-To: <1399465319-65066-1-git-send-email-bfoster@redhat.com>
-References: <1399465319-65066-1-git-send-email-bfoster@redhat.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 31EDB7F6F
+	for <xfs@oss.sgi.com>; Wed,  7 May 2014 07:25:24 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 13B6130404E
+	for <xfs@oss.sgi.com>; Wed,  7 May 2014 05:25:23 -0700 (PDT)
+Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
+	with ESMTP id 73oafCmJttp0Zcqo (version=TLSv1 cipher=AES256-SHA
+	bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 07 May 2014 05:25:22 -0700 (PDT)
+From: David Disseldorp <ddiss@suse.de>
+Subject: [PATCH] btrfs/035: update clone test to expect EOPNOTSUPP
+Date: Wed,  7 May 2014 14:33:18 +0200
+Message-Id: <1399465998-26545-1-git-send-email-ddiss@suse.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -38,52 +27,73 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
+Cc: David Disseldorp <ddiss@suse.de>, bo.li.liu@oracle.com, linux-btrfs@vger.kernel.org
 
-Reserve a v5 read-only compatibility feature bit for the finobt and
-create the xfs_sb_version_hasfinobt() helper to determine whether
-an fs has the feature enabled.
+With kernel commit 00fdf13a2e9f313a044288aa59d3b8ec29ff904a, the first
+clone-range overwrite attempt now fails with EOPNOTSUPP, rather than
+tripping a Btrfs BUG_ON().
 
-The finobt does not change existing on-disk structures, but must
-remain consistent with the ialloc btree. Modifications from older
-kernels would violate that constrant. Therefore, we restrict older
-kernels to read-only mounts of finobt-enabled filesystems.
+This test now trips a new Btrfs bug, in which EIO is returned for
+subsequent reads following the second clone range ioctl.
 
-Note that this does not yet enable the ability to rw mount a finobt
-fs (by setting the feature bit in the XFS_SB_FEAT_RO_COMPAT_ALL
-mask).
-
-Signed-off-by: Brian Foster <bfoster@redhat.com>
+Signed-off-by: David Disseldorp <ddiss@suse.de>
 ---
- include/xfs_sb.h | 7 +++++++
- 1 file changed, 7 insertions(+)
+ tests/btrfs/035     | 11 +++++++++++
+ tests/btrfs/035.out |  5 +++++
+ 2 files changed, 16 insertions(+)
 
-diff --git a/include/xfs_sb.h b/include/xfs_sb.h
-index f7b2fe7..7f53a85 100644
---- a/include/xfs_sb.h
-+++ b/include/xfs_sb.h
-@@ -587,6 +587,7 @@ xfs_sb_has_compat_feature(
- 	return (sbp->sb_features_compat & feature) != 0;
- }
+diff --git a/tests/btrfs/035 b/tests/btrfs/035
+index 6808179..c9530f6 100755
+--- a/tests/btrfs/035
++++ b/tests/btrfs/035
+@@ -57,21 +57,32 @@ src_str="aaaaaaaaaa"
+ echo -n "$src_str" > $SCRATCH_MNT/src
  
-+#define XFS_SB_FEAT_RO_COMPAT_FINOBT   (1 << 0)		/* free inode btree */
- #define XFS_SB_FEAT_RO_COMPAT_ALL 0
- #define XFS_SB_FEAT_RO_COMPAT_UNKNOWN	~XFS_SB_FEAT_RO_COMPAT_ALL
- static inline bool
-@@ -641,6 +642,12 @@ static inline int xfs_sb_version_hasftype(struct xfs_sb *sbp)
- 		 (sbp->sb_features2 & XFS_SB_VERSION2_FTYPE));
- }
+ $CLONER_PROG $SCRATCH_MNT/src  $SCRATCH_MNT/src.clone1
++cat $SCRATCH_MNT/src.clone1
++echo
  
-+static inline int xfs_sb_version_hasfinobt(xfs_sb_t *sbp)
-+{
-+	return (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5) &&
-+		(sbp->sb_features_ro_compat & XFS_SB_FEAT_RO_COMPAT_FINOBT);
-+}
-+
- /*
-  * end of superblock version macros
-  */
+ src_str="bbbbbbbbbbcccccccccc"
+ 
+ echo -n "$src_str" > $SCRATCH_MNT/src
+ 
+ $CLONER_PROG $SCRATCH_MNT/src $SCRATCH_MNT/src.clone2
++cat $SCRATCH_MNT/src.clone2
++echo
+ 
++# Prior to kernel commit 00fdf13a2e9f313a044288aa59d3b8ec29ff904a, this clone
++# resulted in a BUG_ON in __btrfs_drop_extents(). The kernel now returns
++# EOPNOTSUPP up to userspace.
+ snap_src_sz=`ls -lah $SCRATCH_MNT/src.clone1 | awk '{print $5}'`
+ echo "attempting ioctl (src.clone1 src)"
+ $CLONER_PROG -s 0 -d 0 -l ${snap_src_sz} \
+ 	$SCRATCH_MNT/src.clone1 $SCRATCH_MNT/src
++cat $SCRATCH_MNT/src
++echo
+ 
+ snap_src_sz=`ls -lah $SCRATCH_MNT/src.clone2 | awk '{print $5}'`
+ echo "attempting ioctl (src.clone2 src)"
+ $CLONER_PROG -s 0 -d 0 -l ${snap_src_sz} \
+ 	$SCRATCH_MNT/src.clone2 $SCRATCH_MNT/src
++# BUG: subsequent access attempts currently result in EIO...
++cat $SCRATCH_MNT/src
+ 
+ status=0 ; exit
+diff --git a/tests/btrfs/035.out b/tests/btrfs/035.out
+index f86cadf..0ea2c4f 100644
+--- a/tests/btrfs/035.out
++++ b/tests/btrfs/035.out
+@@ -1,3 +1,8 @@
+ QA output created by 035
++aaaaaaaaaa
++bbbbbbbbbbcccccccccc
+ attempting ioctl (src.clone1 src)
++clone failed: Operation not supported
++bbbbbbbbbbcccccccccc
+ attempting ioctl (src.clone2 src)
++bbbbbbbbbbcccccccccc
 -- 
-1.8.3.1
+1.8.4.5
 
 _______________________________________________
 xfs mailing list
