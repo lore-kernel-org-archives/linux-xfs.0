@@ -1,23 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 2ACEC7F52
-	for <xfs@oss.sgi.com>; Wed,  7 May 2014 23:11:38 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id EF3478F8039
-	for <xfs@oss.sgi.com>; Wed,  7 May 2014 21:11:34 -0700 (PDT)
-Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id VKay7Nu8plQQcItM (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 07 May 2014 21:11:32 -0700 (PDT)
-Date: Thu, 8 May 2014 12:11:24 +0800
-From: Liu Bo <bo.li.liu@oracle.com>
-Subject: Re: [PATCH] btrfs/035: update clone test to expect EOPNOTSUPP
-Message-ID: <20140508041123.GB3407@localhost.localdomain>
-References: <1399465998-26545-1-git-send-email-ddiss@suse.de>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 8D5F17F54
+	for <xfs@oss.sgi.com>; Wed,  7 May 2014 23:16:33 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 1792EAC006
+	for <xfs@oss.sgi.com>; Wed,  7 May 2014 21:16:32 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id R4VWX0rFCfPnPKN5 for <xfs@oss.sgi.com>;
+	Wed, 07 May 2014 21:16:28 -0700 (PDT)
+Message-ID: <536B051B.20400@sandeen.net>
+Date: Wed, 07 May 2014 23:16:27 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1399465998-26545-1-git-send-email-ddiss@suse.de>
-Reply-To: bo.li.liu@oracle.com
+Subject: Re: [PATCH] xfstests: fix flink test
+References: <1399496087-20431-1-git-send-email-jbacik@fb.com>
+In-Reply-To: <1399496087-20431-1-git-send-email-jbacik@fb.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,83 +27,67 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: David Disseldorp <ddiss@suse.de>
-Cc: linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
+To: Josef Bacik <jbacik@fb.com>, linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
 
-On Wed, May 07, 2014 at 02:33:18PM +0200, David Disseldorp wrote:
-> With kernel commit 00fdf13a2e9f313a044288aa59d3b8ec29ff904a, the first
-> clone-range overwrite attempt now fails with EOPNOTSUPP, rather than
-> tripping a Btrfs BUG_ON().
-> 
-> This test now trips a new Btrfs bug, in which EIO is returned for
-> subsequent reads following the second clone range ioctl.
-> 
+On 5/7/14, 3:54 PM, Josef Bacik wrote:
+> I don't have flink support in my xfsprogs, but it doesn't fail with "command not
+> found" or whatever, it fails because I don't have the -T option.  So fix
+> _require_xfs_io_command to check for an invalid option and not run.  This way I
+> get notrun instead of a failure.  Thanks,
 
-Hi David,
+This actually doesn't work for me on an old kernel, if that matters; it
+fails with:
 
-Something different here, I didn't get EI on 3.15.0-rc4.
+/mnt/test: Is a directory
 
-thanks,
--liubo
+and nothing catches that.  Old xfsprogs tries to open the file
+in question RDWR even before it gets to the -T option (which
+would fail, I guess), and you can't do that for directories.
 
-> Signed-off-by: David Disseldorp <ddiss@suse.de>
+So I suppose we could explicitly test for that when checking
+flink:
+
+        [ $command = "flink" ] && echo $testio | grep -q "Is a directory" && \
+                _notrun "xfs_io flink support is missing"
+
+or alternately, first just run xfs_io w/ the command but no file;
+today, at least, that works:
+
+[root@bp-05 xfstests]# xfs_io -c flink
+command "flink" not found
+[root@bp-05 xfstests]# xfs_io -c pread
+[root@bp-05 xfstests]# 
+
+so could do this before the case statement:
+
+        $XFS_IO_PROG -c $command 2>&1 | grep -q "not found" && \
+                _notrun "xfs_io $command support is missing"
+
+but that might be subject to future changes in xfs_io command
+parsing...
+
+-Eric
+
+
+> Signed-off-by: Josef Bacik <jbacik@fb.com>
 > ---
->  tests/btrfs/035     | 11 +++++++++++
->  tests/btrfs/035.out |  5 +++++
->  2 files changed, 16 insertions(+)
+>  common/rc | 2 ++
+>  1 file changed, 2 insertions(+)
 > 
-> diff --git a/tests/btrfs/035 b/tests/btrfs/035
-> index 6808179..c9530f6 100755
-> --- a/tests/btrfs/035
-> +++ b/tests/btrfs/035
-> @@ -57,21 +57,32 @@ src_str="aaaaaaaaaa"
->  echo -n "$src_str" > $SCRATCH_MNT/src
+> diff --git a/common/rc b/common/rc
+> index 5c13db5..4fa7e63 100644
+> --- a/common/rc
+> +++ b/common/rc
+> @@ -1258,6 +1258,8 @@ _require_xfs_io_command()
+>  		_notrun "xfs_io $command support is missing"
+>  	echo $testio | grep -q "Operation not supported" && \
+>  		_notrun "xfs_io $command failed (old kernel/wrong fs?)"
+> +	echo $testio | grep -q "invalid option" && \
+> +		_notrun "xfs_io $command support is missing"
+>  }
 >  
->  $CLONER_PROG $SCRATCH_MNT/src  $SCRATCH_MNT/src.clone1
-> +cat $SCRATCH_MNT/src.clone1
-> +echo
->  
->  src_str="bbbbbbbbbbcccccccccc"
->  
->  echo -n "$src_str" > $SCRATCH_MNT/src
->  
->  $CLONER_PROG $SCRATCH_MNT/src $SCRATCH_MNT/src.clone2
-> +cat $SCRATCH_MNT/src.clone2
-> +echo
->  
-> +# Prior to kernel commit 00fdf13a2e9f313a044288aa59d3b8ec29ff904a, this clone
-> +# resulted in a BUG_ON in __btrfs_drop_extents(). The kernel now returns
-> +# EOPNOTSUPP up to userspace.
->  snap_src_sz=`ls -lah $SCRATCH_MNT/src.clone1 | awk '{print $5}'`
->  echo "attempting ioctl (src.clone1 src)"
->  $CLONER_PROG -s 0 -d 0 -l ${snap_src_sz} \
->  	$SCRATCH_MNT/src.clone1 $SCRATCH_MNT/src
-> +cat $SCRATCH_MNT/src
-> +echo
->  
->  snap_src_sz=`ls -lah $SCRATCH_MNT/src.clone2 | awk '{print $5}'`
->  echo "attempting ioctl (src.clone2 src)"
->  $CLONER_PROG -s 0 -d 0 -l ${snap_src_sz} \
->  	$SCRATCH_MNT/src.clone2 $SCRATCH_MNT/src
-> +# BUG: subsequent access attempts currently result in EIO...
-> +cat $SCRATCH_MNT/src
->  
->  status=0 ; exit
-> diff --git a/tests/btrfs/035.out b/tests/btrfs/035.out
-> index f86cadf..0ea2c4f 100644
-> --- a/tests/btrfs/035.out
-> +++ b/tests/btrfs/035.out
-> @@ -1,3 +1,8 @@
->  QA output created by 035
-> +aaaaaaaaaa
-> +bbbbbbbbbbcccccccccc
->  attempting ioctl (src.clone1 src)
-> +clone failed: Operation not supported
-> +bbbbbbbbbbcccccccccc
->  attempting ioctl (src.clone2 src)
-> +bbbbbbbbbbcccccccccc
-> -- 
-> 1.8.4.5
+>  # Check that a fs has enough free space (in 1024b blocks)
+> -- 1.8.3.1 _______________________________________________ xfs mailing list xfs@oss.sgi.com http://oss.sgi.com/mailman/listinfo/xfs
 > 
 
 _______________________________________________
