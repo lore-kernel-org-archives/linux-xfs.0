@@ -1,20 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 8D5F17F54
-	for <xfs@oss.sgi.com>; Wed,  7 May 2014 23:16:33 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 1792EAC006
-	for <xfs@oss.sgi.com>; Wed,  7 May 2014 21:16:32 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id R4VWX0rFCfPnPKN5 for <xfs@oss.sgi.com>;
-	Wed, 07 May 2014 21:16:28 -0700 (PDT)
-Message-ID: <536B051B.20400@sandeen.net>
-Date: Wed, 07 May 2014 23:16:27 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id B397B7F52
+	for <xfs@oss.sgi.com>; Thu,  8 May 2014 00:43:44 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id B1D70304051
+	for <xfs@oss.sgi.com>; Wed,  7 May 2014 22:43:41 -0700 (PDT)
+Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
+	[150.101.137.129]) by cuda.sgi.com with ESMTP id
+	Fy8FHOVAuXLGEBpE for <xfs@oss.sgi.com>;
+	Wed, 07 May 2014 22:43:36 -0700 (PDT)
+Date: Thu, 8 May 2014 15:42:47 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] xfs_repair: don't unlock prefetch tree to read discontig
+	buffers
+Message-ID: <20140508054247.GU5421@dastard>
+References: <536AC1CB.8060601@redhat.com> <20140508014215.GT5421@dastard>
+	<536AE4CE.2030201@redhat.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfstests: fix flink test
-References: <1399496087-20431-1-git-send-email-jbacik@fb.com>
-In-Reply-To: <1399496087-20431-1-git-send-email-jbacik@fb.com>
+Content-Disposition: inline
+In-Reply-To: <536AE4CE.2030201@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,68 +31,76 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Josef Bacik <jbacik@fb.com>, linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-On 5/7/14, 3:54 PM, Josef Bacik wrote:
-> I don't have flink support in my xfsprogs, but it doesn't fail with "command not
-> found" or whatever, it fails because I don't have the -T option.  So fix
-> _require_xfs_io_command to check for an invalid option and not run.  This way I
-> get notrun instead of a failure.  Thanks,
-
-This actually doesn't work for me on an old kernel, if that matters; it
-fails with:
-
-/mnt/test: Is a directory
-
-and nothing catches that.  Old xfsprogs tries to open the file
-in question RDWR even before it gets to the -T option (which
-would fail, I guess), and you can't do that for directories.
-
-So I suppose we could explicitly test for that when checking
-flink:
-
-        [ $command = "flink" ] && echo $testio | grep -q "Is a directory" && \
-                _notrun "xfs_io flink support is missing"
-
-or alternately, first just run xfs_io w/ the command but no file;
-today, at least, that works:
-
-[root@bp-05 xfstests]# xfs_io -c flink
-command "flink" not found
-[root@bp-05 xfstests]# xfs_io -c pread
-[root@bp-05 xfstests]# 
-
-so could do this before the case statement:
-
-        $XFS_IO_PROG -c $command 2>&1 | grep -q "not found" && \
-                _notrun "xfs_io $command support is missing"
-
-but that might be subject to future changes in xfs_io command
-parsing...
-
--Eric
-
-
-> Signed-off-by: Josef Bacik <jbacik@fb.com>
-> ---
->  common/rc | 2 ++
->  1 file changed, 2 insertions(+)
+On Wed, May 07, 2014 at 08:58:38PM -0500, Eric Sandeen wrote:
+> On 5/7/14, 8:42 PM, Dave Chinner wrote:
+> > On Wed, May 07, 2014 at 06:29:15PM -0500, Eric Sandeen wrote:
+> >> The way discontiguous buffers are currently handled in
+> >> prefetch is by unlocking the prefetch tree and reading
+> >> them one at a time in pf_read_discontig(), inside the
+> >> normal loop of searching for buffers to read in a more
+> >> optimized fashion.
+> >>
+> >> But by unlocking the tree, we allow other threads to come
+> >> in and find buffers which we've already stashed locally
+> >> on our bplist[].  If 2 threads think they own the same
+> >> set of buffers, they may both try to delete them from
+> >> the prefetch btree, and the second one to arrive will not
+> >> find it, resulting in:
+> >>
+> >> 	fatal error -- prefetch corruption
+> >>
+> >> Fix this by maintaining 2 lists; the original bplist,
+> >> and a new one containing only discontiguous buffers.
+> >>
+> >> The original list can be seek-optimized as before,
+> >> and the discontiguous list can be read one by one
+> >> before we do the seek-optimized reads, after all of the
+> >> tree manipulation has been completed.
+> > 
+> > Nice job finding the problem, Eric! It looks like your patch solves
+> > the problem, but after considering this approach for a while I think
+> > it's overkill. ;)
 > 
-> diff --git a/common/rc b/common/rc
-> index 5c13db5..4fa7e63 100644
-> --- a/common/rc
-> +++ b/common/rc
-> @@ -1258,6 +1258,8 @@ _require_xfs_io_command()
->  		_notrun "xfs_io $command support is missing"
->  	echo $testio | grep -q "Operation not supported" && \
->  		_notrun "xfs_io $command failed (old kernel/wrong fs?)"
-> +	echo $testio | grep -q "invalid option" && \
-> +		_notrun "xfs_io $command support is missing"
->  }
->  
->  # Check that a fs has enough free space (in 1024b blocks)
-> -- 1.8.3.1 _______________________________________________ xfs mailing list xfs@oss.sgi.com http://oss.sgi.com/mailman/listinfo/xfs
+> Well, that's how it goes.  :)
 > 
+> > What the loop is trying to do is linearise all the IO and turn lots
+> > of small IO into a single large IO, so if we grab all the discontig
+> > buffers in the range, then do IO on them, then do the large IO, we
+> > are effectively seeking all over that range, including backwards.
+> > This is exactly the sort of problem the prefetch loop is trying to
+> > avoid.
+> 
+> mmmhm... OTOH, discontig buffers are ... fairly rare?  And they do
+> have to be read sometime.
+> 
+> > So what I think is best is that we simply abort the pulling of new
+> > buffers off the list when we hit a discontiguous buffer. Leave the
+> > discontig buffer as the last on the list, and process the list as
+> > per normal. Remove all the remaining buffers from the btree, then
+> > drop the lock and do the pread64 call.
+> 
+> I kind of half considered something like that, but the optimizing
+> trims back num based on a few criteria, some involving the last
+> buffer in the bplist.  So it's going to require a bit more awareness
+> I think.
+
+You can ignore it, though, because if we trim the discontig buffer
+out, we don't read it in that loop, and another prefetch thread
+will deal with it. If we don't trim it out, it makes no difference to
+the large read...
+
+i.e. you can completely ignore the discontig buffer until after te
+pread64...
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
