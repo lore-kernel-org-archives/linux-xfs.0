@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id D58B27F52
-	for <xfs@oss.sgi.com>; Wed,  7 May 2014 20:58:45 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id C26F330404E
-	for <xfs@oss.sgi.com>; Wed,  7 May 2014 18:58:42 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id puUriz2alqkvpDSg for
-	<xfs@oss.sgi.com>; Wed, 07 May 2014 18:58:41 -0700 (PDT)
-Message-ID: <536AE4CE.2030201@redhat.com>
-Date: Wed, 07 May 2014 20:58:38 -0500
-From: Eric Sandeen <sandeen@redhat.com>
+	by oss.sgi.com (Postfix) with ESMTP id 41FA07F52
+	for <xfs@oss.sgi.com>; Wed,  7 May 2014 21:28:13 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 2D1FE304062
+	for <xfs@oss.sgi.com>; Wed,  7 May 2014 19:28:10 -0700 (PDT)
+Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
+	[65.41.216.221]) by cuda.sgi.com with ESMTP id 3RoPP5X5dy9kAc3N
+	for <xfs@oss.sgi.com>; Wed, 07 May 2014 19:28:09 -0700 (PDT)
+Message-ID: <536AEBB9.3020807@hardwarefreak.com>
+Date: Wed, 07 May 2014 21:28:09 -0500
+From: Stan Hoeppner <stan@hardwarefreak.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfs_repair: don't unlock prefetch tree to read discontig
-	buffers
-References: <536AC1CB.8060601@redhat.com> <20140508014215.GT5421@dastard>
-In-Reply-To: <20140508014215.GT5421@dastard>
+Subject: Re: Alignment: XFS + LVM2
+References: <CAPrERe02bfrW6+5c+oZPgd9c_7AUx=BEUcAOAj2dT_iYn=P_1w@mail.gmail.com>
+In-Reply-To: <CAPrERe02bfrW6+5c+oZPgd9c_7AUx=BEUcAOAj2dT_iYn=P_1w@mail.gmail.com>
+Reply-To: stan@hardwarefreak.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,81 +28,105 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: Marc Caubet <mcaubet@pic.es>, xfs@oss.sgi.com
 
-On 5/7/14, 8:42 PM, Dave Chinner wrote:
-> On Wed, May 07, 2014 at 06:29:15PM -0500, Eric Sandeen wrote:
->> The way discontiguous buffers are currently handled in
->> prefetch is by unlocking the prefetch tree and reading
->> them one at a time in pf_read_discontig(), inside the
->> normal loop of searching for buffers to read in a more
->> optimized fashion.
->>
->> But by unlocking the tree, we allow other threads to come
->> in and find buffers which we've already stashed locally
->> on our bplist[].  If 2 threads think they own the same
->> set of buffers, they may both try to delete them from
->> the prefetch btree, and the second one to arrive will not
->> find it, resulting in:
->>
->> 	fatal error -- prefetch corruption
->>
->> Fix this by maintaining 2 lists; the original bplist,
->> and a new one containing only discontiguous buffers.
->>
->> The original list can be seek-optimized as before,
->> and the discontiguous list can be read one by one
->> before we do the seek-optimized reads, after all of the
->> tree manipulation has been completed.
+Everything begins and ends with the workload.
+
+On 5/7/2014 7:43 AM, Marc Caubet wrote:
+> Hi all,
 > 
-> Nice job finding the problem, Eric! It looks like your patch solves
-> the problem, but after considering this approach for a while I think
-> it's overkill. ;)
+> I am trying to setup a storage pool with correct disk alignment and I hope
+> somebody can help me to understand some unclear parts to me when
+> configuring XFS over LVM2.
 
-Well, that's how it goes.  :)
+I'll try.  But to be honest, after my first read of your post, a few
+things jump out as breaking traditional rules.
 
-> What the loop is trying to do is linearise all the IO and turn lots
-> of small IO into a single large IO, so if we grab all the discontig
-> buffers in the range, then do IO on them, then do the large IO, we
-> are effectively seeking all over that range, including backwards.
-> This is exactly the sort of problem the prefetch loop is trying to
-> avoid.
+The first thing you need to consider is your workload and the type of
+read/write patterns it will generate.  This document is unfinished, and
+unformatted, but reading what is there should be informative:
 
-mmmhm... OTOH, discontig buffers are ... fairly rare?  And they do
-have to be read sometime.
+http://www.hardwarefreak.com/xfs/storage-arch.txt
 
-> So what I think is best is that we simply abort the pulling of new
-> buffers off the list when we hit a discontiguous buffer. Leave the
-> discontig buffer as the last on the list, and process the list as
-> per normal. Remove all the remaining buffers from the btree, then
-> drop the lock and do the pread64 call.
-
-I kind of half considered something like that, but the optimizing
-trims back num based on a few criteria, some involving the last
-buffer in the bplist.  So it's going to require a bit more awareness
-I think.
-
-> Then, check the last buffer on the bplist - if it's the discontig
-> buffer (i.e. wasn't dropped during list processing), then issue the
-> discontig buffer IO. It should at least start as either sequential I
-> oor with a small forwards seek, so so shoul be as close to seek
-> optimised as we can get for such buffers. Then it can be removed
-> from the bplist, num decremented, the lock picked back up and the
-> large buffer read in via pread64() can be sliced and diced
-> appropriately...
+> Actually we have few storage pools with the following settings each:
 > 
-> i.e. much less code, no need for a separate list, and the seeks
-> shoul dbe minimised as much as possible....
+> - LSI Controller with 3xRAID6
+> - Each RAID6 is configured with 10 data disks + 2 for double-parity.
+> - Each disk has a capacity of 4TB, 512e and physical sector size of 4K.
 
-I'll give something like that a shot.  Yeah, it felt a bit brute-force-y.
+512e drives may cause data loss.  See:
+http://docs.oracle.com/cd/E26502_01/html/E28978/gmkgj.html#gmlfz
 
--eric
+> - 3x(10+2) configuration was considered in order to gain best performance
+> and data safety (less disks per RAID less probability of data corruption)
 
-> Cheers,
+RAID6 is the worst performer of all the RAID levels but gives the best
+resilience to multiple drive failure.  The reason for using fewer drives
+per array has less to do with probability of corruption, but
+
+1. Limiting RMW operations to as few drives as possible, especially for
+controllers that do full stripe scrubbing on RMW
+
+2.  Lowering bandwidth and time required to rebuild a dead drive, fewer
+drives tied up during a rebuild
+
+> From the O.S. side we see:
 > 
-> Dave.
+> [root@stgpool01 ~]# fdisk -l /dev/sda /dev/sdb /dev/sdc
+...
+
+You omitted crucial information.  What is the stripe unit size of each
+RAID6?
+
+> The idea is to aggregate the above devices and show only 1 storage space.
+> We did as follows:
 > 
+> vgcreate dcvg_a /dev/sda /dev/sdb /dev/sdc
+> lvcreate -i 3 -I 4096 -n dcpool -l 100%FREE -v dcvg_a
+
+You've told LVM that its stripe unit is 4MB, and thus the stripe width
+of each RAID6 is 4MB.  This is not possible with 10 data spindles.
+Again, show the RAID geometry from the LSI tools.
+
+When creating a nested stripe, the stripe unit of the outer stripe (LVM)
+must equal the stripe width of eachinner stripe (RAID6).
+
+> Hence, stripe of the 3 RAID6 in a LV.
+
+Each RAID6 has ~1.3GB/s of throughput.  By striping the 3 arrays into a
+nested RAID60 this suggests you need single file throughput greater than
+1.3GB/s and that all files are very large.  If not, you'd be better off
+using a concatenation, and using md to accomplish that instead of LVM.
+
+> And here is my first question: How can I check if the storage and the LV
+> are correctly aligned?
+
+Answer is above.  But the more important question is whether your
+workload wants a stripe or a concatenation.
+
+> On the other hand, I have formatted XFS as follows:
+> 
+> mkfs.xfs -d su=256k,sw=10 -l size=128m,lazy-count=1 /dev/dcvg_a/dcpool
+
+This alignment is not correct.  XFS must be aligned to the LVM stripe
+geometry.  Here you apparently aligned XFS to the RAID6 geometry
+instead.  Why are you manually specifying a 128M log?  If you knew your
+workload that well, you would not have made these other mistakes.
+
+In a nutshell, you need to ditch all of this and start over.
+
+> So my second question is, are the above 'su' and 'sw' parameters correct on
+> the current LV configuration? If not, which values should I have and why?
+> AFAIK su is the stripe size configured in the controller side, but in this
+> case we have a LV. Also, sw is the number of data disks in a RAID, but
+> again, we have a LV with 3 stripes, and I am not sure if the number of data
+> disks should be 30 instead.
+
+Describe your workload and we can tell you how to properly set this up.
+
+Cheers,
+
+Stan
 
 _______________________________________________
 xfs mailing list
