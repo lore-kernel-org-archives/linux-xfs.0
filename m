@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id CA0AE7F52
-	for <xfs@oss.sgi.com>; Thu,  8 May 2014 05:34:27 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 6AD19AC003
-	for <xfs@oss.sgi.com>; Thu,  8 May 2014 03:34:27 -0700 (PDT)
-Received: from mailout1.samsung.com (mailout1.samsung.com [203.254.224.24]) by
-	cuda.sgi.com with ESMTP id hKADGtuS2jndIT3B (version=TLSv1
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 56CDD7F52
+	for <xfs@oss.sgi.com>; Thu,  8 May 2014 05:35:25 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 31A908F8037
+	for <xfs@oss.sgi.com>; Thu,  8 May 2014 03:35:25 -0700 (PDT)
+Received: from mailout4.samsung.com (mailout4.samsung.com [203.254.224.34]) by
+	cuda.sgi.com with ESMTP id XwQ02S1cUjDAyZRH (version=TLSv1
 	cipher=RC4-MD5 bits=128 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 08 May 2014 03:34:26 -0700 (PDT)
-Received: from epcpsbgr3.samsung.com
-	(u143.gpu120.samsung.co.kr [203.254.230.143])
-	by mailout1.samsung.com (Oracle Communications Messaging Server
+	Thu, 08 May 2014 03:35:23 -0700 (PDT)
+Received: from epcpsbgr4.samsung.com
+	(u144.gpu120.samsung.co.kr [203.254.230.144])
+	by mailout4.samsung.com (Oracle Communications Messaging Server
 	7u4-24.01 (7.0.4.24.0) 64bit (built Nov 17 2011))
-	with ESMTP id <0N5900ICL41C5M80@mailout1.samsung.com> for
-	xfs@oss.sgi.com; Thu, 08 May 2014 19:34:24 +0900 (KST)
+	with ESMTP id <0N5900I4Q42YZ760@mailout4.samsung.com> for
+	xfs@oss.sgi.com; Thu, 08 May 2014 19:35:22 +0900 (KST)
 From: Namjae Jeon <namjae.jeon@samsung.com>
-Subject: [PATCH v2 7/10] xfstests: generic/029: Multi insert range tests
-Date: Thu, 08 May 2014 19:34:24 +0900
-Message-id: <003d01cf6aa9$14808ce0$3d81a6a0$@samsung.com>
+Subject: [PATCH v2 8/10] xfstests: generic/030: Delayed allocation multi insert
+Date: Thu, 08 May 2014 19:35:21 +0900
+Message-id: <003e01cf6aa9$36b14c00$a413e400$@samsung.com>
 MIME-version: 1.0
 Content-language: ko
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -36,29 +36,30 @@ Sender: xfs-bounces@oss.sgi.com
 To: 'Dave Chinner' <david@fromorbit.com>, 'Theodore Ts'o' <tytso@mit.edu>
 Cc: linux-fsdevel@vger.kernel.org, 'linux-ext4' <linux-ext4@vger.kernel.org>, linux-kernel@vger.kernel.org, 'Ashish Sangwan' <a.sangwan@samsung.com>, xfs@oss.sgi.com
 
-This testcase(029) tries to test various corner cases with pre-existing holes
-for finsert range functionality over different type of extents.
+This testcase(030) tries to test various corner cases with delayed extents and
+pre-existing holes for finsert range functionality over different type of
+extents.
 
 Signed-off-by: Namjae Jeon <namjae.jeon@samsung.com>
 Signed-off-by: Ashish Sangwan <a.sangwan@samsung.com>
 ---
- tests/generic/029     | 65 +++++++++++++++++++++++++++++++++++++++++++++++++++
- tests/generic/029.out | 50 +++++++++++++++++++++++++++++++++++++++
+ tests/generic/030     | 65 +++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/generic/030.out | 50 +++++++++++++++++++++++++++++++++++++++
  tests/generic/group   |  1 +
  3 files changed, 116 insertions(+)
- create mode 100755 tests/generic/029
- create mode 100644 tests/generic/029.out
+ create mode 100755 tests/generic/030
+ create mode 100644 tests/generic/030.out
 
-diff --git a/tests/generic/029 b/tests/generic/029
+diff --git a/tests/generic/030 b/tests/generic/030
 new file mode 100755
-index 0000000..13d7164
+index 0000000..02680b7
 --- /dev/null
-+++ b/tests/generic/029
++++ b/tests/generic/030
 @@ -0,0 +1,65 @@
 +#! /bin/bash
-+# FS QA Test No. generic/029
++# FS QA Test No. generic/030
 +#
-+# Multi insert range tests
++# Delayed allocation multi insert range tests
 +# This testcase is one of the 4 testcases which tries to
 +# test various corner cases for finsert range functionality over different
 +# type of extents. These tests are based on generic/255 test case.
@@ -115,18 +116,18 @@ index 0000000..13d7164
 +
 +testfile=$TEST_DIR/$seq.$$
 +
-+_test_generic_punch -k falloc fpunch finsert fiemap _filter_hole_fiemap $testfile
++_test_generic_punch -d -k falloc fpunch finsert fiemap _filter_hole_fiemap $testfile
 +_check_test_fs
 +
 +status=0
 +exit
-diff --git a/tests/generic/029.out b/tests/generic/029.out
+diff --git a/tests/generic/030.out b/tests/generic/030.out
 new file mode 100644
-index 0000000..0a2b659
+index 0000000..eed3303
 --- /dev/null
-+++ b/tests/generic/029.out
++++ b/tests/generic/030.out
 @@ -0,0 +1,50 @@
-+QA output created by 029
++QA output created by 030
 +	1. into a hole
 +0: [0..7]: hole
 +1: [8..23]: extent
@@ -177,14 +178,14 @@ index 0000000..0a2b659
 +0: [0..55]: extent
 +86c9d033be2761385c9cfa203c426bb2
 diff --git a/tests/generic/group b/tests/generic/group
-index 0ef13be..f5fe53c 100644
+index f5fe53c..9187d9e 100644
 --- a/tests/generic/group
 +++ b/tests/generic/group
-@@ -31,6 +31,7 @@
- 026 acl quick auto
+@@ -32,6 +32,7 @@
  027 auto quick prealloc
  028 auto quick prealloc
-+029 auto quick prealloc
+ 029 auto quick prealloc
++030 auto quick prealloc
  053 acl repair auto quick
  062 attr udf auto quick
  068 other auto freeze dangerous stress
