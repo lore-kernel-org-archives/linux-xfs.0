@@ -1,18 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 322887F52
-	for <xfs@oss.sgi.com>; Thu,  8 May 2014 13:38:41 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id A864CAC012
-	for <xfs@oss.sgi.com>; Thu,  8 May 2014 11:38:40 -0700 (PDT)
-Received: from mx0b-00082601.pphosted.com (mx0b-00082601.pphosted.com
-	[67.231.153.30]) by cuda.sgi.com with ESMTP id NTMts31h5dVH0iz0
-	for <xfs@oss.sgi.com>; Thu, 08 May 2014 11:38:39 -0700 (PDT)
-From: Josef Bacik <jbacik@fb.com>
-Subject: [PATCH] xfstests: fix flink test V2
-Date: Thu, 8 May 2014 14:38:30 -0400
-Message-ID: <1399574310-13718-1-git-send-email-jbacik@fb.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 5152D7F53
+	for <xfs@oss.sgi.com>; Thu,  8 May 2014 13:40:24 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 2AD408F8035
+	for <xfs@oss.sgi.com>; Thu,  8 May 2014 11:40:20 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id jt9tXnsUgHi24fA1 for <xfs@oss.sgi.com>;
+	Thu, 08 May 2014 11:40:19 -0700 (PDT)
+Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.4])
+	(using TLSv1 with cipher DHE-RSA-AES128-SHA (128/128 bits))
+	(No client certificate requested)
+	by sandeen.net (Postfix) with ESMTPSA id B94BC63C5FF2
+	for <xfs@oss.sgi.com>; Thu,  8 May 2014 13:40:18 -0500 (CDT)
+Message-ID: <536BCF95.201@sandeen.net>
+Date: Thu, 08 May 2014 13:40:21 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
+Subject: Remove xfs_check for 3.2.0?
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,37 +30,13 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: linux-btrfs@vger.kernel.org, xfs@oss.sgi.com, sandeen@redhat.com
+To: xfs-oss <xfs@oss.sgi.com>
 
-I don't have flink support in my xfsprogs, but it doesn't fail with "command not
-found" or whatever, it fails because I don't have the -T option, whereas Eric
-gets an error about $TEST_DIR being a directory because his xfs_io tries to open
-the directory first before it parses the options.  So fix this by checking flink
-with these two cases and don't run if we hit either of them.  Thanks,
+I think we had stated removal in June 2014, but it seems close enough.
 
-Signed-off-by: Josef Bacik <jbacik@fb.com>
----
-V1->V2: check for "Is a directory" errors that Eric mentioned, move test up into
-the flink specific case.
+Should xfs_check be removed prior to 3.2.0's release?
 
- common/rc | 2 ++
- 1 file changed, 2 insertions(+)
-
-diff --git a/common/rc b/common/rc
-index 5c13db5..f37b310 100644
---- a/common/rc
-+++ b/common/rc
-@@ -1248,6 +1248,8 @@ _require_xfs_io_command()
- 	"flink" )
- 		testio=`$XFS_IO_PROG -T -F -c "flink $testfile" \
- 			$TEST_DIR 2>&1`
-+		echo $testio | egrep -q "invalid option|Is a directory" && \
-+			_notrun "xfs_io $command support is missing"
- 		;;
- 	*)
- 		testio=`$XFS_IO_PROG -c "$command help" 2>&1`
--- 
-1.8.3.1
+-Eric
 
 _______________________________________________
 xfs mailing list
