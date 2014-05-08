@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 41FA07F52
-	for <xfs@oss.sgi.com>; Wed,  7 May 2014 21:28:13 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 2D1FE304062
-	for <xfs@oss.sgi.com>; Wed,  7 May 2014 19:28:10 -0700 (PDT)
-Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
-	[65.41.216.221]) by cuda.sgi.com with ESMTP id 3RoPP5X5dy9kAc3N
-	for <xfs@oss.sgi.com>; Wed, 07 May 2014 19:28:09 -0700 (PDT)
-Message-ID: <536AEBB9.3020807@hardwarefreak.com>
-Date: Wed, 07 May 2014 21:28:09 -0500
-From: Stan Hoeppner <stan@hardwarefreak.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id B9B387F52
+	for <xfs@oss.sgi.com>; Wed,  7 May 2014 22:42:36 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 999928F8037
+	for <xfs@oss.sgi.com>; Wed,  7 May 2014 20:42:33 -0700 (PDT)
+Received: from heian.cn.fujitsu.com (cn.fujitsu.com [59.151.112.132]) by
+	cuda.sgi.com with ESMTP id iS59zeXbgYOn9QRt for
+	<xfs@oss.sgi.com>; Wed, 07 May 2014 20:42:31 -0700 (PDT)
+Message-ID: <536AFC3B.7070502@cn.fujitsu.com>
+Date: Thu, 8 May 2014 11:38:35 +0800
+From: Wang Shilong <wangsl.fnst@cn.fujitsu.com>
 MIME-Version: 1.0
-Subject: Re: Alignment: XFS + LVM2
-References: <CAPrERe02bfrW6+5c+oZPgd9c_7AUx=BEUcAOAj2dT_iYn=P_1w@mail.gmail.com>
-In-Reply-To: <CAPrERe02bfrW6+5c+oZPgd9c_7AUx=BEUcAOAj2dT_iYn=P_1w@mail.gmail.com>
-Reply-To: stan@hardwarefreak.com
+Subject: Re: [PATCH v2 1/3] xfstests/btrfs: add qgroup rescan stress test
+References: <1394423051-17356-1-git-send-email-wangsl.fnst@cn.fujitsu.com>
+	<536A9E73.90802@fb.com>
+In-Reply-To: <536A9E73.90802@fb.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,109 +24,142 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Marc Caubet <mcaubet@pic.es>, xfs@oss.sgi.com
+To: Josef Bacik <jbacik@fb.com>
+Cc: linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
 
-Everything begins and ends with the workload.
+On 05/08/2014 04:58 AM, Josef Bacik wrote:
+> On 03/09/2014 11:44 PM, Wang Shilong wrote:
+>> Test flow is to run fsstress after triggering quota rescan.
+>> the ruler is simple, we just remove all files and directories,
+>> sync filesystem and see if qgroup's ref and excl are nodesize.
+>>
+>> Signed-off-by: Wang Shilong <wangsl.fnst@cn.fujitsu.com>
+>> ---
+>> v1->v2:
+>>     switch into new helper _run_btrfs_util_prog()
+>> ---
+>>   tests/btrfs/041     | 76 
+>> +++++++++++++++++++++++++++++++++++++++++++++++++++++
+>>   tests/btrfs/041.out |  3 +++
+>>   tests/btrfs/group   |  1 +
+>>   3 files changed, 80 insertions(+)
+>>   create mode 100644 tests/btrfs/041
+>>   create mode 100644 tests/btrfs/041.out
+>>
+>> diff --git a/tests/btrfs/041 b/tests/btrfs/041
+>> new file mode 100644
+>> index 0000000..92bd080
+>> --- /dev/null
+>> +++ b/tests/btrfs/041
+>> @@ -0,0 +1,76 @@
+>> +#! /bin/bash
+>> +# FSQA Test No. btrfs/041
+>> +#
+>> +# Quota rescan stress test, we run fsstress and quota rescan 
+>> concurrently
+>> +#
+>> +#----------------------------------------------------------------------- 
+>>
+>> +# Copyright (C) 2014 Fujitsu.  All rights reserved.
+>> +#
+>> +# This program is free software; you can redistribute it and/or
+>> +# modify it under the terms of the GNU General Public License as
+>> +# published by the Free Software Foundation.
+>> +#
+>> +# This program is distributed in the hope that it would be useful,
+>> +# but WITHOUT ANY WARRANTY; without even the implied warranty of
+>> +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+>> +# GNU General Public License for more details.
+>> +#
+>> +# You should have received a copy of the GNU General Public License
+>> +# along with this program; if not, write the Free Software Foundation,
+>> +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
+>> +#
+>> +#----------------------------------------------------------------------- 
+>>
+>> +#
+>> +
+>> +seq=`basename $0`
+>> +seqres=$RESULT_DIR/$seq
+>> +echo "QA output created by $seq"
+>> +
+>> +here=`pwd`
+>> +tmp=/tmp/$$
+>> +status=1
+>> +
+>> +_cleanup()
+>> +{
+>> +    cd /
+>> +    rm -f $tmp.*
+>> +}
+>> +trap "_cleanup; exit \$status" 0 1 2 3 15
+>> +
+>> +# get standard environment, filters and checks
+>> +. ./common/rc
+>> +. ./common/filter
+>> +
+>> +# real QA test starts here
+>> +_need_to_be_root
+>> +_supported_fs btrfs
+>> +_supported_os Linux
+>> +_require_scratch
+>> +
+>> +rm -f $seqres.full
+>> +
+>> +run_check _scratch_mkfs "-b 1g --nodesize 4096"
+>> +run_check _scratch_mount
+>> +
+>
+> Add "-o nospace_cache" here please, otherwise I don't get the same 
+> output.
 
-On 5/7/2014 7:43 AM, Marc Caubet wrote:
-> Hi all,
-> 
-> I am trying to setup a storage pool with correct disk alignment and I hope
-> somebody can help me to understand some unclear parts to me when
-> configuring XFS over LVM2.
+I am little confused why we need specify this mount option explicitly?
+As far as i know, space cache is not included into qgroup accounting space.
 
-I'll try.  But to be honest, after my first read of your post, a few
-things jump out as breaking traditional rules.
-
-The first thing you need to consider is your workload and the type of
-read/write patterns it will generate.  This document is unfinished, and
-unformatted, but reading what is there should be informative:
-
-http://www.hardwarefreak.com/xfs/storage-arch.txt
-
-> Actually we have few storage pools with the following settings each:
-> 
-> - LSI Controller with 3xRAID6
-> - Each RAID6 is configured with 10 data disks + 2 for double-parity.
-> - Each disk has a capacity of 4TB, 512e and physical sector size of 4K.
-
-512e drives may cause data loss.  See:
-http://docs.oracle.com/cd/E26502_01/html/E28978/gmkgj.html#gmlfz
-
-> - 3x(10+2) configuration was considered in order to gain best performance
-> and data safety (less disks per RAID less probability of data corruption)
-
-RAID6 is the worst performer of all the RAID levels but gives the best
-resilience to multiple drive failure.  The reason for using fewer drives
-per array has less to do with probability of corruption, but
-
-1. Limiting RMW operations to as few drives as possible, especially for
-controllers that do full stripe scrubbing on RMW
-
-2.  Lowering bandwidth and time required to rebuild a dead drive, fewer
-drives tied up during a rebuild
-
-> From the O.S. side we see:
-> 
-> [root@stgpool01 ~]# fdisk -l /dev/sda /dev/sdb /dev/sdc
-...
-
-You omitted crucial information.  What is the stripe unit size of each
-RAID6?
-
-> The idea is to aggregate the above devices and show only 1 storage space.
-> We did as follows:
-> 
-> vgcreate dcvg_a /dev/sda /dev/sdb /dev/sdc
-> lvcreate -i 3 -I 4096 -n dcpool -l 100%FREE -v dcvg_a
-
-You've told LVM that its stripe unit is 4MB, and thus the stripe width
-of each RAID6 is 4MB.  This is not possible with 10 data spindles.
-Again, show the RAID geometry from the LSI tools.
-
-When creating a nested stripe, the stripe unit of the outer stripe (LVM)
-must equal the stripe width of eachinner stripe (RAID6).
-
-> Hence, stripe of the 3 RAID6 in a LV.
-
-Each RAID6 has ~1.3GB/s of throughput.  By striping the 3 arrays into a
-nested RAID60 this suggests you need single file throughput greater than
-1.3GB/s and that all files are very large.  If not, you'd be better off
-using a concatenation, and using md to accomplish that instead of LVM.
-
-> And here is my first question: How can I check if the storage and the LV
-> are correctly aligned?
-
-Answer is above.  But the more important question is whether your
-workload wants a stripe or a concatenation.
-
-> On the other hand, I have formatted XFS as follows:
-> 
-> mkfs.xfs -d su=256k,sw=10 -l size=128m,lazy-count=1 /dev/dcvg_a/dcpool
-
-This alignment is not correct.  XFS must be aligned to the LVM stripe
-geometry.  Here you apparently aligned XFS to the RAID6 geometry
-instead.  Why are you manually specifying a 128M log?  If you knew your
-workload that well, you would not have made these other mistakes.
-
-In a nutshell, you need to ditch all of this and start over.
-
-> So my second question is, are the above 'su' and 'sw' parameters correct on
-> the current LV configuration? If not, which values should I have and why?
-> AFAIK su is the stripe size configured in the controller side, but in this
-> case we have a LV. Also, sw is the number of data disks in a RAID, but
-> again, we have a LV with 3 stripes, and I am not sure if the number of data
-> disks should be 30 instead.
-
-Describe your workload and we can tell you how to properly set this up.
-
-Cheers,
-
-Stan
+Thanks,
+Wang
+>
+>> +# -w ensures that the only ops are ones which cause write I/O
+>> +run_check $FSSTRESS_PROG -d $SCRATCH_MNT -w -p 5 -n 1000 \
+>> +        $FSSTRESS_AVOID >&/dev/null
+>> +
+>> +_run_btrfs_util_prog subvolume snapshot $SCRATCH_MNT \
+>> +       $SCRATCH_MNT/snap1 >>$seqres.full 2>&1
+>
+> _run_btrfs_util_prog will already redirect to $seqres.full, you don't 
+> need this part.
+>
+>> +
+>> +run_check $FSSTRESS_PROG -d $SCRATCH_MNT/snap1 -w -p 5 -n 1000 \
+>> +       $FSSTRESS_AVOID >&/dev/null
+>> +
+>> +_run_btrfs_util_prog quota enable $SCRATCH_MNT
+>> +_run_btrfs_util_prog quota rescan -w $SCRATCH_MNT
+>> +
+>> +#ignore removing subvolume errors
+>> +rm -rf $SCRATCH_MNT/* >& /dev/null
+>> +
+>> +_run_btrfs_util_prog filesystem sync $SCRATCH_MNT >> $seqres.full 2>&1
+>
+> Same here.
+>
+>> +_run_btrfs_util_prog qgroup show $SCRATCH_MNT | $SED_PROG -n 
+>> '/[0-9]/p' \
+>> +    | $AWK_PROG '{print $1" "$2" "$3 }'
+>> +
+>
+> You can't use _run_btrfs_util_prog here, it will eat the output. You 
+> need to use $BTRFS_UTIL_PROG instead.  Fix these up and resend, this 
+> is a really important test and I needed it to make sure my qgroups 
+> patch was right (which it is now.)  Thanks,
+>
+> Josef
+> .
+>
 
 _______________________________________________
 xfs mailing list
