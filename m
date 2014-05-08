@@ -1,25 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 4F49C7F53
-	for <xfs@oss.sgi.com>; Thu,  8 May 2014 05:30:55 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id D688EAC006
-	for <xfs@oss.sgi.com>; Thu,  8 May 2014 03:30:51 -0700 (PDT)
-Received: from mailout4.samsung.com (mailout4.samsung.com [203.254.224.34]) by
-	cuda.sgi.com with ESMTP id tPcSpPBxNqAPgGta (version=TLSv1
+	by oss.sgi.com (Postfix) with ESMTP id B99D97F53
+	for <xfs@oss.sgi.com>; Thu,  8 May 2014 05:32:24 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 5B4A1AC003
+	for <xfs@oss.sgi.com>; Thu,  8 May 2014 03:32:24 -0700 (PDT)
+Received: from mailout1.samsung.com (mailout1.samsung.com [203.254.224.24]) by
+	cuda.sgi.com with ESMTP id 58I7jtc4zZreEOOu (version=TLSv1
 	cipher=RC4-MD5 bits=128 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 08 May 2014 03:30:50 -0700 (PDT)
-Received: from epcpsbgr1.samsung.com
-	(u141.gpu120.samsung.co.kr [203.254.230.141])
-	by mailout4.samsung.com (Oracle Communications Messaging Server
+	Thu, 08 May 2014 03:32:22 -0700 (PDT)
+Received: from epcpsbgr4.samsung.com
+	(u144.gpu120.samsung.co.kr [203.254.230.144])
+	by mailout1.samsung.com (Oracle Communications Messaging Server
 	7u4-24.01 (7.0.4.24.0) 64bit (built Nov 17 2011))
-	with ESMTP id <0N5900HY53VBBS70@mailout4.samsung.com> for
-	xfs@oss.sgi.com; Thu, 08 May 2014 19:30:47 +0900 (KST)
+	with ESMTP id <0N5900L9Y3XW0A40@mailout1.samsung.com> for
+	xfs@oss.sgi.com; Thu, 08 May 2014 19:32:20 +0900 (KST)
 From: Namjae Jeon <namjae.jeon@samsung.com>
-Subject: [PATCH v2 4/10] xfsprogs: xfs_io: add finsert command for insert range
-	via fallocate
-Date: Thu, 08 May 2014 19:30:47 +0900
-Message-id: <003a01cf6aa8$933f6890$b9be39b0$@samsung.com>
+Subject: [PATCH v2 5/10] xfstests: generic/027: Standard insert range tests
+Date: Thu, 08 May 2014 19:32:20 +0900
+Message-id: <003b01cf6aa8$cab3e170$601ba450$@samsung.com>
 MIME-version: 1.0
 Content-language: ko
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -37,96 +36,205 @@ Sender: xfs-bounces@oss.sgi.com
 To: 'Dave Chinner' <david@fromorbit.com>, 'Theodore Ts'o' <tytso@mit.edu>
 Cc: linux-fsdevel@vger.kernel.org, 'linux-ext4' <linux-ext4@vger.kernel.org>, linux-kernel@vger.kernel.org, 'Ashish Sangwan' <a.sangwan@samsung.com>, xfs@oss.sgi.com
 
-Add finsert command for fallocate FALLOC_FL_INSERT_RANGE flag.
+This testcase(027) tries to test various corner cases for finsert range
+functionality over different type of extents.
 
 Signed-off-by: Namjae Jeon <namjae.jeon@samsung.com>
 Signed-off-by: Ashish Sangwan <a.sangwan@samsung.com>
 ---
- io/prealloc.c | 39 ++++++++++++++++++++++++++++++++++++++-
- 1 file changed, 38 insertions(+), 1 deletion(-)
+ common/punch          |  5 ++++
+ common/rc             |  2 +-
+ tests/generic/027     | 65 ++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/generic/027.out | 66 +++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/generic/group   |  1 +
+ 5 files changed, 138 insertions(+), 1 deletion(-)
+ create mode 100755 tests/generic/027
+ create mode 100644 tests/generic/027.out
 
-diff --git a/io/prealloc.c b/io/prealloc.c
-index aba6b44..11b1e12 100644
---- a/io/prealloc.c
-+++ b/io/prealloc.c
-@@ -37,6 +37,10 @@
- #define FALLOC_FL_ZERO_RANGE 0x10
- #endif
+diff --git a/common/punch b/common/punch
+index f2d538c..4cc50d5 100644
+--- a/common/punch
++++ b/common/punch
+@@ -527,6 +527,11 @@ _test_generic_punch()
+ 		return
+ 	fi
  
-+#ifndef FALLOC_FL_INSERT_RANGE
-+#define FALLOC_FL_INSERT_RANGE 0x20
-+#endif
++	# If zero_cmd is finsert, don't check unaligned offsets
++	if [ "$zero_cmd" == "finsert" ]; then
++		return
++	fi
 +
- static cmdinfo_t allocsp_cmd;
- static cmdinfo_t freesp_cmd;
- static cmdinfo_t resvsp_cmd;
-@@ -46,6 +50,7 @@ static cmdinfo_t zero_cmd;
- static cmdinfo_t falloc_cmd;
- static cmdinfo_t fpunch_cmd;
- static cmdinfo_t fcollapse_cmd;
-+static cmdinfo_t finsert_cmd;
- static cmdinfo_t fzero_cmd;
- #endif
- 
-@@ -169,11 +174,14 @@ fallocate_f(
- 	int		mode = 0;
- 	int		c;
- 
--	while ((c = getopt(argc, argv, "ckp")) != EOF) {
-+	while ((c = getopt(argc, argv, "cikp")) != EOF) {
- 		switch (c) {
- 		case 'c':
- 			mode = FALLOC_FL_COLLAPSE_RANGE;
- 			break;
-+		case 'i':
-+			mode = FALLOC_FL_INSERT_RANGE;
-+			break;
- 		case 'k':
- 			mode = FALLOC_FL_KEEP_SIZE;
- 			break;
-@@ -237,6 +245,25 @@ fcollapse_f(
- }
- 
- static int
-+finsert_f(
-+	int		argc,
-+	char		**argv)
+ 	echo "	16. data -> cache cold ->hole"
+ 	if [ "$remove_testfile" ]; then
+ 		rm -f $testfile
+diff --git a/common/rc b/common/rc
+index 5c13db5..3af3a20 100644
+--- a/common/rc
++++ b/common/rc
+@@ -1237,7 +1237,7 @@ _require_xfs_io_command()
+ 	"falloc" )
+ 		testio=`$XFS_IO_PROG -F -f -c "falloc 0 1m" $testfile 2>&1`
+ 		;;
+-	"fpunch" | "fcollapse" | "zero" | "fzero" )
++	"fpunch" | "fcollapse" | "zero" | "fzero" | "finsert" )
+ 		testio=`$XFS_IO_PROG -F -f -c "pwrite 0 20k" -c "fsync" \
+ 			-c "$command 4k 8k" $testfile 2>&1`
+ 		;;
+diff --git a/tests/generic/027 b/tests/generic/027
+new file mode 100755
+index 0000000..f2f7642
+--- /dev/null
++++ b/tests/generic/027
+@@ -0,0 +1,65 @@
++#! /bin/bash
++# FS QA Test No. generic/027
++#
++# Standard insert range tests
++# This testcase is one of the 4 testcases which tries to
++# test various corner cases for finsert range functionality over different
++# type of extents. These tests are based on generic/255 test case.
++# For the type of tests, check the description of _test_generic_punch
++# in common/rc.
++#-----------------------------------------------------------------------
++# Copyright (c) 2013 Samsung Electronics.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#
++#-----------------------------------------------------------------------
++#
++
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++
++_cleanup()
 +{
-+	xfs_flock64_t	segment;
-+	int		mode = FALLOC_FL_INSERT_RANGE;
-+
-+	if (!offset_length(argv[1], argv[2], &segment))
-+		return 0;
-+
-+	if (fallocate(file->fd, mode,
-+			segment.l_start, segment.l_len)) {
-+		perror("fallocate");
-+		return 0;
-+	}
-+	return 0;
++    rm -f $tmp.*
 +}
 +
-+static int
- fzero_f(
- 	int		argc,
- 	char		**argv)
-@@ -345,6 +372,16 @@ prealloc_init(void)
- 	_("de-allocates space and eliminates the hole by shifting extents");
- 	add_command(&fcollapse_cmd);
- 
-+	finsert_cmd.name = "finsert";
-+	finsert_cmd.cfunc = finsert_f;
-+	finsert_cmd.argmin = 2;
-+	finsert_cmd.argmax = 2;
-+	finsert_cmd.flags = CMD_NOMAP_OK | CMD_FOREIGN_OK;
-+	finsert_cmd.args = _("off len");
-+	finsert_cmd.oneline =
-+	_("allocates zeroes space after creating the hole by shifting extents");
-+	add_command(&finsert_cmd);
++trap "_cleanup ; exit \$status" 0 1 2 3 15
 +
- 	fzero_cmd.name = "fzero";
- 	fzero_cmd.cfunc = fzero_f;
- 	fzero_cmd.argmin = 2;
++# get standard environment, filters and checks
++# we need to include common/punch to get defination fo filter functions
++. ./common/rc
++. ./common/filter
++. ./common/punch
++
++# real QA test starts here
++_supported_fs generic
++_supported_os Linux
++
++_require_xfs_io_command "fpunch"
++_require_xfs_io_command "falloc"
++_require_xfs_io_command "fiemap"
++_require_xfs_io_command "finsert"
++
++testfile=$TEST_DIR/$seq.$$
++
++_test_generic_punch falloc fpunch finsert fiemap _filter_hole_fiemap $testfile
++_check_test_fs
++
++status=0
++exit
+diff --git a/tests/generic/027.out b/tests/generic/027.out
+new file mode 100644
+index 0000000..9b5ec15
+--- /dev/null
++++ b/tests/generic/027.out
+@@ -0,0 +1,66 @@
++QA output created by 027
++	1. into a hole
++0: [0..7]: hole
++1: [8..23]: extent
++2: [24..55]: hole
++cf845a781c107ec1346e849c9dd1b7e8
++	2. into allocated space
++0: [0..55]: extent
++64e72217eebcbdf31b1b058f9f5f476a
++	3. into unwritten space
++0: [0..55]: extent
++cf845a781c107ec1346e849c9dd1b7e8
++	4. hole -> data
++0: [0..7]: hole
++1: [8..23]: extent
++2: [24..31]: hole
++3: [32..47]: extent
++4: [48..55]: hole
++adb08a6d94a3b5eff90fdfebb2366d31
++	5. hole -> unwritten
++0: [0..7]: hole
++1: [8..23]: extent
++2: [24..31]: hole
++3: [32..47]: extent
++4: [48..55]: hole
++cf845a781c107ec1346e849c9dd1b7e8
++	6. data -> hole
++0: [0..31]: extent
++1: [32..55]: hole
++be0f35d4292a20040766d87883b0abd1
++	7. data -> unwritten
++0: [0..47]: extent
++1: [48..55]: hole
++be0f35d4292a20040766d87883b0abd1
++	8. unwritten -> hole
++0: [0..31]: extent
++1: [32..55]: hole
++cf845a781c107ec1346e849c9dd1b7e8
++	9. unwritten -> data
++0: [0..47]: extent
++1: [48..55]: hole
++adb08a6d94a3b5eff90fdfebb2366d31
++	10. hole -> data -> hole
++0: [0..7]: hole
++1: [8..31]: extent
++2: [32..39]: hole
++3: [40..47]: extent
++4: [48..63]: hole
++0487b3c52810f994c541aa166215375f
++	11. data -> hole -> data
++0: [0..39]: extent
++1: [40..47]: hole
++2: [48..63]: extent
++e3a8d52acc4d91a8ed19d7b6f4f26a71
++	12. unwritten -> data -> unwritten
++0: [0..63]: extent
++0487b3c52810f994c541aa166215375f
++	13. data -> unwritten -> data
++0: [0..63]: extent
++2b22165f4a24a2c36fd05ef00b41df88
++	14. data -> hole @ EOF
++0: [0..55]: extent
++aa0f20d1edcdbce60d8ef82700ba30c3
++	15. data -> hole @ 0
++0: [0..55]: extent
++86c9d033be2761385c9cfa203c426bb2
+diff --git a/tests/generic/group b/tests/generic/group
+index 961f4e5..6ab5618 100644
+--- a/tests/generic/group
++++ b/tests/generic/group
+@@ -29,6 +29,7 @@
+ 024 auto quick
+ 025 auto quick
+ 026 acl quick auto
++027 auto quick prealloc
+ 053 acl repair auto quick
+ 062 attr udf auto quick
+ 068 other auto freeze dangerous stress
 -- 
 1.7.11-rc0
 
