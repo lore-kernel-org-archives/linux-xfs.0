@@ -1,30 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id C425A7F52
-	for <xfs@oss.sgi.com>; Wed,  7 May 2014 18:29:21 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 76A6C7F52
+	for <xfs@oss.sgi.com>; Wed,  7 May 2014 20:13:29 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 54CD7AC003
-	for <xfs@oss.sgi.com>; Wed,  7 May 2014 16:29:18 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id ab8S71IuG5GO9GSL for
-	<xfs@oss.sgi.com>; Wed, 07 May 2014 16:29:17 -0700 (PDT)
-Received: from int-mx14.intmail.prod.int.phx2.redhat.com
-	(int-mx14.intmail.prod.int.phx2.redhat.com [10.5.11.27])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id s47NTGDo027647
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256
-	verify=OK) for <xfs@oss.sgi.com>; Wed, 7 May 2014 19:29:16 -0400
-Received: from liberator.sandeen.net (ovpn01.gateway.prod.ext.phx2.redhat.com
-	[10.5.9.1])
-	by int-mx14.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id s47NTEsN031711
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES128-SHA bits=128 verify=NO)
-	for <xfs@oss.sgi.com>; Wed, 7 May 2014 19:29:16 -0400
-Message-ID: <536AC1CB.8060601@redhat.com>
-Date: Wed, 07 May 2014 18:29:15 -0500
-From: Eric Sandeen <sandeen@redhat.com>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id E319BAC007
+	for <xfs@oss.sgi.com>; Wed,  7 May 2014 18:13:28 -0700 (PDT)
+Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
+	[150.101.137.143]) by cuda.sgi.com with ESMTP id
+	BdtBk9xFz4jHrXjG for <xfs@oss.sgi.com>;
+	Wed, 07 May 2014 18:13:22 -0700 (PDT)
+Date: Thu, 8 May 2014 11:12:56 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [RFC] libxfs kernel infrastructure (was [XFS updates] XFS
+	development tree branch, xfs-libxfs-in-kernel-RFC, created.
+	xfs-for-linus-3.15-rc2-52-g6579dd8)
+Message-ID: <20140508011256.GS5421@dastard>
+References: <20140506071855.F152E7FBC@oss.sgi.com>
+	<20140506075905.GA5421@dastard>
+	<20140507144822.GA4061@bfoster.bfoster>
+	<20140507224755.GR5421@dastard>
 MIME-Version: 1.0
-Subject: [PATCH] xfs_repair: don't unlock prefetch tree to read discontig
-	buffers
+Content-Disposition: inline
+In-Reply-To: <20140507224755.GR5421@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -37,149 +34,160 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs-oss <xfs@oss.sgi.com>
+To: Brian Foster <bfoster@redhat.com>
+Cc: xfs@oss.sgi.com
 
-The way discontiguous buffers are currently handled in
-prefetch is by unlocking the prefetch tree and reading
-them one at a time in pf_read_discontig(), inside the
-normal loop of searching for buffers to read in a more
-optimized fashion.
+On Thu, May 08, 2014 at 08:47:55AM +1000, Dave Chinner wrote:
+> On Wed, May 07, 2014 at 10:48:22AM -0400, Brian Foster wrote:
+> > Note that the Makefile structure between the core and libxfs/ subdir
+> > appears to be busted for module compiles. It attempts to create a
+> > libxfs.ko and doesn't appear to create any real link dependency between
+> > the logical modules:
+> 
+> Ok, I hadn't tested that. I'll look into it.
+> 
+> > ...
+> > WARNING: "__tracepoint_xfs_dir2_sf_create" [fs/xfs/libxfs/libxfs.ko]
+> > undefined!
+> > WARNING: "__tracepoint_xfs_da_root_join" [fs/xfs/libxfs/libxfs.ko]
+> > undefined!
+> > WARNING: "xfs_trans_mod_sb" [fs/xfs/libxfs/libxfs.ko] undefined!
+> > WARNING: "xfs_extent_busy_insert" [fs/xfs/libxfs/libxfs.ko] undefined!
+> > WARNING: "__tracepoint_xfs_dir2_sf_addname" [fs/xfs/libxfs/libxfs.ko]
+> > undefined!
+> 
+> That tends to imply I didn't do the right thing with the tracing,
+> either.
+> 
+> >   CC      fs/xfs/xfs.mod.o
+> >   CC      fs/xfs/libxfs/libxfs.mod.o
+> >   LD [M]  fs/xfs/xfs.ko
+> >   LD [M]  fs/xfs/libxfs/libxfs.ko
+> > 
+> > I played with it a bit but didn't get anywhere without just pulling the
+> > source file dependency up into fs/xfs/Makefile. :/
+> 
+> I'll see what I can dig up.
 
-But by unlocking the tree, we allow other threads to come
-in and find buffers which we've already stashed locally
-on our bplist[].  If 2 threads think they own the same
-set of buffers, they may both try to delete them from
-the prefetch btree, and the second one to arrive will not
-find it, resulting in:
+Well, I can make use of "lib-y" to get around the "libxfs is built
+as a module" problem:
 
-	fatal error -- prefetch corruption
+....
+  CC      fs/xfs/libxfs/xfs_sb.o
+  CC      fs/xfs/libxfs/xfs_symlink_remote.o
+  CC      fs/xfs/libxfs/xfs_trans_resv.o
+  AR      fs/xfs/libxfs/lib.a
 
-Fix this by maintaining 2 lists; the original bplist,
-and a new one containing only discontiguous buffers.
+but then there is the issue of adding it as a link flag to the xfs
+object itself. That involved a bit of a ld hack, but I have it
+compiling as a module now. Patch below.
 
-The original list can be seek-optimized as before,
-and the discontiguous list can be read one by one
-before we do the seek-optimized reads, after all of the
-tree manipulation has been completed.
+Cheers,
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
+
+libxfs: fix modular build
+
+From: Dave Chinner <dchinner@redhat.com>
+
+As reported by Brain Foster:
+
+Note that the Makefile structure between the core and libxfs/ subdir
+appears to be busted for module compiles. It attempts to create a
+libxfs.ko and doesn't appear to create any real link dependency between
+the logical modules:
+
+...
+WARNING: "__tracepoint_xfs_dir2_sf_create" [fs/xfs/libxfs/libxfs.ko]
+undefined!
+WARNING: "__tracepoint_xfs_da_root_join" [fs/xfs/libxfs/libxfs.ko]
+undefined!
+WARNING: "xfs_trans_mod_sb" [fs/xfs/libxfs/libxfs.ko] undefined!
+WARNING: "xfs_extent_busy_insert" [fs/xfs/libxfs/libxfs.ko] undefined!
+WARNING: "__tracepoint_xfs_dir2_sf_addname" [fs/xfs/libxfs/libxfs.ko]
+undefined!
+  CC      fs/xfs/xfs.mod.o
+  CC      fs/xfs/libxfs/libxfs.mod.o
+  LD [M]  fs/xfs/xfs.ko
+  LD [M]  fs/xfs/libxfs/libxfs.ko
+
+Fix it by converting libxfs to be a static library, and hack the
+fs/xfs/xfs.o linker commands to include it directly and so
+completely avoid the need for a libxfs.ko module until we have
+sorted out all the circular dependency issues.
+
+Reported-by: Brian Foster <bfoster@redhat.com>
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
+ fs/xfs/Makefile        | 22 +++++++++++++++++++---
+ fs/xfs/libxfs/Makefile | 12 +++++++-----
+ 2 files changed, 26 insertions(+), 8 deletions(-)
 
-diff --git a/repair/prefetch.c b/repair/prefetch.c
-index 65fedf5..2a8008f 100644
---- a/repair/prefetch.c
-+++ b/repair/prefetch.c
-@@ -444,28 +444,7 @@ pf_read_inode_dirs(
- }
+diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
+index c520bff..726cfaa 100644
+--- a/fs/xfs/Makefile
++++ b/fs/xfs/Makefile
+@@ -20,10 +20,26 @@ ccflags-y += -I$(src)			# needed for trace events
+ ccflags-y += -I$(src)/libxfs		# XXX: temporary!
+ ccflags-y += -I$(src)/libxfs/include	# XXX: temporary!
  
- /*
-- * Discontiguous buffers require multiple IOs to fill, so we can't use any
-- * linearising, hole filling algorithms on them to avoid seeks. Just remove them
-- * for the prefetch queue and read them straight into the cache and release
-- * them.
-- */
--static void
--pf_read_discontig(
--	struct prefetch_args	*args,
--	struct xfs_buf		*bp)
--{
--	if (!btree_delete(args->io_queue, XFS_DADDR_TO_FSB(mp, bp->b_bn)))
--		do_error(_("prefetch corruption\n"));
+-ccflags-$(CONFIG_XFS_DEBUG) += -g
++# libxfs should inheret this as well.
++subdir-ccflags-$(CONFIG_XFS_DEBUG) += -g
+ 
+-obj-$(CONFIG_XFS_FS)		+= xfs.o \
+-				   libxfs/
++# When building as a module, we don't want a separate libxfs.ko,
++# so we specifically have to link the libxfs.o object into the
++# xfs.ko module. Hence we need to tell LD to do this appropriately.
++#ldflags-y += -L$(obj)/libxfs -l:libxfs.o
++#
++# The use of --start-group without --endgroup here is a bit of a hack
++# to avoid needing to use symbol exports and real modules.
++# This works around the fact that ldflags-y is included on the linker command
++# line before all the object files built in this directory, and hence
++# it drops all the unreferenced symbols from libxfs. i.e. all the ones that
++# that xfs.ko module actually requires. The lack of an "--end-group" varaible
++# means LD considers all object files on the command line for recursive object
++# searching and hence solves the specification order problem.
++ldflags-y += --start-group $(obj)/libxfs/lib.a
++
++obj-$(CONFIG_XFS_FS)		+= libxfs/ \
++				   xfs.o
+ 
+ # this one should be compiled first, as the tracing macros can easily blow up
+ xfs-y				+= xfs_trace.o
+diff --git a/fs/xfs/libxfs/Makefile b/fs/xfs/libxfs/Makefile
+index e3de6df..b5f443b 100644
+--- a/fs/xfs/libxfs/Makefile
++++ b/fs/xfs/libxfs/Makefile
+@@ -8,11 +8,13 @@
+ ccflags-y += -I$(src)/..
+ ccflags-y += -I$(src)/include -Werror		# needed for trace events
+ 
+-ccflags-$(CONFIG_XFS_DEBUG) += -g
++# Use the lib-X directives rather than obj-X so that this doesn't get built as a
++# module itself and have unresolvable circular dependencies with the xfs module.
++# This means the xfs module needs to specifically link libxfs/lib.a because we
++# are not adding fs/xfs/libxfs to the libs-y built-in library search
++# directories. A bit hacky, but it seems to work as desired for modular builds.
+ 
+-obj-$(CONFIG_XFS_FS)	+= libxfs.o
 -
--	pthread_mutex_unlock(&args->lock);
--	libxfs_readbufr_map(mp->m_ddev_targp, bp, 0);
--	bp->b_flags |= LIBXFS_B_UNCHECKED;
--	libxfs_putbuf(bp);
--	pthread_mutex_lock(&args->lock);
--}
--
--/*
-- * pf_batch_read must be called with the lock locked.
-+ * pf_batch_read must be called with the args->lock mutex locked.
-  */
- static void
- pf_batch_read(
-@@ -474,7 +453,8 @@ pf_batch_read(
- 	void			*buf)
- {
- 	xfs_buf_t		*bplist[MAX_BUFS];
--	unsigned int		num;
-+	xfs_buf_t		*bplist_disc[MAX_BUFS];
-+	unsigned int		num, num_disc;
- 	off64_t			first_off, last_off, next_off;
- 	int			len, size;
- 	int			i;
-@@ -484,7 +464,7 @@ pf_batch_read(
- 	char			*pbuf;
+-libxfs-y		+= xfs_alloc.o \
++lib-(CONFIG_XFS_FS)	+= xfs_alloc.o \
+ 			   xfs_alloc_btree.o \
+ 			   xfs_attr.o \
+ 			   xfs_attr_leaf.o \
+@@ -38,4 +40,4 @@ libxfs-y		+= xfs_alloc.o \
+ 			   xfs_symlink_remote.o \
+ 			   xfs_trans_resv.o
  
- 	for (;;) {
--		num = 0;
-+		num = num_disc = 0;
- 		if (which == PF_SECONDARY) {
- 			bplist[0] = btree_find(args->io_queue, 0, &fsbno);
- 			max_fsbno = MIN(fsbno + pf_max_fsbs,
-@@ -494,18 +474,22 @@ pf_batch_read(
- 						args->last_bno_read, &fsbno);
- 			max_fsbno = fsbno + pf_max_fsbs;
- 		}
-+
- 		while (bplist[num] && num < MAX_BUFS && fsbno < max_fsbno) {
- 			/*
--			 * Handle discontiguous buffers outside the seek
--			 * optimised IO loop below.
-+ 			 * Discontiguous buffers require multiple IOs to fill,
-+ 			 * so we can't use any linearising, hole filling
-+ 			 * algorithms on them to avoid seeks. Just move them
-+ 			 * to their own list and read them individually later.
- 			 */
- 			if ((bplist[num]->b_flags & LIBXFS_B_DISCONTIG)) {
--				pf_read_discontig(args, bplist[num]);
--				bplist[num] = NULL;
-+				bplist_disc[num_disc] = bplist[num];
-+				num_disc++;
- 			} else if (which != PF_META_ONLY ||
- 				   !B_IS_INODE(XFS_BUF_PRIORITY(bplist[num])))
- 				num++;
--			if (num == MAX_BUFS)
-+
-+			if (num == MAX_BUFS || num_disc == MAX_BUFS)
- 				break;
- 			bplist[num] = btree_lookup_next(args->io_queue, &fsbno);
- 		}
-@@ -541,12 +525,19 @@ pf_batch_read(
- 			num = i;
- 		}
- 
-+		/* Take everything we found out of the tree */
- 		for (i = 0; i < num; i++) {
- 			if (btree_delete(args->io_queue, XFS_DADDR_TO_FSB(mp,
- 					XFS_BUF_ADDR(bplist[i]))) == NULL)
- 				do_error(_("prefetch corruption\n"));
- 		}
- 
-+		for (i = 0; i < num_disc; i++) {
-+			if (btree_delete(args->io_queue, XFS_DADDR_TO_FSB(mp,
-+					XFS_BUF_ADDR(bplist_disc[i]))) == NULL)
-+				do_error(_("prefetch corruption\n"));
-+		}
-+
- 		if (which == PF_PRIMARY) {
- 			for (inode_bufs = 0, i = 0; i < num; i++) {
- 				if (B_IS_INODE(XFS_BUF_PRIORITY(bplist[i])))
-@@ -566,6 +557,12 @@ pf_batch_read(
- #endif
- 		pthread_mutex_unlock(&args->lock);
- 
-+		/* Read discontig buffers individually, if any */
-+		for (i = 0; i < num_disc; i++) {
-+			libxfs_readbufr_map(mp->m_ddev_targp, bplist_disc[i], 0);
-+			bplist_disc[i]->b_flags |= LIBXFS_B_UNCHECKED;
-+			libxfs_putbuf(bplist_disc[i]);
-+		}
- 		/*
- 		 * now read the data and put into the xfs_but_t's
- 		 */
-
+-libxfs-$(CONFIG_XFS_RT)	+= xfs_rtbitmap.o
++lib-$(CONFIG_XFS_RT)	+= xfs_rtbitmap.o
 
 _______________________________________________
 xfs mailing list
