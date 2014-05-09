@@ -1,23 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 3768C7F5D
-	for <xfs@oss.sgi.com>; Thu,  8 May 2014 21:13:26 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 1AD157F5D
+	for <xfs@oss.sgi.com>; Thu,  8 May 2014 21:14:30 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id E5457304043
-	for <xfs@oss.sgi.com>; Thu,  8 May 2014 19:13:22 -0700 (PDT)
-Received: from mx0b-00082601.pphosted.com (mx0b-00082601.pphosted.com
-	[67.231.153.30]) by cuda.sgi.com with ESMTP id VrGAYJsvwoCWhoAg
-	for <xfs@oss.sgi.com>; Thu, 08 May 2014 19:13:18 -0700 (PDT)
-From: Josef Bacik <jbacik@fb.com>
-Subject: Re: [PATCH v2 1/3] xfstests/btrfs: add qgroup rescan stress test
-Date: Fri, 9 May 2014 02:13:01 +0000
-Message-ID: <xmifb9cukl6cxjty7n8malrf.1399601580721@email.android.com>
-References: <1394423051-17356-1-git-send-email-wangsl.fnst@cn.fujitsu.com>
-	<536A9E73.90802@fb.com> <536AFC3B.7070502@cn.fujitsu.com>
-	<536BCDF7.7070404@fb.com>,<536C2C99.6020506@cn.fujitsu.com>
-In-Reply-To: <536C2C99.6020506@cn.fujitsu.com>
-Content-Language: en-US
+	by relay2.corp.sgi.com (Postfix) with ESMTP id C2AC4304043
+	for <xfs@oss.sgi.com>; Thu,  8 May 2014 19:14:29 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id QADrpC64gXE2JHkB for <xfs@oss.sgi.com>;
+	Thu, 08 May 2014 19:14:27 -0700 (PDT)
+Message-ID: <536C3A07.2050100@sandeen.net>
+Date: Thu, 08 May 2014 21:14:31 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
+Subject: Re: [PATCH 1/2] repair: don't unlock prefetch tree to read discontig
+	buffers
+References: <1399598222-4349-1-git-send-email-david@fromorbit.com>
+	<1399598222-4349-2-git-send-email-david@fromorbit.com>
+In-Reply-To: <1399598222-4349-2-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,134 +29,134 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Wang Shilong <wangsl.fnst@cn.fujitsu.com>
-Cc: "linux-btrfs@vger.kernel.org" <linux-btrfs@vger.kernel.org>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: Dave Chinner <david@fromorbit.com>, xfs@oss.sgi.com
 
-The inode cache is saved in the FS tree itself for every individual FS tree, that affects the sizes reported by qgroup show so we need to explicitly turn it off to get consistent values.  Thanks,
+On 5/8/14, 8:17 PM, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> The way discontiguous buffers are currently handled in prefetch is
+> by unlocking the prefetch tree and reading them one at a time in
+> pf_read_discontig(), inside the normal loop of searching for buffers
+> to read in a more optimized fashion.
+> 
+> But by unlocking the tree, we allow other threads to come in and
+> find buffers which we've already stashed locally on our bplist[].
+> If 2 threads think they own the same set of buffers, they may both
+> try to delete them from the prefetch btree, and the second one to
+> arrive will not find it, resulting in:
+> 
+>         fatal error -- prefetch corruption
+> 
+> To fix this, simply abort the buffer gathering loop when we come
+> across a discontiguous buffer, process the gathered list as per
+> normal, and then after running the large optimised read, check to
+> see if the last buffer on the list is a discontiguous buffer.
+> If is is discontiguous, then issue the discontiguous buffer read
+> while the locks are not held. We only ever have one discontiguous
+> buffer per read loop, so it is safe just to check the last buffer in
+> the list.
+> 
+> The fix is loosely based on a a patch provided by Eric Sandeen, who
+> did all the hard work of finding the bug and demonstrating how to
+> fix it.
 
-Josef
+Ok, this makes sense to me.  The comment above the discontig read
+seems a bit confusing; you say it's safe to read while unlocked,
+but I wouldn't have expected it not to be - the lock is just for
+btree manipulation, and that's not being done.  So I think the
+comment adds a little confusion rather than clarification.
 
-Wang Shilong <wangsl.fnst@cn.fujitsu.com> wrote:
+But the code looks fine.
 
+Reviewed-by: Eric Sandeen <sandeen@redhat.com>
 
-On 05/09/2014 02:33 AM, Josef Bacik wrote:
-> On 05/07/2014 11:38 PM, Wang Shilong wrote:
->> On 05/08/2014 04:58 AM, Josef Bacik wrote:
->>> On 03/09/2014 11:44 PM, Wang Shilong wrote:
->>>> Test flow is to run fsstress after triggering quota rescan.
->>>> the ruler is simple, we just remove all files and directories,
->>>> sync filesystem and see if qgroup's ref and excl are nodesize.
->>>>
->>>> Signed-off-by: Wang Shilong <wangsl.fnst@cn.fujitsu.com>
->>>> ---
->>>> v1->v2:
->>>>     switch into new helper _run_btrfs_util_prog()
->>>> ---
->>>>   tests/btrfs/041     | 76
->>>> +++++++++++++++++++++++++++++++++++++++++++++++++++++
->>>>   tests/btrfs/041.out |  3 +++
->>>>   tests/btrfs/group   |  1 +
->>>>   3 files changed, 80 insertions(+)
->>>>   create mode 100644 tests/btrfs/041
->>>>   create mode 100644 tests/btrfs/041.out
->>>>
->>>> diff --git a/tests/btrfs/041 b/tests/btrfs/041
->>>> new file mode 100644
->>>> index 0000000..92bd080
->>>> --- /dev/null
->>>> +++ b/tests/btrfs/041
->>>> @@ -0,0 +1,76 @@
->>>> +#! /bin/bash
->>>> +# FSQA Test No. btrfs/041
->>>> +#
->>>> +# Quota rescan stress test, we run fsstress and quota rescan
->>>> concurrently
->>>> +#
->>>> +#-----------------------------------------------------------------------
->>>>
->>>>
->>>> +# Copyright (C) 2014 Fujitsu.  All rights reserved.
->>>> +#
->>>> +# This program is free software; you can redistribute it and/or
->>>> +# modify it under the terms of the GNU General Public License as
->>>> +# published by the Free Software Foundation.
->>>> +#
->>>> +# This program is distributed in the hope that it would be useful,
->>>> +# but WITHOUT ANY WARRANTY; without even the implied warranty of
->>>> +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
->>>> +# GNU General Public License for more details.
->>>> +#
->>>> +# You should have received a copy of the GNU General Public License
->>>> +# along with this program; if not, write the Free Software
->>>> Foundation,
->>>> +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
->>>> +#
->>>> +#-----------------------------------------------------------------------
->>>>
->>>>
->>>> +#
->>>> +
->>>> +seq=`basename $0`
->>>> +seqres=$RESULT_DIR/$seq
->>>> +echo "QA output created by $seq"
->>>> +
->>>> +here=`pwd`
->>>> +tmp=/tmp/$$
->>>> +status=1
->>>> +
->>>> +_cleanup()
->>>> +{
->>>> +    cd /
->>>> +    rm -f $tmp.*
->>>> +}
->>>> +trap "_cleanup; exit \$status" 0 1 2 3 15
->>>> +
->>>> +# get standard environment, filters and checks
->>>> +. ./common/rc
->>>> +. ./common/filter
->>>> +
->>>> +# real QA test starts here
->>>> +_need_to_be_root
->>>> +_supported_fs btrfs
->>>> +_supported_os Linux
->>>> +_require_scratch
->>>> +
->>>> +rm -f $seqres.full
->>>> +
->>>> +run_check _scratch_mkfs "-b 1g --nodesize 4096"
->>>> +run_check _scratch_mount
->>>> +
->>>
->>> Add "-o nospace_cache" here please, otherwise I don't get the same
->>> output.
->>
->> I am little confused why we need specify this mount option explicitly?
->> As far as i know, space cache is not included into qgroup accounting
->> space.
->>
->
-> It is.  Thanks,
-Free space cache are inserted in tree root, they can not be shared with
-other trees(fs/file tree).
-So normal fs/file tree's qgroup accounting is independeng of free space
-cache.
-
-With or without the option, subvolume qgroup's value should not have any
-differences.
-Did i miss something here?:-)
-
-Thanks,
-Wang
->
-> Josef
->
-> .
->
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-btrfs" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  https://urldefense.proofpoint.com/v1/url?u=http://vger.kernel.org/majordomo-info.html&k=ZVNjlDMF0FElm4dQtryO4A%3D%3D%0A&r=cKCbChRKsMpTX8ybrSkonQ%3D%3D%0A&m=G4HqImi%2Fy7KWWbAvCZf%2Bl8CSV3XzU9ODKrgtdQCTPYQ%3D%0A&s=e27422f119365ab04dddfb06e08c152eec84c4de29e19b6811310607e6a15c99
+> Reported-by:Eric Sandeen <sandeen@redhat.com>
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> ---
+>  repair/prefetch.c | 53 +++++++++++++++++++++++++++--------------------------
+>  1 file changed, 27 insertions(+), 26 deletions(-)
+> 
+> diff --git a/repair/prefetch.c b/repair/prefetch.c
+> index 65fedf5..e269f1f 100644
+> --- a/repair/prefetch.c
+> +++ b/repair/prefetch.c
+> @@ -444,27 +444,6 @@ pf_read_inode_dirs(
+>  }
+>  
+>  /*
+> - * Discontiguous buffers require multiple IOs to fill, so we can't use any
+> - * linearising, hole filling algorithms on them to avoid seeks. Just remove them
+> - * for the prefetch queue and read them straight into the cache and release
+> - * them.
+> - */
+> -static void
+> -pf_read_discontig(
+> -	struct prefetch_args	*args,
+> -	struct xfs_buf		*bp)
+> -{
+> -	if (!btree_delete(args->io_queue, XFS_DADDR_TO_FSB(mp, bp->b_bn)))
+> -		do_error(_("prefetch corruption\n"));
+> -
+> -	pthread_mutex_unlock(&args->lock);
+> -	libxfs_readbufr_map(mp->m_ddev_targp, bp, 0);
+> -	bp->b_flags |= LIBXFS_B_UNCHECKED;
+> -	libxfs_putbuf(bp);
+> -	pthread_mutex_lock(&args->lock);
+> -}
+> -
+> -/*
+>   * pf_batch_read must be called with the lock locked.
+>   */
+>  static void
+> @@ -496,13 +475,19 @@ pf_batch_read(
+>  		}
+>  		while (bplist[num] && num < MAX_BUFS && fsbno < max_fsbno) {
+>  			/*
+> -			 * Handle discontiguous buffers outside the seek
+> -			 * optimised IO loop below.
+> +			 * Discontiguous buffers need special handling, so stop
+> +			 * gathering new buffers and process the list and this
+> +			 * discontigous buffer immediately. This avoids the
+> +			 * complexity of keeping a separate discontigous buffer
+> +			 * list and seeking back over ranges we've already done
+> +			 * optimised reads for.
+>  			 */
+>  			if ((bplist[num]->b_flags & LIBXFS_B_DISCONTIG)) {
+> -				pf_read_discontig(args, bplist[num]);
+> -				bplist[num] = NULL;
+> -			} else if (which != PF_META_ONLY ||
+> +				num++;
+> +				break;
+> +			}
+> +
+> +			if (which != PF_META_ONLY ||
+>  				   !B_IS_INODE(XFS_BUF_PRIORITY(bplist[num])))
+>  				num++;
+>  			if (num == MAX_BUFS)
+> @@ -570,6 +555,22 @@ pf_batch_read(
+>  		 * now read the data and put into the xfs_but_t's
+>  		 */
+>  		len = pread64(mp_fd, buf, (int)(last_off - first_off), first_off);
+> +
+> +		/*
+> +		 * Check the last buffer on the list to see if we need to
+> +		 * process a discontiguous buffer. The gather loop guarantees
+> +		 * we only ever have a single discontig buffer on the list,
+> +		 * and that it is the last buffer, so it is safe to do this
+> +		 * check and read here like this while we aren't holding any
+> +		 * locks.
+> +		 */
+> +		if ((bplist[num - 1]->b_flags & LIBXFS_B_DISCONTIG)) {
+> +			libxfs_readbufr_map(mp->m_ddev_targp, bplist[num - 1], 0);
+> +			bplist[num - 1]->b_flags |= LIBXFS_B_UNCHECKED;
+> +			libxfs_putbuf(bplist[num - 1]);
+> +			num--;
+> +		}
+> +
+>  		if (len > 0) {
+>  			/*
+>  			 * go through the xfs_buf_t list copying from the
+> 
 
 _______________________________________________
 xfs mailing list
