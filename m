@@ -1,23 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 3490A7F61
-	for <xfs@oss.sgi.com>; Thu,  8 May 2014 21:47:26 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 36BA97F66
+	for <xfs@oss.sgi.com>; Thu,  8 May 2014 22:01:38 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id EFD6C304043
-	for <xfs@oss.sgi.com>; Thu,  8 May 2014 19:47:25 -0700 (PDT)
-Received: from heian.cn.fujitsu.com (cn.fujitsu.com [59.151.112.132]) by
-	cuda.sgi.com with ESMTP id NynIibG0nDGmlBa9 for
-	<xfs@oss.sgi.com>; Thu, 08 May 2014 19:47:23 -0700 (PDT)
-Message-ID: <536C40E7.5090502@cn.fujitsu.com>
-Date: Fri, 9 May 2014 10:43:51 +0800
-From: Wang Shilong <wangsl.fnst@cn.fujitsu.com>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 246B38F8039
+	for <xfs@oss.sgi.com>; Thu,  8 May 2014 20:01:34 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id wJm8eJ5eKNTebwv4 for <xfs@oss.sgi.com>;
+	Thu, 08 May 2014 20:01:33 -0700 (PDT)
+Message-ID: <536C4511.3050201@sandeen.net>
+Date: Thu, 08 May 2014 22:01:37 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: Re: [PATCH v2 1/3] xfstests/btrfs: add qgroup rescan stress test
-References: <1394423051-17356-1-git-send-email-wangsl.fnst@cn.fujitsu.com>
-	<536A9E73.90802@fb.com> <536AFC3B.7070502@cn.fujitsu.com>
-	<536BCDF7.7070404@fb.com>, <536C2C99.6020506@cn.fujitsu.com>
-	<xmifb9cukl6cxjty7n8malrf.1399601580721@email.android.com>
-In-Reply-To: <xmifb9cukl6cxjty7n8malrf.1399601580721@email.android.com>
+Subject: Re: [PATCH 2/2] repair: don't grind CPUs with large extent lists
+References: <1399598222-4349-1-git-send-email-david@fromorbit.com>
+	<1399598222-4349-3-git-send-email-david@fromorbit.com>
+In-Reply-To: <1399598222-4349-3-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,141 +24,127 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Josef Bacik <jbacik@fb.com>
-Cc: "linux-btrfs@vger.kernel.org" <linux-btrfs@vger.kernel.org>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: Dave Chinner <david@fromorbit.com>, xfs@oss.sgi.com
 
-On 05/09/2014 10:13 AM, Josef Bacik wrote:
-> The inode cache is saved in the FS tree itself for every individual FS tree, that affects the sizes reported by qgroup show so we need to explicitly turn it off to get consistent values.  Thanks,
-Right, so we need turn off inode_cache explicitly rather than free_space 
-option.
-I will fix all your addressed comments and resend the patch.
+On 5/8/14, 8:17 PM, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> When repairing a large filesystem with fragemented files, xfs_repair
+> can grind to a halt burning multiple CPUs in blkmap_set_ext().
+> blkmap_set_ext() inserts extents into the blockmap for the inode
+> fork and it keeps them in order, even if the inserts are not done in
+> order.
+> 
+> The ordered insert is highly inefficient - it starts at the first
+> extent, and simple walks the array to find the insertion point. i.e.
+> it is an O(n) operation. When we have a fragemented file with a
+> large number of extents, the cost of the entire mapping operation
+> is rather costly.
+> 
+> The thing is, we are doing the insertion from an *ordered btree
+> scan* which is inserting the extents in ascending offset order.
+> IOWs, we are always inserting the extent at the end of the array
+> after searching the entire array. i.e. the mapping operation cost is
+> O(N^2).
+> 
+> Fix this simply by reversing the order of the insert slot search.
+> Start at the end of the blockmap array when we do almost all
+> insertions, which brings the overhead of each insertion down to O(1)
+> complexity. This, in turn, results in the overall map building
+> operation being reduced to an O(N) operation, and so performance
+> degrades linearly with increasing extent counts rather than
+> exponentially.
+> 
+> The result is that the test filesystem (27TB, 30M inodes, at ENOSPC)
+> takes 5m10s to *fully repair* on my test system, rather that getting
+> 15 (of 60) AGs into phase three and sitting there burning 3-4 CPUs
+> making no progress for over half an hour.
 
-Thanks,
-Wang
-> Josef
->
-> Wang Shilong<wangsl.fnst@cn.fujitsu.com>  wrote:
->
->
-> On 05/09/2014 02:33 AM, Josef Bacik wrote:
->> On 05/07/2014 11:38 PM, Wang Shilong wrote:
->>> On 05/08/2014 04:58 AM, Josef Bacik wrote:
->>>> On 03/09/2014 11:44 PM, Wang Shilong wrote:
->>>>> Test flow is to run fsstress after triggering quota rescan.
->>>>> the ruler is simple, we just remove all files and directories,
->>>>> sync filesystem and see if qgroup's ref and excl are nodesize.
->>>>>
->>>>> Signed-off-by: Wang Shilong<wangsl.fnst@cn.fujitsu.com>
->>>>> ---
->>>>> v1->v2:
->>>>>      switch into new helper _run_btrfs_util_prog()
->>>>> ---
->>>>>    tests/btrfs/041     | 76
->>>>> +++++++++++++++++++++++++++++++++++++++++++++++++++++
->>>>>    tests/btrfs/041.out |  3 +++
->>>>>    tests/btrfs/group   |  1 +
->>>>>    3 files changed, 80 insertions(+)
->>>>>    create mode 100644 tests/btrfs/041
->>>>>    create mode 100644 tests/btrfs/041.out
->>>>>
->>>>> diff --git a/tests/btrfs/041 b/tests/btrfs/041
->>>>> new file mode 100644
->>>>> index 0000000..92bd080
->>>>> --- /dev/null
->>>>> +++ b/tests/btrfs/041
->>>>> @@ -0,0 +1,76 @@
->>>>> +#! /bin/bash
->>>>> +# FSQA Test No. btrfs/041
->>>>> +#
->>>>> +# Quota rescan stress test, we run fsstress and quota rescan
->>>>> concurrently
->>>>> +#
->>>>> +#-----------------------------------------------------------------------
->>>>>
->>>>>
->>>>> +# Copyright (C) 2014 Fujitsu.  All rights reserved.
->>>>> +#
->>>>> +# This program is free software; you can redistribute it and/or
->>>>> +# modify it under the terms of the GNU General Public License as
->>>>> +# published by the Free Software Foundation.
->>>>> +#
->>>>> +# This program is distributed in the hope that it would be useful,
->>>>> +# but WITHOUT ANY WARRANTY; without even the implied warranty of
->>>>> +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
->>>>> +# GNU General Public License for more details.
->>>>> +#
->>>>> +# You should have received a copy of the GNU General Public License
->>>>> +# along with this program; if not, write the Free Software
->>>>> Foundation,
->>>>> +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
->>>>> +#
->>>>> +#-----------------------------------------------------------------------
->>>>>
->>>>>
->>>>> +#
->>>>> +
->>>>> +seq=`basename $0`
->>>>> +seqres=$RESULT_DIR/$seq
->>>>> +echo "QA output created by $seq"
->>>>> +
->>>>> +here=`pwd`
->>>>> +tmp=/tmp/$$
->>>>> +status=1
->>>>> +
->>>>> +_cleanup()
->>>>> +{
->>>>> +    cd /
->>>>> +    rm -f $tmp.*
->>>>> +}
->>>>> +trap "_cleanup; exit \$status" 0 1 2 3 15
->>>>> +
->>>>> +# get standard environment, filters and checks
->>>>> +. ./common/rc
->>>>> +. ./common/filter
->>>>> +
->>>>> +# real QA test starts here
->>>>> +_need_to_be_root
->>>>> +_supported_fs btrfs
->>>>> +_supported_os Linux
->>>>> +_require_scratch
->>>>> +
->>>>> +rm -f $seqres.full
->>>>> +
->>>>> +run_check _scratch_mkfs "-b 1g --nodesize 4096"
->>>>> +run_check _scratch_mount
->>>>> +
->>>> Add "-o nospace_cache" here please, otherwise I don't get the same
->>>> output.
->>> I am little confused why we need specify this mount option explicitly?
->>> As far as i know, space cache is not included into qgroup accounting
->>> space.
->>>
->> It is.  Thanks,
-> Free space cache are inserted in tree root, they can not be shared with
-> other trees(fs/file tree).
-> So normal fs/file tree's qgroup accounting is independeng of free space
-> cache.
->
-> With or without the option, subvolume qgroup's value should not have any
-> differences.
-> Did i miss something here?:-)
->
-> Thanks,
-> Wang
->> Josef
->>
->> .
->>
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-btrfs" in
-> the body of a message tomajordomo@vger.kernel.org
-> More majordomo info athttps://urldefense.proofpoint.com/v1/url?u=http://vger.kernel.org/majordomo-info.html&k=ZVNjlDMF0FElm4dQtryO4A%3D%3D%0A&r=cKCbChRKsMpTX8ybrSkonQ%3D%3D%0A&m=G4HqImi%2Fy7KWWbAvCZf%2Bl8CSV3XzU9ODKrgtdQCTPYQ%3D%0A&s=e27422f119365ab04dddfb06e08c152eec84c4de29e19b6811310607e6a15c99
-> .
->
+Did the blkmap_grow() changes sneak in here accidentally?
+
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> ---
+>  repair/bmap.c | 36 ++++++++++++++++++++++++++++--------
+>  1 file changed, 28 insertions(+), 8 deletions(-)
+> 
+> diff --git a/repair/bmap.c b/repair/bmap.c
+> index 14161cb..1e913c5 100644
+> --- a/repair/bmap.c
+> +++ b/repair/bmap.c
+> @@ -260,7 +260,15 @@ blkmap_grow(
+>  {
+>  	pthread_key_t	key = dblkmap_key;
+>  	blkmap_t	*new_blkmap;
+> -	int		new_naexts = blkmap->naexts + 4;
+> +	int		new_naexts;
+> +
+> +	/* reduce the number of reallocations for large files */
+> +	if (blkmap->naexts < 1000)
+> +		new_naexts = blkmap->naexts + 4;
+> +	else if (blkmap->naexts < 10000)
+> +		new_naexts = blkmap->naexts + 100;
+> +	else
+> +		new_naexts = blkmap->naexts + 1000;
+>  
+>  	if (pthread_getspecific(key) != blkmap) {
+>  		key = ablkmap_key;
+> @@ -308,7 +316,7 @@ blkmap_set_ext(
+>  	xfs_dfilblks_t	c)
+>  {
+>  	blkmap_t	*blkmap = *blkmapp;
+> -	xfs_extnum_t	i;
+> +	xfs_extnum_t	i = 0;
+
+I wonder if rather than initializing i here...
+
+>  
+>  	if (blkmap->nexts == blkmap->naexts) {
+>  		blkmap = blkmap_grow(blkmap);
+> @@ -318,15 +326,27 @@ blkmap_set_ext(
+>  	}
+>  
+>  	ASSERT(blkmap->nexts < blkmap->naexts);
+> -	for (i = 0; i < blkmap->nexts; i++) {
+> -		if (blkmap->exts[i].startoff > o) {
+> -			memmove(blkmap->exts + i + 1,
+> -				blkmap->exts + i,
+> -				sizeof(bmap_ext_t) * (blkmap->nexts - i));
+> +
+> +	if (blkmap->nexts == 0)
+
+... setting i = 0 here would be a bit more explicit & clear?
+
+> +		goto insert;
+> +
+> +	/*
+> +	 * Do a reverse order search as the most common insertion during
+> +	 * a bmapbt scan is at the end of the map. Use "plus 1" indexing
+> +	 * for the loop counter so when we break out we are at the correct index
+> +	 * for insertion.
+> +	 */
+
+perhaps say why it's most common at the end?
+
+> +	for (i = blkmap->nexts; i > 0; i--) {
+> +		if (blkmap->exts[i - 1].startoff < o)
+>  			break;
+> -		}
+>  	}
+>  
+> +	/* make space for the new extent */
+> +	memmove(blkmap->exts + i + 1,
+> +		blkmap->exts + i,
+> +		sizeof(bmap_ext_t) * (blkmap->nexts - i));
+> +
+> +insert:
+>  	blkmap->exts[i].startoff = o;
+>  	blkmap->exts[i].startblock = b;
+>  	blkmap->exts[i].blockcount = c;
+> 
 
 _______________________________________________
 xfs mailing list
