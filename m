@@ -1,21 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id EA5D77F51
-	for <xfs@oss.sgi.com>; Fri,  9 May 2014 00:44:11 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id F24EF8F804B
-	for <xfs@oss.sgi.com>; Thu,  8 May 2014 22:44:11 -0700 (PDT)
-Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
-	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	8oNkwuIhcBAiTgEF for <xfs@oss.sgi.com>;
-	Thu, 08 May 2014 22:44:06 -0700 (PDT)
-Received: from dave by dastard with local (Exim 4.80)
-	(envelope-from <david@fromorbit.com>) id 1WidbF-0004ru-Id
-	for xfs@oss.sgi.com; Fri, 09 May 2014 15:44:01 +1000
-Date: Fri, 9 May 2014 15:44:01 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: [ANNOUNCE] xfsprogs: v3.2.0-rc3 released
-Message-ID: <20140509054401.GK26353@dastard>
+	by oss.sgi.com (Postfix) with ESMTP id D73B57F51
+	for <xfs@oss.sgi.com>; Fri,  9 May 2014 01:06:09 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id E7C2B8F8039
+	for <xfs@oss.sgi.com>; Thu,  8 May 2014 23:06:06 -0700 (PDT)
+Received: from heian.cn.fujitsu.com (cn.fujitsu.com [59.151.112.132]) by
+	cuda.sgi.com with ESMTP id FwffbbB72kq2fiyJ for
+	<xfs@oss.sgi.com>; Thu, 08 May 2014 23:06:01 -0700 (PDT)
+From: Wang Shilong <wangsl.fnst@cn.fujitsu.com>
+Subject: [PATCH v3] xfstests/btrfs: add qgroup rescan stress test
+Date: Fri, 9 May 2014 14:02:23 +0800
+Message-ID: <1399615343-28544-1-git-send-email-wangsl.fnst@cn.fujitsu.com>
+In-Reply-To: <1394423051-17356-1-git-send-email-wangsl.fnst@cn.fujitsu.com>
+References: <1394423051-17356-1-git-send-email-wangsl.fnst@cn.fujitsu.com>
 MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -25,107 +23,142 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============5217050490464744550=="
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
+Cc: jbacik@fb.com, linux-btrfs@vger.kernel.org
 
+Test flow is to run fsstress after triggering quota rescan.
+the ruler is simple, we just remove all files and directories,
+sync filesystem and see if qgroup's ref and excl are nodesize.
 
---===============5217050490464744550==
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="XvKFcGCOAo53UbWW"
-Content-Disposition: inline
+Signed-off-by: Wang Shilong <wangsl.fnst@cn.fujitsu.com>
+---
+v2->v3: addressed comments from josef:
+	- remove unnecessary redirections
+	- don't use _run_btrfs_util_prog() when capturing qgroup show output.
+	- turn off inode_cache mount option explicitly.
 
+v1->v2: switch to _run_btrfs_util_prog()
+---
+ tests/btrfs/050     | 81 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/btrfs/050.out |  3 ++
+ tests/btrfs/group   |  1 +
+ 3 files changed, 85 insertions(+)
+ create mode 100644 tests/btrfs/050
+ create mode 100644 tests/btrfs/050.out
 
---XvKFcGCOAo53UbWW
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-
-Hi folks,
-
-The xfsprogs repository at git://oss.sgi.com/xfs/cmds/xfsprogs has
-just been updated.
-
-The new head of the master branch is commit:
-
-593dbdd xfsprogs: v3.2.0-rc3 release
-
-This will hopefully be the last release candidate for 3.2.0. This
-update fixes a coupel of build warnings, updates the Debian package
-changelogs for the release, fixes an xfs_repair regression and a
-xfs_repair scalability issue exposed by files with hundreds of
-thousands of extents.
-
-The repository has been tagged (v3.2.0-rc3) and a tarball has been
-uploaded to ftp://oss.sgi.com/projects/xfs/cmd_tars/ so you can pull
-down the source whicever way you want.
-
-Please test!
-
--Dave.
-
-Commits since v3.2.0-rc2:
-
-Dave Chinner (3):
-      [bbd3275] repair: don't unlock prefetch tree to read discontig buffers
-      [bb9ca6c] repair: don't grind CPUs with large extent lists
-      [593dbdd] xfsprogs: v3.2.0-rc3 release
-
-Nathan Scott (3):
-      [b47c8ca] Fix 32 bit build warning in libxfs, xfs_daddr_t printing
-      [ce5da12] Fix msgfmt warning when building the German translation
-      [75b480d] Update debian changelog in preparation for pending release
-
-
-Code Diffstat:
-
- VERSION           |  2 +-
- debian/changelog  |  7 +++++++
- doc/CHANGES       |  7 +++++++
- libxfs/rdwr.c     |  5 +++--
- po/de.po          |  1 +
- repair/bmap.c     | 40 +++++++++++++++++++++++++++++++++-------
- repair/prefetch.c | 51 +++++++++++++++++++++++++--------------------------
- 7 files changed, 77 insertions(+), 36 deletions(-)
---=20
-Dave Chinner
-david@fromorbit.com
-
---XvKFcGCOAo53UbWW
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
-
-iQIcBAEBAgAGBQJTbGsgAAoJEK3oKUf0dfodql0P/2XFmUtpOKDWAxmds3FR5Yva
-KT+oBRx4Ot4ZcvKA9bzdEjxCs2dgn/6tvwwUJ9u/DqELR6bX1/Mll5XYc10L97Mp
-ewGkleYfA5tzj5el7jnKTofXq5od00rXl9/gvXli/NeKKtjeRg49T6YGkg7lK9VH
-6kaKByW5rwDoiHOxCeo9i/5+HgoNO3macS5zYym2keCVXXARX7ny/h8F4qg4hcQW
-H1hX+TKCo9G0oGtde9jGs4UURT3V51OJNBzonTpxo8qOjTIM7UNkcQUo0bZmz01a
-GFtmwX1ub8o5/uqwHoVIHNf6oyWVCSQaqdgtSh5WLeQphdLVO57mhT2LeYTHegSL
-reAudgFGU/eVyUHw1YmFwHHehcGP3UfqBzhMnSsZPrsJTgKavBWbxN4nCEzWOA4/
-EruZPWnVoOgziaYXSKLElYaKMFwlygUWH7t5+j8JccEPHQEka/JZNniX3+kXL9gi
-HWj3CJxBxaIXdCZn42KTSR25MPEi7mRQ+RVbZ4uE1oHHt00NeKoL1zhRoj7TRZgE
-F+lA63m91x3d7sqreVvRrMPAmcyYtyvyNZMJFpvXMlg3i9w+JOJy/0XicuFDgfKf
-3pW0hQK43L4rX0Et7BrHdrMXXtTYHw+wmGQWvpJxm2IDo97+7I62goCB4b4kD8zZ
-icw4aNxkBJij9C0UIwD1
-=p6bi
------END PGP SIGNATURE-----
-
---XvKFcGCOAo53UbWW--
-
-
---===============5217050490464744550==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+diff --git a/tests/btrfs/050 b/tests/btrfs/050
+new file mode 100644
+index 0000000..81d953a
+--- /dev/null
++++ b/tests/btrfs/050
+@@ -0,0 +1,81 @@
++#! /bin/bash
++# FSQA Test No. btrfs/050
++#
++# Quota rescan stress test, we run fsstress and quota rescan concurrently
++#
++#-----------------------------------------------------------------------
++# Copyright (C) 2014 Fujitsu.  All rights reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#
++#-----------------------------------------------------------------------
++#
++
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1
++
++_cleanup()
++{
++	cd /
++	rm -f $tmp.*
++}
++trap "_cleanup; exit \$status" 0 1 2 3 15
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++
++# real QA test starts here
++_need_to_be_root
++_supported_fs btrfs
++_supported_os Linux
++_require_scratch
++
++rm -f $seqres.full
++
++# use small leaf size to get higher btree height.
++run_check _scratch_mkfs "-b 1g --nodesize 4096"
++
++# inode cache is saved in the FS tree itself for every
++# individual FS tree,that affects the sizes reported by qgroup show
++# so we need to explicitly turn it off to get consistent values.
++run_check _scratch_mount "-o noinode_cache"
++
++# -w ensures that the only ops are ones which cause write I/O
++run_check $FSSTRESS_PROG -d $SCRATCH_MNT -w -p 5 -n 1000 \
++		$FSSTRESS_AVOID >&/dev/null
++
++_run_btrfs_util_prog subvolume snapshot $SCRATCH_MNT \
++	$SCRATCH_MNT/snap1
++
++run_check $FSSTRESS_PROG -d $SCRATCH_MNT/snap1 -w -p 5 -n 1000 \
++       $FSSTRESS_AVOID >&/dev/null
++
++_run_btrfs_util_prog quota enable $SCRATCH_MNT
++_run_btrfs_util_prog quota rescan -w $SCRATCH_MNT
++
++# ignore removing subvolume errors
++rm -rf $SCRATCH_MNT/* >& /dev/null
++
++_run_btrfs_util_prog filesystem sync $SCRATCH_MNT
++$BTRFS_UTIL_PROG qgroup show $SCRATCH_MNT | $SED_PROG -n '/[0-9]/p' \
++	| $AWK_PROG '{print $2" "$3}'
++
++status=0
++exit
+diff --git a/tests/btrfs/050.out b/tests/btrfs/050.out
+new file mode 100644
+index 0000000..a388160
+--- /dev/null
++++ b/tests/btrfs/050.out
+@@ -0,0 +1,3 @@
++QA output created by 050
++4096 4096
++4096 4096
+diff --git a/tests/btrfs/group b/tests/btrfs/group
+index 59b0c98..ee3e8a5 100644
+--- a/tests/btrfs/group
++++ b/tests/btrfs/group
+@@ -52,3 +52,4 @@
+ 047 auto quick
+ 048 auto quick
+ 049 auto quick
++050 auto quick
+-- 
+1.9.0
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============5217050490464744550==--
