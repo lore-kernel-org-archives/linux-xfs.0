@@ -1,19 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 97DD429DFA
-	for <xfs@oss.sgi.com>; Mon, 12 May 2014 12:52:30 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 0B3D229E00
+	for <xfs@oss.sgi.com>; Mon, 12 May 2014 12:52:36 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 7D7DA8F8039
-	for <xfs@oss.sgi.com>; Mon, 12 May 2014 10:52:27 -0700 (PDT)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 77FFFAC001
+	for <xfs@oss.sgi.com>; Mon, 12 May 2014 10:52:35 -0700 (PDT)
 Received: from b.mx.filmlight.ltd.uk (b.mx.filmlight.ltd.uk [77.107.81.251])
-	by cuda.sgi.com with SMTP id fdfzAZK0EEYZ2DJO for
-	<xfs@oss.sgi.com>; Mon, 12 May 2014 10:52:25 -0700 (PDT)
+	by cuda.sgi.com with SMTP id ri3SELeFosFrmP3Q for
+	<xfs@oss.sgi.com>; Mon, 12 May 2014 10:52:33 -0700 (PDT)
 Mime-Version: 1.0 (Mac OS X Mail 6.6 \(1510\))
-Subject: Re: 'delete' parameter in xfs_ialloc.h
+Subject: [PATCH] xfs: fix compile error when libxfs header used in C++ code
 From: Roger Willcocks <roger@filmlight.ltd.uk>
 In-Reply-To: <5370E964.50805@sandeen.net>
-Date: Mon, 12 May 2014 18:52:25 +0100
-Message-Id: <949AF4F7-F45E-49EF-AE32-D2A6F1FE6338@filmlight.ltd.uk>
+Date: Mon, 12 May 2014 18:52:34 +0100
+Message-Id: <3EEEF4AD-A192-4A5B-A81A-5FC38F5CF95F@filmlight.ltd.uk>
 References: <1399908138.4857.28.camel@montana.filmlight.ltd.uk>
 	<5370E964.50805@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -31,45 +31,68 @@ Sender: xfs-bounces@oss.sgi.com
 To: Eric Sandeen <sandeen@sandeen.net>
 Cc: Roger Willcocks <roger@filmlight.ltd.uk>, xfs@oss.sgi.com
 
+xfs_ialloc.h:102: error: expected =91,=92 or =91...=92 before =91delete'
 
-On 12 May 2014, at 16:31, Eric Sandeen <sandeen@sandeen.net> wrote:
+Simple parameter rename, no changes to behaviour.
 
-> On 5/12/14, 10:22 AM, Roger Willcocks wrote:
->> Hi folks,
->> =
+Signed-off-by: Roger Willcocks <roger@filmlight.ltd.uk>
+---
+ fs/xfs/xfs_ialloc.c |    6 +++---
+ fs/xfs/xfs_ialloc.h |    2 +-
+ 2 files changed, 4 insertions(+), 4 deletions(-)
 
->> I have to fix this up every time I update xfsprogs -
->> =
+diff --git a/fs/xfs/xfs_ialloc.c b/fs/xfs/xfs_ialloc.c
+index 8f711db..b819263 100644
+--- a/fs/xfs/xfs_ialloc.c
++++ b/fs/xfs/xfs_ialloc.c
+@@ -1109,7 +1109,7 @@ xfs_difree(
+ 	xfs_trans_t	*tp,		/* transaction pointer */
+ 	xfs_ino_t	inode,		/* inode to be freed */
+ 	xfs_bmap_free_t	*flist,		/* extents to free */
+-	int		*delete,	/* set if inode cluster was deleted */
++	int		*deleted,	/* set if inode cluster was deleted */
+ 	xfs_ino_t	*first_ino)	/* first inode in deleted cluster */
+ {
+ 	/* REFERENCED */
+@@ -1209,7 +1209,7 @@ xfs_difree(
+ 	if (!(mp->m_flags & XFS_MOUNT_IKEEP) &&
+ 	    (rec.ir_freecount =3D=3D mp->m_ialloc_inos)) {
+ =
 
->> The 'delete' parameter in xfsprogs/include/xfs_ialloc.c:xfs_difree(...)
->> causes a compile error if the header's included in C++ code (even with
->> 'extern "C"') -
->> =
+-		*delete =3D 1;
++		*deleted =3D 1;
+ 		*first_ino =3D XFS_AGINO_TO_INO(mp, agno, rec.ir_startino);
+ =
 
->> xfs_ialloc.h:102: error: expected =91,=92 or =91...=92 before =91delete=
-=92
->> =
+ 		/*
+@@ -1237,7 +1237,7 @@ xfs_difree(
+ 				  XFS_AGINO_TO_AGBNO(mp, rec.ir_startino)),
+ 				  mp->m_ialloc_blks, flist, mp);
+ 	} else {
+-		*delete =3D 0;
++		*deleted =3D 0;
+ =
 
->> (gcc 4.4.7)
->> =
+ 		error =3D xfs_inobt_update(cur, &rec);
+ 		if (error) {
+diff --git a/fs/xfs/xfs_ialloc.h b/fs/xfs/xfs_ialloc.h
+index 812365d..95ad1c0 100644
+--- a/fs/xfs/xfs_ialloc.h
++++ b/fs/xfs/xfs_ialloc.h
+@@ -90,7 +90,7 @@ xfs_difree(
+ 	struct xfs_trans *tp,		/* transaction pointer */
+ 	xfs_ino_t	inode,		/* inode to be freed */
+ 	struct xfs_bmap_free *flist,	/* extents to free */
+-	int		*delete,	/* set if inode cluster was deleted */
++	int		*deleted,	/* set if inode cluster was deleted */
+ 	xfs_ino_t	*first_ino);	/* first inode in deleted cluster */
+ =
 
->> It would be handy if the parameter name could be commented out or
->> changed in the header.
->> =
+ /*
+-- =
 
-> =
+1.7.1
 
-> Send a patch?  Would need to hit kernel code too.
-> =
-
-> -Eric
-> =
-
-
-Okay, two near-identical patches, one for xfsprogs and one for xfs follow.
-
---
-Roger
 
 _______________________________________________
 xfs mailing list
