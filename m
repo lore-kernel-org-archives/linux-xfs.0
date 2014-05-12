@@ -1,25 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 08B397F3F
-	for <xfs@oss.sgi.com>; Mon, 12 May 2014 07:42:43 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 87C37AC006
-	for <xfs@oss.sgi.com>; Mon, 12 May 2014 05:42:40 -0700 (PDT)
-Received: from imap.thunk.org (imap.thunk.org [74.207.234.97]) by cuda.sgi.com
-	with ESMTP id SPx5vfTKrit4ROvu (version=TLSv1 cipher=AES128-SHA
-	bits=128 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 12 May 2014 05:42:35 -0700 (PDT)
-Date: Mon, 12 May 2014 08:42:32 -0400
-From: Theodore Ts'o <tytso@mit.edu>
-Subject: Re: [PATCH -v2] check: add support for an external file containing
-	tests to exclude
-Message-ID: <20140512124232.GB31376@thunk.org>
-References: <20140416001530.GU15995@dastard>
-	<1397624302-9577-1-git-send-email-tytso@mit.edu>
-	<20140416064018.GJ15995@dastard>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20140416064018.GJ15995@dastard>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 4C1487F3F
+	for <xfs@oss.sgi.com>; Mon, 12 May 2014 07:46:49 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 3371D8F8037
+	for <xfs@oss.sgi.com>; Mon, 12 May 2014 05:46:45 -0700 (PDT)
+Received: from mail-qc0-f173.google.com (mail-qc0-f173.google.com
+	[209.85.216.173]) by cuda.sgi.com with ESMTP id
+	J6IAstoSZiuPJw9t (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Mon, 12 May 2014 05:46:43 -0700 (PDT)
+Received: by mail-qc0-f173.google.com with SMTP id i8so7722908qcq.32
+	for <xfs@oss.sgi.com>; Mon, 12 May 2014 05:46:42 -0700 (PDT)
+Received: from tlielax.poochiereds.net ([2001:470:8:d63:3a60:77ff:fe93:a95d])
+	by mx.google.com with ESMTPSA id
+	q33sm7141551qgq.27.2014.05.12.05.46.41 for <xfs@oss.sgi.com>
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+	Mon, 12 May 2014 05:46:41 -0700 (PDT)
+From: Jeff Layton <jlayton@poochiereds.net>
+Subject: [xfstests PATCH] loggen: remove deprecated header includes and add
+	definition for XFS_TRANS_MAGIC
+Date: Mon, 12 May 2014 08:46:35 -0400
+Message-Id: <1399898795-12967-1-git-send-email-jlayton@poochiereds.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,45 +30,52 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Ext4 Developers List <linux-ext4@vger.kernel.org>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Wed, Apr 16, 2014 at 04:40:18PM +1000, Dave Chinner wrote:
-> On Wed, Apr 16, 2014 at 12:58:22AM -0400, Theodore Ts'o wrote:
-> > Currently the -X option is intended to specify a set of expunging
-> > files which are stored in each test/* subdirectory.  As described in
-> > the commit description for 0b1e8abd4, in order to exclude the test
-> > generic/280, the -X option is used as follows:
-> > 
-> >     $ cat tests/generic/3.0-stable-avoid
-> >     280
-> >     $ sudo ./check -X 3.0-stable-avoid generic/280
-> > 
-> > However, it is sometimes useful to store the set of expunged tests in
-> > a single file, outside of tests/* subdirectories.  This commit enables
-> > the following:
-> > 
-> >     $ cat /root/conf/data_journal.exclude
-> >     generic/068
-> >     ext4/301
-> >     $ sudo ./check -E /root/conf/data_journal.exclude -g auto
-> > 
-> > Signed-off-by: "Theodore Ts'o" <tytso@mit.edu>
-> 
-> Looks good.
-> 
-> Reviewed-by: Dave Chinner <dchinner@redhat.com>
+xfstests was failing to build on my rawhide box. The problem was that
+some of the headers included by loggen.c no longer exist in current
+releases. This just removes those includes and adds a conditional
+definition of XFS_TRANS_MAGIC.
 
-This patch has apparently not hit the xfstests repository.  Would you
-like me to resend it?
+It may make more sense to just move XFS_TRANS_MAGIC to a different
+header, but this seems to work on both f20 and rawhide boxes.
 
-Thanks,
+Signed-off-by: Jeff Layton <jlayton@poochiereds.net>
+---
+ src/loggen.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
-						- Ted
+diff --git a/src/loggen.c b/src/loggen.c
+index 522c9178ee26..1740732249b6 100644
+--- a/src/loggen.c
++++ b/src/loggen.c
+@@ -26,8 +26,6 @@
+  */
+ 
+ #include <xfs/libxfs.h>
+-#include <xfs/xfs_log.h>
+-#include <xfs/xfs_log_priv.h>
+ 
+ #ifndef ASSIGN_ANY_LSN_DISK
+ #define ASSIGN_ANY_LSN_DISK(lsn,cycle,block)  \
+@@ -37,6 +35,10 @@
+     }
+ #endif
+ 
++#ifndef XFS_TRANS_MAGIC
++#define	XFS_TRANS_MAGIC		0x5452414E	/* 'TRAN' */
++#endif
++
+ void
+ usage(void)
+ {
+-- 
+1.9.0
 
 _______________________________________________
 xfs mailing list
