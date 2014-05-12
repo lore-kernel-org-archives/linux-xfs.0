@@ -1,20 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id C75927F3F
-	for <xfs@oss.sgi.com>; Mon, 12 May 2014 09:13:51 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id BF2F9304053
-	for <xfs@oss.sgi.com>; Mon, 12 May 2014 07:13:48 -0700 (PDT)
-Received: from smtp2-g21.free.fr (smtp2-g21.free.fr [212.27.42.2]) by
-	cuda.sgi.com with ESMTP id DOXrsesJbs4FukDI for
-	<xfs@oss.sgi.com>; Mon, 12 May 2014 07:13:47 -0700 (PDT)
-Date: Mon, 12 May 2014 16:13:40 +0200
-From: Emmanuel Florac <eflorac@intellique.com>
+	by oss.sgi.com (Postfix) with ESMTP id DEF1C7F3F
+	for <xfs@oss.sgi.com>; Mon, 12 May 2014 09:20:32 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id B79A2304051
+	for <xfs@oss.sgi.com>; Mon, 12 May 2014 07:20:32 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id yIZeVjQ6jFhQ3IhA for <xfs@oss.sgi.com>;
+	Mon, 12 May 2014 07:20:24 -0700 (PDT)
+Message-ID: <5370D8AA.2010003@sandeen.net>
+Date: Mon, 12 May 2014 09:20:26 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
+MIME-Version: 1.0
 Subject: Re: xfs spanning over ssd and hdd
-Message-ID: <20140512161340.272a8e21@galadriel.home>
-In-Reply-To: <5370C592.6080402@web.de>
 References: <5370C592.6080402@web.de>
-Mime-Version: 1.0
+In-Reply-To: <5370C592.6080402@web.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,25 +23,37 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Matthias Neuer <mneuer@web.de>
-Cc: xfs@oss.sgi.com
+To: Matthias Neuer <mneuer@web.de>, xfs@oss.sgi.com
 
-TGUgTW9uLCAxMiBNYXkgMjAxNCAxNDo1ODo1OCArMDIwMCB2b3VzIMOpY3JpdmllejoKCj4gSSBo
-YXZlIGEgc2xvdyBhbmQgYmlnIGhkZCBhbmQgYSBmYXN0IGJ1dCBzbWFsbCBzc2QgYW5kIHdhbnQg
-dG8gdGVzdAo+IHRoZSBmb2xsb3dpbmcgc2V0dXAgYnV0IGRvbid0IGtub3cgaWYgaXQncyBwb3Nz
-aWJsZS4KClRoaXMgZG9lc24ndCBtYWtlIG11Y2ggc2Vuc2UuIElmIHlvdSB3YW50IHRvIHNwZWVk
-IHVwIHlvdXIgSEREIGJ5CnVzaW5nIHRoZSBTU0QgYXMgYSBjYWNoZSwgeW91IGNhbiBzZXQgdXAg
-b25lIG9mIHRoZSBudW1lcm91cwpibG9jay1jYWNoZSBzeXN0ZW1zIGF2YWlsYWJsZSBmb3IgTGlu
-dXg6IGJjYWNoZSwgZW5oYW5jZSBJTywKRmxhc2hDYWNoZS4uLgoKLS0gCi0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LQpFbW1hbnVlbCBGbG9yYWMgICAgIHwgICBEaXJlY3Rpb24gdGVjaG5pcXVlCiAgICAgICAgICAg
-ICAgICAgICAgfCAgIEludGVsbGlxdWUKICAgICAgICAgICAgICAgICAgICB8CTxlZmxvcmFjQGlu
-dGVsbGlxdWUuY29tPgogICAgICAgICAgICAgICAgICAgIHwgICArMzMgMSA3OCA5NCA4NCAwMgot
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0KCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNv
-bS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
+On 5/12/14, 7:58 AM, Matthias Neuer wrote:
+> Hi.
+> 
+> I have a slow and big hdd and a fast but small ssd and want to test the following setup but don't know if it's possible.
+> 
+> Use LVM to concatenate the ssd and the hdd linearly. Create a xfs filesystem on this device such that the sdd is filled first, i.e. data is written to the ssd as long as there is free space, otherwise the data is written to the hdd.
+> 
+> I have applications which may benefit from this setup but I am not sure so I need to do some benchmarks.
+
+XFS doesn't fill from the front, so you can't configure things to fill the HDD first.
+
+Files in new directories rotor around the allocation groups on the filesystem, so all regions of the fs are filled more or less evenly.
+
+-Eric
+
+> Thanks for your help
+> Matthias
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+> 
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
