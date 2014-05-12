@@ -1,20 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id DEF1C7F3F
-	for <xfs@oss.sgi.com>; Mon, 12 May 2014 09:20:32 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id B79A2304051
-	for <xfs@oss.sgi.com>; Mon, 12 May 2014 07:20:32 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id yIZeVjQ6jFhQ3IhA for <xfs@oss.sgi.com>;
-	Mon, 12 May 2014 07:20:24 -0700 (PDT)
-Message-ID: <5370D8AA.2010003@sandeen.net>
-Date: Mon, 12 May 2014 09:20:26 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
-MIME-Version: 1.0
-Subject: Re: xfs spanning over ssd and hdd
-References: <5370C592.6080402@web.de>
-In-Reply-To: <5370C592.6080402@web.de>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id EF5097F3F
+	for <xfs@oss.sgi.com>; Mon, 12 May 2014 10:06:45 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id DEE318F804B
+	for <xfs@oss.sgi.com>; Mon, 12 May 2014 08:06:45 -0700 (PDT)
+Received: from mail-qa0-f53.google.com (mail-qa0-f53.google.com
+	[209.85.216.53]) by cuda.sgi.com with ESMTP id If5sAHWSk7qMAqAP
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Mon, 12 May 2014 08:06:41 -0700 (PDT)
+Received: by mail-qa0-f53.google.com with SMTP id ih12so7093479qab.40
+	for <xfs@oss.sgi.com>; Mon, 12 May 2014 08:06:41 -0700 (PDT)
+Received: from tlielax.poochiereds.net ([2001:470:8:d63:3a60:77ff:fe93:a95d])
+	by mx.google.com with ESMTPSA id
+	r15sm10025356qgr.15.2014.05.12.08.06.39 for <xfs@oss.sgi.com>
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+	Mon, 12 May 2014 08:06:40 -0700 (PDT)
+From: Jeff Layton <jlayton@poochiereds.net>
+Subject: [xfstests PATCH 0/4] locktest: cleanup, bugfixes,
+	and add new locking test
+Date: Mon, 12 May 2014 11:06:29 -0400
+Message-Id: <1399907193-23857-1-git-send-email-jlayton@poochiereds.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,35 +29,33 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Matthias Neuer <mneuer@web.de>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On 5/12/14, 7:58 AM, Matthias Neuer wrote:
-> Hi.
-> 
-> I have a slow and big hdd and a fast but small ssd and want to test the following setup but don't know if it's possible.
-> 
-> Use LVM to concatenate the ssd and the hdd linearly. Create a xfs filesystem on this device such that the sdd is filled first, i.e. data is written to the ssd as long as there is free space, otherwise the data is written to the hdd.
-> 
-> I have applications which may benefit from this setup but I am not sure so I need to do some benchmarks.
+This patchset does some general cleanup of the locktest binary, adds
+some infrastructure to allow testing F_GETLK requests, and adds a new
+F_GETLK test to the pile.
 
-XFS doesn't fill from the front, so you can't configure things to fill the HDD first.
+The main impetus here is a regression that I caused in F_GETLK handling
+for v3.15. The patch is making its way to Linus now, but I want to be
+sure that it doesn't regress in the future.
 
-Files in new directories rotor around the allocation groups on the filesystem, so all regions of the fs are filled more or less evenly.
+Jeff Layton (4):
+  locktest: don't assume that F_OPEN should use O_RDWR
+  locktest: set f_fd to INVALID_HANDLE on close
+  locktest: consolidate do_lock and do_unlock, and add ability to
+    F_GETLK
+  locktest: add a F_GETLK vs. openmode test
 
--Eric
+ src/locktest.c | 125 ++++++++++++++++++++++++++-------------------------------
+ 1 file changed, 56 insertions(+), 69 deletions(-)
 
-> Thanks for your help
-> Matthias
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
-> 
+-- 
+1.9.0
 
 _______________________________________________
 xfs mailing list
