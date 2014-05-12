@@ -1,26 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 30D397F3F
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id B8AB27F53
 	for <xfs@oss.sgi.com>; Mon, 12 May 2014 10:06:47 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 1A37D30405F
-	for <xfs@oss.sgi.com>; Mon, 12 May 2014 08:06:46 -0700 (PDT)
-Received: from mail-qg0-f42.google.com (mail-qg0-f42.google.com
-	[209.85.192.42]) by cuda.sgi.com with ESMTP id EFslaLtW97zdubqX
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 12 May 2014 08:06:45 -0700 (PDT)
-Received: by mail-qg0-f42.google.com with SMTP id q107so7864217qgd.15
+	by relay1.corp.sgi.com (Postfix) with ESMTP id A86308F804B
 	for <xfs@oss.sgi.com>; Mon, 12 May 2014 08:06:44 -0700 (PDT)
+Received: from mail-qa0-f48.google.com (mail-qa0-f48.google.com
+	[209.85.216.48]) by cuda.sgi.com with ESMTP id dZgVbijZSDBQMq0W
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Mon, 12 May 2014 08:06:42 -0700 (PDT)
+Received: by mail-qa0-f48.google.com with SMTP id i13so7229120qae.35
+	for <xfs@oss.sgi.com>; Mon, 12 May 2014 08:06:42 -0700 (PDT)
 Received: from tlielax.poochiereds.net ([2001:470:8:d63:3a60:77ff:fe93:a95d])
 	by mx.google.com with ESMTPSA id
-	r15sm10025356qgr.15.2014.05.12.08.06.43 for <xfs@oss.sgi.com>
+	r15sm10025356qgr.15.2014.05.12.08.06.40 for <xfs@oss.sgi.com>
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-	Mon, 12 May 2014 08:06:44 -0700 (PDT)
+	Mon, 12 May 2014 08:06:41 -0700 (PDT)
 From: Jeff Layton <jlayton@poochiereds.net>
-Subject: [xfstests PATCH 3/4] locktest: consolidate do_lock and do_unlock,
-	and add ability to F_GETLK
-Date: Mon, 12 May 2014 11:06:32 -0400
-Message-Id: <1399907193-23857-4-git-send-email-jlayton@poochiereds.net>
+Subject: [xfstests PATCH 1/4] locktest: don't assume that F_OPEN should use
+	O_RDWR
+Date: Mon, 12 May 2014 11:06:30 -0400
+Message-Id: <1399907193-23857-2-git-send-email-jlayton@poochiereds.net>
 In-Reply-To: <1399907193-23857-1-git-send-email-jlayton@poochiereds.net>
 References: <1399907193-23857-1-git-send-email-jlayton@poochiereds.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -38,150 +38,97 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Eliminate do_unlock as it's just cut-and-paste of do_lock (down to the
-bad stderr fprintf). Fix the debug messages to print the cmd and type,
-and add the ability to do a WRTEST and RDTEST.
+In a later patch, I'll be adding a test for F_GETLK that will require
+that we open the file with a different f_mode. Change do_open not to
+assume that the it needs to open the file O_RDWR.
+
+While we're at it, fix a bug in do_open. Just because we pass in '0' for
+the flags, doesn't mean that this is the initial open.  Move the exit(1)
+for that case to the caller.
 
 Signed-off-by: Jeff Layton <jlayton@poochiereds.net>
 ---
- src/locktest.c | 61 ++++++++++++++++++++++------------------------------------
- 1 file changed, 23 insertions(+), 38 deletions(-)
+ src/locktest.c | 27 +++++++++++++--------------
+ 1 file changed, 13 insertions(+), 14 deletions(-)
 
 diff --git a/src/locktest.c b/src/locktest.c
-index 0a674a7ff5c2..c9cd04ca4a59 100644
+index d6198b6c1f1b..b440a43e3947 100644
 --- a/src/locktest.c
 +++ b/src/locktest.c
-@@ -110,6 +110,8 @@ static int	D_flag = 0;
- #define		UNLOCK	2
- #define		F_CLOSE	3
- #define		F_OPEN	4
-+#define		WRTEST	5
-+#define		RDTEST	6
- 
- #define		PASS 	1
- #define		FAIL	0
-@@ -629,14 +631,14 @@ int do_open(int flag)
-     return PASS;
- }
- 
--int do_lock(int type, int start, int length)
-+static int do_lock(int cmd, int type, int start, int length)
+@@ -73,7 +73,7 @@ extern int h_errno;
+        
+ #define HANDLE              int
+ #define INVALID_HANDLE      -1
+-#define OPEN(N,F)           (open(N, F|O_CREAT|O_RDWR|O_BINARY| \
++#define OPEN(N,F)           (open(N, F|O_CREAT|O_BINARY| \
+                             (D_flag ? O_DIRECT : 0), 0644))
+ #define SEEK(H, O)          (lseek(H, O, SEEK_SET))
+ #define READ(H, B, L)       (read(H, B, L))
+@@ -512,35 +512,35 @@ static int64_t tests[][6] =
+ 		{27,	WRLOCK,	1,		5,		FAIL,		CLIENT,	},
+ 		{27,	F_CLOSE,0,		0,		PASS,		SERVER,	},
+ 		{27,	WRLOCK,	1,		5,		PASS,		CLIENT,	},
+-		{27,	F_OPEN,	0,		0,		PASS,		SERVER,	},
++		{27,	F_OPEN,	O_RDWR,		0,		PASS,		SERVER,	},
+ 		{27,	UNLOCK,	1,		5,		PASS,		CLIENT,	},
+ 	/* Acquire two read locks, close one file and then reopen to check that first lock still exists */
+ 		{28,	RDLOCK,	1,		5,		PASS,		SERVER,	},
+ 		{28,	RDLOCK,	1,		5,		PASS,		CLIENT,	},
+ 		{28,	F_CLOSE,0,		0,		PASS,		SERVER,	},
+-		{28,	F_OPEN,	0,		0,		PASS,		SERVER,	},
++		{28,	F_OPEN,	O_RDWR,		0,		PASS,		SERVER,	},
+ 		{28,	WRLOCK,	0,		0,		FAIL,		SERVER,	},
+ 		{28,	UNLOCK,	1,		5,		PASS,		SERVER,	},
+ #ifdef macosx
+ 	/* Close the opened file and open the file with SHLOCK, other client will try to open with SHLOCK too */
+ 		{29,	F_CLOSE,0,		0,		PASS,		SERVER,	},
+-		{29,	F_OPEN,	O_SHLOCK|O_NONBLOCK,	0,	PASS,		SERVER,	},
++		{29,	F_OPEN,	O_RDWR|O_SHLOCK|O_NONBLOCK,	0,	PASS,		SERVER,	},
+ 		{29,	F_CLOSE,0,		0,		PASS,		CLIENT,	},
+-		{29,	F_OPEN,	O_SHLOCK|O_NONBLOCK,	0,	PASS,		CLIENT,	},
++		{29,	F_OPEN,	O_RDWR|O_SHLOCK|O_NONBLOCK,	0,	PASS,		CLIENT,	},
+ 	/* Close the opened file and open the file with SHLOCK, other client will try to open with EXLOCK */
+ 		{30,	F_CLOSE,0,		0,		PASS,		SERVER,	},
+ 		{30,	F_CLOSE,0,		0,		PASS,		CLIENT,	},
+-		{30,	F_OPEN,	O_SHLOCK|O_NONBLOCK,	0,	PASS,		SERVER,	},
+-		{30,	F_OPEN,	O_EXLOCK|O_NONBLOCK,	0,	FAIL,		CLIENT,	},
++		{30,	F_OPEN,	O_RDWR|O_SHLOCK|O_NONBLOCK,	0,	PASS,		SERVER,	},
++		{30,	F_OPEN,	O_RDWR|O_EXLOCK|O_NONBLOCK,	0,	FAIL,		CLIENT,	},
+ 	/* Close the opened file and open the file with EXLOCK, other client will try to open with EXLOCK too */
+ 		{31,	F_CLOSE,0,		0,		PASS,		SERVER,	},
+ 		{31,	F_CLOSE,0,		0,		FAIL,		CLIENT,	},
+-		{31,	F_OPEN,	O_EXLOCK|O_NONBLOCK,	0,	PASS,		SERVER,	},
+-		{31,	F_OPEN,	O_EXLOCK|O_NONBLOCK,	0,	FAIL,		CLIENT,	},
++		{31,	F_OPEN,	O_RDWR|O_EXLOCK|O_NONBLOCK,	0,	PASS,		SERVER,	},
++		{31,	F_OPEN,	O_RDWR|O_EXLOCK|O_NONBLOCK,	0,	FAIL,		CLIENT,	},
+ 		{31,	F_CLOSE,0,		0,		PASS,		SERVER,	},
+ 		{31,	F_CLOSE,0,		0,		FAIL,		CLIENT,	},
+-		{31,	F_OPEN,	0,		0,		PASS,		SERVER,	},
+-		{31,	F_OPEN,	0,		0,		PASS,		CLIENT,	},
++		{31,	F_OPEN,	O_RDWR,		0,		PASS,		SERVER,	},
++		{31,	F_OPEN,	O_RDWR,		0,		PASS,		CLIENT,	},
+ #endif /* macosx */
+ 	/* indicate end of array */
+ 		{0,0,0,0,0,SERVER},
+@@ -615,8 +615,6 @@ int do_open(int flag)
  {
-     int ret;
-     int filedes = f_fd;
-     struct flock fl;
- 
-     if(debug > 1) {
--	fprintf(stderr, "do_lock: start=%d, length=%d\n", start, length);
-+	fprintf(stderr, "do_lock: cmd=%d type=%d start=%d, length=%d\n", cmd, type, start, length);
+     if ((f_fd = OPEN(filename, flag)) == INVALID_HANDLE) {
+ 	perror("shared file create");
+-	if (!flag)	/* Only exit if the first open fails */
+-	    exit(1);
+ 	closed = 0;
+ 	return FAIL;
+ 	/*NOTREACHED*/
+@@ -858,7 +856,8 @@ main(int argc, char *argv[])
      }
  
-     if (f_fd < 0)
-@@ -650,7 +652,7 @@ int do_lock(int type, int start, int length)
+     filename=argv[optind];
+-    do_open(0);
++    if (do_open(O_RDWR) == FAIL)
++	exit(1);
  
-     errno = 0;
- 
--    ret = fcntl(filedes, F_SETLK, &fl);
-+    ret = fcntl(filedes, cmd, &fl);
-     saved_errno = errno;	    
- 
-     if(debug > 1 && ret)
-@@ -659,35 +661,6 @@ int do_lock(int type, int start, int length)
-     return(ret==0?PASS:FAIL);
- }
- 
--int do_unlock(int start, int length)
--{
--    int ret;
--    int filedes = f_fd;
--    struct flock fl;
--
--    if(debug > 1) {
--	fprintf(stderr, "do_unlock: start=%d, length=%d\n", start, length);
--    }
--
--    if (f_fd < 0)
--	return f_fd;
--    
--    fl.l_start = start;
--    fl.l_len = length;
--    fl.l_whence = SEEK_SET;
--    fl.l_pid = getpid();
--    fl.l_type = F_UNLCK;
--
--    errno = 0;
--
--    ret = fcntl(filedes, F_SETLK, &fl);
--    saved_errno = errno;	    
--    if(debug > 1 && ret)
--	fprintf(stderr, "do_lock: ret = %d, errno = %d (%s)\n", ret, errno, strerror(errno));
--
--    return(ret==0?PASS:FAIL);
--}
--
- int do_close(void)
- {	
-     if(debug > 1) {
-@@ -1016,13 +989,13 @@ main(int argc, char *argv[])
- 		if(tests[index][TEST_NUM] != 0) {
- 		    switch(tests[index][COMMAND]) {
- 			case WRLOCK:
--			    result = do_lock(F_WRLCK, tests[index][OFFSET], tests[index][LENGTH]);
-+			    result = do_lock(F_SETLK, F_WRLCK, tests[index][OFFSET], tests[index][LENGTH]);
- 			    break;
- 			case RDLOCK:
--			    result = do_lock(F_RDLCK, tests[index][OFFSET], tests[index][LENGTH]);
-+			    result = do_lock(F_SETLK, F_RDLCK, tests[index][OFFSET], tests[index][LENGTH]);
- 			    break;
- 			case UNLOCK:
--			    result = do_unlock(tests[index][OFFSET], tests[index][LENGTH]);
-+			    result = do_lock(F_SETLK, F_UNLCK, tests[index][OFFSET], tests[index][LENGTH]);
- 			    break;
- 			case F_CLOSE:
- 			    result = do_close();
-@@ -1030,6 +1003,12 @@ main(int argc, char *argv[])
- 			case F_OPEN:
- 			    result = do_open(tests[index][FLAGS]);
- 			    break;
-+			case WRTEST:
-+			    result = do_lock(F_GETLK, F_WRLCK, tests[index][OFFSET], tests[index][LENGTH]);
-+			    break;
-+			case RDTEST:
-+			    result = do_lock(F_GETLK, F_RDLCK, tests[index][OFFSET], tests[index][LENGTH]);
-+			    break;
- 		    }
- 		    if( result != tests[index][RESULT]) {
- 			fail_flag++;
-@@ -1126,13 +1105,13 @@ main(int argc, char *argv[])
- 	    ctl.length = tests[index][LENGTH];
- 	    switch(tests[index][COMMAND]) {
- 		case WRLOCK:
--		    result = do_lock(F_WRLCK, tests[index][OFFSET], tests[index][LENGTH]);
-+		    result = do_lock(F_SETLK, F_WRLCK, tests[index][OFFSET], tests[index][LENGTH]);
- 		    break;
- 		case RDLOCK:
--		    result = do_lock(F_RDLCK, tests[index][OFFSET], tests[index][LENGTH]);
-+		    result = do_lock(F_SETLK, F_RDLCK, tests[index][OFFSET], tests[index][LENGTH]);
- 		    break;
- 		case UNLOCK:
--		    result = do_unlock(tests[index][OFFSET], tests[index][LENGTH]);
-+		    result = do_lock(F_SETLK, F_UNLCK, tests[index][OFFSET], tests[index][LENGTH]);
- 		    break;
- 		case F_CLOSE:
- 		    result = do_close();
-@@ -1140,6 +1119,12 @@ main(int argc, char *argv[])
- 		case F_OPEN:
- 		    result = do_open(tests[index][FLAGS]);
- 		    break;
-+		case WRTEST:
-+		    result = do_lock(F_GETLK, F_WRLCK, tests[index][OFFSET], tests[index][LENGTH]);
-+		    break;
-+		case RDTEST:
-+		    result = do_lock(F_GETLK, F_RDLCK, tests[index][OFFSET], tests[index][LENGTH]);
-+		    break;
- 	    }
- 	    if( result != tests[index][RESULT] ) {
- 		if(debug)
+     /*
+      * +10 is slop for the iteration number if do_write() ... never
 -- 
 1.9.0
 
