@@ -1,18 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 796E17F3F
-	for <xfs@oss.sgi.com>; Mon, 12 May 2014 10:22:22 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 08105AC001
-	for <xfs@oss.sgi.com>; Mon, 12 May 2014 08:22:21 -0700 (PDT)
-Received: from b.mx.filmlight.ltd.uk (b.mx.filmlight.ltd.uk [77.107.81.251])
-	by cuda.sgi.com with SMTP id QWp7KD156HcDv57w for
-	<xfs@oss.sgi.com>; Mon, 12 May 2014 08:22:19 -0700 (PDT)
-Subject: 'delete' parameter in xfs_ialloc.h
-From: Roger Willcocks <roger@filmlight.ltd.uk>
-Date: Mon, 12 May 2014 16:22:18 +0100
-Message-Id: <1399908138.4857.28.camel@montana.filmlight.ltd.uk>
-Mime-Version: 1.0
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 4EA827F3F
+	for <xfs@oss.sgi.com>; Mon, 12 May 2014 10:31:48 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 3838C8F8039
+	for <xfs@oss.sgi.com>; Mon, 12 May 2014 08:31:48 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id mO6jlEOyAMxJKsbs for <xfs@oss.sgi.com>;
+	Mon, 12 May 2014 08:31:47 -0700 (PDT)
+Message-ID: <5370E964.50805@sandeen.net>
+Date: Mon, 12 May 2014 10:31:48 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
+MIME-Version: 1.0
+Subject: Re: 'delete' parameter in xfs_ialloc.h
+References: <1399908138.4857.28.camel@montana.filmlight.ltd.uk>
+In-Reply-To: <1399908138.4857.28.camel@montana.filmlight.ltd.uk>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,16 +27,17 @@ Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Roger Willcocks <roger@filmlight.ltd.uk>, xfs@oss.sgi.com
 
-SGkgZm9sa3MsCgpJIGhhdmUgdG8gZml4IHRoaXMgdXAgZXZlcnkgdGltZSBJIHVwZGF0ZSB4ZnNw
-cm9ncyAtCgpUaGUgJ2RlbGV0ZScgcGFyYW1ldGVyIGluIHhmc3Byb2dzL2luY2x1ZGUveGZzX2lh
-bGxvYy5jOnhmc19kaWZyZWUoLi4uKQpjYXVzZXMgYSBjb21waWxlIGVycm9yIGlmIHRoZSBoZWFk
-ZXIncyBpbmNsdWRlZCBpbiBDKysgY29kZSAoZXZlbiB3aXRoCidleHRlcm4gIkMiJykgLQoKeGZz
-X2lhbGxvYy5oOjEwMjogZXJyb3I6IGV4cGVjdGVkIOKAmCzigJkgb3Ig4oCYLi4u4oCZIGJlZm9y
-ZSDigJhkZWxldGXigJkKCihnY2MgNC40LjcpCgpJdCB3b3VsZCBiZSBoYW5keSBpZiB0aGUgcGFy
-YW1ldGVyIG5hbWUgY291bGQgYmUgY29tbWVudGVkIG91dCBvcgpjaGFuZ2VkIGluIHRoZSBoZWFk
-ZXIuCgotLSAKUm9nZXIgV2lsbGNvY2tzIDxyb2dlckBmaWxtbGlnaHQubHRkLnVrPgoKX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KeGZzIG1haWxpbmcgbGlz
-dAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZz
-Cg==
+T24gNS8xMi8xNCwgMTA6MjIgQU0sIFJvZ2VyIFdpbGxjb2NrcyB3cm90ZToKPiBIaSBmb2xrcywK
+PiAKPiBJIGhhdmUgdG8gZml4IHRoaXMgdXAgZXZlcnkgdGltZSBJIHVwZGF0ZSB4ZnNwcm9ncyAt
+Cj4gCj4gVGhlICdkZWxldGUnIHBhcmFtZXRlciBpbiB4ZnNwcm9ncy9pbmNsdWRlL3hmc19pYWxs
+b2MuYzp4ZnNfZGlmcmVlKC4uLikKPiBjYXVzZXMgYSBjb21waWxlIGVycm9yIGlmIHRoZSBoZWFk
+ZXIncyBpbmNsdWRlZCBpbiBDKysgY29kZSAoZXZlbiB3aXRoCj4gJ2V4dGVybiAiQyInKSAtCj4g
+Cj4geGZzX2lhbGxvYy5oOjEwMjogZXJyb3I6IGV4cGVjdGVkIOKAmCzigJkgb3Ig4oCYLi4u4oCZ
+IGJlZm9yZSDigJhkZWxldGXigJkKPiAKPiAoZ2NjIDQuNC43KQo+IAo+IEl0IHdvdWxkIGJlIGhh
+bmR5IGlmIHRoZSBwYXJhbWV0ZXIgbmFtZSBjb3VsZCBiZSBjb21tZW50ZWQgb3V0IG9yCj4gY2hh
+bmdlZCBpbiB0aGUgaGVhZGVyLgo+IAoKU2VuZCBhIHBhdGNoPyAgV291bGQgbmVlZCB0byBoaXQg
+a2VybmVsIGNvZGUgdG9vLgoKLUVyaWMKCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9v
+c3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
