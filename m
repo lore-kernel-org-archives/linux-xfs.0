@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id F04FE7F3F
-	for <xfs@oss.sgi.com>; Tue, 13 May 2014 07:49:45 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id D188C8F8033
-	for <xfs@oss.sgi.com>; Tue, 13 May 2014 05:49:45 -0700 (PDT)
-Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id 2HxmHGZl4vCFCu3a (version=TLSv1
+	by oss.sgi.com (Postfix) with ESMTP id 480007F3F
+	for <xfs@oss.sgi.com>; Tue, 13 May 2014 07:51:15 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 189DF8F8033
+	for <xfs@oss.sgi.com>; Tue, 13 May 2014 05:51:15 -0700 (PDT)
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
+	cuda.sgi.com with ESMTP id 0UpbqZhVLNTDqOA0 (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 13 May 2014 05:49:44 -0700 (PDT)
-Message-ID: <537214D7.3010305@oracle.com>
-Date: Tue, 13 May 2014 20:49:27 +0800
+	Tue, 13 May 2014 05:51:13 -0700 (PDT)
+Message-ID: <53721538.6020702@oracle.com>
+Date: Tue, 13 May 2014 20:51:04 +0800
 From: Jeff Liu <jeff.liu@oracle.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 4/9] xfs: correct error sign on COLLAPSE_RANGE errors
+Subject: Re: [PATCH 5/9] xfs: fix wrong errno from xfs_initxattrs
 References: <1399971373-6242-1-git-send-email-david@fromorbit.com>
-	<1399971373-6242-5-git-send-email-david@fromorbit.com>
-In-Reply-To: <1399971373-6242-5-git-send-email-david@fromorbit.com>
+	<1399971373-6242-6-git-send-email-david@fromorbit.com>
+In-Reply-To: <1399971373-6242-6-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -37,35 +37,38 @@ On 05/13 2014 16:56 PM, Dave Chinner wrote:
 > 
 > Signed-off-by: Dave Chinner <dchinner@redhat.com>
 > ---
->  fs/xfs/xfs_file.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
+>  fs/xfs/xfs_iops.c | 8 ++++----
+>  1 file changed, 4 insertions(+), 4 deletions(-)
 > 
-> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-> index 37f98c6..830c1c9 100644
-> --- a/fs/xfs/xfs_file.c
-> +++ b/fs/xfs/xfs_file.c
-> @@ -837,7 +837,7 @@ xfs_file_fallocate(
->  		unsigned blksize_mask = (1 << inode->i_blkbits) - 1;
+> diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+> index 301ecbf..adfb18e 100644
+> --- a/fs/xfs/xfs_iops.c
+> +++ b/fs/xfs/xfs_iops.c
+> @@ -72,8 +72,8 @@ xfs_initxattrs(
+>  	int			error = 0;
 >  
->  		if (offset & blksize_mask || len & blksize_mask) {
-> -			error = -EINVAL;
-> +			error = EINVAL;
->  			goto out_unlock;
->  		}
+>  	for (xattr = xattr_array; xattr->name != NULL; xattr++) {
+> -		error = xfs_attr_set(ip, xattr->name, xattr->value,
+> -				     xattr->value_len, ATTR_SECURE);
+> +		error = -xfs_attr_set(ip, xattr->name, xattr->value,
+> +				      xattr->value_len, ATTR_SECURE);
+>  		if (error < 0)
+>  			break;
+>  	}
+> @@ -93,8 +93,8 @@ xfs_init_security(
+>  	struct inode	*dir,
+>  	const struct qstr *qstr)
+>  {
+> -	return security_inode_init_security(inode, dir, qstr,
+> -					    &xfs_initxattrs, NULL);
+> +	return -security_inode_init_security(inode, dir, qstr,
+> +					     &xfs_initxattrs, NULL);
+>  }
 >  
-> @@ -846,7 +846,7 @@ xfs_file_fallocate(
->  		 * in which case it is effectively a truncate operation
->  		 */
->  		if (offset + len >= i_size_read(inode)) {
-> -			error = -EINVAL;
-> +			error = EINVAL;
->  			goto out_unlock;
->  		}
->  
+>  static void
 > 
 
 Reviewed-by: Jie Liu <jeff.liu@oracle.com>
-
 
 Cheers,
 -Jeff
