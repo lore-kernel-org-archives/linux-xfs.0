@@ -1,19 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 4133D7F3F
-	for <xfs@oss.sgi.com>; Mon, 12 May 2014 19:55:04 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id D741AAC001
-	for <xfs@oss.sgi.com>; Mon, 12 May 2014 17:55:03 -0700 (PDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 114D77F3F
+	for <xfs@oss.sgi.com>; Mon, 12 May 2014 20:00:39 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id E76CB3041B6
+	for <xfs@oss.sgi.com>; Mon, 12 May 2014 18:00:38 -0700 (PDT)
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	OPDBGSpwLbAq1UKM for <xfs@oss.sgi.com>;
-	Mon, 12 May 2014 17:55:01 -0700 (PDT)
-Date: Tue, 13 May 2014 10:54:57 +1000
+	xPoF22LWUDrdVmk7 for <xfs@oss.sgi.com>;
+	Mon, 12 May 2014 18:00:36 -0700 (PDT)
+Date: Tue, 13 May 2014 11:00:28 +1000
 From: Dave Chinner <david@fromorbit.com>
 Subject: Re: [xfstests PATCH 0/4] locktest: cleanup, bugfixes, and add new
 	locking test
-Message-ID: <20140513005457.GY5421@dastard>
+Message-ID: <20140513010028.GZ5421@dastard>
 References: <1399907193-23857-1-git-send-email-jlayton@poochiereds.net>
 	<20140512225845.GN26353@dastard>
 	<20140512203505.16f73ef8@tlielax.poochiereds.net>
@@ -61,9 +61,10 @@ On Mon, May 12, 2014 at 08:35:05PM -0400, Jeff Layton wrote:
 > soon). The rest of the changes are just cleanups, and shouldn't
 > introduce any behavioral changes.
 
-Ok, I wasn't sure if it was adding a test that never worked, or
-whether it was checking for a recent regression. If it's a recent
-regression, then there's no problem with the change. Thanks! :)
+Is this the regression in question?
+
++Server failure in 29:Verify that F_GETLK for F_WRLCK doesn't
+require that file be opened for write
 
 Cheers,
 
