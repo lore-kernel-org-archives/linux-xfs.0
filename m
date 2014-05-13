@@ -1,22 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 07C097F3F
-	for <xfs@oss.sgi.com>; Tue, 13 May 2014 07:04:51 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 739787F3F
+	for <xfs@oss.sgi.com>; Tue, 13 May 2014 07:24:40 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 7A99FAC006
-	for <xfs@oss.sgi.com>; Tue, 13 May 2014 05:04:47 -0700 (PDT)
-Received: from mail-qa0-f47.google.com (mail-qa0-f47.google.com
-	[209.85.216.47]) by cuda.sgi.com with ESMTP id igBrOaL2TcGS6jUv
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 13 May 2014 05:04:45 -0700 (PDT)
-Received: by mail-qa0-f47.google.com with SMTP id s7so221689qap.34
-	for <xfs@oss.sgi.com>; Tue, 13 May 2014 05:04:45 -0700 (PDT)
-From: Jeff Layton <jlayton@poochiereds.net>
-Subject: [xfstests PATCH v2] loggen: fix build vs. newer xfsprogs headers
-Date: Tue, 13 May 2014 08:04:39 -0400
-Message-Id: <1399982679-15544-1-git-send-email-jlayton@poochiereds.net>
-In-Reply-To: <1399982043-8693-1-git-send-email-jlayton@poochiereds.net>
-References: <1399982043-8693-1-git-send-email-jlayton@poochiereds.net>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 3AC0A3042B2
+	for <xfs@oss.sgi.com>; Tue, 13 May 2014 05:24:37 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id pXTcMeFAIAFlXPUQ for
+	<xfs@oss.sgi.com>; Tue, 13 May 2014 05:24:36 -0700 (PDT)
+Received: from int-mx09.intmail.prod.int.phx2.redhat.com
+	(int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id s4DCOZmu012349
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256
+	verify=OK) for <xfs@oss.sgi.com>; Tue, 13 May 2014 08:24:35 -0400
+Received: from bfoster.bfoster ([10.18.41.237])
+	by int-mx09.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id s4DCOZ5G012714
+	for <xfs@oss.sgi.com>; Tue, 13 May 2014 08:24:35 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: [PATCH] xfstests: use killall -9 and wait in _cleanup() in xfs/013
+Date: Tue, 13 May 2014 08:24:34 -0400
+Message-Id: <1399983874-58985-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,68 +36,42 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-v2: just include xfs/libxfs.h for the conftest prerequisites
+Kill any lingering fsstress processes and wait properly should we abort
+the test. This prevents the workload from inadvertently affecting
+subsequent tests.
 
-commit cc085d770adb in xfsprogs removed some header files that are
-included by loggen.c. Add an autoconf test that checks to see whether
-xfs_log_format.h is present. If it is, include that instead of the
-deprecated headers and add an alias for XFS_TRANS_MAGIC since that
-value no longer exists.
-
-With this patch, xfstests builds on both f20 and rawhide (f21) boxes.
-
-Signed-off-by: Jeff Layton <jlayton@poochiereds.net>
+Signed-off-by: Brian Foster <bfoster@redhat.com>
 ---
- configure.ac | 7 ++++---
- src/loggen.c | 7 +++++++
- 2 files changed, 11 insertions(+), 3 deletions(-)
 
-diff --git a/configure.ac b/configure.ac
-index 43e6029193a6..53459d87f930 100644
---- a/configure.ac
-+++ b/configure.ac
-@@ -26,14 +26,15 @@ AC_HEADER_STDC
- 			sys/types.h		\
- 			strings.h		\
- 			err.h			\
--			linux/falloc.h
--    ])
--    AC_CHECK_HEADERS([	sys/fs/xfs_fsops.h	\
-+			linux/falloc.h		\
-+			sys/fs/xfs_fsops.h	\
- 			sys/fs/xfs_itable.h	\
- 			xfs/platform_defs.h	\
- 			btrfs/ioctl.h		\
-     ])
+Dave,
+
+Sorry, this probably should have been posted sooner. I was half
+expecting to have more changes to the test. Looks like you fixed up the
+groups already (thanks), so here's a small one to fix up the exit
+path... Obviously it's not the end of the world if this waits for the
+next natural xfstests update. :)
+
+Brian
+
+ tests/xfs/013 | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/tests/xfs/013 b/tests/xfs/013
+index 049f0dc..e95d027 100755
+--- a/tests/xfs/013
++++ b/tests/xfs/013
+@@ -40,7 +40,8 @@ status=1	# failure is the default!
  
-+AC_CHECK_HEADERS([xfs/xfs_log_format.h],,,[#include <xfs/libxfs.h>])
-+
- AC_PACKAGE_NEED_UUIDCOMPARE
- 
- case $pkg_platform
-diff --git a/src/loggen.c b/src/loggen.c
-index 522c9178ee26..a3d99f8c915f 100644
---- a/src/loggen.c
-+++ b/src/loggen.c
-@@ -25,9 +25,16 @@
-  *                                                  - dxm 29/09/00
-  */
- 
-+#include <config.h>
-+
- #include <xfs/libxfs.h>
-+#ifdef HAVE_XFS_XFS_LOG_FORMAT_H
-+#include <xfs/xfs_log_format.h>
-+#define XFS_TRANS_MAGIC	XFS_TRANS_HEADER_MAGIC
-+#else /* HAVE_XFS_XFS_LOG_FORMAT_H */
- #include <xfs/xfs_log.h>
- #include <xfs/xfs_log_priv.h>
-+#endif /* HAVE_XFS_XFS_LOG_FORMAT_H */
- 
- #ifndef ASSIGN_ANY_LSN_DISK
- #define ASSIGN_ANY_LSN_DISK(lsn,cycle,block)  \
+ _cleanup()
+ {
+-	killall fsstress 2>/dev/null
++	killall -9 fsstress 2>/dev/null
++	wait
+ 	cd /
+ 	umount $SCRATCH_MNT 2>/dev/null
+ 	rm -f $tmp.*
 -- 
-1.9.0
+1.8.3.1
 
 _______________________________________________
 xfs mailing list
