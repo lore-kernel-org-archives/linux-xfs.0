@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 1CBA57F53
-	for <xfs@oss.sgi.com>; Tue, 13 May 2014 03:56:28 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 06F257F60
+	for <xfs@oss.sgi.com>; Tue, 13 May 2014 03:56:29 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id D1E98304077
-	for <xfs@oss.sgi.com>; Tue, 13 May 2014 01:56:24 -0700 (PDT)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 711F6AC003
+	for <xfs@oss.sgi.com>; Tue, 13 May 2014 01:56:28 -0700 (PDT)
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	kYONtYrhsAIYdqzz for <xfs@oss.sgi.com>;
-	Tue, 13 May 2014 01:56:23 -0700 (PDT)
+	xKMFvEEe1SRfbUo6 for <xfs@oss.sgi.com>;
+	Tue, 13 May 2014 01:56:26 -0700 (PDT)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.80)
-	(envelope-from <dave@fromorbit.com>) id 1Wk8VV-0000JW-To
-	for xfs@oss.sgi.com; Tue, 13 May 2014 18:56:17 +1000
+	(envelope-from <dave@fromorbit.com>) id 1Wk8VW-0000Jc-0I
+	for xfs@oss.sgi.com; Tue, 13 May 2014 18:56:18 +1000
 Received: from dave by disappointment with local (Exim 4.82)
-	(envelope-from <dave@disappointment.disaster>) id 1Wk8VV-0001kX-T1
+	(envelope-from <dave@disappointment.disaster>) id 1Wk8VV-0001l1-Vm
 	for xfs@oss.sgi.com; Tue, 13 May 2014 18:56:17 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 1/9] xfs: xfs_dir_fsync() returns positive errno
-Date: Tue, 13 May 2014 18:56:05 +1000
-Message-Id: <1399971373-6242-2-git-send-email-david@fromorbit.com>
+Subject: [PATCH 7/9] xfs: negate mount workqueue init error value
+Date: Tue, 13 May 2014 18:56:11 +1000
+Message-Id: <1399971373-6242-8-git-send-email-david@fromorbit.com>
 In-Reply-To: <1399971373-6242-1-git-send-email-david@fromorbit.com>
 References: <1399971373-6242-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,26 +39,24 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-And it should be negative.
-
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_file.c | 2 +-
+ fs/xfs/xfs_super.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index 951a232..f499e47 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -155,7 +155,7 @@ xfs_dir_fsync(
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index 2053767..e1597f2 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -1433,7 +1433,7 @@ xfs_fs_fill_super(
+ 	if (error)
+ 		goto out_free_fsname;
  
- 	if (!lsn)
- 		return 0;
--	return _xfs_log_force_lsn(mp, lsn, XFS_LOG_SYNC, NULL);
-+	return -_xfs_log_force_lsn(mp, lsn, XFS_LOG_SYNC, NULL);
- }
+-	error = xfs_init_mount_workqueues(mp);
++	error = -xfs_init_mount_workqueues(mp);
+ 	if (error)
+ 		goto out_close_devices;
  
- STATIC int
 -- 
 1.9.0
 
