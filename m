@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id EBFE07F50
-	for <xfs@oss.sgi.com>; Tue, 13 May 2014 03:56:27 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id CA15B8F8033
-	for <xfs@oss.sgi.com>; Tue, 13 May 2014 01:56:27 -0700 (PDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 1CBA57F53
+	for <xfs@oss.sgi.com>; Tue, 13 May 2014 03:56:28 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id D1E98304077
+	for <xfs@oss.sgi.com>; Tue, 13 May 2014 01:56:24 -0700 (PDT)
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	yijHyChk50TpypH8 for <xfs@oss.sgi.com>;
-	Tue, 13 May 2014 01:56:25 -0700 (PDT)
+	kYONtYrhsAIYdqzz for <xfs@oss.sgi.com>;
+	Tue, 13 May 2014 01:56:23 -0700 (PDT)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.80)
-	(envelope-from <dave@fromorbit.com>) id 1Wk8VV-0000JX-UB
+	(envelope-from <dave@fromorbit.com>) id 1Wk8VV-0000JW-To
 	for xfs@oss.sgi.com; Tue, 13 May 2014 18:56:17 +1000
 Received: from dave by disappointment with local (Exim 4.82)
-	(envelope-from <dave@disappointment.disaster>) id 1Wk8VV-0001kc-TP
+	(envelope-from <dave@disappointment.disaster>) id 1Wk8VV-0001kX-T1
 	for xfs@oss.sgi.com; Tue, 13 May 2014 18:56:17 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 2/9] xfs: fix incorrect error sign in xfs_file_aio_read
-Date: Tue, 13 May 2014 18:56:06 +1000
-Message-Id: <1399971373-6242-3-git-send-email-david@fromorbit.com>
+Subject: [PATCH 1/9] xfs: xfs_dir_fsync() returns positive errno
+Date: Tue, 13 May 2014 18:56:05 +1000
+Message-Id: <1399971373-6242-2-git-send-email-david@fromorbit.com>
 In-Reply-To: <1399971373-6242-1-git-send-email-david@fromorbit.com>
 References: <1399971373-6242-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,24 +39,26 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
+And it should be negative.
+
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
  fs/xfs/xfs_file.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index f499e47..37f98c6 100644
+index 951a232..f499e47 100644
 --- a/fs/xfs/xfs_file.c
 +++ b/fs/xfs/xfs_file.c
-@@ -295,7 +295,7 @@ xfs_file_aio_read(
- 		xfs_rw_ilock(ip, XFS_IOLOCK_EXCL);
+@@ -155,7 +155,7 @@ xfs_dir_fsync(
  
- 		if (inode->i_mapping->nrpages) {
--			ret = -filemap_write_and_wait_range(
-+			ret = filemap_write_and_wait_range(
- 							VFS_I(ip)->i_mapping,
- 							pos, -1);
- 			if (ret) {
+ 	if (!lsn)
+ 		return 0;
+-	return _xfs_log_force_lsn(mp, lsn, XFS_LOG_SYNC, NULL);
++	return -_xfs_log_force_lsn(mp, lsn, XFS_LOG_SYNC, NULL);
+ }
+ 
+ STATIC int
 -- 
 1.9.0
 
