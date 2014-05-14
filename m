@@ -1,24 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 440CA7F3F
-	for <xfs@oss.sgi.com>; Wed, 14 May 2014 07:47:23 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id CCAB9AC00A
-	for <xfs@oss.sgi.com>; Wed, 14 May 2014 05:47:19 -0700 (PDT)
-Received: from mail.zbfmail.de (mail.zbfmail.de [176.9.84.12]) by cuda.sgi.com
-	with ESMTP id FXFSPWL4XsKFMmc5 (version=TLSv1 cipher=AES256-SHA
-	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 14 May 2014 05:47:17 -0700 (PDT)
-Received: from mail.zbfmail.de (localhost [127.0.0.1])
-	by mail.zbfmail.de (Postfix) with ESMTP id 184CD30502
-	for <xfs@oss.sgi.com>; Wed, 14 May 2014 14:47:16 +0200 (CEST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id B046B7F3F
+	for <xfs@oss.sgi.com>; Wed, 14 May 2014 08:20:46 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 74DD18F8050
+	for <xfs@oss.sgi.com>; Wed, 14 May 2014 06:20:43 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id EfxtJwFdGVsCEIgq for
+	<xfs@oss.sgi.com>; Wed, 14 May 2014 06:20:42 -0700 (PDT)
+Date: Wed, 14 May 2014 15:20:24 +0200 (CEST)
+From: =?ISO-8859-15?Q?Luk=E1=A8_Czerner?= <lczerner@redhat.com>
+Subject: Separate mailing list for xfstests
+Message-ID: <alpine.LFD.2.00.1405141508150.9727@localhost.localdomain>
 MIME-Version: 1.0
-Date: Wed, 14 May 2014 14:47:16 +0200
-From: Marko Weber|8000 <weber@zbfmail.de>
-Subject: =?UTF-8?Q?xfs=5Fdb=20dont=20work=20on=20blocksize=20=34=30=39=36?=
-	=?UTF-8?Q?=3F?=
-Message-ID: <e6b0d925a9409122a92d4e14922a26fd@zbfmail.de>
-Reply-To: weber@zbfmail.de
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,39 +21,33 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Xfs <xfs@oss.sgi.com>
+To: dchinner@redhat.com
+Cc: linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, xfs@oss.sgi.com
 
+Hi Dave,
 
-hello,
-does xfs_db not work on blocksize 4096 ?
+I am wondering whether you're open to the idea of creating separate
+mailing list for xfstests. It is no longer xfs specific project and
+even though you're still a maintainer of the project, other fs folks
+are definitely interested in the development process, but not
+everyone might be interested in receiving everything from the
+xfs@oss.sgi.com list.
 
-i get this:
+To speak for myself I would like to help with review of xfstests
+patches as well, but I rarely go through my xfs folder
+unfortunately.
 
-bunka distfiles # xfs_db -r /dev/sda4
-xfs_db: error - read only 0 of 512 bytes
-cache_node_purge: refcount was 1, not zero (node=0x686530)
-xfs_db: cannot read root inode (117)
-cache_node_purge: refcount was 1, not zero (node=0x688810)
-xfs_db: cannot read realtime bitmap inode (117)
-xfs_db: error - read only 0 of 512 bytes
-xfs_db> quit
+linux-fsdevel might seem as a good candidate for it, but still I
+think that it deserves a separate ML to point people to.
 
-any hints, ideas tipps?
+What do you think ?
 
-thank you
-
-marko
-
--- 
-zbfmail - Mittendrin statt nur Datei!
-
-OpenDKIM, SPF, DSPAM, Greylisting, POSTSCREEN, AMAVIS, Mailgateways
-Mailfiltering, SMTP Service, Spam Abwehr, MX-Backup, Mailserver Backup
-Redundante Mailgateways, HA Mailserver, Secure Mailserver
+Thanks!
+-Lukas
 
 _______________________________________________
 xfs mailing list
