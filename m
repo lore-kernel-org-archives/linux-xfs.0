@@ -1,9 +1,9 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 From: xfs@oss.sgi.com
-Subject: [XFS updates] XFS development tree branch, xfs-fixes-for-3.15-rc6,
-	created. xfs-for-linus-3.15-rc5-1275-gee4eec4
-Message-Id: <20140514234848.F37027F47@oss.sgi.com>
-Date: Wed, 14 May 2014 18:48:48 -0500 (CDT)
+Subject: [XFS updates] XFS development tree branch, xfs-attr-cleanup,
+	created. xfs-for-linus-3.15-rc1-14831-g6c888af
+Message-Id: <20140514234909.BFDC27F51@oss.sgi.com>
+Date: Wed, 14 May 2014 18:49:09 -0500 (CDT)
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,105 +23,81 @@ This is an automated email from the git hooks/post-receive script. It was
 generated because a ref change was pushed to the repository containing
 the project "XFS development tree".
 
-The branch, xfs-fixes-for-3.15-rc6 has been created
-        at  ee4eec478be4677b93775d17bc079efb5922b276 (commit)
+The branch, xfs-attr-cleanup has been created
+        at  6c888af0b4ca66565b2aa73147ebc1d139c3bd1b (commit)
 
 - Log -----------------------------------------------------------------
-commit ee4eec478be4677b93775d17bc079efb5922b276
-Author: Dave Chinner <dchinner@redhat.com>
-Date:   Thu May 15 09:23:24 2014 +1000
+commit 6c888af0b4ca66565b2aa73147ebc1d139c3bd1b
+Author: Christoph Hellwig <hch@lst.de>
+Date:   Tue May 13 16:40:19 2014 +1000
 
-    xfs: list_lru_init returns a negative error
+    xfs: pass struct da_args to xfs_attr_calc_size
     
-    And we don't invert it properly when initialising the dquot lru
-    list.
+    And remove a very confused comment.
     
-    Signed-off-by: Dave Chinner <dchinner@redhat.com>
-    Reviewed-by: Jie Liu <jeff.liu@oracle.com>
+    Signed-off-by: Christoph Hellwig <hch@lst.de>
+    Reviewed-by: Brian Foster <bfoster@redhat.com>
+    Reviewed-by: Dave Chinner <dchinner@redhat.com>
     Signed-off-by: Dave Chinner <david@fromorbit.com>
 
-commit bc147822d5ada188fff792691efffe89589e2e19
-Author: Dave Chinner <dchinner@redhat.com>
-Date:   Thu May 15 09:23:07 2014 +1000
+commit 67fd718f30108db320ffc4bef205137b69e60d3a
+Author: Christoph Hellwig <hch@lst.de>
+Date:   Tue May 13 16:34:43 2014 +1000
 
-    xfs: negate xfs_icsb_init_counters error value
+    xfs: simplify attr name setup
     
-    Signed-off-by: Dave Chinner <dchinner@redhat.com>
-    Reviewed-by: Jie Liu <jeff.liu@oracle.com>
+    Replace xfs_attr_name_to_xname with a new xfs_attr_args_init helper that
+    sets up the basic da_args structure without using a temporary xfs_name
+    structure.
+    
+    Signed-off-by: Christoph Hellwig <hch@lst.de>
+    Reviewed-by: Dave Chinner <dchinner@redhat.com>
+    Reviewed-by: Brian Foster <bfoster@redhat.com>
     Signed-off-by: Dave Chinner <david@fromorbit.com>
 
-commit 45687642e43d5a3b700d6c1df0e07b3976c90c08
-Author: Dave Chinner <dchinner@redhat.com>
-Date:   Thu May 15 09:22:53 2014 +1000
+commit 1bc426a76b1a8ecf00d9a3ec8e9765a21ab4082f
+Author: Christoph Hellwig <hch@lst.de>
+Date:   Tue May 13 16:34:33 2014 +1000
 
-    xfs: negate mount workqueue init error value
+    xfs: fold xfs_attr_remove_int into xfs_attr_remove
     
-    Signed-off-by: Dave Chinner <dchinner@redhat.com>
-    Reviewed-by: Jie Liu <jeff.liu@oracle.com>
+    Also remove a useless ilock roundtrip for the first attr fork check, it's
+    racy anyway and we redo it later under the ilock before we start the removal.
+    
+    Plus various minor style fixes to the new xfs_attr_remove.
+    
+    Signed-off-by: Christoph Hellwig <hch@lst.de>
+    Reviewed-by: Dave Chinner <dchinner@redhat.com>
+    Reviewed-by: Brian Foster <bfoster@redhat.com>
     Signed-off-by: Dave Chinner <david@fromorbit.com>
 
-commit 6670232b48848e5ad949dbd4866850aec7035f32
-Author: Dave Chinner <dchinner@redhat.com>
-Date:   Thu May 15 09:22:37 2014 +1000
+commit b87d022c275bce66553a27b68790e7c91927875f
+Author: Christoph Hellwig <hch@lst.de>
+Date:   Tue May 13 16:34:24 2014 +1000
 
-    xfs: fix wrong err sign on xfs_set_acl()
+    xfs: fold xfs_attr_get_int into xfs_attr_get
     
-    Signed-off-by: Dave Chinner <dchinner@redhat.com>
-    Reviewed-by: Jie Liu <jeff.liu@oracle.com>
+    This allows doing an unlocked check if an attr for is present at all and
+    slightly reduce the lock hold time if we actually do an attr get.
+    
+    Plus various minor style fixes to the new xfs_attr_get.
+    
+    Signed-off-by: Christoph Hellwig <hch@lst.de>
+    Reviewed-by: Brian Foster <bfoster@redhat.com>
+    Reviewed-by: Dave Chinner <dchinner@redhat.com>
     Signed-off-by: Dave Chinner <david@fromorbit.com>
 
-commit a5a14de22e8afd771775c7106b3b081c23bac783
-Author: Dave Chinner <dchinner@redhat.com>
-Date:   Thu May 15 09:22:21 2014 +1000
+commit c5b4ac39a4cb6a9a79025106a471f0738b3cb525
+Author: Christoph Hellwig <hch@lst.de>
+Date:   Tue May 13 16:34:14 2014 +1000
 
-    xfs: fix wrong errno from xfs_initxattrs
+    xfs: fold xfs_attr_set_int into xfs_attr_set
     
-    Signed-off-by: Dave Chinner <dchinner@redhat.com>
-    Reviewed-by: Jie Liu <jeff.liu@oracle.com>
-    Signed-off-by: Dave Chinner <david@fromorbit.com>
-
-commit 65149e3fab7f053396d09a429085f3071fa50825
-Author: Dave Chinner <dchinner@redhat.com>
-Date:   Thu May 15 09:22:07 2014 +1000
-
-    xfs: correct error sign on COLLAPSE_RANGE errors
+    Plus various minor style fixes to the new xfs_attr_set.
     
-    Signed-off-by: Dave Chinner <dchinner@redhat.com>
-    Reviewed-by: Jie Liu <jeff.liu@oracle.com>
-    Signed-off-by: Dave Chinner <david@fromorbit.com>
-
-commit b38a134b22fbd0bed90f3e079bbf8cb2962a52be
-Author: Dave Chinner <dchinner@redhat.com>
-Date:   Thu May 15 09:21:52 2014 +1000
-
-    xfs: xfs_commit_metadata returns wrong errno
-    
-    Invert it.
-    
-    Signed-off-by: Dave Chinner <dchinner@redhat.com>
-    Reviewed-by: Jie Liu <jeff.liu@oracle.com>
-    Signed-off-by: Dave Chinner <david@fromorbit.com>
-
-commit 8ff1e6705a4c711247708f23881feea169e6fc3c
-Author: Dave Chinner <dchinner@redhat.com>
-Date:   Thu May 15 09:21:37 2014 +1000
-
-    xfs: fix incorrect error sign in xfs_file_aio_read
-    
-    Signed-off-by: Dave Chinner <dchinner@redhat.com>
-    Reviewed-by: Jie Liu <jeff.liu@oracle.com>
-    Signed-off-by: Dave Chinner <david@fromorbit.com>
-
-commit 43ec1460a2189fbee87980dd3d3e64cba2f11e1f
-Author: Dave Chinner <dchinner@redhat.com>
-Date:   Thu May 15 09:21:11 2014 +1000
-
-    xfs: xfs_dir_fsync() returns positive errno
-    
-    And it should be negative.
-    
-    Signed-off-by: Dave Chinner <dchinner@redhat.com>
-    Reviewed-by: Jie Liu <jeff.liu@oracle.com>
+    Signed-off-by: Christoph Hellwig <hch@lst.de>
+    Reviewed-by: Dave Chinner <dchinner@redhat.com>
+    Reviewed-by: Brian Foster <bfoster@redhat.com>
     Signed-off-by: Dave Chinner <david@fromorbit.com>
 
 -----------------------------------------------------------------------
