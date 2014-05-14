@@ -1,23 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 1D57B7F3F
-	for <xfs@oss.sgi.com>; Wed, 14 May 2014 16:28:28 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id A7986AC00D
-	for <xfs@oss.sgi.com>; Wed, 14 May 2014 14:28:27 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id ADABA7F3F
+	for <xfs@oss.sgi.com>; Wed, 14 May 2014 16:35:48 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 33767AC00D
+	for <xfs@oss.sgi.com>; Wed, 14 May 2014 14:35:48 -0700 (PDT)
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	MR6iSP25DpUH35kl for <xfs@oss.sgi.com>;
-	Wed, 14 May 2014 14:28:25 -0700 (PDT)
-Date: Thu, 15 May 2014 07:28:22 +1000
+	giBXS83hfPjnVEzx for <xfs@oss.sgi.com>;
+	Wed, 14 May 2014 14:35:45 -0700 (PDT)
+Date: Thu, 15 May 2014 07:35:29 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 0/9] xfs: error sign fixes for 3.15-rc6
-Message-ID: <20140514212822.GS26353@dastard>
-References: <1399971373-6242-1-git-send-email-david@fromorbit.com>
-	<53731B07.9040606@oracle.com>
+Subject: Re: Separate mailing list for xfstests
+Message-ID: <20140514213529.GT26353@dastard>
+References: <alpine.LFD.2.00.1405141508150.9727@localhost.localdomain>
+	<53738316.20601@redhat.com> <53738597.70305@fb.com>
+	<20140514160447.GA3974@thunk.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <53731B07.9040606@oracle.com>
+In-Reply-To: <20140514160447.GA3974@thunk.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,41 +31,29 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Jeff Liu <jeff.liu@oracle.com>
-Cc: xfs@oss.sgi.com
+To: tytso@mit.edu
+Cc: Eric Sandeen <sandeen@redhat.com>, xfs@oss.sgi.com, Chris Mason <clm@fb.com>, dchinner@redhat.com, linux-fsdevel@vger.kernel.org, =?utf-8?B?THVrw6HFoQ==?= Czerner <lczerner@redhat.com>, linux-ext4@vger.kernel.org
 
-On Wed, May 14, 2014 at 03:28:07PM +0800, Jeff Liu wrote:
-> Hi Dave,
+On Wed, May 14, 2014 at 04:04:47PM +0000, tytso@mit.edu wrote:
+> On Wed, May 14, 2014 at 11:02:47AM -0400, Chris Mason wrote:
+> > >> linux-fsdevel might seem as a good candidate for it, but still I
+> > >> think that it deserves a separate ML to point people to.
 > 
-> On 05/13/2014 04:56 PM, Dave Chinner wrote:
-> > Hi folks,
-> > 
-> > I've been working through the mess that is the
-> > error sign impedance mismatch between the core XFS code and the rest
-> > of the kernel. I'm about half way through the codebase, and I've
-> > found a bunch of incorrect error signs throughout the VFS interface
-> > layers.
-> > 
-> > These were effectively all found by inspection, and is
-> > further evidence that we need to convert all of XFS to negative
-> > errors as quickly as possible. 
-> 
-> Would you like to find a volunteer to deal with that? I have a colleague
-> is trying to study XFS these days, looks this is a good task to him.
+> I'm personally in favor of using linux-fsdevel since it might
+> encourage more fs developers who aren't using xfstests yet to start
+> using it.
 
-Thanks for the offer, but I've already done half the conversion of
-the codebase.  Hence I may as well finish it.  Indeed, The sooner
-I've done it, the sooner we can get it into the dev tree for
-testing....
+I'd prefer a separate mailing list - I don't really like the idea of
+burying general lists in large amounts of specific topic-related
+traffic. That way lies lkml - a dumping ground for everything that
+has no stopic-related lists and that results in a very low signal to
+noise ratio. Comparitively speaking, -fsdevel has a high SNR, so we
+should try to keep it that way. ;)
 
-> BTW, before doing negative errors converting, should we have
-> libxfs infrastructure support at first?
-
-Makes no difference - the libxfs structural changes are just moving
-files about and futzing with makefiles. It'll only take me an hour
-to redo those patches from scratch, so it doesn't matter what state
-the code base is in to start with. I'd prefer that the kernel libxfs
-uses negative errors from the start, though ;)
+That said, I can see the value in sending update/release
+announcements to -fsdevel, but I'd prefer to keep all the xfstests
+traffic separate.  A separate list makes things like archive
+searching and patch tracking much simpler....
 
 Cheers,
 
