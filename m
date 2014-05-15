@@ -1,9 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-From: xfs@oss.sgi.com
-Subject: [XFS updates] XFS development tree branch, for-next,
-	updated. xfs-for-linus-3.15-rc5-1332-g2d6dcc6
-Message-Id: <20140514235605.C85387F47@oss.sgi.com>
-Date: Wed, 14 May 2014 18:56:05 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 801B57F3F
+	for <xfs@oss.sgi.com>; Wed, 14 May 2014 21:38:51 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 57CE3304048
+	for <xfs@oss.sgi.com>; Wed, 14 May 2014 19:38:48 -0700 (PDT)
+Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
+	[150.101.137.145]) by cuda.sgi.com with ESMTP id
+	bjHrLmQZFUW1LvnK for <xfs@oss.sgi.com>;
+	Wed, 14 May 2014 19:38:41 -0700 (PDT)
+Received: from dave by dastard with local (Exim 4.80)
+	(envelope-from <david@fromorbit.com>) id 1WklYY-0006oj-PH
+	for xfs@oss.sgi.com; Thu, 15 May 2014 12:38:02 +1000
+Date: Thu, 15 May 2014 12:38:02 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: [ANNOUNCE] xfstests: master branch updated to 9b7f704
+Message-ID: <20140515023802.GG5421@dastard>
+MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -12,107 +25,101 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============7038208452519788732=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-This is an automated email from the git hooks/post-receive script. It was
-generated because a ref change was pushed to the repository containing
-the project "XFS development tree".
 
-The branch, for-next has been updated
-  discards  a3f929877fab0bd5f759a62c9a1b5cf5673525d2 (commit)
-  discards  d4f8a227bda5d95a2280bd2a96ad0a0b545349da (commit)
-  discards  b8b39d39f94c0d3ea5771d1df3151c569599c20a (commit)
-  discards  7043507bfa1af648512e36d95cca484757df0b64 (commit)
-  discards  c24c775c5e3657d329ede70f744ba075095bb53d (commit)
-  2d6dcc6 Merge branch 'xfs-attr-cleanup' into for-next
-  ff14ee4 Merge branch 'xfs-misc-fixes-1-for-3.16' into for-next
-  b767692 Merge branch 'xfs-free-inode-btree' into for-next
-  232c2f5 Merge branch 'xfs-filestreams-lookup' into for-next
-  fdd3a2a Merge branch 'xfs-unused-args-cleanup' into for-next
-  ee4eec4 xfs: list_lru_init returns a negative error
-  bc14782 xfs: negate xfs_icsb_init_counters error value 
-  4568764 xfs: negate mount workqueue init error value
-  6670232 xfs: fix wrong err sign on xfs_set_acl()
-  a5a14de xfs: fix wrong errno from xfs_initxattrs
-  65149e3 xfs: correct error sign on COLLAPSE_RANGE errors
-  b38a134 xfs: xfs_commit_metadata returns wrong errno
-  8ff1e67 xfs: fix incorrect error sign in xfs_file_aio_read
-  43ec146 xfs: xfs_dir_fsync() returns positive errno
-  6c888af xfs: pass struct da_args to xfs_attr_calc_size
-  67fd718 xfs: simplify attr name setup
-  1bc426a xfs: fold xfs_attr_remove_int into xfs_attr_remove
-  b87d022 xfs: fold xfs_attr_get_int into xfs_attr_get
-  c5b4ac3 xfs: fold xfs_attr_set_int into xfs_attr_set
-  afcf0a2 Merge tag 'xfs-for-linus-3.15-rc5' of git://oss.sgi.com/xfs/xfs
-  9ac0367 Merge tag 'ext4_for_linus_stable' of git://git.kernel.org/pub/scm/linux/kernel/git/tytso/ext4
-  23fffa9 fs: move falloc collapse range check into the filesystem methods
-      from  a3f929877fab0bd5f759a62c9a1b5cf5673525d2 (commit)
-
-Those revisions listed above that are new to this repository have
-not appeared on any other notification email; so we list those
-revisions in full, below.
-
-- Log -----------------------------------------------------------------
-commit 2d6dcc6d7e95cc83046b2f97e179e6bbb7921245
-Merge: ff14ee4 6c888af
-Author: Dave Chinner <david@fromorbit.com>
-Date:   Thu May 15 09:39:28 2014 +1000
-
-    Merge branch 'xfs-attr-cleanup' into for-next
-    
-    Conflicts:
-    	fs/xfs/xfs_attr.c
-
-commit ff14ee42a038cf48263ac8d2eca5d30196554b82
-Merge: b767692 8cfcc3e
-Author: Dave Chinner <david@fromorbit.com>
-Date:   Thu May 15 09:38:15 2014 +1000
-
-    Merge branch 'xfs-misc-fixes-1-for-3.16' into for-next
-
-commit b76769294ba400415fc44038c21cc2df86f9a28b
-Merge: 232c2f5 53801fd
-Author: Dave Chinner <david@fromorbit.com>
-Date:   Thu May 15 09:37:44 2014 +1000
-
-    Merge branch 'xfs-free-inode-btree' into for-next
-
-commit 232c2f5c65dd80055e7163a5c82e3816119330e6
-Merge: fdd3a2a b94acd4
-Author: Dave Chinner <david@fromorbit.com>
-Date:   Thu May 15 09:36:59 2014 +1000
-
-    Merge branch 'xfs-filestreams-lookup' into for-next
-
-commit fdd3a2ae2e48310491e605c46201c95629dd450b
-Merge: ee4eec4 5e06d14
-Author: Dave Chinner <david@fromorbit.com>
-Date:   Thu May 15 09:36:35 2014 +1000
-
-    Merge branch 'xfs-unused-args-cleanup' into for-next
-
------------------------------------------------------------------------
-
-Summary of changes:
- fs/xfs/xfs_attr.c   | 328 +++++++++++++++++++---------------------------------
- fs/xfs/xfs_export.c |   2 +-
- fs/xfs/xfs_file.c   |  16 ++-
- fs/xfs/xfs_iops.c   |  12 +-
- fs/xfs/xfs_qm.c     |  26 +++--
- fs/xfs/xfs_super.c  |   4 +-
- 6 files changed, 152 insertions(+), 236 deletions(-)
+--===============7038208452519788732==
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="/WwmFnJnmDyWGHa4"
+Content-Disposition: inline
 
 
-hooks/post-receive
--- 
-XFS development tree
+--/WwmFnJnmDyWGHa4
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+
+Hi folks,
+
+The xfstests repository at git://oss.sgi.com/xfs/cmds/xfstests has
+just been updated. Patches often get missed, so please check if your
+outstanding patches were in this update. If they have not been in
+this update, please resubmit them to xfs@oss.sgi.com so they can be
+picked up in the next update.
+
+The new head of the master branch is commit:
+
+9b7f704 config: make sure tests check for loop device support
+
+New Commits:
+
+Brian Foster (2):
+      [49a4f92] xfs/013: use killall -9 and wait in _cleanup()
+      [9b7f704] config: make sure tests check for loop device support
+
+Filipe David Borba Manana (1):
+      [fe3fcf2] btrfs: add regression test for send with extrefs
+
+Jeff Layton (1):
+      [85a0117] loggen: fix build vs. newer xfsprogs headers
+
+
+Code Diffstat:
+
+ configure.ac        |   7 ++--
+ src/loggen.c        |   7 ++++
+ tests/btrfs/050     | 109 ++++++++++++++++++++++++++++++++++++++++++++++++=
+++++
+ tests/btrfs/050.out |   1 +
+ tests/btrfs/group   |   1 +
+ tests/shared/298    |   1 +
+ tests/xfs/013       |   3 +-
+ tests/xfs/206       |   1 +
+ tests/xfs/259       |   2 +-
+ 9 files changed, 127 insertions(+), 5 deletions(-)
+ create mode 100755 tests/btrfs/050
+ create mode 100644 tests/btrfs/050.out
+--=20
+Dave Chinner
+david@fromorbit.com
+
+--/WwmFnJnmDyWGHa4
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
+
+iQIcBAEBAgAGBQJTdCiKAAoJEK3oKUf0dfod9wsP/idpE6bSK3ci78NUuQoA7Ilq
+uV+e98ZHQb8GoPUV6ssPURnHltRR38Wo++6St0z3zXoPEUeh/X9AJ+jf1rHgjcNc
+6vlgafWWqkY9Z6Y89KP07qvIo6X4kNQOzRbClfymqStdXb9h8w+Bv0uKG6+81NEm
+OmlU/6p8NF963KaM6smuWZVBqEj64j3JSl6USPYqndle1ai3Ja/vXncYErZ9EfOy
+7E/+Q/QAeGFmUu7KmF2Cfs2Klq6ELjJ50jtXX4vXzd+LUuBhWzWifQeF445RDhYF
+bmc4Q9mf/UgXbUIMX444naJtyghmTu4xvXgxoF5+X6BLObFEiIsj94zFKkxbBjv/
+fJd1ylDUhBhJGBW4FkW6ArkM1XVcc2+wDxgw0rNGTrZ6RDJ9/OgrAy1hQhyTQl6m
+9Crn9eqx/NAQCk6ZIPvggquCppEovwnB3AOs/77q5aV/uAzLZnWPI3x0vhG0CSrZ
++g9r0VPmBmVHaxsHwpN6eqIofzrWle7YWcYblhLAuLUsbEo65GOkIVK0Q+DNKwBa
+m4V8dHJ6LKFwUwIOBKVNaMYZ1Yocyk03CKsVedzvRGKaZvR22JPTF8t4koqoY8dA
+5lE+5t+6vJOWRAIkKQ51LxsgmkcHzcptnghleGHUZe2BEMOSjsWAL7HctxdnJwk8
+24fUuI35s07vA7I9YlhQ
+=8cuJ
+-----END PGP SIGNATURE-----
+
+--/WwmFnJnmDyWGHa4--
+
+
+--===============7038208452519788732==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============7038208452519788732==--
