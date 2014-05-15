@@ -1,29 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 17AF27F3F
-	for <xfs@oss.sgi.com>; Thu, 15 May 2014 13:59:37 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id B815030405F
-	for <xfs@oss.sgi.com>; Thu, 15 May 2014 11:59:36 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id 8woXLwMV0eZD31TG for
-	<xfs@oss.sgi.com>; Thu, 15 May 2014 11:59:35 -0700 (PDT)
-Received: from int-mx11.intmail.prod.int.phx2.redhat.com
-	(int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id s4FIxXQX028283
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256
-	verify=OK) for <xfs@oss.sgi.com>; Thu, 15 May 2014 14:59:34 -0400
-Received: from liberator.sandeen.net (ovpn01.gateway.prod.ext.phx2.redhat.com
-	[10.5.9.1])
-	by int-mx11.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id s4FIxWx0009304
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES128-SHA bits=128 verify=NO)
-	for <xfs@oss.sgi.com>; Thu, 15 May 2014 14:59:33 -0400
-Message-ID: <53750E9F.3010301@redhat.com>
-Date: Thu, 15 May 2014 13:59:43 -0500
-From: Eric Sandeen <sandeen@redhat.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 360C57F3F
+	for <xfs@oss.sgi.com>; Thu, 15 May 2014 15:26:04 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 7DBC6AC00C
+	for <xfs@oss.sgi.com>; Thu, 15 May 2014 13:26:00 -0700 (PDT)
+Received: from mail-we0-f181.google.com (mail-we0-f181.google.com
+	[74.125.82.181]) by cuda.sgi.com with ESMTP id Nbia62xxah1b79jg
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Thu, 15 May 2014 13:25:59 -0700 (PDT)
+Received: by mail-we0-f181.google.com with SMTP id w61so1599795wes.40
+	for <xfs@oss.sgi.com>; Thu, 15 May 2014 13:25:23 -0700 (PDT)
 MIME-Version: 1.0
-Subject: [PATCH] xfs_repair: don't let bplist index go negative in prefetch
+In-Reply-To: <CAJhmKHmxYbzX=8u7=HcV9xgSq4Xs8HMFcdLhnL01CwAQHpjEkw@mail.gmail.com>
+References: <CAJhmKHmwvCBx=arJ6m2ZhuQVq=Jj-XbBGvEPjTPY5a1QtWRTCQ@mail.gmail.com>
+	<20140408015012.GB22917@dastard>
+	<CAJhmKHnap0vu8m4AXBxJr9L0RKoquFrm3NjKQdDBJwpRTYmfpw@mail.gmail.com>
+	<20140408053117.GJ27017@dastard>
+	<CAJhmKHk5fWVaDTEfL_oESULspavk83eBEsyw7=qEp8bC7f2S2g@mail.gmail.com>
+	<CAAxjCEzdYRug8CUjhmB7AHJCNAJs4ERRTLXGAHXqi1sw-vOriw@mail.gmail.com>
+	<CAJhmKHmxYbzX=8u7=HcV9xgSq4Xs8HMFcdLhnL01CwAQHpjEkw@mail.gmail.com>
+Date: Thu, 15 May 2014 22:25:22 +0200
+Message-ID: <CAAxjCEwHvU+mtNxCnwtR_rr9k2TNjwvJ7BLu25RGe1aKkzFvGw@mail.gmail.com>
+Subject: Re: XFS fragmentation on file append
+From: Stefan Ring <stefanrin@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -36,39 +36,46 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs-oss <xfs@oss.sgi.com>
+To: Keyur Govande <keyurgovande@gmail.com>
+Cc: linux-fsdevel@vger.kernel.org, Linux fs XFS <xfs@oss.sgi.com>
 
-After:
+On Thu, Apr 24, 2014 at 11:49 PM, Keyur Govande <keyurgovande@gmail.com> wrote:
+> On Thu, Apr 24, 2014 at 2:54 AM, Stefan Ring <stefanrin@gmail.com> wrote:
+>> I've become interested in this topic, as I'm also running MySQL with
+>> O_DIRECT and innodb_file_per_table. Out of curiosity, I immediately
+>> ran xfs_bmap on a moderately sized table space (34GB). It listed
+>> around 30000 fragments, on average one for every MB.
+>>
+>> I want to report what happened then: A flurry of activity started on
+>> both disks (root/swap lives on one of them, the data volume containing
+>> the MySQL files on another) and lasted for about two minutes.
+>> Afterwards, all memory previously allocated to the file cache has
+>> become free, and also everything XFS seems to keep buffered internally
+>> (I think it's called SReclaimable) was released. Swap usage increased
+>> only slightly. dmesg was silent during that time.
+>>
+>> This is a 2.6.32-358.2.1.el6.x86_64 kernel with xfsprogs 3.1.1 (CentOS
+>> 6.4). The machine has 64GB of RAM (2 NUMA nodes) and 24 (virtual)
+>> cores. Is this known behavior of xfs_bmap?
+>
+> Interesting...it looks like your box flushed all of the OS buffer
+> cache. I am unable to reproduce this behavior on my test box with the
+> 3.10.37 kernel. I also tried with 2.6.32-358.18.1.el6.x86_64 and
+> didn't hit the issue, but obviously our access patterns differ wildly.
 
-bbd3275 repair: don't unlock prefetch tree to read discontig buffers
+I tried it again, logging a few files in /proc periodically:
+https://dl.dropboxusercontent.com/u/5338701/dev/xfs/memdump.tar.xz
 
-Coverity spotted that it's possible for us to arrive at the loop
-below with num == 1, and then we decrement it to 0, and try to
-index bplist[num-1].
+Inside the archive, "memdump" is the simplistic script used to create
+the other files. A few seconds in, I invoked xfs_bmap on the same file
+again (this time weighing in at 81GB), and it spit out 36000
+fragments. It took only a few seconds to completely drain 40 GB of
+buffer memory.
 
-I think this was possible before the change, i.e. it's probably
-not a regression.
+cciss/c0d0 is the device where the XFS filesystem lives, while sda
+contains root and swap.
 
-Fix this by not trying to shrink the window unless we have
-more than one buffer in the array.
-
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
-
-
-diff --git a/repair/prefetch.c b/repair/prefetch.c
-index 4595310..b6d4755 100644
---- a/repair/prefetch.c
-+++ b/repair/prefetch.c
-@@ -505,7 +505,7 @@ pf_batch_read(
- 		first_off = LIBXFS_BBTOOFF64(XFS_BUF_ADDR(bplist[0]));
- 		last_off = LIBXFS_BBTOOFF64(XFS_BUF_ADDR(bplist[num-1])) +
- 			XFS_BUF_SIZE(bplist[num-1]);
--		while (last_off - first_off > pf_max_bytes) {
-+		while (num > 1 && last_off - first_off > pf_max_bytes) {
- 			num--;
- 			last_off = LIBXFS_BBTOOFF64(XFS_BUF_ADDR(bplist[num-1])) +
- 				XFS_BUF_SIZE(bplist[num-1]);
+If somebody could gain some insight from this, I'd be happy.
 
 _______________________________________________
 xfs mailing list
