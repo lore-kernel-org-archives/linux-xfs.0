@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 0919E7F53
-	for <xfs@oss.sgi.com>; Fri, 16 May 2014 18:01:08 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id C4A9C8F8052
-	for <xfs@oss.sgi.com>; Fri, 16 May 2014 16:01:07 -0700 (PDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 0E37C7F51
+	for <xfs@oss.sgi.com>; Fri, 16 May 2014 18:01:09 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 8FC7AAC001
+	for <xfs@oss.sgi.com>; Fri, 16 May 2014 16:01:05 -0700 (PDT)
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	8QeGx2V6HpNaAZxT for <xfs@oss.sgi.com>;
-	Fri, 16 May 2014 16:01:02 -0700 (PDT)
+	iOpiPpgqQKuAbW0Y for <xfs@oss.sgi.com>;
+	Fri, 16 May 2014 16:01:03 -0700 (PDT)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.80)
-	(envelope-from <dave@fromorbit.com>) id 1WlR7Z-0004wu-IG
+	(envelope-from <dave@fromorbit.com>) id 1WlR7Z-0004ws-HF
 	for xfs@oss.sgi.com; Sat, 17 May 2014 09:00:57 +1000
 Received: from dave by disappointment with local (Exim 4.82)
-	(envelope-from <dave@disappointment.disaster>) id 1WlR7Z-0007xE-HI
+	(envelope-from <dave@disappointment.disaster>) id 1WlR7Z-0007x4-GO
 	for xfs@oss.sgi.com; Sat, 17 May 2014 09:00:57 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 4/5] xfs: don't need dirv2 checks anymore
-Date: Sat, 17 May 2014 09:00:51 +1000
-Message-Id: <1400281252-29638-5-git-send-email-david@fromorbit.com>
+Subject: [PATCH 2/5] xfs: keep sb_bad_features2 the same a sb_features2
+Date: Sat, 17 May 2014 09:00:49 +1000
+Message-Id: <1400281252-29638-3-git-send-email-david@fromorbit.com>
 In-Reply-To: <1400281252-29638-1-git-send-email-david@fromorbit.com>
 References: <1400281252-29638-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,92 +39,35 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-If the the V2 directory feature bit is not set in the superblock
-feature mask the filesystem will fail the good version check.
-Hence we don't need any other version checking on the dir2 feature
-bit in the code as the filesystem will not mount without it set.
-Remove the checking code.
+Whenever we update sb_features2, we need to update sb_bad_features2
+so that they remain identical on disk. This prevents future mounts
+or userspace utilities from getting confused over which features the
+filesystem supports.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/xfs_dir2.c  | 2 +-
- fs/xfs/xfs_fsops.c | 3 +--
- fs/xfs/xfs_sb.c    | 9 ---------
- fs/xfs/xfs_sb.h    | 6 ------
- 4 files changed, 2 insertions(+), 18 deletions(-)
+ fs/xfs/xfs_sb.h | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/fs/xfs/xfs_dir2.c b/fs/xfs/xfs_dir2.c
-index e365c98..93fcebd 100644
---- a/fs/xfs/xfs_dir2.c
-+++ b/fs/xfs/xfs_dir2.c
-@@ -92,7 +92,7 @@ xfs_dir_mount(
- 	int	nodehdr_size;
- 
- 
--	ASSERT(xfs_sb_version_hasdirv2(&mp->m_sb));
-+	ASSERT(mp->m_sb.sb_versionnum & XFS_SB_VERSION_DIRV2BIT);
- 	ASSERT((1 << (mp->m_sb.sb_blocklog + mp->m_sb.sb_dirblklog)) <=
- 	       XFS_MAX_BLOCKSIZE);
- 
-diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
-index 2a03f2d..b099799 100644
---- a/fs/xfs/xfs_fsops.c
-+++ b/fs/xfs/xfs_fsops.c
-@@ -75,6 +75,7 @@ xfs_fs_geometry(
- 	if (new_version >= 3) {
- 		geo->version = XFS_FSOP_GEOM_VERSION;
- 		geo->flags = XFS_FSOP_GEOM_FLAGS_NLINK |
-+			     XFS_FSOP_GEOM_FLAGS_DIRV2 |
- 			(xfs_sb_version_hasattr(&mp->m_sb) ?
- 				XFS_FSOP_GEOM_FLAGS_ATTR : 0) |
- 			(xfs_sb_version_hasquota(&mp->m_sb) ?
-@@ -87,8 +88,6 @@ xfs_fs_geometry(
- 				XFS_FSOP_GEOM_FLAGS_SHARED : 0) |
- 			(xfs_sb_version_hasextflgbit(&mp->m_sb) ?
- 				XFS_FSOP_GEOM_FLAGS_EXTFLG : 0) |
--			(xfs_sb_version_hasdirv2(&mp->m_sb) ?
--				XFS_FSOP_GEOM_FLAGS_DIRV2 : 0) |
- 			(xfs_sb_version_hassector(&mp->m_sb) ?
- 				XFS_FSOP_GEOM_FLAGS_SECTOR : 0) |
- 			(xfs_sb_version_hasasciici(&mp->m_sb) ?
-diff --git a/fs/xfs/xfs_sb.c b/fs/xfs/xfs_sb.c
-index 8baf61a..de16dd5 100644
---- a/fs/xfs/xfs_sb.c
-+++ b/fs/xfs/xfs_sb.c
-@@ -333,15 +333,6 @@ xfs_mount_validate_sb(
- 		xfs_warn(mp, "Offline file system operation in progress!");
- 		return XFS_ERROR(EFSCORRUPTED);
- 	}
--
--	/*
--	 * Version 1 directory format has never worked on Linux.
--	 */
--	if (unlikely(!xfs_sb_version_hasdirv2(sbp))) {
--		xfs_warn(mp, "file system using version 1 directory format");
--		return XFS_ERROR(ENOSYS);
--	}
--
- 	return 0;
- }
- 
 diff --git a/fs/xfs/xfs_sb.h b/fs/xfs/xfs_sb.h
-index b5e7d0a..2344825 100644
+index c750126..9e6a3d5 100644
 --- a/fs/xfs/xfs_sb.h
 +++ b/fs/xfs/xfs_sb.h
-@@ -403,12 +403,6 @@ static inline bool xfs_sb_version_hasshared(struct xfs_sb *sbp)
- 		(sbp->sb_versionnum & XFS_SB_VERSION_SHAREDBIT);
+@@ -468,11 +468,13 @@ static inline void xfs_sb_version_addattr2(struct xfs_sb *sbp)
+ {
+ 	sbp->sb_versionnum |= XFS_SB_VERSION_MOREBITSBIT;
+ 	sbp->sb_features2 |= XFS_SB_VERSION2_ATTR2BIT;
++	sbp->sb_bad_features2 |= XFS_SB_VERSION2_ATTR2BIT;
  }
  
--static inline bool xfs_sb_version_hasdirv2(struct xfs_sb *sbp)
--{
--	return XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5 ||
--	       (sbp->sb_versionnum & XFS_SB_VERSION_DIRV2BIT);
--}
--
- static inline bool xfs_sb_version_haslogv2(struct xfs_sb *sbp)
+ static inline void xfs_sb_version_removeattr2(struct xfs_sb *sbp)
  {
- 	return XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5 ||
+ 	sbp->sb_features2 &= ~XFS_SB_VERSION2_ATTR2BIT;
++	sbp->sb_bad_features2 &= ~XFS_SB_VERSION2_ATTR2BIT;
+ 	if (!sbp->sb_features2)
+ 		sbp->sb_versionnum &= ~XFS_SB_VERSION_MOREBITSBIT;
+ }
 -- 
 1.9.0
 
