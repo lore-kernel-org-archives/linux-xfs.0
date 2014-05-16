@@ -1,23 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id AB88329DF8
-	for <xfs@oss.sgi.com>; Fri, 16 May 2014 01:01:57 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 71AD58F8039
-	for <xfs@oss.sgi.com>; Thu, 15 May 2014 23:01:54 -0700 (PDT)
-Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
-	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	noLv0uRayJ4WAwrx for <xfs@oss.sgi.com>;
-	Thu, 15 May 2014 23:01:52 -0700 (PDT)
-Date: Fri, 16 May 2014 16:01:39 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [GIT PULL] xfs: fixes for 3.15-rc6
-Message-ID: <20140516060139.GG26353@dastard>
-References: <20140516021144.GK5421@dastard>
-	<20140516055320.GA20975@infradead.org>
+	by oss.sgi.com (Postfix) with ESMTP id 150387F50
+	for <xfs@oss.sgi.com>; Fri, 16 May 2014 03:49:14 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id D256C8F8059
+	for <xfs@oss.sgi.com>; Fri, 16 May 2014 01:49:10 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id mBYLdgEPmBazoTxi for
+	<xfs@oss.sgi.com>; Fri, 16 May 2014 01:49:09 -0700 (PDT)
+Date: Fri, 16 May 2014 10:48:42 +0200 (CEST)
+From: =?ISO-8859-15?Q?Luk=E1=A8_Czerner?= <lczerner@redhat.com>
+Subject: Re: [ANNOUNCE] xfstests: new mailing list
+In-Reply-To: <20140516054009.GA17647@infradead.org>
+Message-ID: <alpine.LFD.2.00.1405161047010.2099@localhost.localdomain>
+References: <20140516044611.GA8206@dastard>
+	<20140516054009.GA17647@infradead.org>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20140516055320.GA20975@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,37 +29,43 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+Cc: fstests@vger.kernel.org, xfs@oss.sgi.com, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org
 
-On Thu, May 15, 2014 at 10:53:20PM -0700, Christoph Hellwig wrote:
-> On Fri, May 16, 2014 at 12:11:44PM +1000, Dave Chinner wrote:
-> > Hi Linus,
-> > 
-> > Can you please pull the updates listed below? I found a bunch of
-> > error sign issues while determine what we need to do to rid XFS of
-> > this problem permanently. A couple of the bugs are in data integirty
-> > operations, a couple more are in the new COLLAPSE_RANGE code. One of
-> > these came in through a recent ext4 merge and so I had to update the
-> > base tree to 3.15-rc5 before fixing the issues.
+On Thu, 15 May 2014, Christoph Hellwig wrote:
+
+> Date: Thu, 15 May 2014 22:40:09 -0700
+> From: Christoph Hellwig <hch@infradead.org>
+> To: Dave Chinner <david@fromorbit.com>
+> Cc: fstests@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+>     linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
+> Subject: Re: [ANNOUNCE] xfstests: new mailing list
 > 
-> Doesn't this miss the log roundin fix?
+> On Fri, May 16, 2014 at 02:46:11PM +1000, Dave Chinner wrote:
+> > Hi folks,
+> > 
+> > As requested I've created a new mailing list for xfstests
+> > development and discussion. Reflecting the fact that the test
+> > harness is not really XFS specific anymore, the list is:
+> > 
+> > 	fstests@vger.kernel.org
+> 
+> Isn't there an "x" missing somewhere?
 
-I'm still verifying/testing that fix (a several day stress
-test was need to uncover it in the first place). It will need to be pushed back to
-the -stable kernels, anyway, so it doesn't really matter which
-kernel it goes into as long as it has the cc: stable tag in it...
+It's intentional and it is "Reflecting the fact that the test
+harness is not really XFS specific anymore", even though the test
+suite itself keep the name xfstests.
 
-> Linus said he is away for about a weeke anyway, while we're at it.
+This way it's more obvious to people that this is in fact not xfs
+specific.
 
-I missed that. Not a big problem, I'll just resend the pull request
-when he gets back...
+-Lukas
 
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-ext4" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
 
 _______________________________________________
 xfs mailing list
