@@ -1,24 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 7486A7F3F
-	for <xfs@oss.sgi.com>; Sat, 17 May 2014 05:54:07 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 11408AC001
-	for <xfs@oss.sgi.com>; Sat, 17 May 2014 03:54:03 -0700 (PDT)
-Received: from b.painless.aa.net.uk (b.painless.aa.net.uk [81.187.30.52]) by
-	cuda.sgi.com with ESMTP id RdhJ4FdiiiggRR2x (version=TLSv1
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 5885F7F3F
+	for <xfs@oss.sgi.com>; Sat, 17 May 2014 06:54:28 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 20EC28F80FB
+	for <xfs@oss.sgi.com>; Sat, 17 May 2014 04:54:28 -0700 (PDT)
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.9])
+	by cuda.sgi.com with ESMTP id V0dF7hemTrbS36cZ (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Sat, 17 May 2014 03:54:01 -0700 (PDT)
-From: Adam Sampson <ats@offog.org>
-Subject: Re: [ANNOUNCE] xfsprogs: v3.2.0 released!
-References: <20140516055650.GF26353@dastard>
-	<y2a8uq11g5k.fsf@cartman.at.offog.org>
-	<20140517002309.GA18954@dastard>
-Date: Sat, 17 May 2014 11:53:08 +0100
-In-Reply-To: <20140517002309.GA18954@dastard> (Dave Chinner's message of "Sat,
-	17 May 2014 10:23:09 +1000")
-Message-ID: <y2a4n0o1xt7.fsf@cartman.at.offog.org>
+	Sat, 17 May 2014 04:54:26 -0700 (PDT)
+Date: Sat, 17 May 2014 04:54:25 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 3/5] xfs: turn NLINK feature on by default
+Message-ID: <20140517115425.GA10470@infradead.org>
+References: <1400281252-29638-1-git-send-email-david@fromorbit.com>
+	<1400281252-29638-4-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <1400281252-29638-4-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,24 +33,25 @@ Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-Dave Chinner <david@fromorbit.com> writes:
+> diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+> index 944f3d9..3f09782 100644
+> --- a/fs/xfs/xfs_mount.c
+> +++ b/fs/xfs/xfs_mount.c
+> @@ -697,6 +697,12 @@ xfs_mountfs(
+>  			mp->m_update_flags |= XFS_SB_VERSIONNUM;
+>  	}
+>  
+> +	/* always use v2 inodes by default now */
+> +	if (!(mp->m_sb.sb_versionnum & XFS_SB_VERSION_NLINKBIT)) {
+> +		mp->m_sb.sb_versionnum |= XFS_SB_VERSION_NLINKBIT;
+> +		mp->m_update_flags |= XFS_SB_VERSIONNUM;
+> +	}
 
-> [...] it's preferable to have things like xfs_repair abort when it
-> comes across an inconsistency it can't handle than to continue blindly
-> along and making a bigger mess of the filesystem it's supposed to be
-> fixing...
+This probably should print a message for the user.
 
-Yes -- that's why I was building with DEBUG= on previous releases
-(i.e. I want assertions enabled). doc/INSTALL says that DEBUG=-DNDEBUG
-disables assertions, so packagers are quite likely to have DEBUG= in
-their build process.
+Otherwise looks fine,
 
-> Anyway, we'll look to fix it for 3.2.1.
-
-Cheers. :)
-
--- 
-Adam Sampson <ats@offog.org>                         <http://offog.org/>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
 _______________________________________________
 xfs mailing list
