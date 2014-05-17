@@ -1,23 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 5885F7F3F
-	for <xfs@oss.sgi.com>; Sat, 17 May 2014 06:54:28 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 20EC28F80FB
-	for <xfs@oss.sgi.com>; Sat, 17 May 2014 04:54:28 -0700 (PDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id E75C37F3F
+	for <xfs@oss.sgi.com>; Sat, 17 May 2014 06:54:51 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 70C3DAC03B
+	for <xfs@oss.sgi.com>; Sat, 17 May 2014 04:54:51 -0700 (PDT)
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.9])
-	by cuda.sgi.com with ESMTP id V0dF7hemTrbS36cZ (version=TLSv1
+	by cuda.sgi.com with ESMTP id G9mCsx3v3focLsUN (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Sat, 17 May 2014 04:54:26 -0700 (PDT)
-Date: Sat, 17 May 2014 04:54:25 -0700
+	Sat, 17 May 2014 04:54:50 -0700 (PDT)
+Date: Sat, 17 May 2014 04:54:50 -0700
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 3/5] xfs: turn NLINK feature on by default
-Message-ID: <20140517115425.GA10470@infradead.org>
-References: <1400281252-29638-1-git-send-email-david@fromorbit.com>
-	<1400281252-29638-4-git-send-email-david@fromorbit.com>
+Subject: Re: [PATCH] xfs: remove redundant checks from xfs_da_read_buf
+Message-ID: <20140517115450.GB10470@infradead.org>
+References: <1400281288-30652-1-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1400281252-29638-4-git-send-email-david@fromorbit.com>
+In-Reply-To: <1400281288-30652-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,23 +32,18 @@ Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-> diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-> index 944f3d9..3f09782 100644
-> --- a/fs/xfs/xfs_mount.c
-> +++ b/fs/xfs/xfs_mount.c
-> @@ -697,6 +697,12 @@ xfs_mountfs(
->  			mp->m_update_flags |= XFS_SB_VERSIONNUM;
->  	}
->  
-> +	/* always use v2 inodes by default now */
-> +	if (!(mp->m_sb.sb_versionnum & XFS_SB_VERSION_NLINKBIT)) {
-> +		mp->m_sb.sb_versionnum |= XFS_SB_VERSION_NLINKBIT;
-> +		mp->m_update_flags |= XFS_SB_VERSIONNUM;
-> +	}
+On Sat, May 17, 2014 at 09:01:28AM +1000, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> All of the verification checks of magic numbers are now done by
+> verifiers, so ther eis no need to check them again once the buffer
+> has been successfully read. If the magic number is bad, it won't
+> even get to that code to verify it so it really serves no purpose at
+> all anymore. Remove it.
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
 
-This probably should print a message for the user.
-
-Otherwise looks fine,
+Looks good,
 
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 
