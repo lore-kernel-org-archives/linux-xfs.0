@@ -1,23 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 9F6657F3F
-	for <xfs@oss.sgi.com>; Sat, 17 May 2014 13:03:19 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id CD7CF7F3F
+	for <xfs@oss.sgi.com>; Sun, 18 May 2014 21:56:01 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 8BBEA304039
-	for <xfs@oss.sgi.com>; Sat, 17 May 2014 11:03:19 -0700 (PDT)
-Received: from buxtehude.debian.org (buxtehude.debian.org [140.211.166.26]) by
-	cuda.sgi.com with ESMTP id xG5MpDtwJmhJF9rO (version=TLSv1
-	cipher=AES128-SHA bits=128 verify=NO) for <xfs@oss.sgi.com>;
-	Sat, 17 May 2014 11:03:14 -0700 (PDT)
-Subject: Bug#748483: xfsprogs: Let's add a watch file
-Resent-To: debian-bugs-dist@lists.debian.org
-Resent-Message-ID: <handler.748483.B.14003496038004@bugs.debian.org>
-Content-Type: multipart/mixed; boundary="===============8774757689455281661=="
+	by relay1.corp.sgi.com (Postfix) with ESMTP id A88448F8039
+	for <xfs@oss.sgi.com>; Sun, 18 May 2014 19:56:01 -0700 (PDT)
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	1WOv6DPBcNAC69yR for <xfs@oss.sgi.com>;
+	Sun, 18 May 2014 19:55:59 -0700 (PDT)
+Date: Mon, 19 May 2014 12:55:53 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [ANNOUNCE] xfsprogs: v3.2.0 released!
+Message-ID: <20140519025553.GB8554@dastard>
+References: <20140516055650.GF26353@dastard>
+	<y2a8uq11g5k.fsf@cartman.at.offog.org>
+	<20140517002309.GA18954@dastard>
+	<y2a4n0o1xt7.fsf@cartman.at.offog.org>
 MIME-Version: 1.0
-From: Vincent Blut <vincent.debian@free.fr>
-Message-ID: <20140517175957.5232.71552.reportbug@lamella>
-Date: Sat, 17 May 2014 19:59:57 +0200
-Reply-To: Vincent Blut <vincent.debian@free.fr>, 748483@bugs.debian.org
+Content-Disposition: inline
+In-Reply-To: <y2a4n0o1xt7.fsf@cartman.at.offog.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,61 +28,66 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Debian Bug Tracking System <submit@bugs.debian.org>
+To: Adam Sampson <ats@offog.org>
+Cc: xfs@oss.sgi.com
 
-This is a multi-part MIME message sent by reportbug.
+On Sat, May 17, 2014 at 11:53:08AM +0100, Adam Sampson wrote:
+> Dave Chinner <david@fromorbit.com> writes:
+> 
+> > [...] it's preferable to have things like xfs_repair abort when it
+> > comes across an inconsistency it can't handle than to continue blindly
+> > along and making a bigger mess of the filesystem it's supposed to be
+> > fixing...
+> 
+> Yes -- that's why I was building with DEBUG= on previous releases
+> (i.e. I want assertions enabled). doc/INSTALL says that DEBUG=-DNDEBUG
+> disables assertions, so packagers are quite likely to have DEBUG= in
+> their build process.
 
+Hmmm - so, not being an everyday userspace programmer, it didn't
+even occur to me that "-DNDEBUG" actually changes libc header
+behaviour, not anything to do with the XFS code.
 
---===============8774757689455281661==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+$ man assert
+.....
+BUGS
+       assert()  is  implemented as a macro; if the expression
+       tested has side-effects, program behavior will be different
+       depending on whether NDEBUG is defined.  This may create
+       Heisenbugs which go away when debugging is turned on.
 
-Source: xfsprogs
-Version: 3.1.9
-Severity: wishlist
+Yup, it's oh so obvious now that "NDEBUG" is something owned by
+system library code, not the xfsprogs package...
 
-Hey guys,
+<sigh>
 
-Even if it doesn't necessarily improve your workflow, the watch file could 
-improve some Debian tools that check it (e.g. UDD). 
-Could you please apply the attached one in your next upload?
+> > Anyway, we'll look to fix it for 3.2.1.
 
-Good day,
-Vincent
+Or maybe not. The intent of always turning off the asserts is that
+code like xfs_repair shouldn't assert fail when stuff it detected as
+out of bounds in a library function. IOWs, you're quite likely to
+unintentionally break repair by removing the NDEBUG define to
+re-instate the library asserts...
 
--- System Information:
-Debian Release: jessie/sid
-  APT prefers testing
-  APT policy: (990, 'testing'), (500, 'stable-updates'), (500, 'unstable'), (500, 'stable'), (1, 'experimental')
-Architecture: amd64 (x86_64)
+The control of the assert statements in the xfs_repair code itself
+is handled by the -DDEBUG macro, which is configurable. i.e. you can
+chose whether or not to have asserts in the repair code itself for
+it to fail when an inconsistency it can't handle is detected, but
+repair defines "inconsistent and cannot continue" very differently
+to the libxfs library code....
 
-Kernel: Linux 3.14-1-amd64 (SMP w/4 CPU cores)
-Locale: LANG=fr_FR.UTF-8, LC_CTYPE=fr_FR.UTF-8 (charmap=UTF-8)
-Shell: /bin/sh linked to /bin/dash
+Cheers,
 
---===============8774757689455281661==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment; filename="watch"
-
-version=3
-opts=uversionmangle=s/(\d)[_\.\-\+]?((RC|rc|pre|dev|beta|alpha)\d*)$/$1~$2/ \
-ftp://oss.sgi.com/projects/xfs/cmd_tars/xfsprogs-(.+)\.tar\.gz
-
---===============8774757689455281661==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============8774757689455281661==--
