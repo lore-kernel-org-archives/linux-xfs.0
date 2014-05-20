@@ -1,22 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 5567C7F4E
-	for <xfs@oss.sgi.com>; Tue, 20 May 2014 16:07:45 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 241F2304087
-	for <xfs@oss.sgi.com>; Tue, 20 May 2014 14:07:41 -0700 (PDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id BE1AF7F4E
+	for <xfs@oss.sgi.com>; Tue, 20 May 2014 17:34:44 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 5591BAC002
+	for <xfs@oss.sgi.com>; Tue, 20 May 2014 15:34:41 -0700 (PDT)
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	FKLDKlZAUM3vnNwW for <xfs@oss.sgi.com>;
-	Tue, 20 May 2014 14:07:36 -0700 (PDT)
-Date: Wed, 21 May 2014 07:07:32 +1000
+	n0bBzAjXoHJmC1uV for <xfs@oss.sgi.com>;
+	Tue, 20 May 2014 15:34:36 -0700 (PDT)
+Date: Wed, 21 May 2014 08:33:57 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: a maybe silly question about xfsdump
-Message-ID: <20140520210732.GI8554@dastard>
-References: <33dfdd6d469a5be58f79cbf0f0222c51@zbfmail.de>
+Subject: Re: [PATCH 18/18] xfs: add xfs_da_geometry to inode forks
+Message-ID: <20140520223357.GJ8554@dastard>
+References: <1399537188-26509-1-git-send-email-david@fromorbit.com>
+	<1399537188-26509-19-git-send-email-david@fromorbit.com>
+	<20140509073127.GC7882@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <33dfdd6d469a5be58f79cbf0f0222c51@zbfmail.de>
+In-Reply-To: <20140509073127.GC7882@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,58 +31,51 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: weber@zbfmail.de
-Cc: Xfs <xfs@oss.sgi.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-On Tue, May 20, 2014 at 05:33:15PM +0200, Marko Weber|8000 wrote:
+On Fri, May 09, 2014 at 12:31:27AM -0700, Christoph Hellwig wrote:
+> On Thu, May 08, 2014 at 06:19:48PM +1000, Dave Chinner wrote:
+> > While this might seem wasteful to burn a pointer in the data fork
+> > for all files, consider that the geometry information
+> > for data allocation can be abstracted from the xfs_mount in exactly
+> > the same way as has been done for the directory geometry.
+> > Effectively it's a hook to carry allocation policy around in....
+> > 
+> > So, add the geometry pointer to the inode fork, and initialise is
+> > appropriately and use it for all the directory and attribute
+> > operation setup instead ofthe xfs_mount version.
 > 
-> hello, again me ;-)
-> 
-> i use at runtime this command to backup root partition of a server:
-> 
-> xfsdump -f /var/backup/root2.dump -l 0 -p 5 -L rootdump -M rootdump /
-> 
-> 
-> i googled around alot, cause a question wont get out of my mind:
-> is this backup consistent?
-> And what about consistency when i backup a mysql partition at runtime?
+> A definitively NAK to bloating the inode without actually making
+> use of this.  I can see where you might want to go with this, but
+> until we actuall support different dir block sizes per inodes or
+> similar, and it actually proves to be useful this is not something
+> that should go in.
 
-First, define consistent....
+Yeah, that's fine. it's more just a demonstration of where this
+takes us. That said, it's pretty trivial to add directory block size
+config to the on-disk format. We can use the high bits of the extent
+size hint field so we don't take any more sapce.
 
-If you define consistent as a point in time snapshot where
-everything is from the same point in time, then xfsdump does not
-provide you with that. You need to quiese mysql and snapshot the
-filesystem, then backup the snapshot to get a consistent point in
-time backup of the filesytem from the application data all the way
-down to the filesystem metadata.
+That is, di_extsize is a 32 bit field that holds a log2 value of the
+hint. The hint is set in bytes via a u32 in the ioctl structure,
+so at most can have a value that represents an extent size of 4GB.
+That's an ondisk value range of 0-25, which only requires the lower
+5 bits of the di_extsize field on disk.
 
-That's no different to any other backup process - even if you are
-using btrfs you still need to quiesce the application to get a
-consistent snapshot of the application data in the filesystem
-snapshot that you are backing up....
+For directories, we currently set the value only with the
+XFS_XFLAG_EXTSZINHERIT flag to indicate that the di_extsize hint
+field contains the value new children should inherit. If we allow
+the XFS_XFLAG_EXTSZ to also be set and use the upper
+16 bits of the di_extsize field to indicate the directory block
+size, then we have a method for configuring per-directory block
+sizes without needing to add any new userspace interfaces....
 
-> but my most wondering is abot this:
-> 
-> bunka ~ # df -h
-> Filesystem                     Size  Used Avail Use% Mounted on
-> /dev/root                      135G   11G  125G   8% /
-> 
-> 
-> but the saved dump shows:
-> 
-> 
-> bunka ~ # ls -lh /var/backup/
-> 
-> -rw-r--r-- 1 root root 8.4G May 20 17:29 root2.dump
+> The rest of the series looks okay as long as we don't touch the
+> inode, but I'll have to do a slightly more detailed review.
 
-xfsdump stores information in a more compact form than the
-filesystem does on disk. It doesn't need all the metadata the
-filesystem has on disk to reference all the data you are backing
-up...
-
-Also, they may be some files maked as "no dump" that will be
-skipped, and other files that (e.g. iopen, unlinked tmpfiles) can't
-be found via a directory traversal and so aren't backed up.
+I need to clean it up and make it work properly before that. Wait
+for the resend. ;)
 
 Cheers,
 
