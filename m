@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 32E277F4E
-	for <xfs@oss.sgi.com>; Tue, 20 May 2014 09:40:53 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 1F13F8F8049
-	for <xfs@oss.sgi.com>; Tue, 20 May 2014 07:40:49 -0700 (PDT)
-Received: from newverein.lst.de (verein.lst.de [213.95.11.211]) by
-	cuda.sgi.com with ESMTP id Zw2CXXP9yBkU8AC4 (version=TLSv1
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 3C1427F4E
+	for <xfs@oss.sgi.com>; Tue, 20 May 2014 09:59:14 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 36A89304043
+	for <xfs@oss.sgi.com>; Tue, 20 May 2014 07:59:10 -0700 (PDT)
+Received: from www262.sakura.ne.jp (www262.sakura.ne.jp [202.181.97.72]) by
+	cuda.sgi.com with ESMTP id IMuY1kXS0oGP5GH8 (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 20 May 2014 07:40:48 -0700 (PDT)
-Date: Tue, 20 May 2014 16:40:46 +0200
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [xfs-masters] [Bug 48651] [TRIVIAl]'xfs_uuid_table' allocated
-	in xfs_uuid_mount() is never freed
-Message-ID: <20140520144046.GA17616@lst.de>
-References: <bug-48651-470@https.bugzilla.kernel.org/>
-	<bug-48651-470-8kNPGrGVTO@https.bugzilla.kernel.org/>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <bug-48651-470-8kNPGrGVTO@https.bugzilla.kernel.org/>
+	Tue, 20 May 2014 07:59:08 -0700 (PDT)
+Subject: Re: [PATCH] mm/vmscan: Do not block forever at shrink_inactive_list().
+From: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
+References: <201405192340.FCD48964.OFQHOOJLVSFFMt@I-love.SAKURA.ne.jp>
+	<20140520004449.GE18954@dastard>
+	<20140519225915.3370328d.akpm@linux-foundation.org>
+	<20140520063024.GH18954@dastard>
+In-Reply-To: <20140520063024.GH18954@dastard>
+Message-Id: <201405202358.ADF10119.SMOFOQLFtOVHJF@I-love.SAKURA.ne.jp>
+Date: Tue, 20 May 2014 23:58:29 +0900
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,30 +27,88 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: nickkrause@sympatico.ca, sandeen@redhat.com
-Cc: xfs@oss.sgi.com
+To: david@fromorbit.com, riel@redhat.com
+Cc: linux-kernel@vger.kernel.org, xfs@oss.sgi.com, hch@infradead.org, kosaki.motohiro@jp.fujitsu.com, akpm@linux-foundation.org, fengguang.wu@intel.com, kamezawa.hiroyu@jp.fujitsu.com
 
-T24gVHVlLCBNYXkgMjAsIDIwMTQgYXQgMDQ6MDE6MjBBTSArMDAwMCwgYnVnemlsbGEtZGFlbW9u
-QGJ1Z3ppbGxhLmtlcm5lbC5vcmcgd3JvdGU6Cj4gaHR0cHM6Ly9idWd6aWxsYS5rZXJuZWwub3Jn
-L3Nob3dfYnVnLmNnaT9pZD00ODY1MQo+IC0tLSBDb21tZW50ICMyIGZyb20gRXJpYyBTYW5kZWVu
-IDxzYW5kZWVuQHJlZGhhdC5jb20+IC0tLQo+IEZyZWVpbmcgaXQgd2hlbiB0aGUgbW9kdWxlIGlz
-IHVubG9hZGVkIHNob3VsZCBiZSBzdWZmaWNpZW50Lgo+IAo+IEluIG5vcm1hbCB1c2UsIHVubW91
-bnRpbmcgYSBmaWxlc3lzdGVtIGNyZWF0ZXMgYSBob2xlIGluIHRoZSB0YWJsZSwgd2hpY2ggdGhl
-Cj4gbmV4dCBtb3VudCBjYW4gZmlsbC4KPiAKPiBJZiB5b3UgbW91bnQgYSBsb3Qgb2YgdW5pcXVl
-IFVVSUQgZmlsZXN5c3RlbXMgd2l0aG91dCB1bm1vdW50aW5nIGFueSBpbgo+IGJldHdlZW4sIHRo
-ZSB0YWJsZSB3aWxsIGdyb3cgYWNjb3JkaW5nbHksIGFuZCB1bm1vdW50aW5nIHdvbid0IHNocmlu
-ayBpdCAtIGkuZS4KPiB0aGUgdGFibGUgb25seSBncm93cyBhcyB0aGUgbnVtYmVyIG9mIGNvbmN1
-cnJlbnRseSBtb3VudGVkIGZpbGVzeXN0ZW0gZ3Jvd3MsCj4gYnV0IHRoYXQgZG9lc24ndCBzZWVt
-IGxpa2UgYSBwYXJ0aWN1bGFybHkgY3JpdGljYWwgcHJvYmxlbSB0byBmaXguCgpJZiBhbnlvbmXu
-gIByZWFsbHkgY2FyZXMgYWJvdXQgdGhpcyBoZSBvciBzaGUgc2hvdWxkIGp1c3Qga2lsbCB0aGUg
-dXVpZAp0YWJsZSBlbnRpcmVseS4gIFdlIGNhbiBzaW1wbGUgd2FsayBhIGxpc3Qgb2YgbW91bnRl
-ZCB4ZnMgZmlsZXN5c3RlbXMKYW5kIGNoZWNrIHRoZWlyIHV1aWRzLiAgVGhlIFZGUyBldmVuIGtl
-ZXBzIGEgbGlzdCBhbHJlYWR5LCB3aGljaCB3ZQpwcm9iYWJseSBjb3VsZCB1c2UgaWYgd2UgYXJl
-IGNhcmVmdWwuCgpCb251cyBwb2ludHMgZm9yIGltcGxlbWVudGluZyB0aGlzIGluIGEgd2F5IHNv
-IHRoYXQgb3RoZXIgZmlsZXN5c3RlbXMKY291bGQgc2hhcmUgdGhlIGNvZGUuCgpfX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhm
-c0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
+Today I discussed with Kosaki-san at LinuxCon Japan 2014 about this issue.
+He does not like the idea of adding timeout to throttle loop. As Dave
+posted a patch that fixes a bug in XFS delayed allocation, I updated
+my patch accordingly.
+
+Although the bug in XFS was fixed by Dave's patch, other kernel code
+would have bugs which would fall into this infinite throttle loop.
+But to keep the possibility of triggering OOM killer minimum, can we
+agree with this updated patch (and in the future adding some warning
+mechanism like /proc/sys/kernel/hung_task_timeout_secs for detecting
+memory allocation stall)?
+
+Dave, if you are OK with this updated patch, please let me know
+commit ID of your patch.
+
+Regards.
+----------
+>From 408e65d9025e8e24838e7bf6ac9066ba8a9391a6 Mon Sep 17 00:00:00 2001
+From: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
+Date: Tue, 20 May 2014 23:34:34 +0900
+Subject: [PATCH] mm/vmscan: Do not throttle kswapd at shrink_inactive_list().
+
+I can observe that commit 35cd7815 "vmscan: throttle direct reclaim when
+too many pages are isolated already" causes RHEL7 environment to stall
+with 0% CPU usage when a certain type of memory pressure is given.
+This is because nobody can reclaim memory due to rules listed below.
+
+  (a) XFS uses a kernel worker thread for delayed allocation
+  (b) kswapd wakes up the kernel worker thread for delayed allocation
+  (c) the kernel worker thread is throttled due to commit 35cd7815
+
+This patch and commit XXXXXXXX "xfs: block allocation work needs to be
+kswapd aware" will solve rule (c).
+
+Signed-off-by: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
+---
+ mm/vmscan.c |   20 +++++++++++++++-----
+ 1 files changed, 15 insertions(+), 5 deletions(-)
+
+diff --git a/mm/vmscan.c b/mm/vmscan.c
+index 32c661d..5c6960e 100644
+--- a/mm/vmscan.c
++++ b/mm/vmscan.c
+@@ -1460,12 +1460,22 @@ shrink_inactive_list(unsigned long nr_to_scan, struct lruvec *lruvec,
+ 	struct zone *zone = lruvec_zone(lruvec);
+ 	struct zone_reclaim_stat *reclaim_stat = &lruvec->reclaim_stat;
+ 
+-	while (unlikely(too_many_isolated(zone, file, sc))) {
+-		congestion_wait(BLK_RW_ASYNC, HZ/10);
++	/*
++	 * Throttle only direct reclaimers. Allocations by kswapd (and
++	 * allocation workqueue on behalf of kswapd) should not be
++	 * throttled here; otherwise memory allocation will deadlock.
++	 */
++	if (!sc->hibernation_mode && !current_is_kswapd()) {
++		while (unlikely(too_many_isolated(zone, file, sc))) {
++			congestion_wait(BLK_RW_ASYNC, HZ/10);
+ 
+-		/* We are about to die and free our memory. Return now. */
+-		if (fatal_signal_pending(current))
+-			return SWAP_CLUSTER_MAX;
++			/*
++			 * We are about to die and free our memory.
++			 * Return now.
++			 */
++			if (fatal_signal_pending(current))
++				return SWAP_CLUSTER_MAX;
++		}
+ 	}
+ 
+ 	lru_add_drain();
+-- 
+1.7.1
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
