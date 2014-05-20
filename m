@@ -1,26 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 78E647F4E
-	for <xfs@oss.sgi.com>; Tue, 20 May 2014 11:13:36 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 5567C7F4E
+	for <xfs@oss.sgi.com>; Tue, 20 May 2014 16:07:45 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 264BDAC00A
-	for <xfs@oss.sgi.com>; Tue, 20 May 2014 09:13:35 -0700 (PDT)
-Received: from fujitsu25.fnanic.fujitsu.com ([192.240.6.15]) by cuda.sgi.com
-	with ESMTP id 9qxgd68kZaOMCXiD (version=TLSv1 cipher=AES256-SHA
-	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 20 May 2014 09:13:33 -0700 (PDT)
-From: Motohiro Kosaki <Motohiro.Kosaki@us.fujitsu.com>
-Date: Tue, 20 May 2014 09:12:07 -0700
-Subject: RE: [PATCH] mm/vmscan: Do not block forever at shrink_inactive_list().
-Message-ID: <6B2BA408B38BA1478B473C31C3D2074E31D59D8673@SV-EXCHANGE1.Corp.FC.LOCAL>
-References: <201405192340.FCD48964.OFQHOOJLVSFFMt@I-love.SAKURA.ne.jp>
-	<20140520004449.GE18954@dastard>
-	<20140519225915.3370328d.akpm@linux-foundation.org>
-	<20140520063024.GH18954@dastard>
-	<201405202358.ADF10119.SMOFOQLFtOVHJF@I-love.SAKURA.ne.jp>
-In-Reply-To: <201405202358.ADF10119.SMOFOQLFtOVHJF@I-love.SAKURA.ne.jp>
-Content-Language: en-US
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 241F2304087
+	for <xfs@oss.sgi.com>; Tue, 20 May 2014 14:07:41 -0700 (PDT)
+Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
+	[150.101.137.145]) by cuda.sgi.com with ESMTP id
+	FKLDKlZAUM3vnNwW for <xfs@oss.sgi.com>;
+	Tue, 20 May 2014 14:07:36 -0700 (PDT)
+Date: Wed, 21 May 2014 07:07:32 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: a maybe silly question about xfsdump
+Message-ID: <20140520210732.GI8554@dastard>
+References: <33dfdd6d469a5be58f79cbf0f0222c51@zbfmail.de>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <33dfdd6d469a5be58f79cbf0f0222c51@zbfmail.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,95 +29,65 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, "david@fromorbit.com" <david@fromorbit.com>, "riel@redhat.com" <riel@redhat.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>, "hch@infradead.org" <hch@infradead.org>, Motohiro Kosaki JP <kosaki.motohiro@jp.fujitsu.com>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>, "fengguang.wu@intel.com" <fengguang.wu@intel.com>, "kamezawa.hiroyu@jp.fujitsu.com" <kamezawa.hiroyu@jp.fujitsu.com>
+To: weber@zbfmail.de
+Cc: Xfs <xfs@oss.sgi.com>
 
-
-
-> -----Original Message-----
-> From: Tetsuo Handa [mailto:penguin-kernel@I-love.SAKURA.ne.jp]
-> Sent: Tuesday, May 20, 2014 11:58 PM
-> To: david@fromorbit.com; riel@redhat.com
-> Cc: Motohiro Kosaki JP; fengguang.wu@intel.com; kamezawa.hiroyu@jp.fujitsu.com; akpm@linux-foundation.org;
-> hch@infradead.org; linux-kernel@vger.kernel.org; xfs@oss.sgi.com
-> Subject: Re: [PATCH] mm/vmscan: Do not block forever at shrink_inactive_list().
+On Tue, May 20, 2014 at 05:33:15PM +0200, Marko Weber|8000 wrote:
 > 
-> Today I discussed with Kosaki-san at LinuxCon Japan 2014 about this issue.
-> He does not like the idea of adding timeout to throttle loop. As Dave posted a patch that fixes a bug in XFS delayed allocation, I
-> updated my patch accordingly.
+> hello, again me ;-)
 > 
-> Although the bug in XFS was fixed by Dave's patch, other kernel code would have bugs which would fall into this infinite throttle loop.
-> But to keep the possibility of triggering OOM killer minimum, can we agree with this updated patch (and in the future adding some
-> warning mechanism like /proc/sys/kernel/hung_task_timeout_secs for detecting memory allocation stall)?
+> i use at runtime this command to backup root partition of a server:
 > 
-> Dave, if you are OK with this updated patch, please let me know commit ID of your patch.
+> xfsdump -f /var/backup/root2.dump -l 0 -p 5 -L rootdump -M rootdump /
 > 
-> Regards.
-> ----------
-> >From 408e65d9025e8e24838e7bf6ac9066ba8a9391a6 Mon Sep 17 00:00:00 2001
-> From: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
-> Date: Tue, 20 May 2014 23:34:34 +0900
-> Subject: [PATCH] mm/vmscan: Do not throttle kswapd at shrink_inactive_list().
 > 
-> I can observe that commit 35cd7815 "vmscan: throttle direct reclaim when too many pages are isolated already" causes RHEL7
-> environment to stall with 0% CPU usage when a certain type of memory pressure is given.
-> This is because nobody can reclaim memory due to rules listed below.
+> i googled around alot, cause a question wont get out of my mind:
+> is this backup consistent?
+> And what about consistency when i backup a mysql partition at runtime?
+
+First, define consistent....
+
+If you define consistent as a point in time snapshot where
+everything is from the same point in time, then xfsdump does not
+provide you with that. You need to quiese mysql and snapshot the
+filesystem, then backup the snapshot to get a consistent point in
+time backup of the filesytem from the application data all the way
+down to the filesystem metadata.
+
+That's no different to any other backup process - even if you are
+using btrfs you still need to quiesce the application to get a
+consistent snapshot of the application data in the filesystem
+snapshot that you are backing up....
+
+> but my most wondering is abot this:
 > 
->   (a) XFS uses a kernel worker thread for delayed allocation
->   (b) kswapd wakes up the kernel worker thread for delayed allocation
->   (c) the kernel worker thread is throttled due to commit 35cd7815
+> bunka ~ # df -h
+> Filesystem                     Size  Used Avail Use% Mounted on
+> /dev/root                      135G   11G  125G   8% /
 > 
-> This patch and commit XXXXXXXX "xfs: block allocation work needs to be kswapd aware" will solve rule (c).
 > 
-> Signed-off-by: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
-> ---
->  mm/vmscan.c |   20 +++++++++++++++-----
->  1 files changed, 15 insertions(+), 5 deletions(-)
+> but the saved dump shows:
 > 
-> diff --git a/mm/vmscan.c b/mm/vmscan.c
-> index 32c661d..5c6960e 100644
-> --- a/mm/vmscan.c
-> +++ b/mm/vmscan.c
-> @@ -1460,12 +1460,22 @@ shrink_inactive_list(unsigned long nr_to_scan, struct lruvec *lruvec,
->  	struct zone *zone = lruvec_zone(lruvec);
->  	struct zone_reclaim_stat *reclaim_stat = &lruvec->reclaim_stat;
 > 
-> -	while (unlikely(too_many_isolated(zone, file, sc))) {
-> -		congestion_wait(BLK_RW_ASYNC, HZ/10);
-> +	/*
-> +	 * Throttle only direct reclaimers. Allocations by kswapd (and
-> +	 * allocation workqueue on behalf of kswapd) should not be
-> +	 * throttled here; otherwise memory allocation will deadlock.
-> +	 */
-> +	if (!sc->hibernation_mode && !current_is_kswapd()) {
-> +		while (unlikely(too_many_isolated(zone, file, sc))) {
-> +			congestion_wait(BLK_RW_ASYNC, HZ/10);
+> bunka ~ # ls -lh /var/backup/
 > 
-> -		/* We are about to die and free our memory. Return now. */
-> -		if (fatal_signal_pending(current))
-> -			return SWAP_CLUSTER_MAX;
-> +			/*
-> +			 * We are about to die and free our memory.
-> +			 * Return now.
-> +			 */
-> +			if (fatal_signal_pending(current))
-> +				return SWAP_CLUSTER_MAX;
-> +		}
->  	}
+> -rw-r--r-- 1 root root 8.4G May 20 17:29 root2.dump
 
+xfsdump stores information in a more compact form than the
+filesystem does on disk. It doesn't need all the metadata the
+filesystem has on disk to reference all the data you are backing
+up...
 
-Acked-by: KOSAKI Motohiro <kosaki.motohiro@jp.fujitsu.com>
+Also, they may be some files maked as "no dump" that will be
+skipped, and other files that (e.g. iopen, unlinked tmpfiles) can't
+be found via a directory traversal and so aren't backed up.
 
+Cheers,
 
-Dave, I don't like Tetsuo's first patch because this too_many_isolated exist to prevent false oom-kill. So, simple timeout
-resurrect it. Please let me know if you need further MM enhancement to solve XFS issue. I'd like join and assist this.
-
-Thanks.
-
-
-
-
-
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
