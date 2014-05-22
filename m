@@ -1,18 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id B3B7F7F3F
-	for <xfs@oss.sgi.com>; Thu, 22 May 2014 12:06:54 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 7BDEF7F3F
+	for <xfs@oss.sgi.com>; Thu, 22 May 2014 18:34:59 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id A386A30407B
-	for <xfs@oss.sgi.com>; Thu, 22 May 2014 10:06:51 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id 7nNTNREUogEgjZND for
-	<xfs@oss.sgi.com>; Thu, 22 May 2014 10:06:50 -0700 (PDT)
-Date: Thu, 22 May 2014 13:06:48 -0400
-From: Brian Foster <bfoster@redhat.com>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 5030C8F8037
+	for <xfs@oss.sgi.com>; Thu, 22 May 2014 16:34:56 -0700 (PDT)
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	8Gg39ZpqnNXB9XpN for <xfs@oss.sgi.com>;
+	Thu, 22 May 2014 16:34:52 -0700 (PDT)
+Date: Fri, 23 May 2014 09:34:49 +1000
+From: Dave Chinner <david@fromorbit.com>
 Subject: Re: [PATCH] xfs/005: filter _scratch_mount output and fix golden
 	output to match it
-Message-ID: <20140522170647.GA25877@bfoster.bfoster>
+Message-ID: <20140522233449.GN18954@dastard>
 References: <1400775429-30015-1-git-send-email-eguan@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
@@ -40,48 +41,34 @@ On Fri, May 23, 2014 at 12:17:09AM +0800, Eryu Guan wrote:
 > not
 > 
 > mount: Structure needs cleaning
-> 
-> Filter the output and fix the golden image to match the new output.
-> 
-> Signed-off-by: Eryu Guan <eguan@redhat.com>
-> ---
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+Evidence to the contrary:
 
->  tests/xfs/005     | 2 +-
->  tests/xfs/005.out | 2 +-
->  2 files changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/tests/xfs/005 b/tests/xfs/005
-> index 94157c4..534f910 100755
-> --- a/tests/xfs/005
-> +++ b/tests/xfs/005
-> @@ -59,7 +59,7 @@ _scratch_mkfs_xfs -m crc=1 >> $seqres.full 2>&1 || _fail "mkfs failed"
->  $XFS_IO_PROG -c "pwrite 224 4" $SCRATCH_DEV | _filter_xfs_io
->  
->  # should FAIL, the crc is bad; golden output contains mount failure
-> -_scratch_mount
-> +_scratch_mount 2>&1 | _filter_scratch
->  
->  # success, all done
->  status=0
-> diff --git a/tests/xfs/005.out b/tests/xfs/005.out
-> index 13d0125..853e446 100644
-> --- a/tests/xfs/005.out
-> +++ b/tests/xfs/005.out
-> @@ -1,4 +1,4 @@
->  QA output created by 005
->  wrote 4/4 bytes at offset 224
->  XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-> -mount: Structure needs cleaning
-> +mount: mount SCRATCH_DEV on SCRATCH_MNT failed: Structure needs cleaning
-> -- 
-> 1.9.0
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+# MKFS_OPTIONS="-b size=1024 -m crc=1"  ./check xfs/005
+FSTYP         -- xfs (debug)
+PLATFORM      -- Linux/x86_64 test1 3.15.0-rc5-dgc+
+MKFS_OPTIONS  -- -f -b size=1024 -m crc=1 /dev/vdb
+MOUNT_OPTIONS -- /dev/vdb /mnt/scratch
+
+xfs/005 0s ... 0s
+Ran: xfs/005
+Passed all 1 tests
+
+# mount /dev/vdb /mnt/scratch
+mount: Structure needs cleaning
+# mount -V
+mount from util-linux 2.20.1 (with libblkid and selinux support)
+#
+
+So xfs/005 is correct for a relatively recent mount binary.
+What version of mount are you using?
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
