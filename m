@@ -1,24 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id A69577F3F
-	for <xfs@oss.sgi.com>; Wed, 21 May 2014 16:59:35 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 4B562304067
-	for <xfs@oss.sgi.com>; Wed, 21 May 2014 14:59:35 -0700 (PDT)
-Received: from mail-ig0-f176.google.com (mail-ig0-f176.google.com
-	[209.85.213.176]) by cuda.sgi.com with ESMTP id
-	7HvRoaEXg00CP3an (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 21 May 2014 14:59:31 -0700 (PDT)
-Received: by mail-ig0-f176.google.com with SMTP id hl10so6807552igb.9
-	for <xfs@oss.sgi.com>; Wed, 21 May 2014 14:59:30 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <537CFECF.9070701@ccur.com>
-References: <537CFECF.9070701@ccur.com>
-Date: Wed, 21 May 2014 14:59:30 -0700
-Message-ID: <CANGgnMYCFVQ7aR2Qjo+c5B=Jyi3QfyhAHd6y3imSN_7a3Y4Ekg@mail.gmail.com>
-Subject: Re: Filesystem lockup with CONFIG_PREEMPT_RT
-From: Austin Schuh <austin@peloton-tech.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 299967F3F
+	for <xfs@oss.sgi.com>; Thu, 22 May 2014 04:59:21 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 274158F8033
+	for <xfs@oss.sgi.com>; Thu, 22 May 2014 02:59:17 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id 9lMBId8JV6kLRH1X for
+	<xfs@oss.sgi.com>; Thu, 22 May 2014 02:59:16 -0700 (PDT)
+From: Eryu Guan <eguan@redhat.com>
+Subject: [PATCH] generic: new ENOSPC regression test
+Date: Thu, 22 May 2014 17:58:42 +0800
+Message-Id: <1400752722-22782-1-git-send-email-eguan@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,75 +20,176 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: John Blackwood <john.blackwood@ccur.com>
-Cc: Richard Weinberger <richard.weinberger@gmail.com>, linux-rt-users@vger.kernel.org, linux-kernel@vger.kernel.org, xfs <xfs@oss.sgi.com>
+To: fstests@vger.kernel.org
+Cc: Eryu Guan <eguan@redhat.com>, xfs@oss.sgi.com
 
-On Wed, May 21, 2014 at 12:30 PM, John Blackwood
-<john.blackwood@ccur.com> wrote:
->> Date: Wed, 21 May 2014 03:33:49 -0400
->> From: Richard Weinberger <richard.weinberger@gmail.com>
->> To: Austin Schuh <austin@peloton-tech.com>
->> CC: LKML <linux-kernel@vger.kernel.org>, xfs <xfs@oss.sgi.com>, rt-users
->>       <linux-rt-users@vger.kernel.org>
->> Subject: Re: Filesystem lockup with CONFIG_PREEMPT_RT
->
->>
->> CC'ing RT folks
->>
->> On Wed, May 21, 2014 at 8:23 AM, Austin Schuh <austin@peloton-tech.com>
->> wrote:
->> > > On Tue, May 13, 2014 at 7:29 PM, Austin Schuh
->> > > <austin@peloton-tech.com> wrote:
->> >> >> Hi,
->> >> >>
->> >> >> I am observing a filesystem lockup with XFS on a CONFIG_PREEMPT_RT
->> >> >> patched kernel.  I have currently only triggered it using dpkg.
->> >> >> Dave
->> >> >> Chinner on the XFS mailing list suggested that it was a rt-kernel
->> >> >> workqueue issue as opposed to a XFS problem after looking at the
->> >> >> kernel messages.
->> >> >>
->> >> >> The only modification to the kernel besides the RT patch is that I
->> >> >> have applied tglx's "genirq: Sanitize spurious interrupt detection
->> >> >> of
->> >> >> threaded irqs" patch.
->> > >
->> > > I upgraded to 3.14.3-rt4, and the problem still persists.
->> > >
->> > > I turned on event tracing and tracked it down further.  I'm able to
->> > > lock it up by scping a new kernel debian package to /tmp/ on the
->> > > machine.  scp is locking the inode, and then scheduling
->> > > xfs_bmapi_allocate_worker in the work queue.  The work then never gets
->> > > run.  The kworkers then lock up waiting for the inode lock.
->> > >
->> > > Here are the relevant events from the trace.  ffff8803e9f10288
->> > > (blk_delay_work) gets run later on in the trace, but ffff8803b4c158d0
->> > > (xfs_bmapi_allocate_worker) never does.  The kernel then warns about
->> > > blocked tasks 120 seconds later.
->
-> Austin and Richard,
->
-> I'm not 100% sure that the patch below will fix your problem, but we
-> saw something that sounds pretty familiar to your issue involving the
-> nvidia driver and the preempt-rt patch.  The nvidia driver uses the
-> completion support to create their own driver's notion of an internally
-> used semaphore.
->
-> Some tasks were failing to ever wakeup from wait_for_completion() calls
-> due to a race in the underlying do_wait_for_common() routine.
+Run 8 processes writing 1k files to seperate files in seperate dirs to
+hit ENOSPC on small fs with little free space. Loop for 100 iterations.
 
-Hi John,
+Regression test for
+34cf865 ext4: fix deadlock when writing in ENOSPC conditions
 
-Thanks for the suggestion and patch.  The issue is that the work never
-gets run, not that the work finishes but the waiter never gets woken.
-I applied it anyways to see if it helps, but I still get the lockup.
+Signed-off-by: Eryu Guan <eguan@redhat.com>
+---
 
-Thanks,
-    Austin
+btrfs takes much longer time than xfs and extN do, the rough test time
+on my test box is
+
+xfs	50s
+extN	90s
+btrfs	1h
+
+I'm not sure what's the best way to deal with such situation, so I simply
+reduce iteration count for btrfs to 10, and test time on btrfs is about
+5m now.
+
+ tests/generic/027     | 107 ++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/generic/027.out |   2 +
+ tests/generic/group   |   1 +
+ 3 files changed, 110 insertions(+)
+ create mode 100755 tests/generic/027
+ create mode 100644 tests/generic/027.out
+
+diff --git a/tests/generic/027 b/tests/generic/027
+new file mode 100755
+index 0000000..b9232ec
+--- /dev/null
++++ b/tests/generic/027
+@@ -0,0 +1,107 @@
++#! /bin/bash
++# FS QA Test No. generic/027
++#
++# Run 8 processes writing 1k files to seperate files in seperate dirs to
++# hit ENOSPC on small fs with little free space. Loop for 100 iterations.
++#
++# Regression test for
++# 34cf865 ext4: fix deadlock when writing in ENOSPC conditions
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2014 Red Hat Inc.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#-----------------------------------------------------------------------
++#
++
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 15
++
++_cleanup()
++{
++    cd /
++    rm -f $tmp.*
++}
++
++create_file()
++{
++	local dir=$1
++	local direct=$2
++	local i=0
++
++	mkdir -p $dir
++	while $XFS_IO_PROG -f $direct -c "pwrite 0 1k" $dir/file_$i >/dev/null 2>&1; do
++		let i=$i+1
++	done
++}
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++
++# real QA test starts here
++_supported_fs generic
++_supported_os Linux
++
++_require_scratch
++
++rm -f $seqres.full
++echo "Silence is golden"
++
++_scratch_mkfs_sized $((256 * 1024 * 1024)) >>$seqres.full 2>&1
++_scratch_mount
++
++echo "Reserve 2M space" >>$seqres.full
++$XFS_IO_PROG -f -c "pwrite 0 2m" $SCRATCH_MNT/testfile >>$seqres.full 2>&1
++echo "Fulfill the fs" >>$seqres.full
++$XFS_IO_PROG -f -c "pwrite 0 254m" $SCRATCH_MNT/bigfile >>$seqres.full 2>&1
++echo "Remove reserved file" >>$seqres.full
++rm -f $SCRATCH_MNT/testfile
++
++loop=100
++# btrfs takes much longer time, reduce the loop count
++if [ "$FSTYP" == "btrfs" ]; then
++	loop=10
++fi
++
++dir=$SCRATCH_MNT/testdir
++echo -n "iteration" >>$seqres.full
++i=1
++while [ $i -le $loop ]; do
++	echo -n " $i" >>$seqres.full
++	nr_worker=8
++	while [ $nr_worker -gt 0 ]; do
++		# half buffered I/O half direct I/O
++		if [ `expr $nr_worker % 2` -eq 0 ]; then
++			create_file $dir/$nr_worker -d >>$seqres.full &
++		else
++			create_file $dir/$nr_worker >>$seqres.full &
++		fi
++		let nr_worker=$nr_worker-1
++	done
++	wait
++	rm -rf $dir
++	let i=$i+1
++done
++_scratch_unmount
++_check_scratch_fs
++
++status=0
++exit
+diff --git a/tests/generic/027.out b/tests/generic/027.out
+new file mode 100644
+index 0000000..ef78cda
+--- /dev/null
++++ b/tests/generic/027.out
+@@ -0,0 +1,2 @@
++QA output created by 027
++Silence is golden
+diff --git a/tests/generic/group b/tests/generic/group
+index 961f4e5..e851c62 100644
+--- a/tests/generic/group
++++ b/tests/generic/group
+@@ -29,6 +29,7 @@
+ 024 auto quick
+ 025 auto quick
+ 026 acl quick auto
++027 auto enospc
+ 053 acl repair auto quick
+ 062 attr udf auto quick
+ 068 other auto freeze dangerous stress
+-- 
+1.9.0
 
 _______________________________________________
 xfs mailing list
