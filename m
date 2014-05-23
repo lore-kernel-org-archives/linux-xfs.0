@@ -1,17 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id E478C7F3F
-	for <xfs@oss.sgi.com>; Fri, 23 May 2014 07:58:38 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 5C24A7F3F
+	for <xfs@oss.sgi.com>; Fri, 23 May 2014 12:51:23 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 653D0AC006
-	for <xfs@oss.sgi.com>; Fri, 23 May 2014 05:58:35 -0700 (PDT)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 385B28F8040
+	for <xfs@oss.sgi.com>; Fri, 23 May 2014 10:51:20 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id d0ou8BqVI4sB5EMr for
-	<xfs@oss.sgi.com>; Fri, 23 May 2014 05:58:33 -0700 (PDT)
+	cuda.sgi.com with ESMTP id TjewJiJ9YMYvaoIp for
+	<xfs@oss.sgi.com>; Fri, 23 May 2014 10:51:18 -0700 (PDT)
+Date: Fri, 23 May 2014 13:51:07 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH] xfstests: test speculative preallocation reclaim on ENOSPC
-Date: Fri, 23 May 2014 08:58:31 -0400
-Message-Id: <1400849911-46606-1-git-send-email-bfoster@redhat.com>
+Subject: Re: [PATCH] xfs: kill xfs_buf_geterror()
+Message-ID: <20140523175106.GA8343@laptop.bfoster>
+References: <1400802807-19936-1-git-send-email-david@fromorbit.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <1400802807-19936-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -20,305 +24,200 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: fstests@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-XFS can allocate significant amounts of space to files via speculative
-preallocation. Such preallocation may not be reclaimed automatically on
-file close() if a file is repeatedly opened and extended. For smaller
-filesystems with relatively large and slow growing files, this
-preallocation can linger for some time, including contributing to out of
-space conditions.
+On Fri, May 23, 2014 at 09:53:27AM +1000, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> Most of the callers are just calling ASSERT(!xfs_buf_geterror())
+> which means they are checking for bp->b_error == 0. If bp is null in
+> this case, we will assert fail, and hence it's no different in
+> result to oopsing because of a null bp. In some cases, errors have
+> already been checked for or the function returning the buffer can't
+> return a buffer with an error, so it's just a redundant assert.
+> Either way, the assert can either be removed.
+> 
+> The other two non-assert callers can just test for a buffer and
+> error properly.
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> ---
 
-Create a situation where an fs is near out of space while several files
-still have lingering, significant preallocations. Verify that new
-writers reclaim the preallocated space rather than return ENOSPC.
+Looks good to me.
 
-Signed-off-by: Brian Foster <bfoster@redhat.com>
----
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 
-Hi all,
-
-This test is associated with the recently posted eofblocks scan on
-ENOSPC series. It currently fails and should pass with the
-aforementioned patches applied. Thanks.
-
-Brian
-
- tests/xfs/014     | 141 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
- tests/xfs/014.out |  95 ++++++++++++++++++++++++++++++++++++
- tests/xfs/group   |   1 +
- 3 files changed, 237 insertions(+)
- create mode 100755 tests/xfs/014
- create mode 100644 tests/xfs/014.out
-
-diff --git a/tests/xfs/014 b/tests/xfs/014
-new file mode 100755
-index 0000000..53bc9e1
---- /dev/null
-+++ b/tests/xfs/014
-@@ -0,0 +1,141 @@
-+#!/bin/bash
-+# FS QA Test No. xfs/014
-+#
-+# Test the behavior of XFS dynamic speculative preallocation at ENOSPC
-+# conditions. Speculative preallocation allocates post-EOF space to files as
-+# they are extended. This test creates conditions that bypass natural low space
-+# preallocation throttling and verifies that when no other space is available,
-+# writers reclaim the preallocated space and do not fail with premature ENOSPC.
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2014 Red Hat, Inc.  All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#
-+#-----------------------------------------------------------------------
-+#
-+
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1	# failure is the default!
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+
-+_cleanup()
-+{
-+	cd /
-+	umount $SCRATCH_MNT 2>/dev/null
-+	rm -f $tmp.*
-+}
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+# create a file that is likely to retain speculative preallocation after close
-+_spec_prealloc_file()
-+{
-+	file=$1
-+
-+	rm -f $file
-+
-+	# a few file extending open-write-close cycles should be enough to
-+	# trigger the fs to retain preallocation. write 256k in 32k intervals to
-+	# be sure
-+	for i in $(seq 0 32768 262144)
-+	do
-+		$XFS_IO_PROG -fc "pwrite $i 32k" $file | _filter_xfs_io
-+	done
-+
-+	# write a 4k aligned amount of data to keep the calculations simple
-+	$XFS_IO_PROG -c "pwrite 0 128m" $file | _filter_xfs_io
-+
-+	size=`stat -c "%s" $file`
-+	blocks=`stat -c "%b" $file`
-+	blocksize=`stat -c "%B" $file`
-+
-+	prealloc_size=$((blocks * blocksize - size))
-+	if [ $prealloc_size -eq 0 ]
-+	then
-+		echo "Warning: No speculative preallocation for $file." \
-+			"Check use of the allocsize= mount option."
-+	fi
-+
-+	# keep a running total of how much preallocation we've created
-+	TOTAL_PREALLOC=$((TOTAL_PREALLOC + prealloc_size))
-+}
-+
-+_consume_free_space()
-+{
-+	dir=$1
-+
-+	# calculate the rough amount of free space in MB
-+	fsblocksize=`$XFS_IO_PROG -x -c "statfs" $dir | grep f_bsize | \
-+			awk '{ print $3 }'`
-+	blocksavail=`$XFS_IO_PROG -x -c "statfs" $dir | grep f_bavail | \
-+			awk '{ print $3 }'`
-+	freesp=$((fsblocksize * blocksavail / 1024 / 1024))
-+
-+	# allocate all but 10MB
-+	freesp=$((freesp - 10))
-+	$XFS_IO_PROG -fc "falloc 0 ${freesp}M" $dir/spc
-+}
-+
-+# real QA test starts here
-+_supported_fs xfs
-+_supported_os Linux
-+
-+_require_scratch
-+_require_xfs_io_command "falloc"
-+
-+rm -f $seqres.full
-+
-+# 10GB fs
-+_scratch_mkfs_xfs_opts "-d size=$((1024*1024*1024 * 10))" | \
-+	 _filter_mkfs 2>> $seqres.full
-+_scratch_mount
-+
-+# make sure the background eofblocks scanner doesn't interfere
-+orig_sp_time=`cat /proc/sys/fs/xfs/speculative_prealloc_lifetime`
-+echo 9999 > /proc/sys/fs/xfs/speculative_prealloc_lifetime
-+
-+# create a few files with relatively significant preallocation
-+TOTAL_PREALLOC=0
-+for i in $(seq 0 3)
-+do
-+	_spec_prealloc_file $SCRATCH_MNT/pre$i
-+done
-+
-+# consume most of the remaining free space in the fs to put us near ENOSPC
-+_consume_free_space $SCRATCH_MNT
-+
-+# start a few background writers to consume the bulk of the space that has been
-+# previously preallocated to other files. this space should be reclaimed such
-+# these writers complete without hitting ENOSPC
-+write_size=$((TOTAL_PREALLOC / 2 / 4))
-+for i in $(seq 0 3)
-+do
-+	$XFS_IO_PROG -fc "pwrite 0 $write_size" $SCRATCH_MNT/file.$i | \
-+		_filter_xfs_io &
-+done
-+wait
-+
-+echo $orig_sp_time > /proc/sys/fs/xfs/speculative_prealloc_lifetime
-+umount $SCRATCH_MNT
-+
-+status=0
-+exit
-diff --git a/tests/xfs/014.out b/tests/xfs/014.out
-new file mode 100644
-index 0000000..aed3c0f
---- /dev/null
-+++ b/tests/xfs/014.out
-@@ -0,0 +1,95 @@
-+QA output created by 014
-+meta-data=DDEV isize=XXX agcount=N, agsize=XXX blks
-+data     = bsize=XXX blocks=XXX, imaxpct=PCT
-+         = sunit=XXX swidth=XXX, unwritten=X
-+naming   =VERN bsize=XXX
-+log      =LDEV bsize=XXX blocks=XXX
-+realtime =RDEV extsz=XXX blocks=XXX, rtextents=XXX
-+wrote 32768/32768 bytes at offset 0
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+wrote 32768/32768 bytes at offset 32768
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+wrote 32768/32768 bytes at offset 65536
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+wrote 32768/32768 bytes at offset 98304
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+wrote 32768/32768 bytes at offset 131072
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+wrote 32768/32768 bytes at offset 163840
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+wrote 32768/32768 bytes at offset 196608
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+wrote 32768/32768 bytes at offset 229376
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+wrote 32768/32768 bytes at offset 262144
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+wrote 134217728/134217728 bytes at offset 0
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+wrote 32768/32768 bytes at offset 0
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+wrote 32768/32768 bytes at offset 32768
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+wrote 32768/32768 bytes at offset 65536
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+wrote 32768/32768 bytes at offset 98304
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+wrote 32768/32768 bytes at offset 131072
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+wrote 32768/32768 bytes at offset 163840
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+wrote 32768/32768 bytes at offset 196608
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+wrote 32768/32768 bytes at offset 229376
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+wrote 32768/32768 bytes at offset 262144
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+wrote 134217728/134217728 bytes at offset 0
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+wrote 32768/32768 bytes at offset 0
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+wrote 32768/32768 bytes at offset 32768
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+wrote 32768/32768 bytes at offset 65536
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+wrote 32768/32768 bytes at offset 98304
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+wrote 32768/32768 bytes at offset 131072
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+wrote 32768/32768 bytes at offset 163840
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+wrote 32768/32768 bytes at offset 196608
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+wrote 32768/32768 bytes at offset 229376
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+wrote 32768/32768 bytes at offset 262144
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+wrote 134217728/134217728 bytes at offset 0
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+wrote 32768/32768 bytes at offset 0
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+wrote 32768/32768 bytes at offset 32768
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+wrote 32768/32768 bytes at offset 65536
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+wrote 32768/32768 bytes at offset 98304
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+wrote 32768/32768 bytes at offset 131072
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+wrote 32768/32768 bytes at offset 163840
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+wrote 32768/32768 bytes at offset 196608
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+wrote 32768/32768 bytes at offset 229376
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+wrote 32768/32768 bytes at offset 262144
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+wrote 134217728/134217728 bytes at offset 0
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+wrote 67076096/67076096 bytes at offset 0
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+wrote 67076096/67076096 bytes at offset 0
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+wrote 67076096/67076096 bytes at offset 0
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+wrote 67076096/67076096 bytes at offset 0
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-diff --git a/tests/xfs/group b/tests/xfs/group
-index 19fd968..a39afc1 100644
---- a/tests/xfs/group
-+++ b/tests/xfs/group
-@@ -10,6 +10,7 @@
- 010 auto quick repair
- 012 rw auto quick
- 013 auto metadata stress
-+014 auto enospc quick
- 016 rw auto quick
- 017 mount auto quick stress
- 018 deprecated # log logprint v2log
--- 
-1.8.3.1
+>  fs/xfs/xfs_alloc.c    |  1 -
+>  fs/xfs/xfs_btree.c    | 12 ++----------
+>  fs/xfs/xfs_buf.h      |  5 -----
+>  fs/xfs/xfs_buf_item.c |  2 +-
+>  fs/xfs/xfs_dquot.c    |  6 +++---
+>  fs/xfs/xfs_ialloc.c   |  1 -
+>  fs/xfs/xfs_log.c      |  2 +-
+>  fs/xfs/xfs_rtbitmap.c |  1 -
+>  8 files changed, 7 insertions(+), 23 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_alloc.c b/fs/xfs/xfs_alloc.c
+> index c1cf6a3..077c3417 100644
+> --- a/fs/xfs/xfs_alloc.c
+> +++ b/fs/xfs/xfs_alloc.c
+> @@ -541,7 +541,6 @@ xfs_alloc_read_agfl(
+>  			XFS_FSS_TO_BB(mp, 1), 0, &bp, &xfs_agfl_buf_ops);
+>  	if (error)
+>  		return error;
+> -	ASSERT(!xfs_buf_geterror(bp));
+>  	xfs_buf_set_ref(bp, XFS_AGFL_REF);
+>  	*bpp = bp;
+>  	return 0;
+> diff --git a/fs/xfs/xfs_btree.c b/fs/xfs/xfs_btree.c
+> index 182bac2..bf810c6 100644
+> --- a/fs/xfs/xfs_btree.c
+> +++ b/fs/xfs/xfs_btree.c
+> @@ -553,14 +553,11 @@ xfs_btree_get_bufl(
+>  	xfs_fsblock_t	fsbno,		/* file system block number */
+>  	uint		lock)		/* lock flags for get_buf */
+>  {
+> -	xfs_buf_t	*bp;		/* buffer pointer (return value) */
+>  	xfs_daddr_t		d;		/* real disk block address */
+>  
+>  	ASSERT(fsbno != NULLFSBLOCK);
+>  	d = XFS_FSB_TO_DADDR(mp, fsbno);
+> -	bp = xfs_trans_get_buf(tp, mp->m_ddev_targp, d, mp->m_bsize, lock);
+> -	ASSERT(!xfs_buf_geterror(bp));
+> -	return bp;
+> +	return xfs_trans_get_buf(tp, mp->m_ddev_targp, d, mp->m_bsize, lock);
+>  }
+>  
+>  /*
+> @@ -575,15 +572,12 @@ xfs_btree_get_bufs(
+>  	xfs_agblock_t	agbno,		/* allocation group block number */
+>  	uint		lock)		/* lock flags for get_buf */
+>  {
+> -	xfs_buf_t	*bp;		/* buffer pointer (return value) */
+>  	xfs_daddr_t		d;		/* real disk block address */
+>  
+>  	ASSERT(agno != NULLAGNUMBER);
+>  	ASSERT(agbno != NULLAGBLOCK);
+>  	d = XFS_AGB_TO_DADDR(mp, agno, agbno);
+> -	bp = xfs_trans_get_buf(tp, mp->m_ddev_targp, d, mp->m_bsize, lock);
+> -	ASSERT(!xfs_buf_geterror(bp));
+> -	return bp;
+> +	return xfs_trans_get_buf(tp, mp->m_ddev_targp, d, mp->m_bsize, lock);
+>  }
+>  
+>  /*
+> @@ -723,7 +717,6 @@ xfs_btree_read_bufl(
+>  				   mp->m_bsize, lock, &bp, ops);
+>  	if (error)
+>  		return error;
+> -	ASSERT(!xfs_buf_geterror(bp));
+>  	if (bp)
+>  		xfs_buf_set_ref(bp, refval);
+>  	*bpp = bp;
+> @@ -1179,7 +1172,6 @@ xfs_btree_read_buf_block(
+>  	if (error)
+>  		return error;
+>  
+> -	ASSERT(!xfs_buf_geterror(*bpp));
+>  	xfs_btree_set_refs(cur, *bpp);
+>  	*block = XFS_BUF_TO_BLOCK(*bpp);
+>  	return 0;
+> diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
+> index 0e47fd1..3a7a552 100644
+> --- a/fs/xfs/xfs_buf.h
+> +++ b/fs/xfs/xfs_buf.h
+> @@ -298,11 +298,6 @@ extern void xfs_buf_iomove(xfs_buf_t *, size_t, size_t, void *,
+>  
+>  extern int xfs_bioerror_relse(struct xfs_buf *);
+>  
+> -static inline int xfs_buf_geterror(xfs_buf_t *bp)
+> -{
+> -	return bp ? bp->b_error : ENOMEM;
+> -}
+> -
+>  /* Buffer Utility Routines */
+>  extern xfs_caddr_t xfs_buf_offset(xfs_buf_t *, size_t);
+>  
+> diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
+> index 64b17f5..4654338 100644
+> --- a/fs/xfs/xfs_buf_item.c
+> +++ b/fs/xfs/xfs_buf_item.c
+> @@ -1052,7 +1052,7 @@ xfs_buf_iodone_callbacks(
+>  	static ulong		lasttime;
+>  	static xfs_buftarg_t	*lasttarg;
+>  
+> -	if (likely(!xfs_buf_geterror(bp)))
+> +	if (likely(!bp->b_error))
+>  		goto do_callbacks;
+>  
+>  	/*
+> diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
+> index 5fec738..3ee0cd4 100644
+> --- a/fs/xfs/xfs_dquot.c
+> +++ b/fs/xfs/xfs_dquot.c
+> @@ -353,10 +353,10 @@ xfs_qm_dqalloc(
+>  			       dqp->q_blkno,
+>  			       mp->m_quotainfo->qi_dqchunklen,
+>  			       0);
+> -
+> -	error = xfs_buf_geterror(bp);
+> -	if (error)
+> +	if (!bp) {
+> +		error = ENOMEM;
+>  		goto error1;
+> +	}
+>  	bp->b_ops = &xfs_dquot_buf_ops;
+>  
+>  	/*
+> diff --git a/fs/xfs/xfs_ialloc.c b/fs/xfs/xfs_ialloc.c
+> index e8dfaf0..5960e55 100644
+> --- a/fs/xfs/xfs_ialloc.c
+> +++ b/fs/xfs/xfs_ialloc.c
+> @@ -2129,7 +2129,6 @@ xfs_read_agi(
+>  	if (error)
+>  		return error;
+>  
+> -	ASSERT(!xfs_buf_geterror(*bpp));
+>  	xfs_buf_set_ref(*bpp, XFS_AGI_REF);
+>  	return 0;
+>  }
+> diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+> index 3554098..292308d 100644
+> --- a/fs/xfs/xfs_log.c
+> +++ b/fs/xfs/xfs_log.c
+> @@ -1165,7 +1165,7 @@ xlog_iodone(xfs_buf_t *bp)
+>  	/*
+>  	 * Race to shutdown the filesystem if we see an error.
+>  	 */
+> -	if (XFS_TEST_ERROR((xfs_buf_geterror(bp)), l->l_mp,
+> +	if (XFS_TEST_ERROR(bp->b_error, l->l_mp,
+>  			XFS_ERRTAG_IODONE_IOERR, XFS_RANDOM_IODONE_IOERR)) {
+>  		xfs_buf_ioerror_alert(bp, __func__);
+>  		xfs_buf_stale(bp);
+> diff --git a/fs/xfs/xfs_rtbitmap.c b/fs/xfs/xfs_rtbitmap.c
+> index b1f2fe8..f4dd697 100644
+> --- a/fs/xfs/xfs_rtbitmap.c
+> +++ b/fs/xfs/xfs_rtbitmap.c
+> @@ -74,7 +74,6 @@ xfs_rtbuf_get(
+>  				   mp->m_bsize, 0, &bp, NULL);
+>  	if (error)
+>  		return error;
+> -	ASSERT(!xfs_buf_geterror(bp));
+>  	*bpp = bp;
+>  	return 0;
+>  }
+> -- 
+> 1.9.0
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
