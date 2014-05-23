@@ -1,27 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 2958A7F3F
-	for <xfs@oss.sgi.com>; Thu, 22 May 2014 19:08:00 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 0ABFB7F53
+	for <xfs@oss.sgi.com>; Thu, 22 May 2014 19:08:01 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 106538F8035
-	for <xfs@oss.sgi.com>; Thu, 22 May 2014 17:08:00 -0700 (PDT)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id E22F78F8037
+	for <xfs@oss.sgi.com>; Thu, 22 May 2014 17:07:57 -0700 (PDT)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	B3Z7gUrpoU5fB9IK for <xfs@oss.sgi.com>;
-	Thu, 22 May 2014 17:07:58 -0700 (PDT)
+	Lgg53lqoEcAPC2th for <xfs@oss.sgi.com>;
+	Thu, 22 May 2014 17:07:55 -0700 (PDT)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.80)
-	(envelope-from <dave@fromorbit.com>) id 1Wncxn-00071x-Ae
+	(envelope-from <dave@fromorbit.com>) id 1Wncxn-00071k-4d
 	for xfs@oss.sgi.com; Fri, 23 May 2014 10:03:55 +1000
 Received: from dave by disappointment with local (Exim 4.82)
-	(envelope-from <dave@disappointment.disaster>) id 1Wncxn-0005Tz-9V
+	(envelope-from <dave@disappointment.disaster>) id 1Wncxn-0005T8-3b
 	for xfs@oss.sgi.com; Fri, 23 May 2014 10:03:55 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 11/16] xfs: move node entry counts to xfs_da_geometry
-Date: Fri, 23 May 2014 10:03:47 +1000
-Message-Id: <1400803432-20048-12-git-send-email-david@fromorbit.com>
-In-Reply-To: <1400803432-20048-1-git-send-email-david@fromorbit.com>
-References: <1400803432-20048-1-git-send-email-david@fromorbit.com>
+Subject: [PATCH 00/16 V2] xfs: introduce struct xfs_da_geometry
+Date: Fri, 23 May 2014 10:03:36 +1000
+Message-Id: <1400803432-20048-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -37,143 +35,37 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-From: Dave Chinner <dchinner@redhat.com>
+Hi folks,
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- fs/xfs/xfs_attr.c      |  8 ++++----
- fs/xfs/xfs_da_btree.c  |  4 ++--
- fs/xfs/xfs_dir2.c      |  3 ---
- fs/xfs/xfs_dir2_node.c | 10 +++++-----
- fs/xfs/xfs_mount.h     |  2 --
- 5 files changed, 11 insertions(+), 16 deletions(-)
+This is the second version of the patchset I posted here:
 
-diff --git a/fs/xfs/xfs_attr.c b/fs/xfs/xfs_attr.c
-index c547498..8bb9ae6 100644
---- a/fs/xfs/xfs_attr.c
-+++ b/fs/xfs/xfs_attr.c
-@@ -899,7 +899,7 @@ restart:
- 	state->args = args;
- 	state->mp = mp;
- 	state->blocksize = state->mp->m_sb.sb_blocksize;
--	state->node_ents = state->mp->m_attr_node_ents;
-+	state->node_ents = args->geo->node_ents;
- 
- 	/*
- 	 * Search to see if name already exists, and get back a pointer
-@@ -1078,7 +1078,7 @@ restart:
- 		state->args = args;
- 		state->mp = mp;
- 		state->blocksize = state->mp->m_sb.sb_blocksize;
--		state->node_ents = state->mp->m_attr_node_ents;
-+		state->node_ents = args->geo->node_ents;
- 		state->inleaf = 0;
- 		error = xfs_da3_node_lookup_int(state, &retval);
- 		if (error)
-@@ -1170,7 +1170,7 @@ xfs_attr_node_removename(xfs_da_args_t *args)
- 	state->args = args;
- 	state->mp = dp->i_mount;
- 	state->blocksize = state->mp->m_sb.sb_blocksize;
--	state->node_ents = state->mp->m_attr_node_ents;
-+	state->node_ents = args->geo->node_ents;
- 
- 	/*
- 	 * Search to see if name exists, and get back a pointer to it.
-@@ -1433,7 +1433,7 @@ xfs_attr_node_get(xfs_da_args_t *args)
- 	state->args = args;
- 	state->mp = args->dp->i_mount;
- 	state->blocksize = state->mp->m_sb.sb_blocksize;
--	state->node_ents = state->mp->m_attr_node_ents;
-+	state->node_ents = args->geo->node_ents;
- 
- 	/*
- 	 * Search to see if name exists, and get back a pointer to it.
-diff --git a/fs/xfs/xfs_da_btree.c b/fs/xfs/xfs_da_btree.c
-index b9b007d..f935370 100644
---- a/fs/xfs/xfs_da_btree.c
-+++ b/fs/xfs/xfs_da_btree.c
-@@ -167,8 +167,8 @@ xfs_da3_node_verify(
- 	 * we don't know if the node is for and attribute or directory tree,
- 	 * so only fail if the count is outside both bounds
- 	 */
--	if (ichdr.count > mp->m_dir_node_ents &&
--	    ichdr.count > mp->m_attr_node_ents)
-+	if (ichdr.count > mp->m_dir_geo->node_ents &&
-+	    ichdr.count > mp->m_attr_geo->node_ents)
- 		return false;
- 
- 	/* XXX: hash order check? */
-diff --git a/fs/xfs/xfs_dir2.c b/fs/xfs/xfs_dir2.c
-index 0230342..90d426d 100644
---- a/fs/xfs/xfs_dir2.c
-+++ b/fs/xfs/xfs_dir2.c
-@@ -144,9 +144,6 @@ xfs_da_mount(
- 	else
- 		mp->m_dirnameops = &xfs_default_nameops;
- 
--	/* XXX: these are to be removed as code is converted to use geo */
--	mp->m_dir_node_ents = mp->m_dir_geo->node_ents;
--	mp->m_attr_node_ents = mp->m_attr_geo->node_ents;
- 	return 0;
- }
- 
-diff --git a/fs/xfs/xfs_dir2_node.c b/fs/xfs/xfs_dir2_node.c
-index de5b2996..eff6b8d 100644
---- a/fs/xfs/xfs_dir2_node.c
-+++ b/fs/xfs/xfs_dir2_node.c
-@@ -1596,8 +1596,8 @@ xfs_dir2_node_addname(
- 	state = xfs_da_state_alloc();
- 	state->args = args;
- 	state->mp = args->dp->i_mount;
--	state->blocksize = state->args->geo->blksize;
--	state->node_ents = state->mp->m_dir_node_ents;
-+	state->blocksize = args->geo->blksize;
-+	state->node_ents = args->geo->node_ents;
- 	/*
- 	 * Look up the name.  We're not supposed to find it, but
- 	 * this gives us the insertion point.
-@@ -2043,7 +2043,7 @@ xfs_dir2_node_lookup(
- 	state->args = args;
- 	state->mp = args->dp->i_mount;
- 	state->blocksize = args->geo->blksize;
--	state->node_ents = state->mp->m_dir_node_ents;
-+	state->node_ents = args->geo->node_ents;
- 	/*
- 	 * Fill in the path to the entry in the cursor.
- 	 */
-@@ -2098,7 +2098,7 @@ xfs_dir2_node_removename(
- 	state->args = args;
- 	state->mp = args->dp->i_mount;
- 	state->blocksize = args->geo->blksize;
--	state->node_ents = state->mp->m_dir_node_ents;
-+	state->node_ents = args->geo->node_ents;
- 
- 	/* Look up the entry we're deleting, set up the cursor. */
- 	error = xfs_da3_node_lookup_int(state, &rval);
-@@ -2168,7 +2168,7 @@ xfs_dir2_node_replace(
- 	state->args = args;
- 	state->mp = args->dp->i_mount;
- 	state->blocksize = args->geo->blksize;
--	state->node_ents = state->mp->m_dir_node_ents;
-+	state->node_ents = args->geo->node_ents;
- 	inum = args->inumber;
- 	/*
- 	 * Lookup the entry to change in the btree.
-diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-index 3b690c36..6d7e5d7 100644
---- a/fs/xfs/xfs_mount.h
-+++ b/fs/xfs/xfs_mount.h
-@@ -134,8 +134,6 @@ typedef struct xfs_mount {
- 	int			m_fixedfsid[2];	/* unchanged for life of FS */
- 	uint			m_dmevmask;	/* DMI events for this FS */
- 	__uint64_t		m_flags;	/* global mount flags */
--	uint			m_dir_node_ents; /* #entries in a dir danode */
--	uint			m_attr_node_ents; /* #entries in attr danode */
- 	int			m_ialloc_inos;	/* inodes in inode allocation */
- 	int			m_ialloc_blks;	/* blocks in inode allocation */
- 	int			m_inoalign_mask;/* mask sb_inoalignmt if used */
--- 
-1.9.0
+http://oss.sgi.com/pipermail/xfs/2014-May/036125.html
+
+This patchset moves all the directory and attribute structure
+geometry information into it's own abstract structure. This is done
+to remove a dependency of the directory code on the struct xfs_mount
+and hence xfs_mount.h. It also clears up a dependency between
+xfs_da_format.h and xfs_mount.h by moving all the index type
+conversion functions to xfs_da_btree.h (as they are not on-disk
+format definitions).
+
+This version compiles cleanly at each patch, and runs correctly so
+should be fully bisectable (unlike the RFC patch set that was
+originally posted that oopsed instantly).
+
+Note that this version is based on the current for-next branch, not
+the master branch of the xfs git repo.
+
+Comments and testing welcome!
+
+Version 2:
+- patch removing checks from xfs_da_read_buf() sent separately
+- dropped patch adding xfs_da_geometry to the inode forks as it's
+  not currently needed
+- cleared up all the "XXX" notations added in the RFC series
+- fixed several bugs in different patches as a result of incorrect
+  conversions
+- ensured each patch compiled and passes xfstests individually
 
 _______________________________________________
 xfs mailing list
