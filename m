@@ -1,27 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 720E07F47
-	for <xfs@oss.sgi.com>; Fri, 23 May 2014 06:52:34 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 2C0217F47
+	for <xfs@oss.sgi.com>; Fri, 23 May 2014 06:52:37 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 1C58AAC004
+	by relay2.corp.sgi.com (Postfix) with ESMTP id E5C8F304032
 	for <xfs@oss.sgi.com>; Fri, 23 May 2014 04:52:33 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id 3UB4kcROkDJQsdKR for
+	cuda.sgi.com with ESMTP id NXoYjTJtvv6vQARF for
 	<xfs@oss.sgi.com>; Fri, 23 May 2014 04:52:32 -0700 (PDT)
-Received: from int-mx09.intmail.prod.int.phx2.redhat.com
-	(int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id s4NBqWCN024568
+Received: from int-mx10.intmail.prod.int.phx2.redhat.com
+	(int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id s4NBqW85025563
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256
 	verify=OK) for <xfs@oss.sgi.com>; Fri, 23 May 2014 07:52:32 -0400
 Received: from bfoster.bfoster ([10.18.41.237])
-	by int-mx09.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id s4NBqVbA013455
-	for <xfs@oss.sgi.com>; Fri, 23 May 2014 07:52:32 -0400
+	by int-mx10.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id s4NBqV7B029023
+	for <xfs@oss.sgi.com>; Fri, 23 May 2014 07:52:31 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH v2 3/3] xfs: squash prealloc while over quota free space as
-	well
-Date: Fri, 23 May 2014 07:52:30 -0400
-Message-Id: <1400845950-41435-4-git-send-email-bfoster@redhat.com>
+Subject: [PATCH v2 1/3] xfs: add scan owner field to xfs_eofblocks
+Date: Fri, 23 May 2014 07:52:28 -0400
+Message-Id: <1400845950-41435-2-git-send-email-bfoster@redhat.com>
 In-Reply-To: <1400845950-41435-1-git-send-email-bfoster@redhat.com>
 References: <1400845950-41435-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,74 +38,69 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Commit 4d559a3b introduced heavy prealloc. squashing to catch the case
-of requesting too large a prealloc on smaller filesystems, leading to
-repeated flush and retry cycles that occur on ENOSPC. Now that we issue
-eofblocks scans on EDQUOT/ENOSPC, squash the prealloc against the
-minimum available free space across all applicable quotas as well to
-avoid a similar problem of repeated eofblocks scans.
+The scan owner field represents an optional inode number that is
+responsible for the current scan. The purpose is to identify that an
+inode is under iolock and as such, the iolock shouldn't be attempted
+when trimming eofblocks. This is an internal only field.
 
 Signed-off-by: Brian Foster <bfoster@redhat.com>
 ---
- fs/xfs/xfs_iomap.c | 20 ++++++++++++++------
- 1 file changed, 14 insertions(+), 6 deletions(-)
+ fs/xfs/xfs_icache.c | 12 +++++++++++-
+ fs/xfs/xfs_icache.h |  2 ++
+ 2 files changed, 13 insertions(+), 1 deletion(-)
 
-diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index 6c5eb4c..28629e9 100644
---- a/fs/xfs/xfs_iomap.c
-+++ b/fs/xfs/xfs_iomap.c
-@@ -397,7 +397,8 @@ xfs_quota_calc_throttle(
- 	struct xfs_inode *ip,
- 	int type,
- 	xfs_fsblock_t *qblocks,
--	int *qshift)
-+	int *qshift,
-+	int64_t	*qfreesp)
+diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+index c48df5f..f4191f6 100644
+--- a/fs/xfs/xfs_icache.c
++++ b/fs/xfs/xfs_icache.c
+@@ -1211,6 +1211,7 @@ xfs_inode_free_eofblocks(
  {
- 	int64_t freesp;
- 	int shift = 0;
-@@ -406,6 +407,7 @@ xfs_quota_calc_throttle(
- 	/* over hi wmark, squash the prealloc completely */
- 	if (dq->q_res_bcount >= dq->q_prealloc_hi_wmark) {
- 		*qblocks = 0;
-+		*qfreesp = 0;
- 		return;
- 	}
+ 	int ret;
+ 	struct xfs_eofblocks *eofb = args;
++	bool need_iolock = true;
  
-@@ -418,6 +420,9 @@ xfs_quota_calc_throttle(
- 			shift += 2;
- 	}
- 
-+	if (freesp < *qfreesp)
-+		*qfreesp = freesp;
+ 	if (!xfs_can_free_eofblocks(ip, false)) {
+ 		/* inode could be preallocated or append-only */
+@@ -1235,9 +1236,18 @@ xfs_inode_free_eofblocks(
+ 		if (eofb->eof_flags & XFS_EOF_FLAGS_MINFILESIZE &&
+ 		    XFS_ISIZE(ip) < eofb->eof_min_file_size)
+ 			return 0;
 +
- 	/* only overwrite the throttle values if we are more aggressive */
- 	if ((freesp >> shift) < (*qblocks >> *qshift)) {
- 		*qblocks = freesp;
-@@ -476,15 +481,18 @@ xfs_iomap_prealloc_size(
++		/*
++		 * A scan owner implies we already hold the iolock. Skip it in
++		 * xfs_free_eofblocks() to avoid deadlock. This also eliminates
++		 * the possibility of EAGAIN being returned.
++		 */
++		if (eofb->eof_scan_owner != NULLFSINO &&
++		    eofb->eof_scan_owner == ip->i_ino)
++			need_iolock = false;
  	}
  
- 	/*
--	 * Check each quota to cap the prealloc size and provide a shift
--	 * value to throttle with.
-+	 * Check each quota to cap the prealloc size, provide a shift value to
-+	 * throttle with and adjust amount of available space.
- 	 */
- 	if (xfs_quota_need_throttle(ip, XFS_DQ_USER, alloc_blocks))
--		xfs_quota_calc_throttle(ip, XFS_DQ_USER, &qblocks, &qshift);
-+		xfs_quota_calc_throttle(ip, XFS_DQ_USER, &qblocks, &qshift,
-+					&freesp);
- 	if (xfs_quota_need_throttle(ip, XFS_DQ_GROUP, alloc_blocks))
--		xfs_quota_calc_throttle(ip, XFS_DQ_GROUP, &qblocks, &qshift);
-+		xfs_quota_calc_throttle(ip, XFS_DQ_GROUP, &qblocks, &qshift,
-+					&freesp);
- 	if (xfs_quota_need_throttle(ip, XFS_DQ_PROJ, alloc_blocks))
--		xfs_quota_calc_throttle(ip, XFS_DQ_PROJ, &qblocks, &qshift);
-+		xfs_quota_calc_throttle(ip, XFS_DQ_PROJ, &qblocks, &qshift,
-+					&freesp);
+-	ret = xfs_free_eofblocks(ip->i_mount, ip, true);
++	ret = xfs_free_eofblocks(ip->i_mount, ip, need_iolock);
  
- 	/*
- 	 * The final prealloc size is set to the minimum of free space available
+ 	/* don't revisit the inode if we're not waiting */
+ 	if (ret == EAGAIN && !(flags & SYNC_WAIT))
+diff --git a/fs/xfs/xfs_icache.h b/fs/xfs/xfs_icache.h
+index 9cf017b..152757f 100644
+--- a/fs/xfs/xfs_icache.h
++++ b/fs/xfs/xfs_icache.h
+@@ -27,6 +27,7 @@ struct xfs_eofblocks {
+ 	kgid_t		eof_gid;
+ 	prid_t		eof_prid;
+ 	__u64		eof_min_file_size;
++	xfs_ino_t	eof_scan_owner;
+ };
+ 
+ #define SYNC_WAIT		0x0001	/* wait for i/o to complete */
+@@ -84,6 +85,7 @@ xfs_fs_eofblocks_from_user(
+ 	dst->eof_flags = src->eof_flags;
+ 	dst->eof_prid = src->eof_prid;
+ 	dst->eof_min_file_size = src->eof_min_file_size;
++	dst->eof_scan_owner = NULLFSINO;
+ 
+ 	dst->eof_uid = INVALID_UID;
+ 	if (src->eof_flags & XFS_EOF_FLAGS_UID) {
 -- 
 1.8.3.1
 
