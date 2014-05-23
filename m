@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id ED7827F3F
-	for <xfs@oss.sgi.com>; Thu, 22 May 2014 19:07:58 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 2958A7F3F
+	for <xfs@oss.sgi.com>; Thu, 22 May 2014 19:08:00 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id D3B258F8035
-	for <xfs@oss.sgi.com>; Thu, 22 May 2014 17:07:58 -0700 (PDT)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 106538F8035
+	for <xfs@oss.sgi.com>; Thu, 22 May 2014 17:08:00 -0700 (PDT)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	kv6ZJTVGBDodBxjP for <xfs@oss.sgi.com>;
-	Thu, 22 May 2014 17:07:57 -0700 (PDT)
+	B3Z7gUrpoU5fB9IK for <xfs@oss.sgi.com>;
+	Thu, 22 May 2014 17:07:58 -0700 (PDT)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.80)
-	(envelope-from <dave@fromorbit.com>) id 1Wncxn-000724-C8
+	(envelope-from <dave@fromorbit.com>) id 1Wncxn-00071x-Ae
 	for xfs@oss.sgi.com; Fri, 23 May 2014 10:03:55 +1000
 Received: from dave by disappointment with local (Exim 4.82)
-	(envelope-from <dave@disappointment.disaster>) id 1Wncxn-0005UE-BF
+	(envelope-from <dave@disappointment.disaster>) id 1Wncxn-0005Tz-9V
 	for xfs@oss.sgi.com; Fri, 23 May 2014 10:03:55 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 14/16] xfs: use xfs_da_geometry for block size in attr code
-Date: Fri, 23 May 2014 10:03:50 +1000
-Message-Id: <1400803432-20048-15-git-send-email-david@fromorbit.com>
+Subject: [PATCH 11/16] xfs: move node entry counts to xfs_da_geometry
+Date: Fri, 23 May 2014 10:03:47 +1000
+Message-Id: <1400803432-20048-12-git-send-email-david@fromorbit.com>
 In-Reply-To: <1400803432-20048-1-git-send-email-david@fromorbit.com>
 References: <1400803432-20048-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,112 +39,139 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Rather than using the superblock value obtained through the
-xfs_mount.
-
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_attr.c       | 12 ++++++------
- fs/xfs/xfs_attr_leaf.c  |  6 +++---
- fs/xfs/xfs_log_rlimit.c |  2 +-
- 3 files changed, 10 insertions(+), 10 deletions(-)
+ fs/xfs/xfs_attr.c      |  8 ++++----
+ fs/xfs/xfs_da_btree.c  |  4 ++--
+ fs/xfs/xfs_dir2.c      |  3 ---
+ fs/xfs/xfs_dir2_node.c | 10 +++++-----
+ fs/xfs/xfs_mount.h     |  2 --
+ 5 files changed, 11 insertions(+), 16 deletions(-)
 
 diff --git a/fs/xfs/xfs_attr.c b/fs/xfs/xfs_attr.c
-index 8bb9ae6..ccfc2c9 100644
+index c547498..8bb9ae6 100644
 --- a/fs/xfs/xfs_attr.c
 +++ b/fs/xfs/xfs_attr.c
-@@ -175,11 +175,11 @@ xfs_attr_calc_size(
- 	 * "local" or "remote" (note: local != inline).
- 	 */
- 	size = xfs_attr_leaf_newentsize(args->namelen, args->valuelen,
--					mp->m_sb.sb_blocksize, local);
-+					args->geo->blksize, local);
- 
- 	nblks = XFS_DAENTER_SPACE_RES(mp, XFS_ATTR_FORK);
- 	if (*local) {
--		if (size > (mp->m_sb.sb_blocksize >> 1)) {
-+		if (size > (args->geo->blksize / 2)) {
- 			/* Double split possible */
- 			nblks *= 2;
- 		}
-@@ -898,7 +898,7 @@ restart:
- 	state = xfs_da_state_alloc();
+@@ -899,7 +899,7 @@ restart:
  	state->args = args;
  	state->mp = mp;
--	state->blocksize = state->mp->m_sb.sb_blocksize;
-+	state->blocksize = args->geo->blksize;
- 	state->node_ents = args->geo->node_ents;
+ 	state->blocksize = state->mp->m_sb.sb_blocksize;
+-	state->node_ents = state->mp->m_attr_node_ents;
++	state->node_ents = args->geo->node_ents;
  
  	/*
-@@ -1077,7 +1077,7 @@ restart:
- 		state = xfs_da_state_alloc();
+ 	 * Search to see if name already exists, and get back a pointer
+@@ -1078,7 +1078,7 @@ restart:
  		state->args = args;
  		state->mp = mp;
--		state->blocksize = state->mp->m_sb.sb_blocksize;
-+		state->blocksize = args->geo->blksize;
- 		state->node_ents = args->geo->node_ents;
+ 		state->blocksize = state->mp->m_sb.sb_blocksize;
+-		state->node_ents = state->mp->m_attr_node_ents;
++		state->node_ents = args->geo->node_ents;
  		state->inleaf = 0;
  		error = xfs_da3_node_lookup_int(state, &retval);
-@@ -1169,7 +1169,7 @@ xfs_attr_node_removename(xfs_da_args_t *args)
- 	state = xfs_da_state_alloc();
+ 		if (error)
+@@ -1170,7 +1170,7 @@ xfs_attr_node_removename(xfs_da_args_t *args)
  	state->args = args;
  	state->mp = dp->i_mount;
--	state->blocksize = state->mp->m_sb.sb_blocksize;
-+	state->blocksize = args->geo->blksize;
- 	state->node_ents = args->geo->node_ents;
+ 	state->blocksize = state->mp->m_sb.sb_blocksize;
+-	state->node_ents = state->mp->m_attr_node_ents;
++	state->node_ents = args->geo->node_ents;
  
  	/*
-@@ -1432,7 +1432,7 @@ xfs_attr_node_get(xfs_da_args_t *args)
+ 	 * Search to see if name exists, and get back a pointer to it.
+@@ -1433,7 +1433,7 @@ xfs_attr_node_get(xfs_da_args_t *args)
+ 	state->args = args;
+ 	state->mp = args->dp->i_mount;
+ 	state->blocksize = state->mp->m_sb.sb_blocksize;
+-	state->node_ents = state->mp->m_attr_node_ents;
++	state->node_ents = args->geo->node_ents;
+ 
+ 	/*
+ 	 * Search to see if name exists, and get back a pointer to it.
+diff --git a/fs/xfs/xfs_da_btree.c b/fs/xfs/xfs_da_btree.c
+index b9b007d..f935370 100644
+--- a/fs/xfs/xfs_da_btree.c
++++ b/fs/xfs/xfs_da_btree.c
+@@ -167,8 +167,8 @@ xfs_da3_node_verify(
+ 	 * we don't know if the node is for and attribute or directory tree,
+ 	 * so only fail if the count is outside both bounds
+ 	 */
+-	if (ichdr.count > mp->m_dir_node_ents &&
+-	    ichdr.count > mp->m_attr_node_ents)
++	if (ichdr.count > mp->m_dir_geo->node_ents &&
++	    ichdr.count > mp->m_attr_geo->node_ents)
+ 		return false;
+ 
+ 	/* XXX: hash order check? */
+diff --git a/fs/xfs/xfs_dir2.c b/fs/xfs/xfs_dir2.c
+index 0230342..90d426d 100644
+--- a/fs/xfs/xfs_dir2.c
++++ b/fs/xfs/xfs_dir2.c
+@@ -144,9 +144,6 @@ xfs_da_mount(
+ 	else
+ 		mp->m_dirnameops = &xfs_default_nameops;
+ 
+-	/* XXX: these are to be removed as code is converted to use geo */
+-	mp->m_dir_node_ents = mp->m_dir_geo->node_ents;
+-	mp->m_attr_node_ents = mp->m_attr_geo->node_ents;
+ 	return 0;
+ }
+ 
+diff --git a/fs/xfs/xfs_dir2_node.c b/fs/xfs/xfs_dir2_node.c
+index de5b2996..eff6b8d 100644
+--- a/fs/xfs/xfs_dir2_node.c
++++ b/fs/xfs/xfs_dir2_node.c
+@@ -1596,8 +1596,8 @@ xfs_dir2_node_addname(
  	state = xfs_da_state_alloc();
  	state->args = args;
  	state->mp = args->dp->i_mount;
--	state->blocksize = state->mp->m_sb.sb_blocksize;
+-	state->blocksize = state->args->geo->blksize;
+-	state->node_ents = state->mp->m_dir_node_ents;
 +	state->blocksize = args->geo->blksize;
- 	state->node_ents = args->geo->node_ents;
- 
++	state->node_ents = args->geo->node_ents;
  	/*
-diff --git a/fs/xfs/xfs_attr_leaf.c b/fs/xfs/xfs_attr_leaf.c
-index 5be77b3..88cd84a 100644
---- a/fs/xfs/xfs_attr_leaf.c
-+++ b/fs/xfs/xfs_attr_leaf.c
-@@ -1077,7 +1077,7 @@ xfs_attr3_leaf_add(
- 	xfs_attr3_leaf_hdr_from_disk(&ichdr, leaf);
- 	ASSERT(args->index >= 0 && args->index <= ichdr.count);
- 	entsize = xfs_attr_leaf_newentsize(args->namelen, args->valuelen,
--			   args->trans->t_mountp->m_sb.sb_blocksize, NULL);
-+			   args->geo->blksize, NULL);
- 
+ 	 * Look up the name.  We're not supposed to find it, but
+ 	 * this gives us the insertion point.
+@@ -2043,7 +2043,7 @@ xfs_dir2_node_lookup(
+ 	state->args = args;
+ 	state->mp = args->dp->i_mount;
+ 	state->blocksize = args->geo->blksize;
+-	state->node_ents = state->mp->m_dir_node_ents;
++	state->node_ents = args->geo->node_ents;
  	/*
- 	 * Search through freemap for first-fit on new name length.
-@@ -1180,13 +1180,13 @@ xfs_attr3_leaf_add_work(
- 	ASSERT((ichdr->freemap[mapindex].base & 0x3) == 0);
- 	ASSERT(ichdr->freemap[mapindex].size >=
- 		xfs_attr_leaf_newentsize(args->namelen, args->valuelen,
--					 mp->m_sb.sb_blocksize, NULL));
-+					 args->geo->blksize, NULL));
- 	ASSERT(ichdr->freemap[mapindex].size < XFS_LBSIZE(mp));
- 	ASSERT((ichdr->freemap[mapindex].size & 0x3) == 0);
+ 	 * Fill in the path to the entry in the cursor.
+ 	 */
+@@ -2098,7 +2098,7 @@ xfs_dir2_node_removename(
+ 	state->args = args;
+ 	state->mp = args->dp->i_mount;
+ 	state->blocksize = args->geo->blksize;
+-	state->node_ents = state->mp->m_dir_node_ents;
++	state->node_ents = args->geo->node_ents;
  
- 	ichdr->freemap[mapindex].size -=
- 			xfs_attr_leaf_newentsize(args->namelen, args->valuelen,
--						 mp->m_sb.sb_blocksize, &tmp);
-+						 args->geo->blksize, &tmp);
- 
- 	entry->nameidx = cpu_to_be16(ichdr->freemap[mapindex].base +
- 				     ichdr->freemap[mapindex].size);
-diff --git a/fs/xfs/xfs_log_rlimit.c b/fs/xfs/xfs_log_rlimit.c
-index 2af1a0a..ee7e0e8 100644
---- a/fs/xfs/xfs_log_rlimit.c
-+++ b/fs/xfs/xfs_log_rlimit.c
-@@ -42,7 +42,7 @@ xfs_log_calc_max_attrsetm_res(
- 	int			size;
- 	int			nblks;
- 
--	size = xfs_attr_leaf_entsize_local_max(mp->m_sb.sb_blocksize) -
-+	size = xfs_attr_leaf_entsize_local_max(mp->m_attr_geo->blksize) -
- 	       MAXNAMELEN - 1;
- 	nblks = XFS_DAENTER_SPACE_RES(mp, XFS_ATTR_FORK);
- 	nblks += XFS_B_TO_FSB(mp, size);
+ 	/* Look up the entry we're deleting, set up the cursor. */
+ 	error = xfs_da3_node_lookup_int(state, &rval);
+@@ -2168,7 +2168,7 @@ xfs_dir2_node_replace(
+ 	state->args = args;
+ 	state->mp = args->dp->i_mount;
+ 	state->blocksize = args->geo->blksize;
+-	state->node_ents = state->mp->m_dir_node_ents;
++	state->node_ents = args->geo->node_ents;
+ 	inum = args->inumber;
+ 	/*
+ 	 * Lookup the entry to change in the btree.
+diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+index 3b690c36..6d7e5d7 100644
+--- a/fs/xfs/xfs_mount.h
++++ b/fs/xfs/xfs_mount.h
+@@ -134,8 +134,6 @@ typedef struct xfs_mount {
+ 	int			m_fixedfsid[2];	/* unchanged for life of FS */
+ 	uint			m_dmevmask;	/* DMI events for this FS */
+ 	__uint64_t		m_flags;	/* global mount flags */
+-	uint			m_dir_node_ents; /* #entries in a dir danode */
+-	uint			m_attr_node_ents; /* #entries in attr danode */
+ 	int			m_ialloc_inos;	/* inodes in inode allocation */
+ 	int			m_ialloc_blks;	/* blocks in inode allocation */
+ 	int			m_inoalign_mask;/* mask sb_inoalignmt if used */
 -- 
 1.9.0
 
