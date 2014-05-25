@@ -1,22 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 535DD7F51
-	for <xfs@oss.sgi.com>; Fri, 23 May 2014 15:43:28 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 06EC1AC002
-	for <xfs@oss.sgi.com>; Fri, 23 May 2014 13:43:24 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id GBq2KAHEloqqQCea for
-	<xfs@oss.sgi.com>; Fri, 23 May 2014 13:43:23 -0700 (PDT)
-Date: Fri, 23 May 2014 16:43:20 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 08/16] xfs: convert m_dirblkfsbs to xfs_da_geometry
-Message-ID: <20140523204320.GI8343@laptop.bfoster>
-References: <1400803432-20048-1-git-send-email-david@fromorbit.com>
-	<1400803432-20048-9-git-send-email-david@fromorbit.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 97F0E7F3F
+	for <xfs@oss.sgi.com>; Sun, 25 May 2014 12:32:21 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 73B4E304039
+	for <xfs@oss.sgi.com>; Sun, 25 May 2014 10:32:21 -0700 (PDT)
+Received: from mail.vlasiu.net (mail.vlasiu.net [91.223.50.125]) by
+	cuda.sgi.com with ESMTP id 0r79bOe4Ac7FYQEl (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Sun, 25 May 2014 10:32:17 -0700 (PDT)
+Received: from localhost (localhost [127.0.0.1])
+	by mail.vlasiu.net (Postfix) with ESMTP id 82BFCA0065
+	for <xfs@oss.sgi.com>; Sun, 25 May 2014 20:32:14 +0300 (EEST)
+Received: from mail.vlasiu.net ([127.0.0.1])
+	by localhost (mail.vlasiu.net [127.0.0.1]) (amavisd-new, port 10026)
+	with LMTP id GG8fkp0dRCET for <xfs@oss.sgi.com>;
+	Sun, 25 May 2014 20:32:11 +0300 (EEST)
+Received: from localhost (localhost [127.0.0.1])
+	by mail.vlasiu.net (Postfix) with ESMTP id B3734A0065
+	for <xfs@oss.sgi.com>; Sun, 25 May 2014 20:32:10 +0300 (EEST)
+Date: Sun, 25 May 2014 20:32:04 +0300 (EEST)
+From: Gabriel VLASIU <gabriel@vlasiu.net>
+Subject: xfs fs shutdown when no more space available
+Message-ID: <alpine.LRH.2.03.1405252005430.25037@mail.vlasiu.net>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1400803432-20048-9-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,291 +36,175 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Fri, May 23, 2014 at 10:03:44AM +1000, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
-> 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> ---
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA512
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+Hi!
 
->  fs/xfs/xfs_bmap.c         |  3 ++-
->  fs/xfs/xfs_da_btree.c     | 24 ++++++++----------------
->  fs/xfs/xfs_dir2.c         |  5 ++---
->  fs/xfs/xfs_dir2_leaf.c    |  4 ++--
->  fs/xfs/xfs_dir2_readdir.c | 16 ++++++++--------
->  fs/xfs/xfs_mount.h        |  1 -
->  fs/xfs/xfs_symlink.c      |  1 +
->  fs/xfs/xfs_trans_resv.c   |  1 +
->  fs/xfs/xfs_trans_space.h  |  5 +++--
->  9 files changed, 27 insertions(+), 33 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_bmap.c b/fs/xfs/xfs_bmap.c
-> index 1ff0da6..96175df 100644
-> --- a/fs/xfs/xfs_bmap.c
-> +++ b/fs/xfs/xfs_bmap.c
-> @@ -1098,10 +1098,11 @@ xfs_bmap_add_attrfork_local(
->  
->  	if (S_ISDIR(ip->i_d.di_mode)) {
->  		memset(&dargs, 0, sizeof(dargs));
-> +		dargs.geo = ip->i_mount->m_dir_geo;
->  		dargs.dp = ip;
->  		dargs.firstblock = firstblock;
->  		dargs.flist = flist;
-> -		dargs.total = ip->i_mount->m_dirblkfsbs;
-> +		dargs.total = dargs.geo->fsbcount;
->  		dargs.whichfork = XFS_DATA_FORK;
->  		dargs.trans = tp;
->  		return xfs_dir2_sf_to_block(&dargs);
-> diff --git a/fs/xfs/xfs_da_btree.c b/fs/xfs/xfs_da_btree.c
-> index 8621202..4d0a1e8 100644
-> --- a/fs/xfs/xfs_da_btree.c
-> +++ b/fs/xfs/xfs_da_btree.c
-> @@ -2090,20 +2090,12 @@ xfs_da_grow_inode(
->  	xfs_dablk_t		*new_blkno)
->  {
->  	xfs_fileoff_t		bno;
-> -	int			count;
->  	int			error;
->  
->  	trace_xfs_da_grow_inode(args);
->  
-> -	if (args->whichfork == XFS_DATA_FORK) {
-> -		bno = args->geo->leafblk;
-> -		count = args->dp->i_mount->m_dirblkfsbs;
-> -	} else {
-> -		bno = 0;
-> -		count = 1;
-> -	}
-> -
-> -	error = xfs_da_grow_inode_int(args, &bno, count);
-> +	bno = args->geo->leafblk;
-> +	error = xfs_da_grow_inode_int(args, &bno, args->geo->fsbcount);
->  	if (!error)
->  		*new_blkno = (xfs_dablk_t)bno;
->  	return error;
-> @@ -2170,7 +2162,7 @@ xfs_da3_swap_lastblock(
->  	/*
->  	 * Read the last block in the btree space.
->  	 */
-> -	last_blkno = (xfs_dablk_t)lastoff - mp->m_dirblkfsbs;
-> +	last_blkno = (xfs_dablk_t)lastoff - args->geo->fsbcount;
->  	error = xfs_da3_node_read(tp, dp, last_blkno, -1, &last_buf, w);
->  	if (error)
->  		return error;
-> @@ -2357,10 +2349,7 @@ xfs_da_shrink_inode(
->  	w = args->whichfork;
->  	tp = args->trans;
->  	mp = dp->i_mount;
-> -	if (w == XFS_DATA_FORK)
-> -		count = mp->m_dirblkfsbs;
-> -	else
-> -		count = 1;
-> +	count = args->geo->fsbcount;
->  	for (;;) {
->  		/*
->  		 * Remove extents.  If we get ENOSPC for a dir we have to move
-> @@ -2479,7 +2468,10 @@ xfs_dabuf_map(
->  	ASSERT(map && *map);
->  	ASSERT(*nmaps == 1);
->  
-> -	nfsb = (whichfork == XFS_DATA_FORK) ? mp->m_dirblkfsbs : 1;
-> +	if (whichfork == XFS_DATA_FORK)
-> +		nfsb = mp->m_dir_geo->fsbcount;
-> +	else
-> +		nfsb = mp->m_attr_geo->fsbcount;
->  
->  	/*
->  	 * Caller doesn't have a mapping.  -2 means don't complain
-> diff --git a/fs/xfs/xfs_dir2.c b/fs/xfs/xfs_dir2.c
-> index fc09a11..200c9c4 100644
-> --- a/fs/xfs/xfs_dir2.c
-> +++ b/fs/xfs/xfs_dir2.c
-> @@ -146,7 +146,6 @@ xfs_da_mount(
->  
->  	/* XXX: these are to be removed as code is converted to use geo */
->  	mp->m_dirblksize = mp->m_dir_geo->blksize;
-> -	mp->m_dirblkfsbs = mp->m_dir_geo->fsbcount;
->  	mp->m_dir_node_ents = mp->m_dir_geo->node_ents;
->  	mp->m_dir_magicpct = mp->m_dir_geo->magicpct;
->  	mp->m_attr_node_ents = mp->m_attr_geo->node_ents;
-> @@ -620,7 +619,7 @@ xfs_dir2_grow_inode(
->  	 * Set lowest possible block in the space requested.
->  	 */
->  	bno = XFS_B_TO_FSBT(mp, space * XFS_DIR2_SPACE_SIZE);
-> -	count = mp->m_dirblkfsbs;
-> +	count = args->geo->fsbcount;
->  
->  	error = xfs_da_grow_inode_int(args, &bno, count);
->  	if (error)
-> @@ -711,7 +710,7 @@ xfs_dir2_shrink_inode(
->  	/*
->  	 * Unmap the fsblock(s).
->  	 */
-> -	if ((error = xfs_bunmapi(tp, dp, da, mp->m_dirblkfsbs,
-> +	if ((error = xfs_bunmapi(tp, dp, da, args->geo->fsbcount,
->  			XFS_BMAPI_METADATA, 0, args->firstblock, args->flist,
->  			&done))) {
->  		/*
-> diff --git a/fs/xfs/xfs_dir2_leaf.c b/fs/xfs/xfs_dir2_leaf.c
-> index 3eb8b24..a1f1310 100644
-> --- a/fs/xfs/xfs_dir2_leaf.c
-> +++ b/fs/xfs/xfs_dir2_leaf.c
-> @@ -1715,7 +1715,7 @@ xfs_dir2_node_to_leaf(
->  	if ((error = xfs_bmap_last_offset(dp, &fo, XFS_DATA_FORK))) {
->  		return error;
->  	}
-> -	fo -= mp->m_dirblkfsbs;
-> +	fo -= args->geo->fsbcount;
->  	/*
->  	 * If there are freespace blocks other than the first one,
->  	 * take this opportunity to remove trailing empty freespace blocks
-> @@ -1727,7 +1727,7 @@ xfs_dir2_node_to_leaf(
->  			return error;
->  		}
->  		if (rval)
-> -			fo -= mp->m_dirblkfsbs;
-> +			fo -= args->geo->fsbcount;
->  		else
->  			return 0;
->  	}
-> diff --git a/fs/xfs/xfs_dir2_readdir.c b/fs/xfs/xfs_dir2_readdir.c
-> index 0c8c09c..8cb5340 100644
-> --- a/fs/xfs/xfs_dir2_readdir.c
-> +++ b/fs/xfs/xfs_dir2_readdir.c
-> @@ -314,12 +314,12 @@ xfs_dir2_leaf_readbuf(
->  	if (bp) {
->  		xfs_trans_brelse(NULL, bp);
->  		bp = NULL;
-> -		mip->map_blocks -= mp->m_dirblkfsbs;
-> +		mip->map_blocks -= geo->fsbcount;
->  		/*
->  		 * Loop to get rid of the extents for the
->  		 * directory block.
->  		 */
-> -		for (i = mp->m_dirblkfsbs; i > 0; ) {
-> +		for (i = geo->fsbcount; i > 0; ) {
->  			j = min_t(int, map->br_blockcount, i);
->  			map->br_blockcount -= j;
->  			map->br_startblock += j;
-> @@ -410,7 +410,7 @@ xfs_dir2_leaf_readbuf(
->  	 */
->  	mip->curdb = xfs_dir2_da_to_db(geo, map->br_startoff);
->  	error = xfs_dir3_data_read(NULL, dp, map->br_startoff,
-> -			map->br_blockcount >= mp->m_dirblkfsbs ?
-> +			map->br_blockcount >= geo->fsbcount ?
->  			    XFS_FSB_TO_DADDR(mp, map->br_startblock) : -1, &bp);
->  
->  	/*
-> @@ -424,7 +424,7 @@ xfs_dir2_leaf_readbuf(
->  	 * was previously ra.
->  	 */
->  	if (mip->ra_current)
-> -		mip->ra_current -= mp->m_dirblkfsbs;
-> +		mip->ra_current -= geo->fsbcount;
->  
->  	/*
->  	 * Do we need more readahead?
-> @@ -432,13 +432,13 @@ xfs_dir2_leaf_readbuf(
->  	blk_start_plug(&plug);
->  	for (mip->ra_index = mip->ra_offset = i = 0;
->  	     mip->ra_want > mip->ra_current && i < mip->map_blocks;
-> -	     i += mp->m_dirblkfsbs) {
-> +	     i += geo->fsbcount) {
->  		ASSERT(mip->ra_index < mip->map_valid);
->  		/*
->  		 * Read-ahead a contiguous directory block.
->  		 */
->  		if (i > mip->ra_current &&
-> -		    map[mip->ra_index].br_blockcount >= mp->m_dirblkfsbs) {
-> +		    map[mip->ra_index].br_blockcount >= geo->fsbcount) {
->  			xfs_dir3_data_readahead(dp,
->  				map[mip->ra_index].br_startoff + mip->ra_offset,
->  				XFS_FSB_TO_DADDR(mp,
-> @@ -461,12 +461,12 @@ xfs_dir2_leaf_readbuf(
->  		/*
->  		 * Advance offset through the mapping table.
->  		 */
-> -		for (j = 0; j < mp->m_dirblkfsbs; j += length ) {
-> +		for (j = 0; j < geo->fsbcount; j += length ) {
->  			/*
->  			 * The rest of this extent but not more than a dir
->  			 * block.
->  			 */
-> -			length = min_t(int, mp->m_dirblkfsbs,
-> +			length = min_t(int, geo->fsbcount,
->  					map[mip->ra_index].br_blockcount -
->  							mip->ra_offset);
->  			mip->ra_offset += length;
-> diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-> index 264e210..275fed3 100644
-> --- a/fs/xfs/xfs_mount.h
-> +++ b/fs/xfs/xfs_mount.h
-> @@ -155,7 +155,6 @@ typedef struct xfs_mount {
->  	const struct xfs_dir_ops *m_dir_inode_ops; /* vector of dir inode ops */
->  	const struct xfs_dir_ops *m_nondir_inode_ops; /* !dir inode ops */
->  	int			m_dirblksize;	/* directory block sz--bytes */
-> -	int			m_dirblkfsbs;	/* directory block sz--fsbs */
->  	uint			m_chsize;	/* size of next field */
->  	atomic_t		m_active_trans;	/* number trans frozen */
->  #ifdef HAVE_PERCPU_SB
-> diff --git a/fs/xfs/xfs_symlink.c b/fs/xfs/xfs_symlink.c
-> index 0816b40..d69363c 100644
-> --- a/fs/xfs/xfs_symlink.c
-> +++ b/fs/xfs/xfs_symlink.c
-> @@ -27,6 +27,7 @@
->  #include "xfs_ag.h"
->  #include "xfs_mount.h"
->  #include "xfs_da_format.h"
-> +#include "xfs_da_btree.h"
->  #include "xfs_dir2.h"
->  #include "xfs_inode.h"
->  #include "xfs_ialloc.h"
-> diff --git a/fs/xfs/xfs_trans_resv.c b/fs/xfs/xfs_trans_resv.c
-> index 52b6c3e..63a42a1 100644
-> --- a/fs/xfs/xfs_trans_resv.c
-> +++ b/fs/xfs/xfs_trans_resv.c
-> @@ -26,6 +26,7 @@
->  #include "xfs_ag.h"
->  #include "xfs_mount.h"
->  #include "xfs_da_format.h"
-> +#include "xfs_da_btree.h"
->  #include "xfs_inode.h"
->  #include "xfs_bmap_btree.h"
->  #include "xfs_ialloc.h"
-> diff --git a/fs/xfs/xfs_trans_space.h b/fs/xfs/xfs_trans_space.h
-> index df4c1f8..bf9c457 100644
-> --- a/fs/xfs/xfs_trans_space.h
-> +++ b/fs/xfs/xfs_trans_space.h
-> @@ -28,7 +28,8 @@
->  	(((b + XFS_MAX_CONTIG_EXTENTS_PER_BLOCK(mp) - 1) / \
->  	  XFS_MAX_CONTIG_EXTENTS_PER_BLOCK(mp)) * \
->  	  XFS_EXTENTADD_SPACE_RES(mp,w))
-> -#define	XFS_DAENTER_1B(mp,w)	((w) == XFS_DATA_FORK ? (mp)->m_dirblkfsbs : 1)
-> +#define	XFS_DAENTER_1B(mp,w)	\
-> +	((w) == XFS_DATA_FORK ? (mp)->m_dir_geo->fsbcount : 1)
->  #define	XFS_DAENTER_DBS(mp,w)	\
->  	(XFS_DA_NODE_MAXDEPTH + (((w) == XFS_DATA_FORK) ? 2 : 0))
->  #define	XFS_DAENTER_BLOCKS(mp,w)	\
-> @@ -55,7 +56,7 @@
->   * Space reservation values for various transactions.
->   */
->  #define	XFS_ADDAFORK_SPACE_RES(mp)	\
-> -	((mp)->m_dirblkfsbs + XFS_DAENTER_BMAP1B(mp, XFS_DATA_FORK))
-> +	((mp)->m_dir_geo->fsbcount + XFS_DAENTER_BMAP1B(mp, XFS_DATA_FORK))
->  #define	XFS_ATTRRM_SPACE_RES(mp)	\
->  	XFS_DAREMOVE_SPACE_RES(mp, XFS_ATTR_FORK)
->  /* This macro is not used - see inline code in xfs_attr_set */
-> -- 
-> 1.9.0
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+Usually, when the xfs partition has no more space nothing happend except I 
+cannot write new data. This was true for a long time. But it's seems that 
+in 3.14.4 something has changed (3.14.x?):
+
+# dd if=/dev/urandom of=noise.dat count=4194304
+cp noise.dat 11.dat
+cp noise.dat 22.dat
+....
+
+At some point the partition become full and I get this in logs:
+
+May 25 19:48:25 imhotep kernel: [26271.780894] XFS (loop0): xlog_write: reservation summary:
+May 25 19:48:25 imhotep kernel: [26271.780894]   trans type  = FSYNC_TS (36)
+May 25 19:48:25 imhotep kernel: [26271.780894]   unit res    = 9640 bytes
+May 25 19:48:25 imhotep kernel: [26271.780894]   current res = -4 bytes
+May 25 19:48:25 imhotep kernel: [26271.780894]   total reg   = 0 bytes (o/flow = 0 bytes)
+May 25 19:48:25 imhotep kernel: [26271.780894]   ophdrs      = 0 (ophdr space = 0 bytes)
+May 25 19:48:25 imhotep kernel: [26271.780894]   ophdr + reg = 0 bytes
+May 25 19:48:25 imhotep kernel: [26271.780894]   num regions = 0
+May 25 19:48:25 imhotep kernel: [26271.780894]
+May 25 19:48:25 imhotep kernel: [26271.780910] XFS (loop0): xlog_write: reservation ran out. Need to up reservation
+May 25 19:48:25 imhotep kernel: [26271.780917] XFS (loop0): xfs_do_force_shutdown(0x2) called from line 1999 of file fs/xfs/xfs_log.c.  Return address = 0xffffffffa009a6e8
+May 25 19:48:25 imhotep kernel: [26271.781084] XFS (loop0): Log I/O Error Detected.  Shutting down filesystem
+May 25 19:48:25 imhotep kernel: [26271.781088] XFS (loop0): Please umount the filesystem and rectify the problem(s)
+May 25 19:48:25 imhotep kernel: [26271.781197] XFS (loop0): xfs_log_force: error 5 returned.
+May 25 19:48:25 imhotep kernel: [26271.781550] Buffer I/O error on device loop0, logical block 115955756
+May 25 19:48:25 imhotep kernel: [26271.781556] lost page write due to I/O error on loop0
+May 25 19:48:25 imhotep kernel: [26271.781566] Buffer I/O error on device loop0, logical block 115955757
+May 25 19:48:25 imhotep kernel: [26271.781570] lost page write due to I/O error on loop0
+May 25 19:48:25 imhotep kernel: [26271.781576] Buffer I/O error on device loop0, logical block 115955758
+May 25 19:48:25 imhotep kernel: [26271.781581] lost page write due to I/O error on loop0
+May 25 19:48:25 imhotep kernel: [26271.781586] Buffer I/O error on device loop0, logical block 115955759
+May 25 19:48:25 imhotep kernel: [26271.781590] lost page write due to I/O error on loop0
+May 25 19:48:25 imhotep kernel: [26271.781597] Buffer I/O error on device loop0, logical block 115955760
+May 25 19:48:25 imhotep kernel: [26271.781601] lost page write due to I/O error on loop0
+May 25 19:48:25 imhotep kernel: [26271.781607] Buffer I/O error on device loop0, logical block 115955761
+May 25 19:48:25 imhotep kernel: [26271.781611] lost page write due to I/O error on loop0
+May 25 19:48:25 imhotep kernel: [26271.781616] Buffer I/O error on device loop0, logical block 115955762
+May 25 19:48:25 imhotep kernel: [26271.781620] lost page write due to I/O error on loop0
+May 25 19:48:25 imhotep kernel: [26271.781626] Buffer I/O error on device loop0, logical block 115955763
+May 25 19:48:25 imhotep kernel: [26271.781630] lost page write due to I/O error on loop0
+May 25 19:48:25 imhotep kernel: [26271.781636] Buffer I/O error on device loop0, logical block 115955764
+May 25 19:48:25 imhotep kernel: [26271.781640] lost page write due to I/O error on loop0
+May 25 19:48:25 imhotep kernel: [26271.781646] Buffer I/O error on device loop0, logical block 115955765
+May 25 19:48:25 imhotep kernel: [26271.781650] lost page write due to I/O error on loop0
+May 25 19:48:25 imhotep kernel: [26271.831068] XFS (loop0): xfs_log_force: error 5 returned.
+May 25 19:48:54 imhotep kernel: [26300.896096] XFS (loop0): xfs_log_force: error 5 returned.
+May 25 19:49:24 imhotep kernel: [26330.976040] XFS (loop0): xfs_log_force: error 5 returned.
+May 25 19:49:54 imhotep kernel: [26361.056082] XFS (loop0): xfs_log_force: error 5 returned.
+
+>>>> umount /home here:
+May 25 19:50:04 imhotep kernel: [26370.798657] XFS (loop0): xfs_log_force: error 5 returned.
+May 25 19:50:05 imhotep kernel: [26372.117698] XFS (loop0): xfs_log_force: error 5 returned.
+May 25 19:50:05 imhotep kernel: [26372.121153] XFS (loop0): xfs_log_force: error 5 returned.
+
+>>>> mount /home here:
+May 25 19:50:54 imhotep kernel: [26420.912686] XFS (loop0): Mounting Filesystem
+May 25 19:50:55 imhotep kernel: [26421.551754] XFS (loop0): Starting recovery (logdev: internal)
+May 25 19:50:55 imhotep kernel: [26421.903891] XFS (loop0): Ending recovery (logdev: internal)
+
+Seems like an log error. Can this be fixed?
+Thank you.
+
+
+# uname -a
+Linux imhotep.vlasiu.net 3.14.4-100.AES.f19g.x86_64 #1 SMP Tue May 13 21:36:02 EEST 2014 x86_64 x86_64 x86_64 GNU/Linux
+
+# xfs_repair -V
+xfs_repair version 3.1.10
+
+# cat /proc/cpuinfo | grep ^process | wc -l
+2
+
+# cat /proc/meminfo 
+MemTotal:        3982872 kB
+MemFree:         2352536 kB
+MemAvailable:    2803296 kB
+Buffers:             432 kB
+Cached:           997232 kB
+SwapCached:           36 kB
+Active:          1029964 kB
+Inactive:         417876 kB
+Active(anon):     761920 kB
+Inactive(anon):    83260 kB
+Active(file):     268044 kB
+Inactive(file):   334616 kB
+Unevictable:           0 kB
+Mlocked:               0 kB
+SwapTotal:       4194296 kB
+SwapFree:        4193708 kB
+Dirty:                 4 kB
+Writeback:             0 kB
+AnonPages:        450140 kB
+Mapped:            91904 kB
+Shmem:            395004 kB
+Slab:              75724 kB
+SReclaimable:      34068 kB
+SUnreclaim:        41656 kB
+KernelStack:        1576 kB
+PageTables:        10812 kB
+NFS_Unstable:          0 kB
+Bounce:                0 kB
+WritebackTmp:          0 kB
+CommitLimit:     6185732 kB
+Committed_AS:    1386592 kB
+VmallocTotal:   34359738367 kB
+VmallocUsed:      131492 kB
+VmallocChunk:   34359561724 kB
+HardwareCorrupted:     0 kB
+AnonHugePages:         0 kB
+HugePages_Total:       0
+HugePages_Free:        0
+HugePages_Rsvd:        0
+HugePages_Surp:        0
+Hugepagesize:       2048 kB
+DirectMap4k:      163520 kB
+DirectMap2M:     3964928 kB
+
+# cat /proc/mounts | grep -v cgroup | grep -w xfs
+/dev/sda3 / xfs rw,seclabel,relatime,attr2,inode64,noquota 0 0
+/dev/loop6 /tmp xfs rw,seclabel,nosuid,nodev,noexec,relatime,attr2,inode64,noquota 0 0
+/dev/loop6 /var/tmp xfs rw,seclabel,nosuid,nodev,noexec,relatime,attr2,inode64,noquota 0 0
+/dev/loop0 /home xfs rw,seclabel,nosuid,nodev,relatime,attr2,inode64,logbufs=8,logbsize=256k,noquota 0 0
+
+# xfs_info /dev/loop0
+meta-data=/dev/loop0             isize=256    agcount=4, agsize=40108032 blks
+         =                       sectsz=512   attr=2
+data     =                       bsize=4096   blocks=160432126, imaxpct=25
+         =                       sunit=0      swidth=0 blks
+naming   =version 2              bsize=4096   ascii-ci=0
+log      =internal               bsize=4096   blocks=78335, version=2
+         =                       sectsz=512   sunit=0 blks, lazy-count=1
+realtime =none                   extsz=4096   blocks=0, rtextents=0
+
+
+Sincerely,
+Gabriel
+
+- -- 
+
+// Gabriel VLASIU
+//
+// OpenGPG-KeyID      : 44952F15
+// OpenGPG-Fingerprint: 4AC5 7C26 2FE9 02DA 4906  24B2 D32B 7ED7 4495 2F15
+// OpenGPG-URL        : http://www.vlasiu.net/public.key
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAEBCgAGBQJTgikUAAoJENMrftdElS8VLHkP/3hCMyYmgEZSFYs4alYZRqYp
+SMhTiq41h4Q3GaSSqMvrC9U3+j2MlyaaC/tCOxlCszGNf077X3XsrqDBdyrXXpqW
++qKMroXegwkwg0VQVR6LAJFqIMYweK8WIDFUSE+giSPYL4eG5mWlDr9vC6eMrATH
+MwcGH9MwI46Bwq9BjxHdlAfp7F5S913sdGpIEN/wQGMVNCewOo2+dJ2vsIqv8QxM
+dSrjGXn8QijAJfbgYcrv43wRWONignHgtLmk5bUuyhg7qz0SYOBnziQSuxnDwX8B
+sUXDD2RQujy4wfbMPmO+qpZvfmb8lB7mOATDGNX9Sw4JrSMNrl6yLYTNz20PRMq/
+IW9q6JAsis3ona9ojJqQDRKOmmoa6+17A3CHkKjSZO3Xuw8kD4XDg8dCQ1xp3qA3
+IRfqMKdqQ2mtAI7NZgk4iq5GLdRyZnnGiHMCtP2YV7lqgbjm3M5akSxdoSFrmmdE
+gWZu5GC1XVjpbL52eDMoScnFzFfKMXwiMSw++766Z/xzGqr90f+GNcrVk6sk7Dt4
+gkSzmuVqkAzkHl5DicZRsjiHqxVxBisLaCaJXqUCC1ZrRf5A4/ga8HpE+1TZHnwt
+eDV7obPK6zyg4KkcJzl6RFoes/0XLsN+gay8n4q8AkkqPZso6jJ++3lqpl9ZNOCC
+5Cdl0Gyiq5avibzMEsus
+=geAz
+-----END PGP SIGNATURE-----
 
 _______________________________________________
 xfs mailing list
