@@ -1,29 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 97F0E7F3F
-	for <xfs@oss.sgi.com>; Sun, 25 May 2014 12:32:21 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 1A09F7F3F
+	for <xfs@oss.sgi.com>; Sun, 25 May 2014 15:04:19 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 73B4E304039
-	for <xfs@oss.sgi.com>; Sun, 25 May 2014 10:32:21 -0700 (PDT)
-Received: from mail.vlasiu.net (mail.vlasiu.net [91.223.50.125]) by
-	cuda.sgi.com with ESMTP id 0r79bOe4Ac7FYQEl (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Sun, 25 May 2014 10:32:17 -0700 (PDT)
-Received: from localhost (localhost [127.0.0.1])
-	by mail.vlasiu.net (Postfix) with ESMTP id 82BFCA0065
-	for <xfs@oss.sgi.com>; Sun, 25 May 2014 20:32:14 +0300 (EEST)
-Received: from mail.vlasiu.net ([127.0.0.1])
-	by localhost (mail.vlasiu.net [127.0.0.1]) (amavisd-new, port 10026)
-	with LMTP id GG8fkp0dRCET for <xfs@oss.sgi.com>;
-	Sun, 25 May 2014 20:32:11 +0300 (EEST)
-Received: from localhost (localhost [127.0.0.1])
-	by mail.vlasiu.net (Postfix) with ESMTP id B3734A0065
-	for <xfs@oss.sgi.com>; Sun, 25 May 2014 20:32:10 +0300 (EEST)
-Date: Sun, 25 May 2014 20:32:04 +0300 (EEST)
-From: Gabriel VLASIU <gabriel@vlasiu.net>
-Subject: xfs fs shutdown when no more space available
-Message-ID: <alpine.LRH.2.03.1405252005430.25037@mail.vlasiu.net>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id EC1E6304043
+	for <xfs@oss.sgi.com>; Sun, 25 May 2014 13:04:15 -0700 (PDT)
+Received: from mail-ve0-f178.google.com (mail-ve0-f178.google.com
+	[209.85.128.178]) by cuda.sgi.com with ESMTP id
+	MH5xdM4cx4S49gYw (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Sun, 25 May 2014 13:04:10 -0700 (PDT)
+Received: by mail-ve0-f178.google.com with SMTP id sa20so8536908veb.9
+	for <xfs@oss.sgi.com>; Sun, 25 May 2014 13:04:09 -0700 (PDT)
 MIME-Version: 1.0
+In-Reply-To: <1399314889-9829-1-git-send-email-plamen.sisi@gmail.com>
+References: <1399314889-9829-1-git-send-email-plamen.sisi@gmail.com>
+Date: Sun, 25 May 2014 13:04:09 -0700
+Message-ID: <CA+55aFwxF2xnYerLdJZ2gQdZizK3953L16X5KkUAqD-YePausQ@mail.gmail.com>
+Subject: Re: [PATCH] do_mounts: try all available filesystems before panicking
+From: Linus Torvalds <torvalds@linux-foundation.org>
+Content-Type: multipart/mixed; boundary=047d7b3432363bf83f04fa3ef71d
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,181 +28,112 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Plamen Petrov <plamen.sisi@gmail.com>, Dave Chinner <david@fromorbit.com>
+Cc: LKML <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA512
+--047d7b3432363bf83f04fa3ef71d
+Content-Type: text/plain; charset=UTF-8
 
-Hi!
+On Mon, May 5, 2014 at 11:34 AM, Plamen Petrov <plamen.sisi@gmail.com> wrote:
+>
+> The story short: on systems with btrfs root I have a kernel .config with ext4,
+> xfs and btrfs built-in which works fine with 3.13.x, but 3.14.x panics. After
+> inserting some debug printks, I got this info from mount_block_root:
+>
+> ---> EACCESS=13, EINVAL=22, Available filesystems: ext3 ext2 ext4 fuseblk xfs btrfs
+> -----> Tried ext3, error code is -22.
+> -----> Tried ext2, error code is -22.
+> -----> Tried ext4, error code is -22.
+> -----> Tried fuseblk, error code is -22.
+> -----> Tried xfs, error code is -38.
+> VFS: Cannot open root device "sda2" or unknown-block(8,2): error -38
+> Please append a correct "root=" boot option; here are the available partitions:
+>
+> Last one tried is xfs, the needed btrfs in this case never gets a chance.
+> Looking at the code in init/do_mounts.c we can see that it "continue"s only if
+> the return code it got is EINVAL, yet xfs clearly does not fit - so the kernel
+> panics. Maybe there are other filesystems like xfs - I did not check. This
+> patch fixes mount_block_root to try all available filesystems first, and then
+> panic. The patched 3.14.x works for me.
 
-Usually, when the xfs partition has no more space nothing happend except I 
-cannot write new data. This was true for a long time. But it's seems that 
-in 3.14.4 something has changed (3.14.x?):
+Hmm. I don't really dislike your patch, but it makes all the code
+_after_ the switch-statement dead, since there is now no way to ever
+fall through the switch statement.
 
-# dd if=/dev/urandom of=noise.dat count=4194304
-cp noise.dat 11.dat
-cp noise.dat 22.dat
-....
+So now that
 
-At some point the partition become full and I get this in logs:
+                /*
+                 * Allow the user to distinguish between failed sys_open
+                 * and bad superblock on root device.
+                 * and give them a list of the available devices
+                 */
 
-May 25 19:48:25 imhotep kernel: [26271.780894] XFS (loop0): xlog_write: reservation summary:
-May 25 19:48:25 imhotep kernel: [26271.780894]   trans type  = FSYNC_TS (36)
-May 25 19:48:25 imhotep kernel: [26271.780894]   unit res    = 9640 bytes
-May 25 19:48:25 imhotep kernel: [26271.780894]   current res = -4 bytes
-May 25 19:48:25 imhotep kernel: [26271.780894]   total reg   = 0 bytes (o/flow = 0 bytes)
-May 25 19:48:25 imhotep kernel: [26271.780894]   ophdrs      = 0 (ophdr space = 0 bytes)
-May 25 19:48:25 imhotep kernel: [26271.780894]   ophdr + reg = 0 bytes
-May 25 19:48:25 imhotep kernel: [26271.780894]   num regions = 0
-May 25 19:48:25 imhotep kernel: [26271.780894]
-May 25 19:48:25 imhotep kernel: [26271.780910] XFS (loop0): xlog_write: reservation ran out. Need to up reservation
-May 25 19:48:25 imhotep kernel: [26271.780917] XFS (loop0): xfs_do_force_shutdown(0x2) called from line 1999 of file fs/xfs/xfs_log.c.  Return address = 0xffffffffa009a6e8
-May 25 19:48:25 imhotep kernel: [26271.781084] XFS (loop0): Log I/O Error Detected.  Shutting down filesystem
-May 25 19:48:25 imhotep kernel: [26271.781088] XFS (loop0): Please umount the filesystem and rectify the problem(s)
-May 25 19:48:25 imhotep kernel: [26271.781197] XFS (loop0): xfs_log_force: error 5 returned.
-May 25 19:48:25 imhotep kernel: [26271.781550] Buffer I/O error on device loop0, logical block 115955756
-May 25 19:48:25 imhotep kernel: [26271.781556] lost page write due to I/O error on loop0
-May 25 19:48:25 imhotep kernel: [26271.781566] Buffer I/O error on device loop0, logical block 115955757
-May 25 19:48:25 imhotep kernel: [26271.781570] lost page write due to I/O error on loop0
-May 25 19:48:25 imhotep kernel: [26271.781576] Buffer I/O error on device loop0, logical block 115955758
-May 25 19:48:25 imhotep kernel: [26271.781581] lost page write due to I/O error on loop0
-May 25 19:48:25 imhotep kernel: [26271.781586] Buffer I/O error on device loop0, logical block 115955759
-May 25 19:48:25 imhotep kernel: [26271.781590] lost page write due to I/O error on loop0
-May 25 19:48:25 imhotep kernel: [26271.781597] Buffer I/O error on device loop0, logical block 115955760
-May 25 19:48:25 imhotep kernel: [26271.781601] lost page write due to I/O error on loop0
-May 25 19:48:25 imhotep kernel: [26271.781607] Buffer I/O error on device loop0, logical block 115955761
-May 25 19:48:25 imhotep kernel: [26271.781611] lost page write due to I/O error on loop0
-May 25 19:48:25 imhotep kernel: [26271.781616] Buffer I/O error on device loop0, logical block 115955762
-May 25 19:48:25 imhotep kernel: [26271.781620] lost page write due to I/O error on loop0
-May 25 19:48:25 imhotep kernel: [26271.781626] Buffer I/O error on device loop0, logical block 115955763
-May 25 19:48:25 imhotep kernel: [26271.781630] lost page write due to I/O error on loop0
-May 25 19:48:25 imhotep kernel: [26271.781636] Buffer I/O error on device loop0, logical block 115955764
-May 25 19:48:25 imhotep kernel: [26271.781640] lost page write due to I/O error on loop0
-May 25 19:48:25 imhotep kernel: [26271.781646] Buffer I/O error on device loop0, logical block 115955765
-May 25 19:48:25 imhotep kernel: [26271.781650] lost page write due to I/O error on loop0
-May 25 19:48:25 imhotep kernel: [26271.831068] XFS (loop0): xfs_log_force: error 5 returned.
-May 25 19:48:54 imhotep kernel: [26300.896096] XFS (loop0): xfs_log_force: error 5 returned.
-May 25 19:49:24 imhotep kernel: [26330.976040] XFS (loop0): xfs_log_force: error 5 returned.
-May 25 19:49:54 imhotep kernel: [26361.056082] XFS (loop0): xfs_log_force: error 5 returned.
+comment ends up being entirely stale, and the code after it is
+pointless and it all looks very misleading. And I'm assuming somebody
+cared about that difference at some point.
 
->>>> umount /home here:
-May 25 19:50:04 imhotep kernel: [26370.798657] XFS (loop0): xfs_log_force: error 5 returned.
-May 25 19:50:05 imhotep kernel: [26372.117698] XFS (loop0): xfs_log_force: error 5 returned.
-May 25 19:50:05 imhotep kernel: [26372.121153] XFS (loop0): xfs_log_force: error 5 returned.
+The fact is, I think xfs is just buggy. Returning 38 (ENOSYS) is
+totally insane. "No such system call"? Somebody is on some bad bad
+drugs. Not that the mount_block_root() loop and error handling might
+not be a good thing to perhaps tweak _too_, but at the very least your
+patch means that now it no longer prints out the error number at all.
 
->>>> mount /home here:
-May 25 19:50:54 imhotep kernel: [26420.912686] XFS (loop0): Mounting Filesystem
-May 25 19:50:55 imhotep kernel: [26421.551754] XFS (loop0): Starting recovery (logdev: internal)
-May 25 19:50:55 imhotep kernel: [26421.903891] XFS (loop0): Ending recovery (logdev: internal)
+Maybe just making it do something like the attached patch instead? It
+doesn't panic on unrecognized errors, just prints them out (just once,
+if it repeats). It also doesn't do the "goto repeat" if we already
+have the RDONLY bit set, because if somebody is returning insane error
+numbers, that could otherwise result in an endless loop.
 
-Seems like an log error. Can this be fixed?
-Thank you.
+Anyway, I'm also not seeing why that xfs error would be new to 3.14,
+though.. Adding the XFS people to the cc.
 
+Comments (patch obviously TOTALLY UNTESTED)
 
-# uname -a
-Linux imhotep.vlasiu.net 3.14.4-100.AES.f19g.x86_64 #1 SMP Tue May 13 21:36:02 EEST 2014 x86_64 x86_64 x86_64 GNU/Linux
+              Linus
 
-# xfs_repair -V
-xfs_repair version 3.1.10
+--047d7b3432363bf83f04fa3ef71d
+Content-Type: text/plain; charset=US-ASCII; name="patch.diff"
+Content-Disposition: attachment; filename="patch.diff"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_hvmrw5xg0
 
-# cat /proc/cpuinfo | grep ^process | wc -l
-2
-
-# cat /proc/meminfo 
-MemTotal:        3982872 kB
-MemFree:         2352536 kB
-MemAvailable:    2803296 kB
-Buffers:             432 kB
-Cached:           997232 kB
-SwapCached:           36 kB
-Active:          1029964 kB
-Inactive:         417876 kB
-Active(anon):     761920 kB
-Inactive(anon):    83260 kB
-Active(file):     268044 kB
-Inactive(file):   334616 kB
-Unevictable:           0 kB
-Mlocked:               0 kB
-SwapTotal:       4194296 kB
-SwapFree:        4193708 kB
-Dirty:                 4 kB
-Writeback:             0 kB
-AnonPages:        450140 kB
-Mapped:            91904 kB
-Shmem:            395004 kB
-Slab:              75724 kB
-SReclaimable:      34068 kB
-SUnreclaim:        41656 kB
-KernelStack:        1576 kB
-PageTables:        10812 kB
-NFS_Unstable:          0 kB
-Bounce:                0 kB
-WritebackTmp:          0 kB
-CommitLimit:     6185732 kB
-Committed_AS:    1386592 kB
-VmallocTotal:   34359738367 kB
-VmallocUsed:      131492 kB
-VmallocChunk:   34359561724 kB
-HardwareCorrupted:     0 kB
-AnonHugePages:         0 kB
-HugePages_Total:       0
-HugePages_Free:        0
-HugePages_Rsvd:        0
-HugePages_Surp:        0
-Hugepagesize:       2048 kB
-DirectMap4k:      163520 kB
-DirectMap2M:     3964928 kB
-
-# cat /proc/mounts | grep -v cgroup | grep -w xfs
-/dev/sda3 / xfs rw,seclabel,relatime,attr2,inode64,noquota 0 0
-/dev/loop6 /tmp xfs rw,seclabel,nosuid,nodev,noexec,relatime,attr2,inode64,noquota 0 0
-/dev/loop6 /var/tmp xfs rw,seclabel,nosuid,nodev,noexec,relatime,attr2,inode64,noquota 0 0
-/dev/loop0 /home xfs rw,seclabel,nosuid,nodev,relatime,attr2,inode64,logbufs=8,logbsize=256k,noquota 0 0
-
-# xfs_info /dev/loop0
-meta-data=/dev/loop0             isize=256    agcount=4, agsize=40108032 blks
-         =                       sectsz=512   attr=2
-data     =                       bsize=4096   blocks=160432126, imaxpct=25
-         =                       sunit=0      swidth=0 blks
-naming   =version 2              bsize=4096   ascii-ci=0
-log      =internal               bsize=4096   blocks=78335, version=2
-         =                       sectsz=512   sunit=0 blks, lazy-count=1
-realtime =none                   extsz=4096   blocks=0, rtextents=0
-
-
-Sincerely,
-Gabriel
-
-- -- 
-
-// Gabriel VLASIU
-//
-// OpenGPG-KeyID      : 44952F15
-// OpenGPG-Fingerprint: 4AC5 7C26 2FE9 02DA 4906  24B2 D32B 7ED7 4495 2F15
-// OpenGPG-URL        : http://www.vlasiu.net/public.key
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAEBCgAGBQJTgikUAAoJENMrftdElS8VLHkP/3hCMyYmgEZSFYs4alYZRqYp
-SMhTiq41h4Q3GaSSqMvrC9U3+j2MlyaaC/tCOxlCszGNf077X3XsrqDBdyrXXpqW
-+qKMroXegwkwg0VQVR6LAJFqIMYweK8WIDFUSE+giSPYL4eG5mWlDr9vC6eMrATH
-MwcGH9MwI46Bwq9BjxHdlAfp7F5S913sdGpIEN/wQGMVNCewOo2+dJ2vsIqv8QxM
-dSrjGXn8QijAJfbgYcrv43wRWONignHgtLmk5bUuyhg7qz0SYOBnziQSuxnDwX8B
-sUXDD2RQujy4wfbMPmO+qpZvfmb8lB7mOATDGNX9Sw4JrSMNrl6yLYTNz20PRMq/
-IW9q6JAsis3ona9ojJqQDRKOmmoa6+17A3CHkKjSZO3Xuw8kD4XDg8dCQ1xp3qA3
-IRfqMKdqQ2mtAI7NZgk4iq5GLdRyZnnGiHMCtP2YV7lqgbjm3M5akSxdoSFrmmdE
-gWZu5GC1XVjpbL52eDMoScnFzFfKMXwiMSw++766Z/xzGqr90f+GNcrVk6sk7Dt4
-gkSzmuVqkAzkHl5DicZRsjiHqxVxBisLaCaJXqUCC1ZrRf5A4/ga8HpE+1TZHnwt
-eDV7obPK6zyg4KkcJzl6RFoes/0XLsN+gay8n4q8AkkqPZso6jJ++3lqpl9ZNOCC
-5Cdl0Gyiq5avibzMEsus
-=geAz
------END PGP SIGNATURE-----
+IGluaXQvZG9fbW91bnRzLmMgfCAyNCArKysrKystLS0tLS0tLS0tLS0tLS0tLS0KIDEgZmlsZSBj
+aGFuZ2VkLCA2IGluc2VydGlvbnMoKyksIDE4IGRlbGV0aW9ucygtKQoKZGlmZiAtLWdpdCBhL2lu
+aXQvZG9fbW91bnRzLmMgYi9pbml0L2RvX21vdW50cy5jCmluZGV4IDgyZjIyODg1Yzg3ZS4uYTZh
+NzI1ZjQ2ZjE4IDEwMDY0NAotLS0gYS9pbml0L2RvX21vdW50cy5jCisrKyBiL2luaXQvZG9fbW91
+bnRzLmMKQEAgLTM4NSw2ICszODUsNyBAQCB2b2lkIF9faW5pdCBtb3VudF9ibG9ja19yb290KGNo
+YXIgKm5hbWUsIGludCBmbGFncykKICNlbHNlCiAJY29uc3QgY2hhciAqYiA9IG5hbWU7CiAjZW5k
+aWYKKwlpbnQgbGFzdF9lcnIgPSAwOwogCiAJZ2V0X2ZzX25hbWVzKGZzX25hbWVzKTsKIHJldHJ5
+OgpAQCAtMzk0LDI5ICszOTUsMTYgQEAgcmV0cnk6CiAJCQljYXNlIDA6CiAJCQkJZ290byBvdXQ7
+CiAJCQljYXNlIC1FQUNDRVM6CisJCQkJaWYgKGZsYWdzICYgTVNfUkRPTkxZKQorCQkJCQlicmVh
+azsKIAkJCQlmbGFncyB8PSBNU19SRE9OTFk7CiAJCQkJZ290byByZXRyeTsKIAkJCWNhc2UgLUVJ
+TlZBTDoKIAkJCQljb250aW51ZTsKIAkJfQotCSAgICAgICAgLyoKLQkJICogQWxsb3cgdGhlIHVz
+ZXIgdG8gZGlzdGluZ3Vpc2ggYmV0d2VlbiBmYWlsZWQgc3lzX29wZW4KLQkJICogYW5kIGJhZCBz
+dXBlcmJsb2NrIG9uIHJvb3QgZGV2aWNlLgotCQkgKiBhbmQgZ2l2ZSB0aGVtIGEgbGlzdCBvZiB0
+aGUgYXZhaWxhYmxlIGRldmljZXMKLQkJICovCi0jaWZkZWYgQ09ORklHX0JMT0NLCi0JCV9fYmRl
+dm5hbWUoUk9PVF9ERVYsIGIpOwotI2VuZGlmCi0JCXByaW50aygiVkZTOiBDYW5ub3Qgb3BlbiBy
+b290IGRldmljZSBcIiVzXCIgb3IgJXM6IGVycm9yICVkXG4iLAotCQkJCXJvb3RfZGV2aWNlX25h
+bWUsIGIsIGVycik7Ci0JCXByaW50aygiUGxlYXNlIGFwcGVuZCBhIGNvcnJlY3QgXCJyb290PVwi
+IGJvb3Qgb3B0aW9uOyBoZXJlIGFyZSB0aGUgYXZhaWxhYmxlIHBhcnRpdGlvbnM6XG4iKTsKLQot
+CQlwcmludGtfYWxsX3BhcnRpdGlvbnMoKTsKLSNpZmRlZiBDT05GSUdfREVCVUdfQkxPQ0tfRVhU
+X0RFVlQKLQkJcHJpbnRrKCJERUJVR19CTE9DS19FWFRfREVWVCBpcyBlbmFibGVkLCB5b3UgbmVl
+ZCB0byBzcGVjaWZ5ICIKLQkJICAgICAgICJleHBsaWNpdCB0ZXh0dWFsIG5hbWUgZm9yIFwicm9v
+dD1cIiBib290IG9wdGlvbi5cbiIpOwotI2VuZGlmCi0JCXBhbmljKCJWRlM6IFVuYWJsZSB0byBt
+b3VudCByb290IGZzIG9uICVzIiwgYik7CisJCWlmIChlcnIgIT0gbGFzdF9lcnIpCisJCQlwcmlu
+dGsoIlZGUzogQ2Fubm90IG9wZW4gcm9vdCBkZXZpY2UgXCIlc1wiIG9yICVzOiBlcnJvciAlZFxu
+IiwKKwkJCQkJcm9vdF9kZXZpY2VfbmFtZSwgYiwgZXJyKTsKIAl9CiAKIAlwcmludGsoIkxpc3Qg
+b2YgYWxsIHBhcnRpdGlvbnM6XG4iKTsK
+--047d7b3432363bf83f04fa3ef71d
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--047d7b3432363bf83f04fa3ef71d--
