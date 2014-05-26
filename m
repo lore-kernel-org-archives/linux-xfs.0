@@ -1,25 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 1C6E17F3F
-	for <xfs@oss.sgi.com>; Sun, 25 May 2014 23:48:49 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id DED41304039
-	for <xfs@oss.sgi.com>; Sun, 25 May 2014 21:48:48 -0700 (PDT)
-Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
-	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	D8lZXGTqKMZWAxE3 for <xfs@oss.sgi.com>;
-	Sun, 25 May 2014 21:48:43 -0700 (PDT)
-Date: Mon, 26 May 2014 14:48:40 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 05/16] xfs: convert directory dablk conversion to
-	xfs_da_geometry
-Message-ID: <20140526044840.GX8554@dastard>
-References: <1400803432-20048-1-git-send-email-david@fromorbit.com>
-	<1400803432-20048-6-git-send-email-david@fromorbit.com>
-	<20140523190622.GF8343@laptop.bfoster>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 5DB1C7F3F
+	for <xfs@oss.sgi.com>; Mon, 26 May 2014 00:19:07 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 47C9E8F8037
+	for <xfs@oss.sgi.com>; Sun, 25 May 2014 22:19:04 -0700 (PDT)
+Received: from mail-yh0-f45.google.com (mail-yh0-f45.google.com
+	[209.85.213.45]) by cuda.sgi.com with ESMTP id iEbGyiH3CfPw8oi9
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Sun, 25 May 2014 22:18:59 -0700 (PDT)
+Received: by mail-yh0-f45.google.com with SMTP id b6so6029506yha.4
+	for <xfs@oss.sgi.com>; Sun, 25 May 2014 22:18:59 -0700 (PDT)
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20140523190622.GF8343@laptop.bfoster>
+In-Reply-To: <20140526041958.GV8554@dastard>
+References: <1399314889-9829-1-git-send-email-plamen.sisi@gmail.com>
+	<CA+55aFwxF2xnYerLdJZ2gQdZizK3953L16X5KkUAqD-YePausQ@mail.gmail.com>
+	<20140526000813.GS8554@dastard> <20140526011904.GT8554@dastard>
+	<20140526041958.GV8554@dastard>
+Date: Mon, 26 May 2014 08:18:59 +0300
+Message-ID: <CALkh-HgGuGaR3rimNeCgRUexU1LgKMbSZ+WcPMmzD6UwtVC7pQ@mail.gmail.com>
+Subject: Re: [PATCH] do_mounts: try all available filesystems before panicking
+From: =?UTF-8?B?0J/Qu9Cw0LzQtdC9INCf0LXRgtGA0L7Qsg==?= <plamen.sisi@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,100 +33,63 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
-Cc: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>, LKML <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com
 
-On Fri, May 23, 2014 at 03:06:22PM -0400, Brian Foster wrote:
-> On Fri, May 23, 2014 at 10:03:41AM +1000, Dave Chinner wrote:
-> > From: Dave Chinner <dchinner@redhat.com>
-> > 
-> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> > ---
-> >  fs/xfs/xfs_da_btree.h     | 15 +++++++--------
-> >  fs/xfs/xfs_dir2.c         |  4 ++--
-> >  fs/xfs/xfs_dir2_data.c    |  4 ++--
-> >  fs/xfs/xfs_dir2_leaf.c    | 21 +++++++++++----------
-> >  fs/xfs/xfs_dir2_node.c    | 41 +++++++++++++++++++++++------------------
-> >  fs/xfs/xfs_dir2_readdir.c |  6 +++---
-> >  6 files changed, 48 insertions(+), 43 deletions(-)
-> > 
-> > diff --git a/fs/xfs/xfs_da_btree.h b/fs/xfs/xfs_da_btree.h
-> > index e9496a9..8db83fc 100644
-> > --- a/fs/xfs/xfs_da_btree.h
-> > +++ b/fs/xfs/xfs_da_btree.h
-> > @@ -232,9 +232,9 @@ xfs_dir2_db_off_to_byte(struct xfs_da_geometry *geo, xfs_dir2_db_t db,
-> >   * Convert block (DB) to block (dablk)
-> >   */
-> >  static inline xfs_dablk_t
-> > -xfs_dir2_db_to_da(struct xfs_mount *mp, xfs_dir2_db_t db)
-> > +xfs_dir2_db_to_da(struct xfs_da_geometry *geo, xfs_dir2_db_t db)
-> >  {
-> > -	return (xfs_dablk_t)(db << mp->m_sb.sb_dirblklog);
-> > +	return (xfs_dablk_t)(db << (geo->blklog - geo->fsblog));
-> >  }
-> >  
-> >  /*
-> > @@ -243,7 +243,7 @@ xfs_dir2_db_to_da(struct xfs_mount *mp, xfs_dir2_db_t db)
-> >  static inline xfs_dablk_t
-> >  xfs_dir2_byte_to_da(struct xfs_mount *mp, xfs_dir2_off_t by)
-> >  {
-> > -	return xfs_dir2_db_to_da(mp, xfs_dir2_byte_to_db(mp, by));
-> > +	return xfs_dir2_db_to_da(mp->m_dir_geo, xfs_dir2_byte_to_db(mp, by));
-> >  }
-> >  
-> >  /*
-> > @@ -261,19 +261,18 @@ xfs_dir2_db_off_to_dataptr(struct xfs_mount *mp, xfs_dir2_db_t db,
-> >   * Convert block (dablk) to block (DB)
-> >   */
-> >  static inline xfs_dir2_db_t
-> > -xfs_dir2_da_to_db(struct xfs_mount *mp, xfs_dablk_t da)
-> > +xfs_dir2_da_to_db(struct xfs_da_geometry *geo, xfs_dablk_t da)
-> >  {
-> > -	return (xfs_dir2_db_t)(da >> mp->m_sb.sb_dirblklog);
-> > +	return (xfs_dir2_db_t)(da >> (geo->blklog - geo->fsblog));
-> >  }
-> >  
-> >  /*
-> >   * Convert block (dablk) to byte offset in space
-> >   */
-> >  static inline xfs_dir2_off_t
-> > -xfs_dir2_da_to_byte(struct xfs_mount *mp, xfs_dablk_t da)
-> > +xfs_dir2_da_to_byte(struct xfs_da_geometry *geo, xfs_dablk_t da)
-> >  {
-> > -	return xfs_dir2_db_off_to_byte(mp->m_dir_geo,
-> > -				       xfs_dir2_da_to_db(mp, da), 0);
-> > +	return xfs_dir2_db_off_to_byte(geo, xfs_dir2_da_to_db(geo, da), 0);
-> >  }
-> 
-> Is it a problem that we convert a dablk to a db block on the way to a
-> byte conversion? i.e., that seems like a lossy conversion, assuming I am
-> correctly understanding that a dablk is equivalent to a filesystem block
-> and a db block is a directory block (1 or more dablks).
+2014-05-26 7:19 GMT+03:00 Dave Chinner <david@fromorbit.com>:
+> On Mon, May 26, 2014 at 11:19:04AM +1000, Dave Chinner wrote:
+>> On Mon, May 26, 2014 at 10:08:13AM +1000, Dave Chinner wrote:
+>> > On Sun, May 25, 2014 at 01:04:09PM -0700, Linus Torvalds wrote:
+>> > > On Mon, May 5, 2014 at 11:34 AM, Plamen Petrov <plamen.sisi@gmail.com> wrote:
+>> > > >
+>> > > > The story short: on systems with btrfs root I have a kernel .config with ext4,
+>> > > > xfs and btrfs built-in which works fine with 3.13.x, but 3.14.x panics. After
+>> > > > inserting some debug printks, I got this info from mount_block_root:
+>> > > >
+>> > > > ---> EACCESS=13, EINVAL=22, Available filesystems: ext3 ext2 ext4 fuseblk xfs btrfs
+>> > > > -----> Tried ext3, error code is -22.
+>> > > > -----> Tried ext2, error code is -22.
+>> > > > -----> Tried ext4, error code is -22.
+>> > > > -----> Tried fuseblk, error code is -22.
+>> > > > -----> Tried xfs, error code is -38.
+>> > > > VFS: Cannot open root device "sda2" or unknown-block(8,2): error -38
+>> > > > Please append a correct "root=" boot option; here are the available partitions:
+>>
+>> BTW, This is the original thread with lots of triage in it:
+>>
+>> http://www.spinics.net/lists/linux-btrfs/msg33455.html
+>>
+>> But that doesn't reach any conclusion. I suspect that the
+>> change of btrfs init (from very early (@~1.8s into the boot) until a
+>> few milliseconds before the root mount is changing the order in
+>> which the filesystem type list is traversed by the mount, resulting
+>> in XFS being used to probe the device before btrfs.
+>
+> On that point, on 3.15-rc6:
+>
+> $ tail -1 /proc/filesystems
+>         btrfs
+> $
+>
+>> Why XFS is seeing /dev/sda2 as containing an XFS filesystem is not
+>> yet clear, but perhaps once you've dumped the the first sector of
+>> the btrfs partition all will become clear....
+>
+> No need, I found the regression. Plamen, can you please try the
+> patch below?
+>
 
-It's not lossy, because the only way that directory blocks are
-physically indexed is by the start address of the block. That is:
+Yes, Dave. I applied your patch on top of linux 3.15-rc5. I tried the patch
+you sent in a VM I used for tests.
 
-sb_dirblklog = 2
+With only your patch applied - the system boots up normally.
 
-db blockk index	   0               1               2
-dir block map	   +---------------+---------------+
-bmbt map	   +---+---+---+---+---+---+---+---+
-dablk index	   0   1   2   3   4   5   6   7   8
+Thanks for the different perspectives, guys! Always a pleasure
+communicating with you. After a month or so waiting - definetly worth it!
 
-
-The only time non-sb_dirblklog aligned dablk values are used are
-during discontiguous buffer operations The mapping code in
-xfs_dabuf_map() is the only code that needs to know about the
-intermediate dablk indexes to be able to map and build the
-discontiguous buffers. otherwise dablk increases by 4 counts for
-every directory block and the other indexes are never directly used.
-
-Cheers,
-
-Dave.
+Thanks a lot!
 -- 
-Dave Chinner
-david@fromorbit.com
+Plamen Petrov
 
 _______________________________________________
 xfs mailing list
