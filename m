@@ -1,22 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id C32B829DF8
-	for <xfs@oss.sgi.com>; Mon, 26 May 2014 17:40:55 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id A226029DF8
+	for <xfs@oss.sgi.com>; Mon, 26 May 2014 17:49:37 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 68DBCAC00A
-	for <xfs@oss.sgi.com>; Mon, 26 May 2014 15:40:55 -0700 (PDT)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 763CF8F8059
+	for <xfs@oss.sgi.com>; Mon, 26 May 2014 15:49:37 -0700 (PDT)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	IlMBr9Jnoe0Ea3Ar for <xfs@oss.sgi.com>;
-	Mon, 26 May 2014 15:40:47 -0700 (PDT)
-Date: Tue, 27 May 2014 08:40:33 +1000
+	4YJAah0BcZna1foE for <xfs@oss.sgi.com>;
+	Mon, 26 May 2014 15:49:35 -0700 (PDT)
+Date: Tue, 27 May 2014 08:49:21 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v4 00/20] xfsprogs: introduce the free inode btree
-Message-ID: <20140526224033.GP18954@dastard>
-References: <1399465319-65066-1-git-send-email-bfoster@redhat.com>
+Subject: Re: [PATCH v2 1/3] xfs: add scan owner field to xfs_eofblocks
+Message-ID: <20140526224921.GQ18954@dastard>
+References: <1400845950-41435-1-git-send-email-bfoster@redhat.com>
+	<1400845950-41435-2-git-send-email-bfoster@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1399465319-65066-1-git-send-email-bfoster@redhat.com>
+In-Reply-To: <1400845950-41435-2-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,34 +33,56 @@ Sender: xfs-bounces@oss.sgi.com
 To: Brian Foster <bfoster@redhat.com>
 Cc: xfs@oss.sgi.com
 
-On Wed, May 07, 2014 at 08:21:39AM -0400, Brian Foster wrote:
-> Hi all,
+On Fri, May 23, 2014 at 07:52:28AM -0400, Brian Foster wrote:
+> The scan owner field represents an optional inode number that is
+> responsible for the current scan. The purpose is to identify that an
+> inode is under iolock and as such, the iolock shouldn't be attempted
+> when trimming eofblocks. This is an internal only field.
 > 
-> Here's v4 of the finobt series for xfsprogs. Patches 1-10 are unchanged
-> as they are based on the corresponding kernel patches, which have now
-> been merged.
+> Signed-off-by: Brian Foster <bfoster@redhat.com>
+> ---
+>  fs/xfs/xfs_icache.c | 12 +++++++++++-
+>  fs/xfs/xfs_icache.h |  2 ++
+>  2 files changed, 13 insertions(+), 1 deletion(-)
 > 
-> v4 includes some fairly isolated fixes for mkfs and repair based on
-> review feedback for v3:
-> 
-> 	http://oss.sgi.com/archives/xfs/2014-04/msg00239.html
-> 
-> Some concern was raised over xfs_repair performance based on the
-> implementation of patch 17 in v3, so I have run a few repair tests on
-> largish filesystems. Tests involved creating a large number of inodes on
-> a 1TB 4xraid0, freeing a random percentage to populate the finobt and
-> running xfs_repair (e.g., no actual corruptions). xfs_repair was run
-> normally (with these patches) and with a change to skip the finobt
-> processing via an xfs_sb_version_hasfinobt() hack. The tests were run on
-> a 16xcpu, 32GB RAM server.
+> diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+> index c48df5f..f4191f6 100644
+> --- a/fs/xfs/xfs_icache.c
+> +++ b/fs/xfs/xfs_icache.c
+> @@ -1211,6 +1211,7 @@ xfs_inode_free_eofblocks(
+>  {
+>  	int ret;
+>  	struct xfs_eofblocks *eofb = args;
+> +	bool need_iolock = true;
+>  
+>  	if (!xfs_can_free_eofblocks(ip, false)) {
+>  		/* inode could be preallocated or append-only */
+> @@ -1235,9 +1236,18 @@ xfs_inode_free_eofblocks(
+>  		if (eofb->eof_flags & XFS_EOF_FLAGS_MINFILESIZE &&
+>  		    XFS_ISIZE(ip) < eofb->eof_min_file_size)
+>  			return 0;
+> +
+> +		/*
+> +		 * A scan owner implies we already hold the iolock. Skip it in
+> +		 * xfs_free_eofblocks() to avoid deadlock. This also eliminates
+> +		 * the possibility of EAGAIN being returned.
+> +		 */
+> +		if (eofb->eof_scan_owner != NULLFSINO &&
+> +		    eofb->eof_scan_owner == ip->i_ino)
+> +			need_iolock = false;
 
-I still have some concerns about this simply based on the algorithm
-and that it will come back an bite us eventually, but for the moment
-I think you've done enough to show that it's not going to an
-immediate issue.
+No need to check against NULLFSINO there. ip->i_ino can never be
+NULLFSINO, so just checking eofb->eof_scan_owner == ip->i_ino is
+sufficient.
 
-I haven't seen anything else that needs fixing or causes problems,
-so I'm going to merge it for 3.2.1.
+What might be an idea is adding a
+
+	ASSERT(eofb->eof_scan_owner != 0);
+
+to the start of the function to catch anyone who does not initialise
+it appropriately. The inode number can never be zero (that would
+translate to block 0 - the primary superblock) and so this woul dbe
+sufficient to ensure callers are doing the right thing....
 
 Cheers,
 
