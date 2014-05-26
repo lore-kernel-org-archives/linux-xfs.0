@@ -1,25 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 000297F3F
-	for <xfs@oss.sgi.com>; Mon, 26 May 2014 06:45:57 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id D09508F8052
-	for <xfs@oss.sgi.com>; Mon, 26 May 2014 04:45:54 -0700 (PDT)
-Received: from www262.sakura.ne.jp (www262.sakura.ne.jp [202.181.97.72]) by
-	cuda.sgi.com with ESMTP id K6Wxye0T4U4qQGA5 (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 26 May 2014 04:45:51 -0700 (PDT)
-Subject: Re: [PATCH] mm/vmscan: Do not block forever atshrink_inactive_list().
-From: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
-References: <20140520004449.GE18954@dastard>
-	<20140519225915.3370328d.akpm@linux-foundation.org>
-	<20140520063024.GH18954@dastard>
-	<201405202358.ADF10119.SMOFOQLFtOVHJF@I-love.SAKURA.ne.jp>
-	<6B2BA408B38BA1478B473C31C3D2074E31D59D8673@SV-EXCHANGE1.Corp.FC.LOCAL>
-In-Reply-To: <6B2BA408B38BA1478B473C31C3D2074E31D59D8673@SV-EXCHANGE1.Corp.FC.LOCAL>
-Message-Id: <201405262045.CDG95893.HLFFOSFMQOVOJt@I-love.SAKURA.ne.jp>
-Date: Mon, 26 May 2014 20:45:11 +0900
-Mime-Version: 1.0
+	by oss.sgi.com (Postfix) with ESMTP id 914437F3F
+	for <xfs@oss.sgi.com>; Mon, 26 May 2014 08:30:11 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 7238F8F8050
+	for <xfs@oss.sgi.com>; Mon, 26 May 2014 06:30:08 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id mwiqoHaNoKvTTjtF for
+	<xfs@oss.sgi.com>; Mon, 26 May 2014 06:30:04 -0700 (PDT)
+Date: Mon, 26 May 2014 09:29:55 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 01/16] xfs: introduce directory geometry structure
+Message-ID: <20140526132954.GA61135@bfoster.bfoster>
+References: <1400803432-20048-1-git-send-email-david@fromorbit.com>
+	<1400803432-20048-2-git-send-email-david@fromorbit.com>
+	<20140523190459.GB8343@laptop.bfoster>
+	<20140526042807.GW8554@dastard>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20140526042807.GW8554@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,66 +31,91 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Motohiro.Kosaki@us.fujitsu.com, david@fromorbit.com, riel@redhat.com
-Cc: linux-kernel@vger.kernel.org, xfs@oss.sgi.com, hch@infradead.org, kosaki.motohiro@jp.fujitsu.com, akpm@linux-foundation.org, fengguang.wu@intel.com, kamezawa.hiroyu@jp.fujitsu.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-Tetsuo Handa wrote:
-> Dave, if you are OK with this updated patch, please let me know commit ID of your patch.
+On Mon, May 26, 2014 at 02:28:07PM +1000, Dave Chinner wrote:
+> On Fri, May 23, 2014 at 03:04:59PM -0400, Brian Foster wrote:
+> > On Fri, May 23, 2014 at 10:03:37AM +1000, Dave Chinner wrote:
+> > > From: Dave Chinner <dchinner@redhat.com>
+> > > 
+> > > The directory code has a dependency on the struct xfs_mount to
+> > > supply the directory block geometry. Block size, block log size,
+> > > and other parameters are pre-caclulated in the struct xfs_mount or
+> > > access directly from the superblock embedded in the struct
+> > > xfs_mount.
+> > > 
+> > > Extract all of this geometry information out of the struct xfs_mount
+> > > and superblock and place it into a new struct xfs_da_geometry
+> > > defined by the directory code. Allocate and initialise it at mount
+> > > time, and attach it to the struct xfs_mount so it canbe passed back
+> > > into the directory code appropriately rather than using the struct
+> > > xfs_mount.
+> > > 
+> > > Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> ....
+> > > @@ -99,24 +100,56 @@ xfs_dir_mount(
+> > >  	mp->m_dir_inode_ops = xfs_dir_get_ops(mp, NULL);
+> > >  	mp->m_nondir_inode_ops = xfs_nondir_get_ops(mp, NULL);
+> > >  
+> > > -	mp->m_dirblksize = 1 << (mp->m_sb.sb_blocklog + mp->m_sb.sb_dirblklog);
+> > > -	mp->m_dirblkfsbs = 1 << mp->m_sb.sb_dirblklog;
+> > > -	mp->m_dirdatablk = xfs_dir2_db_to_da(mp, XFS_DIR2_DATA_FIRSTDB(mp));
+> > > -	mp->m_dirleafblk = xfs_dir2_db_to_da(mp, XFS_DIR2_LEAF_FIRSTDB(mp));
+> > > -	mp->m_dirfreeblk = xfs_dir2_db_to_da(mp, XFS_DIR2_FREE_FIRSTDB(mp));
+> > > -
+> > >  	nodehdr_size = mp->m_dir_inode_ops->node_hdr_size;
+> > > -	mp->m_attr_node_ents = (mp->m_sb.sb_blocksize - nodehdr_size) /
+> > > +	mp->m_dir_geo = kmem_zalloc(sizeof(struct xfs_da_geometry),
+> > > +				    KM_SLEEP | KM_MAYFAIL);
+> > > +	mp->m_attr_geo = kmem_zalloc(sizeof(struct xfs_da_geometry),
+> > > +				     KM_SLEEP | KM_MAYFAIL);
+> > > +	if (!mp->m_dir_geo || !mp->m_attr_geo) {
+> > > +		kmem_free(mp->m_dir_geo);
+> > > +		kmem_free(mp->m_attr_geo);
+> > > +		return ENOMEM;
+> > > +	}
+> > 
+> > While it looks like everything is handled correctly here, I think this
+> > would be much cleaner if we just created a set of xfs_mount_alloc/free()
+> > helpers that did all of the allocations at once. Then we wouldn't have a
+> > situation where the caller has non-obvious memory allocations to clean
+> > up should it fail sometime after calling xfs_da_mount().
+> 
+> I think that each subsystem needs to have it's own init/teardown
+> functions, and that the rest of the code needs to call them
+> appropriately. Yes, error handling can be non-trivial, but the idea
+> that we do unconditional allocation for subsystems/configs that we
+> may not use (eg. due to mkfs options) seems a little wrong to me.
+> 
+> And aggregating all the allocations doesn't remove the need for most
+> subsystems to be able to return initialisation errors, so int he
+> long run it doesn't really change the fact that we have to
+> initialise and then tear down on subsequent subsystem init
+> failures...
+> 
 
-I overlooked that too_many_isolated() in mm/vmscan.c already has
+Part of the reason I suggested that approach was that the allocation
+appeared unconditional. Now that I think about it, a related question is
+why not embed the structers into the mount?
 
-  if (current_is_kswapd())
-    return 0;
+No matter, perhaps there is good reason for that. If we do want to keep
+it localized to the subsystem, creating an xfs_da_unmount() (perhaps
+just an inline) would be cleaner and more consistent IMO.
 
-lines. Therefore, it turned out that my patch is irrelevant to XFS issue.
-Does patch shown below make sense?
+Brian
 
-Regards.
-----------
->From e133aadd65df3d8622efced3443888ed3e60327b Mon Sep 17 00:00:00 2001
-From: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
-Date: Mon, 26 May 2014 20:37:12 +0900
-Subject: [PATCH] mm/vmscan: Do not throttle when hibernation_mode != 0.
-
-In shrink_inactive_list(), we do not insert delay at
-
-  if (!sc->hibernation_mode && !current_is_kswapd())
-    wait_iff_congested(zone, BLK_RW_ASYNC, HZ/10);
-
-if sc->hibernation_mode != 0.
-Follow the same reason, we should not insert delay at
-
-  while (unlikely(too_many_isolated(zone, file, sc))) {
-    congestion_wait(BLK_RW_ASYNC, HZ/10);
-
-    /* We are about to die and free our memory. Return now. */
-    if (fatal_signal_pending(current))
-      return SWAP_CLUSTER_MAX;
-  }
-
-if sc->hibernation_mode != 0.
-
-Signed-off-by: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
----
- mm/vmscan.c |    3 +++
- 1 files changed, 3 insertions(+), 0 deletions(-)
-
-diff --git a/mm/vmscan.c b/mm/vmscan.c
-index 32c661d..89c42ca 100644
---- a/mm/vmscan.c
-+++ b/mm/vmscan.c
-@@ -1362,6 +1362,9 @@ static int too_many_isolated(struct zone *zone, int file,
- 	if (current_is_kswapd())
- 		return 0;
- 
-+	if (sc->hibernation_mode)
-+		return 0;
-+
- 	if (!global_reclaim(sc))
- 		return 0;
- 
--- 
-1.7.1
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
