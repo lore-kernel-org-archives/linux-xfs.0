@@ -1,22 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 47C877F3F
-	for <xfs@oss.sgi.com>; Mon, 26 May 2014 00:52:38 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id BECCDAC003
-	for <xfs@oss.sgi.com>; Sun, 25 May 2014 22:52:37 -0700 (PDT)
-Received: from mail.vlasiu.net (mail.vlasiu.net [91.223.50.125]) by
-	cuda.sgi.com with ESMTP id RhhE6V2mbZMtGUdj (version=TLSv1
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 000297F3F
+	for <xfs@oss.sgi.com>; Mon, 26 May 2014 06:45:57 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id D09508F8052
+	for <xfs@oss.sgi.com>; Mon, 26 May 2014 04:45:54 -0700 (PDT)
+Received: from www262.sakura.ne.jp (www262.sakura.ne.jp [202.181.97.72]) by
+	cuda.sgi.com with ESMTP id K6Wxye0T4U4qQGA5 (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Sun, 25 May 2014 22:52:34 -0700 (PDT)
-Date: Mon, 26 May 2014 08:52:23 +0300 (EEST)
-From: Gabriel VLASIU <gabriel@vlasiu.net>
-Subject: Re: xfs fs shutdown when no more space available
-In-Reply-To: <20140525233746.GR8554@dastard>
-Message-ID: <alpine.LRH.2.03.1405260851580.2838@mail.vlasiu.net>
-References: <alpine.LRH.2.03.1405252005430.25037@mail.vlasiu.net>
-	<20140525233746.GR8554@dastard>
-MIME-Version: 1.0
+	Mon, 26 May 2014 04:45:51 -0700 (PDT)
+Subject: Re: [PATCH] mm/vmscan: Do not block forever atshrink_inactive_list().
+From: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
+References: <20140520004449.GE18954@dastard>
+	<20140519225915.3370328d.akpm@linux-foundation.org>
+	<20140520063024.GH18954@dastard>
+	<201405202358.ADF10119.SMOFOQLFtOVHJF@I-love.SAKURA.ne.jp>
+	<6B2BA408B38BA1478B473C31C3D2074E31D59D8673@SV-EXCHANGE1.Corp.FC.LOCAL>
+In-Reply-To: <6B2BA408B38BA1478B473C31C3D2074E31D59D8673@SV-EXCHANGE1.Corp.FC.LOCAL>
+Message-Id: <201405262045.CDG95893.HLFFOSFMQOVOJt@I-love.SAKURA.ne.jp>
+Date: Mon, 26 May 2014 20:45:11 +0900
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,48 +32,66 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: Motohiro.Kosaki@us.fujitsu.com, david@fromorbit.com, riel@redhat.com
+Cc: linux-kernel@vger.kernel.org, xfs@oss.sgi.com, hch@infradead.org, kosaki.motohiro@jp.fujitsu.com, akpm@linux-foundation.org, fengguang.wu@intel.com, kamezawa.hiroyu@jp.fujitsu.com
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA512
+Tetsuo Handa wrote:
+> Dave, if you are OK with this updated patch, please let me know commit ID of your patch.
 
-Hi!
+I overlooked that too_many_isolated() in mm/vmscan.c already has
 
-On Mon, 26 May 2014, Dave Chinner wrote:
+  if (current_is_kswapd())
+    return 0;
 
-> fe4c224 xfs: inode log reservations are still too small
-Thank you.
+lines. Therefore, it turned out that my patch is irrelevant to XFS issue.
+Does patch shown below make sense?
 
+Regards.
+----------
+>From e133aadd65df3d8622efced3443888ed3e60327b Mon Sep 17 00:00:00 2001
+From: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
+Date: Mon, 26 May 2014 20:37:12 +0900
+Subject: [PATCH] mm/vmscan: Do not throttle when hibernation_mode != 0.
 
-Sincerely,
-Gabriel
+In shrink_inactive_list(), we do not insert delay at
 
-- -- 
+  if (!sc->hibernation_mode && !current_is_kswapd())
+    wait_iff_congested(zone, BLK_RW_ASYNC, HZ/10);
 
-// Gabriel VLASIU
-//
-// OpenGPG-KeyID      : 44952F15
-// OpenGPG-Fingerprint: 4AC5 7C26 2FE9 02DA 4906  24B2 D32B 7ED7 4495 2F15
-// OpenGPG-URL        : http://www.vlasiu.net/public.key
+if sc->hibernation_mode != 0.
+Follow the same reason, we should not insert delay at
 
+  while (unlikely(too_many_isolated(zone, file, sc))) {
+    congestion_wait(BLK_RW_ASYNC, HZ/10);
 
------BEGIN PGP SIGNATURE-----
+    /* We are about to die and free our memory. Return now. */
+    if (fatal_signal_pending(current))
+      return SWAP_CLUSTER_MAX;
+  }
 
-iQIcBAEBCgAGBQJTgtaXAAoJENMrftdElS8VMGAP/iG0M6ZC3jsUxUQzY6tqmKp0
-w/bHVK1toey6Km8q7UtDo6SKMWPJt9pIOs4kjcvepy9GxkXIeZq/Gz2NLhqbjKv1
-eGmX/ZuOs/3KzYbmSOScnWDJXiCh2JQLZkgAhJ93w/EyGWiqWNfUMjMJjyGiUA6S
-/MAxRmMGgYF76Mt0cfkuT38I222EFMcAjKHERqkoCZJOIsIg/S79URjoAO1QkJ/9
-51OkZfWIe0xtX/vEXoGk+QUsWgXbYKYRk5OH7kXFqqBn3tF+tKMFP6G3TwaAOh4p
-e68iS4UVJz1LGMn2y32RzDGVHBS2cbH62s8vTEW2QWIoJZQoOHdp7BnmOQfUi84c
-yxOD9KisxWP0ZPgr2425id/TS/4OhjFkGrbo/hcpnDAxbflzi339WxWO4T8FTYGr
-ZPolq6ttC8ZYTZ6yL4aUb/MIY8RtPNiVytLAlJOk3bOwn8SZs79TfBeLzOOAM8Hc
-j3Bzk/pVu8cW7pI0oU+AeRZisnCPMiRslXWaIBrjd/d86G44Cxytqz8csqaYHrLD
-PdvF195dQc8iyAm8lQA3k3nxVTO2kh0stJTGGwVjo0nYWRz0vDQBK8k/a9hRccqw
-rtYKS2Xwia6MhAsBAcyL0CwlcAhvENpTzWATxfkU7rWkgftFUWABVp6JQvhAs99i
-xZswSoh5U9eSj+q53wj1
-=P1OT
------END PGP SIGNATURE-----
+if sc->hibernation_mode != 0.
+
+Signed-off-by: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
+---
+ mm/vmscan.c |    3 +++
+ 1 files changed, 3 insertions(+), 0 deletions(-)
+
+diff --git a/mm/vmscan.c b/mm/vmscan.c
+index 32c661d..89c42ca 100644
+--- a/mm/vmscan.c
++++ b/mm/vmscan.c
+@@ -1362,6 +1362,9 @@ static int too_many_isolated(struct zone *zone, int file,
+ 	if (current_is_kswapd())
+ 		return 0;
+ 
++	if (sc->hibernation_mode)
++		return 0;
++
+ 	if (!global_reclaim(sc))
+ 		return 0;
+ 
+-- 
+1.7.1
 
 _______________________________________________
 xfs mailing list
