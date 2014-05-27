@@ -1,23 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id BDE5B7F4E
-	for <xfs@oss.sgi.com>; Tue, 27 May 2014 05:44:30 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 6CC08AC004
-	for <xfs@oss.sgi.com>; Tue, 27 May 2014 03:44:30 -0700 (PDT)
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.9])
-	by cuda.sgi.com with ESMTP id IkLzukVfuXlFHL5v (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 27 May 2014 03:44:28 -0700 (PDT)
-Date: Tue, 27 May 2014 03:44:28 -0700
+	by oss.sgi.com (Postfix) with ESMTP id 38CE27F4E
+	for <xfs@oss.sgi.com>; Tue, 27 May 2014 05:44:48 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id EBED9AC004
+	for <xfs@oss.sgi.com>; Tue, 27 May 2014 03:44:47 -0700 (PDT)
+Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
+	ESMTP id ZOMtRiRHnRj4C8Da (version=TLSv1 cipher=AES256-SHA
+	bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 27 May 2014 03:44:46 -0700 (PDT)
+Date: Tue, 27 May 2014 03:44:46 -0700
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH v2 1/3] xfs: add scan owner field to xfs_eofblocks
-Message-ID: <20140527104428.GC1440@infradead.org>
-References: <1400845950-41435-1-git-send-email-bfoster@redhat.com>
-	<1400845950-41435-2-git-send-email-bfoster@redhat.com>
+Subject: Re: [PATCH] xfs: kill xfs_buf_geterror()
+Message-ID: <20140527104446.GD1440@infradead.org>
+References: <1400802807-19936-1-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1400845950-41435-2-git-send-email-bfoster@redhat.com>
+In-Reply-To: <1400802807-19936-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,21 +29,26 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
+To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On Fri, May 23, 2014 at 07:52:28AM -0400, Brian Foster wrote:
-> The scan owner field represents an optional inode number that is
-> responsible for the current scan. The purpose is to identify that an
-> inode is under iolock and as such, the iolock shouldn't be attempted
-> when trimming eofblocks. This is an internal only field.
+On Fri, May 23, 2014 at 09:53:27AM +1000, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> Most of the callers are just calling ASSERT(!xfs_buf_geterror())
+> which means they are checking for bp->b_error == 0. If bp is null in
+> this case, we will assert fail, and hence it's no different in
+> result to oopsing because of a null bp. In some cases, errors have
+> already been checked for or the function returning the buffer can't
+> return a buffer with an error, so it's just a redundant assert.
+> Either way, the assert can either be removed.
+> 
+> The other two non-assert callers can just test for a buffer and
+> error properly.
 
-xfs_free_eofblocks already does a trylock, and without that calling it
-from one iolock holding process to another would be a deadlock waiting
-to happen.
+Looks good,
 
-I have to say I'm still not very easy with iolock nesting, even if it's
-a trylock.
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
 _______________________________________________
 xfs mailing list
