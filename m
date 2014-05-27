@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 238B07F4E
-	for <xfs@oss.sgi.com>; Tue, 27 May 2014 11:01:29 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 00B4D7F4E
+	for <xfs@oss.sgi.com>; Tue, 27 May 2014 13:40:54 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 68150AC00A
-	for <xfs@oss.sgi.com>; Tue, 27 May 2014 09:01:25 -0700 (PDT)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id D95618F8081
+	for <xfs@oss.sgi.com>; Tue, 27 May 2014 11:40:50 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id uAaVKYhsXTCA0Xq3 for
-	<xfs@oss.sgi.com>; Tue, 27 May 2014 09:01:23 -0700 (PDT)
-Date: Tue, 27 May 2014 12:01:20 -0400
+	cuda.sgi.com with ESMTP id HWETff6Sxn3EpgGh for
+	<xfs@oss.sgi.com>; Tue, 27 May 2014 11:40:49 -0700 (PDT)
+Date: Tue, 27 May 2014 14:40:43 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 16/16] xfs: repalce attr LBSIZE with xfs_da_geometry
-Message-ID: <20140527160120.GH11265@laptop.bfoster>
-References: <1400803432-20048-1-git-send-email-david@fromorbit.com>
-	<1400803432-20048-17-git-send-email-david@fromorbit.com>
+Subject: Re: [PATCH v3 2/10] xfs: Add support FALLOC_FL_INSERT_RANGE for
+	fallocate
+Message-ID: <20140527184042.GI11265@laptop.bfoster>
+References: <001401cf7984$4e3e1850$eaba48f0$@samsung.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1400803432-20048-17-git-send-email-david@fromorbit.com>
+In-Reply-To: <001401cf7984$4e3e1850$eaba48f0$@samsung.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,577 +29,718 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: Namjae Jeon <namjae.jeon@samsung.com>
+Cc: linux-fsdevel@vger.kernel.org, Ashish Sangwan <a.sangwan@samsung.com>, xfs@oss.sgi.com
 
-On Fri, May 23, 2014 at 10:03:52AM +1000, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
+On Tue, May 27, 2014 at 05:18:57PM +0900, Namjae Jeon wrote:
+> This patch implements fallocate's FALLOC_FL_INSERT_RANGE for XFS.
 > 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> 1) Make sure that both offset and len are block size aligned.
+> 2) Update the i_size of inode by len bytes.
+> 3) Compute the file's logical block number against offset. If the computed
+>    block number is not the starting block of the extent, split the extent
+>    such that the block number is the starting block of the extent.
+> 4) Shift all the extents which are lying bewteen [offset, last allocated extent]
+>    towards right by len bytes. This step will make a hole of len bytes
+>    at offset.
+> 5) Allocate unwritten extents for the hole created in step 4.
+> 
+> Cc: Brian Foster <bfoster@redhat.com>
+> Signed-off-by: Namjae Jeon <namjae.jeon@samsung.com>
+> Signed-off-by: Ashish Sangwan <a.sangwan@samsung.com>
 > ---
+
+This version looks pretty good to me. Thanks Namje.
 
 Reviewed-by: Brian Foster <bfoster@redhat.com>
 
->  fs/xfs/xfs_attr.c        |   2 +-
->  fs/xfs/xfs_attr_leaf.c   | 114 ++++++++++++++++++++++++-----------------------
->  fs/xfs/xfs_attr_remote.c |  55 ++++++++++++-----------
->  fs/xfs/xfs_da_format.h   |  10 -----
->  4 files changed, 89 insertions(+), 92 deletions(-)
 > 
-> diff --git a/fs/xfs/xfs_attr.c b/fs/xfs/xfs_attr.c
-> index 3d8c03e..470a22d 100644
-> --- a/fs/xfs/xfs_attr.c
-> +++ b/fs/xfs/xfs_attr.c
-> @@ -863,7 +863,7 @@ xfs_attr_leaf_get(xfs_da_args_t *args)
->  }
->  
->  /*========================================================================
-> - * External routines when attribute list size > XFS_LBSIZE(mp).
-> + * External routines when attribute list size > geo->blksize
->   *========================================================================*/
->  
->  /*
-> diff --git a/fs/xfs/xfs_attr_leaf.c b/fs/xfs/xfs_attr_leaf.c
-> index 7761103..ae33b14 100644
-> --- a/fs/xfs/xfs_attr_leaf.c
-> +++ b/fs/xfs/xfs_attr_leaf.c
-> @@ -80,11 +80,12 @@ STATIC int xfs_attr3_leaf_figure_balance(xfs_da_state_t *state,
->  /*
->   * Utility routines.
+> Changelog
+> v3:
+>  - remove XFS_TRANS_RESERVE and assert.
+>  - update the comment of blockcount calculation.
+>  - use 'if(blockcount)' instead of 'if (got.br_blockcount < blockcount)'.
+>  - move insert_file_space() calling under xfs_setattr_size to avoid code duplicate.
+> 
+> v2:
+>  - remove reserved enable.
+>  - add xfs_qm_dqattach.
+>  - reset blockcount in xfs_bmap_shift_extents_right.
+>  - update i_size to avoid data loss before insert_file_space() is called.
+>  - use in-memory extent array size that delayed allocation extents.
+> 
+>  fs/xfs/xfs_bmap.c      | 377 ++++++++++++++++++++++++++++++++++++++++++++++++-
+>  fs/xfs/xfs_bmap.h      |   9 +-
+>  fs/xfs/xfs_bmap_util.c | 128 ++++++++++++++++-
+>  fs/xfs/xfs_bmap_util.h |   2 +
+>  fs/xfs/xfs_file.c      |  38 ++++-
+>  fs/xfs/xfs_trace.h     |   1 +
+>  6 files changed, 550 insertions(+), 5 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_bmap.c b/fs/xfs/xfs_bmap.c
+> index 1ff0da6..8023b7e 100644
+> --- a/fs/xfs/xfs_bmap.c
+> +++ b/fs/xfs/xfs_bmap.c
+> @@ -5419,7 +5419,7 @@ error0:
+>   * into, this will be considered invalid operation and we abort immediately.
 >   */
-> -STATIC void xfs_attr3_leaf_moveents(struct xfs_attr_leafblock *src_leaf,
-> +STATIC void xfs_attr3_leaf_moveents(struct xfs_da_args *args,
-> +			struct xfs_attr_leafblock *src_leaf,
->  			struct xfs_attr3_icleaf_hdr *src_ichdr, int src_start,
->  			struct xfs_attr_leafblock *dst_leaf,
->  			struct xfs_attr3_icleaf_hdr *dst_ichdr, int dst_start,
-> -			int move_count, struct xfs_mount *mp);
-> +			int move_count);
->  STATIC int xfs_attr_leaf_entsize(xfs_attr_leafblock_t *leaf, int index);
->  
->  void
-> @@ -806,18 +807,18 @@ xfs_attr3_leaf_to_shortform(
->  
->  	trace_xfs_attr_leaf_to_sf(args);
->  
-> -	tmpbuffer = kmem_alloc(XFS_LBSIZE(dp->i_mount), KM_SLEEP);
-> +	tmpbuffer = kmem_alloc(args->geo->blksize, KM_SLEEP);
->  	if (!tmpbuffer)
->  		return ENOMEM;
->  
-> -	memcpy(tmpbuffer, bp->b_addr, XFS_LBSIZE(dp->i_mount));
-> +	memcpy(tmpbuffer, bp->b_addr, args->geo->blksize);
->  
->  	leaf = (xfs_attr_leafblock_t *)tmpbuffer;
->  	xfs_attr3_leaf_hdr_from_disk(&ichdr, leaf);
->  	entry = xfs_attr3_leaf_entryp(leaf);
->  
->  	/* XXX (dgc): buffer is about to be marked stale - why zero it? */
-> -	memset(bp->b_addr, 0, XFS_LBSIZE(dp->i_mount));
-> +	memset(bp->b_addr, 0, args->geo->blksize);
->  
->  	/*
->  	 * Clean out the prior contents of the attribute list.
-> @@ -906,12 +907,12 @@ xfs_attr3_leaf_to_node(
->  	/* copy leaf to new buffer, update identifiers */
->  	xfs_trans_buf_set_type(args->trans, bp2, XFS_BLFT_ATTR_LEAF_BUF);
->  	bp2->b_ops = bp1->b_ops;
-> -	memcpy(bp2->b_addr, bp1->b_addr, XFS_LBSIZE(mp));
-> +	memcpy(bp2->b_addr, bp1->b_addr, args->geo->blksize);
->  	if (xfs_sb_version_hascrc(&mp->m_sb)) {
->  		struct xfs_da3_blkinfo *hdr3 = bp2->b_addr;
->  		hdr3->blkno = cpu_to_be64(bp2->b_bn);
+>  int
+> -xfs_bmap_shift_extents(
+> +xfs_bmap_shift_extents_left(
+>  	struct xfs_trans	*tp,
+>  	struct xfs_inode	*ip,
+>  	int			*done,
+> @@ -5449,7 +5449,7 @@ xfs_bmap_shift_extents(
+>  	    (XFS_IFORK_FORMAT(ip, whichfork) != XFS_DINODE_FMT_EXTENTS &&
+>  	     XFS_IFORK_FORMAT(ip, whichfork) != XFS_DINODE_FMT_BTREE),
+>  	     mp, XFS_ERRTAG_BMAPIFORMAT, XFS_RANDOM_BMAPIFORMAT))) {
+> -		XFS_ERROR_REPORT("xfs_bmap_shift_extents",
+> +		XFS_ERROR_REPORT("xfs_bmap_shift_extents_left",
+>  				 XFS_ERRLEVEL_LOW, mp);
+>  		return XFS_ERROR(EFSCORRUPTED);
 >  	}
-> -	xfs_trans_log_buf(args->trans, bp2, 0, XFS_LBSIZE(mp) - 1);
-> +	xfs_trans_log_buf(args->trans, bp2, 0, args->geo->blksize - 1);
->  
->  	/*
->  	 * Set up the new root node.
-> @@ -932,7 +933,7 @@ xfs_attr3_leaf_to_node(
->  	btree[0].before = cpu_to_be32(blkno);
->  	icnodehdr.count = 1;
->  	dp->d_ops->node_hdr_to_disk(node, &icnodehdr);
-> -	xfs_trans_log_buf(args->trans, bp1, 0, XFS_LBSIZE(mp) - 1);
-> +	xfs_trans_log_buf(args->trans, bp1, 0, args->geo->blksize - 1);
->  	error = 0;
->  out:
+> @@ -5606,3 +5606,376 @@ del_cursor:
+>  	xfs_trans_log_inode(tp, ip, logflags);
 >  	return error;
-> @@ -968,10 +969,10 @@ xfs_attr3_leaf_create(
->  	bp->b_ops = &xfs_attr3_leaf_buf_ops;
->  	xfs_trans_buf_set_type(args->trans, bp, XFS_BLFT_ATTR_LEAF_BUF);
->  	leaf = bp->b_addr;
-> -	memset(leaf, 0, XFS_LBSIZE(mp));
-> +	memset(leaf, 0, args->geo->blksize);
->  
->  	memset(&ichdr, 0, sizeof(ichdr));
-> -	ichdr.firstused = XFS_LBSIZE(mp);
-> +	ichdr.firstused = args->geo->blksize;
->  
->  	if (xfs_sb_version_hascrc(&mp->m_sb)) {
->  		struct xfs_da3_blkinfo *hdr3 = bp->b_addr;
-> @@ -990,7 +991,7 @@ xfs_attr3_leaf_create(
->  	ichdr.freemap[0].size = ichdr.firstused - ichdr.freemap[0].base;
->  
->  	xfs_attr3_leaf_hdr_to_disk(leaf, &ichdr);
-> -	xfs_trans_log_buf(args->trans, bp, 0, XFS_LBSIZE(mp) - 1);
-> +	xfs_trans_log_buf(args->trans, bp, 0, args->geo->blksize - 1);
->  
->  	*bpp = bp;
->  	return 0;
-> @@ -1175,11 +1176,11 @@ xfs_attr3_leaf_add_work(
->  	 * Allocate space for the new string (at the end of the run).
->  	 */
->  	mp = args->trans->t_mountp;
-> -	ASSERT(ichdr->freemap[mapindex].base < XFS_LBSIZE(mp));
-> +	ASSERT(ichdr->freemap[mapindex].base < args->geo->blksize);
->  	ASSERT((ichdr->freemap[mapindex].base & 0x3) == 0);
->  	ASSERT(ichdr->freemap[mapindex].size >=
->  		xfs_attr_leaf_newentsize(args, NULL));
-> -	ASSERT(ichdr->freemap[mapindex].size < XFS_LBSIZE(mp));
-> +	ASSERT(ichdr->freemap[mapindex].size < args->geo->blksize);
->  	ASSERT((ichdr->freemap[mapindex].size & 0x3) == 0);
->  
->  	ichdr->freemap[mapindex].size -= xfs_attr_leaf_newentsize(args, &tmp);
-> @@ -1267,14 +1268,13 @@ xfs_attr3_leaf_compact(
->  	struct xfs_attr_leafblock *leaf_dst;
->  	struct xfs_attr3_icleaf_hdr ichdr_src;
->  	struct xfs_trans	*trans = args->trans;
-> -	struct xfs_mount	*mp = trans->t_mountp;
->  	char			*tmpbuffer;
->  
->  	trace_xfs_attr_leaf_compact(args);
->  
-> -	tmpbuffer = kmem_alloc(XFS_LBSIZE(mp), KM_SLEEP);
-> -	memcpy(tmpbuffer, bp->b_addr, XFS_LBSIZE(mp));
-> -	memset(bp->b_addr, 0, XFS_LBSIZE(mp));
-> +	tmpbuffer = kmem_alloc(args->geo->blksize, KM_SLEEP);
-> +	memcpy(tmpbuffer, bp->b_addr, args->geo->blksize);
-> +	memset(bp->b_addr, 0, args->geo->blksize);
->  	leaf_src = (xfs_attr_leafblock_t *)tmpbuffer;
->  	leaf_dst = bp->b_addr;
->  
-> @@ -1287,7 +1287,7 @@ xfs_attr3_leaf_compact(
->  
->  	/* Initialise the incore headers */
->  	ichdr_src = *ichdr_dst;	/* struct copy */
-> -	ichdr_dst->firstused = XFS_LBSIZE(mp);
-> +	ichdr_dst->firstused = args->geo->blksize;
->  	ichdr_dst->usedbytes = 0;
->  	ichdr_dst->count = 0;
->  	ichdr_dst->holes = 0;
-> @@ -1302,13 +1302,13 @@ xfs_attr3_leaf_compact(
->  	 * Copy all entry's in the same (sorted) order,
->  	 * but allocate name/value pairs packed and in sequence.
->  	 */
-> -	xfs_attr3_leaf_moveents(leaf_src, &ichdr_src, 0, leaf_dst, ichdr_dst, 0,
-> -				ichdr_src.count, mp);
-> +	xfs_attr3_leaf_moveents(args, leaf_src, &ichdr_src, 0,
-> +				leaf_dst, ichdr_dst, 0, ichdr_src.count);
->  	/*
->  	 * this logs the entire buffer, but the caller must write the header
->  	 * back to the buffer when it is finished modifying it.
->  	 */
-> -	xfs_trans_log_buf(trans, bp, 0, XFS_LBSIZE(mp) - 1);
-> +	xfs_trans_log_buf(trans, bp, 0, args->geo->blksize - 1);
->  
->  	kmem_free(tmpbuffer);
 >  }
-> @@ -1459,8 +1459,8 @@ xfs_attr3_leaf_rebalance(
->  		/*
->  		 * Move high entries from leaf1 to low end of leaf2.
+> +
+> +/*
+> + * Splits an extent into two extents at split_fsb block that it is
+> + * the first block of the current_ext. @current_ext is a target extent
+> + * to be splitted. @split_fsb is a block where the extents is spliited.
+> + * If split_fsb lies in a hole or the first block of extents, just return 0.
+> + */
+> +STATIC int
+> +xfs_bmap_split_extent_at(
+> +	struct xfs_trans	*tp,
+> +	struct xfs_inode	*ip,
+> +	xfs_fileoff_t		split_fsb,
+> +	xfs_extnum_t		*current_ext,
+> +	xfs_fsblock_t		*firstfsb,
+> +	struct xfs_bmap_free	*free_list)
+> +{
+> +	int				whichfork = XFS_DATA_FORK;
+> +	struct xfs_btree_cur		*cur;
+> +	struct xfs_bmbt_rec_host	*gotp;
+> +	struct xfs_bmbt_irec		got;
+> +	struct xfs_bmbt_irec		new; /* splitted extent */
+> +	struct xfs_mount		*mp = ip->i_mount;
+> +	struct xfs_ifork		*ifp;
+> +	xfs_fsblock_t			gotblkcnt; /* new block count for got */
+> +	int				error = 0;
+> +	int				logflags;
+> +	int				i = 0;
+> +
+> +	if (unlikely(XFS_TEST_ERROR(
+> +	    (XFS_IFORK_FORMAT(ip, whichfork) != XFS_DINODE_FMT_EXTENTS &&
+> +	     XFS_IFORK_FORMAT(ip, whichfork) != XFS_DINODE_FMT_BTREE),
+> +	     mp, XFS_ERRTAG_BMAPIFORMAT, XFS_RANDOM_BMAPIFORMAT))) {
+> +		XFS_ERROR_REPORT("xfs_bmap_split_extent_at",
+> +				 XFS_ERRLEVEL_LOW, mp);
+> +		return XFS_ERROR(EFSCORRUPTED);
+> +	}
+> +
+> +	if (XFS_FORCED_SHUTDOWN(mp))
+> +		return XFS_ERROR(EIO);
+> +
+> +	ASSERT(current_ext != NULL);
+> +
+> +	ifp = XFS_IFORK_PTR(ip, whichfork);
+> +	if (!(ifp->if_flags & XFS_IFEXTENTS)) {
+> +		/* Read in all the extents */
+> +		error = xfs_iread_extents(tp, ip, whichfork);
+> +		if (error)
+> +			return error;
+> +	}
+> +
+> +	gotp = xfs_iext_bno_to_ext(ifp, split_fsb, current_ext);
+> +	/*
+> +	 * gotp can be null in 2 cases: 1) if there are no extents
+> +	 * or 2) split_fsb lies in a hole beyond which there are
+> +	 * no extents. Either way, we are done.
+> +	 */
+> +	if (!gotp)
+> +		return 0;
+> +
+> +	xfs_bmbt_get_all(gotp, &got);
+> +
+> +	/*
+> +	 * Check split_fsb lies in a hole or the start boundary offset
+> +	 * of the extent.
+> +	 */
+> +	if (got.br_startoff >= split_fsb)
+> +		return 0;
+> +
+> +	gotblkcnt = split_fsb - got.br_startoff;
+> +	new.br_startoff = split_fsb;
+> +	new.br_startblock = got.br_startblock + gotblkcnt;
+> +	new.br_blockcount = got.br_blockcount - gotblkcnt;
+> +	new.br_state = got.br_state;
+> +
+> +	/* We are going to change core inode */
+> +	logflags = XFS_ILOG_CORE;
+> +
+> +	if (ifp->if_flags & XFS_IFBROOT) {
+> +		cur = xfs_bmbt_init_cursor(mp, tp, ip, whichfork);
+> +		cur->bc_private.b.firstblock = *firstfsb;
+> +		cur->bc_private.b.flist = free_list;
+> +		cur->bc_private.b.flags = 0;
+> +	} else {
+> +		cur = NULL;
+> +		logflags |= XFS_ILOG_DEXT;
+> +	}
+> +
+> +	if (cur) {
+> +		error = xfs_bmbt_lookup_eq(cur, got.br_startoff,
+> +					   got.br_startblock,
+> +					   got.br_blockcount,
+> +					   &i);
+> +		if (error)
+> +			goto del_cursor;
+> +		XFS_WANT_CORRUPTED_GOTO(i == 1, del_cursor);
+> +	}
+> +
+> +	xfs_bmbt_set_blockcount(gotp, gotblkcnt);
+> +	got.br_blockcount = gotblkcnt;
+> +	if (cur) {
+> +		error = xfs_bmbt_update(cur, got.br_startoff,
+> +					got.br_startblock,
+> +					got.br_blockcount,
+> +					got.br_state);
+> +		if (error)
+> +			goto del_cursor;
+> +	}
+> +
+> +	/* Add new extent */
+> +	(*current_ext)++;
+> +	xfs_iext_insert(ip, *current_ext, 1, &new, 0);
+> +	XFS_IFORK_NEXT_SET(ip, whichfork,
+> +		XFS_IFORK_NEXTENTS(ip, whichfork) + 1);
+> +
+> +	if (cur) {
+> +		error = xfs_bmbt_lookup_eq(cur, new.br_startoff,
+> +					   new.br_startblock, new.br_blockcount,
+> +					   &i);
+> +		if (error)
+> +			goto del_cursor;
+> +		XFS_WANT_CORRUPTED_GOTO(i == 0, del_cursor);
+> +		cur->bc_rec.b.br_state = new.br_state;
+> +
+> +		error = xfs_btree_insert(cur, &i);
+> +		if (error)
+> +			goto del_cursor;
+> +		XFS_WANT_CORRUPTED_GOTO(i == 1, del_cursor);
+> +	}
+> +
+> +	/*
+> +	 * Convert to a btree if necessary.
+> +	 */
+> +	if (xfs_bmap_needs_btree(ip, whichfork)) {
+> +		int tmp_logflags; /* partial log flag return val */
+> +
+> +		ASSERT(cur == NULL);
+> +		error = xfs_bmap_extents_to_btree(tp, ip, firstfsb, free_list,
+> +				&cur, 0, &tmp_logflags, whichfork);
+> +		logflags |= tmp_logflags;
+> +	}
+> +
+> +del_cursor:
+> +	if (cur)
+> +		xfs_btree_del_cursor(cur,
+> +			error ? XFS_BTREE_ERROR : XFS_BTREE_NOERROR);
+> +	xfs_trans_log_inode(tp, ip, logflags);
+> +	return error;
+> +}
+> +
+> +int
+> +xfs_bmap_split_extent(
+> +	struct xfs_inode	*ip,
+> +	xfs_fileoff_t		split_fsb,
+> +	xfs_extnum_t		*split_ext)
+> +{
+> +	struct xfs_mount        *mp = ip->i_mount;
+> +	struct xfs_trans	*tp;
+> +	struct xfs_bmap_free	free_list;
+> +	xfs_fsblock_t		firstfsb;
+> +	int			committed;
+> +	int			error;
+> +
+> +	tp = xfs_trans_alloc(mp, XFS_TRANS_DIOSTRAT);
+> +	error = xfs_trans_reserve(tp, &M_RES(mp)->tr_write,
+> +			XFS_DIOSTRAT_SPACE_RES(mp, 0), 0);
+> +
+> +	if (error) {
+> +		/*
+> +		 * Free the transaction structure.
+> +		 */
+> +		xfs_trans_cancel(tp, 0);
+> +		return error;
+> +	}
+> +
+> +	xfs_ilock(ip, XFS_ILOCK_EXCL);
+> +	error = xfs_trans_reserve_quota(tp, mp, ip->i_udquot,
+> +			ip->i_gdquot, ip->i_pdquot,
+> +			XFS_DIOSTRAT_SPACE_RES(mp, 0), 0,
+> +			XFS_QMOPT_RES_REGBLKS);
+> +	if (error)
+> +		goto error1;
+> +
+> +	xfs_trans_ijoin(tp, ip, 0);
+> +	xfs_bmap_init(&free_list, &firstfsb);
+> +
+> +	error = xfs_bmap_split_extent_at(tp, ip, split_fsb, split_ext,
+> +					 &firstfsb, &free_list);
+> +	if (error)
+> +		goto error0;
+> +
+> +	error = xfs_bmap_finish(&tp, &free_list, &committed);
+> +	if (error)
+> +		goto error0;
+> +
+> +	error = xfs_trans_commit(tp, XFS_TRANS_RELEASE_LOG_RES);
+> +	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+> +
+> +	return error;
+> +error0:
+> +	xfs_bmap_cancel(&free_list);
+> +error1:
+> +	xfs_trans_cancel(tp, XFS_TRANS_RELEASE_LOG_RES | XFS_TRANS_ABORT);
+> +	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+> +	return error;
+> +}
+> +
+> +/*
+> + * Shift extent records to the right to make a hole.
+> + * The maximum number of extents to be shifted in a single operation
+> + * is @num_exts, and @current_ext keeps track of the current extent
+> + * index we have shifted. @offset_shift_fsb is the length by which each
+> + * extent is shifted. @end_ext is the last extent to be shifted.
+> + */
+> +int
+> +xfs_bmap_shift_extents_right(
+> +	struct xfs_trans	*tp,
+> +	struct xfs_inode	*ip,
+> +	int			*done,
+> +	xfs_fileoff_t		offset_shift_fsb,
+> +	xfs_extnum_t		*current_ext,
+> +	xfs_extnum_t		end_ext,
+> +	xfs_fsblock_t		*firstblock,
+> +	struct xfs_bmap_free	*flist,
+> +	int			num_exts)
+> +{
+> +	struct xfs_mount		*mp = ip->i_mount;
+> +	struct xfs_btree_cur		*cur;
+> +	struct xfs_bmbt_rec_host	*gotp;
+> +	struct xfs_bmbt_irec		got;
+> +	struct xfs_bmbt_irec            right;
+> +	xfs_ifork_t			*ifp;
+> +	xfs_fileoff_t			startoff;
+> +	xfs_filblks_t			blockcount = 0;
+> +	xfs_extnum_t			last_extent;
+> +	int				error = 0;
+> +	int				i;
+> +	int				whichfork = XFS_DATA_FORK;
+> +	int				logflags;
+> +
+> +	if (unlikely(XFS_TEST_ERROR(
+> +	    (XFS_IFORK_FORMAT(ip, whichfork) != XFS_DINODE_FMT_EXTENTS &&
+> +	     XFS_IFORK_FORMAT(ip, whichfork) != XFS_DINODE_FMT_BTREE),
+> +	     mp, XFS_ERRTAG_BMAPIFORMAT, XFS_RANDOM_BMAPIFORMAT))) {
+> +		XFS_ERROR_REPORT("xfs_bmap_shift_extents_right",
+> +				 XFS_ERRLEVEL_LOW, mp);
+> +		return XFS_ERROR(EFSCORRUPTED);
+> +	}
+> +
+> +	if (XFS_FORCED_SHUTDOWN(mp))
+> +		return XFS_ERROR(EIO);
+> +
+> +	ASSERT(current_ext != NULL);
+> +
+> +	/* We are going to change core inode */
+> +	logflags = XFS_ILOG_CORE;
+> +	ifp = XFS_IFORK_PTR(ip, whichfork);
+> +
+> +	if (ifp->if_flags & XFS_IFBROOT) {
+> +		cur = xfs_bmbt_init_cursor(mp, tp, ip, whichfork);
+> +		cur->bc_private.b.firstblock = *firstblock;
+> +		cur->bc_private.b.flist = flist;
+> +		cur->bc_private.b.flags = 0;
+> +	} else {
+> +		cur = NULL;
+> +		logflags |= XFS_ILOG_DEXT;
+> +	}
+> +
+> +	/* start shifting extents to right */
+> +	while (num_exts-- > 0) {
+> +		blockcount = 0;
+> +
+> +		if (*current_ext < end_ext) {
+> +			*done = 1;
+> +			break;
+> +		}
+> +
+> +		gotp = xfs_iext_get_ext(ifp, *current_ext);
+> +		xfs_bmbt_get_all(gotp, &got);
+> +		startoff = got.br_startoff + offset_shift_fsb;
+> +
+> +		/*
+> +		 * Before shifting extent into hole, make sure that the hole
+> +		 * is large enough to accomodate the shift. This checking has
+> +		 * to be performed for all except the last extent.
+> +		 */
+> +		last_extent = (ifp->if_bytes / sizeof(xfs_bmbt_rec_t)) - 1;
+> +		if (last_extent != *current_ext) {
+> +			xfs_bmbt_get_all(xfs_iext_get_ext(ifp,
+> +						*current_ext + 1), &right);
+> +			if (startoff + got.br_blockcount > right.br_startoff) {
+> +				error = XFS_ERROR(EINVAL);
+> +				if (error)
+> +					goto del_cursor;
+> +			}
+> +		}
+> +
+> +		/* Check if we can merge 2 adjacent extents */
+> +		if (last_extent != *current_ext &&
+> +		    right.br_startoff == startoff + got.br_blockcount &&
+> +		    right.br_startblock ==
+> +				got.br_startblock + got.br_blockcount &&
+> +		    right.br_state == got.br_state &&
+> +		    right.br_blockcount + got.br_blockcount <= MAXEXTLEN) {
+> +
+> +			/*
+> +			 * Merge the current extent with the extent to
+> +			 * the right. Remove the right extent, calculate
+> +			 * a new block count for the current extent to cover
+> +			 * the range of both and decrement the number of extents
+> +			 * in the fork.
+> +			 */
+> +			blockcount = right.br_blockcount + got.br_blockcount;
+> +
+> +			if (cur) {
+> +				error = xfs_bmbt_lookup_eq(cur,
+> +							   right.br_startoff,
+> +							   right.br_startblock,
+> +							   right.br_blockcount,
+> +							   &i);
+> +				if (error)
+> +					goto del_cursor;
+> +				XFS_WANT_CORRUPTED_GOTO(i == 1, del_cursor);
+> +			}
+> +
+> +			xfs_iext_remove(ip, *current_ext + 1, 1, 0);
+> +			if (cur) {
+> +				error = xfs_btree_delete(cur, &i);
+> +				if (error)
+> +					goto del_cursor;
+> +				XFS_WANT_CORRUPTED_GOTO(i == 1, del_cursor);
+> +			}
+> +			XFS_IFORK_NEXT_SET(ip, whichfork,
+> +					XFS_IFORK_NEXTENTS(ip, whichfork) - 1);
+> +
+> +		}
+> +
+> +		if (cur) {
+> +			error = xfs_bmbt_lookup_eq(cur, got.br_startoff,
+> +						   got.br_startblock,
+> +						   got.br_blockcount,
+> +						   &i);
+> +			if (error)
+> +				goto del_cursor;
+> +			XFS_WANT_CORRUPTED_GOTO(i == 1, del_cursor);
+> +		}
+> +
+> +		if (blockcount) {
+> +			xfs_bmbt_set_blockcount(gotp, blockcount);
+> +			got.br_blockcount = blockcount;
+> +		}
+> +
+> +		xfs_bmbt_set_startoff(gotp, startoff);
+> +		got.br_startoff = startoff;
+> +
+> +		if (cur) {
+> +			error = xfs_bmbt_update(cur, got.br_startoff,
+> +						got.br_startblock,
+> +						got.br_blockcount,
+> +						got.br_state);
+> +			if (error)
+> +				goto del_cursor;
+> +		}
+> +
+> +		(*current_ext)--;
+> +	}
+> +
+> +del_cursor:
+> +	if (cur)
+> +		xfs_btree_del_cursor(cur,
+> +			error ? XFS_BTREE_ERROR : XFS_BTREE_NOERROR);
+> +	xfs_trans_log_inode(tp, ip, logflags);
+> +	return error;
+> +}
+> diff --git a/fs/xfs/xfs_bmap.h b/fs/xfs/xfs_bmap.h
+> index 38ba36e..af05899 100644
+> --- a/fs/xfs/xfs_bmap.h
+> +++ b/fs/xfs/xfs_bmap.h
+> @@ -179,10 +179,17 @@ int	xfs_bunmapi(struct xfs_trans *tp, struct xfs_inode *ip,
+>  int	xfs_check_nostate_extents(struct xfs_ifork *ifp, xfs_extnum_t idx,
+>  		xfs_extnum_t num);
+>  uint	xfs_default_attroffset(struct xfs_inode *ip);
+> -int	xfs_bmap_shift_extents(struct xfs_trans *tp, struct xfs_inode *ip,
+> +int	xfs_bmap_shift_extents_left(struct xfs_trans *tp, struct xfs_inode *ip,
+>  		int *done, xfs_fileoff_t start_fsb,
+>  		xfs_fileoff_t offset_shift_fsb, xfs_extnum_t *current_ext,
+>  		xfs_fsblock_t *firstblock, struct xfs_bmap_free	*flist,
+>  		int num_exts);
+> +int	xfs_bmap_split_extent(struct xfs_inode *ip, xfs_fileoff_t split_offset,
+> +		xfs_extnum_t *split_ext);
+> +int	xfs_bmap_shift_extents_right(struct xfs_trans *tp, struct xfs_inode *ip,
+> +		int *done, xfs_fsblock_t offset_shift_fsb,
+> +		xfs_extnum_t *current_ext, xfs_extnum_t end_ext,
+> +		xfs_fsblock_t *firstblock, struct xfs_bmap_free *flist,
+> +		int num_exts);
+>  
+>  #endif	/* __XFS_BMAP_H__ */
+> diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+> index 057f671..b9511dd 100644
+> --- a/fs/xfs/xfs_bmap_util.c
+> +++ b/fs/xfs/xfs_bmap_util.c
+> @@ -1548,7 +1548,7 @@ xfs_collapse_file_space(
+>  		 * We are using the write transaction in which max 2 bmbt
+>  		 * updates are allowed
 >  		 */
-> -		xfs_attr3_leaf_moveents(leaf1, &ichdr1, ichdr1.count - count,
-> -				leaf2, &ichdr2, 0, count, state->mp);
-> +		xfs_attr3_leaf_moveents(args, leaf1, &ichdr1,
-> +				ichdr1.count - count, leaf2, &ichdr2, 0, count);
->  
->  	} else if (count > ichdr1.count) {
->  		/*
-> @@ -1488,8 +1488,8 @@ xfs_attr3_leaf_rebalance(
->  		/*
->  		 * Move low entries from leaf2 to high end of leaf1.
->  		 */
-> -		xfs_attr3_leaf_moveents(leaf2, &ichdr2, 0, leaf1, &ichdr1,
-> -					ichdr1.count, count, state->mp);
-> +		xfs_attr3_leaf_moveents(args, leaf2, &ichdr2, 0, leaf1, &ichdr1,
-> +					ichdr1.count, count);
->  	}
->  
->  	xfs_attr3_leaf_hdr_to_disk(leaf1, &ichdr1);
-> @@ -1795,7 +1795,6 @@ xfs_attr3_leaf_remove(
->  	struct xfs_attr_leafblock *leaf;
->  	struct xfs_attr3_icleaf_hdr ichdr;
->  	struct xfs_attr_leaf_entry *entry;
-> -	struct xfs_mount	*mp = args->trans->t_mountp;
->  	int			before;
->  	int			after;
->  	int			smallest;
-> @@ -1809,7 +1808,7 @@ xfs_attr3_leaf_remove(
->  	leaf = bp->b_addr;
->  	xfs_attr3_leaf_hdr_from_disk(&ichdr, leaf);
->  
-> -	ASSERT(ichdr.count > 0 && ichdr.count < XFS_LBSIZE(mp) / 8);
-> +	ASSERT(ichdr.count > 0 && ichdr.count < args->geo->blksize / 8);
->  	ASSERT(args->index >= 0 && args->index < ichdr.count);
->  	ASSERT(ichdr.firstused >= ichdr.count * sizeof(*entry) +
->  					xfs_attr3_leaf_hdr_size(leaf));
-> @@ -1817,7 +1816,7 @@ xfs_attr3_leaf_remove(
->  	entry = &xfs_attr3_leaf_entryp(leaf)[args->index];
->  
->  	ASSERT(be16_to_cpu(entry->nameidx) >= ichdr.firstused);
-> -	ASSERT(be16_to_cpu(entry->nameidx) < XFS_LBSIZE(mp));
-> +	ASSERT(be16_to_cpu(entry->nameidx) < args->geo->blksize);
->  
->  	/*
->  	 * Scan through free region table:
-> @@ -1832,8 +1831,8 @@ xfs_attr3_leaf_remove(
->  	smallest = XFS_ATTR_LEAF_MAPSIZE - 1;
->  	entsize = xfs_attr_leaf_entsize(leaf, args->index);
->  	for (i = 0; i < XFS_ATTR_LEAF_MAPSIZE; i++) {
-> -		ASSERT(ichdr.freemap[i].base < XFS_LBSIZE(mp));
-> -		ASSERT(ichdr.freemap[i].size < XFS_LBSIZE(mp));
-> +		ASSERT(ichdr.freemap[i].base < args->geo->blksize);
-> +		ASSERT(ichdr.freemap[i].size < args->geo->blksize);
->  		if (ichdr.freemap[i].base == tablesize) {
->  			ichdr.freemap[i].base -= sizeof(xfs_attr_leaf_entry_t);
->  			ichdr.freemap[i].size += sizeof(xfs_attr_leaf_entry_t);
-> @@ -1910,11 +1909,11 @@ xfs_attr3_leaf_remove(
->  	 * removing the name.
->  	 */
->  	if (smallest) {
-> -		tmp = XFS_LBSIZE(mp);
-> +		tmp = args->geo->blksize;
->  		entry = xfs_attr3_leaf_entryp(leaf);
->  		for (i = ichdr.count - 1; i >= 0; entry++, i--) {
->  			ASSERT(be16_to_cpu(entry->nameidx) >= ichdr.firstused);
-> -			ASSERT(be16_to_cpu(entry->nameidx) < XFS_LBSIZE(mp));
-> +			ASSERT(be16_to_cpu(entry->nameidx) < args->geo->blksize);
->  
->  			if (be16_to_cpu(entry->nameidx) < tmp)
->  				tmp = be16_to_cpu(entry->nameidx);
-> @@ -1954,7 +1953,6 @@ xfs_attr3_leaf_unbalance(
->  	struct xfs_attr3_icleaf_hdr drophdr;
->  	struct xfs_attr3_icleaf_hdr savehdr;
->  	struct xfs_attr_leaf_entry *entry;
-> -	struct xfs_mount	*mp = state->mp;
->  
->  	trace_xfs_attr_leaf_unbalance(state->args);
->  
-> @@ -1981,13 +1979,15 @@ xfs_attr3_leaf_unbalance(
->  		 */
->  		if (xfs_attr3_leaf_order(save_blk->bp, &savehdr,
->  					 drop_blk->bp, &drophdr)) {
-> -			xfs_attr3_leaf_moveents(drop_leaf, &drophdr, 0,
-> +			xfs_attr3_leaf_moveents(state->args,
-> +						drop_leaf, &drophdr, 0,
->  						save_leaf, &savehdr, 0,
-> -						drophdr.count, mp);
-> +						drophdr.count);
->  		} else {
-> -			xfs_attr3_leaf_moveents(drop_leaf, &drophdr, 0,
-> +			xfs_attr3_leaf_moveents(state->args,
-> +						drop_leaf, &drophdr, 0,
->  						save_leaf, &savehdr,
-> -						savehdr.count, drophdr.count, mp);
-> +						savehdr.count, drophdr.count);
->  		}
->  	} else {
->  		/*
-> @@ -2017,19 +2017,23 @@ xfs_attr3_leaf_unbalance(
->  
->  		if (xfs_attr3_leaf_order(save_blk->bp, &savehdr,
->  					 drop_blk->bp, &drophdr)) {
-> -			xfs_attr3_leaf_moveents(drop_leaf, &drophdr, 0,
-> +			xfs_attr3_leaf_moveents(state->args,
-> +						drop_leaf, &drophdr, 0,
->  						tmp_leaf, &tmphdr, 0,
-> -						drophdr.count, mp);
-> -			xfs_attr3_leaf_moveents(save_leaf, &savehdr, 0,
-> +						drophdr.count);
-> +			xfs_attr3_leaf_moveents(state->args,
-> +						save_leaf, &savehdr, 0,
->  						tmp_leaf, &tmphdr, tmphdr.count,
-> -						savehdr.count, mp);
-> +						savehdr.count);
->  		} else {
-> -			xfs_attr3_leaf_moveents(save_leaf, &savehdr, 0,
-> +			xfs_attr3_leaf_moveents(state->args,
-> +						save_leaf, &savehdr, 0,
->  						tmp_leaf, &tmphdr, 0,
-> -						savehdr.count, mp);
-> -			xfs_attr3_leaf_moveents(drop_leaf, &drophdr, 0,
-> +						savehdr.count);
-> +			xfs_attr3_leaf_moveents(state->args,
-> +						drop_leaf, &drophdr, 0,
->  						tmp_leaf, &tmphdr, tmphdr.count,
-> -						drophdr.count, mp);
-> +						drophdr.count);
->  		}
->  		memcpy(save_leaf, tmp_leaf, state->blocksize);
->  		savehdr = tmphdr; /* struct copy */
-> @@ -2084,7 +2088,7 @@ xfs_attr3_leaf_lookup_int(
->  	leaf = bp->b_addr;
->  	xfs_attr3_leaf_hdr_from_disk(&ichdr, leaf);
->  	entries = xfs_attr3_leaf_entryp(leaf);
-> -	ASSERT(ichdr.count < XFS_LBSIZE(args->dp->i_mount) / 8);
-> +	ASSERT(ichdr.count < args->geo->blksize / 8);
->  
->  	/*
->  	 * Binary search.  (note: small blocks will skip this loop)
-> @@ -2188,7 +2192,7 @@ xfs_attr3_leaf_getvalue(
->  
->  	leaf = bp->b_addr;
->  	xfs_attr3_leaf_hdr_from_disk(&ichdr, leaf);
-> -	ASSERT(ichdr.count < XFS_LBSIZE(args->dp->i_mount) / 8);
-> +	ASSERT(ichdr.count < args->geo->blksize / 8);
->  	ASSERT(args->index < ichdr.count);
->  
->  	entry = &xfs_attr3_leaf_entryp(leaf)[args->index];
-> @@ -2239,14 +2243,14 @@ xfs_attr3_leaf_getvalue(
->  /*ARGSUSED*/
->  STATIC void
->  xfs_attr3_leaf_moveents(
-> +	struct xfs_da_args		*args,
->  	struct xfs_attr_leafblock	*leaf_s,
->  	struct xfs_attr3_icleaf_hdr	*ichdr_s,
->  	int				start_s,
->  	struct xfs_attr_leafblock	*leaf_d,
->  	struct xfs_attr3_icleaf_hdr	*ichdr_d,
->  	int				start_d,
-> -	int				count,
-> -	struct xfs_mount		*mp)
-> +	int				count)
->  {
->  	struct xfs_attr_leaf_entry	*entry_s;
->  	struct xfs_attr_leaf_entry	*entry_d;
-> @@ -2266,10 +2270,10 @@ xfs_attr3_leaf_moveents(
->  	ASSERT(ichdr_s->magic == XFS_ATTR_LEAF_MAGIC ||
->  	       ichdr_s->magic == XFS_ATTR3_LEAF_MAGIC);
->  	ASSERT(ichdr_s->magic == ichdr_d->magic);
-> -	ASSERT(ichdr_s->count > 0 && ichdr_s->count < XFS_LBSIZE(mp) / 8);
-> +	ASSERT(ichdr_s->count > 0 && ichdr_s->count < args->geo->blksize / 8);
->  	ASSERT(ichdr_s->firstused >= (ichdr_s->count * sizeof(*entry_s))
->  					+ xfs_attr3_leaf_hdr_size(leaf_s));
-> -	ASSERT(ichdr_d->count < XFS_LBSIZE(mp) / 8);
-> +	ASSERT(ichdr_d->count < args->geo->blksize / 8);
->  	ASSERT(ichdr_d->firstused >= (ichdr_d->count * sizeof(*entry_d))
->  					+ xfs_attr3_leaf_hdr_size(leaf_d));
->  
-> @@ -2321,11 +2325,11 @@ xfs_attr3_leaf_moveents(
->  			entry_d->nameidx = cpu_to_be16(ichdr_d->firstused);
->  			entry_d->flags = entry_s->flags;
->  			ASSERT(be16_to_cpu(entry_d->nameidx) + tmp
-> -							<= XFS_LBSIZE(mp));
-> +							<= args->geo->blksize);
->  			memmove(xfs_attr3_leaf_name(leaf_d, desti),
->  				xfs_attr3_leaf_name(leaf_s, start_s + i), tmp);
->  			ASSERT(be16_to_cpu(entry_s->nameidx) + tmp
-> -							<= XFS_LBSIZE(mp));
-> +							<= args->geo->blksize);
->  			memset(xfs_attr3_leaf_name(leaf_s, start_s + i), 0, tmp);
->  			ichdr_s->usedbytes -= tmp;
->  			ichdr_d->usedbytes += tmp;
-> @@ -2346,7 +2350,7 @@ xfs_attr3_leaf_moveents(
->  		tmp = count * sizeof(xfs_attr_leaf_entry_t);
->  		entry_s = &xfs_attr3_leaf_entryp(leaf_s)[start_s];
->  		ASSERT(((char *)entry_s + tmp) <=
-> -		       ((char *)leaf_s + XFS_LBSIZE(mp)));
-> +		       ((char *)leaf_s + args->geo->blksize));
->  		memset(entry_s, 0, tmp);
->  	} else {
->  		/*
-> @@ -2361,7 +2365,7 @@ xfs_attr3_leaf_moveents(
->  		tmp = count * sizeof(xfs_attr_leaf_entry_t);
->  		entry_s = &xfs_attr3_leaf_entryp(leaf_s)[ichdr_s->count];
->  		ASSERT(((char *)entry_s + tmp) <=
-> -		       ((char *)leaf_s + XFS_LBSIZE(mp)));
-> +		       ((char *)leaf_s + args->geo->blksize));
->  		memset(entry_s, 0, tmp);
->  	}
->  
-> diff --git a/fs/xfs/xfs_attr_remote.c b/fs/xfs/xfs_attr_remote.c
-> index 0f0679a..b5adfec 100644
-> --- a/fs/xfs/xfs_attr_remote.c
-> +++ b/fs/xfs/xfs_attr_remote.c
-> @@ -125,6 +125,7 @@ xfs_attr3_rmt_read_verify(
->  	char		*ptr;
->  	int		len;
->  	xfs_daddr_t	bno;
-> +	int		blksize = mp->m_attr_geo->blksize;
->  
->  	/* no verification of non-crc buffers */
->  	if (!xfs_sb_version_hascrc(&mp->m_sb))
-> @@ -133,21 +134,20 @@ xfs_attr3_rmt_read_verify(
->  	ptr = bp->b_addr;
->  	bno = bp->b_bn;
->  	len = BBTOB(bp->b_length);
-> -	ASSERT(len >= XFS_LBSIZE(mp));
-> +	ASSERT(len >= blksize);
->  
->  	while (len > 0) {
-> -		if (!xfs_verify_cksum(ptr, XFS_LBSIZE(mp),
-> -				      XFS_ATTR3_RMT_CRC_OFF)) {
-> +		if (!xfs_verify_cksum(ptr, blksize, XFS_ATTR3_RMT_CRC_OFF)) {
->  			xfs_buf_ioerror(bp, EFSBADCRC);
->  			break;
->  		}
-> -		if (!xfs_attr3_rmt_verify(mp, ptr, XFS_LBSIZE(mp), bno)) {
-> +		if (!xfs_attr3_rmt_verify(mp, ptr, blksize, bno)) {
->  			xfs_buf_ioerror(bp, EFSCORRUPTED);
->  			break;
->  		}
-> -		len -= XFS_LBSIZE(mp);
-> -		ptr += XFS_LBSIZE(mp);
-> -		bno += mp->m_bsize;
-> +		len -= blksize;
-> +		ptr += blksize;
-> +		bno += BTOBB(blksize);
->  	}
->  
->  	if (bp->b_error)
-> @@ -165,6 +165,7 @@ xfs_attr3_rmt_write_verify(
->  	char		*ptr;
->  	int		len;
->  	xfs_daddr_t	bno;
-> +	int		blksize = mp->m_attr_geo->blksize;
->  
->  	/* no verification of non-crc buffers */
->  	if (!xfs_sb_version_hascrc(&mp->m_sb))
-> @@ -173,10 +174,10 @@ xfs_attr3_rmt_write_verify(
->  	ptr = bp->b_addr;
->  	bno = bp->b_bn;
->  	len = BBTOB(bp->b_length);
-> -	ASSERT(len >= XFS_LBSIZE(mp));
-> +	ASSERT(len >= blksize);
->  
->  	while (len > 0) {
-> -		if (!xfs_attr3_rmt_verify(mp, ptr, XFS_LBSIZE(mp), bno)) {
-> +		if (!xfs_attr3_rmt_verify(mp, ptr, blksize, bno)) {
->  			xfs_buf_ioerror(bp, EFSCORRUPTED);
->  			xfs_verifier_error(bp);
->  			return;
-> @@ -187,11 +188,11 @@ xfs_attr3_rmt_write_verify(
->  			rmt = (struct xfs_attr3_rmt_hdr *)ptr;
->  			rmt->rm_lsn = cpu_to_be64(bip->bli_item.li_lsn);
->  		}
-> -		xfs_update_cksum(ptr, XFS_LBSIZE(mp), XFS_ATTR3_RMT_CRC_OFF);
-> +		xfs_update_cksum(ptr, blksize, XFS_ATTR3_RMT_CRC_OFF);
->  
-> -		len -= XFS_LBSIZE(mp);
-> -		ptr += XFS_LBSIZE(mp);
-> -		bno += mp->m_bsize;
-> +		len -= blksize;
-> +		ptr += blksize;
-> +		bno += BTOBB(blksize);
->  	}
->  	ASSERT(len == 0);
+> -		error = xfs_bmap_shift_extents(tp, ip, &done, start_fsb,
+> +		error = xfs_bmap_shift_extents_left(tp, ip, &done, start_fsb,
+>  					       shift_fsb, &current_ext,
+>  					       &first_block, &free_list,
+>  					       XFS_BMAP_MAX_SHIFT_EXTENTS);
+> @@ -1572,6 +1572,132 @@ out:
 >  }
-> @@ -240,12 +241,13 @@ xfs_attr_rmtval_copyout(
->  	char		*src = bp->b_addr;
->  	xfs_daddr_t	bno = bp->b_bn;
->  	int		len = BBTOB(bp->b_length);
-> +	int		blksize = mp->m_attr_geo->blksize;
 >  
-> -	ASSERT(len >= XFS_LBSIZE(mp));
-> +	ASSERT(len >= blksize);
->  
->  	while (len > 0 && *valuelen > 0) {
->  		int hdr_size = 0;
-> -		int byte_cnt = XFS_ATTR3_RMT_BUF_SPACE(mp, XFS_LBSIZE(mp));
-> +		int byte_cnt = XFS_ATTR3_RMT_BUF_SPACE(mp, blksize);
->  
->  		byte_cnt = min(*valuelen, byte_cnt);
->  
-> @@ -263,9 +265,9 @@ xfs_attr_rmtval_copyout(
->  		memcpy(*dst, src + hdr_size, byte_cnt);
->  
->  		/* roll buffer forwards */
-> -		len -= XFS_LBSIZE(mp);
-> -		src += XFS_LBSIZE(mp);
-> -		bno += mp->m_bsize;
-> +		len -= blksize;
-> +		src += blksize;
-> +		bno += BTOBB(blksize);
->  
->  		/* roll attribute data forwards */
->  		*valuelen -= byte_cnt;
-> @@ -287,12 +289,13 @@ xfs_attr_rmtval_copyin(
->  	char		*dst = bp->b_addr;
->  	xfs_daddr_t	bno = bp->b_bn;
->  	int		len = BBTOB(bp->b_length);
-> +	int		blksize = mp->m_attr_geo->blksize;
->  
-> -	ASSERT(len >= XFS_LBSIZE(mp));
-> +	ASSERT(len >= blksize);
->  
->  	while (len > 0 && *valuelen > 0) {
->  		int hdr_size;
-> -		int byte_cnt = XFS_ATTR3_RMT_BUF_SPACE(mp, XFS_LBSIZE(mp));
-> +		int byte_cnt = XFS_ATTR3_RMT_BUF_SPACE(mp, blksize);
->  
->  		byte_cnt = min(*valuelen, byte_cnt);
->  		hdr_size = xfs_attr3_rmt_hdr_set(mp, dst, ino, *offset,
-> @@ -304,17 +307,17 @@ xfs_attr_rmtval_copyin(
->  		 * If this is the last block, zero the remainder of it.
->  		 * Check that we are actually the last block, too.
->  		 */
-> -		if (byte_cnt + hdr_size < XFS_LBSIZE(mp)) {
-> +		if (byte_cnt + hdr_size < blksize) {
->  			ASSERT(*valuelen - byte_cnt == 0);
-> -			ASSERT(len == XFS_LBSIZE(mp));
-> +			ASSERT(len == blksize);
->  			memset(dst + hdr_size + byte_cnt, 0,
-> -					XFS_LBSIZE(mp) - hdr_size - byte_cnt);
-> +					blksize - hdr_size - byte_cnt);
->  		}
->  
->  		/* roll buffer forwards */
-> -		len -= XFS_LBSIZE(mp);
-> -		dst += XFS_LBSIZE(mp);
-> -		bno += mp->m_bsize;
-> +		len -= blksize;
-> +		dst += blksize;
-> +		bno += BTOBB(blksize);
->  
->  		/* roll attribute data forwards */
->  		*valuelen -= byte_cnt;
-> diff --git a/fs/xfs/xfs_da_format.h b/fs/xfs/xfs_da_format.h
-> index 44d7fac..0a49b02 100644
-> --- a/fs/xfs/xfs_da_format.h
-> +++ b/fs/xfs/xfs_da_format.h
-> @@ -19,10 +19,6 @@
->  #ifndef __XFS_DA_FORMAT_H__
->  #define __XFS_DA_FORMAT_H__
->  
-> -/*========================================================================
-> - * Directory Structure when greater than XFS_LBSIZE(mp) bytes.
-> - *========================================================================*/
-> -
 >  /*
->   * This structure is common to both leaf nodes and non-leaf nodes in the Btree.
->   *
-> @@ -122,8 +118,6 @@ struct xfs_da3_icnode_hdr {
->  	__uint16_t	level;
->  };
+> + * xfs_insert_file_space()
+> + *	This routine allocate disk space and shift extent for the given file.
+> + *	The first thing we do is to sync dirty data and invalidate page cache
+> + *	over the region on which insert range is working. And split an extent
+> + *	to two extents at given offset by calling xfs_bmap_split_extent.
+> + *	And shift all extent records which are laying between [offset,
+> + *	last allocated extent] to the right to reserve hole range. Lastly
+> + *	allocate an unwritten extent in hole range created by shifting extents.
+> + *
+> + * RETURNS:
+> + *	0 on success
+> + *	errno on error
+> + *
+> + */
+> +int
+> +xfs_insert_file_space(
+> +	struct xfs_inode	*ip,
+> +	loff_t			offset,
+> +	loff_t			len)
+> +{
+> +	struct xfs_mount	*mp = ip->i_mount;
+> +	struct xfs_trans	*tp;
+> +	struct xfs_bmap_free	free_list;
+> +	xfs_fsblock_t		first_block;
+> +	xfs_ifork_t		*ifp;
+> +	int			done = 0;
+> +	int			committed;
+> +	int			error;
+> +	uint			rounding;
+> +	xfs_fileoff_t		start_fsb;
+> +	xfs_fileoff_t		shift_fsb;
+> +	xfs_extnum_t		split_ext;
+> +	xfs_extnum_t		current_ext = 0;
+> +	xfs_off_t		ioffset;
+> +
+> +	ASSERT(xfs_isilocked(ip, XFS_IOLOCK_EXCL));
+> +	trace_xfs_insert_file_space(ip);
+> +
+> +	error = xfs_qm_dqattach(ip, 0);
+> +	if (error)
+> +		return error;
+> +
+> +	/* wait for the completion of any pending DIOs */
+> +	inode_dio_wait(VFS_I(ip));
+> +
+> +	rounding = max_t(uint, 1 << mp->m_sb.sb_blocklog, PAGE_CACHE_SIZE);
+> +	ioffset = offset & ~(rounding - 1);
+> +	error = -filemap_write_and_wait_range(VFS_I(ip)->i_mapping,
+> +			ioffset, -1);
+> +	if (error)
+> +		return error;
+> +
+> +	truncate_pagecache_range(VFS_I(ip), ioffset, -1);
+> +
+> +	start_fsb = XFS_B_TO_FSB(mp, offset);
+> +	shift_fsb = XFS_B_TO_FSB(mp, len);
+> +
+> +	error = xfs_bmap_split_extent(ip, start_fsb, &split_ext);
+> +	if (error)
+> +		return error;
+> +
+> +	ifp = XFS_IFORK_PTR(ip, XFS_DATA_FORK);
+> +	current_ext = (ifp->if_bytes / sizeof(xfs_bmbt_rec_t)) - 1;
+> +	while (!error && !done) {
+> +		tp = xfs_trans_alloc(mp, XFS_TRANS_DIOSTRAT);
+> +		/*
+> +		 * We would need to reserve permanent block for transaction.
+> +		 * This will come into picture when after shifting extent into
+> +		 * hole we found that adjacent extents can be merged which
+> +		 * may lead to freeing of a block during record update.
+> +		 */
+> +		error = xfs_trans_reserve(tp, &M_RES(mp)->tr_write,
+> +				XFS_DIOSTRAT_SPACE_RES(mp, 0), 0);
+> +		if (error) {
+> +			xfs_trans_cancel(tp, 0);
+> +			break;
+> +		}
+> +
+> +		xfs_ilock(ip, XFS_ILOCK_EXCL);
+> +		error = xfs_trans_reserve_quota(tp, mp, ip->i_udquot,
+> +				ip->i_gdquot, ip->i_pdquot,
+> +				XFS_DIOSTRAT_SPACE_RES(mp, 0), 0,
+> +				XFS_QMOPT_RES_REGBLKS);
+> +		if (error)
+> +			goto error1;
+> +
+> +		xfs_trans_ijoin(tp, ip, 0);
+> +
+> +		xfs_bmap_init(&free_list, &first_block);
+> +
+> +		/*
+> +		 * We are using the write transaction in which max 2 bmbt
+> +		 * updates are allowed
+> +		 */
+> +		error = xfs_bmap_shift_extents_right(tp, ip, &done, shift_fsb,
+> +						&current_ext, split_ext,
+> +						&first_block, &free_list,
+> +						XFS_BMAP_MAX_SHIFT_EXTENTS);
+> +		if (error)
+> +			goto error0;
+> +
+> +		error = xfs_bmap_finish(&tp, &free_list, &committed);
+> +		if (error)
+> +			goto error0;
+> +
+> +		error = xfs_trans_commit(tp, XFS_TRANS_RELEASE_LOG_RES);
+> +		xfs_iunlock(ip, XFS_ILOCK_EXCL);
+> +		if (error)
+> +			goto out;
+> +	}
+> +
+> +	/* Add unwritten extent in a hole range. */
+> +	error = xfs_alloc_file_space(ip, offset, len, XFS_BMAPI_PREALLOC);
+> +
+> +out:
+> +	return error;
+> +
+> +error0:
+> +	xfs_bmap_cancel(&free_list);
+> +error1:
+> +	xfs_trans_cancel(tp, XFS_TRANS_RELEASE_LOG_RES | XFS_TRANS_ABORT);
+> +	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+> +	return error;
+> +}
+> +
+> +/*
+>   * We need to check that the format of the data fork in the temporary inode is
+>   * valid for the target inode before doing the swap. This is not a problem with
+>   * attr1 because of the fixed fork offset, but attr2 has a dynamically sized
+> diff --git a/fs/xfs/xfs_bmap_util.h b/fs/xfs/xfs_bmap_util.h
+> index 935ed2b..d62ab4b 100644
+> --- a/fs/xfs/xfs_bmap_util.h
+> +++ b/fs/xfs/xfs_bmap_util.h
+> @@ -101,6 +101,8 @@ int	xfs_zero_file_space(struct xfs_inode *ip, xfs_off_t offset,
+>  			    xfs_off_t len);
+>  int	xfs_collapse_file_space(struct xfs_inode *, xfs_off_t offset,
+>  				xfs_off_t len);
+> +int	xfs_insert_file_space(struct xfs_inode *, xfs_off_t offset,
+> +				xfs_off_t len);
 >  
-> -#define	XFS_LBSIZE(mp)	(mp)->m_sb.sb_blocksize
-> -
->  /*
->   * Directory version 2.
->   *
-> @@ -620,10 +614,6 @@ xfs_dir2_block_leaf_p(struct xfs_dir2_block_tail *btp)
->   * of an attribute name may not be unique, we may have duplicate keys.  The
->   * internal links in the Btree are logical block offsets into the file.
->   *
-> - *========================================================================
-> - * Attribute structure when equal to XFS_LBSIZE(mp) bytes.
-> - *========================================================================
-> - *
->   * Struct leaf_entry's are packed from the top.  Name/values grow from the
->   * bottom but are not packed.  The freemap contains run-length-encoded entries
->   * for the free bytes after the leaf_entry's, but only the N largest such,
+>  /* EOF block manipulation functions */
+>  bool	xfs_can_free_eofblocks(struct xfs_inode *ip, bool force);
+> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+> index 1f66779..f160cd5 100644
+> --- a/fs/xfs/xfs_file.c
+> +++ b/fs/xfs/xfs_file.c
+> @@ -756,11 +756,13 @@ xfs_file_fallocate(
+>  	struct xfs_trans	*tp;
+>  	long			error;
+>  	loff_t			new_size = 0;
+> +	int			do_file_insert = 0;
+>  
+>  	if (!S_ISREG(inode->i_mode))
+>  		return -EINVAL;
+>  	if (mode & ~(FALLOC_FL_KEEP_SIZE | FALLOC_FL_PUNCH_HOLE |
+> -		     FALLOC_FL_COLLAPSE_RANGE | FALLOC_FL_ZERO_RANGE))
+> +		     FALLOC_FL_COLLAPSE_RANGE | FALLOC_FL_ZERO_RANGE |
+> +		     FALLOC_FL_INSERT_RANGE))
+>  		return -EOPNOTSUPP;
+>  
+>  	xfs_ilock(ip, XFS_IOLOCK_EXCL);
+> @@ -790,6 +792,28 @@ xfs_file_fallocate(
+>  		error = xfs_collapse_file_space(ip, offset, len);
+>  		if (error)
+>  			goto out_unlock;
+> +	} else if (mode & FALLOC_FL_INSERT_RANGE) {
+> +		unsigned blksize_mask = (1 << inode->i_blkbits) - 1;
+> +
+> +		if (offset & blksize_mask || len & blksize_mask) {
+> +			error = -EINVAL;
+> +			goto out_unlock;
+> +		}
+> +
+> +		/* Check for wrap through zero */
+> +		if (inode->i_size + len > inode->i_sb->s_maxbytes) {
+> +			error = -EFBIG;
+> +			goto out_unlock;
+> +		}
+> +
+> +		/* Offset should be less than i_size */
+> +		if (offset >= i_size_read(inode)) {
+> +			error = -EINVAL;
+> +			goto out_unlock;
+> +		}
+> +
+> +		new_size = i_size_read(inode) + len;
+> +		do_file_insert = 1;
+>  	} else {
+>  		if (!(mode & FALLOC_FL_KEEP_SIZE) &&
+>  		    offset + len > i_size_read(inode)) {
+> @@ -840,8 +864,20 @@ xfs_file_fallocate(
+>  		iattr.ia_valid = ATTR_SIZE;
+>  		iattr.ia_size = new_size;
+>  		error = xfs_setattr_size(ip, &iattr);
+> +		if (error)
+> +			goto out_unlock;
+>  	}
+>  
+> +	/*
+> +	 * Some operations are performed after the inode size is updated. For
+> +	 * example, insert range expands the address space of the file, shifts
+> +	 * all subsequent extents over and allocates space into the hole.
+> +	 * Updating the size first ensures that shifted extents aren't left
+> +	 * hanging past EOF in the event of a crash or failure.
+> +	 */
+> +	if (do_file_insert)
+> +		error = xfs_insert_file_space(ip, offset, len);
+> +
+>  out_unlock:
+>  	xfs_iunlock(ip, XFS_IOLOCK_EXCL);
+>  	return -error;
+> diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+> index 152f827..8943c9f 100644
+> --- a/fs/xfs/xfs_trace.h
+> +++ b/fs/xfs/xfs_trace.h
+> @@ -663,6 +663,7 @@ DEFINE_INODE_EVENT(xfs_alloc_file_space);
+>  DEFINE_INODE_EVENT(xfs_free_file_space);
+>  DEFINE_INODE_EVENT(xfs_zero_file_space);
+>  DEFINE_INODE_EVENT(xfs_collapse_file_space);
+> +DEFINE_INODE_EVENT(xfs_insert_file_space);
+>  DEFINE_INODE_EVENT(xfs_readdir);
+>  #ifdef CONFIG_XFS_POSIX_ACL
+>  DEFINE_INODE_EVENT(xfs_get_acl);
 > -- 
-> 1.9.0
+> 1.7.11-rc0
 > 
 > _______________________________________________
 > xfs mailing list
