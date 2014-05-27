@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 00B4D7F4E
-	for <xfs@oss.sgi.com>; Tue, 27 May 2014 13:40:54 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id D95618F8081
-	for <xfs@oss.sgi.com>; Tue, 27 May 2014 11:40:50 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id 7E02D7F4E
+	for <xfs@oss.sgi.com>; Tue, 27 May 2014 16:00:19 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 1B20F8F8035
+	for <xfs@oss.sgi.com>; Tue, 27 May 2014 14:00:16 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id HWETff6Sxn3EpgGh for
-	<xfs@oss.sgi.com>; Tue, 27 May 2014 11:40:49 -0700 (PDT)
-Date: Tue, 27 May 2014 14:40:43 -0400
+	cuda.sgi.com with ESMTP id oZaN3dMj69DWVxIn for
+	<xfs@oss.sgi.com>; Tue, 27 May 2014 14:00:11 -0700 (PDT)
+Date: Tue, 27 May 2014 16:59:59 -0400
 From: Brian Foster <bfoster@redhat.com>
 Subject: Re: [PATCH v3 2/10] xfs: Add support FALLOC_FL_INSERT_RANGE for
 	fallocate
-Message-ID: <20140527184042.GI11265@laptop.bfoster>
+Message-ID: <20140527205959.GA26393@bfoster.bfoster>
 References: <001401cf7984$4e3e1850$eaba48f0$@samsung.com>
 MIME-Version: 1.0
 Content-Disposition: inline
@@ -50,9 +50,46 @@ On Tue, May 27, 2014 at 05:18:57PM +0900, Namjae Jeon wrote:
 > Signed-off-by: Ashish Sangwan <a.sangwan@samsung.com>
 > ---
 
-This version looks pretty good to me. Thanks Namje.
+FYI, while I didn't notice any test failures so far, a run through some
+of the generic xfstests do produce some assert failures and whatnot. I
+noticed output from generic/013,091,127,263. I haven't looked at these
+much at all so far, I just wanted to get them on the list...
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+Namjae, I reproduced these issues running ./check -g auto with
+CONFIG_XFS_WARN enabled for XFS (to warn on assert failures). Below is a
+quick dump of output from generic/091, as an example. That one
+reproduces consistently for me. We'll probably want to run through and
+squash this and any others before this gets merged.
+
+Brian
+
+root: run xfstest generic/091
+kernel: [ 8507.476387] XFS: Assertion failed: cur->bc_btnum != XFS_BTNUM_BMAP || cur->bc_private.b.allocated == 0, file: fs/xfs/xfs_btree.c, line: 314
+kernel: [ 8507.476392] ------------[ cut here ]------------
+kernel: [ 8507.476430] WARNING: CPU: 2 PID: 4648 at fs/xfs/xfs_message.c:99 asswarn+0x33/0x40 [xfs]()
+kernel: [ 8507.476433] Modules linked in: xfs loop ip6t_rpfilter ip6t_REJECT xt_conntrack cfg80211 rfkill ebtable_nat ebtable_broute bridge stp llc ebtable_filter ebtables ip6table_nat nf_conntrack_ipv6 nf_defrag_ipv6 nf_nat_ipv6 ip6table_mangle ip6table_security ip6table_raw ip6table_filter ip6_tables iptable_nat nf_conntrack_ipv4 nf_defrag_ipv4 nf_nat_ipv4 nf_nat nf_conntrack iptable_mangle iptable_security iptable_raw snd_hda_codec_generic snd_hda_intel snd_hda_controller snd_hda_codec joydev snd_hwdep snd_seq ppdev snd_seq_device snd_pcm virtio_console serio_raw virtio_balloon parport_pc snd_timer parport pvpanic snd soundcore i2c_piix4 sunrpc virtio_net virtio_blk qxl drm_kms_helper virtio_pci ttm virtio_ring virtio drm ata_generic i2c_core pata_acpi [last unloaded: xfs]
+kernel: [ 8507.476520] CPU: 2 PID: 4648 Comm: fsx Tainted: G        W  O  3.15.0-rc5+ #87
+kernel: [ 8507.476522] Hardware name: Bochs Bochs, BIOS Bochs 01/01/2011
+kernel: [ 8507.476525]  0000000000000000 00000000cca654ac ffff88009c415c00 ffffffff817bc80e
+kernel: [ 8507.476529]  0000000000000000 ffff88009c415c38 ffffffff81095c4d ffff880035ee41a0
+kernel: [ 8507.476533]  0000000000000000 ffff880035ee41a0 0000000000000000 ffff8800af5d0000
+kernel: [ 8507.476537] Call Trace:
+kernel: [ 8507.476545]  [<ffffffff817bc80e>] dump_stack+0x4d/0x66
+kernel: [ 8507.476549]  [<ffffffff81095c4d>] warn_slowpath_common+0x7d/0xa0
+kernel: [ 8507.476553]  [<ffffffff81095d7a>] warn_slowpath_null+0x1a/0x20
+kernel: [ 8507.476575]  [<ffffffffa03a9173>] asswarn+0x33/0x40 [xfs]
+kernel: [ 8507.476600]  [<ffffffffa03d5739>] xfs_btree_del_cursor+0x89/0xb0 [xfs]
+kernel: [ 8507.476624]  [<ffffffffa03c485e>] xfs_bmap_split_extent_at.constprop.19+0x30e/0x500 [xfs]
+kernel: [ 8507.476648]  [<ffffffffa03d1c4e>] xfs_bmap_split_extent+0x13e/0x1c0 [xfs]
+kernel: [ 8507.476668]  [<ffffffffa0390578>] xfs_insert_file_space+0x188/0x410 [xfs]
+kernel: [ 8507.476695]  [<ffffffffa03f5f97>] ? xfs_iunlock+0x157/0x230 [xfs]
+kernel: [ 8507.476717]  [<ffffffffa03a71e1>] ? xfs_setattr_size+0x381/0x4b0 [xfs]
+kernel: [ 8507.476737]  [<ffffffffa0398fe3>] xfs_file_fallocate+0x3c3/0x470 [xfs]
+kernel: [ 8507.476742]  [<ffffffff8122ca28>] ? do_fallocate+0x118/0x1d0
+kernel: [ 8507.476745]  [<ffffffff8122ca3e>] do_fallocate+0x12e/0x1d0
+kernel: [ 8507.476748]  [<ffffffff8122cb24>] SyS_fallocate+0x44/0x70
+kernel: [ 8507.476752]  [<ffffffff817d0329>] system_call_fastpath+0x16/0x1b
+kernel: [ 8507.476755] ---[ end trace cf941380ff6e4058 ]---
 
 > 
 > Changelog
