@@ -1,22 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 7F65C7F5D
-	for <xfs@oss.sgi.com>; Wed, 28 May 2014 08:50:43 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 601E88F8068
-	for <xfs@oss.sgi.com>; Wed, 28 May 2014 06:50:40 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id 453507F5E
+	for <xfs@oss.sgi.com>; Wed, 28 May 2014 09:01:09 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 3496B8F8035
+	for <xfs@oss.sgi.com>; Wed, 28 May 2014 07:01:06 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id zihaGvEZtEoUGiK9 for
-	<xfs@oss.sgi.com>; Wed, 28 May 2014 06:50:39 -0700 (PDT)
-Message-ID: <5385E996.30309@redhat.com>
-Date: Wed, 28 May 2014 08:50:14 -0500
-From: Eric Sandeen <sandeen@redhat.com>
+	cuda.sgi.com with ESMTP id TnEHyQmRZTB1diWd for
+	<xfs@oss.sgi.com>; Wed, 28 May 2014 07:01:05 -0700 (PDT)
+Date: Wed, 28 May 2014 10:00:36 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH v2 1/3] xfs: add scan owner field to xfs_eofblocks
+Message-ID: <20140528140034.GB5567@bfoster.bfoster>
+References: <1400845950-41435-1-git-send-email-bfoster@redhat.com>
+	<1400845950-41435-2-git-send-email-bfoster@redhat.com>
+	<20140527104428.GC1440@infradead.org>
+	<20140527121810.GB63281@bfoster.bfoster>
+	<20140527212653.GC6677@dastard>
+	<20140528053019.GB3816@infradead.org>
 MIME-Version: 1.0
-Subject: Re: [PATCH 0/2, RFC] xfsprogs: try to handle mkfs of a file on 4k
-	sector device
-References: <53852A05.5040006@redhat.com>
-	<20140528054142.GC13166@infradead.org>
-In-Reply-To: <20140528054142.GC13166@infradead.org>
+Content-Disposition: inline
+In-Reply-To: <20140528053019.GB3816@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,32 +34,58 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs-oss <xfs@oss.sgi.com>
+Cc: xfs@oss.sgi.com
 
-On 5/28/14, 12:41 AM, Christoph Hellwig wrote:
->> We can modify platform_findsizes() to use the fsgeom call to get the
->> "sector size" which should be used here, and warn that mismatches
->> might exist if it fails.
->>
->> This does mean there'll be a new warning emitted on fs images hosted
->> on non-xfs filesystems; I'm not really quite sure it's worth it,
->> hence the RFC nature of this lightly tested 2-patch series...
+On Tue, May 27, 2014 at 10:30:19PM -0700, Christoph Hellwig wrote:
+> On Wed, May 28, 2014 at 07:26:53AM +1000, Dave Chinner wrote:
+> > > Right... maybe I'm not parsing your point. The purpose here is to avoid
+> > > the trylock entirely. E.g., Indicate that we have already acquired the
+> > > lock and can proceed with xfs_free_eofblocks(), rather than fail a
+> > > trylock and skip (which appears to be a potential infinite loop scenario
+> > > here due to how the AG walking code handles EAGAIN).
+> > 
+> > I think Christoph's concern here is that we are calling a function
+> > that can take the iolock while we already hold the iolock. i.e. the
+> > reason we have to add the anti-deadlock code in the first place.
 > 
-> Might be time to introduce some generic VFS-level ioctl for the sector
-> size and dio alignment.  Any beer or chocolate that could motivate you
-> to get this done? :)
+> Indeed.
+> 
 
-Roses from you, Christoph.  ;)
+Ah, I didn't parse correctly then. Thanks...
 
-Yeah, we do desperately need this.  Not sure why nobody's done it yet,
-I'll see if I can get the time & motivation going, and launch into
-the bike shed building.  :)
+> > To
+> > address that, can we restructure xfs_file_buffered_aio_write() such
+> > that the ENOSPC/EDQUOT flush is done outside the iolock?
+> > 
+> > >From a quick check, I don't think there is any problem with dropping
+> > the iolock, doing the flushes and then going all the way back to the
+> > start of the function again, but closer examination and testing is
+> > warranted...
+> 
 
-> Also it would be nice to have a test case that exercises this new code.
+I considered this briefly early on, but wasn't sure about whether we
+should run through the write_checks() bits more than once (e.g.,
+potentially do the eof zeroing, etc., multiple times..?).
 
-Hm yeah fair enough; I tested it w/ scsi-debug...
+> I think we'd need some form of early space reservation, otherwise we'd
+> get non-atomic writes.  Time to get those batches write patches out
+> again..
+> 
 
--Eric
+So the concern is that multiple writers to an overlapped range could
+become interleaved? From passing through the code, we hit
+generic_perform_write(), which iters over the iov in a
+write_begin/copy_write_end loop. If we hit ENOSPC somewhere in the
+middle, we'd return what we've written so far. I don't believe the
+buffered_aio_write() path would see the error unless it was the first
+attempt at a delayed allocation. IOW, mid-write failure will be a short
+write vs. an ENOSPC error.
+
+It seems like it _might_ be safe to drop and reacquire iolock given
+these semantics (notwithstanding the write_checks() bits), but I could
+certainly be missing something...
+
+Brian
 
 _______________________________________________
 xfs mailing list
