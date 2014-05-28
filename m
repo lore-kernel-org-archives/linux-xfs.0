@@ -1,21 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id B95527F60
-	for <xfs@oss.sgi.com>; Wed, 28 May 2014 10:49:57 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id CE1BB7F62
+	for <xfs@oss.sgi.com>; Wed, 28 May 2014 11:08:18 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 5FDA08F8064
-	for <xfs@oss.sgi.com>; Wed, 28 May 2014 08:49:54 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id pnx3J2RWzH5g3guc for
-	<xfs@oss.sgi.com>; Wed, 28 May 2014 08:49:52 -0700 (PDT)
-Date: Wed, 28 May 2014 11:49:27 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH xfs: tone down writepage/releasepage WARN_ONs
-Message-ID: <20140528154927.GD5567@bfoster.bfoster>
-References: <20140527103119.GA26420@infradead.org>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 5DD5DAC001
+	for <xfs@oss.sgi.com>; Wed, 28 May 2014 09:08:15 -0700 (PDT)
+Received: from zene.cmpxchg.org (zene.cmpxchg.org [85.214.230.12]) by
+	cuda.sgi.com with ESMTP id 8al75zK9qSBg4x0T (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 28 May 2014 09:08:13 -0700 (PDT)
+Date: Wed, 28 May 2014 12:06:58 -0400
+From: Johannes Weiner <hannes@cmpxchg.org>
+Subject: Re: [RFC 2/2] x86_64: expand kernel stack to 16K
+Message-ID: <20140528160658.GH2878@cmpxchg.org>
+References: <1401260039-18189-1-git-send-email-minchan@kernel.org>
+	<1401260039-18189-2-git-send-email-minchan@kernel.org>
+	<20140528083738.GL8554@dastard> <20140528091345.GD6677@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20140527103119.GA26420@infradead.org>
+In-Reply-To: <20140528091345.GD6677@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,68 +31,213 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: Dave Hansen <dave.hansen@intel.com>, Rik van Riel <riel@redhat.com>, Peter Zijlstra <a.p.zijlstra@chello.nl>, linux-mm@kvack.org, rusty@rustcorp.com.au, Hugh Dickins <hughd@google.com>, linux-kernel@vger.kernel.org, Steven Rostedt <rostedt@goodmis.org>, xfs@oss.sgi.com, Minchan Kim <minchan@kernel.org>, mst@redhat.com, Mel Gorman <mgorman@suse.de>, "H. Peter Anvin" <hpa@zytor.com>, Andrew Morton <akpm@linux-foundation.org>, Ingo Molnar <mingo@kernel.org>
 
-On Tue, May 27, 2014 at 03:31:19AM -0700, Christoph Hellwig wrote:
-> I recently ran into the issue fixed by
+On Wed, May 28, 2014 at 07:13:45PM +1000, Dave Chinner wrote:
+> On Wed, May 28, 2014 at 06:37:38PM +1000, Dave Chinner wrote:
+> > [ cc XFS list ]
 > 
->   "xfs: kill buffers over failed write ranges properly"
+> [and now there is a complete copy on the XFs list, I'll add my 2c]
 > 
-> which spams the log with lots of backtraces.  Make debugging any issues
-> like that easier by using WARN_ON_ONCE in the writeback code.
+> > On Wed, May 28, 2014 at 03:53:59PM +0900, Minchan Kim wrote:
+> > > While I play inhouse patches with much memory pressure on qemu-kvm,
+> > > 3.14 kernel was randomly crashed. The reason was kernel stack overflow.
+> > > 
+> > > When I investigated the problem, the callstack was a little bit deeper
+> > > by involve with reclaim functions but not direct reclaim path.
+> > > 
+> > > I tried to diet stack size of some functions related with alloc/reclaim
+> > > so did a hundred of byte but overflow was't disappeard so that I encounter
+> > > overflow by another deeper callstack on reclaim/allocator path.
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
+> That's a no win situation. The stack overruns through ->writepage
+> we've been seeing with XFS over the past *4 years* are much larger
+> than a few bytes. The worst case stack usage on a virtio block
+> device was about 10.5KB of stack usage.
+> 
+> And, like this one, it came from the flusher thread as well. The
+> difference was that the allocation that triggered the reclaim path
+> you've reported occurred when 5k of the stack had already been
+> used...
+> 
+> > > Of course, we might sweep every sites we have found for reducing
+> > > stack usage but I'm not sure how long it saves the world(surely,
+> > > lots of developer start to add nice features which will use stack
+> > > agains) and if we consider another more complex feature in I/O layer
+> > > and/or reclaim path, it might be better to increase stack size(
+> > > meanwhile, stack usage on 64bit machine was doubled compared to 32bit
+> > > while it have sticked to 8K. Hmm, it's not a fair to me and arm64
+> > > already expaned to 16K. )
+> 
+> Yup, that's all been pointed out previously. 8k stacks were never
+> large enough to fit the linux IO architecture on x86-64, but nobody
+> outside filesystem and IO developers has been willing to accept that
+> argument as valid, despite regular stack overruns and filesystem
+> having to add workaround after workaround to prevent stack overruns.
+> 
+> That's why stuff like this appears in various filesystem's
+> ->writepage:
+> 
+>         /*
+>          * Refuse to write the page out if we are called from reclaim context.
+>          *
+>          * This avoids stack overflows when called from deeply used stacks in
+>          * random callers for direct reclaim or memcg reclaim.  We explicitly
+>          * allow reclaim from kswapd as the stack usage there is relatively low.
+>          *
+>          * This should never happen except in the case of a VM regression so
+>          * warn about it.
+>          */
+>         if (WARN_ON_ONCE((current->flags & (PF_MEMALLOC|PF_KSWAPD)) ==
+>                         PF_MEMALLOC))
+>                 goto redirty;
+> 
+> That still doesn't guarantee us enough stack space to do writeback,
+> though, because memory allocation can occur when reading in metadata
+> needed to do delayed allocation, and so we could trigger GFP_NOFS
+> memory allocation from the flusher thread with 4-5k of stack already
+> consumed, so that would still overrun teh stack.
+> 
+> So, a couple of years ago we started defering half the writeback
+> stack usage to a worker thread (commit c999a22 "xfs: introduce an
+> allocation workqueue"), under the assumption that the worst stack
+> usage when we call memory allocation is around 3-3.5k of stack used.
+> We thought that would be safe, but the stack trace you've posted
+> shows that alloc_page(GFP_NOFS) can consume upwards of 5k of stack,
+> which means we're still screwed despite all the workarounds we have
+> in place.
 
-The change generally seems fine to me. IIRC, we had a point in time
-where these issues were prevalent and noisy. We also had a few lingering
-ones that were hard to reproduce. I do wonder whether this would make
-that situation difficult to reproduce. For example, running through an
-xfstests run where one test might reproduce randomly and suppress output
-from a subsequent, perhaps more frequent reproducer. Am I correct to
-assume that once fired, the warning wouldn't fire again before a reboot
-or module reload?
+The allocation and reclaim stack itself is only 2k per the stacktrace
+below.  What got us in this particular case is that we engaged a
+complicated block layer setup from within the allocation context in
+order to swap out a page.
 
-Hmm, did we have asserts that covered these scenarios as well?
+In the past we disabled filesystem ->writepage from within the
+allocation context and deferred it to kswapd for stack reasons (see
+the WARN_ON_ONCE and the comment in your above quote), but I think we
+have to go further and do the same for even swap_writepage():
 
-Brian
+> > > I guess this topic was discussed several time so there might be
+> > > strong reason not to increase kernel stack size on x86_64, for me not
+> > > knowing so Ccing x86_64 maintainers, other MM guys and virtio
+> > > maintainers.
+> > >
+> > >          Depth    Size   Location    (51 entries)
+> > > 
+> > >    0)     7696      16   lookup_address+0x28/0x30
+> > >    1)     7680      16   _lookup_address_cpa.isra.3+0x3b/0x40
+> > >    2)     7664      24   __change_page_attr_set_clr+0xe0/0xb50
+> > >    3)     7640     392   kernel_map_pages+0x6c/0x120
+> > >    4)     7248     256   get_page_from_freelist+0x489/0x920
+> > >    5)     6992     352   __alloc_pages_nodemask+0x5e1/0xb20
+> > >    6)     6640       8   alloc_pages_current+0x10f/0x1f0
+> > >    7)     6632     168   new_slab+0x2c5/0x370
+> > >    8)     6464       8   __slab_alloc+0x3a9/0x501
+> > >    9)     6456      80   __kmalloc+0x1cb/0x200
+> > >   10)     6376     376   vring_add_indirect+0x36/0x200
+> > >   11)     6000     144   virtqueue_add_sgs+0x2e2/0x320
+> > >   12)     5856     288   __virtblk_add_req+0xda/0x1b0
+> > >   13)     5568      96   virtio_queue_rq+0xd3/0x1d0
+> > >   14)     5472     128   __blk_mq_run_hw_queue+0x1ef/0x440
+> > >   15)     5344      16   blk_mq_run_hw_queue+0x35/0x40
+> > >   16)     5328      96   blk_mq_insert_requests+0xdb/0x160
+> > >   17)     5232     112   blk_mq_flush_plug_list+0x12b/0x140
+> > >   18)     5120     112   blk_flush_plug_list+0xc7/0x220
+> > >   19)     5008      64   io_schedule_timeout+0x88/0x100
+> > >   20)     4944     128   mempool_alloc+0x145/0x170
+> > >   21)     4816      96   bio_alloc_bioset+0x10b/0x1d0
+> > >   22)     4720      48   get_swap_bio+0x30/0x90
+> > >   23)     4672     160   __swap_writepage+0x150/0x230
+> > >   24)     4512      32   swap_writepage+0x42/0x90
 
->  fs/xfs/xfs_aops.c |    6 +++---
->  1 file changed, 3 insertions(+), 3 deletions(-)
+Without swap IO from the allocation context, the stack would have
+ended here, which would have been easily survivable.  And left the
+writeout work to kswapd, which has a much shallower stack than this:
+
+> > >   25)     4480     320   shrink_page_list+0x676/0xa80
+> > >   26)     4160     208   shrink_inactive_list+0x262/0x4e0
+> > >   27)     3952     304   shrink_lruvec+0x3e1/0x6a0
+> > >   28)     3648      80   shrink_zone+0x3f/0x110
+> > >   29)     3568     128   do_try_to_free_pages+0x156/0x4c0
+> > >   30)     3440     208   try_to_free_pages+0xf7/0x1e0
+> > >   31)     3232     352   __alloc_pages_nodemask+0x783/0xb20
+> > >   32)     2880       8   alloc_pages_current+0x10f/0x1f0
+> > >   33)     2872     200   __page_cache_alloc+0x13f/0x160
+> > >   34)     2672      80   find_or_create_page+0x4c/0xb0
+> > >   35)     2592      80   ext4_mb_load_buddy+0x1e9/0x370
+> > >   36)     2512     176   ext4_mb_regular_allocator+0x1b7/0x460
+> > >   37)     2336     128   ext4_mb_new_blocks+0x458/0x5f0
+> > >   38)     2208     256   ext4_ext_map_blocks+0x70b/0x1010
+> > >   39)     1952     160   ext4_map_blocks+0x325/0x530
+> > >   40)     1792     384   ext4_writepages+0x6d1/0xce0
+> > >   41)     1408      16   do_writepages+0x23/0x40
+> > >   42)     1392      96   __writeback_single_inode+0x45/0x2e0
+> > >   43)     1296     176   writeback_sb_inodes+0x2ad/0x500
+> > >   44)     1120      80   __writeback_inodes_wb+0x9e/0xd0
+> > >   45)     1040     160   wb_writeback+0x29b/0x350
+> > >   46)      880     208   bdi_writeback_workfn+0x11c/0x480
+> > >   47)      672     144   process_one_work+0x1d2/0x570
+> > >   48)      528     112   worker_thread+0x116/0x370
+> > >   49)      416     240   kthread+0xf3/0x110
+> > >   50)      176     176   ret_from_fork+0x7c/0xb0
 > 
-> diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-> index d1b99b6..e32640e 100644
-> --- a/fs/xfs/xfs_aops.c
-> +++ b/fs/xfs/xfs_aops.c
-> @@ -975,7 +975,7 @@ xfs_vm_writepage(
->  	 * Given that we do not allow direct reclaim to call us, we should
->  	 * never be called while in a filesystem transaction.
->  	 */
-> -	if (WARN_ON(current->flags & PF_FSTRANS))
-> +	if (WARN_ON_ONCE(current->flags & PF_FSTRANS))
->  		goto redirty;
->  
->  	/* Is this page beyond the end of the file? */
-> @@ -1225,9 +1225,9 @@ xfs_vm_releasepage(
->  
->  	xfs_count_page_state(page, &delalloc, &unwritten);
->  
-> -	if (WARN_ON(delalloc))
-> +	if (WARN_ON_ONCE(delalloc))
->  		return 0;
-> -	if (WARN_ON(unwritten))
-> +	if (WARN_ON_ONCE(unwritten))
->  		return 0;
->  
->  	return try_to_free_buffers(page);
-> -- 
-> 1.7.10.4
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+> Impressive: 3 nested allocations - GFP_NOFS, GFP_NOIO and then
+> GFP_ATOMIC before the stack goes boom. XFS usually only needs 2...
+
+Do they also usually involve swap_writepage()?
+
+---
+
+diff --git a/mm/page_io.c b/mm/page_io.c
+index 7c59ef681381..02e7e3c168cf 100644
+--- a/mm/page_io.c
++++ b/mm/page_io.c
+@@ -233,6 +233,22 @@ int swap_writepage(struct page *page, struct writeback_control *wbc)
+ {
+ 	int ret = 0;
+ 
++	/*
++	 * Refuse to write the page out if we are called from reclaim context.
++	 *
++	 * This avoids stack overflows when called from deeply used stacks in
++	 * random callers for direct reclaim or memcg reclaim.  We explicitly
++	 * allow reclaim from kswapd as the stack usage there is relatively low.
++	 *
++	 * This should never happen except in the case of a VM regression so
++	 * warn about it.
++	 */
++	if (WARN_ON_ONCE((current->flags & (PF_MEMALLOC|PF_KSWAPD)) ==
++			PF_MEMALLOC)) {
++		SetPageDirty(page);
++		goto out;
++	}
++
+ 	if (try_to_free_swap(page)) {
+ 		unlock_page(page);
+ 		goto out;
+diff --git a/mm/vmscan.c b/mm/vmscan.c
+index 61c576083c07..99cca6633e0d 100644
+--- a/mm/vmscan.c
++++ b/mm/vmscan.c
+@@ -985,13 +985,12 @@ static unsigned long shrink_page_list(struct list_head *page_list,
+ 
+ 		if (PageDirty(page)) {
+ 			/*
+-			 * Only kswapd can writeback filesystem pages to
+-			 * avoid risk of stack overflow but only writeback
++			 * Only kswapd can writeback pages to avoid
++			 * risk of stack overflow but only writeback
+ 			 * if many dirty pages have been encountered.
+ 			 */
+-			if (page_is_file_cache(page) &&
+-					(!current_is_kswapd() ||
+-					 !zone_is_reclaim_dirty(zone))) {
++			if (!current_is_kswapd() ||
++			    !zone_is_reclaim_dirty(zone))) {
+ 				/*
+ 				 * Immediately reclaim when written back.
+ 				 * Similar in principal to deactivate_page()
 
 _______________________________________________
 xfs mailing list
