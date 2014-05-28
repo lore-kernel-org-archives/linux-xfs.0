@@ -1,25 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 268067F4E
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 718677F50
 	for <xfs@oss.sgi.com>; Wed, 28 May 2014 01:04:52 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id F0E318F808F
+	by relay3.corp.sgi.com (Postfix) with ESMTP id DEFB1AC002
 	for <xfs@oss.sgi.com>; Tue, 27 May 2014 23:04:51 -0700 (PDT)
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	GxdouzdBRqaFHLv3 for <xfs@oss.sgi.com>;
-	Tue, 27 May 2014 23:04:50 -0700 (PDT)
+	kxH3HHVYIGxF3XRP for <xfs@oss.sgi.com>;
+	Tue, 27 May 2014 23:04:49 -0700 (PDT)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.80)
-	(envelope-from <dave@fromorbit.com>) id 1WpWyk-0005oe-1X
+	(envelope-from <dave@fromorbit.com>) id 1WpWyk-0005of-20
 	for xfs@oss.sgi.com; Wed, 28 May 2014 16:04:46 +1000
 Received: from dave by disappointment with local (Exim 4.82)
-	(envelope-from <dave@disappointment.disaster>) id 1WpWyk-0003lJ-0h
+	(envelope-from <dave@disappointment.disaster>) id 1WpWyk-0003lO-1C
 	for xfs@oss.sgi.com; Wed, 28 May 2014 16:04:46 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 04/16] xfs: convert dir byte/off conversion to xfs_da_geometry
-Date: Wed, 28 May 2014 16:04:31 +1000
-Message-Id: <1401257083-13433-5-git-send-email-david@fromorbit.com>
+Subject: [PATCH 05/16] xfs: convert directory dablk conversion to
+	xfs_da_geometry
+Date: Wed, 28 May 2014 16:04:32 +1000
+Message-Id: <1401257083-13433-6-git-send-email-david@fromorbit.com>
 In-Reply-To: <1401257083-13433-1-git-send-email-david@fromorbit.com>
 References: <1401257083-13433-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -42,115 +43,334 @@ From: Dave Chinner <dchinner@redhat.com>
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 Reviewed-by: Brian Foster <bfoster@redhat.com>
 ---
- fs/xfs/xfs_dir2.c         |  2 +-
- fs/xfs/xfs_dir2_priv.h    | 18 +++++++++---------
- fs/xfs/xfs_dir2_readdir.c |  7 ++++---
- 3 files changed, 14 insertions(+), 13 deletions(-)
+ fs/xfs/xfs_dir2.c         |  4 ++--
+ fs/xfs/xfs_dir2_data.c    |  4 ++--
+ fs/xfs/xfs_dir2_leaf.c    | 21 +++++++++++----------
+ fs/xfs/xfs_dir2_node.c    | 41 +++++++++++++++++++++++------------------
+ fs/xfs/xfs_dir2_priv.h    | 15 +++++++--------
+ fs/xfs/xfs_dir2_readdir.c |  6 +++---
+ 6 files changed, 48 insertions(+), 43 deletions(-)
 
 diff --git a/fs/xfs/xfs_dir2.c b/fs/xfs/xfs_dir2.c
-index d48d477..73b6c46 100644
+index 73b6c46..ae94617 100644
 --- a/fs/xfs/xfs_dir2.c
 +++ b/fs/xfs/xfs_dir2.c
-@@ -749,7 +749,7 @@ xfs_dir2_shrink_inode(
+@@ -632,7 +632,7 @@ xfs_dir2_grow_inode(
+ 	if (error)
+ 		return error;
+ 
+-	*dbp = xfs_dir2_da_to_db(mp, (xfs_dablk_t)bno);
++	*dbp = xfs_dir2_da_to_db(args->geo, (xfs_dablk_t)bno);
+ 
  	/*
- 	 * If the block isn't the last one in the directory, we're done.
+ 	 * Update file's size if this is the data space and it grew.
+@@ -713,7 +713,7 @@ xfs_dir2_shrink_inode(
+ 	dp = args->dp;
+ 	mp = dp->i_mount;
+ 	tp = args->trans;
+-	da = xfs_dir2_db_to_da(mp, db);
++	da = xfs_dir2_db_to_da(args->geo, db);
+ 	/*
+ 	 * Unmap the fsblock(s).
  	 */
--	if (dp->i_d.di_size > xfs_dir2_db_off_to_byte(mp, db + 1, 0))
-+	if (dp->i_d.di_size > xfs_dir2_db_off_to_byte(args->geo, db + 1, 0))
- 		return 0;
- 	bno = da;
- 	if ((error = xfs_bmap_last_before(tp, dp, &bno, XFS_DATA_FORK))) {
+diff --git a/fs/xfs/xfs_dir2_data.c b/fs/xfs/xfs_dir2_data.c
+index bae8b5b..890c940 100644
+--- a/fs/xfs/xfs_dir2_data.c
++++ b/fs/xfs/xfs_dir2_data.c
+@@ -584,8 +584,8 @@ xfs_dir3_data_init(
+ 	/*
+ 	 * Get the buffer set up for the block.
+ 	 */
+-	error = xfs_da_get_buf(tp, dp, xfs_dir2_db_to_da(mp, blkno), -1, &bp,
+-		XFS_DATA_FORK);
++	error = xfs_da_get_buf(tp, dp, xfs_dir2_db_to_da(args->geo, blkno),
++			       -1, &bp, XFS_DATA_FORK);
+ 	if (error)
+ 		return error;
+ 	bp->b_ops = &xfs_dir3_data_buf_ops;
+diff --git a/fs/xfs/xfs_dir2_leaf.c b/fs/xfs/xfs_dir2_leaf.c
+index dc4ef19..046ba4a 100644
+--- a/fs/xfs/xfs_dir2_leaf.c
++++ b/fs/xfs/xfs_dir2_leaf.c
+@@ -350,8 +350,8 @@ xfs_dir3_leaf_get_buf(
+ 	ASSERT(bno >= xfs_dir2_byte_to_db(mp, XFS_DIR2_LEAF_OFFSET) &&
+ 	       bno < xfs_dir2_byte_to_db(mp, XFS_DIR2_FREE_OFFSET));
+ 
+-	error = xfs_da_get_buf(tp, dp, xfs_dir2_db_to_da(mp, bno), -1, &bp,
+-			       XFS_DATA_FORK);
++	error = xfs_da_get_buf(tp, dp, xfs_dir2_db_to_da(args->geo, bno),
++			       -1, &bp, XFS_DATA_FORK);
+ 	if (error)
+ 		return error;
+ 
+@@ -403,7 +403,7 @@ xfs_dir2_block_to_leaf(
+ 	if ((error = xfs_da_grow_inode(args, &blkno))) {
+ 		return error;
+ 	}
+-	ldb = xfs_dir2_da_to_db(mp, blkno);
++	ldb = xfs_dir2_da_to_db(args->geo, blkno);
+ 	ASSERT(ldb == xfs_dir2_byte_to_db(mp, XFS_DIR2_LEAF_OFFSET));
+ 	/*
+ 	 * Initialize the leaf block, get a buffer for it.
+@@ -828,8 +828,8 @@ xfs_dir2_leaf_addname(
+ 		 * Just read that one in.
+ 		 */
+ 		error = xfs_dir3_data_read(tp, dp,
+-					   xfs_dir2_db_to_da(mp, use_block),
+-					   -1, &dbp);
++				   xfs_dir2_db_to_da(args->geo, use_block),
++				   -1, &dbp);
+ 		if (error) {
+ 			xfs_trans_brelse(tp, lbp);
+ 			return error;
+@@ -1269,8 +1269,8 @@ xfs_dir2_leaf_lookup_int(
+ 			if (dbp)
+ 				xfs_trans_brelse(tp, dbp);
+ 			error = xfs_dir3_data_read(tp, dp,
+-						   xfs_dir2_db_to_da(mp, newdb),
+-						   -1, &dbp);
++					   xfs_dir2_db_to_da(args->geo, newdb),
++					   -1, &dbp);
+ 			if (error) {
+ 				xfs_trans_brelse(tp, lbp);
+ 				return error;
+@@ -1310,8 +1310,8 @@ xfs_dir2_leaf_lookup_int(
+ 		if (cidb != curdb) {
+ 			xfs_trans_brelse(tp, dbp);
+ 			error = xfs_dir3_data_read(tp, dp,
+-						   xfs_dir2_db_to_da(mp, cidb),
+-						   -1, &dbp);
++					   xfs_dir2_db_to_da(args->geo, cidb),
++					   -1, &dbp);
+ 			if (error) {
+ 				xfs_trans_brelse(tp, lbp);
+ 				return error;
+@@ -1609,7 +1609,8 @@ xfs_dir2_leaf_trim_data(
+ 	/*
+ 	 * Read the offending data block.  We need its buffer.
+ 	 */
+-	error = xfs_dir3_data_read(tp, dp, xfs_dir2_db_to_da(mp, db), -1, &dbp);
++	error = xfs_dir3_data_read(tp, dp, xfs_dir2_db_to_da(args->geo, db),
++				   -1, &dbp);
+ 	if (error)
+ 		return error;
+ 
+diff --git a/fs/xfs/xfs_dir2_node.c b/fs/xfs/xfs_dir2_node.c
+index 1bcaaa0..3b70d56 100644
+--- a/fs/xfs/xfs_dir2_node.c
++++ b/fs/xfs/xfs_dir2_node.c
+@@ -195,17 +195,18 @@ xfs_dir2_free_try_read(
+ 
+ static int
+ xfs_dir3_free_get_buf(
+-	struct xfs_trans	*tp,
+-	struct xfs_inode	*dp,
++	xfs_da_args_t		*args,
+ 	xfs_dir2_db_t		fbno,
+ 	struct xfs_buf		**bpp)
+ {
++	struct xfs_trans	*tp = args->trans;
++	struct xfs_inode	*dp = args->dp;
+ 	struct xfs_mount	*mp = dp->i_mount;
+ 	struct xfs_buf		*bp;
+ 	int			error;
+ 	struct xfs_dir3_icfree_hdr hdr;
+ 
+-	error = xfs_da_get_buf(tp, dp, xfs_dir2_db_to_da(mp, fbno),
++	error = xfs_da_get_buf(tp, dp, xfs_dir2_db_to_da(args->geo, fbno),
+ 				   -1, &bp, XFS_DATA_FORK);
+ 	if (error)
+ 		return error;
+@@ -319,7 +320,7 @@ xfs_dir2_leaf_to_node(
+ 	/*
+ 	 * Get the buffer for the new freespace block.
+ 	 */
+-	error = xfs_dir3_free_get_buf(tp, dp, fdb, &fbp);
++	error = xfs_dir3_free_get_buf(args, fdb, &fbp);
+ 	if (error)
+ 		return error;
+ 
+@@ -605,7 +606,8 @@ xfs_dir2_leafn_lookup_for_addname(
+ 					xfs_trans_brelse(tp, curbp);
+ 
+ 				error = xfs_dir2_free_read(tp, dp,
+-						xfs_dir2_db_to_da(mp, newfdb),
++						xfs_dir2_db_to_da(args->geo,
++								  newfdb),
+ 						&curbp);
+ 				if (error)
+ 					return error;
+@@ -746,7 +748,8 @@ xfs_dir2_leafn_lookup_for_entry(
+ 				curbp = state->extrablk.bp;
+ 			} else {
+ 				error = xfs_dir3_data_read(tp, dp,
+-						xfs_dir2_db_to_da(mp, newdb),
++						xfs_dir2_db_to_da(args->geo,
++								  newdb),
+ 						-1, &curbp);
+ 				if (error)
+ 					return error;
+@@ -1246,7 +1249,8 @@ xfs_dir2_leafn_remove(
+ 		 * read in the free block.
+ 		 */
+ 		fdb = dp->d_ops->db_to_fdb(mp, db);
+-		error = xfs_dir2_free_read(tp, dp, xfs_dir2_db_to_da(mp, fdb),
++		error = xfs_dir2_free_read(tp, dp,
++					   xfs_dir2_db_to_da(args->geo, fdb),
+ 					   &fbp);
+ 		if (error)
+ 			return error;
+@@ -1336,7 +1340,7 @@ xfs_dir2_leafn_split(
+ 	/*
+ 	 * Initialize the new leaf block.
+ 	 */
+-	error = xfs_dir3_leaf_get_buf(args, xfs_dir2_da_to_db(mp, blkno),
++	error = xfs_dir3_leaf_get_buf(args, xfs_dir2_da_to_db(args->geo, blkno),
+ 				      &newblk->bp, XFS_DIR2_LEAFN_MAGIC);
+ 	if (error)
+ 		return error;
+@@ -1729,7 +1733,7 @@ xfs_dir2_node_addname_int(
+ 
+ 		if ((error = xfs_bmap_last_offset(dp, &fo, XFS_DATA_FORK)))
+ 			return error;
+-		lastfbno = xfs_dir2_da_to_db(mp, (xfs_dablk_t)fo);
++		lastfbno = xfs_dir2_da_to_db(args->geo, (xfs_dablk_t)fo);
+ 		fbno = ifbno;
+ 	}
+ 	/*
+@@ -1766,8 +1770,8 @@ xfs_dir2_node_addname_int(
+ 			 * to avoid it.
+ 			 */
+ 			error = xfs_dir2_free_try_read(tp, dp,
+-						xfs_dir2_db_to_da(mp, fbno),
+-						&fbp);
++					xfs_dir2_db_to_da(args->geo, fbno),
++					&fbp);
+ 			if (error)
+ 				return error;
+ 			if (!fbp)
+@@ -1837,8 +1841,8 @@ xfs_dir2_node_addname_int(
+ 		 */
+ 		fbno = dp->d_ops->db_to_fdb(mp, dbno);
+ 		error = xfs_dir2_free_try_read(tp, dp,
+-					       xfs_dir2_db_to_da(mp, fbno),
+-					       &fbp);
++				       xfs_dir2_db_to_da(args->geo, fbno),
++				       &fbp);
+ 		if (error)
+ 			return error;
+ 
+@@ -1878,7 +1882,7 @@ xfs_dir2_node_addname_int(
+ 			/*
+ 			 * Get a buffer for the new block.
+ 			 */
+-			error = xfs_dir3_free_get_buf(tp, dp, fbno, &fbp);
++			error = xfs_dir3_free_get_buf(args, fbno, &fbp);
+ 			if (error)
+ 				return error;
+ 			free = fbp->b_addr;
+@@ -1946,7 +1950,8 @@ xfs_dir2_node_addname_int(
+ 		/*
+ 		 * Read the data block in.
+ 		 */
+-		error = xfs_dir3_data_read(tp, dp, xfs_dir2_db_to_da(mp, dbno),
++		error = xfs_dir3_data_read(tp, dp,
++					   xfs_dir2_db_to_da(args->geo, dbno),
+ 					   -1, &dbp);
+ 		if (error)
+ 			return error;
+@@ -2265,9 +2270,9 @@ xfs_dir2_node_trim_free(
+ 	/*
+ 	 * Blow the block away.
+ 	 */
+-	if ((error =
+-	    xfs_dir2_shrink_inode(args, xfs_dir2_da_to_db(mp, (xfs_dablk_t)fo),
+-		    bp))) {
++	error = xfs_dir2_shrink_inode(args,
++			xfs_dir2_da_to_db(args->geo, (xfs_dablk_t)fo), bp);
++	if (error) {
+ 		/*
+ 		 * Can't fail with ENOSPC since that only happens with no
+ 		 * space reservation, when breaking up an extent into two
 diff --git a/fs/xfs/xfs_dir2_priv.h b/fs/xfs/xfs_dir2_priv.h
-index 492edb6..6838289 100644
+index 6838289..18e3086 100644
 --- a/fs/xfs/xfs_dir2_priv.h
 +++ b/fs/xfs/xfs_dir2_priv.h
-@@ -67,10 +67,9 @@ xfs_dir2_dataptr_to_db(struct xfs_mount *mp, xfs_dir2_dataptr_t dp)
-  * Convert byte in space to offset in a block
+@@ -95,9 +95,9 @@ xfs_dir2_db_off_to_byte(struct xfs_da_geometry *geo, xfs_dir2_db_t db,
+  * Convert block (DB) to block (dablk)
   */
- static inline xfs_dir2_data_aoff_t
--xfs_dir2_byte_to_off(struct xfs_mount *mp, xfs_dir2_off_t by)
-+xfs_dir2_byte_to_off(struct xfs_da_geometry *geo, xfs_dir2_off_t by)
+ static inline xfs_dablk_t
+-xfs_dir2_db_to_da(struct xfs_mount *mp, xfs_dir2_db_t db)
++xfs_dir2_db_to_da(struct xfs_da_geometry *geo, xfs_dir2_db_t db)
  {
--	return (xfs_dir2_data_aoff_t)(by &
--		((1 << (mp->m_sb.sb_blocklog + mp->m_sb.sb_dirblklog)) - 1));
-+	return (xfs_dir2_data_aoff_t)(by & (geo->blksize - 1));
+-	return (xfs_dablk_t)(db << mp->m_sb.sb_dirblklog);
++	return (xfs_dablk_t)(db << (geo->blklog - geo->fsblog));
  }
  
  /*
-@@ -79,18 +78,17 @@ xfs_dir2_byte_to_off(struct xfs_mount *mp, xfs_dir2_off_t by)
- static inline xfs_dir2_data_aoff_t
- xfs_dir2_dataptr_to_off(struct xfs_mount *mp, xfs_dir2_dataptr_t dp)
+@@ -106,7 +106,7 @@ xfs_dir2_db_to_da(struct xfs_mount *mp, xfs_dir2_db_t db)
+ static inline xfs_dablk_t
+ xfs_dir2_byte_to_da(struct xfs_mount *mp, xfs_dir2_off_t by)
  {
--	return xfs_dir2_byte_to_off(mp, xfs_dir2_dataptr_to_byte(dp));
-+	return xfs_dir2_byte_to_off(mp->m_dir_geo, xfs_dir2_dataptr_to_byte(dp));
+-	return xfs_dir2_db_to_da(mp, xfs_dir2_byte_to_db(mp, by));
++	return xfs_dir2_db_to_da(mp->m_dir_geo, xfs_dir2_byte_to_db(mp, by));
  }
  
  /*
-  * Convert block and offset to byte in space
+@@ -124,19 +124,18 @@ xfs_dir2_db_off_to_dataptr(struct xfs_mount *mp, xfs_dir2_db_t db,
+  * Convert block (dablk) to block (DB)
+  */
+ static inline xfs_dir2_db_t
+-xfs_dir2_da_to_db(struct xfs_mount *mp, xfs_dablk_t da)
++xfs_dir2_da_to_db(struct xfs_da_geometry *geo, xfs_dablk_t da)
+ {
+-	return (xfs_dir2_db_t)(da >> mp->m_sb.sb_dirblklog);
++	return (xfs_dir2_db_t)(da >> (geo->blklog - geo->fsblog));
+ }
+ 
+ /*
+  * Convert block (dablk) to byte offset in space
   */
  static inline xfs_dir2_off_t
--xfs_dir2_db_off_to_byte(struct xfs_mount *mp, xfs_dir2_db_t db,
-+xfs_dir2_db_off_to_byte(struct xfs_da_geometry *geo, xfs_dir2_db_t db,
- 			xfs_dir2_data_aoff_t o)
+-xfs_dir2_da_to_byte(struct xfs_mount *mp, xfs_dablk_t da)
++xfs_dir2_da_to_byte(struct xfs_da_geometry *geo, xfs_dablk_t da)
  {
--	return ((xfs_dir2_off_t)db <<
--		(mp->m_sb.sb_blocklog + mp->m_sb.sb_dirblklog)) + o;
-+	return ((xfs_dir2_off_t)db << geo->blklog) + o;
- }
- 
- /*
-@@ -118,7 +116,8 @@ static inline xfs_dir2_dataptr_t
- xfs_dir2_db_off_to_dataptr(struct xfs_mount *mp, xfs_dir2_db_t db,
- 			   xfs_dir2_data_aoff_t o)
- {
--	return xfs_dir2_byte_to_dataptr(xfs_dir2_db_off_to_byte(mp, db, o));
-+	return xfs_dir2_byte_to_dataptr(
-+				xfs_dir2_db_off_to_byte(mp->m_dir_geo, db, o));
- }
- 
- /*
-@@ -136,7 +135,8 @@ xfs_dir2_da_to_db(struct xfs_mount *mp, xfs_dablk_t da)
- static inline xfs_dir2_off_t
- xfs_dir2_da_to_byte(struct xfs_mount *mp, xfs_dablk_t da)
- {
--	return xfs_dir2_db_off_to_byte(mp, xfs_dir2_da_to_db(mp, da), 0);
-+	return xfs_dir2_db_off_to_byte(mp->m_dir_geo,
-+				       xfs_dir2_da_to_db(mp, da), 0);
+-	return xfs_dir2_db_off_to_byte(mp->m_dir_geo,
+-				       xfs_dir2_da_to_db(mp, da), 0);
++	return xfs_dir2_db_off_to_byte(geo, xfs_dir2_da_to_db(geo, da), 0);
  }
  
  /*
 diff --git a/fs/xfs/xfs_dir2_readdir.c b/fs/xfs/xfs_dir2_readdir.c
-index bf7a5ce..ec912c8 100644
+index ec912c8..57e9247 100644
 --- a/fs/xfs/xfs_dir2_readdir.c
 +++ b/fs/xfs/xfs_dir2_readdir.c
-@@ -560,7 +560,8 @@ xfs_dir2_leaf_getdents(
- 			/*
- 			 * Having done a read, we need to set a new offset.
- 			 */
--			newoff = xfs_dir2_db_off_to_byte(mp, map_info->curdb, 0);
-+			newoff = xfs_dir2_db_off_to_byte(mp->m_dir_geo,
-+							 map_info->curdb, 0);
- 			/*
- 			 * Start of the current block.
- 			 */
-@@ -578,7 +579,7 @@ xfs_dir2_leaf_getdents(
- 			 * Find our position in the block.
- 			 */
- 			ptr = (char *)dp->d_ops->data_entry_p(hdr);
--			byteoff = xfs_dir2_byte_to_off(mp, curoff);
-+			byteoff = xfs_dir2_byte_to_off(mp->m_dir_geo, curoff);
- 			/*
- 			 * Skip past the header.
- 			 */
-@@ -607,7 +608,7 @@ xfs_dir2_leaf_getdents(
- 				 * Now set our real offset.
- 				 */
- 				curoff =
--					xfs_dir2_db_off_to_byte(mp,
-+					xfs_dir2_db_off_to_byte(mp->m_dir_geo,
- 					    xfs_dir2_byte_to_db(mp, curoff),
- 					    (char *)ptr - (char *)hdr);
- 				if (ptr >= (char *)hdr + mp->m_dirblksize) {
+@@ -396,14 +396,14 @@ xfs_dir2_leaf_readbuf(
+ 	 * No valid mappings, so no more data blocks.
+ 	 */
+ 	if (!mip->map_valid) {
+-		*curoff = xfs_dir2_da_to_byte(mp, mip->map_off);
++		*curoff = xfs_dir2_da_to_byte(mp->m_dir_geo, mip->map_off);
+ 		goto out;
+ 	}
+ 
+ 	/*
+ 	 * Read the directory block starting at the first mapping.
+ 	 */
+-	mip->curdb = xfs_dir2_da_to_db(mp, map->br_startoff);
++	mip->curdb = xfs_dir2_da_to_db(mp->m_dir_geo, map->br_startoff);
+ 	error = xfs_dir3_data_read(NULL, dp, map->br_startoff,
+ 			map->br_blockcount >= mp->m_dirblkfsbs ?
+ 			    XFS_FSB_TO_DADDR(mp, map->br_startblock) : -1, &bp);
+@@ -536,7 +536,7 @@ xfs_dir2_leaf_getdents(
+ 	 * Force this conversion through db so we truncate the offset
+ 	 * down to get the start of the data block.
+ 	 */
+-	map_info->map_off = xfs_dir2_db_to_da(mp,
++	map_info->map_off = xfs_dir2_db_to_da(mp->m_dir_geo,
+ 					      xfs_dir2_byte_to_db(mp, curoff));
+ 
+ 	/*
 -- 
 1.9.0
 
