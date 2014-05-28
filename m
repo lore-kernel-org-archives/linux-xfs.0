@@ -1,24 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id E4A7D7F4E
-	for <xfs@oss.sgi.com>; Wed, 28 May 2014 00:40:36 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 5AE547F4E
+	for <xfs@oss.sgi.com>; Wed, 28 May 2014 00:41:46 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id B9ED68F8074
-	for <xfs@oss.sgi.com>; Tue, 27 May 2014 22:40:36 -0700 (PDT)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id D6842AC005
+	for <xfs@oss.sgi.com>; Tue, 27 May 2014 22:41:45 -0700 (PDT)
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.9])
-	by cuda.sgi.com with ESMTP id 2E6yMgxo4BXS9oVb (version=TLSv1
+	by cuda.sgi.com with ESMTP id I7Iuzv2cABCxLk3e (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 27 May 2014 22:40:35 -0700 (PDT)
-Date: Tue, 27 May 2014 22:40:34 -0700
+	Tue, 27 May 2014 22:41:43 -0700 (PDT)
+Date: Tue, 27 May 2014 22:41:42 -0700
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 2/2, RFC] mkfs.xfs: don't call blkid_get_topology on
-	regular files
-Message-ID: <20140528054034.GB13166@infradead.org>
+Subject: Re: [PATCH 0/2, RFC] xfsprogs: try to handle mkfs of a file on 4k
+	sector device
+Message-ID: <20140528054142.GC13166@infradead.org>
 References: <53852A05.5040006@redhat.com>
- <53852A98.7000809@sandeen.net>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <53852A98.7000809@sandeen.net>
+In-Reply-To: <53852A05.5040006@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,39 +30,22 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Eric Sandeen <sandeen@redhat.com>, xfs-oss <xfs@oss.sgi.com>
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-On Tue, May 27, 2014 at 07:15:20PM -0500, Eric Sandeen wrote:
-> If we encounter a target that's really a regular file,
-> even without "-d file..." on the cmdline, call
-> platform_findsizes() instead of blkid_get_topology to
-> try to discover the "sector size" via the fsgeom() call.
+> We can modify platform_findsizes() to use the fsgeom call to get the
+> "sector size" which should be used here, and warn that mismatches
+> might exist if it fails.
 > 
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-> ---
-> 
-> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-> index 37c05a9..74180c9 100644
-> --- a/mkfs/xfs_mkfs.c
-> +++ b/mkfs/xfs_mkfs.c
-> @@ -454,12 +454,26 @@ static void get_topology(
->  	struct fs_topology	*ft,
->  	int			force_overwrite)
->  {
-> -	if (!xi->disfile) {
-> -		const char *dfile = xi->volname ? xi->volname : xi->dname;
-> +	int is_a_file = 0;
-> +	struct stat statbuf;
-> +	char *dfile = xi->volname ? xi->volname : xi->dname;
->  
-> +	if (!stat(dfile, &statbuf) && S_ISREG(statbuf.st_mode))
-> +		is_a_file = 1;
-> +
-> +	if (!xi->disfile && !is_a_file) {
+> This does mean there'll be a new warning emitted on fs images hosted
+> on non-xfs filesystems; I'm not really quite sure it's worth it,
+> hence the RFC nature of this lightly tested 2-patch series...
 
-Why do need both xi->disfile and a local flag/  Why do we do the
-that even if xi->disfile is set?
+Might be time to introduce some generic VFS-level ioctl for the sector
+size and dio alignment.  Any beer or chocolate that could motivate you
+to get this done? :)
+
+Also it would be nice to have a test case that exercises this new code.
 
 _______________________________________________
 xfs mailing list
