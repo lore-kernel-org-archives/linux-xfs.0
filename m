@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 13E187F50
-	for <xfs@oss.sgi.com>; Wed, 28 May 2014 01:04:55 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 08B817F66
+	for <xfs@oss.sgi.com>; Wed, 28 May 2014 01:04:56 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id CC0D78F8074
-	for <xfs@oss.sgi.com>; Tue, 27 May 2014 23:04:51 -0700 (PDT)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 7C90FAC002
+	for <xfs@oss.sgi.com>; Tue, 27 May 2014 23:04:55 -0700 (PDT)
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	xIFhPRBBpLmMhHWp for <xfs@oss.sgi.com>;
-	Tue, 27 May 2014 23:04:49 -0700 (PDT)
+	qZ3skM3cQ2DfbwoZ for <xfs@oss.sgi.com>;
+	Tue, 27 May 2014 23:04:53 -0700 (PDT)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.80)
-	(envelope-from <dave@fromorbit.com>) id 1WpWyk-0005od-14
+	(envelope-from <dave@fromorbit.com>) id 1WpWyk-0005or-5F
 	for xfs@oss.sgi.com; Wed, 28 May 2014 16:04:46 +1000
 Received: from dave by disappointment with local (Exim 4.82)
-	(envelope-from <dave@disappointment.disaster>) id 1WpWyk-0003lE-0H
+	(envelope-from <dave@disappointment.disaster>) id 1WpWyk-0003lt-4O
 	for xfs@oss.sgi.com; Wed, 28 May 2014 16:04:46 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 03/16] xfs: kill XFS_DIR2...FIRSTDB macros
-Date: Wed, 28 May 2014 16:04:30 +1000
-Message-Id: <1401257083-13433-4-git-send-email-david@fromorbit.com>
+Subject: [PATCH 11/16] xfs: move node entry counts to xfs_da_geometry
+Date: Wed, 28 May 2014 16:04:38 +1000
+Message-Id: <1401257083-13433-12-git-send-email-david@fromorbit.com>
 In-Reply-To: <1401257083-13433-1-git-send-email-david@fromorbit.com>
 References: <1401257083-13433-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,167 +39,140 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-They are just simple wrappers around xfs_dir2_byte_to_db(), and
-we've already removed one usage earlier in the patch set. Kill
-the rest before we start removing the xfs_mount from conversion
-functions.
-
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 Reviewed-by: Brian Foster <bfoster@redhat.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/xfs_da_format.c |  6 ++++--
- fs/xfs/xfs_da_format.h |  6 ------
- fs/xfs/xfs_dir2.c      |  2 +-
- fs/xfs/xfs_dir2_leaf.c |  9 +++++----
- fs/xfs/xfs_dir2_node.c | 11 +++++++----
- 5 files changed, 17 insertions(+), 17 deletions(-)
+ fs/xfs/xfs_attr.c      |  8 ++++----
+ fs/xfs/xfs_da_btree.c  |  4 ++--
+ fs/xfs/xfs_dir2.c      |  3 ---
+ fs/xfs/xfs_dir2_node.c | 10 +++++-----
+ fs/xfs/xfs_mount.h     |  2 --
+ 5 files changed, 11 insertions(+), 16 deletions(-)
 
-diff --git a/fs/xfs/xfs_da_format.c b/fs/xfs/xfs_da_format.c
-index f4a783b..a2d0682 100644
---- a/fs/xfs/xfs_da_format.c
-+++ b/fs/xfs/xfs_da_format.c
-@@ -611,7 +611,8 @@ xfs_dir2_free_bests_p(struct xfs_dir2_free *free)
- static xfs_dir2_db_t
- xfs_dir2_db_to_fdb(struct xfs_mount *mp, xfs_dir2_db_t db)
- {
--	return XFS_DIR2_FREE_FIRSTDB(mp) + db / xfs_dir2_free_max_bests(mp);
-+	return xfs_dir2_byte_to_db(mp, XFS_DIR2_FREE_OFFSET) +
-+			(db / xfs_dir2_free_max_bests(mp));
- }
+diff --git a/fs/xfs/xfs_attr.c b/fs/xfs/xfs_attr.c
+index c547498..8bb9ae6 100644
+--- a/fs/xfs/xfs_attr.c
++++ b/fs/xfs/xfs_attr.c
+@@ -899,7 +899,7 @@ restart:
+ 	state->args = args;
+ 	state->mp = mp;
+ 	state->blocksize = state->mp->m_sb.sb_blocksize;
+-	state->node_ents = state->mp->m_attr_node_ents;
++	state->node_ents = args->geo->node_ents;
  
- /*
-@@ -642,7 +643,8 @@ xfs_dir3_free_bests_p(struct xfs_dir2_free *free)
- static xfs_dir2_db_t
- xfs_dir3_db_to_fdb(struct xfs_mount *mp, xfs_dir2_db_t db)
- {
--	return XFS_DIR2_FREE_FIRSTDB(mp) + db / xfs_dir3_free_max_bests(mp);
-+	return xfs_dir2_byte_to_db(mp, XFS_DIR2_FREE_OFFSET) +
-+			(db / xfs_dir3_free_max_bests(mp));
- }
+ 	/*
+ 	 * Search to see if name already exists, and get back a pointer
+@@ -1078,7 +1078,7 @@ restart:
+ 		state->args = args;
+ 		state->mp = mp;
+ 		state->blocksize = state->mp->m_sb.sb_blocksize;
+-		state->node_ents = state->mp->m_attr_node_ents;
++		state->node_ents = args->geo->node_ents;
+ 		state->inleaf = 0;
+ 		error = xfs_da3_node_lookup_int(state, &retval);
+ 		if (error)
+@@ -1170,7 +1170,7 @@ xfs_attr_node_removename(xfs_da_args_t *args)
+ 	state->args = args;
+ 	state->mp = dp->i_mount;
+ 	state->blocksize = state->mp->m_sb.sb_blocksize;
+-	state->node_ents = state->mp->m_attr_node_ents;
++	state->node_ents = args->geo->node_ents;
  
- /*
-diff --git a/fs/xfs/xfs_da_format.h b/fs/xfs/xfs_da_format.h
-index 32b415c..44d7fac 100644
---- a/fs/xfs/xfs_da_format.h
-+++ b/fs/xfs/xfs_da_format.h
-@@ -330,8 +330,6 @@ xfs_dir2_sf_firstentry(struct xfs_dir2_sf_hdr *hdr)
- #define	XFS_DIR2_SPACE_SIZE	(1ULL << (32 + XFS_DIR2_DATA_ALIGN_LOG))
- #define	XFS_DIR2_DATA_SPACE	0
- #define	XFS_DIR2_DATA_OFFSET	(XFS_DIR2_DATA_SPACE * XFS_DIR2_SPACE_SIZE)
--#define	XFS_DIR2_DATA_FIRSTDB(mp)	\
--	xfs_dir2_byte_to_db(mp, XFS_DIR2_DATA_OFFSET)
+ 	/*
+ 	 * Search to see if name exists, and get back a pointer to it.
+@@ -1433,7 +1433,7 @@ xfs_attr_node_get(xfs_da_args_t *args)
+ 	state->args = args;
+ 	state->mp = args->dp->i_mount;
+ 	state->blocksize = state->mp->m_sb.sb_blocksize;
+-	state->node_ents = state->mp->m_attr_node_ents;
++	state->node_ents = args->geo->node_ents;
  
- /*
-  * Describe a free area in the data block.
-@@ -456,8 +454,6 @@ xfs_dir2_data_unused_tag_p(struct xfs_dir2_data_unused *dup)
-  */
- #define	XFS_DIR2_LEAF_SPACE	1
- #define	XFS_DIR2_LEAF_OFFSET	(XFS_DIR2_LEAF_SPACE * XFS_DIR2_SPACE_SIZE)
--#define	XFS_DIR2_LEAF_FIRSTDB(mp)	\
--	xfs_dir2_byte_to_db(mp, XFS_DIR2_LEAF_OFFSET)
+ 	/*
+ 	 * Search to see if name exists, and get back a pointer to it.
+diff --git a/fs/xfs/xfs_da_btree.c b/fs/xfs/xfs_da_btree.c
+index b9b007d..f935370 100644
+--- a/fs/xfs/xfs_da_btree.c
++++ b/fs/xfs/xfs_da_btree.c
+@@ -167,8 +167,8 @@ xfs_da3_node_verify(
+ 	 * we don't know if the node is for and attribute or directory tree,
+ 	 * so only fail if the count is outside both bounds
+ 	 */
+-	if (ichdr.count > mp->m_dir_node_ents &&
+-	    ichdr.count > mp->m_attr_node_ents)
++	if (ichdr.count > mp->m_dir_geo->node_ents &&
++	    ichdr.count > mp->m_attr_geo->node_ents)
+ 		return false;
  
- /*
-  * Leaf block header.
-@@ -531,8 +527,6 @@ xfs_dir2_leaf_bests_p(struct xfs_dir2_leaf_tail *ltp)
-  */
- #define	XFS_DIR2_FREE_SPACE	2
- #define	XFS_DIR2_FREE_OFFSET	(XFS_DIR2_FREE_SPACE * XFS_DIR2_SPACE_SIZE)
--#define	XFS_DIR2_FREE_FIRSTDB(mp)	\
--	xfs_dir2_byte_to_db(mp, XFS_DIR2_FREE_OFFSET)
- 
- typedef	struct xfs_dir2_free_hdr {
- 	__be32			magic;		/* XFS_DIR2_FREE_MAGIC */
+ 	/* XXX: hash order check? */
 diff --git a/fs/xfs/xfs_dir2.c b/fs/xfs/xfs_dir2.c
-index acd940d..d48d477 100644
+index 4eabe51..f62d2e5 100644
 --- a/fs/xfs/xfs_dir2.c
 +++ b/fs/xfs/xfs_dir2.c
-@@ -744,7 +744,7 @@ xfs_dir2_shrink_inode(
- 	/*
- 	 * If it's not a data block, we're done.
- 	 */
--	if (db >= XFS_DIR2_LEAF_FIRSTDB(mp))
-+	if (db >= xfs_dir2_byte_to_db(mp, XFS_DIR2_LEAF_OFFSET))
- 		return 0;
- 	/*
- 	 * If the block isn't the last one in the directory, we're done.
-diff --git a/fs/xfs/xfs_dir2_leaf.c b/fs/xfs/xfs_dir2_leaf.c
-index f571723..dc4ef19 100644
---- a/fs/xfs/xfs_dir2_leaf.c
-+++ b/fs/xfs/xfs_dir2_leaf.c
-@@ -347,8 +347,8 @@ xfs_dir3_leaf_get_buf(
- 	int			error;
+@@ -144,9 +144,6 @@ xfs_da_mount(
+ 	else
+ 		mp->m_dirnameops = &xfs_default_nameops;
  
- 	ASSERT(magic == XFS_DIR2_LEAF1_MAGIC || magic == XFS_DIR2_LEAFN_MAGIC);
--	ASSERT(bno >= XFS_DIR2_LEAF_FIRSTDB(mp) &&
--	       bno < XFS_DIR2_FREE_FIRSTDB(mp));
-+	ASSERT(bno >= xfs_dir2_byte_to_db(mp, XFS_DIR2_LEAF_OFFSET) &&
-+	       bno < xfs_dir2_byte_to_db(mp, XFS_DIR2_FREE_OFFSET));
+-	/* XXX: these are to be removed as code is converted to use geo */
+-	mp->m_dir_node_ents = mp->m_dir_geo->node_ents;
+-	mp->m_attr_node_ents = mp->m_attr_geo->node_ents;
+ 	return 0;
+ }
  
- 	error = xfs_da_get_buf(tp, dp, xfs_dir2_db_to_da(mp, bno), -1, &bp,
- 			       XFS_DATA_FORK);
-@@ -404,7 +404,7 @@ xfs_dir2_block_to_leaf(
- 		return error;
- 	}
- 	ldb = xfs_dir2_da_to_db(mp, blkno);
--	ASSERT(ldb == XFS_DIR2_LEAF_FIRSTDB(mp));
-+	ASSERT(ldb == xfs_dir2_byte_to_db(mp, XFS_DIR2_LEAF_OFFSET));
- 	/*
- 	 * Initialize the leaf block, get a buffer for it.
- 	 */
-@@ -1798,7 +1798,8 @@ xfs_dir2_node_to_leaf(
- 	/*
- 	 * Get rid of the freespace block.
- 	 */
--	error = xfs_dir2_shrink_inode(args, XFS_DIR2_FREE_FIRSTDB(mp), fbp);
-+	error = xfs_dir2_shrink_inode(args,
-+			xfs_dir2_byte_to_db(mp, XFS_DIR2_FREE_OFFSET), fbp);
- 	if (error) {
- 		/*
- 		 * This can't fail here because it can only happen when
 diff --git a/fs/xfs/xfs_dir2_node.c b/fs/xfs/xfs_dir2_node.c
-index 9cb91ee..1bcaaa0 100644
+index de5b2996..eff6b8d 100644
 --- a/fs/xfs/xfs_dir2_node.c
 +++ b/fs/xfs/xfs_dir2_node.c
-@@ -315,7 +315,7 @@ xfs_dir2_leaf_to_node(
- 	if ((error = xfs_dir2_grow_inode(args, XFS_DIR2_FREE_SPACE, &fdb))) {
- 		return error;
- 	}
--	ASSERT(fdb == XFS_DIR2_FREE_FIRSTDB(mp));
-+	ASSERT(fdb == xfs_dir2_byte_to_db(mp, XFS_DIR2_FREE_OFFSET));
+@@ -1596,8 +1596,8 @@ xfs_dir2_node_addname(
+ 	state = xfs_da_state_alloc();
+ 	state->args = args;
+ 	state->mp = args->dp->i_mount;
+-	state->blocksize = state->args->geo->blksize;
+-	state->node_ents = state->mp->m_dir_node_ents;
++	state->blocksize = args->geo->blksize;
++	state->node_ents = args->geo->node_ents;
  	/*
- 	 * Get the buffer for the new freespace block.
+ 	 * Look up the name.  We're not supposed to find it, but
+ 	 * this gives us the insertion point.
+@@ -2043,7 +2043,7 @@ xfs_dir2_node_lookup(
+ 	state->args = args;
+ 	state->mp = args->dp->i_mount;
+ 	state->blocksize = args->geo->blksize;
+-	state->node_ents = state->mp->m_dir_node_ents;
++	state->node_ents = args->geo->node_ents;
+ 	/*
+ 	 * Fill in the path to the entry in the cursor.
  	 */
-@@ -1256,7 +1256,7 @@ xfs_dir2_leafn_remove(
- 		struct xfs_dir3_icfree_hdr freehdr;
- 		dp->d_ops->free_hdr_from_disk(&freehdr, free);
- 		ASSERT(freehdr.firstdb == dp->d_ops->free_max_bests(mp) *
--					  (fdb - XFS_DIR2_FREE_FIRSTDB(mp)));
-+			  (fdb - xfs_dir2_byte_to_db(mp, XFS_DIR2_FREE_OFFSET)));
- 	}
- #endif
- 		/*
-@@ -1747,7 +1747,8 @@ xfs_dir2_node_addname_int(
- 			 * us a freespace block to start with.
- 			 */
- 			if (++fbno == 0)
--				fbno = XFS_DIR2_FREE_FIRSTDB(mp);
-+				fbno = xfs_dir2_byte_to_db(mp,
-+							XFS_DIR2_FREE_OFFSET);
- 			/*
- 			 * If it's ifbno we already looked at it.
- 			 */
-@@ -1887,7 +1888,9 @@ xfs_dir2_node_addname_int(
- 			/*
- 			 * Remember the first slot as our empty slot.
- 			 */
--			freehdr.firstdb = (fbno - XFS_DIR2_FREE_FIRSTDB(mp)) *
-+			freehdr.firstdb =
-+				(fbno - xfs_dir2_byte_to_db(mp,
-+							XFS_DIR2_FREE_OFFSET)) *
- 					dp->d_ops->free_max_bests(mp);
- 		} else {
- 			free = fbp->b_addr;
+@@ -2098,7 +2098,7 @@ xfs_dir2_node_removename(
+ 	state->args = args;
+ 	state->mp = args->dp->i_mount;
+ 	state->blocksize = args->geo->blksize;
+-	state->node_ents = state->mp->m_dir_node_ents;
++	state->node_ents = args->geo->node_ents;
+ 
+ 	/* Look up the entry we're deleting, set up the cursor. */
+ 	error = xfs_da3_node_lookup_int(state, &rval);
+@@ -2168,7 +2168,7 @@ xfs_dir2_node_replace(
+ 	state->args = args;
+ 	state->mp = args->dp->i_mount;
+ 	state->blocksize = args->geo->blksize;
+-	state->node_ents = state->mp->m_dir_node_ents;
++	state->node_ents = args->geo->node_ents;
+ 	inum = args->inumber;
+ 	/*
+ 	 * Lookup the entry to change in the btree.
+diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+index 78ae7e4..7295a0b 100644
+--- a/fs/xfs/xfs_mount.h
++++ b/fs/xfs/xfs_mount.h
+@@ -134,8 +134,6 @@ typedef struct xfs_mount {
+ 	int			m_fixedfsid[2];	/* unchanged for life of FS */
+ 	uint			m_dmevmask;	/* DMI events for this FS */
+ 	__uint64_t		m_flags;	/* global mount flags */
+-	uint			m_dir_node_ents; /* #entries in a dir danode */
+-	uint			m_attr_node_ents; /* #entries in attr danode */
+ 	int			m_ialloc_inos;	/* inodes in inode allocation */
+ 	int			m_ialloc_blks;	/* blocks in inode allocation */
+ 	int			m_inoalign_mask;/* mask sb_inoalignmt if used */
 -- 
 1.9.0
 
