@@ -1,27 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id DC2947F5A
-	for <xfs@oss.sgi.com>; Wed, 28 May 2014 01:06:25 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 5807E7F57
+	for <xfs@oss.sgi.com>; Wed, 28 May 2014 01:40:48 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 499F3AC006
-	for <xfs@oss.sgi.com>; Tue, 27 May 2014 23:06:25 -0700 (PDT)
-Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
-	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	psP7t32okBnFFvJ5 for <xfs@oss.sgi.com>;
-	Tue, 27 May 2014 23:06:22 -0700 (PDT)
-Received: from disappointment.disaster.area ([192.168.1.110]
-	helo=disappointment) by dastard with esmtp (Exim 4.80)
-	(envelope-from <dave@fromorbit.com>) id 1WpWyk-0005ox-7Q
-	for xfs@oss.sgi.com; Wed, 28 May 2014 16:04:46 +1000
-Received: from dave by disappointment with local (Exim 4.82)
-	(envelope-from <dave@disappointment.disaster>) id 1WpWyk-0003mD-6Z
-	for xfs@oss.sgi.com; Wed, 28 May 2014 16:04:46 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 15/16] xfs: pass xfs_da_args to xfs_attr_leaf_newentsize
-Date: Wed, 28 May 2014 16:04:42 +1000
-Message-Id: <1401257083-13433-16-git-send-email-david@fromorbit.com>
-In-Reply-To: <1401257083-13433-1-git-send-email-david@fromorbit.com>
-References: <1401257083-13433-1-git-send-email-david@fromorbit.com>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 2F1938F807A
+	for <xfs@oss.sgi.com>; Tue, 27 May 2014 23:40:48 -0700 (PDT)
+Received: from mail-pa0-f45.google.com (mail-pa0-f45.google.com
+	[209.85.220.45]) by cuda.sgi.com with ESMTP id 6zdbhjCxjOvPqXUX
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Tue, 27 May 2014 23:40:46 -0700 (PDT)
+Received: by mail-pa0-f45.google.com with SMTP id ey11so10478605pad.18
+	for <xfs@oss.sgi.com>; Tue, 27 May 2014 23:40:46 -0700 (PDT)
+MIME-Version: 1.0
+Date: Wed, 28 May 2014 08:40:46 +0200
+Message-ID: <CACyNnZM7o2Sqzt+ygThJn=ibWsy+eUVLJ9d1+03kjVXW=t-b3Q@mail.gmail.com>
+Subject: Finding the pointer array in XFS_DINODE_FMT_BTREE inodes
+From: Felipe Monteiro de Carvalho <felipemonteiro.carvalho@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,158 +24,125 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-From: Dave Chinner <dchinner@redhat.com>
+Hello,
 
-As it's only ever called from contexts where the xfs_da_args is
-present and contains all the information needed inside the args
-structure.
+I am writing an application which reads XFS partitions, so I am trying
+to understand the internal working of XFS. I read the documentation.
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Brian Foster <bfoster@redhat.com>
----
- fs/xfs/xfs_attr.c      |  4 +---
- fs/xfs/xfs_attr_leaf.c | 47 +++++++++++++++++------------------------------
- fs/xfs/xfs_attr_leaf.h |  3 +--
- 3 files changed, 19 insertions(+), 35 deletions(-)
+But there is one issue which I cannot figure out. In an inode which is
+a directory with data format XFS_DINODE_FMT_BTREE I see that the first
+structure is the 4-byte header, which in my case has these values:
 
-diff --git a/fs/xfs/xfs_attr.c b/fs/xfs/xfs_attr.c
-index ccfc2c9..3d8c03e 100644
---- a/fs/xfs/xfs_attr.c
-+++ b/fs/xfs/xfs_attr.c
-@@ -174,9 +174,7 @@ xfs_attr_calc_size(
- 	 * Determine space new attribute will use, and if it would be
- 	 * "local" or "remote" (note: local != inline).
- 	 */
--	size = xfs_attr_leaf_newentsize(args->namelen, args->valuelen,
--					args->geo->blksize, local);
--
-+	size = xfs_attr_leaf_newentsize(args, local);
- 	nblks = XFS_DAENTER_SPACE_RES(mp, XFS_ATTR_FORK);
- 	if (*local) {
- 		if (size > (args->geo->blksize / 2)) {
-diff --git a/fs/xfs/xfs_attr_leaf.c b/fs/xfs/xfs_attr_leaf.c
-index 88cd84a..7761103 100644
---- a/fs/xfs/xfs_attr_leaf.c
-+++ b/fs/xfs/xfs_attr_leaf.c
-@@ -1076,8 +1076,7 @@ xfs_attr3_leaf_add(
- 	leaf = bp->b_addr;
- 	xfs_attr3_leaf_hdr_from_disk(&ichdr, leaf);
- 	ASSERT(args->index >= 0 && args->index <= ichdr.count);
--	entsize = xfs_attr_leaf_newentsize(args->namelen, args->valuelen,
--			   args->geo->blksize, NULL);
-+	entsize = xfs_attr_leaf_newentsize(args, NULL);
- 
- 	/*
- 	 * Search through freemap for first-fit on new name length.
-@@ -1179,14 +1178,11 @@ xfs_attr3_leaf_add_work(
- 	ASSERT(ichdr->freemap[mapindex].base < XFS_LBSIZE(mp));
- 	ASSERT((ichdr->freemap[mapindex].base & 0x3) == 0);
- 	ASSERT(ichdr->freemap[mapindex].size >=
--		xfs_attr_leaf_newentsize(args->namelen, args->valuelen,
--					 args->geo->blksize, NULL));
-+		xfs_attr_leaf_newentsize(args, NULL));
- 	ASSERT(ichdr->freemap[mapindex].size < XFS_LBSIZE(mp));
- 	ASSERT((ichdr->freemap[mapindex].size & 0x3) == 0);
- 
--	ichdr->freemap[mapindex].size -=
--			xfs_attr_leaf_newentsize(args->namelen, args->valuelen,
--						 args->geo->blksize, &tmp);
-+	ichdr->freemap[mapindex].size -= xfs_attr_leaf_newentsize(args, &tmp);
- 
- 	entry->nameidx = cpu_to_be16(ichdr->freemap[mapindex].base +
- 				     ichdr->freemap[mapindex].size);
-@@ -1594,9 +1590,7 @@ xfs_attr3_leaf_figure_balance(
- 	max = ichdr1->count + ichdr2->count;
- 	half = (max + 1) * sizeof(*entry);
- 	half += ichdr1->usedbytes + ichdr2->usedbytes +
--			xfs_attr_leaf_newentsize(state->args->namelen,
--						 state->args->valuelen,
--						 state->blocksize, NULL);
-+			xfs_attr_leaf_newentsize(state->args, NULL);
- 	half /= 2;
- 	lastdelta = state->blocksize;
- 	entry = xfs_attr3_leaf_entryp(leaf1);
-@@ -1608,10 +1602,7 @@ xfs_attr3_leaf_figure_balance(
- 		 */
- 		if (count == blk1->index) {
- 			tmp = totallen + sizeof(*entry) +
--				xfs_attr_leaf_newentsize(
--						state->args->namelen,
--						state->args->valuelen,
--						state->blocksize, NULL);
-+				xfs_attr_leaf_newentsize(state->args, NULL);
- 			if (XFS_ATTR_ABS(half - tmp) > lastdelta)
- 				break;
- 			lastdelta = XFS_ATTR_ABS(half - tmp);
-@@ -1647,10 +1638,7 @@ xfs_attr3_leaf_figure_balance(
- 	totallen -= count * sizeof(*entry);
- 	if (foundit) {
- 		totallen -= sizeof(*entry) +
--				xfs_attr_leaf_newentsize(
--						state->args->namelen,
--						state->args->valuelen,
--						state->blocksize, NULL);
-+				xfs_attr_leaf_newentsize(state->args, NULL);
- 	}
- 
- 	*countarg = count;
-@@ -2441,22 +2429,21 @@ xfs_attr_leaf_entsize(xfs_attr_leafblock_t *leaf, int index)
-  * a "local" or a "remote" attribute.
-  */
- int
--xfs_attr_leaf_newentsize(int namelen, int valuelen, int blocksize, int *local)
-+xfs_attr_leaf_newentsize(
-+	struct xfs_da_args	*args,
-+	int			*local)
- {
--	int size;
-+	int			size;
- 
--	size = xfs_attr_leaf_entsize_local(namelen, valuelen);
--	if (size < xfs_attr_leaf_entsize_local_max(blocksize)) {
--		if (local) {
-+	size = xfs_attr_leaf_entsize_local(args->namelen, args->valuelen);
-+	if (size < xfs_attr_leaf_entsize_local_max(args->geo->blksize)) {
-+		if (local)
- 			*local = 1;
--		}
--	} else {
--		size = xfs_attr_leaf_entsize_remote(namelen);
--		if (local) {
--			*local = 0;
--		}
-+		return size;
- 	}
--	return size;
-+	if (local)
-+		*local = 0;
-+	return xfs_attr_leaf_entsize_remote(args->namelen);
- }
- 
- 
-diff --git a/fs/xfs/xfs_attr_leaf.h b/fs/xfs/xfs_attr_leaf.h
-index 3ec5ec0..e2929da 100644
---- a/fs/xfs/xfs_attr_leaf.h
-+++ b/fs/xfs/xfs_attr_leaf.h
-@@ -96,8 +96,7 @@ int	xfs_attr3_root_inactive(struct xfs_trans **trans, struct xfs_inode *dp);
- xfs_dahash_t	xfs_attr_leaf_lasthash(struct xfs_buf *bp, int *count);
- int	xfs_attr_leaf_order(struct xfs_buf *leaf1_bp,
- 				   struct xfs_buf *leaf2_bp);
--int	xfs_attr_leaf_newentsize(int namelen, int valuelen, int blocksize,
--					int *local);
-+int	xfs_attr_leaf_newentsize(struct xfs_da_args *args, int *local);
- int	xfs_attr3_leaf_read(struct xfs_trans *tp, struct xfs_inode *dp,
- 			xfs_dablk_t bno, xfs_daddr_t mappedbno,
- 			struct xfs_buf **bpp);
+  xfs_bmdr_block = packed record
+    bb_level = 1;       // 0 is a leaf */
+    bb_numrecs = 1;     // current # of data records */
+
+And after that I get the key array as expected. But after the key
+array there is a lot of empty space, $40 bytes of empty space to be
+exact, enough for 8 more keys, even while my inode has "bb_numrecs =
+1" and only after that empty space I get the pointers array.
+
+My current "guess" is that the key array has at least 9 elements in
+it, being that only bb_numrecs are valid, but I'd prefer to know what
+is going on instead of doing random guesses =D So my question is:
+
+How can I know the start point of the pointer array? In this case it
+starts at offset $B0 from the inode start while I would expect $70
+(just after the key array)
+
+Please see my xfs_db values bellow:
+
+xfs_db> inode 1067904
+xfs_db> print
+core.magic = 0x494e
+core.mode = 040755
+core.version = 2
+core.format = 3 (btree)
+core.nlinkv2 = 2
+core.onlink = 0
+core.projid_lo = 0
+core.projid_hi = 0
+core.uid = 0
+core.gid = 0
+core.flushiter = 1
+core.atime.sec = Mon Dec 30 09:40:08 2013
+core.atime.nsec = 000000000
+core.mtime.sec = Mon Dec 30 09:40:08 2013
+core.mtime.nsec = 000000000
+core.ctime.sec = Sat May  3 14:55:10 2014
+core.ctime.nsec = 657000000
+core.size = 323584
+core.nblocks = 116
+core.extsize = 0
+core.nextents = 82
+core.naextents = 0
+core.forkoff = 0
+core.aformat = 2 (extents)
+core.dmevmask = 0
+core.dmstate = 0
+core.newrtbm = 0
+core.prealloc = 0
+core.realtime = 0
+core.immutable = 0
+core.append = 0
+core.sync = 0
+core.noatime = 0
+core.nodump = 0
+core.rtinherit = 0
+core.projinherit = 0
+core.nosymlinks = 0
+core.extsz = 0
+core.extszinherit = 0
+core.nodefrag = 0
+core.filestream = 0
+core.gen = 247601121
+next_unlinked = null
+u.bmbt.level = 1
+u.bmbt.numrecs = 1
+u.bmbt.keys[1] = [startoff] 1:[0]
+u.bmbt.ptrs[1] = 1:66821
+xfs_db> type text
+xfs_db> p
+00:  49 4e 41 ed 02 03 00 00 00 00 00 00 00 00 00 00  INA.............
+10:  00 00 00 02 00 00 00 00 00 00 00 00 00 00 00 01  ................
+20:  52 c1 31 68 00 00 00 00 52 c1 31 68 00 00 00 00  R.1h....R.1h....
+30:  53 64 e7 2e 27 29 06 40 00 00 00 00 00 04 f0 00  Sd..............
+40:  00 00 00 00 00 00 00 74 00 00 00 00 00 00 00 52  .......t.......R
+50:  00 00 00 02 00 00 00 00 00 00 00 00 0e c2 17 e1  ................
+
+Here I get the terminator FF FF FF FF, then the 4 byte header then the key value
+
+60:  ff ff ff ff 00 01 00 01 00 00 00 00 00 00 00 00  ................
+
+Unexpected empty space!?!?
+
+70:  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+80:  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+90:  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+a0:  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+
+Here starts the pointer array:
+
+b0:  00 00 00 00 00 01 05 05 00 00 00 00 00 00 00 00  ................
+c0:  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+d0:  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+e0:  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+f0:  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+
+Just for reference purposes, someone has already asked this same
+question many years ago somewhere, but he never got any answer =D
+
+http://permalink.gmane.org/gmane.comp.file-systems.xfs.general/15285
+
+thanks,
 -- 
-1.9.0
+Felipe Monteiro de Carvalho
 
 _______________________________________________
 xfs mailing list
