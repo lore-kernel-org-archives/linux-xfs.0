@@ -1,19 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 1B6267F4E
-	for <xfs@oss.sgi.com>; Tue, 27 May 2014 19:14:29 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 0C965304039
-	for <xfs@oss.sgi.com>; Tue, 27 May 2014 17:14:25 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id C8BFB7F4E
+	for <xfs@oss.sgi.com>; Tue, 27 May 2014 19:15:20 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id B42E68F8084
+	for <xfs@oss.sgi.com>; Tue, 27 May 2014 17:15:20 -0700 (PDT)
 Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id DDutHLO1O5CbO0DA for <xfs@oss.sgi.com>;
-	Tue, 27 May 2014 17:14:24 -0700 (PDT)
-Message-ID: <53852A61.90400@sandeen.net>
-Date: Tue, 27 May 2014 19:14:25 -0500
+	ESMTP id 5inuqX3joabPBKH9 for <xfs@oss.sgi.com>;
+	Tue, 27 May 2014 17:15:19 -0700 (PDT)
+Message-ID: <53852A98.7000809@sandeen.net>
+Date: Tue, 27 May 2014 19:15:20 -0500
 From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: [PATCH 1/2,
-	RFC] xfsprogs: check fs sector size in platform_findsizes()
+Subject: [PATCH 2/2, RFC] mkfs.xfs: don't call blkid_get_topology on regular
+	files
 References: <53852A05.5040006@redhat.com>
 In-Reply-To: <53852A05.5040006@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -30,44 +30,47 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Eric Sandeen <sandeen@redhat.com>, xfs-oss <xfs@oss.sgi.com>
 
-Try the xfs geometry ioctl if the mkfs target resides
-in a file; this gives us the equivalent of a device
-sector size.
-
-This does, however, emit a warning if the target file
-exists on a non-XFS filesystem, and that might not be super.
+If we encounter a target that's really a regular file,
+even without "-d file..." on the cmdline, call
+platform_findsizes() instead of blkid_get_topology to
+try to discover the "sector size" via the fsgeom() call.
 
 Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 ---
 
-diff --git a/libxfs/linux.c b/libxfs/linux.c
-index 2e07d54..d66a90f 100644
---- a/libxfs/linux.c
-+++ b/libxfs/linux.c
-@@ -141,10 +141,19 @@ platform_findsizes(char *path, int fd, long long *sz, int *bsz)
- 		exit(1);
- 	}
- 	if ((st.st_mode & S_IFMT) == S_IFREG) {
-+		struct xfs_fsop_geom_v1 geom = { 0 };
+diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+index 37c05a9..74180c9 100644
+--- a/mkfs/xfs_mkfs.c
++++ b/mkfs/xfs_mkfs.c
+@@ -454,12 +454,26 @@ static void get_topology(
+ 	struct fs_topology	*ft,
+ 	int			force_overwrite)
+ {
+-	if (!xi->disfile) {
+-		const char *dfile = xi->volname ? xi->volname : xi->dname;
++	int is_a_file = 0;
++	struct stat statbuf;
++	char *dfile = xi->volname ? xi->volname : xi->dname;
+ 
++	if (!stat(dfile, &statbuf) && S_ISREG(statbuf.st_mode))
++		is_a_file = 1;
 +
- 		*sz = (long long)(st.st_size >> 9);
--		*bsz = BBSIZE;
--		if (BBSIZE > max_block_alignment)
--			max_block_alignment = BBSIZE;
-+		if (ioctl(fd, XFS_IOC_FSGEOMETRY_V1, &geom) < 0) {
-+			fprintf(stderr, _("Cannot get host filesystem geometry.\n"
-+	"mkfs may fail if there is a sector size mismatch between\n"
-+	"the image and the host filesystem.\n"));
-+			*bsz = BBSIZE;
-+		} else
-+			*bsz = geom.sectsize;
++	if (!xi->disfile && !is_a_file) {
+ 		blkid_get_topology(dfile, &ft->dsunit, &ft->dswidth,
+ 				   &ft->lsectorsize, &ft->psectorsize,
+ 				   force_overwrite);
++	} else {
++		int fd;
++		long long dummy;
 +
-+		if (*bsz > max_block_alignment)
-+			max_block_alignment = *bsz;
- 		return;
++		fd = open(dfile, O_RDONLY);
++		if (fd >= 0) {
++			platform_findsizes(dfile, fd, &dummy, &ft->lsectorsize);
++			close(fd);
++		}
  	}
  
-
+ 	if (xi->rtname && !xi->risfile) {
 
 _______________________________________________
 xfs mailing list
