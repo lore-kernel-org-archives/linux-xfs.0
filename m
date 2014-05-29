@@ -1,26 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 1D6A87F77
-	for <xfs@oss.sgi.com>; Thu, 29 May 2014 07:05:13 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id F04EA30404E
-	for <xfs@oss.sgi.com>; Thu, 29 May 2014 05:05:09 -0700 (PDT)
-Received: from mail-la0-f45.google.com (mail-la0-f45.google.com
-	[209.85.215.45]) by cuda.sgi.com with ESMTP id FXOiwScFTPa1bmjh
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 29 May 2014 05:05:06 -0700 (PDT)
-Received: by mail-la0-f45.google.com with SMTP id gl10so127848lab.4
-	for <xfs@oss.sgi.com>; Thu, 29 May 2014 05:05:04 -0700 (PDT)
-Message-ID: <53872237.5040603@xdel.ru>
-Date: Thu, 29 May 2014 16:04:07 +0400
-From: Andrey Korolyov <andrey@xdel.ru>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id A06277F76
+	for <xfs@oss.sgi.com>; Thu, 29 May 2014 09:27:48 -0500 (CDT)
+Message-ID: <538743E0.70103@sgi.com>
+Date: Thu, 29 May 2014 09:27:44 -0500
+From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Subject: Re: Fatigue for XFS
-References: <CABYiri9j=2ipPhvRtn1g=omEDpTz5VD8O0fPWrBGCm=UsgNavw@mail.gmail.com>
-	<20140505203633.GW26353@dastard>
-	<CABYiri9WhwjU66eG2ed=3knwWZ63Aa+r6ZXxdMN_8A_Vbg2ULA@mail.gmail.com>
-	<20140505212335.GZ26353@dastard>
-In-Reply-To: <20140505212335.GZ26353@dastard>
+Subject: Re: [PATCH v2 2/7] xfs: add support FALLOC_FL_COLLAPSE_RANGE for
+	fallocate
+References: <1378132151-2685-1-git-send-email-linkinjeon@gmail.com>
+	<53850F92.7010401@sgi.com> <20140527225138.GD8554@dastard>
+	<53851836.2070301@sgi.com> <20140528002906.GH8554@dastard>
+In-Reply-To: <20140528002906.GH8554@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,146 +20,92 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
-Cc: "ceph-users@lists.ceph.com" <ceph-users@lists.ceph.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+Cc: xfs@oss.sgi.com
 
-On 05/06/2014 01:23 AM, Dave Chinner wrote:
-> On Tue, May 06, 2014 at 12:59:27AM +0400, Andrey Korolyov wrote:
->> On Tue, May 6, 2014 at 12:36 AM, Dave Chinner <david@fromorbit.com> wrote:
->>> On Mon, May 05, 2014 at 11:49:05PM +0400, Andrey Korolyov wrote:
->>>> Hello,
+On 05/27/14 19:29, Dave Chinner wrote:
+> On Tue, May 27, 2014 at 05:56:54PM -0500, Mark Tinguely wrote:
+>> On 05/27/14 17:51, Dave Chinner wrote:
+>>> On Tue, May 27, 2014 at 05:20:02PM -0500, Mark Tinguely wrote:
+>>>> On 09/02/13 09:29, Namjae Jeon wrote:
+>>>>> From: Namjae Jeon<namjae.jeon@samsung.com>
+>>>>>
+>>>>> Add support FALLOC_FL_COLLAPSE_RANGE for fallocate.
+>>>>>
+>>>>> Signed-off-by: Namjae Jeon<namjae.jeon@samsung.com>
+>>>>> Signed-off-by: Ashish Sangwan<a.sangwan@samsung.com>
+>>>>> ---
 >>>>
->>>> We are currently exploring issue which can be related to Ceph itself
->>>> or to the XFS - any help is very appreciated.
+>>>>> +		/* Check if we can merge 2 adjacent extents */
+>>>>> +		if ((state & BMAP_LEFT_VALID) && !(state & BMAP_LEFT_DELAY)&&
+>>>>> +		    left.br_startoff + left.br_blockcount == startoff &&
+>>>>> +		    left.br_startblock + left.br_blockcount ==
+>>>>> +		    xfs_bmbt_get_startblock(gotp) &&
+>>>>> +		    xfs_bmbt_get_state(gotp) == left.br_state &&
+>>>>> +		    left.br_blockcount + xfs_bmbt_get_blockcount(gotp)<=
+>>>>> +		    MAXEXTLEN) {
+>>>>> +			blockcount =
+>>>>> +			left.br_blockcount + xfs_bmbt_get_blockcount(gotp);
+>>>>> +			state |= BMAP_LEFT_CONTIG;
+>>>>> +			xfs_iext_remove(ip, *current_ext, 1, 0);
+>>>>> +			XFS_IFORK_NEXT_SET(ip, whichfork,
+>>>>> +				XFS_IFORK_NEXTENTS(ip, whichfork) - 1);
+>>>>> +			gotp = xfs_iext_get_ext(ifp, --*current_ext);
+>>>>> +		}
+>>>>> +
+>>>>> +		if (cur) {
+>>>>> +			error = xfs_bmbt_lookup_eq(cur,
+>>>>> +					xfs_bmbt_get_startoff(gotp),
+>>>>> +					xfs_bmbt_get_startblock(gotp),
+>>>>> +					xfs_bmbt_get_blockcount(gotp),
+>>>>> +					&i);
+>>>>> +			if (error)
+>>>>> +				goto del_cursor;
+>>>>> +			XFS_WANT_CORRUPTED_GOTO(i == 1, del_cursor);
 >>>>
->>>> First, the picture: relatively old cluster w/ two years uptime and ten
->>>> months after fs recreation on every OSD, one of daemons started to
->>>> flap approximately once per day for couple of weeks, with no external
->>>> reason (bandwidth/IOPS/host issues). It looks almost the same every
->>>> time - OSD suddenly stop serving requests for a short period, gets
->>>> kicked out by peers report, then returns in a couple of seconds. Of
->>>> course, small but sensitive amount of requests are delayed by 15-30
->>>> seconds twice, which is bad for us. The only thing which correlates
->>>> with this kick is a peak of I/O, not too large, even not consuming all
->>>> underlying disk utilization, but alone in the cluster and clearly
->>>> visible. Also there are at least two occasions *without* correlated
->>>> iowait peak.
+>>>> I can reliably trigger this XFS_WANT_CORRUPTED_GOTO() with a
+>>>> fsstress that fills the filesystem:
+>>>>
+>>>> xfstests>   ltp/fsstress -d /mnt/scratch -s 1370236858 -p 512 -n 8192&
 >>>
->>> So, actual numbers and traces are the only thing that tell us what
->>> is happening during these events. See here:
+>>> Hasn't reproduced after 10 minutes of running at ENOSPC here - how
+>>> long does it take to reproduce? What storage hardware are you
+>>> testing on? How many CPUs? RAM? ....
 >>>
 >>> http://xfs.org/index.php/XFS_FAQ#Q:_What_information_should_I_include_when_reporting_a_problem.3F
->>>
->>> If it happens at almost the same time every day, then I'd be looking
->>> at the crontabs to find what starts up about that time. output of
->>> top will also probably tell you what process is running, too. topio
->>> might be instructive, and blktrace almost certainly will be....
->>>
->>>> I have two versions - we`re touching some sector on disk which is
->>>> about to be marked as dead but not displayed in SMART statistics or (I
->>>
->>> Doubt it - SMART doesn't cause OS visible IO dispatch spikes.
->>>
->>>> believe so) some kind of XFS fatigue, which can be more likely in this
->>>> case, since near-bad sector should be touched more frequently and
->>>> related impact could leave traces in dmesg/SMART from my experience. I
->>>
->>> I doubt that, too, because XFS doesn't have anything that is
->>> triggered on a daily basis inside it. Maybe you've got xfs_fsr set
->>> up on a cron job, though...
->>>
->>>> would like to ask if anyone has a simular experience before or can
->>>> suggest to poke existing file system in some way. If no suggestion
->>>> appear, I`ll probably reformat disk and, if problem will remain after
->>>> refill, replace it, but I think less destructive actions can be done
->>>> before.
->>>
->>> Yeah, monitoring and determining the process that is issuing the IO
->>> is what you need to find first.
 >>>
 >>> Cheers,
 >>>
 >>> Dave.
->>> --
->>> Dave Chinner
->>> david@fromorbit.com
 >>
->> Thanks Dave,
->>
->> there are definitely no cron set for specific time (though most of
->> lockups happened in a relatively small interval which correlates with
->> the Ceph snapshot operations).
-> 
-> OK.
-> 
-> FWIW, Ceph snapshots on XFS may not be immediately costly in terms
-> of IO - they can be extremely costly after one is taken when the
-> files in the snapshot are next written to. If you are snapshotting
-> files that are currently being written to, then that's likely to
-> cause immediate IO issues...
-> 
->> In at least one case no Ceph snapshot
->> operations (including delayed removal) happened and at least two when
->> no I/O peak was observed. We observed and eliminated weird lockups
->> related to the openswitch behavior before - we`re combining storage
->> and compute nodes, so quirks in the OVS datapath caused very
->> interesting and weird system-wide lockups on (supposedly) spinlock,
->> and we see 'pure' Ceph lockups on XFS at time with 3.4-3.7 kernels,
->> all of them was correlated with very high context switch peak.
-> 
-> Until we determine what is triggering the IO, the application isn't
-> really a concern.
-> 
->> Current issue is seemingly nothing to do with spinlock-like bugs or
->> just a hardware problem, we even rebooted problematic node to check if
->> the memory allocator may stuck at the border of specific NUMA node,
->> with no help, but first reappearance of this bug was delayed by some
->> days then. Disabling lazy allocation via specifying allocsize did
->> nothing too. It may look like I am insisting that it is XFS bug, where
->> Ceph version is more likely to appear because of way more complicated
->> logic and operation behaviour, but persistence on specific node across
->> relaunching of Ceph storage daemon suggests bug relation to the
->> unlucky byte sequence more than anything else. If it finally appear as
->> Ceph bug, it`ll ruin our expectations from two-year of close
->> experience with this product and if it is XFS bug, we haven`t see
->> anything like this before, thought we had a pretty collection of
->> XFS-related lockups on the earlier kernels.
-> 
-> Long experience with triaging storage performance issues has taught
-> me to ignore what anyone *thinks* is the cause of the problem; I
-> rely on the data that is gathered to tell me what the problem is. I
-> find that hard data has a nasty habit of busting assumptions,
-> expectations, speculations and hypothesis... :)
-> 
->> If it helps, I
->> may collect a series of perf events during next appearance or exact
->> iostat output (mine graphics can say that the I/O was not choked
->> completely when peak appeared, that`s all).
-> 
-> Before delving into perf events, we need to know what we are looking
-> for. That's what things like iostat, vmstat, top, blktrace, etc will
-> tell us - where to point the microscope.
-> 
+>> A 7-8 hours on spinning rust. This is my burn in test.
+>
+> Can you try to narrow the problem down? Otherwise it's going to be a
+> case of looking for a needle in a haystack....
+>
 > Cheers,
-> 
+>
 > Dave.
-> 
 
-Thanks,
+Nod on the needle in a hay stack if it bmbt is really corrupt.
 
-after a long and adventurous investigation we found that the effect was
-most probably caused by crossing tails of multiple background snapshot
-deletion in Ceph, so this had nothing to do with XFS, though behavior
-was very strange and because of very large time intervals we had not
-able imagine correlation between those events earlier. Background
-snapshot removal in Ceph contains kind of 'spike' at the of the process,
-so if one does deletion of a couple of snapshots holding close amount of
-commited bytes each, their removal will shot spike almost synchronously
-at the end, causing one or more OSD daemons to choke.
+I am running fsstress from xfstests with the top commit 9b7f704, and I 
+don't see any newer fsstress patches since then.
+
+I moved the test to another box with a kdump that works on top of tree 
+Linux and grabbed a vmcore. I grabbed a metadata dump of the filesystem 
+after the ASSERT. That should give some idea of what inode/block it was 
+looking up.
+
+I sent email to Namjae when I first tripped over this problem in late 
+April. No longer on the face of the earth and I can't look at this until 
+the weekend.
+
+--Mark.
 
 _______________________________________________
 xfs mailing list
