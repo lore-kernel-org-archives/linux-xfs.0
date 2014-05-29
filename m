@@ -1,24 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id E08C57F6A
-	for <xfs@oss.sgi.com>; Thu, 29 May 2014 01:05:49 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id CCDAB8F8049
-	for <xfs@oss.sgi.com>; Wed, 28 May 2014 23:05:46 -0700 (PDT)
-Received: from lgeamrelo02.lge.com (lgeamrelo02.lge.com [156.147.1.126]) by
-	cuda.sgi.com with ESMTP id D2ZT4FB0zjchh1uo for
-	<xfs@oss.sgi.com>; Wed, 28 May 2014 23:05:43 -0700 (PDT)
-Date: Thu, 29 May 2014 15:06:14 +0900
-From: Minchan Kim <minchan@kernel.org>
-Subject: Re: [RFC 2/2] x86_64: expand kernel stack to 16K
-Message-ID: <20140529060614.GG10092@bbox>
-References: <1401260039-18189-1-git-send-email-minchan@kernel.org>
-	<1401260039-18189-2-git-send-email-minchan@kernel.org>
-	<20140528083738.GL8554@dastard> <20140528091345.GD6677@dastard>
-	<20140528160658.GH2878@cmpxchg.org>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20140528160658.GH2878@cmpxchg.org>
+	by oss.sgi.com (Postfix) with ESMTP id 088A97F6B
+	for <xfs@oss.sgi.com>; Thu, 29 May 2014 02:29:48 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id DA3938F8065
+	for <xfs@oss.sgi.com>; Thu, 29 May 2014 00:29:44 -0700 (PDT)
+Received: from mailout4.samsung.com (mailout4.samsung.com [203.254.224.34]) by
+	cuda.sgi.com with ESMTP id pjNDGBqE2liO5K7N (version=TLSv1
+	cipher=RC4-MD5 bits=128 verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 29 May 2014 00:29:40 -0700 (PDT)
+Received: from epcpsbgr2.samsung.com
+	(u142.gpu120.samsung.co.kr [203.254.230.142])
+	by mailout4.samsung.com (Oracle Communications Messaging Server
+	7u4-24.01 (7.0.4.24.0) 64bit (built Nov 17 2011))
+	with ESMTP id <0N6B000ZMRH63A10@mailout4.samsung.com> for
+	xfs@oss.sgi.com; Thu, 29 May 2014 16:29:30 +0900 (KST)
+From: Namjae Jeon <namjae.jeon@samsung.com>
+Subject: [PATCH v4 2/10] xfs: Add support FALLOC_FL_INSERT_RANGE for fallocate
+Date: Thu, 29 May 2014 16:29:29 +0900
+Message-id: <001e01cf7b0f$ba43dfd0$2ecb9f70$@samsung.com>
+MIME-version: 1.0
+Content-language: ko
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,231 +33,717 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Dave Hansen <dave.hansen@intel.com>, Rik van Riel <riel@redhat.com>, Peter Zijlstra <a.p.zijlstra@chello.nl>, mst@redhat.com, Hugh Dickins <hughd@google.com>, rusty@rustcorp.com.au, linux-kernel@vger.kernel.org, Steven Rostedt <rostedt@goodmis.org>, xfs@oss.sgi.com, linux-mm@kvack.org, Mel Gorman <mgorman@suse.de>, "H. Peter Anvin" <hpa@zytor.com>, Andrew Morton <akpm@linux-foundation.org>, Ingo Molnar <mingo@kernel.org>
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-fsdevel@vger.kernel.org, Brian Foster <bfoster@redhat.com>, Ashish Sangwan <a.sangwan@samsung.com>, xfs@oss.sgi.com
 
-On Wed, May 28, 2014 at 12:06:58PM -0400, Johannes Weiner wrote:
-> On Wed, May 28, 2014 at 07:13:45PM +1000, Dave Chinner wrote:
-> > On Wed, May 28, 2014 at 06:37:38PM +1000, Dave Chinner wrote:
-> > > [ cc XFS list ]
-> > 
-> > [and now there is a complete copy on the XFs list, I'll add my 2c]
-> > 
-> > > On Wed, May 28, 2014 at 03:53:59PM +0900, Minchan Kim wrote:
-> > > > While I play inhouse patches with much memory pressure on qemu-kvm,
-> > > > 3.14 kernel was randomly crashed. The reason was kernel stack overflow.
-> > > > 
-> > > > When I investigated the problem, the callstack was a little bit deeper
-> > > > by involve with reclaim functions but not direct reclaim path.
-> > > > 
-> > > > I tried to diet stack size of some functions related with alloc/reclaim
-> > > > so did a hundred of byte but overflow was't disappeard so that I encounter
-> > > > overflow by another deeper callstack on reclaim/allocator path.
-> > 
-> > That's a no win situation. The stack overruns through ->writepage
-> > we've been seeing with XFS over the past *4 years* are much larger
-> > than a few bytes. The worst case stack usage on a virtio block
-> > device was about 10.5KB of stack usage.
-> > 
-> > And, like this one, it came from the flusher thread as well. The
-> > difference was that the allocation that triggered the reclaim path
-> > you've reported occurred when 5k of the stack had already been
-> > used...
-> > 
-> > > > Of course, we might sweep every sites we have found for reducing
-> > > > stack usage but I'm not sure how long it saves the world(surely,
-> > > > lots of developer start to add nice features which will use stack
-> > > > agains) and if we consider another more complex feature in I/O layer
-> > > > and/or reclaim path, it might be better to increase stack size(
-> > > > meanwhile, stack usage on 64bit machine was doubled compared to 32bit
-> > > > while it have sticked to 8K. Hmm, it's not a fair to me and arm64
-> > > > already expaned to 16K. )
-> > 
-> > Yup, that's all been pointed out previously. 8k stacks were never
-> > large enough to fit the linux IO architecture on x86-64, but nobody
-> > outside filesystem and IO developers has been willing to accept that
-> > argument as valid, despite regular stack overruns and filesystem
-> > having to add workaround after workaround to prevent stack overruns.
-> > 
-> > That's why stuff like this appears in various filesystem's
-> > ->writepage:
-> > 
-> >         /*
-> >          * Refuse to write the page out if we are called from reclaim context.
-> >          *
-> >          * This avoids stack overflows when called from deeply used stacks in
-> >          * random callers for direct reclaim or memcg reclaim.  We explicitly
-> >          * allow reclaim from kswapd as the stack usage there is relatively low.
-> >          *
-> >          * This should never happen except in the case of a VM regression so
-> >          * warn about it.
-> >          */
-> >         if (WARN_ON_ONCE((current->flags & (PF_MEMALLOC|PF_KSWAPD)) ==
-> >                         PF_MEMALLOC))
-> >                 goto redirty;
-> > 
-> > That still doesn't guarantee us enough stack space to do writeback,
-> > though, because memory allocation can occur when reading in metadata
-> > needed to do delayed allocation, and so we could trigger GFP_NOFS
-> > memory allocation from the flusher thread with 4-5k of stack already
-> > consumed, so that would still overrun teh stack.
-> > 
-> > So, a couple of years ago we started defering half the writeback
-> > stack usage to a worker thread (commit c999a22 "xfs: introduce an
-> > allocation workqueue"), under the assumption that the worst stack
-> > usage when we call memory allocation is around 3-3.5k of stack used.
-> > We thought that would be safe, but the stack trace you've posted
-> > shows that alloc_page(GFP_NOFS) can consume upwards of 5k of stack,
-> > which means we're still screwed despite all the workarounds we have
-> > in place.
-> 
-> The allocation and reclaim stack itself is only 2k per the stacktrace
-> below.  What got us in this particular case is that we engaged a
-> complicated block layer setup from within the allocation context in
-> order to swap out a page.
-> 
-> In the past we disabled filesystem ->writepage from within the
-> allocation context and deferred it to kswapd for stack reasons (see
-> the WARN_ON_ONCE and the comment in your above quote), but I think we
-> have to go further and do the same for even swap_writepage():
-> 
-> > > > I guess this topic was discussed several time so there might be
-> > > > strong reason not to increase kernel stack size on x86_64, for me not
-> > > > knowing so Ccing x86_64 maintainers, other MM guys and virtio
-> > > > maintainers.
-> > > >
-> > > >          Depth    Size   Location    (51 entries)
-> > > > 
-> > > >    0)     7696      16   lookup_address+0x28/0x30
-> > > >    1)     7680      16   _lookup_address_cpa.isra.3+0x3b/0x40
-> > > >    2)     7664      24   __change_page_attr_set_clr+0xe0/0xb50
-> > > >    3)     7640     392   kernel_map_pages+0x6c/0x120
-> > > >    4)     7248     256   get_page_from_freelist+0x489/0x920
-> > > >    5)     6992     352   __alloc_pages_nodemask+0x5e1/0xb20
-> > > >    6)     6640       8   alloc_pages_current+0x10f/0x1f0
-> > > >    7)     6632     168   new_slab+0x2c5/0x370
-> > > >    8)     6464       8   __slab_alloc+0x3a9/0x501
-> > > >    9)     6456      80   __kmalloc+0x1cb/0x200
-> > > >   10)     6376     376   vring_add_indirect+0x36/0x200
-> > > >   11)     6000     144   virtqueue_add_sgs+0x2e2/0x320
-> > > >   12)     5856     288   __virtblk_add_req+0xda/0x1b0
-> > > >   13)     5568      96   virtio_queue_rq+0xd3/0x1d0
-> > > >   14)     5472     128   __blk_mq_run_hw_queue+0x1ef/0x440
-> > > >   15)     5344      16   blk_mq_run_hw_queue+0x35/0x40
-> > > >   16)     5328      96   blk_mq_insert_requests+0xdb/0x160
-> > > >   17)     5232     112   blk_mq_flush_plug_list+0x12b/0x140
-> > > >   18)     5120     112   blk_flush_plug_list+0xc7/0x220
-> > > >   19)     5008      64   io_schedule_timeout+0x88/0x100
-> > > >   20)     4944     128   mempool_alloc+0x145/0x170
-> > > >   21)     4816      96   bio_alloc_bioset+0x10b/0x1d0
-> > > >   22)     4720      48   get_swap_bio+0x30/0x90
-> > > >   23)     4672     160   __swap_writepage+0x150/0x230
-> > > >   24)     4512      32   swap_writepage+0x42/0x90
-> 
-> Without swap IO from the allocation context, the stack would have
-> ended here, which would have been easily survivable.  And left the
-> writeout work to kswapd, which has a much shallower stack than this:
-> 
-> > > >   25)     4480     320   shrink_page_list+0x676/0xa80
-> > > >   26)     4160     208   shrink_inactive_list+0x262/0x4e0
-> > > >   27)     3952     304   shrink_lruvec+0x3e1/0x6a0
-> > > >   28)     3648      80   shrink_zone+0x3f/0x110
-> > > >   29)     3568     128   do_try_to_free_pages+0x156/0x4c0
-> > > >   30)     3440     208   try_to_free_pages+0xf7/0x1e0
-> > > >   31)     3232     352   __alloc_pages_nodemask+0x783/0xb20
-> > > >   32)     2880       8   alloc_pages_current+0x10f/0x1f0
-> > > >   33)     2872     200   __page_cache_alloc+0x13f/0x160
-> > > >   34)     2672      80   find_or_create_page+0x4c/0xb0
-> > > >   35)     2592      80   ext4_mb_load_buddy+0x1e9/0x370
-> > > >   36)     2512     176   ext4_mb_regular_allocator+0x1b7/0x460
-> > > >   37)     2336     128   ext4_mb_new_blocks+0x458/0x5f0
-> > > >   38)     2208     256   ext4_ext_map_blocks+0x70b/0x1010
-> > > >   39)     1952     160   ext4_map_blocks+0x325/0x530
-> > > >   40)     1792     384   ext4_writepages+0x6d1/0xce0
-> > > >   41)     1408      16   do_writepages+0x23/0x40
-> > > >   42)     1392      96   __writeback_single_inode+0x45/0x2e0
-> > > >   43)     1296     176   writeback_sb_inodes+0x2ad/0x500
-> > > >   44)     1120      80   __writeback_inodes_wb+0x9e/0xd0
-> > > >   45)     1040     160   wb_writeback+0x29b/0x350
-> > > >   46)      880     208   bdi_writeback_workfn+0x11c/0x480
-> > > >   47)      672     144   process_one_work+0x1d2/0x570
-> > > >   48)      528     112   worker_thread+0x116/0x370
-> > > >   49)      416     240   kthread+0xf3/0x110
-> > > >   50)      176     176   ret_from_fork+0x7c/0xb0
-> > 
-> > Impressive: 3 nested allocations - GFP_NOFS, GFP_NOIO and then
-> > GFP_ATOMIC before the stack goes boom. XFS usually only needs 2...
-> 
-> Do they also usually involve swap_writepage()?
+This patch implements fallocate's FALLOC_FL_INSERT_RANGE for XFS.
 
-Maybe it works but the problem I can think of is churn of LRU because
-anon pages scanned in direct reclaim would live another round in LRU
-and as Dave already pointed out, it couldn't prevent synchronous
-unplugging caused by another shedule point in direct reclaim path
-so I buy Dave's idea which pass plug list off to the kblockd.
+1) Make sure that both offset and len are block size aligned.
+2) Update the i_size of inode by len bytes.
+3) Compute the file's logical block number against offset. If the computed
+   block number is not the starting block of the extent, split the extent
+   such that the block number is the starting block of the extent.
+4) Shift all the extents which are lying bewteen [offset, last allocated extent]
+   towards right by len bytes. This step will make a hole of len bytes
+   at offset.
+5) Allocate unwritten extents for the hole created in step 4.
 
-> 
-> ---
-> 
-> diff --git a/mm/page_io.c b/mm/page_io.c
-> index 7c59ef681381..02e7e3c168cf 100644
-> --- a/mm/page_io.c
-> +++ b/mm/page_io.c
-> @@ -233,6 +233,22 @@ int swap_writepage(struct page *page, struct writeback_control *wbc)
->  {
->  	int ret = 0;
->  
-> +	/*
-> +	 * Refuse to write the page out if we are called from reclaim context.
-> +	 *
-> +	 * This avoids stack overflows when called from deeply used stacks in
-> +	 * random callers for direct reclaim or memcg reclaim.  We explicitly
-> +	 * allow reclaim from kswapd as the stack usage there is relatively low.
-> +	 *
-> +	 * This should never happen except in the case of a VM regression so
-> +	 * warn about it.
-> +	 */
-> +	if (WARN_ON_ONCE((current->flags & (PF_MEMALLOC|PF_KSWAPD)) ==
-> +			PF_MEMALLOC)) {
-> +		SetPageDirty(page);
-> +		goto out;
-> +	}
-> +
->  	if (try_to_free_swap(page)) {
->  		unlock_page(page);
->  		goto out;
-> diff --git a/mm/vmscan.c b/mm/vmscan.c
-> index 61c576083c07..99cca6633e0d 100644
-> --- a/mm/vmscan.c
-> +++ b/mm/vmscan.c
-> @@ -985,13 +985,12 @@ static unsigned long shrink_page_list(struct list_head *page_list,
->  
->  		if (PageDirty(page)) {
->  			/*
-> -			 * Only kswapd can writeback filesystem pages to
-> -			 * avoid risk of stack overflow but only writeback
-> +			 * Only kswapd can writeback pages to avoid
-> +			 * risk of stack overflow but only writeback
->  			 * if many dirty pages have been encountered.
->  			 */
-> -			if (page_is_file_cache(page) &&
-> -					(!current_is_kswapd() ||
-> -					 !zone_is_reclaim_dirty(zone))) {
-> +			if (!current_is_kswapd() ||
-> +			    !zone_is_reclaim_dirty(zone))) {
->  				/*
->  				 * Immediately reclaim when written back.
->  				 * Similar in principal to deactivate_page()
-> 
-> --
-> To unsubscribe, send a message with 'unsubscribe linux-mm' in
-> the body to majordomo@kvack.org.  For more info on Linux MM,
-> see: http://www.linux-mm.org/ .
-> Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Signed-off-by: Namjae Jeon <namjae.jeon@samsung.com>
+Signed-off-by: Ashish Sangwan <a.sangwan@samsung.com>
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+---
 
+Changelog
+v4:
+ - set cur->bc_private.b.allocated to zero before calling xfs_btree_del_cursor.
+
+v3:
+ - remove XFS_TRANS_RESERVE and assert.
+ - update the comment of blockcount calculation.
+ - use 'if(blockcount)' instead of 'if (got.br_blockcount < blockcount)'.
+ - move insert_file_space() calling under xfs_setattr_size to avoid code duplicate.
+
+v2:
+ - remove reserved enable.
+ - add xfs_qm_dqattach.
+ - reset blockcount in xfs_bmap_shift_extents_right.
+ - update i_size to avoid data loss before insert_file_space() is called.
+ - use in-memory extent array size that delayed allocation extents.
+
+ fs/xfs/xfs_bmap.c      | 379 ++++++++++++++++++++++++++++++++++++++++++++++++-
+ fs/xfs/xfs_bmap.h      |   9 +-
+ fs/xfs/xfs_bmap_util.c | 128 ++++++++++++++++-
+ fs/xfs/xfs_bmap_util.h |   2 +
+ fs/xfs/xfs_file.c      |  38 ++++-
+ fs/xfs/xfs_trace.h     |   1 +
+ 6 files changed, 552 insertions(+), 5 deletions(-)
+
+diff --git a/fs/xfs/xfs_bmap.c b/fs/xfs/xfs_bmap.c
+index 1ff0da6..a6d4e8d 100644
+--- a/fs/xfs/xfs_bmap.c
++++ b/fs/xfs/xfs_bmap.c
+@@ -5419,7 +5419,7 @@ error0:
+  * into, this will be considered invalid operation and we abort immediately.
+  */
+ int
+-xfs_bmap_shift_extents(
++xfs_bmap_shift_extents_left(
+ 	struct xfs_trans	*tp,
+ 	struct xfs_inode	*ip,
+ 	int			*done,
+@@ -5449,7 +5449,7 @@ xfs_bmap_shift_extents(
+ 	    (XFS_IFORK_FORMAT(ip, whichfork) != XFS_DINODE_FMT_EXTENTS &&
+ 	     XFS_IFORK_FORMAT(ip, whichfork) != XFS_DINODE_FMT_BTREE),
+ 	     mp, XFS_ERRTAG_BMAPIFORMAT, XFS_RANDOM_BMAPIFORMAT))) {
+-		XFS_ERROR_REPORT("xfs_bmap_shift_extents",
++		XFS_ERROR_REPORT("xfs_bmap_shift_extents_left",
+ 				 XFS_ERRLEVEL_LOW, mp);
+ 		return XFS_ERROR(EFSCORRUPTED);
+ 	}
+@@ -5606,3 +5606,378 @@ del_cursor:
+ 	xfs_trans_log_inode(tp, ip, logflags);
+ 	return error;
+ }
++
++/*
++ * Splits an extent into two extents at split_fsb block that it is
++ * the first block of the current_ext. @current_ext is a target extent
++ * to be splitted. @split_fsb is a block where the extents is spliited.
++ * If split_fsb lies in a hole or the first block of extents, just return 0.
++ */
++STATIC int
++xfs_bmap_split_extent_at(
++	struct xfs_trans	*tp,
++	struct xfs_inode	*ip,
++	xfs_fileoff_t		split_fsb,
++	xfs_extnum_t		*current_ext,
++	xfs_fsblock_t		*firstfsb,
++	struct xfs_bmap_free	*free_list)
++{
++	int				whichfork = XFS_DATA_FORK;
++	struct xfs_btree_cur		*cur;
++	struct xfs_bmbt_rec_host	*gotp;
++	struct xfs_bmbt_irec		got;
++	struct xfs_bmbt_irec		new; /* splitted extent */
++	struct xfs_mount		*mp = ip->i_mount;
++	struct xfs_ifork		*ifp;
++	xfs_fsblock_t			gotblkcnt; /* new block count for got */
++	int				error = 0;
++	int				logflags;
++	int				i = 0;
++
++	if (unlikely(XFS_TEST_ERROR(
++	    (XFS_IFORK_FORMAT(ip, whichfork) != XFS_DINODE_FMT_EXTENTS &&
++	     XFS_IFORK_FORMAT(ip, whichfork) != XFS_DINODE_FMT_BTREE),
++	     mp, XFS_ERRTAG_BMAPIFORMAT, XFS_RANDOM_BMAPIFORMAT))) {
++		XFS_ERROR_REPORT("xfs_bmap_split_extent_at",
++				 XFS_ERRLEVEL_LOW, mp);
++		return XFS_ERROR(EFSCORRUPTED);
++	}
++
++	if (XFS_FORCED_SHUTDOWN(mp))
++		return XFS_ERROR(EIO);
++
++	ASSERT(current_ext != NULL);
++
++	ifp = XFS_IFORK_PTR(ip, whichfork);
++	if (!(ifp->if_flags & XFS_IFEXTENTS)) {
++		/* Read in all the extents */
++		error = xfs_iread_extents(tp, ip, whichfork);
++		if (error)
++			return error;
++	}
++
++	gotp = xfs_iext_bno_to_ext(ifp, split_fsb, current_ext);
++	/*
++	 * gotp can be null in 2 cases: 1) if there are no extents
++	 * or 2) split_fsb lies in a hole beyond which there are
++	 * no extents. Either way, we are done.
++	 */
++	if (!gotp)
++		return 0;
++
++	xfs_bmbt_get_all(gotp, &got);
++
++	/*
++	 * Check split_fsb lies in a hole or the start boundary offset
++	 * of the extent.
++	 */
++	if (got.br_startoff >= split_fsb)
++		return 0;
++
++	gotblkcnt = split_fsb - got.br_startoff;
++	new.br_startoff = split_fsb;
++	new.br_startblock = got.br_startblock + gotblkcnt;
++	new.br_blockcount = got.br_blockcount - gotblkcnt;
++	new.br_state = got.br_state;
++
++	/* We are going to change core inode */
++	logflags = XFS_ILOG_CORE;
++
++	if (ifp->if_flags & XFS_IFBROOT) {
++		cur = xfs_bmbt_init_cursor(mp, tp, ip, whichfork);
++		cur->bc_private.b.firstblock = *firstfsb;
++		cur->bc_private.b.flist = free_list;
++		cur->bc_private.b.flags = 0;
++	} else {
++		cur = NULL;
++		logflags |= XFS_ILOG_DEXT;
++	}
++
++	if (cur) {
++		error = xfs_bmbt_lookup_eq(cur, got.br_startoff,
++					   got.br_startblock,
++					   got.br_blockcount,
++					   &i);
++		if (error)
++			goto del_cursor;
++		XFS_WANT_CORRUPTED_GOTO(i == 1, del_cursor);
++	}
++
++	xfs_bmbt_set_blockcount(gotp, gotblkcnt);
++	got.br_blockcount = gotblkcnt;
++	if (cur) {
++		error = xfs_bmbt_update(cur, got.br_startoff,
++					got.br_startblock,
++					got.br_blockcount,
++					got.br_state);
++		if (error)
++			goto del_cursor;
++	}
++
++	/* Add new extent */
++	(*current_ext)++;
++	xfs_iext_insert(ip, *current_ext, 1, &new, 0);
++	XFS_IFORK_NEXT_SET(ip, whichfork,
++		XFS_IFORK_NEXTENTS(ip, whichfork) + 1);
++
++	if (cur) {
++		error = xfs_bmbt_lookup_eq(cur, new.br_startoff,
++					   new.br_startblock, new.br_blockcount,
++					   &i);
++		if (error)
++			goto del_cursor;
++		XFS_WANT_CORRUPTED_GOTO(i == 0, del_cursor);
++		cur->bc_rec.b.br_state = new.br_state;
++
++		error = xfs_btree_insert(cur, &i);
++		if (error)
++			goto del_cursor;
++		XFS_WANT_CORRUPTED_GOTO(i == 1, del_cursor);
++	}
++
++	/*
++	 * Convert to a btree if necessary.
++	 */
++	if (xfs_bmap_needs_btree(ip, whichfork)) {
++		int tmp_logflags; /* partial log flag return val */
++
++		ASSERT(cur == NULL);
++		error = xfs_bmap_extents_to_btree(tp, ip, firstfsb, free_list,
++				&cur, 0, &tmp_logflags, whichfork);
++		logflags |= tmp_logflags;
++	}
++
++del_cursor:
++	if (cur) {
++		cur->bc_private.b.allocated = 0;
++		xfs_btree_del_cursor(cur,
++			error ? XFS_BTREE_ERROR : XFS_BTREE_NOERROR);
++	}
++	xfs_trans_log_inode(tp, ip, logflags);
++	return error;
++}
++
++int
++xfs_bmap_split_extent(
++	struct xfs_inode	*ip,
++	xfs_fileoff_t		split_fsb,
++	xfs_extnum_t		*split_ext)
++{
++	struct xfs_mount        *mp = ip->i_mount;
++	struct xfs_trans	*tp;
++	struct xfs_bmap_free	free_list;
++	xfs_fsblock_t		firstfsb;
++	int			committed;
++	int			error;
++
++	tp = xfs_trans_alloc(mp, XFS_TRANS_DIOSTRAT);
++	error = xfs_trans_reserve(tp, &M_RES(mp)->tr_write,
++			XFS_DIOSTRAT_SPACE_RES(mp, 0), 0);
++
++	if (error) {
++		/*
++		 * Free the transaction structure.
++		 */
++		xfs_trans_cancel(tp, 0);
++		return error;
++	}
++
++	xfs_ilock(ip, XFS_ILOCK_EXCL);
++	error = xfs_trans_reserve_quota(tp, mp, ip->i_udquot,
++			ip->i_gdquot, ip->i_pdquot,
++			XFS_DIOSTRAT_SPACE_RES(mp, 0), 0,
++			XFS_QMOPT_RES_REGBLKS);
++	if (error)
++		goto error1;
++
++	xfs_trans_ijoin(tp, ip, 0);
++	xfs_bmap_init(&free_list, &firstfsb);
++
++	error = xfs_bmap_split_extent_at(tp, ip, split_fsb, split_ext,
++					 &firstfsb, &free_list);
++	if (error)
++		goto error0;
++
++	error = xfs_bmap_finish(&tp, &free_list, &committed);
++	if (error)
++		goto error0;
++
++	error = xfs_trans_commit(tp, XFS_TRANS_RELEASE_LOG_RES);
++	xfs_iunlock(ip, XFS_ILOCK_EXCL);
++
++	return error;
++error0:
++	xfs_bmap_cancel(&free_list);
++error1:
++	xfs_trans_cancel(tp, XFS_TRANS_RELEASE_LOG_RES | XFS_TRANS_ABORT);
++	xfs_iunlock(ip, XFS_ILOCK_EXCL);
++	return error;
++}
++
++/*
++ * Shift extent records to the right to make a hole.
++ * The maximum number of extents to be shifted in a single operation
++ * is @num_exts, and @current_ext keeps track of the current extent
++ * index we have shifted. @offset_shift_fsb is the length by which each
++ * extent is shifted. @end_ext is the last extent to be shifted.
++ */
++int
++xfs_bmap_shift_extents_right(
++	struct xfs_trans	*tp,
++	struct xfs_inode	*ip,
++	int			*done,
++	xfs_fileoff_t		offset_shift_fsb,
++	xfs_extnum_t		*current_ext,
++	xfs_extnum_t		end_ext,
++	xfs_fsblock_t		*firstblock,
++	struct xfs_bmap_free	*flist,
++	int			num_exts)
++{
++	struct xfs_mount		*mp = ip->i_mount;
++	struct xfs_btree_cur		*cur;
++	struct xfs_bmbt_rec_host	*gotp;
++	struct xfs_bmbt_irec		got;
++	struct xfs_bmbt_irec            right;
++	xfs_ifork_t			*ifp;
++	xfs_fileoff_t			startoff;
++	xfs_filblks_t			blockcount = 0;
++	xfs_extnum_t			last_extent;
++	int				error = 0;
++	int				i;
++	int				whichfork = XFS_DATA_FORK;
++	int				logflags;
++
++	if (unlikely(XFS_TEST_ERROR(
++	    (XFS_IFORK_FORMAT(ip, whichfork) != XFS_DINODE_FMT_EXTENTS &&
++	     XFS_IFORK_FORMAT(ip, whichfork) != XFS_DINODE_FMT_BTREE),
++	     mp, XFS_ERRTAG_BMAPIFORMAT, XFS_RANDOM_BMAPIFORMAT))) {
++		XFS_ERROR_REPORT("xfs_bmap_shift_extents_right",
++				 XFS_ERRLEVEL_LOW, mp);
++		return XFS_ERROR(EFSCORRUPTED);
++	}
++
++	if (XFS_FORCED_SHUTDOWN(mp))
++		return XFS_ERROR(EIO);
++
++	ASSERT(current_ext != NULL);
++
++	/* We are going to change core inode */
++	logflags = XFS_ILOG_CORE;
++	ifp = XFS_IFORK_PTR(ip, whichfork);
++
++	if (ifp->if_flags & XFS_IFBROOT) {
++		cur = xfs_bmbt_init_cursor(mp, tp, ip, whichfork);
++		cur->bc_private.b.firstblock = *firstblock;
++		cur->bc_private.b.flist = flist;
++		cur->bc_private.b.flags = 0;
++	} else {
++		cur = NULL;
++		logflags |= XFS_ILOG_DEXT;
++	}
++
++	/* start shifting extents to right */
++	while (num_exts-- > 0) {
++		blockcount = 0;
++
++		if (*current_ext < end_ext) {
++			*done = 1;
++			break;
++		}
++
++		gotp = xfs_iext_get_ext(ifp, *current_ext);
++		xfs_bmbt_get_all(gotp, &got);
++		startoff = got.br_startoff + offset_shift_fsb;
++
++		/*
++		 * Before shifting extent into hole, make sure that the hole
++		 * is large enough to accomodate the shift. This checking has
++		 * to be performed for all except the last extent.
++		 */
++		last_extent = (ifp->if_bytes / sizeof(xfs_bmbt_rec_t)) - 1;
++		if (last_extent != *current_ext) {
++			xfs_bmbt_get_all(xfs_iext_get_ext(ifp,
++						*current_ext + 1), &right);
++			if (startoff + got.br_blockcount > right.br_startoff) {
++				error = XFS_ERROR(EINVAL);
++				if (error)
++					goto del_cursor;
++			}
++		}
++
++		/* Check if we can merge 2 adjacent extents */
++		if (last_extent != *current_ext &&
++		    right.br_startoff == startoff + got.br_blockcount &&
++		    right.br_startblock ==
++				got.br_startblock + got.br_blockcount &&
++		    right.br_state == got.br_state &&
++		    right.br_blockcount + got.br_blockcount <= MAXEXTLEN) {
++
++			/*
++			 * Merge the current extent with the extent to
++			 * the right. Remove the right extent, calculate
++			 * a new block count for the current extent to cover
++			 * the range of both and decrement the number of extents
++			 * in the fork.
++			 */
++			blockcount = right.br_blockcount + got.br_blockcount;
++
++			if (cur) {
++				error = xfs_bmbt_lookup_eq(cur,
++							   right.br_startoff,
++							   right.br_startblock,
++							   right.br_blockcount,
++							   &i);
++				if (error)
++					goto del_cursor;
++				XFS_WANT_CORRUPTED_GOTO(i == 1, del_cursor);
++			}
++
++			xfs_iext_remove(ip, *current_ext + 1, 1, 0);
++			if (cur) {
++				error = xfs_btree_delete(cur, &i);
++				if (error)
++					goto del_cursor;
++				XFS_WANT_CORRUPTED_GOTO(i == 1, del_cursor);
++			}
++			XFS_IFORK_NEXT_SET(ip, whichfork,
++					XFS_IFORK_NEXTENTS(ip, whichfork) - 1);
++
++		}
++
++		if (cur) {
++			error = xfs_bmbt_lookup_eq(cur, got.br_startoff,
++						   got.br_startblock,
++						   got.br_blockcount,
++						   &i);
++			if (error)
++				goto del_cursor;
++			XFS_WANT_CORRUPTED_GOTO(i == 1, del_cursor);
++		}
++
++		if (blockcount) {
++			xfs_bmbt_set_blockcount(gotp, blockcount);
++			got.br_blockcount = blockcount;
++		}
++
++		xfs_bmbt_set_startoff(gotp, startoff);
++		got.br_startoff = startoff;
++
++		if (cur) {
++			error = xfs_bmbt_update(cur, got.br_startoff,
++						got.br_startblock,
++						got.br_blockcount,
++						got.br_state);
++			if (error)
++				goto del_cursor;
++		}
++
++		(*current_ext)--;
++	}
++
++del_cursor:
++	if (cur)
++		xfs_btree_del_cursor(cur,
++			error ? XFS_BTREE_ERROR : XFS_BTREE_NOERROR);
++	xfs_trans_log_inode(tp, ip, logflags);
++	return error;
++}
+diff --git a/fs/xfs/xfs_bmap.h b/fs/xfs/xfs_bmap.h
+index 38ba36e..af05899 100644
+--- a/fs/xfs/xfs_bmap.h
++++ b/fs/xfs/xfs_bmap.h
+@@ -179,10 +179,17 @@ int	xfs_bunmapi(struct xfs_trans *tp, struct xfs_inode *ip,
+ int	xfs_check_nostate_extents(struct xfs_ifork *ifp, xfs_extnum_t idx,
+ 		xfs_extnum_t num);
+ uint	xfs_default_attroffset(struct xfs_inode *ip);
+-int	xfs_bmap_shift_extents(struct xfs_trans *tp, struct xfs_inode *ip,
++int	xfs_bmap_shift_extents_left(struct xfs_trans *tp, struct xfs_inode *ip,
+ 		int *done, xfs_fileoff_t start_fsb,
+ 		xfs_fileoff_t offset_shift_fsb, xfs_extnum_t *current_ext,
+ 		xfs_fsblock_t *firstblock, struct xfs_bmap_free	*flist,
+ 		int num_exts);
++int	xfs_bmap_split_extent(struct xfs_inode *ip, xfs_fileoff_t split_offset,
++		xfs_extnum_t *split_ext);
++int	xfs_bmap_shift_extents_right(struct xfs_trans *tp, struct xfs_inode *ip,
++		int *done, xfs_fsblock_t offset_shift_fsb,
++		xfs_extnum_t *current_ext, xfs_extnum_t end_ext,
++		xfs_fsblock_t *firstblock, struct xfs_bmap_free *flist,
++		int num_exts);
+ 
+ #endif	/* __XFS_BMAP_H__ */
+diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+index 057f671..b9511dd 100644
+--- a/fs/xfs/xfs_bmap_util.c
++++ b/fs/xfs/xfs_bmap_util.c
+@@ -1548,7 +1548,7 @@ xfs_collapse_file_space(
+ 		 * We are using the write transaction in which max 2 bmbt
+ 		 * updates are allowed
+ 		 */
+-		error = xfs_bmap_shift_extents(tp, ip, &done, start_fsb,
++		error = xfs_bmap_shift_extents_left(tp, ip, &done, start_fsb,
+ 					       shift_fsb, &current_ext,
+ 					       &first_block, &free_list,
+ 					       XFS_BMAP_MAX_SHIFT_EXTENTS);
+@@ -1572,6 +1572,132 @@ out:
+ }
+ 
+ /*
++ * xfs_insert_file_space()
++ *	This routine allocate disk space and shift extent for the given file.
++ *	The first thing we do is to sync dirty data and invalidate page cache
++ *	over the region on which insert range is working. And split an extent
++ *	to two extents at given offset by calling xfs_bmap_split_extent.
++ *	And shift all extent records which are laying between [offset,
++ *	last allocated extent] to the right to reserve hole range. Lastly
++ *	allocate an unwritten extent in hole range created by shifting extents.
++ *
++ * RETURNS:
++ *	0 on success
++ *	errno on error
++ *
++ */
++int
++xfs_insert_file_space(
++	struct xfs_inode	*ip,
++	loff_t			offset,
++	loff_t			len)
++{
++	struct xfs_mount	*mp = ip->i_mount;
++	struct xfs_trans	*tp;
++	struct xfs_bmap_free	free_list;
++	xfs_fsblock_t		first_block;
++	xfs_ifork_t		*ifp;
++	int			done = 0;
++	int			committed;
++	int			error;
++	uint			rounding;
++	xfs_fileoff_t		start_fsb;
++	xfs_fileoff_t		shift_fsb;
++	xfs_extnum_t		split_ext;
++	xfs_extnum_t		current_ext = 0;
++	xfs_off_t		ioffset;
++
++	ASSERT(xfs_isilocked(ip, XFS_IOLOCK_EXCL));
++	trace_xfs_insert_file_space(ip);
++
++	error = xfs_qm_dqattach(ip, 0);
++	if (error)
++		return error;
++
++	/* wait for the completion of any pending DIOs */
++	inode_dio_wait(VFS_I(ip));
++
++	rounding = max_t(uint, 1 << mp->m_sb.sb_blocklog, PAGE_CACHE_SIZE);
++	ioffset = offset & ~(rounding - 1);
++	error = -filemap_write_and_wait_range(VFS_I(ip)->i_mapping,
++			ioffset, -1);
++	if (error)
++		return error;
++
++	truncate_pagecache_range(VFS_I(ip), ioffset, -1);
++
++	start_fsb = XFS_B_TO_FSB(mp, offset);
++	shift_fsb = XFS_B_TO_FSB(mp, len);
++
++	error = xfs_bmap_split_extent(ip, start_fsb, &split_ext);
++	if (error)
++		return error;
++
++	ifp = XFS_IFORK_PTR(ip, XFS_DATA_FORK);
++	current_ext = (ifp->if_bytes / sizeof(xfs_bmbt_rec_t)) - 1;
++	while (!error && !done) {
++		tp = xfs_trans_alloc(mp, XFS_TRANS_DIOSTRAT);
++		/*
++		 * We would need to reserve permanent block for transaction.
++		 * This will come into picture when after shifting extent into
++		 * hole we found that adjacent extents can be merged which
++		 * may lead to freeing of a block during record update.
++		 */
++		error = xfs_trans_reserve(tp, &M_RES(mp)->tr_write,
++				XFS_DIOSTRAT_SPACE_RES(mp, 0), 0);
++		if (error) {
++			xfs_trans_cancel(tp, 0);
++			break;
++		}
++
++		xfs_ilock(ip, XFS_ILOCK_EXCL);
++		error = xfs_trans_reserve_quota(tp, mp, ip->i_udquot,
++				ip->i_gdquot, ip->i_pdquot,
++				XFS_DIOSTRAT_SPACE_RES(mp, 0), 0,
++				XFS_QMOPT_RES_REGBLKS);
++		if (error)
++			goto error1;
++
++		xfs_trans_ijoin(tp, ip, 0);
++
++		xfs_bmap_init(&free_list, &first_block);
++
++		/*
++		 * We are using the write transaction in which max 2 bmbt
++		 * updates are allowed
++		 */
++		error = xfs_bmap_shift_extents_right(tp, ip, &done, shift_fsb,
++						&current_ext, split_ext,
++						&first_block, &free_list,
++						XFS_BMAP_MAX_SHIFT_EXTENTS);
++		if (error)
++			goto error0;
++
++		error = xfs_bmap_finish(&tp, &free_list, &committed);
++		if (error)
++			goto error0;
++
++		error = xfs_trans_commit(tp, XFS_TRANS_RELEASE_LOG_RES);
++		xfs_iunlock(ip, XFS_ILOCK_EXCL);
++		if (error)
++			goto out;
++	}
++
++	/* Add unwritten extent in a hole range. */
++	error = xfs_alloc_file_space(ip, offset, len, XFS_BMAPI_PREALLOC);
++
++out:
++	return error;
++
++error0:
++	xfs_bmap_cancel(&free_list);
++error1:
++	xfs_trans_cancel(tp, XFS_TRANS_RELEASE_LOG_RES | XFS_TRANS_ABORT);
++	xfs_iunlock(ip, XFS_ILOCK_EXCL);
++	return error;
++}
++
++/*
+  * We need to check that the format of the data fork in the temporary inode is
+  * valid for the target inode before doing the swap. This is not a problem with
+  * attr1 because of the fixed fork offset, but attr2 has a dynamically sized
+diff --git a/fs/xfs/xfs_bmap_util.h b/fs/xfs/xfs_bmap_util.h
+index 935ed2b..d62ab4b 100644
+--- a/fs/xfs/xfs_bmap_util.h
++++ b/fs/xfs/xfs_bmap_util.h
+@@ -101,6 +101,8 @@ int	xfs_zero_file_space(struct xfs_inode *ip, xfs_off_t offset,
+ 			    xfs_off_t len);
+ int	xfs_collapse_file_space(struct xfs_inode *, xfs_off_t offset,
+ 				xfs_off_t len);
++int	xfs_insert_file_space(struct xfs_inode *, xfs_off_t offset,
++				xfs_off_t len);
+ 
+ /* EOF block manipulation functions */
+ bool	xfs_can_free_eofblocks(struct xfs_inode *ip, bool force);
+diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+index 1f66779..f160cd5 100644
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@ -756,11 +756,13 @@ xfs_file_fallocate(
+ 	struct xfs_trans	*tp;
+ 	long			error;
+ 	loff_t			new_size = 0;
++	int			do_file_insert = 0;
+ 
+ 	if (!S_ISREG(inode->i_mode))
+ 		return -EINVAL;
+ 	if (mode & ~(FALLOC_FL_KEEP_SIZE | FALLOC_FL_PUNCH_HOLE |
+-		     FALLOC_FL_COLLAPSE_RANGE | FALLOC_FL_ZERO_RANGE))
++		     FALLOC_FL_COLLAPSE_RANGE | FALLOC_FL_ZERO_RANGE |
++		     FALLOC_FL_INSERT_RANGE))
+ 		return -EOPNOTSUPP;
+ 
+ 	xfs_ilock(ip, XFS_IOLOCK_EXCL);
+@@ -790,6 +792,28 @@ xfs_file_fallocate(
+ 		error = xfs_collapse_file_space(ip, offset, len);
+ 		if (error)
+ 			goto out_unlock;
++	} else if (mode & FALLOC_FL_INSERT_RANGE) {
++		unsigned blksize_mask = (1 << inode->i_blkbits) - 1;
++
++		if (offset & blksize_mask || len & blksize_mask) {
++			error = -EINVAL;
++			goto out_unlock;
++		}
++
++		/* Check for wrap through zero */
++		if (inode->i_size + len > inode->i_sb->s_maxbytes) {
++			error = -EFBIG;
++			goto out_unlock;
++		}
++
++		/* Offset should be less than i_size */
++		if (offset >= i_size_read(inode)) {
++			error = -EINVAL;
++			goto out_unlock;
++		}
++
++		new_size = i_size_read(inode) + len;
++		do_file_insert = 1;
+ 	} else {
+ 		if (!(mode & FALLOC_FL_KEEP_SIZE) &&
+ 		    offset + len > i_size_read(inode)) {
+@@ -840,8 +864,20 @@ xfs_file_fallocate(
+ 		iattr.ia_valid = ATTR_SIZE;
+ 		iattr.ia_size = new_size;
+ 		error = xfs_setattr_size(ip, &iattr);
++		if (error)
++			goto out_unlock;
+ 	}
+ 
++	/*
++	 * Some operations are performed after the inode size is updated. For
++	 * example, insert range expands the address space of the file, shifts
++	 * all subsequent extents over and allocates space into the hole.
++	 * Updating the size first ensures that shifted extents aren't left
++	 * hanging past EOF in the event of a crash or failure.
++	 */
++	if (do_file_insert)
++		error = xfs_insert_file_space(ip, offset, len);
++
+ out_unlock:
+ 	xfs_iunlock(ip, XFS_IOLOCK_EXCL);
+ 	return -error;
+diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+index 152f827..8943c9f 100644
+--- a/fs/xfs/xfs_trace.h
++++ b/fs/xfs/xfs_trace.h
+@@ -663,6 +663,7 @@ DEFINE_INODE_EVENT(xfs_alloc_file_space);
+ DEFINE_INODE_EVENT(xfs_free_file_space);
+ DEFINE_INODE_EVENT(xfs_zero_file_space);
+ DEFINE_INODE_EVENT(xfs_collapse_file_space);
++DEFINE_INODE_EVENT(xfs_insert_file_space);
+ DEFINE_INODE_EVENT(xfs_readdir);
+ #ifdef CONFIG_XFS_POSIX_ACL
+ DEFINE_INODE_EVENT(xfs_get_acl);
 -- 
-Kind regards,
-Minchan Kim
+1.7.11-rc0
 
 _______________________________________________
 xfs mailing list
