@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 671A37F47
-	for <xfs@oss.sgi.com>; Fri, 30 May 2014 14:10:21 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id E75B5AC001
-	for <xfs@oss.sgi.com>; Fri, 30 May 2014 12:10:17 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 34CE17F47
+	for <xfs@oss.sgi.com>; Fri, 30 May 2014 14:10:23 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id CD7898F8049
+	for <xfs@oss.sgi.com>; Fri, 30 May 2014 12:10:22 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id pfYnvCsaBDQiBxyE for
-	<xfs@oss.sgi.com>; Fri, 30 May 2014 12:10:13 -0700 (PDT)
-Date: Fri, 30 May 2014 15:05:14 -0400
+	cuda.sgi.com with ESMTP id gnHEQIQSW2cqNpBg for
+	<xfs@oss.sgi.com>; Fri, 30 May 2014 12:10:21 -0700 (PDT)
+Date: Fri, 30 May 2014 15:05:24 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 01/16] xfs: introduce directory geometry structure
-Message-ID: <20140530190513.GA3146@laptop.bfoster>
+Subject: Re: [PATCH 12/16] xfs: reduce direct usage of mp->m_dir_geo
+Message-ID: <20140530190524.GB3146@laptop.bfoster>
 References: <1401257083-13433-1-git-send-email-david@fromorbit.com>
-	<1401257083-13433-2-git-send-email-david@fromorbit.com>
+	<1401257083-13433-13-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1401257083-13433-2-git-send-email-david@fromorbit.com>
+In-Reply-To: <1401257083-13433-13-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,344 +32,470 @@ Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On Wed, May 28, 2014 at 04:04:28PM +1000, Dave Chinner wrote:
+On Wed, May 28, 2014 at 04:04:39PM +1000, Dave Chinner wrote:
 > From: Dave Chinner <dchinner@redhat.com>
 > 
-> The directory code has a dependency on the struct xfs_mount to
-> supply the directory block geometry. Block size, block log size,
-> and other parameters are pre-caclulated in the struct xfs_mount or
-> access directly from the superblock embedded in the struct
-> xfs_mount.
+> There are many places in the directory code were we don't pass the
+> args into and so have to extract the geometry direct from the mount
+> structure. Push the args or the geometry into these leaf functions
+> so that we don't need to grab it from the struct xfs_mount.
 > 
-> Extract all of this geometry information out of the struct xfs_mount
-> and superblock and place it into a new struct xfs_da_geometry
-> defined by the directory code. Allocate and initialise it at mount
-> time, and attach it to the struct xfs_mount so it canbe passed back
-> into the directory code appropriately rather than using the struct
-> xfs_mount.
+> This, in turn, brings use to the point where directory geometry is
+> no longer a property of the struct xfs_mount; it is not a global
+> property anymore, and hence we can start to consider per-directory
+> configuration of physical geometries.
+> 
+> Start by converting the xfs_dir_isblock/leaf code - pass in the
+> xfs_da_args and convert the readdir code to use xfs_da_args like
+> the rest of the directory code to pass information around.
 > 
 > Signed-off-by: Dave Chinner <dchinner@redhat.com>
 > ---
 
 Reviewed-by: Brian Foster <bfoster@redhat.com>
 
->  fs/xfs/xfs_attr.c      |  1 +
->  fs/xfs/xfs_attr_leaf.c |  2 ++
->  fs/xfs/xfs_attr_list.c |  1 +
->  fs/xfs/xfs_da_btree.h  | 18 +++++++++++++
->  fs/xfs/xfs_dir2.c      | 73 +++++++++++++++++++++++++++++++++++++++++---------
->  fs/xfs/xfs_dir2.h      |  4 ++-
->  fs/xfs/xfs_mount.c     | 16 ++++++-----
->  fs/xfs/xfs_mount.h     |  3 +++
->  8 files changed, 97 insertions(+), 21 deletions(-)
+>  fs/xfs/xfs_dir2.c         | 50 +++++++++++++---------------
+>  fs/xfs/xfs_dir2.h         |  4 +--
+>  fs/xfs/xfs_dir2_readdir.c | 85 ++++++++++++++++++++++-------------------------
+>  3 files changed, 65 insertions(+), 74 deletions(-)
 > 
-> diff --git a/fs/xfs/xfs_attr.c b/fs/xfs/xfs_attr.c
-> index 1fc1f06..c547498 100644
-> --- a/fs/xfs/xfs_attr.c
-> +++ b/fs/xfs/xfs_attr.c
-> @@ -88,6 +88,7 @@ xfs_attr_args_init(
->  		return EINVAL;
->  
->  	memset(args, 0, sizeof(*args));
-> +	args->geo = dp->i_mount->m_attr_geo;
->  	args->whichfork = XFS_ATTR_FORK;
->  	args->dp = dp;
->  	args->flags = flags;
-> diff --git a/fs/xfs/xfs_attr_leaf.c b/fs/xfs/xfs_attr_leaf.c
-> index 511c283..2c0fdc8 100644
-> --- a/fs/xfs/xfs_attr_leaf.c
-> +++ b/fs/xfs/xfs_attr_leaf.c
-> @@ -711,6 +711,7 @@ xfs_attr_shortform_to_leaf(xfs_da_args_t *args)
->  
->  	memset((char *)&nargs, 0, sizeof(nargs));
->  	nargs.dp = dp;
-> +	nargs.geo = args->geo;
->  	nargs.firstblock = args->firstblock;
->  	nargs.flist = args->flist;
->  	nargs.total = args->total;
-> @@ -838,6 +839,7 @@ xfs_attr3_leaf_to_shortform(
->  	 * Copy the attributes
->  	 */
->  	memset((char *)&nargs, 0, sizeof(nargs));
-> +	nargs.geo = args->geo;
->  	nargs.dp = dp;
->  	nargs.firstblock = args->firstblock;
->  	nargs.flist = args->flist;
-> diff --git a/fs/xfs/xfs_attr_list.c b/fs/xfs/xfs_attr_list.c
-> index 833fe5d..90e2eeb 100644
-> --- a/fs/xfs/xfs_attr_list.c
-> +++ b/fs/xfs/xfs_attr_list.c
-> @@ -444,6 +444,7 @@ xfs_attr3_leaf_list_int(
->  				xfs_da_args_t args;
->  
->  				memset((char *)&args, 0, sizeof(args));
-> +				args.geo = context->dp->i_mount->m_attr_geo;
->  				args.dp = context->dp;
->  				args.whichfork = XFS_ATTR_FORK;
->  				args.valuelen = valuelen;
-> diff --git a/fs/xfs/xfs_da_btree.h b/fs/xfs/xfs_da_btree.h
-> index c824a0a..0ac63ad 100644
-> --- a/fs/xfs/xfs_da_btree.h
-> +++ b/fs/xfs/xfs_da_btree.h
-> @@ -25,6 +25,23 @@ struct xfs_trans;
->  struct zone;
->  struct xfs_dir_ops;
->  
-> +/*
-> + * Directory/attribute geometry information. There will be one of these for each
-> + * data fork type, and it will be passed around via the xfs_da_args. Global
-> + * structures will be attached to the xfs_mount.
-> + */
-> +struct xfs_da_geometry {
-> +	int		blksize;	/* da block size in bytes */
-> +	int		fsbcount;	/* da block size in filesystem blocks */
-> +	uint8_t		fsblog;		/* log2 of _filesystem_ block size */
-> +	uint8_t		blklog;		/* log2 of da block size */
-> +	uint		node_ents;	/* # of entries in a danode */
-> +	int		magicpct;	/* 37% of block size in bytes */
-> +	xfs_dablk_t	datablk;	/* blockno of dir data v2 */
-> +	xfs_dablk_t	leafblk;	/* blockno of leaf data v2 */
-> +	xfs_dablk_t	freeblk;	/* blockno of free data v2 */
-> +};
-> +
->  /*========================================================================
->   * Btree searching and modification structure definitions.
->   *========================================================================*/
-> @@ -42,6 +59,7 @@ enum xfs_dacmp {
->   * Structure to ease passing around component names.
->   */
->  typedef struct xfs_da_args {
-> +	struct xfs_da_geometry *geo;	/* da block geometry */
->  	const __uint8_t	*name;		/* string (maybe not NULL terminated) */
->  	int		namelen;	/* length of string (maybe no NULL) */
->  	__uint8_t	filetype;	/* filetype of inode for directories */
 > diff --git a/fs/xfs/xfs_dir2.c b/fs/xfs/xfs_dir2.c
-> index 93fcebd..acd940d 100644
+> index f62d2e5..79670cd 100644
 > --- a/fs/xfs/xfs_dir2.c
 > +++ b/fs/xfs/xfs_dir2.c
-> @@ -85,11 +85,12 @@ static struct xfs_nameops xfs_ascii_ci_nameops = {
->  	.compname	= xfs_ascii_ci_compname,
->  };
->  
-> -void
-> -xfs_dir_mount(
-> -	xfs_mount_t	*mp)
-> +int
-> +xfs_da_mount(
-> +	struct xfs_mount	*mp)
->  {
-> -	int	nodehdr_size;
-> +	struct xfs_da_geometry	*dageo;
-> +	int			nodehdr_size;
->  
->  
->  	ASSERT(mp->m_sb.sb_versionnum & XFS_SB_VERSION_DIRV2BIT);
-> @@ -99,24 +100,64 @@ xfs_dir_mount(
->  	mp->m_dir_inode_ops = xfs_dir_get_ops(mp, NULL);
->  	mp->m_nondir_inode_ops = xfs_nondir_get_ops(mp, NULL);
->  
-> -	mp->m_dirblksize = 1 << (mp->m_sb.sb_blocklog + mp->m_sb.sb_dirblklog);
-> -	mp->m_dirblkfsbs = 1 << mp->m_sb.sb_dirblklog;
-> -	mp->m_dirdatablk = xfs_dir2_db_to_da(mp, XFS_DIR2_DATA_FIRSTDB(mp));
-> -	mp->m_dirleafblk = xfs_dir2_db_to_da(mp, XFS_DIR2_LEAF_FIRSTDB(mp));
-> -	mp->m_dirfreeblk = xfs_dir2_db_to_da(mp, XFS_DIR2_FREE_FIRSTDB(mp));
-> -
->  	nodehdr_size = mp->m_dir_inode_ops->node_hdr_size;
-> -	mp->m_attr_node_ents = (mp->m_sb.sb_blocksize - nodehdr_size) /
-> +	mp->m_dir_geo = kmem_zalloc(sizeof(struct xfs_da_geometry),
-> +				    KM_SLEEP | KM_MAYFAIL);
-> +	mp->m_attr_geo = kmem_zalloc(sizeof(struct xfs_da_geometry),
-> +				     KM_SLEEP | KM_MAYFAIL);
-> +	if (!mp->m_dir_geo || !mp->m_attr_geo) {
-> +		kmem_free(mp->m_dir_geo);
-> +		kmem_free(mp->m_attr_geo);
-> +		return ENOMEM;
-> +	}
-> +
-> +	/* set up directory geometry */
-> +	dageo = mp->m_dir_geo;
-> +	dageo->blklog = mp->m_sb.sb_blocklog + mp->m_sb.sb_dirblklog;
-> +	dageo->fsblog = mp->m_sb.sb_blocklog;
-> +	dageo->blksize = 1 << dageo->blklog;
-> +	dageo->fsbcount = 1 << mp->m_sb.sb_dirblklog;
-> +	dageo->datablk = xfs_dir2_byte_to_da(mp, XFS_DIR2_DATA_OFFSET);
-> +	dageo->leafblk = xfs_dir2_byte_to_da(mp, XFS_DIR2_LEAF_OFFSET);
-> +	dageo->freeblk = xfs_dir2_byte_to_da(mp, XFS_DIR2_FREE_OFFSET);
-> +	dageo->node_ents = (dageo->blksize - nodehdr_size) /
->  				(uint)sizeof(xfs_da_node_entry_t);
-> -	mp->m_dir_node_ents = (mp->m_dirblksize - nodehdr_size) /
-> +	dageo->magicpct = (dageo->blksize * 37) / 100;
-> +
-> +	/* set up attribute geometry - single fsb only */
-> +	dageo = mp->m_attr_geo;
-> +	dageo->blklog = mp->m_sb.sb_blocklog;
-> +	dageo->fsblog = mp->m_sb.sb_blocklog;
-> +	dageo->blksize = 1 << dageo->blklog;
-> +	dageo->fsbcount = 1;
-> +	dageo->node_ents = (dageo->blksize - nodehdr_size) /
->  				(uint)sizeof(xfs_da_node_entry_t);
-> +	dageo->magicpct = (dageo->blksize * 37) / 100;
->  
-> -	mp->m_dir_magicpct = (mp->m_dirblksize * 37) / 100;
->  	if (xfs_sb_version_hasasciici(&mp->m_sb))
->  		mp->m_dirnameops = &xfs_ascii_ci_nameops;
->  	else
->  		mp->m_dirnameops = &xfs_default_nameops;
->  
-> +	/* XXX: these are to be removed as code is converted to use geo */
-> +	mp->m_dirblksize = mp->m_dir_geo->blksize;
-> +	mp->m_dirblkfsbs = mp->m_dir_geo->fsbcount;
-> +	mp->m_dirdatablk = mp->m_dir_geo->datablk;
-> +	mp->m_dirleafblk = mp->m_dir_geo->leafblk;
-> +	mp->m_dirfreeblk = mp->m_dir_geo->freeblk;
-> +	mp->m_dir_node_ents = mp->m_dir_geo->node_ents;
-> +	mp->m_dir_magicpct = mp->m_dir_geo->magicpct;
-> +	mp->m_attr_node_ents = mp->m_attr_geo->node_ents;
-> +	mp->m_attr_magicpct = mp->m_attr_geo->magicpct;
-> +	return 0;
-> +}
-> +
-> +void
-> +xfs_da_unmount(
-> +	struct xfs_mount	*mp)
-> +{
-> +	kmem_free(mp->m_dir_geo);
-> +	kmem_free(mp->m_attr_geo);
->  }
->  
->  /*
-> @@ -192,6 +233,7 @@ xfs_dir_init(
->  	if (!args)
->  		return ENOMEM;
->  
-> +	args->geo = dp->i_mount->m_dir_geo;
->  	args->dp = dp;
->  	args->trans = tp;
->  	error = xfs_dir2_sf_create(args, pdp->i_ino);
-> @@ -226,6 +268,7 @@ xfs_dir_createname(
->  	if (!args)
->  		return ENOMEM;
->  
-> +	args->geo = dp->i_mount->m_dir_geo;
->  	args->name = name->name;
->  	args->namelen = name->len;
->  	args->filetype = name->type;
-> @@ -320,6 +363,7 @@ xfs_dir_lookup(
->  	 * annotations into the reclaim path for the ilock.
->  	 */
->  	args = kmem_zalloc(sizeof(*args), KM_SLEEP | KM_NOFS);
-> +	args->geo = dp->i_mount->m_dir_geo;
->  	args->name = name->name;
->  	args->namelen = name->len;
->  	args->filetype = name->type;
-> @@ -391,6 +435,7 @@ xfs_dir_removename(
->  	if (!args)
->  		return ENOMEM;
->  
-> +	args->geo = dp->i_mount->m_dir_geo;
->  	args->name = name->name;
->  	args->namelen = name->len;
->  	args->filetype = name->type;
-> @@ -455,6 +500,7 @@ xfs_dir_replace(
->  	if (!args)
->  		return ENOMEM;
->  
-> +	args->geo = dp->i_mount->m_dir_geo;
->  	args->name = name->name;
->  	args->namelen = name->len;
->  	args->filetype = name->type;
-> @@ -516,6 +562,7 @@ xfs_dir_canenter(
->  	if (!args)
->  		return ENOMEM;
->  
-> +	args->geo = dp->i_mount->m_dir_geo;
->  	args->name = name->name;
->  	args->namelen = name->len;
->  	args->filetype = name->type;
-> diff --git a/fs/xfs/xfs_dir2.h b/fs/xfs/xfs_dir2.h
-> index 64a6b19..7a85b9c 100644
-> --- a/fs/xfs/xfs_dir2.h
-> +++ b/fs/xfs/xfs_dir2.h
-> @@ -112,7 +112,9 @@ extern const struct xfs_dir_ops *
->   * Generic directory interface routines
->   */
->  extern void xfs_dir_startup(void);
-> -extern void xfs_dir_mount(struct xfs_mount *mp);
-> +extern int xfs_da_mount(struct xfs_mount *mp);
-> +extern void xfs_da_unmount(struct xfs_mount *mp);
-> +
->  extern int xfs_dir_isempty(struct xfs_inode *dp);
->  extern int xfs_dir_init(struct xfs_trans *tp, struct xfs_inode *dp,
->  				struct xfs_inode *pdp);
-> diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-> index fa8a420..3507cd0 100644
-> --- a/fs/xfs/xfs_mount.c
-> +++ b/fs/xfs/xfs_mount.c
-> @@ -791,12 +791,11 @@ xfs_mountfs(
->  
->  	mp->m_dmevmask = 0;	/* not persistent; set after each mount */
->  
-> -	xfs_dir_mount(mp);
-> -
-> -	/*
-> -	 * Initialize the attribute manager's entries.
-> -	 */
-> -	mp->m_attr_magicpct = (mp->m_sb.sb_blocksize * 37) / 100;
-> +	error = xfs_da_mount(mp);
-> +	if (error) {
-> +		xfs_warn(mp, "Failed dir/attr init: %d", error);
-> +		goto out_remove_uuid;
-> +	}
->  
->  	/*
->  	 * Initialize the precomputed transaction reservations values.
-> @@ -811,7 +810,7 @@ xfs_mountfs(
->  	error = xfs_initialize_perag(mp, sbp->sb_agcount, &mp->m_maxagi);
->  	if (error) {
->  		xfs_warn(mp, "Failed per-ag init: %d", error);
-> -		goto out_remove_uuid;
-> +		goto out_free_dir;
+> @@ -282,7 +282,7 @@ xfs_dir_createname(
+>  		goto out_free;
 >  	}
 >  
->  	if (!sbp->sb_logblocks) {
-> @@ -986,6 +985,8 @@ xfs_mountfs(
->  	xfs_wait_buftarg(mp->m_ddev_targp);
->   out_free_perag:
->  	xfs_free_perag(mp);
-> + out_free_dir:
-> +	xfs_da_unmount(mp);
->   out_remove_uuid:
->  	xfs_uuid_unmount(mp);
->   out:
-> @@ -1063,6 +1064,7 @@ xfs_unmountfs(
->  				"Freespace may not be correct on next mount.");
+> -	rval = xfs_dir2_isblock(dp, &v);
+> +	rval = xfs_dir2_isblock(args, &v);
+>  	if (rval)
+>  		goto out_free;
+>  	if (v) {
+> @@ -290,7 +290,7 @@ xfs_dir_createname(
+>  		goto out_free;
+>  	}
 >  
->  	xfs_log_unmount(mp);
-> +	xfs_da_unmount(mp);
->  	xfs_uuid_unmount(mp);
+> -	rval = xfs_dir2_isleaf(dp, &v);
+> +	rval = xfs_dir2_isleaf(args, &v);
+>  	if (rval)
+>  		goto out_free;
+>  	if (v)
+> @@ -375,7 +375,7 @@ xfs_dir_lookup(
+>  		goto out_check_rval;
+>  	}
 >  
->  #if defined(DEBUG)
-> diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-> index a466c5e..27cce7b 100644
-> --- a/fs/xfs/xfs_mount.h
-> +++ b/fs/xfs/xfs_mount.h
-> @@ -27,6 +27,7 @@ struct xfs_nameops;
->  struct xfs_ail;
->  struct xfs_quotainfo;
->  struct xfs_dir_ops;
-> +struct xfs_da_geometry;
+> -	rval = xfs_dir2_isblock(dp, &v);
+> +	rval = xfs_dir2_isblock(args, &v);
+>  	if (rval)
+>  		goto out_free;
+>  	if (v) {
+> @@ -383,7 +383,7 @@ xfs_dir_lookup(
+>  		goto out_check_rval;
+>  	}
 >  
->  #ifdef HAVE_PERCPU_SB
+> -	rval = xfs_dir2_isleaf(dp, &v);
+> +	rval = xfs_dir2_isleaf(args, &v);
+>  	if (rval)
+>  		goto out_free;
+>  	if (v)
+> @@ -448,7 +448,7 @@ xfs_dir_removename(
+>  		goto out_free;
+>  	}
 >  
-> @@ -96,6 +97,8 @@ typedef struct xfs_mount {
->  	uint			m_readio_blocks; /* min read size blocks */
->  	uint			m_writeio_log;	/* min write size log bytes */
->  	uint			m_writeio_blocks; /* min write size blocks */
-> +	struct xfs_da_geometry	*m_dir_geo;	/* directory block geometry */
-> +	struct xfs_da_geometry	*m_attr_geo;	/* attribute block geometry */
->  	struct xlog		*m_log;		/* log specific stuff */
->  	int			m_logbufs;	/* number of log buffers */
->  	int			m_logbsize;	/* size of each log buffer */
+> -	rval = xfs_dir2_isblock(dp, &v);
+> +	rval = xfs_dir2_isblock(args, &v);
+>  	if (rval)
+>  		goto out_free;
+>  	if (v) {
+> @@ -456,7 +456,7 @@ xfs_dir_removename(
+>  		goto out_free;
+>  	}
+>  
+> -	rval = xfs_dir2_isleaf(dp, &v);
+> +	rval = xfs_dir2_isleaf(args, &v);
+>  	if (rval)
+>  		goto out_free;
+>  	if (v)
+> @@ -513,7 +513,7 @@ xfs_dir_replace(
+>  		goto out_free;
+>  	}
+>  
+> -	rval = xfs_dir2_isblock(dp, &v);
+> +	rval = xfs_dir2_isblock(args, &v);
+>  	if (rval)
+>  		goto out_free;
+>  	if (v) {
+> @@ -521,7 +521,7 @@ xfs_dir_replace(
+>  		goto out_free;
+>  	}
+>  
+> -	rval = xfs_dir2_isleaf(dp, &v);
+> +	rval = xfs_dir2_isleaf(args, &v);
+>  	if (rval)
+>  		goto out_free;
+>  	if (v)
+> @@ -573,7 +573,7 @@ xfs_dir_canenter(
+>  		goto out_free;
+>  	}
+>  
+> -	rval = xfs_dir2_isblock(dp, &v);
+> +	rval = xfs_dir2_isblock(args, &v);
+>  	if (rval)
+>  		goto out_free;
+>  	if (v) {
+> @@ -581,7 +581,7 @@ xfs_dir_canenter(
+>  		goto out_free;
+>  	}
+>  
+> -	rval = xfs_dir2_isleaf(dp, &v);
+> +	rval = xfs_dir2_isleaf(args, &v);
+>  	if (rval)
+>  		goto out_free;
+>  	if (v)
+> @@ -649,18 +649,16 @@ xfs_dir2_grow_inode(
+>   */
+>  int
+>  xfs_dir2_isblock(
+> -	xfs_inode_t	*dp,
+> -	int		*vp)		/* out: 1 is block, 0 is not block */
+> +	struct xfs_da_args	*args,
+> +	int			*vp)	/* out: 1 is block, 0 is not block */
+>  {
+> -	xfs_fileoff_t	last;		/* last file offset */
+> -	xfs_mount_t	*mp;
+> -	int		rval;
+> +	xfs_fileoff_t		last;	/* last file offset */
+> +	int			rval;
+>  
+> -	mp = dp->i_mount;
+> -	if ((rval = xfs_bmap_last_offset(dp, &last, XFS_DATA_FORK)))
+> +	if ((rval = xfs_bmap_last_offset(args->dp, &last, XFS_DATA_FORK)))
+>  		return rval;
+> -	rval = XFS_FSB_TO_B(mp, last) == mp->m_dir_geo->blksize;
+> -	ASSERT(rval == 0 || dp->i_d.di_size == mp->m_dir_geo->blksize);
+> +	rval = XFS_FSB_TO_B(args->dp->i_mount, last) == args->geo->blksize;
+> +	ASSERT(rval == 0 || args->dp->i_d.di_size == args->geo->blksize);
+>  	*vp = rval;
+>  	return 0;
+>  }
+> @@ -670,17 +668,15 @@ xfs_dir2_isblock(
+>   */
+>  int
+>  xfs_dir2_isleaf(
+> -	xfs_inode_t	*dp,
+> -	int		*vp)		/* out: 1 is leaf, 0 is not leaf */
+> +	struct xfs_da_args	*args,
+> +	int			*vp)	/* out: 1 is block, 0 is not block */
+>  {
+> -	xfs_fileoff_t	last;		/* last file offset */
+> -	xfs_mount_t	*mp;
+> -	int		rval;
+> +	xfs_fileoff_t		last;	/* last file offset */
+> +	int			rval;
+>  
+> -	mp = dp->i_mount;
+> -	if ((rval = xfs_bmap_last_offset(dp, &last, XFS_DATA_FORK)))
+> +	if ((rval = xfs_bmap_last_offset(args->dp, &last, XFS_DATA_FORK)))
+>  		return rval;
+> -	*vp = last == mp->m_dir_geo->leafblk + (1 << mp->m_sb.sb_dirblklog);
+> +	*vp = last == args->geo->leafblk + args->geo->fsbcount;
+>  	return 0;
+>  }
+>  
+> diff --git a/fs/xfs/xfs_dir2.h b/fs/xfs/xfs_dir2.h
+> index 9b709ae..1292e78 100644
+> --- a/fs/xfs/xfs_dir2.h
+> +++ b/fs/xfs/xfs_dir2.h
+> @@ -146,8 +146,8 @@ extern int xfs_dir2_sf_to_block(struct xfs_da_args *args);
+>  /*
+>   * Interface routines used by userspace utilities
+>   */
+> -extern int xfs_dir2_isblock(struct xfs_inode *dp, int *r);
+> -extern int xfs_dir2_isleaf(struct xfs_inode *dp, int *r);
+> +extern int xfs_dir2_isblock(struct xfs_da_args *args, int *r);
+> +extern int xfs_dir2_isleaf(struct xfs_da_args *args, int *r);
+>  extern int xfs_dir2_shrink_inode(struct xfs_da_args *args, xfs_dir2_db_t db,
+>  				struct xfs_buf *bp);
+>  
+> diff --git a/fs/xfs/xfs_dir2_readdir.c b/fs/xfs/xfs_dir2_readdir.c
+> index fa393d5..ca1f43c 100644
+> --- a/fs/xfs/xfs_dir2_readdir.c
+> +++ b/fs/xfs/xfs_dir2_readdir.c
+> @@ -76,28 +76,25 @@ const unsigned char xfs_mode_to_ftype[S_IFMT >> S_SHIFT] = {
+>  
+>  STATIC int
+>  xfs_dir2_sf_getdents(
+> -	xfs_inode_t		*dp,		/* incore directory inode */
+> +	struct xfs_da_args	*args,
+>  	struct dir_context	*ctx)
+>  {
+>  	int			i;		/* shortform entry number */
+> -	xfs_mount_t		*mp;		/* filesystem mount point */
+> +	struct xfs_inode	*dp = args->dp;	/* incore directory inode */
+>  	xfs_dir2_dataptr_t	off;		/* current entry's offset */
+>  	xfs_dir2_sf_entry_t	*sfep;		/* shortform directory entry */
+>  	xfs_dir2_sf_hdr_t	*sfp;		/* shortform structure */
+>  	xfs_dir2_dataptr_t	dot_offset;
+>  	xfs_dir2_dataptr_t	dotdot_offset;
+>  	xfs_ino_t		ino;
+> -	struct xfs_da_geometry	*geo;
+> -
+> -	mp = dp->i_mount;
+> -	geo = mp->m_dir_geo;
+> +	struct xfs_da_geometry	*geo = args->geo;
+>  
+>  	ASSERT(dp->i_df.if_flags & XFS_IFINLINE);
+>  	/*
+>  	 * Give up if the directory is way too short.
+>  	 */
+>  	if (dp->i_d.di_size < offsetof(xfs_dir2_sf_hdr_t, parent)) {
+> -		ASSERT(XFS_FORCED_SHUTDOWN(mp));
+> +		ASSERT(XFS_FORCED_SHUTDOWN(dp->i_mount));
+>  		return XFS_ERROR(EIO);
+>  	}
+>  
+> @@ -163,13 +160,13 @@ xfs_dir2_sf_getdents(
+>  		filetype = dp->d_ops->sf_get_ftype(sfep);
+>  		ctx->pos = off & 0x7fffffff;
+>  		if (!dir_emit(ctx, (char *)sfep->name, sfep->namelen, ino,
+> -			    xfs_dir3_get_dtype(mp, filetype)))
+> +			    xfs_dir3_get_dtype(dp->i_mount, filetype)))
+>  			return 0;
+>  		sfep = dp->d_ops->sf_nextentry(sfp, sfep);
+>  	}
+>  
+>  	ctx->pos = xfs_dir2_db_off_to_dataptr(geo, geo->datablk + 1, 0) &
+> -			0x7fffffff;
+> +								0x7fffffff;
+>  	return 0;
+>  }
+>  
+> @@ -178,9 +175,10 @@ xfs_dir2_sf_getdents(
+>   */
+>  STATIC int
+>  xfs_dir2_block_getdents(
+> -	xfs_inode_t		*dp,		/* incore inode */
+> +	struct xfs_da_args	*args,
+>  	struct dir_context	*ctx)
+>  {
+> +	struct xfs_inode	*dp = args->dp;	/* incore directory inode */
+>  	xfs_dir2_data_hdr_t	*hdr;		/* block header */
+>  	struct xfs_buf		*bp;		/* buffer for block */
+>  	xfs_dir2_block_tail_t	*btp;		/* block tail */
+> @@ -188,14 +186,11 @@ xfs_dir2_block_getdents(
+>  	xfs_dir2_data_unused_t	*dup;		/* block unused entry */
+>  	char			*endptr;	/* end of the data entries */
+>  	int			error;		/* error return value */
+> -	xfs_mount_t		*mp;		/* filesystem mount point */
+>  	char			*ptr;		/* current data entry */
+>  	int			wantoff;	/* starting block offset */
+>  	xfs_off_t		cook;
+> -	struct xfs_da_geometry	*geo;
+> +	struct xfs_da_geometry	*geo = args->geo;
+>  
+> -	mp = dp->i_mount;
+> -	geo = mp->m_dir_geo;
+>  	/*
+>  	 * If the block number in the offset is out of range, we're done.
+>  	 */
+> @@ -258,7 +253,7 @@ xfs_dir2_block_getdents(
+>  		 */
+>  		if (!dir_emit(ctx, (char *)dep->name, dep->namelen,
+>  			    be64_to_cpu(dep->inumber),
+> -			    xfs_dir3_get_dtype(mp, filetype))) {
+> +			    xfs_dir3_get_dtype(dp->i_mount, filetype))) {
+>  			xfs_trans_brelse(NULL, bp);
+>  			return 0;
+>  		}
+> @@ -269,7 +264,7 @@ xfs_dir2_block_getdents(
+>  	 * Set the offset to a non-existent block 1 and return.
+>  	 */
+>  	ctx->pos = xfs_dir2_db_off_to_dataptr(geo, geo->datablk + 1, 0) &
+> -			0x7fffffff;
+> +								0x7fffffff;
+>  	xfs_trans_brelse(NULL, bp);
+>  	return 0;
+>  }
+> @@ -290,13 +285,13 @@ struct xfs_dir2_leaf_map_info {
+>  
+>  STATIC int
+>  xfs_dir2_leaf_readbuf(
+> -	struct xfs_inode	*dp,
+> +	struct xfs_da_args	*args,
+>  	size_t			bufsize,
+>  	struct xfs_dir2_leaf_map_info *mip,
+>  	xfs_dir2_off_t		*curoff,
+>  	struct xfs_buf		**bpp)
+>  {
+> -	struct xfs_mount	*mp = dp->i_mount;
+> +	struct xfs_inode	*dp = args->dp;
+>  	struct xfs_buf		*bp = *bpp;
+>  	struct xfs_bmbt_irec	*map = mip->map;
+>  	struct blk_plug		plug;
+> @@ -304,7 +299,7 @@ xfs_dir2_leaf_readbuf(
+>  	int			length;
+>  	int			i;
+>  	int			j;
+> -	struct xfs_da_geometry	*geo = mp->m_dir_geo;
+> +	struct xfs_da_geometry	*geo = args->geo;
+>  
+>  	/*
+>  	 * If we have a buffer, we need to release it and
+> @@ -338,8 +333,7 @@ xfs_dir2_leaf_readbuf(
+>  	/*
+>  	 * Recalculate the readahead blocks wanted.
+>  	 */
+> -	mip->ra_want = howmany(bufsize + geo->blksize,
+> -			       mp->m_sb.sb_blocksize) - 1;
+> +	mip->ra_want = howmany(bufsize + geo->blksize, (1 << geo->fsblog)) - 1;
+>  	ASSERT(mip->ra_want >= 0);
+>  
+>  	/*
+> @@ -411,8 +405,8 @@ xfs_dir2_leaf_readbuf(
+>  	mip->curdb = xfs_dir2_da_to_db(geo, map->br_startoff);
+>  	error = xfs_dir3_data_read(NULL, dp, map->br_startoff,
+>  			map->br_blockcount >= geo->fsbcount ?
+> -			    XFS_FSB_TO_DADDR(mp, map->br_startblock) : -1, &bp);
+> -
+> +			    XFS_FSB_TO_DADDR(dp->i_mount, map->br_startblock) :
+> +			    -1, &bp);
+>  	/*
+>  	 * Should just skip over the data block instead of giving up.
+>  	 */
+> @@ -441,7 +435,7 @@ xfs_dir2_leaf_readbuf(
+>  		    map[mip->ra_index].br_blockcount >= geo->fsbcount) {
+>  			xfs_dir3_data_readahead(dp,
+>  				map[mip->ra_index].br_startoff + mip->ra_offset,
+> -				XFS_FSB_TO_DADDR(mp,
+> +				XFS_FSB_TO_DADDR(dp->i_mount,
+>  					map[mip->ra_index].br_startblock +
+>  							mip->ra_offset));
+>  			mip->ra_current = i;
+> @@ -493,23 +487,23 @@ out:
+>   */
+>  STATIC int
+>  xfs_dir2_leaf_getdents(
+> -	xfs_inode_t		*dp,		/* incore directory inode */
+> +	struct xfs_da_args	*args,
+>  	struct dir_context	*ctx,
+>  	size_t			bufsize)
+>  {
+> +	struct xfs_inode	*dp = args->dp;
+>  	struct xfs_buf		*bp = NULL;	/* data block buffer */
+>  	xfs_dir2_data_hdr_t	*hdr;		/* data block header */
+>  	xfs_dir2_data_entry_t	*dep;		/* data entry */
+>  	xfs_dir2_data_unused_t	*dup;		/* unused entry */
+>  	int			error = 0;	/* error return value */
+>  	int			length;		/* temporary length value */
+> -	xfs_mount_t		*mp;		/* filesystem mount point */
+>  	int			byteoff;	/* offset in current block */
+>  	xfs_dir2_off_t		curoff;		/* current overall offset */
+>  	xfs_dir2_off_t		newoff;		/* new curoff after new blk */
+>  	char			*ptr = NULL;	/* pointer to current data */
+>  	struct xfs_dir2_leaf_map_info *map_info;
+> -	struct xfs_da_geometry	*geo;
+> +	struct xfs_da_geometry	*geo = args->geo;
+>  
+>  	/*
+>  	 * If the offset is at or past the largest allowed value,
+> @@ -518,15 +512,12 @@ xfs_dir2_leaf_getdents(
+>  	if (ctx->pos >= XFS_DIR2_MAX_DATAPTR)
+>  		return 0;
+>  
+> -	mp = dp->i_mount;
+> -	geo = mp->m_dir_geo;
+> -
+>  	/*
+>  	 * Set up to bmap a number of blocks based on the caller's
+>  	 * buffer size, the directory block size, and the filesystem
+>  	 * block size.
+>  	 */
+> -	length = howmany(bufsize + geo->blksize, mp->m_sb.sb_blocksize);
+> +	length = howmany(bufsize + geo->blksize, (1 << geo->fsblog));
+>  	map_info = kmem_zalloc(offsetof(struct xfs_dir2_leaf_map_info, map) +
+>  				(length * sizeof(struct xfs_bmbt_irec)),
+>  			       KM_SLEEP | KM_NOFS);
+> @@ -558,7 +549,7 @@ xfs_dir2_leaf_getdents(
+>  		 */
+>  		if (!bp || ptr >= (char *)bp->b_addr + geo->blksize) {
+>  
+> -			error = xfs_dir2_leaf_readbuf(dp, bufsize, map_info,
+> +			error = xfs_dir2_leaf_readbuf(args, bufsize, map_info,
+>  						      &curoff, &bp);
+>  			if (error || !map_info->map_valid)
+>  				break;
+> @@ -566,7 +557,7 @@ xfs_dir2_leaf_getdents(
+>  			/*
+>  			 * Having done a read, we need to set a new offset.
+>  			 */
+> -			newoff = xfs_dir2_db_off_to_byte(mp->m_dir_geo,
+> +			newoff = xfs_dir2_db_off_to_byte(geo,
+>  							 map_info->curdb, 0);
+>  			/*
+>  			 * Start of the current block.
+> @@ -585,7 +576,7 @@ xfs_dir2_leaf_getdents(
+>  			 * Find our position in the block.
+>  			 */
+>  			ptr = (char *)dp->d_ops->data_entry_p(hdr);
+> -			byteoff = xfs_dir2_byte_to_off(mp->m_dir_geo, curoff);
+> +			byteoff = xfs_dir2_byte_to_off(geo, curoff);
+>  			/*
+>  			 * Skip past the header.
+>  			 */
+> @@ -644,7 +635,7 @@ xfs_dir2_leaf_getdents(
+>  		ctx->pos = xfs_dir2_byte_to_dataptr(curoff) & 0x7fffffff;
+>  		if (!dir_emit(ctx, (char *)dep->name, dep->namelen,
+>  			    be64_to_cpu(dep->inumber),
+> -			    xfs_dir3_get_dtype(mp, filetype)))
+> +			    xfs_dir3_get_dtype(dp->i_mount, filetype)))
+>  			break;
+>  
+>  		/*
+> @@ -674,13 +665,14 @@ xfs_dir2_leaf_getdents(
+>   */
+>  int
+>  xfs_readdir(
+> -	xfs_inode_t	*dp,
+> -	struct dir_context *ctx,
+> -	size_t		bufsize)
+> +	struct xfs_inode	*dp,
+> +	struct dir_context	*ctx,
+> +	size_t			bufsize)
+>  {
+> -	int		rval;		/* return value */
+> -	int		v;		/* type-checking value */
+> -	uint		lock_mode;
+> +	struct xfs_da_args	args = {0};
+> +	int			rval;
+> +	int			v;
+> +	uint			lock_mode;
+>  
+>  	trace_xfs_readdir(dp);
+>  
+> @@ -690,15 +682,18 @@ xfs_readdir(
+>  	ASSERT(S_ISDIR(dp->i_d.di_mode));
+>  	XFS_STATS_INC(xs_dir_getdents);
+>  
+> +	args.dp = dp;
+> +	args.geo = dp->i_mount->m_dir_geo;
+> +
+>  	lock_mode = xfs_ilock_data_map_shared(dp);
+>  	if (dp->i_d.di_format == XFS_DINODE_FMT_LOCAL)
+> -		rval = xfs_dir2_sf_getdents(dp, ctx);
+> -	else if ((rval = xfs_dir2_isblock(dp, &v)))
+> +		rval = xfs_dir2_sf_getdents(&args, ctx);
+> +	else if ((rval = xfs_dir2_isblock(&args, &v)))
+>  		;
+>  	else if (v)
+> -		rval = xfs_dir2_block_getdents(dp, ctx);
+> +		rval = xfs_dir2_block_getdents(&args, ctx);
+>  	else
+> -		rval = xfs_dir2_leaf_getdents(dp, ctx, bufsize);
+> +		rval = xfs_dir2_leaf_getdents(&args, ctx, bufsize);
+>  	xfs_iunlock(dp, lock_mode);
+>  
+>  	return rval;
 > -- 
 > 1.9.0
 > 
