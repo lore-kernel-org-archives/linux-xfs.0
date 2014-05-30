@@ -1,21 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id A8B037F55
-	for <xfs@oss.sgi.com>; Fri, 30 May 2014 14:49:15 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 929C97F56
+	for <xfs@oss.sgi.com>; Fri, 30 May 2014 15:07:09 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 771198F8065
-	for <xfs@oss.sgi.com>; Fri, 30 May 2014 12:49:15 -0700 (PDT)
-Received: from mail-qg0-f43.google.com (mail-qg0-f43.google.com
-	[209.85.192.43]) by cuda.sgi.com with ESMTP id QGHCxAnycfIDJmEe
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Fri, 30 May 2014 12:49:13 -0700 (PDT)
-Received: by mail-qg0-f43.google.com with SMTP id 63so6868724qgz.30
-	for <xfs@oss.sgi.com>; Fri, 30 May 2014 12:49:13 -0700 (PDT)
-MIME-Version: 1.0
-Date: Fri, 30 May 2014 15:49:13 -0400
-Message-ID: <CAA43vkVzWRTqNQh2VSi5yvFLtstmVOKRJUnYw_ZSkYJGsex8Uw@mail.gmail.com>
-Subject: What to do when... xfs_repair hangs?
-From: Sean Caron <scaron@umich.edu>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 72DDD30404E
+	for <xfs@oss.sgi.com>; Fri, 30 May 2014 13:07:06 -0700 (PDT)
+Received: from mout.kundenserver.de (mout.kundenserver.de [212.227.17.10]) by
+	cuda.sgi.com with ESMTP id WFi1se20bwihGeyv (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Fri, 30 May 2014 13:07:05 -0700 (PDT)
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: [RFC 11/32] xfs: convert to struct inode_time
+Date: Fri, 30 May 2014 22:01:35 +0200
+Message-Id: <1401480116-1973111-12-git-send-email-arnd@arndb.de>
+In-Reply-To: <1401480116-1973111-1-git-send-email-arnd@arndb.de>
+References: <1401480116-1973111-1-git-send-email-arnd@arndb.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,131 +23,111 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============6643844973939390309=="
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com, Sean Caron <scaron@umich.edu>
+To: linux-kernel@vger.kernel.org
+Cc: linux-arch@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>, hpa@zytor.com, xfs@oss.sgi.com, hch@infradead.org, john.stultz@linaro.org, lftan@altera.com, linux-fsdevel@vger.kernel.org, geert@linux-m68k.org, tglx@linutronix.de, joseph@codesourcery.com
 
---===============6643844973939390309==
-Content-Type: multipart/alternative; boundary=089e01536b7202f05a04faa3574e
+xfs uses unsigned 32-bit seconds for inode timestamps, which will work
+for the next 92 years, but the VFS uses struct timespec for timestamps,
+which is only good until 2038 on 32-bit CPUs.
 
---089e01536b7202f05a04faa3574e
-Content-Type: text/plain; charset=UTF-8
+This gets us one small step closer to lifting the VFS limit by using
+struct inode_time in XFS.
 
-Hi all,
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+Cc: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
+---
+ fs/xfs/time.h            | 4 ++--
+ fs/xfs/xfs_inode.c       | 2 +-
+ fs/xfs/xfs_iops.c        | 2 +-
+ fs/xfs/xfs_trans_inode.c | 6 +++---
+ 4 files changed, 7 insertions(+), 7 deletions(-)
 
-Long story short, we have a big array formatted as XFS, we had a machine go
-down hard maybe a month, month and a half ago... when it came back up, XFS
-faulted out when we attempted to mount the filesystem; it complained the
-log was bad or something... I did a dry run of xfs_repair (-L) and it
-looked pretty bad, so we mounted up the filesystem read-only, ran a
-backup... I think we got pretty much everything out OK except maybe files
-that were open at the time of the crash.
-
-Now with a backup in hand, we kicked off xfs_repair "for real"... it ran
-for a while and did its thing, but now it appears to be stuck at the stage -
-
-- agno = 436
-rebuilding directory inode ...
-rebuilding directory inode ...
-rebuilding directory inode ...
-...
-- traversal finished ...
-- moving disconected inodes to lost+found ...
-disconnected inode 1109099673,
-
-and then it just stops. I don't know how long its been sitting like that,
-but it hasn't moved in the last hour or two. I assume that's not good...
-
-Interestingly when we ran a dry run of xfs_repair (-L) it got all the way
-through; it never hung up at any point. Not sure why it would start to hang
-up, once it gets run "for real".
-
-This machine is in single-user-mode, I have exactly 24 lines of console
-with no scrollback buffer, no other tty available besides that which I'm
-running xfs_repair on, the system console.
-
-Running Linux kernel 3.4.61, Ubuntu 12.04 LTS 64-bit with whatever their
-current xfsprogs is.
-
-This is a bit of an exceptional situation for me; I've never seen
-xfs_repair just hang outright. I hoped I could maybe get some feedback from
-the experts here... what should I do?
-
-Try to Control-C out of the xfs_repair and ... re-run it?
-
-Should I just quit wasting time at this point, wipe out the filesystem,
-reformat, then just start the long process of restoring from the backups?
-
-Original plan was just to run xfs_repair, see what happened and pull from
-backups as required to fix damage. Perhaps we should just cut to the chase,
-rebuild, and restore everything? Probably the file system would be
-ultimately healthier starting from scratch, than what xfs_repair leaves
-behind?
-
-Any insight would be very much appreciated!
-
-Thanks,
-
-Sean
-
---089e01536b7202f05a04faa3574e
-Content-Type: text/html; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
-
-<div dir=3D"ltr">Hi all,<div><br></div><div>Long story short, we have a big=
- array formatted as XFS, we had a machine go down hard maybe a month, month=
- and a half ago... when it came back up, XFS faulted out when we attempted =
-to mount the filesystem; it complained the log was bad or something... I di=
-d a dry run of xfs_repair (-L) and it looked pretty bad, so we mounted up t=
-he filesystem read-only, ran a backup... I think we got pretty much everyth=
-ing out OK except maybe files that were open at the time of the crash.</div=
->
-<div><br></div><div>Now with a backup in hand, we kicked off xfs_repair &qu=
-ot;for real&quot;... it ran for a while and did its thing, but now it appea=
-rs to be stuck at the stage -</div><div><br></div><div>- agno =3D 436</div>
-<div>rebuilding directory inode ...</div><div>rebuilding directory inode ..=
-.</div><div>rebuilding directory inode ...</div><div>...</div><div>- traver=
-sal finished ...</div><div>- moving disconected inodes to lost+found ...</d=
-iv>
-<div>disconnected inode 1109099673,</div><div><br></div><div>and then it ju=
-st stops. I don&#39;t know how long its been sitting like that, but it hasn=
-&#39;t moved in the last hour or two. I assume that&#39;s not good...</div>
-<div><br></div><div>Interestingly when we ran a dry run of xfs_repair (-L) =
-it got all the way through; it never hung up at any point. Not sure why it =
-would start to hang up, once it gets run &quot;for real&quot;.</div><div>
-<br></div><div>This machine is in single-user-mode, I have exactly 24 lines=
- of console with no scrollback buffer, no other tty available besides that =
-which I&#39;m running xfs_repair on, the system console.</div><div><br>
-</div><div>Running Linux kernel 3.4.61, Ubuntu 12.04 LTS 64-bit with whatev=
-er their current xfsprogs is.</div><div><br></div><div>This is a bit of an =
-exceptional situation for me; I&#39;ve never seen xfs_repair just hang outr=
-ight. I hoped I could maybe get some feedback from the experts here... what=
- should I do?</div>
-<div><br></div><div>Try to Control-C out of the xfs_repair and ... re-run i=
-t?</div><div><br></div><div>Should I just quit wasting time at this point, =
-wipe out the filesystem, reformat, then just start the long process of rest=
-oring from the backups?</div>
-<div><br></div><div>Original plan was just to run xfs_repair, see what happ=
-ened and pull from backups as required to fix damage. Perhaps we should jus=
-t cut to the chase, rebuild, and restore everything? Probably the file syst=
-em would be ultimately healthier starting from scratch, than what xfs_repai=
-r leaves behind?</div>
-<div><br></div><div>Any insight would be very much appreciated!</div><div><=
-br></div><div>Thanks,</div><div><br></div><div>Sean</div></div>
-
---089e01536b7202f05a04faa3574e--
-
-
---===============6643844973939390309==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+diff --git a/fs/xfs/time.h b/fs/xfs/time.h
+index 387e695..a490f1b 100644
+--- a/fs/xfs/time.h
++++ b/fs/xfs/time.h
+@@ -21,14 +21,14 @@
+ #include <linux/sched.h>
+ #include <linux/time.h>
+ 
+-typedef struct timespec timespec_t;
++typedef struct inode_time timespec_t;
+ 
+ static inline void delay(long ticks)
+ {
+ 	schedule_timeout_uninterruptible(ticks);
+ }
+ 
+-static inline void nanotime(struct timespec *tvp)
++static inline void nanotime(struct inode_time *tvp)
+ {
+ 	*tvp = CURRENT_TIME;
+ }
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index a6115fe..16d5392 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -654,7 +654,7 @@ xfs_ialloc(
+ 	xfs_inode_t	*ip;
+ 	uint		flags;
+ 	int		error;
+-	timespec_t	tv;
++	struct inode_time tv;
+ 
+ 	/*
+ 	 * Call the space management code to pick
+diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+index 205613a..092ee7c 100644
+--- a/fs/xfs/xfs_iops.c
++++ b/fs/xfs/xfs_iops.c
+@@ -956,7 +956,7 @@ xfs_vn_setattr(
+ STATIC int
+ xfs_vn_update_time(
+ 	struct inode		*inode,
+-	struct timespec		*now,
++	struct inode_time	*now,
+ 	int			flags)
+ {
+ 	struct xfs_inode	*ip = XFS_I(inode);
+diff --git a/fs/xfs/xfs_trans_inode.c b/fs/xfs/xfs_trans_inode.c
+index 50c3f56..bae2520 100644
+--- a/fs/xfs/xfs_trans_inode.c
++++ b/fs/xfs/xfs_trans_inode.c
+@@ -70,7 +70,7 @@ xfs_trans_ichgtime(
+ 	int			flags)
+ {
+ 	struct inode		*inode = VFS_I(ip);
+-	timespec_t		tv;
++	struct inode_time	tv;
+ 
+ 	ASSERT(tp);
+ 	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
+@@ -78,13 +78,13 @@ xfs_trans_ichgtime(
+ 	tv = current_fs_time(inode->i_sb);
+ 
+ 	if ((flags & XFS_ICHGTIME_MOD) &&
+-	    !timespec_equal(&inode->i_mtime, &tv)) {
++	    !inode_time_equal(&inode->i_mtime, &tv)) {
+ 		inode->i_mtime = tv;
+ 		ip->i_d.di_mtime.t_sec = tv.tv_sec;
+ 		ip->i_d.di_mtime.t_nsec = tv.tv_nsec;
+ 	}
+ 	if ((flags & XFS_ICHGTIME_CHG) &&
+-	    !timespec_equal(&inode->i_ctime, &tv)) {
++	    !inode_time_equal(&inode->i_ctime, &tv)) {
+ 		inode->i_ctime = tv;
+ 		ip->i_d.di_ctime.t_sec = tv.tv_sec;
+ 		ip->i_d.di_ctime.t_nsec = tv.tv_nsec;
+-- 
+1.8.3.2
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============6643844973939390309==--
