@@ -1,16 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 5D2607F59
-	for <xfs@oss.sgi.com>; Fri, 30 May 2014 14:10:33 -0500 (CDT)
-Message-ID: <5388D7A8.5040906@sgi.com>
-Date: Fri, 30 May 2014 14:10:32 -0500
-From: Mark Tinguely <tinguely@sgi.com>
+	by oss.sgi.com (Postfix) with ESMTP id 3BFDE7F4E
+	for <xfs@oss.sgi.com>; Fri, 30 May 2014 14:10:37 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 0BD6F8F8070
+	for <xfs@oss.sgi.com>; Fri, 30 May 2014 12:10:36 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id hrAwQtSYlsS8jHv9 for
+	<xfs@oss.sgi.com>; Fri, 30 May 2014 12:10:36 -0700 (PDT)
+Date: Fri, 30 May 2014 15:05:35 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 00/16 V3] xfs: introduce struct xfs_da_geometry
+Message-ID: <20140530190534.GC3146@laptop.bfoster>
+References: <1401257083-13433-1-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH v4 2/10] xfs: Add support FALLOC_FL_INSERT_RANGE for
-	fallocate
-References: <001e01cf7b0f$ba43dfd0$2ecb9f70$@samsung.com>
-	<20140530140551.GC6226@bfoster.bfoster>
-In-Reply-To: <20140530140551.GC6226@bfoster.bfoster>
+Content-Disposition: inline
+In-Reply-To: <1401257083-13433-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -19,60 +24,49 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
-Cc: Namjae Jeon <namjae.jeon@samsung.com>, linux-fsdevel@vger.kernel.org, Ashish Sangwan <a.sangwan@samsung.com>, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-On 05/30/14 09:05, Brian Foster wrote:
-> On Thu, May 29, 2014 at 04:29:29PM +0900, Namjae Jeon wrote:
->> >  This patch implements fallocate's FALLOC_FL_INSERT_RANGE for XFS.
->> >
->> >  1) Make sure that both offset and len are block size aligned.
->> >  2) Update the i_size of inode by len bytes.
->> >  3) Compute the file's logical block number against offset. If the computed
->> >      block number is not the starting block of the extent, split the extent
->> >      such that the block number is the starting block of the extent.
->> >  4) Shift all the extents which are lying bewteen [offset, last allocated extent]
->> >      towards right by len bytes. This step will make a hole of len bytes
->> >      at offset.
->> >  5) Allocate unwritten extents for the hole created in step 4.
->> >
->> >  Signed-off-by: Namjae Jeon<namjae.jeon@samsung.com>
->> >  Signed-off-by: Ashish Sangwan<a.sangwan@samsung.com>
->> >  Reviewed-by: Brian Foster<bfoster@redhat.com>
->> >  ---
->> >
->> >  Changelog
->> >  v4:
->> >    - set cur->bc_private.b.allocated to zero before calling xfs_btree_del_cursor.
->> >
-> Other issues not withstanding (sounds like Mark still has a lingering,
-> potential corruption case), this fixes the warnings I was seeing. I ran
-> through an xfstest cycle without problem. Thanks for fixing this.
->
-> The cursor allocated flag appears to be used to carry bmbt block
-> allocations over to delayed allocation extent conversions (such that
-> these allocations are accounted from previous delalloc extent index
-> block reservations). This is all within the bmbt code, so clearing the
-> flag seems reasonable as well.
->
-> Though I wonder why it falls on the caller to clear the flag as opposed
-> to fixing up the flag automatically when it becomes accounted for. I
-> guess that would enable a warning with semantics of "something might
-> have been unaccounted for" vs. "somebody forgot to reset a flag." That
-> said, it's likely there are circumstances involved with this mechanism
-> that I'm not yet familiar with.;)
->
-> Brian
->
+On Wed, May 28, 2014 at 04:04:27PM +1000, Dave Chinner wrote:
+> Hi folks, 
+> 
+> Version three of the patchset first posted here:
+> 
+> http://oss.sgi.com/pipermail/xfs/2014-May/036125.html
+> 
+> This version addresses the review comments so far.
+> 
+> Changelog:
+> 
+> Version 3:
+> - added xfs_da_unmount
+> - moved dir2 conversion functions to xfs_dir2_priv.h
+> - converted xfs_dir2_readdir.c to use local geo variables
+> - added a patch to remove newly redundant geometry fields
+>   from the struct xfs_da_state
 
-I did not have this patch included in my tests just the code from Linux 
-3.15-rc5. I will add and see if it still asserts.
+I don't see this bit anywhere in the series...
 
---Mark.
+Brian
+
+> 
+> Version 2:
+> - patch removing checks from xfs_da_read_buf() sent separately
+> - dropped patch adding xfs_da_geometry to the inode forks as it's
+>   not currently needed
+> - cleared up all the "XXX" notations added in the RFC series
+> - fixed several bugs in different patches as a result of incorrect
+>   conversions
+> - ensured each patch compiled and passes xfstests individually
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
