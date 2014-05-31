@@ -1,28 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 89FEA7F47
-	for <xfs@oss.sgi.com>; Tue,  3 Jun 2014 17:59:00 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 2021EAC004
-	for <xfs@oss.sgi.com>; Tue,  3 Jun 2014 15:59:00 -0700 (PDT)
-Received: from mail-wg0-f48.google.com (mail-wg0-f48.google.com
-	[74.125.82.48]) by cuda.sgi.com with ESMTP id I2V8XoOXF55vR8Se
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 03 Jun 2014 15:58:58 -0700 (PDT)
-Received: by mail-wg0-f48.google.com with SMTP id k14so7572408wgh.7
-	for <xfs@oss.sgi.com>; Tue, 03 Jun 2014 15:58:57 -0700 (PDT)
-Message-ID: <538E532E.7050008@gmail.com>
-Date: Wed, 04 Jun 2014 01:58:54 +0300
-From: Martin Papik <mp6058@gmail.com>
-MIME-Version: 1.0
-Subject: Re: XFS filesystem claims to be mounted after a disconnect
-References: <5363E65C.6010006@sandeen.net> <5363ECE8.6030706@gmail.com>
-	<20140502233512.GE26353@dastard> <536432A0.6000405@gmail.com>
-	<20140503030221.GJ26353@dastard> <538C5E67.6090005@gmail.com>
-	<20140602234135.GO6677@dastard> <538D9412.3040009@gmail.com>
-	<CAAxjCEzz5n85zAH5HuUQkfxKvzZt5_+cPCj3uzZR7U69H+2tDw@mail.gmail.com>
-	<538DA7FF.4080002@gmail.com> <20140603212834.GG14410@dastard>
-In-Reply-To: <20140603212834.GG14410@dastard>
+	by oss.sgi.com (Postfix) with ESMTP id D63C57F7E
+	for <xfs@oss.sgi.com>; Sat, 31 May 2014 09:31:25 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 74446AC003
+	for <xfs@oss.sgi.com>; Sat, 31 May 2014 07:31:22 -0700 (PDT)
+Received: from gproxy4-pub.mail.unifiedlayer.com
+	(gproxy4-pub.mail.unifiedlayer.com [69.89.23.142]) by
+	cuda.sgi.com with SMTP id tilt8fd7DcwSMsEx for
+	<xfs@oss.sgi.com>; Sat, 31 May 2014 07:31:17 -0700 (PDT)
+Message-ID: <1401546649.2413.6.camel@slavad-CELSIUS-H720>
+Subject: Re: [RFC 00/32] making inode time stamps y2038 ready
+From: Vyacheslav Dubeyko <slava@dubeyko.com>
+Date: Sat, 31 May 2014 18:30:49 +0400
+In-Reply-To: <1401480116-1973111-1-git-send-email-arnd@arndb.de>
+References: <1401480116-1973111-1-git-send-email-arnd@arndb.de>
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,58 +28,56 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Linux fs XFS <xfs@oss.sgi.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: hch@infradead.org, linux-mtd@lists.infradead.org, hpa@zytor.com, logfs@logfs.org, linux-afs@lists.infradead.org, joseph@codesourcery.com, linux-arch@vger.kernel.org, linux-cifs@vger.kernel.org, linux-scsi@vger.kernel.org, ceph-devel@vger.kernel.org, codalist@coda.cs.cmu.edu, cluster-devel@redhat.com, coda@cs.cmu.edu, geert@linux-m68k.org, linux-ext4@vger.kernel.org, fuse-devel@lists.sourceforge.net, reiserfs-devel@vger.kernel.org, xfs@oss.sgi.com, john.stultz@linaro.org, tglx@linutronix.de, linux-nfs@vger.kernel.org, linux-ntfs-dev@lists.sourceforge.net, samba-technical@lists.samba.org, linux-kernel@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, ocfs2-devel@oss.oracle.com, linux-fsdevel@vger.kernel.org, lftan@altera.com, linux-btrfs@vger.kernel.org
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA512
+Hi Arnd,
 
+On Fri, 2014-05-30 at 22:01 +0200, Arnd Bergmann wrote:
 
-
->> [3096069.218830] XFS (sdf100): Log I/O Error Detected.  Shutting
->> down filesystem [3096069.218833] XFS (sdf100): Please umount the
->> filesystem and rectify the problem(s)
+[snip]
 > 
-> triggered a shutdown and told you what to do next.
+> Arnd Bergmann (32):
+>   fs: introduce new 'struct inode_time'
+>   uapi: add struct __kernel_timespec{32,64}
+>   fs: introduce sys_utimens64at
+>   fs: introduce sys_newfstat64/sys_newfstatat64
+>   arch: hook up new stat and utimes syscalls
+>   isofs: fix timestamps beyond 2027
+>   fs/nfs: convert to struct inode_time
+>   fs/ceph: convert to 'struct inode_time'
+>   fs/pstore: convert to struct inode_time
+>   fs/coda: convert to struct inode_time
+>   xfs: convert to struct inode_time
+>   btrfs: convert to struct inode_time
+>   ext3: convert to struct inode_time
+>   ext4: convert to struct inode_time
+>   cifs: convert to struct inode_time
+>   ntfs: convert to struct inode_time
+>   ubifs: convert to struct inode_time
+>   ocfs2: convert to struct inode_time
+>   fs/fat: convert to struct inode_time
+>   afs: convert to struct inode_time
+>   udf: convert to struct inode_time
+>   fs: convert simple fs to inode_time
+>   logfs: convert to struct inode_time
+>   hfs, hfsplus: convert to struct inode_time
+>   gfs2: convert to struct inode_time
+>   reiserfs: convert to struct inode_time
+>   jffs2: convert to struct inode_time
+>   adfs: convert to struct inode_time
+>   f2fs: convert to struct inode_time
+>   fuse: convert to struct inode_time
+>   scsi: fnic: use current_kernel_time() for timestamp
+>   fs: use new inode_time definition unconditionally
+> 
 
-Okay, here I'll pick nits. I hope you're not sick of me yet.
+By the way, what about NILFS2? Is NILFS2 ready for suggested approach
+without any changes?
 
-1) I would LOVE to unmount the FS, but how? umount /dev/xxx ... device
-no longer there. umount /media/xxx ... mount point no longer there.
+Thanks,
+Vyacheslav Dubeyko.
 
-2) I can't rectify the problems exactly because the FS is mounted
-(according to xfs_repair [ustat]), yet not mounted (according to
-/proc/mounts). .... unless rectifying the problem means reporting this
-as a bug. :-)
-
-3) "Shutting down filesystem" ... isn't this when the new device
-should no longer be detected as mounted?
-
-4) come to think of it, if XFS is shutting down, why isn't it
-unmounting itself?
-
-Anyway, sorry if I'm being annoying, but I'm really really convinced
-this is wrong. :-)
-
-Martin
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
-Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
-
-iQIcBAEBCgAGBQJTjlMuAAoJELsEaSRwbVYrzOAP/36uqrKeKBlAss8ILg9cwdtI
-cXxGG7kAPCI2r+jTNCmHnMsJW4ujptVB3jllIlNPiF+oglZHEFf2bhfoYL8D5q+0
-oxHiaOuvU590hBfELf+yPHNxkTPpUirhF5VymwqD+ZvV/TEjuw/VvGZ8pAU4bZHv
-v4vfDX2ExCHqK3d5j7D5u5YF4wD754yTq+5Qz5L944JKubXCK2uo0xt7i3QluIMJ
-dcEHPw1LXIKjjmsTZ2BaCSUwtfLGnQhGp2mHQY2Oe8KeRx8Jog7reNjazcFqI5hn
-Ap6Q9ugSbtSn200e4P2pBbQOEsaHgfA9HzAQYZ6rhQk/Wrjr2I34uVxySNDn0RQk
-EbjBFV04DjoiLPfff/tWvHtUNR3yZ3X0ssV5kLbfub4nPk0dMApaDI/pB8j//+Qu
-4CHZgtodi//9hOFaBX9h/3vJl5aD6XddUVznZGP+0W/W2Gifev5xr+jSiUK00xk6
-xLGelmUdtkq5IlFNizXZU/QcTzLW2gcB2oyW0NpoMBqEhsGCFG6IE85H/POtV7Io
-otgBiWxBgxYEzGm73krja3yQlflKfuPK+SKJZue/liK5eNuIt8FRFmMH8jK/dGTc
-6BMZ66Mnt2Pn7UkewLFmH0XtAPcMO7lyCEBBN0iG0s3f7Vg1T7b0tamNcaThkPt/
-476Ebh9LGukDmcNXeyXo
-=C9nD
------END PGP SIGNATURE-----
 
 _______________________________________________
 xfs mailing list
