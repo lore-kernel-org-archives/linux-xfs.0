@@ -1,24 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 5501C7F72
-	for <xfs@oss.sgi.com>; Mon,  2 Jun 2014 08:16:07 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 21DB8304039
-	for <xfs@oss.sgi.com>; Mon,  2 Jun 2014 06:16:06 -0700 (PDT)
-Received: from imap.thunk.org (imap.thunk.org [74.207.234.97]) by cuda.sgi.com
-	with ESMTP id q9IyTgKGajm07ikR (version=TLSv1 cipher=AES128-SHA
-	bits=128 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 02 Jun 2014 06:16:04 -0700 (PDT)
-Date: Mon, 2 Jun 2014 09:15:55 -0400
-From: Theodore Ts'o <tytso@mit.edu>
-Subject: Re: [RFC 11/32] xfs: convert to struct inode_time
-Message-ID: <20140602131555.GD14276@thunk.org>
-References: <1401480116-1973111-1-git-send-email-arnd@arndb.de>
-	<4178301.j9kWdGCRLC@wuerfel> <20140602115737.GB14276@thunk.org>
-	<4910284.a72lauVLNV@wuerfel>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <4910284.a72lauVLNV@wuerfel>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id DEAE47F63
+	for <xfs@oss.sgi.com>; Mon,  2 Jun 2014 08:59:45 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id C9B548F8039
+	for <xfs@oss.sgi.com>; Mon,  2 Jun 2014 06:59:45 -0700 (PDT)
+Received: from mail.kernel.org (mail.kernel.org [198.145.19.201]) by
+	cuda.sgi.com with ESMTP id iam8QBStJimu5tf9 for
+	<xfs@oss.sgi.com>; Mon, 02 Jun 2014 06:59:44 -0700 (PDT)
+From: jaegeuk@kernel.org
+Subject: [PATCH] xfstests: f2fs support
+Date: Mon,  2 Jun 2014 22:59:32 +0900
+Message-Id: <1401717572-21731-1-git-send-email-jaegeuk@kernel.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,40 +20,82 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Nicolas Pitre <nicolas.pitre@linaro.org>, linux-arch@vger.kernel.org, linux-kernel@vger.kernel.org, lftan@altera.com, hch@infradead.org, john.stultz@linaro.org, "H. Peter Anvin" <hpa@zytor.com>, linux-fsdevel@vger.kernel.org, geert@linux-m68k.org, tglx@linutronix.de, xfs@oss.sgi.com, joseph@codesourcery.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-fsdevel@vger.kernel.org, Jaegeuk Kim <jaegeuk@kernel.org>, linux-kernel@vger.kernel.org, linux-f2fs-devel@lists.sourceforget.net, xfs@oss.sgi.com
 
-On Mon, Jun 02, 2014 at 02:38:09PM +0200, Arnd Bergmann wrote:
-> 
-> "For new inodes we always reserve enough space for the kernel's known
-> extended fields, but for inodes created with an old kernel this might
-> not have been the case. None of the extended inode fields is critical
-> for correct filesystem operation."
-> 
-> Do we have to worry about this for inodes that contain extended
-> attributes and that get updated after 2038?
+From: Jaegeuk Kim <jaegeuk@kernel.org>
 
-In practice, the extended timestamps was one of the first things added
-to ext4, so the vast majority of ext4 file systems with inode sizes >
-128 bytes will have room for the extended timestamps.  There are some
-legacy ext3 file systems with 256-byte inodes (enabled for fast
-sotrage of SELinux xattrs) that in theory, could have been converted
-to ext4 and had enough xattrs so that the extended timestamps couldn't
-be added.  That would be a vanishingly small use case, and in
-practice, it's not likely to be the case for the embedded market.
+This patch adds to support f2fs file system.
 
-I could imagine someone worrying about file systems originally
-formatted using RHEL 4 post-2038 (perhaps running in a VM), but I
-don't work for IBM any more, and hopefully even IBM would just tell
-such customers that they need to suck it up, and do a
-backup/reformat/restore pass.
+Signed-off-by: Jaegeuk Kim <jaegeuk@kernel.org>
+---
+ common/config | 7 +++++++
+ common/rc     | 6 ++++++
+ 2 files changed, 13 insertions(+)
 
-Cheers,
-						- Ted
+diff --git a/common/config b/common/config
+index 0dbf0b9..0607294 100644
+--- a/common/config
++++ b/common/config
+@@ -210,6 +210,7 @@ case "$HOSTOS" in
+         export MKFS_XFS_PROG="`set_prog_path mkfs.xfs`"
+         export MKFS_UDF_PROG="`set_prog_path mkudffs`"
+         export MKFS_BTRFS_PROG="`set_btrfs_mkfs_prog_path_with_opts`"
++        export MKFS_F2FS_PROG="`set_prog_path mkfs.f2fs`"
+         export BTRFS_UTIL_PROG="`set_prog_path btrfs`"
+         export BTRFS_SHOW_SUPER_PROG="`set_prog_path btrfs-show-super`"
+         export XFS_FSR_PROG="`set_prog_path xfs_fsr`"
+@@ -241,6 +242,9 @@ _mount_opts()
+ 		# acls & xattrs aren't turned on by default on ext$FOO
+ 		export MOUNT_OPTIONS="-o acl,user_xattr $EXT_MOUNT_OPTIONS"
+ 		;;
++	f2fs)
++		export MOUNT_OPTIONS="-o acl,user_xattr $F2FS_MOUNT_OPTIONS"
++		;;
+ 	reiserfs)
+ 		# acls & xattrs aren't turned on by default on reiserfs
+ 		export MOUNT_OPTIONS="-o acl,user_xattr $REISERFS_MOUNT_OPTIONS"
+@@ -295,6 +299,9 @@ _fsck_opts()
+ 	reiserfs)
+ 		export FSCK_OPTIONS="--yes"
+ 		;;
++	f2fs)
++		export FSCK_OPTIONS=""
++		;;
+ 	*)
+ 		export FSCK_OPTIONS="-n"
+ 		;;
+diff --git a/common/rc b/common/rc
+index f27ee53..fcdabfe 100644
+--- a/common/rc
++++ b/common/rc
+@@ -105,6 +105,9 @@ case "$FSTYP" in
+     btrfs)
+ 	 [ "$MKFS_BTRFS_PROG" = "" ] && _fatal "mkfs.btrfs not found"
+ 	 ;;
++    f2fs)
++	 [ "$MKFS_F2FS_PROG" = "" ] && _fatal "mkfs.f2fs not found"
++	 ;;
+     nfs)
+ 	 ;;
+ esac
+@@ -511,6 +514,9 @@ _scratch_mkfs()
+     tmpfs)
+ 	# do nothing for tmpfs
+ 	;;
++    f2fs)
++        $MKFS_F2FS_PROG $MKFS_OPTIONS $* $SCRATCH_DEV > /dev/null
++	;;
+     *)
+ 	yes | $MKFS_PROG -t $FSTYP -- $MKFS_OPTIONS $* $SCRATCH_DEV
+ 	;;
+-- 
+1.8.5.2 (Apple Git-48)
 
 _______________________________________________
 xfs mailing list
