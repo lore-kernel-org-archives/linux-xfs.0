@@ -1,24 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id B98387F54
-	for <xfs@oss.sgi.com>; Sun,  1 Jun 2014 17:48:32 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id A4E4C8F8037
-	for <xfs@oss.sgi.com>; Sun,  1 Jun 2014 15:48:29 -0700 (PDT)
-Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
-	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	iMrC6G9RAhjLlxws for <xfs@oss.sgi.com>;
-	Sun, 01 Jun 2014 15:48:27 -0700 (PDT)
-Date: Mon, 2 Jun 2014 08:48:25 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: What to do when... xfs_repair hangs?
-Message-ID: <20140601224825.GP14410@dastard>
-References: <CAA43vkVzWRTqNQh2VSi5yvFLtstmVOKRJUnYw_ZSkYJGsex8Uw@mail.gmail.com>
-	<20140531000117.GM6677@dastard>
-	<CAA43vkUBF3q-F6XYTPTVx43KXg_3_COgaK8wtHxRynshOT9smg@mail.gmail.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <CAA43vkUBF3q-F6XYTPTVx43KXg_3_COgaK8wtHxRynshOT9smg@mail.gmail.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id CAF097F63
+	for <xfs@oss.sgi.com>; Mon,  2 Jun 2014 06:35:44 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id AF99C304032
+	for <xfs@oss.sgi.com>; Mon,  2 Jun 2014 04:35:44 -0700 (PDT)
+Received: from b.mx.filmlight.ltd.uk (b.mx.filmlight.ltd.uk [77.107.81.251])
+	by cuda.sgi.com with SMTP id 5GTKO5dskDJIPMKA for
+	<xfs@oss.sgi.com>; Mon, 02 Jun 2014 04:35:42 -0700 (PDT)
+Subject: Re: [RFC 11/32] xfs: convert to struct inode_time
+From: Roger Willcocks <roger@filmlight.ltd.uk>
+In-Reply-To: <20140602002822.GQ14410@dastard>
+References: <1401480116-1973111-1-git-send-email-arnd@arndb.de>
+	<5389252A.5050503@zytor.com> <20140531011450.GJ14410@dastard>
+	<5507340.nVBP5LFtqn@wuerfel> <20140601002437.GL14410@dastard>
+	<20140602002822.GQ14410@dastard>
+Date: Mon, 02 Jun 2014 12:35:41 +0100
+Message-Id: <1401708941.6065.51.camel@montana.filmlight.ltd.uk>
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,54 +30,36 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Sean Caron <scaron@umich.edu>
-Cc: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-arch@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>, linux-kernel@vger.kernel.org, geert@linux-m68k.org, hch@infradead.org, john.stultz@linaro.org, "H. Peter Anvin" <hpa@zytor.com>, linux-fsdevel@vger.kernel.org, lftan@altera.com, tglx@linutronix.de, xfs@oss.sgi.com, joseph@codesourcery.com
 
-On Sun, Jun 01, 2014 at 12:21:55PM -0400, Sean Caron wrote:
-> Sorry, all, I was a little out-of-it on Friday afternoon, of course I had
-> kicked off xfs_repair actually in the background with all output sent to a
-> file, and I was just doing 'tail -f' on that file.
-> 
-> So I kill the 'tail -f' and jump back to the command line, it appears that
-> xfs_repair segfaulted and died.
-> 
-> That line of text:
-> 
-> disconnected inode 1109099673,
-> 
-> was indeed the last thing that it printed before it crashed.
-> 
-> If I look in dmesg, I just see -
-> 
-> xfs_repair[6770]: segfault at 28 ip 000000000042307b sp 00007fffef61bad0
-> error 4 in xfs_repair[400000+72000]
-> 
-> and that's it.
-> 
-> I checked with 'df' and there's plenty of space everywhere; I don't see why
-> it would have faulted out trying to connect something to lost+found.
-> 
-> Underlying storage should be good; this is basically a RAID 60 built on top
-> of a bunch of JBODs with LSI SAS9200 cards. MD sees all strings as started
-> and running OK; no problems getting the array assembled at all.
-> 
-> Since Dave is saying it's OK to try re-running xfs_repair; it'll just pick
-> up where it left off; let me give it another pass and see if it manages to
-> complete, or if it segfaults out again. I guess it it poops out a second
-> time, maybe we'll just want to consider rebuilding the filesystem and
-> restoring from our copies?
 
-You should update to the latest version of xfs_repair first (3.2.0).
-If that still crashes, running xfs-repair under gdb to get a stack
-trace would be a good start, or sending me a metadump image so I can
-reproduce the crash myself would be even better...
+On Mon, 2014-06-02 at 10:28 +1000, Dave Chinner wrote:
 
-Cheers,
+> 
+> The 32 bit second counters in timestamps are too small to represent
+> time beyond the unix epoch (jan 2038) correctly. Extend the on-disk
+> format for a timestamp to include an 8-bit epoch counter so that we
+> can extend time for up to 255 Unix epochs. This should be good for
+> representing timestamps from 1970 to somewhere around 19,000 A.D....
+> 
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+I assume you're using an 'epoch' variable and not simply using the
+padding byte as an eight-bit prefix to the existing 32-bit counter
+because the existing counter is signed ?
+
+For long term sanity it might make more sense for the eight-bit value to
+be a simple (sign-extended) prefix from 1970.
+
+So if the feature bit is set it's a 40-bit signed time, which is good
+for 1970 +/- 17400 years or so.
+
+--
+Roger
+
+
+
+
 
 _______________________________________________
 xfs mailing list
