@@ -1,21 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id C506629DF8
-	for <xfs@oss.sgi.com>; Mon,  2 Jun 2014 13:52:25 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 493D7AC004
-	for <xfs@oss.sgi.com>; Mon,  2 Jun 2014 11:52:25 -0700 (PDT)
-Received: from mout.kundenserver.de (mout.kundenserver.de [212.227.126.131])
-	by cuda.sgi.com with ESMTP id nCnnaEgjxYUioc4F (version=TLSv1
+	by oss.sgi.com (Postfix) with ESMTP id 9BBDE29DF8
+	for <xfs@oss.sgi.com>; Mon,  2 Jun 2014 13:52:55 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 22523AC001
+	for <xfs@oss.sgi.com>; Mon,  2 Jun 2014 11:52:55 -0700 (PDT)
+Received: from mout.kundenserver.de (mout.kundenserver.de [212.227.17.24]) by
+	cuda.sgi.com with ESMTP id EV7FlnPIS3bxoxDV (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 02 Jun 2014 11:52:23 -0700 (PDT)
+	Mon, 02 Jun 2014 11:52:53 -0700 (PDT)
 From: Arnd Bergmann <arnd@arndb.de>
 Subject: Re: [RFC 11/32] xfs: convert to struct inode_time
-Date: Mon, 02 Jun 2014 20:50:55 +0200
-Message-ID: <4548598.6TTMEpKtuS@wuerfel>
-In-Reply-To: <538CB085.5000502@zytor.com>
+Date: Mon, 02 Jun 2014 20:52:43 +0200
+Message-ID: <5109660.teHoOW5tSd@wuerfel>
+In-Reply-To: <6868F108-F0B2-423F-AE31-90DF86A5B7DD@oracle.com>
 References: <1401480116-1973111-1-git-send-email-arnd@arndb.de>
-	<20140602153124.GH30598@thunk.org> <538CB085.5000502@zytor.com>
+	<4178301.j9kWdGCRLC@wuerfel>
+	<6868F108-F0B2-423F-AE31-90DF86A5B7DD@oracle.com>
 MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -25,58 +26,41 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "H. Peter Anvin" <hpa@zytor.com>
-Cc: Nicolas Pitre <nicolas.pitre@linaro.org>, linux-arch@vger.kernel.org, Linux NFS Mailing List <linux-nfs@vger.kernel.org>, Theodore Ts'o <tytso@mit.edu>, LKML Kernel <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, Chuck Lever <chuck.lever@oracle.com>, john.stultz@linaro.org, lftan@altera.com, linux-fsdevel <linux-fsdevel@vger.kernel.org>, geert@linux-m68k.org, tglx@linutronix.de, joseph@codesourcery.com
+To: Chuck Lever <chuck.lever@oracle.com>
+Cc: Nicolas Pitre <nicolas.pitre@linaro.org>, linux-arch@vger.kernel.org, Linux NFS Mailing List <linux-nfs@vger.kernel.org>, LKML Kernel <linux-kernel@vger.kernel.org>, lftan@altera.com, Christoph Hellwig <hch@infradead.org>, john.stultz@linaro.org, "H. Peter Anvin" <hpa@zytor.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, geert@linux-m68k.org, tglx@linutronix.de, xfs@oss.sgi.com, joseph@codesourcery.com
 
-On Monday 02 June 2014 10:12:37 H. Peter Anvin wrote:
-> On 06/02/2014 08:31 AM, Theodore Ts'o wrote:
-> > 
-> > I wonder if it would make sense to try to promulgate via the Austin
-> > group, and possibly the C standards committee the concept of a bit
-> > pattern (that might commonly be INT_MAX or UINT_MAX) that means "time
-> > unknown", or "time indefinite" or "we couldn't encode the time".
-> > 
-> 
-> (time_t)-1 already has this meaning for some calls (e.g. time(2)).
-> However, this also means Wed Dec 31 23:59:59 UTC 1969, and unfortunately
-> something similar applies to all possible bit patterns, certainly within
-> the range of an int.
-
-Worse than Wed Dec 31 23:59:59 UTC 1969, on NFSv3 it also means
-"Sun Feb  7 07:28:15 CET 2106", and that is much harder to distinguish
-from a real future date.
-
-If we had the choice, I'd go for something like 1, i.e.
-"Thu Jan  1 01:00:01 CET 1970".
-
-> > We would then teach gmtime(3) and asctime(3) to print some appropriate
-> > message, and we could teach programs like find (with the -mtime)
-> > option, make, tmpwatch, et. al., that they can't make any presumption
-> > about the comparibility of any timestamp which has a value of
-> > TIME_UNDEFINIED.
-> > 
-> > It would be problematic for time(2) or gettimeofday(2) to return
-> > TIME_UNDEFINED, since there are programs that care about time ticking
-> > forward, but I could imagine a new interface which would be permitted
-> > to return a flag indicating that we don't know the current time
-> > (because the CMOS battery had run down, etc.) so instead we're going
-> > to be counting the number of seconds since the system was booted.
-> 
-> This assumes that we actually know that that is the case, which may be
-> an aggressive assumption.
-
-It's harder for time(2), but for the inode case, we can definitely
-detect when the file system specific representation overflows
-or underflows, which may be be at a number of very different points
-of time.
-
-	Arnd
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gTW9uZGF5IDAyIEp1bmUgMjAxNCAxMTowNDoyMyBDaHVjayBMZXZlciB3cm90ZToKPiBJ4oCZ
+bSB3b25kZXJpbmcgd2hhdCBzaG91bGQgYmUgZG9uZSBhYm91dCBORlMuIEEgc29sdXRpb24gZm9y
+IE5GUyBzaG91bGQKPiBtYXRjaCBhbnkgc2NoZW1lIHRoYXQgaXMgY29uc2lkZXJlZCBmb3IgbG9j
+YWwgZmlsZSBzeXN0ZW1zLCBJTU8uCj4gCj4gTkZTdjIvMyB0aW1lc3RhbXBzIGFyZSBhIHBhaXIg
+b2YgdW5zaWduZWQgMzItYml0IHZhbHVlczogb25lIHZhbHVlIGZvcgo+IHNlY29uZHMgc2luY2Ug
+bWlkbmlnaHQgR01UIEphbiAxLCAxOTcwLCBhbmQgb25lIHZhbHVlIGZvciBuYW5vc2Vjb25kcy4K
+PiAoU2VlIHRoZSBkZWZpbml0aW9uIG9mIG5mc3RpbWUzIGluIFJGQyAxODEzKS4KPiAKPiBORlN2
+NCB1c2VzIGEgc2lnbmVkIDY0LWJpdCB2YWx1ZSB3aGVyZSB6ZXJvIHJlcHJlc2VudHMgbWlkbmln
+aHQgVVRDCj4gb24gSmFudWFyeSAxLCAxOTcwLCBhbmQgYW4gdW5zaWduZWQgMzItYml0IHZhbHVl
+IGZvciBuYW5vc2Vjb25kcy4gKFNlZQo+IHRoZSBkZWZpbml0aW9uIG9mIG5mc3RpbWU0IGluIFJG
+QyA1NjYxKS4KPiAKPiBUaGUgTkZTdjQgcHJvdG9jb2wgaXMgcHJvYmFibHkgbm90IHByb2JsZW1h
+dGljLCBhbmQgTkZTdjMgc2hvdWxkIGJlIG91dAo+IG9mIHRoZSBwaWN0dXJlIGJ5IDIwMzguIEJ1
+dCBpZiBjaGFuZ2VzIGFyZSBwbGFubmVkIGZvciBkZWFsaW5nIF9ub3dfCj4gd2l0aCB0aW1lc3Rh
+bXAgaXNzdWVzLCBjb21wYXRpYmlsaXR5IHdpdGggTkZTdjMgaXMgYSBjb25zaWRlcmF0aW9uLgo+
+IAo+IEl0IGlzIGFscmVhZHkgdGhlIGNhc2UgdGhhdCwgdmlhIE5GU3YzLCB0aGUgTGludXggTkZT
+IGNsaWVudCB0cmFuc21pdHMKPiB0aW1lc3RhbXBzIGVhcmxpZXIgdGhhbiAxOTcwIGFzIGxhcmdl
+IHBvc2l0aXZlIG51bWJlcnMuIFRyeSB0aGlzIHdpdGgKPiB4ZnN0ZXN0cyBnZW5lcmljLzI1OC4K
+CklmIEkgcmVhZCB0aGUgY29kZSBjb3JyZWN0bHksIGEgcHJlLTE5NzAgdGltZXN0YW1wIHdpbGwg
+YmUgc2VudCBhcwphIGxhcmdlIHVuc2lnbmVkIGludGVnZXIsIGJ1dCByZWNlaXZlZCBhcyBhIHBv
+c3QtMjAzOCB0aW1lc3RhbXAgb24KNjQtYml0IGtlcm5lbHMsIGJvdGggaW4gdGhlIG5mcyBjbGll
+bnQgYW5kIHNlcnZlciBjb2RlLgoKVGhpcyBiZWhhdmlvciBpcyBjbGVhcmx5IHdyb25nLCBidXQg
+aXQncyB0aGUgc2FtZSBidWcgdGhhdCB3ZSBoYXZlCmluIGxvdHMgb2Ygb3RoZXIgZmlsZSBzeXN0
+ZW1zLCBhbmQgaXQgbWFrZXMgc2Vuc2UgdG8gaGF2ZSB0aGUKc2FtZSBmaXggZXZlcnl3aGVyZSwg
+YXQgbGVhc2UgdGhlIGNhc2VzIHdoZXJlIHdlIGtub3cgd2hhdCBpbnRlcnByZXRhdGlvbgp3ZSBh
+Y3R1YWxseSB3YW50LiBORlMgaGFzIHRoZSBsdXh1cnkgb2YgaGF2aW5nIGFuIGFjdHVhbCBzcGVj
+aWZpY2F0aW9uCnNheWluZyB0aGF0IHRoZSB2YWx1ZSBpcyB1bnNpZ25lZC4gRm9yIG1vc3Qgb2Yg
+dGhlIGxlZ2FjeSBmaWxlIHN5c3RlbXMsCndlIGNhbiBvbmx5IG1ha2UgYSBndWVzcyBhdCBob3cg
+b3RoZXIgT1NzIHdvdWxkIGludGVycHJldCB0aGUgc2FtZQpudW1iZXJzLgoKCUFybmQKCl9fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxp
+c3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hm
+cwo=
