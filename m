@@ -1,26 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 8FD5029DF8
-	for <xfs@oss.sgi.com>; Mon,  2 Jun 2014 14:05:40 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id DF77529DF8
+	for <xfs@oss.sgi.com>; Mon,  2 Jun 2014 14:11:03 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 30D00AC004
-	for <xfs@oss.sgi.com>; Mon,  2 Jun 2014 12:05:37 -0700 (PDT)
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id JJxKbR3EnECUFhva (version=TLSv1
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 9F4018F8050
+	for <xfs@oss.sgi.com>; Mon,  2 Jun 2014 12:11:00 -0700 (PDT)
+Received: from mout.kundenserver.de (mout.kundenserver.de [212.227.126.131])
+	by cuda.sgi.com with ESMTP id sHFlMF5bcgaiYGhu (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 02 Jun 2014 12:05:35 -0700 (PDT)
-Mime-Version: 1.0 (Mac OS X Mail 7.3 \(1878.2\))
+	Mon, 02 Jun 2014 12:10:58 -0700 (PDT)
+From: Arnd Bergmann <arnd@arndb.de>
 Subject: Re: [RFC 11/32] xfs: convert to struct inode_time
-From: Chuck Lever <chuck.lever@oracle.com>
-In-Reply-To: <1401735504.6065.227.camel@montana.filmlight.ltd.uk>
-Date: Mon, 2 Jun 2014 15:04:27 -0400
-Message-Id: <C57EA6CA-236A-4C93-95F8-21F46A3622DA@oracle.com>
+Date: Mon, 02 Jun 2014 21:10:47 +0200
+Message-ID: <5585593.Xe5bNQZW47@wuerfel>
+In-Reply-To: <C57EA6CA-236A-4C93-95F8-21F46A3622DA@oracle.com>
 References: <1401480116-1973111-1-git-send-email-arnd@arndb.de>
-	<8618458.1EVJCoVbkH@wuerfel>
-	<alpine.LFD.2.11.1406012121430.17310@knanqh.ubzr>
-	<4178301.j9kWdGCRLC@wuerfel>
-	<6868F108-F0B2-423F-AE31-90DF86A5B7DD@oracle.com>
 	<1401735504.6065.227.camel@montana.filmlight.ltd.uk>
+	<C57EA6CA-236A-4C93-95F8-21F46A3622DA@oracle.com>
+MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,71 +26,39 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="windows-1252"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Roger Willcocks <roger@filmlight.ltd.uk>
-Cc: Nicolas Pitre <nicolas.pitre@linaro.org>, linux-arch@vger.kernel.org, Linux NFS Mailing List <linux-nfs@vger.kernel.org>, Arnd Bergmann <arnd@arndb.de>, LKML Kernel <linux-kernel@vger.kernel.org>, geert@linux-m68k.org, Christoph Hellwig <hch@infradead.org>, john.stultz@linaro.org, "H. Peter Anvin" <hpa@zytor.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, lftan@altera.com, tglx@linutronix.de, xfs@oss.sgi.com, joseph@codesourcery.com
+To: Chuck Lever <chuck.lever@oracle.com>
+Cc: Nicolas Pitre <nicolas.pitre@linaro.org>, linux-arch@vger.kernel.org, Linux NFS Mailing List <linux-nfs@vger.kernel.org>, xfs@oss.sgi.com, LKML Kernel <linux-kernel@vger.kernel.org>, geert@linux-m68k.org, Christoph Hellwig <hch@infradead.org>, john.stultz@linaro.org, "H. Peter Anvin" <hpa@zytor.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, lftan@altera.com, tglx@linutronix.de, Roger Willcocks <roger@filmlight.ltd.uk>, joseph@codesourcery.com
 
-
-On Jun 2, 2014, at 2:58 PM, Roger Willcocks <roger@filmlight.ltd.uk> wrote:
-
-> =
-
-> On Mon, 2014-06-02 at 11:04 -0400, Chuck Lever wrote:
-> =
-
->> NFSv2/3 timestamps are a pair of unsigned 32-bit values: one value for
->> seconds since midnight GMT Jan 1, 1970, and one value for nanoseconds.
->> (See the definition of nfstime3 in RFC 1813).
->> =
-
-> =
-
-> nfstime3 could be extended by redefining the otherwise unused
-> nanoseconds bits{31,30} as seconds{33,32}, to give a (signed) 34-bit
-> seconds field and an unsigned 30-bit nanoseconds field.
-> =
-
-> This could represent 1970 +/- 272 years.
-> =
-
-> Servers could indicate they can understand the extended time format by
-> adding a new FSINFO capability - FSF3_CANSETTIME_EX.
-> =
-
-> Clients would use a new SET_TO_CLIENT_TIME_EX time_how enum when sending
-> timestamps so old servers would be protected from new clients.
-
-You would have to get the IETF=92s NFSv4 working group to sign off on
-this change. Otherwise, Linux would be the only NFSv3 implementation
-that supports the extension.
-
-But I suspect the answer you=92d get is =93Use NFSv4.=94
-
-> Old clients don't need to be protected from new servers because the
-> on-the-wire bit pattern for dates between 1970 and 2106 stays the same,
-> so they're no worse off than they were before.
-> =
-
-> Arguably the new server ought to clamp out-of-range timestamps before
-> sending them to old clients but that would need per-client state (and
-> nfs3 is stateless.)
-
-There=92s no reliable way in NFSv3 for clients and servers to identify
-the software running on the peer.
-
-Practically speaking, you should assume that the NFSv3 protocol is never
-going to change.
-
---
-Chuck Lever
-chuck[dot]lever[at]oracle[dot]com
-
-
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gTW9uZGF5IDAyIEp1bmUgMjAxNCAxNTowNDoyNyBDaHVjayBMZXZlciB3cm90ZToKPiBPbiBK
+dW4gMiwgMjAxNCwgYXQgMjo1OCBQTSwgUm9nZXIgV2lsbGNvY2tzIDxyb2dlckBmaWxtbGlnaHQu
+bHRkLnVrPiB3cm90ZToKPiAKPiA+IAo+ID4gT24gTW9uLCAyMDE0LTA2LTAyIGF0IDExOjA0IC0w
+NDAwLCBDaHVjayBMZXZlciB3cm90ZToKPiA+IAo+ID4+IE5GU3YyLzMgdGltZXN0YW1wcyBhcmUg
+YSBwYWlyIG9mIHVuc2lnbmVkIDMyLWJpdCB2YWx1ZXM6IG9uZSB2YWx1ZSBmb3IKPiA+PiBzZWNv
+bmRzIHNpbmNlIG1pZG5pZ2h0IEdNVCBKYW4gMSwgMTk3MCwgYW5kIG9uZSB2YWx1ZSBmb3IgbmFu
+b3NlY29uZHMuCj4gPj4gKFNlZSB0aGUgZGVmaW5pdGlvbiBvZiBuZnN0aW1lMyBpbiBSRkMgMTgx
+MykuCj4gPj4gCj4gPiAKPiA+IG5mc3RpbWUzIGNvdWxkIGJlIGV4dGVuZGVkIGJ5IHJlZGVmaW5p
+bmcgdGhlIG90aGVyd2lzZSB1bnVzZWQKPiA+IG5hbm9zZWNvbmRzIGJpdHN7MzEsMzB9IGFzIHNl
+Y29uZHN7MzMsMzJ9LCB0byBnaXZlIGEgKHNpZ25lZCkgMzQtYml0Cj4gPiBzZWNvbmRzIGZpZWxk
+IGFuZCBhbiB1bnNpZ25lZCAzMC1iaXQgbmFub3NlY29uZHMgZmllbGQuCj4gPiAKPiA+IFRoaXMg
+Y291bGQgcmVwcmVzZW50IDE5NzAgKy8tIDI3MiB5ZWFycy4KPiA+IAo+ID4gU2VydmVycyBjb3Vs
+ZCBpbmRpY2F0ZSB0aGV5IGNhbiB1bmRlcnN0YW5kIHRoZSBleHRlbmRlZCB0aW1lIGZvcm1hdCBi
+eQo+ID4gYWRkaW5nIGEgbmV3IEZTSU5GTyBjYXBhYmlsaXR5IC0gRlNGM19DQU5TRVRUSU1FX0VY
+Lgo+ID4gCj4gPiBDbGllbnRzIHdvdWxkIHVzZSBhIG5ldyBTRVRfVE9fQ0xJRU5UX1RJTUVfRVgg
+dGltZV9ob3cgZW51bSB3aGVuIHNlbmRpbmcKPiA+IHRpbWVzdGFtcHMgc28gb2xkIHNlcnZlcnMg
+d291bGQgYmUgcHJvdGVjdGVkIGZyb20gbmV3IGNsaWVudHMuCj4gCj4gWW91IHdvdWxkIGhhdmUg
+dG8gZ2V0IHRoZSBJRVRG4oCZcyBORlN2NCB3b3JraW5nIGdyb3VwIHRvIHNpZ24gb2ZmIG9uCj4g
+dGhpcyBjaGFuZ2UuIE90aGVyd2lzZSwgTGludXggd291bGQgYmUgdGhlIG9ubHkgTkZTdjMgaW1w
+bGVtZW50YXRpb24KPiB0aGF0IHN1cHBvcnRzIHRoZSBleHRlbnNpb24uCj4gCj4gQnV0IEkgc3Vz
+cGVjdCB0aGUgYW5zd2VyIHlvdeKAmWQgZ2V0IGlzIOKAnFVzZSBORlN2NC7igJ0KCldoaWxlIEkn
+dmUgbmV2ZXIgZGVhbHQgd2l0aCBhbiBORlMgc3RhbmRhcmRpemF0aW9uLCBJJ2QgYXNzdW1lIHRo
+aXMgaXMKYSB3b3JrYWJsZSBhbnN3ZXIuIFRoZSBORlN2MiBhbmQgTkZTdjMgZGVmaW5pdGlvbiBj
+bGVhcmx5IGRlZmluZXMgYSB2YWxpZApyYW5nZSBvZiB0aW1lcyB1bnRpbCAyMTA2IHVzaW5nIHVu
+c2lnbmVkIHNlY29uZHMsIGFuZCB0aGF0IHNob3VsZCByZWFsbHkKZ2l2ZSBlbm91Z2ggdGltZSB0
+byBtaWdyYXRlIHRvIHNvbWV0aGluZyBiZXR0ZXIgKG5vdCBuZWNlc3NhcmlseSBORlN2NCkuCgoJ
+QXJuZAoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KeGZz
+IG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4v
+bGlzdGluZm8veGZzCg==
