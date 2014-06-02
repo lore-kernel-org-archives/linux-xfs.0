@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 597537F5F
-	for <xfs@oss.sgi.com>; Mon,  2 Jun 2014 07:40:04 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 40DFA304051
-	for <xfs@oss.sgi.com>; Mon,  2 Jun 2014 05:40:01 -0700 (PDT)
-Received: from mout.kundenserver.de (mout.kundenserver.de [212.227.126.131])
-	by cuda.sgi.com with ESMTP id mCeKB6WC1xSO8xiH (version=TLSv1
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 9A9AA7F66
+	for <xfs@oss.sgi.com>; Mon,  2 Jun 2014 07:54:01 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 2FD3AAC001
+	for <xfs@oss.sgi.com>; Mon,  2 Jun 2014 05:53:58 -0700 (PDT)
+Received: from mout.kundenserver.de (mout.kundenserver.de [212.227.17.10]) by
+	cuda.sgi.com with ESMTP id k6cDCUKVWAmU7l86 (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 02 Jun 2014 05:39:59 -0700 (PDT)
+	Mon, 02 Jun 2014 05:53:56 -0700 (PDT)
 From: Arnd Bergmann <arnd@arndb.de>
 Subject: Re: [RFC 11/32] xfs: convert to struct inode_time
-Date: Mon, 02 Jun 2014 14:38:09 +0200
-Message-ID: <4910284.a72lauVLNV@wuerfel>
+Date: Mon, 02 Jun 2014 14:52:13 +0200
+Message-ID: <15496653.1vSv1RUCC0@wuerfel>
 In-Reply-To: <20140602115737.GB14276@thunk.org>
 References: <1401480116-1973111-1-git-send-email-arnd@arndb.de>
 	<4178301.j9kWdGCRLC@wuerfel> <20140602115737.GB14276@thunk.org>
@@ -54,17 +54,33 @@ On Monday 02 June 2014 07:57:37 Theodore Ts'o wrote:
 > cycles are order 5-6 years tops, so I'm not that concerned, but it
 > just goes to show this is a very complicated problem.
 
-Ok, I see.
+One stupid question about the current code:
 
-I also now noticed this comment above EXT4_FITS_IN_INODE():
+static inline void ext4_decode_extra_time(struct inode_time *time, __le32 extra)
+{                               
+       if (sizeof(time->tv_sec) > 4)
+               time->tv_sec |= (__u64)(le32_to_cpu(extra) & EXT4_EPOCH_MASK)
+                               << 32;
+       time->tv_nsec = (le32_to_cpu(extra) & EXT4_NSEC_MASK) >> EXT4_EPOCH_BITS;
+}       
 
-"For new inodes we always reserve enough space for the kernel's known
-extended fields, but for inodes created with an old kernel this might
-not have been the case. None of the extended inode fields is critical
-for correct filesystem operation."
+#define EXT4_EINODE_GET_XTIME(xtime, einode, raw_inode)                        \
+do {                                                                           \
+        if (EXT4_FITS_IN_INODE(raw_inode, einode, xtime))                      \
+                (einode)->xtime.tv_sec =                                       \
+                        (signed)le32_to_cpu((raw_inode)->xtime);               \
+        else                                                                   \
+                (einode)->xtime.tv_sec = 0;                                    \
+        if (EXT4_FITS_IN_INODE(raw_inode, einode, xtime ## _extra))            \
+                ext4_decode_extra_time(&(einode)->xtime,                       \
+                                       raw_inode->xtime ## _extra);            \
+        else                                                                   \
+                (einode)->xtime.tv_nsec = 0;                                   \
+} while (0)
 
-Do we have to worry about this for inodes that contain extended
-attributes and that get updated after 2038?
+For a time between 2038 and 2106, this looks like xtime.tv_sec is
+negative when ext4_decode_extra_time gets called, so the '|=' operator
+doesn't actually do anything. Shouldn't that be '+='?
 
 	Arnd
 
