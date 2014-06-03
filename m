@@ -1,32 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id C79947F74
-	for <xfs@oss.sgi.com>; Tue,  3 Jun 2014 04:18:41 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id A704E8F8050
-	for <xfs@oss.sgi.com>; Tue,  3 Jun 2014 02:18:41 -0700 (PDT)
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id JaNu6oSPlgYw9JdG (version=TLSv1
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id E0AD07F58
+	for <xfs@oss.sgi.com>; Tue,  3 Jun 2014 04:18:44 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 6D334AC003
+	for <xfs@oss.sgi.com>; Tue,  3 Jun 2014 02:18:44 -0700 (PDT)
+Received: from mout.kundenserver.de (mout.kundenserver.de [212.227.126.187])
+	by cuda.sgi.com with ESMTP id pBmREUzG705BBq0g (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 03 Jun 2014 02:18:40 -0700 (PDT)
-Received: from ucsinet21.oracle.com (ucsinet21.oracle.com [156.151.31.93])
-	by userp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with
-	ESMTP id s539Id32028573
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Tue, 3 Jun 2014 09:18:40 GMT
-Received: from aserz7022.oracle.com (aserz7022.oracle.com [141.146.126.231])
-	by ucsinet21.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
-	s539Icc9027402
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <xfs@oss.sgi.com>; Tue, 3 Jun 2014 09:18:39 GMT
-Received: from abhmp0007.oracle.com (abhmp0007.oracle.com [141.146.116.13])
-	by aserz7022.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
-	s539IcmQ012509 for <xfs@oss.sgi.com>; Tue, 3 Jun 2014 09:18:38 GMT
-Message-ID: <538D92E9.3010207@oracle.com>
-Date: Tue, 03 Jun 2014 17:18:33 +0800
-From: Jeff Liu <jeff.liu@oracle.com>
+	Tue, 03 Jun 2014 02:18:42 -0700 (PDT)
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: Re: [RFC 11/32] xfs: convert to struct inode_time
+Date: Tue, 03 Jun 2014 11:16:50 +0200
+Message-ID: <5502404.8z4rGLMfhs@wuerfel>
+In-Reply-To: <20140603084130.GF14410@dastard>
+References: <1401480116-1973111-1-git-send-email-arnd@arndb.de>
+	<5082342.alZgfaU1Q0@wuerfel> <20140603084130.GF14410@dastard>
 MIME-Version: 1.0
-Subject: [PATCH v3 06/10] xfs: fix error handling at xfs_bulkstat
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -39,82 +29,58 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-arch@vger.kernel.org, linux-kernel@vger.kernel.org, lftan@altera.com, hch@infradead.org, john.stultz@linaro.org, "H. Peter Anvin" <hpa@zytor.com>, linux-fsdevel@vger.kernel.org, geert@linux-m68k.org, tglx@linutronix.de, xfs@oss.sgi.com, joseph@codesourcery.com
 
-From: Jie Liu <jeff.liu@oracle.com>
+On Tuesday 03 June 2014 18:41:30 Dave Chinner wrote:
+> On Tue, Jun 03, 2014 at 09:33:36AM +0200, Arnd Bergmann wrote:
+> > On Tuesday 03 June 2014 10:32:27 Dave Chinner wrote:
+> > > On Mon, Jun 02, 2014 at 01:43:44PM +0200, Arnd Bergmann wrote:
+> > > > On Monday 02 June 2014 10:28:22 Dave Chinner wrote:
+> > > > > On Sun, Jun 01, 2014 at 10:24:37AM +1000, Dave Chinner wrote:
+> > > > > > On Sat, May 31, 2014 at 05:37:52PM +0200, Arnd Bergmann wrote:
+> > > > My patch set
+> > > > (at least with the 64-bit tv_sec) just gets 32-bit kernels to behave
+> > > > more like 64-bit kernels regarding inode time stamps, which does
+> > > > impact all the file systems that the a 64-bit time or the NFS
+> > > > unsigned epoch (1970-2106), while your patch extends the file
+> > > > system internal epoch (1901-2038 for XFS) so it can be used by
+> > > > anything that knows how to handle larger than 32-bit second values
+> > > > (either 64-bit kernel or 32-bit with inode_time patch).
+> > > 
+> > > Right, but the issue is that 64 bit second counters are broken right
+> > > now because most filesystems can't support more than 32 bit values.
+> > > So it doesn't matter whether it's 32 bit or 64 bit machines, just
+> > > adding explicit support for >32 bit second counters without doing
+> > > anything else just extends that brokenness into the indefinite
+> > > future.
+> > 
+> > Of course, "most filesystems" are obsolete, and most of the modern
+> > file systems already support >32 bit timestamps: ext4, btrfs, cifs,
+> > f2fs, 9p, nfsv4, ntfs, gfs2, ocfs2, fuse, ufs2. Everything else
+> > except xfs, ext2/3 and exofs uses the nfsv3 interpretation on
+> > 64-bit systems, which interprets time stamps with the high bit
+> > set as years 2038-2106 rather than 1903-1969.
+> 
+> I'm not sure that's an entirely correct representation - the
+> remainder of the 32 bit-only timestamp filesystems don't actively
+> interpret the time stamp at all - it's just an opaque 32 bit value.
+> hence the interpretation of the value is dependent on whether the
+> kernel treats it as signed or unsigned....
 
-We should not ignore the btree operation errors at xfs_bulkstat() but
-to propagate them if any. This patch fix two places in this function
-and the remains things will be fixed with code refactoring thereafter.
+As I mentioned elsewhere in the thread, I don't the way it's handled
+is intentional, but it's definitely the file system code that does
+the assignment to the timeval and decides on the interpretation, doing
+either
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Signed-off-by: Jie Liu <jeff.liu@oracle.com>
----
- fs/xfs/xfs_itable.c | 37 ++++++-------------------------------
- 1 file changed, 6 insertions(+), 31 deletions(-)
+	inode->i_mtime.tv_sec = (signed)le32_to_cpu(raw_inode.mtime);
 
-diff --git a/fs/xfs/xfs_itable.c b/fs/xfs/xfs_itable.c
-index d210e24..a3c833c 100644
---- a/fs/xfs/xfs_itable.c
-+++ b/fs/xfs/xfs_itable.c
-@@ -252,14 +252,8 @@ xfs_bulkstat(
- 	while (XFS_BULKSTAT_UBLEFT(ubleft) && agno < mp->m_sb.sb_agcount) {
- 		cond_resched();
- 		error = xfs_ialloc_read_agi(mp, NULL, agno, &agbp);
--		if (error) {
--			/*
--			 * Skip this allocation group and go to the next one.
--			 */
--			agno++;
--			agino = 0;
--			continue;
--		}
-+		if (error)
-+			break;
- 		agi = XFS_BUF_TO_AGI(agbp);
- 		/*
- 		 * Allocate and initialize a btree cursor for ialloc btree.
-@@ -331,34 +325,15 @@ xfs_bulkstat(
- 			error = xfs_inobt_lookup(cur, 0, XFS_LOOKUP_GE, &tmp);
- 			icount = 0;
- 		}
-+		if (error)
-+			break;
-+
- 		/*
- 		 * Loop through inode btree records in this ag,
- 		 * until we run out of inodes or space in the buffer.
- 		 */
- 		while (irbp < irbufend && icount < ubcount) {
--			xfs_inobt_rec_incore_t r;
--
--			/*
--			 * Loop as long as we're unable to read the
--			 * inode btree.
--			 */
--			while (error) {
--				agino += XFS_INODES_PER_CHUNK;
--				if (XFS_AGINO_TO_AGBNO(mp, agino) >=
--						be32_to_cpu(agi->agi_length))
--					break;
--				error = xfs_inobt_lookup(cur, agino,
--							 XFS_LOOKUP_GE, &tmp);
--				cond_resched();
--			}
--			/*
--			 * If ran off the end of the ag either with an error,
--			 * or the normal way, set end and stop collecting.
--			 */
--			if (error) {
--				end_of_ag = 1;
--				break;
--			}
-+			struct xfs_inobt_rec_incore	r;
- 
- 			error = xfs_inobt_get_rec(cur, &r, &i);
- 			if (error || i == 0) {
--- 
-1.8.3.2
+or
+
+	inode->i_mtime.tv_sec = le32_to_cpu(raw_inode.mtime);
+
+
+	Arnd
 
 _______________________________________________
 xfs mailing list
