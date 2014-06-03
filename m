@@ -1,33 +1,32 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 0A57C7F54
-	for <xfs@oss.sgi.com>; Tue,  3 Jun 2014 04:18:00 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id E94FE7F58
+	for <xfs@oss.sgi.com>; Tue,  3 Jun 2014 04:18:02 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id C03A78F8068
+	by relay2.corp.sgi.com (Postfix) with ESMTP id BB728304053
 	for <xfs@oss.sgi.com>; Tue,  3 Jun 2014 02:17:59 -0700 (PDT)
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id BYCLMLUzjSx8xogA (version=TLSv1
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
+	cuda.sgi.com with ESMTP id l9YxvvGhtDOeCKCm (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 03 Jun 2014 02:17:58 -0700 (PDT)
-Received: from ucsinet21.oracle.com (ucsinet21.oracle.com [156.151.31.93])
-	by userp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with
-	ESMTP id s539HuGB027241
+	Tue, 03 Jun 2014 02:17:54 -0700 (PDT)
+Received: from ucsinet22.oracle.com (ucsinet22.oracle.com [156.151.31.94])
+	by aserp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with
+	ESMTP id s539HrTg011410
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Tue, 3 Jun 2014 09:17:57 GMT
-Received: from userz7021.oracle.com (userz7021.oracle.com [156.151.31.85])
-	by ucsinet21.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
-	s539HuQX024728
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=FAIL)
-	for <xfs@oss.sgi.com>; Tue, 3 Jun 2014 09:17:56 GMT
-Received: from abhmp0003.oracle.com (abhmp0003.oracle.com [141.146.116.9])
-	by userz7021.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
-	s539HuQa024714 for <xfs@oss.sgi.com>; Tue, 3 Jun 2014 09:17:56 GMT
-Message-ID: <538D92BE.6040505@oracle.com>
-Date: Tue, 03 Jun 2014 17:17:50 +0800
+	for <xfs@oss.sgi.com>; Tue, 3 Jun 2014 09:17:53 GMT
+Received: from userz7022.oracle.com (userz7022.oracle.com [156.151.31.86])
+	by ucsinet22.oracle.com (8.14.5+Sun/8.14.5) with ESMTP id
+	s539HqCF011930
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <xfs@oss.sgi.com>; Tue, 3 Jun 2014 09:17:53 GMT
+Received: from abhmp0004.oracle.com (abhmp0004.oracle.com [141.146.116.10])
+	by userz7022.oracle.com (8.14.5+Sun/8.14.4) with ESMTP id
+	s539HoRW011845 for <xfs@oss.sgi.com>; Tue, 3 Jun 2014 09:17:51 GMT
+Message-ID: <538D92B6.5050402@oracle.com>
+Date: Tue, 03 Jun 2014 17:17:42 +0800
 From: Jeff Liu <jeff.liu@oracle.com>
 MIME-Version: 1.0
-Subject: [PATCH v3 01/10] xfs: remove redundant stat assignment in
-	xfs_bulkstat_one_int
+Subject: [PATCH v3 00/10] xfs_ioc_bulkstat code refactoring and consolidation
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -42,43 +41,39 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-From: Jie Liu <jeff.liu@oracle.com>
+Hi folk,
 
-Remove the redundant BULKSTAT_RV_NOTHING assignment in case of call
-xfs_iget() failed at xfs_bulkstat_one_int().
+This is the revised patches for xfs_ioc_bulkstat consolidation and code
+refactoring. As per Christoph's comments, I'm not include the per AG
+inumber patch in this series given that I don't actually introduce the
+relevant inumbers interface now. Similar to that reason, I also dropped
+the per AG bulkstat patch, it would be included in parallel quota check
+series.
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Signed-off-by: Jie Liu <jeff.liu@oracle.com>
----
- fs/xfs/xfs_itable.c | 5 +----
- 1 file changed, 1 insertion(+), 4 deletions(-)
 
-diff --git a/fs/xfs/xfs_itable.c b/fs/xfs/xfs_itable.c
-index cb64f22..2e7b397 100644
---- a/fs/xfs/xfs_itable.c
-+++ b/fs/xfs/xfs_itable.c
-@@ -76,10 +76,8 @@ xfs_bulkstat_one_int(
- 	error = xfs_iget(mp, NULL, ino,
- 			 (XFS_IGET_DONTCACHE | XFS_IGET_UNTRUSTED),
- 			 XFS_ILOCK_SHARED, &ip);
--	if (error) {
--		*stat = BULKSTAT_RV_NOTHING;
-+	if (error)
- 		goto out_free;
--	}
- 
- 	ASSERT(ip != NULL);
- 	ASSERT(ip->i_imap.im_blkno != 0);
-@@ -136,7 +134,6 @@ xfs_bulkstat_one_int(
- 	IRELE(ip);
- 
- 	error = formatter(buffer, ubsize, ubused, buf);
--
- 	if (!error)
- 		*stat = BULKSTAT_RV_DIDONE;
- 
--- 
-1.8.3.2
+v3->v2:
+- one major bug fix is at xfs_bulkstat_ag_ichunk() regarding the user buffer
+  pointer operations, it should be defined as a pointer-to-pointer since it
+  would be updated inside xfs_bulkstat_ag_ichunk().
+
+- separate xfs_inumber consolidate patch into two patches, the first one
+  fix the formater function return value and consolidate the codes, another
+  one does the actual logic changes for better error handling.
+
+- Add a separate patch to get rid of the redundant user buffer count
+  checks at xfs_bulkstat()
+
+- fixed agino calculation issue at xfs_bulkstat_grab_ichunk().
+
+v2: http://oss.sgi.com/archives/xfs/2014-04/msg00554.html
+v1: http://oss.sgi.com/archives/xfs/2013-12/msg00901.html
+
+
+Any comments are welcome!
+
+
+Cheers,
+-Jeff
 
 _______________________________________________
 xfs mailing list
