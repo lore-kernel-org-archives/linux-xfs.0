@@ -1,18 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id E1D307F3F
-	for <xfs@oss.sgi.com>; Wed,  4 Jun 2014 11:54:02 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 159557F3F
+	for <xfs@oss.sgi.com>; Wed,  4 Jun 2014 12:33:54 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id CD92B304071
-	for <xfs@oss.sgi.com>; Wed,  4 Jun 2014 09:53:59 -0700 (PDT)
-Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id IbUnKFCAnTU9ov6j (version=TLSv1 cipher=AES256-SHA
-	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 04 Jun 2014 09:53:57 -0700 (PDT)
-From: Jan Kara <jack@suse.cz>
-Subject: [PATCH v2] xfs: Fix rounding in xfs_alloc_fix_len()
-Date: Wed,  4 Jun 2014 18:53:53 +0200
-Message-Id: <1401900833-25485-1-git-send-email-jack@suse.cz>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id E4F248F8049
+	for <xfs@oss.sgi.com>; Wed,  4 Jun 2014 10:33:53 -0700 (PDT)
+Received: from mail-qg0-f47.google.com (mail-qg0-f47.google.com
+	[209.85.192.47]) by cuda.sgi.com with ESMTP id qvOjmmIXN9hysBHt
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Wed, 04 Jun 2014 10:33:53 -0700 (PDT)
+Received: by mail-qg0-f47.google.com with SMTP id j107so16140906qga.34
+	for <xfs@oss.sgi.com>; Wed, 04 Jun 2014 10:33:52 -0700 (PDT)
+MIME-Version: 1.0
+Date: Wed, 4 Jun 2014 23:03:52 +0530
+Message-ID: <CAMqKDv6Ki0vxBkbAJFyZ19C0SqBihSc6kii8cjagtOFF7ECi5A@mail.gmail.com>
+Subject: Why xfs is not permitted on bootable partitions in RHEL 7?
+From: Dhiraj Bhor <dhirajbhor21@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,64 +24,51 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============5111534196603927452=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
-Cc: Brian Foster <bfoster@redhat.com>, Jan Kara <jack@suse.cz>
 
-Rounding in xfs_alloc_fix_len() is wrong. As the comment states, the
-result should be a number of a form (k*prod+mod) however due to sign
-mistake the result is different. As a result allocations on raid arrays
-could be misaligned in some cases.
+--===============5111534196603927452==
+Content-Type: multipart/alternative; boundary=001a11c119e230697704fb06088e
 
-This also seems to fix occasional assertion failure:
-	XFS_WANT_CORRUPTED_GOTO(rlen <= flen, error0)
-in xfs_alloc_ag_vextent_size().
+--001a11c119e230697704fb06088e
+Content-Type: text/plain; charset=ISO-8859-1
 
-Also add an assertion that the result of xfs_alloc_fix_len() is of
-expected form.
+Hi all,
+I am new to this mailing list. I came across a issue with xfs while
+installing RHEL 7.
+When I created "custom layout" and created /boot partition with xfs file
+system it shown me error as "/boot filesystem cannot be of type xfs".
+Why xfs is not allowed on /boot partition?
+Help me resolving this issue.
+Thanks,
+Dhiraj
 
-Signed-off-by: Jan Kara <jack@suse.cz>
----
- fs/xfs/xfs_alloc.c | 18 ++++++++----------
- 1 file changed, 8 insertions(+), 10 deletions(-)
+--001a11c119e230697704fb06088e
+Content-Type: text/html; charset=ISO-8859-1
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/fs/xfs/xfs_alloc.c b/fs/xfs/xfs_alloc.c
-index c1cf6a336a72..1351a24d3cdc 100644
---- a/fs/xfs/xfs_alloc.c
-+++ b/fs/xfs/xfs_alloc.c
-@@ -257,16 +257,14 @@ xfs_alloc_fix_len(
- 	k = rlen % args->prod;
- 	if (k == args->mod)
- 		return;
--	if (k > args->mod) {
--		if ((int)(rlen = rlen - k - args->mod) < (int)args->minlen)
--			return;
--	} else {
--		if ((int)(rlen = rlen - args->prod - (args->mod - k)) <
--		    (int)args->minlen)
--			return;
--	}
--	ASSERT(rlen >= args->minlen);
--	ASSERT(rlen <= args->maxlen);
-+	if (k > args->mod)
-+		rlen = rlen - (k - args->mod);
-+	else
-+		rlen = rlen - args->prod + (args->mod - k);
-+	if ((int)rlen < (int)args->minlen)
-+		return;
-+	ASSERT(rlen >= args->minlen && rlen <= args->maxlen);
-+	ASSERT(rlen % args->prod == args->mod);
- 	args->len = rlen;
- }
- 
--- 
-1.8.1.4
+<div dir=3D"ltr"><div>Hi all,</div><div>I am new to this mailing list. I ca=
+me across a issue with xfs while installing RHEL 7.</div><div>When I create=
+d=A0&quot;custom layout&quot; and created /boot partition=A0with xfs file s=
+ystem it shown me error as &quot;/boot filesystem cannot be of type xfs&quo=
+t;.</div>
+<div>Why xfs is not allowed on /boot partition?</div><div>Help me resolving=
+ this issue.</div><div>Thanks,</div><div>Dhiraj</div></div>
+
+--001a11c119e230697704fb06088e--
+
+
+--===============5111534196603927452==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============5111534196603927452==--
