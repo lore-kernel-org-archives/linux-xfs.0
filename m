@@ -1,27 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id BD4FB7F3F
-	for <xfs@oss.sgi.com>; Thu,  5 Jun 2014 17:41:50 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id EF18C7F3F
+	for <xfs@oss.sgi.com>; Thu,  5 Jun 2014 18:09:20 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 5410CAC006
-	for <xfs@oss.sgi.com>; Thu,  5 Jun 2014 15:41:50 -0700 (PDT)
-Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
-	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	abOzTJpHeav29LrT for <xfs@oss.sgi.com>;
-	Thu, 05 Jun 2014 15:41:44 -0700 (PDT)
-Date: Fri, 6 Jun 2014 08:41:40 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: XFS filesystem claims to be mounted after a disconnect
-Message-ID: <20140605224140.GB4453@dastard>
-References: <20140503030221.GJ26353@dastard> <538C5E67.6090005@gmail.com>
-	<20140602234135.GO6677@dastard> <538D9412.3040009@gmail.com>
-	<CAAxjCEzz5n85zAH5HuUQkfxKvzZt5_+cPCj3uzZR7U69H+2tDw@mail.gmail.com>
-	<538DA7FF.4080002@gmail.com> <20140603212834.GG14410@dastard>
-	<538E4E1B.1020003@gmail.com> <20140605005538.GB4523@dastard>
-	<5390C77E.4020003@gmail.com>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id E260B304053
+	for <xfs@oss.sgi.com>; Thu,  5 Jun 2014 16:09:17 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id 2ifKJnmZAQ6ZK30k for
+	<xfs@oss.sgi.com>; Thu, 05 Jun 2014 16:09:16 -0700 (PDT)
+Received: from int-mx02.intmail.prod.int.phx2.redhat.com
+	(int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id s55N9G2w009654
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <xfs@oss.sgi.com>; Thu, 5 Jun 2014 19:09:16 -0400
+Received: from liberator.sandeen.net (ovpn01.gateway.prod.ext.phx2.redhat.com
+	[10.5.9.1])
+	by int-mx02.intmail.prod.int.phx2.redhat.com (8.13.8/8.13.8) with ESMTP
+	id s55N9FXv001914
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES128-SHA bits=128 verify=NO)
+	for <xfs@oss.sgi.com>; Thu, 5 Jun 2014 19:09:16 -0400
+Message-ID: <5390F89C.2050305@redhat.com>
+Date: Thu, 05 Jun 2014 18:09:16 -0500
+From: Eric Sandeen <sandeen@redhat.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <5390C77E.4020003@gmail.com>
+Subject: [PATCH] xfs_mdrestore: initialize sb prior to xfs_sb_from_disk()
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,54 +36,50 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Martin Papik <mp6058@gmail.com>
-Cc: Linux fs XFS <xfs@oss.sgi.com>
+To: xfs-oss <xfs@oss.sgi.com>
 
-On Thu, Jun 05, 2014 at 10:39:42PM +0300, Martin Papik wrote:
-> -----BEGIN PGP SIGNED MESSAGE-----
-> Hash: SHA512
-> 
-> Dear Dave,
-> 
-> Thanks for your patience, and I'd like to ask a few more questions if
-> I may.
-> 
-> You mentioned that XFS is primarily for server type environment and
-> specifically mentioned multipath access to storage devices. I had a
-> setup in the past, blade center with a shared SCSI array where
-> everything was duplicated. The blades had two connections one to each
-> of a pair of switches, the switches had duplicated connections to two
-> controllers (4 connections) and the controllers had access to the SCSI
-> drives (a dozen). So in this scenario each blade had two SCSI drives
-> showing for each volume on the array. So.....
-> 
-> Does XFS bind to both devices?
+If we xfs_mdrestore an image from a non-crc filesystem, lo
+and behold the restored image has gained a CRC:
 
-No. Use dm-multipath to make them appear as a single block device
-made up as a pair of redundant paths in primary/secondary failover
-or active/active load balancing configurations. dm-multipath handles
-failover between the two block devices on path failure
-transparently.
+# db/xfs_metadump.sh -o /dev/sdc1 - | xfs_mdrestore - test.img
+# xfs_db -c "sb 0" -c "p crc" /dev/sdc1
+crc = 0 (correct)
+# xfs_db -c "sb 0" -c "p crc" test.img
+crc = 0xb6f8d6a0 (correct)
 
-	  XFS
-	   |
-	dm-mp-0
-	/    \
-      sdc    sdd
+Obviously it can't really be correct :)
 
-The mounted filesystem doesn't even know there are multiple paths in
-this configuration, however the XFS UUID trapping behaviour avoids
-this problem by preventing you from doing XFS operations directly on
-/dev/sdc or /dev/sdd while the filesystem is mount on
-/dev/dm-mp-0....
+The problem is, xfs_sb_from_disk doesn't fill in the sb_crc
+field.
 
-Cheers.
+An earlier commit:
 
-Dave.
+  47de6e1 repair: ensure that unused superblock fields are zeroed
 
--- 
-Dave Chinner
-david@fromorbit.com
+fixed this same sort of problem for xfs_repair.  Do the same
+for mdrestore.
+
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
+
+But ... should we maybe just do this once and for all in
+xfs_sb_from_disk?  I'm not sure leaving it up to every
+caller is a good idea, unless somebody ahs a reason to
+pre-populate some fields - I can't imagine why that would
+be, though...
+
+diff --git a/mdrestore/xfs_mdrestore.c b/mdrestore/xfs_mdrestore.c
+index e57bdb2..0453f17 100644
+--- a/mdrestore/xfs_mdrestore.c
++++ b/mdrestore/xfs_mdrestore.c
+@@ -104,6 +104,7 @@ perform_restore(
+ 			1, src_f) != 1)
+ 		fatal("error reading from file: %s\n", strerror(errno));
+ 
++	memset(&sb, 0, sizeof(struct xfs_sb));
+ 	libxfs_sb_from_disk(&sb, (xfs_dsb_t *)block_buffer);
+ 
+ 	if (sb.sb_magicnum != XFS_SB_MAGIC)
 
 _______________________________________________
 xfs mailing list
