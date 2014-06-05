@@ -1,27 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 20D917F3F
-	for <xfs@oss.sgi.com>; Thu,  5 Jun 2014 08:18:13 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id A5475AC002
-	for <xfs@oss.sgi.com>; Thu,  5 Jun 2014 06:18:09 -0700 (PDT)
-Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
-	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	PTJWyvp2UCuUdzJQ for <xfs@oss.sgi.com>;
-	Thu, 05 Jun 2014 06:18:07 -0700 (PDT)
-Date: Thu, 5 Jun 2014 23:17:53 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] mm/vmscan: Do not block forever at shrink_inactive_list().
-Message-ID: <20140605131753.GD4523@dastard>
-References: <20140520063024.GH18954@dastard>
-	<201405202358.ADF10119.SMOFOQLFtOVHJF@I-love.SAKURA.ne.jp>
-	<6B2BA408B38BA1478B473C31C3D2074E31D59D8673@SV-EXCHANGE1.Corp.FC.LOCAL>
-	<201405262045.CDG95893.HLFFOSFMQOVOJt@I-love.SAKURA.ne.jp>
-	<alpine.DEB.2.02.1406031442170.19491@chino.kir.corp.google.com>
-	<201406052145.CIB35534.OQLVMSJFOHtFOF@I-love.SAKURA.ne.jp>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 74F237F3F
+	for <xfs@oss.sgi.com>; Thu,  5 Jun 2014 14:13:07 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 6A1548F8033
+	for <xfs@oss.sgi.com>; Thu,  5 Jun 2014 12:13:04 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id R8ChB95kNqyOxxEw for <xfs@oss.sgi.com>;
+	Thu, 05 Jun 2014 12:13:02 -0700 (PDT)
+Message-ID: <5390C13E.6030205@sandeen.net>
+Date: Thu, 05 Jun 2014 14:13:02 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <201406052145.CIB35534.OQLVMSJFOHtFOF@I-love.SAKURA.ne.jp>
+Subject: [PATCH 1/2 V2] xfsprogs: try to handle mkfs of a file on 4k sector
+	device
+References: <53852A05.5040006@redhat.com>
+In-Reply-To: <53852A05.5040006@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,84 +28,51 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
-Cc: riel@redhat.com, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, hch@infradead.org, kosaki.motohiro@jp.fujitsu.com, rientjes@google.com, Motohiro.Kosaki@us.fujitsu.com, fengguang.wu@intel.com, akpm@linux-foundation.org, kamezawa.hiroyu@jp.fujitsu.com
+To: Eric Sandeen <sandeen@redhat.com>, xfs-oss <xfs@oss.sgi.com>
 
-On Thu, Jun 05, 2014 at 09:45:26PM +0900, Tetsuo Handa wrote:
-> David Rientjes wrote:
-> > On Mon, 26 May 2014, Tetsuo Handa wrote:
-> > 
-> > > In shrink_inactive_list(), we do not insert delay at
-> > > 
-> > >   if (!sc->hibernation_mode && !current_is_kswapd())
-> > >     wait_iff_congested(zone, BLK_RW_ASYNC, HZ/10);
-> > > 
-> > > if sc->hibernation_mode != 0.
-> > > Follow the same reason, we should not insert delay at
-> > > 
-> > >   while (unlikely(too_many_isolated(zone, file, sc))) {
-> > >     congestion_wait(BLK_RW_ASYNC, HZ/10);
-> > > 
-> > >     /* We are about to die and free our memory. Return now. */
-> > >     if (fatal_signal_pending(current))
-> > >       return SWAP_CLUSTER_MAX;
-> > >   }
-> > > 
-> > > if sc->hibernation_mode != 0.
-> > > 
-> > > Signed-off-by: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
-> > > ---
-> > >  mm/vmscan.c |    3 +++
-> > >  1 files changed, 3 insertions(+), 0 deletions(-)
-> > > 
-> > > diff --git a/mm/vmscan.c b/mm/vmscan.c
-> > > index 32c661d..89c42ca 100644
-> > > --- a/mm/vmscan.c
-> > > +++ b/mm/vmscan.c
-> > > @@ -1362,6 +1362,9 @@ static int too_many_isolated(struct zone *zone, int file,
-> > >  	if (current_is_kswapd())
-> > >  		return 0;
-> > >  
-> > > +	if (sc->hibernation_mode)
-> > > +		return 0;
-> > > +
-> > >  	if (!global_reclaim(sc))
-> > >  		return 0;
-> > >  
-> > 
-> > This isn't the only too_many_isolated() functions that do a delay, how is 
-> > the too_many_isolated() in mm/compaction.c different?
-> > 
-> 
-> I don't know. But today I realized that this patch is not sufficient.
-> 
-> I'm trying to find why __alloc_pages_slowpath() cannot return for many minutes
-> when a certain type of memory pressure is given on a RHEL7 environment with
-> 4 CPU / 2GB RAM. Today I tried to use ftrace for examining the breakdown of
-> time-consuming functions inside __alloc_pages_slowpath(). But on the first run,
-> all processes are trapped into this too_many_isolated()/congestion_wait() loop
-> while kswapd is not running; stalling forever because nobody can perform
-> operations for making too_many_isolated() to return 0.
-> 
-> This means that, under rare circumstances, it is possible that all processes
-> other than kswapd are trapped into too_many_isolated()/congestion_wait() loop
-> while kswapd is sleeping because this loop assumes that somebody else shall
-> wake up kswapd and kswapd shall perform operations for making
-> too_many_isolated() to return 0. However, we cannot guarantee that kswapd is
-> waken by somebody nor kswapd is not blocked by blocking operations inside
-> shrinker functions (e.g. mutex_lock()).
+Try the xfs geometry ioctl if the mkfs target resides
+in a file; this gives us the equivalent of a device
+sector size.
 
-So what you are saying is that kswapd is having problems with
-getting blocked on locks held by processes in direct reclaim?
+If this fails, and there's a sector size mismatch
+between the host FS and the filesystem, then mkfs might
+fail - but that's no worse than it's been before.
 
-What are the stack traces that demonstrate such a dependency loop?
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
 
-Cheers,
+V2: remove warning when FSGEOMETRY fails (i.e. on non-xfs
+filesystems) for now
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+diff --git a/libxfs/linux.c b/libxfs/linux.c
+index 2e07d54..3796fdd 100644
+--- a/libxfs/linux.c
++++ b/libxfs/linux.c
+@@ -141,10 +141,20 @@ platform_findsizes(char *path, int fd, long long *sz, int *bsz)
+ 		exit(1);
+ 	}
+ 	if ((st.st_mode & S_IFMT) == S_IFREG) {
++		struct xfs_fsop_geom_v1 geom = { 0 };
++
+ 		*sz = (long long)(st.st_size >> 9);
+-		*bsz = BBSIZE;
+-		if (BBSIZE > max_block_alignment)
+-			max_block_alignment = BBSIZE;
++		if (ioctl(fd, XFS_IOC_FSGEOMETRY_V1, &geom) < 0) {
++			/*
++			 * fall back to BBSIZE; mkfs might fail if there's a
++			 * size mismatch between the image & the host fs...
++			 */
++			*bsz = BBSIZE;
++		} else
++			*bsz = geom.sectsize;
++
++		if (*bsz > max_block_alignment)
++			max_block_alignment = *bsz;
+ 		return;
+ 	}
+ 
+
 
 _______________________________________________
 xfs mailing list
