@@ -1,29 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id EF18C7F3F
-	for <xfs@oss.sgi.com>; Thu,  5 Jun 2014 18:09:20 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id E260B304053
-	for <xfs@oss.sgi.com>; Thu,  5 Jun 2014 16:09:17 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id 2ifKJnmZAQ6ZK30k for
-	<xfs@oss.sgi.com>; Thu, 05 Jun 2014 16:09:16 -0700 (PDT)
-Received: from int-mx02.intmail.prod.int.phx2.redhat.com
-	(int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id s55N9G2w009654
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Thu, 5 Jun 2014 19:09:16 -0400
-Received: from liberator.sandeen.net (ovpn01.gateway.prod.ext.phx2.redhat.com
-	[10.5.9.1])
-	by int-mx02.intmail.prod.int.phx2.redhat.com (8.13.8/8.13.8) with ESMTP
-	id s55N9FXv001914
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES128-SHA bits=128 verify=NO)
-	for <xfs@oss.sgi.com>; Thu, 5 Jun 2014 19:09:16 -0400
-Message-ID: <5390F89C.2050305@redhat.com>
-Date: Thu, 05 Jun 2014 18:09:16 -0500
-From: Eric Sandeen <sandeen@redhat.com>
+	by oss.sgi.com (Postfix) with ESMTP id 262BE7F3F
+	for <xfs@oss.sgi.com>; Thu,  5 Jun 2014 18:56:40 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id CFFAA304053
+	for <xfs@oss.sgi.com>; Thu,  5 Jun 2014 16:56:39 -0700 (PDT)
+Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
+	[150.101.137.145]) by cuda.sgi.com with ESMTP id
+	55xj0FGa8dsQiKbM for <xfs@oss.sgi.com>;
+	Thu, 05 Jun 2014 16:56:37 -0700 (PDT)
+Date: Fri, 6 Jun 2014 09:56:33 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] xfs_mdrestore: initialize sb prior to xfs_sb_from_disk()
+Message-ID: <20140605235633.GC4453@dastard>
+References: <5390F89C.2050305@redhat.com>
 MIME-Version: 1.0
-Subject: [PATCH] xfs_mdrestore: initialize sb prior to xfs_sb_from_disk()
+Content-Disposition: inline
+In-Reply-To: <5390F89C.2050305@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -36,50 +29,80 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs-oss <xfs@oss.sgi.com>
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-If we xfs_mdrestore an image from a non-crc filesystem, lo
-and behold the restored image has gained a CRC:
+On Thu, Jun 05, 2014 at 06:09:16PM -0500, Eric Sandeen wrote:
+> If we xfs_mdrestore an image from a non-crc filesystem, lo
+> and behold the restored image has gained a CRC:
+> 
+> # db/xfs_metadump.sh -o /dev/sdc1 - | xfs_mdrestore - test.img
+> # xfs_db -c "sb 0" -c "p crc" /dev/sdc1
+> crc = 0 (correct)
+> # xfs_db -c "sb 0" -c "p crc" test.img
+> crc = 0xb6f8d6a0 (correct)
+> 
+> Obviously it can't really be correct :)
+> 
+> The problem is, xfs_sb_from_disk doesn't fill in the sb_crc
+> field.
+> 
+> An earlier commit:
+> 
+>   47de6e1 repair: ensure that unused superblock fields are zeroed
+> 
+> fixed this same sort of problem for xfs_repair.  Do the same
+> for mdrestore.
+> 
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 
-# db/xfs_metadump.sh -o /dev/sdc1 - | xfs_mdrestore - test.img
-# xfs_db -c "sb 0" -c "p crc" /dev/sdc1
-crc = 0 (correct)
-# xfs_db -c "sb 0" -c "p crc" test.img
-crc = 0xb6f8d6a0 (correct)
+Patch looks fine, but lets answer the question below before pushing
+this...
 
-Obviously it can't really be correct :)
+> ---
+> 
+> But ... should we maybe just do this once and for all in
+> xfs_sb_from_disk?  I'm not sure leaving it up to every
+> caller is a good idea, unless somebody ahs a reason to
+> pre-populate some fields - I can't imagine why that would
+> be, though...
 
-The problem is, xfs_sb_from_disk doesn't fill in the sb_crc
-field.
+We don't ever read in the CRC field into the in-memory structures
+because it has no meaning in memory. Simiarly, we don't ever write
+the CRC field from the in-core structure because we always
+re-calculate it in the IO path if CRCs are configured. That is
+consistent behaviour across the entire code-base.
 
-An earlier commit:
+The superblock is a special case because of the way it is written.
+In kernel, we only write *specific* fields based on the field
+bitmask passed to xfs_mod_sb(), and we never set the CRC field bit
+in the kernel. Hence we never write that field to the superblock
+except when growing the filesystem and are initialising new
+secondary superblocks (where the in memory value is zero, anyway).
 
-  47de6e1 repair: ensure that unused superblock fields are zeroed
+Essentially, what userspace doing is the same:
 
-fixed this same sort of problem for xfs_repair.  Do the same
-for mdrestore.
+	libxfs_sb_to_disk(buf, sbp, XFS_SB_ALL_BITS)
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
+which is telling the code to write the sb_crc field from the
+in-memory superblock buffer. So, either we need to zero the
+sbp->sb_crc field before it gets written, or we need to mask out
+the XFS_SB_CRC bit from the writable flags.
 
-But ... should we maybe just do this once and for all in
-xfs_sb_from_disk?  I'm not sure leaving it up to every
-caller is a good idea, unless somebody ahs a reason to
-pre-populate some fields - I can't imagine why that would
-be, though...
+IMO, the former is the correct thing to do we have to ensure that
+fields that are not read from disk appear in memory as zero. That
+way no matter how the superblock is written it will have the correct
+zero values for anything that was not specifically initialised....
 
-diff --git a/mdrestore/xfs_mdrestore.c b/mdrestore/xfs_mdrestore.c
-index e57bdb2..0453f17 100644
---- a/mdrestore/xfs_mdrestore.c
-+++ b/mdrestore/xfs_mdrestore.c
-@@ -104,6 +104,7 @@ perform_restore(
- 			1, src_f) != 1)
- 		fatal("error reading from file: %s\n", strerror(errno));
- 
-+	memset(&sb, 0, sizeof(struct xfs_sb));
- 	libxfs_sb_from_disk(&sb, (xfs_dsb_t *)block_buffer);
- 
- 	if (sb.sb_magicnum != XFS_SB_MAGIC)
+Perhaps we should move the memset() to within xfs_sb_from_disk()
+to make this explicit?
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
