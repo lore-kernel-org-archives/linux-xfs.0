@@ -1,9 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-From: xfs@oss.sgi.com
-Subject: [XFS updates] XFS development tree branch, for-next,
-	updated. xfs-for-linus-3.15-rc6-94-g1d2378a
-Message-Id: <20140606070149.B375C7F56@oss.sgi.com>
-Date: Fri,  6 Jun 2014 02:01:49 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 62A817F3F
+	for <xfs@oss.sgi.com>; Fri,  6 Jun 2014 03:18:33 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 58025304053
+	for <xfs@oss.sgi.com>; Fri,  6 Jun 2014 01:18:30 -0700 (PDT)
+Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
+	[150.101.137.145]) by cuda.sgi.com with ESMTP id
+	eQTVD4InFhSostyn for <xfs@oss.sgi.com>;
+	Fri, 06 Jun 2014 01:18:28 -0700 (PDT)
+Received: from disappointment.disaster.area ([192.168.1.110]
+	helo=disappointment) by dastard with esmtp (Exim 4.80)
+	(envelope-from <dave@fromorbit.com>) id 1WspLx-00031P-I5
+	for xfs@oss.sgi.com; Fri, 06 Jun 2014 18:18:21 +1000
+Received: from dave by disappointment with local (Exim 4.82_1-5b7a7c0-XX)
+	(envelope-from <dave@disappointment.disaster>) id 1WspLx-0006ol-G8
+	for xfs@oss.sgi.com; Fri, 06 Jun 2014 18:18:21 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: [PATCH] xfs; fix xfs_da_args sparse warning in xfs_readdir
+Date: Fri,  6 Jun 2014 18:18:21 +1000
+Message-Id: <1402042701-26173-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -19,104 +35,35 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-This is an automated email from the git hooks/post-receive script. It was
-generated because a ref change was pushed to the repository containing
-the project "XFS development tree".
+From: Dave Chinner <dchinner@redhat.com>
 
-The branch, for-next has been updated
-  1d2378a Merge branch 'xfs-misc-fixes-3-for-3.16' into for-next
-  3026511 xfs: Fix rounding in xfs_alloc_fix_len()
-  448011e xfs: tone down writepage/releasepage WARN_ONs
-  72208ee xfs: small cleanup in xfs_lowbit64()
-  36de955 xfs: kill xfs_buf_geterror()
-  556b888 xfs: xfs_readsb needs to check for magic numbers
-  1f6d648 xfs: block allocation work needs to be kswapd aware
-  8cd5674 Merge branch 'xfs-da-geom' into for-next
-  b2a21e7 xfs: remove redundant geometry information from xfs_da_state
-  c2c4c47 xfs: replace attr LBSIZE with xfs_da_geometry
-  c59f0ad xfs: pass xfs_da_args to xfs_attr_leaf_newentsize
-  33a6039 xfs: use xfs_da_geometry for block size in attr code
-  bc85178 xfs: remove mp->m_dir_geo from directory logging
-  53f82db xfs: reduce direct usage of mp->m_dir_geo
-  7ab610f xfs: move node entry counts to xfs_da_geometry
-  ed358c0 xfs: convert dir/attr btree threshold to xfs_da_geometry
-  8f66193 xfs: convert m_dirblksize to xfs_da_geometry
-  d6cf130 xfs: convert m_dirblkfsbs to xfs_da_geometry
-  7dda6e8 xfs: convert directory segment limits to xfs_da_geometry
-  3002803 xfs: convert directory db conversion to xfs_da_geometry
-  2998ab1 xfs: convert directory dablk conversion to xfs_da_geometry
-  9b3b552 xfs: convert dir byte/off conversion to xfs_da_geometry
-  8c44a28 xfs: kill XFS_DIR2...FIRSTDB macros
-  892e3f3 xfs: move directory block translatiosn to xfs_dir2_priv.h
-  0650b55 xfs: introduce directory geometry structure
-      from  b70f14e1ffbb47369b1cc2cdf558c3468ae9e484 (commit)
+The kbuild test robot reported:
 
-Those revisions listed above that are new to this repository have
-not appeared on any other notification email; so we list those
-revisions in full, below.
+>> fs/xfs/xfs_dir2_readdir.c:672:41: sparse: Using plain integer as NULL pointer
 
-- Log -----------------------------------------------------------------
-commit 1d2378a4e89bcef25f3800ef00b94cd07069c876
-Merge: 8cd5674 3026511
-Author: Dave Chinner <david@fromorbit.com>
-Date:   Fri Jun 6 16:17:47 2014 +1000
+Fix it.
 
-    Merge branch 'xfs-misc-fixes-3-for-3.16' into for-next
+Reported-by: kbuild test robot <fengguang.wu@intel.com>
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/xfs_dir2_readdir.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-commit 8cd56740f64b10fb75aba326cf188282970eee5b
-Merge: b70f14e b2a21e7
-Author: Dave Chinner <david@fromorbit.com>
-Date:   Fri Jun 6 15:25:24 2014 +1000
-
-    Merge branch 'xfs-da-geom' into for-next
-
------------------------------------------------------------------------
-
-Summary of changes:
- fs/xfs/xfs_alloc.c        |  19 ++---
- fs/xfs/xfs_aops.c         |   6 +-
- fs/xfs/xfs_attr.c         |  17 +---
- fs/xfs/xfs_attr_leaf.c    | 184 +++++++++++++++++++++---------------------
- fs/xfs/xfs_attr_leaf.h    |   3 +-
- fs/xfs/xfs_attr_list.c    |   1 +
- fs/xfs/xfs_attr_remote.c  |  55 +++++++------
- fs/xfs/xfs_bit.h          |   7 +-
- fs/xfs/xfs_bmap.c         |   3 +-
- fs/xfs/xfs_bmap_util.c    |  16 +++-
- fs/xfs/xfs_bmap_util.h    |  13 +--
- fs/xfs/xfs_btree.c        |  12 +--
- fs/xfs/xfs_buf.h          |   5 --
- fs/xfs/xfs_buf_item.c     |   2 +-
- fs/xfs/xfs_da_btree.c     |  65 +++++++--------
- fs/xfs/xfs_da_btree.h     |  20 ++++-
- fs/xfs/xfs_da_format.c    |  36 +++++----
- fs/xfs/xfs_da_format.h    | 154 -----------------------------------
- fs/xfs/xfs_dir2.c         | 132 +++++++++++++++++++-----------
- fs/xfs/xfs_dir2.h         |  30 ++++---
- fs/xfs/xfs_dir2_block.c   |  88 ++++++++++----------
- fs/xfs/xfs_dir2_data.c    |  80 +++++++++----------
- fs/xfs/xfs_dir2_leaf.c    | 200 ++++++++++++++++++++++++----------------------
- fs/xfs/xfs_dir2_node.c    | 188 ++++++++++++++++++++++---------------------
- fs/xfs/xfs_dir2_priv.h    | 138 +++++++++++++++++++++++++++++++-
- fs/xfs/xfs_dir2_readdir.c | 142 ++++++++++++++++----------------
- fs/xfs/xfs_dir2_sf.c      |  18 +++--
- fs/xfs/xfs_dquot.c        |   6 +-
- fs/xfs/xfs_fsops.c        |   4 +-
- fs/xfs/xfs_ialloc.c       |   1 -
- fs/xfs/xfs_log.c          |   2 +-
- fs/xfs/xfs_log_rlimit.c   |   2 +-
- fs/xfs/xfs_mount.c        |  39 ++++++---
- fs/xfs/xfs_mount.h        |  12 +--
- fs/xfs/xfs_rtbitmap.c     |   1 -
- fs/xfs/xfs_symlink.c      |   1 +
- fs/xfs/xfs_trans_resv.c   |   3 +-
- fs/xfs/xfs_trans_space.h  |   5 +-
- 38 files changed, 879 insertions(+), 831 deletions(-)
-
-
-hooks/post-receive
+diff --git a/fs/xfs/xfs_dir2_readdir.c b/fs/xfs/xfs_dir2_readdir.c
+index ca1f43c..48e99af 100644
+--- a/fs/xfs/xfs_dir2_readdir.c
++++ b/fs/xfs/xfs_dir2_readdir.c
+@@ -669,7 +669,7 @@ xfs_readdir(
+ 	struct dir_context	*ctx,
+ 	size_t			bufsize)
+ {
+-	struct xfs_da_args	args = {0};
++	struct xfs_da_args	args = { NULL };
+ 	int			rval;
+ 	int			v;
+ 	uint			lock_mode;
 -- 
-XFS development tree
+2.0.0
 
 _______________________________________________
 xfs mailing list
