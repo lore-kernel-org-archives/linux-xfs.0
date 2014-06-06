@@ -1,25 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 13FC57F3F
-	for <xfs@oss.sgi.com>; Fri,  6 Jun 2014 07:20:03 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id A0A96AC003
-	for <xfs@oss.sgi.com>; Fri,  6 Jun 2014 05:19:59 -0700 (PDT)
-Received: from www262.sakura.ne.jp (www262.sakura.ne.jp [202.181.97.72]) by
-	cuda.sgi.com with ESMTP id lJP2josy5mTUxsHv (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 06 Jun 2014 05:19:57 -0700 (PDT)
-Subject: Re: [PATCH] mm/vmscan: Do not block forever atshrink_inactive_list().
-From: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
-References: <6B2BA408B38BA1478B473C31C3D2074E31D59D8673@SV-EXCHANGE1.Corp.FC.LOCAL>
-	<201405262045.CDG95893.HLFFOSFMQOVOJt@I-love.SAKURA.ne.jp>
-	<alpine.DEB.2.02.1406031442170.19491@chino.kir.corp.google.com>
-	<201406052145.CIB35534.OQLVMSJFOHtFOF@I-love.SAKURA.ne.jp>
-	<20140605131753.GD4523@dastard>
-In-Reply-To: <20140605131753.GD4523@dastard>
-Message-Id: <201406062119.HHJ30796.FtLFOSFJOOVQMH@I-love.SAKURA.ne.jp>
-Date: Fri, 6 Jun 2014 21:19:22 +0900
-Mime-Version: 1.0
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 77D257F47
+	for <xfs@oss.sgi.com>; Fri,  6 Jun 2014 08:13:40 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 387648F8035
+	for <xfs@oss.sgi.com>; Fri,  6 Jun 2014 06:13:40 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id RpHtNMadoR3EnMsW for
+	<xfs@oss.sgi.com>; Fri, 06 Jun 2014 06:13:36 -0700 (PDT)
+Received: from int-mx10.intmail.prod.int.phx2.redhat.com
+	(int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id s56DDZpY020003
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256
+	verify=OK) for <xfs@oss.sgi.com>; Fri, 6 Jun 2014 09:13:35 -0400
+Received: from bfoster.bfoster ([10.18.41.237])
+	by int-mx10.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id s56DDZwP019499
+	for <xfs@oss.sgi.com>; Fri, 6 Jun 2014 09:13:35 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: [PATCH 1/6] xfs: fix a couple error sequence jumps in xfs_mountfs()
+Date: Fri,  6 Jun 2014 09:13:29 -0400
+Message-Id: <1402060414-22075-2-git-send-email-bfoster@redhat.com>
+In-Reply-To: <1402060414-22075-1-git-send-email-bfoster@redhat.com>
+References: <1402060414-22075-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,37 +31,50 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: david@fromorbit.com
-Cc: riel@redhat.com, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, hch@infradead.org, kosaki.motohiro@jp.fujitsu.com, rientjes@google.com, Motohiro.Kosaki@us.fujitsu.com, fengguang.wu@intel.com, akpm@linux-foundation.org, kamezawa.hiroyu@jp.fujitsu.com
+To: xfs@oss.sgi.com
 
-Dave Chinner wrote:
-> On Thu, Jun 05, 2014 at 09:45:26PM +0900, Tetsuo Handa wrote:
-> > This means that, under rare circumstances, it is possible that all processes
-> > other than kswapd are trapped into too_many_isolated()/congestion_wait() loop
-> > while kswapd is sleeping because this loop assumes that somebody else shall
-> > wake up kswapd and kswapd shall perform operations for making
-> > too_many_isolated() to return 0. However, we cannot guarantee that kswapd is
-> > waken by somebody nor kswapd is not blocked by blocking operations inside
-> > shrinker functions (e.g. mutex_lock()).
-> 
-> So what you are saying is that kswapd is having problems with
-> getting blocked on locks held by processes in direct reclaim?
-> 
-> What are the stack traces that demonstrate such a dependency loop?
+xfs_mountfs() has a couple failure conditions that do not jump to the
+correct labels. Specifically:
 
-If a normal task's GFP_KERNEL memory allocation called a shrinker function and
-the shrinker function does GFP_WAIT-able allocation with a mutex held, there
-is a possibility that kswapd is waken up due to GFP_WAIT-able allocation and
-kswapd calls the shrinker function, and the kswapd is blocked at trying to
-hold the same mutex inside the shrinker function, isn't it?
+- xfs_initialize_perag_data() failure does not deallocate the log even
+  though it occurs after log initialization
+- xfs_mount_reset_sbqflags() failure returns the error directly rather
+  than jump to the error sequence
 
-Since ttm_dma_pool_shrink_count()/ttm_dma_pool_shrink_scan() holds a mutex
-and ttm_dma_pool_shrink_scan() does GFP_WAIT-able allocation, I think such
-a dependency loop is possible.
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+---
+ fs/xfs/xfs_mount.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+index 3507cd0..8a41aba 100644
+--- a/fs/xfs/xfs_mount.c
++++ b/fs/xfs/xfs_mount.c
+@@ -855,7 +855,7 @@ xfs_mountfs(
+ 	     !mp->m_sb.sb_inprogress) {
+ 		error = xfs_initialize_perag_data(mp, sbp->sb_agcount);
+ 		if (error)
+-			goto out_fail_wait;
++			goto out_log_dealloc;;
+ 	}
+ 
+ 	/*
+@@ -927,7 +927,7 @@ xfs_mountfs(
+ 			xfs_notice(mp, "resetting quota flags");
+ 			error = xfs_mount_reset_sbqflags(mp);
+ 			if (error)
+-				return error;
++				goto out_rtunmount;
+ 		}
+ 	}
+ 
+-- 
+1.8.3.1
 
 _______________________________________________
 xfs mailing list
