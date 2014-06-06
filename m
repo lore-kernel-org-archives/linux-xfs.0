@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 9F2CB7F51
-	for <xfs@oss.sgi.com>; Fri,  6 Jun 2014 03:23:05 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 7EB9B7F51
+	for <xfs@oss.sgi.com>; Fri,  6 Jun 2014 03:23:07 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 86F278F8037
-	for <xfs@oss.sgi.com>; Fri,  6 Jun 2014 01:23:05 -0700 (PDT)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 757888F8033
+	for <xfs@oss.sgi.com>; Fri,  6 Jun 2014 01:23:04 -0700 (PDT)
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	OkA9EER7uvVDchTI for <xfs@oss.sgi.com>;
-	Fri, 06 Jun 2014 01:23:03 -0700 (PDT)
+	GqFh3PqYMZR9RUCm for <xfs@oss.sgi.com>;
+	Fri, 06 Jun 2014 01:23:02 -0700 (PDT)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.80)
-	(envelope-from <dave@fromorbit.com>) id 1WspQN-000328-AY
+	(envelope-from <dave@fromorbit.com>) id 1WspQN-000329-B4
 	for xfs@oss.sgi.com; Fri, 06 Jun 2014 18:22:55 +1000
 Received: from dave by disappointment with local (Exim 4.82_1-5b7a7c0-XX)
-	(envelope-from <dave@disappointment.disaster>) id 1WspQN-0006qs-9m
+	(envelope-from <dave@disappointment.disaster>) id 1WspQN-0006qx-AM
 	for xfs@oss.sgi.com; Fri, 06 Jun 2014 18:22:55 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 1/2] xfs: fix swapext ilock deadlock
-Date: Fri,  6 Jun 2014 18:22:52 +1000
-Message-Id: <1402042973-26276-2-git-send-email-david@fromorbit.com>
+Subject: [PATCH 2/2] xfs: flush both inodes in xfs_swap_extents
+Date: Fri,  6 Jun 2014 18:22:53 +1000
+Message-Id: <1402042973-26276-3-git-send-email-david@fromorbit.com>
 In-Reply-To: <1402042973-26276-1-git-send-email-david@fromorbit.com>
 References: <1402042973-26276-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,109 +39,147 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-xfs_swap_extents() holds the ilock over a call to
-filemap_write_and_wait(), which can then try to write data and take
-the ilock. That causes a self-deadlock.
+We need to treat both inodes identically from a page ache point of
+view when preapreing them for extent swapping. We don't do this
+right now - we assume that one of the inodes empty, because that's
+what xfs-fsr currently does. Remove this assumption from the code.
 
-Fix the deadlock and clean up the code by separating the locking
-appropriately. Add a lockflags variable to track what locks we are
-holding as we gain and drop them and cleanup the error handling to
-always use "out_unlock" with the lockflags variable.
+While factoring out the flushing and related checks, move the
+transactions reservation to immeidately after the flushes so that we
+don't need to pick up and then drop the ilock to do the transaction
+reservation. There are no issues with aborting the transaction it if
+the checks fail before we join the inodes to the transaction and
+dirty them, so this is a safe change to make.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_bmap_util.c | 33 ++++++++++++++++++---------------
- 1 file changed, 18 insertions(+), 15 deletions(-)
+ fs/xfs/xfs_bmap_util.c | 80 +++++++++++++++++++++++---------------------------
+ 1 file changed, 37 insertions(+), 43 deletions(-)
 
 diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-index 703b3ec..948eba1 100644
+index 948eba1..7eac7c4 100644
 --- a/fs/xfs/xfs_bmap_util.c
 +++ b/fs/xfs/xfs_bmap_util.c
-@@ -1686,6 +1686,7 @@ xfs_swap_extents(
- 	int		aforkblks = 0;
- 	int		taforkblks = 0;
- 	__uint64_t	tmp;
-+	int		lock_flags;
+@@ -1672,6 +1672,30 @@ xfs_swap_extents_check_format(
+ }
  
- 	tempifp = kmem_alloc(sizeof(xfs_ifork_t), KM_MAYFAIL);
- 	if (!tempifp) {
-@@ -1694,13 +1695,13 @@ xfs_swap_extents(
+ int
++xfs_swap_extent_flush(
++	struct xfs_inode	*ip)
++{
++	int	error;
++
++	error = -filemap_write_and_wait(VFS_I(ip)->i_mapping);
++	if (error)
++		return error;
++	truncate_pagecache_range(VFS_I(ip), 0, -1);
++
++	/* Verify O_DIRECT for ftmp */
++	if (VFS_I(ip)->i_mapping->nrpages)
++		return EINVAL;
++
++	/*
++	 * Don't try to swap extents on mmap()d files because we can't lock
++	 * out races against page faults safely.
++	 */
++	if (mapping_mapped(VFS_I(ip)->i_mapping))
++		return EBUSY;
++	return 0;
++}
++
++int
+ xfs_swap_extents(
+ 	xfs_inode_t	*ip,	/* target inode */
+ 	xfs_inode_t	*tip,	/* tmp inode */
+@@ -1715,26 +1739,28 @@ xfs_swap_extents(
+ 		goto out_unlock;
+ 	}
+ 
+-	error = -filemap_write_and_wait(VFS_I(tip)->i_mapping);
++	error = xfs_swap_extent_flush(ip);
++	if (error)
++		goto out_unlock;
++	error = xfs_swap_extent_flush(tip);
+ 	if (error)
+ 		goto out_unlock;
+-	truncate_pagecache_range(VFS_I(tip), 0, -1);
+-
+-	xfs_lock_two_inodes(ip, tip, XFS_ILOCK_EXCL);
+-	lock_flags |= XFS_ILOCK_EXCL;
+ 
+-	/* Verify O_DIRECT for ftmp */
+-	if (VN_CACHED(VFS_I(tip)) != 0) {
+-		error = XFS_ERROR(EINVAL);
++	tp = xfs_trans_alloc(mp, XFS_TRANS_SWAPEXT);
++	error = xfs_trans_reserve(tp, &M_RES(mp)->tr_ichange, 0, 0);
++	if (error) {
++		xfs_trans_cancel(tp, 0);
+ 		goto out_unlock;
+ 	}
++	xfs_lock_two_inodes(ip, tip, XFS_ILOCK_EXCL);
++	lock_flags |= XFS_ILOCK_EXCL;
+ 
+ 	/* Verify all data are being swapped */
+ 	if (sxp->sx_offset != 0 ||
+ 	    sxp->sx_length != ip->i_d.di_size ||
+ 	    sxp->sx_length != tip->i_d.di_size) {
+ 		error = XFS_ERROR(EFAULT);
+-		goto out_unlock;
++		goto out_trans_cancel;
+ 	}
+ 
+ 	trace_xfs_swap_extent_before(ip, 0);
+@@ -1746,7 +1772,7 @@ xfs_swap_extents(
+ 		xfs_notice(mp,
+ 		    "%s: inode 0x%llx format is incompatible for exchanging.",
+ 				__func__, ip->i_ino);
+-		goto out_unlock;
++		goto out_trans_cancel;
  	}
  
  	/*
--	 * we have to do two separate lock calls here to keep lockdep
--	 * happy. If we try to get all the locks in one call, lock will
--	 * report false positives when we drop the ILOCK and regain them
--	 * below.
-+	 * Lock up the inodes against other IO and truncate to begin with.
-+	 * Then we can ensure the inodes are flushed and have no page cache
-+	 * safely. Once we have done this we can take the ilocks and do the rest
-+	 * of the checks.
- 	 */
-+	lock_flags = XFS_IOLOCK_EXCL;
- 	xfs_lock_two_inodes(ip, tip, XFS_IOLOCK_EXCL);
--	xfs_lock_two_inodes(ip, tip, XFS_ILOCK_EXCL);
- 
- 	/* Verify that both files have the same format */
- 	if ((ip->i_d.di_mode & S_IFMT) != (tip->i_d.di_mode & S_IFMT)) {
-@@ -1719,6 +1720,9 @@ xfs_swap_extents(
- 		goto out_unlock;
- 	truncate_pagecache_range(VFS_I(tip), 0, -1);
- 
-+	xfs_lock_two_inodes(ip, tip, XFS_ILOCK_EXCL);
-+	lock_flags |= XFS_ILOCK_EXCL;
-+
- 	/* Verify O_DIRECT for ftmp */
- 	if (VN_CACHED(VFS_I(tip)) != 0) {
- 		error = XFS_ERROR(EINVAL);
-@@ -1773,6 +1777,7 @@ xfs_swap_extents(
- 
- 	xfs_iunlock(ip, XFS_ILOCK_EXCL);
- 	xfs_iunlock(tip, XFS_ILOCK_EXCL);
-+	lock_flags &= ~XFS_ILOCK_EXCL;
- 
- 	/*
- 	 * There is a race condition here since we gave up the
-@@ -1785,13 +1790,11 @@ xfs_swap_extents(
- 
- 	tp = xfs_trans_alloc(mp, XFS_TRANS_SWAPEXT);
- 	error = xfs_trans_reserve(tp, &M_RES(mp)->tr_ichange, 0, 0);
--	if (error) {
--		xfs_iunlock(ip,  XFS_IOLOCK_EXCL);
--		xfs_iunlock(tip, XFS_IOLOCK_EXCL);
--		xfs_trans_cancel(tp, 0);
--		goto out;
+@@ -1761,40 +1787,8 @@ xfs_swap_extents(
+ 	    (sbp->bs_mtime.tv_sec != VFS_I(ip)->i_mtime.tv_sec) ||
+ 	    (sbp->bs_mtime.tv_nsec != VFS_I(ip)->i_mtime.tv_nsec)) {
+ 		error = XFS_ERROR(EBUSY);
+-		goto out_unlock;
 -	}
-+	if (error)
-+		goto out_trans_cancel;
-+
- 	xfs_lock_two_inodes(ip, tip, XFS_ILOCK_EXCL);
-+	lock_flags |= XFS_ILOCK_EXCL;
+-
+-	/* We need to fail if the file is memory mapped.  Once we have tossed
+-	 * all existing pages, the page fault will have no option
+-	 * but to go to the filesystem for pages. By making the page fault call
+-	 * vop_read (or write in the case of autogrow) they block on the iolock
+-	 * until we have switched the extents.
+-	 */
+-	if (VN_MAPPED(VFS_I(ip))) {
+-		error = XFS_ERROR(EBUSY);
+-		goto out_unlock;
+-	}
+-
+-	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+-	xfs_iunlock(tip, XFS_ILOCK_EXCL);
+-	lock_flags &= ~XFS_ILOCK_EXCL;
+-
+-	/*
+-	 * There is a race condition here since we gave up the
+-	 * ilock.  However, the data fork will not change since
+-	 * we have the iolock (locked for truncation too) so we
+-	 * are safe.  We don't really care if non-io related
+-	 * fields change.
+-	 */
+-	truncate_pagecache_range(VFS_I(ip), 0, -1);
+-
+-	tp = xfs_trans_alloc(mp, XFS_TRANS_SWAPEXT);
+-	error = xfs_trans_reserve(tp, &M_RES(mp)->tr_ichange, 0, 0);
+-	if (error)
+ 		goto out_trans_cancel;
+-
+-	xfs_lock_two_inodes(ip, tip, XFS_ILOCK_EXCL);
+-	lock_flags |= XFS_ILOCK_EXCL;
++	}
  
  	/*
  	 * Count the number of extended attribute blocks
-@@ -1810,8 +1813,8 @@ xfs_swap_extents(
- 			goto out_trans_cancel;
- 	}
- 
--	xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL | XFS_IOLOCK_EXCL);
--	xfs_trans_ijoin(tp, tip, XFS_ILOCK_EXCL | XFS_IOLOCK_EXCL);
-+	xfs_trans_ijoin(tp, ip, lock_flags);
-+	xfs_trans_ijoin(tp, tip, lock_flags);
- 
- 	/*
- 	 * Before we've swapped the forks, lets set the owners of the forks
-@@ -1940,8 +1943,8 @@ out:
- 	return error;
- 
- out_unlock:
--	xfs_iunlock(ip,  XFS_ILOCK_EXCL | XFS_IOLOCK_EXCL);
--	xfs_iunlock(tip, XFS_ILOCK_EXCL | XFS_IOLOCK_EXCL);
-+	xfs_iunlock(ip, lock_flags);
-+	xfs_iunlock(tip, lock_flags);
- 	goto out;
- 
- out_trans_cancel:
 -- 
 2.0.0
 
