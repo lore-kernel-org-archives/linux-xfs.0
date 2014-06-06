@@ -1,9 +1,9 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 From: xfs@oss.sgi.com
-Subject: [XFS updates] XFS development tree branch, xfs-misc-fixes-3-for-3.16,
-	created. xfs-for-linus-3.15-rc5-1272-g3026511
-Message-Id: <20140606070108.C21327F53@oss.sgi.com>
-Date: Fri,  6 Jun 2014 02:01:08 -0500 (CDT)
+Subject: [XFS updates] XFS development tree branch, for-next,
+	updated. xfs-for-linus-3.15-rc6-94-g1d2378a
+Message-Id: <20140606070149.B375C7F56@oss.sgi.com>
+Date: Fri,  6 Jun 2014 02:01:49 -0500 (CDT)
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,142 +23,95 @@ This is an automated email from the git hooks/post-receive script. It was
 generated because a ref change was pushed to the repository containing
 the project "XFS development tree".
 
-The branch, xfs-misc-fixes-3-for-3.16 has been created
-        at  30265117ee1e23fa91920f337a3ea91207f700dc (commit)
+The branch, for-next has been updated
+  1d2378a Merge branch 'xfs-misc-fixes-3-for-3.16' into for-next
+  3026511 xfs: Fix rounding in xfs_alloc_fix_len()
+  448011e xfs: tone down writepage/releasepage WARN_ONs
+  72208ee xfs: small cleanup in xfs_lowbit64()
+  36de955 xfs: kill xfs_buf_geterror()
+  556b888 xfs: xfs_readsb needs to check for magic numbers
+  1f6d648 xfs: block allocation work needs to be kswapd aware
+  8cd5674 Merge branch 'xfs-da-geom' into for-next
+  b2a21e7 xfs: remove redundant geometry information from xfs_da_state
+  c2c4c47 xfs: replace attr LBSIZE with xfs_da_geometry
+  c59f0ad xfs: pass xfs_da_args to xfs_attr_leaf_newentsize
+  33a6039 xfs: use xfs_da_geometry for block size in attr code
+  bc85178 xfs: remove mp->m_dir_geo from directory logging
+  53f82db xfs: reduce direct usage of mp->m_dir_geo
+  7ab610f xfs: move node entry counts to xfs_da_geometry
+  ed358c0 xfs: convert dir/attr btree threshold to xfs_da_geometry
+  8f66193 xfs: convert m_dirblksize to xfs_da_geometry
+  d6cf130 xfs: convert m_dirblkfsbs to xfs_da_geometry
+  7dda6e8 xfs: convert directory segment limits to xfs_da_geometry
+  3002803 xfs: convert directory db conversion to xfs_da_geometry
+  2998ab1 xfs: convert directory dablk conversion to xfs_da_geometry
+  9b3b552 xfs: convert dir byte/off conversion to xfs_da_geometry
+  8c44a28 xfs: kill XFS_DIR2...FIRSTDB macros
+  892e3f3 xfs: move directory block translatiosn to xfs_dir2_priv.h
+  0650b55 xfs: introduce directory geometry structure
+      from  b70f14e1ffbb47369b1cc2cdf558c3468ae9e484 (commit)
+
+Those revisions listed above that are new to this repository have
+not appeared on any other notification email; so we list those
+revisions in full, below.
 
 - Log -----------------------------------------------------------------
-commit 30265117ee1e23fa91920f337a3ea91207f700dc
-Author: Jan Kara <jack@suse.cz>
-Date:   Fri Jun 6 16:06:37 2014 +1000
+commit 1d2378a4e89bcef25f3800ef00b94cd07069c876
+Merge: 8cd5674 3026511
+Author: Dave Chinner <david@fromorbit.com>
+Date:   Fri Jun 6 16:17:47 2014 +1000
 
-    xfs: Fix rounding in xfs_alloc_fix_len()
-    
-    Rounding in xfs_alloc_fix_len() is wrong. As the comment states, the
-    result should be a number of a form (k*prod+mod) however due to sign
-    mistake the result is different. As a result allocations on raid arrays
-    could be misaligned in some cases.
-    
-    This also seems to fix occasional assertion failure:
-    	XFS_WANT_CORRUPTED_GOTO(rlen <= flen, error0)
-    in xfs_alloc_ag_vextent_size().
-    
-    Also add an assertion that the result of xfs_alloc_fix_len() is of
-    expected form.
-    
-    Signed-off-by: Jan Kara <jack@suse.cz>
-    Reviewed-by: Brian Foster <bfoster@redhat.com>
-    Signed-off-by: Dave Chinner <david@fromorbit.com>
+    Merge branch 'xfs-misc-fixes-3-for-3.16' into for-next
 
-commit 448011e2ab1c44f7990a62649580bde0da5242b5
-Author: Christoph Hellwig <hch@infradead.org>
-Date:   Fri Jun 6 16:05:15 2014 +1000
+commit 8cd56740f64b10fb75aba326cf188282970eee5b
+Merge: b70f14e b2a21e7
+Author: Dave Chinner <david@fromorbit.com>
+Date:   Fri Jun 6 15:25:24 2014 +1000
 
-    xfs: tone down writepage/releasepage WARN_ONs
-    
-    I recently ran into the issue fixed by
-    
-      "xfs: kill buffers over failed write ranges properly"
-    
-    which spams the log with lots of backtraces.  Make debugging any
-    issues like that easier by using WARN_ON_ONCE in the writeback code.
-    
-    Signed-off-by: Christoph Hellwig <hch@lst.de>
-    Reviewed-by: Dave Chinner <dchinner@redhat.com>
-    Signed-off-by: Dave Chinner <david@fromorbit.com>
-
-commit 72208ee060635dfab2b3bd447a95e0f9c419e954
-Author: Dan Carpenter <dan.carpenter@oracle.com>
-Date:   Fri Jun 6 16:04:42 2014 +1000
-
-    xfs: small cleanup in xfs_lowbit64()
-    
-    There are two checkpatch.pl complaints here because of the bad
-    indenting and because of the assignment inside the condition.
-    
-    Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
-    Reviewed-by: Eric Sandeen <sandeen@redhat.com>
-    Signed-off-by: Dave Chinner <david@fromorbit.com>
-
-commit 36de95567f910f5544060f50346d8677ae13ad22
-Author: Dave Chinner <dchinner@redhat.com>
-Date:   Fri Jun 6 16:02:12 2014 +1000
-
-    xfs: kill xfs_buf_geterror()
-    
-    Most of the callers are just calling ASSERT(!xfs_buf_geterror())
-    which means they are checking for bp->b_error == 0. If bp is null in
-    this case, we will assert fail, and hence it's no different in
-    result to oopsing because of a null bp. In some cases, errors have
-    already been checked for or the function returning the buffer can't
-    return a buffer with an error, so it's just a redundant assert.
-    Either way, the assert can either be removed.
-    
-    The other two non-assert callers can just test for a buffer and
-    error properly.
-    
-    Signed-off-by: Dave Chinner <dchinner@redhat.com>
-    Reviewed-by: Brian Foster <bfoster@redhat.com>
-    Reviewed-by: Christoph Hellwig <hch@lst.de>
-    Signed-off-by: Dave Chinner <david@fromorbit.com>
-
-commit 556b8883cfac3d3203557e161ea8005f8b5479b2
-Author: Dave Chinner <dchinner@redhat.com>
-Date:   Fri Jun 6 16:00:43 2014 +1000
-
-    xfs: xfs_readsb needs to check for magic numbers
-    
-    Commit daba542 ("xfs: skip verification on initial "guess"
-    superblock read") dropped the use of a verifier for the initial
-    superblock read so we can probe the sector size of the filesystem
-    stored in the superblock. It, however, now fails to validate that
-    what was read initially is actually an XFS superblock and hence will
-    fail the sector size check and return ENOSYS.
-    
-    This causes probe-based mounts to fail because it expects XFS to
-    return EINVAL when it doesn't recognise the superblock format.
-    
-    cc: <stable@vger.kernel.org>
-    Reported-by: Plamen Petrov <plamen.sisi@gmail.com>
-    Tested-by: Plamen Petrov <plamen.sisi@gmail.com>
-    Signed-off-by: Dave Chinner <dchinner@redhat.com>
-    Reviewed-by: Christoph Hellwig <hch@lst.de>
-    Signed-off-by: Dave Chinner <david@fromorbit.com>
-
-commit 1f6d64829db78a7e1d63e15c9f48f0a5d2b5a679
-Author: Dave Chinner <dchinner@redhat.com>
-Date:   Fri Jun 6 15:59:59 2014 +1000
-
-    xfs: block allocation work needs to be kswapd aware
-    
-    Upon memory pressure, kswapd calls xfs_vm_writepage() from
-    shrink_page_list(). This can result in delayed allocation occurring
-    and that gets deferred to the the allocation workqueue.
-    
-    The allocation then runs outside kswapd context, which means if it
-    needs memory (and it does to demand page metadata from disk) it can
-    block in shrink_inactive_list() waiting for IO congestion. These
-    blocking waits are normally avoiding in kswapd context, so under
-    memory pressure writeback from kswapd can be arbitrarily delayed by
-    memory reclaim.
-    
-    To avoid this, pass the kswapd context to the allocation being done
-    by the workqueue, so that memory reclaim understands correctly that
-    the work is being done for kswapd and therefore it is not blocked
-    and does not delay memory reclaim.
-    
-    To avoid issues with int->char conversion of flag fields (as noticed
-    in v1 of this patch) convert the flag fields in the struct
-    xfs_bmalloca to bool types. pahole indicates these variables are
-    still single byte variables, so no extra space is consumed by this
-    change.
-    
-    cc: <stable@vger.kernel.org>
-    Reported-by: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
-    Signed-off-by: Dave Chinner <dchinner@redhat.com>
-    Reviewed-by: Christoph Hellwig <hch@lst.de>
-    Signed-off-by: Dave Chinner <david@fromorbit.com>
+    Merge branch 'xfs-da-geom' into for-next
 
 -----------------------------------------------------------------------
+
+Summary of changes:
+ fs/xfs/xfs_alloc.c        |  19 ++---
+ fs/xfs/xfs_aops.c         |   6 +-
+ fs/xfs/xfs_attr.c         |  17 +---
+ fs/xfs/xfs_attr_leaf.c    | 184 +++++++++++++++++++++---------------------
+ fs/xfs/xfs_attr_leaf.h    |   3 +-
+ fs/xfs/xfs_attr_list.c    |   1 +
+ fs/xfs/xfs_attr_remote.c  |  55 +++++++------
+ fs/xfs/xfs_bit.h          |   7 +-
+ fs/xfs/xfs_bmap.c         |   3 +-
+ fs/xfs/xfs_bmap_util.c    |  16 +++-
+ fs/xfs/xfs_bmap_util.h    |  13 +--
+ fs/xfs/xfs_btree.c        |  12 +--
+ fs/xfs/xfs_buf.h          |   5 --
+ fs/xfs/xfs_buf_item.c     |   2 +-
+ fs/xfs/xfs_da_btree.c     |  65 +++++++--------
+ fs/xfs/xfs_da_btree.h     |  20 ++++-
+ fs/xfs/xfs_da_format.c    |  36 +++++----
+ fs/xfs/xfs_da_format.h    | 154 -----------------------------------
+ fs/xfs/xfs_dir2.c         | 132 +++++++++++++++++++-----------
+ fs/xfs/xfs_dir2.h         |  30 ++++---
+ fs/xfs/xfs_dir2_block.c   |  88 ++++++++++----------
+ fs/xfs/xfs_dir2_data.c    |  80 +++++++++----------
+ fs/xfs/xfs_dir2_leaf.c    | 200 ++++++++++++++++++++++++----------------------
+ fs/xfs/xfs_dir2_node.c    | 188 ++++++++++++++++++++++---------------------
+ fs/xfs/xfs_dir2_priv.h    | 138 +++++++++++++++++++++++++++++++-
+ fs/xfs/xfs_dir2_readdir.c | 142 ++++++++++++++++----------------
+ fs/xfs/xfs_dir2_sf.c      |  18 +++--
+ fs/xfs/xfs_dquot.c        |   6 +-
+ fs/xfs/xfs_fsops.c        |   4 +-
+ fs/xfs/xfs_ialloc.c       |   1 -
+ fs/xfs/xfs_log.c          |   2 +-
+ fs/xfs/xfs_log_rlimit.c   |   2 +-
+ fs/xfs/xfs_mount.c        |  39 ++++++---
+ fs/xfs/xfs_mount.h        |  12 +--
+ fs/xfs/xfs_rtbitmap.c     |   1 -
+ fs/xfs/xfs_symlink.c      |   1 +
+ fs/xfs/xfs_trans_resv.c   |   3 +-
+ fs/xfs/xfs_trans_space.h  |   5 +-
+ 38 files changed, 879 insertions(+), 831 deletions(-)
 
 
 hooks/post-receive
