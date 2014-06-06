@@ -1,29 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 495E57F3F
-	for <xfs@oss.sgi.com>; Thu,  5 Jun 2014 19:48:07 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id CFFC87F3F
+	for <xfs@oss.sgi.com>; Thu,  5 Jun 2014 20:43:02 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 28A498F8035
-	for <xfs@oss.sgi.com>; Thu,  5 Jun 2014 17:48:04 -0700 (PDT)
-Received: from mail-wi0-f175.google.com (mail-wi0-f175.google.com
-	[209.85.212.175]) by cuda.sgi.com with ESMTP id
-	zbiZgs4bdzOs9vNR (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 05 Jun 2014 17:48:02 -0700 (PDT)
-Received: by mail-wi0-f175.google.com with SMTP id f8so77961wiw.8
-	for <xfs@oss.sgi.com>; Thu, 05 Jun 2014 17:48:01 -0700 (PDT)
-Message-ID: <53910FBE.6090109@gmail.com>
-Date: Fri, 06 Jun 2014 03:47:58 +0300
-From: Martin Papik <mp6058@gmail.com>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id B62968F8035
+	for <xfs@oss.sgi.com>; Thu,  5 Jun 2014 18:43:02 -0700 (PDT)
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	Jl9FUizPVbUHVh9b for <xfs@oss.sgi.com>;
+	Thu, 05 Jun 2014 18:43:00 -0700 (PDT)
+Date: Fri, 6 Jun 2014 11:42:56 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] xfs_mdrestore: initialize sb prior to xfs_sb_from_disk()
+Message-ID: <20140606014256.GD4453@dastard>
+References: <5390F89C.2050305@redhat.com> <20140605235633.GC4453@dastard>
+	<53910482.1030909@redhat.com>
 MIME-Version: 1.0
-Subject: Re: XFS filesystem claims to be mounted after a disconnect
-References: <20140503030221.GJ26353@dastard> <538C5E67.6090005@gmail.com>
-	<20140602234135.GO6677@dastard> <538D9412.3040009@gmail.com>
-	<CAAxjCEzz5n85zAH5HuUQkfxKvzZt5_+cPCj3uzZR7U69H+2tDw@mail.gmail.com>
-	<538DA7FF.4080002@gmail.com> <20140603212834.GG14410@dastard>
-	<538E4E1B.1020003@gmail.com> <20140605005538.GB4523@dastard>
-	<5390C77E.4020003@gmail.com> <20140605224140.GB4453@dastard>
-In-Reply-To: <20140605224140.GB4453@dastard>
+Content-Disposition: inline
+In-Reply-To: <53910482.1030909@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -36,58 +30,48 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Linux fs XFS <xfs@oss.sgi.com>
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA512
-
-
-Thanks Dave
-
-But wouldn't the same thing that prevents xfs_repair also prevent
-dm-multipath from using the device? Or would you typically setup a
-partitioning or volume scheme on top of dm-multipath?
-
-Martin
-
-> No. Use dm-multipath to make them appear as a single block device 
-> made up as a pair of redundant paths in primary/secondary failover 
-> or active/active load balancing configurations. dm-multipath
-> handles failover between the two block devices on path failure 
-> transparently.
+On Thu, Jun 05, 2014 at 07:00:02PM -0500, Eric Sandeen wrote:
+> On 6/5/14, 6:56 PM, Dave Chinner wrote:
+> > On Thu, Jun 05, 2014 at 06:09:16PM -0500, Eric Sandeen wrote:
 > 
-> XFS | dm-mp-0 /    \ sdc    sdd
+> ...
 > 
-> The mounted filesystem doesn't even know there are multiple paths
-> in this configuration, however the XFS UUID trapping behaviour
-> avoids this problem by preventing you from doing XFS operations
-> directly on /dev/sdc or /dev/sdd while the filesystem is mount on 
-> /dev/dm-mp-0....
+> >> But ... should we maybe just do this once and for all in
+> >> xfs_sb_from_disk?  I'm not sure leaving it up to every
+> >> caller is a good idea, unless somebody ahs a reason to
+> >> pre-populate some fields - I can't imagine why that would
+> >> be, though...
+> > 
+> > We don't ever read in the CRC field into the in-memory structures
+> > because it has no meaning in memory. Simiarly, we don't ever write
+> > the CRC field from the in-core structure because we always
+> > re-calculate it in the IO path if CRCs are configured. That is
+> > consistent behaviour across the entire code-base.
 > 
-> Cheers.
+> <snip stuff>
 > 
-> Dave.
+> > Perhaps we should move the memset() to within xfs_sb_from_disk()
+> > to make this explicit?
 > 
+> Yes, that's what I meant by "this" in "do this once and for all" - 
+> sorry, that wasn't clear.  memset(0) in xfs_sb_from_disk().
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
-Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
+I didn't read it clearly. my fault.
 
-iQIcBAEBCgAGBQJTkQ+yAAoJELsEaSRwbVYrJB4QAIyjUk7un+bth/5WnW/imwoh
-CGlkS7kuU8Iu96VqwoojOZtY6RcUX5Yq+NoW7NDigFv0iEkaM2j0wg8JoNw6EFqX
-uiJuCkBUI3/v8QkFU0GtA4/6NFsu9N709f8J0ilof20L0bNm2wh7SiXqrp28X3HS
-8Y1G50PXbBnEM5yKbmXLpVTOhEw35NlaPKBYZ5gBFohPXDb4+J6+g0kJD5wZPSWK
-lsHyW8tuuntGIZTtGZ4sHvak5THCXILClmFcPrdzzU110c601RTzJfeq9L7QXTMI
-thrUH3KGvT2s4vTwqLLFHdBZNwEXi2X0PaiM7uO0/AYvaaoDfwnLh0lJmSSxRFZn
-YYFa6Ko20l4nxFZoy6eRUh8vxvOat4VOlYowlyEcnPTE1nSeJfulun94ztjNXs2k
-5VtWlFh12CXSVrynXBVnYKvFOAdecZcztqxjAjjTcjIrWHbZv0UXFtflG1V+zjgD
-63SqxwShL2C/685gFXHh7mY0K2vAbnBK+IrRSTWMKVMZ16OuuIFA2WZebnskDfAf
-vWWFv8mAEAUP/xYF7u4g4XVov2aQAVxjDosXxuqUbW8QHlTXNB/wc7akXgoD3fmZ
-u0cB5Paw9JJeGt5eKYbtReL+Wt3STKtYGu2yNOZo/oiUr0uuoAkcjSfUGqrdu6HL
-kQgRYDDjQt37JPVIyyNK
-=55eH
------END PGP SIGNATURE-----
+> Yeah, the more I think about it, the more I think that's probably
+> the obviously correct thing to do.
+
+*nod*
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
