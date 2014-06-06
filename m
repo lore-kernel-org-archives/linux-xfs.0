@@ -1,23 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id BFCC27F3F
-	for <xfs@oss.sgi.com>; Fri,  6 Jun 2014 11:47:58 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 8E6D630404E
-	for <xfs@oss.sgi.com>; Fri,  6 Jun 2014 09:47:55 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id wB2C6K9FHQXQw5FB for <xfs@oss.sgi.com>;
-	Fri, 06 Jun 2014 09:47:53 -0700 (PDT)
-Message-ID: <5391F0BC.9010308@sandeen.net>
-Date: Fri, 06 Jun 2014 11:47:56 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id EF0907F3F
+	for <xfs@oss.sgi.com>; Fri,  6 Jun 2014 12:34:05 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 8A776AC004
+	for <xfs@oss.sgi.com>; Fri,  6 Jun 2014 10:34:02 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id IVzgqC7G8307mpMT for
+	<xfs@oss.sgi.com>; Fri, 06 Jun 2014 10:33:57 -0700 (PDT)
+Date: Fri, 6 Jun 2014 13:33:54 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH] xfs; fix xfs_da_args sparse warning in xfs_readdir
+Message-ID: <20140606173353.GC3048@laptop.bfoster>
+References: <1402042701-26173-1-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 2/2 V2] mkfs.xfs: don't call blkid_get_topology on regular
-	files
-References: <53852A05.5040006@redhat.com>
-	<5390C1B7.7050106@sandeen.net>	<20140606152059.GB3048@laptop.bfoster>
-	<5391DDE4.90007@sandeen.net>
-In-Reply-To: <5391DDE4.90007@sandeen.net>
+Content-Disposition: inline
+In-Reply-To: <1402042701-26173-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,85 +28,47 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
-Cc: Eric Sandeen <sandeen@redhat.com>, xfs-oss <xfs@oss.sgi.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-On 6/6/14, 10:27 AM, Eric Sandeen wrote:
-> On 6/6/14, 10:21 AM, Brian Foster wrote:
->> On Thu, Jun 05, 2014 at 02:15:03PM -0500, Eric Sandeen wrote:
->>> If we encounter a target that's really a regular file,
->>> even without "-d file..." on the cmdline, call
->>> platform_findsizes() instead of blkid_get_topology to
->>> try to discover the "sector size" via the fsgeom() call.
->>>
->>> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
->>> ---
->>>
->>> V2: Lose local "isa_file" flag, just switch based on 
->>> (xi->disfile) or (stat works & S_ISREG)
->>>
->>> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
->>> index 188b6b3..3b8bf67 100644
->>> --- a/mkfs/xfs_mkfs.c
->>> +++ b/mkfs/xfs_mkfs.c
->>> @@ -456,9 +456,25 @@ static void get_topology(
->>>  	struct fs_topology	*ft,
->>>  	int			force_overwrite)
->>>  {
->>> -	if (!xi->disfile) {
->>> -		const char *dfile = xi->volname ? xi->volname : xi->dname;
->>> +	struct stat statbuf;
->>> +	char *dfile = xi->volname ? xi->volname : xi->dname;
->>>  
->>> +	/*
->>> +	 * Don't call blkid for topology if this is a "-d file" target, or
->>> +	 * if we've simply been pointed at a regular file.  platform_findsizes
->>> +	 * will attempt to find the underlying sector size of the host fs.
->>> +	 */
->>> +	if (xi->disfile ||
->>> +	    (!stat(dfile, &statbuf) && S_ISREG(statbuf.st_mode))) {
->>> +		int fd;
->>> +		long long dummy;
->>> +
->>> +		fd = open(dfile, O_RDONLY);
->>> +		if (fd >= 0) {
->>> +			platform_findsizes(dfile, fd, &dummy, &ft->lsectorsize);
->>> +			close(fd);
->>> +		}
->>
->> The patch looks fine:
->>
->> Reviewed-by: Brian Foster <bfoster@redhat.com>
->>
->> It does look like we'd still be susceptible to error in a situation
->> where the file hasn't been created yet (which would occur in
->> libxfs_init()).
+On Fri, Jun 06, 2014 at 06:18:21PM +1000, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
 > 
-> Hm, let's see - the only way to have mkfs create the file is with the
-> -d file,name=foo,size=bar invocation.
+> The kbuild test robot reported:
 > 
-> Sprinkling some printf's into the if/else above, I see:
+> >> fs/xfs/xfs_dir2_readdir.c:672:41: sparse: Using plain integer as NULL pointer
 > 
-> # rm -f testfile
-> # mkfs/mkfs.xfs -dfile,name=testfile,size=1g
-> ** doing platform_findsizes **
-> meta-data=testfile               isize=256    agcount=4, agsize=65536 blks
-> ...
+> Fix it.
 > 
-> so it looks like the file does get created before we get here.
+> Reported-by: kbuild test robot <fengguang.wu@intel.com>
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> ---
 
-Oh, I see, sorry.  Crud, you're right.
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 
-What prompted all this was that making a fs-in-a-file on a filesystem hosted
-on a hard 4k sector device fails, because it tries to do 512-byte DIO.
-
-If we use the "-d file" invocation, it works, because it doesn't do direct IO.
-
-Sigh.  It's complicated.  Let me think about the 2nd patch just a bit more.
-
-Perhaps only doing the platform_findsizes if stat succeeds, not if xi->disfile.
-
--Eric
+>  fs/xfs/xfs_dir2_readdir.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/fs/xfs/xfs_dir2_readdir.c b/fs/xfs/xfs_dir2_readdir.c
+> index ca1f43c..48e99af 100644
+> --- a/fs/xfs/xfs_dir2_readdir.c
+> +++ b/fs/xfs/xfs_dir2_readdir.c
+> @@ -669,7 +669,7 @@ xfs_readdir(
+>  	struct dir_context	*ctx,
+>  	size_t			bufsize)
+>  {
+> -	struct xfs_da_args	args = {0};
+> +	struct xfs_da_args	args = { NULL };
+>  	int			rval;
+>  	int			v;
+>  	uint			lock_mode;
+> -- 
+> 2.0.0
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
