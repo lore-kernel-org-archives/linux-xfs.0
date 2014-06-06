@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 62A817F3F
-	for <xfs@oss.sgi.com>; Fri,  6 Jun 2014 03:18:33 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 58025304053
-	for <xfs@oss.sgi.com>; Fri,  6 Jun 2014 01:18:30 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id 079497F3F
+	for <xfs@oss.sgi.com>; Fri,  6 Jun 2014 03:23:03 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id EE590304043
+	for <xfs@oss.sgi.com>; Fri,  6 Jun 2014 01:23:02 -0700 (PDT)
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	eQTVD4InFhSostyn for <xfs@oss.sgi.com>;
-	Fri, 06 Jun 2014 01:18:28 -0700 (PDT)
+	8zRnhepydRapYT6b for <xfs@oss.sgi.com>;
+	Fri, 06 Jun 2014 01:23:01 -0700 (PDT)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.80)
-	(envelope-from <dave@fromorbit.com>) id 1WspLx-00031P-I5
-	for xfs@oss.sgi.com; Fri, 06 Jun 2014 18:18:21 +1000
+	(envelope-from <dave@fromorbit.com>) id 1WspQN-000327-A1
+	for xfs@oss.sgi.com; Fri, 06 Jun 2014 18:22:55 +1000
 Received: from dave by disappointment with local (Exim 4.82_1-5b7a7c0-XX)
-	(envelope-from <dave@disappointment.disaster>) id 1WspLx-0006ol-G8
-	for xfs@oss.sgi.com; Fri, 06 Jun 2014 18:18:21 +1000
+	(envelope-from <dave@disappointment.disaster>) id 1WspQN-0006qp-9E
+	for xfs@oss.sgi.com; Fri, 06 Jun 2014 18:22:55 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH] xfs; fix xfs_da_args sparse warning in xfs_readdir
-Date: Fri,  6 Jun 2014 18:18:21 +1000
-Message-Id: <1402042701-26173-1-git-send-email-david@fromorbit.com>
+Subject: [PATCH 0/2] xfs: fix a couple of swap extent issues
+Date: Fri,  6 Jun 2014 18:22:51 +1000
+Message-Id: <1402042973-26276-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,35 +35,18 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-From: Dave Chinner <dchinner@redhat.com>
+Hi folks,
 
-The kbuild test robot reported:
+Eric pointed out that this morning that if xfs_fsr didn't fsync the
+target file, the swap extents ioctl deadlocked. Dumb bug, simple
+fix. I also made sure that swap extent treats both inodes the same
+in terms of flushing, page cache pages and being mmap()d so that if
+anyone other than xfs_fsr uses it it doesn't go boom when the second
+inode is not a newly created empty file.
 
->> fs/xfs/xfs_dir2_readdir.c:672:41: sparse: Using plain integer as NULL pointer
+Thoughts?
 
-Fix it.
-
-Reported-by: kbuild test robot <fengguang.wu@intel.com>
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- fs/xfs/xfs_dir2_readdir.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/fs/xfs/xfs_dir2_readdir.c b/fs/xfs/xfs_dir2_readdir.c
-index ca1f43c..48e99af 100644
---- a/fs/xfs/xfs_dir2_readdir.c
-+++ b/fs/xfs/xfs_dir2_readdir.c
-@@ -669,7 +669,7 @@ xfs_readdir(
- 	struct dir_context	*ctx,
- 	size_t			bufsize)
- {
--	struct xfs_da_args	args = {0};
-+	struct xfs_da_args	args = { NULL };
- 	int			rval;
- 	int			v;
- 	uint			lock_mode;
--- 
-2.0.0
+-Dave.
 
 _______________________________________________
 xfs mailing list
