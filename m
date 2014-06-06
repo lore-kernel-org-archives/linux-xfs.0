@@ -1,27 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 7EB9B7F51
-	for <xfs@oss.sgi.com>; Fri,  6 Jun 2014 03:23:07 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 757888F8033
-	for <xfs@oss.sgi.com>; Fri,  6 Jun 2014 01:23:04 -0700 (PDT)
-Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
-	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	GqFh3PqYMZR9RUCm for <xfs@oss.sgi.com>;
-	Fri, 06 Jun 2014 01:23:02 -0700 (PDT)
-Received: from disappointment.disaster.area ([192.168.1.110]
-	helo=disappointment) by dastard with esmtp (Exim 4.80)
-	(envelope-from <dave@fromorbit.com>) id 1WspQN-000329-B4
-	for xfs@oss.sgi.com; Fri, 06 Jun 2014 18:22:55 +1000
-Received: from dave by disappointment with local (Exim 4.82_1-5b7a7c0-XX)
-	(envelope-from <dave@disappointment.disaster>) id 1WspQN-0006qx-AM
-	for xfs@oss.sgi.com; Fri, 06 Jun 2014 18:22:55 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 2/2] xfs: flush both inodes in xfs_swap_extents
-Date: Fri,  6 Jun 2014 18:22:53 +1000
-Message-Id: <1402042973-26276-3-git-send-email-david@fromorbit.com>
-In-Reply-To: <1402042973-26276-1-git-send-email-david@fromorbit.com>
-References: <1402042973-26276-1-git-send-email-david@fromorbit.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 13FC57F3F
+	for <xfs@oss.sgi.com>; Fri,  6 Jun 2014 07:20:03 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id A0A96AC003
+	for <xfs@oss.sgi.com>; Fri,  6 Jun 2014 05:19:59 -0700 (PDT)
+Received: from www262.sakura.ne.jp (www262.sakura.ne.jp [202.181.97.72]) by
+	cuda.sgi.com with ESMTP id lJP2josy5mTUxsHv (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Fri, 06 Jun 2014 05:19:57 -0700 (PDT)
+Subject: Re: [PATCH] mm/vmscan: Do not block forever atshrink_inactive_list().
+From: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
+References: <6B2BA408B38BA1478B473C31C3D2074E31D59D8673@SV-EXCHANGE1.Corp.FC.LOCAL>
+	<201405262045.CDG95893.HLFFOSFMQOVOJt@I-love.SAKURA.ne.jp>
+	<alpine.DEB.2.02.1406031442170.19491@chino.kir.corp.google.com>
+	<201406052145.CIB35534.OQLVMSJFOHtFOF@I-love.SAKURA.ne.jp>
+	<20140605131753.GD4523@dastard>
+In-Reply-To: <20140605131753.GD4523@dastard>
+Message-Id: <201406062119.HHJ30796.FtLFOSFJOOVQMH@I-love.SAKURA.ne.jp>
+Date: Fri, 6 Jun 2014 21:19:22 +0900
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,158 +28,37 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: david@fromorbit.com
+Cc: riel@redhat.com, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, hch@infradead.org, kosaki.motohiro@jp.fujitsu.com, rientjes@google.com, Motohiro.Kosaki@us.fujitsu.com, fengguang.wu@intel.com, akpm@linux-foundation.org, kamezawa.hiroyu@jp.fujitsu.com
 
-From: Dave Chinner <dchinner@redhat.com>
+Dave Chinner wrote:
+> On Thu, Jun 05, 2014 at 09:45:26PM +0900, Tetsuo Handa wrote:
+> > This means that, under rare circumstances, it is possible that all processes
+> > other than kswapd are trapped into too_many_isolated()/congestion_wait() loop
+> > while kswapd is sleeping because this loop assumes that somebody else shall
+> > wake up kswapd and kswapd shall perform operations for making
+> > too_many_isolated() to return 0. However, we cannot guarantee that kswapd is
+> > waken by somebody nor kswapd is not blocked by blocking operations inside
+> > shrinker functions (e.g. mutex_lock()).
+> 
+> So what you are saying is that kswapd is having problems with
+> getting blocked on locks held by processes in direct reclaim?
+> 
+> What are the stack traces that demonstrate such a dependency loop?
 
-We need to treat both inodes identically from a page ache point of
-view when preapreing them for extent swapping. We don't do this
-right now - we assume that one of the inodes empty, because that's
-what xfs-fsr currently does. Remove this assumption from the code.
+If a normal task's GFP_KERNEL memory allocation called a shrinker function and
+the shrinker function does GFP_WAIT-able allocation with a mutex held, there
+is a possibility that kswapd is waken up due to GFP_WAIT-able allocation and
+kswapd calls the shrinker function, and the kswapd is blocked at trying to
+hold the same mutex inside the shrinker function, isn't it?
 
-While factoring out the flushing and related checks, move the
-transactions reservation to immeidately after the flushes so that we
-don't need to pick up and then drop the ilock to do the transaction
-reservation. There are no issues with aborting the transaction it if
-the checks fail before we join the inodes to the transaction and
-dirty them, so this is a safe change to make.
-
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- fs/xfs/xfs_bmap_util.c | 80 +++++++++++++++++++++++---------------------------
- 1 file changed, 37 insertions(+), 43 deletions(-)
-
-diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-index 948eba1..7eac7c4 100644
---- a/fs/xfs/xfs_bmap_util.c
-+++ b/fs/xfs/xfs_bmap_util.c
-@@ -1672,6 +1672,30 @@ xfs_swap_extents_check_format(
- }
- 
- int
-+xfs_swap_extent_flush(
-+	struct xfs_inode	*ip)
-+{
-+	int	error;
-+
-+	error = -filemap_write_and_wait(VFS_I(ip)->i_mapping);
-+	if (error)
-+		return error;
-+	truncate_pagecache_range(VFS_I(ip), 0, -1);
-+
-+	/* Verify O_DIRECT for ftmp */
-+	if (VFS_I(ip)->i_mapping->nrpages)
-+		return EINVAL;
-+
-+	/*
-+	 * Don't try to swap extents on mmap()d files because we can't lock
-+	 * out races against page faults safely.
-+	 */
-+	if (mapping_mapped(VFS_I(ip)->i_mapping))
-+		return EBUSY;
-+	return 0;
-+}
-+
-+int
- xfs_swap_extents(
- 	xfs_inode_t	*ip,	/* target inode */
- 	xfs_inode_t	*tip,	/* tmp inode */
-@@ -1715,26 +1739,28 @@ xfs_swap_extents(
- 		goto out_unlock;
- 	}
- 
--	error = -filemap_write_and_wait(VFS_I(tip)->i_mapping);
-+	error = xfs_swap_extent_flush(ip);
-+	if (error)
-+		goto out_unlock;
-+	error = xfs_swap_extent_flush(tip);
- 	if (error)
- 		goto out_unlock;
--	truncate_pagecache_range(VFS_I(tip), 0, -1);
--
--	xfs_lock_two_inodes(ip, tip, XFS_ILOCK_EXCL);
--	lock_flags |= XFS_ILOCK_EXCL;
- 
--	/* Verify O_DIRECT for ftmp */
--	if (VN_CACHED(VFS_I(tip)) != 0) {
--		error = XFS_ERROR(EINVAL);
-+	tp = xfs_trans_alloc(mp, XFS_TRANS_SWAPEXT);
-+	error = xfs_trans_reserve(tp, &M_RES(mp)->tr_ichange, 0, 0);
-+	if (error) {
-+		xfs_trans_cancel(tp, 0);
- 		goto out_unlock;
- 	}
-+	xfs_lock_two_inodes(ip, tip, XFS_ILOCK_EXCL);
-+	lock_flags |= XFS_ILOCK_EXCL;
- 
- 	/* Verify all data are being swapped */
- 	if (sxp->sx_offset != 0 ||
- 	    sxp->sx_length != ip->i_d.di_size ||
- 	    sxp->sx_length != tip->i_d.di_size) {
- 		error = XFS_ERROR(EFAULT);
--		goto out_unlock;
-+		goto out_trans_cancel;
- 	}
- 
- 	trace_xfs_swap_extent_before(ip, 0);
-@@ -1746,7 +1772,7 @@ xfs_swap_extents(
- 		xfs_notice(mp,
- 		    "%s: inode 0x%llx format is incompatible for exchanging.",
- 				__func__, ip->i_ino);
--		goto out_unlock;
-+		goto out_trans_cancel;
- 	}
- 
- 	/*
-@@ -1761,40 +1787,8 @@ xfs_swap_extents(
- 	    (sbp->bs_mtime.tv_sec != VFS_I(ip)->i_mtime.tv_sec) ||
- 	    (sbp->bs_mtime.tv_nsec != VFS_I(ip)->i_mtime.tv_nsec)) {
- 		error = XFS_ERROR(EBUSY);
--		goto out_unlock;
--	}
--
--	/* We need to fail if the file is memory mapped.  Once we have tossed
--	 * all existing pages, the page fault will have no option
--	 * but to go to the filesystem for pages. By making the page fault call
--	 * vop_read (or write in the case of autogrow) they block on the iolock
--	 * until we have switched the extents.
--	 */
--	if (VN_MAPPED(VFS_I(ip))) {
--		error = XFS_ERROR(EBUSY);
--		goto out_unlock;
--	}
--
--	xfs_iunlock(ip, XFS_ILOCK_EXCL);
--	xfs_iunlock(tip, XFS_ILOCK_EXCL);
--	lock_flags &= ~XFS_ILOCK_EXCL;
--
--	/*
--	 * There is a race condition here since we gave up the
--	 * ilock.  However, the data fork will not change since
--	 * we have the iolock (locked for truncation too) so we
--	 * are safe.  We don't really care if non-io related
--	 * fields change.
--	 */
--	truncate_pagecache_range(VFS_I(ip), 0, -1);
--
--	tp = xfs_trans_alloc(mp, XFS_TRANS_SWAPEXT);
--	error = xfs_trans_reserve(tp, &M_RES(mp)->tr_ichange, 0, 0);
--	if (error)
- 		goto out_trans_cancel;
--
--	xfs_lock_two_inodes(ip, tip, XFS_ILOCK_EXCL);
--	lock_flags |= XFS_ILOCK_EXCL;
-+	}
- 
- 	/*
- 	 * Count the number of extended attribute blocks
--- 
-2.0.0
+Since ttm_dma_pool_shrink_count()/ttm_dma_pool_shrink_scan() holds a mutex
+and ttm_dma_pool_shrink_scan() does GFP_WAIT-able allocation, I think such
+a dependency loop is possible.
 
 _______________________________________________
 xfs mailing list
