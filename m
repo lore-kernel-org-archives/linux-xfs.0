@@ -1,29 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id E0DF47F3F
-	for <xfs@oss.sgi.com>; Fri,  6 Jun 2014 15:57:46 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id C3DF18F8033
-	for <xfs@oss.sgi.com>; Fri,  6 Jun 2014 13:57:43 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id mwz8kqfgvkt0JeWy for
-	<xfs@oss.sgi.com>; Fri, 06 Jun 2014 13:57:42 -0700 (PDT)
-Received: from int-mx12.intmail.prod.int.phx2.redhat.com
-	(int-mx12.intmail.prod.int.phx2.redhat.com [10.5.11.25])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id s56KvgU0028553
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256
-	verify=OK) for <xfs@oss.sgi.com>; Fri, 6 Jun 2014 16:57:42 -0400
-Received: from liberator.sandeen.net (ovpn01.gateway.prod.ext.phx2.redhat.com
-	[10.5.9.1])
-	by int-mx12.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id s56KvfLf011232
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES128-SHA bits=128 verify=NO)
-	for <xfs@oss.sgi.com>; Fri, 6 Jun 2014 16:57:41 -0400
-Message-ID: <53922B49.1050005@redhat.com>
-Date: Fri, 06 Jun 2014 15:57:45 -0500
-From: Eric Sandeen <sandeen@redhat.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 820077F3F
+	for <xfs@oss.sgi.com>; Fri,  6 Jun 2014 16:03:10 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 6BC2E304032
+	for <xfs@oss.sgi.com>; Fri,  6 Jun 2014 14:03:07 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id 1IXOXW7fxKc4AxVv for <xfs@oss.sgi.com>;
+	Fri, 06 Jun 2014 14:03:05 -0700 (PDT)
+Message-ID: <53922C8E.3050700@sandeen.net>
+Date: Fri, 06 Jun 2014 16:03:10 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: [PATCH 0/3] xfs_fsr robustification
+Subject: [PATCH 1/3] xfs_fsr: ensure the line we read from leftofffile is
+	null terminated
+References: <53922B49.1050005@redhat.com>
+In-Reply-To: <53922B49.1050005@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -36,14 +28,28 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs-oss <xfs@oss.sgi.com>
+To: Eric Sandeen <sandeen@redhat.com>, xfs-oss <xfs@oss.sgi.com>
 
-Coverity whines about xfs_fsr a bit, so this is a small
-patch series to clean some things up.  Nothing essential,
-AFAICT.
+Ensure that the string we read from leftofffile is NULL
+terminated; the buffer gets passed to strchr(), so
+it's important that we ensure it ends with NULL.
 
-Thanks,
--Eric
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
+
+diff --git a/fsr/xfs_fsr.c b/fsr/xfs_fsr.c
+index 3818f02..94d235c 100644
+--- a/fsr/xfs_fsr.c
++++ b/fsr/xfs_fsr.c
+@@ -554,6 +554,8 @@ fsrallfs(char *mtab, int howlong, char *leftofffile)
+ 			fsrprintf(_("could not read %s, starting with %s\n"),
+ 				leftofffile, *fs->dev);
+ 		} else {
++			/* Ensure the buffer we read is null terminated */
++			buf[SMBUFSZ-1] = '\0';
+ 			for (fs = fsbase; fs < fsend; fs++) {
+ 				fsname = fs->dev;
+ 				if ((strncmp(buf,fsname,strlen(fsname)) == 0)
 
 _______________________________________________
 xfs mailing list
