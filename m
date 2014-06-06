@@ -1,17 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 98EDE7F5A
-	for <xfs@oss.sgi.com>; Fri,  6 Jun 2014 08:14:46 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 51B268F8035
-	for <xfs@oss.sgi.com>; Fri,  6 Jun 2014 06:14:46 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id F1AB17F3F
+	for <xfs@oss.sgi.com>; Fri,  6 Jun 2014 10:20:54 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id B78A38F804C
+	for <xfs@oss.sgi.com>; Fri,  6 Jun 2014 08:20:54 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id 8dFbEcsGSCFHpKw3 for
-	<xfs@oss.sgi.com>; Fri, 06 Jun 2014 06:14:45 -0700 (PDT)
+	cuda.sgi.com with ESMTP id v8z4ZQs7xyzH79Ky for
+	<xfs@oss.sgi.com>; Fri, 06 Jun 2014 08:20:50 -0700 (PDT)
+Date: Fri, 6 Jun 2014 11:20:46 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH] xfstests: create a test for xfs log grant head leak detection
-Date: Fri,  6 Jun 2014 09:14:43 -0400
-Message-Id: <1402060483-22195-1-git-send-email-bfoster@redhat.com>
+Subject: Re: [PATCH 1/2 V2] xfsprogs: try to handle mkfs of a file on 4k
+	sector device
+Message-ID: <20140606152045.GA3048@laptop.bfoster>
+References: <53852A05.5040006@redhat.com>
+ <5390C13E.6030205@sandeen.net>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <5390C13E.6030205@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -20,214 +26,67 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: fstests@vger.kernel.org
-Cc: xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Eric Sandeen <sandeen@redhat.com>, xfs-oss <xfs@oss.sgi.com>
 
-Changes in the XFS logging code have lead to small leaks in the log
-grant heads that consume log space slowly over time. Such problems have
-gone undetected for an unnecessarily long time due to code complexity
-and potential for very subtle problems. Losing only a few bytes per
-logged item on a reasonably large enough fs (10s of GB) means only the
-most continuously stressful workloads will cause a severe enough failure
-(deadlock due to log reservation exhaustion) quickly enough to indicate
-something is seriously wrong.
+On Thu, Jun 05, 2014 at 02:13:02PM -0500, Eric Sandeen wrote:
+> Try the xfs geometry ioctl if the mkfs target resides
+> in a file; this gives us the equivalent of a device
+> sector size.
+> 
+> If this fails, and there's a sector size mismatch
+> between the host FS and the filesystem, then mkfs might
+> fail - but that's no worse than it's been before.
+> 
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> ---
 
-Recent changes in XFS export the state of the various log heads through
-sysfs to aid in userspace/runtime analysis of the log. This test runs a
-workload against an XFS filesystem, quiesces the fs and verifies that
-the log reserve and write grant heads have not leaked any space with
-respect to the current head of the physical log.
+Looks Ok...
 
-Signed-off-by: Brian Foster <bfoster@redhat.com>
----
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 
-v1:
-- Use updated attribute names and value format.
-rfc: http://oss.sgi.com/archives/xfs/2014-05/msg00428.html
-
- tests/xfs/011     | 134 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
- tests/xfs/011.out |  11 +++++
- tests/xfs/group   |   1 +
- 3 files changed, 146 insertions(+)
- create mode 100755 tests/xfs/011
- create mode 100644 tests/xfs/011.out
-
-diff --git a/tests/xfs/011 b/tests/xfs/011
-new file mode 100755
-index 0000000..193e6dd
---- /dev/null
-+++ b/tests/xfs/011
-@@ -0,0 +1,134 @@
-+#!/bin/bash
-+# FS QA Test No. xfs/011
-+#
-+# Test the xfs log reservation mechanism for leaks. Run a short fsstress
-+# workload to include a variety of fs operations, freeze the filesystem and
-+# verify that there are no oustanding reservations against the log.
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2014 Red Hat, Inc.  All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#
-+#-----------------------------------------------------------------------
-+#
-+
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1	# failure is the default!
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+
-+_cleanup()
-+{
-+	killall -9 fsstress 2>/dev/null
-+	wait
-+	cd /
-+	umount $SCRATCH_MNT 2>/dev/null
-+	rm -f $tmp.*
-+}
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+# Determine the system device name for a particular block device. The device
-+# name is how the block dev is referenced under sysfs.
-+_get_device_name()
-+{
-+	devpath=$1
-+
-+	# check for a symlink (i.e., device mapper)
-+	if [ -L $devpath ]
-+	then
-+		devpath=`readlink -f $devpath`
-+	fi
-+
-+	# grab the major minor and convert from hex to decimal
-+	major=$((0x`stat -c %t $devpath`))
-+	minor=$((0x`stat -c %T $devpath`))
-+
-+	# refer to sysfs by major minor
-+	basename `readlink /sys/dev/block/$major:$minor`
-+}
-+
-+# Use the information exported by XFS to sysfs to determine whether the log has
-+# active reservations after a filesystem freeze.
-+_check_scratch_log_state()
-+{
-+	devname=`_get_device_name $SCRATCH_DEV`
-+	attrpath="/sys/fs/xfs/$devname/log"
-+
-+	# freeze the fs to ensure data is synced and the log is flushed. this
-+	# means no outstanding transactions, and thus no outstanding log
-+	# reservations, should exist
-+	xfs_freeze -f $SCRATCH_MNT
-+
-+	# the log head is exported in basic blocks and the log grant heads in
-+	# bytes. convert the log head to bytes for precise comparison
-+	log_head_cycle=`cat $attrpath/log_head_lsn | awk -F : '{ print $1 }'`
-+	log_head_bytes=`cat $attrpath/log_head_lsn | awk -F : '{ print $2 }'`
-+	log_head_bytes=$((log_head_bytes * 512))
-+
-+	for attr in "reserve_grant_head" "write_grant_head"
-+	do
-+		cycle=`cat $attrpath/$attr | awk -F : '{ print $1 }'`
-+		bytes=`cat $attrpath/$attr | awk -F : '{ print $2 }'`
-+
-+		if [ $cycle != $log_head_cycle ] ||
-+		   [ $bytes != $log_head_bytes ]
-+		then
-+			echo "$attr ($cycle:$bytes) does not match" \
-+				"log_head_lsn ($log_head_cycle:$log_head_bytes)," \
-+				"possible leak detected."
-+		else
-+			echo "$attr matches log_head_lsn"
-+		fi
-+	done
-+
-+	xfs_freeze -u $SCRATCH_MNT
-+}
-+
-+# real QA test starts here
-+_supported_fs xfs
-+_supported_os Linux
-+
-+_require_scratch
-+_require_freeze
-+
-+if [ ! -e /sys/fs/xfs ]
-+then
-+	_notrun "no kernel support for XFS sysfs attributes"
-+fi
-+
-+rm -f $seqres.full
-+
-+_scratch_mkfs_xfs | _filter_mkfs 2>> $seqres.full
-+_scratch_mount
-+
-+_check_scratch_log_state
-+
-+$FSSTRESS_PROG -d $SCRATCH_MNT/fsstress -n 1000 -p 2 -S t \
-+	>> $seqres.full 2>&1
-+
-+_check_scratch_log_state
-+
-+umount $SCRATCH_MNT
-+_check_scratch_fs
-+
-+status=0
-+exit
-diff --git a/tests/xfs/011.out b/tests/xfs/011.out
-new file mode 100644
-index 0000000..a3f3805
---- /dev/null
-+++ b/tests/xfs/011.out
-@@ -0,0 +1,11 @@
-+QA output created by 011
-+meta-data=DDEV isize=XXX agcount=N, agsize=XXX blks
-+data     = bsize=XXX blocks=XXX, imaxpct=PCT
-+         = sunit=XXX swidth=XXX, unwritten=X
-+naming   =VERN bsize=XXX
-+log      =LDEV bsize=XXX blocks=XXX
-+realtime =RDEV extsz=XXX blocks=XXX, rtextents=XXX
-+reserve_grant_head matches log_head_lsn
-+write_grant_head matches log_head_lsn
-+reserve_grant_head matches log_head_lsn
-+write_grant_head matches log_head_lsn
-diff --git a/tests/xfs/group b/tests/xfs/group
-index 19fd968..99bf0e1 100644
---- a/tests/xfs/group
-+++ b/tests/xfs/group
-@@ -8,6 +8,7 @@
- 008 rw ioctl auto quick
- 009 rw ioctl auto prealloc quick
- 010 auto quick repair
-+011 auto quick freeze
- 012 rw auto quick
- 013 auto metadata stress
- 016 rw auto quick
--- 
-1.8.3.1
+> 
+> V2: remove warning when FSGEOMETRY fails (i.e. on non-xfs
+> filesystems) for now
+> 
+> diff --git a/libxfs/linux.c b/libxfs/linux.c
+> index 2e07d54..3796fdd 100644
+> --- a/libxfs/linux.c
+> +++ b/libxfs/linux.c
+> @@ -141,10 +141,20 @@ platform_findsizes(char *path, int fd, long long *sz, int *bsz)
+>  		exit(1);
+>  	}
+>  	if ((st.st_mode & S_IFMT) == S_IFREG) {
+> +		struct xfs_fsop_geom_v1 geom = { 0 };
+> +
+>  		*sz = (long long)(st.st_size >> 9);
+> -		*bsz = BBSIZE;
+> -		if (BBSIZE > max_block_alignment)
+> -			max_block_alignment = BBSIZE;
+> +		if (ioctl(fd, XFS_IOC_FSGEOMETRY_V1, &geom) < 0) {
+> +			/*
+> +			 * fall back to BBSIZE; mkfs might fail if there's a
+> +			 * size mismatch between the image & the host fs...
+> +			 */
+> +			*bsz = BBSIZE;
+> +		} else
+> +			*bsz = geom.sectsize;
+> +
+> +		if (*bsz > max_block_alignment)
+> +			max_block_alignment = *bsz;
+>  		return;
+>  	}
+>  
+> 
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
