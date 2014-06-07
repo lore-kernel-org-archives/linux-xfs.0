@@ -1,20 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id E4B377F3F
-	for <xfs@oss.sgi.com>; Fri,  6 Jun 2014 16:06:47 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id D2DB47F3F
+	for <xfs@oss.sgi.com>; Fri,  6 Jun 2014 19:18:39 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 6F6F9AC006
-	for <xfs@oss.sgi.com>; Fri,  6 Jun 2014 14:06:44 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id LqR3aSedM3mEVGFK for <xfs@oss.sgi.com>;
-	Fri, 06 Jun 2014 14:06:43 -0700 (PDT)
-Message-ID: <53922D67.2060906@sandeen.net>
-Date: Fri, 06 Jun 2014 16:06:47 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id B1D618F8040
+	for <xfs@oss.sgi.com>; Fri,  6 Jun 2014 17:18:36 -0700 (PDT)
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	e8jRBEGdOE1kJLMe for <xfs@oss.sgi.com>;
+	Fri, 06 Jun 2014 17:18:34 -0700 (PDT)
+Date: Sat, 7 Jun 2014 10:18:19 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [RFC PATCH 1/1] cleanup: use bool as return type for
+	rwsem_is_locked
+Message-ID: <20140607001819.GE4453@dastard>
+References: <5390D7E1.7060606@gatech.edu> <5391FFFD.1060901@gatech.edu>
+	<53920446.7060505@gatech.edu>
 MIME-Version: 1.0
-Subject: [PATCH 3/3] xfs_fsr: test for more potential failures in packfile()
-References: <53922B49.1050005@redhat.com>
-In-Reply-To: <53922B49.1050005@redhat.com>
+Content-Disposition: inline
+In-Reply-To: <53920446.7060505@gatech.edu>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,81 +31,58 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@redhat.com>, xfs-oss <xfs@oss.sgi.com>
+To: Pranith Kumar <pranith@gatech.edu>
+Cc: peterz@infradead.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, mingo@redhat.com, davidlohr@hp.com, tim.c.chen@linux.intel.com
 
-Test for lseek, ftruncate, and fsync failures in packfile()
+On Fri, Jun 06, 2014 at 02:11:18PM -0400, Pranith Kumar wrote:
+> On 06/06/2014 01:53 PM, Pranith Kumar wrote:
+> > On Fri, Jun 6, 2014 at 3:35 AM, Peter Zijlstra <peterz@infradead.org> wrote:
+> >>
+> >> Now in general, I don't particularly like such superfluous changes, so
+> >> unless you can show that GCC actually generates better code, I'd prefer
+> >> to keep things as they are.
+> > 
+> > Fixed and checked the assembly. It saves us 2 bytes of code, not much. I am not sure if that is worth it :(
+> > 
+> > use bool as the return type for rwsem_is_locked() instead of int
+> > 
+> > Signed-off-by: Pranith Kumar <bobby.prani@gmail.com>
+....
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
+Makes sense to me.
 
-diff --git a/fsr/xfs_fsr.c b/fsr/xfs_fsr.c
-index 8b191e6..48629fd 100644
---- a/fsr/xfs_fsr.c
-+++ b/fsr/xfs_fsr.c
-@@ -1325,7 +1325,11 @@ packfile(char *fname, char *tname, int fd,
- 				fsrprintf(_("could not trunc tmp %s\n"),
- 					   tname);
- 			}
--			lseek64(tfd, outmap[extent].bmv_length, SEEK_CUR);
-+			if (lseek64(tfd, outmap[extent].bmv_length, SEEK_CUR) < 0) {
-+				fsrprintf(_("could not lseek in tmpfile: %s : %s\n"),
-+				   tname, strerror(errno));
-+				goto out;
-+			}
- 			continue;
- 		} else if (outmap[extent].bmv_length == 0) {
- 			/* to catch holes at the beginning of the file */
-@@ -1341,7 +1345,11 @@ packfile(char *fname, char *tname, int fd,
- 					" %s\n"), tname);
- 				goto out;
- 			}
--			lseek64(tfd, outmap[extent].bmv_length, SEEK_CUR);
-+			if (lseek64(tfd, outmap[extent].bmv_length, SEEK_CUR) < 0) {
-+				fsrprintf(_("could not lseek in tmpfile: %s : %s\n"),
-+				   tname, strerror(errno));
-+				goto out;
-+			}
- 		}
- 	} /* end of space allocation loop */
- 
-@@ -1365,8 +1373,16 @@ packfile(char *fname, char *tname, int fd,
- 	for (extent = 0; extent < nextents; extent++) {
- 		pos = outmap[extent].bmv_offset;
- 		if (outmap[extent].bmv_block == -1) {
--			lseek64(tfd, outmap[extent].bmv_length, SEEK_CUR);
--			lseek64(fd, outmap[extent].bmv_length, SEEK_CUR);
-+			if (lseek64(tfd, outmap[extent].bmv_length, SEEK_CUR) < 0) {
-+				fsrprintf(_("could not lseek in tmpfile: %s : %s\n"),
-+				   tname, strerror(errno));
-+				goto out;
-+			}
-+			if (lseek64(fd, outmap[extent].bmv_length, SEEK_CUR) < 0) {
-+				fsrprintf(_("could not lseek in file: %s : %s\n"),
-+				   fname, strerror(errno));
-+				goto out;
-+			}
- 			continue;
- 		} else if (outmap[extent].bmv_length == 0) {
- 			/* to catch holes at the beginning of the file */
-@@ -1442,8 +1458,16 @@ packfile(char *fname, char *tname, int fd,
- 			}
- 		}
- 	}
--	ftruncate64(tfd, statp->bs_size);
--	fsync(tfd);
-+	if (ftruncate64(tfd, statp->bs_size) < 0) {
-+		fsrprintf(_("could not truncate tmpfile: %s : %s\n"),
-+				fname, strerror(errno));
-+		goto out;
-+	}
-+	if (fsync(tfd) < 0) {
-+		fsrprintf(_("could not fsync tmpfile: %s : %s\n"),
-+				fname, strerror(errno));
-+		goto out;
-+	}
- 
- 	sx.sx_stat     = *statp; /* struct copy */
- 	sx.sx_version  = XFS_SX_VERSION;
+> I observed one other user of rwsem_is_locked() in xfs, change accordingly
+> 
+> Signed-off-by: Pranith Kumar <bobby.prani@gmail.com>
+> ---
+>  fs/xfs/xfs_inode.c |    2 +-
+>  fs/xfs/xfs_inode.h |    2 +-
+>  2 files changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+> index 768087b..9047eda 100644
+> --- a/fs/xfs/xfs_inode.c
+> +++ b/fs/xfs/xfs_inode.c
+> @@ -285,7 +285,7 @@ xfs_ilock_demote(
+>  }
+>  
+>  #if defined(DEBUG) || defined(XFS_WARN)
+> -int
+> +bool
+>  xfs_isilocked(
+>  	xfs_inode_t		*ip,
+>  	uint			lock_flags)
+
+If you are going to change the return type to bool, then you should
+also remove the manual "!!" conversions to a boolean return and let
+the compiler do it in the most optimal way.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
