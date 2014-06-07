@@ -1,26 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 856F67F3F
-	for <xfs@oss.sgi.com>; Fri,  6 Jun 2014 20:41:27 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 4759830404E
-	for <xfs@oss.sgi.com>; Fri,  6 Jun 2014 18:41:24 -0700 (PDT)
-Received: from mail-qa0-f54.google.com (mail-qa0-f54.google.com
-	[209.85.216.54]) by cuda.sgi.com with ESMTP id e4VuGBPBBavux1RS
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Fri, 06 Jun 2014 18:41:22 -0700 (PDT)
-Received: by mail-qa0-f54.google.com with SMTP id j15so5190753qaq.13
-	for <xfs@oss.sgi.com>; Fri, 06 Jun 2014 18:41:22 -0700 (PDT)
-Message-ID: <53926DC1.4050304@gmail.com>
-Date: Fri, 06 Jun 2014 21:41:21 -0400
-From: Pranith Kumar <bobby.prani@gmail.com>
-MIME-Version: 1.0
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 1D90C7F3F
+	for <xfs@oss.sgi.com>; Fri,  6 Jun 2014 21:39:36 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 0BA7C8F8037
+	for <xfs@oss.sgi.com>; Fri,  6 Jun 2014 19:39:35 -0700 (PDT)
+Received: from smtprelay.hostedemail.com (smtprelay0133.hostedemail.com
+	[216.40.44.133]) by cuda.sgi.com with ESMTP id wDGt5M7xq2wiwmXp
+	for <xfs@oss.sgi.com>; Fri, 06 Jun 2014 19:39:34 -0700 (PDT)
+Message-ID: <1402108770.25112.5.camel@joe-AO725>
 Subject: Re: [RFC PATCH 1/1] cleanup: use bool as return type for
 	rwsem_is_locked
+From: Joe Perches <joe@perches.com>
+Date: Fri, 06 Jun 2014 19:39:30 -0700
+In-Reply-To: <53926DC1.4050304@gmail.com>
 References: <5390D7E1.7060606@gatech.edu> <5391FFFD.1060901@gatech.edu>
 	<53920446.7060505@gatech.edu> <20140607001819.GE4453@dastard>
-	<53926406.4020200@gmail.com>
-In-Reply-To: <53926406.4020200@gmail.com>
+	<53926406.4020200@gmail.com> <53926DC1.4050304@gmail.com>
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,92 +30,42 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>, Pranith Kumar <pranith@gatech.edu>
-Cc: peterz@infradead.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, mingo@redhat.com, davidlohr@hp.com, tim.c.chen@linux.intel.com
+To: Pranith Kumar <bobby.prani@gmail.com>
+Cc: peterz@infradead.org, tim.c.chen@linux.intel.com, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, mingo@redhat.com, davidlohr@hp.com, Pranith Kumar <pranith@gatech.edu>
 
-On 06/06/2014 08:59 PM, Pranith Kumar wrote:
-> On 06/06/2014 08:18 PM, Dave Chinner wrote:
->> On Fri, Jun 06, 2014 at 02:11:18PM -0400, Pranith Kumar wrote:
->>> On 06/06/2014 01:53 PM, Pranith Kumar wrote:
->>>> On Fri, Jun 6, 2014 at 3:35 AM, Peter Zijlstra <peterz@infradead.org> wrote:
->>>>>
->>>>> Now in general, I don't particularly like such superfluous changes, so
->>>>> unless you can show that GCC actually generates better code, I'd prefer
->>>>> to keep things as they are.
->>>>
->>>> Fixed and checked the assembly. It saves us 2 bytes of code, not much. I am not sure if that is worth it :(
->>>>
->>>> use bool as the return type for rwsem_is_locked() instead of int
->>>>
-> 
->>
->> If you are going to change the return type to bool, then you should
->> also remove the manual "!!" conversions to a boolean return and let
->> the compiler do it in the most optimal way.
->>
+On Fri, 2014-06-06 at 21:41 -0400, Pranith Kumar wrote:
+> On 06/06/2014 08:59 PM, Pranith Kumar wrote:
+> > On 06/06/2014 08:18 PM, Dave Chinner wrote:
+> >> If you are going to change the return type to bool, then you should
+> >> also remove the manual "!!" conversions to a boolean return and let
+> >> the compiler do it in the most optimal way.
+> > Agreed, please find patch below:
+> Simplify the "!!" condition. This is much simpler. :)
+[]
+> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+
+> @@ -285,25 +285,25 @@ xfs_ilock_demote(
+>  }
 >  
-> Agreed, please find patch below:
-> 
+>  #if defined(DEBUG) || defined(XFS_WARN)
+> -int
+> +bool
+>  xfs_isilocked(
+>  	xfs_inode_t		*ip,
+>  	uint			lock_flags)
+>  {
+>  	if (lock_flags & (XFS_ILOCK_EXCL|XFS_ILOCK_SHARED)) {
+>  		if (!(lock_flags & XFS_ILOCK_SHARED))
+> -			return !!ip->i_lock.mr_writer;
+> +			return (ip->i_lock.mr_writer != 0);
 
-Simplify the "!!" condition. This is much simpler. :)
+simpler still would be just removing the !! completely.
+I presume in no case would it make an actual difference
+in emitted code.
 
-change return type to bool to follow rwsem_is_locked()
+ie:
+			return ip->i_lock.mr_writer;
 
-Signed-off-by: Pranith Kumar <bobby.prani@gmail.com>
----
- fs/xfs/xfs_inode.c | 8 ++++----
- fs/xfs/xfs_inode.h | 2 +-
- 2 files changed, 5 insertions(+), 5 deletions(-)
-
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index a6115fe..c02ac49 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -285,25 +285,25 @@ xfs_ilock_demote(
- }
- 
- #if defined(DEBUG) || defined(XFS_WARN)
--int
-+bool
- xfs_isilocked(
- 	xfs_inode_t		*ip,
- 	uint			lock_flags)
- {
- 	if (lock_flags & (XFS_ILOCK_EXCL|XFS_ILOCK_SHARED)) {
- 		if (!(lock_flags & XFS_ILOCK_SHARED))
--			return !!ip->i_lock.mr_writer;
-+			return (ip->i_lock.mr_writer != 0);
- 		return rwsem_is_locked(&ip->i_lock.mr_lock);
- 	}
- 
- 	if (lock_flags & (XFS_IOLOCK_EXCL|XFS_IOLOCK_SHARED)) {
- 		if (!(lock_flags & XFS_IOLOCK_SHARED))
--			return !!ip->i_iolock.mr_writer;
-+			return (ip->i_iolock.mr_writer != 0);
- 		return rwsem_is_locked(&ip->i_iolock.mr_lock);
- 	}
- 
- 	ASSERT(0);
--	return 0;
-+	return false;
- }
- #endif
- 
-diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
-index f72bffa..efebed6 100644
---- a/fs/xfs/xfs_inode.h
-+++ b/fs/xfs/xfs_inode.h
-@@ -346,7 +346,7 @@ void		xfs_ilock(xfs_inode_t *, uint);
- int		xfs_ilock_nowait(xfs_inode_t *, uint);
- void		xfs_iunlock(xfs_inode_t *, uint);
- void		xfs_ilock_demote(xfs_inode_t *, uint);
--int		xfs_isilocked(xfs_inode_t *, uint);
-+bool		xfs_isilocked(xfs_inode_t *, uint);
- uint		xfs_ilock_data_map_shared(struct xfs_inode *);
- uint		xfs_ilock_attr_map_shared(struct xfs_inode *);
- int		xfs_ialloc(struct xfs_trans *, xfs_inode_t *, umode_t,
--- 
-1.9.1
 
 _______________________________________________
 xfs mailing list
