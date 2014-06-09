@@ -1,22 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id AA0137F3F
-	for <xfs@oss.sgi.com>; Mon,  9 Jun 2014 08:02:44 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 5BD1C7F58
+	for <xfs@oss.sgi.com>; Mon,  9 Jun 2014 08:02:52 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id A02728F8049
-	for <xfs@oss.sgi.com>; Mon,  9 Jun 2014 06:02:44 -0700 (PDT)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 50E548F804B
+	for <xfs@oss.sgi.com>; Mon,  9 Jun 2014 06:02:52 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id 1g1JQbv0BkFfKeW0 for
-	<xfs@oss.sgi.com>; Mon, 09 Jun 2014 06:02:43 -0700 (PDT)
-Date: Mon, 9 Jun 2014 09:02:41 -0400
+	cuda.sgi.com with ESMTP id k8XQaXM5jrvwxQuS for
+	<xfs@oss.sgi.com>; Mon, 09 Jun 2014 06:02:51 -0700 (PDT)
+Date: Mon, 9 Jun 2014 09:02:49 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 2/3] xfs_fsr: create a cleanup/return target in packfile()
-Message-ID: <20140609130241.GB31319@bfoster.bfoster>
+Subject: Re: [PATCH 3/3] xfs_fsr: test for more potential failures in
+	packfile()
+Message-ID: <20140609130249.GC31319@bfoster.bfoster>
 References: <53922B49.1050005@redhat.com>
- <53922CE5.4000401@sandeen.net>
+ <53922D67.2060906@sandeen.net>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <53922CE5.4000401@sandeen.net>
+In-Reply-To: <53922D67.2060906@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,12 +33,8 @@ Sender: xfs-bounces@oss.sgi.com
 To: Eric Sandeen <sandeen@sandeen.net>
 Cc: Eric Sandeen <sandeen@redhat.com>, xfs-oss <xfs@oss.sgi.com>
 
-On Fri, Jun 06, 2014 at 04:04:37PM -0500, Eric Sandeen wrote:
-> Error handling is a mishmash of closes, frees, etc at every
-> error point.  Create an "out" target that does this all
-> in one place.
-> 
-> Minor comment/doc update while we're at it.
+On Fri, Jun 06, 2014 at 04:06:47PM -0500, Eric Sandeen wrote:
+> Test for lseek, ftruncate, and fsync failures in packfile()
 > 
 > Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 > ---
@@ -46,210 +43,73 @@ Reviewed-by: Brian Foster <bfoster@redhat.com>
 
 > 
 > diff --git a/fsr/xfs_fsr.c b/fsr/xfs_fsr.c
-> index 94d235c..8b191e6 100644
+> index 8b191e6..48629fd 100644
 > --- a/fsr/xfs_fsr.c
 > +++ b/fsr/xfs_fsr.c
-> @@ -1205,14 +1205,20 @@ out:
->   * We already are pretty sure we can and want to
->   * defragment the file.  Create the tmp file, copy
->   * the data (maintaining holes) and call the kernel
-> - * extent swap routinte.
-> + * extent swap routine.
-> + *
-> + * Return values:
-> + * -1: Some error was encountered
-> + *  0: Successfully defragmented the file
-> + *  1: No change / No Error
->   */
->  static int
->  packfile(char *fname, char *tname, int fd,
->  	 xfs_bstat_t *statp, struct fsxattr *fsxp)
->  {
-> -	int 		tfd;
-> +	int 		tfd = -1;
->  	int		srval;
-> +	int		retval = -1;	/* Failure is the default */
->  	int		nextents, extent, cur_nextents, new_nextents;
->  	unsigned	blksz_dio;
->  	unsigned	dio_min;
-> @@ -1220,7 +1226,7 @@ packfile(char *fname, char *tname, int fd,
->  	static xfs_swapext_t   sx;
->  	struct xfs_flock64  space;
->  	off64_t 	cnt, pos;
-> -	void 		*fbuf;
-> +	void 		*fbuf = NULL;
->  	int 		ct, wc, wc_b4;
->  	char		ffname[SMBUFSZ];
->  	int		ffd = -1;
-> @@ -1236,7 +1242,8 @@ packfile(char *fname, char *tname, int fd,
->  	if (cur_nextents == 1 || cur_nextents <= nextents) {
->  		if (vflag)
->  			fsrprintf(_("%s already fully defragmented.\n"), fname);
-> -		return 1; /* indicates no change/no error */
-> +		retval = 1; /* indicates no change/no error */
-> +		goto out;
->  	}
->  
->  	if (dflag)
-> @@ -1248,15 +1255,14 @@ packfile(char *fname, char *tname, int fd,
->  		if (vflag)
->  			fsrprintf(_("could not open tmp file: %s: %s\n"),
->  				   tname, strerror(errno));
-> -		return -1;
-> +		goto out;
->  	}
->  	unlink(tname);
->  
->  	/* Setup extended attributes */
->  	if (fsr_setup_attr_fork(fd, tfd, statp) != 0) {
->  		fsrprintf(_("failed to set ATTR fork on tmp: %s:\n"), tname);
-> -		close(tfd);
-> -		return -1;
-> +		goto out;
->  	}
->  
->  	/* Setup extended inode flags, project identifier, etc */
-> @@ -1264,15 +1270,13 @@ packfile(char *fname, char *tname, int fd,
->  		if (ioctl(tfd, XFS_IOC_FSSETXATTR, fsxp) < 0) {
->  			fsrprintf(_("could not set inode attrs on tmp: %s\n"),
->  				tname);
-> -			close(tfd);
-> -			return -1;
-> +			goto out;
->  		}
->  	}
->  
->  	if ((ioctl(tfd, XFS_IOC_DIOINFO, &dio)) < 0 ) {
->  		fsrprintf(_("could not get DirectIO info on tmp: %s\n"), tname);
-> -		close(tfd);
-> -		return -1;
-> +		goto out;
->  	}
->  
->  	dio_min = dio.d_miniosz;
-> @@ -1294,8 +1298,7 @@ packfile(char *fname, char *tname, int fd,
->  
->  	if (!(fbuf = (char *)memalign(dio.d_mem, blksz_dio))) {
->  		fsrprintf(_("could not allocate buf: %s\n"), tname);
-> -		close(tfd);
-> -		return -1;
-> +		goto out;
->  	}
->  
->  	if (nfrags) {
-> @@ -1306,9 +1309,7 @@ packfile(char *fname, char *tname, int fd,
->  		if ((ffd = open(ffname, openopts, 0666)) < 0) {
->  			fsrprintf(_("could not open fragfile: %s : %s\n"),
->  				   ffname, strerror(errno));
-> -			close(tfd);
-> -			free(fbuf);
-> -			return -1;
-> +			goto out;
->  		}
->  		unlink(ffname);
->  	}
-> @@ -1338,9 +1339,7 @@ packfile(char *fname, char *tname, int fd,
->  			if (ioctl(tfd, XFS_IOC_RESVSP64, &space) < 0) {
->  				fsrprintf(_("could not pre-allocate tmp space:"
+> @@ -1325,7 +1325,11 @@ packfile(char *fname, char *tname, int fd,
+>  				fsrprintf(_("could not trunc tmp %s\n"),
+>  					   tname);
+>  			}
+> -			lseek64(tfd, outmap[extent].bmv_length, SEEK_CUR);
+> +			if (lseek64(tfd, outmap[extent].bmv_length, SEEK_CUR) < 0) {
+> +				fsrprintf(_("could not lseek in tmpfile: %s : %s\n"),
+> +				   tname, strerror(errno));
+> +				goto out;
+> +			}
+>  			continue;
+>  		} else if (outmap[extent].bmv_length == 0) {
+>  			/* to catch holes at the beginning of the file */
+> @@ -1341,7 +1345,11 @@ packfile(char *fname, char *tname, int fd,
 >  					" %s\n"), tname);
-> -				close(tfd);
-> -				free(fbuf);
-> -				return -1;
-> +				goto out;
+>  				goto out;
 >  			}
->  			lseek64(tfd, outmap[extent].bmv_length, SEEK_CUR);
+> -			lseek64(tfd, outmap[extent].bmv_length, SEEK_CUR);
+> +			if (lseek64(tfd, outmap[extent].bmv_length, SEEK_CUR) < 0) {
+> +				fsrprintf(_("could not lseek in tmpfile: %s : %s\n"),
+> +				   tname, strerror(errno));
+> +				goto out;
+> +			}
 >  		}
-> @@ -1348,11 +1347,7 @@ packfile(char *fname, char *tname, int fd,
+>  	} /* end of space allocation loop */
 >  
->  	if (lseek64(tfd, 0, SEEK_SET)) {
->  		fsrprintf(_("Couldn't rewind on temporary file\n"));
-> -		close(tfd);
-> -		if (ffd != -1)
-> -			close(ffd);
-> -		free(fbuf);
-> -		return -1;
-> +		goto out;
->  	}
->  
->  	/* Check if the temporary file has fewer extents */
-> @@ -1362,11 +1357,8 @@ packfile(char *fname, char *tname, int fd,
->  	if (cur_nextents <= new_nextents) {
->  		if (vflag)
->  			fsrprintf(_("No improvement will be made (skipping): %s\n"), fname);
-> -		free(fbuf);
-> -		close(tfd);
-> -		if (ffd != -1)
-> -			close(ffd);
-> -		return 1; /* no change/no error */
-> +		retval = 1; /* no change/no error */
-> +		goto out;
->  	}
->  
->  	/* Loop through block map copying the file. */
-> @@ -1437,11 +1429,7 @@ packfile(char *fname, char *tname, int fd,
->  							tname);
->  					}
->  				}
-> -				free(fbuf);
-> -				close(tfd);
-> -				if (ffd != -1)
-> -					close(ffd);
-> -				return -1;
+> @@ -1365,8 +1373,16 @@ packfile(char *fname, char *tname, int fd,
+>  	for (extent = 0; extent < nextents; extent++) {
+>  		pos = outmap[extent].bmv_offset;
+>  		if (outmap[extent].bmv_block == -1) {
+> -			lseek64(tfd, outmap[extent].bmv_length, SEEK_CUR);
+> -			lseek64(fd, outmap[extent].bmv_length, SEEK_CUR);
+> +			if (lseek64(tfd, outmap[extent].bmv_length, SEEK_CUR) < 0) {
+> +				fsrprintf(_("could not lseek in tmpfile: %s : %s\n"),
+> +				   tname, strerror(errno));
 > +				goto out;
+> +			}
+> +			if (lseek64(fd, outmap[extent].bmv_length, SEEK_CUR) < 0) {
+> +				fsrprintf(_("could not lseek in file: %s : %s\n"),
+> +				   fname, strerror(errno));
+> +				goto out;
+> +			}
+>  			continue;
+>  		} else if (outmap[extent].bmv_length == 0) {
+>  			/* to catch holes at the beginning of the file */
+> @@ -1442,8 +1458,16 @@ packfile(char *fname, char *tname, int fd,
 >  			}
->  			if (nfrags) {
->  				/* Do a matching write to the tmp file */
-> @@ -1455,12 +1443,8 @@ packfile(char *fname, char *tname, int fd,
 >  		}
 >  	}
->  	ftruncate64(tfd, statp->bs_size);
-> -	if (ffd != -1)
-> -		close(ffd);
->  	fsync(tfd);
+> -	ftruncate64(tfd, statp->bs_size);
+> -	fsync(tfd);
+> +	if (ftruncate64(tfd, statp->bs_size) < 0) {
+> +		fsrprintf(_("could not truncate tmpfile: %s : %s\n"),
+> +				fname, strerror(errno));
+> +		goto out;
+> +	}
+> +	if (fsync(tfd) < 0) {
+> +		fsrprintf(_("could not fsync tmpfile: %s : %s\n"),
+> +				fname, strerror(errno));
+> +		goto out;
+> +	}
 >  
-> -	free(fbuf);
-> -
 >  	sx.sx_stat     = *statp; /* struct copy */
 >  	sx.sx_version  = XFS_SX_VERSION;
->  	sx.sx_fdtarget = fd;
-> @@ -1473,8 +1457,7 @@ packfile(char *fname, char *tname, int fd,
->                  if (vflag)
->                          fsrprintf(_("failed to fchown tmpfile %s: %s\n"),
->                                     tname, strerror(errno));
-> -		close(tfd);
-> -                return -1;
-> +		goto out;
->          }
->  
->  	/* Swap the extents */
-> @@ -1496,8 +1479,7 @@ packfile(char *fname, char *tname, int fd,
->  			fsrprintf(_("XFS_IOC_SWAPEXT failed: %s: %s\n"),
->  				  fname, strerror(errno));
->  		}
-> -		close(tfd);
-> -		return -1;
-> +		goto out;
->  	}
->  
->  	/* Report progress */
-> @@ -1506,8 +1488,15 @@ packfile(char *fname, char *tname, int fd,
->  			  cur_nextents, new_nextents,
->  			  (new_nextents <= nextents ? "DONE" : "    " ),
->  		          fname);
-> -	close(tfd);
-> -	return 0;
-> +	retval = 0;
-> +
-> +out:
-> +	free(fbuf);
-> +	if (tfd != -1)
-> +		close(tfd);
-> +	if (ffd != -1)
-> +		close(ffd);
-> +	return retval;
->  }
->  
->  char *
 > 
 > _______________________________________________
 > xfs mailing list
