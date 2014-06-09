@@ -1,29 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id D20A87F3F
-	for <xfs@oss.sgi.com>; Sat,  7 Jun 2014 21:57:40 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 6673FAC006
-	for <xfs@oss.sgi.com>; Sat,  7 Jun 2014 19:57:40 -0700 (PDT)
-Received: from mail-yk0-f172.google.com (mail-yk0-f172.google.com
-	[209.85.160.172]) by cuda.sgi.com with ESMTP id
-	yyL9jOz3Q0y5Tcek (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Sat, 07 Jun 2014 19:57:37 -0700 (PDT)
-Received: by mail-yk0-f172.google.com with SMTP id 79so1603369ykr.31
-	for <xfs@oss.sgi.com>; Sat, 07 Jun 2014 19:57:36 -0700 (PDT)
-Message-ID: <5393D11E.2090906@gmail.com>
-Date: Sat, 07 Jun 2014 22:57:34 -0400
-From: Pranith Kumar <bobby.prani@gmail.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id E28757F3F
+	for <xfs@oss.sgi.com>; Mon,  9 Jun 2014 08:02:42 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id D7C7B8F8049
+	for <xfs@oss.sgi.com>; Mon,  9 Jun 2014 06:02:39 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id K9iG2w3vP00GE0wu for
+	<xfs@oss.sgi.com>; Mon, 09 Jun 2014 06:02:38 -0700 (PDT)
+Date: Mon, 9 Jun 2014 09:02:36 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 1/3] xfs_fsr: ensure the line we read from leftofffile is
+	null terminated
+Message-ID: <20140609130235.GA31319@bfoster.bfoster>
+References: <53922B49.1050005@redhat.com>
+ <53922C8E.3050700@sandeen.net>
 MIME-Version: 1.0
-Subject: Re: [RFC PATCH 1/1] cleanup: use bool as return type for
-	rwsem_is_locked
-References: <5390D7E1.7060606@gatech.edu> <5391FFFD.1060901@gatech.edu>
-	<53920446.7060505@gatech.edu> <20140607001819.GE4453@dastard>
-	<53926406.4020200@gmail.com> <53926DC1.4050304@gmail.com>
-	<1402108770.25112.5.camel@joe-AO725>
-	<20140607234411.GA9508@dastard>
-In-Reply-To: <20140607234411.GA9508@dastard>
+Content-Disposition: inline
+In-Reply-To: <53922C8E.3050700@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -36,85 +30,40 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>, Joe Perches <joe@perches.com>
-Cc: peterz@infradead.org, Pranith Kumar <pranith@gatech.edu>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, mingo@redhat.com, davidlohr@hp.com, tim.c.chen@linux.intel.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Eric Sandeen <sandeen@redhat.com>, xfs-oss <xfs@oss.sgi.com>
 
-On 06/07/2014 07:44 PM, Dave Chinner wrote:
-> On Fri, Jun 06, 2014 at 07:39:30PM -0700, Joe Perches wrote:
->> On Fri, 2014-06-06 at 21:41 -0400, Pranith Kumar wrote:
->>> On 06/06/2014 08:59 PM, Pranith Kumar wrote:
->>>> On 06/06/2014 08:18 PM, Dave Chinner wrote:
->>>>> If you are going to change the return type to bool, then you should
->>>>> also remove the manual "!!" conversions to a boolean return and let
->>>>> the compiler do it in the most optimal way.
->> simpler still would be just removing the !! completely.
->> I presume in no case would it make an actual difference
->> in emitted code.
->>
->> ie:
->> 			return ip->i_lock.mr_writer;
+On Fri, Jun 06, 2014 at 04:03:10PM -0500, Eric Sandeen wrote:
+> Ensure that the string we read from leftofffile is NULL
+> terminated; the buffer gets passed to strchr(), so
+> it's important that we ensure it ends with NULL.
 > 
-> Yup, that's exactly what I meant. Casting to a bool type does all
-> the work of squashing all non-zero values to 1...
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> ---
 > 
+> diff --git a/fsr/xfs_fsr.c b/fsr/xfs_fsr.c
+> index 3818f02..94d235c 100644
+> --- a/fsr/xfs_fsr.c
+> +++ b/fsr/xfs_fsr.c
+> @@ -554,6 +554,8 @@ fsrallfs(char *mtab, int howlong, char *leftofffile)
+>  			fsrprintf(_("could not read %s, starting with %s\n"),
+>  				leftofffile, *fs->dev);
+>  		} else {
+> +			/* Ensure the buffer we read is null terminated */
+> +			buf[SMBUFSZ-1] = '\0';
 
-change return type if xfs_isilocked() to bool to follow rwsem_is_locked()
+Maybe just initialize the buffer..?
 
-Signed-off-by: Pranith Kumar <bobby.prani@gmail.com>
----
- fs/xfs/xfs_inode.c | 8 ++++----
- fs/xfs/xfs_inode.h | 2 +-
- 2 files changed, 5 insertions(+), 5 deletions(-)
+Brian
 
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index a6115fe..c02ac49 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -285,25 +285,25 @@ xfs_ilock_demote(
- }
- 
- #if defined(DEBUG) || defined(XFS_WARN)
--int
-+bool
- xfs_isilocked(
- 	xfs_inode_t		*ip,
- 	uint			lock_flags)
- {
- 	if (lock_flags & (XFS_ILOCK_EXCL|XFS_ILOCK_SHARED)) {
- 		if (!(lock_flags & XFS_ILOCK_SHARED))
--			return !!ip->i_lock.mr_writer;
-+			return ip->i_lock.mr_writer;
- 		return rwsem_is_locked(&ip->i_lock.mr_lock);
- 	}
- 
- 	if (lock_flags & (XFS_IOLOCK_EXCL|XFS_IOLOCK_SHARED)) {
- 		if (!(lock_flags & XFS_IOLOCK_SHARED))
--			return !!ip->i_iolock.mr_writer;
-+			return ip->i_iolock.mr_writer;
- 		return rwsem_is_locked(&ip->i_iolock.mr_lock);
- 	}
- 
- 	ASSERT(0);
--	return 0;
-+	return false;
- }
- #endif
- 
-diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
-index f72bffa..efebed6 100644
---- a/fs/xfs/xfs_inode.h
-+++ b/fs/xfs/xfs_inode.h
-@@ -346,7 +346,7 @@ void		xfs_ilock(xfs_inode_t *, uint);
- int		xfs_ilock_nowait(xfs_inode_t *, uint);
- void		xfs_iunlock(xfs_inode_t *, uint);
- void		xfs_ilock_demote(xfs_inode_t *, uint);
--int		xfs_isilocked(xfs_inode_t *, uint);
-+bool		xfs_isilocked(xfs_inode_t *, uint);
- uint		xfs_ilock_data_map_shared(struct xfs_inode *);
- uint		xfs_ilock_attr_map_shared(struct xfs_inode *);
- int		xfs_ialloc(struct xfs_trans *, xfs_inode_t *, umode_t,
--- 
-1.9.1
+>  			for (fs = fsbase; fs < fsend; fs++) {
+>  				fsname = fs->dev;
+>  				if ((strncmp(buf,fsname,strlen(fsname)) == 0)
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
