@@ -1,21 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 20E417F60
-	for <xfs@oss.sgi.com>; Mon,  9 Jun 2014 15:58:26 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 50F2A7F66
+	for <xfs@oss.sgi.com>; Mon,  9 Jun 2014 16:31:04 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id EFCA88F8059
-	for <xfs@oss.sgi.com>; Mon,  9 Jun 2014 13:58:22 -0700 (PDT)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 3D1678F806F
+	for <xfs@oss.sgi.com>; Mon,  9 Jun 2014 14:31:00 -0700 (PDT)
 Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id OotaFIFCe0j0baFT for <xfs@oss.sgi.com>;
-	Mon, 09 Jun 2014 13:58:16 -0700 (PDT)
-Message-ID: <53961FE7.3050607@sandeen.net>
-Date: Mon, 09 Jun 2014 15:58:15 -0500
+	ESMTP id gVP7wGHvmIIbx9DQ for <xfs@oss.sgi.com>;
+	Mon, 09 Jun 2014 14:30:59 -0700 (PDT)
+Message-ID: <53962792.6040000@sandeen.net>
+Date: Mon, 09 Jun 2014 16:30:58 -0500
 From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfs_mdrestore: initialize sb prior to xfs_sb_from_disk()
-References: <5390F89C.2050305@redhat.com>	<20140605235633.GC4453@dastard>	<53910482.1030909@redhat.com>	<20140606014256.GD4453@dastard>
-	<53912D1F.6010609@sandeen.net>
-In-Reply-To: <53912D1F.6010609@sandeen.net>
+Subject: [PATCH V2] xfs: fix crc field handling in xfs_sb_to/from_disk
+References: <5390F89C.2050305@redhat.com>
+In-Reply-To: <5390F89C.2050305@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,67 +27,54 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>, Eric Sandeen <sandeen@redhat.com>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: Eric Sandeen <sandeen@redhat.com>, xfs-oss <xfs@oss.sgi.com>
 
-On 6/5/14, 9:53 PM, Eric Sandeen wrote:
-> On 6/5/14, 8:42 PM, Dave Chinner wrote:
->> On Thu, Jun 05, 2014 at 07:00:02PM -0500, Eric Sandeen wrote:
->>> On 6/5/14, 6:56 PM, Dave Chinner wrote:
->>>> On Thu, Jun 05, 2014 at 06:09:16PM -0500, Eric Sandeen wrote:
->>>
->>> ...
->>>
->>>>> But ... should we maybe just do this once and for all in
->>>>> xfs_sb_from_disk?  I'm not sure leaving it up to every
->>>>> caller is a good idea, unless somebody ahs a reason to
->>>>> pre-populate some fields - I can't imagine why that would
->>>>> be, though...
->>>>
->>>> We don't ever read in the CRC field into the in-memory structures
->>>> because it has no meaning in memory. Simiarly, we don't ever write
->>>> the CRC field from the in-core structure because we always
->>>> re-calculate it in the IO path if CRCs are configured. That is
->>>> consistent behaviour across the entire code-base.
+I discovered this in userspace, but the same change applies
+to the kernel.
 
-But as you say in userspace, this
+If we xfs_mdrestore an image from a non-crc filesystem, lo
+and behold the restored image has gained a CRC:
+
+# db/xfs_metadump.sh -o /dev/sdc1 - | xfs_mdrestore - test.img
+# xfs_db -c "sb 0" -c "p crc" /dev/sdc1
+crc = 0 (correct)
+# xfs_db -c "sb 0" -c "p crc" test.img
+crc = 0xb6f8d6a0 (correct)
+
+This is because xfs_sb_from_disk doesn't fill in sb_crc,
+but xfs_sb_to_disk(XFS_SB_ALL_BITS) does write the in-memory
+CRC to disk - so we get uninitialized memory on disk.
+
+Fix this by always initializing sb_crc to 0 when we read
+the superblock, and masking out the CRC bit from ALL_BITS
+when we write it.
+
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
+
+diff --git a/fs/xfs/xfs_sb.c b/fs/xfs/xfs_sb.c
+index 8baf61a..d2ccb2e 100644
+--- a/fs/xfs/xfs_sb.c
++++ b/fs/xfs/xfs_sb.c
+@@ -450,6 +450,8 @@ xfs_sb_from_disk(
+ 	to->sb_features_incompat = be32_to_cpu(from->sb_features_incompat);
+ 	to->sb_features_log_incompat =
+ 				be32_to_cpu(from->sb_features_log_incompat);
++	/* crc is only used on disk, not in memory; just init to 0 here. */
++	to->sb_crc = 0;
+ 	to->sb_pad = 0;
+ 	to->sb_pquotino = be64_to_cpu(from->sb_pquotino);
+ 	to->sb_lsn = be64_to_cpu(from->sb_lsn);
+@@ -527,6 +529,9 @@ xfs_sb_to_disk(
+ 	if (!fields)
+ 		return;
  
-	libxfs_sb_to_disk(buf, sbp, XFS_SB_ALL_BITS)
-
-*does* write it.
-
-kernelspace does the same here:
-
-0 xfs_fsops.c xfs_growfs_data_private 520 xfs_sb_to_disk(XFS_BUF_TO_SBP(bp), &mp->m_sb, XFS_SB_ALL_BITS);
-
->>> <snip stuff>
->>>
->>>> Perhaps we should move the memset() to within xfs_sb_from_disk()
->>>> to make this explicit?
->>>
->>> Yes, that's what I meant by "this" in "do this once and for all" - 
->>> sorry, that wasn't clear.  memset(0) in xfs_sb_from_disk().
->>
->> I didn't read it clearly. my fault.
->>
->>> Yeah, the more I think about it, the more I think that's probably
->>> the obviously correct thing to do.
-> 
-> Actually, a memset() seems like overkill - every field except
-> sb_crc is explicitly filled in in the function.
-> 
-> Maybe better to just set sb_crc to 0, with a comment as to why?
-> I think I'll whip that one up.
-
-But now I realize we do sometimes write the in-memory value to
-disk, as seen above.
-
-Backing up - shouldn't we just go ahead and read/write it from/to
-disk just like every other field, at least in the cases where we
-are writing all, and when we are reading (which always reads all)?
-
--Eric
-
++	/* We should never write the crc here, it's updated in the IO path */
++	fields &= ~XFS_SB_CRC;
++
+ 	xfs_sb_quota_to_disk(to, from, &fields);
+ 	while (fields) {
+ 		f = (xfs_sb_field_t)xfs_lowbit64((__uint64_t)fields);
 
 _______________________________________________
 xfs mailing list
