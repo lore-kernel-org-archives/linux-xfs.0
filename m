@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id B0E0A7F66
-	for <xfs@oss.sgi.com>; Mon,  9 Jun 2014 20:21:57 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 09FA129DFA
+	for <xfs@oss.sgi.com>; Mon,  9 Jun 2014 21:06:35 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 829A330407B
-	for <xfs@oss.sgi.com>; Mon,  9 Jun 2014 18:21:57 -0700 (PDT)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id C486B8F8074
+	for <xfs@oss.sgi.com>; Mon,  9 Jun 2014 19:06:31 -0700 (PDT)
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	r91jbPcriUuIv9tU for <xfs@oss.sgi.com>;
-	Mon, 09 Jun 2014 18:21:52 -0700 (PDT)
-Date: Tue, 10 Jun 2014 11:21:49 +1000
+	g0eYCGaty1y2Qx5K for <xfs@oss.sgi.com>;
+	Mon, 09 Jun 2014 19:06:29 -0700 (PDT)
+Date: Tue, 10 Jun 2014 12:06:26 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfstests: create a test for xfs log grant head leak
-	detection
-Message-ID: <20140610012149.GH4453@dastard>
-References: <1402060483-22195-1-git-send-email-bfoster@redhat.com>
+Subject: Re: [PATCH v2] xfstests: test speculative preallocation reclaim on
+	ENOSPC/EDQUOT
+Message-ID: <20140610020626.GK4453@dastard>
+References: <1401807238-59437-1-git-send-email-bfoster@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1402060483-22195-1-git-send-email-bfoster@redhat.com>
+In-Reply-To: <1401807238-59437-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,93 +33,167 @@ Sender: xfs-bounces@oss.sgi.com
 To: Brian Foster <bfoster@redhat.com>
 Cc: fstests@vger.kernel.org, xfs@oss.sgi.com
 
-On Fri, Jun 06, 2014 at 09:14:43AM -0400, Brian Foster wrote:
-> Changes in the XFS logging code have lead to small leaks in the log
-> grant heads that consume log space slowly over time. Such problems have
-> gone undetected for an unnecessarily long time due to code complexity
-> and potential for very subtle problems. Losing only a few bytes per
-> logged item on a reasonably large enough fs (10s of GB) means only the
-> most continuously stressful workloads will cause a severe enough failure
-> (deadlock due to log reservation exhaustion) quickly enough to indicate
-> something is seriously wrong.
+On Tue, Jun 03, 2014 at 10:53:58AM -0400, Brian Foster wrote:
+> XFS can allocate significant amounts of space to files via speculative
+> preallocation. Such preallocation may not be reclaimed automatically on
+> file close() if a file is repeatedly opened and extended. For smaller
+> filesystems with relatively large and slow growing files, this
+> preallocation can linger for some time, including contributing to out of
+> space conditions.
 > 
-> Recent changes in XFS export the state of the various log heads through
-> sysfs to aid in userspace/runtime analysis of the log. This test runs a
-> workload against an XFS filesystem, quiesces the fs and verifies that
-> the log reserve and write grant heads have not leaked any space with
-> respect to the current head of the physical log.
+> Create a situation where an fs is near out of space while several files
+> still have lingering, significant preallocations. Verify that new
+> writers reclaim the preallocated space rather than return ENOSPC. Repeat
+> a similar test for quota limits and EDQUOT.
 > 
 > Signed-off-by: Brian Foster <bfoster@redhat.com>
-> ---
-....
->
-> +# Determine the system device name for a particular block device. The device
-> +# name is how the block dev is referenced under sysfs.
-> +_get_device_name()
+
+Couple of minor things.
+
+> +# Create a file using a repeated open, extending write and close pattern. This
+> +# causes the preallocation to persist after the file is closed. Preallocation
+> +# will not be reclaimed unless the inode is evicted or we hit an allocation
+> +# failure.
+> +_spec_prealloc_file()
 > +{
-> +	devpath=$1
+> +	file=$1
 > +
-> +	# check for a symlink (i.e., device mapper)
-> +	if [ -L $devpath ]
+> +	rm -f $file
+> +
+> +	# a few file extending open-write-close cycles should be enough to
+> +	# trigger the fs to retain preallocation. write 256k in 32k intervals to
+> +	# be sure
+> +	for i in $(seq 0 32768 262144)
+> +	do
+
+	for .... ; do
+
+> +		$XFS_IO_PROG -fc "pwrite $i 32k" $file | \
+> +			_filter_xfs_io >> $seqres.full
+> +	done
+
+If you are dumping the output into $seqres.full, then it doesn't
+need to be filtered. Filtering is only necessary for golden image
+matching; $seqres.full is for debug output and so should be
+pristine...
+
+Also, I prefer $XFS_IO_PROG -f -c "..." (separate -c "...") because
+the -c arg must be followed by the command and so order is
+important...
+
+> +	# write a 4k aligned amount of data to keep the calculations simple
+> +	$XFS_IO_PROG -c "pwrite 0 128m" $file | _filter_xfs_io >> $seqres.full
+> +
+> +	size=`stat -c "%s" $file`
+> +	blocks=`stat -c "%b" $file`
+> +	blocksize=`stat -c "%B" $file`
+> +
+> +	prealloc_size=$((blocks * blocksize - size))
+> +	if [ $prealloc_size -eq 0 ]
 > +	then
-> +		devpath=`readlink -f $devpath`
+
+	if [ ... ]; then
+
+> +		echo "Warning: No speculative preallocation for $file." \
+> +			"Check use of the allocsize= mount option."
 > +	fi
 > +
-> +	# grab the major minor and convert from hex to decimal
-> +	major=$((0x`stat -c %t $devpath`))
-> +	minor=$((0x`stat -c %T $devpath`))
-> +
-> +	# refer to sysfs by major minor
-> +	basename `readlink /sys/dev/block/$major:$minor`
+> +	# keep a running total of how much preallocation we've created
+> +	TOTAL_PREALLOC=$((TOTAL_PREALLOC + prealloc_size))
 > +}
-
-$ basename `readlink -f /dev/mapper/vg0-home`
-dm-2
-$ basename `readlink /sys/dev/block/253:2`
-dm-2
-
-Why is _short_dev() not sufficient?
-
-> +# Use the information exported by XFS to sysfs to determine whether the log has
-> +# active reservations after a filesystem freeze.
-> +_check_scratch_log_state()
+> +
+> +_consume_free_space()
 > +{
-> +	devname=`_get_device_name $SCRATCH_DEV`
-> +	attrpath="/sys/fs/xfs/$devname/log"
+> +	dir=$1
 > +
-> +	# freeze the fs to ensure data is synced and the log is flushed. this
-> +	# means no outstanding transactions, and thus no outstanding log
-> +	# reservations, should exist
-> +	xfs_freeze -f $SCRATCH_MNT
+> +	# calculate the rough amount of free space in MB
+> +	fsblocksize=`$XFS_IO_PROG -x -c "statfs" $dir | grep f_bsize | \
+> +			awk '{ print $3 }'`
+> +	blocksavail=`$XFS_IO_PROG -x -c "statfs" $dir | grep f_bavail | \
+> +			awk '{ print $3 }'`
+> +	freesp=$((fsblocksize * blocksavail / 1024 / 1024))
 > +
-> +	# the log head is exported in basic blocks and the log grant heads in
-> +	# bytes. convert the log head to bytes for precise comparison
-> +	log_head_cycle=`cat $attrpath/log_head_lsn | awk -F : '{ print $1 }'`
-> +	log_head_bytes=`cat $attrpath/log_head_lsn | awk -F : '{ print $2 }'`
+> +	# allocate all but 10MB
+> +	freesp=$((freesp - 10))
 
-awk can read files directly:
-
-	log_head_cycle=`awk -F : '{ print $1 }' $attrpath/log_head_lsn`
-
-> +	log_head_bytes=$((log_head_bytes * 512))
+	freesp=`$DF_PROG -m $dir | awk '/^\// { print $4 - 10 }'`
+ 
+> +	$XFS_IO_PROG -fc "falloc 0 ${freesp}M" $dir/spc
+> +}
 > +
-> +	for attr in "reserve_grant_head" "write_grant_head"
+> +# Create several files with preallocation and consume the remaining free space
+> +# via fallocate to the put the fs at ENOSPC. Create a set of background writers
+> +# to write into ENOSPC and cause the preallocation to be reclaimed and
+> +# reallocated to the new writers.
+> +_test_enospc()
+> +{
+> +	dir=$1
+> +
+> +	rm -rf $dir/*
+> +
+> +	TOTAL_PREALLOC=0
+> +	for i in $(seq 0 3)
 > +	do
-> +		cycle=`cat $attrpath/$attr | awk -F : '{ print $1 }'`
-> +		bytes=`cat $attrpath/$attr | awk -F : '{ print $2 }'`
-> +
-> +		if [ $cycle != $log_head_cycle ] ||
-> +		   [ $bytes != $log_head_bytes ]
-> +		then
-> +			echo "$attr ($cycle:$bytes) does not match" \
-> +				"log_head_lsn ($log_head_cycle:$log_head_bytes)," \
-> +				"possible leak detected."
-> +		else
-> +			echo "$attr matches log_head_lsn"
-> +		fi
+
+for (); do
+
+> +		_spec_prealloc_file $dir/pre$i
 > +	done
 > +
-> +	xfs_freeze -u $SCRATCH_MNT
+> +	_consume_free_space $dir
+> +
+> +	# consume 1/2 of the current preallocation across the set of 4 writers
+> +	write_size=$((TOTAL_PREALLOC / 2 / 4))
+> +	for i in $(seq 0 3)
+> +	do
+> +		$XFS_IO_PROG -fc "pwrite 0 $write_size" $dir/file.$i | \
+> +			_filter_xfs_io >> $seqres.full &
+
+no filter, for (); do
+
+> +	done
+> +
+> +	wait
+> +}
+> +
+> +# Create preallocations accounted by both user and group quotas. Set the
+> +# associated quota hard limits to put them at EDQUOT. Verify that a new writer
+> +# reclaims the preallocated space and proceeds without error.
+> +_test_edquot()
+> +{
+> +	dir=$1
+> +
+> +	rm -rf $dir/*
+> +
+> +	TOTAL_PREALLOC=0
+> +	_spec_prealloc_file $dir/user
+> +	chown $qa_user $dir/user
+> +
+> +	_spec_prealloc_file $dir/group
+> +	chgrp $qa_group $dir/group
+> +
+> +	# writing to a file under both quotas means both will be reclaimed on
+> +	# allocation failure
+> +	touch $dir/file
+> +	chown $qa_user $dir/file
+> +	chgrp $qa_group $dir/file
+> +
+> +	# put both quotas at EDQUOT
+> +	blks=`$XFS_QUOTA_PROG -xc "quota -u $qa_user" $dir | \
+> +		tail -n 1 | awk '{ print $2 }'`
+> +	$XFS_QUOTA_PROG -xc "limit -u bhard=${blks}k $qa_user" $dir
+> +	blks=`$XFS_QUOTA_PROG -xc "quota -g $qa_grup" $dir | \
+> +		tail -n 1 | awk '{ print $2 }'`
+> +	$XFS_QUOTA_PROG -xc "limit -g bhard=${blks}k $qa_group" $dir
+> +
+> +	# each quota has a single file worth of preallocation to reclaim. leave
+> +	# some wiggle room and write to 1/3 the total.
+> +	write_size=$((TOTAL_PREALLOC / 3))
+> +	$XFS_IO_PROG -c "pwrite 0 $write_size" $dir/file | \
+> +		_filter_xfs_io >> $seqres.full
+
+no filter.
+
 > +}
 > +
 > +# real QA test starts here
@@ -127,70 +201,55 @@ awk can read files directly:
 > +_supported_os Linux
 > +
 > +_require_scratch
-> +_require_freeze
-> +
-> +if [ ! -e /sys/fs/xfs ]
-> +then
-> +	_notrun "no kernel support for XFS sysfs attributes"
-> +fi
-
-_requires_xfs_sysfs
-
+> +_require_xfs_io_command "falloc"
+> +_require_loop
+> +_require_quota
+> +_require_user
+> +_require_group
 > +
 > +rm -f $seqres.full
 > +
-> +_scratch_mkfs_xfs | _filter_mkfs 2>> $seqres.full
+> +_scratch_mkfs_xfs | _filter_mkfs >> $seqres.full 2>&1
 > +_scratch_mount
 > +
-> +_check_scratch_log_state
+> +# make sure the background eofblocks scanner doesn't interfere
+> +orig_sp_time=`cat /proc/sys/fs/xfs/speculative_prealloc_lifetime`
+> +echo 9999 > /proc/sys/fs/xfs/speculative_prealloc_lifetime
 > +
-> +$FSSTRESS_PROG -d $SCRATCH_MNT/fsstress -n 1000 -p 2 -S t \
-> +	>> $seqres.full 2>&1
+> +LOOP_FILE=$SCRATCH_MNT/$seq.fs
+> +LOOP_MNT=$SCRATCH_MNT/$seq.mnt
 > +
-> +_check_scratch_log_state
+> +$MKFS_XFS_PROG -d "file=1,name=$LOOP_FILE,size=$((1024*1024*1024 * 10))" | \
+> +	_filter_mkfs >> $seqres.full 2>&1
 
-wouldn't it be better to run fsstress as a background process and do
-several freeze/check/thaw cycles on a running workload?
+mkfs takes "size=10g" as a valid size.
 
+> +mkdir -p $LOOP_MNT
+> +mount -t xfs -o loop,uquota,gquota $LOOP_FILE $LOOP_MNT || \
+> +	_fail "Failed to mount loop fs."
+> +
+> +_test_enospc $LOOP_MNT
+> +_test_edquot $LOOP_MNT
+> +
+> +umount $LOOP_MNT
+> +
+> +echo $orig_sp_time > /proc/sys/fs/xfs/speculative_prealloc_lifetime
 > +
 > +umount $SCRATCH_MNT
 > +_check_scratch_fs
 > +
 > +status=0
 > +exit
-> diff --git a/tests/xfs/011.out b/tests/xfs/011.out
+> diff --git a/tests/xfs/014.out b/tests/xfs/014.out
 > new file mode 100644
-> index 0000000..a3f3805
+> index 0000000..a825535
 > --- /dev/null
-> +++ b/tests/xfs/011.out
-> @@ -0,0 +1,11 @@
-> +QA output created by 011
-> +meta-data=DDEV isize=XXX agcount=N, agsize=XXX blks
-> +data     = bsize=XXX blocks=XXX, imaxpct=PCT
-> +         = sunit=XXX swidth=XXX, unwritten=X
-> +naming   =VERN bsize=XXX
-> +log      =LDEV bsize=XXX blocks=XXX
-> +realtime =RDEV extsz=XXX blocks=XXX, rtextents=XXX
+> +++ b/tests/xfs/014.out
+> @@ -0,0 +1 @@
+> +QA output created by 014
 
-Any particular reason for dumping the filtered mkfs information
-here? It won't ever cause a test failure unless we break
-_filter_mkfs...
-
-> +reserve_grant_head matches log_head_lsn
-> +write_grant_head matches log_head_lsn
-> +reserve_grant_head matches log_head_lsn
-> +write_grant_head matches log_head_lsn
-> diff --git a/tests/xfs/group b/tests/xfs/group
-> index 19fd968..99bf0e1 100644
-> --- a/tests/xfs/group
-> +++ b/tests/xfs/group
-> @@ -8,6 +8,7 @@
->  008 rw ioctl auto quick
->  009 rw ioctl auto prealloc quick
->  010 auto quick repair
-> +011 auto quick freeze
-
-log and metadata, too.
+The test writes nothing to the output file? Perhaps it should
+indicate that (silence is golden....)....
 
 Cheers,
 
