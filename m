@@ -1,22 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 6426C7F6B
-	for <xfs@oss.sgi.com>; Mon,  9 Jun 2014 17:33:31 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id B0E0A7F66
+	for <xfs@oss.sgi.com>; Mon,  9 Jun 2014 20:21:57 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 14CDEAC00A
-	for <xfs@oss.sgi.com>; Mon,  9 Jun 2014 15:33:27 -0700 (PDT)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 829A330407B
+	for <xfs@oss.sgi.com>; Mon,  9 Jun 2014 18:21:57 -0700 (PDT)
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	0IsI3e3Dk07Jmo29 for <xfs@oss.sgi.com>;
-	Mon, 09 Jun 2014 15:33:22 -0700 (PDT)
-Received: from dave by dastard with local (Exim 4.80)
-	(envelope-from <david@fromorbit.com>) id 1Wu880-0004nI-2I
-	for xfs@oss.sgi.com; Tue, 10 Jun 2014 08:33:20 +1000
-Date: Tue, 10 Jun 2014 08:33:20 +1000
+	r91jbPcriUuIv9tU for <xfs@oss.sgi.com>;
+	Mon, 09 Jun 2014 18:21:52 -0700 (PDT)
+Date: Tue, 10 Jun 2014 11:21:49 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [DISCUSS] Planning for new dev cycle (3.17)
-Message-ID: <20140609223320.GE9508@dastard>
+Subject: Re: [PATCH] xfstests: create a test for xfs log grant head leak
+	detection
+Message-ID: <20140610012149.GH4453@dastard>
+References: <1402060483-22195-1-git-send-email-bfoster@redhat.com>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <1402060483-22195-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,133 +26,180 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============0073447818351948264=="
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Brian Foster <bfoster@redhat.com>
+Cc: fstests@vger.kernel.org, xfs@oss.sgi.com
 
+On Fri, Jun 06, 2014 at 09:14:43AM -0400, Brian Foster wrote:
+> Changes in the XFS logging code have lead to small leaks in the log
+> grant heads that consume log space slowly over time. Such problems have
+> gone undetected for an unnecessarily long time due to code complexity
+> and potential for very subtle problems. Losing only a few bytes per
+> logged item on a reasonably large enough fs (10s of GB) means only the
+> most continuously stressful workloads will cause a severe enough failure
+> (deadlock due to log reservation exhaustion) quickly enough to indicate
+> something is seriously wrong.
+> 
+> Recent changes in XFS export the state of the various log heads through
+> sysfs to aid in userspace/runtime analysis of the log. This test runs a
+> workload against an XFS filesystem, quiesces the fs and verifies that
+> the log reserve and write grant heads have not leaked any space with
+> respect to the current head of the physical log.
+> 
+> Signed-off-by: Brian Foster <bfoster@redhat.com>
+> ---
+....
+>
+> +# Determine the system device name for a particular block device. The device
+> +# name is how the block dev is referenced under sysfs.
+> +_get_device_name()
+> +{
+> +	devpath=$1
+> +
+> +	# check for a symlink (i.e., device mapper)
+> +	if [ -L $devpath ]
+> +	then
+> +		devpath=`readlink -f $devpath`
+> +	fi
+> +
+> +	# grab the major minor and convert from hex to decimal
+> +	major=$((0x`stat -c %t $devpath`))
+> +	minor=$((0x`stat -c %T $devpath`))
+> +
+> +	# refer to sysfs by major minor
+> +	basename `readlink /sys/dev/block/$major:$minor`
+> +}
 
---===============0073447818351948264==
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="cWoXeonUoKmBZSoM"
-Content-Disposition: inline
+$ basename `readlink -f /dev/mapper/vg0-home`
+dm-2
+$ basename `readlink /sys/dev/block/253:2`
+dm-2
 
+Why is _short_dev() not sufficient?
 
---cWoXeonUoKmBZSoM
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+> +# Use the information exported by XFS to sysfs to determine whether the log has
+> +# active reservations after a filesystem freeze.
+> +_check_scratch_log_state()
+> +{
+> +	devname=`_get_device_name $SCRATCH_DEV`
+> +	attrpath="/sys/fs/xfs/$devname/log"
+> +
+> +	# freeze the fs to ensure data is synced and the log is flushed. this
+> +	# means no outstanding transactions, and thus no outstanding log
+> +	# reservations, should exist
+> +	xfs_freeze -f $SCRATCH_MNT
+> +
+> +	# the log head is exported in basic blocks and the log grant heads in
+> +	# bytes. convert the log head to bytes for precise comparison
+> +	log_head_cycle=`cat $attrpath/log_head_lsn | awk -F : '{ print $1 }'`
+> +	log_head_bytes=`cat $attrpath/log_head_lsn | awk -F : '{ print $2 }'`
 
-Hi everyone,
+awk can read files directly:
 
-Now that the 3.16 dev cycle has drawn to a close (one more
-linux-next build and I'll tag for-next and send a pull request),
-it's time to look ahead for the next couple of months. I think the
-current major pieces of work that are currently outstanding are
-these:
+	log_head_cycle=`awk -F : '{ print $1 }' $attrpath/log_head_lsn`
 
-	- Jeff's bulkstat rework
-	- Brian's EOF prealloc scanning
-	- Namjae's FALLOC_FL_INSERT_RANGE work
-	- Eric's XFS_ERROR() macro removal and return () cleanup.
+> +	log_head_bytes=$((log_head_bytes * 512))
+> +
+> +	for attr in "reserve_grant_head" "write_grant_head"
+> +	do
+> +		cycle=`cat $attrpath/$attr | awk -F : '{ print $1 }'`
+> +		bytes=`cat $attrpath/$attr | awk -F : '{ print $2 }'`
+> +
+> +		if [ $cycle != $log_head_cycle ] ||
+> +		   [ $bytes != $log_head_bytes ]
+> +		then
+> +			echo "$attr ($cycle:$bytes) does not match" \
+> +				"log_head_lsn ($log_head_cycle:$log_head_bytes)," \
+> +				"possible leak detected."
+> +		else
+> +			echo "$attr matches log_head_lsn"
+> +		fi
+> +	done
+> +
+> +	xfs_freeze -u $SCRATCH_MNT
+> +}
+> +
+> +# real QA test starts here
+> +_supported_fs xfs
+> +_supported_os Linux
+> +
+> +_require_scratch
+> +_require_freeze
+> +
+> +if [ ! -e /sys/fs/xfs ]
+> +then
+> +	_notrun "no kernel support for XFS sysfs attributes"
+> +fi
 
-There's also two major pieces of infrastructure work I'd like to get
-done:
+_requires_xfs_sysfs
 
-	- convert XFS to negative error returns
-	- restructure code to have a fs/xfs/libxfs structure similar
-	  to userspace
+> +
+> +rm -f $seqres.full
+> +
+> +_scratch_mkfs_xfs | _filter_mkfs 2>> $seqres.full
+> +_scratch_mount
+> +
+> +_check_scratch_log_state
+> +
+> +$FSSTRESS_PROG -d $SCRATCH_MNT/fsstress -n 1000 -p 2 -S t \
+> +	>> $seqres.full 2>&1
+> +
+> +_check_scratch_log_state
 
-Because Eric's XFS_ERROR removal touches the entire codebase, as
-does the negative error return and the libxfs restructuring, I'd
-like to get these done first and base the rest of the dev cycle work
-on top of that. Eric's patches just need a minor rebase and the
-libxfs restructure needs some makefile rework and review and they
-should be good to go.
+wouldn't it be better to run fsstress as a background process and do
+several freeze/check/thaw cycles on a running workload?
 
-The issue is the negative error number patchset, and how to handle
-review and testing. The patchset is already 62 patches long and it
-converts roughly half the code base. It'll take me another couple of
-days to convert the rest of the code, and that will probably take
-another 60 patches.
+> +
+> +umount $SCRATCH_MNT
+> +_check_scratch_fs
+> +
+> +status=0
+> +exit
+> diff --git a/tests/xfs/011.out b/tests/xfs/011.out
+> new file mode 100644
+> index 0000000..a3f3805
+> --- /dev/null
+> +++ b/tests/xfs/011.out
+> @@ -0,0 +1,11 @@
+> +QA output created by 011
+> +meta-data=DDEV isize=XXX agcount=N, agsize=XXX blks
+> +data     = bsize=XXX blocks=XXX, imaxpct=PCT
+> +         = sunit=XXX swidth=XXX, unwritten=X
+> +naming   =VERN bsize=XXX
+> +log      =LDEV bsize=XXX blocks=XXX
+> +realtime =RDEV extsz=XXX blocks=XXX, rtextents=XXX
 
-I understand that reviewing 100+ patches is going to be a pain, but
-each patch currently averages about +/- 10 lines. The current
-diffstat is:
+Any particular reason for dumping the filtered mkfs information
+here? It won't ever cause a test failure unless we break
+_filter_mkfs...
 
-	37 files changed, 723 insertions(+), 722 deletions(-)
+> +reserve_grant_head matches log_head_lsn
+> +write_grant_head matches log_head_lsn
+> +reserve_grant_head matches log_head_lsn
+> +write_grant_head matches log_head_lsn
+> diff --git a/tests/xfs/group b/tests/xfs/group
+> index 19fd968..99bf0e1 100644
+> --- a/tests/xfs/group
+> +++ b/tests/xfs/group
+> @@ -8,6 +8,7 @@
+>  008 rw ioctl auto quick
+>  009 rw ioctl auto prealloc quick
+>  010 auto quick repair
+> +011 auto quick freeze
 
-And that will probably double, so it's still going to be a fair
-amount of change.
-
-So the big question is how do we handle the review side of things.
-I think testing won't be a huge issue because of the time we have in
-the cycle (a couple of months to the 3.17 merge, and then a couple
-more months in the 3.17-rcX cycle) to find and catch regressions,
-but I'd like to know what people think about the best way to review
-this change will be.
-
-I'm happy for people to say "no, we need to review it patch by
-patch, so delay it for a cycle while we work through it", but I'm
-also happy for a "apply it all and look at error sources and
-inversion points for problems". The second is probably easier, as
-there will be very few remaining inversion points (only embedded
-errors in ioctl structures, I think) and all error sources should be
-negated at their definition and hence any error value (E* values)
-that are not defined as "-E*" is likely to be an mistake....
-
-I'll be spending the next couple of days finishing this all off, so
-once it is done I can focus on review and bug fixes for the rest of
-the 3.17 dev cycle. That allows me to  concentrate on a xfsprogs
-3.2.1 release, subsequent userspace libxfs resync with the new
-kernel structure, and starting to work on some of the smart block
-device concepts I've been talking about recently....
-
-These are not concrete plans - just what I'd *like* to do in the
-next couple of months. Reality is bound to mess up any plans I have,
-so I figure I mays as well mess them up straight away....
+log and metadata, too.
 
 Cheers,
 
 Dave.
---=20
+-- 
 Dave Chinner
 david@fromorbit.com
-
---cWoXeonUoKmBZSoM
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
-
-iQIcBAEBAgAGBQJTljYvAAoJEK3oKUf0dfodIlIP/10LhZYLfrpobEb9QDW/7D1y
-ETu5WtbrB7mA5F0ZFxV7LltK3GPYKw3bPw7EqdUEHYiHsxPAY2PtIs/cRReU9zaU
-9ZcuFsWpNYYs3/HvcmwpAfQEdy/RSsfWXx5x7LGJeyPFf3EM/qTpMT6xTseUifC6
-X6dZdu79RN9AdUprmwNCR9SBVSZ8tNRNgXoyJUgxvM2y964hc79mCpdghYn4NkvN
-AxEVBTPFdtPe8HsMMwvEY7YapyZ28571JbJts7ksq/g64IoV+BcYw6DtfEhfQQ+s
-JbwngujjK3mEWRM39jnsysPyY2AAgzpBMuAryLEqgO+AyBB+jfFGwvkzKhrlJegO
-a7PKN1NFubhH1DkFBvPc/NG8Nh0g8tRjh/jQjaG6fDqLbfVH7YtnNQOZOKBzCoNO
-Gtpbkfu+HE0Hf0wTBgLmJNvyXipx8mftdJri8QrJHsKH0/FeceF9o4s24pj1xXpe
-RD+PeG7nZubFwVTeDRppQMOMd6Gu99vKVutWiBF4GLf6iem5/CU6zItzGvLtYsQQ
-AqOmn+BkwP4nmb9CT8R4TLuwmXCS2nde1cE4eFwCXqCCVuNkZU71D8TPP3yjGYk7
-bRPoA/IdF4CxDJwwaYm/88uYCjQzAtMOCjuUgR/sUykH1TMFNL3sXS/iuoxS5Gmv
-DmAwADVqamiea1CshrQs
-=o8It
------END PGP SIGNATURE-----
-
---cWoXeonUoKmBZSoM--
-
-
---===============0073447818351948264==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============0073447818351948264==--
