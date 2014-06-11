@@ -1,20 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id EE2F77F3F
-	for <xfs@oss.sgi.com>; Wed, 11 Jun 2014 15:04:27 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id E46E3304039
-	for <xfs@oss.sgi.com>; Wed, 11 Jun 2014 13:04:27 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id Il27zWDt221gmYRq for <xfs@oss.sgi.com>;
-	Wed, 11 Jun 2014 13:04:23 -0700 (PDT)
-Message-ID: <5398B649.6020600@sandeen.net>
-Date: Wed, 11 Jun 2014 15:04:25 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id D13407F3F
+	for <xfs@oss.sgi.com>; Wed, 11 Jun 2014 18:07:16 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 7C12CAC006
+	for <xfs@oss.sgi.com>; Wed, 11 Jun 2014 16:07:13 -0700 (PDT)
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	HjnXTbC9klu2lUZh for <xfs@oss.sgi.com>;
+	Wed, 11 Jun 2014 16:07:10 -0700 (PDT)
+Date: Thu, 12 Jun 2014 09:07:06 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: (Un)known issue with XFS group quotas on LVM?
+Message-ID: <20140611230706.GL9508@dastard>
+References: <CA+Bg6wd9CFKdHaAM-XyJx3royVb2-QdKqhmaamA-KMQk1TdieQ@mail.gmail.com>
 MIME-Version: 1.0
-Subject: [PATCH 2/2] xfsprogs: indicate default mount options in xfs.5 manpage
-References: <5398B5ED.6030703@redhat.com>
-In-Reply-To: <5398B5ED.6030703@redhat.com>
+Content-Disposition: inline
+In-Reply-To: <CA+Bg6wd9CFKdHaAM-XyJx3royVb2-QdKqhmaamA-KMQk1TdieQ@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,64 +29,83 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@redhat.com>, xfs-oss <xfs@oss.sgi.com>, Karel Zak <kzak@redhat.com>
+To: John Desantis <desantis@mail.usf.edu>
+Cc: xfs@oss.sgi.com
 
-Not every pair of mount options indicated which was the
-default, so add those.
+On Wed, Jun 11, 2014 at 11:43:09AM -0400, John Desantis wrote:
+> Hello list!
+> 
+> A big "thanks!" to all XFS developers for a great product.
+> 
+> Now, to the point!
+> 
+> We're using an XFS file system created on an LVM with a standard
+> kernel (2.6.32-431.3.1). 
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
+RHEL kernel? If so, you probably want to report it to your support
+contact to see if it's a known issue with a fix/workaround.....
 
-diff --git a/man/man5/xfs.5 b/man/man5/xfs.5
-index 1729e38..528d99c 100644
---- a/man/man5/xfs.5
-+++ b/man/man5/xfs.5
-@@ -137,6 +137,8 @@ Enables/disables the use of block layer write barriers for
- writes into the journal and for data integrity operations.
- This allows for drive level write caching to be enabled, for
- devices that support write barriers.
-+.sp
-+Barriers are enabled by default.
- .TP
- .BR discard | nodiscard
- Enable/disable the issuing of commands to let the block
-@@ -147,7 +149,7 @@ machine images, but may have a performance impact.
- Note: It is currently recommended that you use the fstrim
- application to discard unused blocks rather than the discard
- mount option because the performance impact of this option
--is quite severe.
-+is quite severe.  For this reason, nodiscard is the default.
- .TP
- .BR grpid | bsdgroups | nogrpid | sysvgroups
- These options define what group ID a newly created file
-@@ -167,7 +169,7 @@ configured to use it.
- When ikeep is specified, XFS does not delete empty inode
- clusters and keeps them around on disk.  When noikeep is
- specified, empty inode clusters are returned to the free
--space pool.
-+space pool.  noikeep is the default.
- .TP
- .BR inode32 | inode64
- When inode32 is specified, it indicates that XFS limits
-@@ -185,6 +187,8 @@ cause problems for some applications that cannot handle
- large inode numbers.  If applications are in use which do
- not handle inode numbers bigger than 32 bits, the inode32
- option should be specified.
-+.sp
-+For kernel v3.7 and later, inode64 is the default.
- .TP
- .BR  largeio | nolargeio
- If "nolargeio" is specified, the optimal I/O reported in
-@@ -198,7 +202,8 @@ If "largeio" specified, a filesystem that was created with a
- in st_blksize. If the filesystem does not have a "swidth"
- specified but does specify an "allocsize" then "allocsize"
- (in bytes) will be returned instead. Otherwise the behavior
--is the same as if "nolargeio" was specified.
-+is the same as if "nolargeio" was specified.  nolargeio
-+is the default.
- .TP
- .B logbufs=value
- Set the number of in-memory log buffers.  Valid numbers
+> We're using quotas without an issue, with
+> the exception of the group quota.  It seems that group quotas are
+> ignored at times, at least from our configuration (we use remote user
+> and group look-ups and authentication).  I've only been able to get
+> root running sudo -g dd.. to create a group file which reflects
+> changes in the group quota limit.
+
+That doesn't sound like a filesystem problem. Sounds more like the
+remote user/group configuration is getting squashed. Do the systems
+have the same user/group configurations, or are the clients sending
+group IDs the server doesn't recognise?
+
+As it is, describing the problem in text doesn't tell me anything
+about the problem. You need to cut-n-paste the CLI and the output
+showing the incorrect behaviour so we can attempt to reproduce the
+same behaviour you are seeing.
+
+> We've mounted the file system in question with both user and group
+> quotas enabled;  I didn't see anywhere in the man page that said this
+> isn't possible, although I did see where group and project quotas
+> cannot be used simultaneously on the same file system.
+> 
+> Has anyone experienced this behavior before?  I feel that I did some
+> pretty good searching in the archives, Google, and the BugZilla page,
+> but there were no "real" results which seemed to describe the same
+> issue we're facing.  Strace didn't provide any clues either.  I don't
+> think it's a sync issue because I've allowed a few days to pass in
+> between "test" runs.
+> 
+> I've tested the quota by:
+> 
+> 1.)  Using sudo -u user -g group dd.... on both the exported file
+> system and its mount path on the server itself.
+> 2.)  Using sudo -u user -g group dd.. on the client and the file
+> system's mount path.
+> 3.)  Using sudo -g group dd... on both the exported file system and
+> its mount path on the server itself;  this method produces expected
+> results.
+> 4.)  Using sudo -g group dd.. on the client and the file system's
+> mount path;  this method also produces expected results.
+> 
+> Items #1 and #2 produce the error.
+
+I can't see how that is related to the filesystem - the filesystem
+will either account for group quota usage or it won't. It doesn't
+care what primary gid the process uses, it will simply account usage
+to that...
+
+> I just wanted to ping the list before creating a local testing group
+> to see if it's an issue with remote group look-ups.
+
+Quite possibly that's a problem when generating quota reports, but
+again that's a userspace problem, not a filesystem quota accounting
+issue...
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
