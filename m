@@ -1,24 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 511E87F69
-	for <xfs@oss.sgi.com>; Wed, 11 Jun 2014 04:11:06 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id C8460AC005
-	for <xfs@oss.sgi.com>; Wed, 11 Jun 2014 02:11:02 -0700 (PDT)
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	Otf6YVAgu6VYBBpY for <xfs@oss.sgi.com>;
-	Wed, 11 Jun 2014 02:11:00 -0700 (PDT)
-Date: Wed, 11 Jun 2014 19:10:20 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [DISCUSS] Planning for new dev cycle (3.17)
-Message-ID: <20140611091020.GO4453@dastard>
-References: <20140609223320.GE9508@dastard>
-	<20140610115857.GC46344@bfoster.bfoster>
-	<20140610214850.GH9508@dastard>
+	by oss.sgi.com (Postfix) with ESMTP id D85417F58
+	for <xfs@oss.sgi.com>; Wed, 11 Jun 2014 05:56:08 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 7B61CAC008
+	for <xfs@oss.sgi.com>; Wed, 11 Jun 2014 03:56:08 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id KxL6MqH7sLlDCVo3 for
+	<xfs@oss.sgi.com>; Wed, 11 Jun 2014 03:56:07 -0700 (PDT)
+Date: Wed, 11 Jun 2014 06:56:03 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH] xfstests: create a test for xfs log grant head leak
+	detection
+Message-ID: <20140611105603.GB39345@bfoster.bfoster>
+References: <1402060483-22195-1-git-send-email-bfoster@redhat.com>
+	<20140610012149.GH4453@dastard>
+	<20140610111750.GA46344@bfoster.bfoster>
+	<20140610233106.GJ9508@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20140610214850.GH9508@dastard>
+In-Reply-To: <20140610233106.GJ9508@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,80 +32,65 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
-Cc: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: fstests@vger.kernel.org, xfs@oss.sgi.com
 
-On Wed, Jun 11, 2014 at 07:48:50AM +1000, Dave Chinner wrote:
-> On Tue, Jun 10, 2014 at 07:58:57AM -0400, Brian Foster wrote:
-> > On Tue, Jun 10, 2014 at 08:33:20AM +1000, Dave Chinner wrote:
-> > > The issue is the negative error number patchset, and how to handle
-> > > review and testing. The patchset is already 62 patches long and it
-> > > converts roughly half the code base. It'll take me another couple of
-> > > days to convert the rest of the code, and that will probably take
-> > > another 60 patches.
+On Wed, Jun 11, 2014 at 09:31:06AM +1000, Dave Chinner wrote:
+> On Tue, Jun 10, 2014 at 07:17:50AM -0400, Brian Foster wrote:
+> > On Tue, Jun 10, 2014 at 11:21:49AM +1000, Dave Chinner wrote:
+> > > On Fri, Jun 06, 2014 at 09:14:43AM -0400, Brian Foster wrote:
+> > > > +# real QA test starts here
+> > > > +_supported_fs xfs
+> > > > +_supported_os Linux
+> > > > +
+> > > > +_require_scratch
+> > > > +_require_freeze
+> > > > +
+> > > > +if [ ! -e /sys/fs/xfs ]
+> > > > +then
+> > > > +	_notrun "no kernel support for XFS sysfs attributes"
+> > > > +fi
 > > > 
-> > > I understand that reviewing 100+ patches is going to be a pain, but
-> > > each patch currently averages about +/- 10 lines. The current
-> > > diffstat is:
+> > > _requires_xfs_sysfs
 > > > 
-> > > 	37 files changed, 723 insertions(+), 722 deletions(-)
-> > > 
-> > > And that will probably double, so it's still going to be a fair
-> > > amount of change.
 > > 
-> > Is there any sort of more coarse logical breakdown of this series, or do
-> > we want/need to convert the entire codebase all at once? The individual
-> > patches sound relatively small... is there a particular method at play
-> > there? E.g., a patch per function? file? call chain?
+> > I was mulling this over as I think we'll probably end up in a situation
+> > where a test that depends on sysfs bits will need to check for a
+> > specific attribute file. E.g., some new test comes along using a new
+> > attribute file. Checking for /sys/fs/xfs is not sufficient for that test
+> > once we release a version that so far only exports the log bits.
+> > 
+> > I think we could handle that by supporting a parameter to
+> > _requires_xfs_sysfs that specifies the sub-attribute that must exist
+> > (similar to what we have for xfs_io commands). We don't need that at the
+> > moment, but that's good enough for me to create the requires func.
 > 
-> I'm doing it layer by layer, starting from the linux interface
-> layers and working my way down. e.g. fs/xfs/xfs_file.c first,
-> the fs/xfs/xfs_iops.c, and so on, and there are multiple patches per
-> file for each (roughly) logical change. e.g. converting xfs_iops.c:
-[...]
-
-I've decided that there really is too much unnecessary code churn
-from this approach. I end up converting all the call sites to negate
-the error sign, and then end up converting them back to the original
-code some time later, leaving only the source of the errors with a
-changed sign.
-
-So, I stopped doing that to see just what the brute force, change
-source and conversions only, and I found with a few simple searches
-I could identify all the locations that need changing. So, in a
-couple of hours I churned out the patch that converted everything.
-Still pretty large, even though it only changes error values and
-conversion points.
-
-67 files changed, 879 insertions(+), 884 deletions(-)
-
-Not sure how I could break this up - it really is an all-or-nothing
-patch this Big Hammer approach....
-
-> > Perhaps if we just make a branch available with the patches, put a
-> > notification on the list, and we can use that as a review
-> > thread..?
+> Yup, passing the name and/or sub-path of the paramter set required
+> sounds fine to me. it would become:
 > 
-> I'll push the series to the git tree at the end of the day - I'm
-> hoping to have the conversion mostly done by then. I did most of the
-> rebase of the existing patchset on top of the libxfs addition last
-> night, so I should e able to knock off most of the rest of the
-> changes today. I wanted to see what people thought about the concept
-> without cluttering the issue with a huge code dump...
+> _requires_xfs_sysfs log
+> 
+> in this case, because the presence of the /sys/fs/xfs/<dev>/log
+> directory would be suficinet to indicate the test should run, yes?
+> 
 
-Ok, so the version I pushed to the rebased xfs-libxfs-restructure
-branch is the big hammer patch from above (commit fcec2eb "xfs:
-global error sign conversion"). I also folded in the fix for the
-problem Eric pointed out (which is why it's a rebase).  That branch
-is running xfstests right now on several machines and hasn't gone
-boom, so i can't have screwed it up too badly...
+Yep, that works. Should any new log attributes come along as a test
+dependency, something like the following would be required:
 
-Cheers,
+_requires_xfs_sysfs log/logattr
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+So _requires_xfs_sysfs can basically just test for the existence of the
+parameter under the xfs/<dev> path for TEST_DEV. I'll go with that.
+Thanks.
+
+Brian
+
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
