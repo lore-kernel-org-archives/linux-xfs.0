@@ -1,9 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-From: xfs@oss.sgi.com
-Subject: [XFS updates] XFS development tree branch, xfs-libxfs-restructure,
-	updated. xfs-for-linus-3.16-rc1-764-gfcec2eb
-Message-Id: <20140611090515.5F28F7F69@oss.sgi.com>
-Date: Wed, 11 Jun 2014 04:05:14 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 511E87F69
+	for <xfs@oss.sgi.com>; Wed, 11 Jun 2014 04:11:06 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id C8460AC005
+	for <xfs@oss.sgi.com>; Wed, 11 Jun 2014 02:11:02 -0700 (PDT)
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	Otf6YVAgu6VYBBpY for <xfs@oss.sgi.com>;
+	Wed, 11 Jun 2014 02:11:00 -0700 (PDT)
+Date: Wed, 11 Jun 2014 19:10:20 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [DISCUSS] Planning for new dev cycle (3.17)
+Message-ID: <20140611091020.GO4453@dastard>
+References: <20140609223320.GE9508@dastard>
+	<20140610115857.GC46344@bfoster.bfoster>
+	<20140610214850.GH9508@dastard>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20140610214850.GH9508@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -12,142 +27,84 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Brian Foster <bfoster@redhat.com>
+Cc: xfs@oss.sgi.com
 
-This is an automated email from the git hooks/post-receive script. It was
-generated because a ref change was pushed to the repository containing
-the project "XFS development tree".
+On Wed, Jun 11, 2014 at 07:48:50AM +1000, Dave Chinner wrote:
+> On Tue, Jun 10, 2014 at 07:58:57AM -0400, Brian Foster wrote:
+> > On Tue, Jun 10, 2014 at 08:33:20AM +1000, Dave Chinner wrote:
+> > > The issue is the negative error number patchset, and how to handle
+> > > review and testing. The patchset is already 62 patches long and it
+> > > converts roughly half the code base. It'll take me another couple of
+> > > days to convert the rest of the code, and that will probably take
+> > > another 60 patches.
+> > > 
+> > > I understand that reviewing 100+ patches is going to be a pain, but
+> > > each patch currently averages about +/- 10 lines. The current
+> > > diffstat is:
+> > > 
+> > > 	37 files changed, 723 insertions(+), 722 deletions(-)
+> > > 
+> > > And that will probably double, so it's still going to be a fair
+> > > amount of change.
+> > 
+> > Is there any sort of more coarse logical breakdown of this series, or do
+> > we want/need to convert the entire codebase all at once? The individual
+> > patches sound relatively small... is there a particular method at play
+> > there? E.g., a patch per function? file? call chain?
+> 
+> I'm doing it layer by layer, starting from the linux interface
+> layers and working my way down. e.g. fs/xfs/xfs_file.c first,
+> the fs/xfs/xfs_iops.c, and so on, and there are multiple patches per
+> file for each (roughly) logical change. e.g. converting xfs_iops.c:
+[...]
 
-The branch, xfs-libxfs-restructure has been updated
-  discards  d12984ec02037de7af328580075ba1bb88272ffd (commit)
-  fcec2eb xfs: global error sign conversion
-  e3584e3 libxfs: move source files
-      from  d12984ec02037de7af328580075ba1bb88272ffd (commit)
+I've decided that there really is too much unnecessary code churn
+from this approach. I end up converting all the call sites to negate
+the error sign, and then end up converting them back to the original
+code some time later, leaving only the source of the errors with a
+changed sign.
 
-Those revisions listed above that are new to this repository have
-not appeared on any other notification email; so we list those
-revisions in full, below.
+So, I stopped doing that to see just what the brute force, change
+source and conversions only, and I found with a few simple searches
+I could identify all the locations that need changing. So, in a
+couple of hours I churned out the patch that converted everything.
+Still pretty large, even though it only changes error values and
+conversion points.
 
-- Log -----------------------------------------------------------------
-commit fcec2eb6a31bde491f4ce9ddd94b41c8aacccd43
-Author: Dave Chinner <dchinner@redhat.com>
-Date:   Wed Jun 11 19:00:50 2014 +1000
+67 files changed, 879 insertions(+), 884 deletions(-)
 
-    xfs: global error sign conversion
-    
-    Convert all the errors the core XFs code to negative error signs
-    like the rest of the kernel and remove all the sign conversion we
-    do in the interface layers.
-    
-    Errors for conversion (and comparison) found via searches like:
-    
-    $ git grep " E" fs/xfs
-    $ git grep "return E" fs/xfs
-    $ git grep " E[A-Z].*;$" fs/xfs
-    
-    Negation points found via searches like:
-    
-    $ git grep "= -[a-z,A-Z]" fs/xfs
-    $ git grep "return -[a-z,A-D,F-Z]" fs/xfs
-    $ git grep " -[a-z].*;" fs/xfs
-    
-    Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Not sure how I could break this up - it really is an all-or-nothing
+patch this Big Hammer approach....
 
-commit e3584e38615389850684fcffd699d97e2e06f2d6
-Author: Dave Chinner <dchinner@redhat.com>
-Date:   Wed Jun 11 08:08:14 2014 +1000
+> > Perhaps if we just make a branch available with the patches, put a
+> > notification on the list, and we can use that as a review
+> > thread..?
+> 
+> I'll push the series to the git tree at the end of the day - I'm
+> hoping to have the conversion mostly done by then. I did most of the
+> rebase of the existing patchset on top of the libxfs addition last
+> night, so I should e able to knock off most of the rest of the
+> changes today. I wanted to see what people thought about the concept
+> without cluttering the issue with a huge code dump...
 
-    libxfs: move source files
-    
-    Move all the source files that are shared with userspace into
-    libxfs/. This is done as one big chunk simpy to get it done
-    quickly
-    
-    Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Ok, so the version I pushed to the rebased xfs-libxfs-restructure
+branch is the big hammer patch from above (commit fcec2eb "xfs:
+global error sign conversion"). I also folded in the fix for the
+problem Eric pointed out (which is why it's a rebase).  That branch
+is running xfstests right now on several machines and hasn't gone
+boom, so i can't have screwed it up too badly...
 
------------------------------------------------------------------------
+Cheers,
 
-Summary of changes:
- fs/xfs/Makefile                        |   7 +-
- fs/xfs/libxfs/xfs_alloc.c              |  20 ++--
- fs/xfs/libxfs/xfs_alloc_btree.c        |   6 +-
- fs/xfs/libxfs/xfs_attr.c               |  50 ++++-----
- fs/xfs/libxfs/xfs_attr_leaf.c          |  44 ++++----
- fs/xfs/libxfs/xfs_attr_remote.c        |  10 +-
- fs/xfs/libxfs/xfs_bmap.c               |  52 +++++-----
- fs/xfs/libxfs/xfs_bmap_btree.c         |  10 +-
- fs/xfs/libxfs/xfs_btree.c              |  14 +--
- fs/xfs/libxfs/xfs_da_btree.c           |  42 ++++----
- fs/xfs/libxfs/xfs_dir2.c               |  24 ++---
- fs/xfs/libxfs/xfs_dir2_block.c         |  16 +--
- fs/xfs/libxfs/xfs_dir2_data.c          |  10 +-
- fs/xfs/libxfs/xfs_dir2_leaf.c          |  22 ++--
- fs/xfs/libxfs/xfs_dir2_node.c          |  40 +++----
- fs/xfs/libxfs/xfs_dir2_sf.c            |  28 ++---
- fs/xfs/libxfs/xfs_dquot_buf.c          |   6 +-
- fs/xfs/libxfs/xfs_ialloc.c             |  32 +++---
- fs/xfs/libxfs/xfs_ialloc_btree.c       |   6 +-
- fs/xfs/libxfs/xfs_inode_buf.c          |  10 +-
- fs/xfs/libxfs/xfs_inode_fork.c         |  30 +++---
- fs/xfs/libxfs/xfs_sb.c                 |  32 +++---
- fs/xfs/libxfs/xfs_symlink_remote.c     |   6 +-
- fs/xfs/xfs_acl.c                       |   8 +-
- fs/xfs/xfs_aops.c                      |  12 +--
- fs/xfs/xfs_attr_inactive.c             |   8 +-
- fs/xfs/xfs_attr_list.c                 |  14 +--
- fs/xfs/xfs_bmap_util.c                 |  78 +++++++-------
- fs/xfs/xfs_buf.c                       |  26 ++---
- fs/xfs/xfs_buf.h                       |   2 +-
- fs/xfs/xfs_buf_item.c                  |   4 +-
- fs/xfs/{libxfs => }/xfs_dir2_readdir.c |   4 +-
- fs/xfs/xfs_discard.c                   |   8 +-
- fs/xfs/xfs_dquot.c                     |  28 ++---
- fs/xfs/xfs_error.c                     |   2 +-
- fs/xfs/xfs_error.h                     |   4 +-
- fs/xfs/xfs_export.c                    |  10 +-
- fs/xfs/xfs_extfree_item.c              |   2 +-
- fs/xfs/xfs_file.c                      |  34 +++---
- fs/xfs/xfs_filestream.c                |   4 +-
- fs/xfs/xfs_fsops.c                     |  42 ++++----
- fs/xfs/xfs_icache.c                    |  46 ++++-----
- fs/xfs/xfs_icache.h                    |  10 +-
- fs/xfs/xfs_inode.c                     |  66 ++++++------
- fs/xfs/xfs_inode_item.c                |   2 +-
- fs/xfs/xfs_ioctl.c                     | 140 ++++++++++++-------------
- fs/xfs/xfs_ioctl32.c                   |  28 ++---
- fs/xfs/xfs_iomap.c                     |  12 +--
- fs/xfs/xfs_iops.c                      |  58 +++++------
- fs/xfs/xfs_itable.c                    |  22 ++--
- fs/xfs/xfs_log.c                       |  52 +++++-----
- fs/xfs/xfs_log_cil.c                   |   6 +-
- fs/xfs/xfs_log_recover.c               | 183 +++++++++++++++++----------------
- fs/xfs/xfs_mount.c                     |  70 ++++++-------
- fs/xfs/xfs_mru_cache.c                 |  14 +--
- fs/xfs/xfs_qm.c                        |  24 ++---
- fs/xfs/xfs_qm_bhv.c                    |   2 +-
- fs/xfs/xfs_qm_syscalls.c               |  24 ++---
- fs/xfs/xfs_quotaops.c                  |  18 ++--
- fs/xfs/xfs_rtalloc.c                   |  20 ++--
- fs/xfs/xfs_rtalloc.h                   |   2 +-
- fs/xfs/xfs_super.c                     |  88 ++++++++--------
- fs/xfs/xfs_symlink.c                   |  30 +++---
- fs/xfs/xfs_trans.c                     |   8 +-
- fs/xfs/xfs_trans_ail.c                 |   4 +-
- fs/xfs/xfs_trans_buf.c                 |  24 ++---
- fs/xfs/xfs_trans_dquot.c               |   4 +-
- fs/xfs/xfs_xattr.c                     |   6 +-
- 68 files changed, 884 insertions(+), 886 deletions(-)
- rename fs/xfs/{libxfs => }/xfs_dir2_readdir.c (99%)
-
-
-hooks/post-receive
+Dave.
 -- 
-XFS development tree
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
