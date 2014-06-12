@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id C40687F47
-	for <xfs@oss.sgi.com>; Thu, 12 Jun 2014 18:44:58 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 911FB8F8035
-	for <xfs@oss.sgi.com>; Thu, 12 Jun 2014 16:44:58 -0700 (PDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id DD0647F53
+	for <xfs@oss.sgi.com>; Thu, 12 Jun 2014 18:57:29 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 58DB1AC008
+	for <xfs@oss.sgi.com>; Thu, 12 Jun 2014 16:57:26 -0700 (PDT)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	AabPVRmp0D9szhHH for <xfs@oss.sgi.com>;
-	Thu, 12 Jun 2014 16:44:55 -0700 (PDT)
-Date: Fri, 13 Jun 2014 09:44:41 +1000
+	ESBcqRgwBUcLE042 for <xfs@oss.sgi.com>;
+	Thu, 12 Jun 2014 16:57:24 -0700 (PDT)
+Date: Fri, 13 Jun 2014 09:57:10 +1000
 From: Dave Chinner <david@fromorbit.com>
 Subject: Re: [PATCH] [RFC] xfs: wire up aio_fsync method
-Message-ID: <20140612234441.GT9508@dastard>
+Message-ID: <20140612235710.GU9508@dastard>
 References: <1402562047-31276-1-git-send-email-david@fromorbit.com>
-	<20140612141329.GA11676@infradead.org>
+	<20140612152458.GB3148@laptop.bfoster>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20140612141329.GA11676@infradead.org>
+In-Reply-To: <20140612152458.GB3148@laptop.bfoster>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,31 +30,54 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
+To: Brian Foster <bfoster@redhat.com>
 Cc: xfs@oss.sgi.com
 
-On Thu, Jun 12, 2014 at 07:13:29AM -0700, Christoph Hellwig wrote:
-> There doesn't really seem anything XFS specific here, so instead
-> of wiring up ->aio_fsync I'd implement IOCB_CMD_FSYNC in fs/aio.c
-> based on the workqueue and ->fsync.
+On Thu, Jun 12, 2014 at 11:24:58AM -0400, Brian Foster wrote:
+> On Thu, Jun 12, 2014 at 06:34:07PM +1000, Dave Chinner wrote:
+> > From: Dave Chinner <dchinner@redhat.com>
+> > 
+> > We've had plenty of requests for an asynchronous fsync over the past
+> > few years, and we've got the infrastructure there to do it. But
+> > nobody has wired it up to test it. The common request we get from
+> > userspace storage applications is to do a post-write pass over a set
+> > of files that were just written (i.e. bulk background fsync) for
+> > point-in-time checkpointing or flushing purposes.
+> > 
+> > So, just to see if I could brute force an effective implementation,
+> > wire up aio_fsync, add a workqueue and push all the fsync calls off
+> > to the workqueue. The workqueue will allow parallel dispatch, switch
+> > execution if a fsync blocks for any reason, etc. Brute force and
+> > very effective....
+....
+> That looks great. This is something that could be quite beneficial to
+> glusterfs, as a real world example. The replication mechanism does an
+> xattr dance across servers and required addition of fsync's into the
+> algorithm to ensure correctness in the case of failures. This had a
+> notable impact on performance.
 
-I really don't know whether the other ->fsync methods in other
-filesystems can stand alone like that. I also don't have the
-time to test that it works properly on all filesystems right now.
+*nod*
 
-Also, doing this implementation in fs/aio.c would mean we can't
-optimise it to reduce things like log forces by splitting up the
-work of concurrent fsyncs into a single log force of the highest
-LSN of the batch of fsyncs being run. We also want to be able to do
-"background fsync" where latency doesn't matter and we only want to
-trickle them out rather than issue them as fast as we possibly can.
+> We thought a bit about hooking up aio_fsync(), but more along the lines
+> of waiting for the log to force rather than forcing it explicitly, but
+> didn't really go anywhere with it. I didn't consider we'd get such a
+> benefit from simply dropping it into a workqueue. :)
 
-So I really don't see this as the infrastructure solution that
-everyone uses. It could be made a generic method with the filesystem
-passing the workqueue to use to generic_aio_fsync(), but for XFS I
-see it turning into something much more complex and optimised...
+Neither did I. I was expecting a small performance increase, not a
+4-5x improvement.  I'm quite surprised that the log sustained that
+level of force operations, too, but it's quite inefficient because
+we don't need to do all those log forces and they are causing lock
+contention at higher thread counts.
 
-Like I said, this is just a brute force proof of concept.
+> I do like Christoph's idea... perhaps create a generic_file_aio_fsync()
+> or some such?
+
+Perhaps, but XFS won't use it because I really want to optimise away
+the majority of the redundant log forces before pushing this
+further. This patch is a proof of concept for XFS, not a generic
+solution for all filesystems.  That's not to say it can't be made a
+generic solution, but that's a different story altogether, and
+something that can happen after I've got XFS sorted out...
 
 Cheers,
 
