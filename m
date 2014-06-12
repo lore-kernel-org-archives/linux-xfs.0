@@ -1,22 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 739877F3F
-	for <xfs@oss.sgi.com>; Thu, 12 Jun 2014 03:56:54 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 5FDDF304048
-	for <xfs@oss.sgi.com>; Thu, 12 Jun 2014 01:56:54 -0700 (PDT)
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	w5crfZJw9uKcZo88 for <xfs@oss.sgi.com>;
-	Thu, 12 Jun 2014 01:56:49 -0700 (PDT)
-Date: Thu, 12 Jun 2014 18:56:45 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH] [RFC] fs_mark: add asynchronous fsync
-Message-ID: <20140612085645.GP9508@dastard>
-References: <1402562047-31276-1-git-send-email-david@fromorbit.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 0C5CE7F3F
+	for <xfs@oss.sgi.com>; Thu, 12 Jun 2014 09:04:36 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 6F22CAC006
+	for <xfs@oss.sgi.com>; Thu, 12 Jun 2014 07:04:32 -0700 (PDT)
+Received: from mail-yh0-f42.google.com (mail-yh0-f42.google.com
+	[209.85.213.42]) by cuda.sgi.com with ESMTP id ejed2PouDsPe87Dy
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Thu, 12 Jun 2014 07:04:30 -0700 (PDT)
+Received: by mail-yh0-f42.google.com with SMTP id i57so997776yha.1
+	for <xfs@oss.sgi.com>; Thu, 12 Jun 2014 07:04:30 -0700 (PDT)
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1402562047-31276-1-git-send-email-david@fromorbit.com>
+In-Reply-To: <20140611230706.GL9508@dastard>
+References: <CA+Bg6wd9CFKdHaAM-XyJx3royVb2-QdKqhmaamA-KMQk1TdieQ@mail.gmail.com>
+	<20140611230706.GL9508@dastard>
+Date: Thu, 12 Jun 2014 10:04:29 -0400
+Message-ID: <CA+Bg6wdvZTYufmfK-U_6zwjKVDPVuQP_-Jwsqnh=1ayyB_EmEA@mail.gmail.com>
+Subject: Re: (Un)known issue with XFS group quotas on LVM?
+From: John Desantis <desantis@mail.usf.edu>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,232 +31,132 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: rwheeler@redhat.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-From: Dave Chinner <dchinner@redhat.com>
+Dave,
 
-to be able to test the performance impact of asynchronous bulk
-fsync of newly created files, add an option to fsmark to be able
-to use libaio for dispatch and collection of fsync operations. This
-requires a filesystem that has wired up IO_CMD_FSYNC in the kernel.
+Thanks for your reply.  Let me address your questions and replies.
 
-This is all a bit hacky, but it does wait for all fsyncs to
-complete. aio contexts have to be set up after the runner thread
-have been forked, so it's not really using a global iocb and event
-array as the code appears - there's one per child process doing
-work, and hence there's no need for locking or other fancy stuff.
+> That doesn't sound like a filesystem problem. Sounds more like the
+> remote user/group configuration is getting squashed. Do the systems
+> have the same user/group configurations, or are the clients sending
+> group IDs the server doesn't recognise?
 
-No attempt has been made to tune the number of AIOs allowed to be in
-flight, nor has there been any attempt to optimise the collection of
-completion events nor return errors if an fsync fails. It works well
-enough for testing the new XFS code and that's all I need from it.
+Stracing shows that the group and user ID's are not being squashed and
+they are resolving each time to their respective UID/GID's.
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> As it is, describing the problem in text doesn't tell me anything
+> about the problem. You need to cut-n-paste the CLI and the output
+> showing the incorrect behaviour so we can attempt to reproduce the
+> same behaviour you are seeing.
 
---- a/fs_mark.c	2011-07-30 10:09:43.000000000 +1000
-+++ b/fs_mark.c	2014-06-12 18:01:43.000000000 +1000
-@@ -41,6 +41,7 @@
- #include <dirent.h>
- #include <ctype.h>
- #include <time.h>
-+#include <libaio.h>
- 
- #include <linux/types.h>
- #include <linux/limits.h>
-@@ -68,6 +69,7 @@
- 		"\t-S Sync Method (0:No Sync, 1:fsyncBeforeClose, "
- 		"2:sync/1_fsync, 3:PostReverseFsync, "
- 		"4:syncPostReverseFsync, 5:PostFsync, 6:syncPostFsync)\n",
-+		"\t-A <use aio_fsync>\n"
- 		"\t[-D number (of subdirectories)]\n",
- 		"\t[-N number (of files in each subdirectory in Round Robin mode)]\n",
- 		"\t[-d dir1 ... -d dirN]\n", "\t[-l log_file_name]\n",
-@@ -84,18 +86,101 @@
- }
- 
- /*
-+ * aio for fsync
-+ */
-+#define MAX_AIO_EVENTS 1024
-+io_context_t ctxp;
-+struct iocb *iocbs[MAX_AIO_EVENTS];
-+struct io_event ioevents[MAX_AIO_EVENTS];
-+int aio_next;
-+int aio_flight;
-+
-+void
-+init_aio_fsync(void)
-+{
-+	int i, r;
-+
-+        memset(&ctxp, 0, sizeof(ctxp));
-+	r = io_setup(MAX_AIO_EVENTS, &ctxp);
-+	if (r) {
-+		printf("FAIL! io_setup returned %d\n", r);
-+		cleanup_exit();
-+	}
-+	for (i = 0; i < MAX_AIO_EVENTS; ++i) {
-+		iocbs[i] = calloc(1, sizeof(struct iocb));
-+		if (iocbs[i] == NULL) {
-+			printf("failed to allocate an iocb\n");
-+			cleanup_exit();
-+		}
-+	}
-+
-+}
-+
-+void
-+get_fsync_completions(int threshold)
-+{
-+	int i, r;
-+
-+	if (!(sync_method & FSYNC_ASYNC))
-+		return;
-+
-+	while (aio_flight > threshold) {
-+		/* gather up some completions */
-+		r = io_getevents(ctxp, 1, MAX_AIO_EVENTS, ioevents, NULL);
-+		if (r < 0)  {
-+			printf("FAIL! io_getevents returned %d\n", r);
-+			cleanup_exit();
-+		}
-+
-+		aio_flight -= r;
-+		for (i = 0; i < r; ++i) {
-+			if (ioevents[i].res)
-+				printf("FAIL! aio_fsync returned %d\n",
-+					ioevents[i].res);
-+		}
-+		usleep(1000);
-+	}
-+}
-+
-+int
-+do_fsync(int fd)
-+{
-+	int r, i;
-+
-+	if (!(sync_method & FSYNC_ASYNC))
-+		return fsync(fd);
-+
-+
-+	get_fsync_completions(MAX_AIO_EVENTS / 2);
-+
-+	/* submit the fsync */
-+	i = aio_next++ % MAX_AIO_EVENTS;
-+	aio_flight++;
-+	r = io_fsync(ctxp, iocbs[i], NULL, fd);
-+	if (r != 1) {
-+		printf("FAIL! io_submit returned %d\n", r);
-+		cleanup_exit();
-+	}
-+
-+}
-+
-+/*
-  * Run through the specified arguments and make sure that they make sense.
-  */
- void process_args(int argc, char **argv, char **envp)
- {
- 	int ret;
-+	int fsync_async = 0;
- 
- 	/*
- 	 * Parse all of the options that the user specified.
- 	 */
- 	while ((ret =
--		getopt(argc, argv, "vhkFr:S:N:D:d:l:L:n:p:s:t:w:")) != EOF) {
-+		getopt(argc, argv, "AvhkFr:S:N:D:d:l:L:n:p:s:t:w:")) != EOF) {
- 		switch (ret) {
-+		case 'A':
-+			fsync_async++;
-+			break;
- 		case 'v':	/* verbose stats */
- 			verbose_stats = 1;
- 			break;
-@@ -250,6 +335,8 @@
- 			" for -N num_per_subdir to make sense\n");
- 		usage();
- 	}
-+	if (fsync_async)
-+		sync_method |= FSYNC_ASYNC;
- 
- 	/*
- 	 * We need at least one thread per specified directory.
-@@ -650,6 +737,8 @@
- 	close_usec = max_close_usec = min_close_usec = 0ULL;
- 	unlink_usec = max_unlink_usec = min_unlink_usec = 0ULL;
- 
-+	init_aio_fsync();
-+
- 	/*
- 	 * MAIN FILE WRITE LOOP:
- 	 * This loop measures the specific steps in creating files:
-@@ -714,7 +803,7 @@
- 		if (sync_method & FSYNC_BEFORE_CLOSE) {
- 			start(0);
- 
--			if (fsync(fd) == -1) {
-+			if (do_fsync(fd) == -1) {
- 				fprintf(stderr, "fs_mark: fsync failed %s\n",
- 					strerror(errno));
- 				cleanup_exit();
-@@ -775,7 +864,7 @@
- 				cleanup_exit();
- 			}
- 
--			if (fsync(fd) == -1) {
-+			if (do_fsync(fd) == -1) {
- 				fprintf(stderr, "fs_mark: fsync failed %s\n",
- 					strerror(errno));
- 				cleanup_exit();
-@@ -813,7 +902,7 @@
- 				cleanup_exit();
- 			}
- 
--			if (fsync(fd) == -1) {
-+			if (do_fsync(fd) == -1) {
- 				fprintf(stderr, "fs_mark: fsync failed %s\n",
- 					strerror(errno));
- 				cleanup_exit();
-@@ -849,7 +938,7 @@
- 			cleanup_exit();
- 		}
- 
--		if (fsync(fd) == -1) {
-+		if (do_fsync(fd) == -1) {
- 			fprintf(stderr, "fs_mark: fsync failed %s\n",
- 				strerror(errno));
- 			cleanup_exit();
-@@ -859,6 +948,8 @@
- 		fsync_usec += stop(0, 0);
- 	}
- 
-+	get_fsync_completions(0);
-+
- 	/*
- 	 * Record the total time spent in the file writing loop - we ignore the time spent unlinking files
- 	 */
-@@ -1209,6 +1300,8 @@
- 		fs_mark_version, num_threads, ctime(&time_run));
- 	fprintf(log_fp, "#\tSync method: %s\n",
- 		sync_policy_string[sync_method_type]);
-+	if (sync_method & FSYNC_ASYNC)
-+		fprintf(log_fp, "#\tUsing aio_fsync\n");
- 	if (num_subdirs > 1) {
- 		fprintf(log_fp,
- 			"#\tDirectories:  %s across %d subdirectories with %d %s.\n",
---- a/fs_mark.h	2011-07-30 10:09:43.000000000 +1000
-+++ b/fs_mark.h	2014-06-12 18:01:43.000000000 +1000
-@@ -70,6 +70,7 @@
- #define FSYNC_FIRST_FILE	(0x4)
- #define FSYNC_POST_REVERSE	(0x8)
- #define FSYNC_POST_IN_ORDER	(0x10)
-+#define FSYNC_ASYNC		(0x20)
- 
- 
- #define SYNC_TEST_NONE		(0)	    					/* -S 0 */
+Busted.  I figured before sending the usual gamut of console "action",
+I'd "save" time by simply presenting the symptoms.
+
+> I can't see how that is related to the filesystem - the filesystem
+> will either account for group quota usage or it won't. It doesn't
+> care what primary gid the process uses, it will simply account usage
+> to that...
+
+You're correct (but you already knew this!).  I can tell you that
+running the quota report does show the group block count changing.
+
+It looks like this "issue" is  my misunderstanding of how XFS is
+checking the quota.  Perhaps you could shed some light?
+
+When you're using active user and group quotas on the same file system
+and the user quota is lower than the group quota, does XFS first check
+against the user quota and then the group quota?  Is the order of
+operations user, group, and then project or does it depend on the
+mounting order of quotas?
+
+In the case I presented yesterday, the user in question had a quota of
+25 GB, but the group had an unlimited quota.  Each time that I used
+sudo -u user -g group or logged into the user's account, the quota was
+always exceeded.  Now that I have removed the user's quota, the group
+quota is now being respected properly.
+
+Again, thank you!
+
+John DeSantis
+
+
+2014-06-11 19:07 GMT-04:00 Dave Chinner <david@fromorbit.com>:
+> On Wed, Jun 11, 2014 at 11:43:09AM -0400, John Desantis wrote:
+>> Hello list!
+>>
+>> A big "thanks!" to all XFS developers for a great product.
+>>
+>> Now, to the point!
+>>
+>> We're using an XFS file system created on an LVM with a standard
+>> kernel (2.6.32-431.3.1).
+>
+> RHEL kernel? If so, you probably want to report it to your support
+> contact to see if it's a known issue with a fix/workaround.....
+>
+>> We're using quotas without an issue, with
+>> the exception of the group quota.  It seems that group quotas are
+>> ignored at times, at least from our configuration (we use remote user
+>> and group look-ups and authentication).  I've only been able to get
+>> root running sudo -g dd.. to create a group file which reflects
+>> changes in the group quota limit.
+>
+> That doesn't sound like a filesystem problem. Sounds more like the
+> remote user/group configuration is getting squashed. Do the systems
+> have the same user/group configurations, or are the clients sending
+> group IDs the server doesn't recognise?
+>
+> As it is, describing the problem in text doesn't tell me anything
+> about the problem. You need to cut-n-paste the CLI and the output
+> showing the incorrect behaviour so we can attempt to reproduce the
+> same behaviour you are seeing.
+>
+>> We've mounted the file system in question with both user and group
+>> quotas enabled;  I didn't see anywhere in the man page that said this
+>> isn't possible, although I did see where group and project quotas
+>> cannot be used simultaneously on the same file system.
+>>
+>> Has anyone experienced this behavior before?  I feel that I did some
+>> pretty good searching in the archives, Google, and the BugZilla page,
+>> but there were no "real" results which seemed to describe the same
+>> issue we're facing.  Strace didn't provide any clues either.  I don't
+>> think it's a sync issue because I've allowed a few days to pass in
+>> between "test" runs.
+>>
+>> I've tested the quota by:
+>>
+>> 1.)  Using sudo -u user -g group dd.... on both the exported file
+>> system and its mount path on the server itself.
+>> 2.)  Using sudo -u user -g group dd.. on the client and the file
+>> system's mount path.
+>> 3.)  Using sudo -g group dd... on both the exported file system and
+>> its mount path on the server itself;  this method produces expected
+>> results.
+>> 4.)  Using sudo -g group dd.. on the client and the file system's
+>> mount path;  this method also produces expected results.
+>>
+>> Items #1 and #2 produce the error.
+>
+> I can't see how that is related to the filesystem - the filesystem
+> will either account for group quota usage or it won't. It doesn't
+> care what primary gid the process uses, it will simply account usage
+> to that...
+>
+>> I just wanted to ping the list before creating a local testing group
+>> to see if it's an issue with remote group look-ups.
+>
+> Quite possibly that's a problem when generating quota reports, but
+> again that's a userspace problem, not a filesystem quota accounting
+> issue...
+>
+> Cheers,
+>
+> Dave.
+> --
+> Dave Chinner
+> david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
