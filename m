@@ -1,21 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id DEC117F3F
-	for <xfs@oss.sgi.com>; Thu, 12 Jun 2014 10:30:04 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id C17AC29DF8
+	for <xfs@oss.sgi.com>; Thu, 12 Jun 2014 15:02:00 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 65614AC002
-	for <xfs@oss.sgi.com>; Thu, 12 Jun 2014 08:30:01 -0700 (PDT)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 2F68FAC009
+	for <xfs@oss.sgi.com>; Thu, 12 Jun 2014 13:01:56 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id 9BDX7pSybltbqs3P for
-	<xfs@oss.sgi.com>; Thu, 12 Jun 2014 08:30:00 -0700 (PDT)
-Date: Thu, 12 Jun 2014 11:24:58 -0400
+	cuda.sgi.com with ESMTP id QYwVRngxvEYKpvw5 for
+	<xfs@oss.sgi.com>; Thu, 12 Jun 2014 13:01:45 -0700 (PDT)
+Date: Thu, 12 Jun 2014 16:01:41 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH] [RFC] xfs: wire up aio_fsync method
-Message-ID: <20140612152458.GB3148@laptop.bfoster>
-References: <1402562047-31276-1-git-send-email-david@fromorbit.com>
+Subject: Re: [DISCUSS] Planning for new dev cycle (3.17)
+Message-ID: <20140612200139.GD3148@laptop.bfoster>
+References: <20140609223320.GE9508@dastard>
+	<20140610115857.GC46344@bfoster.bfoster>
+	<20140610214850.GH9508@dastard> <20140611091020.GO4453@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1402562047-31276-1-git-send-email-david@fromorbit.com>
+In-Reply-To: <20140611091020.GO4453@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,244 +33,110 @@ Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On Thu, Jun 12, 2014 at 06:34:07PM +1000, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
+On Wed, Jun 11, 2014 at 07:10:20PM +1000, Dave Chinner wrote:
+> On Wed, Jun 11, 2014 at 07:48:50AM +1000, Dave Chinner wrote:
+> > On Tue, Jun 10, 2014 at 07:58:57AM -0400, Brian Foster wrote:
+> > > On Tue, Jun 10, 2014 at 08:33:20AM +1000, Dave Chinner wrote:
+> > > > The issue is the negative error number patchset, and how to handle
+> > > > review and testing. The patchset is already 62 patches long and it
+> > > > converts roughly half the code base. It'll take me another couple of
+> > > > days to convert the rest of the code, and that will probably take
+> > > > another 60 patches.
+> > > > 
+> > > > I understand that reviewing 100+ patches is going to be a pain, but
+> > > > each patch currently averages about +/- 10 lines. The current
+> > > > diffstat is:
+> > > > 
+> > > > 	37 files changed, 723 insertions(+), 722 deletions(-)
+> > > > 
+> > > > And that will probably double, so it's still going to be a fair
+> > > > amount of change.
+> > > 
+> > > Is there any sort of more coarse logical breakdown of this series, or do
+> > > we want/need to convert the entire codebase all at once? The individual
+> > > patches sound relatively small... is there a particular method at play
+> > > there? E.g., a patch per function? file? call chain?
+> > 
+> > I'm doing it layer by layer, starting from the linux interface
+> > layers and working my way down. e.g. fs/xfs/xfs_file.c first,
+> > the fs/xfs/xfs_iops.c, and so on, and there are multiple patches per
+> > file for each (roughly) logical change. e.g. converting xfs_iops.c:
+> [...]
 > 
-> We've had plenty of requests for an asynchronous fsync over the past
-> few years, and we've got the infrastructure there to do it. But
-> nobody has wired it up to test it. The common request we get from
-> userspace storage applications is to do a post-write pass over a set
-> of files that were just written (i.e. bulk background fsync) for
-> point-in-time checkpointing or flushing purposes.
+> I've decided that there really is too much unnecessary code churn
+> from this approach. I end up converting all the call sites to negate
+> the error sign, and then end up converting them back to the original
+> code some time later, leaving only the source of the errors with a
+> changed sign.
 > 
-> So, just to see if I could brute force an effective implementation,
-> wire up aio_fsync, add a workqueue and push all the fsync calls off
-> to the workqueue. The workqueue will allow parallel dispatch, switch
-> execution if a fsync blocks for any reason, etc. Brute force and
-> very effective....
+> So, I stopped doing that to see just what the brute force, change
+> source and conversions only, and I found with a few simple searches
+> I could identify all the locations that need changing. So, in a
+> couple of hours I churned out the patch that converted everything.
+> Still pretty large, even though it only changes error values and
+> conversion points.
 > 
-> So, I hacked up fs_mark to enable fsync via the libaio io_fsync()
-> interface to run some tests. The quick test is:
+> 67 files changed, 879 insertions(+), 884 deletions(-)
 > 
-> 	- write 10000 4k files into the cache
-> 	- run a post write open-fsync-close pass (sync mode 5)
-> 	- run 5 iterations
-> 	- run a single thread, then 4 threads.
+> Not sure how I could break this up - it really is an all-or-nothing
+> patch this Big Hammer approach....
 > 
-> First I ran it on a 500TB sparse filesystem on a SSD.
-> 
-> FSUse%        Count         Size    Files/sec     App Overhead
->      0        10000         4096        599.1           153855
->      0        20000         4096        739.2           151228
->      0        30000         4096        672.2           152937
->      0        40000         4096        719.9           150615
->      0        50000         4096        708.4           154889
-> 
-> real    1m13.121s
-> user    0m0.825s
-> sys     0m11.024s
-> 
-> Runs at around 500 log forces a second and 1500 IOPS.
-> 
-> Using io_fsync():
-> 
-> FSUse%        Count         Size    Files/sec     App Overhead
->      0        10000         4096       2700.5           130313
->      0        20000         4096       3938.8           133602
->      0        30000         4096       4608.7           107871
->      0        40000         4096       4768.4            82965
->      0        50000         4096       4615.0            89220
-> 
-> real    0m12.691s
-> user    0m0.460s
-> sys     0m7.389s
-> 
-> Runs at around 4,000 log forces a second and 4500 IOPS. Massive
-> reduction in runtime through parallel dispatch of the fsync calls.
-> 
-> Run the same workload, 4 threads at a time. Normal fsync:
-> 
-> FSUse%        Count         Size    Files/sec     App Overhead
->      0        40000         4096       2151.5           617010
->      0        80000         4096       1953.0           613470
->      0       120000         4096       1874.4           625027
->      0       160000         4096       1907.4           624319
->      0       200000         4096       1924.3           627567
-> 
-> real    1m42.243s
-> user    0m3.552s
-> sys     0m49.118s
-> 
-> Runs at ~2000 log forces/s and 3,500 IOPS.
-> 
-> Using io_fsync():
-> 
-> FSUse%        Count         Size    Files/sec     App Overhead
->      0        40000         4096      11518.9           427666
->      0        80000         4096      15668.8           401661
->      0       120000         4096      15607.0           382279
->      0       160000         4096      14935.0           399097
->      0       200000         4096      15198.6           413965
-> 
-> real    0m14.192s
-> user    0m1.891s
-> sys     0m30.136s
-> 
-> Almost perfect scaling! ~15,000 log forces a second and ~20,000 IOPS.
-> 
-> Now run the tests on a HW RAID0 of spinning disk:
-> 
-> Threads		files/s	   run time	log force/s	IOPS
->  1, fsync	  800	    1m 5.1s	   800		 1500
->  1, io_fsync	 6000	       8.4s	  5000		 5500
->  4, fsync	 1800	    1m47.1s	  2200		 3500
->  4, io_fsync	19000	      10.3s	 21000		26000
-> 
-> Pretty much the same results. Spinning disks don't scale much
-> further. The SSD can go a bit higher, with 8 threads generating
-> a consistent 24,000 files/s, but at that point we're starting to see
-> non-linear system CPU usage (probably lock contention in the log).
-> 
-> But, regardless, there's a massive potential for speed gains for
-> applications that need to do bulk fsync operations and don't need to
-> care about the IO latency of individual fsync operations....
-> 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> ---
 
-That looks great. This is something that could be quite beneficial to
-glusterfs, as a real world example. The replication mechanism does an
-xattr dance across servers and required addition of fsync's into the
-algorithm to ensure correctness in the case of failures. This had a
-notable impact on performance.
+Yeah, now that I look at it, it's kind of hard to review as any other
+way as well. I've done some grepping and made a pass through all of the
+changes. I noticed some very minor things like not all of the comments
+being converted and some multi-line parameter lists going out of
+alignment, but I didn't bother to even make notes of those.
 
-We thought a bit about hooking up aio_fsync(), but more along the lines
-of waiting for the log to force rather than forcing it explicitly, but
-didn't really go anywhere with it. I didn't consider we'd get such a
-benefit from simply dropping it into a workqueue. :)
+I've gone through an xfstests run without any explosions as well.
 
-I do like Christoph's idea... perhaps create a generic_file_aio_fsync()
-or some such?
+A couple general observations:
+
+- I assume the xfs_buf->b_error type change is intentional..?
+- Same for the change in value for the ASSERT(error <=0 && error >=
+  -1000) assert in xfs_buf_ioerror (previously it used 64k).
+
+... and I saw a few spots that looked like could still need conversion.
+A diff is inlined below.
 
 Brian
 
->  fs/xfs/xfs_file.c  | 41 +++++++++++++++++++++++++++++++++++++++++
->  fs/xfs/xfs_mount.h |  2 ++
->  fs/xfs/xfs_super.c |  9 +++++++++
->  3 files changed, 52 insertions(+)
-> 
-> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-> index 077bcc8..9cdecee 100644
-> --- a/fs/xfs/xfs_file.c
-> +++ b/fs/xfs/xfs_file.c
-> @@ -45,6 +45,7 @@
->  #include <linux/pagevec.h>
->  
->  static const struct vm_operations_struct xfs_file_vm_ops;
-> +struct workqueue_struct *xfs_aio_fsync_wq;
->  
->  /*
->   * Locking primitives for read and write IO paths to ensure we consistently use
-> @@ -228,6 +229,45 @@ xfs_file_fsync(
->  	return error;
->  }
->  
-> +struct xfs_afsync_args {
-> +	struct work_struct	work;
-> +	struct kiocb		*iocb;
-> +	struct file		*file;
-> +	int			datasync;
-> +};
-> +
-> +STATIC void
-> +xfs_file_aio_fsync_work(
-> +	struct work_struct	*work)
-> +{
-> +	struct xfs_afsync_args	*args = container_of(work,
-> +						struct xfs_afsync_args, work);
-> +	int			error;
-> +
-> +	error = xfs_file_fsync(args->file, 0, -1LL, args->datasync);
-> +	aio_complete(args->iocb, error, 0);
-> +	kmem_free(args);
-> +}
-> +
-> +STATIC int
-> +xfs_file_aio_fsync(
-> +	struct kiocb		*iocb,
-> +	int			datasync)
-> +{
-> +	struct xfs_afsync_args	*args;
-> +
-> +	args = kmem_zalloc(sizeof(struct xfs_afsync_args), KM_SLEEP|KM_MAYFAIL);
-> +	if (!args)
-> +		return -ENOMEM;
-> +
-> +	INIT_WORK(&args->work, xfs_file_aio_fsync_work);
-> +	args->iocb = iocb;
-> +	args->file = iocb->ki_filp;
-> +	args->datasync = datasync;
-> +	queue_work(xfs_aio_fsync_wq, &args->work);
-> +	return -EIOCBQUEUED;
-> +}
-> +
->  STATIC ssize_t
->  xfs_file_aio_read(
->  	struct kiocb		*iocb,
-> @@ -1475,6 +1515,7 @@ const struct file_operations xfs_file_operations = {
->  	.open		= xfs_file_open,
->  	.release	= xfs_file_release,
->  	.fsync		= xfs_file_fsync,
-> +	.aio_fsync	= xfs_file_aio_fsync,
->  	.fallocate	= xfs_file_fallocate,
->  };
->  
-> diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-> index 7295a0b..dfcf37b 100644
-> --- a/fs/xfs/xfs_mount.h
-> +++ b/fs/xfs/xfs_mount.h
-> @@ -390,6 +390,8 @@ extern int	xfs_dev_is_read_only(struct xfs_mount *, char *);
->  
->  extern void	xfs_set_low_space_thresholds(struct xfs_mount *);
->  
-> +extern struct workqueue_struct *xfs_aio_fsync_wq;
-> +
->  #endif	/* __KERNEL__ */
->  
->  #endif	/* __XFS_MOUNT_H__ */
-> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-> index f2e5f8a..86d4923 100644
-> --- a/fs/xfs/xfs_super.c
-> +++ b/fs/xfs/xfs_super.c
-> @@ -1718,12 +1718,21 @@ xfs_init_workqueues(void)
->  	if (!xfs_alloc_wq)
->  		return -ENOMEM;
->  
-> +	xfs_aio_fsync_wq = alloc_workqueue("xfsfsync", 0, 0);
-> +	if (!xfs_aio_fsync_wq)
-> +		goto destroy_alloc_wq;
-> +
->  	return 0;
-> +
-> +destroy_alloc_wq:
-> +	destroy_workqueue(xfs_alloc_wq);
-> +	return -ENOMEM;
->  }
->  
->  STATIC void
->  xfs_destroy_workqueues(void)
->  {
-> +	destroy_workqueue(xfs_aio_fsync_wq);
->  	destroy_workqueue(xfs_alloc_wq);
->  }
->  
-> -- 
-> 2.0.0
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+---8<---
+
+diff --git a/fs/xfs/xfs_attr_list.c b/fs/xfs/xfs_attr_list.c
+index e76f687..62db83a 100644
+--- a/fs/xfs/xfs_attr_list.c
++++ b/fs/xfs/xfs_attr_list.c
+@@ -648,6 +648,6 @@ xfs_attr_list(
+ 	alist->al_offset[0] = context.bufsize;
+ 
+ 	error = xfs_attr_list_int(&context);
+-	ASSERT(error >= 0);
++	ASSERT(error <= 0);
+ 	return error;
+ }
+diff --git a/fs/xfs/xfs_ioctl32.c b/fs/xfs/xfs_ioctl32.c
+index 7207e9d..e65ea67 100644
+--- a/fs/xfs/xfs_ioctl32.c
++++ b/fs/xfs/xfs_ioctl32.c
+@@ -376,7 +376,7 @@ xfs_compat_attrlist_by_handle(
+ 		goto out_dput;
+ 
+ 	cursor = (attrlist_cursor_kern_t *)&al_hreq.pos;
+-	error = -xfs_attr_list(XFS_I(dentry->d_inode), kbuf, al_hreq.buflen,
++	error = xfs_attr_list(XFS_I(dentry->d_inode), kbuf, al_hreq.buflen,
+ 					al_hreq.flags, cursor);
+ 	if (error)
+ 		goto out_kfree;
+@@ -515,7 +515,7 @@ xfs_compat_fssetdm_by_handle(
+ 		goto out;
+ 	}
+ 
+-	error = -xfs_set_dmattrs(XFS_I(dentry->d_inode), fsd.fsd_dmevmask,
++	error = xfs_set_dmattrs(XFS_I(dentry->d_inode), fsd.fsd_dmevmask,
+ 				 fsd.fsd_dmstate);
+ 
+ out:
 
 _______________________________________________
 xfs mailing list
