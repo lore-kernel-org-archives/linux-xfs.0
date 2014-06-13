@@ -1,23 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id DD0647F53
-	for <xfs@oss.sgi.com>; Thu, 12 Jun 2014 18:57:29 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 6521E7F4E
+	for <xfs@oss.sgi.com>; Thu, 12 Jun 2014 19:02:02 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 58DB1AC008
-	for <xfs@oss.sgi.com>; Thu, 12 Jun 2014 16:57:26 -0700 (PDT)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 4AEA68F8035
+	for <xfs@oss.sgi.com>; Thu, 12 Jun 2014 17:01:59 -0700 (PDT)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	ESBcqRgwBUcLE042 for <xfs@oss.sgi.com>;
-	Thu, 12 Jun 2014 16:57:24 -0700 (PDT)
-Date: Fri, 13 Jun 2014 09:57:10 +1000
+	sCNEt8NVa3LFhuPj for <xfs@oss.sgi.com>;
+	Thu, 12 Jun 2014 17:01:56 -0700 (PDT)
+Date: Fri, 13 Jun 2014 10:01:37 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] [RFC] xfs: wire up aio_fsync method
-Message-ID: <20140612235710.GU9508@dastard>
-References: <1402562047-31276-1-git-send-email-david@fromorbit.com>
-	<20140612152458.GB3148@laptop.bfoster>
+Subject: Re: (Un)known issue with XFS group quotas on LVM?
+Message-ID: <20140613000137.GV9508@dastard>
+References: <CA+Bg6wd9CFKdHaAM-XyJx3royVb2-QdKqhmaamA-KMQk1TdieQ@mail.gmail.com>
+	<20140611230706.GL9508@dastard>
+	<CA+Bg6wdvZTYufmfK-U_6zwjKVDPVuQP_-Jwsqnh=1ayyB_EmEA@mail.gmail.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20140612152458.GB3148@laptop.bfoster>
+In-Reply-To: <CA+Bg6wdvZTYufmfK-U_6zwjKVDPVuQP_-Jwsqnh=1ayyB_EmEA@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,54 +31,60 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
+To: John Desantis <desantis@mail.usf.edu>
 Cc: xfs@oss.sgi.com
 
-On Thu, Jun 12, 2014 at 11:24:58AM -0400, Brian Foster wrote:
-> On Thu, Jun 12, 2014 at 06:34:07PM +1000, Dave Chinner wrote:
-> > From: Dave Chinner <dchinner@redhat.com>
-> > 
-> > We've had plenty of requests for an asynchronous fsync over the past
-> > few years, and we've got the infrastructure there to do it. But
-> > nobody has wired it up to test it. The common request we get from
-> > userspace storage applications is to do a post-write pass over a set
-> > of files that were just written (i.e. bulk background fsync) for
-> > point-in-time checkpointing or flushing purposes.
-> > 
-> > So, just to see if I could brute force an effective implementation,
-> > wire up aio_fsync, add a workqueue and push all the fsync calls off
-> > to the workqueue. The workqueue will allow parallel dispatch, switch
-> > execution if a fsync blocks for any reason, etc. Brute force and
-> > very effective....
-....
-> That looks great. This is something that could be quite beneficial to
-> glusterfs, as a real world example. The replication mechanism does an
-> xattr dance across servers and required addition of fsync's into the
-> algorithm to ensure correctness in the case of failures. This had a
-> notable impact on performance.
+On Thu, Jun 12, 2014 at 10:04:29AM -0400, John Desantis wrote:
+> Dave,
+> 
+> Thanks for your reply.  Let me address your questions and replies.
+> 
+> > That doesn't sound like a filesystem problem. Sounds more like the
+> > remote user/group configuration is getting squashed. Do the systems
+> > have the same user/group configurations, or are the clients sending
+> > group IDs the server doesn't recognise?
+> 
+> Stracing shows that the group and user ID's are not being squashed and
+> they are resolving each time to their respective UID/GID's.
+> 
+> > As it is, describing the problem in text doesn't tell me anything
+> > about the problem. You need to cut-n-paste the CLI and the output
+> > showing the incorrect behaviour so we can attempt to reproduce the
+> > same behaviour you are seeing.
+> 
+> Busted.  I figured before sending the usual gamut of console "action",
+> I'd "save" time by simply presenting the symptoms.
+> 
+> > I can't see how that is related to the filesystem - the filesystem
+> > will either account for group quota usage or it won't. It doesn't
+> > care what primary gid the process uses, it will simply account usage
+> > to that...
+> 
+> You're correct (but you already knew this!).  I can tell you that
+> running the quota report does show the group block count changing.
+> 
+> It looks like this "issue" is  my misunderstanding of how XFS is
+> checking the quota.  Perhaps you could shed some light?
+> 
+> When you're using active user and group quotas on the same file system
+> and the user quota is lower than the group quota, does XFS first check
+> against the user quota and then the group quota?  Is the order of
+> operations user, group, and then project or does it depend on the
+> mounting order of quotas?
 
-*nod*
+Order doesn't matter because the filesystem is supposed to check
+against all enforced quotas, not just the first one.
 
-> We thought a bit about hooking up aio_fsync(), but more along the lines
-> of waiting for the log to force rather than forcing it explicitly, but
-> didn't really go anywhere with it. I didn't consider we'd get such a
-> benefit from simply dropping it into a workqueue. :)
+> In the case I presented yesterday, the user in question had a quota of
+> 25 GB, but the group had an unlimited quota.  Each time that I used
+> sudo -u user -g group or logged into the user's account, the quota was
+> always exceeded.  Now that I have removed the user's quota, the group
+> quota is now being respected properly.
 
-Neither did I. I was expecting a small performance increase, not a
-4-5x improvement.  I'm quite surprised that the log sustained that
-level of force operations, too, but it's quite inefficient because
-we don't need to do all those log forces and they are causing lock
-contention at higher thread counts.
-
-> I do like Christoph's idea... perhaps create a generic_file_aio_fsync()
-> or some such?
-
-Perhaps, but XFS won't use it because I really want to optimise away
-the majority of the redundant log forces before pushing this
-further. This patch is a proof of concept for XFS, not a generic
-solution for all filesystems.  That's not to say it can't be made a
-generic solution, but that's a different story altogether, and
-something that can happen after I've got XFS sorted out...
+Again, you need to post the commands and output that demonstrate the
+problem you are describing. I'm having trouble understanding what
+your problem is because I can't see the raw output that you are
+seeing...
 
 Cheers,
 
