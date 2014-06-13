@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id DDE0B7F54
-	for <xfs@oss.sgi.com>; Fri, 13 Jun 2014 03:21:32 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id ACBBC8F8035
-	for <xfs@oss.sgi.com>; Fri, 13 Jun 2014 01:21:32 -0700 (PDT)
-Received: from mail-qa0-f65.google.com (mail-qa0-f65.google.com
-	[209.85.216.65]) by cuda.sgi.com with ESMTP id 6AhO4iFBvKqfSOWx
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Fri, 13 Jun 2014 01:21:30 -0700 (PDT)
-Received: by mail-qa0-f65.google.com with SMTP id i13so871585qae.0
-	for <xfs@oss.sgi.com>; Fri, 13 Jun 2014 01:21:30 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id 0F9BE7F56
+	for <xfs@oss.sgi.com>; Fri, 13 Jun 2014 06:08:23 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id E627C8F8050
+	for <xfs@oss.sgi.com>; Fri, 13 Jun 2014 04:08:22 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id wyWJC7utmqzFK0BC for
+	<xfs@oss.sgi.com>; Fri, 13 Jun 2014 04:08:19 -0700 (PDT)
+Date: Fri, 13 Jun 2014 07:08:16 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: how to locate the file through blktrace with xfs
+Message-ID: <20140613110816.GA55850@bfoster.bfoster>
+References: <CAF7cUg2QOZ+_nPmdb_jiy0Bip=ggSKE5Bs_pUCT9CmOcGjnYQQ@mail.gmail.com>
 MIME-Version: 1.0
-From: xinxin shu <xinxin.shu5040@gmail.com>
-Date: Fri, 13 Jun 2014 16:21:09 +0800
-Message-ID: <CAF7cUg2QOZ+_nPmdb_jiy0Bip=ggSKE5Bs_pUCT9CmOcGjnYQQ@mail.gmail.com>
-Subject: how to locate the file through blktrace with xfs
+Content-Disposition: inline
+In-Reply-To: <CAF7cUg2QOZ+_nPmdb_jiy0Bip=ggSKE5Bs_pUCT9CmOcGjnYQQ@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,50 +24,49 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============3662217236918518741=="
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: xinxin shu <xinxin.shu5040@gmail.com>
+Cc: xfs@oss.sgi.com
 
---===============3662217236918518741==
-Content-Type: multipart/alternative; boundary=089e0149384e4f063304fbb35d90
+On Fri, Jun 13, 2014 at 04:21:09PM +0800, xinxin shu wrote:
+> Hi all,
+> 
+> 
+> 
+> Recently , I collect blktrace data for xfs ,  I want to find the
+> corresponding file/directory through the offset ,  is there any way to do
+> this ? any tips will appreciate. thx
 
---089e0149384e4f063304fbb35d90
-Content-Type: text/plain; charset=UTF-8
+There isn't any easy way that I'm aware of to take a raw block number
+and map it back to the owner. The global space trees account for free
+space only and all allocated space is tracked in the block maps of
+individual inodes.
 
-Hi all,
+You can obtain the extent mappings for a file via xfs_bmap, but that
+alone isn't useful if you don't know what file you're looking for. You
+could run a find/xfs_bmap through the entire fs and sift through the
+output. If that's a lot of data and this is something you need to do
+repeatedly, a supporting script might be a good idea. For example, you
+could probably create a program that creates a sorted index of every
+allocated extent mapped to inode number. Alternatively, a script that
+takes a block number parameter and searches through the extents for a
+range that includes it might be more simple.
 
+You'll also want to be cognizant of various metadata blocks (i.e., inode
+xattr blocks, btree blocks, internal md for ag's, log blocks if
+internal, etc.).
 
+Brian
 
-Recently , I collect blktrace data for xfs ,  I want to find the
-corresponding file/directory through the offset ,  is there any way to do
-this ? any tips will appreciate. thx
-
---089e0149384e4f063304fbb35d90
-Content-Type: text/html; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
-
-<div dir=3D"ltr"><p class=3D"MsoNormal">Hi all,</p>
-
-<p class=3D"MsoNormal">=C2=A0</p>
-
-<p class=3D"MsoNormal">Recently , I collect blktrace data for xfs ,=C2=A0 I=
- want to find the corresponding file/directory through
-the offset , =C2=A0is there any way to do this ? any tips will appreciate. =
-thx</p></div>
-
---089e0149384e4f063304fbb35d90--
-
-
---===============3662217236918518741==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============3662217236918518741==--
