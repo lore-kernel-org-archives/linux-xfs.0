@@ -1,24 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 3286A7F53
-	for <xfs@oss.sgi.com>; Fri, 13 Jun 2014 18:56:32 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 544837F3F
+	for <xfs@oss.sgi.com>; Sun, 15 Jun 2014 13:57:03 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 1D15D304048
-	for <xfs@oss.sgi.com>; Fri, 13 Jun 2014 16:56:28 -0700 (PDT)
-Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
-	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	E0XQQkaSzLHHa568 for <xfs@oss.sgi.com>;
-	Fri, 13 Jun 2014 16:56:26 -0700 (PDT)
-Date: Sat, 14 Jun 2014 09:56:22 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v2] xfs: Fix rounding in xfs_alloc_fix_len()
-Message-ID: <20140613235622.GA9508@dastard>
-References: <1401900833-25485-1-git-send-email-jack@suse.cz>
-	<20140604184440.GC55624@bfoster.bfoster>
-	<20140613150207.GA24615@quack.suse.cz>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id CD1D1AC07B
+	for <xfs@oss.sgi.com>; Sun, 15 Jun 2014 11:57:02 -0700 (PDT)
+Received: from refuge.colorado.edu (refuge.colorado.edu [128.138.128.167]) by
+	cuda.sgi.com with ESMTP id ncSzWBafiecmjZU7 (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Sun, 15 Jun 2014 11:57:01 -0700 (PDT)
+Received: from refuge.colorado.edu (localhost [127.0.0.1])
+	by refuge.colorado.edu
+	(8.14.6/8.14.1/ITS-7.0/ldap2+tls+throttle+unixops) with ESMTP
+	id s5FIuvQJ015400
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <xfs@oss.sgi.com>; Sun, 15 Jun 2014 12:57:00 -0600
+Received: (from rosemane@localhost)
+	by refuge.colorado.edu (8.14.6/8.14.1/ITS-7.0/submit) id s5FIuv1p015399
+	for xfs@oss.sgi.com; Sun, 15 Jun 2014 12:56:57 -0600
+Message-Id: <201406151856.s5FIuv1p015399@refuge.colorado.edu>
+Subject: v5 on-disk format
+From: Eric Roseman <Eric.Roseman@Colorado.EDU>
+Date: Sun, 15 Jun 2014 18:56:57 +0000
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20140613150207.GA24615@quack.suse.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,42 +35,13 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Jan Kara <jack@suse.cz>
-Cc: Brian Foster <bfoster@redhat.com>, xfs@oss.sgi.com, dchinner@redhat.com
+To: xfs@oss.sgi.com
 
-On Fri, Jun 13, 2014 at 05:02:07PM +0200, Jan Kara wrote:
-> On Wed 04-06-14 14:44:40, Brian Foster wrote:
-> > On Wed, Jun 04, 2014 at 06:53:53PM +0200, Jan Kara wrote:
-> > > Rounding in xfs_alloc_fix_len() is wrong. As the comment states, the
-> > > result should be a number of a form (k*prod+mod) however due to sign
-> > > mistake the result is different. As a result allocations on raid arrays
-> > > could be misaligned in some cases.
-> > > 
-> > > This also seems to fix occasional assertion failure:
-> > > 	XFS_WANT_CORRUPTED_GOTO(rlen <= flen, error0)
-> > > in xfs_alloc_ag_vextent_size().
-> > > 
-> > > Also add an assertion that the result of xfs_alloc_fix_len() is of
-> > > expected form.
-> > > 
-> > > Signed-off-by: Jan Kara <jack@suse.cz>
-> > > ---
-> > 
-> > Looks good to me. Thanks Jan.
-> > 
-> > Reviewed-by: Brian Foster <bfoster@redhat.com>
->   Ping Dave? Are you going to pick up this patch?
+With the new v5 on-disk format is there a way upgrade existing file
+systems, or does this require a re-mkfs?
 
-I did - it's already in Linus' tree for 3.16:
-
-https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/fs/xfs/xfs_alloc.c?id=30265117ee1e23fa91920f337a3ea91207f700dc
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Thanks,
+Eric
 
 _______________________________________________
 xfs mailing list
