@@ -1,22 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 49BAF7F3F
-	for <xfs@oss.sgi.com>; Mon, 16 Jun 2014 11:41:55 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id DA0A98F804B
-	for <xfs@oss.sgi.com>; Mon, 16 Jun 2014 09:41:54 -0700 (PDT)
-Received: from casper.infradead.org (casper.infradead.org [85.118.1.10]) by
-	cuda.sgi.com with ESMTP id t5coNHGkgDLxy5zn (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 16 Jun 2014 09:41:50 -0700 (PDT)
-Received: from [83.175.99.196] (helo=localhost)
-	by casper.infradead.org with esmtpsa (Exim 4.80.1 #2 (Red Hat Linux))
-	id 1WwZye-0004sm-Ps
-	for xfs@oss.sgi.com; Mon, 16 Jun 2014 16:41:49 +0000
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH] xfs: require 64-bit sector_t
-Date: Mon, 16 Jun 2014 18:44:05 +0200
-Message-Id: <1402937045-31103-1-git-send-email-hch@lst.de>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 7D2CE29DF8
+	for <xfs@oss.sgi.com>; Mon, 16 Jun 2014 14:30:43 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 75C45304039
+	for <xfs@oss.sgi.com>; Mon, 16 Jun 2014 12:30:43 -0700 (PDT)
+Received: from mail-pb0-f46.google.com (mail-pb0-f46.google.com
+	[209.85.160.46]) by cuda.sgi.com with ESMTP id LGbW9tjWsfa9a7AS
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Mon, 16 Jun 2014 12:30:41 -0700 (PDT)
+Received: by mail-pb0-f46.google.com with SMTP id md12so3974698pbc.33
+	for <xfs@oss.sgi.com>; Mon, 16 Jun 2014 12:30:40 -0700 (PDT)
+Message-ID: <539F45E2.5030909@kernel.dk>
+Date: Mon, 16 Jun 2014 13:30:42 -0600
+From: Jens Axboe <axboe@kernel.dk>
+MIME-Version: 1.0
+Subject: Re: [PATCH] [RFC] xfs: wire up aio_fsync method
+References: <1402562047-31276-1-git-send-email-david@fromorbit.com>
+	<20140612141329.GA11676@infradead.org>
+	<20140612234441.GT9508@dastard>
+	<20140613162352.GB23394@infradead.org>
+	<20140615223323.GB9508@dastard> <20140616020030.GC9508@dastard>
+	<539E5D66.8040605@kernel.dk> <20140616071951.GD9508@dastard>
+In-Reply-To: <20140616071951.GD9508@dastard>
+Content-Type: multipart/mixed; boundary="------------070900050408020205000309"
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,919 +32,264 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com, linux-man@vger.kernel.org
 
-Trying to support tiny disks only and saving a bit memory might have
-made sense on an SGI O2 15 years ago, but is pretty pointless today.
+This is a multi-part message in MIME format.
+--------------070900050408020205000309
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 
-Remove the rarely tested codepath that uses various smaller in-memory
-types to reduce our test matrix and make the codebase a little bit
-smaller and less complicated.
+On 06/16/2014 01:19 AM, Dave Chinner wrote:
+> On Sun, Jun 15, 2014 at 08:58:46PM -0600, Jens Axboe wrote:
+>> On 2014-06-15 20:00, Dave Chinner wrote:
+>>> On Mon, Jun 16, 2014 at 08:33:23AM +1000, Dave Chinner wrote:
+>>>> On Fri, Jun 13, 2014 at 09:23:52AM -0700, Christoph Hellwig wrote:
+>>>>> On Fri, Jun 13, 2014 at 09:44:41AM +1000, Dave Chinner wrote:
+>>>>>> On Thu, Jun 12, 2014 at 07:13:29AM -0700, Christoph Hellwig wrote:
+>>>>>>> There doesn't really seem anything XFS specific here, so instead
+>>>>>>> of wiring up ->aio_fsync I'd implement IOCB_CMD_FSYNC in fs/aio.c
+>>>>>>> based on the workqueue and ->fsync.
+>>>>>>
+>>>>>> I really don't know whether the other ->fsync methods in other
+>>>>>> filesystems can stand alone like that. I also don't have the
+>>>>>> time to test that it works properly on all filesystems right now.
+>>>>>
+>>>>> Of course they can, as shown by various calls to vfs_fsync_range that
+>>>>> is nothing but a small wrapper around ->fsync.
+>>>>
+>>>> Sure, but that's not getting 10,000 concurrent callers, is it? And
+>>>> some fsync methods require journal credits, and others serialise
+>>>> completely, and so on.
+>>>>
+>>>> Besides, putting an *unbound, highly concurrent* aio queue into the
+>>>> kernel for an operation that can serialise the entire filesystem
+>>>> seems like a pretty nasty user-level DOS vector to me.
+>>>
+>>> FWIW, the non-linear system CPU overhead of a fs_mark test I've been
+>>> running isn't anything related to XFS.  The async fsync workqueue
+>>> results in several thousand worker threads dispatching IO
+>>> concurrently across 16 CPUs:
+>>>
+>>> $ ps -ef |grep kworker |wc -l
+>>> 4693
+>>> $
+>>>
+>>> Profiles from 3.15 + xfs for-next + xfs aio_fsync show:
+>>>
+>>> -  51.33%  [kernel]            [k] percpu_ida_alloc
+>>>    - percpu_ida_alloc
+>>>       + 85.73% blk_mq_wait_for_tags
+>>>       + 14.23% blk_mq_get_tag
+>>> -  14.25%  [kernel]            [k] _raw_spin_unlock_irqrestore
+>>>    - _raw_spin_unlock_irqrestore
+>>>       - 66.26% virtio_queue_rq
+>>>          - __blk_mq_run_hw_queue
+>>>             - 99.65% blk_mq_run_hw_queue
+>>>                + 99.47% blk_mq_insert_requests
+>>>                + 0.53% blk_mq_insert_request
+>>> .....
+>>> -   7.91%  [kernel]            [k] _raw_spin_unlock_irq
+>>>    - _raw_spin_unlock_irq
+>>>       - 69.59% __schedule
+>>>          - 86.49% schedule
+>>>             + 47.72% percpu_ida_alloc
+>>>             + 21.75% worker_thread
+>>>             + 19.12% schedule_timeout
+>>> ....
+>>>       + 18.06% blk_mq_make_request
+>>>
+>>> Runtime:
+>>>
+>>> real    4m1.243s
+>>> user    0m47.724s
+>>> sys     11m56.724s
+>>>
+>>> Most of the excessive CPU usage is coming from the blk-mq layer, and
+>>> XFS is barely showing up in the profiles at all - the IDA tag
+>>> allocator is burning 8 CPUs at about 60,000 write IOPS....
+>>>
+>>> I know that the tag allocator has been rewritten, so I tested
+>>> against a current a current Linus kernel with the XFS aio-fsync
+>>> patch. The results are all over the place - from several sequential
+>>> runs of the same test (removing the files in between so each tests
+>>> starts from an empty fs):
+>>>
+>>> Wall time	sys time	IOPS	 files/s
+>>> 4m58.151s	11m12.648s	30,000	 13,500
+>>> 4m35.075s	12m45.900s	45,000	 15,000
+>>> 3m10.665s	11m15.804s	65,000	 21,000
+>>> 3m27.384s	11m54.723s	85,000	 20,000
+>>> 3m59.574s	11m12.012s	50,000	 16,500
+>>> 4m12.704s	12m15.720s	50,000	 17,000
+>>>
+>>> The 3.15 based kernel was pretty consistent around the 4m10 mark,
+>>> generally only +/-10s in runtime and not much change in system time.
+>>> The files/s rate reported by fs_mark doesn't vary that much, either.
+>>> So the new tag allocator seems to be no better in terms of IO
+>>> dispatch scalability, yet adds significant variability to IO
+>>> performance.
+>>>
+>>> What I noticed is a massive jump in context switch overhead: from
+>>> around 250,000/s to over 800,000/s and the CPU profiles show that
+>>> this comes from the new tag allocator:
+>>>
+>>> -  34.62%  [kernel]  [k] _raw_spin_unlock_irqrestore
+>>>    - _raw_spin_unlock_irqrestore
+>>>       - 58.22% prepare_to_wait
+>>>            100.00% bt_get
+>>>               blk_mq_get_tag
+>>>               __blk_mq_alloc_request
+>>>               blk_mq_map_request
+>>>               blk_sq_make_request
+>>>               generic_make_request
+>>>       - 22.51% virtio_queue_rq
+>>>            __blk_mq_run_hw_queue
+>>> ....
+>>> -  21.56%  [kernel]  [k] _raw_spin_unlock_irq
+>>>    - _raw_spin_unlock_irq
+>>>       - 58.73% __schedule
+>>>          - 53.42% io_schedule
+>>>               99.88% bt_get
+>>>                  blk_mq_get_tag
+>>>                  __blk_mq_alloc_request
+>>>                  blk_mq_map_request
+>>>                  blk_sq_make_request
+>>>                  generic_make_request
+>>>          - 35.58% schedule
+>>>             + 49.31% worker_thread
+>>>             + 32.45% schedule_timeout
+>>>             + 10.35% _xfs_log_force_lsn
+>>>             + 3.10% xlog_cil_force_lsn
+>>> ....
+>>>
+>>> The new block-mq tag allocator is hammering the waitqueues and
+>>> that's generating a large amount of lock contention. It looks like
+>>> the new allocator replaces CPU burn doing work in the IDA allocator
+>>> with the same amount of CPU burn from extra context switch
+>>> overhead....
+>>>
+>>> Oh, OH. Now I understand!
+>>>
+>>> # echo 4 > /sys/block/vdc/queue/nr_requests
+>>>
+>>> <run workload>
+>>>
+>>> 80.56%  [kernel]  [k] _raw_spin_unlock_irqrestore
+>>>    - _raw_spin_unlock_irqrestore
+>>>       - 98.49% prepare_to_wait
+>>>            bt_get
+>>>            blk_mq_get_tag
+>>>            __blk_mq_alloc_request
+>>>            blk_mq_map_request
+>>>            blk_sq_make_request
+>>>            generic_make_request
+>>>          + submit_bio
+>>>       + 1.07% finish_wait
+>>> +  13.63%  [kernel]  [k] _raw_spin_unlock_irq
+>>> ...
+>>>
+>>> It's context switch bound at 800,000 context switches/s, burning all
+>>> 16 CPUs waking up and going to sleep and doing very little real
+>>> work. How little real work? About 3000 IOPS for 2MB/s of IO. That
+>>> amount of IO should only take a single digit CPU percentage of one
+>>> CPU.
+>>
+>> With thousands of threads? I think not. Sanely submitted 3000 IOPS,
+>> correct, I would agree with you.
+>>
+>>> This seems like bad behaviour to have on a congested block device,
+>>> even a high performance one....
+>>
+>> That is pretty much the suck. How do I reproduce this (eg what are
+>> you running, and what are the xfs aio fsync patches)? Even if
+> 
+> http://oss.sgi.com/pipermail/xfs/2014-June/036773.html
+> 
+>> dispatching thousands of threads to do IO is a bad idea (it very
+>> much is), gracefully handling is a must. I haven't seen any bad
+>> behavior from the new allocator, it seems to be well behaved (for
+>> most normal cases, anyway). I'd like to take a stab at ensuring this
+>> works, too.
+>>
+>> If you tell me exactly what you are running, I'll reproduce and get
+>> this fixed up tomorrow.
+> 
+> Test case - take fs_mark:
+> 
+> 	git://oss.sgi.com/dgc/fs_mark
+> 
+> Apply the patch for aio fsync support:
+> 
+> http://oss.sgi.com/pipermail/xfs/2014-June/036774.html
+> 
+> Run this test:
+> 
+> $ time ./fs_mark  -D  10000  -S5 -n  50000  -s  4096  -L  5 -A \
+> -d /mnt/scratch/0 -d  /mnt/scratch/1 -d  /mnt/scratch/2 \
+> -d /mnt/scratch/3 -d  /mnt/scratch/4 -d  /mnt/scratch/5 \
+> -d /mnt/scratch/6 -d  /mnt/scratch/7 -d  /mnt/scratch/8 \
+> -d /mnt/scratch/9 -d  /mnt/scratch/10 -d  /mnt/scratch/11 \
+> -d /mnt/scratch/12 -d  /mnt/scratch/13 -d  /mnt/scratch/14 \
+> -d /mnt/scratch/15
+> 
+> Drop the "-A" if you want to use normal fsync (but then you won't
+> see the problem).
+> 
+> Use a XFS filesystem that has at least 32 AGs (I'm using
+> a sparse 500TB fs image on a virtio device). I'm also using mkfs
+> options of "-m crc=1,finobt=1", but to use that last one you'll need
+> a mkfs built from the xfsprogs git tree. It shouldn't make any
+> difference to the result, though. I'm running on a VM with 16 CPUs
+> and 16GB RAM, using fakenuma=4.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Ben Myers <bpm@sgi.com>
----
- fs/xfs/Kconfig          |    1 +
- fs/xfs/xfs_bmap.c       |    8 ++---
- fs/xfs/xfs_bmap_btree.c |   89 +++--------------------------------------------
- fs/xfs/xfs_bmap_util.c  |    2 +-
- fs/xfs/xfs_btree.c      |   32 ++++++++---------
- fs/xfs/xfs_btree.h      |    2 +-
- fs/xfs/xfs_da_btree.c   |    2 +-
- fs/xfs/xfs_dir2_sf.c    |   45 +++++-------------------
- fs/xfs/xfs_format.h     |   14 +-------
- fs/xfs/xfs_fs.h         |    4 +--
- fs/xfs/xfs_inode_fork.c |    4 +--
- fs/xfs/xfs_inum.h       |    4 ---
- fs/xfs/xfs_linux.h      |   12 -------
- fs/xfs/xfs_log_format.h |    4 +--
- fs/xfs/xfs_mount.c      |    6 +---
- fs/xfs/xfs_rtalloc.c    |    4 +--
- fs/xfs/xfs_sb.h         |    8 ++---
- fs/xfs/xfs_super.c      |    8 -----
- fs/xfs/xfs_super.h      |   11 ------
- fs/xfs/xfs_types.h      |   29 ++-------------
- 20 files changed, 50 insertions(+), 239 deletions(-)
+Can you try with this patch?
 
-diff --git a/fs/xfs/Kconfig b/fs/xfs/Kconfig
-index 399e8ce..5d47b4d 100644
---- a/fs/xfs/Kconfig
-+++ b/fs/xfs/Kconfig
-@@ -1,6 +1,7 @@
- config XFS_FS
- 	tristate "XFS filesystem support"
- 	depends on BLOCK
-+	depends on (64BIT || LBDAF)
- 	select EXPORTFS
- 	select LIBCRC32C
- 	help
-diff --git a/fs/xfs/xfs_bmap.c b/fs/xfs/xfs_bmap.c
-index 96175df..689ffd7 100644
---- a/fs/xfs/xfs_bmap.c
-+++ b/fs/xfs/xfs_bmap.c
-@@ -392,7 +392,7 @@ xfs_bmap_check_leaf_extents(
- 	pp = XFS_BMAP_BROOT_PTR_ADDR(mp, block, 1, ifp->if_broot_bytes);
- 	bno = be64_to_cpu(*pp);
- 
--	ASSERT(bno != NULLDFSBNO);
-+	ASSERT(bno != NULLFSBLOCK);
- 	ASSERT(XFS_FSB_TO_AGNO(mp, bno) < mp->m_sb.sb_agcount);
- 	ASSERT(XFS_FSB_TO_AGBNO(mp, bno) < mp->m_sb.sb_agblocks);
- 
-@@ -1299,7 +1299,7 @@ xfs_bmap_read_extents(
- 	ASSERT(level > 0);
- 	pp = XFS_BMAP_BROOT_PTR_ADDR(mp, block, 1, ifp->if_broot_bytes);
- 	bno = be64_to_cpu(*pp);
--	ASSERT(bno != NULLDFSBNO);
-+	ASSERT(bno != NULLFSBLOCK);
- 	ASSERT(XFS_FSB_TO_AGNO(mp, bno) < mp->m_sb.sb_agcount);
- 	ASSERT(XFS_FSB_TO_AGBNO(mp, bno) < mp->m_sb.sb_agblocks);
- 	/*
-@@ -1429,11 +1429,7 @@ xfs_bmap_search_multi_extents(
- 	gotp->br_startoff = 0xffa5a5a5a5a5a5a5LL;
- 	gotp->br_blockcount = 0xa55a5a5a5a5a5a5aLL;
- 	gotp->br_state = XFS_EXT_INVALID;
--#if XFS_BIG_BLKNOS
- 	gotp->br_startblock = 0xffffa5a5a5a5a5a5LL;
--#else
--	gotp->br_startblock = 0xffffa5a5;
--#endif
- 	prevp->br_startoff = NULLFILEOFF;
- 
- 	ep = xfs_iext_bno_to_ext(ifp, bno, &lastx);
-diff --git a/fs/xfs/xfs_bmap_btree.c b/fs/xfs/xfs_bmap_btree.c
-index 948836c..5201159 100644
---- a/fs/xfs/xfs_bmap_btree.c
-+++ b/fs/xfs/xfs_bmap_btree.c
-@@ -111,23 +111,8 @@ __xfs_bmbt_get_all(
- 	ext_flag = (int)(l0 >> (64 - BMBT_EXNTFLAG_BITLEN));
- 	s->br_startoff = ((xfs_fileoff_t)l0 &
- 			   xfs_mask64lo(64 - BMBT_EXNTFLAG_BITLEN)) >> 9;
--#if XFS_BIG_BLKNOS
- 	s->br_startblock = (((xfs_fsblock_t)l0 & xfs_mask64lo(9)) << 43) |
- 			   (((xfs_fsblock_t)l1) >> 21);
--#else
--#ifdef DEBUG
--	{
--		xfs_dfsbno_t	b;
--
--		b = (((xfs_dfsbno_t)l0 & xfs_mask64lo(9)) << 43) |
--		    (((xfs_dfsbno_t)l1) >> 21);
--		ASSERT((b >> 32) == 0 || isnulldstartblock(b));
--		s->br_startblock = (xfs_fsblock_t)b;
--	}
--#else	/* !DEBUG */
--	s->br_startblock = (xfs_fsblock_t)(((xfs_dfsbno_t)l1) >> 21);
--#endif	/* DEBUG */
--#endif	/* XFS_BIG_BLKNOS */
- 	s->br_blockcount = (xfs_filblks_t)(l1 & xfs_mask64lo(21));
- 	/* This is xfs_extent_state() in-line */
- 	if (ext_flag) {
-@@ -163,21 +148,8 @@ xfs_fsblock_t
- xfs_bmbt_get_startblock(
- 	xfs_bmbt_rec_host_t	*r)
- {
--#if XFS_BIG_BLKNOS
- 	return (((xfs_fsblock_t)r->l0 & xfs_mask64lo(9)) << 43) |
- 	       (((xfs_fsblock_t)r->l1) >> 21);
--#else
--#ifdef DEBUG
--	xfs_dfsbno_t	b;
--
--	b = (((xfs_dfsbno_t)r->l0 & xfs_mask64lo(9)) << 43) |
--	    (((xfs_dfsbno_t)r->l1) >> 21);
--	ASSERT((b >> 32) == 0 || isnulldstartblock(b));
--	return (xfs_fsblock_t)b;
--#else	/* !DEBUG */
--	return (xfs_fsblock_t)(((xfs_dfsbno_t)r->l1) >> 21);
--#endif	/* DEBUG */
--#endif	/* XFS_BIG_BLKNOS */
- }
- 
- /*
-@@ -241,7 +213,6 @@ xfs_bmbt_set_allf(
- 	ASSERT((startoff & xfs_mask64hi(64-BMBT_STARTOFF_BITLEN)) == 0);
- 	ASSERT((blockcount & xfs_mask64hi(64-BMBT_BLOCKCOUNT_BITLEN)) == 0);
- 
--#if XFS_BIG_BLKNOS
- 	ASSERT((startblock & xfs_mask64hi(64-BMBT_STARTBLOCK_BITLEN)) == 0);
- 
- 	r->l0 = ((xfs_bmbt_rec_base_t)extent_flag << 63) |
-@@ -250,23 +221,6 @@ xfs_bmbt_set_allf(
- 	r->l1 = ((xfs_bmbt_rec_base_t)startblock << 21) |
- 		((xfs_bmbt_rec_base_t)blockcount &
- 		(xfs_bmbt_rec_base_t)xfs_mask64lo(21));
--#else	/* !XFS_BIG_BLKNOS */
--	if (isnullstartblock(startblock)) {
--		r->l0 = ((xfs_bmbt_rec_base_t)extent_flag << 63) |
--			((xfs_bmbt_rec_base_t)startoff << 9) |
--			 (xfs_bmbt_rec_base_t)xfs_mask64lo(9);
--		r->l1 = xfs_mask64hi(11) |
--			  ((xfs_bmbt_rec_base_t)startblock << 21) |
--			  ((xfs_bmbt_rec_base_t)blockcount &
--			   (xfs_bmbt_rec_base_t)xfs_mask64lo(21));
--	} else {
--		r->l0 = ((xfs_bmbt_rec_base_t)extent_flag << 63) |
--			((xfs_bmbt_rec_base_t)startoff << 9);
--		r->l1 = ((xfs_bmbt_rec_base_t)startblock << 21) |
--			 ((xfs_bmbt_rec_base_t)blockcount &
--			 (xfs_bmbt_rec_base_t)xfs_mask64lo(21));
--	}
--#endif	/* XFS_BIG_BLKNOS */
- }
- 
- /*
-@@ -298,8 +252,6 @@ xfs_bmbt_disk_set_allf(
- 	ASSERT(state == XFS_EXT_NORM || state == XFS_EXT_UNWRITTEN);
- 	ASSERT((startoff & xfs_mask64hi(64-BMBT_STARTOFF_BITLEN)) == 0);
- 	ASSERT((blockcount & xfs_mask64hi(64-BMBT_BLOCKCOUNT_BITLEN)) == 0);
--
--#if XFS_BIG_BLKNOS
- 	ASSERT((startblock & xfs_mask64hi(64-BMBT_STARTBLOCK_BITLEN)) == 0);
- 
- 	r->l0 = cpu_to_be64(
-@@ -310,26 +262,6 @@ xfs_bmbt_disk_set_allf(
- 		((xfs_bmbt_rec_base_t)startblock << 21) |
- 		 ((xfs_bmbt_rec_base_t)blockcount &
- 		  (xfs_bmbt_rec_base_t)xfs_mask64lo(21)));
--#else	/* !XFS_BIG_BLKNOS */
--	if (isnullstartblock(startblock)) {
--		r->l0 = cpu_to_be64(
--			((xfs_bmbt_rec_base_t)extent_flag << 63) |
--			 ((xfs_bmbt_rec_base_t)startoff << 9) |
--			  (xfs_bmbt_rec_base_t)xfs_mask64lo(9));
--		r->l1 = cpu_to_be64(xfs_mask64hi(11) |
--			  ((xfs_bmbt_rec_base_t)startblock << 21) |
--			  ((xfs_bmbt_rec_base_t)blockcount &
--			   (xfs_bmbt_rec_base_t)xfs_mask64lo(21)));
--	} else {
--		r->l0 = cpu_to_be64(
--			((xfs_bmbt_rec_base_t)extent_flag << 63) |
--			 ((xfs_bmbt_rec_base_t)startoff << 9));
--		r->l1 = cpu_to_be64(
--			((xfs_bmbt_rec_base_t)startblock << 21) |
--			 ((xfs_bmbt_rec_base_t)blockcount &
--			  (xfs_bmbt_rec_base_t)xfs_mask64lo(21)));
--	}
--#endif	/* XFS_BIG_BLKNOS */
- }
- 
- /*
-@@ -365,24 +297,11 @@ xfs_bmbt_set_startblock(
- 	xfs_bmbt_rec_host_t *r,
- 	xfs_fsblock_t	v)
- {
--#if XFS_BIG_BLKNOS
- 	ASSERT((v & xfs_mask64hi(12)) == 0);
- 	r->l0 = (r->l0 & (xfs_bmbt_rec_base_t)xfs_mask64hi(55)) |
- 		  (xfs_bmbt_rec_base_t)(v >> 43);
- 	r->l1 = (r->l1 & (xfs_bmbt_rec_base_t)xfs_mask64lo(21)) |
- 		  (xfs_bmbt_rec_base_t)(v << 21);
--#else	/* !XFS_BIG_BLKNOS */
--	if (isnullstartblock(v)) {
--		r->l0 |= (xfs_bmbt_rec_base_t)xfs_mask64lo(9);
--		r->l1 = (xfs_bmbt_rec_base_t)xfs_mask64hi(11) |
--			  ((xfs_bmbt_rec_base_t)v << 21) |
--			  (r->l1 & (xfs_bmbt_rec_base_t)xfs_mask64lo(21));
--	} else {
--		r->l0 &= ~(xfs_bmbt_rec_base_t)xfs_mask64lo(9);
--		r->l1 = ((xfs_bmbt_rec_base_t)v << 21) |
--			  (r->l1 & (xfs_bmbt_rec_base_t)xfs_mask64lo(21));
--	}
--#endif	/* XFS_BIG_BLKNOS */
- }
- 
- /*
-@@ -438,8 +357,8 @@ xfs_bmbt_to_bmdr(
- 		       cpu_to_be64(XFS_BUF_DADDR_NULL));
- 	} else
- 		ASSERT(rblock->bb_magic == cpu_to_be32(XFS_BMAP_MAGIC));
--	ASSERT(rblock->bb_u.l.bb_leftsib == cpu_to_be64(NULLDFSBNO));
--	ASSERT(rblock->bb_u.l.bb_rightsib == cpu_to_be64(NULLDFSBNO));
-+	ASSERT(rblock->bb_u.l.bb_leftsib == cpu_to_be64(NULLFSBLOCK));
-+	ASSERT(rblock->bb_u.l.bb_rightsib == cpu_to_be64(NULLFSBLOCK));
- 	ASSERT(rblock->bb_level != 0);
- 	dblock->bb_level = rblock->bb_level;
- 	dblock->bb_numrecs = rblock->bb_numrecs;
-@@ -763,11 +682,11 @@ xfs_bmbt_verify(
- 
- 	/* sibling pointer verification */
- 	if (!block->bb_u.l.bb_leftsib ||
--	    (block->bb_u.l.bb_leftsib != cpu_to_be64(NULLDFSBNO) &&
-+	    (block->bb_u.l.bb_leftsib != cpu_to_be64(NULLFSBLOCK) &&
- 	     !XFS_FSB_SANITY_CHECK(mp, be64_to_cpu(block->bb_u.l.bb_leftsib))))
- 		return false;
- 	if (!block->bb_u.l.bb_rightsib ||
--	    (block->bb_u.l.bb_rightsib != cpu_to_be64(NULLDFSBNO) &&
-+	    (block->bb_u.l.bb_rightsib != cpu_to_be64(NULLFSBLOCK) &&
- 	     !XFS_FSB_SANITY_CHECK(mp, be64_to_cpu(block->bb_u.l.bb_rightsib))))
- 		return false;
- 
-diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-index 703b3ec..9306a38 100644
---- a/fs/xfs/xfs_bmap_util.c
-+++ b/fs/xfs/xfs_bmap_util.c
-@@ -478,7 +478,7 @@ xfs_bmap_count_blocks(
- 	ASSERT(level > 0);
- 	pp = XFS_BMAP_BROOT_PTR_ADDR(mp, block, 1, ifp->if_broot_bytes);
- 	bno = be64_to_cpu(*pp);
--	ASSERT(bno != NULLDFSBNO);
-+	ASSERT(bno != NULLFSBLOCK);
- 	ASSERT(XFS_FSB_TO_AGNO(mp, bno) < mp->m_sb.sb_agcount);
- 	ASSERT(XFS_FSB_TO_AGBNO(mp, bno) < mp->m_sb.sb_agblocks);
- 
-diff --git a/fs/xfs/xfs_btree.c b/fs/xfs/xfs_btree.c
-index bf810c6..a052507 100644
---- a/fs/xfs/xfs_btree.c
-+++ b/fs/xfs/xfs_btree.c
-@@ -77,11 +77,11 @@ xfs_btree_check_lblock(
- 		be16_to_cpu(block->bb_numrecs) <=
- 			cur->bc_ops->get_maxrecs(cur, level) &&
- 		block->bb_u.l.bb_leftsib &&
--		(block->bb_u.l.bb_leftsib == cpu_to_be64(NULLDFSBNO) ||
-+		(block->bb_u.l.bb_leftsib == cpu_to_be64(NULLFSBLOCK) ||
- 		 XFS_FSB_SANITY_CHECK(mp,
- 			be64_to_cpu(block->bb_u.l.bb_leftsib))) &&
- 		block->bb_u.l.bb_rightsib &&
--		(block->bb_u.l.bb_rightsib == cpu_to_be64(NULLDFSBNO) ||
-+		(block->bb_u.l.bb_rightsib == cpu_to_be64(NULLFSBLOCK) ||
- 		 XFS_FSB_SANITY_CHECK(mp,
- 			be64_to_cpu(block->bb_u.l.bb_rightsib)));
- 
-@@ -166,12 +166,12 @@ xfs_btree_check_block(
- int					/* error (0 or EFSCORRUPTED) */
- xfs_btree_check_lptr(
- 	struct xfs_btree_cur	*cur,	/* btree cursor */
--	xfs_dfsbno_t		bno,	/* btree block disk address */
-+	xfs_fsblock_t		bno,	/* btree block disk address */
- 	int			level)	/* btree block level */
- {
- 	XFS_WANT_CORRUPTED_RETURN(
- 		level > 0 &&
--		bno != NULLDFSBNO &&
-+		bno != NULLFSBLOCK &&
- 		XFS_FSB_SANITY_CHECK(cur->bc_mp, bno));
- 	return 0;
- }
-@@ -594,7 +594,7 @@ xfs_btree_islastblock(
- 	block = xfs_btree_get_block(cur, level, &bp);
- 	xfs_btree_check_block(cur, block, level, bp);
- 	if (cur->bc_flags & XFS_BTREE_LONG_PTRS)
--		return block->bb_u.l.bb_rightsib == cpu_to_be64(NULLDFSBNO);
-+		return block->bb_u.l.bb_rightsib == cpu_to_be64(NULLFSBLOCK);
- 	else
- 		return block->bb_u.s.bb_rightsib == cpu_to_be32(NULLAGBLOCK);
- }
-@@ -770,16 +770,16 @@ xfs_btree_readahead_lblock(
- 	struct xfs_btree_block	*block)
- {
- 	int			rval = 0;
--	xfs_dfsbno_t		left = be64_to_cpu(block->bb_u.l.bb_leftsib);
--	xfs_dfsbno_t		right = be64_to_cpu(block->bb_u.l.bb_rightsib);
-+	xfs_fsblock_t		left = be64_to_cpu(block->bb_u.l.bb_leftsib);
-+	xfs_fsblock_t		right = be64_to_cpu(block->bb_u.l.bb_rightsib);
- 
--	if ((lr & XFS_BTCUR_LEFTRA) && left != NULLDFSBNO) {
-+	if ((lr & XFS_BTCUR_LEFTRA) && left != NULLFSBLOCK) {
- 		xfs_btree_reada_bufl(cur->bc_mp, left, 1,
- 				     cur->bc_ops->buf_ops);
- 		rval++;
- 	}
- 
--	if ((lr & XFS_BTCUR_RIGHTRA) && right != NULLDFSBNO) {
-+	if ((lr & XFS_BTCUR_RIGHTRA) && right != NULLFSBLOCK) {
- 		xfs_btree_reada_bufl(cur->bc_mp, right, 1,
- 				     cur->bc_ops->buf_ops);
- 		rval++;
-@@ -851,7 +851,7 @@ xfs_btree_ptr_to_daddr(
- 	union xfs_btree_ptr	*ptr)
- {
- 	if (cur->bc_flags & XFS_BTREE_LONG_PTRS) {
--		ASSERT(ptr->l != cpu_to_be64(NULLDFSBNO));
-+		ASSERT(ptr->l != cpu_to_be64(NULLFSBLOCK));
- 
- 		return XFS_FSB_TO_DADDR(cur->bc_mp, be64_to_cpu(ptr->l));
- 	} else {
-@@ -899,9 +899,9 @@ xfs_btree_setbuf(
- 
- 	b = XFS_BUF_TO_BLOCK(bp);
- 	if (cur->bc_flags & XFS_BTREE_LONG_PTRS) {
--		if (b->bb_u.l.bb_leftsib == cpu_to_be64(NULLDFSBNO))
-+		if (b->bb_u.l.bb_leftsib == cpu_to_be64(NULLFSBLOCK))
- 			cur->bc_ra[lev] |= XFS_BTCUR_LEFTRA;
--		if (b->bb_u.l.bb_rightsib == cpu_to_be64(NULLDFSBNO))
-+		if (b->bb_u.l.bb_rightsib == cpu_to_be64(NULLFSBLOCK))
- 			cur->bc_ra[lev] |= XFS_BTCUR_RIGHTRA;
- 	} else {
- 		if (b->bb_u.s.bb_leftsib == cpu_to_be32(NULLAGBLOCK))
-@@ -917,7 +917,7 @@ xfs_btree_ptr_is_null(
- 	union xfs_btree_ptr	*ptr)
- {
- 	if (cur->bc_flags & XFS_BTREE_LONG_PTRS)
--		return ptr->l == cpu_to_be64(NULLDFSBNO);
-+		return ptr->l == cpu_to_be64(NULLFSBLOCK);
- 	else
- 		return ptr->s == cpu_to_be32(NULLAGBLOCK);
- }
-@@ -928,7 +928,7 @@ xfs_btree_set_ptr_null(
- 	union xfs_btree_ptr	*ptr)
- {
- 	if (cur->bc_flags & XFS_BTREE_LONG_PTRS)
--		ptr->l = cpu_to_be64(NULLDFSBNO);
-+		ptr->l = cpu_to_be64(NULLFSBLOCK);
- 	else
- 		ptr->s = cpu_to_be32(NULLAGBLOCK);
- }
-@@ -996,8 +996,8 @@ xfs_btree_init_block_int(
- 	buf->bb_numrecs = cpu_to_be16(numrecs);
- 
- 	if (flags & XFS_BTREE_LONG_PTRS) {
--		buf->bb_u.l.bb_leftsib = cpu_to_be64(NULLDFSBNO);
--		buf->bb_u.l.bb_rightsib = cpu_to_be64(NULLDFSBNO);
-+		buf->bb_u.l.bb_leftsib = cpu_to_be64(NULLFSBLOCK);
-+		buf->bb_u.l.bb_rightsib = cpu_to_be64(NULLFSBLOCK);
- 		if (flags & XFS_BTREE_CRC_BLOCKS) {
- 			buf->bb_u.l.bb_blkno = cpu_to_be64(blkno);
- 			buf->bb_u.l.bb_owner = cpu_to_be64(owner);
-diff --git a/fs/xfs/xfs_btree.h b/fs/xfs/xfs_btree.h
-index a04b694..8f18bab 100644
---- a/fs/xfs/xfs_btree.h
-+++ b/fs/xfs/xfs_btree.h
-@@ -258,7 +258,7 @@ xfs_btree_check_block(
- int					/* error (0 or EFSCORRUPTED) */
- xfs_btree_check_lptr(
- 	struct xfs_btree_cur	*cur,	/* btree cursor */
--	xfs_dfsbno_t		ptr,	/* btree block disk address */
-+	xfs_fsblock_t		ptr,	/* btree block disk address */
- 	int			level);	/* btree block level */
- 
- /*
-diff --git a/fs/xfs/xfs_da_btree.c b/fs/xfs/xfs_da_btree.c
-index a514ab6..daa9ec3 100644
---- a/fs/xfs/xfs_da_btree.c
-+++ b/fs/xfs/xfs_da_btree.c
-@@ -2004,7 +2004,7 @@ xfs_da_grow_inode_int(
- 	struct xfs_trans	*tp = args->trans;
- 	struct xfs_inode	*dp = args->dp;
- 	int			w = args->whichfork;
--	xfs_drfsbno_t		nblks = dp->i_d.di_nblocks;
-+	xfs_rfsblock_t		nblks = dp->i_d.di_nblocks;
- 	struct xfs_bmbt_irec	map, *mapp;
- 	int			nmap, error, got, i, mapi;
- 
-diff --git a/fs/xfs/xfs_dir2_sf.c b/fs/xfs/xfs_dir2_sf.c
-index 53c3be6..577ce44 100644
---- a/fs/xfs/xfs_dir2_sf.c
-+++ b/fs/xfs/xfs_dir2_sf.c
-@@ -51,10 +51,9 @@ static void xfs_dir2_sf_check(xfs_da_args_t *args);
- #else
- #define	xfs_dir2_sf_check(args)
- #endif /* DEBUG */
--#if XFS_BIG_INUMS
-+
- static void xfs_dir2_sf_toino4(xfs_da_args_t *args);
- static void xfs_dir2_sf_toino8(xfs_da_args_t *args);
--#endif /* XFS_BIG_INUMS */
- 
- /*
-  * Given a block directory (dp/block), calculate its size as a shortform (sf)
-@@ -117,10 +116,10 @@ xfs_dir2_block_sfsize(
- 		isdotdot =
- 			dep->namelen == 2 &&
- 			dep->name[0] == '.' && dep->name[1] == '.';
--#if XFS_BIG_INUMS
-+
- 		if (!isdot)
- 			i8count += be64_to_cpu(dep->inumber) > XFS_DIR2_MAX_SHORT_INUM;
--#endif
-+
- 		/* take into account the file type field */
- 		if (!isdot && !isdotdot) {
- 			count++;
-@@ -318,7 +317,7 @@ xfs_dir2_sf_addname(
- 	 */
- 	incr_isize = dp->d_ops->sf_entsize(sfp, args->namelen);
- 	objchange = 0;
--#if XFS_BIG_INUMS
-+
- 	/*
- 	 * Do we have to change to 8 byte inodes?
- 	 */
-@@ -332,7 +331,7 @@ xfs_dir2_sf_addname(
- 			 (uint)sizeof(xfs_dir2_ino4_t));
- 		objchange = 1;
- 	}
--#endif
-+
- 	new_isize = (int)dp->i_d.di_size + incr_isize;
- 	/*
- 	 * Won't fit as shortform any more (due to size),
-@@ -370,10 +369,8 @@ xfs_dir2_sf_addname(
- 	 */
- 	else {
- 		ASSERT(pick == 2);
--#if XFS_BIG_INUMS
- 		if (objchange)
- 			xfs_dir2_sf_toino8(args);
--#endif
- 		xfs_dir2_sf_addname_hard(args, objchange, new_isize);
- 	}
- 	xfs_trans_log_inode(args->trans, dp, XFS_ILOG_CORE | XFS_ILOG_DDATA);
-@@ -425,10 +422,8 @@ xfs_dir2_sf_addname_easy(
- 	 * Update the header and inode.
- 	 */
- 	sfp->count++;
--#if XFS_BIG_INUMS
- 	if (args->inumber > XFS_DIR2_MAX_SHORT_INUM)
- 		sfp->i8count++;
--#endif
- 	dp->i_d.di_size = new_isize;
- 	xfs_dir2_sf_check(args);
- }
-@@ -516,10 +511,8 @@ xfs_dir2_sf_addname_hard(
- 	dp->d_ops->sf_put_ino(sfp, sfep, args->inumber);
- 	dp->d_ops->sf_put_ftype(sfep, args->filetype);
- 	sfp->count++;
--#if XFS_BIG_INUMS
- 	if (args->inumber > XFS_DIR2_MAX_SHORT_INUM && !objchange)
- 		sfp->i8count++;
--#endif
- 	/*
- 	 * If there's more left to copy, do that.
- 	 */
-@@ -593,13 +586,8 @@ xfs_dir2_sf_addname_pick(
- 	/*
- 	 * If changing the inode number size, do it the hard way.
- 	 */
--#if XFS_BIG_INUMS
--	if (objchange) {
-+	if (objchange)
- 		return 2;
--	}
--#else
--	ASSERT(objchange == 0);
--#endif
- 	/*
- 	 * If it won't fit at the end then do it the hard way (use the hole).
- 	 */
-@@ -650,7 +638,6 @@ xfs_dir2_sf_check(
- 		ASSERT(dp->d_ops->sf_get_ftype(sfep) < XFS_DIR3_FT_MAX);
- 	}
- 	ASSERT(i8count == sfp->i8count);
--	ASSERT(XFS_BIG_INUMS || i8count == 0);
- 	ASSERT((char *)sfep - (char *)sfp == dp->i_d.di_size);
- 	ASSERT(offset +
- 	       (sfp->count + 2) * (uint)sizeof(xfs_dir2_leaf_entry_t) +
-@@ -870,7 +857,6 @@ xfs_dir2_sf_removename(
- 	 */
- 	xfs_idata_realloc(dp, newsize - oldsize, XFS_DATA_FORK);
- 	sfp = (xfs_dir2_sf_hdr_t *)dp->i_df.if_u1.if_data;
--#if XFS_BIG_INUMS
- 	/*
- 	 * Are we changing inode number size?
- 	 */
-@@ -880,7 +866,6 @@ xfs_dir2_sf_removename(
- 		else
- 			sfp->i8count--;
- 	}
--#endif
- 	xfs_dir2_sf_check(args);
- 	xfs_trans_log_inode(args->trans, dp, XFS_ILOG_CORE | XFS_ILOG_DDATA);
- 	return 0;
-@@ -895,12 +880,8 @@ xfs_dir2_sf_replace(
- {
- 	xfs_inode_t		*dp;		/* incore directory inode */
- 	int			i;		/* entry index */
--#if XFS_BIG_INUMS || defined(DEBUG)
- 	xfs_ino_t		ino=0;		/* entry old inode number */
--#endif
--#if XFS_BIG_INUMS
- 	int			i8elevated;	/* sf_toino8 set i8count=1 */
--#endif
- 	xfs_dir2_sf_entry_t	*sfep;		/* shortform directory entry */
- 	xfs_dir2_sf_hdr_t	*sfp;		/* shortform structure */
- 
-@@ -920,7 +901,7 @@ xfs_dir2_sf_replace(
- 	ASSERT(dp->i_df.if_u1.if_data != NULL);
- 	sfp = (xfs_dir2_sf_hdr_t *)dp->i_df.if_u1.if_data;
- 	ASSERT(dp->i_d.di_size >= xfs_dir2_sf_hdr_size(sfp->i8count));
--#if XFS_BIG_INUMS
-+
- 	/*
- 	 * New inode number is large, and need to convert to 8-byte inodes.
- 	 */
-@@ -951,17 +932,15 @@ xfs_dir2_sf_replace(
- 		sfp = (xfs_dir2_sf_hdr_t *)dp->i_df.if_u1.if_data;
- 	} else
- 		i8elevated = 0;
--#endif
-+
- 	ASSERT(args->namelen != 1 || args->name[0] != '.');
- 	/*
- 	 * Replace ..'s entry.
- 	 */
- 	if (args->namelen == 2 &&
- 	    args->name[0] == '.' && args->name[1] == '.') {
--#if XFS_BIG_INUMS || defined(DEBUG)
- 		ino = dp->d_ops->sf_get_parent_ino(sfp);
- 		ASSERT(args->inumber != ino);
--#endif
- 		dp->d_ops->sf_put_parent_ino(sfp, args->inumber);
- 	}
- 	/*
-@@ -972,10 +951,8 @@ xfs_dir2_sf_replace(
- 		     i++, sfep = dp->d_ops->sf_nextentry(sfp, sfep)) {
- 			if (xfs_da_compname(args, sfep->name, sfep->namelen) ==
- 								XFS_CMP_EXACT) {
--#if XFS_BIG_INUMS || defined(DEBUG)
- 				ino = dp->d_ops->sf_get_ino(sfp, sfep);
- 				ASSERT(args->inumber != ino);
--#endif
- 				dp->d_ops->sf_put_ino(sfp, sfep, args->inumber);
- 				dp->d_ops->sf_put_ftype(sfep, args->filetype);
- 				break;
-@@ -986,14 +963,11 @@ xfs_dir2_sf_replace(
- 		 */
- 		if (i == sfp->count) {
- 			ASSERT(args->op_flags & XFS_DA_OP_OKNOENT);
--#if XFS_BIG_INUMS
- 			if (i8elevated)
- 				xfs_dir2_sf_toino4(args);
--#endif
- 			return XFS_ERROR(ENOENT);
- 		}
- 	}
--#if XFS_BIG_INUMS
- 	/*
- 	 * See if the old number was large, the new number is small.
- 	 */
-@@ -1020,13 +994,11 @@ xfs_dir2_sf_replace(
- 		if (!i8elevated)
- 			sfp->i8count++;
- 	}
--#endif
- 	xfs_dir2_sf_check(args);
- 	xfs_trans_log_inode(args->trans, dp, XFS_ILOG_DDATA);
- 	return 0;
- }
- 
--#if XFS_BIG_INUMS
- /*
-  * Convert from 8-byte inode numbers to 4-byte inode numbers.
-  * The last 8-byte inode number is gone, but the count is still 1.
-@@ -1181,4 +1153,3 @@ xfs_dir2_sf_toino8(
- 	dp->i_d.di_size = newsize;
- 	xfs_trans_log_inode(args->trans, dp, XFS_ILOG_CORE | XFS_ILOG_DDATA);
- }
--#endif	/* XFS_BIG_INUMS */
-diff --git a/fs/xfs/xfs_format.h b/fs/xfs/xfs_format.h
-index 34d85ac..7e42bba 100644
---- a/fs/xfs/xfs_format.h
-+++ b/fs/xfs/xfs_format.h
-@@ -68,11 +68,7 @@ struct xfs_ifork;
- #define	XFS_RTLOBIT(w)	xfs_lowbit32(w)
- #define	XFS_RTHIBIT(w)	xfs_highbit32(w)
- 
--#if XFS_BIG_BLKNOS
- #define	XFS_RTBLOCKLOG(b)	xfs_highbit64(b)
--#else
--#define	XFS_RTBLOCKLOG(b)	xfs_highbit32(b)
--#endif
- 
- /*
-  * Dquot and dquot block format definitions
-@@ -304,23 +300,15 @@ typedef struct xfs_bmbt_rec_host {
-  * Values and macros for delayed-allocation startblock fields.
-  */
- #define STARTBLOCKVALBITS	17
--#define STARTBLOCKMASKBITS	(15 + XFS_BIG_BLKNOS * 20)
--#define DSTARTBLOCKMASKBITS	(15 + 20)
-+#define STARTBLOCKMASKBITS	(15 + 20)
- #define STARTBLOCKMASK		\
- 	(((((xfs_fsblock_t)1) << STARTBLOCKMASKBITS) - 1) << STARTBLOCKVALBITS)
--#define DSTARTBLOCKMASK		\
--	(((((xfs_dfsbno_t)1) << DSTARTBLOCKMASKBITS) - 1) << STARTBLOCKVALBITS)
- 
- static inline int isnullstartblock(xfs_fsblock_t x)
- {
- 	return ((x) & STARTBLOCKMASK) == STARTBLOCKMASK;
- }
- 
--static inline int isnulldstartblock(xfs_dfsbno_t x)
--{
--	return ((x) & DSTARTBLOCKMASK) == DSTARTBLOCKMASK;
--}
--
- static inline xfs_fsblock_t nullstartblock(int k)
- {
- 	ASSERT(k < (1 << STARTBLOCKVALBITS));
-diff --git a/fs/xfs/xfs_fs.h b/fs/xfs/xfs_fs.h
-index d34703d..dffafc6 100644
---- a/fs/xfs/xfs_fs.h
-+++ b/fs/xfs/xfs_fs.h
-@@ -255,8 +255,8 @@ typedef struct xfs_fsop_resblks {
- 	((2 * 1024 * 1024 * 1024ULL) - XFS_MIN_LOG_BYTES)
- 
- /* Used for sanity checks on superblock */
--#define XFS_MAX_DBLOCKS(s) ((xfs_drfsbno_t)(s)->sb_agcount * (s)->sb_agblocks)
--#define XFS_MIN_DBLOCKS(s) ((xfs_drfsbno_t)((s)->sb_agcount - 1) *	\
-+#define XFS_MAX_DBLOCKS(s) ((xfs_rfsblock_t)(s)->sb_agcount * (s)->sb_agblocks)
-+#define XFS_MIN_DBLOCKS(s) ((xfs_rfsblock_t)((s)->sb_agcount - 1) *	\
- 			 (s)->sb_agblocks + XFS_MIN_AG_BLOCKS)
- 
- /*
-diff --git a/fs/xfs/xfs_inode_fork.c b/fs/xfs/xfs_inode_fork.c
-index b031e8d..9cffae9 100644
---- a/fs/xfs/xfs_inode_fork.c
-+++ b/fs/xfs/xfs_inode_fork.c
-@@ -528,7 +528,7 @@ xfs_iroot_realloc(
- 		ifp->if_broot_bytes = (int)new_size;
- 		ASSERT(XFS_BMAP_BMDR_SPACE(ifp->if_broot) <=
- 			XFS_IFORK_SIZE(ip, whichfork));
--		memmove(np, op, cur_max * (uint)sizeof(xfs_dfsbno_t));
-+		memmove(np, op, cur_max * (uint)sizeof(xfs_fsblock_t));
- 		return;
- 	}
- 
-@@ -575,7 +575,7 @@ xfs_iroot_realloc(
- 						     ifp->if_broot_bytes);
- 		np = (char *)XFS_BMAP_BROOT_PTR_ADDR(mp, new_broot, 1,
- 						     (int)new_size);
--		memcpy(np, op, new_max * (uint)sizeof(xfs_dfsbno_t));
-+		memcpy(np, op, new_max * (uint)sizeof(xfs_fsblock_t));
- 	}
- 	kmem_free(ifp->if_broot);
- 	ifp->if_broot = new_broot;
-diff --git a/fs/xfs/xfs_inum.h b/fs/xfs/xfs_inum.h
-index 90efdaf..4ff2278 100644
---- a/fs/xfs/xfs_inum.h
-+++ b/fs/xfs/xfs_inum.h
-@@ -54,11 +54,7 @@ struct xfs_mount;
- #define	XFS_OFFBNO_TO_AGINO(mp,b,o)	\
- 	((xfs_agino_t)(((b) << XFS_INO_OFFSET_BITS(mp)) | (o)))
- 
--#if XFS_BIG_INUMS
- #define	XFS_MAXINUMBER		((xfs_ino_t)((1ULL << 56) - 1ULL))
--#else
--#define	XFS_MAXINUMBER		((xfs_ino_t)((1ULL << 32) - 1ULL))
--#endif
- #define	XFS_MAXINUMBER_32	((xfs_ino_t)((1ULL << 32) - 1ULL))
- 
- #endif	/* __XFS_INUM_H__ */
-diff --git a/fs/xfs/xfs_linux.h b/fs/xfs/xfs_linux.h
-index 825249d..9590ef7 100644
---- a/fs/xfs/xfs_linux.h
-+++ b/fs/xfs/xfs_linux.h
-@@ -21,18 +21,6 @@
- #include <linux/types.h>
- 
- /*
-- * XFS_BIG_BLKNOS needs block layer disk addresses to be 64 bits.
-- * XFS_BIG_INUMS requires XFS_BIG_BLKNOS to be set.
-- */
--#if defined(CONFIG_LBDAF) || (BITS_PER_LONG == 64)
--# define XFS_BIG_BLKNOS	1
--# define XFS_BIG_INUMS	1
--#else
--# define XFS_BIG_BLKNOS	0
--# define XFS_BIG_INUMS	0
--#endif
--
--/*
-  * Kernel specific type declarations for XFS
-  */
- typedef signed char		__int8_t;
-diff --git a/fs/xfs/xfs_log_format.h b/fs/xfs/xfs_log_format.h
-index f0969c7..aff12f2 100644
---- a/fs/xfs/xfs_log_format.h
-+++ b/fs/xfs/xfs_log_format.h
-@@ -380,7 +380,7 @@ typedef struct xfs_icdinode {
- 	xfs_ictimestamp_t di_mtime;	/* time last modified */
- 	xfs_ictimestamp_t di_ctime;	/* time created/inode modified */
- 	xfs_fsize_t	di_size;	/* number of bytes in file */
--	xfs_drfsbno_t	di_nblocks;	/* # of direct & btree blocks used */
-+	xfs_rfsblock_t	di_nblocks;	/* # of direct & btree blocks used */
- 	xfs_extlen_t	di_extsize;	/* basic/minimum extent size for file */
- 	xfs_extnum_t	di_nextents;	/* number of extents in data fork */
- 	xfs_aextnum_t	di_anextents;	/* number of extents in attribute fork*/
-@@ -516,7 +516,7 @@ xfs_blft_from_flags(struct xfs_buf_log_format *blf)
-  * EFI/EFD log format definitions
-  */
- typedef struct xfs_extent {
--	xfs_dfsbno_t	ext_start;
-+	xfs_fsblock_t	ext_start;
- 	xfs_extlen_t	ext_len;
- } xfs_extent_t;
- 
-diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-index 3507cd0..20fc5c7 100644
---- a/fs/xfs/xfs_mount.c
-+++ b/fs/xfs/xfs_mount.c
-@@ -173,13 +173,9 @@ xfs_sb_validate_fsb_count(
- 	ASSERT(PAGE_SHIFT >= sbp->sb_blocklog);
- 	ASSERT(sbp->sb_blocklog >= BBSHIFT);
- 
--#if XFS_BIG_BLKNOS     /* Limited by ULONG_MAX of page cache index */
-+	/* Limited by ULONG_MAX of page cache index */
- 	if (nblocks >> (PAGE_CACHE_SHIFT - sbp->sb_blocklog) > ULONG_MAX)
- 		return EFBIG;
--#else                  /* Limited by UINT_MAX of sectors */
--	if (nblocks << (sbp->sb_blocklog - BBSHIFT) > UINT_MAX)
--		return EFBIG;
--#endif
- 	return 0;
- }
- 
-diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
-index ec5ca65..9dcf53f 100644
---- a/fs/xfs/xfs_rtalloc.c
-+++ b/fs/xfs/xfs_rtalloc.c
-@@ -944,9 +944,9 @@ xfs_growfs_rt(
- 	xfs_buf_t	*bp;		/* temporary buffer */
- 	int		error;		/* error return value */
- 	xfs_mount_t	*nmp;		/* new (fake) mount structure */
--	xfs_drfsbno_t	nrblocks;	/* new number of realtime blocks */
-+	xfs_rfsblock_t	nrblocks;	/* new number of realtime blocks */
- 	xfs_extlen_t	nrbmblocks;	/* new number of rt bitmap blocks */
--	xfs_drtbno_t	nrextents;	/* new number of realtime extents */
-+	xfs_rtblock_t	nrextents;	/* new number of realtime extents */
- 	uint8_t		nrextslog;	/* new log2 of sb_rextents */
- 	xfs_extlen_t	nrsumblocks;	/* new number of summary blocks */
- 	uint		nrsumlevels;	/* new rt summary levels */
-diff --git a/fs/xfs/xfs_sb.h b/fs/xfs/xfs_sb.h
-index c43c2d6..2e73970 100644
---- a/fs/xfs/xfs_sb.h
-+++ b/fs/xfs/xfs_sb.h
-@@ -87,11 +87,11 @@ struct xfs_trans;
- typedef struct xfs_sb {
- 	__uint32_t	sb_magicnum;	/* magic number == XFS_SB_MAGIC */
- 	__uint32_t	sb_blocksize;	/* logical block size, bytes */
--	xfs_drfsbno_t	sb_dblocks;	/* number of data blocks */
--	xfs_drfsbno_t	sb_rblocks;	/* number of realtime blocks */
--	xfs_drtbno_t	sb_rextents;	/* number of realtime extents */
-+	xfs_rfsblock_t	sb_dblocks;	/* number of data blocks */
-+	xfs_rfsblock_t	sb_rblocks;	/* number of realtime blocks */
-+	xfs_rtblock_t	sb_rextents;	/* number of realtime extents */
- 	uuid_t		sb_uuid;	/* file system unique id */
--	xfs_dfsbno_t	sb_logstart;	/* starting block of log if internal */
-+	xfs_fsblock_t	sb_logstart;	/* starting block of log if internal */
- 	xfs_ino_t	sb_rootino;	/* root inode number */
- 	xfs_ino_t	sb_rbmino;	/* bitmap inode for realtime extents */
- 	xfs_ino_t	sb_rsumino;	/* summary inode for rt bitmap */
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index 8f0333b..1c6bf84 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -204,9 +204,6 @@ xfs_parseargs(
- 	 */
- 	mp->m_flags |= XFS_MOUNT_BARRIER;
- 	mp->m_flags |= XFS_MOUNT_COMPAT_IOSIZE;
--#if !XFS_BIG_INUMS
--	mp->m_flags |= XFS_MOUNT_SMALL_INUMS;
--#endif
- 
- 	/*
- 	 * These can be overridden by the mount option parsing.
-@@ -313,11 +310,6 @@ xfs_parseargs(
- 			mp->m_flags |= XFS_MOUNT_SMALL_INUMS;
- 		} else if (!strcmp(this_char, MNTOPT_64BITINODE)) {
- 			mp->m_flags &= ~XFS_MOUNT_SMALL_INUMS;
--#if !XFS_BIG_INUMS
--			xfs_warn(mp, "%s option not allowed on this system",
--				this_char);
--			return EINVAL;
--#endif
- 		} else if (!strcmp(this_char, MNTOPT_NOUUID)) {
- 			mp->m_flags |= XFS_MOUNT_NOUUID;
- 		} else if (!strcmp(this_char, MNTOPT_BARRIER)) {
-diff --git a/fs/xfs/xfs_super.h b/fs/xfs/xfs_super.h
-index bbe3d15..31f757c 100644
---- a/fs/xfs/xfs_super.h
-+++ b/fs/xfs/xfs_super.h
-@@ -44,16 +44,6 @@ extern void xfs_qm_exit(void);
- # define XFS_REALTIME_STRING
- #endif
- 
--#if XFS_BIG_BLKNOS
--# if XFS_BIG_INUMS
--#  define XFS_BIGFS_STRING	"large block/inode numbers, "
--# else
--#  define XFS_BIGFS_STRING	"large block numbers, "
--# endif
--#else
--# define XFS_BIGFS_STRING
--#endif
--
- #ifdef DEBUG
- # define XFS_DBG_STRING		"debug"
- #else
-@@ -64,7 +54,6 @@ extern void xfs_qm_exit(void);
- #define XFS_BUILD_OPTIONS	XFS_ACL_STRING \
- 				XFS_SECURITY_STRING \
- 				XFS_REALTIME_STRING \
--				XFS_BIGFS_STRING \
- 				XFS_DBG_STRING /* DBG must be last */
- 
- struct xfs_inode;
-diff --git a/fs/xfs/xfs_types.h b/fs/xfs/xfs_types.h
-index 65c6e66..b79dc66 100644
---- a/fs/xfs/xfs_types.h
-+++ b/fs/xfs/xfs_types.h
-@@ -38,43 +38,18 @@ typedef	__int32_t	xfs_tid_t;	/* transaction identifier */
- typedef	__uint32_t	xfs_dablk_t;	/* dir/attr block number (in file) */
- typedef	__uint32_t	xfs_dahash_t;	/* dir/attr hash value */
- 
--/*
-- * These types are 64 bits on disk but are either 32 or 64 bits in memory.
-- * Disk based types:
-- */
--typedef __uint64_t	xfs_dfsbno_t;	/* blockno in filesystem (agno|agbno) */
--typedef __uint64_t	xfs_drfsbno_t;	/* blockno in filesystem (raw) */
--typedef	__uint64_t	xfs_drtbno_t;	/* extent (block) in realtime area */
--typedef	__uint64_t	xfs_dfiloff_t;	/* block number in a file */
--typedef	__uint64_t	xfs_dfilblks_t;	/* number of blocks in a file */
--
--/*
-- * Memory based types are conditional.
-- */
--#if XFS_BIG_BLKNOS
- typedef	__uint64_t	xfs_fsblock_t;	/* blockno in filesystem (agno|agbno) */
- typedef __uint64_t	xfs_rfsblock_t;	/* blockno in filesystem (raw) */
- typedef __uint64_t	xfs_rtblock_t;	/* extent (block) in realtime area */
--typedef	__int64_t	xfs_srtblock_t;	/* signed version of xfs_rtblock_t */
--#else
--typedef	__uint32_t	xfs_fsblock_t;	/* blockno in filesystem (agno|agbno) */
--typedef __uint32_t	xfs_rfsblock_t;	/* blockno in filesystem (raw) */
--typedef __uint32_t	xfs_rtblock_t;	/* extent (block) in realtime area */
--typedef	__int32_t	xfs_srtblock_t;	/* signed version of xfs_rtblock_t */
--#endif
- typedef __uint64_t	xfs_fileoff_t;	/* block number in a file */
--typedef __int64_t	xfs_sfiloff_t;	/* signed block number in a file */
- typedef __uint64_t	xfs_filblks_t;	/* number of blocks in a file */
- 
-+typedef	__int64_t	xfs_srtblock_t;	/* signed version of xfs_rtblock_t */
-+typedef __int64_t	xfs_sfiloff_t;	/* signed block number in a file */
- 
- /*
-  * Null values for the types.
-  */
--#define	NULLDFSBNO	((xfs_dfsbno_t)-1)
--#define	NULLDRFSBNO	((xfs_drfsbno_t)-1)
--#define	NULLDRTBNO	((xfs_drtbno_t)-1)
--#define	NULLDFILOFF	((xfs_dfiloff_t)-1)
--
- #define	NULLFSBLOCK	((xfs_fsblock_t)-1)
- #define	NULLRFSBLOCK	((xfs_rfsblock_t)-1)
- #define	NULLRTBLOCK	((xfs_rtblock_t)-1)
 -- 
-1.7.10.4
+Jens Axboe
+
+
+--------------070900050408020205000309
+Content-Type: text/x-patch;
+ name="tag-batch-wakeup.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+ filename="tag-batch-wakeup.patch"
+
+diff --git a/block/blk-mq-tag.c b/block/blk-mq-tag.c
+index 1aab39f..4f90f91 100644
+--- a/block/blk-mq-tag.c
++++ b/block/blk-mq-tag.c
+@@ -242,7 +242,7 @@ static int bt_get(struct blk_mq_alloc_data *data,
+ 		bool was_empty;
+ 
+ 		was_empty = list_empty(&wait.task_list);
+-		prepare_to_wait(&bs->wait, &wait, TASK_UNINTERRUPTIBLE);
++		prepare_to_wait_exclusive(&bs->wait, &wait, TASK_UNINTERRUPTIBLE);
+ 
+ 		tag = __bt_get(hctx, bt, last_tag);
+ 		if (tag != -1)
+@@ -345,7 +345,7 @@ static void bt_clear_tag(struct blk_mq_bitmap_tags *bt, unsigned int tag)
+ 	if (bs && atomic_dec_and_test(&bs->wait_cnt)) {
+ 		atomic_set(&bs->wait_cnt, bt->wake_cnt);
+ 		bt_index_inc(&bt->wake_index);
+-		wake_up(&bs->wait);
++		wake_up_nr(&bs->wait, bt->wake_cnt);
+ 	}
+ }
+ 
+
+--------------070900050408020205000309
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--------------070900050408020205000309--
