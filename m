@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id B2C607F3F
-	for <xfs@oss.sgi.com>; Mon, 16 Jun 2014 04:34:45 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id F3B837F3F
+	for <xfs@oss.sgi.com>; Mon, 16 Jun 2014 04:39:53 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 80EDB304279
-	for <xfs@oss.sgi.com>; Mon, 16 Jun 2014 02:34:42 -0700 (PDT)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 8DE33AC0BA
+	for <xfs@oss.sgi.com>; Mon, 16 Jun 2014 02:39:53 -0700 (PDT)
 Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id iWGB5rzwJAZSua4J (version=TLSv1 cipher=AES256-SHA
+	ESMTP id EUyh2dwiSYGEWAUZ (version=TLSv1 cipher=AES256-SHA
 	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 16 Jun 2014 02:34:41 -0700 (PDT)
-Date: Mon, 16 Jun 2014 02:34:40 -0700
+	Mon, 16 Jun 2014 02:39:52 -0700 (PDT)
+Date: Mon, 16 Jun 2014 02:39:52 -0700
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] xfs/279: use MKFS_XFS_PROG, not hardcoded path
-Message-ID: <20140616093440.GA26172@infradead.org>
-References: <539B68D2.2000300@sandeen.net>
+Subject: Re: [PATCH 1/2] xfsprogs: add mount options to xfs.5 manpage
+Message-ID: <20140616093952.GB26172@infradead.org>
+References: <5398B5ED.6030703@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <539B68D2.2000300@sandeen.net>
+In-Reply-To: <5398B5ED.6030703@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,18 +29,27 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: fstests@vger.kernel.org, xfs-oss <xfs@oss.sgi.com>
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: Karel Zak <kzak@redhat.com>, xfs-oss <xfs@oss.sgi.com>
 
-On Fri, Jun 13, 2014 at 04:10:42PM -0500, Eric Sandeen wrote:
-> I'm really not sure why this wasn't this way from the start.
-> On some systems it's in /usr/sbin, and the test fails.
+On Wed, Jun 11, 2014 at 03:02:53PM -0500, Eric Sandeen wrote:
+> This is a straight cut and paste from the util-linux
+> mount manpage to xfs.5.
 > 
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> It's pretty much impossible for util-linux to keep up
+> with every filesystem out there, and Karel has more than
+> once expressed a wish that mount options move into fs-specific
+> manpages.
+> 
+> So, here we go.
 
-Looks good,
+Looks reasonable, but it seems there it seems to lack documentation
+for the biosize option.  Also it would be good to mention which
+options could be changed using remount, as our limited set for that
+seems to confuse users a lot.
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Is it worth mentioning the various deprecated options thast the kernel
+just warns about now?
 
 _______________________________________________
 xfs mailing list
