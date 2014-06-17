@@ -1,22 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id AB40A7F58
-	for <xfs@oss.sgi.com>; Tue, 17 Jun 2014 08:26:32 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id A3F518F8040
-	for <xfs@oss.sgi.com>; Tue, 17 Jun 2014 06:26:29 -0700 (PDT)
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	rM8gZfbZQFRywv3a for <xfs@oss.sgi.com>;
-	Tue, 17 Jun 2014 06:26:26 -0700 (PDT)
-Date: Tue, 17 Jun 2014 23:26:09 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: xfs: two deadlock problems occur when kswapd writebacks XFS pages.
-Message-ID: <20140617132609.GI9508@dastard>
-References: <53A0013A.1010100@jp.fujitsu.com>
-MIME-Version: 1.0
+	by oss.sgi.com (Postfix) with ESMTP id 2320729DF8
+	for <xfs@oss.sgi.com>; Tue, 17 Jun 2014 08:42:00 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 073B18F8040
+	for <xfs@oss.sgi.com>; Tue, 17 Jun 2014 06:41:59 -0700 (PDT)
+Received: from g2t2352.austin.hp.com (g2t2352.austin.hp.com [15.217.128.51])
+	by cuda.sgi.com with ESMTP id JYjr8NAAqSSmCcSP (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 17 Jun 2014 06:41:57 -0700 (PDT)
+Received: from g2t2360.austin.hp.com (g2t2360.austin.hp.com [16.197.8.247])
+	by g2t2352.austin.hp.com (Postfix) with ESMTP id 2F9B12DB
+	for <xfs@oss.sgi.com>; Tue, 17 Jun 2014 13:41:57 +0000 (UTC)
+Received: from beardog.cce.hp.com (beardog.cce.hp.com [16.84.84.24])
+	by g2t2360.austin.hp.com (Postfix) with ESMTP id 2255A4C
+	for <xfs@oss.sgi.com>; Tue, 17 Jun 2014 13:41:57 +0000 (UTC)
+Date: Tue, 17 Jun 2014 08:41:05 -0500
+From: scameron@beardog.cce.hp.com
+Subject: Question about xfstests xfs/122 and xfs/253
+Message-ID: <20140617134105.GF29459@beardog.cce.hp.com>
+Mime-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <53A0013A.1010100@jp.fujitsu.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,145 +33,88 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Masayoshi Mizuma <m.mizuma@jp.fujitsu.com>
-Cc: linux-mm@kvack.org, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
+Cc: scameron@beardog.cce.hp.com
 
-On Tue, Jun 17, 2014 at 05:50:02PM +0900, Masayoshi Mizuma wrote:
-> I found two deadlock problems occur when kswapd writebacks XFS pages.
-> I detected these problems on RHEL kernel actually, and I suppose these
-> also happen on upstream kernel (3.16-rc1).
-> 
-> 1.
-> 
-> A process (processA) has acquired read semaphore "xfs_cil.xc_ctx_lock"
-> at xfs_log_commit_cil() and it is waiting for the kswapd. Then, a
-> kworker has issued xlog_cil_push_work() and it is waiting for acquiring
-> the write semaphore. kswapd is waiting for acquiring the read semaphore
-> at xfs_log_commit_cil() because the kworker has been waiting before for
-> acquiring the write semaphore at xlog_cil_push(). Therefore, a deadlock
-> happens.
-> 
-> The deadlock flow is as follows.
-> 
->   processA              | kworker                  | kswapd              
->   ----------------------+--------------------------+----------------------
-> | xfs_trans_commit      |                          |
-> | xfs_log_commit_cil    |                          |
-> | down_read(xc_ctx_lock)|                          |
-> | xlog_cil_insert_items |                          |
-> | xlog_cil_insert_format_items                     |
-> | kmem_alloc            |                          |
-> | :                     |                          |
-> | shrink_inactive_list  |                          |
-> | congestion_wait       |                          |
-> | # waiting for kswapd..|                          |
-> |                       | xlog_cil_push_work       |
-> |                       | xlog_cil_push            |
-> |                       | xfs_trans_commit         |
-> |                       | down_write(xc_ctx_lock)  |
-> |                       | # waiting for processA...|
-> |                       |                          | shrink_page_list
-> |                       |                          | xfs_vm_writepage
-> |                       |                          | xfs_map_blocks
-> |                       |                          | xfs_iomap_write_allocate
-> |                       |                          | xfs_trans_commit
-> |                       |                          | xfs_log_commit_cil
-> |                       |                          | down_read(xc_ctx_lock)
-> V(time)                 |                          | # waiting for kworker...
->   ----------------------+--------------------------+-----------------------
 
-Where's the deadlock here? congestion_wait() simply times out and
-processA continues onward doing memory reclaim. It should continue
-making progress, albeit slowly, and if it isn't then the allocation
-will fail. If the allocation repeatedly fails then you should be
-seeing this in the logs:
+Hi,
 
-XFS: possible memory allocation deadlock in <func> (mode:0x%x)
+I am running xfstests mostly just to exercise a low level driver, and I'm
+seeing failures on tests xfs/122 and xfs/253.
 
-If you aren't seeing that in the logs a few times a second and never
-stopping, then the system is still making progress and isn't
-deadlocked.
+I'm using xfstests, xfsprogs, xfsdump cloned fresh from the git repos listed
+here: http://xfs.org/index.php/Getting_the_latest_source_code
+git hashes:
+xfstests: 45d1fac1303acfa102384f48111dc3a458b93493
+xfsprogs: 03e956b25243bf4aac034275f89a0f3f2712b79a
+xfsdump: b1d6979f1fae82acc79d27cf0add4d55da6d83cc
 
-> To fix this, should we up the read semaphore before calling kmem_alloc()
-> at xlog_cil_insert_format_items() to avoid blocking the kworker? Or,
-> should we the second argument of kmem_alloc() from KM_SLEEP|KM_NOFS
-> to KM_NOSLEEP to avoid waiting for the kswapd. Or...
+I'm using kernel 3.16-rc1 on RHEL 6.5 on x86_64.
 
-Can't do that - it's in transaction context and so reclaim can't
-recurse into the fs. Even if you do remove the flag, kmem_alloc()
-will re-add the GFP_NOFS silently because of the PF_FSTRANS flag on
-the task, so it won't affect anything...
+I would expect that specific versions of xfstests, xfsprogs, xfsdump
+are meant to go with specific kernel versions, though it is not clear
+to me how to match these up in the general case.  I guessed that
+"latest of everything" would have a reasonable chance of being a
+matched set.
 
-We might be able to do a down_write_trylock() in xlog_cil_push(),
-but we can't delay the push for an arbitrary amount of time - the
-write lock needs to be a barrier otherwise we'll get push
-starvation and that will lead to checkpoint size overruns (i.e.
-temporary journal corruption).
+I'm running it by: "./check -g auto"
 
-> 2. 
-> 
-> A kworker (kworkerA), whish is a writeback thread, is waiting for
-> the XFS allocation thread (kworkerB) while it writebacks XFS pages.
-> kworkerB has started the allocation and it is waiting for kswapd to
-> allocate free pages. kswapd has started writeback XFS pages and
-> it is waiting for more log space. The reason why exhaustion of the
-> log space is both the writeback thread and kswapd are stuck, so
-> some processes, who have allocated the log space and are requesting
-> free pages, are also stuck.
-> 
-> The deadlock flow is as follows.
-> 
->   kworkerA              | kworkerB                 | kswapd            
->   ----------------------+--------------------------+-----------------------
-> | wb_writeback          |                          |
-> | :                     |                          |
-> | xfs_vm_writepage      |                          |
-> | xfs_map_blocks        |                          |
-> | xfs_iomap_write_allocate                         |
-> | xfs_bmapi_write       |                          |
-> | xfs_bmapi_allocate    |                          |
-> | wait_for_completion   |                          |
-> | # waiting for kworkerB...                        |
-> |                       | xfs_bmapi_allocate_worker|
-> |                       | :                        |
-> |                       | xfs_buf_get_map          |
-> |                       | xfs_buf_allocate_memory  |
-> |                       | alloc_pages_current      |
-> |                       | :                        |
-> |                       | shrink_inactive_list     |
-> |                       | congestion_wait          |
-> |                       | # waiting for kswapd...  |
-> |                       |                          | shrink_page_list
-> |                       |                          | xfs_vm_writepage
-> |                       |                          | :
-> |                       |                          | xfs_log_reserve
-> |                       |                          | :
-> |                       |                          | xlog_grant_head_check
-> |                       |                          | xlog_grant_head_wait
-> |                       |                          | # waiting for more
-> |                       |                          | # space...
-> V(time)                 |                          |
->   ----------------------+--------------------------+-----------------------
+with configs/localhost.config:
 
-Again, anything in congestion_wait() is not stuck and if the
-allocations here are repeatedly failing and progress is not being
-made, then there should be log messages from XFS indicating this.
+[root@localhost xfstests]# cat configs/localhost.config
+TEST_DEV=/dev/sdc
+TEST_DIR=/mnt/test
+SCRATCH_DEV=/dev/sdb
+SCRATCH_MNT=/mnt/scratch
 
-I need more information about your test setup to understand what is
-going on here. Can you provide:
+I'm not very familiar with these tests, but it looks like xfs/122 is checking
+that some structure sizes specific to xfs are correct, and I'm struggling to
+see how a low level driver would break that test without breaking a lot of
+other stuff, so I'm thinking I can ignore that one (maybe the test is broken?)
+But I figured I should ask here in case I'm not correctly understanding what it's
+trying to test.
 
-http://xfs.org/index.php/XFS_FAQ#Q:_What_information_should_I_include_when_reporting_a_problem.3F
+xfs/253, seems to be testing some kind of filename hashing stuff.
 
-The output of sysrq-w would also be useful here, because the above
-abridged stack traces do not tell me everything about the state of
-the system I need to know.
+Do these failures seem plausibly attributable to a flaw in a low level driver,
+or are these failures known issues with xfs or with the tests, or is there
+something else I might be doing wrong?
 
-Cheers,
+(It occurs to me now I should try the tests with a different driver and
+hardware and see how it behaves.)
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+
+[root@localhost xfs]# diff -u ../../tests/xfs/122.out 122.out.bad | diffstat
+ 122.out.bad |   38 +++++++++++++++++++-------------------
+ 1 file changed, 19 insertions(+), 19 deletions(-)
+[root@localhost xfs]# diff -u ../../tests/xfs/253.out 253.out.bad | diffstat
+ 253.out.bad |    2 ++
+ 1 file changed, 2 insertions(+)
+[root@localhost xfs]# diff -u ../../tests/xfs/253.out 253.out.bad 
+--- ../../tests/xfs/253.out	2014-06-16 10:51:35.881521766 -0500
++++ 253.out.bad	2014-06-16 18:01:13.862884730 -0500
+@@ -1,2 +1,4 @@
+ QA output created by 253
+ Disciplyne of silence is goed.
++mount: Structure needs cleaning
++umount: /dev/sdb: not mounted
+[root@localhost xfs]#
+
+Also, I noticed a few tests were not run, I presume that is not out of the ordinary.
+
+xfs/189	 [not run] noattr2 mount option not supported on /dev/sdb
+xfs/190 1s ... 1s
+xfs/191	 [not run] no mkfs support for NFS v4 ACLs
+xfs/194 1s ... 1s
+xfs/195	 [not run] fsgqa user not defined.
+xfs/196 5s ... 5s
+xfs/197	 [not run] This test is only valid on 32 bit machines
+
+And a few others skipped as well.
+
+Thanks,
+
+-- steve
 
 _______________________________________________
 xfs mailing list
