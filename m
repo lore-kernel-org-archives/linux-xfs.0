@@ -1,22 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id EFDBB7F51
-	for <xfs@oss.sgi.com>; Tue, 17 Jun 2014 18:06:33 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id D7EA8304039
-	for <xfs@oss.sgi.com>; Tue, 17 Jun 2014 16:06:30 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 162477F54
+	for <xfs@oss.sgi.com>; Tue, 17 Jun 2014 18:56:08 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id DC4A18F8059
+	for <xfs@oss.sgi.com>; Tue, 17 Jun 2014 16:56:07 -0700 (PDT)
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	ZqC9KcVxLXjXVq49 for <xfs@oss.sgi.com>;
-	Tue, 17 Jun 2014 16:06:28 -0700 (PDT)
-Date: Wed, 18 Jun 2014 09:06:27 +1000
+	mbnmxGl1a7XAcun3 for <xfs@oss.sgi.com>;
+	Tue, 17 Jun 2014 16:56:06 -0700 (PDT)
+Date: Wed, 18 Jun 2014 09:55:46 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: xfstests, weird looking code in src/resvtest.c
-Message-ID: <20140617230627.GL9508@dastard>
-References: <20140617162044.GL29459@beardog.cce.hp.com>
+Subject: Re: [PATCH] xfs/013: allow non-write fsstress operations in
+	background workload
+Message-ID: <20140617235546.GY4453@dastard>
+References: <1401820129-6543-1-git-send-email-bfoster@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20140617162044.GL29459@beardog.cce.hp.com>
+In-Reply-To: <1401820129-6543-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,53 +30,54 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: scameron@beardog.cce.hp.com
-Cc: xfs@oss.sgi.com
+To: Brian Foster <bfoster@redhat.com>
+Cc: fstests@vger.kernel.org, xfs@oss.sgi.com
 
-On Tue, Jun 17, 2014 at 11:20:44AM -0500, scameron@beardog.cce.hp.com wrote:
+On Tue, Jun 03, 2014 at 02:28:49PM -0400, Brian Foster wrote:
+> It has been reported that test xfs/013 probably uses more space than
+> necessary, exhausting space if run against a several GB sized ramdisk.
+> xfs/013 primarily creates, links and removes inodes. Most of the space
+> consumption occurs via the background fsstress workload.
 > 
-> This code in xfstests src/resvtest.c looks pretty strange:
+> Remove the fsstress -w option that suppresses non-write operations. This
+> slightly reduces the storage footprint while still providing a
+> background workload for the test.
 > 
-> ...
->  32         char            *readbuffer, *writebuffer;
-> ...
->  70         readbuffer = memalign(psize, bsize);
->  71         writebuffer = memalign(psize, bsize);
->  72         if (!readbuffer || !writebuffer) {
->  73                 perror("open");
->  74                 exit(1);
->  75         }
->  76         memset(writebuffer, 'A', sizeof(writebuffer));
-> 
-> ^^^ writebuffer is a pointer, so using sizeof(writebuffer) here is
-> odd. Is it intentional to put either 4 or 8 A's into writebuffer
-> depending on sizeof a pointer?  Seems unlikely.
-> 
-> 110         while (++n < iterations) {
-> 111                 char *p;
-> 112                 int numerrors;
-> 113 
-> 114                 if (write(writefd, writebuffer, sizeof(writebuffer)) < 0) {
-> 115                         perror("write");
-> 116                         exit(1);
-> 117                 }
-> 
-> So that write will write sizeof a pointer's worth of whatever's in writebuffer.
-> Intentional?  Again, seems unlikely.
-> 
-> This seems like maybe somebody initially declared writebuffer as an array, but
-> later went back and changed it to a pointer, but forgot to fixup everywhere that
-> referred to sizeof(writebuffer).
-> 
-> I would have sent a patch but I'm not sure what this code is trying to do.
-> 
-> gcc 4.4.7 (what comes with RHEL6u5) doesn't warn about this, but 4.8.3 does.
+> Signed-off-by: Brian Foster <bfoster@redhat.com>
 
-There's a recent patch on the fstests list (fstests@vger.kernel.org)
-that fixes this that I haven't picked up yet.
+This change makes the runtime blow out on a ramdisk from 4s to over
+ten minutes on my test machine. Non-ramdisk machines seem to be
+completely unaffected.
 
-For actual test harness issues, you should use
-fstests@vger.kernel.org now, not xfs@oss.sgi.com...
+I was going to say "no, bad change", but I noticed that my
+spinning disk VMs weren't affected at all. Looking more closely,
+xfs/013 is now pegging all 16 CPUs on the VM. The profile:
+
+-  60.73%  [kernel]  [k] do_raw_spin_lock
+   - do_raw_spin_lock
+      - 99.98% _raw_spin_lock
+         - 99.83% sync_inodes_sb
+              sync_inodes_one_sb
+              iterate_supers
+              sys_sync
+              tracesys
+              sync
+-  32.76%  [kernel]  [k] delay_tsc
+   - delay_tsc
+      - 98.43% __delay
+           do_raw_spin_lock
+         - _raw_spin_lock
+            - 99.99% sync_inodes_sb
+                 sync_inodes_one_sb
+                 iterate_supers
+                 sys_sync
+                 tracesys
+                 sync
+
+OK, that's a kernel problem, not a problem with the change in the
+test...
+
+/me goes and dusts off his "concurrent sync scalability" patches.
 
 Cheers,
 
