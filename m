@@ -1,27 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 1ECEF29E08
-	for <xfs@oss.sgi.com>; Tue, 17 Jun 2014 10:05:14 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 14E2A8F807A
-	for <xfs@oss.sgi.com>; Tue, 17 Jun 2014 08:05:14 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id neFF3yiY2YFrm74b for
-	<xfs@oss.sgi.com>; Tue, 17 Jun 2014 08:05:13 -0700 (PDT)
-Received: from int-mx09.intmail.prod.int.phx2.redhat.com
-	(int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id s5HF5CN2021954
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256
-	verify=OK) for <xfs@oss.sgi.com>; Tue, 17 Jun 2014 11:05:12 -0400
-Date: Tue, 17 Jun 2014 11:05:11 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 2/2] libxfs: fix crc field handling in xfs_sb_to/from_disk
-Message-ID: <20140617150510.GD8905@bfoster.bfoster>
-References: <1402960461-27881-1-git-send-email-sandeen@redhat.com>
-	<1402960461-27881-3-git-send-email-sandeen@redhat.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id ECB407F57
+	for <xfs@oss.sgi.com>; Tue, 17 Jun 2014 10:29:30 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id CC96F304051
+	for <xfs@oss.sgi.com>; Tue, 17 Jun 2014 08:29:27 -0700 (PDT)
+Received: from awesome.dsw2k3.info (awesome.dsw2k3.info [217.188.63.246]) by
+	cuda.sgi.com with ESMTP id Q56swYsigeuRgUG6 (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 17 Jun 2014 08:29:24 -0700 (PDT)
+Date: Tue, 17 Jun 2014 17:29:17 +0200
+From: Matthias Schniedermeyer <ms@citd.de>
+Subject: Re: V5 format and man mkfs.xfs
+Message-ID: <20140617152917.GA17378@citd.de>
+References: <20140617082651.GA27971@citd.de>
+ <20140617123738.GH9508@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1402960461-27881-3-git-send-email-sandeen@redhat.com>
+In-Reply-To: <20140617123738.GH9508@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,67 +30,87 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@redhat.com>
+To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On Mon, Jun 16, 2014 at 06:14:21PM -0500, Eric Sandeen wrote:
-> If we xfs_mdrestore an image from a non-crc filesystem, lo
-> and behold the restored image has gained a CRC:
+On 17.06.2014 22:37, Dave Chinner wrote:
+> On Tue, Jun 17, 2014 at 10:26:51AM +0200, Matthias Schniedermeyer wrote:
+> > Hi
+> > 
+> > How seriously meant is "V5 isn't experimental anymore"?
 > 
-> # db/xfs_metadump.sh -o /dev/sdc1 - | xfs_mdrestore - test.img
-> # xfs_db -c "sb 0" -c "p crc" /dev/sdc1
-> crc = 0 (correct)
-> # xfs_db -c "sb 0" -c "p crc" test.img
-> crc = 0xb6f8d6a0 (correct)
-> 
-> This is because xfs_sb_from_disk doesn't fill in sb_crc,
-> but xfs_sb_to_disk(XFS_SB_ALL_BITS) does write the in-memory
-> CRC to disk - so we get uninitialized memory on disk.
-> 
-> Fix this by always initializing sb_crc to 0 when we read
-> the superblock, and masking out the CRC bit from ALL_BITS
-> when we write it.
-> 
-> This same fix has already been sent for kernelspace.
-> 
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-> ---
+> "Fully supported" isn't a clear enough statement?
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+I guess that was a "selective memory"-bug on my side.
 
->  libxfs/xfs_sb.c |    5 +++++
->  1 files changed, 5 insertions(+), 0 deletions(-)
+> > I ask because the man-page only mentions the syntax to enable it by 
+> > accident. A.k.a. the backport of ftype to V4.
+> > (man-page of xfsprogs 3.2.0 in Debian-SID)
 > 
-> diff --git a/libxfs/xfs_sb.c b/libxfs/xfs_sb.c
-> index 7ee4612..ea89367 100644
-> --- a/libxfs/xfs_sb.c
-> +++ b/libxfs/xfs_sb.c
-> @@ -408,6 +408,8 @@ xfs_sb_from_disk(
->  	to->sb_features_incompat = be32_to_cpu(from->sb_features_incompat);
->  	to->sb_features_log_incompat =
->  				be32_to_cpu(from->sb_features_log_incompat);
-> +	/* crc is only used on disk, not in memory; just init to 0 here. */
-> +	to->sb_crc = 0;
->  	to->sb_pad = 0;
->  	to->sb_pquotino = be64_to_cpu(from->sb_pquotino);
->  	to->sb_lsn = be64_to_cpu(from->sb_lsn);
-> @@ -485,6 +487,9 @@ xfs_sb_to_disk(
->  	if (!fields)
->  		return;
->  
-> +	/* We should never write the crc here, it's updated in the IO path */
-> +	fields &= ~XFS_SB_CRC;
-> +
->  	xfs_sb_quota_to_disk(to, from, &fields);
->  	while (fields) {
->  		f = (xfs_sb_field_t)xfs_lowbit64((__uint64_t)fields);
-> -- 
-> 1.7.1
+> That's intentional. V5 superblocks are an implementation detail that
+> most users don't even need to know about. They care about the name
+> of the features they are enabling at mkfs time, not the details of
+> the on-disk implementation of those features.
+
+The question still stands.
+
+The crc-option is only mentioned "by accident".
+Without the ftype backport there would be no mention of the "feature 
+crc".
+
+Furthermore i suspect that the ftype-feature also wouldn't be mentionted 
+without the V4 backport.
+
+Which beggs the question, what other features are "burried" in V5 that 
+aren't mentioned in the man-page.
+
+And are there any other "-m" options, because "-m" (asside from the 
+ftype accident) is completly undocumented.
+
+> > And you still have to know that crc means V5.
 > 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+> Why do you care about the format mkfs.xfs chooses for you - it's
+> based on the features you requested. V5 isn't magically faster than
+
+I find the crc feature relativly important.
+
+I personally had exprienced an USB enclosure(-model. As in i had several 
+of those) that under rare circumstances flipped or cleared a single bit 
+in a specific bit-pattern). Such corruption most likely ends up inside a 
+data-file because most times there is more data than meta-data. But 
+COULD happend inside the meta-data.
+
+Since that day i have nearly everything MD5(or SHA256)ed so i can at 
+least detect if i have a data-corruption.
+
+Fortunatly that never happend again after i replaced that enclosure 
+model. Which i can say with pretty high confidence.
+
+> V4 - there are many cases where it is slower due to CRC overhead
+> or the overhead of the larger inode it requires. So unless you
+> request a feature that requires it at mkfs time, you don't get that
+> format.
+
+Are there any feature besides crc/ftype in V5?
+
+But i guess for "-n type=1" i would get a V4 + feature_bit.
+
+And "-m crc=1" chooses V5 and i get ftype as a bonus (If i understand 
+correctly).
+
+> In a year or so we'll change the mkfs default so that CRCs are
+> enabled by default, but we can't do that until all the distro's have
+> had time to pick up a kernel that fully supports the CRC feature....
+
+OK. So V5 will be the future default.
+
+
+
+
+
+-- 
+
+Matthias
 
 _______________________________________________
 xfs mailing list
