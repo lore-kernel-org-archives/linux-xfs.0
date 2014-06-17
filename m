@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 39D877F3F
-	for <xfs@oss.sgi.com>; Tue, 17 Jun 2014 17:47:09 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id BA1D0AC005
-	for <xfs@oss.sgi.com>; Tue, 17 Jun 2014 15:47:05 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id A664F7F4E
+	for <xfs@oss.sgi.com>; Tue, 17 Jun 2014 18:04:35 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 3FB3CAC004
+	for <xfs@oss.sgi.com>; Tue, 17 Jun 2014 16:04:32 -0700 (PDT)
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	NRF1aHZLF1ZecFDR for <xfs@oss.sgi.com>;
-	Tue, 17 Jun 2014 15:47:02 -0700 (PDT)
-Date: Wed, 18 Jun 2014 08:46:58 +1000
+	nBmtWFCn2bGKMqEz for <xfs@oss.sgi.com>;
+	Tue, 17 Jun 2014 16:04:26 -0700 (PDT)
+Date: Wed, 18 Jun 2014 09:04:24 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: V5 format and man mkfs.xfs
-Message-ID: <20140617224658.GJ9508@dastard>
-References: <20140617082651.GA27971@citd.de> <20140617123738.GH9508@dastard>
-	<20140617152917.GA17378@citd.de>
+Subject: Re: Question about xfstests xfs/122 and xfs/253
+Message-ID: <20140617230424.GK9508@dastard>
+References: <20140617134105.GF29459@beardog.cce.hp.com>
+	<20140617145717.GB8905@bfoster.bfoster>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20140617152917.GA17378@citd.de>
+In-Reply-To: <20140617145717.GB8905@bfoster.bfoster>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,38 +30,104 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Matthias Schniedermeyer <ms@citd.de>
-Cc: xfs@oss.sgi.com
+To: Brian Foster <bfoster@redhat.com>
+Cc: scameron@beardog.cce.hp.com, xfs@oss.sgi.com
 
-On Tue, Jun 17, 2014 at 05:29:17PM +0200, Matthias Schniedermeyer wrote:
-> On 17.06.2014 22:37, Dave Chinner wrote:
-> > On Tue, Jun 17, 2014 at 10:26:51AM +0200, Matthias Schniedermeyer wrote:
-> > > Hi
-> > > 
-> > > How seriously meant is "V5 isn't experimental anymore"?
+On Tue, Jun 17, 2014 at 10:57:18AM -0400, Brian Foster wrote:
+> On Tue, Jun 17, 2014 at 08:41:05AM -0500, scameron@beardog.cce.hp.com wrote:
 > > 
-> > "Fully supported" isn't a clear enough statement?
-> 
-> I guess that was a "selective memory"-bug on my side.
-> 
-> > > I ask because the man-page only mentions the syntax to enable it by 
-> > > accident. A.k.a. the backport of ftype to V4.
-> > > (man-page of xfsprogs 3.2.0 in Debian-SID)
+> > Hi,
 > > 
-> > That's intentional. V5 superblocks are an implementation detail that
-> > most users don't even need to know about. They care about the name
-> > of the features they are enabling at mkfs time, not the details of
-> > the on-disk implementation of those features.
+> > I am running xfstests mostly just to exercise a low level driver, and I'm
+> > seeing failures on tests xfs/122 and xfs/253.
+> > 
+> > I'm using xfstests, xfsprogs, xfsdump cloned fresh from the git repos listed
+> > here: http://xfs.org/index.php/Getting_the_latest_source_code
+> > git hashes:
+> > xfstests: 45d1fac1303acfa102384f48111dc3a458b93493
+> > xfsprogs: 03e956b25243bf4aac034275f89a0f3f2712b79a
+> > xfsdump: b1d6979f1fae82acc79d27cf0add4d55da6d83cc
+> > 
+> > I'm using kernel 3.16-rc1 on RHEL 6.5 on x86_64.
+> > 
+> > I would expect that specific versions of xfstests, xfsprogs, xfsdump
+> > are meant to go with specific kernel versions, though it is not clear
+> > to me how to match these up in the general case.  I guessed that
+> > "latest of everything" would have a reasonable chance of being a
+> > matched set.
+> > 
+> > I'm running it by: "./check -g auto"
+> > 
+> > with configs/localhost.config:
+> > 
+> > [root@localhost xfstests]# cat configs/localhost.config
+> > TEST_DEV=/dev/sdc
+> > TEST_DIR=/mnt/test
+> > SCRATCH_DEV=/dev/sdb
+> > SCRATCH_MNT=/mnt/scratch
+> > 
+> > I'm not very familiar with these tests, but it looks like xfs/122 is checking
+> > that some structure sizes specific to xfs are correct, and I'm struggling to
+> > see how a low level driver would break that test without breaking a lot of
+> > other stuff, so I'm thinking I can ignore that one (maybe the test is broken?)
+> > But I figured I should ask here in case I'm not correctly understanding what it's
+> > trying to test.
+> > 
 > 
-> The question still stands.
-> 
-> The crc-option is only mentioned "by accident".
-> Without the ftype backport there would be no mention of the "feature 
-> crc".
+> xfs/122 fails for me as well. I guess I never noticed it before because
+> it depends on indent. It looks like the output file (122.out) contains a
+> bunch of hardcoded field offsets and structure sizes, so perhaps it's
+> just out of date. I'm not familiar with the objective of this test.
 
-Ok, so you're not reporting that we don't mention V5 filesystems as
-"V5" filesystems. You're reporting that the "-m crc" option is not
-documented. That's an oversight, and needs to be fixed.
+They are the sizes and offsets of on-disk structures. I get a
+_not_run here because the test program fails to compile, which is
+probably why I've not noticed that it might be failing. I'll look
+into it that failure here.
+
+FWIW, posting the diff of the failure will tell us if it's an
+important failure or not, or whether it's just that we've removed a
+bunch of typedefs and so the program output is not exactly the same
+as expected....
+
+> > xfs/253, seems to be testing some kind of filename hashing stuff.
+> > 
+> 
+> This one tests metadump and restore, name obfuscation in particular it
+> appears. It passes on a quick test for me with fairly recent code.
+> 
+> > Do these failures seem plausibly attributable to a flaw in a low level driver,
+> > or are these failures known issues with xfs or with the tests, or is there
+> > something else I might be doing wrong?
+> > 
+> > (It occurs to me now I should try the tests with a different driver and
+> > hardware and see how it behaves.)
+> > 
+> 
+> Probably a good idea. ;)
+> 
+> > 
+> > [root@localhost xfs]# diff -u ../../tests/xfs/122.out 122.out.bad | diffstat
+> >  122.out.bad |   38 +++++++++++++++++++-------------------
+> >  1 file changed, 19 insertions(+), 19 deletions(-)
+> > [root@localhost xfs]# diff -u ../../tests/xfs/253.out 253.out.bad | diffstat
+> >  253.out.bad |    2 ++
+> >  1 file changed, 2 insertions(+)
+> > [root@localhost xfs]# diff -u ../../tests/xfs/253.out 253.out.bad 
+> > --- ../../tests/xfs/253.out	2014-06-16 10:51:35.881521766 -0500
+> > +++ 253.out.bad	2014-06-16 18:01:13.862884730 -0500
+> > @@ -1,2 +1,4 @@
+> >  QA output created by 253
+> >  Disciplyne of silence is goed.
+> > +mount: Structure needs cleaning
+> > +umount: /dev/sdb: not mounted
+
+What's the dmesg output?
+
+> > xfs/189  [not run] noattr2 mount option not supported on /dev/sdb
+
+That implies you are testing with MKFS_OPTION="-m crc=1", because
+only CRC enabled filesystems reject the noattr2 mount option. Is
+that correct?
 
 Cheers,
 
