@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 5ED3429DFD
-	for <xfs@oss.sgi.com>; Tue, 17 Jun 2014 09:14:40 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 58D138F8066
-	for <xfs@oss.sgi.com>; Tue, 17 Jun 2014 07:14:37 -0700 (PDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id EA30E29E01
+	for <xfs@oss.sgi.com>; Tue, 17 Jun 2014 09:58:29 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id D842B304051
+	for <xfs@oss.sgi.com>; Tue, 17 Jun 2014 07:58:29 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id XsGQTN8vi9VIkRLC for
-	<xfs@oss.sgi.com>; Tue, 17 Jun 2014 07:14:36 -0700 (PDT)
-Date: Tue, 17 Jun 2014 10:14:31 -0400
+	cuda.sgi.com with ESMTP id uVAqqTjOsLwypKFt for
+	<xfs@oss.sgi.com>; Tue, 17 Jun 2014 07:58:28 -0700 (PDT)
+Date: Tue, 17 Jun 2014 10:57:18 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH] xfs: require 64-bit sector_t
-Message-ID: <20140617141431.GA8905@bfoster.bfoster>
-References: <1402937045-31103-1-git-send-email-hch@lst.de>
+Subject: Re: Question about xfstests xfs/122 and xfs/253
+Message-ID: <20140617145717.GB8905@bfoster.bfoster>
+References: <20140617134105.GF29459@beardog.cce.hp.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1402937045-31103-1-git-send-email-hch@lst.de>
+In-Reply-To: <20140617134105.GF29459@beardog.cce.hp.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,131 +28,114 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@lst.de>
+To: scameron@beardog.cce.hp.com
 Cc: xfs@oss.sgi.com
 
-On Mon, Jun 16, 2014 at 06:44:05PM +0200, Christoph Hellwig wrote:
-> Trying to support tiny disks only and saving a bit memory might have
-> made sense on an SGI O2 15 years ago, but is pretty pointless today.
+On Tue, Jun 17, 2014 at 08:41:05AM -0500, scameron@beardog.cce.hp.com wrote:
 > 
-> Remove the rarely tested codepath that uses various smaller in-memory
-> types to reduce our test matrix and make the codebase a little bit
-> smaller and less complicated.
+> Hi,
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> Reviewed-by: Ben Myers <bpm@sgi.com>
-> ---
->  fs/xfs/Kconfig          |    1 +
->  fs/xfs/xfs_bmap.c       |    8 ++---
->  fs/xfs/xfs_bmap_btree.c |   89 +++--------------------------------------------
->  fs/xfs/xfs_bmap_util.c  |    2 +-
->  fs/xfs/xfs_btree.c      |   32 ++++++++---------
->  fs/xfs/xfs_btree.h      |    2 +-
->  fs/xfs/xfs_da_btree.c   |    2 +-
->  fs/xfs/xfs_dir2_sf.c    |   45 +++++-------------------
->  fs/xfs/xfs_format.h     |   14 +-------
->  fs/xfs/xfs_fs.h         |    4 +--
->  fs/xfs/xfs_inode_fork.c |    4 +--
->  fs/xfs/xfs_inum.h       |    4 ---
->  fs/xfs/xfs_linux.h      |   12 -------
->  fs/xfs/xfs_log_format.h |    4 +--
->  fs/xfs/xfs_mount.c      |    6 +---
->  fs/xfs/xfs_rtalloc.c    |    4 +--
->  fs/xfs/xfs_sb.h         |    8 ++---
->  fs/xfs/xfs_super.c      |    8 -----
->  fs/xfs/xfs_super.h      |   11 ------
->  fs/xfs/xfs_types.h      |   29 ++-------------
->  20 files changed, 50 insertions(+), 239 deletions(-)
+> I am running xfstests mostly just to exercise a low level driver, and I'm
+> seeing failures on tests xfs/122 and xfs/253.
 > 
-...
-> diff --git a/fs/xfs/xfs_super.h b/fs/xfs/xfs_super.h
-> index bbe3d15..31f757c 100644
-> --- a/fs/xfs/xfs_super.h
-> +++ b/fs/xfs/xfs_super.h
-> @@ -44,16 +44,6 @@ extern void xfs_qm_exit(void);
->  # define XFS_REALTIME_STRING
->  #endif
->  
-> -#if XFS_BIG_BLKNOS
-> -# if XFS_BIG_INUMS
-> -#  define XFS_BIGFS_STRING	"large block/inode numbers, "
-> -# else
-> -#  define XFS_BIGFS_STRING	"large block numbers, "
-> -# endif
-> -#else
-> -# define XFS_BIGFS_STRING
-> -#endif
-> -
->  #ifdef DEBUG
->  # define XFS_DBG_STRING		"debug"
->  #else
-> @@ -64,7 +54,6 @@ extern void xfs_qm_exit(void);
->  #define XFS_BUILD_OPTIONS	XFS_ACL_STRING \
->  				XFS_SECURITY_STRING \
->  				XFS_REALTIME_STRING \
-> -				XFS_BIGFS_STRING \
+> I'm using xfstests, xfsprogs, xfsdump cloned fresh from the git repos listed
+> here: http://xfs.org/index.php/Getting_the_latest_source_code
+> git hashes:
+> xfstests: 45d1fac1303acfa102384f48111dc3a458b93493
+> xfsprogs: 03e956b25243bf4aac034275f89a0f3f2712b79a
+> xfsdump: b1d6979f1fae82acc79d27cf0add4d55da6d83cc
+> 
+> I'm using kernel 3.16-rc1 on RHEL 6.5 on x86_64.
+> 
+> I would expect that specific versions of xfstests, xfsprogs, xfsdump
+> are meant to go with specific kernel versions, though it is not clear
+> to me how to match these up in the general case.  I guessed that
+> "latest of everything" would have a reasonable chance of being a
+> matched set.
+> 
+> I'm running it by: "./check -g auto"
+> 
+> with configs/localhost.config:
+> 
+> [root@localhost xfstests]# cat configs/localhost.config
+> TEST_DEV=/dev/sdc
+> TEST_DIR=/mnt/test
+> SCRATCH_DEV=/dev/sdb
+> SCRATCH_MNT=/mnt/scratch
+> 
+> I'm not very familiar with these tests, but it looks like xfs/122 is checking
+> that some structure sizes specific to xfs are correct, and I'm struggling to
+> see how a low level driver would break that test without breaking a lot of
+> other stuff, so I'm thinking I can ignore that one (maybe the test is broken?)
+> But I figured I should ask here in case I'm not correctly understanding what it's
+> trying to test.
+> 
 
-Given that the existence of the string indicates large block/inode
-numbers, shouldn't we leave it to avoid any confusion? That aside, the
-rest of the patch looks fine to me.
+xfs/122 fails for me as well. I guess I never noticed it before because
+it depends on indent. It looks like the output file (122.out) contains a
+bunch of hardcoded field offsets and structure sizes, so perhaps it's
+just out of date. I'm not familiar with the objective of this test.
+
+> xfs/253, seems to be testing some kind of filename hashing stuff.
+> 
+
+This one tests metadump and restore, name obfuscation in particular it
+appears. It passes on a quick test for me with fairly recent code.
+
+> Do these failures seem plausibly attributable to a flaw in a low level driver,
+> or are these failures known issues with xfs or with the tests, or is there
+> something else I might be doing wrong?
+> 
+> (It occurs to me now I should try the tests with a different driver and
+> hardware and see how it behaves.)
+> 
+
+Probably a good idea. ;)
+
+> 
+> [root@localhost xfs]# diff -u ../../tests/xfs/122.out 122.out.bad | diffstat
+>  122.out.bad |   38 +++++++++++++++++++-------------------
+>  1 file changed, 19 insertions(+), 19 deletions(-)
+> [root@localhost xfs]# diff -u ../../tests/xfs/253.out 253.out.bad | diffstat
+>  253.out.bad |    2 ++
+>  1 file changed, 2 insertions(+)
+> [root@localhost xfs]# diff -u ../../tests/xfs/253.out 253.out.bad 
+> --- ../../tests/xfs/253.out	2014-06-16 10:51:35.881521766 -0500
+> +++ 253.out.bad	2014-06-16 18:01:13.862884730 -0500
+> @@ -1,2 +1,4 @@
+>  QA output created by 253
+>  Disciplyne of silence is goed.
+> +mount: Structure needs cleaning
+> +umount: /dev/sdb: not mounted
+> [root@localhost xfs]#
+> 
+
+I'm guessing the dump or restore failed to properly create the metadump
+image or restore it correctly. You probably want to try this on
+something known to be working.
+
+> Also, I noticed a few tests were not run, I presume that is not out of the ordinary.
+> 
+> xfs/189	 [not run] noattr2 mount option not supported on /dev/sdb
+> xfs/190 1s ... 1s
+> xfs/191	 [not run] no mkfs support for NFS v4 ACLs
+> xfs/194 1s ... 1s
+> xfs/195	 [not run] fsgqa user not defined.
+> xfs/196 5s ... 5s
+> xfs/197	 [not run] This test is only valid on 32 bit machines
+> 
+> And a few others skipped as well.
+> 
+
+This is generally normal. Tests will detect dependencies and/or settings
+and skip running if not applicable as opposed to causing failures for
+things that are problems with the test environment.
 
 Brian
 
->  				XFS_DBG_STRING /* DBG must be last */
->  
->  struct xfs_inode;
-> diff --git a/fs/xfs/xfs_types.h b/fs/xfs/xfs_types.h
-> index 65c6e66..b79dc66 100644
-> --- a/fs/xfs/xfs_types.h
-> +++ b/fs/xfs/xfs_types.h
-> @@ -38,43 +38,18 @@ typedef	__int32_t	xfs_tid_t;	/* transaction identifier */
->  typedef	__uint32_t	xfs_dablk_t;	/* dir/attr block number (in file) */
->  typedef	__uint32_t	xfs_dahash_t;	/* dir/attr hash value */
->  
-> -/*
-> - * These types are 64 bits on disk but are either 32 or 64 bits in memory.
-> - * Disk based types:
-> - */
-> -typedef __uint64_t	xfs_dfsbno_t;	/* blockno in filesystem (agno|agbno) */
-> -typedef __uint64_t	xfs_drfsbno_t;	/* blockno in filesystem (raw) */
-> -typedef	__uint64_t	xfs_drtbno_t;	/* extent (block) in realtime area */
-> -typedef	__uint64_t	xfs_dfiloff_t;	/* block number in a file */
-> -typedef	__uint64_t	xfs_dfilblks_t;	/* number of blocks in a file */
-> -
-> -/*
-> - * Memory based types are conditional.
-> - */
-> -#if XFS_BIG_BLKNOS
->  typedef	__uint64_t	xfs_fsblock_t;	/* blockno in filesystem (agno|agbno) */
->  typedef __uint64_t	xfs_rfsblock_t;	/* blockno in filesystem (raw) */
->  typedef __uint64_t	xfs_rtblock_t;	/* extent (block) in realtime area */
-> -typedef	__int64_t	xfs_srtblock_t;	/* signed version of xfs_rtblock_t */
-> -#else
-> -typedef	__uint32_t	xfs_fsblock_t;	/* blockno in filesystem (agno|agbno) */
-> -typedef __uint32_t	xfs_rfsblock_t;	/* blockno in filesystem (raw) */
-> -typedef __uint32_t	xfs_rtblock_t;	/* extent (block) in realtime area */
-> -typedef	__int32_t	xfs_srtblock_t;	/* signed version of xfs_rtblock_t */
-> -#endif
->  typedef __uint64_t	xfs_fileoff_t;	/* block number in a file */
-> -typedef __int64_t	xfs_sfiloff_t;	/* signed block number in a file */
->  typedef __uint64_t	xfs_filblks_t;	/* number of blocks in a file */
->  
-> +typedef	__int64_t	xfs_srtblock_t;	/* signed version of xfs_rtblock_t */
-> +typedef __int64_t	xfs_sfiloff_t;	/* signed block number in a file */
->  
->  /*
->   * Null values for the types.
->   */
-> -#define	NULLDFSBNO	((xfs_dfsbno_t)-1)
-> -#define	NULLDRFSBNO	((xfs_drfsbno_t)-1)
-> -#define	NULLDRTBNO	((xfs_drtbno_t)-1)
-> -#define	NULLDFILOFF	((xfs_dfiloff_t)-1)
-> -
->  #define	NULLFSBLOCK	((xfs_fsblock_t)-1)
->  #define	NULLRFSBLOCK	((xfs_rfsblock_t)-1)
->  #define	NULLRTBLOCK	((xfs_rtblock_t)-1)
-> -- 
-> 1.7.10.4
+> Thanks,
+> 
+> -- steve
 > 
 > _______________________________________________
 > xfs mailing list
