@@ -1,29 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id E7ED27F3F
-	for <xfs@oss.sgi.com>; Tue, 17 Jun 2014 03:51:45 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id D63AF304059
-	for <xfs@oss.sgi.com>; Tue, 17 Jun 2014 01:51:42 -0700 (PDT)
-Received: from fgwmail2.fujitsu.co.jp (fgwmail2.fujitsu.co.jp [164.71.1.135])
-	by cuda.sgi.com with ESMTP id 8TVwVLEz1wobUhpX (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 17 Jun 2014 01:51:41 -0700 (PDT)
-Received: from kw-mxauth.gw.nic.fujitsu.com (unknown [10.0.237.134])
-	by fgwmail2.fujitsu.co.jp (Postfix) with ESMTP id 53F653EE0C7
-	for <xfs@oss.sgi.com>; Tue, 17 Jun 2014 17:51:39 +0900 (JST)
-Received: from s4.gw.fujitsu.co.jp (s4.gw.nic.fujitsu.com [10.0.50.94])
-	by kw-mxauth.gw.nic.fujitsu.com (Postfix) with ESMTP id 6B800AC02CD
-	for <xfs@oss.sgi.com>; Tue, 17 Jun 2014 17:51:38 +0900 (JST)
-Received: from g01jpfmpwyt02.exch.g01.fujitsu.local
-	(g01jpfmpwyt02.exch.g01.fujitsu.local [10.128.193.56])
-	by s4.gw.fujitsu.co.jp (Postfix) with ESMTP id 128851DB8037
-	for <xfs@oss.sgi.com>; Tue, 17 Jun 2014 17:51:38 +0900 (JST)
-Message-ID: <53A0013A.1010100@jp.fujitsu.com>
-Date: Tue, 17 Jun 2014 17:50:02 +0900
-From: Masayoshi Mizuma <m.mizuma@jp.fujitsu.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id D84CF7F3F
+	for <xfs@oss.sgi.com>; Tue, 17 Jun 2014 07:37:50 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id C9B2A8F8059
+	for <xfs@oss.sgi.com>; Tue, 17 Jun 2014 05:37:47 -0700 (PDT)
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	sPyQWh0aSld1WHWy for <xfs@oss.sgi.com>;
+	Tue, 17 Jun 2014 05:37:42 -0700 (PDT)
+Date: Tue, 17 Jun 2014 22:37:38 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: V5 format and man mkfs.xfs
+Message-ID: <20140617123738.GH9508@dastard>
+References: <20140617082651.GA27971@citd.de>
 MIME-Version: 1.0
-Subject: xfs: two deadlock problems occur when kswapd writebacks XFS pages.
+Content-Disposition: inline
+In-Reply-To: <20140617082651.GA27971@citd.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -36,106 +29,44 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-mm@kvack.org, xfs@oss.sgi.com
+To: Matthias Schniedermeyer <ms@citd.de>
+Cc: xfs@oss.sgi.com
 
-I found two deadlock problems occur when kswapd writebacks XFS pages.
-I detected these problems on RHEL kernel actually, and I suppose these
-also happen on upstream kernel (3.16-rc1).
+On Tue, Jun 17, 2014 at 10:26:51AM +0200, Matthias Schniedermeyer wrote:
+> Hi
+> 
+> How seriously meant is "V5 isn't experimental anymore"?
 
-1.
+"Fully supported" isn't a clear enough statement?
 
-A process (processA) has acquired read semaphore "xfs_cil.xc_ctx_lock"
-at xfs_log_commit_cil() and it is waiting for the kswapd. Then, a
-kworker has issued xlog_cil_push_work() and it is waiting for acquiring
-the write semaphore. kswapd is waiting for acquiring the read semaphore
-at xfs_log_commit_cil() because the kworker has been waiting before for
-acquiring the write semaphore at xlog_cil_push(). Therefore, a deadlock
-happens.
+> I ask because the man-page only mentions the syntax to enable it by 
+> accident. A.k.a. the backport of ftype to V4.
+> (man-page of xfsprogs 3.2.0 in Debian-SID)
 
-The deadlock flow is as follows.
+That's intentional. V5 superblocks are an implementation detail that
+most users don't even need to know about. They care about the name
+of the features they are enabling at mkfs time, not the details of
+the on-disk implementation of those features.
 
-  processA              | kworker                  | kswapd              
-  ----------------------+--------------------------+----------------------
-| xfs_trans_commit      |                          |
-| xfs_log_commit_cil    |                          |
-| down_read(xc_ctx_lock)|                          |
-| xlog_cil_insert_items |                          |
-| xlog_cil_insert_format_items                     |
-| kmem_alloc            |                          |
-| :                     |                          |
-| shrink_inactive_list  |                          |
-| congestion_wait       |                          |
-| # waiting for kswapd..|                          |
-|                       | xlog_cil_push_work       |
-|                       | xlog_cil_push            |
-|                       | xfs_trans_commit         |
-|                       | down_write(xc_ctx_lock)  |
-|                       | # waiting for processA...|
-|                       |                          | shrink_page_list
-|                       |                          | xfs_vm_writepage
-|                       |                          | xfs_map_blocks
-|                       |                          | xfs_iomap_write_allocate
-|                       |                          | xfs_trans_commit
-|                       |                          | xfs_log_commit_cil
-|                       |                          | down_read(xc_ctx_lock)
-V(time)                 |                          | # waiting for kworker...
-  ----------------------+--------------------------+-----------------------
+> And you still have to know that crc means V5.
 
-To fix this, should we up the read semaphore before calling kmem_alloc()
-at xlog_cil_insert_format_items() to avoid blocking the kworker? Or,
-should we the second argument of kmem_alloc() from KM_SLEEP|KM_NOFS
-to KM_NOSLEEP to avoid waiting for the kswapd. Or...
+Why do you care about the format mkfs.xfs chooses for you - it's
+based on the features you requested. V5 isn't magically faster than
+V4 - there are many cases where it is slower due to CRC overhead
+or the overhead of the larger inode it requires. So unless you
+request a feature that requires it at mkfs time, you don't get that
+format.
 
-2. 
+In a year or so we'll change the mkfs default so that CRCs are
+enabled by default, but we can't do that until all the distro's have
+had time to pick up a kernel that fully supports the CRC feature....
 
-A kworker (kworkerA), whish is a writeback thread, is waiting for
-the XFS allocation thread (kworkerB) while it writebacks XFS pages.
-kworkerB has started the allocation and it is waiting for kswapd to
-allocate free pages. kswapd has started writeback XFS pages and
-it is waiting for more log space. The reason why exhaustion of the
-log space is both the writeback thread and kswapd are stuck, so
-some processes, who have allocated the log space and are requesting
-free pages, are also stuck.
+Cheers,
 
-The deadlock flow is as follows.
-
-  kworkerA              | kworkerB                 | kswapd            
-  ----------------------+--------------------------+-----------------------
-| wb_writeback          |                          |
-| :                     |                          |
-| xfs_vm_writepage      |                          |
-| xfs_map_blocks        |                          |
-| xfs_iomap_write_allocate                         |
-| xfs_bmapi_write       |                          |
-| xfs_bmapi_allocate    |                          |
-| wait_for_completion   |                          |
-| # waiting for kworkerB...                        |
-|                       | xfs_bmapi_allocate_worker|
-|                       | :                        |
-|                       | xfs_buf_get_map          |
-|                       | xfs_buf_allocate_memory  |
-|                       | alloc_pages_current      |
-|                       | :                        |
-|                       | shrink_inactive_list     |
-|                       | congestion_wait          |
-|                       | # waiting for kswapd...  |
-|                       |                          | shrink_page_list
-|                       |                          | xfs_vm_writepage
-|                       |                          | :
-|                       |                          | xfs_log_reserve
-|                       |                          | :
-|                       |                          | xlog_grant_head_check
-|                       |                          | xlog_grant_head_wait
-|                       |                          | # waiting for more
-|                       |                          | # space...
-V(time)                 |                          |
-  ----------------------+--------------------------+-----------------------
-
-I don't have any ideas to fix this...
-
-Thanks,
-Masayoshi Mizuma
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
