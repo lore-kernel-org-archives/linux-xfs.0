@@ -1,26 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 612427F6F
-	for <xfs@oss.sgi.com>; Tue, 17 Jun 2014 11:21:44 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 4BE84304043
-	for <xfs@oss.sgi.com>; Tue, 17 Jun 2014 09:21:41 -0700 (PDT)
-Received: from g4t3425.houston.hp.com (g4t3425.houston.hp.com [15.201.208.53])
-	by cuda.sgi.com with ESMTP id uCirqO0UVckX3E7a (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 17 Jun 2014 09:21:39 -0700 (PDT)
-Received: from g4t3433.houston.hp.com (g4t3433.houston.hp.com [16.210.25.219])
-	by g4t3425.houston.hp.com (Postfix) with ESMTP id 262762E4
-	for <xfs@oss.sgi.com>; Tue, 17 Jun 2014 16:21:37 +0000 (UTC)
-Received: from beardog.cce.hp.com (beardog.cce.hp.com [16.84.84.24])
-	by g4t3433.houston.hp.com (Postfix) with ESMTP id 0FCE175
-	for <xfs@oss.sgi.com>; Tue, 17 Jun 2014 16:21:36 +0000 (UTC)
-Date: Tue, 17 Jun 2014 11:20:44 -0500
-From: scameron@beardog.cce.hp.com
-Subject: xfstests, weird looking code in src/resvtest.c
-Message-ID: <20140617162044.GL29459@beardog.cce.hp.com>
-Mime-Version: 1.0
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 39D877F3F
+	for <xfs@oss.sgi.com>; Tue, 17 Jun 2014 17:47:09 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id BA1D0AC005
+	for <xfs@oss.sgi.com>; Tue, 17 Jun 2014 15:47:05 -0700 (PDT)
+Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
+	[150.101.137.129]) by cuda.sgi.com with ESMTP id
+	NRF1aHZLF1ZecFDR for <xfs@oss.sgi.com>;
+	Tue, 17 Jun 2014 15:47:02 -0700 (PDT)
+Date: Wed, 18 Jun 2014 08:46:58 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: V5 format and man mkfs.xfs
+Message-ID: <20140617224658.GJ9508@dastard>
+References: <20140617082651.GA27971@citd.de> <20140617123738.GH9508@dastard>
+	<20140617152917.GA17378@citd.de>
+MIME-Version: 1.0
 Content-Disposition: inline
+In-Reply-To: <20140617152917.GA17378@citd.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,48 +30,45 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: scameron@beardog.cce.hp.com
+To: Matthias Schniedermeyer <ms@citd.de>
+Cc: xfs@oss.sgi.com
 
+On Tue, Jun 17, 2014 at 05:29:17PM +0200, Matthias Schniedermeyer wrote:
+> On 17.06.2014 22:37, Dave Chinner wrote:
+> > On Tue, Jun 17, 2014 at 10:26:51AM +0200, Matthias Schniedermeyer wrote:
+> > > Hi
+> > > 
+> > > How seriously meant is "V5 isn't experimental anymore"?
+> > 
+> > "Fully supported" isn't a clear enough statement?
+> 
+> I guess that was a "selective memory"-bug on my side.
+> 
+> > > I ask because the man-page only mentions the syntax to enable it by 
+> > > accident. A.k.a. the backport of ftype to V4.
+> > > (man-page of xfsprogs 3.2.0 in Debian-SID)
+> > 
+> > That's intentional. V5 superblocks are an implementation detail that
+> > most users don't even need to know about. They care about the name
+> > of the features they are enabling at mkfs time, not the details of
+> > the on-disk implementation of those features.
+> 
+> The question still stands.
+> 
+> The crc-option is only mentioned "by accident".
+> Without the ftype backport there would be no mention of the "feature 
+> crc".
 
-This code in xfstests src/resvtest.c looks pretty strange:
+Ok, so you're not reporting that we don't mention V5 filesystems as
+"V5" filesystems. You're reporting that the "-m crc" option is not
+documented. That's an oversight, and needs to be fixed.
 
-...
- 32         char            *readbuffer, *writebuffer;
-...
- 70         readbuffer = memalign(psize, bsize);
- 71         writebuffer = memalign(psize, bsize);
- 72         if (!readbuffer || !writebuffer) {
- 73                 perror("open");
- 74                 exit(1);
- 75         }
- 76         memset(writebuffer, 'A', sizeof(writebuffer));
+Cheers,
 
-^^^ writebuffer is a pointer, so using sizeof(writebuffer) here is
-odd. Is it intentional to put either 4 or 8 A's into writebuffer
-depending on sizeof a pointer?  Seems unlikely.
-
-110         while (++n < iterations) {
-111                 char *p;
-112                 int numerrors;
-113 
-114                 if (write(writefd, writebuffer, sizeof(writebuffer)) < 0) {
-115                         perror("write");
-116                         exit(1);
-117                 }
-
-So that write will write sizeof a pointer's worth of whatever's in writebuffer.
-Intentional?  Again, seems unlikely.
-
-This seems like maybe somebody initially declared writebuffer as an array, but
-later went back and changed it to a pointer, but forgot to fixup everywhere that
-referred to sizeof(writebuffer).
-
-I would have sent a patch but I'm not sure what this code is trying to do.
-
-gcc 4.4.7 (what comes with RHEL6u5) doesn't warn about this, but 4.8.3 does.
-
--- steve
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
