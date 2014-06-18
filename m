@@ -1,23 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 0E3517F3F
-	for <xfs@oss.sgi.com>; Tue, 17 Jun 2014 19:44:01 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id CCF207F3F
+	for <xfs@oss.sgi.com>; Tue, 17 Jun 2014 20:22:30 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 759A3AC004
-	for <xfs@oss.sgi.com>; Tue, 17 Jun 2014 17:44:00 -0700 (PDT)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id C1EFD304062
+	for <xfs@oss.sgi.com>; Tue, 17 Jun 2014 18:22:27 -0700 (PDT)
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	SKrMkvfPyWHk1v03 for <xfs@oss.sgi.com>;
-	Tue, 17 Jun 2014 17:43:58 -0700 (PDT)
-Date: Wed, 18 Jun 2014 10:43:55 +1000
+	eFeRyULVmBbBr5G8 for <xfs@oss.sgi.com>;
+	Tue, 17 Jun 2014 18:22:25 -0700 (PDT)
+Date: Wed, 18 Jun 2014 11:22:23 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v3] xfstests: test speculative preallocation reclaim on
-	ENOSPC/EDQUOT
-Message-ID: <20140618004355.GZ4453@dastard>
-References: <1402508170-61125-1-git-send-email-bfoster@redhat.com>
+Subject: Re: [PATCH] xfs/013: allow non-write fsstress operations in
+	background workload
+Message-ID: <20140618012223.GB4453@dastard>
+References: <1401820129-6543-1-git-send-email-bfoster@redhat.com>
+	<20140617235546.GY4453@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1402508170-61125-1-git-send-email-bfoster@redhat.com>
+In-Reply-To: <20140617235546.GY4453@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,60 +34,58 @@ Sender: xfs-bounces@oss.sgi.com
 To: Brian Foster <bfoster@redhat.com>
 Cc: fstests@vger.kernel.org, xfs@oss.sgi.com
 
-On Wed, Jun 11, 2014 at 01:36:10PM -0400, Brian Foster wrote:
-> XFS can allocate significant amounts of space to files via speculative
-> preallocation. Such preallocation may not be reclaimed automatically on
-> file close() if a file is repeatedly opened and extended. For smaller
-> filesystems with relatively large and slow growing files, this
-> preallocation can linger for some time, including contributing to out of
-> space conditions.
+On Wed, Jun 18, 2014 at 09:55:46AM +1000, Dave Chinner wrote:
+> On Tue, Jun 03, 2014 at 02:28:49PM -0400, Brian Foster wrote:
+> > It has been reported that test xfs/013 probably uses more space than
+> > necessary, exhausting space if run against a several GB sized ramdisk.
+> > xfs/013 primarily creates, links and removes inodes. Most of the space
+> > consumption occurs via the background fsstress workload.
+> > 
+> > Remove the fsstress -w option that suppresses non-write operations. This
+> > slightly reduces the storage footprint while still providing a
+> > background workload for the test.
+> > 
+> > Signed-off-by: Brian Foster <bfoster@redhat.com>
 > 
-> Create a situation where an fs is near out of space while several files
-> still have lingering, significant preallocations. Verify that new
-> writers reclaim the preallocated space rather than return ENOSPC. Repeat
-> a similar test for quota limits and EDQUOT.
+> This change makes the runtime blow out on a ramdisk from 4s to over
+> ten minutes on my test machine. Non-ramdisk machines seem to be
+> completely unaffected.
 > 
-> Signed-off-by: Brian Foster <bfoster@redhat.com>
+> I was going to say "no, bad change", but I noticed that my
+> spinning disk VMs weren't affected at all. Looking more closely,
+> xfs/013 is now pegging all 16 CPUs on the VM. The profile:
+> 
+> -  60.73%  [kernel]  [k] do_raw_spin_lock
+>    - do_raw_spin_lock
+>       - 99.98% _raw_spin_lock
+>          - 99.83% sync_inodes_sb
+>               sync_inodes_one_sb
+>               iterate_supers
+>               sys_sync
+>               tracesys
+>               sync
+> -  32.76%  [kernel]  [k] delay_tsc
+>    - delay_tsc
+>       - 98.43% __delay
+>            do_raw_spin_lock
+>          - _raw_spin_lock
+>             - 99.99% sync_inodes_sb
+>                  sync_inodes_one_sb
+>                  iterate_supers
+>                  sys_sync
+>                  tracesys
+>                  sync
+> 
+> OK, that's a kernel problem, not a problem with the change in the
+> test...
+> 
+> /me goes and dusts off his "concurrent sync scalability" patches.
 
-Hi Brian,
-
-My test machines all fail this test with output like this:
-
-xfs/014  - output mismatch (see /home/dave/src/xfstests-dev/results//xfs/014.out.bad)
-    --- tests/xfs/014.out       2014-06-18 09:32:59.000000000 +1000
-    +++ /home/dave/src/xfstests-dev/results//xfs/014.out.bad    2014-06-18 10:27:10.000000000 +1000
-    @@ -1,2 +1,7 @@
-     QA output created by 014
-     Silence is golden.
-    +/mnt/scratch/014.mnt/file.0: No space left on device
-    +pwrite64: No space left on device
-    +/mnt/scratch/014.mnt/file.2: No space left on device
-    +pwrite64: No space left on device
-    +pwrite64: Disk quota exceeded
-.....
-
-or this from a 1k block size filesystem:
-
-xfs/014  - output mismatch (see /home/dave/src/xfstests-dev/results//xfs/014.out.bad)
-    --- tests/xfs/014.out       2014-06-18 09:32:59.000000000 +1000
-    +++ /home/dave/src/xfstests-dev/results//xfs/014.out.bad    2014-06-18 10:29:15.000000000 +1000
-    @@ -1,2 +1,7 @@
-     QA output created by 014
-     Silence is golden.
-    +pwrite64: No space left on device
-    +pwrite64: No space left on device
-    +pwrite64: No space left on device
-    +pwrite64: No space left on device
-    +pwrite64: Disk quota exceeded
-.....
-
-I'm still going to commit the test as it stands, but could you see
-if you can reproduce this or suggest hints as to where it might be
-going wrong?
-
-FWIW, patches to tee the stderr output to both the golden output and
-the $seqres.full file will make it much easier to determine what
-write is failing....
+Turns out the reason for this problem suddenly showing up was that I
+had another (500TB) XFS filesystem mounted that had several million
+clean cached inodes on it from other testing I was doing before the
+xfstests run. Even so, having sync go off the deep end when there's
+lots of clean cached inodes seems like a Bad Thing to me. :/
 
 Cheers,
 
