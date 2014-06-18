@@ -1,26 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 1D6227F3F
-	for <xfs@oss.sgi.com>; Wed, 18 Jun 2014 01:13:31 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id D46628F8068
-	for <xfs@oss.sgi.com>; Tue, 17 Jun 2014 23:13:30 -0700 (PDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 9C01D7F3F
+	for <xfs@oss.sgi.com>; Wed, 18 Jun 2014 03:55:51 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 0BE7DAC003
+	for <xfs@oss.sgi.com>; Wed, 18 Jun 2014 01:55:47 -0700 (PDT)
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	r0aMdF0TALntdNPV for <xfs@oss.sgi.com>;
-	Tue, 17 Jun 2014 23:13:23 -0700 (PDT)
-Date: Wed, 18 Jun 2014 16:13:20 +1000
+	bQ4c9hfltlMZm4gm for <xfs@oss.sgi.com>;
+	Wed, 18 Jun 2014 01:55:44 -0700 (PDT)
+Received: from disappointment.disaster.area ([192.168.1.110]
+	helo=disappointment) by dastard with esmtp (Exim 4.80)
+	(envelope-from <dave@fromorbit.com>) id 1WxBef-0006wB-Jc
+	for xfs@oss.sgi.com; Wed, 18 Jun 2014 18:55:41 +1000
+Received: from dave by disappointment with local (Exim 4.82_1-5b7a7c0-XX)
+	(envelope-from <dave@disappointment.disaster>) id 1WxBef-0001Ck-IP
+	for xfs@oss.sgi.com; Wed, 18 Jun 2014 18:55:41 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] [RFC] xfs: wire up aio_fsync method
-Message-ID: <20140618061320.GP9508@dastard>
-References: <539E5D66.8040605@kernel.dk> <20140616071951.GD9508@dastard>
-	<539F45E2.5030909@kernel.dk> <20140616222729.GE9508@dastard>
-	<53A0416E.20105@kernel.dk> <20140618002845.GM9508@dastard>
-	<53A0F84A.6040708@kernel.dk> <20140618031329.GN9508@dastard>
-	<53A10597.6020707@kernel.dk> <20140618050230.GO9508@dastard>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20140618050230.GO9508@dastard>
+Subject: [PATCH] xfs: refine the allocation stack switch
+Date: Wed, 18 Jun 2014 18:55:41 +1000
+Message-Id: <1403081741-4596-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,127 +28,302 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Jens Axboe <axboe@kernel.dk>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-fsdevel@vger.kernel.org, linux-man@vger.kernel.org, linux-mm@kvack.org, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Wed, Jun 18, 2014 at 03:02:30PM +1000, Dave Chinner wrote:
-> On Tue, Jun 17, 2014 at 08:20:55PM -0700, Jens Axboe wrote:
-> > On 2014-06-17 20:13, Dave Chinner wrote:
-> > >On Tue, Jun 17, 2014 at 07:24:10PM -0700, Jens Axboe wrote:
-> > >>On 2014-06-17 17:28, Dave Chinner wrote:
-> > >>>[cc linux-mm]
-> > >>>
-> > >>>On Tue, Jun 17, 2014 at 07:23:58AM -0600, Jens Axboe wrote:
-> > >>>>On 2014-06-16 16:27, Dave Chinner wrote:
-> > >>>>>On Mon, Jun 16, 2014 at 01:30:42PM -0600, Jens Axboe wrote:
-> > >>>>>>On 06/16/2014 01:19 AM, Dave Chinner wrote:
-> > >>>>>>>On Sun, Jun 15, 2014 at 08:58:46PM -0600, Jens Axboe wrote:
-> > >>>>>>>>On 2014-06-15 20:00, Dave Chinner wrote:
-> > >>>>>>>>>On Mon, Jun 16, 2014 at 08:33:23AM +1000, Dave Chinner wrote:
-> > >>>>>>>>>FWIW, the non-linear system CPU overhead of a fs_mark test I've been
-> > >>>>>>>>>running isn't anything related to XFS.  The async fsync workqueue
-> > >>>>>>>>>results in several thousand worker threads dispatching IO
-> > >>>>>>>>>concurrently across 16 CPUs:
-> > >....
-> > >>>>>>>>>I know that the tag allocator has been rewritten, so I tested
-> > >>>>>>>>>against a current a current Linus kernel with the XFS aio-fsync
-> > >>>>>>>>>patch. The results are all over the place - from several sequential
-> > >>>>>>>>>runs of the same test (removing the files in between so each tests
-> > >>>>>>>>>starts from an empty fs):
-> > >>>>>>>>>
-> > >>>>>>>>>Wall time	sys time	IOPS	 files/s
-> > >>>>>>>>>4m58.151s	11m12.648s	30,000	 13,500
-> > >>>>>>>>>4m35.075s	12m45.900s	45,000	 15,000
-> > >>>>>>>>>3m10.665s	11m15.804s	65,000	 21,000
-> > >>>>>>>>>3m27.384s	11m54.723s	85,000	 20,000
-> > >>>>>>>>>3m59.574s	11m12.012s	50,000	 16,500
-> > >>>>>>>>>4m12.704s	12m15.720s	50,000	 17,000
-> 
-> ....
-> > >But the IOPS rate has definitely increased with this config
-> > >- I just saw 90k, 100k and 110k IOPS in the last 3 iterations of the
-> > >workload (the above profile is from the 100k IOPS period). However,
-> > >the wall time was still only 3m58s, which again tends to implicate
-> > >the write() portion of the benchmark for causing the slowdowns
-> > >rather than the fsync() portion that is dispatching all the IO...
-> > 
-> > Some contention for this case is hard to avoid, and the above looks
-> > better than 3.15 does. So the big question is whether it's worth
-> > fixing the gaps with multiple waitqueues (and if that actually still
-> > buys us anything), or whether we should just disable them.
-> > 
-> > If I can get you to try one more thing, can you apply this patch and
-> > give that a whirl? Get rid of the other patches I sent first, this
-> > has everything.
-> 
-> Not much difference in the CPU usage profiles or base line
-> performance. It runs at 3m10s from empty memory, and ~3m45s when
-> memory starts full of clean pages. system time varies from 10m40s to
-> 12m55s with no real correlation to overall runtime.
-> 
-> From observation of all the performance metrics I graph in real
-> time, however, the pattern of the peaks and troughs from run to run
-> and even iteration to iteration is much more regular than the
-> previous patches. So from that perspective it is an improvement.
-> Again, all the variability in the graphs show up when free memory
-> runs out...
+From: Dave Chinner <dchinner@redhat.com>
 
-And I've identified the commit that caused the memory reclaim
-behaviour to go south:
+The allocation stack switch at xfs_bmapi_allocate() has served it's
+purpose, but is no longer a sufficient solution to the stack usage
+problem we have in the XFS allocation path.
 
-commit 1f6d64829db78a7e1d63e15c9f48f0a5d2b5a679
-Author: Dave Chinner <dchinner@redhat.com>
-Date:   Fri Jun 6 15:59:59 2014 +1000
+Whilst the kernel stack size is now 16k, that is not a valid reason
+for undoing all our "keep stack usage down" modifications. What it
+does allow us to do is have the freedom to refine and perfect the
+modifications knowing that if we get it wrong it won't blow up in
+our faces - we have a safety net now.
 
-    xfs: block allocation work needs to be kswapd aware
-    
-    Upon memory pressure, kswapd calls xfs_vm_writepage() from
-    shrink_page_list(). This can result in delayed allocation occurring
-    and that gets deferred to the the allocation workqueue.
-    
-    The allocation then runs outside kswapd context, which means if it
-    needs memory (and it does to demand page metadata from disk) it can
-    block in shrink_inactive_list() waiting for IO congestion. These
-    blocking waits are normally avoiding in kswapd context, so under
-    memory pressure writeback from kswapd can be arbitrarily delayed by
-    memory reclaim.
-    
-    To avoid this, pass the kswapd context to the allocation being done
-    by the workqueue, so that memory reclaim understands correctly that
-    the work is being done for kswapd and therefore it is not blocked
-    and does not delay memory reclaim.
-    
-    To avoid issues with int->char conversion of flag fields (as noticed
-    in v1 of this patch) convert the flag fields in the struct
-    xfs_bmalloca to bool types. pahole indicates these variables are
-    still single byte variables, so no extra space is consumed by this
-    change.
-    
-    cc: <stable@vger.kernel.org>
-    Reported-by: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
-    Signed-off-by: Dave Chinner <dchinner@redhat.com>
-    Reviewed-by: Christoph Hellwig <hch@lst.de>
-    Signed-off-by: Dave Chinner <david@fromorbit.com>
+This is important because we still have the issue of older kernels
+having smaller stacks and that they are still supported and are
+demonstrating a wide range of different stack overflows.  Red Hat
+has several open bugs for allocation based stack overflows from
+directory modifications and direct IO block allocation and these
+problems still need to be solved. If we can solve them upstream,
+then distro's won't need to bake their own unique solutions.
 
-Reverting this patch results in runtimes of between 3m and 3m10s
-regardless of the amount of free memory when the test starts.
+To that end, I've observed that every allocation based stack
+overflow report has had a specific characteristic - it has happened
+during or directly after a bmap btree block split. That event
+requires a new block to be allocated to the tree, and so we
+effectively stack one allocation stack on top of another, and that's
+when we get into trouble.
 
-I'm probably going to have to revert this and make sure it stays out
-of the stable kernels now - I think that unbalancing memory reclaim
-and introducing performance degradations of 25-30% to work around a
-problem that is only hit by an extreme memory pressure stress test
-is a bad trade-off.....
+A further observation is that bmap btree block splits are much rarer
+than writeback allocation - over a range of different workloads I've
+observed the ratio of bmap btree inserts to splits ranges from 100:1
+(xfstests run) to 10000:1 (local VM image server with sparse files
+that range in the hundreds of thousands to millions of extents).
+Either way, bmap btree split events are much, much rarer than
+allocation events.
 
-Cheers,
+Finally, we have to move the kswapd state tothe allocation workqueue
+work when allocation is done on behalf of kswapd. This is proving to
+cause significant perturbation in performance under memory pressure
+and appears to be generating allocation deadlock warnings under some
+workloads, so avoiding the use of a workqueue for the majority of
+kswapd writeback allocation will minimise the impact of such
+behaviour.
 
-Dave.
+Hence it makes sense to move the stack switch to xfs_btree_split()
+and only do it for bmap btree splits. Stack switches during
+allocation will be much rarer, so there won't be significant
+performacne overhead caused by switching stacks. The worse case
+stack from all allocation paths will be split, not just writeback.
+And the majority of memory allocations will be done in the correct
+context (e.g. kswapd) without causing additional latency, and so we
+simplify the memory reclaim interactions between processes,
+workqueues and kswapd.
+
+The worst stack I've been able to generate with this patch in place
+is 5600 bytes deep. It's very revealing because we exit XFS at:
+
+37)     1768      64   kmem_cache_alloc+0x13b/0x170
+
+about 1800 bytes of stack consumed, and the remaining 3800 bytes
+(and 36 functions) is memory reclaim, swap and the IO stack. And
+this occurs in the inode allocation from an open(O_CREAT) syscall,
+not writeback.
+
+The amount of stack being used is much less than I've previously be
+able to generate - fs_mark testing has been able to generate stack
+usage of around 7k without too much trouble; with this patch it's
+only just getting to 5.5k. This is primarily because the metadata
+allocation paths (e.g. directory blocks) are no longer causing
+double splits on the same stack, and hence now stack tracing is
+showing swapping being the worst stack consumer rather than XFS.
+
+Performance of fs_mark inode create workloads is unchanged.
+Performance of fs_mark async fsync workloads is consistently good
+with context switches reduced by around 150,000/s (30%).
+Performance of dbench, streaming IO and postmark is unchanged.
+Allocation deadlock warnings have not been seen on the workloads
+that generated them since adding this patch.
+
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/libxfs/xfs_bmap.c  |  4 +--
+ fs/xfs/libxfs/xfs_btree.c | 84 +++++++++++++++++++++++++++++++++++++++++++++--
+ fs/xfs/xfs_bmap_util.c    | 53 ------------------------------
+ fs/xfs/xfs_bmap_util.h    |  2 --
+ 4 files changed, 84 insertions(+), 59 deletions(-)
+
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index 72a110e..d40cef0 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -4298,8 +4298,8 @@ xfs_bmapi_delay(
+ }
+ 
+ 
+-int
+-__xfs_bmapi_allocate(
++static int
++xfs_bmapi_allocate(
+ 	struct xfs_bmalloca	*bma)
+ {
+ 	struct xfs_mount	*mp = bma->ip->i_mount;
+diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
+index 0097c42..9de1153 100644
+--- a/fs/xfs/libxfs/xfs_btree.c
++++ b/fs/xfs/libxfs/xfs_btree.c
+@@ -33,6 +33,7 @@
+ #include "xfs_error.h"
+ #include "xfs_trace.h"
+ #include "xfs_cksum.h"
++#include "xfs_alloc.h"
+ 
+ /*
+  * Cursor allocation zone.
+@@ -2322,8 +2323,8 @@ error1:
+  * Return new block number and the key to its first
+  * record (to be inserted into parent).
+  */
+-STATIC int					/* error */
+-xfs_btree_split(
++int					/* error */
++__xfs_btree_split(
+ 	struct xfs_btree_cur	*cur,
+ 	int			level,
+ 	union xfs_btree_ptr	*ptrp,
+@@ -2503,6 +2504,85 @@ error0:
+ 	return error;
+ }
+ 
++struct xfs_btree_split_args {
++	struct xfs_btree_cur	*cur;
++	int			level;
++	union xfs_btree_ptr	*ptrp;
++	union xfs_btree_key	*key;
++	struct xfs_btree_cur	**curp;
++	int			*stat;		/* success/failure */
++	int			result;
++	bool			kswapd;	/* allocation in kswapd context */
++	struct completion	*done;
++	struct work_struct	work;
++};
++
++/*
++ * Stack switching interfaces for allocation
++ */
++static void
++xfs_btree_split_worker(
++	struct work_struct	*work)
++{
++	struct xfs_btree_split_args	*args = container_of(work,
++						struct xfs_btree_split_args, work);
++	unsigned long		pflags;
++	unsigned long		new_pflags = PF_FSTRANS;
++
++	/*
++	 * we are in a transaction context here, but may also be doing work
++	 * in kswapd context, and hence we may need to inherit that state
++	 * temporarily to ensure that we don't block waiting for memory reclaim
++	 * in any way.
++	 */
++	if (args->kswapd)
++		new_pflags |= PF_MEMALLOC | PF_SWAPWRITE | PF_KSWAPD;
++
++	current_set_flags_nested(&pflags, new_pflags);
++
++	args->result = __xfs_btree_split(args->cur, args->level, args->ptrp,
++					 args->key, args->curp, args->stat);
++	complete(args->done);
++
++	current_restore_flags_nested(&pflags, new_pflags);
++}
++
++/*
++ * BMBT split requests often come in with little stack to work on. Push
++ * them off to a worker thread so there is lots of stack to use. For the other
++ * btree types, just call directly to avoid the context switch overhead here.
++ */
++STATIC int					/* error */
++xfs_btree_split(
++	struct xfs_btree_cur	*cur,
++	int			level,
++	union xfs_btree_ptr	*ptrp,
++	union xfs_btree_key	*key,
++	struct xfs_btree_cur	**curp,
++	int			*stat)		/* success/failure */
++{
++	struct xfs_btree_split_args	args;
++	DECLARE_COMPLETION_ONSTACK(done);
++
++	if (cur->bc_btnum != XFS_BTNUM_BMAP)
++		return __xfs_btree_split(cur, level, ptrp, key, curp, stat);
++
++	args.cur = cur;
++	args.level = level;
++	args.ptrp = ptrp;
++	args.key = key;
++	args.curp = curp;
++	args.stat = stat;
++	args.done = &done;
++	args.kswapd = current_is_kswapd();
++	INIT_WORK_ONSTACK(&args.work, xfs_btree_split_worker);
++	queue_work(xfs_alloc_wq, &args.work);
++	wait_for_completion(&done);
++	destroy_work_on_stack(&args.work);
++	return args.result;
++}
++
++
+ /*
+  * Copy the old inode root contents into a real block and make the
+  * broot point to it.
+diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+index 56f050e..43a9744 100644
+--- a/fs/xfs/xfs_bmap_util.c
++++ b/fs/xfs/xfs_bmap_util.c
+@@ -249,59 +249,6 @@ xfs_bmap_rtalloc(
+ }
+ 
+ /*
+- * Stack switching interfaces for allocation
+- */
+-static void
+-xfs_bmapi_allocate_worker(
+-	struct work_struct	*work)
+-{
+-	struct xfs_bmalloca	*args = container_of(work,
+-						struct xfs_bmalloca, work);
+-	unsigned long		pflags;
+-	unsigned long		new_pflags = PF_FSTRANS;
+-
+-	/*
+-	 * we are in a transaction context here, but may also be doing work
+-	 * in kswapd context, and hence we may need to inherit that state
+-	 * temporarily to ensure that we don't block waiting for memory reclaim
+-	 * in any way.
+-	 */
+-	if (args->kswapd)
+-		new_pflags |= PF_MEMALLOC | PF_SWAPWRITE | PF_KSWAPD;
+-
+-	current_set_flags_nested(&pflags, new_pflags);
+-
+-	args->result = __xfs_bmapi_allocate(args);
+-	complete(args->done);
+-
+-	current_restore_flags_nested(&pflags, new_pflags);
+-}
+-
+-/*
+- * Some allocation requests often come in with little stack to work on. Push
+- * them off to a worker thread so there is lots of stack to use. Otherwise just
+- * call directly to avoid the context switch overhead here.
+- */
+-int
+-xfs_bmapi_allocate(
+-	struct xfs_bmalloca	*args)
+-{
+-	DECLARE_COMPLETION_ONSTACK(done);
+-
+-	if (!args->stack_switch)
+-		return __xfs_bmapi_allocate(args);
+-
+-
+-	args->done = &done;
+-	args->kswapd = current_is_kswapd();
+-	INIT_WORK_ONSTACK(&args->work, xfs_bmapi_allocate_worker);
+-	queue_work(xfs_alloc_wq, &args->work);
+-	wait_for_completion(&done);
+-	destroy_work_on_stack(&args->work);
+-	return args->result;
+-}
+-
+-/*
+  * Check if the endoff is outside the last extent. If so the caller will grow
+  * the allocation to a stripe unit boundary.  All offsets are considered outside
+  * the end of file for an empty fork, so 1 is returned in *eof in that case.
+diff --git a/fs/xfs/xfs_bmap_util.h b/fs/xfs/xfs_bmap_util.h
+index 075f722..5f8abb9 100644
+--- a/fs/xfs/xfs_bmap_util.h
++++ b/fs/xfs/xfs_bmap_util.h
+@@ -66,8 +66,6 @@ struct xfs_bmalloca {
+ int	xfs_bmap_finish(struct xfs_trans **tp, struct xfs_bmap_free *flist,
+ 			int *committed);
+ int	xfs_bmap_rtalloc(struct xfs_bmalloca *ap);
+-int	xfs_bmapi_allocate(struct xfs_bmalloca *args);
+-int	__xfs_bmapi_allocate(struct xfs_bmalloca *args);
+ int	xfs_bmap_eof(struct xfs_inode *ip, xfs_fileoff_t endoff,
+ 		     int whichfork, int *eof);
+ int	xfs_bmap_count_blocks(struct xfs_trans *tp, struct xfs_inode *ip,
 -- 
-Dave Chinner
-david@fromorbit.com
+2.0.0
 
 _______________________________________________
 xfs mailing list
