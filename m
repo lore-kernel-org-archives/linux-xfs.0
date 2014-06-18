@@ -1,25 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id C6D2B7F47
-	for <xfs@oss.sgi.com>; Tue, 17 Jun 2014 22:40:48 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id AF425304059
-	for <xfs@oss.sgi.com>; Tue, 17 Jun 2014 20:40:45 -0700 (PDT)
-Received: from mail-yk0-f171.google.com (mail-yk0-f171.google.com
-	[209.85.160.171]) by cuda.sgi.com with ESMTP id
-	jeVoSpvM7jfa7Gpd (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 17 Jun 2014 20:40:44 -0700 (PDT)
-Received: by mail-yk0-f171.google.com with SMTP id 200so192170ykr.16
-	for <xfs@oss.sgi.com>; Tue, 17 Jun 2014 20:40:44 -0700 (PDT)
-In-Reply-To: <20140617152917.GA17378@citd.de>
-References: <20140617082651.GA27971@citd.de> <20140617123738.GH9508@dastard>
-	<20140617152917.GA17378@citd.de>
+	by oss.sgi.com (Postfix) with ESMTP id D04147F50
+	for <xfs@oss.sgi.com>; Wed, 18 Jun 2014 00:03:17 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id B6BF830406B
+	for <xfs@oss.sgi.com>; Tue, 17 Jun 2014 22:03:14 -0700 (PDT)
+Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
+	[150.101.137.129]) by cuda.sgi.com with ESMTP id
+	xPY0qh1UAihFeEWA for <xfs@oss.sgi.com>;
+	Tue, 17 Jun 2014 22:03:12 -0700 (PDT)
+Date: Wed, 18 Jun 2014 15:02:30 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] [RFC] xfs: wire up aio_fsync method
+Message-ID: <20140618050230.GO9508@dastard>
+References: <20140616020030.GC9508@dastard> <539E5D66.8040605@kernel.dk>
+	<20140616071951.GD9508@dastard> <539F45E2.5030909@kernel.dk>
+	<20140616222729.GE9508@dastard> <53A0416E.20105@kernel.dk>
+	<20140618002845.GM9508@dastard> <53A0F84A.6040708@kernel.dk>
+	<20140618031329.GN9508@dastard> <53A10597.6020707@kernel.dk>
 MIME-Version: 1.0
-Subject: Re: V5 format and man mkfs.xfs
-From: Greg Freemyer <greg.freemyer@gmail.com>
-Date: Tue, 17 Jun 2014 23:39:58 -0400
-Message-ID: <83614fca-8984-4ca4-bd3e-d9cbd8a41aad@email.android.com>
+Content-Disposition: inline
+In-Reply-To: <53A10597.6020707@kernel.dk>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,78 +33,76 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Matthias Schniedermeyer <ms@citd.de>, Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: Jens Axboe <axboe@kernel.dk>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com, linux-mm@kvack.org, linux-man@vger.kernel.org
 
+On Tue, Jun 17, 2014 at 08:20:55PM -0700, Jens Axboe wrote:
+> On 2014-06-17 20:13, Dave Chinner wrote:
+> >On Tue, Jun 17, 2014 at 07:24:10PM -0700, Jens Axboe wrote:
+> >>On 2014-06-17 17:28, Dave Chinner wrote:
+> >>>[cc linux-mm]
+> >>>
+> >>>On Tue, Jun 17, 2014 at 07:23:58AM -0600, Jens Axboe wrote:
+> >>>>On 2014-06-16 16:27, Dave Chinner wrote:
+> >>>>>On Mon, Jun 16, 2014 at 01:30:42PM -0600, Jens Axboe wrote:
+> >>>>>>On 06/16/2014 01:19 AM, Dave Chinner wrote:
+> >>>>>>>On Sun, Jun 15, 2014 at 08:58:46PM -0600, Jens Axboe wrote:
+> >>>>>>>>On 2014-06-15 20:00, Dave Chinner wrote:
+> >>>>>>>>>On Mon, Jun 16, 2014 at 08:33:23AM +1000, Dave Chinner wrote:
+> >>>>>>>>>FWIW, the non-linear system CPU overhead of a fs_mark test I've been
+> >>>>>>>>>running isn't anything related to XFS.  The async fsync workqueue
+> >>>>>>>>>results in several thousand worker threads dispatching IO
+> >>>>>>>>>concurrently across 16 CPUs:
+> >....
+> >>>>>>>>>I know that the tag allocator has been rewritten, so I tested
+> >>>>>>>>>against a current a current Linus kernel with the XFS aio-fsync
+> >>>>>>>>>patch. The results are all over the place - from several sequential
+> >>>>>>>>>runs of the same test (removing the files in between so each tests
+> >>>>>>>>>starts from an empty fs):
+> >>>>>>>>>
+> >>>>>>>>>Wall time	sys time	IOPS	 files/s
+> >>>>>>>>>4m58.151s	11m12.648s	30,000	 13,500
+> >>>>>>>>>4m35.075s	12m45.900s	45,000	 15,000
+> >>>>>>>>>3m10.665s	11m15.804s	65,000	 21,000
+> >>>>>>>>>3m27.384s	11m54.723s	85,000	 20,000
+> >>>>>>>>>3m59.574s	11m12.012s	50,000	 16,500
+> >>>>>>>>>4m12.704s	12m15.720s	50,000	 17,000
 
+....
+> >But the IOPS rate has definitely increased with this config
+> >- I just saw 90k, 100k and 110k IOPS in the last 3 iterations of the
+> >workload (the above profile is from the 100k IOPS period). However,
+> >the wall time was still only 3m58s, which again tends to implicate
+> >the write() portion of the benchmark for causing the slowdowns
+> >rather than the fsync() portion that is dispatching all the IO...
+> 
+> Some contention for this case is hard to avoid, and the above looks
+> better than 3.15 does. So the big question is whether it's worth
+> fixing the gaps with multiple waitqueues (and if that actually still
+> buys us anything), or whether we should just disable them.
+> 
+> If I can get you to try one more thing, can you apply this patch and
+> give that a whirl? Get rid of the other patches I sent first, this
+> has everything.
 
-On June 17, 2014 11:29:17 AM EDT, Matthias Schniedermeyer <ms@citd.de> wrote:
->On 17.06.2014 22:37, Dave Chinner wrote:
->> On Tue, Jun 17, 2014 at 10:26:51AM +0200, Matthias Schniedermeyer
->wrote:
->> > Hi
->> > 
->> > How seriously meant is "V5 isn't experimental anymore"?
->> 
->> "Fully supported" isn't a clear enough statement?
->
->I guess that was a "selective memory"-bug on my side.
->
->> > I ask because the man-page only mentions the syntax to enable it by
->
->> > accident. A.k.a. the backport of ftype to V4.
->> > (man-page of xfsprogs 3.2.0 in Debian-SID)
->> 
->> That's intentional. V5 superblocks are an implementation detail that
->> most users don't even need to know about. They care about the name
->> of the features they are enabling at mkfs time, not the details of
->> the on-disk implementation of those features.
->
->The question still stands.
->
->The crc-option is only mentioned "by accident".
->Without the ftype backport there would be no mention of the "feature 
->crc".
->
->Furthermore i suspect that the ftype-feature also wouldn't be
->mentionted 
->without the V4 backport.
->
->Which beggs the question, what other features are "burried" in V5 that 
->aren't mentioned in the man-page.
->
->And are there any other "-m" options, because "-m" (asside from the 
->ftype accident) is completly undocumented.
->
->> > And you still have to know that crc means V5.
->> 
->> Why do you care about the format mkfs.xfs chooses for you - it's
->> based on the features you requested. V5 isn't magically faster than
->
->I find the crc feature relativly important.
->
->I personally had exprienced an USB enclosure(-model. As in i had
->several 
->of those) that under rare circumstances flipped or cleared a single bit
->
->in a specific bit-pattern). Such corruption most likely ends up inside
->a 
->data-file because most times there is more data than meta-data. But 
->COULD happend inside the meta-data.
->
->Since that day i have nearly everything MD5(or SHA256)ed so i can at 
->least detect if i have a data-corruption.
->
->Fortunatly that never happend again after i replaced that enclosure 
->model. Which i can say with pretty high confidence.
+Not much difference in the CPU usage profiles or base line
+performance. It runs at 3m10s from empty memory, and ~3m45s when
+memory starts full of clean pages. system time varies from 10m40s to
+12m55s with no real correlation to overall runtime.
 
-I md5 hash a lot of important files.  I've seen lots of failures to verify over the years.  As you note, it is typically a hardware failure, but they happen none the less.
+>From observation of all the performance metrics I graph in real
+time, however, the pattern of the peaks and troughs from run to run
+and even iteration to iteration is much more regular than the
+previous patches. So from that perspective it is an improvement.
+Again, all the variability in the graphs show up when free memory
+runs out...
 
-Recently the most common failure has been the sata cables.  They are not very robust if you connect/disconnect them very often.
+Cheers,
 
-Greg
+Dave.
 -- 
-Sent from my Android phone with K-9 Mail. Please excuse my brevity.
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
