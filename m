@@ -1,22 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id CA7557F3F
-	for <xfs@oss.sgi.com>; Wed, 18 Jun 2014 07:01:31 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id A79BC8F8059
-	for <xfs@oss.sgi.com>; Wed, 18 Jun 2014 05:01:28 -0700 (PDT)
-Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
-	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	IhTm6bA5HjjV8fVS for <xfs@oss.sgi.com>;
-	Wed, 18 Jun 2014 05:01:26 -0700 (PDT)
-Date: Wed, 18 Jun 2014 22:01:24 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: log record CRC mismatch: found 0x10a71f1d, expected 0xe012d25f
-Message-ID: <20140618120124.GR9508@dastard>
-References: <alpine.DEB.2.19.4.1406180224150.4757@trent.utfs.org>
+	by oss.sgi.com (Postfix) with ESMTP id 521B87F3F
+	for <xfs@oss.sgi.com>; Wed, 18 Jun 2014 07:28:14 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 4737F8F8033
+	for <xfs@oss.sgi.com>; Wed, 18 Jun 2014 05:28:14 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id Cuh3RMNJV2ohBjHJ (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 18 Jun 2014 05:28:13 -0700 (PDT)
+Date: Wed, 18 Jun 2014 08:28:03 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH v3] xfstests: test speculative preallocation reclaim on
+	ENOSPC/EDQUOT
+Message-ID: <20140618122803.GA57367@bfoster.bfoster>
+References: <1402508170-61125-1-git-send-email-bfoster@redhat.com>
+	<20140618004355.GZ4453@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <alpine.DEB.2.19.4.1406180224150.4757@trent.utfs.org>
+In-Reply-To: <20140618004355.GZ4453@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,90 +31,82 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christian Kujau <lists@nerdbynature.de>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: fstests@vger.kernel.org, xfs@oss.sgi.com
 
-On Wed, Jun 18, 2014 at 02:44:27AM -0700, Christian Kujau wrote:
-> Hi,
+On Wed, Jun 18, 2014 at 10:43:55AM +1000, Dave Chinner wrote:
+> On Wed, Jun 11, 2014 at 01:36:10PM -0400, Brian Foster wrote:
+> > XFS can allocate significant amounts of space to files via speculative
+> > preallocation. Such preallocation may not be reclaimed automatically on
+> > file close() if a file is repeatedly opened and extended. For smaller
+> > filesystems with relatively large and slow growing files, this
+> > preallocation can linger for some time, including contributing to out of
+> > space conditions.
+> > 
+> > Create a situation where an fs is near out of space while several files
+> > still have lingering, significant preallocations. Verify that new
+> > writers reclaim the preallocated space rather than return ENOSPC. Repeat
+> > a similar test for quota limits and EDQUOT.
+> > 
+> > Signed-off-by: Brian Foster <bfoster@redhat.com>
 > 
-> this PowerBook G4 crashed (power supply failed) and now I have to wait a 
-> few days until the new PSU arrives. In the meantime I attached its 
-> external disks to an Intel Atom machine (i686) and wanted to mount the 
-> disks:
-
-The XFS transactions in the log are not endian neutral - they are
-written in the endian format of the current CPU. PowerBook G4 is a
-ppc chip which is big endian, intel atom is little endian.
-
-The log headers are always big endian, and they have a field in
-the header to determine the endianness of the contents of the log
-records...
-
-> # mount -t xfs /dev/mapper/wdc1 /mnt/media
-> mount: /dev/mapper/wdc1: can't read superblock
+> Hi Brian,
 > 
-> In dmesg:
+> My test machines all fail this test with output like this:
 > 
-> XFS (dm-3): Mounting Filesystem
-> XFS (dm-3): Starting recovery (logdev: internal)
-> XFS (dm-3): log record CRC mismatch: found 0x10a71f1d, expected 0xe012d25f.
-> f8808000: 00 00 00 01 00 00 00 00 69 01 00 00 76 63 5a 10  ........i...vcZ.
-> f8808010: 00 00 00 10 69 00 00 00 54 52 41 4e 00 00 00 2a  ....i...TRAN...*
-> XFS (dm-3): dirty log written in incompatible format - can't recover
-> XFS (dm-3): log mount/recovery failed: error 5
-> XFS (dm-3): log mount failed
 
-	if (unlikely(head->h_fmt != cpu_to_be32(XLOG_FMT))) {
-                xfs_warn(mp,
-        "dirty log written in incompatible format - can't recover");
+This is most likely due to not having the corresponding eofblocks scan
+on enospc patches (as noted on irc). The test creates the conditions
+that currently lead to ENOSPC and tests that the scan frees up enough
+space to allow writes to proceed.
 
-#ifdef XFS_NATIVE_HOST
-#define XLOG_FMT XLOG_FMT_LINUX_BE
-#else
-#define XLOG_FMT XLOG_FMT_LINUX_LE
-#endif
+Let me know if you continue to reproduce this and I'll dig further into
+it...
 
-So that's exactly what I'd expect to see from filesystem with the
-wrong endianness in the log.
+Brian
 
-> Note: /dev/mapper/wdc1 is a dm-crypt device, not sure if this matters 
-> though.
+> xfs/014  - output mismatch (see /home/dave/src/xfstests-dev/results//xfs/014.out.bad)
+>     --- tests/xfs/014.out       2014-06-18 09:32:59.000000000 +1000
+>     +++ /home/dave/src/xfstests-dev/results//xfs/014.out.bad    2014-06-18 10:27:10.000000000 +1000
+>     @@ -1,2 +1,7 @@
+>      QA output created by 014
+>      Silence is golden.
+>     +/mnt/scratch/014.mnt/file.0: No space left on device
+>     +pwrite64: No space left on device
+>     +/mnt/scratch/014.mnt/file.2: No space left on device
+>     +pwrite64: No space left on device
+>     +pwrite64: Disk quota exceeded
+> .....
 > 
-> Running "xfs_repair -n /dev/mapper/wdc1" came back with an exit code of 
-> "0" and did not report anything unusual (attached below).
+> or this from a 1k block size filesystem:
 > 
-> Running xfs_repair (v3.2.0 from Fedora 20) *without* "-n" warns that the 
-> filesystem has valuable metadata changes and advises to mount it first. Or 
-> use "xfs_repair -L" to clear the log, but I have not done this just yet.
-
-"-n" simply ignores what is in the log.
-
-> I *think* I have mounted the same filesystem before on this i686 system 
-> (some weeks ago) but then the filesystem got umounted cleanly from the 
-> PowerPC system, where this disk is attached to usually.
-
-Yes, that's the only way to safely move a filesystem between
-machines of different endianness - a clean log has nothing to
-replay, so no endian problems and all new records will be written
-according to the endianness of the host the filesystem is currently
-mounted on.
-
-> Could it be that endianess has something to do with it? The PowerPC is 
-> big-endian I think, and the i686 Laptop is little-endian. Even though I'm 
-> almost certain that I've mounted the disk before, now that the filesystem 
-> needs to be recovered first, maybe endianess matters now?
-
-Always has mattered for the log. We're slowly moving the structure
-of the internal code to be able to fix the endianess of the
-transaction contents, but we're not really in any hurry given most
-archs are moving to be little endian anyway....
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> xfs/014  - output mismatch (see /home/dave/src/xfstests-dev/results//xfs/014.out.bad)
+>     --- tests/xfs/014.out       2014-06-18 09:32:59.000000000 +1000
+>     +++ /home/dave/src/xfstests-dev/results//xfs/014.out.bad    2014-06-18 10:29:15.000000000 +1000
+>     @@ -1,2 +1,7 @@
+>      QA output created by 014
+>      Silence is golden.
+>     +pwrite64: No space left on device
+>     +pwrite64: No space left on device
+>     +pwrite64: No space left on device
+>     +pwrite64: No space left on device
+>     +pwrite64: Disk quota exceeded
+> .....
+> 
+> I'm still going to commit the test as it stands, but could you see
+> if you can reproduce this or suggest hints as to where it might be
+> going wrong?
+> 
+> FWIW, patches to tee the stderr output to both the golden output and
+> the $seqres.full file will make it much easier to determine what
+> write is failing....
+> 
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
