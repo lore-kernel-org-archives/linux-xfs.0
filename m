@@ -1,25 +1,31 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 9C01D7F3F
-	for <xfs@oss.sgi.com>; Wed, 18 Jun 2014 03:55:51 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 0BE7DAC003
-	for <xfs@oss.sgi.com>; Wed, 18 Jun 2014 01:55:47 -0700 (PDT)
-Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
-	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	bQ4c9hfltlMZm4gm for <xfs@oss.sgi.com>;
-	Wed, 18 Jun 2014 01:55:44 -0700 (PDT)
-Received: from disappointment.disaster.area ([192.168.1.110]
-	helo=disappointment) by dastard with esmtp (Exim 4.80)
-	(envelope-from <dave@fromorbit.com>) id 1WxBef-0006wB-Jc
-	for xfs@oss.sgi.com; Wed, 18 Jun 2014 18:55:41 +1000
-Received: from dave by disappointment with local (Exim 4.82_1-5b7a7c0-XX)
-	(envelope-from <dave@disappointment.disaster>) id 1WxBef-0001Ck-IP
-	for xfs@oss.sgi.com; Wed, 18 Jun 2014 18:55:41 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH] xfs: refine the allocation stack switch
-Date: Wed, 18 Jun 2014 18:55:41 +1000
-Message-Id: <1403081741-4596-1-git-send-email-david@fromorbit.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 89CA37F3F
+	for <xfs@oss.sgi.com>; Wed, 18 Jun 2014 04:37:52 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 735178F8065
+	for <xfs@oss.sgi.com>; Wed, 18 Jun 2014 02:37:52 -0700 (PDT)
+Received: from fgwmail.fujitsu.co.jp (fgwmail.fujitsu.co.jp [164.71.1.133]) by
+	cuda.sgi.com with ESMTP id JDwdtEhKNChFGnKs (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 18 Jun 2014 02:37:49 -0700 (PDT)
+Received: from kw-mxoi1.gw.nic.fujitsu.com (unknown [10.0.237.133])
+	by fgwmail.fujitsu.co.jp (Postfix) with ESMTP id 201B63EE0BD
+	for <xfs@oss.sgi.com>; Wed, 18 Jun 2014 18:37:48 +0900 (JST)
+Received: from s3.gw.fujitsu.co.jp (s3.gw.nic.fujitsu.com [10.0.50.93])
+	by kw-mxoi1.gw.nic.fujitsu.com (Postfix) with ESMTP id 39101AC060F
+	for <xfs@oss.sgi.com>; Wed, 18 Jun 2014 18:37:47 +0900 (JST)
+Received: from g01jpfmpwyt03.exch.g01.fujitsu.local
+	(g01jpfmpwyt03.exch.g01.fujitsu.local [10.128.193.57])
+	by s3.gw.fujitsu.co.jp (Postfix) with ESMTP id DCC69E18002
+	for <xfs@oss.sgi.com>; Wed, 18 Jun 2014 18:37:46 +0900 (JST)
+Message-ID: <53A15DC7.50001@jp.fujitsu.com>
+Date: Wed, 18 Jun 2014 18:37:11 +0900
+From: Masayoshi Mizuma <m.mizuma@jp.fujitsu.com>
+MIME-Version: 1.0
+Subject: Re: xfs: two deadlock problems occur when kswapd writebacks XFS pages.
+References: <53A0013A.1010100@jp.fujitsu.com> <20140617132609.GI9508@dastard>
+In-Reply-To: <20140617132609.GI9508@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,302 +34,209 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-mm@kvack.org, xfs@oss.sgi.com
 
-From: Dave Chinner <dchinner@redhat.com>
 
-The allocation stack switch at xfs_bmapi_allocate() has served it's
-purpose, but is no longer a sufficient solution to the stack usage
-problem we have in the XFS allocation path.
+On Tue, 17 Jun 2014 23:26:09 +1000 Dave Chinner wrote:
+> On Tue, Jun 17, 2014 at 05:50:02PM +0900, Masayoshi Mizuma wrote:
+>> I found two deadlock problems occur when kswapd writebacks XFS pages.
+>> I detected these problems on RHEL kernel actually, and I suppose these
+>> also happen on upstream kernel (3.16-rc1).
+>>
+>> 1.
+>>
+>> A process (processA) has acquired read semaphore "xfs_cil.xc_ctx_lock"
+>> at xfs_log_commit_cil() and it is waiting for the kswapd. Then, a
+>> kworker has issued xlog_cil_push_work() and it is waiting for acquiring
+>> the write semaphore. kswapd is waiting for acquiring the read semaphore
+>> at xfs_log_commit_cil() because the kworker has been waiting before for
+>> acquiring the write semaphore at xlog_cil_push(). Therefore, a deadlock
+>> happens.
+>>
+>> The deadlock flow is as follows.
+>>
+>>    processA              | kworker                  | kswapd
+>>    ----------------------+--------------------------+----------------------
+>> | xfs_trans_commit      |                          |
+>> | xfs_log_commit_cil    |                          |
+>> | down_read(xc_ctx_lock)|                          |
+>> | xlog_cil_insert_items |                          |
+>> | xlog_cil_insert_format_items                     |
+>> | kmem_alloc            |                          |
+>> | :                     |                          |
+>> | shrink_inactive_list  |                          |
+>> | congestion_wait       |                          |
+>> | # waiting for kswapd..|                          |
+>> |                       | xlog_cil_push_work       |
+>> |                       | xlog_cil_push            |
+>> |                       | xfs_trans_commit         |
+>> |                       | down_write(xc_ctx_lock)  |
+>> |                       | # waiting for processA...|
+>> |                       |                          | shrink_page_list
+>> |                       |                          | xfs_vm_writepage
+>> |                       |                          | xfs_map_blocks
+>> |                       |                          | xfs_iomap_write_allocate
+>> |                       |                          | xfs_trans_commit
+>> |                       |                          | xfs_log_commit_cil
+>> |                       |                          | down_read(xc_ctx_lock)
+>> V(time)                 |                          | # waiting for kworker...
+>>    ----------------------+--------------------------+-----------------------
+>
+> Where's the deadlock here? congestion_wait() simply times out and
+> processA continues onward doing memory reclaim. It should continue
+> making progress, albeit slowly, and if it isn't then the allocation
+> will fail. If the allocation repeatedly fails then you should be
+> seeing this in the logs:
+>
+> XFS: possible memory allocation deadlock in <func> (mode:0x%x)
+>
+> If you aren't seeing that in the logs a few times a second and never
+> stopping, then the system is still making progress and isn't
+> deadlocked.
 
-Whilst the kernel stack size is now 16k, that is not a valid reason
-for undoing all our "keep stack usage down" modifications. What it
-does allow us to do is have the freedom to refine and perfect the
-modifications knowing that if we get it wrong it won't blow up in
-our faces - we have a safety net now.
+processA is stuck at following while loop. In this situation,
+too_many_isolated() always returns true because kswapd is also stuck...
 
-This is important because we still have the issue of older kernels
-having smaller stacks and that they are still supported and are
-demonstrating a wide range of different stack overflows.  Red Hat
-has several open bugs for allocation based stack overflows from
-directory modifications and direct IO block allocation and these
-problems still need to be solved. If we can solve them upstream,
-then distro's won't need to bake their own unique solutions.
-
-To that end, I've observed that every allocation based stack
-overflow report has had a specific characteristic - it has happened
-during or directly after a bmap btree block split. That event
-requires a new block to be allocated to the tree, and so we
-effectively stack one allocation stack on top of another, and that's
-when we get into trouble.
-
-A further observation is that bmap btree block splits are much rarer
-than writeback allocation - over a range of different workloads I've
-observed the ratio of bmap btree inserts to splits ranges from 100:1
-(xfstests run) to 10000:1 (local VM image server with sparse files
-that range in the hundreds of thousands to millions of extents).
-Either way, bmap btree split events are much, much rarer than
-allocation events.
-
-Finally, we have to move the kswapd state tothe allocation workqueue
-work when allocation is done on behalf of kswapd. This is proving to
-cause significant perturbation in performance under memory pressure
-and appears to be generating allocation deadlock warnings under some
-workloads, so avoiding the use of a workqueue for the majority of
-kswapd writeback allocation will minimise the impact of such
-behaviour.
-
-Hence it makes sense to move the stack switch to xfs_btree_split()
-and only do it for bmap btree splits. Stack switches during
-allocation will be much rarer, so there won't be significant
-performacne overhead caused by switching stacks. The worse case
-stack from all allocation paths will be split, not just writeback.
-And the majority of memory allocations will be done in the correct
-context (e.g. kswapd) without causing additional latency, and so we
-simplify the memory reclaim interactions between processes,
-workqueues and kswapd.
-
-The worst stack I've been able to generate with this patch in place
-is 5600 bytes deep. It's very revealing because we exit XFS at:
-
-37)     1768      64   kmem_cache_alloc+0x13b/0x170
-
-about 1800 bytes of stack consumed, and the remaining 3800 bytes
-(and 36 functions) is memory reclaim, swap and the IO stack. And
-this occurs in the inode allocation from an open(O_CREAT) syscall,
-not writeback.
-
-The amount of stack being used is much less than I've previously be
-able to generate - fs_mark testing has been able to generate stack
-usage of around 7k without too much trouble; with this patch it's
-only just getting to 5.5k. This is primarily because the metadata
-allocation paths (e.g. directory blocks) are no longer causing
-double splits on the same stack, and hence now stack tracing is
-showing swapping being the worst stack consumer rather than XFS.
-
-Performance of fs_mark inode create workloads is unchanged.
-Performance of fs_mark async fsync workloads is consistently good
-with context switches reduced by around 150,000/s (30%).
-Performance of dbench, streaming IO and postmark is unchanged.
-Allocation deadlock warnings have not been seen on the workloads
-that generated them since adding this patch.
-
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/libxfs/xfs_bmap.c  |  4 +--
- fs/xfs/libxfs/xfs_btree.c | 84 +++++++++++++++++++++++++++++++++++++++++++++--
- fs/xfs/xfs_bmap_util.c    | 53 ------------------------------
- fs/xfs/xfs_bmap_util.h    |  2 --
- 4 files changed, 84 insertions(+), 59 deletions(-)
+static noinline_for_stack unsigned long
+shrink_inactive_list(unsigned long nr_to_scan, struct lruvec *lruvec,
+                      struct scan_control *sc, enum lru_list lru)
+{
+...
+         while (unlikely(too_many_isolated(zone, file, sc))) {
+                 congestion_wait(BLK_RW_ASYNC, HZ/10);
 
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index 72a110e..d40cef0 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -4298,8 +4298,8 @@ xfs_bmapi_delay(
- }
- 
- 
--int
--__xfs_bmapi_allocate(
-+static int
-+xfs_bmapi_allocate(
- 	struct xfs_bmalloca	*bma)
- {
- 	struct xfs_mount	*mp = bma->ip->i_mount;
-diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
-index 0097c42..9de1153 100644
---- a/fs/xfs/libxfs/xfs_btree.c
-+++ b/fs/xfs/libxfs/xfs_btree.c
-@@ -33,6 +33,7 @@
- #include "xfs_error.h"
- #include "xfs_trace.h"
- #include "xfs_cksum.h"
-+#include "xfs_alloc.h"
- 
- /*
-  * Cursor allocation zone.
-@@ -2322,8 +2323,8 @@ error1:
-  * Return new block number and the key to its first
-  * record (to be inserted into parent).
-  */
--STATIC int					/* error */
--xfs_btree_split(
-+int					/* error */
-+__xfs_btree_split(
- 	struct xfs_btree_cur	*cur,
- 	int			level,
- 	union xfs_btree_ptr	*ptrp,
-@@ -2503,6 +2504,85 @@ error0:
- 	return error;
- }
- 
-+struct xfs_btree_split_args {
-+	struct xfs_btree_cur	*cur;
-+	int			level;
-+	union xfs_btree_ptr	*ptrp;
-+	union xfs_btree_key	*key;
-+	struct xfs_btree_cur	**curp;
-+	int			*stat;		/* success/failure */
-+	int			result;
-+	bool			kswapd;	/* allocation in kswapd context */
-+	struct completion	*done;
-+	struct work_struct	work;
-+};
-+
-+/*
-+ * Stack switching interfaces for allocation
-+ */
-+static void
-+xfs_btree_split_worker(
-+	struct work_struct	*work)
-+{
-+	struct xfs_btree_split_args	*args = container_of(work,
-+						struct xfs_btree_split_args, work);
-+	unsigned long		pflags;
-+	unsigned long		new_pflags = PF_FSTRANS;
-+
-+	/*
-+	 * we are in a transaction context here, but may also be doing work
-+	 * in kswapd context, and hence we may need to inherit that state
-+	 * temporarily to ensure that we don't block waiting for memory reclaim
-+	 * in any way.
-+	 */
-+	if (args->kswapd)
-+		new_pflags |= PF_MEMALLOC | PF_SWAPWRITE | PF_KSWAPD;
-+
-+	current_set_flags_nested(&pflags, new_pflags);
-+
-+	args->result = __xfs_btree_split(args->cur, args->level, args->ptrp,
-+					 args->key, args->curp, args->stat);
-+	complete(args->done);
-+
-+	current_restore_flags_nested(&pflags, new_pflags);
-+}
-+
-+/*
-+ * BMBT split requests often come in with little stack to work on. Push
-+ * them off to a worker thread so there is lots of stack to use. For the other
-+ * btree types, just call directly to avoid the context switch overhead here.
-+ */
-+STATIC int					/* error */
-+xfs_btree_split(
-+	struct xfs_btree_cur	*cur,
-+	int			level,
-+	union xfs_btree_ptr	*ptrp,
-+	union xfs_btree_key	*key,
-+	struct xfs_btree_cur	**curp,
-+	int			*stat)		/* success/failure */
-+{
-+	struct xfs_btree_split_args	args;
-+	DECLARE_COMPLETION_ONSTACK(done);
-+
-+	if (cur->bc_btnum != XFS_BTNUM_BMAP)
-+		return __xfs_btree_split(cur, level, ptrp, key, curp, stat);
-+
-+	args.cur = cur;
-+	args.level = level;
-+	args.ptrp = ptrp;
-+	args.key = key;
-+	args.curp = curp;
-+	args.stat = stat;
-+	args.done = &done;
-+	args.kswapd = current_is_kswapd();
-+	INIT_WORK_ONSTACK(&args.work, xfs_btree_split_worker);
-+	queue_work(xfs_alloc_wq, &args.work);
-+	wait_for_completion(&done);
-+	destroy_work_on_stack(&args.work);
-+	return args.result;
-+}
-+
-+
- /*
-  * Copy the old inode root contents into a real block and make the
-  * broot point to it.
-diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-index 56f050e..43a9744 100644
---- a/fs/xfs/xfs_bmap_util.c
-+++ b/fs/xfs/xfs_bmap_util.c
-@@ -249,59 +249,6 @@ xfs_bmap_rtalloc(
- }
- 
- /*
-- * Stack switching interfaces for allocation
-- */
--static void
--xfs_bmapi_allocate_worker(
--	struct work_struct	*work)
--{
--	struct xfs_bmalloca	*args = container_of(work,
--						struct xfs_bmalloca, work);
--	unsigned long		pflags;
--	unsigned long		new_pflags = PF_FSTRANS;
--
--	/*
--	 * we are in a transaction context here, but may also be doing work
--	 * in kswapd context, and hence we may need to inherit that state
--	 * temporarily to ensure that we don't block waiting for memory reclaim
--	 * in any way.
--	 */
--	if (args->kswapd)
--		new_pflags |= PF_MEMALLOC | PF_SWAPWRITE | PF_KSWAPD;
--
--	current_set_flags_nested(&pflags, new_pflags);
--
--	args->result = __xfs_bmapi_allocate(args);
--	complete(args->done);
--
--	current_restore_flags_nested(&pflags, new_pflags);
--}
--
--/*
-- * Some allocation requests often come in with little stack to work on. Push
-- * them off to a worker thread so there is lots of stack to use. Otherwise just
-- * call directly to avoid the context switch overhead here.
-- */
--int
--xfs_bmapi_allocate(
--	struct xfs_bmalloca	*args)
--{
--	DECLARE_COMPLETION_ONSTACK(done);
--
--	if (!args->stack_switch)
--		return __xfs_bmapi_allocate(args);
--
--
--	args->done = &done;
--	args->kswapd = current_is_kswapd();
--	INIT_WORK_ONSTACK(&args->work, xfs_bmapi_allocate_worker);
--	queue_work(xfs_alloc_wq, &args->work);
--	wait_for_completion(&done);
--	destroy_work_on_stack(&args->work);
--	return args->result;
--}
--
--/*
-  * Check if the endoff is outside the last extent. If so the caller will grow
-  * the allocation to a stripe unit boundary.  All offsets are considered outside
-  * the end of file for an empty fork, so 1 is returned in *eof in that case.
-diff --git a/fs/xfs/xfs_bmap_util.h b/fs/xfs/xfs_bmap_util.h
-index 075f722..5f8abb9 100644
---- a/fs/xfs/xfs_bmap_util.h
-+++ b/fs/xfs/xfs_bmap_util.h
-@@ -66,8 +66,6 @@ struct xfs_bmalloca {
- int	xfs_bmap_finish(struct xfs_trans **tp, struct xfs_bmap_free *flist,
- 			int *committed);
- int	xfs_bmap_rtalloc(struct xfs_bmalloca *ap);
--int	xfs_bmapi_allocate(struct xfs_bmalloca *args);
--int	__xfs_bmapi_allocate(struct xfs_bmalloca *args);
- int	xfs_bmap_eof(struct xfs_inode *ip, xfs_fileoff_t endoff,
- 		     int whichfork, int *eof);
- int	xfs_bmap_count_blocks(struct xfs_trans *tp, struct xfs_inode *ip,
--- 
-2.0.0
+                 /* We are about to die and free our memory. Return now. */
+                 if (fatal_signal_pending(current))
+                         return SWAP_CLUSTER_MAX;
+         }
+---
+
+On that point, this problem is similar to the problem fixed by
+the following commit.
+
+1f6d64829d xfs: block allocation work needs to be kswapd aware
+
+So, the same solution, for example we add PF_KSWAPD to current->flags
+before calling kmem_alloc(), may fix this problem1...
+
+>
+>> To fix this, should we up the read semaphore before calling kmem_alloc()
+>> at xlog_cil_insert_format_items() to avoid blocking the kworker? Or,
+>> should we the second argument of kmem_alloc() from KM_SLEEP|KM_NOFS
+>> to KM_NOSLEEP to avoid waiting for the kswapd. Or...
+>
+> Can't do that - it's in transaction context and so reclaim can't
+> recurse into the fs. Even if you do remove the flag, kmem_alloc()
+> will re-add the GFP_NOFS silently because of the PF_FSTRANS flag on
+> the task, so it won't affect anything...
+
+I think kmem_alloc() doesn't re-add the GFP_NOFS if the second argument
+is set to KM_NOSLEEP. kmem_alloc() will re-add GFP_ATOMIC and __GFP_NOWARN.
+
+---
+static inline gfp_t
+kmem_flags_convert(xfs_km_flags_t flags)
+{
+         gfp_t   lflags;
+
+         BUG_ON(flags & ~(KM_SLEEP|KM_NOSLEEP|KM_NOFS|KM_MAYFAIL|KM_ZERO));
+
+         if (flags & KM_NOSLEEP) {
+                 lflags = GFP_ATOMIC | __GFP_NOWARN;
+         } else {
+                 lflags = GFP_KERNEL | __GFP_NOWARN;
+                 if ((current->flags & PF_FSTRANS) || (flags & KM_NOFS))
+                         lflags &= ~__GFP_FS;
+         }
+
+         if (flags & KM_ZERO)
+                 lflags |= __GFP_ZERO;
+
+         return lflags;
+}
+---
+
+>
+> We might be able to do a down_write_trylock() in xlog_cil_push(),
+> but we can't delay the push for an arbitrary amount of time - the
+> write lock needs to be a barrier otherwise we'll get push
+> starvation and that will lead to checkpoint size overruns (i.e.
+> temporary journal corruption).
+
+I understand, thanks.
+
+>
+>> 2.
+>>
+>> A kworker (kworkerA), whish is a writeback thread, is waiting for
+>> the XFS allocation thread (kworkerB) while it writebacks XFS pages.
+>> kworkerB has started the allocation and it is waiting for kswapd to
+>> allocate free pages. kswapd has started writeback XFS pages and
+>> it is waiting for more log space. The reason why exhaustion of the
+>> log space is both the writeback thread and kswapd are stuck, so
+>> some processes, who have allocated the log space and are requesting
+>> free pages, are also stuck.
+>>
+>> The deadlock flow is as follows.
+>>
+>>    kworkerA              | kworkerB                 | kswapd
+>>    ----------------------+--------------------------+-----------------------
+>> | wb_writeback          |                          |
+>> | :                     |                          |
+>> | xfs_vm_writepage      |                          |
+>> | xfs_map_blocks        |                          |
+>> | xfs_iomap_write_allocate                         |
+>> | xfs_bmapi_write       |                          |
+>> | xfs_bmapi_allocate    |                          |
+>> | wait_for_completion   |                          |
+>> | # waiting for kworkerB...                        |
+>> |                       | xfs_bmapi_allocate_worker|
+>> |                       | :                        |
+>> |                       | xfs_buf_get_map          |
+>> |                       | xfs_buf_allocate_memory  |
+>> |                       | alloc_pages_current      |
+>> |                       | :                        |
+>> |                       | shrink_inactive_list     |
+>> |                       | congestion_wait          |
+>> |                       | # waiting for kswapd...  |
+>> |                       |                          | shrink_page_list
+>> |                       |                          | xfs_vm_writepage
+>> |                       |                          | :
+>> |                       |                          | xfs_log_reserve
+>> |                       |                          | :
+>> |                       |                          | xlog_grant_head_check
+>> |                       |                          | xlog_grant_head_wait
+>> |                       |                          | # waiting for more
+>> |                       |                          | # space...
+>> V(time)                 |                          |
+>>    ----------------------+--------------------------+-----------------------
+>
+> Again, anything in congestion_wait() is not stuck and if the
+> allocations here are repeatedly failing and progress is not being
+> made, then there should be log messages from XFS indicating this.
+
+kworkerB is stuck at the same reason as above processA.
+
+>
+> I need more information about your test setup to understand what is
+> going on here. Can you provide:
+>
+> http://xfs.org/index.php/XFS_FAQ#Q:_What_information_should_I_include_when_reporting_a_problem.3F
+>
+> The output of sysrq-w would also be useful here, because the above
+> abridged stack traces do not tell me everything about the state of
+> the system I need to know.
+
+OK, I will try to get the information when this problem2 is reproduced.
+
+Thanks,
+Masayoshi Mizuma
 
 _______________________________________________
 xfs mailing list
