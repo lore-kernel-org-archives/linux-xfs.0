@@ -1,25 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 883B47F47
-	for <xfs@oss.sgi.com>; Thu, 19 Jun 2014 00:34:16 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 775328F8054
-	for <xfs@oss.sgi.com>; Wed, 18 Jun 2014 22:34:13 -0700 (PDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 34B937F3F
+	for <xfs@oss.sgi.com>; Thu, 19 Jun 2014 00:42:39 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id C17A3AC003
+	for <xfs@oss.sgi.com>; Wed, 18 Jun 2014 22:42:38 -0700 (PDT)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	75FJDZuEwjGr3JCU for <xfs@oss.sgi.com>;
-	Wed, 18 Jun 2014 22:34:11 -0700 (PDT)
-Received: from disappointment.disaster.area ([192.168.1.110]
-	helo=disappointment) by dastard with esmtp (Exim 4.80)
-	(envelope-from <dave@fromorbit.com>) id 1WxUyz-0001gh-4K
-	for xfs@oss.sgi.com; Thu, 19 Jun 2014 15:33:57 +1000
-Received: from dave by disappointment with local (Exim 4.82_1-5b7a7c0-XX)
-	(envelope-from <dave@disappointment.disaster>) id 1WxUyz-0004xA-3K
-	for xfs@oss.sgi.com; Thu, 19 Jun 2014 15:33:57 +1000
+	LbXpz4PPdhuvRJKs for <xfs@oss.sgi.com>;
+	Wed, 18 Jun 2014 22:42:36 -0700 (PDT)
+Date: Thu, 19 Jun 2014 15:42:18 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 0/2] xfsprogs: fixes for CRC support
-Date: Thu, 19 Jun 2014 15:33:50 +1000
-Message-Id: <1403156032-18525-1-git-send-email-david@fromorbit.com>
+Subject: Re: xfs_freeze
+Message-ID: <20140619054218.GK4453@dastard>
+References: <75F0D28A05391A4E8539D13B4740B89C016860E8@Hik-MBX02.hikvision.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <75F0D28A05391A4E8539D13B4740B89C016860E8@Hik-MBX02.hikvision.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,35 +25,56 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: =?utf-8?B?6ZmI5paH5Lic?= <chenwendong@hikvision.com>
+Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-Hi folks,
-
-These two patches correct a couple of oversights in the new CRC
-support. Firstly, repair actually validates ACLs on disk (from a
-consistency POV, not correctness) and so it needs to know that
-v5 formats handle a lot more than 25 ACLs.
-
-Secondly, we forgot all about documenting the "-m crc=1" option in
-the mkfs.xfs(8) man page. So the second patch fixes that and also
-adds the missing documentation for the free inode btree option as
-well.
-
-With these two fixes and all the other xfsprogs patches I've pulled
-in and are currently testing, we're pretty much ready for a 3.2.1-rc
-release. Is there anything that we know about that we don't have
-patches for yet that needs to be done for 3.2.1?
-
-Cheers,
-
-Dave.
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gVGh1LCBKdW4gMTksIDIwMTQgYXQgMDU6MDk6MDRBTSArMDAwMCwg6ZmI5paH5LicIHdyb3Rl
+Ogo+IEhpOgo+IAo+IFtyb290QGxvY2FsaG9zdCAvXSMgbW91bnQgL2Rldi9sdm1fdmcvbHZtX2x2
+IC9uYXMvCj4gW3Jvb3RAbG9jYWxob3N0IC9dIyB4ZnNfZnJlZXplIC1mIC9uYXMvCj4gW3Jvb3RA
+bG9jYWxob3N0IC9dIyBsdmNyZWF0ZSAgLXMgLUwgNDBNIC1uIGN3ZCAgL2Rldi9sdm1fdmcvbHZt
+X2x2Cj4gICBSb3VuZGluZyB1cCBzaXplIHRvIGZ1bGwgcGh5c2ljYWwgZXh0ZW50IDQ4LjAwIE1p
+Qgo+ICAgZGV2aWNlLW1hcHBlcjogc3VzcGVuZCBpb2N0bCBvbiAgZmFpbGVkOiBEZXZpY2Ugb3Ig
+cmVzb3VyY2UgYnVzeQo+ICAgVW5hYmxlIHRvIHN1c3BlbmQgbHZtX3ZnLWx2bV9sdiAoMjUzOjAp
+Cj4gICBGYWlsZWQgdG8gc3VzcGVuZCBvcmlnaW4gbHZtX2x2Cj4gICBsaWJkZXZtYXBwZXIgZXhp
+dGluZyB3aXRoIDIgZGV2aWNlKHMpIHN0aWxsIHN1c3BlbmRlZC4KPiAKPiAKPiAKPiAKPiBXaHk/
+Cgpjb21taXQgMThlOWU1MTA0ZmNkOWE5NzNmZmUzZWVkMzgxNmM4N2YyYTFiNmNkMgpBdXRob3I6
+IEpvc2VmIEJhY2lrIDxqb3NlZkByZWRoYXQuY29tPgpEYXRlOiAgIFR1ZSBNYXIgMjMgMTA6MzQ6
+NTYgMjAxMCAtMDQwMAoKICAgIEludHJvZHVjZSBmcmVlemVfc3VwZXIgYW5kIHRoYXdfc3VwZXIg
+Zm9yIHRoZSBmc2ZyZWV6ZSBpb2N0bAogICAgCiAgICBDdXJyZW50bHkgdGhlIHdheSB3ZSBkbyBm
+cmVlemluZyBpcyBieSBwYXNzaW5nIHNiPnNfYmRldiB0byBmcmVlemVfYmRldiBhbmQgdGhlCiAg
+ICBsZXR0aW5nIGl0IGRvIGFsbCB0aGUgd29yay4gIEJ1dCBmcmVlemluZyBpcyBtb3JlIG9mIGFu
+IGZzIHRoaW5nLCBhbmQgZG9lc24ndAogICAgcmVhbGx5IGhhdmUgbXVjaCB0byBkbyB3aXRoIHRo
+ZSBiZGV2IGF0IGFsbCwgYWxsIHRoZSB3b3JrIGdldHMgZG9uZSB3aXRoIHRoZQogICAgc3VwZXIu
+ICBJbiBidHJmcyB3ZSBkbyBub3QgcG9wdWxhdGUgc19iZGV2LCBzaW5jZSB3ZSBjYW4gaGF2ZSBt
+dWx0aXBsZSBiZGV2J3MKICAgIGZvciBvbmUgZnMgYW5kIHNldHRpbmcgc19iZGV2IG1ha2VzIHJl
+bW92aW5nIGRldmljZXMgZnJvbSBhIHBvb2wga2luZCBvZiB0cmlja3kKICAgIFRoaXMgbWVhbnMg
+dGhhdCBmcmVlemluZyBhIGJ0cmZzIGZpbGVzeXN0ZW0gZmFpbHMsIHdoaWNoIGNhdXNlcyB1cyB0
+byBjb3JydXB0CiAgICB3aXRoIHRoaW5ncyBsaWtlIHR1eC1vbi1pY2Ugd2hpY2ggdXNlIHRoZSBm
+c2ZyZWV6ZSBtZWNoYW5pc20uICBTbyBpbnN0ZWFkIG9mCiAgICBwb3B1bGF0aW5nIHNiLT5zX2Jk
+ZXYgd2l0aCBhIHJhbmRvbSBiZGV2IGluIG91ciBwb29sLCBJJ3ZlIGJyb2tlbiB0aGUgYWN0dWFs
+IGZzCiAgICBmcmVlemluZyBzdHVmZiBpbnRvIGZyZWV6ZV9zdXBlciBhbmQgdGhhd19zdXBlci4g
+IFRoZXNlIGp1c3QgdGFrZSB0aGUKICAgIHN1cGVyX2Jsb2NrIHRoYXQgd2UncmUgZnJlZXppbmcg
+YW5kIGRvZXMgdGhlIGFwcHJvcHJpYXRlIHdvcmsuICBJdCdzIGJhc2ljYWxseQogICAganVzdCBj
+b3B5IGFuZCBwYXN0ZWQgZnJvbSBmcmVlemVfYmRldi4gIEkndmUgdGhlbiBjb252ZXJ0ZWQgZnJl
+ZXplX2JkZXYgb3ZlciB0bwogICAgdXNlIHRoZSBuZXcgc3VwZXIgaGVscGVycy4gIEkndmUgdGVz
+dGVkIHRoaXMgd2l0aCBleHQ0IGFuZCBidHJmcyBhbmQgdmVyaWZpZWQKICAgIGV2ZXJ5dGhpbmcg
+Y29udGludWVzIHRvIHdvcmsgdGhlIHNhbWUgYXMgYmVmb3JlLgogICAgCiAgICBUaGUgb25seSBu
+ZXcgZ290Y2hhIGlzIG11bHRpcGxlIGNhbGxzIHRvIHRoZSBmc2ZyZWV6ZSBpb2N0bCB3aWxsIHJl
+dHVybiBFQlVTWSBpCiAgICB0aGUgZnMgaXMgYWxyZWFkeSBmcm96ZW4uICBJIHRob3VnaHQgdGhp
+cyB3YXMgYSBiZXR0ZXIgc29sdXRpb24gdGhhbiBhZGRpbmcgYQogICAgZnJlZXplIGNvdW50ZXIg
+dG8gdGhlIHN1cGVyX2Jsb2NrLCBidXQgaWYgZXZlcnlib2R5IGhhdGVzIHRoaXMgaWRlYSBJJ20g
+b3BlbiB0bwogICAgc3VnZ2VzdGlvbnMuICBUaGFua3MsCiAgICAKICAgIFNpZ25lZC1vZmYtYnk6
+IEpvc2VmIEJhY2lrIDxqb3NlZkByZWRoYXQuY29tPgogICAgU2lnbmVkLW9mZi1ieTogQWwgVmly
+byA8dmlyb0B6ZW5pdi5saW51eC5vcmcudWs+CgoKSU9XcywgaWYgeW91IGZyZWV6ZSB0aGUgc3Vw
+ZXJibG9jayB2aWEgeGZzX2ZyZWV6ZSBvciBmc2ZyZWV6ZSwgeW91CmNhbm5vdCBuZXN0IGZyZWV6
+ZSByZXF1ZXN0cyAtIHlvdSdsbCBnZXQgRUJVU1kgb24gdGVoIHNlY29uZCBhdHRlbXB0CnRvIGZy
+ZWV6ZSB0aGUgc3VwZXJibG9jay4gCgpsdmNyZWF0ZSBtdXN0IGJlIGRvaW5nIGEgZnJlZXplIGZy
+b20gdGhlIGJsb2NrIGRldmljZSwgc28gaXQncwpmYWlsaW5nIHdpdGggRUJVU1kgYmVjYXVzZSB0
+aGUgc3VwZXJibG9jayBvbiB0aGUgYmxvY2sgZGV2aWNlIGlzCmFscmVhZHkgZnJvemVuLi4uCgot
+RGF2ZS4KLS0gCkRhdmUgQ2hpbm5lcgpkYXZpZEBmcm9tb3JiaXQuY29tCgpfX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bv
+c3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
