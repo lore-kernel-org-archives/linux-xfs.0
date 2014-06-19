@@ -1,19 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id C1F817F3F
-	for <xfs@oss.sgi.com>; Thu, 19 Jun 2014 00:09:16 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 720F1AC004
-	for <xfs@oss.sgi.com>; Wed, 18 Jun 2014 22:09:13 -0700 (PDT)
-Received: from mail.hikvision.com (mail.hikvision.com [123.157.208.19]) by
-	cuda.sgi.com with ESMTP id Am4ZBeCHm6k4R3NU for
-	<xfs@oss.sgi.com>; Wed, 18 Jun 2014 22:09:10 -0700 (PDT)
-From: =?gb2312?B?s8LOxLar?= <chenwendong@hikvision.com>
-Subject: xfs_freeze 
-Date: Thu, 19 Jun 2014 05:09:04 +0000
-Message-ID: <75F0D28A05391A4E8539D13B4740B89C016860E8@Hik-MBX02.hikvision.com>
-Content-Language: zh-CN
-MIME-Version: 1.0
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id BFF307F3F
+	for <xfs@oss.sgi.com>; Thu, 19 Jun 2014 00:34:14 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id BA4E9304039
+	for <xfs@oss.sgi.com>; Wed, 18 Jun 2014 22:34:14 -0700 (PDT)
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	5EP8b0WzotWEtuNU for <xfs@oss.sgi.com>;
+	Wed, 18 Jun 2014 22:34:13 -0700 (PDT)
+Received: from disappointment.disaster.area ([192.168.1.110]
+	helo=disappointment) by dastard with esmtp (Exim 4.80)
+	(envelope-from <dave@fromorbit.com>) id 1WxUyz-0001gj-5e
+	for xfs@oss.sgi.com; Thu, 19 Jun 2014 15:33:57 +1000
+Received: from dave by disappointment with local (Exim 4.82_1-5b7a7c0-XX)
+	(envelope-from <dave@disappointment.disaster>) id 1WxUyz-0004xI-4b
+	for xfs@oss.sgi.com; Thu, 19 Jun 2014 15:33:57 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: [PATCH 2/2] mkfs: add "-m" options to the man page
+Date: Thu, 19 Jun 2014 15:33:52 +1000
+Message-Id: <1403156032-18525-3-git-send-email-david@fromorbit.com>
+In-Reply-To: <1403156032-18525-1-git-send-email-david@fromorbit.com>
+References: <1403156032-18525-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,136 +30,92 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============4794400311917900333=="
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
---===============4794400311917900333==
-Content-Language: zh-CN
-Content-Type: multipart/alternative;
-	boundary="_000_75F0D28A05391A4E8539D13B4740B89C016860E8HikMBX02hikvisi_"
+From: Dave Chinner <dchinner@redhat.com>
 
---_000_75F0D28A05391A4E8539D13B4740B89C016860E8HikMBX02hikvisi_
-Content-Type: text/plain; charset="gb2312"
-Content-Transfer-Encoding: base64
+Because they are missing.
 
-SGk6DQoNCltyb290QGxvY2FsaG9zdCAvXSMgbW91bnQgL2Rldi9sdm1fdmcvbHZtX2x2IC9uYXMv
-DQpbcm9vdEBsb2NhbGhvc3QgL10jIHhmc19mcmVlemUgLWYgL25hcy8NCltyb290QGxvY2FsaG9z
-dCAvXSMgbHZjcmVhdGUgIC1zIC1MIDQwTSAtbiBjd2QgIC9kZXYvbHZtX3ZnL2x2bV9sdg0KICBS
-b3VuZGluZyB1cCBzaXplIHRvIGZ1bGwgcGh5c2ljYWwgZXh0ZW50IDQ4LjAwIE1pQg0KICBkZXZp
-Y2UtbWFwcGVyOiBzdXNwZW5kIGlvY3RsIG9uICBmYWlsZWQ6IERldmljZSBvciByZXNvdXJjZSBi
-dXN5DQogIFVuYWJsZSB0byBzdXNwZW5kIGx2bV92Zy1sdm1fbHYgKDI1MzowKQ0KICBGYWlsZWQg
-dG8gc3VzcGVuZCBvcmlnaW4gbHZtX2x2DQogIGxpYmRldm1hcHBlciBleGl0aW5nIHdpdGggMiBk
-ZXZpY2Uocykgc3RpbGwgc3VzcGVuZGVkLg0KDQoNCg0KDQpXaHk/DQoNClRoYW5rcw0K
+Reported-by: Matthias Schniedermeyer <ms@citd.de>
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ man/man8/mkfs.xfs.8 | 47 +++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 47 insertions(+)
 
---_000_75F0D28A05391A4E8539D13B4740B89C016860E8HikMBX02hikvisi_
-Content-Type: text/html; charset="gb2312"
-Content-Transfer-Encoding: quoted-printable
-
-<html xmlns:v=3D"urn:schemas-microsoft-com:vml" xmlns:o=3D"urn:schemas-micr=
-osoft-com:office:office" xmlns:w=3D"urn:schemas-microsoft-com:office:word" =
-xmlns:m=3D"http://schemas.microsoft.com/office/2004/12/omml" xmlns=3D"http:=
-//www.w3.org/TR/REC-html40">
-<head>
-<meta http-equiv=3D"Content-Type" content=3D"text/html; charset=3Dgb2312">
-<meta name=3D"Generator" content=3D"Microsoft Word 14 (filtered medium)">
-<style><!--
-/* Font Definitions */
-@font-face
-	{font-family:=CB=CE=CC=E5;
-	panose-1:2 1 6 0 3 1 1 1 1 1;}
-@font-face
-	{font-family:=CB=CE=CC=E5;
-	panose-1:2 1 6 0 3 1 1 1 1 1;}
-@font-face
-	{font-family:Calibri;
-	panose-1:2 15 5 2 2 2 4 3 2 4;}
-@font-face
-	{font-family:"\@=CB=CE=CC=E5";
-	panose-1:2 1 6 0 3 1 1 1 1 1;}
-/* Style Definitions */
-p.MsoNormal, li.MsoNormal, div.MsoNormal
-	{margin:0cm;
-	margin-bottom:.0001pt;
-	text-align:justify;
-	text-justify:inter-ideograph;
-	font-size:10.5pt;
-	font-family:"Calibri","sans-serif";}
-a:link, span.MsoHyperlink
-	{mso-style-priority:99;
-	color:blue;
-	text-decoration:underline;}
-a:visited, span.MsoHyperlinkFollowed
-	{mso-style-priority:99;
-	color:purple;
-	text-decoration:underline;}
-span.EmailStyle17
-	{mso-style-type:personal-compose;
-	font-family:"Calibri","sans-serif";
-	color:windowtext;}
-.MsoChpDefault
-	{mso-style-type:export-only;
-	font-family:"Calibri","sans-serif";}
-/* Page Definitions */
-@page WordSection1
-	{size:612.0pt 792.0pt;
-	margin:72.0pt 90.0pt 72.0pt 90.0pt;}
-div.WordSection1
-	{page:WordSection1;}
---></style><!--[if gte mso 9]><xml>
-<o:shapedefaults v:ext=3D"edit" spidmax=3D"1026" />
-</xml><![endif]--><!--[if gte mso 9]><xml>
-<o:shapelayout v:ext=3D"edit">
-<o:idmap v:ext=3D"edit" data=3D"1" />
-</o:shapelayout></xml><![endif]-->
-</head>
-<body lang=3D"ZH-CN" link=3D"blue" vlink=3D"purple" style=3D"text-justify-t=
-rim:punctuation">
-<div class=3D"WordSection1">
-<p class=3D"MsoNormal"><span lang=3D"EN-US">Hi:<o:p></o:p></span></p>
-<p class=3D"MsoNormal"><span lang=3D"EN-US"><o:p>&nbsp;</o:p></span></p>
-<p class=3D"MsoNormal"><span lang=3D"EN-US">[root@localhost /]# mount /dev/=
-lvm_vg/lvm_lv /nas/<o:p></o:p></span></p>
-<p class=3D"MsoNormal"><span lang=3D"EN-US">[root@localhost /]# xfs_freeze =
--f /nas/<o:p></o:p></span></p>
-<p class=3D"MsoNormal"><span lang=3D"EN-US">[root@localhost /]# lvcreate&nb=
-sp; -s -L 40M -n cwd&nbsp; /dev/lvm_vg/lvm_lv<o:p></o:p></span></p>
-<p class=3D"MsoNormal"><span lang=3D"EN-US">&nbsp; Rounding up size to full=
- physical extent 48.00 MiB<o:p></o:p></span></p>
-<p class=3D"MsoNormal"><span lang=3D"EN-US">&nbsp; device-mapper: suspend i=
-octl on&nbsp; failed: Device or resource busy<o:p></o:p></span></p>
-<p class=3D"MsoNormal"><span lang=3D"EN-US">&nbsp; Unable to suspend lvm_vg=
--lvm_lv (253:0)<o:p></o:p></span></p>
-<p class=3D"MsoNormal"><span lang=3D"EN-US">&nbsp; Failed to suspend origin=
- lvm_lv<o:p></o:p></span></p>
-<p class=3D"MsoNormal"><span lang=3D"EN-US">&nbsp; libdevmapper exiting wit=
-h 2 device(s) still suspended.<o:p></o:p></span></p>
-<p class=3D"MsoNormal"><span lang=3D"EN-US"><o:p>&nbsp;</o:p></span></p>
-<p class=3D"MsoNormal"><span lang=3D"EN-US"><o:p>&nbsp;</o:p></span></p>
-<p class=3D"MsoNormal"><span lang=3D"EN-US"><o:p>&nbsp;</o:p></span></p>
-<p class=3D"MsoNormal"><span lang=3D"EN-US"><o:p>&nbsp;</o:p></span></p>
-<p class=3D"MsoNormal"><span lang=3D"EN-US">Why? <o:p></o:p></span></p>
-<p class=3D"MsoNormal"><b><span lang=3D"EN-US"><o:p>&nbsp;</o:p></span></b>=
-</p>
-<p class=3D"MsoNormal"><b><span lang=3D"EN-US">Thanks<o:p></o:p></span></b>=
-</p>
-</div>
-</body>
-</html>
-
---_000_75F0D28A05391A4E8539D13B4740B89C016860E8HikMBX02hikvisi_--
-
-
---===============4794400311917900333==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+diff --git a/man/man8/mkfs.xfs.8 b/man/man8/mkfs.xfs.8
+index 8184e10..4ba07bf 100644
+--- a/man/man8/mkfs.xfs.8
++++ b/man/man8/mkfs.xfs.8
+@@ -7,6 +7,9 @@ mkfs.xfs \- construct an XFS filesystem
+ .B \-b
+ .I block_size
+ ] [
++.B \-m
++.I global_metadata_options
++] [
+ .B \-d
+ .I data_section_options
+ ] [
+@@ -125,6 +128,50 @@ The default value is 4096 bytes (4 KiB), the minimum is 512, and the
+ maximum is 65536 (64 KiB).
+ XFS on Linux currently only supports pagesize or smaller blocks.
+ .TP
++.BI \-m " global_metadata_options"
++These options specify metadata format options that either apply to the entire
++filesystem or aren't easily characterised by a specific functionality group. The
++valid
++.I global_metadata_options
++are:
++.RS 1.2i
++.TP
++.BI crc= value
++This is used to create a filesystem which maintains and checks CRC information
++in all metadata objects on disk. The value is either 0 to disable the feature,
++or 1 to enable the use of CRCs.
++.IP
++CRCs enable enhanced error detection due to
++hardware issues, whilst the format changes also improves crash recovery
++algorithms and  the ability of various tools to validate and repair metadata
++corruptions when they are found.
++The CRC algorithm used is CRC32c, so the overhead is dependent on CPU
++architecture as some CPUs have hardware acceleration of this algorithm.
++Typically the overhead of calculating and checking the CRCs is not noticable in
++normal operation.
++.IP
++By default,
++.B mkfs.xfs
++will not enable metadata CRCs.
++.TP
++.BI finobt= value
++This option enables the use of a separate free inode btree index in each
++allocation group. The value is either 0 to disable the feature, or 1 to create
++a free inode btree in each allocation group.
++.IP
++The free inode btree mirrors the existing allocated inode btree index which
++indexes both used and free inodes. The free inode btree does not index used
++inodes, allowing faster, more consistent inode allocation performance as
++filesystems age.
++.IP
++By default,
++.B mkfs.xfs
++will not create free inode btrees. This feature is also currently only available
++for filesystems created with the
++.B \-m crc=1
++option set.
++.RE
++.TP
+ .BI \-d " data_section_options"
+ These options specify the location, size, and other parameters of the
+ data section of the filesystem. The valid
+-- 
+2.0.0
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============4794400311917900333==--
