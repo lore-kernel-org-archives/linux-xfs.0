@@ -1,24 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 9E7027F3F
-	for <xfs@oss.sgi.com>; Fri, 20 Jun 2014 18:24:12 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 6827A304084
-	for <xfs@oss.sgi.com>; Fri, 20 Jun 2014 16:24:09 -0700 (PDT)
-Received: from mail-qg0-f44.google.com (mail-qg0-f44.google.com
-	[209.85.192.44]) by cuda.sgi.com with ESMTP id toGPiEztFCFbE0et
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Fri, 20 Jun 2014 16:24:07 -0700 (PDT)
-Received: by mail-qg0-f44.google.com with SMTP id j107so4099235qga.31
-	for <xfs@oss.sgi.com>; Fri, 20 Jun 2014 16:24:06 -0700 (PDT)
-Message-ID: <53A4C291.9060409@gmail.com>
-Date: Fri, 20 Jun 2014 19:24:01 -0400
-From: "Michael L. Semon" <mlsemon35@gmail.com>
+	by oss.sgi.com (Postfix) with ESMTP id 900CF7F3F
+	for <xfs@oss.sgi.com>; Fri, 20 Jun 2014 19:13:56 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 8598430408A
+	for <xfs@oss.sgi.com>; Fri, 20 Jun 2014 17:13:53 -0700 (PDT)
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	SeADf0wJLm3v1B1v for <xfs@oss.sgi.com>;
+	Fri, 20 Jun 2014 17:13:51 -0700 (PDT)
+Date: Sat, 21 Jun 2014 10:13:48 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 1/2] repair: support more than 25 ACLs
+Message-ID: <20140621001348.GV9508@dastard>
+References: <1403156032-18525-1-git-send-email-david@fromorbit.com>
+	<1403156032-18525-2-git-send-email-david@fromorbit.com>
+	<20140619130144.GA9043@bfoster.bfoster>
+	<20140619211414.GS9508@dastard>
+	<20140620121425.GA47159@bfoster.bfoster>
 MIME-Version: 1.0
-Subject: Re: xfs_repair issue with ACLs on v5 XFS when beyond v4 limits
-References: <5396799F.3050801@gmail.com> <20140610055254.GF9508@dastard>
-	<539A61B2.5040202@gmail.com> <20140619033552.GJ4453@dastard>
-In-Reply-To: <20140619033552.GJ4453@dastard>
+Content-Disposition: inline
+In-Reply-To: <20140620121425.GA47159@bfoster.bfoster>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,80 +33,86 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: Brian Foster <bfoster@redhat.com>
+Cc: xfs@oss.sgi.com
 
-On 06/18/2014 11:35 PM, Dave Chinner wrote:
-> On Thu, Jun 12, 2014 at 10:28:02PM -0400, Michael L. Semon wrote:
->> On 06/10/2014 01:52 AM, Dave Chinner wrote:
->>> On Mon, Jun 09, 2014 at 11:21:03PM -0400, Michael L. Semon wrote:
->>>> Hi!  I've been running around in circles trying to work with too many 
->>>> ACLs, even losing my ability to count for a while.  Along the way, 
->>>> xfs_repair from git xfsprogs (last commit around May 27) is showing 
->>>> the following symptoms:
->>>>
->>>> On v5-superblock XFS...
->>>>
->>>> 1) When the ACL count is just above the limit from v4-superblock XFS--
->>>> 96 is a good test figure--`xfs_repair -n` and `xfs_repair` will both 
->>>> end in a segmentation fault.
->>>
->>> I couldn't reproduce this - I suspect that this is a problem with
->>> the ACL struct having a hardcoded array size or userspace not
->>> having the correct padding in the on-disk structure definition and
->>> you are on a 32bit system. I think I've fixed that in the patch
->>> below.
->>
->> Maybe.  Pentium III has a narrower cacheline than the Pentium 4, so 
->> I was not surprised to see holes in the XFS kernel code, even in the 
->> non-XFS kernel structs.  Do I need to upgrade something (ACL, system 
->> kernel headers, etc.) or would a pahole trip through libxfs be more 
->> revealing?
->>
->> What I'm getting is that if xfs_repair is counting between 200 and 
->> 256 ACLs, it will mention that there are too many ACLs, and it will 
->> segfault.  With your patch, the areas below and above this range are 
->> OK.
->>
->> A sample session like the one I overwrote last time looks like this:
->>
->> Phase 1 - find and verify superblock...
->> Phase 2 - using internal log
->>         - zero log...
->>         - scan filesystem freespace and inode maps...
->>         - found root inode chunk
->> Phase 3 - for each AG...
->>         - scan and clear agi unlinked lists...
->>         - process known inodes and perform inode discovery...
->>         - agno = 0
->> Too many ACL entries, count 250
->> entry contains illegal value in attribute named SGI_ACL_FILE or SGI_ACL_DEFAULT
->> (segfault, either Error 4 or Error 5, forgot to bring dmesg)
+On Fri, Jun 20, 2014 at 08:14:26AM -0400, Brian Foster wrote:
+> On Fri, Jun 20, 2014 at 07:14:14AM +1000, Dave Chinner wrote:
+> > On Thu, Jun 19, 2014 at 09:01:45AM -0400, Brian Foster wrote:
+> > > On Thu, Jun 19, 2014 at 03:33:51PM +1000, Dave Chinner wrote:
+> > > > From: Dave Chinner <dchinner@redhat.com>
+> > > > 
+> > > > v5 superblock supports many more than 25 ACLs on an inode, but
+> > > > xfs_repair still thinks that the maximum is 25. Fix it and update
+> > > > the ACL definitions to match the kernel definitions. Also fix the
+> > > > remote attr maximum size off-by-one that the maximum number of v5
+> > > > ACLs tickles.
+> > > > 
+> > > > Reported-by: Michael L. Semon <mlsemon35@gmail.com>
+> > > > Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> > > > ---
+> > > 
+> ...
+> > 
+> > > > @@ -1624,7 +1639,16 @@ xfs_acl_from_disk(struct xfs_acl **aclp, struct xfs_acl_disk *dacl)
+> > > >  
+> > > >  
+> > > >  	end = &dacl->acl_entry[0] + count;
+> > > > -	acl = malloc((int)((char *)end - (char *)dacl));
+> > > > +	size = sizeof(dacl->acl_cnt) + (count * sizeof(struct xfs_acl_entry));
+> > > > +	if (size != (int)((char *)end - (char *)dacl)) {
+> > > > +		do_warn(_("ACL count (%d) does not match buffer size (%d/%d)\n"),
+> > > > +			  count, size, (int)((char *)end - (char *)dacl));
+> > > > +		*aclp = NULL;
+> > > > +		return EINVAL;
+> > > > +	}
+> > > 
+> > > This size check seems superfluous. In what scenario could it fail?
+> > 
+> > Kernel writes a corrupted ACL? Cosmic ray causes a single bit error
+> > in a sector on a non-crc filesystem? We do checks like these on
+> > variable size structures in many other places - not just ACLs - for
+> > verifying internal consistency of the structure we are parsing....
+> > 
 > 
-> Ok, your test found a bug in the patch that was causing segv's - at
-> about 20 ACLs, not 250. It's not the same as what you have reported,
-> but it was a stack corruption bug and so may just be triggering
-> differently on your machines.
-> 
-> Can you try the patch below?
+> Hmm, but what exactly are we checking for in this particular instance?
+> end is calculated as the offset of the first entry in struct xfs_acl
+> (constant) plus count * the entry structure size (variable * constant).
+> size is calculated as the size of the non-entry bit of xfs_acl
+> (constant) plus count * the entry structure size. The only variable
+> between the two calculations is count, and it's used in both. It seems
+> like these would always end up equivalent, regardless of what's on disk.
 
-This patch works!  The range from 4 ACL entries to the ACL limit 
-seems to be fine to xfs_repair.  No segfaults, and the ACL limit is 
-OK for this case.
- 
->> Maybe not...your E-mail patch doesn't have the git version at the 
->> bottom, so I wondered whether I installed the entire patch.  What 
->> I did get went through `git am` just fine, with one whitespace error.
-> 
-> That's because I didn't use git directly to generate it. As you
-> found out, it's still a valid patch...
+Ah, right, I see your point now. The old code used a fixed size
+structure (i.e. with an array of 25 ACLs in it). Hence the check was
+valid for that case, where a corrupted count could result in a
+structure overrun.
 
-Indeed.  All is well here, and hopefully, xfs_repair is a patch or two 
-more ready for the masses.
+> The only way I can see this fail is if we were to add a field to
+> xfs_acl.
 
-Good work!
+Actually, the old code did have a bug like this in it because the
+structure repair defined had different sizes on 32 and 64 bit
+machines. i.e. it didn't have the 4 bytes of padding the kernel
+structure had...
 
-Michael
+> The end calculation will inherit the size of the field by
+> virtue of using the entry offset at the end of the structure. The size
+> calculation would end up wrong as it checks the non-entry field size
+> explicitly. I'm not sure what that would tell us beyond the need to fix
+> this particular bit of code, so this really just seems like a potential
+> bug to me. Am I missing something else? (If so, I'd suggest a more
+> informative error message or a comment).
+
+No, I just misunderstood your comment. You are right, the code
+doesn't provide any value now, so I'll remove it.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
