@@ -1,9 +1,9 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 From: xfs@oss.sgi.com
-Subject: [XFS updates] XFS development tree branch, for-next,
-	updated. xfs-for-linus-3.16-rc1-13101-ga497c3b
-Message-Id: <20140623030053.85E227F51@oss.sgi.com>
-Date: Sun, 22 Jun 2014 22:00:52 -0500 (CDT)
+Subject: [XFS updates] XFS development tree branch, xfs-libxfs-restructure,
+	updated. xfs-for-linus-3.16-rc1-13107-gc59a5ac
+Message-Id: <20140623072359.C16CF7F47@oss.sgi.com>
+Date: Mon, 23 Jun 2014 02:23:59 -0500 (CDT)
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,7 +23,19 @@ This is an automated email from the git hooks/post-receive script. It was
 generated because a ref change was pushed to the repository containing
 the project "XFS development tree".
 
-The branch, for-next has been updated
+The branch, xfs-libxfs-restructure has been updated
+  discards  fcec2eb6a31bde491f4ce9ddd94b41c8aacccd43 (commit)
+  discards  e3584e38615389850684fcffd699d97e2e06f2d6 (commit)
+  discards  f212d6fcf5c1cc3a3980dd320804c1dfb9f49b75 (commit)
+  discards  e10404cf914273de8016d5992c7049bdb9a9a089 (commit)
+  discards  f3a19b3ad85dcc4a073270e1fb594eff37709788 (commit)
+  discards  d5a6cda3cf2c0860543db26bb5df7ed4404f74cd (commit)
+  c59a5ac xfs: global error sign conversion
+  63d512e libxfs: move source files
+  547a71f libxfs: move header files
+  62c9454 xfs: create libxfs infrastructure
+  b474c7a xfs: Nuke XFS_ERROR macro
+  d99831f xfs: return is not a function
   16b9057 Merge branch 'for-linus' of git://git.kernel.org/pub/scm/linux/kernel/git/viro/vfs
   9c1d528 Merge commit '9f12600fe425bc28f0ccba034a77783c09c15af4' into for-linus
   8d02076 ->splice_write() via ->write_iter()
@@ -39,263 +51,134 @@ The branch, for-next has been updated
   d8d3d94 pass iov_iter to ->direct_IO()
   cb66a7a kill generic_segment_checks()
   f8579f8 generic_file_direct_write(): switch to iov_iter
-      from  7691283d0561a350b7517be94818669fb5e3d910 (commit)
+      from  fcec2eb6a31bde491f4ce9ddd94b41c8aacccd43 (commit)
 
 Those revisions listed above that are new to this repository have
 not appeared on any other notification email; so we list those
 revisions in full, below.
 
 - Log -----------------------------------------------------------------
-commit 16b9057804c02e2d351e9c8f606e909b43cbd9e7
-Merge: 5c02c39 c2338f2
-Author: Linus Torvalds <torvalds@linux-foundation.org>
-Date:   Thu Jun 12 10:30:18 2014 -0700
+commit c59a5aca071806ce2ed7279bbaf78336da49ce85
+Author: Dave Chinner <dchinner@redhat.com>
+Date:   Mon Jun 23 16:50:54 2014 +1000
 
-    Merge branch 'for-linus' of git://git.kernel.org/pub/scm/linux/kernel/git/viro/vfs
+    xfs: global error sign conversion
     
-    Pull vfs updates from Al Viro:
-     "This the bunch that sat in -next + lock_parent() fix.  This is the
-      minimal set; there's more pending stuff.
+    Convert all the errors the core XFs code to negative error signs
+    like the rest of the kernel and remove all the sign conversion we
+    do in the interface layers.
     
-      In particular, I really hope to get acct.c fixes merged this cycle -
-      we need that to deal sanely with delayed-mntput stuff.  In the next
-      pile, hopefully - that series is fairly short and localized
-      (kernel/acct.c, fs/super.c and fs/namespace.c).  In this pile: more
-      iov_iter work.  Most of prereqs for ->splice_write with sane locking
-      order are there and Kent's dio rewrite would also fit nicely on top of
-      this pile"
+    Errors for conversion (and comparison) found via searches like:
     
-    * 'for-linus' of git://git.kernel.org/pub/scm/linux/kernel/git/viro/vfs: (70 commits)
-      lock_parent: don't step on stale ->d_parent of all-but-freed one
-      kill generic_file_splice_write()
-      ceph: switch to iter_file_splice_write()
-      shmem: switch to iter_file_splice_write()
-      nfs: switch to iter_splice_write_file()
-      fs/splice.c: remove unneeded exports
-      ocfs2: switch to iter_file_splice_write()
-      ->splice_write() via ->write_iter()
-      bio_vec-backed iov_iter
-      optimize copy_page_{to,from}_iter()
-      bury generic_file_aio_{read,write}
-      lustre: get rid of messing with iovecs
-      ceph: switch to ->write_iter()
-      ceph_sync_direct_write: stop poking into iov_iter guts
-      ceph_sync_read: stop poking into iov_iter guts
-      new helper: copy_page_from_iter()
-      fuse: switch to ->write_iter()
-      btrfs: switch to ->write_iter()
-      ocfs2: switch to ->write_iter()
-      xfs: switch to ->write_iter()
-      ...
+    $ git grep " E" fs/xfs
+    $ git grep "return E" fs/xfs
+    $ git grep " E[A-Z].*;$" fs/xfs
+    
+    Negation points found via searches like:
+    
+    $ git grep "= -[a-z,A-Z]" fs/xfs
+    $ git grep "return -[a-z,A-D,F-Z]" fs/xfs
+    $ git grep " -[a-z].*;" fs/xfs
+    
+    [ with some bits I missed from Brian Foster ]
+    
+    Signed-off-by: Dave Chinner <dchinner@redhat.com>
 
-commit 9c1d5284c79fea050f115eadeec1dd1758e5c630
-Merge: 5f07385 9f12600
-Author: Al Viro <viro@zeniv.linux.org.uk>
-Date:   Thu Jun 12 00:27:11 2014 -0400
+commit 63d512e1df8acffc3aa0068c6efab100c623968f
+Author: Dave Chinner <dchinner@redhat.com>
+Date:   Sun Jun 22 15:07:54 2014 +1000
 
-    Merge commit '9f12600fe425bc28f0ccba034a77783c09c15af4' into for-linus
+    libxfs: move source files
     
-    Backmerge of dcache.c changes from mainline.  It's that, or complete
-    rebase...
+    Move all the source files that are shared with userspace into
+    libxfs/. This is done as one big chunk simpy to get it done
+    quickly
     
-    Conflicts:
-    	fs/splice.c
-    
-    Signed-off-by: Al Viro <viro@zeniv.linux.org.uk>
+    Signed-off-by: Dave Chinner <dchinner@redhat.com>
 
-commit 8d0207652cbe27d1f962050737848e5ad4671958
-Author: Al Viro <viro@zeniv.linux.org.uk>
-Date:   Sat Apr 5 04:27:08 2014 -0400
+commit 547a71f18113e33ff2420ad8b1712c6ab497a1dc
+Author: Dave Chinner <dchinner@redhat.com>
+Date:   Sun Jun 22 15:06:54 2014 +1000
 
-    ->splice_write() via ->write_iter()
+    libxfs: move header files
     
-    iter_file_splice_write() - a ->splice_write() instance that gathers the
-    pipe buffers, builds a bio_vec-based iov_iter covering those and feeds
-    it to ->write_iter().  A bunch of simple cases coverted to that...
+    Move all the header files that are shared with userspace into
+    libxfs. This is done as one big chunk simpy to get it done quickly.
     
-    [AV: fixed the braino spotted by Cyrill]
-    
-    Signed-off-by: Al Viro <viro@zeniv.linux.org.uk>
+    Signed-off-by: Dave Chinner <dchinner@redhat.com>
 
-commit 412dd3a6daf0cadce1b2d6a34fa3713f40255579
-Merge: 23d4ed5 7691283
-Author: Linus Torvalds <torvalds@linux-foundation.org>
-Date:   Wed Jun 11 09:03:47 2014 -0700
+commit 62c94547670f715923950a326daf8b129ca05ee5
+Author: Dave Chinner <dchinner@redhat.com>
+Date:   Sun Jun 22 15:05:54 2014 +1000
 
-    Merge tag 'xfs-for-linus-3.16-rc1' of git://oss.sgi.com/xfs/xfs
+    xfs: create libxfs infrastructure
     
-    Pull xfs updates from Dave Chinner:
-     "This update contains:
-       - cleanup removing unused function args
-       - rework of the filestreams allocator to use dentry cache parent
-         lookups
-       - new on-disk free inode btree and optimised inode allocator
-       - various bug fixes
-       - rework of internal attribute API
-       - cleanup of superblock feature bit support to remove historic cruft
-       - more fixes and minor cleanups
-       - added a new directory/attribute geometry abstraction
-       - yet more fixes and minor cleanups"
+    To minimise the differences between kernel and userspace code,
+    split the kernel code into the same structure as the userspace code.
+    That is, the gneric core functionality of XFS is moved to a libxfs/
+    directory and treat it as a layering barrier in the XFS code.
     
-    * tag 'xfs-for-linus-3.16-rc1' of git://oss.sgi.com/xfs/xfs: (86 commits)
-      xfs: fix xfs_da_args sparse warning in xfs_readdir
-      xfs: Fix rounding in xfs_alloc_fix_len()
-      xfs: tone down writepage/releasepage WARN_ONs
-      xfs: small cleanup in xfs_lowbit64()
-      xfs: kill xfs_buf_geterror()
-      xfs: xfs_readsb needs to check for magic numbers
-      xfs: block allocation work needs to be kswapd aware
-      xfs: remove redundant geometry information from xfs_da_state
-      xfs: replace attr LBSIZE with xfs_da_geometry
-      xfs: pass xfs_da_args to xfs_attr_leaf_newentsize
-      xfs: use xfs_da_geometry for block size in attr code
-      xfs: remove mp->m_dir_geo from directory logging
-      xfs: reduce direct usage of mp->m_dir_geo
-      xfs: move node entry counts to xfs_da_geometry
-      xfs: convert dir/attr btree threshold to xfs_da_geometry
-      xfs: convert m_dirblksize to xfs_da_geometry
-      xfs: convert m_dirblkfsbs to xfs_da_geometry
-      xfs: convert directory segment limits to xfs_da_geometry
-      xfs: convert directory db conversion to xfs_da_geometry
-      xfs: convert directory dablk conversion to xfs_da_geometry
-      ...
+    This patch introduces the libxfs directory, the build infrastructure
+    and an initial source and header file to build. The libxfs directory
+    will contain the header files that are needed to build libxfs - most
+    of userspace does not care about the location of these header files
+    as they are accessed indirectly. Hence keeping them inside libxfs
+    makes it easy to track the changes and script the sync process as
+    the directory structure will be identical.
+    
+    To allow this changeover to occur in the kernel code, there are some
+    temporary infrastructure in the makefiles to grab the header
+    filesystem from both locations. Once all the files are moved,
+    modifications will be made in the source code that will make the
+    need for these include directives go away.
+    
+    Signed-off-by: Dave Chinner <dchinner@redhat.com>
 
-commit 23adbe12ef7d3d4195e80800ab36b37bee28cd03
-Author: Andy Lutomirski <luto@amacapital.net>
-Date:   Tue Jun 10 12:45:42 2014 -0700
+commit b474c7ae4395ba684e85fde8f55c8cf44a39afaf
+Author: Eric Sandeen <sandeen@sandeen.net>
+Date:   Sun Jun 22 15:04:54 2014 +1000
 
-    fs,userns: Change inode_capable to capable_wrt_inode_uidgid
+    xfs: Nuke XFS_ERROR macro
     
-    The kernel has no concept of capabilities with respect to inodes; inodes
-    exist independently of namespaces.  For example, inode_capable(inode,
-    CAP_LINUX_IMMUTABLE) would be nonsense.
+    XFS_ERROR was designed long ago to trap return values, but it's not
+    runtime configurable, it's not consistently used, and we can do
+    similar error trapping with ftrace scripts and triggers from
+    userspace.
     
-    This patch changes inode_capable to check for uid and gid mappings and
-    renames it to capable_wrt_inode_uidgid, which should make it more
-    obvious what it does.
+    Just nuke XFS_ERROR and associated bits.
     
-    Fixes CVE-2014-4014.
-    
-    Cc: Theodore Ts'o <tytso@mit.edu>
-    Cc: Serge Hallyn <serge.hallyn@ubuntu.com>
-    Cc: "Eric W. Biederman" <ebiederm@xmission.com>
-    Cc: Dave Chinner <david@fromorbit.com>
-    Cc: stable@vger.kernel.org
-    Signed-off-by: Andy Lutomirski <luto@amacapital.net>
-    Signed-off-by: Linus Torvalds <torvalds@linux-foundation.org>
+    Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+    Reviewed-by: Dave Chinner <dchinner@redhat.com>
+    Signed-off-by: Dave Chinner <david@fromorbit.com>
 
-commit bf97f3bc0c32140c43fe5ca53d23514ea46a54ca
-Author: Al Viro <viro@zeniv.linux.org.uk>
-Date:   Thu Apr 3 14:20:23 2014 -0400
+commit d99831ff393ff2e28d6110b41f24d9fecf986222
+Author: Eric Sandeen <sandeen@sandeen.net>
+Date:   Sun Jun 22 15:03:54 2014 +1000
 
-    xfs: switch to ->write_iter()
+    xfs: return is not a function
     
-    Signed-off-by: Al Viro <viro@zeniv.linux.org.uk>
-
-commit b4f5d2c6d1f88c79e48f1296076b3a6a22f58c0f
-Author: Al Viro <viro@zeniv.linux.org.uk>
-Date:   Wed Apr 2 14:37:59 2014 -0400
-
-    xfs: switch to ->read_iter()
+    return is not a function.  "return(EIO);" is silly;
+    "return (EIO);" moreso.  return is not a function.
+    Nuke the pointless parens.
     
-    Signed-off-by: Al Viro <viro@zeniv.linux.org.uk>
-
-commit b318891929c2750055a4002bee3e7636ca3684de
-Author: Al Viro <viro@zeniv.linux.org.uk>
-Date:   Wed Apr 2 07:06:30 2014 -0400
-
-    xfs: trim the argument lists of xfs_file_{dio,buffered}_aio_write()
+    [dchinner: catch a couple of extra cases in xfs_attr_list.c,
+    xfs_acl.c and xfs_linux.h.]
     
-    pos is redundant (it's iocb->ki_pos), and iov/nr_segs/count are taken
-    care of by lifting iov_iter into the caller.
-    
-    Signed-off-by: Al Viro <viro@zeniv.linux.org.uk>
-
-commit 0c949334a9e2581646c6ff0d1470a805b1e5be99
-Author: Al Viro <viro@zeniv.linux.org.uk>
-Date:   Sat Mar 22 06:51:37 2014 -0400
-
-    iov_iter_truncate()
-    
-    Now It Can Be Done(tm) - we don't need to do iov_shorten() in
-    generic_file_direct_write() anymore, now that all ->direct_IO()
-    instances are converted to proper iov_iter methods and honour
-    iter->count and iter->iov_offset properly.
-    
-    Get rid of count/ocount arguments of generic_file_direct_write(),
-    while we are at it.
-    
-    Signed-off-by: Al Viro <viro@zeniv.linux.org.uk>
-
-commit 71d8e532b1549a478e6a6a8a44f309d050294d00
-Author: Al Viro <viro@zeniv.linux.org.uk>
-Date:   Wed Mar 5 19:28:09 2014 -0500
-
-    start adding the tag to iov_iter
-    
-    For now, just use the same thing we pass to ->direct_IO() - it's all
-    iovec-based at the moment.  Pass it explicitly to iov_iter_init() and
-    account for kvec vs. iovec in there, by the same kludge NFS ->direct_IO()
-    uses.
-    
-    Signed-off-by: Al Viro <viro@zeniv.linux.org.uk>
-
-commit 31b140398ce56ab41646eda7f02bcb78d6a4c916
-Author: Al Viro <viro@zeniv.linux.org.uk>
-Date:   Wed Mar 5 01:33:16 2014 -0500
-
-    switch {__,}blockdev_direct_IO() to iov_iter
-    
-    Signed-off-by: Al Viro <viro@zeniv.linux.org.uk>
-
-commit a6cbcd4a4a85e2fdb0b3344b88df2e8b3d526b9e
-Author: Al Viro <viro@zeniv.linux.org.uk>
-Date:   Tue Mar 4 22:38:00 2014 -0500
-
-    get rid of pointless iov_length() in ->direct_IO()
-    
-    all callers have iov_length(iter->iov, iter->nr_segs) == iov_iter_count(iter)
-    
-    Signed-off-by: Al Viro <viro@zeniv.linux.org.uk>
-
-commit d8d3d94b80aa1a1c0ca75c58b8abdc7356f38418
-Author: Al Viro <viro@zeniv.linux.org.uk>
-Date:   Tue Mar 4 21:27:34 2014 -0500
-
-    pass iov_iter to ->direct_IO()
-    
-    unmodified, for now
-    
-    Signed-off-by: Al Viro <viro@zeniv.linux.org.uk>
-
-commit cb66a7a1f149ff705fa37cad6d1252b046e0ad4f
-Author: Al Viro <viro@zeniv.linux.org.uk>
-Date:   Tue Mar 4 15:24:06 2014 -0500
-
-    kill generic_segment_checks()
-    
-    all callers of ->aio_read() and ->aio_write() have iov/nr_segs already
-    checked - generic_segment_checks() done after that is just an odd way
-    to spell iov_length().
-    
-    Signed-off-by: Al Viro <viro@zeniv.linux.org.uk>
-
-commit f8579f8673b7ecdb7a81d5d5bb1d981093d9aa94
-Author: Al Viro <viro@zeniv.linux.org.uk>
-Date:   Mon Mar 3 22:03:20 2014 -0500
-
-    generic_file_direct_write(): switch to iov_iter
-    
-    Signed-off-by: Al Viro <viro@zeniv.linux.org.uk>
+    Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+    Reviewed-by: Christoph Hellwig <hch@lst.de>
+    Reviewed-by: Dave Chinner <dchinner@redhat.com>
+    Signed-off-by: Dave Chinner <david@fromorbit.com>
 
 -----------------------------------------------------------------------
 
 Summary of changes:
- fs/xfs/xfs_aops.c  |  17 ++++----
- fs/xfs/xfs_file.c  | 119 ++++++++++++-----------------------------------------
- fs/xfs/xfs_ioctl.c |   2 +-
- fs/xfs/xfs_trace.h |   1 -
- 4 files changed, 35 insertions(+), 104 deletions(-)
+ fs/xfs/xfs_aops.c      |  17 +++----
+ fs/xfs/xfs_attr_list.c |   2 +-
+ fs/xfs/xfs_file.c      | 119 +++++++++++--------------------------------------
+ fs/xfs/xfs_ioctl.c     |   2 +-
+ fs/xfs/xfs_ioctl32.c   |   4 +-
+ fs/xfs/xfs_trace.h     |   1 -
+ 6 files changed, 38 insertions(+), 107 deletions(-)
 
 
 hooks/post-receive
