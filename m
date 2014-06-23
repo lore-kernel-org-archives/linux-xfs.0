@@ -1,26 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 1B9417F3F
-	for <xfs@oss.sgi.com>; Mon, 23 Jun 2014 03:06:28 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id BB0A07F3F
+	for <xfs@oss.sgi.com>; Mon, 23 Jun 2014 04:54:18 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id AFACEAC001
-	for <xfs@oss.sgi.com>; Mon, 23 Jun 2014 01:06:27 -0700 (PDT)
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	cd7pPMUqsdIcaWqc for <xfs@oss.sgi.com>;
-	Mon, 23 Jun 2014 01:06:22 -0700 (PDT)
-Received: from dave by dastard with local (Exim 4.80)
-	(envelope-from <david@fromorbit.com>) id 1WyzGc-0005TY-IQ
-	for xfs@oss.sgi.com; Mon, 23 Jun 2014 18:06:18 +1000
-Date: Mon, 23 Jun 2014 18:06:18 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [XFS updates] XFS development tree branch,
-	xfs-libxfs-restructure, updated. xfs-for-linus-3.16-rc1-13107-gc59a5ac
-Message-ID: <20140623080618.GY9508@dastard>
-References: <20140623072359.C16CF7F47@oss.sgi.com>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 630FD8F8033
+	for <xfs@oss.sgi.com>; Mon, 23 Jun 2014 02:54:15 -0700 (PDT)
+Received: from mail-wi0-f173.google.com (mail-wi0-f173.google.com
+	[209.85.212.173]) by cuda.sgi.com with ESMTP id
+	E9SQfbZajZBeVGve (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Mon, 23 Jun 2014 02:54:13 -0700 (PDT)
+Received: by mail-wi0-f173.google.com with SMTP id cc10so3843075wib.0
+	for <xfs@oss.sgi.com>; Mon, 23 Jun 2014 02:54:12 -0700 (PDT)
+Received: from sucs.org (silver.sucs.swan.ac.uk. [137.44.10.1])
+	by mx.google.com with ESMTPSA id i3sm31848376wiz.13.2014.06.23.02.54.10
+	for <xfs@oss.sgi.com> (version=TLSv1.2 cipher=RC4-SHA bits=128/128);
+	Mon, 23 Jun 2014 02:54:11 -0700 (PDT)
+Date: Mon, 23 Jun 2014 10:54:04 +0100
+From: Sitsofe Wheeler <sitsofe@gmail.com>
+Subject: [PATCH] xfstests: install src/itrash.c
+Message-ID: <20140623095404.GA31644@sucs.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20140623072359.C16CF7F47@oss.sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,66 +36,28 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-On Mon, Jun 23, 2014 at 02:23:59AM -0500, xfs@oss.sgi.com wrote:
-> This is an automated email from the git hooks/post-receive script. It was
-> generated because a ref change was pushed to the repository containing
-> the project "XFS development tree".
-> 
-> The branch, xfs-libxfs-restructure has been updated
->   discards  fcec2eb6a31bde491f4ce9ddd94b41c8aacccd43 (commit)
->   discards  e3584e38615389850684fcffd699d97e2e06f2d6 (commit)
->   discards  f212d6fcf5c1cc3a3980dd320804c1dfb9f49b75 (commit)
->   discards  e10404cf914273de8016d5992c7049bdb9a9a089 (commit)
->   discards  f3a19b3ad85dcc4a073270e1fb594eff37709788 (commit)
->   discards  d5a6cda3cf2c0860543db26bb5df7ed4404f74cd (commit)
->   c59a5ac xfs: global error sign conversion
->   63d512e libxfs: move source files
->   547a71f libxfs: move header files
->   62c9454 xfs: create libxfs infrastructure
->   b474c7a xfs: Nuke XFS_ERROR macro
->   d99831f xfs: return is not a function
->   16b9057 Merge branch 'for-linus' of git://git.kernel.org/pub/scm/linux/kernel/git/viro/vfs
->   9c1d528 Merge commit '9f12600fe425bc28f0ccba034a77783c09c15af4' into for-linus
->   8d02076 ->splice_write() via ->write_iter()
->   412dd3a Merge tag 'xfs-for-linus-3.16-rc1' of git://oss.sgi.com/xfs/xfs
->   23adbe1 fs,userns: Change inode_capable to capable_wrt_inode_uidgid
->   bf97f3b xfs: switch to ->write_iter()
->   b4f5d2c xfs: switch to ->read_iter()
->   b318891 xfs: trim the argument lists of xfs_file_{dio,buffered}_aio_write()
->   0c94933 iov_iter_truncate()
->   71d8e53 start adding the tag to iov_iter
->   31b1403 switch {__,}blockdev_direct_IO() to iov_iter
->   a6cbcd4 get rid of pointless iov_length() in ->direct_IO()
->   d8d3d94 pass iov_iter to ->direct_IO()
->   cb66a7a kill generic_segment_checks()
->   f8579f8 generic_file_direct_write(): switch to iov_iter
->       from  fcec2eb6a31bde491f4ce9ddd94b41c8aacccd43 (commit)
-> 
-> Those revisions listed above that are new to this repository have
-> not appeared on any other notification email; so we list those
-> revisions in full, below.
+tests/xfs/111 uses itrash.c so ensure it's installed.
 
-This looks like a lot of non-libxfs changes, but it's mostly just
-noise from the rebase from 3.15.0 to the current master branch at
-3.16-rc2.
+Signed-off-by: Sitsofe Wheeler <sitsofe@yahoo.com>
+---
+ src/Makefile | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-I've added all the negation fixes that Brian noted, and tested all
-the different config options (m,y,n) for the libxfs restructure. I
-haven't come across any problems over the weekend, so I'd like to
-push this out so that we can get this dev cycle properly underway.
-If people can ack this, I'll add all the appropriate sign-offs and
-push it.
-
-Once that is done, I'll start pulling in all the outstanding
-patchsets and work through getting them through reviews and
-into for-next....
-
-Cheers,
-
-Dave.
+diff --git a/src/Makefile b/src/Makefile
+index 7a7984a..129aafd 100644
+--- a/src/Makefile
++++ b/src/Makefile
+@@ -85,7 +85,7 @@ install: default $(addsuffix -install,$(SUBDIRS))
+ 	$(INSTALL) -m 755 -d $(PKG_LIB_DIR)/src
+ 	$(LTINSTALL) -m 755 $(TARGETS) $(PKG_LIB_DIR)/src
+ 	$(LTINSTALL) -m 755 fill2attr fill2fs fill2fs_check scaleread.sh $(PKG_LIB_DIR)/src
+-	$(LTINSTALL) -m 644 dumpfile $(PKG_LIB_DIR)/src
++	$(LTINSTALL) -m 644 dumpfile itrash.c $(PKG_LIB_DIR)/src
+ 
+ %-install:
+ 	$(MAKE) -C $* install
 -- 
-Dave Chinner
-david@fromorbit.com
+1.9.3
 
 _______________________________________________
 xfs mailing list
