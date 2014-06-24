@@ -1,21 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id AF9597F5E
-	for <xfs@oss.sgi.com>; Tue, 24 Jun 2014 04:33:43 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 9D3A1304059
-	for <xfs@oss.sgi.com>; Tue, 24 Jun 2014 02:33:40 -0700 (PDT)
-Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id hqORsd4xDcPR55l0 (version=TLSv1 cipher=AES256-SHA
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id EB6EC7F60
+	for <xfs@oss.sgi.com>; Tue, 24 Jun 2014 08:01:49 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 60CF1AC005
+	for <xfs@oss.sgi.com>; Tue, 24 Jun 2014 06:01:49 -0700 (PDT)
+Received: from mout.gmx.net (mout.gmx.net [212.227.15.19]) by cuda.sgi.com
+	with ESMTP id IvSTKy6ylFnDABtx (version=TLSv1 cipher=AES256-SHA
 	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 24 Jun 2014 02:33:38 -0700 (PDT)
-Received: from relay1.suse.de (charybdis-ext.suse.de [195.135.220.254])
-	by mx2.suse.de (Postfix) with ESMTP id 83AAAABEF
-	for <xfs@oss.sgi.com>; Tue, 24 Jun 2014 09:33:37 +0000 (UTC)
-From: Jan Kara <jack@suse.cz>
-Subject: [PATCH] repair: Repair directory block CRC mismatches
-Date: Tue, 24 Jun 2014 11:33:35 +0200
-Message-Id: <1403602415-28767-1-git-send-email-jack@suse.cz>
+	Tue, 24 Jun 2014 06:01:44 -0700 (PDT)
+MIME-Version: 1.0
+Message-ID: <trinity-74fd845e-7f9d-4482-a8dd-4dd93421a033-1403614903299@3capp-gmx-bs44>
+From: Dragon <Sunghost@gmx.de>
+Subject: XFS Repair hangs at inode repair in phase3
+Date: Tue, 24 Jun 2014 15:01:43 +0200
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,85 +22,71 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
-Cc: Jan Kara <jack@suse.cz>
 
-It can happen that just CRC doesn't match for directory blocks. In that
-case xfs_repair will just report the error but won't fix anything (as
-further checking of the block doesn't reveal any problems). Make sure we
-recompute and write out new CRC when we failed verification during
-reading.
-
-Signed-off-by: Jan Kara <jack@suse.cz>
----
- repair/dir2.c | 23 +++++++++++++++++++++--
- 1 file changed, 21 insertions(+), 2 deletions(-)
-
-diff --git a/repair/dir2.c b/repair/dir2.c
-index 14c1435f5077..a189c161e569 100644
---- a/repair/dir2.c
-+++ b/repair/dir2.c
-@@ -596,7 +596,13 @@ _("bad level %d in block %u for directory inode %" PRIu64 "\n"),
- 		 */
- 		ASSERT(cursor->level[this_level].dirty == 0 ||
- 			(cursor->level[this_level].dirty && !no_modify));
--
-+		/*
-+		 * If block looks ok but CRC didn't match, make sure to
-+		 * recompute it.
-+		 */
-+		if (!no_modify &&
-+		    cursor->level[this_level].bp->b_error == EFSBADCRC)
-+			cursor->level[this_level].dirty = 1;
- 		if (cursor->level[this_level].dirty && !no_modify)
- 			libxfs_writebuf(cursor->level[this_level].bp, 0);
- 		else
-@@ -1621,6 +1627,9 @@ _("bad directory block magic # %#x in block %u for directory inode %" PRIu64 "\n
- 		blp = (xfs_dir2_leaf_entry_t *)btp;
- 	rval = process_dir2_data(mp, ino, dip, ino_discovery, dirname, parent,
- 		bp, dot, dotdot, mp->m_dirdatablk, (char *)blp, &dirty);
-+	/* If block looks ok but CRC didn't match, make sure to recompute it. */
-+	if (!rval && bp->b_error == EFSBADCRC)
-+		dirty = 1;
- 	if (dirty && !no_modify) {
- 		*repair = 1;
- 		libxfs_writebuf(bp, 0);
-@@ -1784,6 +1793,12 @@ _("bad sibling back pointer for block %u in directory inode %" PRIu64 "\n"),
- 			}
- 		}
- 		current_hashval = greatest_hashval;
-+		/*
-+		 * If block looks ok but CRC didn't match, make sure to
-+		 * recompute it.
-+		 */
-+		if (!no_modify && bp->b_error == EFSBADCRC)
-+			buf_dirty = 1;
- 		ASSERT(buf_dirty == 0 || (buf_dirty && !no_modify));
- 		if (buf_dirty && !no_modify) {
- 			*repair = 1;
-@@ -1927,8 +1942,12 @@ _("bad directory block magic # %#x in block %" PRIu64 " for directory inode %" P
- 		i = process_dir2_data(mp, ino, dip, ino_discovery, dirname,
- 			parent, bp, dot, dotdot, (xfs_dablk_t)dbno,
- 			(char *)data + mp->m_dirblksize, &dirty);
--		if (i == 0)
-+		if (i == 0) {
- 			good++;
-+			/* Maybe just CRC is wrong. Make sure we correct it. */
-+			if (bp->b_error == EFSBADCRC)
-+				dirty = 1;
-+		}
- 		if (dirty && !no_modify) {
- 			*repair = 1;
- 			libxfs_writebuf(bp, 0);
--- 
-1.8.1.4
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+CkhlbGxvLAppIGhhdmUgYSBmcmVzaCBpbnN0YWxsIERlYmlhbiBXaGVlenkgd2l0aCBzb2Z0d2Fy
+ZSByYWlkIGFzIG1kMiBmb3IgbXkgZmlsZXMuIE1EMiBpcyBuZWFscnkgZnVsbCBvZiA4VEIgYW5k
+IGkgd2FudGVkIHRvIG1pZ3JhdGUgdGhlIGRhdGEgdG8gYSBuZXdpZXIgc3lzdGVtLiBXaGlsZSBj
+b3B5IGZpbGVzIGkgZ290IGFuIG1lc3NhZ2UgdGhhdCBpIGhhdmUgdG8gcnVuIHhmc19yZXBhaXIu
+IEkgZmlyc3QgcnVuIHhmc19jaGVjayBidXQgaXQgZWF0cyB1cCBhbGwgbXkgMTFHQiBtZW1vcnkg
+YW5kIHRoZSBzeXN0ZW0gc3RhbGxzLiBUaGVuIGkgcnVuIHhmc19yZXBhaXIgLW4gL2Rldi9tZDIg
+YnV0IGl0IGhhbmdzIGVhY2ggdGltZSBhZGQ6CnByb2JsZW0gd2l0aCBkaXJlY3RvcnkgY29udGVu
+cyBpbiBpbm9kZSAyMTQ3OTk3NzE5IC0gd291bGQgaGF2ZSBjbGVhcmVkIGlub2RlIDIxNDc5OTc3
+MTkuIElmIGkgYnJlYWsgdGhpcyBhbmQgcmVzdGFydCwgaXQgaGFuZ3MgYXQgdGhlIHNhbWUgcG9z
+aXRpb24uIFN5c3RlbSBzZWVtcyB0byBkbyBub3RoaW5nIG92ZXIgaG91cnMuCsKgClNvbWUgSW5m
+b3M6Cnhmc3Byb2dzIGluIFZlcnNpb24gMy4xLjcrYjEKS2VybmVsOiAzLjIuMC00LWFtZDY0CjEg
+Q1BVIHdpdGggMiBDb3JlcwpEaXNrcyBhcmUgU2VhZ2F0ZSBTVDMwMDBETTAwMQpNRDIgPSBTb2Z0
+d2FyZSBSYWlkNiBjbGVhciA0LzUgZGlza3MKTFZNID0gbm8KY2F0IC9wcm9jL21lbWluZm8KTWVt
+VG90YWw6wqDCoMKgwqDCoMKgIDEyMDU3OTEyIGtCCk1lbUZyZWU6wqDCoMKgwqDCoMKgwqDCoCA5
+MDE2MTI4IGtCCkJ1ZmZlcnM6wqDCoMKgwqDCoMKgwqDCoMKgwqDCoCA5NzYwIGtCCkNhY2hlZDrC
+oMKgwqDCoMKgwqDCoMKgwqDCoMKgIDU2MjYwIGtCClN3YXBDYWNoZWQ6wqDCoMKgwqDCoMKgwqDC
+oMKgwqDCoCAwIGtCCkFjdGl2ZTrCoMKgwqDCoMKgwqDCoMKgwqAgMjkwODM2OCBrQgpJbmFjdGl2
+ZTrCoMKgwqDCoMKgwqDCoMKgwqAgNDI2MTYga0IKQWN0aXZlKGFub24pOsKgwqDCoCAyODg3ODg0
+IGtCCkluYWN0aXZlKGFub24pOsKgwqDCoMKgwqAgMzAwIGtCCkFjdGl2ZShmaWxlKTrCoMKgwqDC
+oMKgIDIwNDg0IGtCCkluYWN0aXZlKGZpbGUpOsKgwqDCoCA0MjMxNiBrQgpVbmV2aWN0YWJsZTrC
+oMKgwqDCoMKgwqDCoCA0MjgwIGtCCk1sb2NrZWQ6wqDCoMKgwqDCoMKgwqDCoMKgwqDCoCA0Mjgw
+IGtCClN3YXBUb3RhbDrCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqAgMCBrQgpTd2FwRnJlZTrCoMKg
+wqDCoMKgwqDCoMKgwqDCoMKgwqDCoCAwIGtCCkRpcnR5OsKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
+oMKgwqDCoCAyOCBrQgpXcml0ZWJhY2s6wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgIDAga0IKQW5v
+blBhZ2VzOsKgwqDCoMKgwqDCoCAyODg5MjQwIGtCCk1hcHBlZDrCoMKgwqDCoMKgwqDCoMKgwqDC
+oMKgIDEwNjU2IGtCClNobWVtOsKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqAgNTA4IGtCClNs
+YWI6wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqAgMjExNTYga0IKU1JlY2xhaW1hYmxlOsKgwqDC
+oMKgwqDCoCA2MjQwIGtCClNVbnJlY2xhaW06wqDCoMKgwqDCoMKgwqAgMTQ5MTYga0IKS2VybmVs
+U3RhY2s6wqDCoMKgwqDCoMKgwqDCoCA3NjAga0IKUGFnZVRhYmxlczrCoMKgwqDCoMKgwqDCoMKg
+IDc5MDQga0IKTkZTX1Vuc3RhYmxlOsKgwqDCoMKgwqDCoMKgwqDCoCAwIGtCCkJvdW5jZTrCoMKg
+wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqAgMCBrQgpXcml0ZWJhY2tUbXA6wqDCoMKgwqDCoMKg
+wqDCoMKgIDAga0IKQ29tbWl0TGltaXQ6wqDCoMKgwqAgNjAyODk1NiBrQgpDb21taXR0ZWRfQVM6
+wqDCoMKgIDI3NTEwMDgga0IKVm1hbGxvY1RvdGFsOsKgwqAgMzQzNTk3MzgzNjcga0IKVm1hbGxv
+Y1VzZWQ6wqDCoMKgwqDCoCAzMTE5NDAga0IKVm1hbGxvY0NodW5rOsKgwqAgMzQzNTk0MjI4OTIg
+a0IKSGFyZHdhcmVDb3JydXB0ZWQ6wqDCoMKgwqAgMCBrQgpBbm9uSHVnZVBhZ2VzOsKgwqDCoMKg
+wqDCoMKgwqAgMCBrQgpIdWdlUGFnZXNfVG90YWw6wqDCoMKgwqDCoMKgIDAKSHVnZVBhZ2VzX0Zy
+ZWU6wqDCoMKgwqDCoMKgwqAgMApIdWdlUGFnZXNfUnN2ZDrCoMKgwqDCoMKgwqDCoCAwCkh1Z2VQ
+YWdlc19TdXJwOsKgwqDCoMKgwqDCoMKgIDAKSHVnZXBhZ2VzaXplOsKgwqDCoMKgwqDCoCAyMDQ4
+IGtCCkRpcmVjdE1hcDRrOsKgwqDCoMKgwqDCoCA1MDgxNiBrQgpEaXJlY3RNYXAyTTrCoMKgwqDC
+oCAyODEzOTUyIGtCCkRpcmVjdE1hcDFHOsKgwqDCoMKgIDk0MzcxODQga0IKLS0tLS0tLQoKY2F0
+IC9wcm9jL3BhcnRpdGlvbnMKbWFqb3IgbWlub3LCoCAjYmxvY2tzwqAgbmFtZQrCoMKgIDjCoMKg
+wqDCoMKgwqAgMTYgMjkzMDI2NjU4NCBzZGIKwqDCoCA4wqDCoMKgwqDCoMKgIDE3wqDCoMKgwqDC
+oCA5NjI1NiBzZGIxCsKgwqAgOMKgwqDCoMKgwqDCoCAxOMKgwqDCoCA5NzY1ODg4IHNkYjIKwqDC
+oCA4wqDCoMKgwqDCoMKgIDE5wqDCoMKgIDE5NTI3Njggc2RiMwrCoMKgIDjCoMKgwqDCoMKgwqAg
+MjAgMjkxODQ1MDE3NiBzZGI0CsKgwqAgOMKgwqDCoMKgwqDCoMKgIDAgMjkzMDI2NjU4NCBzZGEK
+wqDCoCA4wqDCoMKgwqDCoMKgwqAgMSAyOTMwMjY1MDg4IHNkYTEKwqDCoCA4wqDCoMKgwqDCoMKg
+IDMyIDI5MzAyNjY1ODQgc2RjCsKgwqAgOMKgwqDCoMKgwqDCoCAzM8KgwqDCoMKgwqAgOTYyNTYg
+c2RjMQrCoMKgIDjCoMKgwqDCoMKgwqAgMzTCoMKgwqAgOTc2NTg4OCBzZGMyCsKgwqAgOMKgwqDC
+oMKgwqDCoCAzNcKgwqDCoCAxOTUyNzY4IHNkYzMKwqDCoCA4wqDCoMKgwqDCoMKgIDM2IDI5MTg0
+NTAxNzYgc2RjNArCoMKgIDjCoMKgwqDCoMKgwqAgNDggMjkzMDI2NjU4NCBzZGQKwqDCoCA4wqDC
+oMKgwqDCoMKgIDQ5wqDCoMKgwqDCoCA5NjI1NiBzZGQxCsKgwqAgOMKgwqDCoMKgwqDCoCA1MMKg
+wqDCoCA5NzY1ODg4IHNkZDIKwqDCoCA4wqDCoMKgwqDCoMKgIDUxwqDCoMKgIDE5NTI3Njggc2Rk
+MwrCoMKgIDjCoMKgwqDCoMKgwqAgNTIgMjkxODQ1MDE3NiBzZGQ0CsKgwqAgOMKgwqDCoMKgwqDC
+oCA2NCAyOTMwMjY2NTg0IHNkZQrCoMKgIDjCoMKgwqDCoMKgwqAgNjXCoMKgwqDCoMKgIDk2MjU2
+IHNkZTEKwqDCoCA4wqDCoMKgwqDCoMKgIDY2wqDCoMKgIDk3NjU4ODggc2RlMgrCoMKgIDjCoMKg
+wqDCoMKgwqAgNjfCoMKgwqAgMTk1Mjc2OCBzZGUzCsKgwqAgOMKgwqDCoMKgwqDCoCA2OCAyOTE4
+NDUwMTc2IHNkZTQKwqDCoCA4wqDCoMKgwqDCoMKgIDgwIDI5MzAyNjY1ODQgc2RmCsKgwqAgOMKg
+wqDCoMKgwqDCoCA4MSAyOTMwMjY1MDg4IHNkZjEKwqDCoCA5wqDCoMKgwqDCoMKgwqAgMMKgwqDC
+oCA5NzU3NTY4IG1kMArCoMKgIDnCoMKgwqDCoMKgwqDCoCAyIDg3NTQ5NTU3NzYgbWQyCsKgCkFu
+eSBoZWxwPwoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18K
+eGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2kuY29tL21haWxt
+YW4vbGlzdGluZm8veGZzCg==
