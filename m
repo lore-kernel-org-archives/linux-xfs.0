@@ -1,24 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 0EA1C7F3F
-	for <xfs@oss.sgi.com>; Mon, 23 Jun 2014 20:07:11 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id CFB0130405F
-	for <xfs@oss.sgi.com>; Mon, 23 Jun 2014 18:07:10 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id 536547F4E
+	for <xfs@oss.sgi.com>; Mon, 23 Jun 2014 21:18:43 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 3DBAF304032
+	for <xfs@oss.sgi.com>; Mon, 23 Jun 2014 19:18:40 -0700 (PDT)
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	yAtG9srvWVor2gXV for <xfs@oss.sgi.com>;
-	Mon, 23 Jun 2014 18:07:05 -0700 (PDT)
-Date: Tue, 24 Jun 2014 11:02:33 +1000
+	XWZ2opCi55QQBaZP for <xfs@oss.sgi.com>;
+	Mon, 23 Jun 2014 19:18:38 -0700 (PDT)
+Date: Tue, 24 Jun 2014 12:18:35 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: XFS WARN_ON in xfs_vm_writepage
-Message-ID: <20140624010233.GZ9508@dastard>
-References: <20140613051631.GA9394@redhat.com> <20140613062645.GZ9508@dastard>
-	<20140613141925.GA24199@redhat.com> <20140619020340.GI4453@dastard>
-	<20140623202714.GA2714@redhat.com>
+Subject: Re: Null pointer dereference while at ACL limit on v5 XFS
+Message-ID: <20140624021835.GA9508@dastard>
+References: <53A8A0AF.9070009@gmail.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20140623202714.GA2714@redhat.com>
+In-Reply-To: <53A8A0AF.9070009@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,94 +29,47 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Jones <davej@redhat.com>, xfs@oss.sgi.com, Linux Kernel <linux-kernel@vger.kernel.org>, linux-mm@kvack.org
+To: "Michael L. Semon" <mlsemon35@gmail.com>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-On Mon, Jun 23, 2014 at 04:27:14PM -0400, Dave Jones wrote:
-> On Thu, Jun 19, 2014 at 12:03:40PM +1000, Dave Chinner wrote:
->  > On Fri, Jun 13, 2014 at 10:19:25AM -0400, Dave Jones wrote:
->  > > On Fri, Jun 13, 2014 at 04:26:45PM +1000, Dave Chinner wrote:
->  > > 
->  > > > >  970         if (WARN_ON_ONCE((current->flags & (PF_MEMALLOC|PF_KSWAPD)) ==
->  > > > >  971                         PF_MEMALLOC))
->  > > >
->  > > > What were you running at the time? The XFS warning is there to
->  > > > indicate that memory reclaim is doing something it shouldn't (i.e.
->  > > > dirty page writeback from direct reclaim), so this is one for the mm
->  > > > folk to work out...
->  > > 
->  > > Trinity had driven the machine deeply into swap, and the oom killer was
->  > > kicking in pretty often. Then this happened.
->  > 
->  > Yup, sounds like a problem somewhere in mm/vmscan.c....
->  
-> I'm now hitting this fairly often, and no-one seems to have offered up
-> any suggestions yet, so I'm going to flail and guess randomly until someone
-> has a better idea what could be wrong.
-
-You are not alone - I haven't been able to get anyone from the MM
-side of things to comment on any of the bad behaviours we've had
-reported recently.
-
-> That WARN commentary for the benefit of linux-mm readers..
+On Mon, Jun 23, 2014 at 05:48:31PM -0400, Michael L. Semon wrote:
+> At the ACL limit of v5-superblock XFS--with a directory filled with both default 
+> and access ACL entries--I'm getting a null pointer dereference on x86 after 
+> creating the directory successfully.
 > 
->  960         /*
->  961          * Refuse to write the page out if we are called from reclaim context.
->  962          *
->  963          * This avoids stack overflows when called from deeply used stacks in
->  964          * random callers for direct reclaim or memcg reclaim.  We explicitly
->  965          * allow reclaim from kswapd as the stack usage there is relatively low.
->  966          *
->  967          * This should never happen except in the case of a VM regression so
->  968          * warn about it.
->  969          */
->  970         if (WARN_ON_ONCE((current->flags & (PF_MEMALLOC|PF_KSWAPD)) ==
->  971                         PF_MEMALLOC))
->  972                 goto redirty;
+> Disclaimer:  There's some current issues on 32-bit x86 that, for instance, can 
+> make badblocks see phantom bad blocks on a read test.  My apologies in advance 
+> if this turns out to be a false alarm bug report.
 > 
-> 
-> Looking at this trace..
-> 
-> xfs_vm_writepage+0x5ce/0x630 [xfs]
-> ? preempt_count_sub+0xab/0x100
-> ? __percpu_counter_add+0x85/0xc0
-> shrink_page_list+0x8f9/0xb90
-> shrink_inactive_list+0x253/0x510
-> shrink_lruvec+0x563/0x6c0
-> shrink_zone+0x3b/0x100
-> shrink_zones+0x1f1/0x3c0
-> try_to_free_pages+0x164/0x380
-> __alloc_pages_nodemask+0x822/0xc90
-> alloc_pages_vma+0xaf/0x1c0
-> read_swap_cache_async+0x123/0x220
-> ? final_putname+0x22/0x50
-> swapin_readahead+0x149/0x1d0
-> ? find_get_entry+0xd5/0x130
-> ? pagecache_get_page+0x30/0x210
-> ? debug_smp_processor_id+0x17/0x20
-> handle_mm_fault+0x9d5/0xc50
-> __do_page_fault+0x1d2/0x640
-> ? __acct_update_integrals+0x8b/0x120
-> ? preempt_count_sub+0xab/0x100
-> do_page_fault+0x1e/0x70
-> page_fault+0x22/0x30
-> 
-> The reclaim here looks to be triggered from the readahead code.
-> Should something in that path be setting PF_KSWAPD in the gfp mask ?
+> My first encounter with this issue involved fsstress.  Here's part of a `crash` 
+> session from the fsstress run.
 
-Definitely not. It's not kswapd that is doing the memory allocation
-and we most certainly do not want direct reclaim to get a free pass
-through reclaim congestion and backoff algorithms.
+Ok, I haven't been able to reproduce this on x86-64....
 
-This could be another symptom of the other problems we've been
-seeing which involve direct reclaim thottling way too hard (via the
-too_many_isolated() loops) and getting stuck. This is a case of
-direct reclaim finding dirty pages on the LRU, which should have
-been handled by writeback threads or kswapd before direct reclaim
-can find them. IOWs, direct reclaim is doing work when it probably
-should have been throttled.
+> # ### ran `fsstress -d $SCRATCH_MNT/test-dir -n 10000 -p 16`
+> [ 1789.338622] BUG: unable to handle kernel NULL pointer dereference at 0000000c
+> [ 1789.338842] IP: [<c1263048>] xfs_ail_check+0x58/0xc0
 
-As the comment in the XFS code says: "This should never happen
-except in the case of a VM regression..."
+Hmmm - xfs_ail_check()is
+checking the LSN ordering of the items on the AIL, and it's crashed
+trying to dereference one of the list pointers on the current log
+item.
+
+
+> [ 1789.339042]  [<c12630c3>] xfs_ail_delete+0x13/0x60
+> [ 1789.339042]  [<c1263d1d>] xfs_trans_ail_update_bulk+0xad/0x3c0
+> [ 1789.339042]  [<c11fbd35>] xfs_trans_committed_bulk+0x255/0x300
+> [ 1789.339042]  [<c125dcac>] xlog_cil_committed+0x3c/0x160
+
+And given that it is doing an update, I suspect a problem with
+the XFS_LI_IN_AIL flag - that the item is not of the AIL, but has
+that flag set.
+
+Can you enable the xfs_ail* tracepoints, set
+/proc/sys/kernel/ftrace_dump_on_oops and rerun the test? That should
+dump the trace buffer into the kernel dmesg output showing AIL
+operations just before the crash occurs. That might tell us what has
+happened here...
 
 Cheers,
 
