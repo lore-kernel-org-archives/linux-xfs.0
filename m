@@ -1,23 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id C4D557F3F
-	for <xfs@oss.sgi.com>; Tue, 24 Jun 2014 17:05:43 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 21B8DAC008
-	for <xfs@oss.sgi.com>; Tue, 24 Jun 2014 15:05:42 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id U0Y2nCBoouULkCh6 (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 24 Jun 2014 15:05:38 -0700 (PDT)
-Date: Wed, 25 Jun 2014 08:05:30 +1000
-From: Dave Chinner <dchinner@redhat.com>
-Subject: Re: xfs: two deadlock problems occur when kswapd writebacks XFS pages.
-Message-ID: <20140624220530.GD1976@devil.localdomain>
-References: <53A0013A.1010100@jp.fujitsu.com> <20140617132609.GI9508@dastard>
-	<53A15DC7.50001@jp.fujitsu.com> <53A7D6CC.1040605@jp.fujitsu.com>
+	by oss.sgi.com (Postfix) with ESMTP id 45C477F3F
+	for <xfs@oss.sgi.com>; Tue, 24 Jun 2014 17:15:49 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id CFCC0AC007
+	for <xfs@oss.sgi.com>; Tue, 24 Jun 2014 15:15:48 -0700 (PDT)
+Received: from mout.gmx.net (mout.gmx.net [212.227.17.21]) by cuda.sgi.com
+	with ESMTP id J84Cow3IRqjAQ0BB (version=TLSv1 cipher=AES256-SHA
+	bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 24 Jun 2014 15:15:47 -0700 (PDT)
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <53A7D6CC.1040605@jp.fujitsu.com>
+Message-ID: <trinity-ffefb824-acab-4879-8870-2861ffb3bad2-1403648145455@3capp-gmx-bs71>
+From: Dragon <Sunghost@gmx.de>
+Subject: Re: XFS Repair hangs at inode repair in phase3
+Date: Wed, 25 Jun 2014 00:15:45 +0200
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,109 +22,30 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============3738507485834157515=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Masayoshi Mizuma <m.mizuma@jp.fujitsu.com>
-Cc: linux-mm@kvack.org, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Mon, Jun 23, 2014 at 04:27:08PM +0900, Masayoshi Mizuma wrote:
-> Hi Dave,
-> 
-> (I removed CCing xfs and linux-mm. And I changed your email address
->  to @redhat.com because this email includes RHEL7 kernel stack traces.)
+--===============3738507485834157515==
+Content-Type: text/html; charset=UTF-8
 
-Please don't do that. There's nothing wrong with posting RHEL7 stack
-traces to public lists (though I'd prefer you to reproduce this
-problem on a 3.15 or 3.16-rc kernel), and breaking the thread of
-discussion makes it impossible to involve the people necessary to
-solve this problem.
+<html><head></head><body><div style="font-family: Verdana;font-size: 12.0px;"><div>Hi,</div>
 
-I've re-added xfs and linux-mm to the cc list, and taken my redhat
-address off it...
+<div>yes read this, but i am new and dont know what this command will do and i dont want to lost my data. I read in the net, that some people couldnt start or boot from that disk, after running xfs_repair. I looked for a upgrade to latest xfsprogs version, but it seems difficult for amd64 systems. Do you have a changelog to latest version, could my installed version be ok, or better not to use?</div>
 
-<snip the 3 process back traces>
+<div>Thx Stan and Eric</div></div></body></html>
 
-[looks at sysrq-w output]
 
-kswapd0 is blocked in shrink_inactive_list/congestion_wait().
-
-kswapd1 is blocked waiting for log space from
-shrink_inactive_list().
-
-kthreadd is blocked in shrink_inactive_list/congestion_wait trying
-to fork another process.
-
-xfsaild is in uninterruptible sleep, indicating that there is still
-metadata to be written to push the log tail to it's required target,
-and it will retry again in less than 20ms.
-
-xfslogd is not blocked, indicating the log has not deadlocked
-due to lack of space.
-
-there are lots of timestamp updates waiting for log space.
-
-There is one kworker stuck in data IO completion on an inode lock.
-
-There are several threads blocked on an AGF lock trying to free
-extents.
-
-The bdi writeback thread is blocked waiting for allocation.
-
-A single xfs_alloc_wq kworker is blocked in
-shrink_inactive_list/congestion_wait while trying to read in btree
-blocks for transactional modification. Indicative of memory pressure
-trashing the working set of cached metadata. waiting for memory
-reclaim
-	- holds agf lock, blocks unlinks
-
-There are 113 (!) blocked sadc processes - why are there so many
-stats gathering processes running? If you stop gathering stats, does
-the problem go away?
-
-There are 54 mktemp processes blocked - what is generating them?
-what filesystem are they actually running on? i.e. which XFS
-filesystem in the system is having log space shortages? And what is
-the xfs_info output of that filesystem i.e. have you simply
-oversubscribed a tiny log and so it crawls along at a very slow
-pace?
-
-All of the blocked processes are on CPUs 0-3 i.e. on node 0, which
-is handled by kswapd0, which is not blocked waiting for log
-space. Hmmm - what is the value of /proc/sys/vm/zone_reclaim_mode?
-If it is not zero, does setting it to zero make the problem go away?
-
-Interestingly enough, for a system under extreme memory pressure,
-don't see any processes blocked waiting for swap space or swap IO.
-Do you have any swap space configured on this machine?  If you
-don't, does the problem go away when you add a swap device?
-
-Overall, I can't see anything that indicates that the filesystem has
-actually hung. I can see it having trouble allocating the memory it
-needs to make forwards progress, but the system itself is not
-deadlocked. Is there any IO being issued when the system is in this
-state? If there is Io being issued, then progress is being made and
-the system is merely slow because of the extreme memory pressure
-generated by the stress test.
-
-If there is not IO being issued, does the system start making
-progress again if you kill one of the memory hogs? i.e. does the
-equivalent of triggering an OOM-kill make the system responsive
-again? If it does, then the filesystem is not hung and the problem
-is that there isn't enough free memory to allow the filesystem to do
-IO and hence allow memory reclaim to make progress. In which case,
-does increasing /proc/sys/vm/min_free_kbytes make the problem go
-away?
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-dchinner@redhat.com
+--===============3738507485834157515==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============3738507485834157515==--
