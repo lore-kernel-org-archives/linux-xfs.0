@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 29C397F47
-	for <xfs@oss.sgi.com>; Tue, 24 Jun 2014 13:48:37 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 0B9F2304084
-	for <xfs@oss.sgi.com>; Tue, 24 Jun 2014 11:48:36 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id zQFxZjFnxlN01SCk for <xfs@oss.sgi.com>;
-	Tue, 24 Jun 2014 11:48:16 -0700 (PDT)
-Message-ID: <53A9C7EF.7010707@sandeen.net>
-Date: Tue, 24 Jun 2014 13:48:15 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 04B337F47
+	for <xfs@oss.sgi.com>; Tue, 24 Jun 2014 13:54:58 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id A89898F8033
+	for <xfs@oss.sgi.com>; Tue, 24 Jun 2014 11:54:57 -0700 (PDT)
+Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
+	[65.41.216.221]) by cuda.sgi.com with ESMTP id RF0qvSkA2Rz2e6Y2
+	for <xfs@oss.sgi.com>; Tue, 24 Jun 2014 11:54:56 -0700 (PDT)
+Message-ID: <53A9C97F.2060908@hardwarefreak.com>
+Date: Tue, 24 Jun 2014 13:54:55 -0500
+From: Stan Hoeppner <stan@hardwarefreak.com>
 MIME-Version: 1.0
-Subject: Re: Metadata CRC error upon unclean unmount
-References: <CA+o=1OW0OXhzU+b9ACMZzg0dq=B7BSj+yPXD2Vrr9F6mWK8ruQ@mail.gmail.com>	<53A9A295.8030302@sandeen.net>
-	<CA+o=1OXJZk2XjZhtEORQesDjb3VGzM1Ddk6DGXwuLhHJUEbjPQ@mail.gmail.com>
-In-Reply-To: <CA+o=1OXJZk2XjZhtEORQesDjb3VGzM1Ddk6DGXwuLhHJUEbjPQ@mail.gmail.com>
+Subject: Re: XFS Repair hangs at inode repair in phase3
+References: <trinity-a2065951-9261-435a-896b-4766fb281781-1403624615402@3capp-gmx-bs44>
+In-Reply-To: <trinity-a2065951-9261-435a-896b-4766fb281781-1403624615402@3capp-gmx-bs44>
+Reply-To: stan@hardwarefreak.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,35 +28,19 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Fanael Linithien <fanael4@gmail.com>
-Cc: xfs@oss.sgi.com
+To: Dragon <Sunghost@gmx.de>, xfs@oss.sgi.com
 
-On 6/24/14, 11:19 AM, Fanael Linithien wrote:
-> 2014-06-24 18:08 GMT+02:00 Eric Sandeen <sandeen@sandeen.net>:
->> Do you have any kind of reproducer for this?
-> 
-> The closest thing to a reliable reproducer I found is:
-> dd if=/dev/urandom of=some.file
-> <VM reset while dd is still running>
-> 
->> Any chance you created an xfs_metadump before the xfs_repair?
-> 
-> I still have the broken FS, but the dump is 225 MB. Will it be OK if I
-> repro it on a clean FS?
-> 
->> What constitutes an "unclean unmount" in your case; a VM reset?  A host
->> crash?
-> 
-> A VM reset.
-> 
->> (This is a VM, right?)
-> 
-> Right.
+On 6/24/2014 10:43 AM, Dragon wrote:
+> Hi,
+> ok will try. So what could be the problem of this? Maybe the lost of one disk 
+> out of raid6? I think not, or? Maybe a controller failure? Before i used ext4 
+> and never had problems with this hardware...
 
-FWIW, I've been unable to reproduce this in about 4 attempts, using
-virtualbox, and doing a guest reset.
+If it's a hardware problem there should be errors in dmesg.
 
--Eric
+Cheers,
+
+Stan
 
 _______________________________________________
 xfs mailing list
