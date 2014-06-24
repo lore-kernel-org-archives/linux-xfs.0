@@ -1,24 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 909737F3F
-	for <xfs@oss.sgi.com>; Tue, 24 Jun 2014 11:04:49 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 84B677F47
+	for <xfs@oss.sgi.com>; Tue, 24 Jun 2014 11:08:59 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 5F4848F804C
-	for <xfs@oss.sgi.com>; Tue, 24 Jun 2014 09:04:49 -0700 (PDT)
-Received: from mail-ig0-f181.google.com (mail-ig0-f181.google.com
-	[209.85.213.181]) by cuda.sgi.com with ESMTP id
-	WRX5yMl7QIavAD1l (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 24 Jun 2014 09:04:48 -0700 (PDT)
-Received: by mail-ig0-f181.google.com with SMTP id h15so644648igd.8
-	for <xfs@oss.sgi.com>; Tue, 24 Jun 2014 09:04:47 -0700 (PDT)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 4E01230407A
+	for <xfs@oss.sgi.com>; Tue, 24 Jun 2014 09:08:54 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id SLj1TkFjpvN7ihUf for <xfs@oss.sgi.com>;
+	Tue, 24 Jun 2014 09:08:53 -0700 (PDT)
+Message-ID: <53A9A295.8030302@sandeen.net>
+Date: Tue, 24 Jun 2014 11:08:53 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-In-Reply-To: <CA+o=1OW0OXhzU+b9ACMZzg0dq=B7BSj+yPXD2Vrr9F6mWK8ruQ@mail.gmail.com>
-References: <CA+o=1OW0OXhzU+b9ACMZzg0dq=B7BSj+yPXD2Vrr9F6mWK8ruQ@mail.gmail.com>
-Date: Tue, 24 Jun 2014 18:04:47 +0200
-Message-ID: <CAFLt3pj=ehm+BDPAjPX3n72pS0MzY5-MLGRoCa6ogyyV25eFRg@mail.gmail.com>
 Subject: Re: Metadata CRC error upon unclean unmount
-From: Grozdan <neutrino8@gmail.com>
+References: <CA+o=1OW0OXhzU+b9ACMZzg0dq=B7BSj+yPXD2Vrr9F6mWK8ruQ@mail.gmail.com>
+In-Reply-To: <CA+o=1OW0OXhzU+b9ACMZzg0dq=B7BSj+yPXD2Vrr9F6mWK8ruQ@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,16 +27,25 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Fanael Linithien <fanael4@gmail.com>
-Cc: Xfs <xfs@oss.sgi.com>
+To: Fanael Linithien <fanael4@gmail.com>, xfs@oss.sgi.com
 
-On Tue, Jun 24, 2014 at 6:01 PM, Fanael Linithien <fanael4@gmail.com> wrote:
+On 6/24/14, 11:01 AM, Fanael Linithien wrote:
 > XFS V5 can become unmountable after an unclean unmount. Zeroing the
 > log and running xfs_repair fixes the filesystem.
->
+> 
 > The following kernel messages are from Linux 3.14.4, but the same
 > thing happens in 3.15.1.
->
+
+Do you have any kind of reproducer for this?  Any chance you created
+an xfs_metadump before the xfs_repair?
+
+What constitutes an "unclean unmount" in your case; a VM reset?  A host
+crash?
+
+(This is a VM, right?)  What sort of block device configuration does it have?
+
+-Eric
+
 > SGI XFS with ACLs, security attributes, realtime, large block/inode
 > numbers, no debug enabled
 > XFS (sda2): Version 5 superblock detected. This kernel has
@@ -89,20 +94,12 @@ On Tue, Jun 24, 2014 at 6:01 PM, Fanael Linithien <fanael4@gmail.com> wrote:
 > ("xfs_trans_read_buf_map") error 117 numblks 8
 > XFS (sda2): Failed to recover EFIs
 > XFS (sda2): log mount finish failed
-
-I've also experienced this so I went back to V4. I was not able to
-find a workaround.
-
->
+> 
 > _______________________________________________
 > xfs mailing list
 > xfs@oss.sgi.com
 > http://oss.sgi.com/mailman/listinfo/xfs
-
-
-
--- 
-Yours truly
+> 
 
 _______________________________________________
 xfs mailing list
