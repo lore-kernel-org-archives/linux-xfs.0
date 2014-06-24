@@ -1,22 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 72D1E7F4E
-	for <xfs@oss.sgi.com>; Tue, 24 Jun 2014 14:05:04 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id B1C577F53
+	for <xfs@oss.sgi.com>; Tue, 24 Jun 2014 14:08:02 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 563D0304097
-	for <xfs@oss.sgi.com>; Tue, 24 Jun 2014 12:05:01 -0700 (PDT)
-Received: from mail-qg0-f68.google.com (mail-qg0-f68.google.com
-	[209.85.192.68]) by cuda.sgi.com with ESMTP id FYWjxO8pIzeQSVCH
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 24 Jun 2014 12:04:56 -0700 (PDT)
-Received: by mail-qg0-f68.google.com with SMTP id q107so206090qgd.7
-	for <xfs@oss.sgi.com>; Tue, 24 Jun 2014 12:04:55 -0700 (PDT)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 14964AC005
+	for <xfs@oss.sgi.com>; Tue, 24 Jun 2014 12:07:58 -0700 (PDT)
+Received: from mout.gmx.net (mout.gmx.net [212.227.17.20]) by cuda.sgi.com
+	with ESMTP id mtPkGWiE5TlcJk2F (version=TLSv1 cipher=AES256-SHA
+	bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 24 Jun 2014 12:07:57 -0700 (PDT)
 MIME-Version: 1.0
-Date: Tue, 24 Jun 2014 21:04:55 +0200
-Message-ID: <CA+o=1OVmonTKZXujrJHJu17sn-Svf53wYhD5VKJVuaofffwKOw@mail.gmail.com>
-Subject: Log record CRC mismatch after unclean unmount (was: Metadata CRC
-	error upon unclean unmount)
-From: Fanael Linithien <fanael4@gmail.com>
+Message-ID: <trinity-570f385d-1cb3-4677-8943-c2cefe73ffce-1403636875999@3capp-gmx-bs71>
+From: Dragon <Sunghost@gmx.de>
+Subject: Re: XFS Repair hangs at inode repair in phase3
+Date: Tue, 24 Jun 2014 21:07:56 +0200
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,29 +22,34 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============5572376405308291070=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Accidentally sent it to Eric instead of here.
+--===============5572376405308291070==
+Content-Type: text/html; charset=UTF-8
 
-Kernel messages:
+<html><head></head><body><div style="font-family: Verdana;font-size: 12.0px;"><pre>Hi Stan,
+will check that. Is there any possebility to check a fresh or running xfs installation? I would check the fs and if all is ok i whould copy my files. xfs_check is depre. i heard ;).
 
-XFS (sdb1): Mounting V5 Filesystem
-XFS (sdb1): Starting recovery (logdev: internal)
-XFS (sdb1): log record CRC mismatch: found 0x956b6019, expected 0xc5023e00.
-ffffc90004840000: 00 00 00 01 00 00 00 00 69 01 00 00 50 35 60 de
-........i...P5`.
-ffffc90004840010: 00 00 00 10 69 00 00 00 4e 41 52 54 2a 00 00 00
-....i...NART*...
-XFS (sdb1): log mount/recovery failed: error 117
-XFS (sdb1): log mount failed
+On 6/24/2014 10:43 AM, Dragon wrote:
+</pre>
 
-Metadata dump (base64 encoded, gzipped): https://clbin.com/xigeP
+<blockquote>Hi, ok will try. So what could be the problem of this? Maybe the lost of one disk out of raid6? I think not, or? Maybe a controller failure? Before i used ext4 and never had problems with this hardware...</blockquote>
+
+<div>If it&#39;s a hardware problem there should be errors in dmesg. Cheers, Stan</div></div></body></html>
+
+
+--===============5572376405308291070==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============5572376405308291070==--
