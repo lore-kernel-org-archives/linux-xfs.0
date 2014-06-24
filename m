@@ -1,21 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 5E7DC7F56
-	for <xfs@oss.sgi.com>; Tue, 24 Jun 2014 11:24:45 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 25B0B30408A
-	for <xfs@oss.sgi.com>; Tue, 24 Jun 2014 09:24:45 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id q5aLUGg5bqowjsg6 for <xfs@oss.sgi.com>;
-	Tue, 24 Jun 2014 09:24:43 -0700 (PDT)
-Message-ID: <53A9A64B.7030808@sandeen.net>
-Date: Tue, 24 Jun 2014 11:24:43 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+	by oss.sgi.com (Postfix) with ESMTP id 9B53D7F57
+	for <xfs@oss.sgi.com>; Tue, 24 Jun 2014 11:32:00 -0500 (CDT)
+Message-ID: <53A9A7FE.7060008@sgi.com>
+Date: Tue, 24 Jun 2014 11:31:58 -0500
+From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Subject: Re: Metadata CRC error upon unclean unmount
-References: <CA+o=1OW0OXhzU+b9ACMZzg0dq=B7BSj+yPXD2Vrr9F6mWK8ruQ@mail.gmail.com>	<53A9A295.8030302@sandeen.net>
-	<CA+o=1OXJZk2XjZhtEORQesDjb3VGzM1Ddk6DGXwuLhHJUEbjPQ@mail.gmail.com>
-In-Reply-To: <CA+o=1OXJZk2XjZhtEORQesDjb3VGzM1Ddk6DGXwuLhHJUEbjPQ@mail.gmail.com>
+Subject: Re: Null pointer dereference while at ACL limit on v5 XFS
+References: <53A8A0AF.9070009@gmail.com> <53A8A578.4070005@sgi.com>
+	<53A8A676.80305@sgi.com> <53A8F1AC.90109@gmail.com>
+In-Reply-To: <53A8F1AC.90109@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,52 +18,83 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Fanael Linithien <fanael4@gmail.com>
+To: "Michael L. Semon" <mlsemon35@gmail.com>
 Cc: xfs@oss.sgi.com
 
-On 6/24/14, 11:19 AM, Fanael Linithien wrote:
-> 2014-06-24 18:08 GMT+02:00 Eric Sandeen <sandeen@sandeen.net>:
->> Do you have any kind of reproducer for this?
-> 
-> The closest thing to a reliable reproducer I found is:
-> dd if=/dev/urandom of=some.file
-> <VM reset while dd is still running>
-> 
->> Any chance you created an xfs_metadump before the xfs_repair?
-> 
-> I still have the broken FS, but the dump is 225 MB. Will it be OK if I
-> repro it on a clean FS?
+On 06/23/14 22:34, Michael L. Semon wrote:
+> On 06/23/2014 06:13 PM, Mark Tinguely wrote:
+>> On 06/23/14 17:08, Mark Tinguely wrote:
+>>> On 06/23/14 16:48, Michael L. Semon wrote:
+>>>> At the ACL limit of v5-superblock XFS--with a directory filled with
+>>>> both default
+>>>> and access ACL entries--I'm getting a null pointer dereference on x86
+>>>> after
+>>>> creating the directory successfully.
+>>>>
+>>>> Disclaimer: There's some current issues on 32-bit x86 that, for
+>>>> instance, can
+>>>> make badblocks see phantom bad blocks on a read test. My apologies in
+>>>> advance
+>>>> if this turns out to be a false alarm bug report.
+>>>>
+>>>> My first encounter with this issue involved fsstress. Here's part of a
+>>>> `crash`
+>>>> session from the fsstress run.
+>>>>
+>>>> root@oldsvrhw:/mnt/crashdump/xfs-fsstress-max-acl-2# crash vmlinux
+>>>> System.map vmcore
+>>>> crash 7.0.4
+>> ...
+>>>> Thanks!
+>>>>
+>>>> Michael
+>>>>
+>>>
+>>> Michael, do you have the vmcore dump for this or was this just from the
+>>> messages.
+>>>
+>>> Thanks.
+>>>
+>>> --Mark.
+>>
+>> ummm, duh me. you were running crash ...
+>>
+>> Can I look at the core?
+>>
+>> --Mark.
+>
+> Sure!  I've uploaded two sets of core dumps (vmcore, vmlinux, System.map,
+> config, sample crash session) and put them here for a short time:
+>
 
-absolutely, if you have a recipe starting at mkfs and ending with corruption,
-that's even better.
+Both are buffer - like your trace shows that is was updating on the AIL 
+and it really is but in both crashes the log item ail next link has been 
+NULLed:
 
->> What constitutes an "unclean unmount" in your case; a VM reset?  A host
->> crash?
-> 
-> A VM reset.
-> 
->> (This is a VM, right?)
-> 
-> Right.
-> 
->> What sort of block device configuration does it have?
-> 
-> What do you mean?
+xfs-fsstress-max-acl-2:
+crash> xfs_buf_log_item dde37370
+struct xfs_buf_log_item {
+   bli_item = {
+     li_ail = {
+       next = 0x0,
+       prev = 0xdc01d6e8
 
-Is the VM using a host block device or an image file?
-What type of image file, VDI, QCOW, or?
-If an image, what type of filesystem hosts the image?
-Have you done any "VBoxManage storagectl"-type modifications to virtualbox defaults?
+xfs-fsstress-max-acl-3:
+crash> xfs_buf_log_item db5bf0b0
+struct xfs_buf_log_item {
+   bli_item = {
+     li_ail = {
+       next = 0x0,
+       prev = 0xdb5bf4d0
+     },
 
-Since this was a guest reset, not a host reset, it doesn't
-matter as much, but it's worth getting the details I think.
+not good.
 
-Thanks,
--Eric
+--Mark.
 
 _______________________________________________
 xfs mailing list
