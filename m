@@ -1,21 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 04B337F47
-	for <xfs@oss.sgi.com>; Tue, 24 Jun 2014 13:54:58 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id A89898F8033
-	for <xfs@oss.sgi.com>; Tue, 24 Jun 2014 11:54:57 -0700 (PDT)
-Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
-	[65.41.216.221]) by cuda.sgi.com with ESMTP id RF0qvSkA2Rz2e6Y2
-	for <xfs@oss.sgi.com>; Tue, 24 Jun 2014 11:54:56 -0700 (PDT)
-Message-ID: <53A9C97F.2060908@hardwarefreak.com>
-Date: Tue, 24 Jun 2014 13:54:55 -0500
-From: Stan Hoeppner <stan@hardwarefreak.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id C69017F4E
+	for <xfs@oss.sgi.com>; Tue, 24 Jun 2014 14:00:01 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 95CF1304084
+	for <xfs@oss.sgi.com>; Tue, 24 Jun 2014 12:00:01 -0700 (PDT)
+Received: from mail-qa0-f47.google.com (mail-qa0-f47.google.com
+	[209.85.216.47]) by cuda.sgi.com with ESMTP id 8A5HDOPIziPOzoe5
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Tue, 24 Jun 2014 12:00:00 -0700 (PDT)
+Received: by mail-qa0-f47.google.com with SMTP id hw13so620111qab.6
+	for <xfs@oss.sgi.com>; Tue, 24 Jun 2014 12:00:00 -0700 (PDT)
 MIME-Version: 1.0
-Subject: Re: XFS Repair hangs at inode repair in phase3
-References: <trinity-a2065951-9261-435a-896b-4766fb281781-1403624615402@3capp-gmx-bs44>
-In-Reply-To: <trinity-a2065951-9261-435a-896b-4766fb281781-1403624615402@3capp-gmx-bs44>
-Reply-To: stan@hardwarefreak.com
+In-Reply-To: <53A9C7EF.7010707@sandeen.net>
+References: <CA+o=1OW0OXhzU+b9ACMZzg0dq=B7BSj+yPXD2Vrr9F6mWK8ruQ@mail.gmail.com>
+	<53A9A295.8030302@sandeen.net>
+	<CA+o=1OXJZk2XjZhtEORQesDjb3VGzM1Ddk6DGXwuLhHJUEbjPQ@mail.gmail.com>
+	<53A9C7EF.7010707@sandeen.net>
+Date: Tue, 24 Jun 2014 21:00:00 +0200
+Message-ID: <CA+o=1OXG9wY7pX3emPtRjdAQKC4MFKvJWiJsmD7yGmuJeXjPQQ@mail.gmail.com>
+Subject: Re: Metadata CRC error upon unclean unmount
+From: Fanael Linithien <fanael4@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,19 +33,16 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dragon <Sunghost@gmx.de>, xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: xfs@oss.sgi.com
 
-On 6/24/2014 10:43 AM, Dragon wrote:
-> Hi,
-> ok will try. So what could be the problem of this? Maybe the lost of one disk 
-> out of raid6? I think not, or? Maybe a controller failure? Before i used ext4 
-> and never had problems with this hardware...
+2014-06-24 20:48 GMT+02:00 Eric Sandeen <sandeen@sandeen.net>:
+> FWIW, I've been unable to reproduce this in about 4 attempts, using
+> virtualbox, and doing a guest reset.
 
-If it's a hardware problem there should be errors in dmesg.
-
-Cheers,
-
-Stan
+Same here. The most breakage I can get is a log record CRC mismatch
+(still a bug, I think). I will report if I run across a metadata CRC
+error ever again.
 
 _______________________________________________
 xfs mailing list
