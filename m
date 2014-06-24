@@ -1,22 +1,31 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 536547F4E
-	for <xfs@oss.sgi.com>; Mon, 23 Jun 2014 21:18:43 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 3DBAF304032
-	for <xfs@oss.sgi.com>; Mon, 23 Jun 2014 19:18:40 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id AB8977F51
+	for <xfs@oss.sgi.com>; Mon, 23 Jun 2014 22:03:35 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 958C1304032
+	for <xfs@oss.sgi.com>; Mon, 23 Jun 2014 20:03:32 -0700 (PDT)
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	XWZ2opCi55QQBaZP for <xfs@oss.sgi.com>;
-	Mon, 23 Jun 2014 19:18:38 -0700 (PDT)
-Date: Tue, 24 Jun 2014 12:18:35 +1000
+	kBz1RNsfhrBdP41s for <xfs@oss.sgi.com>;
+	Mon, 23 Jun 2014 20:03:27 -0700 (PDT)
+Date: Tue, 24 Jun 2014 13:02:40 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Null pointer dereference while at ACL limit on v5 XFS
-Message-ID: <20140624021835.GA9508@dastard>
-References: <53A8A0AF.9070009@gmail.com>
+Subject: On-stack work item completion race? (was Re: XFS crash?)
+Message-ID: <20140624030240.GB9508@dastard>
+References: <20140305233551.GK6851@dastard>
+	<CANGgnMb=2dYGQO4K36pQ9LEb8E4rT6S_VskLF+n=ndd0_kJr_g@mail.gmail.com>
+	<CANGgnMa80WwQ8zSkL52yYegmQURVQeZiBFv41=FQXMZJ_NaEDw@mail.gmail.com>
+	<20140513034647.GA5421@dastard>
+	<CANGgnMZ0q9uE3NHj2i0SBK1d0vdKLx7QBJeFNb+YwP-5EAmejQ@mail.gmail.com>
+	<20140513063943.GQ26353@dastard>
+	<CANGgnMYn++1++UyX+D2d9GxPxtytpQJv0ThFwdxM-yX7xDWqiA@mail.gmail.com>
+	<20140513090321.GR26353@dastard>
+	<CANGgnMZqQc_NeaDpO_aX+bndmHrQ9VWo9mkfxhPBkRD-J=N6sQ@mail.gmail.com>
+	<CANGgnMZ8OwzfBj5m9H7c6q2yahGhU7oFZLsJfVxnWoqZExkZmQ@mail.gmail.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <53A8A0AF.9070009@gmail.com>
+In-Reply-To: <CANGgnMZ8OwzfBj5m9H7c6q2yahGhU7oFZLsJfVxnWoqZExkZmQ@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,47 +38,120 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "Michael L. Semon" <mlsemon35@gmail.com>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: Austin Schuh <austin@peloton-tech.com>
+Cc: Tejun Heo <tj@kernel.org>, linux-kernel@vger.kernel.org, xfs <xfs@oss.sgi.com>
 
-On Mon, Jun 23, 2014 at 05:48:31PM -0400, Michael L. Semon wrote:
-> At the ACL limit of v5-superblock XFS--with a directory filled with both default 
-> and access ACL entries--I'm getting a null pointer dereference on x86 after 
-> creating the directory successfully.
+[Adding Tejun and lkml to the cc list]
+
+On Mon, Jun 23, 2014 at 01:05:54PM -0700, Austin Schuh wrote:
+> I found 1 bug in XFS which I fixed, and I've uncovered something else that
+> I'm not completely sure how to fix.
 > 
-> Disclaimer:  There's some current issues on 32-bit x86 that, for instance, can 
-> make badblocks see phantom bad blocks on a read test.  My apologies in advance 
-> if this turns out to be a false alarm bug report.
+> In xfs_bmapi_allocate, you create a completion, and use that to wait until
+> the work has finished.  Occasionally, I'm seeing a case where I get a
+> context switch after the completion has been completed, but before the
+> workqueue has finished doing it's internal book-keeping.  This results in
+> the work being deleted before the workqueue is done using it, corrupting
+> the internal data structures.  I fixed it by waiting using flush_work and
+> removing the completion entirely.
 > 
-> My first encounter with this issue involved fsstress.  Here's part of a `crash` 
-> session from the fsstress run.
+> --- a/fs/xfs/xfs_bmap_util.c        2014-06-23 12:59:10.008678410 -0700
+> +++ b/fs/xfs/xfs_bmap_util.c      2014-06-23 12:59:14.116678239 -0700
+> @@ -263,7 +263,6 @@
+>         current_set_flags_nested(&pflags, PF_FSTRANS);
+> 
+>         args->result = __xfs_bmapi_allocate(args);
+> -       complete(args->done);
+> 
+>         current_restore_flags_nested(&pflags, PF_FSTRANS);
+>  }
+> @@ -277,16 +276,13 @@
+>  xfs_bmapi_allocate(
+>         struct xfs_bmalloca     *args)
+>  {
+> -       DECLARE_COMPLETION_ONSTACK(done);
+> -
+>         if (!args->stack_switch)
+>                 return __xfs_bmapi_allocate(args);
+> 
+> 
+> -       args->done = &done;
+>         INIT_WORK_ONSTACK(&args->work, xfs_bmapi_allocate_worker);
+>         queue_work(xfs_alloc_wq, &args->work);
+> -       wait_for_completion(&done);
+> +       flush_work(&args->work);
+>         destroy_work_on_stack(&args->work);
+>         return args->result;
+>  }
+> --- a/fs/xfs/xfs_bmap_util.h        2014-06-23 12:59:10.008678410 -0700
+> +++ b/fs/xfs/xfs_bmap_util.h      2014-06-23 12:59:11.708678340 -0700
+> @@ -57,7 +57,6 @@
+>         char                    conv;   /* overwriting unwritten extents */
+>         char                    stack_switch;
+>         int                     flags;
+> -       struct completion       *done;
+>         struct work_struct      work;
+>         int                     result;
+>  };
 
-Ok, I haven't been able to reproduce this on x86-64....
+Ok, that's a surprise. However, I can't see how using flush_work()
+solves that underlying context switch problem, because it's
+implemented the same way:
 
-> # ### ran `fsstress -d $SCRATCH_MNT/test-dir -n 10000 -p 16`
-> [ 1789.338622] BUG: unable to handle kernel NULL pointer dereference at 0000000c
-> [ 1789.338842] IP: [<c1263048>] xfs_ail_check+0x58/0xc0
+bool flush_work(struct work_struct *work)
+{
+        struct wq_barrier barr;
 
-Hmmm - xfs_ail_check()is
-checking the LSN ordering of the items on the AIL, and it's crashed
-trying to dereference one of the list pointers on the current log
-item.
+        lock_map_acquire(&work->lockdep_map);
+        lock_map_release(&work->lockdep_map);
 
+        if (start_flush_work(work, &barr)) {
+                wait_for_completion(&barr.done);
+                destroy_work_on_stack(&barr.work);
+                return true;
+        } else {
+                return false;
+        }
+}
 
-> [ 1789.339042]  [<c12630c3>] xfs_ail_delete+0x13/0x60
-> [ 1789.339042]  [<c1263d1d>] xfs_trans_ail_update_bulk+0xad/0x3c0
-> [ 1789.339042]  [<c11fbd35>] xfs_trans_committed_bulk+0x255/0x300
-> [ 1789.339042]  [<c125dcac>] xlog_cil_committed+0x3c/0x160
+start_flush_work() is effectively a special queue_work()
+implementation, so if if it's not safe to call complete() from the
+workqueue as the above patch implies then this code has the same
+problem.
 
-And given that it is doing an update, I suspect a problem with
-the XFS_LI_IN_AIL flag - that the item is not of the AIL, but has
-that flag set.
+Tejun - is this "do it yourself completion" a known issue w.r.t.
+workqueues? I can't find any documentation that says "don't do
+that" so...?
 
-Can you enable the xfs_ail* tracepoints, set
-/proc/sys/kernel/ftrace_dump_on_oops and rerun the test? That should
-dump the trace buffer into the kernel dmesg output showing AIL
-operations just before the crash occurs. That might tell us what has
-happened here...
+A quick grep also shows up the same queue_work/wait_for_completion
+pattern in arch/x86/kernel/hpet.c, drivers/md/dm-thin.c,
+fs/fs-writeback.c, drivers/block/drbd/drbd_main.c....
+
+> I enabled event tracing (and added a new event which lists the number of
+> workers running in a queue whenever that is changed).
+> 
+> To me, it looks like work is scheduled from irq/44-ahci-273 that will
+> acquire an inode lock.  scp-3986 then acquires the lock, and then goes and
+> schedules work.  That work is then scheduled behind the work from
+> irq/44-ahci-273 in the same pool.  The first work blocks waiting on the
+> lock, and scp-3986 won't finish and release that lock until the second work
+> gets run.
+
+IOWs, scp takes an inode lock and queues work to the xfs_alloc_wq,
+then schedules. Then a kworker runs an xfs-data work item, which
+tries to take the inode lock and blocks.
+
+As I understand it, what then happens is that the workqueue code
+grabs another kworker thread and runs the next work item in it's
+queue. IOWs, work items can block, but doing that does not prevent
+execution of other work items queued on other work queues or even on
+the same work queue. Tejun, did I get that correct?
+
+Hence the work on the xfs-data queue will block until another
+kworker processes the item on the xfs-alloc-wq which means progress
+is made and the inode gets unlocked. Then the kworker for the work
+on the xfs-data queue will get the lock, complete it's work and
+everything has resolved itself.
 
 Cheers,
 
