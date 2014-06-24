@@ -1,16 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id BE3467F47
-	for <xfs@oss.sgi.com>; Tue, 24 Jun 2014 13:25:38 -0500 (CDT)
-Message-ID: <53A9C29D.8080006@sgi.com>
-Date: Tue, 24 Jun 2014 13:25:33 -0500
-From: Mark Tinguely <tinguely@sgi.com>
+	by oss.sgi.com (Postfix) with ESMTP id 29C397F47
+	for <xfs@oss.sgi.com>; Tue, 24 Jun 2014 13:48:37 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 0B9F2304084
+	for <xfs@oss.sgi.com>; Tue, 24 Jun 2014 11:48:36 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id zQFxZjFnxlN01SCk for <xfs@oss.sgi.com>;
+	Tue, 24 Jun 2014 11:48:16 -0700 (PDT)
+Message-ID: <53A9C7EF.7010707@sandeen.net>
+Date: Tue, 24 Jun 2014 13:48:15 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: Re: Null pointer dereference while at ACL limit on v5 XFS
-References: <53A8A0AF.9070009@gmail.com> <53A8A578.4070005@sgi.com>
-	<53A8A676.80305@sgi.com> <53A8F1AC.90109@gmail.com>
-	<53A9A7FE.7060008@sgi.com>
-In-Reply-To: <53A9A7FE.7060008@sgi.com>
+Subject: Re: Metadata CRC error upon unclean unmount
+References: <CA+o=1OW0OXhzU+b9ACMZzg0dq=B7BSj+yPXD2Vrr9F6mWK8ruQ@mail.gmail.com>	<53A9A295.8030302@sandeen.net>
+	<CA+o=1OXJZk2XjZhtEORQesDjb3VGzM1Ddk6DGXwuLhHJUEbjPQ@mail.gmail.com>
+In-Reply-To: <CA+o=1OXJZk2XjZhtEORQesDjb3VGzM1Ddk6DGXwuLhHJUEbjPQ@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -19,151 +24,39 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "Michael L. Semon" <mlsemon35@gmail.com>
+To: Fanael Linithien <fanael4@gmail.com>
 Cc: xfs@oss.sgi.com
 
-On 06/24/14 11:31, Mark Tinguely wrote:
-> On 06/23/14 22:34, Michael L. Semon wrote:
->> On 06/23/2014 06:13 PM, Mark Tinguely wrote:
->>> On 06/23/14 17:08, Mark Tinguely wrote:
->>>> On 06/23/14 16:48, Michael L. Semon wrote:
->>>>> At the ACL limit of v5-superblock XFS--with a directory filled with
->>>>> both default
->>>>> and access ACL entries--I'm getting a null pointer dereference on x86
->>>>> after
->>>>> creating the directory successfully.
->>>>>
->>>>> Disclaimer: There's some current issues on 32-bit x86 that, for
->>>>> instance, can
->>>>> make badblocks see phantom bad blocks on a read test. My apologies in
->>>>> advance
->>>>> if this turns out to be a false alarm bug report.
->>>>>
->>>>> My first encounter with this issue involved fsstress. Here's part of a
->>>>> `crash`
->>>>> session from the fsstress run.
->>>>>
->>>>> root@oldsvrhw:/mnt/crashdump/xfs-fsstress-max-acl-2# crash vmlinux
->>>>> System.map vmcore
->>>>> crash 7.0.4
->>> ...
->>>>> Thanks!
->>>>>
->>>>> Michael
->>>>>
->>>>
->>>> Michael, do you have the vmcore dump for this or was this just from the
->>>> messages.
->>>>
->>>> Thanks.
->>>>
->>>> --Mark.
->>>
->>> ummm, duh me. you were running crash ...
->>>
->>> Can I look at the core?
->>>
->>> --Mark.
->>
->> Sure! I've uploaded two sets of core dumps (vmcore, vmlinux, System.map,
->> config, sample crash session) and put them here for a short time:
->>
->
-> Both are buffer - like your trace shows that is was updating on the AIL
-> and it really is but in both crashes the log item ail next link has been
-> NULLed:
->
-> xfs-fsstress-max-acl-2:
-> crash> xfs_buf_log_item dde37370
-> struct xfs_buf_log_item {
-> bli_item = {
-> li_ail = {
-> next = 0x0,
-> prev = 0xdc01d6e8
->
-> xfs-fsstress-max-acl-3:
-> crash> xfs_buf_log_item db5bf0b0
-> struct xfs_buf_log_item {
-> bli_item = {
-> li_ail = {
-> next = 0x0,
-> prev = 0xdb5bf4d0
-> },
->
-> not good.
->
-> --Mark.
+On 6/24/14, 11:19 AM, Fanael Linithien wrote:
+> 2014-06-24 18:08 GMT+02:00 Eric Sandeen <sandeen@sandeen.net>:
+>> Do you have any kind of reproducer for this?
+> 
+> The closest thing to a reliable reproducer I found is:
+> dd if=/dev/urandom of=some.file
+> <VM reset while dd is still running>
+> 
+>> Any chance you created an xfs_metadump before the xfs_repair?
+> 
+> I still have the broken FS, but the dump is 225 MB. Will it be OK if I
+> repro it on a clean FS?
+> 
+>> What constitutes an "unclean unmount" in your case; a VM reset?  A host
+>> crash?
+> 
+> A VM reset.
+> 
+>> (This is a VM, right?)
+> 
+> Right.
 
-PS. I don't know if this will help but I followed the xfs_log_items 
-backwards to xfs_ail and that is okay. The prev pointer on the ail is 
-pointing to a corrupted chain:
+FWIW, I've been unable to reproduce this in about 4 attempts, using
+virtualbox, and doing a guest reset.
 
-crash> xfs_ail ddc81d80
-struct xfs_ail {
-   xa_mount = 0xddd6b800,
-   xa_task = 0xddec5580,
-   xa_ail = {
-     next = 0xdb04b210,
-     prev = 0xddca60d0
-   },
-
-..
-crash> xfs_log_item ddca60d0
-struct xfs_log_item {
-   li_ail = {
-     next = 0xddc81d88,   <- correct, the xfs_ail
-     prev = 0xdb5bf580
-   },
-...
-crash> xfs_log_item db5bf580
-struct xfs_log_item {
-   li_ail = {
-     next = 0xdbab6000,   <- wrong, points to a small xfs_item loop.
-     prev = 0xde92fcf0
-   },
-
-...
-small loop:
-crash> xfs_log_item de92fcf0
-struct xfs_log_item {
-   li_ail = {
-     next = 0xdb5bf580,
-     prev = 0xdb04b370
-   },
-
-crash> xfs_log_item db04b370
-struct xfs_log_item {
-   li_ail = {
-     next = 0xde92fcf0,
-     prev = 0xdb04b420
-   },
-
-crash> xfs_log_item db04b420
-struct xfs_log_item {
-   li_ail = {
-     next = 0xdb04b370,
-     prev = 0xdb5bf630
-   },
-
-crash> xfs_log_item db5bf630
-struct xfs_log_item {
-   li_ail = {
-     next = 0xdb04b420,
-     prev = 0xdbab6000  <- !!
-   },
-
-crash> xfs_log_item dbab6000
-struct xfs_log_item {
-   li_ail = {
-     next = 0xdb5bf630,
-     prev = 0xdb5bf580   <- end of small loop.
-   },
-
-something is happening in an ail insert or delete.
+-Eric
 
 _______________________________________________
 xfs mailing list
