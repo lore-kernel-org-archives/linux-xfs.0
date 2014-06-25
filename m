@@ -1,31 +1,9 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 0FF307F3F
-	for <xfs@oss.sgi.com>; Wed, 25 Jun 2014 00:56:51 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id E9BA1304051
-	for <xfs@oss.sgi.com>; Tue, 24 Jun 2014 22:56:47 -0700 (PDT)
-Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
-	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	AT8qAtPCAMFCvzMj for <xfs@oss.sgi.com>;
-	Tue, 24 Jun 2014 22:56:46 -0700 (PDT)
-Date: Wed, 25 Jun 2014 15:56:41 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: On-stack work item completion race? (was Re: XFS crash?)
-Message-ID: <20140625055641.GL9508@dastard>
-References: <CANGgnMa80WwQ8zSkL52yYegmQURVQeZiBFv41=FQXMZJ_NaEDw@mail.gmail.com>
-	<20140513034647.GA5421@dastard>
-	<CANGgnMZ0q9uE3NHj2i0SBK1d0vdKLx7QBJeFNb+YwP-5EAmejQ@mail.gmail.com>
-	<20140513063943.GQ26353@dastard>
-	<CANGgnMYn++1++UyX+D2d9GxPxtytpQJv0ThFwdxM-yX7xDWqiA@mail.gmail.com>
-	<20140513090321.GR26353@dastard>
-	<CANGgnMZqQc_NeaDpO_aX+bndmHrQ9VWo9mkfxhPBkRD-J=N6sQ@mail.gmail.com>
-	<CANGgnMZ8OwzfBj5m9H7c6q2yahGhU7oFZLsJfVxnWoqZExkZmQ@mail.gmail.com>
-	<20140624030240.GB9508@dastard>
-	<20140624032521.GA12164@htj.dyndns.org>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20140624032521.GA12164@htj.dyndns.org>
+From: xfs@oss.sgi.com
+Subject: [XFS updates] XFS development tree branch, xfs-libxfs-restructure,
+	updated. xfs-for-linus-3.16-rc1-13107-g2451337
+Message-Id: <20140625060305.87CBA7F47@oss.sgi.com>
+Date: Wed, 25 Jun 2014 01:03:04 -0500 (CDT)
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,58 +12,125 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Tejun Heo <tj@kernel.org>
-Cc: linux-kernel@vger.kernel.org, Austin Schuh <austin@peloton-tech.com>, xfs <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
-On Mon, Jun 23, 2014 at 11:25:21PM -0400, Tejun Heo wrote:
-> Hello,
-> 
-> On Tue, Jun 24, 2014 at 01:02:40PM +1000, Dave Chinner wrote:
-> > As I understand it, what then happens is that the workqueue code
-> > grabs another kworker thread and runs the next work item in it's
-> > queue. IOWs, work items can block, but doing that does not prevent
-> > execution of other work items queued on other work queues or even on
-> > the same work queue. Tejun, did I get that correct?
-> 
-> Yes, as long as the workqueue is under its @max_active limit and has
-> access to an existing kworker or can create a new one, it'll start
-> executing the next work item immediately; however, the guaranteed
-> level of concurrency is 1 even for WQ_RECLAIM workqueues.  IOW, the
-> work items queued on a workqueue must be able to make forward progress
-> with single work item if the work items are being depended upon for
-> memory reclaim.
+This is an automated email from the git hooks/post-receive script. It was
+generated because a ref change was pushed to the repository containing
+the project "XFS development tree".
 
-Hmmm - that's different from my understanding of what the original
-behaviour WQ_MEM_RECLAIM gave us. i.e. that WQ_MEM_RECLAIM
-workqueues had a rescuer thread created to guarantee that the
-*workqueue* could make forward progress executing work in a
-reclaim context.
+The branch, xfs-libxfs-restructure has been updated
+  discards  c59a5aca071806ce2ed7279bbaf78336da49ce85 (commit)
+  discards  63d512e1df8acffc3aa0068c6efab100c623968f (commit)
+  discards  547a71f18113e33ff2420ad8b1712c6ab497a1dc (commit)
+  discards  62c94547670f715923950a326daf8b129ca05ee5 (commit)
+  2451337 xfs: global error sign conversion
+  30f712c libxfs: move source files
+  84be0ff libxfs: move header files
+  69116a1 xfs: create libxfs infrastructure
+      from  c59a5aca071806ce2ed7279bbaf78336da49ce85 (commit)
 
-The concept that the *work being executed* needs to guarantee
-forwards progress is something I've never heard stated before.
-That worries me a lot, especially with all the memory reclaim
-problems that have surfaced in the past couple of months....
+Those revisions listed above that are new to this repository have
+not appeared on any other notification email; so we list those
+revisions in full, below.
 
-> As long as a WQ_RECLAIM workqueue dosen't depend upon itself,
-> forward-progress is guaranteed.
+- Log -----------------------------------------------------------------
+commit 2451337dd043901b5270b7586942abe564443e3d
+Author: Dave Chinner <dchinner@redhat.com>
+Date:   Wed Jun 25 14:58:08 2014 +1000
 
-I can't find any documentation that actually defines what
-WQ_MEM_RECLAIM means, so I can't tell when or how this requirement
-came about. If it's true, then I suspect most of the WQ_MEM_RECLAIM
-workqueues in filesystems violate it. Can you point me at
-documentation/commits/code describing the constraints of
-WQ_MEM_RECLAIM and the reasons for it?
+    xfs: global error sign conversion
+    
+    Convert all the errors the core XFs code to negative error signs
+    like the rest of the kernel and remove all the sign conversion we
+    do in the interface layers.
+    
+    Errors for conversion (and comparison) found via searches like:
+    
+    $ git grep " E" fs/xfs
+    $ git grep "return E" fs/xfs
+    $ git grep " E[A-Z].*;$" fs/xfs
+    
+    Negation points found via searches like:
+    
+    $ git grep "= -[a-z,A-Z]" fs/xfs
+    $ git grep "return -[a-z,A-D,F-Z]" fs/xfs
+    $ git grep " -[a-z].*;" fs/xfs
+    
+    [ with some bits I missed from Brian Foster ]
+    
+    Signed-off-by: Dave Chinner <dchinner@redhat.com>
+    Reviewed-by: Brian Foster <bfoster@redhat.com>
+    Signed-off-by: Dave Chinner <david@fromorbit.com>
 
-Cheers,
+commit 30f712c9dd69348aa51351d5cb6d366bf4fae31d
+Author: Dave Chinner <dchinner@redhat.com>
+Date:   Wed Jun 25 14:57:53 2014 +1000
 
-Dave.
+    libxfs: move source files
+    
+    Move all the source files that are shared with userspace into
+    libxfs/. This is done as one big chunk simpy to get it done
+    quickly
+    
+    Signed-off-by: Dave Chinner <dchinner@redhat.com>
+    Reviewed-by: Brian Foster <bfoster@redhat.com>
+    Signed-off-by: Dave Chinner <david@fromorbit.com>
+
+commit 84be0ffc9043f7c56044294eb775a2200452c76d
+Author: Dave Chinner <dchinner@redhat.com>
+Date:   Wed Jun 25 14:57:36 2014 +1000
+
+    libxfs: move header files
+    
+    Move all the header files that are shared with userspace into
+    libxfs. This is done as one big chunk simpy to get it done quickly.
+    
+    Signed-off-by: Dave Chinner <dchinner@redhat.com>
+    Reviewed-by: Brian Foster <bfoster@redhat.com>
+    Signed-off-by: Dave Chinner <david@fromorbit.com>
+
+commit 69116a1317ce3d2292e062bfb1a22757b95dcd06
+Author: Dave Chinner <dchinner@redhat.com>
+Date:   Wed Jun 25 14:57:22 2014 +1000
+
+    xfs: create libxfs infrastructure
+    
+    To minimise the differences between kernel and userspace code,
+    split the kernel code into the same structure as the userspace code.
+    That is, the gneric core functionality of XFS is moved to a libxfs/
+    directory and treat it as a layering barrier in the XFS code.
+    
+    This patch introduces the libxfs directory, the build infrastructure
+    and an initial source and header file to build. The libxfs directory
+    will contain the header files that are needed to build libxfs - most
+    of userspace does not care about the location of these header files
+    as they are accessed indirectly. Hence keeping them inside libxfs
+    makes it easy to track the changes and script the sync process as
+    the directory structure will be identical.
+    
+    To allow this changeover to occur in the kernel code, there are some
+    temporary infrastructure in the makefiles to grab the header
+    filesystem from both locations. Once all the files are moved,
+    modifications will be made in the source code that will make the
+    need for these include directives go away.
+    
+    Signed-off-by: Dave Chinner <dchinner@redhat.com>
+    Reviewed-by: Brian Foster <bfoster@redhat.com>
+    Signed-off-by: Dave Chinner <david@fromorbit.com>
+
+-----------------------------------------------------------------------
+
+Summary of changes:
+
+
+hooks/post-receive
 -- 
-Dave Chinner
-david@fromorbit.com
+XFS development tree
 
 _______________________________________________
 xfs mailing list
