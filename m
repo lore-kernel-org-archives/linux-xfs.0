@@ -1,26 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id D85C37F3F
-	for <xfs@oss.sgi.com>; Wed, 25 Jun 2014 11:09:12 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id AFA588F8068
-	for <xfs@oss.sgi.com>; Wed, 25 Jun 2014 09:09:09 -0700 (PDT)
-Received: from mail-qa0-f68.google.com (mail-qa0-f68.google.com
-	[209.85.216.68]) by cuda.sgi.com with ESMTP id b5dT3QAYPW2AB8zA
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 25 Jun 2014 09:09:07 -0700 (PDT)
-Received: by mail-qa0-f68.google.com with SMTP id v10so521074qac.3
-	for <xfs@oss.sgi.com>; Wed, 25 Jun 2014 09:09:07 -0700 (PDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 299F27F3F
+	for <xfs@oss.sgi.com>; Wed, 25 Jun 2014 11:49:59 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id F397A304053
+	for <xfs@oss.sgi.com>; Wed, 25 Jun 2014 09:49:55 -0700 (PDT)
+Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
+	with ESMTP id XYCN6LDbqgLTzJhw (version=TLSv1 cipher=AES256-SHA
+	bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 25 Jun 2014 09:49:54 -0700 (PDT)
+Received: from relay1.suse.de (charybdis-ext.suse.de [195.135.220.254])
+	by mx2.suse.de (Postfix) with ESMTP id 1A2F5AC7E
+	for <xfs@oss.sgi.com>; Wed, 25 Jun 2014 16:49:41 +0000 (UTC)
+Date: Wed, 25 Jun 2014 18:49:39 +0200
+From: Jan Kara <jack@suse.cz>
+Subject: XFS CRC errors after a crash
+Message-ID: <20140625164939.GA27620@quack.suse.cz>
 MIME-Version: 1.0
-In-Reply-To: <20140625012144.GK9508@dastard>
-References: <CA+o=1OW0OXhzU+b9ACMZzg0dq=B7BSj+yPXD2Vrr9F6mWK8ruQ@mail.gmail.com>
-	<20140624201946.GJ9508@dastard>
-	<CA+o=1OVnORG0Ah3Zx8dkGzs7vtT7odRH=v12KqtLW0MP_3oHjQ@mail.gmail.com>
-	<20140625012144.GK9508@dastard>
-Date: Wed, 25 Jun 2014 18:09:07 +0200
-Message-ID: <CA+o=1OXY8Ay8CSgsdiAOTacBa9800FiMKGbr0DdkE_YVpewqBw@mail.gmail.com>
-Subject: Re: Metadata CRC error upon unclean unmount
-From: Fanael Linithien <fanael4@gmail.com>
+Content-Disposition: inline
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,14 +30,42 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-First try, and something is wrong already.
+  Hello,
 
-Dmesg: https://clbin.com/e8HwM
-Pre-mount metadata: https://clbin.com/0thyz
-Post-mount metadata: https://clbin.com/WTIuF
+  so I've been crash-testing XFS (just killing KVM with XFS filesystem
+mounted) a bit with V5 superblock enabled in 3.16-rc1 and I can pretty
+easily hit CRC mismatches after that. Kernel complains like:
+[518184.794175] XFS (sdb3): Mounting V5 Filesystem
+[518184.902898] XFS (sdb3): Starting recovery (logdev: internal)
+[518187.118860] XFS (sdb3): Metadata CRC error detected at xfs_agf_read_verify+0x5a/0x100 [xfs], block 0x1
+[518187.118870] XFS (sdb3): Unmount and run xfs_repair
+[518187.118875] XFS (sdb3): First 64 bytes of corrupted metadata buffer:
+[518187.118882] ffff880136ffd600: 58 41 47 46 00 00 00 01 00 00 00 00 00 0f aa 40  XAGF...........@
+[518187.118887] ffff880136ffd610: 00 02 6d 53 00 02 77 f8 00 00 00 00 00 00 00 01  ..mS..w.........
+[518187.118891] ffff880136ffd620: 00 00 00 01 00 00 00 00 00 00 00 00 00 00 00 03  ................
+[518187.118895] ffff880136ffd630: 00 00 00 04 00 08 81 d0 00 08 81 a7 00 00 00 00  ................
+[518187.118923] XFS (sdb3): metadata I/O error: block 0x1 ("xfs_trans_read_buf_map") error 74 numblks 1
+
+So it seem like the checksum doesn't get updated properly in all the cases.
+Looking into the logdump, there doesn't seem to be any modifications for
+this AGF block in unrelayed part of the log but there are some modifications
+in the older parts of the log - the latest LSN where block 1 was updated is
+1,4639 (and the buffer contents in the log corresponds to the data I see in
+block 1). However the lsn field in AGF structure in that block shows 1,3616
+so that really seems stale (and I've checked and in that transaction the
+block has been modified as well).
+
+I'm looking into how the mismatch could happen but if anybody more
+knowledgeable wants to have a look I have an unmodified fs image available
+(however it has ~20G so if there's a way to make that smaller it would be
+good).
+
+								Honza
+-- 
+Jan Kara <jack@suse.cz>
+SUSE Labs, CR
 
 _______________________________________________
 xfs mailing list
