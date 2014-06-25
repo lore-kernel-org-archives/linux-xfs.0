@@ -1,24 +1,33 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 4DE817F3F
-	for <xfs@oss.sgi.com>; Tue, 24 Jun 2014 20:22:20 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 2283B8F804C
-	for <xfs@oss.sgi.com>; Tue, 24 Jun 2014 18:22:16 -0700 (PDT)
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	dWKPMKezBrGq07Hv for <xfs@oss.sgi.com>;
-	Tue, 24 Jun 2014 18:22:11 -0700 (PDT)
-Date: Wed, 25 Jun 2014 11:21:44 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Metadata CRC error upon unclean unmount
-Message-ID: <20140625012144.GK9508@dastard>
-References: <CA+o=1OW0OXhzU+b9ACMZzg0dq=B7BSj+yPXD2Vrr9F6mWK8ruQ@mail.gmail.com>
-	<20140624201946.GJ9508@dastard>
-	<CA+o=1OVnORG0Ah3Zx8dkGzs7vtT7odRH=v12KqtLW0MP_3oHjQ@mail.gmail.com>
+	by oss.sgi.com (Postfix) with ESMTP id AF3197F3F
+	for <xfs@oss.sgi.com>; Tue, 24 Jun 2014 22:05:33 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id A38AC8F804B
+	for <xfs@oss.sgi.com>; Tue, 24 Jun 2014 20:05:30 -0700 (PDT)
+Received: from mail-ie0-f169.google.com (mail-ie0-f169.google.com
+	[209.85.223.169]) by cuda.sgi.com with ESMTP id
+	Qqv8ZGmsSaQCf3Fs (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 24 Jun 2014 20:05:28 -0700 (PDT)
+Received: by mail-ie0-f169.google.com with SMTP id at1so1122260iec.14
+	for <xfs@oss.sgi.com>; Tue, 24 Jun 2014 20:05:27 -0700 (PDT)
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <CA+o=1OVnORG0Ah3Zx8dkGzs7vtT7odRH=v12KqtLW0MP_3oHjQ@mail.gmail.com>
+In-Reply-To: <20140624032521.GA12164@htj.dyndns.org>
+References: <CANGgnMb=2dYGQO4K36pQ9LEb8E4rT6S_VskLF+n=ndd0_kJr_g@mail.gmail.com>
+	<CANGgnMa80WwQ8zSkL52yYegmQURVQeZiBFv41=FQXMZJ_NaEDw@mail.gmail.com>
+	<20140513034647.GA5421@dastard>
+	<CANGgnMZ0q9uE3NHj2i0SBK1d0vdKLx7QBJeFNb+YwP-5EAmejQ@mail.gmail.com>
+	<20140513063943.GQ26353@dastard>
+	<CANGgnMYn++1++UyX+D2d9GxPxtytpQJv0ThFwdxM-yX7xDWqiA@mail.gmail.com>
+	<20140513090321.GR26353@dastard>
+	<CANGgnMZqQc_NeaDpO_aX+bndmHrQ9VWo9mkfxhPBkRD-J=N6sQ@mail.gmail.com>
+	<CANGgnMZ8OwzfBj5m9H7c6q2yahGhU7oFZLsJfVxnWoqZExkZmQ@mail.gmail.com>
+	<20140624030240.GB9508@dastard> <20140624032521.GA12164@htj.dyndns.org>
+From: Austin Schuh <austin@peloton-tech.com>
+Date: Tue, 24 Jun 2014 20:05:07 -0700
+Message-ID: <CANGgnMY5cBSXOayDbbOvqNXEG8e6sAYEjpWEQO2X8XPxx2R5-Q@mail.gmail.com>
+Subject: Re: On-stack work item completion race? (was Re: XFS crash?)
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,156 +36,311 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============8614171302363527970=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Fanael Linithien <fanael4@gmail.com>
-Cc: xfs@oss.sgi.com
+To: Tejun Heo <tj@kernel.org>
+Cc: Thomas Gleixner <tglx@linutronix.de>, linux-kernel@vger.kernel.org, xfs <xfs@oss.sgi.com>
 
-On Tue, Jun 24, 2014 at 11:50:52PM +0200, Fanael Linithien wrote:
-> Managed to get the "metadata CRC error" again. Trying to get useful
-> info from an initramfs recovery shell is fun.
+--===============8614171302363527970==
+Content-Type: multipart/alternative; boundary=089e0115ebd02914c004fca05925
 
-What kernel are you running? (uname -a, please)
+--089e0115ebd02914c004fca05925
+Content-Type: text/plain; charset=UTF-8
 
-> dmesg:
-> 
-> [    4.215841] SGI XFS with ACLs, security attributes, realtime, large
-> block/inode numbers, no debug enabled
-> [    4.224047] XFS (sda1): Mounting V5 Filesystem
-> [    4.527156] XFS (sda1): Starting recovery (logdev: internal)
-> [    4.546698] XFS (sda1): Metadata CRC error detected at
-> xfs_agi_read_verify+0x5e/0x110 [xfs], block 0x2
-> [    4.547083] XFS (sda1): Unmount and run xfs_repair
-> [    4.547347] XFS (sda1): First 64 bytes of corrupted metadata buffer:
-> [    4.547670] ffff8800364d3600: 58 41 47 49 00 00 00 01 00 00 00 00
-> 00 13 d0 00  XAGI............
-> [    4.548027] ffff8800364d3610: 00 00 17 40 00 00 00 03 00 00 00 01
-> 00 00 00 2b  ...@...........+
-> [    4.548382] ffff8800364d3620: 00 0c 95 40 ff ff ff ff ff ff ff ff
-> ff ff ff ff  ...@............
-> [    4.548752] ffff8800364d3630: ff ff ff ff ff ff ff ff ff ff ff ff
-> ff ff ff ff  ................
-> [    4.549420] XFS (sda1): metadata I/O error: block 0x2
-> ("xfs_trans_read_buf_map") error 74 numblks 1
-> 
-> 
-> Metadata dump (xz + base64): https://clbin.com/4KYSR
+[Adding tglx to the cc]
 
-Yup, the CRC on disk is clearly wrong. Without mounting the
-filesystem, it has a value of:
+On Mon, Jun 23, 2014 at 8:25 PM, Tejun Heo <tj@kernel.org> wrote:
 
-crc = 0x4e28030d (bad)
+> Hello,
+>
+> On Tue, Jun 24, 2014 at 01:02:40PM +1000, Dave Chinner wrote:
+> > start_flush_work() is effectively a special queue_work()
+> > implementation, so if if it's not safe to call complete() from the
+> > workqueue as the above patch implies then this code has the same
+> > problem.
+> >
+> > Tejun - is this "do it yourself completion" a known issue w.r.t.
+> > workqueues? I can't find any documentation that says "don't do
+> > that" so...?
+>
+> It's more complex than using flush_work() but there's nothing
+> fundamentally wrong with it.  A work item is completely unlinked
+> before its execution starts.  It's safe to free the work item once its
+> work function started, whether through kfree() or returning.
+>
+> One difference between flush_work() and manual completion would be
+> that if the work item gets requeued, flush_work() would wait for the
+> queued one to finish but given the work item is one-shot this doesn't
+> make any difference.
+>
+> I can see no reason why manual completion would behave differently
+> from flush_work() in this case.
+>
 
-And after re-writing a field in it with xfs_db to the same value:
+I went looking for a short trace in my original log to show the problem,
+and instead found evidence of the second problem.  I still like the shorter
+flush_work call, but that's not my call.
 
-crc = 0x86a5538a (correct)
+I did find this comment in the process_one_work function.  Sounds like this
+could be better documented.
 
-And then it mounts and recovers just fine.
+  /*
+   * It is permissible to free the struct work_struct from
+   * inside the function that is called from it, this we need to
+   * take into account for lockdep too.  To avoid bogus "held
+   * lock freed" warnings as well as problems when looking into
+   * work->lockdep_map, make a copy and use that here.
+   */
 
-But there's CRC errors in every AGI (all 4 on disk) and every inode
-btree block, too.
+ > As I understand it, what then happens is that the workqueue code
+> > grabs another kworker thread and runs the next work item in it's
+> > queue. IOWs, work items can block, but doing that does not prevent
+> > execution of other work items queued on other work queues or even on
+> > the same work queue. Tejun, did I get that correct?
+>
+> Yes, as long as the workqueue is under its @max_active limit and has
+> access to an existing kworker or can create a new one, it'll start
+> executing the next work item immediately; however, the guaranteed
+> level of concurrency is 1 even for WQ_RECLAIM workqueues.  IOW, the
+> work items queued on a workqueue must be able to make forward progress
+> with single work item if the work items are being depended upon for
+> memory reclaim.
 
-Ok, dig further in to AGI 0 - the important bits form xfs_db:
 
-length = 1298432
-count = 5952
-root = 3
-level = 1
-freecount = 43
-lsn = 0x30000017e
+I mentioned this to Dave when I initially started this thread, but I'm
+running a RT patched kernel.  I don't see forwards progress.  The workqueue
+is only used in 1 spot (xfs_alloc_wq), and has WQ_MEM_RECLAIM set.  I
+started with a 10,000,000 line trace and pulled out the entries which
+referenced the workqueue and pool leading up to the lockup.
 
-Ok, so this version should match what is in the log checkpoint at
-lsn = 0x30000017e. What do we have there:
+             scp-4110  [001] ....1.3   101.184640: workqueue_queue_work:
+work struct=ffff8803c782d900 function=xfs_bmapi_allocate_worker
+workqueue=ffff88040c9f5a00 pool=ffff88042dae3fc0 req_cpu=512 cpu=1
+             scp-4110  [001] ....1.3   101.184641: workqueue_activate_work:
+work struct ffff8803c782d900
+     kworker/1:1-89    [001] ....1.1   101.184883: workqueue_nr_running:
+pool=ffff88042dae3fc0 nr_running=1
+     kworker/1:1-89    [001] ....1..   101.184885: workqueue_execute_start:
+work struct ffff8803c782d900: function xfs_bmapi_allocate_worker
+     irq/44-ahci-275   [001] ....1.5   101.185086: workqueue_queue_work:
+work struct=ffff8800ae3f01e0 function=xfs_end_io workqueue=ffff88040b459a00
+pool=ffff88042dae3fc0 req_cpu=512 cpu=1
+     irq/44-ahci-275   [001] ....1.5   101.185088: workqueue_activate_work:
+work struct ffff8800ae3f01e0
+             scp-4110  [001] ....1..   101.187911: xfs_ilock: dev 8:5 ino
+0xf9e flags ILOCK_EXCL caller xfs_iomap_write_allocate
+             scp-4110  [001] ....1.3   101.187914: workqueue_queue_work:
+work struct=ffff8803c782d900 function=xfs_bmapi_allocate_worker
+workqueue=ffff88040c9f5a00 pool=ffff88042dae3fc0 req_cpu=512 cpu=1
+             scp-4110  [001] ....1.3   101.187915: workqueue_activate_work:
+work struct ffff8803c782d900
+             scp-4110  [001] ....1.4   101.187926: workqueue_queue_work:
+work struct=ffff88040a6a01c8 function=blk_delay_work
+workqueue=ffff88040c9f4a00 pool=ffff88042dae44c0 req_cpu=512 cpu=1
+             scp-4110  [001] ....1.4   101.187926: workqueue_activate_work:
+work struct ffff88040a6a01c8
+     kworker/1:1-89    [001] ....1..   101.187998: workqueue_execute_end:
+work struct ffff8803c782d900
+     kworker/1:1-89    [001] ....1..   101.188000: workqueue_execute_start:
+work struct ffff8800ae3f01e0: function xfs_end_io
+     kworker/1:1-89    [001] ....1..   101.188001: xfs_ilock: dev 8:5 ino
+0xf9e flags ILOCK_EXCL caller xfs_setfilesize
 
-LOG REC AT LSN cycle 3 block 382 (0x3, 0x17e)
-============================================================================
-TRANS: tid:0xc7ad5835  type:CHECKPOINT  #items:25  trans:0xc7ad5835  q:0x660a40
-INO: cnt:2 total:2 a:0x668c10 len:56 a:0x660ac0 len:176 
-        INODE: #regs:2   ino:0x85cee  flags:0x1   dsize:0
-        CORE inode:
-BUF: cnt:2 total:2 a:0x64f290 len:24 a:0x668c50 len:128 
-        BUF:  #regs:2   start blkno:0x2   len:1   bmap size:1   flags:0x3800
-        AGI Buffer: (XAGI)
-                ver:1  seq#:0  len:1298432  cnt:5952  root:3
-                level:1  free#:0x2c  newino:0xc9540
-                         ^^^^^^^^^^
-.....
+The last work never runs.  Hangcheck triggers shortly after.
 
-0x2c = 44. The value on disk is *43*. It must have been logged again...
+I spent some more time debugging, and I am seeing that tsk_is_pi_blocked is
+returning 1 in sched_submit_work (kernel/sched/core.c).  It looks
+like sched_submit_work is not detecting that the worker task is blocked on
+a mutex.
 
-LOG REC AT LSN cycle 3 block 414 (0x3, 0x19e)
-============================================================================
-TRANS: tid:0x73c82586  type:CHECKPOINT  #items:23  trans:0x73c82586  q:0x660a40
-INO: cnt:2 total:2 a:0x668c50 len:56 a:0x669880 len:176 
-        INODE: #regs:2   ino:0xc9553  flags:0x1   dsize:0
-        CORE inode:
-BUF: cnt:2 total:2 a:0x66a110 len:24 a:0x6693d0 len:128 
-        BUF:  #regs:2   start blkno:0x2   len:1   bmap size:1   flags:0x3800
-        AGI Buffer: (XAGI)
-                ver:1  seq#:0  len:1298432  cnt:5952  root:3
-                level:1  free#:0x2b  newino:0xc9540
+This looks very RT related right now.  I see 2 problems from my reading
+(and experimentation).  The first is that the second worker isn't getting
+started because tsk_is_pi_blocked is reporting that the task isn't blocked
+on a mutex.  The second is that even if another worker needs to be
+scheduled because the original worker is blocked on a mutex, we need the
+pool lock to schedule another worker.  The pool lock can be acquired by any
+CPU, and is a spin_lock.  If we end up on the slow path for the pool lock,
+we hit BUG_ON(rt_mutex_real_waiter(task->pi_blocked_on))
+in task_blocks_on_rt_mutex in rtmutex.c.  I'm not sure how to deal with
+either problem.
 
-Yup, there it is - value 0x2b, which is 43. But if that value was
-written to disk, then why is the LSN stamped in the buffer the
-previous LSN? I can't see how that is possible, nor is the CRC in
-the buffer consistent with just an updated LSN to match this
-transaction.
+Hopefully I've got all my facts right...  Debugging kernel code is a whole
+new world from userspace code.
 
-OK:
+Thanks!
+Austin
 
-$ xfs_db -x -c "agi 0" -c "write freecount 44" -c "p crc" -f agi-crc-bad.img 
-Metadata CRC error detected at block 0x2/0x200
-xfs_db: cannot init perag data (74). Continuing anyway.
-freecount = 44
-crc = 0x4e28030d (correct)
-$
+--089e0115ebd02914c004fca05925
+Content-Type: text/html; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-Ok, so the CRC corresponds to the version of the AGI that was logged
-at lsn = 0x30000017e. That means the version on disk is a partial
-update without a CRC recalculation. Ok, so how can that happen?
+<div dir=3D"ltr"><div class=3D"gmail_extra"><div class=3D"gmail_quote">[Add=
+ing tglx to the cc]</div><div class=3D"gmail_quote"><br></div><div class=3D=
+"gmail_quote">On Mon, Jun 23, 2014 at 8:25 PM, Tejun Heo <span dir=3D"ltr">=
+&lt;<a href=3D"mailto:tj@kernel.org" target=3D"_blank">tj@kernel.org</a>&gt=
+;</span> wrote:<br>
 
-Given the lsn mismatch, I suspect log recovery has played a part as
-it will not update the LSN when replaying changes in the log. It
-should, however, always be attaching the appropriate verifier to
-the buffers being recovered so the CRC should be recalculated
-correctly.
+<blockquote class=3D"gmail_quote" style=3D"margin:0px 0px 0px 0.8ex;border-=
+left-width:1px;border-left-color:rgb(204,204,204);border-left-style:solid;p=
+adding-left:1ex">
+Hello,<br>
+<div><br>
+On Tue, Jun 24, 2014 at 01:02:40PM +1000, Dave Chinner wrote:<br>
+&gt; start_flush_work() is effectively a special queue_work()<br>
+&gt; implementation, so if if it&#39;s not safe to call complete() from the=
+<br>
+&gt; workqueue as the above patch implies then this code has the same<br>
+&gt; problem.<br>
+&gt;<br>
+&gt; Tejun - is this &quot;do it yourself completion&quot; a known issue w.=
+r.t.<br>
+&gt; workqueues? I can&#39;t find any documentation that says &quot;don&#39=
+;t do<br>
+&gt; that&quot; so...?<br>
+<br>
+</div>It&#39;s more complex than using flush_work() but there&#39;s nothing=
+<br>
+fundamentally wrong with it. =C2=A0A work item is completely unlinked<br>
+before its execution starts. =C2=A0It&#39;s safe to free the work item once=
+ its<br>
+work function started, whether through kfree() or returning.<br>
+<br>
+One difference between flush_work() and manual completion would be<br>
+that if the work item gets requeued, flush_work() would wait for the<br>
+queued one to finish but given the work item is one-shot this doesn&#39;t<b=
+r>
+make any difference.<br>
+<br>
+I can see no reason why manual completion would behave differently<br>
+from flush_work() in this case.<br></blockquote><div><br></div><div>I went =
+looking for a short trace in my original log to show the problem, and inste=
+ad found evidence of the second problem. =C2=A0I still like the shorter flu=
+sh_work call, but that&#39;s not my call.</div>
 
-Given that the CRC errors seem to propagate through the XAGI and
-inode btree blocks *only*, it makes me think that unlinked inode
-list recovery *might* have caused this, but I cannot yet see the
-underlying cause of the initial corruption. What is clear, however,
-is that you are now tripping over a problem caused by a previous
-crash+recover cycle.
+<div><br></div><div>I did find this comment in the=C2=A0process_one_work fu=
+nction. =C2=A0Sounds like this could be better documented.</div>
+<div><br></div><div>=C2=A0 /*</div><div>=C2=A0 =C2=A0* It is permissible to=
+ free the struct work_struct from</div><div>=C2=A0 =C2=A0* inside the funct=
+ion that is called from it, this we need to</div><div>=C2=A0 =C2=A0* take i=
+nto account for lockdep too. =C2=A0To avoid bogus &quot;held</div>
 
-Can you reproduce the problem on demand from a brand new filesystem?
-If so, can you run the cycle:
 
-	mount
-	write
-	crash
-	<restart>
-	take metadump
-	mount
-	unmount
-	run xfs_repair -n <dev>
-	if clean
-		do another iteration
-	otherwise, something is wrong.
-	record dmesg
-	take a post-mount metadump
-	post the pre- and post-mount metadumps for me to look at
-	post the entire dmesg so I can look at it.
+<div>=C2=A0 =C2=A0* lock freed&quot; warnings as well as problems when look=
+ing into</div><div>=C2=A0 =C2=A0* work-&gt;lockdep_map, make a copy and use=
+ that here.</div><div>=C2=A0 =C2=A0*/</div><div><br></div><blockquote class=
+=3D"gmail_quote" style=3D"margin:0px 0px 0px 0.8ex;border-left-width:1px;bo=
+rder-left-color:rgb(204,204,204);border-left-style:solid;padding-left:1ex">
 
-Cheers,
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+<div>
+&gt; As I understand it, what then happens is that the workqueue code<br>
+&gt; grabs another kworker thread and runs the next work item in it&#39;s<b=
+r>
+&gt; queue. IOWs, work items can block, but doing that does not prevent<br>
+&gt; execution of other work items queued on other work queues or even on<b=
+r>
+&gt; the same work queue. Tejun, did I get that correct?<br>
+<br>
+</div>Yes, as long as the workqueue is under its @max_active limit and has<=
+br>
+access to an existing kworker or can create a new one, it&#39;ll start<br>
+executing the next work item immediately; however, the guaranteed<br>
+level of concurrency is 1 even for WQ_RECLAIM workqueues. =C2=A0IOW, the<br=
+>
+work items queued on a workqueue must be able to make forward progress<br>
+with single work item if the work items are being depended upon for<br>
+memory reclaim.</blockquote><div><br></div><div>I mentioned this to Dave wh=
+en I initially started this thread, but I&#39;m running a RT patched kernel=
+. =C2=A0I don&#39;t see forwards progress. =C2=A0The workqueue is only used=
+ in 1 spot (xfs_alloc_wq), and has WQ_MEM_RECLAIM set. =C2=A0I started with=
+ a 10,000,000 line trace and pulled out the entries which referenced the wo=
+rkqueue and pool leading up to the lockup.</div>
+
+<div><br></div><div><div>=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0sc=
+p-4110 =C2=A0[001] ....1.3 =C2=A0 101.184640: workqueue_queue_work: work st=
+ruct=3Dffff8803c782d900 function=3Dxfs_bmapi_allocate_worker workqueue=3Dff=
+ff88040c9f5a00 pool=3Dffff88042dae3fc0 req_cpu=3D512 cpu=3D1</div>
+
+<div>=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0scp-4110 =C2=A0[001] .=
+...1.3 =C2=A0 101.184641: workqueue_activate_work: work struct ffff8803c782=
+d900</div><div>=C2=A0 =C2=A0 =C2=A0kworker/1:1-89 =C2=A0 =C2=A0[001] ....1.=
+1 =C2=A0 101.184883: workqueue_nr_running: pool=3Dffff88042dae3fc0 nr_runni=
+ng=3D1</div>
+
+<div>=C2=A0 =C2=A0 =C2=A0kworker/1:1-89 =C2=A0 =C2=A0[001] ....1.. =C2=A0 1=
+01.184885: workqueue_execute_start: work struct ffff8803c782d900: function =
+xfs_bmapi_allocate_worker</div><div>=C2=A0 =C2=A0 =C2=A0irq/44-ahci-275 =C2=
+=A0 [001] ....1.5 =C2=A0 101.185086: workqueue_queue_work: work struct=3Dff=
+ff8800ae3f01e0 function=3Dxfs_end_io workqueue=3Dffff88040b459a00 pool=3Dff=
+ff88042dae3fc0 req_cpu=3D512 cpu=3D1</div>
+
+<div>=C2=A0 =C2=A0 =C2=A0irq/44-ahci-275 =C2=A0 [001] ....1.5 =C2=A0 101.18=
+5088: workqueue_activate_work: work struct ffff8800ae3f01e0</div><div>=C2=
+=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0scp-4110 =C2=A0[001] ....1.. =
+=C2=A0 101.187911: xfs_ilock: dev 8:5 ino 0xf9e flags ILOCK_EXCL caller xfs=
+_iomap_write_allocate</div>
+
+<div>=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0scp-4110 =C2=A0[001] .=
+...1.3 =C2=A0 101.187914: workqueue_queue_work: work struct=3Dffff8803c782d=
+900 function=3Dxfs_bmapi_allocate_worker workqueue=3Dffff88040c9f5a00 pool=
+=3Dffff88042dae3fc0 req_cpu=3D512 cpu=3D1</div><div>=C2=A0 =C2=A0 =C2=A0 =
+=C2=A0 =C2=A0 =C2=A0 =C2=A0scp-4110 =C2=A0[001] ....1.3 =C2=A0 101.187915: =
+workqueue_activate_work: work struct ffff8803c782d900</div>
+
+<div>=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0scp-4110 =C2=A0[001] .=
+...1.4 =C2=A0 101.187926: workqueue_queue_work: work struct=3Dffff88040a6a0=
+1c8 function=3Dblk_delay_work workqueue=3Dffff88040c9f4a00 pool=3Dffff88042=
+dae44c0 req_cpu=3D512 cpu=3D1</div><div>=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =
+=C2=A0 =C2=A0scp-4110 =C2=A0[001] ....1.4 =C2=A0 101.187926: workqueue_acti=
+vate_work: work struct ffff88040a6a01c8</div>
+
+<div>=C2=A0 =C2=A0 =C2=A0kworker/1:1-89 =C2=A0 =C2=A0[001] ....1.. =C2=A0 1=
+01.187998: workqueue_execute_end: work struct ffff8803c782d900</div><div>=
+=C2=A0 =C2=A0 =C2=A0kworker/1:1-89 =C2=A0 =C2=A0[001] ....1.. =C2=A0 101.18=
+8000: workqueue_execute_start: work struct ffff8800ae3f01e0: function xfs_e=
+nd_io</div>
+
+<div>=C2=A0 =C2=A0 =C2=A0kworker/1:1-89 =C2=A0 =C2=A0[001] ....1.. =C2=A0 1=
+01.188001: xfs_ilock: dev 8:5 ino 0xf9e flags ILOCK_EXCL caller xfs_setfile=
+size</div></div><div><br></div><div>The last work never runs. =C2=A0Hangche=
+ck triggers shortly after.</div>
+
+<div><br></div><div>I spent some more time debugging, and I am seeing that=
+=C2=A0tsk_is_pi_blocked is returning 1 in=C2=A0sched_submit_work (kernel/sc=
+hed/core.c). =C2=A0It looks like=C2=A0sched_submit_work is not detecting th=
+at the worker task is blocked on a mutex.</div>
+
+<div><br></div><div>This looks very RT related right now. =C2=A0I see 2 pro=
+blems from my reading (and experimentation). =C2=A0The first is that the se=
+cond worker isn&#39;t getting started because tsk_is_pi_blocked is reportin=
+g that the task isn&#39;t blocked on a mutex. =C2=A0The second is that even=
+ if another worker needs to be scheduled because the original worker is blo=
+cked on a mutex, we need the pool lock to schedule another worker. =C2=A0Th=
+e pool lock can be acquired by any CPU, and is a spin_lock. =C2=A0If we end=
+ up on the slow path for the pool lock, we hit=C2=A0BUG_ON(rt_mutex_real_wa=
+iter(task-&gt;pi_blocked_on)) in=C2=A0task_blocks_on_rt_mutex in rtmutex.c.=
+ =C2=A0I&#39;m not sure how to deal with either problem.</div>
+
+<div><br></div><div>Hopefully I&#39;ve got all my facts right... =C2=A0Debu=
+gging kernel code is a whole new world from userspace code.</div></div></di=
+v><div class=3D"gmail_extra"><br></div><div class=3D"gmail_extra">Thanks!</=
+div>
+<div class=3D"gmail_extra">
+Austin</div></div>
+
+--089e0115ebd02914c004fca05925--
+
+
+--===============8614171302363527970==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============8614171302363527970==--
