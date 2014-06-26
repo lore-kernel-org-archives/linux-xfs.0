@@ -1,19 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id DEFF37F85
-	for <xfs@oss.sgi.com>; Thu, 26 Jun 2014 14:17:34 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id B8D8B304039
-	for <xfs@oss.sgi.com>; Thu, 26 Jun 2014 12:17:31 -0700 (PDT)
-Received: from mout.gmx.net (mout.gmx.net [212.227.15.19]) by cuda.sgi.com
-	with ESMTP id mQHpqYHaGEE6ARoS (version=TLSv1 cipher=AES256-SHA
-	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 26 Jun 2014 12:17:29 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id 244CF7F83
+	for <xfs@oss.sgi.com>; Thu, 26 Jun 2014 15:03:59 -0500 (CDT)
+Message-ID: <53AC7CA9.9050505@sgi.com>
+Date: Thu, 26 Jun 2014 15:03:53 -0500
+From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Message-ID: <trinity-20fa04a2-b771-42eb-afb3-a915026306bd-1403810247665@3capp-gmx-bs14>
-From: Dragon <Sunghost@gmx.de>
-Subject: Re: XFS Repair hangs at inode repair in phase3
-Date: Thu, 26 Jun 2014 21:17:27 +0200
+Subject: Re: Metadata CRC error upon unclean unmount
+References: <CA+o=1OW0OXhzU+b9ACMZzg0dq=B7BSj+yPXD2Vrr9F6mWK8ruQ@mail.gmail.com>
+	<20140624201946.GJ9508@dastard>
+	<CA+o=1OVnORG0Ah3Zx8dkGzs7vtT7odRH=v12KqtLW0MP_3oHjQ@mail.gmail.com>
+	<20140625012144.GK9508@dastard> <20140626002859.GQ9508@dastard>
+In-Reply-To: <20140626002859.GQ9508@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,43 +20,77 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============8750575605612129867=="
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: Fanael Linithien <fanael4@gmail.com>, xfs@oss.sgi.com
 
---===============8750575605612129867==
-Content-Type: text/html; charset=UTF-8
+On 06/25/14 19:28, Dave Chinner wrote:
+> On Wed, Jun 25, 2014 at 11:21:44AM +1000, Dave Chinner wrote:
+>> On Tue, Jun 24, 2014 at 11:50:52PM +0200, Fanael Linithien wrote:
+>> Ok, so the CRC corresponds to the version of the AGI that was logged
+>> at lsn = 0x30000017e. That means the version on disk is a partial
+>> update without a CRC recalculation. Ok, so how can that happen?
+>>
+>> Given the lsn mismatch, I suspect log recovery has played a part as
+>> it will not update the LSN when replaying changes in the log. It
+>> should, however, always be attaching the appropriate verifier to
+>> the buffers being recovered so the CRC should be recalculated
+>> correctly.
+>
+> Ok, I have confirmed that this is occurring and behaving correctly.
+>
+> [   24.437878] XFS (vdb): Mounting V5 Filesystem
+> [   24.554429] XFS (vdb): Starting recovery (logdev: internal)
+> [   24.623466] XFS (vdb): xfs_agi_write_verify: lsn reset block 0x2
+> [   24.625263] XFS (vdb): xfs_btree_sblock_calc_crc: lsn reset block 0x8
+> [   24.627307] XFS (vdb): xfs_btree_sblock_calc_crc: lsn reset block 0x10
+> [   24.628729] XFS (vdb): xfs_btree_sblock_calc_crc: lsn reset block 0x18
+> [   24.630085] XFS (vdb): xfs_dir3_data_write_verify: lsn reset block 0x20000
+> [   24.631504] XFS (vdb): xfs_da3_node_write_verify: lsn reset block 0x20008
+> [   24.632935] XFS (vdb): xfs_dir3_data_write_verify: lsn reset block 0x20010
+> [   24.634360] XFS (vdb): xfs_dir3_data_write_verify: lsn reset block 0x20018
+> [   24.635622] XFS (vdb): xfs_dir3_free_write_verify: lsn reset block 0x201e0
+> [   24.636656] XFS (vdb): __write_verify: lsn reset block 0x201e8
+> [   24.637510] XFS (vdb): __write_verify: lsn reset block 0x201f0
+> [   24.638365] XFS (vdb): xfs_dir3_data_write_verify: lsn reset block 0x201f8
+> [   24.639378] XFS (vdb): xfs_dir3_data_write_verify: lsn reset block 0x202c0
+> [   24.640397] XFS (vdb): __write_verify: lsn reset block 0x202c8
+> [   24.641260] XFS (vdb): xfs_dir3_data_write_verify: lsn reset block 0x202d0
+> [   24.664330] XFS (vdb): Ending recovery (logdev: internal)
+>
+> But that also confirms that log recovery is recalculating the CRC
+> after replaying changes into that block:
+>
+> # xfs_db -c "agi 0" -c "p lsn" -c "p crc" /dev/vdb
+> lsn = 0xffffffffffffffff
+> crc = 0x788c4f63 (correct)
+>
+> So the common log recovery path for buffers is working as it is
+> designed to do.
+>
+> What I still don't understand yet is how changes after this recovery
+> phase are getting to disk without updating the CRC. That implies
+> buffers without verifiers being written....
+>
+> More debug to come...
+>
+> Cheers,
+>
+> Dave.
 
-<html><head></head><body><div style="font-family: Verdana;font-size: 12.0px;"><div>
-<pre>Hello,
-i upgraded to debian jessie with xfsprogs 3.2. if i run xfs_repair /dev/md2 the system hangs too. If i use -P it ends up with:
-corrupt block 0 in directory inode 2147702899: junking block
-Segmentation fault
+Could an out of order CIL push cause this?
 
-if i use -n -P it ends up with:
+SGI saw sequence 2 (and sometimes 3/4) of the cil push get in front of 
+cil push sequence 1. Looks like the setting of 
+log->l_cilp->xc_ctx->commit_lsn in xlog_cil_init_post_recovery() lets 
+this happen.
 
-No modify flag set, skipping phase 5
-Inode allocation btrees are too corrupted, skipping phases 6 and 7
-No modify flag set, skipping filesystem flush and exiting.
-
-Files are still not accessible - i think i lost some TB ;( - not a good experience for first use of xfs...
-On 6/24/2014 5:15 PM, Dragon wrote:
-</pre>
-
-<blockquote>Hi, yes read this, but i am new and dont know what this command will do and i dont want to lost my data. I read in the net, that some people couldnt start or boot from that disk, after running xfs_repair. I looked for a upgrade to latest xfsprogs version, but it seems difficult for amd64 systems. Do you have a changelog to latest version, could my installed version be ok, or better not to use? Thx Stan and Eric</blockquote>
-# xfs_repair -n -P /dev/device Post the output in your next reply, assuming it doesn&#39;t hang again. Cheers, Stan</div></div></body></html>
-
-
---===============8750575605612129867==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+--Mark.
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============8750575605612129867==--
