@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 4276C7F6B
-	for <xfs@oss.sgi.com>; Wed, 25 Jun 2014 23:29:57 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 0942C304048
-	for <xfs@oss.sgi.com>; Wed, 25 Jun 2014 21:29:56 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id E21EE7F6D
+	for <xfs@oss.sgi.com>; Wed, 25 Jun 2014 23:47:40 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 8AF598F804B
+	for <xfs@oss.sgi.com>; Wed, 25 Jun 2014 21:47:40 -0700 (PDT)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	hXDcKfFPwE5pVtn4 for <xfs@oss.sgi.com>;
-	Wed, 25 Jun 2014 21:29:39 -0700 (PDT)
-Date: Thu, 26 Jun 2014 14:29:25 +1000
+	hAAHP3R47BTU7vSs for <xfs@oss.sgi.com>;
+	Wed, 25 Jun 2014 21:47:37 -0700 (PDT)
+Date: Thu, 26 Jun 2014 14:47:19 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 3/6] xfs: add xfs_mount sysfs kobject
-Message-ID: <20140626042925.GW4453@dastard>
+Subject: Re: [PATCH 4/6] xfs: add xlog sysfs kobject and attribute handlers
+Message-ID: <20140626044719.GX4453@dastard>
 References: <1402060414-22075-1-git-send-email-bfoster@redhat.com>
-	<1402060414-22075-4-git-send-email-bfoster@redhat.com>
+	<1402060414-22075-5-git-send-email-bfoster@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1402060414-22075-4-git-send-email-bfoster@redhat.com>
+In-Reply-To: <1402060414-22075-5-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,46 +33,186 @@ Sender: xfs-bounces@oss.sgi.com
 To: Brian Foster <bfoster@redhat.com>
 Cc: xfs@oss.sgi.com
 
-On Fri, Jun 06, 2014 at 09:13:31AM -0400, Brian Foster wrote:
-> Embed a base kobject into xfs_mount. This creates a kobject associated
-> with each XFS mount and a subdirectory in sysfs with the name of the
-> filesystem. The subdirectory lifecycle matches that of the mount. Also
-> add the new xfs_sysfs.[c,h] source files with some XFS sysfs
-> infrastructure to facilitate attribute creation.
+On Fri, Jun 06, 2014 at 09:13:32AM -0400, Brian Foster wrote:
+> Embed a kobject into the xfs log data structure (xlog). This creates a
+> 'log' subdirectory for every XFS mount instance in sysfs. The lifecycle
+> of the log kobject is tied to the lifecycle of the log.
 > 
-> Note that there are currently no attributes exported as part of the
-> xfs_mount kobject. It exists solely to serve as a per-mount container
-> for child objects.
+> Also define a set of generic attribute handlers associated with the log
+> kobject in preparation for the addition of attributes.
+
+The code works fine, but....
 > 
 > Signed-off-by: Brian Foster <bfoster@redhat.com>
-....
-> +#include <linux/sysfs.h>
-> +#include "xfs.h"
-> +#include "xfs_types.h"
-> +#include "xfs_sb.h"
-> +#include "xfs_trans_resv.h"
-> +#include "xfs_ag.h"
-> +#include "xfs_mount.h"
+> ---
+>  fs/xfs/xfs_log.c      |  9 +++++++++
+>  fs/xfs/xfs_log_priv.h |  3 +++
+>  fs/xfs/xfs_sysfs.c    | 53 +++++++++++++++++++++++++++++++++++++++++++++++++++
+>  fs/xfs/xfs_sysfs.h    |  1 +
+>  4 files changed, 66 insertions(+)
+> 
+> diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+> index 292308d..8eb10d5 100644
+> --- a/fs/xfs/xfs_log.c
+> +++ b/fs/xfs/xfs_log.c
+> @@ -34,6 +34,7 @@
+>  #include "xfs_trace.h"
+>  #include "xfs_fsops.h"
+>  #include "xfs_cksum.h"
+> +#include "xfs_sysfs.h"
+>  
+>  kmem_zone_t	*xfs_log_ticket_zone;
+>  
+> @@ -707,6 +708,11 @@ xfs_log_mount(
+>  		}
+>  	}
+>  
+> +	error = xfs_sysfs_init(&mp->m_log->l_kobject, &xfs_log_ktype,
+> +			&mp->m_log->l_kobject_complete, &mp->m_kobject, "log");
+> +	if (error)
+> +		goto out_destroy_ail;
+
+... that's, ummm, rather verbose.  At minimum, a local log variable,
+but I suspect that if the pattern of "all sysfs dirs have a kobject
+and a completion" and they are always used together that maybe
+we should have a:
+
+struct xfs_kobj {
+	struct kobject		kobj;
+	struct completion	complete;
+};
+
+And we pass them around instead. that would make this:
+
+	error = xfs_sysfs_init(&log->l_kobj, &xfs_log_ktype,
+			       &mp->m_kobj, "log");
+
+which is much easier to read....
+
 > +
-> +struct xfs_sysfs_attr {
-> +	struct attribute attr;
-> +	ssize_t (*show)(char *buf, void *data);
-> +	ssize_t (*store)(const char *buf, size_t count, void *data);
+>  	/* Normal transactions can now occur */
+>  	mp->m_log->l_flags &= ~XLOG_ACTIVE_RECOVERY;
+>  
+> @@ -947,6 +953,9 @@ xfs_log_unmount(
+>  	xfs_log_quiesce(mp);
+>  
+>  	xfs_trans_ail_destroy(mp);
+> +
+> +	xfs_sysfs_del(&mp->m_log->l_kobject, &mp->m_log->l_kobject_complete);
+
+And that would become:
+
+	xfs_sysfs_del(&log->l_kobj);
+
+> +
+>  	xlog_dealloc_log(mp->m_log);
+>  }
+>  
+> diff --git a/fs/xfs/xfs_log_priv.h b/fs/xfs/xfs_log_priv.h
+> index 9bc403a..ce1eee2 100644
+> --- a/fs/xfs/xfs_log_priv.h
+> +++ b/fs/xfs/xfs_log_priv.h
+> @@ -405,6 +405,9 @@ struct xlog {
+>  	struct xlog_grant_head	l_reserve_head;
+>  	struct xlog_grant_head	l_write_head;
+>  
+> +	struct kobject		l_kobject;
+> +	struct completion	l_kobject_complete;
+
+	struct xfs_kobj		l_kobj;
+
+> +
+>  	/* The following field are used for debugging; need to hold icloglock */
+>  #ifdef DEBUG
+>  	char			*l_iclog_bak[XLOG_MAX_ICLOGS];
+> diff --git a/fs/xfs/xfs_sysfs.c b/fs/xfs/xfs_sysfs.c
+> index 41365fe..f837527 100644
+> --- a/fs/xfs/xfs_sysfs.c
+> +++ b/fs/xfs/xfs_sysfs.c
+> @@ -54,3 +54,56 @@ xfs_mp_release(struct kobject *kobj)
+>  struct kobj_type xfs_mp_ktype = {
+>  	.release = xfs_mp_release,
+>  };
+> +
+> +/* xlog */
+> +
+> +static struct attribute *xfs_log_attrs[] = {
+> +	NULL,
 > +};
 > +
-> +#define XFS_SYSFS_ATTR_RW(name) \
-> +	static struct xfs_sysfs_attr xfs_sysfs_attr_##name = __ATTR_RW(name)
-> +#define XFS_SYSFS_ATTR_RO(name) \
-> +	static struct xfs_sysfs_attr xfs_sysfs_attr_##name = __ATTR_RO(name)
+> +STATIC ssize_t
+> +xfs_log_show(
+> +	struct kobject		*kobj,
+> +	struct attribute	*attr,
+> +	char			*buf)
+> +{
+> +	struct xlog *log = container_of(kobj, struct xlog, l_kobject);
+
+> +	struct xfs_sysfs_attr *xfs_attr = container_of(attr,
+> +		struct xfs_sysfs_attr, attr);
 > +
-> +#define ATTR_LIST(name) &xfs_sysfs_attr_##name.attr
+> +	return xfs_attr->show ? xfs_attr->show(buf, log) : 0;
 
-Not a fan of the sysfs attribute stuff, but it's a generic pattern
-so at least the pain is shared by everyone...
+I think this could be made much less verbose:
 
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
+static inline struct xlog *
+to_xlog(struct kobject *kobj)
+{
+	return container_of(...)
+}
+
+static inline struct xfs_sysfs_attr *
+to_attr(struct attribute *attr)
+{
+	return container_of(...)
+}
+
+so this becomes:
+
+{
+	struct xlog		*log = to_xlog(kobj);
+	struct xfs_sysfs_attr	*attr = to_attr(kattr);
+
+	return attr->show ? attr->show(buf, log) : 0;
+}
 
 
+> +}
+> +
+> +STATIC ssize_t
+> +xfs_log_store(
+> +	struct kobject		*kobj,
+> +	struct attribute	*attr,
+> +	const char		*buf,
+> +	size_t			count)
+> +{
+> +	struct xlog *log = container_of(kobj, struct xlog, l_kobject);
+> +	struct xfs_sysfs_attr *xfs_attr = container_of(attr,
+> +		struct xfs_sysfs_attr, attr);
+> +
+> +	return xfs_attr->store ? xfs_attr->store(buf, count, log) : 0;
+> +}
+> +
+> +static struct sysfs_ops xfs_log_ops = {
+> +	.show = xfs_log_show,
+> +	.store = xfs_log_store,
+> +};
+> +
+> +STATIC void
+> +xfs_log_release(struct kobject *kobj)
+> +{
+> +	struct xlog *log = container_of(kobj, struct xlog, l_kobject);
+> +
+> +	complete(&log->l_kobject_complete);
+> +}
+
+If the release funtion is common with other types, then the xfs_kobj
+structure is perfect for this use - it will prevent a heap of
+duplicated release functions...
+
+Cheers,
+
+Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
