@@ -1,26 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 219077F8D
-	for <xfs@oss.sgi.com>; Thu, 26 Jun 2014 17:47:37 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id A335CAC001
-	for <xfs@oss.sgi.com>; Thu, 26 Jun 2014 15:47:33 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id D2FAE7F90
+	for <xfs@oss.sgi.com>; Thu, 26 Jun 2014 17:59:04 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id BEE638F8033
+	for <xfs@oss.sgi.com>; Thu, 26 Jun 2014 15:59:01 -0700 (PDT)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	cKERZooCBkR5CiYf for <xfs@oss.sgi.com>;
-	Thu, 26 Jun 2014 15:47:31 -0700 (PDT)
-Date: Fri, 27 Jun 2014 08:47:27 +1000
+	JpnSzx5QuA4BRX5Z for <xfs@oss.sgi.com>;
+	Thu, 26 Jun 2014 15:58:59 -0700 (PDT)
+Date: Fri, 27 Jun 2014 08:58:57 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Metadata CRC error upon unclean unmount
-Message-ID: <20140626224727.GS9508@dastard>
-References: <CA+o=1OW0OXhzU+b9ACMZzg0dq=B7BSj+yPXD2Vrr9F6mWK8ruQ@mail.gmail.com>
-	<20140624201946.GJ9508@dastard>
-	<CA+o=1OVnORG0Ah3Zx8dkGzs7vtT7odRH=v12KqtLW0MP_3oHjQ@mail.gmail.com>
-	<20140625012144.GK9508@dastard> <20140626002859.GQ9508@dastard>
-	<53AC7CA9.9050505@sgi.com>
+Subject: Re: xfs: possible irq lock inversion dependency detected
+Message-ID: <20140626225857.GT9508@dastard>
+References: <20140626142004.31b981dc@tlielax.poochiereds.net>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <53AC7CA9.9050505@sgi.com>
+In-Reply-To: <20140626142004.31b981dc@tlielax.poochiereds.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,85 +29,33 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Mark Tinguely <tinguely@sgi.com>
-Cc: Fanael Linithien <fanael4@gmail.com>, xfs@oss.sgi.com
+To: Jeff Layton <jeff.layton@primarydata.com>
+Cc: linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com
 
-On Thu, Jun 26, 2014 at 03:03:53PM -0500, Mark Tinguely wrote:
-> On 06/25/14 19:28, Dave Chinner wrote:
-> >On Wed, Jun 25, 2014 at 11:21:44AM +1000, Dave Chinner wrote:
-> >>On Tue, Jun 24, 2014 at 11:50:52PM +0200, Fanael Linithien wrote:
-> >>Ok, so the CRC corresponds to the version of the AGI that was logged
-> >>at lsn = 0x30000017e. That means the version on disk is a partial
-> >>update without a CRC recalculation. Ok, so how can that happen?
-> >>
-> >>Given the lsn mismatch, I suspect log recovery has played a part as
-> >>it will not update the LSN when replaying changes in the log. It
-> >>should, however, always be attaching the appropriate verifier to
-> >>the buffers being recovered so the CRC should be recalculated
-> >>correctly.
-> >
-> >Ok, I have confirmed that this is occurring and behaving correctly.
-> >
-> >[   24.437878] XFS (vdb): Mounting V5 Filesystem
-> >[   24.554429] XFS (vdb): Starting recovery (logdev: internal)
-> >[   24.623466] XFS (vdb): xfs_agi_write_verify: lsn reset block 0x2
-> >[   24.625263] XFS (vdb): xfs_btree_sblock_calc_crc: lsn reset block 0x8
-> >[   24.627307] XFS (vdb): xfs_btree_sblock_calc_crc: lsn reset block 0x10
-> >[   24.628729] XFS (vdb): xfs_btree_sblock_calc_crc: lsn reset block 0x18
-> >[   24.630085] XFS (vdb): xfs_dir3_data_write_verify: lsn reset block 0x20000
-> >[   24.631504] XFS (vdb): xfs_da3_node_write_verify: lsn reset block 0x20008
-> >[   24.632935] XFS (vdb): xfs_dir3_data_write_verify: lsn reset block 0x20010
-> >[   24.634360] XFS (vdb): xfs_dir3_data_write_verify: lsn reset block 0x20018
-> >[   24.635622] XFS (vdb): xfs_dir3_free_write_verify: lsn reset block 0x201e0
-> >[   24.636656] XFS (vdb): __write_verify: lsn reset block 0x201e8
-> >[   24.637510] XFS (vdb): __write_verify: lsn reset block 0x201f0
-> >[   24.638365] XFS (vdb): xfs_dir3_data_write_verify: lsn reset block 0x201f8
-> >[   24.639378] XFS (vdb): xfs_dir3_data_write_verify: lsn reset block 0x202c0
-> >[   24.640397] XFS (vdb): __write_verify: lsn reset block 0x202c8
-> >[   24.641260] XFS (vdb): xfs_dir3_data_write_verify: lsn reset block 0x202d0
-> >[   24.664330] XFS (vdb): Ending recovery (logdev: internal)
-> >
-> >But that also confirms that log recovery is recalculating the CRC
-> >after replaying changes into that block:
-> >
-> ># xfs_db -c "agi 0" -c "p lsn" -c "p crc" /dev/vdb
-> >lsn = 0xffffffffffffffff
-> >crc = 0x788c4f63 (correct)
-> >
-> >So the common log recovery path for buffers is working as it is
-> >designed to do.
-> >
-> >What I still don't understand yet is how changes after this recovery
-> >phase are getting to disk without updating the CRC. That implies
-> >buffers without verifiers being written....
-> >
-> >More debug to come...
-> >
-> >Cheers,
-> >
-> >Dave.
+On Thu, Jun 26, 2014 at 02:20:04PM -0400, Jeff Layton wrote:
+> While testing some knfsd patches on XFS today, I got this lockdep
+> splatter. The kernel is a stock -rc2 kernel with a pile of knfsd
+> patches on top. There are a couple of others in other areas, but
+> nothing that would affect this.
 > 
-> Could an out of order CIL push cause this?
+> Nothing crashed or seems to be hung, so I'm not sure if it's a real
+> problem or not...
 
-I don't think so - the issue appears to be that a CRC is not being
-recalculated on a buffer before IO has been issued to disk, not that
-there is incorrect metadata in the buffer. Regardless of how we
-modify the buffer, the CRC should always match the contents of the
-block on disk because we calculate it with the buffer locked and
-just prior to it being written.
+Known false positive. the problem is that lockdep is too stupid to
+realise you can't mmap a directory inode, but it sees unused
+directory inodes from memory reclaim in page faults (i.e. under the
+mmap_sem) and so therefore thinks that taking a page fault in
+readdir() while holding a directory inode lock on a referenced
+directory inode will deadlock....
 
-> SGI saw sequence 2 (and sometimes 3/4) of the cil push get in front
-> of cil push sequence 1. Looks like the setting of
-> log->l_cilp->xc_ctx->commit_lsn in xlog_cil_init_post_recovery()
-> lets this happen.
-
-I don't think can actually happen - the CIL is not used until after
-xlog_cil_init_post_recovery() is completed and transactions start
-during EFI recovery. Any attempt to use it prior to that call will
-oops on the null ctx_ticket.
-
-As for the ordering issue, I'm pretty sure that was fixed in
-commit f876e44 ("xfs: always do log forces via the workqueue").
+Teaching lockdep the intricacies of locking heirarchies is difficult
+and painful. Fixing this one (and all the other stupidities lockdep
+reports because of this) can't be done through annotations - it
+requires rewriting a bunch of directory code to use different locks.
+And, well, it ain't actually broken right now and there's other more
+important issues to be fixed, so unless someone else beats me to
+rewriting the readdir readahead code, lockdep is going to remain
+unhappy about XFS.
 
 Cheers,
 
