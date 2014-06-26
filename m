@@ -1,25 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 763197F75
-	for <xfs@oss.sgi.com>; Thu, 26 Jun 2014 07:29:36 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 0C6B6AC002
-	for <xfs@oss.sgi.com>; Thu, 26 Jun 2014 05:29:32 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id C39D27F75
+	for <xfs@oss.sgi.com>; Thu, 26 Jun 2014 07:30:27 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 45E27AC002
+	for <xfs@oss.sgi.com>; Thu, 26 Jun 2014 05:30:27 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id p6lbVOmCRwpfkKzR (version=TLSv1
+	cuda.sgi.com with ESMTP id bFm1AidHb3AU3h0X (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 26 Jun 2014 05:29:31 -0700 (PDT)
-Date: Thu, 26 Jun 2014 08:29:29 -0400
+	Thu, 26 Jun 2014 05:30:25 -0700 (PDT)
+Date: Thu, 26 Jun 2014 08:30:22 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 5/6] xfs: add log attributes for log lsn and grant head
-	data
-Message-ID: <20140626122928.GB37470@bfoster.bfoster>
+Subject: Re: [PATCH 6/6] xfs: document log sysfs attributes in testing ABI
+Message-ID: <20140626123022.GC37470@bfoster.bfoster>
 References: <1402060414-22075-1-git-send-email-bfoster@redhat.com>
-	<1402060414-22075-6-git-send-email-bfoster@redhat.com>
-	<20140626045256.GY4453@dastard>
+	<1402060414-22075-7-git-send-email-bfoster@redhat.com>
+	<20140626050345.GZ4453@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20140626045256.GY4453@dastard>
+In-Reply-To: <20140626050345.GZ4453@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,76 +34,61 @@ Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On Thu, Jun 26, 2014 at 02:52:56PM +1000, Dave Chinner wrote:
-> On Fri, Jun 06, 2014 at 09:13:33AM -0400, Brian Foster wrote:
-> > Create log attributes to export the current runtime state of the log to
-> > sysfs. Note that the filesystem should be frozen for consistency across
-> > attributes.
-> > 
-> > The following per-mount attributes are created: log_head_lsn,
-> > log_tail_lsn, reserve_grant_head and write_grant_head. These represent
-> > the physical log head, tail and reserve and write grant heads
-> > respectively. Attribute values are exported in the following format:
-> > 
-> > 	"cycle:[block,byte]"
-> > 
-> > ... where cycle represents the log cycle and [block,bytes] represents
-> > either the basic block or byte offset of the log, depending on the
-> > attribute.  Log sequence number (LSN) values are encoded in basic blocks
-> > and grant heads are encoded in bytes. All values are in decimal format.
+On Thu, Jun 26, 2014 at 03:03:45PM +1000, Dave Chinner wrote:
+> On Fri, Jun 06, 2014 at 09:13:34AM -0400, Brian Foster wrote:
+> > Create a sysfs-fs-xfs ABI documentation file for newly added sysfs
+> > attributes. This is created under the testing section.
 > > 
 > > Signed-off-by: Brian Foster <bfoster@redhat.com>
-> > ---
-> >  fs/xfs/xfs_sysfs.c | 66 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
-> >  1 file changed, 66 insertions(+)
-> > 
-> > diff --git a/fs/xfs/xfs_sysfs.c b/fs/xfs/xfs_sysfs.c
-> > index f837527..fbd82d5 100644
-> > --- a/fs/xfs/xfs_sysfs.c
-> > +++ b/fs/xfs/xfs_sysfs.c
-> > @@ -23,6 +23,9 @@
-> >  #include "xfs_trans_resv.h"
-> >  #include "xfs_ag.h"
-> >  #include "xfs_mount.h"
-> > +#include "xfs_log_format.h"
-> > +#include "xfs_log.h"
-> > +#include "xfs_log_priv.h"
-> >  
-> >  struct xfs_sysfs_attr {
-> >  	struct attribute attr;
-> > @@ -57,7 +60,70 @@ struct kobj_type xfs_mp_ktype = {
-> >  
-> >  /* xlog */
-> >  
-> > +STATIC ssize_t
-> > +log_head_lsn_show(
-> > +	char	*buf,
-> > +	void	*data)
-> > +{
-> > +	struct xlog *log = data;
-> > +	int ret;
-> > +
-> > +	spin_lock(&log->l_icloglock);
-> > +	ret = snprintf(buf, PAGE_SIZE, "%d:%d\n", log->l_curr_cycle,
-> > +			log->l_curr_block);
-> > +	spin_unlock(&log->l_icloglock);
 > 
-> I'd keep the snprintf() outside the iclog lock, just so sampling
-> perturbs behaviour as little as possible. i.e. use cycle/block
-> locals as per all the others.
+> Looks fine, but I'm not sure we ever want people to think these are
+> going to form part of the stable XFS ABI - they are encodings of
+> deeply internal functionality of XFS. We're not going to be tied to
+> an implementation because of diagnostic information we expose to
+> to sysfs, so users need to know that this is a volatile interface.
 > 
 
-Ok, will fix...
+I was under the impression that sysfs in general was considered a stable
+ABI. Perhaps not to the degree of things like system call interfaces,
+but the Documentation/ABI/README describes the expected lifecycle for
+these attributes (i.e., testing->stable->obsolete->removed).
 
-> Otherwise, looks good.
+> Hence I'd suggest adding a disclaimer indicating that these not ever
+> guaranteed to be stable and could change or be removed at any time
+> without warning. Say, for example, we add another description line
+> like this:
 > 
-> Reviewed-by: Dave Chinner <dchinner@redhat.com>
+>    Stability:		Volatile
+> 
+> We can then point out the entries that are we'll never guarantee are
+> stable, those that we are stabilising, and those that are considered
+> stable easily?
 > 
 
-Thanks!
+I'm not against adding another keyword, though I'm curious how this is
+different from the above. Wouldn't we use the location of the
+documentation to identify how stable the interface is expected to be? To
+put it another way, this seems fine under the testing section (but that
+suggests volatility already), but I wouldn't ever place a "Stability:
+volatile" attribute under the stable section.
+
+Taking a look at the ABI/testing/sysfs-fs-ext4 file, it goes back to
+2009 with the most recent update in 2012 and it's still under the
+testing section. It's not clear if that's by design or just stale
+documentation, but perhaps that is technically the right approach. E.g.,
+while clearly those attributes aren't still under "testing," they aren't
+ever going to be considered "stable ABI." That means use them for
+informational and tuning purposes, don't ever build userspace programs
+with significant dependence on them, etc. Anything that does grow unique
+importance (i.e., a future spaceman dependency) can get moved over to
+stable as we'll expect to provide some kind of deprecation warning and
+period of backwards compatibility for supported tools. Thoughts?
 
 Brian
 
+> Cheers,
+> 
+> Dave.
 > -- 
 > Dave Chinner
 > david@fromorbit.com
