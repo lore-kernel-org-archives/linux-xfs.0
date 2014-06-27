@@ -1,27 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 282737FA1
-	for <xfs@oss.sgi.com>; Fri, 27 Jun 2014 07:07:05 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 0F0D3304064
-	for <xfs@oss.sgi.com>; Fri, 27 Jun 2014 05:07:05 -0700 (PDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id CCFAB7FA4
+	for <xfs@oss.sgi.com>; Fri, 27 Jun 2014 07:07:07 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 61FA8AC002
+	for <xfs@oss.sgi.com>; Fri, 27 Jun 2014 05:07:04 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id OFuXT7zZwRJU8r5f (version=TLSv1
+	cuda.sgi.com with ESMTP id WZMVktTsSynxt3wq (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 27 Jun 2014 05:07:04 -0700 (PDT)
-Received: from int-mx11.intmail.prod.int.phx2.redhat.com
-	(int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id s5RC72Zj032519
+	Fri, 27 Jun 2014 05:07:03 -0700 (PDT)
+Received: from int-mx10.intmail.prod.int.phx2.redhat.com
+	(int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id s5RC72gf019747
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256
-	verify=OK) for <xfs@oss.sgi.com>; Fri, 27 Jun 2014 08:07:03 -0400
+	verify=OK) for <xfs@oss.sgi.com>; Fri, 27 Jun 2014 08:07:02 -0400
 Received: from bfoster.bfoster ([10.18.41.237])
-	by int-mx11.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id s5RC72cf029476
+	by int-mx10.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id s5RC71mc028005
 	for <xfs@oss.sgi.com>; Fri, 27 Jun 2014 08:07:02 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH v2 4/6] xfs: add xlog sysfs kobject and attribute handlers
-Date: Fri, 27 Jun 2014 08:06:59 -0400
-Message-Id: <1403870821-20143-5-git-send-email-bfoster@redhat.com>
+Subject: [PATCH v2 2/6] xfs: add a sysfs kset
+Date: Fri, 27 Jun 2014 08:06:57 -0400
+Message-Id: <1403870821-20143-3-git-send-email-bfoster@redhat.com>
 In-Reply-To: <1403870821-20143-1-git-send-email-bfoster@redhat.com>
 References: <1403870821-20143-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,147 +39,63 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Embed a kobject into the xfs log data structure (xlog). This creates a
-'log' subdirectory for every XFS mount instance in sysfs. The lifecycle
-of the log kobject is tied to the lifecycle of the log.
-
-Also define a set of generic attribute handlers associated with the log
-kobject in preparation for the addition of attributes.
+Create a sysfs kset to contain all sub-objects associated with the XFS
+module. The kset is created and removed on module initialization and
+removal respectively. The kset uses fs_obj as a parent. This leads to
+the creation of a /sys/fs/xfs directory when the kset exists.
 
 Signed-off-by: Brian Foster <bfoster@redhat.com>
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_log.c      |  9 +++++++++
- fs/xfs/xfs_log_priv.h |  2 ++
- fs/xfs/xfs_sysfs.c    | 52 +++++++++++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/xfs_sysfs.h    |  1 +
- 4 files changed, 64 insertions(+)
+ fs/xfs/xfs_super.c | 12 +++++++++++-
+ 1 file changed, 11 insertions(+), 1 deletion(-)
 
-diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-index 7647818..149a4a5 100644
---- a/fs/xfs/xfs_log.c
-+++ b/fs/xfs/xfs_log.c
-@@ -34,6 +34,7 @@
- #include "xfs_trace.h"
- #include "xfs_fsops.h"
- #include "xfs_cksum.h"
-+#include "xfs_sysfs.h"
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index f2e5f8a..986c557 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -61,6 +61,7 @@
+ static const struct super_operations xfs_super_operations;
+ static kmem_zone_t *xfs_ioend_zone;
+ mempool_t *xfs_ioend_pool;
++struct kset *xfs_kset;
  
- kmem_zone_t	*xfs_log_ticket_zone;
+ #define MNTOPT_LOGBUFS	"logbufs"	/* number of XFS log buffers */
+ #define MNTOPT_LOGBSIZE	"logbsize"	/* size of XFS log buffers */
+@@ -1761,9 +1762,15 @@ init_xfs_fs(void)
+ 	if (error)
+ 		goto out_cleanup_procfs;
  
-@@ -707,6 +708,11 @@ xfs_log_mount(
- 		}
- 	}
++	xfs_kset = kset_create_and_add("xfs", NULL, fs_kobj);
++	if (!xfs_kset) {
++		error = -ENOMEM;
++		goto out_sysctl_unregister;;
++	}
++
+ 	error = xfs_qm_init();
+ 	if (error)
+-		goto out_sysctl_unregister;
++		goto out_kset_unregister;
  
-+	error = xfs_sysfs_init(&mp->m_log->l_kobj, &xfs_log_ktype, &mp->m_kobj,
-+			       "log");
-+	if (error)
-+		goto out_destroy_ail;
-+
- 	/* Normal transactions can now occur */
- 	mp->m_log->l_flags &= ~XLOG_ACTIVE_RECOVERY;
+ 	error = register_filesystem(&xfs_fs_type);
+ 	if (error)
+@@ -1772,6 +1779,8 @@ init_xfs_fs(void)
  
-@@ -947,6 +953,9 @@ xfs_log_unmount(
- 	xfs_log_quiesce(mp);
- 
- 	xfs_trans_ail_destroy(mp);
-+
-+	xfs_sysfs_del(&mp->m_log->l_kobj);
-+
- 	xlog_dealloc_log(mp->m_log);
- }
- 
-diff --git a/fs/xfs/xfs_log_priv.h b/fs/xfs/xfs_log_priv.h
-index 9bc403a..db7cbde 100644
---- a/fs/xfs/xfs_log_priv.h
-+++ b/fs/xfs/xfs_log_priv.h
-@@ -405,6 +405,8 @@ struct xlog {
- 	struct xlog_grant_head	l_reserve_head;
- 	struct xlog_grant_head	l_write_head;
- 
-+	struct xfs_kobj		l_kobj;
-+
- 	/* The following field are used for debugging; need to hold icloglock */
- #ifdef DEBUG
- 	char			*l_iclog_bak[XLOG_MAX_ICLOGS];
-diff --git a/fs/xfs/xfs_sysfs.c b/fs/xfs/xfs_sysfs.c
-index ae9aa7a..88361d7 100644
---- a/fs/xfs/xfs_sysfs.c
-+++ b/fs/xfs/xfs_sysfs.c
-@@ -18,6 +18,9 @@
- 
- #include "xfs.h"
- #include "xfs_sysfs.h"
-+#include "xfs_log_format.h"
-+#include "xfs_log.h"
-+#include "xfs_log_priv.h"
- 
- struct xfs_sysfs_attr {
- 	struct attribute attr;
-@@ -47,3 +50,52 @@ to_attr(struct attribute *attr)
- struct kobj_type xfs_mp_ktype = {
- 	.release = xfs_sysfs_release,
- };
-+
-+/* xlog */
-+
-+static struct attribute *xfs_log_attrs[] = {
-+	NULL,
-+};
-+
-+static inline struct xlog *
-+to_xlog(struct kobject *kobject)
-+{
-+	struct xfs_kobj *kobj = to_kobj(kobject);
-+	return container_of(kobj, struct xlog, l_kobj);
-+}
-+
-+STATIC ssize_t
-+xfs_log_show(
-+	struct kobject		*kobject,
-+	struct attribute	*attr,
-+	char			*buf)
-+{
-+	struct xlog *log = to_xlog(kobject);
-+	struct xfs_sysfs_attr *xfs_attr = to_attr(attr);
-+
-+	return xfs_attr->show ? xfs_attr->show(buf, log) : 0;
-+}
-+
-+STATIC ssize_t
-+xfs_log_store(
-+	struct kobject		*kobject,
-+	struct attribute	*attr,
-+	const char		*buf,
-+	size_t			count)
-+{
-+	struct xlog *log = to_xlog(kobject);
-+	struct xfs_sysfs_attr *xfs_attr = to_attr(attr);
-+
-+	return xfs_attr->store ? xfs_attr->store(buf, count, log) : 0;
-+}
-+
-+static struct sysfs_ops xfs_log_ops = {
-+	.show = xfs_log_show,
-+	.store = xfs_log_store,
-+};
-+
-+struct kobj_type xfs_log_ktype = {
-+	.release = xfs_sysfs_release,
-+	.sysfs_ops = &xfs_log_ops,
-+	.default_attrs = xfs_log_attrs,
-+};
-diff --git a/fs/xfs/xfs_sysfs.h b/fs/xfs/xfs_sysfs.h
-index 438976b..3dcfe80 100644
---- a/fs/xfs/xfs_sysfs.h
-+++ b/fs/xfs/xfs_sysfs.h
-@@ -20,6 +20,7 @@
- #define __XFS_SYSFS_H__
- 
- extern struct kobj_type xfs_mp_ktype;	/* xfs_mount */
-+extern struct kobj_type xfs_log_ktype;	/* xlog */
- 
- static inline struct xfs_kobj *
- to_kobj(struct kobject *kobject)
+  out_qm_exit:
+ 	xfs_qm_exit();
++ out_kset_unregister:
++	kset_unregister(xfs_kset);
+  out_sysctl_unregister:
+ 	xfs_sysctl_unregister();
+  out_cleanup_procfs:
+@@ -1793,6 +1802,7 @@ exit_xfs_fs(void)
+ {
+ 	xfs_qm_exit();
+ 	unregister_filesystem(&xfs_fs_type);
++	kset_unregister(xfs_kset);
+ 	xfs_sysctl_unregister();
+ 	xfs_cleanup_procfs();
+ 	xfs_buf_terminate();
 -- 
 1.8.3.1
 
