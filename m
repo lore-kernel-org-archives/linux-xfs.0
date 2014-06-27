@@ -1,29 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 049587F9F
-	for <xfs@oss.sgi.com>; Fri, 27 Jun 2014 07:07:06 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id B93C0304062
-	for <xfs@oss.sgi.com>; Fri, 27 Jun 2014 05:07:05 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id 555467FA4
+	for <xfs@oss.sgi.com>; Fri, 27 Jun 2014 07:07:07 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 4A3AA304064
+	for <xfs@oss.sgi.com>; Fri, 27 Jun 2014 05:07:07 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id nn6orPZlVUmfoEJw (version=TLSv1
+	cuda.sgi.com with ESMTP id CU3shJFafJ222j7N (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 27 Jun 2014 05:07:04 -0700 (PDT)
-Received: from int-mx11.intmail.prod.int.phx2.redhat.com
-	(int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id s5RC72fX032525
+	Fri, 27 Jun 2014 05:07:03 -0700 (PDT)
+Received: from int-mx13.intmail.prod.int.phx2.redhat.com
+	(int-mx13.intmail.prod.int.phx2.redhat.com [10.5.11.26])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id s5RC72Wc019748
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256
-	verify=OK) for <xfs@oss.sgi.com>; Fri, 27 Jun 2014 08:07:03 -0400
+	verify=OK) for <xfs@oss.sgi.com>; Fri, 27 Jun 2014 08:07:02 -0400
 Received: from bfoster.bfoster ([10.18.41.237])
-	by int-mx11.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id s5RC72t3029482
+	by int-mx13.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id s5RC71Db017580
 	for <xfs@oss.sgi.com>; Fri, 27 Jun 2014 08:07:02 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH v2 5/6] xfs: add log attributes for log lsn and grant head data
-Date: Fri, 27 Jun 2014 08:07:00 -0400
-Message-Id: <1403870821-20143-6-git-send-email-bfoster@redhat.com>
-In-Reply-To: <1403870821-20143-1-git-send-email-bfoster@redhat.com>
-References: <1403870821-20143-1-git-send-email-bfoster@redhat.com>
+Subject: [PATCH v2 0/6] xfs sysfs support
+Date: Fri, 27 Jun 2014 08:06:55 -0400
+Message-Id: <1403870821-20143-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -39,104 +37,62 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Create log attributes to export the current runtime state of the log to
-sysfs. Note that the filesystem should be frozen for consistency across
-attributes.
+Hi all,
 
-The following per-mount attributes are created: log_head_lsn,
-log_tail_lsn, reserve_grant_head and write_grant_head. These represent
-the physical log head, tail and reserve and write grant heads
-respectively. Attribute values are exported in the following format:
+Here's v2 of sysfs support for XFS. The previous version is available
+here:
 
-	"cycle:[block,byte]"
+	http://oss.sgi.com/archives/xfs/2014-06/msg00141.html
 
-... where cycle represents the log cycle and [block,bytes] represents
-either the basic block or byte offset of the log, depending on the
-attribute.  Log sequence number (LSN) values are encoded in basic blocks
-and grant heads are encoded in bytes. All values are in decimal format.
+This version is rebased onto the latest for-next and further cleans up
+the code to use some abstractions for sysfs object maintenance and
+associated helpers. As noted in the v1 thread, I think the current doc
+patch already indicates that the sysfs attrs are not considered stable.
+Unless there is further feedback on that front, I'll leave that patch as
+is.
 
-Signed-off-by: Brian Foster <bfoster@redhat.com>
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
----
- fs/xfs/xfs_sysfs.c | 64 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 64 insertions(+)
+Brian
 
-diff --git a/fs/xfs/xfs_sysfs.c b/fs/xfs/xfs_sysfs.c
-index 88361d7..9835139 100644
---- a/fs/xfs/xfs_sysfs.c
-+++ b/fs/xfs/xfs_sysfs.c
-@@ -53,7 +53,71 @@ struct kobj_type xfs_mp_ktype = {
- 
- /* xlog */
- 
-+STATIC ssize_t
-+log_head_lsn_show(
-+	char	*buf,
-+	void	*data)
-+{
-+	struct xlog *log = data;
-+	int cycle;
-+	int block;
-+
-+	spin_lock(&log->l_icloglock);
-+	cycle = log->l_curr_cycle;
-+	block = log->l_curr_block;
-+	spin_unlock(&log->l_icloglock);
-+
-+	return snprintf(buf, PAGE_SIZE, "%d:%d\n", cycle, block);
-+}
-+XFS_SYSFS_ATTR_RO(log_head_lsn);
-+
-+STATIC ssize_t
-+log_tail_lsn_show(
-+	char	*buf,
-+	void	*data)
-+{
-+	struct xlog *log = data;
-+	int cycle;
-+	int block;
-+
-+	xlog_crack_atomic_lsn(&log->l_tail_lsn, &cycle, &block);
-+	return snprintf(buf, PAGE_SIZE, "%d:%d\n", cycle, block);
-+}
-+XFS_SYSFS_ATTR_RO(log_tail_lsn);
-+
-+STATIC ssize_t
-+reserve_grant_head_show(
-+	char	*buf,
-+	void	*data)
-+{
-+	struct xlog *log = data;
-+	int cycle;
-+	int bytes;
-+
-+	xlog_crack_grant_head(&log->l_reserve_head.grant, &cycle, &bytes);
-+	return snprintf(buf, PAGE_SIZE, "%d:%d\n", cycle, bytes);
-+}
-+XFS_SYSFS_ATTR_RO(reserve_grant_head);
-+
-+STATIC ssize_t
-+write_grant_head_show(
-+	char	*buf,
-+	void	*data)
-+{
-+	struct xlog *log = data;
-+	int cycle;
-+	int bytes;
-+
-+	xlog_crack_grant_head(&log->l_write_head.grant, &cycle, &bytes);
-+	return snprintf(buf, PAGE_SIZE, "%d:%d\n", cycle, bytes);
-+}
-+XFS_SYSFS_ATTR_RO(write_grant_head);
-+
- static struct attribute *xfs_log_attrs[] = {
-+	ATTR_LIST(log_head_lsn),
-+	ATTR_LIST(log_tail_lsn),
-+	ATTR_LIST(reserve_grant_head),
-+	ATTR_LIST(write_grant_head),
- 	NULL,
- };
- 
+v2:
+- Rebased to latest for-next (error negation, libxfs).
+- Introduce xfs_kobj container for kobject and completion.
+- Genericize kobject release function.
+- Move snprintf() outside of iclog lock in log_head_lsn_show(). Clean up
+  xlog handlers.
+v1:
+- Move sysfs infrastructure code to new source file, add helpers for
+  object initialization, etc.
+- Created an xfs_mount->xlog object heirarchy for attributes associated
+  with the log.
+- Renamed the reserve/write grant head attributes to
+  '[reserve,write]_grant_head.'
+- Use the 'cycle:block' or 'cycle:bytes' decimal format for attributes
+  (rather than export encoded values).
+- Included generic mountfs fix and doc.
+
+Brian Foster (6):
+  xfs: fix a couple error sequence jumps in xfs_mountfs()
+  xfs: add a sysfs kset
+  xfs: add xfs_mount sysfs kobject
+  xfs: add xlog sysfs kobject and attribute handlers
+  xfs: add log attributes for log lsn and grant head data
+  xfs: document log sysfs attributes in testing ABI
+
+ Documentation/ABI/testing/sysfs-fs-xfs |  39 ++++++++
+ fs/xfs/Makefile                        |   1 +
+ fs/xfs/xfs_linux.h                     |  11 +++
+ fs/xfs/xfs_log.c                       |   9 ++
+ fs/xfs/xfs_log_priv.h                  |   2 +
+ fs/xfs/xfs_mount.c                     |  18 +++-
+ fs/xfs/xfs_mount.h                     |   1 +
+ fs/xfs/xfs_super.c                     |  12 ++-
+ fs/xfs/xfs_sysfs.c                     | 165 +++++++++++++++++++++++++++++++++
+ fs/xfs/xfs_sysfs.h                     |  59 ++++++++++++
+ 10 files changed, 313 insertions(+), 4 deletions(-)
+ create mode 100644 Documentation/ABI/testing/sysfs-fs-xfs
+ create mode 100644 fs/xfs/xfs_sysfs.c
+ create mode 100644 fs/xfs/xfs_sysfs.h
+
 -- 
 1.8.3.1
 
