@@ -1,26 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 326117F3F
-	for <xfs@oss.sgi.com>; Fri, 27 Jun 2014 19:29:56 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 01F258F807A
-	for <xfs@oss.sgi.com>; Fri, 27 Jun 2014 17:29:55 -0700 (PDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 3BF2A7F3F
+	for <xfs@oss.sgi.com>; Fri, 27 Jun 2014 19:49:37 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 18653304067
+	for <xfs@oss.sgi.com>; Fri, 27 Jun 2014 17:49:36 -0700 (PDT)
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	qdp7Ps0zPhtNpIJc for <xfs@oss.sgi.com>;
-	Fri, 27 Jun 2014 17:29:50 -0700 (PDT)
-Date: Sat, 28 Jun 2014 10:29:47 +1000
+	aPyDiKZHEJgpyByU for <xfs@oss.sgi.com>;
+	Fri, 27 Jun 2014 17:49:35 -0700 (PDT)
+Date: Sat, 28 Jun 2014 10:49:32 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: XFS CRC errors after a crash
-Message-ID: <20140628002947.GZ9508@dastard>
-References: <20140625164939.GA27620@quack.suse.cz>
-	<20140625215952.GM9508@dastard>
-	<20140626202046.GA17707@quack.suse.cz>
-	<20140626231843.GU9508@dastard>
-	<20140627213524.GA11519@quack.suse.cz>
+Subject: Re: Metadata CRC error upon unclean unmount
+Message-ID: <20140628004932.GA9508@dastard>
+References: <CA+o=1OW0OXhzU+b9ACMZzg0dq=B7BSj+yPXD2Vrr9F6mWK8ruQ@mail.gmail.com>
+	<20140624201946.GJ9508@dastard>
+	<CA+o=1OVnORG0Ah3Zx8dkGzs7vtT7odRH=v12KqtLW0MP_3oHjQ@mail.gmail.com>
+	<20140625012144.GK9508@dastard> <20140626002859.GQ9508@dastard>
+	<53AC7CA9.9050505@sgi.com> <20140626224727.GS9508@dastard>
+	<53AD7F1B.500@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20140627213524.GA11519@quack.suse.cz>
+In-Reply-To: <53AD7F1B.500@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,119 +34,66 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Jan Kara <jack@suse.cz>
+To: Mark Tinguely <tinguely@sgi.com>
 Cc: xfs@oss.sgi.com
 
-On Fri, Jun 27, 2014 at 11:35:24PM +0200, Jan Kara wrote:
-> On Fri 27-06-14 09:18:43, Dave Chinner wrote:
-> > On Thu, Jun 26, 2014 at 10:20:46PM +0200, Jan Kara wrote:
-> > > On Thu 26-06-14 07:59:52, Dave Chinner wrote:
-> > > > On Wed, Jun 25, 2014 at 06:49:39PM +0200, Jan Kara wrote:
-> > > > >   Hello,
-> > > > > 
-> > > > >   so I've been crash-testing XFS (just killing KVM with XFS filesystem
-> > > > > mounted) a bit with V5 superblock enabled in 3.16-rc1 and I can pretty
-> > > > > easily hit CRC mismatches after that. Kernel complains like:
-> > > > 
-> > > > Yes, we had that reported yesterday by another person, using virtual
-> > > > box. I've been unable to reproduce it on my local KVM VMs, so I'm
-> > > > wondering what your configuration KVM configuration is?
-> > >   I'm running the qemu as:
-> > > qemu-kvm -m 2048 -smp 6 -drive file=/dev/sdb,if=virtio,cache=none -net
-> > > nic,macaddr=00:16:3e:32:96:20,model=virtio -net
-> > > tap,script=/root/tests/bin/qemu-setup-net -vnc :1 -serial file:serial.log
-> > > -kernel /boot/vmlinuz-autotest -initrd /boot/initrd-autotest -append
-> > > 'root=/dev/vda3 rootflags=relatime'
-> > 
-> > Ok, so you are testing directly on a block device via virtio, using
-> > direct IO. Hmmm _ I'm using virtio,cache=none on image files on XFS,
-> > so I can't see that there's be much difference there. Nothing else
-> > stands out - I'm assuming that you're not using the "nobarrier"
-> > mount option?
->   No, I'm not using nobarrier.
+On Fri, Jun 27, 2014 at 09:26:35AM -0500, Mark Tinguely wrote:
+> On 06/26/14 17:47, Dave Chinner wrote:
+> >On Thu, Jun 26, 2014 at 03:03:53PM -0500, Mark Tinguely wrote:
 > 
-> > > > > [518184.794175] XFS (sdb3): Mounting V5 Filesystem
-> > > > > [518184.902898] XFS (sdb3): Starting recovery (logdev: internal)
-> > > > > [518187.118860] XFS (sdb3): Metadata CRC error detected at xfs_agf_read_verify+0x5a/0x100 [xfs], block 0x1
-> > > > > [518187.118870] XFS (sdb3): Unmount and run xfs_repair
-> > > > > [518187.118875] XFS (sdb3): First 64 bytes of corrupted metadata buffer:
-> > > > > [518187.118882] ffff880136ffd600: 58 41 47 46 00 00 00 01 00 00 00 00 00 0f aa 40  XAGF...........@
-> > > > > [518187.118887] ffff880136ffd610: 00 02 6d 53 00 02 77 f8 00 00 00 00 00 00 00 01  ..mS..w.........
-> > > > > [518187.118891] ffff880136ffd620: 00 00 00 01 00 00 00 00 00 00 00 00 00 00 00 03  ................
-> > > > > [518187.118895] ffff880136ffd630: 00 00 00 04 00 08 81 d0 00 08 81 a7 00 00 00 00  ................
-> > > > > [518187.118923] XFS (sdb3): metadata I/O error: block 0x1 ("xfs_trans_read_buf_map") error 74 numblks 1
-> > > > > 
-> > > > > So it seem like the checksum doesn't get updated properly in all the cases.
-> > > > > Looking into the logdump, there doesn't seem to be any modifications for
-> > > > > this AGF block in unrelayed part of the log but there are some modifications
-> > > > > in the older parts of the log - the latest LSN where block 1 was updated is
-> > > > > 1,4639 (and the buffer contents in the log corresponds to the data I see in
-> > > > > block 1). However the lsn field in AGF structure in that block shows 1,3616
-> > > > > so that really seems stale (and I've checked and in that transaction the
-> > > > > block has been modified as well).
-> > > > 
-> > > > That tallies with what has been reported -it was the AGI block,
-> > > > however. What I know so far is that the CRC matches for the version
-> > > > of the structure logged at the apparent LSN, but the data is more
-> > > > recent.
-> > >   Yes, this is the case with my corruption as well.
-> > > 
-> > > > Now the only way I can see the data getting updated without the LSN
-> > > > being updates is through log recovery, the analysis is here:
-> > >   Yes, that's what I originally though as well but for me:
-> > > log tail: 8960 head: 10080 state: <DIRTY>
-> > >   and the problematic AGF has last been modified in lsn 1,4639 (and it
-> > > contains data logged there, while agf_lsn field is set to 1,3616). So it
-> > > seems recovery shouldn't replay lsn 4639?
-> > 
-> > No, what that tells me is that a previous log recovery replayed the
-> > change at lsn 4639. Log recovery does not update the lsn in the
-> > object because if log recovery fails we need to run it completely
-> > from tail to head again, and we want it to rewrite all the changes
-> > appropriately. If we update the lsn each time we recover a change,
-> > then this won't happen.
-> > 
-> > Hence a sign of an object that has been recovered is that there is
-> > newer data than the LSN indicates. The issue here is that the CRC
-> > does not appear to have been updated, and I can't work out how that
-> > can occur - log recovery of a buffer will see the appropriate magic
-> > number, add the correct verifier, and when the recovered data is
-> > written it will recalc the CRC first.
-> > 
-> > That's why I send the debug patch to catch buffer writes that didn't
-> > have verifier ops attached. (attached below again for you). If that
-> > fires at any time, then we have a smoking gun. But if it doesn't
-> > fire and you still see CRC mismatches then we've got something
-> > extremely subtle
->   OK, so I've reproduced the issue again and after some investigation found
-> at least one issue in log recovery code (your debug assertions have
-> tripped):
+> >>Could an out of order CIL push cause this?
+> >
+> >I don't think so - the issue appears to be that a CRC is not being
+> >recalculated on a buffer before IO has been issued to disk, not that
+> >there is incorrect metadata in the buffer. Regardless of how we
+> >modify the buffer, the CRC should always match the contents of the
+> >block on disk because we calculate it with the buffer locked and
+> >just prior to it being written.
+> >
+> >>SGI saw sequence 2 (and sometimes 3/4) of the cil push get in front
+> >>of cil push sequence 1. Looks like the setting of
+> >>log->l_cilp->xc_ctx->commit_lsn in xlog_cil_init_post_recovery()
+> >>lets this happen.
+> >
+> >I don't think can actually happen - the CIL is not used until after
+> >xlog_cil_init_post_recovery() is completed and transactions start
+> >during EFI recovery. Any attempt to use it prior to that call will
+> >oops on the null ctx_ticket.
+> >
+> >As for the ordering issue, I'm pretty sure that was fixed in
+> >commit f876e44 ("xfs: always do log forces via the workqueue").
+> 
+> The problem will be with the first CIL push *after* the
+> xlog_cil_init_post_recovery() especially if the first ctx has a
+> large vector list and the following ones have small ones.
 
-Ok, I am going to make that debug patch a permanent "feature" seeing
-as it proved useful in tracking down this bug.
+Sequence 2 cannot start until sequence 1 is on the committing list
+and the xc_ctx_lock has been dropped. If seqeunce 2 is then pushed,
+while sequence 1 is still writing to the log, then sequence 2 can be
+interleaved with sequence 1.
 
-> In the case reproduced now, I had a log with one transaction
-> containing the AGF buffer however the AGF buffer on disk already had the data
-> from that transaction written (and had agf_lsn set appropriately). Log
-> replay then read-ahead the buffer (that leaves b_ops at NULL), then after
-> investigation of the log item found it shouldn't be replayed and never
-> ended up calling xlog_recover_validate_buf_type() to set proper b_ops.
-> Later when we removed orphan inodes (I'm not sure about proper xfs
-> terminology), AGF was modified and written without proper verifiers set.
+However, the sequences on the commit list are then strictly ordered
+while the commit record is written. i.e. seqeunce 2 will sleep
+waiting for seqeunce 1 to write it's commit record, which then wakes
+sequence 2 so it can write it's commit record, whcih then wakes
+seqeunce 3... and so on.
 
-Ok, that also explains why we've been seeing it in AGF, AGI and
-related ABT/IBT buffers and not in any other type of buffer. So you
-analysis definitely fits the symptoms reported.
+Log recovered once cares that the commit records for each checkpoint
+are written in the correct order. You can see the checkpoint
+transactions be written to the log out of order, but the order of
+commit records determines the order in which checkpoints are
+replayed during recovery.
 
-> The attached patch fixes the problem for me (at least this particular case
-> of corruption). Since I'm on vacation already and it's late I'll leave it for
-> now. If the problem needs to be fixed differently, feel free to modify /
-> discard the attached patch (since I will be scarcely on email for following
-> two weeks).
+> Looks to me that the problem is still in the cil push worker.
 
-I might end up fixing it differently, but you'll get the credit for
-finding debugging the problem. Many thanks, Jan, I owe you a beer or
-two for finding this. :)
+I can't see how the commit records (which are written in
+xfs_log_done()) would be incorrectly ordered given the way that
+the commit list code serialises and orders calls to xfs_log_done()
+based on sequence number.
+
+Keep in mind that I might just be being stupid and missing
+something so obvious I need a brown paper bag to hide in, so you'll
+need to spell it out for me.
 
 Cheers,
 
