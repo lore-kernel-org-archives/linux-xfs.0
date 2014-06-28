@@ -1,27 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 3BF2A7F3F
-	for <xfs@oss.sgi.com>; Fri, 27 Jun 2014 19:49:37 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 18653304067
-	for <xfs@oss.sgi.com>; Fri, 27 Jun 2014 17:49:36 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id BF2E17F3F
+	for <xfs@oss.sgi.com>; Fri, 27 Jun 2014 19:56:21 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id A974A8F807A
+	for <xfs@oss.sgi.com>; Fri, 27 Jun 2014 17:56:21 -0700 (PDT)
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	aPyDiKZHEJgpyByU for <xfs@oss.sgi.com>;
-	Fri, 27 Jun 2014 17:49:35 -0700 (PDT)
-Date: Sat, 28 Jun 2014 10:49:32 +1000
+	wk0qiQWK8q4QFtAL for <xfs@oss.sgi.com>;
+	Fri, 27 Jun 2014 17:56:19 -0700 (PDT)
+Date: Sat, 28 Jun 2014 10:56:17 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Metadata CRC error upon unclean unmount
-Message-ID: <20140628004932.GA9508@dastard>
-References: <CA+o=1OW0OXhzU+b9ACMZzg0dq=B7BSj+yPXD2Vrr9F6mWK8ruQ@mail.gmail.com>
-	<20140624201946.GJ9508@dastard>
-	<CA+o=1OVnORG0Ah3Zx8dkGzs7vtT7odRH=v12KqtLW0MP_3oHjQ@mail.gmail.com>
-	<20140625012144.GK9508@dastard> <20140626002859.GQ9508@dastard>
-	<53AC7CA9.9050505@sgi.com> <20140626224727.GS9508@dastard>
-	<53AD7F1B.500@sgi.com>
+Subject: Re: [PATCH v2 3/6] xfs: add xfs_mount sysfs kobject
+Message-ID: <20140628005617.GB9508@dastard>
+References: <1403870821-20143-1-git-send-email-bfoster@redhat.com>
+	<1403870821-20143-4-git-send-email-bfoster@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <53AD7F1B.500@sgi.com>
+In-Reply-To: <1403870821-20143-4-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,70 +30,38 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Mark Tinguely <tinguely@sgi.com>
+To: Brian Foster <bfoster@redhat.com>
 Cc: xfs@oss.sgi.com
 
-On Fri, Jun 27, 2014 at 09:26:35AM -0500, Mark Tinguely wrote:
-> On 06/26/14 17:47, Dave Chinner wrote:
-> >On Thu, Jun 26, 2014 at 03:03:53PM -0500, Mark Tinguely wrote:
+On Fri, Jun 27, 2014 at 08:06:58AM -0400, Brian Foster wrote:
+> Embed a base kobject into xfs_mount. This creates a kobject associated
+> with each XFS mount and a subdirectory in sysfs with the name of the
+> filesystem. The subdirectory lifecycle matches that of the mount. Also
+> add the new xfs_sysfs.[c,h] source files with some XFS sysfs
+> infrastructure to facilitate attribute creation.
 > 
-> >>Could an out of order CIL push cause this?
-> >
-> >I don't think so - the issue appears to be that a CRC is not being
-> >recalculated on a buffer before IO has been issued to disk, not that
-> >there is incorrect metadata in the buffer. Regardless of how we
-> >modify the buffer, the CRC should always match the contents of the
-> >block on disk because we calculate it with the buffer locked and
-> >just prior to it being written.
-> >
-> >>SGI saw sequence 2 (and sometimes 3/4) of the cil push get in front
-> >>of cil push sequence 1. Looks like the setting of
-> >>log->l_cilp->xc_ctx->commit_lsn in xlog_cil_init_post_recovery()
-> >>lets this happen.
-> >
-> >I don't think can actually happen - the CIL is not used until after
-> >xlog_cil_init_post_recovery() is completed and transactions start
-> >during EFI recovery. Any attempt to use it prior to that call will
-> >oops on the null ctx_ticket.
-> >
-> >As for the ordering issue, I'm pretty sure that was fixed in
-> >commit f876e44 ("xfs: always do log forces via the workqueue").
+> Note that there are currently no attributes exported as part of the
+> xfs_mount kobject. It exists solely to serve as a per-mount container
+> for child objects.
 > 
-> The problem will be with the first CIL push *after* the
-> xlog_cil_init_post_recovery() especially if the first ctx has a
-> large vector list and the following ones have small ones.
+> Signed-off-by: Brian Foster <bfoster@redhat.com>
 
-Sequence 2 cannot start until sequence 1 is on the committing list
-and the xc_ctx_lock has been dropped. If seqeunce 2 is then pushed,
-while sequence 1 is still writing to the log, then sequence 2 can be
-interleaved with sequence 1.
+One minor thing I can clean up directly:
 
-However, the sequences on the commit list are then strictly ordered
-while the commit record is written. i.e. seqeunce 2 will sleep
-waiting for seqeunce 1 to write it's commit record, which then wakes
-sequence 2 so it can write it's commit record, whcih then wakes
-seqeunce 3... and so on.
+> +static inline int
+> +xfs_sysfs_init(
+> +	struct xfs_kobj		*kobj,
+> +	struct kobj_type	*ktype,
+> +	struct xfs_kobj		*p_kobj,
+                                 ^^^^^^
 
-Log recovered once cares that the commit records for each checkpoint
-are written in the correct order. You can see the checkpoint
-transactions be written to the log out of order, but the order of
-commit records determines the order in which checkpoints are
-replayed during recovery.
+parent_kobj would be better - that looks too much like hungarian
+notation... :)
 
-> Looks to me that the problem is still in the cil push worker.
+Other than that,
 
-I can't see how the commit records (which are written in
-xfs_log_done()) would be incorrectly ordered given the way that
-the commit list code serialises and orders calls to xfs_log_done()
-based on sequence number.
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
 
-Keep in mind that I might just be being stupid and missing
-something so obvious I need a brown paper bag to hide in, so you'll
-need to spell it out for me.
-
-Cheers,
-
-Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
