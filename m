@@ -1,19 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 4427B7F3F
-	for <xfs@oss.sgi.com>; Sun, 29 Jun 2014 11:19:27 -0500 (CDT)
-Message-ID: <53B03C89.10402@sgi.com>
-Date: Sun, 29 Jun 2014 11:19:21 -0500
-From: Mark Tinguely <tinguely@sgi.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 8322F7F4E
+	for <xfs@oss.sgi.com>; Sun, 29 Jun 2014 22:18:24 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 66C338F8033
+	for <xfs@oss.sgi.com>; Sun, 29 Jun 2014 20:18:21 -0700 (PDT)
+Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
+	[150.101.137.143]) by cuda.sgi.com with ESMTP id
+	T2omyk3EeA2wwFS7 for <xfs@oss.sgi.com>;
+	Sun, 29 Jun 2014 20:18:14 -0700 (PDT)
+Date: Mon, 30 Jun 2014 13:18:10 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: xfs_repair 3.2.0 cannot (?) fix fs
+Message-ID: <20140630031810.GC4453@dastard>
 MIME-Version: 1.0
-Subject: Re: Metadata CRC error upon unclean unmount
-References: <CA+o=1OW0OXhzU+b9ACMZzg0dq=B7BSj+yPXD2Vrr9F6mWK8ruQ@mail.gmail.com>
-	<20140624201946.GJ9508@dastard>
-	<CA+o=1OVnORG0Ah3Zx8dkGzs7vtT7odRH=v12KqtLW0MP_3oHjQ@mail.gmail.com>
-	<20140625012144.GK9508@dastard> <20140626002859.GQ9508@dastard>
-	<53AC7CA9.9050505@sgi.com> <20140626224727.GS9508@dastard>
-	<53AD7F1B.500@sgi.com> <20140628004932.GA9508@dastard>
-In-Reply-To: <20140628004932.GA9508@dastard>
+Content-Disposition: inline
+In-Reply-To: <201406290001.38493.arekm@maven.pl>
+	<201406282352.56431.arekm@maven.pl>
+	<201406280141.54350.arekm@maven.pl>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,174 +26,129 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: Arkadiusz =?utf-8?Q?Mi=C5=9Bkiewicz?= <arekm@maven.pl>
+Cc: Alex Elder <elder@kernel.org>, xfs@oss.sgi.com
 
-On 06/27/14 19:49, Dave Chinner wrote:
-> On Fri, Jun 27, 2014 at 09:26:35AM -0500, Mark Tinguely wrote:
->> On 06/26/14 17:47, Dave Chinner wrote:
->>> On Thu, Jun 26, 2014 at 03:03:53PM -0500, Mark Tinguely wrote:
->>
->>>> Could an out of order CIL push cause this?
->>>
->>> I don't think so - the issue appears to be that a CRC is not being
->>> recalculated on a buffer before IO has been issued to disk, not that
->>> there is incorrect metadata in the buffer. Regardless of how we
->>> modify the buffer, the CRC should always match the contents of the
->>> block on disk because we calculate it with the buffer locked and
->>> just prior to it being written.
->>>
->>>> SGI saw sequence 2 (and sometimes 3/4) of the cil push get in front
->>>> of cil push sequence 1. Looks like the setting of
->>>> log->l_cilp->xc_ctx->commit_lsn in xlog_cil_init_post_recovery()
->>>> lets this happen.
->>>
->>> I don't think can actually happen - the CIL is not used until after
->>> xlog_cil_init_post_recovery() is completed and transactions start
->>> during EFI recovery. Any attempt to use it prior to that call will
->>> oops on the null ctx_ticket.
->>>
->>> As for the ordering issue, I'm pretty sure that was fixed in
->>> commit f876e44 ("xfs: always do log forces via the workqueue").
->>
->> The problem will be with the first CIL push *after* the
->> xlog_cil_init_post_recovery() especially if the first ctx has a
->> large vector list and the following ones have small ones.
->
-> Sequence 2 cannot start until sequence 1 is on the committing list
-> and the xc_ctx_lock has been dropped. If seqeunce 2 is then pushed,
-> while sequence 1 is still writing to the log, then sequence 2 can be
-> interleaved with sequence 1.
->
-> However, the sequences on the commit list are then strictly ordered
-> while the commit record is written. i.e. seqeunce 2 will sleep
-> waiting for seqeunce 1 to write it's commit record, which then wakes
-> sequence 2 so it can write it's commit record, whcih then wakes
-> seqeunce 3... and so on.
->
-> Log recovered once cares that the commit records for each checkpoint
-> are written in the correct order. You can see the checkpoint
-> transactions be written to the log out of order, but the order of
-> commit records determines the order in which checkpoints are
-> replayed during recovery.
->
->> Looks to me that the problem is still in the cil push worker.
->
-> I can't see how the commit records (which are written in
-> xfs_log_done()) would be incorrectly ordered given the way that
-> the commit list code serialises and orders calls to xfs_log_done()
-> based on sequence number.
->
-> Keep in mind that I might just be being stupid and missing
-> something so obvious I need a brown paper bag to hide in, so you'll
-> need to spell it out for me.
->
-> Cheers,
->
-> Dave.
-
-
-It took me a long time to find the needle in the hay stack:
-
-  427 STATIC int
-  428 xlog_cil
-...
-  568         /*
-  569          * now that we've written the checkpoint into the log, 
-strictly
-  570          * order the commit records so replay will get them in the 
-right order.
-  571          */
-  572 restart:
-  573         spin_lock(&cil->xc_push_lock);
-  574         list_for_each_entry(new_ctx, &cil->xc_committing, 
-committing) {
-  575                 /*
-  576                  * Avoid getting stuck in this loop because we 
-were woken by the
-  577                  * shutdown, but then went back to sleep once 
-already in the
-  578                  * shutdown state.
-  579                  */
-  580                 if (XLOG_FORCED_SHUTDOWN(log)) {
-  581                         spin_unlock(&cil->xc_push_lock);
-  582                         goto out_abort_free_ticket;
-  583                 }
-  584
-  585                 /*
-  586                  * Higher sequences will wait for this one so skip 
-them.
-  587                  * Don't wait for our own sequence, either.
-  588                  */
-  589                 if (new_ctx->sequence >= ctx->sequence)
-  590                         continue;
-  591                 if (!new_ctx->commit_lsn) {
-		         ^^^^^^^^^^^^^^^^^^^^^          here ...
-  592                         /*
-  593                          * It is still being pushed! Wait for the 
-push to
-  594                          * complete, then start again from the 
-beginning.
-  595                          */
-  596                         xlog_wait(&cil->xc_commit_wait, 
-&cil->xc_push_lock);
-  597                         goto restart;
-  598                 }
-  599         }
-  600         spin_unlock(&cil->xc_push_lock);_push(
-  429         struct xlog             *log)
-  430 {
-...and ...
-
-   65 /*
-   66  * After the first stage of log recovery is done, we know where 
-the head and
-   67  * tail of the log are. We need this log initialisation done 
-before we can
-   68  * initialise the first CIL checkpoint context.
-   69  *
-   70  * Here we allocate a log ticket to track space usage during a CIL 
-push.  This
-   71  * ticket is passed to xlog_write() directly so that we don't 
-slowly leak log
-   72  * space by failing to account for space used by log headers and 
-additional
-   73  * region headers for split regions.
-   74  */
-   75 void
-   76 xlog_cil_init_post_recovery(
-   77         struct xlog     *log)
-   78 {
-   79         log->l_cilp->xc_ctx->ticket = xlog_cil_ticket_alloc(log);
-   80         log->l_cilp->xc_ctx->sequence = 1;
-   81         log->l_cilp->xc_ctx->commit_lsn = 
-xlog_assign_lsn(log->l_curr_cycle,
-   82 
-log->l_curr_block);
-		^^^^^^^^^^ this setting is the problem.
-   83 }
-
-
-We need:
-   1) More than one cil push after recovery. It appears that the cil push
-      worker still does the pushes in separate threads and they write
-      their log vector list in parallel.
-   2) first push after the recovery is much larger than the following
-      push(es).
-     a) the following push's log writes beat the first.
-     b) when they enter the above loop to check to see who is the lowest
-        cil push sequence, since the commit_lsn was set in
-        xlog_cil_init_post_recovery, so the later push sequences think
-        that push 1 is complete writing the log item list and commit
-        ticket, so they proceed and write their commit tickets.
-
---Mark.
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+W0NvbXBlbmRpdW0gcmVwbHkgdG8gYWxsIDMgZW1haWxzXQoKT24gU2F0LCBKdW4gMjgsIDIwMTQg
+YXQgMDE6NDE6NTRBTSArMDIwMCwgQXJrYWRpdXN6IE1pxZtraWV3aWN6IHdyb3RlOgo+IAo+IEhl
+bGxvLgo+IAo+IEkgaGF2ZSBhIGZzIChtZXRhZHVtcCBvZiBpdAo+IGh0dHA6Ly9peGlvbi5wbGQt
+bGludXgub3JnL35hcmVrbS9wMi94MS93ZWIyLWhvbWUubWV0YWR1bXAuZ3opCj4gdGhhdCB4ZnNf
+cmVwYWlyIDMuMi4wIGlzIHVuYWJsZSB0byBmaXggcHJvcGVybHkuCj4gCj4gUnVubmluZyB4ZnNf
+cmVwYWlyIGZldyB0aW1lcyBzaG93cyB0aGUgc2FtZSBlcnJvcnMgcmVwZWF0aW5nOgo+IGh0dHA6
+Ly9peGlvbi5wbGQtbGludXgub3JnL35hcmVrbS9wMi94MS9yZXBhaXIyLnR4dAo+IGh0dHA6Ly9p
+eGlvbi5wbGQtbGludXgub3JnL35hcmVrbS9wMi94MS9yZXBhaXIzLnR4dAo+IGh0dHA6Ly9peGlv
+bi5wbGQtbGludXgub3JnL35hcmVrbS9wMi94MS9yZXBhaXI0LnR4dAo+IGh0dHA6Ly9peGlvbi5w
+bGQtbGludXgub3JnL35hcmVrbS9wMi94MS9yZXBhaXI1LnR4dAo+IAo+IChyZXBhaXIxLnR4dCBh
+bHNvIGV4aXN0cyAtIGl0IHdhcyBpbml0aWFsLCB2ZXJ5IGJpZy9sb25nIHJlcGFpcikKPiAKPiBO
+b3RlIHRoYXQgZnMgbW91bnRzIGZpbmUgKGFuZCB3YXMgbW91bnRpbmcgZmluZSBiZWZvcmUgYW5k
+IGFmdGVyIHJlcGFpcikgYnV0IAo+IHhmc19yZXBhaXIgaW5kaWNhdGVzIHRoYXQgbm90IGV2ZXJ5
+dGhpbmcgZ290IGZpeGVkLgo+IAo+IAo+IFVuZm9ydHVuYXRlbHkgdGhlcmUgbG9va3MgdG8gYmUg
+YSBwcm9ibGVtIHdpdGggbWV0YWR1bXAgaW1hZ2UuIHhmc19yZXBhaXIgaXMgCj4gYWJsZSB0byBm
+aW5pc2ggZml4aW5nIG9uIGEgcmVzdG9yZWQgaW1hZ2UgYnV0IGlzIG5vdCBhYmxlIChzZWUgcmVw
+YWlyWC50eHQpIAo+IGFib3ZlIG9uIHJlYWwgZGV2aWNlcy4gSHVoPwo+IAo+IEV4YW1wbGVzIG9m
+IHByb2JsZW1zIHJlcGVhdGluZyBlYWNoIHRpbWUgeGZzX3JlcGFpciBpcyBydW46Cj4gCj4gMSkK
+PiByZXNldCBiYWQgc2IgZm9yIGFnIDUKPi4gbm9uLW51bGwgZ3JvdXAgcXVvdGEgaW5vZGUgZmll
+bGQgaW4gc3VwZXJibG9jayA3CgpPSywgc28gdGhpcyBpcyBpbmRpY2F0aXZlIG9mIHNvbWV0aGlu
+ZyBzY3Jld2VkIHVwIGEgbG9uZyB0aW1lIGFnby4KRmlyc3RseSwgdGhlIHByaW1hcnkgc3VwZXJi
+bG9ja3Mgc2hvd3M6Cgp1cXVvdGlubyA9IDQwNzc5NjEKZ3F1b3Rpbm8gPSAwCnFmbGFncyA9IDAK
+CmkuZS4gdXNlciBxdW90YSBAIGlub2RlIDQwNzc5NjEsIG5vIGdyb3VwIHF1b3RhLiBUaGUgc2Vj
+b25kYXJ5CnN1cGVyYmxvY2tzIHRoYXQgYXJlIGJlaW5nIHdhcm5lZCBhYm91dCBzaG93OgoKdXF1
+b3Rpbm8gPSAwCmdxdW90aW5vID0gNDA3Nzk2MgpxZmxhZ3MgPSAwCgpXaGljaCBpcyBjbGVhcmx5
+IHdyb25nLiBUaGV5IHNob3VsZCBoYXZlIGJlZW4gb3ZlcndyaXR0ZW4gZHVyaW5nIHRoZQpncm93
+ZnMgb3BlcmF0aW9uIHRvIG1hdGNoIHRoZSBwcmltYXJ5IHN1cGVyYmxvY2suCgpUaGUgc2ltaWxh
+cml0eSBpbiBpbm9kZSBudW1iZXIgbGVhZHMgbWUgdG8gYmVsZWl2ZSBhdCBzb21lIHBvaW50CmJv
+dGggdXNlciBhbmQgZ3JvdXAvcHJvamVjdCBxdW90YXMgd2VyZSBlbmFibGVkIG9uIHRoaXMgZmls
+ZXN5c3RlbSwKYnV0IHJpZ2h0IG5vdyBvbmx5IHVzZXIgcXVvdGFzIGFyZSBlbmFibGVkLiAgSXQn
+cyBvbmx5IEFHcyAxLTE1IHRoYXQKc2hvdyB0aGlzLCBzbyB0aGlzIHNlZW1zIHRvIG1lIHRoYXQg
+aXQgaXMgbGlrZWx5IHRoYXQgdGhpcwpmaWxlc3lzdGVtIHdhcyBvcmlnaW5hbGx5IG9ubHkgMTYg
+QUdzIGFuZCBpdCdzIGJlZW4gZ3Jvd24gbWFueSB0aW1lcwpzaW5jZT8KCk9oLCB0aGlzIGFsbCBv
+Y2N1cnJlZCBiZWNhdXNlIHlvdSBoYWQgYSBncm93ZnMgb3BlcmF0aW9uIG9uIDMuMTAKZmFpbCBi
+ZWNhdXNlIG9mIGdhcmJhZ2UgaW4gdGhlIHRoZSBzYiBvZiBBRyAxNiAoaS5lLiB0aGlzIGZyb20g
+SVJDOgpodHRwOi8vc3BydW5nZS51cy9VSkZFKT8gSU9XcywgdGhpcyBjb21taXQ6Cgo5ODAyMTgy
+IHhmczogdmVyaWZ5IHN1cGVyYmxvY2tzIGFzIHRoZXkgYXJlIHJlYWQgZnJvbSBkaXNrCgp0cmlw
+cGVkIHVwIG9uIHNiIDE2LiBUaGF0IG1lYW5zIHNiIDE2IGlzIHdhcyBub3QgbW9kaWZpZWQgYnkg
+dGhlCmdyb3dmcyBvcGVyYXRpb24sIGFuZCBzbyBzaG91bGQgaGF2ZSB0aGUgcHJlLWdyb3dmcyBp
+bmZvcm1hdGlvbiBpbgppdDoKCnVxdW90aW5vID0gNDA3Nzk2MQpncXVvdGlubyA9IDQwNzc5NjIK
+cWZsYWdzID0gMHg3NwoKWWVhaCwgdGhhdCdzIHdoYXQgSSB0aG91Z2h0IC0gdGhlIHByZXZpb3Vz
+IGdyb3cgb3BlcmF0aW9uIGhhZCBib3RoCnF1b3RhcyBlbmFibGVkLiBPSywgdGhhdCBleHBsYWlu
+cyB3aHkgdGhlIGdyb3dmcyBvcGVyYXRpb24gaGFkCmlzc3VlcywgYnV0IGl0IGRvZXNuJ3QgZXhw
+bGFpbiBleGFjdGx5IGhvdyB0aGUgcXVvdGEgaW5vZGVzIGdvdApzY3Jld2VkIHVwIGxpa2UgdGhh
+dC4gQW55d2F5LCB0aGUgZ3Jvd2ZzIGlzc3VlcyB3ZXJlIHNvbHZlZCBieToKCjEwZTZlNjUgeGZz
+OiBiZSBtb3JlIGZvcmdpdmluZyBvZiBhIHY0IHNlY29uZGFyeSBzYiB3LyBqdW5rIGluIHY1IGZp
+ZWxkcwoKd2hpY2ggbGFuZGVkIGluIDMuMTMuCgo+IDIpIAo+IGNvcnJlY3RpbmcgbmJsb2NrcyBm
+b3IgaW5vZGUgOTY1MTk1ODU4LCB3YXMgMTkgLSBjb3VudGVkIDIwCj4gY29ycmVjdGluZyBuZXh0
+ZW50cyBmb3IgaW5vZGUgOTY1MTk1ODU4LCB3YXMgMTYgLSBjb3VudGVkIDE3CgpXaGljaCBpcyBw
+cmVjZWVkZWQgYnk6CgpkYXRhIGZvcmsgaW4gaW5vIDk2NTE5NTg1OCBjbGFpbXMgZnJlZSBibG9j
+ayA2MDMyMzUzOQpkYXRhIGZvcmsgaW4gaW5vIDk2NTE5NTg1OCBjbGFpbXMgZnJlZSBibG9jayA2
+MDMyMzUzMgoKYW5kIHdoZW4gY29tYmluZWQgd2l0aCB0aGUgbGF0ZXI6CgplbnRyeSAiZHNjMDk0
+NTE1M2FjMThkNGQ0ZjFhLTE1MHgxNTAuanBnIiAoaW5vIDk2NzM0OTgwMCkgaW4gZGlyIDk2NTE5
+NTg1OCBpcyBhIGR1cGxpY2F0ZSBuYW1lLCBtYXJraW5nIGVudHJ5IHRvIGJlIGp1bmtlZAoKZXJy
+b3JzIGZyb20gdGhhdCBkaXJlY3RvcnksIGl0IGxvb2tzIGxpa2UgdGhlIHNwYWNlIHdhcyBmcmVl
+ZCBidXQKdGhlIGRpcmVjdG9yeSBidHJlZSBub3QgY29ycmVjdGx5IHVwZGF0ZWQuIE5vIGlkZWEg
+d2hhdCBtaWdodCBoYXZlCmNhdXNlZCB0aGF0LCBidXQgaXQgaXMgYSBjbGFzc2ljIHN5bXB0b20g
+b2Ygdm9sYXRpbGUgd3JpdGUgY2FjaGVzLi4uCgpIbW1tLCBhbmQgd2hlbiBJdCBnb2VzIHRvIGp1
+bmsgdGhlbSBvbiBteSBsb2NhbCB0ZXN0aW5nOgoKcmVidWlsZGluZyBkaXJlY3RvcnkgaW5vZGUg
+OTY1MTk1ODU4Cm5hbWUgY3JlYXRlIGZhaWxlZCBpbiBpbm8gOTY1MTk1ODU4ICgxMTcpLCBmaWxl
+c3lzdGVtIG1heSBiZSBvdXQgb2Ygc3BhY2UKCldoaWNoIGlzIGFuIEVGU0NPUlJVUFRFRCBlcnJv
+ciB0cnlpbmcgdG8gcmVidWlsZCB0aGF0IGRpcmVjdG9yeS4KVGhlIHNlY29uZCBlcnJvciBwYXNz
+IGRpZCBub3QgdGhyb3cgYW4gZXJyb3IsIGJ1dCBpdCBkaWQgbm90IGZpeAp0aGUgZXJyb3JzIGFz
+IGEgM3JkIHBhc3Mgc3RpbGwgcmVwb3J0ZWQgdGhpcy4gSSdsbCBsb29rIGludG8gd2h5LgoKCj4g
+MykgY2xlYXJpbmcgc29tZSBlbnRyaWVzOyBtb3ZpbmcgdG8gbG9zdCtmb3VuZCAodGhlIHNhbWUg
+ZmlsZXMpCgo+IAo+IDQpIAo+IFBoYXNlIDcgLSB2ZXJpZnkgYW5kIGNvcnJlY3QgbGluayBjb3Vu
+dHMuLi4KPiBJbnZhbGlkIGlub2RlIG51bWJlciAweGZlZmZmZmZmZmZmZmZmZmYKPiB4ZnNfZGly
+X2lub192YWxpZGF0ZTogWEZTX0VSUk9SX1JFUE9SVAo+IE1ldGFkYXRhIGNvcnJ1cHRpb24gZGV0
+ZWN0ZWQgYXQgYmxvY2sgMHgxMWZiYjY5OC8weDEwMDAKPiBsaWJ4ZnNfd3JpdGVidWZyOiB3cml0
+ZSB2ZXJpZmVyIGZhaWxlZCBvbiBibm8gMHgxMWZiYjY5OC8weDEwMDAKPiBJbnZhbGlkIGlub2Rl
+IG51bWJlciAweGZlZmZmZmZmZmZmZmZmZmYKPiB4ZnNfZGlyX2lub192YWxpZGF0ZTogWEZTX0VS
+Uk9SX1JFUE9SVAo+IE1ldGFkYXRhIGNvcnJ1cHRpb24gZGV0ZWN0ZWQgYXQgYmxvY2sgMHgxMWZi
+YjY5OC8weDEwMDAKPiBsaWJ4ZnNfd3JpdGVidWZyOiB3cml0ZSB2ZXJpZmVyIGZhaWxlZCBvbiBi
+bm8gMHgxMWZiYjY5OC8weDEwMDAKPiBkb25lCgpOb3Qgc3VyZSB3aGF0IHRoYXQgaXMgeWV0LCBi
+dXQgaXQgbG9va3MgbGlrZSB3cml0aW5nIGEgZGlyZWN0b3J5CmJsb2NrIGZvdW5kIGVudHJpZXMg
+d2l0aCBpbnZhbGlkIGlub2RlIG51bWJlcnMgaW4gaXQuIGkuZS4gaXQncwp0ZWxsaW5nIG1lIHRo
+YXQgdGhlcmUncyBzb21ldGhpbmcgbm90IGJlZW4gZml4ZWQgdXAuCgpJJ20gYWN0dWFsbHkgc2Vl
+aW5nIHRoaXMgaW4gcGhhc2U0OgoKICAgICAgICAtIGFnbm8gPSAxNDgKSW52YWxpZCBpbm9kZSBu
+dW1iZXIgMHhmZWZmZmZmZmZmZmZmZmZmCnhmc19kaXJfaW5vX3ZhbGlkYXRlOiBYRlNfRVJST1Jf
+UkVQT1JUCk1ldGFkYXRhIGNvcnJ1cHRpb24gZGV0ZWN0ZWQgYXQgYmxvY2sgMHgxMWZiYjY5OC8w
+eDEwMDAKbGlieGZzX3dyaXRlYnVmcjogd3JpdGUgdmVyaWZlciBmYWlsZWQgb24gYm5vIDB4MTFm
+YmI2OTgvMHgxMDAwCgpTZWNvbmQgdGltZSBhcm91bmQsIHRoaXMgZG9lcyBub3QgaGFwcGVuLCBz
+byB0aGUgZXJyb3IgaGFzIGJlZW4KY29ycmVjdGVkIGluIGEgbGF0ZXIgcGhhc2Ugb2YgdGhlIGZp
+cnN0IHBhc3MuCgoKPiA1KU1ldGFkYXRhIENSQyBlcnJvciBkZXRlY3RlZCBhdCBibG9jayAweDAv
+MHgyMDAKPiBidXQgaXQgaXMgbm90IENSQyBlbmFibGVkIGZzCgpUaGF0J3MgdHlwaWNhbGx5IGNh
+dXNlZCBieSBqdW5rIGluIHRoZSBzdXBlcmJsb2NrIGJleW9uZCB0aGUgZW5kCm9mIHRoZSB2NCBz
+dXBlcmJsb2NrIHN0cnVjdHVyZS4gSXQgc2hvdWxkIGJlIGZvbGxvd2VkIGJ5ICJ6ZXJvaW5nCmp1
+bmsgLi4uIgoKCj4gTWFkZSB4ZnMgbWV0YWR1bXAgd2l0aG91dCBmaWxlIG9iZnVzY2F0aW9uIGFu
+ZCBJJ20gYWJsZSB0byByZXByb2R1Y2UgdGhlIAo+IHByb2JsZW0gcmVsaWFibHkgb24gdGhlIGlt
+YWdlIChpZiBzb21lIHhmcyBkZXZlbG9wZXIgd2FudHMgbWV0YWR1bXAgaW1hZ2UgdGhlbiAKPiBw
+bGVhc2UgbWFpbCBtZSAtIEkgZG9uJ3Qgd2FudCB0byBwdXQgaXQgZm9yIGV2ZXJ5b25lIGR1ZSB0
+byBvYnZpb3VzIHJlYXNvbnMpLgo+IAo+IFNvIGFkZGl0aW9uYWwgYnVnIGluIHhmc19tZXRhZHVt
+cCB3aGVyZSBmaWxlIG9iZnVzY2F0aW9uICJmaXhlcyIgc29tZSBpc3N1ZXMuIAo+IERvZXMgaXQg
+b2JmdXNjYXRlIGJ1dCBrZWVwIGludmFsaWQgY29uZGl0aW9ucyAobGlrZSBrZWVwaW5nICIvIiBp
+biBmaWxlIG5hbWUpIAo+ID8gSSBndWVzcyBpdCBpcyBub3QgZG9pbmcgdGhhdC4KCkkgZG91YnQg
+aXQgaGFuZGxlcyBhICIvIiBpbiBhIGZpbGUgbmFtZSBwcm9wZXJseSAtIHRoYXQncyByYXRoZXIK
+aWxsZWdhbCwgYW5kIHRoZSBvYmZ1c2NhdGlvbiBjb2RlIHByb2JhYmx5IGRvZXNuJ3QgaGFuZGxl
+IGl0IGF0IGFsbC4KRldJVywgeGZzX3JlcGFpciB3aWxsIHRyYXNoIHRob3NlIGZpbGVzIGFueXdh
+eToKCmVudHJ5IGF0IGJsb2NrIDIyIG9mZnNldCA1NjAgaW4gZGlyZWN0b3J5IGlub2RlIDQxOTU1
+ODE0MiBoYXMgaWxsZWdhbCBuYW1lICIvXzE5OC5qcGciOiBjbGVhcmluZyBlbnRyeQoKU28gcmVn
+YXJkbGVzcyBvZiB3aGV0aGVyIG1ldGFkdW1wIGhhbmRsZXMgdGhlbSBvciBpcyBub3QgZ29pbmcg
+dG8KY2hhbmdlIHRoZSBmYWN0IHRoYXQgZmlsZW5hbWVzIHdpdGggIi8iIHRoZW0gYXJlIGJyb2tl
+bi4uLi4KCkJ1dCB0aGUgcmVhbCBxdWVzdGlvbiBoZXJlIGlzIGhvdyBkaWQgeW91IGdldCAiLyIg
+Y2hhcmFjdGVycyBpbgpmaWxlbmFtZXM/IAoKPiBbMzU3MTM2Ny43MTcxNjddIFhGUyAobG9vcDAp
+OiBNb3VudGluZyBGaWxlc3lzdGVtCj4gWzM1NzEzNjcuODgzOTU4XSBYRlMgKGxvb3AwKTogRW5k
+aW5nIGNsZWFuIG1vdW50Cj4gWzM1NzEzNjcuOTAwNzMzXSBYRlMgKGxvb3AwKTogRmFpbGVkIHRv
+IGluaXRpYWxpemUgZGlzayBxdW90YXMuCj4KPiBGaWxlcyBhcmUgYWNjZXNzaWJsZSBldGMuIEp1
+c3Qgbm8gcXVvdGEuIFVuZm9ydHVuYXRlbHkgbm8gaW5mb3JtYXRpb24gd2h5IAo+IGluaXRpYWxp
+emF0aW9uIGZhaWxlZC4KCkkgY2FuJ3QgdGVsbCB3aHkgdGhhdCdzIGhhcHBlbmluZyB5ZXQuIEkn
+bSBub3Qgc3VyZSB3aGF0IHRoZSBjb3JyZWN0CnN0YXRlIGlzIHN1cHBvc2VkIHRvIGJlIHlldCAo
+bW91bnQgb3B0aW9ucyB3aWxsIHRlbGwgbWUpIHNvIEknbSBub3QKc3VyZSB3aGF0IHdlbnQgd3Jv
+bmcuIEFzIGl0IGlzLCB5b3UgcHJvYmFieSBzaG91bGQgYmUgdXBncmFkaW5nIHRvCmEgbW9yZSBy
+ZWNlbnQga2VybmVsLi4uLgoKPiBTbyB4ZnNfcmVwYWlyIHdhc24ndCBhYmxlIHRvIGZpeCB0aGF0
+LCB0b28uCgp4ZnNfcmVwYWlyIGlzbid0IGRldGVjdGluZyB0aGVyZSBpcyBhIHByb2JsZW0gYmVj
+YXVzZSB0aGUgdXF1b3Rpbm8KaXMgbm90IGNvcnJ1cHQgYW5kIHRoZSBxZmxhZ3MgaXMgemVyby4g
+SGVuY2UgaXQgZG9lc24ndCBkbyBhbnl0aGluZy4KCk1vcmUgYXMgSSBmaW5kIGl0LgoKQ2hlZXJz
+LAoKRGF2ZS4KLS0gCkRhdmUgQ2hpbm5lcgpkYXZpZEBmcm9tb3JiaXQuY29tCgpfX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhm
+c0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
