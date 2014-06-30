@@ -1,23 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id DBDA67F60
-	for <xfs@oss.sgi.com>; Mon, 30 Jun 2014 07:06:21 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 76E9EAC005
-	for <xfs@oss.sgi.com>; Mon, 30 Jun 2014 05:06:18 -0700 (PDT)
-Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
-	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	Q2nwbfB5JvKHYe1h for <xfs@oss.sgi.com>;
-	Mon, 30 Jun 2014 05:06:16 -0700 (PDT)
-Date: Mon, 30 Jun 2014 22:06:13 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: xfs_repair 3.2.0 cannot (?) fix fs
-Message-ID: <20140630120613.GF4453@dastard>
-References: <20140630031810.GC4453@dastard> <201406300736.24291.arekm@maven.pl>
-	<20140630111214.GE4453@dastard> <201406301353.10829.arekm@maven.pl>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id CE5897F5E
+	for <xfs@oss.sgi.com>; Mon, 30 Jun 2014 15:48:17 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id C218F304067
+	for <xfs@oss.sgi.com>; Mon, 30 Jun 2014 13:48:14 -0700 (PDT)
+Received: from mail-ve0-f172.google.com (mail-ve0-f172.google.com
+	[209.85.128.172]) by cuda.sgi.com with ESMTP id
+	PFgyiTZWENEchRjF (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Mon, 30 Jun 2014 13:48:13 -0700 (PDT)
+Received: by mail-ve0-f172.google.com with SMTP id jz11so8709773veb.31
+	for <xfs@oss.sgi.com>; Mon, 30 Jun 2014 13:48:12 -0700 (PDT)
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <201406301353.10829.arekm@maven.pl>
+From: Kiran Deen <kirandeen@google.com>
+Date: Mon, 30 Jun 2014 13:47:32 -0700
+Message-ID: <CAKxS-AUXKCf3zroSGE8AZV-H+iX-uP97MwbzeXGeY5u8dvDx1A@mail.gmail.com>
+Subject: Greetings from Google!
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,92 +25,91 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: multipart/mixed; boundary="===============2852290993897620618=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Arkadiusz =?utf-8?Q?Mi=C5=9Bkiewicz?= <arekm@maven.pl>
-Cc: Alex Elder <elder@kernel.org>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-T24gTW9uLCBKdW4gMzAsIDIwMTQgYXQgMDE6NTM6MTBQTSArMDIwMCwgQXJrYWRpdXN6IE1pxZtr
-aWV3aWN6IHdyb3RlOgo+IE9uIE1vbmRheSAzMCBvZiBKdW5lIDIwMTQsIERhdmUgQ2hpbm5lciB3
-cm90ZToKPiA+IE9uIE1vbiwgSnVuIDMwLCAyMDE0IGF0IDA3OjM2OjI0QU0gKzAyMDAsIEFya2Fk
-aXVzeiBNacWba2lld2ljeiB3cm90ZToKPiA+ID4gT24gTW9uZGF5IDMwIG9mIEp1bmUgMjAxNCwg
-RGF2ZSBDaGlubmVyIHdyb3RlOgo+ID4gPiA+IGJ1dCByaWdodCBub3cgb25seSB1c2VyIHF1b3Rh
-cyBhcmUgZW5hYmxlZC4gIEl0J3Mgb25seSBBR3MgMS0xNSB0aGF0Cj4gPiA+ID4gc2hvdyB0aGlz
-LCBzbyB0aGlzIHNlZW1zIHRvIG1lIHRoYXQgaXQgaXMgbGlrZWx5IHRoYXQgdGhpcwo+ID4gPiA+
-IGZpbGVzeXN0ZW0gd2FzIG9yaWdpbmFsbHkgb25seSAxNiBBR3MgYW5kIGl0J3MgYmVlbiBncm93
-biBtYW55IHRpbWVzCj4gPiA+ID4gc2luY2U/Cj4gPiA+IAo+ID4gPiBUaGUgcXVvdGFzIHdhcyBy
-dW5uaW5nIGZpbmUgdW50aWwgc29tZSByZXBhaXIgcnVuIChpZS4gYmVmb3JlIGFuZCBhZnRlcgo+
-ID4gPiBmaXJzdCByZXBhaXIgbW91bnRpbmcgd2l0aCBxdW90YSBzdWNjZWVkZWQpIC0gc29tZSB4
-ZnNfcmVwYWlyIHJ1biBsYXRlcgo+ID4gPiBicm9rZSB0aGlzLgo+ID4gCj4gPiBBY3R1YWxseSwg
-aXQgbG9va3MgbW9yZSBsaWtlbHkgdGhhdCBhIHF1b3RhY2hlY2sgaGFzIGZhaWxlZCBwYXJ0IHdh
-eQo+ID4gdGhvdWdoLCBsZWF2aW5nIHRoZSBxdW90YSBpbiBhbiBpbmRldGVybWluYXRlIHN0YXRl
-IGFuZCB0aGVuIHJlcGFpcgo+ID4gaGFzIGJlZW4gcnVuLCBtZXNzaW5nIHRoaW5ncyB1cCBtb3Jl
-Li4uCj4gCj4gSG0sIHRoZSBvbmx5IHF1b3RhY2hlY2sgSSBzZWUgaW4gbG9ncyBmcm9tIHRoYXQg
-ZGF5IHJlcG9ydGVkICJEb25lIi4gSSBhc3N1bWUgCj4gaXQgd291bGRuJ3QgcmVwb3J0IHRoYXQg
-aWYgc29tZSBwcm9ibGVtIG9jY3VyZWQgaW4gbWlkZGxlPwo+IAo+IEp1biAyOCAwMDo1NzozNiB3
-ZWIyIGtlcm5lbDogWzczNjE2MS45MDY2MjZdIFhGUyAoZG0tMSk6IFF1b3RhY2hlY2sgbmVlZGVk
-OiAKPiBQbGVhc2Ugd2FpdC4KPiBKdW4gMjggMDE6MDk6MTAgd2ViMiBrZXJuZWw6IFs3MzY4NTUu
-ODUxNTU1XSBYRlMgKGRtLTEpOiBRdW90YWNoZWNrOiBEb25lLgoKSWYgdGhlcmUgd2FzIGFuIGVy
-cm9yLCBpdCBzaG91bGQgcmVwb3J0IGl0IGFuZCBzYXkgdGhhdCBxdW90YXMgYXJlCmJlaW5nIHR1
-cm5lZCBvZmYuCgo+IFsuLi5dIGhlcmUgd2VyZSBmZXcgSW50ZXJuYWwgZXJyb3IgeGZzX2JtYXBf
-cmVhZF9leHRlbnRzKDEpIHdoaWxlIGRvaW5nIAo+IHhmc19kaXJfbG9va3VwIChJIGFzc3VtZSBk
-dWUgdG8gbm90IGZpeGVkIGRpcmVjdG9yeSBlbnRyaWVzIHByb2JsZW0pLiAKPiB4ZnNfcmVwYWly
-IHdhcyBhbHNvIHJ1biBmZXcgdGltZXMgYW5kIHRoZW4uLi4KPiAKPiBKdW4gMjggMjM6MTY6NTAg
-d2ViMiBrZXJuZWw6IFs4MTY1MTUuODk4MjEwXSBYRlMgKGRtLTEpOiBNb3VudGluZyBGaWxlc3lz
-dGVtCj4gSnVuIDI4IDIzOjE2OjUwIHdlYjIga2VybmVsOiBbODE2NTE1LjkxNTM1Nl0gWEZTIChk
-bS0xKTogRW5kaW5nIGNsZWFuIG1vdW50Cj4gSnVuIDI4IDIzOjE2OjUwIHdlYjIga2VybmVsOiBb
-ODE2NTE1Ljk0MDAwOF0gWEZTIChkbS0xKTogRmFpbGVkIHRvIGluaXRpYWxpemUgCj4gZGlzayBx
-dW90YXMuCgpJIGhhdmVuJ3QgeWV0IHRyYWNrZWQgZG93biB3aGF0IHRoZSBlcnJvciBoZXJlIGlz
-IHlldCAtIEknbSBzdGlsbAp3b3JraW5nIG9uIHRoZSByZWFwaXIgc2lkZSBvZiB0aGluZ3MgYmVm
-b3JlIEkgZXZlbiB0cnkgdG8gbW91bnQgdGhlCmltYWdlcyB5b3Ugc2VudCBtZS4gOi8KCk9uY2Ug
-SSBnZXQgcmVwYWlyIHJ1bm5pbmcgY2xlYW5seSwgSSdsbCBsb29rIGF0IHdoeSB0aGlzIGlzIGZh
-aWxpbmcuCgo+ID4gPiA+ID4gSW52YWxpZCBpbm9kZSBudW1iZXIgMHhmZWZmZmZmZmZmZmZmZmZm
-Cj4gPiA+ID4gPiB4ZnNfZGlyX2lub192YWxpZGF0ZTogWEZTX0VSUk9SX1JFUE9SVAo+ID4gPiA+
-ID4gTWV0YWRhdGEgY29ycnVwdGlvbiBkZXRlY3RlZCBhdCBibG9jayAweDExZmJiNjk4LzB4MTAw
-MAo+ID4gPiA+ID4gbGlieGZzX3dyaXRlYnVmcjogd3JpdGUgdmVyaWZlciBmYWlsZWQgb24gYm5v
-IDB4MTFmYmI2OTgvMHgxMDAwCj4gPiA+ID4gPiBkb25lCj4gPiA+ID4gCj4gPiA+ID4gTm90IHN1
-cmUgd2hhdCB0aGF0IGlzIHlldCwgYnV0IGl0IGxvb2tzIGxpa2Ugd3JpdGluZyBhIGRpcmVjdG9y
-eQo+ID4gPiA+IGJsb2NrIGZvdW5kIGVudHJpZXMgd2l0aCBpbnZhbGlkIGlub2RlIG51bWJlcnMg
-aW4gaXQuIGkuZS4gaXQncwo+ID4gPiA+IHRlbGxpbmcgbWUgdGhhdCB0aGVyZSdzIHNvbWV0aGlu
-ZyBub3QgYmVlbiBmaXhlZCB1cC4KPiA+ID4gPiAKPiA+ID4gPiBJJ20gYWN0dWFsbHkgc2VlaW5n
-IHRoaXMgaW4gcGhhc2U0Ogo+ID4gPiA+ICAgICAgICAgLSBhZ25vID0gMTQ4Cj4gPiA+ID4gCj4g
-PiA+ID4gSW52YWxpZCBpbm9kZSBudW1iZXIgMHhmZWZmZmZmZmZmZmZmZmZmCj4gPiA+ID4geGZz
-X2Rpcl9pbm9fdmFsaWRhdGU6IFhGU19FUlJPUl9SRVBPUlQKPiA+ID4gPiBNZXRhZGF0YSBjb3Jy
-dXB0aW9uIGRldGVjdGVkIGF0IGJsb2NrIDB4MTFmYmI2OTgvMHgxMDAwCj4gPiA+ID4gbGlieGZz
-X3dyaXRlYnVmcjogd3JpdGUgdmVyaWZlciBmYWlsZWQgb24gYm5vIDB4MTFmYmI2OTgvMHgxMDAw
-Cj4gPiA+ID4gCj4gPiA+ID4gU2Vjb25kIHRpbWUgYXJvdW5kLCB0aGlzIGRvZXMgbm90IGhhcHBl
-biwgc28gdGhlIGVycm9yIGhhcyBiZWVuCj4gPiA+ID4gY29ycmVjdGVkIGluIGEgbGF0ZXIgcGhh
-c2Ugb2YgdGhlIGZpcnN0IHBhc3MuCj4gPiA+IAo+ID4gPiBIZXJlIG9uIHR3byBydW5zIEkgZ290
-IGV4YWN0bHkgdGhlIHNhbWUgcmVwb3J0Ogo+ID4gPiAKPiA+ID4gUGhhc2UgNyAtIHZlcmlmeSBh
-bmQgY29ycmVjdCBsaW5rIGNvdW50cy4uLgo+ID4gPiAKPiA+ID4gSW52YWxpZCBpbm9kZSBudW1i
-ZXIgMHhmZWZmZmZmZmZmZmZmZmZmCj4gPiA+IHhmc19kaXJfaW5vX3ZhbGlkYXRlOiBYRlNfRVJS
-T1JfUkVQT1JUCj4gPiA+IE1ldGFkYXRhIGNvcnJ1cHRpb24gZGV0ZWN0ZWQgYXQgYmxvY2sgMHgx
-MWZiYjY5OC8weDEwMDAKPiA+ID4gbGlieGZzX3dyaXRlYnVmcjogd3JpdGUgdmVyaWZlciBmYWls
-ZWQgb24gYm5vIDB4MTFmYmI2OTgvMHgxMDAwCj4gPiA+IEludmFsaWQgaW5vZGUgbnVtYmVyIDB4
-ZmVmZmZmZmZmZmZmZmZmZgo+ID4gPiB4ZnNfZGlyX2lub192YWxpZGF0ZTogWEZTX0VSUk9SX1JF
-UE9SVAo+ID4gPiBNZXRhZGF0YSBjb3JydXB0aW9uIGRldGVjdGVkIGF0IGJsb2NrIDB4MTFmYmI2
-OTgvMHgxMDAwCj4gPiA+IGxpYnhmc193cml0ZWJ1ZnI6IHdyaXRlIHZlcmlmZXIgZmFpbGVkIG9u
-IGJubyAweDExZmJiNjk4LzB4MTAwMAo+ID4gPiAKPiA+ID4gYnV0IHRoZXJlIHdlcmUgbW9yZSBv
-ZiBlcnJvcnMgbGlrZSB0aGlzIGVhcmxpZXIgc28gcmVwYWlyIGZpeGVkIHNvbWUgYnV0Cj4gPiA+
-IGxlZnQgd2l0aCB0aGVzZSB0d28uCj4gPiAKPiA+IFJpZ2h0LCBJIHN1c3BlY3QgdGhhdCBJJ3Zl
-IGdvdCBhIHBhcnRpYWwgZml4IGZvciB0aGlzIGFscmVhZHkgaW4KPiA+IHBsYWNlIC0gaSB3YXMg
-aGF2aW5nIHhmc19yZXBhaXIgLW4gLi4uIFNFR1Ygb24gd2hlbiBwYXJzaW5nIHRoZQo+ID4gYnJv
-a2VuIGRpcmVjdG9yeSBpbiBwaGFzZSA2LCBzbyBJIGhhdmUgc29tZSBjb2RlIHRoYXQgcHJldmVu
-dHMgdGhhdAo+ID4gY3Jhc2ggd2hpY2ggbWlnaHQgYWxzbyBiZSBwYXJ0aWFsbHkgZml4aW5nIHRo
-aXMuCj4gCj4gTmljZSA6LSkgRG8geW91IGFsc28ga25vdyB3aHkgMy4xLjExIGRvZXNuJ3QgaGF2
-ZSB0aGlzIHByb2JsZW0gd2l0aCAKPiB4ZnNfZGlyX2lub192YWxpZGF0ZTogWEZTX0VSUk9SX1JF
-UE9SVCA/CgpPaCwgdGhhdCdzIGVhc3k6IDMuMS4xMSBkb2Vzbid0IGhhdmUgd3JpdGUgdmVyaWZp
-ZXJzLCBzbyBpdCB3b3VsZApuZXZlciBrbm93IHRoYXQgaXQgd3JvdGUgYSBiYWQgaW5vZGUgbnVt
-YmVyIHRvIGRpc2suIExpa2UgdGhlIGtlcm5lbApjb2RlLCB0aGUgd3JpdGUgdmVyaWZpZXJzIGFj
-dHVhbGx5IGNoZWNrIHRoYXQgdGhlIG1vZGlmaWNhdGlvbnMKYmVpbmcgbWFkZSByZXN1bHQgaW4g
-dmFsaWQgb24gZGlzayB2YWx1ZXMsIGFuZCB0aGF0J3Mgc29tZXRoaW5nCndlJ3ZlIG5ldmVyIGhh
-ZCBpbiByZXBhaXIgYmVmb3JlIDMuMi4wLgoKSU9XcywgMy4xLjExIGNvdWxkIHdlbGwgYmUgd3Jp
-dGluZyBpbm9kZXMgd2l0aCAweGZlZmZmZmZmZmZmZmZmZmYgaW4KdGhlbSwgYnV0IHRoZXJlJ3Mg
-bm90aGluZyB0byBjYXRjaCB0aGF0IGluIHJlcGFpciBvciBsaWJ4ZnMgb24gcmVhZApvciB3cml0
-ZS4gSGVuY2Ugd2UgY291bGQgYmUgdHJpcHBpbmcgb3ZlciBhbiBvbGQgYnVnIHdlIG5ldmVyIGtu
-ZXcKZXhpc3RlZCB1bnRpbCBub3cuLi4KCkNoZWVycywKCkRhdmUuCi0tIApEYXZlIENoaW5uZXIK
-ZGF2aWRAZnJvbW9yYml0LmNvbQoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5z
-Z2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCg==
+--===============2852290993897620618==
+Content-Type: multipart/alternative; boundary=001a11339e2e0e56ab04fd13c778
+
+--001a11339e2e0e56ab04fd13c778
+Content-Type: text/plain; charset=UTF-8
+
+Hi Kevin,
+
+I hope your day is going well. I wanted to connect to see if you are
+interested in exploring opportunities at Google. I came across your
+information online and believe your skills may be aligned with some
+engineering roles that I support. Let me know if you are interested and we
+can schedule a time speak further.
+
+Thank you for your time and consideration. I look forward to hearing back
+from you!
+
+Best,
+Kiran Deen
+
+
+-- 
+
+Kiran Deen |
+ 650.214.6955 | kirandeen@google.com |  Follow us on Life at Google
+<https://plus.google.com/+LifeatGoogle/>
+
+--001a11339e2e0e56ab04fd13c778
+Content-Type: text/html; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+
+<div dir=3D"ltr">Hi Kevin,<div><br></div><div><div><div>I hope your day is =
+going well. I wanted to connect to see if you are interested in exploring o=
+pportunities at Google. I came across your information online and believe y=
+our skills may be aligned with some engineering roles that I support. Let m=
+e know if you are interested and we can schedule a time speak further.=C2=
+=A0</div>
+
+<div><br></div><div>Thank you for your time and consideration. I look forwa=
+rd to hearing back from you!</div><div><br></div><div>Best,</div><div>Kiran=
+ Deen</div></div><div><br></div><div><br></div>-- <br><div dir=3D"ltr"><div=
+ style=3D"color:rgb(68,68,68);font-family:Arial,Verdana,sans-serif;line-hei=
+ght:21px">
+
+<div style=3D"line-height:normal;background-color:transparent"><br></div><d=
+iv style=3D"line-height:normal;background-color:transparent"><table cellpad=
+ding=3D"0" cellspacing=3D"0" style=3D"margin:0px;font-family:Times"><tbody>=
+<tr style=3D"color:rgb(85,85,85);font-family:sans-serif;font-size:small">
+
+<td style=3D"vertical-align:top;border-top-style:solid;border-top-color:rgb=
+(213,15,37);border-top-width:2px"><span style=3D"background-color:transpare=
+nt">Kiran Deen |</span><br></td><td style=3D"vertical-align:top;border-top-=
+style:solid;border-top-color:rgb(51,105,232);border-top-width:2px">
+
+=C2=A0650.214.6955 |</td><td style=3D"vertical-align:top;border-top-style:s=
+olid;border-top-color:rgb(0,153,57);border-top-width:2px">=C2=A0<a href=3D"=
+mailto:kirandeen@google.com" target=3D"_blank">kirandeen@google.com</a> |</=
+td><td style=3D"vertical-align:top;border-top-style:solid;border-top-color:=
+rgb(238,178,17);border-top-width:2px">
+
+=C2=A0Follow us on=C2=A0<a href=3D"https://plus.google.com/+LifeatGoogle/" =
+style=3D"color:rgb(0,82,20)!important" target=3D"_blank">Life at Google</a>=
+</td></tr></tbody></table><br></div><div><span style=3D"color:rgb(0,0,0);fo=
+nt-family:Times;font-size:medium"><br>
+
+</span></div></div></div>
+</div></div>
+
+--001a11339e2e0e56ab04fd13c778--
+
+
+--===============2852290993897620618==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============2852290993897620618==--
