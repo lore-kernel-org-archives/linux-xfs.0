@@ -1,18 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 62E0E7F56
-	for <xfs@oss.sgi.com>; Fri, 30 May 2014 15:08:03 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 46C3E7F6B
+	for <xfs@oss.sgi.com>; Tue,  1 Jul 2014 01:44:49 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 412F730404E
-	for <xfs@oss.sgi.com>; Fri, 30 May 2014 13:08:03 -0700 (PDT)
-Received: from mout.kundenserver.de (mout.kundenserver.de [212.227.17.24]) by
-	cuda.sgi.com with ESMTP id frJFvFDoXvBiBo9F (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 30 May 2014 13:08:00 -0700 (PDT)
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: [RFC 00/32] making inode time stamps y2038 ready
-Date: Fri, 30 May 2014 22:01:24 +0200
-Message-Id: <1401480116-1973111-1-git-send-email-arnd@arndb.de>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 36C798F8039
+	for <xfs@oss.sgi.com>; Mon, 30 Jun 2014 23:44:49 -0700 (PDT)
+Received: from mail-we0-f172.google.com (mail-we0-f172.google.com
+	[74.125.82.172]) by cuda.sgi.com with ESMTP id LUJpkxJWsgdnWJBj
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Mon, 30 Jun 2014 23:44:47 -0700 (PDT)
+Received: by mail-we0-f172.google.com with SMTP id u57so9197765wes.31
+	for <xfs@oss.sgi.com>; Mon, 30 Jun 2014 23:44:45 -0700 (PDT)
+MIME-Version: 1.0
+Date: Mon, 30 Jun 2014 23:44:45 -0700
+Message-ID: <CALkk6gqiwyC7HD3QvzUgecVgdr55=zW=bEA-0bqHFR4y28koxA@mail.gmail.com>
+Subject: corruption of in-memory data detected
+From: Alexandru Cardaniuc <cardaniuc@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,262 +24,209 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============3386200763849333618=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: linux-kernel@vger.kernel.org
-Cc: hch@infradead.org, linux-mtd@lists.infradead.org, hpa@zytor.com, logfs@logfs.org, linux-afs@lists.infradead.org, joseph@codesourcery.com, linux-arch@vger.kernel.org, linux-cifs@vger.kernel.org, linux-scsi@vger.kernel.org, ceph-devel@vger.kernel.org, codalist@coda.cs.cmu.edu, cluster-devel@redhat.com, coda@cs.cmu.edu, geert@linux-m68k.org, linux-ext4@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>, fuse-devel@lists.sourceforge.net, reiserfs-devel@vger.kernel.org, xfs@oss.sgi.com, john.stultz@linaro.org, tglx@linutronix.de, linux-nfs@vger.kernel.org, linux-ntfs-dev@lists.sourceforge.net, samba-technical@lists.samba.org, linux-f2fs-devel@lists.sourceforge.net, ocfs2-devel@oss.oracle.com, linux-fsdevel@vger.kernel.org, lftan@altera.com, linux-btrfs@vger.kernel.org
+To: xfs@oss.sgi.com
+Cc: Alexandru Cardaniuc <cardaniuc@gmail.com>
 
-Based on the recent discussion about 64-bit time_t for new
-architectures, and for solving the year 2038 problem in general,
-I decided to try out what it would take to solve part of the
-kernel side of things.
+--===============3386200763849333618==
+Content-Type: multipart/alternative; boundary=047d7b3a81767ce45804fd1c1ccd
 
-This is a proof-of-concept work to get us to the point where
-two system calls (utimes and stat) provide a working interface
-to user space to pass 64-bit inode time stamps in and out of
-the kernel all the way to the file systems.
+--047d7b3a81767ce45804fd1c1ccd
+Content-Type: text/plain; charset=UTF-8
 
-I picked this because it is a fairly isolated problem, as the
-inode time stamps are rarely assigned to any other time values.
-As a byproduct of this work, I documented for each of the file
-systems we support how long the on-disk format can work[1].
+Hi All,
 
-Obviously we also need to convert all the other syscalls and
-have a proper libc implementation using those for this to
-be really useful, but it's a start and it can be tested
-independently (I didn't so far, want to wait for initial
-feedback).
+I am having an issue with an XFS filesystem shutting down under high load
+with very many small files.
+Basically, I have around 3.5 - 4 million files on this filesystem. New
+files are being written to the FS all the time, until I get to 9-11 mln
+small files (35k on average).
 
-All the interesting stuff is in the first five patches here,
-the rest is the straightforward conversion of all file systems
-that use 'timespec' values internally.
+at some point I get the following in dmesg:
 
-There are of course a number of open questions:
+[2870477.695512] Filesystem "sda5": XFS internal error xfs_trans_cancel at
+line 1138 of file fs/xfs/xfs_trans.c.  Caller 0xffffffff8826bb7d
+[2870477.695558]
+[2870477.695559] Call Trace:
+[2870477.695611]  [<ffffffff88262c28>] :xfs:xfs_trans_cancel+0x5b/0xfe
+[2870477.695643]  [<ffffffff8826bb7d>] :xfs:xfs_mkdir+0x57c/0x5d7
+[2870477.695673]  [<ffffffff8822f3f8>] :xfs:xfs_attr_get+0xbf/0xd2
+[2870477.695707]  [<ffffffff88273326>] :xfs:xfs_vn_mknod+0x1e1/0x3bb
+[2870477.695726]  [<ffffffff80264929>] _spin_lock_irqsave+0x9/0x14
+[2870477.695736]  [<ffffffff802230e6>] __up_read+0x19/0x7f
+[2870477.695764]  [<ffffffff8824f8f4>] :xfs:xfs_iunlock+0x57/0x79
+[2870477.695776]  [<ffffffff80264929>] _spin_lock_irqsave+0x9/0x14
+[2870477.695784]  [<ffffffff802230e6>] __up_read+0x19/0x7f
+[2870477.695791]  [<ffffffff80209f4c>] __d_lookup+0xb0/0xff
+[2870477.695803]  [<ffffffff8020cd4a>] _atomic_dec_and_lock+0x39/0x57
+[2870477.695814]  [<ffffffff8022d6db>] mntput_no_expire+0x19/0x89
+[2870477.695829]  [<ffffffff80264929>] _spin_lock_irqsave+0x9/0x14
+[2870477.695837]  [<ffffffff802230e6>] __up_read+0x19/0x7f
+[2870477.695861]  [<ffffffff8824f8f4>] :xfs:xfs_iunlock+0x57/0x79
+[2870477.695887]  [<ffffffff882680af>] :xfs:xfs_access+0x3d/0x46
+[2870477.695899]  [<ffffffff80264929>] _spin_lock_irqsave+0x9/0x14
+[2870477.695923]  [<ffffffff802df4a3>] vfs_mkdir+0xe3/0x152
+[2870477.695933]  [<ffffffff802dfa79>] sys_mkdirat+0xa3/0xe4
+[2870477.695953]  [<ffffffff80260295>] tracesys+0x47/0xb6
+[2870477.695963]  [<ffffffff802602f9>] tracesys+0xab/0xb6
+[2870477.695977]
+[2870477.695985] xfs_force_shutdown(sda5,0x8) called from line 1139 of file
+fs/xfs/xfs_trans.c.  Return address = 0xffffffff88262c46
+[2870477.696452] Filesystem "sda5": Corruption of in-memory data detected.
+Shutting down filesystem: sda5
+[2870477.696464] Please umount the filesystem, and rectify the problem(s)
 
-a) is this the right approach in general? The previous discussion
-   pointed this way, but there may be other opinions.
-b) what type should we use internally to represent inode time
-   stamps? The code contains three different versions that would
-   all work, we just have to pick a good tradeoff between
-   efficiency and the range of times we want to cover.
-c) Should we continue this way for all 32-bit platforms for
-   consistency, including future ones, or should we go to
-   different 64-bit types right away? My feeling is that the
-   second approach would complicate this work.
+# ls -l /store
+ls: /store: Input/output error
+?--------- 0 root root 0 Jan  1  1970 /store
 
-	Arnd
+Filesystems is ~1T in size
+# df -hT /store
+Filesystem    Type    Size  Used Avail Use% Mounted on
+/dev/sda5      xfs    910G  142G  769G  16% /store
 
-[1] http://kernelnewbies.org/y2038
 
-Arnd Bergmann (32):
-  fs: introduce new 'struct inode_time'
-  uapi: add struct __kernel_timespec{32,64}
-  fs: introduce sys_utimens64at
-  fs: introduce sys_newfstat64/sys_newfstatat64
-  arch: hook up new stat and utimes syscalls
-  isofs: fix timestamps beyond 2027
-  fs/nfs: convert to struct inode_time
-  fs/ceph: convert to 'struct inode_time'
-  fs/pstore: convert to struct inode_time
-  fs/coda: convert to struct inode_time
-  xfs: convert to struct inode_time
-  btrfs: convert to struct inode_time
-  ext3: convert to struct inode_time
-  ext4: convert to struct inode_time
-  cifs: convert to struct inode_time
-  ntfs: convert to struct inode_time
-  ubifs: convert to struct inode_time
-  ocfs2: convert to struct inode_time
-  fs/fat: convert to struct inode_time
-  afs: convert to struct inode_time
-  udf: convert to struct inode_time
-  fs: convert simple fs to inode_time
-  logfs: convert to struct inode_time
-  hfs, hfsplus: convert to struct inode_time
-  gfs2: convert to struct inode_time
-  reiserfs: convert to struct inode_time
-  jffs2: convert to struct inode_time
-  adfs: convert to struct inode_time
-  f2fs: convert to struct inode_time
-  fuse: convert to struct inode_time
-  scsi: fnic: use current_kernel_time() for timestamp
-  fs: use new inode_time definition unconditionally
+Using CentOS 5.9 with kernel 2.6.18-348.el5xen
 
- arch/alpha/kernel/osf_sys.c        |  2 +-
- arch/arm/include/asm/unistd.h      |  2 +-
- arch/arm/include/uapi/asm/stat.h   | 25 +++++++++++++++++
- arch/arm/include/uapi/asm/unistd.h |  3 +++
- arch/arm/kernel/calls.S            |  3 +++
- arch/arm64/include/asm/unistd32.h  |  5 +++-
- arch/x86/include/uapi/asm/stat.h   | 28 +++++++++++++++++++
- arch/x86/syscalls/syscall_32.tbl   |  3 +++
- drivers/block/rbd.c                |  2 +-
- drivers/firmware/efi/efi-pstore.c  | 28 +++++++++----------
- drivers/scsi/fnic/fnic_trace.c     |  2 +-
- drivers/tty/tty_io.c               |  2 +-
- drivers/usb/gadget/f_fs.c          |  2 +-
- fs/adfs/inode.c                    |  4 +--
- fs/afs/afs.h                       |  6 ++---
- fs/afs/fsclient.c                  |  2 +-
- fs/attr.c                          |  8 +++---
- fs/btrfs/file.c                    |  6 ++---
- fs/btrfs/inode.c                   |  4 +--
- fs/btrfs/ioctl.c                   |  4 +--
- fs/btrfs/root-tree.c               |  2 +-
- fs/btrfs/transaction.c             |  2 +-
- fs/ceph/cache.c                    |  2 +-
- fs/ceph/caps.c                     |  6 ++---
- fs/ceph/file.c                     |  4 +--
- fs/ceph/inode.c                    | 20 +++++++-------
- fs/ceph/super.h                    |  8 +++---
- fs/cifs/cache.c                    |  6 ++---
- fs/cifs/cifsglob.h                 |  6 ++---
- fs/cifs/cifsproto.h                |  6 ++---
- fs/cifs/cifssmb.c                  |  5 ++--
- fs/cifs/inode.c                    |  2 +-
- fs/cifs/netmisc.c                  | 15 ++++++-----
- fs/coda/coda_linux.c               | 18 ++++++++-----
- fs/compat.c                        | 19 ++-----------
- fs/configfs/inode.c                |  6 ++---
- fs/cramfs/inode.c                  |  2 +-
- fs/ext3/inode.c                    |  4 +--
- fs/ext4/ext4.h                     | 10 +++----
- fs/ext4/extents.c                  |  2 +-
- fs/f2fs/file.c                     |  6 ++---
- fs/fat/dir.c                       |  2 +-
- fs/fat/fat.h                       |  6 ++---
- fs/fat/misc.c                      |  4 +--
- fs/fat/namei_msdos.c               |  8 +++---
- fs/fat/namei_vfat.c                | 10 +++----
- fs/fuse/inode.c                    |  6 ++---
- fs/gfs2/dir.c                      |  6 ++---
- fs/gfs2/glops.c                    |  4 +--
- fs/hfs/hfs_fs.h                    |  2 +-
- fs/hfsplus/hfsplus_fs.h            |  2 +-
- fs/inode.c                         | 18 ++++++-------
- fs/isofs/util.c                    |  2 +-
- fs/jffs2/os-linux.h                |  2 +-
- fs/locks.c                         |  4 +--
- fs/logfs/readwrite.c               | 18 ++++++-------
- fs/nfs/callback.h                  |  4 +--
- fs/nfs/callback_xdr.c              |  6 ++---
- fs/nfs/file.c                      |  2 +-
- fs/nfs/fscache-index.c             |  8 +++---
- fs/nfs/inode.c                     | 10 +++----
- fs/nfs/internal.h                  |  4 +--
- fs/nfs/netns.h                     |  2 +-
- fs/nfs/nfs2xdr.c                   |  8 +++---
- fs/nfs/nfs3xdr.c                   | 10 +++----
- fs/nfs/nfs4xdr.c                   | 20 +++++++-------
- fs/nfsd/nfs3xdr.c                  |  6 ++---
- fs/nfsd/nfsfh.h                    |  4 +--
- fs/nfsd/nfsxdr.c                   |  2 +-
- fs/ntfs/inode.c                    | 12 ++++-----
- fs/ntfs/time.h                     |  8 +++---
- fs/ocfs2/dlmglue.c                 | 16 +++++------
- fs/ocfs2/file.c                    |  6 ++---
- fs/ocfs2/ocfs2.h                   |  2 +-
- fs/pstore/inode.c                  |  2 +-
- fs/pstore/internal.h               |  2 +-
- fs/pstore/platform.c               |  2 +-
- fs/pstore/ram.c                    | 18 +++++++------
- fs/reiserfs/namei.c                |  2 +-
- fs/reiserfs/xattr.c                |  4 +--
- fs/stat.c                          | 55 ++++++++++++++++++++++++++++++++++++++
- fs/ubifs/dir.c                     |  2 +-
- fs/ubifs/file.c                    | 16 +++++------
- fs/ubifs/misc.h                    |  2 +-
- fs/udf/udf_i.h                     |  2 +-
- fs/udf/udf_sb.h                    |  2 +-
- fs/udf/udfdecl.h                   |  7 ++---
- fs/udf/udftime.c                   |  7 ++---
- fs/utimes.c                        | 47 +++++++++++++++++++++++++++-----
- fs/xfs/time.h                      |  4 +--
- fs/xfs/xfs_inode.c                 |  2 +-
- fs/xfs/xfs_iops.c                  |  2 +-
- fs/xfs/xfs_trans_inode.c           |  6 ++---
- include/linux/ceph/decode.h        |  8 +++---
- include/linux/ceph/osd_client.h    |  4 +--
- include/linux/compat.h             |  2 +-
- include/linux/fs.h                 | 32 +++++++++++-----------
- include/linux/nfs_fs_sb.h          |  2 +-
- include/linux/nfs_xdr.h            | 14 +++++-----
- include/linux/pstore.h             |  4 +--
- include/linux/stat.h               |  6 ++---
- include/linux/syscalls.h           |  9 ++++++-
- include/linux/time.h               | 44 +++++++++++++++++++++++++++---
- include/uapi/asm-generic/stat.h    | 29 ++++++++++++++++++--
- include/uapi/asm-generic/unistd.h  |  8 +++++-
- include/uapi/linux/coda.h          |  1 +
- include/uapi/linux/time.h          | 40 ++++++++++++++++++++++++++-
- init/initramfs.c                   |  2 +-
- kernel/audit.c                     |  2 +-
- kernel/auditsc.c                   |  2 +-
- kernel/time.c                      | 44 +++++++++++++++++++++++++-----
- kernel/time/timekeeping.c          | 16 +++++++++++
- net/ceph/auth_x.c                  |  2 +-
- net/ceph/osd_client.c              |  4 +--
- 114 files changed, 642 insertions(+), 333 deletions(-)
+The filesystem is in a virtual machine (Xen) and on top of LVM.
+
+Filesystem was created using mkfs.xfs defaults with
+xfsprogs-2.9.4-1.el5.centos (that's the one that comes with CentOS 5.x by
+default.)
+
+These are the defaults with which the filesystem was created:
+# xfs_info /store
+meta-data=/dev/sda5              isize=256    agcount=32, agsize=7454720
+blks
+         =                       sectsz=512   attr=0
+data     =                       bsize=4096   blocks=238551040, imaxpct=25
+         =                       sunit=0      swidth=0 blks, unwritten=1
+naming   =version 2              bsize=4096
+log      =internal               bsize=4096   blocks=32768, version=1
+         =                       sectsz=512   sunit=0 blks, lazy-count=0
+realtime =none                   extsz=4096   blocks=0, rtextents=0
+
+
+The problem is reproducible and I don't think it's hardware related. The
+problem was reproduced on multiple servers of the same type. So, I doubt
+it's a memory issue or something like that.
+
+
+Is that a known issue? If it is then what's the fix? I went through the
+kernel updates for CentOS 5.10 (newer kernel), but didn't see any xfs
+related fixes since CentOS 5.9
+
+Any help will be greatly appreciated...
 
 -- 
-1.8.3.2
+Sincerely yours,
+Alexandru Cardaniuc
 
-Bcc: "J. Bruce Fields" <bfields@fieldses.org>
-Bcc: "Theodore Ts'o" <tytso@mit.edu>
-Bcc: Adrian Hunter <adrian.hunter@intel.com>
-Bcc: Andreas Dilger <adilger.kernel@dilger.ca>
-Bcc: Andrew Morton <akpm@linux-foundation.org>
-Bcc: Anton Altaparmakov <anton@tuxera.com>
-Bcc: Anton Vorontsov <anton@enomsg.org>
-Bcc: Artem Bityutskiy <dedekind1@gmail.com>
-Bcc: Brian Uchino <buchino@cisco.com>
-Bcc: Chris Mason <clm@fb.com>
-Bcc: Colin Cross <ccross@android.com>
-Bcc: Dave Chinner <david@fromorbit.com>
-Bcc: David Howells <dhowells@redhat.com>
-Bcc: David Woodhouse <dwmw2@infradead.org>
-Bcc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Bcc: Hiral Patel <hiralpat@cisco.com>
-Bcc: Jaegeuk Kim <jaegeuk.kim@samsung.com>
-Bcc: Jan Harkes <jaharkes@cs.cmu.edu>
-Bcc: Jan Kara <jack@suse.cz>
-Bcc: Joel Becker <jlbec@evilplan.org>
-Bcc: Joern Engel <joern@logfs.org>
-Bcc: Josef Bacik <jbacik@fb.com>
-Bcc: Kees Cook <keescook@chromium.org>
-Bcc: Mark Fasheh <mfasheh@suse.com>
-Bcc: Miklos Szeredi <miklos@szeredi.hu>
-Bcc: OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>
-Bcc: Prasad Joshi <prasadjoshi.linux@gmail.com>
-Bcc: Sage Weil <sage@inktank.com>
-Bcc: Steve French <sfrench@samba.org>
-Bcc: Steven Whitehouse <swhiteho@redhat.com>
-Bcc: Suma Ramars <sramars@cisco.com>
-Bcc: Tony Luck <tony.luck@intel.com>
-Cc: ceph-devel@vger.kernel.org
-Cc: cluster-devel@redhat.com
-Cc: coda@cs.cmu.edu
-Cc: codalist@coda.cs.cmu.edu
-Cc: fuse-devel@lists.sourceforge.net
-Cc: linux-afs@lists.infradead.org
-Cc: linux-btrfs@vger.kernel.org
-Cc: linux-cifs@vger.kernel.org
-Cc: linux-ext4@vger.kernel.org
-Cc: linux-f2fs-devel@lists.sourceforge.net
-Cc: linux-mtd@lists.infradead.org
-Cc: linux-nfs@vger.kernel.org
-Cc: linux-ntfs-dev@lists.sourceforge.net
-Cc: linux-scsi@vger.kernel.org
-Cc: logfs@logfs.org
-Cc: ocfs2-devel@oss.oracle.com
-Cc: reiserfs-devel@vger.kernel.org
-Cc: samba-technical@lists.samba.org
-Cc: xfs@oss.sgi.com
+--047d7b3a81767ce45804fd1c1ccd
+Content-Type: text/html; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+
+<div dir=3D"ltr"><div><div><div><div>Hi All,<br><br></div>I am having an is=
+sue with an XFS filesystem shutting down under high load with very many sma=
+ll files.<br></div>Basically, I have around 3.5 - 4 million files on this f=
+ilesystem. New files are being written to the FS all the time, until I get =
+to 9-11 mln small files (35k on average).<br>
+<br></div>at some point I get the following in dmesg:<br><br>[2870477.69551=
+2] Filesystem &quot;sda5&quot;: XFS internal error xfs_trans_cancel at line=
+ 1138 of file fs/xfs/xfs_trans.c.=C2=A0 Caller 0xffffffff8826bb7d<br>[28704=
+77.695558]<br>
+[2870477.695559] Call Trace:<br>[2870477.695611]=C2=A0 [&lt;ffffffff88262c2=
+8&gt;] :xfs:xfs_trans_cancel+0x5b/0xfe<br>[2870477.695643]=C2=A0 [&lt;fffff=
+fff8826bb7d&gt;] :xfs:xfs_mkdir+0x57c/0x5d7<br>[2870477.695673]=C2=A0 [&lt;=
+ffffffff8822f3f8&gt;] :xfs:xfs_attr_get+0xbf/0xd2<br>
+[2870477.695707]=C2=A0 [&lt;ffffffff88273326&gt;] :xfs:xfs_vn_mknod+0x1e1/0=
+x3bb<br>[2870477.695726]=C2=A0 [&lt;ffffffff80264929&gt;] _spin_lock_irqsav=
+e+0x9/0x14<br>[2870477.695736]=C2=A0 [&lt;ffffffff802230e6&gt;] __up_read+0=
+x19/0x7f<br>
+[2870477.695764]=C2=A0 [&lt;ffffffff8824f8f4&gt;] :xfs:xfs_iunlock+0x57/0x7=
+9<br>[2870477.695776]=C2=A0 [&lt;ffffffff80264929&gt;] _spin_lock_irqsave+0=
+x9/0x14<br>[2870477.695784]=C2=A0 [&lt;ffffffff802230e6&gt;] __up_read+0x19=
+/0x7f<br>[2870477.695791]=C2=A0 [&lt;ffffffff80209f4c&gt;] __d_lookup+0xb0/=
+0xff<br>
+[2870477.695803]=C2=A0 [&lt;ffffffff8020cd4a&gt;] _atomic_dec_and_lock+0x39=
+/0x57<br>[2870477.695814]=C2=A0 [&lt;ffffffff8022d6db&gt;] mntput_no_expire=
++0x19/0x89<br>[2870477.695829]=C2=A0 [&lt;ffffffff80264929&gt;] _spin_lock_=
+irqsave+0x9/0x14<br>
+[2870477.695837]=C2=A0 [&lt;ffffffff802230e6&gt;] __up_read+0x19/0x7f<br>[2=
+870477.695861]=C2=A0 [&lt;ffffffff8824f8f4&gt;] :xfs:xfs_iunlock+0x57/0x79<=
+br>[2870477.695887]=C2=A0 [&lt;ffffffff882680af&gt;] :xfs:xfs_access+0x3d/0=
+x46<br>[2870477.695899]=C2=A0 [&lt;ffffffff80264929&gt;] _spin_lock_irqsave=
++0x9/0x14<br>
+[2870477.695923]=C2=A0 [&lt;ffffffff802df4a3&gt;] vfs_mkdir+0xe3/0x152<br>[=
+2870477.695933]=C2=A0 [&lt;ffffffff802dfa79&gt;] sys_mkdirat+0xa3/0xe4<br>[=
+2870477.695953]=C2=A0 [&lt;ffffffff80260295&gt;] tracesys+0x47/0xb6<br>[287=
+0477.695963]=C2=A0 [&lt;ffffffff802602f9&gt;] tracesys+0xab/0xb6<br>
+[2870477.695977]<br>[2870477.695985] xfs_force_shutdown(sda5,0x8) called fr=
+om line 1139 of file fs/xfs/xfs_trans.c.=C2=A0 Return address =3D 0xfffffff=
+f88262c46<br>[2870477.696452] Filesystem &quot;sda5&quot;: Corruption of in=
+-memory data detected.=C2=A0 Shutting down filesystem: sda5<br>
+[2870477.696464] Please umount the filesystem, and rectify the problem(s)<b=
+r><br># ls -l /store<br>ls: /store: Input/output error<br>?--------- 0 root=
+ root 0 Jan=C2=A0 1=C2=A0 1970 /store<br><br></div><div>Filesystems is ~1T =
+in size<br>
+</div># df -hT /store<br>Filesystem=C2=A0=C2=A0=C2=A0 Type=C2=A0=C2=A0=C2=
+=A0 Size=C2=A0 Used Avail Use% Mounted on<br>/dev/sda5=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0 xfs=C2=A0=C2=A0=C2=A0 910G=C2=A0 142G=C2=A0 769G=C2=A0 16% /store=
+<br><br><div><br><div><div><div><div>Using CentOS 5.9 with kernel 2.6.18-34=
+8.el5xen<br><br>
+</div><div>The filesystem is in a virtual machine (Xen) and on top of LVM.<=
+br><br></div><div>Filesystem was created using mkfs.xfs defaults with xfspr=
+ogs-2.9.4-1.el5.centos (that&#39;s the one that comes with CentOS 5.x by de=
+fault.)<br>
+<br></div><div>These are the defaults with which the filesystem was created=
+:<br># xfs_info /store<br>meta-data=3D/dev/sda5=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 isize=3D256=C2=A0=C2=A0=
+=C2=A0 agcount=3D32, agsize=3D7454720 blks<br>=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0 =3D=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0 sectsz=3D512=C2=A0=C2=A0 attr=3D0<br>
+data=C2=A0=C2=A0=C2=A0=C2=A0 =3D=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0 bsize=3D4096=C2=A0=C2=A0 blocks=3D238551040, imaxpct=3D25<b=
+r>=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 =3D=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 sunit=3D0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0 swidth=3D0 blks, unwritten=3D1<br>naming=C2=A0=C2=A0 =3Dversion 2=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 bs=
+ize=3D4096<br>log=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 =3Dinternal=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 bsize=
+=3D4096=C2=A0=C2=A0 blocks=3D32768, version=3D1<br>
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 =3D=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 sectsz=3D512=C2=A0=C2=A0 sunit=3D0 blk=
+s, lazy-count=3D0<br>realtime =3Dnone=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 ex=
+tsz=3D4096=C2=A0=C2=A0 blocks=3D0, rtextents=3D0<br clear=3D"all"></div><di=
+v><div><div><br><br></div><div>The problem is reproducible and I don&#39;t =
+think it&#39;s hardware related. The problem was reproduced on multiple ser=
+vers of the same type. So, I doubt it&#39;s a memory issue or something lik=
+e that.<br>
+<br><br></div><div>Is that a known issue? If it is then what&#39;s the fix?=
+ I went through the kernel updates for CentOS 5.10 (newer kernel), but didn=
+&#39;t see any xfs related fixes since CentOS 5.9<br></div><div><br></div>
+<div>Any help will be greatly appreciated...<br></div><div><br>-- <br>Since=
+rely yours,<br>Alexandru Cardaniuc
+</div></div></div></div></div></div></div></div>
+
+--047d7b3a81767ce45804fd1c1ccd--
+
+
+--===============3386200763849333618==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============3386200763849333618==--
