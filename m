@@ -1,24 +1,31 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 073EA7F83
-	for <xfs@oss.sgi.com>; Tue,  1 Jul 2014 16:43:25 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 96958AC00E
-	for <xfs@oss.sgi.com>; Tue,  1 Jul 2014 14:43:21 -0700 (PDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 1A5B97F90
+	for <xfs@oss.sgi.com>; Tue,  1 Jul 2014 16:56:35 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id ECA17304067
+	for <xfs@oss.sgi.com>; Tue,  1 Jul 2014 14:56:31 -0700 (PDT)
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	ffr1yQVj1apVshFr for <xfs@oss.sgi.com>;
-	Tue, 01 Jul 2014 14:43:18 -0700 (PDT)
-Date: Wed, 2 Jul 2014 07:43:15 +1000
+	4IhTUhAKQsneTFB7 for <xfs@oss.sgi.com>;
+	Tue, 01 Jul 2014 14:56:29 -0700 (PDT)
+Date: Wed, 2 Jul 2014 07:56:26 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: corruption of in-memory data detected
-Message-ID: <20140701214315.GD9508@dastard>
-References: <CALkk6gqiwyC7HD3QvzUgecVgdr55=zW=bEA-0bqHFR4y28koxA@mail.gmail.com>
-	<20140701070230.GG4453@dastard> <87vbrh1nyo.fsf@gmail.com>
-	<20140701093803.GH4453@dastard> <878uoc25y8.fsf@gmail.com>
+Subject: Re: xfs_growfs_data_private memory leak
+Message-ID: <20140701215626.GE9508@dastard>
+References: <20131226230018.GJ20579@dastard>
+	<A0A556BD24EC45CEADAA07870B3E6205@alyakaslap>
+	<20140113030230.GF3469@dastard>
+	<CAOcd+r0B-4SPjzim=68w3L8Y9FxwBD-C5HkkeO58C6t9nfgbhw@mail.gmail.com>
+	<20140113204314.GJ3469@dastard>
+	<CAOcd+r22FirPMHjdxQyTmXOAM72ND-t0=njK9nEmesSV5=Ec=Q@mail.gmail.com>
+	<20140115014503.GQ3469@dastard>
+	<CAOcd+r0R6KxmgEJNPUZ0Q5cQhsStGb=cehYE0+wKgDNU1negsA@mail.gmail.com>
+	<20140119231745.GF18112@dastard>
+	<4B2A412C75324EE9880358513C069476@alyakaslap>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <878uoc25y8.fsf@gmail.com>
+In-Reply-To: <4B2A412C75324EE9880358513C069476@alyakaslap>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,87 +38,59 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Alexandru Cardaniuc <cardaniuc@gmail.com>
+To: Alex Lyakas <alex@zadarastorage.com>
 Cc: xfs@oss.sgi.com
 
-On Tue, Jul 01, 2014 at 01:13:19PM -0700, Alexandru Cardaniuc wrote:
-> Dave Chinner <david@fromorbit.com> writes:
+On Tue, Jul 01, 2014 at 06:06:38PM +0300, Alex Lyakas wrote:
+> Greetings,
 > 
-> > On Tue, Jul 01, 2014 at 01:29:35AM -0700, Alexandru Cardaniuc wrote:
-> >> Dave Chinner <david@fromorbit.com> writes:
-> >> 
-> >> > On Mon, Jun 30, 2014 at 11:44:45PM -0700, Alexandru Cardaniuc
-> >> > wrote:
-> >> >> Hi All,
-> >>
-> >> >> I am having an issue with an XFS filesystem shutting down under
-> >> >> high load with very many small files. Basically, I have around
-> >> >> 3.5 - 4 million files on this filesystem. New files are being
-> >> >> written to the FS all the time, until I get to 9-11 mln small
-> >> >> files (35k on average).
-> > ....
-> >> > You've probably fragmented free space to the point where inodes
-> >> > cannot be allocated anymore, and then it's shutdown because it got
-> >> > enospc with a dirty inode allocation transaction.
-> >>
-> >> > xfs_db -c "freespc -s" <dev>
-> >>
-> >> > should tell us whether this is the case or not.
-> >>  This is what I have
-> >> 
-> >> # xfs_db -c "freesp -s" /dev/sda5 from to extents blocks pct 1 1 657
-> >> 657 0.00 2 3 264 607 0.00 4 7 29 124 0.00 8 15 13 143 0.00 16 31 41
-> >> 752 0.00 32 63 8 293 0.00 64 127 12 1032 0.00 128 255 8 1565 0.00
-> >> 256 511 10 4044 0.00 512 1023 7 5750 0.00 1024 2047 10 16061 0.01
-> >> 2048 4095 5 16948 0.01 4096 8191 7 43312 0.02 8192 16383 9 115578
-> >> 0.06 16384 32767 6 159576 0.08 32768 65535 3 104586 0.05 262144
-> >> 524287 1 507710 0.25 4194304 7454720 28 200755934 99.51 total free
-> >> extents 1118 total free blocks 201734672 average free extent size
-> >> 180442
-> >
-> > So it's not freespace fragmentation, but that was just the most likely
-> > cause. Most likely it's a transient condition where an AG is out of
-> > space but in determining that condition the AGF was modified. We've
-> > fixed several bugs in that area over the past few years....
+> It appears that if xfs_growfs_data_private fails during the "new AG
+> headers" loop, it does not free all the per-AG structures for the
+> new AGs. When XFS is unmounted later, they are not freed as well,
+> because xfs_growfs_data_private did not update the "sb_agcount"
+> field, so xfs_free_perag will not free them. This happens on 3.8.13,
+> but looking at the latest master branch, it seems to have the same
+> issue.
 > 
-> I still have the FS available. Any other information I can assemble to
-> help you identify the issue?
+> Code like [1] in xfs_growfs_data, seems to fix the issue.
 
-Not really. Historically the only way to work out the exact problem
-causing the transaction failure is to be able to reproduce the
-problem on demand in a controlled environment.  Unfortunately, I
-don't scale to doing this for everyone who has a problem because it
-can take days to build an equivalent environment and reproduce the
-problem and refine it to something that can be used to debug the
-issue.
+Why not just do this in the appropriate error stack, like is
+done inside xfs_initialize_perag() on error?
 
-However, if you can reproduce the problem on a current upstream
-kernel with a metadump image and a script that runs on the image,
-then I'll definitely look at it.  i.e. if you can make it 5 minutes
-work for me to reproduce the problem on an upstream kernel, then
-I should be able find and solve the problem pretty quickly.
+        for (i = oagcount; i < nagcount; i++) {
+                pag = radix_tree_delete(&mp->m_perag_tree, index);
+                kmem_free(pag);
+        }
 
-> >> >> Using CentOS 5.9 with kernel 2.6.18-348.el5xen
-> >> > The "enospc with dirty transaction" shutdown bugs have been fixed
-> >> > in more recent kernels than RHEL5.
-> >>  These fixes were not backported to RHEL5 kernels?
-> 
-> > No.
-> 
-> I assume I wouldn't just be able to take the source for XFS kernel module
-> and compile it against the 2.6.18 kernel in CentOS 5.x?
+(though it might need RCU freeing)
 
-You could try, but you'd only be digging a deeper hole.  Triaging
-and solving a bug like this bug is a walk in the park compared to
-the issues that typically arise(*) during large scale backports to
-older kernels.
+When you have a fix, can you send a proper patch with a sign-off on
+it?
+
+> A follow-up question: if xfs_grows_data_private fails during the
+> loop that updates all the secondary superblocks, what is the
+> consequence? (I am aware that in the latest master branch, the loop
+> is not broken on first error, but attempts to initialize whatever
+> possible). When these secondary superblocks will get updated? Is
+> there a way to force-update them? Otherwise, what can be the
+> consequence of leaving them not updated?
+
+The consequence is documented in mainline tree - if we don't update
+them all, then repair will do the wrong thing.  Repair requires a
+majority iof identical secondaries to determine if the primary is
+correct or out of date. The old behaviour of not updating after the
+first error meant that the majority were old superblocks and so at
+some time in the future repair could decide your filesystem is
+smaller than it really is and hence truncate away the grown section
+of the filesystem. i.e. trigger catastrophic, unrecoverable data
+loss.
+
+Hence it's far better to write every seconday we can than to leave
+a majority in a bad state....
 
 Cheers,
 
 Dave.
-
-(*) speaking as a RH engineer who has done multiple large (several
-hundred commit) XFS backports for RHEL.
 -- 
 Dave Chinner
 david@fromorbit.com
