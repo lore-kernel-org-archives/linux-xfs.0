@@ -1,37 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 2945C7FA5
-	for <xfs@oss.sgi.com>; Tue,  1 Jul 2014 10:06:48 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id CBB0D7F93
+	for <xfs@oss.sgi.com>; Tue,  1 Jul 2014 15:03:58 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id E3BD530404E
-	for <xfs@oss.sgi.com>; Tue,  1 Jul 2014 08:06:44 -0700 (PDT)
-Received: from mail-we0-f176.google.com (mail-we0-f176.google.com
-	[74.125.82.176]) by cuda.sgi.com with ESMTP id uyxQZMJR3N4Em0BF
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 01 Jul 2014 08:06:40 -0700 (PDT)
-Received: by mail-we0-f176.google.com with SMTP id u56so9969214wes.35
-	for <xfs@oss.sgi.com>; Tue, 01 Jul 2014 08:06:38 -0700 (PDT)
-Received: from alyakaslap ([212.143.144.103]) by mx.google.com with ESMTPSA id
-	hc4sm48686908wjc.38.2014.07.01.08.06.35 for <xfs@oss.sgi.com>
-	(version=TLSv1 cipher=ECDHE-RSA-AES128-SHA bits=128/128);
-	Tue, 01 Jul 2014 08:06:36 -0700 (PDT)
-Message-ID: <4B2A412C75324EE9880358513C069476@alyakaslap>
-From: "Alex Lyakas" <alex@zadarastorage.com>
-References: <20131219105513.GZ31386@dastard>
-	<8155F3F9D6094F40B4DA71BD561D2DE8@alyakaslap>
-	<20131226230018.GJ20579@dastard>
-	<A0A556BD24EC45CEADAA07870B3E6205@alyakaslap>
-	<20140113030230.GF3469@dastard>
-	<CAOcd+r0B-4SPjzim=68w3L8Y9FxwBD-C5HkkeO58C6t9nfgbhw@mail.gmail.com>
-	<20140113204314.GJ3469@dastard>
-	<CAOcd+r22FirPMHjdxQyTmXOAM72ND-t0=njK9nEmesSV5=Ec=Q@mail.gmail.com>
-	<20140115014503.GQ3469@dastard>
-	<CAOcd+r0R6KxmgEJNPUZ0Q5cQhsStGb=cehYE0+wKgDNU1negsA@mail.gmail.com>
-	<20140119231745.GF18112@dastard>
-In-Reply-To: <20140119231745.GF18112@dastard>
-Subject: xfs_growfs_data_private memory leak
-Date: Tue, 1 Jul 2014 18:06:38 +0300
+	by relay1.corp.sgi.com (Postfix) with ESMTP id B8E118F8035
+	for <xfs@oss.sgi.com>; Tue,  1 Jul 2014 13:03:55 -0700 (PDT)
+Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
+	[150.101.137.129]) by cuda.sgi.com with ESMTP id
+	6D6vIqrnnEli4VqS for <xfs@oss.sgi.com>;
+	Tue, 01 Jul 2014 13:03:53 -0700 (PDT)
+Date: Wed, 2 Jul 2014 06:03:31 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 0/4] repair: fixes for 3.2
+Message-ID: <20140701200331.GC9508@dastard>
+References: <1404219296-29302-1-git-send-email-david@fromorbit.com>
+	<201407011540.57511.arekm@maven.pl>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <201407011540.57511.arekm@maven.pl>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -40,82 +26,52 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Arkadiusz =?utf-8?Q?Mi=C5=9Bkiewicz?= <arekm@maven.pl>
+Cc: xfs@oss.sgi.com
 
-Greetings,
-
-It appears that if xfs_growfs_data_private fails during the "new AG headers" 
-loop, it does not free all the per-AG structures for the new AGs. When XFS 
-is unmounted later, they are not freed as well, because 
-xfs_growfs_data_private did not update the "sb_agcount" field, so 
-xfs_free_perag will not free them. This happens on 3.8.13, but looking at 
-the latest master branch, it seems to have the same issue.
-
-Code like [1] in xfs_growfs_data, seems to fix the issue.
-
-A follow-up question: if xfs_grows_data_private fails during the loop that 
-updates all the secondary superblocks, what is the consequence? (I am aware 
-that in the latest master branch, the loop is not broken on first error, but 
-attempts to initialize whatever possible). When these secondary superblocks 
-will get updated? Is there a way to force-update them? Otherwise, what can 
-be the consequence of leaving them not updated?
-
-Thanks,
-Alex.
-
-[1]
-    /*
-     * If we had an error, we might have allocated
-     * PAGs, which are >=sb_agcount. We need to free
-     * those, because they will not get freed in
-     * xfs_free_perag().
-     */
-    if (error) {
-        unsigned int n_pags = 0;
-        xfs_perag_t* pags[16] = {0};
-        xfs_agnumber_t start_agno = mp->m_sb.sb_agcount;
-
-        do {
-            unsigned int pag_idx = 0;
-
-            spin_lock(&mp->m_perag_lock);
-            n_pags = radix_tree_gang_lookup(&mp->m_perag_tree, (void**)pags, 
-start_agno, ARRAY_SIZE(pags));
-            for (pag_idx = 0; pag_idx < n_pags; ++pag_idx) {
-                xfs_perag_t *deleted = NULL;
-
-                /* for next lookup */
-                start_agno = pags[pag_idx]->pag_agno + 1;
-
-                /* nobody should really be touching these AGs...*/
-                if (WARN_ON(atomic_read(&pags[pag_idx]->pag_ref) > 0)) {
-                    pags[pag_idx] = NULL;
-                    continue;
-                }
-
-                deleted = radix_tree_delete(&mp->m_perag_tree, 
-pags[pag_idx]->pag_agno);
-                ASSERT(deleted == pags[pag_idx]);
-            }
-            spin_unlock(&mp->m_perag_lock);
-
-            /* now delete all those still marked for deletion */
-            for (pag_idx = 0; pag_idx < n_pags; ++pag_idx) {
-                if (pags[pag_idx])
-                    call_rcu(&pags[pag_idx]->rcu_head, 
-xfs_free_perag_rcu_cb);
-            }
-        } while (n_pags > 0);
-    }
-
-xfs_free_perag_rcu_cb is similar to __xfs_free_perag, but can be called from 
-other files.
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gVHVlLCBKdWwgMDEsIDIwMTQgYXQgMDM6NDA6NTZQTSArMDIwMCwgQXJrYWRpdXN6IE1pxZtr
+aWV3aWN6IHdyb3RlOgo+IE9uIFR1ZXNkYXkgMDEgb2YgSnVseSAyMDE0LCBEYXZlIENoaW5uZXIg
+d3JvdGU6Cj4gPiBIaSBBcmthZGl1c3osCj4gPiAKPiA+IFRoZXNlIGFyZSB0aGUgZml4ZXMgSSBo
+YXZlIHNvIGZhciBmcm9tIHdvcmtpbmcgdGhyb3VnaCB0aGUgbWV0YWR1bXBzCj4gPiB5b3Ugc3Vw
+cGxpZWQgbWUgd2l0aC4gVGhlIHVub2JmdXNjYXRlZCBtZXRhZHVtcCByZXBhaXJzIGNsZWFubHkg
+d2l0aAo+ID4gdGhlc2UgcGF0Y2hlcywgYnV0IHRoZSBvYmZ1c2NhdGVkIG9uZSBzdGlsbCBoYXMg
+YSBkaXJlY3RvcnkgcmVidWlsZAo+ID4gaXNzdWUgdGhhdCBJIGhhdmVuJ3QgZ290IHRvIHRoZSBi
+b3R0b20gb2YgeWV0LiBUaGF0IHJlc3VsdHMgaW4KPiA+IGFuIGVycm9yIGluIHBoYXNlIDYgbGlr
+ZToKPiA+IAo+ID4gTWV0YWRhdGEgY29ycnVwdGlvbiBkZXRlY3RlZCBhdCBibG9jayAweDJhZjg0
+NzcwLzB4MTAwMAo+ID4gbmFtZSBjcmVhdGUgZmFpbGVkIGluIGlubyAyMzA2OTEyMzU0ICgxMTcp
+LCBmaWxlc3lzdGVtIG1heSBiZSBvdXQgb2Ygc3BhY2UKPiA+IAo+ID4gSXQgYXBwZWFycyB0aGF0
+IGEgcmVhZCB2ZXJpZmllciBpcyBvbiBhIHJlY2VudGx5IGNyZWF0ZWQKPiA+IGRpcmVjdG9yeSBs
+ZWFmIGJsb2NrIGFuZCB0aGF0IGlzIGZhaWxpbmcuIEknbSBub3QgeWV0IHN1cmUgd2h5IHRoZQo+
+ID4gbGVhZiBibG9jayBpcyBjb3JydXB0LCBub3Igd2h5IHRoZSB2ZXJpZmllciBpcyBldmVuIGJl
+aW5nIHJ1biBvbiBpdAo+ID4gc2VlaW5nIGFzIGl0IHdhcyBvbmx5IGFsbG9jYXRlZCBhbmQgaW5p
+dGlhbGlzZWQgZHVyaW5nIHRoZSBkaXJlY3RvcnkKPiA+IHJlYnVpbGQuIFRoYXQgZGlyZWN0b3J5
+IHJlYnVpbCBkZmFpbHVyZSBpcyB0aGUgcmVhc29uIGZvciBhbGwgdGhlCj4gPiBkaXNjb25lY3Rl
+ZCBpbm9kZSB0aGF0IGVuZCB1cCBpbiBsb3N0K2ZvdW5kLCBhbmQgSSB0aGluayBpdCdzIHRoZQo+
+ID4gb25seSByZW1haW5pbmcgaXNzdWUgdGhhdCBJIG5lZWQgdG8gc29sdmUuCj4gPiAKPiA+IENh
+biB5b3UgdGVzdCB0aGUgcGF0Y2hlcyBvbiB5b3UgbWFjaGluZSBhbmQgc2VlIGlmIHlvdSBnZXQg
+dGhlIHNhbWUKPiA+IHJlc3VsdHM/Cj4gCj4gVGVzdGluZyBvbiBub24gb2JmdXNjYXRlZCBpbWFn
+ZSBoZXJlLgo+IAo+IE1vc3Qgb2YgaXNzdWVzIGdvdCBmaXhlZCwgZmlyc3QgeGZzX3JlcGFpciBy
+dW46Cj4gaHR0cDovL2l4aW9uLnBsZC1saW51eC5vcmcvfmFyZWttL3AyL3gxL3JlcGFpci0zLjIt
+ZGNoaW5uZXIxLTRwYXRjaGVzLXJ1bjEudHh0IAo+IAo+IHNlY29uZCB4ZnNfcmVwYWlyIHJ1biAo
+cmVwb3J0cyBubyBwcm9ibGVtcyk6Cj4gaHR0cDovL2l4aW9uLnBsZC1saW51eC5vcmcvfmFyZWtt
+L3AyL3gxL3JlcGFpci0zLjItZGNoaW5uZXIxLTRwYXRjaGVzLXJ1bjIudHh0Cj4gCj4gV2hlbiB0
+cnlpbmcgdG8gbW91bnQKPiAiWEZTIChsb29wMCk6IEZhaWxlZCB0byBpbml0aWFsaXplIGRpc2sg
+cXVvdGFzLiIKPiBzbyB0aGlzIGlzc3VlIGxlZnQuCgpZZWFoLCBJIGhhdmVuJ3QgZ290IHRoYXQg
+ZmFyIHlldC4uLi4KCj4gUXVlc3Rpb246Cj4gCj4gUGhhc2UgMiAtIHVzaW5nIGludGVybmFsIGxv
+Zwo+ICAgICAgICAgLSB6ZXJvIGxvZy4uLgo+IHplcm9fbG9nOiBoZWFkIGJsb2NrIDIgdGFpbCBi
+bG9jayAyCj4gICAgICAgICAtIHNjYW4gZmlsZXN5c3RlbSBmcmVlc3BhY2UgYW5kIGlub2RlIG1h
+cHMuLi4KPiBNZXRhZGF0YSBDUkMgZXJyb3IgZGV0ZWN0ZWQgYXQgYmxvY2sgMHgwLzB4MjAwCj4g
+Cj4gSXMgIk1ldGFkYXRhIENSQyBlcnJvciBkZXRlY3RlZCBhdCBibG9jayIgZXhwZWN0ZWQgaGVy
+ZT8gSSBtZWFuIHY0IGZzLCBzbyBubyAKPiBDUkMuCgpHaXZlbiB0aGF0IGl0IHdhcyBmb2xsb3dl
+ZCBieToKCnplcm9pbmcgdW51c2VkIHBvcnRpb24gb2YgcHJpbWFyeSBzdXBlcmJsb2NrIChBRyAj
+MCkKClRoZW4gdGhlcmUgd2FzIGdhcmJhZ2UgaW4gdGhlIHN1cGVyYmxvY2sgdGhhdCBtYWRlIHRo
+ZSB2ZXJpZmllcgp0aGluayB0aGF0IG1heWJlIGl0IHdhcyBtaXNzaW5nIGEgZmVhdHVyZSBiaXQu
+IEl0IGRpZG4ndCBjb21lIHVwIHRoZQpzZWNvbmQgdGltZSwgc28gZXZlcnl0aGluZyBpcyBmaW5l
+Li4uLgoKQ2hlZXJzLAoKRGF2ZS4KLS0gCkRhdmUgQ2hpbm5lcgpkYXZpZEBmcm9tb3JiaXQuY29t
+CgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwp4ZnMgbWFp
+bGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0
+aW5mby94ZnMK
