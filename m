@@ -1,20 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 7D20D7F90
-	for <xfs@oss.sgi.com>; Tue,  1 Jul 2014 07:55:09 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id D02D77F93
+	for <xfs@oss.sgi.com>; Tue,  1 Jul 2014 08:41:08 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 7CB2D304067
-	for <xfs@oss.sgi.com>; Tue,  1 Jul 2014 05:55:09 -0700 (PDT)
-Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
-	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	z56iQ5VNokTuhNp8 for <xfs@oss.sgi.com>;
-	Tue, 01 Jul 2014 05:55:05 -0700 (PDT)
-From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 2/4] libxfs: buffers aren't stale once written
-Date: Tue,  1 Jul 2014 22:54:54 +1000
-Message-Id: <1404219296-29302-3-git-send-email-david@fromorbit.com>
-In-Reply-To: <1404219296-29302-1-git-send-email-david@fromorbit.com>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id B29378F8033
+	for <xfs@oss.sgi.com>; Tue,  1 Jul 2014 06:41:05 -0700 (PDT)
+Received: from mail-we0-f169.google.com (mail-we0-f169.google.com
+	[74.125.82.169]) by cuda.sgi.com with ESMTP id 8HHE6vklwj9SrtB2
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Tue, 01 Jul 2014 06:41:03 -0700 (PDT)
+Received: by mail-we0-f169.google.com with SMTP id t60so9766537wes.14
+	for <xfs@oss.sgi.com>; Tue, 01 Jul 2014 06:41:02 -0700 (PDT)
+From: Arkadiusz =?utf-8?q?Mi=C5=9Bkiewicz?= <arekm@maven.pl>
+Subject: Re: [PATCH 0/4] repair: fixes for 3.2
+Date: Tue, 1 Jul 2014 15:40:56 +0200
 References: <1404219296-29302-1-git-send-email-david@fromorbit.com>
+In-Reply-To: <1404219296-29302-1-git-send-email-david@fromorbit.com>
+MIME-Version: 1.0
+Message-Id: <201407011540.57511.arekm@maven.pl>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,60 +26,44 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-From: Dave Chinner <dchinner@redhat.com>
-
-When rebuilding a bad directory, repair first truncates away all the
-blocks in the directory. This removes blocks from the bmap btree,
-and when those blocks are freed the bmap btree code invalidates
-them. This marks the buffers LIBXFS_B_STALE so that we don't try to
-write stale data from that buffer at a later time.
-
-However, when rebuilding the directory, the block gets reallocated
-and new metadata gets written into it. however, it is still marked
-stale and hence the new, corrected metadata is never written. Hence
-if we write new metadata to a stale buffer, we have to clear the
-LIBXFS_B_STALE flag to ensure that the new data gets written.
-
-Note that this can affect more than just bmap btree buffers - there
-are several different places in the libxfs code that mark buffers
-stale via xfs_trans_binval() during repair operations.
-
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- libxfs/rdwr.c | 2 ++
- 1 file changed, 2 insertions(+)
-
-diff --git a/libxfs/rdwr.c b/libxfs/rdwr.c
-index 981f2ba..28f8f36 100644
---- a/libxfs/rdwr.c
-+++ b/libxfs/rdwr.c
-@@ -928,6 +928,7 @@ libxfs_writebuf_int(xfs_buf_t *bp, int flags)
- 	 * subsequent reads after this write from seeing stale errors.
- 	 */
- 	bp->b_error = 0;
-+	bp->b_flags &= ~LIBXFS_B_STALE;
- 	bp->b_flags |= (LIBXFS_B_DIRTY | flags);
- 	return 0;
- }
-@@ -946,6 +947,7 @@ libxfs_writebuf(xfs_buf_t *bp, int flags)
- 	 * subsequent reads after this write from seeing stale errors.
- 	 */
- 	bp->b_error = 0;
-+	bp->b_flags &= ~LIBXFS_B_STALE;
- 	bp->b_flags |= (LIBXFS_B_DIRTY | flags);
- 	libxfs_putbuf(bp);
- 	return 0;
--- 
-2.0.0
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gVHVlc2RheSAwMSBvZiBKdWx5IDIwMTQsIERhdmUgQ2hpbm5lciB3cm90ZToKPiBIaSBBcmth
+ZGl1c3osCj4gCj4gVGhlc2UgYXJlIHRoZSBmaXhlcyBJIGhhdmUgc28gZmFyIGZyb20gd29ya2lu
+ZyB0aHJvdWdoIHRoZSBtZXRhZHVtcHMKPiB5b3Ugc3VwcGxpZWQgbWUgd2l0aC4gVGhlIHVub2Jm
+dXNjYXRlZCBtZXRhZHVtcCByZXBhaXJzIGNsZWFubHkgd2l0aAo+IHRoZXNlIHBhdGNoZXMsIGJ1
+dCB0aGUgb2JmdXNjYXRlZCBvbmUgc3RpbGwgaGFzIGEgZGlyZWN0b3J5IHJlYnVpbGQKPiBpc3N1
+ZSB0aGF0IEkgaGF2ZW4ndCBnb3QgdG8gdGhlIGJvdHRvbSBvZiB5ZXQuIFRoYXQgcmVzdWx0cyBp
+bgo+IGFuIGVycm9yIGluIHBoYXNlIDYgbGlrZToKPiAKPiBNZXRhZGF0YSBjb3JydXB0aW9uIGRl
+dGVjdGVkIGF0IGJsb2NrIDB4MmFmODQ3NzAvMHgxMDAwCj4gbmFtZSBjcmVhdGUgZmFpbGVkIGlu
+IGlubyAyMzA2OTEyMzU0ICgxMTcpLCBmaWxlc3lzdGVtIG1heSBiZSBvdXQgb2Ygc3BhY2UKPiAK
+PiBJdCBhcHBlYXJzIHRoYXQgYSByZWFkIHZlcmlmaWVyIGlzIG9uIGEgcmVjZW50bHkgY3JlYXRl
+ZAo+IGRpcmVjdG9yeSBsZWFmIGJsb2NrIGFuZCB0aGF0IGlzIGZhaWxpbmcuIEknbSBub3QgeWV0
+IHN1cmUgd2h5IHRoZQo+IGxlYWYgYmxvY2sgaXMgY29ycnVwdCwgbm9yIHdoeSB0aGUgdmVyaWZp
+ZXIgaXMgZXZlbiBiZWluZyBydW4gb24gaXQKPiBzZWVpbmcgYXMgaXQgd2FzIG9ubHkgYWxsb2Nh
+dGVkIGFuZCBpbml0aWFsaXNlZCBkdXJpbmcgdGhlIGRpcmVjdG9yeQo+IHJlYnVpbGQuIFRoYXQg
+ZGlyZWN0b3J5IHJlYnVpbCBkZmFpbHVyZSBpcyB0aGUgcmVhc29uIGZvciBhbGwgdGhlCj4gZGlz
+Y29uZWN0ZWQgaW5vZGUgdGhhdCBlbmQgdXAgaW4gbG9zdCtmb3VuZCwgYW5kIEkgdGhpbmsgaXQn
+cyB0aGUKPiBvbmx5IHJlbWFpbmluZyBpc3N1ZSB0aGF0IEkgbmVlZCB0byBzb2x2ZS4KPiAKPiBD
+YW4geW91IHRlc3QgdGhlIHBhdGNoZXMgb24geW91IG1hY2hpbmUgYW5kIHNlZSBpZiB5b3UgZ2V0
+IHRoZSBzYW1lCj4gcmVzdWx0cz8KClRlc3Rpbmcgb24gbm9uIG9iZnVzY2F0ZWQgaW1hZ2UgaGVy
+ZS4KCk1vc3Qgb2YgaXNzdWVzIGdvdCBmaXhlZCwgZmlyc3QgeGZzX3JlcGFpciBydW46Cmh0dHA6
+Ly9peGlvbi5wbGQtbGludXgub3JnL35hcmVrbS9wMi94MS9yZXBhaXItMy4yLWRjaGlubmVyMS00
+cGF0Y2hlcy1ydW4xLnR4dCAKCnNlY29uZCB4ZnNfcmVwYWlyIHJ1biAocmVwb3J0cyBubyBwcm9i
+bGVtcyk6Cmh0dHA6Ly9peGlvbi5wbGQtbGludXgub3JnL35hcmVrbS9wMi94MS9yZXBhaXItMy4y
+LWRjaGlubmVyMS00cGF0Y2hlcy1ydW4yLnR4dAoKV2hlbiB0cnlpbmcgdG8gbW91bnQKIlhGUyAo
+bG9vcDApOiBGYWlsZWQgdG8gaW5pdGlhbGl6ZSBkaXNrIHF1b3Rhcy4iCnNvIHRoaXMgaXNzdWUg
+bGVmdC4KCgpRdWVzdGlvbjoKClBoYXNlIDIgLSB1c2luZyBpbnRlcm5hbCBsb2cKICAgICAgICAt
+IHplcm8gbG9nLi4uCnplcm9fbG9nOiBoZWFkIGJsb2NrIDIgdGFpbCBibG9jayAyCiAgICAgICAg
+LSBzY2FuIGZpbGVzeXN0ZW0gZnJlZXNwYWNlIGFuZCBpbm9kZSBtYXBzLi4uCk1ldGFkYXRhIENS
+QyBlcnJvciBkZXRlY3RlZCBhdCBibG9jayAweDAvMHgyMDAKCklzICJNZXRhZGF0YSBDUkMgZXJy
+b3IgZGV0ZWN0ZWQgYXQgYmxvY2siIGV4cGVjdGVkIGhlcmU/IEkgbWVhbiB2NCBmcywgc28gbm8g
+CkNSQy4KClRoYW5rcyBhIGxvdCBmb3IgdGhlIGZpeGVzLgoKPiBDaGVlcnMsCj4gCj4gRGF2ZS4K
+CgotLSAKQXJrYWRpdXN6IE1pxZtraWV3aWN6LCBhcmVrbSAvIG1hdmVuLnBsCgpfX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhm
+c0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
