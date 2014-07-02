@@ -1,16 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 6C6BD7F54
-	for <xfs@oss.sgi.com>; Wed,  2 Jul 2014 08:07:59 -0500 (CDT)
-Message-ID: <53B40427.6060302@sgi.com>
-Date: Wed, 02 Jul 2014 08:07:51 -0500
-From: Mark Tinguely <tinguely@sgi.com>
-MIME-Version: 1.0
-Subject: Re: Got "Internal error XFS_WANT_CORRUPTED_GOTO". Filesystem needs
-	reformatting to correct issue.
-References: <alpine.LSU.2.11.1407021104480.9881@Telcontar.valinor>
-	<20140702120441.GA51757@bfoster.bfoster>
-In-Reply-To: <20140702120441.GA51757@bfoster.bfoster>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 5FA507F55
+	for <xfs@oss.sgi.com>; Wed,  2 Jul 2014 08:13:52 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 4F18C304070
+	for <xfs@oss.sgi.com>; Wed,  2 Jul 2014 06:13:48 -0700 (PDT)
+Received: from lucky1.263.net (lucky1.263xmail.com [211.157.147.132]) by
+	cuda.sgi.com with ESMTP id 03pOlNnleA8UmsH2 (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 02 Jul 2014 06:13:44 -0700 (PDT)
+Received: from sean.zhang?yiguandns.com.cn (unknown [192.168.195.82])
+	by lucky1.263.net (Postfix) with SMTP id 218D8207AD
+	for <xfs@oss.sgi.com>; Wed,  2 Jul 2014 21:13:40 +0800 (CST)
+Received: from yiguandns.com.cn (localhost.localdomain [127.0.0.1])
+	by smtp.263.net (Postfix) with SMTP id 5AF9E422
+	for <xfs@oss.sgi.com>; Wed,  2 Jul 2014 21:13:39 +0800 (CST)
+Date: Wed, 02 Jul 2014 21:13:22 +0800
+From: =?gb2312?B?U2VhbiBaaGFuZw==?= <sean.zhang@yiguandns.com.cn>
+Subject: =?gb2312?B?eGZzIGRvbWFpbiBhbmQga2V5d29yZCBpbiBDTg==?=
+Mime-Version: 1.0
+Message-Id: <20140702131339.5AF9E422@smtp.263.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -19,102 +28,113 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
+Content-Type: multipart/mixed; boundary="===============8135519833689050772=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
-Cc: "Carlos E. R." <carlos.e.r@opensuse.org>, XFS mail list <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
-On 07/02/14 07:04, Brian Foster wrote:
-> On Wed, Jul 02, 2014 at 11:57:25AM +0200, Carlos E. R. wrote:
->> -----BEGIN PGP SIGNED MESSAGE-----
->> Hash: SHA1
->>
->>
->>
->> Hi,
->>
->> I got this error:
->>
->>
->> <0.6>  2014-06-29 12:32:18 Telcontar kernel - - - [212890.186436] r8169 0000:06:00.0 eth0: link up
->> <0.6>  2014-06-29 12:32:18 Telcontar kernel - - - [212890.615073] PM: restore of devices complete after 2735.034 msecs
->> <0.1>  2014-06-29 12:32:18 Telcontar kernel - - - [212890.626346] XFS: Internal error XFS_WANT_CORRUPTED_GOTO at line 1602 of file /home/abuild/rpmbuild/BUILD/kernel-desktop-3.11.10/linux-3.11/fs/xfs/xfs_alloc.c.  Caller 0xffffffffa0c39fe9
->> <0.1>  2014-06-29 12:32:18 Telcontar kernel - - - [212890.626346]<0.4>
->> 2014-06-29 12:32:18 Telcontar kernel - - - [212890.626348] CPU: 0 PID: 28875
->> Comm: kworker/0:2 Tainted: P           O 3.11.10-11-desktop #1
->> <0.4>  2014-06-29 12:32:18 Telcontar kernel - - - [212890.626348] Hardware name: MICRO-STAR INTERNATIONAL CO.,LTD MS-7516/MS-7516, BIOS V1.5 10/10/2008
->> <0.4>  2014-06-29 12:32:18 Telcontar kernel - - - [212890.626388] Workqueue: xfs-eofblocks/sde5 xfs_eofblocks_worker [xfs]
->> <0.4>  2014-06-29 12:32:18 Telcontar kernel - - - [212890.626390]  0000000000000002 ffffffff815a0252 00000000002a61c2 ffffffffa0c38996
->> <0.4>  2014-06-29 12:32:18 Telcontar kernel - - - [212890.626391]  ffff8800b7025680 ffff88022eb74180 ffff880121c3fe50 0000000000000002
->> <0.4>  2014-06-29 12:32:18 Telcontar kernel - - - [212890.626393]  0000000000000000 0000000100000000 0000000000000000 0000000000000001
->> <0.4>  2014-06-29 12:32:18 Telcontar kernel - - - [212890.626393] Call Trace:
->> <0.4>  2014-06-29 12:32:18 Telcontar kernel - - - [212890.626403]  [<ffffffff81004a28>] dump_trace+0x88/0x310
->> <0.4>  2014-06-29 12:32:18 Telcontar kernel - - - [212890.626406]  [<ffffffff81004d80>] show_stack_log_lvl+0xd0/0x1d0
->> <0.4>  2014-06-29 12:32:18 Telcontar kernel - - - [212890.626408]  [<ffffffff810061bc>] show_stack+0x1c/0x50
->> <0.4>  2014-06-29 12:32:18 Telcontar kernel - - - [212890.626411]  [<ffffffff815a0252>] dump_stack+0x50/0x89
->> <0.4>  2014-06-29 12:32:18 Telcontar kernel - - - [212890.626425]  [<ffffffffa0c38996>] xfs_free_ag_extent+0x226/0x860 [xfs]
->> <0.4>  2014-06-29 12:32:18 Telcontar kernel - - - [212890.626468]  [<ffffffffa0c39fe9>] xfs_free_extent+0xb9/0xf0 [xfs]
->> <0.4>  2014-06-29 12:32:18 Telcontar kernel - - - [212890.626510]  [<ffffffffa0c4c39e>] xfs_bmap_finish+0x11e/0x170 [xfs]
->> <0.4>  2014-06-29 12:32:18 Telcontar kernel - - - [212890.626560]  [<ffffffffa0c6b4c0>] xfs_itruncate_extents+0x190/0x340 [xfs]
->> <0.4>  2014-06-29 12:32:18 Telcontar kernel - - - [212890.626623]  [<ffffffffa0c33633>] xfs_free_eofblocks+0x1e3/0x260 [xfs]
->> <0.4>  2014-06-29 12:32:18 Telcontar kernel - - - [212890.626659]  [<ffffffffa0c291ef>] xfs_inode_free_eofblocks+0x6f/0x150 [xfs]
->> <0.4>  2014-06-29 12:32:18 Telcontar kernel - - - [212890.626688]  [<ffffffffa0c27f82>] xfs_inode_ag_walk.isra.10+0x1c2/0x310 [xfs]
->> <0.4>  2014-06-29 12:32:18 Telcontar kernel - - - [212890.626716]  [<ffffffffa0c28a8e>] xfs_inode_ag_iterator_tag+0x6e/0xb0 [xfs]
->> <0.4>  2014-06-29 12:32:18 Telcontar kernel - - - [212890.626744]  [<ffffffffa0c28d82>] xfs_eofblocks_worker+0x12/0x20 [xfs]
->> <0.4>  2014-06-29 12:32:18 Telcontar kernel - - - [212890.626763]  [<ffffffff8106ac78>] process_one_work+0x168/0x490
->> <0.4>  2014-06-29 12:32:18 Telcontar kernel - - - [212890.626765]  [<ffffffff8106b914>] worker_thread+0x114/0x3a0
->> <0.4>  2014-06-29 12:32:18 Telcontar kernel - - - [212890.626768]  [<ffffffff81071c3f>] kthread+0xaf/0xc0
->> <0.4>  2014-06-29 12:32:18 Telcontar kernel - - - [212890.626771]  [<ffffffff815addfc>] ret_from_fork+0x7c/0xb0
->> <0.5>  2014-06-29 12:32:18 Telcontar kernel - - - [212890.626776] XFS (sde5): xfs_do_force_shutdown(0x8) called from line 916 of file /home/abuild/rpmbuild/BUILD/kernel-desktop-3.11.10/linux-3.11/fs/xfs/xfs_bmap.c.  Return address = 0xffffffffa0c4c3d8
->> <0.1>  2014-06-29 12:32:18 Telcontar kernel - - - [212890.706440] XFS (sde5): Corruption of in-memory data detected.  Shutting down filesystem
->> <0.1>  2014-06-29 12:32:18 Telcontar kernel - - - [212890.706440] XFS (sde5): Please umount the filesystem and rectify the problem(s)
->>
->
-> This is the background eofblocks scanner attempting to free preallocated
-> space on a file. The scanner looks for files that have been recently
-> grown and since been flushed to disk (i.e., no longer concurrently being
-> written to) and trims the post-eof preallocation that comes along with
-> growing files.
->
-> The corruption errors at xfs_alloc.c:1602,1629 on v3.11 fire if the
-> extent we are attempting to free is already accounted for in the
-> by-block allocation btree. IOW, this is attempting to free an extent
-> that the allocation metadata thinks is already free.
->
->>
->> Brief description:
->>
->>
->>   * It happens only on restore from hibernation.
->
-> Interesting, could you elaborate a bit more on the behavior this system
-> is typically subjected to? i.e., is this a server that sees a constant
-> workload that is also frequently hibernated/awakened?
->
->>   * It happens randomly, spaced a month or two.
->>   * It happens always on the same partition, the one that holds /home
->>     (I have 10 XFS partitions spread on 4 internal hard disks, and a few
->>     more external). It is a new disk, 2 TB, traditional MBR partitions.
->>   * Disk has no defects, or at least so says smartctl long test.
->>   * When it happens, recovery is impossible: xfs_repair does not seem to
->>     find anything, or maybe it does, silently; but on system reuse,
->>     it crashes again, fast.
->>   * Thus recovery procedure is to use "xfsdump" to get a backup copy,
->>     reformat the partition, and recover the files with xfsrestore.
->>
->>
->> The worst issue for me is that "xfs_repair" fails to repair it.
+This is a multi-part message in MIME format.
 
-what version of xfs_repair? Did you try to mount to replay the log 
-before repair?
+--===============8135519833689050772==
+Content-Type: multipart/alternative;
+	boundary="----=_NextPart_001_00C5_01CA2C7D.036CC4EE"
 
-Besides Brian's good advice, is kdump configured to dump vmcore?
+This is a multi-part message in MIME format.
 
---Mark.
+------=_NextPart_001_00C5_01CA2C7D.036CC4EE
+Content-Type: text/plain;
+	charset="GB2312"
+Content-Transfer-Encoding: base64
+
+KFBsZWFzZSBmb3J3YXJkIHRoaXMgdG8geW91ciBDRU8sIGJlY2F1c2UgdGhpcyBpcyB1cmdlbnQu
+IFRoYW5rcykNCg0KV2UgYXJlIGEgTmV0d29yayBTZXJ2aWNlIENvbXBhbnkgd2hpY2ggaXMgdGhl
+IGRvbWFpbiBuYW1lIHJlZ2lzdHJhdGlvbiBjZW50ZXIgaW4gU2hhbmdoYWksIENoaW5hLiBPbiBK
+dWx5IDEsIDIwMTQsIHdlIHJlY2VpdmVkIGFuIGFwcGxpY2F0aW9uIGZyb20gSHVhZmkgSG9sZGlu
+Z3MgTHRkIHJlcXVlc3RlZCAieGZzIiBhcyB0aGVpciBpbnRlcm5ldCBrZXl3b3JkIGFuZCBDaGlu
+YSAoQ04pIGRvbWFpbiBuYW1lcy4gQnV0IGFmdGVyIGNoZWNraW5nIGl0LCB3ZSBmaW5kIHRoaXMg
+bmFtZSBjb25mbGljdCB3aXRoIHlvdXIgY29tcGFueSBuYW1lIG9yIHRyYWRlbWFyay4gSW4gb3Jk
+ZXIgdG8gZGVhbCB3aXRoIHRoaXMgbWF0dGVyIGJldHRlciwgaXQncyBuZWNlc3NhcnkgdG8gc2Vu
+ZCBlbWFpbCB0byB5b3UgYW5kIGNvbmZpcm0gd2hldGhlciB0aGlzIGNvbXBhbnkgaXMgeW91ciBk
+aXN0cmlidXRvciBvciBidXNpbmVzcyBwYXJ0bmVyIGluIENoaW5hPyANCg0KDQpLaW5kIHJlZ2Fy
+ZHMNCg0KU2VhbiBaaGFuZw0KR2VuZXJhbCBNYW5hZ2VyDQpTaGFuZ2hhaSBPZmZpY2UgKEhlYWRx
+dWFydGVycykNCkIwNiwgWXVqaW5nIEJ1aWxkaW5nLCBOby4xIEppaGUgUm9hZCwNClNoYW5naGFp
+IDIwMTEwNywgQ2hpbmENClRlbDogKzg2IDIxIDYxOTEgODY5Ng0KTW9iaWxlOiArODYgMTM4IDE2
+NDIgODY3MQ0KRmF4OiArODYgMjEgNjE5MSA4Njk3DQpXZWI6IHd3dy55aWd1YW5kbnMuY29tLmNu
+
+------=_NextPart_001_00C5_01CA2C7D.036CC4EE
+Content-Type: text/html;
+	charset="GB2312"
+Content-Transfer-Encoding: base64
+
+PEhUTUw+PEhFQUQ+PFRJVExFPnhmcyBkb21haW4gYW5kIGtleXdvcmQgaW4gQ048L1RJVExFPg0K
+PE1FVEEgbmFtZT1HRU5FUkFUT1IgY29udGVudD0iTVNIVE1MIDEwLjAwLjkyMDAuMTY5MjEiPjwv
+SEVBRD4NCjxCT0RZPg0KPERJVj4NCjxESVY+PEZPTlQgY29sb3I9ZGFya2JsdWUgc2l6ZT0yPjwv
+Rk9OVD4NCjxESVY+PEZPTlQgY29sb3I9ZGFya2JsdWUgc2l6ZT0yPjxGT05UIGNvbG9yPWJsYWNr
+PjxGT05UIHNpemU9KzA+PEZPTlQgc2l6ZT0yPjxTUEFOIHN0eWxlPSJGT05ULVNJWkU6IDEwcHQ7
+IEZPTlQtRkFNSUxZOiAnQXJpYWwnLCdzYW5zLXNlcmlmJzsgQ09MT1I6IGJsYWNrIj48U1BBTiBz
+dHlsZT0iRk9OVC1TSVpFOiAxMHB0OyBGT05ULUZBTUlMWTogJ0FyaWFsJywnc2Fucy1zZXJpZic7
+IENPTE9SOiBibGFjayI+PEZPTlQgY29sb3I9ZGFya2JsdWU+PFNQQU4gc3R5bGU9IkZPTlQtU0la
+RTogMTBwdDsgRk9OVC1GQU1JTFk6ICdBcmlhbCcsJ3NhbnMtc2VyaWYnOyBDT0xPUjogYmxhY2si
+PjxGT05UIGNvbG9yPWRhcmtibHVlPjxGT05UIGNvbG9yPWRhcmtibHVlPjwvRk9OVD48L0ZPTlQ+
+PC9TUEFOPjwvRk9OVD48L1NQQU4+PC9TUEFOPjwvRk9OVD48L0ZPTlQ+PC9GT05UPjwvRk9OVD4N
+CjxESVY+PEZPTlQgY29sb3I9ZGFya2JsdWUgc2l6ZT0yPjxGT05UIHNpemU9KzA+PEZPTlQgc2l6
+ZT0yPjxGT05UIGNvbG9yPWRhcmtibHVlPjxGT05UIGNvbG9yPWRhcmtibHVlPjxGT05UIGNvbG9y
+PWRhcmtibHVlPjwvRk9OVD48L0ZPTlQ+PC9GT05UPjwvRk9OVD48L0ZPTlQ+PC9GT05UPg0KPERJ
+Vj48Rk9OVCBjb2xvcj1kYXJrYmx1ZSBzaXplPTI+PEZPTlQgc2l6ZT0rMD48Rk9OVCBzaXplPTI+
+PEZPTlQgY29sb3I9ZGFya2JsdWU+PEZPTlQgY29sb3I9ZGFya2JsdWU+PEZPTlQgY29sb3I9ZGFy
+a2JsdWU+PC9GT05UPjwvRk9OVD48L0ZPTlQ+PC9GT05UPjwvRk9OVD48L0ZPTlQ+DQo8RElWPjxG
+T05UIGNvbG9yPWRhcmtibHVlIHNpemU9Mj48Rk9OVCBzaXplPSswPjxGT05UIHNpemU9Mj48Rk9O
+VCBjb2xvcj1kYXJrYmx1ZT48Rk9OVCBjb2xvcj1kYXJrYmx1ZT48Rk9OVCBjb2xvcj1kYXJrYmx1
+ZT48L0ZPTlQ+PC9GT05UPjwvRk9OVD48L0ZPTlQ+PC9GT05UPjwvRk9OVD4NCjxESVY+PEZPTlQg
+Y29sb3I9ZGFya2JsdWUgc2l6ZT0yPjxGT05UIHNpemU9KzA+PEZPTlQgc2l6ZT0yPjxGT05UIGNv
+bG9yPWRhcmtibHVlPjxGT05UIGNvbG9yPWRhcmtibHVlPjxGT05UIGNvbG9yPWRhcmtibHVlPjwv
+Rk9OVD48L0ZPTlQ+PC9GT05UPjwvRk9OVD48L0ZPTlQ+PC9GT05UPg0KPERJVj48Rk9OVCBjb2xv
+cj1kYXJrYmx1ZSBzaXplPTI+PEZPTlQgc2l6ZT0rMD48Rk9OVCBzaXplPTI+PEZPTlQgY29sb3I9
+ZGFya2JsdWU+PEZPTlQgY29sb3I9ZGFya2JsdWU+PEZPTlQgY29sb3I9ZGFya2JsdWU+PC9GT05U
+PjwvRk9OVD48L0ZPTlQ+PC9GT05UPjwvRk9OVD48L0ZPTlQ+DQo8RElWPjxGT05UIGNvbG9yPWRh
+cmtibHVlIHNpemU9Mj48Rk9OVCBzaXplPSswPjxGT05UIHNpemU9Mj48Rk9OVCBjb2xvcj1kYXJr
+Ymx1ZT48Rk9OVCBjb2xvcj1kYXJrYmx1ZT48Rk9OVCBjb2xvcj1kYXJrYmx1ZT4NCjxESVY+PEZP
+TlQgY29sb3I9IzAwMDAwMCBmYWNlPUFyaWFsPg0KPERJVj48Rk9OVCBjb2xvcj0jMDAwMDAwPg0K
+PERJVj48Rk9OVCBjb2xvcj0jMDAwMDAwIGZhY2U9QXJpYWw+DQo8RElWPjxGT05UIGNvbG9yPSMw
+MDQwODAgc2l6ZT0zIGZhY2U9Q2FsaWJyaT4oUGxlYXNlIGZvcndhcmQgdGhpcyB0byB5b3VyIENF
+TywgYmVjYXVzZSB0aGlzIGlzIHVyZ2VudC4gVGhhbmtzKTxCUj48QlI+V2UgYXJlIGEgTmV0d29y
+ayBTZXJ2aWNlIENvbXBhbnkgd2hpY2ggaXMgdGhlIGRvbWFpbiBuYW1lIHJlZ2lzdHJhdGlvbiBj
+ZW50ZXIgaW4gU2hhbmdoYWksIENoaW5hLiBPbiBKdWx5Jm5ic3A7MSwgMjAxNCwgd2UgcmVjZWl2
+ZWQgYW4gYXBwbGljYXRpb24gZnJvbSBIdWFmaSBIb2xkaW5ncyBMdGQgcmVxdWVzdGVkICJ4ZnMi
+IGFzIHRoZWlyIGludGVybmV0IGtleXdvcmQgYW5kIENoaW5hIChDTikgZG9tYWluIG5hbWVzLiBC
+dXQgYWZ0ZXIgY2hlY2tpbmcgaXQsIHdlIGZpbmQgdGhpcyBuYW1lIGNvbmZsaWN0IHdpdGggeW91
+ciBjb21wYW55IG5hbWUgb3IgdHJhZGVtYXJrLiBJbiBvcmRlciB0byBkZWFsIHdpdGggdGhpcyBt
+YXR0ZXIgYmV0dGVyLCBpdCdzIG5lY2Vzc2FyeSB0byBzZW5kIGVtYWlsIHRvIHlvdSBhbmQgY29u
+ZmlybSB3aGV0aGVyIHRoaXMgY29tcGFueSBpcyB5b3VyIGRpc3RyaWJ1dG9yIG9yIGJ1c2luZXNz
+IHBhcnRuZXIgaW4gQ2hpbmE/IDxCUj48QlI+PC9GT05UPjwvRElWPg0KPERJVj48Rk9OVCBjb2xv
+cj0jMDA0MDgwIHNpemU9MyBmYWNlPUNhbGlicmk+S2luZCByZWdhcmRzPEJSPjxCUj48L0ZPTlQ+
+PEZPTlQgZmFjZT1DYWxpYnJpPjxGT05UIHNpemU9Mz48Rk9OVCBjb2xvcj0jMDA0MDgwPjxTVFJP
+Tkc+U2VhbiBaaGFuZzxCUj48L1NUUk9ORz5HZW5lcmFsIE1hbmFnZXI8QlI+PC9GT05UPjwvRk9O
+VD48L0ZPTlQ+PEZPTlQgZmFjZT1DYWxpYnJpPjxGT05UIHNpemU9Mz48Rk9OVCBjb2xvcj0jMDA0
+MDgwPjxTVFJPTkc+U2hhbmdoYWkgT2ZmaWNlIChIZWFkcXVhcnRlcnMpPEJSPjwvU1RST05HPkIw
+NiwgWXVqaW5nIEJ1aWxkaW5nLCBOby4xIEppaGUgUm9hZCw8QlI+U2hhbmdoYWkgMjAxMTA3LCBD
+aGluYTxCUj5UZWw6ICs4NiAyMSA2MTkxIDg2OTY8QlI+TW9iaWxlOiArODYgMTM4IDE2NDIgODY3
+MTxCUj5GYXg6ICs4NiAyMSA2MTkxIDg2OTc8QlI+V2ViOiA8L0ZPTlQ+PEZPTlQgY29sb3I9IzAw
+NDA4MD48QSBocmVmPSJodHRwOi8vd3d3LnlpZ3VhbmRucy5jb20uY24iPnd3dy55aWd1YW5kbnMu
+Y29tLmNuPC9BPjwvRk9OVD48L0ZPTlQ+PC9GT05UPjxGT05UIGNvbG9yPWJsYWNrPjxCUj48L0ZP
+TlQ+PC9ESVY+PC9GT05UPjwvRElWPjwvRk9OVD48L0RJVj48L0ZPTlQ+PC9ESVY+PC9GT05UPjwv
+Rk9OVD48L0ZPTlQ+PC9GT05UPjwvRk9OVD48L0ZPTlQ+PC9ESVY+PC9ESVY+PC9ESVY+PC9ESVY+
+PC9ESVY+PC9ESVY+PC9ESVY+PC9ESVY+PC9ESVY+PC9CT0RZPjwvSFRNTD4=
+
+------=_NextPart_001_00C5_01CA2C7D.036CC4EE--
+
+
+
+
+--===============8135519833689050772==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============8135519833689050772==--
