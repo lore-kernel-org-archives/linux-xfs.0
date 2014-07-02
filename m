@@ -1,25 +1,39 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id EA73C7F95
-	for <xfs@oss.sgi.com>; Tue,  1 Jul 2014 17:27:35 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id DE3EA8F8035
-	for <xfs@oss.sgi.com>; Tue,  1 Jul 2014 15:27:32 -0700 (PDT)
-Received: from mail-qg0-f49.google.com (mail-qg0-f49.google.com
-	[209.85.192.49]) by cuda.sgi.com with ESMTP id VwJ7QuNDvDVbZNiB
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 01 Jul 2014 15:27:31 -0700 (PDT)
-Received: by mail-qg0-f49.google.com with SMTP id f51so3927729qge.36
-	for <xfs@oss.sgi.com>; Tue, 01 Jul 2014 15:27:30 -0700 (PDT)
-Message-ID: <53B335D1.2010709@gmail.com>
-Date: Tue, 01 Jul 2014 18:27:29 -0400
-From: "Michael L. Semon" <mlsemon35@gmail.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id E73DB7F5D
+	for <xfs@oss.sgi.com>; Wed,  2 Jul 2014 04:57:38 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 928A0AC00D
+	for <xfs@oss.sgi.com>; Wed,  2 Jul 2014 02:57:35 -0700 (PDT)
+Received: from mail-wi0-f181.google.com (mail-wi0-f181.google.com
+	[209.85.212.181]) by cuda.sgi.com with ESMTP id
+	tB2Fbcfc4DHBTeCD (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 02 Jul 2014 02:57:30 -0700 (PDT)
+Received: by mail-wi0-f181.google.com with SMTP id n3so158374wiv.2
+	for <xfs@oss.sgi.com>; Wed, 02 Jul 2014 02:57:29 -0700 (PDT)
+Received: from Telcontar.valinor (90.Red-79-150-228.dynamicIP.rima-tde.net.
+	[79.150.228.90])
+	by mx.google.com with ESMTPSA id d12sm20471233wjx.0.2014.07.02.02.57.27
+	for <xfs@oss.sgi.com>
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+	Wed, 02 Jul 2014 02:57:28 -0700 (PDT)
+Received: from localhost (localhost [127.0.0.1])
+	by Telcontar.valinor (Postfix) with ESMTP id F26746072A
+	for <xfs@oss.sgi.com>; Wed,  2 Jul 2014 11:57:25 +0200 (CEST)
+Received: from Telcontar.valinor ([127.0.0.1])
+	by localhost (Telcontar.valinor [127.0.0.1]) (amavisd-new, port 10024)
+	with LMTP id VbaTfcgKA3RN for <xfs@oss.sgi.com>;
+	Wed,  2 Jul 2014 11:57:25 +0200 (CEST)
+Received: from localhost (localhost [127.0.0.1])
+	by Telcontar.valinor (Postfix) with ESMTP id CB562604A0
+	for <xfs@oss.sgi.com>; Wed,  2 Jul 2014 11:57:25 +0200 (CEST)
+Date: Wed, 2 Jul 2014 11:57:25 +0200 (CEST)
+From: "Carlos E. R." <carlos.e.r@opensuse.org>
+Subject: Got "Internal error XFS_WANT_CORRUPTED_GOTO". Filesystem needs
+	reformatting to correct issue.
+Message-ID: <alpine.LSU.2.11.1407021104480.9881@Telcontar.valinor>
 MIME-Version: 1.0
-Subject: Re: Null pointer dereference while at ACL limit on v5 XFS
-References: <53A8A0AF.9070009@gmail.com> <53A8A578.4070005@sgi.com>
-	<53A8A676.80305@sgi.com> <53A8F1AC.90109@gmail.com>
-	<20140624040434.GC9508@dastard>
-In-Reply-To: <20140624040434.GC9508@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,136 +42,160 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Mark Tinguely <tinguely@sgi.com>, xfs@oss.sgi.com
+To: XFS mail list <xfs@oss.sgi.com>
 
-On 06/24/2014 12:04 AM, Dave Chinner wrote:
-> On Mon, Jun 23, 2014 at 11:34:04PM -0400, Michael L. Semon wrote:
->> [ 1068.431391] ------------[ cut here ]------------
->> [ 1068.431566] WARNING: CPU: 0 PID: 41 at lib/list_debug.c:59 __list_del_entry+0xce/0x110()
->> [ 1068.431596] list_del corruption. prev->next should be db5bf580, but was   (null)
-> 
-> Ok, so the current log item points to a log item that has
-> null pointers (i.e. not on the list).
-> 
->> [ 1068.431629] CPU: 0 PID: 41 Comm: kworker/0:1H Not tainted 3.16.0-rc1+ #3
->> [ 1068.431656] Hardware name: Dell Computer Corporation       L733r                          /CA810E                         , BIOS A14 09/05/2001
->> [ 1068.431697] Workqueue: xfslogd xfs_buf_iodone_work
->> [ 1068.431738]  00000000 00000000 de92fc24 c15d4e76 de92fc68 de92fc58 c103ca33 c1737648
->> [ 1068.431891]  de92fc84 00000029 c173705a 0000003b c13c3e9e 0000003b c13c3e9e 0000003b
->> [ 1068.432115]  db5bf580 00000001 de92fc70 c103cab3 00000009 de92fc68 c1737648 de92fc84
->> [ 1068.432267] Call Trace:
->> [ 1068.432329]  [<c15d4e76>] dump_stack+0x48/0x60
->> [ 1068.432386]  [<c103ca33>] warn_slowpath_common+0x83/0xa0
->> [ 1068.432433]  [<c13c3e9e>] ? __list_del_entry+0xce/0x110
->> [ 1068.432478]  [<c13c3e9e>] ? __list_del_entry+0xce/0x110
->> [ 1068.432524]  [<c103cab3>] warn_slowpath_fmt+0x33/0x40
->> [ 1068.432569]  [<c13c3e9e>] __list_del_entry+0xce/0x110
->> [ 1068.432615]  [<c13c3eeb>] list_del+0xb/0x20
->> [ 1068.432674]  [<c126eb4d>] xfs_ail_delete+0x1d/0x60
-> ....
->> [ 1068.433567] ---[ end trace 60289514948e4bd7 ]---
->> [ 1068.433603] BUG: unable to handle kernel NULL pointer dereference at 0000000c
->> [ 1068.433795] IP: [<c126eac8>] xfs_ail_check+0x58/0xc0
-> 
-> And that's trying to dereference a pointer from an item that is not
-> on the list....
-> 
-> So there's linked list corruption occurring here.
-> 
->> I can reproduce the oops in kernel 3.15.0, perhaps with xfs-oss/for-next 
->> merged, but there's no vmlinux to go with the kernel.  Therefore, I'll have 
->> to resort to other means (rebuilt kernel with netconsole, re-attaching the 
->> serial cable, etc.) to get the full crash log.
-> 
-> How far back can you reproduce it? If it's a recent occurrence, can
-> you bisect it?
-> 
-> Cheers,
-> 
-> Dave.
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
 
-I've had terrible luck with bisects this week due to PEBKAC errors.  With 3 
-commits left to try--one slow, full build (thanks, ARM!) and hopefully 2 
-minor builds--this commit is staring me in the face:
 
-commit bba719b5004234e55737e7074b81b337210c511d
-Author: Jie Liu <jeff.liu@oracle.com>
-Date:   Wed Jan 1 19:28:03 2014 +0800
 
-    xfs: fix off-by-one error in xfs_attr3_rmt_verify
+Hi,
 
-In particular, one kernel had this as the most recent commit and showed 
-the current problem behavior.
+I got this error:
 
-That is about as far back as I can go before attr3_rmt issues corrupt 
-filesystems and cause a "Structure needs cleaning" message during the setfacl 
-part of the test.  Certianly, Jeff has improved matters with this patch.
 
-On the normal kernel git, this may correspond to kernel v3.13.0-rc7 or -rc8, 
-certainly no earlier than -rc2.  git was bouncing the version numbers around 
-quite a bit.
+<0.6> 2014-06-29 12:32:18 Telcontar kernel - - - [212890.186436] r8169 0000:06:00.0 eth0: link up
+<0.6> 2014-06-29 12:32:18 Telcontar kernel - - - [212890.615073] PM: restore of devices complete after 2735.034 msecs
+<0.1> 2014-06-29 12:32:18 Telcontar kernel - - - [212890.626346] XFS: Internal error XFS_WANT_CORRUPTED_GOTO at line 1602 of file /home/abuild/rpmbuild/BUILD/kernel-desktop-3.11.10/linux-3.11/fs/xfs/xfs_alloc.c.  Caller 0xffffffffa0c39fe9
+<0.1> 2014-06-29 12:32:18 Telcontar kernel - - - [212890.626346] 
+<0.4> 2014-06-29 12:32:18 Telcontar kernel - - - [212890.626348] CPU: 0 PID: 28875 Comm: kworker/0:2 Tainted: P           O 3.11.10-11-desktop #1
+<0.4> 2014-06-29 12:32:18 Telcontar kernel - - - [212890.626348] Hardware name: MICRO-STAR INTERNATIONAL CO.,LTD MS-7516/MS-7516, BIOS V1.5 10/10/2008
+<0.4> 2014-06-29 12:32:18 Telcontar kernel - - - [212890.626388] Workqueue: xfs-eofblocks/sde5 xfs_eofblocks_worker [xfs]
+<0.4> 2014-06-29 12:32:18 Telcontar kernel - - - [212890.626390]  0000000000000002 ffffffff815a0252 00000000002a61c2 ffffffffa0c38996
+<0.4> 2014-06-29 12:32:18 Telcontar kernel - - - [212890.626391]  ffff8800b7025680 ffff88022eb74180 ffff880121c3fe50 0000000000000002
+<0.4> 2014-06-29 12:32:18 Telcontar kernel - - - [212890.626393]  0000000000000000 0000000100000000 0000000000000000 0000000000000001
+<0.4> 2014-06-29 12:32:18 Telcontar kernel - - - [212890.626393] Call Trace:
+<0.4> 2014-06-29 12:32:18 Telcontar kernel - - - [212890.626403]  [<ffffffff81004a28>] dump_trace+0x88/0x310
+<0.4> 2014-06-29 12:32:18 Telcontar kernel - - - [212890.626406]  [<ffffffff81004d80>] show_stack_log_lvl+0xd0/0x1d0
+<0.4> 2014-06-29 12:32:18 Telcontar kernel - - - [212890.626408]  [<ffffffff810061bc>] show_stack+0x1c/0x50
+<0.4> 2014-06-29 12:32:18 Telcontar kernel - - - [212890.626411]  [<ffffffff815a0252>] dump_stack+0x50/0x89
+<0.4> 2014-06-29 12:32:18 Telcontar kernel - - - [212890.626425]  [<ffffffffa0c38996>] xfs_free_ag_extent+0x226/0x860 [xfs]
+<0.4> 2014-06-29 12:32:18 Telcontar kernel - - - [212890.626468]  [<ffffffffa0c39fe9>] xfs_free_extent+0xb9/0xf0 [xfs]
+<0.4> 2014-06-29 12:32:18 Telcontar kernel - - - [212890.626510]  [<ffffffffa0c4c39e>] xfs_bmap_finish+0x11e/0x170 [xfs]
+<0.4> 2014-06-29 12:32:18 Telcontar kernel - - - [212890.626560]  [<ffffffffa0c6b4c0>] xfs_itruncate_extents+0x190/0x340 [xfs]
+<0.4> 2014-06-29 12:32:18 Telcontar kernel - - - [212890.626623]  [<ffffffffa0c33633>] xfs_free_eofblocks+0x1e3/0x260 [xfs]
+<0.4> 2014-06-29 12:32:18 Telcontar kernel - - - [212890.626659]  [<ffffffffa0c291ef>] xfs_inode_free_eofblocks+0x6f/0x150 [xfs]
+<0.4> 2014-06-29 12:32:18 Telcontar kernel - - - [212890.626688]  [<ffffffffa0c27f82>] xfs_inode_ag_walk.isra.10+0x1c2/0x310 [xfs]
+<0.4> 2014-06-29 12:32:18 Telcontar kernel - - - [212890.626716]  [<ffffffffa0c28a8e>] xfs_inode_ag_iterator_tag+0x6e/0xb0 [xfs]
+<0.4> 2014-06-29 12:32:18 Telcontar kernel - - - [212890.626744]  [<ffffffffa0c28d82>] xfs_eofblocks_worker+0x12/0x20 [xfs]
+<0.4> 2014-06-29 12:32:18 Telcontar kernel - - - [212890.626763]  [<ffffffff8106ac78>] process_one_work+0x168/0x490
+<0.4> 2014-06-29 12:32:18 Telcontar kernel - - - [212890.626765]  [<ffffffff8106b914>] worker_thread+0x114/0x3a0
+<0.4> 2014-06-29 12:32:18 Telcontar kernel - - - [212890.626768]  [<ffffffff81071c3f>] kthread+0xaf/0xc0
+<0.4> 2014-06-29 12:32:18 Telcontar kernel - - - [212890.626771]  [<ffffffff815addfc>] ret_from_fork+0x7c/0xb0
+<0.5> 2014-06-29 12:32:18 Telcontar kernel - - - [212890.626776] XFS (sde5): xfs_do_force_shutdown(0x8) called from line 916 of file /home/abuild/rpmbuild/BUILD/kernel-desktop-3.11.10/linux-3.11/fs/xfs/xfs_bmap.c.  Return address = 0xffffffffa0c4c3d8
+<0.1> 2014-06-29 12:32:18 Telcontar kernel - - - [212890.706440] XFS (sde5): Corruption of in-memory data detected.  Shutting down filesystem
+<0.1> 2014-06-29 12:32:18 Telcontar kernel - - - [212890.706440] XFS (sde5): Please umount the filesystem and rectify the problem(s)
 
-Before Jeff worked his wonders here, efforts to getfacl a directory with max 
-ACLs (on a remounted, corrupt filesystem) ended like this...
 
-[   84.819306] XFS: Assertion failed: args->op_flags & XFS_DA_OP_OKNOENT, file: fs/xfs/xfs_da_btree.c, line: 1894
-[   84.819500] ------------[ cut here ]------------
-[   84.819573] kernel BUG at fs/xfs/xfs_message.c:108!
-[   84.819646] invalid opcode: 0000 [#1] SMP DEBUG_PAGEALLOC
-[   84.819826] CPU: 0 PID: 204 Comm: getfacl Not tainted 3.12.0+ #2
-[   84.819901] Hardware name: Dell Computer Corporation       L733r                          /CA810E                         , BIOS A14 09/05/2001
-[   84.820015] task: ddc7a960 ti: ddc52000 task.ti: ddc52000
-[   84.820025] EIP: 0060:[<c125822c>] EFLAGS: 00010296 CPU: 0
-[   84.820025] EIP is at assfail+0x2c/0x30
-[   84.820025] EAX: 00000062 EBX: 00000000 ECX: 00000007 EDX: 00000000
-[   84.820025] ESI: ddc53d4c EDI: ffffffff EBP: ddc53c88 ESP: ddc53c74
-[   84.820025]  DS: 007b ES: 007b FS: 00d8 GS: 0033 SS: 0068
-[   84.820025] CR0: 8005003b CR2: b7632fd0 CR3: 1dc75000 CR4: 000007d0
-[   84.820025] Stack:
-[   84.820025]  00000000 c160833c c160c854 c15fa532 00000766 ddc53cd0 c1290854 00000001
-[   84.820025]  00000002 00000008 275b19c4 ddc53d4c 00000000 ddc74010 00000001 0fe80018
-[   84.820025]  00580000 00000f90 00000000 00000000 ddc74010 ddc74014 ddc53d4c ddc53d28
-[   84.820025] Call Trace:
-[   84.820025]  [<c1290854>] xfs_da3_path_shift+0x264/0x470
-[   84.820025]  [<c1291109>] xfs_da3_node_lookup_int+0x259/0x420
-[   84.820025]  [<c1261d56>] ? kmem_zone_alloc+0x66/0xe0
-[   84.820025]  [<c1261de1>] ? kmem_zone_zalloc+0x11/0xd0
-[   84.820025]  [<c126ac77>] xfs_attr_node_get+0x47/0x200
-[   84.820025]  [<c126af05>] xfs_attr_get_int+0xd5/0xf0
-[   84.820025]  [<c126afb1>] xfs_attr_get+0x91/0xb0
-[   84.820025]  [<c12cb993>] xfs_get_acl+0x123/0x2c0
-[   84.820025]  [<c12cbb4a>] xfs_xattr_acl_get+0x1a/0x70
-[   84.820025]  [<c11441b9>] generic_getxattr+0x49/0x70
-[   84.820025]  [<c1144170>] ? SyS_fremovexattr+0xa0/0xa0
-[   84.820025]  [<c11435ca>] vfs_getxattr+0x6a/0xa0
-[   84.820025]  [<c1143683>] getxattr+0x83/0x1d0
-[   84.820025]  [<c1124e14>] ? complete_walk+0x94/0x260
-[   84.820025]  [<c11278ac>] ? path_lookupat+0x8c/0xba0
-[   84.820025]  [<c1114ddf>] ? kmem_cache_alloc+0x4f/0x280
-[   84.820025]  [<c1124ffd>] ? final_putname+0x1d/0x40
-[   84.820025]  [<c112890f>] ? user_path_at_empty+0x4f/0x90
-[   84.820025]  [<c1120134>] ? SyS_lstat64+0x34/0x40
-[   84.820025]  [<c112896d>] ? user_path_at+0x1d/0x30
-[   84.820025]  [<c1143c48>] SyS_getxattr+0x58/0xa0
-[   84.820025]  [<c14edbb8>] sysenter_do_call+0x12/0x36
-[   84.820025] Code: 89 e5 83 ec 14 3e 8d 74 26 00 89 44 24 08 b8 3c 83 60 c1 89 4c 24 10 89 54 24 0c 89 44 24 04 c7 04 24 00 00 00 00 e8 94 fd ff ff <0f> 0b 66 90 55 89 e5 83 ec 14 3e 8d 74 26 00 b9 01 00 00 00 89
-[   84.820025] EIP: [<c125822c>] assfail+0x2c/0x30 SS:ESP 0068:ddc53c74 
+Brief description:
 
-...and there was no real variation going back to 3.11-rc.  That was 
-about as far back as this particular glibc (built against 3.10.32) would 
-let Linux boot.
 
-I'm happy to continue the bisect for your benefit, just running behind 
-schedule on completing it.
+  * It happens only on restore from hibernation.
+  * It happens randomly, spaced a month or two.
+  * It happens always on the same partition, the one that holds /home
+    (I have 10 XFS partitions spread on 4 internal hard disks, and a few
+    more external). It is a new disk, 2 TB, traditional MBR partitions.
+  * Disk has no defects, or at least so says smartctl long test.
+  * When it happens, recovery is impossible: xfs_repair does not seem to
+    find anything, or maybe it does, silently; but on system reuse,
+    it crashes again, fast.
+  * Thus recovery procedure is to use "xfsdump" to get a backup copy,
+    reformat the partition, and recover the files with xfsrestore.
 
-Thanks!
 
-Michael
+The worst issue for me is that "xfs_repair" fails to repair it.
+
+I do not have more info than what appears on the logs, but four times 
+(two different kernels):
+
+cer@Telcontar:~> zgrep XFS_WANT_CORRUPTED_GOTO /var/log/messages*xz
+/var/log/messages-20140402.xz:<0.1> 2014-03-15 03:35:17 Telcontar kernel - - - [37685.111787] XFS: Internal error XFS_WANT_CORRUPTED_GOTO at line 1629 of file /home/abuild/rpmbuild/BUILD/kernel-desktop-3.11.10/linux-3.11/fs/xfs/xfs_alloc.c.  Caller 0xffffffffa0c54fe9
+/var/log/messages-20140402.xz:<0.1> 2014-03-15 22:20:34 Telcontar kernel - - - [20151.298345] XFS: Internal error XFS_WANT_CORRUPTED_GOTO at line 1602 of file /home/abuild/rpmbuild/BUILD/kernel-desktop-3.11.10/linux-3.11/fs/xfs/xfs_alloc.c.  Caller 0xffffffffa0c54fe9
+/var/log/messages-20140506.xz:<0.1> 2014-04-17 22:47:08 Telcontar kernel - - - [280271.851374] XFS: Internal error XFS_WANT_CORRUPTED_GOTO at line 1602 of file /home/abuild/rpmbuild/BUILD/kernel-desktop-3.11.10/linux-3.11/fs/xfs/xfs_alloc.c.  Caller 0xffffffffa0c54fe9
+/var/log/messages-20140629.xz:<0.1> 2014-06-29 12:32:18 Telcontar kernel - - - [212890.626346] XFS: Internal error XFS_WANT_CORRUPTED_GOTO at line 1602 of file /home/abuild/rpmbuild/BUILD/kernel-desktop-3.11.10/linux-3.11/fs/xfs/xfs_alloc.c.  Caller 0xffffffffa0c39fe9
+cer@Telcontar:~>
+
+
+The first time that this happened I used a rescue usb stick (openSUSE 
+13.1 xfce). xfs_repair said to mount the partition to force re-play the 
+log. When I did, mount hung. It was unkillable. Reboot of system hung. I 
+then used "xfs_repair -L" on that disk, which succeeded with no 
+error report. On reuse, the system crashed soon: you can see above two 
+entries on the same day.
+
+This last time, I simply rebooted to runlevel 3, logon as root, perform 
+the backup, format, restore. No testing, I was in a real hurry, and even 
+so took hours.
+
+
+I suppose that to diagnose this further you will want data extracted from 
+the filesystem: you have to tell me what operations to perform to obtain 
+that data the next time it happens, without me having to ask here for your 
+help. It may happen tomorrow, or in two months time, so I have to be 
+prepared for it. And as usual, it may happen at the worst time, when I 
+have work to be done in a hurry, as this last time (or I would have asked 
+you).
+
+The only data I have is the system logs.
+
+I don't suppose that the "xfs_dump" archive contains anything of interest?
+
+- From what I have googled, one suspect is something wrong in that 
+partition. It was created using gparted, as the rest of the disk. This 
+last time I used "YaST" to reformat it, not mkfs.xfs.
+
+
+
+Wait! I have a "dd" copy of the entire partition (500 GB), made on March 
+16th, 5 AM, so hard data could be obtained from there. I had 
+forgotten. I'll get something for you now:
+
+
+Telcontar:/data/storage_d/old_backup # xfs_info xfs_copy_home
+meta-data=/dev/sdf2              isize=256    agcount=4, agsize=122341568 
+blks
+          =                       sectsz=512   attr=2
+data     =                       bsize=4096   blocks=489366272, imaxpct=5
+          =                       sunit=0      swidth=0 blks
+naming   =version 2              bsize=4096   ascii-ci=0
+log      =internal               bsize=4096   blocks=238948, version=2
+          =                       sectsz=512   sunit=0 blks, lazy-count=1
+realtime =none                   extsz=4096   blocks=0, rtextents=0
+Telcontar:/data/storage_d/old_backup #
+
+
+I could do a "xfs_metadump" on it - just tell me what options to use, and 
+where can the result be uploaded to, if big.
+
+
+
+Current versions:
+
+Linux Telcontar 3.11.10-11-desktop #1 SMP PREEMPT Mon May 12 13:37:06 UTC 2014 (3d22b5f) x86_64 x86_64 x86_64 GNU/Linux
+
+xfs_repair version 3.1.11
+
+CPU:  Intel(R) Core(TM)2 Quad CPU    Q9550  @ 2.83GHz
+
+System:  openSUSE Linux 13.1, 64 bit.
+
+
+- -- 
+Cheers
+        Carlos E. R.
+
+        (from 13.1 x86_64 "Bottle" at Telcontar)
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.22 (GNU/Linux)
+
+iEYEARECAAYFAlOz14UACgkQtTMYHG2NR9XWLgCfRXInLwE/FrToinuYjpgWQyu6
+dA4AnjAP0DdUvOnsdZfLVaI7wm+c7U0N
+=vxuS
+-----END PGP SIGNATURE-----
 
 _______________________________________________
 xfs mailing list
