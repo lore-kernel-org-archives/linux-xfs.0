@@ -1,34 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 8319C7F54
-	for <xfs@oss.sgi.com>; Wed,  2 Jul 2014 07:27:33 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 6A6378F8040
-	for <xfs@oss.sgi.com>; Wed,  2 Jul 2014 05:27:30 -0700 (PDT)
-Received: from mail-wi0-f180.google.com (mail-wi0-f180.google.com
-	[209.85.212.180]) by cuda.sgi.com with ESMTP id
-	Df2aD4MCGhz3f2FT (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 02 Jul 2014 05:27:28 -0700 (PDT)
-Received: by mail-wi0-f180.google.com with SMTP id hi2so371252wib.13
-	for <xfs@oss.sgi.com>; Wed, 02 Jul 2014 05:27:22 -0700 (PDT)
-Message-ID: <D8356F34DAF14CF5AC6D204541C261B3@alyakaslap>
-From: "Alex Lyakas" <alex@zadarastorage.com>
-References: <20131226230018.GJ20579@dastard>
-	<A0A556BD24EC45CEADAA07870B3E6205@alyakaslap>
-	<20140113030230.GF3469@dastard>
-	<CAOcd+r0B-4SPjzim=68w3L8Y9FxwBD-C5HkkeO58C6t9nfgbhw@mail.gmail.com>
-	<20140113204314.GJ3469@dastard>
-	<CAOcd+r22FirPMHjdxQyTmXOAM72ND-t0=njK9nEmesSV5=Ec=Q@mail.gmail.com>
-	<20140115014503.GQ3469@dastard>
-	<CAOcd+r0R6KxmgEJNPUZ0Q5cQhsStGb=cehYE0+wKgDNU1negsA@mail.gmail.com>
-	<20140119231745.GF18112@dastard>
-	<4B2A412C75324EE9880358513C069476@alyakaslap>
-	<20140701215626.GE9508@dastard>
-In-Reply-To: <20140701215626.GE9508@dastard>
-Subject: Re: xfs_growfs_data_private memory leak
-Date: Wed, 2 Jul 2014 15:27:25 +0300
+	by oss.sgi.com (Postfix) with ESMTP id 6C6BD7F54
+	for <xfs@oss.sgi.com>; Wed,  2 Jul 2014 08:07:59 -0500 (CDT)
+Message-ID: <53B40427.6060302@sgi.com>
+Date: Wed, 02 Jul 2014 08:07:51 -0500
+From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
+Subject: Re: Got "Internal error XFS_WANT_CORRUPTED_GOTO". Filesystem needs
+	reformatting to correct issue.
+References: <alpine.LSU.2.11.1407021104480.9881@Telcontar.valinor>
+	<20140702120441.GA51757@bfoster.bfoster>
+In-Reply-To: <20140702120441.GA51757@bfoster.bfoster>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -41,107 +23,96 @@ Content-Transfer-Encoding: 7bit
 Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: Brian Foster <bfoster@redhat.com>
+Cc: "Carlos E. R." <carlos.e.r@opensuse.org>, XFS mail list <xfs@oss.sgi.com>
 
-Hi Dave,
-Thank you for your comments.
-
-I realize that secondary superblocks are needed mostly for repairing a 
-broken filesystem.  However, I don't see that they get updated regularly, 
-i.e., during normal operation they don't seem to get updated at all. I put a 
-print in xfs_sb_write_verify, and it gets called only with: 
-bp->b_bn==XFS_SB_DADDR.
-
-So do I understand correctly (also from comments in 
-xfs_growfs_data_private), that it is safe to operate a filesystem while 
-having broken secondary superblocks? For me, it appears to mount properly, 
-and all the data seems to be there, but xfs_check complains like:
-bad sb magic # 0xc2a4baf2 in ag 6144
-bad sb version # 0x4b5d in ag 6144
-blocks 6144/65536..2192631388 out of range
-blocks 6144/65536..2192631388 claimed by block 6144/0
-bad sb magic # 0xb20f3079 in ag 6145
-bad sb version # 0x6505 in ag 6145
-blocks 6145/65536..3530010017 out of range
-blocks 6145/65536..3530010017 claimed by block 6145/0
-...
-
-Also, if secondary superblocks do not get updated regularly, and there is no 
-way to ask an operational XFS to update them, then during repair we may not 
-find a good secondary superblock.
-
-As for the patch, I cannot post a patch against the upstream kernel, because 
-I am running an older kernel. Unfortunately, I cannot qualify an upstream 
-patch properly in a reasonable time. Is there a value in posting a patch 
-against 3.8.13? Otherwise, it's fine by me if somebody else posts it and 
-takes the credit.
-
-Thanks,
-Alex.
-
-
-
------Original Message----- 
-From: Dave Chinner
-Sent: 02 July, 2014 12:56 AM
-To: Alex Lyakas
-Cc: xfs@oss.sgi.com
-Subject: Re: xfs_growfs_data_private memory leak
-
-On Tue, Jul 01, 2014 at 06:06:38PM +0300, Alex Lyakas wrote:
-> Greetings,
+On 07/02/14 07:04, Brian Foster wrote:
+> On Wed, Jul 02, 2014 at 11:57:25AM +0200, Carlos E. R. wrote:
+>> -----BEGIN PGP SIGNED MESSAGE-----
+>> Hash: SHA1
+>>
+>>
+>>
+>> Hi,
+>>
+>> I got this error:
+>>
+>>
+>> <0.6>  2014-06-29 12:32:18 Telcontar kernel - - - [212890.186436] r8169 0000:06:00.0 eth0: link up
+>> <0.6>  2014-06-29 12:32:18 Telcontar kernel - - - [212890.615073] PM: restore of devices complete after 2735.034 msecs
+>> <0.1>  2014-06-29 12:32:18 Telcontar kernel - - - [212890.626346] XFS: Internal error XFS_WANT_CORRUPTED_GOTO at line 1602 of file /home/abuild/rpmbuild/BUILD/kernel-desktop-3.11.10/linux-3.11/fs/xfs/xfs_alloc.c.  Caller 0xffffffffa0c39fe9
+>> <0.1>  2014-06-29 12:32:18 Telcontar kernel - - - [212890.626346]<0.4>
+>> 2014-06-29 12:32:18 Telcontar kernel - - - [212890.626348] CPU: 0 PID: 28875
+>> Comm: kworker/0:2 Tainted: P           O 3.11.10-11-desktop #1
+>> <0.4>  2014-06-29 12:32:18 Telcontar kernel - - - [212890.626348] Hardware name: MICRO-STAR INTERNATIONAL CO.,LTD MS-7516/MS-7516, BIOS V1.5 10/10/2008
+>> <0.4>  2014-06-29 12:32:18 Telcontar kernel - - - [212890.626388] Workqueue: xfs-eofblocks/sde5 xfs_eofblocks_worker [xfs]
+>> <0.4>  2014-06-29 12:32:18 Telcontar kernel - - - [212890.626390]  0000000000000002 ffffffff815a0252 00000000002a61c2 ffffffffa0c38996
+>> <0.4>  2014-06-29 12:32:18 Telcontar kernel - - - [212890.626391]  ffff8800b7025680 ffff88022eb74180 ffff880121c3fe50 0000000000000002
+>> <0.4>  2014-06-29 12:32:18 Telcontar kernel - - - [212890.626393]  0000000000000000 0000000100000000 0000000000000000 0000000000000001
+>> <0.4>  2014-06-29 12:32:18 Telcontar kernel - - - [212890.626393] Call Trace:
+>> <0.4>  2014-06-29 12:32:18 Telcontar kernel - - - [212890.626403]  [<ffffffff81004a28>] dump_trace+0x88/0x310
+>> <0.4>  2014-06-29 12:32:18 Telcontar kernel - - - [212890.626406]  [<ffffffff81004d80>] show_stack_log_lvl+0xd0/0x1d0
+>> <0.4>  2014-06-29 12:32:18 Telcontar kernel - - - [212890.626408]  [<ffffffff810061bc>] show_stack+0x1c/0x50
+>> <0.4>  2014-06-29 12:32:18 Telcontar kernel - - - [212890.626411]  [<ffffffff815a0252>] dump_stack+0x50/0x89
+>> <0.4>  2014-06-29 12:32:18 Telcontar kernel - - - [212890.626425]  [<ffffffffa0c38996>] xfs_free_ag_extent+0x226/0x860 [xfs]
+>> <0.4>  2014-06-29 12:32:18 Telcontar kernel - - - [212890.626468]  [<ffffffffa0c39fe9>] xfs_free_extent+0xb9/0xf0 [xfs]
+>> <0.4>  2014-06-29 12:32:18 Telcontar kernel - - - [212890.626510]  [<ffffffffa0c4c39e>] xfs_bmap_finish+0x11e/0x170 [xfs]
+>> <0.4>  2014-06-29 12:32:18 Telcontar kernel - - - [212890.626560]  [<ffffffffa0c6b4c0>] xfs_itruncate_extents+0x190/0x340 [xfs]
+>> <0.4>  2014-06-29 12:32:18 Telcontar kernel - - - [212890.626623]  [<ffffffffa0c33633>] xfs_free_eofblocks+0x1e3/0x260 [xfs]
+>> <0.4>  2014-06-29 12:32:18 Telcontar kernel - - - [212890.626659]  [<ffffffffa0c291ef>] xfs_inode_free_eofblocks+0x6f/0x150 [xfs]
+>> <0.4>  2014-06-29 12:32:18 Telcontar kernel - - - [212890.626688]  [<ffffffffa0c27f82>] xfs_inode_ag_walk.isra.10+0x1c2/0x310 [xfs]
+>> <0.4>  2014-06-29 12:32:18 Telcontar kernel - - - [212890.626716]  [<ffffffffa0c28a8e>] xfs_inode_ag_iterator_tag+0x6e/0xb0 [xfs]
+>> <0.4>  2014-06-29 12:32:18 Telcontar kernel - - - [212890.626744]  [<ffffffffa0c28d82>] xfs_eofblocks_worker+0x12/0x20 [xfs]
+>> <0.4>  2014-06-29 12:32:18 Telcontar kernel - - - [212890.626763]  [<ffffffff8106ac78>] process_one_work+0x168/0x490
+>> <0.4>  2014-06-29 12:32:18 Telcontar kernel - - - [212890.626765]  [<ffffffff8106b914>] worker_thread+0x114/0x3a0
+>> <0.4>  2014-06-29 12:32:18 Telcontar kernel - - - [212890.626768]  [<ffffffff81071c3f>] kthread+0xaf/0xc0
+>> <0.4>  2014-06-29 12:32:18 Telcontar kernel - - - [212890.626771]  [<ffffffff815addfc>] ret_from_fork+0x7c/0xb0
+>> <0.5>  2014-06-29 12:32:18 Telcontar kernel - - - [212890.626776] XFS (sde5): xfs_do_force_shutdown(0x8) called from line 916 of file /home/abuild/rpmbuild/BUILD/kernel-desktop-3.11.10/linux-3.11/fs/xfs/xfs_bmap.c.  Return address = 0xffffffffa0c4c3d8
+>> <0.1>  2014-06-29 12:32:18 Telcontar kernel - - - [212890.706440] XFS (sde5): Corruption of in-memory data detected.  Shutting down filesystem
+>> <0.1>  2014-06-29 12:32:18 Telcontar kernel - - - [212890.706440] XFS (sde5): Please umount the filesystem and rectify the problem(s)
+>>
 >
-> It appears that if xfs_growfs_data_private fails during the "new AG
-> headers" loop, it does not free all the per-AG structures for the
-> new AGs. When XFS is unmounted later, they are not freed as well,
-> because xfs_growfs_data_private did not update the "sb_agcount"
-> field, so xfs_free_perag will not free them. This happens on 3.8.13,
-> but looking at the latest master branch, it seems to have the same
-> issue.
+> This is the background eofblocks scanner attempting to free preallocated
+> space on a file. The scanner looks for files that have been recently
+> grown and since been flushed to disk (i.e., no longer concurrently being
+> written to) and trims the post-eof preallocation that comes along with
+> growing files.
 >
-> Code like [1] in xfs_growfs_data, seems to fix the issue.
+> The corruption errors at xfs_alloc.c:1602,1629 on v3.11 fire if the
+> extent we are attempting to free is already accounted for in the
+> by-block allocation btree. IOW, this is attempting to free an extent
+> that the allocation metadata thinks is already free.
+>
+>>
+>> Brief description:
+>>
+>>
+>>   * It happens only on restore from hibernation.
+>
+> Interesting, could you elaborate a bit more on the behavior this system
+> is typically subjected to? i.e., is this a server that sees a constant
+> workload that is also frequently hibernated/awakened?
+>
+>>   * It happens randomly, spaced a month or two.
+>>   * It happens always on the same partition, the one that holds /home
+>>     (I have 10 XFS partitions spread on 4 internal hard disks, and a few
+>>     more external). It is a new disk, 2 TB, traditional MBR partitions.
+>>   * Disk has no defects, or at least so says smartctl long test.
+>>   * When it happens, recovery is impossible: xfs_repair does not seem to
+>>     find anything, or maybe it does, silently; but on system reuse,
+>>     it crashes again, fast.
+>>   * Thus recovery procedure is to use "xfsdump" to get a backup copy,
+>>     reformat the partition, and recover the files with xfsrestore.
+>>
+>>
+>> The worst issue for me is that "xfs_repair" fails to repair it.
 
-Why not just do this in the appropriate error stack, like is
-done inside xfs_initialize_perag() on error?
+what version of xfs_repair? Did you try to mount to replay the log 
+before repair?
 
-        for (i = oagcount; i < nagcount; i++) {
-                pag = radix_tree_delete(&mp->m_perag_tree, index);
-                kmem_free(pag);
-        }
+Besides Brian's good advice, is kdump configured to dump vmcore?
 
-(though it might need RCU freeing)
-
-When you have a fix, can you send a proper patch with a sign-off on
-it?
-
-> A follow-up question: if xfs_grows_data_private fails during the
-> loop that updates all the secondary superblocks, what is the
-> consequence? (I am aware that in the latest master branch, the loop
-> is not broken on first error, but attempts to initialize whatever
-> possible). When these secondary superblocks will get updated? Is
-> there a way to force-update them? Otherwise, what can be the
-> consequence of leaving them not updated?
-
-The consequence is documented in mainline tree - if we don't update
-them all, then repair will do the wrong thing.  Repair requires a
-majority iof identical secondaries to determine if the primary is
-correct or out of date. The old behaviour of not updating after the
-first error meant that the majority were old superblocks and so at
-some time in the future repair could decide your filesystem is
-smaller than it really is and hence truncate away the grown section
-of the filesystem. i.e. trigger catastrophic, unrecoverable data
-loss.
-
-Hence it's far better to write every seconday we can than to leave
-a majority in a bad state....
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com 
+--Mark.
 
 _______________________________________________
 xfs mailing list
