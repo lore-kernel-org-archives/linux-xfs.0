@@ -1,20 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 8BF6D7F5E
-	for <xfs@oss.sgi.com>; Wed,  2 Jul 2014 23:57:43 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 10EC37F61
+	for <xfs@oss.sgi.com>; Thu,  3 Jul 2014 00:25:56 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 899B4304064
-	for <xfs@oss.sgi.com>; Wed,  2 Jul 2014 21:57:43 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id KqwqqP4Rfk8kAdHf for <xfs@oss.sgi.com>;
-	Wed, 02 Jul 2014 21:57:41 -0700 (PDT)
-Message-ID: <53B4E2C5.1000303@sandeen.net>
-Date: Wed, 02 Jul 2014 23:57:41 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 12E15304039
+	for <xfs@oss.sgi.com>; Wed,  2 Jul 2014 22:25:52 -0700 (PDT)
+Received: from mx1.securemx.in (mx1.securemx.in [121.241.247.20]) by
+	cuda.sgi.com with ESMTP id x21iVHfHqwYzOLni (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 02 Jul 2014 22:25:49 -0700 (PDT)
+Message-ID: <53B4E952.7020009@cmcltd.com>
+Date: Thu, 03 Jul 2014 10:55:38 +0530
+From: Jignesh <jignesh.prajapati@cmcltd.com>
 MIME-Version: 1.0
-Subject: [PATCH 2/2] xfs: tidy up xfs_set_inode32
-References: <53B4E1EE.40702@redhat.com>
-In-Reply-To: <53B4E1EE.40702@redhat.com>
+Subject: Re: XFS Realtime Replication problem
+References: <53B4E20C.60602@cmcltd.com>
+In-Reply-To: <53B4E20C.60602@cmcltd.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,50 +24,83 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@redhat.com>, xfs-oss <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
+Cc: "Bhavin.Joshi@Cmcltd.Com" <bhavin.joshi@cmcltd.com>, "Gaurang.Patel@Cmcltd.Com" <gaurang.patel@cmcltd.com>, Ravi <m.ravindran@cmcltd.com>
 
-xfs_set_inode32() caught my eye because it had
-weird spacing around the "-1's".  In cleaning that
-up, I realized that the assignment in the declaration
-of "ino" is never used; it's rewritten before it gets
-read.
+One thing I want to update that the same Realtime Replication works fine 
+with ext4 Filesystem.
 
-Drop the ino initializer from its declaration since it's
-not used, and move the agino initialization into the body
-of the function, mostly so that we can have pretty
-whitespace and not exceed 80 columns.  :)
+Regards,
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
+Jignesh P.
 
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index e71c0f8..39c9315 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -609,8 +609,8 @@ xfs_set_inode32(struct xfs_mount *mp, xfs_agnumber_t agcount)
- 	xfs_agnumber_t	maxagi = 0;
- 	xfs_sb_t	*sbp = &mp->m_sb;
- 	xfs_agnumber_t	max_metadata;
--	xfs_agino_t	agino =	XFS_OFFBNO_TO_AGINO(mp, sbp->sb_agblocks -1, 0);
--	xfs_ino_t	ino = XFS_AGINO_TO_INO(mp, sbp->sb_agcount -1, agino);
-+	xfs_agino_t	agino;
-+	xfs_ino_t	ino;
- 	xfs_perag_t	*pag;
- 
- 	/* Calculate how much should be reserved for inodes to meet
-@@ -628,6 +628,8 @@ xfs_set_inode32(struct xfs_mount *mp, xfs_agnumber_t agcount)
- 		max_metadata = agcount;
- 	}
- 
-+	agino =	XFS_OFFBNO_TO_AGINO(mp, sbp->sb_agblocks - 1, 0);
-+
- 	for (index = 0; index < agcount; index++) {
- 		ino = XFS_AGINO_TO_INO(mp, index, agino);
- 
+On 03-07-2014 10:24, Jignesh wrote:
+> Dear,
+>
+> We have SGI IS3500 Storage server and we have installed RHEL 6.2 with 
+> XVM and XFS. We have installed CA ARCserve Replication host based 
+> realtime replication software for Realtime byte level replications to 
+> other server in network for DR.
+>
+> Now we are facing one problem that at the time of Realtime replication 
+> if we update any file on Master (Source) server, file size becomes 0 
+> byte in master server the same file content becomes garbage and slave 
+> side also file size becomes 0 size.
+>
+> Please help, we are struggling from last one month.
+>
+> With warm Regards,
+>
+>
+> Jignesh Prajapati
+> Sr. IT Manager-CS
+> CMC Limited
+> (A TATA Enterprise)
+> 6th Floor, Premier House-1, Bodakdev, S G Highway, Ahmedabad-380054
+> Direct Line: +91 79 66090924 | Email: jignesh.prajapati@cmcltd.com
+> www.cmcltd.com
+> ---------------------------------------------------------------------------------------------------------- 
+>
+> System Engineering | Integration | Solution & Sales
+> ---------------------------------------------------------------------------------------------------------- 
+>
+>
+
+
+-- 
+Jignesh Prajapati
+Sr. IT Manager-CS
+CMC Limited
+(A TATA Enterprise)
+6th Floor, Premier House-1, Bodakdev, S G Highway, Ahmedabad-380054
+Direct Line: +91 79 66090924 | Email: jignesh.prajapati@cmcltd.com
+www.cmcltd.com
+----------------------------------------------------------------------------------------------------------
+System Engineering | Integration | Solution & Sales
+----------------------------------------------------------------------------------------------------------
+
+______________________________________________________________________________
+
+DISCLAIMER
+
+The information contained in this e-mail message and/or attachments to it may
+contain confidential or privileged information. If you are not the intended
+recipient, any dissemination, use, review, distribution, printing or copying
+of the information contained in this e-mail message and/or attachments to it
+are strictly prohibited. If you have received this communication in error,
+please notify us by reply e-mail or directly to netsupport@cmcltd.com or
+telephone and immediately and permanently delete the message and any
+attachments. Thank you.
+
+______________________________________________________________________________
+
+This email has been scrubbed for your protection by SecureMX.
+For more information visit http://securemx.in
+_____________________________________________________________________________
 
 _______________________________________________
 xfs mailing list
