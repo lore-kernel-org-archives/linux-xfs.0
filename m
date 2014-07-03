@@ -1,30 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id E14657F57
-	for <xfs@oss.sgi.com>; Wed,  2 Jul 2014 23:54:08 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id EC8F9304053
-	for <xfs@oss.sgi.com>; Wed,  2 Jul 2014 21:54:08 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id LWuSzqEqEtmpE5iC (version=TLSv1
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id BFEC57F5F
+	for <xfs@oss.sgi.com>; Wed,  2 Jul 2014 23:54:57 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id A75948F8033
+	for <xfs@oss.sgi.com>; Wed,  2 Jul 2014 21:54:54 -0700 (PDT)
+Received: from mx1.securemx.in (mx1.securemx.in [121.241.247.20]) by
+	cuda.sgi.com with ESMTP id rGXbBcYAXmPEm0XF (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 02 Jul 2014 21:54:07 -0700 (PDT)
-Received: from int-mx14.intmail.prod.int.phx2.redhat.com
-	(int-mx14.intmail.prod.int.phx2.redhat.com [10.5.11.27])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id s634s6Eh003015
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256
-	verify=OK) for <xfs@oss.sgi.com>; Thu, 3 Jul 2014 00:54:07 -0400
-Received: from liberator.sandeen.net (ovpn01.gateway.prod.ext.phx2.redhat.com
-	[10.5.9.1])
-	by int-mx14.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id s634s5PQ026955
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES128-SHA bits=128 verify=NO)
-	for <xfs@oss.sgi.com>; Thu, 3 Jul 2014 00:54:06 -0400
-Message-ID: <53B4E1EE.40702@redhat.com>
-Date: Wed, 02 Jul 2014 23:54:06 -0500
-From: Eric Sandeen <sandeen@redhat.com>
+	Wed, 02 Jul 2014 21:54:50 -0700 (PDT)
+Message-ID: <53B4E20C.60602@cmcltd.com>
+Date: Thu, 03 Jul 2014 10:24:36 +0530
+From: Jignesh <jignesh.prajapati@cmcltd.com>
 MIME-Version: 1.0
-Subject: [PATCH 1/2] xfs: allow inode allocations in post-growfs disk space
+Subject: XFS Realtime Replication problem
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,154 +22,59 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs-oss <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
+Cc: "Bhavin.Joshi@Cmcltd.Com" <bhavin.joshi@cmcltd.com>, "Gaurang.Patel@Cmcltd.Com" <gaurang.patel@cmcltd.com>, Ravi <m.ravindran@cmcltd.com>
 
-Today, if we perform an xfs_growfs which adds allocation groups,
-mp->m_maxagi is not properly updated when the growfs is complete.
+Dear,
 
-Therefore inodes will continue to be allocated only in the
-AGs which existed prior to the growfs, and the new space
-won't be utilized.
+We have SGI IS3500 Storage server and we have installed RHEL 6.2 with 
+XVM and XFS. We have installed CA ARCserve Replication host based 
+realtime replication software for Realtime byte level replications to 
+other server in network for DR.
 
-This is because of this path in xfs_growfs_data_private():
+Now we are facing one problem that at the time of Realtime replication 
+if we update any file on Master (Source) server, file size becomes 0 
+byte in master server the same file content becomes garbage and slave 
+side also file size becomes 0 size.
 
-xfs_growfs_data_private
-	xfs_initialize_perag(mp, nagcount, &nagimax);
-	 	if (mp->m_flags & XFS_MOUNT_32BITINODES)
-			index = xfs_set_inode32(mp);
- 		else
-			index = xfs_set_inode64(mp);
+Please help, we are struggling from last one month.
 
-	 	if (maxagi)
- 			*maxagi = index;
+With warm Regards,
 
-where xfs_set_inode* iterates over the (old) agcount in
-mp->m_sb.sb_agblocks, which has not yet been updated
-in the growfs path.  So "index" will be returned based on
-the old agcount, not the new one, and new AGs are not available
-for inode allocation.
+  
+Jignesh Prajapati
+Sr. IT Manager-CS
+CMC Limited
+(A TATA Enterprise)
+6th Floor, Premier House-1, Bodakdev, S G Highway, Ahmedabad-380054
+Direct Line: +91 79 66090924 | Email: jignesh.prajapati@cmcltd.com
+www.cmcltd.com
+----------------------------------------------------------------------------------------------------------
+System Engineering | Integration | Solution & Sales
+----------------------------------------------------------------------------------------------------------
 
-Fix this by explicitly passing the proper AG count (which 
-xfs_initialize_perag() already has) down another level,
-so that xfs_set_inode* can make the proper decision about
-acceptable AGs for inode allocation in the potentially
-newly-added AGs.
+______________________________________________________________________________
 
-This has been broken since 3.7, when these two
-xfs_set_inode* functions were added in commit 2d2194f.
-Prior to that, we looped over "agcount" not sb_agblocks
-in these calculations.
+DISCLAIMER
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
+The information contained in this e-mail message and/or attachments to it may
+contain confidential or privileged information. If you are not the intended
+recipient, any dissemination, use, review, distribution, printing or copying
+of the information contained in this e-mail message and/or attachments to it
+are strictly prohibited. If you have received this communication in error,
+please notify us by reply e-mail or directly to netsupport@cmcltd.com or
+telephone and immediately and permanently delete the message and any
+attachments. Thank you.
 
-tested for regression with the -g growfs group, but this
-shows that we need another testcase for growfs.
+______________________________________________________________________________
 
-
-diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-index 993cb19..b291ada 100644
---- a/fs/xfs/xfs_mount.c
-+++ b/fs/xfs/xfs_mount.c
-@@ -250,9 +250,9 @@ xfs_initialize_perag(
- 		mp->m_flags &= ~XFS_MOUNT_32BITINODES;
- 
- 	if (mp->m_flags & XFS_MOUNT_32BITINODES)
--		index = xfs_set_inode32(mp);
-+		index = xfs_set_inode32(mp, agcount);
- 	else
--		index = xfs_set_inode64(mp);
-+		index = xfs_set_inode64(mp, agcount);
- 
- 	if (maxagi)
- 		*maxagi = index;
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index 87e8b01..ccc564d 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -597,8 +597,13 @@ xfs_max_file_offset(
- 	return (((__uint64_t)pagefactor) << bitshift) - 1;
- }
- 
-+/*
-+ * xfs_set_inode32() and xfs_set_inode64() are passed an agcount
-+ * because in the growfs case, mp->m_sb.sb_agcount is not updated
-+ * yet to the potentially higher ag count.
-+ */
- xfs_agnumber_t
--xfs_set_inode32(struct xfs_mount *mp)
-+xfs_set_inode32(struct xfs_mount *mp, xfs_agnumber_t agcount)
- {
- 	xfs_agnumber_t	index = 0;
- 	xfs_agnumber_t	maxagi = 0;
-@@ -620,10 +625,10 @@ xfs_set_inode32(struct xfs_mount *mp)
- 		do_div(icount, sbp->sb_agblocks);
- 		max_metadata = icount;
- 	} else {
--		max_metadata = sbp->sb_agcount;
-+		max_metadata = agcount;
- 	}
- 
--	for (index = 0; index < sbp->sb_agcount; index++) {
-+	for (index = 0; index < agcount; index++) {
- 		ino = XFS_AGINO_TO_INO(mp, index, agino);
- 
- 		if (ino > XFS_MAXINUMBER_32) {
-@@ -648,11 +653,11 @@ xfs_set_inode32(struct xfs_mount *mp)
- }
- 
- xfs_agnumber_t
--xfs_set_inode64(struct xfs_mount *mp)
-+xfs_set_inode64(struct xfs_mount *mp, xfs_agnumber_t agcount)
- {
- 	xfs_agnumber_t index = 0;
- 
--	for (index = 0; index < mp->m_sb.sb_agcount; index++) {
-+	for (index = 0; index < agcount; index++) {
- 		struct xfs_perag	*pag;
- 
- 		pag = xfs_perag_get(mp, index);
-@@ -1193,6 +1198,7 @@ xfs_fs_remount(
- 	char			*options)
- {
- 	struct xfs_mount	*mp = XFS_M(sb);
-+	xfs_sb_t		*sbp = &mp->m_sb;
- 	substring_t		args[MAX_OPT_ARGS];
- 	char			*p;
- 	int			error;
-@@ -1212,10 +1218,10 @@ xfs_fs_remount(
- 			mp->m_flags &= ~XFS_MOUNT_BARRIER;
- 			break;
- 		case Opt_inode64:
--			mp->m_maxagi = xfs_set_inode64(mp);
-+			mp->m_maxagi = xfs_set_inode64(mp, sbp->sb_agcount);
- 			break;
- 		case Opt_inode32:
--			mp->m_maxagi = xfs_set_inode32(mp);
-+			mp->m_maxagi = xfs_set_inode32(mp, sbp->sb_agcount);
- 			break;
- 		default:
- 			/*
-diff --git a/fs/xfs/xfs_super.h b/fs/xfs/xfs_super.h
-index bbe3d15..b4cfe21 100644
---- a/fs/xfs/xfs_super.h
-+++ b/fs/xfs/xfs_super.h
-@@ -76,8 +76,8 @@ extern __uint64_t xfs_max_file_offset(unsigned int);
- 
- extern void xfs_flush_inodes(struct xfs_mount *mp);
- extern void xfs_blkdev_issue_flush(struct xfs_buftarg *);
--extern xfs_agnumber_t xfs_set_inode32(struct xfs_mount *);
--extern xfs_agnumber_t xfs_set_inode64(struct xfs_mount *);
-+extern xfs_agnumber_t xfs_set_inode32(struct xfs_mount *, xfs_agnumber_t agcount);
-+extern xfs_agnumber_t xfs_set_inode64(struct xfs_mount *, xfs_agnumber_t agcount);
- 
- extern const struct export_operations xfs_export_operations;
- extern const struct xattr_handler *xfs_xattr_handlers[];
-
+This email has been scrubbed for your protection by SecureMX.
+For more information visit http://securemx.in
+_____________________________________________________________________________
 
 _______________________________________________
 xfs mailing list
