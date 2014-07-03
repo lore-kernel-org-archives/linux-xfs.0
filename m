@@ -1,22 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id D7ED37F37
-	for <xfs@oss.sgi.com>; Thu,  3 Jul 2014 08:50:46 -0500 (CDT)
-Received: from estes.americas.sgi.com (estes.americas.sgi.com [128.162.236.10])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id D158F8F8035
-	for <xfs@oss.sgi.com>; Thu,  3 Jul 2014 06:50:43 -0700 (PDT)
-Received: from [128.162.232.11] (porter.americas.sgi.com [128.162.232.11])
-	by estes.americas.sgi.com (Postfix) with ESMTP id 8450F7001893
-	for <xfs@oss.sgi.com>; Thu,  3 Jul 2014 08:50:43 -0500 (CDT)
-Message-ID: <53B55FB3.10804@sgi.com>
-Date: Thu, 03 Jul 2014 08:50:43 -0500
-From: Troy McCorkell <tdm@sgi.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id CF7187F37
+	for <xfs@oss.sgi.com>; Thu,  3 Jul 2014 09:14:17 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 6A28DAC004
+	for <xfs@oss.sgi.com>; Thu,  3 Jul 2014 07:14:17 -0700 (PDT)
+Received: from deltamedia.de (deltamedia.de [178.77.98.209]) by cuda.sgi.com
+	with ESMTP id bkq6JxmHeEbXiYEm (version=TLSv1 cipher=AES256-SHA
+	bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 03 Jul 2014 07:14:12 -0700 (PDT)
+Date: Thu, 3 Jul 2014 16:14:08 +0200
+From: Matthias Schniedermeyer <ms@citd.de>
+Subject: Re: Changing label of a mounted XFS filesystem
+Message-ID: <20140703141408.GA17657@citd.de>
+References: <20140703112911.GA9806@citd.de>
+ <53B54779.40108@oracle.com>
 MIME-Version: 1.0
-Subject: Re: XFS Realtime Replication problem
-References: <53B4E20C.60602@cmcltd.com>
-	<20140703061525.GF9508@dastard>	<53B4F7B7.4080807@cmcltd.com>
-	<20140703090253.GT4453@dastard> <53B52098.2090104@cmcltd.com>
-In-Reply-To: <53B52098.2090104@cmcltd.com>
+Content-Disposition: inline
+In-Reply-To: <53B54779.40108@oracle.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,57 +26,65 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Jeff Liu <jeff.liu@oracle.com>
+Cc: xfs@oss.sgi.com
 
-On 07/03/2014 04:21 AM, Jignesh wrote:
-> Dear Dave,
->
-> Thanks for your reply.
->
-> Regards,
->
-> Jignesh P.
->
-> On 03-07-2014 14:32, Dave Chinner wrote:
->> On Thu, Jul 03, 2014 at 11:57:03AM +0530, Jignesh wrote:
->>> Dear Dave,
->>>
->>> Thanks for your quick response.
->>>
->>> This is not SGI Proprietary Storage product and not using any SGI
->>> proprietary kernel module. SGI IS3500 is normal Intel Server with 36
->>> HDDs. ( Storage Server), We have installed RHEL 6.2 on this Server
->>> and configured XVM and XFS.
->> XVM is SGI proprietary software:
->>
->> http://www.sgi.com/products/storage/software/xvm.html
->>
->> As it is, if you are using RHEL, you should talk to your Red Hat
->> support contact. They'll be able to tell you if it's a known problem
->> w/ XFS on RHEL and which version of RHEL 6.x it is fixed in.
->>
->> Cheers,
->>
->> Dave.
+On 03.07.2014 20:07, Jeff Liu wrote:
+> Hi,
+> 
+> On 07/03/2014 07:29 PM, Matthias Schniedermeyer wrote:
+> > Hi
+> > 
+> > 
+> > Is there a particular reason that the label of a mounted XFS fileystem
+> > can't be changed?
+> 
+> Maybe since we have no user request for this function? :)
+> 
+> > The man-page of xfs_admin gives a blanket "Devices that are mounted
+> > cannot be modified" but no explanation for why that is.
+> > 
+> > In my case it's the label of the root-filesystem i want to change. So to
+> > change it i would have to boot the computer with some kind of live or
+> > rescure-system. Or i would need to temporarily connect the device to
+> > another computer, both aren't really nice hoops to jump through just to
+> > change a few characters.
+> > 
+> > The only thing i can compare this to is ext2 and with ext2 (/boot
+> > partition, so it really is ext2) i can change the label to my hearts
+> > content, even the device is mounted.
+> > 
+> > For my case i could live with it if i could remount the filesystem RO,
+> > change the label and then having to reboot the machine, still nicer than
+> > the other 2 options.
+> 
+> Btrfs support set/change label on a mounted file system via ioctl(2), maybe we
+> can implement it if that sounds useful to our users.
 
-Jignesh,
+I would vote for that, i've run into this particular brickwall several 
+times over the years.
 
-If you have SGI XVM installed, then you most likely have the SGI 
-supplied version
-of XFS installed as well.
+I more or less reguarly clone or "move" storage and/or machines around 
+and several times i forgot to re-label filesystems "at that point in 
+time were it was easily done" and then run into the brickwall when first 
+booting whatever i built at that time. Same has happend to me for 
+/etc/fstab and/or GRUB configuration. But unless GRUB doesn't boot at 
+all it can be rectified without too much hassle.
 
-If you do have the SGI supplied version of XFS installed, Red Hat 
-support will redirect you
-to SGI for support.
+Yesterday i "fixed" it by changing the fstab to the "wrong" label.
 
-Thanks,
-Troy McCorkell
+The other solution would be for me to make a checklist, so i don't 
+forget such things. But that would be to easy. ;-)
 
 
+
+-- 
+
+Matthias
 
 _______________________________________________
 xfs mailing list
