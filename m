@@ -1,21 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 3648F7F3F
-	for <xfs@oss.sgi.com>; Fri,  4 Jul 2014 09:09:18 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 3E2817F3F
+	for <xfs@oss.sgi.com>; Fri,  4 Jul 2014 09:15:11 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id B87FCAC001
-	for <xfs@oss.sgi.com>; Fri,  4 Jul 2014 07:09:14 -0700 (PDT)
-Received: from mail3.ks.pochta.ru (mail3.ks.pochta.ru [62.141.94.173]) by
-	cuda.sgi.com with ESMTP id OHIybT8DqxuJyO6x (version=TLSv1
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 3FEA0304032
+	for <xfs@oss.sgi.com>; Fri,  4 Jul 2014 07:15:11 -0700 (PDT)
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.9])
+	by cuda.sgi.com with ESMTP id 5DZ8RVt595kL9HEJ (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 04 Jul 2014 07:09:12 -0700 (PDT)
-Message-ID: <53B6B581.5070801@hotbox.ru>
-Date: Fri, 04 Jul 2014 18:09:05 +0400
-From: flux@hotbox.ru
+	Fri, 04 Jul 2014 07:15:10 -0700 (PDT)
+Date: Fri, 4 Jul 2014 07:15:09 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 4/6] libxfs: reused invalidated buffers leak state and data
+Message-ID: <20140704141509.GB29520@infradead.org>
+References: <1404453435-1915-1-git-send-email-david@fromorbit.com>
+	<1404453435-1915-5-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
-Subject: Re: XFS syncs
-References: <53B59B81.2030603@hotbox.ru> <20140703231730.GW4453@dastard>
-In-Reply-To: <20140703231730.GW4453@dastard>
+Content-Disposition: inline
+In-Reply-To: <1404453435-1915-5-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,48 +26,32 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-Hello Dave,
+On Fri, Jul 04, 2014 at 03:57:13PM +1000, Dave Chinner wrote:
+> @@ -632,6 +632,12 @@ libxfs_putbuf(xfs_buf_t *bp)
+>  			pthread_mutex_unlock(&bp->b_lock);
+>  		}
+>  	}
+> +	/*
+> +	 * ensure that any errors on this use of the buffer don't carry
+> +	 * over to the next user.
+> +	 */
+> +	bp->b_error = 0;
+> +
+>  	cache_node_put(libxfs_bcache, (struct cache_node *)bp);
 
-Thanks for the explanation and your suggestion to use wsync option.
-
-On 07/04/2014 03:17 AM, Dave Chinner wrote:
-> On Thu, Jul 03, 2014 at 10:05:53PM +0400, flux@hotbox.ru wrote:
->> Hi,
->>
->> I issue 'mkdir abc' on my xfs partition the cut off the power. After
->> reboot there's no 'abc' directoy.
->
-> Because you didn't sync(1) the filesystem or fsync(2) the directory
-> before you cut the power. Hence the change never hit the disk.
->
->> However, when I do that on ext4
->> the 'abc' direcory is always created after reboots.
->
-> That'll be pure fluke - ext4 delays journal writes on namespace
-> operations just like XFS does.
->
->> All the
->> settings, about mount options are default for my distro. What am I
->> missing or how do I change the things of the jounral or whatever?
->
-> If you want directory operations to hitthe disk immediately, then
-> mount with the "-o wsync" option. Be aware, however, that this will
-> kill performance unless you have expensive storage with a large
-> amount of battery backed write cache in front of the disks. There's
-> a good chance it will also cause excessive wear on SSDs due to the
-> frequent journal writes.
->
-> Cheers,
->
-> Dave.
->
+This seems a bit fishy to me.  For one I'm pretty sure it needs to be
+done before unlocking b_lock, second it's different behavior from the
+kernel where we explicitly clear it in the caller for the rare case
+we want to reuse a buffer that had an error (xfs_buf_iodone_callbacks
+seems to be the only one).  Any reason to do this differently in
+userspace?
 
 _______________________________________________
 xfs mailing list
