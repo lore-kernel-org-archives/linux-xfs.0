@@ -1,42 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 831677F3F
-	for <xfs@oss.sgi.com>; Fri,  4 Jul 2014 16:32:53 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id E9F44AC002
-	for <xfs@oss.sgi.com>; Fri,  4 Jul 2014 14:32:49 -0700 (PDT)
-Received: from mail-wg0-f50.google.com (mail-wg0-f50.google.com
-	[74.125.82.50]) by cuda.sgi.com with ESMTP id 7yBSBqF3S5Db96sr
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Fri, 04 Jul 2014 14:32:44 -0700 (PDT)
-Received: by mail-wg0-f50.google.com with SMTP id x13so1086308wgg.9
-	for <xfs@oss.sgi.com>; Fri, 04 Jul 2014 14:32:43 -0700 (PDT)
-Received: from Telcontar.valinor (90.Red-79-150-228.dynamicIP.rima-tde.net.
-	[79.150.228.90]) by mx.google.com with ESMTPSA id
-	cz8sm71459245wjc.11.2014.07.04.14.32.41 for <xfs@oss.sgi.com>
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-	Fri, 04 Jul 2014 14:32:42 -0700 (PDT)
-Received: from localhost (localhost [127.0.0.1])
-	by Telcontar.valinor (Postfix) with ESMTP id 7AF5960EBC
-	for <xfs@oss.sgi.com>; Fri,  4 Jul 2014 23:32:38 +0200 (CEST)
-Received: from Telcontar.valinor ([127.0.0.1])
-	by localhost (Telcontar.valinor [127.0.0.1]) (amavisd-new, port 10024)
-	with LMTP id jyuipD-r5Ek4 for <xfs@oss.sgi.com>;
-	Fri,  4 Jul 2014 23:32:38 +0200 (CEST)
-Received: from localhost (localhost [127.0.0.1])
-	by Telcontar.valinor (Postfix) with ESMTP id B2BDE60AF5
-	for <xfs@oss.sgi.com>; Fri,  4 Jul 2014 23:32:37 +0200 (CEST)
-Date: Fri, 4 Jul 2014 23:32:26 +0200 (CEST)
-From: "Carlos E. R." <carlos.e.r@opensuse.org>
-Subject: Re: Got "Internal error XFS_WANT_CORRUPTED_GOTO". Filesystem needs
-	reformatting to correct issue.
-In-Reply-To: <20140703173916.GB3452@laptop.bfoster>
-Message-ID: <alpine.LSU.2.11.1407040135140.9881@Telcontar.valinor>
-References: <alpine.LSU.2.11.1407021104480.9881@Telcontar.valinor>
-	<20140702120441.GA51757@bfoster.bfoster>
-	<alpine.LSU.2.11.1407030057310.9881@Telcontar.valinor>
-	<20140703173916.GB3452@laptop.bfoster>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 7C9E07F47
+	for <xfs@oss.sgi.com>; Fri,  4 Jul 2014 17:22:19 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 692568F8049
+	for <xfs@oss.sgi.com>; Fri,  4 Jul 2014 15:22:16 -0700 (PDT)
+Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
+	[150.101.137.143]) by cuda.sgi.com with ESMTP id
+	vBdTqH3xPWnG0ReQ for <xfs@oss.sgi.com>;
+	Fri, 04 Jul 2014 15:22:14 -0700 (PDT)
+Date: Sat, 5 Jul 2014 08:22:10 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 4/6] libxfs: reused invalidated buffers leak state and data
+Message-ID: <20140704222210.GM9508@dastard>
+References: <1404453435-1915-1-git-send-email-david@fromorbit.com>
+	<1404453435-1915-5-git-send-email-david@fromorbit.com>
+	<20140704141509.GB29520@infradead.org>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20140704141509.GB29520@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -45,242 +27,81 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: XFS mailing list <xfs@oss.sgi.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
+
+On Fri, Jul 04, 2014 at 07:15:09AM -0700, Christoph Hellwig wrote:
+> On Fri, Jul 04, 2014 at 03:57:13PM +1000, Dave Chinner wrote:
+> > @@ -632,6 +632,12 @@ libxfs_putbuf(xfs_buf_t *bp)
+> >  			pthread_mutex_unlock(&bp->b_lock);
+> >  		}
+> >  	}
+> > +	/*
+> > +	 * ensure that any errors on this use of the buffer don't carry
+> > +	 * over to the next user.
+> > +	 */
+> > +	bp->b_error = 0;
+> > +
+> >  	cache_node_put(libxfs_bcache, (struct cache_node *)bp);
+> 
+> This seems a bit fishy to me.  For one I'm pretty sure it needs to be
+> done before unlocking b_lock,
+
+Fair enough.
+
+> second it's different behavior from the
+> kernel where we explicitly clear it in the caller for the rare case
+> we want to reuse a buffer that had an error (xfs_buf_iodone_callbacks
+> seems to be the only one).  Any reason to do this differently in
+> userspace?
+
+The userspace code that uses the buffer cache is much less
+constrained than the kernel code. The userspace code is pretty nasty
+in places, especially when it comes to buffer error handling.
+
+We can't clear errors or zero buffer contents in libxfs_getbuf-*
+like we do in the kernel, because those functions are used by the
+libxfs_readbuf_* functions and hence need to leave the buffers
+unchanged on cache hits. This is actually the only way to gather a
+write error from a libxfs_writebuf() call - you need to
+get the buffer again so you can check bp->b_error field - assuming
+that the buffer is still in the cache when you check, that is.
+
+This is very different to the kernel code which idoes not release
+buffers on a write so we can wait on IO and check errors. The kernel
+buffer cache also guarantees a buffer of a known initial state from
+xfs_buf_get() even on a cache hit.
+
+Hence the userspace buffer cache is behaving quite differently to
+the kernel buffer cache and as a result it's leaking errors from
+reads, invalidations and writes through
+xfs_da_get_buf/libxfs_getbuf.  Current no userspace outside libxfs
+code clears bp->b_error - very little code even checks it - so th
+elibxfs code is tripping on stale errors left by the usrspace code.
+libxfs_writebuf() already zeros bp->b_error to prevent propagation
+of stale errors into future reads, so this patch is really just
+closing the hole in the other buffer release path that the code
+usually takes.
+
+Doing a full audit and addition of error handling of all the
+userspace code is a little beyond my resources right now. The only
+thing I can really do quickly about the problem is clear the error
+when we've finished with the buffer.
+
+I'm open to other ways of fixing this, but right now we've got to
+fix xfs_repair because it's currently breaking filesystems worse
+than before xfs_repair was run...
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA1
-
-
-
-[This email has been delayed, while I thought about where to upload 
-metadata file - see near the end]
-
-
-On Thursday, 2014-07-03 at 13:39 -0400, Brian Foster wrote:
-> On Thu, Jul 03, 2014 at 05:00:47AM +0200, Carlos E. R. wrote:
-
-
-> Ok, so there's a lot going on. I was mainly curious to see what was
-> causing lingering preallocations, but it could be anything extending a
-> file multiple times.
-
-Right.
-
-
->> AFAIK, xfsdump can not carry over a filesystem corruption, right?
->
-> I think that's accurate, though it might complain/fail in the act of
-> dumping an fs that is corrupted. The behavior here suggests there might
-> not be on disk corruption, however.
-
-At least, not a detectable one.
-
-If I don't do that backup-format-restore, I get issues soon, and it 
-crashes within a day - I got after booting (the first event):
-
-0.1> 2014-03-15 03:53:47 Telcontar kernel - - - [  301.857523] XFS: Internal error XFS_WANT_CORRUPTED_RETURN at line 350 of file /home/abuild/rpmbuild/BUILD/kernel-desktop-3.11.10/linux-3.11/fs/xfs/xfs_all
-
-And some hours later:
-
-<0.1> 2014-03-15 22:20:34 Telcontar kernel - - - [20151.298345] XFS: Internal error XFS_WANT_CORRUPTED_GOTO at line 1602 of file /home/abuild/rpmbuild/BUILD/kernel-desktop-3.11.10/linux-3.11/fs/xfs/xfs_allo
-
-
-It was here that I decided to backup-format-restore instead.
-
-
->> Maybe next time I can take the photo with dd before doing anything else (it
->> takes about 80 minutes), or simply do an "xfs_metadump", which should be
->> faster.  And I might not have then 500 GiB of free space to make a dd copy,
->> anyway.
->>
->
-> xfs_metadump should be faster. It will grab the metadata only and
-> obfuscate filenames so as to hide sensitive information.
-
-
-Ok, I have a post-it label on the monitor so that I remember - my notes 
-are typically stored in the home partition :-)
-
-
-But the obfuscation is not complete, I can recognize file names:
-
-
-00008DC0   .leeme.kfPTgt . ....... .2aujzfJ.%;u. .   .0...
-00008DF0    .pepe_after_gnome.tar.bz2.vcTJ8c.@.. . .......
-00008E20   .amyN3xYjaldFXYpeUry. 3;&.K.. ..  .0... !.pepe_j
-00008E50   ust_created.tar.bz2.JlyD0W .. .@....... .NGb0URO
-00008E80   C0Bh9cHwp-hBh.6wMS .. .p  . ... ..registro.0DPzS
-00008EB0   G  .. . ....... .8n-.w$.9. .. .   .8... +.suse_u
-00008EE0   pgrade_to_102_pkglist-bis.txt.tcFUKq. . .......
-00008F10   #B-XqcrWP4cqsw77yv8UsYbcCa-D76q..(#.. ..  .8...
-00008F40   '.suse_upgrade_to_102_pkglist.txt.0KTuDa  7.. .8
-
-
-I just had a quick look with 'mc', the dump is to large too inspect it 
-all.
-
-
->> Question.
->>
->> As this always happens on recovery from hibernation, and seeing the message
->> "Corruption of in-memory data detected", could it be that thawing does a bad
->> memory recovery from the swap?  I thought that the procedure includes some
->> checksum, but I don't know for sure.
->>
->
-> Not sure, though if so I would think that might be a more common source
-> of problems.
-
-And it only affects my /home partition - although it may be the busiest 
-one.
-
-
->> To me, there are two problems:
->>
->>  1) The corruption itself.
->>  2) That xfs_repair fails to repair the filesystem. In fact, I believe
->>     it does not detect it!
->>
->> To me, #2 is the worst, and it is what makes me do the backup, format,
->> restore cycle for recovery. An occassional kernel crash is somewhat
->> acceptable :-}
->>
->
-> Well it could be that the "corruption" is gone at the point of a
-> remount. E.g., something becomes inconsistent in memory, the fs detects
-> it and shuts down before going any further. That's actually a positive.
-> ;)
->
-> That also means it's probably not be necessary to do a full backup,
-> reformat and restore sequence as part of your routine here. xfs_repair
-> should scour through all of the allocation metadata and yell if it finds
-> something like free blocks allocated to a file.
-
-No, if I don't backup-format-restore it happens again within a day. There 
-is something lingering. Unless that was just chance... :-?
-
-It is true that during that day I hibernated several times more than 
-needed to see if it happened again - and it did.
-
-
-
->>> I'm curious if something like an 'rm -rf *' on the metadump
->>> would catch any other corruptions or if this is indeed limited to
->>> something associated with recent (pre)allocations.
->>
->> Sorry, run 'rm -rf *' where???
->>
->
-> On the metadump... mainly just to see whether freeing all of the used
-> blocks in the fs triggered any other errors (i.e., a brute force way to
-> check for further corruptions).
-
-Sorry, but I fail to see how to do it. I maybe thick, or I lack the context.
-
-If I run:
-
-Telcontar:/data/storage_d/old_backup # ls -lh
-total 604G
-drwxr-xr-x 22 root root  4.0K Mar  8 20:30 home
-drwxr-xr-x  3 root root    16 Sep 25  2010 home1
-drwxr-xr-x  2 root root     6 Jul  3 02:36 mount
-- -rw-r--r--  1 root root    45 Jul  3 04:25 procedure
-- -rw-r--r--  1 root root  388M Jul  3 02:42 tgtfile
-- -rw-r--r--  1 root root   11M Jul  3 02:50 tgtfile2.xz
-- -rw-r--r--  1 root users 489G Mar 16 05:42 xfs_copy_home
-- -rw-r--r--  1 root root  489G Jul  3 04:40 xfs_copy_home_workonit
-- -rw-r--r--  1 root users  39G Mar 16 05:49 xfsdump__home
-- -rw-r--r--  1 root users  39G Mar 16 05:57 xfsdump__home1
-Telcontar:/data/storage_d/old_backup # rm -rf *
-
-
-that would destroy my entire backup!
-
-
-If you mean:
-
-  rm -rf tgtfile
-
-I fail to see what that would accomplish, except to remove a file that is actually on a different partition, not home.
-
-However, I can do:
-
-Telcontar:/data/storage_d/old_backup # mount -v xfs_copy_home_workonit mount/
-mount: /dev/loop0 mounted on /data/storage_d/old_backup/mount.
-Telcontar:/data/storage_d/old_backup # cd mount
-Telcontar:/data/storage_d/old_backup/mount # time rm -r /data/storage_d/old_backup/mount/*
-Telcontar:/data/storage_d/old_backup/mount # time rm -r /data/storage_d/old_backup/mount/*
-
-real    2m45.380s
-user    0m0.265s
-sys     0m6.878s
-Telcontar:/data/storage_d/old_backup/mount #
-Telcontar:/data/storage_d/old_backup/mount # ls -la
-total 4
-drwxr-xr-x 2 root root    6 Jul  4 01:56 .
-drwxr-xr-x 5 root root 4096 Jul  3 04:25 ..
-Telcontar:/data/storage_d/old_backup/mount #
-Telcontar:/data/storage_d/old_backup/mount # df -h .
-Filesystem      Size  Used Avail Use% Mounted on
-/dev/loop0      489G   33M  489G   1% /data/storage_d/old_backup/mount
-Telcontar:/data/storage_d/old_backup/mount #
-
-
-And I do not see anything on the log, only that it mounted cleanly.
-
-
-
->> Meanwhile, I have done a xfs_metadump of the image, and compressed it with
->> xz. It has 10834536 bytes. What do I do with it? I'm not sure I can email
->> that, and even less to a mail list.
->>
->> Do you still have a bugzilla system where I can upload it? I had an account
->> at <http://oss.sgi.com/bugzilla/>, made on 2010. I don't know if it still
->> runs :-?
-
-
-I have an active bugzilla account at <http://oss.sgi.com/bugzilla/>, I'm 
-logged in there now. I haven't checked if I can create a bug, not been 
-sure what parameters to use (product, component, whom to assign to). I 
-think that would be the most appropriate place.
-
-Meanwhile, I have uploaded the file to my google drive account, so I can 
-share it with anybody on request - ie, it is not public, I need to add a 
-gmail address to the list of people that can read the file.
-
-Alternatively, I could just email the file to people asking for it, 
-offlist, but not in a single email, in chunks limited to 1.5 MB per 
-email.
-
-
-> I think http://bugzilla.redhat.com should allow you to file a bug and
-> attach the file.
-
-Sorry, I don't have an account there...
-
-I do have one at openSUSE, though, and it does allow me to attach files, up 
-to a limit. If the file is to big, it can be fragmented in pieces. But I 
-will not use it unless you people say that you have an account there.
-
-For using a bugzilla, the most appropriate one would be at SGI, IMHO, if 
-they are still supporting this project.
-
-- -- 
 Cheers,
-        Carlos E. R.
-        (from 13.1 x86_64 "Bottle" at Telcontar)
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.22 (GNU/Linux)
-
-iEYEARECAAYFAlO3HXUACgkQtTMYHG2NR9VndgCgillZYmQCvUynytO/7YALlUyv
-c9gAnj8GmFfnMHGd+P9GaWm9ScVVTH81
-=GEXl
------END PGP SIGNATURE-----
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
