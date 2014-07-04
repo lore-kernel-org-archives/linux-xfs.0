@@ -1,20 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 6A5157F37
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id F3BAF7F63
 	for <xfs@oss.sgi.com>; Fri,  4 Jul 2014 00:57:35 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id D82E6AC001
-	for <xfs@oss.sgi.com>; Thu,  3 Jul 2014 22:57:34 -0700 (PDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id E5D21304048
+	for <xfs@oss.sgi.com>; Thu,  3 Jul 2014 22:57:32 -0700 (PDT)
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	joxSZFp4rkEf87on for <xfs@oss.sgi.com>;
-	Thu, 03 Jul 2014 22:57:32 -0700 (PDT)
+	qpXiuFTIsIPYPooB for <xfs@oss.sgi.com>;
+	Thu, 03 Jul 2014 22:57:31 -0700 (PDT)
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 1/6] repair: support more than 25 ACLs
-Date: Fri,  4 Jul 2014 15:57:10 +1000
-Message-Id: <1404453435-1915-2-git-send-email-david@fromorbit.com>
-In-Reply-To: <1404453435-1915-1-git-send-email-david@fromorbit.com>
-References: <1404453435-1915-1-git-send-email-david@fromorbit.com>
+Subject: [PATCH 0/6] xfsprogs: fixes for 3.2.1
+Date: Fri,  4 Jul 2014 15:57:09 +1000
+Message-Id: <1404453435-1915-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,317 +28,19 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-From: Dave Chinner <dchinner@redhat.com>
+Hi folks,
 
-v5 superblock supports many more than 25 ACLs on an inode, but
-xfs_repair still thinks that the maximum is 25. This slipped through
-becase the reapir code does not share any of the kernel side ACL
-code in libxfs, and instead has all it's own internal ACL
-definitions.
+This is the current list of patches I have outstanding for xfsprogs.
+Several of these are critical for a 3.2.1 release as they result in
+xfs_repair failing to repair filesystems correctly.
 
-Fix the repair code to support more than 25 ACLs and update
-the ACL definitions to match the kernel definitions. In doing so,
-this tickles a off-by-one bug on remote attribute maximum sizes
-that is already fixed in the kernel code. So in addition to fixing
-the repair code, this patch pulls in parts of the following kernel
-commits:
+These have been tested on several complex  filesytems that broke
+reapir in the 3.2.0 release, as well as all the usual xfstests
+testing.
 
-bba719b5 xfs: fix off-by-one error in xfs_attr3_rmt_verify
-0a8aa193 xfs: increase number of ACL entries for V5 superblocks
+Comments welcome.
 
-Reported-by: Michael L. Semon <mlsemon35@gmail.com>
-Tested-by: Michael L. Semon <mlsemon35@gmail.com>
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- libxfs/xfs_attr_remote.c |  2 +-
- repair/attr_repair.c     | 73 ++++++++++++++++++++++++++++++------------------
- repair/attr_repair.h     | 46 +++++++++++++++++++++---------
- 3 files changed, 80 insertions(+), 41 deletions(-)
-
-diff --git a/libxfs/xfs_attr_remote.c b/libxfs/xfs_attr_remote.c
-index 5cf5c73..08b983b 100644
---- a/libxfs/xfs_attr_remote.c
-+++ b/libxfs/xfs_attr_remote.c
-@@ -85,7 +85,7 @@ xfs_attr3_rmt_verify(
- 	if (be32_to_cpu(rmt->rm_bytes) > fsbsize - sizeof(*rmt))
- 		return false;
- 	if (be32_to_cpu(rmt->rm_offset) +
--				be32_to_cpu(rmt->rm_bytes) >= XATTR_SIZE_MAX)
-+				be32_to_cpu(rmt->rm_bytes) > XATTR_SIZE_MAX)
- 		return false;
- 	if (rmt->rm_owner == 0)
- 		return false;
-diff --git a/repair/attr_repair.c b/repair/attr_repair.c
-index 5dd7e5f..a27a3ec 100644
---- a/repair/attr_repair.c
-+++ b/repair/attr_repair.c
-@@ -25,7 +25,7 @@
- #include "protos.h"
- #include "dir2.h"
- 
--static int xfs_acl_valid(xfs_acl_disk_t *daclp);
-+static int xfs_acl_valid(struct xfs_mount *mp, struct xfs_acl *daclp);
- static int xfs_mac_valid(xfs_mac_label_t *lp);
- 
- /*
-@@ -734,11 +734,15 @@ verify_da_path(xfs_mount_t	*mp,
-  * If value is non-zero, then a remote attribute is being passed in
-  */
- static int
--valuecheck(char *namevalue, char *value, int namelen, int valuelen)
-+valuecheck(
-+	struct xfs_mount *mp,
-+	char		*namevalue,
-+	char		*value,
-+	int		namelen,
-+	int		valuelen)
- {
- 	/* for proper alignment issues, get the structs and memmove the values */
- 	xfs_mac_label_t macl;
--	xfs_acl_t thisacl;
- 	void *valuep;
- 	int clearit = 0;
- 
-@@ -746,18 +750,23 @@ valuecheck(char *namevalue, char *value, int namelen, int valuelen)
- 			(strncmp(namevalue, SGI_ACL_DEFAULT,
- 				SGI_ACL_DEFAULT_SIZE) == 0)) {
- 		if (value == NULL) {
--			memset(&thisacl, 0, sizeof(xfs_acl_t));
--			memmove(&thisacl, namevalue+namelen, valuelen);
--			valuep = &thisacl;
-+			valuep = malloc(valuelen);
-+			if (!valuep)
-+				do_error(_("No memory for ACL check!\n"));
-+			memcpy(valuep, namevalue + namelen, valuelen);
- 		} else
- 			valuep = value;
- 
--		if (xfs_acl_valid((xfs_acl_disk_t *)valuep) != 0) {
-+		if (xfs_acl_valid(mp, valuep) != 0) {
- 			clearit = 1;
- 			do_warn(
- 	_("entry contains illegal value in attribute named SGI_ACL_FILE "
- 	  "or SGI_ACL_DEFAULT\n"));
- 		}
-+
-+		if (valuep != value)
-+			free(valuep);
-+
- 	} else if (strncmp(namevalue, SGI_MAC_FILE, SGI_MAC_FILE_SIZE) == 0) {
- 		if (value == NULL) {
- 			memset(&macl, 0, sizeof(xfs_mac_label_t));
-@@ -800,6 +809,7 @@ valuecheck(char *namevalue, char *value, int namelen, int valuelen)
-  */
- static int
- process_shortform_attr(
-+	struct xfs_mount *mp,
- 	xfs_ino_t	ino,
- 	xfs_dinode_t	*dip,
- 	int		*repair)
-@@ -904,7 +914,7 @@ process_shortform_attr(
- 
- 		/* Only check values for root security attributes */
- 		if (currententry->flags & XFS_ATTR_ROOT)
--		       junkit = valuecheck((char *)&currententry->nameval[0],
-+		       junkit = valuecheck(mp, (char *)&currententry->nameval[0],
- 					NULL, currententry->namelen, 
- 					currententry->valuelen);
- 
-@@ -1039,6 +1049,7 @@ rmtval_get(xfs_mount_t *mp, xfs_ino_t ino, blkmap_t *blkmap,
- 
- static int
- process_leaf_attr_local(
-+	struct xfs_mount	*mp,
- 	xfs_attr_leafblock_t	*leaf,
- 	int			i,
- 	xfs_attr_leaf_entry_t	*entry,
-@@ -1076,7 +1087,7 @@ process_leaf_attr_local(
- 
- 	/* Only check values for root security attributes */
- 	if (entry->flags & XFS_ATTR_ROOT) {
--		if (valuecheck((char *)&local->nameval[0], NULL, 
-+		if (valuecheck(mp, (char *)&local->nameval[0], NULL, 
- 				local->namelen, be16_to_cpu(local->valuelen))) {
- 			do_warn(
- 	_("bad security value for attribute entry %d in attr block %u, inode %" PRIu64 "\n"),
-@@ -1134,7 +1145,7 @@ process_leaf_attr_remote(
- 			i, ino);
- 		goto bad_free_out;
- 	}
--	if (valuecheck((char *)&remotep->name[0], value, remotep->namelen,
-+	if (valuecheck(mp, (char *)&remotep->name[0], value, remotep->namelen,
- 				be32_to_cpu(remotep->valuelen))) {
- 		do_warn(
- 	_("remote attribute value check failed for entry %d, inode %" PRIu64 "\n"),
-@@ -1216,15 +1227,15 @@ process_leaf_attr_block(
- 			break;	/* got an overlap */
- 		}
- 
--		if (entry->flags & XFS_ATTR_LOCAL) 
--			thissize = process_leaf_attr_local(leaf, i, entry,
-+		if (entry->flags & XFS_ATTR_LOCAL)
-+			thissize = process_leaf_attr_local(mp, leaf, i, entry,
- 						last_hashval, da_bno, ino);
- 		else
- 			thissize = process_leaf_attr_remote(leaf, i, entry,
- 						last_hashval, da_bno, ino,
- 						mp, blkmap);
- 		if (thissize < 0) {
--			clearit = 1;				
-+			clearit = 1;
- 			break;
- 		}
- 
-@@ -1608,23 +1619,27 @@ process_longform_attr(
- 
- 
- static int
--xfs_acl_from_disk(struct xfs_acl **aclp, struct xfs_acl_disk *dacl)
-+xfs_acl_from_disk(
-+	struct xfs_mount	*mp,
-+	struct xfs_icacl	**aclp,
-+	struct xfs_acl		*dacl)
- {
-+	struct xfs_icacl	*acl;
-+	struct xfs_icacl_entry	*ace;
-+	struct xfs_acl_entry	*dace;
- 	int			count;
--	xfs_acl_t		*acl;
--	xfs_acl_entry_t 	*ace;
--	xfs_acl_entry_disk_t	*dace, *end;
-+	int			i;
- 
- 	count = be32_to_cpu(dacl->acl_cnt);
--	if (count > XFS_ACL_MAX_ENTRIES) {
-+	if (count > XFS_ACL_MAX_ENTRIES(mp)) {
- 		do_warn(_("Too many ACL entries, count %d\n"), count);
- 		*aclp = NULL;
- 		return EINVAL;
- 	}
- 
- 
--	end = &dacl->acl_entry[0] + count;
--	acl = malloc((int)((char *)end - (char *)dacl));
-+	acl = malloc(sizeof(struct xfs_icacl) +
-+		     count * sizeof(struct xfs_icacl_entry));
- 	if (!acl) {
- 		do_warn(_("cannot malloc enough for ACL attribute\n"));
- 		do_warn(_("SKIPPING this ACL\n"));
-@@ -1633,8 +1648,10 @@ xfs_acl_from_disk(struct xfs_acl **aclp, struct xfs_acl_disk *dacl)
- 	}
- 
- 	acl->acl_cnt = count;
--	ace = &acl->acl_entry[0];
--	for (dace = &dacl->acl_entry[0]; dace < end; ace++, dace++) {
-+	for (i = 0; i < count; i++) {
-+		ace = &acl->acl_entry[i];
-+		dace = &dacl->acl_entry[i];
-+
- 		ace->ae_tag = be32_to_cpu(dace->ae_tag);
- 		ace->ae_id = be32_to_cpu(dace->ae_id);
- 		ace->ae_perm = be16_to_cpu(dace->ae_perm);
-@@ -1667,7 +1684,7 @@ process_attributes(
- 	if (aformat == XFS_DINODE_FMT_LOCAL) {
- 		ASSERT(be16_to_cpu(asf->hdr.totsize) <=
- 			XFS_DFORK_ASIZE(dip, mp));
--		err = process_shortform_attr(ino, dip, repair);
-+		err = process_shortform_attr(mp, ino, dip, repair);
- 	} else if (aformat == XFS_DINODE_FMT_EXTENTS ||
- 					aformat == XFS_DINODE_FMT_BTREE)  {
- 			err = process_longform_attr(mp, ino, dip, blkmap,
-@@ -1686,17 +1703,19 @@ process_attributes(
-  * Validate an ACL
-  */
- static int
--xfs_acl_valid(xfs_acl_disk_t *daclp)
-+xfs_acl_valid(
-+	struct xfs_mount *mp,
-+	struct xfs_acl	*daclp)
- {
--	xfs_acl_t	*aclp = NULL;
--	xfs_acl_entry_t *entry, *e;
-+	struct xfs_icacl	*aclp = NULL;
-+	struct xfs_icacl_entry	*entry, *e;
- 	int user = 0, group = 0, other = 0, mask = 0, mask_required = 0;
- 	int i, j;
- 
- 	if (daclp == NULL)
- 		goto acl_invalid;
- 
--	switch (xfs_acl_from_disk(&aclp, daclp)) {
-+	switch (xfs_acl_from_disk(mp, &aclp, daclp)) {
- 	case ENOMEM:
- 		return 0;
- 	case EINVAL:
-diff --git a/repair/attr_repair.h b/repair/attr_repair.h
-index f42536a..0d0c62c 100644
---- a/repair/attr_repair.h
-+++ b/repair/attr_repair.h
-@@ -37,29 +37,49 @@ typedef __int32_t	xfs_acl_type_t;
- typedef __int32_t	xfs_acl_tag_t;
- typedef __int32_t	xfs_acl_id_t;
- 
--typedef struct xfs_acl_entry {
-+/*
-+ * "icacl" = in-core ACL. There is no equivalent in the XFS kernel code,
-+ * so they are magic names just for repair. The "acl" types are what the kernel
-+ * code uses for the on-disk format names, so use them here too for the on-disk
-+ * ACL format definitions.
-+ */
-+struct xfs_icacl_entry {
- 	xfs_acl_tag_t	ae_tag;
- 	xfs_acl_id_t	ae_id;
- 	xfs_acl_perm_t	ae_perm;
--} xfs_acl_entry_t;
-+};
- 
--#define XFS_ACL_MAX_ENTRIES	25
--typedef struct xfs_acl {
--	__int32_t	acl_cnt;
--	xfs_acl_entry_t	acl_entry[XFS_ACL_MAX_ENTRIES];
--} xfs_acl_t;
-+struct xfs_icacl {
-+	__int32_t		acl_cnt;
-+	struct xfs_icacl_entry	acl_entry[0];
-+};
- 
--typedef struct xfs_acl_entry_disk {
-+struct xfs_acl_entry {
- 	__be32		ae_tag;
- 	__be32		ae_id;
- 	__be16		ae_perm;
--} xfs_acl_entry_disk_t;
-+	__be16		ae_pad;
-+};
- 
--typedef struct xfs_acl_disk {
--	__be32		acl_cnt;
--	xfs_acl_entry_disk_t	acl_entry[XFS_ACL_MAX_ENTRIES];
--} xfs_acl_disk_t;
-+struct xfs_acl {
-+	__be32			acl_cnt;
-+	struct xfs_acl_entry	acl_entry[0];
-+};
- 
-+/*
-+ * The number of ACL entries allowed is defined by the on-disk format.
-+ * For v4 superblocks, that is limited to 25 entries. For v5 superblocks, it is
-+ * limited only by the maximum size of the xattr that stores the information.
-+ */
-+#define XFS_ACL_MAX_ENTRIES(mp) \
-+	(xfs_sb_version_hascrc(&mp->m_sb) \
-+		?  (XATTR_SIZE_MAX - sizeof(struct xfs_acl)) / \
-+						sizeof(struct xfs_acl_entry) \
-+		: 25)
-+
-+#define XFS_ACL_MAX_SIZE(mp) \
-+	(sizeof(struct xfs_acl) + \
-+		sizeof(struct xfs_acl_entry) * XFS_ACL_MAX_ENTRIES((mp)))
- 
- #define SGI_ACL_FILE	"SGI_ACL_FILE"
- #define SGI_ACL_DEFAULT	"SGI_ACL_DEFAULT"
--- 
-2.0.0
+-Dave.
 
 _______________________________________________
 xfs mailing list
