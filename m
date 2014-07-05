@@ -1,20 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 908737F5D
-	for <xfs@oss.sgi.com>; Sat,  5 Jul 2014 15:06:17 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 72ECC304048
-	for <xfs@oss.sgi.com>; Sat,  5 Jul 2014 13:06:14 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id chHCKU7xaDFAL34C for <xfs@oss.sgi.com>;
-	Sat, 05 Jul 2014 13:06:09 -0700 (PDT)
-Message-ID: <53B85AB0.30800@sandeen.net>
-Date: Sat, 05 Jul 2014 15:06:08 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+	by oss.sgi.com (Postfix) with ESMTP id 25F677F5E
+	for <xfs@oss.sgi.com>; Sat,  5 Jul 2014 15:36:18 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 12E7D30404E
+	for <xfs@oss.sgi.com>; Sat,  5 Jul 2014 13:36:17 -0700 (PDT)
+Received: from Galois.linutronix.de (www.linutronix.de [62.245.132.108]) by
+	cuda.sgi.com with ESMTP id A72tw4V6dEmiMwMN (version=TLSv1
+	cipher=AES128-SHA bits=128 verify=NO) for <xfs@oss.sgi.com>;
+	Sat, 05 Jul 2014 13:36:16 -0700 (PDT)
+Date: Sat, 5 Jul 2014 22:36:10 +0200 (CEST)
+From: Thomas Gleixner <tglx@linutronix.de>
+Subject: Re: Filesystem lockup with CONFIG_PREEMPT_RT
+In-Reply-To: <537CFECF.9070701@ccur.com>
+Message-ID: <alpine.DEB.2.10.1407052233230.22031@nanos>
+References: <537CFECF.9070701@ccur.com>
 MIME-Version: 1.0
-Subject: Re: Data loss XFS with RT kernel on Debian.
-References: <CAA85NCjXU7rK8C4AcQ4Tnxowx5MFBUyAoLW_nuwmKyOFL-_PgQ@mail.gmail.com>
-In-Reply-To: <CAA85NCjXU7rK8C4AcQ4Tnxowx5MFBUyAoLW_nuwmKyOFL-_PgQ@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,56 +28,29 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Jan de Kruyf <jan.de.kruyf@gmail.com>, xfs@oss.sgi.com
+To: John Blackwood <john.blackwood@ccur.com>
+Cc: Richard Weinberger <richard.weinberger@gmail.com>, linux-rt-users@vger.kernel.org, linux-kernel@vger.kernel.org, Austin Schuh <austin@peloton-tech.com>, xfs@oss.sgi.com
 
-On 7/5/14, 7:41 AM, Jan de Kruyf wrote:
-> Hallo,
-> 
-> While doing a reasonably high density job like rsynching a subdirectory from one place to another, or tarring it to a pipe and untarring it at the other end, I note that the cpu usage goes practically to 100% and when I after 5 minutes or so I reset the computer the writing has not finished at all.
-> However on the stock Debian kernel it works without a problem.
-> 
-> Could I still use this combination in an industrial environment reading and writing reasonably short text files? So far I did not experience this problem with normal day to day use. It stuck up its head during installation of   gnat-gpl-2014-x86_64-linux-bin from the http://libre.adacore.com/download/ page. The offending code is in the Makefile in the top directory page. The Xterm will give you the place where it gets stuck.
+On Wed, 21 May 2014, John Blackwood wrote:
+> I'm not 100% sure that the patch below will fix your problem, but we
+> saw something that sounds pretty familiar to your issue involving the
+> nvidia driver and the preempt-rt patch.  The nvidia driver uses the
+> completion support to create their own driver's notion of an internally
+> used semaphore.
 
-http://lwn.net/Articles/457667/
+And why should we care about that? If they abuse the completion code
+then it's their problem. And it has nothing to do at all with the
+problem Austin is observing.
+ 
+> Some tasks were failing to ever wakeup from wait_for_completion() calls
+> due to a race in the underlying do_wait_for_common() routine.
 
--Eric
+Why are you not fixing the nvidia crap instead of hacking utter shite
+into the core kernel?
 
-> Regards,
-> 
-> Jan de Kruijf.
-> 
-> 
-> Her are the details of the installation:
-> 
-> root@jan:~# xfs_info -V
-> xfs_info version 3.1.7
-> 
-> root@jan:~# xfs_info /usr
-> meta-data=/dev/sda3 isize=256 agcount=4, agsize=732416 blks
->               = sectsz=512 attr=2
->        data = bsize=4096 blocks=2929664, imaxpct=25
->                = sunit=0 swidth=0 blks
-> naming =version 2 bsize=4096 ascii-ci=0
-> log =internal bsize=4096 blocks=2560, version=2
->        = sectsz=512 sunit=0 blks, lazy-count=1
-> realtime =none extsz=4096 blocks=0, rtextents=0
-> 
-> This combination does not work:
-> root@jan:~# uname -a
-> Linux jan 3.14-0.bpo.1-rt-amd64 #1 SMP PREEMPT RT Debian 3.14.7-1~bpo70+1 (2014-06-21) x86_64 GNU/Linux
-> 
-> Also kernel 3.10-0.bpo.3-rt-amd64 does not work
-> 
-> But this combination works:
->  root@jan:~# uname -a
-> Linux jan 3.2.0-4-amd64 #1 SMP Debian 3.2.57-3+deb7u2 x86_64 GNU/Linux
-> 
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
-> 
+Thanks,
+
+	tglx
 
 _______________________________________________
 xfs mailing list
