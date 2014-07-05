@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 25F677F5E
-	for <xfs@oss.sgi.com>; Sat,  5 Jul 2014 15:36:18 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 12E7D30404E
-	for <xfs@oss.sgi.com>; Sat,  5 Jul 2014 13:36:17 -0700 (PDT)
-Received: from Galois.linutronix.de (www.linutronix.de [62.245.132.108]) by
-	cuda.sgi.com with ESMTP id A72tw4V6dEmiMwMN (version=TLSv1
-	cipher=AES128-SHA bits=128 verify=NO) for <xfs@oss.sgi.com>;
-	Sat, 05 Jul 2014 13:36:16 -0700 (PDT)
-Date: Sat, 5 Jul 2014 22:36:10 +0200 (CEST)
-From: Thomas Gleixner <tglx@linutronix.de>
-Subject: Re: Filesystem lockup with CONFIG_PREEMPT_RT
-In-Reply-To: <537CFECF.9070701@ccur.com>
-Message-ID: <alpine.DEB.2.10.1407052233230.22031@nanos>
-References: <537CFECF.9070701@ccur.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id E7F7F7F47
+	for <xfs@oss.sgi.com>; Sat,  5 Jul 2014 17:08:24 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 81F3EAC001
+	for <xfs@oss.sgi.com>; Sat,  5 Jul 2014 15:08:23 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id sOQOobJgtcuujkiI for <xfs@oss.sgi.com>;
+	Sat, 05 Jul 2014 15:08:18 -0700 (PDT)
+Message-ID: <53B87752.9000008@sandeen.net>
+Date: Sat, 05 Jul 2014 17:08:18 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
+Subject: Re: Data loss XFS with RT kernel on Debian.
+References: <CAA85NCjXU7rK8C4AcQ4Tnxowx5MFBUyAoLW_nuwmKyOFL-_PgQ@mail.gmail.com>
+	<53B85AB0.30800@sandeen.net>
+In-Reply-To: <53B85AB0.30800@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,29 +28,40 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: John Blackwood <john.blackwood@ccur.com>
-Cc: Richard Weinberger <richard.weinberger@gmail.com>, linux-rt-users@vger.kernel.org, linux-kernel@vger.kernel.org, Austin Schuh <austin@peloton-tech.com>, xfs@oss.sgi.com
+To: Jan de Kruyf <jan.de.kruyf@gmail.com>, xfs@oss.sgi.com
 
-On Wed, 21 May 2014, John Blackwood wrote:
-> I'm not 100% sure that the patch below will fix your problem, but we
-> saw something that sounds pretty familiar to your issue involving the
-> nvidia driver and the preempt-rt patch.  The nvidia driver uses the
-> completion support to create their own driver's notion of an internally
-> used semaphore.
+On 7/5/14, 3:06 PM, Eric Sandeen wrote:
+> On 7/5/14, 7:41 AM, Jan de Kruyf wrote:
+>> Hallo,
+>>
+>> While doing a reasonably high density job like rsynching a
+>> subdirectory from one place to another, or tarring it to a pipe and
+>> untarring it at the other end, I note that the cpu usage goes
+>> practically to 100% and when I after 5 minutes or so I reset the
+>> computer the writing has not finished at all. However on the stock
+>> Debian kernel it works without a problem.
+>> 
+>> Could I still use this combination in an industrial environment
+>> reading and writing reasonably short text files? So far I did not
+>> experience this problem with normal day to day use. It stuck up its
+>> head during installation of gnat-gpl-2014-x86_64-linux-bin from the
+>> http://libre.adacore.com/download/ page. The offending code is in
+>> the Makefile in the top directory page. The Xterm will give you the
+>> place where it gets stuck.
 
-And why should we care about that? If they abuse the completion code
-then it's their problem. And it has nothing to do at all with the
-problem Austin is observing.
- 
-> Some tasks were failing to ever wakeup from wait_for_completion() calls
-> due to a race in the underlying do_wait_for_common() routine.
+> http://lwn.net/Articles/457667/
 
-Why are you not fixing the nvidia crap instead of hacking utter shite
-into the core kernel?
+Ok, sorry - that was a little short ;)
 
-Thanks,
+If you have some 100% cpu livelock or whatever, that does sound like
+a potential bug.  Perhaps some tracing or profiling can help figure
+out what has gone wrong there.  Maybe sysrq-t & see where the active
+threads are, or even top?
 
-	tglx
+But if you are surprised that you lost data when you did a hard reset,
+the URL above is informative.
+
+-Eric
 
 _______________________________________________
 xfs mailing list
