@@ -1,27 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 3BD0F29DF8
-	for <xfs@oss.sgi.com>; Sun,  6 Jul 2014 19:09:37 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id C723EAC002
-	for <xfs@oss.sgi.com>; Sun,  6 Jul 2014 17:09:36 -0700 (PDT)
-Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
-	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	3XO8VCYgDyc1is0e for <xfs@oss.sgi.com>;
-	Sun, 06 Jul 2014 17:09:31 -0700 (PDT)
-Date: Mon, 7 Jul 2014 10:09:29 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 4/6] libxfs: reused invalidated buffers leak state and data
-Message-ID: <20140707000929.GR9508@dastard>
-References: <1404453435-1915-1-git-send-email-david@fromorbit.com>
-	<1404453435-1915-5-git-send-email-david@fromorbit.com>
-	<20140704141509.GB29520@infradead.org>
-	<20140704222210.GM9508@dastard>
-	<20140705094807.GB18130@infradead.org>
-	<20140706235444.GP9508@dastard>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id A63CC7F3F
+	for <xfs@oss.sgi.com>; Mon,  7 Jul 2014 03:06:13 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 6DAA38F8033
+	for <xfs@oss.sgi.com>; Mon,  7 Jul 2014 01:06:09 -0700 (PDT)
+Received: from mail-qg0-f51.google.com (mail-qg0-f51.google.com
+	[209.85.192.51]) by cuda.sgi.com with ESMTP id C52hyca0e2OjGfmf
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Mon, 07 Jul 2014 01:06:07 -0700 (PDT)
+Received: by mail-qg0-f51.google.com with SMTP id z60so3314863qgd.38
+	for <xfs@oss.sgi.com>; Mon, 07 Jul 2014 01:06:06 -0700 (PDT)
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20140706235444.GP9508@dastard>
+In-Reply-To: <20140706235701.GQ9508@dastard>
+References: <CAA85NCjXU7rK8C4AcQ4Tnxowx5MFBUyAoLW_nuwmKyOFL-_PgQ@mail.gmail.com>
+	<20140706235701.GQ9508@dastard>
+Date: Mon, 7 Jul 2014 09:59:53 +0200
+Message-ID: <CAA85NChTveO_GSJAK9veDH65d0hLhPpxkKhsxKmgBj=AA3mspQ@mail.gmail.com>
+Subject: Re: Data loss XFS with RT kernel on Debian.
+From: Jan de Kruyf <jan.de.kruyf@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,60 +31,45 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Mon, Jul 07, 2014 at 09:54:44AM +1000, Dave Chinner wrote:
-> On Sat, Jul 05, 2014 at 02:48:07AM -0700, Christoph Hellwig wrote:
-> > On Sat, Jul 05, 2014 at 08:22:10AM +1000, Dave Chinner wrote:
-> > > I'm open to other ways of fixing this, but right now we've got to
-> > > fix xfs_repair because it's currently breaking filesystems worse
-> > > than before xfs_repair was run...
-> > 
-> > Ok, so clearly mark this as difference from kernel code in a long
-> > comment explaining the situation similar to wrote you above. 
-> 
-> Will do.
+I tend to agree with Dave that is is an RT problem, however just for your info:
 
-Ok, I added this to the top of the libxfs/rdwr.c file:
+Kernel 3.2 (the stock Debian kernel) works in both versions, the plain
+vanilla and the RT.
+On Debugging this prob: will it be helpful for any of the parties
+involved if I rig up a serial link and try to get a stacktrace of all
+processes with SysRq ? Does that also give kernel processes? Cause Top
+tells me nothing.
+( I am a bit fresh to this but willing to try)
 
-/*
- * Important design/architecture note:
- *
- * The userspace code that uses the buffer cache is much less constrained than
- * the kernel code. The userspace code is pretty nasty in places, especially
- * when it comes to buffer error handling.  Very little of the userspace code
- * outside libxfs clears bp->b_error - very little code even checks it - so the
- * libxfs code is tripping on stale errors left by the userspace code.
- *
- * We can't clear errors or zero buffer contents in libxfs_getbuf-* like we do
- * in the kernel, because those functions are used by the libxfs_readbuf_*
- * functions and hence need to leave the buffers unchanged on cache hits. This
- * is actually the only way to gather a write error from a libxfs_writebuf()
- * call - you need to get the buffer again so you can check bp->b_error field -
- * assuming that the buffer is still in the cache when you check, that is.
- *
- * This is very different to the kernel code which does not release buffers on a
- * write so we can wait on IO and check errors. The kernel buffer cache also
- * guarantees a buffer of a known initial state from xfs_buf_get() even on a
- * cache hit.
- *
- * IOWs, userspace is behaving quite differently to the kernel and as a result
- * it leaks errors from reads, invalidations and writes through
- * libxfs_getbuf/libxfs_readbuf.
- *
- * The result of this is that until the userspace code outside libxfs is cleaned
- * up, functions that release buffers from userspace control (i.e
- * libxfs_writebuf/libxfs_putbuf) need to zero bp->b_error to prevent
- * propagation of stale errors into future buffer operations.
- */
+Cheers
 
-Is that sufficient for the moment?
+j.
 
--Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+
+On Mon, Jul 7, 2014 at 1:57 AM, Dave Chinner <david@fromorbit.com> wrote:
+> On Sat, Jul 05, 2014 at 02:41:06PM +0200, Jan de Kruyf wrote:
+>> Hallo,
+>>
+>> While doing a reasonably high density job like rsynching a subdirectory
+>> from one place to another, or tarring it to a pipe and untarring it at the
+>> other end, I note that the cpu usage goes practically to 100% and when I
+>> after 5 minutes or so I reset the computer the writing has not finished at
+>> all.
+>> However on the stock Debian kernel it works without a problem.
+>
+> Which says that it's a RT kernel problem, not an XFS issue. There
+> have been other recent reports of issues with RT kernels, and they
+> have proven to be core RT kernel bugs, not filesystem issues. I'd
+> suggest that you are likely to be seeing the same RT issues....
+>
+> Cheers,
+>
+> Dave.
+> --
+> Dave Chinner
+> david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
