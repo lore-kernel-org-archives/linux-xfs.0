@@ -1,22 +1,31 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 7E4657F57
-	for <xfs@oss.sgi.com>; Tue,  8 Jul 2014 07:15:11 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id F2EB37F53
+	for <xfs@oss.sgi.com>; Tue,  8 Jul 2014 08:27:32 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 56F35304032
-	for <xfs@oss.sgi.com>; Tue,  8 Jul 2014 05:15:08 -0700 (PDT)
-Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id Ij3rrLUCEUDQunTf (version=TLSv1 cipher=AES256-SHA
-	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 08 Jul 2014 05:15:07 -0700 (PDT)
-Date: Tue, 8 Jul 2014 05:15:00 -0700
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 2/3] xfs: Add support IOC_MOV_DATA ioctl
-Message-ID: <20140708121500.GA518@infradead.org>
-References: <003f01cf9aa4$1e9e5240$5bdaf6c0$@samsung.com>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 874D8AC002
+	for <xfs@oss.sgi.com>; Tue,  8 Jul 2014 06:27:29 -0700 (PDT)
+Received: from mail-wi0-f181.google.com (mail-wi0-f181.google.com
+	[209.85.212.181]) by cuda.sgi.com with ESMTP id
+	eJHNmTRAAjV98WC5 (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 08 Jul 2014 06:27:26 -0700 (PDT)
+Received: by mail-wi0-f181.google.com with SMTP id n3so988722wiv.14
+	for <xfs@oss.sgi.com>; Tue, 08 Jul 2014 06:27:25 -0700 (PDT)
+Received: from t400.localnet ([91.234.176.246])
+	by mx.google.com with ESMTPSA id f6sm96427498wja.25.2014.07.08.06.27.24
+	for <xfs@oss.sgi.com>
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+	Tue, 08 Jul 2014 06:27:24 -0700 (PDT)
+From: Arkadiusz =?utf-8?q?Mi=C5=9Bkiewicz?= <arekm@maven.pl>
+Subject: Re: usrquota,
+	prjquota mount success on 3.16rc4 but Failed to initialize disk
+	quotas on 3.10.43
+Date: Tue, 8 Jul 2014 15:27:23 +0200
+References: <201407081041.02020.arekm@maven.pl>
+In-Reply-To: <201407081041.02020.arekm@maven.pl>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <003f01cf9aa4$1e9e5240$5bdaf6c0$@samsung.com>
+Message-Id: <201407081527.24119.arekm@maven.pl>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,19 +34,77 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Namjae Jeon <namjae.jeon@samsung.com>
-Cc: Theodore Ts'o <tytso@mit.edu>, Brian Foster <bfoster@redhat.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, Ashish Sangwan <a.sangwan@samsung.com>, linux-fsdevel@vger.kernel.org, Luk?? Czerner <lczerner@redhat.com>, linux-ext4 <linux-ext4@vger.kernel.org>
+To: xfs@oss.sgi.com
 
-On Tue, Jul 08, 2014 at 08:59:49PM +0900, Namjae Jeon wrote:
-> This patch implements fs ioctl's IOC_MOV_DATA for XFS.
-
-Shouldn't this share code with the XFS_IOC_SWAPEXT implementation?
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gVHVlc2RheSAwOCBvZiBKdWx5IDIwMTQsIEFya2FkaXVzeiBNacWba2lld2ljeiB3cm90ZToK
+PiBNeSBicm9rZW4gZnMKPiBodHRwOi8vaXhpb24ucGxkLWxpbnV4Lm9yZy9+YXJla20vcDIveDEv
+d2ViMi1ob21lLm1ldGFkdW1wLmd6Cj4gdGhhbmtzIHRvICJ4ZnNwcm9nczogZml4ZXMgZm9yIDMu
+Mi4xIiBieSBEYXZlIGlzIG5vdyBhbG1vc3QgaW4gZ29vZCBzaGFwZS4KPiAKPiBXaGF0IEkgZm91
+bmQgaW50ZXJlc3RpbmcgaXMgdGhhdCByZXBhaXJpbmcgaXQgd2l0aCBjdXJyZW50IGdpdCB4ZnNf
+cmVwYWlyCj4gYW5kIHRoZW4gbW91bnRpbmcgKC1vIHVzcnF1b3RhLHByanF1b3RhKSBvbiAzLjE2
+LjAtcmM0IGdpdmVzIG1lOgo+IAo+IFszMjIwOC4xNDIzMTZdIFhGUyAoc2RiKTogTW91bnRpbmcg
+VjQgRmlsZXN5c3RlbQo+IFszMjIwOC4yMDU0NDldIFhGUyAoc2RiKTogRW5kaW5nIGNsZWFuIG1v
+dW50Cj4gWzMyMjA4LjI1ODk5MV0gWEZTIChzZGIpOiBRdW90YWNoZWNrIG5lZWRlZDogUGxlYXNl
+IHdhaXQuCj4gWzMyODIxLjkzMDQzN10gWEZTIChzZGIpOiBRdW90YWNoZWNrOiBEb25lLgo+IAo+
+IFRoZW4gSSB1bW91bnQgaXQgYW5kIG1vdW50IGFnYWluIChzYW1lIG9wdGlvbnMgYXMgYmVmb3Jl
+KSBidXQgb24gMy4xMC40Mwo+IGtlcm5lbDoKPiAKPiBbICAxMTEuMzI1ODg5XSBYRlMgKHNkYik6
+IE1vdW50aW5nIEZpbGVzeXN0ZW0KPiBbICAxMTEuNDE5MzMxXSBYRlMgKHNkYik6IEZhaWxlZCB0
+byBpbml0aWFsaXplIGRpc2sgcXVvdGFzLgo+IFsgIDExMS40MTkzMzldIFhGUyAoc2RiKTogRW5k
+aW5nIGNsZWFuIG1vdW50Cj4gCj4gV2hhdCBkaWQgY2hhbmdlIGluIGxhdGVyIGtlcm5lbHMgdGhh
+dCBjb3VsZCBoYXZlIG1lYW5pbmcgaGVyZT8gKHNvIEkgY291bGQKPiB0cnkgdG8gYmFja3BvcnQg
+dGhhdCBjaGFuZ2UpLgo+IAo+IEZvciB0ZXN0aW5nIEkgbW91bnRlZCBhZ2FpbiBvbiAzLjE2IGFu
+ZDoKPiBbMzM4NzAuNDcyNzY5XSBYRlMgKHNkYik6IE1vdW50aW5nIFY0IEZpbGVzeXN0ZW0KPiBb
+MzM4NzAuNTQzNTM5XSBYRlMgKHNkYik6IEVuZGluZyBjbGVhbiBtb3VudAo+IFszMzg3MC41OTc3
+OTFdIFhGUyAoc2RiKTogUXVvdGFjaGVjayBuZWVkZWQ6IFBsZWFzZSB3YWl0Lgo+IFszNDQ4NC4z
+MzI4NzldIFhGUyAoc2RiKTogUXVvdGFjaGVjazogRG9uZQo+IAo+IGFuZCBhZ2FpbiBvbiAzLjEw
+LjQzOgo+IFsgMTY0OS4yMTUzOTBdIFhGUyAoc2RiKTogTW91bnRpbmcgRmlsZXN5c3RlbQo+IFsg
+MTY0OS4zMTY4OTRdIFhGUyAoc2RiKTogRmFpbGVkIHRvIGluaXRpYWxpemUgZGlzayBxdW90YXMu
+Cj4gWyAxNjQ5LjMxNjkwMl0gWEZTIChzZGIpOiBFbmRpbmcgY2xlYW4gbW91bnQKCgpGYWlscyBp
+biB4ZnNfaWdldCBhdCB4ZnNfcW1faW5pdF9xdW90YWlub3MoKToKCiAgICAgICAgICAgICAgICBp
+ZiAoWEZTX0lTX09RVU9UQV9PTihtcCkgJiYKICAgICAgICAgICAgICAgICAgICBtcC0+bV9zYi5z
+Yl9ncXVvdGlubyAhPSBOVUxMRlNJTk8pIHsKICAgICAgICAgICAgICAgICAgICAgICAgQVNTRVJU
+KG1wLT5tX3NiLnNiX2dxdW90aW5vID4gMCk7CiAgICAgICAgICAgICAgICAgICAgICAgIGlmICgo
+ZXJyb3IgPSB4ZnNfaWdldChtcCwgTlVMTCwgbXAtPm1fc2Iuc2JfZ3F1b3Rpbm8sCiAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIDAsIDAsICZnaXApKSkgewogICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgIGlmICh1aXApCiAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICBJUkVMRSh1aXApOwogICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgIHJldHVybiBYRlNfRVJST1IoZXJyb3IpOwogICAgICAgICAgICAgICAgICAgICAgICB9
+CiAgICAgICAgICAgICAgICB9CgphbmQgaW4geGZzX2lnZXQ6CgogICAgICAgIC8qIHJlamVjdCBp
+bm9kZSBudW1iZXJzIG91dHNpZGUgZXhpc3RpbmcgQUdzICovCiAgICAgICAgaWYgKCFpbm8gfHwg
+WEZTX0lOT19UT19BR05PKG1wLCBpbm8pID49IG1wLT5tX3NiLnNiX2FnY291bnQpCiAgICAgICAg
+ICAgICAgICByZXR1cm4gRUlOVkFMOwoKCm1fc2Iuc2JfZ3F1b3Rpbm8vaW5vIGxvb2tzIHRvIGJl
+IDAKCiMgeGZzX2RiIC9kZXYvc2RiIC1jICJzYiAwIiAtYyAicHJpbnQiIHxncmVwIHF1b3QKdXF1
+b3Rpbm8gPSA0MDc3OTYxCmdxdW90aW5vID0gMApwcXVvdGlubyA9IDAKCmFuZCBvbGRlciBrZXJu
+ZWxzICh0ZXN0aW5nIG9uIDMuMTAuNDYgbm93KSBzZWVtIHRvIGJlIHVuYWJsZSB0byBkZWFsIHdp
+dGggCnRoaXMuCgpOZXdlciBrZXJuZWxzIHN1cnZpdmUgcHJvYmFibHkgZHVlIHRvIHRoaXM6Cgog
+ICB4ZnNfc2JfcXVvdGFfZnJvbV9kaXNrKHN0cnVjdCB4ZnNfc2IgKnNicCkKewogICAgICAgIC8q
+CiAgICAgICAgICogb2xkZXIgbWtmcyBkb2Vzbid0IGluaXRpYWxpemUgcXVvdGEgaW5vZGVzIHRv
+IE5VTExGU0lOTy4gVGhpcwogICAgICAgICAqIGxlYWRzIHRvIGluLWNvcmUgdmFsdWVzIGhhdmlu
+ZyB0d28gZGlmZmVyZW50IHZhbHVlcyBmb3IgYSBxdW90YQogICAgICAgICAqIGlub2RlIHRvIGJl
+IGludmFsaWQ6IDAgYW5kIE5VTExGU0lOTy4gQ2hhbmdlIGl0IHRvIGEgc2luZ2xlIHZhbHVlCiAg
+ICAgICAgICogTlVMTEZTSU5PLgogICAgICAgICAqCiAgICAgICAgICogTm90ZSB0aGF0IHRoaXMg
+Y2hhbmdlIGFmZmVjdCBvbmx5IHRoZSBpbi1jb3JlIHZhbHVlcy4gVGhlc2UKICAgICAgICAgKiB2
+YWx1ZXMgYXJlIG5vdCB3cml0dGVuIGJhY2sgdG8gZGlzayB1bmxlc3MgYW55IHF1b3RhIGluZm9y
+bWF0aW9uCiAgICAgICAgICogaXMgd3JpdHRlbiB0byB0aGUgZGlzay4gRXZlbiBpbiB0aGF0IGNh
+c2UsIHNiX3BxdW90aW5vIGZpZWxkIGlzCiAgICAgICAgICogbm90IHdyaXR0ZW4gdG8gZGlzayB1
+bmxlc3MgdGhlIHN1cGVyYmxvY2sgc3VwcG9ydHMgcHF1b3Rpbm8uCiAgICAgICAgICovCiAgICAg
+ICAgaWYgKHNicC0+c2JfdXF1b3Rpbm8gPT0gMCkKICAgICAgICAgICAgICAgIHNicC0+c2JfdXF1
+b3Rpbm8gPSBOVUxMRlNJTk87CiAgICAgICAgaWYgKHNicC0+c2JfZ3F1b3Rpbm8gPT0gMCkKICAg
+ICAgICAgICAgICAgIHNicC0+c2JfZ3F1b3Rpbm8gPSBOVUxMRlNJTk87CiAgICAgICAgaWYgKHNi
+cC0+c2JfcHF1b3Rpbm8gPT0gMCkKICAgICAgICAgICAgICAgIHNicC0+c2JfcHF1b3Rpbm8gPSBO
+VUxMRlNJTk87ICAgCgpzbyBzYl9ncXVvdGlubyA9IE5VTExGU0lOTyBnZXRzIHNldCBhbmQgaXQg
+bmV2ZXIgcmVhY2hlcyBlcnJvciBjb25kaXRpb24gYXQgCnhmc19xbV9pbml0X3F1b3RhaW5vcygp
+Cgo+IAo+IAo+ICh0aGVyZSB3YXMgYW4gYWRkaXRpb25hbCBwcm9ibGVtcyB3aXRoIGhhbmdzIG9u
+IHF1b3RhY2hlY2sgbGlrZQo+IGh0dHA6Ly9zcHJ1bmdlLnVzL0xZUU8gKDMuMTYuMC1yYzMtMDAw
+MDYtZzE2ODc0YjIpCj4gaHR0cDovL3NwcnVuZ2UudXMvRmZoUiAoMy4xNS4zKQo+IGh0dHA6Ly9z
+cHJ1bmdlLnVzL09iV0kgKDMuMTAuMjApCj4gYnV0IGl0IG9ubHkgaGFwcGVuZWQgd2hlbiBkb2lu
+ZyBxdW90YWNoZWNrIG9uIGltYWdlIG1vdW50ZWQgdmlhIGxvb3AuCj4gV2Fzbid0IGFibGUgdG8g
+dHJpZ2dlciBpdCB3aGVuIHVzaW5nIHJlYWwgZGlzaywgc28gYmxhbWluZyBsb29wIGNvZGUgZm9y
+Cj4gbm93KQoKCi0tIApBcmthZGl1c3ogTWnFm2tpZXdpY3osIGFyZWttIC8gbWF2ZW4ucGwKCl9f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5n
+IGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZv
+L3hmcwo=
