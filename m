@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 8DC1D7F3F
-	for <xfs@oss.sgi.com>; Tue,  8 Jul 2014 06:59:38 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 2C2B57F54
+	for <xfs@oss.sgi.com>; Tue,  8 Jul 2014 06:59:44 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 030B3AC005
-	for <xfs@oss.sgi.com>; Tue,  8 Jul 2014 04:59:37 -0700 (PDT)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 0511030405F
+	for <xfs@oss.sgi.com>; Tue,  8 Jul 2014 04:59:40 -0700 (PDT)
 Received: from mailout2.samsung.com (mailout2.samsung.com [203.254.224.25]) by
-	cuda.sgi.com with ESMTP id 4viSYifkTRzZ2PgV (version=TLSv1
+	cuda.sgi.com with ESMTP id uxm2RGz9MVVHCdDT (version=TLSv1
 	cipher=RC4-MD5 bits=128 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 08 Jul 2014 04:59:35 -0700 (PDT)
-Received: from epcpsbgr4.samsung.com
-	(u144.gpu120.samsung.co.kr [203.254.230.144])
+	Tue, 08 Jul 2014 04:59:39 -0700 (PDT)
+Received: from epcpsbgr2.samsung.com
+	(u142.gpu120.samsung.co.kr [203.254.230.142])
 	by mailout2.samsung.com (Oracle Communications Messaging Server
 	7u4-24.01 (7.0.4.24.0) 64bit (built Nov 17 2011))
-	with ESMTP id <0N8E00MFT6N8PC30@mailout2.samsung.com> for
-	xfs@oss.sgi.com; Tue, 08 Jul 2014 20:59:32 +0900 (KST)
+	with ESMTP id <0N8E00MG66NEPC30@mailout2.samsung.com> for
+	xfs@oss.sgi.com; Tue, 08 Jul 2014 20:59:38 +0900 (KST)
 From: Namjae Jeon <namjae.jeon@samsung.com>
-Subject: [PATCH 0/3] fs: introduce IOC_MOV_DATA ioctl
-Date: Tue, 08 Jul 2014 20:59:32 +0900
-Message-id: <003d01cf9aa4$14386cf0$3ca946d0$@samsung.com>
+Subject: [PATCH 1/3] fs: Add support IOC_MOV_DATA ioctl
+Date: Tue, 08 Jul 2014 20:59:37 +0900
+Message-id: <003e01cf9aa4$176da750$4648f5f0$@samsung.com>
 MIME-version: 1.0
 Content-language: ko
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -71,41 +71,184 @@ enables inserting hole instead of current behavior of allocating unwritten
 extents. If the requirement is to create hole at the end of file, truncate(2)
 will suffice.
 
-The semantics of this ioctl are:
-1) Like collapse range, offsets and length should be file system block size
-   aligned.
-2) In the receiver file, atleast length size hole should be present at
-   receiver_offset
-3) It does not change file size of any of donor or receiver file.
-4) It leaves a hole at the place from where blocks are moved out in donor file.
-5) Both (donor_offset + length) and (receiver_offset + length) should be within
-   size of donor file and receiver file respectively.
-   Only unwritten extents resides beyond file size and it does not make sense
-   to transfer unwritten extents, leave apart the security issues it may raise.
-6) If the range to be transfered from donor file contain any holes, they are
-   replicated as it is in receiver file. It mean holes are preserved and
-   the length of hole will be added to moved_len signifying that the hole range
-   is succesfully transfered.
+Signed-off-by: Namjae Jeon <namjae.jeon@samsung.com>
+Signed-off-by: Ashish Sangwan <a.sangwan@samsung.com>
+---
+ fs/ioctl.c              | 108 ++++++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/fs.h      |   2 +
+ include/uapi/linux/fs.h |  13 ++++++
+ 3 files changed, 123 insertions(+)
 
-Currently, flags field is unused but could be used to expand new functionalities
-in future.
-Some potential enhancements could be:
-1) Instead of moving data, one could use it for zero copying between 2 regular
-   files.
-2) Can expand it for a generic VFS interface for defragmenting files.
-   Copying data from donor to receiver and than swapping their extents.
-   Currently xfs has swap_extent ioctl and ext4 has move_extent ioctl.
-   These two calls could additionaly go through the common interface.
-3) Or it can be expanded just for swapping extents without copying.
-
-Note: These patchse are created on source included INSERT RANGE patches.
-Please Firstly Apply INSERT RANGE patches before applying IOC_MOV_DATA patches.
-
-Namjae Jeon (3):
- fs: Add support IOC_MOV_DATA ioctl
- xfs: Add support IOC_MOV_DATA ioctl
- ext4: Add support IOC_MOV_DATA ioctl
- TODO: Add testcases in xfstests
+diff --git a/fs/ioctl.c b/fs/ioctl.c
+index 8ac3fad..a1508f8 100644
+--- a/fs/ioctl.c
++++ b/fs/ioctl.c
+@@ -215,6 +215,111 @@ static int ioctl_fiemap(struct file *filp, unsigned long arg)
+ 	return error;
+ }
+ 
++static int ioctl_mov_data(struct file *filp, unsigned long arg)
++{
++	int error;
++	struct mov_data m_data;
++	struct mov_data __user *um_data = (struct mov_data __user *) arg;
++	struct inode *donor, *receiver;
++	struct fd donor_fd, receiver_fd;
++
++	if (copy_from_user(&m_data, um_data, sizeof(struct mov_data)))
++		return -EFAULT;
++
++	if (m_data.donor_offset < 0 || m_data.receiver_offset < 0 ||
++	    m_data.length <= 0)
++		return -EINVAL;
++
++	donor_fd = fdget(m_data.donor_fd);
++	if (!donor_fd.file) {
++		error = -EINVAL;
++		goto out1;
++	}
++
++	if (!(donor_fd.file->f_mode & FMODE_WRITE) ||
++	    !(donor_fd.file->f_mode & FMODE_READ) ||
++	    (donor_fd.file->f_flags & O_APPEND)) {
++		error = -EBADF;
++		goto out1;
++	}
++
++	receiver_fd = fdget(m_data.receiver_fd);
++	if (!receiver_fd.file) {
++		error = -EINVAL;
++		goto out2;
++	}
++
++	if (!(receiver_fd.file->f_mode & FMODE_WRITE) ||
++	    !(receiver_fd.file->f_mode & FMODE_READ) ||
++	    (receiver_fd.file->f_flags & O_APPEND)) {
++		error = -EBADF;
++		goto out2;
++	}
++
++	donor = file_inode(donor_fd.file);
++	receiver = file_inode(receiver_fd.file);
++
++	if (donor->i_sb != receiver->i_sb) {
++		error = -EINVAL;
++		goto out2;
++	}
++
++	if (donor == receiver) {
++		error = -EINVAL;
++		goto out2;
++	}
++
++	error = security_file_permission(donor_fd.file, MAY_WRITE);
++	if (error)
++		goto out2;
++
++	error = security_file_permission(receiver_fd.file, MAY_WRITE);
++	if (error)
++		goto out2;
++
++	if (IS_IMMUTABLE(donor) || IS_IMMUTABLE(receiver)) {
++		error = -EPERM;
++		goto out2;
++	}
++
++	if (IS_SWAPFILE(donor) || IS_SWAPFILE(receiver)) {
++		error = -EINVAL;
++		goto out2;
++	}
++
++	if (S_ISFIFO(donor->i_mode) | S_ISFIFO(receiver->i_mode)) {
++		error = -ESPIPE;
++		goto out2;
++	}
++
++	if (!S_ISREG(donor->i_mode) || !S_ISREG(receiver->i_mode)) {
++		error = -ENODEV;
++		goto out2;
++	}
++
++	if (!donor->i_op->mov_data) {
++		error = -EOPNOTSUPP;
++		goto out2;
++	}
++
++	m_data.moved_len = 0;
++	sb_start_write(donor->i_sb);
++	error = donor->i_op->mov_data(donor, receiver, m_data.donor_offset,
++				      m_data.receiver_offset, m_data.length,
++				      &m_data.moved_len);
++	sb_end_write(donor->i_sb);
++
++	if (copy_to_user(um_data, &m_data, sizeof(struct mov_data)))
++		error = -EFAULT;
++
++out2:
++	fdput(receiver_fd);
++out1:
++	fdput(donor_fd);
++
++	return error;
++}
++
+ #ifdef CONFIG_BLOCK
+ 
+ static inline sector_t logical_to_blk(struct inode *inode, loff_t offset)
+@@ -591,6 +696,9 @@ int do_vfs_ioctl(struct file *filp, unsigned int fd, unsigned int cmd,
+ 	case FIGETBSZ:
+ 		return put_user(inode->i_sb->s_blocksize, argp);
+ 
++	case FS_IOC_MOV_DATA:
++		return ioctl_mov_data(filp, arg);
++
+ 	default:
+ 		if (S_ISREG(inode->i_mode))
+ 			error = file_ioctl(filp, cmd, arg);
+diff --git a/include/linux/fs.h b/include/linux/fs.h
+index 1649d9d..a13afe3 100644
+--- a/include/linux/fs.h
++++ b/include/linux/fs.h
+@@ -1520,6 +1520,8 @@ struct inode_operations {
+ 			   umode_t create_mode, int *opened);
+ 	int (*tmpfile) (struct inode *, struct dentry *, umode_t);
+ 	int (*set_acl)(struct inode *, struct posix_acl *, int);
++	int (*mov_data)(struct inode *, struct inode *, loff_t, loff_t,
++			loff_t, loff_t *);
+ } ____cacheline_aligned;
+ 
+ ssize_t rw_copy_check_uvector(int type, const struct iovec __user * uvector,
+diff --git a/include/uapi/linux/fs.h b/include/uapi/linux/fs.h
+index ca1a11b..6766d12 100644
+--- a/include/uapi/linux/fs.h
++++ b/include/uapi/linux/fs.h
+@@ -57,6 +57,18 @@ struct inodes_stat_t {
+ 	long dummy[5];		/* padding for sysctl ABI compatibility */
+ };
+ 
++/*
++ * Structure passed to IOC_MOV_DATA
++ */
++struct mov_data {
++	int	donor_fd;		/* fd of donor file */
++	int	receiver_fd;		/* fd of receiver file */
++	loff_t	donor_offset;		/* offset into donor file */
++	loff_t	receiver_offset;	/* offset into receiver file */
++	loff_t	length;			/* data length to be moved */
++	loff_t	moved_len;		/* successfully moved length */
++	int	flags;			/* option to expand new feature */
++};
+ 
+ #define NR_FILE  8192	/* this can well be larger on a larger system */
+ 
+@@ -162,6 +174,7 @@ struct inodes_stat_t {
+ #define	FS_IOC_GETVERSION		_IOR('v', 1, long)
+ #define	FS_IOC_SETVERSION		_IOW('v', 2, long)
+ #define FS_IOC_FIEMAP			_IOWR('f', 11, struct fiemap)
++#define FS_IOC_MOV_DATA			_IOWR('f', 12, struct mov_data)
+ #define FS_IOC32_GETFLAGS		_IOR('f', 1, int)
+ #define FS_IOC32_SETFLAGS		_IOW('f', 2, int)
+ #define FS_IOC32_GETVERSION		_IOR('v', 1, int)
 -- 
 1.7.11-rc0
 
