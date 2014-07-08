@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 6787C7F3F
-	for <xfs@oss.sgi.com>; Tue,  8 Jul 2014 06:59:56 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 5781A7F5D
+	for <xfs@oss.sgi.com>; Tue,  8 Jul 2014 07:00:07 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id CF9FDAC007
-	for <xfs@oss.sgi.com>; Tue,  8 Jul 2014 04:59:55 -0700 (PDT)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id C16B6AC004
+	for <xfs@oss.sgi.com>; Tue,  8 Jul 2014 05:00:06 -0700 (PDT)
 Received: from mailout4.samsung.com (mailout4.samsung.com [203.254.224.34]) by
-	cuda.sgi.com with ESMTP id Fjcuvgx3Wl33Sl6z (version=TLSv1
+	cuda.sgi.com with ESMTP id OQds45rwk4MNvoqG (version=TLSv1
 	cipher=RC4-MD5 bits=128 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 08 Jul 2014 04:59:53 -0700 (PDT)
+	Tue, 08 Jul 2014 05:00:05 -0700 (PDT)
 Received: from epcpsbgr3.samsung.com
 	(u143.gpu120.samsung.co.kr [203.254.230.143])
 	by mailout4.samsung.com (Oracle Communications Messaging Server
 	7u4-24.01 (7.0.4.24.0) 64bit (built Nov 17 2011))
-	with ESMTP id <0N8E00HHG6NQD0D0@mailout4.samsung.com> for
-	xfs@oss.sgi.com; Tue, 08 Jul 2014 20:59:50 +0900 (KST)
+	with ESMTP id <0N8E00K5Q6O3EKA0@mailout4.samsung.com> for
+	xfs@oss.sgi.com; Tue, 08 Jul 2014 21:00:03 +0900 (KST)
 From: Namjae Jeon <namjae.jeon@samsung.com>
-Subject: [PATCH 2/3] xfs: Add support IOC_MOV_DATA ioctl
-Date: Tue, 08 Jul 2014 20:59:49 +0900
-Message-id: <003f01cf9aa4$1e9e5240$5bdaf6c0$@samsung.com>
+Subject: [PATCH 3/3] ext4: Add support IOC_MOV_DATA ioctl
+Date: Tue, 08 Jul 2014 21:00:02 +0900
+Message-id: <004001cf9aa4$2670e280$7352a780$@samsung.com>
 MIME-version: 1.0
 Content-language: ko
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -36,7 +36,7 @@ Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>, Theodore Ts'o <tytso@mit.edu>
 Cc: Brian Foster <bfoster@redhat.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, Ashish Sangwan <a.sangwan@samsung.com>, linux-fsdevel@vger.kernel.org, =?iso-8859-2?Q?Luk=E1=B9_Czerner?= <lczerner@redhat.com>, linux-ext4 <linux-ext4@vger.kernel.org>
 
-This patch implements fs ioctl's IOC_MOV_DATA for XFS.
+This patch implements fs ioctl's IOC_MOV_DATA for Ext4.
 
 The semantics of this ioctl are:
 1) Like collapse range, offsets and length should be file system block size
@@ -57,468 +57,418 @@ The semantics of this ioctl are:
 Signed-off-by: Namjae Jeon <namjae.jeon@samsung.com>
 Signed-off-by: Ashish Sangwan <a.sangwan@samsung.com>
 ---
- fs/xfs/libxfs/xfs_bmap.c | 148 ++++++++++++++++++++++++++++
- fs/xfs/libxfs/xfs_bmap.h |   4 +
- fs/xfs/xfs_bmap_util.c   | 251 +++++++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/xfs_bmap_util.h   |   3 +
- fs/xfs/xfs_iops.c        |   1 +
- 5 files changed, 407 insertions(+)
+ fs/ext4/ext4.h    |   2 +
+ fs/ext4/extents.c | 375 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ fs/ext4/file.c    |   1 +
+ 3 files changed, 378 insertions(+)
 
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index 3dee150..c2ae99e 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -5982,3 +5982,151 @@ del_cursor:
- 	xfs_trans_log_inode(tp, ip, logflags);
- 	return error;
+diff --git a/fs/ext4/ext4.h b/fs/ext4/ext4.h
+index 6386c5f..26478eb 100644
+--- a/fs/ext4/ext4.h
++++ b/fs/ext4/ext4.h
+@@ -2725,6 +2725,8 @@ extern int ext4_fiemap(struct inode *inode, struct fiemap_extent_info *fieinfo,
+ extern int ext4_ext_precache(struct inode *inode);
+ extern int ext4_collapse_range(struct inode *inode, loff_t offset, loff_t len);
+ extern int ext4_insert_range(struct file *file, loff_t offset, loff_t len);
++extern int ext4_mov_data(struct inode *, struct inode *, loff_t, loff_t, loff_t,
++			 loff_t *);
+ 
+ /* move_extent.c */
+ extern void ext4_double_down_write_data_sem(struct inode *first,
+diff --git a/fs/ext4/extents.c b/fs/ext4/extents.c
+index 0c2432e..511db03 100644
+--- a/fs/ext4/extents.c
++++ b/fs/ext4/extents.c
+@@ -5811,3 +5811,378 @@ out_mutex:
+ 	mutex_unlock(&inode->i_mutex);
+ 	return ret;
  }
++
 +/*
-+ * Move an extent record pointed by got and whose extent number is stored in
-+ * donor_ext from donor inode dip to receiver inode rip.
-+ * Extent will be moved at roffset_fsb inside receiver inode.
-+ * Caller of this function must make sure there is atleast got->br_blockcount
-+ * size hole at roffset_fsb.
++ * If offset_lblk does not lie on the extent start boundary, split extent
 + */
-+int xfs_move_extent(
-+	struct xfs_trans	*tp,
-+	xfs_inode_t		*dip,
-+	xfs_inode_t		*rip,
-+	xfs_extnum_t		donor_ext,
-+	struct xfs_bmbt_irec	*got,
-+	xfs_fileoff_t		roffset_fsb,
-+	xfs_fsblock_t		*dfirstblock,
-+	struct xfs_bmap_free	*dflist,
-+	xfs_fsblock_t		*rfirstblock,
-+	struct xfs_bmap_free	*rflist)
-+
++int ext4_find_and_split_extent_at(struct inode *inode, ext4_lblk_t offset_lblk)
 +{
-+	struct xfs_mount		*mp = dip->i_mount;
-+	struct xfs_bmbt_rec_host	*gotp;
-+	struct xfs_btree_cur		*dcur;
-+	struct xfs_btree_cur		*rcur;
-+	xfs_ifork_t			*difp;
-+	xfs_ifork_t			*rifp;
-+	xfs_extnum_t			idx;
-+	int                             i;
-+	int                             dlogflags;
-+	int                             rlogflags;
-+	int                             tmp_logflags;
-+	int				error;
-+	int				whichfork = XFS_DATA_FORK;
-+	struct xfs_bmalloca		bma = { NULL };
++	struct ext4_ext_path *path;
++	handle_t *handle;
++	int credits, err = 0, split_flag, ex_len;
++	struct ext4_extent *ex;
++	int depth = ext_depth(inode);
++	ext4_lblk_t ex_start;
 +
-+	if (unlikely(XFS_TEST_ERROR(
-+	    (XFS_IFORK_FORMAT(dip, whichfork) != XFS_DINODE_FMT_EXTENTS &&
-+	     XFS_IFORK_FORMAT(dip, whichfork) != XFS_DINODE_FMT_BTREE),
-+	     mp, XFS_ERRTAG_BMAPIFORMAT, XFS_RANDOM_BMAPIFORMAT))) {
-+		XFS_ERROR_REPORT("xfs_move_extent",
-+				XFS_ERRLEVEL_LOW, mp);
-+		return -EFSCORRUPTED;
++	path = ext4_ext_find_extent(inode, offset_lblk, NULL, 0);
++	if (IS_ERR(path))
++		return PTR_ERR(path);
++
++	ex = path[depth].p_ext;
++	if (!ex)
++		goto free_path;
++	ex_start = le32_to_cpu(ex->ee_block);
++	ex_len = ext4_ext_get_actual_len(ex);
++
++	if (offset_lblk > ex_start && offset_lblk < (ex_start + ex_len)) {
++		credits = ext4_writepage_trans_blocks(inode);
++		handle = ext4_journal_start(inode, EXT4_HT_TRUNCATE, credits);
++		if (IS_ERR(handle)) {
++			err = PTR_ERR(handle);
++			goto free_path;
++		}
++		if (ext4_ext_is_unwritten(ex))
++			split_flag = EXT4_EXT_MARK_UNWRIT1 |
++				     EXT4_EXT_MARK_UNWRIT2;
++		else
++			split_flag = 0;
++
++		err = ext4_split_extent_at(handle, inode, path, offset_lblk,
++					   split_flag, EXT4_EX_NOCACHE |
++					   EXT4_GET_BLOCKS_PRE_IO);
++		ext4_journal_stop(handle);
 +	}
 +
-+	if (unlikely(XFS_TEST_ERROR(
-+	    (XFS_IFORK_FORMAT(rip, whichfork) != XFS_DINODE_FMT_EXTENTS &&
-+	     XFS_IFORK_FORMAT(rip, whichfork) != XFS_DINODE_FMT_BTREE),
-+	     mp, XFS_ERRTAG_BMAPIFORMAT, XFS_RANDOM_BMAPIFORMAT))) {
-+		XFS_ERROR_REPORT("xfs_move_extent",
-+				XFS_ERRLEVEL_LOW, mp);
-+		return -EFSCORRUPTED;
++free_path:
++	ext4_ext_drop_refs(path);
++	kfree(path);
++	return err;
++}
++
++/*
++ * Compute the size of hole in terms of filesystem blocks present at offset_lblk
++ * until the next extent is found OR till we reach the last block within isize.
++ * Store the computed value in hole_blkcnt.
++ * offset_lblk should be within isize of inode.
++ */
++int ext4_compute_hole_size(struct inode *inode, ext4_lblk_t offset_lblk,
++			   ext4_lblk_t *hole_blkcnt)
++{
++	struct ext4_ext_path *path;
++	struct ext4_extent *ex;
++	ext4_lblk_t ex_start, isize_lblk;
++	int ret = 0, depth, ex_len;
++
++	isize_lblk = (inode->i_size + EXT4_BLOCK_SIZE(inode->i_sb) - 1) >>
++		     EXT4_BLOCK_SIZE_BITS(inode->i_sb);
++
++	if (offset_lblk > isize_lblk)
++		return -EINVAL;
++
++	*hole_blkcnt = 0;
++	path = ext4_ext_find_extent(inode, offset_lblk, NULL, 0);
++	if (IS_ERR(path))
++		return PTR_ERR(path);
++
++	depth = ext_depth(inode);
++	ex = path[depth].p_ext;
++	if (!ex) {
++		/* No blocks allocated in this file */
++		*hole_blkcnt = isize_lblk - offset_lblk;
++		goto out;
 +	}
++	ex_start = le32_to_cpu(ex->ee_block);
++	ex_len = ext4_ext_get_actual_len(ex);
 +
-+	if (XFS_FORCED_SHUTDOWN(mp))
-+		return -EIO;
++	/* if offset_lblk lies within extent? */
++	if (offset_lblk >= ex_start && offset_lblk < (ex_start + ex_len))
++		goto out;
 +
-+	dlogflags = XFS_ILOG_CORE;
-+	difp = XFS_IFORK_PTR(dip, whichfork);
-+
-+	if (difp->if_flags & XFS_IFBROOT) {
-+		dcur = xfs_bmbt_init_cursor(mp, tp, dip, whichfork);
-+		dcur->bc_private.b.firstblock = *dfirstblock;
-+		dcur->bc_private.b.flist = dflist;
-+		dcur->bc_private.b.flags = 0;
-+	} else {
-+		dcur = NULL;
-+		dlogflags |= XFS_ILOG_DEXT;
++	if (ex_start < offset_lblk) {
++		ret = mext_next_extent(inode, path, &ex);
++		if (!ret) {
++			ex_start = le32_to_cpu(ex->ee_block);
++		} else {
++			if (ret == 1) {
++				*hole_blkcnt = isize_lblk - offset_lblk;
++				ret = 0;
++			}
++			goto out;
++		}
 +	}
++	*hole_blkcnt = (ex_start < isize_lblk) ? (ex_start - offset_lblk) :
++						 (isize_lblk - offset_lblk);
++out:
++	ext4_ext_drop_refs(path);
++	kfree(path);
 +
-+	rlogflags = XFS_ILOG_CORE;
-+	rifp = XFS_IFORK_PTR(rip, whichfork);
++	return ret;
++}
 +
-+	if (rifp->if_flags & XFS_IFBROOT) {
-+		rcur = xfs_bmbt_init_cursor(mp, tp, rip, whichfork);
-+		rcur->bc_private.b.firstblock = *rfirstblock;
-+		rcur->bc_private.b.flist = rflist;
-+		rcur->bc_private.b.flags = 0;
-+	} else {
-+		rcur = NULL;
-+		rlogflags |= XFS_ILOG_DEXT;
++/*
++ * Remove a complete extent from in memory and on-disk extent tree
++ * without freeing any data blocks covered by the extent. Caller must call
++ * ext4_mark_inode_dirty() to sync the changes to disk.
++ */
++int ext4_ext_rm_extent(handle_t *handle, struct inode *inode,
++		       struct ext4_ext_path *path, struct ext4_extent *ex)
++{
++	struct ext4_extent_header *eh;
++	int depth = ext_depth(inode);
++	int credits, err, correct_index = 0;
++	int ex_ee_len = ext4_ext_get_actual_len(ex);
++
++	if (!path[depth].p_hdr)
++		path[depth].p_hdr = ext_block_hdr(path[depth].p_bh);
++	eh = path[depth].p_hdr;
++
++	credits = 7 + 2*(ex_ee_len/EXT4_BLOCKS_PER_GROUP(inode->i_sb));
++	if (ex == EXT_FIRST_EXTENT(eh)) {
++		correct_index = 1;
++		credits += (ext_depth(inode)) + 1;
 +	}
++	credits += EXT4_MAXQUOTAS_TRANS_BLOCKS(inode->i_sb);
++	err = ext4_ext_truncate_extend_restart(handle, inode, credits);
++	if (err)
++		return err;
 +
-+	if (dcur) {
-+		error = xfs_bmbt_lookup_eq(dcur,
-+					   got->br_startoff,
-+					   got->br_startblock,
-+					   got->br_blockcount,
-+					   &i);
++	err = ext4_ext_get_access(handle, inode, path + depth);
++	if (err)
++		return err;
++
++	ext4_ext_store_pblock(ex, 0);
++	memmove(ex, ex+1,
++		(EXT_LAST_EXTENT(eh) - ex) * sizeof(struct ext4_extent));
++	memset(EXT_LAST_EXTENT(eh), 0, sizeof(struct ext4_extent));
++	le16_add_cpu(&eh->eh_entries, -1);
++
++	err = ext4_ext_dirty(handle, inode, path + depth);
++	if (err)
++		return err;
++
++	if (correct_index && eh->eh_entries)
++		err = ext4_ext_correct_indexes(handle, inode, path);
++
++	if (err == 0 && eh->eh_entries == 0 && path[depth].p_bh != NULL)
++		err = ext4_ext_rm_idx(handle, inode, path, depth);
++
++	return err;
++}
++
++/*
++ * Move len_lblk amount of blocks from donor inode to receiver inode.
++ * Blocks are to be moved from doffset_lblk and moved to roffset_lblk.
++ * Caller of this function must make sure there is atleast len_lblk size
++ * hole at roffset_lblk. Also doffset_lblk and doffset_lblk + len_lblk
++ * should fall on extent boundary.
++ */
++int ext4_ext_mov_data(struct inode *donor, struct inode *receiver,
++		      ext4_lblk_t doffset_lblk, ext4_lblk_t roffset_lblk,
++		      ext4_lblk_t len_lblk, loff_t *bytes_moved)
++{
++	int error = 0, depth = ext_depth(donor);
++	struct ext4_ext_path *path;
++	struct ext4_extent *ex;
++	loff_t blocks_moved = 0;
++	handle_t *handle;
++	int credits = ext4_writepage_trans_blocks(donor) +
++		      ext4_writepage_trans_blocks(receiver);
++
++	while (blocks_moved < len_lblk && !error) {
++		struct ext4_ext_path *rpath = NULL;
++		ext4_lblk_t ex_start;
++		int ex_len;
++
++		path = ext4_ext_find_extent(donor, doffset_lblk, NULL, 0);
++		if (IS_ERR(path)) {
++			error = PTR_ERR(path);
++			break;
++		}
++		ex = path[depth].p_ext;
++		/*
++		 * No allocated blocks? This could only happen during
++		 * 1st iteration. Otherwise it is en error.
++		 */
++		if (!ex) {
++			if (blocks_moved)
++				error = -EIO;
++			else
++				blocks_moved = len_lblk;
++			goto out;
++		}
++		ex_start = le32_to_cpu(ex->ee_block);
++		ex_len = ext4_ext_get_actual_len(ex);
++
++		if (doffset_lblk != ex_start) {
++			/* Hole within range, move to the next extent */
++			if (ex_start < doffset_lblk)
++				error = mext_next_extent(donor, path, &ex);
++			/* Below if will also handle ex_start > doffset_lblk */
++			if (error == 0) {
++				ex_start = le32_to_cpu(ex->ee_block);
++				blocks_moved += ex_start - doffset_lblk;
++				roffset_lblk += ex_start - doffset_lblk;
++				doffset_lblk = ex_start;
++			}
++			if (error == 1) {
++				/* doffset_lblk till EOF is hole. Success!! */
++				blocks_moved = len_lblk;
++				error = 0;
++			}
++			goto out;
++		}
++
++		/* Add this extent to receiver */
++		handle = ext4_journal_start(donor, EXT4_HT_TRUNCATE, credits);
++		if (IS_ERR(handle)) {
++			error = PTR_ERR(handle);
++			goto out;
++		}
++
++		rpath = ext4_ext_find_extent(receiver, roffset_lblk, NULL, 0);
++		if (IS_ERR(rpath)) {
++			error = PTR_ERR(rpath);
++			ext4_journal_stop(handle);
++			goto out;
++		}
++		ex->ee_block = cpu_to_le32(roffset_lblk);
++		error = ext4_ext_insert_extent(handle, receiver, rpath, ex, 0);
 +		if (error)
-+			goto del_cursor;
-+		XFS_WANT_CORRUPTED_GOTO(i == 1, del_cursor);
-+	}
++			goto hout;
 +
-+	gotp = xfs_iext_bno_to_ext(rifp, roffset_fsb, &idx);
-+
-+	/* Initialize bma */
-+	bma.tp = tp;
-+	bma.ip = rip;
-+	bma.flist = rflist;
-+	bma.firstblock = rfirstblock;
-+	bma.cur = rcur;
-+	bma.got.br_startoff = roffset_fsb;
-+	bma.got.br_startblock = got->br_startblock;
-+	bma.got.br_blockcount = got->br_blockcount;
-+	bma.got.br_state = got->br_state;
-+	bma.idx = idx;
-+
-+	error = xfs_bmap_add_extent_hole_real(&bma, whichfork);
-+	if (error)
-+		goto del_cursor;
-+	rlogflags |= bma.logflags;
-+	rip->i_d.di_nblocks += got->br_blockcount;
-+
-+	xfs_iext_remove(dip, donor_ext, 1, 0);
-+	if (dcur) {
-+		error = xfs_btree_delete(dcur, &i);
++		/* Remove this extent from donor */
++		error = ext4_ext_rm_extent(handle, donor, path, ex);
 +		if (error)
-+			goto del_cursor;
-+		XFS_WANT_CORRUPTED_GOTO(i == 1, del_cursor);
-+	}
-+	XFS_IFORK_NEXT_SET(dip, whichfork,
-+			   XFS_IFORK_NEXTENTS(dip, whichfork) - 1);
-+	dip->i_d.di_nblocks -= got->br_blockcount;
++			goto hout;
 +
-+	if (xfs_bmap_wants_extents(dip, whichfork)) {
-+		ASSERT(dcur != NULL);
-+		error = xfs_bmap_btree_to_extents(tp, dip, dcur, &tmp_logflags,
-+				whichfork);
-+		dlogflags |= tmp_logflags;
++		/* Extent moved successfully */
++		roffset_lblk += ex_len;
++		doffset_lblk += ex_len;
++		blocks_moved += ex_len;
++
++		donor->i_blocks -= (ex_len << (donor->i_blkbits - 9));
++		receiver->i_blocks += (ex_len << (receiver->i_blkbits - 9));
++		donor->i_mtime = donor->i_ctime = ext4_current_time(donor);
++		receiver->i_mtime = receiver->i_ctime =
++						ext4_current_time(receiver);
++		ext4_mark_inode_dirty(handle, donor);
++		ext4_mark_inode_dirty(handle, receiver);
++hout:
++		ext4_journal_stop(handle);
++		ext4_ext_drop_refs(rpath);
++		kfree(rpath);
++out:
++		ext4_ext_drop_refs(path);
++		kfree(path);
 +	}
 +
-+del_cursor:
-+	if (dcur) {
-+		dcur->bc_private.b.allocated = 0;
-+		xfs_btree_del_cursor(dcur,
-+				error ? XFS_BTREE_ERROR : XFS_BTREE_NOERROR);
-+	}
-+	xfs_trans_log_inode(tp, dip, dlogflags);
++	/* This can happen when (doffset_lblk + len_lblk) is in a hole */
++	if (blocks_moved > len_lblk)
++		blocks_moved = len_lblk;
 +
-+	if (rcur) {
-+		rcur->bc_private.b.allocated = 0;
-+		xfs_btree_del_cursor(rcur,
-+				error ? XFS_BTREE_ERROR : XFS_BTREE_NOERROR);
-+	}
-+	xfs_trans_log_inode(tp, rip, rlogflags);
-+
++	*bytes_moved = blocks_moved << EXT4_BLOCK_SIZE_BITS(donor->i_sb);
 +	return error;
 +}
-diff --git a/fs/xfs/libxfs/xfs_bmap.h b/fs/xfs/libxfs/xfs_bmap.h
-index af05899..ebfe584 100644
---- a/fs/xfs/libxfs/xfs_bmap.h
-+++ b/fs/xfs/libxfs/xfs_bmap.h
-@@ -191,5 +191,9 @@ int	xfs_bmap_shift_extents_right(struct xfs_trans *tp, struct xfs_inode *ip,
- 		xfs_extnum_t *current_ext, xfs_extnum_t end_ext,
- 		xfs_fsblock_t *firstblock, struct xfs_bmap_free *flist,
- 		int num_exts);
-+int	xfs_move_extent(struct xfs_trans *, xfs_inode_t *, xfs_inode_t *,
-+		xfs_extnum_t, struct xfs_bmbt_irec *, xfs_fileoff_t,
-+		xfs_fsblock_t *, struct xfs_bmap_free *, xfs_fsblock_t *,
-+		struct xfs_bmap_free *);
- 
- #endif	/* __XFS_BMAP_H__ */
-diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-index 3c05843..c004b25 100644
---- a/fs/xfs/xfs_bmap_util.c
-+++ b/fs/xfs/xfs_bmap_util.c
-@@ -2071,3 +2071,254 @@ out_trans_cancel:
- 	xfs_trans_cancel(tp, 0);
- 	goto out_unlock;
- }
 +
-+/*
-+ * Compute and return the size of hole, if present, @offset_fsb.
-+ * The hole size is distance between offset_fsb and till we reach the next
-+ * allocated extent. If next extent is beyond isize, the size is computed
-+ * till isize.
-+ */
-+int
-+xfs_compute_hole_size(
-+	xfs_inode_t		*ip,
-+	xfs_fileoff_t		offset_fsb,
-+	struct xfs_trans	*tp,
-+	xfs_fileoff_t		*count)
++int ext4_mov_data(struct inode *donor, struct inode *receiver, loff_t doffset,
++		  loff_t roffset, loff_t len, loff_t *moved_len)
 +{
-+	struct xfs_ifork		*ifp;
-+	struct xfs_bmbt_rec_host	*gotp;
-+	struct xfs_bmbt_irec		got;
-+	xfs_extnum_t			current_ext;
-+	xfs_fileoff_t			isize_fsb;
-+	int				error = 0;
++	struct super_block *sb = donor->i_sb;
++	loff_t d_pg_off, r_pg_off, pg_len;
++	ext4_lblk_t doffset_lblk, roffset_lblk, len_lblk, hole_size;
++	int error;
 +
-+	*count = 0;
-+	isize_fsb = XFS_B_TO_FSB(ip->i_mount, VFS_I(ip)->i_size);
-+	ASSERT(isize_fsb > offset_fsb);
++	if (doffset & (EXT4_BLOCK_SIZE(sb) - 1) ||
++	    roffset & (EXT4_BLOCK_SIZE(sb) - 1) ||
++	    len & (EXT4_BLOCK_SIZE(sb) - 1))
++		return -EINVAL;
 +
-+	ifp = XFS_IFORK_PTR(ip, XFS_DATA_FORK);
-+	if (!(ifp->if_flags & XFS_IFEXTENTS)) {
-+		error = xfs_iread_extents(tp, ip, XFS_DATA_FORK);
++	if (EXT4_SB(sb)->s_cluster_ratio > 1)
++		return -EOPNOTSUPP;
++
++	if (!ext4_test_inode_flag(donor, EXT4_INODE_EXTENTS) ||
++	    !ext4_test_inode_flag(receiver, EXT4_INODE_EXTENTS))
++		return -EOPNOTSUPP;
++
++	doffset_lblk = doffset >> EXT4_BLOCK_SIZE_BITS(sb);
++	roffset_lblk = roffset >> EXT4_BLOCK_SIZE_BITS(sb);
++	len_lblk = len >> EXT4_BLOCK_SIZE_BITS(sb);
++
++	d_pg_off = round_down(doffset, PAGE_SIZE);
++	r_pg_off = round_down(roffset, PAGE_SIZE);
++	pg_len = round_up(len, PAGE_SIZE);
++
++	if (ext4_should_journal_data(donor)) {
++		error = ext4_force_commit(donor->i_sb);
++		if (error)
++			return error;
++		error = ext4_force_commit(receiver->i_sb);
 +		if (error)
 +			return error;
 +	}
 +
-+	gotp = xfs_iext_bno_to_ext(ifp, offset_fsb, &current_ext);
-+	if (gotp) {
-+		xfs_bmbt_get_all(gotp, &got);
-+		if (got.br_startoff != offset_fsb) {
-+			ASSERT(got.br_startoff > offset_fsb);
-+			*count = (isize_fsb > got.br_startoff) ?
-+				 (got.br_startoff - offset_fsb) :
-+				 (isize_fsb - offset_fsb);
-+		}
-+	} else
-+		*count = isize_fsb - offset_fsb;
++	error = filemap_write_and_wait_range(donor->i_mapping,
++					     d_pg_off, d_pg_off + pg_len);
++	if (error)
++		return error;
++	error = filemap_write_and_wait_range(receiver->i_mapping,
++					     r_pg_off, r_pg_off + pg_len);
++	if (error)
++		return error;
 +
++	lock_two_nondirectories(donor, receiver);
++
++	/* Check for isize limits for both files */
++	if (doffset + len > donor->i_size ||
++	    roffset + len > receiver->i_size) {
++		error = -EINVAL;
++		goto out_mutex;
++	}
++
++	truncate_pagecache_range(donor, d_pg_off, d_pg_off + pg_len - 1);
++	truncate_pagecache_range(receiver, r_pg_off, r_pg_off + pg_len - 1);
++
++	ext4_inode_block_unlocked_dio(donor);
++	inode_dio_wait(donor);
++	ext4_inode_block_unlocked_dio(receiver);
++	inode_dio_wait(receiver);
++
++	ext4_discard_preallocations(donor);
++	ext4_discard_preallocations(receiver);
++
++	error = ext4_es_remove_extent(donor, doffset_lblk, len_lblk);
++	if (error)
++		goto out_sem;
++	error = ext4_es_remove_extent(receiver, roffset_lblk, len_lblk);
++	if (error)
++		goto out_sem;
++
++	error = ext4_compute_hole_size(receiver, roffset_lblk, &hole_size);
++	if (error)
++		goto out_sem;
++	if (len_lblk > hole_size) {
++		error = -EINVAL;
++		goto out_sem;
++	}
++
++	error = ext4_find_and_split_extent_at(donor, doffset_lblk);
++	if (error)
++		goto out_sem;
++
++	error = ext4_find_and_split_extent_at(donor, doffset_lblk + len_lblk);
++	if (error)
++		goto out_sem;
++
++	error = ext4_ext_mov_data(donor, receiver, doffset_lblk,
++				  roffset_lblk, len_lblk, moved_len);
++
++	ext4_discard_preallocations(donor);
++	ext4_discard_preallocations(receiver);
++out_sem:
++	ext4_inode_resume_unlocked_dio(donor);
++	ext4_inode_resume_unlocked_dio(receiver);
++
++out_mutex:
++	unlock_two_nondirectories(donor, receiver);
 +	return error;
 +}
-+
-+int
-+xfs_vn_move_data(
-+	struct inode	*donor,
-+	struct inode	*receiver,
-+	loff_t		doffset,
-+	loff_t		roffset,
-+	loff_t		len,
-+	loff_t		*moved_len)
-+{
-+	struct xfs_mount		*mp;
-+	struct xfs_ifork		*ifp;
-+	struct xfs_trans		*tp;
-+	struct xfs_bmbt_rec_host	*gotp;
-+	struct xfs_bmbt_irec		got;
-+	struct xfs_bmap_free		dfree_list;
-+	struct xfs_bmap_free		rfree_list;
-+	xfs_inode_t			*dip;
-+	xfs_inode_t			*rip;
-+	xfs_extnum_t			split_ext;
-+	xfs_extnum_t			dcurrent_ext = 0;
-+	xfs_fsblock_t			dfirstblock;
-+	xfs_fsblock_t			rfirstblock;
-+	xfs_fileoff_t			dcurrent_fsb;
-+	xfs_fileoff_t			rcurrent_fsb;
-+	xfs_fileoff_t			len_fsb;
-+	xfs_fileoff_t			moved_blocks = 0;
-+	xfs_fileoff_t			hole_blkcnt = 0;
-+	xfs_off_t			pg_start;
-+	int				committed;
-+	int				error;
-+	unsigned			mask = (1 << donor->i_blkbits) - 1;
-+
-+	dip = XFS_I(donor);
-+	rip = XFS_I(receiver);
-+	mp = dip->i_mount;
-+
-+	if (XFS_FORCED_SHUTDOWN(dip->i_mount))
-+		return -EIO;
-+
-+	xfs_lock_two_inodes(dip, rip, XFS_IOLOCK_EXCL);
-+
-+	if (doffset + len > donor->i_size || roffset + len > receiver->i_size) {
-+		error = EINVAL;
-+		goto out;
-+	}
-+
-+	if (doffset & mask || roffset & mask || len & mask) {
-+		error = EINVAL;
-+		goto out;
-+	}
-+
-+	dcurrent_fsb = XFS_B_TO_FSB(mp, doffset);
-+	rcurrent_fsb = XFS_B_TO_FSB(mp, roffset);
-+	len_fsb = XFS_B_TO_FSB(mp, len);
-+
-+	pg_start = round_down(doffset, PAGE_SIZE);
-+	error = -filemap_write_and_wait_range(donor->i_mapping, pg_start, -1);
-+	if (error)
-+		goto out;
-+	truncate_pagecache_range(donor, pg_start, -1);
-+
-+	pg_start = round_down(roffset, PAGE_SIZE);
-+	error = -filemap_write_and_wait_range(receiver->i_mapping,
-+					     pg_start, -1);
-+	if (error)
-+		goto out;
-+	truncate_pagecache_range(receiver, pg_start, -1);
-+
-+	error = xfs_qm_dqattach(dip, 0);
-+	if (error)
-+		goto out;
-+
-+	error = xfs_qm_dqattach(rip, 0);
-+	if (error)
-+		goto out;
-+
-+	error = xfs_bmap_split_extent(dip, dcurrent_fsb, &split_ext);
-+	if (error)
-+		goto out;
-+
-+	error = xfs_bmap_split_extent(dip, dcurrent_fsb + len_fsb,
-+				      &split_ext);
-+	if (error)
-+		goto out;
-+
-+	ifp = XFS_IFORK_PTR(dip, XFS_DATA_FORK);
-+
-+	while (moved_blocks < len_fsb && !error) {
-+		gotp = xfs_iext_bno_to_ext(ifp, dcurrent_fsb, &dcurrent_ext);
-+		if (!gotp) {
-+			/* No more data blocks left in donor */
-+			moved_blocks = len_fsb;
-+			break;
-+		}
-+
-+		xfs_bmbt_get_all(gotp, &got);
-+		if (dcurrent_fsb != got.br_startoff) {
-+			if (dcurrent_fsb > got.br_startoff) {
-+				error = -EFSCORRUPTED;
-+				break;
-+			}
-+			hole_blkcnt = got.br_startoff - dcurrent_fsb;
-+			dcurrent_fsb += hole_blkcnt;
-+			rcurrent_fsb += hole_blkcnt;
-+			moved_blocks += hole_blkcnt;
-+			if (moved_blocks >= len_fsb) {
-+				moved_blocks = len_fsb;
-+				break;
-+			}
-+		}
-+
-+		tp = xfs_trans_alloc(mp, XFS_TRANS_DIOSTRAT);
-+
-+		/*
-+		 * We would need to reserve permanent block for transaction.
-+		 * This will come into picture when after shifting extent into
-+		 * hole we found that adjacent extents can be merged which
-+		 * may lead to freeing of a block during record update.
-+		 */
-+		error = xfs_trans_reserve(tp, &M_RES(mp)->tr_write,
-+					  XFS_DIOSTRAT_SPACE_RES(mp, 0), 0);
-+		if (error) {
-+			xfs_trans_cancel(tp, 0);
-+			break;
-+		}
-+
-+		xfs_lock_two_inodes(dip, rip, XFS_ILOCK_EXCL);
-+
-+		error = xfs_trans_reserve_quota(tp, mp, dip->i_udquot,
-+				dip->i_gdquot, dip->i_pdquot,
-+				XFS_DIOSTRAT_SPACE_RES(mp, 0), 0,
-+				XFS_QMOPT_RES_REGBLKS);
-+		if (error)
-+			goto error2;
-+
-+		error = xfs_trans_reserve_quota(tp, mp, rip->i_udquot,
-+				rip->i_gdquot, rip->i_pdquot,
-+				XFS_DIOSTRAT_SPACE_RES(mp, 0), 0,
-+				XFS_QMOPT_RES_REGBLKS);
-+		if (error)
-+			goto error2;
-+
-+		xfs_trans_ijoin(tp, dip, 0);
-+		xfs_trans_ijoin(tp, rip, 0);
-+
-+		xfs_bmap_init(&dfree_list, &dfirstblock);
-+		xfs_bmap_init(&rfree_list, &rfirstblock);
-+
-+		/* compute the hole size in first iteration */
-+		if (moved_blocks == hole_blkcnt) {
-+			error = xfs_compute_hole_size(rip, rcurrent_fsb,
-+						      tp, &hole_blkcnt);
-+			if (error)
-+				goto error0;
-+			if (hole_blkcnt < len_fsb) {
-+				error = EINVAL;
-+				goto error0;
-+			}
-+		}
-+
-+		error = xfs_move_extent(tp, dip, rip, dcurrent_ext, &got,
-+					rcurrent_fsb, &dfirstblock,
-+					&dfree_list, &rfirstblock, &rfree_list);
-+		if (error)
-+			goto error0;
-+
-+		error = xfs_bmap_finish(&tp, &dfree_list, &committed);
-+		if (error)
-+			goto error0;
-+
-+		error = xfs_bmap_finish(&tp, &rfree_list, &committed);
-+		if (error)
-+			goto error1;
-+
-+		error = xfs_trans_commit(tp, 0);
-+
-+		if (!error) {
-+			dcurrent_fsb += got.br_blockcount;
-+			moved_blocks += got.br_blockcount;
-+			rcurrent_fsb += got.br_blockcount;
-+		}
-+
-+		xfs_iunlock(dip, XFS_ILOCK_EXCL);
-+		xfs_iunlock(rip, XFS_ILOCK_EXCL);
-+	}
-+out:
-+	*moved_len = moved_blocks << donor->i_blkbits;
-+	xfs_iunlock(dip, XFS_IOLOCK_EXCL);
-+	xfs_iunlock(rip, XFS_IOLOCK_EXCL);
-+	return -error;
-+
-+error0:
-+	xfs_bmap_cancel(&dfree_list);
-+error1:
-+	xfs_bmap_cancel(&rfree_list);
-+error2:
-+	xfs_trans_cancel(tp, XFS_TRANS_RELEASE_LOG_RES | XFS_TRANS_ABORT);
-+	xfs_iunlock(dip, XFS_ILOCK_EXCL);
-+	xfs_iunlock(rip, XFS_ILOCK_EXCL);
-+	xfs_iunlock(dip, XFS_IOLOCK_EXCL);
-+	xfs_iunlock(rip, XFS_IOLOCK_EXCL);
-+	*moved_len = moved_blocks << donor->i_blkbits;
-+	return -error;
-+}
-diff --git a/fs/xfs/xfs_bmap_util.h b/fs/xfs/xfs_bmap_util.h
-index 9a18a4b..b2ae123 100644
---- a/fs/xfs/xfs_bmap_util.h
-+++ b/fs/xfs/xfs_bmap_util.h
-@@ -104,6 +104,9 @@ int	xfs_collapse_file_space(struct xfs_inode *, xfs_off_t offset,
- 				xfs_off_t len);
- int	xfs_insert_file_space(struct xfs_inode *, xfs_off_t offset,
- 				xfs_off_t len);
-+int	xfs_vn_move_data(struct inode *donor, struct inode *receiver,
-+			 loff_t doffset, loff_t roffset, loff_t len,
-+			 loff_t *moved_len);
- 
- /* EOF block manipulation functions */
- bool	xfs_can_free_eofblocks(struct xfs_inode *ip, bool force);
-diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-index d75621a..63c1621 100644
---- a/fs/xfs/xfs_iops.c
-+++ b/fs/xfs/xfs_iops.c
-@@ -1100,6 +1100,7 @@ static const struct inode_operations xfs_inode_operations = {
- 	.listxattr		= xfs_vn_listxattr,
- 	.fiemap			= xfs_vn_fiemap,
- 	.update_time		= xfs_vn_update_time,
-+	.mov_data		= xfs_vn_move_data,
+diff --git a/fs/ext4/file.c b/fs/ext4/file.c
+index 8695f70..d2feaba 100644
+--- a/fs/ext4/file.c
++++ b/fs/ext4/file.c
+@@ -614,5 +614,6 @@ const struct inode_operations ext4_file_inode_operations = {
+ 	.get_acl	= ext4_get_acl,
+ 	.set_acl	= ext4_set_acl,
+ 	.fiemap		= ext4_fiemap,
++	.mov_data	= ext4_mov_data,
  };
  
- static const struct inode_operations xfs_dir_inode_operations = {
 -- 
 1.7.11-rc0
 
