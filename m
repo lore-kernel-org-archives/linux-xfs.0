@@ -1,22 +1,32 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 64BB77F3F
-	for <xfs@oss.sgi.com>; Tue,  8 Jul 2014 16:04:05 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 49CC07F51
+	for <xfs@oss.sgi.com>; Tue,  8 Jul 2014 16:49:15 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id D42AAAC003
-	for <xfs@oss.sgi.com>; Tue,  8 Jul 2014 14:04:01 -0700 (PDT)
-Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
-	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	MKzHP3TPLWRQ5OUd for <xfs@oss.sgi.com>;
-	Tue, 08 Jul 2014 14:03:55 -0700 (PDT)
-Date: Wed, 9 Jul 2014 07:03:52 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Error (failing assert) in xfs_repair
-Message-ID: <20140708210352.GA22339@dastard>
-References: <trinity-abe1fdb7-c48f-4186-bc36-343c584e19d8-1404830904979@3capp-gmx-bs08>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id B4D98AC004
+	for <xfs@oss.sgi.com>; Tue,  8 Jul 2014 14:49:14 -0700 (PDT)
+Received: from mail-wi0-f180.google.com (mail-wi0-f180.google.com
+	[209.85.212.180]) by cuda.sgi.com with ESMTP id
+	Bqn4M2NFeGWnV98J (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 08 Jul 2014 14:49:10 -0700 (PDT)
+Received: by mail-wi0-f180.google.com with SMTP id hi2so1740392wib.1
+	for <xfs@oss.sgi.com>; Tue, 08 Jul 2014 14:49:09 -0700 (PDT)
+Received: from t400.localnet (89-65-199-25.dynamic.chello.pl. [89.65.199.25])
+	by mx.google.com with ESMTPSA id
+	o2sm11568500wia.16.2014.07.08.14.49.08 for <xfs@oss.sgi.com>
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+	Tue, 08 Jul 2014 14:49:08 -0700 (PDT)
+From: Arkadiusz =?utf-8?q?Mi=C5=9Bkiewicz?= <arekm@maven.pl>
+Subject: Re: usrquota,
+	prjquota mount success on 3.16rc4 but Failed to initialize disk
+	quotas on 3.10.43
+Date: Tue, 8 Jul 2014 23:49:07 +0200
+References: <201407081041.02020.arekm@maven.pl>
+	<201407081527.24119.arekm@maven.pl>
+In-Reply-To: <201407081527.24119.arekm@maven.pl>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <trinity-abe1fdb7-c48f-4186-bc36-343c584e19d8-1404830904979@3capp-gmx-bs08>
+Message-Id: <201407082349.07906.arekm@maven.pl>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,74 +35,105 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Hans Kraus <hans.w.kraus@gmx.at>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Tue, Jul 08, 2014 at 04:48:25PM +0200, Hans Kraus wrote:
-> <html><head></head><body><div style="font-family: Verdana;font-size: 12.0px;"><div>
-> <div>Hi,</div>
-
-Hi, can you please use text-only email, not html email?
-
-> <div>I installed xfstools from the git repository on my debian 7 amd64<br/>
-> backup server. I got the following assertion error:<br/>
-> -------------------------------------------------------------------<br/>
-> root@elefant:/home/kraush# xfs_repair -L /dev/vg_stor1/lv_stor1<br/>
-
-What commit did you pull from? Also, a bit more information about
-your filesystem and storage will help us:
-
-http://xfs.org/index.php/XFS_FAQ#Q:_What_information_should_I_include_when_reporting_a_problem.3F
-
-> Phase 1 - find and verify superblock...<br/>
-> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; - reporting progress in intervals of 15 minutes<br/>
-> Phase 2 - using internal log<br/>
-> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; - zero log...<br/>
-> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; - scan filesystem freespace and inode maps...<br/>
-> zeroing unused portion of secondary superblock (AG #20)<br/>
-> Metadata corruption detected at block 0x2b9e8a001/0x200<br/>
-> zeroing unused portion of secondary superblock (AG #16)<br/>
-> bad agbno 4274958142 in agfl, agno 16<br/>
-> freeblk count 1 != flcount 1806214135 in ag 16<br/>
-> bad agbno 131784061 for btbno root, agno 16<br/>
-> bad agbno 1628187110 for btbcnt root, agno 16<br/>
-> agf_freeblks 2414458438, counted 0 in ag 16<br/>
-> agf_longest 1482451932, counted 0 in ag 16<br/>
-> agf_btreeblks 4031360978, counted 0 in ag 16<br/>
-> bad agbno 1207336865 for inobt root, agno 16<br/>
-> agi_count 1835626108, counted 0 in ag 16<br/>
-> agi_freecount 952362526, counted 0 in ag 16<br/>
-> xfs_repair: scan.c:1579: scan_ag: Assertion &#96;agf_dirty &#124;&#124;<br/>
-> agfbuf-&gt;b_error != 117&#39; failed.<br/>
-
-So AG 16 has garbage in superblock, the AGF and the AGI. How did
-that happen? What went wrong with the storage that lead you to run
-xfs_repair?
-
-I think I see the problem, but I first need to confirm what assert
-is firing by matching commits.
-
-> root@elefant:/home/kraush#<br/>
-> -------------------------------------------------------------------<br/>
-> What shall I do to repair the file system (about 16 TB, 88% full,<br/>
-> backuppc storage medium).</div>
-
-You'll probably have to wait for a patch to fix the problem. The
-sooner I can confirm the assert you hit, the sooner I'll be able to
-get you that patch.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gVHVlc2RheSAwOCBvZiBKdWx5IDIwMTQsIEFya2FkaXVzeiBNacWba2lld2ljeiB3cm90ZToK
+PiBPbiBUdWVzZGF5IDA4IG9mIEp1bHkgMjAxNCwgQXJrYWRpdXN6IE1pxZtraWV3aWN6IHdyb3Rl
+Ogo+ID4gTXkgYnJva2VuIGZzCj4gPiBodHRwOi8vaXhpb24ucGxkLWxpbnV4Lm9yZy9+YXJla20v
+cDIveDEvd2ViMi1ob21lLm1ldGFkdW1wLmd6Cj4gPiB0aGFua3MgdG8gInhmc3Byb2dzOiBmaXhl
+cyBmb3IgMy4yLjEiIGJ5IERhdmUgaXMgbm93IGFsbW9zdCBpbiBnb29kCj4gPiBzaGFwZS4KPiA+
+IAo+ID4gV2hhdCBJIGZvdW5kIGludGVyZXN0aW5nIGlzIHRoYXQgcmVwYWlyaW5nIGl0IHdpdGgg
+Y3VycmVudCBnaXQgeGZzX3JlcGFpcgo+ID4gYW5kIHRoZW4gbW91bnRpbmcgKC1vIHVzcnF1b3Rh
+LHByanF1b3RhKSBvbiAzLjE2LjAtcmM0IGdpdmVzIG1lOgo+ID4gCj4gPiBbMzIyMDguMTQyMzE2
+XSBYRlMgKHNkYik6IE1vdW50aW5nIFY0IEZpbGVzeXN0ZW0KPiA+IFszMjIwOC4yMDU0NDldIFhG
+UyAoc2RiKTogRW5kaW5nIGNsZWFuIG1vdW50Cj4gPiBbMzIyMDguMjU4OTkxXSBYRlMgKHNkYik6
+IFF1b3RhY2hlY2sgbmVlZGVkOiBQbGVhc2Ugd2FpdC4KPiA+IFszMjgyMS45MzA0MzddIFhGUyAo
+c2RiKTogUXVvdGFjaGVjazogRG9uZS4KPiA+IAo+ID4gVGhlbiBJIHVtb3VudCBpdCBhbmQgbW91
+bnQgYWdhaW4gKHNhbWUgb3B0aW9ucyBhcyBiZWZvcmUpIGJ1dCBvbiAzLjEwLjQzCj4gPiBrZXJu
+ZWw6Cj4gPiAKPiA+IFsgIDExMS4zMjU4ODldIFhGUyAoc2RiKTogTW91bnRpbmcgRmlsZXN5c3Rl
+bQo+ID4gWyAgMTExLjQxOTMzMV0gWEZTIChzZGIpOiBGYWlsZWQgdG8gaW5pdGlhbGl6ZSBkaXNr
+IHF1b3Rhcy4KPiA+IFsgIDExMS40MTkzMzldIFhGUyAoc2RiKTogRW5kaW5nIGNsZWFuIG1vdW50
+Cj4gPiAKPiA+IFdoYXQgZGlkIGNoYW5nZSBpbiBsYXRlciBrZXJuZWxzIHRoYXQgY291bGQgaGF2
+ZSBtZWFuaW5nIGhlcmU/IChzbyBJCj4gPiBjb3VsZCB0cnkgdG8gYmFja3BvcnQgdGhhdCBjaGFu
+Z2UpLgo+ID4gCj4gPiBGb3IgdGVzdGluZyBJIG1vdW50ZWQgYWdhaW4gb24gMy4xNiBhbmQ6Cj4g
+PiBbMzM4NzAuNDcyNzY5XSBYRlMgKHNkYik6IE1vdW50aW5nIFY0IEZpbGVzeXN0ZW0KPiA+IFsz
+Mzg3MC41NDM1MzldIFhGUyAoc2RiKTogRW5kaW5nIGNsZWFuIG1vdW50Cj4gPiBbMzM4NzAuNTk3
+NzkxXSBYRlMgKHNkYik6IFF1b3RhY2hlY2sgbmVlZGVkOiBQbGVhc2Ugd2FpdC4KPiA+IFszNDQ4
+NC4zMzI4NzldIFhGUyAoc2RiKTogUXVvdGFjaGVjazogRG9uZQo+ID4gCj4gPiBhbmQgYWdhaW4g
+b24gMy4xMC40MzoKPiA+IFsgMTY0OS4yMTUzOTBdIFhGUyAoc2RiKTogTW91bnRpbmcgRmlsZXN5
+c3RlbQo+ID4gWyAxNjQ5LjMxNjg5NF0gWEZTIChzZGIpOiBGYWlsZWQgdG8gaW5pdGlhbGl6ZSBk
+aXNrIHF1b3Rhcy4KPiA+IFsgMTY0OS4zMTY5MDJdIFhGUyAoc2RiKTogRW5kaW5nIGNsZWFuIG1v
+dW50Cj4gCj4gRmFpbHMgaW4geGZzX2lnZXQgYXQgeGZzX3FtX2luaXRfcXVvdGFpbm9zKCk6Cj4g
+Cj4gICAgICAgICAgICAgICAgIGlmIChYRlNfSVNfT1FVT1RBX09OKG1wKSAmJgo+ICAgICAgICAg
+ICAgICAgICAgICAgbXAtPm1fc2Iuc2JfZ3F1b3Rpbm8gIT0gTlVMTEZTSU5PKSB7Cj4gICAgICAg
+ICAgICAgICAgICAgICAgICAgQVNTRVJUKG1wLT5tX3NiLnNiX2dxdW90aW5vID4gMCk7Cj4gICAg
+ICAgICAgICAgICAgICAgICAgICAgaWYgKChlcnJvciA9IHhmc19pZ2V0KG1wLCBOVUxMLAo+IG1w
+LT5tX3NiLnNiX2dxdW90aW5vLCAwLCAwLCAmZ2lwKSkpIHsKPiAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgIGlmICh1aXApCj4gICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgIElSRUxFKHVpcCk7Cj4gICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICByZXR1
+cm4gWEZTX0VSUk9SKGVycm9yKTsKPiAgICAgICAgICAgICAgICAgICAgICAgICB9Cj4gICAgICAg
+ICAgICAgICAgIH0KPiAKPiBhbmQgaW4geGZzX2lnZXQ6Cj4gCj4gICAgICAgICAvKiByZWplY3Qg
+aW5vZGUgbnVtYmVycyBvdXRzaWRlIGV4aXN0aW5nIEFHcyAqLwo+ICAgICAgICAgaWYgKCFpbm8g
+fHwgWEZTX0lOT19UT19BR05PKG1wLCBpbm8pID49IG1wLT5tX3NiLnNiX2FnY291bnQpCj4gICAg
+ICAgICAgICAgICAgIHJldHVybiBFSU5WQUw7Cj4gCj4gCj4gbV9zYi5zYl9ncXVvdGluby9pbm8g
+bG9va3MgdG8gYmUgMAo+IAo+ICMgeGZzX2RiIC9kZXYvc2RiIC1jICJzYiAwIiAtYyAicHJpbnQi
+IHxncmVwIHF1b3QKPiB1cXVvdGlubyA9IDQwNzc5NjEKPiBncXVvdGlubyA9IDAKPiBwcXVvdGlu
+byA9IDAKPiAKPiBhbmQgb2xkZXIga2VybmVscyAodGVzdGluZyBvbiAzLjEwLjQ2IG5vdykgc2Vl
+bSB0byBiZSB1bmFibGUgdG8gZGVhbCB3aXRoCj4gdGhpcy4KPiAKPiBOZXdlciBrZXJuZWxzIHN1
+cnZpdmUgcHJvYmFibHkgZHVlIHRvIHRoaXM6Cj4gCj4gICAgeGZzX3NiX3F1b3RhX2Zyb21fZGlz
+ayhzdHJ1Y3QgeGZzX3NiICpzYnApCj4gewo+ICAgICAgICAgLyoKPiAgICAgICAgICAqIG9sZGVy
+IG1rZnMgZG9lc24ndCBpbml0aWFsaXplIHF1b3RhIGlub2RlcyB0byBOVUxMRlNJTk8uIFRoaXMK
+PiAgICAgICAgICAqIGxlYWRzIHRvIGluLWNvcmUgdmFsdWVzIGhhdmluZyB0d28gZGlmZmVyZW50
+IHZhbHVlcyBmb3IgYSBxdW90YQo+ICAgICAgICAgICogaW5vZGUgdG8gYmUgaW52YWxpZDogMCBh
+bmQgTlVMTEZTSU5PLiBDaGFuZ2UgaXQgdG8gYSBzaW5nbGUKPiB2YWx1ZSAqIE5VTExGU0lOTy4K
+PiAgICAgICAgICAqCj4gICAgICAgICAgKiBOb3RlIHRoYXQgdGhpcyBjaGFuZ2UgYWZmZWN0IG9u
+bHkgdGhlIGluLWNvcmUgdmFsdWVzLiBUaGVzZQo+ICAgICAgICAgICogdmFsdWVzIGFyZSBub3Qg
+d3JpdHRlbiBiYWNrIHRvIGRpc2sgdW5sZXNzIGFueSBxdW90YSBpbmZvcm1hdGlvbgo+ICAgICAg
+ICAgICogaXMgd3JpdHRlbiB0byB0aGUgZGlzay4gRXZlbiBpbiB0aGF0IGNhc2UsIHNiX3BxdW90
+aW5vIGZpZWxkIGlzCj4gICAgICAgICAgKiBub3Qgd3JpdHRlbiB0byBkaXNrIHVubGVzcyB0aGUg
+c3VwZXJibG9jayBzdXBwb3J0cyBwcXVvdGluby4KPiAgICAgICAgICAqLwo+ICAgICAgICAgaWYg
+KHNicC0+c2JfdXF1b3Rpbm8gPT0gMCkKPiAgICAgICAgICAgICAgICAgc2JwLT5zYl91cXVvdGlu
+byA9IE5VTExGU0lOTzsKPiAgICAgICAgIGlmIChzYnAtPnNiX2dxdW90aW5vID09IDApCj4gICAg
+ICAgICAgICAgICAgIHNicC0+c2JfZ3F1b3Rpbm8gPSBOVUxMRlNJTk87Cj4gICAgICAgICBpZiAo
+c2JwLT5zYl9wcXVvdGlubyA9PSAwKQo+ICAgICAgICAgICAgICAgICBzYnAtPnNiX3BxdW90aW5v
+ID0gTlVMTEZTSU5POwo+IAo+IHNvIHNiX2dxdW90aW5vID0gTlVMTEZTSU5PIGdldHMgc2V0IGFu
+ZCBpdCBuZXZlciByZWFjaGVzIGVycm9yIGNvbmRpdGlvbiBhdAo+IHhmc19xbV9pbml0X3F1b3Rh
+aW5vcygpCgpTbWFsbCBzdW1tYXJ5IGZyb20gbXkgb2JzZXJ2YXRpb246CgotIG1rZnMueGZzIHNl
+dHMgYWxsIHRocmVlIFt1Z3BdcXVvdGlubyB0byAwIChjb250cmFyeSB0byB3aGF0IGNvbW1lbnQg
+YWJvdmUgCnNheXM6ICJvbGRlciBta2ZzIGRvZXNuJ3QgaW5pdGlhbGl6ZSBxdW90YSBpbm9kZXMg
+dG8gTlVMTEZTSU5PLiIuIE5ldy9mcmVzaCAKbWtmcy54ZnMgYWxzbyBkb2Vzbid0IGRvIHRoYXQu
+IFdlcmUgYW55IGludGVybWVkaWF0ZSB2ZXJzaW9ucyBhY3R1YWxseSBzZXR0aW5nIApOVUxMRlNJ
+Tk8gPwoKLSBmcmVzaGx5IGNyZWF0ZWQgZnM7IDMuMTAga2VybmVsOyBtb3VudCBpbWFnZSAtbyB1
+c3JxdW90YSBjYXVzZXM6IHVxdW90aW5vIApnZXRzIE5FVyBpbm9kZTsgZ3F1b3Rpbm8gaXMgc2V0
+IHRvIG51bGw7IHBxdW90aW5vIG5vdCB1c2VkIChzdGF5cyBhdCAwKQoKLSAzLjE2IGJlaGF2aW91
+ciBpcyBkaWZmZXJlbnQ7IGZyZXNobHkgY3JlYXRlZCBmczsgbW91bnQgaW1hZ2UgLW8gdXNycXVv
+dGEgCmNhdXNlczogdXF1b3Rpbm8gZ2V0cyBORVcgaW5vZGU7IGdxdW90aW5vL3BxdW90aW5vIHN0
+YXlzIGF0IDAgKHdoaWxlIG9uIDMuMTAgCmdxdW90aW5vIHdhcyBiZWluZyBzZXQgdG8gbnVsbCkK
+Ci0gMy4xMCBrZXJuZWwgaXMgbm90IGFibGUgdG8gaGFuZGxlIGNhc2Ugd2hlbiB1cXVvdGlubyA9
+PSB2YWx1ZSwgZ3F1b3Rpbm8gPT0gCjAuIEZvciAzLjEwIHRoaXMgY2FzZSBpcyBpbXBvc3NpYmxl
+IC8gc2hvdWxkIG5ldmVyIGhhcHBlbi4gMy4xMCBleHBlY3RzIAoodXF1b3Rpbm8gPT0gdmFsdWUs
+IGdxdW90aW5vID09IG51bGwpIG9yICh1cXVvdGlubyA9PSB2YWx1ZSwgZ3F1b3Rpbm8gPT0gCm90
+aGVydmFsdWUpIG9yICh1cW90aW5mbyA9PSBudWxsLCBncnVvdGlubyA9PSB2YWx1ZSkgb25seS4K
+Ci0gdGhpcyBtZWFucyB0aGF0IGZyZXNoIGZzOyBtb3VudCB1bmRlciAzLjE2IHdpdGggLW8gdXNy
+cXVvdGEuIFRyeSB0byBtb3VudCAKdGhlIHNhbWUgZnMgb24gMy4xMCBidXQgd2l0aCAtbyB1c3Jx
+dW90YSxncnBxdW90YSAtPiB3aWxsIGZhaWwgIkZhaWxlZCB0byAKaW5pdGlhbGl6ZSBkaXNrIHF1
+b3Rhcy4iCgotIDMuMTYgaGFuZGxlcyBib3RoIGNhc2VzICh1cXVvdGlubyA9PSB2YWwsIGdxdW90
+aW5vID09IDAsIHRvbykgYmVjYXVzZSBpdCAKZG9lcyB0cmFuc2xhdGlvbiB3aGVuIHJlYWRpbmcg
+ZnJvbSBkaXNrICh0aGUgb25lIGNpdGVkIGF0IGJlZ2lubmluZyBvZiB0aGlzIAptYWlsKQoKUHJv
+YmFibHkgc29sdXRpb24gaXMgdG8gbWFrZSB4ZnNfcmVwYWlyIG1ha2UgaWYgW3VncF1xdW90aW5v
+ICA9PSAwIHNldCB0aGVzZSAKdG8gbnVsbC4gSU1PIG9sZCBhbmQgbmV3IGtlcm5lbHMgc2hvdWxk
+IGhhbmRsZSBudWxsIHByb3Blcmx5IChyZWdhcmRsZXNzIG9mIApxdW90YSBmZWF0dXJlIGJpdCBz
+dGF0ZSkuIG1rZnMueGZzIHNob3VsZCBhbHNvIGdldCB1cGRhdGVkIHRvIHNldCB0aGVzZSB0byAK
+bnVsbCBpbml0aWFsbHkuIAoKTGFzdCBxdWVzdGlvbi9pc3N1ZSBpczogc2hvdWxkIG1vdW50IGZh
+aWwgaW4gY2FzZSBvZiAiRmFpbGVkIHRvIGluaXRpYWxpemUgCmRpc2sgcXVvdGFzLiIgcHJvYmxl
+bT8gUmlnaHQgbm93IHVzZXIgcmVxdWVzdHMgcXVvdGFzIHRvIGJlIGVuYWJsZWQgYnV0IGdldHMg
+CmZzIHdpdGhvdXQgcXVvdGEgKGFuZCB0aGUgb25seSBmYWlsdXJlIGluZGljYXRpb24gaXMgb25l
+IGxpbmUgaW4gZG1lc2cpLgoKQ2l0YXRpb246CjIzOjI0IDwgZGNoaW5uZXJfXz4gYXJla206aXQn
+cyBqdXN0IGEgbmFzdHkgY2FuIG9mIHdvcm1zCgotLSAKQXJrYWRpdXN6IE1pxZtraWV3aWN6LCBh
+cmVrbSAvIG1hdmVuLnBsCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5j
+b20vbWFpbG1hbi9saXN0aW5mby94ZnMK
