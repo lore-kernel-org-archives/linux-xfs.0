@@ -1,24 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 1963B7FAC
-	for <xfs@oss.sgi.com>; Thu, 31 Jul 2014 18:02:16 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 05B298F8059
-	for <xfs@oss.sgi.com>; Thu, 31 Jul 2014 16:02:15 -0700 (PDT)
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	HaGHYSA3OCPFQVHf for <xfs@oss.sgi.com>;
-	Thu, 31 Jul 2014 16:02:14 -0700 (PDT)
-Date: Fri, 1 Aug 2014 09:02:12 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 2/2] xfs: flush both inodes in xfs_swap_extents
-Message-ID: <20140731230212.GT26465@dastard>
-References: <1406787128-11897-1-git-send-email-david@fromorbit.com>
-	<1406787128-11897-3-git-send-email-david@fromorbit.com>
-	<20140731171602.GF22173@infradead.org>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 4078F7F4E
+	for <xfs@oss.sgi.com>; Wed,  9 Jul 2014 04:02:30 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 114BF304062
+	for <xfs@oss.sgi.com>; Wed,  9 Jul 2014 02:02:27 -0700 (PDT)
+Date: Wed, 9 Jul 2014 02:02:24 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 4/5] xfs: free inodes on log recovery error
+Message-ID: <20140709090224.GA31122@infradead.org>
+References: <20140702143206.438456679@sgi.com>
+	<20140702144139.894251516@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20140731171602.GF22173@infradead.org>
+In-Reply-To: <20140702144139.894251516@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,37 +26,19 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
+To: Mark Tinguely <tinguely@sgi.com>
 Cc: xfs@oss.sgi.com
 
-On Thu, Jul 31, 2014 at 10:16:02AM -0700, Christoph Hellwig wrote:
-> >  int
-> > +xfs_swap_extent_flush(
-> > +	struct xfs_inode	*ip)
-> > +{
-> > +	int	error;
-> 
-> nipick:  shouldn't the arguments and local variables align to the same
-> level?
+On Wed, Jul 02, 2014 at 09:32:10AM -0500, Mark Tinguely wrote:
+> Recovery may free inodes that end up on the inode
+> reclaim RCU. If recovery fails, we leak these inodes.
+> The filesystem should be in forced shutdown at this
+> point, so a call to xfs_reclaim_inode is a fast path
+> to freeing the inodes and RCU entries.
 
-*nod*
-
-> Also a local struct inode variable instead of using VFS_I(ip) 4 times
-> would be nice.
-
-Will fix.
-
-> Otherwise looks good,
-> 
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
-
-Thanks.
-
--Dave.
-
--- 
-Dave Chinner
-david@fromorbit.com
+I haven't really started reviewing the series, but your terminology
+here seems wrong.  RCU is just a way to synchronize updates - do you
+mean inodes are marked as reclaimable in the radix tree?
 
 _______________________________________________
 xfs mailing list
