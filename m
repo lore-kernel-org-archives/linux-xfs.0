@@ -1,25 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 109E87F3F
-	for <xfs@oss.sgi.com>; Thu, 10 Jul 2014 18:26:30 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id DEC987F57
+	for <xfs@oss.sgi.com>; Thu, 10 Jul 2014 18:26:31 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 02EE9304032
-	for <xfs@oss.sgi.com>; Thu, 10 Jul 2014 16:26:26 -0700 (PDT)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 5C165AC001
+	for <xfs@oss.sgi.com>; Thu, 10 Jul 2014 16:26:28 -0700 (PDT)
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	ZGnDfgbKMcmRxfRX for <xfs@oss.sgi.com>;
-	Thu, 10 Jul 2014 16:26:24 -0700 (PDT)
+	CGfNHEs4dwzE5YDk for <xfs@oss.sgi.com>;
+	Thu, 10 Jul 2014 16:26:26 -0700 (PDT)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.80)
-	(envelope-from <dave@fromorbit.com>) id 1X5NjK-0005M8-8w
+	(envelope-from <dave@fromorbit.com>) id 1X5NjK-0005M9-9a
 	for xfs@oss.sgi.com; Fri, 11 Jul 2014 09:26:22 +1000
 Received: from dave by disappointment with local (Exim 4.82_1-5b7a7c0-XX)
-	(envelope-from <dave@disappointment.disaster>) id 1X5NjK-0000dl-87
+	(envelope-from <dave@disappointment.disaster>) id 1X5NjK-0000do-8g
 	for xfs@oss.sgi.com; Fri, 11 Jul 2014 09:26:22 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 0/3] xfs: regression fixes for 3.16-rc5
-Date: Fri, 11 Jul 2014 09:26:16 +1000
-Message-Id: <1405034779-2028-1-git-send-email-david@fromorbit.com>
+Subject: [PATCH 1/3] Revert "xfs: block allocation work needs to be kswapd
+	aware"
+Date: Fri, 11 Jul 2014 09:26:17 +1000
+Message-Id: <1405034779-2028-2-git-send-email-david@fromorbit.com>
+In-Reply-To: <1405034779-2028-1-git-send-email-david@fromorbit.com>
+References: <1405034779-2028-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,29 +38,88 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Hi folks,
+This reverts commit 1f6d64829db78a7e1d63e15c9f48f0a5d2b5a679.
 
-These three patches are fixes for recent regressions. The first two
-are fixing up the mess that making the allocation workqueue kswapd
-aware. The first reverts the original patch, and the second moves
-the stack switch to the problematic double btree split path rather
-than being done for all writeback allocation. This allows the stack
-split to be done unconditionally for all allocations due to the
-relative rarity of it occurring now, and allows the kswapd awareness
-to be passed because we aren't going to swamp memory reclaim with
-hundreds of concurrent allocation requests from "kswapd" context.
+This commit resulted in regressions in performance in low
+memory situations where kswapd was doing writeback of delayed
+allocation blocks. It resulted in significant parallelism of the
+kswapd work and with the special kswapd flags meant that hundreds of
+active allocation could dip into kswapd specific memory reserves and
+avoid being throttled. This cause a large amount of performance
+variation, as well as random OOM-killer invocations that didn't
+previously exist.
 
-The last patch is for an older regression, and one that was tripped
-over recently when fixing up v3.2.0 of repair. It only affects
-people who are switching from newer kernels to older kernels and
-have only user quotas enabled. That combination shouldn't be too
-frequent - the fact the bug has been there since 3.12 indicates that
-this, indeed, isn't a frequent occurrence. Still, it needs to be
-fixed.
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/xfs_bmap_util.c | 16 +++-------------
+ fs/xfs/xfs_bmap_util.h | 13 ++++++-------
+ 2 files changed, 9 insertions(+), 20 deletions(-)
 
-Comments, thoughts, and testing all welcome...
-
--Dave.
+diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+index 703b3ec..057f671 100644
+--- a/fs/xfs/xfs_bmap_util.c
++++ b/fs/xfs/xfs_bmap_util.c
+@@ -258,23 +258,14 @@ xfs_bmapi_allocate_worker(
+ 	struct xfs_bmalloca	*args = container_of(work,
+ 						struct xfs_bmalloca, work);
+ 	unsigned long		pflags;
+-	unsigned long		new_pflags = PF_FSTRANS;
+ 
+-	/*
+-	 * we are in a transaction context here, but may also be doing work
+-	 * in kswapd context, and hence we may need to inherit that state
+-	 * temporarily to ensure that we don't block waiting for memory reclaim
+-	 * in any way.
+-	 */
+-	if (args->kswapd)
+-		new_pflags |= PF_MEMALLOC | PF_SWAPWRITE | PF_KSWAPD;
+-
+-	current_set_flags_nested(&pflags, new_pflags);
++	/* we are in a transaction context here */
++	current_set_flags_nested(&pflags, PF_FSTRANS);
+ 
+ 	args->result = __xfs_bmapi_allocate(args);
+ 	complete(args->done);
+ 
+-	current_restore_flags_nested(&pflags, new_pflags);
++	current_restore_flags_nested(&pflags, PF_FSTRANS);
+ }
+ 
+ /*
+@@ -293,7 +284,6 @@ xfs_bmapi_allocate(
+ 
+ 
+ 	args->done = &done;
+-	args->kswapd = current_is_kswapd();
+ 	INIT_WORK_ONSTACK(&args->work, xfs_bmapi_allocate_worker);
+ 	queue_work(xfs_alloc_wq, &args->work);
+ 	wait_for_completion(&done);
+diff --git a/fs/xfs/xfs_bmap_util.h b/fs/xfs/xfs_bmap_util.h
+index 075f722..935ed2b 100644
+--- a/fs/xfs/xfs_bmap_util.h
++++ b/fs/xfs/xfs_bmap_util.h
+@@ -50,13 +50,12 @@ struct xfs_bmalloca {
+ 	xfs_extlen_t		total;	/* total blocks needed for xaction */
+ 	xfs_extlen_t		minlen;	/* minimum allocation size (blocks) */
+ 	xfs_extlen_t		minleft; /* amount must be left after alloc */
+-	bool			eof;	/* set if allocating past last extent */
+-	bool			wasdel;	/* replacing a delayed allocation */
+-	bool			userdata;/* set if is user data */
+-	bool			aeof;	/* allocated space at eof */
+-	bool			conv;	/* overwriting unwritten extents */
+-	bool			stack_switch;
+-	bool			kswapd;	/* allocation in kswapd context */
++	char			eof;	/* set if allocating past last extent */
++	char			wasdel;	/* replacing a delayed allocation */
++	char			userdata;/* set if is user data */
++	char			aeof;	/* allocated space at eof */
++	char			conv;	/* overwriting unwritten extents */
++	char			stack_switch;
+ 	int			flags;
+ 	struct completion	*done;
+ 	struct work_struct	work;
+-- 
+2.0.0
 
 _______________________________________________
 xfs mailing list
