@@ -1,27 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id A52437F3F
-	for <xfs@oss.sgi.com>; Thu, 10 Jul 2014 18:26:28 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 109E87F3F
+	for <xfs@oss.sgi.com>; Thu, 10 Jul 2014 18:26:30 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 879FA304043
-	for <xfs@oss.sgi.com>; Thu, 10 Jul 2014 16:26:28 -0700 (PDT)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 02EE9304032
+	for <xfs@oss.sgi.com>; Thu, 10 Jul 2014 16:26:26 -0700 (PDT)
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	sBWU7DIonAw3GGFC for <xfs@oss.sgi.com>;
-	Thu, 10 Jul 2014 16:26:26 -0700 (PDT)
+	ZGnDfgbKMcmRxfRX for <xfs@oss.sgi.com>;
+	Thu, 10 Jul 2014 16:26:24 -0700 (PDT)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.80)
-	(envelope-from <dave@fromorbit.com>) id 1X5NjK-0005MB-B7
+	(envelope-from <dave@fromorbit.com>) id 1X5NjK-0005M8-8w
 	for xfs@oss.sgi.com; Fri, 11 Jul 2014 09:26:22 +1000
 Received: from dave by disappointment with local (Exim 4.82_1-5b7a7c0-XX)
-	(envelope-from <dave@disappointment.disaster>) id 1X5NjK-0000dy-AC
+	(envelope-from <dave@disappointment.disaster>) id 1X5NjK-0000dl-87
 	for xfs@oss.sgi.com; Fri, 11 Jul 2014 09:26:22 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 3/3] xfs: null unused quota inodes when quota is on
-Date: Fri, 11 Jul 2014 09:26:19 +1000
-Message-Id: <1405034779-2028-4-git-send-email-david@fromorbit.com>
-In-Reply-To: <1405034779-2028-1-git-send-email-david@fromorbit.com>
-References: <1405034779-2028-1-git-send-email-david@fromorbit.com>
+Subject: [PATCH 0/3] xfs: regression fixes for 3.16-rc5
+Date: Fri, 11 Jul 2014 09:26:16 +1000
+Message-Id: <1405034779-2028-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -37,77 +35,29 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-From: Dave Chinner <dchinner@redhat.com>
+Hi folks,
 
-When quota is on, it is expected that unused quota inodes have a
-value of NULLFSINO. The changes to support a separate project quota
-in 3.12 broken this rule for non-project quota inode enabled
-filesystem, as the code now refuses to write the group quota inode
-if neither group or project quotas are enabled. This regression was
-introduced by commit d892d58 ("xfs: Start using pquotaino from the
-superblock").
+These three patches are fixes for recent regressions. The first two
+are fixing up the mess that making the allocation workqueue kswapd
+aware. The first reverts the original patch, and the second moves
+the stack switch to the problematic double btree split path rather
+than being done for all writeback allocation. This allows the stack
+split to be done unconditionally for all allocations due to the
+relative rarity of it occurring now, and allows the kswapd awareness
+to be passed because we aren't going to swamp memory reclaim with
+hundreds of concurrent allocation requests from "kswapd" context.
 
-In this case, we should be writing NULLFSINO rather than nothing to
-ensure that we leave the group quota inode in a valid state while
-quotas are enabled.
+The last patch is for an older regression, and one that was tripped
+over recently when fixing up v3.2.0 of repair. It only affects
+people who are switching from newer kernels to older kernels and
+have only user quotas enabled. That combination shouldn't be too
+frequent - the fact the bug has been there since 3.12 indicates that
+this, indeed, isn't a frequent occurrence. Still, it needs to be
+fixed.
 
-Failure to do so doesn't cause a current kernel to break - the
-separate project quota inodes introduced translation code to always
-treat a zero inode as NULLFSINO. This was introduced by commit
-0102629 ("xfs: Initialize all quota inodes to be NULLFSINO") with is
-also in 3.12 but older kernels do not do this and hence taking a
-filesystem back to an older kernel can result in quotas failing
-initialisation at mount time. When that happens, we see this in
-dmesg:
+Comments, thoughts, and testing all welcome...
 
-[ 1649.215390] XFS (sdb): Mounting Filesystem
-[ 1649.316894] XFS (sdb): Failed to initialize disk quotas.
-[ 1649.316902] XFS (sdb): Ending clean mount
-
-By ensuring that we write NULLFSINO to quota inodes that aren't
-active, we avoid this problem.
-
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- fs/xfs/xfs_sb.c | 16 ++++++++++++----
- 1 file changed, 12 insertions(+), 4 deletions(-)
-
-diff --git a/fs/xfs/xfs_sb.c b/fs/xfs/xfs_sb.c
-index c3453b1..9a58699 100644
---- a/fs/xfs/xfs_sb.c
-+++ b/fs/xfs/xfs_sb.c
-@@ -483,10 +483,16 @@ xfs_sb_quota_to_disk(
- 	}
- 
- 	/*
--	 * GQUOTINO and PQUOTINO cannot be used together in versions
--	 * of superblock that do not have pquotino. from->sb_flags
--	 * tells us which quota is active and should be copied to
--	 * disk.
-+	 * GQUOTINO and PQUOTINO cannot be used together in versions of
-+	 * superblock that do not have pquotino. from->sb_flags tells us which
-+	 * quota is active and should be copied to disk. If neither are active,
-+	 * make sure we write NULLFSINO to the sb_gquotino field as a quota
-+	 * inode value of "0" is invalid when the XFS_SB_VERSION_QUOTA feature
-+	 * bit is set.
-+	 *
-+	 * Note that we don't need to handle the sb_uquotino or sb_pquotino here
-+	 * as they do not require any translation. Hence the main sb field loop
-+	 * will write them appropriately from the in-core superblock.
- 	 */
- 	if ((*fields & XFS_SB_GQUOTINO) &&
- 				(from->sb_qflags & XFS_GQUOTA_ACCT))
-@@ -494,6 +500,8 @@ xfs_sb_quota_to_disk(
- 	else if ((*fields & XFS_SB_PQUOTINO) &&
- 				(from->sb_qflags & XFS_PQUOTA_ACCT))
- 		to->sb_gquotino = cpu_to_be64(from->sb_pquotino);
-+	else
-+		to->sb_gquotino = cpu_to_be64(NULLFSINO);
- 
- 	*fields &= ~(XFS_SB_PQUOTINO | XFS_SB_GQUOTINO);
- }
--- 
-2.0.0
+-Dave.
 
 _______________________________________________
 xfs mailing list
