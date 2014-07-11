@@ -1,24 +1,31 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 8547C7F47
-	for <xfs@oss.sgi.com>; Fri, 11 Jul 2014 17:00:53 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 7EDD67F47
+	for <xfs@oss.sgi.com>; Fri, 11 Jul 2014 18:02:07 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 6E3778F8068
-	for <xfs@oss.sgi.com>; Fri, 11 Jul 2014 15:00:53 -0700 (PDT)
-Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
-	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	2aa4upFIuoxmj1Ww for <xfs@oss.sgi.com>;
-	Fri, 11 Jul 2014 15:00:51 -0700 (PDT)
-Date: Sat, 12 Jul 2014 08:00:49 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 3/3] xfs: null unused quota inodes when quota is on
-Message-ID: <20140711220049.GR4453@dastard>
-References: <1405034779-2028-1-git-send-email-david@fromorbit.com>
-	<1405034779-2028-4-git-send-email-david@fromorbit.com>
-	<20140711131514.GA3593@laptop.bfoster>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 8BF92304039
+	for <xfs@oss.sgi.com>; Fri, 11 Jul 2014 16:02:04 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id 7VQhrrg3N4TGRJNF (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Fri, 11 Jul 2014 16:02:03 -0700 (PDT)
+Received: from int-mx11.intmail.prod.int.phx2.redhat.com
+	(int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id s6BN22ac030216
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256
+	verify=OK) for <xfs@oss.sgi.com>; Fri, 11 Jul 2014 19:02:02 -0400
+Received: from liberator.sandeen.net (ovpn01.gateway.prod.ext.phx2.redhat.com
+	[10.5.9.1])
+	by int-mx11.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id s6BN20GX026958
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES128-SHA bits=128 verify=NO)
+	for <xfs@oss.sgi.com>; Fri, 11 Jul 2014 19:02:01 -0400
+Message-ID: <53C06CE9.9000209@redhat.com>
+Date: Fri, 11 Jul 2014 18:02:01 -0500
+From: Eric Sandeen <sandeen@redhat.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20140711131514.GA3593@laptop.bfoster>
+Subject: [PATCH] xfs_repair: copy, don't clear, stripe geometry in backup
+ SB
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,101 +38,90 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
-Cc: xfs@oss.sgi.com
+To: xfs-oss <xfs@oss.sgi.com>
 
-On Fri, Jul 11, 2014 at 09:15:15AM -0400, Brian Foster wrote:
-> On Fri, Jul 11, 2014 at 09:26:19AM +1000, Dave Chinner wrote:
-> > From: Dave Chinner <dchinner@redhat.com>
-> > 
-> > When quota is on, it is expected that unused quota inodes have a
-> > value of NULLFSINO. The changes to support a separate project quota
-> > in 3.12 broken this rule for non-project quota inode enabled
-> > filesystem, as the code now refuses to write the group quota inode
-> > if neither group or project quotas are enabled. This regression was
-> > introduced by commit d892d58 ("xfs: Start using pquotaino from the
-> > superblock").
-> > 
-> > In this case, we should be writing NULLFSINO rather than nothing to
-> > ensure that we leave the group quota inode in a valid state while
-> > quotas are enabled.
-> > 
-> > Failure to do so doesn't cause a current kernel to break - the
-> > separate project quota inodes introduced translation code to always
-> > treat a zero inode as NULLFSINO. This was introduced by commit
-> > 0102629 ("xfs: Initialize all quota inodes to be NULLFSINO") with is
-> > also in 3.12 but older kernels do not do this and hence taking a
-> > filesystem back to an older kernel can result in quotas failing
-> > initialisation at mount time. When that happens, we see this in
-> > dmesg:
-> > 
-> > [ 1649.215390] XFS (sdb): Mounting Filesystem
-> > [ 1649.316894] XFS (sdb): Failed to initialize disk quotas.
-> > [ 1649.316902] XFS (sdb): Ending clean mount
-> > 
-> > By ensuring that we write NULLFSINO to quota inodes that aren't
-> > active, we avoid this problem.
-> > 
-> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> > ---
-> >  fs/xfs/xfs_sb.c | 16 ++++++++++++----
-> >  1 file changed, 12 insertions(+), 4 deletions(-)
-> > 
-> > diff --git a/fs/xfs/xfs_sb.c b/fs/xfs/xfs_sb.c
-> > index c3453b1..9a58699 100644
-> > --- a/fs/xfs/xfs_sb.c
-> > +++ b/fs/xfs/xfs_sb.c
-> > @@ -483,10 +483,16 @@ xfs_sb_quota_to_disk(
-> >  	}
-> >  
-> >  	/*
-> > -	 * GQUOTINO and PQUOTINO cannot be used together in versions
-> > -	 * of superblock that do not have pquotino. from->sb_flags
-> > -	 * tells us which quota is active and should be copied to
-> > -	 * disk.
-> > +	 * GQUOTINO and PQUOTINO cannot be used together in versions of
-> > +	 * superblock that do not have pquotino. from->sb_flags tells us which
-> > +	 * quota is active and should be copied to disk. If neither are active,
-> > +	 * make sure we write NULLFSINO to the sb_gquotino field as a quota
-> > +	 * inode value of "0" is invalid when the XFS_SB_VERSION_QUOTA feature
-> > +	 * bit is set.
-> > +	 *
-> > +	 * Note that we don't need to handle the sb_uquotino or sb_pquotino here
-> > +	 * as they do not require any translation. Hence the main sb field loop
-> > +	 * will write them appropriately from the in-core superblock.
-> >  	 */
-> 
-> sb_uquotino does not require any translation, but sb_pquotino simply
-> doesn't exist on older sb's, right? Is that what you mean to say here?
-> E.g., we clear XFS_SB_PQUOTINO from fields below, so the field loop
-> isn't going to write it (and I take that's the right thing to do).
+Today, if we have a filesystem with stripe geometry and
+a damaged primary superblock, we will zero out stripe geometry
+if we have copied the backup.
 
-Correct.
+I'm guessing this might be because changing geometry with mount
+options only updates the primary, so backups aren't guaranteed
+to be current or correct.
 
-> >  	if ((*fields & XFS_SB_GQUOTINO) &&
-> >  				(from->sb_qflags & XFS_GQUOTA_ACCT))
-> > @@ -494,6 +500,8 @@ xfs_sb_quota_to_disk(
-> >  	else if ((*fields & XFS_SB_PQUOTINO) &&
-> >  				(from->sb_qflags & XFS_PQUOTA_ACCT))
-> >  		to->sb_gquotino = cpu_to_be64(from->sb_pquotino);
-> > +	else
-> > +		to->sb_gquotino = cpu_to_be64(NULLFSINO);
-> >  
-> 
-> We update the field manually and clear the flag bit so the loop doesn't
-> handle it. Seems Ok, despite my minor confusion over the above comment:
+Unfortunately, that leaves us with sb 0 w/ no geom, and backups
+*with* geom, so the next repair finds the mismatch, and complains.
+(In other words, the 2nd repair does not come up clean.)_
+And ... the second repair copies the backup stripe geometry back
+into the primary!
 
-Yeah, it's a bit messy. And I'm really thinking that given how
-rarely we change the superblock, we should just convert it to the
-same "convert everything" mechanism we use for all the other on-disk
-formatting functions. i.e. get rid of all the bitfield crap....
+Rather than clearing stripe geometry in this case, just leave it
+at what was found in the backup super, and inform the user that this
+was done.  This leaves a consistent filesystem, and gives the user
+a heads-up to double-check the result.
 
-Cheers,
+This can all be demonstrated and tested by running xfs/030 with
+geometry set in MKFS_OPTIONS.  (To really make the test pass, 
+we need to filter the warning out of repair output.)
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
+
+diff --git a/repair/globals.h b/repair/globals.h
+index f6e0a22..6207ca1 100644
+--- a/repair/globals.h
++++ b/repair/globals.h
+@@ -124,7 +124,7 @@ EXTERN int	lazy_count;		/* What to set if to if converting */
+ 
+ EXTERN int		primary_sb_modified;
+ EXTERN int		bad_ino_btree;
+-EXTERN int		clear_sunit;
++EXTERN int		copied_sunit;
+ EXTERN int		fs_is_dirty;
+ 
+ /* for hunting down the root inode */
+diff --git a/repair/sb.c b/repair/sb.c
+index bc421cc..ad27756 100644
+--- a/repair/sb.c
++++ b/repair/sb.c
+@@ -151,7 +151,7 @@ find_secondary_sb(xfs_sb_t *rsb)
+ 			 */
+ 			memmove(rsb, &bufsb, sizeof(xfs_sb_t));
+ 			rsb->sb_inprogress = 0;
+-			clear_sunit = 1;
++			copied_sunit = 1;
+ 
+ 			if (verify_set_primary_sb(rsb, 0, &dirty) == XR_OK)  {
+ 				do_warn(
+diff --git a/repair/xfs_repair.c b/repair/xfs_repair.c
+index 9eb2fa4..834697a 100644
+--- a/repair/xfs_repair.c
++++ b/repair/xfs_repair.c
+@@ -193,7 +193,7 @@ process_args(int argc, char **argv)
+ 	delete_attr_ok = 1;
+ 	force_geo = 0;
+ 	assume_xfs = 0;
+-	clear_sunit = 0;
++	copied_sunit = 0;
+ 	sb_inoalignmt = 0;
+ 	sb_unit = 0;
+ 	sb_width = 0;
+@@ -898,13 +898,11 @@ _("Warning:  project quota information would be cleared.\n"
+ 		dsb->sb_qflags &= cpu_to_be16(~XFS_ALL_QUOTA_CHKD);
+ 	}
+ 
+-	if (clear_sunit) {
++	if (copied_sunit) {
+ 		do_warn(
+-_("Note - stripe unit (%d) and width (%d) fields have been reset.\n"
+-  "Please set with mount -o sunit=<value>,swidth=<value>\n"),
++_("Note - stripe unit (%d) and width (%d) were copied from a backup superblock.\n"
++  "Please reset with mount -o sunit=<value>,swidth=<value> if necessary\n"),
+ 			be32_to_cpu(dsb->sb_unit), be32_to_cpu(dsb->sb_width));
+-		dsb->sb_unit = 0;
+-		dsb->sb_width = 0;
+ 	}
+ 
+ 	libxfs_writebuf(sbp, 0);
 
 _______________________________________________
 xfs mailing list
