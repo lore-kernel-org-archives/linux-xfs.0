@@ -1,23 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 0E20E7F47
-	for <xfs@oss.sgi.com>; Fri, 11 Jul 2014 08:15:31 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 85E7EAC004
-	for <xfs@oss.sgi.com>; Fri, 11 Jul 2014 06:15:27 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id UAKy026lDopz5gSQ (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 11 Jul 2014 06:15:26 -0700 (PDT)
-Date: Fri, 11 Jul 2014 09:15:15 -0400
-From: Brian Foster <bfoster@redhat.com>
+	by oss.sgi.com (Postfix) with ESMTP id 694457F47
+	for <xfs@oss.sgi.com>; Fri, 11 Jul 2014 10:23:03 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 0BB42AC001
+	for <xfs@oss.sgi.com>; Fri, 11 Jul 2014 08:22:59 -0700 (PDT)
+Received: from mail-wi0-f181.google.com (mail-wi0-f181.google.com
+	[209.85.212.181]) by cuda.sgi.com with ESMTP id
+	BETJLF95nt5rAfnn (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Fri, 11 Jul 2014 08:22:56 -0700 (PDT)
+Received: by mail-wi0-f181.google.com with SMTP id bs8so1608411wib.2
+	for <xfs@oss.sgi.com>; Fri, 11 Jul 2014 08:22:53 -0700 (PDT)
+From: Arkadiusz =?utf-8?q?Mi=C5=9Bkiewicz?= <arekm@maven.pl>
 Subject: Re: [PATCH 3/3] xfs: null unused quota inodes when quota is on
-Message-ID: <20140711131514.GA3593@laptop.bfoster>
+Date: Fri, 11 Jul 2014 17:22:48 +0200
 References: <1405034779-2028-1-git-send-email-david@fromorbit.com>
 	<1405034779-2028-4-git-send-email-david@fromorbit.com>
-MIME-Version: 1.0
-Content-Disposition: inline
 In-Reply-To: <1405034779-2028-4-git-send-email-david@fromorbit.com>
+MIME-Version: 1.0
+Message-Id: <201407111722.48507.arekm@maven.pl>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,104 +28,96 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Fri, Jul 11, 2014 at 09:26:19AM +1000, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
-> 
-> When quota is on, it is expected that unused quota inodes have a
-> value of NULLFSINO. The changes to support a separate project quota
-> in 3.12 broken this rule for non-project quota inode enabled
-> filesystem, as the code now refuses to write the group quota inode
-> if neither group or project quotas are enabled. This regression was
-> introduced by commit d892d58 ("xfs: Start using pquotaino from the
-> superblock").
-> 
-> In this case, we should be writing NULLFSINO rather than nothing to
-> ensure that we leave the group quota inode in a valid state while
-> quotas are enabled.
-> 
-> Failure to do so doesn't cause a current kernel to break - the
-> separate project quota inodes introduced translation code to always
-> treat a zero inode as NULLFSINO. This was introduced by commit
-> 0102629 ("xfs: Initialize all quota inodes to be NULLFSINO") with is
-> also in 3.12 but older kernels do not do this and hence taking a
-> filesystem back to an older kernel can result in quotas failing
-> initialisation at mount time. When that happens, we see this in
-> dmesg:
-> 
-> [ 1649.215390] XFS (sdb): Mounting Filesystem
-> [ 1649.316894] XFS (sdb): Failed to initialize disk quotas.
-> [ 1649.316902] XFS (sdb): Ending clean mount
-> 
-> By ensuring that we write NULLFSINO to quota inodes that aren't
-> active, we avoid this problem.
-> 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> ---
->  fs/xfs/xfs_sb.c | 16 ++++++++++++----
->  1 file changed, 12 insertions(+), 4 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_sb.c b/fs/xfs/xfs_sb.c
-> index c3453b1..9a58699 100644
-> --- a/fs/xfs/xfs_sb.c
-> +++ b/fs/xfs/xfs_sb.c
-> @@ -483,10 +483,16 @@ xfs_sb_quota_to_disk(
->  	}
->  
->  	/*
-> -	 * GQUOTINO and PQUOTINO cannot be used together in versions
-> -	 * of superblock that do not have pquotino. from->sb_flags
-> -	 * tells us which quota is active and should be copied to
-> -	 * disk.
-> +	 * GQUOTINO and PQUOTINO cannot be used together in versions of
-> +	 * superblock that do not have pquotino. from->sb_flags tells us which
-> +	 * quota is active and should be copied to disk. If neither are active,
-> +	 * make sure we write NULLFSINO to the sb_gquotino field as a quota
-> +	 * inode value of "0" is invalid when the XFS_SB_VERSION_QUOTA feature
-> +	 * bit is set.
-> +	 *
-> +	 * Note that we don't need to handle the sb_uquotino or sb_pquotino here
-> +	 * as they do not require any translation. Hence the main sb field loop
-> +	 * will write them appropriately from the in-core superblock.
->  	 */
-
-sb_uquotino does not require any translation, but sb_pquotino simply
-doesn't exist on older sb's, right? Is that what you mean to say here?
-E.g., we clear XFS_SB_PQUOTINO from fields below, so the field loop
-isn't going to write it (and I take that's the right thing to do).
-
->  	if ((*fields & XFS_SB_GQUOTINO) &&
->  				(from->sb_qflags & XFS_GQUOTA_ACCT))
-> @@ -494,6 +500,8 @@ xfs_sb_quota_to_disk(
->  	else if ((*fields & XFS_SB_PQUOTINO) &&
->  				(from->sb_qflags & XFS_PQUOTA_ACCT))
->  		to->sb_gquotino = cpu_to_be64(from->sb_pquotino);
-> +	else
-> +		to->sb_gquotino = cpu_to_be64(NULLFSINO);
->  
-
-We update the field manually and clear the flag bit so the loop doesn't
-handle it. Seems Ok, despite my minor confusion over the above comment:
-
-Reviewed-by: Brian Foster <bfoster@redhat.com>
-
->  	*fields &= ~(XFS_SB_PQUOTINO | XFS_SB_GQUOTINO);
->  }
-> -- 
-> 2.0.0
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gRnJpZGF5IDExIG9mIEp1bHkgMjAxNCwgRGF2ZSBDaGlubmVyIHdyb3RlOgo+IEZyb206IERh
+dmUgQ2hpbm5lciA8ZGNoaW5uZXJAcmVkaGF0LmNvbT4KPiAKPiBXaGVuIHF1b3RhIGlzIG9uLCBp
+dCBpcyBleHBlY3RlZCB0aGF0IHVudXNlZCBxdW90YSBpbm9kZXMgaGF2ZSBhCj4gdmFsdWUgb2Yg
+TlVMTEZTSU5PLiBUaGUgY2hhbmdlcyB0byBzdXBwb3J0IGEgc2VwYXJhdGUgcHJvamVjdCBxdW90
+YQo+IGluIDMuMTIgYnJva2VuIHRoaXMgcnVsZSBmb3Igbm9uLXByb2plY3QgcXVvdGEgaW5vZGUg
+ZW5hYmxlZAo+IGZpbGVzeXN0ZW0sIGFzIHRoZSBjb2RlIG5vdyByZWZ1c2VzIHRvIHdyaXRlIHRo
+ZSBncm91cCBxdW90YSBpbm9kZQo+IGlmIG5laXRoZXIgZ3JvdXAgb3IgcHJvamVjdCBxdW90YXMg
+YXJlIGVuYWJsZWQuIFRoaXMgcmVncmVzc2lvbiB3YXMKPiBpbnRyb2R1Y2VkIGJ5IGNvbW1pdCBk
+ODkyZDU4ICgieGZzOiBTdGFydCB1c2luZyBwcXVvdGFpbm8gZnJvbSB0aGUKPiBzdXBlcmJsb2Nr
+IikuCj4gCj4gSW4gdGhpcyBjYXNlLCB3ZSBzaG91bGQgYmUgd3JpdGluZyBOVUxMRlNJTk8gcmF0
+aGVyIHRoYW4gbm90aGluZyB0bwo+IGVuc3VyZSB0aGF0IHdlIGxlYXZlIHRoZSBncm91cCBxdW90
+YSBpbm9kZSBpbiBhIHZhbGlkIHN0YXRlIHdoaWxlCj4gcXVvdGFzIGFyZSBlbmFibGVkLgo+IAo+
+IEZhaWx1cmUgdG8gZG8gc28gZG9lc24ndCBjYXVzZSBhIGN1cnJlbnQga2VybmVsIHRvIGJyZWFr
+IC0gdGhlCj4gc2VwYXJhdGUgcHJvamVjdCBxdW90YSBpbm9kZXMgaW50cm9kdWNlZCB0cmFuc2xh
+dGlvbiBjb2RlIHRvIGFsd2F5cwo+IHRyZWF0IGEgemVybyBpbm9kZSBhcyBOVUxMRlNJTk8uIFRo
+aXMgd2FzIGludHJvZHVjZWQgYnkgY29tbWl0Cj4gMDEwMjYyOSAoInhmczogSW5pdGlhbGl6ZSBh
+bGwgcXVvdGEgaW5vZGVzIHRvIGJlIE5VTExGU0lOTyIpIHdpdGggaXMKPiBhbHNvIGluIDMuMTIg
+YnV0IG9sZGVyIGtlcm5lbHMgZG8gbm90IGRvIHRoaXMgYW5kIGhlbmNlIHRha2luZyBhCj4gZmls
+ZXN5c3RlbSBiYWNrIHRvIGFuIG9sZGVyIGtlcm5lbCBjYW4gcmVzdWx0IGluIHF1b3RhcyBmYWls
+aW5nCj4gaW5pdGlhbGlzYXRpb24gYXQgbW91bnQgdGltZS4gV2hlbiB0aGF0IGhhcHBlbnMsIHdl
+IHNlZSB0aGlzIGluCj4gZG1lc2c6Cj4gCj4gWyAxNjQ5LjIxNTM5MF0gWEZTIChzZGIpOiBNb3Vu
+dGluZyBGaWxlc3lzdGVtCj4gWyAxNjQ5LjMxNjg5NF0gWEZTIChzZGIpOiBGYWlsZWQgdG8gaW5p
+dGlhbGl6ZSBkaXNrIHF1b3Rhcy4KPiBbIDE2NDkuMzE2OTAyXSBYRlMgKHNkYik6IEVuZGluZyBj
+bGVhbiBtb3VudAo+IAo+IEJ5IGVuc3VyaW5nIHRoYXQgd2Ugd3JpdGUgTlVMTEZTSU5PIHRvIHF1
+b3RhIGlub2RlcyB0aGF0IGFyZW4ndAo+IGFjdGl2ZSwgd2UgYXZvaWQgdGhpcyBwcm9ibGVtLgo+
+IAo+IFNpZ25lZC1vZmYtYnk6IERhdmUgQ2hpbm5lciA8ZGNoaW5uZXJAcmVkaGF0LmNvbT4KPiAt
+LS0KPiAgZnMveGZzL3hmc19zYi5jIHwgMTYgKysrKysrKysrKysrLS0tLQo+ICAxIGZpbGUgY2hh
+bmdlZCwgMTIgaW5zZXJ0aW9ucygrKSwgNCBkZWxldGlvbnMoLSkKPiAKPiBkaWZmIC0tZ2l0IGEv
+ZnMveGZzL3hmc19zYi5jIGIvZnMveGZzL3hmc19zYi5jCj4gaW5kZXggYzM0NTNiMS4uOWE1ODY5
+OSAxMDA2NDQKPiAtLS0gYS9mcy94ZnMveGZzX3NiLmMKPiArKysgYi9mcy94ZnMveGZzX3NiLmMK
+PiBAQCAtNDgzLDEwICs0ODMsMTYgQEAgeGZzX3NiX3F1b3RhX3RvX2Rpc2soCj4gIAl9Cj4gCj4g
+IAkvKgo+IC0JICogR1FVT1RJTk8gYW5kIFBRVU9USU5PIGNhbm5vdCBiZSB1c2VkIHRvZ2V0aGVy
+IGluIHZlcnNpb25zCj4gLQkgKiBvZiBzdXBlcmJsb2NrIHRoYXQgZG8gbm90IGhhdmUgcHF1b3Rp
+bm8uIGZyb20tPnNiX2ZsYWdzCj4gLQkgKiB0ZWxscyB1cyB3aGljaCBxdW90YSBpcyBhY3RpdmUg
+YW5kIHNob3VsZCBiZSBjb3BpZWQgdG8KPiAtCSAqIGRpc2suCj4gKwkgKiBHUVVPVElOTyBhbmQg
+UFFVT1RJTk8gY2Fubm90IGJlIHVzZWQgdG9nZXRoZXIgaW4gdmVyc2lvbnMgb2YKPiArCSAqIHN1
+cGVyYmxvY2sgdGhhdCBkbyBub3QgaGF2ZSBwcXVvdGluby4gZnJvbS0+c2JfZmxhZ3MgdGVsbHMg
+dXMgd2hpY2gKPiArCSAqIHF1b3RhIGlzIGFjdGl2ZSBhbmQgc2hvdWxkIGJlIGNvcGllZCB0byBk
+aXNrLiBJZiBuZWl0aGVyIGFyZSBhY3RpdmUsCj4gKwkgKiBtYWtlIHN1cmUgd2Ugd3JpdGUgTlVM
+TEZTSU5PIHRvIHRoZSBzYl9ncXVvdGlubyBmaWVsZCBhcyBhIHF1b3RhCj4gKwkgKiBpbm9kZSB2
+YWx1ZSBvZiAiMCIgaXMgaW52YWxpZCB3aGVuIHRoZSBYRlNfU0JfVkVSU0lPTl9RVU9UQSBmZWF0
+dXJlCj4gKwkgKiBiaXQgaXMgc2V0Lgo+ICsJICoKPiArCSAqIE5vdGUgdGhhdCB3ZSBkb24ndCBu
+ZWVkIHRvIGhhbmRsZSB0aGUgc2JfdXF1b3Rpbm8gb3Igc2JfcHF1b3Rpbm8gaGVyZQo+ICsJICog
+YXMgdGhleSBkbyBub3QgcmVxdWlyZSBhbnkgdHJhbnNsYXRpb24uIEhlbmNlIHRoZSBtYWluIHNi
+IGZpZWxkIGxvb3AKPiArCSAqIHdpbGwgd3JpdGUgdGhlbSBhcHByb3ByaWF0ZWx5IGZyb20gdGhl
+IGluLWNvcmUgc3VwZXJibG9jay4KPiAgCSAqLwo+ICAJaWYgKCgqZmllbGRzICYgWEZTX1NCX0dR
+VU9USU5PKSAmJgo+ICAJCQkJKGZyb20tPnNiX3FmbGFncyAmIFhGU19HUVVPVEFfQUNDVCkpCj4g
+QEAgLTQ5NCw2ICs1MDAsOCBAQCB4ZnNfc2JfcXVvdGFfdG9fZGlzaygKPiAgCWVsc2UgaWYgKCgq
+ZmllbGRzICYgWEZTX1NCX1BRVU9USU5PKSAmJgo+ICAJCQkJKGZyb20tPnNiX3FmbGFncyAmIFhG
+U19QUVVPVEFfQUNDVCkpCj4gIAkJdG8tPnNiX2dxdW90aW5vID0gY3B1X3RvX2JlNjQoZnJvbS0+
+c2JfcHF1b3Rpbm8pOwo+ICsJZWxzZQo+ICsJCXRvLT5zYl9ncXVvdGlubyA9IGNwdV90b19iZTY0
+KE5VTExGU0lOTyk7Cj4gCj4gIAkqZmllbGRzICY9IH4oWEZTX1NCX1BRVU9USU5PIHwgWEZTX1NC
+X0dRVU9USU5PKTsKPiAgfQoKClRlc3RlZC1ieTogQXJrYWRpdXN6IE1pxZtraWV3aWN6IDxhcmVr
+bUBtYXZlbi5wbD4KCjMuMTYuMC1yYzQtMDAxMjAtZzg1ZDkwZmEgKyBwYXRjaAoKJCB0cnVuY2F0
+ZSAtcyA1ME0gNTBNLWltYWdlCiQgbWtmcy54ZnMgLWYgNTBNLWltYWdlIAptZXRhLWRhdGE9NTBN
+LWltYWdlICAgICAgICAgICAgICBpc2l6ZT0yNTYgICAgYWdjb3VudD0yLCBhZ3NpemU9NjQwMCBi
+bGtzCiAgICAgICAgID0gICAgICAgICAgICAgICAgICAgICAgIHNlY3Rzej01MTIgICBhdHRyPTIs
+IHByb2ppZDMyYml0PTEKICAgICAgICAgPSAgICAgICAgICAgICAgICAgICAgICAgY3JjPTAgICAg
+ICAgIGZpbm9idD0wCmRhdGEgICAgID0gICAgICAgICAgICAgICAgICAgICAgIGJzaXplPTQwOTYg
+ICBibG9ja3M9MTI4MDAsIGltYXhwY3Q9MjUKICAgICAgICAgPSAgICAgICAgICAgICAgICAgICAg
+ICAgc3VuaXQ9MCAgICAgIHN3aWR0aD0wIGJsa3MKbmFtaW5nICAgPXZlcnNpb24gMiAgICAgICAg
+ICAgICAgYnNpemU9NDA5NiAgIGFzY2lpLWNpPTAgZnR5cGU9MApsb2cgICAgICA9aW50ZXJuYWwg
+bG9nICAgICAgICAgICBic2l6ZT00MDk2ICAgYmxvY2tzPTg1MywgdmVyc2lvbj0yCiAgICAgICAg
+ID0gICAgICAgICAgICAgICAgICAgICAgIHNlY3Rzej01MTIgICBzdW5pdD0wIGJsa3MsIGxhenkt
+Y291bnQ9MQpyZWFsdGltZSA9bm9uZSAgICAgICAgICAgICAgICAgICBleHRzej00MDk2ICAgYmxv
+Y2tzPTAsIHJ0ZXh0ZW50cz0wCiQgeGZzX2RiIDUwTS1pbWFnZSAgLWMgInNiIDAiIC1jICJwcmlu
+dCIgfGdyZXAgcXVvdAp1cXVvdGlubyA9IDAKZ3F1b3Rpbm8gPSAwCnBxdW90aW5vID0gMAokIHN1
+ZG8gbW91bnQgNTBNLWltYWdlIC9tZWRpYS9mbG9wcHkvIC1vIHVzcnF1b3RhCltzdWRvXSBwYXNz
+d29yZCBmb3IgYXJla206IAokIGRtZXNnfHRhaWwgLW4gNApbICAgOTguNDEzODc3XSBYRlMgKGxv
+b3AwKTogTW91bnRpbmcgVjQgRmlsZXN5c3RlbQpbICAgOTguNDQ1OTUwXSBYRlMgKGxvb3AwKTog
+RW5kaW5nIGNsZWFuIG1vdW50ClsgICA5OC40NDU5ODddIFhGUyAobG9vcDApOiBRdW90YWNoZWNr
+IG5lZWRlZDogUGxlYXNlIHdhaXQuClsgICA5OC40Njk2NjZdIFhGUyAobG9vcDApOiBRdW90YWNo
+ZWNrOiBEb25lLgokIHN1ZG8gdW1vdW50IC9tZWRpYS9mbG9wcHkvCl0kIHhmc19kYiA1ME0taW1h
+Z2UgIC1jICJzYiAwIiAtYyAicHJpbnQiIHxncmVwIHF1b3QgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgIAp1cXVvdGlubyA9IDEzMSAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgCmdxdW90aW5vID0gbnVsbCAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKcHF1b3Rpbm8gPSAwICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKCmFuZCBpdCBwcm9wZXJs
+eSBtb3VudGVkIG9uIDMuMTAuNDYgd2l0aCB1c3JxdW90YSxncnBxdW90YQoKLS0gCkFya2FkaXVz
+eiBNacWba2lld2ljeiwgYXJla20gLyBtYXZlbi5wbAoKX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20K
+aHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCg==
