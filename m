@@ -1,26 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id DD0437F47
-	for <xfs@oss.sgi.com>; Fri, 11 Jul 2014 05:48:13 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id A955F7F47
+	for <xfs@oss.sgi.com>; Fri, 11 Jul 2014 07:32:24 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id ABE528F804C
-	for <xfs@oss.sgi.com>; Fri, 11 Jul 2014 03:48:10 -0700 (PDT)
-Received: from mail-we0-f180.google.com (mail-we0-f180.google.com
-	[74.125.82.180]) by cuda.sgi.com with ESMTP id LiSOSMDogYXqh1bd
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Fri, 11 Jul 2014 03:48:07 -0700 (PDT)
-Received: by mail-we0-f180.google.com with SMTP id x48so879595wes.39
-	for <xfs@oss.sgi.com>; Fri, 11 Jul 2014 03:48:04 -0700 (PDT)
-Message-ID: <1405075678.28203.56.camel@jtulak>
-Subject: Re: symlink loop for /lib64/libhandle.so
-From: Jan =?UTF-8?Q?=C5=A4ul=C3=A1k?= <jan@tulak.me>
-Date: Fri, 11 Jul 2014 12:47:58 +0200
-In-Reply-To: <53BEC1E7.1070904@sandeen.net>
-References: <1404898212.7231.12.camel@jtulak>
-	<20140709132836.GA65226@bfoster.bfoster>
-	<20140710134851.GA26652@infradead.org>
-	<1405009872.31068.22.camel@jtulak> <53BEC1E7.1070904@sandeen.net>
-Mime-Version: 1.0
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 5C71A304048
+	for <xfs@oss.sgi.com>; Fri, 11 Jul 2014 05:32:24 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id C7jXZ6VR6sOB1h47 (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Fri, 11 Jul 2014 05:32:20 -0700 (PDT)
+Date: Fri, 11 Jul 2014 08:32:10 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 1/3] Revert "xfs: block allocation work needs to be
+	kswapd aware"
+Message-ID: <20140711123210.GA3077@laptop.bfoster>
+References: <1405034779-2028-1-git-send-email-david@fromorbit.com>
+	<1405034779-2028-2-git-send-email-david@fromorbit.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <1405034779-2028-2-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,93 +31,103 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Christoph Hellwig <hch@infradead.org>, Brian Foster <bfoster@redhat.com>, XFS mail list <xfs@oss.sgi.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-On Thu, 2014-07-10 at 11:40 -0500, Eric Sandeen wrote:
-> Here's what the current RPM build does; I don't claim that it's elegant or
-> beautiful:
+On Fri, Jul 11, 2014 at 09:26:17AM +1000, Dave Chinner wrote:
+> This reverts commit 1f6d64829db78a7e1d63e15c9f48f0a5d2b5a679.
 > 
-> %install
-> rm -rf $RPM_BUILD_ROOT
-> make V=1 DIST_ROOT=$RPM_BUILD_ROOT install install-dev install-qa \
->         PKG_ROOT_SBIN_DIR=%{_sbindir} PKG_ROOT_LIB_DIR=%{_libdir}
+> This commit resulted in regressions in performance in low
+> memory situations where kswapd was doing writeback of delayed
+> allocation blocks. It resulted in significant parallelism of the
+> kswapd work and with the special kswapd flags meant that hundreds of
+> active allocation could dip into kswapd specific memory reserves and
+> avoid being throttled. This cause a large amount of performance
+> variation, as well as random OOM-killer invocations that didn't
+> previously exist.
 > 
-> so that sounds like what you're doing, too.
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> ---
 
-I think I found it. In short: On Fedora, /lib64 is a symlink
-into /usr/lib64, but "install/buildmacros" script thinks it as two
-different directories and mess it. Proposed solution: better condition
-on line 79 to avoid symlink changes.
+I was going to suggest to keep the bool types, but that's fixed up in
+the subsequent patch. ;) Looks good...
 
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 
-Long version:
-
-I looked for the variables and maybe found something more in files
-"include/buildmacros" and "install-sh". In the buildmacros file on line
-around 80 is command:
-
-../$(INSTALL) -S $(PKG_ROOT_LIB_DIR)/$(LIBNAME).so
-$(PKG_LIB_DIR)/$(LIBNAME).so; 
-
-It is invoked just once and its arguments are  [/lib64/libhandle.so] and
-[/usr/lib64/libhandle.so] (in this order). This is at the end translated
-into this call in "install-sh" on line 172:
-
-ln -s -f /lib64/libhandle.so //usr/lib64/libhandle.so 
-
-
-It seems to be OK, , but when I put a "ls -li" before and after this
-command on line 172, this is what I got (I just added few echos):
-
- ---------------- 
-before:
-1668 lrwxrwxrwx. 1 root root 14 Jul 11 10:36 /lib64/libhandle.so ->
-libhandle.so.1
-1668 lrwxrwxrwx. 1 root root 14 Jul 11 10:36 //usr/lib64/libhandle.so ->
-libhandle.so.1
-......
-ln -s -f /lib64/libhandle.so //usr/lib64/libhandle.so 
-......
-after:
-1668 lrwxrwxrwx. 1 root root 19 Jul 11 10:36 /lib64/libhandle.so
--> /lib64/libhandle.so
-1668 lrwxrwxrwx. 1 root root 19 Jul 11 10:36 //usr/lib64/libhandle.so
--> /lib64/libhandle.so
- -----------
-
-Then I have done "ls -l /" and found the reason:
-lrwxrwxrwx.   1 root root     9 Dec 12  2013 lib64 -> usr/lib64
-
-So the loop is because on Fedora, /lib64 and /usr/lib64 are the same
-directory. The "buildmacros" script does some check before doing the
-symlinking, but it just checks the paths as strings. I think that a
-better condition on line 80 of "include/buildmacros" file should fix it.
-I tried to make a new condition and it works, but I'm not sure about
-portability of using the "$(shell ...)" extension of GNU Make. Is there
-some more portable way how to do it and keep the condition short?
-
-Proposed condition:
-
-if test "x$(PKG_LIB_DIR)" != "x$(PKG_ROOT_LIB_DIR)"\
--a "x$(shell readlink -f $(PKG_ROOT_LIB_DIR))" != "x$(PKG_LIB_DIR)"\
--a "x$(shell readlink -f $(PKG_LIB_DIR))" != "x$(PKG_ROOT_LIB_DIR)";\ 
-then \
-
-Instead of:
-
-if test "x$(PKG_LIB_DIR)" != "x$(PKG_ROOT_LIB_DIR)"; then \
-
-
-And by the way: It seems to me that the command on line 83 in
-"buildmacros" has swapped arguments. In two other symlinks around,
-PKG_LIB_DIR and PKG_ROOT_LIB_DIR for .a and .la files are in other
-order. Is this all right?
-
-
-Jan Tulak
-
-
+>  fs/xfs/xfs_bmap_util.c | 16 +++-------------
+>  fs/xfs/xfs_bmap_util.h | 13 ++++++-------
+>  2 files changed, 9 insertions(+), 20 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+> index 703b3ec..057f671 100644
+> --- a/fs/xfs/xfs_bmap_util.c
+> +++ b/fs/xfs/xfs_bmap_util.c
+> @@ -258,23 +258,14 @@ xfs_bmapi_allocate_worker(
+>  	struct xfs_bmalloca	*args = container_of(work,
+>  						struct xfs_bmalloca, work);
+>  	unsigned long		pflags;
+> -	unsigned long		new_pflags = PF_FSTRANS;
+>  
+> -	/*
+> -	 * we are in a transaction context here, but may also be doing work
+> -	 * in kswapd context, and hence we may need to inherit that state
+> -	 * temporarily to ensure that we don't block waiting for memory reclaim
+> -	 * in any way.
+> -	 */
+> -	if (args->kswapd)
+> -		new_pflags |= PF_MEMALLOC | PF_SWAPWRITE | PF_KSWAPD;
+> -
+> -	current_set_flags_nested(&pflags, new_pflags);
+> +	/* we are in a transaction context here */
+> +	current_set_flags_nested(&pflags, PF_FSTRANS);
+>  
+>  	args->result = __xfs_bmapi_allocate(args);
+>  	complete(args->done);
+>  
+> -	current_restore_flags_nested(&pflags, new_pflags);
+> +	current_restore_flags_nested(&pflags, PF_FSTRANS);
+>  }
+>  
+>  /*
+> @@ -293,7 +284,6 @@ xfs_bmapi_allocate(
+>  
+>  
+>  	args->done = &done;
+> -	args->kswapd = current_is_kswapd();
+>  	INIT_WORK_ONSTACK(&args->work, xfs_bmapi_allocate_worker);
+>  	queue_work(xfs_alloc_wq, &args->work);
+>  	wait_for_completion(&done);
+> diff --git a/fs/xfs/xfs_bmap_util.h b/fs/xfs/xfs_bmap_util.h
+> index 075f722..935ed2b 100644
+> --- a/fs/xfs/xfs_bmap_util.h
+> +++ b/fs/xfs/xfs_bmap_util.h
+> @@ -50,13 +50,12 @@ struct xfs_bmalloca {
+>  	xfs_extlen_t		total;	/* total blocks needed for xaction */
+>  	xfs_extlen_t		minlen;	/* minimum allocation size (blocks) */
+>  	xfs_extlen_t		minleft; /* amount must be left after alloc */
+> -	bool			eof;	/* set if allocating past last extent */
+> -	bool			wasdel;	/* replacing a delayed allocation */
+> -	bool			userdata;/* set if is user data */
+> -	bool			aeof;	/* allocated space at eof */
+> -	bool			conv;	/* overwriting unwritten extents */
+> -	bool			stack_switch;
+> -	bool			kswapd;	/* allocation in kswapd context */
+> +	char			eof;	/* set if allocating past last extent */
+> +	char			wasdel;	/* replacing a delayed allocation */
+> +	char			userdata;/* set if is user data */
+> +	char			aeof;	/* allocated space at eof */
+> +	char			conv;	/* overwriting unwritten extents */
+> +	char			stack_switch;
+>  	int			flags;
+>  	struct completion	*done;
+>  	struct work_struct	work;
+> -- 
+> 2.0.0
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
