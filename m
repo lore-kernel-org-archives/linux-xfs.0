@@ -1,31 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 5F7DB7F3F
-	for <xfs@oss.sgi.com>; Fri, 11 Jul 2014 20:32:41 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 51090304039
-	for <xfs@oss.sgi.com>; Fri, 11 Jul 2014 18:32:38 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id 9doWhDG1A79UujIx (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 11 Jul 2014 18:32:37 -0700 (PDT)
-Received: from int-mx09.intmail.prod.int.phx2.redhat.com
-	(int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id s6C1WaE9004445
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256
-	verify=OK) for <xfs@oss.sgi.com>; Fri, 11 Jul 2014 21:32:36 -0400
-Received: from liberator.sandeen.net (ovpn01.gateway.prod.ext.phx2.redhat.com
-	[10.5.9.1])
-	by int-mx09.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id s6C1WZtC012849
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES128-SHA bits=128 verify=NO)
-	for <xfs@oss.sgi.com>; Fri, 11 Jul 2014 21:32:36 -0400
-Message-ID: <53C09034.3070203@redhat.com>
-Date: Fri, 11 Jul 2014 20:32:36 -0500
-From: Eric Sandeen <sandeen@redhat.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id E49647F58
+	for <xfs@oss.sgi.com>; Fri, 11 Jul 2014 20:34:25 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id CFAA88F8071
+	for <xfs@oss.sgi.com>; Fri, 11 Jul 2014 18:34:25 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id 3dZnZgCESChS9pWD for <xfs@oss.sgi.com>;
+	Fri, 11 Jul 2014 18:34:24 -0700 (PDT)
+Message-ID: <53C090A0.9050403@sandeen.net>
+Date: Fri, 11 Jul 2014 20:34:24 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: [PATCH] xfsprogs: libxcmd/paths: make all comparisons using realpath'd
-	paths
+Subject: [PATCH V2] xfsprogs: libxcmd/paths: make all comparisons using
+	realpath'd paths
+References: <53C09034.3070203@redhat.com>
+In-Reply-To: <53C09034.3070203@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -38,7 +28,7 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs-oss <xfs@oss.sgi.com>
+To: Eric Sandeen <sandeen@redhat.com>, xfs-oss <xfs@oss.sgi.com>
 
 Both mountpoints and devices can be symlinks, so given a path
 to look for, and mountpoints/devices from the system, use
@@ -97,6 +87,7 @@ got our best shot at finding the match.
 Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 ---
 
+V2: remove the quota/report.c change which snuck in...
 
 diff --git a/libxcmd/paths.c b/libxcmd/paths.c
 index 7b0e434..8da3968 100644
@@ -200,20 +191,6 @@ index 7b0e434..8da3968 100644
  	if (path && !found)
  		error = ENXIO;
  
-diff --git a/quota/report.c b/quota/report.c
-index 70894a2..d486524 100644
---- a/quota/report.c
-+++ b/quota/report.c
-@@ -624,7 +624,7 @@ report_f(
- 		if (flags & ALL_MOUNTS_FLAG)
- 			report_any_type(fp, form, type, NULL,
- 					lower, upper, flags);
--		else if (fs_path->fs_flags & FS_MOUNT_POINT)
-+		else if (fs_path && fs_path->fs_flags & FS_MOUNT_POINT)
- 			report_any_type(fp, form, type, fs_path->fs_dir,
- 					lower, upper, flags);
- 	} else while (argc > optind) {
-
 
 _______________________________________________
 xfs mailing list
