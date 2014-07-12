@@ -1,19 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id D66B77F47
-	for <xfs@oss.sgi.com>; Sat, 12 Jul 2014 09:19:36 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id C492A304062
-	for <xfs@oss.sgi.com>; Sat, 12 Jul 2014 07:19:33 -0700 (PDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id EAE737F47
+	for <xfs@oss.sgi.com>; Sat, 12 Jul 2014 09:26:48 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 45BA2AC001
+	for <xfs@oss.sgi.com>; Sat, 12 Jul 2014 07:26:45 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id yZuwxn1Ti2S5kalu (version=TLSv1
+	cuda.sgi.com with ESMTP id HCiMHmCUHGLO8fdH (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Sat, 12 Jul 2014 07:19:32 -0700 (PDT)
-Date: Sat, 12 Jul 2014 10:19:25 -0400
+	Sat, 12 Jul 2014 07:26:43 -0700 (PDT)
+Date: Sat, 12 Jul 2014 10:26:38 -0400
 From: Brian Foster <bfoster@redhat.com>
 Subject: Re: Got "Internal error XFS_WANT_CORRUPTED_GOTO". Filesystem needs
 	reformatting to correct issue.
-Message-ID: <20140712141925.GA53265@bfoster.bfoster>
+Message-ID: <20140712142637.GB53265@bfoster.bfoster>
 References: <alpine.LSU.2.11.1407021104480.9881@Telcontar.valinor>
 	<20140702120441.GA51757@bfoster.bfoster>
 	<alpine.LSU.2.11.1407030057310.9881@Telcontar.valinor>
@@ -21,9 +21,11 @@ References: <alpine.LSU.2.11.1407021104480.9881@Telcontar.valinor>
 	<alpine.LSU.2.11.1407040135140.9881@Telcontar.valinor>
 	<20140705122833.GA3573@bfoster.bfoster>
 	<alpine.LSU.2.11.1407120150220.15907@Telcontar.valinor>
+	<alpine.LSU.2.11.1407120318100.15907@Telcontar.valinor>
+	<alpine.LSU.2.11.1407120340330.15907@Telcontar.valinor>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <alpine.LSU.2.11.1407120150220.15907@Telcontar.valinor>
+In-Reply-To: <alpine.LSU.2.11.1407120340330.15907@Telcontar.valinor>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -39,207 +41,89 @@ Sender: xfs-bounces@oss.sgi.com
 To: "Carlos E. R." <carlos.e.r@opensuse.org>
 Cc: XFS mailing list <xfs@oss.sgi.com>
 
-On Sat, Jul 12, 2014 at 02:30:45AM +0200, Carlos E. R. wrote:
+On Sat, Jul 12, 2014 at 03:45:07AM +0200, Carlos E. R. wrote:
 > -----BEGIN PGP SIGNED MESSAGE-----
 > Hash: SHA1
 > 
 > 
 > 
-> On Saturday, 2014-07-05 at 08:28 -0400, Brian Foster wrote:
-> >On Fri, Jul 04, 2014 at 11:32:26PM +0200, Carlos E. R. wrote:
+> On Saturday, 2014-07-12 at 03:30 +0200, Carlos E. R. wrote:
 > 
-> 
-> >>If I don't do that backup-format-restore, I get issues soon, and it crashes
-> >>within a day - I got after booting (the first event):
-> >>
+> >So, please wait till I verify things again. Tomorrow, it is 3 AM here.
+> >Sorry :-(
 > >
-> >I echo Dave's previous question... within a day of doing what? Just
-> >using the system or doing more hibernation cycles?
-> 
-> It is in the long post with the logs I posted.
-> 
-> The first time it crashed, I rebooted, got some errors I probably did not
-> see, managed to mount the device, and I used the machine normally, doing
-> several hibernation cycles. On one of these, it crashed, within the day.
-> 
-
-That still suggests something could be going on at runtime during the
-hibernation or wakeup cycle. Identifying some kind of runtime error or
-metadata inconsistency without involving hibernation would be a smoking
-gun for a general corruption. So far we have no evidence of reproduction
-without hibernation and no evidence of a persistent corruption. That
-doesn't rule out something going on on-disk, but it certainly suggests a
-runtime corruption during hibernation/wake is more likely.
-
-> 
-> As explained in this part of the previous post:
-> 
-> >>0.1> 2014-03-15 03:53:47 Telcontar kernel - - - [  301.857523] XFS: Internal error XFS_WANT_CORRUPTED_RETURN at line 350 of file /home/abuild/rpmbuild/BUILD/kernel-desktop-3.11.10/linux-3.11/fs/xfs/xfs_all
-> >>
-> >>And some hours later:
-> >>
-> >><0.1> 2014-03-15 22:20:34 Telcontar kernel - - - [20151.298345] XFS: Internal error XFS_WANT_CORRUPTED_GOTO at line 1602 of file /home/abuild/rpmbuild/BUILD/kernel-desktop-3.11.10/linux-3.11/fs/xfs/xfs_allo
-> >>
-> >>
-> >>It was here that I decided to backup-format-restore instead.
-> 
-> 
-> 
-> 
-> 
-> >>>That also means it's probably not be necessary to do a full backup,
-> >>>reformat and restore sequence as part of your routine here. xfs_repair
-> >>>should scour through all of the allocation metadata and yell if it finds
-> >>>something like free blocks allocated to a file.
-> >>
-> >>No, if I don't backup-format-restore it happens again within a day. There is
-> >>something lingering. Unless that was just chance... :-?
-> >>
-> >>It is true that during that day I hibernated several times more than needed
-> >>to see if it happened again - and it did.
-> >>
+> >Unless "xfs_info tgtfile" gives the information about the device where
+> >"tgtfile" is stored (/dev/sdf2), not on the image file itself :-?
 > >
-> >This depends on what causes this to happen, not how frequent it happens.
-> >Does it continue to happen along with hibernation, or do you start
-> >seeing these kind of errors during normal use?
+> >I'm very confused.
+> 
+> False alarm. See:
 > 
 > 
-> Except the first time that this happened, the sequence is this:
+> Telcontar:/data/storage_c/tmp_borrar # xfs_info tgtfile
+> meta-data=/dev/sde18             isize=256    agcount=4, agsize=35770496 blks
+>          =                       sectsz=512   attr=2, projid32bit=0
+>          =                       crc=0
+> data     =                       bsize=4096   blocks=143081984, imaxpct=25
+>          =                       sunit=0      swidth=0 blks
+> naming   =version 2              bsize=4096   ascii-ci=0 ftype=0
+> log      =internal               bsize=4096   blocks=69864, version=2
+>          =                       sectsz=512   sunit=0 blks, lazy-count=1
+> realtime =none                   extsz=4096   blocks=0, rtextents=0
+> Telcontar:/data/storage_c/tmp_borrar #
 > 
-> I use the machine for weeks, without event, booting once, then hibernating
-> at least once per day. I finally reboot when I have to apply some system
-> update, or something special.
+> Telcontar:/data/storage_d/old_backup # xfs_info tgtfile
+> meta-data=/dev/sdf2              isize=256    agcount=4, agsize=122341568 blks
+>          =                       sectsz=512   attr=2, projid32bit=0
+>          =                       crc=0
+> data     =                       bsize=4096   blocks=489366272, imaxpct=5
+>          =                       sunit=0      swidth=0 blks
+> naming   =version 2              bsize=4096   ascii-ci=0 ftype=0
+> log      =internal               bsize=4096   blocks=238948, version=2
+>          =                       sectsz=512   sunit=0 blks, lazy-count=1
+> realtime =none                   extsz=4096   blocks=0, rtextents=0
+> Telcontar:/data/storage_d/old_backup #
 > 
-> Till one day, this "thing" happens. It happens inmediately after coming out
-> from hibernation, and puts the affected partition, always /home, in read
-> only mode. When it happens, I reboot, repair partition manually if needed,
-> then I back up the files, format it, and replace all the files from the
-> backup just made, with xfsdump. Well, this last time, I used rsync instead.
-> 
-> 
-> It has happened "only" four times:
-> 
-> 2014-03-15 03:35:17
-> 2014-03-15 22:20:34
-> 2014-04-17 22:47:08
-> 2014-06-29 12:32:18
-> 
-> 
-> >If the latter, that could suggest something broken on disk.
-> 
-> That was my first thought, because it started hapening after replacing the
-> hard disk, but also after a kernel update. But I have tested that disk
-> several times, with smartctl and with the manufacturer test tool, and
-> nothing came out.
-> 
-
-I was referring to a potential on-disk corruption, but that's good to
-know as well.
-
-> 
-> >If the
-> >former, that could simply suggest the fs (perhaps on-disk) has made it
-> >into some kind of state that makes this easier to reproduce, for
-> >whatever reason. It could be timing, location of metadata,
-> >fragmentation, or anything really for that matter, but it doesn't
-> >necessarily mean corruption (even though it doesn't rule it out).
-> >Perhaps the clean regeneration of everything by a from-scratch recovery
-> >simply makes this more difficult to reproduce until the fs naturally
-> >becomes more aged/fragmented, for example.
-> >
-> >This probably makes a pristine, pre-repair metadump of the reproducing
-> >fs more interesting. I could try some of my previous tests against a
-> >restore of that metadump.
+> Telcontar:/data/storage_d/old_backup # file tgtfile
+> tgtfile: XFS filesystem metadump image
+> Telcontar:/data/storage_d/old_backup #
 > 
 > 
-> Well, I suggest that, unless you can find something on the metadata (I just
-> sent you the link via email from google), we wait till the next event. I
-> will at that time take an intact metadata photo. But this can take a month
-> or two to happen again, if the pattern keeps.
+> It appears that the command "xfs_info" analyzes the current, underlying,
+> filesystem, not the one given on the command line. Or something in that
+> line, I'm too sleepy. I hope you can understand my meaning better than my
+> words...
 > 
 
-That would be a good idea. I'll take a look at the metadump when I have
-a chance. If there is nothing out of the ordinary, the next best option
-is to metadump the fs that reproduces the behavior. I could retry some
-of my previous vm hibernation tests against that. As mentioned
-previously, once you have a more reliably reproducing state, that's also
-a good opportunity to see if you can narrow down which of the things you
-have running against the fs appear to trigger this.
+xfs_info reports on the mounted fs. If you check out 'man xfs_info,'
+you'll see it specifies the mountpoint as a parameter but it can query
+the fs info from the actual mountpoint or any file therein. E.g., so it
+doesn't know anything about a metadump file and pointing it at one will
+just report on the fs that contains the file.
 
-> 
-> 
-> 
-> >I was somewhat thinking out loud originally discussing this topic. I was
-> >suggesting to run this against a restored metadump, not the primary
-> >dataset or a backup.
-> >
-> >The metadump creates an image of the metadata of the source fs in a file
-> >(no data is copied). This metadump image can be restored at will via
-> >'xfs_mdrestore.' This allows restoring to a file, mounting the file
-> >loopback, and performing experiments or investigation on the fs
-> >generally as it existed when the shutdown was reproducible.
-> 
-> Ah... I see.
-> 
-> 
-> >So basically:
-> >
-> >- xfs_mdrestore <mdimgfile> <tmpfileimg>
-> >- mount <tmpfileimg> /mnt
-> >- rm -rf /mnt/*
-> >
-> >... was what I was suggesting. <tmpfileimg> can be recreated from the
-> >metadump image afterwards to get back to square one.
-> 
-> I see.
-> 
-> Well, I tried this on a copy of the 'dd' image days ago, and nothing
-> hapened. I guess the procedure above would be the same.
-> 
+If you wanted to test an actual metadump image, restore the metadump to
+an fs image, mount and test that:
 
-A dd of the raw block device will preserve the metadata, so yeah that's
-effectively the same test. If there were an obvious free space
-corruption, the fs probably would have shutdown. I can retry the same
-test via the metadump on a debug kernel as well.
+xfs_mdrestore ./metadump ./mynewfsimage
+mount ./mynewfsimage /mnt -o loop
+xfs_info /mnt/
 
 Brian
 
 > 
-> 
-> 
-> 
-> >>I have an active bugzilla account at <http://oss.sgi.com/bugzilla/>, I'm
-> >>logged in there now. I haven't checked if I can create a bug, not been sure
-> >>what parameters to use (product, component, whom to assign to). I think that
-> >>would be the most appropriate place.
-> >>
-> >>Meanwhile, I have uploaded the file to my google drive account, so I can
-> >>share it with anybody on request - ie, it is not public, I need to add a
-> >>gmail address to the list of people that can read the file.
-> >>
-> >>Alternatively, I could just email the file to people asking for it, offlist,
-> >>but not in a single email, in chunks limited to 1.5 MB per email.
-> >>
-> >
-> >Either of the bugzilla or google drive options works Ok for me.
-> 
-> It's here:
-> 
-> <https://drive.google.com/file/d/0Bx2OgfTa-XC9UDBnQzZIMTVyN0k/edit?usp=sharing>
-> 
-> Whoever wants to read it, has to tell me the address to add to it, access is
-> not public.
+> So the uploaded file is the correct one.
 > 
 > 
 > - -- Cheers,
 >        Carlos E. R.
 >        (from 13.1 x86_64 "Bottle" at Telcontar)
+> 
 > -----BEGIN PGP SIGNATURE-----
 > Version: GnuPG v2.0.22 (GNU/Linux)
 > 
-> iEYEARECAAYFAlPAgb0ACgkQtTMYHG2NR9U/FQCgjtwuDC0HTSG3i7DrEV8+qZeT
-> 6mUAn0FGf42SsU1WeRx/AAk4X2oqV4Bc
-> =pASJ
+> iEYEARECAAYFAlPAkyMACgkQtTMYHG2NR9U2uACfTdPx8DGCkBzLGiSVGn3XCcSV
+> 7ukAnAvR1CjR9Jx3rPosLYNceBtQjJjf
+> =/odv
 > -----END PGP SIGNATURE-----
 > 
 > _______________________________________________
