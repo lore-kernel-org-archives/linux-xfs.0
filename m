@@ -1,25 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 8DA567F47
-	for <xfs@oss.sgi.com>; Sun, 13 Jul 2014 17:55:49 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 8920B304032
-	for <xfs@oss.sgi.com>; Sun, 13 Jul 2014 15:55:46 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 9C4477F50
+	for <xfs@oss.sgi.com>; Sun, 13 Jul 2014 18:04:14 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 838518F8050
+	for <xfs@oss.sgi.com>; Sun, 13 Jul 2014 16:04:14 -0700 (PDT)
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	StmSIjpOBFGXKCE7 for <xfs@oss.sgi.com>;
-	Sun, 13 Jul 2014 15:55:44 -0700 (PDT)
-Date: Mon, 14 Jul 2014 08:55:32 +1000
+	5zAGA4A7Hy44AViq for <xfs@oss.sgi.com>;
+	Sun, 13 Jul 2014 16:04:09 -0700 (PDT)
+Date: Mon, 14 Jul 2014 09:04:06 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: consequences of XFS_IOC_FSSETXATTR on non-empty file?
-Message-ID: <20140713225532.GD22339@dastard>
-References: <CA+4uBUYg+81G2=sj3qXO4GGgA7pyjgVrGDCN+UQ32jnWgSbG5w@mail.gmail.com>
-	<20140713012624.GS4453@dastard>
-	<CA+4uBUZwuh5t28jU5jfQb3ApdUKx8t88hg6m8CXS+0ztpi6OTw@mail.gmail.com>
-	<CALFYKtC7J1ZvW40wsSWmVpNS5T3tmAOmY9CP=nsh4r=iUjeznA@mail.gmail.com>
+Subject: Re: [PATCH] Init errno before strto* calls.
+Message-ID: <20140713230406.GE22339@dastard>
+References: <1405107244-14234-1-git-send-email-arekm@maven.pl>
+	<1405273088-7956-1-git-send-email-arekm@maven.pl>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <CALFYKtC7J1ZvW40wsSWmVpNS5T3tmAOmY9CP=nsh4r=iUjeznA@mail.gmail.com>
+In-Reply-To: <1405273088-7956-1-git-send-email-arekm@maven.pl>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,69 +26,37 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Ilya Dryomov <ilya.dryomov@inktank.com>
-Cc: "ceph-devel@vger.kernel.org" <ceph-devel@vger.kernel.org>, Sage Weil <sage@inktank.com>, Samuel Just <sam.just@inktank.com>, xfs@oss.sgi.com
+To: Arkadiusz =?utf-8?Q?Mi=C5=9Bkiewicz?= <arekm@maven.pl>
+Cc: xfs@oss.sgi.com
 
-On Sun, Jul 13, 2014 at 09:01:13PM +0400, Ilya Dryomov wrote:
-> On Sun, Jul 13, 2014 at 5:48 AM, Samuel Just <sam.just@inktank.com> wrote:
-> > Actually, on this ubuntu kernel (3.13.0-24-generic), it doesn't seem
-> > to give an error.  I'll attach my test case for that.  We don't yet
-> > have a way of reproducing the corruption -- the ext_size change in the
-> > osd simply seemed like a promising lead.
-> > -Sam
-> >
-> > On Sat, Jul 12, 2014 at 6:26 PM, Dave Chinner <david@fromorbit.com> wrote:
-> >> On Sat, Jul 12, 2014 at 06:16:54PM -0700, Samuel Just wrote:
-> >>> Hi,
-> >>>
-> >>> We are seeing reports of ceph-osd stores on xfs of files with some
-> >>> garbage data (possibly misplaced from data elsewhere in the
-> >>> filesystem).  There was a bug for a while where the ceph-osd process
-> >>> would set a value for fsx_extsize on a non-empty (possibly sparse)
-> >>> file using XFS_IOC_FSSETXATTR.  Could that plausibly result in a file
-> >>> with garbage data?
-> >>
-> >> No, setting an extent size on a non-empty file will simply fail
-> >> with EINVAL.
-> 
-> AFAIR it checks whether or not any extents are actually allocated, not
-> whether the file is empty or not.
-
-FWIW, that's an implementation detail, not the definition of the
-intended behaviour of the ioctl.  Indeed, the man page says:
-
-"The fsx_xflags realtime file bit and the file's extent size may be
-changed only when the file is empty, ..."
-
-For most people, "[non-]empty file" is much more easily understood
-than "a file without real extents, but might have been written to
-and so have dirty, in-memory delayed allocation data whose
-asynchronous flushing may or may not affect the behaviour of a call
-to XFS_IOC_FSSETXATTR".
-
-i.e. the intended application behaviour is that they should only be
-able to change the extent size hint *before* any data is written to
-the file.
-
-> I think if you call fsync() or even
-> fdatasync() before close(fd), it will fail as expected.
-
-Only if you are trying to change the extent size immediately after
-the first write you do to an empty file. Which is, as per the above,
-not the recommended or intended use of the ioctl.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gU3VuLCBKdWwgMTMsIDIwMTQgYXQgMDc6Mzg6MDhQTSArMDIwMCwgQXJrYWRpdXN6IE1pxZtr
+aWV3aWN6IHdyb3RlOgo+IEVyaWMgU2FuZGVlbiBub3RlZCB0aGF0IHN0cnRvbCgzKSBhbmQgZnJp
+ZW5kcyByZXF1aXJlIGVycm5vCj4gaW5pdGlhbGl6YXRpb24uIEZyb20gKGZyZXNoKSBtYW4gcGFn
+ZToKPiAKPiBOT1RFUwo+ICAgICAgICBTaW5jZSAgc3RydG9sKCkgIGNhbiAgbGVnaXRpbWF0ZWx5
+ICByZXR1cm4gIDAsICBMT05HX01BWCwKPiAgICAgICAgb3IgTE9OR19NSU4gKExMT05HX01BWCBv
+ciBMTE9OR19NSU4gZm9yIHN0cnRvbGwoKSkgb24gYm90aAo+ICAgICAgICBzdWNjZXNzIGFuZCBm
+YWlsdXJlLCB0aGUgY2FsbGluZyAgcHJvZ3JhbSBzaG91bGQgc2V0IGVycm5vCj4gICAgICAgIHRv
+IDAgYmVmb3JlIHRoZSBjYWxsLCBhbmQgdGhlbiBkZXRlcm1pbmUgaWYgYW4gZXJyb3IKPiAgICAg
+ICAgb2NjdXJyZWQgYnkgY2hlY2tpbmcgIHdoZXRoZXIgIGVycm5vICBoYXMgIGEgbm9uLXplcm8K
+PiAgICAgICAgdmFsdWUgYWZ0ZXIgdGhlIGNhbGwuCj4gCj4gU28gZG8gaXQuCj4gLS0tCj4gIGxp
+YnhjbWQvaW5wdXQuYyB8IDUgKysrKysKPiAgMSBmaWxlIGNoYW5nZWQsIDUgaW5zZXJ0aW9ucygr
+KQo+IAo+IGRpZmYgLS1naXQgYS9saWJ4Y21kL2lucHV0LmMgYi9saWJ4Y21kL2lucHV0LmMKPiBp
+bmRleCAzOTdhMTI0Li43MTFiNTI3IDEwMDY0NAo+IC0tLSBhL2xpYnhjbWQvaW5wdXQuYwo+ICsr
+KyBiL2xpYnhjbWQvaW5wdXQuYwo+IEBAIC0xNTMsNiArMTUzLDcgQEAgY3Z0bnVtKAo+ICAJY2hh
+cgkJKnNwOwo+ICAJaW50CQljOwo+ICAKPiArCWVycm5vID0gMDsKPiAgCWkgPSBzdHJ0b2xsKHMs
+ICZzcCwgMCk7Cj4gIAlpZiAoKGkgPT0gTExPTkdfTUlOIHx8IGkgPT0gTExPTkdfTUFYKSAmJiBl
+cnJubyA9PSBFUkFOR0UpCj4gIAkJcmV0dXJuIC0xTEw7CgpJIHRoaW5rIHRoYXQganVzdCBjaGVj
+a2luZyBmb3IgKGVycm5vICE9IDApIGlzIGJldHRlciBoZXJlLCBiZWNhdXNlCnRoZW4gd2UgYWxz
+byBjYXRjaCBlcnJvcnMgZnJvbSB1bnN1cHBvcnRlZCBmb3JtYXRzIG9yIGludmFsaWQKc3RyaW5n
+cyAoaS5lLiBFSU5WQUwpLgoKaS5lLiBpZiB0aGUgcmVzdWx0IGlzIG91dCBvZiByYW5nZSwgdGhl
+biBFUkFOR0UgaXMgYWx3YXlzIHJldHVybmVkLApzbyB3ZSBkb24ndCBuZWVkIHRvIGNoZWNrIHRo
+ZSBhY3R1YWwgdmFsdWUgYXQgYWxsLi4uCgpCb3RoIHBhdGNoZXMgY291bGQgYmUgY29uZGVuc2Vk
+IGRvd24gdG8gYSBzaW5nbGUgcGF0Y2ggdGhhdCBkb2VzOgoKKwllcnJubyA9IDA7CiAJaSA9IHN0
+cnRvbGwocywgJnNwLCAwKTsKKwlpZiAoZXJybm8pCisJCXJldHVybiAtMUxMOwoKQ2hlZXJzLAoK
+RGF2ZS4KLS0gCkRhdmUgQ2hpbm5lcgpkYXZpZEBmcm9tb3JiaXQuY29tCgpfX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bv
+c3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
