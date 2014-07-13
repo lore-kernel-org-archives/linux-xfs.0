@@ -1,21 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id AB6D37F5D
-	for <xfs@oss.sgi.com>; Sat, 12 Jul 2014 20:17:02 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 92F14304032
-	for <xfs@oss.sgi.com>; Sat, 12 Jul 2014 18:16:59 -0700 (PDT)
-Received: from mail-qa0-f52.google.com (mail-qa0-f52.google.com
-	[209.85.216.52]) by cuda.sgi.com with ESMTP id hGTaG4I7NnoJJhx7
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Sat, 12 Jul 2014 18:16:54 -0700 (PDT)
-Received: by mail-qa0-f52.google.com with SMTP id j15so2132478qaq.11
-	for <xfs@oss.sgi.com>; Sat, 12 Jul 2014 18:16:54 -0700 (PDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id CD33C7F67
+	for <xfs@oss.sgi.com>; Sat, 12 Jul 2014 20:26:30 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 626CCAC002
+	for <xfs@oss.sgi.com>; Sat, 12 Jul 2014 18:26:30 -0700 (PDT)
+Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
+	[150.101.137.129]) by cuda.sgi.com with ESMTP id
+	d3JBDrj8TrWu9AJu for <xfs@oss.sgi.com>;
+	Sat, 12 Jul 2014 18:26:28 -0700 (PDT)
+Date: Sun, 13 Jul 2014 11:26:24 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: consequences of XFS_IOC_FSSETXATTR on non-empty file?
+Message-ID: <20140713012624.GS4453@dastard>
+References: <CA+4uBUYg+81G2=sj3qXO4GGgA7pyjgVrGDCN+UQ32jnWgSbG5w@mail.gmail.com>
 MIME-Version: 1.0
-Date: Sat, 12 Jul 2014 18:16:54 -0700
-Message-ID: <CA+4uBUYg+81G2=sj3qXO4GGgA7pyjgVrGDCN+UQ32jnWgSbG5w@mail.gmail.com>
-Subject: consequences of XFS_IOC_FSSETXATTR on non-empty file?
-From: Samuel Just <sam.just@inktank.com>
+Content-Disposition: inline
+In-Reply-To: <CA+4uBUYg+81G2=sj3qXO4GGgA7pyjgVrGDCN+UQ32jnWgSbG5w@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,19 +29,30 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com, "ceph-devel@vger.kernel.org" <ceph-devel@vger.kernel.org>, Sage Weil <sage@inktank.com>, Ilya Dryomov <ilya.dryomov@inktank.com>
+To: Samuel Just <sam.just@inktank.com>
+Cc: Ilya Dryomov <ilya.dryomov@inktank.com>, "ceph-devel@vger.kernel.org" <ceph-devel@vger.kernel.org>, Sage Weil <sage@inktank.com>, xfs@oss.sgi.com
 
-Hi,
+On Sat, Jul 12, 2014 at 06:16:54PM -0700, Samuel Just wrote:
+> Hi,
+> 
+> We are seeing reports of ceph-osd stores on xfs of files with some
+> garbage data (possibly misplaced from data elsewhere in the
+> filesystem).  There was a bug for a while where the ceph-osd process
+> would set a value for fsx_extsize on a non-empty (possibly sparse)
+> file using XFS_IOC_FSSETXATTR.  Could that plausibly result in a file
+> with garbage data? 
 
-We are seeing reports of ceph-osd stores on xfs of files with some
-garbage data (possibly misplaced from data elsewhere in the
-filesystem).  There was a bug for a while where the ceph-osd process
-would set a value for fsx_extsize on a non-empty (possibly sparse)
-file using XFS_IOC_FSSETXATTR.  Could that plausibly result in a file
-with garbage data?  Let me know if there is any additional information
-or detail which might be valuable.  One report was on kernel versions
-3.14.3 and 3.14.4.
--Sam
+No, setting an extent size on a non-empty file will simply fail
+with EINVAL.
+
+Do you have any method of reproducing the bad data in files?
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
