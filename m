@@ -1,25 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 26CA27F51
-	for <xfs@oss.sgi.com>; Sun, 13 Jul 2014 03:52:32 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 19018304032
-	for <xfs@oss.sgi.com>; Sun, 13 Jul 2014 01:52:27 -0700 (PDT)
-Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id f7oNckuN7PaC1Fjf (version=TLSv1 cipher=AES256-SHA
-	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Sun, 13 Jul 2014 01:52:26 -0700 (PDT)
-Received: from hch by bombadil.infradead.org with local (Exim 4.80.1 #2 (Red
-	Hat Linux)) id 1X6FWD-0004ze-GG
-	for xfs@oss.sgi.com; Sun, 13 Jul 2014 08:52:25 +0000
-Date: Sun, 13 Jul 2014 01:52:25 -0700
+	by oss.sgi.com (Postfix) with ESMTP id E652F7F61
+	for <xfs@oss.sgi.com>; Sun, 13 Jul 2014 03:57:09 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id A855E304032
+	for <xfs@oss.sgi.com>; Sun, 13 Jul 2014 01:57:09 -0700 (PDT)
+Received: from buxtehude.debian.org (buxtehude.debian.org [140.211.166.26]) by
+	cuda.sgi.com with ESMTP id 67Em1L6ExtDKEwLX (version=TLSv1
+	cipher=AES128-SHA bits=128 verify=NO) for <xfs@oss.sgi.com>;
+	Sun, 13 Jul 2014 01:57:07 -0700 (PDT)
+Subject: Bug#751511: xfslibs-dev: Incorrect licensing information in
+	debian/copyright
+Resent-To: debian-bugs-dist@lists.debian.org
+Resent-Message-ID: <handler.751511.B751511.140524158822254@bugs.debian.org>
+Date: Sun, 13 Jul 2014 01:33:36 -0700
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: Your message to xfs awaits moderator approval
-Message-ID: <20140713085225.GA19073@infradead.org>
-References: <mailman.6340.1405240522.4413.xfs@oss.sgi.com>
+Message-ID: <20140713083336.GA24104@infradead.org>
+References: <20140613142534.8854.10300.reportbug@sibsagar.btc.netapp.com>
+	<20140613152414.GF2840@sid.nuvreauspam>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <mailman.6340.1405240522.4413.xfs@oss.sgi.com>
+In-Reply-To: <20140613152414.GF2840@sid.nuvreauspam>
+Reply-To: Christoph Hellwig <hch@infradead.org>, 751511@bugs.debian.org
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,30 +34,24 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Andrei POPESCU <andreimpopescu@gmail.com>
+Cc: 751511@bugs.debian.org, Y Giridhar Appaji Nag <appaji@debian.org>, xfslibs-dev@packages.debian.org
 
-Looks like the list server broke the forwarding of the Debian bug
-reports..
+On Fri, Jun 13, 2014 at 06:24:14PM +0300, Andrei POPESCU wrote:
+> Control: reassign -1 xfslibs-dev
+> 
+> On Vi, 13 iun 14, 19:55:34, Y Giridhar Appaji Nag wrote:
+> > Source: xfslibs-dev
+> > Severity: serious
+> > Justification: Policy 4.5
+> > 
+> > It looks like the xfslibs-dev package source files are licensed under LGPL
+> > v2.1, however the debian/copyright file indicates that only the libhandle
+> > package is under LGPL and that the rest of the package is licensed under GPL.
 
-On Sun, Jul 13, 2014 at 03:35:22AM -0500, xfs-bounces@oss.sgi.com wrote:
-> Your mail to 'xfs' with the subject
-> 
->     Re: Bug#751511: xfslibs-dev: Incorrect licensing information in
-> debian/copyright
-> 
-> Is being held until the list moderator can review it for approval.
-> 
-> The reason it is being held:
-> 
->     Message has implicit destination
-> 
-> Either the message will get posted to the list, or you will receive
-> notification of the moderator's decision.  If you would like to cancel
-> this posting, please visit the following URL:
-> 
->     http://oss.sgi.com/mailman/confirm/xfs/7ca40b56f5aea55cd0ed7b0f161cce447939b63b
-> 
----end quoted text---
+All the headers in xfslibs-dev are licensed under the LGPL.  The man
+pages don't have specific licensing information in the source file nad
+thus default to GPL.
 
 _______________________________________________
 xfs mailing list
