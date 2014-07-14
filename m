@@ -1,24 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 3A6DD7FAC
-	for <xfs@oss.sgi.com>; Mon, 14 Jul 2014 11:27:36 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id AD405AC001
-	for <xfs@oss.sgi.com>; Mon, 14 Jul 2014 09:27:32 -0700 (PDT)
-Received: from mail-la0-f43.google.com (mail-la0-f43.google.com
-	[209.85.215.43]) by cuda.sgi.com with ESMTP id 5ikt2fwRIsC82HHz
+	by oss.sgi.com (Postfix) with ESMTP id B1DE27F4E
+	for <xfs@oss.sgi.com>; Mon, 14 Jul 2014 12:54:55 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 29F51AC006
+	for <xfs@oss.sgi.com>; Mon, 14 Jul 2014 10:54:52 -0700 (PDT)
+Received: from mail-we0-f182.google.com (mail-we0-f182.google.com
+	[74.125.82.182]) by cuda.sgi.com with ESMTP id UVKFkUhubZemRqEm
 	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 14 Jul 2014 09:27:30 -0700 (PDT)
-Received: by mail-la0-f43.google.com with SMTP id hr17so2568324lab.2
-	for <xfs@oss.sgi.com>; Mon, 14 Jul 2014 09:27:28 -0700 (PDT)
-From: Dmitry Monakhov <dmonakhov@openvz.org>
-Subject: RE: [PATCH 2/3] xfs: Add support IOC_MOV_DATA ioctl
-In-Reply-To: <001801cf9b3f$ad786ff0$08694fd0$@samsung.com>
-References: <003f01cf9aa4$1e9e5240$5bdaf6c0$@samsung.com>
-	<20140708121500.GA518@infradead.org>
-	<001801cf9b3f$ad786ff0$08694fd0$@samsung.com>
-Date: Mon, 14 Jul 2014 20:27:26 +0400
-Message-ID: <87ha2jsy6p.fsf@openvz.org>
+	<xfs@oss.sgi.com>; Mon, 14 Jul 2014 10:54:48 -0700 (PDT)
+Received: by mail-we0-f182.google.com with SMTP id q59so4514762wes.13
+	for <xfs@oss.sgi.com>; Mon, 14 Jul 2014 10:54:47 -0700 (PDT)
+From: Iustin Pop <iusty@k1024.org>
+Subject: [PATCH] Fix trivial typo in xfsrestore warning message
+Date: Mon, 14 Jul 2014 19:54:42 +0200
+Message-Id: <1405360482-28870-1-git-send-email-iusty@k1024.org>
 MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -28,42 +24,40 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Namjae Jeon <namjae.jeon@samsung.com>, 'Christoph Hellwig' <hch@infradead.org>
-Cc: 'Theodore Ts'o' <tytso@mit.edu>, 'Brian Foster' <bfoster@redhat.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, 'Ashish Sangwan' <a.sangwan@samsung.com>, linux-fsdevel@vger.kernel.org, 'Luk?? Czerner' <lczerner@redhat.com>, 'linux-ext4' <linux-ext4@vger.kernel.org>
+To: xfs@oss.sgi.com
+Cc: Iustin Pop <iusty@k1024.org>
 
-On Wed, 09 Jul 2014 15:33:21 +0900, Namjae Jeon <namjae.jeon@samsung.com> wrote:
-> > 
-> > On Tue, Jul 08, 2014 at 08:59:49PM +0900, Namjae Jeon wrote:
-> > > This patch implements fs ioctl's IOC_MOV_DATA for XFS.
-> > 
-> > Shouldn't this share code with the XFS_IOC_SWAPEXT implementation?
-> Lukas has raised the same question for ext4.
-> Both xfs(XFS_IOC_SWAPEXT) and ext4(EXT4_IOC_MOVE_EXT) has ioctls which uses
-> almost similar kind of structure as struct mov_data.
-> As such, there seems to be possiblity for sharing basic code (I will try)
-> used for sanity checking in IOC_MOV_DATA to be shared with these ioctls
-> but the core functionality code will remain different.
-> 
-> Thanks!
-Actually they are differ. EXT4_IOC_MOVE_EXT copy data inside kernel,
-but XFS_IOC_SWAPEXT live this job to userpsace see:
-http://oss.sgi.com/cgi-bin/gitweb.cgi?p=xfs/cmds/xfsprogs.git;a=blob;f=fsr/xfs_fsr.c packfile
-And I'll vote to make EXT4_IOC_MOVE_EXT deprecated, and implement EXT4_IOC_SWAPEXT
-as XFS does that.
-Ted, Lukas what do you think about that?
-
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+QWxzbyBtb2RpZnkgdGhlIHBvLyBmaWxlcywgYWx0aG91Z2ggbm90IHN1cmUgaWYgdGhhdCdzIHRo
+ZSBjb3JyZWN0CnByb2NlZHVyZS4KClNpZ25lZC1vZmYtYnk6IEl1c3RpbiBQb3AgPGl1c3R5QGsx
+MDI0Lm9yZz4KLS0tCiBwby9kZS5wbyAgICAgICB8IDIgKy0KIHBvL3BsLnBvICAgICAgIHwgMiAr
+LQogcmVzdG9yZS90cmVlLmMgfCAyICstCiAzIGZpbGVzIGNoYW5nZWQsIDMgaW5zZXJ0aW9ucygr
+KSwgMyBkZWxldGlvbnMoLSkKCmRpZmYgLS1naXQgYS9wby9kZS5wbyBiL3BvL2RlLnBvCmluZGV4
+IDg4MTEzNTYuLjhiZGQ3NTYgMTAwNjQ0Ci0tLSBhL3BvL2RlLnBvCisrKyBiL3BvL2RlLnBvCkBA
+IC0yODMyLDcgKzI4MzIsNyBAQCBtc2dzdHIgImNobW9kICVzIGZlaGxnZXNjaGxhZ2VuOiAlc1xu
+IgogIywgYy1mb3JtYXQKIG1zZ2lkICIiCiAiYXR0ZW1wdCB0byBzZXQgZXh0ZW5kZWQgYXR0cmli
+dXRlcyAoeGZsYWdzIDB4JXgsIGV4dHNpemUgPSAweCV4LCBwcm9qaWQgPSAweCUiCi0ieClvZiAl
+cyBmYWlsZWQ6ICVzXG4iCisieCkgb2YgJXMgZmFpbGVkOiAlc1xuIgogbXNnc3RyICIiCiAiVmVy
+c3VjaCBlcndlaXRlcnRlIEF0dHJpYnV0ZSAoeGZsYWdzIDB4JXgsIGV4dHNpemUgPSAweCV4LCBw
+cm9qaWQgPSAweCV4KSAiCiAidm9uICVzIHp1IHNldHplbiBmZWhsZ2VzY2hsYWdlbjogJXNcbiIK
+ZGlmZiAtLWdpdCBhL3BvL3BsLnBvIGIvcG8vcGwucG8KaW5kZXggZDRkNjhiNC4uM2NlODIzZSAx
+MDA2NDQKLS0tIGEvcG8vcGwucG8KKysrIGIvcG8vcGwucG8KQEAgLTM3NzAsNyArMzc3MCw3IEBA
+IG1zZ3N0ciAiY2htb2QgJXMgbmllIHBvd2lvZMWCbyBzacSZOiAlc1xuIgogIywgYy1mb3JtYXQK
+IG1zZ2lkICIiCiAiYXR0ZW1wdCB0byBzZXQgZXh0ZW5kZWQgYXR0cmlidXRlcyAoeGZsYWdzIDB4
+JXgsIGV4dHNpemUgPSAweCV4LCBwcm9qaWQgPSAweCIKLSIleClvZiAlcyBmYWlsZWQ6ICVzXG4i
+CisiJXgpIG9mICVzIGZhaWxlZDogJXNcbiIKIG1zZ3N0ciAiIgogInByw7NiYSB1c3Rhd2llbmlh
+IHJvenN6ZXJ6b255Y2ggYXRyeWJ1dMOzdyAoeGZsYWdzIDB4JXgsIGV4dHNpemUgPSAweCV4LCAi
+CiAicHJvamlkID0gMHgleCkgJXMgbmllIHBvd2lvZMWCYSBzacSZOiAlc1xuIgpkaWZmIC0tZ2l0
+IGEvcmVzdG9yZS90cmVlLmMgYi9yZXN0b3JlL3RyZWUuYwppbmRleCA3ZTYxMjdmLi4wOGUxNzdm
+IDEwMDY0NAotLS0gYS9yZXN0b3JlL3RyZWUuYworKysgYi9yZXN0b3JlL3RyZWUuYwpAQCAtMjYx
+Nyw3ICsyNjE3LDcgQEAgc2V0ZGlyYXR0ciggZGFoX3QgZGFoLCBjaGFyICpwYXRoICkKIAkJICAg
+ICAgICJleHRlbmRlZCBhdHRyaWJ1dGVzICIKIAkJICAgICAgICIoeGZsYWdzIDB4JXgsICIKIAkJ
+ICAgICAgICJleHRzaXplID0gMHgleCwgIgotCQkgICAgICAgInByb2ppZCA9IDB4JXgpIgorCQkg
+ICAgICAgInByb2ppZCA9IDB4JXgpICIKIAkJICAgICAgICJvZiAlcyBmYWlsZWQ6ICIKIAkJICAg
+ICAgICIlc1xuIiksCiAJCSAgICAgZnN4YXR0ci5mc3hfeGZsYWdzLAotLSAKMi4wLjAucmM0Cgpf
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGlu
+ZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5m
+by94ZnMK
