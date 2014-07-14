@@ -1,28 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id C85477F63
-	for <xfs@oss.sgi.com>; Mon, 14 Jul 2014 02:24:10 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 340037F6F
+	for <xfs@oss.sgi.com>; Mon, 14 Jul 2014 02:57:07 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 4CC28AC006
-	for <xfs@oss.sgi.com>; Mon, 14 Jul 2014 00:24:06 -0700 (PDT)
-Received: from mail-qc0-f179.google.com (mail-qc0-f179.google.com
-	[209.85.216.179]) by cuda.sgi.com with ESMTP id
-	CPP9DKRkHkyuKZD3 (version=TLSv1 cipher=RC4-SHA bits=128
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 35F588F804C
+	for <xfs@oss.sgi.com>; Mon, 14 Jul 2014 00:57:07 -0700 (PDT)
+Received: from mail-wi0-f182.google.com (mail-wi0-f182.google.com
+	[209.85.212.182]) by cuda.sgi.com with ESMTP id
+	zd5HuQbg8c5cMbg4 (version=TLSv1 cipher=RC4-SHA bits=128
 	verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 14 Jul 2014 00:24:05 -0700 (PDT)
-Received: by mail-qc0-f179.google.com with SMTP id r5so2341939qcx.38
-	for <xfs@oss.sgi.com>; Mon, 14 Jul 2014 00:24:05 -0700 (PDT)
+	Mon, 14 Jul 2014 00:57:03 -0700 (PDT)
+Received: by mail-wi0-f182.google.com with SMTP id d1so2029777wiv.9
+	for <xfs@oss.sgi.com>; Mon, 14 Jul 2014 00:57:02 -0700 (PDT)
+From: =?UTF-8?q?Arkadiusz=20Mi=C5=9Bkiewicz?= <arekm@maven.pl>
+Subject: [PATCH] Detect strto* failures based on errno.
+Date: Mon, 14 Jul 2014 09:56:59 +0200
+Message-Id: <1405324619-25515-1-git-send-email-arekm@maven.pl>
+In-Reply-To: <20140713230406.GE22339@dastard>
+References: <20140713230406.GE22339@dastard>
 MIME-Version: 1.0
-In-Reply-To: <20140713225532.GD22339@dastard>
-References: <CA+4uBUYg+81G2=sj3qXO4GGgA7pyjgVrGDCN+UQ32jnWgSbG5w@mail.gmail.com>
-	<20140713012624.GS4453@dastard>
-	<CA+4uBUZwuh5t28jU5jfQb3ApdUKx8t88hg6m8CXS+0ztpi6OTw@mail.gmail.com>
-	<CALFYKtC7J1ZvW40wsSWmVpNS5T3tmAOmY9CP=nsh4r=iUjeznA@mail.gmail.com>
-	<20140713225532.GD22339@dastard>
-Date: Mon, 14 Jul 2014 11:24:05 +0400
-Message-ID: <CALFYKtBVLLTjXnxS3qc7sCYbc+MfFFrGsbM1D_8jK4oiUd267w@mail.gmail.com>
-Subject: Re: consequences of XFS_IOC_FSSETXATTR on non-empty file?
-From: Ilya Dryomov <ilya.dryomov@inktank.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,70 +27,45 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: "ceph-devel@vger.kernel.org" <ceph-devel@vger.kernel.org>, Sage Weil <sage@inktank.com>, Samuel Just <sam.just@inktank.com>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Mon, Jul 14, 2014 at 2:55 AM, Dave Chinner <david@fromorbit.com> wrote:
-> On Sun, Jul 13, 2014 at 09:01:13PM +0400, Ilya Dryomov wrote:
->> On Sun, Jul 13, 2014 at 5:48 AM, Samuel Just <sam.just@inktank.com> wrote:
->> > Actually, on this ubuntu kernel (3.13.0-24-generic), it doesn't seem
->> > to give an error.  I'll attach my test case for that.  We don't yet
->> > have a way of reproducing the corruption -- the ext_size change in the
->> > osd simply seemed like a promising lead.
->> > -Sam
->> >
->> > On Sat, Jul 12, 2014 at 6:26 PM, Dave Chinner <david@fromorbit.com> wrote:
->> >> On Sat, Jul 12, 2014 at 06:16:54PM -0700, Samuel Just wrote:
->> >>> Hi,
->> >>>
->> >>> We are seeing reports of ceph-osd stores on xfs of files with some
->> >>> garbage data (possibly misplaced from data elsewhere in the
->> >>> filesystem).  There was a bug for a while where the ceph-osd process
->> >>> would set a value for fsx_extsize on a non-empty (possibly sparse)
->> >>> file using XFS_IOC_FSSETXATTR.  Could that plausibly result in a file
->> >>> with garbage data?
->> >>
->> >> No, setting an extent size on a non-empty file will simply fail
->> >> with EINVAL.
->>
->> AFAIR it checks whether or not any extents are actually allocated, not
->> whether the file is empty or not.
->
-> FWIW, that's an implementation detail, not the definition of the
-> intended behaviour of the ioctl.  Indeed, the man page says:
->
-> "The fsx_xflags realtime file bit and the file's extent size may be
-> changed only when the file is empty, ..."
->
-> For most people, "[non-]empty file" is much more easily understood
-> than "a file without real extents, but might have been written to
-> and so have dirty, in-memory delayed allocation data whose
-> asynchronous flushing may or may not affect the behaviour of a call
-> to XFS_IOC_FSSETXATTR".
->
-> i.e. the intended application behaviour is that they should only be
-> able to change the extent size hint *before* any data is written to
-> the file.
->
->> I think if you call fsync() or even
->> fdatasync() before close(fd), it will fail as expected.
->
-> Only if you are trying to change the extent size immediately after
-> the first write you do to an empty file. Which is, as per the above,
-> not the recommended or intended use of the ioctl.
-
-That's understood, but that is exactly what Sam's test program happens
-to try to do, so I had to point the "file w/o real extents" thing out.
-
-Thanks,
-
-                Ilya
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+Q29kZSB3YXMgdGVzdGluZyBmb3IgRVJBTkdFIGVycm5vIG9ubHkgaW4gc29tZSBwbGFjZXMuIElu
+IG90aGVyIHBsYWNlcwppdCBkaWRuJ3QgZG8gYW55IGVycm5vIGNoZWNraW5nIGF0IGFsbC4KClVu
+aWZ5IHN0cnRvKiByZXN1bHQgdGVzdGluZyBieSB0cmVhdGluZyBhbnkgbm9uIHplcm8gZXJybm8g
+YXMgZmFpbHVyZS4KClNpZ25lZC1vZmYtYnk6IEFya2FkaXVzeiBNacWba2lld2ljeiA8YXJla21A
+bWF2ZW4ucGw+Ci0tLQogbGlieGNtZC9pbnB1dC5jIHwgMTggKysrKysrKysrKy0tLS0tLS0tCiAx
+IGZpbGUgY2hhbmdlZCwgMTAgaW5zZXJ0aW9ucygrKSwgOCBkZWxldGlvbnMoLSkKCmRpZmYgLS1n
+aXQgYS9saWJ4Y21kL2lucHV0LmMgYi9saWJ4Y21kL2lucHV0LmMKaW5kZXggYzA2YjViOC4uZDcy
+ZGZmMyAxMDA2NDQKLS0tIGEvbGlieGNtZC9pbnB1dC5jCisrKyBiL2xpYnhjbWQvaW5wdXQuYwpA
+QCAtMTUzLDggKzE1Myw5IEBAIGN2dG51bSgKIAljaGFyCQkqc3A7CiAJaW50CQljOwogCisJZXJy
+bm8gPSAwOwogCWkgPSBzdHJ0b2xsKHMsICZzcCwgMCk7Ci0JaWYgKGkgPT0gMCAmJiBzcCA9PSBz
+KQorCWlmIChlcnJubyB8fCAoaSA9PSAwICYmIHNwID09IHMpKQogCQlyZXR1cm4gLTFMTDsKIAlp
+ZiAoKnNwID09ICdcMCcpCiAJCXJldHVybiBpOwpAQCAtMjM3LDggKzIzOCw5IEBAIGN2dHRpbWUo
+CiAJdW5zaWduZWQgbG9uZwlpOwogCWNoYXIJCSpzcDsKIAorCWVycm5vID0gMDsKIAlpID0gc3Ry
+dG91bChzLCAmc3AsIDApOwotCWlmIChpID09IDAgJiYgc3AgPT0gcykKKwlpZiAoZXJybm8gfHwg
+KGkgPT0gMCAmJiBzcCA9PSBzKSkKIAkJcmV0dXJuIDA7CiAJaWYgKCpzcCA9PSAnXDAnKQogCQly
+ZXR1cm4gaTsKQEAgLTM0NCwxMCArMzQ2LDEwIEBAIHByaWRfZnJvbV9zdHJpbmcoCiAJICogQWxs
+b3cgZWl0aGVyIGEgZnVsbCBudW1lcmljIG9yIGEgdmFsaWQgcHJvamVjdG5hbWUsIGV2ZW4KIAkg
+KiBpZiBpdCBzdGFydHMgd2l0aCBhIGRpZ2l0LgogCSAqLworCWVycm5vID0gMDsKIAlwcmlkX2xv
+bmcgPSBzdHJ0b3VsKHByb2plY3QsICZzcCwgMTApOwogCWlmICgqcHJvamVjdCAhPSAnXDAnICYm
+ICpzcCA9PSAnXDAnKSB7Ci0JCWlmICgocHJpZF9sb25nID09IFVMT05HX01BWCAmJiBlcnJubyA9
+PSBFUkFOR0UpCi0JCQkJfHwgKHByaWRfbG9uZyA+IChwcmlkX3QpLTEpKQorCQlpZiAoZXJybm8g
+fHwgKHByaWRfbG9uZyA+IChwcmlkX3QpLTEpKQogCQkJcmV0dXJuIC0xOwogCQlyZXR1cm4gKHBy
+aWRfdClwcmlkX2xvbmc7CiAJfQpAQCAtMzY1LDEwICszNjcsMTAgQEAgdWlkX2Zyb21fc3RyaW5n
+KAogCXVuc2lnbmVkIGxvbmcJdWlkX2xvbmc7CiAJY2hhcgkJKnNwOwogCisJZXJybm8gPSAwOwog
+CXVpZF9sb25nID0gc3RydG91bCh1c2VyLCAmc3AsIDEwKTsKIAlpZiAoc3AgIT0gdXNlcikgewot
+CQlpZiAoKHVpZF9sb25nID09IFVMT05HX01BWCAmJiBlcnJubyA9PSBFUkFOR0UpCi0JCQkJfHwg
+KHVpZF9sb25nID4gKHVpZF90KS0xKSkKKwkJaWYgKGVycm5vIHx8ICh1aWRfbG9uZyA+ICh1aWRf
+dCktMSkpCiAJCQlyZXR1cm4gLTE7CiAJCXJldHVybiAodWlkX3QpdWlkX2xvbmc7CiAJfQpAQCAt
+Mzg2LDEwICszODgsMTAgQEAgZ2lkX2Zyb21fc3RyaW5nKAogCXVuc2lnbmVkIGxvbmcJZ2lkX2xv
+bmc7CiAJY2hhcgkJKnNwOwogCisJZXJybm8gPSAwOwogCWdpZF9sb25nID0gc3RydG91bChncm91
+cCwgJnNwLCAxMCk7CiAJaWYgKHNwICE9IGdyb3VwKSB7Ci0JCWlmICgoZ2lkX2xvbmcgPT0gVUxP
+TkdfTUFYICYmIGVycm5vID09IEVSQU5HRSkKLQkJCQl8fCAoZ2lkX2xvbmcgPiAoZ2lkX3QpLTEp
+KQorCQlpZiAoZXJybm8gfHwgKGdpZF9sb25nID4gKGdpZF90KS0xKSkKIAkJCXJldHVybiAtMTsK
+IAkJcmV0dXJuIChnaWRfdClnaWRfbG9uZzsKIAl9Ci0tIAoyLjAuMQoKX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3Nz
+LnNnaS5jb20KaHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCg==
