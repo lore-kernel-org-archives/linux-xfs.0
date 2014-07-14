@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 5B8577F85
-	for <xfs@oss.sgi.com>; Mon, 14 Jul 2014 07:02:38 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id CEA0DAC005
-	for <xfs@oss.sgi.com>; Mon, 14 Jul 2014 05:02:34 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 1C8907F90
+	for <xfs@oss.sgi.com>; Mon, 14 Jul 2014 07:02:43 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 154E48F8035
+	for <xfs@oss.sgi.com>; Mon, 14 Jul 2014 05:02:40 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id zDgiL4qcGXlTlXEs (version=TLSv1
+	cuda.sgi.com with ESMTP id Ap2A6sIaDV61NiSJ (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 14 Jul 2014 05:02:33 -0700 (PDT)
-Date: Mon, 14 Jul 2014 08:02:23 -0400
+	Mon, 14 Jul 2014 05:02:39 -0700 (PDT)
+Date: Mon, 14 Jul 2014 08:02:35 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 2/3] xfs: refine the allocation stack switch
-Message-ID: <20140714120222.GA14369@bfoster.bfoster>
+Subject: Re: [PATCH 3/3] xfs: null unused quota inodes when quota is on
+Message-ID: <20140714120235.GB14369@bfoster.bfoster>
 References: <1405313339-29110-1-git-send-email-david@fromorbit.com>
-	<1405313339-29110-3-git-send-email-david@fromorbit.com>
+	<1405313339-29110-4-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1405313339-29110-3-git-send-email-david@fromorbit.com>
+In-Reply-To: <1405313339-29110-4-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,279 +33,91 @@ Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On Mon, Jul 14, 2014 at 02:48:58PM +1000, Dave Chinner wrote:
+On Mon, Jul 14, 2014 at 02:48:59PM +1000, Dave Chinner wrote:
 > From: Dave Chinner <dchinner@redhat.com>
 > 
-...
+> When quota is on, it is expected that unused quota inodes have a
+> value of NULLFSINO. The changes to support a separate project quota
+> in 3.12 broken this rule for non-project quota inode enabled
+> filesystem, as the code now refuses to write the group quota inode
+> if neither group or project quotas are enabled. This regression was
+> introduced by commit d892d58 ("xfs: Start using pquotaino from the
+> superblock").
+> 
+> In this case, we should be writing NULLFSINO rather than nothing to
+> ensure that we leave the group quota inode in a valid state while
+> quotas are enabled.
+> 
+> Failure to do so doesn't cause a current kernel to break - the
+> separate project quota inodes introduced translation code to always
+> treat a zero inode as NULLFSINO. This was introduced by commit
+> 0102629 ("xfs: Initialize all quota inodes to be NULLFSINO") with is
+> also in 3.12 but older kernels do not do this and hence taking a
+> filesystem back to an older kernel can result in quotas failing
+> initialisation at mount time. When that happens, we see this in
+> dmesg:
+> 
+> [ 1649.215390] XFS (sdb): Mounting Filesystem
+> [ 1649.316894] XFS (sdb): Failed to initialize disk quotas.
+> [ 1649.316902] XFS (sdb): Ending clean mount
+> 
+> By ensuring that we write NULLFSINO to quota inodes that aren't
+> active, we avoid this problem. We have to be really careful when
+> determining if the quota inodes are active or not, because we don't
+> want to write a NULLFSINO if the quota inodes are active and we
+> simply aren't updating them.
 > 
 > Signed-off-by: Dave Chinner <dchinner@redhat.com>
 > ---
 
-Looks good...
-
 Reviewed-by: Brian Foster <bfoster@redhat.com>
 
->  fs/xfs/xfs_bmap.c      |  7 ++---
->  fs/xfs/xfs_bmap.h      |  4 +--
->  fs/xfs/xfs_bmap_util.c | 43 --------------------------
->  fs/xfs/xfs_bmap_util.h | 13 +++-----
->  fs/xfs/xfs_btree.c     | 82 +++++++++++++++++++++++++++++++++++++++++++++++++-
->  fs/xfs/xfs_iomap.c     |  3 +-
->  6 files changed, 90 insertions(+), 62 deletions(-)
+>  fs/xfs/xfs_sb.c | 25 +++++++++++++++++++++----
+>  1 file changed, 21 insertions(+), 4 deletions(-)
 > 
-> diff --git a/fs/xfs/xfs_bmap.c b/fs/xfs/xfs_bmap.c
-> index 96175df..75c3fe5 100644
-> --- a/fs/xfs/xfs_bmap.c
-> +++ b/fs/xfs/xfs_bmap.c
-> @@ -4298,8 +4298,8 @@ xfs_bmapi_delay(
+> diff --git a/fs/xfs/xfs_sb.c b/fs/xfs/xfs_sb.c
+> index c3453b1..7703fa6 100644
+> --- a/fs/xfs/xfs_sb.c
+> +++ b/fs/xfs/xfs_sb.c
+> @@ -483,10 +483,16 @@ xfs_sb_quota_to_disk(
+>  	}
+>  
+>  	/*
+> -	 * GQUOTINO and PQUOTINO cannot be used together in versions
+> -	 * of superblock that do not have pquotino. from->sb_flags
+> -	 * tells us which quota is active and should be copied to
+> -	 * disk.
+> +	 * GQUOTINO and PQUOTINO cannot be used together in versions of
+> +	 * superblock that do not have pquotino. from->sb_flags tells us which
+> +	 * quota is active and should be copied to disk. If neither are active,
+> +	 * make sure we write NULLFSINO to the sb_gquotino field as a quota
+> +	 * inode value of "0" is invalid when the XFS_SB_VERSION_QUOTA feature
+> +	 * bit is set.
+> +	 *
+> +	 * Note that we don't need to handle the sb_uquotino or sb_pquotino here
+> +	 * as they do not require any translation. Hence the main sb field loop
+> +	 * will write them appropriately from the in-core superblock.
+>  	 */
+>  	if ((*fields & XFS_SB_GQUOTINO) &&
+>  				(from->sb_qflags & XFS_GQUOTA_ACCT))
+> @@ -494,6 +500,17 @@ xfs_sb_quota_to_disk(
+>  	else if ((*fields & XFS_SB_PQUOTINO) &&
+>  				(from->sb_qflags & XFS_PQUOTA_ACCT))
+>  		to->sb_gquotino = cpu_to_be64(from->sb_pquotino);
+> +	else {
+> +		/*
+> +		 * We can't rely on just the fields being logged to tell us
+> +		 * that it is safe to write NULLFSINO - we should only do that
+> +		 * if quotas are not actually enabled. Hence only write
+> +		 * NULLFSINO if both in-core quota inodes are NULL.
+> +		 */
+> +		if (from->sb_gquotino == NULLFSINO &&
+> +		    from->sb_pquotino == NULLFSINO)
+> +			to->sb_gquotino = cpu_to_be64(NULLFSINO);
+> +	}
+>  
+>  	*fields &= ~(XFS_SB_PQUOTINO | XFS_SB_GQUOTINO);
 >  }
->  
->  
-> -int
-> -__xfs_bmapi_allocate(
-> +static int
-> +xfs_bmapi_allocate(
->  	struct xfs_bmalloca	*bma)
->  {
->  	struct xfs_mount	*mp = bma->ip->i_mount;
-> @@ -4578,9 +4578,6 @@ xfs_bmapi_write(
->  	bma.flist = flist;
->  	bma.firstblock = firstblock;
->  
-> -	if (flags & XFS_BMAPI_STACK_SWITCH)
-> -		bma.stack_switch = 1;
-> -
->  	while (bno < end && n < *nmap) {
->  		inhole = eof || bma.got.br_startoff > bno;
->  		wasdelay = !inhole && isnullstartblock(bma.got.br_startblock);
-> diff --git a/fs/xfs/xfs_bmap.h b/fs/xfs/xfs_bmap.h
-> index 38ba36e..b879ca5 100644
-> --- a/fs/xfs/xfs_bmap.h
-> +++ b/fs/xfs/xfs_bmap.h
-> @@ -77,7 +77,6 @@ typedef	struct xfs_bmap_free
->   * from written to unwritten, otherwise convert from unwritten to written.
->   */
->  #define XFS_BMAPI_CONVERT	0x040
-> -#define XFS_BMAPI_STACK_SWITCH	0x080
->  
->  #define XFS_BMAPI_FLAGS \
->  	{ XFS_BMAPI_ENTIRE,	"ENTIRE" }, \
-> @@ -86,8 +85,7 @@ typedef	struct xfs_bmap_free
->  	{ XFS_BMAPI_PREALLOC,	"PREALLOC" }, \
->  	{ XFS_BMAPI_IGSTATE,	"IGSTATE" }, \
->  	{ XFS_BMAPI_CONTIG,	"CONTIG" }, \
-> -	{ XFS_BMAPI_CONVERT,	"CONVERT" }, \
-> -	{ XFS_BMAPI_STACK_SWITCH, "STACK_SWITCH" }
-> +	{ XFS_BMAPI_CONVERT,	"CONVERT" }
->  
->  
->  static inline int xfs_bmapi_aflag(int w)
-> diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-> index 057f671..64731ef 100644
-> --- a/fs/xfs/xfs_bmap_util.c
-> +++ b/fs/xfs/xfs_bmap_util.c
-> @@ -249,49 +249,6 @@ xfs_bmap_rtalloc(
->  }
->  
->  /*
-> - * Stack switching interfaces for allocation
-> - */
-> -static void
-> -xfs_bmapi_allocate_worker(
-> -	struct work_struct	*work)
-> -{
-> -	struct xfs_bmalloca	*args = container_of(work,
-> -						struct xfs_bmalloca, work);
-> -	unsigned long		pflags;
-> -
-> -	/* we are in a transaction context here */
-> -	current_set_flags_nested(&pflags, PF_FSTRANS);
-> -
-> -	args->result = __xfs_bmapi_allocate(args);
-> -	complete(args->done);
-> -
-> -	current_restore_flags_nested(&pflags, PF_FSTRANS);
-> -}
-> -
-> -/*
-> - * Some allocation requests often come in with little stack to work on. Push
-> - * them off to a worker thread so there is lots of stack to use. Otherwise just
-> - * call directly to avoid the context switch overhead here.
-> - */
-> -int
-> -xfs_bmapi_allocate(
-> -	struct xfs_bmalloca	*args)
-> -{
-> -	DECLARE_COMPLETION_ONSTACK(done);
-> -
-> -	if (!args->stack_switch)
-> -		return __xfs_bmapi_allocate(args);
-> -
-> -
-> -	args->done = &done;
-> -	INIT_WORK_ONSTACK(&args->work, xfs_bmapi_allocate_worker);
-> -	queue_work(xfs_alloc_wq, &args->work);
-> -	wait_for_completion(&done);
-> -	destroy_work_on_stack(&args->work);
-> -	return args->result;
-> -}
-> -
-> -/*
->   * Check if the endoff is outside the last extent. If so the caller will grow
->   * the allocation to a stripe unit boundary.  All offsets are considered outside
->   * the end of file for an empty fork, so 1 is returned in *eof in that case.
-> diff --git a/fs/xfs/xfs_bmap_util.h b/fs/xfs/xfs_bmap_util.h
-> index 935ed2b..2fdb72d 100644
-> --- a/fs/xfs/xfs_bmap_util.h
-> +++ b/fs/xfs/xfs_bmap_util.h
-> @@ -50,12 +50,11 @@ struct xfs_bmalloca {
->  	xfs_extlen_t		total;	/* total blocks needed for xaction */
->  	xfs_extlen_t		minlen;	/* minimum allocation size (blocks) */
->  	xfs_extlen_t		minleft; /* amount must be left after alloc */
-> -	char			eof;	/* set if allocating past last extent */
-> -	char			wasdel;	/* replacing a delayed allocation */
-> -	char			userdata;/* set if is user data */
-> -	char			aeof;	/* allocated space at eof */
-> -	char			conv;	/* overwriting unwritten extents */
-> -	char			stack_switch;
-> +	bool			eof;	/* set if allocating past last extent */
-> +	bool			wasdel;	/* replacing a delayed allocation */
-> +	bool			userdata;/* set if is user data */
-> +	bool			aeof;	/* allocated space at eof */
-> +	bool			conv;	/* overwriting unwritten extents */
->  	int			flags;
->  	struct completion	*done;
->  	struct work_struct	work;
-> @@ -65,8 +64,6 @@ struct xfs_bmalloca {
->  int	xfs_bmap_finish(struct xfs_trans **tp, struct xfs_bmap_free *flist,
->  			int *committed);
->  int	xfs_bmap_rtalloc(struct xfs_bmalloca *ap);
-> -int	xfs_bmapi_allocate(struct xfs_bmalloca *args);
-> -int	__xfs_bmapi_allocate(struct xfs_bmalloca *args);
->  int	xfs_bmap_eof(struct xfs_inode *ip, xfs_fileoff_t endoff,
->  		     int whichfork, int *eof);
->  int	xfs_bmap_count_blocks(struct xfs_trans *tp, struct xfs_inode *ip,
-> diff --git a/fs/xfs/xfs_btree.c b/fs/xfs/xfs_btree.c
-> index bf810c6..cf893bc 100644
-> --- a/fs/xfs/xfs_btree.c
-> +++ b/fs/xfs/xfs_btree.c
-> @@ -33,6 +33,7 @@
->  #include "xfs_error.h"
->  #include "xfs_trace.h"
->  #include "xfs_cksum.h"
-> +#include "xfs_alloc.h"
->  
->  /*
->   * Cursor allocation zone.
-> @@ -2323,7 +2324,7 @@ error1:
->   * record (to be inserted into parent).
->   */
->  STATIC int					/* error */
-> -xfs_btree_split(
-> +__xfs_btree_split(
->  	struct xfs_btree_cur	*cur,
->  	int			level,
->  	union xfs_btree_ptr	*ptrp,
-> @@ -2503,6 +2504,85 @@ error0:
->  	return error;
->  }
->  
-> +struct xfs_btree_split_args {
-> +	struct xfs_btree_cur	*cur;
-> +	int			level;
-> +	union xfs_btree_ptr	*ptrp;
-> +	union xfs_btree_key	*key;
-> +	struct xfs_btree_cur	**curp;
-> +	int			*stat;		/* success/failure */
-> +	int			result;
-> +	bool			kswapd;	/* allocation in kswapd context */
-> +	struct completion	*done;
-> +	struct work_struct	work;
-> +};
-> +
-> +/*
-> + * Stack switching interfaces for allocation
-> + */
-> +static void
-> +xfs_btree_split_worker(
-> +	struct work_struct	*work)
-> +{
-> +	struct xfs_btree_split_args	*args = container_of(work,
-> +						struct xfs_btree_split_args, work);
-> +	unsigned long		pflags;
-> +	unsigned long		new_pflags = PF_FSTRANS;
-> +
-> +	/*
-> +	 * we are in a transaction context here, but may also be doing work
-> +	 * in kswapd context, and hence we may need to inherit that state
-> +	 * temporarily to ensure that we don't block waiting for memory reclaim
-> +	 * in any way.
-> +	 */
-> +	if (args->kswapd)
-> +		new_pflags |= PF_MEMALLOC | PF_SWAPWRITE | PF_KSWAPD;
-> +
-> +	current_set_flags_nested(&pflags, new_pflags);
-> +
-> +	args->result = __xfs_btree_split(args->cur, args->level, args->ptrp,
-> +					 args->key, args->curp, args->stat);
-> +	complete(args->done);
-> +
-> +	current_restore_flags_nested(&pflags, new_pflags);
-> +}
-> +
-> +/*
-> + * BMBT split requests often come in with little stack to work on. Push
-> + * them off to a worker thread so there is lots of stack to use. For the other
-> + * btree types, just call directly to avoid the context switch overhead here.
-> + */
-> +STATIC int					/* error */
-> +xfs_btree_split(
-> +	struct xfs_btree_cur	*cur,
-> +	int			level,
-> +	union xfs_btree_ptr	*ptrp,
-> +	union xfs_btree_key	*key,
-> +	struct xfs_btree_cur	**curp,
-> +	int			*stat)		/* success/failure */
-> +{
-> +	struct xfs_btree_split_args	args;
-> +	DECLARE_COMPLETION_ONSTACK(done);
-> +
-> +	if (cur->bc_btnum != XFS_BTNUM_BMAP)
-> +		return __xfs_btree_split(cur, level, ptrp, key, curp, stat);
-> +
-> +	args.cur = cur;
-> +	args.level = level;
-> +	args.ptrp = ptrp;
-> +	args.key = key;
-> +	args.curp = curp;
-> +	args.stat = stat;
-> +	args.done = &done;
-> +	args.kswapd = current_is_kswapd();
-> +	INIT_WORK_ONSTACK(&args.work, xfs_btree_split_worker);
-> +	queue_work(xfs_alloc_wq, &args.work);
-> +	wait_for_completion(&done);
-> +	destroy_work_on_stack(&args.work);
-> +	return args.result;
-> +}
-> +
-> +
->  /*
->   * Copy the old inode root contents into a real block and make the
->   * broot point to it.
-> diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-> index 6c5eb4c..6d3ec2b 100644
-> --- a/fs/xfs/xfs_iomap.c
-> +++ b/fs/xfs/xfs_iomap.c
-> @@ -749,8 +749,7 @@ xfs_iomap_write_allocate(
->  			 * pointer that the caller gave to us.
->  			 */
->  			error = xfs_bmapi_write(tp, ip, map_start_fsb,
-> -						count_fsb,
-> -						XFS_BMAPI_STACK_SWITCH,
-> +						count_fsb, 0,
->  						&first_block, 1,
->  						imap, &nimaps, &free_list);
->  			if (error)
 > -- 
 > 2.0.0
 > 
