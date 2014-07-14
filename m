@@ -1,9 +1,9 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 From: xfs@oss.sgi.com
-Subject: [XFS updates] XFS development tree branch, for-next,
-	updated. xfs-for-linus-3.16-rc1-13117-ga087481
-Message-Id: <20140714222551.EC5CF7F76@oss.sgi.com>
-Date: Mon, 14 Jul 2014 17:25:51 -0500 (CDT)
+Subject: [XFS updates] XFS development tree branch, xfs-for-3.16-rc5,
+	created. xfs-for-linus-3.16-rc1-13104-g03e0134
+Message-Id: <20140714222459.933217F6C@oss.sgi.com>
+Date: Mon, 14 Jul 2014 17:24:59 -0500 (CDT)
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,148 +23,159 @@ This is an automated email from the git hooks/post-receive script. It was
 generated because a ref change was pushed to the repository containing
 the project "XFS development tree".
 
-The branch, for-next has been updated
-  80d6d69 xfs: add log attributes for log lsn and grant head data
-  baff4e4 xfs: add xlog sysfs kobject and attribute handlers
-  a31b1d3 xfs: add xfs_mount sysfs kobject
-  3d87122 xfs: add a sysfs kset
-  a70a4fa xfs: fix a couple error sequence jumps in xfs_mountfs()
-  7f8a058 Merge branch 'xfs-libxfs-restructure' into for-next
-  03e0134 xfs: null unused quota inodes when quota is on
-  cf11da9 xfs: refine the allocation stack switch
-  aa182e6 Revert "xfs: block allocation work needs to be kswapd aware"
-      from  2451337dd043901b5270b7586942abe564443e3d (commit)
-
-Those revisions listed above that are new to this repository have
-not appeared on any other notification email; so we list those
-revisions in full, below.
+The branch, xfs-for-3.16-rc5 has been created
+        at  03e01349c654fbdea80d3d9b4ab599244eb55bb7 (commit)
 
 - Log -----------------------------------------------------------------
-commit 80d6d69821a27c3cd4687c2eefe409cbd1b7f458
-Author: Brian Foster <bfoster@redhat.com>
-Date:   Tue Jul 15 08:07:48 2014 +1000
+commit 03e01349c654fbdea80d3d9b4ab599244eb55bb7
+Author: Dave Chinner <dchinner@redhat.com>
+Date:   Tue Jul 15 07:28:41 2014 +1000
 
-    xfs: add log attributes for log lsn and grant head data
+    xfs: null unused quota inodes when quota is on
     
-    Create log attributes to export the current runtime state of the log to
-    sysfs. Note that the filesystem should be frozen for consistency across
-    attributes.
+    When quota is on, it is expected that unused quota inodes have a
+    value of NULLFSINO. The changes to support a separate project quota
+    in 3.12 broken this rule for non-project quota inode enabled
+    filesystem, as the code now refuses to write the group quota inode
+    if neither group or project quotas are enabled. This regression was
+    introduced by commit d892d58 ("xfs: Start using pquotaino from the
+    superblock").
     
-    The following per-mount attributes are created: log_head_lsn,
-    log_tail_lsn, reserve_grant_head and write_grant_head. These represent
-    the physical log head, tail and reserve and write grant heads
-    respectively. Attribute values are exported in the following format:
+    In this case, we should be writing NULLFSINO rather than nothing to
+    ensure that we leave the group quota inode in a valid state while
+    quotas are enabled.
     
-    	"cycle:[block,byte]"
+    Failure to do so doesn't cause a current kernel to break - the
+    separate project quota inodes introduced translation code to always
+    treat a zero inode as NULLFSINO. This was introduced by commit
+    0102629 ("xfs: Initialize all quota inodes to be NULLFSINO") with is
+    also in 3.12 but older kernels do not do this and hence taking a
+    filesystem back to an older kernel can result in quotas failing
+    initialisation at mount time. When that happens, we see this in
+    dmesg:
     
-    ... where cycle represents the log cycle and [block,bytes] represents
-    either the basic block or byte offset of the log, depending on the
-    attribute.  Log sequence number (LSN) values are encoded in basic blocks
-    and grant heads are encoded in bytes. All values are in decimal format.
+    [ 1649.215390] XFS (sdb): Mounting Filesystem
+    [ 1649.316894] XFS (sdb): Failed to initialize disk quotas.
+    [ 1649.316902] XFS (sdb): Ending clean mount
     
-    Signed-off-by: Brian Foster <bfoster@redhat.com>
-    Reviewed-by: Dave Chinner <dchinner@redhat.com>
+    By ensuring that we write NULLFSINO to quota inodes that aren't
+    active, we avoid this problem. We have to be really careful when
+    determining if the quota inodes are active or not, because we don't
+    want to write a NULLFSINO if the quota inodes are active and we
+    simply aren't updating them.
+    
+    Signed-off-by: Dave Chinner <dchinner@redhat.com>
+    Reviewed-by: Brian Foster <bfoster@redhat.com>
     Signed-off-by: Dave Chinner <david@fromorbit.com>
 
-commit baff4e44b92aad363dcce176b907a369ee8b348e
-Author: Brian Foster <bfoster@redhat.com>
-Date:   Tue Jul 15 08:07:29 2014 +1000
+commit cf11da9c5d374962913ca5ba0ce0886b58286224
+Author: Dave Chinner <dchinner@redhat.com>
+Date:   Tue Jul 15 07:08:24 2014 +1000
 
-    xfs: add xlog sysfs kobject and attribute handlers
+    xfs: refine the allocation stack switch
     
-    Embed a kobject into the xfs log data structure (xlog). This creates a
-    'log' subdirectory for every XFS mount instance in sysfs. The lifecycle
-    of the log kobject is tied to the lifecycle of the log.
+    The allocation stack switch at xfs_bmapi_allocate() has served it's
+    purpose, but is no longer a sufficient solution to the stack usage
+    problem we have in the XFS allocation path.
     
-    Also define a set of generic attribute handlers associated with the log
-    kobject in preparation for the addition of attributes.
+    Whilst the kernel stack size is now 16k, that is not a valid reason
+    for undoing all our "keep stack usage down" modifications. What it
+    does allow us to do is have the freedom to refine and perfect the
+    modifications knowing that if we get it wrong it won't blow up in
+    our faces - we have a safety net now.
     
-    Signed-off-by: Brian Foster <bfoster@redhat.com>
-    Reviewed-by: Dave Chinner <dchinner@redhat.com>
+    This is important because we still have the issue of older kernels
+    having smaller stacks and that they are still supported and are
+    demonstrating a wide range of different stack overflows.  Red Hat
+    has several open bugs for allocation based stack overflows from
+    directory modifications and direct IO block allocation and these
+    problems still need to be solved. If we can solve them upstream,
+    then distro's won't need to bake their own unique solutions.
+    
+    To that end, I've observed that every allocation based stack
+    overflow report has had a specific characteristic - it has happened
+    during or directly after a bmap btree block split. That event
+    requires a new block to be allocated to the tree, and so we
+    effectively stack one allocation stack on top of another, and that's
+    when we get into trouble.
+    
+    A further observation is that bmap btree block splits are much rarer
+    than writeback allocation - over a range of different workloads I've
+    observed the ratio of bmap btree inserts to splits ranges from 100:1
+    (xfstests run) to 10000:1 (local VM image server with sparse files
+    that range in the hundreds of thousands to millions of extents).
+    Either way, bmap btree split events are much, much rarer than
+    allocation events.
+    
+    Finally, we have to move the kswapd state to the allocation workqueue
+    work when allocation is done on behalf of kswapd. This is proving to
+    cause significant perturbation in performance under memory pressure
+    and appears to be generating allocation deadlock warnings under some
+    workloads, so avoiding the use of a workqueue for the majority of
+    kswapd writeback allocation will minimise the impact of such
+    behaviour.
+    
+    Hence it makes sense to move the stack switch to xfs_btree_split()
+    and only do it for bmap btree splits. Stack switches during
+    allocation will be much rarer, so there won't be significant
+    performacne overhead caused by switching stacks. The worse case
+    stack from all allocation paths will be split, not just writeback.
+    And the majority of memory allocations will be done in the correct
+    context (e.g. kswapd) without causing additional latency, and so we
+    simplify the memory reclaim interactions between processes,
+    workqueues and kswapd.
+    
+    The worst stack I've been able to generate with this patch in place
+    is 5600 bytes deep. It's very revealing because we exit XFS at:
+    
+    37)     1768      64   kmem_cache_alloc+0x13b/0x170
+    
+    about 1800 bytes of stack consumed, and the remaining 3800 bytes
+    (and 36 functions) is memory reclaim, swap and the IO stack. And
+    this occurs in the inode allocation from an open(O_CREAT) syscall,
+    not writeback.
+    
+    The amount of stack being used is much less than I've previously be
+    able to generate - fs_mark testing has been able to generate stack
+    usage of around 7k without too much trouble; with this patch it's
+    only just getting to 5.5k. This is primarily because the metadata
+    allocation paths (e.g. directory blocks) are no longer causing
+    double splits on the same stack, and hence now stack tracing is
+    showing swapping being the worst stack consumer rather than XFS.
+    
+    Performance of fs_mark inode create workloads is unchanged.
+    Performance of fs_mark async fsync workloads is consistently good
+    with context switches reduced by around 150,000/s (30%).
+    Performance of dbench, streaming IO and postmark is unchanged.
+    Allocation deadlock warnings have not been seen on the workloads
+    that generated them since adding this patch.
+    
+    Signed-off-by: Dave Chinner <dchinner@redhat.com>
+    Reviewed-by: Brian Foster <bfoster@redhat.com>
     Signed-off-by: Dave Chinner <david@fromorbit.com>
 
-commit a31b1d3d89e40f585a1c6745b066774ee3263eb2
-Author: Brian Foster <bfoster@redhat.com>
-Date:   Tue Jul 15 08:07:01 2014 +1000
+commit aa182e64f16fc29a4984c2d79191b161888bbd9b
+Author: Dave Chinner <dchinner@redhat.com>
+Date:   Tue Jul 15 07:08:10 2014 +1000
 
-    xfs: add xfs_mount sysfs kobject
+    Revert "xfs: block allocation work needs to be kswapd aware"
     
-    Embed a base kobject into xfs_mount. This creates a kobject associated
-    with each XFS mount and a subdirectory in sysfs with the name of the
-    filesystem. The subdirectory lifecycle matches that of the mount. Also
-    add the new xfs_sysfs.[c,h] source files with some XFS sysfs
-    infrastructure to facilitate attribute creation.
+    This reverts commit 1f6d64829db78a7e1d63e15c9f48f0a5d2b5a679.
     
-    Note that there are currently no attributes exported as part of the
-    xfs_mount kobject. It exists solely to serve as a per-mount container
-    for child objects.
+    This commit resulted in regressions in performance in low
+    memory situations where kswapd was doing writeback of delayed
+    allocation blocks. It resulted in significant parallelism of the
+    kswapd work and with the special kswapd flags meant that hundreds of
+    active allocation could dip into kswapd specific memory reserves and
+    avoid being throttled. This cause a large amount of performance
+    variation, as well as random OOM-killer invocations that didn't
+    previously exist.
     
-    Signed-off-by: Brian Foster <bfoster@redhat.com>
-    Reviewed-by: Dave Chinner <dchinner@redhat.com>
+    Signed-off-by: Dave Chinner <dchinner@redhat.com>
+    Reviewed-by: Brian Foster <bfoster@redhat.com>
     Signed-off-by: Dave Chinner <david@fromorbit.com>
-
-commit 3d8712265c26546823b38eb97487262500ff13db
-Author: Brian Foster <bfoster@redhat.com>
-Date:   Tue Jul 15 07:41:37 2014 +1000
-
-    xfs: add a sysfs kset
-    
-    Create a sysfs kset to contain all sub-objects associated with the XFS
-    module. The kset is created and removed on module initialization and
-    removal respectively. The kset uses fs_obj as a parent. This leads to
-    the creation of a /sys/fs/xfs directory when the kset exists.
-    
-    Signed-off-by: Brian Foster <bfoster@redhat.com>
-    Reviewed-by: Dave Chinner <dchinner@redhat.com>
-    Signed-off-by: Dave Chinner <david@fromorbit.com>
-
-commit a70a4fa528faf6f22adce9a9067d1f4dfc332ade
-Author: Brian Foster <bfoster@redhat.com>
-Date:   Tue Jul 15 07:41:25 2014 +1000
-
-    xfs: fix a couple error sequence jumps in xfs_mountfs()
-    
-    xfs_mountfs() has a couple failure conditions that do not jump to the
-    correct labels. Specifically:
-    
-    - xfs_initialize_perag_data() failure does not deallocate the log even
-      though it occurs after log initialization
-    - xfs_mount_reset_sbqflags() failure returns the error directly rather
-      than jump to the error sequence
-    
-    Signed-off-by: Brian Foster <bfoster@redhat.com>
-    Reviewed-by: Dave Chinner <dchinner@redhat.com>
-    Signed-off-by: Dave Chinner <david@fromorbit.com>
-
-commit 7f8a058f6dc52219117bc2469b1fb816f7fa1a4b
-Merge: 03e0134 2451337
-Author: Dave Chinner <david@fromorbit.com>
-Date:   Tue Jul 15 07:37:18 2014 +1000
-
-    Merge branch 'xfs-libxfs-restructure' into for-next
 
 -----------------------------------------------------------------------
-
-Summary of changes:
- fs/xfs/Makefile           |   1 +
- fs/xfs/libxfs/xfs_bmap.c  |   7 +-
- fs/xfs/libxfs/xfs_bmap.h  |   4 +-
- fs/xfs/libxfs/xfs_btree.c |  82 ++++++++++++++++++++++-
- fs/xfs/libxfs/xfs_sb.c    |  25 +++++--
- fs/xfs/xfs_bmap_util.c    |  53 ---------------
- fs/xfs/xfs_bmap_util.h    |   4 --
- fs/xfs/xfs_iomap.c        |   3 +-
- fs/xfs/xfs_linux.h        |  11 ++++
- fs/xfs/xfs_log.c          |   9 +++
- fs/xfs/xfs_log_priv.h     |   2 +
- fs/xfs/xfs_mount.c        |  18 ++++-
- fs/xfs/xfs_mount.h        |   1 +
- fs/xfs/xfs_super.c        |  12 +++-
- fs/xfs/xfs_sysfs.c        | 165 ++++++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/xfs_sysfs.h        |  59 +++++++++++++++++
- 16 files changed, 380 insertions(+), 76 deletions(-)
- create mode 100644 fs/xfs/xfs_sysfs.c
- create mode 100644 fs/xfs/xfs_sysfs.h
 
 
 hooks/post-receive
