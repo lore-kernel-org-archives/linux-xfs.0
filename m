@@ -1,25 +1,9 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id C5F507F66
-	for <xfs@oss.sgi.com>; Mon, 14 Jul 2014 17:06:49 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id B76898F8040
-	for <xfs@oss.sgi.com>; Mon, 14 Jul 2014 15:06:46 -0700 (PDT)
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	O8yP5oHGE8PXOcJQ for <xfs@oss.sgi.com>;
-	Mon, 14 Jul 2014 15:06:44 -0700 (PDT)
-Date: Tue, 15 Jul 2014 08:06:33 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 2/3] xfs: Add support IOC_MOV_DATA ioctl
-Message-ID: <20140714220633.GV4453@dastard>
-References: <003f01cf9aa4$1e9e5240$5bdaf6c0$@samsung.com>
-	<20140708121500.GA518@infradead.org>
-	<001801cf9b3f$ad786ff0$08694fd0$@samsung.com>
-	<87ha2jsy6p.fsf@openvz.org> <20140714212539.GH8935@thunk.org>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20140714212539.GH8935@thunk.org>
+From: xfs@oss.sgi.com
+Subject: [XFS updates] XFS development tree branch, xfs-sysfs-support,
+	created. xfs-for-linus-3.16-rc1-13117-ga087481
+Message-Id: <20140714222517.EA0117F72@oss.sgi.com>
+Date: Mon, 14 Jul 2014 17:25:17 -0500 (CDT)
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,65 +12,143 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Theodore Ts'o <tytso@mit.edu>, Dmitry Monakhov <dmonakhov@openvz.org>, Namjae Jeon <namjae.jeon@samsung.com>, 'Christoph Hellwig' <hch@infradead.org>, 'linux-ext4' <linux-ext4@vger.kernel.org>, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, 'Luk?? Czerner' <lczerner@redhat.com>, 'Brian Foster' <bfoster@redhat.com>, 'Ashish Sangwan' <a.sangwan@samsung.com>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Mon, Jul 14, 2014 at 05:25:39PM -0400, Theodore Ts'o wrote:
-> On Mon, Jul 14, 2014 at 08:27:26PM +0400, Dmitry Monakhov wrote:
-> > Actually they are differ. EXT4_IOC_MOVE_EXT copy data inside kernel,
-> > but XFS_IOC_SWAPEXT live this job to userpsace see:
-> > http://oss.sgi.com/cgi-bin/gitweb.cgi?p=xfs/cmds/xfsprogs.git;a=blob;f=fsr/xfs_fsr.c packfile
-> > And I'll vote to make EXT4_IOC_MOVE_EXT deprecated, and implement EXT4_IOC_SWAPEXT
-> > as XFS does that.
-> > Ted, Lukas what do you think about that?
-> 
-> The reason why EXT4_IOC_MOVE_EXT moves the data via the cache is to
-> avoid being subject to races if the file happens to mmap'ed and being
-> actively modified at the time of the defrag operation.  
-> 
-> I'm not sure how XFS handles that case, but if it's not somehow
-> locking the file against mmap's before it starts the userspace copy,
-> it would seem to me to be fairly dangerous in terms of prevent
-> potential data loss in this scenario.  Unless they are doing some
-> especially clever?
+This is an automated email from the git hooks/post-receive script. It was
+generated because a ref change was pushed to the repository containing
+the project "XFS development tree".
 
-Yes, we're being clever:
+The branch, xfs-sysfs-support has been created
+        at  a087481811bed920eb5eedbb5574b915881adbea (commit)
 
-	a) we can snapshot the inode directly with bulkstat and then
-	feed that as a cookie back into the swap extent ioctl, hence
-	detect any change made to the inode since the snapshot was
-	taken; 
+- Log -----------------------------------------------------------------
+commit a087481811bed920eb5eedbb5574b915881adbea
+Author: Brian Foster <bfoster@redhat.com>
+Date:   Tue Jul 15 08:09:06 2014 +1000
 
-	b) we do invisible IO to copy the data (i.e. doesn't update
-	timestamps on the files); and
+    xfs: document log sysfs attributes in testing ABI
+    
+    Create a sysfs-fs-xfs ABI documentation file for newly added sysfs
+    attributes. This is created under the testing section.
+    
+    Signed-off-by: Brian Foster <bfoster@redhat.com>
+    Reviewed-by: Dave Chinner <dchinner@redhat.com>
+    Signed-off-by: Dave Chinner <david@fromorbit.com>
 
-	c) the swap ext ioctl aborts if the file is mmapped() at the
-	time we do the extent swap.
+commit 80d6d69821a27c3cd4687c2eefe409cbd1b7f458
+Author: Brian Foster <bfoster@redhat.com>
+Date:   Tue Jul 15 08:07:48 2014 +1000
 
-Basically, if there is any inconsistency or trouble, we abort the
-swap without doing anything and leave userspace to clean up.
+    xfs: add log attributes for log lsn and grant head data
+    
+    Create log attributes to export the current runtime state of the log to
+    sysfs. Note that the filesystem should be frozen for consistency across
+    attributes.
+    
+    The following per-mount attributes are created: log_head_lsn,
+    log_tail_lsn, reserve_grant_head and write_grant_head. These represent
+    the physical log head, tail and reserve and write grant heads
+    respectively. Attribute values are exported in the following format:
+    
+    	"cycle:[block,byte]"
+    
+    ... where cycle represents the log cycle and [block,bytes] represents
+    either the basic block or byte offset of the log, depending on the
+    attribute.  Log sequence number (LSN) values are encoded in basic blocks
+    and grant heads are encoded in bytes. All values are in decimal format.
+    
+    Signed-off-by: Brian Foster <bfoster@redhat.com>
+    Reviewed-by: Dave Chinner <dchinner@redhat.com>
+    Signed-off-by: Dave Chinner <david@fromorbit.com>
 
-As it is, we'll be looking to replace the swapext call with this new
-move ioctl because we can do a lot more with it and avoids
-implementation wrinkles like having to check and handle different
-sized data and inode forks, and having to change the owner field in
-every bmap btree block after the swap has occurred.
+commit baff4e44b92aad363dcce176b907a369ee8b348e
+Author: Brian Foster <bfoster@redhat.com>
+Date:   Tue Jul 15 08:07:29 2014 +1000
 
-FWIW, what we ideally need for these sorts of defrag programs is
-per-file freezing. i.e. we freeze the file to be defragged, then do
-the copy in userspace, swap/move the copied range and then unfreeze
-it once complete.  That guarantees that the file is not modified in
-any way while userspace is doing the defrag...
+    xfs: add xlog sysfs kobject and attribute handlers
+    
+    Embed a kobject into the xfs log data structure (xlog). This creates a
+    'log' subdirectory for every XFS mount instance in sysfs. The lifecycle
+    of the log kobject is tied to the lifecycle of the log.
+    
+    Also define a set of generic attribute handlers associated with the log
+    kobject in preparation for the addition of attributes.
+    
+    Signed-off-by: Brian Foster <bfoster@redhat.com>
+    Reviewed-by: Dave Chinner <dchinner@redhat.com>
+    Signed-off-by: Dave Chinner <david@fromorbit.com>
 
-Cheers,
+commit a31b1d3d89e40f585a1c6745b066774ee3263eb2
+Author: Brian Foster <bfoster@redhat.com>
+Date:   Tue Jul 15 08:07:01 2014 +1000
 
-Dave.
+    xfs: add xfs_mount sysfs kobject
+    
+    Embed a base kobject into xfs_mount. This creates a kobject associated
+    with each XFS mount and a subdirectory in sysfs with the name of the
+    filesystem. The subdirectory lifecycle matches that of the mount. Also
+    add the new xfs_sysfs.[c,h] source files with some XFS sysfs
+    infrastructure to facilitate attribute creation.
+    
+    Note that there are currently no attributes exported as part of the
+    xfs_mount kobject. It exists solely to serve as a per-mount container
+    for child objects.
+    
+    Signed-off-by: Brian Foster <bfoster@redhat.com>
+    Reviewed-by: Dave Chinner <dchinner@redhat.com>
+    Signed-off-by: Dave Chinner <david@fromorbit.com>
+
+commit 3d8712265c26546823b38eb97487262500ff13db
+Author: Brian Foster <bfoster@redhat.com>
+Date:   Tue Jul 15 07:41:37 2014 +1000
+
+    xfs: add a sysfs kset
+    
+    Create a sysfs kset to contain all sub-objects associated with the XFS
+    module. The kset is created and removed on module initialization and
+    removal respectively. The kset uses fs_obj as a parent. This leads to
+    the creation of a /sys/fs/xfs directory when the kset exists.
+    
+    Signed-off-by: Brian Foster <bfoster@redhat.com>
+    Reviewed-by: Dave Chinner <dchinner@redhat.com>
+    Signed-off-by: Dave Chinner <david@fromorbit.com>
+
+commit a70a4fa528faf6f22adce9a9067d1f4dfc332ade
+Author: Brian Foster <bfoster@redhat.com>
+Date:   Tue Jul 15 07:41:25 2014 +1000
+
+    xfs: fix a couple error sequence jumps in xfs_mountfs()
+    
+    xfs_mountfs() has a couple failure conditions that do not jump to the
+    correct labels. Specifically:
+    
+    - xfs_initialize_perag_data() failure does not deallocate the log even
+      though it occurs after log initialization
+    - xfs_mount_reset_sbqflags() failure returns the error directly rather
+      than jump to the error sequence
+    
+    Signed-off-by: Brian Foster <bfoster@redhat.com>
+    Reviewed-by: Dave Chinner <dchinner@redhat.com>
+    Signed-off-by: Dave Chinner <david@fromorbit.com>
+
+commit 7f8a058f6dc52219117bc2469b1fb816f7fa1a4b
+Merge: 03e0134 2451337
+Author: Dave Chinner <david@fromorbit.com>
+Date:   Tue Jul 15 07:37:18 2014 +1000
+
+    Merge branch 'xfs-libxfs-restructure' into for-next
+
+-----------------------------------------------------------------------
+
+
+hooks/post-receive
 -- 
-Dave Chinner
-david@fromorbit.com
+XFS development tree
 
 _______________________________________________
 xfs mailing list
