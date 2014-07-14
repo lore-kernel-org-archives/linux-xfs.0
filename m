@@ -1,9 +1,9 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 From: xfs@oss.sgi.com
-Subject: [XFS updates] XFS development tree branch, xfs-sysfs-support,
-	created. xfs-for-linus-3.16-rc1-13117-ga087481
-Message-Id: <20140714222517.EA0117F72@oss.sgi.com>
-Date: Mon, 14 Jul 2014 17:25:17 -0500 (CDT)
+Subject: [XFS updates] XFS development tree branch, for-next,
+	updated. xfs-for-linus-3.16-rc1-13117-ga087481
+Message-Id: <20140714222551.EC5CF7F76@oss.sgi.com>
+Date: Mon, 14 Jul 2014 17:25:51 -0500 (CDT)
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,23 +23,23 @@ This is an automated email from the git hooks/post-receive script. It was
 generated because a ref change was pushed to the repository containing
 the project "XFS development tree".
 
-The branch, xfs-sysfs-support has been created
-        at  a087481811bed920eb5eedbb5574b915881adbea (commit)
+The branch, for-next has been updated
+  80d6d69 xfs: add log attributes for log lsn and grant head data
+  baff4e4 xfs: add xlog sysfs kobject and attribute handlers
+  a31b1d3 xfs: add xfs_mount sysfs kobject
+  3d87122 xfs: add a sysfs kset
+  a70a4fa xfs: fix a couple error sequence jumps in xfs_mountfs()
+  7f8a058 Merge branch 'xfs-libxfs-restructure' into for-next
+  03e0134 xfs: null unused quota inodes when quota is on
+  cf11da9 xfs: refine the allocation stack switch
+  aa182e6 Revert "xfs: block allocation work needs to be kswapd aware"
+      from  2451337dd043901b5270b7586942abe564443e3d (commit)
+
+Those revisions listed above that are new to this repository have
+not appeared on any other notification email; so we list those
+revisions in full, below.
 
 - Log -----------------------------------------------------------------
-commit a087481811bed920eb5eedbb5574b915881adbea
-Author: Brian Foster <bfoster@redhat.com>
-Date:   Tue Jul 15 08:09:06 2014 +1000
-
-    xfs: document log sysfs attributes in testing ABI
-    
-    Create a sysfs-fs-xfs ABI documentation file for newly added sysfs
-    attributes. This is created under the testing section.
-    
-    Signed-off-by: Brian Foster <bfoster@redhat.com>
-    Reviewed-by: Dave Chinner <dchinner@redhat.com>
-    Signed-off-by: Dave Chinner <david@fromorbit.com>
-
 commit 80d6d69821a27c3cd4687c2eefe409cbd1b7f458
 Author: Brian Foster <bfoster@redhat.com>
 Date:   Tue Jul 15 08:07:48 2014 +1000
@@ -144,6 +144,27 @@ Date:   Tue Jul 15 07:37:18 2014 +1000
     Merge branch 'xfs-libxfs-restructure' into for-next
 
 -----------------------------------------------------------------------
+
+Summary of changes:
+ fs/xfs/Makefile           |   1 +
+ fs/xfs/libxfs/xfs_bmap.c  |   7 +-
+ fs/xfs/libxfs/xfs_bmap.h  |   4 +-
+ fs/xfs/libxfs/xfs_btree.c |  82 ++++++++++++++++++++++-
+ fs/xfs/libxfs/xfs_sb.c    |  25 +++++--
+ fs/xfs/xfs_bmap_util.c    |  53 ---------------
+ fs/xfs/xfs_bmap_util.h    |   4 --
+ fs/xfs/xfs_iomap.c        |   3 +-
+ fs/xfs/xfs_linux.h        |  11 ++++
+ fs/xfs/xfs_log.c          |   9 +++
+ fs/xfs/xfs_log_priv.h     |   2 +
+ fs/xfs/xfs_mount.c        |  18 ++++-
+ fs/xfs/xfs_mount.h        |   1 +
+ fs/xfs/xfs_super.c        |  12 +++-
+ fs/xfs/xfs_sysfs.c        | 165 ++++++++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/xfs_sysfs.h        |  59 +++++++++++++++++
+ 16 files changed, 380 insertions(+), 76 deletions(-)
+ create mode 100644 fs/xfs/xfs_sysfs.c
+ create mode 100644 fs/xfs/xfs_sysfs.h
 
 
 hooks/post-receive
