@@ -1,25 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 660B27F53
-	for <xfs@oss.sgi.com>; Sun, 13 Jul 2014 19:58:57 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 689E0304032
-	for <xfs@oss.sgi.com>; Sun, 13 Jul 2014 17:58:54 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id A37A87F60
+	for <xfs@oss.sgi.com>; Sun, 13 Jul 2014 23:49:12 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 99414304053
+	for <xfs@oss.sgi.com>; Sun, 13 Jul 2014 21:49:12 -0700 (PDT)
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	gNLAWt76egqh3NRV for <xfs@oss.sgi.com>;
-	Sun, 13 Jul 2014 17:58:52 -0700 (PDT)
-Date: Mon, 14 Jul 2014 10:58:21 +1000
+	7dED8KDYIF5WCpDz for <xfs@oss.sgi.com>;
+	Sun, 13 Jul 2014 21:49:11 -0700 (PDT)
+Received: from disappointment.disaster.area ([192.168.1.110]
+	helo=disappointment) by dastard with esmtp (Exim 4.80)
+	(envelope-from <dave@fromorbit.com>) id 1X6YCE-0006Jd-Ad
+	for xfs@oss.sgi.com; Mon, 14 Jul 2014 14:49:02 +1000
+Received: from dave by disappointment with local (Exim 4.82_1-5b7a7c0-XX)
+	(envelope-from <dave@disappointment.disaster>) id 1X6YCE-0007ah-9k
+	for xfs@oss.sgi.com; Mon, 14 Jul 2014 14:49:02 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 3/3] xfs: null unused quota inodes when quota is on
-Message-ID: <20140714005821.GT4453@dastard>
-References: <1405034779-2028-1-git-send-email-david@fromorbit.com>
-	<1405034779-2028-4-git-send-email-david@fromorbit.com>
-	<201407111722.48507.arekm@maven.pl>
-	<201407111730.10168.arekm@maven.pl>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <201407111730.10168.arekm@maven.pl>
+Subject: [PATCH 1/3] Revert "xfs: block allocation work needs to be kswapd
+	aware"
+Date: Mon, 14 Jul 2014 14:48:57 +1000
+Message-Id: <1405313339-29110-2-git-send-email-david@fromorbit.com>
+In-Reply-To: <1405313339-29110-1-git-send-email-david@fromorbit.com>
+References: <1405313339-29110-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,77 +31,100 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Arkadiusz =?utf-8?Q?Mi=C5=9Bkiewicz?= <arekm@maven.pl>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-T24gRnJpLCBKdWwgMTEsIDIwMTQgYXQgMDU6MzA6MTBQTSArMDIwMCwgQXJrYWRpdXN6IE1pxZtr
-aWV3aWN6IHdyb3RlOgo+IE9uIEZyaWRheSAxMSBvZiBKdWx5IDIwMTQsIEFya2FkaXVzeiBNacWb
-a2lld2ljeiB3cm90ZToKPiA+IE9uIEZyaWRheSAxMSBvZiBKdWx5IDIwMTQsIERhdmUgQ2hpbm5l
-ciB3cm90ZToKPiA+ID4gRnJvbTogRGF2ZSBDaGlubmVyIDxkY2hpbm5lckByZWRoYXQuY29tPgo+
-ID4gPiAKPiA+ID4gV2hlbiBxdW90YSBpcyBvbiwgaXQgaXMgZXhwZWN0ZWQgdGhhdCB1bnVzZWQg
-cXVvdGEgaW5vZGVzIGhhdmUgYQo+ID4gPiB2YWx1ZSBvZiBOVUxMRlNJTk8uIFRoZSBjaGFuZ2Vz
-IHRvIHN1cHBvcnQgYSBzZXBhcmF0ZSBwcm9qZWN0IHF1b3RhCj4gPiA+IGluIDMuMTIgYnJva2Vu
-IHRoaXMgcnVsZSBmb3Igbm9uLXByb2plY3QgcXVvdGEgaW5vZGUgZW5hYmxlZAo+ID4gPiBmaWxl
-c3lzdGVtLCBhcyB0aGUgY29kZSBub3cgcmVmdXNlcyB0byB3cml0ZSB0aGUgZ3JvdXAgcXVvdGEg
-aW5vZGUKPiA+ID4gaWYgbmVpdGhlciBncm91cCBvciBwcm9qZWN0IHF1b3RhcyBhcmUgZW5hYmxl
-ZC4gVGhpcyByZWdyZXNzaW9uIHdhcwo+ID4gPiBpbnRyb2R1Y2VkIGJ5IGNvbW1pdCBkODkyZDU4
-ICgieGZzOiBTdGFydCB1c2luZyBwcXVvdGFpbm8gZnJvbSB0aGUKPiA+ID4gc3VwZXJibG9jayIp
-Lgo+ID4gPiAKPiA+ID4gSW4gdGhpcyBjYXNlLCB3ZSBzaG91bGQgYmUgd3JpdGluZyBOVUxMRlNJ
-Tk8gcmF0aGVyIHRoYW4gbm90aGluZyB0bwo+ID4gPiBlbnN1cmUgdGhhdCB3ZSBsZWF2ZSB0aGUg
-Z3JvdXAgcXVvdGEgaW5vZGUgaW4gYSB2YWxpZCBzdGF0ZSB3aGlsZQo+ID4gPiBxdW90YXMgYXJl
-IGVuYWJsZWQuCj4gPiA+IAo+ID4gPiBGYWlsdXJlIHRvIGRvIHNvIGRvZXNuJ3QgY2F1c2UgYSBj
-dXJyZW50IGtlcm5lbCB0byBicmVhayAtIHRoZQo+ID4gPiBzZXBhcmF0ZSBwcm9qZWN0IHF1b3Rh
-IGlub2RlcyBpbnRyb2R1Y2VkIHRyYW5zbGF0aW9uIGNvZGUgdG8gYWx3YXlzCj4gPiA+IHRyZWF0
-IGEgemVybyBpbm9kZSBhcyBOVUxMRlNJTk8uIFRoaXMgd2FzIGludHJvZHVjZWQgYnkgY29tbWl0
-Cj4gPiA+IDAxMDI2MjkgKCJ4ZnM6IEluaXRpYWxpemUgYWxsIHF1b3RhIGlub2RlcyB0byBiZSBO
-VUxMRlNJTk8iKSB3aXRoIGlzCj4gPiA+IGFsc28gaW4gMy4xMiBidXQgb2xkZXIga2VybmVscyBk
-byBub3QgZG8gdGhpcyBhbmQgaGVuY2UgdGFraW5nIGEKPiA+ID4gZmlsZXN5c3RlbSBiYWNrIHRv
-IGFuIG9sZGVyIGtlcm5lbCBjYW4gcmVzdWx0IGluIHF1b3RhcyBmYWlsaW5nCj4gPiA+IGluaXRp
-YWxpc2F0aW9uIGF0IG1vdW50IHRpbWUuIFdoZW4gdGhhdCBoYXBwZW5zLCB3ZSBzZWUgdGhpcyBp
-bgo+ID4gPiBkbWVzZzoKPiA+ID4gCj4gPiA+IFsgMTY0OS4yMTUzOTBdIFhGUyAoc2RiKTogTW91
-bnRpbmcgRmlsZXN5c3RlbQo+ID4gPiBbIDE2NDkuMzE2ODk0XSBYRlMgKHNkYik6IEZhaWxlZCB0
-byBpbml0aWFsaXplIGRpc2sgcXVvdGFzLgo+ID4gPiBbIDE2NDkuMzE2OTAyXSBYRlMgKHNkYik6
-IEVuZGluZyBjbGVhbiBtb3VudAo+ID4gPiAKPiA+ID4gQnkgZW5zdXJpbmcgdGhhdCB3ZSB3cml0
-ZSBOVUxMRlNJTk8gdG8gcXVvdGEgaW5vZGVzIHRoYXQgYXJlbid0Cj4gPiA+IGFjdGl2ZSwgd2Ug
-YXZvaWQgdGhpcyBwcm9ibGVtLgo+ID4gPiAKPiA+ID4gU2lnbmVkLW9mZi1ieTogRGF2ZSBDaGlu
-bmVyIDxkY2hpbm5lckByZWRoYXQuY29tPgouLi4uLgo+IEFjdHVhbGx5IHRoZXJlIGlzIGEgcHJv
-YmxlbSB3aXRoIGRpZmZlcmVudCBvcHRpb25zLCBzbyBsaWtlbHkgbW9yZSBmaXhlcyBpcyAKPiBu
-ZWVkZWQuIGdxdW90aW5vZGUgZG9lc24ndCBnZXQgYWxsb2NhdGVkIGlmIG1vdW50ZWQgd2l0aCBn
-cnBxdW90YToKPiAKPiAzLjE2Z2l0K3BhdGNoOgo+IFthcmVrbUB0NDAwIHRlc3RdJCBybSA1ME0t
-aW1hZ2UgCj4gW2FyZWttQHQ0MDAgdGVzdF0kIHRydW5jYXRlIC1zIDUwTSA1ME0taW1hZ2UKPiBb
-YXJla21AdDQwMCB0ZXN0XSQgbWtmcy54ZnMgLWYgNTBNLWltYWdlIAo+IG1ldGEtZGF0YT01ME0t
-aW1hZ2UgICAgICAgICAgICAgIGlzaXplPTI1NiAgICBhZ2NvdW50PTIsIGFnc2l6ZT02NDAwIGJs
-a3MKPiAgICAgICAgICA9ICAgICAgICAgICAgICAgICAgICAgICBzZWN0c3o9NTEyICAgYXR0cj0y
-LCBwcm9qaWQzMmJpdD0xCj4gICAgICAgICAgPSAgICAgICAgICAgICAgICAgICAgICAgY3JjPTAg
-ICAgICAgIGZpbm9idD0wCj4gZGF0YSAgICAgPSAgICAgICAgICAgICAgICAgICAgICAgYnNpemU9
-NDA5NiAgIGJsb2Nrcz0xMjgwMCwgaW1heHBjdD0yNQo+ICAgICAgICAgID0gICAgICAgICAgICAg
-ICAgICAgICAgIHN1bml0PTAgICAgICBzd2lkdGg9MCBibGtzCj4gbmFtaW5nICAgPXZlcnNpb24g
-MiAgICAgICAgICAgICAgYnNpemU9NDA5NiAgIGFzY2lpLWNpPTAgZnR5cGU9MAo+IGxvZyAgICAg
-ID1pbnRlcm5hbCBsb2cgICAgICAgICAgIGJzaXplPTQwOTYgICBibG9ja3M9ODUzLCB2ZXJzaW9u
-PTIKPiAgICAgICAgICA9ICAgICAgICAgICAgICAgICAgICAgICBzZWN0c3o9NTEyICAgc3VuaXQ9
-MCBibGtzLCBsYXp5LWNvdW50PTEKPiByZWFsdGltZSA9bm9uZSAgICAgICAgICAgICAgICAgICBl
-eHRzej00MDk2ICAgYmxvY2tzPTAsIHJ0ZXh0ZW50cz0wCj4gJCB4ZnNfZGIgNTBNLWltYWdlICAt
-YyAic2IgMCIgLWMgInByaW50IiB8Z3JlcCBxdW90Cj4gdXF1b3Rpbm8gPSAwCj4gZ3F1b3Rpbm8g
-PSAwCj4gcHF1b3Rpbm8gPSAwCj4gJCBzdWRvIG1vdW50IDUwTS1pbWFnZSAvbWVkaWEvZmxvcHB5
-LyAtbyBncnBxdW90YQo+ICQgc3VkbyB1bW91bnQgL21lZGlhL2Zsb3BweS8KPiAkIHhmc19kYiA1
-ME0taW1hZ2UgIC1jICJzYiAwIiAtYyAicHJpbnQiIHxncmVwIHF1b3QKPiB1cXVvdGlubyA9IG51
-bGwKPiBncXVvdGlubyA9IG51bGwKPiBwcXVvdGlubyA9IDAKCk9rLCBJIGNhbiByZXByb2R1Y2Ug
-dGhhdC4KCldoYXQgYSBmcmVha2luJyBtZXNzLgoKV2UgY2FuJ3QgdW5jb25kaXRpb25hbGx5IHdy
-aXRlIE5VTExGU0lOTyB0byB0aGUgZmllbGQgYmVjYXVzZSBvZiB0aGUKd2F5IHRoZSB1cGRhdGVz
-IGFuZCBsb2dnaW5nIG9mIHRoZSBzdXBlcmJsb2NrIGJ1ZmZlciB3b3JrIC0gaXQgb25seQp1cGRh
-dGVzIHRoZSBmaWVsZHMgdGhhdCBhcmUgY2hhbmdlZCwgc28gbW9zdCB1cGRhdGVzICh3aGljaCBv
-Y2N1cgpkdXJpbmcgbW91bnQgb3IgdW5tb3VudCkgZG9uJ3Qgc2V0IHRoZSBxdW90YSBpbm9kZSBm
-aWVsZHMgYXQgYWxsLgoKSW4gZmFjdCwgdGhlIHdob2xlICJvbmx5IHdyaXRlIHRoZSBzcGVjaWZp
-YyBzYiBmaWVsZHMiIGNvZGUgc2VlbXMKbGlrZSBhbiBvcHRpbWlzYXRpb24gdGhhdCBpcyBubyBs
-b25nZXIgbmVlZGVkLCBnaXZlbiB0aGF0IHdlIG5ldmVyCmFjdHVhbGx5IHVwZGF0ZSBvciBsb2cg
-dGhlIHN1cGVyYmxvY2sgYnVmZmVyIGluIGEgZmFzdCBwYXRoIGFueW1vcmUuCgpTbywgZm9yIHRo
-ZSBkZXYgdHJlZSwgSSdtIGp1c3QgZ29pbmcgdG8gcmlwIGFsbCB0aGlzIGNyYXAgb3V0LiBBcyB0
-bwphIHNtYWxsLCB0YXJnZXRlZCByZWdyZXNzaW9uIGZpeCwgd2VsbCwgSSBoYXZlbid0IHdvcmtl
-ZCB0aGF0IG91dAp5ZXQuLi4uCgotRGF2ZS4KLS0gCkRhdmUgQ2hpbm5lcgpkYXZpZEBmcm9tb3Ji
-aXQuY29tCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwp4
-ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1h
-bi9saXN0aW5mby94ZnMK
+From: Dave Chinner <dchinner@redhat.com>
+
+This reverts commit 1f6d64829db78a7e1d63e15c9f48f0a5d2b5a679.
+
+This commit resulted in regressions in performance in low
+memory situations where kswapd was doing writeback of delayed
+allocation blocks. It resulted in significant parallelism of the
+kswapd work and with the special kswapd flags meant that hundreds of
+active allocation could dip into kswapd specific memory reserves and
+avoid being throttled. This cause a large amount of performance
+variation, as well as random OOM-killer invocations that didn't
+previously exist.
+
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+---
+ fs/xfs/xfs_bmap_util.c | 16 +++-------------
+ fs/xfs/xfs_bmap_util.h | 13 ++++++-------
+ 2 files changed, 9 insertions(+), 20 deletions(-)
+
+diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+index 703b3ec..057f671 100644
+--- a/fs/xfs/xfs_bmap_util.c
++++ b/fs/xfs/xfs_bmap_util.c
+@@ -258,23 +258,14 @@ xfs_bmapi_allocate_worker(
+ 	struct xfs_bmalloca	*args = container_of(work,
+ 						struct xfs_bmalloca, work);
+ 	unsigned long		pflags;
+-	unsigned long		new_pflags = PF_FSTRANS;
+ 
+-	/*
+-	 * we are in a transaction context here, but may also be doing work
+-	 * in kswapd context, and hence we may need to inherit that state
+-	 * temporarily to ensure that we don't block waiting for memory reclaim
+-	 * in any way.
+-	 */
+-	if (args->kswapd)
+-		new_pflags |= PF_MEMALLOC | PF_SWAPWRITE | PF_KSWAPD;
+-
+-	current_set_flags_nested(&pflags, new_pflags);
++	/* we are in a transaction context here */
++	current_set_flags_nested(&pflags, PF_FSTRANS);
+ 
+ 	args->result = __xfs_bmapi_allocate(args);
+ 	complete(args->done);
+ 
+-	current_restore_flags_nested(&pflags, new_pflags);
++	current_restore_flags_nested(&pflags, PF_FSTRANS);
+ }
+ 
+ /*
+@@ -293,7 +284,6 @@ xfs_bmapi_allocate(
+ 
+ 
+ 	args->done = &done;
+-	args->kswapd = current_is_kswapd();
+ 	INIT_WORK_ONSTACK(&args->work, xfs_bmapi_allocate_worker);
+ 	queue_work(xfs_alloc_wq, &args->work);
+ 	wait_for_completion(&done);
+diff --git a/fs/xfs/xfs_bmap_util.h b/fs/xfs/xfs_bmap_util.h
+index 075f722..935ed2b 100644
+--- a/fs/xfs/xfs_bmap_util.h
++++ b/fs/xfs/xfs_bmap_util.h
+@@ -50,13 +50,12 @@ struct xfs_bmalloca {
+ 	xfs_extlen_t		total;	/* total blocks needed for xaction */
+ 	xfs_extlen_t		minlen;	/* minimum allocation size (blocks) */
+ 	xfs_extlen_t		minleft; /* amount must be left after alloc */
+-	bool			eof;	/* set if allocating past last extent */
+-	bool			wasdel;	/* replacing a delayed allocation */
+-	bool			userdata;/* set if is user data */
+-	bool			aeof;	/* allocated space at eof */
+-	bool			conv;	/* overwriting unwritten extents */
+-	bool			stack_switch;
+-	bool			kswapd;	/* allocation in kswapd context */
++	char			eof;	/* set if allocating past last extent */
++	char			wasdel;	/* replacing a delayed allocation */
++	char			userdata;/* set if is user data */
++	char			aeof;	/* allocated space at eof */
++	char			conv;	/* overwriting unwritten extents */
++	char			stack_switch;
+ 	int			flags;
+ 	struct completion	*done;
+ 	struct work_struct	work;
+-- 
+2.0.0
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
