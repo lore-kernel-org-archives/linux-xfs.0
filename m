@@ -1,32 +1,32 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id B6CD07F57
-	for <xfs@oss.sgi.com>; Tue, 15 Jul 2014 04:28:02 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 9140C304043
-	for <xfs@oss.sgi.com>; Tue, 15 Jul 2014 02:27:59 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 3C9E67F63
+	for <xfs@oss.sgi.com>; Tue, 15 Jul 2014 04:31:26 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 35EB58F8052
+	for <xfs@oss.sgi.com>; Tue, 15 Jul 2014 02:31:23 -0700 (PDT)
 Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id 13QYQoNy64HfqMbD (version=TLSv1
+	cuda.sgi.com with ESMTP id J6tcGZgaw9aG7mLn (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 15 Jul 2014 02:27:57 -0700 (PDT)
-Received: from ucsinet21.oracle.com (ucsinet21.oracle.com [156.151.31.93])
+	Tue, 15 Jul 2014 02:31:18 -0700 (PDT)
+Received: from acsinet22.oracle.com (acsinet22.oracle.com [141.146.126.238])
 	by aserp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with
-	ESMTP id s6F9RtCj000334
+	ESMTP id s6F9VHDd004600
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Tue, 15 Jul 2014 09:27:56 GMT
-Received: from aserz7022.oracle.com (aserz7022.oracle.com [141.146.126.231])
-	by ucsinet21.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
-	s6F9Rt3b014961
+	for <xfs@oss.sgi.com>; Tue, 15 Jul 2014 09:31:18 GMT
+Received: from userz7022.oracle.com (userz7022.oracle.com [156.151.31.86])
+	by acsinet22.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
+	s6F9VGan001916
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <xfs@oss.sgi.com>; Tue, 15 Jul 2014 09:27:55 GMT
-Received: from abhmp0018.oracle.com (abhmp0018.oracle.com [141.146.116.24])
-	by aserz7022.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
-	s6F9RsOd022738 for <xfs@oss.sgi.com>; Tue, 15 Jul 2014 09:27:54 GMT
-Message-ID: <53C4F513.4020502@oracle.com>
-Date: Tue, 15 Jul 2014 17:32:03 +0800
+	for <xfs@oss.sgi.com>; Tue, 15 Jul 2014 09:31:17 GMT
+Received: from abhmp0010.oracle.com (abhmp0010.oracle.com [141.146.116.16])
+	by userz7022.oracle.com (8.14.5+Sun/8.14.4) with ESMTP id
+	s6F9VE9U007410 for <xfs@oss.sgi.com>; Tue, 15 Jul 2014 09:31:16 GMT
+Message-ID: <53C4F5DB.2060108@oracle.com>
+Date: Tue, 15 Jul 2014 17:35:23 +0800
 From: Jeff Liu <jeff.liu@oracle.com>
 MIME-Version: 1.0
-Subject: [PATCH] xfs: remove XFS_IS_OQUOTA_ON macros
+Subject: [PATCH] xfs: fix uflags detection at xfs_fs_rm_xquota
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -43,26 +43,28 @@ To: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
 From: Jie Liu <jeff.liu@oracle.com>
 
-Remove the XFS_IS_OQUOTA_ON macros as it is obsoleted.
+We are intended to check up uflags against FS_PROJ_QUOTA rather than 
+FS_USER_UQUOTA once more, it looks to me like a typo, but might cause
+the project quota metadata space can not be removed.
 
 Signed-off-by: Jie Liu <jeff.liu@oracle.com>
 ---
- fs/xfs/libxfs/xfs_quota_defs.h | 2 --
- 1 file changed, 2 deletions(-)
+ fs/xfs/xfs_quotaops.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/fs/xfs/libxfs/xfs_quota_defs.h b/fs/xfs/libxfs/xfs_quota_defs.h
-index 137e209..1b0a083 100644
---- a/fs/xfs/libxfs/xfs_quota_defs.h
-+++ b/fs/xfs/libxfs/xfs_quota_defs.h
-@@ -98,8 +98,6 @@ typedef __uint16_t	xfs_qwarncnt_t;
- #define XFS_IS_QUOTA_ON(mp)	((mp)->m_qflags & (XFS_UQUOTA_ACTIVE | \
- 						   XFS_GQUOTA_ACTIVE | \
- 						   XFS_PQUOTA_ACTIVE))
--#define XFS_IS_OQUOTA_ON(mp)	((mp)->m_qflags & (XFS_GQUOTA_ACTIVE | \
--						   XFS_PQUOTA_ACTIVE))
- #define XFS_IS_UQUOTA_ON(mp)	((mp)->m_qflags & XFS_UQUOTA_ACTIVE)
- #define XFS_IS_GQUOTA_ON(mp)	((mp)->m_qflags & XFS_GQUOTA_ACTIVE)
- #define XFS_IS_PQUOTA_ON(mp)	((mp)->m_qflags & XFS_PQUOTA_ACTIVE)
+diff --git a/fs/xfs/xfs_quotaops.c b/fs/xfs/xfs_quotaops.c
+index 4f7aecb..b238027 100644
+--- a/fs/xfs/xfs_quotaops.c
++++ b/fs/xfs/xfs_quotaops.c
+@@ -123,7 +123,7 @@ xfs_fs_rm_xquota(
+ 		flags |= XFS_DQ_USER;
+ 	if (uflags & FS_GROUP_QUOTA)
+ 		flags |= XFS_DQ_GROUP;
+-	if (uflags & FS_USER_QUOTA)
++	if (uflags & FS_PROJ_QUOTA)
+ 		flags |= XFS_DQ_PROJ;
+ 
+ 	return xfs_qm_scall_trunc_qfiles(mp, flags);
 -- 
 1.8.3.2
 
