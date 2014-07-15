@@ -1,29 +1,35 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id E383A7FA1
-	for <xfs@oss.sgi.com>; Tue, 15 Jul 2014 05:28:29 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 5DD29AC003
-	for <xfs@oss.sgi.com>; Tue, 15 Jul 2014 03:28:29 -0700 (PDT)
-Received: from mail-ie0-f174.google.com (mail-ie0-f174.google.com
-	[209.85.223.174]) by cuda.sgi.com with ESMTP id
-	LIjdkvkwsQJKFj0c (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 15 Jul 2014 03:28:26 -0700 (PDT)
-Received: by mail-ie0-f174.google.com with SMTP id rp18so2188740iec.5
-	for <xfs@oss.sgi.com>; Tue, 15 Jul 2014 03:28:26 -0700 (PDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id C625C7FAD
+	for <xfs@oss.sgi.com>; Tue, 15 Jul 2014 05:50:40 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id B8753304043
+	for <xfs@oss.sgi.com>; Tue, 15 Jul 2014 03:50:40 -0700 (PDT)
+Received: from e23smtp07.au.ibm.com (e23smtp07.au.ibm.com [202.81.31.140]) by
+	cuda.sgi.com with ESMTP id oM1RLu4crnKs8ogq (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 15 Jul 2014 03:50:38 -0700 (PDT)
+Received: from /spool/local
+	by e23smtp07.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use
+	Only! Violators will be prosecuted
+	for <xfs@oss.sgi.com> from <chandan@linux.vnet.ibm.com>;
+	Tue, 15 Jul 2014 20:50:34 +1000
+Received: from d23relay03.au.ibm.com (d23relay03.au.ibm.com [9.190.235.21])
+	by d23dlp01.au.ibm.com (Postfix) with ESMTP id 0C2B32CE8040
+	for <xfs@oss.sgi.com>; Tue, 15 Jul 2014 20:50:32 +1000 (EST)
+Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
+	by d23relay03.au.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
+	s6FAoFYd11862378
+	for <xfs@oss.sgi.com>; Tue, 15 Jul 2014 20:50:15 +1000
+Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
+	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id
+	s6FAoV4D016599 for <xfs@oss.sgi.com>; Tue, 15 Jul 2014 20:50:31 +1000
+From: Chandan Rajendra <chandan@linux.vnet.ibm.com>
+Subject: Fiemap inconsistent behaviour when file offset range isn't on a block
+	boundary
+Date: Tue, 15 Jul 2014 16:20:29 +0630
+Message-ID: <2891198.LvUkX379bh@localhost.localdomain>
 MIME-Version: 1.0
-In-Reply-To: <20140714082607.GA19882@infradead.org>
-References: <1404898212.7231.12.camel@jtulak>
-	<20140709132836.GA65226@bfoster.bfoster>
-	<20140710134851.GA26652@infradead.org>
-	<1405009872.31068.22.camel@jtulak> <53BEC1E7.1070904@sandeen.net>
-	<1405075678.28203.56.camel@jtulak> <1405325087.3196.6.camel@jtulak>
-	<20140714082607.GA19882@infradead.org>
-Date: Tue, 15 Jul 2014 12:28:26 +0200
-Message-ID: <CAO78W=0Y-ja8U6ntkKHdOaXBhR5P4Ec8i+0ic3vTqZ5AugwP9A@mail.gmail.com>
-Subject: Re: symlink loop for /lib64/libhandle.so
-From: =?UTF-8?B?SmFuIMWkdWzDoWs=?= <jan@tulak.me>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -36,59 +42,131 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Brian Foster <bfoster@redhat.com>, Eric Sandeen <sandeen@sandeen.net>, XFS mail list <xfs@oss.sgi.com>
+To: linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
+Cc: linux-fsdevel@vger.kernel.org
 
-2014-07-14 10:26 GMT+02:00 Christoph Hellwig <hch@infradead.org>:
->
-> Can you just send the properly formatted and signed off patch to the
-> list?  That's the usual process for XFS changes and makes everyones life
-> simpler.
->
+All the filesystems created and used below have 4k blocksize. The
+"file.bin" file mentioned below is 8k in size and has two 4k
+extents. The test program used can be found at http://fpaste.org/118057/.
 
-I hope this is all right.
-And sorry Chris, I mistakenly replied just to you instead of into the
-mailing list.
+1. First run (file range being passed is on block boundaries).
+   ,----
+   | [root@guest0 btrfs]# for f in $(ls -1 /mnt/{btrfs,ext4,xfs}/file.bin) ;
+   | >        do
+   | >        echo "-------------- File: $f -----------";
+   | >        /root/print-fiemap 0 8192 $f;
+   | >        done
+   | -------------- File: /mnt/btrfs/file.bin -----------
+   | File range: 0 - 8191.
+   | Found 2 extents.
+   | Fiemap information:
+   | 		Logical: 0
+   | 		Physical: 12582912
+   | 		Length: 4096
+   | 		Flags:
+   | 
+   | 		Logical: 4096
+   | 		Physical: 12656640
+   | 		Length: 4096
+   | 		Flags: FIEMAP_EXTENT_LAST |
+   | 
+   | -------------- File: /mnt/ext4/file.bin -----------
+   | File range: 0 - 8191.
+   | Found 2 extents.
+   | Fiemap information:
+   | 		Logical: 0
+   | 		Physical: 135270400
+   | 		Length: 4096
+   | 		Flags:
+   | 
+   | 		Logical: 4096
+   | 		Physical: 135278592
+   | 		Length: 4096
+   | 		Flags: FIEMAP_EXTENT_LAST |
+   | 
+   | -------------- File: /mnt/xfs/file.bin -----------
+   | File range: 0 - 8191.
+   | Found 2 extents.
+   | Fiemap information:
+   | 		Logical: 0
+   | 		Physical: 49152
+   | 		Length: 4096
+   | 		Flags:
+   | 
+   | 		Logical: 4096
+   | 		Physical: 57344
+   | 		Length: 4096
+   | 		Flags: FIEMAP_EXTENT_LAST |
+   `----
 
+2. If the file offset range being passed as input to fiemap ioctl is
+   not on block boundaries and falls within an extent's range then that
+   extent is skipped.
+   ,----
+   | [root@guest0 btrfs]# for f in $(ls -1 /mnt/{btrfs,ext4,xfs}/file.bin) ;
+   | > do
+   | > echo "-------------- File: $f -----------";
+   | > /root/print-fiemap 1 4095 $f;
+   | > done
+   | -------------- File: /mnt/btrfs/file.bin -----------
+   | File range: 1 - 4095.
+   | Found 0 extents.
+   | 
+   | 
+   | -------------- File: /mnt/ext4/file.bin -----------
+   | File range: 1 - 4095.
+   | Found 1 extents.
+   | Fiemap information:
+   | 		Logical: 0
+   | 		Physical: 135270400
+   | 		Length: 4096
+   | 		Flags:
+   | 
+   | -------------- File: /mnt/xfs/file.bin -----------
+   | File range: 1 - 4095.
+   | Found 2 extents.
+   | Fiemap information:
+   | 		Logical: 0
+   | 		Physical: 49152
+   | 		Length: 4096
+   | 		Flags:
+   | 
+   | 		Logical: 4096
+   | 		Physical: 57344
+   | 		Length: 4096
+   | 		Flags: FIEMAP_EXTENT_LAST |
+   `----
 
-Reported-by: Jan Tulak <jan at tulak.me>
-Signed-off-by: Jan Tulak <jan at tulak.me>
----
-include/buildmacros | 6 +++++-
-1 file changed, 5 insertions(+), 1 deletion(-)
+   From linux/Documentation/filesystems/fiemap.txt, "fm_start, and
+   fm_length specify the logical range within the file which the
+   process would like mappings for. Extents returned mirror those on
+   disk - that is, the logical offset of the 1st returned extent may
+   start before fm_start, and the range covered by the last returned
+   extent may end after fm_length. All offsets and lengths are in
+   bytes."
 
-diff --git a/include/buildmacros b/include/buildmacros
-index 7a01880..657b82a 100644
---- a/include/buildmacros
-+++ b/include/buildmacros
-@@ -76,7 +76,11 @@ INSTALL_LTLIB_DEV = \
-        ../$(INSTALL) -m 644 $(LIBNAME).lai $(PKG_LIB_DIR)/$(LIBNAME).la ; \
-        ../$(INSTALL) -m 755 -d $(PKG_ROOT_LIB_DIR); \
-        ../$(INSTALL) -T so_base $(LIBNAME).lai $(PKG_ROOT_LIB_DIR); \
--       if test "x$(PKG_LIB_DIR)" != "x$(PKG_ROOT_LIB_DIR)" ; then \
-+       if test "x$(PKG_LIB_DIR)" != "x$(PKG_ROOT_LIB_DIR)"\
-+       -a "x$(shell readlink -f $(PKG_ROOT_LIB_DIR))" != "x$(PKG_LIB_DIR)"\
-+       -a "x$(shell readlink -f $(PKG_LIB_DIR))" != "x$(PKG_ROOT_LIB_DIR)"\
-+       -a "x$(shell readlink -f $(PKG_LIB_DIR))" != "x$(shell
-readlink -f $(PKG_ROOT_LIB_DIR))";\
-+       then \
-        ../$(INSTALL) -S $(PKG_LIB_DIR)/$(LIBNAME).a
-$(PKG_ROOT_LIB_DIR)/$(LIBNAME)
-.a; \
-        ../$(INSTALL) -S $(PKG_LIB_DIR)/$(LIBNAME).la
-$(PKG_ROOT_LIB_DIR)/$(LIBNAME).la; \
-        ../$(INSTALL) -S $(PKG_ROOT_LIB_DIR)/$(LIBNAME).so
-$(PKG_LIB_DIR)/$(LIBNAME).so; \
+   So IMHO, the above would mean that all the extents that map the
+   file range [fm_start, fm_start + fm_length - 1] should be returned
+   by a fiemap ioctl call (as done by ext4).
 
-2014-07-14 10:26 GMT+02:00 Christoph Hellwig <hch@infradead.org>:
-> On Mon, Jul 14, 2014 at 10:04:47AM +0200, Jan ??ul??k wrote:
->> And I have created a bug report and added the proposed change as a
->> patch: http://oss.sgi.com/bugzilla/show_bug.cgi?id=1059
->
-> Can you just send the properly formatted and signed off patch to the
-> list?  That's the usual process for XFS changes and makes everyones life
-> simpler.
->
+   In the case of Btrfs, the commit
+   ea8efc74bd0402b4d5f663d007b4e25fa29ea778 i.e. "Btrfs: make sure not
+   to return overlapping extents to fiemap", forces the first extent
+   returned by btrfs_fiemap() to start from fm_start (if fm_start is
+   greater than the file offset mapped by the containing extent's
+   first byte). Can somebody please list some example scenarios where
+   extent_fiemap() ends up returning dupclicate and overlapping
+   extents?
+   Also, the commit 4d479cf010d56ec9c54f3099992d039918f1296b
+   i.e. "Btrfs: sectorsize align offsets in fiemap", rounds up first
+   byte of the file offset range to the next block. Shouldn't it be
+   rounded down instead?
+
+   XFS lists both the extents even though the first one encompasses the
+   file range specified in the input.
+     
+-- 
+chandan
 
 _______________________________________________
 xfs mailing list
