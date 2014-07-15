@@ -1,19 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id ECA337F74
-	for <xfs@oss.sgi.com>; Tue, 15 Jul 2014 04:47:59 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id C0B68304048
-	for <xfs@oss.sgi.com>; Tue, 15 Jul 2014 02:47:59 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id 284527F75
+	for <xfs@oss.sgi.com>; Tue, 15 Jul 2014 04:48:03 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 16230304048
+	for <xfs@oss.sgi.com>; Tue, 15 Jul 2014 02:48:02 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id VKxidRSukckE4InD (version=TLSv1
+	cuda.sgi.com with ESMTP id 51vxyHhc6C702W6Y (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 15 Jul 2014 02:47:58 -0700 (PDT)
+	Tue, 15 Jul 2014 02:48:00 -0700 (PDT)
 From: Lukas Czerner <lczerner@redhat.com>
-Subject: [PATCH v2 1/2] xfstests: Check the file system consistency on
-	SCRATCH_DEV
-Date: Tue, 15 Jul 2014 11:47:51 +0200
-Message-Id: <1405417672-25683-1-git-send-email-lczerner@redhat.com>
+Subject: [PATCH v2 2/2] xfstests: Check fs consistency on TEST_DEV only when
+	needed
+Date: Tue, 15 Jul 2014 11:47:52 +0200
+Message-Id: <1405417672-25683-2-git-send-email-lczerner@redhat.com>
+In-Reply-To: <1405417672-25683-1-git-send-email-lczerner@redhat.com>
+References: <1405417672-25683-1-git-send-email-lczerner@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,830 +32,1759 @@ Sender: xfs-bounces@oss.sgi.com
 To: fstests@vger.kernel.org
 Cc: Lukas Czerner <lczerner@redhat.com>, xfs@oss.sgi.com
 
-There are about 198 tests which requires scratch_dev, but does not check
-the file system consistency afterwards. Xfstests infrastructure does not
-do it automatically, so fix it by running _check_scratch_fs() after
-each test that _require_scratch.
+Currently we're checking file system consistency on TEST_DEV after every
+successful test run even though the TEST_DEV might not even be used in
+that test.
 
-Also remove all the _check_scratch_fs() calls that are not actually needed
-and will be covered by the check script.
+Fix it by introducing _require_test to for the test ti indicate that
+it's about to use TEST_DEV.
+
+Also add _require_test to the new script so that this requirement is a
+default.
 
 Signed-off-by: Lukas Czerner <lczerner@redhat.com>
 ---
- check             | 2 ++
- common/rc         | 1 +
- tests/btrfs/024   | 1 -
- tests/btrfs/043   | 2 --
- tests/btrfs/044   | 2 --
- tests/btrfs/045   | 2 --
- tests/btrfs/046   | 2 --
- tests/btrfs/047   | 2 --
- tests/btrfs/048   | 2 --
- tests/btrfs/050   | 2 --
- tests/btrfs/051   | 2 --
- tests/btrfs/053   | 2 --
- tests/btrfs/054   | 2 --
- tests/ext4/271    | 3 +--
- tests/ext4/301    | 3 +--
- tests/ext4/302    | 3 +--
- tests/ext4/303    | 3 +--
- tests/ext4/304    | 3 +--
- tests/generic/009 | 0
- tests/generic/017 | 6 ------
- tests/generic/019 | 1 -
- tests/generic/026 | 0
- tests/generic/027 | 1 -
- tests/generic/068 | 2 --
- tests/generic/076 | 1 -
- tests/generic/083 | 1 -
- tests/generic/097 | 7 -------
- tests/generic/099 | 7 -------
- tests/generic/100 | 1 -
- tests/generic/117 | 2 --
- tests/generic/124 | 3 ---
- tests/generic/204 | 2 --
- tests/generic/269 | 3 +--
- tests/generic/270 | 3 +--
- tests/generic/273 | 3 +--
- tests/generic/299 | 3 +--
- tests/generic/300 | 3 +--
- tests/generic/312 | 1 -
- tests/generic/315 | 0
- tests/generic/320 | 1 -
- tests/generic/321 | 2 --
- tests/generic/322 | 2 --
- tests/shared/006  | 1 -
- tests/shared/272  | 3 +--
- tests/xfs/010     | 1 -
- tests/xfs/011     | 1 -
- tests/xfs/013     | 1 -
- tests/xfs/014     | 1 -
- tests/xfs/019     | 3 ---
- tests/xfs/019.out | 1 -
- tests/xfs/034     | 2 --
- tests/xfs/042     | 1 -
- tests/xfs/042.out | 1 -
- tests/xfs/085     | 6 ------
- tests/xfs/085.out | 1 -
- tests/xfs/104     | 1 -
- tests/xfs/110     | 2 --
- tests/xfs/121     | 3 ---
- tests/xfs/181     | 3 ---
- tests/xfs/278     | 5 -----
- tests/xfs/297     | 1 -
- tests/xfs/306     | 1 -
- 62 files changed, 14 insertions(+), 119 deletions(-)
- mode change 100644 => 100755 tests/generic/009
- mode change 100644 => 100755 tests/generic/026
- mode change 100644 => 100755 tests/generic/315
- mode change 100644 => 100755 tests/generic/321
- mode change 100644 => 100755 tests/generic/322
+ check             |  3 ++-
+ common/rc         | 49 +++++++++++++++++++++++++++++++++++++++++++++++++
+ new               |  1 +
+ tests/btrfs/008   |  1 +
+ tests/btrfs/016   |  1 +
+ tests/btrfs/019   |  1 +
+ tests/btrfs/020   |  1 +
+ tests/btrfs/026   |  1 +
+ tests/btrfs/027   |  1 +
+ tests/btrfs/028   |  1 +
+ tests/btrfs/029   |  1 +
+ tests/btrfs/031   |  1 +
+ tests/btrfs/041   |  1 +
+ tests/btrfs/046   |  1 +
+ tests/btrfs/047   |  1 +
+ tests/btrfs/048   |  1 +
+ tests/btrfs/050   |  1 +
+ tests/btrfs/051   |  1 +
+ tests/btrfs/053   |  1 +
+ tests/btrfs/054   |  1 +
+ tests/ext4/001    |  1 +
+ tests/ext4/002    |  1 +
+ tests/generic/001 |  1 +
+ tests/generic/002 |  1 +
+ tests/generic/004 |  1 +
+ tests/generic/005 |  1 +
+ tests/generic/006 |  1 +
+ tests/generic/007 |  1 +
+ tests/generic/008 |  1 +
+ tests/generic/009 |  1 +
+ tests/generic/010 |  1 +
+ tests/generic/011 |  1 +
+ tests/generic/012 |  1 +
+ tests/generic/013 |  1 +
+ tests/generic/014 |  1 +
+ tests/generic/016 |  1 +
+ tests/generic/020 |  1 +
+ tests/generic/021 |  1 +
+ tests/generic/022 |  1 +
+ tests/generic/023 |  1 +
+ tests/generic/024 |  1 +
+ tests/generic/025 |  1 +
+ tests/generic/026 |  1 +
+ tests/generic/028 |  1 +
+ tests/generic/070 |  1 +
+ tests/generic/074 |  1 +
+ tests/generic/075 |  1 +
+ tests/generic/088 |  1 +
+ tests/generic/089 |  1 +
+ tests/generic/091 |  1 +
+ tests/generic/093 |  1 +
+ tests/generic/097 |  1 +
+ tests/generic/099 |  1 +
+ tests/generic/100 |  1 +
+ tests/generic/112 |  1 +
+ tests/generic/113 |  1 +
+ tests/generic/123 |  1 +
+ tests/generic/124 |  1 +
+ tests/generic/125 |  1 +
+ tests/generic/126 |  1 +
+ tests/generic/127 |  1 +
+ tests/generic/131 |  1 +
+ tests/generic/133 |  1 +
+ tests/generic/184 |  1 +
+ tests/generic/192 |  1 +
+ tests/generic/193 |  1 +
+ tests/generic/198 |  1 +
+ tests/generic/207 |  1 +
+ tests/generic/208 |  1 +
+ tests/generic/209 |  1 +
+ tests/generic/210 |  1 +
+ tests/generic/211 |  1 +
+ tests/generic/212 |  1 +
+ tests/generic/213 |  1 +
+ tests/generic/214 |  1 +
+ tests/generic/215 |  1 +
+ tests/generic/221 |  1 +
+ tests/generic/228 |  1 +
+ tests/generic/236 |  1 +
+ tests/generic/237 |  1 +
+ tests/generic/239 |  1 +
+ tests/generic/240 |  1 +
+ tests/generic/241 |  1 +
+ tests/generic/245 |  1 +
+ tests/generic/246 |  1 +
+ tests/generic/247 |  1 +
+ tests/generic/248 |  1 +
+ tests/generic/249 |  1 +
+ tests/generic/255 |  1 +
+ tests/generic/256 |  1 +
+ tests/generic/257 |  1 +
+ tests/generic/258 |  1 +
+ tests/generic/263 |  1 +
+ tests/generic/285 |  1 +
+ tests/generic/286 |  1 +
+ tests/generic/306 |  1 +
+ tests/generic/308 |  1 +
+ tests/generic/309 |  1 +
+ tests/generic/310 |  1 +
+ tests/generic/313 |  1 +
+ tests/generic/314 |  1 +
+ tests/generic/315 |  1 +
+ tests/generic/316 |  1 +
+ tests/shared/051  |  1 +
+ tests/shared/298  |  1 +
+ tests/xfs/003     |  1 +
+ tests/xfs/008     |  1 +
+ tests/xfs/012     |  1 +
+ tests/xfs/045     |  1 +
+ tests/xfs/048     |  1 +
+ tests/xfs/066     |  1 +
+ tests/xfs/073     |  1 +
+ tests/xfs/078     |  1 +
+ tests/xfs/080     |  1 +
+ tests/xfs/084     |  1 +
+ tests/xfs/134     |  1 +
+ tests/xfs/164     |  1 +
+ tests/xfs/165     |  1 +
+ tests/xfs/195     |  1 +
+ tests/xfs/197     |  1 +
+ tests/xfs/206     |  1 +
+ tests/xfs/222     |  1 +
+ tests/xfs/229     |  1 +
+ tests/xfs/242     |  1 +
+ tests/xfs/250     |  1 +
+ tests/xfs/252     |  1 +
+ tests/xfs/253     |  1 +
+ tests/xfs/259     |  1 +
+ tests/xfs/290     |  1 +
+ tests/xfs/292     |  1 +
+ 130 files changed, 179 insertions(+), 1 deletion(-)
 
 diff --git a/check b/check
-index b1eaed2..5b76fab 100755
+index 5b76fab..77c6559 100755
 --- a/check
 +++ b/check
-@@ -626,6 +626,8 @@ for section in $HOST_OPTIONS_SECTIONS; do
+@@ -625,7 +625,8 @@ for section in $HOST_OPTIONS_SECTIONS; do
+ 	    then
  		try="$try $seqnum"
  		n_try=`expr $n_try + 1`
- 		_check_test_fs
-+		test -f ${RESULT_DIR}/require_scratch && _check_scratch_fs
-+		rm -f ${RESULT_DIR}/require_scratch
+-		_check_test_fs
++		test -f ${RESULT_DIR}/require_test && _check_test_fs
++		rm -f ${RESULT_DIR}/require_test
+ 		test -f ${RESULT_DIR}/require_scratch && _check_scratch_fs
+ 		rm -f ${RESULT_DIR}/require_scratch
  	    fi
- 
- 	    seq="after_$seqnum"
 diff --git a/common/rc b/common/rc
-index 95030ae..57c4446 100644
+index 57c4446..27a2ba7 100644
 --- a/common/rc
 +++ b/common/rc
-@@ -986,6 +986,7 @@ _require_scratch()
-             exit 1
-         fi
-     fi
-+    touch ${RESULT_DIR}/require_scratch
+@@ -989,6 +989,55 @@ _require_scratch()
+     touch ${RESULT_DIR}/require_scratch
  }
  
++# this test needs a test partition - check we're ok & unmount it
++#
++_require_test()
++{
++    case "$FSTYP" in
++	nfs*)
++                 _notrun "requires a test device"
++		 ;;
++	tmpfs)
++		if [ -z "$TEST_DEV" -o ! -d "$TEST_DIR" ];
++		then
++		    _notrun "this test requires a valid \$TEST_DIR and unique $TEST_DEV"
++		fi
++		;;
++	*)
++		 if [ -z "$TEST_DEV" -o "`_is_block_dev $TEST_DEV`" = "" ]
++		 then
++		     _notrun "this test requires a valid \$TEST_DEV"
++		 fi
++		 if [ "`_is_block_dev $SCRATCH_DEV`" = "`_is_block_dev $TEST_DEV`" ]
++		 then
++		     _notrun "this test requires a valid \$TEST_DEV"
++		 fi
++		if [ ! -d "$TEST_DIR" ]
++		then
++		     _notrun "this test requires a valid \$TEST_DIR"
++		fi
++		 ;;
++    esac
++
++    # mounted?
++    if _mount | grep -q $TEST_DEV
++    then
++        # if it's mounted, make sure its on $TEST_DIR
++        if ! _mount | grep $TEST_DEV | grep -q $TEST_DIR
++        then
++            echo "\$TEST_DEV is mounted but not on \$TEST_DIR - aborting"
++            exit 1
++        fi
++    else
++	out=`_mount_or_remount_rw "$MOUNT_OPTIONS" $TEST_DEV $TEST_DIR`
++	if [ $? -ne 1 ]; then
++		echo $out
++		exit 1
++	fi
++    fi
++    touch ${RESULT_DIR}/require_test
++}
++
  # this test needs a logdev
-diff --git a/tests/btrfs/024 b/tests/btrfs/024
-index cb8a6e4..03d105a 100755
---- a/tests/btrfs/024
-+++ b/tests/btrfs/024
-@@ -77,7 +77,6 @@ _scratch_mkfs > /dev/null 2>&1
- _scratch_mount "-o compress-force=no"
- __workout
- _scratch_unmount
--_check_scratch_fs
+ #
+ _require_logdev()
+diff --git a/new b/new
+index f712892..f3e6fa1 100755
+--- a/new
++++ b/new
+@@ -129,6 +129,7 @@ _cleanup()
+ # Modify as appropriate.
+ _supported_fs generic
+ _supported_os IRIX Linux
++_require_test
  
- echo "*** done"
- status=0 ; exit
-diff --git a/tests/btrfs/043 b/tests/btrfs/043
-index b1fef96..4993349 100644
---- a/tests/btrfs/043
-+++ b/tests/btrfs/043
-@@ -143,7 +143,5 @@ run_check $FSSUM_PROG -r $tmp/1.fssum $SCRATCH_MNT/mysnap1
- _run_btrfs_util_prog receive $SCRATCH_MNT -f $tmp/2.snap
- run_check $FSSUM_PROG -r $tmp/2.fssum $SCRATCH_MNT/mysnap2
- 
--_check_scratch_fs
--
- status=0
+ # if error
  exit
-diff --git a/tests/btrfs/044 b/tests/btrfs/044
-index dae189e..5565b86 100644
---- a/tests/btrfs/044
-+++ b/tests/btrfs/044
-@@ -123,7 +123,5 @@ run_check $FSSUM_PROG -r $tmp/1.fssum $SCRATCH_MNT/mysnap1
- _run_btrfs_util_prog receive $SCRATCH_MNT -f $tmp/2.snap
- run_check $FSSUM_PROG -r $tmp/2.fssum $SCRATCH_MNT/mysnap2
+diff --git a/tests/btrfs/008 b/tests/btrfs/008
+index 9fa36a6..019af04 100755
+--- a/tests/btrfs/008
++++ b/tests/btrfs/008
+@@ -50,6 +50,7 @@ trap "_cleanup ; exit \$status" 0 1 2 3 15
+ # real QA test starts here
+ _supported_fs btrfs
+ _supported_os Linux
++_require_test
+ _require_scratch
  
--_check_scratch_fs
--
- status=0
- exit
-diff --git a/tests/btrfs/045 b/tests/btrfs/045
-index 4567a3f..8570fa6 100755
---- a/tests/btrfs/045
-+++ b/tests/btrfs/045
-@@ -370,7 +370,5 @@ run_check $FSSUM_PROG -r $tmp/1.fssum $SCRATCH_MNT/mysnap1
- _run_btrfs_util_prog receive $SCRATCH_MNT -f $tmp/2.snap
- run_check $FSSUM_PROG -r $tmp/2.fssum $SCRATCH_MNT/mysnap2
+ _scratch_mkfs > /dev/null 2>&1
+diff --git a/tests/btrfs/016 b/tests/btrfs/016
+index d04c21a..c8fc708 100755
+--- a/tests/btrfs/016
++++ b/tests/btrfs/016
+@@ -49,6 +49,7 @@ trap "_cleanup ; exit \$status" 0 1 2 3 15
+ # real QA test starts here
+ _supported_fs btrfs
+ _supported_os Linux
++_require_test
+ _require_scratch
+ _require_fssum
  
--_check_scratch_fs
--
- status=0
- exit
+diff --git a/tests/btrfs/019 b/tests/btrfs/019
+index 45bba5e..452d24b 100755
+--- a/tests/btrfs/019
++++ b/tests/btrfs/019
+@@ -50,6 +50,7 @@ trap "_cleanup ; exit \$status" 0 1 2 3 15
+ # real QA test starts here
+ _supported_fs btrfs
+ _supported_os Linux
++_require_test
+ _require_scratch
+ 
+ _scratch_mkfs > /dev/null 2>&1
+diff --git a/tests/btrfs/020 b/tests/btrfs/020
+index 7464bd0..5a928dd 100755
+--- a/tests/btrfs/020
++++ b/tests/btrfs/020
+@@ -55,6 +55,7 @@ trap "_cleanup ; exit \$status" 0 1 2 3 15
+ # real QA test starts here
+ _supported_fs btrfs
+ _supported_os Linux
++_require_test
+ 
+ rm -f $seqres.full
+ echo "Silence is golden"
+diff --git a/tests/btrfs/026 b/tests/btrfs/026
+index c2ac561..7559ca2 100644
+--- a/tests/btrfs/026
++++ b/tests/btrfs/026
+@@ -50,6 +50,7 @@ _supported_os Linux
+ 
+ _require_xfs_io_command "fiemap"
+ _require_cp_reflink
++_require_test
+ 
+ TESTDIR1=$TEST_DIR/test-$seq
+ rm -rf $TESTDIR1
+diff --git a/tests/btrfs/027 b/tests/btrfs/027
+index d615efd..d2b812b 100644
+--- a/tests/btrfs/027
++++ b/tests/btrfs/027
+@@ -50,6 +50,7 @@ _supported_os Linux
+ 
+ _require_xfs_io_command "fiemap"
+ _require_cp_reflink
++_require_test
+ 
+ TESTDIR1=$TEST_DIR/test-$seq
+ rm -rf $TESTDIR1
+diff --git a/tests/btrfs/028 b/tests/btrfs/028
+index 50cffd3..7193337 100644
+--- a/tests/btrfs/028
++++ b/tests/btrfs/028
+@@ -48,6 +48,7 @@ _supported_os Linux
+ 
+ _require_xfs_io_command "fiemap"
+ _require_cp_reflink
++_require_test
+ 
+ rm -f $seqres.full
+ 
+diff --git a/tests/btrfs/029 b/tests/btrfs/029
+index 80c05e3..0b77b33 100644
+--- a/tests/btrfs/029
++++ b/tests/btrfs/029
+@@ -52,6 +52,7 @@ _cleanup()
+ _supported_fs btrfs
+ _supported_os Linux
+ 
++_require_test
+ _require_scratch
+ _require_cp_reflink
+ 
+diff --git a/tests/btrfs/031 b/tests/btrfs/031
+index e158a57..bcd332c 100644
+--- a/tests/btrfs/031
++++ b/tests/btrfs/031
+@@ -53,6 +53,7 @@ _cleanup()
+ _supported_fs btrfs
+ _supported_os Linux
+ 
++_require_test
+ _require_scratch
+ _require_cp_reflink
+ 
+diff --git a/tests/btrfs/041 b/tests/btrfs/041
+index b86e2f5..9639787 100755
+--- a/tests/btrfs/041
++++ b/tests/btrfs/041
+@@ -51,6 +51,7 @@ _cleanup()
+ # real QA test starts here
+ _supported_fs btrfs
+ _supported_os Linux
++_require_test
+ _require_scratch
+ _need_to_be_root
+ 
 diff --git a/tests/btrfs/046 b/tests/btrfs/046
-index 685e359..c0d10e1 100644
+index c0d10e1..288fb7f 100644
 --- a/tests/btrfs/046
 +++ b/tests/btrfs/046
-@@ -298,7 +298,5 @@ echo "File digests in the replica filesystem:"
- md5sum $SCRATCH_MNT/mysnap1/foo | _filter_scratch
- md5sum $SCRATCH_MNT/mysnap2/foo | _filter_scratch
- 
--_check_scratch_fs
--
- status=0
- exit
+@@ -51,6 +51,7 @@ _cleanup()
+ # real QA test starts here
+ _supported_fs btrfs
+ _supported_os Linux
++_require_test
+ _require_scratch
+ _require_fssum
+ _need_to_be_root
 diff --git a/tests/btrfs/047 b/tests/btrfs/047
-index 2dc6499..8b20e79 100755
+index 8b20e79..2c50bf6 100755
 --- a/tests/btrfs/047
 +++ b/tests/btrfs/047
-@@ -116,7 +116,5 @@ $XFS_IO_PROG -r -c "seek -r -a 0" $SCRATCH_MNT/mysnap2/foo
- # the file's size.
- $XFS_IO_PROG -r -c "fiemap -v" $SCRATCH_MNT/mysnap2/foo | _filter_fiemap
- 
--_check_scratch_fs
--
- status=0
- exit
+@@ -57,6 +57,7 @@ _cleanup()
+ # real QA test starts here
+ _supported_fs btrfs
+ _supported_os Linux
++_require_test
+ _require_scratch
+ _require_fssum
+ _require_xfs_io_command "fiemap"
 diff --git a/tests/btrfs/048 b/tests/btrfs/048
-index e998f97..2a9bfc3 100755
+index 2a9bfc3..dc7386d 100755
 --- a/tests/btrfs/048
 +++ b/tests/btrfs/048
-@@ -214,7 +214,5 @@ $BTRFS_UTIL_PROG property get $SCRATCH_MNT/sv1 compression
- touch $SCRATCH_MNT/sv1/file2
- $BTRFS_UTIL_PROG property get $SCRATCH_MNT/sv1/file2 compression
- 
--_check_scratch_fs
--
- status=0
- exit
+@@ -45,6 +45,7 @@ _cleanup()
+ # real QA test starts here
+ _supported_fs btrfs
+ _supported_os Linux
++_require_test
+ _require_scratch
+ _require_btrfs "property"
+ _need_to_be_root
 diff --git a/tests/btrfs/050 b/tests/btrfs/050
-index 6e4bd13..9079408 100755
+index 9079408..b72408a 100755
 --- a/tests/btrfs/050
 +++ b/tests/btrfs/050
-@@ -103,7 +103,5 @@ _scratch_mount
- _run_btrfs_util_prog receive $SCRATCH_MNT -f $send_files_dir/1.snap
- run_check $FSSUM_PROG -r $send_files_dir/1.fssum $SCRATCH_MNT/mysnap1
- 
--_check_scratch_fs
--
- status=0
- exit
+@@ -51,6 +51,7 @@ _cleanup()
+ # real QA test starts here
+ _supported_fs btrfs
+ _supported_os Linux
++_require_test
+ _require_scratch
+ _require_fssum
+ _need_to_be_root
 diff --git a/tests/btrfs/051 b/tests/btrfs/051
-index 53df664..deaa765 100755
+index deaa765..1ddfb74 100755
 --- a/tests/btrfs/051
 +++ b/tests/btrfs/051
-@@ -79,7 +79,5 @@ _scratch_mount
- _run_btrfs_util_prog receive $SCRATCH_MNT -f $send_files_dir/1.snap
- run_check $FSSUM_PROG -r $send_files_dir/1.fssum $SCRATCH_MNT/mysnap1
- 
--_check_scratch_fs
--
- status=0
- exit
+@@ -48,6 +48,7 @@ _cleanup()
+ # real QA test starts here
+ _supported_fs btrfs
+ _supported_os Linux
++_require_test
+ _require_scratch
+ _require_fssum
+ _need_to_be_root
 diff --git a/tests/btrfs/053 b/tests/btrfs/053
-index 3994110..7eef55f 100755
+index 7eef55f..43a831c 100755
 --- a/tests/btrfs/053
 +++ b/tests/btrfs/053
-@@ -103,7 +103,5 @@ run_check $FSSUM_PROG -r $send_files_dir/1.fssum $SCRATCH_MNT/mysnap1
- _run_btrfs_util_prog receive $SCRATCH_MNT -f $send_files_dir/2.snap
- run_check $FSSUM_PROG -r $send_files_dir/2.fssum $SCRATCH_MNT/mysnap2
- 
--_check_scratch_fs
--
- status=0
- exit
+@@ -50,6 +50,7 @@ _cleanup()
+ # real QA test starts here
+ _supported_fs btrfs
+ _supported_os Linux
++_require_test
+ _require_scratch
+ _require_fssum
+ _require_attrs
 diff --git a/tests/btrfs/054 b/tests/btrfs/054
-index 215861c..258eead 100755
+index 258eead..33241b0 100755
 --- a/tests/btrfs/054
 +++ b/tests/btrfs/054
-@@ -103,7 +103,5 @@ _run_btrfs_util_prog receive $SCRATCH_MNT -f $send_files_dir/2.snap
- [ -e $SCRATCH_MNT/testdir ] && \
- 	echo "Directory testdir was supposed to be deleted after incremental send!"
+@@ -58,6 +58,7 @@ _cleanup()
+ # real QA test starts here
+ _supported_fs btrfs
+ _supported_os Linux
++_require_test
+ _require_scratch
+ _need_to_be_root
  
--_check_scratch_fs
--
- status=0
- exit
-diff --git a/tests/ext4/271 b/tests/ext4/271
-index 274e904..e77ae57 100755
---- a/tests/ext4/271
-+++ b/tests/ext4/271
-@@ -62,6 +62,5 @@ if ! _scratch_unmount; then
- 	exit
- fi
- echo "Check filesystem"
--_check_scratch_fs
--status=$?
-+status=0
- exit
-diff --git a/tests/ext4/301 b/tests/ext4/301
-index 0ca3622..568327d 100755
---- a/tests/ext4/301
-+++ b/tests/ext4/301
-@@ -121,5 +121,4 @@ if ! _scratch_unmount; then
- 	status=1
- 	exit
- fi
--_check_scratch_fs
--status=$?
-+status=0
-diff --git a/tests/ext4/302 b/tests/ext4/302
-index 497f4c6..1e90016 100755
---- a/tests/ext4/302
-+++ b/tests/ext4/302
-@@ -137,6 +137,5 @@ if ! _scratch_unmount; then
- 	status=1
- 	exit
- fi
--_check_scratch_fs
--status=$?
-+status=0
- exit
-diff --git a/tests/ext4/303 b/tests/ext4/303
-index 93354e5..9573872 100755
---- a/tests/ext4/303
-+++ b/tests/ext4/303
-@@ -147,6 +147,5 @@ if ! _scratch_unmount; then
- 	status=1
- 	exit
- fi
--_check_scratch_fs
--status=$?
-+status=0
- exit
-diff --git a/tests/ext4/304 b/tests/ext4/304
-index 74e601a..b9b4356 100755
---- a/tests/ext4/304
-+++ b/tests/ext4/304
-@@ -124,6 +124,5 @@ if ! _scratch_unmount; then
- 	status=1
- 	exit
- fi
--_check_scratch_fs
--status=$?
-+status=0
- exit
-diff --git a/tests/generic/009 b/tests/generic/009
-old mode 100644
-new mode 100755
-diff --git a/tests/generic/017 b/tests/generic/017
-index 11705bf..c769dd8 100755
---- a/tests/generic/017
-+++ b/tests/generic/017
-@@ -67,12 +67,6 @@ done
- # Check if 80 extents are present
- $XFS_IO_PROG -c "fiemap -v" $testfile | grep "^ *[0-9]*:" |wc -l
+diff --git a/tests/ext4/001 b/tests/ext4/001
+index 827d806..5409f48 100755
+--- a/tests/ext4/001
++++ b/tests/ext4/001
+@@ -46,6 +46,7 @@ trap "_cleanup ; exit \$status" 0 1 2 3 15
+ _supported_fs ext4
+ _supported_os Linux
+ _require_xfs_io_command "fzero"
++_require_test
  
--_check_scratch_fs
--if [ $? -ne 0 ]; then
--	status=1
--	exit
--fi
--
- # success, all done
- status=0
- exit
-diff --git a/tests/generic/019 b/tests/generic/019
-index 7a019ad..b387507 100755
---- a/tests/generic/019
-+++ b/tests/generic/019
-@@ -171,7 +171,6 @@ _workout()
- 	# perform mount/umount, after that all errors should be fixed
- 	run_check _scratch_mount
- 	run_check _scratch_unmount
--	_check_scratch_fs
- }
+ testfile=$TEST_DIR/001.$$
+ 
+diff --git a/tests/ext4/002 b/tests/ext4/002
+index 8cb3fd1..035ea7b 100755
+--- a/tests/ext4/002
++++ b/tests/ext4/002
+@@ -120,6 +120,7 @@ _check_ext4_eof_flag()
+ _supported_fs ext4
+ _supported_os Linux
+ _require_xfs_io_command "falloc"
++_require_test
+ 
+ # Real QA test starts here.
+ rm -f $seqres.full
+diff --git a/tests/generic/001 b/tests/generic/001
+index 6e5f3dd..e977a01 100755
+--- a/tests/generic/001
++++ b/tests/generic/001
+@@ -48,6 +48,7 @@ trap "_cleanup; rm -f $tmp.*; exit \$status" 0 1 2 3 15
+ # real QA test starts here
+ _supported_fs generic
+ _supported_os IRIX Linux
++_require_test
+ 
+ verbose=true
+ verify=$here/verify_fill
+diff --git a/tests/generic/002 b/tests/generic/002
+index 656d29f..f63b208 100755
+--- a/tests/generic/002
++++ b/tests/generic/002
+@@ -43,6 +43,7 @@ _cleanup()
+ # real QA test starts here
+ _supported_fs generic
+ _supported_os IRIX Linux
++_require_test
+ 
+ echo "Silence is goodness ..."
+ 
+diff --git a/tests/generic/004 b/tests/generic/004
+index 23ca349..c7aa473 100755
+--- a/tests/generic/004
++++ b/tests/generic/004
+@@ -44,6 +44,7 @@ _cleanup()
+ _supported_fs generic
+ _supported_os Linux
+ 
++_require_test
+ _require_xfs_io_command "flink"
+ 
+ testfile="${TEST_DIR}/tst-tmpfile-flink"
+diff --git a/tests/generic/005 b/tests/generic/005
+index 544af14..d78e43f 100755
+--- a/tests/generic/005
++++ b/tests/generic/005
+@@ -66,6 +66,7 @@ _touch()
  
  # real QA test starts here
+ _supported_fs generic
++_require_test
+ 
+ # IRIX UDF does not support symlinks
+ if [ $FSTYP == 'udf' ]; then
+diff --git a/tests/generic/006 b/tests/generic/006
+index 481e1f1..7a38dbf 100755
+--- a/tests/generic/006
++++ b/tests/generic/006
+@@ -54,6 +54,7 @@ _count()
+ # real QA test starts here
+ _supported_fs generic
+ _supported_os IRIX Linux
++_require_test
+ 
+ mkdir $TEST_DIR/permname.$$
+ 
+diff --git a/tests/generic/007 b/tests/generic/007
+index abbee74..88cd6cc 100755
+--- a/tests/generic/007
++++ b/tests/generic/007
+@@ -48,6 +48,7 @@ _cleanup()
+ # real QA test starts here
+ _supported_fs generic
+ _supported_os IRIX Linux
++_require_test
+ 
+ status=1 # default failure 
+ sourcefile=$tmp.nametest
+diff --git a/tests/generic/008 b/tests/generic/008
+index 65e1661..9b70b28 100755
+--- a/tests/generic/008
++++ b/tests/generic/008
+@@ -44,6 +44,7 @@ trap "exit \$status" 0 1 2 3 15
+ _supported_os Linux
+ 
+ _require_xfs_io_command "fzero"
++_require_test
+ 
+ testfile=$TEST_DIR/008.$$
+ 
+diff --git a/tests/generic/009 b/tests/generic/009
+index 08eafb9..7fbec34 100755
+--- a/tests/generic/009
++++ b/tests/generic/009
+@@ -45,6 +45,7 @@ trap "_cleanup ; exit \$status" 0 1 2 3 15
+ # real QA test starts here
+ _supported_os Linux
+ _require_xfs_io_command "fzero"
++_require_test
+ 
+ testfile=$TEST_DIR/009.$$
+ 
+diff --git a/tests/generic/010 b/tests/generic/010
+index 9d2e76a..ea8ea50 100755
+--- a/tests/generic/010
++++ b/tests/generic/010
+@@ -56,6 +56,7 @@ _filter_dbtest()
+ # real QA test starts here
+ _supported_fs generic
+ _supported_os IRIX Linux
++_require_test
+ 
+ rm -f $seqres.full
+ 
+diff --git a/tests/generic/011 b/tests/generic/011
+index bed23aa..f3c2f7c 100755
+--- a/tests/generic/011
++++ b/tests/generic/011
+@@ -46,6 +46,7 @@ _cleanup()
+ # real QA test starts here
+ _supported_fs generic
+ _supported_os IRIX Linux
++_require_test
+ 
+ out=$TEST_DIR/dirstress.$$
+ 
+diff --git a/tests/generic/012 b/tests/generic/012
+index 730625b..6b1e20b 100755
+--- a/tests/generic/012
++++ b/tests/generic/012
+@@ -51,6 +51,7 @@ trap "_cleanup ; exit \$status" 0 1 2 3 15
+ _supported_fs generic
+ _supported_os Linux
+ 
++_require_test
+ _require_xfs_io_command "fpunch"
+ _require_xfs_io_command "falloc"
+ _require_xfs_io_command "fiemap"
+diff --git a/tests/generic/013 b/tests/generic/013
+index 8e76d3d..93d9904 100755
+--- a/tests/generic/013
++++ b/tests/generic/013
+@@ -91,6 +91,7 @@ _do_test()
+ # real QA test starts here
+ _supported_fs generic
+ _supported_os IRIX Linux
++_require_test
+ 
+ rm -f $seqres.full
+ echo "brevity is wit..."
+diff --git a/tests/generic/014 b/tests/generic/014
+index a9c2638..7961961 100755
+--- a/tests/generic/014
++++ b/tests/generic/014
+@@ -45,6 +45,7 @@ _cleanup()
+ _supported_fs generic
+ _supported_os IRIX Linux
+ 
++_require_test
+ _require_sparse_files
+ 
+ # ensure EOF preallocation doesn't massively extend the runtime of this test
+diff --git a/tests/generic/016 b/tests/generic/016
+index 15a2551..b994775 100755
+--- a/tests/generic/016
++++ b/tests/generic/016
+@@ -51,6 +51,7 @@ trap "_cleanup ; exit \$status" 0 1 2 3 15
+ _supported_fs generic
+ _supported_os Linux
+ 
++_require_test
+ _require_xfs_io_command "fpunch"
+ _require_xfs_io_command "falloc"
+ _require_xfs_io_command "fiemap"
+diff --git a/tests/generic/020 b/tests/generic/020
+index a9bd17a..49230da 100755
+--- a/tests/generic/020
++++ b/tests/generic/020
+@@ -76,6 +76,7 @@ _attr_list()
+ _supported_fs generic
+ _supported_os Linux
+ 
++_require_test
+ _require_attrs
+ 
+ rm -f $seqres.full
+diff --git a/tests/generic/021 b/tests/generic/021
+index eb88e01..4729400 100755
+--- a/tests/generic/021
++++ b/tests/generic/021
+@@ -51,6 +51,7 @@ trap "_cleanup ; exit \$status" 0 1 2 3 15
+ _supported_fs generic
+ _supported_os Linux
+ 
++_require_test
+ _require_xfs_io_command "fpunch"
+ _require_xfs_io_command "falloc"
+ _require_xfs_io_command "fiemap"
+diff --git a/tests/generic/022 b/tests/generic/022
+index 55bf8c5..1228e51 100755
+--- a/tests/generic/022
++++ b/tests/generic/022
+@@ -51,6 +51,7 @@ trap "_cleanup ; exit \$status" 0 1 2 3 15
+ _supported_fs generic
+ _supported_os Linux
+ 
++_require_test
+ _require_xfs_io_command "fpunch"
+ _require_xfs_io_command "falloc"
+ _require_xfs_io_command "fiemap"
+diff --git a/tests/generic/023 b/tests/generic/023
+index aaf196a..114485c 100755
+--- a/tests/generic/023
++++ b/tests/generic/023
+@@ -43,6 +43,7 @@ _cleanup()
+ _supported_fs generic
+ _supported_os Linux
+ 
++_require_test
+ _requires_renameat2
+ 
+ # real QA test starts here
+diff --git a/tests/generic/024 b/tests/generic/024
+index fa61169..8945191 100755
+--- a/tests/generic/024
++++ b/tests/generic/024
+@@ -43,6 +43,7 @@ _cleanup()
+ _supported_fs generic
+ _supported_os Linux
+ 
++_require_test
+ _requires_renameat2
+ 
+ rename_dir=$TEST_DIR/$$
+diff --git a/tests/generic/025 b/tests/generic/025
+index 251fffe..6b6c8ab 100755
+--- a/tests/generic/025
++++ b/tests/generic/025
+@@ -43,6 +43,7 @@ _cleanup()
+ _supported_fs generic
+ _supported_os Linux
+ 
++_require_test
+ _requires_renameat2
+ 
+ rename_dir=$TEST_DIR/$$
 diff --git a/tests/generic/026 b/tests/generic/026
-old mode 100644
-new mode 100755
-diff --git a/tests/generic/027 b/tests/generic/027
-index b9232ec..8dab117 100755
---- a/tests/generic/027
-+++ b/tests/generic/027
-@@ -101,7 +101,6 @@ while [ $i -le $loop ]; do
- 	let i=$i+1
- done
- _scratch_unmount
--_check_scratch_fs
+index 6dae966..ab75839 100755
+--- a/tests/generic/026
++++ b/tests/generic/026
+@@ -48,6 +48,7 @@ _cleanup()
+ # real QA test starts here
+ _supported_fs generic
+ _supported_os Linux
++_require_test
+ _require_scratch
+ _need_to_be_root
+ _acl_setup_ids
+diff --git a/tests/generic/028 b/tests/generic/028
+index eb3c799..f181d3e 100755
+--- a/tests/generic/028
++++ b/tests/generic/028
+@@ -50,6 +50,7 @@ _cleanup()
+ # real QA test starts here
+ _supported_fs generic
+ _supported_os Linux
++_require_test
  
- status=0
- exit
-diff --git a/tests/generic/068 b/tests/generic/068
-index a764019..7794326 100755
---- a/tests/generic/068
-+++ b/tests/generic/068
-@@ -130,6 +130,4 @@ rm $tmp.running
- # wait for fsstresses to finish
- wait
+ echo "Silence is golden"
  
--_check_scratch_fs
--
- exit 1
-diff --git a/tests/generic/076 b/tests/generic/076
-index a53840f..02af762 100755
---- a/tests/generic/076
-+++ b/tests/generic/076
-@@ -77,7 +77,6 @@ FSSTRESS_ARGS=`_scale_fsstress_args -p 2 -n 2000 $FSSTRESS_AVOID`
- echo "run fsstress with args: $FSSTRESS_ARGS" >>$seqres.full
- $FSSTRESS_PROG $FSSTRESS_ARGS >>$seqres.full
- _lets_get_pidst
--_check_scratch_fs
+diff --git a/tests/generic/070 b/tests/generic/070
+index f593d84..7591b25 100755
+--- a/tests/generic/070
++++ b/tests/generic/070
+@@ -47,6 +47,7 @@ _cleanup()
+ _supported_fs generic
+ _supported_os IRIX Linux
  
- echo "*** done"
- status=0
-diff --git a/tests/generic/083 b/tests/generic/083
-index f9135f8..61316bf 100755
---- a/tests/generic/083
-+++ b/tests/generic/083
-@@ -84,7 +84,6 @@ workout()
- 	# -w ensures that the only ops are ones which cause write I/O
- 	FSSTRESS_ARGS=`_scale_fsstress_args -d $SCRATCH_MNT -w -p $procs -n $nops $FSSTRESS_AVOID`
- 	$FSSTRESS_PROG $FSSTRESS_ARGS >>$seqres.full
--	_check_scratch_fs
- }
++_require_test
+ _require_attrs
  
- echo "*** test out-of-space handling for random write operations"
+ FSSTRESS_ARGS=`_scale_fsstress_args \
+diff --git a/tests/generic/074 b/tests/generic/074
+index 668132e..df85d66 100755
+--- a/tests/generic/074
++++ b/tests/generic/074
+@@ -110,6 +110,7 @@ rm -f $seqres.full
+ 
+ _supported_fs generic
+ _supported_os IRIX Linux
++_require_test
+ 
+ #
+ # set params
+diff --git a/tests/generic/075 b/tests/generic/075
+index af4f34b..a2411c6 100755
+--- a/tests/generic/075
++++ b/tests/generic/075
+@@ -123,6 +123,7 @@ _process_args()
+ # real QA test starts here
+ _supported_fs generic
+ _supported_os IRIX Linux
++_require_test
+ 
+ size10=`expr 10 \* 1024 \* 1024`	# 10 megabytes
+ filelen=$size10
+diff --git a/tests/generic/088 b/tests/generic/088
+index fce6489..983de98 100755
+--- a/tests/generic/088
++++ b/tests/generic/088
+@@ -48,6 +48,7 @@ _link_out_file $seq.out $seqfull.out
+ # real QA test starts here
+ _supported_fs generic
+ _supported_os IRIX Linux
++_require_test
+ 
+ path=$TEST_DIR/t_access
+ src/t_access_root $path | tee $seqres.full | _filter
+diff --git a/tests/generic/089 b/tests/generic/089
+index fdddad4..4324f83 100755
+--- a/tests/generic/089
++++ b/tests/generic/089
+@@ -51,6 +51,7 @@ addentries()
+ # real QA test starts here
+ _supported_fs generic
+ _supported_os Linux
++_require_test
+ 
+ rm -f $seqres.full
+ [ "X$TEST_DIR" = "X" ] && exit 1
+diff --git a/tests/generic/091 b/tests/generic/091
+index e7b60fe..3775016 100755
+--- a/tests/generic/091
++++ b/tests/generic/091
+@@ -38,6 +38,7 @@ trap "rm -f $tmp.*; exit \$status" 0 1 2 3 15
+ # real QA test starts here
+ _supported_fs generic
+ _supported_os Linux
++_require_test
+ 
+ rm -f $seqres.full
+ 
+diff --git a/tests/generic/093 b/tests/generic/093
+index fe20f38..8f810a6 100755
+--- a/tests/generic/093
++++ b/tests/generic/093
+@@ -58,6 +58,7 @@ _filefilter()
+ _supported_fs generic
+ _supported_os IRIX
+ 
++_require_test
+ _require_attrs
+ 
+ [ -x $runas ] || _notrun "$runas executable not found"
 diff --git a/tests/generic/097 b/tests/generic/097
-index c120422..f40d5d5 100755
+index f40d5d5..637c73b 100755
 --- a/tests/generic/097
 +++ b/tests/generic/097
-@@ -244,13 +244,6 @@ ${ATTR_PROG} -R -l foo
+@@ -75,6 +75,7 @@ fi
+ _supported_fs generic
+ _supported_os IRIX
  
- cd /
++_require_test
+ _require_scratch
+ _require_attrs
  
--# Check the filesystem
--_check_scratch_fs
--
--# optional stuff if your test has verbose output to help resolve problems
--#echo
--#echo "If failure, check $seqres.full (this) and $seqres.full.ok (reference)"
--
- # success, all done
- status=0
- exit
 diff --git a/tests/generic/099 b/tests/generic/099
-index 7351966..83097e9 100755
+index 83097e9..b544fe2 100755
 --- a/tests/generic/099
 +++ b/tests/generic/099
-@@ -328,13 +328,6 @@ chacl $acl3 largeaclfile
- _acl_list largeaclfile | _filter_aces_notypes
+@@ -80,6 +80,7 @@ rm -f $seqres.full
+ _supported_fs generic
+ _supported_os IRIX
  
- #-------------------------------------------------------
--
--if [ "$FSTYP" == "udf" ]; then
--    cd /
--    umount $TARGET_DIR
--    # Check the filesystem
--    _check_scratch_fs
--fi
- # success, all done
- status=0
- exit
++_require_test
+ _acl_setup_ids
+ _require_acls
+ 
 diff --git a/tests/generic/100 b/tests/generic/100
-index 05d766f..00ba23e 100755
+index 00ba23e..59b8e75 100755
 --- a/tests/generic/100
 +++ b/tests/generic/100
-@@ -80,7 +80,6 @@ ls -R -l ${TEST_DIR}${POPULATED_DIR} >>$seqres.full 2>&1
- diff -qr $POPULATED_DIR ${TEST_DIR}${POPULATED_DIR}
+@@ -44,6 +44,7 @@ _cleanup()
+ # real QA test starts here
+ _supported_fs generic
+ _supported_os IRIX Linux
++_require_test
  
- cd /
--_check_scratch_fs
+ # Use _populate_fs() in common/rc to create a directory structure.
+ TEMP_DIR=/tmp
+diff --git a/tests/generic/112 b/tests/generic/112
+index 1e34d99..b59cbfa 100755
+--- a/tests/generic/112
++++ b/tests/generic/112
+@@ -121,6 +121,7 @@ _process_args()
+ # real QA test starts here
+ _supported_fs generic
+ _supported_os Linux
++_require_test
  
- status=0
- exit
-diff --git a/tests/generic/117 b/tests/generic/117
-index f81265b..935dcaf 100755
---- a/tests/generic/117
-+++ b/tests/generic/117
-@@ -108,8 +108,6 @@ cd /
- umount $SCRATCH_MNT
- echo 
- echo Checking filesystem
--_check_scratch_fs
--_scratch_mount
+ [ -x $here/ltp/aio-stress ] || \
+ 	_notrun "fsx not built with AIO for this platform"
+diff --git a/tests/generic/113 b/tests/generic/113
+index 56672f0..7208fa2 100755
+--- a/tests/generic/113
++++ b/tests/generic/113
+@@ -76,6 +76,7 @@ _do_test()
+ # real QA test starts here
+ _supported_fs generic
+ _supported_os Linux
++_require_test
  
- status=$?
- exit
+ [ -x $here/ltp/aio-stress ] || _notrun "aio-stress not built for this platform"
+ 
+diff --git a/tests/generic/123 b/tests/generic/123
+index 911e9d2..453ede4 100755
+--- a/tests/generic/123
++++ b/tests/generic/123
+@@ -48,6 +48,7 @@ _cleanup()
+ _supported_fs generic
+ _supported_os Linux IRIX
+ 
++_require_test
+ _require_user
+ 
+ my_test_subdir=$TEST_DIR/123subdir
 diff --git a/tests/generic/124 b/tests/generic/124
-index 93ec4a1..77f6e7d 100755
+index 77f6e7d..888bbc0 100755
 --- a/tests/generic/124
 +++ b/tests/generic/124
-@@ -76,7 +76,4 @@ fi
+@@ -48,6 +48,7 @@ _cleanup()
+ _supported_fs generic
+ _supported_os Linux
  
- umount $SCRATCH_DEV
++_require_test
+ _require_scratch
+ _scratch_mkfs >/dev/null 2>&1
+ _scratch_mount
+diff --git a/tests/generic/125 b/tests/generic/125
+index f4ffea5..bcf9b3e 100755
+--- a/tests/generic/125
++++ b/tests/generic/125
+@@ -39,6 +39,7 @@ trap "exit \$status" 0 1 2 3 15
+ _supported_fs generic
+ _supported_os Linux
  
--_check_test_fs
--_check_scratch_fs
--
- exit 
-diff --git a/tests/generic/204 b/tests/generic/204
-index de029c6..d6bb094 100755
---- a/tests/generic/204
-+++ b/tests/generic/204
-@@ -83,8 +83,6 @@ for i in `seq 1 $files`; do
-     echo XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX > $SCRATCH_MNT/$i
- done
++_require_test
+ _require_user
  
--_check_scratch_fs
--
- # success, all done
- echo "*** done"
- status=0
-diff --git a/tests/generic/269 b/tests/generic/269
-index 684cf42..cff5e54 100755
---- a/tests/generic/269
-+++ b/tests/generic/269
-@@ -79,6 +79,5 @@ if ! _scratch_unmount; then
- 	status=1
- 	exit
- fi
--_check_scratch_fs
--status=$?
-+status=0
- exit
-diff --git a/tests/generic/270 b/tests/generic/270
-index b5ed7af..cebd377 100755
---- a/tests/generic/270
-+++ b/tests/generic/270
-@@ -104,6 +104,5 @@ if ! _scratch_unmount; then
- 	status=1
- 	exit
- fi
--_check_scratch_fs
--status=$?
-+status=0
- exit
-diff --git a/tests/generic/273 b/tests/generic/273
-index 8e121a2..1ceb6c4 100755
---- a/tests/generic/273
-+++ b/tests/generic/273
-@@ -138,6 +138,5 @@ _scratch_mount
+ TESTDIR=$TEST_DIR/ftrunc
+diff --git a/tests/generic/126 b/tests/generic/126
+index 1796527..a22d587 100755
+--- a/tests/generic/126
++++ b/tests/generic/126
+@@ -43,6 +43,7 @@ _cleanup()
+ # real QA test starts here
+ _supported_fs generic
+ _supported_os Linux
++_require_test
  
- _do_workload
+ QA_FS_PERMS=$here/src/fs_perms
  
--_check_scratch_fs
--status=$?
-+status=0
- exit
-diff --git a/tests/generic/299 b/tests/generic/299
-index bf02c94..e8685a4 100755
---- a/tests/generic/299
-+++ b/tests/generic/299
-@@ -152,6 +152,5 @@ if ! _scratch_unmount; then
- 	status=1
- 	exit
- fi
--_check_scratch_fs
--status=$?
-+status=0
- exit
-diff --git a/tests/generic/300 b/tests/generic/300
-index 01d4600..5234d05 100755
---- a/tests/generic/300
-+++ b/tests/generic/300
-@@ -155,6 +155,5 @@ if ! _scratch_unmount; then
- 	status=1
- 	exit
- fi
--_check_scratch_fs
--status=$?
-+status=0
- exit
-diff --git a/tests/generic/312 b/tests/generic/312
-index 7611bb9..b035978 100755
---- a/tests/generic/312
-+++ b/tests/generic/312
-@@ -67,6 +67,5 @@ echo "Silence is golden"
- $XFS_IO_PROG -f -c "falloc 0 6g" $SCRATCH_MNT/testfile.$seq >>$seqres.full 2>&1
+diff --git a/tests/generic/127 b/tests/generic/127
+index f6b7f95..94d15b2 100755
+--- a/tests/generic/127
++++ b/tests/generic/127
+@@ -104,6 +104,7 @@ _fsx_std_mmap()
+ # real QA test starts here
+ _supported_fs generic
+ _supported_os Linux
++_require_test
  
- _scratch_unmount
--_check_scratch_fs
- status=0
- exit
+ _fsx_lite_nommap
+ _fsx_lite_mmap
+diff --git a/tests/generic/131 b/tests/generic/131
+index ce3e490..b4e3ff0 100755
+--- a/tests/generic/131
++++ b/tests/generic/131
+@@ -44,6 +44,7 @@ _cleanup()
+ # real QA test starts here
+ _supported_fs generic
+ _supported_os Linux
++_require_test
+ 
+ TESTFILE=$TEST_DIR/lock_file
+ 
+diff --git a/tests/generic/133 b/tests/generic/133
+index 7fb1695..f1d67aa 100755
+--- a/tests/generic/133
++++ b/tests/generic/133
+@@ -38,6 +38,7 @@ trap "exit \$status" 0 1 2 3 15
+ # real QA test starts here
+ _supported_fs generic
+ _supported_os Linux IRIX
++_require_test
+ 
+ echo "Buffered writer, buffered reader"
+ $XFS_IO_PROG -f -d -c 'pwrite -b 64k 0 512m' $TEST_DIR/io_test > /dev/null
+diff --git a/tests/generic/184 b/tests/generic/184
+index dcc8b4e..d7c0eb9 100755
+--- a/tests/generic/184
++++ b/tests/generic/184
+@@ -44,6 +44,7 @@ _cleanup()
+ # real QA test starts here
+ _supported_fs generic
+ _supported_os IRIX Linux
++_require_test
+ 
+ rm -f $TEST_DIR/null
+ mknod $TEST_DIR/null c 1 3
+diff --git a/tests/generic/192 b/tests/generic/192
+index 2b4e41c..f630be9 100755
+--- a/tests/generic/192
++++ b/tests/generic/192
+@@ -53,6 +53,7 @@ is_noatime_set() {
+ 
+ _supported_fs generic
+ _supported_os Linux
++_require_test
+ #delay=150
+ #delay=75
+ #delay=60
+diff --git a/tests/generic/193 b/tests/generic/193
+index 4fa20ff..cd3c0b0 100755
+--- a/tests/generic/193
++++ b/tests/generic/193
+@@ -70,6 +70,7 @@ _filter_files()
+ _supported_fs generic
+ _supported_os Linux
+ 
++_require_test
+ _require_user
+ _need_to_be_root
+ 
+diff --git a/tests/generic/198 b/tests/generic/198
+index 5190d34..5978f54 100755
+--- a/tests/generic/198
++++ b/tests/generic/198
+@@ -44,6 +44,7 @@ _cleanup()
+ _supported_fs generic
+ _supported_os Linux
+ _require_aiodio aiodio_sparse2
++_require_test
+ 
+ echo "Silence is golden."
+ 
+diff --git a/tests/generic/207 b/tests/generic/207
+index 0709061..8f22c55 100755
+--- a/tests/generic/207
++++ b/tests/generic/207
+@@ -44,6 +44,7 @@ _cleanup()
+ 
+ _supported_fs generic
+ _supported_os Linux
++_require_test
+ 
+ _run_aiodio aio-dio-extend-stat
+ 
+diff --git a/tests/generic/208 b/tests/generic/208
+index 58d1d08..f57e2bc 100755
+--- a/tests/generic/208
++++ b/tests/generic/208
+@@ -44,6 +44,7 @@ _cleanup()
+ 
+ _supported_fs generic
+ _supported_os Linux
++_require_test
+ 
+ rm -f $seqres.full
+ 
+diff --git a/tests/generic/209 b/tests/generic/209
+index 2abafcf..aface56 100755
+--- a/tests/generic/209
++++ b/tests/generic/209
+@@ -44,6 +44,7 @@ _cleanup()
+ 
+ _supported_fs generic
+ _supported_os Linux
++_require_test
+ 
+ _run_aiodio aio-dio-invalidate-readahead
+ 
+diff --git a/tests/generic/210 b/tests/generic/210
+index ebeb137..6abd3b4 100755
+--- a/tests/generic/210
++++ b/tests/generic/210
+@@ -44,6 +44,7 @@ _cleanup()
+ 
+ _supported_fs generic
+ _supported_os Linux
++_require_test
+ 
+ _run_aiodio aio-dio-subblock-eof-read
+ 
+diff --git a/tests/generic/211 b/tests/generic/211
+index d1110f5..e0afeff 100755
+--- a/tests/generic/211
++++ b/tests/generic/211
+@@ -44,6 +44,7 @@ _cleanup()
+ 
+ _supported_fs generic
+ _supported_os Linux
++_require_test
+ 
+ _run_aiodio aio-free-ring-with-bogus-nr-pages
+ 
+diff --git a/tests/generic/212 b/tests/generic/212
+index 23ceae0..e3b2dad 100755
+--- a/tests/generic/212
++++ b/tests/generic/212
+@@ -45,6 +45,7 @@ _cleanup()
+ 
+ _supported_fs generic
+ _supported_os Linux
++_require_test
+ 
+ _run_aiodio aio-io-setup-with-nonwritable-context-pointer
+ 
+diff --git a/tests/generic/213 b/tests/generic/213
+index c99520f..609fcf1 100755
+--- a/tests/generic/213
++++ b/tests/generic/213
+@@ -54,6 +54,7 @@ _supported_os Linux
+ 
+ rm -f $seqres.full
+ 
++_require_test
+ _require_xfs_io_command "falloc"
+ 
+ # check there's enough freespace on $TEST_DIR ... (1GiB + 1MiB)
+diff --git a/tests/generic/214 b/tests/generic/214
+index 444c1fe..dff267e 100755
+--- a/tests/generic/214
++++ b/tests/generic/214
+@@ -47,6 +47,7 @@ trap "_cleanup; exit \$status" 0 1 2 3 15
+ _supported_fs generic
+ # only Linux supports fallocate
+ _supported_os Linux
++_require_test
+ 
+ [ -n "$XFS_IO_PROG" ] || _notrun "xfs_io executable not found"
+ 
+diff --git a/tests/generic/215 b/tests/generic/215
+index eaae8d8..6ddd1fc 100755
+--- a/tests/generic/215
++++ b/tests/generic/215
+@@ -45,6 +45,7 @@ trap "_cleanup; exit \$status" 0 1 2 3 15
+ # real QA test starts here
+ _supported_fs generic
+ _supported_os Linux
++_require_test
+ 
+ testfile=$TEST_DIR/tst.mmap
+ 
+diff --git a/tests/generic/221 b/tests/generic/221
+index e7d4740..aa42f65 100755
+--- a/tests/generic/221
++++ b/tests/generic/221
+@@ -39,6 +39,7 @@ status=1	# failure is the default!
+ # real QA test starts here
+ _supported_fs generic
+ _supported_os Linux
++_require_test
+ 
+ echo "Silence is golden."
+ 
+diff --git a/tests/generic/228 b/tests/generic/228
+index 7ac0872..1856dec 100755
+--- a/tests/generic/228
++++ b/tests/generic/228
+@@ -47,6 +47,7 @@ trap "_cleanup; exit \$status" 0 1 2 3 15 25
+ _supported_fs generic
+ # only Linux supports fallocate
+ _supported_os Linux
++_require_test
+ 
+ [ -n "$XFS_IO_PROG" ] || _notrun "xfs_io executable not found"
+ 
+diff --git a/tests/generic/236 b/tests/generic/236
+index 10cf71a..12ea0bc 100755
+--- a/tests/generic/236
++++ b/tests/generic/236
+@@ -43,6 +43,7 @@ trap "_cleanup; exit \$status" 0 1 2 3 15
+ _supported_fs generic
+ # only Linux supports fallocate
+ _supported_os Linux
++_require_test
+ 
+ rm -f $TEST_DIR/ouch*
+ 
+diff --git a/tests/generic/237 b/tests/generic/237
+index 6a61ec8..ff11ed3 100755
+--- a/tests/generic/237
++++ b/tests/generic/237
+@@ -49,6 +49,7 @@ _cleanup()
+ _supported_fs generic
+ # only Linux supports fallocate
+ _supported_os Linux
++_require_test
+ 
+ [ -x $runas ] || _notrun "$runas executable not found"
+ 
+diff --git a/tests/generic/239 b/tests/generic/239
+index bf39953..4f764c2 100755
+--- a/tests/generic/239
++++ b/tests/generic/239
+@@ -44,6 +44,7 @@ _cleanup()
+ _supported_fs generic
+ _supported_os Linux
+ 
++_require_test
+ _require_sparse_files
+ _require_aiodio aio-dio-hole-filling-race
+ 
+diff --git a/tests/generic/240 b/tests/generic/240
+index 44ba0d3..e32f15a 100755
+--- a/tests/generic/240
++++ b/tests/generic/240
+@@ -50,6 +50,7 @@ _cleanup()
+ _supported_fs generic
+ _supported_os Linux
+ 
++_require_test
+ _require_sparse_files
+ _require_aiodio aiodio_sparse2
+ 
+diff --git a/tests/generic/241 b/tests/generic/241
+index 7c3f6e8..b45f5e9 100755
+--- a/tests/generic/241
++++ b/tests/generic/241
+@@ -42,6 +42,7 @@ _cleanup()
+ 
+ _supported_fs generic
+ _supported_os Linux
++_require_test
+ 
+ [ "$DBENCH_PROG" = "" ] && _notrun "dbench not found"
+ 
+diff --git a/tests/generic/245 b/tests/generic/245
+index 9b87fbb..4034d04 100755
+--- a/tests/generic/245
++++ b/tests/generic/245
+@@ -39,6 +39,7 @@ status=1	# failure is the default!
+ # real QA test starts here
+ _supported_fs generic
+ _supported_os Linux
++_require_test
+ 
+ dir=$TEST_DIR/test-mv
+ 
+diff --git a/tests/generic/246 b/tests/generic/246
+index dd809fb..4184cfc 100755
+--- a/tests/generic/246
++++ b/tests/generic/246
+@@ -40,6 +40,7 @@ status=1	# failure is the default!
+ # real QA test starts here
+ _supported_fs generic
+ _supported_os Linux
++_require_test
+ 
+ file=$TEST_DIR/mmap-writev
+ 
+diff --git a/tests/generic/247 b/tests/generic/247
+index 5f16281..c8648a2 100755
+--- a/tests/generic/247
++++ b/tests/generic/247
+@@ -46,6 +46,7 @@ _cleanup()
+ # Modify as appropriate.
+ _supported_fs generic
+ _supported_os Linux
++_require_test
+ 
+ testfile=$TEST_DIR/$seq.$$
+ 
+diff --git a/tests/generic/248 b/tests/generic/248
+index 873313d..f47d47f 100755
+--- a/tests/generic/248
++++ b/tests/generic/248
+@@ -46,6 +46,7 @@ _cleanup()
+ # Modify as appropriate.
+ _supported_fs generic
+ _supported_os Linux
++_require_test
+ 
+ TESTFILE=$TEST_DIR/test_file
+ TEST_PROG=$here/src/pwrite_mmap_blocked
+diff --git a/tests/generic/249 b/tests/generic/249
+index 306e820..d8b4df4 100755
+--- a/tests/generic/249
++++ b/tests/generic/249
+@@ -44,6 +44,7 @@ _cleanup()
+ # real QA test starts here
+ _supported_fs generic
+ _supported_os Linux
++_require_test
+ 
+ echo "Feel the serenity."
+ 
+diff --git a/tests/generic/255 b/tests/generic/255
+index 8419065..14de49e 100755
+--- a/tests/generic/255
++++ b/tests/generic/255
+@@ -46,6 +46,7 @@ trap "_cleanup ; exit \$status" 0 1 2 3 15
+ _supported_fs generic 
+ _supported_os Linux
+ 
++_require_test
+ _require_xfs_io_command "fpunch"
+ _require_xfs_io_command "falloc"
+ _require_xfs_io_command "fiemap"
+diff --git a/tests/generic/256 b/tests/generic/256
+index 92c4f30..086c00a 100755
+--- a/tests/generic/256
++++ b/tests/generic/256
+@@ -49,6 +49,7 @@ _supported_os Linux
+ _require_xfs_io_command "fpunch"
+ _require_scratch
+ _require_user
++_require_test
+ 
+ testfile=$TEST_DIR/256.$$
+ 
+diff --git a/tests/generic/257 b/tests/generic/257
+index a9ce73b..64f2100 100755
+--- a/tests/generic/257
++++ b/tests/generic/257
+@@ -42,6 +42,7 @@ trap "_cleanup; exit \$status" 0 1 2 3 15
+ # real QA test starts here
+ _supported_fs generic
+ _supported_os Linux
++_require_test
+ 
+ mkdir $TEST_DIR/ttt
+ for n in {1..168}; do
+diff --git a/tests/generic/258 b/tests/generic/258
+index 3aeb5ce..b9b5cf9 100755
+--- a/tests/generic/258
++++ b/tests/generic/258
+@@ -45,6 +45,7 @@ trap "_cleanup ; exit \$status" 0 1 2 3 15
+ # real QA test starts here
+ _supported_fs generic
+ _supported_os Linux
++_require_test
+ 
+ TESTFILE=$TEST_DIR/timestamp-test.txt
+ 
+diff --git a/tests/generic/263 b/tests/generic/263
+index 6ecb74d..6ee2165 100755
+--- a/tests/generic/263
++++ b/tests/generic/263
+@@ -38,6 +38,7 @@ trap "rm -f $tmp.*; exit \$status" 0 1 2 3 15
+ # real QA test starts here
+ _supported_fs generic
+ _supported_os Linux
++_require_test
+ 
+ rm -f $seqres.full
+ 
+diff --git a/tests/generic/285 b/tests/generic/285
+index ac34d34..d6275b5 100755
+--- a/tests/generic/285
++++ b/tests/generic/285
+@@ -40,6 +40,7 @@ trap "_cleanup; exit \$status" 0 1 2 3 15
+ _supported_fs generic
+ _supported_os Linux
+ 
++_require_test
+ _require_seek_data_hole
+ 
+ BASE_TEST_FILE=$TEST_DIR/seek_sanity_testfile
+diff --git a/tests/generic/286 b/tests/generic/286
+index f4fe39a..94c22c6 100755
+--- a/tests/generic/286
++++ b/tests/generic/286
+@@ -38,6 +38,7 @@ trap "_cleanup; exit \$status" 0 1 2 3 15
+ _supported_fs generic
+ _supported_os Linux
+ 
++_require_test
+ _require_seek_data_hole
+ 
+ src=$TEST_DIR/seek_copy_testfile
+diff --git a/tests/generic/306 b/tests/generic/306
+index 04d28df..64d8cde 100755
+--- a/tests/generic/306
++++ b/tests/generic/306
+@@ -47,6 +47,7 @@ _cleanup()
+ _supported_fs generic
+ _supported_os Linux
+ _require_scratch
++_require_test
+ 
+ DEVNULL=$SCRATCH_MNT/devnull
+ DEVZERO=$SCRATCH_MNT/devzero
+diff --git a/tests/generic/308 b/tests/generic/308
+index 5646486..e639da1 100755
+--- a/tests/generic/308
++++ b/tests/generic/308
+@@ -44,6 +44,7 @@ testfile=$TEST_DIR/testfile.$seq
+ # real QA test starts here
+ _supported_fs generic
+ _supported_os Linux
++_require_test
+ 
+ rm -f $seqres.full
+ echo "Silence is golden"
+diff --git a/tests/generic/309 b/tests/generic/309
+index cbaf307..c6b89db 100755
+--- a/tests/generic/309
++++ b/tests/generic/309
+@@ -46,6 +46,7 @@ _cleanup()
+ # real QA test starts here
+ _supported_fs generic
+ _supported_os IRIX Linux
++_require_test
+ 
+ echo "Silence is golden"
+ 
+diff --git a/tests/generic/310 b/tests/generic/310
+index 26d2d4a..9d46e87 100755
+--- a/tests/generic/310
++++ b/tests/generic/310
+@@ -57,6 +57,7 @@ trap "_cleanup; exit \$status" 0 1 2 3 15
+ # real QA test starts here
+ _supported_fs generic
+ _supported_os Linux
++_require_test
+ 
+ dmesg -c > /dev/null
+ 
+diff --git a/tests/generic/313 b/tests/generic/313
+index 623c777..a906926 100755
+--- a/tests/generic/313
++++ b/tests/generic/313
+@@ -45,6 +45,7 @@ _cleanup()
+ # real QA test starts here
+ _supported_fs generic
+ _supported_os IRIX Linux
++_require_test
+ 
+ testfile=$TEST_DIR/testfile.$seq
+ 
+diff --git a/tests/generic/314 b/tests/generic/314
+index f430b82..294fb23 100755
+--- a/tests/generic/314
++++ b/tests/generic/314
+@@ -43,6 +43,7 @@ _cleanup()
+ 
+ # real QA test starts here
+ _supported_fs generic
++_require_test
+ _require_acls
+ _require_user
+ _need_to_be_root
 diff --git a/tests/generic/315 b/tests/generic/315
-old mode 100644
-new mode 100755
-diff --git a/tests/generic/320 b/tests/generic/320
-index e1ba970..3dd3bea 100755
---- a/tests/generic/320
-+++ b/tests/generic/320
-@@ -116,6 +116,5 @@ _scratch_mount >>$seqres.full 2>&1
+index 9c01b5e..62fdc01 100755
+--- a/tests/generic/315
++++ b/tests/generic/315
+@@ -48,6 +48,7 @@ _cleanup()
+ # Modify as appropriate.
+ _supported_fs generic
+ _supported_os Linux
++_require_test
  
- do_workload
+ rm -f $seqres.full
  
--_check_scratch_fs
- status=0
- exit
-diff --git a/tests/generic/321 b/tests/generic/321
-old mode 100644
-new mode 100755
-index 345416c..8410d40
---- a/tests/generic/321
-+++ b/tests/generic/321
-@@ -121,8 +121,6 @@ _replay_rename_test()
- 	_ls_l $SCRATCH_MNT | tail -n +2 | awk '{ print $1, $9 }'
- 	_ls_l $SCRATCH_MNT/bar | tail -n +2 | awk '{ print $1, $9 }'
- 	_unmount_flakey
--	_check_scratch_fs $FLAKEY_DEV
--	[ $? -ne 0 ] && _fatal "fsck failed"
- }
+diff --git a/tests/generic/316 b/tests/generic/316
+index 29a4331..0ccf01f 100755
+--- a/tests/generic/316
++++ b/tests/generic/316
+@@ -45,6 +45,7 @@ _cleanup()
+ _supported_fs generic
+ _supported_os Linux
  
- _scratch_mkfs >> $seqres.full 2>&1
-diff --git a/tests/generic/322 b/tests/generic/322
-old mode 100644
-new mode 100755
-index c43fcb1..fe1a4d5
---- a/tests/generic/322
-+++ b/tests/generic/322
-@@ -94,8 +94,6 @@ _write_after_fsync_rename_test()
- 	_mount_flakey
- 	md5sum $SCRATCH_MNT/bar | _filter_scratch
- 	_unmount_flakey
--	_check_scratch_fs $FLAKEY_DEV
--	[ $? -ne 0 ] && _fatal "fsck failed"
- }
++_require_test
+ _require_xfs_io_command "fpunch"
+ _require_xfs_io_command "fiemap"
  
- _scratch_mkfs >> $seqres.full 2>&1
-diff --git a/tests/shared/006 b/tests/shared/006
-index 445c35d..55c5965 100755
---- a/tests/shared/006
-+++ b/tests/shared/006
-@@ -91,7 +91,6 @@ _check_scratch_fs
- rm -rf $SCRATCH_MNT/testdir
- echo "Inode status after deleting all test files" >>$seqres.full
- $DF_PROG -i $SCRATCH_MNT >>$seqres.full
--_check_scratch_fs
+diff --git a/tests/shared/051 b/tests/shared/051
+index 2b61f45..44dfd64 100755
+--- a/tests/shared/051
++++ b/tests/shared/051
+@@ -70,6 +70,7 @@ _cleanup()
+ # real QA test starts here
+ _supported_fs xfs udf
+ _supported_os Linux
++_require_test
  
- status=0
- exit
-diff --git a/tests/shared/272 b/tests/shared/272
-index 0f812f3..4417535 100755
---- a/tests/shared/272
-+++ b/tests/shared/272
-@@ -103,6 +103,5 @@ if ! _scratch_unmount; then
- 	exit
- fi
- echo "Check filesystem"
--_check_scratch_fs
--status=$?
-+status=0
- exit
-diff --git a/tests/xfs/010 b/tests/xfs/010
-index 2b5ad00..fd2e27c 100755
---- a/tests/xfs/010
-+++ b/tests/xfs/010
-@@ -127,7 +127,6 @@ _check_scratch_fs
- _corrupt_finobt_root $SCRATCH_DEV
+ [ -x $runas ] || _notrun "$runas executable not found"
  
- _scratch_xfs_repair 2>&1 | _filter_repair
--_check_scratch_fs
+diff --git a/tests/shared/298 b/tests/shared/298
+index c1a6316..c12e889 100755
+--- a/tests/shared/298
++++ b/tests/shared/298
+@@ -32,6 +32,7 @@ trap "_cleanup; exit \$status" 0 1 2 3 15
  
- status=0
- exit
-diff --git a/tests/xfs/011 b/tests/xfs/011
-index 5763af9..658a822 100755
---- a/tests/xfs/011
-+++ b/tests/xfs/011
-@@ -110,7 +110,6 @@ killall $FSSTRESS_PROG
- wait
+ _supported_fs ext4 xfs
+ _supported_os Linux
++_require_test
+ _require_loop
+ _require_fstrim
+ _require_xfs_io_command "fiemap"
+diff --git a/tests/xfs/003 b/tests/xfs/003
+index 228dd17..2eed40f 100755
+--- a/tests/xfs/003
++++ b/tests/xfs/003
+@@ -40,6 +40,7 @@ _need_to_be_root
+ # real QA test starts here
+ _supported_fs xfs
+ _supported_os IRIX Linux
++_require_test
  
- umount $SCRATCH_MNT
--_check_scratch_fs
+ [ -f core ] && rm -f core
+ [ -f core ] && echo "Warning: can't nuke existing core file!"
+diff --git a/tests/xfs/008 b/tests/xfs/008
+index 56be923..9f22087 100755
+--- a/tests/xfs/008
++++ b/tests/xfs/008
+@@ -87,6 +87,7 @@ _do_test()
+ # real QA test starts here
+ _supported_fs xfs
+ _supported_os IRIX Linux
++_require_test
  
- status=0
- exit
-diff --git a/tests/xfs/013 b/tests/xfs/013
-index d47bf53..dea3d08 100755
---- a/tests/xfs/013
-+++ b/tests/xfs/013
-@@ -150,7 +150,6 @@ rm -rf $SCRATCH_MNT/fsstress
- rm -rf $SCRATCH_MNT/dir*
+ rm -f $seqres.full
  
- umount $SCRATCH_MNT
--_check_scratch_fs
+diff --git a/tests/xfs/012 b/tests/xfs/012
+index 4127222..7b9a54d 100755
+--- a/tests/xfs/012
++++ b/tests/xfs/012
+@@ -104,6 +104,7 @@ _do_test()
+ # real QA test starts here
+ _supported_fs xfs
+ _supported_os IRIX Linux
++_require_test
  
- status=0
- exit
-diff --git a/tests/xfs/014 b/tests/xfs/014
-index 1e092a9..8866bfe 100755
---- a/tests/xfs/014
-+++ b/tests/xfs/014
-@@ -194,7 +194,6 @@ umount $LOOP_MNT
- echo $orig_sp_time > /proc/sys/fs/xfs/speculative_prealloc_lifetime
+ rm -f $seqres.full
  
- umount $SCRATCH_MNT
--_check_scratch_fs
+diff --git a/tests/xfs/045 b/tests/xfs/045
+index 84ca802..31516b3 100755
+--- a/tests/xfs/045
++++ b/tests/xfs/045
+@@ -44,6 +44,7 @@ _get_existing_uuid()
+ _supported_fs xfs
+ _supported_os Linux
  
- status=0
- exit
-diff --git a/tests/xfs/019 b/tests/xfs/019
-index d35d15b..09670b9 100755
---- a/tests/xfs/019
-+++ b/tests/xfs/019
-@@ -136,9 +136,6 @@ _verify_fs()
- 	_full "umount"
- 	umount $SCRATCH_DEV >>$seqfull 2>&1 \
- 		|| _fail "umount failed"
--
--	echo "*** check FS"
--	_check_scratch_fs
- }
++_require_test
+ _require_scratch
  
- #_verify_fs 1
-diff --git a/tests/xfs/019.out b/tests/xfs/019.out
-index 0c1bf8f..19614d9 100644
---- a/tests/xfs/019.out
-+++ b/tests/xfs/019.out
-@@ -79,6 +79,5 @@ Device: <DEVICE> Inode: <INODE> Links: 1
-  Mode: (0123/l--x-w--wx) Uid: (0) Gid: (0)
- Device: <DEVICE> Inode: <INODE> Links: 1 
- *** unmount FS
--*** check FS
- *** done
- *** unmount
-diff --git a/tests/xfs/034 b/tests/xfs/034
-index 6f73fdd..6beeb56 100755
---- a/tests/xfs/034
-+++ b/tests/xfs/034
-@@ -83,8 +83,6 @@ then
- fi
+ echo "*** get uuid"
+diff --git a/tests/xfs/048 b/tests/xfs/048
+index f9fb16f..3dd685f 100755
+--- a/tests/xfs/048
++++ b/tests/xfs/048
+@@ -44,6 +44,7 @@ _cleanup()
+ # real QA test starts here
+ _supported_fs xfs
+ _supported_os IRIX Linux
++_require_test
  
- # pv 801241 causes corruption here (inode left in agi_unlinked list)
--_check_scratch_fs
--
- echo "*** done"
- # happy exit
- status=0
-diff --git a/tests/xfs/042 b/tests/xfs/042
-index db0fa28..77dd704 100755
---- a/tests/xfs/042
-+++ b/tests/xfs/042
-@@ -162,7 +162,6 @@ if ! _do "diff $tmp.sum1 $tmp.sum2"; then
-     status=1; exit
- fi
- echo "done"
--_do "Checking filesystem" "_check_scratch_fs"
+ src/fault $TEST_DIR || exit
  
- # success, all done
- echo "xfs_fsr tests passed."
-diff --git a/tests/xfs/042.out b/tests/xfs/042.out
-index f5b37b3..41baf09 100644
---- a/tests/xfs/042.out
-+++ b/tests/xfs/042.out
-@@ -9,5 +9,4 @@ Remove other files... done
- Run xfs_fsr on filesystem... done
- Check fill file... done
- Check large file... done
--Checking filesystem... done
- xfs_fsr tests passed.
-diff --git a/tests/xfs/085 b/tests/xfs/085
-index af71b77..54c2d01 100755
---- a/tests/xfs/085
-+++ b/tests/xfs/085
-@@ -88,12 +88,6 @@ umount $SCRATCH_MNT
- echo "logprint after mount and replay..."
- _print_logstate
+diff --git a/tests/xfs/066 b/tests/xfs/066
+index db29249..736439b 100755
+--- a/tests/xfs/066
++++ b/tests/xfs/066
+@@ -45,6 +45,7 @@ _cleanup()
+ # real QA test starts here
+ _supported_fs xfs
+ _supported_os IRIX Linux
++_require_test
  
--if _check_scratch_fs; then
--    echo "filesystem is checked ok"
--else
--    echo "filesystem is NOT ok"
--fi
--
- # success, all done
- status=0
- exit
-diff --git a/tests/xfs/085.out b/tests/xfs/085.out
-index 48e3e73..d2d99a1 100644
---- a/tests/xfs/085.out
-+++ b/tests/xfs/085.out
-@@ -111,4 +111,3 @@ ls SCRATCH_MNT
- unmount
- logprint after mount and replay...
- clean log
--filesystem is checked ok
-diff --git a/tests/xfs/104 b/tests/xfs/104
-index e899aca..69fcc69 100755
---- a/tests/xfs/104
-+++ b/tests/xfs/104
-@@ -113,7 +113,6 @@ done
- wait	# stop for any remaining stress processes
+ _my_stat_filter()
+ {
+diff --git a/tests/xfs/073 b/tests/xfs/073
+index ca553ae..f955771 100755
+--- a/tests/xfs/073
++++ b/tests/xfs/073
+@@ -126,6 +126,7 @@ _verify_copy()
+ # real QA test starts here
+ _supported_fs xfs
+ _supported_os Linux
++_require_test
  
- umount $SCRATCH_DEV
--_check_scratch_fs
+ [ "$USE_EXTERNAL" = yes ] && _notrun "Cannot xfs_copy with external devices"
+ [ -n "$XFS_COPY_PROG" ] || _notrun "xfs_copy binary not yet installed"
+diff --git a/tests/xfs/078 b/tests/xfs/078
+index e04c6cc..f859efc 100755
+--- a/tests/xfs/078
++++ b/tests/xfs/078
+@@ -48,6 +48,7 @@ _cleanup()
+ _supported_fs xfs
+ _supported_os Linux
  
- status=0
- exit
-diff --git a/tests/xfs/110 b/tests/xfs/110
-index 48bea45..7428faf 100755
---- a/tests/xfs/110
-+++ b/tests/xfs/110
-@@ -81,7 +81,5 @@ do
- done
- wait
++_require_test
+ # Must have loop device
+ _require_loop
  
--_check_scratch_fs
--
- status=0
- exit
-diff --git a/tests/xfs/121 b/tests/xfs/121
-index 1e06e45..1457ed1 100755
---- a/tests/xfs/121
-+++ b/tests/xfs/121
-@@ -106,9 +106,6 @@ fi
- _scratch_mount >> $seqres.full 2>&1 \
-     || _fail "mount failed"
+diff --git a/tests/xfs/080 b/tests/xfs/080
+index 59c6104..e0f5b1b 100755
+--- a/tests/xfs/080
++++ b/tests/xfs/080
+@@ -46,6 +46,7 @@ _supported_fs xfs
+ # Apparently should be able to work on IRIX,
+ # but not at the moment.
+ _supported_os Linux
++_require_test
  
--# should now be peaches
--_check_scratch_fs
--
- # success, all done
- status=0
- exit
-diff --git a/tests/xfs/181 b/tests/xfs/181
-index 38d556c..4e7ac3a 100755
---- a/tests/xfs/181
-+++ b/tests/xfs/181
-@@ -120,9 +120,6 @@ fi
- _scratch_mount >> $seqres.full 2>&1 \
-     || _fail "mount failed"
+ quiet=-q
+ clean=-c
+diff --git a/tests/xfs/084 b/tests/xfs/084
+index 0d17cf3..7aa193b 100755
+--- a/tests/xfs/084
++++ b/tests/xfs/084
+@@ -51,6 +51,7 @@ pgsize=`$here/src/feature -s`
+ # real QA test starts here
+ _supported_fs xfs
+ _supported_os IRIX Linux
++_require_test
  
--# should now be peaches
--_check_scratch_fs
--
- # success, all done
- status=0
- exit
-diff --git a/tests/xfs/278 b/tests/xfs/278
-index dacd1fc..2b1db8a 100755
---- a/tests/xfs/278
-+++ b/tests/xfs/278
-@@ -78,9 +78,4 @@ echo "" >>$seqres.full
- xfs_repair  $SCRATCH_DEV >> $seqres.full 2>&1
- echo "===== END of xfs_repair =====" >> $seqres.full
+ if [ $HOSTOS == "IRIX" ]; then 
+     if uname -R | grep -iq debug; then 
+diff --git a/tests/xfs/134 b/tests/xfs/134
+index 6f092f2..adafa39 100755
+--- a/tests/xfs/134
++++ b/tests/xfs/134
+@@ -48,6 +48,7 @@ trap "_cleanup; exit \$status" 0 1 2 3 15
+ _supported_fs xfs
+ _supported_os Linux IRIX
  
--#if _check_scratch_fs; then
--#	status=0
--#else
--#	status=1
--#fi
- exit
-diff --git a/tests/xfs/297 b/tests/xfs/297
-index 3fe32f1..1cdbbb9 100755
---- a/tests/xfs/297
-+++ b/tests/xfs/297
-@@ -82,6 +82,5 @@ echo "Test done" | tee -a $seqres.full
- killall -q $FSSTRESS_PROG
- wait
++_require_test
+ _require_xfs_quota
  
--_check_scratch_fs
- status=0
- exit
-diff --git a/tests/xfs/306 b/tests/xfs/306
-index 0794de3..3053fd9 100644
---- a/tests/xfs/306
-+++ b/tests/xfs/306
-@@ -97,7 +97,6 @@ for d in $load_dir/*; do
- done
- wait
- umount $SCRATCH_MNT
--_check_scratch_fs
+ dir=$SCRATCH_MNT/project
+diff --git a/tests/xfs/164 b/tests/xfs/164
+index 33a038f..404c208 100755
+--- a/tests/xfs/164
++++ b/tests/xfs/164
+@@ -67,6 +67,7 @@ _filter_bmap()
+ # Modify as appropriate.
+ _supported_fs xfs
+ _supported_os IRIX Linux
++_require_test
  
- echo "No output is good. Failures are loud."
+ testfile=$TEST_DIR/file.$seq
+ 
+diff --git a/tests/xfs/165 b/tests/xfs/165
+index bc882da..4080a88 100755
+--- a/tests/xfs/165
++++ b/tests/xfs/165
+@@ -64,6 +64,7 @@ _filter_bmap()
+ # Modify as appropriate.
+ _supported_fs xfs
+ _supported_os IRIX Linux
++_require_test
+ 
+ # io tests 
+ testfile=$TEST_DIR/file.$seq
+diff --git a/tests/xfs/195 b/tests/xfs/195
+index d67ce9f..6abddbc 100755
+--- a/tests/xfs/195
++++ b/tests/xfs/195
+@@ -63,6 +63,7 @@ _do_dump()
+ _supported_fs xfs
+ _supported_os Linux
+ 
++_require_test
+ _require_user
+ 
+ echo "Preparing subtree"
+diff --git a/tests/xfs/197 b/tests/xfs/197
+index bc2de9d..7706e03 100755
+--- a/tests/xfs/197
++++ b/tests/xfs/197
+@@ -48,6 +48,7 @@ trap "_cleanup; exit \$status" 0 1 2 3 15
+ # real QA test starts here
+ _supported_fs xfs
+ _supported_os Linux
++_require_test
+ 
+ bitsperlong=`src/feature -w`
+ if [ "$bitsperlong" -ne 32 ]; then
+diff --git a/tests/xfs/206 b/tests/xfs/206
+index f739597..f6dcca6 100755
+--- a/tests/xfs/206
++++ b/tests/xfs/206
+@@ -53,6 +53,7 @@ _cleanup()
+ # Modify as appropriate.
+ _supported_fs xfs
+ _supported_os IRIX Linux
++_require_test
+ _require_loop
+ 
+ bitsperlong=`src/feature -w`
+diff --git a/tests/xfs/222 b/tests/xfs/222
+index 0e5aaf6..77ecfc6 100755
+--- a/tests/xfs/222
++++ b/tests/xfs/222
+@@ -47,6 +47,7 @@ trap "_cleanup ; exit \$status" 0 1 2 3 15
+ # real QA test starts here
+ _supported_fs xfs
+ _supported_os Linux
++_require_test
+ 
+ [ "$XFS_FSR_PROG" = "" ] && _notrun "xfs_fsr not found"
+ 
+diff --git a/tests/xfs/229 b/tests/xfs/229
+index 3e02421..c057677 100755
+--- a/tests/xfs/229
++++ b/tests/xfs/229
+@@ -49,6 +49,7 @@ trap "_cleanup ; exit \$status" 0 1 2 3 15
+ # real QA test starts here
+ _supported_fs xfs
+ _supported_os Linux
++_require_test
+ 
+ TDIR="${TEST_DIR}/t_holes"
+ NFILES="10"
+diff --git a/tests/xfs/242 b/tests/xfs/242
+index 24a572a..304e69f 100755
+--- a/tests/xfs/242
++++ b/tests/xfs/242
+@@ -45,6 +45,7 @@ trap "_cleanup ; exit \$status" 0 1 2 3 15
+ # real QA test starts here
+ _supported_fs xfs
+ _supported_os Linux
++_require_test
+ 
+ _test_io_zero()
+ {
+diff --git a/tests/xfs/250 b/tests/xfs/250
+index 3b67c3f..c1622a4 100755
+--- a/tests/xfs/250
++++ b/tests/xfs/250
+@@ -45,6 +45,7 @@ _cleanup()
+ # real QA test starts here
+ _supported_fs xfs
+ _supported_os Linux
++_require_test
+ _require_loop
+ 
+ LOOP_DEV=$TEST_DIR/$seq.fs
+diff --git a/tests/xfs/252 b/tests/xfs/252
+index b2c4c08..ddafda6 100755
+--- a/tests/xfs/252
++++ b/tests/xfs/252
+@@ -46,6 +46,7 @@ trap "_cleanup ; exit \$status" 0 1 2 3 15
+ _supported_fs xfs 
+ _supported_os Linux
+ 
++_require_test
+ _require_xfs_io_command "fpunch"
+ _require_xfs_io_command "fiemap"
+ 
+diff --git a/tests/xfs/253 b/tests/xfs/253
+index 4119794..91eb041 100755
+--- a/tests/xfs/253
++++ b/tests/xfs/253
+@@ -53,6 +53,7 @@ _cleanup()
+ . ./common/rc
+ . ./common/filter
+ 
++_require_test
+ _require_scratch
+ 
+ # real QA test starts here
+diff --git a/tests/xfs/259 b/tests/xfs/259
+index 8241d94..6587a65 100755
+--- a/tests/xfs/259
++++ b/tests/xfs/259
+@@ -41,6 +41,7 @@ trap "_cleanup ; exit \$status" 0 1 2 3 15
+ # real QA test starts here
+ _supported_fs xfs
+ _supported_os Linux
++_require_test
+ _require_loop
+ _require_math
+ 
+diff --git a/tests/xfs/290 b/tests/xfs/290
+index 55322ec..adc398f 100755
+--- a/tests/xfs/290
++++ b/tests/xfs/290
+@@ -46,6 +46,7 @@ trap "exit \$status" 0 1 2 3 15
+ _supported_fs xfs
+ _supported_os Linux
+ 
++_require_test
+ _require_xfs_io_command "zero"
+ 
+ testfile=$TEST_DIR/290.$$
+diff --git a/tests/xfs/292 b/tests/xfs/292
+index 2910118..44aaef7 100755
+--- a/tests/xfs/292
++++ b/tests/xfs/292
+@@ -46,6 +46,7 @@ _cleanup()
+ # Modify as appropriate.
+ _supported_fs xfs
+ _supported_os IRIX Linux
++_require_test
+ 
+ fsfile=$TEST_DIR/fsfile.$seq
  
 -- 
 1.8.3.1
