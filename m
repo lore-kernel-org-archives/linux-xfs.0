@@ -1,23 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id AE6227F9F
-	for <xfs@oss.sgi.com>; Tue, 15 Jul 2014 22:01:51 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 3BB1DAC002
-	for <xfs@oss.sgi.com>; Tue, 15 Jul 2014 20:01:48 -0700 (PDT)
-Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
-	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	dD3fvur2Tya3UfCU for <xfs@oss.sgi.com>;
-	Tue, 15 Jul 2014 20:01:46 -0700 (PDT)
-Date: Wed, 16 Jul 2014 13:01:32 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] Detect strto* failures based on errno.
-Message-ID: <20140716030132.GB20518@dastard>
-References: <20140713230406.GE22339@dastard>
-	<1405324619-25515-1-git-send-email-arekm@maven.pl>
+	by oss.sgi.com (Postfix) with ESMTP id 31A9A7FAA
+	for <xfs@oss.sgi.com>; Tue, 15 Jul 2014 22:40:09 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 9ECB8AC002
+	for <xfs@oss.sgi.com>; Tue, 15 Jul 2014 20:40:08 -0700 (PDT)
+Received: from mx4-phx2.redhat.com (mx4-phx2.redhat.com [209.132.183.25]) by
+	cuda.sgi.com with ESMTP id D8HWT85GH5VG3XGx for
+	<xfs@oss.sgi.com>; Tue, 15 Jul 2014 20:40:06 -0700 (PDT)
+Date: Tue, 15 Jul 2014 23:40:00 -0400 (EDT)
+From: Nathan Scott <nathans@debian.org>
+Message-ID: <369317103.10971454.1405482000035.JavaMail.zimbra@redhat.com>
+In-Reply-To: <53C3FFED.5080301@sandeen.net>
+References: <53C3FFED.5080301@sandeen.net>
+Subject: Re: time for an xfsdump release?
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1405324619-25515-1-git-send-email-arekm@maven.pl>
+Reply-To: Nathan Scott <nathans@debian.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,26 +24,71 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Arkadiusz =?utf-8?Q?Mi=C5=9Bkiewicz?= <arekm@maven.pl>
-Cc: xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@sandeen.net>, Dave Chinner <david@fromorbit.com>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-T24gTW9uLCBKdWwgMTQsIDIwMTQgYXQgMDk6NTY6NTlBTSArMDIwMCwgQXJrYWRpdXN6IE1pxZtr
-aWV3aWN6IHdyb3RlOgo+IENvZGUgd2FzIHRlc3RpbmcgZm9yIEVSQU5HRSBlcnJubyBvbmx5IGlu
-IHNvbWUgcGxhY2VzLiBJbiBvdGhlciBwbGFjZXMKPiBpdCBkaWRuJ3QgZG8gYW55IGVycm5vIGNo
-ZWNraW5nIGF0IGFsbC4KPiAKPiBVbmlmeSBzdHJ0byogcmVzdWx0IHRlc3RpbmcgYnkgdHJlYXRp
-bmcgYW55IG5vbiB6ZXJvIGVycm5vIGFzIGZhaWx1cmUuCj4gCj4gU2lnbmVkLW9mZi1ieTogQXJr
-YWRpdXN6IE1pxZtraWV3aWN6IDxhcmVrbUBtYXZlbi5wbD4KClRoaXMgcGF0Y2ggYXBwZWFycyB0
-byBjYXVzZSB4ZnMvMDcxIHRvIGZhaWw6CgoKCiAgICAgV3JpdGluZyA1MTIgYnl0ZXMsIG9mZnNl
-dCBpcyArMCAoZGlyZWN0PWZhbHNlKQogICAgLXB3cml0ZTY0OiBGaWxlIHRvbyBsYXJnZQogICAg
-K25vbi1udW1lcmljIG9mZnNldCBhcmd1bWVudCAtLSA8T0ZGU0VUPgogICAgIFJlYWRpbmcgNTEy
-IGJ5dGVzIChkaXJlY3Q9ZmFsc2UpCiAgICAgcmVhZCAwLzUxMiBieXRlcyBhdCBvZmZzZXQgPE9G
-RlNFVD4KICAgIC4uLgogICAgKFJ1biAnZGlmZiAtdSB0ZXN0cy94ZnMvMDcxLm91dCAvaG9tZS9k
-YXZlL3NyYy94ZnN0ZXN0cy1kZXYvcmVzdWx0cy8veGZzLzA3MS5vdXQuYmFkJyAgdG8gc2VlIHRo
-ZSBlbnRpcmUgZGlmZikKCkNhbiB5b3UgaGF2ZSBhIGxvb2sgaW50byB0aGlzPwoKQ2hlZXJzLAoK
-RGF2ZS4KLS0gCkRhdmUgQ2hpbm5lcgpkYXZpZEBmcm9tb3JiaXQuY29tCgpfX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bv
-c3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
+Hi,
+
+----- Original Message -----
+> There aren't a lot of changes since v3.1.3, but with the rate of change of
+> xfsdump (slow), I wonder if it's worth cutting a point release to get these
+> bugfixes out there:
+
+I've verified and pushed a few Debian packaging updates folks have sent
+through to the git tree below.  Please include these odds & ends too...
+
+thanks!
+
+
+Changes committed to git://oss.sgi.com/nathans/xfsdump.git master
+
+ debian/Makefile  |    2 +-
+ debian/changelog |    8 ++++++++
+ debian/control   |    2 +-
+ debian/rules     |    3 +++
+ debian/watch     |    3 +++
+ 5 files changed, 16 insertions(+), 2 deletions(-)
+
+commit 96be05e971e1e23c252f5432fe430cd724a52910
+Author: Nathan Scott <nathans@debian.org>
+Date:   Wed Jul 16 13:29:12 2014 +1000
+
+    xfsdump: update debian packaging for next release
+    
+    Make a note of each of the Debian bugs resolved in this release,
+    so that they'll be automatically closed during next upload.
+    
+    Signed-off-by: Nathan Scott <nathans@debian.org>
+
+commit f33aa73b89624feaeb94f4d48b88f2d480798420
+Author: Nathan Scott <nathans@debian.org>
+Date:   Wed Jul 16 13:25:36 2014 +1000
+
+    xfsdump: add a watch file into the debian packaging
+    
+    Apparently it can improve some Debian tools that check it (e.g. UDD).
+    Resolves Debian bug #748482.
+    
+    Signed-off-by: Nathan Scott <nathans@debian.org>
+
+commit fae9bcf317ce3a0d919ebdc6fd667993a4dbd484
+Author: Nathan Scott <nathans@debian.org>
+Date:   Wed Jul 16 13:21:27 2014 +1000
+
+    xfsdump: rebuild configure files during deb package builds
+    
+    Use the same technique applied to xfsprogs recently to tackle
+    out-of-date config.{sub,guess} files in the build.
+    
+    Resolves Debian bug #746531.
+    
+    Signed-off-by: Nathan Scott <nathans@debian.org>
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
