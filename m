@@ -1,27 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id A30337FDF
-	for <xfs@oss.sgi.com>; Wed, 16 Jul 2014 18:17:32 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 82BC9304039
-	for <xfs@oss.sgi.com>; Wed, 16 Jul 2014 16:17:29 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id 9ECC87FE7
+	for <xfs@oss.sgi.com>; Wed, 16 Jul 2014 18:32:53 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 5EDBB304051
+	for <xfs@oss.sgi.com>; Wed, 16 Jul 2014 16:32:53 -0700 (PDT)
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	88GC1mG9fsCmNk01 for <xfs@oss.sgi.com>;
-	Wed, 16 Jul 2014 16:17:27 -0700 (PDT)
-Date: Thu, 17 Jul 2014 09:17:25 +1000
+	99TmbhamaEjXCCkF for <xfs@oss.sgi.com>;
+	Wed, 16 Jul 2014 16:32:51 -0700 (PDT)
+Date: Thu, 17 Jul 2014 09:32:49 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] logprint: Fix printing of AGF buffers
-Message-ID: <20140716231725.GF4453@dastard>
-References: <1405349100-19734-1-git-send-email-jack@suse.cz>
-	<20140715101931.GC30363@infradead.org>
-	<20140715140938.GA1733@quack.suse.cz>
-	<20140715153922.GB5369@infradead.org>
-	<20140716003851.GO22339@dastard>
-	<20140716081105.GB29924@infradead.org>
+Subject: Re: [PATCH] Detect strto* failures based on errno.
+Message-ID: <20140716233249.GG4453@dastard>
+References: <20140713230406.GE22339@dastard>
+	<1405324619-25515-1-git-send-email-arekm@maven.pl>
+	<20140716030132.GB20518@dastard>
+	<201407160944.07266.arekm@maven.pl>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20140716081105.GB29924@infradead.org>
+In-Reply-To: <201407160944.07266.arekm@maven.pl>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,71 +28,42 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Jan Kara <jack@suse.cz>, xfs@oss.sgi.com
+To: Arkadiusz =?utf-8?Q?Mi=C5=9Bkiewicz?= <arekm@maven.pl>
+Cc: xfs@oss.sgi.com
 
-On Wed, Jul 16, 2014 at 01:11:05AM -0700, Christoph Hellwig wrote:
-> On Wed, Jul 16, 2014 at 10:38:51AM +1000, Dave Chinner wrote:
-> > I added this:
-> > 
-> > 	/*
-> > 	 * The addition of spare space and the non-logged CRC format
-> > 	 * fields to the AGF mean that the size that is logged is almost
-> > 	 * always going to be smaller than the structure itself. Hence
-> > 	 * we need to make sure that the buffer contains all the data we
-> > 	 * want to print rather than just check against the structure
-> > 	 * size.
-> > 	 */
-> > 
-> > Cheers,
-> 
-> I'd prefer to mention v4 filesystems as well:
-> 
-> 	/*
-> 	 * v4 filesystems only contain the fields before the uuid, and
-> 	 * even v5 filesystems don't usually log any field beneath it.
-> 	 */
-
-It actually has nothing to do with v4 or v5 filesystems - it's to do
-with the fact that we do partial buffer logging but logprint is
-assuming the structure is always logging as a whole.  There's
-mistakes like this all through logprint - we whack them like this
-with a big stick (i.e. refuse to parse the structure) when they are
-found.
-
-Did you notice the way that log_print_all.c handled these issues?
-For the AGI, it simply looks at the length of the region and sizes
-the output accordingly. And for the AGF, it just ignores the size of
-the region and assumes that it captured everything that is to be
-printed.
-
-IOWs, we've played whack-a-mole on this again while ignoring the
-fundamental issues ithat still remain:
-
-	- that logprint has a lot of assumptions that simply aren't
-	  true; and
-	- that logprint simply does not handle split region
-	  continuations like the kernel recovery code does.
-
-Both of these things lead to having to handle these strange "out of
-space" cases in multiple places, and simply not handling them in
-places that actually need to.
-
-These are just more reasons why logprint - as it says itself in a
-couple of comments - needs a complete rewrite.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gV2VkLCBKdWwgMTYsIDIwMTQgYXQgMDk6NDQ6MDdBTSArMDIwMCwgQXJrYWRpdXN6IE1pxZtr
+aWV3aWN6IHdyb3RlOgo+IE9uIFdlZG5lc2RheSAxNiBvZiBKdWx5IDIwMTQsIERhdmUgQ2hpbm5l
+ciB3cm90ZToKPiA+IE9uIE1vbiwgSnVsIDE0LCAyMDE0IGF0IDA5OjU2OjU5QU0gKzAyMDAsIEFy
+a2FkaXVzeiBNacWba2lld2ljeiB3cm90ZToKPiA+ID4gQ29kZSB3YXMgdGVzdGluZyBmb3IgRVJB
+TkdFIGVycm5vIG9ubHkgaW4gc29tZSBwbGFjZXMuIEluIG90aGVyIHBsYWNlcwo+ID4gPiBpdCBk
+aWRuJ3QgZG8gYW55IGVycm5vIGNoZWNraW5nIGF0IGFsbC4KPiA+ID4gCj4gPiA+IFVuaWZ5IHN0
+cnRvKiByZXN1bHQgdGVzdGluZyBieSB0cmVhdGluZyBhbnkgbm9uIHplcm8gZXJybm8gYXMgZmFp
+bHVyZS4KPiA+ID4gCj4gPiA+IFNpZ25lZC1vZmYtYnk6IEFya2FkaXVzeiBNacWba2lld2ljeiA8
+YXJla21AbWF2ZW4ucGw+Cj4gPiAKPiA+IFRoaXMgcGF0Y2ggYXBwZWFycyB0byBjYXVzZSB4ZnMv
+MDcxIHRvIGZhaWw6Cj4gPiAKPiA+IAo+ID4gCj4gPiAgICAgIFdyaXRpbmcgNTEyIGJ5dGVzLCBv
+ZmZzZXQgaXMgKzAgKGRpcmVjdD1mYWxzZSkKPiA+ICAgICAtcHdyaXRlNjQ6IEZpbGUgdG9vIGxh
+cmdlCj4gPiAgICAgK25vbi1udW1lcmljIG9mZnNldCBhcmd1bWVudCAtLSA8T0ZGU0VUPgo+ID4g
+ICAgICBSZWFkaW5nIDUxMiBieXRlcyAoZGlyZWN0PWZhbHNlKQo+ID4gICAgICByZWFkIDAvNTEy
+IGJ5dGVzIGF0IG9mZnNldCA8T0ZGU0VUPgo+ID4gICAgIC4uLgo+ID4gICAgIChSdW4gJ2RpZmYg
+LXUgdGVzdHMveGZzLzA3MS5vdXQKPiA+IC9ob21lL2RhdmUvc3JjL3hmc3Rlc3RzLWRldi9yZXN1
+bHRzLy94ZnMvMDcxLm91dC5iYWQnICB0byBzZWUgdGhlIGVudGlyZQo+ID4gZGlmZikKPiA+IAo+
+ID4gQ2FuIHlvdSBoYXZlIGEgbG9vayBpbnRvIHRoaXM/Cj4gCj4gVGhlIHRlc3QgcnVuczoKPiB4
+ZnNfaW8gLWMgJ3B3cml0ZSA5MjIzMzczMTM2MzY2NDAzNTgzIDUxMicgZmlsZQo+IAo+IHdoZXJl
+IDkyMjMzNzMxMzYzNjY0MDM1ODMgaXMgYmlnZ2VyIHRoYW4gTExPTkdfTUFYICg5MjIzMzcyMDM2
+ODU0Nzc1ODA3KSwgc28KPiAKPiAjIExDX0FMTD1DIHhmc19pbyAtYyAncHdyaXRlIDkyMjMzNzMx
+MzYzNjY0MDM1ODMgNTEyJyAuL3gKPiAoTVlERUJVRylzdHJlcnJvcigzNCk6IE51bWVyaWNhbCBy
+ZXN1bHQgb3V0IG9mIHJhbmdlCj4gbm9uLW51bWVyaWMgb2Zmc2V0IGFyZ3VtZW50IC0tIDkyMjMz
+NzMxMzYzNjY0MDM1ODMKPiAKPiAKPiBXaGF0IHdvdWxkIGJlIGJlc3QgYXBwcm9hY2ggdG8gZml4
+IHRoaXMgLSBzb21lIGN2dHVudW0gZm9yIHVuc2lnbmVkIGxvbmcgbG9uZz8KCkknbSBwcmV0dHkg
+c3VyZSB0aGF0IGN2dG51bSBpcyBvbmx5IHN1cHBvc2VkIHRvIHdvcmsgd2l0aCBwb3NpdGl2ZQpp
+bnRlZ2VycyAtIGl0IHJldHVybnMgbmVnYXRpdmUgdmFsdWVzIGFzIGFuIGVycm9yLiBoZW5jZSBq
+dXN0CmNoYW5naW5nIHRvIHVzZSBzdHJ0b3VsbCgpIHdvdWxkIHByb2JhYmx5IGZpeCB0aGUgaXNz
+dWUuCgpUaGUgY2FsbGVyIGNhbiBkZXRlcm1pbmUgaWYgYSBuZWdhdGl2ZSBudW1iZXIgaXMgdmFs
+aWQgb3Igbm90Li4uLgoKQ2hlZXJzLAoKRGF2ZS4KLS0gCkRhdmUgQ2hpbm5lcgpkYXZpZEBmcm9t
+b3JiaXQuY29tCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+Xwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFp
+bG1hbi9saXN0aW5mby94ZnMK
