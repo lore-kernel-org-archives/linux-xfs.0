@@ -1,23 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id F11C67F3F
-	for <xfs@oss.sgi.com>; Wed, 16 Jul 2014 03:32:47 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 529C17F99
+	for <xfs@oss.sgi.com>; Wed, 16 Jul 2014 04:22:29 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 8A73DAC003
-	for <xfs@oss.sgi.com>; Wed, 16 Jul 2014 01:32:44 -0700 (PDT)
-Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id lQ7lc4nqD3ngJTJ5 (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 16 Jul 2014 01:32:43 -0700 (PDT)
-Message-ID: <53C6388C.8000608@oracle.com>
-Date: Wed, 16 Jul 2014 16:32:12 +0800
-From: Jeff Liu <jeff.liu@oracle.com>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 4F1408F8087
+	for <xfs@oss.sgi.com>; Wed, 16 Jul 2014 02:22:29 -0700 (PDT)
+Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
+	ESMTP id TSJTk2tRSnVRxVPS (version=TLSv1 cipher=AES256-SHA
+	bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 16 Jul 2014 02:22:28 -0700 (PDT)
+Date: Wed, 16 Jul 2014 02:22:26 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: v0.80.4 Firefly released
+Message-ID: <20140716092226.GA23561@infradead.org>
+References: <alpine.DEB.2.00.1407151634250.21336@cobra.newdream.net>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfs: fix uflags detection at xfs_fs_rm_xquota
-References: <53C4F5DB.2060108@oracle.com>
-	<20140715102520.GH30363@infradead.org>
-	<53C62595.6010702@oracle.com> <20140716071250.GA1461@infradead.org>
-In-Reply-To: <20140716071250.GA1461@infradead.org>
+Content-Disposition: inline
+In-Reply-To: <alpine.DEB.2.00.1407151634250.21336@cobra.newdream.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,33 +29,25 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: Sage Weil <sage@inktank.com>
+Cc: ceph-devel@vger.kernel.org, xfs@oss.sgi.com
 
+On Tue, Jul 15, 2014 at 04:45:59PM -0700, Sage Weil wrote:
+> This Firefly point release fixes an potential data corruption problem
+> when ceph-osd daemons run on top of XFS and service Firefly librbd
+> clients.  A recently added allocation hint that RBD utilizes triggers
+> an XFS bug on some kernels (Linux 3.2, and likely others) that leads
+> to data corruption and deep-scrub errors (and inconsistent PGs).  This
+> release avoids the situation by disabling the allocation hint until we
+> can validate which kernels are affected and/or are known to be safe to
+> use the hint on.
 
-On 07/16/2014 15:12 PM, Christoph Hellwig wrote:
-> On Wed, Jul 16, 2014 at 03:11:17PM +0800, Jeff Liu wrote:
->>> This code was introduced by commit
->>> 9da93f9b7cdf8ab28da6b364cdc1fafc8670b4dc which attempts to fix the
->>> broken quotarm code.  Seems like we need a testcase for this
->>> functionality or just remove it.  Physically removing the quota file
->>> never seems that useful to me to start with..
->>
->> Is there an approach to verify that a particular quota file inode has
->> been successfully removed?  It seems we have to do this in a test case
->> but am not yet figure out a way, or any thoughts for the test case?
-> 
-> umount the filesystem and check that the field in the superblock
-> pointing to that kind of quota inode is zeroed out would be my
-> suggestion.
+I've not really seen an report for that on the XFS list, could it be
+that you're running into the issue fixed by
 
-Oh yes, after quota remove, the 'u' field of the quota inode will changed from
-u.bmx[0] = [startoff,startblock,blockcount,extentflag] 0:[0,16,1,0] to u = (empty)
-which can be used for the verification, thanks for your suggestion. :)
+ "xfs: Use preallocation for inodes with extsz hints"
 
-
-Cheers,
--Jeff
+(commit aff3a9edb7080f69f07fe76a8bd089b3dfa4cb5d)?
 
 _______________________________________________
 xfs mailing list
