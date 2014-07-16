@@ -1,20 +1,33 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 6B6967FA4
-	for <xfs@oss.sgi.com>; Wed, 16 Jul 2014 12:10:50 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 42A2E8F8066
-	for <xfs@oss.sgi.com>; Wed, 16 Jul 2014 10:10:47 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id YAbLNPGiICrWVTvt for <xfs@oss.sgi.com>;
-	Wed, 16 Jul 2014 10:10:45 -0700 (PDT)
-Message-ID: <53C6B212.9030704@sandeen.net>
-Date: Wed, 16 Jul 2014 12:10:42 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id AF9857FBC
+	for <xfs@oss.sgi.com>; Wed, 16 Jul 2014 12:26:31 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 27954AC001
+	for <xfs@oss.sgi.com>; Wed, 16 Jul 2014 10:26:28 -0700 (PDT)
+Received: from mail-qc0-f169.google.com (mail-qc0-f169.google.com
+	[209.85.216.169]) by cuda.sgi.com with ESMTP id
+	ssYBYm9RWjnjOpyQ (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 16 Jul 2014 10:26:26 -0700 (PDT)
+Received: by mail-qc0-f169.google.com with SMTP id m20so1078952qcx.28
+	for <xfs@oss.sgi.com>; Wed, 16 Jul 2014 10:26:25 -0700 (PDT)
+Received: from mail-qa0-f50.google.com (mail-qa0-f50.google.com
+	[209.85.216.50])
+	by mx.google.com with ESMTPSA id o10sm32547450qah.3.2014.07.16.10.26.23
+	for <xfs@oss.sgi.com>
+	(version=TLSv1 cipher=ECDHE-RSA-RC4-SHA bits=128/128);
+	Wed, 16 Jul 2014 10:26:23 -0700 (PDT)
+Received: by mail-qa0-f50.google.com with SMTP id s7so949219qap.23
+	for <xfs@oss.sgi.com>; Wed, 16 Jul 2014 10:26:23 -0700 (PDT)
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfs: fix uflags detection at xfs_fs_rm_xquota
-References: <53C4F5DB.2060108@oracle.com>
-In-Reply-To: <53C4F5DB.2060108@oracle.com>
+In-Reply-To: <20140716092226.GA23561@infradead.org>
+References: <alpine.DEB.2.00.1407151634250.21336@cobra.newdream.net>
+	<20140716092226.GA23561@infradead.org>
+Date: Wed, 16 Jul 2014 10:26:23 -0700
+Message-ID: <CAPYLRziqpnjHbViaFw2MtXcYKiCDE9wz8qaqiQjAJGDoUbG7cg@mail.gmail.com>
+Subject: Re: v0.80.4 Firefly released
+From: Gregory Farnum <gregory.farnum@dreamhost.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,40 +40,35 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Jeff Liu <jeff.liu@oracle.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: Christoph Hellwig <hch@infradead.org>, Samuel Just <sam.just@inktank.com>
+Cc: "ceph-devel@vger.kernel.org" <ceph-devel@vger.kernel.org>, Sage Weil <sage@inktank.com>, xfs@oss.sgi.com
 
-On 7/15/14, 4:35 AM, Jeff Liu wrote:
-> From: Jie Liu <jeff.liu@oracle.com>
-> 
-> We are intended to check up uflags against FS_PROJ_QUOTA rather than 
-> FS_USER_UQUOTA once more, it looks to me like a typo, but might cause
-> the project quota metadata space can not be removed.
+On Wed, Jul 16, 2014 at 2:22 AM, Christoph Hellwig <hch@infradead.org> wrote:
+> On Tue, Jul 15, 2014 at 04:45:59PM -0700, Sage Weil wrote:
+>> This Firefly point release fixes an potential data corruption problem
+>> when ceph-osd daemons run on top of XFS and service Firefly librbd
+>> clients.  A recently added allocation hint that RBD utilizes triggers
+>> an XFS bug on some kernels (Linux 3.2, and likely others) that leads
+>> to data corruption and deep-scrub errors (and inconsistent PGs).  This
+>> release avoids the situation by disabling the allocation hint until we
+>> can validate which kernels are affected and/or are known to be safe to
+>> use the hint on.
+>
+> I've not really seen an report for that on the XFS list, could it be
+> that you're running into the issue fixed by
+>
+>  "xfs: Use preallocation for inodes with extsz hints"
+>
+> (commit aff3a9edb7080f69f07fe76a8bd089b3dfa4cb5d)?
 
-Ugh, mea culpa.  Thanks for spotting.  :(
+Sam reported the issue we're seeing in "consequences of
+XFS_IOC_FSSETXATTR on non-empty file?", but didn't have it narrowed
+down very far. I think he's trying to get a minimal reproducer and
+identify as much as he can right now, but he's also trying to get out
+the door for a vacation. :)
 
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
-
-Thankfully I don't think anyone uses this interface ;)
-
-> Signed-off-by: Jie Liu <jeff.liu@oracle.com>
-> ---
->  fs/xfs/xfs_quotaops.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/fs/xfs/xfs_quotaops.c b/fs/xfs/xfs_quotaops.c
-> index 4f7aecb..b238027 100644
-> --- a/fs/xfs/xfs_quotaops.c
-> +++ b/fs/xfs/xfs_quotaops.c
-> @@ -123,7 +123,7 @@ xfs_fs_rm_xquota(
->  		flags |= XFS_DQ_USER;
->  	if (uflags & FS_GROUP_QUOTA)
->  		flags |= XFS_DQ_GROUP;
-> -	if (uflags & FS_USER_QUOTA)
-> +	if (uflags & FS_PROJ_QUOTA)
->  		flags |= XFS_DQ_PROJ;
->  
->  	return xfs_qm_scall_trunc_qfiles(mp, flags);
-> 
+But yes, looking at the patch description that sounds about right.
+-Greg
 
 _______________________________________________
 xfs mailing list
