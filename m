@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id DEF297FB3
-	for <xfs@oss.sgi.com>; Tue, 15 Jul 2014 22:56:25 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id C4BB6304039
-	for <xfs@oss.sgi.com>; Tue, 15 Jul 2014 20:56:22 -0700 (PDT)
-Received: from mx3-phx2.redhat.com (mx3-phx2.redhat.com [209.132.183.24]) by
-	cuda.sgi.com with ESMTP id hD5GXb8EuZ8lunJL for
-	<xfs@oss.sgi.com>; Tue, 15 Jul 2014 20:56:20 -0700 (PDT)
-Date: Tue, 15 Jul 2014 23:56:13 -0400 (EDT)
-From: Nathan Scott <nathans@debian.org>
-Message-ID: <709922250.10972745.1405482973400.JavaMail.zimbra@redhat.com>
-In-Reply-To: <369317103.10971454.1405482000035.JavaMail.zimbra@redhat.com>
-References: <53C3FFED.5080301@sandeen.net>
-	<369317103.10971454.1405482000035.JavaMail.zimbra@redhat.com>
-Subject: Re: time for an xfsdump release?
+	by oss.sgi.com (Postfix) with ESMTP id C69497F9E
+	for <xfs@oss.sgi.com>; Wed, 16 Jul 2014 02:11:59 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id B110F304043
+	for <xfs@oss.sgi.com>; Wed, 16 Jul 2014 00:11:56 -0700 (PDT)
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
+	cuda.sgi.com with ESMTP id skQCMGCt7Zru2kZu (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 16 Jul 2014 00:11:55 -0700 (PDT)
+Message-ID: <53C62595.6010702@oracle.com>
+Date: Wed, 16 Jul 2014 15:11:17 +0800
+From: Jeff Liu <jeff.liu@oracle.com>
 MIME-Version: 1.0
-Reply-To: Nathan Scott <nathans@debian.org>
+Subject: Re: [PATCH] xfs: fix uflags detection at xfs_fs_rm_xquota
+References: <53C4F5DB.2060108@oracle.com>
+	<20140715102520.GH30363@infradead.org>
+In-Reply-To: <20140715102520.GH30363@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,52 +29,32 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>, Dave Chinner <david@fromorbit.com>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
 
-
------ Original Message -----
-> ----- Original Message -----
-> > There aren't a lot of changes since v3.1.3, but with the rate of change of
-> > xfsdump (slow), I wonder if it's worth cutting a point release to get these
-> > bugfixes out there:
+On 07/15/2014 18:25 PM, Christoph Hellwig wrote:
+> On Tue, Jul 15, 2014 at 05:35:23PM +0800, Jeff Liu wrote:
+>> From: Jie Liu <jeff.liu@oracle.com>
+>>
+>> We are intended to check up uflags against FS_PROJ_QUOTA rather than 
+>> FS_USER_UQUOTA once more, it looks to me like a typo, but might cause
+>> the project quota metadata space can not be removed.
 > 
-> I've verified and pushed a few Debian packaging updates folks have sent
-> through to the git tree below.  Please include these odds & ends too...
-> 
+> This code was introduced by commit
+> 9da93f9b7cdf8ab28da6b364cdc1fafc8670b4dc which attempts to fix the
+> broken quotarm code.  Seems like we need a testcase for this
+> functionality or just remove it.  Physically removing the quota file
+> never seems that useful to me to start with..
 
-And some similar changes for xfsprogs... thanks.
+Is there an approach to verify that a particular quota file inode has
+been successfully removed?  It seems we have to do this in a test case
+but am not yet figure out a way, or any thoughts for the test case?
 
 
-Changes committed to git://oss.sgi.com/nathans/xfsprogs.git master
+Cheers,
+-Jeff
 
- debian/Makefile  |    2 +-
- debian/changelog |    7 +++++++
- debian/watch     |    3 +++
- 3 files changed, 11 insertions(+), 1 deletion(-)
-
-commit b6ad8545923aaa0bcc6ec7f7d3edea00382ef3a1
-Author: Nathan Scott <nathans@redhat.com>
-Date:   Wed Jul 16 13:50:47 2014 +1000
-
-    xfsprogs: update debian packaging for next release
-    
-    Make a note of each of the Debian bugs resolved in this release,
-    so that they'll be automatically closed during next upload.
-    
-    Signed-off-by: Nathan Scott <nathans@debian.org>
-
-commit 1a05f9188b1a151fa6dcdec61880699d2acf53cd
-Author: Nathan Scott <nathans@redhat.com>
-Date:   Wed Jul 16 13:49:16 2014 +1000
-
-    xfsprogs: add a watch file into the debian packaging
-    
-    Apparently it can improve some Debian tools that check it (e.g. UDD).
-    Resolves Debian bug #748483.
-    
-    Signed-off-by: Nathan Scott <nathans@debian.org>
 
 _______________________________________________
 xfs mailing list
