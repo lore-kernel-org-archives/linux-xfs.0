@@ -1,26 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 1FEA87F9B
-	for <xfs@oss.sgi.com>; Wed, 16 Jul 2014 03:11:12 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id F11C67F3F
+	for <xfs@oss.sgi.com>; Wed, 16 Jul 2014 03:32:47 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 1431C304043
-	for <xfs@oss.sgi.com>; Wed, 16 Jul 2014 01:11:09 -0700 (PDT)
-Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id b2zIgiKo4V4PMLb0 (version=TLSv1 cipher=AES256-SHA
-	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 16 Jul 2014 01:11:08 -0700 (PDT)
-Date: Wed, 16 Jul 2014 01:11:05 -0700
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] logprint: Fix printing of AGF buffers
-Message-ID: <20140716081105.GB29924@infradead.org>
-References: <1405349100-19734-1-git-send-email-jack@suse.cz>
-	<20140715101931.GC30363@infradead.org>
-	<20140715140938.GA1733@quack.suse.cz>
-	<20140715153922.GB5369@infradead.org>
-	<20140716003851.GO22339@dastard>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 8A73DAC003
+	for <xfs@oss.sgi.com>; Wed, 16 Jul 2014 01:32:44 -0700 (PDT)
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
+	cuda.sgi.com with ESMTP id lQ7lc4nqD3ngJTJ5 (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 16 Jul 2014 01:32:43 -0700 (PDT)
+Message-ID: <53C6388C.8000608@oracle.com>
+Date: Wed, 16 Jul 2014 16:32:12 +0800
+From: Jeff Liu <jeff.liu@oracle.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20140716003851.GO22339@dastard>
+Subject: Re: [PATCH] xfs: fix uflags detection at xfs_fs_rm_xquota
+References: <53C4F5DB.2060108@oracle.com>
+	<20140715102520.GH30363@infradead.org>
+	<53C62595.6010702@oracle.com> <20140716071250.GA1461@infradead.org>
+In-Reply-To: <20140716071250.GA1461@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,31 +30,33 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Jan Kara <jack@suse.cz>, xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-On Wed, Jul 16, 2014 at 10:38:51AM +1000, Dave Chinner wrote:
-> I added this:
+
+On 07/16/2014 15:12 PM, Christoph Hellwig wrote:
+> On Wed, Jul 16, 2014 at 03:11:17PM +0800, Jeff Liu wrote:
+>>> This code was introduced by commit
+>>> 9da93f9b7cdf8ab28da6b364cdc1fafc8670b4dc which attempts to fix the
+>>> broken quotarm code.  Seems like we need a testcase for this
+>>> functionality or just remove it.  Physically removing the quota file
+>>> never seems that useful to me to start with..
+>>
+>> Is there an approach to verify that a particular quota file inode has
+>> been successfully removed?  It seems we have to do this in a test case
+>> but am not yet figure out a way, or any thoughts for the test case?
 > 
-> 	/*
-> 	 * The addition of spare space and the non-logged CRC format
-> 	 * fields to the AGF mean that the size that is logged is almost
-> 	 * always going to be smaller than the structure itself. Hence
-> 	 * we need to make sure that the buffer contains all the data we
-> 	 * want to print rather than just check against the structure
-> 	 * size.
-> 	 */
-> 
-> Cheers,
+> umount the filesystem and check that the field in the superblock
+> pointing to that kind of quota inode is zeroed out would be my
+> suggestion.
 
-I'd prefer to mention v4 filesystems as well:
+Oh yes, after quota remove, the 'u' field of the quota inode will changed from
+u.bmx[0] = [startoff,startblock,blockcount,extentflag] 0:[0,16,1,0] to u = (empty)
+which can be used for the verification, thanks for your suggestion. :)
 
-	/*
-	 * v4 filesystems only contain the fields before the uuid, and
-	 * even v5 filesystems don't usually log any field beneath it.
-	 */
 
-note that the AGI case also needs the same treatment.
+Cheers,
+-Jeff
 
 _______________________________________________
 xfs mailing list
