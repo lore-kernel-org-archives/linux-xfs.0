@@ -1,24 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 52E987FD3
-	for <xfs@oss.sgi.com>; Wed, 16 Jul 2014 17:31:58 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 349EF8F8035
-	for <xfs@oss.sgi.com>; Wed, 16 Jul 2014 15:31:54 -0700 (PDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id A30337FDF
+	for <xfs@oss.sgi.com>; Wed, 16 Jul 2014 18:17:32 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 82BC9304039
+	for <xfs@oss.sgi.com>; Wed, 16 Jul 2014 16:17:29 -0700 (PDT)
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	j2KLA0VCzVgKzCFr for <xfs@oss.sgi.com>;
-	Wed, 16 Jul 2014 15:31:52 -0700 (PDT)
-Date: Thu, 17 Jul 2014 08:31:50 +1000
+	88GC1mG9fsCmNk01 for <xfs@oss.sgi.com>;
+	Wed, 16 Jul 2014 16:17:27 -0700 (PDT)
+Date: Thu, 17 Jul 2014 09:17:25 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: v0.80.4 Firefly released
-Message-ID: <20140716223150.GE4453@dastard>
-References: <alpine.DEB.2.00.1407151634250.21336@cobra.newdream.net>
-	<20140716092226.GA23561@infradead.org>
-	<CAPYLRziqpnjHbViaFw2MtXcYKiCDE9wz8qaqiQjAJGDoUbG7cg@mail.gmail.com>
+Subject: Re: [PATCH] logprint: Fix printing of AGF buffers
+Message-ID: <20140716231725.GF4453@dastard>
+References: <1405349100-19734-1-git-send-email-jack@suse.cz>
+	<20140715101931.GC30363@infradead.org>
+	<20140715140938.GA1733@quack.suse.cz>
+	<20140715153922.GB5369@infradead.org>
+	<20140716003851.GO22339@dastard>
+	<20140716081105.GB29924@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <CAPYLRziqpnjHbViaFw2MtXcYKiCDE9wz8qaqiQjAJGDoUbG7cg@mail.gmail.com>
+In-Reply-To: <20140716081105.GB29924@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,42 +34,58 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Gregory Farnum <gregory.farnum@dreamhost.com>
-Cc: Christoph Hellwig <hch@infradead.org>, "ceph-devel@vger.kernel.org" <ceph-devel@vger.kernel.org>, Sage Weil <sage@inktank.com>, Samuel Just <sam.just@inktank.com>, xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Jan Kara <jack@suse.cz>, xfs@oss.sgi.com
 
-On Wed, Jul 16, 2014 at 10:26:23AM -0700, Gregory Farnum wrote:
-> On Wed, Jul 16, 2014 at 2:22 AM, Christoph Hellwig <hch@infradead.org> wrote:
-> > On Tue, Jul 15, 2014 at 04:45:59PM -0700, Sage Weil wrote:
-> >> This Firefly point release fixes an potential data corruption problem
-> >> when ceph-osd daemons run on top of XFS and service Firefly librbd
-> >> clients.  A recently added allocation hint that RBD utilizes triggers
-> >> an XFS bug on some kernels (Linux 3.2, and likely others) that leads
-> >> to data corruption and deep-scrub errors (and inconsistent PGs).  This
-> >> release avoids the situation by disabling the allocation hint until we
-> >> can validate which kernels are affected and/or are known to be safe to
-> >> use the hint on.
-> >
-> > I've not really seen an report for that on the XFS list, could it be
-> > that you're running into the issue fixed by
-> >
-> >  "xfs: Use preallocation for inodes with extsz hints"
-> >
-> > (commit aff3a9edb7080f69f07fe76a8bd089b3dfa4cb5d)?
+On Wed, Jul 16, 2014 at 01:11:05AM -0700, Christoph Hellwig wrote:
+> On Wed, Jul 16, 2014 at 10:38:51AM +1000, Dave Chinner wrote:
+> > I added this:
+> > 
+> > 	/*
+> > 	 * The addition of spare space and the non-logged CRC format
+> > 	 * fields to the AGF mean that the size that is logged is almost
+> > 	 * always going to be smaller than the structure itself. Hence
+> > 	 * we need to make sure that the buffer contains all the data we
+> > 	 * want to print rather than just check against the structure
+> > 	 * size.
+> > 	 */
+> > 
+> > Cheers,
 > 
-> Sam reported the issue we're seeing in "consequences of
-> XFS_IOC_FSSETXATTR on non-empty file?",
+> I'd prefer to mention v4 filesystems as well:
+> 
+> 	/*
+> 	 * v4 filesystems only contain the fields before the uuid, and
+> 	 * even v5 filesystems don't usually log any field beneath it.
+> 	 */
 
-Assuming you've created an extent size hint with a file with delayed
-allocation on it and no blocks, then that's more than likely the
-same issue. The above commit uses preallocation to allocate
-unwritten extents rather than delayed allocation for files with
-extent size hints because delayed allocation doesn't write zeros
-over ranges in the allocated extents that don't have dirty data over
-them.
+It actually has nothing to do with v4 or v5 filesystems - it's to do
+with the fact that we do partial buffer logging but logprint is
+assuming the structure is always logging as a whole.  There's
+mistakes like this all through logprint - we whack them like this
+with a big stick (i.e. refuse to parse the structure) when they are
+found.
 
-Moral of the story: any time you get what appears to be data
-corruption in the underlying data store, you should report it to the
-relevant filesystem list rather than try to work around it....
+Did you notice the way that log_print_all.c handled these issues?
+For the AGI, it simply looks at the length of the region and sizes
+the output accordingly. And for the AGF, it just ignores the size of
+the region and assumes that it captured everything that is to be
+printed.
+
+IOWs, we've played whack-a-mole on this again while ignoring the
+fundamental issues ithat still remain:
+
+	- that logprint has a lot of assumptions that simply aren't
+	  true; and
+	- that logprint simply does not handle split region
+	  continuations like the kernel recovery code does.
+
+Both of these things lead to having to handle these strange "out of
+space" cases in multiple places, and simply not handling them in
+places that actually need to.
+
+These are just more reasons why logprint - as it says itself in a
+couple of comments - needs a complete rewrite.
 
 Cheers,
 
