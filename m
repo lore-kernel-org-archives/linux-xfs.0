@@ -1,19 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 134857FA1
-	for <xfs@oss.sgi.com>; Thu, 17 Jul 2014 09:13:31 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 0D750304067
-	for <xfs@oss.sgi.com>; Thu, 17 Jul 2014 07:13:30 -0700 (PDT)
-Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id LcUqCo1XHGKHaoWA (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 17 Jul 2014 07:13:26 -0700 (PDT)
-Message-ID: <53C7DA01.7060703@oracle.com>
-Date: Thu, 17 Jul 2014 22:13:21 +0800
-From: Jeff Liu <jeff.liu@oracle.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 450C67F86
+	for <xfs@oss.sgi.com>; Thu, 17 Jul 2014 18:10:58 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 05F148F8039
+	for <xfs@oss.sgi.com>; Thu, 17 Jul 2014 16:10:54 -0700 (PDT)
+Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
+	[150.101.137.129]) by cuda.sgi.com with ESMTP id
+	bw7RRMydBI68mySY for <xfs@oss.sgi.com>;
+	Thu, 17 Jul 2014 16:10:52 -0700 (PDT)
+Received: from dave by dastard with local (Exim 4.80)
+	(envelope-from <david@fromorbit.com>) id 1X7uoc-00042s-G1
+	for xfs@oss.sgi.com; Fri, 18 Jul 2014 09:10:18 +1000
+Date: Fri, 18 Jul 2014 09:10:18 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: [ANNOUNCE] xfsdump v3.1.4 released
+Message-ID: <20140717231018.GH4453@dastard>
 MIME-Version: 1.0
-Subject: [PATCH v2] xfs/007: add project quota Q_XQUOTARM test
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,80 +25,94 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============9078954701933117069=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: fstests@vger.kernel.org
-Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
-From: Jie Liu <jeff.liu@oracle.com>
 
-Add test for project quota Q_XQUOTARM operations, update the
-golden output file to match the new test output.
+--===============9078954701933117069==
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="H+4ONPRPur6+Ovig"
+Content-Disposition: inline
 
-Signed-off-by: Jie Liu <jeff.liu@oracle.com>
----
- tests/xfs/007     | 24 ++++++++++++++++++++++++
- tests/xfs/007.out |  9 +++++++++
- 2 files changed, 33 insertions(+)
 
-diff --git a/tests/xfs/007 b/tests/xfs/007
-index 8cc5bf3..04c20e3 100755
---- a/tests/xfs/007
-+++ b/tests/xfs/007
-@@ -74,6 +74,30 @@ echo "*** Usage after quotarm ***"
- xfs_db -c "inode $UQUOTINO" -c "p core.nblocks" $SCRATCH_DEV
- xfs_db -c "inode $GQUOTINO" -c "p core.nblocks" $SCRATCH_DEV
- 
-+_qmount_option "uquota,pquota"
-+_qmount
-+
-+echo "*** umount"
-+umount $SCRATCH_MNT
-+
-+UQUOTINO=`xfs_db -c "sb 0" -c "p" $SCRATCH_DEV | grep uquotino | awk '{print $NF}'`
-+PQUOTINO=`xfs_db -c "sb 0" -c "p" $SCRATCH_DEV | grep gquotino | awk '{print $NF}'`
-+
-+echo "*** Usage before quotarm ***"
-+xfs_db -c "inode $UQUOTINO" -c "p core.nblocks" $SCRATCH_DEV
-+xfs_db -c "inode $PQUOTINO" -c "p core.nblocks" $SCRATCH_DEV
-+
-+_qmount
-+echo "*** turn off user and project quotas"
-+xfs_quota -x -c 'off -up' $SCRATCH_MNT
-+xfs_quota -x -c "remove -up" $SCRATCH_MNT
-+echo "*** umount"
-+umount $SCRATCH_MNT
-+
-+echo "*** Usage after quotarm ***"
-+xfs_db -c "inode $UQUOTINO" -c "p core.nblocks" $SCRATCH_DEV
-+xfs_db -c "inode $PQUOTINO" -c "p core.nblocks" $SCRATCH_DEV
-+
- # success, all done
- status=0
- exit
-diff --git a/tests/xfs/007.out b/tests/xfs/007.out
-index 0fc17ae..7c5bff5 100644
---- a/tests/xfs/007.out
-+++ b/tests/xfs/007.out
-@@ -8,3 +8,12 @@ core.nblocks = 1
- *** Usage after quotarm ***
- core.nblocks = 0
- core.nblocks = 0
-+*** umount
-+*** Usage before quotarm ***
-+core.nblocks = 1
-+core.nblocks = 1
-+*** turn off user and project quotas
-+*** umount
-+*** Usage after quotarm ***
-+core.nblocks = 0
-+core.nblocks = 0
--- 
-1.8.3.2
+--H+4ONPRPur6+Ovig
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+
+Hello!
+
+xfsdump v3.1.4 has just been released. This is a bug fix release
+that contains fixes accumulated over the past year since the last
+release.
+
+The source code can be accessed via git using this URL:
+
+        git://oss.sgi.com/xfs/cmds/xfsdump.git
+
+A signed gzipped-tar archive of the source code is available here:
+
+        ftp://oss.sgi.com/projects/xfs/cmd_tars/xfsdump-3.1.4.tar.gz
+        ftp://oss.sgi.com/projects/xfs/cmd_tars/xfsdump-3.1.4.tar.gz.sign
+
+The archive is signed with my gpg key (the same one that this
+release announcement is signed with).
+
+Problems, issues, questions and general discussion about the release
+should be directed to the XFS mailing list (xfs@oss.sgi.com).
+
+A summary of the changes during development of this release (taken
+=66rom doc/CHANGES) is as follows:
+
+	- fix partial region segfault and debug code (Eric Sandeen)
+	- dump wholly sparse files correctly (Eric Sandeen)
+	- restore capabilities correctly
+	- memory leak fixes (Boris Ranto)
+	- sys_getdents modernisation (Kyle McMartin)
+	- Error message fixes (Iustin Pop)
+	- Updated polish translation (Jakub Bogusz)
+	- debian package build updates (Nathan Scott)
+
+--=20
+Dave Chinner
+david@fromorbit.com
+
+--H+4ONPRPur6+Ovig
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
+
+iQIcBAEBAgAGBQJTyFfZAAoJEK3oKUf0dfod1vwP/3Gfb3oUyCljMSTeFrRacJ5b
+r40+Z8n8sNGIJbFVspbQYsTPJAIgh50wQZtcDGo4Y9iRPYWTQmukJ0GHajh6ncmz
+AAk31dKZVpgasfHNe/wDRhOtaA9Zh7K3yafs59Ie9wOuOWs3uI7+len9J+79PPrF
+a3UqjQ0S9I10J1gF5KGsQJCA5zvSoQYuFSyKmWxbHqDCQlXbo1sSFkxHTfNoAaWO
+/jCXQBrYTpVNpG9r/s7XQ0MDx7TAecGu2g6V3nX9Fk3Gpz1zlIk4NFtLWcCRnGhr
+bgSYUwLhXW/UPSoz/qRk/4xZAWsrZtKxR0K+hpTfD4Ot743ArHHicRlLR/4axek9
+JvN76zWonIqJiEJLxRHer45RXtZUWi66SLmv/GiwO/rfxMuiatkFdSU2eP/JknbY
+vbPtOlXMEqhVu6Tm9VhzNoaOMf1AQ8m7moUvMwhfsJWIJFiaQZEmWs4EWR+9XmT8
+1cEZqzDP1FmG5tE49gtzvEMzetwW0jXa4805U/Ni6qhvEb8DKXoE4F0ORmvA/ITi
+DHcs3YUGjASF5rvrDdU14Q6KIQOHVxjTFbquGVPZybEgzVIb7UGLYgBLS/ee9Uis
+er/XNmzzY55ExYTC55uKA4EVPkIIHFlDq/83Lga1FXhX9TWAEo3HzUljBle5XO1E
+zVyuOp+0KQLDD9BOIIeM
+=SDGv
+-----END PGP SIGNATURE-----
+
+--H+4ONPRPur6+Ovig--
+
+
+--===============9078954701933117069==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============9078954701933117069==--
