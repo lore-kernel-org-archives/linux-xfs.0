@@ -1,28 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 7F98D7FC5
-	for <xfs@oss.sgi.com>; Thu, 17 Jul 2014 03:39:10 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id F35B5AC003
-	for <xfs@oss.sgi.com>; Thu, 17 Jul 2014 01:39:09 -0700 (PDT)
-Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id Yabyodz2qwy2mSKq (version=TLSv1 cipher=AES256-SHA
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id C5A577FCD
+	for <xfs@oss.sgi.com>; Thu, 17 Jul 2014 04:04:59 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id B5CE18F806F
+	for <xfs@oss.sgi.com>; Thu, 17 Jul 2014 02:04:56 -0700 (PDT)
+Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
+	ESMTP id HWzO8sDDw9Zz07TQ (version=TLSv1 cipher=AES256-SHA
 	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 17 Jul 2014 01:39:07 -0700 (PDT)
-Date: Thu, 17 Jul 2014 10:39:05 +0200
-From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH] logprint: Fix printing of AGF buffers
-Message-ID: <20140717083905.GB1649@quack.suse.cz>
-References: <1405349100-19734-1-git-send-email-jack@suse.cz>
-	<20140715101931.GC30363@infradead.org>
-	<20140715140938.GA1733@quack.suse.cz>
-	<20140715153922.GB5369@infradead.org>
-	<20140716003851.GO22339@dastard>
-	<20140716081105.GB29924@infradead.org>
-	<20140716231725.GF4453@dastard>
+	Thu, 17 Jul 2014 02:04:51 -0700 (PDT)
+Received: from hch by bombadil.infradead.org with local (Exim 4.80.1 #2 (Red
+	Hat Linux)) id 1X7hcQ-0002dA-SR
+	for xfs@oss.sgi.com; Thu, 17 Jul 2014 09:04:50 +0000
+Date: Thu, 17 Jul 2014 02:04:50 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: Error setting extent size on a directory
+Message-ID: <20140717090450.GA27425@infradead.org>
+References: <20140714070913.GA29541@teal.hq.k1024.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20140716231725.GF4453@dastard>
+In-Reply-To: <20140714070913.GA29541@teal.hq.k1024.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,69 +32,33 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Jan Kara <jack@suse.cz>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Thu 17-07-14 09:17:25, Dave Chinner wrote:
-> On Wed, Jul 16, 2014 at 01:11:05AM -0700, Christoph Hellwig wrote:
-> > On Wed, Jul 16, 2014 at 10:38:51AM +1000, Dave Chinner wrote:
-> > > I added this:
-> > > 
-> > > 	/*
-> > > 	 * The addition of spare space and the non-logged CRC format
-> > > 	 * fields to the AGF mean that the size that is logged is almost
-> > > 	 * always going to be smaller than the structure itself. Hence
-> > > 	 * we need to make sure that the buffer contains all the data we
-> > > 	 * want to print rather than just check against the structure
-> > > 	 * size.
-> > > 	 */
-> > > 
-> > > Cheers,
-> > 
-> > I'd prefer to mention v4 filesystems as well:
-> > 
-> > 	/*
-> > 	 * v4 filesystems only contain the fields before the uuid, and
-> > 	 * even v5 filesystems don't usually log any field beneath it.
-> > 	 */
-> 
-> It actually has nothing to do with v4 or v5 filesystems - it's to do
-> with the fact that we do partial buffer logging but logprint is
-> assuming the structure is always logging as a whole.  There's
-> mistakes like this all through logprint - we whack them like this
-> with a big stick (i.e. refuse to parse the structure) when they are
-> found.
-> 
-> Did you notice the way that log_print_all.c handled these issues?
-> For the AGI, it simply looks at the length of the region and sizes
-> the output accordingly. And for the AGF, it just ignores the size of
-> the region and assumes that it captured everything that is to be
-> printed.
-> 
-> IOWs, we've played whack-a-mole on this again while ignoring the
-> fundamental issues ithat still remain:
-> 
-> 	- that logprint has a lot of assumptions that simply aren't
-> 	  true; and
-> 	- that logprint simply does not handle split region
-> 	  continuations like the kernel recovery code does.
-> 
-> Both of these things lead to having to handle these strange "out of
-> space" cases in multiple places, and simply not handling them in
-> places that actually need to.
-> 
-> These are just more reasons why logprint - as it says itself in a
-> couple of comments - needs a complete rewrite.
-  Yeah, I've noticed that logprint definitely doesn't handle all possible
-cases and the code is ... well, organic :). OTOH it worked for me (except
-for this bug) when I needed so for a debug tool like that it seemed good
-enough. I don't feel like rewriting it from scratch (at least in near
-future) but if someone can find time for that, it would be surely welcome.
+On Mon, Jul 14, 2014 at 09:09:13AM +0200, Iustin Pop wrote:
+> The xfsctl man page says that an extent size should be settable any time
+> on a directory, so why would this fail? Looking at the kernel sources,
+> I see a number of possible cases where EINVAL is returned:
 
-								Honza
--- 
-Jan Kara <jack@suse.cz>
-SUSE Labs, CR
+And no special casing for directories at all..
+
+> So to me this reads as if the di_nextents check can also fail for a
+> directory which has extents, contradicting the man page. Which one needs
+> to be updated?
+> 
+> The question arises to if the extent size also applies, then, to
+> allocating extents for a directory - instead of just being inherited for
+> files (the man page says no).
+
+We're not using the extent size hint on the directory itself.  So to
+me it seems we just not check for already allocated blocks if we're
+setting the extent size on a directory, but instead maybe make sure
+the directory.  What's also a little odd is that we allow setting
+the extent size on a directory even if the extent size inherit bit is
+not set, which doesn't make much sense to me.
+
+Do you want to prepare a patch to remove the check for directories?
+At testcase for xfstests that ensures this works also would be highly
+useful..
 
 _______________________________________________
 xfs mailing list
