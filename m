@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id C5A577FCD
-	for <xfs@oss.sgi.com>; Thu, 17 Jul 2014 04:04:59 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id B5CE18F806F
-	for <xfs@oss.sgi.com>; Thu, 17 Jul 2014 02:04:56 -0700 (PDT)
-Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id HWzO8sDDw9Zz07TQ (version=TLSv1 cipher=AES256-SHA
-	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 17 Jul 2014 02:04:51 -0700 (PDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 8A6A97FD5
+	for <xfs@oss.sgi.com>; Thu, 17 Jul 2014 04:05:52 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 7A8FA30404E
+	for <xfs@oss.sgi.com>; Thu, 17 Jul 2014 02:05:52 -0700 (PDT)
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.9])
+	by cuda.sgi.com with ESMTP id gy4Mw9sIKKEz6ZuH (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 17 Jul 2014 02:05:50 -0700 (PDT)
 Received: from hch by bombadil.infradead.org with local (Exim 4.80.1 #2 (Red
-	Hat Linux)) id 1X7hcQ-0002dA-SR
-	for xfs@oss.sgi.com; Thu, 17 Jul 2014 09:04:50 +0000
-Date: Thu, 17 Jul 2014 02:04:50 -0700
+	Hat Linux)) id 1X7hdO-000498-8Z
+	for xfs@oss.sgi.com; Thu, 17 Jul 2014 09:05:50 +0000
+Date: Thu, 17 Jul 2014 02:05:50 -0700
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: Error setting extent size on a directory
-Message-ID: <20140717090450.GA27425@infradead.org>
-References: <20140714070913.GA29541@teal.hq.k1024.org>
+Subject: Re: xfsrestore -t and default location of housekeeping dir
+Message-ID: <20140717090550.GB27425@infradead.org>
+References: <20140714071935.GB29541@teal.hq.k1024.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20140714070913.GA29541@teal.hq.k1024.org>
+In-Reply-To: <20140714071935.GB29541@teal.hq.k1024.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,31 +34,21 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-On Mon, Jul 14, 2014 at 09:09:13AM +0200, Iustin Pop wrote:
-> The xfsctl man page says that an extent size should be settable any time
-> on a directory, so why would this fail? Looking at the kernel sources,
-> I see a number of possible cases where EINVAL is returned:
-
-And no special casing for directories at all..
-
-> So to me this reads as if the di_nextents check can also fail for a
-> directory which has extents, contradicting the man page. Which one needs
-> to be updated?
+On Mon, Jul 14, 2014 at 09:19:35AM +0200, Iustin Pop wrote:
+> Hi,
 > 
-> The question arises to if the extent size also applies, then, to
-> allocating extents for a directory - instead of just being inherited for
-> files (the man page says no).
+> While testing a just-made dump with via 'xfsrestore -t', I learned that
+> the default housekeepingdir path is still under the original filesystem.
+> My xfsrestore therefore failed, since that filesystem was read-only.
+> 
+> Since '-t' should denote a pure no-op operation, with no changes, would
+> it make more sense to default the housekeeping location to a temporary
+> location if it is used?
 
-We're not using the extent size hint on the directory itself.  So to
-me it seems we just not check for already allocated blocks if we're
-setting the extent size on a directory, but instead maybe make sure
-the directory.  What's also a little odd is that we allow setting
-the extent size on a directory even if the extent size inherit bit is
-not set, which doesn't make much sense to me.
-
-Do you want to prepare a patch to remove the check for directories?
-At testcase for xfstests that ensures this works also would be highly
-useful..
+It seems to me like -t shouldn't recreate the files in the housekeeping
+directory at all.  I did take a brief look at the code and is a huge
+mess that seems to recreate files unconditionally, so I don't really
+have a good solution for this yet.
 
 _______________________________________________
 xfs mailing list
