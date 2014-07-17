@@ -1,27 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id A48087FEC
-	for <xfs@oss.sgi.com>; Wed, 16 Jul 2014 18:41:42 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 3F4D1AC001
-	for <xfs@oss.sgi.com>; Wed, 16 Jul 2014 16:41:39 -0700 (PDT)
-Received: from mail-qc0-f178.google.com (mail-qc0-f178.google.com
-	[209.85.216.178]) by cuda.sgi.com with ESMTP id
-	16KVKMO2o4LMi9pi (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 16 Jul 2014 16:41:33 -0700 (PDT)
-Received: by mail-qc0-f178.google.com with SMTP id x3so1492709qcv.9
-	for <xfs@oss.sgi.com>; Wed, 16 Jul 2014 16:41:32 -0700 (PDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 45A817FAA
+	for <xfs@oss.sgi.com>; Wed, 16 Jul 2014 21:31:11 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 35E6D304048
+	for <xfs@oss.sgi.com>; Wed, 16 Jul 2014 19:31:08 -0700 (PDT)
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
+	cuda.sgi.com with ESMTP id TgQnhqx9ejXW8awN (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 16 Jul 2014 19:31:07 -0700 (PDT)
+Message-ID: <53C73562.3010005@oracle.com>
+Date: Thu, 17 Jul 2014 10:30:58 +0800
+From: Jeff Liu <jeff.liu@oracle.com>
 MIME-Version: 1.0
-In-Reply-To: <20140716223150.GE4453@dastard>
-References: <alpine.DEB.2.00.1407151634250.21336@cobra.newdream.net>
-	<20140716092226.GA23561@infradead.org>
-	<CAPYLRziqpnjHbViaFw2MtXcYKiCDE9wz8qaqiQjAJGDoUbG7cg@mail.gmail.com>
-	<20140716223150.GE4453@dastard>
-Date: Wed, 16 Jul 2014 16:41:32 -0700
-Message-ID: <CA+4uBUYTu9LsgfuBvz7_S5QYb3ySwOdfPcvDTK-Ym6usEQ=0-g@mail.gmail.com>
-Subject: Re: v0.80.4 Firefly released
-From: Samuel Just <sam.just@inktank.com>
+Subject: [PATCH] xfs/007: add project quota Q_XQUOTRM test
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,68 +26,85 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Gregory Farnum <gregory.farnum@dreamhost.com>, xfs@oss.sgi.com, "ceph-devel@vger.kernel.org" <ceph-devel@vger.kernel.org>, Sage Weil <sage@inktank.com>
+To: fstests@vger.kernel.org
+Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-[Apologies for the repost, attachment was too big]
+From: Jie Liu <jeff.liu@oracle.com>
 
-Sorry for the delay.  I've been trying to put together a simpler
-reproducer since no one wants to debug a filesystem based on rbd
-symptoms :).  It doesn't appear to be related to using extsize on a
-non-empty file. The linked archive below has a reproducer
-(xfs_extsize_reproducer.cc), an input op sequence (trimmed-ops.in),
-the resulting file and what it should be (test, test.correct), and a
-summary (notes.txt).
+Add test for project quota Q_XQUOTRM operations, this patch also
+update the golden output file to match the new output.
 
-http://filedump.ceph.com/samuelj/reproducer.tgz
+Signed-off-by: Jie Liu <jeff.liu@oracle.com>
+---
+ tests/xfs/007     | 15 ++++++++++-----
+ tests/xfs/007.out |  4 +++-
+ 2 files changed, 13 insertions(+), 6 deletions(-)
 
-I think this probably is fixed in the commit mentioned above (xfs: Use
-preallocation for inodes with extsz hints).
-
-Thanks!
--Sam
-
-On Wed, Jul 16, 2014 at 3:31 PM, Dave Chinner <david@fromorbit.com> wrote:
-> On Wed, Jul 16, 2014 at 10:26:23AM -0700, Gregory Farnum wrote:
->> On Wed, Jul 16, 2014 at 2:22 AM, Christoph Hellwig <hch@infradead.org> wrote:
->> > On Tue, Jul 15, 2014 at 04:45:59PM -0700, Sage Weil wrote:
->> >> This Firefly point release fixes an potential data corruption problem
->> >> when ceph-osd daemons run on top of XFS and service Firefly librbd
->> >> clients.  A recently added allocation hint that RBD utilizes triggers
->> >> an XFS bug on some kernels (Linux 3.2, and likely others) that leads
->> >> to data corruption and deep-scrub errors (and inconsistent PGs).  This
->> >> release avoids the situation by disabling the allocation hint until we
->> >> can validate which kernels are affected and/or are known to be safe to
->> >> use the hint on.
->> >
->> > I've not really seen an report for that on the XFS list, could it be
->> > that you're running into the issue fixed by
->> >
->> >  "xfs: Use preallocation for inodes with extsz hints"
->> >
->> > (commit aff3a9edb7080f69f07fe76a8bd089b3dfa4cb5d)?
->>
->> Sam reported the issue we're seeing in "consequences of
->> XFS_IOC_FSSETXATTR on non-empty file?",
->
-> Assuming you've created an extent size hint with a file with delayed
-> allocation on it and no blocks, then that's more than likely the
-> same issue. The above commit uses preallocation to allocate
-> unwritten extents rather than delayed allocation for files with
-> extent size hints because delayed allocation doesn't write zeros
-> over ranges in the allocated extents that don't have dirty data over
-> them.
->
-> Moral of the story: any time you get what appears to be data
-> corruption in the underlying data store, you should report it to the
-> relevant filesystem list rather than try to work around it....
->
-> Cheers,
->
-> Dave.
-> --
-> Dave Chinner
-> david@fromorbit.com
+diff --git a/tests/xfs/007 b/tests/xfs/007
+index 8cc5bf3..ca05a3c 100755
+--- a/tests/xfs/007
++++ b/tests/xfs/007
+@@ -47,10 +47,12 @@ _supported_os Linux Irix
+ 
+ _require_scratch
+ _require_xfs_quota
++_require_xfs_mkfs_crc
++_require_xfs_crc
+ 
+-_scratch_mkfs_xfs >/dev/null 2>&1
++_scratch_mkfs_xfs -m crc=1 >/dev/null 2>&1
+ 
+-_qmount_option "uquota,gquota"
++_qmount_option "uquota,gquota,pquota"
+ _qmount
+ 
+ echo "*** umount"
+@@ -58,21 +60,24 @@ umount $SCRATCH_MNT
+ 
+ UQUOTINO=`xfs_db -c "sb 0" -c "p" $SCRATCH_DEV | grep uquotino | awk '{print $NF}'`
+ GQUOTINO=`xfs_db -c "sb 0" -c "p" $SCRATCH_DEV | grep gquotino | awk '{print $NF}'` 
++PQUOTINO=`xfs_db -c "sb 0" -c "p" $SCRATCH_DEV | grep pquotino | awk '{print $NF}'`
+ 
+ echo "*** Usage before quotarm ***"
+ xfs_db -c "inode $UQUOTINO" -c "p core.nblocks" $SCRATCH_DEV
+ xfs_db -c "inode $GQUOTINO" -c "p core.nblocks" $SCRATCH_DEV
++xfs_db -c "inode $PQUOTINO" -c "p core.nblocks" $SCRATCH_DEV
+ 
+ _qmount
+-echo "*** turn off user and group quotas"
+-xfs_quota -x -c 'off -ug' $SCRATCH_MNT
+-xfs_quota -x -c "remove -ug" $SCRATCH_MNT
++echo "*** turn off user/group/project quotas"
++xfs_quota -x -c 'off -ugp' $SCRATCH_MNT
++xfs_quota -x -c "remove -ugp" $SCRATCH_MNT
+ echo "*** umount"
+ umount $SCRATCH_MNT
+ 
+ echo "*** Usage after quotarm ***"
+ xfs_db -c "inode $UQUOTINO" -c "p core.nblocks" $SCRATCH_DEV
+ xfs_db -c "inode $GQUOTINO" -c "p core.nblocks" $SCRATCH_DEV
++xfs_db -c "inode $PQUOTINO" -c "p core.nblocks" $SCRATCH_DEV
+ 
+ # success, all done
+ status=0
+diff --git a/tests/xfs/007.out b/tests/xfs/007.out
+index 0fc17ae..f370e5f 100644
+--- a/tests/xfs/007.out
++++ b/tests/xfs/007.out
+@@ -3,8 +3,10 @@ QA output created by 007
+ *** Usage before quotarm ***
+ core.nblocks = 1
+ core.nblocks = 1
+-*** turn off user and group quotas
++core.nblocks = 1
++*** turn off user/group/project quotas
+ *** umount
+ *** Usage after quotarm ***
+ core.nblocks = 0
+ core.nblocks = 0
++core.nblocks = 0
+-- 
+1.8.3.2
 
 _______________________________________________
 xfs mailing list
