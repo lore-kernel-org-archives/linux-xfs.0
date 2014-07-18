@@ -1,20 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id A0B967F8E
-	for <xfs@oss.sgi.com>; Thu, 17 Jul 2014 18:37:55 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 163368F8039
-	for <xfs@oss.sgi.com>; Thu, 17 Jul 2014 16:37:54 -0700 (PDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 8DD327F86
+	for <xfs@oss.sgi.com>; Thu, 17 Jul 2014 19:30:19 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 7B3CD30404E
+	for <xfs@oss.sgi.com>; Thu, 17 Jul 2014 17:30:16 -0700 (PDT)
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	LPCgefiGwriw1ZGL for <xfs@oss.sgi.com>;
-	Thu, 17 Jul 2014 16:37:52 -0700 (PDT)
-Date: Fri, 18 Jul 2014 09:37:50 +1000
+	dcNdmgp5MwjtXAca for <xfs@oss.sgi.com>;
+	Thu, 17 Jul 2014 17:30:14 -0700 (PDT)
+Date: Fri, 18 Jul 2014 10:29:31 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [GIT PULL] xfs: fixes for 3.16-rc5
-Message-ID: <20140717233750.GE20518@dastard>
+Subject: Re: [PATCH] logprint: Fix printing of AGF buffers
+Message-ID: <20140718002931.GI4453@dastard>
+References: <1405349100-19734-1-git-send-email-jack@suse.cz>
+	<20140715101931.GC30363@infradead.org>
+	<20140715140938.GA1733@quack.suse.cz>
+	<20140715153922.GB5369@infradead.org>
+	<20140716003851.GO22339@dastard>
+	<20140716081105.GB29924@infradead.org>
+	<20140716231725.GF4453@dastard>
+	<20140717083905.GB1649@quack.suse.cz>
 MIME-Version: 1.0
 Content-Disposition: inline
+In-Reply-To: <20140717083905.GB1649@quack.suse.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,54 +36,46 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: torvalds@linux-foundation.org
-Cc: akpm@linux-foundation.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: Jan Kara <jack@suse.cz>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
-Hi Linus,
+On Thu, Jul 17, 2014 at 10:39:05AM +0200, Jan Kara wrote:
+> On Thu 17-07-14 09:17:25, Dave Chinner wrote:
+> > IOWs, we've played whack-a-mole on this again while ignoring the
+> > fundamental issues ithat still remain:
+> > 
+> > 	- that logprint has a lot of assumptions that simply aren't
+> > 	  true; and
+> > 	- that logprint simply does not handle split region
+> > 	  continuations like the kernel recovery code does.
+> > 
+> > Both of these things lead to having to handle these strange "out of
+> > space" cases in multiple places, and simply not handling them in
+> > places that actually need to.
+> > 
+> > These are just more reasons why logprint - as it says itself in a
+> > couple of comments - needs a complete rewrite.
+>   Yeah, I've noticed that logprint definitely doesn't handle all possible
+> cases and the code is ... well, organic :).
 
-Can you please pull the updates listed below? These are regression
-fixes for issues recently introduced - the change in the stack
-switch location is fairly important, so I've held off sending this
-update until I was sure that it still addresses the stack usage
-problem the original solved. So while the commits in the xfs tree
-are recent, it has been under tested for several weeks now.
+That's a very polite way of putting it ;)
 
--Dave.
+> OTOH it worked for me (except
+> for this bug) when I needed so for a debug tool like that it seemed good
+> enough. I don't feel like rewriting it from scratch (at least in near
+> future) but if someone can find time for that, it would be surely welcome.
 
-The following changes since commit a497c3ba1d97fc69c1e78e7b96435ba8c2cb42ee:
+Right, that's effectively been the state of play for some time. It's
+a useful tool that could do with some work to make it better, but
+nobody has had the time to do that work because most of the time it
+works fine...
 
-  Linux 3.16-rc2 (2014-06-21 19:02:54 -1000)
+If only there were some minions around looking to learn about XFS
+log recovery....
 
-are available in the git repository at:
+Cheers,
 
-  git://oss.sgi.com/xfs/xfs.git tags/xfs-for-linus-3.16-rc5
-
-for you to fetch changes up to 03e01349c654fbdea80d3d9b4ab599244eb55bb7:
-
-  xfs: null unused quota inodes when quota is on (2014-07-15 07:28:41 +1000)
-
-----------------------------------------------------------------
-xfs: fixes for 3.15-rc5
-
-Fixes for low memory perforamnce regressions and a quota inode handling
-regression.
-
-----------------------------------------------------------------
-Dave Chinner (3):
-      Revert "xfs: block allocation work needs to be kswapd aware"
-      xfs: refine the allocation stack switch
-      xfs: null unused quota inodes when quota is on
-
- fs/xfs/xfs_bmap.c      |    7 ++-----
- fs/xfs/xfs_bmap.h      |    4 +---
- fs/xfs/xfs_bmap_util.c |   53 -----------------------------------------------------
- fs/xfs/xfs_bmap_util.h |    4 ----
- fs/xfs/xfs_btree.c     |   82 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++-
- fs/xfs/xfs_iomap.c     |    3 +--
- fs/xfs/xfs_sb.c        |   25 +++++++++++++++++++++----
- 7 files changed, 106 insertions(+), 72 deletions(-)
-
-
+Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
