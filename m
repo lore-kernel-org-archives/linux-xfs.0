@@ -1,26 +1,31 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 881377F7D
-	for <xfs@oss.sgi.com>; Fri, 18 Jul 2014 05:38:22 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 65A1130404E
-	for <xfs@oss.sgi.com>; Fri, 18 Jul 2014 03:38:19 -0700 (PDT)
-Received: from mail-la0-f46.google.com (mail-la0-f46.google.com
-	[209.85.215.46]) by cuda.sgi.com with ESMTP id J9f14jDMw5GSXIxp
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Fri, 18 Jul 2014 03:38:16 -0700 (PDT)
-Received: by mail-la0-f46.google.com with SMTP id b8so2699597lan.19
-	for <xfs@oss.sgi.com>; Fri, 18 Jul 2014 03:38:14 -0700 (PDT)
-From: Dmitry Monakhov <dmonakhov@openvz.org>
-Subject: RE: [PATCH 3/3] ext4: Add support IOC_MOV_DATA ioctl
-In-Reply-To: <002901cfa265$636d2e50$2a478af0$@samsung.com>
-References: <004001cf9aa4$2670e280$7352a780$@samsung.com>
-	<alpine.LFD.2.00.1407081558280.2180@localhost.localdomain>
-	<87tx6ktiay.fsf@openvz.org>
-	<002901cfa265$636d2e50$2a478af0$@samsung.com>
-Date: Fri, 18 Jul 2014 14:38:12 +0400
-Message-ID: <87zjg7ar57.fsf@openvz.org>
+	by oss.sgi.com (Postfix) with ESMTP id 7C8E47F50
+	for <xfs@oss.sgi.com>; Fri, 18 Jul 2014 14:07:38 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 5B46A304048
+	for <xfs@oss.sgi.com>; Fri, 18 Jul 2014 12:07:38 -0700 (PDT)
+Received: from mail-wi0-f179.google.com (mail-wi0-f179.google.com
+	[209.85.212.179]) by cuda.sgi.com with ESMTP id
+	WBDjHUnIOzWVtCY9 (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Fri, 18 Jul 2014 12:07:33 -0700 (PDT)
+Received: by mail-wi0-f179.google.com with SMTP id f8so1332329wiw.12
+	for <xfs@oss.sgi.com>; Fri, 18 Jul 2014 12:07:32 -0700 (PDT)
+Received: from teal.hq.k1024.org (178-83-234-80.dynamic.hispeed.ch.
+	[178.83.234.80]) by mx.google.com with ESMTPSA id
+	v14sm16212728wjw.38.2014.07.18.12.07.31 for <xfs@oss.sgi.com>
+	(version=TLSv1 cipher=ECDHE-RSA-AES128-SHA bits=128/128);
+	Fri, 18 Jul 2014 12:07:31 -0700 (PDT)
+Date: Fri, 18 Jul 2014 21:07:30 +0200
+From: Iustin Pop <iusty@k1024.org>
+Subject: Re: xfsrestore -t and default location of housekeeping dir
+Message-ID: <20140718190730.GA27801@teal.hq.k1024.org>
+References: <20140714071935.GB29541@teal.hq.k1024.org>
+	<20140717090550.GB27425@infradead.org>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20140717090550.GB27425@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,73 +34,34 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Namjae Jeon <namjae.jeon@samsung.com>
-Cc: 'Theodore Ts'o' <tytso@mit.edu>, 'Brian Foster' <bfoster@redhat.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, 'Christoph Hellwig' <hch@infradead.org>, 'Ashish Sangwan' <a.sangwan@samsung.com>, linux-fsdevel@vger.kernel.org, =?utf-8?B?J0x1a8OhxaE=?= Czerner' <lczerner@redhat.com>, 'linux-ext4' <linux-ext4@vger.kernel.org>
+To: xfs@oss.sgi.com
 
-T24gRnJpLCAxOCBKdWwgMjAxNCAxNzo1MDo1NSArMDkwMCwgTmFtamFlIEplb24gPG5hbWphZS5q
-ZW9uQHNhbXN1bmcuY29tPiB3cm90ZToKPiA+IE9uIFR1ZSwgOCBKdWwgMjAxNCAxNjowMjoyOCAr
-MDIwMCAoQ0VTVCksIEx1a8OhxaEgQ3plcm5lciA8bGN6ZXJuZXJAcmVkaGF0LmNvbT4gd3JvdGU6
-Cj4gPiBOb24tdGV4dCBwYXJ0OiBNVUxUSVBBUlQvTUlYRUQKPiA+ID4gT24gVHVlLCA4IEp1bCAy
-MDE0LCBOYW1qYWUgSmVvbiB3cm90ZToKPiA+ID4KPiA+ID4gPiBEYXRlOiBUdWUsIDA4IEp1bCAy
-MDE0IDIxOjAwOjAyICswOTAwCj4gPiA+ID4gRnJvbTogTmFtamFlIEplb24gPG5hbWphZS5qZW9u
-QHNhbXN1bmcuY29tPgo+ID4gPiA+IFRvOiBEYXZlIENoaW5uZXIgPGRhdmlkQGZyb21vcmJpdC5j
-b20+LCBUaGVvZG9yZSBUcydvIDx0eXRzb0BtaXQuZWR1Pgo+ID4gPiA+IENjOiBsaW51eC1leHQ0
-IDxsaW51eC1leHQ0QHZnZXIua2VybmVsLm9yZz4sIGxpbnV4LWZzZGV2ZWxAdmdlci5rZXJuZWwu
-b3JnLAo+ID4gPiA+ICAgICBsaW51eC1rZXJuZWxAdmdlci5rZXJuZWwub3JnLCBMdWvDocWhIEN6
-ZXJuZXIgPGxjemVybmVyQHJlZGhhdC5jb20+LAo+ID4gPiA+ICAgICBCcmlhbiBGb3N0ZXIgPGJm
-b3N0ZXJAcmVkaGF0LmNvbT4sIENocmlzdG9waCBIZWxsd2lnIDxoY2hAaW5mcmFkZWFkLm9yZz4s
-Cj4gPiA+ID4gICAgIEFzaGlzaCBTYW5nd2FuIDxhLnNhbmd3YW5Ac2Ftc3VuZy5jb20+LCB4ZnNA
-b3NzLnNnaS5jb20KPiA+ID4gPiBTdWJqZWN0OiBbUEFUQ0ggMy8zXSBleHQ0OiBBZGQgc3VwcG9y
-dCBJT0NfTU9WX0RBVEEgaW9jdGwKPiA+ID4gPgo+ID4gPiA+IFRoaXMgcGF0Y2ggaW1wbGVtZW50
-cyBmcyBpb2N0bCdzIElPQ19NT1ZfREFUQSBmb3IgRXh0NC4KPiA+ID4KPiA+ID4gSG1tIGlzbid0
-IHRoaXMgYmFzaWNhbGx5IHdoYXQgZXh0NF9tb3ZlX2V4dGVudHMoKSBkb2VzID8gZWcuCj4gPiA+
-IEVYVDRfSU9DX01PVkVfRVhUID8KPiA+ID4KPiA+ID4gSSBndWVzcyB0aGF0IHRoZSBpbnRlbnRp
-b24gaGVyZSBpcyB0byBkbyB0aGUgbW92ZSwgd2l0aG91dCBhY3R1YWxseQo+ID4gPiBtb3Zpbmcg
-dGhlIGRhdGEgcmlnaHQgPyBCdXQgbmV2ZXJ0aGVsZXNzIG1heWJlIHNvbWUgY29kZSBjYW4gYmUK
-PiA+ID4gc2hhcmVkIHdpdGggZXh0NF9tb3ZlX2V4dGVudHMoKSA/Cj4gPiBJdCBkZWZpbml0ZWx5
-IGNhbiBiZSBzaGFyZWQsIGJlY2F1c2UgaXQgaGFzIHNwZWNpZmljIGNhc2UgZm9yIHVud3JpdHRl
-bgo+ID4gZGF0YSBzZWUgbW92ZV9leHRlbnRfcGVyX3BhZ2UoKS4KPiBJZiBJIHVuZGVyc3RhbmQg
-Y29ycmVjdGx5LCBtb3ZfZXh0ZW50X3Blcl9wYWdlIGNhbGxzIG1leHRfcmVwbGFjZV9icmFuY2hl
-cyB0bwo+IF9yZXBsYWNlXyBleHRlbnRzIGZyb20gMSBpbm9kZSB0byBvdGhlciBpbm9kZS4gUGxl
-YXNlIGNvcnJlY3QgbWUgaWYgSQo+ID4gPiBhbSB3cm9uZy4KWW91IGFyZSByaWdodC4KPiBpb2Nf
-bW92X2RhdGEgd2lsbCBub3QgcmVwbGFjZSBleHRlbnRzLCBidXQgaXQgd2lsbCBhY3R1YWxseSBf
-bW92ZV8gZXh0ZW50cyBpbnRvCj4gaG9sZSBmcm9tIGRvbm9yIHRvIHJlY2VpdmVyLCBsZWF2aW5n
-IGEgaG9sZSBhdCB0aGUgcGxhY2UgZnJvbSB3aGVyZSBleHRlbnRzIGFyZQo+IG1vdmVkLgpTbyB3
-ZSBjYW4gcmVmZXIgZXh0NF9tb3ZlX2V4dGVudHMgYXMgU1dBUCwgYW5kIGlvY19tb3ZfZGF0YSBh
-cyBBU1NJTkcuCkFuZCBib3RoIHRhc2tzIGxvb2tzIHZlcnkgc2ltaWxhciwgZXhjZXB0IHRoZSB3
-YXkgaG93IGhvbGVzIGFyZQppbnRlcnByZXRlZC4gSSB0aGluayBpdCBpcyByZWFzb25hYmxlIHRv
-IGFsbG93IGV4dDRfbW92ZV9leHRlbnRzKCkKdG8gaW50ZXJwcmV0IGhvbGVzIHNpbWlsYXIgdG8g
-aW9jX21vdl9kYXRhLiAKPiBDb3VsZCB5b3UgZWxhYm9yYXRlIG1vcmUgaG93IGl0IGNhbiBiZSBz
-aGFyZWQgZm9yIHVud3JpdHRlbiBkYXRhIGNhc2UgPwpJZiB3ZSBmb3VuZCB1bndyaXR0ZW4gZXh0
-ZW50IHdlIGRvIG5vdCBoYXZlIHRvIGNvcHkgZGF0YSwganVzdCBzd2FwIHRvCmV4dGVudHMgYmV0
-d2VlbiBpbm9kZXMuCj4gCj4gPiBCdXQgSSB0aGluayB3ZSBjYW4gb2JzZXJ2ZSBhbm90aGVyIHdh
-eSB0byB1bmlmeSB0aGlzIHR3byB0aGluZ3MuCj4gPiBBbiBpZGVhIGluc3BpcmVkIGJ5IHRoZSBm
-YWN0IHRoYXQgaW9jX21vdmVfZGF0YSB3b3JrcyBvbmx5IGZvcgo+ID4gcmVndWxhciBpbm9kZXMs
-IHdoZXJlIG9yaWdfb2Zmc2V0ID09IGRvbm9yX29mZnNldC4gCj4gQ291bGQgeW91IGVsYWJvcmF0
-ZSB0aGlzIHBvaW50PwpBdCB0aGlzIG1vbWVudCBvZmZzZXQgZm9yIGJvdGggaW5vZGVzIHNob3Vs
-ZCBiZSBlcXVhbC4gVGhpcyBpcyBwdXJlCmFydGlmaWNpYWwgcmVzdHJpY3Rpb24uIEF0IHRoaXMg
-bW9tZW50IEknbSB3b3JraW5nIG9uIHBhdGNoIHdoaWNoCnJlbW92ZSB0aGlzIHJlc3RyaWN0aW9u
-LiAKPiAKPiA+IFRoaXMgaXMgc2hvd3N0b3BwZXIKPiA+IGZvciAgbXkgdXRpbGl0eSBlNGRlZnJh
-ZzIgKCBuZXcgdmVyc2lvbiBvZiBlNGRlZnJhZyB3aGljaCBpcyBhYmxlIGRlZnJhZ21lbnQKPiA+
-IHBhY2sgc21hbGwgZmlsZXMgYXMgZGVzY3JpYmVkIGhlcmUgOgo+ID4gaHR0cDovL2xpc3RzLm9w
-ZW53YWxsLm5ldC9saW51eC1leHQ0LzIwMTQvMDQvMjgvMykKPiA+IAo+ID4gUHJvcG9zZWQgQVBJ
-IGlzIHZlcnkgc2ltaWxhciB0byBleHQ0X2V4dF9taWdyYXRlOgo+ID4gQXJnczoKPiA+ICAgb3Jp
-Z19maWxlOiBpbm9kZSB3aGljaCB3ZSB3YW50IHRvIGRlZnJhZ21lbnQKPiA+ICAgZG9ub3JfZmls
-ZTogYSBmaWxlIHdoaWNoIHdpbGwgYmUgdXNlZCBhcyBhIGRvbm9yIG9mIGJsb2Nrcwo+ID4gMSkg
-ZmFsbG9jYXRlIGJpZyBkb25vcl9maWxlCj4gPiAyKSBhKSBDcmVhdGUgdG1wIGlub2RlIHdpY2gg
-bmxpbmsgPSAwCj4gPiAgICBiKSBtb3ZlIGV4dGVudHMgcmVxdWlyZWQgZXh0ZW50cyBmcm9tICBk
-b25vciB0byB0bXBfZG9ub3JfaW5vZGUKPiA+ICAgIGMpIHJldHVybiBmaWxlIGRlc2NyaXB0b3Ig
-KHRtcF9mZCkgdG8gdGhhdCB0bXBfZG9ub3JfaW5vZGUKPiA+IDQpIE1hcmsgb3JpZ19maWxlJ3Mg
-aW5vZGUgd2l0aCBFWFQ0X1NUQVRFX0VYVF9NSUdSQVRFIHN0YXRlCj4gPiA1KSBDb3B5IGRhdGEg
-ZnJvbSBvcmlnX2ZpbGUgdG8gdG1wX2ZkCj4gPiA2KSBJT0NfU1dBUF9FWDogYXRvbWljYWxseSBz
-d2FwICBvcmlnX2ZpbGUtPmlfZGF0YSBhbmQgdG1wX2ZkLT5pX2RhdGEKPiA+ICAgIGlmIEVYVDRf
-U1RBVEVfRVhUX01JR1JBVEUgd2FzIG5vdCBjbGVhcmVkLgo+ID4gCj4gPiBUaGlzIGFwcHJvYWNo
-IGNhbiB3b3JrcyBub3Qgb25seSBmb3IgcmVndWxhciBmaWxlIHcvbyBqb3VybmFsaW5nCj4gPiBl
-bmFibGVkLCBidXQgYWxzbyBmb3Igam91cm5hbGVkIG9uZXMsIGFuZCBkaXJlY3Rvcmllcy4KPiA+
-IAo+ID4gCj4gPiAKPiA+IAo+ID4gPgo+ID4gPiAtTHVrYXMKPiA+ID4KPiAKCl9fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZz
-QG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
+On Thu, Jul 17, 2014 at 02:05:50AM -0700, Christoph Hellwig wrote:
+> On Mon, Jul 14, 2014 at 09:19:35AM +0200, Iustin Pop wrote:
+> > Hi,
+> > 
+> > While testing a just-made dump with via 'xfsrestore -t', I learned that
+> > the default housekeepingdir path is still under the original filesystem.
+> > My xfsrestore therefore failed, since that filesystem was read-only.
+> > 
+> > Since '-t' should denote a pure no-op operation, with no changes, would
+> > it make more sense to default the housekeeping location to a temporary
+> > location if it is used?
+> 
+> It seems to me like -t shouldn't recreate the files in the housekeeping
+> directory at all.  I did take a brief look at the code and is a huge
+> mess that seems to recreate files unconditionally, so I don't really
+> have a good solution for this yet.
+
+Understood. Thanks!
+
+iustin
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
