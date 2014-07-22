@@ -1,20 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id D41BF7F3F
-	for <xfs@oss.sgi.com>; Tue, 22 Jul 2014 12:10:18 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id B380F304070
-	for <xfs@oss.sgi.com>; Tue, 22 Jul 2014 10:10:15 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id cwAgg4lJbLeH2MpI for <xfs@oss.sgi.com>;
-	Tue, 22 Jul 2014 10:10:14 -0700 (PDT)
-Message-ID: <53CE9AF6.3090401@sandeen.net>
-Date: Tue, 22 Jul 2014 12:10:14 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+	by oss.sgi.com (Postfix) with ESMTP id CCD047F3F
+	for <xfs@oss.sgi.com>; Tue, 22 Jul 2014 15:56:13 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 8EC9530406A
+	for <xfs@oss.sgi.com>; Tue, 22 Jul 2014 13:56:10 -0700 (PDT)
+Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
+	[150.101.137.143]) by cuda.sgi.com with ESMTP id
+	E71G1hVo2oGfoGO4 for <xfs@oss.sgi.com>;
+	Tue, 22 Jul 2014 13:56:08 -0700 (PDT)
+Date: Wed, 23 Jul 2014 06:56:05 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: Problem building xfsprogs
+Message-ID: <20140722205605.GJ20518@dastard>
+References: <20140722160641.GU17967@beardog.cce.hp.com>
 MIME-Version: 1.0
-Subject: [PATCH] xfs: avoid false quotacheck after unclean shutdown
-References: <53CE6415.8080607@excellency.fr>
-In-Reply-To: <53CE6415.8080607@excellency.fr>
+Content-Disposition: inline
+In-Reply-To: <20140722160641.GU17967@beardog.cce.hp.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,55 +29,94 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: cbay@excellency.fr, xfs@oss.sgi.com
+To: scameron@beardog.cce.hp.com
+Cc: fstests@vger.kernel.org, xfs@oss.sgi.com
 
-The commit
+[cc xfs@oss.sgi.com - list for XFS issues]
 
-83e782e xfs: Remove incore use of XFS_OQUOTA_ENFD and XFS_OQUOTA_CHKD
+On Tue, Jul 22, 2014 at 11:06:41AM -0500, scameron@beardog.cce.hp.com wrote:
+> 
+> I'm trying to build xfsprogs (in order to run xfstests), and I'm running into this:
+> 
+> [scameron@localhost xfsprogs]$ git log --oneline | head -1
+> ba24eb7 logprint: Fix printing of AGF and AGI buffers
+> [scameron@localhost xfsprogs]$ git pull
+> Already up-to-date.
+> [scameron@localhost xfsprogs]$ git diff
+> [scameron@localhost xfsprogs]$ ./configure
+> checking build system type... x86_64-unknown-linux-gnu
+> checking host system type... x86_64-unknown-linux-gnu
+> checking for gcc... gcc
+> checking for C compiler default output file name... a.out
+> 
+> [...snip...]
+> 
+> checking for library containing blkid_probe_all... -lblkid
+> checking for blkid_probe_get_topology... yes
+> checking for readdir... yes
+> checking size of long... 8
+> checking size of char *... 8
+> checking for __psint_t ... no
+> checking for __psunsigned_t ... no
+> checking for __u32 ... yes
+> checking for umode_t... yes
+> configure: creating ./config.status
+> config.status: creating include/builddefs
+> config.status: creating include/platform_defs.h
+> config.status: include/platform_defs.h is unchanged
+> config.status: executing libtool commands
+> [scameron@localhost xfsprogs]$ make
+> Building include
 
-added a new function xfs_sb_quota_from_disk() which swaps
-on-disk XFS_OQUOTA_* flags for in-core XFS_GQUOTA_* and XFS_PQUOTA_*
-flags after the superblock is read.
+Nothing built in the include directory - is this a clean build area?
 
-However, if log recovery is required, the superblock is read again,
-and the modified in-core flags are re-read from disk, so we have
-XFS_OQUOTA_* flags in memory again.  This causes the 
-XFS_QM_NEED_QUOTACHECK() test to be true, because the XFS_OQUOTA_CHKD
-is still set, and not XFS_GQUOTA_CHKD or XFS_PQUOTA_CHKD.
+> Building libxfs
+> gmake[2]: *** No rule to make target `.ltdep', needed by `ltdepend'.  Stop.
+> gmake[1]: *** [libxfs] Error 2
+> make: *** [default] Error 2
+> 
+> Any ideas what's wrong here?
 
-The simple one-line fix is to call xfs_sb_quota_from_disk after
-we re-read the superblock during log recovery.
+The automatic dependency generation failed to generate the .ltdep
+file. But it can't be a clean build area, because the libxfs build
+rule is:
 
-Reported-by: Cyril B. <cbay@excellency.fr>
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
+default: crc32selftest ltdepend $(LTLIBRARY)
 
-Quick-tested only; it seems to resolve Cyril's testcase, but I've
-not done an xfstests run yet as this is somewhat of an RFC:
+and I don't see the crc32selftest rule being executed before the
+dependencies are generated. It shoul dlook something like:
 
-It feels like there may be a better/more systemic fix here, though.
-We can't call xfs_sb_quota_from_disk it from xfs_sb_from_disk(),
-because the sb read verifier wants to know what was really on disk,
-not what was fixed up after the fact.
+$ make
+....
+configure: creating ./config.status
+config.status: creating include/builddefs
+config.status: creating include/platform_defs.h
+config.status: executing libtool commands
+Building include
+    [LN]     xfs
+    [LN]     disk
+Building libxfs
+    [CC]     gen_crc32table
+    [GENERATE] crc32table.h
+    [TEST]    CRC32
+CRC_LE_BITS = 32
+crc32: tests passed, 225944 bytes in 131 usec
+crc32c: tests passed, 225944 bytes in 131 usec
+    [CC]     cache.lo
+....
 
-We could add an "xlate_quota" arg to xfs_sb_from_disk(), but
-that feels a little odd; the function today quite clearly only
-does endian conversions, not other more detailed translations.
+So the first thing I'd do is run 'make realclean; make' to restart
+the build for a clean workarea first. If that doesn't fix the
+problem, then I'll need to know versions of libtool, gcc, etc that
+you are using and you'll need to post the output of "make realclean;
+make Q=" so we can see the command line that is actually failing.
 
-But if something like that is preferred, I can send a patch V2.
+Cheers,
 
-diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index bce53ac..0a29de7 100644
---- a/fs/xfs/xfs_log_recover.c
-+++ b/fs/xfs/xfs_log_recover.c
-@@ -4429,6 +4429,7 @@ xlog_do_recover(
- 	/* Convert superblock from on-disk format */
- 	sbp = &log->l_mp->m_sb;
- 	xfs_sb_from_disk(sbp, XFS_BUF_TO_SBP(bp));
-+	xfs_sb_quota_from_disk(sbp);
- 	ASSERT(sbp->sb_magicnum == XFS_SB_MAGIC);
- 	ASSERT(xfs_sb_good_version(sbp));
- 	xfs_buf_relse(bp);
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
