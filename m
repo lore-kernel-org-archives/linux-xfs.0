@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id ED78629DF9
-	for <xfs@oss.sgi.com>; Tue, 22 Jul 2014 11:48:07 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 8858EAC002
-	for <xfs@oss.sgi.com>; Tue, 22 Jul 2014 09:48:06 -0700 (PDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id D41BF7F3F
+	for <xfs@oss.sgi.com>; Tue, 22 Jul 2014 12:10:18 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id B380F304070
+	for <xfs@oss.sgi.com>; Tue, 22 Jul 2014 10:10:15 -0700 (PDT)
 Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id zfNgfGLRxizY8qHt for <xfs@oss.sgi.com>;
-	Tue, 22 Jul 2014 09:48:05 -0700 (PDT)
-Message-ID: <53CE95C5.8040702@sandeen.net>
-Date: Tue, 22 Jul 2014 11:48:05 -0500
+	ESMTP id cwAgg4lJbLeH2MpI for <xfs@oss.sgi.com>;
+	Tue, 22 Jul 2014 10:10:14 -0700 (PDT)
+Message-ID: <53CE9AF6.3090401@sandeen.net>
+Date: Tue, 22 Jul 2014 12:10:14 -0500
 From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: Re: Forced quotacheck after unclean unmount since 3.11, bisected
+Subject: [PATCH] xfs: avoid false quotacheck after unclean shutdown
 References: <53CE6415.8080607@excellency.fr>
 In-Reply-To: <53CE6415.8080607@excellency.fr>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -29,45 +29,53 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: cbay@excellency.fr, xfs@oss.sgi.com
 
-On 7/22/14, 8:16 AM, Cyril B. wrote:
-> Hello,
-> 
-> I've noticed that since Linux 3.11, quotacheck always happen after
-> unclean unmounts. Is this expected? It didn't happen on previous
-> Linux versions.
+The commit
 
-I can reproduce this, I'll take a look - thanks for bisecting!
+83e782e xfs: Remove incore use of XFS_OQUOTA_ENFD and XFS_OQUOTA_CHKD
 
--Eric
+added a new function xfs_sb_quota_from_disk() which swaps
+on-disk XFS_OQUOTA_* flags for in-core XFS_GQUOTA_* and XFS_PQUOTA_*
+flags after the superblock is read.
 
-> A bisect shows that this commit is responsible:
-> xfs: Remove incore use of XFS_OQUOTA_ENFD and XFS_OQUOTA_CHKD
-> id: 83e782e1a1cc0159888e58e14dfc8f3289663338
-> 
-> Relevant dmesg:
-> [    8.844063] XFS (md4): Mounting Filesystem
-> [    9.054023] XFS (md4): Starting recovery (logdev: internal)
-> [    9.331785] XFS (md4): Ending recovery (logdev: internal)
-> [    9.383856] XFS (md4): Quotacheck needed: Please wait.
-> [   48.427732] XFS (md4): Quotacheck: Done.
-> 
-> More details:
->   * vanilla kernel
->   * on top of mdadm (RAID1)
->   * xfsprogs 3.1.5
->   * mount options: noatime,nosuid,nodev,grpquota,inode64
->   * xfs_info:
-> meta-data=/dev/md4               isize=256    agcount=4, agsize=119997280 blks
->          =                       sectsz=512   attr=2
-> data     =                       bsize=4096   blocks=479989120, imaxpct=5
->          =                       sunit=0      swidth=0 blks
-> naming   =version 2              bsize=4096   ascii-ci=0
-> log      =internal               bsize=4096   blocks=234369, version=2
->          =                       sectsz=512   sunit=0 blks, lazy-count=1
-> realtime =none                   extsz=4096   blocks=0, rtextents=0
-> 
-> Thanks,
-> 
+However, if log recovery is required, the superblock is read again,
+and the modified in-core flags are re-read from disk, so we have
+XFS_OQUOTA_* flags in memory again.  This causes the 
+XFS_QM_NEED_QUOTACHECK() test to be true, because the XFS_OQUOTA_CHKD
+is still set, and not XFS_GQUOTA_CHKD or XFS_PQUOTA_CHKD.
+
+The simple one-line fix is to call xfs_sb_quota_from_disk after
+we re-read the superblock during log recovery.
+
+Reported-by: Cyril B. <cbay@excellency.fr>
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
+
+Quick-tested only; it seems to resolve Cyril's testcase, but I've
+not done an xfstests run yet as this is somewhat of an RFC:
+
+It feels like there may be a better/more systemic fix here, though.
+We can't call xfs_sb_quota_from_disk it from xfs_sb_from_disk(),
+because the sb read verifier wants to know what was really on disk,
+not what was fixed up after the fact.
+
+We could add an "xlate_quota" arg to xfs_sb_from_disk(), but
+that feels a little odd; the function today quite clearly only
+does endian conversions, not other more detailed translations.
+
+But if something like that is preferred, I can send a patch V2.
+
+diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+index bce53ac..0a29de7 100644
+--- a/fs/xfs/xfs_log_recover.c
++++ b/fs/xfs/xfs_log_recover.c
+@@ -4429,6 +4429,7 @@ xlog_do_recover(
+ 	/* Convert superblock from on-disk format */
+ 	sbp = &log->l_mp->m_sb;
+ 	xfs_sb_from_disk(sbp, XFS_BUF_TO_SBP(bp));
++	xfs_sb_quota_from_disk(sbp);
+ 	ASSERT(sbp->sb_magicnum == XFS_SB_MAGIC);
+ 	ASSERT(xfs_sb_good_version(sbp));
+ 	xfs_buf_relse(bp);
 
 _______________________________________________
 xfs mailing list
