@@ -1,24 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id CDA257F47
-	for <xfs@oss.sgi.com>; Tue, 22 Jul 2014 16:57:01 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 8DA0D7F3F
+	for <xfs@oss.sgi.com>; Wed, 23 Jul 2014 08:20:37 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 68C38AC002
-	for <xfs@oss.sgi.com>; Tue, 22 Jul 2014 14:57:01 -0700 (PDT)
-Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
-	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	Eazewb1oKzy7zJGg for <xfs@oss.sgi.com>;
-	Tue, 22 Jul 2014 14:56:58 -0700 (PDT)
-Date: Wed, 23 Jul 2014 07:56:57 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Problem building xfsprogs
-Message-ID: <20140722215656.GQ4453@dastard>
-References: <20140722160641.GU17967@beardog.cce.hp.com>
-	<20140722205605.GJ20518@dastard>
-	<CAK2EqxR93J8441Ajj8no7_Pu1WSDLaVsKG=_FLMYvTnOUEzKGQ@mail.gmail.com>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 5E913304043
+	for <xfs@oss.sgi.com>; Wed, 23 Jul 2014 06:20:34 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id hAkSMvGERCiVn9kv (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 23 Jul 2014 06:20:33 -0700 (PDT)
+Date: Wed, 23 Jul 2014 09:20:23 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH] xfs: avoid false quotacheck after unclean shutdown
+Message-ID: <20140723132022.GA56078@bfoster.bfoster>
+References: <53CE6415.8080607@excellency.fr>
+ <53CE9AF6.3090401@sandeen.net>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <CAK2EqxR93J8441Ajj8no7_Pu1WSDLaVsKG=_FLMYvTnOUEzKGQ@mail.gmail.com>
+In-Reply-To: <53CE9AF6.3090401@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,38 +30,85 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Martin Furuhjelm <martin.furuhjelm@seagate.com>
-Cc: scameron@beardog.cce.hp.com, fstests@vger.kernel.org, xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: cbay@excellency.fr, xfs@oss.sgi.com
 
-On Tue, Jul 22, 2014 at 03:14:42PM -0600, Martin Furuhjelm wrote:
-> I have just recently gone through the process of attempting to build and
-> run xfstests based on the current sources from oss.sgi.com.
-> Not having exactly the correct packages and kernel version creates
-> problems. The build on FEDORA fails complaining about too many symlinks, I
-> was successful on SUSE V 13 updated to kernel v3.15 and adding the
-> following packages before attempting git and the build:
+On Tue, Jul 22, 2014 at 12:10:14PM -0500, Eric Sandeen wrote:
+> The commit
 > 
-> git gcc libtool automake make gettext-tools libattr-devel libacl-devel
-> libuuid-devel ncurses-devel quota indent libcap-progs btrfsprogs
+> 83e782e xfs: Remove incore use of XFS_OQUOTA_ENFD and XFS_OQUOTA_CHKD
 > 
-> I then git and built xfsprogs followed by xfsdump and finally xfstests
+> added a new function xfs_sb_quota_from_disk() which swaps
+> on-disk XFS_OQUOTA_* flags for in-core XFS_GQUOTA_* and XFS_PQUOTA_*
+> flags after the superblock is read.
 > 
-> After adding the fsgqa group and user the appropriate definitions of
-> TEST_DEV and SCRATCH_DEV the quick test (./check -g quick)
-> runs with 5 errors on xfs and one error on ext4.
+> However, if log recovery is required, the superblock is read again,
+> and the modified in-core flags are re-read from disk, so we have
+> XFS_OQUOTA_* flags in memory again.  This causes the 
+> XFS_QM_NEED_QUOTACHECK() test to be true, because the XFS_OQUOTA_CHKD
+> is still set, and not XFS_GQUOTA_CHKD or XFS_PQUOTA_CHKD.
 > 
-> If you just want xfstest to run - you may want to start with SUSE and the
-> procedure above.
+> The simple one-line fix is to call xfs_sb_quota_from_disk after
+> we re-read the superblock during log recovery.
+> 
 
-Perhaps it would be good to document that in the INSTALL file? Can
-you write a patch to do that, please?
+First off, this looks reasonable to me given the current code.
 
-Cheers,
+> Reported-by: Cyril B. <cbay@excellency.fr>
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> ---
+> 
+> Quick-tested only; it seems to resolve Cyril's testcase, but I've
+> not done an xfstests run yet as this is somewhat of an RFC:
+> 
+> It feels like there may be a better/more systemic fix here, though.
+> We can't call xfs_sb_quota_from_disk it from xfs_sb_from_disk(),
+> because the sb read verifier wants to know what was really on disk,
+> not what was fixed up after the fact.
+> 
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+I was wondering why this is the case because the verifier runs in the
+I/O path, so it would hit before we actually return with the buffer in
+hand in the mount codepath. Looking a bit further, I see that we call
+xfs_sb_from_disk() from within the verifier (xfs_sb_verify()) and
+apparently some flag validation is done on the result of that. So I
+suspect that's what you mean here and probably why
+xfs_sb_quota_from_disk() is outside of xfs_sb_from_disk().
+
+FWIW, xfs_sb_quota_to_disk() is called within xfs_sb_to_disk(). IMO, the
+more clear thing to do is make xfs_sb_to_disk() and xfs_sb_from_disk()
+consistent in behavior and let the special verifier case deal with the
+quirk. In other words, rename it to something like
+__xfs_sb_from_disk(..., bool convert_flags) and conditionally call
+xfs_sb_quota_from_disk(). Let the verifier call that variant directly
+with false and then #define xfs_sb_from_disk to the true variant. Just
+my .02. ;)
+
+Brian
+
+> We could add an "xlate_quota" arg to xfs_sb_from_disk(), but
+> that feels a little odd; the function today quite clearly only
+> does endian conversions, not other more detailed translations.
+> 
+> But if something like that is preferred, I can send a patch V2.
+> 
+> diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+> index bce53ac..0a29de7 100644
+> --- a/fs/xfs/xfs_log_recover.c
+> +++ b/fs/xfs/xfs_log_recover.c
+> @@ -4429,6 +4429,7 @@ xlog_do_recover(
+>  	/* Convert superblock from on-disk format */
+>  	sbp = &log->l_mp->m_sb;
+>  	xfs_sb_from_disk(sbp, XFS_BUF_TO_SBP(bp));
+> +	xfs_sb_quota_from_disk(sbp);
+>  	ASSERT(sbp->sb_magicnum == XFS_SB_MAGIC);
+>  	ASSERT(xfs_sb_good_version(sbp));
+>  	xfs_buf_relse(bp);
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
