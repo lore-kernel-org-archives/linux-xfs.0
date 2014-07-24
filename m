@@ -1,23 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 15AFD7F58
-	for <xfs@oss.sgi.com>; Thu, 24 Jul 2014 18:25:16 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 63BA07F61
+	for <xfs@oss.sgi.com>; Thu, 24 Jul 2014 18:29:37 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id DA6698F8040
-	for <xfs@oss.sgi.com>; Thu, 24 Jul 2014 16:25:12 -0700 (PDT)
-Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
-	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	s9VVuUUKvsk5L858 for <xfs@oss.sgi.com>;
-	Thu, 24 Jul 2014 16:25:10 -0700 (PDT)
-Date: Fri, 25 Jul 2014 09:24:47 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 15/18] xfs: only free allocated regions of inode chunks
-Message-ID: <20140724232447.GV20518@dastard>
-References: <1406211788-63206-1-git-send-email-bfoster@redhat.com>
-	<1406211788-63206-16-git-send-email-bfoster@redhat.com>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 2298F304067
+	for <xfs@oss.sgi.com>; Thu, 24 Jul 2014 16:29:36 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id VYprz4UzwMWDOX1K for <xfs@oss.sgi.com>;
+	Thu, 24 Jul 2014 16:29:34 -0700 (PDT)
+Message-ID: <53D196DE.4060602@sandeen.net>
+Date: Thu, 24 Jul 2014 18:29:34 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1406211788-63206-16-git-send-email-bfoster@redhat.com>
+Subject: [PATCH V2] xfs: avoid false quotacheck after unclean shutdown
+References: <53CE6415.8080607@excellency.fr> <53CE9AF6.3090401@sandeen.net>
+In-Reply-To: <53CE9AF6.3090401@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,107 +27,101 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
-Cc: xfs@oss.sgi.com
+To: cbay@excellency.fr, xfs@oss.sgi.com
 
-On Thu, Jul 24, 2014 at 10:23:05AM -0400, Brian Foster wrote:
-> An inode chunk is currently added to the transaction free list based on
-> a simple fsb conversion and hardcoded chunk length. The nature of sparse
-> chunks is such that the physical chunk of inodes on disk may consist of
-> one or more discontiguous parts. Blocks that reside in the holes of the
-> inode chunk are not inodes and could be allocated to any other use or
-> not allocated at all.
-> 
-> Refactor the existing xfs_bmap_add_free() call into the
-> xfs_difree_inode_chunk() helper. The new helper uses the existing
-> calculation if a chunk is not sparse. Otherwise, use the inobt record
-> holemask to free the contiguous regions of the chunk.
-> 
-> Signed-off-by: Brian Foster <bfoster@redhat.com>
-> ---
->  fs/xfs/libxfs/xfs_ialloc.c | 64 +++++++++++++++++++++++++++++++++++++++++++---
->  1 file changed, 61 insertions(+), 3 deletions(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
-> index f75f191..1be57b1 100644
-> --- a/fs/xfs/libxfs/xfs_ialloc.c
-> +++ b/fs/xfs/libxfs/xfs_ialloc.c
-> @@ -1659,6 +1659,66 @@ out_error:
->  	return error;
->  }
->  
-> +/*
-> + * Free the blocks of an inode chunk. We must consider that the inode chunk
-> + * might be sparse and only free the regions that are allocated as part of the
-> + * chunk.
-> + */
-> +STATIC void
-> +xfs_difree_inode_chunk(
-> +	struct xfs_mount		*mp,
-> +	xfs_agnumber_t			agno,
-> +	struct xfs_inobt_rec_incore	*rec,
-> +	struct xfs_bmap_free		*flist)
-> +{
-> +	xfs_agblock_t	sagbno = XFS_AGINO_TO_AGBNO(mp, rec->ir_startino);
-> +	xfs_agblock_t	agbno;
-> +	int		nextbit;
-> +	int		contig, contigblk;
-> +	__uint16_t	allocmask;
-> +	uint		allocbitmap;
-> +
-> +	if (!xfs_inobt_issparse(rec)) {
-> +		/* not sparse, calculate extent info directly */
-> +		xfs_bmap_add_free(XFS_AGB_TO_FSB(mp, agno,
-> +				  XFS_AGINO_TO_AGBNO(mp, rec->ir_startino)),
-> +				  mp->m_ialloc_blks, flist, mp);
-> +		return;
-> +	}
-> +
-> +	/*
-> +	 * The bit flip and type conversion are intentionally done separately
-> +	 * here to zero-extend the bitmask.
-> +	 */
-> +	allocmask = ~rec->ir_holemask;
-> +	allocbitmap = allocmask;
+The commit
 
-If we are going to keep this code, then a helper is absolutely
-necessary....
+83e782e xfs: Remove incore use of XFS_OQUOTA_ENFD and XFS_OQUOTA_CHKD
 
-> +
-> +	/*
-> +	 * We now have an allocation bitmap in units of inodes at sparse chunk
-> +	 * granularity (e.g., more than one inode per bit). Use the bitmask
-> +	 * functions to find each contigious range of bits in the map. For each
-> +	 * range, convert the start bit and count to block values and use that
-> +	 * data to add the associated extent to the free list.
-> +	 */
-> +	nextbit = xfs_next_bit(&allocbitmap, 1, 0);
-> +	while (nextbit != -1) {
-> +		agbno = (nextbit * XFS_INODES_PER_SPCHUNK) /
-> +				mp->m_sb.sb_inopblock;
-> +		agbno += sagbno;
-> +
-> +		contig = xfs_contig_bits(&allocbitmap, 1, nextbit);
-> +		contigblk = (contig * XFS_INODES_PER_SPCHUNK) /
-> +				mp->m_sb.sb_inopblock;
-> +
-> +		ASSERT(agbno % xfs_ialloc_cluster_alignment(mp) == 0);
-> +		ASSERT(contigblk % xfs_ialloc_cluster_alignment(mp) == 0);
-> +		xfs_bmap_add_free(XFS_AGB_TO_FSB(mp, agno, agbno), contigblk,
-> +				  flist, mp);
-> +
-> +		nextbit = xfs_next_bit(&allocbitmap, 1, nextbit + contig + 1);
-> +	}
+added a new function xfs_sb_quota_from_disk() which swaps
+on-disk XFS_OQUOTA_* flags for in-core XFS_GQUOTA_* and XFS_PQUOTA_*
+flags after the superblock is read.
 
-Again, I think that the generic bitmap code is a better way to
-implement this...
+However, if log recovery is required, the superblock is read again,
+and the modified in-core flags are re-read from disk, so we have
+XFS_OQUOTA_* flags in memory again.  This causes the 
+XFS_QM_NEED_QUOTACHECK() test to be true, because the XFS_OQUOTA_CHKD
+is still set, and not XFS_GQUOTA_CHKD or XFS_PQUOTA_CHKD.
 
-Cheers,
+Change xfs_sb_from_disk to call xfs_sb_quota_from disk and always
+convert the disk flags to in-memory flags.
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Add a lower-level function which can be called with "false" to
+not convert the flags, so that the sb verifier can verify
+exactly what was on disk, per Brian Foster's suggestion.
+
+Reported-by: Cyril B. <cbay@excellency.fr>
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
+
+V2: Call xfs_sb_quota_from_disk from xfs_sb_from_disk,
+unless we're the verifier, which wants to see what is
+actually on-disk to verify it.  Thanks Brian!
+
+
+diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+index 3507cd0..16d1671 100644
+--- a/fs/xfs/xfs_mount.c
++++ b/fs/xfs/xfs_mount.c
+@@ -324,7 +324,6 @@ reread:
+ 	 * Initialize the mount structure from the superblock.
+ 	 */
+ 	xfs_sb_from_disk(sbp, XFS_BUF_TO_SBP(bp));
+-	xfs_sb_quota_from_disk(sbp);
+ 
+ 	/*
+ 	 * If we haven't validated the superblock, do so now before we try
+diff --git a/fs/xfs/xfs_sb.c b/fs/xfs/xfs_sb.c
+index 7703fa6..0f631d2 100644
+--- a/fs/xfs/xfs_sb.c
++++ b/fs/xfs/xfs_sb.c
+@@ -386,10 +386,11 @@ xfs_sb_quota_from_disk(struct xfs_sb *sbp)
+ 	}
+ }
+ 
+-void
+-xfs_sb_from_disk(
++static void
++__xfs_sb_from_disk(
+ 	struct xfs_sb	*to,
+-	xfs_dsb_t	*from)
++	xfs_dsb_t	*from,
++	bool		convert_xquota)
+ {
+ 	to->sb_magicnum = be32_to_cpu(from->sb_magicnum);
+ 	to->sb_blocksize = be32_to_cpu(from->sb_blocksize);
+@@ -445,6 +446,17 @@ xfs_sb_from_disk(
+ 	to->sb_pad = 0;
+ 	to->sb_pquotino = be64_to_cpu(from->sb_pquotino);
+ 	to->sb_lsn = be64_to_cpu(from->sb_lsn);
++	/* Convert on-disk flags to in-memory flags? */
++	if (convert_xquota)
++		xfs_sb_quota_from_disk(to);
++}
++
++void
++xfs_sb_from_disk(
++	struct xfs_sb	*to,
++	xfs_dsb_t	*from)
++{
++	__xfs_sb_from_disk(to, from, true);
+ }
+ 
+ static inline void
+@@ -577,7 +589,11 @@ xfs_sb_verify(
+ 	struct xfs_mount *mp = bp->b_target->bt_mount;
+ 	struct xfs_sb	sb;
+ 
+-	xfs_sb_from_disk(&sb, XFS_BUF_TO_SBP(bp));
++	/*
++	 * Use call variant which doesn't convert quota flags from disk 
++	 * format, because xfs_mount_validate_sb checks the on-disk flags.
++	 */
++	__xfs_sb_from_disk(&sb, XFS_BUF_TO_SBP(bp), false);
+ 
+ 	/*
+ 	 * Only check the in progress field for the primary superblock as
+
 
 _______________________________________________
 xfs mailing list
