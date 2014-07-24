@@ -1,22 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 86CC37F4E
-	for <xfs@oss.sgi.com>; Thu, 24 Jul 2014 14:38:30 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 639F38F8054
-	for <xfs@oss.sgi.com>; Thu, 24 Jul 2014 12:38:30 -0700 (PDT)
-Date: Thu, 24 Jul 2014 15:38:26 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 03/18] xfs: define sparse inode chunks v5 sb feature bit
-	and helper function
-Message-ID: <20140724193825.GE37832@bfoster.bfoster>
-References: <1406211788-63206-1-git-send-email-bfoster@redhat.com>
-	<1406211788-63206-4-git-send-email-bfoster@redhat.com>
-	<53D13D94.9030607@sgi.com> <20140724173701.GD37832@bfoster.bfoster>
-	<53D1528F.5090906@sgi.com>
+	by oss.sgi.com (Postfix) with ESMTP id 592FA7F3F
+	for <xfs@oss.sgi.com>; Thu, 24 Jul 2014 14:22:51 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 2833F8F8040
+	for <xfs@oss.sgi.com>; Thu, 24 Jul 2014 12:22:50 -0700 (PDT)
+Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
+	with ESMTP id fy2P9sqzyNMeMUiY (version=TLSv1 cipher=AES256-SHA
+	bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 24 Jul 2014 12:22:48 -0700 (PDT)
+Date: Thu, 24 Jul 2014 21:22:45 +0200
+From: David Sterba <dsterba@suse.cz>
+Subject: Re: [PATCH 2/4 v3] fiemap: add EXTENT_DATA_COMPRESSED flag
+Message-ID: <20140724192245.GG1553@suse.cz>
+References: <cover.1386778302.git.dsterba@suse.cz>
+	<4f8d5dc5b51a43efaf16c39398c23a6276e40a30.1386778303.git.dsterba@suse.cz>
+	<20131212232443.GL31386@dastard>
+	<9520AB36-B728-423A-8EA1-FDD22B79AE90@dilger.ca>
+	<B58DEEA8-561A-4173-B9F5-528B73E06C6D@dilger.ca>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <53D1528F.5090906@sgi.com>
+In-Reply-To: <B58DEEA8-561A-4173-B9F5-528B73E06C6D@dilger.ca>
+Reply-To: dsterba@suse.cz
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,67 +34,47 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Mark Tinguely <tinguely@sgi.com>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: Andreas Dilger <adilger@dilger.ca>
+Cc: linux-nilfs@vger.kernel.org, xfs@oss.sgi.com, Btrfs Developer List <linux-btrfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Ext4 Developers List <linux-ext4@vger.kernel.org>, ocfs2-devel@oss.oracle.com
 
-On Thu, Jul 24, 2014 at 01:38:07PM -0500, Mark Tinguely wrote:
-> On 07/24/14 12:37, Brian Foster wrote:
-> >On Thu, Jul 24, 2014 at 12:08:36PM -0500, Mark Tinguely wrote:
-> >>On 07/24/14 09:22, Brian Foster wrote:
-> >>>The sparse inode chunks feature will use the helper function to enable
-> >>>the allocation of sparse inode chunks. The incompatible feature bit is
-> >>>set on disk once a sparse inode chunk is allocated to prevent older
-> >>>drivers from mounting an fs with sparse chunks.
-> >>>
-> >>>Note that the feature is hardcoded disabled and the feature bit not
-> >>>included in the all features mask until fully implemented.
-> >>>
-> >>>Signed-off-by: Brian Foster<bfoster@redhat.com>
-> >>>---
-> >>
-> >>Sorry if I missed it in the series but is there an
-> >>XFS_FSOP_GEOM_FLAGS_SPINODES for xfs_info/growfs?
-> >>
-> >
-> >Nope, looks like I missed it. It probably slipped my mind as I haven't
-> >got into userspace yet and thus hadn't thought about xfs_info. I'll make
-> >a note to add it, thanks!
-> >
-> >Brian
+On Thu, Jul 17, 2014 at 12:07:57AM -0600, Andreas Dilger wrote:
+> any progress on this patch series?
+
+I'm sorry I got distracted at the end of year and did not finish the
+series.
+
+> I never saw an updated version of this patch series after the last round of
+> reviews, but it would be great to move it forward.  I have filefrag patches
+> in my e2fsprogs tree waiting for an updated version of your patch.
 > 
-> Again forgive my quick scanning of the series, but am I correct in thinking
-> that this does not change the minimum number of reserved blocks for create
-> like fs ops. The create/rename do some attempts to continue when it cannot
-> get the full number of reserved blocks. Would allocating a sparse inode
-> chunk make sense in that case? My gut says the complication does not.
+> I recall the main changes were:
+> - add FIEMAP_EXTENT_PHYS_LENGTH flag to indicate if fe_phys_length was valid
+
+fe_phys_length will be always valid, so other the flags are set only if it's
+not equal to the logical length.
+
+> - rename fe_length to fe_logi_length and #define fe_length fe_logi_length
+> - always fill in fe_phys_length (= fe_logi_length for uncompressed files)
+>   and set FIEMAP_EXTENT_PHYS_LENGTH whether the extent is compressed or not
+
+This is my understanding and contradicts the first point.
+
+> - add WARN_ONCE() in fiemap_fill_next_extent() as described below
+>
+> I don't know if there was any clear statement about whether there should be
+> separate FIEMAP_EXTENT_PHYS_LENGTH and FIEMAP_EXTENT_DATA_COMPRESSED flags,
+> or if the latter should be implicit?  Probably makes sense to have separate
+> flags.  It should be fine to use:
+>
+> #define FIEMAP_EXTENT_PHYS_LENGTH	0x00000010
 > 
+> since this flag was never used.
 
-No problem, thanks for looking.
+I've kept only FIEMAP_EXTENT_DATA_COMPRESSED, I don't see a need for
+FIEMAP_EXTENT_PHYS_LENGTH and this would be yet another flag because the
+FIEMAP_EXTENT_DATA_ENCODED is also implied.
 
-Correct... I haven't made any changes to transaction reservations or
-things like XFS_CREATE_SPACE_RES(), etc. xfs_create() has the kind of
-logic you describe where we set resblks = 0 if the reservation fails
-with ENOSPC and try again with a flag set to indicate we can't do
-allocations. My understanding is that this is justified since we could
-always allocate an inode from an existing record and a dentry from an
-unused slot in a directory.
-
-Technically, I think we could explicitly allocate a sparse chunk in this
-scenario if we wanted to, but we'd have to pass that down to/through the
-allocation code in xfs_ialloc_ag_alloc(). I could be wrong, but I think
-the reservation failure in this case will always be limited to a case
-where we are truly up against ENOSPC (as opposed to failing due to an
-extent length or alignment requirement), since the reservation comes out
-of the sb counters. Given that, I tend to agree that it might not be
-worth the extra complexity there.
-
-Brian
-
-> Thanks again,
-> 
-> --Mark.
-> 
-> 
+I'll send V4, we can discuss the PHYS_LENGTH flag then.
 
 _______________________________________________
 xfs mailing list
