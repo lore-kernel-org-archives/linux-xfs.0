@@ -1,21 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 394EA7F3F
-	for <xfs@oss.sgi.com>; Thu, 24 Jul 2014 15:55:57 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 18B998F804B
-	for <xfs@oss.sgi.com>; Thu, 24 Jul 2014 13:55:53 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id c7D2sp4pH6UAHOpR for <xfs@oss.sgi.com>;
-	Thu, 24 Jul 2014 13:55:46 -0700 (PDT)
-Message-ID: <53D172D1.2010308@sandeen.net>
-Date: Thu, 24 Jul 2014 15:55:45 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 294CB7F3F
+	for <xfs@oss.sgi.com>; Thu, 24 Jul 2014 17:10:49 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id B6872AC005
+	for <xfs@oss.sgi.com>; Thu, 24 Jul 2014 15:10:45 -0700 (PDT)
+Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
+	[150.101.137.143]) by cuda.sgi.com with ESMTP id
+	oTYV8gfZyyz3XoY3 for <xfs@oss.sgi.com>;
+	Thu, 24 Jul 2014 15:10:41 -0700 (PDT)
+Date: Fri, 25 Jul 2014 08:10:38 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 01/18] xfs: refactor xfs_inobt_insert() to eliminate loop
+	and support variable count
+Message-ID: <20140724221038.GN20518@dastard>
+References: <1406211788-63206-1-git-send-email-bfoster@redhat.com>
+	<1406211788-63206-2-git-send-email-bfoster@redhat.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfsprogs: fix typo in mkfs.xfs
-References: <20140724184748.800975529@sgi.com>
-	<20140724184830.434943824@sgi.com>
-In-Reply-To: <20140724184830.434943824@sgi.com>
+Content-Disposition: inline
+In-Reply-To: <1406211788-63206-2-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,77 +27,41 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="windows-1252"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Mark Tinguely <tinguely@sgi.com>, xfs@oss.sgi.com
+To: Brian Foster <bfoster@redhat.com>
+Cc: xfs@oss.sgi.com
 
-On 7/24/14, 1:47 PM, Mark Tinguely wrote:
-> Fix typo in xfs.mkfs output.
-> =
+On Thu, Jul 24, 2014 at 10:22:51AM -0400, Brian Foster wrote:
+> Inodes are always allocated in chunks of 64 and thus the loop in
+> xfs_inobt_insert() is unnecessary.
 
-> Signed-off-by: Mark Tinguely <tinguely@sgi.com>
+I don't believe this is true. The number of inodes allocated at once
+is:
 
-I can do this one! ;)
+        mp->m_ialloc_inos = (int)MAX((__uint16_t)XFS_INODES_PER_CHUNK,
+	                                        sbp->sb_inopblock);
 
-Reviewed-by: Eric Sandeen <sandeen@redhat.com> =
+So when the block size is, say, 64k, the number of 512 byte inodes
+allocated at once is 128. i.e. 2 chunks. Hence xfs_inobt_insert()
+can be called with a inode could of > 64 and therefore the loop is
+still necessary...
 
+And, indeed, we might want to increase the allocation size in future
+to do entire stripe units or stripe widths of inodes at once:
 
-> ---
->  mkfs/xfs_mkfs.c |    2 +-
->  po/pl.po        |    2 +-
->  2 files changed, 2 insertions(+), 2 deletions(-)
-> =
+http://xfs.org/index.php/Improving_inode_Caching#Contiguous_Inode_Allocation
 
-> Index: b/mkfs/xfs_mkfs.c
-> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-> --- a/mkfs/xfs_mkfs.c
-> +++ b/mkfs/xfs_mkfs.c
-> @@ -447,7 +447,7 @@ static void blkid_get_topology(
->  out_free_probe:
->  	blkid_free_probe(pr);
->  	fprintf(stderr,
-> -		_("warning: unable to probe device toplology for device %s\n"),
-> +		_("warning: unable to probe device topology for device %s\n"),
->  		device);
->  }
->  =
+This also means a loop would be required -somewhere-...
 
-> Index: b/po/pl.po
-> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-> --- a/po/pl.po
-> +++ b/po/pl.po
-> @@ -7171,7 +7171,7 @@ msgstr "Mo=C5=BCna u=C5=BCy=C4=87 -f do wymuszenia u
->  =
+Cheers,
 
->  #: .././mkfs/xfs_mkfs.c:450
->  #, c-format
-> -msgid "warning: unable to probe device toplology for device %s\n"
-> +msgid "warning: unable to probe device topology for device %s\n"
->  msgstr "uwaga: nie uda=C5=82o si=C4=99 odczyta=C4=87 topologii urz=C4=85=
-dzenia %s\n"
->  =
-
->  #: .././mkfs/xfs_mkfs.c:578
-> =
-
-> =
-
-> =
-
-> =
-
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
-> =
-
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
