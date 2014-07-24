@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 17A517F3F
-	for <xfs@oss.sgi.com>; Thu, 24 Jul 2014 17:13:49 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 033B9304048
-	for <xfs@oss.sgi.com>; Thu, 24 Jul 2014 15:13:45 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 8A0997F54
+	for <xfs@oss.sgi.com>; Thu, 24 Jul 2014 17:15:35 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 5844C8F8040
+	for <xfs@oss.sgi.com>; Thu, 24 Jul 2014 15:15:32 -0700 (PDT)
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	dDQYgXxXhCU83n89 for <xfs@oss.sgi.com>;
-	Thu, 24 Jul 2014 15:13:43 -0700 (PDT)
-Date: Fri, 25 Jul 2014 08:13:41 +1000
+	tu8HtEacvsgUNp8P for <xfs@oss.sgi.com>;
+	Thu, 24 Jul 2014 15:15:30 -0700 (PDT)
+Date: Fri, 25 Jul 2014 08:14:53 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 05/18] xfs: create macros/helpers for dealing with sparse
+Subject: Re: [PATCH 04/18] xfs: introduce inode record hole mask for sparse
 	inode chunks
-Message-ID: <20140724221341.GO20518@dastard>
+Message-ID: <20140724221453.GP20518@dastard>
 References: <1406211788-63206-1-git-send-email-bfoster@redhat.com>
-	<1406211788-63206-6-git-send-email-bfoster@redhat.com>
+	<1406211788-63206-5-git-send-email-bfoster@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1406211788-63206-6-git-send-email-bfoster@redhat.com>
+In-Reply-To: <1406211788-63206-5-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,41 +34,57 @@ Sender: xfs-bounces@oss.sgi.com
 To: Brian Foster <bfoster@redhat.com>
 Cc: xfs@oss.sgi.com
 
-On Thu, Jul 24, 2014 at 10:22:55AM -0400, Brian Foster wrote:
-> Sparse inode chunks allow the traditional inode btree record format to
-> describe an inode chunk that is not fully allocated and/or contiguous.
-> Define a couple constants that set requirements for allocation and
-> management of such chunks. Also define a helper to easily detect sparse
-> inode chunks.
+On Thu, Jul 24, 2014 at 10:22:54AM -0400, Brian Foster wrote:
+> The inode btrees track 64 inodes per record, regardless of inode size.
+> Thus, inode chunks on disk vary in size depending on the size of the
+> inodes. This creates a contiguous allocation requirement for new inode
+> chunks that can be difficult to satisfy on an aged and fragmented (free
+> space) filesystem.
 > 
-> The granularity of a sparse chunk is defined by the the 16-bit holemask
-> field in the inode record. Assuming 64 inodes per full chunk, a single
-> holemask bit accounts for 4 inodes. The minimum allocation requirement
-> for a sparse inode chunk is defined as the minimum number of blocks
-> required to meet the 4 inode granularity.
+> The inode record freecount currently uses 4 bytes on disk to track the
+> free inode count. With a maximum freecount value of 64, only one byte is
+> required. Convert the freecount field to a single byte and reserve two
+> of the remaining 3 higher order bytes left to the hole mask field.
+> 
+> The hole mask field tracks potential holes in the chunks of physical
+> space that the inode record refers to. This facilitates the sparse
+> allocation of inode chunks when contiguous chunks are not available and
+> allows the inode btrees to identify what portions of the chunk contain
+> valid inodes.
+> 
+> Tracking holes means the field is initialized to zero and thus maintains
+> backwards compatibility with existing filesystems. E.g., the higher
+> order bytes of a counter with a max value of 64 are already initialized
+> to 0. Update the inode record management functions to handle the new
+> field and initialize it to zero for now.
 > 
 > Signed-off-by: Brian Foster <bfoster@redhat.com>
 > ---
->  fs/xfs/libxfs/xfs_format.h | 9 +++++++++
->  1 file changed, 9 insertions(+)
+>  fs/xfs/libxfs/xfs_format.h       | 7 +++++--
+>  fs/xfs/libxfs/xfs_ialloc.c       | 9 +++++++--
+>  fs/xfs/libxfs/xfs_ialloc_btree.c | 4 +++-
+>  3 files changed, 15 insertions(+), 5 deletions(-)
 > 
 > diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
-> index 39022d9..0baad50 100644
+> index 34d85ac..39022d9 100644
 > --- a/fs/xfs/libxfs/xfs_format.h
 > +++ b/fs/xfs/libxfs/xfs_format.h
-> @@ -211,6 +211,11 @@ typedef	__uint64_t	xfs_inofree_t;
->  #define	XFS_INOBT_ALL_FREE		((xfs_inofree_t)-1)
->  #define	XFS_INOBT_MASK(i)		((xfs_inofree_t)1 << (i))
->  
-> +#define XFS_INODES_PER_SPCHUNK		\
-> +	(XFS_INODES_PER_CHUNK / (NBBY * sizeof(__uint16_t)))
-> +#define XFS_INOBT_MIN_SPCHUNKLEN(sb)	\
-> +	(roundup(XFS_INODES_PER_SPCHUNK, sb.sb_inopblock) / sb.sb_inopblock)
+> @@ -221,13 +221,16 @@ static inline xfs_inofree_t xfs_inobt_maskn(int i, int n)
+>   */
+>  typedef struct xfs_inobt_rec {
+>  	__be32		ir_startino;	/* starting inode number */
+> -	__be32		ir_freecount;	/* count of free inodes (set bits) */
+> +	__be16		ir_holemask;	/* hole mask for sparse chunks */
+> +	__u8		ir_pad;
+> +	__u8		ir_freecount;	/* count of free inodes (set bits) */
+>  	__be64		ir_free;	/* free inode mask */
+>  } xfs_inobt_rec_t;
 
-static inline.
+might we want the number of inodes allocated in the chunk there as
+well (i.e. in the pad field) so we can validate the holemask against
+the number of inodes allocated in the chunk?
 
 -Dave.
-
 -- 
 Dave Chinner
 david@fromorbit.com
