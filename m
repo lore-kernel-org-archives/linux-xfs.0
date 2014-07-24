@@ -1,17 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 9B72C7F3F
-	for <xfs@oss.sgi.com>; Thu, 24 Jul 2014 13:38:12 -0500 (CDT)
-Message-ID: <53D1528F.5090906@sgi.com>
-Date: Thu, 24 Jul 2014 13:38:07 -0500
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id B23DE7F3F
+	for <xfs@oss.sgi.com>; Thu, 24 Jul 2014 13:51:13 -0500 (CDT)
+Received: from eagdhcp-232-188.americas.sgi.com
+	(eagdhcp-232-188.americas.sgi.com [128.162.232.188])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 30BF0AC00A
+	for <xfs@oss.sgi.com>; Thu, 24 Jul 2014 11:51:13 -0700 (PDT)
+Received: from eagdhcp-232-188.americas.sgi.com (localhost [127.0.0.1])
+	by eagdhcp-232-188.americas.sgi.com (8.14.5/8.14.5) with ESMTP id
+	s6OIpBYT003327
+	for <xfs@oss.sgi.com>; Thu, 24 Jul 2014 13:51:11 -0500 (CDT)
+	(envelope-from tinguely@eagdhcp-232-188.americas.sgi.com)
+Message-Id: <20140724184830.434943824@sgi.com>
+Date: Thu, 24 Jul 2014 13:47:49 -0500
 From: Mark Tinguely <tinguely@sgi.com>
-MIME-Version: 1.0
-Subject: Re: [PATCH 03/18] xfs: define sparse inode chunks v5 sb feature bit
-	and helper function
-References: <1406211788-63206-1-git-send-email-bfoster@redhat.com>
-	<1406211788-63206-4-git-send-email-bfoster@redhat.com>
-	<53D13D94.9030607@sgi.com> <20140724173701.GD37832@bfoster.bfoster>
-In-Reply-To: <20140724173701.GD37832@bfoster.bfoster>
+Subject: [PATCH] xfsprogs: fix typo in mkfs.xfs
+References: <20140724184748.800975529@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -20,50 +24,61 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="===============3521655532431046858=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
-On 07/24/14 12:37, Brian Foster wrote:
-> On Thu, Jul 24, 2014 at 12:08:36PM -0500, Mark Tinguely wrote:
->> On 07/24/14 09:22, Brian Foster wrote:
->>> The sparse inode chunks feature will use the helper function to enable
->>> the allocation of sparse inode chunks. The incompatible feature bit is
->>> set on disk once a sparse inode chunk is allocated to prevent older
->>> drivers from mounting an fs with sparse chunks.
->>>
->>> Note that the feature is hardcoded disabled and the feature bit not
->>> included in the all features mask until fully implemented.
->>>
->>> Signed-off-by: Brian Foster<bfoster@redhat.com>
->>> ---
->>
->> Sorry if I missed it in the series but is there an
->> XFS_FSOP_GEOM_FLAGS_SPINODES for xfs_info/growfs?
->>
->
-> Nope, looks like I missed it. It probably slipped my mind as I haven't
-> got into userspace yet and thus hadn't thought about xfs_info. I'll make
-> a note to add it, thanks!
->
-> Brian
+--===============3521655532431046858==
+Content-Disposition: inline; filename=xfsprogs-fix-topology-typo.patch
 
-Again forgive my quick scanning of the series, but am I correct in 
-thinking that this does not change the minimum number of reserved blocks 
-for create like fs ops. The create/rename do some attempts to continue 
-when it cannot get the full number of reserved blocks. Would allocating 
-a sparse inode chunk make sense in that case? My gut says the 
-complication does not.
+Fix typo in xfs.mkfs output.
 
-Thanks again,
+Signed-off-by: Mark Tinguely <tinguely@sgi.com>
+---
+ mkfs/xfs_mkfs.c |    2 +-
+ po/pl.po        |    2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
---Mark.
+Index: b/mkfs/xfs_mkfs.c
+===================================================================
+--- a/mkfs/xfs_mkfs.c
++++ b/mkfs/xfs_mkfs.c
+@@ -447,7 +447,7 @@ static void blkid_get_topology(
+ out_free_probe:
+ 	blkid_free_probe(pr);
+ 	fprintf(stderr,
+-		_("warning: unable to probe device toplology for device %s\n"),
++		_("warning: unable to probe device topology for device %s\n"),
+ 		device);
+ }
+ 
+Index: b/po/pl.po
+===================================================================
+--- a/po/pl.po
++++ b/po/pl.po
+@@ -7171,7 +7171,7 @@ msgstr "Można użyć -f do wymuszenia u
+ 
+ #: .././mkfs/xfs_mkfs.c:450
+ #, c-format
+-msgid "warning: unable to probe device toplology for device %s\n"
++msgid "warning: unable to probe device topology for device %s\n"
+ msgstr "uwaga: nie udało się odczytać topologii urządzenia %s\n"
+ 
+ #: .././mkfs/xfs_mkfs.c:578
 
+
+
+--===============3521655532431046858==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============3521655532431046858==--
