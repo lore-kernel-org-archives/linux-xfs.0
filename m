@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 02CF07F56
-	for <xfs@oss.sgi.com>; Thu, 24 Jul 2014 17:41:19 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id E16078F8049
-	for <xfs@oss.sgi.com>; Thu, 24 Jul 2014 15:41:18 -0700 (PDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 93D4C7F58
+	for <xfs@oss.sgi.com>; Thu, 24 Jul 2014 17:46:33 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 2DDE4AC005
+	for <xfs@oss.sgi.com>; Thu, 24 Jul 2014 15:46:32 -0700 (PDT)
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	GQXPt6wacoGzxd5T for <xfs@oss.sgi.com>;
-	Thu, 24 Jul 2014 15:41:16 -0700 (PDT)
-Date: Fri, 25 Jul 2014 08:41:12 +1000
+	G3145LhP74Go5AT5 for <xfs@oss.sgi.com>;
+	Thu, 24 Jul 2014 15:46:30 -0700 (PDT)
+Date: Fri, 25 Jul 2014 08:46:28 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 08/18] xfs: create helper to manage record overlap for
-	sparse inode chunks
-Message-ID: <20140724224112.GR20518@dastard>
+Subject: Re: [PATCH 10/18] xfs: set sparse inodes feature bit when a sparse
+	chunk is allocated
+Message-ID: <20140724224628.GS20518@dastard>
 References: <1406211788-63206-1-git-send-email-bfoster@redhat.com>
-	<1406211788-63206-9-git-send-email-bfoster@redhat.com>
+	<1406211788-63206-11-git-send-email-bfoster@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1406211788-63206-9-git-send-email-bfoster@redhat.com>
+In-Reply-To: <1406211788-63206-11-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,87 +34,78 @@ Sender: xfs-bounces@oss.sgi.com
 To: Brian Foster <bfoster@redhat.com>
 Cc: xfs@oss.sgi.com
 
-On Thu, Jul 24, 2014 at 10:22:58AM -0400, Brian Foster wrote:
-> Create xfs_spchunk_has_record() to receive the parameters of a new
-> sparse inode chunk allocation and identify whether a record exists that
-> is capable of tracking this sparse chunk.
+On Thu, Jul 24, 2014 at 10:23:00AM -0400, Brian Foster wrote:
+> The sparse chunk inode record format is backwards compatible with old
+> format inobt records as long as full chunks are allocated. The holemask
+> field uses higher order bytes of the freecount. While sparse chunks can
+> be enabled on previously unsupported fs, older kernel drivers cannot
+> parse sparse inode records.
+> 
+> Set the feature incompatible bit once a sparse inode chunk is allocated
+> to prevent older XFS drivers from tripping over the new format.
 > 
 > Signed-off-by: Brian Foster <bfoster@redhat.com>
 > ---
->  fs/xfs/libxfs/xfs_ialloc.c | 55 ++++++++++++++++++++++++++++++++++++++++++++++
->  1 file changed, 55 insertions(+)
+>  fs/xfs/libxfs/xfs_ialloc.c | 33 +++++++++++++++++++++++++++++++++
+>  1 file changed, 33 insertions(+)
 > 
 > diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
-> index 27d3437..be57b51 100644
+> index 4226b1b..4dd45c2 100644
 > --- a/fs/xfs/libxfs/xfs_ialloc.c
 > +++ b/fs/xfs/libxfs/xfs_ialloc.c
-> @@ -351,6 +351,61 @@ xfs_ialloc_inode_init(
+> @@ -407,6 +407,27 @@ error:
+>  	return error;
 >  }
 >  
->  /*
-> + * Determine whether part of a sparse inode chunk that has just been allocated
-> + * is covered by an existing inobt record.
-> + */
-> +STATIC int
-> +xfs_spchunk_has_record(
-
-not sure I like the "spchunk" naming. I see that and I have no idea
-what subsystem it belongs to. It's actually an inobt lookup
-function, and doesn't really have anything to do with sparse chunks.
-So maybe xfs_inobt_rec_exists or xfs_inobt_lookup_exact?
-
-> +	struct xfs_mount		*mp,
-> +	struct xfs_trans		*tp,
-> +	struct xfs_buf			*agbp,
-> +	xfs_agino_t			newino,
-> +	xfs_agino_t			count,
-> +	xfs_btnum_t			btnum,
-> +	struct xfs_inobt_rec_incore	*orec)
+> +STATIC void
+> +xfs_sbversion_add_spinodes(
+> +	struct xfs_trans	*tp,
+> +	struct xfs_mount	*mp)
 > +{
-> +	struct xfs_btree_cur		*cur;
-> +	struct xfs_agi			*agi = XFS_BUF_TO_AGI(agbp);
-> +	xfs_agnumber_t			agno = be32_to_cpu(agi->agi_seqno);
-> +	xfs_agino_t			previno;
-> +	int				error;
-> +	int				i;
-> +	struct xfs_inobt_rec_incore	rec;
-> +
-> +	orec->ir_startino = NULLAGINO;
-> +
-> +	cur = xfs_inobt_init_cursor(mp, tp, agbp, agno, btnum);
-> +
-> +	previno = newino + count - XFS_INODES_PER_CHUNK;
-> +	error = xfs_inobt_lookup(cur, previno, XFS_LOOKUP_GE, &i);
+> +	if (xfs_sb_has_incompat_log_feature(&mp->m_sb,
+> +					    XFS_SB_FEAT_INCOMPAT_SPINODES))
 
-You want XFS_LOOKUP_EQ, yes? i.e. XFS_LOOKUP_GE won't fail if the
-exact record for the inode chunk does not exist - it will return the
-next one in the btree.
+wrong function. xfs_sb_has_incompat_feature().
 
-> +	if (error)
-> +		goto error;
-> +	if (i == 0)
-> +		goto out;
+> +		return;
 > +
-> +	error = xfs_inobt_get_rec(cur, &rec, &i);
-> +	if (error)
-> +		goto error;
-> +	XFS_WANT_CORRUPTED_GOTO(i == 1, error);
+> +	spin_lock(&mp->m_sb_lock);
+> +	if (xfs_sb_has_incompat_log_feature(&mp->m_sb,
+> +					    XFS_SB_FEAT_INCOMPAT_SPINODES)) {
+> +		spin_unlock(&mp->m_sb_lock);
+> +		return;
+> +	}
 > +
-> +	if (rec.ir_startino > newino)
-> +		goto out;
-
-And so this check would not be necessary...
-
+> +	mp->m_sb.sb_features_incompat |= XFS_SB_FEAT_INCOMPAT_SPINODES;
+> +	spin_unlock(&mp->m_sb_lock);
+> +	xfs_mod_sb(tp, XFS_SB_FEATURES_INCOMPAT);
+> +}
 > +
-> +	ASSERT(rec.ir_startino <= newino &&
-> +	       rec.ir_startino + XFS_INODES_PER_CHUNK > newino);
-> +	ASSERT(rec.ir_freecount + count <= XFS_INODES_PER_CHUNK);
+>  /*
+>   * Allocate new inodes in the allocation group specified by agbp.
+>   * Return 0 for success, else error code.
+> @@ -631,6 +652,18 @@ xfs_ialloc_ag_alloc(
+>  		if (error)
+>  			return error;
+>  	}
 > +
-> +	*orec = rec;
+> +	/*
+> +	 * Set an incompat feature bit as old drivers can't parse sparse
+> +	 * records. Pre-sparse inode chunk drivers will include the
+> +	 * holemask in the higher order freecount bits, resulting in a
+> +	 * bogus value.
+> +	 *
+> +	 * XXX: when is this bit removed?
+> +	 */
+> +	if (xfs_inobt_issparse(&rec))
+> +		xfs_sbversion_add_spinodes(tp, args.mp);
 
-/* struct copy */
+I'd like to avoid this dynamic feature bit adding if possible. Do we
+really need it?
 
--Dave.
+Cheers,
+
+Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
