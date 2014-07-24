@@ -1,27 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id BF3617F60
-	for <xfs@oss.sgi.com>; Thu, 24 Jul 2014 09:23:16 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 8FDB48F804C
-	for <xfs@oss.sgi.com>; Thu, 24 Jul 2014 07:23:13 -0700 (PDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 797077F3F
+	for <xfs@oss.sgi.com>; Thu, 24 Jul 2014 09:51:14 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 563C7304048
+	for <xfs@oss.sgi.com>; Thu, 24 Jul 2014 07:51:14 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id U5zpEAWfgbdBBfj6 (version=TLSv1
+	cuda.sgi.com with ESMTP id Bl5ng8tTCpsdshjk (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 24 Jul 2014 07:23:12 -0700 (PDT)
-Received: from int-mx11.intmail.prod.int.phx2.redhat.com
-	(int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id s6OENAfV002642
+	Thu, 24 Jul 2014 07:51:13 -0700 (PDT)
+Received: from int-mx10.intmail.prod.int.phx2.redhat.com
+	(int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id s6OEpCok008437
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256
-	verify=OK) for <xfs@oss.sgi.com>; Thu, 24 Jul 2014 10:23:11 -0400
+	verify=OK) for <xfs@oss.sgi.com>; Thu, 24 Jul 2014 10:51:12 -0400
 Received: from bfoster.bfoster ([10.18.41.237])
-	by int-mx11.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id s6OENA46017006
-	for <xfs@oss.sgi.com>; Thu, 24 Jul 2014 10:23:10 -0400
+	by int-mx10.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id s6OEN958030706
+	for <xfs@oss.sgi.com>; Thu, 24 Jul 2014 10:23:09 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH 15/18] xfs: only free allocated regions of inode chunks
-Date: Thu, 24 Jul 2014 10:23:05 -0400
-Message-Id: <1406211788-63206-16-git-send-email-bfoster@redhat.com>
+Subject: [PATCH 02/18] xfs: pass xfs_mount directly to
+	xfs_ialloc_cluster_alignment()
+Date: Thu, 24 Jul 2014 10:22:52 -0400
+Message-Id: <1406211788-63206-3-git-send-email-bfoster@redhat.com>
 In-Reply-To: <1406211788-63206-1-git-send-email-bfoster@redhat.com>
 References: <1406211788-63206-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,105 +40,64 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-An inode chunk is currently added to the transaction free list based on
-a simple fsb conversion and hardcoded chunk length. The nature of sparse
-chunks is such that the physical chunk of inodes on disk may consist of
-one or more discontiguous parts. Blocks that reside in the holes of the
-inode chunk are not inodes and could be allocated to any other use or
-not allocated at all.
-
-Refactor the existing xfs_bmap_add_free() call into the
-xfs_difree_inode_chunk() helper. The new helper uses the existing
-calculation if a chunk is not sparse. Otherwise, use the inobt record
-holemask to free the contiguous regions of the chunk.
+xfs_ialloc_cluster_alignment() takes an args parameter but only uses the
+xfs_mount pointer. Replace the args parameter with mp such that we can
+use this function from additional contexts.
 
 Signed-off-by: Brian Foster <bfoster@redhat.com>
 ---
- fs/xfs/libxfs/xfs_ialloc.c | 64 +++++++++++++++++++++++++++++++++++++++++++---
- 1 file changed, 61 insertions(+), 3 deletions(-)
+ fs/xfs/libxfs/xfs_ialloc.c | 16 ++++++++--------
+ 1 file changed, 8 insertions(+), 8 deletions(-)
 
 diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
-index f75f191..1be57b1 100644
+index 6e2ccb3..5448a74 100644
 --- a/fs/xfs/libxfs/xfs_ialloc.c
 +++ b/fs/xfs/libxfs/xfs_ialloc.c
-@@ -1659,6 +1659,66 @@ out_error:
- 	return error;
+@@ -48,12 +48,12 @@
+  */
+ static inline int
+ xfs_ialloc_cluster_alignment(
+-	xfs_alloc_arg_t	*args)
++	struct xfs_mount *mp)
+ {
+-	if (xfs_sb_version_hasalign(&args->mp->m_sb) &&
+-	    args->mp->m_sb.sb_inoalignmt >=
+-	     XFS_B_TO_FSBT(args->mp, args->mp->m_inode_cluster_size))
+-		return args->mp->m_sb.sb_inoalignmt;
++	if (xfs_sb_version_hasalign(&mp->m_sb) &&
++	    mp->m_sb.sb_inoalignmt >=
++	     XFS_B_TO_FSBT(mp, mp->m_inode_cluster_size))
++		return mp->m_sb.sb_inoalignmt;
+ 	return 1;
  }
  
-+/*
-+ * Free the blocks of an inode chunk. We must consider that the inode chunk
-+ * might be sparse and only free the regions that are allocated as part of the
-+ * chunk.
-+ */
-+STATIC void
-+xfs_difree_inode_chunk(
-+	struct xfs_mount		*mp,
-+	xfs_agnumber_t			agno,
-+	struct xfs_inobt_rec_incore	*rec,
-+	struct xfs_bmap_free		*flist)
-+{
-+	xfs_agblock_t	sagbno = XFS_AGINO_TO_AGBNO(mp, rec->ir_startino);
-+	xfs_agblock_t	agbno;
-+	int		nextbit;
-+	int		contig, contigblk;
-+	__uint16_t	allocmask;
-+	uint		allocbitmap;
-+
-+	if (!xfs_inobt_issparse(rec)) {
-+		/* not sparse, calculate extent info directly */
-+		xfs_bmap_add_free(XFS_AGB_TO_FSB(mp, agno,
-+				  XFS_AGINO_TO_AGBNO(mp, rec->ir_startino)),
-+				  mp->m_ialloc_blks, flist, mp);
-+		return;
-+	}
-+
-+	/*
-+	 * The bit flip and type conversion are intentionally done separately
-+	 * here to zero-extend the bitmask.
-+	 */
-+	allocmask = ~rec->ir_holemask;
-+	allocbitmap = allocmask;
-+
-+	/*
-+	 * We now have an allocation bitmap in units of inodes at sparse chunk
-+	 * granularity (e.g., more than one inode per bit). Use the bitmask
-+	 * functions to find each contigious range of bits in the map. For each
-+	 * range, convert the start bit and count to block values and use that
-+	 * data to add the associated extent to the free list.
-+	 */
-+	nextbit = xfs_next_bit(&allocbitmap, 1, 0);
-+	while (nextbit != -1) {
-+		agbno = (nextbit * XFS_INODES_PER_SPCHUNK) /
-+				mp->m_sb.sb_inopblock;
-+		agbno += sagbno;
-+
-+		contig = xfs_contig_bits(&allocbitmap, 1, nextbit);
-+		contigblk = (contig * XFS_INODES_PER_SPCHUNK) /
-+				mp->m_sb.sb_inopblock;
-+
-+		ASSERT(agbno % xfs_ialloc_cluster_alignment(mp) == 0);
-+		ASSERT(contigblk % xfs_ialloc_cluster_alignment(mp) == 0);
-+		xfs_bmap_add_free(XFS_AGB_TO_FSB(mp, agno, agbno), contigblk,
-+				  flist, mp);
-+
-+		nextbit = xfs_next_bit(&allocbitmap, 1, nextbit + contig + 1);
-+	}
-+}
-+
- STATIC int
- xfs_difree_inobt(
- 	struct xfs_mount		*mp,
-@@ -1750,9 +1810,7 @@ xfs_difree_inobt(
- 			goto error0;
- 		}
+@@ -407,7 +407,7 @@ xfs_ialloc_ag_alloc(
+ 		 * but not to use them in the actual exact allocation.
+ 		 */
+ 		args.alignment = 1;
+-		args.minalignslop = xfs_ialloc_cluster_alignment(&args) - 1;
++		args.minalignslop = xfs_ialloc_cluster_alignment(args.mp) - 1;
  
--		xfs_bmap_add_free(XFS_AGB_TO_FSB(mp, agno,
--				  XFS_AGINO_TO_AGBNO(mp, rec.ir_startino)),
--				  mp->m_ialloc_blks, flist, mp);
-+		xfs_difree_inode_chunk(mp, agno, &rec, flist);
- 	} else {
- 		*deleted = 0;
- 
+ 		/* Allow space for the inode btree to split. */
+ 		args.minleft = args.mp->m_in_maxlevels - 1;
+@@ -443,7 +443,7 @@ xfs_ialloc_ag_alloc(
+ 			args.alignment = args.mp->m_dalign;
+ 			isaligned = 1;
+ 		} else
+-			args.alignment = xfs_ialloc_cluster_alignment(&args);
++			args.alignment = xfs_ialloc_cluster_alignment(args.mp);
+ 		/*
+ 		 * Need to figure out where to allocate the inode blocks.
+ 		 * Ideally they should be spaced out through the a.g.
+@@ -472,7 +472,7 @@ xfs_ialloc_ag_alloc(
+ 		args.type = XFS_ALLOCTYPE_NEAR_BNO;
+ 		args.agbno = be32_to_cpu(agi->agi_root);
+ 		args.fsbno = XFS_AGB_TO_FSB(args.mp, agno, args.agbno);
+-		args.alignment = xfs_ialloc_cluster_alignment(&args);
++		args.alignment = xfs_ialloc_cluster_alignment(args.mp);
+ 		if ((error = xfs_alloc_vextent(&args)))
+ 			return error;
+ 	}
 -- 
 1.8.3.1
 
