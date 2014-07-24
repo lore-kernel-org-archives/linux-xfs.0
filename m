@@ -1,22 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 100857F50
-	for <xfs@oss.sgi.com>; Thu, 24 Jul 2014 17:32:17 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 505BC7F53
+	for <xfs@oss.sgi.com>; Thu, 24 Jul 2014 17:34:42 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id DF75C8F8040
-	for <xfs@oss.sgi.com>; Thu, 24 Jul 2014 15:32:16 -0700 (PDT)
-Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
-	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	c0ucFlL1jE7qPHEw for <xfs@oss.sgi.com>;
-	Thu, 24 Jul 2014 15:32:14 -0700 (PDT)
-Date: Fri, 25 Jul 2014 08:32:11 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH RFC 00/18] xfs: sparse inode chunks
-Message-ID: <20140724223211.GQ20518@dastard>
-References: <1406211788-63206-1-git-send-email-bfoster@redhat.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1406211788-63206-1-git-send-email-bfoster@redhat.com>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 3AF1230406B
+	for <xfs@oss.sgi.com>; Thu, 24 Jul 2014 15:34:42 -0700 (PDT)
+Received: from mail-pa0-f49.google.com (mail-pa0-f49.google.com
+	[209.85.220.49]) by cuda.sgi.com with ESMTP id SztllSjl9cMtoAsj
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Thu, 24 Jul 2014 15:34:40 -0700 (PDT)
+Received: by mail-pa0-f49.google.com with SMTP id hz1so4763214pad.22
+	for <xfs@oss.sgi.com>; Thu, 24 Jul 2014 15:34:40 -0700 (PDT)
+Mime-Version: 1.0 (Mac OS X Mail 7.3 \(1878.6\))
+Subject: Re: [PATCH 2/4 v3] fiemap: add EXTENT_DATA_COMPRESSED flag
+From: Andreas Dilger <adilger@dilger.ca>
+In-Reply-To: <20140724192245.GG1553@suse.cz>
+Date: Thu, 24 Jul 2014 16:34:35 -0600
+Message-Id: <5B4825C3-F47E-48B7-8DA4-6D79F53B73B1@dilger.ca>
+References: <cover.1386778302.git.dsterba@suse.cz>
+	<4f8d5dc5b51a43efaf16c39398c23a6276e40a30.1386778303.git.dsterba@suse.cz>
+	<20131212232443.GL31386@dastard>
+	<9520AB36-B728-423A-8EA1-FDD22B79AE90@dilger.ca>
+	<B58DEEA8-561A-4173-B9F5-528B73E06C6D@dilger.ca>
+	<20140724192245.GG1553@suse.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,149 +31,148 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============5971906306549464896=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
-Cc: xfs@oss.sgi.com
+To: dsterba@suse.cz
+Cc: linux-nilfs@vger.kernel.org, xfs@oss.sgi.com, Btrfs Developer List <linux-btrfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Ext4 Developers List <linux-ext4@vger.kernel.org>, ocfs2-devel@oss.oracle.com
 
-On Thu, Jul 24, 2014 at 10:22:50AM -0400, Brian Foster wrote:
-> Hi all,
-> 
-> This is a first pass at sparse inode chunk support for XFS. Some
-> background on this work is available here:
-> 
-> http://oss.sgi.com/archives/xfs/2013-08/msg00346.html
-> 
-> The basic idea is to allow the partial allocation of inode chunks into
-> fragmented regions of free space. This is accomplished through addition
-> of a holemask field into the inobt record that defines what portion(s)
-> of an inode chunk are invalid (i.e., holes in the chunk). This work is
-> not quite complete, but is at a point where I'd like to start getting
-> feedback on the design and what direction to take for some of the known
-> gaps.
-> 
-> The basic breakdown of functionality in this set is as follows:
-> 
-> - Patches 1-2 - A couple generic cleanups that are dependencies for later
->   patches in the series.
-> - Patches 3-5 - Basic data structure update, feature bit and minor
->   helper introduction.
-> - Patches 6-7 - Update v5 icreate logging and recovery to handle sparse
->   inode records.
-> - Patches 8-13 - Allocation support for sparse inode records. Physical
->   chunk allocation and individual inode allocation.
-> - Patches 14-16 - Deallocation support for sparse inode chunks. Physical
->   chunk deallocation, individual inode free and cluster free.
-> - Patch 17 - Fixes for bulkstat/inumbers.
-> - Patch 18 - Activate support for sparse chunk allocation and
->   processing.
-> 
-> This work is lightly tested for regression (some xfstests failures due
-> to repair) and basic functionality. I have a new xfstests test I'll
-> forward along for demonstration purposes.
-> 
-> Some notes on gaps in the design:
-> 
-> - Sparse inode chunk allocation granularity:
-> 
-> The current minimum sparse chunk allocation granularity is the cluster
-> size.
 
-Looking at the patchset (I got to patch 5 that first uses this),
-this is problematic. the cluster size is currently a kernel
-implementation detail, and not something defined by the on-disk
-format. We can change the cluster size in the kernel and not affect
-the format on disk. Making the cluster size a part of the disk
-format by defining it to be the resolution of sparse inode chunks
-changes that - it's now a part of the on-disk inode format, and that
-greatly limits what we can do with it.
+--===============5971906306549464896==
+Content-Type: multipart/signed; boundary="Apple-Mail=_EE49BFE3-FECB-40D9-B2D2-AD63AA8C9172"; protocol="application/pgp-signature"; micalg=pgp-sha1
 
-> My initial attempts at this work tried to redefine to the minimum
-> chunk length based on the holemask granularity (a la the stale macro I
-> seemingly left in this series ;), but this involves tweaking the
-> codepaths that use the cluster size (i.e., imap) which proved rather
-> hairy.
 
-This is where we need to head towards, though. The cluster size is
-currently the unit of inode IO, so that needs to be influenced by the
-sparse inode chunk granularity. Yes, we can define the inode chunk
-granularity to be the same as the cluster size, but that simply
-means we need to configure the cluster size appropriately at mount.
-It doesn't mean we need to change what cluster size means or it's
-implementation....
+--Apple-Mail=_EE49BFE3-FECB-40D9-B2D2-AD63AA8C9172
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain;
+	charset=us-ascii
 
-> This also means we need a solution where an imap can change if an
-> inode was initially mapped as a sparse chunk and said chunk is
-> subsequently made full. E.g., we'd perhaps need to invalidate the inode
-> buffers for sparse chunks at the time where they are made full. Given
-> that, I landed on using the cluster size and leaving those codepaths as
-> is for the time being.
 
-Again, that's kernel inode buffer cache implementaiton details, not
-something that matters for the on-disk format. So really these need
-to be separated. Probably means we need a "sparse inode allocation
-alignment" field in the superblock to define this. Having
-the kernel reject sparse alignments it can't support from the
-initial implementation means we can improve the kernel
-implementation over time and (eventually) support sub-cluster sized
-sparse inode allocation.
+On Jul 24, 2014, at 1:22 PM, David Sterba <dsterba@suse.cz> wrote:
+> On Thu, Jul 17, 2014 at 12:07:57AM -0600, Andreas Dilger wrote:
+>> any progress on this patch series?
+>=20
+> I'm sorry I got distracted at the end of year and did not finish the
+> series.
+>=20
+>> I never saw an updated version of this patch series after the last =
+round of
+>> reviews, but it would be great to move it forward.  I have filefrag =
+patches
+>> in my e2fsprogs tree waiting for an updated version of your patch.
+>>=20
+>> I recall the main changes were:
+>> - add FIEMAP_EXTENT_PHYS_LENGTH flag to indicate if fe_phys_length =
+was valid
+>=20
+> fe_phys_length will be always valid, so other the flags are set only =
+if it's
+> not equal to the logical length.
+>=20
+>> - rename fe_length to fe_logi_length and #define fe_length =
+fe_logi_length
+>> - always fill in fe_phys_length (=3D fe_logi_length for uncompressed =
+files)
+>>  and set FIEMAP_EXTENT_PHYS_LENGTH whether the extent is compressed =
+or not
+>=20
+> This is my understanding and contradicts the first point.
 
-i.e. initial implementation only supports sparse alignment ==
-cluster size, and rejects everything else....
+I think Dave Chinner's former point was that having fe_phys_length =
+validity
+depend on FIEMAP_EXTENT_DATA_COMPRESSED is a non-intuitive interface.  =
+It is
+not true that fe_phys_length would always be valid, since that is not =
+the
+case for older kernels that currently always set this field to 0, so =
+they
+need some flag to indicate if fe_phys_length is valid.  Alternately,
+userspace could do:
 
-> There is a tradeoff here for v5 superblocks because we've recently made
-> a change to scale the cluster size based on the factor increase in the
-> inode size from the default (see xfsprogs commit 7b5f9801). This means
-> that effectiveness of sparse chunks is tied to whether the level of free
-> space fragmentation matches the cluster size. By that I mean effectivess
-> is good (near 100% utilization possible) if free space fragmentation
-> leaves free extents around that at least match the cluster size. If
-> fragmentation is worse than the cluster size, effectiveness is reduced.
-> This can also be demonstrated with the forthcoming xfstests test.
+	if (ext->fe_phys_length =3D=3D 0)
+		ext->fe_phys_length =3D ext->fe_logi_length;
 
-Exactly. We don't need to solve every problem with the initial
-implementation - we can iteratively improve the code because once
-the fields are one disk we only need to change the kernel
-implemenation to support finer grained sparse allocation to solve
-this allocation chunk < cluster size problem....
+but that pre-supposes that fe_phys_length =3D=3D 0 is never a valid =
+value when
+fe_logi_length is non-zero, and this might introduce errors in some =
+cases.
+I could imagine that some compression methods might not allocate any =
+space
+at all if it was all zeroes, and just store a bit in the blockpointer or
+extent, so having a separate FIEMAP_EXTENT_PHYS_LENGTH is probably safer
+in the long run.  That opens up the question of whether a written zero
+filled space that gets compressed away is different from a hole, but I'd
+prefer to just return whatever the file mapping is than interpret it.
 
-> - On-disk lifecycle of the sparse inode chunks feature bit:
-> 
-> We set an incompatible feature bit once a sparse inode chunk is
-> allocated because older revisions of code will interpret the non-zero
-> holemask bits in the higher order bytes of the record freecount. The
-> feature bit must be removed once all sparse inode chunks are eliminated
-> one way or another. This series does not currently remove the feature
-> bit once set simply because I hadn't thought through the mechanism quite
-> yet. For the next version, I'm thinking about adding an inobt walk
-> mechanism that can be conditionally invoked (i.e., feature bit is
-> currently set and a sparse inode chunk has been eliminated) either via
-> workqueue on an interval or during unmount if necessary. Thoughts or
-> alternative suggestions on that appreciated.
+Cheers, Andreas
 
-I wouldn't bother. Let xfs_repair determine if the bit needs to be
-set or not when it does it's final superblock write after it has
-scanned and repaired the fs.
+>> - add WARN_ONCE() in fiemap_fill_next_extent() as described below
+>>=20
+>> I don't know if there was any clear statement about whether there =
+should be
+>> separate FIEMAP_EXTENT_PHYS_LENGTH and FIEMAP_EXTENT_DATA_COMPRESSED =
+flags,
+>> or if the latter should be implicit?  Probably makes sense to have =
+separate
+>> flags.  It should be fine to use:
+>>=20
+>> #define FIEMAP_EXTENT_PHYS_LENGTH	0x00000010
+>>=20
+>> since this flag was never used.
+>=20
+> I've kept only FIEMAP_EXTENT_DATA_COMPRESSED, I don't see a need for
+> FIEMAP_EXTENT_PHYS_LENGTH and this would be yet another flag because =
+the
+> FIEMAP_EXTENT_DATA_ENCODED is also implied.
+>=20
+> I'll send V4, we can discuss the PHYS_LENGTH flag then.
 
-I'm even in two minds of whether we want the sb bit added
-dynamically, because it means the same upgrade/downdgrade cycle can
-have different results simply due to filesystem freespace
-fragmentation patterns...
 
-Perhaps an xfs-admin command to turn the feature on dynamicallyi for
-existing filesystems, kind of like what we did with lazy superblock
-counters when they were introduced?
+Cheers, Andreas
 
-Cheers,
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+
+
+
+
+--Apple-Mail=_EE49BFE3-FECB-40D9-B2D2-AD63AA8C9172
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+	filename=signature.asc
+Content-Type: application/pgp-signature;
+	name=signature.asc
+Content-Description: Message signed with OpenPGP using GPGMail
+
+-----BEGIN PGP SIGNATURE-----
+Comment: GPGTools - http://gpgtools.org
+
+iQIVAwUBU9GJ+3Kl2rkXzB/gAQL14w/9E/WENH/RddgvYvMI0mPiMkdxzFK++PEH
+dsaix22ddMjmnP7cRHt/Ty5ZfcnydZqFG/FNta9ZOcfTDaUOXGw3C7U7X93MAorx
+s+q6ISAO81cYTLKvxFJDXzYzo/QxB219+oByPSdutEOYvANM1x/2vY5QYPVwjg4g
+dxTAmoChCCbGEn96VZOG0M93kugQn7n4EzMjjK/5niUOiQiT4GCsTCFGyXuieXf+
+PifblnRrNgQVRCzOimY+lXbXgL0+huGFw0okgx1/QCz176s60yFweEktWPuHdrZ1
+8cDp97T5EwLXe9NYH+tyR6aw6yURzx8BSLMMscQWXs12lceuV0c5tBQ9l8RKtlEo
+cLJJwPXHt7BS/CWsLpjyEz3zNTkvX88rmV0kPZIdVeseI3yP7GLLTdJ5TWXeR3Jb
+BS9RQlXXU+1dZET3Lab22uEkUted8qH0sKyACbcwGRitJNx6aDpu5ByV4MyCjKPm
+HnJAmTbADVpJRVTaPmgQbs4MrEgZm9PxAG/JWm7Qi+KythnZVFG1DVocvmE9ZWSK
+FCkyBKEwDR/7KiFy3EBm1v0nwVetoHVOykTLBu6jCW8BU70o5BwAp5gVfGYEj2x8
+9lx6QZWKDSRH2YyVjh2q7s0DrNosPpejxwT5ZxdKNOAUTcw+m4HO5LzD6WYbkU5W
+nvpdaVUDRbc=
+=Z7dA
+-----END PGP SIGNATURE-----
+
+--Apple-Mail=_EE49BFE3-FECB-40D9-B2D2-AD63AA8C9172--
+
+
+--===============5971906306549464896==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============5971906306549464896==--
