@@ -1,25 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 1C1547F47
-	for <xfs@oss.sgi.com>; Mon, 28 Jul 2014 11:23:05 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id A59327F47
+	for <xfs@oss.sgi.com>; Mon, 28 Jul 2014 18:32:28 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 07DE68F8040
-	for <xfs@oss.sgi.com>; Mon, 28 Jul 2014 09:23:04 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id ewMH5NWLJySEVjbq (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 28 Jul 2014 09:23:04 -0700 (PDT)
-Date: Mon, 28 Jul 2014 12:23:00 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 10/18] xfs: set sparse inodes feature bit when a sparse
-	chunk is allocated
-Message-ID: <20140728162300.GE59542@bfoster.bfoster>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 1BB39AC003
+	for <xfs@oss.sgi.com>; Mon, 28 Jul 2014 16:32:24 -0700 (PDT)
+Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
+	[150.101.137.145]) by cuda.sgi.com with ESMTP id
+	K5DtTiu0HSzpAQE8 for <xfs@oss.sgi.com>;
+	Mon, 28 Jul 2014 16:32:22 -0700 (PDT)
+Date: Tue, 29 Jul 2014 09:32:19 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 01/18] xfs: refactor xfs_inobt_insert() to eliminate loop
+	and support variable count
+Message-ID: <20140728233219.GF26465@dastard>
 References: <1406211788-63206-1-git-send-email-bfoster@redhat.com>
-	<1406211788-63206-11-git-send-email-bfoster@redhat.com>
-	<20140724224628.GS20518@dastard>
+	<1406211788-63206-2-git-send-email-bfoster@redhat.com>
+	<20140724221038.GN20518@dastard>
+	<20140728160351.GB59542@bfoster.bfoster>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20140724224628.GS20518@dastard>
+In-Reply-To: <20140728160351.GB59542@bfoster.bfoster>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,100 +33,82 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
+To: Brian Foster <bfoster@redhat.com>
 Cc: xfs@oss.sgi.com
 
-On Fri, Jul 25, 2014 at 08:46:28AM +1000, Dave Chinner wrote:
-> On Thu, Jul 24, 2014 at 10:23:00AM -0400, Brian Foster wrote:
-> > The sparse chunk inode record format is backwards compatible with old
-> > format inobt records as long as full chunks are allocated. The holemask
-> > field uses higher order bytes of the freecount. While sparse chunks can
-> > be enabled on previously unsupported fs, older kernel drivers cannot
-> > parse sparse inode records.
+On Mon, Jul 28, 2014 at 12:03:52PM -0400, Brian Foster wrote:
+> On Fri, Jul 25, 2014 at 08:10:38AM +1000, Dave Chinner wrote:
+> > On Thu, Jul 24, 2014 at 10:22:51AM -0400, Brian Foster wrote:
+> > > Inodes are always allocated in chunks of 64 and thus the loop in
+> > > xfs_inobt_insert() is unnecessary.
 > > 
-> > Set the feature incompatible bit once a sparse inode chunk is allocated
-> > to prevent older XFS drivers from tripping over the new format.
+> > I don't believe this is true. The number of inodes allocated at once
+> > is:
 > > 
-> > Signed-off-by: Brian Foster <bfoster@redhat.com>
-> > ---
-> >  fs/xfs/libxfs/xfs_ialloc.c | 33 +++++++++++++++++++++++++++++++++
-> >  1 file changed, 33 insertions(+)
+> >         mp->m_ialloc_inos = (int)MAX((__uint16_t)XFS_INODES_PER_CHUNK,
+> > 	                                        sbp->sb_inopblock);
 > > 
-> > diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
-> > index 4226b1b..4dd45c2 100644
-> > --- a/fs/xfs/libxfs/xfs_ialloc.c
-> > +++ b/fs/xfs/libxfs/xfs_ialloc.c
-> > @@ -407,6 +407,27 @@ error:
-> >  	return error;
-> >  }
-> >  
-> > +STATIC void
-> > +xfs_sbversion_add_spinodes(
-> > +	struct xfs_trans	*tp,
-> > +	struct xfs_mount	*mp)
-> > +{
-> > +	if (xfs_sb_has_incompat_log_feature(&mp->m_sb,
-> > +					    XFS_SB_FEAT_INCOMPAT_SPINODES))
 > 
-> wrong function. xfs_sb_has_incompat_feature().
-> 
+> So I'm going on that effectively that the number of inodes per block
+> will never be larger than 8 (v5) due to a max block size of 4k.
 
-Oops, right.
+The whole world is not x86... ;)
 
-> > +		return;
-> > +
-> > +	spin_lock(&mp->m_sb_lock);
-> > +	if (xfs_sb_has_incompat_log_feature(&mp->m_sb,
-> > +					    XFS_SB_FEAT_INCOMPAT_SPINODES)) {
-> > +		spin_unlock(&mp->m_sb_lock);
-> > +		return;
-> > +	}
-> > +
-> > +	mp->m_sb.sb_features_incompat |= XFS_SB_FEAT_INCOMPAT_SPINODES;
-> > +	spin_unlock(&mp->m_sb_lock);
-> > +	xfs_mod_sb(tp, XFS_SB_FEATURES_INCOMPAT);
-> > +}
-> > +
-> >  /*
-> >   * Allocate new inodes in the allocation group specified by agbp.
-> >   * Return 0 for success, else error code.
-> > @@ -631,6 +652,18 @@ xfs_ialloc_ag_alloc(
-> >  		if (error)
-> >  			return error;
-> >  	}
-> > +
-> > +	/*
-> > +	 * Set an incompat feature bit as old drivers can't parse sparse
-> > +	 * records. Pre-sparse inode chunk drivers will include the
-> > +	 * holemask in the higher order freecount bits, resulting in a
-> > +	 * bogus value.
-> > +	 *
-> > +	 * XXX: when is this bit removed?
-> > +	 */
-> > +	if (xfs_inobt_issparse(&rec))
-> > +		xfs_sbversion_add_spinodes(tp, args.mp);
+> > So when the block size is, say, 64k, the number of 512 byte inodes
+> > allocated at once is 128. i.e. 2 chunks. Hence xfs_inobt_insert()
+> > can be called with a inode could of > 64 and therefore the loop is
+> > still necessary...
+> > 
 > 
-> I'd like to avoid this dynamic feature bit adding if possible. Do we
-> really need it?
-> 
+> Playing with mkfs I see that we actually can format >4k bsize
+> filesystems and the min and max are set at 512b and 64k. I can't
+> actually mount such filesystems due to the page size limitation.
 
-Nope. As discussed, I'll move to something purely manual for the next
-iteration and we can move forward from there with regard to if/when to
-set it by default.
+The whole world is not x86.... ;)
 
-Brian
+ia64 and power default to 64k page size, so we have to code
+everything to work with 64k block sizes.
 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+> FWIW,
+> the default log size params appear to be broken for bsize >= 32k as
+
+In what way?
+
+> well, so I wonder if/how often that format tends to occur.
+
+More often than you think.
+
+> What's the situation with regard to >PAGE_SIZE block size support? Is
+> this something we actually could support today?
+
+Well, the problem is bufferheads and page cache don't support blocks
+large than page size. The metadata side of XFS supports it just fine
+through the xfs_buf structures, but the file data side doesn't.
+That's one of the things I'm slowly trying to find time to fix (i.e.
+kill bufferheads).
+
+> Do we know about any
+> large page sized arches that could push us into this territory with the
+> actual page size limitation?
+
+Yes, see above. We have always supported 64k block sizes on Linux
+ever since ia64 supported 64k page sizes (i.e. for at least 10
+years), so we can't now say "we only support 4k block sizes"....
+
+> I suppose if we have >4k page sized arches that utilize block sizes
+> outside of the 256b-4k range, that's enough to justify the existence of
+> the range in the general sense. I just might have to factor this area of
+> code a bit differently. It would also be nice if there was a means to
+> test.
+
+Grab a ppc64 box from the RH QE guys or ask them to test it....
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
