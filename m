@@ -1,24 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 7F36F7F47
-	for <xfs@oss.sgi.com>; Mon, 28 Jul 2014 09:24:07 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 1982DAC005
-	for <xfs@oss.sgi.com>; Mon, 28 Jul 2014 07:24:06 -0700 (PDT)
-Received: from zene.cmpxchg.org (zene.cmpxchg.org [85.214.230.12]) by
-	cuda.sgi.com with ESMTP id CzqGv4pzkqDHCMhx (version=TLSv1
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 0B3BB7F47
+	for <xfs@oss.sgi.com>; Mon, 28 Jul 2014 10:02:43 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id DED308F8035
+	for <xfs@oss.sgi.com>; Mon, 28 Jul 2014 08:02:42 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id Dmx7tbO4IPVzu2ao (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 28 Jul 2014 07:24:05 -0700 (PDT)
-Date: Mon, 28 Jul 2014 10:23:13 -0400
-From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: Re: [PATCH] mm: fix direct reclaim writeback regression
-Message-ID: <20140728142313.GN1725@cmpxchg.org>
-References: <alpine.LSU.2.11.1407261248140.13796@eggly.anvils>
-	<53D42F80.7000000@suse.cz>
-	<alpine.LSU.2.11.1407261600570.14577@eggly.anvils>
+	Mon, 28 Jul 2014 08:02:38 -0700 (PDT)
+Date: Mon, 28 Jul 2014 11:02:28 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH V2] xfs: avoid false quotacheck after unclean shutdown
+Message-ID: <20140728150227.GA59542@bfoster.bfoster>
+References: <53CE6415.8080607@excellency.fr> <53CE9AF6.3090401@sandeen.net>
+	<53D196DE.4060602@sandeen.net>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <alpine.LSU.2.11.1407261600570.14577@eggly.anvils>
+In-Reply-To: <53D196DE.4060602@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,68 +30,113 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Hugh Dickins <hughd@google.com>
-Cc: Rik van Riel <riel@redhat.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, linux-mm@kvack.org, David Rientjes <rientjes@google.com>, Dave Jones <davej@redhat.com>, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, Vlastimil Babka <vbabka@suse.cz>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: cbay@excellency.fr, xfs@oss.sgi.com
 
-On Sat, Jul 26, 2014 at 04:15:25PM -0700, Hugh Dickins wrote:
-> On Sun, 27 Jul 2014, Vlastimil Babka wrote:
-> > On 07/26/2014 09:58 PM, Hugh Dickins wrote:
-> > > Yes, 3.16-rc1's 68711a746345 ("mm, migration: add destination page
-> > > freeing callback") has provided such a way to compaction: if migrating
-> > > a SwapBacked page fails, its newpage may be put back on the list for
-> > > later use with PageSwapBacked still set, and nothing will clear it.
-> > 
-> > Ugh good catch. So is this the only flag that can become "stray" like
-> > this? It seems so from quick check...
+On Thu, Jul 24, 2014 at 06:29:34PM -0500, Eric Sandeen wrote:
+> The commit
 > 
-> Yes, it seemed so to me too; but I would prefer a regime in which
-> we only mess with newpage once it's sure to be successful.
+> 83e782e xfs: Remove incore use of XFS_OQUOTA_ENFD and XFS_OQUOTA_CHKD
 > 
-> > > --- 3.16-rc6/mm/migrate.c	2014-06-29 15:22:10.584003935 -0700
-> > > +++ linux/mm/migrate.c	2014-07-26 11:28:34.488126591 -0700
-> > > @@ -988,9 +988,10 @@ out:
-> > >  	 * it.  Otherwise, putback_lru_page() will drop the reference grabbed
-> > >  	 * during isolation.
-> > >  	 */
-> > > -	if (rc != MIGRATEPAGE_SUCCESS && put_new_page)
-> > > +	if (rc != MIGRATEPAGE_SUCCESS && put_new_page) {
-> > > +		ClearPageSwapBacked(newpage);
-> > >  		put_new_page(newpage, private);
-> > > -	else
-> > > +	} else
-> > >  		putback_lru_page(newpage);
-> > >  
-> > >  	if (result) {
-> > 
-> > What about unmap_and_move_huge_page()? Seems to me it can also get the
-> > same stray flag. Although compaction, who is the only user so far of
-> > custom put_new_page, wouldn't of course migrate huge pages. But might
-> > bite us in the future, if a new user appears before a cleanup...
+> added a new function xfs_sb_quota_from_disk() which swaps
+> on-disk XFS_OQUOTA_* flags for in-core XFS_GQUOTA_* and XFS_PQUOTA_*
+> flags after the superblock is read.
 > 
-> I think you're right, thanks for pointing it out.  We don't have an
-> actual bug there at present, so no need to rush back and fix up the
-> patch now in Linus's tree; but unmap_and_move_huge_page() gives
-> another reason why my choice was "probably the worst place to fix it".
+> However, if log recovery is required, the superblock is read again,
+> and the modified in-core flags are re-read from disk, so we have
+> XFS_OQUOTA_* flags in memory again.  This causes the 
+> XFS_QM_NEED_QUOTACHECK() test to be true, because the XFS_OQUOTA_CHKD
+> is still set, and not XFS_GQUOTA_CHKD or XFS_PQUOTA_CHKD.
 > 
-> More reason for a cleanup, but not while the memcg interface is in flux.
-> In mmotm I'm a little anxious about the PageAnon case when newpage's
-> mapping is left set, I wonder if that might also be problematic: I
-> mailed Hannes privately to think about that - perhaps that will give
-> more impulse for a cleanup, though I've not noticed any bug from it.
+> Change xfs_sb_from_disk to call xfs_sb_quota_from disk and always
+> convert the disk flags to in-memory flags.
+> 
+> Add a lower-level function which can be called with "false" to
+> not convert the flags, so that the sb verifier can verify
+> exactly what was on disk, per Brian Foster's suggestion.
+> 
+> Reported-by: Cyril B. <cbay@excellency.fr>
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> ---
 
-I made that change for oldpage because uncharge in the final put_page
-relies on PageAnon() to work for statistics.
+Looks good to me, thanks!
 
-The newpage case could have been left alone, but it looked like an
-anomaly to me - anonymous mappings are usually sticky and only cleared
-by the page allocator - so I was eager to make the cases symmetrical.
-I don't see a bug there because if the page is reused its mapping will
-be overwritten right away, and if freed the allocator will reset it.
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 
-mem_cgroup_migrate() has since changed to fully uncharge the old page
-and not leave this task to the final put_page, so ->mapping does not
-need to be maintained past that point.  I'll send a revert of these
-conditional ->mapping resets to Andrew.
+> 
+> V2: Call xfs_sb_quota_from_disk from xfs_sb_from_disk,
+> unless we're the verifier, which wants to see what is
+> actually on-disk to verify it.  Thanks Brian!
+> 
+> 
+> diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+> index 3507cd0..16d1671 100644
+> --- a/fs/xfs/xfs_mount.c
+> +++ b/fs/xfs/xfs_mount.c
+> @@ -324,7 +324,6 @@ reread:
+>  	 * Initialize the mount structure from the superblock.
+>  	 */
+>  	xfs_sb_from_disk(sbp, XFS_BUF_TO_SBP(bp));
+> -	xfs_sb_quota_from_disk(sbp);
+>  
+>  	/*
+>  	 * If we haven't validated the superblock, do so now before we try
+> diff --git a/fs/xfs/xfs_sb.c b/fs/xfs/xfs_sb.c
+> index 7703fa6..0f631d2 100644
+> --- a/fs/xfs/xfs_sb.c
+> +++ b/fs/xfs/xfs_sb.c
+> @@ -386,10 +386,11 @@ xfs_sb_quota_from_disk(struct xfs_sb *sbp)
+>  	}
+>  }
+>  
+> -void
+> -xfs_sb_from_disk(
+> +static void
+> +__xfs_sb_from_disk(
+>  	struct xfs_sb	*to,
+> -	xfs_dsb_t	*from)
+> +	xfs_dsb_t	*from,
+> +	bool		convert_xquota)
+>  {
+>  	to->sb_magicnum = be32_to_cpu(from->sb_magicnum);
+>  	to->sb_blocksize = be32_to_cpu(from->sb_blocksize);
+> @@ -445,6 +446,17 @@ xfs_sb_from_disk(
+>  	to->sb_pad = 0;
+>  	to->sb_pquotino = be64_to_cpu(from->sb_pquotino);
+>  	to->sb_lsn = be64_to_cpu(from->sb_lsn);
+> +	/* Convert on-disk flags to in-memory flags? */
+> +	if (convert_xquota)
+> +		xfs_sb_quota_from_disk(to);
+> +}
+> +
+> +void
+> +xfs_sb_from_disk(
+> +	struct xfs_sb	*to,
+> +	xfs_dsb_t	*from)
+> +{
+> +	__xfs_sb_from_disk(to, from, true);
+>  }
+>  
+>  static inline void
+> @@ -577,7 +589,11 @@ xfs_sb_verify(
+>  	struct xfs_mount *mp = bp->b_target->bt_mount;
+>  	struct xfs_sb	sb;
+>  
+> -	xfs_sb_from_disk(&sb, XFS_BUF_TO_SBP(bp));
+> +	/*
+> +	 * Use call variant which doesn't convert quota flags from disk 
+> +	 * format, because xfs_mount_validate_sb checks the on-disk flags.
+> +	 */
+> +	__xfs_sb_from_disk(&sb, XFS_BUF_TO_SBP(bp), false);
+>  
+>  	/*
+>  	 * Only check the in progress field for the primary superblock as
+> 
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
