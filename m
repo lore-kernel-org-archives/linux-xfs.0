@@ -1,14 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 54C427F37
-	for <xfs@oss.sgi.com>; Tue, 29 Jul 2014 13:18:25 -0500 (CDT)
-Message-ID: <53D7E56C.8020103@sgi.com>
-Date: Tue, 29 Jul 2014 13:18:20 -0500
+	by oss.sgi.com (Postfix) with ESMTP id 10EFC7F37
+	for <xfs@oss.sgi.com>; Tue, 29 Jul 2014 15:04:07 -0500 (CDT)
+Message-ID: <53D7FE32.3080807@sgi.com>
+Date: Tue, 29 Jul 2014 15:04:02 -0500
 From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
 Subject: Re: Is jdm_delete_filehandle part of a public API?
-References: <53D7DA7F.2040706@redhat.com>
-In-Reply-To: <53D7DA7F.2040706@redhat.com>
+References: <53D7DA7F.2040706@redhat.com> <53D7E56C.8020103@sgi.com>
+In-Reply-To: <53D7E56C.8020103@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,31 +24,48 @@ Sender: xfs-bounces@oss.sgi.com
 To: Eric Sandeen <sandeen@redhat.com>
 Cc: xfs-oss <xfs@oss.sgi.com>
 
-On 07/29/14 12:31, Eric Sandeen wrote:
-> I was cleaning up xfsprogs to plug some leaks, and wanted to use
-> jdm_delete_filehandle().  I noticed that it has an "hlen" argument which
-> is unused.
+On 07/29/14 13:18, Mark Tinguely wrote:
+> On 07/29/14 12:31, Eric Sandeen wrote:
+>> I was cleaning up xfsprogs to plug some leaks, and wanted to use
+>> jdm_delete_filehandle(). I noticed that it has an "hlen" argument which
+>> is unused.
+>>
+>> Can we remove that, or is this part of a public API? It's not in any
+>> manpage (or even called anywhere in xfsprogs/xfstests/xfsdump/dmapi)
+>> but it is in a public header...
+>>
+>> anyone know?
+>>
+>> If needed I guess I can just call it with hlen==0, but that seems odd.
+>>
+>> Thanks,
+>> -Eric
 >
-> Can we remove that, or is this part of a public API?  It's not in any
-> manpage (or even called anywhere in xfsprogs/xfstests/xfsdump/dmapi)
-> but it is in a public header...
+> The first thing that comes to mind is maybe they trying to distinguish
+> between a fshandle or handle. Or they we trying to be consistent with
+> the allocation calls.
 >
-> anyone know?
+> The libhandle free_handle has the same calling parameters. It also does
+> nothing with the length. That we cannot change without breaking existing
+> code.
 >
-> If needed I guess I can just call it with hlen==0, but that seems odd.
+> I will look/ask around.
 >
-> Thanks,
-> -Eric
+> --Mark.
 
-The first thing that comes to mind is maybe they trying to distinguish 
-between a fshandle or handle. Or they we trying to be consistent with 
-the allocation calls.
+Looks like the code is pretty sloppy with freeing the handles.
 
-The libhandle free_handle has the same calling parameters. It also does 
-nothing with the length. That we cannot change without breaking existing 
-code.
+Best guess is jdm_delete_filehandle() and  free_handle are trying to 
+keep the API similar to DMAPI. The DMAPI handle free routine, 
+dm_handle_free(), also has a second length parameter that is not used in 
+the library.
 
-I will look/ask around.
+The code example that I saw are similar to the use in xfsdump, where the 
+length used in the free comes from the handle creation/conversion routine.
+
+Since the xfsprogs do not open handles with calls that provide a length. 
+How about FSHANDLE_SZ and FILEHANDLE_SZ depending on if it is a 
+xfs_fshandle or xfs_handle?
 
 --Mark.
 
