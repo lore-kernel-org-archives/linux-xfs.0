@@ -1,15 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 239C97F37
-	for <xfs@oss.sgi.com>; Tue, 29 Jul 2014 15:54:05 -0500 (CDT)
-Message-ID: <53D809EB.80207@sgi.com>
-Date: Tue, 29 Jul 2014 15:54:03 -0500
-From: Mark Tinguely <tinguely@sgi.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 0671A7F60
+	for <xfs@oss.sgi.com>; Tue, 29 Jul 2014 18:28:09 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id B8CEC30404E
+	for <xfs@oss.sgi.com>; Tue, 29 Jul 2014 16:28:08 -0700 (PDT)
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	GHjF9uJKTzbIGHpk for <xfs@oss.sgi.com>;
+	Tue, 29 Jul 2014 16:28:02 -0700 (PDT)
+Date: Wed, 30 Jul 2014 09:27:48 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH v3 00/10] xfs_ioc_bulkstat code refactoring and
+	consolidation
+Message-ID: <20140729232748.GI26465@dastard>
+References: <538D92B6.5050402@oracle.com>
 MIME-Version: 1.0
-Subject: Re: Is jdm_delete_filehandle part of a public API?
-References: <53D7DA7F.2040706@redhat.com> <53D7E56C.8020103@sgi.com>
-	<53D7FE32.3080807@sgi.com> <53D801B1.5000300@sandeen.net>
-In-Reply-To: <53D801B1.5000300@sandeen.net>
+Content-Disposition: inline
+In-Reply-To: <538D92B6.5050402@oracle.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -18,79 +26,111 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Eric Sandeen <sandeen@redhat.com>, xfs-oss <xfs@oss.sgi.com>
+To: Jeff Liu <jeff.liu@oracle.com>
+Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-On 07/29/14 15:18, Eric Sandeen wrote:
-> On 7/29/14, 3:04 PM, Mark Tinguely wrote:
->> On 07/29/14 13:18, Mark Tinguely wrote:
->>> On 07/29/14 12:31, Eric Sandeen wrote:
->>>> I was cleaning up xfsprogs to plug some leaks, and wanted to use
->>>> jdm_delete_filehandle(). I noticed that it has an "hlen" argument which
->>>> is unused.
->>>>
->>>> Can we remove that, or is this part of a public API? It's not in any
->>>> manpage (or even called anywhere in xfsprogs/xfstests/xfsdump/dmapi)
->>>> but it is in a public header...
->>>>
->>>> anyone know?
->>>>
->>>> If needed I guess I can just call it with hlen==0, but that seems odd.
->>>>
->>>> Thanks,
->>>> -Eric
->>>
->>> The first thing that comes to mind is maybe they trying to distinguish
->>> between a fshandle or handle. Or they we trying to be consistent with
->>> the allocation calls.
->>>
->>> The libhandle free_handle has the same calling parameters. It also does
->>> nothing with the length. That we cannot change without breaking existing
->>> code.
->>>
->>> I will look/ask around.
->>>
->>> --Mark.
->>
->> Looks like the code is pretty sloppy with freeing the handles.
->
-> yeah, that's what I was going to fix :)
->
->> Best guess is jdm_delete_filehandle() and free_handle are trying to
->> keep the API similar to DMAPI. The DMAPI handle free routine,
->> dm_handle_free(), also has a second length parameter that is not used
->> in the library.
->>
->> The code example that I saw are similar to the use in xfsdump, where
->> the length used in the free comes from the handle creation/conversion
->> routine.
->
-> yup but I don't think jdm_getfshandle has anything similar does it?
+On Tue, Jun 03, 2014 at 05:17:42PM +0800, Jeff Liu wrote:
+> Hi folk,
+> 
+> This is the revised patches for xfs_ioc_bulkstat consolidation and code
+> refactoring. As per Christoph's comments, I'm not include the per AG
+> inumber patch in this series given that I don't actually introduce the
+> relevant inumbers interface now. Similar to that reason, I also dropped
+> the per AG bulkstat patch, it would be included in parallel quota check
+> series.
+> 
+> 
+> v3->v2:
+> - one major bug fix is at xfs_bulkstat_ag_ichunk() regarding the user buffer
+>   pointer operations, it should be defined as a pointer-to-pointer since it
+>   would be updated inside xfs_bulkstat_ag_ichunk().
+> 
+> - separate xfs_inumber consolidate patch into two patches, the first one
+>   fix the formater function return value and consolidate the codes, another
+>   one does the actual logic changes for better error handling.
+> 
+> - Add a separate patch to get rid of the redundant user buffer count
+>   checks at xfs_bulkstat()
+> 
+> - fixed agino calculation issue at xfs_bulkstat_grab_ichunk().
+> 
+> v2: http://oss.sgi.com/archives/xfs/2014-04/msg00554.html
+> v1: http://oss.sgi.com/archives/xfs/2013-12/msg00901.html
+> 
+> 
+> Any comments are welcome!
 
-nope. Do you know why there is a jdm and a libhandle libs?
+Hi Jeff, I ported this to the current dev tree based on the
+xfs-libxfs-restructure branch, and I keep seeing fsstress failing
+with memory corruption after random bulkstat ioctls. I see regular
+failures with generic/013, generic/068, xfs/167 and the other
+fstress tests also randomly fail. The typical failure is glibc
+detected memory heap corruption on freeing the bulkstat structure
+after the ioctl:
 
->
->> Since the xfsprogs do not open handles with calls that provide a
->> length. How about FSHANDLE_SZ and FILEHANDLE_SZ depending on if it is
->> a xfs_fshandle or xfs_handle?
->
-> *shrug* it's not used anyway - I'm not sure why we'd need to invent a
-> macro to pass in only to have it ignored.  Is there any advantage to that?
+generic/068 42s ...*** Error in `./ltp/fsstress': double free or corruption (!prev): 0x00007f0224000b70 ***
+======= Backtrace: =========
+/lib/x86_64-linux-gnu/libc.so.6(+0x7aa26)[0x7f022bce3a26]
+/lib/x86_64-linux-gnu/libc.so.6(+0x7b7a3)[0x7f022bce47a3]
+./ltp/fsstress[0x40260e]
+./ltp/fsstress[0x402db5]
+./ltp/fsstress[0x402359]
+/lib/x86_64-linux-gnu/libc.so.6(__libc_start_main+0xf5)[0x7f022bc8a995]
+./ltp/fsstress[0x402477]
+======= Memory map: ========
+00400000-0040c000 r-xp 00000000 08:01 511772                             /home/dave/src/xfstests-dev/ltp/fsstress
+0060c000-0060d000 rw-p 0000c000 08:01 511772                             /home/dave/src/xfstests-dev/ltp/fsstress
+0060d000-0062e000 rw-p 00000000 00:00 0                                  [heap]
+7f0224000000-7f0224021000 rw-p 00000000 00:00 0 
+7f0224021000-7f0228000000 ---p 00000000 00:00 0 
+7f022ba53000-7f022ba68000 r-xp 00000000 08:01 244777                     /lib/x86_64-linux-gnu/libgcc_s.so.1
+7f022ba68000-7f022bc68000 ---p 00015000 08:01 244777                     /lib/x86_64-linux-gnu/libgcc_s.so.1
+7f022bc68000-7f022bc69000 rw-p 00015000 08:01 244777                     /lib/x86_64-linux-gnu/libgcc_s.so.1
+7f022bc69000-7f022be0b000 r-xp 00000000 08:01 245384                     /lib/x86_64-linux-gnu/libc-2.17.so
+7f022be0b000-7f022c00b000 ---p 001a2000 08:01 245384                     /lib/x86_64-linux-gnu/libc-2.17.so
+7f022c00b000-7f022c00f000 r--p 001a2000 08:01 245384                     /lib/x86_64-linux-gnu/libc-2.17.so
+7f022c00f000-7f022c011000 rw-p 001a6000 08:01 245384                     /lib/x86_64-linux-gnu/libc-2.17.so
+7f022c011000-7f022c015000 rw-p 00000000 00:00 0 
+7f022c015000-7f022c02c000 r-xp 00000000 08:01 245380                     /lib/x86_64-linux-gnu/libpthread-2.17.so
+7f022c02c000-7f022c22b000 ---p 00017000 08:01 245380                     /lib/x86_64-linux-gnu/libpthread-2.17.so
+7f022c22b000-7f022c22c000 r--p 00016000 08:01 245380                     /lib/x86_64-linux-gnu/libpthread-2.17.so
+7f022c22c000-7f022c22d000 rw-p 00017000 08:01 245380                     /lib/x86_64-linux-gnu/libpthread-2.17.so
+7f022c22d000-7f022c231000 rw-p 00000000 00:00 0 
+7f022c231000-7f022c232000 r-xp 00000000 08:01 325472                     /lib/x86_64-linux-gnu/libaio.so.1.0.1
+7f022c232000-7f022c431000 ---p 00001000 08:01 325472                     /lib/x86_64-linux-gnu/libaio.so.1.0.1
+7f022c431000-7f022c432000 r--p 00000000 08:01 325472                     /lib/x86_64-linux-gnu/libaio.so.1.0.1
+7f022c432000-7f022c433000 rw-p 00001000 08:01 325472                     /lib/x86_64-linux-gnu/libaio.so.1.0.1
+7f022c433000-7f022c437000 r-xp 00000000 08:01 324661                     /lib/x86_64-linux-gnu/libattr.so.1.1.0
+7f022c437000-7f022c636000 ---p 00004000 08:01 324661                     /lib/x86_64-linux-gnu/libattr.so.1.1.0
+7f022c636000-7f022c637000 r--p 00003000 08:01 324661                     /lib/x86_64-linux-gnu/libattr.so.1.1.0
+7f022c637000-7f022c638000 rw-p 00004000 08:01 324661                     /lib/x86_64-linux-gnu/libattr.so.1.1.0
+7f022c638000-7f022c659000 r-xp 00000000 08:01 245381                     /lib/x86_64-linux-gnu/ld-2.17.so
+7f022c844000-7f022c848000 rw-p 00000000 00:00 0 
+7f022c855000-7f022c856000 rw-p 00000000 00:00 0 
+7f022c856000-7f022c859000 rw-p 00000000 00:00 0 
+7f022c859000-7f022c85a000 r--p 00021000 08:01 245381                     /lib/x86_64-linux-gnu/ld-2.17.so
+7f022c85a000-7f022c85c000 rw-p 00022000 08:01 245381                     /lib/x86_64-linux-gnu/ld-2.17.so
+7fffd18b7000-7fffd18d8000 rw-p 00000000 00:00 0                          [stack]
+7fffd19fc000-7fffd19fe000 r-xp 00000000 00:00 0                          [vdso]
+7fffd19fe000-7fffd1a00000 r--p 00000000 00:00 0                          [vvar]
+ffffffffff600000-ffffffffff601000 r-xp 00000000 00:00 0                  [vsyscall]
 
-never mind... handles are opaque and we should not be defining a size.
 
-I did the grep and saw that the sizes were defined and thought they were 
-better than nothing. I did not not realize that the defines are are in 
-jdm.c and not a header file. In that case, nothing is better than adding 
-a define for an opaque item.
+I haven't been able to track down the issue yet, so could you pass
+an eye over my updated patchset and see if you can spot the mistake
+I made?  The patchset is in the xfs-bulkstat-refactor-NEEDS-FIXING
+branch in the xfsdev repo which I just pushed. 
 
-> -Eric
+Cheers,
 
---Mark.
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
