@@ -1,25 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id E6D187F37
-	for <xfs@oss.sgi.com>; Wed, 30 Jul 2014 03:19:18 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 9B3E87F37
+	for <xfs@oss.sgi.com>; Wed, 30 Jul 2014 06:16:38 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 76160AC005
-	for <xfs@oss.sgi.com>; Wed, 30 Jul 2014 01:19:15 -0700 (PDT)
-Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
-	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	BRH2YHMbcWc2UGpG for <xfs@oss.sgi.com>;
-	Wed, 30 Jul 2014 01:19:12 -0700 (PDT)
-Date: Wed, 30 Jul 2014 18:18:58 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Delaylog information enquiry
-Message-ID: <20140730081858.GN26465@dastard>
-References: <DUB129-W7B2973281D7E749989D43EEF80@phx.gbl>
-	<20140729123815.GA13120@bfoster.bfoster>
-	<20140729234151.GJ26465@dastard>
-	<CAFLt3phu1kJUjFyP8-+zkRPEsiv8ue=c+W+Ym8PYS1zd3kHyzw@mail.gmail.com>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 7B429304051
+	for <xfs@oss.sgi.com>; Wed, 30 Jul 2014 04:16:35 -0700 (PDT)
+Received: from mail-ig0-f180.google.com (mail-ig0-f180.google.com
+	[209.85.213.180]) by cuda.sgi.com with ESMTP id
+	9osg2aztCikuoRRS (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 30 Jul 2014 04:16:33 -0700 (PDT)
+Received: by mail-ig0-f180.google.com with SMTP id l13so2695282iga.7
+	for <xfs@oss.sgi.com>; Wed, 30 Jul 2014 04:16:33 -0700 (PDT)
+Received: from [10.10.10.238] (97-92-36-7.dhcp.aldl.mi.charter.com.
+	[97.92.36.7])
+	by mx.google.com with ESMTPSA id q19sm47573913igx.0.2014.07.30.04.16.31
+	for <xfs@oss.sgi.com>
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+	Wed, 30 Jul 2014 04:16:32 -0700 (PDT)
+Message-ID: <53D8D412.4050509@gmail.com>
+Date: Wed, 30 Jul 2014 07:16:34 -0400
+From: Michael Lueck <wurlitzer@gmail.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <CAFLt3phu1kJUjFyP8-+zkRPEsiv8ue=c+W+Ym8PYS1zd3kHyzw@mail.gmail.com>
+Subject: Trouble with xfs mailing list subscription
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,74 +31,59 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Grozdan <neutrino8@gmail.com>
-Cc: Brian Foster <bfoster@redhat.com>, "Frank ." <frank_1005@msn.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
-On Wed, Jul 30, 2014 at 07:42:32AM +0200, Grozdan wrote:
-> On Wed, Jul 30, 2014 at 1:41 AM, Dave Chinner <david@fromorbit.com> wrote:
-> > Note that this does not change file data behaviour. In this case you
-> > need to add the "sync" mount option, which forces all buffered IO to
-> > be synchronous and so will be *very slow*. But if you've already
-> > turned off the BBWC on the RAID controller then your storage is
-> > already terribly slow and so you probably won't care about making
-> > performance even worse...
-> 
-> Dave, excuse my ignorant questions
-> 
-> I know the Linux kernel keeps data in cache up to 30 seconds before a
-> kernel daemon flushes it to disk, unless
-> the configured dirty ratio (which is 40% of RAM, iirc) is reached
+Greetings,
 
-10% of RAM, actually.
+I was previously subscribed to the xfs mailing list, in non-deliver mode as I use the gmane NNTP gateway to read messages.
 
-> before these 30 seconds so the flush is done before it
-> 
-> What I did is lower these 30 seconds to 5 seconds so every 5 seconds
-> data is flushed to disk (I've set the dirty_expire_centisecs to 500).
-> So, are there any drawbacks in doing this?
+Suddenly my ID is not allowed to post. I tried checking my subscription, and the following rejection is returned.
 
-Depends on your workload. For a desktop, you probably won't notice
-anything different. For a machine that creates lots of temporary
-files and then removes them (e.g. build machines) then it could
-crater performance completely because it causes writeback before the
-files are removed...
+This message was created automatically by mail delivery software.
 
-> I mean, I don't care *that*
-> much for performance but I do want my dirty data to be on
-> storage in a reasonable amount of time. I looked at the various sync
-> mount options but they all are synchronous so it is my
-> impression they'll be slower than giving the kernel 5 seconds to keep
-> data and then flush it.
-> 
-> From XFS perspective, I'd like to know if this is not recommended or
-> if it is? I know that with setting the above to 500 centisecs
-> means that there will be more writes to disk and potentially may
-> result in tear & wear, thus shortening the lifetime of the
-> storage
-> 
-> This is a regular desktop system with a single Seagate Constellation
-> SATA disk so no RAID, LVM, thin provision or anything else
-> 
-> What do you think? :)
+A message that you sent could not be delivered to one or more of
+its recipients. This is a permanent error. The following address
+failed:
 
-I don't think it really matters either way. I don't change
-the writeback time on my workstations, build machines or test
-machines, but I actually *increase* it on my laptops to save power
-by not writing to disk as often. So if you want a little more
-safety, then reducing the writeback timeout shouldn't have any
-significant affect on performance or wear unless you are doing
-something unusual....
+"xfs-request@oss.sgi.com":
+SMTP error from remote server after RCPT command:
+host: cuda-allmx.sgi.com
+Sender IP address rejected
 
-Cheers,
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+--- The header of the original message is following. ---
+
+Received: from [10.10.10.238] (97-92-36-7.dhcp.aldl.mi.charter.com [97.92.36.7])
+	by mrelay.perfora.net (node=mreueus001) with ESMTP (Nemesis)
+	id 0Lqjq8-1WZF4H1MgM-00eLva; Wed, 30 Jul 2014 13:10:24 +0200
+Message-ID: <53D8D2A1.4090807@lueckdatasystems.com>
+Date: Wed, 30 Jul 2014 07:10:25 -0400
+From: Michael Lueck <mlueck@lueckdatasystems.com>
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:29.0) Gecko/20100101 Firefox/29.0 SeaMonkey/2.26.1
+MIME-Version: 1.0
+To: xfs-request@oss.sgi.com
+Subject: subscribe
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Provags-ID: V02:K0:AsXHEFZLHHVOdHAjU41kZRRxcuuhfChV68BHNDVRhrw
+  CRxUUGmrCgStqHM6aY0597oFivvSfUfqQIoYQfTB95+ehYUNhN
+  ePRANuggQkwrWgwbsxVREwsiF+FJP7NHh1qlyWi+Zw3H0YGUo0
+  mYZqi9OmEez/yodVDIugZ4NzS963L64uBod/IpVUatv3WerTou
+  /UzmDOmWuGfvEj3lwuMBL5a/53ZzeStLVZaWGBpvpUOS5xh/rp
+  5ejeDnTYnwBvuEFD6dGBPpiMyTsxbtEqfH3wQZfkhFNB+SW3n7
+  ufrrFH7ZHhDxzM6o700YDql/2/UaFGRPAiOEqLqbtLZPpnyFLS
+  RoQAqHa8IU8M0M8wMR+jFQZHSPKeApuWE/UYY1h/v
+
+
+
+Please advise how this difficulty may be corrected.
+
+I am thankful,
+Michael
 
 _______________________________________________
 xfs mailing list
