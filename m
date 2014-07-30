@@ -1,28 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 4FFC57F7B
-	for <xfs@oss.sgi.com>; Wed, 30 Jul 2014 16:18:17 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id A04437F63
+	for <xfs@oss.sgi.com>; Wed, 30 Jul 2014 16:39:25 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id E1670AC003
-	for <xfs@oss.sgi.com>; Wed, 30 Jul 2014 14:18:13 -0700 (PDT)
-Received: from mail-ie0-f172.google.com (mail-ie0-f172.google.com
-	[209.85.223.172]) by cuda.sgi.com with ESMTP id
-	l8dpRPLtCMdCbTWL (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 30 Jul 2014 14:18:12 -0700 (PDT)
-Received: by mail-ie0-f172.google.com with SMTP id lx4so2354653iec.31
-	for <xfs@oss.sgi.com>; Wed, 30 Jul 2014 14:18:11 -0700 (PDT)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 3BCBDAC003
+	for <xfs@oss.sgi.com>; Wed, 30 Jul 2014 14:39:25 -0700 (PDT)
+Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
+	[150.101.137.143]) by cuda.sgi.com with ESMTP id
+	yJirbLZ3nNiOjmRN for <xfs@oss.sgi.com>;
+	Wed, 30 Jul 2014 14:39:22 -0700 (PDT)
+Date: Thu, 31 Jul 2014 07:39:20 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 1/4 V2] xfs: catch buffers written without verifiers
+	attached
+Message-ID: <20140730213920.GM20518@dastard>
+References: <1406684929-11133-1-git-send-email-david@fromorbit.com>
+	<1406684929-11133-2-git-send-email-david@fromorbit.com>
+	<20140730023023.GM26465@dastard>
+	<20140730162913.GA2830@bfoster.bfoster>
 MIME-Version: 1.0
-In-Reply-To: <20140730081858.GN26465@dastard>
-References: <DUB129-W7B2973281D7E749989D43EEF80@phx.gbl>
-	<20140729123815.GA13120@bfoster.bfoster>
-	<20140729234151.GJ26465@dastard>
-	<CAFLt3phu1kJUjFyP8-+zkRPEsiv8ue=c+W+Ym8PYS1zd3kHyzw@mail.gmail.com>
-	<20140730081858.GN26465@dastard>
-Date: Wed, 30 Jul 2014 23:18:11 +0200
-Message-ID: <CAFLt3pjdwdSOxVhbTFemReyNr9HnUodA-NL5bND2yRJGX2GBuA@mail.gmail.com>
-Subject: Re: Delaylog information enquiry
-From: Grozdan <neutrino8@gmail.com>
+Content-Disposition: inline
+In-Reply-To: <20140730162913.GA2830@bfoster.bfoster>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,96 +33,95 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Brian Foster <bfoster@redhat.com>, "Frank ." <frank_1005@msn.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: Brian Foster <bfoster@redhat.com>
+Cc: xfs@oss.sgi.com
 
-On Wed, Jul 30, 2014 at 10:18 AM, Dave Chinner <david@fromorbit.com> wrote:
-> On Wed, Jul 30, 2014 at 07:42:32AM +0200, Grozdan wrote:
->> On Wed, Jul 30, 2014 at 1:41 AM, Dave Chinner <david@fromorbit.com> wrote:
->> > Note that this does not change file data behaviour. In this case you
->> > need to add the "sync" mount option, which forces all buffered IO to
->> > be synchronous and so will be *very slow*. But if you've already
->> > turned off the BBWC on the RAID controller then your storage is
->> > already terribly slow and so you probably won't care about making
->> > performance even worse...
->>
->> Dave, excuse my ignorant questions
->>
->> I know the Linux kernel keeps data in cache up to 30 seconds before a
->> kernel daemon flushes it to disk, unless
->> the configured dirty ratio (which is 40% of RAM, iirc) is reached
->
-> 10% of RAM, actually.
->
->> before these 30 seconds so the flush is done before it
->>
->> What I did is lower these 30 seconds to 5 seconds so every 5 seconds
->> data is flushed to disk (I've set the dirty_expire_centisecs to 500).
->> So, are there any drawbacks in doing this?
->
-> Depends on your workload. For a desktop, you probably won't notice
-> anything different. For a machine that creates lots of temporary
-> files and then removes them (e.g. build machines) then it could
-> crater performance completely because it causes writeback before the
-> files are removed...
->
->> I mean, I don't care *that*
->> much for performance but I do want my dirty data to be on
->> storage in a reasonable amount of time. I looked at the various sync
->> mount options but they all are synchronous so it is my
->> impression they'll be slower than giving the kernel 5 seconds to keep
->> data and then flush it.
->>
->> From XFS perspective, I'd like to know if this is not recommended or
->> if it is? I know that with setting the above to 500 centisecs
->> means that there will be more writes to disk and potentially may
->> result in tear & wear, thus shortening the lifetime of the
->> storage
->>
->> This is a regular desktop system with a single Seagate Constellation
->> SATA disk so no RAID, LVM, thin provision or anything else
->>
->> What do you think? :)
->
-> I don't think it really matters either way. I don't change
-> the writeback time on my workstations, build machines or test
-> machines, but I actually *increase* it on my laptops to save power
-> by not writing to disk as often. So if you want a little more
-> safety, then reducing the writeback timeout shouldn't have any
-> significant affect on performance or wear unless you are doing
-> something unusual....
->
-> Cheers,
->
-> Dave.
+On Wed, Jul 30, 2014 at 12:29:14PM -0400, Brian Foster wrote:
+> On Wed, Jul 30, 2014 at 12:30:24PM +1000, Dave Chinner wrote:
+> > From: Dave Chinner <dchinner@redhat.com>
+> > 
+> > We recently had a bug where buffers were slipping through log
+> > recovery without any verifier attached to them. This was resulting
+> > in on-disk CRC mismatches for valid data. Add some warning code to
+> > catch this occurrence so that we catch such bugs during development
+> > rather than not being aware they exist.
+> > 
+> > Note that we cannot do this verification unconditionally as non-CRC
+> > filesystems don't always attach verifiers to the buffers being
+> > written. e.g. during log recovery we cannot identify all the
+> > different types of buffers correctly on non-CRC filesystems, so we
+> > can't attach the correct verifiers in all cases and so we don't
+> > attach any. Hence we don't want on non-CRC filesystems to avoid
+> > spamming the logs with false indications.
+> > 
+> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> > ---
+> >  fs/xfs/xfs_buf.c | 15 +++++++++++++++
+> >  fs/xfs/xfs_log.c |  7 ++++++-
+> >  2 files changed, 21 insertions(+), 1 deletion(-)
+> > 
+> > diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+> > index a6dc83e..078b8be 100644
+> > --- a/fs/xfs/xfs_buf.c
+> > +++ b/fs/xfs/xfs_buf.c
+> > @@ -1330,6 +1330,21 @@ _xfs_buf_ioapply(
+> >  						   SHUTDOWN_CORRUPT_INCORE);
+> >  				return;
+> >  			}
+> > +		} else if (bp->b_bn != -1LL) {
+> > +			struct xfs_mount *mp = bp->b_target->bt_mount;
+> > +
+> > +			/*
+> > +			 * non-crc filesystems don't attach verifiers during
+> > +			 * log recovery, so don't warn for such filesystems.
+> > +			 */
+> > +			if (xfs_sb_version_hascrc(&mp->m_sb)) {
+> > +				xfs_warn(mp,
+> > +					"%s: no ops on block 0x%llx/0x%llx",
+> > +					__func__, bp->b_bn,
+> > +					bp->b_maps[0].bm_bn);
+> 
+> Are you intending to print both block number values here or the
+> b_bn/bm_len combo?
 
-Thanks Dave :)
+Yeah, I probably did. I didn't actuall look at the block numbers in
+the output I kept getting - just the magic number in the hex dump
+and the stack trace...
 
-I don't want to start another thread as this is my last question but
-it's one unrelated to the original question from Frank
+> 
+> > +				xfs_hex_dump(bp->b_addr, 64);
+> > +				dump_stack();
+> > +			}
+> >  		}
+> >  	} else if (bp->b_flags & XBF_READ_AHEAD) {
+> >  		rw = READA;
+> > diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+> > index 149a4a5..9dc92b3 100644
+> > --- a/fs/xfs/xfs_log.c
+> > +++ b/fs/xfs/xfs_log.c
+> > @@ -1378,8 +1378,13 @@ xlog_alloc_log(
+> >  
+> >  	xlog_get_iclog_buffer_size(mp, log);
+> >  
+> > +	/*
+> > +	 * Use a block number of -1 for the extra log buffer used during splits
+> > +	 * so that it will trigger errors if we ever try to do IO on it without
+> > +	 * first having set it up properly.
+> > +	 */
+> >  	error = -ENOMEM;
+> > -	bp = xfs_buf_alloc(mp->m_logdev_targp, 0, BTOBB(log->l_iclog_size), 0);
+> > +	bp = xfs_buf_alloc(mp->m_logdev_targp, -1LL, BTOBB(log->l_iclog_size), 0);
+> 
+> How about XFS_BUF_DADDR_NULL (here and above)?
 
-One of my partitions was almost full (there was 5 GB over according to
-df -h). I had about 8 torrents open in the client, all sizes between 4
-and 6 GB (they were all downloaded and got never "released" from the
-client as I was seeding back). When I tried to add a torrent to
-download which was 3 GB, the client reported that there was no more
-space left over on the partition. I suspect this is related to
-speculative preallocation and because the 8 torrents were all "open"
-they still had extra space allocated by the speculative preallocation
-and thus I couldn't add the 3GB torrent even though df says there was
-5GB over but in reality it was much less. Am I correct on this or is
-there something completely else that happened?
+Will fix.
 
-Thanks ;)
+Cheers,
 
-> --
-> Dave Chinner
-> david@fromorbit.com
-
-
-
+Dave.
 -- 
-Yours truly
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
