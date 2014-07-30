@@ -1,24 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id E53B57F75
-	for <xfs@oss.sgi.com>; Wed, 30 Jul 2014 16:43:38 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 7FED2AC003
-	for <xfs@oss.sgi.com>; Wed, 30 Jul 2014 14:43:38 -0700 (PDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id EEE707F82
+	for <xfs@oss.sgi.com>; Wed, 30 Jul 2014 16:59:27 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id BCBB330405F
+	for <xfs@oss.sgi.com>; Wed, 30 Jul 2014 14:59:27 -0700 (PDT)
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	XnUCmAKXi2Xk0pea for <xfs@oss.sgi.com>;
-	Wed, 30 Jul 2014 14:43:36 -0700 (PDT)
-Date: Thu, 31 Jul 2014 07:43:34 +1000
+	wwJJVv2JOlYMfwoS for <xfs@oss.sgi.com>;
+	Wed, 30 Jul 2014 14:59:21 -0700 (PDT)
+Date: Thu, 31 Jul 2014 07:59:19 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 4/4] xfs: dquot recovery needs verifiers
-Message-ID: <20140730214334.GN20518@dastard>
-References: <1406684929-11133-1-git-send-email-david@fromorbit.com>
-	<1406684929-11133-5-git-send-email-david@fromorbit.com>
-	<CA+o=1OWqWXXLGLB9-TgkmBUDfFs0GpmQS=4to3tO6-R0FvgLuA@mail.gmail.com>
+Subject: Re: xfs_metadump from Blur Studio
+Message-ID: <20140730215919.GO20518@dastard>
+References: <53D93246.1070406@blur.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <CA+o=1OWqWXXLGLB9-TgkmBUDfFs0GpmQS=4to3tO6-R0FvgLuA@mail.gmail.com>
+In-Reply-To: <53D93246.1070406@blur.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,18 +29,40 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Fanael Linithien <fanael4@gmail.com>
+To: Duane Powell <duane@blur.com>
 Cc: xfs@oss.sgi.com
 
-On Wed, Jul 30, 2014 at 02:30:11PM +0200, Fanael Linithien wrote:
-> 2014-07-30 3:48 GMT+02:00 Dave Chinner <david@fromorbit.com>:
-> > +       if (!mp->m_qflags == 0)
-> > +               return false;
+On Wed, Jul 30, 2014 at 10:58:30AM -0700, Duane Powell wrote:
+> XFS!,
 > 
-> Is it a typo, or is it intentionally obfuscated mp->m_qflags != 0?
+> corrupt dinode 1124573, extent total = 1, nblocks = 0.  This is a bug.
+> Please capture the filesystem metadata with xfs_metadump and
+> report it to xfs@oss.sgi.com.
 
-Ugh. Two patches in the series that weren't properly uptodate. I'll
-resend the series....
+Why were you repairing the filesystem? What went wrong?
+
+Also:
+
+http://xfs.org/index.php/XFS_FAQ#Q:_What_information_should_I_include_when_reporting_a_problem.3F
+
+> dump to big to email, please use this ftp account.
+> 
+> ftp.blur.com
+> user: xsi
+> password: smoke.water.775
+
+220 Blur Studio's FTP Server (ftp.blur.com)
+Name (ftp.blur.com:dave): xsi
+331 Username OK, please send password.
+Password:
+530 Login failed.
+Login failed.
+
+> ./pickup/xfs.bug.dump
+
+Please compress it with bzip2 first - I'm upside down at the end of
+a long piece of wet string, so compression of the dump image will
+save a lot of time...
 
 Cheers,
 
