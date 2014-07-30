@@ -1,24 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 45A857F59
-	for <xfs@oss.sgi.com>; Wed, 30 Jul 2014 11:30:11 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 257AC8F806F
-	for <xfs@oss.sgi.com>; Wed, 30 Jul 2014 09:30:08 -0700 (PDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 005D47F66
+	for <xfs@oss.sgi.com>; Wed, 30 Jul 2014 11:30:20 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 9E1ABAC00A
+	for <xfs@oss.sgi.com>; Wed, 30 Jul 2014 09:30:20 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id 0N0bTrQIBHHvXMll (version=TLSv1
+	cuda.sgi.com with ESMTP id yON9XW5O0dEjCYn0 (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 30 Jul 2014 09:30:07 -0700 (PDT)
-Date: Wed, 30 Jul 2014 12:30:03 -0400
+	Wed, 30 Jul 2014 09:30:16 -0700 (PDT)
+Date: Wed, 30 Jul 2014 12:30:12 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 2/4] xfs: ensure verifiers are attached to recovered
-	buffers
-Message-ID: <20140730163002.GB2830@bfoster.bfoster>
+Subject: Re: [PATCH 3/4] xfs: quotacheck leaves dquot buffers without verifiers
+Message-ID: <20140730163012.GC2830@bfoster.bfoster>
 References: <1406684929-11133-1-git-send-email-david@fromorbit.com>
-	<1406684929-11133-3-git-send-email-david@fromorbit.com>
+	<1406684929-11133-4-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1406684929-11133-3-git-send-email-david@fromorbit.com>
+In-Reply-To: <1406684929-11133-4-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,145 +33,112 @@ Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On Wed, Jul 30, 2014 at 11:48:47AM +1000, Dave Chinner wrote:
+On Wed, Jul 30, 2014 at 11:48:48AM +1000, Dave Chinner wrote:
 > From: Dave Chinner <dchinner@redhat.com>
 > 
-> Crash testing of CRC enabled filesystems has resulted in a number of
-> reports of bad CRCs being detected after the filesystem was mounted.
-> Errors such as the following were being seen:
+> When running xfs/305, I noticed that quotacheck was flushing dquot
+> buffers that did not have the xfs_dquot_buf_ops verifiers attached:
 > 
-> XFS (sdb3): Mounting V5 Filesystem
-> XFS (sdb3): Starting recovery (logdev: internal)
-> XFS (sdb3): Metadata CRC error detected at xfs_agf_read_verify+0x5a/0x100 [xfs], block 0x1
-> XFS (sdb3): Unmount and run xfs_repair
-> XFS (sdb3): First 64 bytes of corrupted metadata buffer:
-> ffff880136ffd600: 58 41 47 46 00 00 00 01 00 00 00 00 00 0f aa 40  XAGF...........@
-> ffff880136ffd610: 00 02 6d 53 00 02 77 f8 00 00 00 00 00 00 00 01  ..mS..w.........
-> ffff880136ffd620: 00 00 00 01 00 00 00 00 00 00 00 00 00 00 00 03  ................
-> ffff880136ffd630: 00 00 00 04 00 08 81 d0 00 08 81 a7 00 00 00 00  ................
-> XFS (sdb3): metadata I/O error: block 0x1 ("xfs_trans_read_buf_map") error 74 numblks 1
+> XFS (vdb): _xfs_buf_ioapply: no ops on block 0x1dc8/0x1dc8
+> ffff880052489000: 44 51 01 04 00 00 65 b8 00 00 00 00 00 00 00 00  DQ....e.........
+> ffff880052489010: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+> ffff880052489020: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+> ffff880052489030: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+> CPU: 1 PID: 2376 Comm: mount Not tainted 3.16.0-rc2-dgc+ #306
+> Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS Bochs 01/01/2011
+>  ffff88006fe38000 ffff88004a0ffae8 ffffffff81cf1cca 0000000000000001
+>  ffff88004a0ffb88 ffffffff814d50ca 000010004a0ffc70 0000000000000000
+>  ffff88006be56dc4 0000000000000021 0000000000001dc8 ffff88007c773d80
+> Call Trace:
+>  [<ffffffff81cf1cca>] dump_stack+0x45/0x56
+>  [<ffffffff814d50ca>] _xfs_buf_ioapply+0x3ca/0x3d0
+>  [<ffffffff810db520>] ? wake_up_state+0x20/0x20
+>  [<ffffffff814d51f5>] ? xfs_bdstrat_cb+0x55/0xb0
+>  [<ffffffff814d513b>] xfs_buf_iorequest+0x6b/0xd0
+>  [<ffffffff814d51f5>] xfs_bdstrat_cb+0x55/0xb0
+>  [<ffffffff814d53ab>] __xfs_buf_delwri_submit+0x15b/0x220
+>  [<ffffffff814d6040>] ? xfs_buf_delwri_submit+0x30/0x90
+>  [<ffffffff814d6040>] xfs_buf_delwri_submit+0x30/0x90
+>  [<ffffffff8150f89d>] xfs_qm_quotacheck+0x17d/0x3c0
+>  [<ffffffff81510591>] xfs_qm_mount_quotas+0x151/0x1e0
+>  [<ffffffff814ed01c>] xfs_mountfs+0x56c/0x7d0
+>  [<ffffffff814f0f12>] xfs_fs_fill_super+0x2c2/0x340
+>  [<ffffffff811c9fe4>] mount_bdev+0x194/0x1d0
+>  [<ffffffff814f0c50>] ? xfs_finish_flags+0x170/0x170
+>  [<ffffffff814ef0f5>] xfs_fs_mount+0x15/0x20
+>  [<ffffffff811ca8c9>] mount_fs+0x39/0x1b0
+>  [<ffffffff811e4d67>] vfs_kern_mount+0x67/0x120
+>  [<ffffffff811e757e>] do_mount+0x23e/0xad0
+>  [<ffffffff8117abde>] ? __get_free_pages+0xe/0x50
+>  [<ffffffff811e71e6>] ? copy_mount_options+0x36/0x150
+>  [<ffffffff811e8103>] SyS_mount+0x83/0xc0
+>  [<ffffffff81cfd40b>] tracesys+0xdd/0xe2
 > 
-> The errors were typically being seen in AGF, AGI and their related
-> btree block buffers some time after log recovery had run. Often it
-> wasn't until later subsequent mounts that the problem was
-> discovered. The common symptom was a buffer with the correct
-> contents, but a CRC and an LSN that matched an older version of the
-> contents.
+> This was caused by dquot buffer readahead not attaching a verifier
+> structure to the buffer when readahead was issued, resulting in the
+> followup read of the buffer finding a valid buffer and so not
+> attaching new verifiers to the buffer as part of the read.
 > 
-> Some debug added to _xfs_buf_ioapply() indicated that buffers were
-> being written without verifiers attached to them from log recovery,
-> and Jan Kara isolated the cause to log recovery readahead an dit's
-> interactions with buffers that had a more recent LSN on disk than
-> the transaction being recovered. In this case, the buffer did not
-> get a verifier attached, and os when the second phase of log
-> recovery ran and recovered EFIs and unlinked inodes, the buffers
-> were modified and written without the verifier running. Hence they
-> had up to date contents, but stale LSNs and CRCs.
+> Also, when a verifier failure occurs, we then read the buffer
+> without verifiers. Attach the verifiers manually after this read so
+> that if the buffer is then written it will be verified that the
+> corruption has been repaired.
 > 
-> Fix it by attaching verifiers to buffers we skip due to future LSN
-> values so they don't escape into the buffer cache without the
-> correct verifier attached.
+> Further, when flushing a dquot we don't ask for a verifier when
+> reading in the dquot buffer the dquot belongs to. Most of the time
+> this isn't an issue because the buffer is still cached, but when it
+> is not cached it will result in writing the dquot buffer without
+> having the verfier attached.
 > 
-> This patch is based on analysis and a patch from Jan Kara.
-> 
-> cc: <stable@vger.kernel.org>
-> Reported-by: Jan Kara <jack@suse.cz>
-> Reported-by: Fanael Linithien <fanael4@gmail.com>
-> Reported-by: Grozdan <neutrino8@gmail.com>
 > Signed-off-by: Dave Chinner <dchinner@redhat.com>
 > ---
->  fs/xfs/xfs_log_recover.c | 47 +++++++++++++++++++++++++++++++----------------
->  1 file changed, 31 insertions(+), 16 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-> index fbc2362..0a015cc 100644
-> --- a/fs/xfs/xfs_log_recover.c
-> +++ b/fs/xfs/xfs_log_recover.c
-> @@ -2126,6 +2126,17 @@ xlog_recover_validate_buf_type(
->  	__uint16_t		magic16;
->  	__uint16_t		magicda;
->  
-> +	/*
-> +	 * We can only do post recovery validation on items on CRC enabled
-> +	 * fielsystems as we need to know when the buffer was written to be able
-> +	 * to determine if we should have replayed the item. If we replay old
-> +	 * metadata over a newer buffer, then it will enter a temporarily
-> +	 * inconsistent state resulting in verification failures. Hence for now
-> +	 * just avoid the verification stage for non-crc filesystems
-> +	 */
-> +	if (!xfs_sb_version_hascrc(&mp->m_sb))
-> +		return;
-> +
-
-This function has a couple other similar *_hascrc() checks further down
-that we should probably kill now. Otherwise, looks Ok...
 
 Reviewed-by: Brian Foster <bfoster@redhat.com>
 
->  	magic32 = be32_to_cpu(*(__be32 *)bp->b_addr);
->  	magic16 = be16_to_cpu(*(__be16*)bp->b_addr);
->  	magicda = be16_to_cpu(info->magic);
-> @@ -2197,10 +2208,6 @@ xlog_recover_validate_buf_type(
->  #endif
->  		break;
->  	case XFS_BLFT_DINO_BUF:
-> -		/*
-> -		 * we get here with inode allocation buffers, not buffers that
-> -		 * track unlinked list changes.
-> -		 */
->  		if (magic16 != XFS_DINODE_MAGIC) {
->  			xfs_warn(mp, "Bad INODE block magic!");
->  			ASSERT(0);
-> @@ -2388,16 +2395,7 @@ xlog_recover_do_reg_buffer(
->  	/* Shouldn't be any more regions */
->  	ASSERT(i == item->ri_total);
->  
-> -	/*
-> -	 * We can only do post recovery validation on items on CRC enabled
-> -	 * fielsystems as we need to know when the buffer was written to be able
-> -	 * to determine if we should have replayed the item. If we replay old
-> -	 * metadata over a newer buffer, then it will enter a temporarily
-> -	 * inconsistent state resulting in verification failures. Hence for now
-> -	 * just avoid the verification stage for non-crc filesystems
-> -	 */
-> -	if (xfs_sb_version_hascrc(&mp->m_sb))
-> -		xlog_recover_validate_buf_type(mp, bp, buf_f);
-> +	xlog_recover_validate_buf_type(mp, bp, buf_f);
->  }
->  
->  /*
-> @@ -2505,12 +2503,29 @@ xlog_recover_buffer_pass2(
->  	}
->  
->  	/*
-> -	 * recover the buffer only if we get an LSN from it and it's less than
-> +	 * Recover the buffer only if we get an LSN from it and it's less than
->  	 * the lsn of the transaction we are replaying.
-> +	 *
-> +	 * Note that we have to be extremely careful of readahead here.
-> +	 * Readahead does not attach verfiers to the buffers so if we don't
-> +	 * actually do any replay after readahead because of the LSN we found
-> +	 * in the buffer if more recent than that current transaction then we
-> +	 * need to attach the verifier directly. Failure to do so can lead to
-> +	 * future recovery actions (e.g. EFI and unlinked list recovery) can
-> +	 * operate on the buffers and they won't get the verifier attached. This
-> +	 * can lead to blocks on disk having the correct content but a stale
-> +	 * CRC.
-> +	 *
-> +	 * It is safe to assume these clean buffers are currently up to date.
-> +	 * If the buffer is dirtied by a later transaction being replayed, then
-> +	 * the verifier will be reset to match whatever recover turns that
-> +	 * buffer into.
+>  fs/xfs/xfs_dquot.c | 3 ++-
+>  fs/xfs/xfs_qm.c    | 8 +++++++-
+>  2 files changed, 9 insertions(+), 2 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
+> index 8a44a79..63c2de4 100644
+> --- a/fs/xfs/xfs_dquot.c
+> +++ b/fs/xfs/xfs_dquot.c
+> @@ -974,7 +974,8 @@ xfs_qm_dqflush(
+>  	 * Get the buffer containing the on-disk dquot
 >  	 */
->  	lsn = xlog_recover_get_buf_lsn(mp, bp);
-> -	if (lsn && lsn != -1 && XFS_LSN_CMP(lsn, current_lsn) >= 0)
-> +	if (lsn && lsn != -1 && XFS_LSN_CMP(lsn, current_lsn) >= 0) {
-> +		xlog_recover_validate_buf_type(mp, bp, buf_f);
->  		goto out_release;
-> +	}
+>  	error = xfs_trans_read_buf(mp, NULL, mp->m_ddev_targp, dqp->q_blkno,
+> -				   mp->m_quotainfo->qi_dqchunklen, 0, &bp, NULL);
+> +				   mp->m_quotainfo->qi_dqchunklen, 0, &bp,
+> +				   &xfs_dquot_buf_ops);
+>  	if (error)
+>  		goto out_unlock;
 >  
->  	if (buf_f->blf_flags & XFS_BLF_INODE_BUF) {
->  		error = xlog_recover_do_inode_buffer(mp, item, bp, buf_f);
+> diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
+> index 7e1a80b..1023210 100644
+> --- a/fs/xfs/xfs_qm.c
+> +++ b/fs/xfs/xfs_qm.c
+> @@ -911,6 +911,12 @@ xfs_qm_dqiter_bufs(
+>  		if (error)
+>  			break;
+>  
+> +		/*
+> +		 * A corrupt buffer might not have a verifier attached, so
+> +		 * make sure we have the correct one attached before writeback
+> +		 * occurs.
+> +		 */
+> +		bp->b_ops = &xfs_dquot_buf_ops;
+>  		xfs_qm_reset_dqcounts(mp, bp, firstid, type);
+>  		xfs_buf_delwri_queue(bp, buffer_list);
+>  		xfs_buf_relse(bp);
+> @@ -996,7 +1002,7 @@ xfs_qm_dqiterate(
+>  					xfs_buf_readahead(mp->m_ddev_targp,
+>  					       XFS_FSB_TO_DADDR(mp, rablkno),
+>  					       mp->m_quotainfo->qi_dqchunklen,
+> -					       NULL);
+> +					       &xfs_dquot_buf_ops);
+>  					rablkno++;
+>  				}
+>  			}
 > -- 
 > 2.0.0
 > 
