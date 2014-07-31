@@ -1,26 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 7E2077F7B
-	for <xfs@oss.sgi.com>; Wed, 30 Jul 2014 22:32:48 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 24F907F98
+	for <xfs@oss.sgi.com>; Thu, 31 Jul 2014 01:12:21 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id F2666AC004
-	for <xfs@oss.sgi.com>; Wed, 30 Jul 2014 20:32:44 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id MsSObZ1agBQrsIjO (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 30 Jul 2014 20:32:43 -0700 (PDT)
-Date: Thu, 31 Jul 2014 11:32:38 +0800
-From: Eryu Guan <eguan@redhat.com>
-Subject: Re: [PATCH 1/2] xfs: new case to test inode allocations in
-	post-growfs disk space
-Message-ID: <20140731033238.GY7382@dhcp-13-216.nay.redhat.com>
-References: <1405529554-31225-1-git-send-email-eguan@redhat.com>
-	<20140721134638.GA45794@bfoster.bfoster>
-	<20140724103658.GB6210@dhcp-13-216.nay.redhat.com>
-	<20140724130646.GA37832@bfoster.bfoster>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20140724130646.GA37832@bfoster.bfoster>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 047D68F8081
+	for <xfs@oss.sgi.com>; Wed, 30 Jul 2014 23:12:20 -0700 (PDT)
+Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
+	[150.101.137.143]) by cuda.sgi.com with ESMTP id
+	uI8lUu3VClXyHnd2 for <xfs@oss.sgi.com>;
+	Wed, 30 Jul 2014 23:12:19 -0700 (PDT)
+Received: from disappointment.disaster.area ([192.168.1.110]
+	helo=disappointment) by dastard with esmtp (Exim 4.80)
+	(envelope-from <dave@fromorbit.com>) id 1XCjaz-0005TN-V2
+	for xfs@oss.sgi.com; Thu, 31 Jul 2014 16:12:09 +1000
+Received: from dave by disappointment with local (Exim 4.82_1-5b7a7c0-XX)
+	(envelope-from <dave@disappointment.disaster>) id 1XCjaz-00036d-UG
+	for xfs@oss.sgi.com; Thu, 31 Jul 2014 16:12:09 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: [PATCH 1/2] xfs: fix swapext ilock deadlock
+Date: Thu, 31 Jul 2014 16:12:07 +1000
+Message-Id: <1406787128-11897-2-git-send-email-david@fromorbit.com>
+In-Reply-To: <1406787128-11897-1-git-send-email-david@fromorbit.com>
+References: <1406787128-11897-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,199 +30,120 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
-Cc: fstests@vger.kernel.org, Eryu Guan <guaneryu@gmail.com>, Eric Sandeen <esandeen@redhat.com>, Boris Ranto <branto@redhat.com>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Thu, Jul 24, 2014 at 09:06:47AM -0400, Brian Foster wrote:
-> On Thu, Jul 24, 2014 at 06:36:58PM +0800, Eryu Guan wrote:
-> > On Mon, Jul 21, 2014 at 09:46:38AM -0400, Brian Foster wrote:
-> > > On Thu, Jul 17, 2014 at 12:52:33AM +0800, Eryu Guan wrote:
-> > [snip]
-> > > > +
-> > > > +create_file()
-> > > > +{
-> > > > +	local dir=$1
-> > > > +	local i=0
-> > > > +
-> > > > +	while echo -n >$dir/testfile_$i; do
-> > > > +		let i=$i+1
-> > > > +	done
-> > > > +}
-> > > > +
-> > > > +# get standard environment, filters and checks
-> > > > +. ./common/rc
-> > > > +. ./common/filter
-> > > > +
-> > > > +# real QA test starts here
-> > > > +_supported_fs xfs
-> > > > +_supported_os Linux
-> > > > +
-> > > > +_require_scratch
-> > > > +
-> > > > +rm -f $seqres.full
-> > > > +echo "Silence is golden"
-> > > > +
-> > > > +_scratch_mkfs_sized $((128 * 1024 * 1024)) | _filter_mkfs >$seqres.full 2>$tmp.mkfs
-> > > > +# get original data blocks number
-> > > > +. $tmp.mkfs
-> > > > +_scratch_mount
-> > > > +
-> > > 
-> > 
-> > Hi Brian,
-> > 
-> > Thanks for the review, and sorry for the late response..
-> > 
-> > > You could probably even make this smaller and make the test quicker.
-> > > E.g., I can create an fs down to 20M or so without any problems.  Also,
-> > > setting imaxpct=0 might be a good idea so you don't hit that artificial
-> > > limit.
-> > 
-> > Yes, a smaller fs could make the test much more quicker. I tested with
-> > 16M fs and the test time reduced from 70s to ~10s on my test host.
-> > 
-> 
-> That sounds great.
-> 
-> > But setting imaxpct=0 could increase the total available inode number
-> > which could make test run longer. So I tend to use default mkfs
-> > options here.
-> >
-> 
-> True... I don't really want to make a big deal out of imaxpct. I think
-> the consensus now is that it's a useless relic and will probably be
-> removed. That does mean this test will eventually use the full fs space
-> by default and we should make sure it runs in a reasonable amount of
-> time. FWIW, it seems to in my tests, running in under 2 minutes on a
-> single spindle.
-> 
-> The other issue is that if I set imaxpct=1 in my mkfs options, the test
-> passes. Should it? Is it actually testing what it should be in that
-> scenario? ;) Note that when imaxpct is set, the 'df -i' information will
-> be based on the cap that imaxpct sets. E.g., it will show 100% usage
-> even though we've only used a few MB for inodes.
+From: Dave Chinner <dchinner@redhat.com>
 
-Yes, I can pass the test too with imaxpct=1 set. But I'm not really
-sure about imaxpct impact on the test result.
+xfs_swap_extents() holds the ilock over a call to
+filemap_write_and_wait(), which can then try to write data and take
+the ilock. That causes a self-deadlock.
 
-Eric, do you have any suggestions here? Because I saw you send out the
-kernel patch to fix this problem :)
+Fix the deadlock and clean up the code by separating the locking
+appropriately. Add a lockflags variable to track what locks we are
+holding as we gain and drop them and cleanup the error handling to
+always use "out_unlock" with the lockflags variable.
 
-Thanks,
-Eryu
-> 
-> Brian
-> 
-> > > 
-> > > > +# Create files to consume free inodes in background
-> > > > +(
-> > > > +	i=0
-> > > > +	while [ $i -lt 1000 ]; do
-> > > > +		mkdir $SCRATCH_MNT/testdir_$i
-> > > > +		create_file $SCRATCH_MNT/testdir_$i &
-> > > > +		let i=$i+1
-> > > > +	done
-> > > > +) >/dev/null 2>&1 &
-> > > > +
-> > > > +# Grow fs at the same time, at least x4
-> > > > +# doubling or tripling the size couldn't reproduce
-> > > > +$XFS_GROWFS_PROG -D $((dblocks * 4)) $SCRATCH_MNT >>$seqres.full
-> > > > +
-> > > 
-> > > Even though this is still relatively small based on what people probably
-> > > typically test, we're still making assumptions about the size of the
-> > > scratch device. It may be better to create the fs as a file on TEST_DEV.
-> > > Then you could do something like truncate to a fixed starting size, mkfs
-> > > at ~20MB and just growfs to the full size of the file. A 4x grow at that
-> > > point is then still only ~80MB, though hopefully it still doesn't run
-> > > too long on slower machines.
-> > 
-> > I'll use _require_fs_space here as Dave suggested.
-> > 
-> > > 
-> > > > +# Wait for background create_file to hit ENOSPC
-> > > > +wait
-> > > > +
-> > > > +# log inode status in $seqres.full for debug purpose
-> > > > +echo "Inode status after growing fs" >>$seqres.full
-> > > > +$DF_PROG -i $SCRATCH_MNT >>$seqres.full
-> > > > +
-> > > > +# Check free inode count, we expect all free inodes are taken
-> > > > +free_inode=`_get_free_inode $SCRATCH_MNT`
-> > > > +if [ $free_inode -gt 0 ]; then
-> > > > +	echo "$free_inode free inodes available, newly added space not being used"
-> > > > +else
-> > > > +	status=0
-> > > > +fi
-> > > 
-> > > This might not be the best metric either. I believe the free inodes
-> > > count that 'df -Ti' returns is a somewhat artificial calculation based
-> > > on the number of free blocks available, since we can do dynamic inode
-> > > allocation. It doesn't necessarily mean that all blocks can be allocated
-> > > to inodes however (e.g., due to alignment or extent length constraints),
-> > > so it might never actually read 0 unless the filesystem is perfectly
-> > > full.
-> > > 
-> > > Perhaps consider something like the IUse percentage over a certain
-> > > threshold?
-> > 
-> > I'm not sure about the proper percentage here, I'll try %99. But in my
-> > test on RHEL6 the free inode count is always 0 after test.
-> > 
-> > Will send out v2 soon.
-> > 
-> > Thanks,
-> > Eryu
-> > 
-> > > 
-> > > Brian
-> > > 
-> > > > +
-> > > > +exit
-> > > > diff --git a/tests/xfs/015.out b/tests/xfs/015.out
-> > > > new file mode 100644
-> > > > index 0000000..fee0fcf
-> > > > --- /dev/null
-> > > > +++ b/tests/xfs/015.out
-> > > > @@ -0,0 +1,2 @@
-> > > > +QA output created by 015
-> > > > +Silence is golden
-> > > > diff --git a/tests/xfs/group b/tests/xfs/group
-> > > > index d5b50b7..0aab336 100644
-> > > > --- a/tests/xfs/group
-> > > > +++ b/tests/xfs/group
-> > > > @@ -12,6 +12,7 @@
-> > > >  012 rw auto quick
-> > > >  013 auto metadata stress
-> > > >  014 auto enospc quick quota
-> > > > +015 auto enospc growfs
-> > > >  016 rw auto quick
-> > > >  017 mount auto quick stress
-> > > >  018 deprecated # log logprint v2log
-> > > > -- 
-> > > > 1.9.3
-> > > > 
-> > > > --
-> > > > To unsubscribe from this list: send the line "unsubscribe fstests" in
-> > > > the body of a message to majordomo@vger.kernel.org
-> > > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > > 
-> > > _______________________________________________
-> > > xfs mailing list
-> > > xfs@oss.sgi.com
-> > > http://oss.sgi.com/mailman/listinfo/xfs
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe fstests" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe fstests" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/xfs_bmap_util.c | 33 ++++++++++++++++++---------------
+ 1 file changed, 18 insertions(+), 15 deletions(-)
+
+diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+index bbc748a..3c60c43 100644
+--- a/fs/xfs/xfs_bmap_util.c
++++ b/fs/xfs/xfs_bmap_util.c
+@@ -1633,6 +1633,7 @@ xfs_swap_extents(
+ 	int		aforkblks = 0;
+ 	int		taforkblks = 0;
+ 	__uint64_t	tmp;
++	int		lock_flags;
+ 
+ 	tempifp = kmem_alloc(sizeof(xfs_ifork_t), KM_MAYFAIL);
+ 	if (!tempifp) {
+@@ -1641,13 +1642,13 @@ xfs_swap_extents(
+ 	}
+ 
+ 	/*
+-	 * we have to do two separate lock calls here to keep lockdep
+-	 * happy. If we try to get all the locks in one call, lock will
+-	 * report false positives when we drop the ILOCK and regain them
+-	 * below.
++	 * Lock up the inodes against other IO and truncate to begin with.
++	 * Then we can ensure the inodes are flushed and have no page cache
++	 * safely. Once we have done this we can take the ilocks and do the rest
++	 * of the checks.
+ 	 */
++	lock_flags = XFS_IOLOCK_EXCL;
+ 	xfs_lock_two_inodes(ip, tip, XFS_IOLOCK_EXCL);
+-	xfs_lock_two_inodes(ip, tip, XFS_ILOCK_EXCL);
+ 
+ 	/* Verify that both files have the same format */
+ 	if ((ip->i_d.di_mode & S_IFMT) != (tip->i_d.di_mode & S_IFMT)) {
+@@ -1666,6 +1667,9 @@ xfs_swap_extents(
+ 		goto out_unlock;
+ 	truncate_pagecache_range(VFS_I(tip), 0, -1);
+ 
++	xfs_lock_two_inodes(ip, tip, XFS_ILOCK_EXCL);
++	lock_flags |= XFS_ILOCK_EXCL;
++
+ 	/* Verify O_DIRECT for ftmp */
+ 	if (VFS_I(tip)->i_mapping->nrpages) {
+ 		error = -EINVAL;
+@@ -1720,6 +1724,7 @@ xfs_swap_extents(
+ 
+ 	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+ 	xfs_iunlock(tip, XFS_ILOCK_EXCL);
++	lock_flags &= ~XFS_ILOCK_EXCL;
+ 
+ 	/*
+ 	 * There is a race condition here since we gave up the
+@@ -1732,13 +1737,11 @@ xfs_swap_extents(
+ 
+ 	tp = xfs_trans_alloc(mp, XFS_TRANS_SWAPEXT);
+ 	error = xfs_trans_reserve(tp, &M_RES(mp)->tr_ichange, 0, 0);
+-	if (error) {
+-		xfs_iunlock(ip,  XFS_IOLOCK_EXCL);
+-		xfs_iunlock(tip, XFS_IOLOCK_EXCL);
+-		xfs_trans_cancel(tp, 0);
+-		goto out;
+-	}
++	if (error)
++		goto out_trans_cancel;
++
+ 	xfs_lock_two_inodes(ip, tip, XFS_ILOCK_EXCL);
++	lock_flags |= XFS_ILOCK_EXCL;
+ 
+ 	/*
+ 	 * Count the number of extended attribute blocks
+@@ -1757,8 +1760,8 @@ xfs_swap_extents(
+ 			goto out_trans_cancel;
+ 	}
+ 
+-	xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL | XFS_IOLOCK_EXCL);
+-	xfs_trans_ijoin(tp, tip, XFS_ILOCK_EXCL | XFS_IOLOCK_EXCL);
++	xfs_trans_ijoin(tp, ip, lock_flags);
++	xfs_trans_ijoin(tp, tip, lock_flags);
+ 
+ 	/*
+ 	 * Before we've swapped the forks, lets set the owners of the forks
+@@ -1887,8 +1890,8 @@ out:
+ 	return error;
+ 
+ out_unlock:
+-	xfs_iunlock(ip,  XFS_ILOCK_EXCL | XFS_IOLOCK_EXCL);
+-	xfs_iunlock(tip, XFS_ILOCK_EXCL | XFS_IOLOCK_EXCL);
++	xfs_iunlock(ip, lock_flags);
++	xfs_iunlock(tip, lock_flags);
+ 	goto out;
+ 
+ out_trans_cancel:
+-- 
+2.0.0
 
 _______________________________________________
 xfs mailing list
