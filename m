@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 10C347F93
-	for <xfs@oss.sgi.com>; Thu, 31 Jul 2014 12:13:10 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 928CFAC003
-	for <xfs@oss.sgi.com>; Thu, 31 Jul 2014 10:13:06 -0700 (PDT)
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.9])
-	by cuda.sgi.com with ESMTP id lpIRIcjDvpuys4oZ (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 31 Jul 2014 10:13:03 -0700 (PDT)
-Date: Thu, 31 Jul 2014 10:13:02 -0700
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 732D37F9B
+	for <xfs@oss.sgi.com>; Thu, 31 Jul 2014 12:13:48 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 524FD8F804B
+	for <xfs@oss.sgi.com>; Thu, 31 Jul 2014 10:13:45 -0700 (PDT)
+Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
+	ESMTP id r3uNfjR36FM7INWI (version=TLSv1 cipher=AES256-SHA
+	bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 31 Jul 2014 10:13:44 -0700 (PDT)
+Date: Thu, 31 Jul 2014 10:13:43 -0700
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 3/6] xfs: kill VN_DIRTY()
-Message-ID: <20140731171302.GA22173@infradead.org>
+Subject: Re: [PATCH 4/6] xfs: kill VN_CACHED
+Message-ID: <20140731171343.GB22173@infradead.org>
 References: <1406791995-14723-1-git-send-email-david@fromorbit.com>
-	<1406791995-14723-4-git-send-email-david@fromorbit.com>
+	<1406791995-14723-5-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1406791995-14723-4-git-send-email-david@fromorbit.com>
+In-Reply-To: <1406791995-14723-5-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,16 +33,15 @@ Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On Thu, Jul 31, 2014 at 05:33:12PM +1000, Dave Chinner wrote:
-> -			if (VN_DIRTY(VFS_I(ip)) && ip->i_delayed_blks > 0) {
-> +			if (mapping_tagged(VFS_I(ip)->i_mapping,
-> +					   PAGECACHE_TAG_DIRTY) &&
-> +			    ip->i_delayed_blks > 0) {
->  				error = filemap_flush(VFS_I(ip)->i_mapping);
+On Thu, Jul 31, 2014 at 05:33:13PM +1000, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> Only has 2 users, has outlived it's usefulness.
 
-I don't think there's even any point in keeping the mapping_tagged
-check.  filemap_flush handles the case where nothing is to flush
-internally, and no other callers others with things like this either.
+Looks good. (I had this and other vnode.h removal bits in one of my
+trees for years but never managed to send it out..).
+
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
 _______________________________________________
 xfs mailing list
