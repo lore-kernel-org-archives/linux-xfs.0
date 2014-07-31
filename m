@@ -1,27 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id DCE757F99
-	for <xfs@oss.sgi.com>; Thu, 31 Jul 2014 01:12:21 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 9F54630404E
-	for <xfs@oss.sgi.com>; Wed, 30 Jul 2014 23:12:21 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id 4465E7FA2
+	for <xfs@oss.sgi.com>; Thu, 31 Jul 2014 02:33:26 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 31D27304051
+	for <xfs@oss.sgi.com>; Thu, 31 Jul 2014 00:33:26 -0700 (PDT)
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	QlLnsxLqGOeCsSxL for <xfs@oss.sgi.com>;
-	Wed, 30 Jul 2014 23:12:19 -0700 (PDT)
+	McKsAovI4sijCtvr for <xfs@oss.sgi.com>;
+	Thu, 31 Jul 2014 00:33:24 -0700 (PDT)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.80)
-	(envelope-from <dave@fromorbit.com>) id 1XCjaz-0005TO-Vf
-	for xfs@oss.sgi.com; Thu, 31 Jul 2014 16:12:10 +1000
+	(envelope-from <dave@fromorbit.com>) id 1XCkrW-0005gV-Ru
+	for xfs@oss.sgi.com; Thu, 31 Jul 2014 17:33:18 +1000
 Received: from dave by disappointment with local (Exim 4.82_1-5b7a7c0-XX)
-	(envelope-from <dave@disappointment.disaster>) id 1XCjaz-00036i-Uo
-	for xfs@oss.sgi.com; Thu, 31 Jul 2014 16:12:09 +1000
+	(envelope-from <dave@disappointment.disaster>) id 1XCkrW-0003y7-Qi
+	for xfs@oss.sgi.com; Thu, 31 Jul 2014 17:33:18 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 2/2] xfs: flush both inodes in xfs_swap_extents
-Date: Thu, 31 Jul 2014 16:12:08 +1000
-Message-Id: <1406787128-11897-3-git-send-email-david@fromorbit.com>
-In-Reply-To: <1406787128-11897-1-git-send-email-david@fromorbit.com>
-References: <1406787128-11897-1-git-send-email-david@fromorbit.com>
+Subject: [PATCH 3/6] xfs: kill VN_DIRTY()
+Date: Thu, 31 Jul 2014 17:33:12 +1000
+Message-Id: <1406791995-14723-4-git-send-email-david@fromorbit.com>
+In-Reply-To: <1406791995-14723-1-git-send-email-david@fromorbit.com>
+References: <1406791995-14723-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -39,148 +39,43 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-We need to treat both inodes identically from a page cache point of
-view when prepareing them for extent swapping. We don't do this
-right now - we assume that one of the inodes empty, because that's
-what xfs_fsr currently does. Remove this assumption from the code.
-
-While factoring out the flushing and related checks, move the
-transactions reservation to immeidately after the flushes so that we
-don't need to pick up and then drop the ilock to do the transaction
-reservation. There are no issues with aborting the transaction it if
-the checks fail before we join the inodes to the transaction and
-dirty them, so this is a safe change to make.
+Only one user, so get rid of it.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Signed-off-by: Dave Chinner <david@fromorbit.com>
 ---
- fs/xfs/xfs_bmap_util.c | 81 +++++++++++++++++++++++---------------------------
- 1 file changed, 37 insertions(+), 44 deletions(-)
+ fs/xfs/xfs_inode.c | 4 +++-
+ fs/xfs/xfs_vnode.h | 2 --
+ 2 files changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-index 3c60c43..2f1e30d 100644
---- a/fs/xfs/xfs_bmap_util.c
-+++ b/fs/xfs/xfs_bmap_util.c
-@@ -1619,6 +1619,30 @@ xfs_swap_extents_check_format(
- }
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index 1a5e068..c929217 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -1635,7 +1635,9 @@ xfs_release(
+ 		truncated = xfs_iflags_test_and_clear(ip, XFS_ITRUNCATED);
+ 		if (truncated) {
+ 			xfs_iflags_clear(ip, XFS_IDIRTY_RELEASE);
+-			if (VN_DIRTY(VFS_I(ip)) && ip->i_delayed_blks > 0) {
++			if (mapping_tagged(VFS_I(ip)->i_mapping,
++					   PAGECACHE_TAG_DIRTY) &&
++			    ip->i_delayed_blks > 0) {
+ 				error = filemap_flush(VFS_I(ip)->i_mapping);
+ 				if (error)
+ 					return error;
+diff --git a/fs/xfs/xfs_vnode.h b/fs/xfs/xfs_vnode.h
+index e8a7738..07b475a 100644
+--- a/fs/xfs/xfs_vnode.h
++++ b/fs/xfs/xfs_vnode.h
+@@ -39,8 +39,6 @@ struct attrlist_cursor_kern;
+  */
+ #define VN_MAPPED(vp)	mapping_mapped(vp->i_mapping)
+ #define VN_CACHED(vp)	(vp->i_mapping->nrpages)
+-#define VN_DIRTY(vp)	mapping_tagged(vp->i_mapping, \
+-					PAGECACHE_TAG_DIRTY)
  
- int
-+xfs_swap_extent_flush(
-+	struct xfs_inode	*ip)
-+{
-+	int	error;
-+
-+	error = filemap_write_and_wait(VFS_I(ip)->i_mapping);
-+	if (error)
-+		return error;
-+	truncate_pagecache_range(VFS_I(ip), 0, -1);
-+
-+	/* Verify O_DIRECT for ftmp */
-+	if (VFS_I(ip)->i_mapping->nrpages)
-+		return -EINVAL;
-+
-+	/*
-+	 * Don't try to swap extents on mmap()d files because we can't lock
-+	 * out races against page faults safely.
-+	 */
-+	if (mapping_mapped(VFS_I(ip)->i_mapping))
-+		return -EBUSY;
-+	return 0;
-+}
-+
-+int
- xfs_swap_extents(
- 	xfs_inode_t	*ip,	/* target inode */
- 	xfs_inode_t	*tip,	/* tmp inode */
-@@ -1662,26 +1686,28 @@ xfs_swap_extents(
- 		goto out_unlock;
- 	}
  
--	error = filemap_write_and_wait(VFS_I(tip)->i_mapping);
-+	error = xfs_swap_extent_flush(ip);
-+	if (error)
-+		goto out_unlock;
-+	error = xfs_swap_extent_flush(tip);
- 	if (error)
- 		goto out_unlock;
--	truncate_pagecache_range(VFS_I(tip), 0, -1);
--
--	xfs_lock_two_inodes(ip, tip, XFS_ILOCK_EXCL);
--	lock_flags |= XFS_ILOCK_EXCL;
- 
--	/* Verify O_DIRECT for ftmp */
--	if (VFS_I(tip)->i_mapping->nrpages) {
--		error = -EINVAL;
-+	tp = xfs_trans_alloc(mp, XFS_TRANS_SWAPEXT);
-+	error = xfs_trans_reserve(tp, &M_RES(mp)->tr_ichange, 0, 0);
-+	if (error) {
-+		xfs_trans_cancel(tp, 0);
- 		goto out_unlock;
- 	}
-+	xfs_lock_two_inodes(ip, tip, XFS_ILOCK_EXCL);
-+	lock_flags |= XFS_ILOCK_EXCL;
- 
- 	/* Verify all data are being swapped */
- 	if (sxp->sx_offset != 0 ||
- 	    sxp->sx_length != ip->i_d.di_size ||
- 	    sxp->sx_length != tip->i_d.di_size) {
- 		error = -EFAULT;
--		goto out_unlock;
-+		goto out_trans_cancel;
- 	}
- 
- 	trace_xfs_swap_extent_before(ip, 0);
-@@ -1693,7 +1719,7 @@ xfs_swap_extents(
- 		xfs_notice(mp,
- 		    "%s: inode 0x%llx format is incompatible for exchanging.",
- 				__func__, ip->i_ino);
--		goto out_unlock;
-+		goto out_trans_cancel;
- 	}
- 
- 	/*
-@@ -1708,41 +1734,8 @@ xfs_swap_extents(
- 	    (sbp->bs_mtime.tv_sec != VFS_I(ip)->i_mtime.tv_sec) ||
- 	    (sbp->bs_mtime.tv_nsec != VFS_I(ip)->i_mtime.tv_nsec)) {
- 		error = -EBUSY;
--		goto out_unlock;
--	}
--
--	/* We need to fail if the file is memory mapped.  Once we have tossed
--	 * all existing pages, the page fault will have no option
--	 * but to go to the filesystem for pages. By making the page fault call
--	 * vop_read (or write in the case of autogrow) they block on the iolock
--	 * until we have switched the extents.
--	 */
--	if (mapping_mapped(VFS_I(ip)->i_mapping)) {
--		error = -EBUSY;
--		goto out_unlock;
--	}
--
--	xfs_iunlock(ip, XFS_ILOCK_EXCL);
--	xfs_iunlock(tip, XFS_ILOCK_EXCL);
--	lock_flags &= ~XFS_ILOCK_EXCL;
--
--	/*
--	 * There is a race condition here since we gave up the
--	 * ilock.  However, the data fork will not change since
--	 * we have the iolock (locked for truncation too) so we
--	 * are safe.  We don't really care if non-io related
--	 * fields change.
--	 */
--	truncate_pagecache_range(VFS_I(ip), 0, -1);
--
--	tp = xfs_trans_alloc(mp, XFS_TRANS_SWAPEXT);
--	error = xfs_trans_reserve(tp, &M_RES(mp)->tr_ichange, 0, 0);
--	if (error)
- 		goto out_trans_cancel;
--
--	xfs_lock_two_inodes(ip, tip, XFS_ILOCK_EXCL);
--	lock_flags |= XFS_ILOCK_EXCL;
--
-+	}
- 	/*
- 	 * Count the number of extended attribute blocks
- 	 */
+ #endif	/* __XFS_VNODE_H__ */
 -- 
 2.0.0
 
