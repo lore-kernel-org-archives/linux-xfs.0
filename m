@@ -1,22 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id DCA747F37
-	for <xfs@oss.sgi.com>; Thu, 31 Jul 2014 02:51:40 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id EFDD27F8B
+	for <xfs@oss.sgi.com>; Thu, 31 Jul 2014 06:45:43 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id C8EBB8F8081
-	for <xfs@oss.sgi.com>; Thu, 31 Jul 2014 00:51:40 -0700 (PDT)
-Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id RFE2hdwMS3Q1vSqc (version=TLSv1
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 7D57BAC005
+	for <xfs@oss.sgi.com>; Thu, 31 Jul 2014 04:45:43 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id E39ke2jfiuXqtCGz (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 31 Jul 2014 00:51:39 -0700 (PDT)
-Message-ID: <53D9F67F.9060609@oracle.com>
-Date: Thu, 31 Jul 2014 15:55:43 +0800
-From: Jeff Liu <jeff.liu@oracle.com>
+	Thu, 31 Jul 2014 04:45:41 -0700 (PDT)
+Date: Thu, 31 Jul 2014 07:45:37 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 1/2] xfs: new case to test inode allocations in
+	post-growfs disk space
+Message-ID: <20140731114537.GA43383@bfoster.bfoster>
+References: <1405529554-31225-1-git-send-email-eguan@redhat.com>
+	<20140721134638.GA45794@bfoster.bfoster>
+	<20140724103658.GB6210@dhcp-13-216.nay.redhat.com>
+	<20140724130646.GA37832@bfoster.bfoster>
+	<20140731033238.GY7382@dhcp-13-216.nay.redhat.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH v3 00/10] xfs_ioc_bulkstat code refactoring and
-	consolidation
-References: <538D92B6.5050402@oracle.com> <20140729232748.GI26465@dastard>
-In-Reply-To: <20140729232748.GI26465@dastard>
+Content-Disposition: inline
+In-Reply-To: <20140731033238.GY7382@dhcp-13-216.nay.redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,61 +34,213 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: Eryu Guan <eguan@redhat.com>
+Cc: fstests@vger.kernel.org, Eryu Guan <guaneryu@gmail.com>, Eric Sandeen <esandeen@redhat.com>, Boris Ranto <branto@redhat.com>, xfs@oss.sgi.com
 
-Hi Dave,
-
-On 07/30/2014 07:27 AM, Dave Chinner wrote:
-> On Tue, Jun 03, 2014 at 05:17:42PM +0800, Jeff Liu wrote:
->> Hi folk,
->>
->> This is the revised patches for xfs_ioc_bulkstat consolidation and code
->> refactoring. As per Christoph's comments, I'm not include the per AG
->> inumber patch in this series given that I don't actually introduce the
->> relevant inumbers interface now. Similar to that reason, I also dropped
->> the per AG bulkstat patch, it would be included in parallel quota check
->> series.
->>
->>
->> v3->v2:
->> - one major bug fix is at xfs_bulkstat_ag_ichunk() regarding the user buffer
->>   pointer operations, it should be defined as a pointer-to-pointer since it
->>   would be updated inside xfs_bulkstat_ag_ichunk().
->>
->> - separate xfs_inumber consolidate patch into two patches, the first one
->>   fix the formater function return value and consolidate the codes, another
->>   one does the actual logic changes for better error handling.
->>
->> - Add a separate patch to get rid of the redundant user buffer count
->>   checks at xfs_bulkstat()
->>
->> - fixed agino calculation issue at xfs_bulkstat_grab_ichunk().
->>
->> v2: http://oss.sgi.com/archives/xfs/2014-04/msg00554.html
->> v1: http://oss.sgi.com/archives/xfs/2013-12/msg00901.html
->>
->>
->> Any comments are welcome!
+On Thu, Jul 31, 2014 at 11:32:38AM +0800, Eryu Guan wrote:
+> On Thu, Jul 24, 2014 at 09:06:47AM -0400, Brian Foster wrote:
+> > On Thu, Jul 24, 2014 at 06:36:58PM +0800, Eryu Guan wrote:
+> > > On Mon, Jul 21, 2014 at 09:46:38AM -0400, Brian Foster wrote:
+> > > > On Thu, Jul 17, 2014 at 12:52:33AM +0800, Eryu Guan wrote:
+> > > [snip]
+> > > > > +
+> > > > > +create_file()
+> > > > > +{
+> > > > > +	local dir=$1
+> > > > > +	local i=0
+> > > > > +
+> > > > > +	while echo -n >$dir/testfile_$i; do
+> > > > > +		let i=$i+1
+> > > > > +	done
+> > > > > +}
+> > > > > +
+> > > > > +# get standard environment, filters and checks
+> > > > > +. ./common/rc
+> > > > > +. ./common/filter
+> > > > > +
+> > > > > +# real QA test starts here
+> > > > > +_supported_fs xfs
+> > > > > +_supported_os Linux
+> > > > > +
+> > > > > +_require_scratch
+> > > > > +
+> > > > > +rm -f $seqres.full
+> > > > > +echo "Silence is golden"
+> > > > > +
+> > > > > +_scratch_mkfs_sized $((128 * 1024 * 1024)) | _filter_mkfs >$seqres.full 2>$tmp.mkfs
+> > > > > +# get original data blocks number
+> > > > > +. $tmp.mkfs
+> > > > > +_scratch_mount
+> > > > > +
+> > > > 
+> > > 
+> > > Hi Brian,
+> > > 
+> > > Thanks for the review, and sorry for the late response..
+> > > 
+> > > > You could probably even make this smaller and make the test quicker.
+> > > > E.g., I can create an fs down to 20M or so without any problems.  Also,
+> > > > setting imaxpct=0 might be a good idea so you don't hit that artificial
+> > > > limit.
+> > > 
+> > > Yes, a smaller fs could make the test much more quicker. I tested with
+> > > 16M fs and the test time reduced from 70s to ~10s on my test host.
+> > > 
+> > 
+> > That sounds great.
+> > 
+> > > But setting imaxpct=0 could increase the total available inode number
+> > > which could make test run longer. So I tend to use default mkfs
+> > > options here.
+> > >
+> > 
+> > True... I don't really want to make a big deal out of imaxpct. I think
+> > the consensus now is that it's a useless relic and will probably be
+> > removed. That does mean this test will eventually use the full fs space
+> > by default and we should make sure it runs in a reasonable amount of
+> > time. FWIW, it seems to in my tests, running in under 2 minutes on a
+> > single spindle.
+> > 
+> > The other issue is that if I set imaxpct=1 in my mkfs options, the test
+> > passes. Should it? Is it actually testing what it should be in that
+> > scenario? ;) Note that when imaxpct is set, the 'df -i' information will
+> > be based on the cap that imaxpct sets. E.g., it will show 100% usage
+> > even though we've only used a few MB for inodes.
 > 
-> Hi Jeff, I ported this to the current dev tree based on the
-> xfs-libxfs-restructure branch, and I keep seeing fsstress failing
-> with memory corruption after random bulkstat ioctls. I see regular
-> failures with generic/013, generic/068, xfs/167 and the other
-> fstress tests also randomly fail. The typical failure is glibc
-> detected memory heap corruption on freeing the bulkstat structure
-> after the ioctl:
+> Yes, I can pass the test too with imaxpct=1 set. But I'm not really
+> sure about imaxpct impact on the test result.
 > 
-> generic/068 42s ...*** Error in `./ltp/fsstress': double free or corruption (!prev): 0x00007f0224000b70 ***
-> ======= Backtrace: =========
+> Eric, do you have any suggestions here? Because I saw you send out the
+> kernel patch to fix this problem :)
+> 
 
-Sorry for my late response and thanks for help porting this patch series.
+(I think Eric might be away.)
 
-Now I can reproduce this issue frequently with generic/013, will try to fix
-it ASAP.
+To be clear, I'm just suggesting we verify whether the test is as
+focused as possible. Put another way, have we verified whether this test
+detects the problem with this potential configuration? E.g., run a
+kernel without Eric's growfs fix, run the test and verify it fails.
+Repeat with '-i imaxpct=1' in MKFS_OPTIONS and verify the test still
+fails. If it does, then it's probably fine. If it passes, that's a hole
+in the test case we should close up.
 
-Cheers,
--Jeff
+Brian
+
+> Thanks,
+> Eryu
+> > 
+> > Brian
+> > 
+> > > > 
+> > > > > +# Create files to consume free inodes in background
+> > > > > +(
+> > > > > +	i=0
+> > > > > +	while [ $i -lt 1000 ]; do
+> > > > > +		mkdir $SCRATCH_MNT/testdir_$i
+> > > > > +		create_file $SCRATCH_MNT/testdir_$i &
+> > > > > +		let i=$i+1
+> > > > > +	done
+> > > > > +) >/dev/null 2>&1 &
+> > > > > +
+> > > > > +# Grow fs at the same time, at least x4
+> > > > > +# doubling or tripling the size couldn't reproduce
+> > > > > +$XFS_GROWFS_PROG -D $((dblocks * 4)) $SCRATCH_MNT >>$seqres.full
+> > > > > +
+> > > > 
+> > > > Even though this is still relatively small based on what people probably
+> > > > typically test, we're still making assumptions about the size of the
+> > > > scratch device. It may be better to create the fs as a file on TEST_DEV.
+> > > > Then you could do something like truncate to a fixed starting size, mkfs
+> > > > at ~20MB and just growfs to the full size of the file. A 4x grow at that
+> > > > point is then still only ~80MB, though hopefully it still doesn't run
+> > > > too long on slower machines.
+> > > 
+> > > I'll use _require_fs_space here as Dave suggested.
+> > > 
+> > > > 
+> > > > > +# Wait for background create_file to hit ENOSPC
+> > > > > +wait
+> > > > > +
+> > > > > +# log inode status in $seqres.full for debug purpose
+> > > > > +echo "Inode status after growing fs" >>$seqres.full
+> > > > > +$DF_PROG -i $SCRATCH_MNT >>$seqres.full
+> > > > > +
+> > > > > +# Check free inode count, we expect all free inodes are taken
+> > > > > +free_inode=`_get_free_inode $SCRATCH_MNT`
+> > > > > +if [ $free_inode -gt 0 ]; then
+> > > > > +	echo "$free_inode free inodes available, newly added space not being used"
+> > > > > +else
+> > > > > +	status=0
+> > > > > +fi
+> > > > 
+> > > > This might not be the best metric either. I believe the free inodes
+> > > > count that 'df -Ti' returns is a somewhat artificial calculation based
+> > > > on the number of free blocks available, since we can do dynamic inode
+> > > > allocation. It doesn't necessarily mean that all blocks can be allocated
+> > > > to inodes however (e.g., due to alignment or extent length constraints),
+> > > > so it might never actually read 0 unless the filesystem is perfectly
+> > > > full.
+> > > > 
+> > > > Perhaps consider something like the IUse percentage over a certain
+> > > > threshold?
+> > > 
+> > > I'm not sure about the proper percentage here, I'll try %99. But in my
+> > > test on RHEL6 the free inode count is always 0 after test.
+> > > 
+> > > Will send out v2 soon.
+> > > 
+> > > Thanks,
+> > > Eryu
+> > > 
+> > > > 
+> > > > Brian
+> > > > 
+> > > > > +
+> > > > > +exit
+> > > > > diff --git a/tests/xfs/015.out b/tests/xfs/015.out
+> > > > > new file mode 100644
+> > > > > index 0000000..fee0fcf
+> > > > > --- /dev/null
+> > > > > +++ b/tests/xfs/015.out
+> > > > > @@ -0,0 +1,2 @@
+> > > > > +QA output created by 015
+> > > > > +Silence is golden
+> > > > > diff --git a/tests/xfs/group b/tests/xfs/group
+> > > > > index d5b50b7..0aab336 100644
+> > > > > --- a/tests/xfs/group
+> > > > > +++ b/tests/xfs/group
+> > > > > @@ -12,6 +12,7 @@
+> > > > >  012 rw auto quick
+> > > > >  013 auto metadata stress
+> > > > >  014 auto enospc quick quota
+> > > > > +015 auto enospc growfs
+> > > > >  016 rw auto quick
+> > > > >  017 mount auto quick stress
+> > > > >  018 deprecated # log logprint v2log
+> > > > > -- 
+> > > > > 1.9.3
+> > > > > 
+> > > > > --
+> > > > > To unsubscribe from this list: send the line "unsubscribe fstests" in
+> > > > > the body of a message to majordomo@vger.kernel.org
+> > > > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > > > 
+> > > > _______________________________________________
+> > > > xfs mailing list
+> > > > xfs@oss.sgi.com
+> > > > http://oss.sgi.com/mailman/listinfo/xfs
+> > > --
+> > > To unsubscribe from this list: send the line "unsubscribe fstests" in
+> > > the body of a message to majordomo@vger.kernel.org
+> > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe fstests" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> --
+> To unsubscribe from this list: send the line "unsubscribe fstests" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
 _______________________________________________
 xfs mailing list
