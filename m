@@ -1,27 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 1F0D97FA5
-	for <xfs@oss.sgi.com>; Wed, 30 Jul 2014 20:02:04 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id D496A304043
-	for <xfs@oss.sgi.com>; Wed, 30 Jul 2014 18:02:00 -0700 (PDT)
-Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
-	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	1vA6n3WhRjg1jQ9P for <xfs@oss.sgi.com>;
-	Wed, 30 Jul 2014 18:01:58 -0700 (PDT)
-Received: from disappointment.disaster.area ([192.168.1.110]
-	helo=disappointment) by dastard with esmtp (Exim 4.80)
-	(envelope-from <dave@fromorbit.com>) id 1XCeki-0004nH-9Z
-	for xfs@oss.sgi.com; Thu, 31 Jul 2014 11:01:52 +1000
-Received: from dave by disappointment with local (Exim 4.82_1-5b7a7c0-XX)
-	(envelope-from <dave@disappointment.disaster>) id 1XCeki-0000AD-8T
-	for xfs@oss.sgi.com; Thu, 31 Jul 2014 11:01:52 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 2/4] xfs: ensure verifiers are attached to recovered buffers
-Date: Thu, 31 Jul 2014 11:01:47 +1000
-Message-Id: <1406768509-32556-3-git-send-email-david@fromorbit.com>
-In-Reply-To: <1406768509-32556-1-git-send-email-david@fromorbit.com>
-References: <1406768509-32556-1-git-send-email-david@fromorbit.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 7E2077F7B
+	for <xfs@oss.sgi.com>; Wed, 30 Jul 2014 22:32:48 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id F2666AC004
+	for <xfs@oss.sgi.com>; Wed, 30 Jul 2014 20:32:44 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id MsSObZ1agBQrsIjO (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 30 Jul 2014 20:32:43 -0700 (PDT)
+Date: Thu, 31 Jul 2014 11:32:38 +0800
+From: Eryu Guan <eguan@redhat.com>
+Subject: Re: [PATCH 1/2] xfs: new case to test inode allocations in
+	post-growfs disk space
+Message-ID: <20140731033238.GY7382@dhcp-13-216.nay.redhat.com>
+References: <1405529554-31225-1-git-send-email-eguan@redhat.com>
+	<20140721134638.GA45794@bfoster.bfoster>
+	<20140724103658.GB6210@dhcp-13-216.nay.redhat.com>
+	<20140724130646.GA37832@bfoster.bfoster>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20140724130646.GA37832@bfoster.bfoster>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,166 +29,199 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Brian Foster <bfoster@redhat.com>
+Cc: fstests@vger.kernel.org, Eryu Guan <guaneryu@gmail.com>, Eric Sandeen <esandeen@redhat.com>, Boris Ranto <branto@redhat.com>, xfs@oss.sgi.com
 
-From: Dave Chinner <dchinner@redhat.com>
+On Thu, Jul 24, 2014 at 09:06:47AM -0400, Brian Foster wrote:
+> On Thu, Jul 24, 2014 at 06:36:58PM +0800, Eryu Guan wrote:
+> > On Mon, Jul 21, 2014 at 09:46:38AM -0400, Brian Foster wrote:
+> > > On Thu, Jul 17, 2014 at 12:52:33AM +0800, Eryu Guan wrote:
+> > [snip]
+> > > > +
+> > > > +create_file()
+> > > > +{
+> > > > +	local dir=$1
+> > > > +	local i=0
+> > > > +
+> > > > +	while echo -n >$dir/testfile_$i; do
+> > > > +		let i=$i+1
+> > > > +	done
+> > > > +}
+> > > > +
+> > > > +# get standard environment, filters and checks
+> > > > +. ./common/rc
+> > > > +. ./common/filter
+> > > > +
+> > > > +# real QA test starts here
+> > > > +_supported_fs xfs
+> > > > +_supported_os Linux
+> > > > +
+> > > > +_require_scratch
+> > > > +
+> > > > +rm -f $seqres.full
+> > > > +echo "Silence is golden"
+> > > > +
+> > > > +_scratch_mkfs_sized $((128 * 1024 * 1024)) | _filter_mkfs >$seqres.full 2>$tmp.mkfs
+> > > > +# get original data blocks number
+> > > > +. $tmp.mkfs
+> > > > +_scratch_mount
+> > > > +
+> > > 
+> > 
+> > Hi Brian,
+> > 
+> > Thanks for the review, and sorry for the late response..
+> > 
+> > > You could probably even make this smaller and make the test quicker.
+> > > E.g., I can create an fs down to 20M or so without any problems.  Also,
+> > > setting imaxpct=0 might be a good idea so you don't hit that artificial
+> > > limit.
+> > 
+> > Yes, a smaller fs could make the test much more quicker. I tested with
+> > 16M fs and the test time reduced from 70s to ~10s on my test host.
+> > 
+> 
+> That sounds great.
+> 
+> > But setting imaxpct=0 could increase the total available inode number
+> > which could make test run longer. So I tend to use default mkfs
+> > options here.
+> >
+> 
+> True... I don't really want to make a big deal out of imaxpct. I think
+> the consensus now is that it's a useless relic and will probably be
+> removed. That does mean this test will eventually use the full fs space
+> by default and we should make sure it runs in a reasonable amount of
+> time. FWIW, it seems to in my tests, running in under 2 minutes on a
+> single spindle.
+> 
+> The other issue is that if I set imaxpct=1 in my mkfs options, the test
+> passes. Should it? Is it actually testing what it should be in that
+> scenario? ;) Note that when imaxpct is set, the 'df -i' information will
+> be based on the cap that imaxpct sets. E.g., it will show 100% usage
+> even though we've only used a few MB for inodes.
 
-Crash testing of CRC enabled filesystems has resulted in a number of
-reports of bad CRCs being detected after the filesystem was mounted.
-Errors such as the following were being seen:
+Yes, I can pass the test too with imaxpct=1 set. But I'm not really
+sure about imaxpct impact on the test result.
 
-XFS (sdb3): Mounting V5 Filesystem
-XFS (sdb3): Starting recovery (logdev: internal)
-XFS (sdb3): Metadata CRC error detected at xfs_agf_read_verify+0x5a/0x100 [xfs], block 0x1
-XFS (sdb3): Unmount and run xfs_repair
-XFS (sdb3): First 64 bytes of corrupted metadata buffer:
-ffff880136ffd600: 58 41 47 46 00 00 00 01 00 00 00 00 00 0f aa 40  XAGF...........@
-ffff880136ffd610: 00 02 6d 53 00 02 77 f8 00 00 00 00 00 00 00 01  ..mS..w.........
-ffff880136ffd620: 00 00 00 01 00 00 00 00 00 00 00 00 00 00 00 03  ................
-ffff880136ffd630: 00 00 00 04 00 08 81 d0 00 08 81 a7 00 00 00 00  ................
-XFS (sdb3): metadata I/O error: block 0x1 ("xfs_trans_read_buf_map") error 74 numblks 1
+Eric, do you have any suggestions here? Because I saw you send out the
+kernel patch to fix this problem :)
 
-The errors were typically being seen in AGF, AGI and their related
-btree block buffers some time after log recovery had run. Often it
-wasn't until later subsequent mounts that the problem was
-discovered. The common symptom was a buffer with the correct
-contents, but a CRC and an LSN that matched an older version of the
-contents.
-
-Some debug added to _xfs_buf_ioapply() indicated that buffers were
-being written without verifiers attached to them from log recovery,
-and Jan Kara isolated the cause to log recovery readahead an dit's
-interactions with buffers that had a more recent LSN on disk than
-the transaction being recovered. In this case, the buffer did not
-get a verifier attached, and os when the second phase of log
-recovery ran and recovered EFIs and unlinked inodes, the buffers
-were modified and written without the verifier running. Hence they
-had up to date contents, but stale LSNs and CRCs.
-
-Fix it by attaching verifiers to buffers we skip due to future LSN
-values so they don't escape into the buffer cache without the
-correct verifier attached.
-
-This patch is based on analysis and a patch from Jan Kara.
-
-cc: <stable@vger.kernel.org>
-Reported-by: Jan Kara <jack@suse.cz>
-Reported-by: Fanael Linithien <fanael4@gmail.com>
-Reported-by: Grozdan <neutrino8@gmail.com>
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Brian Foster <bfoster@redhat.com>
----
- fs/xfs/xfs_log_recover.c | 51 +++++++++++++++++++++++++++++-------------------
- 1 file changed, 31 insertions(+), 20 deletions(-)
-
-diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index fbc2362..8a7d8a7 100644
---- a/fs/xfs/xfs_log_recover.c
-+++ b/fs/xfs/xfs_log_recover.c
-@@ -2126,6 +2126,17 @@ xlog_recover_validate_buf_type(
- 	__uint16_t		magic16;
- 	__uint16_t		magicda;
- 
-+	/*
-+	 * We can only do post recovery validation on items on CRC enabled
-+	 * fielsystems as we need to know when the buffer was written to be able
-+	 * to determine if we should have replayed the item. If we replay old
-+	 * metadata over a newer buffer, then it will enter a temporarily
-+	 * inconsistent state resulting in verification failures. Hence for now
-+	 * just avoid the verification stage for non-crc filesystems
-+	 */
-+	if (!xfs_sb_version_hascrc(&mp->m_sb))
-+		return;
-+
- 	magic32 = be32_to_cpu(*(__be32 *)bp->b_addr);
- 	magic16 = be16_to_cpu(*(__be16*)bp->b_addr);
- 	magicda = be16_to_cpu(info->magic);
-@@ -2163,8 +2174,6 @@ xlog_recover_validate_buf_type(
- 		bp->b_ops = &xfs_agf_buf_ops;
- 		break;
- 	case XFS_BLFT_AGFL_BUF:
--		if (!xfs_sb_version_hascrc(&mp->m_sb))
--			break;
- 		if (magic32 != XFS_AGFL_MAGIC) {
- 			xfs_warn(mp, "Bad AGFL block magic!");
- 			ASSERT(0);
-@@ -2197,10 +2206,6 @@ xlog_recover_validate_buf_type(
- #endif
- 		break;
- 	case XFS_BLFT_DINO_BUF:
--		/*
--		 * we get here with inode allocation buffers, not buffers that
--		 * track unlinked list changes.
--		 */
- 		if (magic16 != XFS_DINODE_MAGIC) {
- 			xfs_warn(mp, "Bad INODE block magic!");
- 			ASSERT(0);
-@@ -2280,8 +2285,6 @@ xlog_recover_validate_buf_type(
- 		bp->b_ops = &xfs_attr3_leaf_buf_ops;
- 		break;
- 	case XFS_BLFT_ATTR_RMT_BUF:
--		if (!xfs_sb_version_hascrc(&mp->m_sb))
--			break;
- 		if (magic32 != XFS_ATTR3_RMT_MAGIC) {
- 			xfs_warn(mp, "Bad attr remote magic!");
- 			ASSERT(0);
-@@ -2388,16 +2391,7 @@ xlog_recover_do_reg_buffer(
- 	/* Shouldn't be any more regions */
- 	ASSERT(i == item->ri_total);
- 
--	/*
--	 * We can only do post recovery validation on items on CRC enabled
--	 * fielsystems as we need to know when the buffer was written to be able
--	 * to determine if we should have replayed the item. If we replay old
--	 * metadata over a newer buffer, then it will enter a temporarily
--	 * inconsistent state resulting in verification failures. Hence for now
--	 * just avoid the verification stage for non-crc filesystems
--	 */
--	if (xfs_sb_version_hascrc(&mp->m_sb))
--		xlog_recover_validate_buf_type(mp, bp, buf_f);
-+	xlog_recover_validate_buf_type(mp, bp, buf_f);
- }
- 
- /*
-@@ -2505,12 +2499,29 @@ xlog_recover_buffer_pass2(
- 	}
- 
- 	/*
--	 * recover the buffer only if we get an LSN from it and it's less than
-+	 * Recover the buffer only if we get an LSN from it and it's less than
- 	 * the lsn of the transaction we are replaying.
-+	 *
-+	 * Note that we have to be extremely careful of readahead here.
-+	 * Readahead does not attach verfiers to the buffers so if we don't
-+	 * actually do any replay after readahead because of the LSN we found
-+	 * in the buffer if more recent than that current transaction then we
-+	 * need to attach the verifier directly. Failure to do so can lead to
-+	 * future recovery actions (e.g. EFI and unlinked list recovery) can
-+	 * operate on the buffers and they won't get the verifier attached. This
-+	 * can lead to blocks on disk having the correct content but a stale
-+	 * CRC.
-+	 *
-+	 * It is safe to assume these clean buffers are currently up to date.
-+	 * If the buffer is dirtied by a later transaction being replayed, then
-+	 * the verifier will be reset to match whatever recover turns that
-+	 * buffer into.
- 	 */
- 	lsn = xlog_recover_get_buf_lsn(mp, bp);
--	if (lsn && lsn != -1 && XFS_LSN_CMP(lsn, current_lsn) >= 0)
-+	if (lsn && lsn != -1 && XFS_LSN_CMP(lsn, current_lsn) >= 0) {
-+		xlog_recover_validate_buf_type(mp, bp, buf_f);
- 		goto out_release;
-+	}
- 
- 	if (buf_f->blf_flags & XFS_BLF_INODE_BUF) {
- 		error = xlog_recover_do_inode_buffer(mp, item, bp, buf_f);
--- 
-2.0.0
+Thanks,
+Eryu
+> 
+> Brian
+> 
+> > > 
+> > > > +# Create files to consume free inodes in background
+> > > > +(
+> > > > +	i=0
+> > > > +	while [ $i -lt 1000 ]; do
+> > > > +		mkdir $SCRATCH_MNT/testdir_$i
+> > > > +		create_file $SCRATCH_MNT/testdir_$i &
+> > > > +		let i=$i+1
+> > > > +	done
+> > > > +) >/dev/null 2>&1 &
+> > > > +
+> > > > +# Grow fs at the same time, at least x4
+> > > > +# doubling or tripling the size couldn't reproduce
+> > > > +$XFS_GROWFS_PROG -D $((dblocks * 4)) $SCRATCH_MNT >>$seqres.full
+> > > > +
+> > > 
+> > > Even though this is still relatively small based on what people probably
+> > > typically test, we're still making assumptions about the size of the
+> > > scratch device. It may be better to create the fs as a file on TEST_DEV.
+> > > Then you could do something like truncate to a fixed starting size, mkfs
+> > > at ~20MB and just growfs to the full size of the file. A 4x grow at that
+> > > point is then still only ~80MB, though hopefully it still doesn't run
+> > > too long on slower machines.
+> > 
+> > I'll use _require_fs_space here as Dave suggested.
+> > 
+> > > 
+> > > > +# Wait for background create_file to hit ENOSPC
+> > > > +wait
+> > > > +
+> > > > +# log inode status in $seqres.full for debug purpose
+> > > > +echo "Inode status after growing fs" >>$seqres.full
+> > > > +$DF_PROG -i $SCRATCH_MNT >>$seqres.full
+> > > > +
+> > > > +# Check free inode count, we expect all free inodes are taken
+> > > > +free_inode=`_get_free_inode $SCRATCH_MNT`
+> > > > +if [ $free_inode -gt 0 ]; then
+> > > > +	echo "$free_inode free inodes available, newly added space not being used"
+> > > > +else
+> > > > +	status=0
+> > > > +fi
+> > > 
+> > > This might not be the best metric either. I believe the free inodes
+> > > count that 'df -Ti' returns is a somewhat artificial calculation based
+> > > on the number of free blocks available, since we can do dynamic inode
+> > > allocation. It doesn't necessarily mean that all blocks can be allocated
+> > > to inodes however (e.g., due to alignment or extent length constraints),
+> > > so it might never actually read 0 unless the filesystem is perfectly
+> > > full.
+> > > 
+> > > Perhaps consider something like the IUse percentage over a certain
+> > > threshold?
+> > 
+> > I'm not sure about the proper percentage here, I'll try %99. But in my
+> > test on RHEL6 the free inode count is always 0 after test.
+> > 
+> > Will send out v2 soon.
+> > 
+> > Thanks,
+> > Eryu
+> > 
+> > > 
+> > > Brian
+> > > 
+> > > > +
+> > > > +exit
+> > > > diff --git a/tests/xfs/015.out b/tests/xfs/015.out
+> > > > new file mode 100644
+> > > > index 0000000..fee0fcf
+> > > > --- /dev/null
+> > > > +++ b/tests/xfs/015.out
+> > > > @@ -0,0 +1,2 @@
+> > > > +QA output created by 015
+> > > > +Silence is golden
+> > > > diff --git a/tests/xfs/group b/tests/xfs/group
+> > > > index d5b50b7..0aab336 100644
+> > > > --- a/tests/xfs/group
+> > > > +++ b/tests/xfs/group
+> > > > @@ -12,6 +12,7 @@
+> > > >  012 rw auto quick
+> > > >  013 auto metadata stress
+> > > >  014 auto enospc quick quota
+> > > > +015 auto enospc growfs
+> > > >  016 rw auto quick
+> > > >  017 mount auto quick stress
+> > > >  018 deprecated # log logprint v2log
+> > > > -- 
+> > > > 1.9.3
+> > > > 
+> > > > --
+> > > > To unsubscribe from this list: send the line "unsubscribe fstests" in
+> > > > the body of a message to majordomo@vger.kernel.org
+> > > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > > 
+> > > _______________________________________________
+> > > xfs mailing list
+> > > xfs@oss.sgi.com
+> > > http://oss.sgi.com/mailman/listinfo/xfs
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe fstests" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> --
+> To unsubscribe from this list: send the line "unsubscribe fstests" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
 _______________________________________________
 xfs mailing list
