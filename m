@@ -1,23 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 6D1467F8D
-	for <xfs@oss.sgi.com>; Thu, 31 Jul 2014 07:27:30 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 45BAD8F8074
-	for <xfs@oss.sgi.com>; Thu, 31 Jul 2014 05:27:27 -0700 (PDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 484357F91
+	for <xfs@oss.sgi.com>; Thu, 31 Jul 2014 07:42:11 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id D1E04AC004
+	for <xfs@oss.sgi.com>; Thu, 31 Jul 2014 05:42:10 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id TgCCFdwIzIjB4kQj (version=TLSv1
+	cuda.sgi.com with ESMTP id OL0PZe6b5BWI2s7k (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 31 Jul 2014 05:27:26 -0700 (PDT)
-Date: Thu, 31 Jul 2014 08:27:23 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 4/4] xfs: dquot recovery needs verifiers
-Message-ID: <20140731122723.GC43383@bfoster.bfoster>
-References: <1406768509-32556-1-git-send-email-david@fromorbit.com>
-	<1406768509-32556-5-git-send-email-david@fromorbit.com>
+	Thu, 31 Jul 2014 05:42:09 -0700 (PDT)
+Date: Thu, 31 Jul 2014 20:42:03 +0800
+From: Eryu Guan <eguan@redhat.com>
+Subject: Re: [PATCH 1/2] xfs: new case to test inode allocations in
+	post-growfs disk space
+Message-ID: <20140731124203.GH7382@dhcp-13-216.nay.redhat.com>
+References: <1405529554-31225-1-git-send-email-eguan@redhat.com>
+	<20140721134638.GA45794@bfoster.bfoster>
+	<20140724103658.GB6210@dhcp-13-216.nay.redhat.com>
+	<20140724130646.GA37832@bfoster.bfoster>
+	<20140731033238.GY7382@dhcp-13-216.nay.redhat.com>
+	<20140731114537.GA43383@bfoster.bfoster>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1406768509-32556-5-git-send-email-david@fromorbit.com>
+In-Reply-To: <20140731114537.GA43383@bfoster.bfoster>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,140 +35,74 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: Brian Foster <bfoster@redhat.com>
+Cc: Boris Ranto <branto@redhat.com>, Eryu Guan <guaneryu@gmail.com>, Eric Sandeen <esandeen@redhat.com>, fstests@vger.kernel.org, xfs@oss.sgi.com
 
-On Thu, Jul 31, 2014 at 11:01:49AM +1000, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
+On Thu, Jul 31, 2014 at 07:45:37AM -0400, Brian Foster wrote:
+> On Thu, Jul 31, 2014 at 11:32:38AM +0800, Eryu Guan wrote:
+> > On Thu, Jul 24, 2014 at 09:06:47AM -0400, Brian Foster wrote:
+> > > On Thu, Jul 24, 2014 at 06:36:58PM +0800, Eryu Guan wrote:
+> > > > On Mon, Jul 21, 2014 at 09:46:38AM -0400, Brian Foster wrote:
+> > > > > On Thu, Jul 17, 2014 at 12:52:33AM +0800, Eryu Guan wrote:
+[snip]
+> > > > Hi Brian,
+> > > > 
+> > > > Thanks for the review, and sorry for the late response..
+> > > > 
+> > > > > You could probably even make this smaller and make the test quicker.
+> > > > > E.g., I can create an fs down to 20M or so without any problems.  Also,
+> > > > > setting imaxpct=0 might be a good idea so you don't hit that artificial
+> > > > > limit.
+> > > > 
+> > > > Yes, a smaller fs could make the test much more quicker. I tested with
+> > > > 16M fs and the test time reduced from 70s to ~10s on my test host.
+> > > > 
+> > > 
+> > > That sounds great.
+> > > 
+> > > > But setting imaxpct=0 could increase the total available inode number
+> > > > which could make test run longer. So I tend to use default mkfs
+> > > > options here.
+> > > >
+> > > 
+> > > True... I don't really want to make a big deal out of imaxpct. I think
+> > > the consensus now is that it's a useless relic and will probably be
+> > > removed. That does mean this test will eventually use the full fs space
+> > > by default and we should make sure it runs in a reasonable amount of
+> > > time. FWIW, it seems to in my tests, running in under 2 minutes on a
+> > > single spindle.
+> > > 
+> > > The other issue is that if I set imaxpct=1 in my mkfs options, the test
+> > > passes. Should it? Is it actually testing what it should be in that
+> > > scenario? ;) Note that when imaxpct is set, the 'df -i' information will
+> > > be based on the cap that imaxpct sets. E.g., it will show 100% usage
+> > > even though we've only used a few MB for inodes.
+> > 
+> > Yes, I can pass the test too with imaxpct=1 set. But I'm not really
+> > sure about imaxpct impact on the test result.
+> > 
+> > Eric, do you have any suggestions here? Because I saw you send out the
+> > kernel patch to fix this problem :)
+> > 
 > 
-> dquot recovery should add verifiers to the dquot buffers that it
-> recovers changes into. Unfortunately, it doesn't attached the
-> verifiers to the buffers in a consistent manner. For example,
-> xlog_recover_dquot_pass2() reads dquot buffers without a verifier
-> and then writes it without ever having attached a verifier to the
-> buffer.
+> (I think Eric might be away.)
 > 
-> Further, dquot buffer recovery may write a dquot buffer that has not
-> been modified, or indeed, shoul dbe written because quotas are not
-> enabled and hence changes to the buffer were not replayed. In this
-> case, we again write buffers without verifiers attached because that
-> doesn't happen until after the buffer changes have been replayed.
+> To be clear, I'm just suggesting we verify whether the test is as
+> focused as possible. Put another way, have we verified whether this test
+> detects the problem with this potential configuration? E.g., run a
+> kernel without Eric's growfs fix, run the test and verify it fails.
+> Repeat with '-i imaxpct=1' in MKFS_OPTIONS and verify the test still
+> fails. If it does, then it's probably fine. If it passes, that's a hole
+> in the test case we should close up.
 > 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> ---
+> Brian
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+Thanks Brian, I'll look into it and try to work it out.
 
->  fs/xfs/xfs_log_recover.c | 44 +++++++++++++++++++++++---------------------
->  1 file changed, 23 insertions(+), 21 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-> index 8a7d8a7..1fd5787 100644
-> --- a/fs/xfs/xfs_log_recover.c
-> +++ b/fs/xfs/xfs_log_recover.c
-> @@ -2399,8 +2399,11 @@ xlog_recover_do_reg_buffer(
->   * Simple algorithm: if we have found a QUOTAOFF log item of the same type
->   * (ie. USR or GRP), then just toss this buffer away; don't recover it.
->   * Else, treat it as a regular buffer and do recovery.
-> + *
-> + * Return false if the buffer was tossed and true if we recovered the buffer to
-> + * indicate to the caller if the buffer needs writing.
->   */
-> -STATIC void
-> +STATIC bool
->  xlog_recover_do_dquot_buffer(
->  	struct xfs_mount		*mp,
->  	struct xlog			*log,
-> @@ -2415,9 +2418,8 @@ xlog_recover_do_dquot_buffer(
->  	/*
->  	 * Filesystems are required to send in quota flags at mount time.
->  	 */
-> -	if (mp->m_qflags == 0) {
-> -		return;
-> -	}
-> +	if (!mp->m_qflags)
-> +		return false;
->  
->  	type = 0;
->  	if (buf_f->blf_flags & XFS_BLF_UDQUOT_BUF)
-> @@ -2430,9 +2432,10 @@ xlog_recover_do_dquot_buffer(
->  	 * This type of quotas was turned off, so ignore this buffer
->  	 */
->  	if (log->l_quotaoffs_flag & type)
-> -		return;
-> +		return false;
->  
->  	xlog_recover_do_reg_buffer(mp, item, bp, buf_f);
-> +	return true;
->  }
->  
->  /*
-> @@ -2525,14 +2528,18 @@ xlog_recover_buffer_pass2(
->  
->  	if (buf_f->blf_flags & XFS_BLF_INODE_BUF) {
->  		error = xlog_recover_do_inode_buffer(mp, item, bp, buf_f);
-> +		if (error)
-> +			goto out_release;
->  	} else if (buf_f->blf_flags &
->  		  (XFS_BLF_UDQUOT_BUF|XFS_BLF_PDQUOT_BUF|XFS_BLF_GDQUOT_BUF)) {
-> -		xlog_recover_do_dquot_buffer(mp, log, item, bp, buf_f);
-> +		bool	dirty;
-> +
-> +		dirty = xlog_recover_do_dquot_buffer(mp, log, item, bp, buf_f);
-> +		if (!dirty)
-> +			goto out_release;
->  	} else {
->  		xlog_recover_do_reg_buffer(mp, item, bp, buf_f);
->  	}
-> -	if (error)
-> -		goto out_release;
->  
->  	/*
->  	 * Perform delayed write on the buffer.  Asynchronous writes will be
-> @@ -3022,9 +3029,16 @@ xlog_recover_dquot_pass2(
->  		return -EIO;
->  	ASSERT(dq_f->qlf_len == 1);
->  
-> +	/*
-> +	 * At this point we are assuming that the dquots have been allocated
-> +	 * and hence the buffer has valid dquots stamped in it. It should,
-> +	 * therefore, pass verifier validation. If the dquot is bad, then the
-> +	 * we'll return an error here, so we don't need to specifically check
-> +	 * the dquot in the buffer after the verifier has run.
-> +	 */
->  	error = xfs_trans_read_buf(mp, NULL, mp->m_ddev_targp, dq_f->qlf_blkno,
->  				   XFS_FSB_TO_BB(mp, dq_f->qlf_len), 0, &bp,
-> -				   NULL);
-> +				   &xfs_dquot_buf_ops);
->  	if (error)
->  		return error;
->  
-> @@ -3032,18 +3046,6 @@ xlog_recover_dquot_pass2(
->  	ddq = (xfs_disk_dquot_t *)xfs_buf_offset(bp, dq_f->qlf_boffset);
->  
->  	/*
-> -	 * At least the magic num portion should be on disk because this
-> -	 * was among a chunk of dquots created earlier, and we did some
-> -	 * minimal initialization then.
-> -	 */
-> -	error = xfs_dqcheck(mp, ddq, dq_f->qlf_id, 0, XFS_QMOPT_DOWARN,
-> -			   "xlog_recover_dquot_pass2");
-> -	if (error) {
-> -		xfs_buf_relse(bp);
-> -		return -EIO;
-> -	}
-> -
-> -	/*
->  	 * If the dquot has an LSN in it, recover the dquot only if it's less
->  	 * than the lsn of the transaction we are replaying.
->  	 */
-> -- 
-> 2.0.0
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+(Note that with my v2 patch, the maxpct number in question is 5 instead of 1)
+
+Thanks,
+Eryu
 
 _______________________________________________
 xfs mailing list
