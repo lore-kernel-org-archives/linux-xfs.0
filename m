@@ -1,14 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id ABFA07FA9
-	for <xfs@oss.sgi.com>; Thu, 31 Jul 2014 17:14:38 -0500 (CDT)
-Message-ID: <53DABFCB.3070906@sgi.com>
-Date: Thu, 31 Jul 2014 17:14:35 -0500
-From: Troy McCorkell <tdm@sgi.com>
+	by oss.sgi.com (Postfix) with ESMTP id 4BDB97FAC
+	for <xfs@oss.sgi.com>; Thu, 31 Jul 2014 18:01:45 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 29BF88F8059
+	for <xfs@oss.sgi.com>; Thu, 31 Jul 2014 16:01:41 -0700 (PDT)
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	RSfOQAuZORBXgh4F for <xfs@oss.sgi.com>;
+	Thu, 31 Jul 2014 16:01:40 -0700 (PDT)
+Date: Fri, 1 Aug 2014 09:01:36 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 0/6] xfs: discombobulate sb updates and kill xfs_vnode.h
+Message-ID: <20140731230136.GS26465@dastard>
+References: <1406791995-14723-1-git-send-email-david@fromorbit.com>
+	<20140731171655.GA30301@infradead.org>
 MIME-Version: 1.0
-Subject: Re: Trouble with xfs mailing list subscription
-References: <53D8D412.4050509@gmail.com>
-In-Reply-To: <53D8D412.4050509@gmail.com>
+Content-Disposition: inline
+In-Reply-To: <20140731171655.GA30301@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -17,79 +26,56 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Michael Lueck <wurlitzer@gmail.com>
+To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
-On 07/30/2014 06:16 AM, Michael Lueck wrote:
-> Greetings,
->
-> I was previously subscribed to the xfs mailing list, in non-deliver 
-> mode as I use the gmane NNTP gateway to read messages.
->
-> Suddenly my ID is not allowed to post. I tried checking my 
-> subscription, and the following rejection is returned.
->
-> This message was created automatically by mail delivery software.
->
-> A message that you sent could not be delivered to one or more of
-> its recipients. This is a permanent error. The following address
-> failed:
->
-> "xfs-request@oss.sgi.com":
-> SMTP error from remote server after RCPT command:
-> host: cuda-allmx.sgi.com
-> Sender IP address rejected
->
->
-> --- The header of the original message is following. ---
->
-> Received: from [10.10.10.238] (97-92-36-7.dhcp.aldl.mi.charter.com 
-> [97.92.36.7])
->     by mrelay.perfora.net (node=mreueus001) with ESMTP (Nemesis)
->     id 0Lqjq8-1WZF4H1MgM-00eLva; Wed, 30 Jul 2014 13:10:24 +0200
-> Message-ID: <53D8D2A1.4090807@lueckdatasystems.com>
-> Date: Wed, 30 Jul 2014 07:10:25 -0400
-> From: Michael Lueck <mlueck@lueckdatasystems.com>
-> User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:29.0) Gecko/20100101 
-> Firefox/29.0 SeaMonkey/2.26.1
-> MIME-Version: 1.0
-> To: xfs-request@oss.sgi.com
-> Subject: subscribe
-> Content-Type: text/plain; charset=UTF-8; format=flowed
-> Content-Transfer-Encoding: 7bit
-> X-Provags-ID: V02:K0:AsXHEFZLHHVOdHAjU41kZRRxcuuhfChV68BHNDVRhrw
->  CRxUUGmrCgStqHM6aY0597oFivvSfUfqQIoYQfTB95+ehYUNhN
->  ePRANuggQkwrWgwbsxVREwsiF+FJP7NHh1qlyWi+Zw3H0YGUo0
->  mYZqi9OmEez/yodVDIugZ4NzS963L64uBod/IpVUatv3WerTou
->  /UzmDOmWuGfvEj3lwuMBL5a/53ZzeStLVZaWGBpvpUOS5xh/rp
->  5ejeDnTYnwBvuEFD6dGBPpiMyTsxbtEqfH3wQZfkhFNB+SW3n7
->  ufrrFH7ZHhDxzM6o700YDql/2/UaFGRPAiOEqLqbtLZPpnyFLS
->  RoQAqHa8IU8M0M8wMR+jFQZHSPKeApuWE/UYY1h/v
->
->
->
-> Please advise how this difficulty may be corrected.
->
-> I am thankful,
-> Michael
->
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+On Thu, Jul 31, 2014 at 10:16:55AM -0700, Christoph Hellwig wrote:
+> On Thu, Jul 31, 2014 at 05:33:09PM +1000, Dave Chinner wrote:
+> > Hi folks,
+> > 
+> > Really two patch series in one. The first two patches remove the
+> > bitfield based superblock update method and replace it with a simple
+> > "update and log everything" operation. Superblock updates are
+> > now relatively rare so there's no need to optimise for single field
+> > updates. This patchset removes all that complex code and makes
+> > everything nice and simple.
+> 
+> Is there any deeper rationale why you want to get rid of it?
 
-Michael,
+Tangential - cleaning up the mess of separate project quota inode
+support. We do lots of dancing around with bit flags and updates in
+different functions, and it really just complicates the code.
+The recent problems with the quota flags getting
+screwed up by repair due not using the sb-to-disk code properly
+in userspace was the initial source of the problem - it's just an
+unmaintainable PITA that leads to bugs. So the first step to fixing
+that is removing all of the unnecessary obfuscation and complexity
+from the kernel code, then port it over to userspace(*).
 
-I have opened a internal SGI ticket with the admins for oss.sgi.com to 
-look into
-your request.
+Besides, when we log a single field in the superblock, we're really
+logging the surrounding 128 byte chunk, so we really are logging
+most of the superbock on every change right now. And if we want to
+move to single regions for logged buffers, then we'll be logging the
+entire sb every time anyway. So, really, it makes no sense to do
+this special bitfield based update and logging stuff anymore.
 
-Thanks,
-Troy McCorkell
+Cheers,
+
+Dave.
+
+(*) I haven't posted the "trash all quota state" patch set for
+repair yet - given that repair doesn't validate the quota inode
+contents, and we quotacheck unconditionally after a repair
+run, there's no point trying to check or repair quota state or
+inodes at all - just trash them and let the kernel rebuild it from
+scratch on the next mount....
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
