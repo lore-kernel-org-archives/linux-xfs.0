@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 24F407FB6
-	for <xfs@oss.sgi.com>; Fri,  1 Aug 2014 01:09:28 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 021248F808F
-	for <xfs@oss.sgi.com>; Thu, 31 Jul 2014 23:09:27 -0700 (PDT)
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id 41JoU8fWc5D6O6G0 (version=TLSv1
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 1BEF07FC0
+	for <xfs@oss.sgi.com>; Fri,  1 Aug 2014 07:44:15 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id BB949AC00A
+	for <xfs@oss.sgi.com>; Fri,  1 Aug 2014 05:44:11 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id 4jvasqUxhuL7rV6V (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 31 Jul 2014 23:09:26 -0700 (PDT)
-Message-ID: <53DB2F08.2090703@oracle.com>
-Date: Fri, 01 Aug 2014 14:09:12 +0800
-From: Jeff Liu <jeff.liu@oracle.com>
+	Fri, 01 Aug 2014 05:44:07 -0700 (PDT)
+Date: Fri, 1 Aug 2014 08:44:02 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 2/2] xfs: flush both inodes in xfs_swap_extents
+Message-ID: <20140801124401.GA3582@laptop.bfoster>
+References: <1406787128-11897-1-git-send-email-david@fromorbit.com>
+	<1406787128-11897-3-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH v3 00/10] xfs_ioc_bulkstat code refactoring and
-	consolidation
-References: <538D92B6.5050402@oracle.com> <20140729232748.GI26465@dastard>
-	<53D9F67F.9060609@oracle.com>
-In-Reply-To: <53D9F67F.9060609@oracle.com>
+Content-Disposition: inline
+In-Reply-To: <1406787128-11897-3-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,105 +31,166 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
-Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+Cc: xfs@oss.sgi.com
 
-
-On 07/31/2014 15:55 PM, Jeff Liu wrote:
-> Hi Dave,
+On Thu, Jul 31, 2014 at 04:12:08PM +1000, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
 > 
-> On 07/30/2014 07:27 AM, Dave Chinner wrote:
->> On Tue, Jun 03, 2014 at 05:17:42PM +0800, Jeff Liu wrote:
->>> Hi folk,
->>>
->>> This is the revised patches for xfs_ioc_bulkstat consolidation and code
->>> refactoring. As per Christoph's comments, I'm not include the per AG
->>> inumber patch in this series given that I don't actually introduce the
->>> relevant inumbers interface now. Similar to that reason, I also dropped
->>> the per AG bulkstat patch, it would be included in parallel quota check
->>> series.
->>>
->>>
->>> v3->v2:
->>> - one major bug fix is at xfs_bulkstat_ag_ichunk() regarding the user buffer
->>>   pointer operations, it should be defined as a pointer-to-pointer since it
->>>   would be updated inside xfs_bulkstat_ag_ichunk().
->>>
->>> - separate xfs_inumber consolidate patch into two patches, the first one
->>>   fix the formater function return value and consolidate the codes, another
->>>   one does the actual logic changes for better error handling.
->>>
->>> - Add a separate patch to get rid of the redundant user buffer count
->>>   checks at xfs_bulkstat()
->>>
->>> - fixed agino calculation issue at xfs_bulkstat_grab_ichunk().
->>>
->>> v2: http://oss.sgi.com/archives/xfs/2014-04/msg00554.html
->>> v1: http://oss.sgi.com/archives/xfs/2013-12/msg00901.html
->>>
->>>
->>> Any comments are welcome!
->>
->> Hi Jeff, I ported this to the current dev tree based on the
->> xfs-libxfs-restructure branch, and I keep seeing fsstress failing
->> with memory corruption after random bulkstat ioctls. I see regular
->> failures with generic/013, generic/068, xfs/167 and the other
->> fstress tests also randomly fail. The typical failure is glibc
->> detected memory heap corruption on freeing the bulkstat structure
->> after the ioctl:
->>
->> generic/068 42s ...*** Error in `./ltp/fsstress': double free or corruption (!prev): 0x00007f0224000b70 ***
->> ======= Backtrace: =========
+> We need to treat both inodes identically from a page cache point of
+> view when prepareing them for extent swapping. We don't do this
+> right now - we assume that one of the inodes empty, because that's
+> what xfs_fsr currently does. Remove this assumption from the code.
 > 
-> Sorry for my late response and thanks for help porting this patch series.
+> While factoring out the flushing and related checks, move the
+> transactions reservation to immeidately after the flushes so that we
+> don't need to pick up and then drop the ilock to do the transaction
+> reservation. There are no issues with aborting the transaction it if
+> the checks fail before we join the inodes to the transaction and
+> dirty them, so this is a safe change to make.
 > 
-> Now I can reproduce this issue frequently with generic/013, will try to fix
-> it ASAP.
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> ---
 
-Hi Dave,
+Both of these looked fine to me, but I couldn't apply this one to
+for-next or master...
 
-Could you please check the patch below for this issue?
+Brian
 
-
-From: Jie Liu <jeff.liu@oracle.com>
-Subject: xfs: always updating acp elements at xfs_bulkstat_ag_ichunk
-
-After processing the inodes in chunk, we should always updating the
-last inode number and the left user buffer info no matter anything
-wrong while formatting an inode to the user buffer. Otherwise, the
-related info might be updated improperly at xfs_bulkstat() for the
-next round of inode processing.
-
-Signed-off-by: Jie Liu <jeff.liu@oracle.com>
----
- fs/xfs/xfs_itable.c | 8 +++-----
- 1 file changed, 3 insertions(+), 5 deletions(-)
-
-diff --git a/fs/xfs/xfs_itable.c b/fs/xfs/xfs_itable.c
-index 9959a05..f71be9c 100644
---- a/fs/xfs/xfs_itable.c
-+++ b/fs/xfs/xfs_itable.c
-@@ -328,11 +328,9 @@ xfs_bulkstat_ag_ichunk(
- 		lastino = ino;
- 	}
- 
--	if (!error) {
--		acp->ac_lastino = lastino;
--		acp->ac_ubleft = ubleft;
--		acp->ac_ubelem = ubelem;
--	}
-+	acp->ac_lastino = lastino;
-+	acp->ac_ubleft = ubleft;
-+	acp->ac_ubelem = ubelem;
- 
- 	return error;
- }
--- 
-1.8.3.2
-
-
-
-Cheers,
--Jeff
+>  fs/xfs/xfs_bmap_util.c | 81 +++++++++++++++++++++++---------------------------
+>  1 file changed, 37 insertions(+), 44 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+> index 3c60c43..2f1e30d 100644
+> --- a/fs/xfs/xfs_bmap_util.c
+> +++ b/fs/xfs/xfs_bmap_util.c
+> @@ -1619,6 +1619,30 @@ xfs_swap_extents_check_format(
+>  }
+>  
+>  int
+> +xfs_swap_extent_flush(
+> +	struct xfs_inode	*ip)
+> +{
+> +	int	error;
+> +
+> +	error = filemap_write_and_wait(VFS_I(ip)->i_mapping);
+> +	if (error)
+> +		return error;
+> +	truncate_pagecache_range(VFS_I(ip), 0, -1);
+> +
+> +	/* Verify O_DIRECT for ftmp */
+> +	if (VFS_I(ip)->i_mapping->nrpages)
+> +		return -EINVAL;
+> +
+> +	/*
+> +	 * Don't try to swap extents on mmap()d files because we can't lock
+> +	 * out races against page faults safely.
+> +	 */
+> +	if (mapping_mapped(VFS_I(ip)->i_mapping))
+> +		return -EBUSY;
+> +	return 0;
+> +}
+> +
+> +int
+>  xfs_swap_extents(
+>  	xfs_inode_t	*ip,	/* target inode */
+>  	xfs_inode_t	*tip,	/* tmp inode */
+> @@ -1662,26 +1686,28 @@ xfs_swap_extents(
+>  		goto out_unlock;
+>  	}
+>  
+> -	error = filemap_write_and_wait(VFS_I(tip)->i_mapping);
+> +	error = xfs_swap_extent_flush(ip);
+> +	if (error)
+> +		goto out_unlock;
+> +	error = xfs_swap_extent_flush(tip);
+>  	if (error)
+>  		goto out_unlock;
+> -	truncate_pagecache_range(VFS_I(tip), 0, -1);
+> -
+> -	xfs_lock_two_inodes(ip, tip, XFS_ILOCK_EXCL);
+> -	lock_flags |= XFS_ILOCK_EXCL;
+>  
+> -	/* Verify O_DIRECT for ftmp */
+> -	if (VFS_I(tip)->i_mapping->nrpages) {
+> -		error = -EINVAL;
+> +	tp = xfs_trans_alloc(mp, XFS_TRANS_SWAPEXT);
+> +	error = xfs_trans_reserve(tp, &M_RES(mp)->tr_ichange, 0, 0);
+> +	if (error) {
+> +		xfs_trans_cancel(tp, 0);
+>  		goto out_unlock;
+>  	}
+> +	xfs_lock_two_inodes(ip, tip, XFS_ILOCK_EXCL);
+> +	lock_flags |= XFS_ILOCK_EXCL;
+>  
+>  	/* Verify all data are being swapped */
+>  	if (sxp->sx_offset != 0 ||
+>  	    sxp->sx_length != ip->i_d.di_size ||
+>  	    sxp->sx_length != tip->i_d.di_size) {
+>  		error = -EFAULT;
+> -		goto out_unlock;
+> +		goto out_trans_cancel;
+>  	}
+>  
+>  	trace_xfs_swap_extent_before(ip, 0);
+> @@ -1693,7 +1719,7 @@ xfs_swap_extents(
+>  		xfs_notice(mp,
+>  		    "%s: inode 0x%llx format is incompatible for exchanging.",
+>  				__func__, ip->i_ino);
+> -		goto out_unlock;
+> +		goto out_trans_cancel;
+>  	}
+>  
+>  	/*
+> @@ -1708,41 +1734,8 @@ xfs_swap_extents(
+>  	    (sbp->bs_mtime.tv_sec != VFS_I(ip)->i_mtime.tv_sec) ||
+>  	    (sbp->bs_mtime.tv_nsec != VFS_I(ip)->i_mtime.tv_nsec)) {
+>  		error = -EBUSY;
+> -		goto out_unlock;
+> -	}
+> -
+> -	/* We need to fail if the file is memory mapped.  Once we have tossed
+> -	 * all existing pages, the page fault will have no option
+> -	 * but to go to the filesystem for pages. By making the page fault call
+> -	 * vop_read (or write in the case of autogrow) they block on the iolock
+> -	 * until we have switched the extents.
+> -	 */
+> -	if (mapping_mapped(VFS_I(ip)->i_mapping)) {
+> -		error = -EBUSY;
+> -		goto out_unlock;
+> -	}
+> -
+> -	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+> -	xfs_iunlock(tip, XFS_ILOCK_EXCL);
+> -	lock_flags &= ~XFS_ILOCK_EXCL;
+> -
+> -	/*
+> -	 * There is a race condition here since we gave up the
+> -	 * ilock.  However, the data fork will not change since
+> -	 * we have the iolock (locked for truncation too) so we
+> -	 * are safe.  We don't really care if non-io related
+> -	 * fields change.
+> -	 */
+> -	truncate_pagecache_range(VFS_I(ip), 0, -1);
+> -
+> -	tp = xfs_trans_alloc(mp, XFS_TRANS_SWAPEXT);
+> -	error = xfs_trans_reserve(tp, &M_RES(mp)->tr_ichange, 0, 0);
+> -	if (error)
+>  		goto out_trans_cancel;
+> -
+> -	xfs_lock_two_inodes(ip, tip, XFS_ILOCK_EXCL);
+> -	lock_flags |= XFS_ILOCK_EXCL;
+> -
+> +	}
+>  	/*
+>  	 * Count the number of extended attribute blocks
+>  	 */
+> -- 
+> 2.0.0
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
