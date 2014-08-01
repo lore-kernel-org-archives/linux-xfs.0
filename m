@@ -1,17 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 0ABEF7F59
-	for <xfs@oss.sgi.com>; Fri,  1 Aug 2014 09:59:24 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id E23BC7F55
+	for <xfs@oss.sgi.com>; Fri,  1 Aug 2014 09:59:23 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id DECBD8F8087
+	by relay1.corp.sgi.com (Postfix) with ESMTP id C1BA48F8084
 	for <xfs@oss.sgi.com>; Fri,  1 Aug 2014 07:59:23 -0700 (PDT)
 Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id AaYn0icRcb7CeThx for <xfs@oss.sgi.com>;
+	ESMTP id BIb2PNDe9MOCSeeu for <xfs@oss.sgi.com>;
 	Fri, 01 Aug 2014 07:59:22 -0700 (PDT)
 From: Eric Sandeen <sandeen@redhat.com>
-Subject: [PATCH 1/6] xfs_io: free fshandlep in parent_check()
-Date: Fri,  1 Aug 2014 09:59:14 -0500
-Message-Id: <1406905159-12415-2-git-send-email-sandeen@redhat.com>
+Subject: [PATCH 4/6] libhandle: Fix handle leak in path_to_fshandle error paths
+Date: Fri,  1 Aug 2014 09:59:17 -0500
+Message-Id: <1406905159-12415-5-git-send-email-sandeen@redhat.com>
 In-Reply-To: <1406905159-12415-1-git-send-email-sandeen@redhat.com>
 References: <1406905159-12415-1-git-send-email-sandeen@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -29,43 +29,27 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-The allocated fshandle wasn't freed in either normal
-exit or error paths.
-
-Do this, and consolidate cleanup into an out: target.
+path_to_fshandle calls obj_to_handle, which potentially
+allocates a handle, but the handle isn't freed on
+a subsequent error path.
 
 Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 ---
- io/parent.c |    7 ++++---
- 1 files changed, 4 insertions(+), 3 deletions(-)
+ libhandle/handle.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-diff --git a/io/parent.c b/io/parent.c
-index ca989e9..56e126d 100644
---- a/io/parent.c
-+++ b/io/parent.c
-@@ -258,9 +258,8 @@ parent_check(void)
- 	if (!bstatbuf || !parentbuf) {
- 		fprintf(stderr, _("unable to allocate buffers: %s\n"),
- 			strerror(errno));
--		free(bstatbuf);
--		free(parentbuf);
--		return 1;
-+		err_status = 1;
-+		goto out;
- 	}
- 
- 	if (do_bulkstat(parentbuf, &parentbuf_size, bstatbuf, fsfd, fshandlep) != 0)
-@@ -272,8 +271,10 @@ parent_check(void)
- 		printf(_("succeeded checking %llu inodes\n"),
- 			(unsigned long long) inodes_checked);
- 
-+out:
- 	free(bstatbuf);
- 	free(parentbuf);
-+	free(fshandlep);
- 	return err_status;
- }
- 
+diff --git a/libhandle/handle.c b/libhandle/handle.c
+index 9f81483..3c1395a 100644
+--- a/libhandle/handle.c
++++ b/libhandle/handle.c
+@@ -97,6 +97,7 @@ path_to_fshandle(
+ 		/* new filesystem. add it to the cache */
+ 		fdhp = malloc(sizeof(struct fdhash));
+ 		if (fdhp == NULL) {
++			free(*fshanp);
+ 			close(fd);
+ 			errno = ENOMEM;
+ 			return -1;
 -- 
 1.7.1
 
