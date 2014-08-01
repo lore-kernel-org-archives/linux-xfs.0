@@ -1,17 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id EA8BB7F57
+	by oss.sgi.com (Postfix) with ESMTP id F11367F58
 	for <xfs@oss.sgi.com>; Fri,  1 Aug 2014 09:59:23 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id D94778F807A
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id DECD78F8089
 	for <xfs@oss.sgi.com>; Fri,  1 Aug 2014 07:59:23 -0700 (PDT)
 Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id T9B1mcDpzxqQwGl1 for <xfs@oss.sgi.com>;
-	Fri, 01 Aug 2014 07:59:23 -0700 (PDT)
+	ESMTP id AB3g992LHLcpQrHx for <xfs@oss.sgi.com>;
+	Fri, 01 Aug 2014 07:59:22 -0700 (PDT)
 From: Eric Sandeen <sandeen@redhat.com>
-Subject: [PATCH 6/6] xfs_db: free flist on error in write_struct()
-Date: Fri,  1 Aug 2014 09:59:19 -0500
-Message-Id: <1406905159-12415-7-git-send-email-sandeen@redhat.com>
+Subject: [PATCH 3/6] xfs_fsr: free handlep in fsrfs
+Date: Fri,  1 Aug 2014 09:59:16 -0500
+Message-Id: <1406905159-12415-4-git-send-email-sandeen@redhat.com>
 In-Reply-To: <1406905159-12415-1-git-send-email-sandeen@redhat.com>
 References: <1406905159-12415-1-git-send-email-sandeen@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -29,25 +29,41 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-One error path in write_struct() wasn't freeing
-the flist_t *fl which was allocated, so it leaks.
+We leaked the fshandlep in both error returns and
+normal function exit.
 
 Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 ---
- db/write.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+ fsr/xfs_fsr.c |    3 +++
+ 1 files changed, 3 insertions(+), 0 deletions(-)
 
-diff --git a/db/write.c b/db/write.c
-index 0157a44..a0f14f4 100644
---- a/db/write.c
-+++ b/db/write.c
-@@ -652,6 +652,7 @@ write_struct(
- 	buf = convert_arg(argv[1], bit_length);
- 	if (!buf) {
- 		dbprintf(_("unable to convert value '%s'.\n"), argv[1]);
-+		flist_free(fl);
- 		return;
+diff --git a/fsr/xfs_fsr.c b/fsr/xfs_fsr.c
+index 752d2db..580604c 100644
+--- a/fsr/xfs_fsr.c
++++ b/fsr/xfs_fsr.c
+@@ -702,6 +702,7 @@ fsrfs(char *mntdir, xfs_ino_t startino, int targetrange)
+ 	if ((fsfd = open(mntdir, O_RDONLY)) < 0) {
+ 		fsrprintf(_("unable to open: %s: %s\n"),
+ 		          mntdir, strerror( errno ));
++		free(fshandlep);
+ 		return -1;
  	}
+ 
+@@ -709,6 +710,7 @@ fsrfs(char *mntdir, xfs_ino_t startino, int targetrange)
+ 		fsrprintf(_("Skipping %s: could not get XFS geometry\n"),
+ 			  mntdir);
+ 		close(fsfd);
++		free(fshandlep);
+ 		return -1;
+ 	}
+ 
+@@ -774,6 +776,7 @@ fsrfs(char *mntdir, xfs_ino_t startino, int targetrange)
+ out0:
+ 	tmp_close(mntdir);
+ 	close(fsfd);
++	free(fshandlep);
+ 	return 0;
+ }
  
 -- 
 1.7.1
