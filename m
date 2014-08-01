@@ -1,19 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 9558B7F54
-	for <xfs@oss.sgi.com>; Fri,  1 Aug 2014 09:59:24 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 2B200AC006
-	for <xfs@oss.sgi.com>; Fri,  1 Aug 2014 07:59:24 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id zDau82bNwKjszAz3 for <xfs@oss.sgi.com>;
-	Fri, 01 Aug 2014 07:59:22 -0700 (PDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 36AC87F50
+	for <xfs@oss.sgi.com>; Fri,  1 Aug 2014 10:11:13 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 16A1F30405F
+	for <xfs@oss.sgi.com>; Fri,  1 Aug 2014 08:11:09 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id EubJ1rkM3EG72z7G (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Fri, 01 Aug 2014 08:11:09 -0700 (PDT)
+Received: from int-mx11.intmail.prod.int.phx2.redhat.com
+	(int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id s71FB8Md022779
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256
+	verify=OK) for <xfs@oss.sgi.com>; Fri, 1 Aug 2014 11:11:08 -0400
+Received: from liberator.sandeen.net (ovpn01.gateway.prod.ext.phx2.redhat.com
+	[10.5.9.1])
+	by int-mx11.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id s71FB7GQ000950
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES128-SHA bits=128 verify=NO)
+	for <xfs@oss.sgi.com>; Fri, 1 Aug 2014 11:11:07 -0400
+Message-ID: <53DBAE0B.6020000@redhat.com>
+Date: Fri, 01 Aug 2014 10:11:07 -0500
 From: Eric Sandeen <sandeen@redhat.com>
-Subject: [PATCH 2/6] xfs_fsr: fix leaks & catch error  in fsrfile()
-Date: Fri,  1 Aug 2014 09:59:15 -0500
-Message-Id: <1406905159-12415-3-git-send-email-sandeen@redhat.com>
-In-Reply-To: <1406905159-12415-1-git-send-email-sandeen@redhat.com>
-References: <1406905159-12415-1-git-send-email-sandeen@redhat.com>
+MIME-Version: 1.0
+Subject: [PATCH] xfs: avoid double free on xlog_recover_commit_trans error
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,106 +33,44 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: xfs-oss <xfs@oss.sgi.com>
 
-The allocated fshandlep leaks on most error paths;
-restructure with an out: target that does all necessary
-freeing, and initialize filehandles to -1 so that we
-know whether they need to be closed on the error path.
+xlog_recover_process_data() frees the transaction on
+any error out of the oh_flags switch statement, but
+in the XLOG_COMMIT_TRANS / xlog_recover_commit_trans() case,
+the transaction has already been freed in 
+xlog_recover_commit_trans() before the error is returned.
 
-While we're at it, if gettmpname() fails, we still
-return 0 for an error, because error is initialized
-to 0 and only set otherwise by fsrfile_common.
-So if gettmpname() fails, we return success from the
-function even though we did no work.  Fix that
-as well by initializing error to -1.
+Avoid this by only freeing the transaction in
+xlog_recover_commit_trans() if no error will be returned.
+
+(Coverity spotted this)
 
 Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 ---
- fsr/xfs_fsr.c |   28 ++++++++++++++--------------
- 1 files changed, 14 insertions(+), 14 deletions(-)
 
-diff --git a/fsr/xfs_fsr.c b/fsr/xfs_fsr.c
-index 48629fd..752d2db 100644
---- a/fsr/xfs_fsr.c
-+++ b/fsr/xfs_fsr.c
-@@ -809,15 +809,15 @@ fsrfile(char *fname, xfs_ino_t ino)
- {
- 	xfs_bstat_t	statbuf;
- 	jdm_fshandle_t	*fshandlep;
--	int	fd, fsfd;
--	int	error = 0;
-+	int	fd = -1, fsfd = -1;
-+	int	error = -1;
- 	char	*tname;
+diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+index 981af0f..e634ffd 100644
+--- a/fs/xfs/xfs_log_recover.c
++++ b/fs/xfs/xfs_log_recover.c
+@@ -3514,9 +3514,11 @@ out:
+ 	if (!list_empty(&done_list))
+ 		list_splice_init(&done_list, &trans->r_itemq);
  
- 	fshandlep = jdm_getfshandle(getparent (fname) );
--	if (! fshandlep) {
-+	if (!fshandlep) {
- 		fsrprintf(_("unable to construct sys handle for %s: %s\n"),
- 			fname, strerror(errno));
--		return -1;
-+		goto out;
- 	}
- 
- 	/*
-@@ -828,39 +828,39 @@ fsrfile(char *fname, xfs_ino_t ino)
- 	if (fsfd < 0) {
- 		fsrprintf(_("unable to open sys handle for %s: %s\n"),
- 			fname, strerror(errno));
--		return -1;
-+		goto out;
- 	}
- 
- 	if ((xfs_bulkstat_single(fsfd, &ino, &statbuf)) < 0) {
- 		fsrprintf(_("unable to get bstat on %s: %s\n"),
- 			fname, strerror(errno));
--		close(fsfd);
--		return -1;
-+		goto out;
- 	}
- 
- 	fd = jdm_open(fshandlep, &statbuf, O_RDWR|O_DIRECT);
- 	if (fd < 0) {
- 		fsrprintf(_("unable to open handle %s: %s\n"),
- 			fname, strerror(errno));
--		close(fsfd);
--		return -1;
-+		goto out;
- 	}
- 
- 	/* Get the fs geometry */
- 	if (xfs_getgeom(fsfd, &fsgeom) < 0 ) {
- 		fsrprintf(_("Unable to get geom on fs for: %s\n"), fname);
--		close(fsfd);
--		return -1;
-+		goto out;
- 	}
- 
--	close(fsfd);
+-	xlog_recover_free_trans(trans);
 -
- 	tname = gettmpname(fname);
- 
- 	if (tname)
- 		error = fsrfile_common(fname, tname, NULL, fd, &statbuf);
- 
--	close(fd);
-+out:
-+	if (fsfd >= 0)
-+		close(fsfd);
-+	if (fd >= 0)
-+		close(fd);
-+	free(fshandlep);
- 
- 	return error;
+ 	error2 = xfs_buf_delwri_submit(&buffer_list);
++	/* caller will free trans on error */
++	if (!error && !error2)
++		xlog_recover_free_trans(trans);
++
+ 	return error ? error : error2;
  }
--- 
-1.7.1
+ 
 
 _______________________________________________
 xfs mailing list
