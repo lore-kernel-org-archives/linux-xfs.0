@@ -1,25 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 848DE7F51
-	for <xfs@oss.sgi.com>; Sat,  2 Aug 2014 06:24:23 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 20DB8AC002
-	for <xfs@oss.sgi.com>; Sat,  2 Aug 2014 04:24:19 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id FeNN8W37nGdS5mF1 (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Sat, 02 Aug 2014 04:24:15 -0700 (PDT)
-Date: Sat, 2 Aug 2014 07:24:06 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 2/2] xfs: flush both inodes in xfs_swap_extents
-Message-ID: <20140802112404.GA36014@bfoster.bfoster>
-References: <1406787128-11897-1-git-send-email-david@fromorbit.com>
-	<1406787128-11897-3-git-send-email-david@fromorbit.com>
-	<20140801124401.GA3582@laptop.bfoster>
-	<20140802031931.GS20518@dastard>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id C1AB57F54
+	for <xfs@oss.sgi.com>; Sat,  2 Aug 2014 11:37:13 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id A145A304043
+	for <xfs@oss.sgi.com>; Sat,  2 Aug 2014 09:37:10 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id 7SwzCDNHx1lWKZGM for <xfs@oss.sgi.com>;
+	Sat, 02 Aug 2014 09:37:08 -0700 (PDT)
+Message-ID: <53DD13B5.5050000@sandeen.net>
+Date: Sat, 02 Aug 2014 11:37:09 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20140802031931.GS20518@dastard>
+Subject: Re: [PATCH] xfs: avoid double free on xlog_recover_commit_trans error
+References: <53DBAE0B.6020000@redhat.com>
+In-Reply-To: <53DBAE0B.6020000@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,52 +27,55 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@redhat.com>, xfs-oss <xfs@oss.sgi.com>
 
-On Sat, Aug 02, 2014 at 01:19:31PM +1000, Dave Chinner wrote:
-> On Fri, Aug 01, 2014 at 08:44:02AM -0400, Brian Foster wrote:
-> > On Thu, Jul 31, 2014 at 04:12:08PM +1000, Dave Chinner wrote:
-> > > From: Dave Chinner <dchinner@redhat.com>
-> > > 
-> > > We need to treat both inodes identically from a page cache point of
-> > > view when prepareing them for extent swapping. We don't do this
-> > > right now - we assume that one of the inodes empty, because that's
-> > > what xfs_fsr currently does. Remove this assumption from the code.
-> > > 
-> > > While factoring out the flushing and related checks, move the
-> > > transactions reservation to immeidately after the flushes so that we
-> > > don't need to pick up and then drop the ilock to do the transaction
-> > > reservation. There are no issues with aborting the transaction it if
-> > > the checks fail before we join the inodes to the transaction and
-> > > dirty them, so this is a safe change to make.
-> > > 
-> > > Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> > > ---
-> > 
-> > Both of these looked fine to me, but I couldn't apply this one to
-> > for-next or master...
+On 8/1/14, 10:11 AM, Eric Sandeen wrote:
+> xlog_recover_process_data() frees the transaction on
+> any error out of the oh_flags switch statement, but
+> in the XLOG_COMMIT_TRANS / xlog_recover_commit_trans() case,
+> the transaction has already been freed in 
+> xlog_recover_commit_trans() before the error is returned.
 > 
-> It's actually in my working branch, which means it's based on
-> 3.16-rc5 + random-outside-xfs-patches + for-next + verifier fixes +
-> sb discombobulation and then this patch set. I didn't check that it
-> applied directly against for-next - do you want me to rebase and
-> resend it?
+> Avoid this by only freeing the transaction in
+> xlog_recover_commit_trans() if no error will be returned.
 > 
+> (Coverity spotted this)
 
-Ok, no worries. I was just trying to compile test and verify that
-nothing was unexpected with the patch as posted. I'm good as long we get
-some lead team for testing and whatnot when this gets merged to a dev.
-branch. :)
+Ok, I see that Mark already sent this (thanks Mark, sorry for not
+seeing / remembering) and he was scolded for not thinking hard enough
+about the problem.  I guess I'm not thinking hard enough either...
 
-Brian
+Sorry 'bout that.
 
-> Cheers,
+-Eric
+
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> ---
 > 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+> diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+> index 981af0f..e634ffd 100644
+> --- a/fs/xfs/xfs_log_recover.c
+> +++ b/fs/xfs/xfs_log_recover.c
+> @@ -3514,9 +3514,11 @@ out:
+>  	if (!list_empty(&done_list))
+>  		list_splice_init(&done_list, &trans->r_itemq);
+>  
+> -	xlog_recover_free_trans(trans);
+> -
+>  	error2 = xfs_buf_delwri_submit(&buffer_list);
+> +	/* caller will free trans on error */
+> +	if (!error && !error2)
+> +		xlog_recover_free_trans(trans);
+> +
+>  	return error ? error : error2;
+>  }
+>  
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+> 
 
 _______________________________________________
 xfs mailing list
