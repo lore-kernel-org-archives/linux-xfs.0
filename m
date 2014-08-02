@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id EE70B7F51
-	for <xfs@oss.sgi.com>; Fri,  1 Aug 2014 22:19:54 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 8B26EAC005
-	for <xfs@oss.sgi.com>; Fri,  1 Aug 2014 20:19:54 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id 1D22F7F51
+	for <xfs@oss.sgi.com>; Fri,  1 Aug 2014 22:20:11 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 9F506AC00A
+	for <xfs@oss.sgi.com>; Fri,  1 Aug 2014 20:20:10 -0700 (PDT)
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	y7M9aZ5ih2T9fPgB for <xfs@oss.sgi.com>;
-	Fri, 01 Aug 2014 20:19:49 -0700 (PDT)
-Date: Sat, 2 Aug 2014 13:19:31 +1000
+	OtHlioWmDBjdomSk for <xfs@oss.sgi.com>;
+	Fri, 01 Aug 2014 20:20:08 -0700 (PDT)
+Date: Sat, 2 Aug 2014 13:20:06 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 2/2] xfs: flush both inodes in xfs_swap_extents
-Message-ID: <20140802031931.GS20518@dastard>
-References: <1406787128-11897-1-git-send-email-david@fromorbit.com>
-	<1406787128-11897-3-git-send-email-david@fromorbit.com>
-	<20140801124401.GA3582@laptop.bfoster>
+Subject: Re: [PATCH 4/4] xfs: dquot recovery needs verifiers
+Message-ID: <20140802032006.GT20518@dastard>
+References: <1406768509-32556-1-git-send-email-david@fromorbit.com>
+	<1406768509-32556-5-git-send-email-david@fromorbit.com>
+	<20140801143023.GD26455@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20140801124401.GA3582@laptop.bfoster>
+In-Reply-To: <20140801143023.GD26455@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,36 +31,32 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
+To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
-On Fri, Aug 01, 2014 at 08:44:02AM -0400, Brian Foster wrote:
-> On Thu, Jul 31, 2014 at 04:12:08PM +1000, Dave Chinner wrote:
+On Fri, Aug 01, 2014 at 07:30:23AM -0700, Christoph Hellwig wrote:
+> On Thu, Jul 31, 2014 at 11:01:49AM +1000, Dave Chinner wrote:
 > > From: Dave Chinner <dchinner@redhat.com>
 > > 
-> > We need to treat both inodes identically from a page cache point of
-> > view when prepareing them for extent swapping. We don't do this
-> > right now - we assume that one of the inodes empty, because that's
-> > what xfs_fsr currently does. Remove this assumption from the code.
+> > dquot recovery should add verifiers to the dquot buffers that it
+> > recovers changes into. Unfortunately, it doesn't attached the
+> > verifiers to the buffers in a consistent manner. For example,
+> > xlog_recover_dquot_pass2() reads dquot buffers without a verifier
+> > and then writes it without ever having attached a verifier to the
+> > buffer.
 > > 
-> > While factoring out the flushing and related checks, move the
-> > transactions reservation to immeidately after the flushes so that we
-> > don't need to pick up and then drop the ilock to do the transaction
-> > reservation. There are no issues with aborting the transaction it if
-> > the checks fail before we join the inodes to the transaction and
-> > dirty them, so this is a safe change to make.
+> > Further, dquot buffer recovery may write a dquot buffer that has not
+> > been modified, or indeed, shoul dbe written because quotas are not
+> > enabled and hence changes to the buffer were not replayed. In this
+> > case, we again write buffers without verifiers attached because that
+> > doesn't happen until after the buffer changes have been replayed.
 > > 
 > > Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> > ---
 > 
-> Both of these looked fine to me, but I couldn't apply this one to
-> for-next or master...
+> The xlog_recover_do_reg_buffer look fine to me, but what's the rationale
+> for removing the xfs_dqcheck call?
 
-It's actually in my working branch, which means it's based on
-3.16-rc5 + random-outside-xfs-patches + for-next + verifier fixes +
-sb discombobulation and then this patch set. I didn't check that it
-applied directly against for-next - do you want me to rebase and
-resend it?
+It's done by the verifier.
 
 Cheers,
 
