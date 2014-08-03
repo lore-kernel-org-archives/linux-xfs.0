@@ -1,24 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id EFC867F53
-	for <xfs@oss.sgi.com>; Sat,  2 Aug 2014 19:09:50 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id C1ACC8F8037
-	for <xfs@oss.sgi.com>; Sat,  2 Aug 2014 17:09:47 -0700 (PDT)
-Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
-	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	b4oA7o4Vb8SC7Y0n for <xfs@oss.sgi.com>;
-	Sat, 02 Aug 2014 17:09:45 -0700 (PDT)
-Date: Sun, 3 Aug 2014 10:07:05 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v3 00/10] xfs_ioc_bulkstat code refactoring and
-	consolidation
-Message-ID: <20140803000705.GU20518@dastard>
-References: <538D92B6.5050402@oracle.com> <20140729232748.GI26465@dastard>
-	<53D9F67F.9060609@oracle.com> <53DB2F08.2090703@oracle.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <53DB2F08.2090703@oracle.com>
+	by oss.sgi.com (Postfix) with ESMTP id B16497F54
+	for <xfs@oss.sgi.com>; Sat,  2 Aug 2014 19:50:06 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 908F98F8037
+	for <xfs@oss.sgi.com>; Sat,  2 Aug 2014 17:50:06 -0700 (PDT)
+Received: from shadbolt.e.decadent.org.uk (shadbolt.e.decadent.org.uk
+	[88.96.1.126]) by cuda.sgi.com with ESMTP id RsmMfJegyMMssfIG
+	(version=TLSv1 cipher=AES128-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Sat, 02 Aug 2014 17:50:00 -0700 (PDT)
+Message-ID: <1407026987.30258.60.camel@deadeye.wl.decadent.org.uk>
+Subject: Re: [PATCH][v3.2.y] xfs: really fix the cursor leak in
+	xfs_alloc_ag_vextent_near
+From: Ben Hutchings <ben@decadent.org.uk>
+Date: Sun, 03 Aug 2014 01:49:47 +0100
+In-Reply-To: <53D91CBC.1000901@canonical.com>
+References: <53D91CBC.1000901@canonical.com>
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,119 +25,89 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============8452764160888390218=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Jeff Liu <jeff.liu@oracle.com>
-Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: Joseph Salisbury <joseph.salisbury@canonical.com>
+Cc: linux-kernel@vger.kernel.org, "stable@vger.kernel.org" <stable@vger.kernel.org>, xfs@oss.sgi.com
 
-On Fri, Aug 01, 2014 at 02:09:12PM +0800, Jeff Liu wrote:
-> 
-> On 07/31/2014 15:55 PM, Jeff Liu wrote:
-> > Hi Dave,
-> > 
-> > On 07/30/2014 07:27 AM, Dave Chinner wrote:
-> >> On Tue, Jun 03, 2014 at 05:17:42PM +0800, Jeff Liu wrote:
-> >>> Hi folk,
-> >>>
-> >>> This is the revised patches for xfs_ioc_bulkstat consolidation and code
-> >>> refactoring. As per Christoph's comments, I'm not include the per AG
-> >>> inumber patch in this series given that I don't actually introduce the
-> >>> relevant inumbers interface now. Similar to that reason, I also dropped
-> >>> the per AG bulkstat patch, it would be included in parallel quota check
-> >>> series.
-> >>>
-> >>>
-> >>> v3->v2:
-> >>> - one major bug fix is at xfs_bulkstat_ag_ichunk() regarding the user buffer
-> >>>   pointer operations, it should be defined as a pointer-to-pointer since it
-> >>>   would be updated inside xfs_bulkstat_ag_ichunk().
-> >>>
-> >>> - separate xfs_inumber consolidate patch into two patches, the first one
-> >>>   fix the formater function return value and consolidate the codes, another
-> >>>   one does the actual logic changes for better error handling.
-> >>>
-> >>> - Add a separate patch to get rid of the redundant user buffer count
-> >>>   checks at xfs_bulkstat()
-> >>>
-> >>> - fixed agino calculation issue at xfs_bulkstat_grab_ichunk().
-> >>>
-> >>> v2: http://oss.sgi.com/archives/xfs/2014-04/msg00554.html
-> >>> v1: http://oss.sgi.com/archives/xfs/2013-12/msg00901.html
-> >>>
-> >>>
-> >>> Any comments are welcome!
-> >>
-> >> Hi Jeff, I ported this to the current dev tree based on the
-> >> xfs-libxfs-restructure branch, and I keep seeing fsstress failing
-> >> with memory corruption after random bulkstat ioctls. I see regular
-> >> failures with generic/013, generic/068, xfs/167 and the other
-> >> fstress tests also randomly fail. The typical failure is glibc
-> >> detected memory heap corruption on freeing the bulkstat structure
-> >> after the ioctl:
-> >>
-> >> generic/068 42s ...*** Error in `./ltp/fsstress': double free or corruption (!prev): 0x00007f0224000b70 ***
-> >> ======= Backtrace: =========
-> > 
-> > Sorry for my late response and thanks for help porting this patch series.
-> > 
-> > Now I can reproduce this issue frequently with generic/013, will try to fix
-> > it ASAP.
-> 
-> Hi Dave,
-> 
-> Could you please check the patch below for this issue?
-> 
-> 
-> From: Jie Liu <jeff.liu@oracle.com>
-> Subject: xfs: always updating acp elements at xfs_bulkstat_ag_ichunk
-> 
-> After processing the inodes in chunk, we should always updating the
-> last inode number and the left user buffer info no matter anything
-> wrong while formatting an inode to the user buffer. Otherwise, the
-> related info might be updated improperly at xfs_bulkstat() for the
-> next round of inode processing.
-> 
-> Signed-off-by: Jie Liu <jeff.liu@oracle.com>
-> ---
->  fs/xfs/xfs_itable.c | 8 +++-----
->  1 file changed, 3 insertions(+), 5 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_itable.c b/fs/xfs/xfs_itable.c
-> index 9959a05..f71be9c 100644
-> --- a/fs/xfs/xfs_itable.c
-> +++ b/fs/xfs/xfs_itable.c
-> @@ -328,11 +328,9 @@ xfs_bulkstat_ag_ichunk(
->  		lastino = ino;
->  	}
->  
-> -	if (!error) {
-> -		acp->ac_lastino = lastino;
-> -		acp->ac_ubleft = ubleft;
-> -		acp->ac_ubelem = ubelem;
-> -	}
-> +	acp->ac_lastino = lastino;
-> +	acp->ac_ubleft = ubleft;
-> +	acp->ac_ubelem = ubelem;
 
-Yes, that looks like it fixes the issues I'm seeing here. I'll fold
-this into the patch that introduces this code (the last patch, if
-I'm not mistaken) so we don't have a point in a bisection where
-bulkstat is busted. I'll run it through some more testing and if
-everything goes well I'll push it into for-next early in the week.
+--===============8452764160888390218==
+Content-Type: multipart/signed; micalg="pgp-sha512";
+	protocol="application/pgp-signature"; boundary="=-2k+LEOsAS2On6GRrQsko"
 
-Thanks for the quick turn-around and finding the problem for me,
-Jeff!
 
-Cheers,
+--=-2k+LEOsAS2On6GRrQsko
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+On Wed, 2014-07-30 at 12:26 -0400, Joseph Salisbury wrote:
+> Hello,
+>    =20
+> Please consider including mainline commit
+> e3a746f5aab71f2dd0a83116772922fb37ae29d6 in the next v3.2.y release.  It
+> was included in the mainline tree as of v3.5.  It has been tested and
+> confirmed
+> to resolve http://bugs.launchpad.net/bugs/1327360 .
+>=20
+>=20
+> commit e3a746f5aab71f2dd0a83116772922fb37ae29d6
+> Author: Dave Chinner <dchinner@redhat.com>
+> Date:   Thu Jul 12 07:40:42 2012 +1000
+>=20
+>     xfs: really fix the cursor leak in xfs_alloc_ag_vextent_near
+
+I assume I'm supposed to apply this first:
+
+commit 76d095388b040229ea1aad7dea45be0cfa20f589
+Author: Dave Chinner <dchinner@redhat.com>
+Date:   Tue Jun 12 14:20:26 2012 +1000
+
+    xfs: fix allocbt cursor leak in xfs_alloc_ag_vextent_near
+
+So I've queued up both of these.
+
+Ben.
+
+--=20
+Ben Hutchings
+Kids!  Bringing about Armageddon can be dangerous.  Do not attempt it in
+your own home. - Terry Pratchett and Neil Gaiman, `Good Omens'
+
+--=-2k+LEOsAS2On6GRrQsko
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQIVAwUAU92HMOe/yOyVhhEJAQrDUg/+N1dtGeuhxC+v5li/Ah4UMK+fVIeUGQ0k
+K62Mhb8o0zEm7ZxK6DK7ky+AeMBCesve50FiuiMXFyJyeL+GT+TMrkLcHKN4Ia1H
+UlshiZGx68QSU/rL9eAGK/0hwDyfPdWod7rXsNcvZqo11C3lOuoQhrslSfwuVb6L
+/e/2eypLmJ47rPIBTMz2AZZLzuZDBHPdd0fK4Kw2FHJw7F7wbJ30Vbpz7EEXZ1V5
+Ds4q4dKfOrC/jaQlJO0SbiFC7wvpAmg/dUAU5xLE6SoY0uZDZiqssYpqB4SigUFf
+TyxnMKRQ3tc1zDk5vWiMOppKP27SbKHQKd+Od+IVwJBy92+rMLBgj6CuC0QLuVC2
+i+x5uXjQ/Oeo6eXVOzT+caAqJ5gnn/k9HN/l3p1imyLovFb62a5dukcpNPapp+FR
+V4/j1sTmfXIeGnI+yH693AMy8d5wNgeH4Bqakukr7fEcXOY1Zx11lzqPC3HTQnWI
+KkYtHw8VtgXTTdELVcBRphNvAnAsV7aKCiLucQgxkaPvkoDDB3lNalkSdC1WO18b
+vR48vNNXL27lJBHoto1MHhJ8BazSI+1Y016gaiql81vX7FO0YkpfiEJMBaIWhymG
+cuagIXjKkp/RrnjGH8mL3PcDHq0RqDq1zm/BjAznZZsErPMl/Ol0ylP4xv1Y3Kvq
+pwFdY5d/0rE=
+=GPx1
+-----END PGP SIGNATURE-----
+
+--=-2k+LEOsAS2On6GRrQsko--
+
+
+--===============8452764160888390218==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============8452764160888390218==--
