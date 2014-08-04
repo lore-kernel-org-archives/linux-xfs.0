@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 530DA7F56
-	for <xfs@oss.sgi.com>; Mon,  4 Aug 2014 02:34:53 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 4155B30404E
-	for <xfs@oss.sgi.com>; Mon,  4 Aug 2014 00:34:50 -0700 (PDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 6848F7F5E
+	for <xfs@oss.sgi.com>; Mon,  4 Aug 2014 03:09:44 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id EC3B0AC001
+	for <xfs@oss.sgi.com>; Mon,  4 Aug 2014 01:09:40 -0700 (PDT)
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	HrkCsRADCv69B2Rg for <xfs@oss.sgi.com>;
-	Mon, 04 Aug 2014 00:34:47 -0700 (PDT)
-Date: Mon, 4 Aug 2014 17:34:43 +1000
+	iy1k4AoHao75XYwd for <xfs@oss.sgi.com>;
+	Mon, 04 Aug 2014 01:09:35 -0700 (PDT)
+Date: Mon, 4 Aug 2014 18:09:30 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 1/6] xfs: remove bitfield based superblock updates
-Message-ID: <20140804073443.GX20518@dastard>
+Subject: Re: [PATCH 2/6] xfs: consolidate superblock logging functions
+Message-ID: <20140804080930.GY20518@dastard>
 References: <1406791995-14723-1-git-send-email-david@fromorbit.com>
-	<1406791995-14723-2-git-send-email-david@fromorbit.com>
-	<20140801143751.GB3582@laptop.bfoster>
+	<1406791995-14723-3-git-send-email-david@fromorbit.com>
+	<20140801143929.GC3582@laptop.bfoster>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20140801143751.GB3582@laptop.bfoster>
+In-Reply-To: <20140801143929.GC3582@laptop.bfoster>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,169 +34,132 @@ Sender: xfs-bounces@oss.sgi.com
 To: Brian Foster <bfoster@redhat.com>
 Cc: xfs@oss.sgi.com
 
-On Fri, Aug 01, 2014 at 10:37:51AM -0400, Brian Foster wrote:
-> On Thu, Jul 31, 2014 at 05:33:10PM +1000, Dave Chinner wrote:
+On Fri, Aug 01, 2014 at 10:39:29AM -0400, Brian Foster wrote:
+> On Thu, Jul 31, 2014 at 05:33:11PM +1000, Dave Chinner wrote:
 > > From: Dave Chinner <dchinner@redhat.com>
 > > 
-> > When we log changes to the superblock, we first have to write them
-> > to the on-disk buffer, and then log that. Right now we have a
-> > complex bitfield based arrangement to only write the modified field
-> > to the buffer before we log it.
+> > We now have several superblock loggin functions that are identical
+> > except for the transaction reservation and whether it shoul dbe a
+> > synchronous transaction or not. Consolidate these all into a single
+> > function, a single reserveration and a sync flag and call it
+> > xfs_sync_sb().
 > > 
-> > This used to be necessary as a performance optimisation because we
-> > logged the superblock buffer in every extent or inode allocation or
-> > freeing, and so performance was extremely important. We haven't done
-> > this for years, however, ever since the lazy superblock counters
-> > pulled the superblock logging out of the transaction commit
-> > fast path.
+> > Also, xfs_mod_sb() is not really a modification function - it's the
+> > operation of logging the superblock buffer. hence change the name of
+> > it to reflect this.
 > > 
-> > Hence we have a bunch of complexity that is not necessary that makes
-> > writing the in-core superblock to disk much more complex than it
-> > needs to be. We only need to log the superblock now during
-> > management operations (e.g. during mount, unmount or quota control
-> > operations) so it is not a performance critical path anymore.
-> > 
-> > As such, remove the complex field based logging mechanism and
-> > replace it with a simple conversion function similar to what we use
-> > for all other on-disk structures.
-> > 
-> > This means we always log the entirity of the superblock, but again
-> > because we rarely modify the superblock this is not an issue for log
-> > bandwidth or CPU time. Indeed, if we do log the superblock
-> > frequently, delayed logging will minimise the impact of this
-> > overhead.
-...
-> > @@ -447,125 +384,119 @@ xfs_sb_from_disk(
-> >  	to->sb_lsn = be64_to_cpu(from->sb_lsn);
-> >  }
-> >  
-> > -static inline void
-> > +static void
-> >  xfs_sb_quota_to_disk(
-> > -	xfs_dsb_t	*to,
-> > -	xfs_sb_t	*from,
-> > -	__int64_t	*fields)
-> > +	struct xfs_dsb	*to,
-> > +	struct xfs_sb	*from)
-> >  {
-> >  	__uint16_t	qflags = from->sb_qflags;
-> >  
-> > +	to->sb_uquotino = cpu_to_be64(from->sb_uquotino);
-> > +	if (xfs_sb_version_has_pquotino(from)) {
-> > +		to->sb_qflags = be16_to_cpu(from->sb_qflags);
-> > +		to->sb_gquotino = cpu_to_be64(from->sb_gquotino);
-> > +		to->sb_pquotino = cpu_to_be64(from->sb_pquotino);
-> > +		return;
-> > +	}
+> > Note that we have to change the mp->m_update_flags that are passed
+> > around at mount time to a boolean simply to indicate a superblock
+> > update is needed.
+.....
 > > +
+> > +/*
+> > + * xfs_sync_sb
+> > + *
+> > + * Sync the superblock to disk.
+> > + *
+> > + * Note this code can be called during the process of freezing, so
+> > + * we may need to use the transaction allocator which does not
+> > + * block when the transaction subsystem is in its frozen state.
+> > + */
+> > +int
+> > +xfs_sync_sb(
+> > +	struct xfs_mount	*mp,
+> > +	bool			wait)
+> > +{
+> > +	struct xfs_trans	*tp;
+> > +	int			error;
+> > +
+> > +	tp = _xfs_trans_alloc(mp, XFS_TRANS_SB_CHANGE, KM_SLEEP);
 > 
-> Ok, so we're inheriting the quota conversion from xfs_sb_to_disk()
-> unconditionally (as opposed to previously being solely a has_pquotino()
-> fixup function).
+> We're converting some previous calls of xfs_trans_alloc() to the
+> _xfs_trans_alloc() variant. The only difference is the dropped call to
+> sb_start_intwrite() and I see that technically we handle that with the
+> xfs_fs_writeable() check.
 
-Right - that's one of the problems with this function - it modifies
-some fields and modifies flags for other code to do the right thing.
-It's kinda confusing to split it up like that rather than have all
-the quota translation in one place.
+Writing a change to the superblock is not something that normal
+operations do. They are something that is typically done as a
+standalone management operation, and hence the xfs_fs_writeable()
+check is usually enough.
 
-> 
-> >  	/*
-> > -	 * We need to do these manipilations only if we are working
-> > -	 * with an older version of on-disk superblock.
-> > +	 * The in-core version of sb_qflags do not have XFS_OQUOTA_*
-> > +	 * flags, whereas the on-disk version does.  So, convert incore
-> > +	 * XFS_{PG}QUOTA_* flags to on-disk XFS_OQUOTA_* flags.
-> >  	 */
-> > -	if (xfs_sb_version_has_pquotino(from))
-> > -		return;
-> > +	qflags &= ~(XFS_PQUOTA_ENFD | XFS_PQUOTA_CHKD |
-> > +			XFS_GQUOTA_ENFD | XFS_GQUOTA_CHKD);
-> >  
-> > -	if (*fields & XFS_SB_QFLAGS) {
-> > -		/*
-> > -		 * The in-core version of sb_qflags do not have
-> > -		 * XFS_OQUOTA_* flags, whereas the on-disk version
-> > -		 * does.  So, convert incore XFS_{PG}QUOTA_* flags
-> > -		 * to on-disk XFS_OQUOTA_* flags.
-> > -		 */
-> > -		qflags &= ~(XFS_PQUOTA_ENFD | XFS_PQUOTA_CHKD |
-> > -				XFS_GQUOTA_ENFD | XFS_GQUOTA_CHKD);
-> > -
-> > -		if (from->sb_qflags &
-> > -				(XFS_PQUOTA_ENFD | XFS_GQUOTA_ENFD))
-> > -			qflags |= XFS_OQUOTA_ENFD;
-> > -		if (from->sb_qflags &
-> > -				(XFS_PQUOTA_CHKD | XFS_GQUOTA_CHKD))
-> > -			qflags |= XFS_OQUOTA_CHKD;
-> > -		to->sb_qflags = cpu_to_be16(qflags);
-> > -		*fields &= ~XFS_SB_QFLAGS;
-> > -	}
-> > +	if (from->sb_qflags &
-> > +			(XFS_PQUOTA_ENFD | XFS_GQUOTA_ENFD))
-> > +		qflags |= XFS_OQUOTA_ENFD;
-> > +	if (from->sb_qflags &
-> > +			(XFS_PQUOTA_CHKD | XFS_GQUOTA_CHKD))
-> > +		qflags |= XFS_OQUOTA_CHKD;
-> > +	to->sb_qflags = cpu_to_be16(qflags);
-> >  
-> >  	/*
-> > -	 * GQUOTINO and PQUOTINO cannot be used together in versions of
-> > -	 * superblock that do not have pquotino. from->sb_flags tells us which
-> > -	 * quota is active and should be copied to disk. If neither are active,
-> > -	 * make sure we write NULLFSINO to the sb_gquotino field as a quota
-> > -	 * inode value of "0" is invalid when the XFS_SB_VERSION_QUOTA feature
-> > -	 * bit is set.
-> > +	 * GQUOTINO and PQUOTINO cannot be used together in versions
-> > +	 * of superblock that do not have pquotino. from->sb_flags
-> > +	 * tells us which quota is active and should be copied to
-> > +	 * disk. If neither are active, we should NULL the inode.
-> >  	 *
-> > -	 * Note that we don't need to handle the sb_uquotino or sb_pquotino here
-> > -	 * as they do not require any translation. Hence the main sb field loop
-> > -	 * will write them appropriately from the in-core superblock.
-> > +	 * In all cases, the separate pquotino must remain 0 because it
-> > +	 * it beyond the "end" of the valid non-pquotino superblock.
-> >  	 */
-> > -	if ((*fields & XFS_SB_GQUOTINO) &&
-> > -				(from->sb_qflags & XFS_GQUOTA_ACCT))
-> > +	if (from->sb_qflags & XFS_GQUOTA_ACCT)
-> >  		to->sb_gquotino = cpu_to_be64(from->sb_gquotino);
-> > -	else if ((*fields & XFS_SB_PQUOTINO) &&
-> > -				(from->sb_qflags & XFS_PQUOTA_ACCT))
-> > +	else if (from->sb_qflags & XFS_PQUOTA_ACCT)
-> >  		to->sb_gquotino = cpu_to_be64(from->sb_pquotino);
-> > -	else {
-> > -		/*
-> > -		 * We can't rely on just the fields being logged to tell us
-> > -		 * that it is safe to write NULLFSINO - we should only do that
-> > -		 * if quotas are not actually enabled. Hence only write
-> > -		 * NULLFSINO if both in-core quota inodes are NULL.
-> > -		 */
-> > -		if (from->sb_gquotino == NULLFSINO &&
-> > -		    from->sb_pquotino == NULLFSINO)
-> > -			to->sb_gquotino = cpu_to_be64(NULLFSINO);
-> > -	}
-> > +	else
-> > +		to->sb_gquotino = cpu_to_be64(NULLFSINO);
-> 
-> I'll ask since I'm not 100% on the backwards compatibility fixup here...
-> but this else condition is effectively the same logic as the previous
-> NULLFSINO checks due to the *QUOTA_ACCT flags checks, yes? If so, the
-> rest looks fine:
+So, the callers are:
 
-*nod*. The in-core NULLFSINO checks were required because we
-couldn't trust either the superblock quota flags or the modified
-fields mask to tell us if we needed to convert the gquotino field
-from zero to NULLFSINO.
+	xfs_fs_log_dummy	-> occurs during freeze
+	  _xfs_trans_alloc	-> no change
 
->From a compatibility POV on older kernels, if usr quota is turned on
-but not grp/prj then the expected the value iof sb_gquotino is
-NULLFSINO. If quota is turned off, then either 0 or NULLFSINO are
-valid values. IOWs, the logic in the absence of the logging field
-bitmask is much, much simpler: if we don't write a real inode number
-to the field because quotas are not on then just write NULLFSINO.
+and
+	xfs_log_sbcount		-> occurs during freeze, unmount
+	  _xfs_trans_alloc	-> no change
 
-Clear as mud, huh?
+and
+	xfs_mount_reset_sbqflags	-> called only in mount path
+	  xfs_fs_writable		-> was just a RO check
+	  _xfs_trans_alloc		-> was xfs_trans_alloc
+
+and
+	xfs_mount_log_sb		-> called only in mount path
+	  _xfs_trans_alloc		-> was xfs_trans_alloc
+
+and
+	xfs_qm_write_sb_changes		-> quota on/off syscalls
+	  _xfs_trans_alloc		-> was xfs_trans_alloc
+
+So the first 4 are effectively unchanged - there can be no racing
+freeze while we are in the mount path, so the change from
+xfs_trans_alloc to _xfs_trans_alloc makes no difference at all.
+Similarly, the change from an open-coded RO check to
+xfs_fs_writable() makes no difference, either.
+
+It's only the last function - xfs_qm_write_sb_changes() - where
+there is a difference. However, let's walk all the way back up the
+stack to the syscall quotactl():
+
+	sys_quotactl
+	  quotactl_block()
+	    if (quotactl_cmd_write())
+	      get_super_thawed()
+
+which will only proceed with an unfrozen superblock, and it holds
+the sb->s_umount lock in read mode across the quotactl operation.
+Hence it will prevent the filesystem from being frozen during quota
+on/off operations. Hence we don't need or want freeze accounting on
+those operations because they need to complete before a freeze can
+be started.
+
+> Unless I misunderstand, the sb_start_inwrite() call is what will
+> block us on internal transaction allocs once the fs is already
+> frozen.  It seems a little dicey to me to offer up this single
+> helper without much indication that a frozen check might be a
+> requirement, particularly since this is expected to be built into
+> the transaction infrastructure.
+
+Right, but none of the callers actually are run in a situation where
+they should block on freezes, either complete or in progress. i.e.
+there is no requirement for freeze checks - there is the opposite:
+requirements to avoid freeze checks so the code doesn't deadlock.
+
+> How would we expect a new caller to identify that?
+
+Same as we always do: by code review.
+
+> Even the current xfs_fs_writable() check seems like it might be
+> unnecessary, given some brief testing. I don't hit the mount path at all
+> on a frozen fs.
+
+xfs_fs_writable() checks more than whether the filesystem is
+frozen. ;)
+
+> I'm not sure of the mechanics behind that, but I'm
+> guessing some kind of reference remains on the sb of a frozen fs and a
+> subsequent umount/mount is purely namespace magic. Point being... this
+> appears to be implicit and confusing. IMO, using an _xfs_sync_sb()
+> variant that allocates a nonblocking tp if one isn't provided as a
+> parameter (for example) and using that only in the contexts we know it's
+> Ok to avoid freeze interaction issues might be more clear.
+
+Well, it was pretty clear to me that the code paths were free of
+freeze interactions. Looking at this - especially the quota on/off
+paths - I guess it's not as obvious as I thought it was... :/
 
 Cheers,
 
