@@ -1,21 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 129AD7F72
-	for <xfs@oss.sgi.com>; Mon,  4 Aug 2014 13:15:08 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 452C77F74
+	for <xfs@oss.sgi.com>; Mon,  4 Aug 2014 17:15:47 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id B2604AC001
-	for <xfs@oss.sgi.com>; Mon,  4 Aug 2014 11:15:04 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id ygt97VPfceuLy4Lb for <xfs@oss.sgi.com>;
-	Mon, 04 Aug 2014 11:15:02 -0700 (PDT)
-Message-ID: <53DFCDA4.9000605@sandeen.net>
-Date: Mon, 04 Aug 2014 13:15:00 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 135BF30406B
+	for <xfs@oss.sgi.com>; Mon,  4 Aug 2014 15:15:46 -0700 (PDT)
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	PMgBnv6BGYNecUfB for <xfs@oss.sgi.com>;
+	Mon, 04 Aug 2014 15:15:41 -0700 (PDT)
+Date: Tue, 5 Aug 2014 08:15:26 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 2/6] xfs: consolidate superblock logging functions
+Message-ID: <20140804221526.GZ20518@dastard>
+References: <1406791995-14723-1-git-send-email-david@fromorbit.com>
+	<1406791995-14723-3-git-send-email-david@fromorbit.com>
+	<20140801143929.GC3582@laptop.bfoster>
+	<20140804080930.GY20518@dastard>
+	<20140804124836.GA4049@bfoster.bfoster>
 MIME-Version: 1.0
-Subject: Re: xfs_growfs_data_private memory leak
-References: <20131226230018.GJ20579@dastard>	<A0A556BD24EC45CEADAA07870B3E6205@alyakaslap>	<20140113030230.GF3469@dastard>	<CAOcd+r0B-4SPjzim=68w3L8Y9FxwBD-C5HkkeO58C6t9nfgbhw@mail.gmail.com>	<20140113204314.GJ3469@dastard>	<CAOcd+r22FirPMHjdxQyTmXOAM72ND-t0=njK9nEmesSV5=Ec=Q@mail.gmail.com>	<20140115014503.GQ3469@dastard>	<CAOcd+r0R6KxmgEJNPUZ0Q5cQhsStGb=cehYE0+wKgDNU1negsA@mail.gmail.com>	<20140119231745.GF18112@dastard>	<4B2A412C75324EE9880358513C069476@alyakaslap>	<20140701215626.GE9508@dastard>
-	<D8356F34DAF14CF5AC6D204541C261B3@alyakaslap>
-In-Reply-To: <D8356F34DAF14CF5AC6D204541C261B3@alyakaslap>
+Content-Disposition: inline
+In-Reply-To: <20140804124836.GA4049@bfoster.bfoster>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,168 +33,168 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Alex Lyakas <alex@zadarastorage.com>, Dave Chinner <david@fromorbit.com>
+To: Brian Foster <bfoster@redhat.com>
 Cc: xfs@oss.sgi.com
 
-On 7/2/14, 7:27 AM, Alex Lyakas wrote:
-> Hi Dave,
-> Thank you for your comments.
+On Mon, Aug 04, 2014 at 08:48:36AM -0400, Brian Foster wrote:
+> On Mon, Aug 04, 2014 at 06:09:30PM +1000, Dave Chinner wrote:
+> > On Fri, Aug 01, 2014 at 10:39:29AM -0400, Brian Foster wrote:
+> > > On Thu, Jul 31, 2014 at 05:33:11PM +1000, Dave Chinner wrote:
+> > > > From: Dave Chinner <dchinner@redhat.com>
+> > > > 
+> > > > We now have several superblock loggin functions that are identical
+> > > > except for the transaction reservation and whether it shoul dbe a
+> > > > synchronous transaction or not. Consolidate these all into a single
+> > > > function, a single reserveration and a sync flag and call it
+> > > > xfs_sync_sb().
+> > > > 
+> > > > Also, xfs_mod_sb() is not really a modification function - it's the
+> > > > operation of logging the superblock buffer. hence change the name of
+> > > > it to reflect this.
+> > > > 
+> > > > Note that we have to change the mp->m_update_flags that are passed
+> > > > around at mount time to a boolean simply to indicate a superblock
+> > > > update is needed.
+> > .....
+> > > > +
+> > > > +/*
+> > > > + * xfs_sync_sb
+> > > > + *
+> > > > + * Sync the superblock to disk.
+> > > > + *
+> > > > + * Note this code can be called during the process of freezing, so
+> > > > + * we may need to use the transaction allocator which does not
+> > > > + * block when the transaction subsystem is in its frozen state.
+> > > > + */
+> > > > +int
+> > > > +xfs_sync_sb(
+> > > > +	struct xfs_mount	*mp,
+> > > > +	bool			wait)
+> > > > +{
+> > > > +	struct xfs_trans	*tp;
+> > > > +	int			error;
+> > > > +
+> > > > +	tp = _xfs_trans_alloc(mp, XFS_TRANS_SB_CHANGE, KM_SLEEP);
+> > > 
+> > > We're converting some previous calls of xfs_trans_alloc() to the
+> > > _xfs_trans_alloc() variant. The only difference is the dropped call to
+> > > sb_start_intwrite() and I see that technically we handle that with the
+> > > xfs_fs_writeable() check.
+> > 
+> > Writing a change to the superblock is not something that normal
+> > operations do. They are something that is typically done as a
+> > standalone management operation, and hence the xfs_fs_writeable()
+> > check is usually enough.
+> > 
 > 
-> I realize that secondary superblocks are needed mostly for repairing
+> Fair point, an sb modification is something that should stand out. I
+> think the characteristic of the new api is somewhat subtle, however.
 
-s/mostly/only/
+Which is why there's a comment explaining it. Is there anything I
+can add to that comment to make it clearer?
 
-> a broken filesystem. However, I don't see that they get updated
-> regularly, i.e., during normal operation they don't seem to get
-> updated at all. I put a print in xfs_sb_write_verify, and it gets
-> called only with: bp->b_bn==XFS_SB_DADDR.
-
-See the comments above verify_sb(): not everything is validated, so
-not everything needs to be constantly updated.  It's just the basic
-fs geometry, not counters, etc.
-
-/*
- * verify a superblock -- does not verify root inode #
- *      can only check that geometry info is internally
- *      consistent.  because of growfs, that's no guarantee
- *      of correctness (e.g. geometry may have changed)
- *
- * fields verified or consistency checked:
- *
- *                      sb_magicnum
- *
- *                      sb_versionnum
- *
- *                      sb_inprogress
- *
- *                      sb_blocksize    (as a group)
- *                      sb_blocklog
- *
- * geometry info -      sb_dblocks      (as a group)
- *                      sb_agcount
- *                      sb_agblocks
- *                      sb_agblklog
- *
- * inode info -         sb_inodesize    (x-checked with geo info)
- *                      sb_inopblock
- *
- * sector size info -
- *                      sb_sectsize
- *                      sb_sectlog
- *                      sb_logsectsize
- *                      sb_logsectlog
- *
- * not checked here -
- *                      sb_rootino
- *                      sb_fname
- *                      sb_fpack
- *                      sb_logstart
- *                      sb_uuid
- *
- *                      ALL real-time fields
- *                      final 4 summary counters
- */
-
-
-> So do I understand correctly (also from comments in
-> xfs_growfs_data_private), that it is safe to operate a filesystem
-> while having broken secondary superblocks? For me, it appears to
-> mount properly, and all the data seems to be there, but xfs_check
-> complains like:
-
-> bad sb magic # 0xc2a4baf2 in ag 6144
-> bad sb version # 0x4b5d in ag 6144
-> blocks 6144/65536..2192631388 out of range
-> blocks 6144/65536..2192631388 claimed by block 6144/0
-> bad sb magic # 0xb20f3079 in ag 6145
-> bad sb version # 0x6505 in ag 6145
-> blocks 6145/65536..3530010017 out of range
-> blocks 6145/65536..3530010017 claimed by block 6145/0
-> ...
-
-some of that looks more serious than "just" bad backup sb's.
-But the bad secondaries shouldn't cause runtime problems AFAIK.
-
-> Also, if secondary superblocks do not get updated regularly, and
-> there is no way to ask an operational XFS to update them, then during
-> repair we may not find a good secondary superblock.
-
-You seem to have 6144 (!) allocation groups; one would hope that a
-majority of those supers would be "good" and the others will be
-properly corrected by an xfs_repair.
-
-> As for the patch, I cannot post a patch against the upstream kernel,
-> because I am running an older kernel. Unfortunately, I cannot qualify
-> an upstream patch properly in a reasonable time. Is there a value in
-> posting a patch against 3.8.13? Otherwise, it's fine by me if
-> somebody else posts it and takes the credit.
-
-If the patch applies cleanly to both kernels, probably fine to
-go ahead and post it, with that caveat.
-
--Eric
-
-> Thanks,
-> Alex.
+> > > Unless I misunderstand, the sb_start_inwrite() call is what will
+> > > block us on internal transaction allocs once the fs is already
+> > > frozen.  It seems a little dicey to me to offer up this single
+> > > helper without much indication that a frozen check might be a
+> > > requirement, particularly since this is expected to be built into
+> > > the transaction infrastructure.
+> > 
+> > Right, but none of the callers actually are run in a situation where
+> > they should block on freezes, either complete or in progress. i.e.
+> > there is no requirement for freeze checks - there is the opposite:
+> > requirements to avoid freeze checks so the code doesn't deadlock.
+> > 
 > 
+> Sure, but the codepaths with that requirement were previously explicitly
+> and exclusively using _xfs_trans_alloc().
+
+And they still are. It's just now explicit for a bunch more use
+cases that previously weren't....
+
+> > > How would we expect a new caller to identify that?
+> > 
+> > Same as we always do: by code review.
+> > 
 > 
+> Fair enough, but what happens if^Wwhen something is missed? :) I think
+> that means we can potentially modify a frozen fs.
+
+Sure, but that can happen if we make any number of mistakes.....
+
+> I'd feel better if we
+> had a BUG_ON() or assert at the very least, but the obvious problem is
+> the couple of contexts we have where we explicitly make a modification
+> as part of the freeze sequence.
+
+Yup, and that's why I put a comment there instead of trying to add
+asserts - there is no single freeze condition we can actually assert
+on because the code is called from non-freeze situations where the
+s_umount is held as well as situations where the freeze is in
+progress. I guess that the only thing we might see as common is that
+the s_umount is held in all these code paths, but I'm not sure that
+we should be looking at that lock this deep inside the XFS code...
+
+> > > Even the current xfs_fs_writable() check seems like it might be
+> > > unnecessary, given some brief testing. I don't hit the mount path at all
+> > > on a frozen fs.
+> > 
+> > xfs_fs_writable() checks more than whether the filesystem is
+> > frozen. ;)
+> > 
 > 
-> -----Original Message----- From: Dave Chinner
-> Sent: 02 July, 2014 12:56 AM
-> To: Alex Lyakas
-> Cc: xfs@oss.sgi.com
-> Subject: Re: xfs_growfs_data_private memory leak
+> Sure, so there's a new shutdown check before the xfs_trans_commit() that
+> would fail anyways due to already having a shutdown check. ;)
+
+There isn't any new check before a transaction commit in this patch.
+The only change involving xfs_fs_writeable() was this in
+xfs_mount_reset_sbqflags():
+
+-       if (mp->m_flags & XFS_MOUNT_RDONLY)
++       if (!xfs_fs_writable(mp))
+
+I can revert that if you're really concerned about it....
+
+> > > I'm not sure of the mechanics behind that, but I'm
+> > > guessing some kind of reference remains on the sb of a frozen fs and a
+> > > subsequent umount/mount is purely namespace magic. Point being... this
+> > > appears to be implicit and confusing. IMO, using an _xfs_sync_sb()
+> > > variant that allocates a nonblocking tp if one isn't provided as a
+> > > parameter (for example) and using that only in the contexts we know it's
+> > > Ok to avoid freeze interaction issues might be more clear.
+> > 
+> > Well, it was pretty clear to me that the code paths were free of
+> > freeze interactions. Looking at this - especially the quota on/off
+> > paths - I guess it's not as obvious as I thought it was... :/
+> > 
 > 
-> On Tue, Jul 01, 2014 at 06:06:38PM +0300, Alex Lyakas wrote:
->> Greetings,
->>
->> It appears that if xfs_growfs_data_private fails during the "new AG
->> headers" loop, it does not free all the per-AG structures for the
->> new AGs. When XFS is unmounted later, they are not freed as well,
->> because xfs_growfs_data_private did not update the "sb_agcount"
->> field, so xfs_free_perag will not free them. This happens on 3.8.13,
->> but looking at the latest master branch, it seems to have the same
->> issue.
->>
->> Code like [1] in xfs_growfs_data, seems to fix the issue.
-> 
-> Why not just do this in the appropriate error stack, like is
-> done inside xfs_initialize_perag() on error?
-> 
->        for (i = oagcount; i < nagcount; i++) {
->                pag = radix_tree_delete(&mp->m_perag_tree, index);
->                kmem_free(pag);
->        }
-> 
-> (though it might need RCU freeing)
-> 
-> When you have a fix, can you send a proper patch with a sign-off on
-> it?
-> 
->> A follow-up question: if xfs_grows_data_private fails during the
->> loop that updates all the secondary superblocks, what is the
->> consequence? (I am aware that in the latest master branch, the loop
->> is not broken on first error, but attempts to initialize whatever
->> possible). When these secondary superblocks will get updated? Is
->> there a way to force-update them? Otherwise, what can be the
->> consequence of leaving them not updated?
-> 
-> The consequence is documented in mainline tree - if we don't update
-> them all, then repair will do the wrong thing.  Repair requires a
-> majority iof identical secondaries to determine if the primary is
-> correct or out of date. The old behaviour of not updating after the
-> first error meant that the majority were old superblocks and so at
-> some time in the future repair could decide your filesystem is
-> smaller than it really is and hence truncate away the grown section
-> of the filesystem. i.e. trigger catastrophic, unrecoverable data
-> loss.
-> 
-> Hence it's far better to write every seconday we can than to leave
-> a majority in a bad state....
-> 
-> Cheers,
-> 
-> Dave.
+> My point was more geared towards future use. E.g., we have frozen fs
+> management built into transaction management, which is nice and clean
+> and easy to understand.
+
+Actually, it's nowhere near as clean as you think. :/
+
+e.g. did you know that the xfs_fs_writable() check in
+xfs_log_sbcount() is to prevent it from writing anything when
+unmounting a fully frozen filesystem? i.e. xfs_log_sbcount needs to
+succeed while a freeze is in progress, but fail when a freeze is
+fully complete?
+
+i.e. we *already have* micro-management of frozen state for
+superblock writes, even if it's not explicitly stated.
+
+Factoring the logging implementation does not change the fact we
+already have higher level management of freeze state and will
+continue to need it in the future. I realise that all the freeze
+complexities are not exactly obvious, so if there are new comments
+that would help please suggest what you'd like to see ;)
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
