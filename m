@@ -1,31 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 238147F6C
-	for <xfs@oss.sgi.com>; Mon,  4 Aug 2014 09:13:06 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 129AD7F72
+	for <xfs@oss.sgi.com>; Mon,  4 Aug 2014 13:15:08 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id DB8868F8049
-	for <xfs@oss.sgi.com>; Mon,  4 Aug 2014 07:13:05 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id 6RgcKx8faAKFXGpw (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 04 Aug 2014 07:13:01 -0700 (PDT)
-Date: Mon, 4 Aug 2014 10:12:57 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: use-after-free on log replay failure
-Message-ID: <20140804141257.GB4049@bfoster.bfoster>
-References: <A0A556BD24EC45CEADAA07870B3E6205@alyakaslap>
-	<20140113030230.GF3469@dastard>
-	<CAOcd+r0B-4SPjzim=68w3L8Y9FxwBD-C5HkkeO58C6t9nfgbhw@mail.gmail.com>
-	<20140113204314.GJ3469@dastard>
-	<CAOcd+r22FirPMHjdxQyTmXOAM72ND-t0=njK9nEmesSV5=Ec=Q@mail.gmail.com>
-	<20140115014503.GQ3469@dastard>
-	<CAOcd+r0R6KxmgEJNPUZ0Q5cQhsStGb=cehYE0+wKgDNU1negsA@mail.gmail.com>
-	<20140119231745.GF18112@dastard>
-	<4B2A412C75324EE9880358513C069476@alyakaslap>
-	<9D3CBECB663B4A77B7EF74B67973310A@alyakaslap>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id B2604AC001
+	for <xfs@oss.sgi.com>; Mon,  4 Aug 2014 11:15:04 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id ygt97VPfceuLy4Lb for <xfs@oss.sgi.com>;
+	Mon, 04 Aug 2014 11:15:02 -0700 (PDT)
+Message-ID: <53DFCDA4.9000605@sandeen.net>
+Date: Mon, 04 Aug 2014 13:15:00 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <9D3CBECB663B4A77B7EF74B67973310A@alyakaslap>
+Subject: Re: xfs_growfs_data_private memory leak
+References: <20131226230018.GJ20579@dastard>	<A0A556BD24EC45CEADAA07870B3E6205@alyakaslap>	<20140113030230.GF3469@dastard>	<CAOcd+r0B-4SPjzim=68w3L8Y9FxwBD-C5HkkeO58C6t9nfgbhw@mail.gmail.com>	<20140113204314.GJ3469@dastard>	<CAOcd+r22FirPMHjdxQyTmXOAM72ND-t0=njK9nEmesSV5=Ec=Q@mail.gmail.com>	<20140115014503.GQ3469@dastard>	<CAOcd+r0R6KxmgEJNPUZ0Q5cQhsStGb=cehYE0+wKgDNU1negsA@mail.gmail.com>	<20140119231745.GF18112@dastard>	<4B2A412C75324EE9880358513C069476@alyakaslap>	<20140701215626.GE9508@dastard>
+	<D8356F34DAF14CF5AC6D204541C261B3@alyakaslap>
+In-Reply-To: <D8356F34DAF14CF5AC6D204541C261B3@alyakaslap>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -38,127 +28,168 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Alex Lyakas <alex@zadarastorage.com>
+To: Alex Lyakas <alex@zadarastorage.com>, Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On Mon, Aug 04, 2014 at 02:00:05PM +0300, Alex Lyakas wrote:
-> Greetings,
+On 7/2/14, 7:27 AM, Alex Lyakas wrote:
+> Hi Dave,
+> Thank you for your comments.
 > 
-> we had a log replay failure due to some errors that the underlying block
-> device returned:
-> [49133.801406] XFS (dm-95): metadata I/O error: block 0x270e8c180
-> ("xlog_recover_iodone") error 28 numblks 16
-> [49133.802495] XFS (dm-95): log mount/recovery failed: error 28
-> [49133.802644] XFS (dm-95): log mount failed
-> 
-> and then kernel panicked [1].
-> 
-> Looking at the code, when xfs_mountfs() fails, xfs_fs_fill_super() goes and
-> cleans up and eventually frees the "xfs_mount" structure. But then
-> xfs_buf_iodone_work() can still be delivered through "xfslogd_workqueue",
-> which is static and not per-XFS. But this callback has a pointer to
-> "xfs_mount", and may try to access it as in [1]. Does this analysis sound
-> correct? Kernel is 3.8.13, but looking at the XFS master branch, it might
-> have the same issue.
-> 
+> I realize that secondary superblocks are needed mostly for repairing
 
-Seems possible... we call xfs_buf_delwri_submit() via log recovery which
-does an xfs_buf_iowait() on each buffer for synchronous I/O.
-xfs_buf_iowait() doesn't wait on b_iowait if b_error is set, however. In
-the callback side, xfs_buf_ioerror() is called before the
-_xfs_buf_ioend() sequence that calls into the workqueue. Perhaps the
-error can be detected by the iowait before the xfslogd_workqueue job can
-run..?
+s/mostly/only/
 
-> Should we flush this static workqueue before unmounting?
-> 
+> a broken filesystem. However, I don't see that they get updated
+> regularly, i.e., during normal operation they don't seem to get
+> updated at all. I put a print in xfs_sb_write_verify, and it gets
+> called only with: bp->b_bn==XFS_SB_DADDR.
 
-It's not totally clear that fixes the problem since we set b_error on
-the buffer before we even schedule on the workqueue. Perhaps it depends
-on the nature of the race. Another option could be to not use the wq on
-error, but that may or may not be ideal for other contexts besides log
-recovery.
+See the comments above verify_sb(): not everything is validated, so
+not everything needs to be constantly updated.  It's just the basic
+fs geometry, not counters, etc.
 
-It looks like the bio code always returns error via the callback and the
-xlog_recover_iodone() handler does call back into ioend, presumably to
-do the io completion. It might not be appropriate to remove the b_error
-bypass in xfs_buf_iowait() as we have ioerror() callers on the buffer
-that can occur before I/O submission, but I wonder if it could be made
-conditional for this particular case. That would be an interesting
-experiment at least to see if it fixes this problem.
+/*
+ * verify a superblock -- does not verify root inode #
+ *      can only check that geometry info is internally
+ *      consistent.  because of growfs, that's no guarantee
+ *      of correctness (e.g. geometry may have changed)
+ *
+ * fields verified or consistency checked:
+ *
+ *                      sb_magicnum
+ *
+ *                      sb_versionnum
+ *
+ *                      sb_inprogress
+ *
+ *                      sb_blocksize    (as a group)
+ *                      sb_blocklog
+ *
+ * geometry info -      sb_dblocks      (as a group)
+ *                      sb_agcount
+ *                      sb_agblocks
+ *                      sb_agblklog
+ *
+ * inode info -         sb_inodesize    (x-checked with geo info)
+ *                      sb_inopblock
+ *
+ * sector size info -
+ *                      sb_sectsize
+ *                      sb_sectlog
+ *                      sb_logsectsize
+ *                      sb_logsectlog
+ *
+ * not checked here -
+ *                      sb_rootino
+ *                      sb_fname
+ *                      sb_fpack
+ *                      sb_logstart
+ *                      sb_uuid
+ *
+ *                      ALL real-time fields
+ *                      final 4 summary counters
+ */
 
-Brian
+
+> So do I understand correctly (also from comments in
+> xfs_growfs_data_private), that it is safe to operate a filesystem
+> while having broken secondary superblocks? For me, it appears to
+> mount properly, and all the data seems to be there, but xfs_check
+> complains like:
+
+> bad sb magic # 0xc2a4baf2 in ag 6144
+> bad sb version # 0x4b5d in ag 6144
+> blocks 6144/65536..2192631388 out of range
+> blocks 6144/65536..2192631388 claimed by block 6144/0
+> bad sb magic # 0xb20f3079 in ag 6145
+> bad sb version # 0x6505 in ag 6145
+> blocks 6145/65536..3530010017 out of range
+> blocks 6145/65536..3530010017 claimed by block 6145/0
+> ...
+
+some of that looks more serious than "just" bad backup sb's.
+But the bad secondaries shouldn't cause runtime problems AFAIK.
+
+> Also, if secondary superblocks do not get updated regularly, and
+> there is no way to ask an operational XFS to update them, then during
+> repair we may not find a good secondary superblock.
+
+You seem to have 6144 (!) allocation groups; one would hope that a
+majority of those supers would be "good" and the others will be
+properly corrected by an xfs_repair.
+
+> As for the patch, I cannot post a patch against the upstream kernel,
+> because I am running an older kernel. Unfortunately, I cannot qualify
+> an upstream patch properly in a reasonable time. Is there a value in
+> posting a patch against 3.8.13? Otherwise, it's fine by me if
+> somebody else posts it and takes the credit.
+
+If the patch applies cleanly to both kernels, probably fine to
+go ahead and post it, with that caveat.
+
+-Eric
 
 > Thanks,
 > Alex.
 > 
 > 
-> [1]
-> [49133.804546] general protection fault: 0000 [#1] SMP
-> [49133.808033]  xcbc rmd160 crypto_null af_key xfrm_algo scsi_dh cirrus
-> psmouse ttm drm_kms_helper serio_raw drm i2c_piix4 sysimgblt virtio_balloon
-> sysfillrect syscopyarea nfsd(OF) kvm nfs_acl auth_rpcgss nfs fscache
-> microcode lockd mac_hid sunrpc lp parport floppy ixgbevf(OF)
-> [49133.808033] CPU 2
-> [49133.808033] Pid: 2907, comm: kworker/2:1H Tainted: GF       W  O
-> 3.8.13-030813-generic #201305111843 Bochs Bochs
-> [49133.808033] RIP: 0010:[<ffffffff813582fb>]  [<ffffffff813582fb>]
-> strnlen+0xb/0x30
-> [49133.808033] RSP: 0018:ffff8801e31c5b08  EFLAGS: 00010086
-> [49133.808033] RAX: 0000000000000000 RBX: ffffffff81e4e527 RCX:
-> 0000000000000000
-> [49133.808033] RDX: 640000450008cf9d RSI: ffffffffffffffff RDI:
-> 640000450008cf9d
-> [49133.808033] RBP: ffff8801e31c5b08 R08: 000000000000ffff R09:
-> 000000000000ffff
-> [49133.808033] R10: 0000000000000000 R11: 0000000000000ffe R12:
-> 640000450008cf9d
-> [49133.808033] R13: ffffffff81e4e900 R14: 0000000000000000 R15:
-> 000000000000ffff
-> [49133.808033] FS:  0000000000000000(0000) GS:ffff88021fd00000(0000)
-> knlGS:0000000000000000
-> [49133.808033] CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
-> [49133.808033] CR2: 00007fa4a91abd80 CR3: 000000020e783000 CR4:
-> 00000000000006e0
-> [49133.808033] DR0: 0000000000000000 DR1: 0000000000000000 DR2:
-> 0000000000000000
-> [49133.808033] DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7:
-> 0000000000000400
-> [49133.808033] Process kworker/2:1H (pid: 2907, threadinfo ffff8801e31c4000,
-> task ffff8802124f45c0)
-> [49133.808033] Stack:
-> [49133.808033]  ffff8801e31c5b48 ffffffff81359d8e ffff8801e31c5b28
-> ffffffff81e4e527
-> [49133.808033]  ffffffffa0636a1e ffff8801e31c5c80 ffffffffa0636a1e
-> ffffffff81e4e900
-> [49133.808033]  ffff8801e31c5bc8 ffffffff8135af89 ffff8801e31c5bc8
-> ffffffff8105a4e7
-> [49133.808033] Call Trace:
-> [49133.808033]  [<ffffffff81359d8e>] string.isra.4+0x3e/0xd0
-> [49133.808033]  [<ffffffff8135af89>] vsnprintf+0x219/0x640
-> [49133.808033]  [<ffffffff8105a4e7>] ? msg_print_text+0xb7/0x1b0
-> [49133.808033]  [<ffffffff8135b471>] vscnprintf+0x11/0x30
-> [49133.808033]  [<ffffffff8105b3b1>] vprintk_emit+0xc1/0x490
-> [49133.808033]  [<ffffffff8105b460>] ? vprintk_emit+0x170/0x490
-> [49133.808033]  [<ffffffff816d5848>] printk+0x61/0x63
-> [49133.808033]  [<ffffffffa05ba261>] __xfs_printk+0x31/0x50 [xfs]
-> [49133.808033]  [<ffffffffa05ba4b3>] xfs_notice+0x53/0x60 [xfs]
-> [49133.808033]  [<ffffffffa05b14a5>] xfs_do_force_shutdown+0xf5/0x180 [xfs]
-> [49133.808033]  [<ffffffffa05f6c38>] ? xlog_recover_iodone+0x48/0x70 [xfs]
-> [49133.808033]  [<ffffffffa05f6c38>] xlog_recover_iodone+0x48/0x70 [xfs]
-> [49133.808033]  [<ffffffffa05a749d>] xfs_buf_iodone_work+0x4d/0xa0 [xfs]
-> [49133.808033]  [<ffffffff81078b81>] process_one_work+0x141/0x490
-> [49133.808033]  [<ffffffff81079b48>] worker_thread+0x168/0x400
-> [49133.808033]  [<ffffffff810799e0>] ? manage_workers+0x120/0x120
-> [49133.808033]  [<ffffffff8107f050>] kthread+0xc0/0xd0
-> [49133.808033]  [<ffffffff8107ef90>] ? flush_kthread_worker+0xb0/0xb0
-> [49133.808033]  [<ffffffff816f61ec>] ret_from_fork+0x7c/0xb0
-> [49133.808033]  [<ffffffff8107ef90>] ? flush_kthread_worker+0xb0/0xb0
 > 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+> -----Original Message----- From: Dave Chinner
+> Sent: 02 July, 2014 12:56 AM
+> To: Alex Lyakas
+> Cc: xfs@oss.sgi.com
+> Subject: Re: xfs_growfs_data_private memory leak
+> 
+> On Tue, Jul 01, 2014 at 06:06:38PM +0300, Alex Lyakas wrote:
+>> Greetings,
+>>
+>> It appears that if xfs_growfs_data_private fails during the "new AG
+>> headers" loop, it does not free all the per-AG structures for the
+>> new AGs. When XFS is unmounted later, they are not freed as well,
+>> because xfs_growfs_data_private did not update the "sb_agcount"
+>> field, so xfs_free_perag will not free them. This happens on 3.8.13,
+>> but looking at the latest master branch, it seems to have the same
+>> issue.
+>>
+>> Code like [1] in xfs_growfs_data, seems to fix the issue.
+> 
+> Why not just do this in the appropriate error stack, like is
+> done inside xfs_initialize_perag() on error?
+> 
+>        for (i = oagcount; i < nagcount; i++) {
+>                pag = radix_tree_delete(&mp->m_perag_tree, index);
+>                kmem_free(pag);
+>        }
+> 
+> (though it might need RCU freeing)
+> 
+> When you have a fix, can you send a proper patch with a sign-off on
+> it?
+> 
+>> A follow-up question: if xfs_grows_data_private fails during the
+>> loop that updates all the secondary superblocks, what is the
+>> consequence? (I am aware that in the latest master branch, the loop
+>> is not broken on first error, but attempts to initialize whatever
+>> possible). When these secondary superblocks will get updated? Is
+>> there a way to force-update them? Otherwise, what can be the
+>> consequence of leaving them not updated?
+> 
+> The consequence is documented in mainline tree - if we don't update
+> them all, then repair will do the wrong thing.  Repair requires a
+> majority iof identical secondaries to determine if the primary is
+> correct or out of date. The old behaviour of not updating after the
+> first error meant that the majority were old superblocks and so at
+> some time in the future repair could decide your filesystem is
+> smaller than it really is and hence truncate away the grown section
+> of the filesystem. i.e. trigger catastrophic, unrecoverable data
+> loss.
+> 
+> Hence it's far better to write every seconday we can than to leave
+> a majority in a bad state....
+> 
+> Cheers,
+> 
+> Dave.
 
 _______________________________________________
 xfs mailing list
