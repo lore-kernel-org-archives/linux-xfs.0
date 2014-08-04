@@ -1,23 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id B6CBF7F55
-	for <xfs@oss.sgi.com>; Sun,  3 Aug 2014 21:20:14 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id A478C8F8040
-	for <xfs@oss.sgi.com>; Sun,  3 Aug 2014 19:20:11 -0700 (PDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 911387F5E
+	for <xfs@oss.sgi.com>; Sun,  3 Aug 2014 22:20:24 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 7FE69304048
+	for <xfs@oss.sgi.com>; Sun,  3 Aug 2014 20:20:24 -0700 (PDT)
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	HLSjFeOMLWEkwEz8 for <xfs@oss.sgi.com>;
-	Sun, 03 Aug 2014 19:20:09 -0700 (PDT)
-Date: Mon, 4 Aug 2014 12:20:05 +1000
+	dIwKTPnzHuuZ4zEZ for <xfs@oss.sgi.com>;
+	Sun, 03 Aug 2014 20:20:19 -0700 (PDT)
+Date: Mon, 4 Aug 2014 13:20:16 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Is jdm_delete_filehandle part of a public API?
-Message-ID: <20140804022005.GV20518@dastard>
-References: <53D7DA7F.2040706@redhat.com>
-	<20140801135305.GA31894@infradead.org>
+Subject: [PATCH 3/6 V2] xfs: kill VN_DIRTY()
+Message-ID: <20140804032016.GW20518@dastard>
+References: <1406791995-14723-1-git-send-email-david@fromorbit.com>
+	<1406791995-14723-4-git-send-email-david@fromorbit.com>
+	<20140731171302.GA22173@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20140801135305.GA31894@infradead.org>
+In-Reply-To: <20140731171302.GA22173@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,45 +32,46 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
-Cc: Eric Sandeen <sandeen@redhat.com>, xfs-oss <xfs@oss.sgi.com>
+Cc: xfs@oss.sgi.com
 
-On Fri, Aug 01, 2014 at 06:53:05AM -0700, Christoph Hellwig wrote:
-> Talking about libhandle: this one has been a bit bitrotted.  Maybe it's
-> a good time to move everything over to the kernel by handle syscalls
-> and deprecated it?
+From: Dave Chinner <dchinner@redhat.com>
 
-First you need to make the kernel by-handle interfaces handle the
-sae functionality as the XFS by-handle ioctls.
+Only one user and the use of a dirty page cache check is redundant,
+so just get rid of it.
 
-	1. O_NOCMTIME doesn't exist, and so there's no way to do
-	   invisible IO on files.
-	2. Can we construct VFs filehandles in userspace from
-	   bulkstat information (dump, xfs_fsr and others rely on
-	   this capability)?
-	3. The kernel by-handle interfaces cannot manipulate
-	   attributes at all (i.e. attr-list, attr-multi
-	   functionality).
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
 
-So until the VFS by-handle interfaces can do these things, we can't
-change libhandle over to use the newer kernel interfaces.
+---
+ fs/xfs/xfs_inode.c | 2 +-
+ fs/xfs/xfs_vnode.h | 2 --
+ 2 files changed, 1 insertion(+), 3 deletions(-)
 
-I'm also pretty sure the incompatible handle format would mean
-big problems if someone were to be storing file handles in userspace
-and they upgrade their version of libhandle. i.e. such a library
-implementation change is not forwards or backwards compatible with
-existing applications, but bumping the major shared library version
-should solve that problem.
-
-However, these are all solvable problems. It's definitely a low
-priority for me to do this, but if you want to do it patches will
-definitely be accepted ;)
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index 1a5e068..fea3c92 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -1635,7 +1635,7 @@ xfs_release(
+ 		truncated = xfs_iflags_test_and_clear(ip, XFS_ITRUNCATED);
+ 		if (truncated) {
+ 			xfs_iflags_clear(ip, XFS_IDIRTY_RELEASE);
+-			if (VN_DIRTY(VFS_I(ip)) && ip->i_delayed_blks > 0) {
++			if (ip->i_delayed_blks > 0) {
+ 				error = filemap_flush(VFS_I(ip)->i_mapping);
+ 				if (error)
+ 					return error;
+diff --git a/fs/xfs/xfs_vnode.h b/fs/xfs/xfs_vnode.h
+index e8a7738..07b475a 100644
+--- a/fs/xfs/xfs_vnode.h
++++ b/fs/xfs/xfs_vnode.h
+@@ -39,8 +39,6 @@ struct attrlist_cursor_kern;
+  */
+ #define VN_MAPPED(vp)	mapping_mapped(vp->i_mapping)
+ #define VN_CACHED(vp)	(vp->i_mapping->nrpages)
+-#define VN_DIRTY(vp)	mapping_tagged(vp->i_mapping, \
+-					PAGECACHE_TAG_DIRTY)
+ 
+ 
+ #endif	/* __XFS_VNODE_H__ */
 
 _______________________________________________
 xfs mailing list
