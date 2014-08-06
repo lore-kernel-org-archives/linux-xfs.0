@@ -1,22 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 1E25B7FA3
-	for <xfs@oss.sgi.com>; Wed,  6 Aug 2014 09:13:52 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id F179F8F804B
-	for <xfs@oss.sgi.com>; Wed,  6 Aug 2014 07:13:48 -0700 (PDT)
-Received: from mail-pa0-f43.google.com (mail-pa0-f43.google.com
-	[209.85.220.43]) by cuda.sgi.com with ESMTP id T5yyNpmw2tWKaL26
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 06 Aug 2014 07:13:47 -0700 (PDT)
-Received: by mail-pa0-f43.google.com with SMTP id lf10so3523897pab.16
-	for <xfs@oss.sgi.com>; Wed, 06 Aug 2014 07:13:46 -0700 (PDT)
-Date: Wed, 6 Aug 2014 19:43:43 +0530
-From: Himangi Saraogi <himangi774@gmail.com>
-Subject: [PATCH] xfs: Remove typedef xfs_uu_t
-Message-ID: <20140806141343.GA15659@himangi-Dell>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 176147F6B
+	for <xfs@oss.sgi.com>; Wed,  6 Aug 2014 09:23:38 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id A8CDFAC005
+	for <xfs@oss.sgi.com>; Wed,  6 Aug 2014 07:23:34 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id ROJALW84NlNxj7yV (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 06 Aug 2014 07:23:33 -0700 (PDT)
+Date: Wed, 6 Aug 2014 10:23:30 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: xfs_bmbt_rec_64 leading to wrong blocks
+Message-ID: <20140806142329.GA39990@bfoster.bfoster>
+References: <CACyNnZM8D4ZdOAvbXNoiRUAGh1uZF8=9Gy34qS2XH7QUVjiGsQ@mail.gmail.com>
+	<20140806113447.GA14820@bfoster.bfoster>
+	<CACyNnZNwCPw8dsyRKSty7GPp4DxAd7ycHuztsC-VAdGEmjdnyw@mail.gmail.com>
 MIME-Version: 1.0
 Content-Disposition: inline
+In-Reply-To: <CACyNnZNwCPw8dsyRKSty7GPp4DxAd7ycHuztsC-VAdGEmjdnyw@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,92 +31,133 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>, xfs@oss.sgi.com, linux-kernel@vger.kernel.org
-Cc: Julia Lawall <julia.lawall@lip6.fr>
+To: Felipe Monteiro de Carvalho <felipemonteiro.carvalho@gmail.com>
+Cc: xfs@oss.sgi.com
 
-The Linux kernel coding style guidelines suggest not using typedefs
-for structure types. This patch gets rid of the typedef for xfs_uu_t.
-Also the names of the struct is changed to drop the _t, to make the
-name look less typedef-like.
+On Wed, Aug 06, 2014 at 02:31:11PM +0200, Felipe Monteiro de Carvalho wrote:
+> Thanks! Indeed that's it =)
+> 
+> One strange thing however is that in my xfs_dir2_data.h there is:
+> 
+> #define XFS_DIR2_DATA_ALIGN_LOG 3 /* i.e., 8 bytes */
+> #define XFS_DIR2_SPACE_SIZE (1ULL << (32 + XFS_DIR2_DATA_ALIGN_LOG))
+> #define XFS_DIR2_LEAF_SPACE 1
+> #define XFS_DIR2_LEAF_OFFSET (XFS_DIR2_LEAF_SPACE * XFS_DIR2_SPACE_SIZE)
+> 
+> That doesn't match the number that I am seeing here for the offset.
+> Here I see 1 << 23, but according to the headers it should be 1 << 35
+> 
 
-The following Coccinelle semantic patch detects the case.
+We're talking about extent map data here right? If so, the offset on
+disk is in filesystem block units. E.g., block 8388608 * 4096 == 32G ==
+(1 << 35).
 
-@tn1@
-type td;
-@@
+Brian
 
-typedef struct { ... } td;
-
-@script:python tf@
-td << tn1.td;
-tdres;
-@@
-
-coccinelle.tdres = td;
-
-@@
-type tn1.td;
-identifier tf.tdres;
-@@
-
--typedef
- struct 
-+  tdres
-   { ... }
--td
- ;
-
-@@
-type tn1.td;
-identifier tf.tdres;
-@@
-
-(
--td
-+ struct tdres
-|
- const
-- td
-+ struct tdres
-)
-
-Signed-off-by: Himangi Saraogi <himangi774@gmail.com>
-Acked-by: Julia Lawall <julia.lawall@lip6.fr>
----
- fs/xfs/uuid.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
-
-diff --git a/fs/xfs/uuid.c b/fs/xfs/uuid.c
-index b83f76b..1f21d8f 100644
---- a/fs/xfs/uuid.c
-+++ b/fs/xfs/uuid.c
-@@ -18,13 +18,13 @@
- #include <xfs.h>
- 
- /* IRIX interpretation of an uuid_t */
--typedef struct {
-+struct xfs_uu {
- 	__be32	uu_timelow;
- 	__be16	uu_timemid;
- 	__be16	uu_timehi;
- 	__be16	uu_clockseq;
- 	__be16	uu_node[3];
--} xfs_uu_t;
-+};
- 
- /*
-  * uuid_getnodeuniq - obtain the node unique fields of a UUID.
-@@ -35,7 +35,7 @@ typedef struct {
- void
- uuid_getnodeuniq(uuid_t *uuid, int fsid [2])
- {
--	xfs_uu_t *uup = (xfs_uu_t *)uuid;
-+	struct xfs_uu *uup = (struct xfs_uu *)uuid;
- 
- 	fsid[0] = (be16_to_cpu(uup->uu_clockseq) << 16) |
- 		   be16_to_cpu(uup->uu_timemid);
--- 
-1.9.1
+> --
+> Felipe Monteiro de Carvalho
+> 
+> 
+> On Wed, Aug 6, 2014 at 1:34 PM, Brian Foster <bfoster@redhat.com> wrote:
+> > On Wed, Aug 06, 2014 at 12:12:12PM +0200, Felipe Monteiro de Carvalho wrote:
+> >> Hello,
+> >>
+> >> I am writing a software which reads xfs partitions and it is working
+> >> well so far, but, at in a particular folder with 10k files, only 7k
+> >> files appear, the other ones don't.
+> >>
+> >> I read an inode which has di_core.di_format = XFS_DINODE_FMT_BTREE
+> >>
+> >> No problem here, the btree is trivial, it has only 1 element inside
+> >> it, which leads to a list of 82 extends.
+> >>
+> >> Extends 0..52 aprox. are all great, and work fine.
+> >>
+> >> Extent 53 (and other ones after that) point to very wierd memory areas
+> >> which don't match the pattern that I saw previously =(
+> >>
+> >> Here is the hex data of the extents, the selected extent in nr 53:
+> >>
+> >> http://magnifier.sourceforge.net/temp/xfs/extent_with_xfs_bmbt_rec_64.png
+> >>
+> >> And here is debug information showing which values I extracted from this table:
+> >>
+> >> i=0 FLocalExtent.StartOff=0 FLocalExtent.StartBlock=66748
+> >> FLocalExtent.BlockCount=1 lStartBlock=65212
+> >> i=1 FLocalExtent.StartOff=1 FLocalExtent.StartBlock=66758
+> >> FLocalExtent.BlockCount=2 lStartBlock=65222
+> >> i=2 FLocalExtent.StartOff=3 FLocalExtent.StartBlock=66772
+> >> FLocalExtent.BlockCount=1 lStartBlock=65236
+> >> ....
+> >>
+> >> i=51 FLocalExtent.StartOff=77 FLocalExtent.StartBlock=67468
+> >> FLocalExtent.BlockCount=1 lStartBlock=65932
+> >> i=52 FLocalExtent.StartOff=78 FLocalExtent.StartBlock=67479
+> >> FLocalExtent.BlockCount=1 lStartBlock=65943
+> >> i=53 FLocalExtent.StartOff=8388608 FLocalExtent.StartBlock=66749
+> >> FLocalExtent.BlockCount=1 lStartBlock=65213
+> >> i=54 FLocalExtent.StartOff=8388609 FLocalExtent.StartBlock=66783
+> >> FLocalExtent.BlockCount=2 lStartBlock=65247
+> >> ...
+> >>
+> >> Note how StartOff is suddenly so big! But I manually checked the bits
+> >> comparing to xfs_bmbt_rec_64 and the value written is that one. But
+> >> what sense does it make for StartOff to jump like that?
+> >>
+> >
+> > Assuming 4k blocks, 8388608 is 32G, which is the offset interval used
+> > for some internal sections of directories on XFS. If this is a
+> > directory, it could be a node/leaf or freelist block. Looking at
+> > xfs_da_format.h, it looks like XFS_DIR2_LEAF_OFFSET points to this
+> > offset. This block basically points to a btree of hashed entry names for
+> > lookup. See here for basics:
+> >
+> > http://xfs.org/docs/xfsdocs-xml-dev/XFS_Filesystem_Structure//tmp/en-US/html/Directories.html
+> >
+> > ... and here for a diagram:
+> >
+> > http://xfs.org/docs/xfsdocs-xml-dev/XFS_Filesystem_Structure//tmp/en-US/html/Node_Directories.html
+> >
+> >> And why are the blocks pointing to a non-XD2D block?
+> >>
+> >> Here is the block to which one of the valid extents point to:
+> >>
+> >> http://magnifier.sourceforge.net/temp/xfs/correct_block_xd2d.png
+> >>
+> >> And here is a block to which one of the extents that I cannot
+> >> interpretate point to:
+> >>
+> >> http://magnifier.sourceforge.net/temp/xfs/wierd_block_xd2d.png
+> >> and another one:
+> >> http://magnifier.sourceforge.net/temp/xfs/wierd_xfs_dir2_data_entry.png
+> >>
+> >
+> > The 0xFEBE magic seems to confirm the second one as a node block.
+> >
+> > Brian
+> >
+> >> Any ideas???
+> >>
+> >> I already worked so much on this, but I cannot figure out =(
+> >>
+> >> thanks,
+> >> --
+> >> Felipe Monteiro de Carvalho
+> >>
+> >> _______________________________________________
+> >> xfs mailing list
+> >> xfs@oss.sgi.com
+> >> http://oss.sgi.com/mailman/listinfo/xfs
+> 
+> 
+> 
+> -- 
+> Felipe Monteiro de Carvalho
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
