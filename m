@@ -1,24 +1,31 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 985D97FA1
-	for <xfs@oss.sgi.com>; Wed,  6 Aug 2014 07:31:13 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 83646304043
-	for <xfs@oss.sgi.com>; Wed,  6 Aug 2014 05:31:13 -0700 (PDT)
-Received: from mail-pa0-f49.google.com (mail-pa0-f49.google.com
-	[209.85.220.49]) by cuda.sgi.com with ESMTP id tblYi8RDYzwEdAQ9
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 06 Aug 2014 05:31:12 -0700 (PDT)
-Received: by mail-pa0-f49.google.com with SMTP id hz1so3324455pad.22
-	for <xfs@oss.sgi.com>; Wed, 06 Aug 2014 05:31:11 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id B8A187FA3
+	for <xfs@oss.sgi.com>; Wed,  6 Aug 2014 07:32:34 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 8A7538F8050
+	for <xfs@oss.sgi.com>; Wed,  6 Aug 2014 05:32:31 -0700 (PDT)
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	oublZvUZlmmJL0Hs for <xfs@oss.sgi.com>;
+	Wed, 06 Aug 2014 05:32:29 -0700 (PDT)
+Date: Wed, 6 Aug 2014 22:32:15 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: use-after-free on log replay failure
+Message-ID: <20140806123215.GJ20518@dastard>
+References: <CAOcd+r0B-4SPjzim=68w3L8Y9FxwBD-C5HkkeO58C6t9nfgbhw@mail.gmail.com>
+	<20140113204314.GJ3469@dastard>
+	<CAOcd+r22FirPMHjdxQyTmXOAM72ND-t0=njK9nEmesSV5=Ec=Q@mail.gmail.com>
+	<20140115014503.GQ3469@dastard>
+	<CAOcd+r0R6KxmgEJNPUZ0Q5cQhsStGb=cehYE0+wKgDNU1negsA@mail.gmail.com>
+	<20140119231745.GF18112@dastard>
+	<4B2A412C75324EE9880358513C069476@alyakaslap>
+	<9D3CBECB663B4A77B7EF74B67973310A@alyakaslap>
+	<20140804230721.GA20518@dastard>
+	<CAOcd+r0_KjaZam8ocA1YtwF7jmCyh0+bXOY8nqiE3fsVn1gyiA@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20140806113447.GA14820@bfoster.bfoster>
-References: <CACyNnZM8D4ZdOAvbXNoiRUAGh1uZF8=9Gy34qS2XH7QUVjiGsQ@mail.gmail.com>
-	<20140806113447.GA14820@bfoster.bfoster>
-Date: Wed, 6 Aug 2014 14:31:11 +0200
-Message-ID: <CACyNnZNwCPw8dsyRKSty7GPp4DxAd7ycHuztsC-VAdGEmjdnyw@mail.gmail.com>
-Subject: Re: xfs_bmbt_rec_64 leading to wrong blocks
-From: Felipe Monteiro de Carvalho <felipemonteiro.carvalho@gmail.com>
+Content-Disposition: inline
+In-Reply-To: <CAOcd+r0_KjaZam8ocA1YtwF7jmCyh0+bXOY8nqiE3fsVn1gyiA@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,120 +38,65 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
+To: Alex Lyakas <alex@zadarastorage.com>
 Cc: xfs@oss.sgi.com
 
-Thanks! Indeed that's it =)
+On Wed, Aug 06, 2014 at 01:05:34PM +0300, Alex Lyakas wrote:
+> Hi Dave,
+> 
+> On Tue, Aug 5, 2014 at 2:07 AM, Dave Chinner <david@fromorbit.com> wrote:
+> > On Mon, Aug 04, 2014 at 02:00:05PM +0300, Alex Lyakas wrote:
+> >> Greetings,
+> >>
+> >> we had a log replay failure due to some errors that the underlying
+> >> block device returned:
+> >> [49133.801406] XFS (dm-95): metadata I/O error: block 0x270e8c180
+> >> ("xlog_recover_iodone") error 28 numblks 16
+> >> [49133.802495] XFS (dm-95): log mount/recovery failed: error 28
+> >> [49133.802644] XFS (dm-95): log mount failed
+> >
+> > #define ENOSPC          28      /* No space left on device */
+> >
+> > You're getting an ENOSPC as a metadata IO error during log recovery?
+> > Thin provisioning problem, perhaps,
+> Yes, it is a thin provisioning problem (which I already know the cause for).
+> 
+> > and the error is occurring on
+> > submission rather than completion? If so:
+> >
+> > 8d6c121 xfs: fix buffer use after free on IO error
+> I am not sure what do you mean by "submission rather than completion".
+> Do you mean that xfs_buf_ioapply_map() returns without submitting any
+> bios?
 
-One strange thing however is that in my xfs_dir2_data.h there is:
+No, that the bio submission results in immediate failure (e.g. the
+device goes away, so submission results in ENODEV). Hence when
+_xfs_buf_ioapply() releases it's IO reference itis the only
+remaining reference to the buffer and so completion processing is
+run immediately. i.e. inline from the submission path.
 
-#define XFS_DIR2_DATA_ALIGN_LOG 3 /* i.e., 8 bytes */
-#define XFS_DIR2_SPACE_SIZE (1ULL << (32 + XFS_DIR2_DATA_ALIGN_LOG))
-#define XFS_DIR2_LEAF_SPACE 1
-#define XFS_DIR2_LEAF_OFFSET (XFS_DIR2_LEAF_SPACE * XFS_DIR2_SPACE_SIZE)
+Normally IO errors are reported through the bio in IO completion
+interrupt context. i.e the IO is completed by the hardware and the
+error status is attached to bio, which is then completed and we get
+into XFS that way. The IO submision context is long gone at this
+point....
 
-That doesn't match the number that I am seeing here for the offset.
-Here I see 1 << 23, but according to the headers it should be 1 << 35
+> In that case, no, bios are submitted to the block device, and it
+> fails them through a different context with ENOSPC error. I will still
+> try the patch you mentioned, because it also looks relevant to another
+> question I addressed to you earlier in:
+> http://oss.sgi.com/archives/xfs/2013-11/msg00648.html
 
---
-Felipe Monteiro de Carvalho
+No, that's a different problem.
 
+9c23ecc xfs: unmount does not wait for shutdown during unmount
 
-On Wed, Aug 6, 2014 at 1:34 PM, Brian Foster <bfoster@redhat.com> wrote:
-> On Wed, Aug 06, 2014 at 12:12:12PM +0200, Felipe Monteiro de Carvalho wrote:
->> Hello,
->>
->> I am writing a software which reads xfs partitions and it is working
->> well so far, but, at in a particular folder with 10k files, only 7k
->> files appear, the other ones don't.
->>
->> I read an inode which has di_core.di_format = XFS_DINODE_FMT_BTREE
->>
->> No problem here, the btree is trivial, it has only 1 element inside
->> it, which leads to a list of 82 extends.
->>
->> Extends 0..52 aprox. are all great, and work fine.
->>
->> Extent 53 (and other ones after that) point to very wierd memory areas
->> which don't match the pattern that I saw previously =(
->>
->> Here is the hex data of the extents, the selected extent in nr 53:
->>
->> http://magnifier.sourceforge.net/temp/xfs/extent_with_xfs_bmbt_rec_64.png
->>
->> And here is debug information showing which values I extracted from this table:
->>
->> i=0 FLocalExtent.StartOff=0 FLocalExtent.StartBlock=66748
->> FLocalExtent.BlockCount=1 lStartBlock=65212
->> i=1 FLocalExtent.StartOff=1 FLocalExtent.StartBlock=66758
->> FLocalExtent.BlockCount=2 lStartBlock=65222
->> i=2 FLocalExtent.StartOff=3 FLocalExtent.StartBlock=66772
->> FLocalExtent.BlockCount=1 lStartBlock=65236
->> ....
->>
->> i=51 FLocalExtent.StartOff=77 FLocalExtent.StartBlock=67468
->> FLocalExtent.BlockCount=1 lStartBlock=65932
->> i=52 FLocalExtent.StartOff=78 FLocalExtent.StartBlock=67479
->> FLocalExtent.BlockCount=1 lStartBlock=65943
->> i=53 FLocalExtent.StartOff=8388608 FLocalExtent.StartBlock=66749
->> FLocalExtent.BlockCount=1 lStartBlock=65213
->> i=54 FLocalExtent.StartOff=8388609 FLocalExtent.StartBlock=66783
->> FLocalExtent.BlockCount=2 lStartBlock=65247
->> ...
->>
->> Note how StartOff is suddenly so big! But I manually checked the bits
->> comparing to xfs_bmbt_rec_64 and the value written is that one. But
->> what sense does it make for StartOff to jump like that?
->>
->
-> Assuming 4k blocks, 8388608 is 32G, which is the offset interval used
-> for some internal sections of directories on XFS. If this is a
-> directory, it could be a node/leaf or freelist block. Looking at
-> xfs_da_format.h, it looks like XFS_DIR2_LEAF_OFFSET points to this
-> offset. This block basically points to a btree of hashed entry names for
-> lookup. See here for basics:
->
-> http://xfs.org/docs/xfsdocs-xml-dev/XFS_Filesystem_Structure//tmp/en-US/html/Directories.html
->
-> ... and here for a diagram:
->
-> http://xfs.org/docs/xfsdocs-xml-dev/XFS_Filesystem_Structure//tmp/en-US/html/Node_Directories.html
->
->> And why are the blocks pointing to a non-XD2D block?
->>
->> Here is the block to which one of the valid extents point to:
->>
->> http://magnifier.sourceforge.net/temp/xfs/correct_block_xd2d.png
->>
->> And here is a block to which one of the extents that I cannot
->> interpretate point to:
->>
->> http://magnifier.sourceforge.net/temp/xfs/wierd_block_xd2d.png
->> and another one:
->> http://magnifier.sourceforge.net/temp/xfs/wierd_xfs_dir2_data_entry.png
->>
->
-> The 0xFEBE magic seems to confirm the second one as a node block.
->
-> Brian
->
->> Any ideas???
->>
->> I already worked so much on this, but I cannot figure out =(
->>
->> thanks,
->> --
->> Felipe Monteiro de Carvalho
->>
->> _______________________________________________
->> xfs mailing list
->> xfs@oss.sgi.com
->> http://oss.sgi.com/mailman/listinfo/xfs
+Cheers,
 
-
-
+Dave.
 -- 
-Felipe Monteiro de Carvalho
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
