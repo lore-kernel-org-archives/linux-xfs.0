@@ -1,34 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 11B367F87
-	for <xfs@oss.sgi.com>; Wed,  6 Aug 2014 05:05:42 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id B6F007F93
+	for <xfs@oss.sgi.com>; Wed,  6 Aug 2014 05:12:17 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id F30618F8035
-	for <xfs@oss.sgi.com>; Wed,  6 Aug 2014 03:05:38 -0700 (PDT)
-Received: from mail-wi0-f172.google.com (mail-wi0-f172.google.com
-	[209.85.212.172]) by cuda.sgi.com with ESMTP id
-	0HwFjvCngxAtWeOb (version=TLSv1 cipher=RC4-SHA bits=128
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 96461304053
+	for <xfs@oss.sgi.com>; Wed,  6 Aug 2014 03:12:14 -0700 (PDT)
+Received: from mail-pd0-f172.google.com (mail-pd0-f172.google.com
+	[209.85.192.172]) by cuda.sgi.com with ESMTP id
+	LnIIugEbC8Xkequ7 (version=TLSv1 cipher=RC4-SHA bits=128
 	verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 06 Aug 2014 03:05:36 -0700 (PDT)
-Received: by mail-wi0-f172.google.com with SMTP id n3so8477140wiv.11
-	for <xfs@oss.sgi.com>; Wed, 06 Aug 2014 03:05:35 -0700 (PDT)
+	Wed, 06 Aug 2014 03:12:13 -0700 (PDT)
+Received: by mail-pd0-f172.google.com with SMTP id ft15so3084264pdb.3
+	for <xfs@oss.sgi.com>; Wed, 06 Aug 2014 03:12:12 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20140804230721.GA20518@dastard>
-References: <A0A556BD24EC45CEADAA07870B3E6205@alyakaslap>
-	<20140113030230.GF3469@dastard>
-	<CAOcd+r0B-4SPjzim=68w3L8Y9FxwBD-C5HkkeO58C6t9nfgbhw@mail.gmail.com>
-	<20140113204314.GJ3469@dastard>
-	<CAOcd+r22FirPMHjdxQyTmXOAM72ND-t0=njK9nEmesSV5=Ec=Q@mail.gmail.com>
-	<20140115014503.GQ3469@dastard>
-	<CAOcd+r0R6KxmgEJNPUZ0Q5cQhsStGb=cehYE0+wKgDNU1negsA@mail.gmail.com>
-	<20140119231745.GF18112@dastard>
-	<4B2A412C75324EE9880358513C069476@alyakaslap>
-	<9D3CBECB663B4A77B7EF74B67973310A@alyakaslap>
-	<20140804230721.GA20518@dastard>
-Date: Wed, 6 Aug 2014 13:05:34 +0300
-Message-ID: <CAOcd+r0_KjaZam8ocA1YtwF7jmCyh0+bXOY8nqiE3fsVn1gyiA@mail.gmail.com>
-Subject: Re: use-after-free on log replay failure
-From: Alex Lyakas <alex@zadarastorage.com>
+Date: Wed, 6 Aug 2014 12:12:12 +0200
+Message-ID: <CACyNnZM8D4ZdOAvbXNoiRUAGh1uZF8=9Gy34qS2XH7QUVjiGsQ@mail.gmail.com>
+Subject: xfs_bmbt_rec_64 leading to wrong blocks
+From: Felipe Monteiro de Carvalho <felipemonteiro.carvalho@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -41,51 +29,72 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-Hi Dave,
+Hello,
 
-On Tue, Aug 5, 2014 at 2:07 AM, Dave Chinner <david@fromorbit.com> wrote:
-> On Mon, Aug 04, 2014 at 02:00:05PM +0300, Alex Lyakas wrote:
->> Greetings,
->>
->> we had a log replay failure due to some errors that the underlying
->> block device returned:
->> [49133.801406] XFS (dm-95): metadata I/O error: block 0x270e8c180
->> ("xlog_recover_iodone") error 28 numblks 16
->> [49133.802495] XFS (dm-95): log mount/recovery failed: error 28
->> [49133.802644] XFS (dm-95): log mount failed
->
-> #define ENOSPC          28      /* No space left on device */
->
-> You're getting an ENOSPC as a metadata IO error during log recovery?
-> Thin provisioning problem, perhaps,
-Yes, it is a thin provisioning problem (which I already know the cause for).
+I am writing a software which reads xfs partitions and it is working
+well so far, but, at in a particular folder with 10k files, only 7k
+files appear, the other ones don't.
 
-> and the error is occurring on
-> submission rather than completion? If so:
->
-> 8d6c121 xfs: fix buffer use after free on IO error
-I am not sure what do you mean by "submission rather than completion".
-Do you mean that xfs_buf_ioapply_map() returns without submitting any
-bios? In that case, no, bios are submitted to the block device, and it
-fails them through a different context with ENOSPC error. I will still
-try the patch you mentioned, because it also looks relevant to another
-question I addressed to you earlier in:
-http://oss.sgi.com/archives/xfs/2013-11/msg00648.html
+I read an inode which has di_core.di_format = XFS_DINODE_FMT_BTREE
 
-Thanks,
-Alex.
+No problem here, the btree is trivial, it has only 1 element inside
+it, which leads to a list of 82 extends.
 
+Extends 0..52 aprox. are all great, and work fine.
 
->
-> Cheers,
->
-> Dave.
-> --
-> Dave Chinner
-> david@fromorbit.com
+Extent 53 (and other ones after that) point to very wierd memory areas
+which don't match the pattern that I saw previously =(
+
+Here is the hex data of the extents, the selected extent in nr 53:
+
+http://magnifier.sourceforge.net/temp/xfs/extent_with_xfs_bmbt_rec_64.png
+
+And here is debug information showing which values I extracted from this table:
+
+i=0 FLocalExtent.StartOff=0 FLocalExtent.StartBlock=66748
+FLocalExtent.BlockCount=1 lStartBlock=65212
+i=1 FLocalExtent.StartOff=1 FLocalExtent.StartBlock=66758
+FLocalExtent.BlockCount=2 lStartBlock=65222
+i=2 FLocalExtent.StartOff=3 FLocalExtent.StartBlock=66772
+FLocalExtent.BlockCount=1 lStartBlock=65236
+....
+
+i=51 FLocalExtent.StartOff=77 FLocalExtent.StartBlock=67468
+FLocalExtent.BlockCount=1 lStartBlock=65932
+i=52 FLocalExtent.StartOff=78 FLocalExtent.StartBlock=67479
+FLocalExtent.BlockCount=1 lStartBlock=65943
+i=53 FLocalExtent.StartOff=8388608 FLocalExtent.StartBlock=66749
+FLocalExtent.BlockCount=1 lStartBlock=65213
+i=54 FLocalExtent.StartOff=8388609 FLocalExtent.StartBlock=66783
+FLocalExtent.BlockCount=2 lStartBlock=65247
+...
+
+Note how StartOff is suddenly so big! But I manually checked the bits
+comparing to xfs_bmbt_rec_64 and the value written is that one. But
+what sense does it make for StartOff to jump like that?
+
+And why are the blocks pointing to a non-XD2D block?
+
+Here is the block to which one of the valid extents point to:
+
+http://magnifier.sourceforge.net/temp/xfs/correct_block_xd2d.png
+
+And here is a block to which one of the extents that I cannot
+interpretate point to:
+
+http://magnifier.sourceforge.net/temp/xfs/wierd_block_xd2d.png
+and another one:
+http://magnifier.sourceforge.net/temp/xfs/wierd_xfs_dir2_data_entry.png
+
+Any ideas???
+
+I already worked so much on this, but I cannot figure out =(
+
+thanks,
+-- 
+Felipe Monteiro de Carvalho
 
 _______________________________________________
 xfs mailing list
