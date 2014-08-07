@@ -1,20 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id C14687F82
-	for <xfs@oss.sgi.com>; Thu,  7 Aug 2014 15:14:45 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 50900AC010
-	for <xfs@oss.sgi.com>; Thu,  7 Aug 2014 13:14:41 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id MvgSBxDYFusQaGwJ for <xfs@oss.sgi.com>;
-	Thu, 07 Aug 2014 13:14:36 -0700 (PDT)
-Message-ID: <53E3DE2B.6080205@sandeen.net>
-Date: Thu, 07 Aug 2014 15:14:35 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 403047F5D
+	for <xfs@oss.sgi.com>; Thu,  7 Aug 2014 16:10:59 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 111DF304043
+	for <xfs@oss.sgi.com>; Thu,  7 Aug 2014 14:10:55 -0700 (PDT)
+Received: from mail.linuxfoundation.org (mail.linuxfoundation.org
+	[140.211.169.12]) by cuda.sgi.com with ESMTP id
+	ASddJZBshTtTlHXl (version=TLSv1 cipher=AES256-SHA bits=256
+	verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 07 Aug 2014 14:10:54 -0700 (PDT)
+Date: Thu, 7 Aug 2014 14:10:52 -0700
+From: Greg KH <gregkh@linuxfoundation.org>
+Subject: Re: xfs hang in 3.14.15
+Message-ID: <20140807211052.GD17105@kroah.com>
+References: <53E02495.4080208@sbcglobal.net> <20140805011800.GC20518@dastard>
+	<53E372AA.4030304@sbcglobal.net>
 MIME-Version: 1.0
-Subject: Re: [DISCUSS] Moving from oss.sgi.com to kernel.org
-References: <20140807000922.GA26465@dastard>
-In-Reply-To: <20140807000922.GA26465@dastard>
+Content-Disposition: inline
+In-Reply-To: <53E372AA.4030304@sbcglobal.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,79 +31,34 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>, xfs@oss.sgi.com
-Cc: fstests@vger.kernel.org
+To: Bill <billstuff2001@sbcglobal.net>
+Cc: xfs@oss.sgi.com
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA1
-
-On 8/6/14, 7:09 PM, Dave Chinner wrote:
-> Hi folks,
-
-<rationale>
-
-> It should be no surprise that since this conversation I've been
-> looking at what is involved in moving everything XFS off oss.sgi.com
-> to kernel.org.  Right now I have the main XFS repositories up to
-> date on kernel.org.  For userspace I've simply pushed the current
-> trees and tags to the pre-existing repositories here:
+On Thu, Aug 07, 2014 at 07:35:54AM -0500, Bill wrote:
+> On 08/04/2014 08:18 PM, Dave Chinner wrote:
+> >On Mon, Aug 04, 2014 at 07:25:57PM -0500, Bill wrote:
+> >>Hi,
+> >>
+> >>I've been running a stress test on 3.14.15 and eventually my xfs
+> >>filesystem hangs. Both 3.10.50 and 3.16 seem to work ok.
+> >log space hang.
+> >
+> >110dc24 xfs: log vector rounding leaks log space
+> >
+> >Cheers,
+> >
+> >Dave.
 > 
-> 	git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git
-> 	git://git.kernel.org/pub/scm/fs/xfs/xfsdump-dev.git
-> 	git://git.kernel.org/pub/scm/fs/xfs/xfstests-dev.git
+> Thanks Dave, that helped.
 > 
-> These trees currently have the same content as the trees on
-> oss.sgi.com.  I may rename these as a result of discussions here
-> (e.g. some people don't like the -dev suffix on the trees) so it's
-> best for people to continue to use the trees on oss.sgi.com until
-> this disucssion comes to a conclusion.
+> Greg, Please consider this for inclusion in 3.14.y. It fixed an xfs hang I
+> had on 3.14.15
 
-I agree with the move to kernel.org; they have paid staff with time
-and resources to look after this stuff; it's a resource we should use,
-and it'll save us all time and/or money.
+Dave, any objection for me to include it?
 
-But I'm one of the "some people" who don't want to re-use the -dev
-trees; let's just get properly named repos up there.  These served
-a different purpose, long ago.
+thanks,
 
-If you want to rename to fstests, that's ok with me, but that's
-potentially a different scope; depending on how much content in
-the tree needs to be updated etc, I could see doing that a bit later
-if needed.
-
-If/when you get the names truly settled, let me know and I'll help
-with updating the wiki etc if you like.
-
-As for the old tarballs - they do claim to be signed, right?  So
-if we can verify their identity, I see no harm in keeping them around.
-
-As for mailing lists, is it possible to forward for a while, and
-also send a reply back about the address change?  That might be most
-foolproof, then eventually stop the forwarding and just add a reply
-about the list move, and leave that there until oss crumbles into
-dust.  ;)
-
-Thanks, and "May the source be with you" ;)
-- -Eric
------BEGIN PGP SIGNATURE-----
-Version: GnuPG/MacGPG2 v2.0.17 (Darwin)
-Comment: GPGTools - http://gpgtools.org
-Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
-
-iQIbBAEBAgAGBQJT494qAAoJECCuFpLhPd7gJm4P93Eas7qaiftU6WF4qKkvkKpD
-0MzWk/b17wBR2cHqG9eLnw6Y4AuXCuYb3DTa77B1+8G+v7RBL1NWzbHAJBfc8KUe
-mfVNbNfGfTBdgUC7FAyvYZtPlHotcG5ghv8pkdIZNT1aazgZ0Eztjkbfz1NnF5Ia
-RwlqGdCyRNB3NsKn+rWypIPaIfUXcCwiSp94YfTiIPvuYIwRnBY4MjKzQa1i+eBl
-qNjziJDxNLuHdsnCRClxiDubnLbxlBoQiu4hHNblA+ogC+xvdjAknqbmq2oF825R
-9P1BM8gwYJIqvZtoDT1P1NFSPt4NpSYL41Eakn5d8KoprbB3FWwsnYV/biX6UyMX
-692Vw5GTtKD6wLeu7Ovi4C8JA+zCFHuMbd8wdmji1IwylRrTvGyGFOdel+caD9ua
-sWoTgJfA8ZZBFgbzmEb6jRJe8x8zx5jobaS1w1KxR2gHXL39/8WOGQ7/TukQnzeE
-omZ2QFqfJTaCbPlns01qrNOvZJHgX7XUPFZ1BxL7kSfptDfCMYnGiACxjhYiWrFf
-H/wPEq4F4itgn2L+eyIpiSlLfLZffsqUFAUKot/raV9+SwjXHfp3zFlbw5Mbw/Co
-H6krvTY0ZN4OzgyrT/16BsC8JUjKMSsN05oTDHfB0ldl2gaFGOuDYv20yzHAKN5m
-WJLBciq+9DFYsBiOnIw=
-=nbLn
------END PGP SIGNATURE-----
+greg k-h
 
 _______________________________________________
 xfs mailing list
