@@ -1,32 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id BA25D7F76
-	for <xfs@oss.sgi.com>; Wed,  6 Aug 2014 10:29:10 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 55675AC005
-	for <xfs@oss.sgi.com>; Wed,  6 Aug 2014 08:29:07 -0700 (PDT)
-Received: from mail-we0-f179.google.com (mail-we0-f179.google.com
-	[74.125.82.179]) by cuda.sgi.com with ESMTP id ab6OMb4xrakrstT1
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 06 Aug 2014 08:29:04 -0700 (PDT)
-Received: by mail-we0-f179.google.com with SMTP id u57so2819988wes.10
-	for <xfs@oss.sgi.com>; Wed, 06 Aug 2014 08:29:03 -0700 (PDT)
-Message-ID: <B1908491D82E4BA58C85A72D787AC6E6@alyakaslap>
-From: "Alex Lyakas" <alex@zadarastorage.com>
-References: <CAOcd+r0B-4SPjzim=68w3L8Y9FxwBD-C5HkkeO58C6t9nfgbhw@mail.gmail.com>
-	<20140113204314.GJ3469@dastard>
-	<CAOcd+r22FirPMHjdxQyTmXOAM72ND-t0=njK9nEmesSV5=Ec=Q@mail.gmail.com>
-	<20140115014503.GQ3469@dastard>
-	<CAOcd+r0R6KxmgEJNPUZ0Q5cQhsStGb=cehYE0+wKgDNU1negsA@mail.gmail.com>
-	<20140119231745.GF18112@dastard>
-	<4B2A412C75324EE9880358513C069476@alyakaslap>
-	<9D3CBECB663B4A77B7EF74B67973310A@alyakaslap>
-	<20140804230721.GA20518@dastard>
-	<AC10852F403846A182491ED8071135ED@alyakaslap>
-	<20140806152042.GB39990@bfoster.bfoster>
-In-Reply-To: <20140806152042.GB39990@bfoster.bfoster>
-Subject: Re: use-after-free on log replay failure
-Date: Wed, 6 Aug 2014 18:28:34 +0300
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 69AAA7FA2
+	for <xfs@oss.sgi.com>; Wed,  6 Aug 2014 19:09:40 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 5884B8F8052
+	for <xfs@oss.sgi.com>; Wed,  6 Aug 2014 17:09:37 -0700 (PDT)
+Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
+	[150.101.137.145]) by cuda.sgi.com with ESMTP id
+	DTixTeFzKYSywLyA for <xfs@oss.sgi.com>;
+	Wed, 06 Aug 2014 17:09:34 -0700 (PDT)
+Date: Thu, 7 Aug 2014 10:09:22 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: [DISCUSS] Moving from oss.sgi.com to kernel.org
+Message-ID: <20140807000922.GA26465@dastard>
 MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -36,370 +22,198 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
+Content-Type: multipart/mixed; boundary="===============8053165494245948395=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
-Cc: xfs@oss.sgi.com
-
-Hi Brian,
-The purpose of the sleep is like this: I added a  module parameter to my 
-block device, which says "from now on fail all WRITEs with ENOSPC". If I set 
-this parameter before mounting, then xlog_find_tail() fails. This does not 
-reproduce my problem. So I want xlog_find_tail() to succeed, and then start 
-returning errors. So I need the sleep so that I can set my parameter, before 
-actual log recovery is attempted:)
-
-Will try what you suggest.
-
-Thanks,
-Alex.
+To: xfs@oss.sgi.com
+Cc: fstests@vger.kernel.org
 
 
------Original Message----- 
-From: Brian Foster
-Sent: 06 August, 2014 6:20 PM
-To: Alex Lyakas
-Cc: Dave Chinner ; xfs@oss.sgi.com
-Subject: Re: use-after-free on log replay failure
+--===============8053165494245948395==
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="k+w/mQv8wyuph6w0"
+Content-Disposition: inline
 
-On Wed, Aug 06, 2014 at 03:52:03PM +0300, Alex Lyakas wrote:
-> Hello Dave and Brian,
->
-> Dave, I tried the patch you suggested, but it does not fix the issue. I 
-> did
-> some further digging, and it appears that _xfs_buf_ioend(schedule=1) can 
-> be
-> called from xfs_buf_iorequest(), which the patch fixes, but also from
-> xfs_buf_bio_end_io() which is my case. I am reproducing the issue pretty
-> easily. The flow that I have is like this:
-> - xlog_recover() calls xlog_find_tail(). This works alright.
 
-What's the purpose of a sleep here?
+--k+w/mQv8wyuph6w0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-> - Now I add a small sleep before calling xlog_do_recover(), and meanwhile 
-> I
-> instruct my block device to return ENOSPC for any WRITE from now on.
->
-> What seems to happen is that several WRITE bios are submitted and they all
-> fail. When they do, they reach xfs_buf_ioend() through a stack like this:
->
-> Aug  6 15:23:07 dev kernel: [  304.410528] [56]xfs*[xfs_buf_ioend:1056]
-> XFS(dm-19): Scheduling xfs_buf_iodone_work on error
-> Aug  6 15:23:07 dev kernel: [  304.410534] Pid: 56, comm: kworker/u:1
-> Tainted: G        W  O 3.8.13-557-generic #1382000791
-> Aug  6 15:23:07 dev kernel: [  304.410537] Call Trace:
-> Aug  6 15:23:07 dev kernel: [  304.410587]  [<ffffffffa04d6654>]
-> xfs_buf_ioend+0x1a4/0x1b0 [xfs]
-> Aug  6 15:23:07 dev kernel: [  304.410621]  [<ffffffffa04d6685>]
-> _xfs_buf_ioend+0x25/0x30 [xfs]
-> Aug  6 15:23:07 dev kernel: [  304.410643]  [<ffffffffa04d6b3d>]
-> xfs_buf_bio_end_io+0x3d/0x50 [xfs]
-> Aug  6 15:23:07 dev kernel: [  304.410652]  [<ffffffff811c3d8d>]
-> bio_endio+0x1d/0x40
-> ...
->
-> At this point, they are scheduled to run xlog_recover_iodone through
-> xfslogd_workqueue.
-> The first callback that gets called, calls xfs_do_force_shutdown in stack
-> like this:
->
-> Aug  6 15:23:07 dev kernel: [  304.411791] XFS (dm-19): metadata I/O 
-> error:
-> block 0x3780001 ("xlog_recover_iodone") error 28 numblks 1
-> Aug  6 15:23:07 dev kernel: [  304.413493] XFS (dm-19):
-> xfs_do_force_shutdown(0x1) called from line 377 of file
-> /mnt/work/alex/xfs/fs/xfs/xfs_log_recover.c.  Return address =
-> 0xffffffffa0526848
-> Aug  6 15:23:07 dev kernel: [  304.413837]  [<ffffffffa04e0b60>]
-> xfs_do_force_shutdown+0x40/0x180 [xfs]
-> Aug  6 15:23:07 dev kernel: [  304.413870]  [<ffffffffa0526848>] ?
-> xlog_recover_iodone+0x48/0x70 [xfs]
-> Aug  6 15:23:07 dev kernel: [  304.413902]  [<ffffffffa0526848>]
-> xlog_recover_iodone+0x48/0x70 [xfs]
-> Aug  6 15:23:07 dev kernel: [  304.413923]  [<ffffffffa04d645d>]
-> xfs_buf_iodone_work+0x4d/0xa0 [xfs]
-> Aug  6 15:23:07 dev kernel: [  304.413930]  [<ffffffff81077a11>]
-> process_one_work+0x141/0x4a0
-> Aug  6 15:23:07 dev kernel: [  304.413937]  [<ffffffff810789e8>]
-> worker_thread+0x168/0x410
-> Aug  6 15:23:07 dev kernel: [  304.413943]  [<ffffffff81078880>] ?
-> manage_workers+0x120/0x120
-> Aug  6 15:23:07 dev kernel: [  304.413949]  [<ffffffff8107df10>]
-> kthread+0xc0/0xd0
-> Aug  6 15:23:07 dev kernel: [  304.413954]  [<ffffffff8107de50>] ?
-> flush_kthread_worker+0xb0/0xb0
-> Aug  6 15:23:07 dev kernel: [  304.413976]  [<ffffffff816ab86c>]
-> ret_from_fork+0x7c/0xb0
-> Aug  6 15:23:07 dev kernel: [  304.413986]  [<ffffffff8107de50>] ?
-> flush_kthread_worker+0xb0/0xb0
-> Aug  6 15:23:07 dev kernel: [  304.413990] ---[ end trace 988d698520e1fa81
-> ]---
-> Aug  6 15:23:07 dev kernel: [  304.414012] XFS (dm-19): I/O Error 
-> Detected.
-> Shutting down filesystem
-> Aug  6 15:23:07 dev kernel: [  304.415936] XFS (dm-19): Please umount the
-> filesystem and rectify the problem(s)
->
-> But the rest of the callbacks also arrive:
-> Aug  6 15:23:07 dev kernel: [  304.417812] XFS (dm-19): metadata I/O 
-> error:
-> block 0x3780002 ("xlog_recover_iodone") error 28 numblks 1
-> Aug  6 15:23:07 dev kernel: [  304.420420] XFS (dm-19):
-> xfs_do_force_shutdown(0x1) called from line 377 of file
-> /mnt/work/alex/xfs/fs/xfs/xfs_log_recover.c.  Return address =
-> 0xffffffffa0526848
-> Aug  6 15:23:07 dev kernel: [  304.420427] XFS (dm-19): metadata I/O 
-> error:
-> block 0x3780008 ("xlog_recover_iodone") error 28 numblks 8
-> Aug  6 15:23:07 dev kernel: [  304.422708] XFS (dm-19):
-> xfs_do_force_shutdown(0x1) called from line 377 of file
-> /mnt/work/alex/xfs/fs/xfs/xfs_log_recover.c.  Return address =
-> 0xffffffffa0526848
-> Aug  6 15:23:07 dev kernel: [  304.422738] XFS (dm-19): metadata I/O 
-> error:
-> block 0x3780010 ("xlog_recover_iodone") error 28 numblks 8
->
-> The mount sequence fails and goes back to the caller:
-> Aug  6 15:23:07 dev kernel: [  304.423438] XFS (dm-19): log mount/recovery
-> failed: error 28
-> Aug  6 15:23:07 dev kernel: [  304.423757] XFS (dm-19): log mount failed
->
-> But there are still additional callbacks to deliver, which the mount
-> sequence did not wait for!
-> Aug  6 15:23:07 dev kernel: [  304.425717] XFS (@dR):
-> xfs_do_force_shutdown(0x1) called from line 377 of file
-> /mnt/work/alex/xfs/fs/xfs/xfs_log_recover.c.  Return address =
-> 0xffffffffa0526848
-> Aug  6 15:23:07 dev kernel: [  304.425723] XFS (@dR): metadata I/O error:
-> block 0x3780018 ("xlog_recover_iodone") error 28 numblks 8
-> Aug  6 15:23:07 dev kernel: [  304.428239] XFS (@dR):
-> xfs_do_force_shutdown(0x1) called from line 377 of file
-> /mnt/work/alex/xfs/fs/xfs/xfs_log_recover.c.  Return address =
-> 0xffffffffa0526848
-> Aug  6 15:23:07 dev kernel: [  304.428246] XFS (@dR): metadata I/O error:
-> block 0x37800a0 ("xlog_recover_iodone") error 28 numblks 16
->
-> Notice the junk that they are printing! Naturally, because xfs_mount
-> structure has been kfreed.
->
-> Finally the kernel crashes (instead of printing junk), because the 
-> xfs_mount
-> structure is gone, but the callback tries to access it (printing the 
-> name):
->
-> Aug  6 15:23:07 dev kernel: [  304.430796] general protection fault: 0000
-> [#1] SMP
-> Aug  6 15:23:07 dev kernel: [  304.432035] Modules linked in: xfrm_user
-> xfrm4_tunnel tunnel4 ipcomp xfrm_ipcomp esp4 ah4 iscsi_scst_tcp(O)
-> scst_vdisk(O) scst(O) dm_zcache(O) dm_btrfs(O) xfs(O) btrfs(O) libcrc32c
-> raid456(O) async_pq async_xor xor async_memcpy async_raid6_recov raid6_pq
-> async_tx raid1(O) md_mod deflate zlib_deflate ctr twofish_generic
-> twofish_x86_64_3way glue_helper lrw xts gf128mul twofish_x86_64
-> twofish_common camellia_generic serpent_generic blowfish_generic
-> blowfish_x86_64 blowfish_common cast5_generic cast_common des_generic xcbc
-> rmd160 sha512_generic crypto_null af_key xfrm_algo dm_round_robin kvm vfat
-> fat ppdev psmouse microcode nfsd nfs_acl dm_multipath(O) serio_raw
-> parport_pc nfsv4 dm_iostat(O) mac_hid i2c_piix4 auth_rpcgss nfs fscache
-> lockd sunrpc lp parport floppy
-> Aug  6 15:23:07 dev kernel: [  304.432035] CPU 1
-> Aug  6 15:23:07 dev kernel: [  304.432035] Pid: 133, comm: kworker/1:1H
-> Tainted: G        W  O 3.8.13-557-generic #1382000791 Bochs Bochs
-> Aug  6 15:23:07 dev kernel: [  304.432035] RIP: 0010:[<ffffffff8133c2cb>]
-> [<ffffffff8133c2cb>] strnlen+0xb/0x30
-> Aug  6 15:23:07 dev kernel: [  304.432035] RSP: 0018:ffff880035461b08
-> EFLAGS: 00010086
-> Aug  6 15:23:07 dev kernel: [  304.432035] RAX: 0000000000000000 RBX:
-> ffffffff81e6a4e7 RCX: 0000000000000000
-> Aug  6 15:23:07 dev kernel: [  304.432035] RDX: e4e8390a265c0000 RSI:
-> ffffffffffffffff RDI: e4e8390a265c0000
-> Aug  6 15:23:07 dev kernel: [  304.432035] RBP: ffff880035461b08 R08:
-> 000000000000ffff R09: 000000000000ffff
-> Aug  6 15:23:07 dev kernel: [  304.432035] R10: 0000000000000000 R11:
-> 00000000000004cd R12: e4e8390a265c0000
-> Aug  6 15:23:07 dev kernel: [  304.432035] R13: ffffffff81e6a8c0 R14:
-> 0000000000000000 R15: 000000000000ffff
-> Aug  6 15:23:07 dev kernel: [  304.432035] FS:  0000000000000000(0000)
-> GS:ffff88007fc80000(0000) knlGS:0000000000000000
-> Aug  6 15:23:07 dev kernel: [  304.432035] CS:  0010 DS: 0000 ES: 0000 
-> CR0:
-> 000000008005003b
-> Aug  6 15:23:07 dev kernel: [  304.432035] CR2: 00007fc902ffbfd8 CR3:
-> 000000007702a000 CR4: 00000000000006e0
-> Aug  6 15:23:07 dev kernel: [  304.432035] DR0: 0000000000000000 DR1:
-> 0000000000000000 DR2: 0000000000000000
-> Aug  6 15:23:07 dev kernel: [  304.432035] DR3: 0000000000000000 DR6:
-> 00000000ffff0ff0 DR7: 0000000000000400
-> Aug  6 15:23:07 dev kernel: [  304.432035] Process kworker/1:1H (pid: 133,
-> threadinfo ffff880035460000, task ffff880035412e00)
-> Aug  6 15:23:07 dev kernel: [  304.432035] Stack:
-> Aug  6 15:23:07 dev kernel: [  304.432035]  ffff880035461b48
-> ffffffff8133dd5e 0000000000000000 ffffffff81e6a4e7
-> Aug  6 15:23:07 dev kernel: [  304.432035]  ffffffffa0566cba
-> ffff880035461c80 ffffffffa0566cba ffffffff81e6a8c0
-> Aug  6 15:23:07 dev kernel: [  304.432035]  ffff880035461bc8
-> ffffffff8133ef59 ffff880035461bc8 ffffffff81c84040
-> Aug  6 15:23:07 dev kernel: [  304.432035] Call Trace:
-> Aug  6 15:23:07 dev kernel: [  304.432035]  [<ffffffff8133dd5e>]
-> string.isra.4+0x3e/0xd0
-> Aug  6 15:23:07 dev kernel: [  304.432035]  [<ffffffff8133ef59>]
-> vsnprintf+0x219/0x640
-> Aug  6 15:23:07 dev kernel: [  304.432035]  [<ffffffff8133f441>]
-> vscnprintf+0x11/0x30
-> Aug  6 15:23:07 dev kernel: [  304.432035]  [<ffffffff8105a971>]
-> vprintk_emit+0xc1/0x490
-> Aug  6 15:23:07 dev kernel: [  304.432035]  [<ffffffff8105aa20>] ?
-> vprintk_emit+0x170/0x490
-> Aug  6 15:23:07 dev kernel: [  304.432035]  [<ffffffff8168b992>]
-> printk+0x61/0x63
-> Aug  6 15:23:07 dev kernel: [  304.432035]  [<ffffffffa04e9bf1>]
-> __xfs_printk+0x31/0x50 [xfs]
-> Aug  6 15:23:07 dev kernel: [  304.432035]  [<ffffffffa04e9e43>]
-> xfs_notice+0x53/0x60 [xfs]
-> Aug  6 15:23:07 dev kernel: [  304.432035]  [<ffffffffa04e0c15>]
-> xfs_do_force_shutdown+0xf5/0x180 [xfs]
-> Aug  6 15:23:07 dev kernel: [  304.432035]  [<ffffffffa0526848>] ?
-> xlog_recover_iodone+0x48/0x70 [xfs]
-> Aug  6 15:23:07 dev kernel: [  304.432035]  [<ffffffffa0526848>]
-> xlog_recover_iodone+0x48/0x70 [xfs]
-> Aug  6 15:23:07 dev kernel: [  304.432035]  [<ffffffffa04d645d>]
-> xfs_buf_iodone_work+0x4d/0xa0 [xfs]
-> Aug  6 15:23:07 dev kernel: [  304.432035]  [<ffffffff81077a11>]
-> process_one_work+0x141/0x4a0
-> Aug  6 15:23:07 dev kernel: [  304.432035]  [<ffffffff810789e8>]
-> worker_thread+0x168/0x410
-> Aug  6 15:23:07 dev kernel: [  304.432035]  [<ffffffff81078880>] ?
-> manage_workers+0x120/0x120
-> Aug  6 15:23:07 dev kernel: [  304.432035]  [<ffffffff8107df10>]
-> kthread+0xc0/0xd0
-> Aug  6 15:23:07 dev kernel: [  304.432035]  [<ffffffff8107de50>] ?
-> flush_kthread_worker+0xb0/0xb0
-> Aug  6 15:23:07 dev kernel: [  304.432035]  [<ffffffff816ab86c>]
-> ret_from_fork+0x7c/0xb0
-> Aug  6 15:23:07 dev kernel: [  304.432035]  [<ffffffff8107de50>] ?
-> flush_kthread_worker+0xb0/0xb0
-> Aug  6 15:23:07 dev kernel: [  304.432035] Code: 31 c0 80 3f 00 55 48 89 
-> e5
-> 74 11 48 89 f8 66 90 48 83 c0 01 80 38 00 75 f7 48 29 f8 5d c3 66 90 55 31
-> c0 48 85 f6 48 89 e5 74 23 <80> 3f 00 74 1e 48 89 f8 eb 0c 0f 1f 00 48 83 
-> ee
-> 01 80 38 00 74
-> Aug  6 15:23:07 dev kernel: [  304.432035] RIP  [<ffffffff8133c2cb>]
-> strnlen+0xb/0x30
-> Aug  6 15:23:07 dev kernel: [  304.432035]  RSP <ffff880035461b08>
->
->
-> So previously you said: "So, something is corrupting memory and stamping 
-> all
-> over the XFS structures." and also "given you have a bunch of out of tree
-> modules loaded (and some which are experiemental) suggests that you have a
-> problem with your storage...".
->
-> But I believe, my analysis shows that during the mount sequence XFS does 
-> not
-> wait properly for all the bios to complete, before failing the mount
-> sequence back to the caller.
->
+Hi folks,
 
-As an experiment, what about the following? Compile tested only and not
-safe for general use.
+A few recent incidents, discoveries and comments have me concerned
+about the viability of using oss.sgi.com to host XFS deveopment and
+community support.
 
-What might help more is to see if you can create a reproducer on a
-recent, clean kernel. Perhaps a metadump of your reproducer fs combined
-with whatever block device ENOSPC hack you're using would do it.
+We are very grateful for the time, effort and money that SGI has put
+into providing oss.sgi.com for us over many, many years, but these
+recent issues have brought the state of oss.sgi.com and hence it's
+viability as a host for XFS development to my immediate attention.
 
-Brian
+Ultimately, as the XFS maintainer, I'm responsible for the contents
+of the pull requests sent to Linus and the code we distribute to
+users, distros and developers. That means I need to be able to trust
+that the hosting infrastructure is secure and well maintained.
 
----8<---
+The short story is that I can't trust oss.sgi.com to be maintained
+and secure anymore. The recent DOS issues with oss.sgi.com made it
+clear that it is essentially unmaintained and the SGI admins don't
+have time to address issues that arise. This little snippet of the
+conversion about blocking the rogue spider causing the recent
+ftp and gitweb DOS problems is instructive:
 
-diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-index cd7b8ca..fbcf524 100644
---- a/fs/xfs/xfs_buf.c
-+++ b/fs/xfs/xfs_buf.c
-@@ -1409,19 +1409,27 @@ xfs_buf_iorequest(
-  * case nothing will ever complete.  It returns the I/O error code, if any, 
-or
-  * 0 if there was no error.
-  */
--int
--xfs_buf_iowait(
-- xfs_buf_t *bp)
-+static int
-+__xfs_buf_iowait(
-+ struct xfs_buf *bp,
-+ bool skip_error)
-{
-  trace_xfs_buf_iowait(bp, _RET_IP_);
+[19/07/14 09:07] <sandeen> trev, it's you guys' box :)
+[19/07/14 09:07] <sandeen> you get to make it work=20
+[19/07/14 09:07] <dchinner__> I am not eh administrator, and if I'm forced =
+to do this sort of thing I'll just take the content elsewhere....
+[19/07/14 09:08] <trev> dchinner__, please do so. I don't have much time fo=
+r oss anymore
 
-- if (!bp->b_error)
-+ if (skip_error || !bp->b_error)
-  wait_for_completion(&bp->b_iowait);
+It should be no surprise that since this conversation I've been
+looking at what is involved in moving everything XFS off oss.sgi.com
+to kernel.org.  Right now I have the main XFS repositories up to
+date on kernel.org.  For userspace I've simply pushed the current
+trees and tags to the pre-existing repositories here:
 
-  trace_xfs_buf_iowait_done(bp, _RET_IP_);
-  return bp->b_error;
-}
+	git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git
+	git://git.kernel.org/pub/scm/fs/xfs/xfsdump-dev.git
+	git://git.kernel.org/pub/scm/fs/xfs/xfstests-dev.git
 
-+int
-+xfs_buf_iowait(
-+ struct xfs_buf *bp)
-+{
-+ return __xfs_buf_iowait(bp, false);
-+}
-+
-xfs_caddr_t
-xfs_buf_offset(
-  xfs_buf_t *bp,
-@@ -1866,7 +1874,7 @@ xfs_buf_delwri_submit(
-  bp = list_first_entry(&io_list, struct xfs_buf, b_list);
+These trees currently have the same content as the trees on
+oss.sgi.com.  I may rename these as a result of discussions here
+(e.g. some people don't like the -dev suffix on the trees) so it's
+best for people to continue to use the trees on oss.sgi.com until
+this disucssion comes to a conclusion.
 
-  list_del_init(&bp->b_list);
-- error2 = xfs_buf_iowait(bp);
-+ error2 = __xfs_buf_iowait(bp, true);
-  xfs_buf_relse(bp);
-  if (!error)
-  error = error2;
+My new kernel dev tree can be found here:
 
----
+	git://git.kernel.org/pub/scm/linux/kernel/git/dgc/linux-xfs.git
 
-> Thanks,
-> Alex.
->
->
->
-> -----Original Message----- From: Dave Chinner
-> Sent: 05 August, 2014 2:07 AM
-> To: Alex Lyakas
-> Cc: xfs@oss.sgi.com
-> Subject: Re: use-after-free on log replay failure
->
-> On Mon, Aug 04, 2014 at 02:00:05PM +0300, Alex Lyakas wrote:
-> >Greetings,
-> >
-> >we had a log replay failure due to some errors that the underlying
-> >block device returned:
-> >[49133.801406] XFS (dm-95): metadata I/O error: block 0x270e8c180
-> >("xlog_recover_iodone") error 28 numblks 16
-> >[49133.802495] XFS (dm-95): log mount/recovery failed: error 28
-> >[49133.802644] XFS (dm-95): log mount failed
->
-> #define ENOSPC          28      /* No space left on device */
->
-> You're getting an ENOSPC as a metadata IO error during log recovery?
-> Thin provisioning problem, perhaps, and the error is occurring on
-> submission rather than completion? If so:
->
-> 8d6c121 xfs: fix buffer use after free on IO error
->
-> Cheers,
->
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
-> 
+This is my immediate concern: this tree, regardless of anything
+else, the tree I am going to be asking Linus to pull from - it is
+now *my* master tree and the tree on oss.sgi.com will simply mirror
+that tree.
+
+For the short term, I will set up a cron job to keep the oss trees
+up to date with the trees on kernel.org. By "short-term" I mean till
+the end of the year at most. This will allow people time to change
+their workflows, update their repos, bookmarks, etc in their own
+time so hopefully not take anyone by surprise when the trees on
+oss.sgi.com stop updating. "short-term" is a rubbery concept - if
+anyone things it should be longer or shorter or whether a completely
+different approach is warranted, please speak up.
+
+Over the next few days I will move the remaining xfs trees to
+kernel.org - the historical kernel archive and documentation trees -
+and then I'll maintain them as the primary trees with the same
+short term mirroring backup.
+
+In moving these trees, we will need to update some documentation
+(e.g. the "where to get" documentation on the xfs.org wiki) and
+links, as well as place a "readme" in the gitweb main page on
+oss.sgi.com to indicate that the up-to-date XFS trees are now on
+kernel.org and documenting the drop-dead date to when the trees on
+oss will no longer be kept up to date.
+
+The only remaining issue is what to do about tarball releases for
+xfsprogs/xfsdump/fstests. We currently have a bunch of historic
+releases in the ftp release area on oss.sgi.com. I will organise a
+release directory on kernel.org for future releases (location yet to
+be confirmed), but I'm not sure what to do with the older releases.
+I'm open to suggestions here, but the limit of what I will try to
+move to kernel.org is signed tarballs that I have verified.
+
+For xfstests, I think this would be a good time to rename the
+project officially as well (i.e. to "fstests"). I'll need to talk to
+the kernel.org admins on where to locate it (pub/scm/fs/fstests is
+the best candidate, I think), but in the mean time I'll just mirror
+to oss.sgi.com as per the above so nobody needs to change anything
+until we sort out the final location/name of the tree. If anyone has
+any other ideas on this, please let me know, otherwise I'll just
+proceed with this plan.
+
+In conjunction with this source tree move, I'd also like to start the
+move the mailing list. We have ongoing spam, performance and user
+access issues with oss.sgi.com, so IMO if we are moving source trees
+off this host we should also move the mailing list to kernel.org
+infrastructure.
+
+To that end, there is a linux-xfs@vger.kernel.org
+list already - it was created at the same time that the above
+kernel.org repositories were created, but we've never used it. It
+is archived here:
+
+	http://www.spinics.net/lists/linux-xfs/
+
+Moving the mailing list is going to be something that affects more
+than just the developers - we've got lots of documentation that
+points at this list and there are lots of users that are subscribed,
+read it though nntp gateways, have aliases for it, etc so we need
+a good transition plan here.
+
+I'm not sure what the best approach - perhaps just
+forwarding all email from xfs@oss.sgi.com to
+linux-xfs@vger.kernel.org will solve most transitional problems
+for users that aren't aware of the change or are following old
+documentation or "please report bug" messages from xfs_repair.
+But it means that everyone needs to subscribe to the new list
+and probably unsubscribe from the old list. I dont see how we can
+avoid that in the long term, but I'd like to minimise the pain
+as much as possible for everyone.
+
+Again, I'm open to suggestions on how to approach this and maintain
+the oss list aliases for long enough that people and search engines
+learn about the new list.
+
+I would like to make this as painless as possible for everyone. This
+isn't the only solution to the problems we have with oss.sgi.com,
+but it's the path of least effort/greatest gain for me. If anyone
+has any ideas on alternative solutions, reservations about moving to
+kernel.org infrastructure and/or suggestions to make it less painful
+for everyone, please speak up now.
+
+Cheers,
+
+Dave.
+--=20
+Dave Chinner
+david@fromorbit.com
+
+--k+w/mQv8wyuph6w0
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
+
+iQIcBAEBAgAGBQJT4sOxAAoJEK3oKUf0dfodHRsQANRBTF02Q742McbEZxb0J9IB
+EKz+eLegRB5zRaHQAa7GEVq5xSnEJvX4/M2XTCK+HBCNdGy6DPH3777Tf6869uLt
+5YLf1hIhQso/o3FPqaRdb9UmaV/fXGjAjBIcTneCHThMO1JWRpyLlZBAcYIrO3yQ
+MD8xjypUk/KxRxLZU54kXHZG5TZ6abXF6MAksBBX7gnKlLMBeVwBznn64WLUebAF
+aJEJCiaiBKYo0Hcd7MkKLtBdbi977Mk/pkMS1U3AILrRBN40jl7o7pFDnyApzTy6
+r03VbWTuZSgaPQF32SfSqBXUTAKaOJA4zEr61QuS7yyvVhm2a6YcY92/yw1ia7AY
+kT5eMqn9vxZwPHI8b/38Dhrm/HJEXS/TkCAafCQlaMN7U0auvpsZtHQain2s4Vm4
+SW7hzb26Y1zy/A0pLDGz0GHEs+Hml9DuZvu5BbmCtFnrsi6u0DpHUorwQ4JxWuiJ
+SbonlU1Wf4g7h2SwShoPmtRKS2ar2vFmS5jnuUoq7HtWjLJwFryKuDHHjaDReVVA
+JeV4Ux13BeRnGqFpn7Xbaphm/3I3fFQc7h6qU+u/Clt6u6bC1+2j41Nq35fCT04M
+wB7ogbW19elsr/hbZBINLWmb5k6lZ8WFXMKuvlUdEvwTL89FTOhimWZRrKNlDSDc
+TSDH886bZf4WgoN8h505
+=4kZa
+-----END PGP SIGNATURE-----
+
+--k+w/mQv8wyuph6w0--
+
+
+--===============8053165494245948395==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============8053165494245948395==--
