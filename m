@@ -1,26 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 759E87FCE
-	for <xfs@oss.sgi.com>; Fri,  8 Aug 2014 00:07:37 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 9E5977F77
+	for <xfs@oss.sgi.com>; Fri,  8 Aug 2014 02:39:38 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 46129304059
-	for <xfs@oss.sgi.com>; Thu,  7 Aug 2014 22:07:37 -0700 (PDT)
-Received: from mailout3.samsung.com (mailout3.samsung.com [203.254.224.33]) by
-	cuda.sgi.com with ESMTP id SwsZuZ5bAjfemXfb (version=TLSv1
-	cipher=RC4-MD5 bits=128 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 07 Aug 2014 22:07:35 -0700 (PDT)
-Received: from epcpsbgr5.samsung.com
-	(u145.gpu120.samsung.co.kr [203.254.230.145])
-	by mailout3.samsung.com (Oracle Communications Messaging Server
-	7u4-24.01 (7.0.4.24.0) 64bit (built Nov 17 2011))
-	with ESMTP id <0N9Z00F4W27TWS40@mailout3.samsung.com> for
-	xfs@oss.sgi.com; Fri, 08 Aug 2014 14:07:05 +0900 (KST)
-From: Namjae Jeon <namjae.jeon@samsung.com>
-Subject: [PATCH v5 9/10]  xfstests: fsstress: Add fallocate insert range
-Date: Fri, 08 Aug 2014 14:07:05 +0900
-Message-id: <004a01cfb2c6$98c4b250$ca4e16f0$@samsung.com>
-MIME-version: 1.0
-Content-language: ko
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 6D6F4304062
+	for <xfs@oss.sgi.com>; Fri,  8 Aug 2014 00:39:38 -0700 (PDT)
+Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
+	[150.101.137.143]) by cuda.sgi.com with ESMTP id
+	S46kr5kgCcsxKJ12 for <xfs@oss.sgi.com>;
+	Fri, 08 Aug 2014 00:39:35 -0700 (PDT)
+Date: Fri, 8 Aug 2014 17:39:31 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: xfs hang in 3.14.15
+Message-ID: <20140808073931.GD26465@dastard>
+References: <53E02495.4080208@sbcglobal.net> <20140805011800.GC20518@dastard>
+	<53E372AA.4030304@sbcglobal.net> <20140807211052.GD17105@kroah.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20140807211052.GD17105@kroah.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,102 +30,41 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>, Theodore Ts'o <tytso@mit.edu>
-Cc: Brian Foster <bfoster@redhat.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, linux-fsdevel@vger.kernel.org, =?iso-8859-2?Q?Luk=E1=B9_Czerner?= <lczerner@redhat.com>, linux-ext4 <linux-ext4@vger.kernel.org>
+To: Greg KH <gregkh@linuxfoundation.org>
+Cc: xfs@oss.sgi.com, Bill <billstuff2001@sbcglobal.net>
 
-This commit adds insert operation support for fsstress, which is
-meant to exercise fallocate FALLOC_FL_INSERT_RANGE support.
+On Thu, Aug 07, 2014 at 02:10:52PM -0700, Greg KH wrote:
+> On Thu, Aug 07, 2014 at 07:35:54AM -0500, Bill wrote:
+> > On 08/04/2014 08:18 PM, Dave Chinner wrote:
+> > >On Mon, Aug 04, 2014 at 07:25:57PM -0500, Bill wrote:
+> > >>Hi,
+> > >>
+> > >>I've been running a stress test on 3.14.15 and eventually my xfs
+> > >>filesystem hangs. Both 3.10.50 and 3.16 seem to work ok.
+> > >log space hang.
+> > >
+> > >110dc24 xfs: log vector rounding leaks log space
+> > >
+> > >Cheers,
+> > >
+> > >Dave.
+> > 
+> > Thanks Dave, that helped.
+> > 
+> > Greg, Please consider this for inclusion in 3.14.y. It fixed an xfs hang I
+> > had on 3.14.15
+> 
+> Dave, any objection for me to include it?
 
-Signed-off-by: Namjae Jeon <namjae.jeon@samsung.com>
-Signed-off-by: Ashish Sangwan <a.sangwan@samsung.com>
----
- ltp/fsstress.c | 19 ++++++++++++++++---
- src/global.h   |  4 ++++
- 2 files changed, 20 insertions(+), 3 deletions(-)
+Go ahead, Greg. FWIW, if you are doing another 3.15 release, it is
+needed there as well as this fix didn't go in until 3.16-rc1....
 
-diff --git a/ltp/fsstress.c b/ltp/fsstress.c
-index b56fe5c..aa3e0c3 100644
---- a/ltp/fsstress.c
-+++ b/ltp/fsstress.c
-@@ -72,6 +72,7 @@ typedef enum {
- 	OP_PUNCH,
- 	OP_ZERO,
- 	OP_COLLAPSE,
-+	OP_INSERT,
- 	OP_READ,
- 	OP_READLINK,
- 	OP_RENAME,
-@@ -170,6 +171,7 @@ void	mknod_f(int, long);
- void	punch_f(int, long);
- void	zero_f(int, long);
- void	collapse_f(int, long);
-+void	insert_f(int, long);
- void	read_f(int, long);
- void	readlink_f(int, long);
- void	rename_f(int, long);
-@@ -209,6 +211,7 @@ opdesc_t	ops[] = {
- 	{ OP_PUNCH, "punch", punch_f, 1, 1 },
- 	{ OP_ZERO, "zero", zero_f, 1, 1 },
- 	{ OP_COLLAPSE, "collapse", collapse_f, 1, 1 },
-+	{ OP_INSERT, "insert", insert_f, 1, 1 },
- 	{ OP_READ, "read", read_f, 1, 0 },
- 	{ OP_READLINK, "readlink", readlink_f, 1, 0 },
- 	{ OP_RENAME, "rename", rename_f, 2, 1 },
-@@ -2176,6 +2179,7 @@ struct print_flags falloc_flags [] = {
- 	{ FALLOC_FL_NO_HIDE_STALE, "NO_HIDE_STALE"},
- 	{ FALLOC_FL_COLLAPSE_RANGE, "COLLAPSE_RANGE"},
- 	{ FALLOC_FL_ZERO_RANGE, "ZERO_RANGE"},
-+	{ FALLOC_FL_INSERT_RANGE, "INSERT_RANGE"},
- 	{ -1, NULL}
- };
- 
-@@ -2227,10 +2231,11 @@ do_fallocate(int opno, long r, int mode)
- 	off %= maxfsize;
- 	len = (off64_t)(random() % (1024 * 1024));
- 	/*
--	 * Collapse range requires off and len to be block aligned, make it
--	 * more likely to be the case.
-+	 * Collapse/insert range requires off and len to be block aligned,
-+	 * make it more likely to be the case.
- 	 */
--	if ((mode & FALLOC_FL_COLLAPSE_RANGE) && (opno % 2)) {
-+	if ((mode & (FALLOC_FL_COLLAPSE_RANGE | FALLOC_FL_INSERT_RANGE)) &&
-+		(opno % 2)) {
- 		off = ((off + stb.st_blksize - 1) & ~(stb.st_blksize - 1));
- 		len = ((len + stb.st_blksize - 1) & ~(stb.st_blksize - 1));
- 	}
-@@ -2656,6 +2661,14 @@ collapse_f(int opno, long r)
- }
- 
- void
-+insert_f(int opno, long r)
-+{
-+#ifdef HAVE_LINUX_FALLOC_H
-+	do_fallocate(opno, r, FALLOC_FL_INSERT_RANGE);
-+#endif
-+}
-+
-+void
- read_f(int opno, long r)
- {
- 	char		*buf;
-diff --git a/src/global.h b/src/global.h
-index 8180f66..f63246b 100644
---- a/src/global.h
-+++ b/src/global.h
-@@ -172,6 +172,10 @@
- #define FALLOC_FL_ZERO_RANGE		0x10
- #endif
- 
-+#ifndef FALLOC_FL_INSERT_RANGE
-+#define FALLOC_FL_INSERT_RANGE		0x20
-+#endif
-+
- #endif /* HAVE_LINUX_FALLOC_H */
- 
- #endif /* GLOBAL_H */
+Thanks!
+
+-Dave.
 -- 
-1.7.11-rc0
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
