@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 9EAFB7F73
-	for <xfs@oss.sgi.com>; Fri,  8 Aug 2014 10:18:02 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id D79B57F59
+	for <xfs@oss.sgi.com>; Fri,  8 Aug 2014 11:05:04 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 7DAE130404E
-	for <xfs@oss.sgi.com>; Fri,  8 Aug 2014 08:17:59 -0700 (PDT)
-Received: from mx0a-00082601.pphosted.com (mx0a-00082601.pphosted.com
-	[67.231.145.42]) by cuda.sgi.com with ESMTP id LUukCEMFX3aNZ2Yc
-	for <xfs@oss.sgi.com>; Fri, 08 Aug 2014 08:17:58 -0700 (PDT)
-Message-ID: <53E4EA1C.6030009@fb.com>
-Date: Fri, 8 Aug 2014 11:17:48 -0400
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 58B09AC004
+	for <xfs@oss.sgi.com>; Fri,  8 Aug 2014 09:05:01 -0700 (PDT)
+Received: from mx0a-00082601.pphosted.com (mx0b-00082601.pphosted.com
+	[67.231.153.30]) by cuda.sgi.com with ESMTP id OOtgEeCKuiWncMlt
+	for <xfs@oss.sgi.com>; Fri, 08 Aug 2014 09:04:58 -0700 (PDT)
+Message-ID: <53E4F518.9030107@fb.com>
+Date: Fri, 8 Aug 2014 12:04:40 -0400
 From: Chris Mason <clm@fb.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfs: don't zero partial page cache pages during O_DIRECT
+Subject: [PATCH RFC] xfs: use invalidate_inode_pages2_range for DIO writes
 References: <53E4E03A.7050101@fb.com>
 In-Reply-To: <53E4E03A.7050101@fb.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -29,69 +29,39 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com, Dave Chinner <david@fromorbit.com>, Eric Sandeen <sandeen@redhat.com>
 
-On 08/08/2014 10:35 AM, Chris Mason wrote:
-> 
-> xfs is using truncate_pagecache_range to invalidate the page cache
-> during DIO reads.  This is different from the other filesystems who only
-> invalidate pages during DIO writes.
-> 
-> truncate_pagecache_range is meant to be used when we are freeing the
-> underlying data structs from disk, so it will zero any partial ranges
-> in the page.  This means a DIO read can zero out part of the page cache
-> page, and it is possible the page will stay in cache.
-> 
-> buffered reads will find an up to date page with zeros instead of the
-> data actually on disk.
-> 
-> This patch fixes things by leaving the page cache alone during DIO
-> reads.
-> 
-> We discovered this when our buffered IO program for distributing
-> database indexes was finding zero filled blocks.  I think writes
-> are broken too, but I'll leave that for a separate patch because I don't
-> fully understand what XFS needs to happen during a DIO write.
 
-I stuck a cc: stable@vger.kernel.org after my sob, but then inserted a
-giant test program.  Just realized the cc might get lost...sorry I
-wasn't trying to sneak it in.
+xfs is using truncate_pagecache_range to invalidate the page cache
+during DIO writes.  The other filesystems are calling
+invalidate_inode_pages2_range
+ 
+truncate_pagecache_range is meant to be used when we are freeing the
+underlying data structs from disk, so it will zero any partial ranges
+in the page.  This means a DIO write can zero out part of the page cache
+page, and it is possible the page will stay in cache.
 
-I've been trying to figure out why this bug doesn't show up in our 3.2
-kernels but does show up now.  Today xfs does this:
+This one is an RFC because it is untested and because I don't understand
+how XFS is dealing with pages the truncate was unable to clear away.
+I'm not able to actually trigger zeros by mixing DIO writes with
+buffered reads.
 
-     truncate_pagecache_range(VFS_I(ip), pos, -1);
+Signed-off-by: Chris Mason <clm@fb.com>
 
-But in 3.2 we did this:
-
-     ret = -xfs_flushinval_pages(ip,
-                              (iocb->ki_pos & PAGE_CACHE_MASK),
-                              -1, FI_REMAPF_LOCKED);
-
-
-Since we've done pos & PAGE_CACHE_MASK, the 3.2 code never sent a
-partial offset.  So it never zero'd partial pages.
-
-> 
-> Signed-off-by: Chris Mason <clm@fb.com>
-> cc: stable@vger.kernel.org
-> 
-> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-> index 1f66779..8d25d98 100644
-> --- a/fs/xfs/xfs_file.c
-> +++ b/fs/xfs/xfs_file.c
-> @@ -295,7 +295,11 @@ xfs_file_read_iter(
->  				xfs_rw_iunlock(ip, XFS_IOLOCK_EXCL);
->  				return ret;
->  			}
-> -			truncate_pagecache_range(VFS_I(ip), pos, -1);
-> +
-> +			/* we don't remove any pages here.  A direct read
-> +			 * does not invalidate any contents of the page
-> +			 * cache
-> +			 */
->  		}
->  		xfs_rw_ilock_demote(ip, XFS_IOLOCK_EXCL);
->  	}
-> 
+diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+index 8d25d98..c30c112 100644
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@ -638,7 +638,10 @@ xfs_file_dio_aio_write(
+ 						    pos, -1);
+ 		if (ret)
+ 			goto out;
+-		truncate_pagecache_range(VFS_I(ip), pos, -1);
++
++		/* what do we do if we can't invalidate the pages? */
++		invalidate_inode_pages2_range(VFS_I(ip)->i_mapping,
++					      pos >> PAGE_CACHE_SHIFT, -1);
+ 	}
+ 
+ 	/*
 
 _______________________________________________
 xfs mailing list
