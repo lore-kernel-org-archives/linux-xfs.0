@@ -1,23 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 8361F7FA1
-	for <xfs@oss.sgi.com>; Fri,  8 Aug 2014 23:17:14 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 12361AC002
-	for <xfs@oss.sgi.com>; Fri,  8 Aug 2014 21:17:10 -0700 (PDT)
-Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
-	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	HIdGpHR11qaUIW0C for <xfs@oss.sgi.com>;
-	Fri, 08 Aug 2014 21:17:05 -0700 (PDT)
-Date: Sat, 9 Aug 2014 14:17:00 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs: don't zero partial page cache pages during O_DIRECT
-Message-ID: <20140809041700.GH26465@dastard>
-References: <53E4E03A.7050101@fb.com> <20140809003628.GE26465@dastard>
-	<53E5885A.9090302@fb.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id EF9357F89
+	for <xfs@oss.sgi.com>; Sat,  9 Aug 2014 07:57:10 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id CEC838F8066
+	for <xfs@oss.sgi.com>; Sat,  9 Aug 2014 05:57:07 -0700 (PDT)
+Received: from mx0b-00082601.pphosted.com (mx0b-00082601.pphosted.com
+	[67.231.153.30]) by cuda.sgi.com with ESMTP id 5s7okgtsuR1d979C
+	for <xfs@oss.sgi.com>; Sat, 09 Aug 2014 05:57:06 -0700 (PDT)
+Message-ID: <53E61A9C.4020807@fb.com>
+Date: Sat, 9 Aug 2014 08:57:00 -0400
+From: Chris Mason <clm@fb.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <53E5885A.9090302@fb.com>
+Subject: [PATCH v2] xfs: don't zero partial page cache pages during O_DIRECT
+References: <53E4E03A.7050101@fb.com>
+In-Reply-To: <53E4E03A.7050101@fb.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,111 +27,47 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Chris Mason <clm@fb.com>
-Cc: Eric Sandeen <sandeen@redhat.com>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com, Dave Chinner <david@fromorbit.com>, Eric Sandeen <sandeen@redhat.com>
 
-On Fri, Aug 08, 2014 at 10:32:58PM -0400, Chris Mason wrote:
-> 
-> 
-> On 08/08/2014 08:36 PM, Dave Chinner wrote:
-> > On Fri, Aug 08, 2014 at 10:35:38AM -0400, Chris Mason wrote:
-> >>
-> >> xfs is using truncate_pagecache_range to invalidate the page cache
-> >> during DIO reads.  This is different from the other filesystems who only
-> >> invalidate pages during DIO writes.
-> > 
-> > Historical oddity thanks to wrapper functions that were kept way
-> > longer than they should have been.
-> > 
-> >> truncate_pagecache_range is meant to be used when we are freeing the
-> >> underlying data structs from disk, so it will zero any partial ranges
-> >> in the page.  This means a DIO read can zero out part of the page cache
-> >> page, and it is possible the page will stay in cache.
-> > 
-> > commit fb59581 ("xfs: remove xfs_flushinval_pages").  also removed
-> > the offset masks that seem to be the issue here. Classic case of a
-> > regression caused by removing 10+ year old code that was not clearly
-> > documented and didn't appear important.
-> > 
-> > The real question is why isn't fsx and other corner case data
-> > integrity tools tripping over this?
-> > 
-> 
-> My question too.  Maybe not mixing buffered/direct for partial pages?
-> Does fsx only do 4K O_DIRECT?
 
-No. xfstests::tests/generic/091 is supposed to cover this exact
-case.  It runs fsx with direct IO aligned to sector boundaries
-amongst other things.
+xfs is using truncate_pagecache_range to invalidate the page cache
+during DIO reads.  This is different from the other filesystems who only
+invalidate pages during DIO writes.
 
-$ ./lsqa.pl tests/generic/091
-FS QA Test No. 091
+truncate_pagecache_range is meant to be used when we are freeing the
+underlying data structs from disk, so it will zero any partial ranges in
+the page.  This means a DIO read can zero out part of the page cache
+page, and it is possible the page will stay in cache.
 
-fsx exercising direct IO -- sub-block sizes and concurrent buffered IO
+buffered reads will find an up to date page with zeros instead of the
+data actually on disk.
 
-$
+This patch fixes things by using invalidate_inode_pages2_range instead.
+It preserves the page cache invalidation, but won't zero any pages.
 
-> 
-> >> buffered reads will find an up to date page with zeros instead of the
-> >> data actually on disk.
-> >>
-> >> This patch fixes things by leaving the page cache alone during DIO
-> >> reads.
-> >>
-> >> We discovered this when our buffered IO program for distributing
-> >> database indexes was finding zero filled blocks.  I think writes
-> >> are broken too, but I'll leave that for a separate patch because I don't
-> >> fully understand what XFS needs to happen during a DIO write.
-> >>
-> >> Test program:
-> > 
-> > Encapsulate it in a generic xfstest, please, and send it to
-> > fstests@vger.kernel.org.
-> 
-> This test prog was looking for races, which we really don't have.  It
-> can be much shorter to just look for the improper zeroing from a single
-> thread.  I can send it either way.
+Signed-off-by: Chris Mason <clm@fb.com>
+cc: stable@vger.kernel.org
 
-Doesn't matter, as long as we have something that exercises this
-case....
+---
+ fs/xfs/xfs_file.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-> > Besides, XFS's direct IO semantics are far saner, more predictable
-> > and hence are more widely useful than the generic code. As such,
-> > we're not going to regress semantics that have been unchanged
-> > over 20 years just to match whatever insanity the generic Linux code
-> > does right now.
-> > 
-> > Go on, call me a deranged monkey on some serious mind-controlling
-> > substances. I don't care. :)
-> 
-> The deranged part is invalidating pos -> -1 on a huge file because of a
-> single 512b direct read.  But, if you mix O_DIRECT and buffered you get
-> what the monkeys give you and like it.
-
-That's a historical artifact - it predates the range interfaces that
-Linux has grown over the years, and every time we've changed it to
-match teh I/O range subtle problems have arisen. THose are usually
-due to other bugs we knew nothing about at the time, but that's the
-way it goes...
-
-> > I think the fix should probably just be:
-> > 
-> > -			truncate_pagecache_range(VFS_I(ip), pos, -1);
-> > +			invalidate_inode_pages2_range(VFS_I(ip)->i_mapping,
-> > +					pos >> PAGE_CACHE_SHIFT, -1);
-> > 
-> 
-> I'll retest with this in the morning.  The invalidate is basically what
-> we had before with the masking & PAGE_CACHE_SHIFT.
-
-Yup. Thanks for finding these issuesi, Chris!
-
-Cheers,
-
-Dave.
+diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+index 1f66779..023d575 100644
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@ -295,7 +295,8 @@ xfs_file_read_iter(
+ 				xfs_rw_iunlock(ip, XFS_IOLOCK_EXCL);
+ 				return ret;
+ 			}
+-			truncate_pagecache_range(VFS_I(ip), pos, -1);
++			invalidate_inode_pages2_range(VFS_I(ip)->i_mapping,
++					      pos >> PAGE_CACHE_SHIFT, -1);
+ 		}
+ 		xfs_rw_ilock_demote(ip, XFS_IOLOCK_EXCL);
+ 	}
 -- 
-Dave Chinner
-david@fromorbit.com
+1.8.1
 
 _______________________________________________
 xfs mailing list
