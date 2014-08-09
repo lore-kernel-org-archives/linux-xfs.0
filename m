@@ -1,22 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 620057F89
-	for <xfs@oss.sgi.com>; Fri,  8 Aug 2014 19:36:49 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id D6518AC003
-	for <xfs@oss.sgi.com>; Fri,  8 Aug 2014 17:36:45 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id A06287F8C
+	for <xfs@oss.sgi.com>; Fri,  8 Aug 2014 19:49:13 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 49BD4AC003
+	for <xfs@oss.sgi.com>; Fri,  8 Aug 2014 17:49:13 -0700 (PDT)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	7ihn50gHa5qb8Jbk for <xfs@oss.sgi.com>;
-	Fri, 08 Aug 2014 17:36:43 -0700 (PDT)
-Date: Sat, 9 Aug 2014 10:36:28 +1000
+	kGtUTAvS8lbwuKbR for <xfs@oss.sgi.com>;
+	Fri, 08 Aug 2014 17:49:10 -0700 (PDT)
+Date: Sat, 9 Aug 2014 10:48:57 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs: don't zero partial page cache pages during O_DIRECT
-Message-ID: <20140809003628.GE26465@dastard>
+Subject: Re: [PATCH RFC] xfs: use invalidate_inode_pages2_range for DIO writes
+Message-ID: <20140809004857.GF26465@dastard>
 References: <53E4E03A.7050101@fb.com>
+ <53E4F518.9030107@fb.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <53E4E03A.7050101@fb.com>
+In-Reply-To: <53E4F518.9030107@fb.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,81 +33,58 @@ Sender: xfs-bounces@oss.sgi.com
 To: Chris Mason <clm@fb.com>
 Cc: Eric Sandeen <sandeen@redhat.com>, xfs@oss.sgi.com
 
-On Fri, Aug 08, 2014 at 10:35:38AM -0400, Chris Mason wrote:
+On Fri, Aug 08, 2014 at 12:04:40PM -0400, Chris Mason wrote:
 > 
 > xfs is using truncate_pagecache_range to invalidate the page cache
-> during DIO reads.  This is different from the other filesystems who only
-> invalidate pages during DIO writes.
-
-Historical oddity thanks to wrapper functions that were kept way
-longer than they should have been.
-
+> during DIO writes.  The other filesystems are calling
+> invalidate_inode_pages2_range
+>  
 > truncate_pagecache_range is meant to be used when we are freeing the
 > underlying data structs from disk, so it will zero any partial ranges
-> in the page.  This means a DIO read can zero out part of the page cache
+> in the page.  This means a DIO write can zero out part of the page cache
 > page, and it is possible the page will stay in cache.
-
-commit fb59581 ("xfs: remove xfs_flushinval_pages").  also removed
-the offset masks that seem to be the issue here. Classic case of a
-regression caused by removing 10+ year old code that was not clearly
-documented and didn't appear important.
-
-The real question is why isn't fsx and other corner case data
-integrity tools tripping over this?
-
-> buffered reads will find an up to date page with zeros instead of the
-> data actually on disk.
 > 
-> This patch fixes things by leaving the page cache alone during DIO
-> reads.
+> This one is an RFC because it is untested and because I don't understand
+> how XFS is dealing with pages the truncate was unable to clear away.
+> I'm not able to actually trigger zeros by mixing DIO writes with
+> buffered reads.
 > 
-> We discovered this when our buffered IO program for distributing
-> database indexes was finding zero filled blocks.  I think writes
-> are broken too, but I'll leave that for a separate patch because I don't
-> fully understand what XFS needs to happen during a DIO write.
+> Signed-off-by: Chris Mason <clm@fb.com>
 > 
-> Test program:
-
-Encapsulate it in a generic xfstest, please, and send it to
-fstests@vger.kernel.org.
-
-...
-
 > diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-> index 1f66779..8d25d98 100644
+> index 8d25d98..c30c112 100644
 > --- a/fs/xfs/xfs_file.c
 > +++ b/fs/xfs/xfs_file.c
-> @@ -295,7 +295,11 @@ xfs_file_read_iter(
->  				xfs_rw_iunlock(ip, XFS_IOLOCK_EXCL);
->  				return ret;
->  			}
-> -			truncate_pagecache_range(VFS_I(ip), pos, -1);
+> @@ -638,7 +638,10 @@ xfs_file_dio_aio_write(
+>  						    pos, -1);
+>  		if (ret)
+>  			goto out;
+> -		truncate_pagecache_range(VFS_I(ip), pos, -1);
 > +
-> +			/* we don't remove any pages here.  A direct read
-> +			 * does not invalidate any contents of the page
-> +			 * cache
-> +			 */
+> +		/* what do we do if we can't invalidate the pages? */
+> +		invalidate_inode_pages2_range(VFS_I(ip)->i_mapping,
+> +					      pos >> PAGE_CACHE_SHIFT, -1);
 
-I guarantee you that there are applications out there that rely on
-the implicit invalidation behaviour for performance. There are also
-applications out that rely on it for correctness, too, because the
-OS is not the only source of data in the filesystem the OS has
-mounted.
+I don't think it can on XFS.
 
-Besides, XFS's direct IO semantics are far saner, more predictable
-and hence are more widely useful than the generic code. As such,
-we're not going to regress semantics that have been unchanged
-over 20 years just to match whatever insanity the generic Linux code
-does right now.
+We're holding the XFS_IOLOCK_EXCL, so no other syscall based IO can
+dirty pages, all the pages are clean, try_to_free_buffers() will
+never fail, no-one can run a truncate operation concurently, and
+so on.
 
-Go on, call me a deranged monkey on some serious mind-controlling
-substances. I don't care. :)
+The only thing that could cause an issue is a racing mmap page fault
+dirtying the page. But if you are mixing mmap+direct IO on the same
+file, you lost a long time ago so that's nothing new at all.
 
-I think the fix should probably just be:
+So, I'd just do:
 
--			truncate_pagecache_range(VFS_I(ip), pos, -1);
-+			invalidate_inode_pages2_range(VFS_I(ip)->i_mapping,
-+					pos >> PAGE_CACHE_SHIFT, -1);
+		ret = invalidate_inode_pages2_range(VFS_I(ip)->i_mapping,
+						pos >> PAGE_CACHE_SHIFT, -1);
+		WARN_ON_ONCE(ret);
+		ret = 0;
+
+That way we'll find out if it does ever fail, and if it does we can
+take it from there.
 
 Cheers,
 
