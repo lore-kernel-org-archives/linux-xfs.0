@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id E17D17F73
-	for <xfs@oss.sgi.com>; Fri,  8 Aug 2014 15:39:46 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id A3783304059
-	for <xfs@oss.sgi.com>; Fri,  8 Aug 2014 13:39:43 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id H3n6n0N95JEaQbG6 (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 08 Aug 2014 13:39:42 -0700 (PDT)
-Date: Fri, 8 Aug 2014 16:39:28 -0400
-From: Brian Foster <bfoster@redhat.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 620057F89
+	for <xfs@oss.sgi.com>; Fri,  8 Aug 2014 19:36:49 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id D6518AC003
+	for <xfs@oss.sgi.com>; Fri,  8 Aug 2014 17:36:45 -0700 (PDT)
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	7ihn50gHa5qb8Jbk for <xfs@oss.sgi.com>;
+	Fri, 08 Aug 2014 17:36:43 -0700 (PDT)
+Date: Sat, 9 Aug 2014 10:36:28 +1000
+From: Dave Chinner <david@fromorbit.com>
 Subject: Re: [PATCH] xfs: don't zero partial page cache pages during O_DIRECT
-Message-ID: <20140808203928.GA64279@bfoster.bfoster>
+Message-ID: <20140809003628.GE26465@dastard>
 References: <53E4E03A.7050101@fb.com>
 MIME-Version: 1.0
 Content-Disposition: inline
@@ -37,12 +37,23 @@ On Fri, Aug 08, 2014 at 10:35:38AM -0400, Chris Mason wrote:
 > xfs is using truncate_pagecache_range to invalidate the page cache
 > during DIO reads.  This is different from the other filesystems who only
 > invalidate pages during DIO writes.
-> 
+
+Historical oddity thanks to wrapper functions that were kept way
+longer than they should have been.
+
 > truncate_pagecache_range is meant to be used when we are freeing the
 > underlying data structs from disk, so it will zero any partial ranges
 > in the page.  This means a DIO read can zero out part of the page cache
 > page, and it is possible the page will stay in cache.
-> 
+
+commit fb59581 ("xfs: remove xfs_flushinval_pages").  also removed
+the offset masks that seem to be the issue here. Classic case of a
+regression caused by removing 10+ year old code that was not clearly
+documented and didn't appear important.
+
+The real question is why isn't fsx and other corner case data
+integrity tools tripping over this?
+
 > buffered reads will find an up to date page with zeros instead of the
 > data actually on disk.
 > 
@@ -55,12 +66,12 @@ On Fri, Aug 08, 2014 at 10:35:38AM -0400, Chris Mason wrote:
 > fully understand what XFS needs to happen during a DIO write.
 > 
 > Test program:
-> 
+
+Encapsulate it in a generic xfstest, please, and send it to
+fstests@vger.kernel.org.
+
 ...
-> 
-> Signed-off-by: Chris Mason <clm@fb.com>
-> cc: stable@vger.kernel.org
-> 
+
 > diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
 > index 1f66779..8d25d98 100644
 > --- a/fs/xfs/xfs_file.c
@@ -75,45 +86,34 @@ On Fri, Aug 08, 2014 at 10:35:38AM -0400, Chris Mason wrote:
 > +			 * does not invalidate any contents of the page
 > +			 * cache
 > +			 */
->  		}
 
-That seems sane to me at first glance. I don't know why we would need to
-completely kill the cache on a dio read. I'm not a fan of the additional
-comment though. We should probably just fix up the existing comment
-instead. It also seems like we might be able to kill the XFS_IOLOCK_EXCL
-dance here if the truncate goes away.. Dave?
+I guarantee you that there are applications out there that rely on
+the implicit invalidation behaviour for performance. There are also
+applications out that rely on it for correctness, too, because the
+OS is not the only source of data in the filesystem the OS has
+mounted.
 
-FWIW, I had to go back to the following commit to see where this
-originates from:
+Besides, XFS's direct IO semantics are far saner, more predictable
+and hence are more widely useful than the generic code. As such,
+we're not going to regress semantics that have been unchanged
+over 20 years just to match whatever insanity the generic Linux code
+does right now.
 
-commit 9cea236492ebabb9545564eb039aa0f477a05c96
-Author: Nathan Scott <nathans@sgi.com>
-Date:   Fri Mar 17 17:26:41 2006 +1100
+Go on, call me a deranged monkey on some serious mind-controlling
+substances. I don't care. :)
 
-    [XFS] Flush and invalidate dirty pages at the start of a direct read also,
-    else we can hit a delalloc-extents-via-direct-io BUG.
-    
-    SGI-PV: 949916
-    SGI-Modid: xfs-linux-melb:xfs-kern:25483a
-    
-    Signed-off-by: Nathan Scott <nathans@sgi.com>
-    ...
+I think the fix should probably just be:
 
-That adds a VOP_FLUSHINVAL_PAGES() call that looks like it's some kind
-of portability API. I would expect the flush to deal with any delalloc
-conversion issues vs. the invalidation, so perhaps the invalidation part
-is a historical artifact of the api. Then again, there's also a straight
-'flushpages' call so perhaps there's more to it than that.
+-			truncate_pagecache_range(VFS_I(ip), pos, -1);
++			invalidate_inode_pages2_range(VFS_I(ip)->i_mapping,
++					pos >> PAGE_CACHE_SHIFT, -1);
 
-Brian
+Cheers,
 
->  		xfs_rw_ilock_demote(ip, XFS_IOLOCK_EXCL);
->  	}
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
