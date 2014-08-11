@@ -1,40 +1,31 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 290B17F53
-	for <xfs@oss.sgi.com>; Mon, 11 Aug 2014 16:50:36 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id CB63F304053
-	for <xfs@oss.sgi.com>; Mon, 11 Aug 2014 14:50:35 -0700 (PDT)
-Received: from mail-we0-f182.google.com (mail-we0-f182.google.com
-	[74.125.82.182]) by cuda.sgi.com with ESMTP id ztK7qYRjsy3iutFV
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 11 Aug 2014 14:50:34 -0700 (PDT)
-Received: by mail-we0-f182.google.com with SMTP id k48so9153443wev.41
-	for <xfs@oss.sgi.com>; Mon, 11 Aug 2014 14:50:32 -0700 (PDT)
-Received: from minas-tirith.valinor (177.Red-79-159-63.staticIP.rima-tde.net.
-	[79.159.63.177])
-	by mx.google.com with ESMTPSA id u7sm48403569wif.3.2014.08.11.14.50.31
-	for <xfs@oss.sgi.com>
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-	Mon, 11 Aug 2014 14:50:32 -0700 (PDT)
-Received: from localhost (localhost [127.0.0.1])
-	by minas-tirith.valinor (Postfix) with ESMTP id E6BAB183EEA
-	for <xfs@oss.sgi.com>; Mon, 11 Aug 2014 23:50:29 +0200 (CEST)
-Date: Mon, 11 Aug 2014 23:50:20 +0200 (CEST)
-From: "Carlos E. R." <carlos.e.r@opensuse.org>
-Subject: Re: Subject : Happened again, 20140811 -- Got "Internal error
-	XFS_WANT_CORRUPTED_GOTO". Filesystem needs reformatting to correct
-	issue.
-In-Reply-To: <53E93530.4070902@sgi.com>
-Message-ID: <alpine.LSU.2.11.1408112347480.17839@minas-tirith.valinor>
-References: <alpine.LSU.2.11.1407021104480.9881@Telcontar.valinor>
-	<alpine.LSU.2.11.1408111559280.2447@minas-tirith.valinor>
-	<53E8D9F6.7080704@sgi.com>
-	<alpine.LSU.2.11.1408111720170.7326@minas-tirith.valinor>
-	<53E93530.4070902@sgi.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 34E147F55
+	for <xfs@oss.sgi.com>; Mon, 11 Aug 2014 16:52:13 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 005678F8066
+	for <xfs@oss.sgi.com>; Mon, 11 Aug 2014 14:52:12 -0700 (PDT)
+Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
+	[150.101.137.145]) by cuda.sgi.com with ESMTP id
+	cGYTkmKdcD9TTof7 for <xfs@oss.sgi.com>;
+	Mon, 11 Aug 2014 14:52:11 -0700 (PDT)
+Date: Tue, 12 Aug 2014 07:52:07 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: use-after-free on log replay failure
+Message-ID: <20140811215207.GS20518@dastard>
+References: <20140115014503.GQ3469@dastard>
+	<CAOcd+r0R6KxmgEJNPUZ0Q5cQhsStGb=cehYE0+wKgDNU1negsA@mail.gmail.com>
+	<20140119231745.GF18112@dastard>
+	<4B2A412C75324EE9880358513C069476@alyakaslap>
+	<9D3CBECB663B4A77B7EF74B67973310A@alyakaslap>
+	<20140804230721.GA20518@dastard>
+	<AC10852F403846A182491ED8071135ED@alyakaslap>
+	<20140806152042.GB39990@bfoster.bfoster>
+	<CAOcd+r3bC59m7Rh-3tmjrnWnF5XoPQfE=U+=hz78NcAGu+Ou1g@mail.gmail.com>
+	<20140811132057.GA1186@bfoster.bfoster>
 MIME-Version: 1.0
-Content-Type: MULTIPART/MIXED;
-	BOUNDARY="-1463779071-481454962-1407793829=:17839"
+Content-Disposition: inline
+In-Reply-To: <20140811132057.GA1186@bfoster.bfoster>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -43,57 +34,121 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: XFS mailing list <xfs@oss.sgi.com>
+To: Brian Foster <bfoster@redhat.com>
+Cc: Alex Lyakas <alex@zadarastorage.com>, xfs@oss.sgi.com
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
+On Mon, Aug 11, 2014 at 09:20:57AM -0400, Brian Foster wrote:
+> On Sun, Aug 10, 2014 at 03:20:50PM +0300, Alex Lyakas wrote:
+> > On Wed, Aug 6, 2014 at 6:20 PM, Brian Foster <bfoster@redhat.com> wrote:
+> > > On Wed, Aug 06, 2014 at 03:52:03PM +0300, Alex Lyakas wrote:
+.....
+> > >> But I believe, my analysis shows that during the mount sequence XFS does not
+> > >> wait properly for all the bios to complete, before failing the mount
+> > >> sequence back to the caller.
+> > >>
+> > >
+> > > As an experiment, what about the following? Compile tested only and not
+> > > safe for general use.
+...
+> > > diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+> > > index cd7b8ca..fbcf524 100644
+> > > --- a/fs/xfs/xfs_buf.c
+> > > +++ b/fs/xfs/xfs_buf.c
+> > > @@ -1409,19 +1409,27 @@ xfs_buf_iorequest(
+> > >   * case nothing will ever complete.  It returns the I/O error code, if any, or
+> > >   * 0 if there was no error.
+> > >   */
+> > > -int
+> > > -xfs_buf_iowait(
+> > > -       xfs_buf_t               *bp)
+> > > +static int
+> > > +__xfs_buf_iowait(
+> > > +       struct xfs_buf          *bp,
+> > > +       bool                    skip_error)
+> > >  {
+> > >         trace_xfs_buf_iowait(bp, _RET_IP_);
+> > >
+> > > -       if (!bp->b_error)
+> > > +       if (skip_error || !bp->b_error)
+> > >                 wait_for_completion(&bp->b_iowait);
+> > >
+> > >         trace_xfs_buf_iowait_done(bp, _RET_IP_);
+> > >         return bp->b_error;
+> > >  }
+> > >
+> > > +int
+> > > +xfs_buf_iowait(
+> > > +       struct xfs_buf          *bp)
+> > > +{
+> > > +       return __xfs_buf_iowait(bp, false);
+> > > +}
+> > > +
+> > >  xfs_caddr_t
+> > >  xfs_buf_offset(
+> > >         xfs_buf_t               *bp,
+> > > @@ -1866,7 +1874,7 @@ xfs_buf_delwri_submit(
+> > >                 bp = list_first_entry(&io_list, struct xfs_buf, b_list);
+> > >
+> > >                 list_del_init(&bp->b_list);
+> > > -               error2 = xfs_buf_iowait(bp);
+> > > +               error2 = __xfs_buf_iowait(bp, true);
+> > >                 xfs_buf_relse(bp);
+> > >                 if (!error)
+> > >                         error = error2;
 
----1463779071-481454962-1407793829=:17839
-Content-Type: TEXT/PLAIN; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8BIT
+Not waiting here on buffer error should not matter. Any buffer that
+is under IO and requires completion should be referenced, and that
+means it should be caught and waited on by xfs_wait_buftarg() in the
+mount failure path after log recovery fails.
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA256
+> > > ---
+> > I think that this patch fixes the problem. I tried reproducing it like
+> > 30 times, and it doesn't happen with this patch. Dropping this patch
+> > reproduces the problem within 1 or 2 tries. Thanks!
+> > What are next steps? How to make it "safe for general use"?
+> > 
+> 
+> Ok, thanks for testing. I think that implicates the caller bypassing the
+> expected blocking with the right sequence of log recovery I/Os and
+> device failure. TBH, I'd still like to see the specifics, if possible.
+> Could you come up with a generic reproducer for this? I think a metadump
+> of the fs with the dirty log plus whatever device failure simulation
+> hack you're using would suffice.
 
+The real issue is we don't know exactly what code is being tested
+(it's 3.8 + random bug fix backports + custom code). Even if we have
+a reproducer there's no guarantee it will reproduce on a current
+kernel. IOWs, we are stumbling around in the dark bashing our heads
+against everything in the room, and that just wastes everyone's
+time.
 
+We need a reproducer that triggers on a current, unmodified
+kernel release. You can use dm-faulty to error out all writes just
+like you are doing with your custom code. See
+xfstests::tests/generic/321 and common/dmflakey for to do this.
+Ideally the reproducer is in a form that xfstests can use....
 
-El 2014-08-11 a las 16:27 -0500, Mark Tinguely escribió:
-> On 08/11/14 10:34, Carlos E. R. wrote:
+If you can't reproduce it on an upstream kernel, then git bisect is
+your friend. It will find the commit that fixed the problem you are
+seeing....
 
->
-> so XFS gave a forced shutdown after the machine came back from hibernation. 
-> After replaying the log, there were no errors in xfs_repair.
->
-> We should have quiesced the metadata/log before freezing xfs. Was there a lot 
-> of items in the log?
+> The ideal fix is not yet clear to me.
 
-Sorry, what log? The /var/log/messages file? I posted it in full, from 
-before the hibernation to powerdown.
+We are not even that far along - the root cause of the bug is not at
+all clear to me. :/
 
-- -- 
-Cheers
-        Carlos E. R.
+Cheers,
 
-        (from 13.1 x86_64 "Bottle" (Minas Tirith))
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.22 (GNU/Linux)
-
-iF4EAREIAAYFAlPpOqUACgkQja8UbcUWM1xpewD/XaCmyL60x0lqs8PuoA9xfSTn
-8CNxtpVX78L3O/1RsdYA/3U9CIA0uOCI9Lk4t0KO5xiLLjCZi/+AlvUtAbCfCQCB
-=VEcc
------END PGP SIGNATURE-----
----1463779071-481454962-1407793829=:17839
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
----1463779071-481454962-1407793829=:17839--
