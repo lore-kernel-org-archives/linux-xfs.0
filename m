@@ -1,22 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 096087F57
-	for <xfs@oss.sgi.com>; Mon, 11 Aug 2014 16:56:02 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id C359330404E
-	for <xfs@oss.sgi.com>; Mon, 11 Aug 2014 14:56:01 -0700 (PDT)
-Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
-	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	vQgSHQXrv69PLqSC for <xfs@oss.sgi.com>;
-	Mon, 11 Aug 2014 14:55:59 -0700 (PDT)
-Date: Tue, 12 Aug 2014 07:55:57 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 0/2] xfs: for-next file collapse bug fixes
-Message-ID: <20140811215557.GT20518@dastard>
-References: <1407523766-62233-1-git-send-email-bfoster@redhat.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 72D1A7F5A
+	for <xfs@oss.sgi.com>; Mon, 11 Aug 2014 16:56:58 -0500 (CDT)
+Received: from dhcp-128-162-232-117.americas.sgi.com
+	(dhcp-128-162-232-117.americas.sgi.com [128.162.232.117])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 4185A8F8065
+	for <xfs@oss.sgi.com>; Mon, 11 Aug 2014 14:56:58 -0700 (PDT)
+Message-ID: <53E93C29.1020103@sgi.com>
+Date: Mon, 11 Aug 2014 16:56:57 -0500
+From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1407523766-62233-1-git-send-email-bfoster@redhat.com>
+Subject: Re: Subject : Happened again,
+	20140811 -- Got "Internal error XFS_WANT_CORRUPTED_GOTO".
+	Filesystem needs reformatting to correct issue.
+References: <alpine.LSU.2.11.1407021104480.9881@Telcontar.valinor>
+	<alpine.LSU.2.11.1408111559280.2447@minas-tirith.valinor>
+	<53E8D9F6.7080704@sgi.com>
+	<alpine.LSU.2.11.1408111720170.7326@minas-tirith.valinor>
+	<53E93530.4070902@sgi.com>
+	<alpine.LSU.2.11.1408112347480.17839@minas-tirith.valinor>
+In-Reply-To: <alpine.LSU.2.11.1408112347480.17839@minas-tirith.valinor>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,49 +28,41 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="iso-8859-1"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Fri, Aug 08, 2014 at 02:49:24PM -0400, Brian Foster wrote:
-> Hi all,
-> 
-> I've seen collapse range fall over during some recent stress testing.
-> I'm running fsx and 16 fsstress threads in parallel to reproduce. Note
-> that the fsstress workload doesn't need to be on the same fs (I suspect
-> a sync() is a trigger). These patches are what has fallen out so far...
-> 
-> The first patch stems from the fact that the error caused an fs shutdown
-> that appeared to be unnecessary. I was initially going to skip the inode
-> log on any error, but on closer inspection it seems like we expect to
-> abort/shutdown if something has in fact been changed, so this modifies
-> the code to reduce that shutdown window. The second patch deals with the
-> actual collapse failure by fixing up the locking.
-> 
-> Note that I still reproduced at least one collapse failure even with
-> these fixes, so there could be more at play here with the
-> implementation:
-> 
-> XFS: Internal error XFS_WANT_CORRUPTED_GOTO at line 5535 of file fs/xfs/libxfs/xfs_bmap.c.  Caller xfs_collapse_file_space+0x1af/0x280 [xfs]
-> 
-> This took significantly longer to reproduce and I don't yet have a feel
-> for how reproducible it is in general. In the meantime, these two seemed
-> relatively straightforward and incremental...
+On 08/11/14 16:50, Carlos E. R. wrote:
+> -----BEGIN PGP SIGNED MESSAGE-----
+> Hash: SHA256
+>
+>
+>
+> El 2014-08-11 a las 16:27 -0500, Mark Tinguely escribi=F3:
+>> On 08/11/14 10:34, Carlos E. R. wrote:
+>
+>>
+>> so XFS gave a forced shutdown after the machine came back from
+>> hibernation. After replaying the log, there were no errors in xfs_repair.
+>>
+>> We should have quiesced the metadata/log before freezing xfs. Was
+>> there a lot of items in the log?
+>
+> Sorry, what log? The /var/log/messages file? I posted it in full, from
+> before the hibernation to powerdown.
+>
+> - -- Cheers
+> Carlos E. R.
 
-They look good, but it's too late for the 3.17 merge window.
-However, given that we've got other fixes that need to go to 3.17
-but are also too late (Chris Mason's direct IO invalidation fixes)
-I'll plan these for 3.17-rc2 or so.
+Sorry, I was referring to the XFS log.
 
-Cheers,
+If you had a metadata dump before mounting/xfs_repair, then you can =
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+display the xfs log using the xfs_logprint.
+
+--Mark.
 
 _______________________________________________
 xfs mailing list
