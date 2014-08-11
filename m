@@ -1,34 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 074397F63
-	for <xfs@oss.sgi.com>; Sun, 10 Aug 2014 11:26:32 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id EA2DB8F8033
-	for <xfs@oss.sgi.com>; Sun, 10 Aug 2014 09:26:28 -0700 (PDT)
-Received: from mail-wi0-f170.google.com (mail-wi0-f170.google.com
-	[209.85.212.170]) by cuda.sgi.com with ESMTP id
-	yx8WjB0sdJZMCSRB (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Sun, 10 Aug 2014 09:26:26 -0700 (PDT)
-Received: by mail-wi0-f170.google.com with SMTP id f8so4542922wiw.3
-	for <xfs@oss.sgi.com>; Sun, 10 Aug 2014 09:26:25 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id F1B227F4E
+	for <xfs@oss.sgi.com>; Sun, 10 Aug 2014 23:32:28 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id E07D38F8037
+	for <xfs@oss.sgi.com>; Sun, 10 Aug 2014 21:32:28 -0700 (PDT)
+Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
+	[150.101.137.145]) by cuda.sgi.com with ESMTP id
+	g6J0dYevm6dUIfFt for <xfs@oss.sgi.com>;
+	Sun, 10 Aug 2014 21:32:23 -0700 (PDT)
+Date: Mon, 11 Aug 2014 14:32:19 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: Verifier fixes backported to stable kernels?
+Message-ID: <20140811043219.GJ26465@dastard>
+References: <CA+o=1OVY0pV18XMKz98dT5LGwE500DQQb5B1wh=HaGTAGuP+oQ@mail.gmail.com>
+	<20140809005404.GG26465@dastard>
+	<CA+o=1OX+Qq4Scq=su1MDDknRXJGL8F=7WV8P0PCeDjYep7rLnA@mail.gmail.com>
+	<CA+o=1OXmM+WsFh-ipS4d8hn6RKvOuv3Zga+66PF4DBehuH-5-A@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20140806123215.GJ20518@dastard>
-References: <CAOcd+r0B-4SPjzim=68w3L8Y9FxwBD-C5HkkeO58C6t9nfgbhw@mail.gmail.com>
-	<20140113204314.GJ3469@dastard>
-	<CAOcd+r22FirPMHjdxQyTmXOAM72ND-t0=njK9nEmesSV5=Ec=Q@mail.gmail.com>
-	<20140115014503.GQ3469@dastard>
-	<CAOcd+r0R6KxmgEJNPUZ0Q5cQhsStGb=cehYE0+wKgDNU1negsA@mail.gmail.com>
-	<20140119231745.GF18112@dastard>
-	<4B2A412C75324EE9880358513C069476@alyakaslap>
-	<9D3CBECB663B4A77B7EF74B67973310A@alyakaslap>
-	<20140804230721.GA20518@dastard>
-	<CAOcd+r0_KjaZam8ocA1YtwF7jmCyh0+bXOY8nqiE3fsVn1gyiA@mail.gmail.com>
-	<20140806123215.GJ20518@dastard>
-Date: Sun, 10 Aug 2014 19:26:24 +0300
-Message-ID: <CAOcd+r1S5srTAGR2Y+2Ss5uDz=6WO-EoxERWaE8uCGKEYth01g@mail.gmail.com>
-Subject: Re: use-after-free on log replay failure
-From: Alex Lyakas <alex@zadarastorage.com>
+Content-Disposition: inline
+In-Reply-To: <CA+o=1OXmM+WsFh-ipS4d8hn6RKvOuv3Zga+66PF4DBehuH-5-A@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -41,77 +32,48 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
+To: Fanael Linithien <fanael4@gmail.com>
 Cc: xfs@oss.sgi.com
 
-Hello Dave,
+On Sat, Aug 09, 2014 at 05:55:19PM +0200, Fanael Linithien wrote:
+> 2014-08-09 2:54 GMT+02:00 Dave Chinner <david@fromorbit.com>:
+> > What fixes are you talking about? List of commits, please, noting
+> > whether the commit already has a "cc: <stable@vger.kernel.org>" in
+> > it or not.
+> 
+> These are the commits:
+> 
+> 400b9d88757c0bfbdfa97014e090ec40a31c1282
+> 67dc288c21064b31a98a53dc64f6b9714b819fd6 (this is the only one with the cc)
+> 5fd364fee81a7888af806e42ed8a91c845894f2d
+> ad3714b82c631a34724da09a7daa53afcab952fa
 
-On Wed, Aug 6, 2014 at 3:32 PM, Dave Chinner <david@fromorbit.com> wrote:
-> On Wed, Aug 06, 2014 at 01:05:34PM +0300, Alex Lyakas wrote:
->> Hi Dave,
->>
->> On Tue, Aug 5, 2014 at 2:07 AM, Dave Chinner <david@fromorbit.com> wrote:
->> > On Mon, Aug 04, 2014 at 02:00:05PM +0300, Alex Lyakas wrote:
->> >> Greetings,
->> >>
->> >> we had a log replay failure due to some errors that the underlying
->> >> block device returned:
->> >> [49133.801406] XFS (dm-95): metadata I/O error: block 0x270e8c180
->> >> ("xlog_recover_iodone") error 28 numblks 16
->> >> [49133.802495] XFS (dm-95): log mount/recovery failed: error 28
->> >> [49133.802644] XFS (dm-95): log mount failed
->> >
->> > #define ENOSPC          28      /* No space left on device */
->> >
->> > You're getting an ENOSPC as a metadata IO error during log recovery?
->> > Thin provisioning problem, perhaps,
->> Yes, it is a thin provisioning problem (which I already know the cause for).
->>
->> > and the error is occurring on
->> > submission rather than completion? If so:
->> >
->> > 8d6c121 xfs: fix buffer use after free on IO error
->> I am not sure what do you mean by "submission rather than completion".
->> Do you mean that xfs_buf_ioapply_map() returns without submitting any
->> bios?
->
-> No, that the bio submission results in immediate failure (e.g. the
-> device goes away, so submission results in ENODEV). Hence when
-> _xfs_buf_ioapply() releases it's IO reference itis the only
-> remaining reference to the buffer and so completion processing is
-> run immediately. i.e. inline from the submission path.
->
-> Normally IO errors are reported through the bio in IO completion
-> interrupt context. i.e the IO is completed by the hardware and the
-> error status is attached to bio, which is then completed and we get
-> into XFS that way. The IO submision context is long gone at this
-> point....
->
->> In that case, no, bios are submitted to the block device, and it
->> fails them through a different context with ENOSPC error. I will still
->> try the patch you mentioned, because it also looks relevant to another
->> question I addressed to you earlier in:
->> http://oss.sgi.com/archives/xfs/2013-11/msg00648.html
->
-> No, that's a different problem.
->
-> 9c23ecc xfs: unmount does not wait for shutdown during unmount
-Yes, this patch appears to fix the problem that I reported in the
-past. XFS survives the unmount and kmemleak is also happy. Thanks! Is
-this patch safe to apply to 3.8.13?
+Ok, but please use the "one-line format" when quoting commits.
 
-Thanks,
-Alex.
+I.e. this:
 
+$ git log --oneline -n 4 ad3714b
+ad3714b xfs: dquot recovery needs verifiers
+5fd364f xfs: quotacheck leaves dquot buffers without verifiers
+67dc288 xfs: ensure verifiers are attached to recovered buffers
+400b9d8 xfs: catch buffers written without verifiers attached
 
+is much more informative to the reader without a git tree to look up
+commits.
 
->
-> Cheers,
->
-> Dave.
-> --
-> Dave Chinner
-> david@fromorbit.com
+As it is, those commits have not yet been sent to Linus, hence they
+won't yet be accepted by the stable kernel folk. And because they
+haven't been sent to Linus yet, I can redo the commits in that topic
+branch with the needed stable tags. I've got to add a couple more
+fixes that need to go to stable, too, so a pull req won't happen for
+a couple of days yet....
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
