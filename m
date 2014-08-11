@@ -1,40 +1,40 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 5E6407F50
-	for <xfs@oss.sgi.com>; Mon, 11 Aug 2014 16:32:16 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 338A38F8037
-	for <xfs@oss.sgi.com>; Mon, 11 Aug 2014 14:32:16 -0700 (PDT)
-Received: from mail-wg0-f50.google.com (mail-wg0-f50.google.com
-	[74.125.82.50]) by cuda.sgi.com with ESMTP id gA7mabcdz7a9oiY5
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 290B17F53
+	for <xfs@oss.sgi.com>; Mon, 11 Aug 2014 16:50:36 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id CB63F304053
+	for <xfs@oss.sgi.com>; Mon, 11 Aug 2014 14:50:35 -0700 (PDT)
+Received: from mail-we0-f182.google.com (mail-we0-f182.google.com
+	[74.125.82.182]) by cuda.sgi.com with ESMTP id ztK7qYRjsy3iutFV
 	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 11 Aug 2014 14:32:14 -0700 (PDT)
-Received: by mail-wg0-f50.google.com with SMTP id n12so8904048wgh.21
-	for <xfs@oss.sgi.com>; Mon, 11 Aug 2014 14:32:13 -0700 (PDT)
+	<xfs@oss.sgi.com>; Mon, 11 Aug 2014 14:50:34 -0700 (PDT)
+Received: by mail-we0-f182.google.com with SMTP id k48so9153443wev.41
+	for <xfs@oss.sgi.com>; Mon, 11 Aug 2014 14:50:32 -0700 (PDT)
 Received: from minas-tirith.valinor (177.Red-79-159-63.staticIP.rima-tde.net.
 	[79.159.63.177])
-	by mx.google.com with ESMTPSA id a4sm48194434wie.21.2014.08.11.14.32.11
+	by mx.google.com with ESMTPSA id u7sm48403569wif.3.2014.08.11.14.50.31
 	for <xfs@oss.sgi.com>
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-	Mon, 11 Aug 2014 14:32:12 -0700 (PDT)
+	Mon, 11 Aug 2014 14:50:32 -0700 (PDT)
 Received: from localhost (localhost [127.0.0.1])
-	by minas-tirith.valinor (Postfix) with ESMTP id 62866183EEA
-	for <xfs@oss.sgi.com>; Mon, 11 Aug 2014 23:32:10 +0200 (CEST)
-Date: Mon, 11 Aug 2014 23:31:44 +0200 (CEST)
+	by minas-tirith.valinor (Postfix) with ESMTP id E6BAB183EEA
+	for <xfs@oss.sgi.com>; Mon, 11 Aug 2014 23:50:29 +0200 (CEST)
+Date: Mon, 11 Aug 2014 23:50:20 +0200 (CEST)
 From: "Carlos E. R." <carlos.e.r@opensuse.org>
 Subject: Re: Subject : Happened again, 20140811 -- Got "Internal error
 	XFS_WANT_CORRUPTED_GOTO". Filesystem needs reformatting to correct
 	issue.
-In-Reply-To: <alpine.LSU.2.11.1408111843150.7326@minas-tirith.valinor>
-Message-ID: <alpine.LSU.2.11.1408112320040.17839@minas-tirith.valinor>
+In-Reply-To: <53E93530.4070902@sgi.com>
+Message-ID: <alpine.LSU.2.11.1408112347480.17839@minas-tirith.valinor>
 References: <alpine.LSU.2.11.1407021104480.9881@Telcontar.valinor>
 	<alpine.LSU.2.11.1408111559280.2447@minas-tirith.valinor>
-	<20140811144359.GA10217@laptop.bfoster>
-	<alpine.LSU.2.11.1408111657160.7326@minas-tirith.valinor>
-	<alpine.LSU.2.11.1408111843150.7326@minas-tirith.valinor>
+	<53E8D9F6.7080704@sgi.com>
+	<alpine.LSU.2.11.1408111720170.7326@minas-tirith.valinor>
+	<53E93530.4070902@sgi.com>
 MIME-Version: 1.0
 Content-Type: MULTIPART/MIXED;
-	BOUNDARY="-1463779071-1142169509-1407792730=:17839"
+	BOUNDARY="-1463779071-481454962-1407793829=:17839"
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -50,7 +50,7 @@ To: XFS mailing list <xfs@oss.sgi.com>
   This message is in MIME format.  The first part should be readable text,
   while the remaining parts are likely unreadable without MIME-aware tools.
 
----1463779071-1142169509-1407792730=:17839
+---1463779071-481454962-1407793829=:17839
 Content-Type: TEXT/PLAIN; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8BIT
 
@@ -59,53 +59,33 @@ Hash: SHA256
 
 
 
-El 2014-08-11 a las 19:05 +0200, Carlos E. R. escribió:
+El 2014-08-11 a las 16:27 -0500, Mark Tinguely escribió:
+> On 08/11/14 10:34, Carlos E. R. wrote:
 
-> linux:/run/media/linux/d_storage/xfs_disaster_home/20140811 # xfs_repair -V
-> xfs_repair version 3.1.11
 >
-> It is a live system, so I acan't update it. If I boot from the main
+> so XFS gave a forced shutdown after the machine came back from hibernation. 
+> After replaying the log, there were no errors in xfs_repair.
+>
+> We should have quiesced the metadata/log before freezing xfs. Was there a lot 
+> of items in the log?
 
-...
-
-> Now I'm going to create an xfsdump of it, and reboot, without rebuilding.
-> Then I'll upload the metadata to google drive.
-
-
-I have just booted the main system, in text mode, logged as root. Look:
-
-Telcontar:/data/storage_d/xfs_disaster_home/20140811 # time xfs_metadump -g -w /dev/sdc5 tgtfile_20140811_obfus_after_repair_bis
-Copied 231552 of 231552 inodes (3 of 4 AGs)
-xfs_metadump: invalid dqblk inode number (-1)
-Copying log
-
-real    0m20.044s
-user    0m1.527s
-sys     0m1.174s
-Telcontar:/data/storage_d/xfs_disaster_home/20140811 #
-Telcontar:/data/storage_d/xfs_disaster_home/20140811 # xfs_metadump -V
-xfs_metadump version 3.2.1
-
-
-And that was after running xfs_repair 3.2.1, which found nothing...
-
-
-Does that give any ideas?
-
+Sorry, what log? The /var/log/messages file? I posted it in full, from 
+before the hibernation to powerdown.
 
 - -- 
 Cheers
         Carlos E. R.
 
         (from 13.1 x86_64 "Bottle" (Minas Tirith))
+
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.22 (GNU/Linux)
 
-iF4EAREIAAYFAlPpNloACgkQja8UbcUWM1xa/wD/XzXCXoTni1LL13iBgD7XzTrv
-1D6PLaMyIYsLiE9K0PYA/j7sXcWkvZV27fpfIdlU4ECyid6iULLdlQN4oSE56O2C
-=rZOy
+iF4EAREIAAYFAlPpOqUACgkQja8UbcUWM1xpewD/XaCmyL60x0lqs8PuoA9xfSTn
+8CNxtpVX78L3O/1RsdYA/3U9CIA0uOCI9Lk4t0KO5xiLLjCZi/+AlvUtAbCfCQCB
+=VEcc
 -----END PGP SIGNATURE-----
----1463779071-1142169509-1407792730=:17839
+---1463779071-481454962-1407793829=:17839
 Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
@@ -116,4 +96,4 @@ xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
 
----1463779071-1142169509-1407792730=:17839--
+---1463779071-481454962-1407793829=:17839--
