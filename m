@@ -1,37 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 2C1BD7F3F
-	for <xfs@oss.sgi.com>; Mon, 11 Aug 2014 10:35:09 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id B8E2F7F3F
+	for <xfs@oss.sgi.com>; Mon, 11 Aug 2014 11:14:57 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 6DB2AAC003
-	for <xfs@oss.sgi.com>; Mon, 11 Aug 2014 08:35:08 -0700 (PDT)
-Received: from mail-we0-f172.google.com (mail-we0-f172.google.com
-	[74.125.82.172]) by cuda.sgi.com with ESMTP id hpVFA7EReDLHaOjb
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 11 Aug 2014 08:35:00 -0700 (PDT)
-Received: by mail-we0-f172.google.com with SMTP id x48so8810342wes.3
-	for <xfs@oss.sgi.com>; Mon, 11 Aug 2014 08:34:59 -0700 (PDT)
-Received: from minas-tirith.valinor (177.Red-79-159-63.staticIP.rima-tde.net.
-	[79.159.63.177]) by mx.google.com with ESMTPSA id
-	mw4sm45075734wic.20.2014.08.11.08.34.56 for <xfs@oss.sgi.com>
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-	Mon, 11 Aug 2014 08:34:58 -0700 (PDT)
-Received: from localhost (localhost [127.0.0.1])
-	by minas-tirith.valinor (Postfix) with ESMTP id 71C6B185A7D
-	for <xfs@oss.sgi.com>; Mon, 11 Aug 2014 17:34:54 +0200 (CEST)
-Date: Mon, 11 Aug 2014 17:34:46 +0200 (CEST)
-From: "Carlos E. R." <carlos.e.r@opensuse.org>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 860238F8037
+	for <xfs@oss.sgi.com>; Mon, 11 Aug 2014 09:14:54 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id I7FZc85RPtE95Lm1 (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Mon, 11 Aug 2014 09:14:53 -0700 (PDT)
+Date: Mon, 11 Aug 2014 12:14:46 -0400
+From: Brian Foster <bfoster@redhat.com>
 Subject: Re: Subject : Happened again, 20140811 -- Got "Internal error
 	XFS_WANT_CORRUPTED_GOTO". Filesystem needs reformatting to correct
 	issue.
-In-Reply-To: <53E8D9F6.7080704@sgi.com>
-Message-ID: <alpine.LSU.2.11.1408111720170.7326@minas-tirith.valinor>
+Message-ID: <20140811161445.GA7696@bfoster.bfoster>
 References: <alpine.LSU.2.11.1407021104480.9881@Telcontar.valinor>
 	<alpine.LSU.2.11.1408111559280.2447@minas-tirith.valinor>
 	<53E8D9F6.7080704@sgi.com>
+	<alpine.LSU.2.11.1408111720170.7326@minas-tirith.valinor>
 MIME-Version: 1.0
-Content-Type: MULTIPART/MIXED;
-	BOUNDARY="-1463779071-1326823490-1407771294=:7326"
+Content-Disposition: inline
+In-Reply-To: <alpine.LSU.2.11.1408111720170.7326@minas-tirith.valinor>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -40,555 +30,697 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: XFS mailing list <xfs@oss.sgi.com>
+To: "Carlos E. R." <carlos.e.r@opensuse.org>
+Cc: XFS mailing list <xfs@oss.sgi.com>
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
-
----1463779071-1326823490-1407771294=:7326
-Content-Type: TEXT/PLAIN; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8BIT
-
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA256
-
-
-
-El 2014-08-11 a las 09:57 -0500, Mark Tinguely escribió:
-> On 08/11/14 09:23, Carlos E. R. wrote:
-
-> Where in the filesystem did the XFS_WANT_CORRUPTED_GOTO happen?
-
-This time?
-Did not look at the log yet. Let me see...
-
-Here is the full log of the event. It starts prior to hibernating, all 
-things nominal. And ends on shutdown (had to hit reset button, despite 
-what log says). If you want to see entries prior to that, since boot, I 
-can do that.
-
-
-<3.6> 2014-08-11 05:15:01 Telcontar systemd 1 - -  Starting Session 556 of user news.
-<3.6> 2014-08-11 05:18:01 Telcontar systemd 1 - -  Starting Session 557 of user news.
-<3.6> 2014-08-11 05:20:01 Telcontar systemd 1 - -  Starting Session 558 of user cer.
-<3.4> 2014-08-11 05:22:25 Telcontar pm-utils - - -  Hibernating the system now (04)...
-<3.5> 2014-08-11 05:22:25 Telcontar pm-utils - - -  There appears not be any pending nntp post to be sent. I just checked :-)
-<1.5> 2014-08-11 05:22:25 Telcontar network 5840 - -  redirecting to "systemctl --signal=9 kill network.service"
-<3.5> 2014-08-11 05:22:25 Telcontar systemd 1 - -  network@eth0.service: main process exited, code=killed, status=9/KILL
-<3.6> 2014-08-11 05:22:25 Telcontar systemd 1 - -  Stopping LSB: Network time protocol daemon (ntpd)...
-<3.6> 2014-08-11 05:22:25 Telcontar ntp 5867 - -  Shutting down network time protocol daemon (NTPD)..done
-<3.6> 2014-08-11 05:22:25 Telcontar systemd 1 - -  Stopped LSB: Network time protocol daemon (ntpd).
-<3.4> 2014-08-11 05:22:25 Telcontar pm-utils - - -  Hibernating (95)...
-<0.7> 2014-08-11 05:22:30 Telcontar kernel - - - [73220.857511] PM: Marking nosave pages: [mem 0x0009f000-0x000fffff]
-<0.7> 2014-08-11 05:22:30 Telcontar kernel - - - [73220.857516] PM: Marking nosave pages: [mem 0xbff90000-0xffffffff]
-<0.7> 2014-08-11 05:22:30 Telcontar kernel - - - [73220.858132] PM: Basic memory bitmaps created
-<0.4> 2014-08-11 15:17:18 Telcontar kernel - - - [73221.946553] Syncing filesystems ... done.
-<0.4> 2014-08-11 15:17:18 Telcontar kernel - - - [73222.682396] Freezing user space processes ... (elapsed 0.002 seconds) done.
-<0.6> 2014-08-11 15:17:18 Telcontar kernel - - - [73222.685031] PM: Preallocating image memory... done (allocated 1140745 pages)
-<0.6> 2014-08-11 15:17:18 Telcontar kernel - - - [73228.046524] PM: Allocated 4562980 kbytes in 5.36 seconds (851.30 MB/s)
-<0.4> 2014-08-11 15:17:18 Telcontar kernel - - - [73228.046645] Freezing remaining freezable tasks ... (elapsed 0.001 seconds) done.
-<0.4> 2014-08-11 15:17:18 Telcontar kernel - - - [73228.048553] Suspending console(s) (use no_console_suspend to debug)
-<0.6> 2014-08-11 15:17:18 Telcontar kernel - - - [73228.049663] serial 00:05: disabled
-<0.6> 2014-08-11 15:17:18 Telcontar kernel - - - [73228.260091] PM: freeze of devices complete after 211.420 msecs
-<0.6> 2014-08-11 15:17:18 Telcontar kernel - - - [73228.260391] PM: late freeze of devices complete after 0.298 msecs
-<0.6> 2014-08-11 15:17:18 Telcontar kernel - - - [73228.260939] PM: noirq freeze of devices complete after 0.545 msecs
-<0.4> 2014-08-11 15:17:18 Telcontar kernel - - - [73228.260940] Disabling non-boot CPUs ...
-<0.6> 2014-08-11 15:17:18 Telcontar kernel - - - [73228.262294] smpboot: CPU 1 is now offline
-<0.6> 2014-08-11 15:17:18 Telcontar kernel - - - [73228.264134] smpboot: CPU 2 is now offline
-<0.5> 2014-08-11 15:17:18 Telcontar kernel - - - [73228.265056] Broke affinity for irq 16
-<0.6> 2014-08-11 15:17:18 Telcontar kernel - - - [73228.266103] smpboot: CPU 3 is now offline
-<0.6> 2014-08-11 15:17:18 Telcontar kernel - - - [73228.266614] PM: Creating hibernation image:
-<0.6> 2014-08-11 15:17:18 Telcontar kernel - - - [73228.267097] PM: Need to copy 920142 pages
-<0.7> 2014-08-11 15:17:18 Telcontar kernel - - - [73228.267097] PM: Normal pages needed: 920142 + 1024, available pages: 1176633
-<0.6> 2014-08-11 15:17:18 Telcontar kernel - - - [73228.267097] microcode: CPU0 sig=0x1067a, pf=0x10, revision=0xa0b
-<0.6> 2014-08-11 15:17:18 Telcontar kernel - - - [73228.267097] Enabling non-boot CPUs ...
-<0.6> 2014-08-11 15:17:18 Telcontar kernel - - - [73228.267097] smpboot: Booting Node 0 Processor 1 APIC 0x1
-<0.6> 2014-08-11 15:17:18 Telcontar kernel - - - [73228.280111] microcode: CPU1 sig=0x1067a, pf=0x10, revision=0xa0b
-<0.6> 2014-08-11 15:17:18 Telcontar kernel - - - [73228.280300] CPU1 is up
-<0.6> 2014-08-11 15:17:18 Telcontar kernel - - - [73228.280425] smpboot: Booting Node 0 Processor 2 APIC 0x2
-<0.6> 2014-08-11 15:17:18 Telcontar kernel - - - [73228.293688] microcode: CPU2 sig=0x1067a, pf=0x10, revision=0xa0b
-<0.6> 2014-08-11 15:17:18 Telcontar kernel - - - [73228.293828] CPU2 is up
-<0.6> 2014-08-11 15:17:18 Telcontar kernel - - - [73228.293918] smpboot: Booting Node 0 Processor 3 APIC 0x3
-<0.6> 2014-08-11 15:17:18 Telcontar kernel - - - [73228.307216] microcode: CPU3 sig=0x1067a, pf=0x10, revision=0xa0b
-<0.6> 2014-08-11 15:17:18 Telcontar kernel - - - [73228.307358] CPU3 is up
-<0.6> 2014-08-11 15:17:18 Telcontar kernel - - - [73228.335219] PM: noirq restore of devices complete after 22.779 msecs
-<0.6> 2014-08-11 15:17:18 Telcontar kernel - - - [73228.335354] PM: early restore of devices complete after 0.110 msecs
-<0.7> 2014-08-11 15:17:18 Telcontar kernel - - - [73228.508789] uhci_hcd 0000:00:1a.0: setting latency timer to 64
-<0.4> 2014-08-11 15:17:18 Telcontar kernel - - - [73228.508809] usb usb3: root hub lost power or was reset
-<0.7> 2014-08-11 15:17:18 Telcontar kernel - - - [73228.508819] uhci_hcd 0000:00:1a.1: setting latency timer to 64
-<0.4> 2014-08-11 15:17:18 Telcontar kernel - - - [73228.508836] usb usb4: root hub lost power or was reset
-<0.7> 2014-08-11 15:17:18 Telcontar kernel - - - [73228.508844] uhci_hcd 0000:00:1a.2: setting latency timer to 64
-<0.4> 2014-08-11 15:17:18 Telcontar kernel - - - [73228.508861] usb usb5: root hub lost power or was reset
-<0.7> 2014-08-11 15:17:18 Telcontar kernel - - - [73228.508871] ehci-pci 0000:00:1a.7: setting latency timer to 64
-<0.4> 2014-08-11 15:17:18 Telcontar kernel - - - [73228.508889] usb usb1: root hub lost power or was reset
-<0.7> 2014-08-11 15:17:18 Telcontar kernel - - - [73228.510138] uhci_hcd 0000:00:1d.0: setting latency timer to 64
-<0.4> 2014-08-11 15:17:18 Telcontar kernel - - - [73228.510159] usb usb6: root hub lost power or was reset
-<0.7> 2014-08-11 15:17:18 Telcontar kernel - - - [73228.510168] uhci_hcd 0000:00:1d.1: setting latency timer to 64
-<0.4> 2014-08-11 15:17:18 Telcontar kernel - - - [73228.510187] usb usb7: root hub lost power or was reset
-<0.7> 2014-08-11 15:17:18 Telcontar kernel - - - [73228.510196] uhci_hcd 0000:00:1d.2: setting latency timer to 64
-<0.4> 2014-08-11 15:17:18 Telcontar kernel - - - [73228.510215] usb usb8: root hub lost power or was reset
-<0.7> 2014-08-11 15:17:18 Telcontar kernel - - - [73228.510225] ehci-pci 0000:00:1d.7: setting latency timer to 64
-<0.4> 2014-08-11 15:17:18 Telcontar kernel - - - [73228.510235] usb usb2: root hub lost power or was reset
-<0.7> 2014-08-11 15:17:18 Telcontar kernel - - - [73228.512778] ehci-pci 0000:00:1a.7: cache line size of 32 is not supported
-<0.7> 2014-08-11 15:17:18 Telcontar kernel - - - [73228.512784] pci 0000:00:1e.0: setting latency timer to 64
-<0.7> 2014-08-11 15:17:18 Telcontar kernel - - - [73228.512879] ata_piix 0000:00:1f.2: setting latency timer to 64
-<0.7> 2014-08-11 15:17:18 Telcontar kernel - - - [73228.512934] ata_piix 0000:00:1f.5: setting latency timer to 64
-<0.7> 2014-08-11 15:17:18 Telcontar kernel - - - [73228.514123] ehci-pci 0000:00:1d.7: cache line size of 32 is not supported
-<0.3> 2014-08-11 15:17:18 Telcontar kernel - - - [73228.611029] pciehp 0000:00:1c.3:pcie04: Device 0000:05:00.0 already exists at 0000:05:00, cannot hot-add
-<0.3> 2014-08-11 15:17:18 Telcontar kernel - - - [73228.611032] pciehp 0000:00:1c.0:pcie04: Device 0000:02:00.0 already exists at 0000:02:00, cannot hot-add
-<0.3> 2014-08-11 15:17:18 Telcontar kernel - - - [73228.611035] pciehp 0000:00:1c.2:pcie04: Device 0000:04:00.0 already exists at 0000:04:00, cannot hot-add
-<0.3> 2014-08-11 15:17:18 Telcontar kernel - - - [73228.611036] pciehp 0000:00:1c.3:pcie04: Cannot add device at 0000:05:00
-<0.3> 2014-08-11 15:17:18 Telcontar kernel - - - [73228.611037] pciehp 0000:00:1c.0:pcie04: Cannot add device at 0000:02:00
-<0.3> 2014-08-11 15:17:18 Telcontar kernel - - - [73228.611039] pciehp 0000:00:1c.2:pcie04: Cannot add device at 0000:04:00
-<0.3> 2014-08-11 15:17:18 Telcontar kernel - - - [73228.611061] pciehp 0000:00:1c.4:pcie04: Device 0000:06:00.0 already exists at 0000:06:00, cannot hot-add
-<0.3> 2014-08-11 15:17:18 Telcontar kernel - - - [73228.611062] pciehp 0000:00:1c.4:pcie04: Cannot add device at 0000:06:00
-<0.3> 2014-08-11 15:17:18 Telcontar kernel - - - [73228.611086] pciehp 0000:00:1c.5:pcie04: Device 0000:07:00.0 already exists at 0000:07:00, cannot hot-add
-<0.3> 2014-08-11 15:17:18 Telcontar kernel - - - [73228.611087] pciehp 0000:00:1c.5:pcie04: Cannot add device at 0000:07:00
-<0.7> 2014-08-11 15:17:18 Telcontar kernel - - - [73228.611172] pata_jmicron 0000:05:00.1: setting latency timer to 64
-<0.7> 2014-08-11 15:17:18 Telcontar kernel - - - [73228.611249] pata_jmicron 0000:04:00.1: setting latency timer to 64
-<0.6> 2014-08-11 15:17:18 Telcontar kernel - - - [73228.614064] serial 00:05: activated
-<0.6> 2014-08-11 15:17:18 Telcontar kernel - - - [73228.775267] r8169 0000:06:00.0 eth0: link down
-<0.6> 2014-08-11 15:17:18 Telcontar kernel - - - [73228.837013] ata11: SATA link down (SStatus 0 SControl 300)
-<0.6> 2014-08-11 15:17:18 Telcontar kernel - - - [73228.837220] r8169 0000:07:00.0 eth1: link down
-<0.6> 2014-08-11 15:17:18 Telcontar kernel - - - [73228.916030] ata2: SATA link down (SStatus 0 SControl 300)
-<0.6> 2014-08-11 15:17:18 Telcontar kernel - - - [73228.916069] ata1: SATA link down (SStatus 0 SControl 300)
-<0.6> 2014-08-11 15:17:18 Telcontar kernel - - - [73228.920031] ata4: SATA link down (SStatus 0 SControl 300)
-<0.6> 2014-08-11 15:17:18 Telcontar kernel - - - [73228.930018] usb 1-2: reset high-speed USB device number 3 using ehci-pci
-<0.6> 2014-08-11 15:17:18 Telcontar kernel - - - [73228.988036] ata12: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-<0.6> 2014-08-11 15:17:18 Telcontar kernel - - - [73228.991149] ata12.00: ACPI cmd ef/03:45:00:00:00:a0 (SET FEATURES) filtered out
-<0.6> 2014-08-11 15:17:18 Telcontar kernel - - - [73228.991151] ata12.00: ACPI cmd ef/03:0c:00:00:00:a0 (SET FEATURES) filtered out
-<0.6> 2014-08-11 15:17:18 Telcontar kernel - - - [73228.991152] ata12.00: ACPI cmd f5/00:00:00:00:00:00 (SECURITY FREEZE LOCK) filtered out
-<0.6> 2014-08-11 15:17:18 Telcontar kernel - - - [73228.997133] ata12.00: configured for UDMA/100
-<0.5> 2014-08-11 15:17:18 Telcontar kernel - - - [73229.069020] firewire_core 0000:08:02.0: rediscovered device fw0
-<0.6> 2014-08-11 15:17:18 Telcontar kernel - - - [73229.074017] ata3: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-<0.6> 2014-08-11 15:17:18 Telcontar kernel - - - [73229.076182] ata3.00: configured for UDMA/133
-<0.5> 2014-08-11 15:17:18 Telcontar kernel - - - [73229.076210] sd 2:0:0:0: [sda] Starting disk
-<0.6> 2014-08-11 15:17:18 Telcontar kernel - - - [73229.146014] usb 2-5: reset high-speed USB device number 2 using ehci-pci
-<0.6> 2014-08-11 15:17:18 Telcontar kernel - - - [73229.284050] ata9.00: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-<0.6> 2014-08-11 15:17:18 Telcontar kernel - - - [73229.284060] ata9.01: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-<0.6> 2014-08-11 15:17:18 Telcontar kernel - - - [73229.284167] ata10.00: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-<0.6> 2014-08-11 15:17:18 Telcontar kernel - - - [73229.284177] ata10.01: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-<0.6> 2014-08-11 15:17:18 Telcontar kernel - - - [73229.287190] ata9.01: ACPI cmd ef/03:45:00:00:00:b0 (SET FEATURES) filtered out
-<0.6> 2014-08-11 15:17:18 Telcontar kernel - - - [73229.287191] ata9.01: ACPI cmd ef/03:0c:00:00:00:b0 (SET FEATURES) filtered out
-<0.6> 2014-08-11 15:17:18 Telcontar kernel - - - [73229.287241] ata10.01: ACPI cmd ef/03:45:00:00:00:b0 (SET FEATURES) filtered out
-<0.6> 2014-08-11 15:17:18 Telcontar kernel - - - [73229.287242] ata10.01: ACPI cmd ef/03:0c:00:00:00:b0 (SET FEATURES) filtered out
-<0.7> 2014-08-11 15:17:18 Telcontar kernel - - - [73229.287362] ata9.01: ACPI cmd c6/00:10:00:00:00:b0 (SET MULTIPLE MODE) succeeded
-<0.6> 2014-08-11 15:17:18 Telcontar kernel - - - [73229.287364] ata9.01: ACPI cmd f5/00:00:00:00:00:00 (SECURITY FREEZE LOCK) filtered out
-<0.7> 2014-08-11 15:17:18 Telcontar kernel - - - [73229.287457] ata10.01: ACPI cmd c6/00:10:00:00:00:b0 (SET MULTIPLE MODE) succeeded
-<0.6> 2014-08-11 15:17:18 Telcontar kernel - - - [73229.287459] ata10.01: ACPI cmd f5/00:00:00:00:00:00 (SECURITY FREEZE LOCK) filtered out
-<0.6> 2014-08-11 15:17:18 Telcontar kernel - - - [73229.293185] ata10.00: ACPI cmd ef/03:45:00:00:00:a0 (SET FEATURES) filtered out
-<0.6> 2014-08-11 15:17:18 Telcontar kernel - - - [73229.293186] ata10.00: ACPI cmd ef/03:0c:00:00:00:a0 (SET FEATURES) filtered out
-<0.6> 2014-08-11 15:17:18 Telcontar kernel - - - [73229.293236] ata9.00: ACPI cmd ef/03:45:00:00:00:a0 (SET FEATURES) filtered out
-<0.6> 2014-08-11 15:17:18 Telcontar kernel - - - [73229.293237] ata9.00: ACPI cmd ef/03:0c:00:00:00:a0 (SET FEATURES) filtered out
-<0.7> 2014-08-11 15:17:18 Telcontar kernel - - - [73229.293378] ata10.00: ACPI cmd c6/00:10:00:00:00:a0 (SET MULTIPLE MODE) succeeded
-<0.6> 2014-08-11 15:17:18 Telcontar kernel - - - [73229.293379] ata10.00: ACPI cmd f5/00:00:00:00:00:00 (SECURITY FREEZE LOCK) filtered out
-<0.7> 2014-08-11 15:17:18 Telcontar kernel - - - [73229.293443] ata9.00: ACPI cmd c6/00:10:00:00:00:a0 (SET MULTIPLE MODE) succeeded
-<0.6> 2014-08-11 15:17:18 Telcontar kernel - - - [73229.293445] ata9.00: ACPI cmd f5/00:00:00:00:00:00 (SECURITY FREEZE LOCK) filtered out
-<0.6> 2014-08-11 15:17:18 Telcontar kernel - - - [73229.302319] ata9.00: configured for UDMA/133
-<0.6> 2014-08-11 15:17:18 Telcontar kernel - - - [73229.308304] ata9.01: configured for UDMA/133
-<0.5> 2014-08-11 15:17:18 Telcontar kernel - - - [73229.308337] sd 8:0:0:0: [sdb] Starting disk
-<0.5> 2014-08-11 15:17:18 Telcontar kernel - - - [73229.308338] sd 8:0:1:0: [sdc] Starting disk
-<0.6> 2014-08-11 15:17:18 Telcontar kernel - - - [73229.318322] ata10.00: configured for UDMA/133
-<0.6> 2014-08-11 15:17:18 Telcontar kernel - - - [73229.324321] ata10.01: configured for UDMA/133
-<0.5> 2014-08-11 15:17:18 Telcontar kernel - - - [73229.324351] sd 9:0:1:0: [sde] Starting disk
-<0.5> 2014-08-11 15:17:18 Telcontar kernel - - - [73229.324352] sd 9:0:0:0: [sdd] Starting disk
-<0.6> 2014-08-11 15:17:18 Telcontar kernel - - - [73229.512018] usb 3-1: reset low-speed USB device number 2 using uhci_hcd
-<0.6> 2014-08-11 15:17:18 Telcontar kernel - - - [73230.057013] usb 8-2: reset low-speed USB device number 2 using uhci_hcd
-<0.6> 2014-08-11 15:17:18 Telcontar kernel - - - [73230.408094] usb 2-5.4: reset high-speed USB device number 4 using ehci-pci
-<0.6> 2014-08-11 15:17:18 Telcontar kernel - - - [73230.798419] r8169 0000:06:00.0 eth0: link up
-<0.6> 2014-08-11 15:17:18 Telcontar kernel - - - [73231.245103] PM: restore of devices complete after 2736.365 msecs
-<0.4> 2014-08-11 15:17:18 Telcontar kernel - - - [73231.514298] Restarting kernel threads ... done.
-<0.4> 2014-08-11 15:17:18 Telcontar kernel - - - [73231.518736] Restarting tasks ... done.
-<0.7> 2014-08-11 15:17:18 Telcontar kernel - - - [73231.562307] PM: Basic memory bitmaps freed
-<3.4> 2014-08-11 15:17:19 Telcontar rtkit-daemon 4535 - -  The canary thread is apparently starving. Taking action.
-<3.6> 2014-08-11 15:17:19 Telcontar rtkit-daemon 4535 - -  Demoting known real-time threads.
-<3.5> 2014-08-11 15:17:19 Telcontar rtkit-daemon 4535 - -  Successfully demoted thread 4541 of process 4534 (/usr/bin/pulseaudio).
-<3.5> 2014-08-11 15:17:19 Telcontar rtkit-daemon 4535 - -  Successfully demoted thread 4540 of process 4534 (/usr/bin/pulseaudio).
-<3.5> 2014-08-11 15:17:19 Telcontar rtkit-daemon 4535 - -  Successfully demoted thread 4534 of process 4534 (/usr/bin/pulseaudio).
-<3.5> 2014-08-11 15:17:19 Telcontar rtkit-daemon 4535 - -  Demoted 3 threads.
-<0.1> 2014-08-11 15:17:22 Telcontar kernel - - - [73235.439809] XFS: Internal error XFS_WANT_CORRUPTED_GOTO at line 1602 of file /home/abuild/rpmbuild/BUILD/kernel-desktop-3.1
-<0.1> 2014-08-11 15:17:22 Telcontar kernel - - - [73235.439809].
-<0.4> 2014-08-11 15:17:22 Telcontar kernel - - - [73235.440155] CPU: 0 PID: 6255 Comm: kworker/0:7 Tainted: P           O 3.11.10-17-desktop #1
-<0.4> 2014-08-11 15:17:22 Telcontar kernel - - - [73235.440322] Hardware name: MICRO-STAR INTERNATIONAL CO.,LTD MS-7516/MS-7516, BIOS V1.5 10/10/2008
-<0.4> 2014-08-11 15:17:22 Telcontar kernel - - - [73235.440361] Workqueue: xfs-eofblocks/sdd5 xfs_eofblocks_worker [xfs]
-<0.4> 2014-08-11 15:17:22 Telcontar kernel - - - [73235.440364]  0000000000000001 ffffffff815a0402 000000000010c9d3 ffffffffa0c38996
-<0.4> 2014-08-11 15:17:22 Telcontar kernel - - - [73235.440365]  ffff880211412b00 ffff88023448dd80 ffff88023fb95cb0 0000000000000001
-<0.4> 2014-08-11 15:17:22 Telcontar kernel - - - [73235.440366]  0000000000000000 0000000100000000 0000000000000000 0000000000000001
-<0.4> 2014-08-11 15:17:22 Telcontar kernel - - - [73235.440367] Call Trace:
-<0.4> 2014-08-11 15:17:22 Telcontar kernel - - - [73235.440377]  [<ffffffff81004a28>] dump_trace+0x88/0x310
-<0.4> 2014-08-11 15:17:22 Telcontar kernel - - - [73235.440380]  [<ffffffff81004d80>] show_stack_log_lvl+0xd0/0x1d0
-<0.4> 2014-08-11 15:17:22 Telcontar kernel - - - [73235.440382]  [<ffffffff810061bc>] show_stack+0x1c/0x50
-<0.4> 2014-08-11 15:17:22 Telcontar kernel - - - [73235.440385]  [<ffffffff815a0402>] dump_stack+0x50/0x89
-<0.4> 2014-08-11 15:17:22 Telcontar kernel - - - [73235.440399]  [<ffffffffa0c38996>] xfs_free_ag_extent+0x226/0x860 [xfs]
-<0.4> 2014-08-11 15:17:22 Telcontar kernel - - - [73235.440442]  [<ffffffffa0c39fe9>] xfs_free_extent+0xb9/0xf0 [xfs]
-<0.4> 2014-08-11 15:17:22 Telcontar kernel - - - [73235.440484]  [<ffffffffa0c4c39e>] xfs_bmap_finish+0x11e/0x170 [xfs]
-<0.4> 2014-08-11 15:17:22 Telcontar kernel - - - [73235.440534]  [<ffffffffa0c6b4c0>] xfs_itruncate_extents+0x190/0x340 [xfs]
-<0.4> 2014-08-11 15:17:22 Telcontar kernel - - - [73235.440597]  [<ffffffffa0c33633>] xfs_free_eofblocks+0x1e3/0x260 [xfs]
-<0.4> 2014-08-11 15:17:22 Telcontar kernel - - - [73235.440633]  [<ffffffffa0c291ef>] xfs_inode_free_eofblocks+0x6f/0x150 [xfs]
-<0.4> 2014-08-11 15:17:22 Telcontar kernel - - - [73235.440662]  [<ffffffffa0c27f82>] xfs_inode_ag_walk.isra.10+0x1c2/0x310 [xfs]
-<0.4> 2014-08-11 15:17:22 Telcontar kernel - - - [73235.440690]  [<ffffffffa0c28a8e>] xfs_inode_ag_iterator_tag+0x6e/0xb0 [xfs]
-<0.4> 2014-08-11 15:17:22 Telcontar kernel - - - [73235.440718]  [<ffffffffa0c28d82>] xfs_eofblocks_worker+0x12/0x20 [xfs]
-<0.4> 2014-08-11 15:17:22 Telcontar kernel - - - [73235.440737]  [<ffffffff8106ac78>] process_one_work+0x168/0x490
-<0.4> 2014-08-11 15:17:22 Telcontar kernel - - - [73235.440739]  [<ffffffff8106b914>] worker_thread+0x114/0x3a0
-<0.4> 2014-08-11 15:17:22 Telcontar kernel - - - [73235.440742]  [<ffffffff81071c3f>] kthread+0xaf/0xc0
-<0.4> 2014-08-11 15:17:22 Telcontar kernel - - - [73235.440746]  [<ffffffff815adfbc>] ret_from_fork+0x7c/0xb0
-<0.5> 2014-08-11 15:17:22 Telcontar kernel - - - [73235.440751] XFS (sdd5): xfs_do_force_shutdown(0x8) called from line 916 of file /home/abuild/rpmbuild/BUILD/kernel-desktop-
-<0.1> 2014-08-11 15:17:22 Telcontar kernel - - - [73235.498979] XFS (sdd5): Corruption of in-memory data detected.  Shutting down filesystem
-<0.1> 2014-08-11 15:17:22 Telcontar kernel - - - [73235.499136] XFS (sdd5): Please umount the filesystem and rectify the problem(s)
-<3.6> 2014-08-11 15:17:22 Telcontar systemd 1 - -  Time has been changed
-<3.6> 2014-08-11 15:17:27 Telcontar acpid - - -  1 client rule loaded
-<3.4> 2014-08-11 15:17:29 Telcontar pm-utils - - -  Thawing (95)...
-<3.5> 2014-08-11 15:17:30 Telcontar dbus 1020 - -  [system] Activating service name='org.freedesktop.PackageKit' (using servicehelper)
-<3.6> 2014-08-11 15:17:30 Telcontar systemd 1 - -  Starting LSB: Network time protocol daemon (ntpd)...
-<0.4> 2014-08-11 15:17:30 Telcontar kernel - - - [73244.256012] XFS (sdd5): xfs_log_force: error 5 returned.
-<3.5> 2014-08-11 15:17:31 Telcontar dbus 1020 - -  [system] Activated service 'org.freedesktop.PackageKit' failed: Cannot launch daemon, file not found or permissions invalid
-<1.5> 2014-08-11 15:17:31 Telcontar network 6315 - -  redirecting to "systemctl  restart network.service"
-<3.6> 2014-08-11 15:17:32 Telcontar systemd 1 - -  Stopping ifup managed network interface eth1...
-<3.6> 2014-08-11 15:17:32 Telcontar systemd 1 - -  Stopping ifup managed network interface eth0...
-<3.6> 2014-08-11 15:17:32 Telcontar systemd 1 - -  Stopping LSB: Configure network interfaces and set up routing...
-<3.6> 2014-08-11 15:17:32 Telcontar systemd 1 - -  Starting LSB: Configure network interfaces and set up routing...
-<3.6> 2014-08-11 15:17:32 Telcontar ifdown 6352 - -  touch: cannot touch ‘/dev/.sysconfig/network/tmp/if-eth0.6352’: No such file or directory
-<3.6> 2014-08-11 15:17:32 Telcontar ifdown 6352 - -  scripts/functions: line 1221: /dev/.sysconfig/network/tmp/if-eth0.6352.tmp: No such file or directory
-<3.6> 2014-08-11 15:17:32 Telcontar ifdown 6352 - -  scripts/functions: line 1239: /dev/.sysconfig/network/tmp/if-eth0.6352.tmp: No such file or directory
-<3.6> 2014-08-11 15:17:32 Telcontar ifdown 6352 - -  cat: /dev/.sysconfig/network/tmp/if-eth0.6352: No such file or directory
-<3.6> 2014-08-11 15:17:34 Telcontar ntp 6314 - -  11 Aug 15:17:34 sntp[6505]: Started sntp
-<3.6> 2014-08-11 15:17:34 Telcontar ifdown 6352 - -  eth0      device: Realtek Semiconductor Co., Ltd. RTL8111/8168/8411 PCI Express Gigabit Ethernet Controller (rev 02)
-<1.5> 2014-08-11 15:17:34 Telcontar ifdown 6352 - -      eth0      device: Realtek Semiconductor Co., Ltd. RTL8111/8168/8411 PCI Express Gigabit Ethernet Controller (rev 02)
-<3.6> 2014-08-11 15:17:34 Telcontar ifdown 6351 - -  eth1      device: Realtek Semiconductor Co., Ltd. RTL8111/8168/8411 PCI Express Gigabit Ethernet Controller (rev 02)
-<1.5> 2014-08-11 15:17:34 Telcontar ifdown 6351 - -      eth1      device: Realtek Semiconductor Co., Ltd. RTL8111/8168/8411 PCI Express Gigabit Ethernet Controller (rev 02)
-<3.6> 2014-08-11 15:17:34 Telcontar network 6384 - -  Setting up network interfaces:
-<3.6> 2014-08-11 15:17:34 Telcontar network 6384 - -  lo
-<1.5> 2014-08-11 15:17:34 Telcontar ifup 6924 - -      lo
-<1.5> 2014-08-11 15:17:35 Telcontar ifup 6924 - -      lo
-<1.5> 2014-08-11 15:17:35 Telcontar ifup 6924 - -  IP address: 127.0.0.1/8
-<3.6> 2014-08-11 15:17:35 Telcontar network 6384 - -  lo        IP address: 127.0.0.1/8
-<1.5> 2014-08-11 15:17:35 Telcontar ifup 6924 - -.
-<16.3> 2014-08-11 15:17:38 Telcontar dhcpcd 7162 - -  eth1: dhcpcd not running
-<16.6> 2014-08-11 15:17:38 Telcontar dhcpcd 7162 - -  eth1: exiting
-<3.5> 2014-08-11 15:17:38 Telcontar systemd 1 - -  Unit network@eth0.service entered failed state.
-<3.6> 2014-08-11 15:17:38 Telcontar systemd 1 - -  Starting ifup managed network interface eth0...
-<3.6> 2014-08-11 15:17:38 Telcontar avahi-daemon 1007 - -  Interface eth0.IPv6 no longer relevant for mDNS.
-<3.6> 2014-08-11 15:17:38 Telcontar avahi-daemon 1007 - -  Leaving mDNS multicast group on interface eth0.IPv6 with address fc00::14.
-<3.6> 2014-08-11 15:17:38 Telcontar avahi-daemon 1007 - -  Interface eth0.IPv4 no longer relevant for mDNS.
-<3.6> 2014-08-11 15:17:38 Telcontar avahi-daemon 1007 - -  Leaving mDNS multicast group on interface eth0.IPv4 with address 192.168.1.14.
-<3.6> 2014-08-11 15:17:38 Telcontar avahi-daemon 1007 - -  Withdrawing address record for fc00::14 on eth0.
-<3.6> 2014-08-11 15:17:38 Telcontar avahi-daemon 1007 - -  Withdrawing address record for 192.168.1.14 on eth0.
-<3.6> 2014-08-11 15:17:38 Telcontar ifup 7226 - -  eth0      device: Realtek Semiconductor Co., Ltd. RTL8111/8168/8411 PCI Express Gigabit Ethernet Controller (rev 02)
-<1.5> 2014-08-11 15:17:38 Telcontar ifup 7226 - -      eth0      device: Realtek Semiconductor Co., Ltd. RTL8111/8168/8411 PCI Express Gigabit Ethernet Controller (rev 02)
-<0.6> 2014-08-11 15:17:38 Telcontar kernel - - - [73251.792336] r8169 0000:06:00.0 eth0: link down
-<0.6> 2014-08-11 15:17:38 Telcontar kernel - - - [73251.792353] r8169 0000:06:00.0 eth0: link down
-<0.6> 2014-08-11 15:17:38 Telcontar kernel - - - [73251.792366] IPv6: ADDRCONF(NETDEV_UP): eth0: link is not ready
-<3.6> 2014-08-11 15:17:38 Telcontar avahi-daemon 1007 - -  Joining mDNS multicast group on interface eth0.IPv4 with address 192.168.1.14.
-<3.6> 2014-08-11 15:17:38 Telcontar avahi-daemon 1007 - -  New relevant interface eth0.IPv4 for mDNS.
-<3.6> 2014-08-11 15:17:38 Telcontar avahi-daemon 1007 - -  Registering new address record for 192.168.1.14 on eth0.IPv4.
-<3.6> 2014-08-11 15:17:39 Telcontar systemd 1 - -  Starting ifup managed network interface eth1...
-<3.6> 2014-08-11 15:17:39 Telcontar ifplugd(eth1) 7541 - -  ifplugd 0.28 initializing.
-<0.6> 2014-08-11 15:17:39 Telcontar kernel - - - [73252.646313] r8169 0000:07:00.0 eth1: link down
-<0.6> 2014-08-11 15:17:39 Telcontar kernel - - - [73252.646341] IPv6: ADDRCONF(NETDEV_UP): eth1: link is not ready
-<3.6> 2014-08-11 15:17:39 Telcontar ifplugd(eth1) 7541 - -  Using interface eth1/00:21:85:16:2D:0C with driver <r8169> (version: 2.3LK-NAPI)
-<3.6> 2014-08-11 15:17:39 Telcontar ifplugd(eth1) 7541 - -  Using detection mode: SIOCETHTOOL
-<3.6> 2014-08-11 15:17:39 Telcontar ifplugd(eth1) 7541 - -  Initialization complete, link beat not detected.
-<1.5> 2014-08-11 15:17:39 Telcontar ifup 7521 - -      eth1      device: Realtek Semiconductor Co., Ltd. RTL8111/8168/8411 PCI Express Gigabit Ethernet Controller (rev 02)
-<1.5> 2014-08-11 15:17:39 Telcontar ifup 7521 - -      eth1      is controlled by ifplugd
-<3.6> 2014-08-11 15:17:39 Telcontar ifup 7521 - -  eth1      device: Realtek Semiconductor Co., Ltd. RTL8111/8168/8411 PCI Express Gigabit Ethernet Controller (rev 02)
-<3.6> 2014-08-11 15:17:39 Telcontar ifup 7521 - -  eth1      is controlled by ifplugd
-<3.6> 2014-08-11 15:17:39 Telcontar systemd 1 - -  Started ifup managed network interface eth1.
-<0.6> 2014-08-11 15:17:40 Telcontar kernel - - - [73253.958299] r8169 0000:06:00.0 eth0: link up
-<0.6> 2014-08-11 15:17:40 Telcontar kernel - - - [73253.958306] IPv6: ADDRCONF(NETDEV_CHANGE): eth0: link becomes ready
-<3.6> 2014-08-11 15:17:41 Telcontar avahi-daemon 1007 - -  Joining mDNS multicast group on interface eth0.IPv6 with address fe80::221:85ff:fe16:2d0b.
-<3.6> 2014-08-11 15:17:41 Telcontar avahi-daemon 1007 - -  New relevant interface eth0.IPv6 for mDNS.
-<3.6> 2014-08-11 15:17:41 Telcontar avahi-daemon 1007 - -  Registering new address record for fe80::221:85ff:fe16:2d0b on eth0.*.
-<3.6> 2014-08-11 15:17:42 Telcontar avahi-daemon 1007 - -  Leaving mDNS multicast group on interface eth0.IPv6 with address fe80::221:85ff:fe16:2d0b.
-<3.6> 2014-08-11 15:17:42 Telcontar avahi-daemon 1007 - -  Joining mDNS multicast group on interface eth0.IPv6 with address fc00::14.
-<3.6> 2014-08-11 15:17:42 Telcontar avahi-daemon 1007 - -  Registering new address record for fc00::14 on eth0.*.
-<3.6> 2014-08-11 15:17:42 Telcontar avahi-daemon 1007 - -  Withdrawing address record for fe80::221:85ff:fe16:2d0b on eth0.
-<3.6> 2014-08-11 15:17:44 Telcontar ntp 6314 - -  11 Aug 15:17:44 sntp[6505]: Received no useable packet from 192.168.1.15!
-<3.6> 2014-08-11 15:17:44 Telcontar ntp 6314 - -  11 Aug 15:17:44 sntp[7926]: Started sntp
-<3.6> 2014-08-11 15:17:44 Telcontar systemd 1 - -  Time has been changed
-<3.6> 2014-08-11 15:17:44 Telcontar ntp 6314 - -  2014-08-11 15:17:44.656291 (-0100) -0.112718 +/- 0.037338 secs
-<3.6> 2014-08-11 15:17:44 Telcontar ntp 6314 - -  2014-08-11 15:17:44.604369 (-0100) +0.0081 +/- 0.069473 secs
-<3.6> 2014-08-11 15:17:44 Telcontar ntp 6314 - -  Time synchronized with  0.pool.ntp.org
-<4.6> 2014-08-11 15:17:45 Telcontar SuSEfirewall2 - - -  Setting up rules from /etc/sysconfig/SuSEfirewall2 ...
-<4.6> 2014-08-11 15:17:45 Telcontar SuSEfirewall2 - - -  using default zone 'ext' for interface eth1
-<4.6> 2014-08-11 15:17:45 Telcontar SuSEfirewall2 - - -  Firewall customary rules loaded from /etc/sysconfig/scripts/SuSEfirewall2-custom
-<3.5> 2014-08-11 15:17:45 Telcontar ntpd 7991 - -  ntpd 4.2.6p5@1.2349-o Tue Jul 22 08:26:41 UTC 2014 (1)
-<3.6> 2014-08-11 15:17:45 Telcontar ntp 6314 - -  Starting network time protocol daemon (NTPD)..done
-<3.6> 2014-08-11 15:17:44 Telcontar systemd 1 - -  Time has been changed
-<3.6> 2014-08-11 15:17:45 Telcontar systemd 1 - -  Started LSB: Network time protocol daemon (ntpd).
-<3.5> 2014-08-11 15:17:45 Telcontar ntpd 8017 - -  proto: precision = 1.613 usec
-<3.7> 2014-08-11 15:17:46 Telcontar ntpd 8017 - -  ntp_io: estimated max descriptors: 1024, initial socket boundary: 16
-<3.6> 2014-08-11 15:17:46 Telcontar ntpd 8017 - -  Listen and drop on 0 v4wildcard 0.0.0.0 UDP 123
-<3.6> 2014-08-11 15:17:46 Telcontar ntpd 8017 - -  Listen and drop on 1 v6wildcard :: UDP 123
-<3.6> 2014-08-11 15:17:46 Telcontar ntpd 8017 - -  Listen normally on 2 lo 127.0.0.1 UDP 123
-<3.6> 2014-08-11 15:17:46 Telcontar ntpd 8017 - -  Listen normally on 3 eth0 192.168.1.14 UDP 123
-<3.6> 2014-08-11 15:17:46 Telcontar ntpd 8017 - -  Listen normally on 4 lo ::1 UDP 123
-<3.6> 2014-08-11 15:17:46 Telcontar ntpd 8017 - -  Listen normally on 5 eth0 fe80::221:85ff:fe16:2d0b UDP 123
-<3.6> 2014-08-11 15:17:46 Telcontar ntpd 8017 - -  Listen normally on 6 eth0 fc00::14 UDP 123
-<3.6> 2014-08-11 15:17:46 Telcontar ntpd 8017 - -  peers refreshed
-<3.6> 2014-08-11 15:17:46 Telcontar ntpd 8017 - -  Listening on routing socket on fd #23 for interface updates
-<3.5> 2014-08-11 15:17:46 Telcontar ntpd 8017 - -  logging to file /var/log/ntp
-<4.6> 2014-08-11 15:17:48 Telcontar SuSEfirewall2 - - -  Firewall rules successfully set
-<3.6> 2014-08-11 15:17:48 Telcontar avahi-autoipd(eth0) 8434 - -  Found user 'avahi-autoipd' (UID 495) and group 'avahi-autoipd' (GID 491).
-<3.6> 2014-08-11 15:17:48 Telcontar avahi-autoipd(eth0) 8434 - -  Successfully called chroot().
-<3.6> 2014-08-11 15:17:48 Telcontar avahi-autoipd(eth0) 8434 - -  Successfully dropped root privileges.
-<3.6> 2014-08-11 15:17:48 Telcontar avahi-autoipd(eth0) 8434 - -  Starting with address 169.254.3.89
-<3.6> 2014-08-11 15:17:48 Telcontar avahi-autoipd(eth0) 8434 - -  Routable address already assigned, sleeping.
-<3.6> 2014-08-11 15:17:50 Telcontar systemd 1 - -  Started ifup managed network interface eth0.
-<3.6> 2014-08-11 15:17:50 Telcontar systemd 1 - -  Started ifup managed network interface eth1.
-<3.6> 2014-08-11 15:17:50 Telcontar network 6384 - -  ..done..done..done    ppp0      Startmode is 'manual' -> skipping
-<1.5> 2014-08-11 15:17:50 Telcontar ifup 8500 - -      ppp0      Startmode is 'manual' -> skipping
-<3.6> 2014-08-11 15:17:50 Telcontar network 6384 - -  ..skippedSetting up service network  .  .  .  .  .  .  .  .  .  .  .  .  ...done
-<3.6> 2014-08-11 15:17:50 Telcontar systemd 1 - -  Started LSB: Configure network interfaces and set up routing.
-<3.4> 2014-08-11 15:17:52 Telcontar pm-utils - - -  Thawing the system now (04)...
-<0.6> 2014-08-11 15:17:55 Telcontar kernel - - - [73268.481672] Chrome_ChildThr[5680]: segfault at 0 ip 00007ffcedf71598 sp 00007ffce1821410 error 6 in libmozalloc.so[7ffcedf7
-<0.4> 2014-08-11 15:18:00 Telcontar kernel - - - [73274.336014] XFS (sdd5): xfs_log_force: error 5 returned.
-<3.6> 2014-08-11 15:18:01 Telcontar systemd 1 - -  Starting Session 559 of user news.
-<3.4> 2014-08-11 15:18:16 Telcontar router - - -  (Thawing 04) Logging the current IP= 79.159.63.177
-<0.4> 2014-08-11 15:18:31 Telcontar kernel - - - [73304.416012] XFS (sdd5): xfs_log_force: error 5 returned.
-<0.4> 2014-08-11 15:19:01 Telcontar kernel - - - [73334.496014] XFS (sdd5): xfs_log_force: error 5 returned.
-<0.4> 2014-08-11 15:19:31 Telcontar kernel - - - [73364.576016] XFS (sdd5): xfs_log_force: error 5 returned.
-<0.4> 2014-08-11 15:20:01 Telcontar kernel - - - [73394.656015] XFS (sdd5): xfs_log_force: error 5 returned.
-<3.6> 2014-08-11 15:20:01 Telcontar systemd 1 - -  Starting Session 560 of user cer.
-<0.4> 2014-08-11 15:20:31 Telcontar kernel - - - [73424.736049] XFS (sdd5): xfs_log_force: error 5 returned.
-<0.4> 2014-08-11 15:21:01 Telcontar kernel - - - [73454.816016] XFS (sdd5): xfs_log_force: error 5 returned.
-<0.4> 2014-08-11 15:21:31 Telcontar kernel - - - [73484.896015] XFS (sdd5): xfs_log_force: error 5 returned.
-<0.4> 2014-08-11 15:22:01 Telcontar kernel - - - [73514.976016] XFS (sdd5): xfs_log_force: error 5 returned.
-<0.4> 2014-08-11 15:22:31 Telcontar kernel - - - [73545.056018] XFS (sdd5): xfs_log_force: error 5 returned.
-<3.6> 2014-08-11 15:23:01 Telcontar systemd 1 - -  Starting Session 561 of user news.
-<0.4> 2014-08-11 15:23:01 Telcontar kernel - - - [73575.136025] XFS (sdd5): xfs_log_force: error 5 returned.
-<0.4> 2014-08-11 15:23:31 Telcontar kernel - - - [73605.216014] XFS (sdd5): xfs_log_force: error 5 returned.
-<3.6> 2014-08-11 15:23:52 Telcontar smartd 1013 - -  Device: /dev/sdb [SAT], Temperature changed -5 Celsius to 33 Celsius (Min/Max 19/38)
-<0.4> 2014-08-11 15:24:01 Telcontar kernel - - - [73635.296078] XFS (sdd5): xfs_log_force: error 5 returned.
-<0.4> 2014-08-11 15:24:32 Telcontar kernel - - - [73665.376020] XFS (sdd5): xfs_log_force: error 5 returned.
-<3.6> 2014-08-11 15:25:01 Telcontar systemd 1 - -  Starting Session 562 of user news.
-<0.4> 2014-08-11 15:25:02 Telcontar kernel - - - [73695.456011] XFS (sdd5): xfs_log_force: error 5 returned.
-<0.4> 2014-08-11 15:25:32 Telcontar kernel - - - [73725.536015] XFS (sdd5): xfs_log_force: error 5 returned.
-<0.4> 2014-08-11 15:26:02 Telcontar kernel - - - [73755.616017] XFS (sdd5): xfs_log_force: error 5 returned.
-<0.4> 2014-08-11 15:26:32 Telcontar kernel - - - [73785.696017] XFS (sdd5): xfs_log_force: error 5 returned.
-<0.4> 2014-08-11 15:27:02 Telcontar kernel - - - [73815.776016] XFS (sdd5): xfs_log_force: error 5 returned.
-<0.4> 2014-08-11 15:27:32 Telcontar kernel - - - [73845.856021] XFS (sdd5): xfs_log_force: error 5 returned.
-<3.6> 2014-08-11 15:28:01 Telcontar systemd 1 - -  Starting Session 563 of user news.
-<0.4> 2014-08-11 15:28:02 Telcontar kernel - - - [73875.936014] XFS (sdd5): xfs_log_force: error 5 returned.
-<0.4> 2014-08-11 15:28:32 Telcontar kernel - - - [73906.016015] XFS (sdd5): xfs_log_force: error 5 returned.
-<0.4> 2014-08-11 15:29:02 Telcontar kernel - - - [73936.096017] XFS (sdd5): xfs_log_force: error 5 returned.
-<0.4> 2014-08-11 15:29:32 Telcontar kernel - - - [73966.176012] XFS (sdd5): xfs_log_force: error 5 returned.
-<3.6> 2014-08-11 15:30:01 Telcontar systemd 1 - -  Starting Session 564 of user root.
-<3.6> 2014-08-11 15:30:01 Telcontar systemd 1 - -  Starting Session 565 of user cer.
-<1.6> 2014-08-11 15:30:01 Telcontar run-crons 8974 - -  suse.de-snapper: OK
-<4.5> 2014-08-11 15:30:01 Telcontar su - - -  (to root) root on (null)
-<10.3> 2014-08-11 15:30:01 Telcontar su - - -  pam_systemd(su-l:session): pam_putenv: delete non-existent entry; XDG_RUNTIME_DIR
-<0.4> 2014-08-11 15:30:02 Telcontar kernel - - - [73996.256010] XFS (sdd5): xfs_log_force: error 5 returned.
-<0.4> 2014-08-11 15:30:32 Telcontar kernel - - - [74026.336013] XFS (sdd5): xfs_log_force: error 5 returned.
-<0.4> 2014-08-11 15:31:03 Telcontar kernel - - - [74056.416012] XFS (sdd5): xfs_log_force: error 5 returned.
-<0.4> 2014-08-11 15:31:33 Telcontar kernel - - - [74086.496011] XFS (sdd5): xfs_log_force: error 5 returned.
-<4.5> 2014-08-11 15:31:59 Telcontar gnome-keyring-daemon 4381 - -  Gkm: couldn't stat directory: /home/cer/.gnome2/keyrings: Input/output error
-<4.4> 2014-08-11 15:32:00 Telcontar gnome-keyring-daemon 4381 - -  GLib-GObject: invalid unclassed pointer in cast to 'GkmObject'
-<4.3> 2014-08-11 15:32:00 Telcontar gnome-keyring-daemon 4381 - -  Gkm: gkm_object_expose_full: assertion 'GKM_IS_OBJECT (self)' failed
-<4.5> 2014-08-11 15:32:00 Telcontar gnome-keyring-daemon 4381 - -  Gkm: couldn't stat directory: /home/cer/.gnome2/keyrings: Input/output error
-<4.5> 2014-08-11 15:32:00 Telcontar gnome-keyring-daemon 4381 - -  Gkm: couldn't stat directory: /home/cer/.gnome2/keyrings: Input/output error
-<4.4> 2014-08-11 15:32:00 Telcontar gnome-keyring-daemon 4381 - -  Gkm: couldn't create temporary file for: /home/cer/.gnome2/keyrings/login.keyring: Input/output error
-<4.4> 2014-08-11 15:32:00 Telcontar gnome-keyring-daemon 4381 - -  couldn't create login keyring: An error occurred on the device
-<10.3> 2014-08-11 15:32:00 Telcontar unix2_chkpwd - - -  gkr-pam: the password for the login keyring was invalid.
-<0.4> 2014-08-11 15:32:03 Telcontar kernel - - - [74116.576018] XFS (sdd5): xfs_log_force: error 5 returned.
-<0.4> 2014-08-11 15:32:33 Telcontar kernel - - - [74146.656011] XFS (sdd5): xfs_log_force: error 5 returned.
-<3.6> 2014-08-11 15:33:01 Telcontar systemd 1 - -  Starting Session 566 of user news.
-<0.4> 2014-08-11 15:33:03 Telcontar kernel - - - [74176.736068] XFS (sdd5): xfs_log_force: error 5 returned.
-<0.4> 2014-08-11 15:33:33 Telcontar kernel - - - [74206.816012] XFS (sdd5): xfs_log_force: error 5 returned.
-<0.4> 2014-08-11 15:34:03 Telcontar kernel - - - [74236.896017] XFS (sdd5): xfs_log_force: error 5 returned.
-<0.4> 2014-08-11 15:34:33 Telcontar kernel - - - [74266.976014] XFS (sdd5): xfs_log_force: error 5 returned.
-<3.6> 2014-08-11 15:35:01 Telcontar systemd 1 - -  Starting Session 567 of user news.
-<0.4> 2014-08-11 15:35:03 Telcontar kernel - - - [74297.056012] XFS (sdd5): xfs_log_force: error 5 returned.
-<0.4> 2014-08-11 15:35:33 Telcontar kernel - - - [74327.136015] XFS (sdd5): xfs_log_force: error 5 returned.
-<1.6> 2014-08-11 15:35:56 Telcontar run-crons 8974 - -  leafnode: OK
-<3.6> 2014-08-11 15:35:56 Telcontar systemd 1 - -  Reloading System Logging Service.
-<3.6> 2014-08-11 15:35:57 Telcontar systemd 1 - -  Reloaded System Logging Service.
-<5.6> 2014-08-11 15:35:57 Telcontar rsyslogd - - -  [origin software="rsyslogd" swVersion="7.4.7" x-pid="1081" x-info="http://www.rsyslog.com"] rsyslogd was HUPed
-<3.6> 2014-08-11 15:36:02 Telcontar systemd 1 - -  Reloading System Logging Service.
-<3.6> 2014-08-11 15:36:02 Telcontar systemd 1 - -  Reloaded System Logging Service.
-<0.4> 2014-08-11 15:36:03 Telcontar kernel - - - [74357.216013] XFS (sdd5): xfs_log_force: error 5 returned.
-<1.6> 2014-08-11 15:36:06 Telcontar run-crons 8974 - -  logrotate: OK
-<3.2> 2014-08-11 15:36:06 Telcontar mdadm 9290 - -  DegradedArray event detected on md device /dev/md0
-<1.6> 2014-08-11 15:36:06 Telcontar run-crons 8974 - -  mdadm: OK
-<4.5> 2014-08-11 15:36:06 Telcontar su - - -  (to root) root on (null)
-<1.4> 2014-08-11 15:36:25 Telcontar run-crons 8974 - -  mlocate.cron returned 143
-<1.6> 2014-08-11 15:36:25 Telcontar run-crons 8974 - -  packagekit-background.cron: OK
-<1.6> 2014-08-11 15:36:26 Telcontar run-crons 8974 - -  suse-clean_catman: OK
-<0.4> 2014-08-11 15:36:33 Telcontar kernel - - - [74387.296018] XFS (sdd5): xfs_log_force: error 5 returned.
-<1.6> 2014-08-11 15:36:41 Telcontar run-crons 8974 - -  suse-do_mandb: OK
-<1.6> 2014-08-11 15:36:57 Telcontar run-crons 8974 - -  suse-texlive: OK
-<1.6> 2014-08-11 15:36:57 Telcontar run-crons 8974 - -  suse.cron-sa-update: OK
-<1.6> 2014-08-11 15:36:58 Telcontar run-crons 8974 - -  suse.de-backup-rc.config: OK
-<0.4> 2014-08-11 15:37:04 Telcontar kernel - - - [74417.376010] XFS (sdd5): xfs_log_force: error 5 returned.
-<1.6> 2014-08-11 15:37:34 Telcontar run-crons 8974 - -  suse.de-backup-rpmdb: OK
-<0.4> 2014-08-11 15:37:34 Telcontar kernel - - - [74447.456013] XFS (sdd5): xfs_log_force: error 5 returned.
-<1.6> 2014-08-11 15:37:34 Telcontar run-crons 8974 - -  suse.de-check-battery: OK
-<1.6> 2014-08-11 15:37:34 Telcontar run-crons 8974 - -  suse.de-cron-local: OK
-<1.6> 2014-08-11 15:37:34 Telcontar run-crons 8974 - -  suse.de-faxcron: OK
-<1.6> 2014-08-11 15:37:34 Telcontar run-crons 8974 - -  suse.de-snapper: OK
-<3.6> 2014-08-11 15:38:01 Telcontar systemd 1 - -  Starting Session 568 of user news.
-<0.4> 2014-08-11 15:38:04 Telcontar kernel - - - [74477.536013] XFS (sdd5): xfs_log_force: error 5 returned.
-<0.4> 2014-08-11 15:38:34 Telcontar kernel - - - [74507.616019] XFS (sdd5): xfs_log_force: error 5 returned.
-<0.4> 2014-08-11 15:39:04 Telcontar kernel - - - [74537.696013] XFS (sdd5): xfs_log_force: error 5 returned.
-<0.4> 2014-08-11 15:39:34 Telcontar kernel - - - [74567.776014] XFS (sdd5): xfs_log_force: error 5 returned.
-<3.6> 2014-08-11 15:40:01 Telcontar systemd 1 - -  Starting Session 569 of user cer.
-<0.4> 2014-08-11 15:40:04 Telcontar kernel - - - [74597.856013] XFS (sdd5): xfs_log_force: error 5 returned.
-<0.4> 2014-08-11 15:40:34 Telcontar kernel - - - [74627.936021] XFS (sdd5): xfs_log_force: error 5 returned.
-<0.4> 2014-08-11 15:41:04 Telcontar kernel - - - [74658.016012] XFS (sdd5): xfs_log_force: error 5 returned.
-<0.4> 2014-08-11 15:41:34 Telcontar kernel - - - [74688.096019] XFS (sdd5): xfs_log_force: error 5 returned.
-<0.4> 2014-08-11 15:42:04 Telcontar kernel - - - [74718.176018] XFS (sdd5): xfs_log_force: error 5 returned.
-<0.4> 2014-08-11 15:42:34 Telcontar kernel - - - [74748.256017] XFS (sdd5): xfs_log_force: error 5 returned.
-<3.6> 2014-08-11 15:43:01 Telcontar systemd 1 - -  Starting Session 570 of user news.
-<0.4> 2014-08-11 15:43:04 Telcontar kernel - - - [74778.336012] XFS (sdd5): xfs_log_force: error 5 returned.
-<0.4> 2014-08-11 15:43:35 Telcontar kernel - - - [74808.416013] XFS (sdd5): xfs_log_force: error 5 returned.
-<0.4> 2014-08-11 15:44:05 Telcontar kernel - - - [74838.496014] XFS (sdd5): xfs_log_force: error 5 returned.
-<0.4> 2014-08-11 15:44:35 Telcontar kernel - - - [74868.576013] XFS (sdd5): xfs_log_force: error 5 returned.
-<3.6> 2014-08-11 15:45:01 Telcontar systemd 1 - -  Starting Session 571 of user root.
-<3.6> 2014-08-11 15:45:01 Telcontar systemd 1 - -  Starting Session 572 of user news.
-<0.4> 2014-08-11 15:45:05 Telcontar kernel - - - [74898.656019] XFS (sdd5): xfs_log_force: error 5 returned.
-<0.4> 2014-08-11 15:45:35 Telcontar kernel - - - [74928.736017] XFS (sdd5): xfs_log_force: error 5 returned.
-<0.4> 2014-08-11 15:46:05 Telcontar kernel - - - [74958.816015] XFS (sdd5): xfs_log_force: error 5 returned.
-<0.4> 2014-08-11 15:46:35 Telcontar kernel - - - [74988.896026] XFS (sdd5): xfs_log_force: error 5 returned.
-<0.4> 2014-08-11 15:47:05 Telcontar kernel - - - [75018.976014] XFS (sdd5): xfs_log_force: error 5 returned.
-<0.4> 2014-08-11 15:47:35 Telcontar kernel - - - [75049.056013] XFS (sdd5): xfs_log_force: error 5 returned.
-<3.6> 2014-08-11 15:48:01 Telcontar systemd 1 - -  Starting Session 573 of user news.
-<0.4> 2014-08-11 15:48:05 Telcontar kernel - - - [75079.136016] XFS (sdd5): xfs_log_force: error 5 returned.
-<0.4> 2014-08-11 15:48:35 Telcontar kernel - - - [75109.216014] XFS (sdd5): xfs_log_force: error 5 returned.
-<0.4> 2014-08-11 15:49:05 Telcontar kernel - - - [75139.296014] XFS (sdd5): xfs_log_force: error 5 returned.
-<0.4> 2014-08-11 15:49:36 Telcontar kernel - - - [75169.376013] XFS (sdd5): xfs_log_force: error 5 returned.
-<0.4> 2014-08-11 15:50:06 Telcontar kernel - - - [75199.456012] XFS (sdd5): xfs_log_force: error 5 returned.
-<0.4> 2014-08-11 15:50:36 Telcontar kernel - - - [75229.536011] XFS (sdd5): xfs_log_force: error 5 returned.
-<0.4> 2014-08-11 15:51:06 Telcontar kernel - - - [75259.616013] XFS (sdd5): xfs_log_force: error 5 returned.
-<0.6> 2014-08-11 15:51:09 Telcontar kernel - - - [75262.721354] xfce4-session[4520]: segfault at 8 ip 00000000004164dc sp 00007fffdc291dc0 error 4 in xfce4-session[400000+2b00
-<4.6> 2014-08-11 15:51:18 Telcontar systemd-logind 1021 - -  Removed session 8.
-<10.5> 2014-08-11 15:51:18 Telcontar polkitd 4314 - -  Unregistered Authentication Agent for unix-session:10 (system bus name :1.69, object path /org/gnome/PolicyKit1/Authenti
-<0.7> 2014-08-11 15:51:28 Telcontar kernel - - - [75282.132776] nvidia 0000:01:00.0: irq 48 for MSI/MSI-X
-<3.6> 2014-08-11 15:51:29 Telcontar acpid - - -  1 client rule loaded
-<4.6> 2014-08-11 15:51:30 Telcontar systemd-logind 1021 - -  Removed session 10.
-<0.6> 2014-08-11 15:51:30 Telcontar kernel - - - [75284.176020] usb 1-6: new high-speed USB device number 4 using ehci-pci
-<3.6> 2014-08-11 15:51:30 Telcontar systemd 1 - -  Starting Session 574 of user lightdm.
-<4.6> 2014-08-11 15:51:30 Telcontar systemd-logind 1021 - -  New session 574 of user lightdm.
-<4.6> 2014-08-11 15:51:30 Telcontar systemd-logind 1021 - -  Linked /tmp/.X11-unix/X0 to /run/user/127/X11-display.
-<0.6> 2014-08-11 15:51:30 Telcontar kernel - - - [75284.291822] usb 1-6: New USB device found, idVendor=8564, idProduct=1000
-<0.6> 2014-08-11 15:51:30 Telcontar kernel - - - [75284.291825] usb 1-6: New USB device strings: Mfr=1, Product=2, SerialNumber=3
-<0.6> 2014-08-11 15:51:30 Telcontar kernel - - - [75284.291828] usb 1-6: Product: Mass Storage Device
-<0.6> 2014-08-11 15:51:30 Telcontar kernel - - - [75284.291829] usb 1-6: Manufacturer: JetFlash
-<0.6> 2014-08-11 15:51:30 Telcontar kernel - - - [75284.291831] usb 1-6: SerialNumber: 346YLQ4L0G5H8S2F
-<1.6> 2014-08-11 15:51:31 Telcontar mtp-probe - - -  checking bus 1, device 4: "/sys/devices/pci0000:00/0000:00:1a.7/usb1/1-6"
-<1.6> 2014-08-11 15:51:31 Telcontar mtp-probe - - -  bus: 1, device: 4 was not an MTP device
-<0.6> 2014-08-11 15:51:31 Telcontar kernel - - - [75284.667399] usb-storage 1-6:1.0: USB Mass Storage device detected
-<0.6> 2014-08-11 15:51:31 Telcontar kernel - - - [75284.667502] scsi12 : usb-storage 1-6:1.0
-<0.6> 2014-08-11 15:51:31 Telcontar kernel - - - [75284.667606] usbcore: registered new interface driver usb-storage
-<0.5> 2014-08-11 15:51:32 Telcontar kernel - - - [75285.794904] scsi 12:0:0:0: Direct-Access     JetFlash Transcend 4GB    1100 PQ: 0 ANSI: 4
-<0.6> 2014-08-11 15:51:32 Telcontar kernel - - - [75285.794976] scsi 12:0:0:0: alua: supports implicit and explicit TPGS
-<0.6> 2014-08-11 15:51:32 Telcontar kernel - - - [75285.796262] scsi 12:0:0:0: alua: No target port descriptors found
-<0.3> 2014-08-11 15:51:32 Telcontar kernel - - - [75285.796265] scsi 12:0:0:0: alua: not attached
-<0.5> 2014-08-11 15:51:32 Telcontar kernel - - - [75285.796396] sd 12:0:0:0: Attached scsi generic sg6 type 0
-<0.5> 2014-08-11 15:51:32 Telcontar kernel - - - [75285.796888] sd 12:0:0:0: [sdf] 7913472 512-byte logical blocks: (4.05 GB/3.77 GiB)
-<0.5> 2014-08-11 15:51:32 Telcontar kernel - - - [75285.797634] sd 12:0:0:0: [sdf] Write Protect is off
-<0.7> 2014-08-11 15:51:32 Telcontar kernel - - - [75285.797637] sd 12:0:0:0: [sdf] Mode Sense: 43 00 00 00
-<0.3> 2014-08-11 15:51:32 Telcontar kernel - - - [75285.798386] sd 12:0:0:0: [sdf] No Caching mode page found
-<0.3> 2014-08-11 15:51:32 Telcontar kernel - - - [75285.798388] sd 12:0:0:0: [sdf] Assuming drive cache: write through
-<0.3> 2014-08-11 15:51:32 Telcontar kernel - - - [75285.801508] sd 12:0:0:0: [sdf] No Caching mode page found
-<0.3> 2014-08-11 15:51:32 Telcontar kernel - - - [75285.801511] sd 12:0:0:0: [sdf] Assuming drive cache: write through
-<0.6> 2014-08-11 15:51:32 Telcontar kernel - - - [75285.802147]  sdf: sdf1 sdf2 sdf3
-<0.3> 2014-08-11 15:51:32 Telcontar kernel - - - [75285.805642] sd 12:0:0:0: [sdf] No Caching mode page found
-<0.3> 2014-08-11 15:51:32 Telcontar kernel - - - [75285.805645] sd 12:0:0:0: [sdf] Assuming drive cache: write through
-<0.5> 2014-08-11 15:51:32 Telcontar kernel - - - [75285.805648] sd 12:0:0:0: [sdf] Attached SCSI removable disk
-<0.4> 2014-08-11 15:51:36 Telcontar kernel - - - [75289.696019] XFS (sdd5): xfs_log_force: error 5 returned.
-<3.6> 2014-08-11 15:51:41 Telcontar systemd 1 - -  Starting Getty on tty2...
-<3.6> 2014-08-11 15:51:41 Telcontar systemd 1 - -  Started Getty on tty2.
-<3.6> 2014-08-11 15:51:42 Telcontar systemd 1 - -  Starting Getty on tty3...
-<3.6> 2014-08-11 15:51:42 Telcontar systemd 1 - -  Started Getty on tty3.
-<3.6> 2014-08-11 15:51:43 Telcontar systemd 1 - -  Starting Getty on tty6...
-<3.6> 2014-08-11 15:51:43 Telcontar systemd 1 - -  Started Getty on tty6.
-<3.6> 2014-08-11 15:51:44 Telcontar systemd 1 - -  Starting Getty on tty5...
-<3.6> 2014-08-11 15:51:44 Telcontar systemd 1 - -  Started Getty on tty5.
-<3.6> 2014-08-11 15:51:45 Telcontar systemd 1 - -  Starting Getty on tty4...
-<3.6> 2014-08-11 15:51:45 Telcontar systemd 1 - -  Started Getty on tty4.
-<0.4> 2014-08-11 15:52:06 Telcontar kernel - - - [75319.776023] XFS (sdd5): xfs_log_force: error 5 returned.
-<3.6> 2014-08-11 15:52:08 Telcontar systemd 1 - -  Unmounting /data/raid...
-<3.6> 2014-08-11 15:52:08 Telcontar systemd 1 - -  Unmounting /data/cripta...
-<3.6> 2014-08-11 15:52:08 Telcontar systemd 1 - -  Stopping /sys/devices/virtual/block/dm-0.
-<3.6> 2014-08-11 15:52:08 Telcontar systemd 1 - -  message repeated 5 times: [ Stopping /sys/devices/virtual/block/dm-0.]
-<3.6> 2014-08-11 15:52:08 Telcontar systemd 1 - -  Stopping Session 574 of user lightdm.
-<3.6> 2014-08-11 15:52:08 Telcontar systemd 1 - -  Stopped Session 574 of user lightdm.
-<3.6> 2014-08-11 15:52:08 Telcontar systemd 1 - -  Stopping Session 7 of user root.
-<3.6> 2014-08-11 15:52:08 Telcontar systemd 1 - -  Stopped Session 7 of user root.
-<3.6> 2014-08-11 15:52:08 Telcontar systemd 1 - -  Stopping user-0.slice.
-<3.6> 2014-08-11 15:52:08 Telcontar systemd 1 - -  Removed slice user-0.slice.
-<3.6> 2014-08-11 15:52:08 Telcontar systemd 1 - -  Stopping Stop Read-Ahead Data Collection 10s After Completed Startup.
-<3.6> 2014-08-11 15:52:08 Telcontar systemd 1 - -  Stopped Stop Read-Ahead Data Collection 10s After Completed Startup.
-<3.6> 2014-08-11 15:52:08 Telcontar systemd 1 - -  Stopping User Manager for 1000...
-<3.6> 2014-08-11 15:52:08 Telcontar systemd 1 - -  Stopping User Manager for 9...
-<3.6> 2014-08-11 15:52:08 Telcontar systemd 1 - -  Stopping User Manager for 127...
-<3.6> 2014-08-11 15:52:08 Telcontar systemd 1 - -  Stopping CUPS Printing Service...
-<3.6> 2014-08-11 15:52:08 Telcontar systemd 1 - -  Stopping ifup managed network interface eth1...
-<3.6> 2014-08-11 15:52:08 Telcontar systemd 1 - -  Stopping ifup managed network interface eth0...
-<3.6> 2014-08-11 15:17:44 Telcontar systemd 4377 - -  message repeated 14 times: [ Time has been changed]
-<3.3> 2014-08-11 15:52:08 Telcontar systemd 4377 - -  Failed to enqueue exit.target job: Unit exit.target failed to load: Input/output error.
-<3.6> 2014-08-11 15:52:08 Telcontar systemd 1 - -  Stopping Graphical Interface.
-<3.6> 2014-08-11 15:52:08 Telcontar systemd 1 - -  Stopped target Graphical Interface.
-<3.6> 2014-08-11 15:52:08 Telcontar systemd 1 - -  Stopping LSB: X Display Manager...
-<3.6> 2014-08-11 15:52:08 Telcontar systemd 1 - -  Stopping helloworld.service...
-<3.6> 2014-08-11 15:52:08 Telcontar systemd 1 - -  Stopped helloworld.service.
-<3.6> 2014-08-11 15:52:08 Telcontar systemd 1 - -  Stopping Multi-User System.
-<3.6> 2014-08-11 15:52:08 Telcontar systemd 1 - -  Stopped target Multi-User System.
-<3.6> 2014-08-11 15:52:08 Telcontar systemd 1 - -  Stopping LSB: virus scanner daemon...
-<3.6> 2014-08-11 15:52:08 Telcontar systemd 1 - -  Stopping LSB: Start the hddtemp daemon...
-<3.6> 2014-08-11 15:52:08 Telcontar systemd 1 - -  Stopping LSB: mdadmd daemon monitoring MD devices...
-<3.6> 2014-08-11 15:52:08 Telcontar systemd 1 - -  Stopping LSB: This services starts and stops the USB Arbitrator....
-<3.6> 2014-08-11 15:52:08 Telcontar systemd 1 - -  Stopping LSB: Supports the direct execution of binary formats....
-<3.6> 2014-08-11 15:52:08 Telcontar systemd 1 - -  Stopping LSB: irqbalance daemon providing irq balancing on MP-machines...
-<3.6> 2014-08-11 15:52:09 Telcontar systemd 1 - -  Stopping LSB: Set up analog joysticks...
-<0.4> 2014-08-11 15:52:10 Telcontar kernel - - - [75323.547122] nfsd: last server has exited, flushing export cache
-<5.6> 2014-08-11 15:36:02 Telcontar rsyslogd - - -  [origin software="rsyslogd" swVersion="7.4.7" x-pid="1081" x-info="http://www.rsyslog.com"] rsyslogd was HUPed
-<5.6> 2014-08-11 15:52:11 Telcontar rsyslogd - - -  [origin software="rsyslogd" swVersion="7.4.7" x-pid="1081" x-info="http://www.rsyslog.com"] exiting on signal 15.
-2014-08-11 15:52:12+02:00 - Halting the system now  =========================================== uptime:  15:52pm  up 1 day 20:54,  1 user,  load average: 5.94, 2.47, 1.22
-
-
-
-> I am interested in the metadata dump.
-
-Ok, sure, no problem. I'm working on that, but I need to have lunch first ;-)
-
-
-> Also, some one hit back to back duplicate block allocation 
-> XFS_WANT_CORRUPTED_GOTO bugs, you may want to do a metadata dump before and 
-> after the xfs_repair in case you hit it again soon.
-
-I already have a metadata dump, and I have not attempted to repair yet 
-(I'm doing a full dd copy of partition, and it is 400 Gigs). I will obtain 
-another metadadump after repair, and I can upload both to google drive.
-
-But first I need sustenance :-)
-
-(At least this time I do not have any pressing thing to do on the 
-computer...)
-
-- -- 
-Cheers
-        Carlos E. R.
-
-        (from 13.1 x86_64 "Bottle" (Minas Tirith))
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.22 (GNU/Linux)
-
-iF0EAREIAAYFAlPo4p4ACgkQja8UbcUWM1wGAADxAVuTUPkxG+LO29VzehJ8cSPV
-uItG/Puu2KbqUeCyXwD/cgu/+F7vhEeU9WEbNP5eifhmyu0T3ByDMtuKp55Rj7A=
-=CgSx
------END PGP SIGNATURE-----
----1463779071-1326823490-1407771294=:7326
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
-
----1463779071-1326823490-1407771294=:7326--
+T24gTW9uLCBBdWcgMTEsIDIwMTQgYXQgMDU6MzQ6NDZQTSArMDIwMCwgQ2FybG9zIEUuIFIuIHdy
+b3RlOgo+IC0tLS0tQkVHSU4gUEdQIFNJR05FRCBNRVNTQUdFLS0tLS0KPiBIYXNoOiBTSEEyNTYK
+PiAKPiAKPiAKPiBFbCAyMDE0LTA4LTExIGEgbGFzIDA5OjU3IC0wNTAwLCBNYXJrIFRpbmd1ZWx5
+IGVzY3JpYmnDszoKPiA+T24gMDgvMTEvMTQgMDk6MjMsIENhcmxvcyBFLiBSLiB3cm90ZToKPiAK
+PiA+V2hlcmUgaW4gdGhlIGZpbGVzeXN0ZW0gZGlkIHRoZSBYRlNfV0FOVF9DT1JSVVBURURfR09U
+TyBoYXBwZW4/Cj4gCj4gVGhpcyB0aW1lPwo+IERpZCBub3QgbG9vayBhdCB0aGUgbG9nIHlldC4g
+TGV0IG1lIHNlZS4uLgo+IAo+IEhlcmUgaXMgdGhlIGZ1bGwgbG9nIG9mIHRoZSBldmVudC4gSXQg
+c3RhcnRzIHByaW9yIHRvIGhpYmVybmF0aW5nLCBhbGwKPiB0aGluZ3Mgbm9taW5hbC4gQW5kIGVu
+ZHMgb24gc2h1dGRvd24gKGhhZCB0byBoaXQgcmVzZXQgYnV0dG9uLCBkZXNwaXRlIHdoYXQKPiBs
+b2cgc2F5cykuIElmIHlvdSB3YW50IHRvIHNlZSBlbnRyaWVzIHByaW9yIHRvIHRoYXQsIHNpbmNl
+IGJvb3QsIEkgY2FuIGRvCj4gdGhhdC4KPiAKPiAKLi4uCj4gPDAuMT4gMjAxNC0wOC0xMSAxNTox
+NzoyMiBUZWxjb250YXIga2VybmVsIC0gLSAtIFs3MzIzNS40Mzk4MDldIFhGUzogSW50ZXJuYWwg
+ZXJyb3IgWEZTX1dBTlRfQ09SUlVQVEVEX0dPVE8gYXQgbGluZSAxNjAyIG9mIGZpbGUgL2hvbWUv
+YWJ1aWxkL3JwbWJ1aWxkL0JVSUxEL2tlcm5lbC1kZXNrdG9wLTMuMQo+IDwwLjE+IDIwMTQtMDgt
+MTEgMTU6MTc6MjIgVGVsY29udGFyIGtlcm5lbCAtIC0gLSBbNzMyMzUuNDM5ODA5XS4KPiA8MC40
+PiAyMDE0LTA4LTExIDE1OjE3OjIyIFRlbGNvbnRhciBrZXJuZWwgLSAtIC0gWzczMjM1LjQ0MDE1
+NV0gQ1BVOiAwIFBJRDogNjI1NSBDb21tOiBrd29ya2VyLzA6NyBUYWludGVkOiBQICAgICAgICAg
+ICBPIDMuMTEuMTAtMTctZGVza3RvcCAjMQo+IDwwLjQ+IDIwMTQtMDgtMTEgMTU6MTc6MjIgVGVs
+Y29udGFyIGtlcm5lbCAtIC0gLSBbNzMyMzUuNDQwMzIyXSBIYXJkd2FyZSBuYW1lOiBNSUNSTy1T
+VEFSIElOVEVSTkFUSU9OQUwgQ08uLExURCBNUy03NTE2L01TLTc1MTYsIEJJT1MgVjEuNSAxMC8x
+MC8yMDA4Cj4gPDAuND4gMjAxNC0wOC0xMSAxNToxNzoyMiBUZWxjb250YXIga2VybmVsIC0gLSAt
+IFs3MzIzNS40NDAzNjFdIFdvcmtxdWV1ZTogeGZzLWVvZmJsb2Nrcy9zZGQ1IHhmc19lb2ZibG9j
+a3Nfd29ya2VyIFt4ZnNdCj4gPDAuND4gMjAxNC0wOC0xMSAxNToxNzoyMiBUZWxjb250YXIga2Vy
+bmVsIC0gLSAtIFs3MzIzNS40NDAzNjRdICAwMDAwMDAwMDAwMDAwMDAxIGZmZmZmZmZmODE1YTA0
+MDIgMDAwMDAwMDAwMDEwYzlkMyBmZmZmZmZmZmEwYzM4OTk2Cj4gPDAuND4gMjAxNC0wOC0xMSAx
+NToxNzoyMiBUZWxjb250YXIga2VybmVsIC0gLSAtIFs3MzIzNS40NDAzNjVdICBmZmZmODgwMjEx
+NDEyYjAwIGZmZmY4ODAyMzQ0OGRkODAgZmZmZjg4MDIzZmI5NWNiMCAwMDAwMDAwMDAwMDAwMDAx
+Cj4gPDAuND4gMjAxNC0wOC0xMSAxNToxNzoyMiBUZWxjb250YXIga2VybmVsIC0gLSAtIFs3MzIz
+NS40NDAzNjZdICAwMDAwMDAwMDAwMDAwMDAwIDAwMDAwMDAxMDAwMDAwMDAgMDAwMDAwMDAwMDAw
+MDAwMCAwMDAwMDAwMDAwMDAwMDAxCj4gPDAuND4gMjAxNC0wOC0xMSAxNToxNzoyMiBUZWxjb250
+YXIga2VybmVsIC0gLSAtIFs3MzIzNS40NDAzNjddIENhbGwgVHJhY2U6Cj4gPDAuND4gMjAxNC0w
+OC0xMSAxNToxNzoyMiBUZWxjb250YXIga2VybmVsIC0gLSAtIFs3MzIzNS40NDAzNzddICBbPGZm
+ZmZmZmZmODEwMDRhMjg+XSBkdW1wX3RyYWNlKzB4ODgvMHgzMTAKPiA8MC40PiAyMDE0LTA4LTEx
+IDE1OjE3OjIyIFRlbGNvbnRhciBrZXJuZWwgLSAtIC0gWzczMjM1LjQ0MDM4MF0gIFs8ZmZmZmZm
+ZmY4MTAwNGQ4MD5dIHNob3dfc3RhY2tfbG9nX2x2bCsweGQwLzB4MWQwCj4gPDAuND4gMjAxNC0w
+OC0xMSAxNToxNzoyMiBUZWxjb250YXIga2VybmVsIC0gLSAtIFs3MzIzNS40NDAzODJdICBbPGZm
+ZmZmZmZmODEwMDYxYmM+XSBzaG93X3N0YWNrKzB4MWMvMHg1MAo+IDwwLjQ+IDIwMTQtMDgtMTEg
+MTU6MTc6MjIgVGVsY29udGFyIGtlcm5lbCAtIC0gLSBbNzMyMzUuNDQwMzg1XSAgWzxmZmZmZmZm
+ZjgxNWEwNDAyPl0gZHVtcF9zdGFjaysweDUwLzB4ODkKPiA8MC40PiAyMDE0LTA4LTExIDE1OjE3
+OjIyIFRlbGNvbnRhciBrZXJuZWwgLSAtIC0gWzczMjM1LjQ0MDM5OV0gIFs8ZmZmZmZmZmZhMGMz
+ODk5Nj5dIHhmc19mcmVlX2FnX2V4dGVudCsweDIyNi8weDg2MCBbeGZzXQo+IDwwLjQ+IDIwMTQt
+MDgtMTEgMTU6MTc6MjIgVGVsY29udGFyIGtlcm5lbCAtIC0gLSBbNzMyMzUuNDQwNDQyXSAgWzxm
+ZmZmZmZmZmEwYzM5ZmU5Pl0geGZzX2ZyZWVfZXh0ZW50KzB4YjkvMHhmMCBbeGZzXQo+IDwwLjQ+
+IDIwMTQtMDgtMTEgMTU6MTc6MjIgVGVsY29udGFyIGtlcm5lbCAtIC0gLSBbNzMyMzUuNDQwNDg0
+XSAgWzxmZmZmZmZmZmEwYzRjMzllPl0geGZzX2JtYXBfZmluaXNoKzB4MTFlLzB4MTcwIFt4ZnNd
+Cj4gPDAuND4gMjAxNC0wOC0xMSAxNToxNzoyMiBUZWxjb250YXIga2VybmVsIC0gLSAtIFs3MzIz
+NS40NDA1MzRdICBbPGZmZmZmZmZmYTBjNmI0YzA+XSB4ZnNfaXRydW5jYXRlX2V4dGVudHMrMHgx
+OTAvMHgzNDAgW3hmc10KPiA8MC40PiAyMDE0LTA4LTExIDE1OjE3OjIyIFRlbGNvbnRhciBrZXJu
+ZWwgLSAtIC0gWzczMjM1LjQ0MDU5N10gIFs8ZmZmZmZmZmZhMGMzMzYzMz5dIHhmc19mcmVlX2Vv
+ZmJsb2NrcysweDFlMy8weDI2MCBbeGZzXQo+IDwwLjQ+IDIwMTQtMDgtMTEgMTU6MTc6MjIgVGVs
+Y29udGFyIGtlcm5lbCAtIC0gLSBbNzMyMzUuNDQwNjMzXSAgWzxmZmZmZmZmZmEwYzI5MWVmPl0g
+eGZzX2lub2RlX2ZyZWVfZW9mYmxvY2tzKzB4NmYvMHgxNTAgW3hmc10KPiA8MC40PiAyMDE0LTA4
+LTExIDE1OjE3OjIyIFRlbGNvbnRhciBrZXJuZWwgLSAtIC0gWzczMjM1LjQ0MDY2Ml0gIFs8ZmZm
+ZmZmZmZhMGMyN2Y4Mj5dIHhmc19pbm9kZV9hZ193YWxrLmlzcmEuMTArMHgxYzIvMHgzMTAgW3hm
+c10KPiA8MC40PiAyMDE0LTA4LTExIDE1OjE3OjIyIFRlbGNvbnRhciBrZXJuZWwgLSAtIC0gWzcz
+MjM1LjQ0MDY5MF0gIFs8ZmZmZmZmZmZhMGMyOGE4ZT5dIHhmc19pbm9kZV9hZ19pdGVyYXRvcl90
+YWcrMHg2ZS8weGIwIFt4ZnNdCj4gPDAuND4gMjAxNC0wOC0xMSAxNToxNzoyMiBUZWxjb250YXIg
+a2VybmVsIC0gLSAtIFs3MzIzNS40NDA3MThdICBbPGZmZmZmZmZmYTBjMjhkODI+XSB4ZnNfZW9m
+YmxvY2tzX3dvcmtlcisweDEyLzB4MjAgW3hmc10KPiA8MC40PiAyMDE0LTA4LTExIDE1OjE3OjIy
+IFRlbGNvbnRhciBrZXJuZWwgLSAtIC0gWzczMjM1LjQ0MDczN10gIFs8ZmZmZmZmZmY4MTA2YWM3
+OD5dIHByb2Nlc3Nfb25lX3dvcmsrMHgxNjgvMHg0OTAKPiA8MC40PiAyMDE0LTA4LTExIDE1OjE3
+OjIyIFRlbGNvbnRhciBrZXJuZWwgLSAtIC0gWzczMjM1LjQ0MDczOV0gIFs8ZmZmZmZmZmY4MTA2
+YjkxND5dIHdvcmtlcl90aHJlYWQrMHgxMTQvMHgzYTAKPiA8MC40PiAyMDE0LTA4LTExIDE1OjE3
+OjIyIFRlbGNvbnRhciBrZXJuZWwgLSAtIC0gWzczMjM1LjQ0MDc0Ml0gIFs8ZmZmZmZmZmY4MTA3
+MWMzZj5dIGt0aHJlYWQrMHhhZi8weGMwCj4gPDAuND4gMjAxNC0wOC0xMSAxNToxNzoyMiBUZWxj
+b250YXIga2VybmVsIC0gLSAtIFs3MzIzNS40NDA3NDZdICBbPGZmZmZmZmZmODE1YWRmYmM+XSBy
+ZXRfZnJvbV9mb3JrKzB4N2MvMHhiMAo+IDwwLjU+IDIwMTQtMDgtMTEgMTU6MTc6MjIgVGVsY29u
+dGFyIGtlcm5lbCAtIC0gLSBbNzMyMzUuNDQwNzUxXSBYRlMgKHNkZDUpOiB4ZnNfZG9fZm9yY2Vf
+c2h1dGRvd24oMHg4KSBjYWxsZWQgZnJvbSBsaW5lIDkxNiBvZiBmaWxlIC9ob21lL2FidWlsZC9y
+cG1idWlsZC9CVUlMRC9rZXJuZWwtZGVza3RvcC0KPiA8MC4xPiAyMDE0LTA4LTExIDE1OjE3OjIy
+IFRlbGNvbnRhciBrZXJuZWwgLSAtIC0gWzczMjM1LjQ5ODk3OV0gWEZTIChzZGQ1KTogQ29ycnVw
+dGlvbiBvZiBpbi1tZW1vcnkgZGF0YSBkZXRlY3RlZC4gIFNodXR0aW5nIGRvd24gZmlsZXN5c3Rl
+bQo+IDwwLjE+IDIwMTQtMDgtMTEgMTU6MTc6MjIgVGVsY29udGFyIGtlcm5lbCAtIC0gLSBbNzMy
+MzUuNDk5MTM2XSBYRlMgKHNkZDUpOiBQbGVhc2UgdW1vdW50IHRoZSBmaWxlc3lzdGVtIGFuZCBy
+ZWN0aWZ5IHRoZSBwcm9ibGVtKHMpCgpUaGlzIHJlbWluZHMgbWUgdGhhdCBpdCBtaWdodCBiZSBp
+bnRlcmVzdGluZyB0byB0dW5lIHRoZSBlb2ZibG9ja3MKc2Nhbm5lciB0byBiZSBtb3JlIGFnZ3Jl
+c3NpdmUgYW5kIHNlZSBpZiB0aGF0IGhlbHBzIHJlcHJvZHVjZS4gVGhpcwp0aHJlYWQgdGhhdCdz
+IHJ1bm5pbmcgaGVyZSBub3JtYWxseSBydW5zIGV2ZXJ5IDUgbWludXRlcyBieSBkZWZhdWx0LCBi
+dXQKaXQgY2FuIGJlIHR1bmVkIHRvIHJ1biBhdCBhIHVzZXItZGVmaW5lZCBpbnRlcnZhbCB2aWEg
+dGhlIGZvbGxvd2luZwovcHJvYyBmaWxlOgoKIyBjYXQgL3Byb2Mvc3lzL2ZzL3hmcy9zcGVjdWxh
+dGl2ZV9wcmVhbGxvY19saWZldGltZSAKMzAwCgpJIHdvbmRlciBpZiBzZXR0aW5nIGl0IHRvIDMw
+cyBvciBzbyAoJ2VjaG8gMzAgPiAvcHJvYy8uLi4nKSBhbmQgcnVubmluZwpzb21lIGhpYmVybmF0
+aW9uIGN5Y2xlcyB3b3VsZCBoZWxwLi4uCgpCcmlhbgoKPiA8My42PiAyMDE0LTA4LTExIDE1OjE3
+OjIyIFRlbGNvbnRhciBzeXN0ZW1kIDEgLSAtICBUaW1lIGhhcyBiZWVuIGNoYW5nZWQKPiA8My42
+PiAyMDE0LTA4LTExIDE1OjE3OjI3IFRlbGNvbnRhciBhY3BpZCAtIC0gLSAgMSBjbGllbnQgcnVs
+ZSBsb2FkZWQKPiA8My40PiAyMDE0LTA4LTExIDE1OjE3OjI5IFRlbGNvbnRhciBwbS11dGlscyAt
+IC0gLSAgVGhhd2luZyAoOTUpLi4uCj4gPDMuNT4gMjAxNC0wOC0xMSAxNToxNzozMCBUZWxjb250
+YXIgZGJ1cyAxMDIwIC0gLSAgW3N5c3RlbV0gQWN0aXZhdGluZyBzZXJ2aWNlIG5hbWU9J29yZy5m
+cmVlZGVza3RvcC5QYWNrYWdlS2l0JyAodXNpbmcgc2VydmljZWhlbHBlcikKPiA8My42PiAyMDE0
+LTA4LTExIDE1OjE3OjMwIFRlbGNvbnRhciBzeXN0ZW1kIDEgLSAtICBTdGFydGluZyBMU0I6IE5l
+dHdvcmsgdGltZSBwcm90b2NvbCBkYWVtb24gKG50cGQpLi4uCj4gPDAuND4gMjAxNC0wOC0xMSAx
+NToxNzozMCBUZWxjb250YXIga2VybmVsIC0gLSAtIFs3MzI0NC4yNTYwMTJdIFhGUyAoc2RkNSk6
+IHhmc19sb2dfZm9yY2U6IGVycm9yIDUgcmV0dXJuZWQuCj4gPDMuNT4gMjAxNC0wOC0xMSAxNTox
+NzozMSBUZWxjb250YXIgZGJ1cyAxMDIwIC0gLSAgW3N5c3RlbV0gQWN0aXZhdGVkIHNlcnZpY2Ug
+J29yZy5mcmVlZGVza3RvcC5QYWNrYWdlS2l0JyBmYWlsZWQ6IENhbm5vdCBsYXVuY2ggZGFlbW9u
+LCBmaWxlIG5vdCBmb3VuZCBvciBwZXJtaXNzaW9ucyBpbnZhbGlkCj4gPDEuNT4gMjAxNC0wOC0x
+MSAxNToxNzozMSBUZWxjb250YXIgbmV0d29yayA2MzE1IC0gLSAgcmVkaXJlY3RpbmcgdG8gInN5
+c3RlbWN0bCAgcmVzdGFydCBuZXR3b3JrLnNlcnZpY2UiCj4gPDMuNj4gMjAxNC0wOC0xMSAxNTox
+NzozMiBUZWxjb250YXIgc3lzdGVtZCAxIC0gLSAgU3RvcHBpbmcgaWZ1cCBtYW5hZ2VkIG5ldHdv
+cmsgaW50ZXJmYWNlIGV0aDEuLi4KPiA8My42PiAyMDE0LTA4LTExIDE1OjE3OjMyIFRlbGNvbnRh
+ciBzeXN0ZW1kIDEgLSAtICBTdG9wcGluZyBpZnVwIG1hbmFnZWQgbmV0d29yayBpbnRlcmZhY2Ug
+ZXRoMC4uLgo+IDwzLjY+IDIwMTQtMDgtMTEgMTU6MTc6MzIgVGVsY29udGFyIHN5c3RlbWQgMSAt
+IC0gIFN0b3BwaW5nIExTQjogQ29uZmlndXJlIG5ldHdvcmsgaW50ZXJmYWNlcyBhbmQgc2V0IHVw
+IHJvdXRpbmcuLi4KPiA8My42PiAyMDE0LTA4LTExIDE1OjE3OjMyIFRlbGNvbnRhciBzeXN0ZW1k
+IDEgLSAtICBTdGFydGluZyBMU0I6IENvbmZpZ3VyZSBuZXR3b3JrIGludGVyZmFjZXMgYW5kIHNl
+dCB1cCByb3V0aW5nLi4uCj4gPDMuNj4gMjAxNC0wOC0xMSAxNToxNzozMiBUZWxjb250YXIgaWZk
+b3duIDYzNTIgLSAtICB0b3VjaDogY2Fubm90IHRvdWNoIOKAmC9kZXYvLnN5c2NvbmZpZy9uZXR3
+b3JrL3RtcC9pZi1ldGgwLjYzNTLigJk6IE5vIHN1Y2ggZmlsZSBvciBkaXJlY3RvcnkKPiA8My42
+PiAyMDE0LTA4LTExIDE1OjE3OjMyIFRlbGNvbnRhciBpZmRvd24gNjM1MiAtIC0gIHNjcmlwdHMv
+ZnVuY3Rpb25zOiBsaW5lIDEyMjE6IC9kZXYvLnN5c2NvbmZpZy9uZXR3b3JrL3RtcC9pZi1ldGgw
+LjYzNTIudG1wOiBObyBzdWNoIGZpbGUgb3IgZGlyZWN0b3J5Cj4gPDMuNj4gMjAxNC0wOC0xMSAx
+NToxNzozMiBUZWxjb250YXIgaWZkb3duIDYzNTIgLSAtICBzY3JpcHRzL2Z1bmN0aW9uczogbGlu
+ZSAxMjM5OiAvZGV2Ly5zeXNjb25maWcvbmV0d29yay90bXAvaWYtZXRoMC42MzUyLnRtcDogTm8g
+c3VjaCBmaWxlIG9yIGRpcmVjdG9yeQo+IDwzLjY+IDIwMTQtMDgtMTEgMTU6MTc6MzIgVGVsY29u
+dGFyIGlmZG93biA2MzUyIC0gLSAgY2F0OiAvZGV2Ly5zeXNjb25maWcvbmV0d29yay90bXAvaWYt
+ZXRoMC42MzUyOiBObyBzdWNoIGZpbGUgb3IgZGlyZWN0b3J5Cj4gPDMuNj4gMjAxNC0wOC0xMSAx
+NToxNzozNCBUZWxjb250YXIgbnRwIDYzMTQgLSAtICAxMSBBdWcgMTU6MTc6MzQgc250cFs2NTA1
+XTogU3RhcnRlZCBzbnRwCj4gPDMuNj4gMjAxNC0wOC0xMSAxNToxNzozNCBUZWxjb250YXIgaWZk
+b3duIDYzNTIgLSAtICBldGgwICAgICAgZGV2aWNlOiBSZWFsdGVrIFNlbWljb25kdWN0b3IgQ28u
+LCBMdGQuIFJUTDgxMTEvODE2OC84NDExIFBDSSBFeHByZXNzIEdpZ2FiaXQgRXRoZXJuZXQgQ29u
+dHJvbGxlciAocmV2IDAyKQo+IDwxLjU+IDIwMTQtMDgtMTEgMTU6MTc6MzQgVGVsY29udGFyIGlm
+ZG93biA2MzUyIC0gLSAgICAgIGV0aDAgICAgICBkZXZpY2U6IFJlYWx0ZWsgU2VtaWNvbmR1Y3Rv
+ciBDby4sIEx0ZC4gUlRMODExMS84MTY4Lzg0MTEgUENJIEV4cHJlc3MgR2lnYWJpdCBFdGhlcm5l
+dCBDb250cm9sbGVyIChyZXYgMDIpCj4gPDMuNj4gMjAxNC0wOC0xMSAxNToxNzozNCBUZWxjb250
+YXIgaWZkb3duIDYzNTEgLSAtICBldGgxICAgICAgZGV2aWNlOiBSZWFsdGVrIFNlbWljb25kdWN0
+b3IgQ28uLCBMdGQuIFJUTDgxMTEvODE2OC84NDExIFBDSSBFeHByZXNzIEdpZ2FiaXQgRXRoZXJu
+ZXQgQ29udHJvbGxlciAocmV2IDAyKQo+IDwxLjU+IDIwMTQtMDgtMTEgMTU6MTc6MzQgVGVsY29u
+dGFyIGlmZG93biA2MzUxIC0gLSAgICAgIGV0aDEgICAgICBkZXZpY2U6IFJlYWx0ZWsgU2VtaWNv
+bmR1Y3RvciBDby4sIEx0ZC4gUlRMODExMS84MTY4Lzg0MTEgUENJIEV4cHJlc3MgR2lnYWJpdCBF
+dGhlcm5ldCBDb250cm9sbGVyIChyZXYgMDIpCj4gPDMuNj4gMjAxNC0wOC0xMSAxNToxNzozNCBU
+ZWxjb250YXIgbmV0d29yayA2Mzg0IC0gLSAgU2V0dGluZyB1cCBuZXR3b3JrIGludGVyZmFjZXM6
+Cj4gPDMuNj4gMjAxNC0wOC0xMSAxNToxNzozNCBUZWxjb250YXIgbmV0d29yayA2Mzg0IC0gLSAg
+bG8KPiA8MS41PiAyMDE0LTA4LTExIDE1OjE3OjM0IFRlbGNvbnRhciBpZnVwIDY5MjQgLSAtICAg
+ICAgbG8KPiA8MS41PiAyMDE0LTA4LTExIDE1OjE3OjM1IFRlbGNvbnRhciBpZnVwIDY5MjQgLSAt
+ICAgICAgbG8KPiA8MS41PiAyMDE0LTA4LTExIDE1OjE3OjM1IFRlbGNvbnRhciBpZnVwIDY5MjQg
+LSAtICBJUCBhZGRyZXNzOiAxMjcuMC4wLjEvOAo+IDwzLjY+IDIwMTQtMDgtMTEgMTU6MTc6MzUg
+VGVsY29udGFyIG5ldHdvcmsgNjM4NCAtIC0gIGxvICAgICAgICBJUCBhZGRyZXNzOiAxMjcuMC4w
+LjEvOAo+IDwxLjU+IDIwMTQtMDgtMTEgMTU6MTc6MzUgVGVsY29udGFyIGlmdXAgNjkyNCAtIC0u
+Cj4gPDE2LjM+IDIwMTQtMDgtMTEgMTU6MTc6MzggVGVsY29udGFyIGRoY3BjZCA3MTYyIC0gLSAg
+ZXRoMTogZGhjcGNkIG5vdCBydW5uaW5nCj4gPDE2LjY+IDIwMTQtMDgtMTEgMTU6MTc6MzggVGVs
+Y29udGFyIGRoY3BjZCA3MTYyIC0gLSAgZXRoMTogZXhpdGluZwo+IDwzLjU+IDIwMTQtMDgtMTEg
+MTU6MTc6MzggVGVsY29udGFyIHN5c3RlbWQgMSAtIC0gIFVuaXQgbmV0d29ya0BldGgwLnNlcnZp
+Y2UgZW50ZXJlZCBmYWlsZWQgc3RhdGUuCj4gPDMuNj4gMjAxNC0wOC0xMSAxNToxNzozOCBUZWxj
+b250YXIgc3lzdGVtZCAxIC0gLSAgU3RhcnRpbmcgaWZ1cCBtYW5hZ2VkIG5ldHdvcmsgaW50ZXJm
+YWNlIGV0aDAuLi4KPiA8My42PiAyMDE0LTA4LTExIDE1OjE3OjM4IFRlbGNvbnRhciBhdmFoaS1k
+YWVtb24gMTAwNyAtIC0gIEludGVyZmFjZSBldGgwLklQdjYgbm8gbG9uZ2VyIHJlbGV2YW50IGZv
+ciBtRE5TLgo+IDwzLjY+IDIwMTQtMDgtMTEgMTU6MTc6MzggVGVsY29udGFyIGF2YWhpLWRhZW1v
+biAxMDA3IC0gLSAgTGVhdmluZyBtRE5TIG11bHRpY2FzdCBncm91cCBvbiBpbnRlcmZhY2UgZXRo
+MC5JUHY2IHdpdGggYWRkcmVzcyBmYzAwOjoxNC4KPiA8My42PiAyMDE0LTA4LTExIDE1OjE3OjM4
+IFRlbGNvbnRhciBhdmFoaS1kYWVtb24gMTAwNyAtIC0gIEludGVyZmFjZSBldGgwLklQdjQgbm8g
+bG9uZ2VyIHJlbGV2YW50IGZvciBtRE5TLgo+IDwzLjY+IDIwMTQtMDgtMTEgMTU6MTc6MzggVGVs
+Y29udGFyIGF2YWhpLWRhZW1vbiAxMDA3IC0gLSAgTGVhdmluZyBtRE5TIG11bHRpY2FzdCBncm91
+cCBvbiBpbnRlcmZhY2UgZXRoMC5JUHY0IHdpdGggYWRkcmVzcyAxOTIuMTY4LjEuMTQuCj4gPDMu
+Nj4gMjAxNC0wOC0xMSAxNToxNzozOCBUZWxjb250YXIgYXZhaGktZGFlbW9uIDEwMDcgLSAtICBX
+aXRoZHJhd2luZyBhZGRyZXNzIHJlY29yZCBmb3IgZmMwMDo6MTQgb24gZXRoMC4KPiA8My42PiAy
+MDE0LTA4LTExIDE1OjE3OjM4IFRlbGNvbnRhciBhdmFoaS1kYWVtb24gMTAwNyAtIC0gIFdpdGhk
+cmF3aW5nIGFkZHJlc3MgcmVjb3JkIGZvciAxOTIuMTY4LjEuMTQgb24gZXRoMC4KPiA8My42PiAy
+MDE0LTA4LTExIDE1OjE3OjM4IFRlbGNvbnRhciBpZnVwIDcyMjYgLSAtICBldGgwICAgICAgZGV2
+aWNlOiBSZWFsdGVrIFNlbWljb25kdWN0b3IgQ28uLCBMdGQuIFJUTDgxMTEvODE2OC84NDExIFBD
+SSBFeHByZXNzIEdpZ2FiaXQgRXRoZXJuZXQgQ29udHJvbGxlciAocmV2IDAyKQo+IDwxLjU+IDIw
+MTQtMDgtMTEgMTU6MTc6MzggVGVsY29udGFyIGlmdXAgNzIyNiAtIC0gICAgICBldGgwICAgICAg
+ZGV2aWNlOiBSZWFsdGVrIFNlbWljb25kdWN0b3IgQ28uLCBMdGQuIFJUTDgxMTEvODE2OC84NDEx
+IFBDSSBFeHByZXNzIEdpZ2FiaXQgRXRoZXJuZXQgQ29udHJvbGxlciAocmV2IDAyKQo+IDwwLjY+
+IDIwMTQtMDgtMTEgMTU6MTc6MzggVGVsY29udGFyIGtlcm5lbCAtIC0gLSBbNzMyNTEuNzkyMzM2
+XSByODE2OSAwMDAwOjA2OjAwLjAgZXRoMDogbGluayBkb3duCj4gPDAuNj4gMjAxNC0wOC0xMSAx
+NToxNzozOCBUZWxjb250YXIga2VybmVsIC0gLSAtIFs3MzI1MS43OTIzNTNdIHI4MTY5IDAwMDA6
+MDY6MDAuMCBldGgwOiBsaW5rIGRvd24KPiA8MC42PiAyMDE0LTA4LTExIDE1OjE3OjM4IFRlbGNv
+bnRhciBrZXJuZWwgLSAtIC0gWzczMjUxLjc5MjM2Nl0gSVB2NjogQUREUkNPTkYoTkVUREVWX1VQ
+KTogZXRoMDogbGluayBpcyBub3QgcmVhZHkKPiA8My42PiAyMDE0LTA4LTExIDE1OjE3OjM4IFRl
+bGNvbnRhciBhdmFoaS1kYWVtb24gMTAwNyAtIC0gIEpvaW5pbmcgbUROUyBtdWx0aWNhc3QgZ3Jv
+dXAgb24gaW50ZXJmYWNlIGV0aDAuSVB2NCB3aXRoIGFkZHJlc3MgMTkyLjE2OC4xLjE0Lgo+IDwz
+LjY+IDIwMTQtMDgtMTEgMTU6MTc6MzggVGVsY29udGFyIGF2YWhpLWRhZW1vbiAxMDA3IC0gLSAg
+TmV3IHJlbGV2YW50IGludGVyZmFjZSBldGgwLklQdjQgZm9yIG1ETlMuCj4gPDMuNj4gMjAxNC0w
+OC0xMSAxNToxNzozOCBUZWxjb250YXIgYXZhaGktZGFlbW9uIDEwMDcgLSAtICBSZWdpc3Rlcmlu
+ZyBuZXcgYWRkcmVzcyByZWNvcmQgZm9yIDE5Mi4xNjguMS4xNCBvbiBldGgwLklQdjQuCj4gPDMu
+Nj4gMjAxNC0wOC0xMSAxNToxNzozOSBUZWxjb250YXIgc3lzdGVtZCAxIC0gLSAgU3RhcnRpbmcg
+aWZ1cCBtYW5hZ2VkIG5ldHdvcmsgaW50ZXJmYWNlIGV0aDEuLi4KPiA8My42PiAyMDE0LTA4LTEx
+IDE1OjE3OjM5IFRlbGNvbnRhciBpZnBsdWdkKGV0aDEpIDc1NDEgLSAtICBpZnBsdWdkIDAuMjgg
+aW5pdGlhbGl6aW5nLgo+IDwwLjY+IDIwMTQtMDgtMTEgMTU6MTc6MzkgVGVsY29udGFyIGtlcm5l
+bCAtIC0gLSBbNzMyNTIuNjQ2MzEzXSByODE2OSAwMDAwOjA3OjAwLjAgZXRoMTogbGluayBkb3du
+Cj4gPDAuNj4gMjAxNC0wOC0xMSAxNToxNzozOSBUZWxjb250YXIga2VybmVsIC0gLSAtIFs3MzI1
+Mi42NDYzNDFdIElQdjY6IEFERFJDT05GKE5FVERFVl9VUCk6IGV0aDE6IGxpbmsgaXMgbm90IHJl
+YWR5Cj4gPDMuNj4gMjAxNC0wOC0xMSAxNToxNzozOSBUZWxjb250YXIgaWZwbHVnZChldGgxKSA3
+NTQxIC0gLSAgVXNpbmcgaW50ZXJmYWNlIGV0aDEvMDA6MjE6ODU6MTY6MkQ6MEMgd2l0aCBkcml2
+ZXIgPHI4MTY5PiAodmVyc2lvbjogMi4zTEstTkFQSSkKPiA8My42PiAyMDE0LTA4LTExIDE1OjE3
+OjM5IFRlbGNvbnRhciBpZnBsdWdkKGV0aDEpIDc1NDEgLSAtICBVc2luZyBkZXRlY3Rpb24gbW9k
+ZTogU0lPQ0VUSFRPT0wKPiA8My42PiAyMDE0LTA4LTExIDE1OjE3OjM5IFRlbGNvbnRhciBpZnBs
+dWdkKGV0aDEpIDc1NDEgLSAtICBJbml0aWFsaXphdGlvbiBjb21wbGV0ZSwgbGluayBiZWF0IG5v
+dCBkZXRlY3RlZC4KPiA8MS41PiAyMDE0LTA4LTExIDE1OjE3OjM5IFRlbGNvbnRhciBpZnVwIDc1
+MjEgLSAtICAgICAgZXRoMSAgICAgIGRldmljZTogUmVhbHRlayBTZW1pY29uZHVjdG9yIENvLiwg
+THRkLiBSVEw4MTExLzgxNjgvODQxMSBQQ0kgRXhwcmVzcyBHaWdhYml0IEV0aGVybmV0IENvbnRy
+b2xsZXIgKHJldiAwMikKPiA8MS41PiAyMDE0LTA4LTExIDE1OjE3OjM5IFRlbGNvbnRhciBpZnVw
+IDc1MjEgLSAtICAgICAgZXRoMSAgICAgIGlzIGNvbnRyb2xsZWQgYnkgaWZwbHVnZAo+IDwzLjY+
+IDIwMTQtMDgtMTEgMTU6MTc6MzkgVGVsY29udGFyIGlmdXAgNzUyMSAtIC0gIGV0aDEgICAgICBk
+ZXZpY2U6IFJlYWx0ZWsgU2VtaWNvbmR1Y3RvciBDby4sIEx0ZC4gUlRMODExMS84MTY4Lzg0MTEg
+UENJIEV4cHJlc3MgR2lnYWJpdCBFdGhlcm5ldCBDb250cm9sbGVyIChyZXYgMDIpCj4gPDMuNj4g
+MjAxNC0wOC0xMSAxNToxNzozOSBUZWxjb250YXIgaWZ1cCA3NTIxIC0gLSAgZXRoMSAgICAgIGlz
+IGNvbnRyb2xsZWQgYnkgaWZwbHVnZAo+IDwzLjY+IDIwMTQtMDgtMTEgMTU6MTc6MzkgVGVsY29u
+dGFyIHN5c3RlbWQgMSAtIC0gIFN0YXJ0ZWQgaWZ1cCBtYW5hZ2VkIG5ldHdvcmsgaW50ZXJmYWNl
+IGV0aDEuCj4gPDAuNj4gMjAxNC0wOC0xMSAxNToxNzo0MCBUZWxjb250YXIga2VybmVsIC0gLSAt
+IFs3MzI1My45NTgyOTldIHI4MTY5IDAwMDA6MDY6MDAuMCBldGgwOiBsaW5rIHVwCj4gPDAuNj4g
+MjAxNC0wOC0xMSAxNToxNzo0MCBUZWxjb250YXIga2VybmVsIC0gLSAtIFs3MzI1My45NTgzMDZd
+IElQdjY6IEFERFJDT05GKE5FVERFVl9DSEFOR0UpOiBldGgwOiBsaW5rIGJlY29tZXMgcmVhZHkK
+PiA8My42PiAyMDE0LTA4LTExIDE1OjE3OjQxIFRlbGNvbnRhciBhdmFoaS1kYWVtb24gMTAwNyAt
+IC0gIEpvaW5pbmcgbUROUyBtdWx0aWNhc3QgZ3JvdXAgb24gaW50ZXJmYWNlIGV0aDAuSVB2NiB3
+aXRoIGFkZHJlc3MgZmU4MDo6MjIxOjg1ZmY6ZmUxNjoyZDBiLgo+IDwzLjY+IDIwMTQtMDgtMTEg
+MTU6MTc6NDEgVGVsY29udGFyIGF2YWhpLWRhZW1vbiAxMDA3IC0gLSAgTmV3IHJlbGV2YW50IGlu
+dGVyZmFjZSBldGgwLklQdjYgZm9yIG1ETlMuCj4gPDMuNj4gMjAxNC0wOC0xMSAxNToxNzo0MSBU
+ZWxjb250YXIgYXZhaGktZGFlbW9uIDEwMDcgLSAtICBSZWdpc3RlcmluZyBuZXcgYWRkcmVzcyBy
+ZWNvcmQgZm9yIGZlODA6OjIyMTo4NWZmOmZlMTY6MmQwYiBvbiBldGgwLiouCj4gPDMuNj4gMjAx
+NC0wOC0xMSAxNToxNzo0MiBUZWxjb250YXIgYXZhaGktZGFlbW9uIDEwMDcgLSAtICBMZWF2aW5n
+IG1ETlMgbXVsdGljYXN0IGdyb3VwIG9uIGludGVyZmFjZSBldGgwLklQdjYgd2l0aCBhZGRyZXNz
+IGZlODA6OjIyMTo4NWZmOmZlMTY6MmQwYi4KPiA8My42PiAyMDE0LTA4LTExIDE1OjE3OjQyIFRl
+bGNvbnRhciBhdmFoaS1kYWVtb24gMTAwNyAtIC0gIEpvaW5pbmcgbUROUyBtdWx0aWNhc3QgZ3Jv
+dXAgb24gaW50ZXJmYWNlIGV0aDAuSVB2NiB3aXRoIGFkZHJlc3MgZmMwMDo6MTQuCj4gPDMuNj4g
+MjAxNC0wOC0xMSAxNToxNzo0MiBUZWxjb250YXIgYXZhaGktZGFlbW9uIDEwMDcgLSAtICBSZWdp
+c3RlcmluZyBuZXcgYWRkcmVzcyByZWNvcmQgZm9yIGZjMDA6OjE0IG9uIGV0aDAuKi4KPiA8My42
+PiAyMDE0LTA4LTExIDE1OjE3OjQyIFRlbGNvbnRhciBhdmFoaS1kYWVtb24gMTAwNyAtIC0gIFdp
+dGhkcmF3aW5nIGFkZHJlc3MgcmVjb3JkIGZvciBmZTgwOjoyMjE6ODVmZjpmZTE2OjJkMGIgb24g
+ZXRoMC4KPiA8My42PiAyMDE0LTA4LTExIDE1OjE3OjQ0IFRlbGNvbnRhciBudHAgNjMxNCAtIC0g
+IDExIEF1ZyAxNToxNzo0NCBzbnRwWzY1MDVdOiBSZWNlaXZlZCBubyB1c2VhYmxlIHBhY2tldCBm
+cm9tIDE5Mi4xNjguMS4xNSEKPiA8My42PiAyMDE0LTA4LTExIDE1OjE3OjQ0IFRlbGNvbnRhciBu
+dHAgNjMxNCAtIC0gIDExIEF1ZyAxNToxNzo0NCBzbnRwWzc5MjZdOiBTdGFydGVkIHNudHAKPiA8
+My42PiAyMDE0LTA4LTExIDE1OjE3OjQ0IFRlbGNvbnRhciBzeXN0ZW1kIDEgLSAtICBUaW1lIGhh
+cyBiZWVuIGNoYW5nZWQKPiA8My42PiAyMDE0LTA4LTExIDE1OjE3OjQ0IFRlbGNvbnRhciBudHAg
+NjMxNCAtIC0gIDIwMTQtMDgtMTEgMTU6MTc6NDQuNjU2MjkxICgtMDEwMCkgLTAuMTEyNzE4ICsv
+LSAwLjAzNzMzOCBzZWNzCj4gPDMuNj4gMjAxNC0wOC0xMSAxNToxNzo0NCBUZWxjb250YXIgbnRw
+IDYzMTQgLSAtICAyMDE0LTA4LTExIDE1OjE3OjQ0LjYwNDM2OSAoLTAxMDApICswLjAwODEgKy8t
+IDAuMDY5NDczIHNlY3MKPiA8My42PiAyMDE0LTA4LTExIDE1OjE3OjQ0IFRlbGNvbnRhciBudHAg
+NjMxNCAtIC0gIFRpbWUgc3luY2hyb25pemVkIHdpdGggIDAucG9vbC5udHAub3JnCj4gPDQuNj4g
+MjAxNC0wOC0xMSAxNToxNzo0NSBUZWxjb250YXIgU3VTRWZpcmV3YWxsMiAtIC0gLSAgU2V0dGlu
+ZyB1cCBydWxlcyBmcm9tIC9ldGMvc3lzY29uZmlnL1N1U0VmaXJld2FsbDIgLi4uCj4gPDQuNj4g
+MjAxNC0wOC0xMSAxNToxNzo0NSBUZWxjb250YXIgU3VTRWZpcmV3YWxsMiAtIC0gLSAgdXNpbmcg
+ZGVmYXVsdCB6b25lICdleHQnIGZvciBpbnRlcmZhY2UgZXRoMQo+IDw0LjY+IDIwMTQtMDgtMTEg
+MTU6MTc6NDUgVGVsY29udGFyIFN1U0VmaXJld2FsbDIgLSAtIC0gIEZpcmV3YWxsIGN1c3RvbWFy
+eSBydWxlcyBsb2FkZWQgZnJvbSAvZXRjL3N5c2NvbmZpZy9zY3JpcHRzL1N1U0VmaXJld2FsbDIt
+Y3VzdG9tCj4gPDMuNT4gMjAxNC0wOC0xMSAxNToxNzo0NSBUZWxjb250YXIgbnRwZCA3OTkxIC0g
+LSAgbnRwZCA0LjIuNnA1QDEuMjM0OS1vIFR1ZSBKdWwgMjIgMDg6MjY6NDEgVVRDIDIwMTQgKDEp
+Cj4gPDMuNj4gMjAxNC0wOC0xMSAxNToxNzo0NSBUZWxjb250YXIgbnRwIDYzMTQgLSAtICBTdGFy
+dGluZyBuZXR3b3JrIHRpbWUgcHJvdG9jb2wgZGFlbW9uIChOVFBEKS4uZG9uZQo+IDwzLjY+IDIw
+MTQtMDgtMTEgMTU6MTc6NDQgVGVsY29udGFyIHN5c3RlbWQgMSAtIC0gIFRpbWUgaGFzIGJlZW4g
+Y2hhbmdlZAo+IDwzLjY+IDIwMTQtMDgtMTEgMTU6MTc6NDUgVGVsY29udGFyIHN5c3RlbWQgMSAt
+IC0gIFN0YXJ0ZWQgTFNCOiBOZXR3b3JrIHRpbWUgcHJvdG9jb2wgZGFlbW9uIChudHBkKS4KPiA8
+My41PiAyMDE0LTA4LTExIDE1OjE3OjQ1IFRlbGNvbnRhciBudHBkIDgwMTcgLSAtICBwcm90bzog
+cHJlY2lzaW9uID0gMS42MTMgdXNlYwo+IDwzLjc+IDIwMTQtMDgtMTEgMTU6MTc6NDYgVGVsY29u
+dGFyIG50cGQgODAxNyAtIC0gIG50cF9pbzogZXN0aW1hdGVkIG1heCBkZXNjcmlwdG9yczogMTAy
+NCwgaW5pdGlhbCBzb2NrZXQgYm91bmRhcnk6IDE2Cj4gPDMuNj4gMjAxNC0wOC0xMSAxNToxNzo0
+NiBUZWxjb250YXIgbnRwZCA4MDE3IC0gLSAgTGlzdGVuIGFuZCBkcm9wIG9uIDAgdjR3aWxkY2Fy
+ZCAwLjAuMC4wIFVEUCAxMjMKPiA8My42PiAyMDE0LTA4LTExIDE1OjE3OjQ2IFRlbGNvbnRhciBu
+dHBkIDgwMTcgLSAtICBMaXN0ZW4gYW5kIGRyb3Agb24gMSB2NndpbGRjYXJkIDo6IFVEUCAxMjMK
+PiA8My42PiAyMDE0LTA4LTExIDE1OjE3OjQ2IFRlbGNvbnRhciBudHBkIDgwMTcgLSAtICBMaXN0
+ZW4gbm9ybWFsbHkgb24gMiBsbyAxMjcuMC4wLjEgVURQIDEyMwo+IDwzLjY+IDIwMTQtMDgtMTEg
+MTU6MTc6NDYgVGVsY29udGFyIG50cGQgODAxNyAtIC0gIExpc3RlbiBub3JtYWxseSBvbiAzIGV0
+aDAgMTkyLjE2OC4xLjE0IFVEUCAxMjMKPiA8My42PiAyMDE0LTA4LTExIDE1OjE3OjQ2IFRlbGNv
+bnRhciBudHBkIDgwMTcgLSAtICBMaXN0ZW4gbm9ybWFsbHkgb24gNCBsbyA6OjEgVURQIDEyMwo+
+IDwzLjY+IDIwMTQtMDgtMTEgMTU6MTc6NDYgVGVsY29udGFyIG50cGQgODAxNyAtIC0gIExpc3Rl
+biBub3JtYWxseSBvbiA1IGV0aDAgZmU4MDo6MjIxOjg1ZmY6ZmUxNjoyZDBiIFVEUCAxMjMKPiA8
+My42PiAyMDE0LTA4LTExIDE1OjE3OjQ2IFRlbGNvbnRhciBudHBkIDgwMTcgLSAtICBMaXN0ZW4g
+bm9ybWFsbHkgb24gNiBldGgwIGZjMDA6OjE0IFVEUCAxMjMKPiA8My42PiAyMDE0LTA4LTExIDE1
+OjE3OjQ2IFRlbGNvbnRhciBudHBkIDgwMTcgLSAtICBwZWVycyByZWZyZXNoZWQKPiA8My42PiAy
+MDE0LTA4LTExIDE1OjE3OjQ2IFRlbGNvbnRhciBudHBkIDgwMTcgLSAtICBMaXN0ZW5pbmcgb24g
+cm91dGluZyBzb2NrZXQgb24gZmQgIzIzIGZvciBpbnRlcmZhY2UgdXBkYXRlcwo+IDwzLjU+IDIw
+MTQtMDgtMTEgMTU6MTc6NDYgVGVsY29udGFyIG50cGQgODAxNyAtIC0gIGxvZ2dpbmcgdG8gZmls
+ZSAvdmFyL2xvZy9udHAKPiA8NC42PiAyMDE0LTA4LTExIDE1OjE3OjQ4IFRlbGNvbnRhciBTdVNF
+ZmlyZXdhbGwyIC0gLSAtICBGaXJld2FsbCBydWxlcyBzdWNjZXNzZnVsbHkgc2V0Cj4gPDMuNj4g
+MjAxNC0wOC0xMSAxNToxNzo0OCBUZWxjb250YXIgYXZhaGktYXV0b2lwZChldGgwKSA4NDM0IC0g
+LSAgRm91bmQgdXNlciAnYXZhaGktYXV0b2lwZCcgKFVJRCA0OTUpIGFuZCBncm91cCAnYXZhaGkt
+YXV0b2lwZCcgKEdJRCA0OTEpLgo+IDwzLjY+IDIwMTQtMDgtMTEgMTU6MTc6NDggVGVsY29udGFy
+IGF2YWhpLWF1dG9pcGQoZXRoMCkgODQzNCAtIC0gIFN1Y2Nlc3NmdWxseSBjYWxsZWQgY2hyb290
+KCkuCj4gPDMuNj4gMjAxNC0wOC0xMSAxNToxNzo0OCBUZWxjb250YXIgYXZhaGktYXV0b2lwZChl
+dGgwKSA4NDM0IC0gLSAgU3VjY2Vzc2Z1bGx5IGRyb3BwZWQgcm9vdCBwcml2aWxlZ2VzLgo+IDwz
+LjY+IDIwMTQtMDgtMTEgMTU6MTc6NDggVGVsY29udGFyIGF2YWhpLWF1dG9pcGQoZXRoMCkgODQz
+NCAtIC0gIFN0YXJ0aW5nIHdpdGggYWRkcmVzcyAxNjkuMjU0LjMuODkKPiA8My42PiAyMDE0LTA4
+LTExIDE1OjE3OjQ4IFRlbGNvbnRhciBhdmFoaS1hdXRvaXBkKGV0aDApIDg0MzQgLSAtICBSb3V0
+YWJsZSBhZGRyZXNzIGFscmVhZHkgYXNzaWduZWQsIHNsZWVwaW5nLgo+IDwzLjY+IDIwMTQtMDgt
+MTEgMTU6MTc6NTAgVGVsY29udGFyIHN5c3RlbWQgMSAtIC0gIFN0YXJ0ZWQgaWZ1cCBtYW5hZ2Vk
+IG5ldHdvcmsgaW50ZXJmYWNlIGV0aDAuCj4gPDMuNj4gMjAxNC0wOC0xMSAxNToxNzo1MCBUZWxj
+b250YXIgc3lzdGVtZCAxIC0gLSAgU3RhcnRlZCBpZnVwIG1hbmFnZWQgbmV0d29yayBpbnRlcmZh
+Y2UgZXRoMS4KPiA8My42PiAyMDE0LTA4LTExIDE1OjE3OjUwIFRlbGNvbnRhciBuZXR3b3JrIDYz
+ODQgLSAtICAuLmRvbmUuLmRvbmUuLmRvbmUgICAgcHBwMCAgICAgIFN0YXJ0bW9kZSBpcyAnbWFu
+dWFsJyAtPiBza2lwcGluZwo+IDwxLjU+IDIwMTQtMDgtMTEgMTU6MTc6NTAgVGVsY29udGFyIGlm
+dXAgODUwMCAtIC0gICAgICBwcHAwICAgICAgU3RhcnRtb2RlIGlzICdtYW51YWwnIC0+IHNraXBw
+aW5nCj4gPDMuNj4gMjAxNC0wOC0xMSAxNToxNzo1MCBUZWxjb250YXIgbmV0d29yayA2Mzg0IC0g
+LSAgLi5za2lwcGVkU2V0dGluZyB1cCBzZXJ2aWNlIG5ldHdvcmsgIC4gIC4gIC4gIC4gIC4gIC4g
+IC4gIC4gIC4gIC4gIC4gIC4gIC4uLmRvbmUKPiA8My42PiAyMDE0LTA4LTExIDE1OjE3OjUwIFRl
+bGNvbnRhciBzeXN0ZW1kIDEgLSAtICBTdGFydGVkIExTQjogQ29uZmlndXJlIG5ldHdvcmsgaW50
+ZXJmYWNlcyBhbmQgc2V0IHVwIHJvdXRpbmcuCj4gPDMuND4gMjAxNC0wOC0xMSAxNToxNzo1MiBU
+ZWxjb250YXIgcG0tdXRpbHMgLSAtIC0gIFRoYXdpbmcgdGhlIHN5c3RlbSBub3cgKDA0KS4uLgo+
+IDwwLjY+IDIwMTQtMDgtMTEgMTU6MTc6NTUgVGVsY29udGFyIGtlcm5lbCAtIC0gLSBbNzMyNjgu
+NDgxNjcyXSBDaHJvbWVfQ2hpbGRUaHJbNTY4MF06IHNlZ2ZhdWx0IGF0IDAgaXAgMDAwMDdmZmNl
+ZGY3MTU5OCBzcCAwMDAwN2ZmY2UxODIxNDEwIGVycm9yIDYgaW4gbGlibW96YWxsb2Muc29bN2Zm
+Y2VkZjcKPiA8MC40PiAyMDE0LTA4LTExIDE1OjE4OjAwIFRlbGNvbnRhciBrZXJuZWwgLSAtIC0g
+WzczMjc0LjMzNjAxNF0gWEZTIChzZGQ1KTogeGZzX2xvZ19mb3JjZTogZXJyb3IgNSByZXR1cm5l
+ZC4KPiA8My42PiAyMDE0LTA4LTExIDE1OjE4OjAxIFRlbGNvbnRhciBzeXN0ZW1kIDEgLSAtICBT
+dGFydGluZyBTZXNzaW9uIDU1OSBvZiB1c2VyIG5ld3MuCj4gPDMuND4gMjAxNC0wOC0xMSAxNTox
+ODoxNiBUZWxjb250YXIgcm91dGVyIC0gLSAtICAoVGhhd2luZyAwNCkgTG9nZ2luZyB0aGUgY3Vy
+cmVudCBJUD0gNzkuMTU5LjYzLjE3Nwo+IDwwLjQ+IDIwMTQtMDgtMTEgMTU6MTg6MzEgVGVsY29u
+dGFyIGtlcm5lbCAtIC0gLSBbNzMzMDQuNDE2MDEyXSBYRlMgKHNkZDUpOiB4ZnNfbG9nX2ZvcmNl
+OiBlcnJvciA1IHJldHVybmVkLgo+IDwwLjQ+IDIwMTQtMDgtMTEgMTU6MTk6MDEgVGVsY29udGFy
+IGtlcm5lbCAtIC0gLSBbNzMzMzQuNDk2MDE0XSBYRlMgKHNkZDUpOiB4ZnNfbG9nX2ZvcmNlOiBl
+cnJvciA1IHJldHVybmVkLgo+IDwwLjQ+IDIwMTQtMDgtMTEgMTU6MTk6MzEgVGVsY29udGFyIGtl
+cm5lbCAtIC0gLSBbNzMzNjQuNTc2MDE2XSBYRlMgKHNkZDUpOiB4ZnNfbG9nX2ZvcmNlOiBlcnJv
+ciA1IHJldHVybmVkLgo+IDwwLjQ+IDIwMTQtMDgtMTEgMTU6MjA6MDEgVGVsY29udGFyIGtlcm5l
+bCAtIC0gLSBbNzMzOTQuNjU2MDE1XSBYRlMgKHNkZDUpOiB4ZnNfbG9nX2ZvcmNlOiBlcnJvciA1
+IHJldHVybmVkLgo+IDwzLjY+IDIwMTQtMDgtMTEgMTU6MjA6MDEgVGVsY29udGFyIHN5c3RlbWQg
+MSAtIC0gIFN0YXJ0aW5nIFNlc3Npb24gNTYwIG9mIHVzZXIgY2VyLgo+IDwwLjQ+IDIwMTQtMDgt
+MTEgMTU6MjA6MzEgVGVsY29udGFyIGtlcm5lbCAtIC0gLSBbNzM0MjQuNzM2MDQ5XSBYRlMgKHNk
+ZDUpOiB4ZnNfbG9nX2ZvcmNlOiBlcnJvciA1IHJldHVybmVkLgo+IDwwLjQ+IDIwMTQtMDgtMTEg
+MTU6MjE6MDEgVGVsY29udGFyIGtlcm5lbCAtIC0gLSBbNzM0NTQuODE2MDE2XSBYRlMgKHNkZDUp
+OiB4ZnNfbG9nX2ZvcmNlOiBlcnJvciA1IHJldHVybmVkLgo+IDwwLjQ+IDIwMTQtMDgtMTEgMTU6
+MjE6MzEgVGVsY29udGFyIGtlcm5lbCAtIC0gLSBbNzM0ODQuODk2MDE1XSBYRlMgKHNkZDUpOiB4
+ZnNfbG9nX2ZvcmNlOiBlcnJvciA1IHJldHVybmVkLgo+IDwwLjQ+IDIwMTQtMDgtMTEgMTU6MjI6
+MDEgVGVsY29udGFyIGtlcm5lbCAtIC0gLSBbNzM1MTQuOTc2MDE2XSBYRlMgKHNkZDUpOiB4ZnNf
+bG9nX2ZvcmNlOiBlcnJvciA1IHJldHVybmVkLgo+IDwwLjQ+IDIwMTQtMDgtMTEgMTU6MjI6MzEg
+VGVsY29udGFyIGtlcm5lbCAtIC0gLSBbNzM1NDUuMDU2MDE4XSBYRlMgKHNkZDUpOiB4ZnNfbG9n
+X2ZvcmNlOiBlcnJvciA1IHJldHVybmVkLgo+IDwzLjY+IDIwMTQtMDgtMTEgMTU6MjM6MDEgVGVs
+Y29udGFyIHN5c3RlbWQgMSAtIC0gIFN0YXJ0aW5nIFNlc3Npb24gNTYxIG9mIHVzZXIgbmV3cy4K
+PiA8MC40PiAyMDE0LTA4LTExIDE1OjIzOjAxIFRlbGNvbnRhciBrZXJuZWwgLSAtIC0gWzczNTc1
+LjEzNjAyNV0gWEZTIChzZGQ1KTogeGZzX2xvZ19mb3JjZTogZXJyb3IgNSByZXR1cm5lZC4KPiA8
+MC40PiAyMDE0LTA4LTExIDE1OjIzOjMxIFRlbGNvbnRhciBrZXJuZWwgLSAtIC0gWzczNjA1LjIx
+NjAxNF0gWEZTIChzZGQ1KTogeGZzX2xvZ19mb3JjZTogZXJyb3IgNSByZXR1cm5lZC4KPiA8My42
+PiAyMDE0LTA4LTExIDE1OjIzOjUyIFRlbGNvbnRhciBzbWFydGQgMTAxMyAtIC0gIERldmljZTog
+L2Rldi9zZGIgW1NBVF0sIFRlbXBlcmF0dXJlIGNoYW5nZWQgLTUgQ2Vsc2l1cyB0byAzMyBDZWxz
+aXVzIChNaW4vTWF4IDE5LzM4KQo+IDwwLjQ+IDIwMTQtMDgtMTEgMTU6MjQ6MDEgVGVsY29udGFy
+IGtlcm5lbCAtIC0gLSBbNzM2MzUuMjk2MDc4XSBYRlMgKHNkZDUpOiB4ZnNfbG9nX2ZvcmNlOiBl
+cnJvciA1IHJldHVybmVkLgo+IDwwLjQ+IDIwMTQtMDgtMTEgMTU6MjQ6MzIgVGVsY29udGFyIGtl
+cm5lbCAtIC0gLSBbNzM2NjUuMzc2MDIwXSBYRlMgKHNkZDUpOiB4ZnNfbG9nX2ZvcmNlOiBlcnJv
+ciA1IHJldHVybmVkLgo+IDwzLjY+IDIwMTQtMDgtMTEgMTU6MjU6MDEgVGVsY29udGFyIHN5c3Rl
+bWQgMSAtIC0gIFN0YXJ0aW5nIFNlc3Npb24gNTYyIG9mIHVzZXIgbmV3cy4KPiA8MC40PiAyMDE0
+LTA4LTExIDE1OjI1OjAyIFRlbGNvbnRhciBrZXJuZWwgLSAtIC0gWzczNjk1LjQ1NjAxMV0gWEZT
+IChzZGQ1KTogeGZzX2xvZ19mb3JjZTogZXJyb3IgNSByZXR1cm5lZC4KPiA8MC40PiAyMDE0LTA4
+LTExIDE1OjI1OjMyIFRlbGNvbnRhciBrZXJuZWwgLSAtIC0gWzczNzI1LjUzNjAxNV0gWEZTIChz
+ZGQ1KTogeGZzX2xvZ19mb3JjZTogZXJyb3IgNSByZXR1cm5lZC4KPiA8MC40PiAyMDE0LTA4LTEx
+IDE1OjI2OjAyIFRlbGNvbnRhciBrZXJuZWwgLSAtIC0gWzczNzU1LjYxNjAxN10gWEZTIChzZGQ1
+KTogeGZzX2xvZ19mb3JjZTogZXJyb3IgNSByZXR1cm5lZC4KPiA8MC40PiAyMDE0LTA4LTExIDE1
+OjI2OjMyIFRlbGNvbnRhciBrZXJuZWwgLSAtIC0gWzczNzg1LjY5NjAxN10gWEZTIChzZGQ1KTog
+eGZzX2xvZ19mb3JjZTogZXJyb3IgNSByZXR1cm5lZC4KPiA8MC40PiAyMDE0LTA4LTExIDE1OjI3
+OjAyIFRlbGNvbnRhciBrZXJuZWwgLSAtIC0gWzczODE1Ljc3NjAxNl0gWEZTIChzZGQ1KTogeGZz
+X2xvZ19mb3JjZTogZXJyb3IgNSByZXR1cm5lZC4KPiA8MC40PiAyMDE0LTA4LTExIDE1OjI3OjMy
+IFRlbGNvbnRhciBrZXJuZWwgLSAtIC0gWzczODQ1Ljg1NjAyMV0gWEZTIChzZGQ1KTogeGZzX2xv
+Z19mb3JjZTogZXJyb3IgNSByZXR1cm5lZC4KPiA8My42PiAyMDE0LTA4LTExIDE1OjI4OjAxIFRl
+bGNvbnRhciBzeXN0ZW1kIDEgLSAtICBTdGFydGluZyBTZXNzaW9uIDU2MyBvZiB1c2VyIG5ld3Mu
+Cj4gPDAuND4gMjAxNC0wOC0xMSAxNToyODowMiBUZWxjb250YXIga2VybmVsIC0gLSAtIFs3Mzg3
+NS45MzYwMTRdIFhGUyAoc2RkNSk6IHhmc19sb2dfZm9yY2U6IGVycm9yIDUgcmV0dXJuZWQuCj4g
+PDAuND4gMjAxNC0wOC0xMSAxNToyODozMiBUZWxjb250YXIga2VybmVsIC0gLSAtIFs3MzkwNi4w
+MTYwMTVdIFhGUyAoc2RkNSk6IHhmc19sb2dfZm9yY2U6IGVycm9yIDUgcmV0dXJuZWQuCj4gPDAu
+ND4gMjAxNC0wOC0xMSAxNToyOTowMiBUZWxjb250YXIga2VybmVsIC0gLSAtIFs3MzkzNi4wOTYw
+MTddIFhGUyAoc2RkNSk6IHhmc19sb2dfZm9yY2U6IGVycm9yIDUgcmV0dXJuZWQuCj4gPDAuND4g
+MjAxNC0wOC0xMSAxNToyOTozMiBUZWxjb250YXIga2VybmVsIC0gLSAtIFs3Mzk2Ni4xNzYwMTJd
+IFhGUyAoc2RkNSk6IHhmc19sb2dfZm9yY2U6IGVycm9yIDUgcmV0dXJuZWQuCj4gPDMuNj4gMjAx
+NC0wOC0xMSAxNTozMDowMSBUZWxjb250YXIgc3lzdGVtZCAxIC0gLSAgU3RhcnRpbmcgU2Vzc2lv
+biA1NjQgb2YgdXNlciByb290Lgo+IDwzLjY+IDIwMTQtMDgtMTEgMTU6MzA6MDEgVGVsY29udGFy
+IHN5c3RlbWQgMSAtIC0gIFN0YXJ0aW5nIFNlc3Npb24gNTY1IG9mIHVzZXIgY2VyLgo+IDwxLjY+
+IDIwMTQtMDgtMTEgMTU6MzA6MDEgVGVsY29udGFyIHJ1bi1jcm9ucyA4OTc0IC0gLSAgc3VzZS5k
+ZS1zbmFwcGVyOiBPSwo+IDw0LjU+IDIwMTQtMDgtMTEgMTU6MzA6MDEgVGVsY29udGFyIHN1IC0g
+LSAtICAodG8gcm9vdCkgcm9vdCBvbiAobnVsbCkKPiA8MTAuMz4gMjAxNC0wOC0xMSAxNTozMDow
+MSBUZWxjb250YXIgc3UgLSAtIC0gIHBhbV9zeXN0ZW1kKHN1LWw6c2Vzc2lvbik6IHBhbV9wdXRl
+bnY6IGRlbGV0ZSBub24tZXhpc3RlbnQgZW50cnk7IFhER19SVU5USU1FX0RJUgo+IDwwLjQ+IDIw
+MTQtMDgtMTEgMTU6MzA6MDIgVGVsY29udGFyIGtlcm5lbCAtIC0gLSBbNzM5OTYuMjU2MDEwXSBY
+RlMgKHNkZDUpOiB4ZnNfbG9nX2ZvcmNlOiBlcnJvciA1IHJldHVybmVkLgo+IDwwLjQ+IDIwMTQt
+MDgtMTEgMTU6MzA6MzIgVGVsY29udGFyIGtlcm5lbCAtIC0gLSBbNzQwMjYuMzM2MDEzXSBYRlMg
+KHNkZDUpOiB4ZnNfbG9nX2ZvcmNlOiBlcnJvciA1IHJldHVybmVkLgo+IDwwLjQ+IDIwMTQtMDgt
+MTEgMTU6MzE6MDMgVGVsY29udGFyIGtlcm5lbCAtIC0gLSBbNzQwNTYuNDE2MDEyXSBYRlMgKHNk
+ZDUpOiB4ZnNfbG9nX2ZvcmNlOiBlcnJvciA1IHJldHVybmVkLgo+IDwwLjQ+IDIwMTQtMDgtMTEg
+MTU6MzE6MzMgVGVsY29udGFyIGtlcm5lbCAtIC0gLSBbNzQwODYuNDk2MDExXSBYRlMgKHNkZDUp
+OiB4ZnNfbG9nX2ZvcmNlOiBlcnJvciA1IHJldHVybmVkLgo+IDw0LjU+IDIwMTQtMDgtMTEgMTU6
+MzE6NTkgVGVsY29udGFyIGdub21lLWtleXJpbmctZGFlbW9uIDQzODEgLSAtICBHa206IGNvdWxk
+bid0IHN0YXQgZGlyZWN0b3J5OiAvaG9tZS9jZXIvLmdub21lMi9rZXlyaW5nczogSW5wdXQvb3V0
+cHV0IGVycm9yCj4gPDQuND4gMjAxNC0wOC0xMSAxNTozMjowMCBUZWxjb250YXIgZ25vbWUta2V5
+cmluZy1kYWVtb24gNDM4MSAtIC0gIEdMaWItR09iamVjdDogaW52YWxpZCB1bmNsYXNzZWQgcG9p
+bnRlciBpbiBjYXN0IHRvICdHa21PYmplY3QnCj4gPDQuMz4gMjAxNC0wOC0xMSAxNTozMjowMCBU
+ZWxjb250YXIgZ25vbWUta2V5cmluZy1kYWVtb24gNDM4MSAtIC0gIEdrbTogZ2ttX29iamVjdF9l
+eHBvc2VfZnVsbDogYXNzZXJ0aW9uICdHS01fSVNfT0JKRUNUIChzZWxmKScgZmFpbGVkCj4gPDQu
+NT4gMjAxNC0wOC0xMSAxNTozMjowMCBUZWxjb250YXIgZ25vbWUta2V5cmluZy1kYWVtb24gNDM4
+MSAtIC0gIEdrbTogY291bGRuJ3Qgc3RhdCBkaXJlY3Rvcnk6IC9ob21lL2Nlci8uZ25vbWUyL2tl
+eXJpbmdzOiBJbnB1dC9vdXRwdXQgZXJyb3IKPiA8NC41PiAyMDE0LTA4LTExIDE1OjMyOjAwIFRl
+bGNvbnRhciBnbm9tZS1rZXlyaW5nLWRhZW1vbiA0MzgxIC0gLSAgR2ttOiBjb3VsZG4ndCBzdGF0
+IGRpcmVjdG9yeTogL2hvbWUvY2VyLy5nbm9tZTIva2V5cmluZ3M6IElucHV0L291dHB1dCBlcnJv
+cgo+IDw0LjQ+IDIwMTQtMDgtMTEgMTU6MzI6MDAgVGVsY29udGFyIGdub21lLWtleXJpbmctZGFl
+bW9uIDQzODEgLSAtICBHa206IGNvdWxkbid0IGNyZWF0ZSB0ZW1wb3JhcnkgZmlsZSBmb3I6IC9o
+b21lL2Nlci8uZ25vbWUyL2tleXJpbmdzL2xvZ2luLmtleXJpbmc6IElucHV0L291dHB1dCBlcnJv
+cgo+IDw0LjQ+IDIwMTQtMDgtMTEgMTU6MzI6MDAgVGVsY29udGFyIGdub21lLWtleXJpbmctZGFl
+bW9uIDQzODEgLSAtICBjb3VsZG4ndCBjcmVhdGUgbG9naW4ga2V5cmluZzogQW4gZXJyb3Igb2Nj
+dXJyZWQgb24gdGhlIGRldmljZQo+IDwxMC4zPiAyMDE0LTA4LTExIDE1OjMyOjAwIFRlbGNvbnRh
+ciB1bml4Ml9jaGtwd2QgLSAtIC0gIGdrci1wYW06IHRoZSBwYXNzd29yZCBmb3IgdGhlIGxvZ2lu
+IGtleXJpbmcgd2FzIGludmFsaWQuCj4gPDAuND4gMjAxNC0wOC0xMSAxNTozMjowMyBUZWxjb250
+YXIga2VybmVsIC0gLSAtIFs3NDExNi41NzYwMThdIFhGUyAoc2RkNSk6IHhmc19sb2dfZm9yY2U6
+IGVycm9yIDUgcmV0dXJuZWQuCj4gPDAuND4gMjAxNC0wOC0xMSAxNTozMjozMyBUZWxjb250YXIg
+a2VybmVsIC0gLSAtIFs3NDE0Ni42NTYwMTFdIFhGUyAoc2RkNSk6IHhmc19sb2dfZm9yY2U6IGVy
+cm9yIDUgcmV0dXJuZWQuCj4gPDMuNj4gMjAxNC0wOC0xMSAxNTozMzowMSBUZWxjb250YXIgc3lz
+dGVtZCAxIC0gLSAgU3RhcnRpbmcgU2Vzc2lvbiA1NjYgb2YgdXNlciBuZXdzLgo+IDwwLjQ+IDIw
+MTQtMDgtMTEgMTU6MzM6MDMgVGVsY29udGFyIGtlcm5lbCAtIC0gLSBbNzQxNzYuNzM2MDY4XSBY
+RlMgKHNkZDUpOiB4ZnNfbG9nX2ZvcmNlOiBlcnJvciA1IHJldHVybmVkLgo+IDwwLjQ+IDIwMTQt
+MDgtMTEgMTU6MzM6MzMgVGVsY29udGFyIGtlcm5lbCAtIC0gLSBbNzQyMDYuODE2MDEyXSBYRlMg
+KHNkZDUpOiB4ZnNfbG9nX2ZvcmNlOiBlcnJvciA1IHJldHVybmVkLgo+IDwwLjQ+IDIwMTQtMDgt
+MTEgMTU6MzQ6MDMgVGVsY29udGFyIGtlcm5lbCAtIC0gLSBbNzQyMzYuODk2MDE3XSBYRlMgKHNk
+ZDUpOiB4ZnNfbG9nX2ZvcmNlOiBlcnJvciA1IHJldHVybmVkLgo+IDwwLjQ+IDIwMTQtMDgtMTEg
+MTU6MzQ6MzMgVGVsY29udGFyIGtlcm5lbCAtIC0gLSBbNzQyNjYuOTc2MDE0XSBYRlMgKHNkZDUp
+OiB4ZnNfbG9nX2ZvcmNlOiBlcnJvciA1IHJldHVybmVkLgo+IDwzLjY+IDIwMTQtMDgtMTEgMTU6
+MzU6MDEgVGVsY29udGFyIHN5c3RlbWQgMSAtIC0gIFN0YXJ0aW5nIFNlc3Npb24gNTY3IG9mIHVz
+ZXIgbmV3cy4KPiA8MC40PiAyMDE0LTA4LTExIDE1OjM1OjAzIFRlbGNvbnRhciBrZXJuZWwgLSAt
+IC0gWzc0Mjk3LjA1NjAxMl0gWEZTIChzZGQ1KTogeGZzX2xvZ19mb3JjZTogZXJyb3IgNSByZXR1
+cm5lZC4KPiA8MC40PiAyMDE0LTA4LTExIDE1OjM1OjMzIFRlbGNvbnRhciBrZXJuZWwgLSAtIC0g
+Wzc0MzI3LjEzNjAxNV0gWEZTIChzZGQ1KTogeGZzX2xvZ19mb3JjZTogZXJyb3IgNSByZXR1cm5l
+ZC4KPiA8MS42PiAyMDE0LTA4LTExIDE1OjM1OjU2IFRlbGNvbnRhciBydW4tY3JvbnMgODk3NCAt
+IC0gIGxlYWZub2RlOiBPSwo+IDwzLjY+IDIwMTQtMDgtMTEgMTU6MzU6NTYgVGVsY29udGFyIHN5
+c3RlbWQgMSAtIC0gIFJlbG9hZGluZyBTeXN0ZW0gTG9nZ2luZyBTZXJ2aWNlLgo+IDwzLjY+IDIw
+MTQtMDgtMTEgMTU6MzU6NTcgVGVsY29udGFyIHN5c3RlbWQgMSAtIC0gIFJlbG9hZGVkIFN5c3Rl
+bSBMb2dnaW5nIFNlcnZpY2UuCj4gPDUuNj4gMjAxNC0wOC0xMSAxNTozNTo1NyBUZWxjb250YXIg
+cnN5c2xvZ2QgLSAtIC0gIFtvcmlnaW4gc29mdHdhcmU9InJzeXNsb2dkIiBzd1ZlcnNpb249Ijcu
+NC43IiB4LXBpZD0iMTA4MSIgeC1pbmZvPSJodHRwOi8vd3d3LnJzeXNsb2cuY29tIl0gcnN5c2xv
+Z2Qgd2FzIEhVUGVkCj4gPDMuNj4gMjAxNC0wOC0xMSAxNTozNjowMiBUZWxjb250YXIgc3lzdGVt
+ZCAxIC0gLSAgUmVsb2FkaW5nIFN5c3RlbSBMb2dnaW5nIFNlcnZpY2UuCj4gPDMuNj4gMjAxNC0w
+OC0xMSAxNTozNjowMiBUZWxjb250YXIgc3lzdGVtZCAxIC0gLSAgUmVsb2FkZWQgU3lzdGVtIExv
+Z2dpbmcgU2VydmljZS4KPiA8MC40PiAyMDE0LTA4LTExIDE1OjM2OjAzIFRlbGNvbnRhciBrZXJu
+ZWwgLSAtIC0gWzc0MzU3LjIxNjAxM10gWEZTIChzZGQ1KTogeGZzX2xvZ19mb3JjZTogZXJyb3Ig
+NSByZXR1cm5lZC4KPiA8MS42PiAyMDE0LTA4LTExIDE1OjM2OjA2IFRlbGNvbnRhciBydW4tY3Jv
+bnMgODk3NCAtIC0gIGxvZ3JvdGF0ZTogT0sKPiA8My4yPiAyMDE0LTA4LTExIDE1OjM2OjA2IFRl
+bGNvbnRhciBtZGFkbSA5MjkwIC0gLSAgRGVncmFkZWRBcnJheSBldmVudCBkZXRlY3RlZCBvbiBt
+ZCBkZXZpY2UgL2Rldi9tZDAKPiA8MS42PiAyMDE0LTA4LTExIDE1OjM2OjA2IFRlbGNvbnRhciBy
+dW4tY3JvbnMgODk3NCAtIC0gIG1kYWRtOiBPSwo+IDw0LjU+IDIwMTQtMDgtMTEgMTU6MzY6MDYg
+VGVsY29udGFyIHN1IC0gLSAtICAodG8gcm9vdCkgcm9vdCBvbiAobnVsbCkKPiA8MS40PiAyMDE0
+LTA4LTExIDE1OjM2OjI1IFRlbGNvbnRhciBydW4tY3JvbnMgODk3NCAtIC0gIG1sb2NhdGUuY3Jv
+biByZXR1cm5lZCAxNDMKPiA8MS42PiAyMDE0LTA4LTExIDE1OjM2OjI1IFRlbGNvbnRhciBydW4t
+Y3JvbnMgODk3NCAtIC0gIHBhY2thZ2VraXQtYmFja2dyb3VuZC5jcm9uOiBPSwo+IDwxLjY+IDIw
+MTQtMDgtMTEgMTU6MzY6MjYgVGVsY29udGFyIHJ1bi1jcm9ucyA4OTc0IC0gLSAgc3VzZS1jbGVh
+bl9jYXRtYW46IE9LCj4gPDAuND4gMjAxNC0wOC0xMSAxNTozNjozMyBUZWxjb250YXIga2VybmVs
+IC0gLSAtIFs3NDM4Ny4yOTYwMThdIFhGUyAoc2RkNSk6IHhmc19sb2dfZm9yY2U6IGVycm9yIDUg
+cmV0dXJuZWQuCj4gPDEuNj4gMjAxNC0wOC0xMSAxNTozNjo0MSBUZWxjb250YXIgcnVuLWNyb25z
+IDg5NzQgLSAtICBzdXNlLWRvX21hbmRiOiBPSwo+IDwxLjY+IDIwMTQtMDgtMTEgMTU6MzY6NTcg
+VGVsY29udGFyIHJ1bi1jcm9ucyA4OTc0IC0gLSAgc3VzZS10ZXhsaXZlOiBPSwo+IDwxLjY+IDIw
+MTQtMDgtMTEgMTU6MzY6NTcgVGVsY29udGFyIHJ1bi1jcm9ucyA4OTc0IC0gLSAgc3VzZS5jcm9u
+LXNhLXVwZGF0ZTogT0sKPiA8MS42PiAyMDE0LTA4LTExIDE1OjM2OjU4IFRlbGNvbnRhciBydW4t
+Y3JvbnMgODk3NCAtIC0gIHN1c2UuZGUtYmFja3VwLXJjLmNvbmZpZzogT0sKPiA8MC40PiAyMDE0
+LTA4LTExIDE1OjM3OjA0IFRlbGNvbnRhciBrZXJuZWwgLSAtIC0gWzc0NDE3LjM3NjAxMF0gWEZT
+IChzZGQ1KTogeGZzX2xvZ19mb3JjZTogZXJyb3IgNSByZXR1cm5lZC4KPiA8MS42PiAyMDE0LTA4
+LTExIDE1OjM3OjM0IFRlbGNvbnRhciBydW4tY3JvbnMgODk3NCAtIC0gIHN1c2UuZGUtYmFja3Vw
+LXJwbWRiOiBPSwo+IDwwLjQ+IDIwMTQtMDgtMTEgMTU6Mzc6MzQgVGVsY29udGFyIGtlcm5lbCAt
+IC0gLSBbNzQ0NDcuNDU2MDEzXSBYRlMgKHNkZDUpOiB4ZnNfbG9nX2ZvcmNlOiBlcnJvciA1IHJl
+dHVybmVkLgo+IDwxLjY+IDIwMTQtMDgtMTEgMTU6Mzc6MzQgVGVsY29udGFyIHJ1bi1jcm9ucyA4
+OTc0IC0gLSAgc3VzZS5kZS1jaGVjay1iYXR0ZXJ5OiBPSwo+IDwxLjY+IDIwMTQtMDgtMTEgMTU6
+Mzc6MzQgVGVsY29udGFyIHJ1bi1jcm9ucyA4OTc0IC0gLSAgc3VzZS5kZS1jcm9uLWxvY2FsOiBP
+Swo+IDwxLjY+IDIwMTQtMDgtMTEgMTU6Mzc6MzQgVGVsY29udGFyIHJ1bi1jcm9ucyA4OTc0IC0g
+LSAgc3VzZS5kZS1mYXhjcm9uOiBPSwo+IDwxLjY+IDIwMTQtMDgtMTEgMTU6Mzc6MzQgVGVsY29u
+dGFyIHJ1bi1jcm9ucyA4OTc0IC0gLSAgc3VzZS5kZS1zbmFwcGVyOiBPSwo+IDwzLjY+IDIwMTQt
+MDgtMTEgMTU6Mzg6MDEgVGVsY29udGFyIHN5c3RlbWQgMSAtIC0gIFN0YXJ0aW5nIFNlc3Npb24g
+NTY4IG9mIHVzZXIgbmV3cy4KPiA8MC40PiAyMDE0LTA4LTExIDE1OjM4OjA0IFRlbGNvbnRhciBr
+ZXJuZWwgLSAtIC0gWzc0NDc3LjUzNjAxM10gWEZTIChzZGQ1KTogeGZzX2xvZ19mb3JjZTogZXJy
+b3IgNSByZXR1cm5lZC4KPiA8MC40PiAyMDE0LTA4LTExIDE1OjM4OjM0IFRlbGNvbnRhciBrZXJu
+ZWwgLSAtIC0gWzc0NTA3LjYxNjAxOV0gWEZTIChzZGQ1KTogeGZzX2xvZ19mb3JjZTogZXJyb3Ig
+NSByZXR1cm5lZC4KPiA8MC40PiAyMDE0LTA4LTExIDE1OjM5OjA0IFRlbGNvbnRhciBrZXJuZWwg
+LSAtIC0gWzc0NTM3LjY5NjAxM10gWEZTIChzZGQ1KTogeGZzX2xvZ19mb3JjZTogZXJyb3IgNSBy
+ZXR1cm5lZC4KPiA8MC40PiAyMDE0LTA4LTExIDE1OjM5OjM0IFRlbGNvbnRhciBrZXJuZWwgLSAt
+IC0gWzc0NTY3Ljc3NjAxNF0gWEZTIChzZGQ1KTogeGZzX2xvZ19mb3JjZTogZXJyb3IgNSByZXR1
+cm5lZC4KPiA8My42PiAyMDE0LTA4LTExIDE1OjQwOjAxIFRlbGNvbnRhciBzeXN0ZW1kIDEgLSAt
+ICBTdGFydGluZyBTZXNzaW9uIDU2OSBvZiB1c2VyIGNlci4KPiA8MC40PiAyMDE0LTA4LTExIDE1
+OjQwOjA0IFRlbGNvbnRhciBrZXJuZWwgLSAtIC0gWzc0NTk3Ljg1NjAxM10gWEZTIChzZGQ1KTog
+eGZzX2xvZ19mb3JjZTogZXJyb3IgNSByZXR1cm5lZC4KPiA8MC40PiAyMDE0LTA4LTExIDE1OjQw
+OjM0IFRlbGNvbnRhciBrZXJuZWwgLSAtIC0gWzc0NjI3LjkzNjAyMV0gWEZTIChzZGQ1KTogeGZz
+X2xvZ19mb3JjZTogZXJyb3IgNSByZXR1cm5lZC4KPiA8MC40PiAyMDE0LTA4LTExIDE1OjQxOjA0
+IFRlbGNvbnRhciBrZXJuZWwgLSAtIC0gWzc0NjU4LjAxNjAxMl0gWEZTIChzZGQ1KTogeGZzX2xv
+Z19mb3JjZTogZXJyb3IgNSByZXR1cm5lZC4KPiA8MC40PiAyMDE0LTA4LTExIDE1OjQxOjM0IFRl
+bGNvbnRhciBrZXJuZWwgLSAtIC0gWzc0Njg4LjA5NjAxOV0gWEZTIChzZGQ1KTogeGZzX2xvZ19m
+b3JjZTogZXJyb3IgNSByZXR1cm5lZC4KPiA8MC40PiAyMDE0LTA4LTExIDE1OjQyOjA0IFRlbGNv
+bnRhciBrZXJuZWwgLSAtIC0gWzc0NzE4LjE3NjAxOF0gWEZTIChzZGQ1KTogeGZzX2xvZ19mb3Jj
+ZTogZXJyb3IgNSByZXR1cm5lZC4KPiA8MC40PiAyMDE0LTA4LTExIDE1OjQyOjM0IFRlbGNvbnRh
+ciBrZXJuZWwgLSAtIC0gWzc0NzQ4LjI1NjAxN10gWEZTIChzZGQ1KTogeGZzX2xvZ19mb3JjZTog
+ZXJyb3IgNSByZXR1cm5lZC4KPiA8My42PiAyMDE0LTA4LTExIDE1OjQzOjAxIFRlbGNvbnRhciBz
+eXN0ZW1kIDEgLSAtICBTdGFydGluZyBTZXNzaW9uIDU3MCBvZiB1c2VyIG5ld3MuCj4gPDAuND4g
+MjAxNC0wOC0xMSAxNTo0MzowNCBUZWxjb250YXIga2VybmVsIC0gLSAtIFs3NDc3OC4zMzYwMTJd
+IFhGUyAoc2RkNSk6IHhmc19sb2dfZm9yY2U6IGVycm9yIDUgcmV0dXJuZWQuCj4gPDAuND4gMjAx
+NC0wOC0xMSAxNTo0MzozNSBUZWxjb250YXIga2VybmVsIC0gLSAtIFs3NDgwOC40MTYwMTNdIFhG
+UyAoc2RkNSk6IHhmc19sb2dfZm9yY2U6IGVycm9yIDUgcmV0dXJuZWQuCj4gPDAuND4gMjAxNC0w
+OC0xMSAxNTo0NDowNSBUZWxjb250YXIga2VybmVsIC0gLSAtIFs3NDgzOC40OTYwMTRdIFhGUyAo
+c2RkNSk6IHhmc19sb2dfZm9yY2U6IGVycm9yIDUgcmV0dXJuZWQuCj4gPDAuND4gMjAxNC0wOC0x
+MSAxNTo0NDozNSBUZWxjb250YXIga2VybmVsIC0gLSAtIFs3NDg2OC41NzYwMTNdIFhGUyAoc2Rk
+NSk6IHhmc19sb2dfZm9yY2U6IGVycm9yIDUgcmV0dXJuZWQuCj4gPDMuNj4gMjAxNC0wOC0xMSAx
+NTo0NTowMSBUZWxjb250YXIgc3lzdGVtZCAxIC0gLSAgU3RhcnRpbmcgU2Vzc2lvbiA1NzEgb2Yg
+dXNlciByb290Lgo+IDwzLjY+IDIwMTQtMDgtMTEgMTU6NDU6MDEgVGVsY29udGFyIHN5c3RlbWQg
+MSAtIC0gIFN0YXJ0aW5nIFNlc3Npb24gNTcyIG9mIHVzZXIgbmV3cy4KPiA8MC40PiAyMDE0LTA4
+LTExIDE1OjQ1OjA1IFRlbGNvbnRhciBrZXJuZWwgLSAtIC0gWzc0ODk4LjY1NjAxOV0gWEZTIChz
+ZGQ1KTogeGZzX2xvZ19mb3JjZTogZXJyb3IgNSByZXR1cm5lZC4KPiA8MC40PiAyMDE0LTA4LTEx
+IDE1OjQ1OjM1IFRlbGNvbnRhciBrZXJuZWwgLSAtIC0gWzc0OTI4LjczNjAxN10gWEZTIChzZGQ1
+KTogeGZzX2xvZ19mb3JjZTogZXJyb3IgNSByZXR1cm5lZC4KPiA8MC40PiAyMDE0LTA4LTExIDE1
+OjQ2OjA1IFRlbGNvbnRhciBrZXJuZWwgLSAtIC0gWzc0OTU4LjgxNjAxNV0gWEZTIChzZGQ1KTog
+eGZzX2xvZ19mb3JjZTogZXJyb3IgNSByZXR1cm5lZC4KPiA8MC40PiAyMDE0LTA4LTExIDE1OjQ2
+OjM1IFRlbGNvbnRhciBrZXJuZWwgLSAtIC0gWzc0OTg4Ljg5NjAyNl0gWEZTIChzZGQ1KTogeGZz
+X2xvZ19mb3JjZTogZXJyb3IgNSByZXR1cm5lZC4KPiA8MC40PiAyMDE0LTA4LTExIDE1OjQ3OjA1
+IFRlbGNvbnRhciBrZXJuZWwgLSAtIC0gWzc1MDE4Ljk3NjAxNF0gWEZTIChzZGQ1KTogeGZzX2xv
+Z19mb3JjZTogZXJyb3IgNSByZXR1cm5lZC4KPiA8MC40PiAyMDE0LTA4LTExIDE1OjQ3OjM1IFRl
+bGNvbnRhciBrZXJuZWwgLSAtIC0gWzc1MDQ5LjA1NjAxM10gWEZTIChzZGQ1KTogeGZzX2xvZ19m
+b3JjZTogZXJyb3IgNSByZXR1cm5lZC4KPiA8My42PiAyMDE0LTA4LTExIDE1OjQ4OjAxIFRlbGNv
+bnRhciBzeXN0ZW1kIDEgLSAtICBTdGFydGluZyBTZXNzaW9uIDU3MyBvZiB1c2VyIG5ld3MuCj4g
+PDAuND4gMjAxNC0wOC0xMSAxNTo0ODowNSBUZWxjb250YXIga2VybmVsIC0gLSAtIFs3NTA3OS4x
+MzYwMTZdIFhGUyAoc2RkNSk6IHhmc19sb2dfZm9yY2U6IGVycm9yIDUgcmV0dXJuZWQuCj4gPDAu
+ND4gMjAxNC0wOC0xMSAxNTo0ODozNSBUZWxjb250YXIga2VybmVsIC0gLSAtIFs3NTEwOS4yMTYw
+MTRdIFhGUyAoc2RkNSk6IHhmc19sb2dfZm9yY2U6IGVycm9yIDUgcmV0dXJuZWQuCj4gPDAuND4g
+MjAxNC0wOC0xMSAxNTo0OTowNSBUZWxjb250YXIga2VybmVsIC0gLSAtIFs3NTEzOS4yOTYwMTRd
+IFhGUyAoc2RkNSk6IHhmc19sb2dfZm9yY2U6IGVycm9yIDUgcmV0dXJuZWQuCj4gPDAuND4gMjAx
+NC0wOC0xMSAxNTo0OTozNiBUZWxjb250YXIga2VybmVsIC0gLSAtIFs3NTE2OS4zNzYwMTNdIFhG
+UyAoc2RkNSk6IHhmc19sb2dfZm9yY2U6IGVycm9yIDUgcmV0dXJuZWQuCj4gPDAuND4gMjAxNC0w
+OC0xMSAxNTo1MDowNiBUZWxjb250YXIga2VybmVsIC0gLSAtIFs3NTE5OS40NTYwMTJdIFhGUyAo
+c2RkNSk6IHhmc19sb2dfZm9yY2U6IGVycm9yIDUgcmV0dXJuZWQuCj4gPDAuND4gMjAxNC0wOC0x
+MSAxNTo1MDozNiBUZWxjb250YXIga2VybmVsIC0gLSAtIFs3NTIyOS41MzYwMTFdIFhGUyAoc2Rk
+NSk6IHhmc19sb2dfZm9yY2U6IGVycm9yIDUgcmV0dXJuZWQuCj4gPDAuND4gMjAxNC0wOC0xMSAx
+NTo1MTowNiBUZWxjb250YXIga2VybmVsIC0gLSAtIFs3NTI1OS42MTYwMTNdIFhGUyAoc2RkNSk6
+IHhmc19sb2dfZm9yY2U6IGVycm9yIDUgcmV0dXJuZWQuCj4gPDAuNj4gMjAxNC0wOC0xMSAxNTo1
+MTowOSBUZWxjb250YXIga2VybmVsIC0gLSAtIFs3NTI2Mi43MjEzNTRdIHhmY2U0LXNlc3Npb25b
+NDUyMF06IHNlZ2ZhdWx0IGF0IDggaXAgMDAwMDAwMDAwMDQxNjRkYyBzcCAwMDAwN2ZmZmRjMjkx
+ZGMwIGVycm9yIDQgaW4geGZjZTQtc2Vzc2lvbls0MDAwMDArMmIwMAo+IDw0LjY+IDIwMTQtMDgt
+MTEgMTU6NTE6MTggVGVsY29udGFyIHN5c3RlbWQtbG9naW5kIDEwMjEgLSAtICBSZW1vdmVkIHNl
+c3Npb24gOC4KPiA8MTAuNT4gMjAxNC0wOC0xMSAxNTo1MToxOCBUZWxjb250YXIgcG9sa2l0ZCA0
+MzE0IC0gLSAgVW5yZWdpc3RlcmVkIEF1dGhlbnRpY2F0aW9uIEFnZW50IGZvciB1bml4LXNlc3Np
+b246MTAgKHN5c3RlbSBidXMgbmFtZSA6MS42OSwgb2JqZWN0IHBhdGggL29yZy9nbm9tZS9Qb2xp
+Y3lLaXQxL0F1dGhlbnRpCj4gPDAuNz4gMjAxNC0wOC0xMSAxNTo1MToyOCBUZWxjb250YXIga2Vy
+bmVsIC0gLSAtIFs3NTI4Mi4xMzI3NzZdIG52aWRpYSAwMDAwOjAxOjAwLjA6IGlycSA0OCBmb3Ig
+TVNJL01TSS1YCj4gPDMuNj4gMjAxNC0wOC0xMSAxNTo1MToyOSBUZWxjb250YXIgYWNwaWQgLSAt
+IC0gIDEgY2xpZW50IHJ1bGUgbG9hZGVkCj4gPDQuNj4gMjAxNC0wOC0xMSAxNTo1MTozMCBUZWxj
+b250YXIgc3lzdGVtZC1sb2dpbmQgMTAyMSAtIC0gIFJlbW92ZWQgc2Vzc2lvbiAxMC4KPiA8MC42
+PiAyMDE0LTA4LTExIDE1OjUxOjMwIFRlbGNvbnRhciBrZXJuZWwgLSAtIC0gWzc1Mjg0LjE3NjAy
+MF0gdXNiIDEtNjogbmV3IGhpZ2gtc3BlZWQgVVNCIGRldmljZSBudW1iZXIgNCB1c2luZyBlaGNp
+LXBjaQo+IDwzLjY+IDIwMTQtMDgtMTEgMTU6NTE6MzAgVGVsY29udGFyIHN5c3RlbWQgMSAtIC0g
+IFN0YXJ0aW5nIFNlc3Npb24gNTc0IG9mIHVzZXIgbGlnaHRkbS4KPiA8NC42PiAyMDE0LTA4LTEx
+IDE1OjUxOjMwIFRlbGNvbnRhciBzeXN0ZW1kLWxvZ2luZCAxMDIxIC0gLSAgTmV3IHNlc3Npb24g
+NTc0IG9mIHVzZXIgbGlnaHRkbS4KPiA8NC42PiAyMDE0LTA4LTExIDE1OjUxOjMwIFRlbGNvbnRh
+ciBzeXN0ZW1kLWxvZ2luZCAxMDIxIC0gLSAgTGlua2VkIC90bXAvLlgxMS11bml4L1gwIHRvIC9y
+dW4vdXNlci8xMjcvWDExLWRpc3BsYXkuCj4gPDAuNj4gMjAxNC0wOC0xMSAxNTo1MTozMCBUZWxj
+b250YXIga2VybmVsIC0gLSAtIFs3NTI4NC4yOTE4MjJdIHVzYiAxLTY6IE5ldyBVU0IgZGV2aWNl
+IGZvdW5kLCBpZFZlbmRvcj04NTY0LCBpZFByb2R1Y3Q9MTAwMAo+IDwwLjY+IDIwMTQtMDgtMTEg
+MTU6NTE6MzAgVGVsY29udGFyIGtlcm5lbCAtIC0gLSBbNzUyODQuMjkxODI1XSB1c2IgMS02OiBO
+ZXcgVVNCIGRldmljZSBzdHJpbmdzOiBNZnI9MSwgUHJvZHVjdD0yLCBTZXJpYWxOdW1iZXI9Mwo+
+IDwwLjY+IDIwMTQtMDgtMTEgMTU6NTE6MzAgVGVsY29udGFyIGtlcm5lbCAtIC0gLSBbNzUyODQu
+MjkxODI4XSB1c2IgMS02OiBQcm9kdWN0OiBNYXNzIFN0b3JhZ2UgRGV2aWNlCj4gPDAuNj4gMjAx
+NC0wOC0xMSAxNTo1MTozMCBUZWxjb250YXIga2VybmVsIC0gLSAtIFs3NTI4NC4yOTE4MjldIHVz
+YiAxLTY6IE1hbnVmYWN0dXJlcjogSmV0Rmxhc2gKPiA8MC42PiAyMDE0LTA4LTExIDE1OjUxOjMw
+IFRlbGNvbnRhciBrZXJuZWwgLSAtIC0gWzc1Mjg0LjI5MTgzMV0gdXNiIDEtNjogU2VyaWFsTnVt
+YmVyOiAzNDZZTFE0TDBHNUg4UzJGCj4gPDEuNj4gMjAxNC0wOC0xMSAxNTo1MTozMSBUZWxjb250
+YXIgbXRwLXByb2JlIC0gLSAtICBjaGVja2luZyBidXMgMSwgZGV2aWNlIDQ6ICIvc3lzL2Rldmlj
+ZXMvcGNpMDAwMDowMC8wMDAwOjAwOjFhLjcvdXNiMS8xLTYiCj4gPDEuNj4gMjAxNC0wOC0xMSAx
+NTo1MTozMSBUZWxjb250YXIgbXRwLXByb2JlIC0gLSAtICBidXM6IDEsIGRldmljZTogNCB3YXMg
+bm90IGFuIE1UUCBkZXZpY2UKPiA8MC42PiAyMDE0LTA4LTExIDE1OjUxOjMxIFRlbGNvbnRhciBr
+ZXJuZWwgLSAtIC0gWzc1Mjg0LjY2NzM5OV0gdXNiLXN0b3JhZ2UgMS02OjEuMDogVVNCIE1hc3Mg
+U3RvcmFnZSBkZXZpY2UgZGV0ZWN0ZWQKPiA8MC42PiAyMDE0LTA4LTExIDE1OjUxOjMxIFRlbGNv
+bnRhciBrZXJuZWwgLSAtIC0gWzc1Mjg0LjY2NzUwMl0gc2NzaTEyIDogdXNiLXN0b3JhZ2UgMS02
+OjEuMAo+IDwwLjY+IDIwMTQtMDgtMTEgMTU6NTE6MzEgVGVsY29udGFyIGtlcm5lbCAtIC0gLSBb
+NzUyODQuNjY3NjA2XSB1c2Jjb3JlOiByZWdpc3RlcmVkIG5ldyBpbnRlcmZhY2UgZHJpdmVyIHVz
+Yi1zdG9yYWdlCj4gPDAuNT4gMjAxNC0wOC0xMSAxNTo1MTozMiBUZWxjb250YXIga2VybmVsIC0g
+LSAtIFs3NTI4NS43OTQ5MDRdIHNjc2kgMTI6MDowOjA6IERpcmVjdC1BY2Nlc3MgICAgIEpldEZs
+YXNoIFRyYW5zY2VuZCA0R0IgICAgMTEwMCBQUTogMCBBTlNJOiA0Cj4gPDAuNj4gMjAxNC0wOC0x
+MSAxNTo1MTozMiBUZWxjb250YXIga2VybmVsIC0gLSAtIFs3NTI4NS43OTQ5NzZdIHNjc2kgMTI6
+MDowOjA6IGFsdWE6IHN1cHBvcnRzIGltcGxpY2l0IGFuZCBleHBsaWNpdCBUUEdTCj4gPDAuNj4g
+MjAxNC0wOC0xMSAxNTo1MTozMiBUZWxjb250YXIga2VybmVsIC0gLSAtIFs3NTI4NS43OTYyNjJd
+IHNjc2kgMTI6MDowOjA6IGFsdWE6IE5vIHRhcmdldCBwb3J0IGRlc2NyaXB0b3JzIGZvdW5kCj4g
+PDAuMz4gMjAxNC0wOC0xMSAxNTo1MTozMiBUZWxjb250YXIga2VybmVsIC0gLSAtIFs3NTI4NS43
+OTYyNjVdIHNjc2kgMTI6MDowOjA6IGFsdWE6IG5vdCBhdHRhY2hlZAo+IDwwLjU+IDIwMTQtMDgt
+MTEgMTU6NTE6MzIgVGVsY29udGFyIGtlcm5lbCAtIC0gLSBbNzUyODUuNzk2Mzk2XSBzZCAxMjow
+OjA6MDogQXR0YWNoZWQgc2NzaSBnZW5lcmljIHNnNiB0eXBlIDAKPiA8MC41PiAyMDE0LTA4LTEx
+IDE1OjUxOjMyIFRlbGNvbnRhciBrZXJuZWwgLSAtIC0gWzc1Mjg1Ljc5Njg4OF0gc2QgMTI6MDow
+OjA6IFtzZGZdIDc5MTM0NzIgNTEyLWJ5dGUgbG9naWNhbCBibG9ja3M6ICg0LjA1IEdCLzMuNzcg
+R2lCKQo+IDwwLjU+IDIwMTQtMDgtMTEgMTU6NTE6MzIgVGVsY29udGFyIGtlcm5lbCAtIC0gLSBb
+NzUyODUuNzk3NjM0XSBzZCAxMjowOjA6MDogW3NkZl0gV3JpdGUgUHJvdGVjdCBpcyBvZmYKPiA8
+MC43PiAyMDE0LTA4LTExIDE1OjUxOjMyIFRlbGNvbnRhciBrZXJuZWwgLSAtIC0gWzc1Mjg1Ljc5
+NzYzN10gc2QgMTI6MDowOjA6IFtzZGZdIE1vZGUgU2Vuc2U6IDQzIDAwIDAwIDAwCj4gPDAuMz4g
+MjAxNC0wOC0xMSAxNTo1MTozMiBUZWxjb250YXIga2VybmVsIC0gLSAtIFs3NTI4NS43OTgzODZd
+IHNkIDEyOjA6MDowOiBbc2RmXSBObyBDYWNoaW5nIG1vZGUgcGFnZSBmb3VuZAo+IDwwLjM+IDIw
+MTQtMDgtMTEgMTU6NTE6MzIgVGVsY29udGFyIGtlcm5lbCAtIC0gLSBbNzUyODUuNzk4Mzg4XSBz
+ZCAxMjowOjA6MDogW3NkZl0gQXNzdW1pbmcgZHJpdmUgY2FjaGU6IHdyaXRlIHRocm91Z2gKPiA8
+MC4zPiAyMDE0LTA4LTExIDE1OjUxOjMyIFRlbGNvbnRhciBrZXJuZWwgLSAtIC0gWzc1Mjg1Ljgw
+MTUwOF0gc2QgMTI6MDowOjA6IFtzZGZdIE5vIENhY2hpbmcgbW9kZSBwYWdlIGZvdW5kCj4gPDAu
+Mz4gMjAxNC0wOC0xMSAxNTo1MTozMiBUZWxjb250YXIga2VybmVsIC0gLSAtIFs3NTI4NS44MDE1
+MTFdIHNkIDEyOjA6MDowOiBbc2RmXSBBc3N1bWluZyBkcml2ZSBjYWNoZTogd3JpdGUgdGhyb3Vn
+aAo+IDwwLjY+IDIwMTQtMDgtMTEgMTU6NTE6MzIgVGVsY29udGFyIGtlcm5lbCAtIC0gLSBbNzUy
+ODUuODAyMTQ3XSAgc2RmOiBzZGYxIHNkZjIgc2RmMwo+IDwwLjM+IDIwMTQtMDgtMTEgMTU6NTE6
+MzIgVGVsY29udGFyIGtlcm5lbCAtIC0gLSBbNzUyODUuODA1NjQyXSBzZCAxMjowOjA6MDogW3Nk
+Zl0gTm8gQ2FjaGluZyBtb2RlIHBhZ2UgZm91bmQKPiA8MC4zPiAyMDE0LTA4LTExIDE1OjUxOjMy
+IFRlbGNvbnRhciBrZXJuZWwgLSAtIC0gWzc1Mjg1LjgwNTY0NV0gc2QgMTI6MDowOjA6IFtzZGZd
+IEFzc3VtaW5nIGRyaXZlIGNhY2hlOiB3cml0ZSB0aHJvdWdoCj4gPDAuNT4gMjAxNC0wOC0xMSAx
+NTo1MTozMiBUZWxjb250YXIga2VybmVsIC0gLSAtIFs3NTI4NS44MDU2NDhdIHNkIDEyOjA6MDow
+OiBbc2RmXSBBdHRhY2hlZCBTQ1NJIHJlbW92YWJsZSBkaXNrCj4gPDAuND4gMjAxNC0wOC0xMSAx
+NTo1MTozNiBUZWxjb250YXIga2VybmVsIC0gLSAtIFs3NTI4OS42OTYwMTldIFhGUyAoc2RkNSk6
+IHhmc19sb2dfZm9yY2U6IGVycm9yIDUgcmV0dXJuZWQuCj4gPDMuNj4gMjAxNC0wOC0xMSAxNTo1
+MTo0MSBUZWxjb250YXIgc3lzdGVtZCAxIC0gLSAgU3RhcnRpbmcgR2V0dHkgb24gdHR5Mi4uLgo+
+IDwzLjY+IDIwMTQtMDgtMTEgMTU6NTE6NDEgVGVsY29udGFyIHN5c3RlbWQgMSAtIC0gIFN0YXJ0
+ZWQgR2V0dHkgb24gdHR5Mi4KPiA8My42PiAyMDE0LTA4LTExIDE1OjUxOjQyIFRlbGNvbnRhciBz
+eXN0ZW1kIDEgLSAtICBTdGFydGluZyBHZXR0eSBvbiB0dHkzLi4uCj4gPDMuNj4gMjAxNC0wOC0x
+MSAxNTo1MTo0MiBUZWxjb250YXIgc3lzdGVtZCAxIC0gLSAgU3RhcnRlZCBHZXR0eSBvbiB0dHkz
+Lgo+IDwzLjY+IDIwMTQtMDgtMTEgMTU6NTE6NDMgVGVsY29udGFyIHN5c3RlbWQgMSAtIC0gIFN0
+YXJ0aW5nIEdldHR5IG9uIHR0eTYuLi4KPiA8My42PiAyMDE0LTA4LTExIDE1OjUxOjQzIFRlbGNv
+bnRhciBzeXN0ZW1kIDEgLSAtICBTdGFydGVkIEdldHR5IG9uIHR0eTYuCj4gPDMuNj4gMjAxNC0w
+OC0xMSAxNTo1MTo0NCBUZWxjb250YXIgc3lzdGVtZCAxIC0gLSAgU3RhcnRpbmcgR2V0dHkgb24g
+dHR5NS4uLgo+IDwzLjY+IDIwMTQtMDgtMTEgMTU6NTE6NDQgVGVsY29udGFyIHN5c3RlbWQgMSAt
+IC0gIFN0YXJ0ZWQgR2V0dHkgb24gdHR5NS4KPiA8My42PiAyMDE0LTA4LTExIDE1OjUxOjQ1IFRl
+bGNvbnRhciBzeXN0ZW1kIDEgLSAtICBTdGFydGluZyBHZXR0eSBvbiB0dHk0Li4uCj4gPDMuNj4g
+MjAxNC0wOC0xMSAxNTo1MTo0NSBUZWxjb250YXIgc3lzdGVtZCAxIC0gLSAgU3RhcnRlZCBHZXR0
+eSBvbiB0dHk0Lgo+IDwwLjQ+IDIwMTQtMDgtMTEgMTU6NTI6MDYgVGVsY29udGFyIGtlcm5lbCAt
+IC0gLSBbNzUzMTkuNzc2MDIzXSBYRlMgKHNkZDUpOiB4ZnNfbG9nX2ZvcmNlOiBlcnJvciA1IHJl
+dHVybmVkLgo+IDwzLjY+IDIwMTQtMDgtMTEgMTU6NTI6MDggVGVsY29udGFyIHN5c3RlbWQgMSAt
+IC0gIFVubW91bnRpbmcgL2RhdGEvcmFpZC4uLgo+IDwzLjY+IDIwMTQtMDgtMTEgMTU6NTI6MDgg
+VGVsY29udGFyIHN5c3RlbWQgMSAtIC0gIFVubW91bnRpbmcgL2RhdGEvY3JpcHRhLi4uCj4gPDMu
+Nj4gMjAxNC0wOC0xMSAxNTo1MjowOCBUZWxjb250YXIgc3lzdGVtZCAxIC0gLSAgU3RvcHBpbmcg
+L3N5cy9kZXZpY2VzL3ZpcnR1YWwvYmxvY2svZG0tMC4KPiA8My42PiAyMDE0LTA4LTExIDE1OjUy
+OjA4IFRlbGNvbnRhciBzeXN0ZW1kIDEgLSAtICBtZXNzYWdlIHJlcGVhdGVkIDUgdGltZXM6IFsg
+U3RvcHBpbmcgL3N5cy9kZXZpY2VzL3ZpcnR1YWwvYmxvY2svZG0tMC5dCj4gPDMuNj4gMjAxNC0w
+OC0xMSAxNTo1MjowOCBUZWxjb250YXIgc3lzdGVtZCAxIC0gLSAgU3RvcHBpbmcgU2Vzc2lvbiA1
+NzQgb2YgdXNlciBsaWdodGRtLgo+IDwzLjY+IDIwMTQtMDgtMTEgMTU6NTI6MDggVGVsY29udGFy
+IHN5c3RlbWQgMSAtIC0gIFN0b3BwZWQgU2Vzc2lvbiA1NzQgb2YgdXNlciBsaWdodGRtLgo+IDwz
+LjY+IDIwMTQtMDgtMTEgMTU6NTI6MDggVGVsY29udGFyIHN5c3RlbWQgMSAtIC0gIFN0b3BwaW5n
+IFNlc3Npb24gNyBvZiB1c2VyIHJvb3QuCj4gPDMuNj4gMjAxNC0wOC0xMSAxNTo1MjowOCBUZWxj
+b250YXIgc3lzdGVtZCAxIC0gLSAgU3RvcHBlZCBTZXNzaW9uIDcgb2YgdXNlciByb290Lgo+IDwz
+LjY+IDIwMTQtMDgtMTEgMTU6NTI6MDggVGVsY29udGFyIHN5c3RlbWQgMSAtIC0gIFN0b3BwaW5n
+IHVzZXItMC5zbGljZS4KPiA8My42PiAyMDE0LTA4LTExIDE1OjUyOjA4IFRlbGNvbnRhciBzeXN0
+ZW1kIDEgLSAtICBSZW1vdmVkIHNsaWNlIHVzZXItMC5zbGljZS4KPiA8My42PiAyMDE0LTA4LTEx
+IDE1OjUyOjA4IFRlbGNvbnRhciBzeXN0ZW1kIDEgLSAtICBTdG9wcGluZyBTdG9wIFJlYWQtQWhl
+YWQgRGF0YSBDb2xsZWN0aW9uIDEwcyBBZnRlciBDb21wbGV0ZWQgU3RhcnR1cC4KPiA8My42PiAy
+MDE0LTA4LTExIDE1OjUyOjA4IFRlbGNvbnRhciBzeXN0ZW1kIDEgLSAtICBTdG9wcGVkIFN0b3Ag
+UmVhZC1BaGVhZCBEYXRhIENvbGxlY3Rpb24gMTBzIEFmdGVyIENvbXBsZXRlZCBTdGFydHVwLgo+
+IDwzLjY+IDIwMTQtMDgtMTEgMTU6NTI6MDggVGVsY29udGFyIHN5c3RlbWQgMSAtIC0gIFN0b3Bw
+aW5nIFVzZXIgTWFuYWdlciBmb3IgMTAwMC4uLgo+IDwzLjY+IDIwMTQtMDgtMTEgMTU6NTI6MDgg
+VGVsY29udGFyIHN5c3RlbWQgMSAtIC0gIFN0b3BwaW5nIFVzZXIgTWFuYWdlciBmb3IgOS4uLgo+
+IDwzLjY+IDIwMTQtMDgtMTEgMTU6NTI6MDggVGVsY29udGFyIHN5c3RlbWQgMSAtIC0gIFN0b3Bw
+aW5nIFVzZXIgTWFuYWdlciBmb3IgMTI3Li4uCj4gPDMuNj4gMjAxNC0wOC0xMSAxNTo1MjowOCBU
+ZWxjb250YXIgc3lzdGVtZCAxIC0gLSAgU3RvcHBpbmcgQ1VQUyBQcmludGluZyBTZXJ2aWNlLi4u
+Cj4gPDMuNj4gMjAxNC0wOC0xMSAxNTo1MjowOCBUZWxjb250YXIgc3lzdGVtZCAxIC0gLSAgU3Rv
+cHBpbmcgaWZ1cCBtYW5hZ2VkIG5ldHdvcmsgaW50ZXJmYWNlIGV0aDEuLi4KPiA8My42PiAyMDE0
+LTA4LTExIDE1OjUyOjA4IFRlbGNvbnRhciBzeXN0ZW1kIDEgLSAtICBTdG9wcGluZyBpZnVwIG1h
+bmFnZWQgbmV0d29yayBpbnRlcmZhY2UgZXRoMC4uLgo+IDwzLjY+IDIwMTQtMDgtMTEgMTU6MTc6
+NDQgVGVsY29udGFyIHN5c3RlbWQgNDM3NyAtIC0gIG1lc3NhZ2UgcmVwZWF0ZWQgMTQgdGltZXM6
+IFsgVGltZSBoYXMgYmVlbiBjaGFuZ2VkXQo+IDwzLjM+IDIwMTQtMDgtMTEgMTU6NTI6MDggVGVs
+Y29udGFyIHN5c3RlbWQgNDM3NyAtIC0gIEZhaWxlZCB0byBlbnF1ZXVlIGV4aXQudGFyZ2V0IGpv
+YjogVW5pdCBleGl0LnRhcmdldCBmYWlsZWQgdG8gbG9hZDogSW5wdXQvb3V0cHV0IGVycm9yLgo+
+IDwzLjY+IDIwMTQtMDgtMTEgMTU6NTI6MDggVGVsY29udGFyIHN5c3RlbWQgMSAtIC0gIFN0b3Bw
+aW5nIEdyYXBoaWNhbCBJbnRlcmZhY2UuCj4gPDMuNj4gMjAxNC0wOC0xMSAxNTo1MjowOCBUZWxj
+b250YXIgc3lzdGVtZCAxIC0gLSAgU3RvcHBlZCB0YXJnZXQgR3JhcGhpY2FsIEludGVyZmFjZS4K
+PiA8My42PiAyMDE0LTA4LTExIDE1OjUyOjA4IFRlbGNvbnRhciBzeXN0ZW1kIDEgLSAtICBTdG9w
+cGluZyBMU0I6IFggRGlzcGxheSBNYW5hZ2VyLi4uCj4gPDMuNj4gMjAxNC0wOC0xMSAxNTo1Mjow
+OCBUZWxjb250YXIgc3lzdGVtZCAxIC0gLSAgU3RvcHBpbmcgaGVsbG93b3JsZC5zZXJ2aWNlLi4u
+Cj4gPDMuNj4gMjAxNC0wOC0xMSAxNTo1MjowOCBUZWxjb250YXIgc3lzdGVtZCAxIC0gLSAgU3Rv
+cHBlZCBoZWxsb3dvcmxkLnNlcnZpY2UuCj4gPDMuNj4gMjAxNC0wOC0xMSAxNTo1MjowOCBUZWxj
+b250YXIgc3lzdGVtZCAxIC0gLSAgU3RvcHBpbmcgTXVsdGktVXNlciBTeXN0ZW0uCj4gPDMuNj4g
+MjAxNC0wOC0xMSAxNTo1MjowOCBUZWxjb250YXIgc3lzdGVtZCAxIC0gLSAgU3RvcHBlZCB0YXJn
+ZXQgTXVsdGktVXNlciBTeXN0ZW0uCj4gPDMuNj4gMjAxNC0wOC0xMSAxNTo1MjowOCBUZWxjb250
+YXIgc3lzdGVtZCAxIC0gLSAgU3RvcHBpbmcgTFNCOiB2aXJ1cyBzY2FubmVyIGRhZW1vbi4uLgo+
+IDwzLjY+IDIwMTQtMDgtMTEgMTU6NTI6MDggVGVsY29udGFyIHN5c3RlbWQgMSAtIC0gIFN0b3Bw
+aW5nIExTQjogU3RhcnQgdGhlIGhkZHRlbXAgZGFlbW9uLi4uCj4gPDMuNj4gMjAxNC0wOC0xMSAx
+NTo1MjowOCBUZWxjb250YXIgc3lzdGVtZCAxIC0gLSAgU3RvcHBpbmcgTFNCOiBtZGFkbWQgZGFl
+bW9uIG1vbml0b3JpbmcgTUQgZGV2aWNlcy4uLgo+IDwzLjY+IDIwMTQtMDgtMTEgMTU6NTI6MDgg
+VGVsY29udGFyIHN5c3RlbWQgMSAtIC0gIFN0b3BwaW5nIExTQjogVGhpcyBzZXJ2aWNlcyBzdGFy
+dHMgYW5kIHN0b3BzIHRoZSBVU0IgQXJiaXRyYXRvci4uLi4KPiA8My42PiAyMDE0LTA4LTExIDE1
+OjUyOjA4IFRlbGNvbnRhciBzeXN0ZW1kIDEgLSAtICBTdG9wcGluZyBMU0I6IFN1cHBvcnRzIHRo
+ZSBkaXJlY3QgZXhlY3V0aW9uIG9mIGJpbmFyeSBmb3JtYXRzLi4uLgo+IDwzLjY+IDIwMTQtMDgt
+MTEgMTU6NTI6MDggVGVsY29udGFyIHN5c3RlbWQgMSAtIC0gIFN0b3BwaW5nIExTQjogaXJxYmFs
+YW5jZSBkYWVtb24gcHJvdmlkaW5nIGlycSBiYWxhbmNpbmcgb24gTVAtbWFjaGluZXMuLi4KPiA8
+My42PiAyMDE0LTA4LTExIDE1OjUyOjA5IFRlbGNvbnRhciBzeXN0ZW1kIDEgLSAtICBTdG9wcGlu
+ZyBMU0I6IFNldCB1cCBhbmFsb2cgam95c3RpY2tzLi4uCj4gPDAuND4gMjAxNC0wOC0xMSAxNTo1
+MjoxMCBUZWxjb250YXIga2VybmVsIC0gLSAtIFs3NTMyMy41NDcxMjJdIG5mc2Q6IGxhc3Qgc2Vy
+dmVyIGhhcyBleGl0ZWQsIGZsdXNoaW5nIGV4cG9ydCBjYWNoZQo+IDw1LjY+IDIwMTQtMDgtMTEg
+MTU6MzY6MDIgVGVsY29udGFyIHJzeXNsb2dkIC0gLSAtICBbb3JpZ2luIHNvZnR3YXJlPSJyc3lz
+bG9nZCIgc3dWZXJzaW9uPSI3LjQuNyIgeC1waWQ9IjEwODEiIHgtaW5mbz0iaHR0cDovL3d3dy5y
+c3lzbG9nLmNvbSJdIHJzeXNsb2dkIHdhcyBIVVBlZAo+IDw1LjY+IDIwMTQtMDgtMTEgMTU6NTI6
+MTEgVGVsY29udGFyIHJzeXNsb2dkIC0gLSAtICBbb3JpZ2luIHNvZnR3YXJlPSJyc3lzbG9nZCIg
+c3dWZXJzaW9uPSI3LjQuNyIgeC1waWQ9IjEwODEiIHgtaW5mbz0iaHR0cDovL3d3dy5yc3lzbG9n
+LmNvbSJdIGV4aXRpbmcgb24gc2lnbmFsIDE1Lgo+IDIwMTQtMDgtMTEgMTU6NTI6MTIrMDI6MDAg
+LSBIYWx0aW5nIHRoZSBzeXN0ZW0gbm93ICA9PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09IHVwdGltZTogIDE1OjUycG0gIHVwIDEgZGF5IDIwOjU0LCAgMSB1c2VyLCAg
+bG9hZCBhdmVyYWdlOiA1Ljk0LCAyLjQ3LCAxLjIyCj4gCj4gCj4gCj4gPkkgYW0gaW50ZXJlc3Rl
+ZCBpbiB0aGUgbWV0YWRhdGEgZHVtcC4KPiAKPiBPaywgc3VyZSwgbm8gcHJvYmxlbS4gSSdtIHdv
+cmtpbmcgb24gdGhhdCwgYnV0IEkgbmVlZCB0byBoYXZlIGx1bmNoIGZpcnN0IDstKQo+IAo+IAo+
+ID5BbHNvLCBzb21lIG9uZSBoaXQgYmFjayB0byBiYWNrIGR1cGxpY2F0ZSBibG9jayBhbGxvY2F0
+aW9uCj4gPlhGU19XQU5UX0NPUlJVUFRFRF9HT1RPIGJ1Z3MsIHlvdSBtYXkgd2FudCB0byBkbyBh
+IG1ldGFkYXRhIGR1bXAgYmVmb3JlCj4gPmFuZCBhZnRlciB0aGUgeGZzX3JlcGFpciBpbiBjYXNl
+IHlvdSBoaXQgaXQgYWdhaW4gc29vbi4KPiAKPiBJIGFscmVhZHkgaGF2ZSBhIG1ldGFkYXRhIGR1
+bXAsIGFuZCBJIGhhdmUgbm90IGF0dGVtcHRlZCB0byByZXBhaXIgeWV0IChJJ20KPiBkb2luZyBh
+IGZ1bGwgZGQgY29weSBvZiBwYXJ0aXRpb24sIGFuZCBpdCBpcyA0MDAgR2lncykuIEkgd2lsbCBv
+YnRhaW4KPiBhbm90aGVyIG1ldGFkYWR1bXAgYWZ0ZXIgcmVwYWlyLCBhbmQgSSBjYW4gdXBsb2Fk
+IGJvdGggdG8gZ29vZ2xlIGRyaXZlLgo+IAo+IEJ1dCBmaXJzdCBJIG5lZWQgc3VzdGVuYW5jZSA6
+LSkKPiAKPiAoQXQgbGVhc3QgdGhpcyB0aW1lIEkgZG8gbm90IGhhdmUgYW55IHByZXNzaW5nIHRo
+aW5nIHRvIGRvIG9uIHRoZQo+IGNvbXB1dGVyLi4uKQo+IAo+IC0gLS0gQ2hlZXJzCj4gICAgICAg
+IENhcmxvcyBFLiBSLgo+IAo+ICAgICAgICAoZnJvbSAxMy4xIHg4Nl82NCAiQm90dGxlIiAoTWlu
+YXMgVGlyaXRoKSkKPiAKPiAtLS0tLUJFR0lOIFBHUCBTSUdOQVRVUkUtLS0tLQo+IFZlcnNpb246
+IEdudVBHIHYyLjAuMjIgKEdOVS9MaW51eCkKPiAKPiBpRjBFQVJFSUFBWUZBbFBvNHA0QUNna1Fq
+YThVYmNVV00xd0dBQUR4QVZ1VFVQa3hHK0xPMjlWemVoSjhjU1BWCj4gdUl0Ry9QdXUyS2JxVWVD
+eVh3RC9jZ3UvK0Y3dmhFZVU5V0ViTlA1ZWlmaG15dTBUM0J5RE10dUtwNTVSajdBPQo+ID1DZ1N4
+Cj4gLS0tLS1FTkQgUEdQIFNJR05BVFVSRS0tLS0tCgo+IF9fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fCj4geGZzIG1haWxpbmcgbGlzdAo+IHhmc0Bvc3Muc2dp
+LmNvbQo+IGh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwoKX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KeGZzIG1haWxpbmcgbGlzdAp4
+ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCg==
