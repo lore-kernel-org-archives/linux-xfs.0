@@ -1,44 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 578CB7F61
-	for <xfs@oss.sgi.com>; Mon, 11 Aug 2014 19:17:25 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 2AC4B8F8037
-	for <xfs@oss.sgi.com>; Mon, 11 Aug 2014 17:17:22 -0700 (PDT)
-Received: from mail-we0-f175.google.com (mail-we0-f175.google.com
-	[74.125.82.175]) by cuda.sgi.com with ESMTP id 4WgZxznjgmF6GrD7
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 11 Aug 2014 17:17:14 -0700 (PDT)
-Received: by mail-we0-f175.google.com with SMTP id t60so9069849wes.6
-	for <xfs@oss.sgi.com>; Mon, 11 Aug 2014 17:17:13 -0700 (PDT)
-Received: from minas-tirith.valinor (177.Red-79-159-63.staticIP.rima-tde.net.
-	[79.159.63.177])
-	by mx.google.com with ESMTPSA id wi9sm5183691wjc.23.2014.08.11.17.17.12
-	for <xfs@oss.sgi.com>
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-	Mon, 11 Aug 2014 17:17:13 -0700 (PDT)
-Received: from localhost (localhost [127.0.0.1])
-	by minas-tirith.valinor (Postfix) with ESMTP id A05E5182668
-	for <xfs@oss.sgi.com>; Tue, 12 Aug 2014 02:17:10 +0200 (CEST)
-Date: Tue, 12 Aug 2014 02:17:00 +0200 (CEST)
-From: "Carlos E. R." <carlos.e.r@opensuse.org>
-Subject: Re: Subject : Happened again, 20140811 -- Got "Internal error
-	XFS_WANT_CORRUPTED_GOTO". Filesystem needs reformatting to correct
-	issue.
-In-Reply-To: <alpine.LSU.2.11.1408120013500.17839@minas-tirith.valinor>
-Message-ID: <alpine.LSU.2.11.1408120139060.21410@minas-tirith.valinor>
-References: <alpine.LSU.2.11.1407021104480.9881@Telcontar.valinor>
-	<alpine.LSU.2.11.1408111559280.2447@minas-tirith.valinor>
-	<53E8D9F6.7080704@sgi.com>
-	<alpine.LSU.2.11.1408111720170.7326@minas-tirith.valinor>
-	<53E93530.4070902@sgi.com>
-	<alpine.LSU.2.11.1408112347480.17839@minas-tirith.valinor>
-	<53E93C29.1020103@sgi.com>
-	<alpine.LSU.2.11.1408120013500.17839@minas-tirith.valinor>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 315ED7F63
+	for <xfs@oss.sgi.com>; Mon, 11 Aug 2014 20:17:59 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id E5C06304032
+	for <xfs@oss.sgi.com>; Mon, 11 Aug 2014 18:17:58 -0700 (PDT)
+Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
+	[150.101.137.143]) by cuda.sgi.com with ESMTP id
+	qaMW2Wn2wU4adZ2s for <xfs@oss.sgi.com>;
+	Mon, 11 Aug 2014 18:17:56 -0700 (PDT)
+Date: Tue, 12 Aug 2014 11:17:43 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH v2] xfs: don't zero partial page cache pages during
+	O_DIRECT
+Message-ID: <20140812011743.GU20518@dastard>
+References: <53E4E03A.7050101@fb.com>
+ <53E61A9C.4020807@fb.com>
 MIME-Version: 1.0
-Content-Type: MULTIPART/MIXED;
-	BOUNDARY="-1463779071-1850205973-1407800504=:21410"
-Content-ID: <alpine.LSU.2.11.1408120142170.21410@minas-tirith.valinor>
+Content-Disposition: inline
+In-Reply-To: <53E61A9C.4020807@fb.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -47,56 +27,77 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: XFS mailing list <xfs@oss.sgi.com>
+To: Chris Mason <clm@fb.com>
+Cc: Eric Sandeen <sandeen@redhat.com>, xfs@oss.sgi.com
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
+On Sat, Aug 09, 2014 at 08:57:00AM -0400, Chris Mason wrote:
+> 
+> xfs is using truncate_pagecache_range to invalidate the page cache
+> during DIO reads.  This is different from the other filesystems who only
+> invalidate pages during DIO writes.
+> 
+> truncate_pagecache_range is meant to be used when we are freeing the
+> underlying data structs from disk, so it will zero any partial ranges in
+> the page.  This means a DIO read can zero out part of the page cache
+> page, and it is possible the page will stay in cache.
+> 
+> buffered reads will find an up to date page with zeros instead of the
+> data actually on disk.
+> 
+> This patch fixes things by using invalidate_inode_pages2_range instead.
+> It preserves the page cache invalidation, but won't zero any pages.
+> 
+> Signed-off-by: Chris Mason <clm@fb.com>
+> cc: stable@vger.kernel.org
+> 
+> ---
+>  fs/xfs/xfs_file.c | 3 ++-
+>  1 file changed, 2 insertions(+), 1 deletion(-)
+> 
+> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+> index 1f66779..023d575 100644
+> --- a/fs/xfs/xfs_file.c
+> +++ b/fs/xfs/xfs_file.c
+> @@ -295,7 +295,8 @@ xfs_file_read_iter(
+>  				xfs_rw_iunlock(ip, XFS_IOLOCK_EXCL);
+>  				return ret;
+>  			}
+> -			truncate_pagecache_range(VFS_I(ip), pos, -1);
+> +			invalidate_inode_pages2_range(VFS_I(ip)->i_mapping,
+> +					      pos >> PAGE_CACHE_SHIFT, -1);
+>  		}
+>  		xfs_rw_ilock_demote(ip, XFS_IOLOCK_EXCL);
+>  	}
 
----1463779071-1850205973-1407800504=:21410
-Content-Type: TEXT/PLAIN; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8BIT
-Content-ID: <alpine.LSU.2.11.1408120142001.21410@minas-tirith.valinor>
+I added the WARN_ON_ONCE(ret) check to this and I am seeing it fire
+occasionally. It always fires immediately before some other ASSERT()
+they fires with a block map/page cache inconsistency. It usually
+fires in a test that runs fsx or fsstress. The fsx failures are new
+regressions caused by this patch. e.g. generic/263 hasn't failed for
+months on any of my systems and this patch causes it to fail
+reliably on my 1k block size test config.
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA256
+I'm going to assume at this point that this is uncovering some other
+existing bug, but it means I'm not going to push this fix until I
+understand what is actually happening here. It is possible that what
+I'm seeing is related to Brian's collapse range bug fixes, but until
+I applied this direct IO patch I'd never seen fsx throw ASSERTs in
+xfs_bmap_shift_extents()....
 
-Content-ID: <alpine.LSU.2.11.1408120142170.21410@minas-tirith.valinor>
+Either way, more testing and understanding is needed.
 
+Cheers,
 
-El 2014-08-12 a las 00:36 +0200, Carlos E. R. escribió:
-> El 2014-08-11 a las 16:56 -0500, Mark Tinguely escribió:
-
-> but all of them are about 401M before compression. The upload will take
-> long, my ADSL upload is 0.3M/s at most.
-
-
-I have shared (view) on google drive a folder with the three files. Both 
-Brian Foster and Mark Tinguely should have got a link on the mail from me. 
-If somebody else wants access, just tell me.
-
-- -- 
-Cheers
-        Carlos E. R.
-
-        (from 13.1 x86_64 "Bottle" (Minas Tirith))
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.22 (GNU/Linux)
-
-iF4EAREIAAYFAlPpXQYACgkQja8UbcUWM1wQ9gEAl1WI24UDArdlWHh3J2ih3AV3
-nMTwDRqTrT0Rk2BJOB8A/1BOzzn3/IX16sPCsYoqGEyXNHcNXWBHENShlyWzJGUr
-=W+BG
------END PGP SIGNATURE-----
----1463779071-1850205973-1407800504=:21410
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
----1463779071-1850205973-1407800504=:21410--
