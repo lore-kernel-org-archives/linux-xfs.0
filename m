@@ -1,20 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 599F17F3F
-	for <xfs@oss.sgi.com>; Tue, 12 Aug 2014 16:59:53 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 097EC304032
-	for <xfs@oss.sgi.com>; Tue, 12 Aug 2014 14:59:52 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id OShizzuljimRlDMY (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 12 Aug 2014 14:59:49 -0700 (PDT)
-Date: Tue, 12 Aug 2014 17:59:43 -0400
-From: Brian Foster <bfoster@redhat.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 6FA4F7F3F
+	for <xfs@oss.sgi.com>; Tue, 12 Aug 2014 17:02:38 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id D5011AC002
+	for <xfs@oss.sgi.com>; Tue, 12 Aug 2014 15:02:34 -0700 (PDT)
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	LqqtgZ0kZr769WrR for <xfs@oss.sgi.com>;
+	Tue, 12 Aug 2014 15:02:32 -0700 (PDT)
+Date: Wed, 13 Aug 2014 07:57:05 +1000
+From: Dave Chinner <david@fromorbit.com>
 Subject: Re: Subject : Happened again, 20140811 -- Got "Internal error
 	XFS_WANT_CORRUPTED_GOTO". Filesystem needs reformatting to correct
 	issue.
-Message-ID: <20140812215943.GA39704@bfoster.bfoster>
+Message-ID: <20140812215704.GZ20518@dastard>
 References: <alpine.LSU.2.11.1408111559280.2447@minas-tirith.valinor>
 	<53E8D9F6.7080704@sgi.com>
 	<alpine.LSU.2.11.1408111720170.7326@minas-tirith.valinor>
@@ -41,7 +41,7 @@ Content-Transfer-Encoding: quoted-printable
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Eric Sandeen <sandeen@sandeen.net>
-Cc: "Carlos E. R." <carlos.e.r@opensuse.org>, XFS mailing list <xfs@oss.sgi.com>
+Cc: Brian Foster <bfoster@redhat.com>, "Carlos E. R." <carlos.e.r@opensuse.org>, XFS mailing list <xfs@oss.sgi.com>
 
 On Tue, Aug 12, 2014 at 02:27:58PM -0700, Eric Sandeen wrote:
 > On 8/12/14, 9:51 AM, Brian Foster wrote:
@@ -130,22 +130,23 @@ at
 > =
 
 > AFAIK there is no freeze call involved.
-> =
 
+Yes, that's a problem I've been pointing out for years. TuxOnIce
+freezes the filesystems, but the kernel hibernation maintainers have
+steadfastly refuses to even acknowledge that it is necessary.
 
-Eep, not sure why I was thinking there was a freeze there. It appears
-not. I guess that explains why the log contains what it does. Thanks for
-pointing that out...
+As it is, I'm pretty sure this is being caused by the XFS workqueues
+not being frozen appropriately i.e. WQ_FREEZEABLE needs to be added
+to various workqueue definitions so that work gets halted when
+kernel threads get halted.
 
-Brian
+Cheers,
 
-> -Eric
-> =
+Dave.
+-- =
 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
