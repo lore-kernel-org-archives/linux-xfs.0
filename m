@@ -1,33 +1,31 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 4608F7F3F
-	for <xfs@oss.sgi.com>; Tue, 12 Aug 2014 18:16:50 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 009557F3F
+	for <xfs@oss.sgi.com>; Tue, 12 Aug 2014 18:56:39 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 1211F8F8064
-	for <xfs@oss.sgi.com>; Tue, 12 Aug 2014 16:16:46 -0700 (PDT)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id E52BB304032
+	for <xfs@oss.sgi.com>; Tue, 12 Aug 2014 16:56:35 -0700 (PDT)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	qjJ8drq2FunUG3CI for <xfs@oss.sgi.com>;
-	Tue, 12 Aug 2014 16:16:44 -0700 (PDT)
-Date: Wed, 13 Aug 2014 09:16:29 +1000
+	iVAm15EnsfmmIbfy for <xfs@oss.sgi.com>;
+	Tue, 12 Aug 2014 16:56:30 -0700 (PDT)
+Date: Wed, 13 Aug 2014 09:56:15 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Subject : Happened again, 20140811 -- Got "Internal error
-	XFS_WANT_CORRUPTED_GOTO". Filesystem needs reformatting to correct
-	issue.
-Message-ID: <20140812231629.GA20518@dastard>
-References: <alpine.LSU.2.11.1408111720170.7326@minas-tirith.valinor>
-	<53E93530.4070902@sgi.com>
-	<alpine.LSU.2.11.1408112347480.17839@minas-tirith.valinor>
-	<53E93C29.1020103@sgi.com>
-	<alpine.LSU.2.11.1408120013500.17839@minas-tirith.valinor>
-	<alpine.LSU.2.11.1408120139060.21410@minas-tirith.valinor>
-	<20140812165143.GB46654@bfoster.bfoster>
-	<53EA86DE.5060508@sandeen.net>
-	<20140812215943.GA39704@bfoster.bfoster>
-	<53EA9386.2040207@sandeen.net>
+Subject: Re: use-after-free on log replay failure
+Message-ID: <20140812235615.GB20518@dastard>
+References: <4B2A412C75324EE9880358513C069476@alyakaslap>
+	<9D3CBECB663B4A77B7EF74B67973310A@alyakaslap>
+	<20140804230721.GA20518@dastard>
+	<AC10852F403846A182491ED8071135ED@alyakaslap>
+	<20140806152042.GB39990@bfoster.bfoster>
+	<CAOcd+r3bC59m7Rh-3tmjrnWnF5XoPQfE=U+=hz78NcAGu+Ou1g@mail.gmail.com>
+	<20140811132057.GA1186@bfoster.bfoster>
+	<20140811215207.GS20518@dastard>
+	<20140812120341.GA46654@bfoster.bfoster>
+	<DC407F6E8F8C4EE1AF7117D7D6ABF282@alyakaslap>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <53EA9386.2040207@sandeen.net>
+In-Reply-To: <DC407F6E8F8C4EE1AF7117D7D6ABF282@alyakaslap>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -36,168 +34,83 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Brian Foster <bfoster@redhat.com>, "Carlos E. R." <carlos.e.r@opensuse.org>, XFS mailing list <xfs@oss.sgi.com>
+To: Alex Lyakas <alex@zadarastorage.com>
+Cc: Brian Foster <bfoster@redhat.com>, xfs@oss.sgi.com
 
-On Tue, Aug 12, 2014 at 03:21:58PM -0700, Eric Sandeen wrote:
-> On 8/12/14, 2:59 PM, Brian Foster wrote:
-> > On Tue, Aug 12, 2014 at 02:27:58PM -0700, Eric Sandeen wrote:
-> >> On 8/12/14, 9:51 AM, Brian Foster wrote:
-> >>> On Tue, Aug 12, 2014 at 02:17:00AM +0200, Carlos E. R. wrote:
-> >>> Content-ID: <alpine.LSU.2.11.1408120142170.21410@minas-tirith.valinor>
-> >>>
-> >>>
-> >>> El 2014-08-12 a las 00:36 +0200, Carlos E. R. escribi=F3:
-> >>>>>> El 2014-08-11 a las 16:56 -0500, Mark Tinguely escribi=F3:
-> >>>
-> >>>>>> but all of them are about 401M before compression. The upload will=
- take
-> >>>>>> long, my ADSL upload is 0.3M/s at most.
-> >>>
-> >>>
-> >>> I have shared (view) on google drive a folder with the three files. B=
-oth
-> >>> Brian Foster and Mark Tinguely should have got a link on the mail fro=
-m me.
-> >>> If somebody else wants access, just tell me.
-> >>>
-> >>>
-> >>>> I see the same thing from repair that was in your repair output:
-> >>>
-> >>>> block (1,12608397-12608397) multiply claimed by cnt space tree, stat=
-e - 2
-> >>>
-> >>>> If I take a look at the btrees as is, I see "235:[12608397,10]" incl=
-uded
-> >>>> in the bnobt (fsb 0x200aa55) and "270:[12608397,10]" in the cntbt (f=
-sb
-> >>>> 0x2000781). If I skip the mount, zero the log and repair, everything
-> >>>> seems Ok. I can allocate the remainder of available space and rm -rf
-> >>>> everything in the fs without an error.
-> >>>
-> >>>> Once I replay the log, I see "272:[12608397,10] 273:[12608397,10]" in
-> >>>> the cntbt, which is clearly a duplicate entry. This is what repair
-> >>>> detects and cleans up and seems to lead to the shutdown. E.g., if I
-> >>>> mount and use the fs, I can hit an assert or failure just by attempt=
-ing
-> >>>> to allocate the rest of the space in the fs. If that is the state of=
- the
-> >>>> fs on disk, it's only a matter of time we explode due to allocating =
-and
-> >>>> freeing that range of space or possibly attempting to allocate that
-> >>>> space twice.
-> >>>
-> >>>> Mark mentioned that he didn't see the superblock item in the log with
-> >>>> regard to the freeze. I don't see that either... which perhaps sugge=
-sts
-> >>>> that this all happens during the wake-from-hibernate sequence..? My
-> >>>> understanding is that we should freeze on hibernate, thus force
-> >>>> everything out to the log, write an unmount record and then dirty the
-> >>>> log with a superblock transaction. Therefore, that should be the only
-> >>>> item in the log post-freeze. Here, we have various items in the log
-> >>>> including several logged buffers that correspond to the cntbt block =
-that
-> >>>> ends up corrupted (daddr 0xf427c08).
-> >>
-> >> What freeze?  look at hibernate(), nothing but a sync:
-> >>
-> >> /**
-> >>  * hibernate - Carry out system hibernation, including saving the imag=
-e.
-> >>  */
-> >> int hibernate(void)
-> >> {
-> >> ...
-> >>         printk(KERN_INFO "PM: Syncing filesystems ... ");
-> >>         sys_sync();
-> >>         printk("done.\n");
-> >>
-> >>         error =3D freeze_processes();
-> >>         if (error)
-> >>                 goto Exit;
-> >>
-> >>
-> >> AFAIK there is no freeze call involved.
-> >>
-> > =
+On Tue, Aug 12, 2014 at 03:39:02PM +0300, Alex Lyakas wrote:
+> Hello Dave, Brian,
+> I will describe a generic reproduction that you ask for.
+> 
+> It was performed on pristine XFS code from 3.8.13, taken from here:
+> git://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git
+....
+> I mounted XFS with the following options:
+> rw,sync,noatime,wsync,attr2,inode64,noquota 0 0
+> 
+> I started a couple of processes writing files sequentially onto this
+> mount point, and after few seconds crashed the VM.
+> When the VM came up, I took the metadump file and placed it in:
+> https://drive.google.com/file/d/0ByBy89zr3kJNa0ZpdmZFS242RVU/edit?usp=sharing
+> 
+> Then I set up the following Device Mapper target onto /dev/vde:
+> dmsetup create VDE --table "0 41943040 linear-custom /dev/vde 0"
+> I am attaching the code (and Makefile) of dm-linear-custom target.
+> It is exact copy of dm-linear, except that it has a module
+> parameter. With the parameter set to 0, this is an identity mapping
+> onto /dev/vde. If the parameter is set to non-0, all WRITE bios are
+> failed with ENOSPC. There is a workqueue to fail them in a different
+> context (not sure if really needed, but that's what our "real"
+> custom
+> block device does).
 
-> > Eep, not sure why I was thinking there was a freeze there.
-> =
+Well, they you go. That explains it - an asynchronous dispatch error
+happening fast enough to race with the synchronous XFS dispatch
+processing.
 
-> because it seems so logical.  :)
-> =
+dispatch thread			device workqueue
+xfs_buf_hold();
+atomic_set(b_io_remaining, 1)
+atomic_inc(b_io_remaining)
+submit_bio(bio)
+queue_work(bio)
+xfs_buf_ioend(bp, ....);
+  atomic_dec(b_io_remaining)
+xfs_buf_rele()
+				bio error set to ENOSPC
+				  bio->end_io()
+				    xfs_buf_bio_endio()
+				      bp->b_error = ENOSPC
+				      _xfs_buf_ioend(bp, 1);
+				        atomic_dec(b_io_remaining)
+					  xfs_buf_ioend(bp, 1);
+					    queue_work(bp)
+xfs_buf_iowait()
+ if (bp->b_error) return error;
+if (error)
+  xfs_buf_relse()
+    xfs_buf_rele()
+      xfs_buf_free()
 
-> > It appears
-> > not. I guess that explains why the log contains what it does. Thanks for
-> > pointing that out...
-> =
+And now we have a freed buffer that is queued on the io completion
+queue. Basically, it requires the buffer error to be set
+asynchronously *between* the dispatch decrementing it's I/O count
+after dispatch, but before we wait on the IO.
 
-> but as I was saying on IRC, I think in theory it's not necessary; the fs =
-state
-> on disk + fs state in memory (saved to disk during hibernate) needs to be
-> consistent, and it's conceivable that this could be done without freeze
-> (or even sync for that matter).
+Not sure what the right fix is yet - removing the bp->b_error check
+from xfs_buf_iowait() doesn't solve the problem - it just prevents
+this code path from being tripped over by the race condition.
 
-Well, the sync is necessary for hibernate - it needs to shrink the
-amount of memory that is saved to disk to as small as possible. If
-your memory is full of dirty page cache, why would you save that to
-the hibernate image, only to have to load it back off, then write it
-to the filesystem after resume? Why wouldn't you write it straight
-to disk before hibernation, then remove it from memory so you've
-then got free memory to allocate the hibernation image that gets
-written to disk?
-
-> A freeze sure sounds nice though, to be sure the fs really is consistent
-> on disk, in case resume fails.
-> =
-
-> The thing I was wondering about is what makes sure disk caches are flushed
-> before disks lose power when hibernate completes.  (I'm just handwaving
-> here, though...)
-
-That usually happens in the driver power-down sequence.
-
-> Anyway, Dave's mention of making threads freezable makes the most sense.
-> Documentation/power/freezing-of-tasks.txt
-> makes it pretty clear that any thread which might change fs state
-> needs to be freezable:
-> =
-
-> > We therefore freeze tasks that might
-> > cause the on-disk filesystems' data and metadata to be modified after t=
-he
-> > hibernation image has been created and before the system is finally pow=
-ered off.
-> > The majority of these are user space processes, but if any of the kerne=
-l threads
-> > may cause something like this to happen, they have to be freezable.
-> =
-
-> jbd/jbd2 explicitly handle this freezing in the kjournald/kjournald2 thre=
-ads.
-
-As we do for the xfsaild kernel thread. We used to use kernel
-threads for functionality that we now use workqueues for - the
-xfssyncd and the xfsbufd  - and those kernel threads used to also
-freeze like the xfsaild does. We lost that when moving to
-workqueues.
-
-The stupid part about all this is we actually stop periodic
-workqueue processing for workqueues that can modify state when the
-filesystem freezes. i.e. if the hibernation code froze the
-filesystem we wouldn't need to mark workqueues as freezable because
-XFS already manages everything in the manner than hibernation
-requires....
+But, just to validate this is the problem, you should be able to
+reproduce this on a 3.16 kernel. Can you try that, Alex?
 
 Cheers,
 
 Dave.
--- =
-
+-- 
 Dave Chinner
 david@fromorbit.com
 
