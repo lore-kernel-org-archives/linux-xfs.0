@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id DAD707F3F
-	for <xfs@oss.sgi.com>; Tue, 12 Aug 2014 16:28:07 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 36F9F7F3F
+	for <xfs@oss.sgi.com>; Tue, 12 Aug 2014 16:54:01 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id A91738F8087
-	for <xfs@oss.sgi.com>; Tue, 12 Aug 2014 14:28:04 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id whWuC1qNMpfasdJ2 for <xfs@oss.sgi.com>;
-	Tue, 12 Aug 2014 14:28:00 -0700 (PDT)
-Message-ID: <53EA86DE.5060508@sandeen.net>
-Date: Tue, 12 Aug 2014 14:27:58 -0700
-From: Eric Sandeen <sandeen@sandeen.net>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id F1DB38F8087
+	for <xfs@oss.sgi.com>; Tue, 12 Aug 2014 14:54:00 -0700 (PDT)
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	KsvJUfBiz8zKhWnh for <xfs@oss.sgi.com>;
+	Tue, 12 Aug 2014 14:53:58 -0700 (PDT)
+Date: Wed, 13 Aug 2014 07:53:44 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [GIT PULL] xfs: updates for 3.17-rc1
+Message-ID: <20140812215344.GY20518@dastard>
+References: <20140812125313.GX20518@dastard>
+	<20140812235612.684a9af7@canb.auug.org.au>
 MIME-Version: 1.0
-Subject: Re: Subject : Happened again,
-	20140811 -- Got "Internal error XFS_WANT_CORRUPTED_GOTO".
-	Filesystem needs reformatting to correct issue.
-References: <alpine.LSU.2.11.1407021104480.9881@Telcontar.valinor>	<alpine.LSU.2.11.1408111559280.2447@minas-tirith.valinor>	<53E8D9F6.7080704@sgi.com>	<alpine.LSU.2.11.1408111720170.7326@minas-tirith.valinor>	<53E93530.4070902@sgi.com>	<alpine.LSU.2.11.1408112347480.17839@minas-tirith.valinor>	<53E93C29.1020103@sgi.com>	<alpine.LSU.2.11.1408120013500.17839@minas-tirith.valinor>	<alpine.LSU.2.11.1408120139060.21410@minas-tirith.valinor>
-	<20140812165143.GB46654@bfoster.bfoster>
-In-Reply-To: <20140812165143.GB46654@bfoster.bfoster>
+Content-Disposition: inline
+In-Reply-To: <20140812235612.684a9af7@canb.auug.org.au>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,90 +26,36 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>, "Carlos E. R." <carlos.e.r@opensuse.org>
-Cc: XFS mailing list <xfs@oss.sgi.com>
+To: Stephen Rothwell <sfr@canb.auug.org.au>
+Cc: akpm@linux-foundation.org, torvalds@linux-foundation.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-On 8/12/14, 9:51 AM, Brian Foster wrote:
-> On Tue, Aug 12, 2014 at 02:17:00AM +0200, Carlos E. R. wrote:
-> Content-ID: <alpine.LSU.2.11.1408120142170.21410@minas-tirith.valinor>
-> =
+On Tue, Aug 12, 2014 at 11:56:12PM +1000, Stephen Rothwell wrote:
+> Hi Dave,
+> 
+> On Tue, 12 Aug 2014 22:53:13 +1000 Dave Chinner <david@fromorbit.com> wrote:
+> >
+> > FYI, this will be the last pull request I will send you from a tree
+> > on oss.sgi.com. I'm moving everything XFS related over to kernel.org
+> > so future pull requests should come from there.
+> 
+> Please let me know when you have the new tree set up so I can change
+> where I fetch from.
 
-> =
+git://git.kernel.org/pub/scm/linux/kernel/git/dgc/linux-xfs.git for-next
 
-> El 2014-08-12 a las 00:36 +0200, Carlos E. R. escribi=F3:
->>>> El 2014-08-11 a las 16:56 -0500, Mark Tinguely escribi=F3:
-> =
+It should be identical to the xfs tree you are pulling from
+oss.sgi.com.
 
->>>> but all of them are about 401M before compression. The upload will take
->>>> long, my ADSL upload is 0.3M/s at most.
-> =
+Cheers,
 
-> =
-
-> I have shared (view) on google drive a folder with the three files. Both
-> Brian Foster and Mark Tinguely should have got a link on the mail from me.
-> If somebody else wants access, just tell me.
-> =
-
-> =
-
->> I see the same thing from repair that was in your repair output:
-> =
-
->> block (1,12608397-12608397) multiply claimed by cnt space tree, state - 2
-> =
-
->> If I take a look at the btrees as is, I see "235:[12608397,10]" included
->> in the bnobt (fsb 0x200aa55) and "270:[12608397,10]" in the cntbt (fsb
->> 0x2000781). If I skip the mount, zero the log and repair, everything
->> seems Ok. I can allocate the remainder of available space and rm -rf
->> everything in the fs without an error.
-> =
-
->> Once I replay the log, I see "272:[12608397,10] 273:[12608397,10]" in
->> the cntbt, which is clearly a duplicate entry. This is what repair
->> detects and cleans up and seems to lead to the shutdown. E.g., if I
->> mount and use the fs, I can hit an assert or failure just by attempting
->> to allocate the rest of the space in the fs. If that is the state of the
->> fs on disk, it's only a matter of time we explode due to allocating and
->> freeing that range of space or possibly attempting to allocate that
->> space twice.
-> =
-
->> Mark mentioned that he didn't see the superblock item in the log with
->> regard to the freeze. I don't see that either... which perhaps suggests
->> that this all happens during the wake-from-hibernate sequence..? My
->> understanding is that we should freeze on hibernate, thus force
->> everything out to the log, write an unmount record and then dirty the
->> log with a superblock transaction. Therefore, that should be the only
->> item in the log post-freeze. Here, we have various items in the log
->> including several logged buffers that correspond to the cntbt block that
->> ends up corrupted (daddr 0xf427c08).
-
-What freeze?  look at hibernate(), nothing but a sync:
-
-/**
- * hibernate - Carry out system hibernation, including saving the image.
- */
-int hibernate(void)
-{
-...
-        printk(KERN_INFO "PM: Syncing filesystems ... ");
-        sys_sync();
-        printk("done.\n");
-
-        error =3D freeze_processes();
-        if (error)
-                goto Exit;
-
-
-AFAIK there is no freeze call involved.
-
--Eric
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
