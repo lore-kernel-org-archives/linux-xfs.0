@@ -1,31 +1,33 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id BFB237F3F
-	for <xfs@oss.sgi.com>; Wed, 13 Aug 2014 15:59:41 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 79DD5304043
-	for <xfs@oss.sgi.com>; Wed, 13 Aug 2014 13:59:38 -0700 (PDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id D66D87F4E
+	for <xfs@oss.sgi.com>; Wed, 13 Aug 2014 16:04:52 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 5C705AC006
+	for <xfs@oss.sgi.com>; Wed, 13 Aug 2014 14:04:49 -0700 (PDT)
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	O9OHAdJwAL5GM9eC for <xfs@oss.sgi.com>;
-	Wed, 13 Aug 2014 13:59:32 -0700 (PDT)
-Date: Thu, 14 Aug 2014 06:59:29 +1000
+	W5tPLqMq5kbCYokO for <xfs@oss.sgi.com>;
+	Wed, 13 Aug 2014 14:04:45 -0700 (PDT)
+Date: Thu, 14 Aug 2014 07:04:09 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: use-after-free on log replay failure
-Message-ID: <20140813205929.GE20518@dastard>
-References: <20140804230721.GA20518@dastard>
-	<AC10852F403846A182491ED8071135ED@alyakaslap>
-	<20140806152042.GB39990@bfoster.bfoster>
-	<CAOcd+r3bC59m7Rh-3tmjrnWnF5XoPQfE=U+=hz78NcAGu+Ou1g@mail.gmail.com>
-	<20140811132057.GA1186@bfoster.bfoster>
-	<20140811215207.GS20518@dastard>
-	<20140812120341.GA46654@bfoster.bfoster>
-	<DC407F6E8F8C4EE1AF7117D7D6ABF282@alyakaslap>
-	<20140812235615.GB20518@dastard>
-	<20140813125932.GA4605@bfoster.bfoster>
+Subject: Re: Subject : Happened again, 20140811 -- Got "Internal error
+	XFS_WANT_CORRUPTED_GOTO". Filesystem needs reformatting to correct
+	issue.
+Message-ID: <20140813210409.GF20518@dastard>
+References: <53E8D9F6.7080704@sgi.com>
+	<alpine.LSU.2.11.1408111720170.7326@minas-tirith.valinor>
+	<53E93530.4070902@sgi.com>
+	<alpine.LSU.2.11.1408112347480.17839@minas-tirith.valinor>
+	<53E93C29.1020103@sgi.com>
+	<alpine.LSU.2.11.1408120013500.17839@minas-tirith.valinor>
+	<alpine.LSU.2.11.1408120139060.21410@minas-tirith.valinor>
+	<20140812165143.GB46654@bfoster.bfoster>
+	<alpine.LSU.2.11.1408122212410.14631@Telcontar.valinor>
+	<20140813120450.GA3569@bfoster.bfoster>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20140813125932.GA4605@bfoster.bfoster>
+In-Reply-To: <20140813120450.GA3569@bfoster.bfoster>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -39,140 +41,29 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Brian Foster <bfoster@redhat.com>
-Cc: Alex Lyakas <alex@zadarastorage.com>, xfs@oss.sgi.com
+Cc: "Carlos E. R." <carlos.e.r@opensuse.org>, XFS mailing list <xfs@oss.sgi.com>
 
-On Wed, Aug 13, 2014 at 08:59:32AM -0400, Brian Foster wrote:
-> On Wed, Aug 13, 2014 at 09:56:15AM +1000, Dave Chinner wrote:
-> > On Tue, Aug 12, 2014 at 03:39:02PM +0300, Alex Lyakas wrote:
-> > > Hello Dave, Brian,
-> > > I will describe a generic reproduction that you ask for.
-> > > 
-> > > It was performed on pristine XFS code from 3.8.13, taken from here:
-> > > git://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git
-> > ....
-> > > I mounted XFS with the following options:
-> > > rw,sync,noatime,wsync,attr2,inode64,noquota 0 0
-> > > 
-> > > I started a couple of processes writing files sequentially onto this
-> > > mount point, and after few seconds crashed the VM.
-> > > When the VM came up, I took the metadump file and placed it in:
-> > > https://drive.google.com/file/d/0ByBy89zr3kJNa0ZpdmZFS242RVU/edit?usp=sharing
-> > > 
-> > > Then I set up the following Device Mapper target onto /dev/vde:
-> > > dmsetup create VDE --table "0 41943040 linear-custom /dev/vde 0"
-> > > I am attaching the code (and Makefile) of dm-linear-custom target.
-> > > It is exact copy of dm-linear, except that it has a module
-> > > parameter. With the parameter set to 0, this is an identity mapping
-> > > onto /dev/vde. If the parameter is set to non-0, all WRITE bios are
-> > > failed with ENOSPC. There is a workqueue to fail them in a different
-> > > context (not sure if really needed, but that's what our "real"
-> > > custom
-> > > block device does).
-> > 
-> > Well, they you go. That explains it - an asynchronous dispatch error
-> > happening fast enough to race with the synchronous XFS dispatch
-> > processing.
-> > 
-> > dispatch thread			device workqueue
-> > xfs_buf_hold();
-> > atomic_set(b_io_remaining, 1)
-> > atomic_inc(b_io_remaining)
-> > submit_bio(bio)
-> > queue_work(bio)
-> > xfs_buf_ioend(bp, ....);
-> >   atomic_dec(b_io_remaining)
-> > xfs_buf_rele()
-> > 				bio error set to ENOSPC
-> > 				  bio->end_io()
-> > 				    xfs_buf_bio_endio()
-> > 				      bp->b_error = ENOSPC
-> > 				      _xfs_buf_ioend(bp, 1);
-> > 				        atomic_dec(b_io_remaining)
-> > 					  xfs_buf_ioend(bp, 1);
-> > 					    queue_work(bp)
-> > xfs_buf_iowait()
-> >  if (bp->b_error) return error;
-> > if (error)
-> >   xfs_buf_relse()
-> >     xfs_buf_rele()
-> >       xfs_buf_free()
-> > 
-> > And now we have a freed buffer that is queued on the io completion
-> > queue. Basically, it requires the buffer error to be set
-> > asynchronously *between* the dispatch decrementing it's I/O count
-> > after dispatch, but before we wait on the IO.
+On Wed, Aug 13, 2014 at 08:04:51AM -0400, Brian Foster wrote:
+> On Tue, Aug 12, 2014 at 11:17:36PM +0200, Carlos E. R. wrote:
+> > This the point I'm at now. Are you saying that the filesystem can explode at
+> > any time now? I have not written any files, beyond what the desktop does
+> > automatically.
 > > 
 > 
-> That's basically the theory I wanted to test with the experimental
-> patch. E.g., the error check races with the iodone workqueue item.
-> 
-> > Not sure what the right fix is yet - removing the bp->b_error check
-> > from xfs_buf_iowait() doesn't solve the problem - it just prevents
-> > this code path from being tripped over by the race condition.
-> > 
-> 
-> Perhaps I'm missing some context... I don't follow how removing the
-> error check doesn't solve the problem. It clearly closes the race and
-> perhaps there are other means of doing the same thing, but what part of
-> the problem does that leave unresolved?
+> No, the filesystem has been fixed by repair. I'm just saying that
+> somehow the fs creates a duplicate free space record in one of the free
+> space trees.
 
-Anything that does:
-
-	xfs_buf_iorequest(bp);
-	if (bp->b_error)
-		xfs_buf_relse(bp);
-
-is susceptible to the same race condition. based on bp->b_error
-being set asynchronously and before the buffer IO completion
-processing is complete.
-
-
-> E.g., we provide a
-> synchronization mechanism for an async submission path and an object
-> (xfs_buf) that is involved with potentially multiple such async (I/O)
-> operations. The async callback side manages the counts of outstanding
-> bios etc. to set the state of the buf object correctly and fires a
-> completion when everything is done. The calling side simply waits on the
-> completion before it can analyze state of the object. Referring to
-> anything inside that object that happens to be managed by the buffer I/O
-> mechanism before the buffer is considered complete just seems generally
-> racy.
-
-The point is that the IO submitter holds the buffer lock and so has
-"exclusive" access to the buffer, even after it is submitted. It is
-allowed to check the internal state of the buffer at any time, and
-it is expected to be sane, including while IO completion processing
-is running.
-
-The real issue is that workqueue based  IO completion processing is
-not protected by a reference count of any kind for synchronous IO.
-It is done with only the reference count of lock holder held, and so
-if the lock holder unlocks and frees the buffer, then that buffer
-will be freed.
-
-This issue doesn't exist with B_ASYNC IO submission, because the
-B_ASYNC IO owns the reference and the the buffer lock and drops them
-from the workqueue when the IO comlpetion processing actuall
-completes...
-
-> It looks like submit_bio() manages this by providing the error through
-> the callback (always). It also doesn't look like submission path is
-> guaranteed to be synchronous either (consider md, which appears to use
-> workqueues and kernel threads)), so I'm not sure that '...;
-> xfs_buf_iorequest(bp); if (bp->b_error)' is really safe anywhere unless
-> you're explicitly looking for a write verifier error or something and
-> do nothing further on the buf contingent on completion (e.g., freeing it
-> or something it depends on).
-
-My point remains that it *should be safe*, and the intent is that
-the caller should be able to check for submission errors without
-being exposed to a use after free situation. That's the bug we need
-to fix, not say "you can't check for submission errors on
-synchronous IO" to avoid the race condition.....
+Simple answer: the block is being freed twice. i.e. from a workqueue
+during the hibernate process after the relevant memory has been
+snapshotted (i.e. because the workqueue was not frozen), and again
+after thaw when the memory image is restored to RAM and the
+workqueue is started up again and the workqueue runs the same work a
+second time.
 
 Cheers,
 
-Dave
+Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
