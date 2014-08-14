@@ -1,24 +1,31 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id D7B717F3F
-	for <xfs@oss.sgi.com>; Wed, 13 Aug 2014 22:13:32 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id DB5C97F3F
+	for <xfs@oss.sgi.com>; Thu, 14 Aug 2014 01:14:56 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id B608930404E
-	for <xfs@oss.sgi.com>; Wed, 13 Aug 2014 20:13:29 -0700 (PDT)
-Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
-	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	5TYQddMIzlI8CXZo for <xfs@oss.sgi.com>;
-	Wed, 13 Aug 2014 20:13:27 -0700 (PDT)
-Date: Thu, 14 Aug 2014 13:11:36 +1000
+	by relay2.corp.sgi.com (Postfix) with ESMTP id C596A304032
+	for <xfs@oss.sgi.com>; Wed, 13 Aug 2014 23:14:53 -0700 (PDT)
+Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
+	[150.101.137.145]) by cuda.sgi.com with ESMTP id
+	EL7O8W6p3wFyEuTu for <xfs@oss.sgi.com>;
+	Wed, 13 Aug 2014 23:14:48 -0700 (PDT)
+Date: Thu, 14 Aug 2014 16:14:44 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 2/2] xfs: hole the inode lock across a full file collapse
-Message-ID: <20140814031136.GG20518@dastard>
-References: <1407523766-62233-1-git-send-email-bfoster@redhat.com>
-	<1407523766-62233-3-git-send-email-bfoster@redhat.com>
-	<20140813154229.GB4426@laptop.bfoster>
+Subject: Re: use-after-free on log replay failure
+Message-ID: <20140814061444.GH20518@dastard>
+References: <20140806152042.GB39990@bfoster.bfoster>
+	<CAOcd+r3bC59m7Rh-3tmjrnWnF5XoPQfE=U+=hz78NcAGu+Ou1g@mail.gmail.com>
+	<20140811132057.GA1186@bfoster.bfoster>
+	<20140811215207.GS20518@dastard>
+	<20140812120341.GA46654@bfoster.bfoster>
+	<DC407F6E8F8C4EE1AF7117D7D6ABF282@alyakaslap>
+	<20140812235615.GB20518@dastard>
+	<20140813125932.GA4605@bfoster.bfoster>
+	<20140813205929.GE20518@dastard>
+	<20140813232135.GB8456@laptop.bfoster>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20140813154229.GB4426@laptop.bfoster>
+In-Reply-To: <20140813232135.GB8456@laptop.bfoster>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,77 +39,133 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Brian Foster <bfoster@redhat.com>
-Cc: xfs@oss.sgi.com
+Cc: Alex Lyakas <alex@zadarastorage.com>, xfs@oss.sgi.com
 
-On Wed, Aug 13, 2014 at 11:42:29AM -0400, Brian Foster wrote:
-> On Fri, Aug 08, 2014 at 02:49:26PM -0400, Brian Foster wrote:
-> > A file collapse stress test workload reproduces collapse failures
-> > mid-operation due to changes in the inode fork extent count across
-> > extent shift cycles. xfs_collapse_file_space() currently calls
-> > xfs_bmap_shift_extents() to shift one extent at a time per transaction.
-> > The extent index is used to track the next extent to shift after each
-> > iteration.
-
-Right, it does so after writing back all the dirty pages and
-invalidating the cache. This is done under the IOLOCK_EXCL, so we
-should end up with nothing being able to newly dirty the inode while
-the collapse range operation is in progress.
+On Wed, Aug 13, 2014 at 07:21:35PM -0400, Brian Foster wrote:
+> On Thu, Aug 14, 2014 at 06:59:29AM +1000, Dave Chinner wrote:
+> > On Wed, Aug 13, 2014 at 08:59:32AM -0400, Brian Foster wrote:
+> > > Perhaps I'm missing some context... I don't follow how removing the
+> > > error check doesn't solve the problem. It clearly closes the race and
+> > > perhaps there are other means of doing the same thing, but what part of
+> > > the problem does that leave unresolved?
 > > 
-> > A concurrent fsx and fsstress workload reproduces a scenario where the
-> > extent count changes during this sequence, causing the 'current_ext'
-> > index to become inaccurate and possibly skip shifting an extent. The
-> > likely result of this behavior is the subsequent shift attempt will not
-> > find a hole in the area of the skipped extent and fail, leaving the file
-> > in a partially collapsed state.
+> > Anything that does:
 > > 
-> > This occurs because the ilock is released and acquired across each
-> > transaction and each individual extent shift. Tracepoint output shows
-> > that once the ilock is released after an extent shift, a pending
-> > blocking writeback (e.g., sync) can acquire the lock and proceed before
-> > the next extent is shifted down. If the writeback converts part of a
-> > delayed allocation earlier in the file, for example, it can insert a new
-> > extent into the map. Tracing confirms a call to
-> > xfs_bmap_add_extent_delay_real() in this particular instance.
-
-Are we getting a dirty extent in the range being collapsed, or does
-it exist outside the range being shifted? If outside, then shouldn't
-we just sync the entire file first? i.e. treat it the same way as we
-do xfs_swap_extents()?
-
-Realistically, cur_extent is not valid once we drop the ILOCK.
-Perhaps we should keep the offset of the extent we are up to in the
-shift, and then look up the offset to get current extent map index
-once we pick the ILOCK back up. That way we avoid issues with other
-parts of the extent map changing between ILOCK hold contexts.
-
-> > To prevent this scenario, hold the ilock across the entire extent shift
-> > loop in xfs_collapse_file_space().
+> > 	xfs_buf_iorequest(bp);
+> > 	if (bp->b_error)
+> > 		xfs_buf_relse(bp);
 > > 
-> > Signed-off-by: Brian Foster <bfoster@redhat.com>
-> > ---
-> >  fs/xfs/xfs_bmap_util.c | 5 +++--
-> >  1 file changed, 3 insertions(+), 2 deletions(-)
+> > is susceptible to the same race condition. based on bp->b_error
+> > being set asynchronously and before the buffer IO completion
+> > processing is complete.
 > > 
-> > diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-> > index 2f1e30d..96eb97b 100644
-> > --- a/fs/xfs/xfs_bmap_util.c
-> > +++ b/fs/xfs/xfs_bmap_util.c
-> > @@ -1474,6 +1474,8 @@ xfs_collapse_file_space(
-> >  	if (error)
-> >  		return error;
-> >  
-> > +	xfs_ilock(ip, XFS_ILOCK_EXCL);
-> > +
 > 
-> I realized this moves the lock outside of the xfs_trans_reserve(), thus
-> opening a potential deadlock scenario with regard to the log. I suppose
-> this might be harder to hit in real life than a sync() causing the
-> operation to fall over mid-sequence, so I'm still Ok with keeping this
-> unless anybody objects.
+> Understood, by why would anything do that (as opposed to
+> xfs_buf_iowait())? I don't see that we do that anywhere today
+> (the check buried within xfs_buf_iowait() notwithstanding of course).
 
-We can't do that. Inode locking rules explicitly forbid it - we've
-avoided needing to do break this rule for 20 years, so let's not
-start making exceptions now just because it's a "simple fix".
+"Why" is not important - the fact is the caller *owns* the buffer
+and so the above fragment of code is valid behaviour. If there is
+an error on the buffer after xfs_buf_iorequest() request returns on
+a synchronous IO, then it's a bug if there is still IO in progress
+on that buffer.
+
+We can't run IO completion synchronously from xfs_buf_bio_end_io in
+this async dispatch error case - we cannot detect it as any
+different from IO completion in interrupt context - and so we need
+to have some kind of reference protecting the buffer from being
+freed from under the completion.
+
+i.e. the bug is that a synchronous buffer has no active reference
+while it is sitting on the completion workqueue - it's references
+are owned by other contexts that can drop them without regard to
+the completion status of the buffer.
+
+For async IO we transfer a reference and the lock to the IO context,
+which gets dropped in xfs_buf_iodone_work when all the IO is
+complete. Synchronous IO needs this protection, too.
+
+As a proof of concept, adding this to the start of
+xfs_buf_iorequest():
+
++	/*
++	 * synchronous IO needs it's own reference count. async IO
++	 * inherits the submitter's reference count.
++	 */
++	if (!(bp->b_flags & XBF_ASYNC))
++		xfs_buf_hold(bp);
+
+And this to the synchronous IO completion case for
+xfs_buf_iodone_work():
+
+	else {
+		ASSERT(read && bp->b_ops);
+		complete(&bp->b_iowait);
++		xfs_buf_rele(bp);
+	}
+
+Should ensure that all IO carries a reference count and the buffer
+cannot be freed until all IO processing has been completed.
+
+This means it does not matter what the buffer owner does after
+xfs_buf_iorequest() - even unconditionally calling xfs_buf_relse()
+will not result in use-after-free as the b_hold count will not go to
+zero until the IO completion processing has been finalised.
+
+Fixing the rest of the mess (i.e. determining how to deal with
+submission/completion races) is going to require more effort and
+thought. For the moment, though, correctly reference counting
+buffers will solve the use-after-free without changing any
+other behaviour.
+
+> From what I can see, all it really guarantees is that the submission has
+> either passed/failed the write verifier, yes?
+
+No.  It can also mean it wasn't rejected by the lower layersi as
+they process the bio passed by submit_bio(). e.g.  ENODEV, because
+the underlying device has been hot-unplugged, EIO because the
+buffer is beyond the end of the device, etc.
+
+> > > It looks like submit_bio() manages this by providing the error through
+> > > the callback (always). It also doesn't look like submission path is
+> > > guaranteed to be synchronous either (consider md, which appears to use
+> > > workqueues and kernel threads)), so I'm not sure that '...;
+> > > xfs_buf_iorequest(bp); if (bp->b_error)' is really safe anywhere unless
+> > > you're explicitly looking for a write verifier error or something and
+> > > do nothing further on the buf contingent on completion (e.g., freeing it
+> > > or something it depends on).
+> > 
+> > My point remains that it *should be safe*, and the intent is that
+> > the caller should be able to check for submission errors without
+> > being exposed to a use after free situation. That's the bug we need
+> > to fix, not say "you can't check for submission errors on
+> > synchronous IO" to avoid the race condition.....
+> > 
+> 
+> Well, technically you can check for submission errors on sync I/O, just
+> use the code you posted above. :) What we can't currently do is find out
+> when the I/O subsystem is done with the buffer.
+
+By definition, a buffer marked with an error after submission
+processing is complete. It should not need to be waited on, and
+there-in lies the bug.
+
+> Perhaps the point here is around the semantics of xfs_buf_iowait(). With
+> a mechanism that is fundamentally async, the sync variant obviously
+> becomes the async mechanism + some kind of synchronization. I'd expect
+> that synchronization to not necessarily just tell me whether an error
+> occurred, but also tell me when the I/O subsystem is done with the
+> object I've passed (e.g., so I'm free to chuck it, scribble over it, put
+> it back where I got it, whatever).
+>
+> My impression is that's the purpose of the b_iowait mechanism.
+> Otherwise, what's the point of the whole
+> bio_end_io->buf_ioend->b_iodone->buf_ioend round trip dance?
+
+Yes, that's exactly what xfs_buf_iorequest/xfs_buf_iowait() provides
+and the b_error indication is an integral part of that
+synchronisation mechanism.  Unfortunately, that is also the part of
+the mechanism that is racy and causing problems.
 
 Cheers,
 
