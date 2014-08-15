@@ -1,24 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 3F03A7F3F
-	for <xfs@oss.sgi.com>; Fri, 15 Aug 2014 08:18:27 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 8E79E7F3F
+	for <xfs@oss.sgi.com>; Fri, 15 Aug 2014 08:18:42 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 1FACC304043
-	for <xfs@oss.sgi.com>; Fri, 15 Aug 2014 06:18:27 -0700 (PDT)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 7CFE130404E
+	for <xfs@oss.sgi.com>; Fri, 15 Aug 2014 06:18:42 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id VaY5IgbfASTKNuei (version=TLSv1
+	cuda.sgi.com with ESMTP id Q8QZNhcRaDF7CaEQ (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 15 Aug 2014 06:18:25 -0700 (PDT)
-Date: Fri, 15 Aug 2014 09:18:21 -0400
+	Fri, 15 Aug 2014 06:18:41 -0700 (PDT)
+Date: Fri, 15 Aug 2014 09:18:37 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 2/9] xfs: xfs_buf_ioend and xfs_buf_iodone_work duplicate
-	functionality
-Message-ID: <20140815131820.GB4096@laptop.bfoster>
+Subject: Re: [PATCH 3/9] xfs: rework xfs_buf_bio_endio error handling
+Message-ID: <20140815131836.GC4096@laptop.bfoster>
 References: <1408084747-4540-1-git-send-email-david@fromorbit.com>
-	<1408084747-4540-3-git-send-email-david@fromorbit.com>
+	<1408084747-4540-4-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1408084747-4540-3-git-send-email-david@fromorbit.com>
+In-Reply-To: <1408084747-4540-4-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,252 +33,96 @@ Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On Fri, Aug 15, 2014 at 04:39:00PM +1000, Dave Chinner wrote:
+On Fri, Aug 15, 2014 at 04:39:01PM +1000, Dave Chinner wrote:
 > From: Dave Chinner <dchinner@redhat.com>
 > 
-> We do some work in xfs_buf_ioend, and some work in
-> xfs_buf_iodone_work, but much of that functionality is the same.
-> This work can all be done in a single function, leaving
-> xfs_buf_iodone just a wrapper to determine if we should execute it
-> by workqueue or directly. hence rename xfs_buf_iodone_work to
-> xfs_buf_ioend(), and add a new xfs_buf_ioend_async() for places that
-> need async processing.
+> Currently the report of a bio error from completion
+> immediately marks the buffer with an error. The issue is that this
+> is racy w.r.t. synchronous IO - the submitter can see b_error being
+> set before the IO is complete, and hence we cannot differentiate
+> between submission failures and completion failures.
 > 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> ---
->  fs/xfs/xfs_buf.c         | 79 +++++++++++++++++++++---------------------------
->  fs/xfs/xfs_buf.h         |  2 +-
->  fs/xfs/xfs_buf_item.c    |  4 +--
->  fs/xfs/xfs_inode.c       |  2 +-
->  fs/xfs/xfs_log.c         |  2 +-
->  fs/xfs/xfs_log_recover.c |  2 +-
->  6 files changed, 40 insertions(+), 51 deletions(-)
+> Add an internal b_io_error field protected by the b_lock to catch IO
+> completion errors, and only propagate that to the buffer during
+> final IO completion handling. Hence we can tell in xfs_buf_iorequest
+> if we've had a submission failure bey checking bp->b_error before
+> dropping our b_io_remaining reference - that reference will prevent
+> b_io_error values from being propagated to b_error in the event that
+> completion races with submission.
 > 
-> diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-> index 5d86bbd..1b7f0bc 100644
-> --- a/fs/xfs/xfs_buf.c
-> +++ b/fs/xfs/xfs_buf.c
-> @@ -999,54 +999,49 @@ xfs_buf_wait_unpin(
->   */
->  
->  STATIC void
-> -xfs_buf_iodone_work(
-> -	struct work_struct	*work)
-> +xfs_buf_ioend(
-> +	struct xfs_buf	*bp)
+> In doing so, allow xfs_buf_iorequest to return an error. That way,
+> the caller can check for submission errors safely if required, and
+> easily distinguish them from completion errors that come from
+> xfs_buf_iowait().
+> 
 
-Compile failure here due to STATIC.
-
->  {
-> -	struct xfs_buf		*bp =
-> -		container_of(work, xfs_buf_t, b_iodone_work);
-> -	bool			read = !!(bp->b_flags & XBF_READ);
-> +	bool		read = !!(bp->b_flags & XBF_READ);
-> +
-> +	trace_xfs_buf_iodone(bp, _RET_IP_);
->  
->  	bp->b_flags &= ~(XBF_READ | XBF_WRITE | XBF_READ_AHEAD);
->  
-> -	/* only validate buffers that were read without errors */
-> -	if (read && bp->b_ops && !bp->b_error && (bp->b_flags & XBF_DONE))
-> -		bp->b_ops->verify_read(bp);
-> +	if (!bp->b_error) {
-> +		bp->b_flags |= XBF_DONE;
-> +
-> +		/* only validate buffers that were read without errors */
-> +		if (read && bp->b_ops)
-> +			bp->b_ops->verify_read(bp);
-> +	}
-
-Probably not a cause of errors, but this code is now executed twice for
-I/O with b_iodone callbacks. Once for the initial call from bio_end_io,
-again from the callback via the b_iodone handler. The flags bits are
-probably fine, but we don't want to be running the verifiers multiple
-times unnecessarily.
-
->  
->  	if (bp->b_iodone)
->  		(*(bp->b_iodone))(bp);
->  	else if (bp->b_flags & XBF_ASYNC)
->  		xfs_buf_relse(bp);
->  	else {
-> -		ASSERT(read && bp->b_ops);
->  		complete(&bp->b_iowait);
->  		xfs_buf_rele(bp);
->  	}
->  }
->  
-> -void
-> -xfs_buf_ioend(
-> -	struct xfs_buf	*bp,
-> -	int		schedule)
-> +static void
-> +xfs_buf_ioend_work(
-> +	struct work_struct	*work)
->  {
-> -	bool		read = !!(bp->b_flags & XBF_READ);
-> -
-> -	trace_xfs_buf_iodone(bp, _RET_IP_);
-> +	struct xfs_buf		*bp =
-> +		container_of(work, xfs_buf_t, b_iodone_work);
->  
-> -	if (bp->b_error == 0)
-> -		bp->b_flags |= XBF_DONE;
-> +	xfs_buf_ioend(bp);
-> +}
->  
-> -	if (bp->b_iodone || (read && bp->b_ops) || (bp->b_flags & XBF_ASYNC)) {
-> -		if (schedule) {
-> -			INIT_WORK(&bp->b_iodone_work, xfs_buf_iodone_work);
-> -			queue_work(xfslogd_workqueue, &bp->b_iodone_work);
-> -		} else {
-> -			xfs_buf_iodone_work(&bp->b_iodone_work);
-> -		}
-> -	} else {
-> -		bp->b_flags &= ~(XBF_READ | XBF_WRITE | XBF_READ_AHEAD);
-> -		complete(&bp->b_iowait);
-> -		xfs_buf_rele(bp);
-> -	}
-> +void
-> +xfs_buf_ioend_async(
-> +	struct xfs_buf	*bp)
-> +{
-> +	INIT_WORK(&bp->b_iodone_work, xfs_buf_ioend_work);
-> +	queue_work(xfslogd_workqueue, &bp->b_iodone_work);
->  }
->  
->  void
-> @@ -1094,7 +1089,7 @@ xfs_bioerror(
->  	XFS_BUF_UNDONE(bp);
->  	xfs_buf_stale(bp);
->  
-> -	xfs_buf_ioend(bp, 0);
-> +	xfs_buf_ioend(bp);
->  
->  	return -EIO;
->  }
-> @@ -1181,15 +1176,6 @@ xfs_bwrite(
->  }
->  
->  STATIC void
-> -_xfs_buf_ioend(
-> -	xfs_buf_t		*bp,
-> -	int			schedule)
-> -{
-> -	if (atomic_dec_and_test(&bp->b_io_remaining) == 1)
-> -		xfs_buf_ioend(bp, schedule);
-> -}
-> -
-> -STATIC void
->  xfs_buf_bio_end_io(
->  	struct bio		*bio,
->  	int			error)
-> @@ -1206,7 +1192,8 @@ xfs_buf_bio_end_io(
->  	if (!bp->b_error && xfs_buf_is_vmapped(bp) && (bp->b_flags & XBF_READ))
->  		invalidate_kernel_vmap_range(bp->b_addr, xfs_buf_vmap_len(bp));
->  
-> -	_xfs_buf_ioend(bp, 1);
-> +	if (atomic_dec_and_test(&bp->b_io_remaining) == 1)
-> +		xfs_buf_ioend_async(bp);
->  	bio_put(bio);
->  }
->  
-> @@ -1425,10 +1412,12 @@ xfs_buf_iorequest(
->  	 * waiting, and in the synchronous IO case it avoids unnecessary context
->  	 * switches an latency for high-peformance devices.
->  	 */
-> -	if (bp->b_error || !(bp->b_flags & XBF_ASYNC))
-> -		_xfs_buf_ioend(bp, 0);
-> -	else
-> -		_xfs_buf_ioend(bp, 1);
-> +	if (atomic_dec_and_test(&bp->b_io_remaining) == 1) {
-> +		if (bp->b_error || !(bp->b_flags & XBF_ASYNC))
-> +			xfs_buf_ioend(bp);
-> +		else
-> +			xfs_buf_ioend_async(bp);
-> +	}
-
-This looks cleaner, but the comment is out of whack at this point.
+I don't see any changes to xfs_buf_iorequest() at all in this one.  That
+aside, it looks fine. It's not how I was thinking about it, but a clear
+separation of submission error regardless.
 
 Brian
 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> ---
+>  fs/xfs/xfs_buf.c | 18 ++++++++++++++++--
+>  fs/xfs/xfs_buf.h |  1 +
+>  2 files changed, 17 insertions(+), 2 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+> index 1b7f0bc..58ae34c 100644
+> --- a/fs/xfs/xfs_buf.c
+> +++ b/fs/xfs/xfs_buf.c
+> @@ -1008,6 +1008,13 @@ xfs_buf_ioend(
 >  
->  	xfs_buf_rele(bp);
->  }
+>  	bp->b_flags &= ~(XBF_READ | XBF_WRITE | XBF_READ_AHEAD);
+>  
+> +	/*
+> +	 * Pull in IO completion errors now. We are guaranteed to be running
+> +	 * single threaded, so we don't need the lock to read b_io_error.
+> +	 */
+> +	if (!bp->b_error && bp->b_io_error)
+> +		xfs_buf_ioerror(bp, bp->b_io_error);
+> +
+>  	if (!bp->b_error) {
+>  		bp->b_flags |= XBF_DONE;
+>  
+> @@ -1186,8 +1193,12 @@ xfs_buf_bio_end_io(
+>  	 * don't overwrite existing errors - otherwise we can lose errors on
+>  	 * buffers that require multiple bios to complete.
+>  	 */
+> -	if (!bp->b_error)
+> -		xfs_buf_ioerror(bp, error);
+> +	if (error) {
+> +		spin_lock(&bp->b_lock);
+> +		if (!bp->b_io_error)
+> +			bp->b_io_error = error;
+> +		spin_unlock(&bp->b_lock);
+> +	}
+>  
+>  	if (!bp->b_error && xfs_buf_is_vmapped(bp) && (bp->b_flags & XBF_READ))
+>  		invalidate_kernel_vmap_range(bp->b_addr, xfs_buf_vmap_len(bp));
+> @@ -1373,6 +1384,9 @@ xfs_buf_iorequest(
+>  	if (bp->b_flags & XBF_WRITE)
+>  		xfs_buf_wait_unpin(bp);
+>  
+> +	/* clear the internal error state to avoid spurious errors */
+> +	bp->b_io_error = 0;
+> +
+>  	/*
+>  	 * Take references to the buffer. For XBF_ASYNC buffers, holding a
+>  	 * reference for as long as submission takes is all that is necessary
 > diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
-> index c753183..4585c15 100644
+> index 4585c15..44db8cd 100644
 > --- a/fs/xfs/xfs_buf.h
 > +++ b/fs/xfs/xfs_buf.h
-> @@ -286,7 +286,7 @@ extern void xfs_buf_unlock(xfs_buf_t *);
->  
->  /* Buffer Read and Write Routines */
->  extern int xfs_bwrite(struct xfs_buf *bp);
-> -extern void xfs_buf_ioend(xfs_buf_t *,	int);
-> +extern void xfs_buf_ioend(struct xfs_buf *bp);
->  extern void xfs_buf_ioerror(xfs_buf_t *, int);
->  extern void xfs_buf_ioerror_alert(struct xfs_buf *, const char *func);
->  extern void xfs_buf_iorequest(xfs_buf_t *);
-> diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
-> index 76007de..4fd41b5 100644
-> --- a/fs/xfs/xfs_buf_item.c
-> +++ b/fs/xfs/xfs_buf_item.c
-> @@ -491,7 +491,7 @@ xfs_buf_item_unpin(
->  		xfs_buf_ioerror(bp, -EIO);
->  		XFS_BUF_UNDONE(bp);
->  		xfs_buf_stale(bp);
-> -		xfs_buf_ioend(bp, 0);
-> +		xfs_buf_ioend(bp);
->  	}
->  }
->  
-> @@ -1115,7 +1115,7 @@ do_callbacks:
->  	xfs_buf_do_callbacks(bp);
->  	bp->b_fspriv = NULL;
->  	bp->b_iodone = NULL;
-> -	xfs_buf_ioend(bp, 0);
-> +	xfs_buf_ioend(bp);
->  }
->  
->  /*
-> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-> index fea3c92..00d210b 100644
-> --- a/fs/xfs/xfs_inode.c
-> +++ b/fs/xfs/xfs_inode.c
-> @@ -3056,7 +3056,7 @@ cluster_corrupt_out:
->  			XFS_BUF_UNDONE(bp);
->  			xfs_buf_stale(bp);
->  			xfs_buf_ioerror(bp, -EIO);
-> -			xfs_buf_ioend(bp, 0);
-> +			xfs_buf_ioend(bp);
->  		} else {
->  			xfs_buf_stale(bp);
->  			xfs_buf_relse(bp);
-> diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-> index 8eaa8f5..e4665db 100644
-> --- a/fs/xfs/xfs_log.c
-> +++ b/fs/xfs/xfs_log.c
-> @@ -1689,7 +1689,7 @@ xlog_bdstrat(
->  	if (iclog->ic_state & XLOG_STATE_IOERROR) {
->  		xfs_buf_ioerror(bp, -EIO);
->  		xfs_buf_stale(bp);
-> -		xfs_buf_ioend(bp, 0);
-> +		xfs_buf_ioend(bp);
->  		/*
->  		 * It would seem logical to return EIO here, but we rely on
->  		 * the log state machine to propagate I/O errors instead of
-> diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-> index 1fd5787..4ba19bf 100644
-> --- a/fs/xfs/xfs_log_recover.c
-> +++ b/fs/xfs/xfs_log_recover.c
-> @@ -383,7 +383,7 @@ xlog_recover_iodone(
->  					SHUTDOWN_META_IO_ERROR);
->  	}
->  	bp->b_iodone = NULL;
-> -	xfs_buf_ioend(bp, 0);
-> +	xfs_buf_ioend(bp);
->  }
->  
->  /*
+> @@ -158,6 +158,7 @@ typedef struct xfs_buf {
+>  	struct list_head	b_lru;		/* lru list */
+>  	spinlock_t		b_lock;		/* internal state lock */
+>  	unsigned int		b_state;	/* internal state flags */
+> +	int			b_io_error;	/* internal IO error state */
+>  	wait_queue_head_t	b_waiters;	/* unpin waiters */
+>  	struct list_head	b_list;
+>  	struct xfs_perag	*b_pag;		/* contains rbtree root */
 > -- 
 > 2.0.0
 > 
