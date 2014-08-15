@@ -1,23 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 8E79E7F3F
-	for <xfs@oss.sgi.com>; Fri, 15 Aug 2014 08:18:42 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 7CFE130404E
-	for <xfs@oss.sgi.com>; Fri, 15 Aug 2014 06:18:42 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 84F047F3F
+	for <xfs@oss.sgi.com>; Fri, 15 Aug 2014 09:30:33 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 73C1A8F8089
+	for <xfs@oss.sgi.com>; Fri, 15 Aug 2014 07:30:30 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id Q8QZNhcRaDF7CaEQ (version=TLSv1
+	cuda.sgi.com with ESMTP id B7RbTeRvclfuH9bU (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 15 Aug 2014 06:18:41 -0700 (PDT)
-Date: Fri, 15 Aug 2014 09:18:37 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 3/9] xfs: rework xfs_buf_bio_endio error handling
-Message-ID: <20140815131836.GC4096@laptop.bfoster>
-References: <1408084747-4540-1-git-send-email-david@fromorbit.com>
-	<1408084747-4540-4-git-send-email-david@fromorbit.com>
+	Fri, 15 Aug 2014 07:30:29 -0700 (PDT)
+Date: Fri, 15 Aug 2014 16:30:21 +0200 (CEST)
+From: =?ISO-8859-15?Q?Luk=E1=A8_Czerner?= <lczerner@redhat.com>
+Subject: 2014 Linux Plumbers Call for File and Storage Systems Microconference
+	Proposals
+Message-ID: <alpine.LFD.2.00.1408151618160.2220@localhost.localdomain>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1408084747-4540-4-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,106 +27,36 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, xfs@oss.sgi.com, linux-btrfs@vger.kernel.org, util-linux@vger.kernel.org
+Cc: Ric Wheeler <rwheeler@redhat.com>, Hannes Reinecke <hare@suse.de>
 
-On Fri, Aug 15, 2014 at 04:39:01PM +1000, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
-> 
-> Currently the report of a bio error from completion
-> immediately marks the buffer with an error. The issue is that this
-> is racy w.r.t. synchronous IO - the submitter can see b_error being
-> set before the IO is complete, and hence we cannot differentiate
-> between submission failures and completion failures.
-> 
-> Add an internal b_io_error field protected by the b_lock to catch IO
-> completion errors, and only propagate that to the buffer during
-> final IO completion handling. Hence we can tell in xfs_buf_iorequest
-> if we've had a submission failure bey checking bp->b_error before
-> dropping our b_io_remaining reference - that reference will prevent
-> b_io_error values from being propagated to b_error in the event that
-> completion races with submission.
-> 
-> In doing so, allow xfs_buf_iorequest to return an error. That way,
-> the caller can check for submission errors safely if required, and
-> easily distinguish them from completion errors that come from
-> xfs_buf_iowait().
-> 
+Submission for Microconferences discussion topics and BOFs are now open [1]
+and as a File and Storage Systems [2] microconference leads we'd like to
+invite you to submit your proposals.
 
-I don't see any changes to xfs_buf_iorequest() at all in this one.  That
-aside, it looks fine. It's not how I was thinking about it, but a clear
-separation of submission error regardless.
+You can find the instructions on how to propose a discussion topic here:
 
-Brian
+http://www.linuxplumbersconf.org/2014/how-to-submit-microconference-discussions-topics/
 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> ---
->  fs/xfs/xfs_buf.c | 18 ++++++++++++++++--
->  fs/xfs/xfs_buf.h |  1 +
->  2 files changed, 17 insertions(+), 2 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-> index 1b7f0bc..58ae34c 100644
-> --- a/fs/xfs/xfs_buf.c
-> +++ b/fs/xfs/xfs_buf.c
-> @@ -1008,6 +1008,13 @@ xfs_buf_ioend(
->  
->  	bp->b_flags &= ~(XBF_READ | XBF_WRITE | XBF_READ_AHEAD);
->  
-> +	/*
-> +	 * Pull in IO completion errors now. We are guaranteed to be running
-> +	 * single threaded, so we don't need the lock to read b_io_error.
-> +	 */
-> +	if (!bp->b_error && bp->b_io_error)
-> +		xfs_buf_ioerror(bp, bp->b_io_error);
-> +
->  	if (!bp->b_error) {
->  		bp->b_flags |= XBF_DONE;
->  
-> @@ -1186,8 +1193,12 @@ xfs_buf_bio_end_io(
->  	 * don't overwrite existing errors - otherwise we can lose errors on
->  	 * buffers that require multiple bios to complete.
->  	 */
-> -	if (!bp->b_error)
-> -		xfs_buf_ioerror(bp, error);
-> +	if (error) {
-> +		spin_lock(&bp->b_lock);
-> +		if (!bp->b_io_error)
-> +			bp->b_io_error = error;
-> +		spin_unlock(&bp->b_lock);
-> +	}
->  
->  	if (!bp->b_error && xfs_buf_is_vmapped(bp) && (bp->b_flags & XBF_READ))
->  		invalidate_kernel_vmap_range(bp->b_addr, xfs_buf_vmap_len(bp));
-> @@ -1373,6 +1384,9 @@ xfs_buf_iorequest(
->  	if (bp->b_flags & XBF_WRITE)
->  		xfs_buf_wait_unpin(bp);
->  
-> +	/* clear the internal error state to avoid spurious errors */
-> +	bp->b_io_error = 0;
-> +
->  	/*
->  	 * Take references to the buffer. For XBF_ASYNC buffers, holding a
->  	 * reference for as long as submission takes is all that is necessary
-> diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
-> index 4585c15..44db8cd 100644
-> --- a/fs/xfs/xfs_buf.h
-> +++ b/fs/xfs/xfs_buf.h
-> @@ -158,6 +158,7 @@ typedef struct xfs_buf {
->  	struct list_head	b_lru;		/* lru list */
->  	spinlock_t		b_lock;		/* internal state lock */
->  	unsigned int		b_state;	/* internal state flags */
-> +	int			b_io_error;	/* internal IO error state */
->  	wait_queue_head_t	b_waiters;	/* unpin waiters */
->  	struct list_head	b_list;
->  	struct xfs_perag	*b_pag;		/* contains rbtree root */
-> -- 
-> 2.0.0
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+The Linux Plumbers Conference has officially sold out all of the places, so
+we encourage submissions for our file and storage microconference from people
+who have already registered.  We will work to get exceptionally compelling
+session leaders registered, but our ability is limited, so please submit your
+topics early.
+
+Deadline for submissions is Friday, August 30th at midnight and we will
+announce the topics on Monday, September 1st.
+
+If you have any questions, please let us know.
+
+Thanks!
+-Lukas
+
+-- 
+[1] http://www.linuxplumbersconf.org/2014/submissions-for-microconferences-discussion-topics-and-bofs-are-now-open/
+[2] http://www.linuxplumbersconf.org/2014/ocw/events/LPC2014/tracks/303
+[3] http://www.linuxplumbersconf.org/2014/how-to-submit-microconference-discussions-topics/
+[4] http://wiki.linuxplumbersconf.org/2014:file_and_storage_systems
 
 _______________________________________________
 xfs mailing list
