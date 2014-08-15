@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 82D077F3F
-	for <xfs@oss.sgi.com>; Fri, 15 Aug 2014 09:36:04 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 36CD0304059
-	for <xfs@oss.sgi.com>; Fri, 15 Aug 2014 07:36:04 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id 3D8007F3F
+	for <xfs@oss.sgi.com>; Fri, 15 Aug 2014 11:13:32 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 19CF230404E
+	for <xfs@oss.sgi.com>; Fri, 15 Aug 2014 09:13:29 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id 3xQVt8dB1H3iOTKG (version=TLSv1
+	cuda.sgi.com with ESMTP id t0sHg7Vz2nQwiy0f (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 15 Aug 2014 07:36:02 -0700 (PDT)
-Date: Fri, 15 Aug 2014 10:35:58 -0400
+	Fri, 15 Aug 2014 09:13:27 -0700 (PDT)
+Date: Fri, 15 Aug 2014 12:13:20 -0400
 From: Brian Foster <bfoster@redhat.com>
 Subject: Re: [PATCH 8/9] xfs: introduce xfs_buf_submit[_wait]
-Message-ID: <20140815143558.GE4096@laptop.bfoster>
+Message-ID: <20140815161319.GF4096@laptop.bfoster>
 References: <1408084747-4540-1-git-send-email-david@fromorbit.com>
 	<1408084747-4540-9-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
@@ -83,20 +83,6 @@ On Fri, Aug 15, 2014 at 04:39:06PM +1000, Dave Chinner wrote:
 > 
 > Signed-off-by: Dave Chinner <dchinner@redhat.com>
 > ---
-
-On a quick look at submit_wait this looks pretty good. It actually
-implements the general model I've been looking for for sync I/O. E.g.,
-send the I/O, wait on synchronization, then check for errors. In other
-words, a pure synchronous mechanism. The refactoring and new helpers and
-whatnot are additional bonus and abstract it nicely.
-
-I still have to take a closer look to review the actual code, but since
-we go and remove the additional sync I/O reference counting business,
-why do we even add that stuff early on? Can't we get from where the
-current code is to here in a more direct manner?
-
-Brian
-
 >  fs/xfs/xfs_bmap_util.c   |  14 +---
 >  fs/xfs/xfs_buf.c         | 186 ++++++++++++++++++++++++++---------------------
 >  fs/xfs/xfs_buf.h         |   4 +-
@@ -250,6 +236,11 @@ Brian
 > @@ -1311,25 +1307,10 @@ xfs_buf_iorequest(
 >  	bp->b_io_error = 0;
 >  
+
+I know this is from the previous patch, but I wonder if it's cleaner to
+reset b_io_error when the error is transferred to b_error. That seems
+slightly more future proof at least.
+
 >  	/*
 > -	 * Take references to the buffer. For XBF_ASYNC buffers, holding a
 > -	 * reference for as long as submission takes is all that is necessary
@@ -268,6 +259,16 @@ Brian
 > +	 * Take an extra reference so that we don't have to guess when it's no
 > +	 * longer safe to reference the buffer that was passed to us.
 >  	 */
+
+Assuming my understanding is correct:
+
+/*
+ * The caller's reference is released by buffer I/O completion.  Technically
+ * this should not occur until we release the last b_io_remaining reference.
+ * Take a direct reference across the I/O submission anyways to be sure it's
+ * safe to access the buffer until we release it.
+ */
+
 >  	xfs_buf_hold(bp);
 > -	if (!(bp->b_flags & XBF_ASYNC))
 > -		xfs_buf_hold(bp);
@@ -345,6 +346,11 @@ Brian
 > +	 */
 > +	xfs_buf_hold(bp);
 > +
+
+Harmless, but why is this necessary? The caller should have the
+reference, the I/O completion won't release it and we wait on b_iowait
+before we return. Isn't the caller's reference sufficient?
+
 > +	/*
 > +	 * Set the count to 1 initially, this will stop an I/O completion
 > +	 * callout which happens before we have started all the I/O from calling
@@ -425,6 +431,21 @@ Brian
 > +		/* locking the buffer will wait for async IO completion. */
 > +		xfs_buf_lock(bp);
 > +		error2 = bp->b_error;
+
+Interesting delwri cleanup overall. The lock here works for
+synchronization (blocking), but it doesn't look safe for error
+processing. Once the buffer lock is dropped, who says b_error is from
+our write (and not a subsequent, for example) and thus this caller's
+responsibility to handle the error? I suspect this is a reason the lock
+is typically held across a sync I/O, so the error is valid after the
+I/O.
+
+Also, it looks like blocking on async I/O as such opens up the
+possibility of blocking indefinitely on failing writes if the right
+combination of delwri and b_iodone handler is used (see
+xfs_buf_iodone_callbacks()). I'm not sure if that's a real problem
+today, though.
+
 >  		xfs_buf_relse(bp);
 >  		if (!error)
 >  			error = error2;
@@ -513,6 +534,11 @@ Brian
 > -		xfs_buf_ioerror_alert(bp, __func__);
 > -		ASSERT(0);
 > +		if (XFS_FORCED_SHUTDOWN(log->l_mp)) {
+
+Should this be !XFS_FORCED_SHUTDOWN()?
+
+Brian
+
 > +			xfs_buf_ioerror_alert(bp, __func__);
 > +			ASSERT(0);
 > +		}
