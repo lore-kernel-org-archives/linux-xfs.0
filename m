@@ -1,25 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 9DA247F3F
-	for <xfs@oss.sgi.com>; Fri, 15 Aug 2014 01:39:17 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 6FE13304048
-	for <xfs@oss.sgi.com>; Thu, 14 Aug 2014 23:39:14 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 26A237F59
+	for <xfs@oss.sgi.com>; Fri, 15 Aug 2014 01:39:19 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 0615B8F8052
+	for <xfs@oss.sgi.com>; Thu, 14 Aug 2014 23:39:15 -0700 (PDT)
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	Ff6RqmwKtYRsyE99 for <xfs@oss.sgi.com>;
-	Thu, 14 Aug 2014 23:39:12 -0700 (PDT)
+	nJUazeS1axm4KoZR for <xfs@oss.sgi.com>;
+	Thu, 14 Aug 2014 23:39:14 -0700 (PDT)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.80)
-	(envelope-from <dave@fromorbit.com>) id 1XIBAL-0001ZO-9J
+	(envelope-from <dave@fromorbit.com>) id 1XIBAL-0001ZP-9U
 	for xfs@oss.sgi.com; Fri, 15 Aug 2014 16:39:09 +1000
 Received: from dave by disappointment with local (Exim 4.82_1-5b7a7c0-XX)
-	(envelope-from <dave@disappointment.disaster>) id 1XIBAL-0001UB-7U
+	(envelope-from <dave@disappointment.disaster>) id 1XIBAL-0001UE-8L
 	for xfs@oss.sgi.com; Fri, 15 Aug 2014 16:39:09 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [RFC PATCH 0/9] xfs: clean up xfs_buf io interfaces
-Date: Fri, 15 Aug 2014 16:38:58 +1000
-Message-Id: <1408084747-4540-1-git-send-email-david@fromorbit.com>
+Subject: [PATCH 1/9] xfs: synchronous buffer IO needs a reference
+Date: Fri, 15 Aug 2014 16:38:59 +1000
+Message-Id: <1408084747-4540-2-git-send-email-david@fromorbit.com>
+In-Reply-To: <1408084747-4540-1-git-send-email-david@fromorbit.com>
+References: <1408084747-4540-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,69 +37,112 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Hi folks,
+From: Dave Chinner <dchinner@redhat.com>
 
-This patch set has come from the conversion Brian and I have been
-having over how to fix a use-after-free issue related to IO
-completions racing with synchronous IO submission. It seemed to me
-we were having trouble grasping all the different things that were
-wrong and putting them in a line, so I figured the easiest way to do
-with was to write a patchset that fixed the original bug, everything
-else we'd noticed, and changed the IO API such that we wouldn't have
-problems in the future.
+When synchronous IO runs IO completion work, it does so without an
+IO reference or a hold reference on the buffer. The IO "hold
+reference" is owned by the submitter, and released when the
+submission is complete. The IO reference is released when both the
+submitter and the bio end_io processing is run, and so if the io
+completion work is run from IO completion context, it is run without
+an IO reference.
 
-So, this patch contains:
+Hence we can get the situation where the submitter can submit the
+IO, see an error on the buffer and unlock and free the buffer while
+there is still IO in progress. This leads to use-after-free and
+memory corruption.
 
-	a) initial fix for the use after free issue (patch 1)
-	b) clear separation of IO submission errors at the XFS level
-	   from IO errors reported through BIO completion callbacks
-	   (patches 2,3)
-	c) removal of some historic cruft around IO submission
-	   (patch 4)
-	d) rework of unnecessarily complex historic error handling
-	   paths (patches 5,6,7)
-	e) a new API for clear and concise asynchronous and
-	   synchronous IO.  (patch 8)
+Fix this by taking a "sync IO hold" reference that is owned by the
+IO and not released until after the buffer completion calls are run
+to wake up synchronous waiters. This means that the buffer will not
+be freed in any circumstance until all IO processing is completed.
 
-The last patch fixes a bug I found writing patch 8, and can probably
-be moved to first in the series...
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/xfs_buf.c | 46 ++++++++++++++++++++++++++++++++++++++--------
+ 1 file changed, 38 insertions(+), 8 deletions(-)
 
-I was just going to send this compile tested for comments, but I
-threw it at a couple of VMs and it's half way through xfstests now
-without any failures. That means I haven't broken anything badly,
-though the error hendling changes will be interesting to test.
-
-The error handling changes have something in common - a buffer that
-took an IO error was mostly marked stale, but not always. Sometimes
-they were marked as "not done" indicating that IO needed to be done
-on them before the contents were valid. Some got marked stale and
-done, and so on. The thing is, when we mark a buffer stale, it is
-essentially the same thing as marking it !XBF_DONE. So all the error
-handling paths now stale the buffer and clear XBF_DONE. Nice,
-consistent error handling. This enabled some significant cleanups -
-xfs_trans_buf_read_map() finally got the love it's been needing for
-long time.
-
-It also defines a specific, safe way for waiting on XBF_ASYNC buffer
-IO, and makes use of that in the buffer delayed write code. Hence
-the patchset also solves the problem of how do async dispatch, some
-work, then wait for IO completion as separate steps as opposed to
-issuing synchronous IO that is waited on immediately.
-
-Also, the rework of the IO submission interfaces removes the fixes
-added in the first patch to solve the use-after-free issue - we no
-longer need an extra reference to protect parts of the IO completion
-path because the reference we take during submission is held until
-after the IO completion wait has occurred.
-
-Anyway, I figured patches would speak louder than any description,
-and most especially a diffstat that looks like this:
-
-	9 files changed, 286 insertions(+), 360 deletions(-)
-
-Comments welcome.
-
--Dave.
+diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+index cd7b8ca..5d86bbd 100644
+--- a/fs/xfs/xfs_buf.c
++++ b/fs/xfs/xfs_buf.c
+@@ -1019,6 +1019,7 @@ xfs_buf_iodone_work(
+ 	else {
+ 		ASSERT(read && bp->b_ops);
+ 		complete(&bp->b_iowait);
++		xfs_buf_rele(bp);
+ 	}
+ }
+ 
+@@ -1044,6 +1045,7 @@ xfs_buf_ioend(
+ 	} else {
+ 		bp->b_flags &= ~(XBF_READ | XBF_WRITE | XBF_READ_AHEAD);
+ 		complete(&bp->b_iowait);
++		xfs_buf_rele(bp);
+ 	}
+ }
+ 
+@@ -1383,22 +1385,50 @@ xfs_buf_iorequest(
+ 
+ 	if (bp->b_flags & XBF_WRITE)
+ 		xfs_buf_wait_unpin(bp);
++
++	/*
++	 * Take references to the buffer. For XBF_ASYNC buffers, holding a
++	 * reference for as long as submission takes is all that is necessary
++	 * here. The IO inherits the lock and hold count from the submitter,
++	 * and these are release during IO completion processing. Taking a hold
++	 * over submission ensures that the buffer is not freed until we have
++	 * completed all processing, regardless of when IO errors occur or are
++	 * reported.
++	 *
++	 * However, for synchronous IO, the IO does not inherit the submitters
++	 * reference count, nor the buffer lock. Hence we need to take an extra
++	 * reference to the buffer for the for the IO context so that we can
++	 * guarantee the buffer is not freed until all IO completion processing
++	 * is done. Otherwise the caller can drop their reference while the IO
++	 * is still in progress and hence trigger a use-after-free situation.
++	 */
+ 	xfs_buf_hold(bp);
++	if (!(bp->b_flags & XBF_ASYNC))
++		xfs_buf_hold(bp);
++
+ 
+ 	/*
+-	 * Set the count to 1 initially, this will stop an I/O
+-	 * completion callout which happens before we have started
+-	 * all the I/O from calling xfs_buf_ioend too early.
++	 * Set the count to 1 initially, this will stop an I/O completion
++	 * callout which happens before we have started all the I/O from calling
++	 * xfs_buf_ioend too early.
+ 	 */
+ 	atomic_set(&bp->b_io_remaining, 1);
+ 	_xfs_buf_ioapply(bp);
++
+ 	/*
+-	 * If _xfs_buf_ioapply failed, we'll get back here with
+-	 * only the reference we took above.  _xfs_buf_ioend will
+-	 * drop it to zero, so we'd better not queue it for later,
+-	 * or we'll free it before it's done.
++	 * If _xfs_buf_ioapply failed or we are doing synchronous IO that
++	 * completes extremely quickly, we can get back here with only the IO
++	 * reference we took above.  _xfs_buf_ioend will drop it to zero, so
++	 * we'd better run completion processing synchronously so that the we
++	 * don't return to the caller with completion still pending. In the
++	 * error case, this allows the caller to check b_error safely without
++	 * waiting, and in the synchronous IO case it avoids unnecessary context
++	 * switches an latency for high-peformance devices.
+ 	 */
+-	_xfs_buf_ioend(bp, bp->b_error ? 0 : 1);
++	if (bp->b_error || !(bp->b_flags & XBF_ASYNC))
++		_xfs_buf_ioend(bp, 0);
++	else
++		_xfs_buf_ioend(bp, 1);
+ 
+ 	xfs_buf_rele(bp);
+ }
+-- 
+2.0.0
 
 _______________________________________________
 xfs mailing list
