@@ -1,43 +1,41 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 5381B7F3F
-	for <xfs@oss.sgi.com>; Mon, 18 Aug 2014 05:26:07 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id B72C57F3F
+	for <xfs@oss.sgi.com>; Mon, 18 Aug 2014 05:31:23 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 417058F8037
-	for <xfs@oss.sgi.com>; Mon, 18 Aug 2014 03:26:04 -0700 (PDT)
-Received: from mail-we0-f176.google.com (mail-we0-f176.google.com
-	[74.125.82.176]) by cuda.sgi.com with ESMTP id ED2WNJceL0q6S8o5
+	by relay1.corp.sgi.com (Postfix) with ESMTP id A22B08F8035
+	for <xfs@oss.sgi.com>; Mon, 18 Aug 2014 03:31:23 -0700 (PDT)
+Received: from mail-we0-f175.google.com (mail-we0-f175.google.com
+	[74.125.82.175]) by cuda.sgi.com with ESMTP id z8y1smWrnoAYkPmk
 	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 18 Aug 2014 03:26:02 -0700 (PDT)
-Received: by mail-we0-f176.google.com with SMTP id q58so4802747wes.21
-	for <xfs@oss.sgi.com>; Mon, 18 Aug 2014 03:26:01 -0700 (PDT)
+	<xfs@oss.sgi.com>; Mon, 18 Aug 2014 03:31:22 -0700 (PDT)
+Received: by mail-we0-f175.google.com with SMTP id t60so4789564wes.20
+	for <xfs@oss.sgi.com>; Mon, 18 Aug 2014 03:31:21 -0700 (PDT)
 Received: from Telcontar.valinor (177.Red-79-159-63.staticIP.rima-tde.net.
-	[79.159.63.177]) by mx.google.com with ESMTPSA id
-	di7sm41197518wjb.34.2014.08.18.03.25.59 for <xfs@oss.sgi.com>
+	[79.159.63.177])
+	by mx.google.com with ESMTPSA id a4sm36536700wie.21.2014.08.18.03.31.19
+	for <xfs@oss.sgi.com>
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-	Mon, 18 Aug 2014 03:26:00 -0700 (PDT)
+	Mon, 18 Aug 2014 03:31:20 -0700 (PDT)
 Received: from localhost (localhost [127.0.0.1])
-	by Telcontar.valinor (Postfix) with ESMTP id 2007160E5A
-	for <xfs@oss.sgi.com>; Mon, 18 Aug 2014 12:25:58 +0200 (CEST)
+	by Telcontar.valinor (Postfix) with ESMTP id 5844860E5A
+	for <xfs@oss.sgi.com>; Mon, 18 Aug 2014 12:31:18 +0200 (CEST)
 Received: from Telcontar.valinor ([127.0.0.1])
 	by localhost (Telcontar.valinor [127.0.0.1]) (amavisd-new, port 10024)
-	with LMTP id 8jiCUQhFfb_7 for <xfs@oss.sgi.com>;
-	Mon, 18 Aug 2014 12:25:58 +0200 (CEST)
+	with LMTP id PLIOvkKKjOsp for <xfs@oss.sgi.com>;
+	Mon, 18 Aug 2014 12:31:18 +0200 (CEST)
 Received: from localhost (localhost [127.0.0.1])
-	by Telcontar.valinor (Postfix) with ESMTP id F2189605B8
-	for <xfs@oss.sgi.com>; Mon, 18 Aug 2014 12:25:57 +0200 (CEST)
-Date: Mon, 18 Aug 2014 12:25:57 +0200 (CEST)
+	by Telcontar.valinor (Postfix) with ESMTP id 327E8605B8
+	for <xfs@oss.sgi.com>; Mon, 18 Aug 2014 12:31:18 +0200 (CEST)
+Date: Mon, 18 Aug 2014 12:31:18 +0200 (CEST)
 From: "Carlos E. R." <carlos.e.r@opensuse.org>
-Subject: RE: [RFD]: Help in setting up XFS
-In-Reply-To: <BLU181-W782ECB29BAB77090E0292A9CD40@phx.gbl>
-Message-ID: <alpine.LSU.2.11.1408181223400.5417@Telcontar.valinor>
-References: <BLU181-W3698AB216D54D0CCE5A9739CD40@phx.gbl>,
-	<20140818070312.GM20518@dastard>
-	<BLU181-W782ECB29BAB77090E0292A9CD40@phx.gbl>
+Subject: Re: Help setting up XFS
+In-Reply-To: <BLU181-W306A7E4DE2F035EA4530139CD70@phx.gbl>
+Message-ID: <alpine.LSU.2.11.1408181227030.5417@Telcontar.valinor>
+References: <BLU181-W306A7E4DE2F035EA4530139CD70@phx.gbl>
 MIME-Version: 1.0
 Content-Type: MULTIPART/MIXED;
-	BOUNDARY="-1463808511-172924305-1408357446=:5417"
-Content-ID: <alpine.LSU.2.11.1408181224240.5417@Telcontar.valinor>
+	BOUNDARY="-1463808511-487602297-1408357878=:5417"
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -53,29 +51,30 @@ To: XFS mailing list <xfs@oss.sgi.com>
   This message is in MIME format.  The first part should be readable text,
   while the remaining parts are likely unreadable without MIME-aware tools.
 
----1463808511-172924305-1408357446=:5417
+---1463808511-487602297-1408357878=:5417
 Content-Type: TEXT/PLAIN; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8BIT
-Content-ID: <alpine.LSU.2.11.1408181224241.5417@Telcontar.valinor>
 
 -----BEGIN PGP SIGNED MESSAGE-----
 Hash: SHA1
 
-Content-ID: <alpine.LSU.2.11.1408181224240.5417@Telcontar.valinor>
 
 
-On Monday, 2014-08-18 at 15:00 +0530, Prithvi Rathore wrote:
+On Sunday, 2014-08-17 at 07:36 +0530, Prithvi Rathore wrote:
 
-> About the part where you say mount it properly, I just wanted to check if this is correct.
-> 
-> 1)Create a mount point.
->     $ mkdir /mnt/dat1
+> Hi,
+>     I am a student currently pursuing my under-graduation and would love to use XFS. I believe it has a lot to offer and I Iook forwarding to
+> testing and using it on an external device like a pen-drive (USB) for starters.
+>     I was a bit confused on how to set up XFS. I am currently using Ubuntu 14.04 dual boot (via rEFInd) with Mac OS X on MacBook Air 2013. 
 
-Just plug in the stick and click on the icon to mount it. No different 
-than any other filesystem.
 
-If it doesn't work, just ask on the help forum or mail lists of your 
-distribution.
+I don't know about Ubuntu. In openSUSE I just open the graphical tool to 
+format any device and format it, just selecting in the drop list XFS or 
+any other type I want. On other distributions I would use gparted.
+
+The procedure is exactly the same for any filesystem you choose.
+
+I rather think that what you need is help on using Linux, not XFS.
 
 - -- 
 Cheers,
@@ -84,11 +83,11 @@ Cheers,
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.22 (GNU/Linux)
 
-iEYEARECAAYFAlPx1LUACgkQtTMYHG2NR9Xm5wCgiOtmi49VqkGLNsvs7UsJzLN5
-d4cAn04RTjfL3Di13AStVgR4+UJVvgV6
-=paC3
+iEYEARECAAYFAlPx1fYACgkQtTMYHG2NR9X0PQCeLq7Q5/uEOzxtiAhdY4QlZjb5
+cHAAn0w7eXWilM+IVH852cLmg076zEYv
+=cMGX
 -----END PGP SIGNATURE-----
----1463808511-172924305-1408357446=:5417
+---1463808511-487602297-1408357878=:5417
 Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
@@ -99,4 +98,4 @@ xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
 
----1463808511-172924305-1408357446=:5417--
+---1463808511-487602297-1408357878=:5417--
