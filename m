@@ -1,27 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id F34517F3F
-	for <xfs@oss.sgi.com>; Mon, 18 Aug 2014 14:02:11 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 7EA20AC002
-	for <xfs@oss.sgi.com>; Mon, 18 Aug 2014 12:02:11 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id mRsPlZaU4Ar8fucV (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 18 Aug 2014 12:02:07 -0700 (PDT)
-Received: from int-mx09.intmail.prod.int.phx2.redhat.com
-	(int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id s7IJ25YT016134
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256
-	verify=OK) for <xfs@oss.sgi.com>; Mon, 18 Aug 2014 15:02:05 -0400
-Received: from bfoster.bfoster ([10.18.41.237])
-	by int-mx09.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id s7IJ25rs008143
-	for <xfs@oss.sgi.com>; Mon, 18 Aug 2014 15:02:05 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH] xfs: mark all internal workqueues as freezable
-Date: Mon, 18 Aug 2014 15:02:03 -0400
-Message-Id: <1408388523-3684-1-git-send-email-bfoster@redhat.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 6FC2F7F3F
+	for <xfs@oss.sgi.com>; Mon, 18 Aug 2014 17:49:02 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 32B6D30407A
+	for <xfs@oss.sgi.com>; Mon, 18 Aug 2014 15:48:59 -0700 (PDT)
+Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
+	[150.101.137.143]) by cuda.sgi.com with ESMTP id
+	VQnzEsmKC79FtpHU for <xfs@oss.sgi.com>;
+	Mon, 18 Aug 2014 15:48:56 -0700 (PDT)
+Date: Tue, 19 Aug 2014 08:48:53 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: inode64 directory placement determinism
+Message-ID: <20140818224853.GD26465@dastard>
+References: <e1eeba7b0fb97c63e41f40ed9ac162d7@localhost>
+	<20140818070153.GL20518@dastard>
+	<bc34a576d2b3e8c431633574deaa37cc@localhost>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <bc34a576d2b3e8c431633574deaa37cc@localhost>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,134 +27,99 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Stan Hoeppner <stan@hardwarefreak.com>
+Cc: xfs@oss.sgi.com
 
-Workqueues must be explicitly set as freezable to ensure they are frozen
-in the assocated part of the hibernation/suspend sequence. Freezing of
-workqueues and kernel threads is important to ensure that modifications
-are not made on-disk after the hibernation image has been created.
-Otherwise, the in-memory state can become inconsistent with what is on
-disk and eventually lead to filesystem corruption. We have reports of
-free space btree corruptions that occur immediately after restore from
-hibernate that suggest the xfs-eofblocks workqueue could be causing
-such problems if it races with hibernation.
+On Mon, Aug 18, 2014 at 11:16:12AM -0500, Stan Hoeppner wrote:
+> On Mon, 18 Aug 2014 17:01:53 +1000, Dave Chinner <david@fromorbit.com>
+> wrote:
+> > On Sun, Aug 17, 2014 at 10:29:21PM -0500, Stan Hoeppner wrote:
+> >> Say I have a single 4TB disk in an md linear device.  The md device has
+> a
+> >> filesystem on it formatted with defaults.  It has 4 AGs, 0-3.  I have
+> >> created 4 directories.  Each should reside in a different AG, the first
+> >> in
+> >> AG0.  Now I expand the linear device with an identical 4TB disk and
+> >> execute
+> >> xfs_growfs.  I now have 4 more AGs, 4-7.  I create 4 more directories.
+> >> 
+> >> Will these 4 new dirs be created sequentially in AGs 4-7, or in the
+> first
+> >> 4 AGs?  Is this deterministic, or is there any chance involved?  On the
+> > 
+> > Deterministic, assuming single threaded *file-system-wide* directory
+> > creation. Completely unpredictable under concurrent directory
+> > creations.  See xfs_ialloc_ag_select/xfs_ialloc_next_ag.
+> > 
+> > Note that the rotor used to select the next AG is set to
+> > zero at mount.
+> > 
+> > i.e. single threaded behaviour at agcount = 4:
+> > 
+> > dir number	rotor value	  destination AG
+> >  1		  0			0
+> >  2		  1			1
+> >  3		  2			2
+> >  4		  3			3
+> >  5		  0			0
+> >  6		  1			1
+> > ....
+> > 
+> > So, if you do what you suggest, and grow *after* the first 4 dirs
+> > are created, the above is what you'll get because the rotor goes
+> > back to zero on the fourth directory create. Now, with changing from
+> > 4 to 8 AGs after the first 4:
+> > 
+> > dir number	rotor value	  new inode location (AG)
+> >  1		  0			0
+> >  2		  1			1
+> >  3		  2			2
+> >  4		  3			3
+> > <grow to 8 AGs>
+> >  5		  0			0
+> >  6		  1			1
+> >  7		  2			2
+> >  8		  3			3
+> >  9		  4			4
+> >  10		  5			5
+> >  11		  6			6
+> >  13		  7			7
+> >  14		  0			0
+> > 
+> >> real system these 4TB drives are actually 48TB LUNs.  I'm after
+> >> deterministic parallel bandwidth to subsequently added RAIDs after each
+> >> grow operation by simply writing to the proper directory.
+> > 
+> > Just create new directories and use the inode number to
+> > determine their location. If the directory is not in the correct AG,
+> > remove it and create a new one, until you have directories located
+> > in the AGs you want.
+> > 
+> > Cheers,
+> > 
+> > Dave.
+> 
+> 
+> Thanks for the info Dave.  Was hoping it would be more straightforward. 
+> Modifying the app for this is out of the question.  They've spent 3+ years
+> developing with EXT4 and decided to try XFS at the last minute.  Product is
+> to ship in October, so optimizations I can suggest are limited.
 
-Mark all of the internal XFS workqueues as freezable to ensure nothing
-changes on-disk once the freezer infrastructure freezes kernel threads
-and creates the hibernation image.
+Perhaps you could actually tell us what the requirement for
+layout/separation is, and how they are acheiving it with ext4. We
+really need a more "directed" allocation ability, but it's not clear
+exactly what requirements need to drive that.
 
-Signed-off-by: Brian Foster <bfoster@redhat.com>
-Reported-by: Carlos E. R. <carlos.e.r@opensuse.org>
----
+Cheers,
 
-Hi all,
-
-Unfortunately I still haven't been able to reproduce the specific
-corruption. The best I've been able to do is reproduce a hang/crash on
-hibernate if I coordinate hibernate with background eofblocks scans, but
-I couldn't get any output as to what was going on. I ran some similar
-test cycles with this change and didn't reproduce that hang, so this
-appears to be effective at least.
-
-I reproduce other such problems running hibernation while doing stress
-level I/O, so to be honest I'm not sure how trustworthy/reliable
-hibernate is in general. This appears like the right thing to do to
-reduce chances of corruptions in any event.
-
-Brian
-
- fs/xfs/xfs_buf.c       |  2 +-
- fs/xfs/xfs_mru_cache.c |  3 ++-
- fs/xfs/xfs_super.c     | 15 ++++++++-------
- 3 files changed, 11 insertions(+), 9 deletions(-)
-
-diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-index cd7b8ca..ec65050 100644
---- a/fs/xfs/xfs_buf.c
-+++ b/fs/xfs/xfs_buf.c
-@@ -1884,7 +1884,7 @@ xfs_buf_init(void)
- 		goto out;
- 
- 	xfslogd_workqueue = alloc_workqueue("xfslogd",
--					WQ_MEM_RECLAIM | WQ_HIGHPRI, 1);
-+				WQ_MEM_RECLAIM | WQ_HIGHPRI | WQ_FREEZABLE, 1);
- 	if (!xfslogd_workqueue)
- 		goto out_free_buf_zone;
- 
-diff --git a/fs/xfs/xfs_mru_cache.c b/fs/xfs/xfs_mru_cache.c
-index 1eb6f3d..30ecca3 100644
---- a/fs/xfs/xfs_mru_cache.c
-+++ b/fs/xfs/xfs_mru_cache.c
-@@ -304,7 +304,8 @@ _xfs_mru_cache_reap(
- int
- xfs_mru_cache_init(void)
- {
--	xfs_mru_reap_wq = alloc_workqueue("xfs_mru_cache", WQ_MEM_RECLAIM, 1);
-+	xfs_mru_reap_wq = alloc_workqueue("xfs_mru_cache",
-+				WQ_MEM_RECLAIM|WQ_FREEZABLE, 1);
- 	if (!xfs_mru_reap_wq)
- 		return -ENOMEM;
- 	return 0;
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index b194652..bc9ec44 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -838,32 +838,32 @@ xfs_init_mount_workqueues(
- 	struct xfs_mount	*mp)
- {
- 	mp->m_data_workqueue = alloc_workqueue("xfs-data/%s",
--			WQ_MEM_RECLAIM, 0, mp->m_fsname);
-+			WQ_MEM_RECLAIM|WQ_FREEZABLE, 0, mp->m_fsname);
- 	if (!mp->m_data_workqueue)
- 		goto out;
- 
- 	mp->m_unwritten_workqueue = alloc_workqueue("xfs-conv/%s",
--			WQ_MEM_RECLAIM, 0, mp->m_fsname);
-+			WQ_MEM_RECLAIM|WQ_FREEZABLE, 0, mp->m_fsname);
- 	if (!mp->m_unwritten_workqueue)
- 		goto out_destroy_data_iodone_queue;
- 
- 	mp->m_cil_workqueue = alloc_workqueue("xfs-cil/%s",
--			WQ_MEM_RECLAIM, 0, mp->m_fsname);
-+			WQ_MEM_RECLAIM|WQ_FREEZABLE, 0, mp->m_fsname);
- 	if (!mp->m_cil_workqueue)
- 		goto out_destroy_unwritten;
- 
- 	mp->m_reclaim_workqueue = alloc_workqueue("xfs-reclaim/%s",
--			0, 0, mp->m_fsname);
-+			WQ_FREEZABLE, 0, mp->m_fsname);
- 	if (!mp->m_reclaim_workqueue)
- 		goto out_destroy_cil;
- 
- 	mp->m_log_workqueue = alloc_workqueue("xfs-log/%s",
--			0, 0, mp->m_fsname);
-+			WQ_FREEZABLE, 0, mp->m_fsname);
- 	if (!mp->m_log_workqueue)
- 		goto out_destroy_reclaim;
- 
- 	mp->m_eofblocks_workqueue = alloc_workqueue("xfs-eofblocks/%s",
--			0, 0, mp->m_fsname);
-+			WQ_FREEZABLE, 0, mp->m_fsname);
- 	if (!mp->m_eofblocks_workqueue)
- 		goto out_destroy_log;
- 
-@@ -1715,7 +1715,8 @@ xfs_init_workqueues(void)
- 	 * AGs in all the filesystems mounted. Hence use the default large
- 	 * max_active value for this workqueue.
- 	 */
--	xfs_alloc_wq = alloc_workqueue("xfsalloc", WQ_MEM_RECLAIM, 0);
-+	xfs_alloc_wq = alloc_workqueue("xfsalloc",
-+			WQ_MEM_RECLAIM|WQ_FREEZABLE, 0);
- 	if (!xfs_alloc_wq)
- 		return -ENOMEM;
- 
+Dave.
 -- 
-1.8.3.1
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
