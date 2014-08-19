@@ -1,23 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id E0FCC7F50
-	for <xfs@oss.sgi.com>; Mon, 18 Aug 2014 19:02:09 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id B15FF8F8039
-	for <xfs@oss.sgi.com>; Mon, 18 Aug 2014 17:02:06 -0700 (PDT)
-Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
-	[65.41.216.221]) by cuda.sgi.com with ESMTP id i5jK0y7YcBBHwuyb
-	for <xfs@oss.sgi.com>; Mon, 18 Aug 2014 17:02:05 -0700 (PDT)
-Subject: Re: inode64 directory placement determinism
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id CB52E7F51
+	for <xfs@oss.sgi.com>; Mon, 18 Aug 2014 21:25:41 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id B9F8E304082
+	for <xfs@oss.sgi.com>; Mon, 18 Aug 2014 19:25:41 -0700 (PDT)
+Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
+	[150.101.137.145]) by cuda.sgi.com with ESMTP id
+	fPVevXPr4CxcoToL for <xfs@oss.sgi.com>;
+	Mon, 18 Aug 2014 19:25:36 -0700 (PDT)
+Date: Tue, 19 Aug 2014 12:25:33 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [RFD]: Help in setting up XFS
+Message-ID: <20140819022533.GE26465@dastard>
+References: <BLU181-W3698AB216D54D0CCE5A9739CD40@phx.gbl>
+	<20140818070312.GM20518@dastard>
+	<BLU181-W782ECB29BAB77090E0292A9CD40@phx.gbl>
+	<alpine.LSU.2.11.1408181223400.5417@Telcontar.valinor>
+	<20140818132026.GO20518@dastard>
+	<alpine.LSU.2.11.1408181624430.5417@Telcontar.valinor>
 MIME-Version: 1.0
-Date: Mon, 18 Aug 2014 19:02:04 -0500
-From: Stan Hoeppner <stan@hardwarefreak.com>
-In-Reply-To: <20140818224853.GD26465@dastard>
-References: <e1eeba7b0fb97c63e41f40ed9ac162d7@localhost>
-	<20140818070153.GL20518@dastard>
-	<bc34a576d2b3e8c431633574deaa37cc@localhost>
-	<20140818224853.GD26465@dastard>
-Message-ID: <ed7598d015f5a1d3576e6b03f3ef3116@localhost>
+Content-Disposition: inline
+In-Reply-To: <alpine.LSU.2.11.1408181624430.5417@Telcontar.valinor>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,124 +34,76 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: "Carlos E. R." <carlos.e.r@opensuse.org>
+Cc: XFS mailing list <xfs@oss.sgi.com>
 
-On Tue, 19 Aug 2014 08:48:53 +1000, Dave Chinner <david@fromorbit.com>
-wrote:
-> On Mon, Aug 18, 2014 at 11:16:12AM -0500, Stan Hoeppner wrote:
->> On Mon, 18 Aug 2014 17:01:53 +1000, Dave Chinner <david@fromorbit.com>
->> wrote:
->> > On Sun, Aug 17, 2014 at 10:29:21PM -0500, Stan Hoeppner wrote:
->> >> Say I have a single 4TB disk in an md linear device.  The md device
->> >> has
->> a
->> >> filesystem on it formatted with defaults.  It has 4 AGs, 0-3.  I
-have
->> >> created 4 directories.  Each should reside in a different AG, the
->> >> first
->> >> in
->> >> AG0.  Now I expand the linear device with an identical 4TB disk and
->> >> execute
->> >> xfs_growfs.  I now have 4 more AGs, 4-7.  I create 4 more
-directories.
->> >> 
->> >> Will these 4 new dirs be created sequentially in AGs 4-7, or in the
->> first
->> >> 4 AGs?  Is this deterministic, or is there any chance involved?  On
->> >> the
->> > 
->> > Deterministic, assuming single threaded *file-system-wide* directory
->> > creation. Completely unpredictable under concurrent directory
->> > creations.  See xfs_ialloc_ag_select/xfs_ialloc_next_ag.
->> > 
->> > Note that the rotor used to select the next AG is set to
->> > zero at mount.
->> > 
->> > i.e. single threaded behaviour at agcount = 4:
->> > 
->> > dir number	rotor value	  destination AG
->> >  1		  0			0
->> >  2		  1			1
->> >  3		  2			2
->> >  4		  3			3
->> >  5		  0			0
->> >  6		  1			1
->> > ....
->> > 
->> > So, if you do what you suggest, and grow *after* the first 4 dirs
->> > are created, the above is what you'll get because the rotor goes
->> > back to zero on the fourth directory create. Now, with changing from
->> > 4 to 8 AGs after the first 4:
->> > 
->> > dir number	rotor value	  new inode location (AG)
->> >  1		  0			0
->> >  2		  1			1
->> >  3		  2			2
->> >  4		  3			3
->> > <grow to 8 AGs>
->> >  5		  0			0
->> >  6		  1			1
->> >  7		  2			2
->> >  8		  3			3
->> >  9		  4			4
->> >  10		  5			5
->> >  11		  6			6
->> >  13		  7			7
->> >  14		  0			0
->> > 
->> >> real system these 4TB drives are actually 48TB LUNs.  I'm after
->> >> deterministic parallel bandwidth to subsequently added RAIDs after
->> >> each
->> >> grow operation by simply writing to the proper directory.
->> > 
->> > Just create new directories and use the inode number to
->> > determine their location. If the directory is not in the correct AG,
->> > remove it and create a new one, until you have directories located
->> > in the AGs you want.
->> > 
->> > Cheers,
->> > 
->> > Dave.
->> 
->> 
->> Thanks for the info Dave.  Was hoping it would be more straightforward.
-
->> Modifying the app for this is out of the question.  They've spent 3+
->> years
->> developing with EXT4 and decided to try XFS at the last minute. 
-Product
->> is
->> to ship in October, so optimizations I can suggest are limited.
+On Mon, Aug 18, 2014 at 04:47:36PM +0200, Carlos E. R. wrote:
+> On Monday, 2014-08-18 at 23:20 +1000, Dave Chinner wrote:
+> >On Mon, Aug 18, 2014 at 12:25:57PM +0200, Carlos E. R. wrote:
+> >>Just plug in the stick and click on the icon to mount it. No
+> >>different than any other filesystem.
+> >
+> >That doesn't work for machines with no desktop or ones that you
+> >access via ssh. Learn the command line first then you can always get
+> >the machine to do what you want regardless of how you need to access
+> >it. Indeed, typing commands is often faster than using the mouse,
+> >especially if you know how to use command history search
+> >effectively...
 > 
-> Perhaps you could actually tell us what the requirement for
-> layout/separation is, and how they are acheiving it with ext4. We
-> really need a more "directed" allocation ability, but it's not clear
-> exactly what requirements need to drive that.
-> 
-> Cheers,
-> 
-> Dave.
+> I use the CLI method myself, but I don't see the point on novices
+> using it when there are modern methods far easier :-)
 
-The test harness app writes to thousands of preallocated files in hundreds
-of directories.  The target is ~250MB/s at the application per array, more
-if achievable, writing a combination of fast and slow streams from up to
-~1000 threads, to different files, circularly.  The mix of stream rates and
-the files they write will depend on the end customers' needs.  Currently
-they have 1 FS per array with 3 top level dirs each w/3 subdirs, 2 of these
-with ~100 subdirs each, and hundreds files in each of those.  Simply doing
-a concat, growing and just running with it might work fine.  The concern is
-ending up with too many fast stream writers hitting AGs on a single array
-which won't be able to keep up.  Currently they simply duplicate the layout
-on each new filesystem they mount.  The application duplicates the same
-layout on each filesystem and does its own load balancing among the group
-of them.
+That's quite disrespectful and condescending towards new users who
+are trying to learn new skills - you were once a novice, too. To
+make my point unambiguously clear, I'll repeat what you just said as
+it came across to me:
 
-Ideally they'd obviously like to simply add files to existing directories
-after growing, but that won't achieve scalable bandwidth.
+	'I'm an expert and I know the CLI, but I think he is a dumb
+	n00b so I gave him a solution I think is appropriate for
+	dumb n00bs even though I know I'm not answering the question
+	he asked.'
 
+Does that sound like appropriate "guidance" to you?
+
+But I'll give you the benefit of the doubt - I've seen this often
+enough to know that frequently people are not even aware they are
+making unconcious judgements like this until they are pointed out.
+Especially as you've done is again in this email:
+
+> And each distribution has specifics. On ubuntu you probably need to
+> do "sudo mount ...", a plain mount should fail. So if the
+> generalized help an upstream mail list can provide, the best place
+> to ask for help is the specific help forum of that distribution, as
+> they will probably know best the easiest way to install and use the
+> tools they provide.
+
+You are implying that the XFS community doesn't have the knowledge
+or experience to support XFS users from different distros.  You are
+also implying that we don't care about our users enough to try to
+help them in such situations where the problem is a distro specific
+quirk. Years of experience has taught us that distro quirks really
+don't matter anywhere near as much as, say, the version of software
+being used.
+
+Also, I suspect that you don't realise that we have all the major
+distro XFS userspace package maintainers and the relevant distro
+kernel filesystem maintainers on the list and listening in. We
+actually have more distro specific storage infrastructure expertise
+(not to mention overall storage expertise) on this list than you'll
+find in most individual distro support forums.
+
+This is a highly technical community and we tend to have high
+standards w.r.t. to the quality of responses given to users.  If you
+want to provide help to XFS users - new or experienced - on this
+list, then please give relevant, respectful answers to questions
+without trying to demonstrate your expertise to everyone.
+
+Cheers,
+
+Dave.
 -- 
-Stan
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
