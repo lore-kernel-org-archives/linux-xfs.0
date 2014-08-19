@@ -1,37 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 92F6E7F3F
-	for <xfs@oss.sgi.com>; Tue, 19 Aug 2014 10:34:34 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 5FDE830407E
-	for <xfs@oss.sgi.com>; Tue, 19 Aug 2014 08:34:34 -0700 (PDT)
-Received: from orion.efm.de (orion.efm.de [195.190.148.230]) by cuda.sgi.com
-	with ESMTP id vkV4NfWXcTtVXOwG (version=TLSv1 cipher=AES256-SHA
-	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 19 Aug 2014 08:34:32 -0700 (PDT)
-Received: from localhost (localhost [127.0.0.1])
-	by orion.efm.de (Postfix) with ESMTP id 8B06F1A1003E
-	for <xfs@oss.sgi.com>; Tue, 19 Aug 2014 17:34:30 +0200 (CEST)
-Received: from orion.efm.de ([127.0.0.1])
-	by localhost (orion.efm.de [127.0.0.1]) (amavisd-new, port 10024)
-	with ESMTP id XmXNUmi9FRtQ for <xfs@oss.sgi.com>;
-	Tue, 19 Aug 2014 17:34:30 +0200 (CEST)
-Received: from localhost (localhost [127.0.0.1])
-	by orion.efm.de (Postfix) with ESMTP id 710111A1003F
-	for <xfs@oss.sgi.com>; Tue, 19 Aug 2014 17:34:30 +0200 (CEST)
-Received: from orion.efm.de ([127.0.0.1])
-	by localhost (orion.efm.de [127.0.0.1]) (amavisd-new, port 10026)
-	with ESMTP id OSSlpC6a1PgD for <xfs@oss.sgi.com>;
-	Tue, 19 Aug 2014 17:34:30 +0200 (CEST)
-Received: from orion.efm.de (orion.efm.de [195.190.148.230])
-	by orion.efm.de (Postfix) with ESMTP id 4FD951A1003E
-	for <xfs@oss.sgi.com>; Tue, 19 Aug 2014 17:34:30 +0200 (CEST)
-Date: Tue, 19 Aug 2014 17:34:30 +0200 (CEST)
-From: Thomas Klaube <thomas@klaube.net>
-Message-ID: <362338960.3862279.1408462470243.JavaMail.zimbra@klaube.net>
-In-Reply-To: <159192779.3859815.1408461799560.JavaMail.zimbra@klaube.net>
-Subject: xlog_write: reservation ran out. Need to up reservation
-MIME-Version: 1.0
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 450A87F3F
+	for <xfs@oss.sgi.com>; Tue, 19 Aug 2014 12:26:20 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 249E78F8035
+	for <xfs@oss.sgi.com>; Tue, 19 Aug 2014 10:26:17 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id 5GTDCLKncPqTqHFB (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 19 Aug 2014 10:26:16 -0700 (PDT)
+Received: from int-mx13.intmail.prod.int.phx2.redhat.com
+	(int-mx13.intmail.prod.int.phx2.redhat.com [10.5.11.26])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id s7JHQEiL028137
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256
+	verify=OK) for <xfs@oss.sgi.com>; Tue, 19 Aug 2014 13:26:14 -0400
+Received: from bfoster.bfoster ([10.18.41.237])
+	by int-mx13.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id s7JHQD0I004773
+	for <xfs@oss.sgi.com>; Tue, 19 Aug 2014 13:26:14 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: [PATCH RFC] xfs/051: test buffer use after free race on I/O failure
+	in XFS log recovery
+Date: Tue, 19 Aug 2014 13:26:12 -0400
+Message-Id: <1408469172-55478-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -40,56 +31,168 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Hi all,
+A buffer use after free race was discovered in the XFS log recovery
+codepath if I/O failures occur during recovery. The I/O submission path
+can proceed to abort the mount and release the only reference held on
+some buffers before I/O completion processing (e.g., async workqueue
+processing) might have completed. Badness ensues if the I/O completion
+path subsequently attempts to access said buffers.
 
-I am currently testing/benchmarking xfs on top of a bcache. When I run a heavy
-IO workload (fio with 64 threads, read/write) on the device for ~30-45min I get
+The test manufactures the race by forcing all writes to fail (via
+dm-flakey) after a fixed period of time. A delay is inserted into the
+mount codepath to synchronize write failures with log recovery.
 
-[ 9092.978268] XFS (bcache1): xlog_write: reservation summary:
-[ 9092.978268]   trans type  = (null) (42)
-[ 9092.978268]   unit res    = 18730384 bytes
-[ 9092.978268]   current res = -1640 bytes
-[ 9092.978268]   total reg   = 512 bytes (o/flow = 1163749592 bytes)
-[ 9092.978268]   ophdrs      = 655304 (ophdr space = 7863648 bytes)
-[ 9092.978268]   ophdr + reg = 1171613752 bytes
-[ 9092.978268]   num regions = 2
-[ 9092.978268] 
-[ 9092.978272] XFS (bcache1): region[0]: LR header - 512 bytes
-[ 9092.978273] XFS (bcache1): region[1]: commit - 0 bytes
-[ 9092.978274] XFS (bcache1): xlog_write: reservation ran out. Need to up reservation
-[ 9092.978303] XFS (bcache1): xfs_do_force_shutdown(0x2) called from line 2036 of file fs/xfs/xfs_log.c.  Return address = 0xffffffffa04433c8
-[ 9092.979189] XFS (bcache1): Log I/O Error Detected.  Shutting down filesystem
-[ 9092.979210] XFS (bcache1): Please umount the filesystem and rectify the problem(s)
-[ 9092.979238] XFS (bcache1): xfs_do_force_shutdown(0x2) called from line 1497 of file fs/xfs/xfs_log.c.  Return address = 0xffffffffa0443b57
-[ 9093.183869] XFS (bcache1): xfs_log_force: error 5 returned.
-[ 9093.489944] XFS (bcache1): xfs_log_force: error 5 returned.
+Credit for discovery of the race and definition of the reproducible test
+case goes to Alex Lyakas.
 
-Kernel is 3.16.1 but this also happens with Ubuntu 3.13.0.34. 
-With the bcache the fio puts ~30k IOps on the filesystem. 
+[NOTE: This still depends on kernel side instrumentation. Insert a 10s
+ delay immediately prior to log recovery to reproduce.]
 
-xfs_info:
-meta-data=/dev/bcache1           isize=256    agcount=8, agsize=268435455 blks
-         =                       sectsz=512   attr=2
-data     =                       bsize=4096   blocks=1949957886, imaxpct=5
-         =                       sunit=0      swidth=0 blks
-naming   =version 2              bsize=4096   ascii-ci=0
-log      =internal               bsize=4096   blocks=521728, version=2
-         =                       sectsz=512   sunit=0 blks, lazy-count=1
-realtime =none                   extsz=4096   blocks=0, rtextents=0
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+Reported-by: Alex Lyakas <alex@zadarastorage.com>
+---
 
-umount/mount recovers the fs and the fs seems ok.
+Hi guys,
 
-I can reproduce this behavior. Is there anything I could try to debug
-this?
+This is obviously incomplete as there is no mechanism to synchronize
+write failures with log recovery. I was hoping we could get around that,
+but apparently we unconditionally reset the inactive range of the log
+before we get into log recovery.
 
-Regards
-Thomas
+Anyways, I just wanted to throw this over the wall in case it's useful
+for testing in intermediate form. This reproduces the problem for me
+with the 10s delay on the kernel side. The mount fails, I see a series
+of BUG()s and the vm becomes generally unusable. I'll send a new version
+when I have some kind of synchronization mechanism worked out.
+
+Brian
+
+ tests/xfs/051     | 84 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/051.out |  2 ++
+ tests/xfs/group   |  1 +
+ 3 files changed, 87 insertions(+)
+ create mode 100755 tests/xfs/051
+ create mode 100644 tests/xfs/051.out
+
+diff --git a/tests/xfs/051 b/tests/xfs/051
+new file mode 100755
+index 0000000..25acb28
+--- /dev/null
++++ b/tests/xfs/051
+@@ -0,0 +1,84 @@
++#! /bin/bash
++# FS QA Test No. 051
++#
++# Simulate a buffer use after free race in XFS log recovery. The race triggers
++# on I/O failures during log recovery. Note that this test is dangerous as it
++# causes BUG() errors or a panic.
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2013 Oracle, Inc.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#-----------------------------------------------------------------------
++#
++
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 15
++
++_cleanup()
++{
++	cd /
++	rm -f $tmp.*
++	_scratch_unmount > /dev/null 2>&1
++}
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/dmflakey
++
++# Modify as appropriate.
++_supported_fs xfs
++_supported_os Linux
++
++_require_scratch
++_require_dm_flakey
++
++echo "Silence is golden."
++
++_scratch_mkfs_xfs >/dev/null 2>&1
++_scratch_mount
++
++# Start a workload and shutdown the fs. The subsequent mount will require log
++# recovery.
++$FSSTRESS_PROG -n 9999 -p 2 -w -d $SCRATCH_MNT > /dev/null 2>&1 &
++sleep 5
++src/godown -f $SCRATCH_MNT
++killall -q $FSSTRESS_PROG
++wait
++_scratch_unmount
++
++# TODO: Add a mechanism to take advantage of the 5s error delay. This currently
++# depends on a >5s delay inserted into the mount codepath prior to start of log
++# recovery.
++_init_flakey
++BLK_DEV_SIZE=`blockdev --getsz $SCRATCH_DEV`
++FLAKEY_TABLE="0 $BLK_DEV_SIZE flakey $SCRATCH_DEV 0 5 180"
++_load_flakey_table $FLAKEY_ALLOW_WRITES
++
++_mount_flakey > /dev/null 2>&1	# should fail!
++_cleanup_flakey
++
++# replay the log
++_scratch_mount
++_scratch_unmount
++
++# success, all done
++status=0
++exit
+diff --git a/tests/xfs/051.out b/tests/xfs/051.out
+new file mode 100644
+index 0000000..5180bc4
+--- /dev/null
++++ b/tests/xfs/051.out
+@@ -0,0 +1,2 @@
++QA output created by 051
++Silence is golden.
+diff --git a/tests/xfs/group b/tests/xfs/group
+index 4d35df5..9784dea 100644
+--- a/tests/xfs/group
++++ b/tests/xfs/group
+@@ -47,6 +47,7 @@
+ 048 other auto quick
+ 049 rw auto quick
+ 050 quota auto quick
++051 dangerous
+ 052 quota db auto quick
+ 054 quota auto quick
+ 055 dump ioctl remote tape
+-- 
+1.8.3.1
 
 _______________________________________________
 xfs mailing list
