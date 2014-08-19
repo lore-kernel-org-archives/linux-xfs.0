@@ -1,28 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 450A87F3F
-	for <xfs@oss.sgi.com>; Tue, 19 Aug 2014 12:26:20 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 249E78F8035
-	for <xfs@oss.sgi.com>; Tue, 19 Aug 2014 10:26:17 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id 5GTDCLKncPqTqHFB (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 19 Aug 2014 10:26:16 -0700 (PDT)
-Received: from int-mx13.intmail.prod.int.phx2.redhat.com
-	(int-mx13.intmail.prod.int.phx2.redhat.com [10.5.11.26])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id s7JHQEiL028137
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256
-	verify=OK) for <xfs@oss.sgi.com>; Tue, 19 Aug 2014 13:26:14 -0400
-Received: from bfoster.bfoster ([10.18.41.237])
-	by int-mx13.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id s7JHQD0I004773
-	for <xfs@oss.sgi.com>; Tue, 19 Aug 2014 13:26:14 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH RFC] xfs/051: test buffer use after free race on I/O failure
-	in XFS log recovery
-Date: Tue, 19 Aug 2014 13:26:12 -0400
-Message-Id: <1408469172-55478-1-git-send-email-bfoster@redhat.com>
+	by oss.sgi.com (Postfix) with ESMTP id D918D7F3F
+	for <xfs@oss.sgi.com>; Tue, 19 Aug 2014 12:44:29 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id B57F48F8035
+	for <xfs@oss.sgi.com>; Tue, 19 Aug 2014 10:44:29 -0700 (PDT)
+Received: from mail-ig0-f174.google.com (mail-ig0-f174.google.com
+	[209.85.213.174]) by cuda.sgi.com with ESMTP id
+	fPipObgRWSDTTszV (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 19 Aug 2014 10:44:27 -0700 (PDT)
+Received: by mail-ig0-f174.google.com with SMTP id c1so10426563igq.13
+	for <xfs@oss.sgi.com>; Tue, 19 Aug 2014 10:44:27 -0700 (PDT)
+MIME-Version: 1.0
+Date: Tue, 19 Aug 2014 23:14:27 +0530
+Message-ID: <CAJAKVEGTFxJ3Vb7KO5SP3ZYdO5kuKieyAaztku1MwoMG2SLyxA@mail.gmail.com>
+Subject: [RFD] xfs_fsr: Adding features for online defragmentation
+From: Somdeep Dey <somdeepdey10@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,170 +25,208 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============2875005186518367658=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-A buffer use after free race was discovered in the XFS log recovery
-codepath if I/O failures occur during recovery. The I/O submission path
-can proceed to abort the mount and release the only reference held on
-some buffers before I/O completion processing (e.g., async workqueue
-processing) might have completed. Badness ensues if the I/O completion
-path subsequently attempts to access said buffers.
+--===============2875005186518367658==
+Content-Type: multipart/alternative; boundary=089e01538e5af256ba0500ff097f
 
-The test manufactures the race by forcing all writes to fail (via
-dm-flakey) after a fixed period of time. A delay is inserted into the
-mount codepath to synchronize write failures with log recovery.
+--089e01538e5af256ba0500ff097f
+Content-Type: text/plain; charset=UTF-8
 
-Credit for discovery of the race and definition of the reproducible test
-case goes to Alex Lyakas.
+Hello,
 
-[NOTE: This still depends on kernel side instrumentation. Insert a 10s
- delay immediately prior to log recovery to reproduce.]
+We are a team of three final year under-graduates from Pune Institute
+<http://pict.edu/>
+of Computer Technology <http://pict.edu/>, India and were looking for a
+project in XFS
+with a development time of about 6 - 7 months. On contacting Dave,
+he suggested we work on the userspace utility, xfs_fsr.
 
-Signed-off-by: Brian Foster <bfoster@redhat.com>
-Reported-by: Alex Lyakas <alex@zadarastorage.com>
----
+xfs_fsr(online defragmenter):
+A few possible enhancements to xfs_fsr are as follows:
 
-Hi guys,
+1. explicit control of locality for groups of files.
+2. ability to defragment only portions of files rather
+than just whole files.
+3. defragmenting free space.
+4. enhanced/faster filesystem scanning.
 
-This is obviously incomplete as there is no mechanism to synchronize
-write failures with log recovery. I was hoping we could get around that,
-but apparently we unconditionally reset the inactive range of the log
-before we get into log recovery.
+Our understanding of the problem is as follows:
 
-Anyways, I just wanted to throw this over the wall in case it's useful
-for testing in intermediate form. This reproduces the problem for me
-with the 10s delay on the kernel side. The mount fails, I see a series
-of BUG()s and the vm becomes generally unusable. I'll send a new version
-when I have some kind of synchronization mechanism worked out.
+A) We identified the first thing needed, will be to find regions of
+fragmented free space. Dave directed us to the following prototype
+that he had written
+(http://oss.sgi.com/archives/xfs/2012-10/msg00363.html)
 
-Brian
+B)  The next task will be to go about finding the owners of the blocks
+that are causing the region of fragmented free space. It will require a
+reverse block map to do this efficiently. Dave has said that he is likely
+to implement it in the next couple of months, and we understand that
+we will to need to define the interfaces needed to query the rmap from
+userspace.
 
- tests/xfs/051     | 84 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
- tests/xfs/051.out |  2 ++
- tests/xfs/group   |  1 +
- 3 files changed, 87 insertions(+)
- create mode 100755 tests/xfs/051
- create mode 100644 tests/xfs/051.out
+C)  Once the fragmented free space, and the files that own the blocks
+that fragment the free space are found we will need to move them, and
+take care of the following:
+(a) move just the blocks we need to.
+(b) control exactly where we move them to.
 
-diff --git a/tests/xfs/051 b/tests/xfs/051
-new file mode 100755
-index 0000000..25acb28
---- /dev/null
-+++ b/tests/xfs/051
-@@ -0,0 +1,84 @@
-+#! /bin/bash
-+# FS QA Test No. 051
-+#
-+# Simulate a buffer use after free race in XFS log recovery. The race triggers
-+# on I/O failures during log recovery. Note that this test is dangerous as it
-+# causes BUG() errors or a panic.
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2013 Oracle, Inc.  All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#-----------------------------------------------------------------------
-+#
-+
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1	# failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+_cleanup()
-+{
-+	cd /
-+	rm -f $tmp.*
-+	_scratch_unmount > /dev/null 2>&1
-+}
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/dmflakey
-+
-+# Modify as appropriate.
-+_supported_fs xfs
-+_supported_os Linux
-+
-+_require_scratch
-+_require_dm_flakey
-+
-+echo "Silence is golden."
-+
-+_scratch_mkfs_xfs >/dev/null 2>&1
-+_scratch_mount
-+
-+# Start a workload and shutdown the fs. The subsequent mount will require log
-+# recovery.
-+$FSSTRESS_PROG -n 9999 -p 2 -w -d $SCRATCH_MNT > /dev/null 2>&1 &
-+sleep 5
-+src/godown -f $SCRATCH_MNT
-+killall -q $FSSTRESS_PROG
-+wait
-+_scratch_unmount
-+
-+# TODO: Add a mechanism to take advantage of the 5s error delay. This currently
-+# depends on a >5s delay inserted into the mount codepath prior to start of log
-+# recovery.
-+_init_flakey
-+BLK_DEV_SIZE=`blockdev --getsz $SCRATCH_DEV`
-+FLAKEY_TABLE="0 $BLK_DEV_SIZE flakey $SCRATCH_DEV 0 5 180"
-+_load_flakey_table $FLAKEY_ALLOW_WRITES
-+
-+_mount_flakey > /dev/null 2>&1	# should fail!
-+_cleanup_flakey
-+
-+# replay the log
-+_scratch_mount
-+_scratch_unmount
-+
-+# success, all done
-+status=0
-+exit
-diff --git a/tests/xfs/051.out b/tests/xfs/051.out
-new file mode 100644
-index 0000000..5180bc4
---- /dev/null
-+++ b/tests/xfs/051.out
-@@ -0,0 +1,2 @@
-+QA output created by 051
-+Silence is golden.
-diff --git a/tests/xfs/group b/tests/xfs/group
-index 4d35df5..9784dea 100644
---- a/tests/xfs/group
-+++ b/tests/xfs/group
-@@ -47,6 +47,7 @@
- 048 other auto quick
- 049 rw auto quick
- 050 quota auto quick
-+051 dangerous
- 052 quota db auto quick
- 054 quota auto quick
- 055 dump ioctl remote tape
--- 
-1.8.3.1
+We are reviewing the recent patches on the mailing list for IOC_MOV_DATA,
+which allows an arbitrary range of one file to be swapped with an arbitrary
+range of another file. The core mechanism required by #2.
+(http://oss.sgi.com/archives/xfs/2014-07/msg00109.html)
+
+Hence after due consideration we are planning to execute
+the 4 sub topics in the following order:
+1. defragmenting free space.
+2. enhanced/faster filesystem scanning.
+3. ability to defragment only portions of files rather
+than just whole files.
+4. explicit control of locality for groups of files.
+
+Comments regarding the same will be appreciated. We would also like to
+thank
+Dave for his inputs. We look forward to working with the community and hope
+to
+make a valuable contribution.
+
+Regards.
+
+--089e01538e5af256ba0500ff097f
+Content-Type: text/html; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+
+<div dir=3D"ltr"><div class=3D"gmail_extra" style=3D"font-family:arial,sans=
+-serif;font-size:13px">Hello,</div><div class=3D"gmail_extra" style=3D"font=
+-family:arial,sans-serif;font-size:13px"><br></div><div class=3D"gmail_extr=
+a" style=3D"font-family:arial,sans-serif;font-size:13px">
+We are a team of three final year under-graduates from=C2=A0<a href=3D"http=
+://pict.edu/" target=3D"_blank">Pune Institute</a></div><div class=3D"gmail=
+_extra" style=3D"font-family:arial,sans-serif;font-size:13px"><a href=3D"ht=
+tp://pict.edu/" target=3D"_blank">of Computer Technology</a>, India and wer=
+e looking for a project in XFS=C2=A0</div>
+<div class=3D"gmail_extra" style=3D"font-family:arial,sans-serif;font-size:=
+13px">with a development time of about 6 - 7 months. On contacting Dave,=C2=
+=A0</div><div class=3D"gmail_extra" style=3D"font-family:arial,sans-serif;f=
+ont-size:13px">
+he suggested we work on the userspace utility, xfs_fsr.</div><div class=3D"=
+gmail_extra" style=3D"font-family:arial,sans-serif;font-size:13px">=C2=A0</=
+div><div class=3D"gmail_extra" style=3D"font-family:arial,sans-serif;font-s=
+ize:13px">
+xfs_fsr(online defragmenter):</div><div class=3D"gmail_extra" style=3D"font=
+-family:arial,sans-serif;font-size:13px">A few possible enhancements to xfs=
+_fsr are as follows:</div><div class=3D"gmail_extra" style=3D"font-family:a=
+rial,sans-serif;font-size:13px">
+=C2=A0</div><div class=3D"gmail_extra" style=3D"font-family:arial,sans-seri=
+f;font-size:13px">1. explicit control of locality for groups of files.</div=
+><div class=3D"gmail_extra" style=3D"font-family:arial,sans-serif;font-size=
+:13px">2. ability to defragment only portions of files rather</div>
+<div class=3D"gmail_extra" style=3D"font-family:arial,sans-serif;font-size:=
+13px">than just whole files.</div><div class=3D"gmail_extra" style=3D"font-=
+family:arial,sans-serif;font-size:13px">3. defragmenting free space.</div><=
+div class=3D"gmail_extra" style=3D"font-family:arial,sans-serif;font-size:1=
+3px">
+4. enhanced/faster filesystem scanning.</div><div class=3D"gmail_extra" sty=
+le=3D"font-family:arial,sans-serif;font-size:13px">=C2=A0</div><div class=
+=3D"gmail_extra" style=3D"font-family:arial,sans-serif;font-size:13px">Our =
+understanding of the problem is as follows:</div>
+<div class=3D"gmail_extra" style=3D"font-family:arial,sans-serif;font-size:=
+13px">=C2=A0</div><div class=3D"gmail_extra" style=3D"font-family:arial,san=
+s-serif;font-size:13px">A) We identified the first thing needed, will be to=
+ find regions of=C2=A0</div>
+<div class=3D"gmail_extra" style=3D"font-family:arial,sans-serif;font-size:=
+13px">fragmented free space. Dave directed us to the following prototype=C2=
+=A0</div><div class=3D"gmail_extra" style=3D"font-family:arial,sans-serif;f=
+ont-size:13px">
+that he had written</div><div class=3D"gmail_extra" style=3D"font-family:ar=
+ial,sans-serif;font-size:13px">(<a href=3D"http://oss.sgi.com/archives/xfs/=
+2012-10/msg00363.html" target=3D"_blank">http://oss.sgi.com/archives/xfs/20=
+12-10/msg00363.html</a>)</div>
+<div class=3D"gmail_extra" style=3D"font-family:arial,sans-serif;font-size:=
+13px">=C2=A0</div><div class=3D"gmail_extra" style=3D"font-family:arial,san=
+s-serif;font-size:13px">B) =C2=A0The next task will be to go about finding =
+the owners of the blocks</div>
+<div class=3D"gmail_extra" style=3D"font-family:arial,sans-serif;font-size:=
+13px">that are causing the region of fragmented free space. It will require=
+ a</div><div class=3D"gmail_extra" style=3D"font-family:arial,sans-serif;fo=
+nt-size:13px">
+reverse block map to do this efficiently. Dave has said that he is likely</=
+div><div class=3D"gmail_extra" style=3D"font-family:arial,sans-serif;font-s=
+ize:13px">to implement it in the next couple of months, and we understand t=
+hat</div>
+<div class=3D"gmail_extra" style=3D"font-family:arial,sans-serif;font-size:=
+13px">we will to need to define the interfaces needed to query the rmap fro=
+m=C2=A0</div><div class=3D"gmail_extra" style=3D"font-family:arial,sans-ser=
+if;font-size:13px">
+userspace.</div><div class=3D"gmail_extra" style=3D"font-family:arial,sans-=
+serif;font-size:13px">=C2=A0</div><div class=3D"gmail_extra" style=3D"font-=
+family:arial,sans-serif;font-size:13px">C) =C2=A0Once the fragmented free s=
+pace, and the files that own the blocks=C2=A0</div>
+<div class=3D"gmail_extra" style=3D"font-family:arial,sans-serif;font-size:=
+13px">that fragment the free space are found we will need to move them, and=
+=C2=A0</div><div class=3D"gmail_extra" style=3D"font-family:arial,sans-seri=
+f;font-size:13px">
+take care of the following:</div><div class=3D"gmail_extra" style=3D"font-f=
+amily:arial,sans-serif;font-size:13px">(a) move just the blocks we need to.=
+</div><div class=3D"gmail_extra" style=3D"font-family:arial,sans-serif;font=
+-size:13px">
+(b) control exactly where we move them to.</div><div class=3D"gmail_extra" =
+style=3D"font-family:arial,sans-serif;font-size:13px">=C2=A0</div><div clas=
+s=3D"gmail_extra" style=3D"font-family:arial,sans-serif;font-size:13px">We =
+are reviewing the recent patches on the mailing list for IOC_MOV_DATA,=C2=
+=A0</div>
+<div class=3D"gmail_extra" style=3D"font-family:arial,sans-serif;font-size:=
+13px">which allows an arbitrary range of one file to be swapped with an arb=
+itrary</div><div class=3D"gmail_extra" style=3D"font-family:arial,sans-seri=
+f;font-size:13px">
+range of another file. The core mechanism required by #2.</div><div class=
+=3D"gmail_extra" style=3D"font-family:arial,sans-serif;font-size:13px">(<a =
+href=3D"http://oss.sgi.com/archives/xfs/2014-07/msg00109.html" target=3D"_b=
+lank">http://oss.sgi.com/archives/xfs/2014-07/msg00109.html</a>)</div>
+<div class=3D"gmail_extra" style=3D"font-family:arial,sans-serif;font-size:=
+13px">=C2=A0</div><div class=3D"gmail_extra" style=3D"font-family:arial,san=
+s-serif;font-size:13px">Hence after due consideration we are planning to ex=
+ecute</div>
+<div class=3D"gmail_extra" style=3D"font-family:arial,sans-serif;font-size:=
+13px">the 4 sub topics in the following order:</div><div class=3D"gmail_ext=
+ra" style=3D"font-family:arial,sans-serif;font-size:13px">1. defragmenting =
+free space.</div>
+<div class=3D"gmail_extra" style=3D"font-family:arial,sans-serif;font-size:=
+13px">2. enhanced/faster filesystem scanning.</div><div class=3D"gmail_extr=
+a" style=3D"font-family:arial,sans-serif;font-size:13px">3. ability to defr=
+agment only portions of files rather</div>
+<div class=3D"gmail_extra" style=3D"font-family:arial,sans-serif;font-size:=
+13px">than just whole files.</div><div class=3D"gmail_extra" style=3D"font-=
+family:arial,sans-serif;font-size:13px">4. explicit control of locality for=
+ groups of files.</div>
+<div class=3D"gmail_extra" style=3D"font-family:arial,sans-serif;font-size:=
+13px">=C2=A0</div><div class=3D"gmail_extra" style=3D"font-family:arial,san=
+s-serif;font-size:13px">Comments regarding the same will be appreciated. We=
+ would also like to thank=C2=A0</div>
+<div class=3D"gmail_extra" style=3D"font-family:arial,sans-serif;font-size:=
+13px">Dave for his inputs. We look forward to working with the community an=
+d hope to</div><div class=3D"gmail_extra" style=3D"font-family:arial,sans-s=
+erif;font-size:13px">
+make a valuable contribution.</div><div class=3D"gmail_extra" style=3D"font=
+-family:arial,sans-serif;font-size:13px">=C2=A0</div><div class=3D"gmail_ex=
+tra" style=3D"font-family:arial,sans-serif;font-size:13px">Regards.</div></=
+div>
+
+--089e01538e5af256ba0500ff097f--
+
+
+--===============2875005186518367658==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============2875005186518367658==--
