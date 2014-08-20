@@ -1,30 +1,31 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 6E9A67F50
-	for <xfs@oss.sgi.com>; Wed, 20 Aug 2014 11:56:02 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 408968F8054
-	for <xfs@oss.sgi.com>; Wed, 20 Aug 2014 09:56:02 -0700 (PDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 8685A7F4E
+	for <xfs@oss.sgi.com>; Wed, 20 Aug 2014 13:00:15 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 152AEAC002
+	for <xfs@oss.sgi.com>; Wed, 20 Aug 2014 11:00:11 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id rIququCWqFSAoqLW (version=TLSv1
+	cuda.sgi.com with ESMTP id ZZyGOnjmB2AcaNBt (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 20 Aug 2014 09:55:57 -0700 (PDT)
-Received: from int-mx14.intmail.prod.int.phx2.redhat.com
-	(int-mx14.intmail.prod.int.phx2.redhat.com [10.5.11.27])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id s7KGtv12013557
+	Wed, 20 Aug 2014 11:00:07 -0700 (PDT)
+Received: from int-mx10.intmail.prod.int.phx2.redhat.com
+	(int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id s7KI066B006440
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256
-	verify=OK) for <xfs@oss.sgi.com>; Wed, 20 Aug 2014 12:55:57 -0400
-Received: from bfoster.bfoster ([10.18.41.237])
-	by int-mx14.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id s7KGtuoQ006544
-	for <xfs@oss.sgi.com>; Wed, 20 Aug 2014 12:55:57 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH 2/2] xfs: export log_recovery_delay to delay mount time log
-	recovery
-Date: Wed, 20 Aug 2014 12:55:55 -0400
-Message-Id: <1408553755-10255-3-git-send-email-bfoster@redhat.com>
-In-Reply-To: <1408553755-10255-1-git-send-email-bfoster@redhat.com>
-References: <1408553755-10255-1-git-send-email-bfoster@redhat.com>
+	verify=OK) for <xfs@oss.sgi.com>; Wed, 20 Aug 2014 14:00:06 -0400
+Received: from liberator.sandeen.net (ovpn01.gateway.prod.ext.phx2.redhat.com
+	[10.5.9.1])
+	by int-mx10.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id s7KI05Zj028059
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES128-SHA bits=128 verify=NO)
+	for <xfs@oss.sgi.com>; Wed, 20 Aug 2014 14:00:06 -0400
+Message-ID: <53F4E229.3010607@redhat.com>
+Date: Wed, 20 Aug 2014 13:00:09 -0500
+From: Eric Sandeen <sandeen@redhat.com>
+MIME-Version: 1.0
+Subject: [PATCH RESEND] xfsprogs: add supported file attributes to xfs.5
+	manpage
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,142 +34,64 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: xfs-oss <xfs@oss.sgi.com>
 
-XFS log recovery has been discovered to have race conditions with
-buffers when I/O errors occur. External tools are available to simulate
-I/O errors to XFS, but this alone is not sufficient for testing log
-recovery. XFS unconditionally resets the inactive region of the log
-prior to log recovery to avoid confusion over processing any partially
-written log records that might have been written before an unclean
-shutdown. Therefore, unconditional write I/O failures at mount time are
-caught by the reset sequence rather than log recovery and hinder the
-ability to test the latter.
+The chattr(1) manpage now refers users to filesystem-specific
+manpages for details on supported attributes, so add those to
+xfs.5.
 
-The device-mapper dm-flakey module uses an up/down timer to define a
-cycle for when to fail I/Os. Create a pre log recovery delay tunable
-that can be used to coordinate XFS log recovery with I/O errors
-simulated by dm-flakey. This facilitates coordination in userspace that
-allows the reset of stale log blocks to succeed and writes due to log
-recovery to fail. For example, define a dm-flakey instance with an
-uptime long enough to allow log reset to succeed and a log recovery
-delay long enough to allow the dm-flakey uptime to expire.
-
-The 'log_recovery_delay' sysfs tunable is exported under
-/sys/fs/xfs/debug. The value is exported in units of seconds and allows
-for a delay of up to 60 seconds. Note that this is for XFS debug and
-test instrumentation purposes only and should not be used by
-applications. No delay is enabled by default.
-
-Signed-off-by: Brian Foster <bfoster@redhat.com>
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 ---
- fs/xfs/xfs_globals.c     |  4 ++++
- fs/xfs/xfs_log_recover.c | 12 ++++++++++++
- fs/xfs/xfs_sysctl.h      |  5 +++++
- fs/xfs/xfs_sysfs.c       | 31 +++++++++++++++++++++++++++++++
- 4 files changed, 52 insertions(+)
 
-diff --git a/fs/xfs/xfs_globals.c b/fs/xfs/xfs_globals.c
-index 5399ef2..4d41b24 100644
---- a/fs/xfs/xfs_globals.c
-+++ b/fs/xfs/xfs_globals.c
-@@ -43,3 +43,7 @@ xfs_param_t xfs_params = {
- 	.fstrm_timer	= {	1,		30*100,		3600*100},
- 	.eofb_timer	= {	1,		300,		3600*24},
- };
-+
-+struct xfs_globals xfs_globals = {
-+	.log_recovery_delay	=	0,	/* no delay by default */
-+};
-diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index 1fd5787..176c4b3 100644
---- a/fs/xfs/xfs_log_recover.c
-+++ b/fs/xfs/xfs_log_recover.c
-@@ -4509,6 +4509,18 @@ xlog_recover(
- 			return -EINVAL;
- 		}
- 
-+		/*
-+		 * Delay log recovery if the debug hook is set. This is debug
-+		 * instrumention to coordinate simulation of I/O failures with
-+		 * log recovery.
-+		 */
-+		if (xfs_globals.log_recovery_delay) {
-+			xfs_notice(log->l_mp,
-+				"Delaying log recovery for %d seconds.",
-+				xfs_globals.log_recovery_delay);
-+			msleep(xfs_globals.log_recovery_delay * 1000);
-+		}
-+
- 		xfs_notice(log->l_mp, "Starting recovery (logdev: %s)",
- 				log->l_mp->m_logname ? log->l_mp->m_logname
- 						     : "internal");
-diff --git a/fs/xfs/xfs_sysctl.h b/fs/xfs/xfs_sysctl.h
-index bd8e157..ffef453 100644
---- a/fs/xfs/xfs_sysctl.h
-+++ b/fs/xfs/xfs_sysctl.h
-@@ -92,6 +92,11 @@ enum {
- 
- extern xfs_param_t	xfs_params;
- 
-+struct xfs_globals {
-+	int	log_recovery_delay;	/* log recovery delay (secs) */
-+};
-+extern struct xfs_globals	xfs_globals;
-+
- #ifdef CONFIG_SYSCTL
- extern int xfs_sysctl_register(void);
- extern void xfs_sysctl_unregister(void);
-diff --git a/fs/xfs/xfs_sysfs.c b/fs/xfs/xfs_sysfs.c
-index dd31511..f78ab31 100644
---- a/fs/xfs/xfs_sysfs.c
-+++ b/fs/xfs/xfs_sysfs.c
-@@ -53,7 +53,38 @@ struct kobj_type xfs_mp_ktype = {
- 
- /* debug */
- 
-+STATIC ssize_t
-+log_recovery_delay_store(
-+	const char	*buf,
-+	size_t		count,
-+	void		*data)
-+{
-+	int		ret;
-+	int		val;
-+
-+	ret = kstrtoint(buf, 0, &val);
-+	if (ret)
-+		return ret;
-+
-+	if (val < 0 || val > 60)
-+		return -EINVAL;
-+
-+	xfs_globals.log_recovery_delay = val;
-+
-+	return count;
-+}
-+
-+STATIC ssize_t
-+log_recovery_delay_show(
-+	char	*buf,
-+	void	*data)
-+{
-+	return snprintf(buf, PAGE_SIZE, "%d\n", xfs_globals.log_recovery_delay);
-+}
-+XFS_SYSFS_ATTR_RW(log_recovery_delay);
-+
- static struct attribute *xfs_dbg_attrs[] = {
-+	ATTR_LIST(log_recovery_delay),
- 	NULL,
- };
- 
--- 
-1.8.3.1
+I thought I had sent this already, but I guess not...
+
+(and now resending to xfs@ not linux-xfs@ in hopes that this
+one gets through...)
+
+diff --git a/man/man5/xfs.5 b/man/man5/xfs.5
+index 5e47c4c..3214455 100644
+--- a/man/man5/xfs.5
++++ b/man/man5/xfs.5
+@@ -1,6 +1,6 @@
+ .TH xfs 5
+ .SH NAME
+-xfs \- layout and mount options for the XFS filesystem
++xfs \- layout, mount options, and supported file attributes for the XFS filesystem
+ .SH DESCRIPTION
+ An XFS filesystem can reside on a regular disk partition or on a
+ logical volume.
+@@ -302,7 +302,27 @@ namespace is on stable storage. This is useful in HA setups
+ where failover must not result in clients seeing
+ inconsistent namespace presentation during or after a
+ failover event.
++.SH FILE ATTRIBUTES
++The XFS filesystem supports setting the following file
++attributes on Linux systems using the
++.BR chattr (1)
++utility:
++.sp
++.BR a " - append only"
++.sp
++.BR A " - no atime updates"
++.sp
++.BR d " - no dump"
++.sp
++.BR i " - immutable"
++.sp
++.BR S " - synchronous updates"
++.sp
++For descriptions of these attribute flags, please refer to the
++.BR chattr (1)
++man page.
+ .SH SEE ALSO
++.BR chattr (1),
+ .BR xfsctl (3),
+ .BR mount (8),
+ .BR mkfs.xfs (8),
 
 _______________________________________________
 xfs mailing list
