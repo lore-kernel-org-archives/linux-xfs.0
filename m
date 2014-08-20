@@ -1,37 +1,45 @@
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Subject: Welcome to the "xfs" mailing list
 From: xfs-request@oss.sgi.com
-Subject: confirm 11427e99188a19c3164b0e345ee9a6bd16c5c1fa
-Reply-To: xfs-request@oss.sgi.com
-Message-ID: <mailman.0.1408493587.26820.xfs@oss.sgi.com>
-Date: Tue, 19 Aug 2014 19:13:07 -0500
+Message-ID: <mailman.8.1408493635.4392.xfs@oss.sgi.com>
+Date: Tue, 19 Aug 2014 19:13:55 -0500
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: darrick.wong@oracle.com
 
-Mailing list subscription confirmation notice for mailing list xfs
+Welcome to the xfs@oss.sgi.com mailing list!
 
-We have received a request from 148.87.67.203 for subscription of your
-email address, "darrick.wong@oracle.com", to the xfs@oss.sgi.com
-mailing list.  To confirm that you want to be added to this mailing
-list, simply reply to this message, keeping the Subject: header
-intact.  Or visit this web page:
+To post to this list, send your message to:
 
-    http://oss.sgi.com/mailman/confirm/xfs/11427e99188a19c3164b0e345ee9a6bd16c5c1fa
+  xfs@oss.sgi.com
 
+General information about the mailing list is at:
 
-Or include the following line -- and only the following line -- in a
-message to xfs-request@oss.sgi.com:
+  http://oss.sgi.com/mailman/listinfo/xfs
 
-    confirm 11427e99188a19c3164b0e345ee9a6bd16c5c1fa
+If you ever want to unsubscribe or change your options (eg, switch to
+or from digest mode, change your password, etc.), visit your
+subscription page at:
 
-Note that simply sending a `reply' to this message should work from
-most mail readers, since that usually leaves the Subject: line in the
-right form (additional "Re:" text in the Subject: is okay).
+  http://oss.sgi.com/mailman/options/xfs/darrick.wong%40oracle.com
 
-If you do not wish to be subscribed to this list, please simply
-disregard this message.  If you think you are being maliciously
-subscribed to the list, or have any other questions, send them to
-xfs-owner@oss.sgi.com.
+You can also make such adjustments via email by sending a message to:
+
+  xfs-request@oss.sgi.com
+
+with the word `help' in the subject or body (don't include the
+quotes), and you will get back a message with instructions.
+
+You must know your password to change your options (including changing
+the password, itself) or to unsubscribe without confirmation.  It is:
+
+  dD+I+sNo
+
+Normally, Mailman will remind you of your oss.sgi.com mailing list
+passwords once every month, although you can disable this if you
+prefer.  This reminder will also include instructions on how to
+unsubscribe or change your account options.  There is also a button on
+your options page that will email your current password to you.
