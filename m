@@ -1,21 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id DF22F7F69
-	for <xfs@oss.sgi.com>; Thu, 21 Aug 2014 00:09:43 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id BF4A98F8039
-	for <xfs@oss.sgi.com>; Wed, 20 Aug 2014 22:09:40 -0700 (PDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 8BAA27F50
+	for <xfs@oss.sgi.com>; Thu, 21 Aug 2014 00:12:56 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 04540AC002
+	for <xfs@oss.sgi.com>; Wed, 20 Aug 2014 22:12:55 -0700 (PDT)
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	yAygDWfCjAW6tct7 for <xfs@oss.sgi.com>;
-	Wed, 20 Aug 2014 22:09:39 -0700 (PDT)
+	XeITSSKxqUqACSsN for <xfs@oss.sgi.com>;
+	Wed, 20 Aug 2014 22:12:53 -0700 (PDT)
+Date: Thu, 21 Aug 2014 15:12:51 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 3/6] xfs: don't zero partial page cache pages during O_DIRECT
-	writes
-Date: Thu, 21 Aug 2014 15:09:11 +1000
-Message-Id: <1408597754-13526-4-git-send-email-david@fromorbit.com>
-In-Reply-To: <1408597754-13526-1-git-send-email-david@fromorbit.com>
-References: <1408597754-13526-1-git-send-email-david@fromorbit.com>
+Subject: Re: [PATCH] xfs: deduplicate xlog_do_recovery_pass()
+Message-ID: <20140821051251.GY20518@dastard>
+References: <53F5651C.8030206@redhat.com> <53F57758.9070007@sandeen.net>
+	<20140821044915.GX20518@dastard> <53F57C8F.6060909@sandeen.net>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <53F57C8F.6060909@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,54 +26,62 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: clm@fb.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Eric Sandeen <sandeen@redhat.com>, xfs-oss <xfs@oss.sgi.com>
 
-From: Dave Chinner <dchinner@redhat.com>
+On Wed, Aug 20, 2014 at 11:58:55PM -0500, Eric Sandeen wrote:
+> On 8/20/14, 11:49 PM, Dave Chinner wrote:
+> > On Wed, Aug 20, 2014 at 11:36:40PM -0500, Eric Sandeen wrote:
+> >> On 8/20/14, 10:18 PM, Eric Sandeen wrote:
+> >>> In xlog_do_recovery_pass(), there are 2 distinct cases:
+> >>> non-wrapped and wrapped log recovery.
+> >>>
+> >>> If we find a wrapped log, we recover around the end
+> >>> of the log, and then handle the rest of recovery
+> >>> exactly as in the non-wrapped case - using exactly the same
+> >>> (duplicated) code.
+> >>>
+> >>> Rather than having the same code in both cases, we can
+> >>> get the wrapped portion out of the way first if needed,
+> >>> and then recover the non-wrapped portion of the log.
+> >>>
+> >>> There should be no functional change here, just code
+> >>> reorganization & deduplication.
+> >>>
+> >>> The patch looks a bit bigger than it really is; the last
+> >>> hunk is whitespace changes (un-indenting).
+> >>>
+> >>> Tested with xfstests "check -g log" on a stock configuration.
+> >>
+> >> which didn't actually hit any log wraps.  Does xfstests
+> >> really not cover wrapped log recovery?  anyway, something like this
+> >> on a small log:
+> > 
+> > xfs/016
+> 
+> AFAICT that doesn't ever run recovery...
 
-Similar to direct IO reads, direct IO writes are using
-truncate_pagecache_range to invalidate the page cache. This is
-incorrect due to the sub-block zeroing in the page cache that
-truncate_pagecache_range() triggers.
+It does:
 
-This patch fixes things by using invalidate_inode_pages2_range
-instead.  It preserves the page cache invalidation, but won't zero
-any pages.
+loop 20 times {
 
-cc: stable@vger.kernel.org
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- fs/xfs/xfs_file.c | 10 +++++++++-
- 1 file changed, 9 insertions(+), 1 deletion(-)
+	mount
+	<do stuff>
+	unmount
 
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index 827cfb2..19917fa 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -644,7 +644,15 @@ xfs_file_dio_aio_write(
- 						    pos, -1);
- 		if (ret)
- 			goto out;
--		truncate_pagecache_range(VFS_I(ip), pos, -1);
-+		/*
-+		 * Invalidate whole pages. This can return an error if
-+		 * we fail to invalidate a page, but this should never
-+		 * happen on XFS. Warn if it does fail.
-+		 */
-+		ret = invalidate_inode_pages2_range(VFS_I(ip)->i_mapping,
-+						pos >> PAGE_CACHE_SHIFT, -1);
-+		WARN_ON_ONCE(ret);
-+		ret = 0;
- 	}
- 
- 	/*
+	dump and process log
+}
+
+Cheers,
+
+Dave.
 -- 
-2.0.0
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
