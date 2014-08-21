@@ -1,23 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id AB07C7F4E
-	for <xfs@oss.sgi.com>; Wed, 20 Aug 2014 18:47:39 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 2BAB7AC002
-	for <xfs@oss.sgi.com>; Wed, 20 Aug 2014 16:47:36 -0700 (PDT)
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	IL4eKUblxLyRBbwP for <xfs@oss.sgi.com>;
-	Wed, 20 Aug 2014 16:47:33 -0700 (PDT)
-Date: Thu, 21 Aug 2014 09:47:29 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: xfsdump completes very prematurely in low RAM, commit found
-Message-ID: <20140820234729.GW20518@dastard>
-References: <53F15EEF.4090308@gmail.com> <20140818024114.GK20518@dastard>
-	<53F1FBBC.8000903@gmail.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 997937F4E
+	for <xfs@oss.sgi.com>; Wed, 20 Aug 2014 21:20:28 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 8617F30406A
+	for <xfs@oss.sgi.com>; Wed, 20 Aug 2014 19:20:25 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id jpz0750Qt9BCQb0W (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 20 Aug 2014 19:20:24 -0700 (PDT)
+Message-ID: <53F55765.6030205@redhat.com>
+Date: Wed, 20 Aug 2014 21:20:21 -0500
+From: Eric Sandeen <sandeen@redhat.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <53F1FBBC.8000903@gmail.com>
+Subject: [PATCH RFC] xfs: combine xfs_seek_hole & xfs_seek_data
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,92 +26,283 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "Michael L. Semon" <mlsemon35@gmail.com>
-Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: xfs-oss <xfs@oss.sgi.com>, Jeff Liu <jeff.liu@oracle.com>
 
-On Mon, Aug 18, 2014 at 09:12:28AM -0400, Michael L. Semon wrote:
-> On 08/17/14 22:41, Dave Chinner wrote:
-> >On Sun, Aug 17, 2014 at 10:03:27PM -0400, Michael L. Semon wrote:
-> >>Hi!  I had some phantom issues that are chasing me through this 3.17
-> >>merge window period.  While chasing those issues, I decided to do an
-> >>xfsdump of a v5/finobt XFS system rescued from PEBKAC issues.  The
-> >>xfsdump completed rather prematurely, ending like this test case
-> >>output...
-> >>
-> >>xfsdump: dumping special file ino 4194523 mode 0x21b0
-> >>xfsdump: dumping special file ino 4194524 mode 0x21b0
-> >>xfsdump: dumping special file ino 4194525 mode 0x21b0
-> >>xfsdump: dumping special file ino 4194526 mode 0x21b0
-> >>xfsdump: dumping special file ino 4194527 mode 0x21b0
-> >>xfsdump: ending media file
-> >>xfsdump: media file size 4512992 bytes
-> >>xfsdump: ending stream: 23 seconds elapsed
-> >>xfsdump: dump size (non-dir files) : 4452088 bytes
-> >>xfsdump: dump complete: 23 seconds elapsed
-> >>xfsdump: Dump Summary:
-> >>xfsdump:   stream 0 /mnt/xfstests-scratch/blah.0.dump OK (success)
-> >>xfsdump: Dump Status: SUCCESS
-> >>
-> >>That looks fine for a lack of obvious error messages.  However, it
-> >>should end like this:
-> >>
-> >>xfsdump: dumping regular file ino 13653551 offset 0 to offset 12154 (size 12154)
-> >>xfsdump: dumping regular file ino 13653555 offset 0 to offset 16554 (size 16554)
-> >>xfsdump: dumping regular file ino 13653556 offset 0 to offset 185 (size 185)
-> >>xfsdump: dumping regular file ino 13653557 offset 0 to offset 471 (size 471)
-> >>xfsdump: dumping special file ino 13653558 mode 0xa1ff
-> >>xfsdump: ending media file
-> >>xfsdump: media file size 1999127056 bytes
-> >>xfsdump: ending stream: 465 seconds elapsed
-> >>xfsdump: dump size (non-dir files) : 1963549104 bytes
-> >>xfsdump: dump complete: 465 seconds elapsed
-> >>xfsdump: Dump Summary:
-> >>xfsdump:   stream 0 /mnt/xfstests-scratch/blah.0.dump OK (success)
-> >>xfsdump: Dump Status: SUCCESS
-> >
-> >What's the inode number progression of a successful dump at the
-> >point at which the incomplete dump ends? i.e. around inode 4194527?
-> >That number is one inode chunk short of 2^22, which implies that
-> >there is a failure or some kind moving from one AG to the next.
-> >The progrssion of inode numbers will tell me whether this is the
-> >case or not...
-> 
-> It is this, run a bit longer to show xfsdump start to dump regular
-> files again:
-> 
-> xfsdump: dumping special file ino 4194520 mode 0x21b0
-> xfsdump: dumping special file ino 4194521 mode 0x21b0
-> xfsdump: dumping special file ino 4194522 mode 0x21b0
-> xfsdump: dumping special file ino 4194523 mode 0x21b0
-> xfsdump: dumping special file ino 4194524 mode 0x21b0
-> xfsdump: dumping special file ino 4194525 mode 0x21b0
-> xfsdump: dumping special file ino 4194526 mode 0x21b0
-> xfsdump: dumping special file ino 4194527 mode 0x21b0
-> xfsdump: dumping special file ino 4194528 mode 0x21b0
-> xfsdump: dumping special file ino 4194529 mode 0x21b0
-> xfsdump: dumping special file ino 4194530 mode 0x21b0
-> xfsdump: dumping special file ino 4194531 mode 0x21b0
-> xfsdump: dumping special file ino 4194532 mode 0x21b0
-> xfsdump: dumping special file ino 4194533 mode 0x21b0
-> xfsdump: dumping special file ino 4194534 mode 0x21b0
-> xfsdump: dumping special file ino 4194535 mode 0x21b0
-> xfsdump: dumping special file ino 4194536 mode 0x21b0
+xfs_seek_hole & xfs_seek_data are remarkably similar;
+so much so that they could be combined, saving a fair
+bit of semi-complex code duplication.
 
-So it's not the end of the AG that is causing problems. Can you get
-a tracepoint dump of the failing xfsdump run? i.e.
+The following patch passes generic/285 and generic/286;
+is this worth doing, (maybe cleaning up a bit), or
+is it too convoluted & confusing?
 
-$ trace-cmd record -e xfs\* <xfsdump command>
-.....
-$ trace-cmd report > traces.txt
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
 
-and send me that traces.txt file (compress it first, please).
+ xfs_file.c |  174 +++++++++++++++++--------------------------------------------
+ 1 file changed, 50 insertions(+), 124 deletions(-)
 
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+index 076b170..321dde6 100644
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@ -964,7 +964,7 @@ xfs_vm_page_mkwrite(
+ 
+ /*
+  * This type is designed to indicate the type of offset we would like
+- * to search from page cache for either xfs_seek_data() or xfs_seek_hole().
++ * to search from page cache for xfs_seek_hole_data().
+  */
+ enum {
+ 	HOLE_OFF = 0,
+@@ -1021,7 +1021,7 @@ xfs_lookup_buffer_offset(
+ /*
+  * This routine is called to find out and return a data or hole offset
+  * from the page cache for unwritten extents according to the desired
+- * type for xfs_seek_data() or xfs_seek_hole().
++ * type for xfs_seek_hole_data().
+  *
+  * The argument offset is used to tell where we start to search from the
+  * page cache.  Map is used to figure out the end points of the range to
+@@ -1181,9 +1181,10 @@ out:
+ }
+ 
+ STATIC loff_t
+-xfs_seek_data(
++xfs_seek_hole_data(
+ 	struct file		*file,
+-	loff_t			start)
++	loff_t			start,
++	int			whence)
+ {
+ 	struct inode		*inode = file->f_mapping->host;
+ 	struct xfs_inode	*ip = XFS_I(inode);
+@@ -1195,6 +1196,9 @@ xfs_seek_data(
+ 	uint			lock;
+ 	int			error;
+ 
++	if (XFS_FORCED_SHUTDOWN(mp))
++		return -EIO;
++
+ 	lock = xfs_ilock_data_map_shared(ip);
+ 
+ 	isize = i_size_read(inode);
+@@ -1209,6 +1213,7 @@ xfs_seek_data(
+ 	 */
+ 	fsbno = XFS_B_TO_FSBT(mp, start);
+ 	end = XFS_B_TO_FSB(mp, isize);
++
+ 	for (;;) {
+ 		struct xfs_bmbt_irec	map[2];
+ 		int			nmap = 2;
+@@ -1229,29 +1234,46 @@ xfs_seek_data(
+ 			offset = max_t(loff_t, start,
+ 				       XFS_FSB_TO_B(mp, map[i].br_startoff));
+ 
+-			/* Landed in a data extent */
+-			if (map[i].br_startblock == DELAYSTARTBLOCK ||
+-			    (map[i].br_state == XFS_EXT_NORM &&
+-			     !isnullstartblock(map[i].br_startblock)))
++			/* Landed in the hole we wanted? */
++			if (whence == SEEK_HOLE &&
++			    map[i].br_startblock == HOLESTARTBLOCK)
++				goto out;
++
++			/* Landed in the data extent we wanted? */
++			if (whence == SEEK_DATA &&
++			    (map[i].br_startblock == DELAYSTARTBLOCK ||
++			     (map[i].br_state == XFS_EXT_NORM &&
++			      !isnullstartblock(map[i].br_startblock))))
+ 				goto out;
+ 
+ 			/*
+-			 * Landed in an unwritten extent, try to search data
+-			 * from page cache.
++			 * Landed in an unwritten extent, try to search
++			 * for hole or data from page cache.
+ 			 */
+ 			if (map[i].br_state == XFS_EXT_UNWRITTEN) {
+ 				if (xfs_find_get_desired_pgoff(inode, &map[i],
+-							DATA_OFF, &offset))
++				      whence == SEEK_HOLE ? HOLE_OFF : DATA_OFF,
++							&offset))
+ 					goto out;
+ 			}
+ 		}
+ 
+-		/*
+-		 * map[0] is hole or its an unwritten extent but
+-		 * without data in page cache.  Probably means that
+-		 * we are reading after EOF if nothing in map[1].
+-		 */
+ 		if (nmap == 1) {
++			/*
++			 * The single map didn't have what we were looking for.
++			 * If we were looking for a hole, we are probably
++			 * looking past EOF.  We should fix offset to point
++			 * to the end of the file (i.e., there is an implicit
++			 * hole at the end of any file).
++		 	 */
++			if (whence == SEEK_HOLE) {
++				offset = isize;
++				break;
++			}
++			/*
++			 * If we were looking for data, it's nowhere to be found
++			 */
++			ASSERT(whence == SEEK_DATA);
+ 			error = -ENXIO;
+ 			goto out_unlock;
+ 		}
+@@ -1260,125 +1282,30 @@ xfs_seek_data(
+ 
+ 		/*
+ 		 * Nothing was found, proceed to the next round of search
+-		 * if reading offset not beyond or hit EOF.
++		 * if the next reading offset is not at or beyond EOF.
+ 		 */
+ 		fsbno = map[i - 1].br_startoff + map[i - 1].br_blockcount;
+ 		start = XFS_FSB_TO_B(mp, fsbno);
+ 		if (start >= isize) {
++			if (whence == SEEK_HOLE) {
++				offset = isize;
++				break;
++			}
++			ASSERT(whence == SEEK_DATA);
+ 			error = -ENXIO;
+ 			goto out_unlock;
+ 		}
+ 	}
+ 
+ out:
+-	offset = vfs_setpos(file, offset, inode->i_sb->s_maxbytes);
+-
+-out_unlock:
+-	xfs_iunlock(ip, lock);
+-
+-	if (error)
+-		return error;
+-	return offset;
+-}
+-
+-STATIC loff_t
+-xfs_seek_hole(
+-	struct file		*file,
+-	loff_t			start)
+-{
+-	struct inode		*inode = file->f_mapping->host;
+-	struct xfs_inode	*ip = XFS_I(inode);
+-	struct xfs_mount	*mp = ip->i_mount;
+-	loff_t			uninitialized_var(offset);
+-	xfs_fsize_t		isize;
+-	xfs_fileoff_t		fsbno;
+-	xfs_filblks_t		end;
+-	uint			lock;
+-	int			error;
+-
+-	if (XFS_FORCED_SHUTDOWN(mp))
+-		return -EIO;
+-
+-	lock = xfs_ilock_data_map_shared(ip);
+-
+-	isize = i_size_read(inode);
+-	if (start >= isize) {
+-		error = -ENXIO;
+-		goto out_unlock;
+-	}
+-
+-	fsbno = XFS_B_TO_FSBT(mp, start);
+-	end = XFS_B_TO_FSB(mp, isize);
+-
+-	for (;;) {
+-		struct xfs_bmbt_irec	map[2];
+-		int			nmap = 2;
+-		unsigned int		i;
+-
+-		error = xfs_bmapi_read(ip, fsbno, end - fsbno, map, &nmap,
+-				       XFS_BMAPI_ENTIRE);
+-		if (error)
+-			goto out_unlock;
+-
+-		/* No extents at given offset, must be beyond EOF */
+-		if (nmap == 0) {
+-			error = -ENXIO;
+-			goto out_unlock;
+-		}
+-
+-		for (i = 0; i < nmap; i++) {
+-			offset = max_t(loff_t, start,
+-				       XFS_FSB_TO_B(mp, map[i].br_startoff));
+-
+-			/* Landed in a hole */
+-			if (map[i].br_startblock == HOLESTARTBLOCK)
+-				goto out;
+-
+-			/*
+-			 * Landed in an unwritten extent, try to search hole
+-			 * from page cache.
+-			 */
+-			if (map[i].br_state == XFS_EXT_UNWRITTEN) {
+-				if (xfs_find_get_desired_pgoff(inode, &map[i],
+-							HOLE_OFF, &offset))
+-					goto out;
+-			}
+-		}
+-
+-		/*
+-		 * map[0] contains data or its unwritten but contains
+-		 * data in page cache, probably means that we are
+-		 * reading after EOF.  We should fix offset to point
+-		 * to the end of the file(i.e., there is an implicit
+-		 * hole at the end of any file).
+-		 */
+-		if (nmap == 1) {
+-			offset = isize;
+-			break;
+-		}
+-
+-		ASSERT(i > 1);
+-
+-		/*
+-		 * Both mappings contains data, proceed to the next round of
+-		 * search if the current reading offset not beyond or hit EOF.
+-		 */
+-		fsbno = map[i - 1].br_startoff + map[i - 1].br_blockcount;
+-		start = XFS_FSB_TO_B(mp, fsbno);
+-		if (start >= isize) {
+-			offset = isize;
+-			break;
+-		}
+-	}
+-
+-out:
+ 	/*
+-	 * At this point, we must have found a hole.  However, the returned
++	 * If at this point we have found the hole we wanted, the returned
+ 	 * offset may be bigger than the file size as it may be aligned to
+-	 * page boundary for unwritten extents, we need to deal with this
++	 * page boundary for unwritten extents.  We need to deal with this
+ 	 * situation in particular.
+ 	 */
+-	offset = min_t(loff_t, offset, isize);
++	if (whence == SEEK_HOLE)
++		offset = min_t(loff_t, offset, isize);
+ 	offset = vfs_setpos(file, offset, inode->i_sb->s_maxbytes);
+ 
+ out_unlock:
+@@ -1400,10 +1327,9 @@ xfs_file_llseek(
+ 	case SEEK_CUR:
+ 	case SEEK_SET:
+ 		return generic_file_llseek(file, offset, origin);
+-	case SEEK_DATA:
+-		return xfs_seek_data(file, offset);
+ 	case SEEK_HOLE:
+-		return xfs_seek_hole(file, offset);
++	case SEEK_DATA:
++		return xfs_seek_hole_data(file, offset, origin);
+ 	default:
+ 		return -EINVAL;
+ 	}
 
 _______________________________________________
 xfs mailing list
