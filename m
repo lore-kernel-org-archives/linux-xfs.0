@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 161C07F51
-	for <xfs@oss.sgi.com>; Thu, 21 Aug 2014 07:48:36 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 8AD75AC003
-	for <xfs@oss.sgi.com>; Thu, 21 Aug 2014 05:48:35 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id 5jBbIKRcBf5LXsUD (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 21 Aug 2014 05:48:30 -0700 (PDT)
-Date: Thu, 21 Aug 2014 08:48:24 -0400
-From: Brian Foster <bfoster@redhat.com>
+	by oss.sgi.com (Postfix) with ESMTP id 154137F51
+	for <xfs@oss.sgi.com>; Thu, 21 Aug 2014 08:08:19 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id A6C18AC003
+	for <xfs@oss.sgi.com>; Thu, 21 Aug 2014 06:08:15 -0700 (PDT)
+Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
+	ESMTP id rDfwQMWtyuZAUCtc (version=TLSv1 cipher=AES256-SHA
+	bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 21 Aug 2014 06:08:13 -0700 (PDT)
+Date: Thu, 21 Aug 2014 06:08:12 -0700
+From: Christoph Hellwig <hch@infradead.org>
 Subject: Re: [PATCH 1/6] xfs: mmap write/read leaves bad state on pages
-Message-ID: <20140821124823.GB64112@bfoster.bfoster>
+Message-ID: <20140821130812.GC1567@infradead.org>
 References: <1408597754-13526-1-git-send-email-david@fromorbit.com>
 	<1408597754-13526-2-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
@@ -31,7 +31,7 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
-Cc: clm@fb.com, xfs@oss.sgi.com
+Cc: linux-fsdevel@vger.kernel.org, clm@fb.com, xfs@oss.sgi.com
 
 On Thu, Aug 21, 2014 at 03:09:09PM +1000, Dave Chinner wrote:
 > From: Dave Chinner <dchinner@redhat.com>
@@ -67,112 +67,9 @@ On Thu, Aug 21, 2014 at 03:09:09PM +1000, Dave Chinner wrote:
 > we have buffers marked dirty beyond EOF that we need to clean.
 > So, we need to implement our own .set_page_dirty method that
 > doesn't dirty buffers beyond EOF.
-> 
-> This is messy because the buffer code is not meant to be shared
-> and it has interesting locking issues on the buffer dirty bits.
-> So just copy and paste it and then modify it to suit what we need.
-> 
-> cc: <stable@kernel.org>
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> ---
->  fs/xfs/xfs_aops.c | 58 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
->  1 file changed, 58 insertions(+)
-> 
-> diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-> index 11e9b4c..2a316ad 100644
-> --- a/fs/xfs/xfs_aops.c
-> +++ b/fs/xfs/xfs_aops.c
-> @@ -1753,11 +1753,69 @@ xfs_vm_readpages(
->  	return mpage_readpages(mapping, pages, nr_pages, xfs_get_blocks);
->  }
->  
-> +/*
-> + * This is basically a copy of __set_page_dirty_buffers() with one
-> + * small tweak: buffers beyond EOF do not get marked dirty. If we mark them
-> + * dirty, we'll never be able to clean them because we don't write buffers
-> + * beyond EOF, and that means we can't invalidate pages that span EOF
-> + * that have been marked dirty. Further, the dirty state can leak into
-> + * the file interior if the file is extended, resulting in all sorts of
-> + * bad things happening as the state does not match the unerlying data.
-> + */
-> +STATIC int
-> +xfs_vm_set_page_dirty(
-> +	struct page		*page)
-> +{
-> +	struct address_space	*mapping = page_mapping(page);
 
-This breaks xfs as a kernel module:
-
-$ make -j 8 M=fs/xfs
-  Building modules, stage 2.
-  MODPOST 1 modules
-WARNING: "page_mapping" [fs/xfs/xfs.ko] undefined!
-  ...
-
-I suppose we could export that symbol, but why wouldn't we just propose
-this change to __set_page_dirty_buffers()?
-
-Brian
-
-> +	struct inode		*inode = mapping->host;
-> +	loff_t			end_offset;
-> +	loff_t			offset;
-> +	int			newly_dirty;
-> +
-> +	if (unlikely(!mapping))
-> +		return !TestSetPageDirty(page);
-> +
-> +	end_offset = i_size_read(inode);
-> +	offset = end_offset & PAGE_CACHE_MASK;
-> +
-> +	spin_lock(&mapping->private_lock);
-> +	if (page_has_buffers(page)) {
-> +		struct buffer_head *head = page_buffers(page);
-> +		struct buffer_head *bh = head;
-> +
-> +		do {
-> +			if (offset < end_offset)
-> +				set_buffer_dirty(bh);
-> +			bh = bh->b_this_page;
-> +			offset += 1 << inode->i_blkbits;
-> +		} while (bh != head);
-> +	}
-> +	newly_dirty = !TestSetPageDirty(page);
-> +	spin_unlock(&mapping->private_lock);
-> +
-> +	if (newly_dirty) {
-> +		/* sigh - __set_page_dirty() is static, so copy it here, too */
-> +		unsigned long flags;
-> +
-> +		spin_lock_irqsave(&mapping->tree_lock, flags);
-> +		if (page->mapping) {	/* Race with truncate? */
-> +			WARN_ON_ONCE(!PageUptodate(page));
-> +			account_page_dirtied(page, mapping);
-> +			radix_tree_tag_set(&mapping->page_tree,
-> +					page_index(page), PAGECACHE_TAG_DIRTY);
-> +		}
-> +		spin_unlock_irqrestore(&mapping->tree_lock, flags);
-> +		__mark_inode_dirty(mapping->host, I_DIRTY_PAGES);
-> +	}
-> +	return newly_dirty;
-> +}
-> +
->  const struct address_space_operations xfs_address_space_operations = {
->  	.readpage		= xfs_vm_readpage,
->  	.readpages		= xfs_vm_readpages,
->  	.writepage		= xfs_vm_writepage,
->  	.writepages		= xfs_vm_writepages,
-> +	.set_page_dirty		= xfs_vm_set_page_dirty,
->  	.releasepage		= xfs_vm_releasepage,
->  	.invalidatepage		= xfs_vm_invalidatepage,
->  	.write_begin		= xfs_vm_write_begin,
-> -- 
-> 2.0.0
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+Shouldn't this be fixed in __set_page_buffers_dirty itself?  This
+doesn't seem an XFS-specific issue.
 
 _______________________________________________
 xfs mailing list
