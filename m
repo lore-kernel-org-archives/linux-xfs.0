@@ -1,22 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id DD94F7F51
-	for <xfs@oss.sgi.com>; Thu, 21 Aug 2014 12:45:28 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id EAE1E7F3F
+	for <xfs@oss.sgi.com>; Thu, 21 Aug 2014 13:27:02 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id C9D898F8037
-	for <xfs@oss.sgi.com>; Thu, 21 Aug 2014 10:45:28 -0700 (PDT)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id C9DD58F8039
+	for <xfs@oss.sgi.com>; Thu, 21 Aug 2014 11:26:59 -0700 (PDT)
 Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id vpPgmfHIiPnE2Psr for <xfs@oss.sgi.com>;
-	Thu, 21 Aug 2014 10:45:28 -0700 (PDT)
-Message-ID: <53F6303D.7060407@sandeen.net>
-Date: Thu, 21 Aug 2014 12:45:33 -0500
+	ESMTP id cfzWYGQQDjqbdBBh for <xfs@oss.sgi.com>;
+	Thu, 21 Aug 2014 11:26:57 -0700 (PDT)
+Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.4])
+	(using TLSv1 with cipher DHE-RSA-AES128-SHA (128/128 bits))
+	(No client certificate requested)
+	by sandeen.net (Postfix) with ESMTPSA id 60E7B63D7D24
+	for <xfs@oss.sgi.com>; Thu, 21 Aug 2014 13:26:57 -0500 (CDT)
+Message-ID: <53F639F6.6050905@sandeen.net>
+Date: Thu, 21 Aug 2014 13:27:02 -0500
 From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfsprogs: use abort() not ASSERT(0) for impossible switch
-	case
+Subject: [PATCH V2] xfsprogs: use ASSERT_ALWAYS for impossible switch case
 References: <53F62D12.8010505@sandeen.net>
-	<20140821174414.GA28860@infradead.org>
-In-Reply-To: <20140821174414.GA28860@infradead.org>
+In-Reply-To: <53F62D12.8010505@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,27 +32,59 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: xfs-oss <xfs@oss.sgi.com>
 
-On 8/21/14, 12:44 PM, Christoph Hellwig wrote:
-> On Thu, Aug 21, 2014 at 12:32:02PM -0500, Eric Sandeen wrote:
->> The original reason for the expletive below has been lost
->> in the mists of time, but at any rate, ASSERT() goes away in
->> libxfs, and this leads static analysis checkers to believe that
->> XFS_BTNUM_MAX is possible, and that we might overflow an array
->> later when using it as an index.
->>
->> We can shut this up and mark it as truly impossible with abort().
-> 
-> This won't work in kernel space, and we'd like to keep this file in sync.
+The original reason for the expletive below has been lost
+in the mists of time, but at any rate, ASSERT() goes away in
+libxfs, and this leads static analysis checkers to believe that
+XFS_BTNUM_MAX is possible, and that we might overflow an array
+later when using it as an index.
 
-Ah, right, sorry - spaced out that it was shared.
+We can shut this up and mark it as truly impossible by adding
+a userspace definition for ASSERT_ALWAYS and using it.
 
-I'll add ASSERT_ALWAYS() to userspace then, perhaps.
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
 
-Thanks,
--Eric
+V2: do it in a kernel-compatible way.
+
+diff --git a/include/xfs_btree.h b/include/xfs_btree.h
+index 2590d40..f24f787 100644
+--- a/include/xfs_btree.h
++++ b/include/xfs_btree.h
+@@ -69,7 +69,7 @@ do {    \
+ 	case XFS_BTNUM_BMAP: __XFS_BTREE_STATS_INC(bmbt, stat); break;	\
+ 	case XFS_BTNUM_INO: __XFS_BTREE_STATS_INC(ibt, stat); break;	\
+ 	case XFS_BTNUM_FINO: __XFS_BTREE_STATS_INC(fibt, stat); break;	\
+-	case XFS_BTNUM_MAX: ASSERT(0); /* fucking gcc */ ; break;	\
++	case XFS_BTNUM_MAX: ASSERT_ALWAYS(0); /* fucking gcc */ ; break; \
+ 	}       \
+ } while (0)
+ 
+@@ -83,7 +83,7 @@ do {    \
+ 	case XFS_BTNUM_BMAP: __XFS_BTREE_STATS_ADD(bmbt, stat, val); break; \
+ 	case XFS_BTNUM_INO: __XFS_BTREE_STATS_ADD(ibt, stat, val); break; \
+ 	case XFS_BTNUM_FINO: __XFS_BTREE_STATS_ADD(fibt, stat, val); break; \
+-	case XFS_BTNUM_MAX: ASSERT(0); /* fucking gcc */ ; break;	\
++	case XFS_BTNUM_MAX: ASSERT_ALWAYS(0); /* fucking gcc */ ; break; \
+ 	}       \
+ } while (0)
+ 
+diff --git a/libxfs/xfs.h b/libxfs/xfs.h
+index 30a316d..81d7cd9 100644
+--- a/libxfs/xfs.h
++++ b/libxfs/xfs.h
+@@ -48,6 +48,10 @@
+ #undef ASSERT
+ #define ASSERT(ex) assert(ex)
+ 
++#undef ASSERT_ALWAYS
++#define ASSERT_ALWAYS(ex) \
++	(unlikely(ex) ? (void)0 : abort())
++
+ typedef __uint32_t		uint_t;
+ typedef __uint32_t		inst_t;		/* an instruction */
+ 
 
 _______________________________________________
 xfs mailing list
