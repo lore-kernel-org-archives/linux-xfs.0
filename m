@@ -1,21 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id F26DC7F51
-	for <xfs@oss.sgi.com>; Thu, 21 Aug 2014 07:38:06 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 8FDFDAC003
-	for <xfs@oss.sgi.com>; Thu, 21 Aug 2014 05:38:03 -0700 (PDT)
-Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id hj2uAPUSdDg5Hhr2 (version=TLSv1
+	by oss.sgi.com (Postfix) with ESMTP id 161C07F51
+	for <xfs@oss.sgi.com>; Thu, 21 Aug 2014 07:48:36 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 8AD75AC003
+	for <xfs@oss.sgi.com>; Thu, 21 Aug 2014 05:48:35 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id 5jBbIKRcBf5LXsUD (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 21 Aug 2014 05:38:01 -0700 (PDT)
-Message-ID: <53F5E822.9010507@oracle.com>
-Date: Thu, 21 Aug 2014 20:37:54 +0800
-From: Jeff Liu <jeff.liu@oracle.com>
+	Thu, 21 Aug 2014 05:48:30 -0700 (PDT)
+Date: Thu, 21 Aug 2014 08:48:24 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 1/6] xfs: mmap write/read leaves bad state on pages
+Message-ID: <20140821124823.GB64112@bfoster.bfoster>
+References: <1408597754-13526-1-git-send-email-david@fromorbit.com>
+	<1408597754-13526-2-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH RFC] xfs: combine xfs_seek_hole & xfs_seek_data
-References: <53F55765.6030205@redhat.com>
-In-Reply-To: <53F55765.6030205@redhat.com>
+Content-Disposition: inline
+In-Reply-To: <1408597754-13526-2-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,308 +30,149 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@redhat.com>, xfs-oss <xfs@oss.sgi.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: clm@fb.com, xfs@oss.sgi.com
 
-Hi Eric,
-
-On 08/21/2014 10:20 AM, Eric Sandeen wrote:
-> xfs_seek_hole & xfs_seek_data are remarkably similar;
-> so much so that they could be combined, saving a fair
-> bit of semi-complex code duplication.
+On Thu, Aug 21, 2014 at 03:09:09PM +1000, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
 > 
-> The following patch passes generic/285 and generic/286; E
-> is this worth doing, (maybe cleaning up a bit), or
-> is it too convoluted & confusing?
+> generic/263 is failing fsx at this point with a page spanning
+> EOF that cannot be invalidated. The operations are:
 > 
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> 1190 mapwrite   0x52c00 thru    0x5e569 (0xb96a bytes)
+> 1191 mapread    0x5c000 thru    0x5d636 (0x1637 bytes)
+> 1192 write      0x5b600 thru    0x771ff (0x1bc00 bytes)
+> 
+> where 1190 extents EOF from 0x54000 to 0x5e569. When the direct IO
+> write attempts to invalidate the cached page over this range, it
+> fails with -EBUSY and so we fire this assert:
+> 
+> XFS: Assertion failed: ret < 0 || ret == count, file: fs/xfs/xfs_file.c, line: 676
+> 
+> because the kernel is trying to fall back to buffered IO on the
+> direct IO path (which XFS does not do).
+> 
+> The real question is this: Why can't that page be invalidated after
+> it has been written to disk an cleaned?
+> 
+> Well, there's data on the first two buffers in the page (1k block
+> size, 4k page), but the third buffer on the page (i.e. beyond EOF)
+> is failing drop_buffers because it's bh->b_state == 0x3, which is
+> BH_Uptodate | BH_Dirty.  IOWs, there's dirty buffers beyond EOF. Say
+> what?
+> 
+> OK, set_buffer_dirty() is called on all buffers from
+> __set_page_buffers_dirty(), regardless of whether the buffer is
+> beyond EOF or not, which means that when we get to ->writepage,
+> we have buffers marked dirty beyond EOF that we need to clean.
+> So, we need to implement our own .set_page_dirty method that
+> doesn't dirty buffers beyond EOF.
+> 
+> This is messy because the buffer code is not meant to be shared
+> and it has interesting locking issues on the buffer dirty bits.
+> So just copy and paste it and then modify it to suit what we need.
+> 
+> cc: <stable@kernel.org>
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
 > ---
+>  fs/xfs/xfs_aops.c | 58 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
+>  1 file changed, 58 insertions(+)
 > 
->  xfs_file.c |  174 +++++++++++++++++--------------------------------------------
->  1 file changed, 50 insertions(+), 124 deletions(-)
-
-Significant code reduction :)
-
-> 
-> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-> index 076b170..321dde6 100644
-> --- a/fs/xfs/xfs_file.c
-> +++ b/fs/xfs/xfs_file.c
-> @@ -964,7 +964,7 @@ xfs_vm_page_mkwrite(
->  
->  /*
->   * This type is designed to indicate the type of offset we would like
-> - * to search from page cache for either xfs_seek_data() or xfs_seek_hole().
-> + * to search from page cache for xfs_seek_hole_data().
->   */
->  enum {
->  	HOLE_OFF = 0,
-> @@ -1021,7 +1021,7 @@ xfs_lookup_buffer_offset(
->  /*
->   * This routine is called to find out and return a data or hole offset
->   * from the page cache for unwritten extents according to the desired
-> - * type for xfs_seek_data() or xfs_seek_hole().
-> + * type for xfs_seek_hole_data().
->   *
->   * The argument offset is used to tell where we start to search from the
->   * page cache.  Map is used to figure out the end points of the range to
-> @@ -1181,9 +1181,10 @@ out:
+> diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+> index 11e9b4c..2a316ad 100644
+> --- a/fs/xfs/xfs_aops.c
+> +++ b/fs/xfs/xfs_aops.c
+> @@ -1753,11 +1753,69 @@ xfs_vm_readpages(
+>  	return mpage_readpages(mapping, pages, nr_pages, xfs_get_blocks);
 >  }
 >  
->  STATIC loff_t
-> -xfs_seek_data(
-> +xfs_seek_hole_data(
->  	struct file		*file,
-> -	loff_t			start)
-> +	loff_t			start,
-> +	int			whence)
->  {
->  	struct inode		*inode = file->f_mapping->host;
->  	struct xfs_inode	*ip = XFS_I(inode);
-> @@ -1195,6 +1196,9 @@ xfs_seek_data(
->  	uint			lock;
->  	int			error;
->  
-> +	if (XFS_FORCED_SHUTDOWN(mp))
-> +		return -EIO;
+> +/*
+> + * This is basically a copy of __set_page_dirty_buffers() with one
+> + * small tweak: buffers beyond EOF do not get marked dirty. If we mark them
+> + * dirty, we'll never be able to clean them because we don't write buffers
+> + * beyond EOF, and that means we can't invalidate pages that span EOF
+> + * that have been marked dirty. Further, the dirty state can leak into
+> + * the file interior if the file is extended, resulting in all sorts of
+> + * bad things happening as the state does not match the unerlying data.
+> + */
+> +STATIC int
+> +xfs_vm_set_page_dirty(
+> +	struct page		*page)
+> +{
+> +	struct address_space	*mapping = page_mapping(page);
 
-Currently, the forced shutdown check up is only enabled for SEEK_HOLE.
-But looks we should add it for SEEK_DATA as well, no matter the RFC
-patch would be applied or not.
+This breaks xfs as a kernel module:
 
+$ make -j 8 M=fs/xfs
+  Building modules, stage 2.
+  MODPOST 1 modules
+WARNING: "page_mapping" [fs/xfs/xfs.ko] undefined!
+  ...
+
+I suppose we could export that symbol, but why wouldn't we just propose
+this change to __set_page_dirty_buffers()?
+
+Brian
+
+> +	struct inode		*inode = mapping->host;
+> +	loff_t			end_offset;
+> +	loff_t			offset;
+> +	int			newly_dirty;
 > +
->  	lock = xfs_ilock_data_map_shared(ip);
->  
->  	isize = i_size_read(inode);
-> @@ -1209,6 +1213,7 @@ xfs_seek_data(
->  	 */
->  	fsbno = XFS_B_TO_FSBT(mp, start);
->  	end = XFS_B_TO_FSB(mp, isize);
+> +	if (unlikely(!mapping))
+> +		return !TestSetPageDirty(page);
 > +
->  	for (;;) {
->  		struct xfs_bmbt_irec	map[2];
->  		int			nmap = 2;
-> @@ -1229,29 +1234,46 @@ xfs_seek_data(
->  			offset = max_t(loff_t, start,
->  				       XFS_FSB_TO_B(mp, map[i].br_startoff));
->  
-> -			/* Landed in a data extent */
-> -			if (map[i].br_startblock == DELAYSTARTBLOCK ||
-> -			    (map[i].br_state == XFS_EXT_NORM &&
-> -			     !isnullstartblock(map[i].br_startblock)))
-> +			/* Landed in the hole we wanted? */
-> +			if (whence == SEEK_HOLE &&
-> +			    map[i].br_startblock == HOLESTARTBLOCK)
-> +				goto out;
+> +	end_offset = i_size_read(inode);
+> +	offset = end_offset & PAGE_CACHE_MASK;
 > +
-> +			/* Landed in the data extent we wanted? */
-> +			if (whence == SEEK_DATA &&
-> +			    (map[i].br_startblock == DELAYSTARTBLOCK ||
-> +			     (map[i].br_state == XFS_EXT_NORM &&
-> +			      !isnullstartblock(map[i].br_startblock))))
->  				goto out;
->  
->  			/*
-> -			 * Landed in an unwritten extent, try to search data
-> -			 * from page cache.
-> +			 * Landed in an unwritten extent, try to search
-> +			 * for hole or data from page cache.
->  			 */
->  			if (map[i].br_state == XFS_EXT_UNWRITTEN) {
->  				if (xfs_find_get_desired_pgoff(inode, &map[i],
-> -							DATA_OFF, &offset))
-> +				      whence == SEEK_HOLE ? HOLE_OFF : DATA_OFF,
-> +							&offset))
->  					goto out;
->  			}
->  		}
->  
-> -		/*
-> -		 * map[0] is hole or its an unwritten extent but
-> -		 * without data in page cache.  Probably means that
-> -		 * we are reading after EOF if nothing in map[1].
-> -		 */
->  		if (nmap == 1) {
-> +			/*
-> +			 * The single map didn't have what we were looking for.
-> +			 * If we were looking for a hole, we are probably
-> +			 * looking past EOF.  We should fix offset to point
-> +			 * to the end of the file (i.e., there is an implicit
-> +			 * hole at the end of any file).
-> +		 	 */
-> +			if (whence == SEEK_HOLE) {
-> +				offset = isize;
-> +				break;
-> +			}
-> +			/*
-> +			 * If we were looking for data, it's nowhere to be found
-> +			 */
-> +			ASSERT(whence == SEEK_DATA);
->  			error = -ENXIO;
->  			goto out_unlock;
->  		}
-> @@ -1260,125 +1282,30 @@ xfs_seek_data(
->  
->  		/*
->  		 * Nothing was found, proceed to the next round of search
-> -		 * if reading offset not beyond or hit EOF.
-> +		 * if the next reading offset is not at or beyond EOF.
->  		 */
->  		fsbno = map[i - 1].br_startoff + map[i - 1].br_blockcount;
->  		start = XFS_FSB_TO_B(mp, fsbno);
->  		if (start >= isize) {
-> +			if (whence == SEEK_HOLE) {
-> +				offset = isize;
-> +				break;
-> +			}
-> +			ASSERT(whence == SEEK_DATA);
->  			error = -ENXIO;
->  			goto out_unlock;
->  		}
->  	}
->  
->  out:
-> -	offset = vfs_setpos(file, offset, inode->i_sb->s_maxbytes);
-> -
-> -out_unlock:
-> -	xfs_iunlock(ip, lock);
-> -
-> -	if (error)
-> -		return error;
-> -	return offset;
-> -}
-> -
-> -STATIC loff_t
-> -xfs_seek_hole(
-> -	struct file		*file,
-> -	loff_t			start)
-> -{
-> -	struct inode		*inode = file->f_mapping->host;
-> -	struct xfs_inode	*ip = XFS_I(inode);
-> -	struct xfs_mount	*mp = ip->i_mount;
-> -	loff_t			uninitialized_var(offset);
-> -	xfs_fsize_t		isize;
-> -	xfs_fileoff_t		fsbno;
-> -	xfs_filblks_t		end;
-> -	uint			lock;
-> -	int			error;
-> -
-> -	if (XFS_FORCED_SHUTDOWN(mp))
-> -		return -EIO;
-> -
-> -	lock = xfs_ilock_data_map_shared(ip);
-> -
-> -	isize = i_size_read(inode);
-> -	if (start >= isize) {
-> -		error = -ENXIO;
-> -		goto out_unlock;
-> -	}
-> -
-> -	fsbno = XFS_B_TO_FSBT(mp, start);
-> -	end = XFS_B_TO_FSB(mp, isize);
-> -
-> -	for (;;) {
-> -		struct xfs_bmbt_irec	map[2];
-> -		int			nmap = 2;
-> -		unsigned int		i;
-> -
-> -		error = xfs_bmapi_read(ip, fsbno, end - fsbno, map, &nmap,
-> -				       XFS_BMAPI_ENTIRE);
-> -		if (error)
-> -			goto out_unlock;
-> -
-> -		/* No extents at given offset, must be beyond EOF */
-> -		if (nmap == 0) {
-> -			error = -ENXIO;
-> -			goto out_unlock;
-> -		}
-> -
-> -		for (i = 0; i < nmap; i++) {
-> -			offset = max_t(loff_t, start,
-> -				       XFS_FSB_TO_B(mp, map[i].br_startoff));
-> -
-> -			/* Landed in a hole */
-> -			if (map[i].br_startblock == HOLESTARTBLOCK)
-> -				goto out;
-> -
-> -			/*
-> -			 * Landed in an unwritten extent, try to search hole
-> -			 * from page cache.
-> -			 */
-> -			if (map[i].br_state == XFS_EXT_UNWRITTEN) {
-> -				if (xfs_find_get_desired_pgoff(inode, &map[i],
-> -							HOLE_OFF, &offset))
-> -					goto out;
-> -			}
-> -		}
-> -
-> -		/*
-> -		 * map[0] contains data or its unwritten but contains
-> -		 * data in page cache, probably means that we are
-> -		 * reading after EOF.  We should fix offset to point
-> -		 * to the end of the file(i.e., there is an implicit
-> -		 * hole at the end of any file).
-> -		 */
-> -		if (nmap == 1) {
-> -			offset = isize;
-> -			break;
-> -		}
-> -
-> -		ASSERT(i > 1);
-> -
-> -		/*
-> -		 * Both mappings contains data, proceed to the next round of
-> -		 * search if the current reading offset not beyond or hit EOF.
-> -		 */
-> -		fsbno = map[i - 1].br_startoff + map[i - 1].br_blockcount;
-> -		start = XFS_FSB_TO_B(mp, fsbno);
-> -		if (start >= isize) {
-> -			offset = isize;
-> -			break;
-> -		}
-> -	}
-> -
-> -out:
->  	/*
-> -	 * At this point, we must have found a hole.  However, the returned
-> +	 * If at this point we have found the hole we wanted, the returned
->  	 * offset may be bigger than the file size as it may be aligned to
-> -	 * page boundary for unwritten extents, we need to deal with this
-> +	 * page boundary for unwritten extents.  We need to deal with this
->  	 * situation in particular.
->  	 */
-> -	offset = min_t(loff_t, offset, isize);
-> +	if (whence == SEEK_HOLE)
-> +		offset = min_t(loff_t, offset, isize);
->  	offset = vfs_setpos(file, offset, inode->i_sb->s_maxbytes);
->  
->  out_unlock:
-> @@ -1400,10 +1327,9 @@ xfs_file_llseek(
->  	case SEEK_CUR:
->  	case SEEK_SET:
->  		return generic_file_llseek(file, offset, origin);
-> -	case SEEK_DATA:
-> -		return xfs_seek_data(file, offset);
->  	case SEEK_HOLE:
-> -		return xfs_seek_hole(file, offset);
-> +	case SEEK_DATA:
-> +		return xfs_seek_hole_data(file, offset, origin);
->  	default:
->  		return -EINVAL;
->  	}
-
-With the current refactoring, the code logic still looks easy to understand,
-so I personally vote this change.
-
-BTW, originally I have also tried to implement SEEK_HOLE/DATA in one routine
-in my 1st round of patch which was shown as following. However, I failed to
-make the code looks readable and works correctly at that time.
-
-http://oss.sgi.com/archives/xfs/2011-11/msg00364.html
-http://oss.sgi.com/archives/xfs/2011-11/msg00395.html
-
-
-Cheers,
--Jeff
+> +	spin_lock(&mapping->private_lock);
+> +	if (page_has_buffers(page)) {
+> +		struct buffer_head *head = page_buffers(page);
+> +		struct buffer_head *bh = head;
+> +
+> +		do {
+> +			if (offset < end_offset)
+> +				set_buffer_dirty(bh);
+> +			bh = bh->b_this_page;
+> +			offset += 1 << inode->i_blkbits;
+> +		} while (bh != head);
+> +	}
+> +	newly_dirty = !TestSetPageDirty(page);
+> +	spin_unlock(&mapping->private_lock);
+> +
+> +	if (newly_dirty) {
+> +		/* sigh - __set_page_dirty() is static, so copy it here, too */
+> +		unsigned long flags;
+> +
+> +		spin_lock_irqsave(&mapping->tree_lock, flags);
+> +		if (page->mapping) {	/* Race with truncate? */
+> +			WARN_ON_ONCE(!PageUptodate(page));
+> +			account_page_dirtied(page, mapping);
+> +			radix_tree_tag_set(&mapping->page_tree,
+> +					page_index(page), PAGECACHE_TAG_DIRTY);
+> +		}
+> +		spin_unlock_irqrestore(&mapping->tree_lock, flags);
+> +		__mark_inode_dirty(mapping->host, I_DIRTY_PAGES);
+> +	}
+> +	return newly_dirty;
+> +}
+> +
+>  const struct address_space_operations xfs_address_space_operations = {
+>  	.readpage		= xfs_vm_readpage,
+>  	.readpages		= xfs_vm_readpages,
+>  	.writepage		= xfs_vm_writepage,
+>  	.writepages		= xfs_vm_writepages,
+> +	.set_page_dirty		= xfs_vm_set_page_dirty,
+>  	.releasepage		= xfs_vm_releasepage,
+>  	.invalidatepage		= xfs_vm_invalidatepage,
+>  	.write_begin		= xfs_vm_write_begin,
+> -- 
+> 2.0.0
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
