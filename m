@@ -1,21 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id C4D967F4E
-	for <xfs@oss.sgi.com>; Thu, 21 Aug 2014 14:30:26 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 833D07F51
+	for <xfs@oss.sgi.com>; Thu, 21 Aug 2014 14:56:41 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 6DF0BAC002
-	for <xfs@oss.sgi.com>; Thu, 21 Aug 2014 12:30:25 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id w0ICz8GUvxJj4HsF (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 21 Aug 2014 12:30:17 -0700 (PDT)
-Message-ID: <53F648CC.9080604@redhat.com>
-Date: Thu, 21 Aug 2014 14:30:20 -0500
-From: Eric Sandeen <sandeen@redhat.com>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 2D4B3AC003
+	for <xfs@oss.sgi.com>; Thu, 21 Aug 2014 12:56:40 -0700 (PDT)
+Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
+	with ESMTP id 1sNgQSRIP8EeNoSb (version=TLSv1 cipher=AES256-SHA
+	bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 21 Aug 2014 12:56:39 -0700 (PDT)
+Date: Thu, 21 Aug 2014 21:56:32 +0200
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [PATCH 1/6] xfs: mmap write/read leaves bad state on pages
+Message-ID: <20140821195632.GA10335@quack.suse.cz>
+References: <1408597754-13526-1-git-send-email-david@fromorbit.com>
+	<1408597754-13526-2-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
-Subject: [PATCH] xfs: lseek: the "whence" argument is called "whence"
-References: <53F55765.6030205@redhat.com> <53F64723.4070001@sandeen.net>
-In-Reply-To: <53F64723.4070001@sandeen.net>
+Content-Disposition: inline
+In-Reply-To: <1408597754-13526-2-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,47 +30,154 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>, xfs-oss <xfs@oss.sgi.com>, Jeff Liu <jeff.liu@oracle.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: clm@fb.com, xfs@oss.sgi.com
 
-For some reason, the older commit:
+On Thu 21-08-14 15:09:09, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> generic/263 is failing fsx at this point with a page spanning
+> EOF that cannot be invalidated. The operations are:
+> 
+> 1190 mapwrite   0x52c00 thru    0x5e569 (0xb96a bytes)
+> 1191 mapread    0x5c000 thru    0x5d636 (0x1637 bytes)
+> 1192 write      0x5b600 thru    0x771ff (0x1bc00 bytes)
+> 
+> where 1190 extents EOF from 0x54000 to 0x5e569. When the direct IO
+> write attempts to invalidate the cached page over this range, it
+> fails with -EBUSY and so we fire this assert:
+> 
+> XFS: Assertion failed: ret < 0 || ret == count, file: fs/xfs/xfs_file.c, line: 676
+> 
+> because the kernel is trying to fall back to buffered IO on the
+> direct IO path (which XFS does not do).
+> 
+> The real question is this: Why can't that page be invalidated after
+> it has been written to disk an cleaned?
+> 
+> Well, there's data on the first two buffers in the page (1k block
+> size, 4k page), but the third buffer on the page (i.e. beyond EOF)
+> is failing drop_buffers because it's bh->b_state == 0x3, which is
+> BH_Uptodate | BH_Dirty.  IOWs, there's dirty buffers beyond EOF. Say
+> what?
+> 
+> OK, set_buffer_dirty() is called on all buffers from
+> __set_page_buffers_dirty(), regardless of whether the buffer is
+> beyond EOF or not, which means that when we get to ->writepage,
+> we have buffers marked dirty beyond EOF that we need to clean.
+> So, we need to implement our own .set_page_dirty method that
+> doesn't dirty buffers beyond EOF.
+> 
+> This is messy because the buffer code is not meant to be shared
+> and it has interesting locking issues on the buffer dirty bits.
+> So just copy and paste it and then modify it to suit what we need.
+  Well, I'm not sure this is the cleanest way to fix your problem. The
+thing is that inode size can change (decrease) after set_page_dirty() has
+run and writeback can find the page before truncate_inode_pages() calls
+do_invalidatepage() on the last partial page. Now I agree that given
+truncate and direct IO are both synchronized using IOLOCK, this change
+still fixes your problem. I just wanted to point out that your change
+doesn't really make sure won't see dirty buffers in a tail page beyond
+i_size.
 
-    965c8e5 lseek: the "whence" argument is called "whence"
+As Anton has pointed out other filesystems solve the same issue by clearing
+the dirty bits beyond EOF in their writepage() function. Also since we
+zero-out the tail of the page in writepage() (even in XFS as I checked),
+this kind of makes sense to me and has smaller overhead than special
+set_page_dirty()...
 
-    lseek: the "whence" argument is called "whence"
-    
-    But the kernel decided to call it "origin" instead.
-    Fix most of the sites.
+								Honza
 
-left out xfs.  So fix xfs.
-
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
-
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index 1da3b7d..0fe36e4 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -1322,16 +1322,16 @@ STATIC loff_t
- xfs_file_llseek(
- 	struct file	*file,
- 	loff_t		offset,
--	int		origin)
-+	int		whence)
- {
--	switch (origin) {
-+	switch (whence) {
- 	case SEEK_END:
- 	case SEEK_CUR:
- 	case SEEK_SET:
--		return generic_file_llseek(file, offset, origin);
-+		return generic_file_llseek(file, offset, whence);
- 	case SEEK_HOLE:
- 	case SEEK_DATA:
--		return xfs_seek_hole_data(file, offset, origin);
-+		return xfs_seek_hole_data(file, offset, whence);
- 	default:
- 		return -EINVAL;
- 	}
+> cc: <stable@kernel.org>
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> ---
+>  fs/xfs/xfs_aops.c | 58 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
+>  1 file changed, 58 insertions(+)
+> 
+> diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+> index 11e9b4c..2a316ad 100644
+> --- a/fs/xfs/xfs_aops.c
+> +++ b/fs/xfs/xfs_aops.c
+> @@ -1753,11 +1753,69 @@ xfs_vm_readpages(
+>  	return mpage_readpages(mapping, pages, nr_pages, xfs_get_blocks);
+>  }
+>  
+> +/*
+> + * This is basically a copy of __set_page_dirty_buffers() with one
+> + * small tweak: buffers beyond EOF do not get marked dirty. If we mark them
+> + * dirty, we'll never be able to clean them because we don't write buffers
+> + * beyond EOF, and that means we can't invalidate pages that span EOF
+> + * that have been marked dirty. Further, the dirty state can leak into
+> + * the file interior if the file is extended, resulting in all sorts of
+> + * bad things happening as the state does not match the unerlying data.
+> + */
+> +STATIC int
+> +xfs_vm_set_page_dirty(
+> +	struct page		*page)
+> +{
+> +	struct address_space	*mapping = page_mapping(page);
+> +	struct inode		*inode = mapping->host;
+> +	loff_t			end_offset;
+> +	loff_t			offset;
+> +	int			newly_dirty;
+> +
+> +	if (unlikely(!mapping))
+> +		return !TestSetPageDirty(page);
+> +
+> +	end_offset = i_size_read(inode);
+> +	offset = end_offset & PAGE_CACHE_MASK;
+> +
+> +	spin_lock(&mapping->private_lock);
+> +	if (page_has_buffers(page)) {
+> +		struct buffer_head *head = page_buffers(page);
+> +		struct buffer_head *bh = head;
+> +
+> +		do {
+> +			if (offset < end_offset)
+> +				set_buffer_dirty(bh);
+> +			bh = bh->b_this_page;
+> +			offset += 1 << inode->i_blkbits;
+> +		} while (bh != head);
+> +	}
+> +	newly_dirty = !TestSetPageDirty(page);
+> +	spin_unlock(&mapping->private_lock);
+> +
+> +	if (newly_dirty) {
+> +		/* sigh - __set_page_dirty() is static, so copy it here, too */
+> +		unsigned long flags;
+> +
+> +		spin_lock_irqsave(&mapping->tree_lock, flags);
+> +		if (page->mapping) {	/* Race with truncate? */
+> +			WARN_ON_ONCE(!PageUptodate(page));
+> +			account_page_dirtied(page, mapping);
+> +			radix_tree_tag_set(&mapping->page_tree,
+> +					page_index(page), PAGECACHE_TAG_DIRTY);
+> +		}
+> +		spin_unlock_irqrestore(&mapping->tree_lock, flags);
+> +		__mark_inode_dirty(mapping->host, I_DIRTY_PAGES);
+> +	}
+> +	return newly_dirty;
+> +}
+> +
+>  const struct address_space_operations xfs_address_space_operations = {
+>  	.readpage		= xfs_vm_readpage,
+>  	.readpages		= xfs_vm_readpages,
+>  	.writepage		= xfs_vm_writepage,
+>  	.writepages		= xfs_vm_writepages,
+> +	.set_page_dirty		= xfs_vm_set_page_dirty,
+>  	.releasepage		= xfs_vm_releasepage,
+>  	.invalidatepage		= xfs_vm_invalidatepage,
+>  	.write_begin		= xfs_vm_write_begin,
+> -- 
+> 2.0.0
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+-- 
+Jan Kara <jack@suse.cz>
+SUSE Labs, CR
 
 _______________________________________________
 xfs mailing list
