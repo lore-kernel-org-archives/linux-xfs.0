@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id BB3B77F61
-	for <xfs@oss.sgi.com>; Thu, 21 Aug 2014 08:09:30 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 681E5AC004
-	for <xfs@oss.sgi.com>; Thu, 21 Aug 2014 06:09:30 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id H3YsVNYwn28gbPux (version=TLSv1
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 934537F51
+	for <xfs@oss.sgi.com>; Thu, 21 Aug 2014 08:54:42 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 710E1304081
+	for <xfs@oss.sgi.com>; Thu, 21 Aug 2014 06:54:42 -0700 (PDT)
+Received: from ppsw-41.csi.cam.ac.uk (ppsw-41.csi.cam.ac.uk [131.111.8.141])
+	by cuda.sgi.com with ESMTP id e6bbVAarkYvaj0RT (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 21 Aug 2014 06:09:29 -0700 (PDT)
-Date: Thu, 21 Aug 2014 09:09:25 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 6/6] xfs: xfs_file_collapse_range is delalloc challenged
-Message-ID: <20140821130924.GF64112@bfoster.bfoster>
+	Thu, 21 Aug 2014 06:54:40 -0700 (PDT)
+Subject: Re: [PATCH 1/6] xfs: mmap write/read leaves bad state on pages
+Mime-Version: 1.0 (Mac OS X Mail 7.3 \(1878.6\))
+From: Anton Altaparmakov <aia21@cam.ac.uk>
+In-Reply-To: <20140821130812.GC1567@infradead.org>
+Date: Thu, 21 Aug 2014 14:54:30 +0100
+Message-Id: <9F1A2B5D-6A0E-47B3-BF63-BA46EF61CCD0@cam.ac.uk>
 References: <1408597754-13526-1-git-send-email-david@fromorbit.com>
-	<1408597754-13526-7-git-send-email-david@fromorbit.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1408597754-13526-7-git-send-email-david@fromorbit.com>
+	<1408597754-13526-2-git-send-email-david@fromorbit.com>
+	<20140821130812.GC1567@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,77 +30,75 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: clm@fb.com, xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-fsdevel@vger.kernel.org, clm@fb.com, xfs@oss.sgi.com
 
-On Thu, Aug 21, 2014 at 03:09:14PM +1000, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
-> 
-> If we have delalloc extents on a file before we run a collapse range
-> opertaion, we sync the range that we are going to collapse to
-> convert delalloc extents in that region to real extents to simplify
-> the shift operation.
-> 
-> However, the shift operation then assumes that the extent list is
-> not going to change as it iterates over the extent list moving
-> things about. Unfortunately, this isn't true because we can't hold
-> the ILOCK over all the operations. We can prevent new IO from
-> modifying the extent list by holding the IOLOCK, but that doesn't
-> prevent writeback from running....
-> 
-> And when writeback runs, it can convert delalloc extents is the
-> range of the file prior to the region being collapsed, and this
-> changes the indexes of all the extents in the file. That causes the
-> collapse range operation to Go Bad.
-> 
-> The right fix is to rewrite the extent shift operation not to be
-> dependent on the extent list not changing across the entire
-> operation, but this is a fairly significant piece of work to do.
-> Hence, as a short-term workaround for the problem, sync the entire
-> file before starting a collapse operation to remove all delalloc
-> ranges from the file and so avoid the problem of concurrent
-> writeback changing the extent list.
-> 
-> Diagnosed-and-Reported-by: Brian Foster <bfoster@redhat.com>
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> ---
+Hi,
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+On 21 Aug 2014, at 14:08, Christoph Hellwig <hch@infradead.org> wrote:
+> On Thu, Aug 21, 2014 at 03:09:09PM +1000, Dave Chinner wrote:
+>> From: Dave Chinner <dchinner@redhat.com>
+>> 
+>> generic/263 is failing fsx at this point with a page spanning
+>> EOF that cannot be invalidated. The operations are:
+>> 
+>> 1190 mapwrite   0x52c00 thru    0x5e569 (0xb96a bytes)
+>> 1191 mapread    0x5c000 thru    0x5d636 (0x1637 bytes)
+>> 1192 write      0x5b600 thru    0x771ff (0x1bc00 bytes)
+>> 
+>> where 1190 extents EOF from 0x54000 to 0x5e569. When the direct IO
+>> write attempts to invalidate the cached page over this range, it
+>> fails with -EBUSY and so we fire this assert:
+>> 
+>> XFS: Assertion failed: ret < 0 || ret == count, file: fs/xfs/xfs_file.c, line: 676
+>> 
+>> because the kernel is trying to fall back to buffered IO on the
+>> direct IO path (which XFS does not do).
+>> 
+>> The real question is this: Why can't that page be invalidated after
+>> it has been written to disk an cleaned?
+>> 
+>> Well, there's data on the first two buffers in the page (1k block
+>> size, 4k page), but the third buffer on the page (i.e. beyond EOF)
+>> is failing drop_buffers because it's bh->b_state == 0x3, which is
+>> BH_Uptodate | BH_Dirty.  IOWs, there's dirty buffers beyond EOF. Say
+>> what?
+>> 
+>> OK, set_buffer_dirty() is called on all buffers from
+>> __set_page_buffers_dirty(), regardless of whether the buffer is
+>> beyond EOF or not, which means that when we get to ->writepage,
+>> we have buffers marked dirty beyond EOF that we need to clean.
+>> So, we need to implement our own .set_page_dirty method that
+>> doesn't dirty buffers beyond EOF.
+> 
+> Shouldn't this be fixed in __set_page_buffers_dirty itself?  This
+> doesn't seem an XFS-specific issue.
 
->  fs/xfs/xfs_bmap_util.c | 13 +++++++++++++
->  1 file changed, 13 insertions(+)
-> 
-> diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-> index c53cc03..035041d 100644
-> --- a/fs/xfs/xfs_bmap_util.c
-> +++ b/fs/xfs/xfs_bmap_util.c
-> @@ -1460,6 +1460,19 @@ xfs_collapse_file_space(
->  	start_fsb = XFS_B_TO_FSB(mp, offset + len);
->  	shift_fsb = XFS_B_TO_FSB(mp, len);
->  
-> +	/*
-> +	 * writeback the entire file to prevent concurrent writeback of ranges
-> +	 * outside the collapsing region from changing the extent list.
-> +	 *
-> +	 * XXX: This is a temporary fix until the extent shift loop below is
-> +	 * converted to use offsets and lookups within the ILOCK rather than
-> +	 * carrying around the index into the extent list for the next
-> +	 * iteration.
-> +	 */
-> +	error = filemap_write_and_wait(VFS_I(ip)->i_mapping);
-> +	if (error)
-> +		return error;
-> +
->  	error = xfs_free_file_space(ip, offset, len);
->  	if (error)
->  		return error;
-> -- 
-> 2.0.0
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+It is perfectly normal to have dirty buffers beyond EOF.  The file system should just clean such buffers so the page then becomes reclaimable (or if the file system is using generic functionality this would be done by the generic functions but XFS is implementing writepage(s) itself and missing this bit).
+
+The generic function you want to see is fs/buffer.c::__block_write_full_page() which does:
+
+                if (block > last_block) {
+                        /*
+                         * mapped buffers outside i_size will occur, because
+                         * this page can be outside i_size when there is a
+                         * truncate in progress.
+                         */
+                        /*
+                         * The buffer was zeroed by block_write_full_page()
+                         */
+                        clear_buffer_dirty(bh);
+                        set_buffer_uptodate(bh);
+
+Why do you want to add complexity to __set_page_buffers_dirty() given that they are no big deal and we need to be able to cope with their existance due to concurrent truncate anyway?
+
+Best regards,
+
+	Anton
+-- 
+Anton Altaparmakov <aia21 at cam.ac.uk> (replace at with @)
+University of Cambridge Information Services, Roger Needham Building
+7 JJ Thomson Avenue, Cambridge, CB3 0RB, UK
 
 _______________________________________________
 xfs mailing list
