@@ -1,24 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id A7A8E7F56
-	for <xfs@oss.sgi.com>; Thu, 21 Aug 2014 17:39:56 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 82D187F53
+	for <xfs@oss.sgi.com>; Thu, 21 Aug 2014 17:50:52 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 7634A8F8035
-	for <xfs@oss.sgi.com>; Thu, 21 Aug 2014 15:39:53 -0700 (PDT)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 2520BAC004
+	for <xfs@oss.sgi.com>; Thu, 21 Aug 2014 15:50:52 -0700 (PDT)
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	GBP7q00KV4mGLU7o for <xfs@oss.sgi.com>;
-	Thu, 21 Aug 2014 15:39:51 -0700 (PDT)
-Date: Fri, 22 Aug 2014 08:38:45 +1000
+	6yyS3yiM6r2ONhsB for <xfs@oss.sgi.com>;
+	Thu, 21 Aug 2014 15:50:50 -0700 (PDT)
+Date: Fri, 22 Aug 2014 08:50:48 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 1/6] xfs: mmap write/read leaves bad state on pages
-Message-ID: <20140821223845.GP26465@dastard>
-References: <1408597754-13526-1-git-send-email-david@fromorbit.com>
-	<1408597754-13526-2-git-send-email-david@fromorbit.com>
-	<20140821124823.GB64112@bfoster.bfoster>
+Subject: Re: [PATCH] xfsprogs: use abort() not ASSERT(0) for impossible
+	switch case
+Message-ID: <20140821225048.GQ26465@dastard>
+References: <53F62D12.8010505@sandeen.net>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20140821124823.GB64112@bfoster.bfoster>
+In-Reply-To: <53F62D12.8010505@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,48 +30,37 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
-Cc: clm@fb.com, xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-On Thu, Aug 21, 2014 at 08:48:24AM -0400, Brian Foster wrote:
-> On Thu, Aug 21, 2014 at 03:09:09PM +1000, Dave Chinner wrote:
-> > +++ b/fs/xfs/xfs_aops.c
-> > @@ -1753,11 +1753,69 @@ xfs_vm_readpages(
-> >  	return mpage_readpages(mapping, pages, nr_pages, xfs_get_blocks);
-> >  }
-> >  
-> > +/*
-> > + * This is basically a copy of __set_page_dirty_buffers() with one
-> > + * small tweak: buffers beyond EOF do not get marked dirty. If we mark them
-> > + * dirty, we'll never be able to clean them because we don't write buffers
-> > + * beyond EOF, and that means we can't invalidate pages that span EOF
-> > + * that have been marked dirty. Further, the dirty state can leak into
-> > + * the file interior if the file is extended, resulting in all sorts of
-> > + * bad things happening as the state does not match the unerlying data.
-> > + */
-> > +STATIC int
-> > +xfs_vm_set_page_dirty(
-> > +	struct page		*page)
-> > +{
-> > +	struct address_space	*mapping = page_mapping(page);
+On Thu, Aug 21, 2014 at 12:32:02PM -0500, Eric Sandeen wrote:
+> The original reason for the expletive below has been lost
+> in the mists of time
+
+Oh, no it hasn't.
+
+That's a switch statement using enums for the cases and so if you
+don't define every enum value in the switch statement gcc throws
+warnings. IOWs, the switch statement has to either define them all or
+contain a "default" case, either of which *does not need to exist* because
+other code guarantees that the value of cur->bc_btnum is within
+the valid range.
+
+So, we have to put an invalid value into the switch statement to
+make gcc shut the fuck up, and the ASSERT(0) is there to indicate
+that "this should never, ever happen".
+
+> libxfs, and this leads static analysis checkers to believe that
+> XFS_BTNUM_MAX is possible, and that we might overflow an array
+> later when using it as an index.
 > 
-> This breaks xfs as a kernel module:
-> 
-> $ make -j 8 M=fs/xfs
->   Building modules, stage 2.
->   MODPOST 1 modules
-> WARNING: "page_mapping" [fs/xfs/xfs.ko] undefined!
->   ...
+> We can shut this up and mark it as truly impossible with abort().
 
-Oh, that should just be:
-
-+	struct address_space	*mapping = page->mapping;
-
-> I suppose we could export that symbol, but why wouldn't we just propose
-> this change to __set_page_dirty_buffers()?
-
-I'm not going to risk breaking other filesystems that have implicit
-dependencies on buffers beyond EOF being dirtied.
+Random differences between kernel and user code to keep static
+analysis checkers happy is not a good road to follow, because it
+will just cause patch failures and people wondering "why is this
+randomly different to the kernel code?". So, no, I don't really like
+this approach.
 
 Cheers,
 
