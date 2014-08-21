@@ -1,30 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 944257F4E
-	for <xfs@oss.sgi.com>; Wed, 20 Aug 2014 22:18:56 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 81FB28F8039
-	for <xfs@oss.sgi.com>; Wed, 20 Aug 2014 20:18:53 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id 22gMnXL8i05HSPmc (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 20 Aug 2014 20:18:49 -0700 (PDT)
-Received: from int-mx10.intmail.prod.int.phx2.redhat.com
-	(int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id s7L3ImdB032493
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256
-	verify=OK) for <xfs@oss.sgi.com>; Wed, 20 Aug 2014 23:18:48 -0400
-Received: from liberator.sandeen.net (ovpn01.gateway.prod.ext.phx2.redhat.com
-	[10.5.9.1])
-	by int-mx10.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id s7L3IlO1025050
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES128-SHA bits=128 verify=NO)
-	for <xfs@oss.sgi.com>; Wed, 20 Aug 2014 23:18:48 -0400
-Message-ID: <53F5651C.8030206@redhat.com>
-Date: Wed, 20 Aug 2014 22:18:52 -0500
-From: Eric Sandeen <sandeen@redhat.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 072F67F50
+	for <xfs@oss.sgi.com>; Wed, 20 Aug 2014 23:36:44 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id E9EBD304043
+	for <xfs@oss.sgi.com>; Wed, 20 Aug 2014 21:36:40 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id TPTDB4X1MBEm8uh8 for <xfs@oss.sgi.com>;
+	Wed, 20 Aug 2014 21:36:36 -0700 (PDT)
+Message-ID: <53F57758.9070007@sandeen.net>
+Date: Wed, 20 Aug 2014 23:36:40 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: [PATCH] xfs: deduplicate xlog_do_recovery_pass()
+Subject: Re: [PATCH] xfs: deduplicate xlog_do_recovery_pass()
+References: <53F5651C.8030206@redhat.com>
+In-Reply-To: <53F5651C.8030206@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -37,142 +27,38 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs-oss <xfs@oss.sgi.com>
+To: Eric Sandeen <sandeen@redhat.com>, xfs-oss <xfs@oss.sgi.com>
 
-In xlog_do_recovery_pass(), there are 2 distinct cases:
-non-wrapped and wrapped log recovery.
+On 8/20/14, 10:18 PM, Eric Sandeen wrote:
+> In xlog_do_recovery_pass(), there are 2 distinct cases:
+> non-wrapped and wrapped log recovery.
+> 
+> If we find a wrapped log, we recover around the end
+> of the log, and then handle the rest of recovery
+> exactly as in the non-wrapped case - using exactly the same
+> (duplicated) code.
+> 
+> Rather than having the same code in both cases, we can
+> get the wrapped portion out of the way first if needed,
+> and then recover the non-wrapped portion of the log.
+> 
+> There should be no functional change here, just code
+> reorganization & deduplication.
+> 
+> The patch looks a bit bigger than it really is; the last
+> hunk is whitespace changes (un-indenting).
+> 
+> Tested with xfstests "check -g log" on a stock configuration.
 
-If we find a wrapped log, we recover around the end
-of the log, and then handle the rest of recovery
-exactly as in the non-wrapped case - using exactly the same
-(duplicated) code.
+which didn't actually hit any log wraps.  Does xfstests
+really not cover wrapped log recovery?  anyway, something like this
+on a small log:
 
-Rather than having the same code in both cases, we can
-get the wrapped portion out of the way first if needed,
-and then recover the non-wrapped portion of the log.
+[root@bp-05 xfstests]# while true; do mount /dev/sdc5 /mnt/scratch; ltp/fsstress -n 500 -d /mnt/scratch; src/godown -f /mnt/scratch; umount /mnt/scratch; done
 
-There should be no functional change here, just code
-reorganization & deduplication.
+hit plenty of log wraps w/ no problem.
 
-The patch looks a bit bigger than it really is; the last
-hunk is whitespace changes (un-indenting).
-
-Tested with xfstests "check -g log" on a stock configuration.
-
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
-
- xfs_log_recover.c |   81 ++++++++++++++++++------------------------------------
- 1 file changed, 27 insertions(+), 54 deletions(-)
-
-diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index 1fd5787..08d3569 100644
---- a/fs/xfs/xfs_log_recover.c
-+++ b/fs/xfs/xfs_log_recover.c
-@@ -4132,41 +4132,13 @@ xlog_do_recovery_pass(
- 	}
- 
- 	memset(rhash, 0, sizeof(rhash));
--	if (tail_blk <= head_blk) {
--		for (blk_no = tail_blk; blk_no < head_blk; ) {
--			error = xlog_bread(log, blk_no, hblks, hbp, &offset);
--			if (error)
--				goto bread_err2;
--
--			rhead = (xlog_rec_header_t *)offset;
--			error = xlog_valid_rec_header(log, rhead, blk_no);
--			if (error)
--				goto bread_err2;
--
--			/* blocks in data section */
--			bblks = (int)BTOBB(be32_to_cpu(rhead->h_len));
--			error = xlog_bread(log, blk_no + hblks, bblks, dbp,
--					   &offset);
--			if (error)
--				goto bread_err2;
--
--			error = xlog_unpack_data(rhead, offset, log);
--			if (error)
--				goto bread_err2;
--
--			error = xlog_recover_process_data(log,
--						rhash, rhead, offset, pass);
--			if (error)
--				goto bread_err2;
--			blk_no += bblks + hblks;
--		}
--	} else {
-+	blk_no = tail_blk;
-+	if (tail_blk > head_blk) {
- 		/*
- 		 * Perform recovery around the end of the physical log.
- 		 * When the head is not on the same cycle number as the tail,
--		 * we can't do a sequential recovery as above.
-+		 * we can't do a sequential recovery.
- 		 */
--		blk_no = tail_blk;
- 		while (blk_no < log->l_logBBsize) {
- 			/*
- 			 * Check for header wrapping around physical end-of-log
-@@ -4280,34 +4252,35 @@ xlog_do_recovery_pass(
- 
- 		ASSERT(blk_no >= log->l_logBBsize);
- 		blk_no -= log->l_logBBsize;
-+	}
- 
--		/* read first part of physical log */
--		while (blk_no < head_blk) {
--			error = xlog_bread(log, blk_no, hblks, hbp, &offset);
--			if (error)
--				goto bread_err2;
-+	/* read first part of physical log */
-+	while (blk_no < head_blk) {
-+		error = xlog_bread(log, blk_no, hblks, hbp, &offset);
-+		if (error)
-+			goto bread_err2;
- 
--			rhead = (xlog_rec_header_t *)offset;
--			error = xlog_valid_rec_header(log, rhead, blk_no);
--			if (error)
--				goto bread_err2;
-+		rhead = (xlog_rec_header_t *)offset;
-+		error = xlog_valid_rec_header(log, rhead, blk_no);
-+		if (error)
-+			goto bread_err2;
- 
--			bblks = (int)BTOBB(be32_to_cpu(rhead->h_len));
--			error = xlog_bread(log, blk_no+hblks, bblks, dbp,
--					   &offset);
--			if (error)
--				goto bread_err2;
-+		/* blocks in data section */
-+		bblks = (int)BTOBB(be32_to_cpu(rhead->h_len));
-+		error = xlog_bread(log, blk_no+hblks, bblks, dbp,
-+				   &offset);
-+		if (error)
-+			goto bread_err2;
- 
--			error = xlog_unpack_data(rhead, offset, log);
--			if (error)
--				goto bread_err2;
-+		error = xlog_unpack_data(rhead, offset, log);
-+		if (error)
-+			goto bread_err2;
- 
--			error = xlog_recover_process_data(log, rhash,
--							rhead, offset, pass);
--			if (error)
--				goto bread_err2;
--			blk_no += bblks + hblks;
--		}
-+		error = xlog_recover_process_data(log, rhash,
-+						rhead, offset, pass);
-+		if (error)
-+			goto bread_err2;
-+		blk_no += bblks + hblks;
- 	}
- 
-  bread_err2:
+-Eric
 
 _______________________________________________
 xfs mailing list
