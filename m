@@ -1,27 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 9B3DB7F51
-	for <xfs@oss.sgi.com>; Thu, 21 Aug 2014 07:36:14 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 89EA68F8037
-	for <xfs@oss.sgi.com>; Thu, 21 Aug 2014 05:36:11 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id p7gy5DMsIVI5Lqd8 (version=TLSv1
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id F26DC7F51
+	for <xfs@oss.sgi.com>; Thu, 21 Aug 2014 07:38:06 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 8FDFDAC003
+	for <xfs@oss.sgi.com>; Thu, 21 Aug 2014 05:38:03 -0700 (PDT)
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
+	cuda.sgi.com with ESMTP id hj2uAPUSdDg5Hhr2 (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 21 Aug 2014 05:36:10 -0700 (PDT)
-Received: from int-mx09.intmail.prod.int.phx2.redhat.com
-	(int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id s7LCa874024322
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256
-	verify=OK) for <xfs@oss.sgi.com>; Thu, 21 Aug 2014 08:36:09 -0400
-Date: Thu, 21 Aug 2014 08:36:06 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH] xfs: deduplicate xlog_do_recovery_pass()
-Message-ID: <20140821123604.GA64112@bfoster.bfoster>
-References: <53F5651C.8030206@redhat.com>
+	Thu, 21 Aug 2014 05:38:01 -0700 (PDT)
+Message-ID: <53F5E822.9010507@oracle.com>
+Date: Thu, 21 Aug 2014 20:37:54 +0800
+From: Jeff Liu <jeff.liu@oracle.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <53F5651C.8030206@redhat.com>
+Subject: Re: [PATCH RFC] xfs: combine xfs_seek_hole & xfs_seek_data
+References: <53F55765.6030205@redhat.com>
+In-Reply-To: <53F55765.6030205@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,154 +28,308 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: Eric Sandeen <sandeen@redhat.com>, xfs-oss <xfs@oss.sgi.com>
 
-On Wed, Aug 20, 2014 at 10:18:52PM -0500, Eric Sandeen wrote:
-> In xlog_do_recovery_pass(), there are 2 distinct cases:
-> non-wrapped and wrapped log recovery.
+Hi Eric,
+
+On 08/21/2014 10:20 AM, Eric Sandeen wrote:
+> xfs_seek_hole & xfs_seek_data are remarkably similar;
+> so much so that they could be combined, saving a fair
+> bit of semi-complex code duplication.
 > 
-> If we find a wrapped log, we recover around the end
-> of the log, and then handle the rest of recovery
-> exactly as in the non-wrapped case - using exactly the same
-> (duplicated) code.
-> 
-> Rather than having the same code in both cases, we can
-> get the wrapped portion out of the way first if needed,
-> and then recover the non-wrapped portion of the log.
-> 
-> There should be no functional change here, just code
-> reorganization & deduplication.
-> 
-> The patch looks a bit bigger than it really is; the last
-> hunk is whitespace changes (un-indenting).
-> 
-> Tested with xfstests "check -g log" on a stock configuration.
+> The following patch passes generic/285 and generic/286; E
+> is this worth doing, (maybe cleaning up a bit), or
+> is it too convoluted & confusing?
 > 
 > Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 > ---
+> 
+>  xfs_file.c |  174 +++++++++++++++++--------------------------------------------
+>  1 file changed, 50 insertions(+), 124 deletions(-)
 
-Looks good to me:
-
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+Significant code reduction :)
 
 > 
->  xfs_log_recover.c |   81 ++++++++++++++++++------------------------------------
->  1 file changed, 27 insertions(+), 54 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-> index 1fd5787..08d3569 100644
-> --- a/fs/xfs/xfs_log_recover.c
-> +++ b/fs/xfs/xfs_log_recover.c
-> @@ -4132,41 +4132,13 @@ xlog_do_recovery_pass(
->  	}
+> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+> index 076b170..321dde6 100644
+> --- a/fs/xfs/xfs_file.c
+> +++ b/fs/xfs/xfs_file.c
+> @@ -964,7 +964,7 @@ xfs_vm_page_mkwrite(
 >  
->  	memset(rhash, 0, sizeof(rhash));
-> -	if (tail_blk <= head_blk) {
-> -		for (blk_no = tail_blk; blk_no < head_blk; ) {
-> -			error = xlog_bread(log, blk_no, hblks, hbp, &offset);
-> -			if (error)
-> -				goto bread_err2;
-> -
-> -			rhead = (xlog_rec_header_t *)offset;
-> -			error = xlog_valid_rec_header(log, rhead, blk_no);
-> -			if (error)
-> -				goto bread_err2;
-> -
-> -			/* blocks in data section */
-> -			bblks = (int)BTOBB(be32_to_cpu(rhead->h_len));
-> -			error = xlog_bread(log, blk_no + hblks, bblks, dbp,
-> -					   &offset);
-> -			if (error)
-> -				goto bread_err2;
-> -
-> -			error = xlog_unpack_data(rhead, offset, log);
-> -			if (error)
-> -				goto bread_err2;
-> -
-> -			error = xlog_recover_process_data(log,
-> -						rhash, rhead, offset, pass);
-> -			if (error)
-> -				goto bread_err2;
-> -			blk_no += bblks + hblks;
-> -		}
-> -	} else {
-> +	blk_no = tail_blk;
-> +	if (tail_blk > head_blk) {
->  		/*
->  		 * Perform recovery around the end of the physical log.
->  		 * When the head is not on the same cycle number as the tail,
-> -		 * we can't do a sequential recovery as above.
-> +		 * we can't do a sequential recovery.
->  		 */
-> -		blk_no = tail_blk;
->  		while (blk_no < log->l_logBBsize) {
+>  /*
+>   * This type is designed to indicate the type of offset we would like
+> - * to search from page cache for either xfs_seek_data() or xfs_seek_hole().
+> + * to search from page cache for xfs_seek_hole_data().
+>   */
+>  enum {
+>  	HOLE_OFF = 0,
+> @@ -1021,7 +1021,7 @@ xfs_lookup_buffer_offset(
+>  /*
+>   * This routine is called to find out and return a data or hole offset
+>   * from the page cache for unwritten extents according to the desired
+> - * type for xfs_seek_data() or xfs_seek_hole().
+> + * type for xfs_seek_hole_data().
+>   *
+>   * The argument offset is used to tell where we start to search from the
+>   * page cache.  Map is used to figure out the end points of the range to
+> @@ -1181,9 +1181,10 @@ out:
+>  }
+>  
+>  STATIC loff_t
+> -xfs_seek_data(
+> +xfs_seek_hole_data(
+>  	struct file		*file,
+> -	loff_t			start)
+> +	loff_t			start,
+> +	int			whence)
+>  {
+>  	struct inode		*inode = file->f_mapping->host;
+>  	struct xfs_inode	*ip = XFS_I(inode);
+> @@ -1195,6 +1196,9 @@ xfs_seek_data(
+>  	uint			lock;
+>  	int			error;
+>  
+> +	if (XFS_FORCED_SHUTDOWN(mp))
+> +		return -EIO;
+
+Currently, the forced shutdown check up is only enabled for SEEK_HOLE.
+But looks we should add it for SEEK_DATA as well, no matter the RFC
+patch would be applied or not.
+
+> +
+>  	lock = xfs_ilock_data_map_shared(ip);
+>  
+>  	isize = i_size_read(inode);
+> @@ -1209,6 +1213,7 @@ xfs_seek_data(
+>  	 */
+>  	fsbno = XFS_B_TO_FSBT(mp, start);
+>  	end = XFS_B_TO_FSB(mp, isize);
+> +
+>  	for (;;) {
+>  		struct xfs_bmbt_irec	map[2];
+>  		int			nmap = 2;
+> @@ -1229,29 +1234,46 @@ xfs_seek_data(
+>  			offset = max_t(loff_t, start,
+>  				       XFS_FSB_TO_B(mp, map[i].br_startoff));
+>  
+> -			/* Landed in a data extent */
+> -			if (map[i].br_startblock == DELAYSTARTBLOCK ||
+> -			    (map[i].br_state == XFS_EXT_NORM &&
+> -			     !isnullstartblock(map[i].br_startblock)))
+> +			/* Landed in the hole we wanted? */
+> +			if (whence == SEEK_HOLE &&
+> +			    map[i].br_startblock == HOLESTARTBLOCK)
+> +				goto out;
+> +
+> +			/* Landed in the data extent we wanted? */
+> +			if (whence == SEEK_DATA &&
+> +			    (map[i].br_startblock == DELAYSTARTBLOCK ||
+> +			     (map[i].br_state == XFS_EXT_NORM &&
+> +			      !isnullstartblock(map[i].br_startblock))))
+>  				goto out;
+>  
 >  			/*
->  			 * Check for header wrapping around physical end-of-log
-> @@ -4280,34 +4252,35 @@ xlog_do_recovery_pass(
+> -			 * Landed in an unwritten extent, try to search data
+> -			 * from page cache.
+> +			 * Landed in an unwritten extent, try to search
+> +			 * for hole or data from page cache.
+>  			 */
+>  			if (map[i].br_state == XFS_EXT_UNWRITTEN) {
+>  				if (xfs_find_get_desired_pgoff(inode, &map[i],
+> -							DATA_OFF, &offset))
+> +				      whence == SEEK_HOLE ? HOLE_OFF : DATA_OFF,
+> +							&offset))
+>  					goto out;
+>  			}
+>  		}
 >  
->  		ASSERT(blk_no >= log->l_logBBsize);
->  		blk_no -= log->l_logBBsize;
-> +	}
+> -		/*
+> -		 * map[0] is hole or its an unwritten extent but
+> -		 * without data in page cache.  Probably means that
+> -		 * we are reading after EOF if nothing in map[1].
+> -		 */
+>  		if (nmap == 1) {
+> +			/*
+> +			 * The single map didn't have what we were looking for.
+> +			 * If we were looking for a hole, we are probably
+> +			 * looking past EOF.  We should fix offset to point
+> +			 * to the end of the file (i.e., there is an implicit
+> +			 * hole at the end of any file).
+> +		 	 */
+> +			if (whence == SEEK_HOLE) {
+> +				offset = isize;
+> +				break;
+> +			}
+> +			/*
+> +			 * If we were looking for data, it's nowhere to be found
+> +			 */
+> +			ASSERT(whence == SEEK_DATA);
+>  			error = -ENXIO;
+>  			goto out_unlock;
+>  		}
+> @@ -1260,125 +1282,30 @@ xfs_seek_data(
 >  
-> -		/* read first part of physical log */
-> -		while (blk_no < head_blk) {
-> -			error = xlog_bread(log, blk_no, hblks, hbp, &offset);
-> -			if (error)
-> -				goto bread_err2;
-> +	/* read first part of physical log */
-> +	while (blk_no < head_blk) {
-> +		error = xlog_bread(log, blk_no, hblks, hbp, &offset);
-> +		if (error)
-> +			goto bread_err2;
->  
-> -			rhead = (xlog_rec_header_t *)offset;
-> -			error = xlog_valid_rec_header(log, rhead, blk_no);
-> -			if (error)
-> -				goto bread_err2;
-> +		rhead = (xlog_rec_header_t *)offset;
-> +		error = xlog_valid_rec_header(log, rhead, blk_no);
-> +		if (error)
-> +			goto bread_err2;
->  
-> -			bblks = (int)BTOBB(be32_to_cpu(rhead->h_len));
-> -			error = xlog_bread(log, blk_no+hblks, bblks, dbp,
-> -					   &offset);
-> -			if (error)
-> -				goto bread_err2;
-> +		/* blocks in data section */
-> +		bblks = (int)BTOBB(be32_to_cpu(rhead->h_len));
-> +		error = xlog_bread(log, blk_no+hblks, bblks, dbp,
-> +				   &offset);
-> +		if (error)
-> +			goto bread_err2;
->  
-> -			error = xlog_unpack_data(rhead, offset, log);
-> -			if (error)
-> -				goto bread_err2;
-> +		error = xlog_unpack_data(rhead, offset, log);
-> +		if (error)
-> +			goto bread_err2;
->  
-> -			error = xlog_recover_process_data(log, rhash,
-> -							rhead, offset, pass);
-> -			if (error)
-> -				goto bread_err2;
-> -			blk_no += bblks + hblks;
-> -		}
-> +		error = xlog_recover_process_data(log, rhash,
-> +						rhead, offset, pass);
-> +		if (error)
-> +			goto bread_err2;
-> +		blk_no += bblks + hblks;
+>  		/*
+>  		 * Nothing was found, proceed to the next round of search
+> -		 * if reading offset not beyond or hit EOF.
+> +		 * if the next reading offset is not at or beyond EOF.
+>  		 */
+>  		fsbno = map[i - 1].br_startoff + map[i - 1].br_blockcount;
+>  		start = XFS_FSB_TO_B(mp, fsbno);
+>  		if (start >= isize) {
+> +			if (whence == SEEK_HOLE) {
+> +				offset = isize;
+> +				break;
+> +			}
+> +			ASSERT(whence == SEEK_DATA);
+>  			error = -ENXIO;
+>  			goto out_unlock;
+>  		}
 >  	}
 >  
->   bread_err2:
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+>  out:
+> -	offset = vfs_setpos(file, offset, inode->i_sb->s_maxbytes);
+> -
+> -out_unlock:
+> -	xfs_iunlock(ip, lock);
+> -
+> -	if (error)
+> -		return error;
+> -	return offset;
+> -}
+> -
+> -STATIC loff_t
+> -xfs_seek_hole(
+> -	struct file		*file,
+> -	loff_t			start)
+> -{
+> -	struct inode		*inode = file->f_mapping->host;
+> -	struct xfs_inode	*ip = XFS_I(inode);
+> -	struct xfs_mount	*mp = ip->i_mount;
+> -	loff_t			uninitialized_var(offset);
+> -	xfs_fsize_t		isize;
+> -	xfs_fileoff_t		fsbno;
+> -	xfs_filblks_t		end;
+> -	uint			lock;
+> -	int			error;
+> -
+> -	if (XFS_FORCED_SHUTDOWN(mp))
+> -		return -EIO;
+> -
+> -	lock = xfs_ilock_data_map_shared(ip);
+> -
+> -	isize = i_size_read(inode);
+> -	if (start >= isize) {
+> -		error = -ENXIO;
+> -		goto out_unlock;
+> -	}
+> -
+> -	fsbno = XFS_B_TO_FSBT(mp, start);
+> -	end = XFS_B_TO_FSB(mp, isize);
+> -
+> -	for (;;) {
+> -		struct xfs_bmbt_irec	map[2];
+> -		int			nmap = 2;
+> -		unsigned int		i;
+> -
+> -		error = xfs_bmapi_read(ip, fsbno, end - fsbno, map, &nmap,
+> -				       XFS_BMAPI_ENTIRE);
+> -		if (error)
+> -			goto out_unlock;
+> -
+> -		/* No extents at given offset, must be beyond EOF */
+> -		if (nmap == 0) {
+> -			error = -ENXIO;
+> -			goto out_unlock;
+> -		}
+> -
+> -		for (i = 0; i < nmap; i++) {
+> -			offset = max_t(loff_t, start,
+> -				       XFS_FSB_TO_B(mp, map[i].br_startoff));
+> -
+> -			/* Landed in a hole */
+> -			if (map[i].br_startblock == HOLESTARTBLOCK)
+> -				goto out;
+> -
+> -			/*
+> -			 * Landed in an unwritten extent, try to search hole
+> -			 * from page cache.
+> -			 */
+> -			if (map[i].br_state == XFS_EXT_UNWRITTEN) {
+> -				if (xfs_find_get_desired_pgoff(inode, &map[i],
+> -							HOLE_OFF, &offset))
+> -					goto out;
+> -			}
+> -		}
+> -
+> -		/*
+> -		 * map[0] contains data or its unwritten but contains
+> -		 * data in page cache, probably means that we are
+> -		 * reading after EOF.  We should fix offset to point
+> -		 * to the end of the file(i.e., there is an implicit
+> -		 * hole at the end of any file).
+> -		 */
+> -		if (nmap == 1) {
+> -			offset = isize;
+> -			break;
+> -		}
+> -
+> -		ASSERT(i > 1);
+> -
+> -		/*
+> -		 * Both mappings contains data, proceed to the next round of
+> -		 * search if the current reading offset not beyond or hit EOF.
+> -		 */
+> -		fsbno = map[i - 1].br_startoff + map[i - 1].br_blockcount;
+> -		start = XFS_FSB_TO_B(mp, fsbno);
+> -		if (start >= isize) {
+> -			offset = isize;
+> -			break;
+> -		}
+> -	}
+> -
+> -out:
+>  	/*
+> -	 * At this point, we must have found a hole.  However, the returned
+> +	 * If at this point we have found the hole we wanted, the returned
+>  	 * offset may be bigger than the file size as it may be aligned to
+> -	 * page boundary for unwritten extents, we need to deal with this
+> +	 * page boundary for unwritten extents.  We need to deal with this
+>  	 * situation in particular.
+>  	 */
+> -	offset = min_t(loff_t, offset, isize);
+> +	if (whence == SEEK_HOLE)
+> +		offset = min_t(loff_t, offset, isize);
+>  	offset = vfs_setpos(file, offset, inode->i_sb->s_maxbytes);
+>  
+>  out_unlock:
+> @@ -1400,10 +1327,9 @@ xfs_file_llseek(
+>  	case SEEK_CUR:
+>  	case SEEK_SET:
+>  		return generic_file_llseek(file, offset, origin);
+> -	case SEEK_DATA:
+> -		return xfs_seek_data(file, offset);
+>  	case SEEK_HOLE:
+> -		return xfs_seek_hole(file, offset);
+> +	case SEEK_DATA:
+> +		return xfs_seek_hole_data(file, offset, origin);
+>  	default:
+>  		return -EINVAL;
+>  	}
+
+With the current refactoring, the code logic still looks easy to understand,
+so I personally vote this change.
+
+BTW, originally I have also tried to implement SEEK_HOLE/DATA in one routine
+in my 1st round of patch which was shown as following. However, I failed to
+make the code looks readable and works correctly at that time.
+
+http://oss.sgi.com/archives/xfs/2011-11/msg00364.html
+http://oss.sgi.com/archives/xfs/2011-11/msg00395.html
+
+
+Cheers,
+-Jeff
 
 _______________________________________________
 xfs mailing list
