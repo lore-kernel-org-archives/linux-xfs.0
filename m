@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 8BAA27F50
-	for <xfs@oss.sgi.com>; Thu, 21 Aug 2014 00:12:56 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 04540AC002
-	for <xfs@oss.sgi.com>; Wed, 20 Aug 2014 22:12:55 -0700 (PDT)
-Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
-	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	XeITSSKxqUqACSsN for <xfs@oss.sgi.com>;
-	Wed, 20 Aug 2014 22:12:53 -0700 (PDT)
-Date: Thu, 21 Aug 2014 15:12:51 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs: deduplicate xlog_do_recovery_pass()
-Message-ID: <20140821051251.GY20518@dastard>
-References: <53F5651C.8030206@redhat.com> <53F57758.9070007@sandeen.net>
-	<20140821044915.GX20518@dastard> <53F57C8F.6060909@sandeen.net>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 74F487F4E
+	for <xfs@oss.sgi.com>; Thu, 21 Aug 2014 02:24:22 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 3784D30406B
+	for <xfs@oss.sgi.com>; Thu, 21 Aug 2014 00:24:18 -0700 (PDT)
+Received: from orion.efm.de (orion.efm.de [195.190.148.230]) by cuda.sgi.com
+	with ESMTP id EWdQ1VdHb074xD5Y (version=TLSv1 cipher=AES256-SHA
+	bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 21 Aug 2014 00:24:16 -0700 (PDT)
+Date: Thu, 21 Aug 2014 09:24:14 +0200 (CEST)
+From: Thomas Klaube <thomas@klaube.net>
+Message-ID: <290396821.4233459.1408605854867.JavaMail.zimbra@klaube.net>
+In-Reply-To: <20140819225507.GS20518@dastard>
+References: <159192779.3859815.1408461799560.JavaMail.zimbra@klaube.net>
+	<362338960.3862279.1408462470243.JavaMail.zimbra@klaube.net>
+	<20140819225507.GS20518@dastard>
+Subject: Re: xlog_write: reservation ran out. Need to up reservation
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <53F57C8F.6060909@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,64 +26,40 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Eric Sandeen <sandeen@redhat.com>, xfs-oss <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
-On Wed, Aug 20, 2014 at 11:58:55PM -0500, Eric Sandeen wrote:
-> On 8/20/14, 11:49 PM, Dave Chinner wrote:
-> > On Wed, Aug 20, 2014 at 11:36:40PM -0500, Eric Sandeen wrote:
-> >> On 8/20/14, 10:18 PM, Eric Sandeen wrote:
-> >>> In xlog_do_recovery_pass(), there are 2 distinct cases:
-> >>> non-wrapped and wrapped log recovery.
-> >>>
-> >>> If we find a wrapped log, we recover around the end
-> >>> of the log, and then handle the rest of recovery
-> >>> exactly as in the non-wrapped case - using exactly the same
-> >>> (duplicated) code.
-> >>>
-> >>> Rather than having the same code in both cases, we can
-> >>> get the wrapped portion out of the way first if needed,
-> >>> and then recover the non-wrapped portion of the log.
-> >>>
-> >>> There should be no functional change here, just code
-> >>> reorganization & deduplication.
-> >>>
-> >>> The patch looks a bit bigger than it really is; the last
-> >>> hunk is whitespace changes (un-indenting).
-> >>>
-> >>> Tested with xfstests "check -g log" on a stock configuration.
-> >>
-> >> which didn't actually hit any log wraps.  Does xfstests
-> >> really not cover wrapped log recovery?  anyway, something like this
-> >> on a small log:
-> > 
-> > xfs/016
-> 
-> AFAICT that doesn't ever run recovery...
-
-It does:
-
-loop 20 times {
-
-	mount
-	<do stuff>
-	unmount
-
-	dump and process log
-}
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+LS0tLS0gVXJzcHLDvG5nbGljaGUgTWFpbCAtLS0tLQo+IFZvbjogIkRhdmUgQ2hpbm5lciIgPGRh
+dmlkQGZyb21vcmJpdC5jb20+Cj4gQW46ICJUaG9tYXMgS2xhdWJlIiA8dGhvbWFzQGtsYXViZS5u
+ZXQ+Cj4gQ0M6IHhmc0Bvc3Muc2dpLmNvbQo+IEdlc2VuZGV0OiBNaXR0d29jaCwgMjAuIEF1Z3Vz
+dCAyMDE0IDAwOjU1OjA3Cj4gQmV0cmVmZjogUmU6IHhsb2dfd3JpdGU6IHJlc2VydmF0aW9uIHJh
+biBvdXQuIE5lZWQgdG8gdXAgcmVzZXJ2YXRpb24KCkhpLAoKPiBDYW4geW91IHBvc3QgdGhlIGZp
+byBqb2IgY29uZmlndXJhdGlvbj8KCmZpcnN0IEkgcnVuIHRoaXMgam9iIGZvciA2MDAgc2VjOgp3
+dGtAdWJ1bnR1IH4gJCBjYXQgd3JpdGUuZmlvCltybmRdCnJ3PXJhbmR3cml0ZQpyYW1wX3RpbWU9
+MzAKcnVudGltZT02MDAKdGltZV9iYXNlZApndG9kX3JlZHVjZT0xCnNpemU9MTAwZwpyZWZpbGxf
+YnVmZmVycz0xCmRpcmVjdG9yeT0uCmlvZGVwdGg9NjQKZGlyZWN0PTEKYmxvY2tzaXplPTE2awpu
+dW1qb2JzPTY0Cm5yZmlsZXM9MQpncm91cF9yZXBvcnRpbmcKaW9lbmdpbmU9bGliYWlvCmxvb3Bz
+PTEKClRoZW4gSSBydW4gdGhpcyBqb2IgZm9yIDJob3VyczoKd3RrQHVidW50dSB+ICQgY2F0IHJh
+bmRvbS5maW8KW3JuZF0Kcnc9cmFuZHJ3CnJhbXBfdGltZT0zMApydW50aW1lPTcyMDAKdGltZV9i
+YXNlZApyd21peHJlYWQ9MzAKc2l6ZT0xMDBnCnJlZmlsbF9idWZmZXJzPTEKZGlyZWN0b3J5PS4K
+aW9kZXB0aD02NApkaXJlY3Q9MQpibG9ja3NpemU9NGsKbnVtam9icz02NApncm91cF9yZXBvcnRp
+bmcKaW9lbmdpbmU9bGliYWlvCmxvb3BzPTEKCkkgcnVuIHRoaXMgd29ya2xvYWQgb24gMiBkZXZp
+Y2VzIGluIHBhcmFsbGVsLiBPbmUgaXMgdGhlIGJjYWNoZSBkZXZpY2UgKHdpdGggeGZzKSwgdGhl
+IG90aGVyIGlzCmEgbm9uIGNhY2hlZCBkZXZpY2UuIFRoZSByYW5kb20uZmlvIGpvYiBjYXVzZXMg
+dGhlIHByb2JsZW0gb24gdGhlIGJjYWNoZSBkZXZpY2UgYWZ0ZXIgfjMwLTc1bWlucy4KCj4gaHR0
+cDovL3hmcy5vcmcvaW5kZXgucGhwL1hGU19GQVEjUTpfV2hhdF9pbmZvcm1hdGlvbl9zaG91bGRf
+SV9pbmNsdWRlX3doZW5fcmVwb3J0aW5nX2FfcHJvYmxlbS4zRgoKSSBoYXZlIHNlbnQgYSBtYWls
+IHdpdGggYWxsIGNvbGxlY3RlZCBkYXRhIHRvIERhdmUuCgo+IFJ1biB0aGUgd29ya2xvYWQgZGly
+ZWN0bHkgb24gdGhlIFNTRCByYXRoZXIgdGhhbiB3aXRoIGJjYWNoZS4gVXNlCj4gbWtmcyBwYXJh
+bWV0ZXJzIHRvIGdpdmUgeW91IDggYWdzIGFuZCB0aGUgc2FtZSBzaXplIGxvZywgYW5kIHNlZQo+
+IGlmIHlvdSBnZXQgdGhlIHNhbWUgcHJvYmxlbS4KCkkgY3JlYXRlZCBhIHhmcyBkaXJlY2x0eSBv
+biB0aGUgU1NEOgpta2ZzLnhmcyAtZiAtZCBhZ2NvdW50PTggLWwgc2l6ZT01MjE3MjhiIC9kZXYv
+c2RjMQoKVGhlbiBJIHN0YXJ0ZWQgdGhvIGZpbyBqb2JzIGFzIGRlc2NyaWJlZCBhYm92ZSBmb3Ig
+MTAgaG91cnMuIEkgY291bGQgbm90IHJlcHJvZHVjZSB0aGUKcHJvYmxlbS4gSSB3aWxsIHNlbmQg
+YSBtYWlsIHRvIHRoZSBiY2FjaGUgbWFpbGluZyBsaXN0IGFzIHdlbGwuLi4KClRoYW54IGFuZCBS
+ZWdhcmRzClRob21hcwoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2kuY29t
+L21haWxtYW4vbGlzdGluZm8veGZzCg==
