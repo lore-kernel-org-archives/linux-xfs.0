@@ -1,18 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 1714A7F58
+	by oss.sgi.com (Postfix) with ESMTP id 483A97F59
 	for <xfs@oss.sgi.com>; Thu, 21 Aug 2014 00:09:40 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 9A348AC001
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id D8C61AC002
 	for <xfs@oss.sgi.com>; Wed, 20 Aug 2014 22:09:39 -0700 (PDT)
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	KFhsiygTpf8QbGBn for <xfs@oss.sgi.com>;
-	Wed, 20 Aug 2014 22:09:37 -0700 (PDT)
+	jtfKyecXnwClUNNJ for <xfs@oss.sgi.com>;
+	Wed, 20 Aug 2014 22:09:38 -0700 (PDT)
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 0/6] xfs: direct IO invalidation and related fixes
-Date: Thu, 21 Aug 2014 15:09:08 +1000
-Message-Id: <1408597754-13526-1-git-send-email-david@fromorbit.com>
+Subject: [PATCH 1/6] xfs: mmap write/read leaves bad state on pages
+Date: Thu, 21 Aug 2014 15:09:09 +1000
+Message-Id: <1408597754-13526-2-git-send-email-david@fromorbit.com>
+In-Reply-To: <1408597754-13526-1-git-send-email-david@fromorbit.com>
+References: <1408597754-13526-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,48 +31,126 @@ Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 Cc: clm@fb.com
 
-Hi folks,
+From: Dave Chinner <dchinner@redhat.com>
 
-This patch set started when I was testing Chris Mason's direct IO
-read invalidation fix (patch 2 of the series). I hit a problem
-testing it on a 1k block size filesystem, and that opened a can of
-bugs. Luckily, the can of bugs fell into the fire, and so the bug
-hunt wasn't long and drawn out.
+generic/263 is failing fsx at this point with a page spanning
+EOF that cannot be invalidated. The operations are:
 
-In the end, the class of bugs that was uncovered is prevented from
-occurring by the first patch (hmmm, not sure the title is accurate
-anymore) which then means it is safe to fix the invalidation bugs
-in the direct Io code (Chris fixed read, I fixed write). With these
-issues fixed, we can trim the range of invalidation to just that of
-the direct IO in progress and that finally works without causing
-random regressions.
+1190 mapwrite   0x52c00 thru    0x5e569 (0xb96a bytes)
+1191 mapread    0x5c000 thru    0x5d636 (0x1637 bytes)
+1192 write      0x5b600 thru    0x771ff (0x1bc00 bytes)
 
-This then left fsx tripping over issues with collapse range calls
-that Brian had already found the cause of, so this series adds his
-patch to change the inode logging and my temporary workaround of
-flushing the entire file before running the collapse range
-operation.
+where 1190 extents EOF from 0x54000 to 0x5e569. When the direct IO
+write attempts to invalidate the cached page over this range, it
+fails with -EBUSY and so we fire this assert:
 
-With these 6 patches, the troublesome fsx configuration from
-generic/263 goes from assert failing on the 1192nd operation to
-running for over 60 million operations before tripping over another
-collapse range issue. This was repeated on multiple test machines,
-with a ramdisk based test getting 61,350,000 million ops, a 2p VM
-getting 63,700,000 ops and a 1p VM getting 65,450,000 million ops
-before failing.
+XFS: Assertion failed: ret < 0 || ret == count, file: fs/xfs/xfs_file.c, line: 676
 
-The series does result in generic/247 now occasionally tripping an
-invalidation failure, but this is intentionally causing direct Io
-writes and mmap writes to race and so this is an expected failure
-when the code is working correctly. i.e. page faults cannot be
-synchronised against any other IO operation.
+because the kernel is trying to fall back to buffered IO on the
+direct IO path (which XFS does not do).
 
-Hence I think this patch series fixes the root cause of another long
-standing bufferhead coherency issue that we'd otherwise covered up.
-Please test and review - I want to send this patchset to Linux for
-3.17-rc3 if possible...
+The real question is this: Why can't that page be invalidated after
+it has been written to disk an cleaned?
 
--Dave.
+Well, there's data on the first two buffers in the page (1k block
+size, 4k page), but the third buffer on the page (i.e. beyond EOF)
+is failing drop_buffers because it's bh->b_state == 0x3, which is
+BH_Uptodate | BH_Dirty.  IOWs, there's dirty buffers beyond EOF. Say
+what?
+
+OK, set_buffer_dirty() is called on all buffers from
+__set_page_buffers_dirty(), regardless of whether the buffer is
+beyond EOF or not, which means that when we get to ->writepage,
+we have buffers marked dirty beyond EOF that we need to clean.
+So, we need to implement our own .set_page_dirty method that
+doesn't dirty buffers beyond EOF.
+
+This is messy because the buffer code is not meant to be shared
+and it has interesting locking issues on the buffer dirty bits.
+So just copy and paste it and then modify it to suit what we need.
+
+cc: <stable@kernel.org>
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/xfs_aops.c | 58 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 58 insertions(+)
+
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index 11e9b4c..2a316ad 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -1753,11 +1753,69 @@ xfs_vm_readpages(
+ 	return mpage_readpages(mapping, pages, nr_pages, xfs_get_blocks);
+ }
+ 
++/*
++ * This is basically a copy of __set_page_dirty_buffers() with one
++ * small tweak: buffers beyond EOF do not get marked dirty. If we mark them
++ * dirty, we'll never be able to clean them because we don't write buffers
++ * beyond EOF, and that means we can't invalidate pages that span EOF
++ * that have been marked dirty. Further, the dirty state can leak into
++ * the file interior if the file is extended, resulting in all sorts of
++ * bad things happening as the state does not match the unerlying data.
++ */
++STATIC int
++xfs_vm_set_page_dirty(
++	struct page		*page)
++{
++	struct address_space	*mapping = page_mapping(page);
++	struct inode		*inode = mapping->host;
++	loff_t			end_offset;
++	loff_t			offset;
++	int			newly_dirty;
++
++	if (unlikely(!mapping))
++		return !TestSetPageDirty(page);
++
++	end_offset = i_size_read(inode);
++	offset = end_offset & PAGE_CACHE_MASK;
++
++	spin_lock(&mapping->private_lock);
++	if (page_has_buffers(page)) {
++		struct buffer_head *head = page_buffers(page);
++		struct buffer_head *bh = head;
++
++		do {
++			if (offset < end_offset)
++				set_buffer_dirty(bh);
++			bh = bh->b_this_page;
++			offset += 1 << inode->i_blkbits;
++		} while (bh != head);
++	}
++	newly_dirty = !TestSetPageDirty(page);
++	spin_unlock(&mapping->private_lock);
++
++	if (newly_dirty) {
++		/* sigh - __set_page_dirty() is static, so copy it here, too */
++		unsigned long flags;
++
++		spin_lock_irqsave(&mapping->tree_lock, flags);
++		if (page->mapping) {	/* Race with truncate? */
++			WARN_ON_ONCE(!PageUptodate(page));
++			account_page_dirtied(page, mapping);
++			radix_tree_tag_set(&mapping->page_tree,
++					page_index(page), PAGECACHE_TAG_DIRTY);
++		}
++		spin_unlock_irqrestore(&mapping->tree_lock, flags);
++		__mark_inode_dirty(mapping->host, I_DIRTY_PAGES);
++	}
++	return newly_dirty;
++}
++
+ const struct address_space_operations xfs_address_space_operations = {
+ 	.readpage		= xfs_vm_readpage,
+ 	.readpages		= xfs_vm_readpages,
+ 	.writepage		= xfs_vm_writepage,
+ 	.writepages		= xfs_vm_writepages,
++	.set_page_dirty		= xfs_vm_set_page_dirty,
+ 	.releasepage		= xfs_vm_releasepage,
+ 	.invalidatepage		= xfs_vm_invalidatepage,
+ 	.write_begin		= xfs_vm_write_begin,
+-- 
+2.0.0
 
 _______________________________________________
 xfs mailing list
