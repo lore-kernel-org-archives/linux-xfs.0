@@ -1,20 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 4729A7F4E
-	for <xfs@oss.sgi.com>; Thu, 21 Aug 2014 00:09:38 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 1714A7F58
+	for <xfs@oss.sgi.com>; Thu, 21 Aug 2014 00:09:40 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 27556304066
-	for <xfs@oss.sgi.com>; Wed, 20 Aug 2014 22:09:37 -0700 (PDT)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 9A348AC001
+	for <xfs@oss.sgi.com>; Wed, 20 Aug 2014 22:09:39 -0700 (PDT)
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	vHD65xntNc1jUSBH for <xfs@oss.sgi.com>;
-	Wed, 20 Aug 2014 22:09:36 -0700 (PDT)
+	KFhsiygTpf8QbGBn for <xfs@oss.sgi.com>;
+	Wed, 20 Aug 2014 22:09:37 -0700 (PDT)
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 6/6] xfs: xfs_file_collapse_range is delalloc challenged
-Date: Thu, 21 Aug 2014 15:09:14 +1000
-Message-Id: <1408597754-13526-7-git-send-email-david@fromorbit.com>
-In-Reply-To: <1408597754-13526-1-git-send-email-david@fromorbit.com>
-References: <1408597754-13526-1-git-send-email-david@fromorbit.com>
+Subject: [PATCH 0/6] xfs: direct IO invalidation and related fixes
+Date: Thu, 21 Aug 2014 15:09:08 +1000
+Message-Id: <1408597754-13526-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,65 +29,48 @@ Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 Cc: clm@fb.com
 
-From: Dave Chinner <dchinner@redhat.com>
+Hi folks,
 
-If we have delalloc extents on a file before we run a collapse range
-opertaion, we sync the range that we are going to collapse to
-convert delalloc extents in that region to real extents to simplify
-the shift operation.
+This patch set started when I was testing Chris Mason's direct IO
+read invalidation fix (patch 2 of the series). I hit a problem
+testing it on a 1k block size filesystem, and that opened a can of
+bugs. Luckily, the can of bugs fell into the fire, and so the bug
+hunt wasn't long and drawn out.
 
-However, the shift operation then assumes that the extent list is
-not going to change as it iterates over the extent list moving
-things about. Unfortunately, this isn't true because we can't hold
-the ILOCK over all the operations. We can prevent new IO from
-modifying the extent list by holding the IOLOCK, but that doesn't
-prevent writeback from running....
+In the end, the class of bugs that was uncovered is prevented from
+occurring by the first patch (hmmm, not sure the title is accurate
+anymore) which then means it is safe to fix the invalidation bugs
+in the direct Io code (Chris fixed read, I fixed write). With these
+issues fixed, we can trim the range of invalidation to just that of
+the direct IO in progress and that finally works without causing
+random regressions.
 
-And when writeback runs, it can convert delalloc extents is the
-range of the file prior to the region being collapsed, and this
-changes the indexes of all the extents in the file. That causes the
-collapse range operation to Go Bad.
+This then left fsx tripping over issues with collapse range calls
+that Brian had already found the cause of, so this series adds his
+patch to change the inode logging and my temporary workaround of
+flushing the entire file before running the collapse range
+operation.
 
-The right fix is to rewrite the extent shift operation not to be
-dependent on the extent list not changing across the entire
-operation, but this is a fairly significant piece of work to do.
-Hence, as a short-term workaround for the problem, sync the entire
-file before starting a collapse operation to remove all delalloc
-ranges from the file and so avoid the problem of concurrent
-writeback changing the extent list.
+With these 6 patches, the troublesome fsx configuration from
+generic/263 goes from assert failing on the 1192nd operation to
+running for over 60 million operations before tripping over another
+collapse range issue. This was repeated on multiple test machines,
+with a ramdisk based test getting 61,350,000 million ops, a 2p VM
+getting 63,700,000 ops and a 1p VM getting 65,450,000 million ops
+before failing.
 
-Diagnosed-and-Reported-by: Brian Foster <bfoster@redhat.com>
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- fs/xfs/xfs_bmap_util.c | 13 +++++++++++++
- 1 file changed, 13 insertions(+)
+The series does result in generic/247 now occasionally tripping an
+invalidation failure, but this is intentionally causing direct Io
+writes and mmap writes to race and so this is an expected failure
+when the code is working correctly. i.e. page faults cannot be
+synchronised against any other IO operation.
 
-diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-index c53cc03..035041d 100644
---- a/fs/xfs/xfs_bmap_util.c
-+++ b/fs/xfs/xfs_bmap_util.c
-@@ -1460,6 +1460,19 @@ xfs_collapse_file_space(
- 	start_fsb = XFS_B_TO_FSB(mp, offset + len);
- 	shift_fsb = XFS_B_TO_FSB(mp, len);
- 
-+	/*
-+	 * writeback the entire file to prevent concurrent writeback of ranges
-+	 * outside the collapsing region from changing the extent list.
-+	 *
-+	 * XXX: This is a temporary fix until the extent shift loop below is
-+	 * converted to use offsets and lookups within the ILOCK rather than
-+	 * carrying around the index into the extent list for the next
-+	 * iteration.
-+	 */
-+	error = filemap_write_and_wait(VFS_I(ip)->i_mapping);
-+	if (error)
-+		return error;
-+
- 	error = xfs_free_file_space(ip, offset, len);
- 	if (error)
- 		return error;
--- 
-2.0.0
+Hence I think this patch series fixes the root cause of another long
+standing bufferhead coherency issue that we'd otherwise covered up.
+Please test and review - I want to send this patchset to Linux for
+3.17-rc3 if possible...
+
+-Dave.
 
 _______________________________________________
 xfs mailing list
