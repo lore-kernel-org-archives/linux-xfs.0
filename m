@@ -1,25 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 941C37F4E
-	for <xfs@oss.sgi.com>; Sun, 24 Aug 2014 04:22:04 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 7416B8F804B
-	for <xfs@oss.sgi.com>; Sun, 24 Aug 2014 02:22:04 -0700 (PDT)
-Received: from mail-wi0-f179.google.com (mail-wi0-f179.google.com
-	[209.85.212.179]) by cuda.sgi.com with ESMTP id
-	7wiO5coBrLYQrfJK (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Sun, 24 Aug 2014 02:21:59 -0700 (PDT)
-Received: by mail-wi0-f179.google.com with SMTP id f8so1302326wiw.12
-	for <xfs@oss.sgi.com>; Sun, 24 Aug 2014 02:21:58 -0700 (PDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 698C57F4E
+	for <xfs@oss.sgi.com>; Sun, 24 Aug 2014 15:14:47 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id EDC1DAC001
+	for <xfs@oss.sgi.com>; Sun, 24 Aug 2014 13:14:43 -0700 (PDT)
+Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
+	[65.41.216.221]) by cuda.sgi.com with ESMTP id cKECPEteVhkJ9os4
+	for <xfs@oss.sgi.com>; Sun, 24 Aug 2014 13:14:42 -0700 (PDT)
+Message-ID: <53FA47B4.6020103@hardwarefreak.com>
+Date: Sun, 24 Aug 2014 15:14:44 -0500
+From: stan hoeppner <stan@hardwarefreak.com>
 MIME-Version: 1.0
-In-Reply-To: <CAOcd+r32+6gafv5+MCNyNTH1Ncas9CJHHrku+Y=sZefDzzS1Zw@mail.gmail.com>
-References: <1408648692-15957-1-git-send-email-bfoster@redhat.com>
-	<CAOcd+r32+6gafv5+MCNyNTH1Ncas9CJHHrku+Y=sZefDzzS1Zw@mail.gmail.com>
-Date: Sun, 24 Aug 2014 12:21:58 +0300
-Message-ID: <CAOcd+r1X_WeXECpzFxrJ1uT7KAM5MveP1xcL4pWcJh1fSHHDfQ@mail.gmail.com>
-Subject: Re: [PATCH] xfs: fix double free of trans in log recovery on I/O error
-From: Alex Lyakas <alex@zadarastorage.com>
+Subject: Re: inode64 directory placement determinism
+References: <e1eeba7b0fb97c63e41f40ed9ac162d7@localhost>	<20140818070153.GL20518@dastard>	<bc34a576d2b3e8c431633574deaa37cc@localhost>	<20140818224853.GD26465@dastard>
+	<ed7598d015f5a1d3576e6b03f3ef3116@localhost>
+In-Reply-To: <ed7598d015f5a1d3576e6b03f3ef3116@localhost>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,118 +24,179 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
+To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-Forgot to mention that the metadump from this repro is here:
-https://drive.google.com/file/d/0ByBy89zr3kJNeWdBQ1RFbmJESTg/edit?usp=sharing
 
-On Sun, Aug 24, 2014 at 12:20 PM, Alex Lyakas <alex@zadarastorage.com> wrote:
-> Hi Brian,
+On 08/18/2014 07:02 PM, Stan Hoeppner wrote:
+> On Tue, 19 Aug 2014 08:48:53 +1000, Dave Chinner <david@fromorbit.com>
+> wrote:
+>> On Mon, Aug 18, 2014 at 11:16:12AM -0500, Stan Hoeppner wrote:
+>>> On Mon, 18 Aug 2014 17:01:53 +1000, Dave Chinner <david@fromorbit.com>
+>>> wrote:
+>>>> On Sun, Aug 17, 2014 at 10:29:21PM -0500, Stan Hoeppner wrote:
+>>>>> Say I have a single 4TB disk in an md linear device.  The md device
+>>>>> has
+>>> a
+>>>>> filesystem on it formatted with defaults.  It has 4 AGs, 0-3.  I
+> have
+>>>>> created 4 directories.  Each should reside in a different AG, the
+>>>>> first
+>>>>> in
+>>>>> AG0.  Now I expand the linear device with an identical 4TB disk and
+>>>>> execute
+>>>>> xfs_growfs.  I now have 4 more AGs, 4-7.  I create 4 more
+> directories.
+>>>>>
+>>>>> Will these 4 new dirs be created sequentially in AGs 4-7, or in the
+>>> first
+>>>>> 4 AGs?  Is this deterministic, or is there any chance involved?  On
+>>>>> the
+>>>>
+>>>> Deterministic, assuming single threaded *file-system-wide* directory
+>>>> creation. Completely unpredictable under concurrent directory
+>>>> creations.  See xfs_ialloc_ag_select/xfs_ialloc_next_ag.
+>>>>
+>>>> Note that the rotor used to select the next AG is set to
+>>>> zero at mount.
+>>>>
+>>>> i.e. single threaded behaviour at agcount = 4:
+>>>>
+>>>> dir number	rotor value	  destination AG
+>>>>   1		  0			0
+>>>>   2		  1			1
+>>>>   3		  2			2
+>>>>   4		  3			3
+>>>>   5		  0			0
+>>>>   6		  1			1
+>>>> ....
+>>>>
+>>>> So, if you do what you suggest, and grow *after* the first 4 dirs
+>>>> are created, the above is what you'll get because the rotor goes
+>>>> back to zero on the fourth directory create. Now, with changing from
+>>>> 4 to 8 AGs after the first 4:
+>>>>
+>>>> dir number	rotor value	  new inode location (AG)
+>>>>   1		  0			0
+>>>>   2		  1			1
+>>>>   3		  2			2
+>>>>   4		  3			3
+>>>> <grow to 8 AGs>
+>>>>   5		  0			0
+>>>>   6		  1			1
+>>>>   7		  2			2
+>>>>   8		  3			3
+>>>>   9		  4			4
+>>>>   10		  5			5
+>>>>   11		  6			6
+>>>>   13		  7			7
+>>>>   14		  0			0
+>>>>
+>>>>> real system these 4TB drives are actually 48TB LUNs.  I'm after
+>>>>> deterministic parallel bandwidth to subsequently added RAIDs after
+>>>>> each
+>>>>> grow operation by simply writing to the proper directory.
+>>>>
+>>>> Just create new directories and use the inode number to
+>>>> determine their location. If the directory is not in the correct AG,
+>>>> remove it and create a new one, until you have directories located
+>>>> in the AGs you want.
+>>>>
+>>>> Cheers,
+>>>>
+>>>> Dave.
+>>>
+>>>
+>>> Thanks for the info Dave.  Was hoping it would be more straightforward.
 >
-> On Thu, Aug 21, 2014 at 10:18 PM, Brian Foster <bfoster@redhat.com> wrote:
->> XFS log recovery builds up an xlog_recover object as it passes through
->> the log operations on the physical log. These structures are managed via
->> a hash table and are allocated when a new transaction is encountered and
->> freed once a commit operation for the transaction is encountered.
+>>> Modifying the app for this is out of the question.  They've spent 3+
+>>> years
+>>> developing with EXT4 and decided to try XFS at the last minute.
+> Product
+>>> is
+>>> to ship in October, so optimizations I can suggest are limited.
 >>
->> This state machine for active transactions is implemented by a
->> combination of xlog_do_recovery_pass(), which walks through the log
->> buffers and xlog_recover_process_data() which processes log operations
->> within each buffer. The latter function decides whether to allocate a
->> new xlog_recover, add to it or commit and ultimately free it.  If an
->> error occurs at any point during the lifecycle of a particular
->> xlog_recover, xlog_recover_process_data() frees the object and returns
->> an error.
+>> Perhaps you could actually tell us what the requirement for
+>> layout/separation is, and how they are acheiving it with ext4. We
+>> really need a more "directed" allocation ability, but it's not clear
+>> exactly what requirements need to drive that.
 >>
->> xlog_recover_commit_trans() handles the final processing of the
->> transaction. It submits whatever I/O is required for the transaction and
->> frees xlog_recover object along with the transaction items it tracks. If
->> an error occurs at the final stages of the commit operation, such as I/O
->> failure, both xlog_recover_commit_trans() and
->> xlog_recover_process_data() attempt to free the trans object.
+>> Cheers,
 >>
->> Modify xlog_recover_commit_trans() to only free the trans object on
->> successful completion of the trans, including any I/O errors that might
->> occur when recovering the log.
->>
->> Signed-off-by: Brian Foster <bfoster@redhat.com>
->> ---
->>
->> Hi all,
->>
->> I found that the recent buffer I/O rework fixes didn't address the crash
->> reproduced by the dm-flakey/log recovery test case I posted recently. I
->> tracked the crash down to this, which allows the test to pass. This
->> addresses the crash I saw when running the reproducer manually with the
->> metadump that Alex posted as well.
->>
->> FWIW, I also went back and tested the xfs_buf_iowait() experiment in
->> both scenarios (Alex's metadump and xfstests test) and they all
->> reproduce the same crash for me. I think that either I'm still not
->> reproducing the original problem, something else might have contaminated
->> the original xfs_buf_iowait() test to give a false positive, or
->> something else entirely is going on.
->>
->> Alex,
->>
->> If you have a chance, I think it might be interesting to see whether you
->> reproduce any problems with this patch. It looks like this is a
->> regression introduced by:
->>
->>         2a84108f xfs: free the list of recovery items on error
->>
->> ... but I have no idea if that's in whatever kernel you're running.
-> I am running kernel 3.8.13 with some changes (published at
-> https://github.com/zadarastorage/zadara-xfs-pushback), but this
-> problem also happens on pristine 3.8.13 from
-> git://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git,
-> branch linux-stable-3.8.y.
+>> Dave.
 >
-> I do not have commit 2a84108f in this kernel. It was introduced in 3.14.
-> I applied your patch to 3.8.13, but it doesn't fix the issue. Same
-> problem happens when testing scenario that I described in
-> http://oss.sgi.com/pipermail/xfs/2014-August/037637.html.
+> The test harness app writes to thousands of preallocated files in hundreds
+> of directories.  The target is ~250MB/s at the application per array, more
+> if achievable, writing a combination of fast and slow streams from up to
+> ~1000 threads, to different files, circularly.  The mix of stream rates and
+> the files they write will depend on the end customers' needs.  Currently
+> they have 1 FS per array with 3 top level dirs each w/3 subdirs, 2 of these
+> with ~100 subdirs each, and hundreds files in each of those.  Simply doing
+> a concat, growing and just running with it might work fine.  The concern is
+> ending up with too many fast stream writers hitting AGs on a single array
+> which won't be able to keep up.  Currently they simply duplicate the layout
+> on each new filesystem they mount.  The application duplicates the same
+> layout on each filesystem and does its own load balancing among the group
+> of them.
 >
-> Thanks,
-> Alex.
->
->>
->> Brian
->>
->>  fs/xfs/xfs_log_recover.c | 11 ++++++++---
->>  1 file changed, 8 insertions(+), 3 deletions(-)
->>
->> diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
->> index 176c4b3..daca9a6 100644
->> --- a/fs/xfs/xfs_log_recover.c
->> +++ b/fs/xfs/xfs_log_recover.c
->> @@ -3528,10 +3528,15 @@ out:
->>         if (!list_empty(&done_list))
->>                 list_splice_init(&done_list, &trans->r_itemq);
->>
->> -       xlog_recover_free_trans(trans);
->> -
->>         error2 = xfs_buf_delwri_submit(&buffer_list);
->> -       return error ? error : error2;
->> +
->> +       if (!error)
->> +               error = error2;
->> +       /* caller frees trans on error */
->> +       if (!error)
->> +               xlog_recover_free_trans(trans);
->> +
->> +       return error;
->>  }
->>
->>  STATIC int
->> --
->> 1.8.3.1
->>
+> Ideally they'd obviously like to simply add files to existing directories
+> after growing, but that won't achieve scalable bandwidth.
+
+
+My apologies Dave.  The above isn't really a description of a 
+requirement, but simply how they do things currently.  So let me take 
+another stab at this.  I think the generic requirement is best described 
+as:
+
+	Create a directory in the first AG in a range of specified
+	AGs.  Create all child directories and files in AGs within the
+	range of AGs, starting with the first AG.  In other words, we
+	take the default behavior of the inode64 allocator and we apply
+	it to a subset of AGs within the filesystem.  Something like...
+
+agr = allocation group range
+
+1.  mkdir $directory agr=0,47
+
+2.  create $directory in AG0 and set flag in metadata to have inode64
+     allocator rotor new child directories of this parent across only
+     the AGs in the range specified
+
+3.  file allocation policy need not be altered, files go in parent
+     directory, parent AG.  If we spill due to AG free space do what
+     we already do and allow writing outside of the AGs in agr
+
+
+So when we expand the concat and grow XFS we simply do
+
+~$ mkdir $directory agr=48,95
+
+All child directories and files created in $directory will be allocated 
+in AGs 48-95, only on the new LUN.  Rinse and repeat.
+
+Such a feature would provide everything needed I think for this 
+particular workload.  I can imagine there are similar workloads out 
+there that would benefit from something like this given the prevalence 
+of large concatenated RAID6s today.  Another scenario that might benefit 
+from something like this is short stroking of mechanical storage, but 
+controlling it at the filesystem level instead of the block or 
+controller layer.
+
+Setting AGR with an mkdir switch might not fly due to it being a generic 
+command for all filesystems.  But it would sure be the most 
+straightforward approach and easiest to use.
+
+Due to the timetable and other restrictions I wouldn't be able to use 
+patches that might come from fleshing out our ideas here, but I think it 
+would be very useful functionality for others.
+
+Cheers,
+
+Stan
 
 _______________________________________________
 xfs mailing list
