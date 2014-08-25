@@ -1,23 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 575777F4E
-	for <xfs@oss.sgi.com>; Mon, 25 Aug 2014 09:20:43 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 45B6A304059
-	for <xfs@oss.sgi.com>; Mon, 25 Aug 2014 07:20:39 -0700 (PDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 7BEC87F4E
+	for <xfs@oss.sgi.com>; Mon, 25 Aug 2014 12:37:41 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 0C1EBAC001
+	for <xfs@oss.sgi.com>; Mon, 25 Aug 2014 10:37:37 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id M0eQ4glXtkaS3Zsh (version=TLSv1
+	cuda.sgi.com with ESMTP id iuYADwJBSNbHACSa (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 25 Aug 2014 07:20:35 -0700 (PDT)
-Date: Mon, 25 Aug 2014 10:20:25 -0400
+	Mon, 25 Aug 2014 10:37:34 -0700 (PDT)
+Received: from int-mx13.intmail.prod.int.phx2.redhat.com
+	(int-mx13.intmail.prod.int.phx2.redhat.com [10.5.11.26])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id s7PHbWnR006151
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256
+	verify=OK) for <xfs@oss.sgi.com>; Mon, 25 Aug 2014 13:37:32 -0400
+Received: from bfoster.bfoster ([10.18.41.237])
+	by int-mx13.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id s7PHbWjH013986
+	for <xfs@oss.sgi.com>; Mon, 25 Aug 2014 13:37:32 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH] xfs: fix double free of trans in log recovery on I/O error
-Message-ID: <20140825142025.GA10135@bfoster.bfoster>
-References: <1408648692-15957-1-git-send-email-bfoster@redhat.com>
-	<CAOcd+r32+6gafv5+MCNyNTH1Ncas9CJHHrku+Y=sZefDzzS1Zw@mail.gmail.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <CAOcd+r32+6gafv5+MCNyNTH1Ncas9CJHHrku+Y=sZefDzzS1Zw@mail.gmail.com>
+Subject: [PATCH] xfs: trim eofblocks before collapse range
+Date: Mon, 25 Aug 2014 13:37:30 -0400
+Message-Id: <1408988250-17772-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,131 +30,76 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Alex Lyakas <alex@zadarastorage.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Sun, Aug 24, 2014 at 12:20:20PM +0300, Alex Lyakas wrote:
-> Hi Brian,
-> 
-> On Thu, Aug 21, 2014 at 10:18 PM, Brian Foster <bfoster@redhat.com> wrote:
-> > XFS log recovery builds up an xlog_recover object as it passes through
-> > the log operations on the physical log. These structures are managed via
-> > a hash table and are allocated when a new transaction is encountered and
-> > freed once a commit operation for the transaction is encountered.
-> >
-> > This state machine for active transactions is implemented by a
-> > combination of xlog_do_recovery_pass(), which walks through the log
-> > buffers and xlog_recover_process_data() which processes log operations
-> > within each buffer. The latter function decides whether to allocate a
-> > new xlog_recover, add to it or commit and ultimately free it.  If an
-> > error occurs at any point during the lifecycle of a particular
-> > xlog_recover, xlog_recover_process_data() frees the object and returns
-> > an error.
-> >
-> > xlog_recover_commit_trans() handles the final processing of the
-> > transaction. It submits whatever I/O is required for the transaction and
-> > frees xlog_recover object along with the transaction items it tracks. If
-> > an error occurs at the final stages of the commit operation, such as I/O
-> > failure, both xlog_recover_commit_trans() and
-> > xlog_recover_process_data() attempt to free the trans object.
-> >
-> > Modify xlog_recover_commit_trans() to only free the trans object on
-> > successful completion of the trans, including any I/O errors that might
-> > occur when recovering the log.
-> >
-> > Signed-off-by: Brian Foster <bfoster@redhat.com>
-> > ---
-> >
-> > Hi all,
-> >
-> > I found that the recent buffer I/O rework fixes didn't address the crash
-> > reproduced by the dm-flakey/log recovery test case I posted recently. I
-> > tracked the crash down to this, which allows the test to pass. This
-> > addresses the crash I saw when running the reproducer manually with the
-> > metadump that Alex posted as well.
-> >
-> > FWIW, I also went back and tested the xfs_buf_iowait() experiment in
-> > both scenarios (Alex's metadump and xfstests test) and they all
-> > reproduce the same crash for me. I think that either I'm still not
-> > reproducing the original problem, something else might have contaminated
-> > the original xfs_buf_iowait() test to give a false positive, or
-> > something else entirely is going on.
-> >
-> > Alex,
-> >
-> > If you have a chance, I think it might be interesting to see whether you
-> > reproduce any problems with this patch. It looks like this is a
-> > regression introduced by:
-> >
-> >         2a84108f xfs: free the list of recovery items on error
-> >
-> > ... but I have no idea if that's in whatever kernel you're running.
-> I am running kernel 3.8.13 with some changes (published at
-> https://github.com/zadarastorage/zadara-xfs-pushback), but this
-> problem also happens on pristine 3.8.13 from
-> git://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git,
-> branch linux-stable-3.8.y.
-> 
-> I do not have commit 2a84108f in this kernel. It was introduced in 3.14.
-> I applied your patch to 3.8.13, but it doesn't fix the issue. Same
-> problem happens when testing scenario that I described in
-> http://oss.sgi.com/pipermail/xfs/2014-August/037637.html.
-> 
+xfs_collapse_file_space() currently writes back the entire file
+undergoing collapse range to settle things down for the extent shift
+algorithm. While this prevents changes to the extent list during the
+collapse operation, the writeback itself is not enough to prevent
+unnecessary collapse failures.
 
-Ok, thanks. Yeah, I don't see the double free regression in the 3.8.13
-stable branch. I went back to that kernel to try and confirm some
-things. I do reproduce the problem with your metadump as well as the
-test case I put together. I tested Dave's buf hold across sync I/O patch
-and that does indeed prevent the problem.
+The current shift algorithm uses the extent index to iterate the in-core
+extent list. If a post-eof delalloc extent persists after the writeback
+(e.g., a prior zero range op where the end of the range aligns with eof
+can separate the post-eof blocks such that they are not written back and
+converted), xfs_bmap_shift_extents() becomes confused over the encoded
+br_startblock value and fails the collapse.
 
-For whatever reason, neither the test case nor your metadump reproduce
-the same problem on latest kernels. Instead, they reproduce this double
-free regression. I suspect this is what you ran into when you reproduced
-on a more recent kernel. If you'd like, feel free to try and verify that
-by running your reproducer again on a recent kernel with this patch and
-see if you can still reproduce a crash as with the 3.8.13 kernel.
+As with the full writeback, this is a temporary fix until the algorithm
+is improved to cope with a volatile extent list and avoid attempts to
+shift post-eof extents.
+
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+---
+
+Hi all,
+
+This addresses the other fsx failure I've observed related to collapse
+range. It should also be addressed by reworking the algorithm as
+discussed in Dave's full file writeback patch. This patch applies on top
+of that and I think this is more suitable for a near-term -rc drop.
 
 Brian
 
-> Thanks,
-> Alex.
-> 
-> >
-> > Brian
-> >
-> >  fs/xfs/xfs_log_recover.c | 11 ++++++++---
-> >  1 file changed, 8 insertions(+), 3 deletions(-)
-> >
-> > diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-> > index 176c4b3..daca9a6 100644
-> > --- a/fs/xfs/xfs_log_recover.c
-> > +++ b/fs/xfs/xfs_log_recover.c
-> > @@ -3528,10 +3528,15 @@ out:
-> >         if (!list_empty(&done_list))
-> >                 list_splice_init(&done_list, &trans->r_itemq);
-> >
-> > -       xlog_recover_free_trans(trans);
-> > -
-> >         error2 = xfs_buf_delwri_submit(&buffer_list);
-> > -       return error ? error : error2;
-> > +
-> > +       if (!error)
-> > +               error = error2;
-> > +       /* caller frees trans on error */
-> > +       if (!error)
-> > +               xlog_recover_free_trans(trans);
-> > +
-> > +       return error;
-> >  }
-> >
-> >  STATIC int
-> > --
-> > 1.8.3.1
-> >
+ fs/xfs/xfs_bmap_util.c | 11 +++++++++--
+ 1 file changed, 9 insertions(+), 2 deletions(-)
+
+diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+index 76b6a29..1707980 100644
+--- a/fs/xfs/xfs_bmap_util.c
++++ b/fs/xfs/xfs_bmap_util.c
+@@ -1471,8 +1471,10 @@ xfs_collapse_file_space(
+ 	shift_fsb = XFS_B_TO_FSB(mp, len);
+ 
+ 	/*
+-	 * writeback the entire file to prevent concurrent writeback of ranges
+-	 * outside the collapsing region from changing the extent list.
++	 * Writeback the entire file and force remove any post-eof blocks. The
++	 * writeback prevents changes to the extent list via concurrent
++	 * writeback and the eofblocks trim prevents the extent shift algorithm
++	 * from running into a post-eof delalloc extent.
+ 	 *
+ 	 * XXX: This is a temporary fix until the extent shift loop below is
+ 	 * converted to use offsets and lookups within the ILOCK rather than
+@@ -1482,6 +1484,11 @@ xfs_collapse_file_space(
+ 	error = filemap_write_and_wait(VFS_I(ip)->i_mapping);
+ 	if (error)
+ 		return error;
++	if (xfs_can_free_eofblocks(ip, true)) {
++		error = xfs_free_eofblocks(mp, ip, false);
++		if (error)
++			return error;
++	}
+ 
+ 	error = xfs_free_file_space(ip, offset, len);
+ 	if (error)
+-- 
+1.8.3.1
 
 _______________________________________________
 xfs mailing list
