@@ -1,21 +1,20 @@
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 9D4677F50
-	for <xfs@oss.sgi.com>; Mon, 25 Aug 2014 13:03:11 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 7CD818F804B
-	for <xfs@oss.sgi.com>; Mon, 25 Aug 2014 11:03:08 -0700 (PDT)
-Received: from mail2.mexicocalendario2014.info
-	(mail2.mexicocalendario2014.info [81.7.3.198]) by cuda.sgi.com
-	with ESMTP id KtQWnBTRmP6DYoUO for <xfs@oss.sgi.com>;
-	Mon, 25 Aug 2014 11:03:06 -0700 (PDT)
-Received: from 81-7-3-140 (81.7.3.140) by mail2.mexicocalendario2014.info id
-	hvdt5i0our0k for <xfs@oss.sgi.com>;
-	Mon, 25 Aug 2014 13:03:04 -0500 (envelope-from
-	<inv@mexicocalendario2014.info>)
-Message-ID: <76a619a72a86f530df4887570017c709@mexicocalendario2014.info>
-From: "Lic. Estefania Mena" <inv@mexicocalendario2014.info>
-Subject: =?utf-8?Q?Administre_su_Inventario_/_Cierre_de_Inscripciones?=
-Date: Mon, 25 Aug 2014 13:03:04 -0500
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 89ECA7F54
+	for <xfs@oss.sgi.com>; Sun, 24 Aug 2014 21:29:12 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 35380AC001
+	for <xfs@oss.sgi.com>; Sun, 24 Aug 2014 19:29:12 -0700 (PDT)
+Received: from mail.mexicocalendario2014.info (mail.mexicocalendario2014.info
+	[81.7.3.140]) by cuda.sgi.com with ESMTP id Kisf1w3pkCA03o2k
+	for <xfs@oss.sgi.com>; Sun, 24 Aug 2014 19:29:09 -0700 (PDT)
+Received: from 81-7-3-140 (81.7.3.140) by mail.mexicocalendario2014.info id
+	hvafna0our0b for <xfs@oss.sgi.com>;
+	Sun, 24 Aug 2014 21:29:08 -0500 (envelope-from
+	<suc@mexicocalendario2014.info>)
+Message-ID: <04f4135f3ca739fce5da2a5100104f7e@mexicocalendario2014.info>
+From: "Administracion" <suc@mexicocalendario2014.info>
+Subject: Eres un Buen Gerente?
+Date: Sun, 24 Aug 2014 21:29:08 -0500
 MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -25,20 +24,20 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============6619524195684163840=="
+Content-Type: multipart/mixed; boundary="===============4220459095624074563=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
 This is a multi-part message in MIME format.
 
---===============6619524195684163840==
+--===============4220459095624074563==
 Content-Type: multipart/alternative;
-	boundary="----=SPLITOR00A_001_294381983D"
+	boundary="----=SPLITOR00A_001_238345706D"
 
 This is a multi-part message in MIME format.
 
-------=SPLITOR00A_001_294381983D
+------=SPLITOR00A_001_238345706D
 Content-Type: text/plain;
 	charset="utf-8"
 Content-Transfer-Encoding: quoted-printable
@@ -46,28 +45,27 @@ Content-Transfer-Encoding: quoted-printable
 
 
 =20
-Las 7 Reglas de oro del control de Inventarios
-Guadalajara, JAL 10 de septiembre 2014
-M=C3=A9xico, D.F. 04 de septiembre 2014
-Monterrey, NL 12 de septiembre 2014
+C=C3=B3mo manejar EXITOSAMENTE SUCURSALES
+10 de septiembre, Guadalajara
+11 de septiembre, M=C3=A9xico, D.F.=20
+12 de septiembre, Monterrey=20
 
-=C2=A1No pierda la oportunidad de ser un factor de crecimiento y =
-desarrollo desde su posici=C3=B3n en la organizaci=C3=B3n!
-
-- Alta confiabilidad operativa y financiera de sus registros=2E
-- Disposici=C3=B3n y prevenci=C3=B3n de obsoletos=2E
-- Elaboraci=C3=B3n de su propio plan de trabajo=2E
+1. C=C3=93MO MANTENER EL ORDEN MIENTRAS DIRIGE A CONTROL REMOTO O LARGA =
+DISTANCIA=2E
+2. CONTACTO Y COMUNICACI=C3=93N CON LAS SUCURSALES=2E
+3. EQUIPOS CALIFICADOS EN LOS QUE USTED PUEDE CONFIAR=2E
+4. QU=C3=89 TAN A MENUDO DEBER=C3=8DA VISITAR CADA SUCURSAL=2E
 
 Para obtener el contenido completo de este programa responda este correo =
-con la palabra info + Nombre + Tel=C3=A9fono + Sede (GDL, D.F. =C3=B3 MTY) =
-y se lo enviaremos a la brevedad=2E
+con la palabra Sucursales + Nombre + Tel=C3=A9fono + Sede (GDL, D.F. =
+=C3=B3 MTY) y se lo enviaremos a la brevedad=2E
 
 Mayores informes e inscripci=C3=B3n, - Solic=C3=ADtala ya
 L=C3=ADnea directa Guadalajara: 01 331 809 8213
 L=C3=ADnea directa D.F. y  Monterrey: 01 800 212 0660
 
 Para YA no recibir estos boletines a: xfs@oss.sgi.com simplemente =
-env=C3=ADe un correo con asunto (noinfo)
+env=C3=ADe un correo con asunto (fridf3y)
  
  
  
@@ -77,7 +75,7 @@ env=C3=ADe un correo con asunto (noinfo)
 
 
 
-------=SPLITOR00A_001_294381983D
+------=SPLITOR00A_001_238345706D
 Content-Type: text/html;
 	charset="utf-8"
 Content-Transfer-Encoding: quoted-printable
@@ -344,62 +342,57 @@ size=3D4>
                   <p style=3D"TEXT-ALIGN: left" align=3Dleft><span><span=20
                   style=3D"FONT-FAMILY: 'Arial','sans-serif'"><font =
 size=3D3><font=20
-                  size=3D3><font size=3D3><font color=3D#000000><font =
-size=3D5>Las 7=20
-                  Reglas de oro del control de=20
-                  Inventarios</font><br>Guadalajara, JAL 10 de septiembre=20
-                  2014<br><strong>M=C3=A9xico, D.F. 04 de septiembre=20
-                  2014</strong><br>Monterrey, NL 12 de septiembre=20
-                  2014</font></font></font></font></span></span></p>
+                  size=3D3><font face=3Dari><font color=3D#004080><font =
+color=3D#000000=20
+                  size=3D3><strong><font color=3D#004080>C=C3=B3mo manejar =
+EXITOSAMENTE=20
+                  SUCURSALES<br></font></strong>10 de septiembre,=20
+                  Guadalajara<br><font color=3D#008040><strong>11 de =
+septiembre,=20
+                  M=C3=A9xico, D.F.</strong></font> <br>12 de septiembre, =
+Monterrey=20
+                  </font></font></font></font></font></span></span></p>
                   <p style=3D"TEXT-ALIGN: left" align=3Dleft><span><span=20
                   style=3D"FONT-FAMILY: 'Arial','sans-serif'"><font =
 size=3D3><font=20
                   size=3D3><font face=3Dari><font color=3D#004080><font =
 color=3D#000000=20
-                  size=3D3>=C2=A1No pierda la oportunidad de ser un factor =
-de=20
-                  crecimiento y desarrollo desde su posici=C3=B3n en la=20
+                  size=3D3>1. C=C3=93MO MANTENER EL ORDEN MIENTRAS DIRIGE =
+A CONTROL=20
+                  REMOTO O LARGA DISTANCIA.<br>2. CONTACTO Y =
+COMUNICACI=C3=93N CON=20
+                  LAS SUCURSALES.<br>3. EQUIPOS CALIFICADOS EN LOS QUE =
+USTED=20
+                  PUEDE CONFIAR.<br>4. QU=C3=89 TAN A MENUDO DEBER=C3=8DA =
+VISITAR CADA=20
                   =
-organizaci=C3=B3n!</font></font></font></font></font></span></span></p>
-                  <p style=3D"TEXT-ALIGN: left" align=3Dleft><span><span=20
-                  style=3D"FONT-FAMILY: 'Arial','sans-serif'"><font =
-size=3D3><font=20
-                  size=3D3><font face=3Dari><font color=3D#004080><font =
-color=3D#000000=20
-                  size=3D3>- Alta confiabilidad operativa y financiera de =
-sus=20
-                  registros.<br>- Disposici=C3=B3n y prevenci=C3=B3n de =
-obsoletos.<br>-=20
-                  Elaboraci=C3=B3n de su propio plan de=20
-                  =
-trabajo.<br></font></font></font></font></font></span></span><span=20
+SUCURSAL.<br></font></font></font></font></font></span></span><span=20
                   style=3D"FONT-FAMILY: 'Arial Narrow','sans-serif'; =
 COLOR: windowtext"><font=20
                   color=3D#004080><font color=3D#666666><font =
 face=3Dari><font=20
                   color=3D#000000><br>Para obtener el contenido completo =
 de este=20
-                  programa responda este correo con la=20
-                  palabra<strong>&nbsp;<font color=3D#b66a03>info + Nombre =
-+=20
-                  Tel=C3=A9fono + Sede (GDL, D.F. =C3=B3 =
-MTY)</font></strong> y se lo=20
-                  enviaremos a la brevedad.<br><br><strong>Mayores =
-informes e=20
-                  inscripci=C3=B3n, - Solic=C3=ADtala =
-ya<br></strong>L=C3=ADnea directa=20
-                  Guadalajara: 01 331 809 8213<br><strong>L=C3=ADnea =
-directa D.F.=20
-                  y&nbsp; Monterrey: 01 800 212=20
-                  0660<br></strong></font><br></font></font><font=20
+                  programa responda este correo con la palabra =
+<strong><font=20
+                  color=3D#004080>Sucursales + Nombre + Tel=C3=A9fono + =
+Sede (GDL, D.F.=20
+                  =C3=B3 MTY)</font></strong> y se lo enviaremos a la=20
+                  brevedad.<br><br><strong>Mayores informes e =
+inscripci=C3=B3n, -=20
+                  Solic=C3=ADtala ya<br></strong>L=C3=ADnea directa =
+Guadalajara: 01 331=20
+                  809 8213<br><strong>L=C3=ADnea directa D.F. y&nbsp; =
+Monterrey: 01=20
+                  800 212 0660<br></strong></font><br></font></font><font=20
                   color=3D#004080><font face=3Dari><font =
 color=3D#4f4f4f>Para YA no=20
                   recibir estos boletines a: xfs@oss.sgi.com simplemente =
 env=C3=ADe un=20
                   correo con asunto=20
                   =
-(noinfo</font>)</font></font></font></span></font></span></p></td></tr></tb=
-ody></table></td></tr>
+(fridf3y</font>)</font></font></font></span></font></span></p></td></tr></t=
+body></table></td></tr>
         <tr>
           <td=20
           style=3D"PADDING-BOTTOM: 0cm; PADDING-LEFT: 0cm; WIDTH: 450pt; =
@@ -417,10 +410,10 @@ face=3Dari>&nbsp;<o:p></o:p></font></p></div></div></div></div>
 
 
 
-------=SPLITOR00A_001_294381983D--
+------=SPLITOR00A_001_238345706D--
 
 
---===============6619524195684163840==
+--===============4220459095624074563==
 Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
@@ -431,4 +424,4 @@ xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
 
---===============6619524195684163840==--
+--===============4220459095624074563==--
