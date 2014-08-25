@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id D37FC7F5E
-	for <xfs@oss.sgi.com>; Mon, 25 Aug 2014 03:09:11 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id C16B28F8037
-	for <xfs@oss.sgi.com>; Mon, 25 Aug 2014 01:09:11 -0700 (PDT)
-Received: from mail-lb0-f170.google.com (mail-lb0-f170.google.com
-	[209.85.217.170]) by cuda.sgi.com with ESMTP id
-	Y4AT7H39jzpfrqjC (version=TLSv1 cipher=RC4-SHA bits=128
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 541267F4E
+	for <xfs@oss.sgi.com>; Mon, 25 Aug 2014 03:47:49 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 42234304051
+	for <xfs@oss.sgi.com>; Mon, 25 Aug 2014 01:47:46 -0700 (PDT)
+Received: from mail-lb0-f172.google.com (mail-lb0-f172.google.com
+	[209.85.217.172]) by cuda.sgi.com with ESMTP id
+	BrxRARjFF4ij8UkX (version=TLSv1 cipher=RC4-SHA bits=128
 	verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 25 Aug 2014 01:09:06 -0700 (PDT)
-Received: by mail-lb0-f170.google.com with SMTP id l4so11833552lbv.1
-	for <xfs@oss.sgi.com>; Mon, 25 Aug 2014 01:09:05 -0700 (PDT)
+	Mon, 25 Aug 2014 01:47:43 -0700 (PDT)
+Received: by mail-lb0-f172.google.com with SMTP id z11so12038477lbi.3
+	for <xfs@oss.sgi.com>; Mon, 25 Aug 2014 01:47:39 -0700 (PDT)
 MIME-Version: 1.0
 In-Reply-To: <20140825051801.GY26465@dastard>
 References: <CAKEtwsWxZseS8M+O7vSR2FRXr4gjVQ0RDO8ok+jMPWq-8jPEeA@mail.gmail.com>
 	<20140825051801.GY26465@dastard>
-Date: Mon, 25 Aug 2014 16:09:05 +0800
-Message-ID: <CAKEtwsWWoJ4QK1Od4WUT+hx7iFeX2bKfXk3QF9f2yG6vJ+TgxQ@mail.gmail.com>
+Date: Mon, 25 Aug 2014 16:47:39 +0800
+Message-ID: <CAKEtwsXiVKTWAW+YszjNnFnD4_Ld7g2qXEvw48A-SitYSGyXHA@mail.gmail.com>
 Subject: Re: bad performance on touch/cp file on XFS system
 From: Zhang Qiang <zhangqiang.buaa@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -28,19 +28,229 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============4910201977608659339=="
+Content-Type: multipart/mixed; boundary="===============6565765678956240336=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
---===============4910201977608659339==
-Content-Type: multipart/alternative; boundary=089e01493e8057e80405016fb33d
+--===============6565765678956240336==
+Content-Type: multipart/alternative; boundary=001a11c353fa3fce430501703d36
 
---089e01493e8057e80405016fb33d
+--001a11c353fa3fce430501703d36
 Content-Type: text/plain; charset=UTF-8
 
-Thanks for your quick and clear response. Some comments bellow:
+I have checked icount and ifree, but I found there are about 11.8 percent
+free, so the free inode should not be too few.
+
+Here's the detail log, any new clue?
+
+# mount /dev/sda4 /data1/
+# xfs_info /data1/
+meta-data=/dev/sda4              isize=256    agcount=4, agsize=142272384
+blks
+         =                       sectsz=512   attr=2, projid32bit=0
+data     =                       bsize=4096   blocks=569089536, imaxpct=5
+         =                       sunit=0      swidth=0 blks
+naming   =version 2              bsize=4096   ascii-ci=0
+log      =internal               bsize=4096   blocks=277875, version=2
+         =                       sectsz=512   sunit=0 blks, lazy-count=1
+realtime =none                   extsz=4096   blocks=0, rtextents=0
+# umount /dev/sda4
+# xfs_db /dev/sda4
+xfs_db> sb 0
+xfs_db> p
+magicnum = 0x58465342
+blocksize = 4096
+dblocks = 569089536
+rblocks = 0
+rextents = 0
+uuid = 13ecf47b-52cf-4944-9a71-885bddc5e008
+logstart = 536870916
+rootino = 128
+rbmino = 129
+rsumino = 130
+rextsize = 1
+agblocks = 142272384
+agcount = 4
+rbmblocks = 0
+logblocks = 277875
+versionnum = 0xb4a4
+sectsize = 512
+inodesize = 256
+inopblock = 16
+fname = "\000\000\000\000\000\000\000\000\000\000\000\000"
+blocklog = 12
+sectlog = 9
+inodelog = 8
+inopblog = 4
+agblklog = 28
+rextslog = 0
+inprogress = 0
+imax_pct = 5
+icount = 220619904
+ifree = 26202919
+fdblocks = 147805479
+frextents = 0
+uquotino = 0
+gquotino = 0
+qflags = 0
+flags = 0
+shared_vn = 0
+inoalignmt = 2
+unit = 0
+width = 0
+dirblklog = 0
+logsectlog = 0
+logsectsize = 0
+logsunit = 1
+features2 = 0xa
+bad_features2 = 0xa
+xfs_db> sb 1
+xfs_db> p
+magicnum = 0x58465342
+blocksize = 4096
+dblocks = 569089536
+rblocks = 0
+rextents = 0
+uuid = 13ecf47b-52cf-4944-9a71-885bddc5e008
+logstart = 536870916
+rootino = 128
+rbmino = null
+rsumino = null
+rextsize = 1
+agblocks = 142272384
+agcount = 4
+rbmblocks = 0
+logblocks = 277875
+versionnum = 0xb4a4
+sectsize = 512
+inodesize = 256
+inopblock = 16
+fname = "\000\000\000\000\000\000\000\000\000\000\000\000"
+blocklog = 12
+sectlog = 9
+inodelog = 8
+inopblog = 4
+agblklog = 28
+rextslog = 0
+inprogress = 1
+imax_pct = 5
+icount = 0
+ifree = 0
+fdblocks = 568811645
+frextents = 0
+uquotino = 0
+gquotino = 0
+qflags = 0
+flags = 0
+shared_vn = 0
+inoalignmt = 2
+unit = 0
+width = 0
+dirblklog = 0
+logsectlog = 0
+logsectsize = 0
+logsunit = 1
+features2 = 0xa
+bad_features2 = 0xa
+xfs_db> sb 2
+xfs_db> p
+magicnum = 0x58465342
+blocksize = 4096
+dblocks = 569089536
+rblocks = 0
+rextents = 0
+uuid = 13ecf47b-52cf-4944-9a71-885bddc5e008
+logstart = 536870916
+rootino = null
+rbmino = null
+rsumino = null
+rextsize = 1
+agblocks = 142272384
+agcount = 4
+rbmblocks = 0
+logblocks = 277875
+versionnum = 0xb4a4
+sectsize = 512
+inodesize = 256
+inopblock = 16
+fname = "\000\000\000\000\000\000\000\000\000\000\000\000"
+blocklog = 12
+sectlog = 9
+inodelog = 8
+inopblog = 4
+agblklog = 28
+rextslog = 0
+inprogress = 1
+imax_pct = 5
+icount = 0
+ifree = 0
+fdblocks = 568811645
+frextents = 0
+uquotino = 0
+gquotino = 0
+qflags = 0
+flags = 0
+shared_vn = 0
+inoalignmt = 2
+unit = 0
+width = 0
+dirblklog = 0
+logsectlog = 0
+logsectsize = 0
+logsunit = 1
+features2 = 0xa
+bad_features2 = 0xa
+xfs_db> sb 3
+xfs_db> p
+magicnum = 0x58465342
+blocksize = 4096
+dblocks = 569089536
+rblocks = 0
+rextents = 0
+uuid = 13ecf47b-52cf-4944-9a71-885bddc5e008
+logstart = 536870916
+rootino = 128
+rbmino = null
+rsumino = null
+rextsize = 1
+agblocks = 142272384
+agcount = 4
+rbmblocks = 0
+logblocks = 277875
+versionnum = 0xb4a4
+sectsize = 512
+inodesize = 256
+inopblock = 16
+fname = "\000\000\000\000\000\000\000\000\000\000\000\000"
+blocklog = 12
+sectlog = 9
+inodelog = 8
+inopblog = 4
+agblklog = 28
+rextslog = 0
+inprogress = 1
+imax_pct = 5
+icount = 0
+ifree = 0
+fdblocks = 568811645
+frextents = 0
+uquotino = 0
+gquotino = 0
+qflags = 0
+flags = 0
+shared_vn = 0
+inoalignmt = 2
+unit = 0
+width = 0
+dirblklog = 0
+logsectlog = 0
+logsectsize = 0
+logsunit = 1
+features2 = 0xa
+bad_features2 = 0xa
+
 
 
 2014-08-25 13:18 GMT+08:00 Dave Chinner <david@fromorbit.com>:
@@ -94,9 +304,6 @@ Thanks for your quick and clear response. Some comments bellow:
 >
 > No.
 >
-
-
->
 > > It's very greatly appreciated if you can give constructive suggestion
 > about
 > > this issue, as It's really hard to reproduce from another system and it's
@@ -108,16 +315,6 @@ Thanks for your quick and clear response. Some comments bellow:
 >
 > This is the issue solved by this series of recent commits to add a
 > new on-disk free inode btree index:
->
-[Qiang] This meas that if I want to fix this issue, I have to apply the
-following patches and build my own kernel.
-
-As the on-disk structure has been changed, so should I also re-create xfs
-filesystem again? is there any user space tools to convert old disk
-filesystem to new one, and don't need to backup and restore currently data?
-
-
-
 >
 > 53801fd xfs: enable the finobt feature on v5 superblocks
 > 0c153c1 xfs: report finobt status in fs geometry
@@ -136,26 +333,12 @@ filesystem to new one, and don't need to backup and restore currently data?
 > Which is of no help to you, however, because it's not available in
 > any CentOS kernel.
 >
-[Qiang] Do you think if it's possible to just backport these patches to
-kernel  6.2.32 (CentOS 6.3) to fix this issue?
-
-Or it's better to backport to 3.10 kernel, used in CentOS 7.0?
-
-
-
 > There's really not much you can do to avoid the problem once you've
 > punched random freespace holes in the allocated inode btree. IT
 > generally doesn't affect many people; those that it does affect are
 > normally using XFS as an object store indexed by a hard link farm
 > (e.g. various backup programs do this).
 >
-OK, I see.
-
-Could you please guide me to reproduce this issue easily? as I have tried
-to use a 500G xfs partition, and use about 98 % spaces, but still can't
-reproduce this issue. Is there any easy way from your mind?
-
-
 > If you dump the superblock via xfs_db, the difference between icount
 > and ifree will give you idea of how much "needle in a haystack"
 > searching is going on. You can probably narrow it down to a specific
@@ -165,14 +348,6 @@ reproduce this issue. Is there any easy way from your mind?
 > problem go away until you remove more filesystem and create random
 > free inode holes again...
 >
-
-I will try to investigate the detail issue.
-
-Thanks for your kindly response.
-Qiang
-
-
->
 > Cheers,
 >
 > Dave.
@@ -181,15 +356,127 @@ Qiang
 > david@fromorbit.com
 >
 
---089e01493e8057e80405016fb33d
+--001a11c353fa3fce430501703d36
 Content-Type: text/html; charset=UTF-8
 Content-Transfer-Encoding: quoted-printable
 
-<div dir=3D"ltr">Thanks for your quick and clear response. Some comments be=
-llow:<br><div class=3D"gmail_extra"><br><br><div class=3D"gmail_quote">2014=
--08-25 13:18 GMT+08:00 Dave Chinner <span dir=3D"ltr">&lt;<a href=3D"mailto=
-:david@fromorbit.com" target=3D"_blank">david@fromorbit.com</a>&gt;</span>:=
-<br>
+<div dir=3D"ltr">I have checked icount and ifree, but I found there are abo=
+ut 11.8 percent free, so the free inode should not be too few.<div><br></di=
+v><div>Here&#39;s the detail log, any new clue?=C2=A0</div><div><br></div><=
+div>
+<div># mount /dev/sda4 /data1/</div><div># xfs_info /data1/</div><div>meta-=
+data=3D/dev/sda4 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0isize=3D25=
+6 =C2=A0 =C2=A0agcount=3D4, agsize=3D142272384 blks</div><div>=C2=A0 =C2=A0=
+ =C2=A0 =C2=A0 =C2=A0=3D =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =
+=C2=A0 =C2=A0 =C2=A0 =C2=A0 sectsz=3D512 =C2=A0 attr=3D2, projid32bit=3D0</=
+div>
+<div>data =C2=A0 =C2=A0 =3D =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
+=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 bsize=3D4096 =C2=A0 blocks=3D569089536, ima=
+xpct=3D5</div><div>=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=3D =C2=A0 =C2=A0 =C2=
+=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 sunit=3D0 =C2=
+=A0 =C2=A0 =C2=A0swidth=3D0 blks</div><div>naming =C2=A0 =3Dversion 2 =C2=
+=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0bsize=3D4096 =C2=A0 ascii-ci=
+=3D0</div>
+<div>log =C2=A0 =C2=A0 =C2=A0=3Dinternal =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
+ =C2=A0 =C2=A0 bsize=3D4096 =C2=A0 blocks=3D277875, version=3D2</div><div>=
+=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=3D =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =
+=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 sectsz=3D512 =C2=A0 sunit=3D0 blk=
+s, lazy-count=3D1</div><div>realtime =3Dnone =C2=A0 =C2=A0 =C2=A0 =C2=A0 =
+=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 extsz=3D4096 =C2=A0 blocks=3D0, rtextent=
+s=3D0</div>
+<div># umount /dev/sda4</div><div># xfs_db /dev/sda4</div><div>xfs_db&gt; s=
+b 0</div><div>xfs_db&gt; p</div><div>magicnum =3D 0x58465342</div><div>bloc=
+ksize =3D 4096</div><div>dblocks =3D 569089536</div><div>rblocks =3D 0</div=
+><div>
+rextents =3D 0</div><div>uuid =3D 13ecf47b-52cf-4944-9a71-885bddc5e008</div=
+><div>logstart =3D 536870916</div><div>rootino =3D 128</div><div>rbmino =3D=
+ 129</div><div>rsumino =3D 130</div><div>rextsize =3D 1</div><div>agblocks =
+=3D 142272384</div>
+<div>agcount =3D 4</div><div>rbmblocks =3D 0</div><div>logblocks =3D 277875=
+</div><div>versionnum =3D 0xb4a4</div><div>sectsize =3D 512</div><div>inode=
+size =3D 256</div><div>inopblock =3D 16</div><div>fname =3D &quot;\000\000\=
+000\000\000\000\000\000\000\000\000\000&quot;</div>
+<div>blocklog =3D 12</div><div>sectlog =3D 9</div><div>inodelog =3D 8</div>=
+<div>inopblog =3D 4</div><div>agblklog =3D 28</div><div>rextslog =3D 0</div=
+><div>inprogress =3D 0</div><div>imax_pct =3D 5</div><div>icount =3D 220619=
+904</div><div>
+ifree =3D 26202919</div><div>fdblocks =3D 147805479</div><div>frextents =3D=
+ 0</div><div>uquotino =3D 0</div><div>gquotino =3D 0</div><div>qflags =3D 0=
+</div><div>flags =3D 0</div><div>shared_vn =3D 0</div><div>inoalignmt =3D 2=
+</div><div>unit =3D 0</div>
+<div>width =3D 0</div><div>dirblklog =3D 0</div><div>logsectlog =3D 0</div>=
+<div>logsectsize =3D 0</div><div>logsunit =3D 1</div><div>features2 =3D 0xa=
+</div><div>bad_features2 =3D 0xa</div><div>xfs_db&gt; sb 1</div><div>xfs_db=
+&gt; p</div>
+<div>magicnum =3D 0x58465342</div><div>blocksize =3D 4096</div><div>dblocks=
+ =3D 569089536</div><div>rblocks =3D 0</div><div>rextents =3D 0</div><div>u=
+uid =3D 13ecf47b-52cf-4944-9a71-885bddc5e008</div><div>logstart =3D 5368709=
+16</div><div>
+rootino =3D 128</div><div>rbmino =3D null</div><div>rsumino =3D null</div><=
+div>rextsize =3D 1</div><div>agblocks =3D 142272384</div><div>agcount =3D 4=
+</div><div>rbmblocks =3D 0</div><div>logblocks =3D 277875</div><div>version=
+num =3D 0xb4a4</div>
+<div>sectsize =3D 512</div><div>inodesize =3D 256</div><div>inopblock =3D 1=
+6</div><div>fname =3D &quot;\000\000\000\000\000\000\000\000\000\000\000\00=
+0&quot;</div><div>blocklog =3D 12</div><div>sectlog =3D 9</div><div>inodelo=
+g =3D 8</div>
+<div>inopblog =3D 4</div><div>agblklog =3D 28</div><div>rextslog =3D 0</div=
+><div>inprogress =3D 1</div><div>imax_pct =3D 5</div><div>icount =3D 0</div=
+><div>ifree =3D 0</div><div>fdblocks =3D 568811645</div><div>frextents =3D =
+0</div><div>uquotino =3D 0</div>
+<div>gquotino =3D 0</div><div>qflags =3D 0</div><div>flags =3D 0</div><div>=
+shared_vn =3D 0</div><div>inoalignmt =3D 2</div><div>unit =3D 0</div><div>w=
+idth =3D 0</div><div>dirblklog =3D 0</div><div>logsectlog =3D 0</div><div>l=
+ogsectsize =3D 0</div>
+<div>logsunit =3D 1</div><div>features2 =3D 0xa</div><div>bad_features2 =3D=
+ 0xa</div><div>xfs_db&gt; sb 2</div><div>xfs_db&gt; p</div><div>magicnum =
+=3D 0x58465342</div><div>blocksize =3D 4096</div><div>dblocks =3D 569089536=
+</div><div>
+rblocks =3D 0</div><div>rextents =3D 0</div><div>uuid =3D 13ecf47b-52cf-494=
+4-9a71-885bddc5e008</div><div>logstart =3D 536870916</div><div>rootino =3D =
+null</div><div>rbmino =3D null</div><div>rsumino =3D null</div><div>rextsiz=
+e =3D 1</div>
+<div>agblocks =3D 142272384</div><div>agcount =3D 4</div><div>rbmblocks =3D=
+ 0</div><div>logblocks =3D 277875</div><div>versionnum =3D 0xb4a4</div><div=
+>sectsize =3D 512</div><div>inodesize =3D 256</div><div>inopblock =3D 16</d=
+iv><div>fname =3D &quot;\000\000\000\000\000\000\000\000\000\000\000\000&qu=
+ot;</div>
+<div>blocklog =3D 12</div><div>sectlog =3D 9</div><div>inodelog =3D 8</div>=
+<div>inopblog =3D 4</div><div>agblklog =3D 28</div><div>rextslog =3D 0</div=
+><div>inprogress =3D 1</div><div>imax_pct =3D 5</div><div>icount =3D 0</div=
+><div>ifree =3D 0</div>
+<div>fdblocks =3D 568811645</div><div>frextents =3D 0</div><div>uquotino =
+=3D 0</div><div>gquotino =3D 0</div><div>qflags =3D 0</div><div>flags =3D 0=
+</div><div>shared_vn =3D 0</div><div>inoalignmt =3D 2</div><div>unit =3D 0<=
+/div><div>width =3D 0</div>
+<div>dirblklog =3D 0</div><div>logsectlog =3D 0</div><div>logsectsize =3D 0=
+</div><div>logsunit =3D 1</div><div>features2 =3D 0xa</div><div>bad_feature=
+s2 =3D 0xa</div><div>xfs_db&gt; sb 3</div><div>xfs_db&gt; p</div><div>magic=
+num =3D 0x58465342</div>
+<div>blocksize =3D 4096</div><div>dblocks =3D 569089536</div><div>rblocks =
+=3D 0</div><div>rextents =3D 0</div><div>uuid =3D 13ecf47b-52cf-4944-9a71-8=
+85bddc5e008</div><div>logstart =3D 536870916</div><div>rootino =3D 128</div=
+><div>rbmino =3D null</div>
+<div>rsumino =3D null</div><div>rextsize =3D 1</div><div>agblocks =3D 14227=
+2384</div><div>agcount =3D 4</div><div>rbmblocks =3D 0</div><div>logblocks =
+=3D 277875</div><div>versionnum =3D 0xb4a4</div><div>sectsize =3D 512</div>=
+<div>inodesize =3D 256</div>
+<div>inopblock =3D 16</div><div>fname =3D &quot;\000\000\000\000\000\000\00=
+0\000\000\000\000\000&quot;</div><div>blocklog =3D 12</div><div>sectlog =3D=
+ 9</div><div>inodelog =3D 8</div><div>inopblog =3D 4</div><div>agblklog =3D=
+ 28</div><div>
+rextslog =3D 0</div><div>inprogress =3D 1</div><div>imax_pct =3D 5</div><di=
+v>icount =3D 0</div><div>ifree =3D 0</div><div>fdblocks =3D 568811645</div>=
+<div>frextents =3D 0</div><div>uquotino =3D 0</div><div>gquotino =3D 0</div=
+><div>qflags =3D 0</div>
+<div>flags =3D 0</div><div>shared_vn =3D 0</div><div>inoalignmt =3D 2</div>=
+<div>unit =3D 0</div><div>width =3D 0</div><div>dirblklog =3D 0</div><div>l=
+ogsectlog =3D 0</div><div>logsectsize =3D 0</div><div>logsunit =3D 1</div><=
+div>features2 =3D 0xa</div>
+<div>bad_features2 =3D 0xa</div></div><div><br></div></div><div class=3D"gm=
+ail_extra"><br><br><div class=3D"gmail_quote">2014-08-25 13:18 GMT+08:00 Da=
+ve Chinner <span dir=3D"ltr">&lt;<a href=3D"mailto:david@fromorbit.com" tar=
+get=3D"_blank">david@fromorbit.com</a>&gt;</span>:<br>
 <blockquote class=3D"gmail_quote" style=3D"margin:0 0 0 .8ex;border-left:1p=
 x #ccc solid;padding-left:1ex"><div class=3D"HOEnZb"><div class=3D"h5">On M=
 on, Aug 25, 2014 at 11:34:34AM +0800, Zhang Qiang wrote:<br>
@@ -259,9 +546,7 @@ rec,<br>
 &gt; I found a bug in bugzilla [1], is that is the same issue like this?<br=
 >
 <br>
-</div></div>No.<br></blockquote><div>=C2=A0</div><blockquote class=3D"gmail=
-_quote" style=3D"margin:0 0 0 .8ex;border-left:1px #ccc solid;padding-left:=
-1ex">
+</div></div>No.<br>
 <div class=3D""><br>
 &gt; It&#39;s very greatly appreciated if you can give constructive suggest=
 ion about<br>
@@ -275,14 +560,7 @@ inode btree. The CPU time above is the btree search for the next<br>
 free inode.<br>
 <br>
 This is the issue solved by this series of recent commits to add a<br>
-new on-disk free inode btree index:<br></blockquote><div>[Qiang] This meas =
-that if I want to fix this issue, I have to apply the following patches and=
- build my own kernel.</div><div><br></div><div>As the on-disk structure has=
- been changed, so should I also re-create xfs filesystem again? is there an=
-y user space tools to convert old disk filesystem to new one, and don&#39;t=
- need to backup and restore currently data?</div>
-<div><br></div><div>=C2=A0<br></div><blockquote class=3D"gmail_quote" style=
-=3D"margin:0 0 0 .8ex;border-left:1px #ccc solid;padding-left:1ex">
+new on-disk free inode btree index:<br>
 <br>
 53801fd xfs: enable the finobt feature on v5 superblocks<br>
 0c153c1 xfs: report finobt status in fs geometry<br>
@@ -301,25 +579,14 @@ aafc3c2 xfs: support the XFS_BTNUM_FINOBT free inode btree type<br>
 br>
 <br>
 Which is of no help to you, however, because it&#39;s not available in<br>
-any CentOS kernel.<br></blockquote><div>[Qiang] Do you think if it&#39;s po=
-ssible to just backport these patches to kernel =C2=A06.2.32 (CentOS 6.3) t=
-o fix this issue?</div><div><br></div><div>Or it&#39;s better to backport t=
-o 3.10 kernel, used in CentOS 7.0?</div>
-<div><br></div><div><br></div><blockquote class=3D"gmail_quote" style=3D"ma=
-rgin:0 0 0 .8ex;border-left:1px #ccc solid;padding-left:1ex">
+any CentOS kernel.<br>
 <br>
 There&#39;s really not much you can do to avoid the problem once you&#39;ve=
 <br>
 punched random freespace holes in the allocated inode btree. IT<br>
 generally doesn&#39;t affect many people; those that it does affect are<br>
 normally using XFS as an object store indexed by a hard link farm<br>
-(e.g. various backup programs do this).<br></blockquote><div>OK, I see.</di=
-v><div><br></div><div>Could you please guide me to reproduce this issue eas=
-ily? as I have tried to use a 500G xfs partition, and use about 98 % spaces=
-, but still can&#39;t reproduce this issue. Is there any easy way from your=
- mind?</div>
-<div><br></div><blockquote class=3D"gmail_quote" style=3D"margin:0 0 0 .8ex=
-;border-left:1px #ccc solid;padding-left:1ex">
+(e.g. various backup programs do this).<br>
 <br>
 If you dump the superblock via xfs_db, the difference between icount<br>
 and ifree will give you idea of how much &quot;needle in a haystack&quot;<b=
@@ -329,12 +596,7 @@ AG by dumping the AGI headers and checking the same thing. filling<br>
 in all the holes (by creating a bunch of zero length files in the<br>
 appropriate AGs) might take some time, but it should make the<br>
 problem go away until you remove more filesystem and create random<br>
-free inode holes again...<br></blockquote><div>=C2=A0</div><div>I will try =
-to investigate the detail issue.</div><div><br></div><div>Thanks for your k=
-indly response.</div><div>Qiang</div><div>=C2=A0</div><blockquote class=3D"=
-gmail_quote" style=3D"margin:0 0 0 .8ex;border-left:1px #ccc solid;padding-=
-left:1ex">
-
+free inode holes again...<br>
 <br>
 Cheers,<br>
 <br>
@@ -342,12 +604,12 @@ Dave.<br>
 <span class=3D"HOEnZb"><font color=3D"#888888">--<br>
 Dave Chinner<br>
 <a href=3D"mailto:david@fromorbit.com">david@fromorbit.com</a><br>
-</font></span></blockquote></div><br></div></div>
+</font></span></blockquote></div><br></div>
 
---089e01493e8057e80405016fb33d--
+--001a11c353fa3fce430501703d36--
 
 
---===============4910201977608659339==
+--===============6565765678956240336==
 Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
@@ -358,4 +620,4 @@ xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
 
---===============4910201977608659339==--
+--===============6565765678956240336==--
