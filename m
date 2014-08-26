@@ -1,26 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 5EB8E7F51
-	for <xfs@oss.sgi.com>; Tue, 26 Aug 2014 16:38:29 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 4D3448F8054
-	for <xfs@oss.sgi.com>; Tue, 26 Aug 2014 14:38:25 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id 9D3FF7F51
+	for <xfs@oss.sgi.com>; Tue, 26 Aug 2014 17:34:27 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 7A4788F8065
+	for <xfs@oss.sgi.com>; Tue, 26 Aug 2014 15:34:27 -0700 (PDT)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	l8sfu2DaWxAEAU2u for <xfs@oss.sgi.com>;
-	Tue, 26 Aug 2014 14:38:23 -0700 (PDT)
-Date: Wed, 27 Aug 2014 07:38:08 +1000
+	D1mQNfU5ExfCccLP for <xfs@oss.sgi.com>;
+	Tue, 26 Aug 2014 15:34:22 -0700 (PDT)
+Date: Wed, 27 Aug 2014 08:34:07 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 1/6] xfs: mmap write/read leaves bad state on pages
-Message-ID: <20140826213808.GL20518@dastard>
-References: <1408597754-13526-1-git-send-email-david@fromorbit.com>
-	<1408597754-13526-2-git-send-email-david@fromorbit.com>
-	<20140821195632.GA10335@quack.suse.cz>
-	<20140821223332.GO26465@dastard>
-	<20140826160630.GA9341@quack.suse.cz>
+Subject: Re: [PATCH 1/4] xfs: refactor xlog_recover_process_data()
+Message-ID: <20140826223407.GM20518@dastard>
+References: <1409016101-9511-1-git-send-email-david@fromorbit.com>
+	<1409016101-9511-2-git-send-email-david@fromorbit.com>
+	<20140826124112.GB52815@bfoster.bfoster>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20140826160630.GA9341@quack.suse.cz>
+In-Reply-To: <20140826124112.GB52815@bfoster.bfoster>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,135 +31,137 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Jan Kara <jack@suse.cz>
-Cc: clm@fb.com, xfs@oss.sgi.com
+To: Brian Foster <bfoster@redhat.com>
+Cc: xfs@oss.sgi.com
 
-On Tue, Aug 26, 2014 at 06:06:30PM +0200, Jan Kara wrote:
-> On Fri 22-08-14 08:33:32, Dave Chinner wrote:
-> > On Thu, Aug 21, 2014 at 09:56:32PM +0200, Jan Kara wrote:
-> > > On Thu 21-08-14 15:09:09, Dave Chinner wrote:
-> > > > From: Dave Chinner <dchinner@redhat.com>
-> > > > 
-> > > > generic/263 is failing fsx at this point with a page spanning
-> > > > EOF that cannot be invalidated. The operations are:
-> > > > 
-> > > > 1190 mapwrite   0x52c00 thru    0x5e569 (0xb96a bytes)
-> > > > 1191 mapread    0x5c000 thru    0x5d636 (0x1637 bytes)
-> > > > 1192 write      0x5b600 thru    0x771ff (0x1bc00 bytes)
-> > > > 
-> > > > where 1190 extents EOF from 0x54000 to 0x5e569. When the direct IO
-> > > > write attempts to invalidate the cached page over this range, it
-> > > > fails with -EBUSY and so we fire this assert:
-> > > > 
-> > > > XFS: Assertion failed: ret < 0 || ret == count, file: fs/xfs/xfs_file.c, line: 676
-> > > > 
-> > > > because the kernel is trying to fall back to buffered IO on the
-> > > > direct IO path (which XFS does not do).
-> > > > 
-> > > > The real question is this: Why can't that page be invalidated after
-> > > > it has been written to disk an cleaned?
-....
-> > > As Anton has pointed out other filesystems solve the same issue by clearing
-> > > the dirty bits beyond EOF in their writepage() function. Also since we
-> > > zero-out the tail of the page in writepage() (even in XFS as I checked),
-> > > this kind of makes sense to me and has smaller overhead than special
-> > > set_page_dirty()...
+On Tue, Aug 26, 2014 at 08:41:13AM -0400, Brian Foster wrote:
+> On Tue, Aug 26, 2014 at 11:21:38AM +1000, Dave Chinner wrote:
+> > From: Dave Chinner <dchinner@redhat.com>
 > > 
-> > Yes, and that's where I started - block_write_full_page and so
-> > I ended up with this first:
+> > Clean up xlog_recover_process_data() structure in preparation for
+> > fixing the allocationa nd freeing context of the transaction being
+> > recovered.
 > > 
-> > diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-> > index 2a316ad..a9d6afc 100644
-> > --- a/fs/xfs/xfs_aops.c
-> > +++ b/fs/xfs/xfs_aops.c
-> > @@ -1057,8 +1073,24 @@ xfs_vm_writepage(
-> >  	do {
-> >  		int new_ioend = 0;
+> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> > ---
+> >  fs/xfs/xfs_log_recover.c | 151 ++++++++++++++++++++++++++---------------------
+> >  1 file changed, 84 insertions(+), 67 deletions(-)
+> > 
+> > diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+> > index 01becbb..1970732f 100644
+> > --- a/fs/xfs/xfs_log_recover.c
+> > +++ b/fs/xfs/xfs_log_recover.c
+> > @@ -3531,12 +3531,78 @@ out:
+> >  }
 > >  
-> > -		if (offset >= end_offset)
-> > +		/*
-> > +		 * If the buffer is fully beyond EOF, we need to mark it clean
-> > +		 * otherwise we'll leave stale dirty buffers in memory. See the
-> > +		 * comment above in the EOF handling about Charlie Foxtrots.
-> > +		 */
-> > +		if (offset >= end_offset) {
-> > +			clear_buffer_dirty(bh);
-> > +			ASSERT(!buffer_delay(bh));
-> > +			ASSERT(!buffer_mapped(bh));
+> >  STATIC int
+> > -xlog_recover_unmount_trans(
+> > -	struct xlog		*log)
+> > +xlog_recovery_process_ophdr(
+> > +	struct xlog		*log,
+> > +	struct hlist_head	rhash[],
+> > +	struct xlog_rec_header	*rhead,
+> > +	struct xlog_op_header	*ohead,
+> > +	xfs_caddr_t		dp,
+> > +	xfs_caddr_t		lp,
+> > +	int			pass)
+> >  {
+> > -	/* Do nothing now */
+> > -	xfs_warn(log->l_mp, "%s: Unmount LR", __func__);
+> > -	return 0;
+> > +	struct xlog_recover	*trans;
+> > +	xlog_tid_t		tid;
+> > +	int			error;
+> > +	unsigned long		hash;
+> > +	uint			flags;
+> > +	unsigned int		hlen;
 > > +
-> > +			/*
-> > +			 * Page is not uptodate until buffers under IO have been
-> > +			 * fully processed.
-> > +			 */
-> > +			uptodate = 0;
-> > +			continue;
-> > -			break;
+> > +	hlen = be32_to_cpu(ohead->oh_len);
+> > +	tid = be32_to_cpu(ohead->oh_tid);
+> > +	hash = XLOG_RHASH(tid);
+> > +	trans = xlog_recover_find_tid(&rhash[hash], tid);
+> > +	if (!trans) {
+> > +		/* add new tid if this is a new transaction */
+> > +		if (ohead->oh_flags & XLOG_START_TRANS) {
+> > +			xlog_recover_new_tid(&rhash[hash], tid,
+> > +					     be64_to_cpu(rhead->h_lsn));
 > > +		}
+> > +		return 0;
+> > +	}
 > > +
-> >  		if (!buffer_uptodate(bh))
-> >  			uptodate = 0;
-> >  
-> > 
-> > But this doesn't solve the invalidation failures - it merely covers
-> > up a symptom of the underlying problem. i.e. fsx went from
-> > failing invalidate on the EOF page at operation #1192 to failing
-> > invalidate on the EOF page at operation #9378.
-> >
-> > The I realised that flush/wait/invalidate is actually racy against
-> > mmap, so writepage clearing dirty buffer flags on buffers beyond EOF
-> > is not a solution to the problem - it can still occur. So I added
->   Hum, I have to say I don't quite understand this. I agree with you that
-> clearing dirty bits in .writepage() is racy wrt mmap. However I don't see
-> how fsx can ever trigger this. For flush/wait/invalidate to fail, someone
-> would have to write to the mapping somewhere between flush and invalidate.
-> However fsx is singlethreaded so I don't see how that can happen.
+> 
+> Overall this looks pretty good to me. I wonder if we can clean this up
+> to separate state management from error detection while we're at it. I
+> don't see any reason this code to find trans has to be up here.
+> 
+> > +	error = -EIO;
+> > +	if (dp + hlen > lp) {
+> > +		xfs_warn(log->l_mp, "%s: bad length 0x%x", __func__, hlen);
+> > +		WARN_ON(1);
+> > +		goto out_free;
+> > +	}
+> > +
+> > +	flags = ohead->oh_flags & ~XLOG_END_TRANS;
+> > +	if (flags & XLOG_WAS_CONT_TRANS)
+> > +		flags &= ~XLOG_CONTINUE_TRANS;
+> > +
+> 
+> 	/* we should find a trans for anything other than a start op */
+> 	trans = xlog_recover_find_tid(&rhash[hash], tid);
+> 	if (((ohead->oh_flags & XLOG_START_TRANS) && trans) ||
+> 	    (!(ohead->oh_flags & XLOG_START_TRANS) && !trans)) {
+> 		xfs_warn(log->l_mp, "%s: bad transaction 0x%x oh_flags 0x%x trans %p",
+> 			 __func__, tid, ohead->oh_flags, trans);
+> 		ASSERT(0);
+> 		return -EIO;
+> 	}
+> 
+> Maybe returning error here is not the right thing to do because we want
+> the recovery to proceed. We could still dump a warning and return 0
+> though.
 
-Right, I was talking about the general problem, not necessarily the
-specific fsx problem I was seeing. i.e. clearing dirty buffers
-beyond EOF in writepage is not a robust solution, so regardless of
-whatever other problems there are, it's not a solution we can rely
-on.
+Urk. Try understanding why that logic exists in a couple of years
+time when you've forgetten all the context. :/
 
-....
+> > +	switch (flags) {
+> > +	/* expected flag values */
+> > +	case 0:
+> > +	case XLOG_CONTINUE_TRANS:
+> > +		error = xlog_recover_add_to_trans(log, trans, dp, hlen);
+> > +		break;
+> > +	case XLOG_WAS_CONT_TRANS:
+> > +		error = xlog_recover_add_to_cont_trans(log, trans, dp, hlen);
+> > +		break;
+> > +	case XLOG_COMMIT_TRANS:
+> > +		error = xlog_recover_commit_trans(log, trans, pass);
+> > +		break;
+> > +
+> > +	/* unexpected flag values */
+> > +	case XLOG_UNMOUNT_TRANS:
+> > +		xfs_warn(log->l_mp, "%s: Unmount LR", __func__);
+> > +		error = 0;
+> > +		break;
+> > +	case XLOG_START_TRANS:
+> > +		xfs_warn(log->l_mp, "%s: bad transaction 0x%x", __func__, tid);
+> > +		ASSERT(0);
+> > +		break;
+> 
+> 		xlog_recover_new_tid(&rhash[hash], tid, be64_to_cpu(rhead->h_lsn)
+> 		error = 0;
+> 		break;
+> 
 
-> > At which point I realised that I'm playing whack-a-mole with a
-> > fundamental problem: buffers beyond EOF cannot be written, so
-> > dirtying them in the first place is just fundamentally wrong. In XFS we'll
-> > zero them on disk during an extend operation (either in write,
-> > truncate or prealloc), so we're not going to leaak stale data by not
-> > marking them dirty.  They may not even be allocated, so we can't
-> > assume that we can write them. So, rather than trying to handle this
-> > dirty-buffers-beyond-EOF case in every situation where we might trip
-> > over it, let's just prevent it from happening in the first place.
->   Sure I understand that. I'm now trying to understand why noone else sees
-> the problem (we do run xfstests for ext4 and blocksize < page size) and
-> whether there's something we might want to do for other filesystems as
-> well.
+I like the idea, but I don't like the suggested implementation. I
+was in two minds as to whether I should factor
+xlog_recover_find_tid() further.  There's only one caller of it and
+only one caller of xlog_recover_new_tid() and the happen within
+three lines of each other. Hence I'm thinking that it makes more
+sense to wrap the "find or allocate trans" code in a single helper
+and lift all that logic clean out of this function. That helper can
+handle all the XLOG_START_TRANS logic more cleanly, I think....
 
-Right, I don't understand where it's coming from, either.
-
-I know there are still problems with stray delalloc blocks even
-after making this change because xfs/297 is still tripping over
-delayed allocation blocks where there should be none during direct
-IO. i.e. this avoids the EOF issues that the direct IO invalidation
-changes expose, but I still haven't been able to find the underlying
-cause that is still triggering problems within EOF.
-
-This is the disadvantage of smart people writing smart code - most
-people (me included) are simply too dumb to be able to debug it. And
-so when shit goes wrong, we're left to wonder where the paddle was
-hidden...
-
-> I wonder if there isn't something special going on with XFS
-> redirtying the page because xfs_imap_valid() returned EAGAIN but looking
-> into the code I don't see how that could happen.
-
-To tell the truth, I'm fed up with having to deal repeatedly with
-bufferhead coherency problems and not being able to find the root
-cause. We just keep finding problem after problem after problem and
-there's no end in sight. So I'm much more inclined to spend time
-removing bufferheads from XFS than I am to try to find a needle in a
-very large haystack....
+Actually, that makes the factoring I've already done a little
+inconsistent. Let me rework this a bit.
 
 Cheers,
 
