@@ -1,22 +1,22 @@
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 0ED627F54
-	for <xfs@oss.sgi.com>; Mon, 25 Aug 2014 19:17:36 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id F13448F804B
-	for <xfs@oss.sgi.com>; Mon, 25 Aug 2014 17:17:32 -0700 (PDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id B09867F4E
+	for <xfs@oss.sgi.com>; Mon, 25 Aug 2014 19:16:47 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 8FC54304053
+	for <xfs@oss.sgi.com>; Mon, 25 Aug 2014 17:16:44 -0700 (PDT)
 Received: from vps.magizz.com (vps.magizz.com [162.251.83.157]) by
-	cuda.sgi.com with ESMTP id 4Ha7oGHHN4jPJHdh (version=TLSv1
+	cuda.sgi.com with ESMTP id 944sn97bNj3y9B4Z (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 25 Aug 2014 17:17:30 -0700 (PDT)
-Received: from dev104magizz by vps.magizz.com with local (Exim 4.82)
-	(envelope-from <webmaster@dev104.magizz.com>) id 1XM4S2-0005wI-5s
-	for xfs@oss.sgi.com; Tue, 26 Aug 2014 04:17:30 +0400
+	Mon, 25 Aug 2014 17:16:41 -0700 (PDT)
+Received: from dev101magizz by vps.magizz.com with local (Exim 4.82)
+	(envelope-from <webmaster@dev101.magizz.com>) id 1XM4RE-0005vF-4b
+	for xfs@oss.sgi.com; Tue, 26 Aug 2014 04:16:40 +0400
 Subject: Goodbye from our newsletter
-Date: Tue, 26 Aug 2014 00:17:30 +0000
-From: Webmaster <noreply@dev104.magizz.com>
-Message-ID: <804e5d135c2ca0a51ccc39d0dbfc1a26@dev104.magizz.com>
+Date: Tue, 26 Aug 2014 00:16:40 +0000
+From: Webmaster <noreply@dev101.magizz.com>
+Message-ID: <a882f88bd06258de234cdc63734284e0@dev101.magizz.com>
 MIME-Version: 1.0
-Reply-To: Webmaster <noreply@dev104.magizz.com>
+Reply-To: Webmaster <noreply@dev101.magizz.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -43,7 +43,7 @@ phpList,
 by our administrator.
 
   If there is an error in this information, you can re-subscribe:
-  please go to http://dev104.magizz.com/mailz/?p=subscribe and follow the
+  please go to http://dev101.magizz.com/mailz/?p=subscribe and follow the
 steps.
 
   Thank you
