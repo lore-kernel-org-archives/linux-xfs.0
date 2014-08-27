@@ -1,23 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id B66697F3F
-	for <xfs@oss.sgi.com>; Wed, 27 Aug 2014 05:14:29 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 38C14AC001
-	for <xfs@oss.sgi.com>; Wed, 27 Aug 2014 03:14:28 -0700 (PDT)
-Received: from mail.zbfmail.de (mail.zbfmail.de [176.9.84.12]) by cuda.sgi.com
-	with ESMTP id 8xNYmeF4XX5KWFht (version=TLSv1 cipher=AES256-SHA
-	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 27 Aug 2014 03:14:26 -0700 (PDT)
-Received: from mail.zbfmail.de (localhost [127.0.0.1])
-	by mail.zbfmail.de (Postfix) with ESMTP id 512DAA3436
-	for <xfs@oss.sgi.com>; Wed, 27 Aug 2014 12:14:21 +0200 (CEST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 027C47F47
+	for <xfs@oss.sgi.com>; Wed, 27 Aug 2014 05:20:23 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id D62968F8070
+	for <xfs@oss.sgi.com>; Wed, 27 Aug 2014 03:20:19 -0700 (PDT)
+Received: from mail-pd0-f178.google.com (mail-pd0-f178.google.com
+	[209.85.192.178]) by cuda.sgi.com with ESMTP id
+	XSX57ekKuweoNixi (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 27 Aug 2014 03:20:18 -0700 (PDT)
+Received: by mail-pd0-f178.google.com with SMTP id w10so24528751pde.9
+	for <xfs@oss.sgi.com>; Wed, 27 Aug 2014 03:20:15 -0700 (PDT)
 MIME-Version: 1.0
-Date: Wed, 27 Aug 2014 12:14:21 +0200
-From: Marko Weber|8000 <weber@zbfmail.de>
-Subject: mount options question
-Message-ID: <3dc9caf6f9b415f6e4c0ebac1f1626d3@zbfmail.de>
-Reply-To: weber@zbfmail.de
+Date: Wed, 27 Aug 2014 12:20:14 +0200
+Message-ID: <CACyNnZNUMdv=EUAaYmW69X+0yB7qmsVA3bC=ChJiKb_X4WCt-w@mail.gmail.com>
+Subject: Ghost items in the end of a dir listing
+From: Felipe Monteiro de Carvalho <felipemonteiro.carvalho@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,25 +25,55 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Transfer-Encoding: base64
-Content-Type: text/plain; charset="utf-8"; Format="flowed"
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Xfs <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
-CnNvcnJ5IGRhdmUgYW5kIGFsbCBvdGhlciwKCmNhbiB5b3UgZ3V5cyByZWNvbW1lbmQgbWUgdGhl
-IG1vc3Qgc3RhYmxlIC8gYmVzdCBtb3VudCBvcHRpb25zIGZvcgpteSBuZXcgc2VydmVyIHdpdGgg
-c3NkwrRzIGFuZCBYRlMgZmlsZXN5c3RlbT8KCmF0IG1vbWVudCBpIHdvdWxkIHNldDogIGRlZmF1
-bHRzLG5vYmFycmllcixkaXNjYXJkLGxvZ2JzaXplPTI1Nmssbm9pa2VlcApvciBpcyBqdXN0ICJk
-ZWZhdWx0IiB0aGUgYmVzdCBzb2x1dGlvbiBhbmQgeGZzIGRldGVjdCBpdHNlbGYgd2hhdHMgYmVz
-dC4KCmNhbiB5b3UgZ3VpZGUgbWUgYSBiaXQ/CgphcyBlbGVhdnRvciBpIHNldCBlbGV2YXRvcj1u
-b29wCgppIHNldHVwIGRpc2tzIHdpdGggbGludXggc29mdHJhaWQgcmFpZDEuIE9uIHRvcCBvZiB0
-aGUgcmFpZCBpcyBMVk0gKGZvciAKc29tZSBkYXRhIHBhcnRhdGlvbnMpLgoKCndvdWxkIGJlIG5p
-Y2UgdG8gaGVhciBzb21lIHRpcHBzIGZyb20geW91CgpiZXN0IHJlZ2FyZHMKCm1hcmtvCgoKCgot
-LSAKemJmbWFpbCAtIE1pdHRlbmRyaW4gc3RhdHQgbnVyIERhdGVpIQoKT3BlbkRLSU0sIFNQRiwg
-RFNQQU0sIEdyZXlsaXN0aW5nLCBQT1NUU0NSRUVOLCBBTUFWSVMsIE1haWxnYXRld2F5cwpNYWls
-ZmlsdGVyaW5nLCBTTVRQIFNlcnZpY2UsIFNwYW0gQWJ3ZWhyLCBNWC1CYWNrdXAsIE1haWxzZXJ2
-ZXIgQmFja3VwClJlZHVuZGFudGUgTWFpbGdhdGV3YXlzLCBIQSBNYWlsc2VydmVyLCBTZWN1cmUg
-TWFpbHNlcnZlcgoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2kuY29tL21h
-aWxtYW4vbGlzdGluZm8veGZzCg==
+Hello,
+
+I am writing a program that reads XFS partitions and I am having
+trouble with some dir listings. In some directories in the block that
+starts with XD2B there is first the list of all directory items, which
+I read without problems, and then there is a free item, for example:
+
+  xfs_dir2_data_unused
+    freetag -> XFS_DIR2_DATA_FREE_TAG */
+    length -> 9A0
+    tag -> zero
+
+But after this free item there is still room in the block, so my
+program will try to read the next item. I cannot stop the reading
+because it is possible to have valid items, then a free item and then
+more valid items.
+
+The next item start might be something like:
+
+00 00 00 2E 00 00 00 02 16
+
+So it is not a free item, as it doesn't start with FF = XFS_DIR2_DATA_FREE_TAG
+But it isn't valid either, as its name is a bunch of trash =(
+
+So my questions are:
+1> What are those ghost items in the end of the block?
+2> Which criteria should be utilized to differentiate them from valid
+items? I tried some guesses but nothing really works so far...
+
+Here are screenshots of the actual data involved, here showing the
+item with XFS_DIR2_DATA_FREE_TAG:
+
+http://magnifier.sourceforge.net/temp/xfs/xfs_dir_listing_XD2B_FREE_item.png
+
+And here showing the area in the end of the block with wierd items:
+
+http://magnifier.sourceforge.net/temp/xfs/xfs_dir_listing_XD2B_after_FREE.png
+
+thanks for any tips =)
+-- 
+Felipe Monteiro de Carvalho
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
