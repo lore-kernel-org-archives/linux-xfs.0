@@ -1,29 +1,18 @@
-Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 452AC7F4E
-	for <xfs@oss.sgi.com>; Sun, 31 Aug 2014 22:36:33 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 33BAC304043
-	for <xfs@oss.sgi.com>; Sun, 31 Aug 2014 20:36:30 -0700 (PDT)
-Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
-	[65.41.216.221]) by cuda.sgi.com with ESMTP id Jg32J6HSNJ3lD7cw
-	for <xfs@oss.sgi.com>; Sun, 31 Aug 2014 20:36:25 -0700 (PDT)
-Message-ID: <5403E9B9.7040608@hardwarefreak.com>
-Date: Sun, 31 Aug 2014 22:36:25 -0500
-From: stan hoeppner <stan@hardwarefreak.com>
+	by oss.sgi.com (Postfix) with ESMTP id 0163F7F3F
+	for <xfs@oss.sgi.com>; Thu, 28 Aug 2014 04:29:08 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id E417A304039
+	for <xfs@oss.sgi.com>; Thu, 28 Aug 2014 02:29:04 -0700 (PDT)
+Received: from us-alimail-mta2.hst.scl.en.alidc.net
+	(out113-248.biz.mail.alibaba.com [205.204.113.248]) by
+	cuda.sgi.com with ESMTP id sLHVQYGmWQ0wHiaQ for
+	<xfs@oss.sgi.com>; Thu, 28 Aug 2014 02:29:02 -0700 (PDT)
+Date: Thu, 28 Aug 2014 17:27:17 +0800
+From: <shengyehong@mdesafe.com>
+Message-ID: <ade28670-9920-416c-b375-3c73261da388@mdesafe.com>
+Subject: =?UTF-8?B?UkU6IFNhZmUgQm94?=
 MIME-Version: 1.0
-Subject: Re: storage, libaio, or XFS problem?  3.4.26
-References: <3fe8c34c0ccbbd720015d273fa2b8b30@localhost>
-	<20140826075345.GJ20518@dastard>
-	<8c29baf987467a84f0b7c1d09c863662@localhost>
-	<20140828003226.GO20518@dastard>
-	<7f9e5aef187b44e899077467aeb0809d@localhost>
-	<20140828230817.GU20518@dastard>
-	<2d2ce7bb38c00a7d35f4a324f6a36cbb@localhost>
-	<20140829235538.GF20518@dastard>
-	<d20fe777ec1fd318ae5d4054dffda3f4@localhost>
-	<20140831235749.GH20518@dastard>
-In-Reply-To: <20140831235749.GH20518@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,97 +21,174 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============8906250038115905652=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On 08/31/2014 06:57 PM, Dave Chinner wrote:
-> On Fri, Aug 29, 2014 at 09:55:53PM -0500, Stan Hoeppner wrote:
->> On Sat, 30 Aug 2014 09:55:38 +1000, Dave Chinner <david@fromorbit.com> wrote:
->>> On Fri, Aug 29, 2014 at 11:38:16AM -0500, Stan Hoeppner wrote:
->>>>
->>>> Another storage crash yesterday.  xfs_repair output inline below for the 7
->>>> filesystems.  I'm also pasting the dmesg output.  This time there is no
->>>> oops, no call traces.  The filesystems mounted fine after mounting,
->>>> replaying, and repairing. 
->>>
->>> Ok, what version of xfs_repair did you use?
->>
->> 3.1.4 which is a little long in the tooth.
-> 
-> And so not useful for th epurposes of finding free space tree
-> corruptions. Old xfs_repair versions only rebuild the freespace
-> trees - they don't check them first. IOWs, silence from an old
-> xfs_repair does not mean the filesystem was free of errors.
-> 
->>>> This because some of our writes for a given low rate stream are as low as
->>>> 32KB and may be 2-3 seconds apart.  With a 64-128KB chunk, 768 to 1536KB
->>>> stripe width, we'd get massive RMW without this feature.  Testing thus
->>>> far
->>>> shows it is fairly effective, though we still get pretty serious RMW due
->>>> to
->>>> the fact we're writing 350 of these small streams per array at ~72 KB/s
->>>> max, along with 2 streams at ~48 MB/s, and and 50 streams at ~1.2 MB/s.
->>
->>>> Multiply this by 7 LUNs per controller and it becomes clear we're
->>>> putting a
->>>> pretty serious load on the firmware and cache.
->>>
->>> Yup, so having the array cache do the equivalent of sequential
->>> readahead multi-stream detection for writeback would make a big
->>> difference. But not simple to do....
->>
->> Not at all, especially with only 3 GB of RAM to work with, as I'm told. 
->> Seems low for a high end controller with 4x 12G SAS ports.  We're only able
->> to achieve ~250 MB/s per array at the application due to the access pattern
->> being essentially random, and still with a serious quantity of RMWs.  Which
->> is why we're going to test with an even smaller chunk of 32KB.  I believe
->> that's the lower bound on these controllers.  For this workload 16KB or
->> maybe even 8KB would likely be more optimal.  We're also going to test with
->> bcache and a 400 GB Intel 3700 (datacenter grade) SSD backing two LUNs. 
->> But with bcache chunk size should be far less relevant.  I'm anxious to
->> kick those tires, but it'll be a couple of weeks.
->>
->> Have you played with bcache yet?
-> 
-> Enough to scare me. So many ways for things to go wrong, no easy way
-> to recover when things go wrong. And that's before I even get to
-> performance warts, like having systems stall completely because
-> there's tens or hundreds of GB of 4k random writes that have to be
-> flushed to slow SATA RAID6 in the cache....
+--===============8906250038115905652==
+Content-Type: multipart/alternative;
+  boundary="----=ALIBOUNDARY_6990_4c716940_53fef5f8_3f45"
 
-Yikes.  I hadn't yet heard such opinions expressed.  By go wrong I
-assume you mean the btrees or cached sector data getting broken, corrupted?
+------=ALIBOUNDARY_6990_4c716940_53fef5f8_3f45
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-> Cheers,
-> 
-> Dave.
-> 
-> PS: can you wrap your text at 68 or 72 columns so quoted text
-> doesn't overflow 80 columns and get randomly wrapped and messed up?
+Dear Sir hello,=0D=0A=0D=0A=0D=0AGlad to learn that you're looking for Hotel s=
+afe! =0D=0A=0D=0A=0D=0AWe supply Hotel Safes/ Deposit Safes / Minibar/ Finance=
+ safes/ Fire safe and other safes with high quality and good price. Hope to be=
+ a partner of your company! =0D=0A=0D=0A=0D=0AE-catalog will be provided if ne=
+eded.  =0D=0A=0D=0A=0D=0AEmail me or just call me directly. Thank you! =0D=0A=0D=
+=0A=0D=0A=0D=0ABest regards, =0D=0A=0D=0A=0D=0A=0D=0AEmily Zhang|Trade Manager=
+  =0D=0ASuzhou Metal Safe Equipment Manufacturing Co., Ltd.=0D=0AMob:86-159016=
+23106     Skype:emily6985=0D=0ATel:(+86)21 60672003      FAX:(+86)2160672001-8=
+18=0D=0AMail:emily@mdesafe.com 
+------=ALIBOUNDARY_6990_4c716940_53fef5f8_3f45
+Content-Type: text/html; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-This email should be.  Lemme see what I can do with the others.  The
-lovely Cisco VPN client I must use kills routing to my local subnet, so
-Icedovce can't connect to my IMAP server when the VPN is active.  The
-test hardness app requires a shell unfortunately so I have to keep the
-tunnel open all the time, as the test runs are 40+ hours each.  My last
-test just crashed a bit ago so I can use Icedove for this reply.
+<div class=3D"__aliyun_email_body_block"><DIV>=0D=0A<P style=3D"TEXT-ALIGN: le=
+ft; MARGIN-TOP: 0pt; MARGIN-BOTTOM: 0pt" class=3Dp0><SPAN style=3D"FONT-FAMILY=
+: 'Times New Roman'; COLOR: rgb(0,0,0); FONT-SIZE: 14pt; mso-spacerun: 'yes'">=
+Dear&nbsp;</SPAN><SPAN style=3D"FONT-FAMILY: 'Times New Roman'; COLOR: rgb(0,0=
+,0); FONT-SIZE: 14pt; mso-spacerun: 'yes'">Sir&nbsp;hello</SPAN><SPAN style=3D=
+"FONT-FAMILY: 'Times New Roman'; COLOR: rgb(0,0,0); FONT-SIZE: 14pt; mso-space=
+run: 'yes'">,</SPAN><SPAN style=3D"FONT-FAMILY: 'Times New Roman'; COLOR: rgb(=
+0,0,0); FONT-SIZE: 14pt; mso-spacerun: 'yes'"><?xml:namespace prefix =3D o ns =
+=3D "urn:schemas-microsoft-com:office:office" /><o:p></o:p></SPAN></P>=0D=0A<P=
+ style=3D"TEXT-ALIGN: left; MARGIN-TOP: 0pt; MARGIN-BOTTOM: 0pt" class=3Dp0><S=
+PAN style=3D"FONT-FAMILY: 'Times New Roman'; COLOR: rgb(0,0,0); FONT-SIZE: 14p=
+t; mso-spacerun: 'yes'">=0D=0A<DIV><A href=3D"about:blank#" #RecipientName#&nb=
+sp;#DateTime#;#RandomString40#;#RandomString40#;#RandomString40#;#RandomString=
+40#;#RandomString40#;#RandomString40#><SPAN style=3D"VISIBILITY: hidden"></SPA=
+N></A></DIV><BR></SPAN><SPAN style=3D"FONT-FAMILY: 'Times New Roman'; COLOR: r=
+gb(0,0,0); FONT-SIZE: 14pt; mso-spacerun: 'yes'">Glad&nbsp;to&nbsp;</SPAN><SPA=
+N style=3D"FONT-FAMILY: 'Times New Roman'; COLOR: rgb(0,0,0); FONT-SIZE: 14pt;=
+ mso-spacerun: 'yes'">learn&nbsp;that&nbsp;</SPAN><FONT color=3D#000000><SPAN =
+style=3D"FONT-FAMILY: 'Times New Roman'; FONT-SIZE: 14pt; mso-spacerun: 'yes'"=
+>you're&nbsp;looking&nbsp;for&nbsp;Hotel&nbsp;safe</SPAN><SPAN style=3D"FONT-F=
+AMILY: 'Times New Roman'; FONT-SIZE: 14pt; mso-spacerun: 'yes'">!</SPAN><SPAN =
+style=3D"FONT-FAMILY: 'Times New Roman'; FONT-SIZE: 14pt; mso-spacerun: 'yes'"=
+><o:p></o:p></SPAN><FONT style=3D"BACKGROUND-COLOR: #c7edcc" size=3D3> </FONT>=
+</FONT>=0D=0A<P><FONT style=3D"BACKGROUND-COLOR: #c7edcc"></FONT></P>=0D=0A<P =
+style=3D"TEXT-ALIGN: left; MARGIN-TOP: 0pt; MARGIN-BOTTOM: 0pt" class=3Dp0><FO=
+NT style=3D"BACKGROUND-COLOR: #c7edcc" color=3D#000000 size=3D3></FONT><SPAN s=
+tyle=3D"FONT-FAMILY: 'Times New Roman'; COLOR: rgb(0,0,0); FONT-SIZE: 14pt; ms=
+o-spacerun: 'yes'">=0D=0A<DIV><A href=3D"about:blank#" #RecipientName#&nbsp;#D=
+ateTime#;#RandomString40#;#RandomString40#;#RandomString40#;#RandomString40#;#=
+RandomString40#;#RandomString40#><SPAN style=3D"VISIBILITY: hidden"><FONT styl=
+e=3D"BACKGROUND-COLOR: #c7edcc" size=3D3></FONT></SPAN></A></DIV><BR></SPAN><S=
+PAN style=3D"FONT-FAMILY: 'Times New Roman'; COLOR: rgb(0,0,0); FONT-SIZE: 14p=
+t; mso-spacerun: 'yes'">We&nbsp;supply&nbsp;</SPAN><FONT color=3D#000000><SPAN=
+ style=3D"FONT-FAMILY: 'Times New Roman'; FONT-SIZE: 14pt; mso-spacerun: 'yes'=
+">Hotel&nbsp;</SPAN><SPAN style=3D"FONT-FAMILY: 'Times New Roman'; FONT-SIZE: =
+14pt; mso-spacerun: 'yes'">S</SPAN><SPAN style=3D"FONT-FAMILY: 'Times New Roma=
+n'; FONT-SIZE: 14pt; mso-spacerun: 'yes'">afe</SPAN><SPAN style=3D"FONT-FAMILY=
+: 'Times New Roman'; FONT-SIZE: 14pt; mso-spacerun: 'yes'">s/&nbsp;Deposit&nbs=
+p;Safes</SPAN><SPAN style=3D"FONT-FAMILY: 'Times New Roman'; FONT-SIZE: 14pt; =
+mso-spacerun: 'yes'">&nbsp;/&nbsp;Minibar/&nbsp;Finance&nbsp;safe</SPAN><SPAN =
+style=3D"FONT-FAMILY: 'Times New Roman'; FONT-SIZE: 14pt; mso-spacerun: 'yes'"=
+>s</SPAN><SPAN style=3D"FONT-FAMILY: 'Times New Roman'; FONT-SIZE: 14pt; mso-s=
+pacerun: 'yes'">/&nbsp;Fire&nbsp;safe&nbsp;and&nbsp;other&nbsp;</SPAN><SPAN st=
+yle=3D"FONT-FAMILY: 'Times New Roman'; FONT-SIZE: 14pt; mso-spacerun: 'yes'">s=
+afes</SPAN><SPAN style=3D"FONT-FAMILY: 'Times New Roman'; COLOR: rgb(0,0,0); F=
+ONT-SIZE: 14pt; mso-spacerun: 'yes'">&nbsp;with&nbsp;</SPAN><SPAN style=3D"FON=
+T-FAMILY: 'Times New Roman'; COLOR: rgb(0,0,0); FONT-SIZE: 14pt; mso-spacerun:=
+ 'yes'">high</SPAN><SPAN style=3D"FONT-FAMILY: 'Times New Roman'; COLOR: rgb(0=
+,0,0); FONT-SIZE: 14pt; mso-spacerun: 'yes'">&nbsp;quality&nbsp;and&nbsp;</SPA=
+N><SPAN style=3D"FONT-FAMILY: 'Times New Roman'; COLOR: rgb(0,0,0); FONT-SIZE:=
+ 14pt; mso-spacerun: 'yes'">good</SPAN><SPAN style=3D"FONT-FAMILY: 'Times New =
+Roman'; COLOR: rgb(0,0,0); FONT-SIZE: 14pt; mso-spacerun: 'yes'">&nbsp;price.&=
+nbsp;Hope&nbsp;to&nbsp;be&nbsp;a&nbsp;partner&nbsp;of&nbsp;your&nbsp;company!<=
+/SPAN><SPAN style=3D"FONT-FAMILY: 'Times New Roman'; COLOR: rgb(0,0,0); FONT-S=
+IZE: 14pt; mso-spacerun: 'yes'"><o:p></o:p></SPAN><FONT style=3D"BACKGROUND-CO=
+LOR: #c7edcc" size=3D3> </FONT></FONT>=0D=0A<P><FONT style=3D"BACKGROUND-COLOR=
+: #c7edcc"></FONT></P>=0D=0A<P style=3D"TEXT-ALIGN: left; MARGIN-TOP: 0pt; MAR=
+GIN-BOTTOM: 0pt" class=3Dp0><FONT style=3D"BACKGROUND-COLOR: #c7edcc" color=3D=
+#000000 size=3D3></FONT><SPAN style=3D"FONT-FAMILY: 'Times New Roman'; COLOR: =
+rgb(0,0,0); FONT-SIZE: 14pt; mso-spacerun: 'yes'">=0D=0A<DIV><A href=3D"about:=
+blank#" #RecipientName#&nbsp;#DateTime#;#RandomString40#;#RandomString40#;#Ran=
+domString40#;#RandomString40#;#RandomString40#;#RandomString40#><SPAN style=3D=
+"VISIBILITY: hidden"><FONT style=3D"BACKGROUND-COLOR: #c7edcc" size=3D3></FONT=
+></SPAN></A></DIV><BR></SPAN><SPAN style=3D"FONT-FAMILY: 'Times New Roman'; CO=
+LOR: rgb(0,0,0); FONT-SIZE: 14pt; mso-spacerun: 'yes'">E-catalog&nbsp;will&nbs=
+p;be&nbsp;provided&nbsp;if&nbsp;needed.&nbsp;</SPAN><SPAN style=3D"FONT-FAMILY=
+: 'Times New Roman'; COLOR: rgb(0,0,0); FONT-SIZE: 14pt; mso-spacerun: 'yes'">=
+<o:p></o:p></SPAN><FONT style=3D"BACKGROUND-COLOR: #c7edcc" color=3D#000000 si=
+ze=3D3> </FONT>=0D=0A<P></P>=0D=0A<P style=3D"TEXT-ALIGN: left; MARGIN-TOP: 0p=
+t; MARGIN-BOTTOM: 0pt" class=3Dp0><FONT style=3D"BACKGROUND-COLOR: #c7edcc" co=
+lor=3D#000000 size=3D3></FONT><SPAN style=3D"FONT-FAMILY: 'Times New Roman'; C=
+OLOR: rgb(0,0,0); FONT-SIZE: 14pt; mso-spacerun: 'yes'">=0D=0A<DIV><A href=3D"=
+about:blank#" #RecipientName#&nbsp;#DateTime#;#RandomString40#;#RandomString40=
+#;#RandomString40#;#RandomString40#;#RandomString40#;#RandomString40#><SPAN st=
+yle=3D"VISIBILITY: hidden"><FONT style=3D"BACKGROUND-COLOR: #c7edcc" size=3D3>=
+</FONT></SPAN></A></DIV><BR></SPAN><SPAN style=3D"FONT-FAMILY: 'Times New Roma=
+n'; COLOR: rgb(0,0,0); FONT-SIZE: 14pt; mso-spacerun: 'yes'">Email&nbsp;me&nbs=
+p;or&nbsp;just&nbsp;call&nbsp;me&nbsp;directly.&nbsp;Thank&nbsp;you!</SPAN><SP=
+AN style=3D"FONT-FAMILY: 'Times New Roman'; COLOR: rgb(0,0,0); FONT-SIZE: 14pt=
+; mso-spacerun: 'yes'"> =0D=0A<DIV><A href=3D"about:blank#" #RecipientName#&nb=
+sp;#DateTime#;#RandomString40#;#RandomString40#;#RandomString40#;#RandomString=
+40#;#RandomString40#;#RandomString40#><SPAN style=3D"VISIBILITY: hidden"></SPA=
+N></A></DIV><BR></SPAN><SPAN style=3D"FONT-FAMILY: 'Times New Roman'; COLOR: r=
+gb(0,0,0); FONT-SIZE: 14pt; mso-spacerun: 'yes'">=0D=0A<DIV><A href=3D"about:b=
+lank#" #RecipientName#&nbsp;#DateTime#;#RandomString40#;#RandomString40#;#Rand=
+omString40#;#RandomString40#;#RandomString40#;#RandomString40#><SPAN style=3D"=
+VISIBILITY: hidden"></SPAN></A></DIV><BR></SPAN><SPAN style=3D"FONT-FAMILY: 'T=
+imes New Roman'; COLOR: rgb(0,0,0); FONT-SIZE: 14pt; mso-spacerun: 'yes'">Best=
+&nbsp;regards,</SPAN><SPAN style=3D"FONT-FAMILY: 'Times New Roman'; COLOR: rgb=
+(0,0,0); FONT-SIZE: 14pt; mso-spacerun: 'yes'"> =0D=0A<DIV><A href=3D"about:bl=
+ank#" #RecipientName#&nbsp;#DateTime#;#RandomString40#;#RandomString40#;#Rando=
+mString40#;#RandomString40#;#RandomString40#;#RandomString40#><SPAN style=3D"V=
+ISIBILITY: hidden"></SPAN></A></DIV><BR></SPAN><SPAN style=3D"FONT-FAMILY: 'Ti=
+mes New Roman'; COLOR: rgb(0,0,0); FONT-SIZE: 14pt; mso-spacerun: 'yes'">=0D=0A=
+<DIV><A href=3D"about:blank#" #RecipientName#&nbsp;#DateTime#;#RandomString40#=
+;#RandomString40#;#RandomString40#;#RandomString40#;#RandomString40#;#RandomSt=
+ring40#><SPAN style=3D"VISIBILITY: hidden"></SPAN></A></DIV><BR></SPAN><FONT c=
+olor=3D#000000><SPAN style=3D"FONT-FAMILY: 'Times New Roman'; FONT-SIZE: 14pt;=
+ mso-spacerun: 'yes'">Emily&nbsp;Zhang</SPAN><SPAN style=3D"FONT-FAMILY: 'Time=
+s New Roman'; FONT-SIZE: 14pt; mso-spacerun: 'yes'">|</SPAN><SPAN style=3D"FON=
+T-FAMILY: 'Times New Roman'; FONT-SIZE: 14pt; mso-spacerun: 'yes'">Trade&nbsp;=
+Manager&nbsp;</SPAN><SPAN style=3D"FONT-FAMILY: 'Times New Roman'; FONT-SIZE: =
+14pt; mso-spacerun: 'yes'"><o:p></o:p></SPAN><FONT style=3D"BACKGROUND-COLOR: =
+#c7edcc" size=3D3> </FONT></FONT>=0D=0A<P><FONT style=3D"BACKGROUND-COLOR: #c7=
+edcc"></FONT></P>=0D=0A<P style=3D"TEXT-ALIGN: left; MARGIN-TOP: 0pt; MARGIN-B=
+OTTOM: 0pt" class=3Dp0><SPAN style=3D"FONT-FAMILY: 'Times New Roman'; FONT-SIZ=
+E: 14pt; mso-spacerun: 'yes'">Suzhou&nbsp;Metal&nbsp;Safe&nbsp;Equipment&nbsp;=
+Manufacturing&nbsp;Co.,&nbsp;Ltd.</SPAN><SPAN style=3D"FONT-FAMILY: 'Times New=
+ Roman'; FONT-SIZE: 14pt; mso-spacerun: 'yes'"><o:p></o:p></SPAN></P>=0D=0A<P =
+style=3D"TEXT-ALIGN: left; MARGIN-TOP: 0pt; MARGIN-BOTTOM: 0pt" class=3Dp0><SP=
+AN style=3D"FONT-FAMILY: 'Times New Roman'; FONT-SIZE: 14pt; mso-spacerun: 'ye=
+s'">Mob:86-15901623106</SPAN><SPAN style=3D"FONT-FAMILY: '=E5=AE=8B=E4=BD=93';=
+ FONT-SIZE: 14pt; mso-spacerun: 'yes'">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</SPAN><S=
+PAN style=3D"FONT-FAMILY: 'Times New Roman'; FONT-SIZE: 14pt; mso-spacerun: 'y=
+es'">Skype:emily6985</SPAN><SPAN style=3D"FONT-FAMILY: 'Times New Roman'; FONT=
+-SIZE: 14pt; mso-spacerun: 'yes'"><o:p></o:p></SPAN></P>=0D=0A<P style=3D"TEXT=
+-ALIGN: left; MARGIN-TOP: 0pt; MARGIN-BOTTOM: 0pt" class=3Dp0><SPAN style=3D"F=
+ONT-FAMILY: 'Times New Roman'; FONT-SIZE: 14pt; mso-spacerun: 'yes'">Tel:(+86)=
+21&nbsp;60672003&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</SPAN><SPAN style=3D"FONT-FAMIL=
+Y: '=E5=AE=8B=E4=BD=93'; FONT-SIZE: 14pt; mso-spacerun: 'yes'">&nbsp;</SPAN><S=
+PAN style=3D"FONT-FAMILY: 'Times New Roman'; FONT-SIZE: 14pt; mso-spacerun: 'y=
+es'">FAX:(+86)2160672001-818</SPAN><SPAN style=3D"FONT-FAMILY: 'Times New Roma=
+n'; FONT-SIZE: 14pt; mso-spacerun: 'yes'"><o:p></o:p></SPAN></P>=0D=0A<P style=
+=3D"TEXT-ALIGN: left; MARGIN-TOP: 0pt; MARGIN-BOTTOM: 0pt" class=3Dp0><SPAN st=
+yle=3D"FONT-FAMILY: 'Times New Roman'; FONT-SIZE: 14pt; mso-spacerun: 'yes'">M=
+ail:emily@mdesafe.com&nbsp;</SPAN><SPAN style=3D"FONT-FAMILY: 'Times New Roman=
+'; FONT-SIZE: 14pt; mso-spacerun: 'yes'"><o:p></o:p></SPAN></P>=0D=0A<P style=3D=
+"TEXT-ALIGN: left; MARGIN-TOP: 0pt; MARGIN-BOTTOM: 0pt" class=3Dp0><SPAN style=
+=3D"FONT-FAMILY: 'Times New Roman'; FONT-SIZE: 14pt; mso-spacerun: 'yes'"><o:p=
+></o:p></SPAN></P></DIV></div>
+------=ALIBOUNDARY_6990_4c716940_53fef5f8_3f45--
 
-I've been using Roundcube, an older version, which doesn't let me set
-the line wrap, at least not in the web GUI, might be in the config.  I
-normally only use it when I'm remote, which is rare, so I've not kept it
-updated.
 
-Lemme see if I can open the firewall and get IMAP working through their
-VPN link so I can use Icedove.  Sorry for the inconvenience.  Believe
-me, it negatively affects me more than you. :(
-
-Stan
+--===============8906250038115905652==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============8906250038115905652==--
