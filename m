@@ -1,31 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id BAA1C7F3F
-	for <xfs@oss.sgi.com>; Wed, 27 Aug 2014 21:09:15 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id A8D7B304053
-	for <xfs@oss.sgi.com>; Wed, 27 Aug 2014 19:09:15 -0700 (PDT)
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	ofcXLaG9Ar92eNxo for <xfs@oss.sgi.com>;
-	Wed, 27 Aug 2014 19:09:10 -0700 (PDT)
-Date: Thu, 28 Aug 2014 12:08:19 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: bad performance on touch/cp file on XFS system
-Message-ID: <20140828020819.GQ20518@dastard>
-References: <20140825051801.GY26465@dastard>
-	<CAKEtwsXiVKTWAW+YszjNnFnD4_Ld7g2qXEvw48A-SitYSGyXHA@mail.gmail.com>
-	<20140825090843.GE20518@dastard>
-	<CAKEtwsU4gywG7fVVMVU1Y_TG9Pgg_-sFV0=SPg_7Ob5EV6FTew@mail.gmail.com>
-	<20140825222657.GF20518@dastard>
-	<CAGpXXZL2=ynv4x6hhBSsBPZmBG9Ac8mPOgE-Ekjs3tLvQO9Uaw@mail.gmail.com>
-	<20140826023754.GH20518@dastard>
-	<CAKEtwsW=6Wh3rdaNvmNbiOq1iUm+=xAwL0FsNhcmpKwkQrN9Ww@mail.gmail.com>
-	<20140826131354.GK20518@dastard>
-	<CAKEtwsVwXq4NXcGKCXob-qte3AT2MJ6qgzPB9Sb5Av12WxjCMw@mail.gmail.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <CAKEtwsVwXq4NXcGKCXob-qte3AT2MJ6qgzPB9Sb5Av12WxjCMw@mail.gmail.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 741527F3F
+	for <xfs@oss.sgi.com>; Wed, 27 Aug 2014 23:23:13 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id E655EAC006
+	for <xfs@oss.sgi.com>; Wed, 27 Aug 2014 21:23:12 -0700 (PDT)
+Received: from mail-we0-f181.google.com (mail-we0-f181.google.com
+	[74.125.82.181]) by cuda.sgi.com with ESMTP id WE5F0qkHvzMHwGq7
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Wed, 27 Aug 2014 21:23:10 -0700 (PDT)
+Received: by mail-we0-f181.google.com with SMTP id x48so181764wes.12
+	for <xfs@oss.sgi.com>; Wed, 27 Aug 2014 21:23:09 -0700 (PDT)
+From: Iustin Pop <iusty@k1024.org>
+Subject: [PATCH] xfs: fix behaviour of XFS_IOC_FSSETXATTR on directories
+Date: Wed, 27 Aug 2014 21:22:53 -0700
+Message-Id: <1409199773-16802-1-git-send-email-iusty@k1024.org>
+In-Reply-To: <20140718191314.GB27801@teal.hq.k1024.org>
+References: <20140718191314.GB27801@teal.hq.k1024.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,95 +25,80 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Zhang Qiang <zhangqiang.buaa@gmail.com>
-Cc: Greg Freemyer <greg.freemyer@gmail.com>, xfs-oss <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
+Cc: hch@infradead.org, Iustin Pop <iusty@k1024.org>
 
-On Wed, Aug 27, 2014 at 04:53:17PM +0800, Zhang Qiang wrote:
-> 2014-08-26 21:13 GMT+08:00 Dave Chinner <david@fromorbit.com>:
-> 
-> > On Tue, Aug 26, 2014 at 06:04:52PM +0800, Zhang Qiang wrote:
-> > > Thanks Dave/Greg for your analysis and suggestions.
-> > >
-> > > I can summarize what I should do next:
-> > >
-> > > - backup my data using xfsdump
-> > > - rebuilt filesystem using mkfs with options: agcount=32 for 2T disk
-> > > - mount filesystem with option inode64,nobarrier
-> >
-> > Ok up to here.
-> >
-> > > - applied patches about adding free list inode on disk structure
-> >
-> > No, don't do that. You're almost certain to get it wrong and corrupt
-> > your filesysetms and lose data.
-> >
-> > > As we have about ~100 servers need back up, so that will take much
-> > effort,
-> > > do you have any other suggestion?
-> >
-> > Just remount them with inode64. Nothing else. Over time as you add
-> > and remove files the inodes will redistribute across all 4 AGs.
-> >
-> OK.
-> 
-> How I can see  the layout number of inodes on each AGs? Here's my checking
-> steps:
-> 
-> 1) Check unmounted file system first:
-> [root@fstest data1]# xfs_db -c "sb 0"  -c "p" /dev/sdb1 |egrep
-> 'icount|ifree'
-> icount = 421793920
-> ifree = 41
-> [root@fstest data1]# xfs_db -c "sb 1"  -c "p" /dev/sdb1 |egrep
-> 'icount|ifree'
-> icount = 0
-> ifree = 0
+Currently, the ioctl handling code for XFS_IOC_FSSETXATTR treats all
+targets as regular files: it refuses to change the extent size if
+extents are allocated. This is wrong for directories, as there the
+extent size is only used as a default for children.
 
-That's wrong. You need to check the AGI headers, not the superblock.
-Only the primary superblock gets updated, and it's the aggregated of
-all the AGI values, not the per AG values.
+The patch fixes this by only checking for allocated extents for regular
+files; it leaves undefined what it means to set an extent size on a
+non-regular, non-directory inode. Additionally, when setting a non-zero
+extent size, the appropriate flags (EXTSIZE, respectively EXTSZINHERIT)
+are enforced for regular files and directories.
 
-And, BTW, that's *421 million* inodes in that filesystem. Almost
-twice as many as the filesystem you started showing problems on...
+Signed-off-by: Iustin Pop <iusty@k1024.org>
+---
+ A patch against xfstests to test for the fixed behaviour will follow
+ shortly.
 
-> OK, this is a social networking website back end servers, actually the CDN
-> infrastructure, and different server located different cities.
-> We have a global sync script to make all these 100 servers have the same
-> data.
-> 
-> For each server we use RAID10 and XFS (CentOS6.3).
-> 
-> There are about 3M files (50K in size) generated every day, and we track
-> the path of each files in database.
+ fs/xfs/xfs_ioctl.c | 34 ++++++++++++++++++++++++++--------
+ 1 file changed, 26 insertions(+), 8 deletions(-)
 
-I'd suggest you are overestimating the size of the files being
-storedi by an order of magnitude: 200M files at 50k in size is 10TB,
-not 1.5TB.
-
-But you've confirmed exactly what I thought - you're using the
-filesystem as an anonymous object store for hundreds of millions of
-small objects and that's exactly the situation I'd expect to see
-these problems....
-
-> Do you have any suggestions to improve our solution?
-
-TANSTAAFL.
-
-I've given you some stuff to try, worst case is reformating and
-recopying all the data around. I don't really have much time to do
-much more than that - talk to Red Hat (because you are using CentOS)
-if you want help with a more targeted solution to your problem...
-
-Cheers,
-
-Dave.
+diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+index 8bc1bbc..5b9acd2 100644
+--- a/fs/xfs/xfs_ioctl.c
++++ b/fs/xfs/xfs_ioctl.c
+@@ -1116,14 +1116,32 @@ xfs_ioctl_setattr(
+ 	}
+ 
+ 	if (mask & FSX_EXTSIZE) {
+-		/*
+-		 * Can't change extent size if any extents are allocated.
+-		 */
+-		if (ip->i_d.di_nextents &&
+-		    ((ip->i_d.di_extsize << mp->m_sb.sb_blocklog) !=
+-		     fa->fsx_extsize)) {
+-			code = XFS_ERROR(EINVAL);	/* EFBIG? */
+-			goto error_return;
++		if (S_ISDIR(ip->i_d.di_mode)) {
++			/*
++			 * Enforce setting the EXTSZINHERIT flag when
++			 * a non-zero extent size has been specified.
++			 */
++			if (fa->fsx_extsize) {
++				fa->fsx_xflags |= XFS_XFLAG_EXTSZINHERIT;
++			}
++		} else if (S_ISREG(ip->i_d.di_mode)) {
++			/*
++			 * For a regular file, we can't change extent
++			 * size if any extents are allocated.
++			 */
++			if (ip->i_d.di_nextents &&
++			    ((ip->i_d.di_extsize << mp->m_sb.sb_blocklog) !=
++			     fa->fsx_extsize)) {
++				code = XFS_ERROR(EINVAL);	/* EFBIG? */
++				goto error_return;
++			}
++			/*
++			 * Enforce setting the EXTSIZE flag when
++			 * a non-zero extent size has been specified.
++			 */
++			if (fa->fsx_extsize) {
++				fa->fsx_xflags |= XFS_XFLAG_EXTSIZE;
++			}
+ 		}
+ 
+ 		/*
 -- 
-Dave Chinner
-david@fromorbit.com
+2.1.0
 
 _______________________________________________
 xfs mailing list
