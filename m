@@ -1,26 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 7D6137F55
+	by oss.sgi.com (Postfix) with ESMTP id 8D0D47F57
 	for <xfs@oss.sgi.com>; Thu, 28 Aug 2014 06:49:22 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id F0B3EAC002
-	for <xfs@oss.sgi.com>; Thu, 28 Aug 2014 04:49:18 -0700 (PDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 2226CAC008
+	for <xfs@oss.sgi.com>; Thu, 28 Aug 2014 04:49:22 -0700 (PDT)
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	GDxo5L8hxR1k3gia for <xfs@oss.sgi.com>;
-	Thu, 28 Aug 2014 04:49:16 -0700 (PDT)
+	QHdMUWN0i82uWwcA for <xfs@oss.sgi.com>;
+	Thu, 28 Aug 2014 04:49:20 -0700 (PDT)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.80)
-	(envelope-from <dave@fromorbit.com>) id 1XMyCX-0000FN-GD
+	(envelope-from <dave@fromorbit.com>) id 1XMyCX-0000FQ-Hz
 	for xfs@oss.sgi.com; Thu, 28 Aug 2014 21:49:13 +1000
 Received: from dave by disappointment with local (Exim 4.82_1-5b7a7c0-XX)
-	(envelope-from <dave@disappointment.disaster>) id 1XMyCX-0004Kl-FK
+	(envelope-from <dave@disappointment.disaster>) id 1XMyCX-0004L0-HA
 	for xfs@oss.sgi.com; Thu, 28 Aug 2014 21:49:13 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 3/7] xfs: don't zero partial page cache pages during O_DIRECT
-	writes
-Date: Thu, 28 Aug 2014 21:49:07 +1000
-Message-Id: <1409226551-16570-4-git-send-email-david@fromorbit.com>
+Subject: [PATCH 6/7] xfs: xfs_file_collapse_range is delalloc challenged
+Date: Thu, 28 Aug 2014 21:49:10 +1000
+Message-Id: <1409226551-16570-7-git-send-email-david@fromorbit.com>
 In-Reply-To: <1409226551-16570-1-git-send-email-david@fromorbit.com>
 References: <1409226551-16570-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -40,43 +39,62 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Similar to direct IO reads, direct IO writes are using
-truncate_pagecache_range to invalidate the page cache. This is
-incorrect due to the sub-block zeroing in the page cache that
-truncate_pagecache_range() triggers.
+If we have delalloc extents on a file before we run a collapse range
+opertaion, we sync the range that we are going to collapse to
+convert delalloc extents in that region to real extents to simplify
+the shift operation.
 
-This patch fixes things by using invalidate_inode_pages2_range
-instead.  It preserves the page cache invalidation, but won't zero
-any pages.
+However, the shift operation then assumes that the extent list is
+not going to change as it iterates over the extent list moving
+things about. Unfortunately, this isn't true because we can't hold
+the ILOCK over all the operations. We can prevent new IO from
+modifying the extent list by holding the IOLOCK, but that doesn't
+prevent writeback from running....
 
-cc: stable@vger.kernel.org
+And when writeback runs, it can convert delalloc extents is the
+range of the file prior to the region being collapsed, and this
+changes the indexes of all the extents in the file. That causes the
+collapse range operation to Go Bad.
+
+The right fix is to rewrite the extent shift operation not to be
+dependent on the extent list not changing across the entire
+operation, but this is a fairly significant piece of work to do.
+Hence, as a short-term workaround for the problem, sync the entire
+file before starting a collapse operation to remove all delalloc
+ranges from the file and so avoid the problem of concurrent
+writeback changing the extent list.
+
+Diagnosed-and-Reported-by: Brian Foster <bfoster@redhat.com>
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 Reviewed-by: Brian Foster <bfoster@redhat.com>
 ---
- fs/xfs/xfs_file.c | 10 +++++++++-
- 1 file changed, 9 insertions(+), 1 deletion(-)
+ fs/xfs/xfs_bmap_util.c | 13 +++++++++++++
+ 1 file changed, 13 insertions(+)
 
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index 827cfb2..19917fa 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -644,7 +644,15 @@ xfs_file_dio_aio_write(
- 						    pos, -1);
- 		if (ret)
- 			goto out;
--		truncate_pagecache_range(VFS_I(ip), pos, -1);
-+		/*
-+		 * Invalidate whole pages. This can return an error if
-+		 * we fail to invalidate a page, but this should never
-+		 * happen on XFS. Warn if it does fail.
-+		 */
-+		ret = invalidate_inode_pages2_range(VFS_I(ip)->i_mapping,
-+						pos >> PAGE_CACHE_SHIFT, -1);
-+		WARN_ON_ONCE(ret);
-+		ret = 0;
- 	}
+diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+index aa70620..283e20c 100644
+--- a/fs/xfs/xfs_bmap_util.c
++++ b/fs/xfs/xfs_bmap_util.c
+@@ -1444,6 +1444,19 @@ xfs_collapse_file_space(
+ 	start_fsb = XFS_B_TO_FSB(mp, offset + len);
+ 	shift_fsb = XFS_B_TO_FSB(mp, len);
  
- 	/*
++	/*
++	 * writeback the entire file to prevent concurrent writeback of ranges
++	 * outside the collapsing region from changing the extent list.
++	 *
++	 * XXX: This is a temporary fix until the extent shift loop below is
++	 * converted to use offsets and lookups within the ILOCK rather than
++	 * carrying around the index into the extent list for the next
++	 * iteration.
++	 */
++	error = filemap_write_and_wait(VFS_I(ip)->i_mapping);
++	if (error)
++		return error;
++
+ 	error = xfs_free_file_space(ip, offset, len);
+ 	if (error)
+ 		return error;
 -- 
 2.0.0
 
