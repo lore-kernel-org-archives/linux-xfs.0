@@ -1,26 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id B51AF7F3F
-	for <xfs@oss.sgi.com>; Thu, 28 Aug 2014 06:49:21 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 52FF6AC004
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 0C0F57F47
+	for <xfs@oss.sgi.com>; Thu, 28 Aug 2014 06:49:22 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id EED4A304048
 	for <xfs@oss.sgi.com>; Thu, 28 Aug 2014 04:49:21 -0700 (PDT)
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	IEThrQS62nqW2lFM for <xfs@oss.sgi.com>;
-	Thu, 28 Aug 2014 04:49:19 -0700 (PDT)
+	GiYo4kvab5M0yjw9 for <xfs@oss.sgi.com>;
+	Thu, 28 Aug 2014 04:49:20 -0700 (PDT)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.80)
-	(envelope-from <dave@fromorbit.com>) id 1XMyCX-0000FP-HO
+	(envelope-from <dave@fromorbit.com>) id 1XMyCX-0000FM-Fh
 	for xfs@oss.sgi.com; Thu, 28 Aug 2014 21:49:13 +1000
 Received: from dave by disappointment with local (Exim 4.82_1-5b7a7c0-XX)
-	(envelope-from <dave@disappointment.disaster>) id 1XMyCX-0004Kv-GR
+	(envelope-from <dave@disappointment.disaster>) id 1XMyCX-0004Kg-Er
 	for xfs@oss.sgi.com; Thu, 28 Aug 2014 21:49:13 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 5/7] xfs: don't log inode unless extent shift makes extent
-	modifications
-Date: Thu, 28 Aug 2014 21:49:09 +1000
-Message-Id: <1409226551-16570-6-git-send-email-david@fromorbit.com>
+Subject: [PATCH 2/7] xfs: don't zero partial page cache pages during O_DIRECT
+	writes
+Date: Thu, 28 Aug 2014 21:49:06 +1000
+Message-Id: <1409226551-16570-3-git-send-email-david@fromorbit.com>
 In-Reply-To: <1409226551-16570-1-git-send-email-david@fromorbit.com>
 References: <1409226551-16570-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -38,113 +38,57 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-From: Brian Foster <bfoster@redhat.com>
+From: Chris Mason <clm@fb.com>
 
-The file collapse mechanism uses xfs_bmap_shift_extents() to collapse
-all subsequent extents down into the specified, previously punched out,
-region. This function performs some validation, such as whether a
-sufficient hole exists in the target region of the collapse, then shifts
-the remaining exents downward.
+xfs is using truncate_pagecache_range to invalidate the page cache
+during DIO reads.  This is different from the other filesystems who
+only invalidate pages during DIO writes.
 
-The exit path of the function currently logs the inode unconditionally.
-While we must log the inode (and abort) if an error occurs and the
-transaction is dirty, the initial validation paths can generate errors
-before the transaction has been dirtied. This creates an unnecessary
-filesystem shutdown scenario, as the caller will cancel a transaction
-that has been marked dirty.
+truncate_pagecache_range is meant to be used when we are freeing the
+underlying data structs from disk, so it will zero any partial
+ranges in the page.  This means a DIO read can zero out part of the
+page cache page, and it is possible the page will stay in cache.
 
-Modify xfs_bmap_shift_extents() to OR the logflags bits as modifications
-are made to the inode bmap. Only log the inode in the exit path if
-logflags has been set. This ensures we only have to cancel a dirty
-transaction if modifications have been made and prevents an unnecessary
-filesystem shutdown otherwise.
+buffered reads will find an up to date page with zeros instead of
+the data actually on disk.
 
-Signed-off-by: Brian Foster <bfoster@redhat.com>
+This patch fixes things by using invalidate_inode_pages2_range
+instead.  It preserves the page cache invalidation, but won't zero
+any pages.
+
+[dchinner: catch error and warn if it fails. Comment.]
+
+cc: stable@vger.kernel.org
+Signed-off-by: Chris Mason <clm@fb.com>
 Reviewed-by: Dave Chinner <dchinner@redhat.com>
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+Signed-off-by: Dave Chinner <david@fromorbit.com>
 ---
- fs/xfs/libxfs/xfs_bmap.c | 18 ++++++++++--------
- 1 file changed, 10 insertions(+), 8 deletions(-)
+ fs/xfs/xfs_file.c | 11 ++++++++++-
+ 1 file changed, 10 insertions(+), 1 deletion(-)
 
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index 3a6a700..e5c2518 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -5422,7 +5422,7 @@ xfs_bmap_shift_extents(
- 	struct xfs_bmap_free	*flist,
- 	int			num_exts)
- {
--	struct xfs_btree_cur		*cur;
-+	struct xfs_btree_cur		*cur = NULL;
- 	struct xfs_bmbt_rec_host	*gotp;
- 	struct xfs_bmbt_irec            got;
- 	struct xfs_bmbt_irec		left;
-@@ -5433,7 +5433,7 @@ xfs_bmap_shift_extents(
- 	int				error = 0;
- 	int				i;
- 	int				whichfork = XFS_DATA_FORK;
--	int				logflags;
-+	int				logflags = 0;
- 	xfs_filblks_t			blockcount = 0;
- 	int				total_extents;
- 
-@@ -5476,16 +5476,11 @@ xfs_bmap_shift_extents(
- 		}
- 	}
- 
--	/* We are going to change core inode */
--	logflags = XFS_ILOG_CORE;
- 	if (ifp->if_flags & XFS_IFBROOT) {
- 		cur = xfs_bmbt_init_cursor(mp, tp, ip, whichfork);
- 		cur->bc_private.b.firstblock = *firstblock;
- 		cur->bc_private.b.flist = flist;
- 		cur->bc_private.b.flags = 0;
--	} else {
--		cur = NULL;
--		logflags |= XFS_ILOG_DEXT;
- 	}
- 
- 	/*
-@@ -5543,11 +5538,14 @@ xfs_bmap_shift_extents(
- 			blockcount = left.br_blockcount +
- 				got.br_blockcount;
- 			xfs_iext_remove(ip, *current_ext, 1, 0);
-+			logflags |= XFS_ILOG_CORE;
- 			if (cur) {
- 				error = xfs_btree_delete(cur, &i);
- 				if (error)
- 					goto del_cursor;
- 				XFS_WANT_CORRUPTED_GOTO(i == 1, del_cursor);
-+			} else {
-+				logflags |= XFS_ILOG_DEXT;
+diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+index 076b170..827cfb2 100644
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@ -296,7 +296,16 @@ xfs_file_read_iter(
+ 				xfs_rw_iunlock(ip, XFS_IOLOCK_EXCL);
+ 				return ret;
  			}
- 			XFS_IFORK_NEXT_SET(ip, whichfork,
- 				XFS_IFORK_NEXTENTS(ip, whichfork) - 1);
-@@ -5573,6 +5571,7 @@ xfs_bmap_shift_extents(
- 			got.br_startoff = startoff;
+-			truncate_pagecache_range(VFS_I(ip), pos, -1);
++
++			/*
++			 * Invalidate whole pages. This can return an error if
++			 * we fail to invalidate a page, but this should never
++			 * happen on XFS. Warn if it does fail.
++			 */
++			ret = invalidate_inode_pages2_range(VFS_I(ip)->i_mapping,
++						pos >> PAGE_CACHE_SHIFT, -1);
++			WARN_ON_ONCE(ret);
++			ret = 0;
  		}
- 
-+		logflags |= XFS_ILOG_CORE;
- 		if (cur) {
- 			error = xfs_bmbt_update(cur, got.br_startoff,
- 						got.br_startblock,
-@@ -5580,6 +5579,8 @@ xfs_bmap_shift_extents(
- 						got.br_state);
- 			if (error)
- 				goto del_cursor;
-+		} else {
-+			logflags |= XFS_ILOG_DEXT;
- 		}
- 
- 		(*current_ext)++;
-@@ -5595,6 +5596,7 @@ del_cursor:
- 		xfs_btree_del_cursor(cur,
- 			error ? XFS_BTREE_ERROR : XFS_BTREE_NOERROR);
- 
--	xfs_trans_log_inode(tp, ip, logflags);
-+	if (logflags)
-+		xfs_trans_log_inode(tp, ip, logflags);
- 	return error;
- }
+ 		xfs_rw_ilock_demote(ip, XFS_IOLOCK_EXCL);
+ 	}
 -- 
 2.0.0
 
