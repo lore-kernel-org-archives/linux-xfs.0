@@ -1,27 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 9B2BC7F3F
-	for <xfs@oss.sgi.com>; Thu, 28 Aug 2014 17:29:05 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 7B1CD304039
-	for <xfs@oss.sgi.com>; Thu, 28 Aug 2014 15:29:02 -0700 (PDT)
-Received: from mail-ie0-f179.google.com (mail-ie0-f179.google.com
-	[209.85.223.179]) by cuda.sgi.com with ESMTP id
-	ampxFvk3diivjXCE (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 28 Aug 2014 15:28:57 -0700 (PDT)
-Received: by mail-ie0-f179.google.com with SMTP id tr6so1811617ieb.38
-	for <xfs@oss.sgi.com>; Thu, 28 Aug 2014 15:28:57 -0700 (PDT)
-Date: Thu, 28 Aug 2014 15:28:54 -0700
-From: Iustin Pop <iustin@google.com>
-Subject: Re: [PATCH xfstests] xfs: add tests for XFS_IOC_FSSETXATTR behaviour
-Message-ID: <20140828222854.GB29940@google.com>
-References: <20140718191314.GB27801@teal.hq.k1024.org>
-	<1409199840-16907-1-git-send-email-iusty@k1024.org>
-	<20140828101628.GS20518@dastard>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 214CB7F3F
+	for <xfs@oss.sgi.com>; Thu, 28 Aug 2014 17:31:39 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 957CBAC001
+	for <xfs@oss.sgi.com>; Thu, 28 Aug 2014 15:31:35 -0700 (PDT)
+Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
+	[65.41.216.221]) by cuda.sgi.com with ESMTP id tjQ8d6FaPIdKMWvp
+	for <xfs@oss.sgi.com>; Thu, 28 Aug 2014 15:31:34 -0700 (PDT)
+Subject: Re: storage, libaio,
+	or XFS =?UTF-8?Q?problem=3F=20=20=33=2E=34=2E=32=36?=
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20140828101628.GS20518@dastard>
+Date: Thu, 28 Aug 2014 17:31:33 -0500
+From: Stan Hoeppner <stan@hardwarefreak.com>
+In-Reply-To: <20140828003226.GO20518@dastard>
+References: <3fe8c34c0ccbbd720015d273fa2b8b30@localhost>
+	<20140826075345.GJ20518@dastard>
+	<8c29baf987467a84f0b7c1d09c863662@localhost>
+	<20140828003226.GO20518@dastard>
+Message-ID: <7f9e5aef187b44e899077467aeb0809d@localhost>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,175 +27,247 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
-Cc: hch@infradead.org, Iustin Pop <iusty@k1024.org>, fstests@vger.kernel.org, xfs@oss.sgi.com
+Cc: xfs@oss.sgi.com
 
-T24gRG9uLCBBdWcgMjgsIDIwMTQgYXQgMDg6MTY6MjggKzEwMDAsIERhdmUgQ2hpbm5lciB3cm90
-ZToKPiBbY2MgZnN0ZXN0c0B2Z2VyLmtlcm5lbC5vcmddCj4gCj4gT24gV2VkLCBBdWcgMjcsIDIw
-MTQgYXQgMDk6MjQ6MDBQTSAtMDcwMCwgSXVzdGluIFBvcCB3cm90ZToKPiA+IEFkZCB0d28gdGVz
-dHMgdGhhdCBjaGVjayBmb3IgY29ycmVjdCBiZWhhdmlvdXIgb2YgWEZTX0lPQ19GU1NFVFhBVFRS
-Ogo+ID4gCj4gPiAtIDMwNzogY2hlY2sgdGhhdCBleHRlbnQgc2l6ZSBjYW4gYWx3YXlzIGJlIHNl
-dCBvbiBhIGRpcmVjdG9yeQo+ID4gLSAzMDg6IGNoZWNrIHRoYXQgc2V0dGluZyBhIG5vbi16ZXJv
-IGV4dGVudCBzaXplIGRpcmVjdGx5IHZpYSB0aGUgaW9jdGwKPiA+ICAgc2V0cyB0aGUgZXhwZWN0
-ZWQgZmxhZ3MgKEVYVFNJWkUgYW5kIEVYVFNaSU5IRVJJVCkKPiA+IAo+ID4gU2lnbmVkLW9mZi1i
-eTogSXVzdGluIFBvcCA8aXVzdHlAazEwMjQub3JnPgo+IAo+IE1pbm9yIHN0dWZmIGZpcnN0Ogo+
-IAo+IC0geGZzdGVzdHMgcGF0Y2hlcyBzaG91bGQgYmUgc2VudCB0byBmc3Rlc3RzQHZnZXIua2Vy
-bmVsLm9yZyBub3cuCgpPSywgd2lsbCBkby4gVGhlcmUgd2FzIG5vdGhpbmcgd3JpdHRlbiBpbiB0
-aGUgZ2l0IHJlcG9zaXRvcnkncyBSRUFETUUsCmhlbmNlIEkgY2hvc2Ugd2hhdCBJIHRob3VnaHQg
-YmVzdC4KCj4gLSBjYW4geW91IHBpY2sgdGhlIGZpcnN0IHVudXNlZCBudW1iZXJzIGluIHRoZSBz
-ZXF1ZW5jZSBmb3IgbmV3Cj4gICB0ZXN0cyAoeGZzLzAzMiwgeGZzLzA1MSkgc28gSSBkb24ndCBo
-YXZlIHRvIHJlbnVtYmVyIHRoZW0gYmVmb3JlCj4gICBhcHBseWluZyB0aGVtPwoKV2lsbCBkbyAt
-IHRoaXMgaXMgd2hhdCB0aGUgJ25ldycgc2NyaXB0IGRpZCAob3IgdHJpZWQgdG8gZG8sIGFzIGl0
-CmRvZXNuJ3Qgc2VlbSB0byB3b3JrIHJlbGlhYmx5KS4KCj4gLSBhIHBhdGNoIHBlciBuZXcgdGVz
-dCAtIGl0IG1ha2VzIGl0IGVhc2llciB0byByZXZpZXcgYW5kIGFwcGx5IGFzIGkKPiAgIGRvbid0
-IGhhdmUgdG8gc3BsaXQgcGF0Y2hlcyBpbnRvIG11bHRpcGxlIGNvbW1pdHMuLi4KCldpbGwgZG8g
-c28gd2hlbiByZXNlbmRpbmcuCgo+ID4gZGlmZiAtLWdpdCBhL3Rlc3RzL3hmcy8zMDcgYi90ZXN0
-cy94ZnMvMzA3Cj4gPiBuZXcgZmlsZSBtb2RlIDEwMDc1NQo+ID4gaW5kZXggMDAwMDAwMC4uZThm
-MzU3Ngo+ID4gLS0tIC9kZXYvbnVsbAo+ID4gKysrIGIvdGVzdHMveGZzLzMwNwo+ID4gQEAgLTAs
-MCArMSw4NyBAQAo+ID4gKyMhIC9iaW4vYmFzaAo+ID4gKyMgRlMgUUEgVGVzdCBOby4gMzA3Cj4g
-PiArIwo+ID4gKyMgVGVzdCB0aGF0IHNldHRpbmcgZXh0ZW50IHNpemUgb24gZGlyZWN0b3JpZXMg
-d29yayBldmVuIGZvciBsYXJnZQo+ID4gKyMgZGlyZWN0b3JpZXMuCj4gCj4gV2hhdCBpcyBhICJs
-YXJnZSBkaXJlY3RvcnkiPyBXb3VsZG4ndCBpdCBiZSBiZXR0ZXIgdG8gZGVzY3JpYmUgdGhlCj4g
-dGVzdCBhcyAiRGV0ZXJtaW5lIHdoZXRoZXIgdGhlIGV4dGVudCBzaXplIGhpbnQgY2FuIGJlIHNl
-dCBvbgo+IGRpcmVjdG9yaWVzIHdpdGggYWxsb2NhdGVkIGV4dGVudHMgY29ycmVjdGx5Ij8KCklu
-ZGVlZCB0aGF0J3MgYmV0dGVyLCBJJ2xsIHVwZGF0ZS4KCj4gPiArIwo+ID4gKyMtLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLQo+ID4gKyMgQ29weXJpZ2h0IChjKSAyMDE0IEdvb2dsZSBJbmMuICBBbGwgUmlnaHRzIFJl
-c2VydmVkLgo+IAo+IElzIHRoYXQgY29ycmVjdD8gSXQgZG9lc24ndCBtYXRjaCB0aGUgZW1haWwg
-YWRkcmVzcyB5b3Ugc2VudCB0aGlzCj4gZnJvbSBhbmQgSSd2ZSBuZXZlciBzZWVuIHlvdSBwb3N0
-IGZyb20gYSBAZ29vZ2xlLmNvbSBhZGRyZXNzLiAgSQo+IGFsd2F5cyBsaWtlIHRvIGNoZWNrIHRo
-YXQgdGhlIGNvcHlyaWdodCBhc3NpZ25tZW50IGlzIGNvcnJlY3QgaW4KPiBzaXR1YXRpb25zIGxp
-a2UgdGhpcy4uLgoKSXQgaXMgY29ycmVjdCBpbmRlZWQgKGFuZCB0aGFua3MgZm9yIGRvdWJsZS1j
-aGVja2luZykuIEkgcHJlZmVyIHRvIHNlbmQKbXkgaW50ZXJhY3Rpb25zL2NvbnRyaWJ1dGlvbnMg
-ZG9uZSBub3QgYXMgcGFydCBvZiBteSBqb2IgdXNpbmcgbXkKcGVyc29uYWwgYWRkcmVzcyAoaGVu
-Y2UgSSBhbHdheXMgd3JvdGUgdG8geGZzQCBmcm9tIHRoZSBzYW1lIGFkZHJlc3MpLApidXQgZXZl
-biBpbiB0aGF0IGNhc2UsIHRoZSBjb3B5cmlnaHQgcmVtYWlucyB3aXRoIG15IGVtcGxveWVyLgoK
-SnVzdCBhcyBhIGNvbmZpcm1hdGlvbiwgc2VuZGluZyB0aGlzIGVtYWlsIGZyb20gbXkgQGdvb2ds
-ZS5jb20gYWRkcmVzcy4KCj4gPiArIyByZWFsIFFBIHRlc3Qgc3RhcnRzIGhlcmUKPiA+ICsKPiA+
-ICsjIE1vZGlmeSBhcyBhcHByb3ByaWF0ZS4KPiA+ICtfc3VwcG9ydGVkX2ZzIHhmcwo+ID4gK19z
-dXBwb3J0ZWRfb3MgTGludXgKPiA+ICtfcmVxdWlyZV90ZXN0Cj4gCj4gTm90IG5lZWRlZCwgZG9l
-c24ndCB1c2UgdGhlIHRlc3QgZGV2aWNlLgoKQWNrLgoKPiA+ICtfcmVxdWlyZV9zY3JhdGNoCj4g
-PiArCj4gPiArX3NjcmF0Y2hfbWtmc194ZnMgPi9kZXYvbnVsbCAyPiYxCj4gPiArX3NjcmF0Y2hf
-bW91bnQKPiA+ICsKPiA+ICtzbWFsbD0kU0NSQVRDSF9NTlQvc21hbGwKPiA+ICtiaWc9JFNDUkFU
-Q0hfTU5UL2JpZwo+ID4gKwo+ID4gKyMgc2FuaXR5IGNoZWNrIG9uIGEgc21hbGwgZGlyZWN0b3J5
-Cj4gPiArbWtkaXIgJHNtYWxsCj4gPiArIyBleHBlY3QgdGhhdCBhbiBlbXB0eSBkaXJlY3Rvcnkg
-aGFzIG5vIGV4dGVudHMKPiA+ICt4ZnNfYm1hcCAkc21hbGwgfCBncmVwIC1xICJubyBleHRlbnRz
-Igo+IAo+IEJldHRlciB0byB1c2UgeGZzX2lvIGRpcmVjdGx5IGFuZCBmaWx0ZXIgb3V0ICRTQ1JB
-VENIX01OVCBpbnRvIHRoZQo+IGdvbGRlbiBvdXRwdXQgZmlsZSBsaWtlIHNvOgo+IAo+ICRYRlNf
-SU9fUFJPRyAtYyAiYm1hcCIgJHNtYWxsIHwgX2ZpbHRlcl9zY3JhdGNoCj4gCj4gd2hpY2ggd2ls
-bCBnaXZlOgo+IAo+IFNDUkFUQ0hfTU5UL3NtYWxsOiBubyBleHRlbnRzCgpPaCwgbmljZSwgdGhh
-bmtzIQoKPiA+ICsjIGFuZCB0aGF0IHdlIGNhbiBzZXQgYW4gZXh0ZW50IHNpemUgb24gaXQKPiA+
-ICt4ZnNfaW8gLWMgJ2V4dHNpemUgOG0nICRzbWFsbAo+IAo+ICRYRlNfSU9fUFJPRwoKQWNrLgoK
-PiA+ICsjIGFuZCBmaW5hbGx5IGNoZWNrIHRoYXQgdGhlIGV4dGVudCBzaXplIHVwZGF0ZSBoYXMg
-dGFrZW4gcGxhY2UKPiA+ICsoY2QgJFNDUkFUQ0hfTU5UOyB4ZnNfaW8gLWMgJ2V4dHNpemUnIHNt
-YWxsKQo+IAo+ICRYRlNfSU9fUFJPRyAtYyAnZXh0c2l6ZScgJHNtYWxsIHwgX2ZpbHRlcl9zY3Jh
-dGNoCgpBY2suCgo+ID4gKyMgbm93IGNyZWF0ZSBhICdiaWcnICh3aXRoIGV4dGVudHMpIGRpcmVj
-dG9yeQo+ID4gK21rZGlyICRiaWcKPiA+ICtpZHg9MQo+ID4gK3doaWxlIHhmc19ibWFwICRiaWcg
-fCBncmVwIC1xICJubyBleHRlbnRzIjsgZG8KPiA+ICsJdG91Y2ggJGJpZy8kaWR4Cj4gPiArCWlk
-eD0kKChpZHgrMSkpCj4gPiArCWlmIFsgIiRpZHgiIC1ndCAxMDQ4NTc2IF07IHRoZW4KPiA+ICsJ
-CSMgc3RpbGwgbm8gZXh0ZW50cz8gZ2l2aW5nIHVwCj4gPiArCQllY2hvICJDYW4ndCBtYWtlIGEg
-ZGlyZWN0b3J5IHRvIGhhdmUgZXh0ZW50cyBldmVuIGFmdGVyIDFNIGZpbGVzIiAxPiYyCj4gPiAr
-CQlleGl0Cj4gPiArCWZpCj4gPiArZG9uZQo+IAo+IHVyay4gbGFyZ2VzdCBpbm9kZSBzaXplIGlz
-IDJrYiwgd2hpY2ggbWVhbnMgYXQgbW9zdCBpdCBjYW4gZml0IGxlc3MKPiB0aGFuIDEwMCBkaXJl
-bnRzIGluIHRoZSBpbm9kZSBiZWZvcmUgc3BpbGxpbmcgdG8gZXh0ZW50IGZvcm0uIFNvCj4ganVz
-dCBkbyBhIGxvb3AgdGhhdCBjcmVhdGVzIDEwMDAgZmlsZXMgLSB0aGVyZSdzIG5vIG5lZWQgdG8K
-PiBvdmVyZW5naW5lZXIgdGhlIHRlc3QgY29kZS4KCldpbGwgZG8uICBJdCdzIGZpbmUgdG8gc3Rp
-bGwgY2hlY2sgdGhhdCB0aGUgZGlyZWN0b3J5IGRvZXMgaGF2ZSBleHRlbnRzLApJIGhvcGU/Cgo+
-ID4gKyMgZXhwZWN0IHRoYXQgd2UgY2FuIHNldCB0aGUgZXh0ZW50IHNpemUgb24gJGJpZyBhcyB3
-ZWxsCj4gPiAreGZzX2lvIC1jICdleHRzaXplIDhtJyAkYmlnCj4gCj4gJFhGU19JT19QUk9HCgpB
-Y2suCgo+ID4gKyMgYW5kIHRoYXQgaXQgdG9vayBlZmZlY3QKPiA+ICsoY2QgJFNDUkFUQ0hfTU5U
-OyB4ZnNfaW8gLWMgJ2V4dHNpemUnIGJpZykKPiAKPiAkWEZTX0lPX1BST0cgLWMgJ2V4dHNpemUn
-ICRiaWcgfCBfZmlsdGVyX3NjcmF0Y2gKCkFjay4KCj4gPiArIyBzdWNjZXNzLCBhbGwgZG9uZQo+
-ID4gK3N0YXR1cz0wCj4gPiArZXhpdAo+ID4gZGlmZiAtLWdpdCBhL3Rlc3RzL3hmcy8zMDcub3V0
-IGIvdGVzdHMveGZzLzMwNy5vdXQKPiA+IG5ldyBmaWxlIG1vZGUgMTAwNjQ0Cj4gPiBpbmRleCAw
-MDAwMDAwLi5mODI1NTI1Cj4gPiAtLS0gL2Rldi9udWxsCj4gPiArKysgYi90ZXN0cy94ZnMvMzA3
-Lm91dAo+ID4gQEAgLTAsMCArMSwzIEBACj4gPiArUUEgb3V0cHV0IGNyZWF0ZWQgYnkgMzA3Cj4g
-PiArWzgzODg2MDhdIHNtYWxsCj4gPiArWzgzODg2MDhdIGJpZwo+ID4gZGlmZiAtLWdpdCBhL3Rl
-c3RzL3hmcy8zMDggYi90ZXN0cy94ZnMvMzA4Cj4gPiBuZXcgZmlsZSBtb2RlIDEwMDc1NQo+ID4g
-aW5kZXggMDAwMDAwMC4uN2I0MzgzNgo+ID4gLS0tIC9kZXYvbnVsbAo+ID4gKysrIGIvdGVzdHMv
-eGZzLzMwOAo+ID4gQEAgLTAsMCArMSw5OCBAQAo+ID4gKyMhIC9iaW4vYmFzaAo+ID4gKyMgRlMg
-UUEgVGVzdCBOby4gMzA4Cj4gPiArIwo+ID4gKyMgVGVzdCB0aGF0IHNldHRpbmcgZXh0ZW50IHNp
-emUgb24gZmlsZXMgYW5kIGRpcmVjdG9yaWVzIChkaXJlY3RseSB2aWEKPiA+ICsjIGlvY3RsIGFu
-ZCBub3QgdmlhIHhmc19pbykgc2V0cyB0aGUgY29ycmVjdCBmbGFncy4KPiAKPiB4ZnNfaW8gdXNl
-cyB0aGUgaW9jdGwgZGlyZWN0bHkgLSB0aGVyZSdzIG5vIG5lZWQgdG8gd3JpdGUgYSBzcGVjaWFs
-Cj4gYyBwcm9ncmFtIHRvIGRvIHRoaXMsIGVzcGVjaWFsbHkgYXMuLi4uCj4gCj4gPiArdG91Y2gg
-JGZpbGUKPiA+ICtta2RpciAkZGlyCj4gPiArCj4gPiArY2F0ID4gJGNwcm9nIDw8IEVPRgo+ID4g
-KyNpbmNsdWRlIDxzdGRpby5oPgo+ID4gKyNpbmNsdWRlIDx4ZnMveGZzLmg+Cj4gPiArCj4gPiAr
-aW50IG1haW4oaW50IGFyZ2MsIGNoYXIgKiphcmd2KSB7Cj4gPiArCXN0cnVjdCBmc3hhdHRyIGZh
-Owo+ID4gKwlpbnQgZmQgPSBvcGVuKGFyZ3ZbMV0sIE9fUkRPTkxZKTsKPiA+ICsJaWYgKGZkIDwg
-MCkgewo+ID4gKwkJcGVycm9yKCJvcGVuIik7Cj4gPiArCQlyZXR1cm4gMTsKPiA+ICsJfQo+ID4g
-KwlmYS5mc3hfeGZsYWdzID0gMDsKPiA+ICsJZmEuZnN4X2V4dHNpemUgPSAxMDQ4NTc2ICogODsK
-PiA+ICsJaW50IHIgPSB4ZnNjdGwoYXJndlsxXSwgZmQsIFhGU19JT0NfRlNTRVRYQVRUUiwgJmZh
-KTsKPiAKPiAuLi4uIHRoYXQgY29kZSBpcyBxdWl0ZSBicm9rZW4uIFllcywgaXQgd291bGQgd29y
-ayB0byBzZXQgdGhlCj4gYXBwcm9wcmlhdGUgZXh0ZW50IHNpemUgZmxhZ3Mgd2l0aCB0aGUga2Vy
-bmVsCj4gY2hhbmdlcyB5b3UgbWFkZSwgYnV0IHRoYXQncyBub3QgaG93IHRoaXMgaW9jdGwgd29y
-a3MuCj4gCj4gaS5lLiBpdCB3aWxsIGNhdXNlIGFueSBmbGFnIGJpdHMgdGhhdCBhcmUgc2V0IG9u
-IHRoZSBpbm9kZSB0byBiZQo+IGNsZWFyZWQKCkdvb2QgcG9pbnTigKYKCj4gYW5kIGl0J3MgbGlr
-ZWx5IHRvIGZhaWwgb24gb2xkIGtlcm5lbHMgYmVhY3VzZSB0aGV5IGhhdmUKPiB2ZXJ5IGRpZmZl
-cmVudCBiZWhhdmlvdXIgdG8gd2hhdCB5b3VyIHBhdGNoIGRvZXMuCgpPSywgdGhhdCBJIGRpZG4n
-dCBrbm93LiAoV291bGQgeW91IG1pbmQgcXVpY2tseSBleHBsYWluaW5nPykKCj4gSU9Xcywgc2V0
-dGluZyBmc3hfZXh0c2l6ZSB3aXRob3V0IHNldHRpbmcgZWl0aGVyIFhGU19YRkxBR19FWFRTSVpF
-Cj4gb3IgWEZTX1hGTEFHX0VYVFNaSU5IRVJJVCBpcyBiYWQgcHJhY3RpY2UuIFRoZSBrZXJuZWwg
-aXMgbGVmdCB0bwo+IGd1ZXNzIHdoYXQgeW91IGFjdHVhbGx5IHdhbnRlZCB0byBiZSBkb25lIC0g
-dGhlIGZsYWdzIGFyZSBzdXBwb3NlZAo+IHRvIHRlbGwgdGhlIGtlcm5lbCB0aGF0IHRoZSBmc3hf
-ZXh0c2l6ZSB2YWx1ZSBpcyBtZWFuaW5nZnVsLCBub3QgdGhlCj4gb3RoZXIgd2F5IGFyb3VuZC4K
-ClNlZSBiZWxvdy4KCj4gRldJVywgdGhlIHhmc19pbyBjb2RlIGlzICpleGFjdGx5KiB3aGF0IGFw
-cGxpY2F0aW9ucyBzaG91bGQgYmUKPiBkb2luZyB0byBzZXQgdGhlIGV4dGVudCBzaXplIG9yIGFu
-eSBvdGhlciBpbm9kZSBmbGFnLiBpLmU6Cj4gCj4gMS4gc3RhdCB0aGUgZmQgdG8gZGV0ZXJtaW5l
-IHRoZSB0eXBlLgo+IDIuIHBvcHVsYXRlIHRoZSBmc3hhdHRyIHN0cnVjdHVyZSB3aXRoIHRoZSBl
-eGlzdGluZyBpbm9kZSBmbGFncwo+IDMuIGNoYW5nZSB0aGUgZmxhZ3MvZmllbGRzIG9mIHRoZSBm
-c3hhdHRyIHN0cnVjdHVyZSBhcHByb3ByaWF0ZWx5Cj4gNC4gc2V0IHRoZSBuZXcgdmFsdWVzIHRv
-IHRoZSBpbm9kZS4KPiAKPiBpLmUsIGZyb20gaW8vb3Blbi5jOgo+IAo+IHN0YXRpYyBpbnQKPiBz
-ZXRfZXh0c2l6ZShjb25zdCBjaGFyICpwYXRoLCBpbnQgZmQsIGxvbmcgZXh0c3opCj4gewo+ICAg
-ICAgICAgc3RydWN0IGZzeGF0dHIgIGZzeDsKPiAgICAgICAgIHN0cnVjdCBzdGF0NjQgICBzdGF0
-Owo+IAo+ICAgICAgICAgaWYgKGZzdGF0NjQoZmQsICZzdGF0KSA8IDApIHsKPiAgICAgICAgICAg
-ICAgICAgcGVycm9yKCJmc3RhdDY0Iik7Cj4gICAgICAgICAgICAgICAgIHJldHVybiAwOwo+ICAg
-ICAgICAgfQo+ICAgICAgICAgaWYgKCh4ZnNjdGwocGF0aCwgZmQsIFhGU19JT0NfRlNHRVRYQVRU
-UiwgJmZzeCkpIDwgMCkgewo+ICAgICAgICAgICAgICAgICBwcmludGYoIiVzOiBYRlNfSU9DX0ZT
-R0VUWEFUVFIgJXM6ICVzXG4iLAo+ICAgICAgICAgICAgICAgICAgICAgICAgIHByb2duYW1lLCBw
-YXRoLCBzdHJlcnJvcihlcnJubykpOwo+ICAgICAgICAgICAgICAgICByZXR1cm4gMDsKPiAgICAg
-ICAgIH0KPiAKPiAgICAgICAgIGlmIChTX0lTUkVHKHN0YXQuc3RfbW9kZSkpIHsKPiAgICAgICAg
-ICAgICAgICAgZnN4LmZzeF94ZmxhZ3MgfD0gWEZTX1hGTEFHX0VYVFNJWkU7Cj4gICAgICAgICB9
-IGVsc2UgaWYgKFNfSVNESVIoc3RhdC5zdF9tb2RlKSkgewo+ICAgICAgICAgICAgICAgICBmc3gu
-ZnN4X3hmbGFncyB8PSBYRlNfWEZMQUdfRVhUU1pJTkhFUklUOwo+ICAgICAgICAgfSBlbHNlIHsK
-PiAgICAgICAgICAgICAgICAgcHJpbnRmKF8oImludmFsaWQgdGFyZ2V0IGZpbGUgdHlwZSAtIGZp
-bGUgJXNcbiIpLCBwYXRoKTsKPiAgICAgICAgICAgICAgICAgcmV0dXJuIDA7Cj4gICAgICAgICB9
-Cj4gICAgICAgICBmc3guZnN4X2V4dHNpemUgPSBleHRzejsKPiAKPiAgICAgICAgIGlmICgoeGZz
-Y3RsKHBhdGgsIGZkLCBYRlNfSU9DX0ZTU0VUWEFUVFIsICZmc3gpKSA8IDApIHsKPiAgICAgICAg
-ICAgICAgICAgcHJpbnRmKCIlczogWEZTX0lPQ19GU1NFVFhBVFRSICVzOiAlc1xuIiwKPiAgICAg
-ICAgICAgICAgICAgICAgICAgICBwcm9nbmFtZSwgcGF0aCwgc3RyZXJyb3IoZXJybm8pKTsKPiAg
-ICAgICAgICAgICAgICAgcmV0dXJuIDA7Cj4gICAgICAgICB9Cj4gCj4gICAgICAgICByZXR1cm4g
-MDsKPiB9Cj4gCj4gV2UgaGF2ZSB4ZnNfaW8gcHJlY2lzZWx5IHNvIHRoYXQgd2UgZG9uJ3QgaGF2
-ZSB0byBtYWludGFpbiByYW5kb20KPiB0ZXN0IGNvZGUgbGlrZSB0aGlzIHRocm91Z2hvdXQgeGZz
-dGVzdHMgLSBkbyBpdCBvbmNlLCBkbyBpdCByaWdodCwKPiB1c2UgaXQgZXZlcnl3aGVyZS4KCkkg
-dG90YWxseSBhZ3JlZSB0aGF0IHhmc19pbyBpcyB3aGF0IHBlb3BsZSBzaG91bGQgdXNlLCBidXQg
-SSBkaXNhZ3JlZSBvbgp0aGUgdXNlIG9mIHhmc19pbyBpbiB0aGlzIHBhcnRpY3VsYXIgdGVzdCwg
-bGV0IG1lIGV4cGxhaW4gd2h5LgoKV2l0aCAzLjE2LXJjMSBhdCBsZWFzdCwgaXQgaXMgcG9zc2li
-bGUgdG8gc2V0IGZzeF9leHRzaXplIHRvIGEgbm9uLXplcm8KdmFsdWUsIHdpdGhvdXQgc2V0dGlu
-ZyB0aGUgZmxhZ3MgKGlmIHlvdSBjYWxsIHRoZSBpb2N0bCBkaXJlY3RseSkuIFN1Y2gKYW4gaW5v
-ZGUgIHdpbGwgYmUgKHVubGVzcyBJJ20gbWlzdGFrZW4pIGZsYWdnZWQgd2l0aCBhIHdhcm5pbmcg
-YnkKeGZzX3JlcGFpciwgd2hpY2ggbWVhbnMgdGhhdCBpdCdzIGFuIGludmFsaWQgaW5vZGUgc3Rh
-dGUuCgpTbyBpbiBteSB2aWV3LCB0aGVyZSdzIGEga2VybmVsIGJ1ZywgaW4gdGhhdCBpdCBhbGxv
-d3MgYSB1c2VyIGxhbmQKYXBwbGljYXRpb24gdG8gcHV0IGFuIGlub2RlIGludG8gYSAid3Jvbmci
-IHN0YXRlLiBUaGlzIHBhcnRpY3VsYXIgdGVzdAppcyBkZXNpZ25lZCB0byByZXByb2R1Y2UgdGhp
-cyBrZXJuZWwgYnVnLCBzbyB0aGF0IHRoZSBrZXJuZWwgZml4IGNhbiBiZQp2ZXJpZmllZCB0aGF0
-IGlzIGluZGVlZCBhIGZpeC4KCkkgY2FuJ3QgdXNlIHhmc19pbyBoZXJlLCBiZWNhdXNlIGl0IHdp
-bGwgZG8gdGhlICJyaWdodCIgdGhpbmcgLSBzZXQgdGhlCkVYVFNJWkUvRVhUU1pJTkhFUklUIGZs
-YWdzIGNvcnJlY3RseTsgYnV0IHRoaXMgaXMgYSB0ZXN0IHRoYXQgdGhlIGtlcm5lbApwcm90ZWN0
-cyB0aGUgaW5vZGUgaW52YXJpYW50cywgbm90IHRoYXQgeGZzX2lvIGRvZXMgc28uCgpBbHRlcm5h
-dGl2ZWx5LCB5b3UgY291bGQgc2F5IHRoYXQgaXQncyBwZXJmZWN0bHkgZmluZSB0byBoYXZlIGEg
-bm9uLXplcm8KZnN4X2V4dHNpemUsIGFuZCB0aGF0IG9ubHkgd2hlbiB0aGUgZmxhZyBpcyBzZXQg
-aXQgc2hvdWxkIGJlIHRha2VuIGludG8KYWNjb3VudDsgYnV0IEkgZG9uJ3QgdGhpbmsgdGhhdCBp
-cyB3aGF0IHRoZSByZXN0IG9mIHRoZSBjb2RlIGV4cGVjdHMKdG9kYXkuCgpTbywgSSdtIGZpbmUg
-ZWl0aGVyIHdheSwgYnV0IEkgd291bGQgdG8gZml4IHRoaXMgc28gdGhhdCBhbGwgdGhlIGNvZGUK
-YWdyZWVzIHdoYXQgdGhlIGNvcnJlY3Qgc3RhdGVzIGZvciBhbiBpbm9kZSBhcmUsIGFuZCB0aGF0
-IHRoZSBrZXJuZWwKcHJldmVudHMgdXNlciBzcGFjZSBmcm9tIHZpb2xhdGluZyB0aGlzIGFzc3Vt
-cHRpb24gdmlhIGEgKGRvY3VtZW50ZWQpCmlvY3RsLiBKdXN0IGxldCBtZSBrbm93IHdoaWNoIGFy
-ZSB0aGUgY29ycmVjdCBzdGF0ZXMuCgpUaGFua3MgZm9yIHRoZSBmZWVkYmFjaywgYW5kIGZvciBz
-dWNoIGEgcXVpY2sgcmVwbHkuCgppdXN0aW4KCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6
-Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
+On Thu, 28 Aug 2014 10:32:27 +1000, Dave Chinner <david@fromorbit.com>
+wrote:
+> On Tue, Aug 26, 2014 at 12:19:43PM -0500, Stan Hoeppner wrote:
+>> On Tue, 26 Aug 2014 17:53:45 +1000, Dave Chinner <david@fromorbit.com>
+>> wrote:
+>> > On Tue, Aug 26, 2014 at 01:18:50AM -0500, Stan Hoeppner wrote:
+>> >> Had some controller issues but believe we had those ironed out
+before
+>> >> this
+>> >> recent breakage.  I had reformatted both 48TB LUNs on this test box
+>> with
+>> >> -f
+>> >> and defaults, and fired up the test app again.  Throughput was
+>> fantastic
+>> >> with no dropped application buffers for ~30 minutes, and IO times
+were
+>> >> 1.x
+>> >> ms max, suggesting all the writes were acked by controller cache. 
+The
+>> >> app
+>> >> was running perfectly.  Then it hanged and spit out an internal
+error
+>> >> msg:
+>> >> 
+>> >> 
+>> >> Failed to reopen file /mnt/VOL1/sg-04/str-0015/f-0000000005
+>> >> 
+>> >> I have many call traces in dmesg, most are XFS, pasted below.  I
+found
+>> no
+>> >> SCSI I/O errors in dmesg.  Application is submitting writes via
+libaio
+>> >> and
+>> >> using O_DIRECT, writing to preallocated files.  I don't see any
+errors
+>> in
+>> >> the storage controller log and everything seems to check out there. 
+>> >> Using
+>> >> noop elevator, mpt2sas, no multipathing.  The application process is
+>> hung
+>> >> in d state and kill -9 won't get rid of it.  I can't unmount the
+hosed
+>> up
+>> >> filesystem.  Any ideas?
+>> >> 
+>> >> # ls -la /mnt/VOL1
+>> >> ls: cannot access /mnt/VOL1: Input/output error
+>> >> 
+>> >> # dd if=/mnt/VOL1 of=/dev/null bs=1M count=16
+>> >> dd: opening `/mnt/VOL1': Input/output error
+>> >> 
+>> >> # dd if=/dev/sdd of=/dev/null bs=1M count=16
+>> >> 16+0 records in
+>> >> 16+0 records out
+>> >> 16777216 bytes (17 MB) copied, 1.10989 s, 15.1 MB/s
+>> >> 
+>> >> # ls -la /mnt/
+>> >> ls: cannot access /mnt/VOL1: Input/output error
+>> >> total 8
+>> >> drwxrwxrwt  6 root root  120 Aug 25 17:59 .
+>> >> drwxr-xr-x 21 root root 4096 Jul 15 09:39 ..
+>> >> drwxrwxrwt  3 root root   80 Aug 25 16:52 initramfs
+>> >> drwxr-xr-x  3 root root 4096 Apr 24 04:57 scratch
+>> >> drwxrwxrwx  5 root root   58 Aug 25 22:06 VOL0
+>> >> d?????????  ? ?    ?       ?            ? VOL1
+>> > 
+>> > That's an inode we failed to stat() - most likely because of the IO
+>> > error. Has the filesystem shut down? the IO error shoul dhave had
+>> > some kind of output in dmesg associated with it from XFS....
+>> 
+>> Sorry, I omitted the XFS logging preceding the first call trace:
+>> 
+>> Aug 25 18:02:50 Anguish-ssu-1 kernel: [ 4280.310304] SGI XFS with
+>> security
+>> attributes, large block/inode numbers, no debug enabled
+>> Aug 25 18:02:50 Anguish-ssu-1 kernel: [ 4280.311101] XFS (sdc):
+Mounting
+>> Filesystem
+>> Aug 25 18:02:51 Anguish-ssu-1 kernel: [ 4280.501405] XFS (sdc):
+Starting
+>> recovery (logdev: internal)
+>> Aug 25 18:02:53 Anguish-ssu-1 kernel: [ 4282.766547] XFS (sdc): Failed
+to
+>> recover EFIs
+>> Aug 25 18:02:53 Anguish-ssu-1 kernel: [ 4282.766549] XFS (sdc): log
+mount
+>> finish failed
+> 
+> That's indicative of corrupted free space btrees.
+
+I did mkfs on both LUNs after this mount failure.
+ 
+>> Aug 25 18:04:50 Anguish-ssu-1 kernel: [ 4399.471829] XFS (sdc):
+Mounting
+>> Filesystem
+>> Aug 25 18:04:50 Anguish-ssu-1 kernel: [ 4399.620805] XFS (sdc): Ending
+>> clean mount
+>> Aug 25 18:04:56 Anguish-ssu-1 kernel: [ 4405.613778] XFS (sdd):
+Mounting
+>> Filesystem
+>> Aug 25 18:04:56 Anguish-ssu-1 kernel: [ 4405.835412] XFS (sdd): Ending
+>> clean mount
+
+The back-to-back mounts here were me testing my storage prep automation
+script - creates the mount points, sets permission, mounts the filesystems,
+sets the elevator to noop, etc. (their kernel defaults to CFQ...)
+
+>> Aug 25 23:05:39 Anguish-ssu-1 kernel: [22409.328839] XFS (sdd):
+>> xfs_do_force_shutdown(0x8) called from line 3732 of file
+>> fs/xfs/xfs_bmap.c.
+>> Return address = 0xffffffffa01cc9a6
+> 
+> Yup, that's kinda important. That's from xfs_bmap_finish(), and
+> freeing an extent has failed and triggered SHUTDOWN_CORRUPT_INCORE
+> which it's found some kind of inconsistency in the free space
+> btrees. So, likely the same problem that caused EFI recovery to fail
+> on the other volume.
+> 
+> Are the tests being run on newly made filesystems? If not, have
+> these filesystems had xfs_repair run on them after a failure?  If
+> so, what is the error that is fixed? If not, does repairing the
+> filesystem make the problem go away?
+
+Newly made after every error of any kind, whether app, XFS shutdown, call
+trace, etc.  I've not attempted xfs_repair.  Part of the problem is the
+storage hardware is a moving target.  They're swapping modules and
+upgrading firmware every few days.  And I don't have a view into that.  So
+it's difficult to know when IO problems are due to hardware or buggy code. 
+However, I can state with certainty that we only run into the XFS problems
+when using AIO.  And it has occurred on both test rigs, each of which have
+their own RAID controllers and disks.
+ 
+>> Aug 25 23:05:49 Anguish-ssu-1 kernel: [22419.307128] XFS (sdd): failed
+to
+>> update timestamps for inode 0x2a000000a4
+>> Aug 25 23:05:49 Anguish-ssu-1 kernel: [22419.307484] XFS (sdd): failed
+to
+>> update timestamps for inode 0x29000000a4
+>> Aug 25 23:05:49 Anguish-ssu-1 kernel: [22419.307487] XFS (sdd): failed
+to
+>> update timestamps for inode 0x20000009f
+>> Aug 25 23:05:49 Anguish-ssu-1 kernel: [22419.307499] XFS (sdd): failed
+to
+>> update timestamps for inode 0x29000000a4
+>> Aug 25 23:05:49 Anguish-ssu-1 kernel: [22419.307693] XFS (sdd): failed
+to
+>> update timestamps for inode 0x20000009f
+>> Aug 25 23:05:49 Anguish-ssu-1 kernel: [22419.368106] XFS (sdd): failed
+to
+>> update timestamps for inode 0xf000000a4
+>> Aug 25 23:05:49 Anguish-ssu-1 kernel: [22419.369785] XFS (sdd): failed
+to
+>> update timestamps for inode 0xf000000a4
+>> Aug 25 23:05:49 Anguish-ssu-1 kernel: [22419.605835] XFS (sdd): failed
+to
+>> update timestamps for inode 0x2810f413c
+>> Aug 25 23:05:49 Anguish-ssu-1 kernel: [22419.606169] XFS (sdd): failed
+to
+>> update timestamps for inode 0x60000009f
+> 
+> And that is interesting. Makes me wonder if the inode is getting
+> unlocked on transaction commit failure, or whether there's some
+> other path in the shutdown code that is not unlocking the inode
+> correctly.
+
+Is this a separate time stamp from that which noatime disables?  We're
+mounting with noatime, nodiratime.
+
+>> Again, when the app locked up I was assuming we had more controller
+>> issues, and I expected to find SCSI I/O errors preceding the XFS
+errors. 
+>> But there are none.
+> 
+> XFs has had some kind of internal error in extent or freespace
+> management. The lack of output when the error has triggered makes it
+> impossible to determine what might have gone wrong. Seeing what
+> xfs_repair -n says about the filesystem woul dbe interesting.
+> Probably best to use an xfs-repair from the current 3.2.1 release,
+> because older 3.1.x versions (i think 3.1.10 and prior) didn't
+> validate the freespace btrees - they just got rebuilt.
+
+I'm hoping to be able to get kernel 3.12.26 onto the smaller rig soon so I
+can test bcache.  I'll enable xfs_debug on it.  WRT newer user space tools,
+that's like pulling teeth.  It's all like like pulling teeth actually, WRT
+the platform software.  WRT the app we can do whatever we want.
+
+>> These aren't truly lab systems in all respects.  I don't have the
+>> permission/access to change the kernel config and recompile.  There is
+a
+>> "process" for that and a different group owns that process.  If this is
+>> necessary to troubleshoot this then I'll see if I can push it through.
+> 
+> Good luck, it sounds like you might have a few stories for the
+> Daily WTF if the "processes" at that so entrenched it's impossible
+> to test fixes.
+
+Yes, it's difficult.  I won't be able to test patches as things stand. 
+That will require much time, many meetings, my project manager throwing
+chairs, that kinda thing.  And he's very mild mannered.
+
+>> > I haven't cheked if this still works on a 3.4 kernel, but it will
+>> > change the rwsem implementation to the generic, spinlock based
+>> > implementation rather than the super-special, highly optimised
+>> > x86 specific implementation. If that makes the problem go away,
+>> > then we've got another rwsem bug on our hands. If it doesn't, then I
+>> > can probably get you the mrlock debug code lachlan wrote and we can
+>> > see if XFS is doing something wrong...
+>> 
+>> Thanks for the detailed explanation.  Given the new information I've
+>> provided, what is my next step?
+> 
+> xfs_repair output, turn /proc/sys/fs/xfs/error_level up to 11,
+> maybe run a test with a CONFIG_XFS_DEBUG=y kernel, or even a
+> current 3.15/3.16 kernel to see if the problem still exists...
+> 
+> But if you can't get new kernels or xfsprogs binaries onto the
+> machine, then there is very little that we can do.
+
+One would think such a thing would be easy, a no brainer.  But this is a
+large corporation after all, so I shouldn't be surprised by red tape.  The
+fact it took them over 3 months from contact to getting me in the door was
+a bit of a clue up front.  I think the way this is seen is that AIO would
+be nice to have, but it's not a necessity.  Not with the red tape to cut
+through to get newer system software...
+
+
+> Cheers,
+> 
+> Dave.
+
+-- 
+Stan
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
