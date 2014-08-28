@@ -1,25 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 8829F7F3F
-	for <xfs@oss.sgi.com>; Thu, 28 Aug 2014 06:49:20 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 101B07F47
+	for <xfs@oss.sgi.com>; Thu, 28 Aug 2014 06:49:21 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 186F0AC002
+	by relay2.corp.sgi.com (Postfix) with ESMTP id E9A57304053
 	for <xfs@oss.sgi.com>; Thu, 28 Aug 2014 04:49:20 -0700 (PDT)
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	wFprHl71RD6qfhbK for <xfs@oss.sgi.com>;
-	Thu, 28 Aug 2014 04:49:18 -0700 (PDT)
+	bQpyg5kRWlP8nNKa for <xfs@oss.sgi.com>;
+	Thu, 28 Aug 2014 04:49:19 -0700 (PDT)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.80)
-	(envelope-from <dave@fromorbit.com>) id 1XMyCX-0000FK-Ed
+	(envelope-from <dave@fromorbit.com>) id 1XMyCX-0000FO-Gl
 	for xfs@oss.sgi.com; Thu, 28 Aug 2014 21:49:13 +1000
 Received: from dave by disappointment with local (Exim 4.82_1-5b7a7c0-XX)
-	(envelope-from <dave@disappointment.disaster>) id 1XMyCX-0004KY-DV
+	(envelope-from <dave@disappointment.disaster>) id 1XMyCX-0004Kq-Ft
 	for xfs@oss.sgi.com; Thu, 28 Aug 2014 21:49:13 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH v2 0/7] xfs: invalidation and related fixes for v3.17-rc3
-Date: Thu, 28 Aug 2014 21:49:04 +1000
-Message-Id: <1409226551-16570-1-git-send-email-david@fromorbit.com>
+Subject: [PATCH 4/7] xfs: use ranged writeback and invalidation for direct IO
+Date: Thu, 28 Aug 2014 21:49:08 +1000
+Message-Id: <1409226551-16570-5-git-send-email-david@fromorbit.com>
+In-Reply-To: <1409226551-16570-1-git-send-email-david@fromorbit.com>
+References: <1409226551-16570-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,25 +37,68 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Hi folks,
+From: Dave Chinner <dchinner@redhat.com>
 
-These are the patches that I'm planning to send to Linus for
-3.17-rc3. I've been testing them all week, an dI'll push them out
-into a topic branch tomorrow morning for a linux-next build before
-pushing them to Linus.
+Now we are not doing silly things with dirtying buffers beyond EOF
+and using invalidation correctly, we can finally reduce the ranges of
+writeback and invalidation used by direct IO to match that of the IO
+being issued.
 
-Only the first patch doesn't have a review; there was a bit of
-discussion about the problem that the patch fixes but no changes
-have really been suggested from that discussion. I've fixed the one
-problem that was pointed out, so please have a look over it...
+Bring the writeback and invalidation ranges back to match the
+generic direct IO code - this will greatly reduce the perturbation
+of cached data when direct IO and buffered IO are mixed, but still
+provide the same buffered vs direct IO coherency behaviour we
+currently have.
 
-I also added Brian's eofblocks trimming for collapse range fix to
-the set as it fixed another problem I was tripping over in testing
-and it's simple enough to consider a valid -rc fix.
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/xfs_file.c | 10 ++++++----
+ 1 file changed, 6 insertions(+), 4 deletions(-)
 
-Cheers,
-
-Dave.
+diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+index 19917fa..de5368c 100644
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@ -291,7 +291,7 @@ xfs_file_read_iter(
+ 		if (inode->i_mapping->nrpages) {
+ 			ret = filemap_write_and_wait_range(
+ 							VFS_I(ip)->i_mapping,
+-							pos, -1);
++							pos, pos + size - 1);
+ 			if (ret) {
+ 				xfs_rw_iunlock(ip, XFS_IOLOCK_EXCL);
+ 				return ret;
+@@ -303,7 +303,8 @@ xfs_file_read_iter(
+ 			 * happen on XFS. Warn if it does fail.
+ 			 */
+ 			ret = invalidate_inode_pages2_range(VFS_I(ip)->i_mapping,
+-						pos >> PAGE_CACHE_SHIFT, -1);
++					pos >> PAGE_CACHE_SHIFT,
++					(pos + size - 1) >> PAGE_CACHE_SHIFT);
+ 			WARN_ON_ONCE(ret);
+ 			ret = 0;
+ 		}
+@@ -641,7 +642,7 @@ xfs_file_dio_aio_write(
+ 
+ 	if (mapping->nrpages) {
+ 		ret = filemap_write_and_wait_range(VFS_I(ip)->i_mapping,
+-						    pos, -1);
++						    pos, pos + count - 1);
+ 		if (ret)
+ 			goto out;
+ 		/*
+@@ -650,7 +651,8 @@ xfs_file_dio_aio_write(
+ 		 * happen on XFS. Warn if it does fail.
+ 		 */
+ 		ret = invalidate_inode_pages2_range(VFS_I(ip)->i_mapping,
+-						pos >> PAGE_CACHE_SHIFT, -1);
++					pos >> PAGE_CACHE_SHIFT,
++					(pos + count - 1) >> PAGE_CACHE_SHIFT);
+ 		WARN_ON_ONCE(ret);
+ 		ret = 0;
+ 	}
+-- 
+2.0.0
 
 _______________________________________________
 xfs mailing list
