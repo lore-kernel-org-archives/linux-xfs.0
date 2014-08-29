@@ -1,45 +1,56 @@
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 119207F95
+	for <xfs@oss.sgi.com>; Fri, 29 Aug 2014 03:39:20 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id E458F8F8050
+	for <xfs@oss.sgi.com>; Fri, 29 Aug 2014 01:39:19 -0700 (PDT)
+Received: from vps.magizz.com (vps.magizz.com [162.251.83.157]) by
+	cuda.sgi.com with ESMTP id 5ExYHjRLo4DmfSjz (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Fri, 29 Aug 2014 01:39:17 -0700 (PDT)
+Received: from dev102magizz by vps.magizz.com with local (Exim 4.82)
+	(envelope-from <webmaster@dev102.magizz.com>) id 1XNHiG-0001YZ-Fj
+	for xfs@oss.sgi.com; Fri, 29 Aug 2014 12:39:16 +0400
+Subject: Goodbye from our newsletter
+Date: Fri, 29 Aug 2014 08:39:16 +0000
+From: Webmaster <noreply@dev102.magizz.com>
+Message-ID: <bc14e6d685ae9573189bf20ec86ee893@dev102.magizz.com>
 MIME-Version: 1.0
+Reply-To: Webmaster <noreply@dev102.magizz.com>
+List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
+List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
+	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
+List-Archive: <http://oss.sgi.com/pipermail/xfs>
+List-Post: <mailto:xfs@oss.sgi.com>
+List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
+List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
+	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Subject: Welcome to the "xfs" mailing list
-From: xfs-request@oss.sgi.com
-Message-ID: <mailman.8.1408493635.4392.xfs@oss.sgi.com>
-Date: Tue, 19 Aug 2014 19:13:55 -0500
-List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: darrick.wong@oracle.com
+To: xfs@oss.sgi.com
 
-Welcome to the xfs@oss.sgi.com mailing list!
 
-To post to this list, send your message to:
+  
+  Goodbye from our Newsletter, sorry to see you go.
 
-  xfs@oss.sgi.com
+  You have been unsubscribed from our newsletters.
 
-General information about the mailing list is at:
+  This is the last email you will receive from us. Our newsletter system,
+phpList,
+  will refuse to send you any further messages, without manual intervention
+by our administrator.
 
-  http://oss.sgi.com/mailman/listinfo/xfs
+  If there is an error in this information, you can re-subscribe:
+  please go to http://dev102.magizz.com/mailz/?p=subscribe and follow the
+steps.
 
-If you ever want to unsubscribe or change your options (eg, switch to
-or from digest mode, change your password, etc.), visit your
-subscription page at:
+  Thank you
+  
+  
 
-  http://oss.sgi.com/mailman/options/xfs/darrick.wong%40oracle.com
-
-You can also make such adjustments via email by sending a message to:
-
-  xfs-request@oss.sgi.com
-
-with the word `help' in the subject or body (don't include the
-quotes), and you will get back a message with instructions.
-
-You must know your password to change your options (including changing
-the password, itself) or to unsubscribe without confirmation.  It is:
-
-  dD+I+sNo
-
-Normally, Mailman will remind you of your oss.sgi.com mailing list
-passwords once every month, although you can disable this if you
-prefer.  This reminder will also include instructions on how to
-unsubscribe or change your account options.  There is also a button on
-your options page that will email your current password to you.
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
