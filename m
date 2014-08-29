@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id B35AC7F58
-	for <xfs@oss.sgi.com>; Thu, 28 Aug 2014 19:28:29 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id A1DB88F8050
-	for <xfs@oss.sgi.com>; Thu, 28 Aug 2014 17:28:26 -0700 (PDT)
-Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id OADylS16aNAkC9r9 (version=TLSv1 cipher=AES256-SHA
-	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 28 Aug 2014 17:28:25 -0700 (PDT)
-Date: Thu, 28 Aug 2014 17:28:25 -0700
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id E6A817F5E
+	for <xfs@oss.sgi.com>; Thu, 28 Aug 2014 19:33:06 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 63DD3AC002
+	for <xfs@oss.sgi.com>; Thu, 28 Aug 2014 17:33:06 -0700 (PDT)
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.9])
+	by cuda.sgi.com with ESMTP id y3qeVsHvBX67wrAL (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 28 Aug 2014 17:32:58 -0700 (PDT)
+Date: Thu, 28 Aug 2014 17:32:57 -0700
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 5/9] xfs: xfs_bioerror can die.
-Message-ID: <20140829002825.GE17502@infradead.org>
+Subject: Re: [PATCH 6/9] xfs: kill xfs_bioerror_relse
+Message-ID: <20140829003257.GF17502@infradead.org>
 References: <1408084747-4540-1-git-send-email-david@fromorbit.com>
-	<1408084747-4540-6-git-send-email-david@fromorbit.com>
+	<1408084747-4540-7-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1408084747-4540-6-git-send-email-david@fromorbit.com>
+In-Reply-To: <1408084747-4540-7-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,17 +33,26 @@ Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On Fri, Aug 15, 2014 at 04:39:03PM +1000, Dave Chinner wrote:
-> Internal buffer write error handling is a mess due to the unnatural
-> split between xfs_bioerror and xfs_bioerror_relse(). The buffer
-> reference counting is also wrong for the xfs_bioerror path for
-> xfs_bwrite - it uses sync IO and so xfs_buf_ioend will release a
-> hold count that was never taken.
+> index 96c898e..758c07d 100644
+> --- a/fs/xfs/xfs_trans_buf.c
+> +++ b/fs/xfs/xfs_trans_buf.c
+> @@ -324,11 +324,13 @@ xfs_trans_read_buf_map(
+>  			 */
+>  			if (XFS_FORCED_SHUTDOWN(mp)) {
+>  				trace_xfs_bdstrat_shut(bp, _RET_IP_);
+> -				xfs_bioerror_relse(bp);
+> -			} else {
+> -				xfs_buf_iorequest(bp);
+> +				bp->b_flags &= ~(XBF_READ | XBF_DONE);
+> +				xfs_buf_ioerror(bp, -EIO);
+> +				xfs_buf_stale(bp);
+> +				return -EIO;
+>  			}
 
-Which seems to be cause by patch 1 in the series, and thus the
-additional hold for the error case should be introduced there.
-
-Otherwise this looks good to me.
+This is a large change of behavior as it doesn't hit the error
+path after the xfs_buf_iowait anymore.  While I don't think that
+that path was entirely correct this version seems to be even less so
+by not releasing the buffer reference or forcing the shutdown.
 
 _______________________________________________
 xfs mailing list
