@@ -1,24 +1,32 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 07ABF7F92
-	for <xfs@oss.sgi.com>; Fri, 29 Aug 2014 03:38:07 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id D099B7F95
+	for <xfs@oss.sgi.com>; Fri, 29 Aug 2014 05:08:15 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id DA9948F804B
-	for <xfs@oss.sgi.com>; Fri, 29 Aug 2014 01:38:03 -0700 (PDT)
-Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
-	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	ogKBOjKQPDx0eykm for <xfs@oss.sgi.com>;
-	Fri, 29 Aug 2014 01:37:57 -0700 (PDT)
-Date: Fri, 29 Aug 2014 18:37:38 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: mount options question
-Message-ID: <20140829083738.GD20518@dastard>
-References: <3dc9caf6f9b415f6e4c0ebac1f1626d3@zbfmail.de>
-	<20140827230732.GN20518@dastard>
-	<CAAxjCEy9UyjDVrTZ4GdRyDy330wUqLGWurzrLAE6-7Q0KdYzvA@mail.gmail.com>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id BECD8304039
+	for <xfs@oss.sgi.com>; Fri, 29 Aug 2014 03:08:12 -0700 (PDT)
+Received: from smtp.inserm.fr (smtp.inserm.fr [195.98.252.37]) by cuda.sgi.com
+	with ESMTP id tu4YElnHXL2FSJ71 (version=TLSv1 cipher=AES256-SHA
+	bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Fri, 29 Aug 2014 03:08:11 -0700 (PDT)
+Received: from localhost (localhost.localdomain [127.0.0.1])
+	by smtp.inserm.fr (SrvInserm) with ESMTP id 5B61216846A
+	for <xfs@oss.sgi.com>; Fri, 29 Aug 2014 12:08:09 +0200 (CEST)
+Received: from smtp.inserm.fr ([195.98.252.37])
+	by localhost (potentille.inserm.fr [127.0.0.1]) (amavisd-new,
+	port 10026) with ESMTP id btTV-QTKML_1 for <xfs@oss.sgi.com>;
+	Fri, 29 Aug 2014 12:08:09 +0200 (CEST)
+Received: from cognac-lmde.crcm.mrs (236-ne1068.marseille.inserm.fr
+	[195.220.68.236])
+	(using TLSv1 with cipher DHE-RSA-AES128-SHA (128/128 bits))
+	(No client certificate requested)
+	by smtp.inserm.fr (SrvInserm) with ESMTP id 428651683DD
+	for <xfs@oss.sgi.com>; Fri, 29 Aug 2014 12:08:08 +0200 (CEST)
+Message-ID: <54005108.1020203@inserm.fr>
+Date: Fri, 29 Aug 2014 12:08:08 +0200
+From: Samuel Granjeaud <samuel.granjeaud@inserm.fr>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <CAAxjCEy9UyjDVrTZ4GdRyDy330wUqLGWurzrLAE6-7Q0KdYzvA@mail.gmail.com>
+Subject: Run out of inodes?
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,59 +35,47 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Stefan Ring <stefanrin@gmail.com>
-Cc: Xfs <xfs@oss.sgi.com>, weber@zbfmail.de
+To: xfs@oss.sgi.com
 
-On Fri, Aug 29, 2014 at 08:31:43AM +0200, Stefan Ring wrote:
-> On Thu, Aug 28, 2014 at 1:07 AM, Dave Chinner <david@fromorbit.com> wrote:
-> > On Wed, Aug 27, 2014 at 12:14:21PM +0200, Marko Weber|8000 wrote:
-> >>
-> >> sorry dave and all other,
-> >>
-> >> can you guys recommend me the most stable / best mount options for
-> >> my new server with ssd=B4s and XFS filesystem?
-> >>
-> >> at moment i would set:  defaults,nobarrier,discard,logbsize=3D256k,noi=
-keep
-> >> or is just "default" the best solution and xfs detect itself whats bes=
-t.
-> >>
-> >> can you guide me a bit?
-> >>
-> >> as eleavtor i set elevator=3Dnoop
-> >>
-> >> i setup disks with linux softraid raid1. On top of the raid is LVM
-> >> (for some data partations).
-> >>
-> >>
-> >> would be nice to hear some tipps from you
-> >
-> > Unless you have specific requirements or have the knowledge to
-> > understand how the different options affect behaviour, then just use
-> > the defaults.
-> =
+Hi,
 
-> Mostly agreed, but using "discard" would be a no-brainer for me. I
-> suppose XFS does not automatically switch it on for non-rotational
-> storage.
+Sorry if the answer is obvious, but I didn't find any clear answer after 
+googling.
 
-Yup, you're not using your brain. :P
+I have a XFS system of 18T over LVM. Recently, I could not create new 
+files or directories.
 
-mount -o discard *sucks* on so many levels it is not funny. I don't
-recommend that anybody *ever* use it, on XFS, ext4 or btrfs.  Just
-use fstrim if you ever need to clean up a SSD.
+# mkdir tempo
+mkdir: cannot create directory `tempo': No space left on device
 
-Cheers,
+After deleting a few files, this command runs successfully.
 
-Dave.
--- =
+So I think that the system runs out of something, inodes I guess.
 
-Dave Chinner
-david@fromorbit.com
+But the df diagnosis does not enlight it: only 1% used.
+
+# df -ht xfs
+Filesystem            Size  Used Avail Use% Mounted on
+/dev/mapper/vg1_backup-backup
+                        18T   12T  6.6T  63% /mnt/vg1_backup/backup
+# df -it xfs
+Filesystem            Inodes   IUsed   IFree IUse% Mounted on
+/dev/mapper/vg1_backup-backup
+                      18874040320  530042 18873510278    1% 
+/mnt/vg1_backup/backup
+
+So what is wrong? How should I solve the problem?
+
+I read about xfs_grow -m, but I am not sure if it could help.
+Of course, I rebooted the system before my trials.
+
+Best regards,
+Samuel
+
 
 _______________________________________________
 xfs mailing list
