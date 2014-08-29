@@ -1,25 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 13B237F72
-	for <xfs@oss.sgi.com>; Thu, 28 Aug 2014 19:56:10 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id D44EE7F72
+	for <xfs@oss.sgi.com>; Thu, 28 Aug 2014 19:59:26 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 9C456AC003
-	for <xfs@oss.sgi.com>; Thu, 28 Aug 2014 17:56:09 -0700 (PDT)
-Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
-	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	fIAsr235xm3U2t2K for <xfs@oss.sgi.com>;
-	Thu, 28 Aug 2014 17:56:07 -0700 (PDT)
-Date: Fri, 29 Aug 2014 10:55:43 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 2/9] xfs: xfs_buf_ioend and xfs_buf_iodone_work duplicate
-	functionality
-Message-ID: <20140829005543.GZ20518@dastard>
-References: <1408084747-4540-1-git-send-email-david@fromorbit.com>
-	<1408084747-4540-3-git-send-email-david@fromorbit.com>
-	<20140829002209.GB17502@infradead.org>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 9AB0C304051
+	for <xfs@oss.sgi.com>; Thu, 28 Aug 2014 17:59:26 -0700 (PDT)
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.9])
+	by cuda.sgi.com with ESMTP id LSGWICRT8sq8Lv0b (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 28 Aug 2014 17:59:25 -0700 (PDT)
+Date: Thu, 28 Aug 2014 17:59:23 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 1/4] xfs: check resblks before calling xfs_dir_canenter
+Message-ID: <20140829005923.GA26340@infradead.org>
+References: <53F6942B.80808@redhat.com>
+ <53F694F9.9030406@sandeen.net>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20140829002209.GB17502@infradead.org>
+In-Reply-To: <53F694F9.9030406@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,23 +30,12 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Eric Sandeen <sandeen@redhat.com>, xfs-oss <xfs@oss.sgi.com>
 
-On Thu, Aug 28, 2014 at 05:22:09PM -0700, Christoph Hellwig wrote:
-> >  STATIC void
-> 
-> needs the static removed as pointed out by Brian.
-> > -	bool			read = !!(bp->b_flags & XBF_READ);
-> > +	bool		read = !!(bp->b_flags & XBF_READ);
-> 
-> We don't really need the double negation here.
+Looks good (although not useful on it's own, but there's more followups)
 
-Good point. I'll fix it.
-
--- 
-Dave Chinner
-david@fromorbit.com
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
 _______________________________________________
 xfs mailing list
