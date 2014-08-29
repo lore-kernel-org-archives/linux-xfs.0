@@ -1,23 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id E6A817F5E
-	for <xfs@oss.sgi.com>; Thu, 28 Aug 2014 19:33:06 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 63DD3AC002
-	for <xfs@oss.sgi.com>; Thu, 28 Aug 2014 17:33:06 -0700 (PDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 40C1E7F5E
+	for <xfs@oss.sgi.com>; Thu, 28 Aug 2014 19:37:57 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 17EE9304048
+	for <xfs@oss.sgi.com>; Thu, 28 Aug 2014 17:37:57 -0700 (PDT)
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.9])
-	by cuda.sgi.com with ESMTP id y3qeVsHvBX67wrAL (version=TLSv1
+	by cuda.sgi.com with ESMTP id 19htLgakKYEbPmuL (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 28 Aug 2014 17:32:58 -0700 (PDT)
-Date: Thu, 28 Aug 2014 17:32:57 -0700
+	Thu, 28 Aug 2014 17:37:56 -0700 (PDT)
+Date: Thu, 28 Aug 2014 17:37:56 -0700
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 6/9] xfs: kill xfs_bioerror_relse
-Message-ID: <20140829003257.GF17502@infradead.org>
+Subject: Re: [PATCH 9/9] xfs: check xfs_buf_read_uncached returns correctly
+Message-ID: <20140829003756.GG17502@infradead.org>
 References: <1408084747-4540-1-git-send-email-david@fromorbit.com>
-	<1408084747-4540-7-git-send-email-david@fromorbit.com>
+	<1408084747-4540-10-git-send-email-david@fromorbit.com>
+	<20140815125608.GA27856@infradead.org>
+	<20140815235843.GA26465@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1408084747-4540-7-git-send-email-david@fromorbit.com>
+In-Reply-To: <20140815235843.GA26465@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,28 +33,18 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
-> index 96c898e..758c07d 100644
-> --- a/fs/xfs/xfs_trans_buf.c
-> +++ b/fs/xfs/xfs_trans_buf.c
-> @@ -324,11 +324,13 @@ xfs_trans_read_buf_map(
->  			 */
->  			if (XFS_FORCED_SHUTDOWN(mp)) {
->  				trace_xfs_bdstrat_shut(bp, _RET_IP_);
-> -				xfs_bioerror_relse(bp);
-> -			} else {
-> -				xfs_buf_iorequest(bp);
-> +				bp->b_flags &= ~(XBF_READ | XBF_DONE);
-> +				xfs_buf_ioerror(bp, -EIO);
-> +				xfs_buf_stale(bp);
-> +				return -EIO;
->  			}
+On Sat, Aug 16, 2014 at 09:58:43AM +1000, Dave Chinner wrote:
+> > I'd rather get rid of these annoying calling conventions.  Make it
+> > return and errno, and the bp in a pointer argument, with the bp
+> > never non-NULL in case of error.
+> 
+> Ok. I considered that, then just did the simple thing.
 
-This is a large change of behavior as it doesn't hit the error
-path after the xfs_buf_iowait anymore.  While I don't think that
-that path was entirely correct this version seems to be even less so
-by not releasing the buffer reference or forcing the shutdown.
+There's only about a dozen callers of all xfs_buf_read* variants, so
+I think switching them over to return an errno shouldn't be much of a
+problem.
 
 _______________________________________________
 xfs mailing list
