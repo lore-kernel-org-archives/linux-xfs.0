@@ -1,25 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 40C1E7F5E
-	for <xfs@oss.sgi.com>; Thu, 28 Aug 2014 19:37:57 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id AC9B37F62
+	for <xfs@oss.sgi.com>; Thu, 28 Aug 2014 19:39:12 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 17EE9304048
-	for <xfs@oss.sgi.com>; Thu, 28 Aug 2014 17:37:57 -0700 (PDT)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 859EF8F8052
+	for <xfs@oss.sgi.com>; Thu, 28 Aug 2014 17:39:12 -0700 (PDT)
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.9])
-	by cuda.sgi.com with ESMTP id 19htLgakKYEbPmuL (version=TLSv1
+	by cuda.sgi.com with ESMTP id JE82EkG4VBSpUL3r (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 28 Aug 2014 17:37:56 -0700 (PDT)
-Date: Thu, 28 Aug 2014 17:37:56 -0700
+	Thu, 28 Aug 2014 17:39:11 -0700 (PDT)
+Date: Thu, 28 Aug 2014 17:39:11 -0700
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 9/9] xfs: check xfs_buf_read_uncached returns correctly
-Message-ID: <20140829003756.GG17502@infradead.org>
-References: <1408084747-4540-1-git-send-email-david@fromorbit.com>
-	<1408084747-4540-10-git-send-email-david@fromorbit.com>
-	<20140815125608.GA27856@infradead.org>
-	<20140815235843.GA26465@dastard>
+Subject: Re: [PATCH 1/7] xfs: don't dirty buffers beyond EOF
+Message-ID: <20140829003911.GA30463@infradead.org>
+References: <1409226551-16570-1-git-send-email-david@fromorbit.com>
+	<1409226551-16570-2-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20140815235843.GA26465@dastard>
+In-Reply-To: <1409226551-16570-2-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,18 +31,11 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
+Cc: xfs@oss.sgi.com
 
-On Sat, Aug 16, 2014 at 09:58:43AM +1000, Dave Chinner wrote:
-> > I'd rather get rid of these annoying calling conventions.  Make it
-> > return and errno, and the bp in a pointer argument, with the bp
-> > never non-NULL in case of error.
-> 
-> Ok. I considered that, then just did the simple thing.
-
-There's only about a dozen callers of all xfs_buf_read* variants, so
-I think switching them over to return an errno shouldn't be much of a
-problem.
+Not sure if my 10 cents are worth anything given that I haven't spent
+much time with this code recently, but I feel very uneasy diverging
+from the generic path in this area.
 
 _______________________________________________
 xfs mailing list
