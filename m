@@ -1,20 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 363967F75
-	for <xfs@oss.sgi.com>; Thu, 28 Aug 2014 21:14:09 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id B915CAC001
-	for <xfs@oss.sgi.com>; Thu, 28 Aug 2014 19:14:05 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id 9ar4Xyy7Ax3xgxug for <xfs@oss.sgi.com>;
-	Thu, 28 Aug 2014 19:14:03 -0700 (PDT)
-Message-ID: <53FFE1EC.9010102@sandeen.net>
-Date: Thu, 28 Aug 2014 21:14:04 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+	by oss.sgi.com (Postfix) with ESMTP id BF8C77F8A
+	for <xfs@oss.sgi.com>; Thu, 28 Aug 2014 21:52:26 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 41517AC003
+	for <xfs@oss.sgi.com>; Thu, 28 Aug 2014 19:52:25 -0700 (PDT)
+Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
+	[150.101.137.145]) by cuda.sgi.com with ESMTP id
+	g30tn8DzycbK7qdZ for <xfs@oss.sgi.com>;
+	Thu, 28 Aug 2014 19:52:23 -0700 (PDT)
+Date: Fri, 29 Aug 2014 12:52:18 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH xfstests] xfs: add tests for XFS_IOC_FSSETXATTR behaviour
+Message-ID: <20140829025218.GG26465@dastard>
+References: <20140718191314.GB27801@teal.hq.k1024.org>
+	<1409199840-16907-1-git-send-email-iusty@k1024.org>
+	<20140828101628.GS20518@dastard>
+	<20140828222854.GB29940@google.com>
 MIME-Version: 1.0
-Subject: [PATCH 2/4 V2] xfs: combine xfs_dir_canenter into xfs_dir_createname
-References: <53F6942B.80808@redhat.com> <53F695C3.1020607@sandeen.net>
-In-Reply-To: <53F695C3.1020607@sandeen.net>
+Content-Disposition: inline
+In-Reply-To: <20140828222854.GB29940@google.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,121 +28,109 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@redhat.com>, xfs-oss <xfs@oss.sgi.com>
+To: Iustin Pop <iustin@google.com>
+Cc: hch@infradead.org, Iustin Pop <iusty@k1024.org>, fstests@vger.kernel.org, xfs@oss.sgi.com
 
-xfs_dir_canenter and xfs_dir_createname are
-almost identical.
-
-Fold the former into the latter, with a helpful
-wrapper for the former.  If createname is called without
-an inode number, it now only checks for space, and does
-not actually add the entry.
-
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
-
-V2: slightly more verbose comment
-
-diff --git a/fs/xfs/libxfs/xfs_dir2.c b/fs/xfs/libxfs/xfs_dir2.c
-index ea84e1c..fdd391f 100644
---- a/fs/xfs/libxfs/xfs_dir2.c
-+++ b/fs/xfs/libxfs/xfs_dir2.c
-@@ -237,7 +237,8 @@ xfs_dir_init(
- }
- 
- /*
--  Enter a name in a directory.
-+ * Enter a name in a directory, or check for available space.
-+ * If inum is 0, only the available space test is performed.
-  */
- int
- xfs_dir_createname(
-@@ -254,10 +255,12 @@ xfs_dir_createname(
- 	int			v;		/* type-checking value */
- 
- 	ASSERT(S_ISDIR(dp->i_d.di_mode));
--	rval = xfs_dir_ino_validate(tp->t_mountp, inum);
--	if (rval)
--		return rval;
--	XFS_STATS_INC(xs_dir_create);
-+	if (inum) {
-+		rval = xfs_dir_ino_validate(tp->t_mountp, inum);
-+		if (rval)
-+			return rval;
-+		XFS_STATS_INC(xs_dir_create);
-+	}
- 
- 	args = kmem_zalloc(sizeof(*args), KM_SLEEP | KM_NOFS);
- 	if (!args)
-@@ -276,6 +279,8 @@ xfs_dir_createname(
- 	args->whichfork = XFS_DATA_FORK;
- 	args->trans = tp;
- 	args->op_flags = XFS_DA_OP_ADDNAME | XFS_DA_OP_OKNOENT;
-+	if (!inum)
-+		args->op_flags |= XFS_DA_OP_JUSTCHECK;
- 
- 	if (dp->i_d.di_format == XFS_DINODE_FMT_LOCAL) {
- 		rval = xfs_dir2_sf_addname(args);
-@@ -542,50 +547,7 @@ xfs_dir_canenter(
- 	xfs_inode_t	*dp,
- 	struct xfs_name	*name)		/* name of entry to add */
- {
--	struct xfs_da_args *args;
--	int		rval;
--	int		v;		/* type-checking value */
--
--	ASSERT(S_ISDIR(dp->i_d.di_mode));
--
--	args = kmem_zalloc(sizeof(*args), KM_SLEEP | KM_NOFS);
--	if (!args)
--		return -ENOMEM;
--
--	args->geo = dp->i_mount->m_dir_geo;
--	args->name = name->name;
--	args->namelen = name->len;
--	args->filetype = name->type;
--	args->hashval = dp->i_mount->m_dirnameops->hashname(name);
--	args->dp = dp;
--	args->whichfork = XFS_DATA_FORK;
--	args->trans = tp;
--	args->op_flags = XFS_DA_OP_JUSTCHECK | XFS_DA_OP_ADDNAME |
--							XFS_DA_OP_OKNOENT;
--
--	if (dp->i_d.di_format == XFS_DINODE_FMT_LOCAL) {
--		rval = xfs_dir2_sf_addname(args);
--		goto out_free;
--	}
--
--	rval = xfs_dir2_isblock(args, &v);
--	if (rval)
--		goto out_free;
--	if (v) {
--		rval = xfs_dir2_block_addname(args);
--		goto out_free;
--	}
--
--	rval = xfs_dir2_isleaf(args, &v);
--	if (rval)
--		goto out_free;
--	if (v)
--		rval = xfs_dir2_leaf_addname(args);
--	else
--		rval = xfs_dir2_node_addname(args);
--out_free:
--	kmem_free(args);
--	return rval;
-+	return xfs_dir_createname(tp, dp, name, 0, NULL, NULL, 0);
- }
- 
- /*
-
-
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gVGh1LCBBdWcgMjgsIDIwMTQgYXQgMDM6Mjg6NTRQTSAtMDcwMCwgSXVzdGluIFBvcCB3cm90
+ZToKPiBPbiBEb24sIEF1ZyAyOCwgMjAxNCBhdCAwODoxNjoyOCArMTAwMCwgRGF2ZSBDaGlubmVy
+IHdyb3RlOgo+ID4gW2NjIGZzdGVzdHNAdmdlci5rZXJuZWwub3JnXQo+ID4gCj4gPiBPbiBXZWQs
+IEF1ZyAyNywgMjAxNCBhdCAwOToyNDowMFBNIC0wNzAwLCBJdXN0aW4gUG9wIHdyb3RlOgo+ID4g
+PiBBZGQgdHdvIHRlc3RzIHRoYXQgY2hlY2sgZm9yIGNvcnJlY3QgYmVoYXZpb3VyIG9mIFhGU19J
+T0NfRlNTRVRYQVRUUjoKPiA+ID4gCj4gPiA+IC0gMzA3OiBjaGVjayB0aGF0IGV4dGVudCBzaXpl
+IGNhbiBhbHdheXMgYmUgc2V0IG9uIGEgZGlyZWN0b3J5Cj4gPiA+IC0gMzA4OiBjaGVjayB0aGF0
+IHNldHRpbmcgYSBub24temVybyBleHRlbnQgc2l6ZSBkaXJlY3RseSB2aWEgdGhlIGlvY3RsCj4g
+PiA+ICAgc2V0cyB0aGUgZXhwZWN0ZWQgZmxhZ3MgKEVYVFNJWkUgYW5kIEVYVFNaSU5IRVJJVCkK
+PiA+ID4gCj4gPiA+IFNpZ25lZC1vZmYtYnk6IEl1c3RpbiBQb3AgPGl1c3R5QGsxMDI0Lm9yZz4K
+PiA+IAo+ID4gTWlub3Igc3R1ZmYgZmlyc3Q6Cj4gPiAKPiA+IC0geGZzdGVzdHMgcGF0Y2hlcyBz
+aG91bGQgYmUgc2VudCB0byBmc3Rlc3RzQHZnZXIua2VybmVsLm9yZyBub3cuCj4gCj4gT0ssIHdp
+bGwgZG8uIFRoZXJlIHdhcyBub3RoaW5nIHdyaXR0ZW4gaW4gdGhlIGdpdCByZXBvc2l0b3J5J3Mg
+UkVBRE1FLAo+IGhlbmNlIEkgY2hvc2Ugd2hhdCBJIHRob3VnaHQgYmVzdC4KCkRvY3VtZW50YXRp
+b24gYWx3YXlzIG5lZWRzIHVwZGF0aW5nLCBhbmQgc3R1ZmYgaXMgaW4gdGhlIHByb2Nlc3Mgb2YK
+YmVpbmcgbW92ZWQgYXJvdW5kLgoKPiA+ID4gKyMgQ29weXJpZ2h0IChjKSAyMDE0IEdvb2dsZSBJ
+bmMuICBBbGwgUmlnaHRzIFJlc2VydmVkLgo+ID4gCj4gPiBJcyB0aGF0IGNvcnJlY3Q/IEl0IGRv
+ZXNuJ3QgbWF0Y2ggdGhlIGVtYWlsIGFkZHJlc3MgeW91IHNlbnQgdGhpcwo+ID4gZnJvbSBhbmQg
+SSd2ZSBuZXZlciBzZWVuIHlvdSBwb3N0IGZyb20gYSBAZ29vZ2xlLmNvbSBhZGRyZXNzLiAgSQo+
+ID4gYWx3YXlzIGxpa2UgdG8gY2hlY2sgdGhhdCB0aGUgY29weXJpZ2h0IGFzc2lnbm1lbnQgaXMg
+Y29ycmVjdCBpbgo+ID4gc2l0dWF0aW9ucyBsaWtlIHRoaXMuLi4KPiAKPiBJdCBpcyBjb3JyZWN0
+IGluZGVlZCAoYW5kIHRoYW5rcyBmb3IgZG91YmxlLWNoZWNraW5nKS4gSSBwcmVmZXIgdG8gc2Vu
+ZAo+IG15IGludGVyYWN0aW9ucy9jb250cmlidXRpb25zIGRvbmUgbm90IGFzIHBhcnQgb2YgbXkg
+am9iIHVzaW5nIG15Cj4gcGVyc29uYWwgYWRkcmVzcyAoaGVuY2UgSSBhbHdheXMgd3JvdGUgdG8g
+eGZzQCBmcm9tIHRoZSBzYW1lIGFkZHJlc3MpLAo+IGJ1dCBldmVuIGluIHRoYXQgY2FzZSwgdGhl
+IGNvcHlyaWdodCByZW1haW5zIHdpdGggbXkgZW1wbG95ZXIuCj4gCj4gSnVzdCBhcyBhIGNvbmZp
+cm1hdGlvbiwgc2VuZGluZyB0aGlzIGVtYWlsIGZyb20gbXkgQGdvb2dsZS5jb20gYWRkcmVzcy4K
+ClRoYW5rcywgSSdsbCBrbm93IGluIGZ1dHVyZSA7KQoKPiA+ID4gKyMgbm93IGNyZWF0ZSBhICdi
+aWcnICh3aXRoIGV4dGVudHMpIGRpcmVjdG9yeQo+ID4gPiArbWtkaXIgJGJpZwo+ID4gPiAraWR4
+PTEKPiA+ID4gK3doaWxlIHhmc19ibWFwICRiaWcgfCBncmVwIC1xICJubyBleHRlbnRzIjsgZG8K
+PiA+ID4gKwl0b3VjaCAkYmlnLyRpZHgKPiA+ID4gKwlpZHg9JCgoaWR4KzEpKQo+ID4gPiArCWlm
+IFsgIiRpZHgiIC1ndCAxMDQ4NTc2IF07IHRoZW4KPiA+ID4gKwkJIyBzdGlsbCBubyBleHRlbnRz
+PyBnaXZpbmcgdXAKPiA+ID4gKwkJZWNobyAiQ2FuJ3QgbWFrZSBhIGRpcmVjdG9yeSB0byBoYXZl
+IGV4dGVudHMgZXZlbiBhZnRlciAxTSBmaWxlcyIgMT4mMgo+ID4gPiArCQlleGl0Cj4gPiA+ICsJ
+ZmkKPiA+ID4gK2RvbmUKPiA+IAo+ID4gdXJrLiBsYXJnZXN0IGlub2RlIHNpemUgaXMgMmtiLCB3
+aGljaCBtZWFucyBhdCBtb3N0IGl0IGNhbiBmaXQgbGVzcwo+ID4gdGhhbiAxMDAgZGlyZW50cyBp
+biB0aGUgaW5vZGUgYmVmb3JlIHNwaWxsaW5nIHRvIGV4dGVudCBmb3JtLiBTbwo+ID4ganVzdCBk
+byBhIGxvb3AgdGhhdCBjcmVhdGVzIDEwMDAgZmlsZXMgLSB0aGVyZSdzIG5vIG5lZWQgdG8KPiA+
+IG92ZXJlbmdpbmVlciB0aGUgdGVzdCBjb2RlLgo+IAo+IFdpbGwgZG8uICBJdCdzIGZpbmUgdG8g
+c3RpbGwgY2hlY2sgdGhhdCB0aGUgZGlyZWN0b3J5IGRvZXMgaGF2ZSBleHRlbnRzLAo+IEkgaG9w
+ZT8KCiRYRlNfSU9fUFJPRyAtYyAnYm1hcCAtdnAnICRiaWcgfCBfZmlsdGVyX2JtYXAKCj4gPiA+
+ICtpbnQgbWFpbihpbnQgYXJnYywgY2hhciAqKmFyZ3YpIHsKPiA+ID4gKwlzdHJ1Y3QgZnN4YXR0
+ciBmYTsKPiA+ID4gKwlpbnQgZmQgPSBvcGVuKGFyZ3ZbMV0sIE9fUkRPTkxZKTsKPiA+ID4gKwlp
+ZiAoZmQgPCAwKSB7Cj4gPiA+ICsJCXBlcnJvcigib3BlbiIpOwo+ID4gPiArCQlyZXR1cm4gMTsK
+PiA+ID4gKwl9Cj4gPiA+ICsJZmEuZnN4X3hmbGFncyA9IDA7Cj4gPiA+ICsJZmEuZnN4X2V4dHNp
+emUgPSAxMDQ4NTc2ICogODsKPiA+ID4gKwlpbnQgciA9IHhmc2N0bChhcmd2WzFdLCBmZCwgWEZT
+X0lPQ19GU1NFVFhBVFRSLCAmZmEpOwo+ID4gCj4gPiAuLi4uIHRoYXQgY29kZSBpcyBxdWl0ZSBi
+cm9rZW4uIFllcywgaXQgd291bGQgd29yayB0byBzZXQgdGhlCj4gPiBhcHByb3ByaWF0ZSBleHRl
+bnQgc2l6ZSBmbGFncyB3aXRoIHRoZSBrZXJuZWwKPiA+IGNoYW5nZXMgeW91IG1hZGUsIGJ1dCB0
+aGF0J3Mgbm90IGhvdyB0aGlzIGlvY3RsIHdvcmtzLgo+ID4gCj4gPiBpLmUuIGl0IHdpbGwgY2F1
+c2UgYW55IGZsYWcgYml0cyB0aGF0IGFyZSBzZXQgb24gdGhlIGlub2RlIHRvIGJlCj4gPiBjbGVh
+cmVkCj4gCj4gR29vZCBwb2ludOKApgo+IAo+ID4gYW5kIGl0J3MgbGlrZWx5IHRvIGZhaWwgb24g
+b2xkIGtlcm5lbHMgYmVhY3VzZSB0aGV5IGhhdmUKPiA+IHZlcnkgZGlmZmVyZW50IGJlaGF2aW91
+ciB0byB3aGF0IHlvdXIgcGF0Y2ggZG9lcy4KPiAKPiBPSywgdGhhdCBJIGRpZG4ndCBrbm93LiAo
+V291bGQgeW91IG1pbmQgcXVpY2tseSBleHBsYWluaW5nPykKClRoZSBleHRzaXplIGhpbnQgb24g
+dGhlIGlub2RlIGlzIG5vdCB1c2VkIGJ5IHRoZSBrZXJuZWwgY29kZSB1bmxlc3MKdGhlIFhGU19Y
+RkxBR19FWFRTSVpFIGlzIGFsc28gc2V0LiBTbyBleGlzdGluZyBrZXJuZWxzIG1heSBzZXQgdGhl
+Cmlub2RlIGV4dHN6aGludCBmaWVsZCwgYnV0IHRoZSBjb2RlIHdpbGwgaWdub3JlIGl0IGJlY2F1
+c2UgdGhlIGZsYWdzCmRpZG4ndCBnZXQgc2V0IG9uIHRoZSBpbm9kZS4gU2VlIHhmc19nZXRfZXh0
+c3pfaGludCgpLgoKV2l0aCB5b3VyIGtlcm5lbCBjaGFuZ2VzLCB0aGUgYWJvdmUgKmludmFsaWQq
+IGNvZGUgd2lsbCByZXN1bHQgaW4KdGhlIGZsYWdzIGJlaW5nIHNldCBvbiB0aGUgaW5vZGUsIGFu
+ZCBzbyB0aGVyZSdzIGEgY2hhbmdlIG9mCmJlaGF2aW91ciBmcm9tICJvbGQga2VybmVsLCBkb2Vz
+IG5vdCB0cmlnZ2VyIGV4dHN6IGJlaGF2aW91ciIgdG8KIm5ldyBrZXJuZWwsIGV4dHN6IGJlaGF2
+aW91ciBpcyBpbnZva2VkIi4KCj4gPiBXZSBoYXZlIHhmc19pbyBwcmVjaXNlbHkgc28gdGhhdCB3
+ZSBkb24ndCBoYXZlIHRvIG1haW50YWluIHJhbmRvbQo+ID4gdGVzdCBjb2RlIGxpa2UgdGhpcyB0
+aHJvdWdob3V0IHhmc3Rlc3RzIC0gZG8gaXQgb25jZSwgZG8gaXQgcmlnaHQsCj4gPiB1c2UgaXQg
+ZXZlcnl3aGVyZS4KPiAKPiBJIHRvdGFsbHkgYWdyZWUgdGhhdCB4ZnNfaW8gaXMgd2hhdCBwZW9w
+bGUgc2hvdWxkIHVzZSwgYnV0IEkgZGlzYWdyZWUgb24KPiB0aGUgdXNlIG9mIHhmc19pbyBpbiB0
+aGlzIHBhcnRpY3VsYXIgdGVzdCwgbGV0IG1lIGV4cGxhaW4gd2h5Lgo+IAo+IFdpdGggMy4xNi1y
+YzEgYXQgbGVhc3QsIGl0IGlzIHBvc3NpYmxlIHRvIHNldCBmc3hfZXh0c2l6ZSB0byBhIG5vbi16
+ZXJvCj4gdmFsdWUsIHdpdGhvdXQgc2V0dGluZyB0aGUgZmxhZ3MgKGlmIHlvdSBjYWxsIHRoZSBp
+b2N0bCBkaXJlY3RseSkuIFN1Y2gKPiBhbiBpbm9kZSAgd2lsbCBiZSAodW5sZXNzIEknbSBtaXN0
+YWtlbikgZmxhZ2dlZCB3aXRoIGEgd2FybmluZyBieQo+IHhmc19yZXBhaXIsIHdoaWNoIG1lYW5z
+IHRoYXQgaXQncyBhbiBpbnZhbGlkIGlub2RlIHN0YXRlLgoKWWVzLCBzaW5jZSB0aGlzIGNvbW1p
+dCBiZDU2ODNmICgieGZzX3JlcGFpcjogdmFsaWRhdGUgaW5vZGUgZGlfZmxhZ3MKZmllbGQiKSBp
+biAyMDExIHJlcGFpciB3aWxsIGZsYWcgdGhhdCB0aGUgaGludCBpcyBub24temVybyBidXQgdGhl
+CmNvcnJlY3QgZmxhZ3MgYXJlIG5vdCBzZXQuIExpa2V3aXNlIGl0IHdpbGwgd2FybiBpZiB0aGUg
+d3JvbmcgZmxhZ3MKYXJlIHNldC4gWW91IGNhbiBnZXQgd3JvbmcgZmxhZ3Mgc2V0IG9uIHRoZSBp
+bm9kZSBpbiBtYW55IHdheXMsIGJ1dApoaXN0b3JpY2FsbHkgdGhlIGtlcm5lbCBhbmQgcmVwYWly
+IHV0aWxpdGllcyBoYXZlbid0IGNhcmVkLgoKPiBTbyBpbiBteSB2aWV3LCB0aGVyZSdzIGEga2Vy
+bmVsIGJ1ZywgaW4gdGhhdCBpdCBhbGxvd3MgYSB1c2VyIGxhbmQKPiBhcHBsaWNhdGlvbiB0byBw
+dXQgYW4gaW5vZGUgaW50byBhICJ3cm9uZyIgc3RhdGUuIFRoaXMgcGFydGljdWxhciB0ZXN0Cj4g
+aXMgZGVzaWduZWQgdG8gcmVwcm9kdWNlIHRoaXMga2VybmVsIGJ1Zywgc28gdGhhdCB0aGUga2Vy
+bmVsIGZpeCBjYW4gYmUKPiB2ZXJpZmllZCB0aGF0IGlzIGluZGVlZCBhIGZpeC4KClllcyB0aGlz
+IGlzIG5vdCB3aGF0IHhmc3Rlc3RzIGlzIGZvci4gSWYgd2UgZml4IGFuIEFQSSBidWcsIHRoZXJl
+J3MKbGl0dGxlIHZhbHVlIHRvIHRlc3RpbmcgZm9yZXZlciB0aGF0IHRoZSBBUEkgaXMgZml4ZWQu
+IFdoYXQgd2UgYXJlCnRyeWluZyB0byBjb3ZlciBpcyB0aGF0IHdoZW4gdGhlIHBhcmFtZXRlcnMg
+YXJlIHNldCBjb3JyZWN0bHkgdGhhdAp0aGUgYmVoYXZpb3VyIGlzIGNvcnJlY3QuCgpJZiB5b3Ug
+d2FudCB0byBkbyAiaXMgdGhlIEFQSSB2YWxpZGF0aW5nIHVzZXIgaW5wdXQgY29ycmVjdGx5Igp0
+ZXN0aW5nIHRoZW4gdGhhdCdzIHdoYXQgdHJpbml0eSBpcyBmb3IuIERhdmUgSm9uZXMgaGFzIGxv
+bmcgd2FudGVkCnRvIGdldCBiZXR0ZXIgaW9jdGwgY292ZXJhZ2UgZm9yIGZpbGVzeXN0ZW0gc3Bl
+Y2lmaWMgb3BlcmF0aW9ucywgc28KSSdkIHN1Z2dlc3QgdGhhdCB0aGlzIGlzIHRoZSBhdmVudWUg
+Zm9yIHRlc3Rpbmcgd2hldGhlciBhbiBBUEkKYmVoYXZlcyBjb3JyZWN0bHkgYW5kIGNhdGNoZXMg
+YWxsIGludmFsaWQgaW5wdXQuCgpUaGVuIHdlIGdldCB0byBmaXggYWxsIHRoZSBwcm9ibGVtcyB0
+aGF0IHRyaW5pdHkgY2F1c2VzLCBqdXN0IGxpa2UKdGhlIG1tIGZvbGsgaGF2ZSBiZWVuIGRvaW5n
+IGZvciB0aGUgcGFzdCBjb3VwbGUgb2YgeWVhcnMuLi4KCkNoZWVycywKCkRhdmUuCi0tIApEYXZl
+IENoaW5uZXIKZGF2aWRAZnJvbW9yYml0LmNvbQoKX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0
+cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCg==
