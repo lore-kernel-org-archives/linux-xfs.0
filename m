@@ -1,28 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 9964B7FB5
-	for <xfs@oss.sgi.com>; Fri, 29 Aug 2014 22:44:11 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 3672BAC001
-	for <xfs@oss.sgi.com>; Fri, 29 Aug 2014 20:44:08 -0700 (PDT)
-Received: from mail-we0-f169.google.com (mail-we0-f169.google.com
-	[74.125.82.169]) by cuda.sgi.com with ESMTP id zezOANUgOV8iNfyx
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Fri, 29 Aug 2014 20:44:06 -0700 (PDT)
-Received: by mail-we0-f169.google.com with SMTP id k48so2968901wev.14
-	for <xfs@oss.sgi.com>; Fri, 29 Aug 2014 20:44:05 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id 9053D7FB7
+	for <xfs@oss.sgi.com>; Sat, 30 Aug 2014 02:24:20 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 00DD9AC001
+	for <xfs@oss.sgi.com>; Sat, 30 Aug 2014 00:24:16 -0700 (PDT)
+Received: from server11.emailgun.biz (server11.emailgun.biz [23.239.19.58]) by
+	cuda.sgi.com with ESMTP id INiqGAGufXZbaPaW (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Sat, 30 Aug 2014 00:24:12 -0700 (PDT)
+Received: from client11 by server11.emailgun.biz with local (Exim 4.82)
+	(envelope-from <bounce@client11.emailgun.biz>) id 1XNd1A-0006Cl-1o
+	for xfs@oss.sgi.com; Sat, 30 Aug 2014 07:24:12 +0000
+Subject: Not planned holidays yet? Plan now & get best travel deals !!!
+Message-ID: <d80523201ed0067276927d13d5201485@23.239.19.58>
+Date: Fri, 29 Aug 2014 06:52:09 +0000
+From: "Peehu Sharma" <noreply@client11.emailgun.biz>
 MIME-Version: 1.0
-In-Reply-To: <20140829234505.GE20518@dastard>
-References: <3dc9caf6f9b415f6e4c0ebac1f1626d3@zbfmail.de>
-	<20140827230732.GN20518@dastard>
-	<CAAxjCEy9UyjDVrTZ4GdRyDy330wUqLGWurzrLAE6-7Q0KdYzvA@mail.gmail.com>
-	<20140829083738.GD20518@dastard>
-	<6306cfa5-457d-4794-8fc0-1768f7f1deec@email.android.com>
-	<20140829234505.GE20518@dastard>
-From: Greg Freemyer <greg.freemyer@gmail.com>
-Date: Fri, 29 Aug 2014 23:43:25 -0400
-Message-ID: <CAGpXXZ+c9CkMMQTvtOhhFeQxjT9-zO1UAr4O_9+dF0TO2ZwEVg@mail.gmail.com>
-Subject: Re: mount options question
+Reply-To: noreply@client11.emailgun.biz
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,80 +26,363 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: multipart/mixed; boundary="===============1778088385280009077=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Stefan Ring <stefanrin@gmail.com>, "Johannes B. Kernel" <weber@zbfmail.de>, Xfs <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
-T24gRnJpLCBBdWcgMjksIDIwMTQgYXQgNzo0NSBQTSwgRGF2ZSBDaGlubmVyIDxkYXZpZEBmcm9t
-b3JiaXQuY29tPiB3cm90ZToKPiBPbiBGcmksIEF1ZyAyOSwgMjAxNCBhdCAwNzoyNjo1OUFNIC0w
-NDAwLCBHcmVnIEZyZWVteWVyIHdyb3RlOgo+Pgo+Pgo+PiBPbiBBdWd1c3QgMjksIDIwMTQgNDoz
-NzozOCBBTSBFRFQsIERhdmUgQ2hpbm5lciA8ZGF2aWRAZnJvbW9yYml0LmNvbT4gd3JvdGU6Cj4+
-ID5PbiBGcmksIEF1ZyAyOSwgMjAxNCBhdCAwODozMTo0M0FNICswMjAwLCBTdGVmYW4gUmluZyB3
-cm90ZToKPj4gPj4gT24gVGh1LCBBdWcgMjgsIDIwMTQgYXQgMTowNyBBTSwgRGF2ZSBDaGlubmVy
-IDxkYXZpZEBmcm9tb3JiaXQuY29tPgo+PiA+d3JvdGU6Cj4+ID4+ID4gT24gV2VkLCBBdWcgMjcs
-IDIwMTQgYXQgMTI6MTQ6MjFQTSArMDIwMCwgTWFya28gV2ViZXJ8ODAwMCB3cm90ZToKPj4gPj4g
-Pj4KPj4gPj4gPj4gc29ycnkgZGF2ZSBhbmQgYWxsIG90aGVyLAo+PiA+PiA+Pgo+PiA+PiA+PiBj
-YW4geW91IGd1eXMgcmVjb21tZW5kIG1lIHRoZSBtb3N0IHN0YWJsZSAvIGJlc3QgbW91bnQgb3B0
-aW9ucyBmb3IKPj4gPj4gPj4gbXkgbmV3IHNlcnZlciB3aXRoIHNzZOaEgCBhbmQgWEZTIGZpbGVz
-eXN0ZW0/Cj4+ID4+ID4+Cj4+ID4+ID4+IGF0IG1vbWVudCBpIHdvdWxkIHNldDoKPj4gPmRlZmF1
-bHRzLG5vYmFycmllcixkaXNjYXJkLGxvZ2JzaXplPTI1Nmssbm9pa2VlcAo+PiA+PiA+PiBvciBp
-cyBqdXN0ICJkZWZhdWx0IiB0aGUgYmVzdCBzb2x1dGlvbiBhbmQgeGZzIGRldGVjdCBpdHNlbGYg
-d2hhdHMKPj4gPmJlc3QuCj4+ID4+ID4+Cj4+ID4+ID4+IGNhbiB5b3UgZ3VpZGUgbWUgYSBiaXQ/
-Cj4+ID4+ID4+Cj4+ID4+ID4+IGFzIGVsZWF2dG9yIGkgc2V0IGVsZXZhdG9yPW5vb3AKPj4gPj4g
-Pj4KPj4gPj4gPj4gaSBzZXR1cCBkaXNrcyB3aXRoIGxpbnV4IHNvZnRyYWlkIHJhaWQxLiBPbiB0
-b3Agb2YgdGhlIHJhaWQgaXMgTFZNCj4+ID4+ID4+IChmb3Igc29tZSBkYXRhIHBhcnRhdGlvbnMp
-Lgo+PiA+PiA+Pgo+PiA+PiA+Pgo+PiA+PiA+PiB3b3VsZCBiZSBuaWNlIHRvIGhlYXIgc29tZSB0
-aXBwcyBmcm9tIHlvdQo+PiA+PiA+Cj4+ID4+ID4gVW5sZXNzIHlvdSBoYXZlIHNwZWNpZmljIHJl
-cXVpcmVtZW50cyBvciBoYXZlIHRoZSBrbm93bGVkZ2UgdG8KPj4gPj4gPiB1bmRlcnN0YW5kIGhv
-dyB0aGUgZGlmZmVyZW50IG9wdGlvbnMgYWZmZWN0IGJlaGF2aW91ciwgdGhlbiBqdXN0Cj4+ID51
-c2UKPj4gPj4gPiB0aGUgZGVmYXVsdHMuCj4+ID4+Cj4+ID4+IE1vc3RseSBhZ3JlZWQsIGJ1dCB1
-c2luZyAiZGlzY2FyZCIgd291bGQgYmUgYSBuby1icmFpbmVyIGZvciBtZS4gSQo+PiA+PiBzdXBw
-b3NlIFhGUyBkb2VzIG5vdCBhdXRvbWF0aWNhbGx5IHN3aXRjaCBpdCBvbiBmb3Igbm9uLXJvdGF0
-aW9uYWwKPj4gPj4gc3RvcmFnZS4KPj4gPgo+PiA+WXVwLCB5b3UncmUgbm90IHVzaW5nIHlvdXIg
-YnJhaW4uIDpQCj4+ID4KPj4gPm1vdW50IC1vIGRpc2NhcmQgKnN1Y2tzKiBvbiBzbyBtYW55IGxl
-dmVscyBpdCBpcyBub3QgZnVubnkuIEkgZG9uJ3QKPj4gPnJlY29tbWVuZCB0aGF0IGFueWJvZHkg
-KmV2ZXIqIHVzZSBpdCwgb24gWEZTLCBleHQ0IG9yIGJ0cmZzLiAgSnVzdAo+PiA+dXNlIGZzdHJp
-bSBpZiB5b3UgZXZlciBuZWVkIHRvIGNsZWFuIHVwIGEgU1NELgo+Pgo+Cj4+IEluIHBhcnRpY3Vs
-YXIgdHJpbSBpcyBhIHN5bmNocm9ub3VzIGNvbW1hbmQgaW4gbWFueSBTU0RzLCBJIGRvbid0Cj4+
-IGtub3cgYWJvdXQgdGhlIGltcGFjdCBvbiB0aGUga2VybmVsIGJsb2NrIHN0YWNrLgo+Cj4gYmxr
-ZGV2X2lzc3VlX2Rpc2NhcmQoKSBpcyBzeW5jaHJvbm91cyBhcyB3ZWxsLCB3aGljaCBpcyBhIGJp
-Zwo+IHByb2JsZW0gZm9yIHNvbWV0aGluZyB0aGF0IG5lZWRzIHRvIGl0ZXJhdGUgKHBvdGVudGlh
-bGx5KSB0aG91c2FuZHMKPiBvZiByZWdpb25zIGZvciBkaXNjYXJkIHdoZW4gYSBqb3VybmFsIGNo
-ZWNrcG9pbnQgY29tcGxldGVzLi4uLgo+Cj4+IEZvciB0aGUgU1NECj4+IGl0c2VsZiB0aGF0IG1l
-YW5zIHRoZSBTU0RzIGJhc2ljYWxseSBmbHVzaCB0aGVpciB3cml0ZSBjYWNoZSBvbgo+PiBldmVy
-eSB0cmltIGNhbGwuCj4KPiBPaCwgaXQncyB3b3JzZSB0aGFuIHRoYXQsIHVzdWFsbHkuIFRSSU0g
-aXMgb25lIG9mIHRoZSBzbG93ZXN0Cj4gb3BlcmF0aW9ucyB5b3UgY2FuIHJ1biBvbiBtYW55IGRy
-aXZlcywgc28gaXQgY2FuIHRha2UgaHVuZHJlZHMgb2YKPiBtaWxsaXNlY29uZHMgdG8gZXhlY3V0
-ZS4uLi4KPgo+PiBJIG9mdGVuIHRlbGwgcGVvcGxlIHRvIGRvIHBlcmZvcm1hbmNlIHRlc3Rpbmcg
-d2l0aCBhbmQgd2l0aG91dCBpdAo+PiBhbmQgcmVwb3J0IGJhY2sgdG8gbWUgaWYgdGhleSBzZWUg
-bm8gZGVncmFkYXRpb24gY2F1c2VkIGJ5IC1vCj4+IGRpc2NhcmQuICBUbyBkYXRlIG5vIG9uZSBo
-YXMgZXZlciByZXBvcnRlZCBiYWNrLiAgSSB0aGluayAtbwo+PiBkaXNjYXJkIHNob3VsZCBoYXZl
-IG5ldmVyIGJlZW4gaW50cm9kdWNlZCBhbmQgY2VydGFpbmx5IG5vdCA1Cj4+IHllYXJzIGFnby4K
-Pgo+IEl0IHdhcyBpbnRyb2R1Y2VkIGludG8gWEZTIGFzIGEgY2hlY2tib3ggZmVhdHVyZS4gV2Ug
-cmVzaXN0ZWQgYXMKPiBsb25nIGFzIHdlIGNvdWxkLCBidXQgdG9vIG1hbnkgcGVvcGxlIHdlcmUg
-c2hvdXRpbmcgYXQgdXMgdGhhdCB3ZQo+IG5lZWRlZCByZWFsdGltZSBkaXNjYXJkIGJlY2F1c2Ug
-ZXh0NCBhbmQgYnRyZnMgaGFkIGl0LiBPZiBjb3Vyc2UsCj4gYWxsIHRob3NlIHBlb3BsZSBzaG91
-dGluZyBmb3IgaXQgcmVhbGlzZWQgdGhhdCB3ZSB3ZXJlIHJpZ2h0IGluIHRoYXQKPiBpdCBzdWNr
-ZWQgdGhlIG1vbWVudCB0aGV5IHRyaWVkIHRvIHVzZSBpdCBhbmQgZm91bmQgdGhhdCBwZXJmb3Jt
-YW5jZQo+IHdhcyB3b2VmdWwuIE5vdCB0byBtZW50aW9uIHRoYXQgU1NEIHRyaW0gaW1wbGVtZW50
-YXRpb25zIHdlcmUgc28gYmFkCj4gdGhhdCB0aGV5IGNhdXNlZCByYW5kb20gZGF0YSBjb3JydXB0
-aW9uIGJ5IHRyaW1taW5nIHRoZSB3cm9uZwo+IHJlZ2lvbnMsIGRyaXZlcyB3b3VsZCBzaW1wbHkg
-aGFuZyByYW5kb21seSBhbmQgaW4gYSBjb3VwbGUgb2YgY2FzZXMKPiB0b28gbWFueSB0cmltcyB0
-b28gZmFzdCB3b3VsZCBicmljayB0aGVtLi4uCj4KPiBTbywgeWVhaCwgaXQgd2FzIGltcGxlbWVu
-dCBiZWNhdXNlIGxvdHMgb2YgcGVvcGxlIGRlbWFuZGVkIGl0LCBub3QKPiBiZWNhdXNlIGl0IHdh
-cyBhIGdvb2QgaWRlYS4KPgo+PiBJbiB0aGVvcnksIFNTRHMgdGhhdCBoYW5kbGUgdHJpbSBhcyBh
-IGFzeW5jaHJvbm91cwo+PiBjb21tYW5kIGFyZSBub3cgYXZhaWxhYmxlLCBidXQgSSBkb24ndCBr
-bm93IGFueSBzcGVjaWZpY3MuCj4KPiBSZXF1aXJlcyBTQVRBIDMuMSBmb3IgdGhlIHF1ZXVlZCBU
-UklNLCBhbmQgSSdtIG5vdCBzdXJlIHRoYXQgdGhlcmUKPiBpcyBhbnkgaGFyZHdhcmUgb3V0IHRo
-ZXJlIHRoYXQgdXNlcyB0aGlzIGVuZC10by1lbmQgeWV0LiBBbmQgdGhlCj4gYmxvY2sgbGF5ZXIg
-Y2FuJ3QgbWFrZSB1c2Ugb2YgaXQgeWV0LCBlaXRoZXIuLi4KPgo+PiBJbiBhbnkgY2FzZSwgZnN0
-cmltIHdvcmtzIGZvciBhbG1vc3QgYWxsIHdvcmtsb2FkcyBhbmQgZG9lc24ndAo+PiBoYXZlIHRo
-ZSBwb3RlbnRpYWwgY29udGludW91cyBuZWdhdGl2ZSBpbXBhY3Qgb2YgLW8gZGlzY2FyZC4KPgo+
-IFByZWNpc2VseSBteSBwb2ludCAtIHlvdSBqdXN0IGdhdmUgc29tZSBtb3JlIGRldGFpbC4gOikK
-PgpZZXMsIEkgd2FzIG9ubHkgYXR0ZW1wdGluZyB0byBlbGFib3JhdGUgb24geW91ciBhbnN3ZXIs
-IGJ1dCB0aGFua3MgZm9yCmVsYWJvcmF0aW5nIG9uIG1pbmUuCgpHcmVnCgpfX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bv
-c3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
+--===============1778088385280009077==
+Content-Type: multipart/alternative; charset="UTF-8"; boundary="b1_e37c54b754c1d2f17eb6ac4cfceb5b82"
+Content-Transfer-Encoding: 8bit
+
+--b1_e37c54b754c1d2f17eb6ac4cfceb5b82
+Content-Type: text/plain; format=flowed; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
+
+Your email client cannot read this email.
+To view it online, please go here:
+http://23.239.19.58/~client11/display.php?M=3256522&C=6d8ce6b3c2277ee07d66212c98d7ccdb&S=22&L=13&N=1
+
+
+To stop receiving these
+emails:http://23.239.19.58/~client11/unsubscribe.php?M=3256522&C=6d8ce6b3c2277ee07d66212c98d7ccdb&L=13&N=22
+
+--b1_e37c54b754c1d2f17eb6ac4cfceb5b82
+Content-Type: text/html; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
+
+<html><head></head><body><div>
+<div>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Holiday Trip Planning</title>
+<style type="text/css"><!--
+	body {width: 100%; background-color: #ffffff; margin:0; padding:0;
+-webkit-font-smoothing: antialiased;font-family: Georgia, Times, serif}
+	table {border-collapse: collapse;}
+
+	@media only screen and (max-width: 640px)  {
+					.devi-wid {width:440px!important; padding:0;}
+					.cen {text-align: center!important;}	 
+			}
+
+	@media only screen and (max-width: 479px) {
+					 .devi-wid {width:280px!important; padding:0;}
+					 .cen {text-align: center!important;}	 
+			}
+--></style>
+<table style="width: 100%;" border="0" cellpadding="0" cellspacing="0"
+align="center">
+<tbody>
+<tr>
+<td style="padding:10px 0;" bgcolor="#d3d3d3" valign="top" width="100%">
+<table style="width: 580px;" class="devi-wid" border="0" cellpadding="0"
+cellspacing="0" align="center">
+<tbody>
+<tr>
+<td bgcolor="#ffffff">
+<table style="width: 580px;" class="devi-wid" border="0" cellpadding="0"
+cellspacing="0" align="center">
+<tbody>
+<tr>
+<td style="background-color:#c61b1b;" class="devi-wid" height="10"></td>
+</tr>
+<tr>
+<td style="border-bottom:1px solid #c61b1b; padding-bottom:5px"
+bgcolor="#ffffff" width="100%">
+<table class="devi-wid" border="0" cellpadding="0" cellspacing="0"
+align="left">
+<tbody>
+<tr>
+<td class="cen"><a
+href="http://23.239.19.58/~client11/link.php?M=3256522&N=22&L=5&F=H"
+target="_blank"><img
+src="http://www.popular-india.com/domestic/gifs/popular-india-logo.jpg"
+border="0" /></a></td>
+</tr>
+</tbody>
+</table>
+</td>
+</tr>
+</tbody>
+</table>
+<table style="width: 580px;" class="devi-wid" border="0" cellpadding="0"
+cellspacing="0" align="center">
+<tbody>
+<tr>
+<td><a
+href="http://23.239.19.58/~client11/link.php?M=3256522&N=22&L=13&F=H"><img
+src="http://www.popular-india.com/domestic/gifs/andaman1-tour.jpg"
+class="devi-wid" alt="Andaman Tour" /></a></td>
+</tr>
+</tbody>
+</table>
+<div style="height: 15px;">&nbsp;</div>
+<table style="width: 580px;" class="devi-wid" cellpadding="0"
+cellspacing="0" align="center" bgcolor="#f5f5f5">
+<tbody>
+<tr>
+<td style="padding:10px 10px 10px 0; font-size: 20px; color: #333333;
+font-family:Arial,Helvetica,sans-serif; text-align:center;
+font-weight:bold" valign="middle">VISIT TOP DESTINATIONS in INDIA</td>
+</tr>
+</tbody>
+</table>
+<div style="height: 10px;">&nbsp;</div>
+<table style="width: 560px;" class="devi-wid" border="0" cellpadding="0"
+cellspacing="0" align="center">
+<tbody>
+<tr>
+<td class="cen" style="padding:10px 0 0 5px">
+<table class="devi-wid" style="background-color: #eeeeee; border: 1px solid
+#bdbcbc; box-shadow: 2px 2px 2px #c1bfbf; width: 48%;" border="0"
+cellpadding="0" cellspacing="0" align="left">
+<tbody>
+<tr>
+<td style="padding-top:7px" align="center">
+<p style="mso-table-lspace:0;mso-table-rspace:0; margin:0"><a
+href="http://23.239.19.58/~client11/link.php?M=3256522&N=22&L=5&F=H"><img
+src="http://www.popular-india.com/domestic/gifs/ladakh-img1.jpg"
+alt="Ladakh" style="border-radius: 4px; width: 250px;" class="devi-wid"
+border="0" width="267" /></a></p>
+</td>
+</tr>
+<tr>
+<td style="font-size: 12px; color: #959595; font-weight: normal;
+text-align: left; font-family: Georgia, Times, serif; line-height: 24px;
+vertical-align: top; padding:10px 8px 10px 8px">
+<table style="border-bottom: 1px solid #bdbcbc; width: 100%;">
+<tbody>
+<tr>
+<td style="padding:0 10px 10px 0" valign="middle"><a
+href="http://23.239.19.58/~client11/link.php?M=3256522&N=22&L=4&F=H"
+style="text-decoration: none; font-size: 17px; color: #363636; font-weight:
+bold; font-family:Arial, sans-serif ">Ladakh</a></td>
+</tr>
+</tbody>
+</table>
+<table style="margin-top: 10px; width: 100%;" border="0" cellpadding="0"
+cellspacing="0">
+<tbody>
+<tr>
+<td style="font-family:Arial, Helvetica, sans-serif; font-size:12px;
+color:#343434; line-height:25px;" valign="top">Nubra Valley | Leh | Thiksey
+| Mankorma  <br /> 5 Night 6 Days</td>
+</tr>
+<tr>
+<td style=" font-family:Arial, Helvetica, sans-serif; font-size:15px;
+text-align:right; font-weight:bold; padding-top:10px" height="16"
+valign="middle"><a
+href="http://23.239.19.58/~client11/link.php?M=3256522&N=22&L=6&F=H"
+target="_blank" style="background-color:#c61b1b; color:#fff;
+text-decoration:none; padding:6px 10px; border-radius:3px">PLAN
+NOW</a></td>
+</tr>
+</tbody>
+</table>
+</td>
+</tr>
+</tbody>
+</table>
+<table class="devi-wid" style="background-color: #eeeeee; border: 1px solid
+#bdbcbc; box-shadow: 2px 2px 2px #c1bfbf; width: 48%;" border="0"
+cellpadding="0" cellspacing="0" align="right">
+<tbody>
+<tr>
+<td style="padding-top:7px" align="center">
+<p style="mso-table-lspace:0;mso-table-rspace:0; margin:0"><a
+href="http://23.239.19.58/~client11/link.php?M=3256522&N=22&L=2&F=H"><img
+src="http://www.popular-india.com/domestic/gifs/north-east-img1.jpg"
+alt="North East" style="border-radius: 4px; width: 250px;" class="devi-wid"
+border="0" width="267" /></a></p>
+</td>
+</tr>
+<tr>
+<td style="font-size: 12px; color: #959595; font-weight: normal;
+text-align: left; font-family: Georgia, Times, serif; line-height: 24px;
+vertical-align: top; padding:10px 8px 10px 8px">
+<table style="border-bottom: 1px solid #333333; width: 100%;">
+<tbody>
+<tr>
+<td style="padding:0 10px 10px 0" valign="middle"><a
+href="http://23.239.19.58/~client11/link.php?M=3256522&N=22&L=1&F=H"
+style="text-decoration: none; font-size: 17px; color: #363636; font-weight:
+bold; font-family:Arial, sans-serif ">North East</a></td>
+</tr>
+</tbody>
+</table>
+<table style="margin-top: 10px; width: 100%;" border="0" cellpadding="0"
+cellspacing="0">
+<tbody>
+<tr>
+<td style="font-family:Arial, Helvetica, sans-serif; font-size:12px;
+color:#343434; line-height:25px;" valign="top">Darjeeling | Gangtok |
+Sikkim | Bagdogra <br /> 4 Night 5 Days</td>
+</tr>
+<tr>
+<td style=" font-family:Arial, Helvetica, sans-serif; font-size:15px;
+text-align:right; font-weight:bold; padding-top:10px" height="16"
+valign="middle"><a
+href="http://23.239.19.58/~client11/link.php?M=3256522&N=22&L=3&F=H"
+target="_blank" style="background-color:#c61b1b; color:#fff;
+text-decoration:none; padding:6px 10px; border-radius:3px">PLAN
+NOW</a></td>
+</tr>
+</tbody>
+</table>
+</td>
+</tr>
+</tbody>
+</table>
+</td>
+</tr>
+</tbody>
+</table>
+<div style="height: 15px;">&nbsp;</div>
+<table style="width: 560px;" class="devi-wid" border="0" cellpadding="0"
+cellspacing="0" align="center">
+<tbody>
+<tr>
+<td class="cen" style="padding:10px 0 0 5px">
+<table class="devi-wid" style="background-color: #eeeeee; border: 1px solid
+#bdbcbc; box-shadow: 2px 2px 2px #c1bfbf; width: 48%;" border="0"
+cellpadding="0" cellspacing="0" align="left">
+<tbody>
+<tr>
+<td style="padding-top:7px" align="center">
+<p style="mso-table-lspace:0;mso-table-rspace:0; margin:0"><a
+href="http://23.239.19.58/~client11/link.php?M=3256522&N=22&L=11&F=H"><img
+src="http://www.popular-india.com/domestic/gifs/kashmir-img1.jpg"
+alt="Kashmir" style="border-radius: 4px; width: 250px;" class="devi-wid"
+border="0" width="267" /></a></p>
+</td>
+</tr>
+<tr>
+<td style="font-size: 12px; color: #959595; font-weight: normal;
+text-align: left; font-family: Georgia, Times, serif; line-height: 24px;
+vertical-align: top; padding:10px 8px 10px 8px">
+<table style="border-bottom: 1px solid #bdbcbc; width: 100%;">
+<tbody>
+<tr>
+<td style="padding:0 10px 10px 0" valign="middle"><a
+href="http://23.239.19.58/~client11/link.php?M=3256522&N=22&L=10&F=H"
+style="text-decoration: none; font-size: 17px; color: #363636; font-weight:
+bold; font-family:Arial, sans-serif ">Kashmir</a></td>
+</tr>
+</tbody>
+</table>
+<table style="margin-top: 10px; width: 100%;" border="0" cellpadding="0"
+cellspacing="0">
+<tbody>
+<tr>
+<td style="font-family:Arial, Helvetica, sans-serif; font-size:12px;
+color:#343434; line-height:25px;" valign="top">Gulmarg | Pahalgam | Sonmarg
+| Dal Lake  <br /> 3 Night 4 Days</td>
+</tr>
+<tr>
+<td style=" font-family:Arial, Helvetica, sans-serif; font-size:15px;
+text-align:right; font-weight:bold; padding-top:10px" height="16"
+valign="middle"><a
+href="http://23.239.19.58/~client11/link.php?M=3256522&N=22&L=12&F=H"
+target="_blank" style="background-color:#c61b1b; color:#fff;
+text-decoration:none; padding:6px 10px; border-radius:3px">PLAN
+NOW</a></td>
+</tr>
+</tbody>
+</table>
+</td>
+</tr>
+</tbody>
+</table>
+<table class="devi-wid" style="background-color: #eeeeee; border: 1px solid
+#bdbcbc; box-shadow: 2px 2px 2px #c1bfbf; width: 48%;" border="0"
+cellpadding="0" cellspacing="0" align="right">
+<tbody>
+<tr>
+<td style="padding-top:7px" align="center">
+<p style="mso-table-lspace:0;mso-table-rspace:0; margin:0"><a
+href="http://23.239.19.58/~client11/link.php?M=3256522&N=22&L=8&F=H"><img
+src="http://www.popular-india.com/domestic/gifs/kerala-img1.jpg"
+alt="Kerala" style="border-radius: 4px; width: 250px;" class="devi-wid"
+border="0" width="267" /></a></p>
+</td>
+</tr>
+<tr>
+<td style="font-size: 12px; color: #959595; font-weight: normal;
+text-align: left; font-family: Georgia, Times, serif; line-height: 24px;
+vertical-align: top; padding:10px 8px 10px 8px">
+<table style="border-bottom: 1px solid #333333; width: 100%;">
+<tbody>
+<tr>
+<td style="padding:0 10px 10px 0" valign="middle"><a
+href="http://23.239.19.58/~client11/link.php?M=3256522&N=22&L=7&F=H"
+style="text-decoration: none; font-size: 17px; color: #363636; font-weight:
+bold; font-family:Arial, sans-serif ">Kerala</a></td>
+</tr>
+</tbody>
+</table>
+<table style="margin-top: 10px; width: 100%;" border="0" cellpadding="0"
+cellspacing="0">
+<tbody>
+<tr>
+<td style="font-family:Arial, Helvetica, sans-serif; font-size:12px;
+color:#343434; line-height:25px;" valign="top">Kovalam | Kumarakom | Kochi
+| Munnar <br /> 4 Night 5 Days</td>
+</tr>
+<tr>
+<td style=" font-family:Arial, Helvetica, sans-serif; font-size:15px;
+text-align:right; font-weight:bold; padding-top:10px" height="16"
+valign="middle"><a
+href="http://23.239.19.58/~client11/link.php?M=3256522&N=22&L=9&F=H"
+target="_blank" style="background-color:#c61b1b; color:#fff;
+text-decoration:none; padding:6px 10px; border-radius:3px">PLAN
+NOW</a></td>
+</tr>
+</tbody>
+</table>
+</td>
+</tr>
+</tbody>
+</table>
+</td>
+</tr>
+</tbody>
+</table>
+<div style="height: 15px;">&nbsp;</div>
+<table style="width: 580px;" class="devi-wid" border="0" cellpadding="0"
+cellspacing="0" align="center">
+<tbody>
+<tr>
+<td style="background-color:#c61b1b;" class="devi-wid" height="10"><br /><a
+href="http://23.239.19.58/~client11/unsubscribe.php?M=3256522&C=6d8ce6b3c2277ee07d66212c98d7ccdb&L=13&N=22">Unsubscribe
+me from this list</a><br /></td>
+</tr>
+</tbody>
+</table>
+</td>
+</tr>
+</tbody>
+</table>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div><img
+src="http://23.239.19.58/~client11/open.php?M=3256522&L=13&N=22&F=H&image=.jpg"
+height="1" width="10"></body></html>
+
+--b1_e37c54b754c1d2f17eb6ac4cfceb5b82--
+
+
+--===============1778088385280009077==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============1778088385280009077==--
