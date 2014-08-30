@@ -1,28 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id C12367FB2
-	for <xfs@oss.sgi.com>; Fri, 29 Aug 2014 21:56:01 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id B080F8F8037
-	for <xfs@oss.sgi.com>; Fri, 29 Aug 2014 19:55:58 -0700 (PDT)
-Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
-	[65.41.216.221]) by cuda.sgi.com with ESMTP id qTtvpr08kHkNU6S3
-	for <xfs@oss.sgi.com>; Fri, 29 Aug 2014 19:55:54 -0700 (PDT)
-Subject: Re: storage, libaio,
-	or XFS =?UTF-8?Q?problem=3F=20=20=33=2E=34=2E=32=36?=
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 9964B7FB5
+	for <xfs@oss.sgi.com>; Fri, 29 Aug 2014 22:44:11 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 3672BAC001
+	for <xfs@oss.sgi.com>; Fri, 29 Aug 2014 20:44:08 -0700 (PDT)
+Received: from mail-we0-f169.google.com (mail-we0-f169.google.com
+	[74.125.82.169]) by cuda.sgi.com with ESMTP id zezOANUgOV8iNfyx
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Fri, 29 Aug 2014 20:44:06 -0700 (PDT)
+Received: by mail-we0-f169.google.com with SMTP id k48so2968901wev.14
+	for <xfs@oss.sgi.com>; Fri, 29 Aug 2014 20:44:05 -0700 (PDT)
 MIME-Version: 1.0
-Date: Fri, 29 Aug 2014 21:55:53 -0500
-From: Stan Hoeppner <stan@hardwarefreak.com>
-In-Reply-To: <20140829235538.GF20518@dastard>
-References: <3fe8c34c0ccbbd720015d273fa2b8b30@localhost>
-	<20140826075345.GJ20518@dastard>
-	<8c29baf987467a84f0b7c1d09c863662@localhost>
-	<20140828003226.GO20518@dastard>
-	<7f9e5aef187b44e899077467aeb0809d@localhost>
-	<20140828230817.GU20518@dastard>
-	<2d2ce7bb38c00a7d35f4a324f6a36cbb@localhost>
-	<20140829235538.GF20518@dastard>
-Message-ID: <d20fe777ec1fd318ae5d4054dffda3f4@localhost>
+In-Reply-To: <20140829234505.GE20518@dastard>
+References: <3dc9caf6f9b415f6e4c0ebac1f1626d3@zbfmail.de>
+	<20140827230732.GN20518@dastard>
+	<CAAxjCEy9UyjDVrTZ4GdRyDy330wUqLGWurzrLAE6-7Q0KdYzvA@mail.gmail.com>
+	<20140829083738.GD20518@dastard>
+	<6306cfa5-457d-4794-8fc0-1768f7f1deec@email.android.com>
+	<20140829234505.GE20518@dastard>
+From: Greg Freemyer <greg.freemyer@gmail.com>
+Date: Fri, 29 Aug 2014 23:43:25 -0400
+Message-ID: <CAGpXXZ+c9CkMMQTvtOhhFeQxjT9-zO1UAr4O_9+dF0TO2ZwEVg@mail.gmail.com>
+Subject: Re: mount options question
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,133 +31,80 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+Cc: Stefan Ring <stefanrin@gmail.com>, "Johannes B. Kernel" <weber@zbfmail.de>, Xfs <xfs@oss.sgi.com>
 
-On Sat, 30 Aug 2014 09:55:38 +1000, Dave Chinner <david@fromorbit.com>
-wrote:
-> On Fri, Aug 29, 2014 at 11:38:16AM -0500, Stan Hoeppner wrote:
->> On Fri, 29 Aug 2014 09:08:17 +1000, Dave Chinner <david@fromorbit.com>
->> wrote:
->> > On Thu, Aug 28, 2014 at 05:31:33PM -0500, Stan Hoeppner wrote:
->> >> On Thu, 28 Aug 2014 10:32:27 +1000, Dave Chinner
-<david@fromorbit.com>
->> >> wrote:
->> >> > On Tue, Aug 26, 2014 at 12:19:43PM -0500, Stan Hoeppner wrote:
->> >> >> Aug 25 23:05:39 Anguish-ssu-1 kernel: [22409.328839] XFS (sdd):
->> >> >> xfs_do_force_shutdown(0x8) called from line 3732 of file
->> >> >> fs/xfs/xfs_bmap.c.
->> >> >> Return address = 0xffffffffa01cc9a6
->> >> > 
->> >> > Yup, that's kinda important. That's from xfs_bmap_finish(), and
->> >> > freeing an extent has failed and triggered SHUTDOWN_CORRUPT_INCORE
->> >> > which it's found some kind of inconsistency in the free space
->> >> > btrees. So, likely the same problem that caused EFI recovery to
-fail
->> >> > on the other volume.
->> >> > 
->> >> > Are the tests being run on newly made filesystems? If not, have
->> >> > these filesystems had xfs_repair run on them after a failure?  If
->> >> > so, what is the error that is fixed? If not, does repairing the
->> >> > filesystem make the problem go away?
->> >> 
->> >> Newly made after every error of any kind, whether app, XFS shutdown,
->> call
->> >> trace, etc.  I've not attempted xfs_repair.
->> > 
->> > Please do.
->> 
->> Another storage crash yesterday.  xfs_repair output inline below for
-the
->> 7
->> filesystems.  I'm also pasting the dmesg output.  This time there is no
->> oops, no call traces.  The filesystems mounted fine after mounting,
->> replaying, and repairing. 
-> 
-> Ok, what version of xfs_repair did you use?
-
-3.1.4 which is a little long in the tooth.  I believe they built the OS
-image from Squeeze 6.0.  I was originally told it was Wheezy 7.0, but that
-turns out to have been false.
- 
->> > The bug? The bleeding edge storage arrays being used had had a
->> > firmware bug in it.  When the number of outstanding IOs hit the
->> > *array controller* command tag queue depth limit (some several
->> > thousand simultaneous IOs in flight) it would occasionally misdirect
->> > a single write IO to the *wrong lun*.  i.e. it would misdirect a
->> > write.
->> > 
->> > It was only under *extreme* loads that this would happen, and it's
->> > this sort of load that AIO+DIO can easily generate - you can have
->> > several thousand IOs in flight without too much hassle, and that
->> > will hit limits in the storage arrays that aren't often hit.  Array
->> > controller CTQ depth limits are a good example of a limit that
->> > normal IO won't go near to stressing.
->> 
->> I hadn't considered that up to this point.  That is *very* insightful,
->> and
->> applicable, since we are dealing with a beta storage array and
-firmware. 
->> Worth mentioning is that the storage vendor has added a custom routine
->> which expends Herculean effort to identify full stripes before
->> writeback.
-> 
-> Hmmmm. Food for thought, especially as it is evident that the
-> storage array appears to be crashing completely. At this point,
-> I'd say the burden of finding a corruption needs to start with
-> proving that the array is has not done something wrong. Once you
-> know that what is on disk is exactly what the filesystem asked to be
-> written, then you can start to isolate filesystem issues. But you
-> need the storage to be solid and trust-worthy before going looking
-> for filesystem problems....
-
-Agreed.  Which is why I put storage first in the subject, AIO second, and
-XFS third.  My initial instinct was a problem with libaio, as the crashes
-only surfaced writing with AIO.  I'm now seeing problems with storage on
-both systems when not using AIO.  We're supposed to receive a new firmware
-upload next week, so hopefully that will fix some of these issues.
- 
->> This because some of our writes for a given low rate stream are as low
-as
->> 32KB and may be 2-3 seconds apart.  With a 64-128KB chunk, 768 to
-1536KB
->> stripe width, we'd get massive RMW without this feature.  Testing thus
->> far
->> shows it is fairly effective, though we still get pretty serious RMW
-due
->> to
->> the fact we're writing 350 of these small streams per array at ~72 KB/s
->> max, along with 2 streams at ~48 MB/s, and and 50 streams at ~1.2 MB/s.
-
->> Multiply this by 7 LUNs per controller and it becomes clear we're
->> putting a
->> pretty serious load on the firmware and cache.
-> 
-> Yup, so having the array cache do the equivalent of sequential
-> readahead multi-stream detection for writeback would make a big
-> difference. But not simple to do....
-
-Not at all, especially with only 3 GB of RAM to work with, as I'm told. 
-Seems low for a high end controller with 4x 12G SAS ports.  We're only able
-to achieve ~250 MB/s per array at the application due to the access pattern
-being essentially random, and still with a serious quantity of RMWs.  Which
-is why we're going to test with an even smaller chunk of 32KB.  I believe
-that's the lower bound on these controllers.  For this workload 16KB or
-maybe even 8KB would likely be more optimal.  We're also going to test with
-bcache and a 400 GB Intel 3700 (datacenter grade) SSD backing two LUNs. 
-But with bcache chunk size should be far less relevant.  I'm anxious to
-kick those tires, but it'll be a couple of weeks.
-
-Have you played with bcache yet?
-
--- 
-Stan
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gRnJpLCBBdWcgMjksIDIwMTQgYXQgNzo0NSBQTSwgRGF2ZSBDaGlubmVyIDxkYXZpZEBmcm9t
+b3JiaXQuY29tPiB3cm90ZToKPiBPbiBGcmksIEF1ZyAyOSwgMjAxNCBhdCAwNzoyNjo1OUFNIC0w
+NDAwLCBHcmVnIEZyZWVteWVyIHdyb3RlOgo+Pgo+Pgo+PiBPbiBBdWd1c3QgMjksIDIwMTQgNDoz
+NzozOCBBTSBFRFQsIERhdmUgQ2hpbm5lciA8ZGF2aWRAZnJvbW9yYml0LmNvbT4gd3JvdGU6Cj4+
+ID5PbiBGcmksIEF1ZyAyOSwgMjAxNCBhdCAwODozMTo0M0FNICswMjAwLCBTdGVmYW4gUmluZyB3
+cm90ZToKPj4gPj4gT24gVGh1LCBBdWcgMjgsIDIwMTQgYXQgMTowNyBBTSwgRGF2ZSBDaGlubmVy
+IDxkYXZpZEBmcm9tb3JiaXQuY29tPgo+PiA+d3JvdGU6Cj4+ID4+ID4gT24gV2VkLCBBdWcgMjcs
+IDIwMTQgYXQgMTI6MTQ6MjFQTSArMDIwMCwgTWFya28gV2ViZXJ8ODAwMCB3cm90ZToKPj4gPj4g
+Pj4KPj4gPj4gPj4gc29ycnkgZGF2ZSBhbmQgYWxsIG90aGVyLAo+PiA+PiA+Pgo+PiA+PiA+PiBj
+YW4geW91IGd1eXMgcmVjb21tZW5kIG1lIHRoZSBtb3N0IHN0YWJsZSAvIGJlc3QgbW91bnQgb3B0
+aW9ucyBmb3IKPj4gPj4gPj4gbXkgbmV3IHNlcnZlciB3aXRoIHNzZOaEgCBhbmQgWEZTIGZpbGVz
+eXN0ZW0/Cj4+ID4+ID4+Cj4+ID4+ID4+IGF0IG1vbWVudCBpIHdvdWxkIHNldDoKPj4gPmRlZmF1
+bHRzLG5vYmFycmllcixkaXNjYXJkLGxvZ2JzaXplPTI1Nmssbm9pa2VlcAo+PiA+PiA+PiBvciBp
+cyBqdXN0ICJkZWZhdWx0IiB0aGUgYmVzdCBzb2x1dGlvbiBhbmQgeGZzIGRldGVjdCBpdHNlbGYg
+d2hhdHMKPj4gPmJlc3QuCj4+ID4+ID4+Cj4+ID4+ID4+IGNhbiB5b3UgZ3VpZGUgbWUgYSBiaXQ/
+Cj4+ID4+ID4+Cj4+ID4+ID4+IGFzIGVsZWF2dG9yIGkgc2V0IGVsZXZhdG9yPW5vb3AKPj4gPj4g
+Pj4KPj4gPj4gPj4gaSBzZXR1cCBkaXNrcyB3aXRoIGxpbnV4IHNvZnRyYWlkIHJhaWQxLiBPbiB0
+b3Agb2YgdGhlIHJhaWQgaXMgTFZNCj4+ID4+ID4+IChmb3Igc29tZSBkYXRhIHBhcnRhdGlvbnMp
+Lgo+PiA+PiA+Pgo+PiA+PiA+Pgo+PiA+PiA+PiB3b3VsZCBiZSBuaWNlIHRvIGhlYXIgc29tZSB0
+aXBwcyBmcm9tIHlvdQo+PiA+PiA+Cj4+ID4+ID4gVW5sZXNzIHlvdSBoYXZlIHNwZWNpZmljIHJl
+cXVpcmVtZW50cyBvciBoYXZlIHRoZSBrbm93bGVkZ2UgdG8KPj4gPj4gPiB1bmRlcnN0YW5kIGhv
+dyB0aGUgZGlmZmVyZW50IG9wdGlvbnMgYWZmZWN0IGJlaGF2aW91ciwgdGhlbiBqdXN0Cj4+ID51
+c2UKPj4gPj4gPiB0aGUgZGVmYXVsdHMuCj4+ID4+Cj4+ID4+IE1vc3RseSBhZ3JlZWQsIGJ1dCB1
+c2luZyAiZGlzY2FyZCIgd291bGQgYmUgYSBuby1icmFpbmVyIGZvciBtZS4gSQo+PiA+PiBzdXBw
+b3NlIFhGUyBkb2VzIG5vdCBhdXRvbWF0aWNhbGx5IHN3aXRjaCBpdCBvbiBmb3Igbm9uLXJvdGF0
+aW9uYWwKPj4gPj4gc3RvcmFnZS4KPj4gPgo+PiA+WXVwLCB5b3UncmUgbm90IHVzaW5nIHlvdXIg
+YnJhaW4uIDpQCj4+ID4KPj4gPm1vdW50IC1vIGRpc2NhcmQgKnN1Y2tzKiBvbiBzbyBtYW55IGxl
+dmVscyBpdCBpcyBub3QgZnVubnkuIEkgZG9uJ3QKPj4gPnJlY29tbWVuZCB0aGF0IGFueWJvZHkg
+KmV2ZXIqIHVzZSBpdCwgb24gWEZTLCBleHQ0IG9yIGJ0cmZzLiAgSnVzdAo+PiA+dXNlIGZzdHJp
+bSBpZiB5b3UgZXZlciBuZWVkIHRvIGNsZWFuIHVwIGEgU1NELgo+Pgo+Cj4+IEluIHBhcnRpY3Vs
+YXIgdHJpbSBpcyBhIHN5bmNocm9ub3VzIGNvbW1hbmQgaW4gbWFueSBTU0RzLCBJIGRvbid0Cj4+
+IGtub3cgYWJvdXQgdGhlIGltcGFjdCBvbiB0aGUga2VybmVsIGJsb2NrIHN0YWNrLgo+Cj4gYmxr
+ZGV2X2lzc3VlX2Rpc2NhcmQoKSBpcyBzeW5jaHJvbm91cyBhcyB3ZWxsLCB3aGljaCBpcyBhIGJp
+Zwo+IHByb2JsZW0gZm9yIHNvbWV0aGluZyB0aGF0IG5lZWRzIHRvIGl0ZXJhdGUgKHBvdGVudGlh
+bGx5KSB0aG91c2FuZHMKPiBvZiByZWdpb25zIGZvciBkaXNjYXJkIHdoZW4gYSBqb3VybmFsIGNo
+ZWNrcG9pbnQgY29tcGxldGVzLi4uLgo+Cj4+IEZvciB0aGUgU1NECj4+IGl0c2VsZiB0aGF0IG1l
+YW5zIHRoZSBTU0RzIGJhc2ljYWxseSBmbHVzaCB0aGVpciB3cml0ZSBjYWNoZSBvbgo+PiBldmVy
+eSB0cmltIGNhbGwuCj4KPiBPaCwgaXQncyB3b3JzZSB0aGFuIHRoYXQsIHVzdWFsbHkuIFRSSU0g
+aXMgb25lIG9mIHRoZSBzbG93ZXN0Cj4gb3BlcmF0aW9ucyB5b3UgY2FuIHJ1biBvbiBtYW55IGRy
+aXZlcywgc28gaXQgY2FuIHRha2UgaHVuZHJlZHMgb2YKPiBtaWxsaXNlY29uZHMgdG8gZXhlY3V0
+ZS4uLi4KPgo+PiBJIG9mdGVuIHRlbGwgcGVvcGxlIHRvIGRvIHBlcmZvcm1hbmNlIHRlc3Rpbmcg
+d2l0aCBhbmQgd2l0aG91dCBpdAo+PiBhbmQgcmVwb3J0IGJhY2sgdG8gbWUgaWYgdGhleSBzZWUg
+bm8gZGVncmFkYXRpb24gY2F1c2VkIGJ5IC1vCj4+IGRpc2NhcmQuICBUbyBkYXRlIG5vIG9uZSBo
+YXMgZXZlciByZXBvcnRlZCBiYWNrLiAgSSB0aGluayAtbwo+PiBkaXNjYXJkIHNob3VsZCBoYXZl
+IG5ldmVyIGJlZW4gaW50cm9kdWNlZCBhbmQgY2VydGFpbmx5IG5vdCA1Cj4+IHllYXJzIGFnby4K
+Pgo+IEl0IHdhcyBpbnRyb2R1Y2VkIGludG8gWEZTIGFzIGEgY2hlY2tib3ggZmVhdHVyZS4gV2Ug
+cmVzaXN0ZWQgYXMKPiBsb25nIGFzIHdlIGNvdWxkLCBidXQgdG9vIG1hbnkgcGVvcGxlIHdlcmUg
+c2hvdXRpbmcgYXQgdXMgdGhhdCB3ZQo+IG5lZWRlZCByZWFsdGltZSBkaXNjYXJkIGJlY2F1c2Ug
+ZXh0NCBhbmQgYnRyZnMgaGFkIGl0LiBPZiBjb3Vyc2UsCj4gYWxsIHRob3NlIHBlb3BsZSBzaG91
+dGluZyBmb3IgaXQgcmVhbGlzZWQgdGhhdCB3ZSB3ZXJlIHJpZ2h0IGluIHRoYXQKPiBpdCBzdWNr
+ZWQgdGhlIG1vbWVudCB0aGV5IHRyaWVkIHRvIHVzZSBpdCBhbmQgZm91bmQgdGhhdCBwZXJmb3Jt
+YW5jZQo+IHdhcyB3b2VmdWwuIE5vdCB0byBtZW50aW9uIHRoYXQgU1NEIHRyaW0gaW1wbGVtZW50
+YXRpb25zIHdlcmUgc28gYmFkCj4gdGhhdCB0aGV5IGNhdXNlZCByYW5kb20gZGF0YSBjb3JydXB0
+aW9uIGJ5IHRyaW1taW5nIHRoZSB3cm9uZwo+IHJlZ2lvbnMsIGRyaXZlcyB3b3VsZCBzaW1wbHkg
+aGFuZyByYW5kb21seSBhbmQgaW4gYSBjb3VwbGUgb2YgY2FzZXMKPiB0b28gbWFueSB0cmltcyB0
+b28gZmFzdCB3b3VsZCBicmljayB0aGVtLi4uCj4KPiBTbywgeWVhaCwgaXQgd2FzIGltcGxlbWVu
+dCBiZWNhdXNlIGxvdHMgb2YgcGVvcGxlIGRlbWFuZGVkIGl0LCBub3QKPiBiZWNhdXNlIGl0IHdh
+cyBhIGdvb2QgaWRlYS4KPgo+PiBJbiB0aGVvcnksIFNTRHMgdGhhdCBoYW5kbGUgdHJpbSBhcyBh
+IGFzeW5jaHJvbm91cwo+PiBjb21tYW5kIGFyZSBub3cgYXZhaWxhYmxlLCBidXQgSSBkb24ndCBr
+bm93IGFueSBzcGVjaWZpY3MuCj4KPiBSZXF1aXJlcyBTQVRBIDMuMSBmb3IgdGhlIHF1ZXVlZCBU
+UklNLCBhbmQgSSdtIG5vdCBzdXJlIHRoYXQgdGhlcmUKPiBpcyBhbnkgaGFyZHdhcmUgb3V0IHRo
+ZXJlIHRoYXQgdXNlcyB0aGlzIGVuZC10by1lbmQgeWV0LiBBbmQgdGhlCj4gYmxvY2sgbGF5ZXIg
+Y2FuJ3QgbWFrZSB1c2Ugb2YgaXQgeWV0LCBlaXRoZXIuLi4KPgo+PiBJbiBhbnkgY2FzZSwgZnN0
+cmltIHdvcmtzIGZvciBhbG1vc3QgYWxsIHdvcmtsb2FkcyBhbmQgZG9lc24ndAo+PiBoYXZlIHRo
+ZSBwb3RlbnRpYWwgY29udGludW91cyBuZWdhdGl2ZSBpbXBhY3Qgb2YgLW8gZGlzY2FyZC4KPgo+
+IFByZWNpc2VseSBteSBwb2ludCAtIHlvdSBqdXN0IGdhdmUgc29tZSBtb3JlIGRldGFpbC4gOikK
+PgpZZXMsIEkgd2FzIG9ubHkgYXR0ZW1wdGluZyB0byBlbGFib3JhdGUgb24geW91ciBhbnN3ZXIs
+IGJ1dCB0aGFua3MgZm9yCmVsYWJvcmF0aW5nIG9uIG1pbmUuCgpHcmVnCgpfX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bv
+c3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
