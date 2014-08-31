@@ -1,22 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 81CBD7F69
-	for <xfs@oss.sgi.com>; Sat, 30 Aug 2014 21:46:27 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 0EB03AC003
-	for <xfs@oss.sgi.com>; Sat, 30 Aug 2014 19:46:26 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id JsJKNKPCtM5dHzD7 for <xfs@oss.sgi.com>;
-	Sat, 30 Aug 2014 19:46:24 -0700 (PDT)
-Message-ID: <54028C7F.4040706@sandeen.net>
-Date: Sat, 30 Aug 2014 21:46:23 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id CCD697F6F
+	for <xfs@oss.sgi.com>; Sun, 31 Aug 2014 03:50:42 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id BB8778F8039
+	for <xfs@oss.sgi.com>; Sun, 31 Aug 2014 01:50:42 -0700 (PDT)
+Received: from mail-wg0-f46.google.com (mail-wg0-f46.google.com
+	[74.125.82.46]) by cuda.sgi.com with ESMTP id Q4aWcemqKfoWtrTW
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Sun, 31 Aug 2014 01:50:37 -0700 (PDT)
+Received: by mail-wg0-f46.google.com with SMTP id x13so3983263wgg.5
+	for <xfs@oss.sgi.com>; Sun, 31 Aug 2014 01:50:36 -0700 (PDT)
+Message-ID: <AFED541EB7FA490C8E16DCB81F400B1C@alyakaslap>
+From: "Alex Lyakas" <alex@zadarastorage.com>
+References: <1408648692-15957-1-git-send-email-bfoster@redhat.com>
+	<CAOcd+r32+6gafv5+MCNyNTH1Ncas9CJHHrku+Y=sZefDzzS1Zw@mail.gmail.com>
+	<20140825142025.GA10135@bfoster.bfoster>
+In-Reply-To: <20140825142025.GA10135@bfoster.bfoster>
+Subject: Re: [PATCH] xfs: fix double free of trans in log recovery on I/O error
+Date: Sun, 31 Aug 2014 11:50:52 +0300
 MIME-Version: 1.0
-Subject: Re: Run out of inodes?
-References: <54005108.1020203@inserm.fr>	<20140829114806.GA17610@bfoster.bfoster>
-	<5400802C.5050005@inserm.fr>	<54009603.9050404@sandeen.net>
-	<8d5fff2548d35737c6cebcb1f6382e80@inserm.fr>
-In-Reply-To: <8d5fff2548d35737c6cebcb1f6382e80@inserm.fr>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,21 +32,155 @@ Content-Transfer-Encoding: 7bit
 Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Samuel GRANJEAUD IR/INSERM <samuel.granjeaud@inserm.fr>, xfs@oss.sgi.com
+To: Brian Foster <bfoster@redhat.com>
+Cc: xfs@oss.sgi.com
 
-On 8/30/14, 2:33 PM, Samuel GRANJEAUD IR/INSERM wrote:
-> Enabling the inode64 option has solved the problem.
+Hi Brian, Dave,
+I tested this patch on kernel 3.16, top commit:
+
+commit 19583ca584d6f574384e17fe7613dfaeadcdc4a6
+Author: Linus Torvalds <torvalds@linux-foundation.org>
+Date:   Sun Aug 3 15:25:02 2014 -0700
+
+    Linux 3.16
+
+and, yes, it appears to fix the issue.
+
+Trouble is that our production kernel is 3.8.13, and we cannot upgrade to 
+mainline kernel easily. Question is whether we can expect some patch 
+suitable for our kernel, or, since our kernel is EOL and not a long-term 
+one, we cannot?
+
+Thanks for your help,
+Alex.
+
+
+-----Original Message----- 
+From: Brian Foster
+Sent: 25 August, 2014 5:20 PM
+To: Alex Lyakas
+Cc: xfs@oss.sgi.com ; Dave Chinner
+Subject: Re: [PATCH] xfs: fix double free of trans in log recovery on I/O 
+error
+
+On Sun, Aug 24, 2014 at 12:20:20PM +0300, Alex Lyakas wrote:
+> Hi Brian,
 >
-> Final question: could some issues appear with SAMBA?
+> On Thu, Aug 21, 2014 at 10:18 PM, Brian Foster <bfoster@redhat.com> wrote:
+> > XFS log recovery builds up an xlog_recover object as it passes through
+> > the log operations on the physical log. These structures are managed via
+> > a hash table and are allocated when a new transaction is encountered and
+> > freed once a commit operation for the transaction is encountered.
+> >
+> > This state machine for active transactions is implemented by a
+> > combination of xlog_do_recovery_pass(), which walks through the log
+> > buffers and xlog_recover_process_data() which processes log operations
+> > within each buffer. The latter function decides whether to allocate a
+> > new xlog_recover, add to it or commit and ultimately free it.  If an
+> > error occurs at any point during the lifecycle of a particular
+> > xlog_recover, xlog_recover_process_data() frees the object and returns
+> > an error.
+> >
+> > xlog_recover_commit_trans() handles the final processing of the
+> > transaction. It submits whatever I/O is required for the transaction and
+> > frees xlog_recover object along with the transaction items it tracks. If
+> > an error occurs at the final stages of the commit operation, such as I/O
+> > failure, both xlog_recover_commit_trans() and
+> > xlog_recover_process_data() attempt to free the trans object.
+> >
+> > Modify xlog_recover_commit_trans() to only free the trans object on
+> > successful completion of the trans, including any I/O errors that might
+> > occur when recovering the log.
+> >
+> > Signed-off-by: Brian Foster <bfoster@redhat.com>
+> > ---
+> >
+> > Hi all,
+> >
+> > I found that the recent buffer I/O rework fixes didn't address the crash
+> > reproduced by the dm-flakey/log recovery test case I posted recently. I
+> > tracked the crash down to this, which allows the test to pass. This
+> > addresses the crash I saw when running the reproducer manually with the
+> > metadump that Alex posted as well.
+> >
+> > FWIW, I also went back and tested the xfs_buf_iowait() experiment in
+> > both scenarios (Alex's metadump and xfstests test) and they all
+> > reproduce the same crash for me. I think that either I'm still not
+> > reproducing the original problem, something else might have contaminated
+> > the original xfs_buf_iowait() test to give a false positive, or
+> > something else entirely is going on.
+> >
+> > Alex,
+> >
+> > If you have a chance, I think it might be interesting to see whether you
+> > reproduce any problems with this patch. It looks like this is a
+> > regression introduced by:
+> >
+> >         2a84108f xfs: free the list of recovery items on error
+> >
+> > ... but I have no idea if that's in whatever kernel you're running.
+> I am running kernel 3.8.13 with some changes (published at
+> https://github.com/zadarastorage/zadara-xfs-pushback), but this
+> problem also happens on pristine 3.8.13 from
+> git://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git,
+> branch linux-stable-3.8.y.
+>
+> I do not have commit 2a84108f in this kernel. It was introduced in 3.14.
+> I applied your patch to 3.8.13, but it doesn't fix the issue. Same
+> problem happens when testing scenario that I described in
+> http://oss.sgi.com/pipermail/xfs/2014-August/037637.html.
+>
 
-ah, what sort of issues?
+Ok, thanks. Yeah, I don't see the double free regression in the 3.8.13
+stable branch. I went back to that kernel to try and confirm some
+things. I do reproduce the problem with your metadump as well as the
+test case I put together. I tested Dave's buf hold across sync I/O patch
+and that does indeed prevent the problem.
 
-Any application which uses i.e. a 32-bit stat() interface will return -EOVERFLOW on a 64-bit inode.
+For whatever reason, neither the test case nor your metadump reproduce
+the same problem on latest kernels. Instead, they reproduce this double
+free regression. I suspect this is what you ran into when you reproduced
+on a more recent kernel. If you'd like, feel free to try and verify that
+by running your reproducer again on a recent kernel with this patch and
+see if you can still reproduce a crash as with the 3.8.13 kernel.
 
-http://sandeen.net/wordpress/computers/the-world-wants-32-bit-inodes/
-http://blog.fmeh.org/2013/05/11/does-the-world-need-32-bit-inodes/
+Brian
 
--Eric
+> Thanks,
+> Alex.
+>
+> >
+> > Brian
+> >
+> >  fs/xfs/xfs_log_recover.c | 11 ++++++++---
+> >  1 file changed, 8 insertions(+), 3 deletions(-)
+> >
+> > diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+> > index 176c4b3..daca9a6 100644
+> > --- a/fs/xfs/xfs_log_recover.c
+> > +++ b/fs/xfs/xfs_log_recover.c
+> > @@ -3528,10 +3528,15 @@ out:
+> >         if (!list_empty(&done_list))
+> >                 list_splice_init(&done_list, &trans->r_itemq);
+> >
+> > -       xlog_recover_free_trans(trans);
+> > -
+> >         error2 = xfs_buf_delwri_submit(&buffer_list);
+> > -       return error ? error : error2;
+> > +
+> > +       if (!error)
+> > +               error = error2;
+> > +       /* caller frees trans on error */
+> > +       if (!error)
+> > +               xlog_recover_free_trans(trans);
+> > +
+> > +       return error;
+> >  }
+> >
+> >  STATIC int
+> > --
+> > 1.8.3.1
+> > 
 
 _______________________________________________
 xfs mailing list
