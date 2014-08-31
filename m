@@ -1,25 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 6A34C7F5F
-	for <xfs@oss.sgi.com>; Sun, 31 Aug 2014 16:05:26 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 49284304032
-	for <xfs@oss.sgi.com>; Sun, 31 Aug 2014 14:05:23 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id 2ckeHoFxgyqRFhg2 (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Sun, 31 Aug 2014 14:05:18 -0700 (PDT)
-Date: Sun, 31 Aug 2014 17:05:08 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH] xfs: fix double free of trans in log recovery on I/O error
-Message-ID: <20140831210507.GA11913@bfoster.bfoster>
-References: <1408648692-15957-1-git-send-email-bfoster@redhat.com>
-	<CAOcd+r32+6gafv5+MCNyNTH1Ncas9CJHHrku+Y=sZefDzzS1Zw@mail.gmail.com>
-	<20140825142025.GA10135@bfoster.bfoster>
-	<AFED541EB7FA490C8E16DCB81F400B1C@alyakaslap>
+	by oss.sgi.com (Postfix) with ESMTP id 114A97F5A
+	for <xfs@oss.sgi.com>; Sun, 31 Aug 2014 18:57:58 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id D7835304043
+	for <xfs@oss.sgi.com>; Sun, 31 Aug 2014 16:57:54 -0700 (PDT)
+Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
+	[150.101.137.145]) by cuda.sgi.com with ESMTP id
+	itVnS03yFw7MJ93U for <xfs@oss.sgi.com>;
+	Sun, 31 Aug 2014 16:57:52 -0700 (PDT)
+Date: Mon, 1 Sep 2014 09:57:49 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: storage, libaio, or XFS problem?  3.4.26
+Message-ID: <20140831235749.GH20518@dastard>
+References: <3fe8c34c0ccbbd720015d273fa2b8b30@localhost>
+	<20140826075345.GJ20518@dastard>
+	<8c29baf987467a84f0b7c1d09c863662@localhost>
+	<20140828003226.GO20518@dastard>
+	<7f9e5aef187b44e899077467aeb0809d@localhost>
+	<20140828230817.GU20518@dastard>
+	<2d2ce7bb38c00a7d35f4a324f6a36cbb@localhost>
+	<20140829235538.GF20518@dastard>
+	<d20fe777ec1fd318ae5d4054dffda3f4@localhost>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <AFED541EB7FA490C8E16DCB81F400B1C@alyakaslap>
+In-Reply-To: <d20fe777ec1fd318ae5d4054dffda3f4@localhost>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,169 +37,73 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Alex Lyakas <alex@zadarastorage.com>
+To: Stan Hoeppner <stan@hardwarefreak.com>
 Cc: xfs@oss.sgi.com
 
-On Sun, Aug 31, 2014 at 11:50:52AM +0300, Alex Lyakas wrote:
-> Hi Brian, Dave,
-> I tested this patch on kernel 3.16, top commit:
+On Fri, Aug 29, 2014 at 09:55:53PM -0500, Stan Hoeppner wrote:
+> On Sat, 30 Aug 2014 09:55:38 +1000, Dave Chinner <david@fromorbit.com> wrote:
+> > On Fri, Aug 29, 2014 at 11:38:16AM -0500, Stan Hoeppner wrote:
+> >> 
+> >> Another storage crash yesterday.  xfs_repair output inline below for the 7
+> >> filesystems.  I'm also pasting the dmesg output.  This time there is no
+> >> oops, no call traces.  The filesystems mounted fine after mounting,
+> >> replaying, and repairing. 
+> > 
+> > Ok, what version of xfs_repair did you use?
 > 
-> commit 19583ca584d6f574384e17fe7613dfaeadcdc4a6
-> Author: Linus Torvalds <torvalds@linux-foundation.org>
-> Date:   Sun Aug 3 15:25:02 2014 -0700
-> 
->    Linux 3.16
-> 
-> and, yes, it appears to fix the issue.
-> 
+> 3.1.4 which is a little long in the tooth.
 
-Thanks. That settles that then, I think. We're reproducing different
-problems on the 3.8 stable kernel vs. a recent kernel using the same
-test case.
+And so not useful for th epurposes of finding free space tree
+corruptions. Old xfs_repair versions only rebuild the freespace
+trees - they don't check them first. IOWs, silence from an old
+xfs_repair does not mean the filesystem was free of errors.
 
-> Trouble is that our production kernel is 3.8.13, and we cannot upgrade to
-> mainline kernel easily. Question is whether we can expect some patch
-> suitable for our kernel, or, since our kernel is EOL and not a long-term
-> one, we cannot?
+> >> This because some of our writes for a given low rate stream are as low as
+> >> 32KB and may be 2-3 seconds apart.  With a 64-128KB chunk, 768 to 1536KB
+> >> stripe width, we'd get massive RMW without this feature.  Testing thus
+> >> far
+> >> shows it is fairly effective, though we still get pretty serious RMW due
+> >> to
+> >> the fact we're writing 350 of these small streams per array at ~72 KB/s
+> >> max, along with 2 streams at ~48 MB/s, and and 50 streams at ~1.2 MB/s.
 > 
+> >> Multiply this by 7 LUNs per controller and it becomes clear we're
+> >> putting a
+> >> pretty serious load on the firmware and cache.
+> > 
+> > Yup, so having the array cache do the equivalent of sequential
+> > readahead multi-stream detection for writeback would make a big
+> > difference. But not simple to do....
+> 
+> Not at all, especially with only 3 GB of RAM to work with, as I'm told. 
+> Seems low for a high end controller with 4x 12G SAS ports.  We're only able
+> to achieve ~250 MB/s per array at the application due to the access pattern
+> being essentially random, and still with a serious quantity of RMWs.  Which
+> is why we're going to test with an even smaller chunk of 32KB.  I believe
+> that's the lower bound on these controllers.  For this workload 16KB or
+> maybe even 8KB would likely be more optimal.  We're also going to test with
+> bcache and a 400 GB Intel 3700 (datacenter grade) SSD backing two LUNs. 
+> But with bcache chunk size should be far less relevant.  I'm anxious to
+> kick those tires, but it'll be a couple of weeks.
+> 
+> Have you played with bcache yet?
 
-Dave wrote a patch specifically to resolve this problem on older
-kernels:
+Enough to scare me. So many ways for things to go wrong, no easy way
+to recover when things go wrong. And that's before I even get to
+performance warts, like having systems stall completely because
+there's tens or hundreds of GB of 4k random writes that have to be
+flushed to slow SATA RAID6 in the cache....
 
-http://oss.sgi.com/archives/xfs/2014-08/msg00204.html
+Cheers,
 
-Brian
+Dave.
 
-> Thanks for your help,
-> Alex.
-> 
-> 
-> -----Original Message----- From: Brian Foster
-> Sent: 25 August, 2014 5:20 PM
-> To: Alex Lyakas
-> Cc: xfs@oss.sgi.com ; Dave Chinner
-> Subject: Re: [PATCH] xfs: fix double free of trans in log recovery on I/O
-> error
-> 
-> On Sun, Aug 24, 2014 at 12:20:20PM +0300, Alex Lyakas wrote:
-> >Hi Brian,
-> >
-> >On Thu, Aug 21, 2014 at 10:18 PM, Brian Foster <bfoster@redhat.com> wrote:
-> >> XFS log recovery builds up an xlog_recover object as it passes through
-> >> the log operations on the physical log. These structures are managed via
-> >> a hash table and are allocated when a new transaction is encountered and
-> >> freed once a commit operation for the transaction is encountered.
-> >>
-> >> This state machine for active transactions is implemented by a
-> >> combination of xlog_do_recovery_pass(), which walks through the log
-> >> buffers and xlog_recover_process_data() which processes log operations
-> >> within each buffer. The latter function decides whether to allocate a
-> >> new xlog_recover, add to it or commit and ultimately free it.  If an
-> >> error occurs at any point during the lifecycle of a particular
-> >> xlog_recover, xlog_recover_process_data() frees the object and returns
-> >> an error.
-> >>
-> >> xlog_recover_commit_trans() handles the final processing of the
-> >> transaction. It submits whatever I/O is required for the transaction and
-> >> frees xlog_recover object along with the transaction items it tracks. If
-> >> an error occurs at the final stages of the commit operation, such as I/O
-> >> failure, both xlog_recover_commit_trans() and
-> >> xlog_recover_process_data() attempt to free the trans object.
-> >>
-> >> Modify xlog_recover_commit_trans() to only free the trans object on
-> >> successful completion of the trans, including any I/O errors that might
-> >> occur when recovering the log.
-> >>
-> >> Signed-off-by: Brian Foster <bfoster@redhat.com>
-> >> ---
-> >>
-> >> Hi all,
-> >>
-> >> I found that the recent buffer I/O rework fixes didn't address the crash
-> >> reproduced by the dm-flakey/log recovery test case I posted recently. I
-> >> tracked the crash down to this, which allows the test to pass. This
-> >> addresses the crash I saw when running the reproducer manually with the
-> >> metadump that Alex posted as well.
-> >>
-> >> FWIW, I also went back and tested the xfs_buf_iowait() experiment in
-> >> both scenarios (Alex's metadump and xfstests test) and they all
-> >> reproduce the same crash for me. I think that either I'm still not
-> >> reproducing the original problem, something else might have contaminated
-> >> the original xfs_buf_iowait() test to give a false positive, or
-> >> something else entirely is going on.
-> >>
-> >> Alex,
-> >>
-> >> If you have a chance, I think it might be interesting to see whether you
-> >> reproduce any problems with this patch. It looks like this is a
-> >> regression introduced by:
-> >>
-> >>         2a84108f xfs: free the list of recovery items on error
-> >>
-> >> ... but I have no idea if that's in whatever kernel you're running.
-> >I am running kernel 3.8.13 with some changes (published at
-> >https://github.com/zadarastorage/zadara-xfs-pushback), but this
-> >problem also happens on pristine 3.8.13 from
-> >git://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git,
-> >branch linux-stable-3.8.y.
-> >
-> >I do not have commit 2a84108f in this kernel. It was introduced in 3.14.
-> >I applied your patch to 3.8.13, but it doesn't fix the issue. Same
-> >problem happens when testing scenario that I described in
-> >http://oss.sgi.com/pipermail/xfs/2014-August/037637.html.
-> >
-> 
-> Ok, thanks. Yeah, I don't see the double free regression in the 3.8.13
-> stable branch. I went back to that kernel to try and confirm some
-> things. I do reproduce the problem with your metadump as well as the
-> test case I put together. I tested Dave's buf hold across sync I/O patch
-> and that does indeed prevent the problem.
-> 
-> For whatever reason, neither the test case nor your metadump reproduce
-> the same problem on latest kernels. Instead, they reproduce this double
-> free regression. I suspect this is what you ran into when you reproduced
-> on a more recent kernel. If you'd like, feel free to try and verify that
-> by running your reproducer again on a recent kernel with this patch and
-> see if you can still reproduce a crash as with the 3.8.13 kernel.
-> 
-> Brian
-> 
-> >Thanks,
-> >Alex.
-> >
-> >>
-> >> Brian
-> >>
-> >>  fs/xfs/xfs_log_recover.c | 11 ++++++++---
-> >>  1 file changed, 8 insertions(+), 3 deletions(-)
-> >>
-> >> diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-> >> index 176c4b3..daca9a6 100644
-> >> --- a/fs/xfs/xfs_log_recover.c
-> >> +++ b/fs/xfs/xfs_log_recover.c
-> >> @@ -3528,10 +3528,15 @@ out:
-> >>         if (!list_empty(&done_list))
-> >>                 list_splice_init(&done_list, &trans->r_itemq);
-> >>
-> >> -       xlog_recover_free_trans(trans);
-> >> -
-> >>         error2 = xfs_buf_delwri_submit(&buffer_list);
-> >> -       return error ? error : error2;
-> >> +
-> >> +       if (!error)
-> >> +               error = error2;
-> >> +       /* caller frees trans on error */
-> >> +       if (!error)
-> >> +               xlog_recover_free_trans(trans);
-> >> +
-> >> +       return error;
-> >>  }
-> >>
-> >>  STATIC int
-> >> --
-> >> 1.8.3.1
-> >>
-> 
+PS: can you wrap your text at 68 or 72 columns so quoted text
+doesn't overflow 80 columns and get randomly wrapped and messed up?
+
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
