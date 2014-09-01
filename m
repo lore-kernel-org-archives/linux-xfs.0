@@ -1,24 +1,31 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id B13347F66
-	for <xfs@oss.sgi.com>; Mon,  1 Sep 2014 14:18:56 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 9136A304032
-	for <xfs@oss.sgi.com>; Mon,  1 Sep 2014 12:18:53 -0700 (PDT)
-Received: from smtp3-g21.free.fr (smtp3-g21.free.fr [212.27.42.3]) by
-	cuda.sgi.com with ESMTP id yABqNnfq7FnLQPdN (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 01 Sep 2014 12:18:51 -0700 (PDT)
-Date: Mon, 1 Sep 2014 21:19:32 +0200
-From: Emmanuel Florac <eflorac@intellique.com>
-Subject: Re: Run out of inodes?
-Message-ID: <20140901211932.342b4bb3@galadriel.home>
-In-Reply-To: <8d5fff2548d35737c6cebcb1f6382e80@inserm.fr>
-References: <54005108.1020203@inserm.fr>
-	<20140829114806.GA17610@bfoster.bfoster>
-	<5400802C.5050005@inserm.fr> <54009603.9050404@sandeen.net>
-	<8d5fff2548d35737c6cebcb1f6382e80@inserm.fr>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 9236C7F66
+	for <xfs@oss.sgi.com>; Mon,  1 Sep 2014 18:45:40 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 12E52AC001
+	for <xfs@oss.sgi.com>; Mon,  1 Sep 2014 16:45:36 -0700 (PDT)
+Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
+	[150.101.137.129]) by cuda.sgi.com with ESMTP id
+	Cx1sDyWPS7jgwOvG for <xfs@oss.sgi.com>;
+	Mon, 01 Sep 2014 16:45:34 -0700 (PDT)
+Date: Tue, 2 Sep 2014 09:45:29 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: storage, libaio, or XFS problem?  3.4.26
+Message-ID: <20140901234529.GI20518@dastard>
+References: <20140826075345.GJ20518@dastard>
+	<8c29baf987467a84f0b7c1d09c863662@localhost>
+	<20140828003226.GO20518@dastard>
+	<7f9e5aef187b44e899077467aeb0809d@localhost>
+	<20140828230817.GU20518@dastard>
+	<2d2ce7bb38c00a7d35f4a324f6a36cbb@localhost>
+	<20140829235538.GF20518@dastard>
+	<d20fe777ec1fd318ae5d4054dffda3f4@localhost>
+	<20140831235749.GH20518@dastard>
+	<5403E9B9.7040608@hardwarefreak.com>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <5403E9B9.7040608@hardwarefreak.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,23 +34,54 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Samuel GRANJEAUD IR/INSERM <samuel.granjeaud@inserm.fr>
+To: stan hoeppner <stan@hardwarefreak.com>
 Cc: xfs@oss.sgi.com
 
-TGUgU2F0LCAzMCBBdWcgMjAxNCAyMTozMzo0NiArMDIwMCB2b3VzIMOpY3JpdmllejoKCj4gRmlu
-YWwgcXVlc3Rpb246IGNvdWxkIHNvbWUgaXNzdWVzIGFwcGVhciB3aXRoIFNBTUJBPwo+IAo+ICMg
-c21ic3RhdHVzICAtVgo+IFZlcnNpb24gMy40LjUKCklzIHlvdXIgd2hvbGUgZGlzdHJpYnV0aW9u
-IDY0IGJpdHMsIG9yIG9ubHkgdGhlIGtlcm5lbD8gSG93ZXZlciwgSSd2ZQpuZXZlciBoYWQgYW55
-IHByb2JsZW0gd2l0aCBzYW1iYSwgYnV0IHNvbWUgd2l0aCBORlMuCgotLSAKLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tCkVtbWFudWVsIEZsb3JhYyAgICAgfCAgIERpcmVjdGlvbiB0ZWNobmlxdWUKICAgICAgICAg
-ICAgICAgICAgICB8ICAgSW50ZWxsaXF1ZQogICAgICAgICAgICAgICAgICAgIHwJPGVmbG9yYWNA
-aW50ZWxsaXF1ZS5jb20+CiAgICAgICAgICAgICAgICAgICAgfCAgICszMyAxIDc4IDk0IDg0IDAy
-Ci0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLQoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2ku
-Y29tL21haWxtYW4vbGlzdGluZm8veGZzCg==
+On Sun, Aug 31, 2014 at 10:36:25PM -0500, stan hoeppner wrote:
+> On 08/31/2014 06:57 PM, Dave Chinner wrote:
+> > On Fri, Aug 29, 2014 at 09:55:53PM -0500, Stan Hoeppner wrote:
+> >> Have you played with bcache yet?
+> > 
+> > Enough to scare me. So many ways for things to go wrong, no easy way
+> > to recover when things go wrong. And that's before I even get to
+> > performance warts, like having systems stall completely because
+> > there's tens or hundreds of GB of 4k random writes that have to be
+> > flushed to slow SATA RAID6 in the cache....
+> 
+> Yikes.  I hadn't yet heard such opinions expressed.  By go wrong I
+> assume you mean the btrees or cached sector data getting broken, corrupted?
+
+bcache is a complex filesystem hidden inside a block device. If
+bcache goes AWOL, so does the all the data on your block device.
+Need I say more?
+
+> > PS: can you wrap your text at 68 or 72 columns so quoted text
+> > doesn't overflow 80 columns and get randomly wrapped and messed up?
+> 
+> This email should be.  Lemme see what I can do with the others.  The
+> lovely Cisco VPN client I must use kills routing to my local subnet, so
+> Icedovce can't connect to my IMAP server when the VPN is active.  The
+> test hardness app requires a shell unfortunately so I have to keep the
+> tunnel open all the time, as the test runs are 40+ hours each.  My last
+> test just crashed a bit ago so I can use Icedove for this reply.
+
+screen is your friend when it comes to keeping remote shells
+active as the network comes and goes. VPN drops out, just bring it
+back up when you need it and reconnect to the remote screen instance
+and it's like you never left....
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
