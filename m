@@ -1,33 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id AA72D7F4E
-	for <xfs@oss.sgi.com>; Tue,  2 Sep 2014 14:16:30 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 66EC67F52
+	for <xfs@oss.sgi.com>; Tue,  2 Sep 2014 17:02:36 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 56B72AC004
-	for <xfs@oss.sgi.com>; Tue,  2 Sep 2014 12:16:27 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id 7rbufw64z0TzcAYm (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 02 Sep 2014 12:16:23 -0700 (PDT)
-Received: from int-mx09.intmail.prod.int.phx2.redhat.com
-	(int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id s82JGM6b018512
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256
-	verify=FAIL) for <xfs@oss.sgi.com>; Tue, 2 Sep 2014 15:16:22 -0400
-Received: from laptop.bfoster (vpn-51-136.rdu2.redhat.com [10.10.51.136])
-	by int-mx09.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id s82JGKZF013899
-	(version=TLSv1/SSLv3 cipher=AES128-GCM-SHA256 bits=128 verify=NO)
-	for <xfs@oss.sgi.com>; Tue, 2 Sep 2014 15:16:22 -0400
-Date: Tue, 2 Sep 2014 15:16:20 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [RFC PATCH 0/4] clean up collapse range and handle post-eof
-	delalloc
-Message-ID: <20140902191620.GA5304@laptop.bfoster>
-References: <1409344178-44817-1-git-send-email-bfoster@redhat.com>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 13512AC006
+	for <xfs@oss.sgi.com>; Tue,  2 Sep 2014 15:02:32 -0700 (PDT)
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	mcVlGR21r4ER0eRN for <xfs@oss.sgi.com>;
+	Tue, 02 Sep 2014 15:02:31 -0700 (PDT)
+Date: Wed, 3 Sep 2014 08:02:16 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] xfs: fix double free of trans in log recovery on I/O error
+Message-ID: <20140902220216.GJ20518@dastard>
+References: <1408648692-15957-1-git-send-email-bfoster@redhat.com>
+	<CAOcd+r32+6gafv5+MCNyNTH1Ncas9CJHHrku+Y=sZefDzzS1Zw@mail.gmail.com>
+	<20140825142025.GA10135@bfoster.bfoster>
+	<AFED541EB7FA490C8E16DCB81F400B1C@alyakaslap>
+	<20140831210507.GA11913@bfoster.bfoster>
+	<3476A2CBDE694DC6BD06DBDD15165151@alyakaslap>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1409344178-44817-1-git-send-email-bfoster@redhat.com>
+In-Reply-To: <3476A2CBDE694DC6BD06DBDD15165151@alyakaslap>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -40,62 +34,61 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Alex Lyakas <alex@zadarastorage.com>
+Cc: Brian Foster <bfoster@redhat.com>, xfs@oss.sgi.com
 
-On Fri, Aug 29, 2014 at 04:29:34PM -0400, Brian Foster wrote:
-> Here's a drop of what I'm testing over the weekend. It passes some quick
-> tests, but only lightly tested so far.
+On Tue, Sep 02, 2014 at 12:51:35PM +0300, Alex Lyakas wrote:
+> Hi Brian, Dave,
+> I tested this patch on 3.8.13 kernel with the scenario I described
+> in http://oss.sgi.com/pipermail/xfs/2014-August/037637.html, but I
+> still see the issue.
+> I placed the metadump at https://drive.google.com/file/d/0ByBy89zr3kJNV2UxMERNTkE4aHM/edit?usp=sharing
 > 
+> During log recovery, 3 IO errors are encountered:
+> [  340.381199] XFS (dm-0): Mounting Filesystem
+> [  340.439897] XFS (dm-0): Sleep 10s before xlog_do_recover
+> [  350.440143] XFS (dm-0): Starting recovery (logdev: internal)
+> [  351.584647] XFS (dm-0): metadata I/O error: block 0x1
+> ("xlog_recover_iodone") error 28 numblks 1
+> [  351.584660] XFS (dm-0): metadata I/O error: block 0x40
+> ("xlog_recover_iodone") error 28 numblks 16
+> [  351.584665] XFS (dm-0): xfs_do_force_shutdown(0x1) called from
+> line 377 of file
+> /mnt/work/alex/zadara-btrfs/fs/xfs/xfs_log_recover.c.  Return
+> address = 0xffffffffa0372728
+> [  351.584969] XFS (dm-0): I/O Error Detected. Shutting down filesystem
+> [  351.584970] XFS (dm-0): Please umount the filesystem and rectify
+> the problem(s)
+> [  351.585047] XFS (dm-0): metadata I/O error: block 0x1e00040
+> ("xlog_recover_iodone") error 28 numblks 16
+> [  351.585050] XFS (dm-0): xfs_do_force_shutdown(0x1) called from
+> line 377 of file
+> /mnt/work/alex/zadara-btrfs/fs/xfs/xfs_log_recover.c.  Return
+> address = 0xffffffffa0372728
+> [  351.585068] XFS (dm-0): log mount/recovery failed: error 28
+> [  351.585332] XFS (dm-0): log mount failed
+> 
+> Two IO error callbacks are handled before XFS is unmounted, but the
+> last one crashes with stack[1].
+> 
+> Do I need some or all of the 9 patches that Dave posted? (They do
+> not apply to my kernel, so I need to apply them by hand).
 
-fsx has been running for over 3 days without a failure and I've kicked
-off a parallel fsstress today that so far hasn't caused any problems.
-Given that, I think the patches here help reduce the likelihood of
-errors from collapse.
+No, I suspect that there are other problems that have been fixed
+since 3.8 that you are missing. e.g.
 
-> My biggest question at this point is whether there is any risk to the
-> shift of the post-eof extent if the subsequent truncate happens to fail.
-> If it's not worth dealing with that, we could just drop patch 3 and
-> leave the eofblocks trim permanently.
-> 
+9c23ecc xfs: unmount does not wait for shutdown during unmount
 
-That said, a test to skip the post-collapse truncate confirms that the
-behavior of patch 3 is potentially problematic in the event of failure.
-E.g., there is no behavior analogous to the zeroing of prealloc space
-for extending truncates.
+THere's bound to be others, so you're really going to need to look
+at the differences between 3.8 and a current mainline to determine
+what other patches you are going to need...
 
-I think the right thing to do here might be for the collapse to
-writeback and invalidate the range following the space that was freed to
-EOF and to retain the eofblocks trim.
+Cheers,
 
-Brian
-
-> In fact, it might even be a good idea to go back to the original
-> [start,-1] writeback in collapse range given that the free file space
-> helper could change at some point to only write and punch out the range
-> being freed... and then we're left shifting a bunch of extents after the
-> freed range that could have dirty data in pagecache, which sounds bad.
-> Thoughts?
-> 
-> Brian
-> 
-> Brian Foster (4):
->   xfs: track collapse via file offset rather than extent index
->   xfs: refactor xfs_bmap_shift_extents() into multiple functions
->   xfs: allow collapse to handle delalloc extents
->   xfs: remove file writeback and eofblocks trim from collapse range
-> 
->  fs/xfs/libxfs/xfs_bmap.c | 302 ++++++++++++++++++++++++++++++++---------------
->  fs/xfs/libxfs/xfs_bmap.h |   7 +-
->  fs/xfs/xfs_bmap_util.c   |  32 +----
->  3 files changed, 214 insertions(+), 127 deletions(-)
-> 
-> -- 
-> 1.8.3.1
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
