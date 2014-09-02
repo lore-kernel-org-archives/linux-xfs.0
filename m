@@ -1,27 +1,31 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 66EC67F52
-	for <xfs@oss.sgi.com>; Tue,  2 Sep 2014 17:02:36 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 13512AC006
-	for <xfs@oss.sgi.com>; Tue,  2 Sep 2014 15:02:32 -0700 (PDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 890A37F55
+	for <xfs@oss.sgi.com>; Tue,  2 Sep 2014 17:20:00 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 7660A304066
+	for <xfs@oss.sgi.com>; Tue,  2 Sep 2014 15:19:57 -0700 (PDT)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	mcVlGR21r4ER0eRN for <xfs@oss.sgi.com>;
-	Tue, 02 Sep 2014 15:02:31 -0700 (PDT)
-Date: Wed, 3 Sep 2014 08:02:16 +1000
+	igUdXgNIV7wivOyJ for <xfs@oss.sgi.com>;
+	Tue, 02 Sep 2014 15:19:52 -0700 (PDT)
+Date: Wed, 3 Sep 2014 08:19:15 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs: fix double free of trans in log recovery on I/O error
-Message-ID: <20140902220216.GJ20518@dastard>
-References: <1408648692-15957-1-git-send-email-bfoster@redhat.com>
-	<CAOcd+r32+6gafv5+MCNyNTH1Ncas9CJHHrku+Y=sZefDzzS1Zw@mail.gmail.com>
-	<20140825142025.GA10135@bfoster.bfoster>
-	<AFED541EB7FA490C8E16DCB81F400B1C@alyakaslap>
-	<20140831210507.GA11913@bfoster.bfoster>
-	<3476A2CBDE694DC6BD06DBDD15165151@alyakaslap>
+Subject: Re: storage, libaio, or XFS problem?  3.4.26
+Message-ID: <20140902221915.GK20518@dastard>
+References: <20140828003226.GO20518@dastard>
+	<7f9e5aef187b44e899077467aeb0809d@localhost>
+	<20140828230817.GU20518@dastard>
+	<2d2ce7bb38c00a7d35f4a324f6a36cbb@localhost>
+	<20140829235538.GF20518@dastard>
+	<d20fe777ec1fd318ae5d4054dffda3f4@localhost>
+	<20140831235749.GH20518@dastard>
+	<5403E9B9.7040608@hardwarefreak.com>
+	<20140901234529.GI20518@dastard>
+	<5405FB19.2020208@hardwarefreak.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <3476A2CBDE694DC6BD06DBDD15165151@alyakaslap>
+In-Reply-To: <5405FB19.2020208@hardwarefreak.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,54 +38,54 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Alex Lyakas <alex@zadarastorage.com>
-Cc: Brian Foster <bfoster@redhat.com>, xfs@oss.sgi.com
+To: stan hoeppner <stan@hardwarefreak.com>
+Cc: xfs@oss.sgi.com
 
-On Tue, Sep 02, 2014 at 12:51:35PM +0300, Alex Lyakas wrote:
-> Hi Brian, Dave,
-> I tested this patch on 3.8.13 kernel with the scenario I described
-> in http://oss.sgi.com/pipermail/xfs/2014-August/037637.html, but I
-> still see the issue.
-> I placed the metadump at https://drive.google.com/file/d/0ByBy89zr3kJNV2UxMERNTkE4aHM/edit?usp=sharing
+On Tue, Sep 02, 2014 at 12:15:05PM -0500, stan hoeppner wrote:
+> On 09/01/2014 06:45 PM, Dave Chinner wrote:
+> > On Sun, Aug 31, 2014 at 10:36:25PM -0500, stan hoeppner wrote:
+> >> On 08/31/2014 06:57 PM, Dave Chinner wrote:
+> >>> On Fri, Aug 29, 2014 at 09:55:53PM -0500, Stan Hoeppner wrote:
+> >>>> Have you played with bcache yet?
+> >>>
+> >>> Enough to scare me. So many ways for things to go wrong, no easy way
+> >>> to recover when things go wrong. And that's before I even get to
+> >>> performance warts, like having systems stall completely because
+> >>> there's tens or hundreds of GB of 4k random writes that have to be
+> >>> flushed to slow SATA RAID6 in the cache....
+> >>
+> >> Yikes.  I hadn't yet heard such opinions expressed.  By go wrong I
+> >> assume you mean the btrees or cached sector data getting broken, corrupted?
+> > 
+> > bcache is a complex filesystem hidden inside a block device. If
+> > bcache goes AWOL, so does the all the data on your block device.
+> > Need I say more?
 > 
-> During log recovery, 3 IO errors are encountered:
-> [  340.381199] XFS (dm-0): Mounting Filesystem
-> [  340.439897] XFS (dm-0): Sleep 10s before xlog_do_recover
-> [  350.440143] XFS (dm-0): Starting recovery (logdev: internal)
-> [  351.584647] XFS (dm-0): metadata I/O error: block 0x1
-> ("xlog_recover_iodone") error 28 numblks 1
-> [  351.584660] XFS (dm-0): metadata I/O error: block 0x40
-> ("xlog_recover_iodone") error 28 numblks 16
-> [  351.584665] XFS (dm-0): xfs_do_force_shutdown(0x1) called from
-> line 377 of file
-> /mnt/work/alex/zadara-btrfs/fs/xfs/xfs_log_recover.c.  Return
-> address = 0xffffffffa0372728
-> [  351.584969] XFS (dm-0): I/O Error Detected. Shutting down filesystem
-> [  351.584970] XFS (dm-0): Please umount the filesystem and rectify
-> the problem(s)
-> [  351.585047] XFS (dm-0): metadata I/O error: block 0x1e00040
-> ("xlog_recover_iodone") error 28 numblks 16
-> [  351.585050] XFS (dm-0): xfs_do_force_shutdown(0x1) called from
-> line 377 of file
-> /mnt/work/alex/zadara-btrfs/fs/xfs/xfs_log_recover.c.  Return
-> address = 0xffffffffa0372728
-> [  351.585068] XFS (dm-0): log mount/recovery failed: error 28
-> [  351.585332] XFS (dm-0): log mount failed
+> So it's no different in that regard than the black box implementations
+> such as LSI's CacheCade and various SAN vendor SSD caching
+> implementations.  Or are you saying the bcache code complexity is so
+> much greater that failure is more likely that the vendor implementations?
+
+No, not the code complexity in particular. It's more that compared
+to vendor SSD caching implementations there's an awful lot less
+testing and validation, and people tend to use random, unreliable
+hardware for cache devices. It's great when it works, but the
+configuration and validation of correct behaviour in error
+conditions falls to the user...
+
+> > screen is your friend when it comes to keeping remote shells
+> > active as the network comes and goes. VPN drops out, just bring it
+> > back up when you need it and reconnect to the remote screen instance
+> > and it's like you never left....
 > 
-> Two IO error callbacks are handled before XFS is unmounted, but the
-> last one crashes with stack[1].
-> 
-> Do I need some or all of the 9 patches that Dave posted? (They do
-> not apply to my kernel, so I need to apply them by hand).
+> Thanks for this tip.  I'd heard of screen before but never used it.  I
+> will say the man page is a bit intimidating for such an apparently
+> simple tool...
 
-No, I suspect that there are other problems that have been fixed
-since 3.8 that you are missing. e.g.
-
-9c23ecc xfs: unmount does not wait for shutdown during unmount
-
-THere's bound to be others, so you're really going to need to look
-at the differences between 3.8 and a current mainline to determine
-what other patches you are going to need...
+Yeah, I use about 0.0001% of what screen can do. It could lose most
+of it's functionality and I wouldn't notice or care. tmux is another
+option for this functionality, but I've never used it because I
+found out about screen first...
 
 Cheers,
 
