@@ -1,30 +1,33 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 951A17F53
-	for <xfs@oss.sgi.com>; Tue,  2 Sep 2014 12:15:11 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 32B14AC003
-	for <xfs@oss.sgi.com>; Tue,  2 Sep 2014 10:15:07 -0700 (PDT)
-Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
-	[65.41.216.221]) by cuda.sgi.com with ESMTP id fV9YsJOgMCmCGKtG
-	for <xfs@oss.sgi.com>; Tue, 02 Sep 2014 10:15:06 -0700 (PDT)
-Message-ID: <5405FB19.2020208@hardwarefreak.com>
-Date: Tue, 02 Sep 2014 12:15:05 -0500
-From: stan hoeppner <stan@hardwarefreak.com>
+	by oss.sgi.com (Postfix) with ESMTP id AA72D7F4E
+	for <xfs@oss.sgi.com>; Tue,  2 Sep 2014 14:16:30 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 56B72AC004
+	for <xfs@oss.sgi.com>; Tue,  2 Sep 2014 12:16:27 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id 7rbufw64z0TzcAYm (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 02 Sep 2014 12:16:23 -0700 (PDT)
+Received: from int-mx09.intmail.prod.int.phx2.redhat.com
+	(int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id s82JGM6b018512
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256
+	verify=FAIL) for <xfs@oss.sgi.com>; Tue, 2 Sep 2014 15:16:22 -0400
+Received: from laptop.bfoster (vpn-51-136.rdu2.redhat.com [10.10.51.136])
+	by int-mx09.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id s82JGKZF013899
+	(version=TLSv1/SSLv3 cipher=AES128-GCM-SHA256 bits=128 verify=NO)
+	for <xfs@oss.sgi.com>; Tue, 2 Sep 2014 15:16:22 -0400
+Date: Tue, 2 Sep 2014 15:16:20 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [RFC PATCH 0/4] clean up collapse range and handle post-eof
+	delalloc
+Message-ID: <20140902191620.GA5304@laptop.bfoster>
+References: <1409344178-44817-1-git-send-email-bfoster@redhat.com>
 MIME-Version: 1.0
-Subject: Re: storage, libaio, or XFS problem?  3.4.26
-References: <20140826075345.GJ20518@dastard>
-	<8c29baf987467a84f0b7c1d09c863662@localhost>
-	<20140828003226.GO20518@dastard>
-	<7f9e5aef187b44e899077467aeb0809d@localhost>
-	<20140828230817.GU20518@dastard>
-	<2d2ce7bb38c00a7d35f4a324f6a36cbb@localhost>
-	<20140829235538.GF20518@dastard>
-	<d20fe777ec1fd318ae5d4054dffda3f4@localhost>
-	<20140831235749.GH20518@dastard>
-	<5403E9B9.7040608@hardwarefreak.com>
-	<20140901234529.GI20518@dastard>
-In-Reply-To: <20140901234529.GI20518@dastard>
+Content-Disposition: inline
+In-Reply-To: <1409344178-44817-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -37,53 +40,62 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On 09/01/2014 06:45 PM, Dave Chinner wrote:
-> On Sun, Aug 31, 2014 at 10:36:25PM -0500, stan hoeppner wrote:
->> On 08/31/2014 06:57 PM, Dave Chinner wrote:
->>> On Fri, Aug 29, 2014 at 09:55:53PM -0500, Stan Hoeppner wrote:
->>>> Have you played with bcache yet?
->>>
->>> Enough to scare me. So many ways for things to go wrong, no easy way
->>> to recover when things go wrong. And that's before I even get to
->>> performance warts, like having systems stall completely because
->>> there's tens or hundreds of GB of 4k random writes that have to be
->>> flushed to slow SATA RAID6 in the cache....
->>
->> Yikes.  I hadn't yet heard such opinions expressed.  By go wrong I
->> assume you mean the btrees or cached sector data getting broken, corrupted?
+On Fri, Aug 29, 2014 at 04:29:34PM -0400, Brian Foster wrote:
+> Here's a drop of what I'm testing over the weekend. It passes some quick
+> tests, but only lightly tested so far.
 > 
-> bcache is a complex filesystem hidden inside a block device. If
-> bcache goes AWOL, so does the all the data on your block device.
-> Need I say more?
 
-So it's no different in that regard than the black box implementations
-such as LSI's CacheCade and various SAN vendor SSD caching
-implementations.  Or are you saying the bcache code complexity is so
-much greater that failure is more likely that the vendor implementations?
+fsx has been running for over 3 days without a failure and I've kicked
+off a parallel fsstress today that so far hasn't caused any problems.
+Given that, I think the patches here help reduce the likelihood of
+errors from collapse.
 
->>> PS: can you wrap your text at 68 or 72 columns so quoted text
->>> doesn't overflow 80 columns and get randomly wrapped and messed up?
->>
->> This email should be.  Lemme see what I can do with the others.  The
->> lovely Cisco VPN client I must use kills routing to my local subnet, so
->> Icedovce can't connect to my IMAP server when the VPN is active.  The
->> test hardness app requires a shell unfortunately so I have to keep the
->> tunnel open all the time, as the test runs are 40+ hours each.  My last
->> test just crashed a bit ago so I can use Icedove for this reply.
+> My biggest question at this point is whether there is any risk to the
+> shift of the post-eof extent if the subsequent truncate happens to fail.
+> If it's not worth dealing with that, we could just drop patch 3 and
+> leave the eofblocks trim permanently.
 > 
-> screen is your friend when it comes to keeping remote shells
-> active as the network comes and goes. VPN drops out, just bring it
-> back up when you need it and reconnect to the remote screen instance
-> and it's like you never left....
 
-Thanks for this tip.  I'd heard of screen before but never used it.  I
-will say the man page is a bit intimidating for such an apparently
-simple tool...
+That said, a test to skip the post-collapse truncate confirms that the
+behavior of patch 3 is potentially problematic in the event of failure.
+E.g., there is no behavior analogous to the zeroing of prealloc space
+for extending truncates.
 
-Stan
+I think the right thing to do here might be for the collapse to
+writeback and invalidate the range following the space that was freed to
+EOF and to retain the eofblocks trim.
+
+Brian
+
+> In fact, it might even be a good idea to go back to the original
+> [start,-1] writeback in collapse range given that the free file space
+> helper could change at some point to only write and punch out the range
+> being freed... and then we're left shifting a bunch of extents after the
+> freed range that could have dirty data in pagecache, which sounds bad.
+> Thoughts?
+> 
+> Brian
+> 
+> Brian Foster (4):
+>   xfs: track collapse via file offset rather than extent index
+>   xfs: refactor xfs_bmap_shift_extents() into multiple functions
+>   xfs: allow collapse to handle delalloc extents
+>   xfs: remove file writeback and eofblocks trim from collapse range
+> 
+>  fs/xfs/libxfs/xfs_bmap.c | 302 ++++++++++++++++++++++++++++++++---------------
+>  fs/xfs/libxfs/xfs_bmap.h |   7 +-
+>  fs/xfs/xfs_bmap_util.c   |  32 +----
+>  3 files changed, 214 insertions(+), 127 deletions(-)
+> 
+> -- 
+> 1.8.3.1
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
