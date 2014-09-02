@@ -1,9 +1,9 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 From: xfs@oss.sgi.com
-Subject: [XFS updates] XFS development tree branch, for-next,
-	updated. xfs-for-linus-3.17-rc1-13183-g41b9d72
-Message-Id: <20140902021916.42C417F6C@oss.sgi.com>
-Date: Mon,  1 Sep 2014 21:19:14 -0500 (CDT)
+Subject: [XFS updates] XFS development tree branch, xfs-for-3.17-rc3,
+	created. xfs-for-linus-3.17-rc1-13183-g41b9d72
+Message-Id: <20140902021933.51E217F74@oss.sgi.com>
+Date: Mon,  1 Sep 2014 21:19:32 -0500 (CDT)
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,19 +23,8 @@ This is an automated email from the git hooks/post-receive script. It was
 generated because a ref change was pushed to the repository containing
 the project "XFS development tree".
 
-The branch, for-next has been updated
-  41b9d72 xfs: trim eofblocks before collapse range
-  1669a8c xfs: xfs_file_collapse_range is delalloc challenged
-  ca446d8 xfs: don't log inode unless extent shift makes extent modifications
-  7d4ea3c xfs: use ranged writeback and invalidation for direct IO
-  834ffca xfs: don't zero partial page cache pages during O_DIRECT writes
-  85e584d xfs: don't zero partial page cache pages during O_DIRECT writes
-  22e757a xfs: don't dirty buffers beyond EOF
-      from  52addcf9d6669fa439387610bc65c92fa0980cef (commit)
-
-Those revisions listed above that are new to this repository have
-not appeared on any other notification email; so we list those
-revisions in full, below.
+The branch, xfs-for-3.17-rc3 has been created
+        at  41b9d7263ea1e270019c5d04fa0ab15db50b9725 (commit)
 
 - Log -----------------------------------------------------------------
 commit 41b9d7263ea1e270019c5d04fa0ab15db50b9725
@@ -256,13 +245,6 @@ Date:   Tue Sep 2 12:12:51 2014 +1000
     Signed-off-by: Dave Chinner <david@fromorbit.com>
 
 -----------------------------------------------------------------------
-
-Summary of changes:
- fs/xfs/libxfs/xfs_bmap.c | 18 +++++++-------
- fs/xfs/xfs_aops.c        | 61 ++++++++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/xfs_bmap_util.c   | 20 ++++++++++++++++
- fs/xfs/xfs_file.c        | 27 +++++++++++++++++----
- 4 files changed, 114 insertions(+), 12 deletions(-)
 
 
 hooks/post-receive
