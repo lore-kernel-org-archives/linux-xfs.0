@@ -1,9 +1,35 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-From: xfs@oss.sgi.com
-Subject: [XFS updates] XFS development tree branch, xfs-for-3.17-rc3,
-	created. xfs-for-linus-3.17-rc1-13183-g41b9d72
-Message-Id: <20140902021933.51E217F74@oss.sgi.com>
-Date: Mon,  1 Sep 2014 21:19:32 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 54C1B7F6A
+	for <xfs@oss.sgi.com>; Tue,  2 Sep 2014 02:22:25 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id F3D17AC001
+	for <xfs@oss.sgi.com>; Tue,  2 Sep 2014 00:22:21 -0700 (PDT)
+Received: from smtp.inserm.fr (smtp.inserm.fr [195.98.252.37]) by cuda.sgi.com
+	with ESMTP id XUCvCIanFQfwldoe (version=TLSv1 cipher=AES256-SHA
+	bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 02 Sep 2014 00:22:17 -0700 (PDT)
+Received: from localhost (localhost.localdomain [127.0.0.1])
+	by smtp.inserm.fr (SrvInserm) with ESMTP id 3F0B9168437
+	for <xfs@oss.sgi.com>; Tue,  2 Sep 2014 09:22:15 +0200 (CEST)
+Received: from smtp.inserm.fr ([195.98.252.37])
+	by localhost (potentille.inserm.fr [127.0.0.1]) (amavisd-new,
+	port 10026) with ESMTP id T6RzsbPBXV4t for <xfs@oss.sgi.com>;
+	Tue,  2 Sep 2014 09:22:15 +0200 (CEST)
+Received: from cognac-lmde.crcm.mrs (236-ne1068.marseille.inserm.fr
+	[195.220.68.236])
+	(using TLSv1 with cipher DHE-RSA-AES128-SHA (128/128 bits))
+	(No client certificate requested)
+	by smtp.inserm.fr (SrvInserm) with ESMTP id 0FDF1168481
+	for <xfs@oss.sgi.com>; Tue,  2 Sep 2014 09:22:14 +0200 (CEST)
+Message-ID: <54057025.5090807@inserm.fr>
+Date: Tue, 02 Sep 2014 09:22:13 +0200
+From: Samuel Granjeaud <samuel.granjeaud@inserm.fr>
+MIME-Version: 1.0
+Subject: Re: Run out of inodes?
+References: <54005108.1020203@inserm.fr>	<20140829114806.GA17610@bfoster.bfoster>	<5400802C.5050005@inserm.fr>	<54009603.9050404@sandeen.net>	<8d5fff2548d35737c6cebcb1f6382e80@inserm.fr>
+	<20140901211932.342b4bb3@galadriel.home>
+In-Reply-To: <20140901211932.342b4bb3@galadriel.home>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -12,246 +38,282 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="utf-8"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-This is an automated email from the git hooks/post-receive script. It was
-generated because a ref change was pushed to the repository containing
-the project "XFS development tree".
-
-The branch, xfs-for-3.17-rc3 has been created
-        at  41b9d7263ea1e270019c5d04fa0ab15db50b9725 (commit)
-
-- Log -----------------------------------------------------------------
-commit 41b9d7263ea1e270019c5d04fa0ab15db50b9725
-Author: Brian Foster <bfoster@redhat.com>
-Date:   Tue Sep 2 12:12:53 2014 +1000
-
-    xfs: trim eofblocks before collapse range
-    
-    xfs_collapse_file_space() currently writes back the entire file
-    undergoing collapse range to settle things down for the extent shift
-    algorithm. While this prevents changes to the extent list during the
-    collapse operation, the writeback itself is not enough to prevent
-    unnecessary collapse failures.
-    
-    The current shift algorithm uses the extent index to iterate the in-core
-    extent list. If a post-eof delalloc extent persists after the writeback
-    (e.g., a prior zero range op where the end of the range aligns with eof
-    can separate the post-eof blocks such that they are not written back and
-    converted), xfs_bmap_shift_extents() becomes confused over the encoded
-    br_startblock value and fails the collapse.
-    
-    As with the full writeback, this is a temporary fix until the algorithm
-    is improved to cope with a volatile extent list and avoid attempts to
-    shift post-eof extents.
-    
-    Signed-off-by: Brian Foster <bfoster@redhat.com>
-    Reviewed-by: Dave Chinner <dchinner@redhat.com>
-    Reviewed-by: Christoph Hellwig <hch@lst.de>
-    Signed-off-by: Dave Chinner <david@fromorbit.com>
-
-commit 1669a8ca2105968f660cf7d84ba38fd18075cd99
-Author: Dave Chinner <dchinner@redhat.com>
-Date:   Tue Sep 2 12:12:53 2014 +1000
-
-    xfs: xfs_file_collapse_range is delalloc challenged
-    
-    If we have delalloc extents on a file before we run a collapse range
-    opertaion, we sync the range that we are going to collapse to
-    convert delalloc extents in that region to real extents to simplify
-    the shift operation.
-    
-    However, the shift operation then assumes that the extent list is
-    not going to change as it iterates over the extent list moving
-    things about. Unfortunately, this isn't true because we can't hold
-    the ILOCK over all the operations. We can prevent new IO from
-    modifying the extent list by holding the IOLOCK, but that doesn't
-    prevent writeback from running....
-    
-    And when writeback runs, it can convert delalloc extents is the
-    range of the file prior to the region being collapsed, and this
-    changes the indexes of all the extents in the file. That causes the
-    collapse range operation to Go Bad.
-    
-    The right fix is to rewrite the extent shift operation not to be
-    dependent on the extent list not changing across the entire
-    operation, but this is a fairly significant piece of work to do.
-    Hence, as a short-term workaround for the problem, sync the entire
-    file before starting a collapse operation to remove all delalloc
-    ranges from the file and so avoid the problem of concurrent
-    writeback changing the extent list.
-    
-    Diagnosed-and-Reported-by: Brian Foster <bfoster@redhat.com>
-    Signed-off-by: Dave Chinner <dchinner@redhat.com>
-    Reviewed-by: Brian Foster <bfoster@redhat.com>
-    Reviewed-by: Christoph Hellwig <hch@lst.de>
-    Signed-off-by: Dave Chinner <david@fromorbit.com>
-
-commit ca446d880c399bb31301e7d8eefbd7fe3c504c4e
-Author: Brian Foster <bfoster@redhat.com>
-Date:   Tue Sep 2 12:12:53 2014 +1000
-
-    xfs: don't log inode unless extent shift makes extent modifications
-    
-    The file collapse mechanism uses xfs_bmap_shift_extents() to collapse
-    all subsequent extents down into the specified, previously punched out,
-    region. This function performs some validation, such as whether a
-    sufficient hole exists in the target region of the collapse, then shifts
-    the remaining exents downward.
-    
-    The exit path of the function currently logs the inode unconditionally.
-    While we must log the inode (and abort) if an error occurs and the
-    transaction is dirty, the initial validation paths can generate errors
-    before the transaction has been dirtied. This creates an unnecessary
-    filesystem shutdown scenario, as the caller will cancel a transaction
-    that has been marked dirty.
-    
-    Modify xfs_bmap_shift_extents() to OR the logflags bits as modifications
-    are made to the inode bmap. Only log the inode in the exit path if
-    logflags has been set. This ensures we only have to cancel a dirty
-    transaction if modifications have been made and prevents an unnecessary
-    filesystem shutdown otherwise.
-    
-    Signed-off-by: Brian Foster <bfoster@redhat.com>
-    Reviewed-by: Dave Chinner <dchinner@redhat.com>
-    Reviewed-by: Christoph Hellwig <hch@lst.de>
-    Signed-off-by: Dave Chinner <david@fromorbit.com>
-
-commit 7d4ea3ce63a6bc532abb334c469c18481798af8c
-Author: Dave Chinner <dchinner@redhat.com>
-Date:   Tue Sep 2 12:12:53 2014 +1000
-
-    xfs: use ranged writeback and invalidation for direct IO
-    
-    Now we are not doing silly things with dirtying buffers beyond EOF
-    and using invalidation correctly, we can finally reduce the ranges of
-    writeback and invalidation used by direct IO to match that of the IO
-    being issued.
-    
-    Bring the writeback and invalidation ranges back to match the
-    generic direct IO code - this will greatly reduce the perturbation
-    of cached data when direct IO and buffered IO are mixed, but still
-    provide the same buffered vs direct IO coherency behaviour we
-    currently have.
-    
-    Signed-off-by: Dave Chinner <dchinner@redhat.com>
-    Reviewed-by: Brian Foster <bfoster@redhat.com>
-    Reviewed-by: Christoph Hellwig <hch@lst.de>
-    Signed-off-by: Dave Chinner <david@fromorbit.com>
-
-commit 834ffca6f7e345a79f6f2e2d131b0dfba8a4b67a
-Author: Dave Chinner <dchinner@redhat.com>
-Date:   Tue Sep 2 12:12:52 2014 +1000
-
-    xfs: don't zero partial page cache pages during O_DIRECT writes
-    
-    Similar to direct IO reads, direct IO writes are using
-    truncate_pagecache_range to invalidate the page cache. This is
-    incorrect due to the sub-block zeroing in the page cache that
-    truncate_pagecache_range() triggers.
-    
-    This patch fixes things by using invalidate_inode_pages2_range
-    instead.  It preserves the page cache invalidation, but won't zero
-    any pages.
-    
-    cc: stable@vger.kernel.org
-    Signed-off-by: Dave Chinner <dchinner@redhat.com>
-    Reviewed-by: Brian Foster <bfoster@redhat.com>
-    Reviewed-by: Christoph Hellwig <hch@lst.de>
-    Signed-off-by: Dave Chinner <david@fromorbit.com>
-
-commit 85e584da3212140ee80fd047f9058bbee0bc00d5
-Author: Chris Mason <clm@fb.com>
-Date:   Tue Sep 2 12:12:52 2014 +1000
-
-    xfs: don't zero partial page cache pages during O_DIRECT writes
-    
-    xfs is using truncate_pagecache_range to invalidate the page cache
-    during DIO reads.  This is different from the other filesystems who
-    only invalidate pages during DIO writes.
-    
-    truncate_pagecache_range is meant to be used when we are freeing the
-    underlying data structs from disk, so it will zero any partial
-    ranges in the page.  This means a DIO read can zero out part of the
-    page cache page, and it is possible the page will stay in cache.
-    
-    buffered reads will find an up to date page with zeros instead of
-    the data actually on disk.
-    
-    This patch fixes things by using invalidate_inode_pages2_range
-    instead.  It preserves the page cache invalidation, but won't zero
-    any pages.
-    
-    [dchinner: catch error and warn if it fails. Comment.]
-    
-    cc: stable@vger.kernel.org
-    Signed-off-by: Chris Mason <clm@fb.com>
-    Reviewed-by: Dave Chinner <dchinner@redhat.com>
-    Reviewed-by: Brian Foster <bfoster@redhat.com>
-    Reviewed-by: Christoph Hellwig <hch@lst.de>
-    Signed-off-by: Dave Chinner <david@fromorbit.com>
-
-commit 22e757a49cf010703fcb9c9b4ef793248c39b0c2
-Author: Dave Chinner <dchinner@redhat.com>
-Date:   Tue Sep 2 12:12:51 2014 +1000
-
-    xfs: don't dirty buffers beyond EOF
-    
-    generic/263 is failing fsx at this point with a page spanning
-    EOF that cannot be invalidated. The operations are:
-    
-    1190 mapwrite   0x52c00 thru    0x5e569 (0xb96a bytes)
-    1191 mapread    0x5c000 thru    0x5d636 (0x1637 bytes)
-    1192 write      0x5b600 thru    0x771ff (0x1bc00 bytes)
-    
-    where 1190 extents EOF from 0x54000 to 0x5e569. When the direct IO
-    write attempts to invalidate the cached page over this range, it
-    fails with -EBUSY and so any attempt to do page invalidation fails.
-    
-    The real question is this: Why can't that page be invalidated after
-    it has been written to disk and cleaned?
-    
-    Well, there's data on the first two buffers in the page (1k block
-    size, 4k page), but the third buffer on the page (i.e. beyond EOF)
-    is failing drop_buffers because it's bh->b_state == 0x3, which is
-    BH_Uptodate | BH_Dirty.  IOWs, there's dirty buffers beyond EOF. Say
-    what?
-    
-    OK, set_buffer_dirty() is called on all buffers from
-    __set_page_buffers_dirty(), regardless of whether the buffer is
-    beyond EOF or not, which means that when we get to ->writepage,
-    we have buffers marked dirty beyond EOF that we need to clean.
-    So, we need to implement our own .set_page_dirty method that
-    doesn't dirty buffers beyond EOF.
-    
-    This is messy because the buffer code is not meant to be shared
-    and it has interesting locking issues on the buffer dirty bits.
-    So just copy and paste it and then modify it to suit what we need.
-    
-    Note: the solutions the other filesystems and generic block code use
-    of marking the buffers clean in ->writepage does not work for XFS.
-    It still leaves dirty buffers beyond EOF and invalidations still
-    fail. Hence rather than play whack-a-mole, this patch simply
-    prevents those buffers from being dirtied in the first place.
-    
-    cc: <stable@kernel.org>
-    Signed-off-by: Dave Chinner <dchinner@redhat.com>
-    Reviewed-by: Brian Foster <bfoster@redhat.com>
-    Signed-off-by: Dave Chinner <david@fromorbit.com>
-
------------------------------------------------------------------------
-
-
-hooks/post-receive
--- 
-XFS development tree
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+VGhhbmtzIEVyaWMgYW5kIEVtbWFudWVsLgoKSGVyZSBhcmUgdGhlIGRpYWdub3NpcyBvZiB0aGUg
+aW5zdGFsbGVkIHNhbWJhIGRpc3RyaWIgd2l0aCBvcGVuZmlsZXIgNjQgYml0cwoKIyBzbWIgKGF1
+dG8tY29tcGxldGlvbiBrZXkpCnNtYmNvbnRyb2wgIHNtYmQgICAgICAgIHNtYnBhc3N3ZCAgIHNt
+YnByaW50ICAgIHNtYnN0YXR1cyBzbWJ0YXIKCiMgd2hpY2ggc21iY29udHJvbCAgc21iZCAgICAg
+ICAgc21icGFzc3dkICAgc21icHJpbnQgICAgc21ic3RhdHVzIHNtYnRhcgovdXNyL2Jpbi9zbWJj
+b250cm9sCi91c3Ivc2Jpbi9zbWJkCi91c3IvYmluL3NtYnBhc3N3ZAovdXNyL2Jpbi9zbWJwcmlu
+dAovdXNyL2Jpbi9zbWJzdGF0dXMKL3Vzci9iaW4vc21idGFyCgojIGZpbGUgL3Vzci9zYmluL3Nt
+YmQgL3Vzci9iaW4vc21iKgovdXNyL3NiaW4vc21iZDogICAgICBFTEYgNjQtYml0IExTQiBzaGFy
+ZWQgb2JqZWN0LCB4ODYtNjQsIHZlcnNpb24gMSAKKFNZU1YpLCBmb3IgR05VL0xpbnV4IDIuNC4w
+LCBzdHJpcHBlZAovdXNyL2Jpbi9zbWJjb250cm9sOiBFTEYgNjQtYml0IExTQiBzaGFyZWQgb2Jq
+ZWN0LCB4ODYtNjQsIHZlcnNpb24gMSAKKFNZU1YpLCBmb3IgR05VL0xpbnV4IDIuNC4wLCBzdHJp
+cHBlZAovdXNyL2Jpbi9zbWJwYXNzd2Q6ICBFTEYgNjQtYml0IExTQiBzaGFyZWQgb2JqZWN0LCB4
+ODYtNjQsIHZlcnNpb24gMSAKKFNZU1YpLCBmb3IgR05VL0xpbnV4IDIuNC4wLCBzdHJpcHBlZAov
+dXNyL2Jpbi9zbWJwcmludDogICBCb3VybmUgc2hlbGwgc2NyaXB0IHRleHQgZXhlY3V0YWJsZQov
+dXNyL2Jpbi9zbWJzdGF0dXM6ICBFTEYgNjQtYml0IExTQiBzaGFyZWQgb2JqZWN0LCB4ODYtNjQs
+IHZlcnNpb24gMSAKKFNZU1YpLCBmb3IgR05VL0xpbnV4IDIuNC4wLCBzdHJpcHBlZAovdXNyL2Jp
+bi9zbWJ0YXI6ICAgICBCb3VybmUgc2hlbGwgc2NyaXB0IHRleHQgZXhlY3V0YWJsZQoKW3Jvb3RA
+cHJvdGVvLXJlcGxpY2Egfl0jIGxkZCAvdXNyL3NiaW4vc21iZCAvdXNyL2Jpbi9zbWIqCi91c3Iv
+c2Jpbi9zbWJkOgogICAgIGxpYmxkYXAtMi4yLnNvLjcgPT4gL3Vzci9saWI2NC9saWJsZGFwLTIu
+Mi5zby43ICgweDAwMDA3ZmU0Yzk3ZmYwMDApCiAgICAgbGlibGJlci0yLjIuc28uNyA9PiAvdXNy
+L2xpYjY0L2xpYmxiZXItMi4yLnNvLjcgKDB4MDAwMDdmZTRjOTZmMDAwMCkKICAgICBsaWJnc3Nh
+cGlfa3JiNS5zby4yID0+IC91c3Iva2VyYmVyb3MvbGliNjQvbGliZ3NzYXBpX2tyYjUuc28uMiAK
+KDB4MDAwMDdmZTRjOTVkODAwMCkKICAgICBsaWJrcmI1LnNvLjMgPT4gL3Vzci9rZXJiZXJvcy9s
+aWI2NC9saWJrcmI1LnNvLjMgKDB4MDAwMDdmZTRjOTQ1ZTAwMCkKICAgICBsaWJrNWNyeXB0by5z
+by4zID0+IC91c3Iva2VyYmVyb3MvbGliNjQvbGliazVjcnlwdG8uc28uMyAKKDB4MDAwMDdmZTRj
+OTMzYTAwMCkKICAgICBsaWJrcmI1c3VwcG9ydC5zby4wID0+IC91c3Iva2VyYmVyb3MvbGliNjQv
+bGlia3JiNXN1cHBvcnQuc28uMCAKKDB4MDAwMDdmZTRjOTIzNzAwMCkKICAgICBsaWJjb21fZXJy
+LnNvLjMgPT4gL3Vzci9rZXJiZXJvcy9saWI2NC9saWJjb21fZXJyLnNvLjMgCigweDAwMDA3ZmU0
+YzkxMzMwMDApCiAgICAgbGlicmVzb2x2LnNvLjIgPT4gL2xpYjY0L2xpYnJlc29sdi5zby4yICgw
+eDAwMDA3ZmU0YzkwMjAwMDApCiAgICAgbGliY3J5cHQuc28uMSA9PiAvbGliNjQvbGliY3J5cHQu
+c28uMSAoMHgwMDAwN2ZlNGM4ZWVkMDAwKQogICAgIGxpYnBhbS5zby4wID0+IC9saWI2NC9saWJw
+YW0uc28uMCAoMHgwMDAwN2ZlNGM4ZGU1MDAwKQogICAgIGxpYmFjbC5zby4xID0+IC9saWI2NC9s
+aWJhY2wuc28uMSAoMHgwMDAwN2ZlNGM4Y2RkMDAwKQogICAgIGxpYmF0dHIuc28uMSA9PiAvbGli
+NjQvbGliYXR0ci5zby4xICgweDAwMDA3ZmU0YzhiZDkwMDApCiAgICAgbGliY2FwLnNvLjEgPT4g
+L2xpYjY0L2xpYmNhcC5zby4xICgweDAwMDA3ZmU0YzhhZDUwMDApCiAgICAgbGlibnNsLnNvLjEg
+PT4gL2xpYjY0L2xpYm5zbC5zby4xICgweDAwMDA3ZmU0Yzg5YmYwMDApCiAgICAgbGliZGwuc28u
+MiA9PiAvbGliNjQvbGliZGwuc28uMiAoMHgwMDAwN2ZlNGM4OGJjMDAwKQogICAgIGxpYnJ0LnNv
+LjEgPT4gL2xpYjY0L3Rscy9saWJydC5zby4xICgweDAwMDA3ZmU0Yzg3YTIwMDApCiAgICAgbGli
+cG9wdC5zby4wID0+IC91c3IvbGliNjQvbGlicG9wdC5zby4wICgweDAwMDA3ZmU0Yzg2OWEwMDAp
+CiAgICAgbGlidGFsbG9jLnNvLjEgPT4gL3Vzci9saWI2NC9saWJ0YWxsb2Muc28uMSAoMHgwMDAw
+N2ZlNGM4NTkyMDAwKQogICAgIGxpYnRkYi5zby4xID0+IC91c3IvbGliNjQvbGlidGRiLnNvLjEg
+KDB4MDAwMDdmZTRjODQ4NTAwMCkKICAgICBsaWJ3YmNsaWVudC5zby4wID0+IC91c3IvbGliNjQv
+bGlid2JjbGllbnQuc28uMCAoMHgwMDAwN2ZlNGM4Mzc5MDAwKQogICAgIGxpYnouc28uMSA9PiAv
+dXNyL2xpYjY0L2xpYnouc28uMSAoMHgwMDAwN2ZlNGM4MjY0MDAwKQogICAgIGxpYmMuc28uNiA9
+PiAvbGliNjQvdGxzL2xpYmMuc28uNiAoMHgwMDAwN2ZlNGM4MDNlMDAwKQogICAgIGxpYnNhc2wy
+LnNvLjIgPT4gL3Vzci9saWI2NC9saWJzYXNsMi5zby4yICgweDAwMDA3ZmU0YzdmMjcwMDApCiAg
+ICAgbGlic3NsLnNvLjUgPT4gL2xpYjY0L2xpYnNzbC5zby41ICgweDAwMDA3ZmU0YzdkZGUwMDAp
+CiAgICAgbGliY3J5cHRvLnNvLjUgPT4gL2xpYjY0L2xpYmNyeXB0by5zby41ICgweDAwMDA3ZmU0
+YzdiNmUwMDApCiAgICAgL2xpYjY0L2xkLWxpbnV4LXg4Ni02NC5zby4yICgweDAwMDA3ZmU0Yzk5
+MzUwMDApCiAgICAgbGlicHRocmVhZC5zby4wID0+IC9saWI2NC90bHMvbGlicHRocmVhZC5zby4w
+ICgweDAwMDA3ZmU0YzdhNWEwMDApCi91c3IvYmluL3NtYmNvbnRyb2w6CiAgICAgbGliY2FwLnNv
+LjEgPT4gL2xpYjY0L2xpYmNhcC5zby4xICgweDAwMDA3ZjYxMzNlMzcwMDApCiAgICAgbGlicmVz
+b2x2LnNvLjIgPT4gL2xpYjY0L2xpYnJlc29sdi5zby4yICgweDAwMDA3ZjYxMzNkMjQwMDApCiAg
+ICAgbGlibnNsLnNvLjEgPT4gL2xpYjY0L2xpYm5zbC5zby4xICgweDAwMDA3ZjYxMzNjMGUwMDAp
+CiAgICAgbGliZGwuc28uMiA9PiAvbGliNjQvbGliZGwuc28uMiAoMHgwMDAwN2Y2MTMzYjBiMDAw
+KQogICAgIGxpYnJ0LnNvLjEgPT4gL2xpYjY0L3Rscy9saWJydC5zby4xICgweDAwMDA3ZjYxMzM5
+ZjEwMDApCiAgICAgbGlibGRhcC0yLjIuc28uNyA9PiAvdXNyL2xpYjY0L2xpYmxkYXAtMi4yLnNv
+LjcgKDB4MDAwMDdmNjEzMzhiYjAwMCkKICAgICBsaWJsYmVyLTIuMi5zby43ID0+IC91c3IvbGli
+NjQvbGlibGJlci0yLjIuc28uNyAoMHgwMDAwN2Y2MTMzN2FjMDAwKQogICAgIGxpYnBvcHQuc28u
+MCA9PiAvdXNyL2xpYjY0L2xpYnBvcHQuc28uMCAoMHgwMDAwN2Y2MTMzNmE0MDAwKQogICAgIGxp
+YnRhbGxvYy5zby4xID0+IC91c3IvbGliNjQvbGlidGFsbG9jLnNvLjEgKDB4MDAwMDdmNjEzMzU5
+YzAwMCkKICAgICBsaWJ0ZGIuc28uMSA9PiAvdXNyL2xpYjY0L2xpYnRkYi5zby4xICgweDAwMDA3
+ZjYxMzM0OGYwMDApCiAgICAgbGliYy5zby42ID0+IC9saWI2NC90bHMvbGliYy5zby42ICgweDAw
+MDA3ZjYxMzMyNjkwMDApCiAgICAgL2xpYjY0L2xkLWxpbnV4LXg4Ni02NC5zby4yICgweDAwMDA3
+ZjYxMzNmM2IwMDApCiAgICAgbGlicHRocmVhZC5zby4wID0+IC9saWI2NC90bHMvbGlicHRocmVh
+ZC5zby4wICgweDAwMDA3ZjYxMzMxNTUwMDApCiAgICAgbGlic2FzbDIuc28uMiA9PiAvdXNyL2xp
+YjY0L2xpYnNhc2wyLnNvLjIgKDB4MDAwMDdmNjEzMzAzZTAwMCkKICAgICBsaWJzc2wuc28uNSA9
+PiAvbGliNjQvbGlic3NsLnNvLjUgKDB4MDAwMDdmNjEzMmVmNTAwMCkKICAgICBsaWJjcnlwdG8u
+c28uNSA9PiAvbGliNjQvbGliY3J5cHRvLnNvLjUgKDB4MDAwMDdmNjEzMmM4NTAwMCkKICAgICBs
+aWJnc3NhcGlfa3JiNS5zby4yID0+IC91c3Iva2VyYmVyb3MvbGliNjQvbGliZ3NzYXBpX2tyYjUu
+c28uMiAKKDB4MDAwMDdmNjEzMmI2ZDAwMCkKICAgICBsaWJrcmI1LnNvLjMgPT4gL3Vzci9rZXJi
+ZXJvcy9saWI2NC9saWJrcmI1LnNvLjMgKDB4MDAwMDdmNjEzMjlmMzAwMCkKICAgICBsaWJjb21f
+ZXJyLnNvLjMgPT4gL3Vzci9rZXJiZXJvcy9saWI2NC9saWJjb21fZXJyLnNvLjMgCigweDAwMDA3
+ZjYxMzI4ZWYwMDApCiAgICAgbGliazVjcnlwdG8uc28uMyA9PiAvdXNyL2tlcmJlcm9zL2xpYjY0
+L2xpYms1Y3J5cHRvLnNvLjMgCigweDAwMDA3ZjYxMzI3Y2IwMDApCiAgICAgbGliei5zby4xID0+
+IC91c3IvbGliNjQvbGliei5zby4xICgweDAwMDA3ZjYxMzI2YjYwMDApCiAgICAgbGlia3JiNXN1
+cHBvcnQuc28uMCA9PiAvdXNyL2tlcmJlcm9zL2xpYjY0L2xpYmtyYjVzdXBwb3J0LnNvLjAgCigw
+eDAwMDA3ZjYxMzI1YjMwMDApCi91c3IvYmluL3NtYnBhc3N3ZDoKICAgICBsaWJsZGFwLTIuMi5z
+by43ID0+IC91c3IvbGliNjQvbGlibGRhcC0yLjIuc28uNyAoMHgwMDAwN2Y5ZWFlYTFmMDAwKQog
+ICAgIGxpYmxiZXItMi4yLnNvLjcgPT4gL3Vzci9saWI2NC9saWJsYmVyLTIuMi5zby43ICgweDAw
+MDA3ZjllYWU5MTAwMDApCiAgICAgbGliY2FwLnNvLjEgPT4gL2xpYjY0L2xpYmNhcC5zby4xICgw
+eDAwMDA3ZjllYWU4MGMwMDApCiAgICAgbGlicmVzb2x2LnNvLjIgPT4gL2xpYjY0L2xpYnJlc29s
+di5zby4yICgweDAwMDA3ZjllYWU2ZjkwMDApCiAgICAgbGlibnNsLnNvLjEgPT4gL2xpYjY0L2xp
+Ym5zbC5zby4xICgweDAwMDA3ZjllYWU1ZTMwMDApCiAgICAgbGliZGwuc28uMiA9PiAvbGliNjQv
+bGliZGwuc28uMiAoMHgwMDAwN2Y5ZWFlNGUwMDAwKQogICAgIGxpYnJ0LnNvLjEgPT4gL2xpYjY0
+L3Rscy9saWJydC5zby4xICgweDAwMDA3ZjllYWUzYzYwMDApCiAgICAgbGlicG9wdC5zby4wID0+
+IC91c3IvbGliNjQvbGlicG9wdC5zby4wICgweDAwMDA3ZjllYWUyYmUwMDApCiAgICAgbGliZ3Nz
+YXBpX2tyYjUuc28uMiA9PiAvdXNyL2tlcmJlcm9zL2xpYjY0L2xpYmdzc2FwaV9rcmI1LnNvLjIg
+CigweDAwMDA3ZjllYWUxYTYwMDApCiAgICAgbGlia3JiNS5zby4zID0+IC91c3Iva2VyYmVyb3Mv
+bGliNjQvbGlia3JiNS5zby4zICgweDAwMDA3ZjllYWUwMmMwMDApCiAgICAgbGliazVjcnlwdG8u
+c28uMyA9PiAvdXNyL2tlcmJlcm9zL2xpYjY0L2xpYms1Y3J5cHRvLnNvLjMgCigweDAwMDA3Zjll
+YWRmMDgwMDApCiAgICAgbGlia3JiNXN1cHBvcnQuc28uMCA9PiAvdXNyL2tlcmJlcm9zL2xpYjY0
+L2xpYmtyYjVzdXBwb3J0LnNvLjAgCigweDAwMDA3ZjllYWRlMDUwMDApCiAgICAgbGliY29tX2Vy
+ci5zby4zID0+IC91c3Iva2VyYmVyb3MvbGliNjQvbGliY29tX2Vyci5zby4zIAooMHgwMDAwN2Y5
+ZWFkZDAxMDAwKQogICAgIGxpYnRhbGxvYy5zby4xID0+IC91c3IvbGliNjQvbGlidGFsbG9jLnNv
+LjEgKDB4MDAwMDdmOWVhZGJmOTAwMCkKICAgICBsaWJ0ZGIuc28uMSA9PiAvdXNyL2xpYjY0L2xp
+YnRkYi5zby4xICgweDAwMDA3ZjllYWRhZWMwMDApCiAgICAgbGlid2JjbGllbnQuc28uMCA9PiAv
+dXNyL2xpYjY0L2xpYndiY2xpZW50LnNvLjAgKDB4MDAwMDdmOWVhZDllMDAwMCkKICAgICBsaWJ6
+LnNvLjEgPT4gL3Vzci9saWI2NC9saWJ6LnNvLjEgKDB4MDAwMDdmOWVhZDhjYjAwMCkKICAgICBs
+aWJjLnNvLjYgPT4gL2xpYjY0L3Rscy9saWJjLnNvLjYgKDB4MDAwMDdmOWVhZDZhNTAwMCkKICAg
+ICBsaWJzYXNsMi5zby4yID0+IC91c3IvbGliNjQvbGlic2FzbDIuc28uMiAoMHgwMDAwN2Y5ZWFk
+NThlMDAwKQogICAgIGxpYnNzbC5zby41ID0+IC9saWI2NC9saWJzc2wuc28uNSAoMHgwMDAwN2Y5
+ZWFkNDQ1MDAwKQogICAgIGxpYmNyeXB0by5zby41ID0+IC9saWI2NC9saWJjcnlwdG8uc28uNSAo
+MHgwMDAwN2Y5ZWFkMWQ1MDAwKQogICAgIC9saWI2NC9sZC1saW51eC14ODYtNjQuc28uMiAoMHgw
+MDAwN2Y5ZWFlYjU1MDAwKQogICAgIGxpYnB0aHJlYWQuc28uMCA9PiAvbGliNjQvdGxzL2xpYnB0
+aHJlYWQuc28uMCAoMHgwMDAwN2Y5ZWFkMGMxMDAwKQovdXNyL2Jpbi9zbWJwcmludDoKICAgICBu
+b3QgYSBkeW5hbWljIGV4ZWN1dGFibGUKL3Vzci9iaW4vc21ic3RhdHVzOgogICAgIGxpYmNhcC5z
+by4xID0+IC9saWI2NC9saWJjYXAuc28uMSAoMHgwMDAwN2ZmYzliNWQ1MDAwKQogICAgIGxpYnJl
+c29sdi5zby4yID0+IC9saWI2NC9saWJyZXNvbHYuc28uMiAoMHgwMDAwN2ZmYzliNGMyMDAwKQog
+ICAgIGxpYm5zbC5zby4xID0+IC9saWI2NC9saWJuc2wuc28uMSAoMHgwMDAwN2ZmYzliM2FjMDAw
+KQogICAgIGxpYmRsLnNvLjIgPT4gL2xpYjY0L2xpYmRsLnNvLjIgKDB4MDAwMDdmZmM5YjJhOTAw
+MCkKICAgICBsaWJydC5zby4xID0+IC9saWI2NC90bHMvbGlicnQuc28uMSAoMHgwMDAwN2ZmYzli
+MThmMDAwKQogICAgIGxpYmxkYXAtMi4yLnNvLjcgPT4gL3Vzci9saWI2NC9saWJsZGFwLTIuMi5z
+by43ICgweDAwMDA3ZmZjOWIwNTkwMDApCiAgICAgbGlibGJlci0yLjIuc28uNyA9PiAvdXNyL2xp
+YjY0L2xpYmxiZXItMi4yLnNvLjcgKDB4MDAwMDdmZmM5YWY0YTAwMCkKICAgICBsaWJwb3B0LnNv
+LjAgPT4gL3Vzci9saWI2NC9saWJwb3B0LnNvLjAgKDB4MDAwMDdmZmM5YWU0MjAwMCkKICAgICBs
+aWJ0YWxsb2Muc28uMSA9PiAvdXNyL2xpYjY0L2xpYnRhbGxvYy5zby4xICgweDAwMDA3ZmZjOWFk
+M2EwMDApCiAgICAgbGlidGRiLnNvLjEgPT4gL3Vzci9saWI2NC9saWJ0ZGIuc28uMSAoMHgwMDAw
+N2ZmYzlhYzJkMDAwKQogICAgIGxpYmMuc28uNiA9PiAvbGliNjQvdGxzL2xpYmMuc28uNiAoMHgw
+MDAwN2ZmYzlhYTA3MDAwKQogICAgIC9saWI2NC9sZC1saW51eC14ODYtNjQuc28uMiAoMHgwMDAw
+N2ZmYzliNmQ5MDAwKQogICAgIGxpYnB0aHJlYWQuc28uMCA9PiAvbGliNjQvdGxzL2xpYnB0aHJl
+YWQuc28uMCAoMHgwMDAwN2ZmYzlhOGYzMDAwKQogICAgIGxpYnNhc2wyLnNvLjIgPT4gL3Vzci9s
+aWI2NC9saWJzYXNsMi5zby4yICgweDAwMDA3ZmZjOWE3ZGMwMDApCiAgICAgbGlic3NsLnNvLjUg
+PT4gL2xpYjY0L2xpYnNzbC5zby41ICgweDAwMDA3ZmZjOWE2OTMwMDApCiAgICAgbGliY3J5cHRv
+LnNvLjUgPT4gL2xpYjY0L2xpYmNyeXB0by5zby41ICgweDAwMDA3ZmZjOWE0MjMwMDApCiAgICAg
+bGliZ3NzYXBpX2tyYjUuc28uMiA9PiAvdXNyL2tlcmJlcm9zL2xpYjY0L2xpYmdzc2FwaV9rcmI1
+LnNvLjIgCigweDAwMDA3ZmZjOWEzMGIwMDApCiAgICAgbGlia3JiNS5zby4zID0+IC91c3Iva2Vy
+YmVyb3MvbGliNjQvbGlia3JiNS5zby4zICgweDAwMDA3ZmZjOWExOTEwMDApCiAgICAgbGliY29t
+X2Vyci5zby4zID0+IC91c3Iva2VyYmVyb3MvbGliNjQvbGliY29tX2Vyci5zby4zIAooMHgwMDAw
+N2ZmYzlhMDhkMDAwKQogICAgIGxpYms1Y3J5cHRvLnNvLjMgPT4gL3Vzci9rZXJiZXJvcy9saWI2
+NC9saWJrNWNyeXB0by5zby4zIAooMHgwMDAwN2ZmYzk5ZjY5MDAwKQogICAgIGxpYnouc28uMSA9
+PiAvdXNyL2xpYjY0L2xpYnouc28uMSAoMHgwMDAwN2ZmYzk5ZTU0MDAwKQogICAgIGxpYmtyYjVz
+dXBwb3J0LnNvLjAgPT4gL3Vzci9rZXJiZXJvcy9saWI2NC9saWJrcmI1c3VwcG9ydC5zby4wIAoo
+MHgwMDAwN2ZmYzk5ZDUxMDAwKQovdXNyL2Jpbi9zbWJ0YXI6CiAgICAgbm90IGEgZHluYW1pYyBl
+eGVjdXRhYmxlCltyb290QHByb3Rlby1yZXBsaWNhIH5dIyBsZGQgL3Vzci9zYmluL3NtYmQgL3Vz
+ci9iaW4vc21iKiB8IGdyZXAgLXIgImxpYjY0IgogICAgIGxpYmxkYXAtMi4yLnNvLjcgPT4gL3Vz
+ci9saWI2NC9saWJsZGFwLTIuMi5zby43ICgweDAwMDA3ZmUzMjIyMDUwMDApCiAgICAgbGlibGJl
+ci0yLjIuc28uNyA9PiAvdXNyL2xpYjY0L2xpYmxiZXItMi4yLnNvLjcgKDB4MDAwMDdmZTMyMjBm
+NjAwMCkKICAgICBsaWJnc3NhcGlfa3JiNS5zby4yID0+IC91c3Iva2VyYmVyb3MvbGliNjQvbGli
+Z3NzYXBpX2tyYjUuc28uMiAKKDB4MDAwMDdmZTMyMWZkZTAwMCkKICAgICBsaWJrcmI1LnNvLjMg
+PT4gL3Vzci9rZXJiZXJvcy9saWI2NC9saWJrcmI1LnNvLjMgKDB4MDAwMDdmZTMyMWU2NDAwMCkK
+ICAgICBsaWJrNWNyeXB0by5zby4zID0+IC91c3Iva2VyYmVyb3MvbGliNjQvbGliazVjcnlwdG8u
+c28uMyAKKDB4MDAwMDdmZTMyMWQ0MDAwMCkKICAgICBsaWJrcmI1c3VwcG9ydC5zby4wID0+IC91
+c3Iva2VyYmVyb3MvbGliNjQvbGlia3JiNXN1cHBvcnQuc28uMCAKKDB4MDAwMDdmZTMyMWMzZDAw
+MCkKICAgICBsaWJjb21fZXJyLnNvLjMgPT4gL3Vzci9rZXJiZXJvcy9saWI2NC9saWJjb21fZXJy
+LnNvLjMgCigweDAwMDA3ZmUzMjFiMzkwMDApCiAgICAgbGlicmVzb2x2LnNvLjIgPT4gL2xpYjY0
+L2xpYnJlc29sdi5zby4yICgweDAwMDA3ZmUzMjFhMjYwMDApCiAgICAgbGliY3J5cHQuc28uMSA9
+PiAvbGliNjQvbGliY3J5cHQuc28uMSAoMHgwMDAwN2ZlMzIxOGYzMDAwKQogICAgIGxpYnBhbS5z
+by4wID0+IC9saWI2NC9saWJwYW0uc28uMCAoMHgwMDAwN2ZlMzIxN2ViMDAwKQogICAgIGxpYmFj
+bC5zby4xID0+IC9saWI2NC9saWJhY2wuc28uMSAoMHgwMDAwN2ZlMzIxNmUzMDAwKQogICAgIGxp
+YmF0dHIuc28uMSA9PiAvbGliNjQvbGliYXR0ci5zby4xICgweDAwMDA3ZmUzMjE1ZGYwMDApCiAg
+ICAgbGliY2FwLnNvLjEgPT4gL2xpYjY0L2xpYmNhcC5zby4xICgweDAwMDA3ZmUzMjE0ZGIwMDAp
+CiAgICAgbGlibnNsLnNvLjEgPT4gL2xpYjY0L2xpYm5zbC5zby4xICgweDAwMDA3ZmUzMjEzYzUw
+MDApCiAgICAgbGliZGwuc28uMiA9PiAvbGliNjQvbGliZGwuc28uMiAoMHgwMDAwN2ZlMzIxMmMy
+MDAwKQogICAgIGxpYnJ0LnNvLjEgPT4gL2xpYjY0L3Rscy9saWJydC5zby4xICgweDAwMDA3ZmUz
+MjExYTgwMDApCiAgICAgbGlicG9wdC5zby4wID0+IC91c3IvbGliNjQvbGlicG9wdC5zby4wICgw
+eDAwMDA3ZmUzMjEwYTAwMDApCiAgICAgbGlidGFsbG9jLnNvLjEgPT4gL3Vzci9saWI2NC9saWJ0
+YWxsb2Muc28uMSAoMHgwMDAwN2ZlMzIwZjk4MDAwKQogICAgIGxpYnRkYi5zby4xID0+IC91c3Iv
+bGliNjQvbGlidGRiLnNvLjEgKDB4MDAwMDdmZTMyMGU4YjAwMCkKICAgICBsaWJ3YmNsaWVudC5z
+by4wID0+IC91c3IvbGliNjQvbGlid2JjbGllbnQuc28uMCAoMHgwMDAwN2ZlMzIwZDdmMDAwKQog
+ICAgIGxpYnouc28uMSA9PiAvdXNyL2xpYjY0L2xpYnouc28uMSAoMHgwMDAwN2ZlMzIwYzZhMDAw
+KQogICAgIGxpYmMuc28uNiA9PiAvbGliNjQvdGxzL2xpYmMuc28uNiAoMHgwMDAwN2ZlMzIwYTQ0
+MDAwKQogICAgIGxpYnNhc2wyLnNvLjIgPT4gL3Vzci9saWI2NC9saWJzYXNsMi5zby4yICgweDAw
+MDA3ZmUzMjA5MmQwMDApCiAgICAgbGlic3NsLnNvLjUgPT4gL2xpYjY0L2xpYnNzbC5zby41ICgw
+eDAwMDA3ZmUzMjA3ZTQwMDApCiAgICAgbGliY3J5cHRvLnNvLjUgPT4gL2xpYjY0L2xpYmNyeXB0
+by5zby41ICgweDAwMDA3ZmUzMjA1NzQwMDApCiAgICAgL2xpYjY0L2xkLWxpbnV4LXg4Ni02NC5z
+by4yICgweDAwMDA3ZmUzMjIzM2IwMDApCiAgICAgbGlicHRocmVhZC5zby4wID0+IC9saWI2NC90
+bHMvbGlicHRocmVhZC5zby4wICgweDAwMDA3ZmUzMjA0NjAwMDApCiAgICAgbGliY2FwLnNvLjEg
+PT4gL2xpYjY0L2xpYmNhcC5zby4xICgweDAwMDA3ZmFkMWYyODIwMDApCiAgICAgbGlicmVzb2x2
+LnNvLjIgPT4gL2xpYjY0L2xpYnJlc29sdi5zby4yICgweDAwMDA3ZmFkMWYxNmYwMDApCiAgICAg
+bGlibnNsLnNvLjEgPT4gL2xpYjY0L2xpYm5zbC5zby4xICgweDAwMDA3ZmFkMWYwNTkwMDApCiAg
+ICAgbGliZGwuc28uMiA9PiAvbGliNjQvbGliZGwuc28uMiAoMHgwMDAwN2ZhZDFlZjU2MDAwKQog
+ICAgIGxpYnJ0LnNvLjEgPT4gL2xpYjY0L3Rscy9saWJydC5zby4xICgweDAwMDA3ZmFkMWVlM2Mw
+MDApCiAgICAgbGlibGRhcC0yLjIuc28uNyA9PiAvdXNyL2xpYjY0L2xpYmxkYXAtMi4yLnNvLjcg
+KDB4MDAwMDdmYWQxZWQwNjAwMCkKICAgICBsaWJsYmVyLTIuMi5zby43ID0+IC91c3IvbGliNjQv
+bGlibGJlci0yLjIuc28uNyAoMHgwMDAwN2ZhZDFlYmY3MDAwKQogICAgIGxpYnBvcHQuc28uMCA9
+PiAvdXNyL2xpYjY0L2xpYnBvcHQuc28uMCAoMHgwMDAwN2ZhZDFlYWVmMDAwKQogICAgIGxpYnRh
+bGxvYy5zby4xID0+IC91c3IvbGliNjQvbGlidGFsbG9jLnNvLjEgKDB4MDAwMDdmYWQxZTllNzAw
+MCkKICAgICBsaWJ0ZGIuc28uMSA9PiAvdXNyL2xpYjY0L2xpYnRkYi5zby4xICgweDAwMDA3ZmFk
+MWU4ZGEwMDApCiAgICAgbGliYy5zby42ID0+IC9saWI2NC90bHMvbGliYy5zby42ICgweDAwMDA3
+ZmFkMWU2YjQwMDApCiAgICAgL2xpYjY0L2xkLWxpbnV4LXg4Ni02NC5zby4yICgweDAwMDA3ZmFk
+MWYzODYwMDApCiAgICAgbGlicHRocmVhZC5zby4wID0+IC9saWI2NC90bHMvbGlicHRocmVhZC5z
+by4wICgweDAwMDA3ZmFkMWU1YTAwMDApCiAgICAgbGlic2FzbDIuc28uMiA9PiAvdXNyL2xpYjY0
+L2xpYnNhc2wyLnNvLjIgKDB4MDAwMDdmYWQxZTQ4OTAwMCkKICAgICBsaWJzc2wuc28uNSA9PiAv
+bGliNjQvbGlic3NsLnNvLjUgKDB4MDAwMDdmYWQxZTM0MDAwMCkKICAgICBsaWJjcnlwdG8uc28u
+NSA9PiAvbGliNjQvbGliY3J5cHRvLnNvLjUgKDB4MDAwMDdmYWQxZTBkMDAwMCkKICAgICBsaWJn
+c3NhcGlfa3JiNS5zby4yID0+IC91c3Iva2VyYmVyb3MvbGliNjQvbGliZ3NzYXBpX2tyYjUuc28u
+MiAKKDB4MDAwMDdmYWQxZGZiODAwMCkKICAgICBsaWJrcmI1LnNvLjMgPT4gL3Vzci9rZXJiZXJv
+cy9saWI2NC9saWJrcmI1LnNvLjMgKDB4MDAwMDdmYWQxZGUzZTAwMCkKICAgICBsaWJjb21fZXJy
+LnNvLjMgPT4gL3Vzci9rZXJiZXJvcy9saWI2NC9saWJjb21fZXJyLnNvLjMgCigweDAwMDA3ZmFk
+MWRkM2EwMDApCiAgICAgbGliazVjcnlwdG8uc28uMyA9PiAvdXNyL2tlcmJlcm9zL2xpYjY0L2xp
+Yms1Y3J5cHRvLnNvLjMgCigweDAwMDA3ZmFkMWRjMTYwMDApCiAgICAgbGliei5zby4xID0+IC91
+c3IvbGliNjQvbGliei5zby4xICgweDAwMDA3ZmFkMWRiMDEwMDApCiAgICAgbGlia3JiNXN1cHBv
+cnQuc28uMCA9PiAvdXNyL2tlcmJlcm9zL2xpYjY0L2xpYmtyYjVzdXBwb3J0LnNvLjAgCigweDAw
+MDA3ZmFkMWQ5ZmUwMDApCiAgICAgbGlibGRhcC0yLjIuc28uNyA9PiAvdXNyL2xpYjY0L2xpYmxk
+YXAtMi4yLnNvLjcgKDB4MDAwMDdmNDU1MWU5MjAwMCkKICAgICBsaWJsYmVyLTIuMi5zby43ID0+
+IC91c3IvbGliNjQvbGlibGJlci0yLjIuc28uNyAoMHgwMDAwN2Y0NTUxZDgzMDAwKQogICAgIGxp
+YmNhcC5zby4xID0+IC9saWI2NC9saWJjYXAuc28uMSAoMHgwMDAwN2Y0NTUxYzdmMDAwKQogICAg
+IGxpYnJlc29sdi5zby4yID0+IC9saWI2NC9saWJyZXNvbHYuc28uMiAoMHgwMDAwN2Y0NTUxYjZj
+MDAwKQogICAgIGxpYm5zbC5zby4xID0+IC9saWI2NC9saWJuc2wuc28uMSAoMHgwMDAwN2Y0NTUx
+YTU2MDAwKQogICAgIGxpYmRsLnNvLjIgPT4gL2xpYjY0L2xpYmRsLnNvLjIgKDB4MDAwMDdmNDU1
+MTk1MzAwMCkKICAgICBsaWJydC5zby4xID0+IC9saWI2NC90bHMvbGlicnQuc28uMSAoMHgwMDAw
+N2Y0NTUxODM5MDAwKQogICAgIGxpYnBvcHQuc28uMCA9PiAvdXNyL2xpYjY0L2xpYnBvcHQuc28u
+MCAoMHgwMDAwN2Y0NTUxNzMxMDAwKQogICAgIGxpYmdzc2FwaV9rcmI1LnNvLjIgPT4gL3Vzci9r
+ZXJiZXJvcy9saWI2NC9saWJnc3NhcGlfa3JiNS5zby4yIAooMHgwMDAwN2Y0NTUxNjE5MDAwKQog
+ICAgIGxpYmtyYjUuc28uMyA9PiAvdXNyL2tlcmJlcm9zL2xpYjY0L2xpYmtyYjUuc28uMyAoMHgw
+MDAwN2Y0NTUxNDlmMDAwKQogICAgIGxpYms1Y3J5cHRvLnNvLjMgPT4gL3Vzci9rZXJiZXJvcy9s
+aWI2NC9saWJrNWNyeXB0by5zby4zIAooMHgwMDAwN2Y0NTUxMzdiMDAwKQogICAgIGxpYmtyYjVz
+dXBwb3J0LnNvLjAgPT4gL3Vzci9rZXJiZXJvcy9saWI2NC9saWJrcmI1c3VwcG9ydC5zby4wIAoo
+MHgwMDAwN2Y0NTUxMjc4MDAwKQogICAgIGxpYmNvbV9lcnIuc28uMyA9PiAvdXNyL2tlcmJlcm9z
+L2xpYjY0L2xpYmNvbV9lcnIuc28uMyAKKDB4MDAwMDdmNDU1MTE3NDAwMCkKICAgICBsaWJ0YWxs
+b2Muc28uMSA9PiAvdXNyL2xpYjY0L2xpYnRhbGxvYy5zby4xICgweDAwMDA3ZjQ1NTEwNmMwMDAp
+CiAgICAgbGlidGRiLnNvLjEgPT4gL3Vzci9saWI2NC9saWJ0ZGIuc28uMSAoMHgwMDAwN2Y0NTUw
+ZjVmMDAwKQogICAgIGxpYndiY2xpZW50LnNvLjAgPT4gL3Vzci9saWI2NC9saWJ3YmNsaWVudC5z
+by4wICgweDAwMDA3ZjQ1NTBlNTMwMDApCiAgICAgbGliei5zby4xID0+IC91c3IvbGliNjQvbGli
+ei5zby4xICgweDAwMDA3ZjQ1NTBkM2UwMDApCiAgICAgbGliYy5zby42ID0+IC9saWI2NC90bHMv
+bGliYy5zby42ICgweDAwMDA3ZjQ1NTBiMTgwMDApCiAgICAgbGlic2FzbDIuc28uMiA9PiAvdXNy
+L2xpYjY0L2xpYnNhc2wyLnNvLjIgKDB4MDAwMDdmNDU1MGEwMTAwMCkKICAgICBsaWJzc2wuc28u
+NSA9PiAvbGliNjQvbGlic3NsLnNvLjUgKDB4MDAwMDdmNDU1MDhiODAwMCkKICAgICBsaWJjcnlw
+dG8uc28uNSA9PiAvbGliNjQvbGliY3J5cHRvLnNvLjUgKDB4MDAwMDdmNDU1MDY0ODAwMCkKICAg
+ICAvbGliNjQvbGQtbGludXgteDg2LTY0LnNvLjIgKDB4MDAwMDdmNDU1MWZjODAwMCkKICAgICBs
+aWJwdGhyZWFkLnNvLjAgPT4gL2xpYjY0L3Rscy9saWJwdGhyZWFkLnNvLjAgKDB4MDAwMDdmNDU1
+MDUzNDAwMCkKICAgICBsaWJjYXAuc28uMSA9PiAvbGliNjQvbGliY2FwLnNvLjEgKDB4MDAwMDdm
+MDNjNTRjNjAwMCkKICAgICBsaWJyZXNvbHYuc28uMiA9PiAvbGliNjQvbGlicmVzb2x2LnNvLjIg
+KDB4MDAwMDdmMDNjNTNiMzAwMCkKICAgICBsaWJuc2wuc28uMSA9PiAvbGliNjQvbGlibnNsLnNv
+LjEgKDB4MDAwMDdmMDNjNTI5ZDAwMCkKICAgICBsaWJkbC5zby4yID0+IC9saWI2NC9saWJkbC5z
+by4yICgweDAwMDA3ZjAzYzUxOWEwMDApCiAgICAgbGlicnQuc28uMSA9PiAvbGliNjQvdGxzL2xp
+YnJ0LnNvLjEgKDB4MDAwMDdmMDNjNTA4MDAwMCkKICAgICBsaWJsZGFwLTIuMi5zby43ID0+IC91
+c3IvbGliNjQvbGlibGRhcC0yLjIuc28uNyAoMHgwMDAwN2YwM2M0ZjRhMDAwKQogICAgIGxpYmxi
+ZXItMi4yLnNvLjcgPT4gL3Vzci9saWI2NC9saWJsYmVyLTIuMi5zby43ICgweDAwMDA3ZjAzYzRl
+M2IwMDApCiAgICAgbGlicG9wdC5zby4wID0+IC91c3IvbGliNjQvbGlicG9wdC5zby4wICgweDAw
+MDA3ZjAzYzRkMzMwMDApCiAgICAgbGlidGFsbG9jLnNvLjEgPT4gL3Vzci9saWI2NC9saWJ0YWxs
+b2Muc28uMSAoMHgwMDAwN2YwM2M0YzJiMDAwKQogICAgIGxpYnRkYi5zby4xID0+IC91c3IvbGli
+NjQvbGlidGRiLnNvLjEgKDB4MDAwMDdmMDNjNGIxZTAwMCkKICAgICBsaWJjLnNvLjYgPT4gL2xp
+YjY0L3Rscy9saWJjLnNvLjYgKDB4MDAwMDdmMDNjNDhmODAwMCkKICAgICAvbGliNjQvbGQtbGlu
+dXgteDg2LTY0LnNvLjIgKDB4MDAwMDdmMDNjNTVjYTAwMCkKICAgICBsaWJwdGhyZWFkLnNvLjAg
+PT4gL2xpYjY0L3Rscy9saWJwdGhyZWFkLnNvLjAgKDB4MDAwMDdmMDNjNDdlNDAwMCkKICAgICBs
+aWJzYXNsMi5zby4yID0+IC91c3IvbGliNjQvbGlic2FzbDIuc28uMiAoMHgwMDAwN2YwM2M0NmNk
+MDAwKQogICAgIGxpYnNzbC5zby41ID0+IC9saWI2NC9saWJzc2wuc28uNSAoMHgwMDAwN2YwM2M0
+NTg0MDAwKQogICAgIGxpYmNyeXB0by5zby41ID0+IC9saWI2NC9saWJjcnlwdG8uc28uNSAoMHgw
+MDAwN2YwM2M0MzE0MDAwKQogICAgIGxpYmdzc2FwaV9rcmI1LnNvLjIgPT4gL3Vzci9rZXJiZXJv
+cy9saWI2NC9saWJnc3NhcGlfa3JiNS5zby4yIAooMHgwMDAwN2YwM2M0MWZjMDAwKQogICAgIGxp
+YmtyYjUuc28uMyA9PiAvdXNyL2tlcmJlcm9zL2xpYjY0L2xpYmtyYjUuc28uMyAoMHgwMDAwN2Yw
+M2M0MDgyMDAwKQogICAgIGxpYmNvbV9lcnIuc28uMyA9PiAvdXNyL2tlcmJlcm9zL2xpYjY0L2xp
+YmNvbV9lcnIuc28uMyAKKDB4MDAwMDdmMDNjM2Y3ZTAwMCkKICAgICBsaWJrNWNyeXB0by5zby4z
+ID0+IC91c3Iva2VyYmVyb3MvbGliNjQvbGliazVjcnlwdG8uc28uMyAKKDB4MDAwMDdmMDNjM2U1
+YTAwMCkKICAgICBsaWJ6LnNvLjEgPT4gL3Vzci9saWI2NC9saWJ6LnNvLjEgKDB4MDAwMDdmMDNj
+M2Q0NTAwMCkKICAgICBsaWJrcmI1c3VwcG9ydC5zby4wID0+IC91c3Iva2VyYmVyb3MvbGliNjQv
+bGlia3JiNXN1cHBvcnQuc28uMCAKKDB4MDAwMDdmMDNjM2M0MjAwMCkKCiMgbGRkIC91c3Ivc2Jp
+bi9zbWJkIC91c3IvYmluL3NtYiogfCBncmVwIC12ICJsaWI2NCIKL3Vzci9zYmluL3NtYmQ6Ci91
+c3IvYmluL3NtYmNvbnRyb2w6Ci91c3IvYmluL3NtYnBhc3N3ZDoKL3Vzci9iaW4vc21icHJpbnQ6
+CiAgICAgbm90IGEgZHluYW1pYyBleGVjdXRhYmxlCi91c3IvYmluL3NtYnN0YXR1czoKL3Vzci9i
+aW4vc21idGFyOgogICAgIG5vdCBhIGR5bmFtaWMgZXhlY3V0YWJsZQoKSWYgdGhlcmUgaXMgbm8g
+b3RoZXIgYmluYXJ5IGluIHJlbGF0aW9uIHRvIFNhbWJhIEkgZGlkbid0IHRoaW5rIGFib3V0LCBJ
+IApndWVzcyB0aGUgU2FtYmEgcGFja2FnZSBpcyA2NCBiaXRzLiBUaGlzIHNob3VsZCBwcmV2ZW50
+IG1lIGZyb20gYW55IApzdXJwcmlzZS4KCkJlc3QuCgpFcmljIFNhbmRlZW4gd3JvdGUsIE9uIDMx
+LzA4LzE0IDA0OjQ2Ogo+IE9uIDgvMzAvMTQsIDI6MzMgUE0sIFNhbXVlbCBHUkFOSkVBVUQgSVIv
+SU5TRVJNIHdyb3RlOgo+PiBFbmFibGluZyB0aGUgaW5vZGU2NCBvcHRpb24gaGFzIHNvbHZlZCB0
+aGUgcHJvYmxlbS4KPj4KPj4gRmluYWwgcXVlc3Rpb246IGNvdWxkIHNvbWUgaXNzdWVzIGFwcGVh
+ciB3aXRoIFNBTUJBPwo+Cj4gYWgsIHdoYXQgc29ydCBvZiBpc3N1ZXM/Cj4KPiBBbnkgYXBwbGlj
+YXRpb24gd2hpY2ggdXNlcyBpLmUuIGEgMzItYml0IHN0YXQoKSBpbnRlcmZhY2Ugd2lsbCByZXR1
+cm4gCj4gLUVPVkVSRkxPVyBvbiBhIDY0LWJpdCBpbm9kZS4KPgo+IGh0dHA6Ly9zYW5kZWVuLm5l
+dC93b3JkcHJlc3MvY29tcHV0ZXJzL3RoZS13b3JsZC13YW50cy0zMi1iaXQtaW5vZGVzLwo+IGh0
+dHA6Ly9ibG9nLmZtZWgub3JnLzIwMTMvMDUvMTEvZG9lcy10aGUtd29ybGQtbmVlZC0zMi1iaXQt
+aW5vZGVzLwo+Cj4gLUVyaWMKPgoKRW1tYW51ZWwgRmxvcmFjIHdyb3RlLCBPbiAwMS8wOS8xNCAy
+MToxOToKPiBMZSBTYXQsIDMwIEF1ZyAyMDE0IDIxOjMzOjQ2ICswMjAwIHZvdXMgw6ljcml2aWV6
+Ogo+Cj4+IEZpbmFsIHF1ZXN0aW9uOiBjb3VsZCBzb21lIGlzc3VlcyBhcHBlYXIgd2l0aCBTQU1C
+QT8KPj4KPj4gIyBzbWJzdGF0dXMgIC1WCj4+IFZlcnNpb24gMy40LjUKPiBJcyB5b3VyIHdob2xl
+IGRpc3RyaWJ1dGlvbiA2NCBiaXRzLCBvciBvbmx5IHRoZSBrZXJuZWw/IEhvd2V2ZXIsIEkndmUK
+PiBuZXZlciBoYWQgYW55IHByb2JsZW0gd2l0aCBzYW1iYSwgYnV0IHNvbWUgd2l0aCBORlMuCj4K
+Cl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWls
+aW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3Rp
+bmZvL3hmcwo=
