@@ -1,18 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 1DFCC7F57
-	for <xfs@oss.sgi.com>; Tue,  2 Sep 2014 22:26:33 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 8702D7F54
+	for <xfs@oss.sgi.com>; Thu,  4 Sep 2014 05:14:53 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id E377D8F8054
-	for <xfs@oss.sgi.com>; Tue,  2 Sep 2014 20:26:32 -0700 (PDT)
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id 0EdKRISESCHcPIH8 (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 02 Sep 2014 20:26:28 -0700 (PDT)
-From: Liu Bo <bo.li.liu@oracle.com>
-Subject: [PATCH] xfstests: remove check_scratch_fs in btrfs/012
-Date: Wed,  3 Sep 2014 11:25:59 +0800
-Message-Id: <1409714759-9805-1-git-send-email-bo.li.liu@oracle.com>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 589B48F8040
+	for <xfs@oss.sgi.com>; Thu,  4 Sep 2014 03:14:50 -0700 (PDT)
+Received: from mail-pd0-f169.google.com (mail-pd0-f169.google.com
+	[209.85.192.169]) by cuda.sgi.com with ESMTP id
+	sJGd8rQm1PKHWE5u (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 04 Sep 2014 03:14:49 -0700 (PDT)
+Received: by mail-pd0-f169.google.com with SMTP id y10so3879071pdj.28
+	for <xfs@oss.sgi.com>; Thu, 04 Sep 2014 03:14:42 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CACyNnZNUMdv=EUAaYmW69X+0yB7qmsVA3bC=ChJiKb_X4WCt-w@mail.gmail.com>
+References: <CACyNnZNUMdv=EUAaYmW69X+0yB7qmsVA3bC=ChJiKb_X4WCt-w@mail.gmail.com>
+Date: Thu, 4 Sep 2014 12:14:39 +0200
+Message-ID: <CACyNnZNtuLH4+653z_BtaFVy9fY=YP2QAYM=53MtdRa_jmbrBg@mail.gmail.com>
+Subject: Re: Ghost items in the end of a dir listing
+From: Felipe Monteiro de Carvalho <felipemonteiro.carvalho@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,45 +27,70 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
-Cc: linux-btrfs <linux-btrfs@vger.kernel.org>
 
-From: Liu Bo <liub.liubo@gmail.com>
+Hello,
 
-btrfs/012 is a case to verify btrfs-convert feature, it converts an ext4 to
-btrfs firstly and do something, then rolls back to ext4.
+No ideas about this? =(
 
-So at last we have a ext4 on the scratch device, but setting _require_scratch
-will force a btrfsck on a ext4 fs because $FSTYP here is btrfs, and it ends up
-with a failure report of _check_btrfs_filesystem.
+Any kind of tip would be really appreciated =)
 
-Now that we have deliberately check the final ext4 fs in btrfs/012, just do not
-set _require_scratch in this case.
+thanks,
 
-Signed-off-by: Liu Bo <liub.liubo@gmail.com>
----
- tests/btrfs/012 | 1 -
- 1 file changed, 1 deletion(-)
+Felipe Monteiro de Carvalho
 
-diff --git a/tests/btrfs/012 b/tests/btrfs/012
-index f7e5da5..12f6462 100755
---- a/tests/btrfs/012
-+++ b/tests/btrfs/012
-@@ -52,7 +52,6 @@ _cleanup()
- # Modify as appropriate.
- _supported_fs btrfs
- _supported_os Linux
--_require_scratch
- 
- BTRFS_CONVERT_PROG="`set_prog_path btrfs-convert`"
- MKFS_EXT4_PROG="`set_prog_path mkfs.ext4`"
+On Wed, Aug 27, 2014 at 12:20 PM, Felipe Monteiro de Carvalho
+<felipemonteiro.carvalho@gmail.com> wrote:
+> Hello,
+>
+> I am writing a program that reads XFS partitions and I am having
+> trouble with some dir listings. In some directories in the block that
+> starts with XD2B there is first the list of all directory items, which
+> I read without problems, and then there is a free item, for example:
+>
+>   xfs_dir2_data_unused
+>     freetag -> XFS_DIR2_DATA_FREE_TAG */
+>     length -> 9A0
+>     tag -> zero
+>
+> But after this free item there is still room in the block, so my
+> program will try to read the next item. I cannot stop the reading
+> because it is possible to have valid items, then a free item and then
+> more valid items.
+>
+> The next item start might be something like:
+>
+> 00 00 00 2E 00 00 00 02 16
+>
+> So it is not a free item, as it doesn't start with FF = XFS_DIR2_DATA_FREE_TAG
+> But it isn't valid either, as its name is a bunch of trash =(
+>
+> So my questions are:
+> 1> What are those ghost items in the end of the block?
+> 2> Which criteria should be utilized to differentiate them from valid
+> items? I tried some guesses but nothing really works so far...
+>
+> Here are screenshots of the actual data involved, here showing the
+> item with XFS_DIR2_DATA_FREE_TAG:
+>
+> http://magnifier.sourceforge.net/temp/xfs/xfs_dir_listing_XD2B_FREE_item.png
+>
+> And here showing the area in the end of the block with wierd items:
+>
+> http://magnifier.sourceforge.net/temp/xfs/xfs_dir_listing_XD2B_after_FREE.png
+>
+> thanks for any tips =)
+> --
+> Felipe Monteiro de Carvalho
+
+
+
 -- 
-1.8.1.4
+Felipe Monteiro de Carvalho
 
 _______________________________________________
 xfs mailing list
