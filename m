@@ -1,26 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 789997F3F
-	for <xfs@oss.sgi.com>; Sat,  6 Sep 2014 17:56:58 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 22F42AC001
-	for <xfs@oss.sgi.com>; Sat,  6 Sep 2014 15:56:57 -0700 (PDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id B69767F3F
+	for <xfs@oss.sgi.com>; Sat,  6 Sep 2014 18:00:30 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 96F5D304048
+	for <xfs@oss.sgi.com>; Sat,  6 Sep 2014 16:00:27 -0700 (PDT)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	oF8uTHVhCTUst5A9 for <xfs@oss.sgi.com>;
-	Sat, 06 Sep 2014 15:56:56 -0700 (PDT)
-Date: Sun, 7 Sep 2014 08:56:54 +1000
+	6cB7j09490RZCntr for <xfs@oss.sgi.com>;
+	Sat, 06 Sep 2014 16:00:25 -0700 (PDT)
+Date: Sun, 7 Sep 2014 09:00:08 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Is XFS suitable for 350 million files on 20TB storage?
-Message-ID: <20140906225654.GB9955@dastard>
-References: <540986B1.4080306@profihost.ag>
-	<20140905123058.GA29710@bfoster.bfoster>
-	<5409AF40.10801@profihost.ag> <20140905230528.GO20473@dastard>
-	<540AB933.4030707@profihost.ag>
-	<20140906150412.GB23506@bfoster.bfoster>
+Subject: Re: [PATCH 1/2] xfs_db: fix inode CRC validity state, and warn on
+	read if invalid
+Message-ID: <20140906230008.GC9955@dastard>
+References: <540B4399.4020804@sandeen.net>
+ <540B485F.8070502@sandeen.net>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20140906150412.GB23506@bfoster.bfoster>
+In-Reply-To: <540B485F.8070502@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,58 +31,83 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
-Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>, Stefan Priebe <s.priebe@profihost.ag>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-On Sat, Sep 06, 2014 at 11:04:13AM -0400, Brian Foster wrote:
-> On Sat, Sep 06, 2014 at 09:35:15AM +0200, Stefan Priebe wrote:
-> > Hi Dave,
-> > 
-> > Am 06.09.2014 01:05, schrieb Dave Chinner:
-> > >On Fri, Sep 05, 2014 at 02:40:32PM +0200, Stefan Priebe - Profihost AG wrote:
-> > >>
-> > >>Am 05.09.2014 um 14:30 schrieb Brian Foster:
-> > >>>On Fri, Sep 05, 2014 at 11:47:29AM +0200, Stefan Priebe - Profihost AG wrote:
-> > >>>>Hi,
-> > >>>>
-> > >>>>i have a backup system running 20TB of storage having 350 million files.
-> > >>>>This was working fine for month.
-> > >>>>
-> > >>>>But now the free space is so heavily fragmented that i only see the
-> > >>>>kworker with 4x 100% CPU and write speed beeing very slow. 15TB of the
-> > >>>>20TB are in use.
-> > >
-> > >What does perf tell you about the CPU being burnt? (i.e run perf top
-> > >for 10-20s while that CPU burn is happening and paste the top 10 CPU
-> > >consuming functions).
-> > 
-> > here we go:
-> >  15,79%  [kernel]            [k] xfs_inobt_get_rec
-> >  14,57%  [kernel]            [k] xfs_btree_get_rec
-> >  10,37%  [kernel]            [k] xfs_btree_increment
-> >   7,20%  [kernel]            [k] xfs_btree_get_block
-> >   6,13%  [kernel]            [k] xfs_btree_rec_offset
-> >   4,90%  [kernel]            [k] xfs_dialloc_ag
-> >   3,53%  [kernel]            [k] xfs_btree_readahead
-> >   2,87%  [kernel]            [k] xfs_btree_rec_addr
-> >   2,80%  [kernel]            [k] _xfs_buf_find
-> >   1,94%  [kernel]            [k] intel_idle
-> >   1,49%  [kernel]            [k] _raw_spin_lock
-> >   1,13%  [kernel]            [k] copy_pte_range
-> >   1,10%  [kernel]            [k] unmap_single_vma
-> > 
+On Sat, Sep 06, 2014 at 12:46:07PM -0500, Eric Sandeen wrote:
+> Currently, the "ino_crc_ok" field on the io cursor
+> reflects overall inode validity, not CRC correctness.
+> Because it is only used when printing CRC validity,
+> change it to reflect only that.
 > 
-> The top 6 or so items look related to inode allocation, so that probably
-> confirms the primary bottleneck as searching around for free inodes out
-> of the existing inode chunks, precisely what the finobt is intended to
-> resolve. That was introduced in 3.16 kernels, so unfortunately it is not
-> available in 3.10.
+> In addition, when reading an inode, print the current
+> CRC state.
+> 
+> Note, if specifying an inode which doesn't actually
+> exist, this will claim corruption; I'm not sure if
+> that's good or bad.  Today, it already issues corruption
+> errors on the way; this adds a new message as well ;)
+> 
+> xfs_db> inode 129
+> Metadata corruption detected at block 0x80/0x2000
+> Metadata corruption detected at block 0x80/0x2000
+> ...
+> Metadata CRC error detected for ino 129
+> 
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> ---
+> 
+> diff --git a/db/inode.c b/db/inode.c
+> index 24170ba..244d03b 100644
+> --- a/db/inode.c
+> +++ b/db/inode.c
+> @@ -684,13 +684,18 @@ set_cur_inode(
+>  		numblks, DB_RING_IGN, NULL);
+>  	off_cur(offset << mp->m_sb.sb_inodelog, mp->m_sb.sb_inodesize);
+>  	dip = iocur_top->data;
+> -	iocur_top->ino_crc_ok = libxfs_dinode_verify(mp, ino, dip);
+> +	iocur_top->ino_crc_ok = xfs_verify_cksum((char *)dip,
+> +						 mp->m_sb.sb_inodesize,
+> +						 XFS_DINODE_CRC_OFF);
 
-*nod*
+that needs to be "libxfs_verify_cksum".
 
-Again, the only workaround for this on a non-finobt fs is to greatly
-increase the number of AGs so there's less records in each btree to
-search.
+>  	iocur_top->ino_buf = 1;
+>  	iocur_top->ino = ino;
+>  	iocur_top->mode = be16_to_cpu(dip->di_mode);
+>  	if ((iocur_top->mode & S_IFMT) == S_IFDIR)
+>  		iocur_top->dirino = ino;
+> +	if (xfs_sb_version_hascrc(&mp->m_sb) && !iocur_top->ino_crc_ok)
+> +		dbprintf(_("Metadata CRC error detected for ino %lld\n"), ino);
+> +
+
+and we probably shoul dbe looking at making all those sb version
+checks "libxfs_sb_version_has...." as well.
+
+>  	/* track updated info in ring */
+>  	ring_add();
+>  }
+> diff --git a/db/io.c b/db/io.c
+> index 7f1b76a..93ebf5c 100644
+> --- a/db/io.c
+> +++ b/db/io.c
+> @@ -473,6 +473,17 @@ write_cur(void)
+>  		write_cur_bbs();
+>  	else
+>  		write_cur_buf();
+> +
+> +	if (iocur_top->ino_buf) {
+> +		xfs_dinode_t    *dip;
+> +		xfs_ino_t       ino;
+> +
+> +		dip = iocur_top->data;
+> +		ino = iocur_top->ino;
+> +		iocur_top->ino_crc_ok = xfs_verify_cksum((char *)dip,
+> +						 mp->m_sb.sb_inodesize,
+> +						 XFS_DINODE_CRC_OFF);
+> +	}
+
+Needs a comment explaining why we are reverifying the inode crc.
 
 Cheers,
 
