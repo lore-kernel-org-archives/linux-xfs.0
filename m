@@ -1,17 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 8D9897F50
-	for <xfs@oss.sgi.com>; Sun,  7 Sep 2014 11:41:08 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 64B5B8F8035
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 417447F4E
+	for <xfs@oss.sgi.com>; Sun,  7 Sep 2014 11:41:09 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id B5766AC004
 	for <xfs@oss.sgi.com>; Sun,  7 Sep 2014 09:41:08 -0700 (PDT)
 Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id kAlWteQoyUxGTkl9 for <xfs@oss.sgi.com>;
-	Sun, 07 Sep 2014 09:41:07 -0700 (PDT)
+	ESMTP id 8iIw0F9BC2bkM27M for <xfs@oss.sgi.com>;
+	Sun, 07 Sep 2014 09:41:06 -0700 (PDT)
 From: Eric Sandeen <sandeen@redhat.com>
-Subject: [PATCH 2/5] xfs_repair: preserve error state in process_shortform_attr
-Date: Sun,  7 Sep 2014 11:41:02 -0500
-Message-Id: <1410108065-18156-3-git-send-email-sandeen@redhat.com>
+Subject: [PATCH 4/5] xfs_repair: don't ASSERT on corrupt ftype
+Date: Sun,  7 Sep 2014 11:41:04 -0500
+Message-Id: <1410108065-18156-5-git-send-email-sandeen@redhat.com>
 In-Reply-To: <1410108065-18156-1-git-send-email-sandeen@redhat.com>
 References: <1410108065-18156-1-git-send-email-sandeen@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -29,34 +29,32 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-process_shortform_attr uses the "junkit" error to
-track whether an error was found, but by assigning
-it directly to the result of valuecheck, previous
-errors are ignored, leading to unrepairable errors
-of the form i.e.
+xfs_dir3_dirent_get_ftype() gets the file type
+off disk, but ASSERTs if it's invalid:
 
-"entry has INCOMPLETE flag on in shortform attribute"
-or
-"entry contains illegal character in shortform attribute name"
+	ASSERT(type < XFS_DIR3_FT_MAX);
+
+This might be cut & paste from
+xfs_dir3_dirent_put_ftype which should be checking
+that it's not been passed bad values, but we
+shouldn't ASSERT on bad values read from disk.
 
 Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 ---
- repair/attr_repair.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
+ include/xfs_da_format.h |    1 -
+ 1 files changed, 0 insertions(+), 1 deletions(-)
 
-diff --git a/repair/attr_repair.c b/repair/attr_repair.c
-index a27a3ec..d60b664 100644
---- a/repair/attr_repair.c
-+++ b/repair/attr_repair.c
-@@ -914,7 +914,8 @@ process_shortform_attr(
+diff --git a/include/xfs_da_format.h b/include/xfs_da_format.h
+index 89a1a21..11f1420 100644
+--- a/include/xfs_da_format.h
++++ b/include/xfs_da_format.h
+@@ -561,7 +561,6 @@ xfs_dir3_dirent_get_ftype(
+ 	if (xfs_sb_version_hasftype(&mp->m_sb)) {
+ 		__uint8_t	type = dep->name[dep->namelen];
  
- 		/* Only check values for root security attributes */
- 		if (currententry->flags & XFS_ATTR_ROOT)
--		       junkit = valuecheck(mp, (char *)&currententry->nameval[0],
-+		       junkit |= valuecheck(mp,
-+					(char *)&currententry->nameval[0],
- 					NULL, currententry->namelen, 
- 					currententry->valuelen);
+-		ASSERT(type < XFS_DIR3_FT_MAX);
+ 		if (type < XFS_DIR3_FT_MAX)
+ 			return type;
  
 -- 
 1.7.1
