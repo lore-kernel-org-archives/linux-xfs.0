@@ -1,24 +1,22 @@
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id A4D807F3F
-	for <xfs@oss.sgi.com>; Wed, 10 Sep 2014 03:04:43 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id C21AD7F4E
+	for <xfs@oss.sgi.com>; Sun,  7 Sep 2014 08:31:19 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 92A9C8F8059
-	for <xfs@oss.sgi.com>; Wed, 10 Sep 2014 01:04:40 -0700 (PDT)
-Received: from mwork.nabble.com (static.162.253.133.43.macminivault.com
-	[162.253.133.43]) by cuda.sgi.com with ESMTP id
-	N0jyuMJkYBgNxNro for <xfs@oss.sgi.com>;
-	Wed, 10 Sep 2014 01:04:38 -0700 (PDT)
-Received: from mtom.nabble.com (unknown [162.253.133.81])
-	by mwork.nabble.com (Postfix) with ESMTP id 3E5A7550B66
-	for <xfs@oss.sgi.com>; Wed, 10 Sep 2014 01:04:36 -0700 (PDT)
-Date: Wed, 10 Sep 2014 01:03:54 -0700 (MST)
-From: jame87 <denoy.steve32@gmail.com>
-Message-ID: <1410336234315-35025.post@n7.nabble.com>
-In-Reply-To: <b4098eaa47d539f0b98fc361d525f94b@localhost.localdomain>
-References: <b4098eaa47d539f0b98fc361d525f94b@localhost.localdomain>
-Subject: =?UTF-8?Q?Re:_VIETNAM_Acquiring_Business?=
-	=?UTF-8?Q?_=E2=80=93_Legal_and_Tax_Considerations?=
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 62A64AC001
+	for <xfs@oss.sgi.com>; Sun,  7 Sep 2014 06:31:16 -0700 (PDT)
+Received: from vps.magizz.com (vps.magizz.com [162.251.83.157]) by
+	cuda.sgi.com with ESMTP id jsK2FREm0olEzzKZ (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Sun, 07 Sep 2014 06:31:13 -0700 (PDT)
+Received: from magivis by vps.magizz.com with local (Exim 4.82)
+	(envelope-from <admin@vista1.magizz.com>) id 1XQcYj-0003uX-0w
+	for xfs@oss.sgi.com; Sun, 07 Sep 2014 17:31:13 +0400
+Subject: Goodbye from our newsletter
+Date: Sun, 7 Sep 2014 13:31:12 +0000
+From: Administrator <noreply@vista1.magizz.com>
+Message-ID: <59d56c4701e843312d21ad1fc6325e6e@vista1.magizz.com>
 MIME-Version: 1.0
+Reply-To: Administrator <noreply@vista1.magizz.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,17 +31,24 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-I would be interested in acquiring  law firms for sale
-<http://lawbrokers.com.au/>   in Vietnam but the idea of the complicated
-regulatory framework for acquisitions is holding me back. The government
-should make the process easier.
 
+  
+  Goodbye from our Newsletter, sorry to see you go.
 
+  You have been unsubscribed from our newsletters.
 
+  This is the last email you will receive from us. Our newsletter system,
+phpList,
+  will refuse to send you any further messages, without manual intervention
+by our administrator.
 
---
-View this message in context: http://xfs.9218.n7.nabble.com/VIETNAM-Acquiring-Business-Legal-and-Tax-Considerations-tp18168p35025.html
-Sent from the Xfs - General mailing list archive at Nabble.com.
+  If there is an error in this information, you can re-subscribe:
+  please go to http://vista1.magizz.com/mailz/?p=subscribe and follow the
+steps.
+
+  Thank you
+  
+  
 
 _______________________________________________
 xfs mailing list
