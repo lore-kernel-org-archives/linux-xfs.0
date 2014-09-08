@@ -1,22 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id AFDF97F51
-	for <xfs@oss.sgi.com>; Mon,  8 Sep 2014 08:05:29 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 8FD50304039
-	for <xfs@oss.sgi.com>; Mon,  8 Sep 2014 06:05:26 -0700 (PDT)
-Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
-	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	fVWRQPkfBqmnRqQO for <xfs@oss.sgi.com>;
-	Mon, 08 Sep 2014 06:05:21 -0700 (PDT)
-Date: Mon, 8 Sep 2014 23:05:07 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs: don't ASSERT on corrupt ftype
-Message-ID: <20140908130507.GN30012@dastard>
-References: <540D011B.2000807@redhat.com>
+	by oss.sgi.com (Postfix) with ESMTP id 8E0407F4E
+	for <xfs@oss.sgi.com>; Mon,  8 Sep 2014 08:45:18 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 7C698304039
+	for <xfs@oss.sgi.com>; Mon,  8 Sep 2014 06:45:18 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id HzPDip6jJKyjY2JC (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Mon, 08 Sep 2014 06:45:14 -0700 (PDT)
+Received: from int-mx11.intmail.prod.int.phx2.redhat.com
+	(int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id s88DjDOH001935
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256
+	verify=FAIL) for <xfs@oss.sgi.com>; Mon, 8 Sep 2014 09:45:13 -0400
+Date: Mon, 8 Sep 2014 09:45:12 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 1/5] xfs_repair: clear bad flgs in process_dinode_int
+Message-ID: <20140908134510.GA52419@bfoster.bfoster>
+References: <1410108065-18156-1-git-send-email-sandeen@redhat.com>
+	<1410108065-18156-2-git-send-email-sandeen@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <540D011B.2000807@redhat.com>
+In-Reply-To: <1410108065-18156-2-git-send-email-sandeen@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,59 +36,67 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Eric Sandeen <sandeen@redhat.com>
-Cc: xfs-oss <xfs@oss.sgi.com>
+Cc: xfs@oss.sgi.com
 
-On Sun, Sep 07, 2014 at 08:06:35PM -0500, Eric Sandeen wrote:
-> xfs_dir3_data_get_ftype() and xfs_dir2_sf_check() get
-> the file type off disk, but ASSERT if it's invalid:
+On Sun, Sep 07, 2014 at 11:41:01AM -0500, Eric Sandeen wrote:
+> process_dinode_int() reports bad flags if
+> dino->di_flags & ~XFS_DIFLAG_ANY - i.e. if
+> any flags are set outside the known set.  But
+> then instead of clearing them, it does
+> flags &= ~XFS_DIFLAG_ANY which keeps *only*
+> the bad flags.  This leads to persistent,
+> unrepairable errors of the form:
 > 
-> 	ASSERT(type < XFS_DIR3_FT_MAX);
+> "Bad flags set in inode XXX"
 > 
-> This might be cut & paste from the "put" functions,
-> which should be checking that they've not been passed
-> bad values, but we shouldn't ASSERT on bad values
-> read from disk.
+> Fix this.
+> 
+> While we are at it, fix a couple lines which
+> look like they used to be continuation lines,
+> but are no longer.
+> 
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> ---
 
-No, they weren't cut-n-paste from the put functions. They were
-actually designed for a metadata block where bad values would not be
-written to disk, and corrupted disk blocks would be detected by CRC
-validation failures. So on debug kernels it's quite appropriate to
-assert fail on a "should never, ever happen" condition.
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 
-Then the v4 ftype feature bit was rammed in but none of the code got
-changed to reflect that the values in the ftype fields are not CRC
-protected on v4 filesystems....
-
-> diff --git a/fs/xfs/libxfs/xfs_dir2_sf.c b/fs/xfs/libxfs/xfs_dir2_sf.c
-> index 5079e05..ea89250 100644
-> --- a/fs/xfs/libxfs/xfs_dir2_sf.c
-> +++ b/fs/xfs/libxfs/xfs_dir2_sf.c
-> @@ -635,7 +635,6 @@ xfs_dir2_sf_check(
->  		offset =
->  			xfs_dir2_sf_get_offset(sfep) +
->  			dp->d_ops->data_entsize(sfep->namelen);
-> -		ASSERT(dp->d_ops->sf_get_ftype(sfep) < XFS_DIR3_FT_MAX);
+>  repair/dinode.c |    6 +++---
+>  1 files changed, 3 insertions(+), 3 deletions(-)
+> 
+> diff --git a/repair/dinode.c b/repair/dinode.c
+> index 8891e84..38a6562 100644
+> --- a/repair/dinode.c
+> +++ b/repair/dinode.c
+> @@ -2456,7 +2456,7 @@ _("bad (negative) size %" PRId64 " on inode %" PRIu64 "\n"),
+>  	_("Bad flags set in inode %" PRIu64 "\n"),
+>  					lino);
+>  			}
+> -			flags &= ~XFS_DIFLAG_ANY;
+> +			flags &= XFS_DIFLAG_ANY;
+>  		}
+>  
+>  		if (flags & (XFS_DIFLAG_REALTIME | XFS_DIFLAG_RTINHERIT)) {
+> @@ -2513,11 +2513,11 @@ _("bad (negative) size %" PRId64 " on inode %" PRIu64 "\n"),
+>  		}
+>  		if (!verify_mode && flags != be16_to_cpu(dino->di_flags)) {
+>  			if (!no_modify) {
+> -				do_warn(_(", fixing bad flags.\n"));
+> +				do_warn(_("fixing bad flags.\n"));
+>  				dino->di_flags = cpu_to_be16(flags);
+>  				*dirty = 1;
+>  			} else
+> -				do_warn(_(", would fix bad flags.\n"));
+> +				do_warn(_("would fix bad flags.\n"));
+>  		}
 >  	}
->  	ASSERT(i8count == sfp->i8count);
->  	ASSERT((char *)sfep - (char *)sfp == dp->i_d.di_size);
-
-That's a debug only function validating that the shortform directory
-is internally consistent. And as the comment says:
-
-/*
- * Check consistency of shortform directory, assert if bad.
- */
-
-So that assert should remain because it's checking the in-memory
-state immediately before, during and after modifications are made to
-the directory, not when it has just been read of disk....
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+>  
+> -- 
+> 1.7.1
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
