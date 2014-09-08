@@ -1,25 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 252037F4E
-	for <xfs@oss.sgi.com>; Mon,  8 Sep 2014 01:23:31 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id B784AAC001
-	for <xfs@oss.sgi.com>; Sun,  7 Sep 2014 23:23:27 -0700 (PDT)
-Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
-	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	bVgIa2gdF8MBdoZe for <xfs@oss.sgi.com>;
-	Sun, 07 Sep 2014 23:23:25 -0700 (PDT)
-Date: Mon, 8 Sep 2014 16:23:22 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 4/5] xfs_repair: don't ASSERT on corrupt ftype
-Message-ID: <20140908062321.GA20518@dastard>
-References: <1410108065-18156-1-git-send-email-sandeen@redhat.com>
-	<1410108065-18156-5-git-send-email-sandeen@redhat.com>
-	<20140908001044.GB30012@dastard> <540D001C.6020607@sandeen.net>
-	<20140908031644.GZ20518@dastard> <540D1FF1.4030601@sandeen.net>
+	by oss.sgi.com (Postfix) with ESMTP id 1D5667F4E
+	for <xfs@oss.sgi.com>; Mon,  8 Sep 2014 03:36:01 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 84E0BAC006
+	for <xfs@oss.sgi.com>; Mon,  8 Sep 2014 01:36:00 -0700 (PDT)
+Received: from mail-ph.de-nserver.de (mail-ph.de-nserver.de [85.158.179.214])
+	by cuda.sgi.com with ESMTP id 8nsJXNHI6YEaFaRR (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Mon, 08 Sep 2014 01:35:58 -0700 (PDT)
+Message-ID: <540D6A6C.9090801@profihost.ag>
+Date: Mon, 08 Sep 2014 10:35:56 +0200
+From: Stefan Priebe - Profihost AG <s.priebe@profihost.ag>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <540D1FF1.4030601@sandeen.net>
+Subject: Re: Is XFS suitable for 350 million files on 20TB storage?
+References: <540986B1.4080306@profihost.ag>
+	<20140905123058.GA29710@bfoster.bfoster>
+	<5409AF40.10801@profihost.ag> <20140905230528.GO20473@dastard>
+	<540AB933.4030707@profihost.ag>
+	<20140906150412.GB23506@bfoster.bfoster>
+	<20140906225654.GB9955@dastard>
+In-Reply-To: <20140906225654.GB9955@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,68 +33,72 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Eric Sandeen <sandeen@redhat.com>, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>, Brian Foster <bfoster@redhat.com>
+Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-On Sun, Sep 07, 2014 at 10:18:09PM -0500, Eric Sandeen wrote:
-> On 9/7/14 10:16 PM, Dave Chinner wrote:
-> >On Sun, Sep 07, 2014 at 08:02:20PM -0500, Eric Sandeen wrote:
-> >>On 9/7/14 7:10 PM, Dave Chinner wrote:
+Thanks,
+
+upgraded to 3.16.2 and xfsprogs 3.2.1. Let's see how it behaves with finobt.
+
+Greets,
+Stefan
+
+
+Am 07.09.2014 um 00:56 schrieb Dave Chinner:
+> On Sat, Sep 06, 2014 at 11:04:13AM -0400, Brian Foster wrote:
+>> On Sat, Sep 06, 2014 at 09:35:15AM +0200, Stefan Priebe wrote:
+>>> Hi Dave,
+>>>
+>>> Am 06.09.2014 01:05, schrieb Dave Chinner:
+>>>> On Fri, Sep 05, 2014 at 02:40:32PM +0200, Stefan Priebe - Profihost AG wrote:
+>>>>>
+>>>>> Am 05.09.2014 um 14:30 schrieb Brian Foster:
+>>>>>> On Fri, Sep 05, 2014 at 11:47:29AM +0200, Stefan Priebe - Profihost AG wrote:
+>>>>>>> Hi,
+>>>>>>>
+>>>>>>> i have a backup system running 20TB of storage having 350 million files.
+>>>>>>> This was working fine for month.
+>>>>>>>
+>>>>>>> But now the free space is so heavily fragmented that i only see the
+>>>>>>> kworker with 4x 100% CPU and write speed beeing very slow. 15TB of the
+>>>>>>> 20TB are in use.
+>>>>
+>>>> What does perf tell you about the CPU being burnt? (i.e run perf top
+>>>> for 10-20s while that CPU burn is happening and paste the top 10 CPU
+>>>> consuming functions).
+>>>
+>>> here we go:
+>>>  15,79%  [kernel]            [k] xfs_inobt_get_rec
+>>>  14,57%  [kernel]            [k] xfs_btree_get_rec
+>>>  10,37%  [kernel]            [k] xfs_btree_increment
+>>>   7,20%  [kernel]            [k] xfs_btree_get_block
+>>>   6,13%  [kernel]            [k] xfs_btree_rec_offset
+>>>   4,90%  [kernel]            [k] xfs_dialloc_ag
+>>>   3,53%  [kernel]            [k] xfs_btree_readahead
+>>>   2,87%  [kernel]            [k] xfs_btree_rec_addr
+>>>   2,80%  [kernel]            [k] _xfs_buf_find
+>>>   1,94%  [kernel]            [k] intel_idle
+>>>   1,49%  [kernel]            [k] _raw_spin_lock
+>>>   1,13%  [kernel]            [k] copy_pte_range
+>>>   1,10%  [kernel]            [k] unmap_single_vma
+>>>
+>>
+>> The top 6 or so items look related to inode allocation, so that probably
+>> confirms the primary bottleneck as searching around for free inodes out
+>> of the existing inode chunks, precisely what the finobt is intended to
+>> resolve. That was introduced in 3.16 kernels, so unfortunately it is not
+>> available in 3.10.
 > 
-> ...
+> *nod*
 > 
-> >>>Needs to be fixed kernel-side first.
-> >>
-> >>xfs_dir3_dirent_get_ftype doesn't exist in kernelspace :)
-> >>
-> >>bleah, why do they have different names...  Ok, will send.
-> >
-> >Because kernel has changed, and we need to do yet another large
-> >kernel/user libxfs sync.
-> >
-> >I haven't found time to do that yet. Unless you want to volunteer
-> >for it....
+> Again, the only workaround for this on a non-finobt fs is to greatly
+> increase the number of AGs so there's less records in each btree to
+> search.
 > 
-> I could give it a shot.  Do you usually do it commit-by-commit,
-> diff-and-edit, or a big copy?
-
-This one is going to need multiple phases, and in a moment you're
-going to understand what all functions called into libxfs should
-have a "libxfs define wrapper":
-
-	1. sync up to kernel commit before error negation
-	2. make sure all external function calls have libxfs
-	   define wrappers
-	3. commit error negation patch and change sign of all libxfs
-	   define wrappers
-	4. apply kernel libxfs rename patch and restructure
-	   libxfs userspace and xfsprogs build to match
-	5. continue syncing kernel changes commit by commit.
-
-Given the scope of changes, and the fact that some of the changes
-have already been applied (i.e. bug fixes, finobt changes, etc)
-step #1 is not going to be a straight forward commit-by-commit.
-So I'm happy to do that as a bulk commit. Steps #2 and #3 are
-relatively straight forward, too, just a bit painful as we need
-to be sure we don't leak negative errors.
-
-Step #4 is the big one; we want to end up with the kernel
-fs/xfs/libxfs to be identical to the xfsprogs:/libxfs/ code and so
-in userspace we've got to move headers around and rejig includes and
-things like that. That's one I should probably do.
-
-And from there, step 5 should be a simple extract/sed/commit process
-of pulling patch by patch from the kernel changes that touch
-fs/xfs/libxfs....
-
-So, really, the big step right now is #1...
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> Cheers,
+> 
+> Dave.
+> 
 
 _______________________________________________
 xfs mailing list
