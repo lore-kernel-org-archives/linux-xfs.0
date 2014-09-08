@@ -1,28 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 7DE277F4E
-	for <xfs@oss.sgi.com>; Mon,  8 Sep 2014 13:10:12 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 1AF59AC00A
-	for <xfs@oss.sgi.com>; Mon,  8 Sep 2014 11:10:09 -0700 (PDT)
-Received: from mail-ig0-f174.google.com (mail-ig0-f174.google.com
-	[209.85.213.174]) by cuda.sgi.com with ESMTP id
-	qHzopjaDQo4FA4RK (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 08 Sep 2014 11:10:07 -0700 (PDT)
-Received: by mail-ig0-f174.google.com with SMTP id a13so3215331igq.7
-	for <xfs@oss.sgi.com>; Mon, 08 Sep 2014 11:10:07 -0700 (PDT)
-Received: from [192.168.1.171] (50-197-102-113-static.hfc.comcastbusiness.net.
-	[50.197.102.113])
-	by mx.google.com with ESMTPSA id x9sm11608103igl.10.2014.09.08.11.10.06
-	for <xfs@oss.sgi.com>
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-	Mon, 08 Sep 2014 11:10:06 -0700 (PDT)
-Message-ID: <540DF0FD.205@gmail.com>
-Date: Mon, 08 Sep 2014 14:10:05 -0400
-From: Joe Landman <joe.landman@gmail.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id DC8F97F4E
+	for <xfs@oss.sgi.com>; Mon,  8 Sep 2014 13:41:57 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id BCF7A304048
+	for <xfs@oss.sgi.com>; Mon,  8 Sep 2014 11:41:54 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id fg157WLRfxr8qhM3 for <xfs@oss.sgi.com>;
+	Mon, 08 Sep 2014 11:41:52 -0700 (PDT)
+Message-ID: <540DF86D.8080705@sandeen.net>
+Date: Mon, 08 Sep 2014 13:41:49 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: converting from external log to internal log ... is this possible?
+Subject: Re: converting from external log to internal log ... is this possible?
+References: <540DF0FD.205@gmail.com>
+In-Reply-To: <540DF0FD.205@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,15 +27,22 @@ Content-Transfer-Encoding: 7bit
 Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Joe Landman <joe.landman@gmail.com>, xfs@oss.sgi.com
 
-Figured I'd ask, looked on the FAQ and didn't see anything there 
-relevant to this.  There is a hint of this in xfs_growfs, specifically 
-the -i option, though it is noted that "[NOTE: This option is not 
-implemented]".
+On 9/8/14 1:10 PM, Joe Landman wrote:
+> Figured I'd ask, looked on the FAQ and didn't see anything there
+> relevant to this.  There is a hint of this in xfs_growfs,
+> specifically the -i option, though it is noted that "[NOTE: This
+> option is not implemented]".
 
---
-Joe Landman
+Yep, it's never been implemented.  You could do it manually with
+some very careful xfs_db surgery, if you had enough contiguous
+freespace available, but it's not at all supported.
+
+Basically, no, you can't do it without getting very far under
+the hood and directly editing the disk.
+
+-Eric
 
 _______________________________________________
 xfs mailing list
