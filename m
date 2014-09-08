@@ -1,27 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id E1A1C7F4E
-	for <xfs@oss.sgi.com>; Mon,  8 Sep 2014 04:49:23 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id CEBE68F8040
-	for <xfs@oss.sgi.com>; Mon,  8 Sep 2014 02:49:23 -0700 (PDT)
-Received: from mail-ph.de-nserver.de (mail-ph.de-nserver.de [85.158.179.214])
-	by cuda.sgi.com with ESMTP id N7c3WwZzxpPu9DWf (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 08 Sep 2014 02:49:22 -0700 (PDT)
-Message-ID: <540D7BA0.6090107@profihost.ag>
-Date: Mon, 08 Sep 2014 11:49:20 +0200
-From: Stefan Priebe - Profihost AG <s.priebe@profihost.ag>
+	by oss.sgi.com (Postfix) with ESMTP id 6D0A17F4E
+	for <xfs@oss.sgi.com>; Mon,  8 Sep 2014 05:48:12 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 5AA668F8039
+	for <xfs@oss.sgi.com>; Mon,  8 Sep 2014 03:48:09 -0700 (PDT)
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	Y5AIPJYOAuCT0Ldf for <xfs@oss.sgi.com>;
+	Mon, 08 Sep 2014 03:48:03 -0700 (PDT)
+Date: Mon, 8 Sep 2014 20:47:49 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 2/2] xfs/051: test buffer use after free race on I/O
+	failure in XFS log recovery
+Message-ID: <20140908104749.GI30012@dastard>
+References: <1409667761-50248-1-git-send-email-bfoster@redhat.com>
+	<1409667761-50248-3-git-send-email-bfoster@redhat.com>
 MIME-Version: 1.0
-Subject: Re: Is XFS suitable for 350 million files on 20TB storage?
-References: <540986B1.4080306@profihost.ag>
-	<20140905123058.GA29710@bfoster.bfoster>
-	<5409AF40.10801@profihost.ag> <20140905230528.GO20473@dastard>
-	<540AB933.4030707@profihost.ag>
-	<20140906150412.GB23506@bfoster.bfoster>
-	<20140906225654.GB9955@dastard> <540D6A6C.9090801@profihost.ag>
-	<20140908094659.GC30012@dastard>
-In-Reply-To: <20140908094659.GC30012@dastard>
+Content-Disposition: inline
+In-Reply-To: <1409667761-50248-3-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,29 +31,38 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Brian Foster <bfoster@redhat.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: Brian Foster <bfoster@redhat.com>
+Cc: fstests@vger.kernel.org, xfs@oss.sgi.com
 
-
-Am 08.09.2014 um 11:46 schrieb Dave Chinner:
-> On Mon, Sep 08, 2014 at 10:35:56AM +0200, Stefan Priebe - Profihost AG wrote:
->> Thanks,
->>
->> upgraded to 3.16.2 and xfsprogs 3.2.1. Let's see how it behaves with finobt.
+On Tue, Sep 02, 2014 at 10:22:41AM -0400, Brian Foster wrote:
+> A buffer use after free race was discovered in the XFS log recovery
+> codepath if I/O failures occur during recovery. The I/O submission path
+> can abort the mount and release the only reference held on some buffers
+> before I/O completion processing (e.g., async workqueue processing)
+> might have completed. Badness ensues if the I/O completion path
+> subsequently attempts to access said buffers.
+.....
 > 
-> You need to mkfs the filesystem to use finobt - it's not something
-> that an upgrade will just switch on. i.e.
-> 
-> # mkfs.xfs -m crc=1,finobt=1 <dev>
+> case goes to Alex Lyakas.
+> index 4d35df5..9784dea 100644
+> --- a/tests/xfs/group
+> +++ b/tests/xfs/group
+> @@ -47,6 +47,7 @@
+>  048 other auto quick
+>  049 rw auto quick
+>  050 quota auto quick
+> +051 dangerous
 
-Sure i also did a reformat using "-m crc=1,finobt=1".
+I'm going to consider this auto/log/metadata rather than dangerous.
+Once the bug is fixed, we want to continue running this test as a
+regression test, and nobody does that with the dangerous group....
 
-Stefan
+Cheers,
 
-> Cheers,
-> 
-> Dave.
-> 
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
