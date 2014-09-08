@@ -1,24 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 6D0A17F4E
-	for <xfs@oss.sgi.com>; Mon,  8 Sep 2014 05:48:12 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 5AA668F8039
-	for <xfs@oss.sgi.com>; Mon,  8 Sep 2014 03:48:09 -0700 (PDT)
-Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
-	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	Y5AIPJYOAuCT0Ldf for <xfs@oss.sgi.com>;
-	Mon, 08 Sep 2014 03:48:03 -0700 (PDT)
-Date: Mon, 8 Sep 2014 20:47:49 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 2/2] xfs/051: test buffer use after free race on I/O
-	failure in XFS log recovery
-Message-ID: <20140908104749.GI30012@dastard>
-References: <1409667761-50248-1-git-send-email-bfoster@redhat.com>
-	<1409667761-50248-3-git-send-email-bfoster@redhat.com>
+	by oss.sgi.com (Postfix) with ESMTP id 45F9F7F4E
+	for <xfs@oss.sgi.com>; Mon,  8 Sep 2014 07:03:45 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 261368F8033
+	for <xfs@oss.sgi.com>; Mon,  8 Sep 2014 05:03:41 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id 8ie6vAjgCl7F3FHD (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Mon, 08 Sep 2014 05:03:41 -0700 (PDT)
+Received: from int-mx09.intmail.prod.int.phx2.redhat.com
+	(int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id s88C3dEw023957
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256
+	verify=FAIL) for <xfs@oss.sgi.com>; Mon, 8 Sep 2014 08:03:40 -0400
+Date: Mon, 8 Sep 2014 08:03:38 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH] xfs: don't ASSERT on corrupt ftype
+Message-ID: <20140908120336.GA50018@bfoster.bfoster>
+References: <540D011B.2000807@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1409667761-50248-3-git-send-email-bfoster@redhat.com>
+In-Reply-To: <540D011B.2000807@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,38 +34,60 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
-Cc: fstests@vger.kernel.org, xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-On Tue, Sep 02, 2014 at 10:22:41AM -0400, Brian Foster wrote:
-> A buffer use after free race was discovered in the XFS log recovery
-> codepath if I/O failures occur during recovery. The I/O submission path
-> can abort the mount and release the only reference held on some buffers
-> before I/O completion processing (e.g., async workqueue processing)
-> might have completed. Badness ensues if the I/O completion path
-> subsequently attempts to access said buffers.
-.....
+On Sun, Sep 07, 2014 at 08:06:35PM -0500, Eric Sandeen wrote:
+> xfs_dir3_data_get_ftype() and xfs_dir2_sf_check() get
+> the file type off disk, but ASSERT if it's invalid:
 > 
-> case goes to Alex Lyakas.
-> index 4d35df5..9784dea 100644
-> --- a/tests/xfs/group
-> +++ b/tests/xfs/group
-> @@ -47,6 +47,7 @@
->  048 other auto quick
->  049 rw auto quick
->  050 quota auto quick
-> +051 dangerous
+> 	ASSERT(type < XFS_DIR3_FT_MAX);
+> 
+> This might be cut & paste from the "put" functions,
+> which should be checking that they've not been passed
+> bad values, but we shouldn't ASSERT on bad values
+> read from disk.
+> 
 
-I'm going to consider this auto/log/metadata rather than dangerous.
-Once the bug is fixed, we want to continue running this test as a
-regression test, and nobody does that with the dangerous group....
+Does this lead to a problem of some kind in a valid configuration?
 
-Cheers,
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> ---
+> 
+> diff --git a/fs/xfs/libxfs/xfs_da_format.c b/fs/xfs/libxfs/xfs_da_format.c
+> index c9aee52..7e42fdf 100644
+> --- a/fs/xfs/libxfs/xfs_da_format.c
+> +++ b/fs/xfs/libxfs/xfs_da_format.c
+> @@ -270,7 +270,6 @@ xfs_dir3_data_get_ftype(
+>  {
+>  	__uint8_t	ftype = dep->name[dep->namelen];
+> -	ASSERT(ftype < XFS_DIR3_FT_MAX);
+>  	if (ftype >= XFS_DIR3_FT_MAX)
+>  		return XFS_DIR3_FT_UNKNOWN;
+>  	return ftype;
+> diff --git a/fs/xfs/libxfs/xfs_dir2_sf.c b/fs/xfs/libxfs/xfs_dir2_sf.c
+> index 5079e05..ea89250 100644
+> --- a/fs/xfs/libxfs/xfs_dir2_sf.c
+> +++ b/fs/xfs/libxfs/xfs_dir2_sf.c
+> @@ -635,7 +635,6 @@ xfs_dir2_sf_check(
+>  		offset =
+>  			xfs_dir2_sf_get_offset(sfep) +
+>  			dp->d_ops->data_entsize(sfep->namelen);
+> -		ASSERT(dp->d_ops->sf_get_ftype(sfep) < XFS_DIR3_FT_MAX);
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+This one is a DEBUG mode only function and the comment suggests the
+intent is to assert on directory inconsistency..?
+
+Brian
+
+>  	}
+>  	ASSERT(i8count == sfp->i8count);
+>  	ASSERT((char *)sfep - (char *)sfp == dp->i_d.di_size);
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
