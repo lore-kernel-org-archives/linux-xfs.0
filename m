@@ -1,22 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 28F897F3F
-	for <xfs@oss.sgi.com>; Tue,  9 Sep 2014 09:29:20 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 79C0FAC004
-	for <xfs@oss.sgi.com>; Tue,  9 Sep 2014 07:29:16 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 2D4FB7F3F
+	for <xfs@oss.sgi.com>; Tue,  9 Sep 2014 10:04:38 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 0D54A8F8033
+	for <xfs@oss.sgi.com>; Tue,  9 Sep 2014 08:04:34 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id iO60noJrO4HE8T6a (version=TLSv1
+	cuda.sgi.com with ESMTP id qV06eSObmJmuHtt1 (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 09 Sep 2014 07:29:11 -0700 (PDT)
-Date: Tue, 9 Sep 2014 09:44:58 -0400
+	Tue, 09 Sep 2014 08:04:30 -0700 (PDT)
+Date: Tue, 9 Sep 2014 11:04:26 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH] xfs: xlog_cil_force_lsn doesn't always wait correctly
-Message-ID: <20140909134458.GA35182@bfoster.bfoster>
-References: <1410226995-15714-1-git-send-email-david@fromorbit.com>
+Subject: Re: [PATCH 2/4] xfs: refactor xfs_bmap_shift_extents() into multiple
+	functions
+Message-ID: <20140909150426.GC35182@bfoster.bfoster>
+References: <1410092760-3451-1-git-send-email-bfoster@redhat.com>
+	<1410092760-3451-3-git-send-email-bfoster@redhat.com>
+	<20140909050800.GD20518@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1410226995-15714-1-git-send-email-david@fromorbit.com>
+In-Reply-To: <20140909050800.GD20518@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,183 +35,342 @@ Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On Tue, Sep 09, 2014 at 11:43:15AM +1000, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
+On Tue, Sep 09, 2014 at 03:08:00PM +1000, Dave Chinner wrote:
+> On Sun, Sep 07, 2014 at 08:25:58AM -0400, Brian Foster wrote:
+> > The extent shift mechanism in xfs_bmap_shift_extents() is complicated
+> > and handles several different, non-deterministic scenarios. These
+> > include extent shifts, extent merges and potential btree updates in
+> > either of the former scenarios.
+> > 
+> > Refactor the code to be more linear and readable. The loop logic in
+> > xfs_bmap_shift_extents() and some initial error checking is adjusted
+> > slightly. The associated btree lookup and update/delete operations are
+> > condensed into single blocks of code. This reduces the number of
+> > btree-specific blocks and facilitates the separation of the merge
+> > operation into a new xfs_bmap_shift_extents_merge() helper.  The merge
+> > check is also separated into an inline.
+> > 
+> > This is a code refactor only. The behavior of extent shift and collapse
+> > range is not modified.
+> > 
+> > Signed-off-by: Brian Foster <bfoster@redhat.com>
+> > ---
+> >  fs/xfs/libxfs/xfs_bmap.c | 243 ++++++++++++++++++++++++++++++++---------------
+> >  1 file changed, 168 insertions(+), 75 deletions(-)
+> > 
+> > diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+> > index 4b3f1b9..449a016 100644
+> > --- a/fs/xfs/libxfs/xfs_bmap.c
+> > +++ b/fs/xfs/libxfs/xfs_bmap.c
+> > @@ -5404,6 +5404,120 @@ error0:
+> >  }
+> >  
+> >  /*
+> > + * Determine whether an extent shift can be accomplished by a merge with the
+> > + * extent that precedes the target hole of the shift.
+> > + */
+> > +static inline bool
+> > +xfs_bmap_shift_extents_can_merge(
 > 
-> When running a tight mount/unmount loop on an older kernel, RedHat
-> QE found that unmount would occasionally hang in
-> xfs_buf_unpin_wait() on the superblock buffer. Tracing and other
-> debug work by Eric Sandeen indicated that it was hanging on the
-> writing of the superblock during unmount immediately after logging
-> the superblock counters in a synchronous transaction. Further debug
-> indicated that the synchronous transaction was not waiting for
-> completion correctly, and we narrowed it down to
-> xlog_cil_force_lsn() returning NULLCOMMITLSN and hence not pushing
-> the transaction in the iclog buffer to disk correctly.
+> No need for "inline" for static functions. The compiler will do that
+> as an optimisation if appropriate.
 > 
-> While this unmount superblock write code is now very different in
-> mainline kernels, the xlog_cil_force_lsn() code is identical, and it
-> was bisected to the backport of commit f876e44 ("xfs: always do log
-> forces via the workqueue"). This commit made the CIL push
-> asynchronous for log forces and hence exposed a race condition that
-> couldn't occur on a synchronous push.
+
+Ok.
+
+> > +	struct xfs_bmbt_irec	*left,	/* preceding extent */
+> > +	struct xfs_bmbt_irec	*got,	/* current extent to shift */
+> > +	xfs_fileoff_t		shift)	/* shift fsb */
+> > +{
+> > +	xfs_fileoff_t		startoff;
+> > +
+> > +	startoff = got->br_startoff - shift;
+> > +
+> > +	/*
+> > +	 * The extent, once shifted, must be adjacent in-file and on-disk with
+> > +	 * the preceding extent.
+> > +	 */
+> > +	if ((left->br_startoff + left->br_blockcount != startoff) ||
+> > +	    (left->br_startblock + left->br_blockcount != got->br_startblock) ||
+> > +	    (left->br_state != got->br_state) ||
+> > +	    (left->br_blockcount + got->br_blockcount > MAXEXTLEN))
+> > +		return false;
+> > +
+> > +	return true;
+> > +}
+> > +
+> > +/*
+> > + * An extent shift adjusts the file offset of an extent to fill a preceding hole
+> > + * in the file. If an extent shift would result in the extent being fully
+> > + * adjacent to the extent that currently precedes the hole, we can merge with
+> > + * the preceding extent rather than do the shift.
+> > + *
+> > + * This function assumes the caller has verified a shift-by-merge is possible
+> > + * with the provided extents via xfs_bmap_shift_extents_can_merge().
+> > + */
+> > +static int
+> > +xfs_bmap_shift_extents_merge(
+> > +	struct xfs_inode		*ip,
+> > +	int				whichfork,
+> > +	xfs_fileoff_t			shift,		/* shift fsb */
+> > +	int				current_ext,	/* idx of gotp */
+> > +	struct xfs_bmbt_rec_host	*gotp,		/* extent to shift */
+> > +	struct xfs_bmbt_rec_host	*leftp,		/* preceding extent */
+> > +	struct xfs_btree_cur		*cur,
+> > +	int				*logflags)	/* output */
+> > +{
+> > +	struct xfs_ifork		*ifp;
+> > +	struct xfs_bmbt_irec		got;
+> > +	struct xfs_bmbt_irec		left;
+> > +	xfs_filblks_t			blockcount;
+> > +	int				error, i;
+> > +
+> > +	ifp = XFS_IFORK_PTR(ip, whichfork);
+> > +	xfs_bmbt_get_all(gotp, &got);
+> > +	xfs_bmbt_get_all(leftp, &left);
+> > +	blockcount = left.br_blockcount + got.br_blockcount;
+> > +
+> > +	ASSERT(xfs_isilocked(ip, XFS_IOLOCK_EXCL));
+> > +	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
+> > +	ASSERT(xfs_bmap_shift_extents_can_merge(&left, &got, shift));
+> > +
+> > +	/*
+> > +	 * Merge the in-core extents. Note that the host record pointers and
+> > +	 * current_ext index are invalid once the extent has been removed via
+> > +	 * xfs_iext_remove().
+> > +	 */
+> > +	xfs_bmbt_set_blockcount(leftp, blockcount);
+> > +	xfs_iext_remove(ip, current_ext, 1, 0);
+> > +
+> > +	/*
+> > +	 * Update the on-disk extent count, the btree if necessary and log the
+> > +	 * inode.
+> > +	 */
+> > +	XFS_IFORK_NEXT_SET(ip, whichfork,
+> > +			   XFS_IFORK_NEXTENTS(ip, whichfork) - 1);
+> > +	*logflags |= XFS_ILOG_CORE;
+> > +	if (cur) {
+> > +		/* lookup and remove the extent to merge */
+> > +		error = xfs_bmbt_lookup_eq(cur, got.br_startoff,
+> > +				got.br_startblock, got.br_blockcount, &i);
+> > +		if (error)
+> > +			goto error;
 > 
-> Essentially, the xlog_cil_force_lsn() relied implicitly on the fact
-> that the sequence push would be complete by the time
-> xlog_cil_push_now() returned, resulting in the context being pushed
-> being in the committing list. When it was made asynchronous, it was
-> recognised that there was a race condition in detecting whether an
-> asynchronous push has started or not and code was added to handle
-> it.
+> Probably shouldn't give the jump label the same name as a variable
+> in the function. "out_error" is commonly used here.
 > 
-> Unfortunately, the fix was not quite right and left a race condition
-> where it it would detect an empty CIL while a push was in progress
-> before the context had been added to the committing list. This was
-> incorrectly seen as a "nothing to do" condition and so would tell
-> xfs_log_force_lsn() that there is nothing to wait for, and hence it
-> would push the iclogbufs in memory.
+
+Ok.
+
+> > +		XFS_WANT_CORRUPTED_GOTO(i == 1, error);
+> > +
+> > +		error = xfs_btree_delete(cur, &i);
+> > +		if (error)
+> > +			goto error;
+> > +		XFS_WANT_CORRUPTED_GOTO(i == 1, error);
+> > +
+> > +		/* lookup and update size of the previous extent */
+> > +		error = xfs_bmbt_lookup_eq(cur, left.br_startoff,
+> > +				left.br_startblock, left.br_blockcount, &i);
+> > +		if (error)
+> > +			goto error;
+> > +		XFS_WANT_CORRUPTED_GOTO(i == 1, error);
+> > +
+> > +		left.br_blockcount = blockcount;
+> > +
+> > +		error = xfs_bmbt_update(cur, left.br_startoff,
+> > +				left.br_startblock, left.br_blockcount,
+> > +				left.br_state);
+> > +		if (error)
+> > +			goto error;
+> > +	} else {
+> > +		*logflags |= XFS_ILOG_DEXT;
+> > +	}
+> > +
+> > +	return 0;
+> > +
+> > +error:
+> > +	return error;
 > 
-> The fix is simple, but explaining the logic and the race condition
-> is a lot more complex. The fix is to add the context to the
-> committing list before we start emptying the CIL. This allows us to
-> detect the difference between an empty "do nothing" push and a push
-> that has not started by adding a discrete "emptying the CIL" state
-> to avoid the transient, incorrect "empty" condition that the
-> (unchanged) waiting code was seeing.
+> This code is much clearer, though I'd get rid of further
+> indents by changing the logic around like so:
 > 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> Tested-by: Eric Sandeen <esandeen@redhat.com>
-> ---
 
-The pusher side queues the work, acquires xc_push_lock, walks the
-committing list and then does this:
+Yeah, good idea.
 
-	if (sequence == cil->xc_current_sequence &&
-	    !list_empty(&cil->xc_cil)) {
-		spin_unlock(&cil->xc_push_lock);
-		goto restart;
-	}
-
-... which is effectively peeking into the cil state to see if the push
-actually needed to do anything. The purpose is to identify the case
-where the push hasn't occurred and the previous committing list
-traversal was insufficient.
-
-The "pushee" side drains the cil, updates the current sequence and adds
-the ctx to the committing list. The time between the cil drain and
-list_add() creates a window where, according to the logic above, the cil
-push looks like it wasn't going to do anything from the pusher
-perspective. The latter two bits occur under xc_push_lock (spinlock), so
-perhaps that widens a window to make this slightly more reproducible.
-
-The pushee work is all done under xc_ctx_lock, so generally this is an
-issue because the pusher doesn't acquire xc_ctx_lock, and thus the cil
-drain and ctx update are not seen as atomic. I presume this is lockless
-by design, so taking the lock is not a desired solution.
-
-Therefore, the order of changes to data structures that the pusher peeks
-into is updated on the pushee side to add to the committing list, drain
-the cil and update the current sequence number.
-
-For the pusher side, this means the committing list walk and logic above
-(all under xc_push_lock) either sees the ctx on the list or not. If the
-ctx is on the list, then we waited for it and there is no race. If the
-ctx is not on the list, it is either populated and waiting to be added
-to the list (e.g., we hold xc_push_lock) or empty and there's nothing to
-do (regardless of whether the pusher side has run or not).
-
-That seems sound to me. It would be nice of we could somehow make this
-explicitly more simple rather than dependent on complex ordering (e.g.,
-a push completion or something of that sort), but that's for another
-time. One nit below...
-
->  fs/xfs/xfs_log_cil.c | 47 ++++++++++++++++++++++++++++++++++++++---------
->  1 file changed, 38 insertions(+), 9 deletions(-)
+> ....
+> 	*logflags |= XFS_ILOG_CORE;
+> 	if (!cur) {
+> 		*logflags |= XFS_ILOG_DEXT;
+> 		return 0;
+> 	}
 > 
-> diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
-> index f6b79e5..f506c45 100644
-> --- a/fs/xfs/xfs_log_cil.c
-> +++ b/fs/xfs/xfs_log_cil.c
-> @@ -463,12 +463,40 @@ xlog_cil_push(
->  		spin_unlock(&cil->xc_push_lock);
->  		goto out_skip;
->  	}
-> -	spin_unlock(&cil->xc_push_lock);
->  
->  
->  	/* check for a previously pushed seqeunce */
-> -	if (push_seq < cil->xc_ctx->sequence)
-> +	if (push_seq < cil->xc_ctx->sequence) {
-> +		spin_unlock(&cil->xc_push_lock);
->  		goto out_skip;
-> +	}
-> +
+> 	/* lookup and remove the extent to merge */
+> 	error = xfs_bmbt_lookup_eq(cur, got.br_startoff,
+> 				got.br_startblock, got.br_blockcount, &i);
+> 	if (error)
+> 		goto out_error;
+> .....
+> 
+> 	error = xfs_bmbt_update(cur, left.br_startoff,
+> 				left.br_startblock, left.br_blockcount,
+> 				left.br_state);
+> out_error:
+> 	return error;
+> }
+> 
+> > @@ -5493,30 +5617,42 @@ xfs_bmap_shift_extents(
+> >  	 */
+> >  	total_extents = ifp->if_bytes / sizeof(xfs_bmbt_rec_t);
+> >  	while (nexts++ < num_exts && current_ext < total_extents) {
+> > -
+> > -		gotp = xfs_iext_get_ext(ifp, current_ext);
+> > -		xfs_bmbt_get_all(gotp, &got);
+> >  		startoff = got.br_startoff - offset_shift_fsb;
+> >  
+> > -		/*
+> > -		 * Before shifting extent into hole, make sure that the hole is
+> > -		 * large enough to accommodate the shift.
+> > -		 */
+> > +		/* grab the left extent and check for a potential merge */
+> >  		if (current_ext > 0) {
+> > -			xfs_bmbt_get_all(xfs_iext_get_ext(ifp, current_ext - 1),
+> > -					 &left);
+> > -			if (startoff < left.br_startoff + left.br_blockcount)
+> > +			leftp = xfs_iext_get_ext(ifp, current_ext - 1);
+> > +			xfs_bmbt_get_all(leftp, &left);
+> > +
+> > +			/* make sure hole is large enough for shift */
+> > +			if (startoff < left.br_startoff + left.br_blockcount) {
+> >  				error = -EINVAL;
+> > -		} else if (offset_shift_fsb > got.br_startoff) {
+> > -			/*
+> > -			 * When first extent is shifted, offset_shift_fsb should
+> > -			 * be less than the stating offset of the first extent.
+> > -			 */
+> > -			error = -EINVAL;
+> > +				goto del_cursor;
+> > +			}
+> > +
+> > +			if (xfs_bmap_shift_extents_can_merge(&left, &got,
+> > +							offset_shift_fsb)) {
+> > +				error = xfs_bmap_shift_extents_merge(ip, whichfork,
+> > +						offset_shift_fsb, current_ext, gotp,
+> > +						leftp, cur, &logflags);
+> > +				if (error)
+> > +					goto del_cursor;
+> > +
+> > +				/*
+> > +				 * The extent was merged so adjust the extent
+> > +				 * index and move onto the next.
+> > +				 */
+> > +				current_ext--;
+> > +				goto next;
+> > +			}
+> >  		}
+> > -		if (error)
+> > -			goto del_cursor;
+> >  
+> > +		/*
+> > +		 * We didn't merge the extent so do the shift. Update the start
+> > +		 * offset in the in-core extent and btree, if necessary.
+> > +		 */
+> > +		xfs_bmbt_set_startoff(gotp, startoff);
+> > +		logflags |= XFS_ILOG_CORE;
+> >  		if (cur) {
+> >  			error = xfs_bmbt_lookup_eq(cur, got.br_startoff,
+> >  						   got.br_startblock,
+> 
+> This doesn't do a lot to improve the code. It increases the level of
+> indent and, IMO, makes it harder to read. It's a classic case of
+> function names getting so long there's no space left for the code...
+> 
+> So, how about s/xfs_bmap_shift_extents/xfs_bmse/ as a means of
+> reducing the namespace verbosity? And, really, that whole loop body
+> could be pushed into a separate function. i.e
+> 
+>         while (nexts++ < num_exts) {
+> 		error = xfs_bmse_collapse_one(ip, ifp, cur, &current_ext, gotp,
+> 					      offset_shift_fsb, &logflags);
+> 		if (error)
+> 			goto del_cursor;
+> 
+> 		/* check against total extent count, grab the next record */
+> 		total_extents = ifp->if_bytes / sizeof(xfs_bmbt_rec_t);
+> 		if (current_ext >= total_extents)
+> 			break;
+> 		gotp = xfs_iext_get_ext(ifp, current_ext);
+> 		xfs_bmbt_get_all(gotp, &got);
+> 	}
+> 
+> That reduces all the jumps/error cases simply to return statements,
+> allowing them to be ordered clearly to minimise the indent of
+> the code. It also means that way the value of current_ext changes is
+> obvious, rather than having the decrement/increment because of the
+> "next iteration" handling in the loop always incrementing the value.
+> 
+> Even the initial check outside the loop for:
+> 
+>         if (current_ext == 0 && got.br_startoff < offset_shift_fsb) {
+> 		error = -EINVAL;
+> 		goto del_cursor
+> 	}
+> 
+> could be driven inside xfs_bmse_collapse_one() as the first check that
+> is done, and that would further simplify xfs_bmap_shift_extents().
+> i.e.
+> 
+> xfs_bmse_collapse_one()
+> {
+> 	if (*current_ext == 0) {
+> 		if (got.br_startoff < offset_shift_fsb)
+> 			return -EINVAL;
+> 		goto shift_extent;
+> 	}
+> 
+> 	/* get left, do merge checks */
+> 	....
+> 	if (!xfs_bmse_can_merge(&left, &got, offset_shift_fsb))
+> 		goto shift_extent;
+> 
+> 	return xfs_bmse_merge(ip, whichfork, ...)
+> 
+> shift_extent:
+> 	(*current_ext)++;
+> 	xfs_bmbt_set_startoff(gotp, startoff);
+> 	logflags |= XFS_ILOG_CORE;
+> 	if (!cur)
+> 		*logflags |= XFS_ILOG_DEXT;
+> 		return 0;
+> 	}
+> 
+> 	/* do btree shift */
+> 	....
+> 	return error;
+> }
+> 
+> This way we end up with a set of well defined operations, along
+> with clear logic on how they are iterated to make do the overall
+> shift operation.
+> 
+> What do you think?
+> 
 
-Looks like out_skip could unlock xc_push_lock now.
+That all sounds pretty good to me. I may incorporate the aforementioned
+updates to the merge bits to this patch and create a new patch for the
+subsequent refactor of the loop body. E.g., this patch becomes "...
+refactor extent merge into new function." But I'll play with it and see
+what falls out... thanks for the feedback.
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+Brian
 
-> +	/*
-> +	 * We are now going to push this context, so add it to the committing
-> +	 * list before we do anything else. This ensures that anyone waiting on
-> +	 * this push can easily detect the difference between a "push in
-> +	 * progress" and "CIL is empty, nothing to do".
-> +	 *
-> +	 * IOWs, a wait loop can now check for:
-> +	 *	the current sequence not being found on the committing list;
-> +	 *	an empty CIL; and
-> +	 *	an unchanged sequence number
-> +	 * to detect a push that had nothing to do and therefore does not need
-> +	 * waiting on. If the CIL is not empty, we get put on the committing
-> +	 * list before emptying the CIL and bumping the sequence number. Hence
-> +	 * an empty CIL and an unchanged sequence number means we jumped out
-> +	 * above after doing nothing.
-> +	 *
-> +	 * Hence the waiter will either find the commit sequence on the
-> +	 * committing list or the sequence number will be unchanged and the CIL
-> +	 * still dirty. In that latter case, the push has not yet started, and
-> +	 * so the waiter will have to continue trying to check the CIL
-> +	 * committing list until it is found. In extreme cases of delay, the
-> +	 * sequence may fully commit between the attempts the wait makes to wait
-> +	 * on the commit sequence.
-> +	 */
-> +	list_add(&ctx->committing, &cil->xc_committing);
-> +	spin_unlock(&cil->xc_push_lock);
->  
->  	/*
->  	 * pull all the log vectors off the items in the CIL, and
-> @@ -532,7 +560,6 @@ xlog_cil_push(
->  	 */
->  	spin_lock(&cil->xc_push_lock);
->  	cil->xc_current_sequence = new_ctx->sequence;
-> -	list_add(&ctx->committing, &cil->xc_committing);
->  	spin_unlock(&cil->xc_push_lock);
->  	up_write(&cil->xc_ctx_lock);
->  
-> @@ -855,13 +882,15 @@ restart:
->  	 * Hence by the time we have got here it our sequence may not have been
->  	 * pushed yet. This is true if the current sequence still matches the
->  	 * push sequence after the above wait loop and the CIL still contains
-> -	 * dirty objects.
-> +	 * dirty objects. This is guaranteed by the push code first adding the
-> +	 * context to the committing list before emptying the CIL.
->  	 *
-> -	 * When the push occurs, it will empty the CIL and atomically increment
-> -	 * the currect sequence past the push sequence and move it into the
-> -	 * committing list. Of course, if the CIL is clean at the time of the
-> -	 * push, it won't have pushed the CIL at all, so in that case we should
-> -	 * try the push for this sequence again from the start just in case.
-> +	 * Hence if we don't find the context in the committing list and the
-> +	 * current sequence number is unchanged then the CIL contents are
-> +	 * significant.  If the CIL is empty, if means there was nothing to push
-> +	 * and that means there is nothing to wait for. If the CIL is not empty,
-> +	 * it means we haven't yet started the push, because if it had started
-> +	 * we would have found the context on the committing list.
->  	 */
->  	if (sequence == cil->xc_current_sequence &&
->  	    !list_empty(&cil->xc_cil)) {
+> Cheers,
+> 
+> Dave.
+> 
 > -- 
-> 2.0.0
+> Dave Chinner
+> david@fromorbit.com
 > 
 > _______________________________________________
 > xfs mailing list
