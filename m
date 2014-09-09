@@ -1,22 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 7C0BD7F51
-	for <xfs@oss.sgi.com>; Tue,  9 Sep 2014 17:06:53 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 27EE17F52
+	for <xfs@oss.sgi.com>; Tue,  9 Sep 2014 17:24:55 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 59ECB8F8050
-	for <xfs@oss.sgi.com>; Tue,  9 Sep 2014 15:06:53 -0700 (PDT)
-Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
-	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	T7o6TtrQuPCrZplm for <xfs@oss.sgi.com>;
-	Tue, 09 Sep 2014 15:06:48 -0700 (PDT)
-Date: Wed, 10 Sep 2014 08:06:45 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Corrupted files
-Message-ID: <20140909220645.GH20518@dastard>
-References: <540F1B01.3020700@mygrande.net>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id D8A858F8050
+	for <xfs@oss.sgi.com>; Tue,  9 Sep 2014 15:24:54 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id Fl7GSJZW8Ud95wo3 for <xfs@oss.sgi.com>;
+	Tue, 09 Sep 2014 15:24:52 -0700 (PDT)
+Message-ID: <540F7E37.7020500@sandeen.net>
+Date: Tue, 09 Sep 2014 17:24:55 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <540F1B01.3020700@mygrande.net>
+Subject: Re: Corrupted files
+References: <540F1B01.3020700@mygrande.net>	<CAA43vkXwHF9RHW-cbTZ91_vF6wiQ6o_+TQDL3=7kD9P4tErCNQ@mail.gmail.com>
+	<CAA43vkWgh8-EjDXjkySUn+y18W1O+v_W5j+fQankRTgDCmc8tw@mail.gmail.com>
+In-Reply-To: <CAA43vkWgh8-EjDXjkySUn+y18W1O+v_W5j+fQankRTgDCmc8tw@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,43 +24,31 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Leslie Rhorer <lrhorer@mygrande.net>
-Cc: xfs@oss.sgi.com
+To: Sean Caron <scaron@umich.edu>, Leslie Rhorer <lrhorer@mygrande.net>
+Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-On Tue, Sep 09, 2014 at 10:21:37AM -0500, Leslie Rhorer wrote:
-> 
-> Hello,
-> 
-> 	I have an issue with my primary RAID array.  I have 13T of data on
-> the array, and I suffered a major array failure.  I was able to
-> rebuild the array, but some data was lost.  Of course I have
-> backups, so after running xfs_repair, I ran an rsync job to recover
-> the lost data.  Most of it was recovered, but there are several
-> files that cannot be read, deleted, or overwritten.  I have tried
-> running xfs_repair several times, but any attempt to access these
-> files continuously reports "cannot stat XXXXXXXX: Structure needs
-> cleaning".  I don't need to try to recover the data directly, as it
-> does reside on the backup, but I need to clear the file structure so
-> I can write the files back to the filesystem.  How do I proceed?
+On 9/9/14 11:03 AM, Sean Caron wrote:
 
-Fristly, more infomration is required, namely versions and actual
-error messages:
+>Barring rare cases, xfs_repair is bad juju.
 
-http://xfs.org/index.php/XFS_FAQ#Q:_What_information_should_I_include_when_reporting_a_problem.3F
+No, it's not.  It is the appropriate tool to use for filesystem repair.
 
-dmesg, in particular, should tell use what the corruption being
-encountered is when stat fails.
+But it is not the appropriate tool for recovery from mangled storage.
 
-Cheers,
+I've actually been running a filesystem fuzzer over xfs images, randomly
+corrupting data and testing repair, 1000s of times over.  It does
+remarkably well.
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+If you scramble your raid, which means your block device is no longer
+an xfs filesystem, but is instead a random tangle of bits and pieces of
+other things, of course xfs_repair won't do well, but it's not the right
+tool for the job at that stage.
+
+-Eric
 
 _______________________________________________
 xfs mailing list
