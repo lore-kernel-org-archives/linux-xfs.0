@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id AA9687F4E
-	for <xfs@oss.sgi.com>; Tue,  9 Sep 2014 00:08:13 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 18B047F4E
+	for <xfs@oss.sgi.com>; Tue,  9 Sep 2014 00:13:34 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 6CB5B8F8033
-	for <xfs@oss.sgi.com>; Mon,  8 Sep 2014 22:08:10 -0700 (PDT)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id DBD92304043
+	for <xfs@oss.sgi.com>; Mon,  8 Sep 2014 22:13:30 -0700 (PDT)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	v7LcmAOZqxlutVJU for <xfs@oss.sgi.com>;
-	Mon, 08 Sep 2014 22:08:07 -0700 (PDT)
-Date: Tue, 9 Sep 2014 15:08:00 +1000
+	mIm1tSlXIFqOZtBn for <xfs@oss.sgi.com>;
+	Mon, 08 Sep 2014 22:13:28 -0700 (PDT)
+Date: Tue, 9 Sep 2014 15:13:26 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 2/4] xfs: refactor xfs_bmap_shift_extents() into multiple
-	functions
-Message-ID: <20140909050800.GD20518@dastard>
+Subject: Re: [PATCH 3/4] xfs: writeback and inval. file range to be shifted
+	by collapse
+Message-ID: <20140909051326.GE20518@dastard>
 References: <1410092760-3451-1-git-send-email-bfoster@redhat.com>
-	<1410092760-3451-3-git-send-email-bfoster@redhat.com>
+	<1410092760-3451-4-git-send-email-bfoster@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1410092760-3451-3-git-send-email-bfoster@redhat.com>
+In-Reply-To: <1410092760-3451-4-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,320 +34,59 @@ Sender: xfs-bounces@oss.sgi.com
 To: Brian Foster <bfoster@redhat.com>
 Cc: xfs@oss.sgi.com
 
-On Sun, Sep 07, 2014 at 08:25:58AM -0400, Brian Foster wrote:
-> The extent shift mechanism in xfs_bmap_shift_extents() is complicated
-> and handles several different, non-deterministic scenarios. These
-> include extent shifts, extent merges and potential btree updates in
-> either of the former scenarios.
+On Sun, Sep 07, 2014 at 08:25:59AM -0400, Brian Foster wrote:
+> The collapse range operation currently writes the entire file before
+> starting the collapse to avoid changes in the in-core extent list due to
+> writeback causing the extent count to change. Now that collapse range is
+> fsb based rather than extent index based it can sustain changes in the
+> extent list during the shift sequence without disruption.
 > 
-> Refactor the code to be more linear and readable. The loop logic in
-> xfs_bmap_shift_extents() and some initial error checking is adjusted
-> slightly. The associated btree lookup and update/delete operations are
-> condensed into single blocks of code. This reduces the number of
-> btree-specific blocks and facilitates the separation of the merge
-> operation into a new xfs_bmap_shift_extents_merge() helper.  The merge
-> check is also separated into an inline.
+> Modify xfs_collapse_file_space() to writeback and invalidate pages
+> associated with the range of the file to be shifted.
+> xfs_free_file_space() currently has similar behavior, but the space free
+> need only affect the region of the file that is freed and this could
+> change in the future.
 > 
-> This is a code refactor only. The behavior of extent shift and collapse
-> range is not modified.
+> Also update the comments to reflect the current implementation. We
+> retain the eofblocks trim permanently as a best option for dealing with
+> delalloc extents. We don't shift delalloc extents because this scenario
+> only occurs with post-eof preallocation (since data must be flushed such
+> that the cache can be invalidated and data can be shifted). That means
+> said space must also be initialized before being shifted into the
+> accessible region of the file only to be immediately truncated off as
+> the last part of the collapse. In other words, the eofblocks trim will
+> happen anyways, we just run it first to ensure the file remains in a
+> consistent state throughout the collapse.
+> 
+> Finally, BUG() in the event of a delalloc extent during the extent shift
+> such that a failure is obvious. The implementation explicitly does not
+> support delalloc extents and the caller is expected to prevent this
+> scenario in advance as is done by collapse.
 > 
 > Signed-off-by: Brian Foster <bfoster@redhat.com>
 > ---
->  fs/xfs/libxfs/xfs_bmap.c | 243 ++++++++++++++++++++++++++++++++---------------
->  1 file changed, 168 insertions(+), 75 deletions(-)
+>  fs/xfs/libxfs/xfs_bmap.c |  2 ++
+>  fs/xfs/xfs_bmap_util.c   | 32 +++++++++++++++++++-------------
+>  2 files changed, 21 insertions(+), 13 deletions(-)
 > 
 > diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> index 4b3f1b9..449a016 100644
+> index 449a016..1dd04c2 100644
 > --- a/fs/xfs/libxfs/xfs_bmap.c
 > +++ b/fs/xfs/libxfs/xfs_bmap.c
-> @@ -5404,6 +5404,120 @@ error0:
->  }
->  
->  /*
-> + * Determine whether an extent shift can be accomplished by a merge with the
-> + * extent that precedes the target hole of the shift.
-> + */
-> +static inline bool
-> +xfs_bmap_shift_extents_can_merge(
-
-No need for "inline" for static functions. The compiler will do that
-as an optimisation if appropriate.
-
-> +	struct xfs_bmbt_irec	*left,	/* preceding extent */
-> +	struct xfs_bmbt_irec	*got,	/* current extent to shift */
-> +	xfs_fileoff_t		shift)	/* shift fsb */
-> +{
-> +	xfs_fileoff_t		startoff;
-> +
-> +	startoff = got->br_startoff - shift;
-> +
-> +	/*
-> +	 * The extent, once shifted, must be adjacent in-file and on-disk with
-> +	 * the preceding extent.
-> +	 */
-> +	if ((left->br_startoff + left->br_blockcount != startoff) ||
-> +	    (left->br_startblock + left->br_blockcount != got->br_startblock) ||
-> +	    (left->br_state != got->br_state) ||
-> +	    (left->br_blockcount + got->br_blockcount > MAXEXTLEN))
-> +		return false;
-> +
-> +	return true;
-> +}
-> +
-> +/*
-> + * An extent shift adjusts the file offset of an extent to fill a preceding hole
-> + * in the file. If an extent shift would result in the extent being fully
-> + * adjacent to the extent that currently precedes the hole, we can merge with
-> + * the preceding extent rather than do the shift.
-> + *
-> + * This function assumes the caller has verified a shift-by-merge is possible
-> + * with the provided extents via xfs_bmap_shift_extents_can_merge().
-> + */
-> +static int
-> +xfs_bmap_shift_extents_merge(
-> +	struct xfs_inode		*ip,
-> +	int				whichfork,
-> +	xfs_fileoff_t			shift,		/* shift fsb */
-> +	int				current_ext,	/* idx of gotp */
-> +	struct xfs_bmbt_rec_host	*gotp,		/* extent to shift */
-> +	struct xfs_bmbt_rec_host	*leftp,		/* preceding extent */
-> +	struct xfs_btree_cur		*cur,
-> +	int				*logflags)	/* output */
-> +{
-> +	struct xfs_ifork		*ifp;
-> +	struct xfs_bmbt_irec		got;
-> +	struct xfs_bmbt_irec		left;
-> +	xfs_filblks_t			blockcount;
-> +	int				error, i;
-> +
-> +	ifp = XFS_IFORK_PTR(ip, whichfork);
-> +	xfs_bmbt_get_all(gotp, &got);
-> +	xfs_bmbt_get_all(leftp, &left);
-> +	blockcount = left.br_blockcount + got.br_blockcount;
-> +
-> +	ASSERT(xfs_isilocked(ip, XFS_IOLOCK_EXCL));
-> +	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
-> +	ASSERT(xfs_bmap_shift_extents_can_merge(&left, &got, shift));
-> +
-> +	/*
-> +	 * Merge the in-core extents. Note that the host record pointers and
-> +	 * current_ext index are invalid once the extent has been removed via
-> +	 * xfs_iext_remove().
-> +	 */
-> +	xfs_bmbt_set_blockcount(leftp, blockcount);
-> +	xfs_iext_remove(ip, current_ext, 1, 0);
-> +
-> +	/*
-> +	 * Update the on-disk extent count, the btree if necessary and log the
-> +	 * inode.
-> +	 */
-> +	XFS_IFORK_NEXT_SET(ip, whichfork,
-> +			   XFS_IFORK_NEXTENTS(ip, whichfork) - 1);
-> +	*logflags |= XFS_ILOG_CORE;
-> +	if (cur) {
-> +		/* lookup and remove the extent to merge */
-> +		error = xfs_bmbt_lookup_eq(cur, got.br_startoff,
-> +				got.br_startblock, got.br_blockcount, &i);
-> +		if (error)
-> +			goto error;
-
-Probably shouldn't give the jump label the same name as a variable
-in the function. "out_error" is commonly used here.
-
-> +		XFS_WANT_CORRUPTED_GOTO(i == 1, error);
-> +
-> +		error = xfs_btree_delete(cur, &i);
-> +		if (error)
-> +			goto error;
-> +		XFS_WANT_CORRUPTED_GOTO(i == 1, error);
-> +
-> +		/* lookup and update size of the previous extent */
-> +		error = xfs_bmbt_lookup_eq(cur, left.br_startoff,
-> +				left.br_startblock, left.br_blockcount, &i);
-> +		if (error)
-> +			goto error;
-> +		XFS_WANT_CORRUPTED_GOTO(i == 1, error);
-> +
-> +		left.br_blockcount = blockcount;
-> +
-> +		error = xfs_bmbt_update(cur, left.br_startoff,
-> +				left.br_startblock, left.br_blockcount,
-> +				left.br_state);
-> +		if (error)
-> +			goto error;
-> +	} else {
-> +		*logflags |= XFS_ILOG_DEXT;
-> +	}
-> +
-> +	return 0;
-> +
-> +error:
-> +	return error;
-
-This code is much clearer, though I'd get rid of further
-indents by changing the logic around like so:
-
-....
-	*logflags |= XFS_ILOG_CORE;
-	if (!cur) {
-		*logflags |= XFS_ILOG_DEXT;
-		return 0;
-	}
-
-	/* lookup and remove the extent to merge */
-	error = xfs_bmbt_lookup_eq(cur, got.br_startoff,
-				got.br_startblock, got.br_blockcount, &i);
-	if (error)
-		goto out_error;
-.....
-
-	error = xfs_bmbt_update(cur, left.br_startoff,
-				left.br_startblock, left.br_blockcount,
-				left.br_state);
-out_error:
-	return error;
-}
-
-> @@ -5493,30 +5617,42 @@ xfs_bmap_shift_extents(
+> @@ -5617,6 +5617,8 @@ xfs_bmap_shift_extents(
 >  	 */
 >  	total_extents = ifp->if_bytes / sizeof(xfs_bmbt_rec_t);
 >  	while (nexts++ < num_exts && current_ext < total_extents) {
-> -
-> -		gotp = xfs_iext_get_ext(ifp, current_ext);
-> -		xfs_bmbt_get_all(gotp, &got);
->  		startoff = got.br_startoff - offset_shift_fsb;
->  
-> -		/*
-> -		 * Before shifting extent into hole, make sure that the hole is
-> -		 * large enough to accommodate the shift.
-> -		 */
-> +		/* grab the left extent and check for a potential merge */
->  		if (current_ext > 0) {
-> -			xfs_bmbt_get_all(xfs_iext_get_ext(ifp, current_ext - 1),
-> -					 &left);
-> -			if (startoff < left.br_startoff + left.br_blockcount)
-> +			leftp = xfs_iext_get_ext(ifp, current_ext - 1);
-> +			xfs_bmbt_get_all(leftp, &left);
-> +
-> +			/* make sure hole is large enough for shift */
-> +			if (startoff < left.br_startoff + left.br_blockcount) {
->  				error = -EINVAL;
-> -		} else if (offset_shift_fsb > got.br_startoff) {
-> -			/*
-> -			 * When first extent is shifted, offset_shift_fsb should
-> -			 * be less than the stating offset of the first extent.
-> -			 */
-> -			error = -EINVAL;
-> +				goto del_cursor;
-> +			}
-> +
-> +			if (xfs_bmap_shift_extents_can_merge(&left, &got,
-> +							offset_shift_fsb)) {
-> +				error = xfs_bmap_shift_extents_merge(ip, whichfork,
-> +						offset_shift_fsb, current_ext, gotp,
-> +						leftp, cur, &logflags);
-> +				if (error)
-> +					goto del_cursor;
-> +
-> +				/*
-> +				 * The extent was merged so adjust the extent
-> +				 * index and move onto the next.
-> +				 */
-> +				current_ext--;
-> +				goto next;
-> +			}
->  		}
-> -		if (error)
-> -			goto del_cursor;
->  
-> +		/*
-> +		 * We didn't merge the extent so do the shift. Update the start
-> +		 * offset in the in-core extent and btree, if necessary.
-> +		 */
-> +		xfs_bmbt_set_startoff(gotp, startoff);
-> +		logflags |= XFS_ILOG_CORE;
->  		if (cur) {
->  			error = xfs_bmbt_lookup_eq(cur, got.br_startoff,
->  						   got.br_startblock,
+> +		/* can't handle delalloc extents */
+> +		BUG_ON(isnullstartblock(got.br_startblock));
 
-This doesn't do a lot to improve the code. It increases the level of
-indent and, IMO, makes it harder to read. It's a classic case of
-function names getting so long there's no space left for the code...
+XFS_WANT_CORRUPTED_GOTO() would be better, I think.
 
-So, how about s/xfs_bmap_shift_extents/xfs_bmse/ as a means of
-reducing the namespace verbosity? And, really, that whole loop body
-could be pushed into a separate function. i.e
-
-        while (nexts++ < num_exts) {
-		error = xfs_bmse_collapse_one(ip, ifp, cur, &current_ext, gotp,
-					      offset_shift_fsb, &logflags);
-		if (error)
-			goto del_cursor;
-
-		/* check against total extent count, grab the next record */
-		total_extents = ifp->if_bytes / sizeof(xfs_bmbt_rec_t);
-		if (current_ext >= total_extents)
-			break;
-		gotp = xfs_iext_get_ext(ifp, current_ext);
-		xfs_bmbt_get_all(gotp, &got);
-	}
-
-That reduces all the jumps/error cases simply to return statements,
-allowing them to be ordered clearly to minimise the indent of
-the code. It also means that way the value of current_ext changes is
-obvious, rather than having the decrement/increment because of the
-"next iteration" handling in the loop always incrementing the value.
-
-Even the initial check outside the loop for:
-
-        if (current_ext == 0 && got.br_startoff < offset_shift_fsb) {
-		error = -EINVAL;
-		goto del_cursor
-	}
-
-could be driven inside xfs_bmse_collapse_one() as the first check that
-is done, and that would further simplify xfs_bmap_shift_extents().
-i.e.
-
-xfs_bmse_collapse_one()
-{
-	if (*current_ext == 0) {
-		if (got.br_startoff < offset_shift_fsb)
-			return -EINVAL;
-		goto shift_extent;
-	}
-
-	/* get left, do merge checks */
-	....
-	if (!xfs_bmse_can_merge(&left, &got, offset_shift_fsb))
-		goto shift_extent;
-
-	return xfs_bmse_merge(ip, whichfork, ...)
-
-shift_extent:
-	(*current_ext)++;
-	xfs_bmbt_set_startoff(gotp, startoff);
-	logflags |= XFS_ILOG_CORE;
-	if (!cur)
-		*logflags |= XFS_ILOG_DEXT;
-		return 0;
-	}
-
-	/* do btree shift */
-	....
-	return error;
-}
-
-This way we end up with a set of well defined operations, along
-with clear logic on how they are iterated to make do the overall
-shift operation.
-
-What do you think?
+Otherwise OK.
 
 Cheers,
 
 Dave.
-
 -- 
 Dave Chinner
 david@fromorbit.com
