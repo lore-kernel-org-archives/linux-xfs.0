@@ -1,21 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 27EE17F52
-	for <xfs@oss.sgi.com>; Tue,  9 Sep 2014 17:24:55 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 1F30F7F55
+	for <xfs@oss.sgi.com>; Tue,  9 Sep 2014 17:29:00 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id D8A858F8050
-	for <xfs@oss.sgi.com>; Tue,  9 Sep 2014 15:24:54 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id Fl7GSJZW8Ud95wo3 for <xfs@oss.sgi.com>;
-	Tue, 09 Sep 2014 15:24:52 -0700 (PDT)
-Message-ID: <540F7E37.7020500@sandeen.net>
-Date: Tue, 09 Sep 2014 17:24:55 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id E25C78F8049
+	for <xfs@oss.sgi.com>; Tue,  9 Sep 2014 15:28:59 -0700 (PDT)
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.9])
+	by cuda.sgi.com with ESMTP id Ei01gzYMXHvkDek2 (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 09 Sep 2014 15:28:57 -0700 (PDT)
+Date: Tue, 9 Sep 2014 15:28:56 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 1/5] xfs_repair: clear bad flgs in process_dinode_int
+Message-ID: <20140909222856.GA27349@infradead.org>
+References: <1410108065-18156-1-git-send-email-sandeen@redhat.com>
+	<1410108065-18156-2-git-send-email-sandeen@redhat.com>
 MIME-Version: 1.0
-Subject: Re: Corrupted files
-References: <540F1B01.3020700@mygrande.net>	<CAA43vkXwHF9RHW-cbTZ91_vF6wiQ6o_+TQDL3=7kD9P4tErCNQ@mail.gmail.com>
-	<CAA43vkWgh8-EjDXjkySUn+y18W1O+v_W5j+fQankRTgDCmc8tw@mail.gmail.com>
-In-Reply-To: <CAA43vkWgh8-EjDXjkySUn+y18W1O+v_W5j+fQankRTgDCmc8tw@mail.gmail.com>
+Content-Disposition: inline
+In-Reply-To: <1410108065-18156-2-git-send-email-sandeen@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,31 +26,28 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Sean Caron <scaron@umich.edu>, Leslie Rhorer <lrhorer@mygrande.net>
-Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: xfs@oss.sgi.com
 
-On 9/9/14 11:03 AM, Sean Caron wrote:
+On Sun, Sep 07, 2014 at 11:41:01AM -0500, Eric Sandeen wrote:
+> process_dinode_int() reports bad flags if
+> dino->di_flags & ~XFS_DIFLAG_ANY - i.e. if
+> any flags are set outside the known set.  But
+> then instead of clearing them, it does
+> flags &= ~XFS_DIFLAG_ANY which keeps *only*
+> the bad flags.  This leads to persistent,
+> unrepairable errors of the form:
 
->Barring rare cases, xfs_repair is bad juju.
+You know you can use up to 75 characters per line for your commit messages,
+don't you? :)
 
-No, it's not.  It is the appropriate tool to use for filesystem repair.
+Otherwise looks good,
 
-But it is not the appropriate tool for recovery from mangled storage.
-
-I've actually been running a filesystem fuzzer over xfs images, randomly
-corrupting data and testing repair, 1000s of times over.  It does
-remarkably well.
-
-If you scramble your raid, which means your block device is no longer
-an xfs filesystem, but is instead a random tangle of bits and pieces of
-other things, of course xfs_repair won't do well, but it's not the right
-tool for the job at that stage.
-
--Eric
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
 _______________________________________________
 xfs mailing list
