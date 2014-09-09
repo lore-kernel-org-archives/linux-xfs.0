@@ -1,22 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 86A407F4E
-	for <xfs@oss.sgi.com>; Mon,  8 Sep 2014 20:56:07 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 21977AC001
-	for <xfs@oss.sgi.com>; Mon,  8 Sep 2014 18:56:06 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id ABE0D7F4E
+	for <xfs@oss.sgi.com>; Mon,  8 Sep 2014 23:04:01 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 9967F8F8039
+	for <xfs@oss.sgi.com>; Mon,  8 Sep 2014 21:03:58 -0700 (PDT)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	u5pHYRkbYiKxhl0o for <xfs@oss.sgi.com>;
-	Mon, 08 Sep 2014 18:56:04 -0700 (PDT)
-Date: Tue, 9 Sep 2014 11:56:01 +1000
+	qyaPEKoaldASaKxf for <xfs@oss.sgi.com>;
+	Mon, 08 Sep 2014 21:03:56 -0700 (PDT)
+Date: Tue, 9 Sep 2014 14:03:52 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v2 0/2] xfs log recovery delay instrumentation
-Message-ID: <20140909015601.GV30012@dastard>
-References: <1409666895-49799-1-git-send-email-bfoster@redhat.com>
+Subject: Re: [PATCH 1/4] xfs: track collapse via file offset rather than
+	extent index
+Message-ID: <20140909040352.GC20518@dastard>
+References: <1410092760-3451-1-git-send-email-bfoster@redhat.com>
+	<1410092760-3451-2-git-send-email-bfoster@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1409666895-49799-1-git-send-email-bfoster@redhat.com>
+In-Reply-To: <1410092760-3451-2-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,30 +34,30 @@ Sender: xfs-bounces@oss.sgi.com
 To: Brian Foster <bfoster@redhat.com>
 Cc: xfs@oss.sgi.com
 
-On Tue, Sep 02, 2014 at 10:08:13AM -0400, Brian Foster wrote:
-> Here's v2 of the log recovery delay instrumentation set. v1 is available
-> here:
+On Sun, Sep 07, 2014 at 08:25:57AM -0400, Brian Foster wrote:
+> The collapse range implementation uses a transaction per extent shift.
+> The progress of the overall operation is tracked via the current extent
+> index of the in-core extent list. This is racy because the ilock must be
+> dropped and reacquired for each transaction according to locking and log
+> reservation rules. Therefore, writeback to prior regions of the file is
+> possible and can change the extent count. This changes the extent to
+> which the current index refers and causes the collapse to fail mid
+> operation. To avoid this problem, the entire file is currently written
+> back before the collapse operation starts.
 > 
-> http://oss.sgi.com/archives/xfs/2014-08/msg00276.html
+> To eliminate the need to flush the entire file, use the file offset
+> (fsb) to track the progress of the overall extent shift operation rather
+> than the extent index. Modify xfs_bmap_shift_extents() to
+> unconditionally convert the start_fsb parameter to an extent index and
+> return the file offset of the extent where the shift left off, if
+> further extents exist. The bulk of ths function can remain based on
+> extent index as ilock is held by the caller. xfs_collapse_file_space()
+> now uses the fsb output as the starting point for the subsequent shift.
 > 
-> After a brief conversation with Dave, we thought it best to tie in this
-> functionality with DEBUG mode to express/ensure that these attributes
-> are for debugging/hacking purposes only. Everything else should be
-> equivalent to v1.
-> 
-> Brian
-> 
-> v2:
-> - Enable /sys/fs/xfs/debug for DEBUG mode kernels only.
-> v1: http://oss.sgi.com/archives/xfs/2014-08/msg00276.html
-> 
-> Brian Foster (2):
->   xfs: add debug sysfs attribute set
->   xfs: export log_recovery_delay to delay mount time log recovery
+> Signed-off-by: Brian Foster <bfoster@redhat.com>
 
-These look good. I'm sure that as we add more attributes there will
-be opportunity for factoring/streamlining this code more, but right
-now I don't think that is necessary.
+Looks good. There's a couple of small things I noticed, but
+they aren't worth redoing the patches again to fix.
 
 Reviewed-by: Dave Chinner <dchinner@redhat.com>
 
