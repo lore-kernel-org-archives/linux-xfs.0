@@ -1,23 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 552E17F4E
-	for <xfs@oss.sgi.com>; Mon,  8 Sep 2014 20:47:24 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 255428F8040
-	for <xfs@oss.sgi.com>; Mon,  8 Sep 2014 18:47:24 -0700 (PDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 86A407F4E
+	for <xfs@oss.sgi.com>; Mon,  8 Sep 2014 20:56:07 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 21977AC001
+	for <xfs@oss.sgi.com>; Mon,  8 Sep 2014 18:56:06 -0700 (PDT)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	NUlgtBhOQi1QJLqW for <xfs@oss.sgi.com>;
-	Mon, 08 Sep 2014 18:47:22 -0700 (PDT)
-Date: Tue, 9 Sep 2014 11:47:20 +1000
+	u5pHYRkbYiKxhl0o for <xfs@oss.sgi.com>;
+	Mon, 08 Sep 2014 18:56:04 -0700 (PDT)
+Date: Tue, 9 Sep 2014 11:56:01 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH V2] xfs: add a few more verifier tests
-Message-ID: <20140909014720.GU30012@dastard>
-References: <53F2C103.8030607@redhat.com>
- <53F3A726.8080305@sandeen.net>
+Subject: Re: [PATCH v2 0/2] xfs log recovery delay instrumentation
+Message-ID: <20140909015601.GV30012@dastard>
+References: <1409666895-49799-1-git-send-email-bfoster@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <53F3A726.8080305@sandeen.net>
+In-Reply-To: <1409666895-49799-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,50 +29,33 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Eric Sandeen <sandeen@redhat.com>, xfs-oss <xfs@oss.sgi.com>
+To: Brian Foster <bfoster@redhat.com>
+Cc: xfs@oss.sgi.com
 
-On Tue, Aug 19, 2014 at 02:36:06PM -0500, Eric Sandeen wrote:
-> These were exposed by fsfuzzer runs; without them we fail
-> in various exciting and sometimes convoluted ways when we
-> encounter disk corruption.
+On Tue, Sep 02, 2014 at 10:08:13AM -0400, Brian Foster wrote:
+> Here's v2 of the log recovery delay instrumentation set. v1 is available
+> here:
 > 
-> Without the MAXLEVELS tests we tend to walk off the end of
-> an array in a loop like this:
+> http://oss.sgi.com/archives/xfs/2014-08/msg00276.html
 > 
->         for (i = 0; i < cur->bc_nlevels; i++) {
->                 if (cur->bc_bufs[i])
+> After a brief conversation with Dave, we thought it best to tie in this
+> functionality with DEBUG mode to express/ensure that these attributes
+> are for debugging/hacking purposes only. Everything else should be
+> equivalent to v1.
 > 
-> Without the dirblklog test we try to allocate more memory
-> than we could possibly hope for and loop forever:
+> Brian
 > 
-> xfs_dabuf_map()
-> 	nfsb = mp->m_dir_geo->fsbcount;
-> 	irecs = kmem_zalloc(sizeof(irec) * nfsb, KM_SLEEP...
+> v2:
+> - Enable /sys/fs/xfs/debug for DEBUG mode kernels only.
+> v1: http://oss.sgi.com/archives/xfs/2014-08/msg00276.html
 > 
-> As for the logbsize check, that's the convoluted one.
-> 
-> If logbsize is specified at mount time, it's sanitized
-> in xfs_parseargs; in particular it makes sure that it's
-> not > XLOG_MAX_RECORD_BSIZE.
->     
-> If not specified at mount time, it comes from the superblock
-> via sb_logsunit; this is limited to 256k at mkfs time as well;
-> it's copied into m_logbsize in xfs_finish_flags().
->     
-> However, if for some reason the on-disk value is corrupt and
-> too large, nothing catches it.  It's a circuitous path, but
-> that size eventually finds its way to places that make the kernel
-> very unhappy, leading to oopses in xlog_pack_data() because we
-> use the size as an index into iclog->ic_data, but the array
-> is not necessarily that big.
-> 
-> Anyway - bounds checking when we read from disk is a good thing!
-> 
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-> --
+> Brian Foster (2):
+>   xfs: add debug sysfs attribute set
+>   xfs: export log_recovery_delay to delay mount time log recovery
 
-Looks good.
+These look good. I'm sure that as we add more attributes there will
+be opportunity for factoring/streamlining this code more, but right
+now I don't think that is necessary.
 
 Reviewed-by: Dave Chinner <dchinner@redhat.com>
 
