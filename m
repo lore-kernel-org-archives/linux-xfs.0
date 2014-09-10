@@ -1,22 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id BC69C7F74
-	for <xfs@oss.sgi.com>; Tue,  9 Sep 2014 23:52:45 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 0DBE37F76
+	for <xfs@oss.sgi.com>; Wed, 10 Sep 2014 00:09:09 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id A1812304048
-	for <xfs@oss.sgi.com>; Tue,  9 Sep 2014 21:52:45 -0700 (PDT)
-Received: from mail04.lsn.net (mail04.lsn.net [66.90.130.138]) by cuda.sgi.com
-	with ESMTP id 6mhRhkldaBDl6Suh for <xfs@oss.sgi.com>;
-	Tue, 09 Sep 2014 21:52:44 -0700 (PDT)
-Message-ID: <540FD8DE.7090306@mygrande.net>
-Date: Tue, 09 Sep 2014 23:51:42 -0500
-From: Leslie Rhorer <lrhorer@mygrande.net>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id EEF168F8050
+	for <xfs@oss.sgi.com>; Tue,  9 Sep 2014 22:09:05 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id mKRpVCd9jK4dYaqu for <xfs@oss.sgi.com>;
+	Tue, 09 Sep 2014 22:09:04 -0700 (PDT)
+Message-ID: <540FDCF4.3020202@sandeen.net>
+Date: Wed, 10 Sep 2014 00:09:08 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
 Subject: Re: Corrupted files
-References: <540F1B01.3020700@mygrande.net> <20140909220645.GH20518@dastard>
-	<540FA586.9090308@mygrande.net> <20140910015331.GJ20518@dastard>
-	<540FC135.8010601@mygrande.net> <20140910033331.GA27048@dastard>
-In-Reply-To: <20140910033331.GA27048@dastard>
+References: <540F1B01.3020700@mygrande.net>	<CAA43vkXwHF9RHW-cbTZ91_vF6wiQ6o_+TQDL3=7kD9P4tErCNQ@mail.gmail.com>	<CAA43vkWgh8-EjDXjkySUn+y18W1O+v_W5j+fQankRTgDCmc8tw@mail.gmail.com>	<540F7E37.7020500@sandeen.net>
+	<CAA43vkX8Ve3g7=w16742b4vT3=yRdCMR7m66g2M7fYPmEMmctA@mail.gmail.com>
+In-Reply-To: <CAA43vkX8Ve3g7=w16742b4vT3=yRdCMR7m66g2M7fYPmEMmctA@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,127 +28,39 @@ Content-Transfer-Encoding: 7bit
 Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: Sean Caron <scaron@umich.edu>
+Cc: Leslie Rhorer <lrhorer@mygrande.net>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-On 9/9/2014 10:33 PM, Dave Chinner wrote:
-> On Tue, Sep 09, 2014 at 10:10:45PM -0500, Leslie Rhorer wrote:
->> On 9/9/2014 8:53 PM, Dave Chinner wrote:
->>> On Tue, Sep 09, 2014 at 08:12:38PM -0500, Leslie Rhorer wrote:
->>>> On 9/9/2014 5:06 PM, Dave Chinner wrote:
->>>>> Fristly, more infomration is required, namely versions and actual
->>>>> error messages:
->>>>
->>>> 	Indubitably:
->>>>
->>>> RAID-Server:/# xfs_repair -V
->>>> xfs_repair version 3.1.7
->>>> RAID-Server:/# uname -r
->>>> 3.2.0-4-amd64
->>>
->>> Ok, so a relatively old xfs_repair. That's important - read on....
->>
->> 	OK, a good reason is a good reason.
->>
->>>> 4.0 GHz FX-8350 eight core processor
->>>>
->>>> RAID-Server:/# cat /proc/meminfo /proc/mounts /proc/partitions
->>>> MemTotal:        8099916 kB
->>> ....
->>>> /dev/md0 /RAID xfs
->>>> rw,relatime,attr2,delaylog,sunit=2048,swidth=12288,noquota 0 0
->>>
->>> FWIW, you don't need sunit=2048,swidth=12288 in the mount options -
->>> they are stored on disk and the mount options are only necessray to
->>> change the on-disk values.
->>
->> 	They aren't.  Those were created automatically, weather at creation
->> time or at mount time, I don't know, but the filesystem was created
->> with
+On 9/9/14 5:57 PM, Sean Caron wrote:
+> Hey, just sharing some hard-won (believe me) professional experience.
+> I have seen xfs_repair take a bad situation and make it worse many
+> times. I don't know that a filesystem fuzzer or any other simulation
+> can ever provide true simulation of users absolutely pounding the tar
+> out of a system. There seems to be a real disconnect between what
+> developers are able to test and observe directly, and what happens in
+> the production environment in a very high-throughput environment.
 >
-> Ah, my mistake. Normally it's only mount options in that code - I
-> forgot that we report sunit/swidth unconditionally if it is set in
-> the superblock.
+> Best,
 >
->>>> 	I'm not sure what is meant by "write cache status" in this context.
->>>> The machine has been rebooted more than once during recovery and the
->>>> FS has been umounted and xfs_repair run several times.
->>>
->>> Start here and read the next few entries:
->>>
->>> http://xfs.org/index.php/XFS_FAQ#Q:_What_is_the_problem_with_the_write_cache_on_journaled_filesystems.3F
->>
->> 	I knew that, but I still don't see the relevance in this context.
->> There is no battery backup on the drive controller or the drives,
->> and the drives have all been powered down and back up several times.
->> Anything in any cache right now would be from some operation in the
->> last few minutes, not four days ago.
->
-> There is no direct relevance to your situation, but for a lot of
-> other common problems it definitely is. That's why we ask people to
-> report it with all the other information about their system
->
->>>> 	I don't know for what the acronym BBWC stands.
->>>
->>> "battery backed write cache". If you're not using a hardware RAID
->>> controller, it's unlikely you have one.
->>
->> 	See my previous.  I do have one (a 3Ware 9650E, given to me by a
->> friend when his company switched to zfs for their server).  It's not
->> on this system.  This array is on a HighPoint RocketRAID 2722.
->
-> Ok. We have seen over time that those 3ware controllers can do
-> strange things in error conditions - we've had reports of entire
-> hardware luns dying and being completely unrecoverable after a
-> disk was kicked out due to an error. I can't comment on the
-> highpoint controller - either not many people use them or they just
-> don't report problems if there do. Either way, I'd suggest that if
-> you aren't running the latest firmware it would be to update them
-> as these problems were typically fixed by newer firmware releases.
->
->>>> [192173.364460]  [<ffffffff810fe45a>] ? vfs_fstatat+0x32/0x60
->>>> [192173.364471]  [<ffffffff810fe590>] ? sys_newstat+0x12/0x2b
->>>> [192173.364483]  [<ffffffff813509f5>] ? page_fault+0x25/0x30
->>>> [192173.364495]  [<ffffffff81355452>] ? system_call_fastpath+0x16/0x1b
->>>> [192173.364503] XFS (md0): Corruption detected. Unmount and run xfs_repair
->>>>
->>>> 	That last line, by the way, is why I ran umount and xfs_repair.
->>>
->>> Right, that's the correct thing to do, but sometimes there are
->>> issues that repair doesn't handle properly. This *was* one of them,
->>> and it was fixed by commit e1f43b4 ("repair: update extent count
->>> after zapping duplicate blocks") which was added to xfs_repair
->>> v3.1.8.
->>>
->>> IOWs, upgrading xfsprogs to the latest release and re-running
->>> xfs_repair should fix this error.
->>
->> 	OK. I'll scarf the source and compile.  All I need is to git clone
->> git://oss.sgi.com/xfs/xfs and git://oss.sgi.com/xfs/cmds/xfsprogs,
->> right?
->
-> Just clone git://oss.sgi.com/xfs/cmds/xfsprogs and check out the
-> v3.2.1 tag and build that..
->
->> 	I've never used git on a package maintained in my distro.  Will I
->> have issues when I upgrade to Debian Jessie in a few months, since
->> this is not being managed by apt / dpkg?  It looks like Jessie has
->> 3.2.1 of xfs-progs.
->
-> If you're using debian you can build debian packages directly from
-> the git tree via "make deb" (I use it all the time for pushing
-> new builds to my test machines) and so when you upgrade to Jessie it
-> should just replace your custom built package correctly...
->
-> Cheers,
->
-> Dave.
+> Sean
 
-	Thanks a ton, Dave (and everyone else who helped).  That seems to have 
-worked just fine.  The three grunged entries are gone and the system is 
-happily copying over the backups.  Now I'll run another rsync with 
-checksum to make sure everything is good before putting the backup into 
-production.  I'm also going to upgrade the controller BIOS just in case.
+Fair enough, but I don't want to let stand an assertion that you should
+avoid xfs_repair at all (most) costs.  It, like almost any software,
+has some bugs, but they don't get fixed if they don't get well reported.
+We do our best to improve it when we get useful reports from
+users - usually including a metadata dump - and we beat on it as best
+we can in the lab.
+
+"pounding the tar out of a filesystem" should not, in general, require
+an xfs_repair run.  ;)
+
+Yes, it's always good advice to do a dry run before committing to a
+repair, in case something goes off the rails.  But most times I've seen
+things go very very badly was when the storage device under the filesystem
+was no longer consistent, and the filesystem really had no pieces to
+pick up.
+
+-Eric
 
 _______________________________________________
 xfs mailing list
