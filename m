@@ -1,21 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 0DBE37F76
-	for <xfs@oss.sgi.com>; Wed, 10 Sep 2014 00:09:09 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id EEF168F8050
-	for <xfs@oss.sgi.com>; Tue,  9 Sep 2014 22:09:05 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id mKRpVCd9jK4dYaqu for <xfs@oss.sgi.com>;
-	Tue, 09 Sep 2014 22:09:04 -0700 (PDT)
-Message-ID: <540FDCF4.3020202@sandeen.net>
-Date: Wed, 10 Sep 2014 00:09:08 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
-MIME-Version: 1.0
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 527467F78
+	for <xfs@oss.sgi.com>; Wed, 10 Sep 2014 00:23:31 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id D4C52AC006
+	for <xfs@oss.sgi.com>; Tue,  9 Sep 2014 22:23:30 -0700 (PDT)
+Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
+	[150.101.137.143]) by cuda.sgi.com with ESMTP id
+	FXizr3gR03iks0cK for <xfs@oss.sgi.com>;
+	Tue, 09 Sep 2014 22:23:25 -0700 (PDT)
+Date: Wed, 10 Sep 2014 15:23:03 +1000
+From: Dave Chinner <david@fromorbit.com>
 Subject: Re: Corrupted files
-References: <540F1B01.3020700@mygrande.net>	<CAA43vkXwHF9RHW-cbTZ91_vF6wiQ6o_+TQDL3=7kD9P4tErCNQ@mail.gmail.com>	<CAA43vkWgh8-EjDXjkySUn+y18W1O+v_W5j+fQankRTgDCmc8tw@mail.gmail.com>	<540F7E37.7020500@sandeen.net>
-	<CAA43vkX8Ve3g7=w16742b4vT3=yRdCMR7m66g2M7fYPmEMmctA@mail.gmail.com>
-In-Reply-To: <CAA43vkX8Ve3g7=w16742b4vT3=yRdCMR7m66g2M7fYPmEMmctA@mail.gmail.com>
+Message-ID: <20140910052303.GB27048@dastard>
+References: <540F1B01.3020700@mygrande.net> <20140909220645.GH20518@dastard>
+	<540FA586.9090308@mygrande.net> <20140910015331.GJ20518@dastard>
+	<540FC135.8010601@mygrande.net> <20140910033331.GA27048@dastard>
+	<540FD8DE.7090306@mygrande.net>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <540FD8DE.7090306@mygrande.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,43 +28,45 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Sean Caron <scaron@umich.edu>
-Cc: Leslie Rhorer <lrhorer@mygrande.net>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: Leslie Rhorer <lrhorer@mygrande.net>
+Cc: xfs@oss.sgi.com
 
-On 9/9/14 5:57 PM, Sean Caron wrote:
-> Hey, just sharing some hard-won (believe me) professional experience.
-> I have seen xfs_repair take a bad situation and make it worse many
-> times. I don't know that a filesystem fuzzer or any other simulation
-> can ever provide true simulation of users absolutely pounding the tar
-> out of a system. There seems to be a real disconnect between what
-> developers are able to test and observe directly, and what happens in
-> the production environment in a very high-throughput environment.
->
-> Best,
->
-> Sean
+On Tue, Sep 09, 2014 at 11:51:42PM -0500, Leslie Rhorer wrote:
+> On 9/9/2014 10:33 PM, Dave Chinner wrote:
+> >On Tue, Sep 09, 2014 at 10:10:45PM -0500, Leslie Rhorer wrote:
+> >>On 9/9/2014 8:53 PM, Dave Chinner wrote:
+> >>>On Tue, Sep 09, 2014 at 08:12:38PM -0500, Leslie Rhorer wrote:
+> >>>>On 9/9/2014 5:06 PM, Dave Chinner wrote:
+> >>	I've never used git on a package maintained in my distro.  Will I
+> >>have issues when I upgrade to Debian Jessie in a few months, since
+> >>this is not being managed by apt / dpkg?  It looks like Jessie has
+> >>3.2.1 of xfs-progs.
+> >
+> >If you're using debian you can build debian packages directly from
+> >the git tree via "make deb" (I use it all the time for pushing
+> >new builds to my test machines) and so when you upgrade to Jessie it
+> >should just replace your custom built package correctly...
+> 
+> 	Thanks a ton, Dave (and everyone else who helped).  That seems to
+> have worked just fine.  The three grunged entries are gone and the
+> system is happily copying over the backups.  Now I'll run another
+> rsync with checksum to make sure everything is good before putting
+> the backup into production.  I'm also going to upgrade the
+> controller BIOS just in case.
 
-Fair enough, but I don't want to let stand an assertion that you should
-avoid xfs_repair at all (most) costs.  It, like almost any software,
-has some bugs, but they don't get fixed if they don't get well reported.
-We do our best to improve it when we get useful reports from
-users - usually including a metadata dump - and we beat on it as best
-we can in the lab.
+Good to hear. Hopefully everything will check out. Just yell if you
+need more help. ;)
 
-"pounding the tar out of a filesystem" should not, in general, require
-an xfs_repair run.  ;)
+Cheers,
 
-Yes, it's always good advice to do a dry run before committing to a
-repair, in case something goes off the rails.  But most times I've seen
-things go very very badly was when the storage device under the filesystem
-was no longer consistent, and the filesystem really had no pieces to
-pick up.
-
--Eric
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
