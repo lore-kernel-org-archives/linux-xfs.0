@@ -1,9 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-From: xfs@oss.sgi.com
-Subject: [XFS updates] XFS development tree branch, for-next,
-	updated. xfs-for-linus-3.17-rc3-12-ga4241ae
-Message-Id: <20140910000021.BA0737F6B@oss.sgi.com>
-Date: Tue,  9 Sep 2014 19:00:21 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 8B3467F53
+	for <xfs@oss.sgi.com>; Tue,  9 Sep 2014 19:48:51 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 79B248F804B
+	for <xfs@oss.sgi.com>; Tue,  9 Sep 2014 17:48:48 -0700 (PDT)
+Received: from mail04.lsn.net (mail04.lsn.net [66.90.130.138]) by cuda.sgi.com
+	with ESMTP id Nc165FHZIFheKILV for <xfs@oss.sgi.com>;
+	Tue, 09 Sep 2014 17:48:44 -0700 (PDT)
+Message-ID: <540F9FE9.7070500@mygrande.net>
+Date: Tue, 09 Sep 2014 19:48:41 -0500
+From: Leslie Rhorer <lrhorer@mygrande.net>
+MIME-Version: 1.0
+Subject: Re: Corrupted files
+References: <540F1B01.3020700@mygrande.net>	<CAA43vkXwHF9RHW-cbTZ91_vF6wiQ6o_+TQDL3=7kD9P4tErCNQ@mail.gmail.com>
+	<CAA43vkWgh8-EjDXjkySUn+y18W1O+v_W5j+fQankRTgDCmc8tw@mail.gmail.com>
+	<540F7E37.7020500@sandeen.net>
+In-Reply-To: <540F7E37.7020500@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -12,72 +25,65 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@sandeen.net>, Sean Caron <scaron@umich.edu>
+Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-This is an automated email from the git hooks/post-receive script. It was
-generated because a ref change was pushed to the repository containing
-the project "XFS development tree".
+On 9/9/2014 5:24 PM, Eric Sandeen wrote:
+> On 9/9/14 11:03 AM, Sean Caron wrote:
+>
+>> Barring rare cases, xfs_repair is bad juju.
+>
+> No, it's not.  It is the appropriate tool to use for filesystem repair.
+>
+> But it is not the appropriate tool for recovery from mangled storage.
 
-The branch, for-next has been updated
-  a4241ae Merge branch 'xfs-misc-fixes-for-3.18-1' into for-next
-  ab6978c xfs: remove rbpp check from xfs_rtmodify_summary_int
-  afabfd3 xfs: combine xfs_rtmodify_summary and xfs_rtget_summary
-  b16ed7c xfs: combine xfs_dir_canenter into xfs_dir_createname
-  94f3cad xfs: check resblks before calling xfs_dir_canenter
-  970fd3f xfs: deduplicate xlog_do_recovery_pass()
-  59f9c00 xfs: lseek: the "whence" argument is called "whence"
-  49c6959 xfs: combine xfs_seek_hole & xfs_seek_data
-  2e22717 xfs: export log_recovery_delay to delay mount time log recovery
-  65b6573 xfs: add debug sysfs attribute set
-  e1b0572 xfs: add a few more verifier tests
-  8018ec0 xfs: mark all internal workqueues as freezable
-      from  41b9d7263ea1e270019c5d04fa0ab15db50b9725 (commit)
+	It's not all that mangled.  Out of over 52,000 files on the backup 
+server array, only 5758 were missing from the primary array, and most of 
+those were lost by the corruption of just a couple of directories, where 
+every file in the directory was lost with the directory itself.  Several 
+directories and a scattering of individual files were deleted with 
+intent prior to the failure but not yet purged from the backup.  Most 
+were small files - only 29 were larger than 1G.  All of those 5758 were 
+easily recovered.  The only ones remaining at issue are 3 files which 
+cannot be read, written or deleted.  The rest have been read and 
+checksums sucessfully computed and compared.  With only 50K files in 
+question, I am confidant any checksum collisions are of insignificant 
+probability.  Someone is going to have to do a lot of talking to 
+convince me rsync can read two copies of what should be the same data 
+and come up with the same checksum value for both, but other 
+applications would be able to successfully read one of the files and not 
+the other.
 
-Those revisions listed above that are new to this repository have
-not appeared on any other notification email; so we list those
-revisions in full, below.
-
-- Log -----------------------------------------------------------------
-commit a4241aebe924136d6838fd516da6daa727fcd728
-Merge: 41b9d72 ab6978c
-Author: Dave Chinner <david@fromorbit.com>
-Date:   Tue Sep 9 13:25:31 2014 +1000
-
-    Merge branch 'xfs-misc-fixes-for-3.18-1' into for-next
-
------------------------------------------------------------------------
-
-Summary of changes:
- fs/xfs/libxfs/xfs_alloc.c    |   4 +
- fs/xfs/libxfs/xfs_dir2.c     |  67 +++-------------
- fs/xfs/libxfs/xfs_dir2.h     |   2 +-
- fs/xfs/libxfs/xfs_ialloc.c   |   2 +
- fs/xfs/libxfs/xfs_rtbitmap.c |  49 ++++++++----
- fs/xfs/libxfs/xfs_sb.c       |   2 +
- fs/xfs/xfs_buf.c             |   2 +-
- fs/xfs/xfs_file.c            | 178 +++++++++++++------------------------------
- fs/xfs/xfs_globals.c         |   4 +
- fs/xfs/xfs_inode.c           |  24 +++---
- fs/xfs/xfs_log_recover.c     |  93 ++++++++++------------
- fs/xfs/xfs_mru_cache.c       |   3 +-
- fs/xfs/xfs_rtalloc.c         |  55 +------------
- fs/xfs/xfs_rtalloc.h         |   4 +
- fs/xfs/xfs_super.c           |  38 ++++++---
- fs/xfs/xfs_symlink.c         |   8 +-
- fs/xfs/xfs_sysctl.h          |   5 ++
- fs/xfs/xfs_sysfs.c           |  74 ++++++++++++++++++
- fs/xfs/xfs_sysfs.h           |   1 +
- 19 files changed, 290 insertions(+), 325 deletions(-)
+	I really don't think Draconian measures are required.  Even if it turns 
+out they are, the existence of the backup allows for a good deal of 
+fiddling with the main filesystem before one is compelled to give up and 
+start fresh.  This especially since a small amount of the data on the 
+main array had not yet been backed up to the secondary array.  These 
+e-mails, for example.  The rsync job that backs up the main array runs 
+every morning at 04:00, so files created that day were not backed up, 
+and for safety I have changed the backup array file system to read-only, 
+so nothing created since is backed up.
 
 
-hooks/post-receive
--- 
-XFS development tree
+> I've actually been running a filesystem fuzzer over xfs images, randomly
+> corrupting data and testing repair, 1000s of times over.  It does
+> remarkably well.
+>
+> If you scramble your raid, which means your block device is no longer
+> an xfs filesystem, but is instead a random tangle of bits and pieces of
+> other things, of course xfs_repair won't do well, but it's not the right
+> tool for the job at that stage.
+
+	This is nowhere near that stage.  A few sectors here and there were 
+lost because 3 drives were kicked from the array while write operations 
+were underway.  I had to force re-assemble the array, which lost some 
+data.  The vast majority of the data is clearly intact, including most 
+of the file system structures.  Far less than 1% of the data was lost or 
+corrupted.
 
 _______________________________________________
 xfs mailing list
