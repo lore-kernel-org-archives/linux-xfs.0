@@ -1,21 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id BF2D87F61
-	for <xfs@oss.sgi.com>; Wed, 10 Sep 2014 17:40:32 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id F332C7F63
+	for <xfs@oss.sgi.com>; Wed, 10 Sep 2014 18:18:47 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id ADFDA8F8049
-	for <xfs@oss.sgi.com>; Wed, 10 Sep 2014 15:40:29 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id QYRgJzIJjwzVJVRD (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 10 Sep 2014 15:40:25 -0700 (PDT)
-Message-ID: <5410D34F.1030404@redhat.com>
-Date: Wed, 10 Sep 2014 18:40:15 -0400
-From: Prarit Bhargava <prarit@redhat.com>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 81D3CAC00A
+	for <xfs@oss.sgi.com>; Wed, 10 Sep 2014 16:18:44 -0700 (PDT)
+Received: from mail03.lsn.net (mail03.lsn.net [66.90.130.130]) by cuda.sgi.com
+	with ESMTP id 83jgvj693yEk3yQt for <xfs@oss.sgi.com>;
+	Wed, 10 Sep 2014 16:18:42 -0700 (PDT)
+Message-ID: <5410DC4E.90908@mygrande.net>
+Date: Wed, 10 Sep 2014 18:18:38 -0500
+From: Leslie Rhorer <lrhorer@mygrande.net>
 MIME-Version: 1.0
-Subject: Re: lockdep warning when logging in with ssh
-References: <54109F93.9020206@redhat.com> <20140910202348.GC27048@dastard>
-In-Reply-To: <20140910202348.GC27048@dastard>
+Subject: Re: Corrupted files
+References: <540F1B01.3020700@mygrande.net>
+	<20140909220645.GH20518@dastard>	<540FA586.9090308@mygrande.net>	<CAA43vkVYX+zJQcoTH2iSX7rS9B1D=mnTeyS0QqP+fbKxVY0YZA@mail.gmail.com>	<540FACAC.3010504@mygrande.net>
+	<20140910163124.3d879432@harpe.intellique.com>
+In-Reply-To: <20140910163124.3d879432@harpe.intellique.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,36 +25,23 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="utf-8"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Eric Sandeen <esandeen@redhat.com>, xfs@oss.sgi.com
+To: Emmanuel Florac <eflorac@intellique.com>
+Cc: Sean Caron <scaron@umich.edu>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-
-
-On 09/10/2014 04:23 PM, Dave Chinner wrote:
-> On Wed, Sep 10, 2014 at 02:59:31PM -0400, Prarit Bhargava wrote:
->> I see this when I attempt to login via ssh.  I do not see it if I login on
->> the serial console.  I recall seeing it earlier when chasing another patch but
->> cannot recall the kernel version.
-> 
-> It's the shmem code that is broken - instantiating an inode while
-> holding the mmap_sem inverts lock orders all over the place,
-> especially in the security subsystem....
-> 
-
-I'll send this off to Hugh Dickens then.
-
-P.
-
-> Cheers,
-> 
-> Dave.
-> 
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gOS8xMC8yMDE0IDk6MzEgQU0sIEVtbWFudWVsIEZsb3JhYyB3cm90ZToKPiBMZSBUdWUsIDA5
+IFNlcCAyMDE0IDIwOjQzOjA4IC0wNTAwCj4gTGVzbGllIFJob3JlciA8bHJob3JlckBteWdyYW5k
+ZS5uZXQ+IMOpY3JpdmFpdDoKPgo+PiAJTm9uZSBvZiB0aGUgZmFpbGVkIGRyaXZlcyB3ZXJlIFdE
+IGdyZWVuLiAgQWxsIHRocmVlIGFuZCB0aGUKPj4gcHJldmlvdXMgZm91ciB3ZXJlIFNlYWdhdGUu
+ICBJIHJlYWxpemUgdGhhdCBpcyBub3QgYSBsYXJnZQo+PiBzdGF0aXN0aWNhbCBzYW1wbGUuCj4+
+Cj4KPiBJZiB5b3UncmUgaW50ZXJlc3RlZCBpbiBsYXJnZSBzdGF0aXN0aWNhbCBzYW1wbGVzLCBv
+biBhIGdyYW5kIHRvdGFsIG9mCj4gNDAwMCAxIFRCIFNlYWdhdGUgQmFycmFjdWRhIEVTMiwgSSBo
+YWQgdG8gcmVwbGFjZSAyMTAwIG9mIHRoZW0gb3ZlciB0aGUKPiBjb3Vyc2Ugb2YgMyB5ZWFycy4K
+CglUaGF0J3MgYSBnb29kIHNpemVkIHN0YXRpc3RpY2FsIHNhbXBsZS4gIE9kZGx5IGVub3VnaCwg
+cGVyaGFwcywgdGhlIApvbmVzIHRoYXQgZmFpbGVkIG9uIG1lIHdlcmUgYWxzbyAxVCBCYXJyYWN1
+ZGEgZHJpdmVzLCBhbmQgbXkgZmFpbHVyZSAKcmF0ZSB3YXMgNDAlLgoKCl9fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9z
+cy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
