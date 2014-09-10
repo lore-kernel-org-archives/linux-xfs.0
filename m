@@ -1,25 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 527467F78
-	for <xfs@oss.sgi.com>; Wed, 10 Sep 2014 00:23:31 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id D4C52AC006
-	for <xfs@oss.sgi.com>; Tue,  9 Sep 2014 22:23:30 -0700 (PDT)
-Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
-	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	FXizr3gR03iks0cK for <xfs@oss.sgi.com>;
-	Tue, 09 Sep 2014 22:23:25 -0700 (PDT)
-Date: Wed, 10 Sep 2014 15:23:03 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Corrupted files
-Message-ID: <20140910052303.GB27048@dastard>
-References: <540F1B01.3020700@mygrande.net> <20140909220645.GH20518@dastard>
-	<540FA586.9090308@mygrande.net> <20140910015331.GJ20518@dastard>
-	<540FC135.8010601@mygrande.net> <20140910033331.GA27048@dastard>
-	<540FD8DE.7090306@mygrande.net>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <540FD8DE.7090306@mygrande.net>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 3B8F57F3F
+	for <xfs@oss.sgi.com>; Wed, 10 Sep 2014 08:20:37 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 2A7178F8049
+	for <xfs@oss.sgi.com>; Wed, 10 Sep 2014 06:20:34 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id dlzHwzyg3drpMDqF (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 10 Sep 2014 06:20:33 -0700 (PDT)
+Received: from int-mx09.intmail.prod.int.phx2.redhat.com
+	(int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id s8ADKWDw030987
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256
+	verify=FAIL) for <xfs@oss.sgi.com>; Wed, 10 Sep 2014 09:20:32 -0400
+Received: from bfoster.bfoster ([10.18.41.237])
+	by int-mx09.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id s8ADKWga009670
+	for <xfs@oss.sgi.com>; Wed, 10 Sep 2014 09:20:32 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: [PATCH v2 0/5] clean up collapse range and handle post-eof delalloc
+Date: Wed, 10 Sep 2014 09:20:26 -0400
+Message-Id: <1410355231-50495-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,45 +30,49 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Leslie Rhorer <lrhorer@mygrande.net>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Tue, Sep 09, 2014 at 11:51:42PM -0500, Leslie Rhorer wrote:
-> On 9/9/2014 10:33 PM, Dave Chinner wrote:
-> >On Tue, Sep 09, 2014 at 10:10:45PM -0500, Leslie Rhorer wrote:
-> >>On 9/9/2014 8:53 PM, Dave Chinner wrote:
-> >>>On Tue, Sep 09, 2014 at 08:12:38PM -0500, Leslie Rhorer wrote:
-> >>>>On 9/9/2014 5:06 PM, Dave Chinner wrote:
-> >>	I've never used git on a package maintained in my distro.  Will I
-> >>have issues when I upgrade to Debian Jessie in a few months, since
-> >>this is not being managed by apt / dpkg?  It looks like Jessie has
-> >>3.2.1 of xfs-progs.
-> >
-> >If you're using debian you can build debian packages directly from
-> >the git tree via "make deb" (I use it all the time for pushing
-> >new builds to my test machines) and so when you upgrade to Jessie it
-> >should just replace your custom built package correctly...
-> 
-> 	Thanks a ton, Dave (and everyone else who helped).  That seems to
-> have worked just fine.  The three grunged entries are gone and the
-> system is happily copying over the backups.  Now I'll run another
-> rsync with checksum to make sure everything is good before putting
-> the backup into production.  I'm also going to upgrade the
-> controller BIOS just in case.
+Hi all,
 
-Good to hear. Hopefully everything will check out. Just yell if you
-need more help. ;)
+Here's v2 of the collapse clean up. We refactor a bit more via the
+insertion of patch 3, otherwise it's similar to v1. This will see some
+continued testing, but it survived ~500m fsx operations overnight.
 
-Cheers,
+Brian
 
-Dave.
+v2:
+- Rename helpers to xfs_bmse_*() scheme.
+- Rearrange logic and minor cleanups to xfs_bmse[_can]_merge().
+- Inserted patch 3 to further refactor xfs_bmap_shift_extents() into
+  xfs_bmse_shift_one().
+- Return corruption error rather than BUG_ON() in patch 4 and detect
+  error in new helper.
+v1: http://oss.sgi.com/archives/xfs/2014-09/msg00061.html
+- Retain the eofblocks trim and writeback/inval. the range of shifted
+  data only.
+- Added the xfs_free_file_space() patch to no longer writeback the
+  entire file.
+rfc: http://oss.sgi.com/archives/xfs/2014-08/msg00462.html
+
+Brian Foster (5):
+  xfs: track collapse via file offset rather than extent index
+  xfs: refactor shift-by-merge into xfs_bmse_merge() helper
+  xfs: refactor single extent shift into xfs_bmse_shift_one() helper
+  xfs: writeback and inval. file range to be shifted by collapse
+  xfs: only writeback and truncate pages for the freed range
+
+ fs/xfs/libxfs/xfs_bmap.c | 365 +++++++++++++++++++++++++++++++----------------
+ fs/xfs/libxfs/xfs_bmap.h |   7 +-
+ fs/xfs/xfs_bmap_util.c   |  54 ++++---
+ 3 files changed, 275 insertions(+), 151 deletions(-)
+
 -- 
-Dave Chinner
-david@fromorbit.com
+1.8.3.1
 
 _______________________________________________
 xfs mailing list
