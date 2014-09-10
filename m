@@ -1,22 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 8B3467F53
-	for <xfs@oss.sgi.com>; Tue,  9 Sep 2014 19:48:51 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 39F4A7F4E
+	for <xfs@oss.sgi.com>; Tue,  9 Sep 2014 20:00:26 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 79B248F804B
-	for <xfs@oss.sgi.com>; Tue,  9 Sep 2014 17:48:48 -0700 (PDT)
-Received: from mail04.lsn.net (mail04.lsn.net [66.90.130.138]) by cuda.sgi.com
-	with ESMTP id Nc165FHZIFheKILV for <xfs@oss.sgi.com>;
-	Tue, 09 Sep 2014 17:48:44 -0700 (PDT)
-Message-ID: <540F9FE9.7070500@mygrande.net>
-Date: Tue, 09 Sep 2014 19:48:41 -0500
-From: Leslie Rhorer <lrhorer@mygrande.net>
-MIME-Version: 1.0
+	by relay3.corp.sgi.com (Postfix) with ESMTP id AE4D4AC003
+	for <xfs@oss.sgi.com>; Tue,  9 Sep 2014 18:00:22 -0700 (PDT)
+Received: from b.mx.filmlight.ltd.uk (b.mx.filmlight.ltd.uk [77.107.81.251])
+	by cuda.sgi.com with SMTP id DmsLs4GQghQDK0CG for
+	<xfs@oss.sgi.com>; Tue, 09 Sep 2014 18:00:20 -0700 (PDT)
+Mime-Version: 1.0 (Mac OS X Mail 6.6 \(1510\))
 Subject: Re: Corrupted files
-References: <540F1B01.3020700@mygrande.net>	<CAA43vkXwHF9RHW-cbTZ91_vF6wiQ6o_+TQDL3=7kD9P4tErCNQ@mail.gmail.com>
+From: Roger Willcocks <roger@filmlight.ltd.uk>
+In-Reply-To: <CAA43vkX8Ve3g7=w16742b4vT3=yRdCMR7m66g2M7fYPmEMmctA@mail.gmail.com>
+Date: Wed, 10 Sep 2014 02:00:18 +0100
+Message-Id: <62B15E94-1944-457F-B298-89EDEE3EC70D@filmlight.ltd.uk>
+References: <540F1B01.3020700@mygrande.net>
+	<CAA43vkXwHF9RHW-cbTZ91_vF6wiQ6o_+TQDL3=7kD9P4tErCNQ@mail.gmail.com>
 	<CAA43vkWgh8-EjDXjkySUn+y18W1O+v_W5j+fQankRTgDCmc8tw@mail.gmail.com>
 	<540F7E37.7020500@sandeen.net>
-In-Reply-To: <540F7E37.7020500@sandeen.net>
+	<CAA43vkX8Ve3g7=w16742b4vT3=yRdCMR7m66g2M7fYPmEMmctA@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,67 +27,177 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
+Content-Type: multipart/mixed; boundary="===============5915772082589621485=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>, Sean Caron <scaron@umich.edu>
-Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: Sean Caron <scaron@umich.edu>
+Cc: Roger Willcocks <roger@filmlight.ltd.uk>, Eric Sandeen <sandeen@sandeen.net>, Leslie Rhorer <lrhorer@mygrande.net>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-On 9/9/2014 5:24 PM, Eric Sandeen wrote:
+
+--===============5915772082589621485==
+Content-Type: multipart/alternative; boundary="Apple-Mail=_883806B7-225F-4F7A-8C28-339A49FE81DA"
+
+
+--Apple-Mail=_883806B7-225F-4F7A-8C28-339A49FE81DA
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain;
+	charset=us-ascii
+
+I normally watch quietly from the sidelines but I think it's important =
+to get some balance here; our customers between them run many hundreds =
+of multi-terabyte arrays and when something goes badly awry it generally =
+falls to me to sort it out. In my experience xfs_repair does exactly =
+what it says on the tin.
+
+I can recall only a couple of instances where we elected to reformat and =
+reload from backups and they were both due to human error: somebody =
+deleted the wrong raid unit when doing routine maintenance, and then =
+tried to fix it up hemselves.
+
+In theory of course xfs_repair shouldn't be needed if the write barriers =
+work properly (it's a journalled filesystem), but low-level corruption =
+does creep in due to power failures / kernel crashes and it's this which =
+xfs_repair is intended to address; not massive data corruption due to =
+failed hardware or careless users.
+
+--
+Roger
+
+
+On 9 Sep 2014, at 23:57, Sean Caron <scaron@umich.edu> wrote:
+
+> Hey, just sharing some hard-won (believe me) professional experience. =
+I have seen xfs_repair take a bad situation and make it worse many =
+times. I don't know that a filesystem fuzzer or any other simulation can =
+ever provide true simulation of users absolutely pounding the tar out of =
+a system. There seems to be a real disconnect between what developers =
+are able to test and observe directly, and what happens in the =
+production environment in a very high-throughput environment.
+>=20
+> Best,
+>=20
+> Sean
+>=20
+>=20
+> On Tue, Sep 9, 2014 at 6:24 PM, Eric Sandeen <sandeen@sandeen.net> =
+wrote:
 > On 9/9/14 11:03 AM, Sean Caron wrote:
->
->> Barring rare cases, xfs_repair is bad juju.
->
-> No, it's not.  It is the appropriate tool to use for filesystem repair.
->
+>=20
+> Barring rare cases, xfs_repair is bad juju.
+>=20
+> No, it's not.  It is the appropriate tool to use for filesystem =
+repair.
+>=20
 > But it is not the appropriate tool for recovery from mangled storage.
-
-	It's not all that mangled.  Out of over 52,000 files on the backup 
-server array, only 5758 were missing from the primary array, and most of 
-those were lost by the corruption of just a couple of directories, where 
-every file in the directory was lost with the directory itself.  Several 
-directories and a scattering of individual files were deleted with 
-intent prior to the failure but not yet purged from the backup.  Most 
-were small files - only 29 were larger than 1G.  All of those 5758 were 
-easily recovered.  The only ones remaining at issue are 3 files which 
-cannot be read, written or deleted.  The rest have been read and 
-checksums sucessfully computed and compared.  With only 50K files in 
-question, I am confidant any checksum collisions are of insignificant 
-probability.  Someone is going to have to do a lot of talking to 
-convince me rsync can read two copies of what should be the same data 
-and come up with the same checksum value for both, but other 
-applications would be able to successfully read one of the files and not 
-the other.
-
-	I really don't think Draconian measures are required.  Even if it turns 
-out they are, the existence of the backup allows for a good deal of 
-fiddling with the main filesystem before one is compelled to give up and 
-start fresh.  This especially since a small amount of the data on the 
-main array had not yet been backed up to the secondary array.  These 
-e-mails, for example.  The rsync job that backs up the main array runs 
-every morning at 04:00, so files created that day were not backed up, 
-and for safety I have changed the backup array file system to read-only, 
-so nothing created since is backed up.
-
-
-> I've actually been running a filesystem fuzzer over xfs images, randomly
+>=20
+> I've actually been running a filesystem fuzzer over xfs images, =
+randomly
 > corrupting data and testing repair, 1000s of times over.  It does
 > remarkably well.
->
+>=20
 > If you scramble your raid, which means your block device is no longer
-> an xfs filesystem, but is instead a random tangle of bits and pieces of
-> other things, of course xfs_repair won't do well, but it's not the right
+> an xfs filesystem, but is instead a random tangle of bits and pieces =
+of
+> other things, of course xfs_repair won't do well, but it's not the =
+right
 > tool for the job at that stage.
+>=20
+> -Eric
+>=20
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
-	This is nowhere near that stage.  A few sectors here and there were 
-lost because 3 drives were kicked from the array while write operations 
-were underway.  I had to force re-assemble the array, which lost some 
-data.  The vast majority of the data is clearly intact, including most 
-of the file system structures.  Far less than 1% of the data was lost or 
-corrupted.
+
+--Apple-Mail=_883806B7-225F-4F7A-8C28-339A49FE81DA
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/html;
+	charset=us-ascii
+
+<html><head><meta http-equiv=3D"Content-Type" content=3D"text/html =
+charset=3Dus-ascii"></head><body style=3D"word-wrap: break-word; =
+-webkit-nbsp-mode: space; -webkit-line-break: after-white-space; =
+"><div>I normally watch quietly from the sidelines but I think it's =
+important to get some balance here; our customers between them run many =
+hundreds of multi-terabyte arrays and when something goes badly awry it =
+generally falls to me to sort it out. In my experience xfs_repair does =
+exactly what it says on the tin.</div><div><br></div><div>I can recall =
+only a couple of instances where we elected to reformat and reload from =
+backups and they were both due to human error: somebody deleted the =
+wrong raid unit when doing routine maintenance, and then tried to fix it =
+up hemselves.</div><div><br></div><div>In theory of course xfs_repair =
+shouldn't be needed if the write barriers work properly (it's a =
+journalled filesystem), but low-level corruption does creep in due to =
+power failures / kernel crashes and it's this which xfs_repair is =
+intended to address; not massive data corruption due to failed hardware =
+or careless =
+users.</div><div><br></div><div>--</div><div>Roger</div><div><br><div><br>=
+<div><div>On 9 Sep 2014, at 23:57, Sean Caron &lt;<a =
+href=3D"mailto:scaron@umich.edu">scaron@umich.edu</a>&gt; =
+wrote:</div><br class=3D"Apple-interchange-newline"><blockquote =
+type=3D"cite"><div dir=3D"ltr">Hey, just sharing some hard-won (believe =
+me) professional experience. I have seen xfs_repair take a bad situation =
+and make it worse many times. I don't know that a filesystem fuzzer or =
+any other simulation can ever provide true simulation of users =
+absolutely pounding the tar out of a system. There seems to be a real =
+disconnect between what developers are able to test and observe =
+directly, and what happens in the production environment in a very =
+high-throughput =
+environment.<div><br></div><div><div>Best,</div><div><br></div><div>Sean</=
+div><div><br></div></div></div><div class=3D"gmail_extra"><br><div =
+class=3D"gmail_quote">On Tue, Sep 9, 2014 at 6:24 PM, Eric Sandeen <span =
+dir=3D"ltr">&lt;<a href=3D"mailto:sandeen@sandeen.net" =
+target=3D"_blank">sandeen@sandeen.net</a>&gt;</span> =
+wrote:<br><blockquote class=3D"gmail_quote" style=3D"margin:0 0 0 =
+.8ex;border-left:1px #ccc solid;padding-left:1ex"><span class=3D"">On =
+9/9/14 11:03 AM, Sean Caron wrote:<br>
+<br>
+<blockquote class=3D"gmail_quote" style=3D"margin:0 0 0 =
+.8ex;border-left:1px #ccc solid;padding-left:1ex">
+Barring rare cases, xfs_repair is bad juju.<br>
+</blockquote>
+<br></span>
+No, it's not.&nbsp; It is the appropriate tool to use for filesystem =
+repair.<br>
+<br>
+But it is not the appropriate tool for recovery from mangled =
+storage.<br>
+<br>
+I've actually been running a filesystem fuzzer over xfs images, =
+randomly<br>
+corrupting data and testing repair, 1000s of times over.&nbsp; It =
+does<br>
+remarkably well.<br>
+<br>
+If you scramble your raid, which means your block device is no =
+longer<br>
+an xfs filesystem, but is instead a random tangle of bits and pieces =
+of<br>
+other things, of course xfs_repair won't do well, but it's not the =
+right<br>
+tool for the job at that stage.<span class=3D"HOEnZb"><font =
+color=3D"#888888"><br>
+<br>
+-Eric<br>
+</font></span></blockquote></div><br></div>
+_______________________________________________<br>xfs mailing =
+list<br><a =
+href=3D"mailto:xfs@oss.sgi.com">xfs@oss.sgi.com</a><br>http://oss.sgi.com/=
+mailman/listinfo/xfs<br></blockquote></div><br></div></div></body></html>=
+
+--Apple-Mail=_883806B7-225F-4F7A-8C28-339A49FE81DA--
+
+
+--===============5915772082589621485==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============5915772082589621485==--
