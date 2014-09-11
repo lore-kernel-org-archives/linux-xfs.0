@@ -1,12 +1,12 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 507FA7F85
-	for <xfs@oss.sgi.com>; Thu, 11 Sep 2014 15:50:24 -0500 (CDT)
-Date: Thu, 11 Sep 2014 15:50:23 -0500
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 64F057F85
+	for <xfs@oss.sgi.com>; Thu, 11 Sep 2014 15:51:47 -0500 (CDT)
+Date: Thu, 11 Sep 2014 15:51:46 -0500
 From: Ben Myers <bpm@sgi.com>
-Subject: [PATCH 9/9] xfs: apply utf-8 normalization rules to user extended
-	attribute names
-Message-ID: <20140911205023.GI13262@sgi.com>
+Subject: [PATCH 01/13] libxfs: return the first match during
+	case-insensitive lookup
+Message-ID: <20140911205146.GJ13262@sgi.com>
 References: <20140911203735.GA19952@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
@@ -28,309 +28,282 @@ Cc: tinguely@sgi.com, olaf@sgi.com
 
 From: Olaf Weber <olaf@sgi.com>
 
-Apply the same rules for UTF-8 normalization to the names of user-defined
-extended attributes. System attributes are excluded because they are not
-user-visible in the first place, and the kernel is expected to know what
-it is doing when naming them.
+Change the XFS case-insensitive lookup code to return the first match found,
+even if it is not an exact match. Whether a filesystem uses case-insensitive
+lookups is determined by a superblock bit set during filesystem creation.
+This means that normal use cannot create two files that both match the same
+filename.
 
 Signed-off-by: Olaf Weber <olaf@sgi.com>
 ---
- fs/xfs/libxfs/xfs_attr.c      | 56 ++++++++++++++++++++++++++++++++++++-------
- fs/xfs/libxfs/xfs_attr_leaf.c | 11 +++++++--
- fs/xfs/xfs_attr_list.c        | 11 ++++++++-
- fs/xfs/xfs_utf8.c             |  7 ++++++
- 4 files changed, 74 insertions(+), 11 deletions(-)
+ libxfs/xfs_dir2_block.c | 17 ++++-------
+ libxfs/xfs_dir2_leaf.c  | 38 ++++-------------------
+ libxfs/xfs_dir2_node.c  | 80 ++++++++++++++++++-------------------------------
+ libxfs/xfs_dir2_sf.c    |  8 ++---
+ 4 files changed, 44 insertions(+), 99 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
-index 353fb42..68e7ce3 100644
---- a/fs/xfs/libxfs/xfs_attr.c
-+++ b/fs/xfs/libxfs/xfs_attr.c
-@@ -83,12 +83,14 @@ xfs_attr_args_init(
- 	const unsigned char	*name,
- 	int			flags)
- {
-+	struct xfs_mount	*mp = dp->i_mount;
-+	int			error;
- 
- 	if (!name)
- 		return -EINVAL;
- 
- 	memset(args, 0, sizeof(*args));
--	args->geo = dp->i_mount->m_attr_geo;
-+	args->geo = mp->m_attr_geo;
- 	args->whichfork = XFS_ATTR_FORK;
- 	args->dp = dp;
- 	args->flags = flags;
-@@ -97,7 +99,11 @@ xfs_attr_args_init(
- 	if (args->namelen >= MAXNAMELEN)
- 		return -EFAULT;		/* match IRIX behaviour */
- 
--	args->hashval = xfs_da_hashname(args->name, args->namelen);
-+	if (!xfs_sb_version_hasutf8(&mp->m_sb))
-+		args->hashval = xfs_da_hashname(args->name, args->namelen);
-+	else if ((error = mp->m_dirnameops->normhash(args)) != 0)
-+		return error;
-+
- 	return 0;
- }
- 
-@@ -154,6 +160,9 @@ xfs_attr_get(
- 		error = xfs_attr_node_get(&args);
- 	xfs_iunlock(ip, lock_mode);
- 
-+	if (args.norm)
-+		kmem_free(args.norm);
-+
- 	*valuelenp = args.valuelen;
- 	return error == -EEXIST ? 0 : error;
- }
-@@ -216,8 +225,11 @@ xfs_attr_set(
- 		return -EIO;
- 
- 	error = xfs_attr_args_init(&args, dp, name, flags);
--	if (error)
-+	if (error) {
-+		if (args.norm)
-+			kmem_free(args.norm);
- 		return error;
-+	}
- 
- 	args.value = value;
- 	args.valuelen = valuelen;
-@@ -227,8 +239,11 @@ xfs_attr_set(
- 	args.total = xfs_attr_calc_size(&args, &local);
- 
- 	error = xfs_qm_dqattach(dp, 0);
--	if (error)
-+	if (error) {
-+		if (args.norm)
-+			kmem_free(args.norm);
- 		return error;
-+	}
- 
- 	/*
- 	 * If the inode doesn't have an attribute fork, add one.
-@@ -239,8 +254,11 @@ xfs_attr_set(
- 			XFS_ATTR_SF_ENTSIZE_BYNAME(args.namelen, valuelen);
- 
- 		error = xfs_bmap_add_attrfork(dp, sf_size, rsvd);
--		if (error)
-+		if (error) {
-+			if (args.norm)
-+				kmem_free(args.norm);
- 			return error;
-+		}
- 	}
- 
- 	/*
-@@ -270,6 +288,8 @@ xfs_attr_set(
- 	error = xfs_trans_reserve(args.trans, &tres, args.total, 0);
- 	if (error) {
- 		xfs_trans_cancel(args.trans, 0);
-+		if (args.norm)
-+			kmem_free(args.norm);
- 		return error;
- 	}
- 	xfs_ilock(dp, XFS_ILOCK_EXCL);
-@@ -280,6 +300,8 @@ xfs_attr_set(
- 	if (error) {
- 		xfs_iunlock(dp, XFS_ILOCK_EXCL);
- 		xfs_trans_cancel(args.trans, XFS_TRANS_RELEASE_LOG_RES);
-+		if (args.norm)
-+			kmem_free(args.norm);
- 		return error;
- 	}
- 
-@@ -327,6 +349,8 @@ xfs_attr_set(
- 						 XFS_TRANS_RELEASE_LOG_RES);
- 			xfs_iunlock(dp, XFS_ILOCK_EXCL);
- 
-+			if (args.norm)
-+				kmem_free(args.norm);
- 			return error ? error : err2;
+diff --git a/libxfs/xfs_dir2_block.c b/libxfs/xfs_dir2_block.c
+index cede01f..2880431 100644
+--- a/libxfs/xfs_dir2_block.c
++++ b/libxfs/xfs_dir2_block.c
+@@ -705,28 +705,21 @@ xfs_dir2_block_lookup_int(
+ 		dep = (xfs_dir2_data_entry_t *)
+ 			((char *)hdr + xfs_dir2_dataptr_to_off(mp, addr));
+ 		/*
+-		 * Compare name and if it's an exact match, return the index
+-		 * and buffer. If it's the first case-insensitive match, store
+-		 * the index and buffer and continue looking for an exact match.
++		 * Compare name and if it's a match, return the
++		 * index and buffer.
+ 		 */
+ 		cmp = mp->m_dirnameops->compname(args, dep->name, dep->namelen);
+-		if (cmp != XFS_CMP_DIFFERENT && cmp != args->cmpresult) {
++		if (cmp != XFS_CMP_DIFFERENT) {
+ 			args->cmpresult = cmp;
+ 			*bpp = bp;
+ 			*entno = mid;
+-			if (cmp == XFS_CMP_EXACT)
+-				return 0;
++			return 0;
  		}
+ 	} while (++mid < be32_to_cpu(btp->count) &&
+ 			be32_to_cpu(blp[mid].hashval) == hash);
  
-@@ -388,7 +412,8 @@ xfs_attr_set(
- 	xfs_trans_log_inode(args.trans, dp, XFS_ILOG_CORE);
- 	error = xfs_trans_commit(args.trans, XFS_TRANS_RELEASE_LOG_RES);
- 	xfs_iunlock(dp, XFS_ILOCK_EXCL);
--
-+	if (args.norm)
-+		kmem_free(args.norm);
- 	return error;
- 
- out:
-@@ -397,6 +422,8 @@ out:
- 			XFS_TRANS_RELEASE_LOG_RES|XFS_TRANS_ABORT);
- 	}
- 	xfs_iunlock(dp, XFS_ILOCK_EXCL);
-+	if (args.norm)
-+		kmem_free(args.norm);
- 	return error;
- }
- 
-@@ -425,8 +452,11 @@ xfs_attr_remove(
- 		return -ENOATTR;
- 
- 	error = xfs_attr_args_init(&args, dp, name, flags);
--	if (error)
-+	if (error) {
-+		if (args.norm)
-+			kmem_free(args.norm);
- 		return error;
-+	}
- 
- 	args.firstblock = &firstblock;
- 	args.flist = &flist;
-@@ -439,8 +469,11 @@ xfs_attr_remove(
- 	args.op_flags = XFS_DA_OP_OKNOENT;
- 
- 	error = xfs_qm_dqattach(dp, 0);
--	if (error)
-+	if (error) {
-+		if (args.norm)
-+			kmem_free(args.norm);
- 		return error;
-+	}
- 
+ 	ASSERT(args->op_flags & XFS_DA_OP_OKNOENT);
+-	/*
+-	 * Here, we can only be doing a lookup (not a rename or replace).
+-	 * If a case-insensitive match was found earlier, return success.
+-	 */
+-	if (args->cmpresult == XFS_CMP_CASE)
+-		return 0;
++	ASSERT(args->cmpresult == XFS_CMP_DIFFERENT);
  	/*
- 	 * Start our first transaction of the day.
-@@ -466,6 +499,8 @@ xfs_attr_remove(
- 				  XFS_ATTRRM_SPACE_RES(mp), 0);
- 	if (error) {
- 		xfs_trans_cancel(args.trans, 0);
-+		if (args.norm)
-+			kmem_free(args.norm);
- 		return error;
+ 	 * No match, release the buffer and return ENOENT.
+ 	 */
+diff --git a/libxfs/xfs_dir2_leaf.c b/libxfs/xfs_dir2_leaf.c
+index 8e0cbc9..b1901d3 100644
+--- a/libxfs/xfs_dir2_leaf.c
++++ b/libxfs/xfs_dir2_leaf.c
+@@ -1246,7 +1246,6 @@ xfs_dir2_leaf_lookup_int(
+ 	xfs_mount_t		*mp;		/* filesystem mount point */
+ 	xfs_dir2_db_t		newdb;		/* new data block number */
+ 	xfs_trans_t		*tp;		/* transaction pointer */
+-	xfs_dir2_db_t		cidb = -1;	/* case match data block no. */
+ 	enum xfs_dacmp		cmp;		/* name compare result */
+ 	struct xfs_dir2_leaf_entry *ents;
+ 	struct xfs_dir3_icleaf_hdr leafhdr;
+@@ -1307,47 +1306,22 @@ xfs_dir2_leaf_lookup_int(
+ 		dep = (xfs_dir2_data_entry_t *)((char *)dbp->b_addr +
+ 			xfs_dir2_dataptr_to_off(mp, be32_to_cpu(lep->address)));
+ 		/*
+-		 * Compare name and if it's an exact match, return the index
+-		 * and buffer. If it's the first case-insensitive match, store
+-		 * the index and buffer and continue looking for an exact match.
++		 * Compare name and if it's a match, return the index
++		 * and buffer.
+ 		 */
+ 		cmp = mp->m_dirnameops->compname(args, dep->name, dep->namelen);
+-		if (cmp != XFS_CMP_DIFFERENT && cmp != args->cmpresult) {
++		if (cmp != XFS_CMP_DIFFERENT) {
+ 			args->cmpresult = cmp;
+ 			*indexp = index;
+-			/* case exact match: return the current buffer. */
+-			if (cmp == XFS_CMP_EXACT) {
+-				*dbpp = dbp;
+-				return 0;
+-			}
+-			cidb = curdb;
++			*dbpp = dbp;
++			return 0;
+ 		}
  	}
- 
-@@ -506,6 +541,8 @@ xfs_attr_remove(
- 	xfs_trans_log_inode(args.trans, dp, XFS_ILOG_CORE);
- 	error = xfs_trans_commit(args.trans, XFS_TRANS_RELEASE_LOG_RES);
- 	xfs_iunlock(dp, XFS_ILOCK_EXCL);
-+	if (args.norm)
-+		kmem_free(args.norm);
- 
- 	return error;
- 
-@@ -515,6 +552,9 @@ out:
- 			XFS_TRANS_RELEASE_LOG_RES|XFS_TRANS_ABORT);
+ 	ASSERT(args->op_flags & XFS_DA_OP_OKNOENT);
+-	/*
+-	 * Here, we can only be doing a lookup (not a rename or remove).
+-	 * If a case-insensitive match was found earlier, re-read the
+-	 * appropriate data block if required and return it.
+-	 */
+-	if (args->cmpresult == XFS_CMP_CASE) {
+-		ASSERT(cidb != -1);
+-		if (cidb != curdb) {
+-			xfs_trans_brelse(tp, dbp);
+-			error = xfs_dir3_data_read(tp, dp,
+-						   xfs_dir2_db_to_da(mp, cidb),
+-						   -1, &dbp);
+-			if (error) {
+-				xfs_trans_brelse(tp, lbp);
+-				return error;
+-			}
+-		}
+-		*dbpp = dbp;
+-		return 0;
+-	}
++	ASSERT(args->cmpresult == XFS_CMP_DIFFERENT);
+ 	/*
+ 	 * No match found, return ENOENT.
+ 	 */
+-	ASSERT(cidb == -1);
+ 	if (dbp)
+ 		xfs_trans_brelse(tp, dbp);
+ 	xfs_trans_brelse(tp, lbp);
+diff --git a/libxfs/xfs_dir2_node.c b/libxfs/xfs_dir2_node.c
+index 3737e4e..fb27506 100644
+--- a/libxfs/xfs_dir2_node.c
++++ b/libxfs/xfs_dir2_node.c
+@@ -702,6 +702,7 @@ xfs_dir2_leafn_lookup_for_entry(
+ 	xfs_dir2_db_t		curdb = -1;	/* current data block number */
+ 	xfs_dir2_data_entry_t	*dep;		/* data block entry */
+ 	xfs_inode_t		*dp;		/* incore directory inode */
++	int			di = -1;	/* data entry index */
+ 	int			error;		/* error return value */
+ 	int			index;		/* leaf entry index */
+ 	xfs_dir2_leaf_t		*leaf;		/* leaf structure */
+@@ -733,6 +734,7 @@ xfs_dir2_leafn_lookup_for_entry(
+ 	if (state->extravalid) {
+ 		curbp = state->extrablk.bp;
+ 		curdb = state->extrablk.blkno;
++		di = state->extrablk.index;
  	}
- 	xfs_iunlock(dp, XFS_ILOCK_EXCL);
-+	if (args.norm)
-+		kmem_free(args.norm);
-+
- 	return error;
- }
- 
-diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
-index b1f73db..c991a88 100644
---- a/fs/xfs/libxfs/xfs_attr_leaf.c
-+++ b/fs/xfs/libxfs/xfs_attr_leaf.c
-@@ -661,6 +661,7 @@ int
- xfs_attr_shortform_to_leaf(xfs_da_args_t *args)
- {
- 	xfs_inode_t *dp;
-+	struct xfs_mount *mp;
- 	xfs_attr_shortform_t *sf;
- 	xfs_attr_sf_entry_t *sfe;
- 	xfs_da_args_t nargs;
-@@ -673,6 +674,7 @@ xfs_attr_shortform_to_leaf(xfs_da_args_t *args)
- 	trace_xfs_attr_sf_to_leaf(args);
- 
- 	dp = args->dp;
-+	mp = dp->i_mount;
- 	ifp = dp->i_afp;
- 	sf = (xfs_attr_shortform_t *)ifp->if_u1.if_data;
- 	size = be16_to_cpu(sf->hdr.totsize);
-@@ -726,13 +728,18 @@ xfs_attr_shortform_to_leaf(xfs_da_args_t *args)
- 		nargs.namelen = sfe->namelen;
- 		nargs.value = &sfe->nameval[nargs.namelen];
- 		nargs.valuelen = sfe->valuelen;
--		nargs.hashval = xfs_da_hashname(sfe->nameval,
--						sfe->namelen);
- 		nargs.flags = XFS_ATTR_NSP_ONDISK_TO_ARGS(sfe->flags);
-+		if (!xfs_sb_version_hasutf8(&mp->m_sb))
-+			nargs.hashval = xfs_da_hashname(sfe->nameval,
-+							sfe->namelen);
-+		else if ((error = mp->m_dirnameops->normhash(&nargs)) != 0)
+ 	/*
+ 	 * Loop over leaf entries with the right hash value.
+@@ -757,27 +759,20 @@ xfs_dir2_leafn_lookup_for_entry(
+ 		 */
+ 		if (newdb != curdb) {
+ 			/*
+-			 * If we had a block before that we aren't saving
+-			 * for a CI name, drop it
++			 * If we had a block, drop it
+ 			 */
+-			if (curbp && (args->cmpresult == XFS_CMP_DIFFERENT ||
+-						curdb != state->extrablk.blkno))
++			if (curbp) {
+ 				xfs_trans_brelse(tp, curbp);
++				di = -1;
++			}
+ 			/*
+-			 * If needing the block that is saved with a CI match,
+-			 * use it otherwise read in the new data block.
++			 * Read in the new data block.
+ 			 */
+-			if (args->cmpresult != XFS_CMP_DIFFERENT &&
+-					newdb == state->extrablk.blkno) {
+-				ASSERT(state->extravalid);
+-				curbp = state->extrablk.bp;
+-			} else {
+-				error = xfs_dir3_data_read(tp, dp,
+-						xfs_dir2_db_to_da(mp, newdb),
+-						-1, &curbp);
+-				if (error)
+-					return error;
+-			}
++			error = xfs_dir3_data_read(tp, dp,
++					xfs_dir2_db_to_da(mp, newdb),
++					-1, &curbp);
++			if (error)
++				return error;
+ 			xfs_dir3_data_check(dp, curbp);
+ 			curdb = newdb;
+ 		}
+@@ -787,53 +782,36 @@ xfs_dir2_leafn_lookup_for_entry(
+ 		dep = (xfs_dir2_data_entry_t *)((char *)curbp->b_addr +
+ 			xfs_dir2_dataptr_to_off(mp, be32_to_cpu(lep->address)));
+ 		/*
+-		 * Compare the entry and if it's an exact match, return
+-		 * EEXIST immediately. If it's the first case-insensitive
+-		 * match, store the block & inode number and continue looking.
++		 * Compare the entry and if it's a match, return
++		 * EEXIST immediately.
+ 		 */
+ 		cmp = mp->m_dirnameops->compname(args, dep->name, dep->namelen);
+-		if (cmp != XFS_CMP_DIFFERENT && cmp != args->cmpresult) {
+-			/* If there is a CI match block, drop it */
+-			if (args->cmpresult != XFS_CMP_DIFFERENT &&
+-						curdb != state->extrablk.blkno)
+-				xfs_trans_brelse(tp, state->extrablk.bp);
++		if (cmp != XFS_CMP_DIFFERENT) {
+ 			args->cmpresult = cmp;
+ 			args->inumber = be64_to_cpu(dep->inumber);
+ 			args->filetype = xfs_dir3_dirent_get_ftype(mp, dep);
+-			*indexp = index;
+-			state->extravalid = 1;
+-			state->extrablk.bp = curbp;
+-			state->extrablk.blkno = curdb;
+-			state->extrablk.index = (int)((char *)dep -
+-							(char *)curbp->b_addr);
+-			state->extrablk.magic = XFS_DIR2_DATA_MAGIC;
+-			curbp->b_ops = &xfs_dir3_data_buf_ops;
+-			xfs_trans_buf_set_type(tp, curbp, XFS_BLFT_DIR_DATA_BUF);
+-			if (cmp == XFS_CMP_EXACT)
+-				return XFS_ERROR(EEXIST);
++			error = EEXIST;
 +			goto out;
- 		error = xfs_attr3_leaf_lookup_int(bp, &nargs); /* set a->index */
- 		ASSERT(error == -ENOATTR);
- 		error = xfs_attr3_leaf_add(bp, &nargs);
- 		ASSERT(error != -ENOSPC);
-+		if (nargs.norm)
-+			kmem_free(nargs.norm);
- 		if (error)
- 			goto out;
- 		sfe = XFS_ATTR_SF_NEXTENTRY(sfe);
-diff --git a/fs/xfs/xfs_attr_list.c b/fs/xfs/xfs_attr_list.c
-index 62db83a..4075d54 100644
---- a/fs/xfs/xfs_attr_list.c
-+++ b/fs/xfs/xfs_attr_list.c
-@@ -76,12 +76,14 @@ xfs_attr_shortform_list(xfs_attr_list_context_t *context)
- 	xfs_attr_shortform_t *sf;
- 	xfs_attr_sf_entry_t *sfe;
- 	xfs_inode_t *dp;
-+	struct xfs_mount *mp;
- 	int sbsize, nsbuf, count, i;
- 	int error;
- 
- 	ASSERT(context != NULL);
- 	dp = context->dp;
- 	ASSERT(dp != NULL);
-+	mp = dp->i_mount;
- 	ASSERT(dp->i_afp != NULL);
- 	sf = (xfs_attr_shortform_t *)dp->i_afp->if_u1.if_data;
- 	ASSERT(sf != NULL);
-@@ -154,7 +156,14 @@ xfs_attr_shortform_list(xfs_attr_list_context_t *context)
  		}
+ 	}
++	/* Didn't find a match */
++	error = ENOENT;
+ 	ASSERT(index == leafhdr.count || (args->op_flags & XFS_DA_OP_OKNOENT));
++out:
+ 	if (curbp) {
+-		if (args->cmpresult == XFS_CMP_DIFFERENT) {
+-			/* Giving back last used data block. */
+-			state->extravalid = 1;
+-			state->extrablk.bp = curbp;
+-			state->extrablk.index = -1;
+-			state->extrablk.blkno = curdb;
+-			state->extrablk.magic = XFS_DIR2_DATA_MAGIC;
+-			curbp->b_ops = &xfs_dir3_data_buf_ops;
+-			xfs_trans_buf_set_type(tp, curbp, XFS_BLFT_DIR_DATA_BUF);
+-		} else {
+-			/* If the curbp is not the CI match block, drop it */
+-			if (state->extrablk.bp != curbp)
+-				xfs_trans_brelse(tp, curbp);
+-		}
++		/* Giving back last used data block. */
++		state->extravalid = 1;
++		state->extrablk.bp = curbp;
++		state->extrablk.index = di;
++		state->extrablk.blkno = curdb;
++		state->extrablk.magic = XFS_DIR2_DATA_MAGIC;
++		curbp->b_ops = &xfs_dir3_data_buf_ops;
++		xfs_trans_buf_set_type(tp, curbp, XFS_BLFT_DIR_DATA_BUF);
+ 	} else {
+ 		state->extravalid = 0;
+ 	}
+ 	*indexp = index;
+-	return XFS_ERROR(ENOENT);
++	return XFS_ERROR(error);
+ }
  
- 		sbp->entno = i;
--		sbp->hash = xfs_da_hashname(sfe->nameval, sfe->namelen);
-+		/* ATTR_ROOT and ATTR_SECURE are never normalized. */
-+		if (!xfs_sb_version_hasutf8(&mp->m_sb) ||
-+		    (sfe->flags & (ATTR_ROOT|ATTR_SECURE))) {
-+			sbp->hash = xfs_da_hashname(sfe->nameval, sfe->namelen);
-+		} else {
-+			sbp->hash = mp->m_dirnameops->hashname(sfe->nameval,
-+							       sfe->namelen);
-+		}
- 		sbp->name = sfe->nameval;
- 		sbp->namelen = sfe->namelen;
- 		/* These are bytes, and both on-disk, don't endian-flip */
-diff --git a/fs/xfs/xfs_utf8.c b/fs/xfs/xfs_utf8.c
-index 7c18e43..8df05fe 100644
---- a/fs/xfs/xfs_utf8.c
-+++ b/fs/xfs/xfs_utf8.c
-@@ -38,6 +38,7 @@
- #include "xfs_inode.h"
- #include "xfs_inode_item.h"
- #include "xfs_bmap.h"
-+#include "xfs_attr.h"
- #include "xfs_error.h"
- #include "xfs_trace.h"
- #include "xfs_utf8.h"
-@@ -80,6 +81,9 @@ xfs_utf8_normhash(
- 	ssize_t		normlen;
- 	int		c;
- 
-+	/* Don't normalize system attribute names. */
-+	if (args->flags & (ATTR_ROOT|ATTR_SECURE))
-+		goto blob;
- 	nfkdi = utf8nfkdi(utf8version);
- 	/* Failure to normalize is treated as a blob. */
- 	if ((normlen = utf8nlen(nfkdi, args->name, args->namelen)) < 0)
-@@ -179,6 +183,9 @@ xfs_utf8_ci_normhash(
- 	ssize_t		normlen;
- 	int		c;
- 
-+	/* Don't normalize system attribute names. */
-+	if (args->flags & (ATTR_ROOT|ATTR_SECURE))
-+		goto blob;
- 	nfkdicf = utf8nfkdicf(utf8version);
- 	/* Failure to normalize is treated as a blob. */
- 	if ((normlen = utf8nlen(nfkdicf, args->name, args->namelen)) < 0)
+ /*
+diff --git a/libxfs/xfs_dir2_sf.c b/libxfs/xfs_dir2_sf.c
+index 7580333..7b01d43 100644
+--- a/libxfs/xfs_dir2_sf.c
++++ b/libxfs/xfs_dir2_sf.c
+@@ -833,13 +833,12 @@ xfs_dir2_sf_lookup(
+ 	for (i = 0, sfep = xfs_dir2_sf_firstentry(sfp); i < sfp->count;
+ 	     i++, sfep = xfs_dir3_sf_nextentry(dp->i_mount, sfp, sfep)) {
+ 		/*
+-		 * Compare name and if it's an exact match, return the inode
+-		 * number. If it's the first case-insensitive match, store the
+-		 * inode number and continue looking for an exact match.
++		 * Compare name and if it's a match, return the inode
++		 * number.
+ 		 */
+ 		cmp = dp->i_mount->m_dirnameops->compname(args, sfep->name,
+ 								sfep->namelen);
+-		if (cmp != XFS_CMP_DIFFERENT && cmp != args->cmpresult) {
++		if (cmp != XFS_CMP_DIFFERENT) {
+ 			args->cmpresult = cmp;
+ 			args->inumber = xfs_dir3_sfe_get_ino(dp->i_mount,
+ 							     sfp, sfep);
+@@ -848,6 +847,7 @@ xfs_dir2_sf_lookup(
+ 			if (cmp == XFS_CMP_EXACT)
+ 				return XFS_ERROR(EEXIST);
+ 			ci_sfep = sfep;
++			break;
+ 		}
+ 	}
+ 	ASSERT(args->op_flags & XFS_DA_OP_OKNOENT);
 -- 
 1.7.12.4
 
