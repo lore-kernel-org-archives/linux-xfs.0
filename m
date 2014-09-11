@@ -1,30 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 0472D7F67
-	for <xfs@oss.sgi.com>; Wed, 10 Sep 2014 22:25:04 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id C9796304043
-	for <xfs@oss.sgi.com>; Wed, 10 Sep 2014 20:25:00 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id oBQWN1TT1mUVIiI1 (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 10 Sep 2014 20:24:59 -0700 (PDT)
-Received: from int-mx13.intmail.prod.int.phx2.redhat.com
-	(int-mx13.intmail.prod.int.phx2.redhat.com [10.5.11.26])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id s8B3OxHf020735
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256
-	verify=FAIL) for <xfs@oss.sgi.com>; Wed, 10 Sep 2014 23:24:59 -0400
-Received: from liberator.sandeen.net (ovpn01.gateway.prod.ext.phx2.redhat.com
-	[10.5.9.1])
-	by int-mx13.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id s8B3OvQE008598
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES128-SHA bits=128 verify=NO)
-	for <xfs@oss.sgi.com>; Wed, 10 Sep 2014 23:24:58 -0400
-Message-ID: <54111610.4080604@redhat.com>
-Date: Wed, 10 Sep 2014 22:25:04 -0500
-From: Eric Sandeen <sandeen@redhat.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 146BC7F6F
+	for <xfs@oss.sgi.com>; Wed, 10 Sep 2014 22:29:39 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 974B9AC005
+	for <xfs@oss.sgi.com>; Wed, 10 Sep 2014 20:29:35 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id xAuXNzCVqMYN2ZgF for <xfs@oss.sgi.com>;
+	Wed, 10 Sep 2014 20:29:30 -0700 (PDT)
+Message-ID: <5411171F.6010704@sandeen.net>
+Date: Wed, 10 Sep 2014 22:29:35 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: [PATCH] xfs_io: add mremap command
+Subject: [PATCH V2] xfs_io: add mremap command
+References: <54111610.4080604@redhat.com>
+In-Reply-To: <54111610.4080604@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -37,7 +27,7 @@ Content-Transfer-Encoding: 7bit
 Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs-oss <xfs@oss.sgi.com>
+To: Eric Sandeen <sandeen@redhat.com>, xfs-oss <xfs@oss.sgi.com>
 
 This adds a simple mremap command to xfs_io.
 
@@ -48,8 +38,11 @@ size of the mapping.
 Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 ---
 
+V2: fix stray line in help.
+Why was it only visible after I sent V1... :/
+
 diff --git a/io/mmap.c b/io/mmap.c
-index ea7498f..565a541 100644
+index ea7498f..f1809e0 100644
 --- a/io/mmap.c
 +++ b/io/mmap.c
 @@ -29,6 +29,7 @@ static cmdinfo_t mread_cmd;
@@ -60,7 +53,7 @@ index ea7498f..565a541 100644
   
   mmap_region_t	*maptable;
   int		mapcount;
-@@ -574,6 +575,66 @@ mwrite_f(
+@@ -574,6 +575,65 @@ mwrite_f(
   	return 0;
   }
   
@@ -75,7 +68,6 @@ index ea7498f..565a541 100644
 +" 'mremap 8192' - resizes the current mapping to 8192 bytes.\n"
 +"\n"
 +" Resizes the mappping, growing or shrinking from the current size.\n"
-+" The default stored value is 'X', repeated to fill the range specified.\n"
 +" -f -- use the MREMAP_FIXED flag\n"
 +" -m -- use the MREMAP_MAYMOVE flag\n"
 +"\n"));
@@ -127,7 +119,7 @@ index ea7498f..565a541 100644
   void
   mmap_init(void)
   {
-@@ -628,9 +689,21 @@ mmap_init(void)
+@@ -628,9 +688,21 @@ mmap_init(void)
   		_("writes data into a region in the current memory mapping");
   	mwrite_cmd.help = mwrite_help;
   
@@ -137,7 +129,7 @@ index ea7498f..565a541 100644
 +	mremap_cmd.argmin = 1;
 +	mremap_cmd.argmax = 2;
 +	mremap_cmd.flags = CMD_NOFILE_OK | CMD_FOREIGN_OK;
-+	mremap_cmd.args = _("[-f|-m] newsize");
++	mremap_cmd.args = _("[-m|-f] newsize");
 +	mremap_cmd.oneline =
 +		_("alters the size of the current memory mapping");
 +	mremap_cmd.help = mremap_help;
@@ -174,6 +166,7 @@ index e1a3e1a..e40fbf9 100644
   .B munmap
   Unmaps the current memory mapping.
   .TP
+
 
 _______________________________________________
 xfs mailing list
