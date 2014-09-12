@@ -1,22 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 3B0D57FA7
-	for <xfs@oss.sgi.com>; Fri, 12 Sep 2014 12:45:38 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 296C0304051
-	for <xfs@oss.sgi.com>; Fri, 12 Sep 2014 10:45:35 -0700 (PDT)
-Received: from josefsipek.net (josefsipek.net [71.174.113.7]) by cuda.sgi.com
-	with ESMTP id vG1GEfsYKKB8hEyD for <xfs@oss.sgi.com>;
-	Fri, 12 Sep 2014 10:45:31 -0700 (PDT)
-Date: Fri, 12 Sep 2014 13:45:39 -0400
-From: Josef 'Jeff' Sipek <jeffpc@josefsipek.net>
-Subject: Re: [RFC] Unicode/UTF-8 support for XFS
-Message-ID: <20140912174538.GD978@meili>
-References: <20140911203735.GA19952@sgi.com>
- <20140912100230.GB4267@dastard>
+	by oss.sgi.com (Postfix) with ESMTP id A25747FA9
+	for <xfs@oss.sgi.com>; Fri, 12 Sep 2014 14:29:49 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 81D32304062
+	for <xfs@oss.sgi.com>; Fri, 12 Sep 2014 12:29:46 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id vYUU3YmlWHjmn1uy for <xfs@oss.sgi.com>;
+	Fri, 12 Sep 2014 12:29:45 -0700 (PDT)
+Message-ID: <541349B1.1070007@sandeen.net>
+Date: Fri, 12 Sep 2014 14:29:53 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20140912100230.GB4267@dastard>
+Subject: Re: [PATCH] xfs: test for shut down fs in xfs_dir_fsync()
+References: <535E8344.2070209@redhat.com>
+In-Reply-To: <535E8344.2070209@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,55 +27,32 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Ben Myers <bpm@sgi.com>, tinguely@sgi.com, olaf@sgi.com, xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@redhat.com>, xfs-oss <xfs@oss.sgi.com>
+Cc: Boris Ranto <branto@redhat.com>
 
-On Fri, Sep 12, 2014 at 08:02:30PM +1000, Dave Chinner wrote:
-> On Thu, Sep 11, 2014 at 03:37:35PM -0500, Ben Myers wrote:
-...
-> > When comparing unicode strings for equality, normalization comes into play:
-> > we must compare the normalized forms of strings, not just the raw sequences
-> > of bytes. There are a number of defined normalization forms for unicode.
-> > We decided on a variant of NFKD we call NFKDI. NFD was chosed over NFC,
-> > because calculating NFC requires calculating NFD first, followed by an
-> > additional step. NFKD was chosen over NFD because this makes filenames
-> > that ought to be equal compare as equal.
-> 
-> But are they really equal?
-> 
-> Choosing *compatibility* decomposition over *canonical*
-> decomposition means that compound characters and formatting
-> distinctions don't affect the hash. i.e. "of'fi'ce", "o'ffi'ce" and
-> "office" all hash and compare as the same name, but then they get
-> stored on disk unnormalised. So they are the "same" in memory, but
-> very different on disk.
-> 
-> I note that the unicode spec says this for normalised forms
-> (11.1):
-> 
-> "A normalized string is guaranteed to be stable; that is, once
-> normalized, a string is normalized according to all future versions
-> of Unicode."
-> 
-> So if we store normalised strings on disk, they are guaranteed to
-> be compatible with all future versions of unicode and anything that
-> goes to use them. So why wouldn't we store normalised forms on disk?
+On 4/28/14 11:35 AM, Eric Sandeen wrote:
+> Similar to xfs_file_fsync(), I think xfs_dir_fsync() needs
+> to test for a shut down fs, lest we go down paths we'll
+> never be able to complete; Boris reported that during some
+> stress tests he had threads stuck in xlog_cil_force_lsn
+> via xfs_dir_fsync().
 
-I've had a very similar discussion about normalization in ZFS.  Sadly, I
-can't find where it happened so I can't point you to it.  One interesting
-point that I remember is that storing the original form may be less
-surprising to an application.  Specifically, the name it reads back is the
-same it supplied during the creation.  (Granted, if the file already exists,
-the application will read back the new form.)
+(re-ping)
 
-Just FWIW.
+So Dave, you fixed this with:
 
-Jeff.
+So, you did solve the problem properly I guess, in 
+commit ac983517ec5941da0c58cacdbad10a231dc4e001
+Author: Dave Chinner <dchinner@redhat.com>
+Date:   Wed May 7 08:05:50 2014 +1000
 
--- 
-Only two things are infinite, the universe and human stupidity, and I'm not
-sure about the former.
-		- Albert Einstein
+    xfs: don't sleep in xlog_cil_force_lsn on shutdown
+    
+
+But should my patch still go in, if only to be consistent
+with file_fsync() paths?
+
+-Eric
 
 _______________________________________________
 xfs mailing list
