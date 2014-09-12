@@ -1,14 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 56A127FB7
-	for <xfs@oss.sgi.com>; Fri, 12 Sep 2014 06:55:42 -0500 (CDT)
-Message-ID: <5412DF37.9030005@sgi.com>
-Date: Fri, 12 Sep 2014 13:55:35 +0200
-From: Olaf Weber <olaf@sgi.com>
+	by oss.sgi.com (Postfix) with ESMTP id 998887F3F
+	for <xfs@oss.sgi.com>; Fri, 12 Sep 2014 11:22:14 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 7912530406A
+	for <xfs@oss.sgi.com>; Fri, 12 Sep 2014 09:22:10 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id XjBhZXmsZBDPYAEX for <xfs@oss.sgi.com>;
+	Fri, 12 Sep 2014 09:22:09 -0700 (PDT)
+Message-ID: <54131DB9.9010307@sandeen.net>
+Date: Fri, 12 Sep 2014 11:22:17 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: Re: [RFC] Unicode/UTF-8 support for XFS
-References: <20140911203735.GA19952@sgi.com> <20140912100230.GB4267@dastard>
-In-Reply-To: <20140912100230.GB4267@dastard>
+Subject: Re: [PATCH V2] xfs_io: add mremap command
+References: <54111610.4080604@redhat.com> <5411171F.6010704@sandeen.net>
+In-Reply-To: <5411171F.6010704@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,335 +27,34 @@ Content-Transfer-Encoding: 7bit
 Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>, Ben Myers <bpm@sgi.com>
-Cc: tinguely@sgi.com, xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@redhat.com>, xfs-oss <xfs@oss.sgi.com>
 
-On 12-09-14 12:02, Dave Chinner wrote:
-> On Thu, Sep 11, 2014 at 03:37:35PM -0500, Ben Myers wrote:
->> Hi,
->>
->> I'm posting this RFC on Olaf's behalf, as he is busy with other projects.
+On 9/10/14 10:29 PM, Eric Sandeen wrote:
+> This adds a simple mremap command to xfs_io.
 >
-> Ok, but I'd prefer to have Olaf discuss the finer points rather than
-> have to play chinese whispers through you. :/
+> It does not take a start address; it uses the existing
+> start address, so the sized passed will be the new total
+> size of the mapping.
 >
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> ---
 
-I am on this mailing list, and I am trying to follow along, but I do have 
-other calls on my time.
 
->> First is a series of kernel patches, then a series of patches for
->> xfsprogs, and then a test.
->
-> Seeing as this is something out of the blue (i.e. nobody has made a
-> mention of this functionality in the past couple of years), I think
-> we need to look at design and architecture first before spending any
-> time commenting on the code.
->
->> Note that I have removed the unicode database files prior to posting due
->> to their large size.  There are instructions on how to download them in
->> the relevant commit headers.
->
-> Which leads to an interesting issue: these files do not have
-> cryptographically verifiable signatures. How can I trust them?  I
-> can't even access unicode.org via https, so I can't even be certain
-> that I'm downloading from the site I think I'm downloading from....
+> +int
+> +mremap_f(
+> +    int        argc,
+> +    char        **argv)
+> +{
+> +    ssize_t        new_length;
+> +    void        *new_addr;
+> +    int        flags = 0;
+> +    int        c;
+> +    size_t        blocksize, sectsize;
+> +
 
-As Ben noted, the reason to not include them in these emails is their size:
+Crap, and I just realized my mailer has started swapping tabs for spaces; my last several patches are probably corrupted this way.  Grumble.
 
-$ wc fs/xfs/support/ucd/*
-    1273   12288   68009 fs/xfs/support/ucd/CaseFolding-7.0.0.txt
-    1470   14166   98263 fs/xfs/support/ucd/DerivedAge-7.0.0.txt
-    2368   22320  145072 fs/xfs/support/ucd/DerivedCombiningClass-7.0.0.txt
-   10794  123871  899859 fs/xfs/support/ucd/DerivedCoreProperties-7.0.0.txt
-      50     318    2040 fs/xfs/support/ucd/NormalizationCorrections-7.0.0.txt
-   18635  332441 2457187 fs/xfs/support/ucd/NormalizationTest-7.0.0.txt
-      33      86    1364 fs/xfs/support/ucd/README
-   27268  120686 1509570 fs/xfs/support/ucd/UnicodeData-7.0.0.txt
-   61891  626176 5181364 total
-
-As for your remarks about cryptographic signatures, I'm not sure I see your 
-point there. Just to be clear: the idea is to check the files in, as opposed 
-to having to download them from unicode.org prior to compiling XFS.
-
->> Here are some notes of introduction from Olaf:
->>
->> -----------------------------------------------------------------------------
->> Unicode/UTF-8 support for XFS
->>
->> So we had a customer request proper unicode support...
->>
->> Design notes.
->>
->> XFS uses byte strings for filenames, so UTF-8 is the expected format for
->> unicode filenames. This does raise the question what criteria a byte string
->> must meet to be UTF-8. We settled on the following:
->>    - Valid unicode code points are 0..0x10FFFF, except that
->>    - The surrogates 0xD800..0xDFFF are not valid code points, and
->>    - Valid UTF-8 must be a shortest encoding of a valid unicode code point.
->>
->> In addition, U+0 (ASCII NUL, '\0') is used to terminate byte strings (and
->> is itself not part of the string). Moreover strings may be length-limited
->> in addition to being NUL-terminated (there is no such thing as an embedded
->> NUL in a length-limited string).
->>
->> Based on feedback on the earlier patches for unicode/UTF-8 support, we
->
-> References, please. I don't recall any series discussion on this
-> topic since Barry posted the unicode-CI patches back in 2008, and I
-> doubt anyone remembers the details of those discussions....
-
-I looked up those discussions in the archives.  For example, here's 
-Christoph about rejecting filenames if they're not well-formed unicode.
-    http://marc.info/?l=linux-fsdevel&m=120876935526856&w=2
-And Jamie Lokier making a similar point:
-    http://oss.sgi.com/archives/xfs/2008-04/msg01263.html
-
->> decided that a filename that does not match the above criteria should be
->> treated as a binary blob, as opposed to being rejected. To stress: if any
->> part of the string isn't valid UTF-8, then the entire string is treated
->> as a binary blob. This matters once normalization is considered.
->
-> So we accept invalid unicode in filenames, but only after failing to
-> parse them? Isn't this a potential vector for exploiting weaknesses
-> in application filename handling? i.e.  unprivileged user writes
-> specially crafted invalid unicode filename to disk, setuid program
-> tries to parse it, invalid sequence triggers a buffer overflow bug
-> in setuid parser?
->
-
-Yes, this means that userspace must be capable of handling filenames that 
-are not well-formed UTF-8 and a whole slew of other edge cases. Same as 
-today really.
-
->> When comparing unicode strings for equality, normalization comes into play:
->> we must compare the normalized forms of strings, not just the raw sequences
->> of bytes. There are a number of defined normalization forms for unicode.
->> We decided on a variant of NFKD we call NFKDI. NFD was chosed over NFC,
->> because calculating NFC requires calculating NFD first, followed by an
->> additional step. NFKD was chosen over NFD because this makes filenames
->> that ought to be equal compare as equal.
->
-> But are they really equal?
->
-> Choosing *compatibility* decomposition over *canonical*
-> decomposition means that compound characters and formatting
-> distinctions don't affect the hash. i.e. "of'fi'ce", "o'ffi'ce" and
-> "office" all hash and compare as the same name, but then they get
-> stored on disk unnormalised. So they are the "same" in memory, but
-> very different on disk.
->
-> I note that the unicode spec says this for normalised forms
-> (11.1):
->
-> "A normalized string is guaranteed to be stable; that is, once
-> normalized, a string is normalized according to all future versions
-> of Unicode."
-
-Provided no unassigned codepoints are present in that string.
-
-> So if we store normalised strings on disk, they are guaranteed to
-> be compatible with all future versions of unicode and anything that
-> goes to use them. So why wouldn't we store normalised forms on disk?
->
-
-Because, based what I read around the web, I expect a good deal of 
-resistance to the idea that a filesystem will on a lookup of a file you just 
-created return a name that is different-but-equivalent.
-
-Think of it as the equivalent of being case-preserving for a 
-case-insensitive filesystem.
-
-An alternative would be to store each filename twice: both raw and 
-normalized forms.
-
-> As another point to note and discuss, from the unicode standard:
->
-> "Normalization Forms KC and KD must not be blindly applied to
-> arbitrary text. [...] It is best to think of these Normalization
-> Forms as being like uppercase or lowercase mappings: useful in
-> certain contexts for identifying core meanings, but also performing
-> modifications to the text that may not always be appropriate."
->
-> I'd consider file names to be mostly "arbitrary text" - we currently
-> treat them as opaque blobs and don't try to interpret them (apart
-> from '/' delimiters) and so they can contain arbitrary text....
->
-
-My reading of this part of the unicode standard is that applying a 
-compatibility normalization results in strings that materially differ from 
-the originals, and no full equivalent of the original can be reconstructed 
-from the normalized form. This makes it improper for a word processor to 
-normalize to NFKC or NFKD before saving a file.
-
-For the same reason, it would not be proper to store the NFKD version of a 
-filename on disk without some method to retrieve (an equivalent of) the 
-original.
-
->> My favorite example is the ways
->> "office" can be spelled, when "fi" or "ffi" ligatures are used. NFKDI adds
->> one more step of NFKD, in that it eliminates the code points that have the
->> Default_Ignorable_Code_Point property from the comparison. These code
->> points are as a rule invisible, but might (or might not) be pulled in when
->> you copy/paste a string to be used as a filename. An example of these is
->> U+00AD SOFT HYPHEN, a code point that only shows up if a word is split
->> across lines.
->
-> This extension does not appear to be specified by the unicode
-> standard - this seems like a dangerous thing to do when considering
-> compatibility with future unicode standards - we are not in the
-> business of extend-and-embrace here. Anyway, what happens if a
-> user actually wants a filename with a Default_Ignorable_Code_Point
-> character in it?
-
-Such a filename can be created, and since the raw form of the name is stored 
-on disk, when the filename is read back the Default_Ignorable_Code_Point 
-will still be there. It just doesn't count when comparing names for equality.
-
-> IMO, if cut-n-paste modifies the string being cut-n-pasted, then
-> that's a bug in the cut-n-paste application.  I'd much prefer we use
-> a normalisation type that is defined by the standard than to invent
-> a new one to work around problems that may not even exist.
->
->> If a filename is considered to be binary blob, comparison is based on a
->> simple binary match. Normalization does not apply to any part of a blob.
->
-> See above: if we have unicode enabled, I think that we should reject
-> invalid unicode in filenames at normalisation time.
->
-
-That was my original intent, which I abandoned based on the emails linked to 
-above.
-
->> The code uses ("leverages", in corp-speak) the existing infrastructure for
->> case-insensitive filenames. Like the CI code, the name used to create a
->> file is stored on disk, and returned in a lookup. When comparing filenames
->> the normalized forms of the names being compared are generated on the fly
->> from the non-normalized forms stored on disk.
->
-> Again, why not store normalised forms on disk and avoid the need to
-> generate normalised forms for dirents being read from disk every
-> time they must be compared?
->
->> If the borgbit (the bit enabling legacy ASCII-based CI) is set in the
->> superblock, then case folding is added into the mix. This normalization
->> form we call NFKDICF. It allows for the creation of case-insensitive
->> filesystems with UTF-8 support.
->
-> Different languages have different case folding rules e.g. the upper
-> case character might be the same, but the lower case character is
-> different (or vice versa). Where are the language specific case
-> folding tables being stored? And speaking of language support, how
-> does this interact with the kernel NLS subsystem?
-
-I use a full case fold as per CaseFolding.txt to obtain a result that is 
-consistent and (in my opinion) good enough.
-
-Since XFS has no nls mount options, there is no interaction with the NLS 
-subsystem.
-
->> -----------------------------------------------------------------------------
->> Implementation notes.
->>
->> Strings are normalized using a trie that stores the relevant information.
->> The trie itself is part of the XFS module, and about 250kB in size. The
->> trie is not checked in: instead we add the source files from the Unicode
->> Character Database and a program that creates the header containing the
->> trie.
->
-> This is rather unappealing. Distros would have to take this code
-> size penalty if they decide one user needs that support. The other
-> millions of users pay that cost even if they don't want it.  And
-> then there's validation - how are we supposed to validate that a
-> 250k binary blob is correct and free of issues on every compiler and
-> architecture that the kernel is built on?
-
-If your concern is that the generator might create bad blobs on some 
-architectures, then there are ways around that: checksums, checking in a 
-reference blob, or maybe something else.
-
-As for size in general, looking at the NLS support I do not consider it to 
-be excessively big (as in, it is a bit less than 2 times the size of the 
-largest NLS module). Obviously opinions can differ on this.
-
->> The key for a lookup in the trie is a UTF-8 sequence. Each valid UTF-8
->> sequence leads to a leaf. No invalid sequence does. This means that trie
->> lookups can be used to validate UTF-8 sequences, which why there is no
->> specialized code for the same purpose.
->>
->> The trie contains information for the version of unicode in which each
->> code point was defined. This matters because non-normalized strings are
->> stored on disk, and newer versions of unicode may introduce new normalized
->> forms. Ideally, the version of unicode used by the filesystem is stored in
->> the filesystem.
->>
->> The trie also accounts for corrections made in the past to normalizations.
->> This has little value today, because any newly created filesystem would be
->> using unicode version 7.0.0. It is included in order to show, not tell,
->> that such corrections can be handled if they are added in future revisions.
->
-> And so back to the stability of normalised forms: if the normalised
-> forms are stable and the trie encodes the version of codepoints,
-> then the data in the leaves of the trie itself must be stable. i.e.
-> even for future versions of the standards, all the leaves that are
-> there now will be there in the future. What is valid unicode now
-> will remain valid unicode.
-
-The set of valid unicode code points is known and stable: 0..0x10FFFF minus 
-0xD800..0xDFFF. However, the set of assigned code points grows with each 
-revision of the unicode standard. Note that there is an explicit limitation 
-on the stability of normalized strings: they are stable if, and only if, no 
-unassigned codepoints are present in the string.
-
-> And given that, why do we need to carry the trie around in the
-> compiled kernel? We have a perfectly good mechanism for storing
-> large chunks of long-term stable metadata that we can access easily:
-> in files.
->
-> IOWs, the trie is really a property of the filesystem, not the
-> kernel or userspace tools. If we ever want to update to a new
-> version of unicode, we can compile a new trie and have mkfs write
-> that into new filesystems, and maybe add an xfs-reapir function that
-> allows migration to a new trie on an existing filesystem. But if we
-> carry it in the kernel then there will be interesting issues with
-> iupgrade/downgrade compatibility with new tries. Better to prevent
-> those simply by havingthe trie be owned by the filesystem, not the
-> kernel.
->
-> Hence I think the trie should probably be stored on disk in the
-> filesystem.  It gets calculated and written by mkfs into file
-> attached to the superblock, and the only code that needs to go into
-> the kernel is the code needed to read it into memory and walk it.
->
-> That means we don't need 3,000 lines of nasty trie generation code
-> in the kernel, we don't bloat the kernel unnecessarily with abinary
-> blob, we don't need to build code with data from unverifiable
-> sources directly into the kernel, we can support different versions
-> of unicode easily, and so on.
-
-Storing the trie in the filesystem is certainly an option, as is making XFS 
-UTF-8 support a config option.
-
->> The algorithm used to calculate the sequences of bytes for the normalized
->> form of a UTF-8 string is tricky. The core is found in utf8byte(), with an
->> explanation in the preceeding comment.
->
-> Precisely my point - it's nasty, tricky code, and getting it wrong
-> is a potential security vulnerability. Exactly how are we expected
-> to review >3,000 lines of unicode/utf-8 minutae without having to
-> become unicode encoding experts?
-
-The bits and pieces that are specific to unicode are smaller than that, much 
-of the complication of the generator is due to the work required to reduce 
-the size of the trie. The generator is included because we felt that 
-offering a large binary blob for checkin would also run into resistance.
-
-Olaf
-
--- 
-Olaf Weber                 SGI               Phone:  +31(0)30-6696796
-                            Veldzigt 2b       Fax:    +31(0)30-6696799
-Technical Lead             3454 PW de Meern  Vnet:   955-6796
-Storage Software           The Netherlands   Email:  olaf@sgi.com
+-Eric
 
 _______________________________________________
 xfs mailing list
