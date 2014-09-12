@@ -1,20 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 66B227FA5
-	for <xfs@oss.sgi.com>; Fri, 12 Sep 2014 11:54:39 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 3B0D57FA7
+	for <xfs@oss.sgi.com>; Fri, 12 Sep 2014 12:45:38 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 556978F8037
-	for <xfs@oss.sgi.com>; Fri, 12 Sep 2014 09:54:35 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id MNvuR7lnZVOAsteI for <xfs@oss.sgi.com>;
-	Fri, 12 Sep 2014 09:54:34 -0700 (PDT)
-Message-ID: <54132553.9090202@sandeen.net>
-Date: Fri, 12 Sep 2014 11:54:43 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 296C0304051
+	for <xfs@oss.sgi.com>; Fri, 12 Sep 2014 10:45:35 -0700 (PDT)
+Received: from josefsipek.net (josefsipek.net [71.174.113.7]) by cuda.sgi.com
+	with ESMTP id vG1GEfsYKKB8hEyD for <xfs@oss.sgi.com>;
+	Fri, 12 Sep 2014 10:45:31 -0700 (PDT)
+Date: Fri, 12 Sep 2014 13:45:39 -0400
+From: Josef 'Jeff' Sipek <jeffpc@josefsipek.net>
+Subject: Re: [RFC] Unicode/UTF-8 support for XFS
+Message-ID: <20140912174538.GD978@meili>
+References: <20140911203735.GA19952@sgi.com>
+ <20140912100230.GB4267@dastard>
 MIME-Version: 1.0
-Subject: [PATCH V3] xfs_io: add mremap command
-References: <54111610.4080604@redhat.com>
-In-Reply-To: <54111610.4080604@redhat.com>
+Content-Disposition: inline
+In-Reply-To: <20140912100230.GB4267@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,147 +29,55 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@redhat.com>, xfs-oss <xfs@oss.sgi.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: Ben Myers <bpm@sgi.com>, tinguely@sgi.com, olaf@sgi.com, xfs@oss.sgi.com
 
-This adds a simple mremap command to xfs_io.
+On Fri, Sep 12, 2014 at 08:02:30PM +1000, Dave Chinner wrote:
+> On Thu, Sep 11, 2014 at 03:37:35PM -0500, Ben Myers wrote:
+...
+> > When comparing unicode strings for equality, normalization comes into play:
+> > we must compare the normalized forms of strings, not just the raw sequences
+> > of bytes. There are a number of defined normalization forms for unicode.
+> > We decided on a variant of NFKD we call NFKDI. NFD was chosed over NFC,
+> > because calculating NFC requires calculating NFD first, followed by an
+> > additional step. NFKD was chosen over NFD because this makes filenames
+> > that ought to be equal compare as equal.
+> 
+> But are they really equal?
+> 
+> Choosing *compatibility* decomposition over *canonical*
+> decomposition means that compound characters and formatting
+> distinctions don't affect the hash. i.e. "of'fi'ce", "o'ffi'ce" and
+> "office" all hash and compare as the same name, but then they get
+> stored on disk unnormalised. So they are the "same" in memory, but
+> very different on disk.
+> 
+> I note that the unicode spec says this for normalised forms
+> (11.1):
+> 
+> "A normalized string is guaranteed to be stable; that is, once
+> normalized, a string is normalized according to all future versions
+> of Unicode."
+> 
+> So if we store normalised strings on disk, they are guaranteed to
+> be compatible with all future versions of unicode and anything that
+> goes to use them. So why wouldn't we store normalised forms on disk?
 
-It does not take a start address; it uses the existing
-start address, so the sized passed will be the new total
-size of the mapping.
+I've had a very similar discussion about normalization in ZFS.  Sadly, I
+can't find where it happened so I can't point you to it.  One interesting
+point that I remember is that storing the original form may be less
+surprising to an application.  Specifically, the name it reads back is the
+same it supplied during the creation.  (Granted, if the file already exists,
+the application will read back the new form.)
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
+Just FWIW.
 
-V2: fix stray line in help.
-	- Why was it only visible after I sent V1... :/ 
-V3: Unmangle whitespace, yay me!
+Jeff.
 
-diff --git a/io/mmap.c b/io/mmap.c
-index ea7498f..565a541 100644
---- a/io/mmap.c
-+++ b/io/mmap.c
-@@ -29,6 +29,7 @@ static cmdinfo_t mread_cmd;
- static cmdinfo_t msync_cmd;
- static cmdinfo_t munmap_cmd;
- static cmdinfo_t mwrite_cmd;
-+static cmdinfo_t mremap_cmd;
- 
- mmap_region_t	*maptable;
- int		mapcount;
-@@ -574,6 +575,66 @@ mwrite_f(
- 	return 0;
- }
- 
-+static void
-+mremap_help(void)
-+{
-+	printf(_(
-+"\n"
-+" resizes the current memory mapping\n"
-+"\n"
-+" Examples:\n"
-+" 'mremap 8192' - resizes the current mapping to 8192 bytes.\n"
-+"\n"
-+" Resizes the mappping, growing or shrinking from the current size.\n"
-+" The default stored value is 'X', repeated to fill the range specified.\n"
-+" -f -- use the MREMAP_FIXED flag\n"
-+" -m -- use the MREMAP_MAYMOVE flag\n"
-+"\n"));
-+}
-+
-+int
-+mremap_f(
-+	int		argc,
-+	char		**argv)
-+{
-+	ssize_t		new_length;
-+	void		*new_addr;
-+	int		flags = 0;
-+	int		c;
-+	size_t		blocksize, sectsize;
-+
-+	while ((c = getopt(argc, argv, "fm")) != EOF) {
-+		switch (c) {
-+		case 'f':
-+			flags = MREMAP_FIXED|MREMAP_MAYMOVE;
-+			break;
-+		case 'm':
-+			flags = MREMAP_MAYMOVE;
-+			break;
-+		default:
-+			return command_usage(&mremap_cmd);
-+		}
-+	}
-+
-+	init_cvtnum(&blocksize, &sectsize);
-+	new_length = cvtnum(blocksize, sectsize, argv[optind]);
-+	if (new_length < 0) {
-+		printf(_("non-numeric offset argument -- %s\n"),
-+			argv[optind]);
-+		return 0;
-+	}
-+
-+	new_addr = mremap(mapping->addr, mapping->length, new_length, flags);
-+	if (new_addr == MAP_FAILED)
-+		perror("mremap");
-+	else {
-+		mapping->addr = new_addr;
-+		mapping->length = new_length;
-+	}
-+
-+	return 0;
-+}
-+
- void
- mmap_init(void)
- {
-@@ -628,9 +689,21 @@ mmap_init(void)
- 		_("writes data into a region in the current memory mapping");
- 	mwrite_cmd.help = mwrite_help;
- 
-+	mremap_cmd.name = "mremap";
-+	mremap_cmd.altname = "mrm";
-+	mremap_cmd.cfunc = mremap_f;
-+	mremap_cmd.argmin = 1;
-+	mremap_cmd.argmax = 2;
-+	mremap_cmd.flags = CMD_NOFILE_OK | CMD_FOREIGN_OK;
-+	mremap_cmd.args = _("[-m|-f] newsize");
-+	mremap_cmd.oneline =
-+		_("alters the size of the current memory mapping");
-+	mremap_cmd.help = mremap_help;
-+
- 	add_command(&mmap_cmd);
- 	add_command(&mread_cmd);
- 	add_command(&msync_cmd);
- 	add_command(&munmap_cmd);
- 	add_command(&mwrite_cmd);
-+	add_command(&mremap_cmd);
- }
-diff --git a/man/man8/xfs_io.8 b/man/man8/xfs_io.8
-index e1a3e1a..e40fbf9 100644
---- a/man/man8/xfs_io.8
-+++ b/man/man8/xfs_io.8
-@@ -501,6 +501,20 @@ See the
- .B mmap
- command.
- .TP
-+.BI "mremap [ \-f ] [ \-m ] " new_length
-+Changes the current mapping size to
-+.IR new_length .
-+Whether the mapping may be moved is controlled by the flags passed;
-+MREMAP_FIXED
-+.RB ( \-f ),
-+or MREMAP_MAYMOVE
-+.RB ( \-m ).
-+.TP
-+.B mrm
-+See the
-+.B mremap
-+command.
-+.TP
- .B munmap
- Unmaps the current memory mapping.
- .TP
+-- 
+Only two things are infinite, the universe and human stupidity, and I'm not
+sure about the former.
+		- Albert Einstein
 
 _______________________________________________
 xfs mailing list
