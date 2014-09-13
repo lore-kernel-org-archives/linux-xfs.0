@@ -1,25 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id A61B67F37
-	for <xfs@oss.sgi.com>; Fri, 12 Sep 2014 20:44:51 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id E2EE27F3F
+	for <xfs@oss.sgi.com>; Sat, 13 Sep 2014 09:33:33 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 33140AC002
-	for <xfs@oss.sgi.com>; Fri, 12 Sep 2014 18:44:48 -0700 (PDT)
-Received: from out4-smtp.messagingengine.com (out4-smtp.messagingengine.com
-	[66.111.4.28]) by cuda.sgi.com with ESMTP id Fs4aE02VlYSFYALH
-	(version=TLSv1 cipher=AES256-SHA bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Fri, 12 Sep 2014 18:44:43 -0700 (PDT)
-Received: from compute3.internal (compute3.nyi.internal [10.202.2.43])
-	by gateway2.nyi.internal (Postfix) with ESMTP id E074C20A8A
-	for <xfs@oss.sgi.com>; Fri, 12 Sep 2014 21:44:42 -0400 (EDT)
-Date: Fri, 12 Sep 2014 18:44:41 -0700
-From: Greg KH <greg@kroah.com>
-Subject: Re: XFS fixes needed in stable kernels
-Message-ID: <20140913014441.GA21972@kroah.com>
-References: <20140820001623.GT20518@dastard>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id AA4258F804B
+	for <xfs@oss.sgi.com>; Sat, 13 Sep 2014 07:33:30 -0700 (PDT)
+Received: from mail.zbfmail.de (mail.zbfmail.de [176.9.84.12]) by cuda.sgi.com
+	with ESMTP id qB8RahUQDzgBHCZg (version=TLSv1 cipher=AES256-SHA
+	bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Sat, 13 Sep 2014 07:33:28 -0700 (PDT)
+Received: from mail.zbfmail.de (localhost [127.0.0.1])
+	by mail.zbfmail.de (Postfix) with ESMTP id EAD271BE46E
+	for <xfs@oss.sgi.com>; Sat, 13 Sep 2014 16:33:21 +0200 (CEST)
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20140820001623.GT20518@dastard>
+Date: Sat, 13 Sep 2014 16:33:21 +0200
+From: Marko Weber|8000 <weber@zbfmail.de>
+Subject: unclean shutdown of usb hdd destroyed xfs partially
+Message-ID: <3999c95c0dc7ebfdfbb2853a6d13f7dc@zbfmail.de>
+Reply-To: weber@zbfmail.de
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,38 +26,28 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="utf-8"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Fanael Linithien <fanael4@gmail.com>, stable@vger.kernel.org, xfs@oss.sgi.com
+To: Xfs <xfs@oss.sgi.com>
 
-On Wed, Aug 20, 2014 at 10:16:23AM +1000, Dave Chinner wrote:
-> Hi Stable Kernel Gurus!
-> 
-> The following XFs fixes need to be pushed back to stable kernels.
-> The commits weren't all tagged in the recent 3.17-rc1 merge, so
-> you're getting an email from me instead. The commits required
-> from 3.17-rc1 are:
-> 
-> 67dc288 xfs: ensure verifiers are attached to recovered buffers
-
-You already marked this one, but it didn't apply to 3.10-stable
-
-> 5fd364f xfs: quotacheck leaves dquot buffers without verifiers
-
-Now queued up.
-
-> ad3714b xfs: dquot recovery needs verifiers
-
-Didn't apply at all to 3.16-stable :(
-
-thanks,
-
-greg k-h
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+CmhlbGxvIGRhdmUgaGVsbG8gbGlzdCwKCmFuIHVuY2xlYW4gc2h1dGRvd24gb24gb2YgbXkgYm94
+ZXMgbWFkZSB0aGUgeGZzIHBhcnRpYWxseSBjb3JydXB0LgoKaSB0cmllZCBhbiB4ZnNfcmVwYWly
+IHdpdGggeGZzcHJvZ3MgMy4xLjEwCnRoZW4gaSByZWFkIHRoZSBjb3JydXB0IGRhdGEgdGhyZWFk
+IGFuZCB0cmllZCBpdCB3aXRoIDMuMi4xIHZlcnNpb24gb2YgCnhmc3Byb2dzLgoKd2hlbiBpIG1v
+dW50IHRoZSBwYXJ0aXRpb24gYW5kIGRvIGFuIGxzIC1sIGkgZ2V0OgoKICAjIGxzIC1sIC9tbnQv
+dGVtcApsczogWnVncmlmZiBhdWYgL21udC90ZW1wL3NlcmllbiBuaWNodCBtw7ZnbGljaDogRGll
+IFN0cnVrdHVyIG11c3MgCmJlcmVpbmlndCB3ZXJkZW4KbHM6IFp1Z3JpZmYgYXVmIC9tbnQvdGVt
+cC9kb2t1dHYgbmljaHQgbcO2Z2xpY2g6IERpZSBTdHJ1a3R1ciBtdXNzIApiZXJlaW5pZ3Qgd2Vy
+ZGVuCmluc2dlc2FtdCAwCj8/Pz8/Pz8/Pz8gID8gPyAgICAgPyAgICAgICAgICAgID8gICAgICAg
+ICAgICAgPyBkb2t1dHYKZHJ3eHJ3eHIteCAzMyB3ZWJlciBtZWRpYXRvbWIgMTI4MyAyNS4gQXVn
+IDIwMTMgIG1vdmllcwpkcnd4cnd4ci14IDEyIHdlYmVyIG1lZGlhdG9tYiAgMTUxICA2LiBBdWcg
+MTg6NTcgbXAzCj8/Pz8/Pz8/Pz8gID8gPyAgICAgPyAgICAgICAgICAgID8gICAgICAgICAgICAg
+PyBzZXJpZW4KCnRoZSBhYm92ZSBsaW5lcyB3aXRoIGxzIHNheXMgImFjY2VzcyBub3QgcG9zc2li
+bGUgb24gc2VyaWVuIGFuZCBkb2t1dHYsIApzdHJ1Y3R1cmUgbmVlZHMgY2xlYW5pbmcuCgpUaGlz
+IGlzIGFsc28gYWZ0ZXIgYW4geGZzX3JlcGFpciAtTCAvZGV2L3NkZTEKCmlzIHRoZXJlIGFueSB0
+cmljayB0byBnZXQgdGhlIGRhdGEgYWNjZXNzYWJsZSBhZ2Fpbj8KCnRoYW5rcyBmb3IgYW55IGhp
+bnRzIG9yIGhlbHAKCm1hcmtvCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNn
+aS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
