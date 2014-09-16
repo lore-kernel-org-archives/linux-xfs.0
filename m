@@ -1,27 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 2BD397F47
-	for <xfs@oss.sgi.com>; Tue, 16 Sep 2014 16:27:52 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 173DD8F8052
-	for <xfs@oss.sgi.com>; Tue, 16 Sep 2014 14:27:48 -0700 (PDT)
-Received: from mail.zbfmail.de (mail.zbfmail.de [176.9.84.12]) by cuda.sgi.com
-	with ESMTP id i8TRdNnhhcKwe6xY (version=TLSv1 cipher=AES256-SHA
-	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 16 Sep 2014 14:27:46 -0700 (PDT)
-Received: from mail.zbfmail.de (localhost [127.0.0.1])
-	by mail.zbfmail.de (Postfix) with ESMTP id 8E66710C084
-	for <xfs@oss.sgi.com>; Tue, 16 Sep 2014 23:27:45 +0200 (CEST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id BC1FB7F47
+	for <xfs@oss.sgi.com>; Tue, 16 Sep 2014 16:30:47 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 3F1CAAC008
+	for <xfs@oss.sgi.com>; Tue, 16 Sep 2014 14:30:44 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id dEdX1kMTaKJ6vBoz (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 16 Sep 2014 14:30:43 -0700 (PDT)
+Received: from int-mx11.intmail.prod.int.phx2.redhat.com
+	(int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id s8GLUgAc013982
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256
+	verify=FAIL) for <xfs@oss.sgi.com>; Tue, 16 Sep 2014 17:30:42 -0400
+Received: from liberator.sandeen.net (ovpn01.gateway.prod.ext.phx2.redhat.com
+	[10.5.9.1])
+	by int-mx11.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id s8GLUfi1004047
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES128-SHA bits=128 verify=NO)
+	for <xfs@oss.sgi.com>; Tue, 16 Sep 2014 17:30:41 -0400
+Message-ID: <5418AC01.30006@redhat.com>
+Date: Tue, 16 Sep 2014 16:30:41 -0500
+From: Eric Sandeen <sandeen@redhat.com>
 MIME-Version: 1.0
-Date: Tue, 16 Sep 2014 23:27:45 +0200
-From: Marko Weber|8000 <weber@zbfmail.de>
-Subject: Re: unclean shutdown of usb hdd destroyed xfs partially
-In-Reply-To: <20140913220916.GC4267@dastard>
-References: <3999c95c0dc7ebfdfbb2853a6d13f7dc@zbfmail.de>
-	<082ebd288523ee6155b66debade2a775@zbfmail.de>
-	<20140913220916.GC4267@dastard>
-Message-ID: <330c89398cb4eef9b7289c1ffef8bcc3@zbfmail.de>
-Reply-To: weber@zbfmail.de
+Subject: [PATCH] xfs_repair: validate & fix inode CRCs
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,53 +33,66 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Transfer-Encoding: base64
-Content-Type: text/plain; charset="utf-8"; Format="flowed"
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Xfs <xfs@oss.sgi.com>
+To: xfs-oss <xfs@oss.sgi.com>
 
-CgpBbSAyMDE0LTA5LTE0IDAwOjA5LCBzY2hyaWViIERhdmUgQ2hpbm5lcjoKPiBPbiBTYXQsIFNl
-cCAxMywgMjAxNCBhdCAwNDozNjo1OVBNICswMjAwLCBNYXJrbyBXZWJlcnw4MDAwIHdyb3RlOgo+
-PiAKPj4gYW4gb3V0cHV0IG9mICB4ZnNfcmVwYWlyIC12IC1MIC9kZXYvc2RlMQo+IC4uLgo+PiAK
-Pj4gICMgeGZzX3JlcGFpciAtdiAtTCAvZGV2L3NkZTEKPiAKPiBXaGF0IHZlcnNpb24/CgpmaXJz
-dCBpdCB3YXMgMy4xLjEwCmxhdGVyIGxpa2UgcG9zdGVkIDMuMi4xCgo+IAo+PiBQaGFzZSAxIC0g
-U3VwZXJibG9jayBmaW5kZW4gdW5kIMO8YmVycHLDvGZlbi4uLgo+PiAgICAgICAgIC0gQmVyaWNo
-dHMtUHJvemVzcyBpbiBBYnN0w6RuZGVuIHZvbiAxNSBNaW51dGVzCj4+ICAgICAgICAgLSBCbG9j
-ay1ad2lzY2hlbnNwZWljaGVyZ3LDtsOfZSBpc3QgYXVmIDE0ODc3OTIgRWludHLDpGdlIGdlc2V0
-enQKPj4gUGhhc2UgMiAtIGVpbiBpbnRlcm5lcyBQcm90b2tvbGwgYmVudXR6ZW4KPj4gICAgICAg
-ICAtIE51bGwtUHJvdG9rb2xsLi4uCj4+IHplcm9fbG9nOiBoZWFkIGJsb2NrIDQwIHRhaWwgYmxv
-Y2sgNDAKPj4gICAgICAgICAtIGZyZWllciBTcGVpY2hlciB1bmQgSW5vZGUtS2FydGVuIGRlcyBE
-YXRlaXN5c3RlbXMgd2VyZGVuCj4+IGdlc2Nhbm50Li4uCj4+IGJhZCBtYWdpYyBudW1iZXJiYWQg
-bWFnaWMgbnVtYmVyYmFkIG1hZ2ljIG51bWJlcgo+IC4uLi4KPj4gZmFsc2NoZXIgb24tZGlzay1T
-dXBlcmJsb2NrIDEyIC0gZmFsc2NoZSBNYWdpc2NoZSBOdW1tZXIKPj4gTWV0YWRhdGEgY29ycnVw
-dGlvbiBkZXRlY3RlZCBhdCBibG9jawo+PiAweDIwYmY4ZTUwLzB4MTAwMHByaW3DpHJlL3Nla3Vu
-ZMOkcmVyIFN1cGVyYmxvY2stMTItS29uZmxpa3QgLQo+PiBBRy1TdXBlcmJsb2NrLUdlb21ldHJp
-ZS1JbmZvIGhhdCBlaW5lbiBLb25mbGlrdCBtaXQgZGVyCj4+IERhdGVpc3lzdGVtLUdlb21ldHJp
-ZQo+PiBmbGFzY2hlIG1hZ2lzY2hlICMgMHgwIGbDvHIgYWdmIDEyCj4+IGZhbHNjaGUgVmVyc2lv
-biAjIDAgZsO8ciBhZ2YgMTIKPj4gCj4+IE1ldGFkYXRhIGNvcnJ1cHRpb24gZGV0ZWN0ZWQgYXQg
-YmxvY2sgMHg0MTdmMWM5MC8weDEwMDAKPj4gZmFsc2NoZXIgb24tZGlzay1TdXBlcmJsb2NrIDYg
-LSBmYWxzY2hlIE1hZ2lzY2hlIE51bW1lcgo+PiBwcmltw6RyZS9zZWt1bmTDpHJlciBTdXBlcmJs
-b2NrLTYtS29uZmxpa3QgLQo+PiBBRy1TdXBlcmJsb2NrLUdlb21ldHJpZS1JbmZvIGhhdCBlaW5l
-biBLb25mbGlrdCBtaXQgZGVyCj4+IERhdGVpc3lzdGVtLUdlb21ldHJpZQo+PiBmYWxzY2hlciBv
-bi1kaXNrLVN1cGVyYmxvY2sgMyAtIGZhbHNjaGUgTWFnaXNjaGUgTnVtbWVyCj4+IHVuZ2VudXR6
-dGVuIEFudGVpbCBkZXMgwrtzZWt1bmTDpHLCqy1TdXBlcmJsb2NrcyBudWxsZW4gKEFHICM2KQo+
-PiBNZXRhZGF0YSBjb3JydXB0aW9uIGRldGVjdGVkIGF0IGJsb2NrIDB4NTc1NDI2MTAvMHgxMDAw
-Cj4+IGZhbHNjaGUgU2VxdWVueiAjIDAgZsO8ciBhZ2YgMTIKPj4gTWV0YWRhdGEgY29ycnVwdGlv
-biBkZXRlY3RlZCBhdCBibG9jawo+PiAweDc4MTNiNDUwLzB4MTAwMFNwZWljaGVyenVncmlmZnNm
-ZWhsZXIKPiAKPiBJIGRvbid0IHJlYWQgZ2VybWFuKD8pIGJ1dCB0aGF0IGxvb2tzIGxpa2UgbWFu
-eSBBRyBoZWFkZXIgYmxvY2sKPiBoYXZlIGJlZW4gb3ZlcndyaXR0ZW4gd2l0aCB6ZXJvcyAoMCBt
-YWdpYyBudW1iZXIsIDAgc2VxdWVuY2UgIywgMAo+IGxlbmd0aCwgZXRjKSBhbmQgc28gZXZlbiBp
-ZiB3ZSBjYW4gcmVwYWlyIHRoZSBmaWxlc3lzdGVtLCBJJ2QKPiBzdWdnZXN0IHRoYXQgeW91IG5l
-ZWQgdG8gdmVyaWZ5IHRoYXQgdGhlIGRhdGEgaW4gZXZlcnkgZmlsZSBpbiB0aGUKPiBmaWxlc3lz
-dGVtIGlzIGNvcnJlY3QuCj4gCj4gSXMgdGhhdCBhcyBmYXIgYXMgeGZzX3JlcGFpciBnb3Q/IElm
-IHNvLCBpdCB3b3VsZCBoYXZlIGFwcGVhcmVkIHRvCj4gY3Jhc2guICBDYW4geW91IHJ1biB0aGUg
-bGFzdGVzdCB2ZXJzaW9uIGluc2lkZSBnZGIgdG8gZ2V0IGEgc3RhY2sKPiB0cmFjZSB3aGVuIGl0
-IGRpZXM/IE9yLCBhbHRlcm5hdGl2ZWx5LCBwcm92aWRlIGEgbWV0YWR1bXAgZm9yIG9uZSBvZgo+
-IHVzIHRvIGxvb2sgYXQgbW9yZSBjbG9zZWx5PwoKeWVzLCB0aGlzIGlzIGFzIGZhciB4ZnNfcmVw
-YWlyIGdvdCBpdC4Kd2hhdCBpcyBtZW50ICdydW4gbGF0ZXN0IHZlcnNpb24gaW4gZ2RiPycgZ251
-ZGVidWdnZXI/IGhvdyBkbyBpIGRvIHRoYXQ/IApjb25zb2xlIGV4YW1wbGUgbmVlZGVkLgphbmQg
-aG93IGRvIGkgZG8gdGhlIG1ldGFkdW1wPwoKdGhhbmsgeW91CgptYXJrbwo+IAo+IENoZWVycywK
-PiAKPiBEYXZlLgoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2kuY29tL21h
-aWxtYW4vbGlzdGluZm8veGZzCg==
+xfs_repair doesn't ever check an inode's CRC, so it never repairs
+them.  If the root inode or realtime inodes have bad crcs, the
+fs won't even mount and can't be fixed (without using xfs_db).
+
+It's fairly straightforward to just test the inode CRC before
+we do any other checking or modification of the inode, once we
+get past the "verify only" phase of process_dinode_int();
+just mark it dirty if it's wrong and needs to be re-written.
+
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
+
+forgive the gratuitous big honkin' comment line, but
+process_dinode_int is so long, I thought the visual delimiter was
+useful.  ;)
+
+diff --git a/repair/dinode.c b/repair/dinode.c
+index 8891e84..27c0da6 100644
+--- a/repair/dinode.c
++++ b/repair/dinode.c
+@@ -2524,6 +2524,30 @@ _("bad (negative) size %" PRId64 " on inode %" PRIu64 "\n"),
+ 	if (verify_mode)
+ 		return retval;
+ 
++	/* =========== END OF VERIFY MODE =================== */
++
++	/*
++	 * We'd really like to know if the CRC is bad before we
++	 * go fixing anything; that way we have some hint about
++	 * bit-rot vs bugs.  Also, any changes will invalidate the
++	 * existing CRC, so this is the only valid point to test it.
++	 *
++	 * Of course if we make any modifications after this, the
++	 * inode gets rewritten, and CRC is updated automagically.
++	 */
++	if (xfs_sb_version_hascrc(&mp->m_sb)) {
++		ASSERT(!verify_mode);
++		if(!xfs_verify_cksum((char *)dino, mp->m_sb.sb_inodesize,
++                		XFS_DINODE_CRC_OFF)) {
++			do_warn(_("bad CRC for inode %" PRIu64), lino);
++			if (!no_modify) {
++				do_warn(_(", will rewrite\n"));
++				*dirty = 1;
++			} else
++				do_warn(_(", would rewrite\n"));
++		}
++	}
++
+ 	/*
+ 	 * clear the next unlinked field if necessary on a good
+ 	 * inode only during phase 4 -- when checking for inodes
+
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
