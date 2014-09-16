@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 5009D7F47
-	for <xfs@oss.sgi.com>; Tue, 16 Sep 2014 17:17:55 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 2923B7F47
+	for <xfs@oss.sgi.com>; Tue, 16 Sep 2014 17:30:50 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 1ECCC8F8039
-	for <xfs@oss.sgi.com>; Tue, 16 Sep 2014 15:17:54 -0700 (PDT)
-Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
-	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	QopbKKTWDqXuFMiT for <xfs@oss.sgi.com>;
-	Tue, 16 Sep 2014 15:17:52 -0700 (PDT)
-Date: Wed, 17 Sep 2014 08:17:38 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: mkfs.xfs fails with raid5 and smaller chunk sizes
-Message-ID: <20140916221738.GO4322@dastard>
-References: <5418B39C.2060707@rincon.com>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id ADF53AC00B
+	for <xfs@oss.sgi.com>; Tue, 16 Sep 2014 15:30:49 -0700 (PDT)
+Received: from ZenIV.linux.org.uk (zeniv.linux.org.uk [195.92.253.2]) by
+	cuda.sgi.com with ESMTP id PGd4A3PexB7WUYnV (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 16 Sep 2014 15:30:47 -0700 (PDT)
+Date: Tue, 16 Sep 2014 23:30:44 +0100
+From: Al Viro <viro@ZenIV.linux.org.uk>
+Subject: Re: [BUG, 3.17-rc4] dentry still in use during unmount
+Message-ID: <20140916223043.GY7996@ZenIV.linux.org.uk>
+References: <20140916215336.GL4322@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <5418B39C.2060707@rincon.com>
+In-Reply-To: <20140916215336.GL4322@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,55 +29,44 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Brian Hemme <bmh@rincon.com>
-Cc: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com
 
-On Tue, Sep 16, 2014 at 03:03:08PM -0700, Brian Hemme wrote:
-> Hello all,
+On Wed, Sep 17, 2014 at 07:53:36AM +1000, Dave Chinner wrote:
+> Hi Al,
 > 
-> I am having some odd problems with mkfs.xfs when used on a raid 5
-> array.  The array is built from 6 960GB SSDs all connected to SATA
-> ports on the MB and created with mdadm.  If I use a chunk size any
-> smaller then 512K mkfs.xfs just hangs forever.  It continues to use
-> CPU and so does the raid array but never completes.  If the system
-> is just left running for an extended length of time the whole OS
-> eventually locks up.  I have tried this on three different systems
-> with the same results.   I have searched all over for someone with
-> similar issues without success.  I am hoping I am just doing
-> something clearly wrong and you all can set me straight quickly.
+> One of my xfstest rigs tripped over this last night when running
+> xfs/301 on a pair of 4G ramdisks during an auto group run:
 > 
-> Some specifics:
->     Arch linux with 3.14.1 kernel
->     mkfs.xfs version 3.1.11
->     mdadm - v3.3 - 3rd September 2013
-> 
-> Commands:
-> > mdadm --create /dev/md0 --chunk=64K --level=5 --raid-devices=6
-> /dev/sd[a-f]
-> > mkfs.xfs /dev/md0
->   ** This command fails and locks up
-> 
-> I have tried specifying the arguments to mkfs.xfs with the same
-> results.  Building a 4 drive array seems to require a chunk size of
-> 1M or greater to work.  Same results if I make a partition on the
-> array and make the fs there.
+> BUG: Dentry ffff8803c14fc870{i=0,n=dir}  still in use (-127) [unmount of xfs ram1]
 
-mkfs.xfs really should only take a couple of seconds to complete.
-Seeing as you are using SSDs, my first suspicion is that md or the
-SSDs are having problems with discard. Hence you should first
-try 'mkfs.xfs -K /dev/md0' and see if that completes quickly.
+Umm... -127 == "already got past the beginning of __dentry_kill()".  And if
+it had been seen by d_walk() callback, it must have gotten past the point where
+__dentry_kill() unlocks that sucker.
 
-Otherwise, output of 'echo w > sysrq-trigger' from dmesg would be a
-good start, as would a 'perf top -G -U' snapshot (run for 30s at
-least a minute after mkfs.xfs starts) to tell us what is burning
-CPU.
+Very interesting...  I don't see how that could happen, TBH - __dentry_kill()
+is called with parent and victim locked; it sets DCACHE_DENTRY_KILLED and
+removes the victim from parent's ->d_subdirs before dropping either lock.
+Moreover, the victim can't have any children at that point - it must have
+had the last reference held by called of __dentry_kill() and each child
+would've contributed to refcount.
 
-Cheers,
+And d_walk() goes through the list of children with parent kept locked.
+It does unlock the parent after walking one level deeper, but on the
+way back it
+	* checks that there had been no renames
+	* checks that child isn't marked with DCACHE_DENTRY_KILLED
+after relocking the parent.  In case of anything fishy it restarts the
+whole thing with renames excluded.  If those tests succeed, we are guaranteed
+that we'll continue walking the parent's list of children with parent locked,
+AFAICS, not that there could legitimately be anything playing with the
+dentry tree modifications in parallel with fs shutdown...
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+It might be interesting to slap WARN_ON(dentry->d_flags & DCACHE_DENTRY_KILLED)
+for dentry and target in __d_move() and for anon in __d_materialise_dentry(),
+after dentry_lock_for_move() in both functions.  And see if it triggers.
+IOW, whether it's possible for doomed dentry to be readded to someone's
+->d_subdirs after it has entered __dentry_kill().
 
 _______________________________________________
 xfs mailing list
