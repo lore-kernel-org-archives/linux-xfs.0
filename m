@@ -1,18 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 8B52D7F47
-	for <xfs@oss.sgi.com>; Tue, 16 Sep 2014 16:42:51 -0500 (CDT)
-Date: Tue, 16 Sep 2014 16:42:50 -0500
-From: Ben Myers <bpm@sgi.com>
-Subject: Re: [RFC] Unicode/UTF-8 support for XFS
-Message-ID: <20140916214250.GU19952@sgi.com>
-References: <20140911203735.GA19952@sgi.com> <20140912100230.GB4267@dastard>
-	<5412DF37.9030005@sgi.com> <20140912205528.GB11717@infradead.org>
-	<54169248.1090105@sgi.com> <20140916205406.GJ4322@dastard>
-	<20140916210235.GA24591@infradead.org>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 923247F47
+	for <xfs@oss.sgi.com>; Tue, 16 Sep 2014 16:53:52 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 7D80B8F8039
+	for <xfs@oss.sgi.com>; Tue, 16 Sep 2014 14:53:52 -0700 (PDT)
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	BsM3qlmeVrWPDSDk for <xfs@oss.sgi.com>;
+	Tue, 16 Sep 2014 14:53:49 -0700 (PDT)
+Date: Wed, 17 Sep 2014 07:53:36 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: [BUG, 3.17-rc4] dentry still in use during unmount
+Message-ID: <20140916215336.GL4322@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20140916210235.GA24591@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,90 +27,65 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>, Dave Chinner <david@fromorbit.com>
-Cc: tinguely@sgi.com, Olaf Weber <olaf@sgi.com>, xfs@oss.sgi.com
+To: Al Viro <viro@ZenIV.linux.org.uk>
+Cc: linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com
 
-Hey Gents,
+Hi Al,
 
-On Tue, Sep 16, 2014 at 02:02:35PM -0700, Christoph Hellwig wrote:
-> On Wed, Sep 17, 2014 at 06:54:06AM +1000, Dave Chinner wrote:
-> > So how do existing utf8/unicode enabled filesystems handle this? 
-> > 
-> > I think we should be consistent with ZFS, MacOS and others that
-> > already deal with this problem if at all possible. 
+One of my xfstest rigs tripped over this last night when running
+xfs/301 on a pair of 4G ramdisks during an auto group run:
 
-Here's a data point from man(zfs):
+BUG: Dentry ffff8803c14fc870{i=0,n=dir}  still in use (-127) [unmount of xfs ram1]
+------------[ cut here ]------------
+WARNING: CPU: 4 PID: 27856 at fs/dcache.c:1319 umount_check+0x7f/0x90()
+Modules linked in:
+CPU: 4 PID: 27856 Comm: umount Tainted: G        W      3.17.0-rc4-dgc+ #479
+Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS Bochs 01/01/2011
+ 0000000000000009 ffff88025eeefd80 ffffffff81cf7327 0000000000000000
+ ffff88025eeefdb8 ffffffff810933bd ffff8803c14fc870 ffff88011aeba800
+ ffffffff81db2860 ffff88023acf72c0 00000000002353d2 ffff88025eeefdc8
+Call Trace:
+ [<ffffffff81cf7327>] dump_stack+0x45/0x56
+ [<ffffffff810933bd>] warn_slowpath_common+0x7d/0xa0
+ [<ffffffff8109349a>] warn_slowpath_null+0x1a/0x20
+ [<ffffffff811c1baf>] umount_check+0x7f/0x90
+ [<ffffffff811c2ea6>] d_walk+0x66/0x2c0
+ [<ffffffff811c1b30>] ? d_lru_del+0xa0/0xa0
+ [<ffffffff811c3286>] do_one_tree+0x26/0x40
+ [<ffffffff811c43ba>] shrink_dcache_for_umount+0x5a/0x90
+ [<ffffffff811aebe1>] generic_shutdown_super+0x21/0xf0
+ [<ffffffff811aefdc>] kill_block_super+0x3c/0x90
+ [<ffffffff811af309>] deactivate_locked_super+0x49/0x60
+ [<ffffffff811af8b6>] deactivate_super+0x46/0x60
+ [<ffffffff811cb04a>] mntput_no_expire+0xca/0x120
+ [<ffffffff811cc5ce>] SyS_umount+0x8e/0x100
+ [<ffffffff81d025e9>] system_call_fastpath+0x16/0x1b
+---[ end trace 15254c3c565abf1a ]---
+VFS: Busy inodes after unmount of ram1. Self-destruct in 5 seconds.  Have a nice day...
 
-       The following three properties cannot be	changed	after the file	system
-       is  created,  and therefore, should be set when the file	system is cre-
-       ated. If	the properties are not set with	the  "zfs  create"  or	"zpool
-       create"	commands,  these  properties  are  inherited  from  the	parent
-       dataset.	If the parent dataset lacks these  properties  due  to	having
-       been created prior to these features being supported, the new file sys-
-       tem will	have the default values	for these properties.
+I can't reproduce it easily:
 
-       casesensitivity = sensitive | insensitive | mixed
+$ sudo MKFS_OPTIONS="-m crc=1,finobt=1" ./check xfs/301
+FSTYP         -- xfs (debug)
+PLATFORM      -- Linux/x86_64 test4 3.17.0-rc4-dgc+
+MKFS_OPTIONS  -- -f -m crc=1,finobt=1 /dev/ram1
+MOUNT_OPTIONS -- /dev/ram1 /mnt/scr
 
-	   Indicates whether the file name matching algorithm used by the file
-	   system  should be case-sensitive, case-insensitive, or allow	a com-
-	   bination of both styles of matching.	 The  default  value  for  the
-	   "casesensitivity"  property is "sensitive." Traditionally, UNIX and
-	   POSIX file systems have case-sensitive file names.
+xfs/301 12s ... 12s
+Ran: xfs/301
+Passed all 1 tests
+$
 
-	   The "mixed" value for the "casesensitivity" property	indicates that
-	   the	file  system  can support requests for both case-sensitive and
-	   case-insensitive  matching  behavior.  Currently,  case-insensitive
-	   matching  behavior on a file	system that supports mixed behavior is
-	   limited to the Solaris CIFS server product.	For  more  information
-	   about the "mixed" value behavior, see the ZFS Administration	Guide.
+And even run in a loop for 20 minutes it hasn't triggered the error.
+I haven't seen this before, so I thought I better give you the heads
+up just in case.
 
-       normalization =none | formD | formKCf
+Cheers,
 
-	   Indicates whether the file system should perform a unicode  normal-
-	   ization  of	file  names  whenever two file names are compared, and
-	   which normalization algorithm should	be used. File names are	always
-	   stored  unmodified,	names are normalized as	part of	any comparison
-	   process. If this property is	 set  to  a  legal  value  other  than
-	   "none,"  and	 the  "utf8only"  property  was	 left unspecified, the
-	   "utf8only" property is automatically	set to "on." The default value
-	   of  the "normalization" property is "none." This property cannot be
-	   changed after the file system is created.
-
-       utf8only	=on | off
-
-	   Indicates whether the file system should  reject  file  names  that
-	   include characters that are not present in the UTF-8	character code
-	   set.	If this	property is explicitly set to "off," the normalization
-	   property must either	not be explicitly set or be set	to "none." The
-	   default value for the "utf8only" property is	"off."	This  property
-	   cannot be changed after the file system is created.
-
-       The  "casesensitivity,"	"normalization," and "utf8only"	properties are
-       also new	permissions that can be	assigned to  non-privileged  users  by
-       using the ZFS delegated administration feature.
-
-The original link:
-https://www.freebsd.org/cgi/man.cgi?query=zfs&apropos=0&sektion=0&manpath=FreeBSD+8.1-RELEASE&format=html
-
-> > However, this
-> > really is a wider policy decision for the kernel/VFS as we want
-> > consistent behaviour across all linux filesystems, hence this
-> > patchset really needs to discussed at the lkml/-fsdevel level...
->
-> Absolutely.  I've also talked to a few Samba folks at SDC, and one
-> thing they would love to see is conditional case insensitive lookups,
-> e.g.:
-> 
->  - we hash case insensitive with collisions, but perform normal case
->    sensitive lookups.
->  - with a new AT_CASE_INSENSTIVE flag to the various *at calls that
->    gets passed down to the dcache we enable CI lookups.
-
-I'm working on addressing some of the initial feedback and will be in a
-position to post for a wider audience later in the week.
-
-Thanks,
-Ben
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
