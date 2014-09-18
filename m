@@ -1,12 +1,11 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 15F247F37
-	for <xfs@oss.sgi.com>; Thu, 18 Sep 2014 15:36:39 -0500 (CDT)
-Date: Thu, 18 Sep 2014 15:36:38 -0500
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id D11817F37
+	for <xfs@oss.sgi.com>; Thu, 18 Sep 2014 15:37:17 -0500 (CDT)
+Date: Thu, 18 Sep 2014 15:37:17 -0500
 From: Ben Myers <bpm@sgi.com>
-Subject: [PATCH 05/13] libxfs: add a superblock feature bit to indicate
-	UTF-8 support.
-Message-ID: <20140918203638.GS4482@sgi.com>
+Subject: [PATCH 06/13] xfsprogs: add unicode character database files
+Message-ID: <20140918203717.GT4482@sgi.com>
 References: <20140918195650.GI19952@sgi.com>
  <20140918203114.GN4482@sgi.com>
 MIME-Version: 1.0
@@ -29,88 +28,67 @@ Cc: tinguely@sgi.com, olaf@sgi.com, xfs@oss.sgi.com
 
 From: Olaf Weber <olaf@sgi.com>
 
-When UTF-8 support is enabled, the xfs_dir_ci_inode_operations must be
-installed. Add xfs_sb_version_hasci(), which tests both the borgbit and
-the utf8bit, and returns true if at least one of them is set. Replace
-calls to xfs_sb_version_hasasciici() as needed.
+Add files from the Unicode Character Database, version 7.0.0, to the source.
+A helper program that generates a trie used for normalization from these
+files is part of a separate commit.
 
 Signed-off-by: Olaf Weber <olaf@sgi.com>
----
- include/xfs_fs.h |  2 +-
- include/xfs_sb.h | 25 ++++++++++++++++++++++++-
- 2 files changed, 25 insertions(+), 2 deletions(-)
 
-diff --git a/include/xfs_fs.h b/include/xfs_fs.h
-index 59c40fc..1be539d 100644
---- a/include/xfs_fs.h
-+++ b/include/xfs_fs.h
-@@ -239,7 +239,7 @@ typedef struct xfs_fsop_resblks {
- #define XFS_FSOP_GEOM_FLAGS_V5SB	0x8000	/* version 5 superblock */
- #define XFS_FSOP_GEOM_FLAGS_FTYPE	0x10000	/* inode directory types */
- #define XFS_FSOP_GEOM_FLAGS_FINOBT	0x20000	/* free inode btree */
--
-+#define XFS_FSOP_GEOM_FLAGS_UTF8	0x40000	/* utf8 filenames */
- 
- /*
-  * Minimum and maximum sizes need for growth checks.
-diff --git a/include/xfs_sb.h b/include/xfs_sb.h
-index 950d1ea..5ac7f06 100644
---- a/include/xfs_sb.h
-+++ b/include/xfs_sb.h
-@@ -82,6 +82,8 @@ struct xfs_trans;
- #define XFS_SB_VERSION2_RESERVED4BIT	0x00000004
- #define XFS_SB_VERSION2_ATTR2BIT	0x00000008	/* Inline attr rework */
- #define XFS_SB_VERSION2_PARENTBIT	0x00000010	/* parent pointers */
-+#define XFS_SB_VERSION2_PARENTBIT	0x00000010	/* parent pointers */
-+#define XFS_SB_VERSION2_UTF8BIT		0x00000020	/* utf8 names */
- #define XFS_SB_VERSION2_PROJID32BIT	0x00000080	/* 32 bit project id */
- #define XFS_SB_VERSION2_CRCBIT		0x00000100	/* metadata CRCs */
- #define XFS_SB_VERSION2_FTYPE		0x00000200	/* inode type in dir */
-@@ -89,6 +91,7 @@ struct xfs_trans;
- #define	XFS_SB_VERSION2_OKREALFBITS	\
- 	(XFS_SB_VERSION2_LAZYSBCOUNTBIT	| \
- 	 XFS_SB_VERSION2_ATTR2BIT	| \
-+	 XFS_SB_VERSION2_UTF8BIT	| \
- 	 XFS_SB_VERSION2_PROJID32BIT	| \
- 	 XFS_SB_VERSION2_FTYPE)
- #define	XFS_SB_VERSION2_OKSASHFBITS	\
-@@ -600,8 +603,10 @@ xfs_sb_has_ro_compat_feature(
- }
- 
- #define XFS_SB_FEAT_INCOMPAT_FTYPE	(1 << 0)	/* filetype in dirent */
-+#define XFS_SB_FEAT_INCOMPAT_UTF8	(1 << 1)	/* utf-8 name support */
- #define XFS_SB_FEAT_INCOMPAT_ALL \
--		(XFS_SB_FEAT_INCOMPAT_FTYPE)
-+		(XFS_SB_FEAT_INCOMPAT_FTYPE | \
-+		 XFS_SB_FEAT_INCOMPAT_UTF8)
- 
- #define XFS_SB_FEAT_INCOMPAT_UNKNOWN	~XFS_SB_FEAT_INCOMPAT_ALL
- static inline bool
-@@ -649,6 +654,24 @@ static inline int xfs_sb_version_hasfinobt(xfs_sb_t *sbp)
- 		(sbp->sb_features_ro_compat & XFS_SB_FEAT_RO_COMPAT_FINOBT);
- }
- 
-+static inline int xfs_sb_version_hasutf8(xfs_sb_t *sbp)
-+{
-+	return (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5 &&
-+		xfs_sb_has_incompat_feature(sbp, XFS_SB_FEAT_INCOMPAT_UTF8)) ||
-+	       (xfs_sb_version_hasmorebits(sbp) &&
-+		 (sbp->sb_features2 & XFS_SB_VERSION2_UTF8BIT));
-+}
+---
+[v2: removed large unicode files.  download them as below.  -bpm]
+
+cd support/ucd-7.0.0
+wget http://www.unicode.org/Public/7.0.0/ucd/CaseFolding.txt
+wget http://www.unicode.org/Public/7.0.0/ucd/DerivedAge.txt
+wget http://www.unicode.org/Public/7.0.0/ucd/extracted/DerivedCombiningClass.txt
+wget http://www.unicode.org/Public/7.0.0/ucd/DerivedCoreProperties.txt
+wget http://www.unicode.org/Public/7.0.0/ucd/NormalizationCorrections.txt
+wget http://www.unicode.org/Public/7.0.0/ucd/NormalizationTest.txt
+wget http://www.unicode.org/Public/7.0.0/ucd/UnicodeData.txt
+---
+ support/ucd-7.0.0/README | 33 +++++++++++++++++++++++++++++++++
+ 1 file changed, 33 insertions(+)
+ create mode 100644 support/ucd-7.0.0/README
+
+diff --git a/support/ucd-7.0.0/README b/support/ucd-7.0.0/README
+new file mode 100644
+index 0000000..d713e66
+--- /dev/null
++++ b/support/ucd-7.0.0/README
+@@ -0,0 +1,33 @@
++The files in this directory are part of the Unicode Character Database
++for version 7.0.0 of the Unicode standard.
 +
-+/*
-+ * Special case: there are a number of places where we need to test
-+ * both the borgbit and the utf8bit, and take the same action if
-+ * either of those is set.
-+ */
-+static inline int xfs_sb_version_hasci(xfs_sb_t *sbp)
-+{
-+	return xfs_sb_version_hasasciici(sbp) || xfs_sb_version_hasutf8(sbp);
-+}
++The full set of files can be found here:
 +
- /*
-  * end of superblock version macros
-  */
++  http://www.unicode.org/Public/7.0.0/ucd/
++
++The latest released version of the UCD can be found here:
++
++  http://www.unicode.org/Public/UCD/latest/
++
++The files in this directory are identical, except that they have been
++renamed with a suffix indicating the unicode version.
++
++Individual source links:
++
++  http://www.unicode.org/Public/7.0.0/ucd/CaseFolding.txt
++  http://www.unicode.org/Public/7.0.0/ucd/DerivedAge.txt
++  http://www.unicode.org/Public/7.0.0/ucd/extracted/DerivedCombiningClass.txt
++  http://www.unicode.org/Public/7.0.0/ucd/DerivedCoreProperties.txt
++  http://www.unicode.org/Public/7.0.0/ucd/NormalizationCorrections.txt
++  http://www.unicode.org/Public/7.0.0/ucd/NormalizationTest.txt
++  http://www.unicode.org/Public/7.0.0/ucd/UnicodeData.txt
++
++md5sums
++
++  9a92b2bfe56c6719def926bab524fefd  CaseFolding-7.0.0.txt
++  07b8b1027eb824cf0835314e94f23d2e  DerivedAge-7.0.0.txt
++  90c3340b16821e2f2153acdbe6fc6180  DerivedCombiningClass-7.0.0.txt
++  c41c0601f808116f623de47110ed4f93  DerivedCoreProperties-7.0.0.txt
++  522720ddfc150d8e63a2518634829bce  NormalizationCorrections-7.0.0.txt
++  1f35175eba4a2ad795db489f789ae352  NormalizationTest-7.0.0.txt
++  c8355655731d75e6a3de8c20d7e601ba  UnicodeData-7.0.0.txt
 -- 
 1.7.12.4
 
