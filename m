@@ -1,20 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 51DD07F37
-	for <xfs@oss.sgi.com>; Thu, 18 Sep 2014 10:33:56 -0500 (CDT)
-Received: from estes.americas.sgi.com (estes.americas.sgi.com [128.162.236.10])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 22059304043
-	for <xfs@oss.sgi.com>; Thu, 18 Sep 2014 08:33:53 -0700 (PDT)
-Received: from [128.162.232.11] (porter.americas.sgi.com [128.162.232.11])
-	by estes.americas.sgi.com (Postfix) with ESMTP id F2DD27002BF9
-	for <xfs@oss.sgi.com>; Thu, 18 Sep 2014 10:33:52 -0500 (CDT)
-Message-ID: <541AFB60.5030403@sgi.com>
-Date: Thu, 18 Sep 2014 10:33:52 -0500
-From: Troy McCorkell <tdm@sgi.com>
-MIME-Version: 1.0
-Subject: Re: What's up with this list?
-References: <alpine.LSU.2.11.1409181438290.6675@Telcontar.valinor>
-In-Reply-To: <alpine.LSU.2.11.1409181438290.6675@Telcontar.valinor>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 6807C7F37
+	for <xfs@oss.sgi.com>; Thu, 18 Sep 2014 13:54:25 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id EB037AC009
+	for <xfs@oss.sgi.com>; Thu, 18 Sep 2014 11:54:24 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id vTTVgjjpN9KxCeWW (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 18 Sep 2014 11:54:23 -0700 (PDT)
+Received: from int-mx13.intmail.prod.int.phx2.redhat.com
+	(int-mx13.intmail.prod.int.phx2.redhat.com [10.5.11.26])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id s8IIsM12000664
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256
+	verify=FAIL) for <xfs@oss.sgi.com>; Thu, 18 Sep 2014 14:54:22 -0400
+Received: from bfoster.bfoster ([10.18.41.237])
+	by int-mx13.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id s8IIsL8i005118
+	for <xfs@oss.sgi.com>; Thu, 18 Sep 2014 14:54:21 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: [PATCH] xfs: restore buffer_head unwritten bit on ioend cancel
+Date: Thu, 18 Sep 2014 14:54:20 -0400
+Message-Id: <1411066460-23992-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,193 +30,87 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============8383482003049895868=="
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-This is a multi-part message in MIME format.
---===============8383482003049895868==
-Content-Type: multipart/alternative;
- boundary="------------010103060904090701090203"
+xfs_vm_writepage() walks each buffer_head on the page, maps to the block
+on disk and attaches to a running ioend structure that represents the
+I/O submission. A new ioend is created when the type of I/O (unwritten,
+delayed allocation or overwrite) required for a particular buffer_head
+differs from the previous. If a buffer_head is a delalloc or unwritten
+buffer, the associated bits are cleared by xfs_map_at_offset() once the
+buffer_head is added to the ioend.
 
-This is a multi-part message in MIME format.
---------------010103060904090701090203
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+The process of mapping each buffer_head occurs in xfs_map_blocks() and
+acquires the ilock in blocking or non-blocking mode, depending on the
+type of writeback in progress. If the lock cannot be acquired for
+non-blocking writeback, we cancel the ioend, redirty the page and
+return. Writeback will revisit the page at some later point.
 
-On 09/18/2014 07:46 AM, Carlos E. R. wrote:
-> -----BEGIN PGP SIGNED MESSAGE-----
-> Hash: SHA1
->
->
->
-> Hi,
->
-> Now an then I get messages like this:
->
-> ++·································
-> Your membership in the mailing list xfs has been disabled due to
-> excessive bounces The last bounce received from you was dated
-> 18-Sep-2014.  You will not get any more messages from this list until
-> you re-enable your membership.  You will receive 3 more reminders like
-> this before your membership in the list is deleted.
->
-> To re-enable your membership, you can simply respond to this message
-> (leaving the Subject: line intact), or visit the confirmation page at
->
-> ...
->
-> ·································++-
->
->
-> Bounces? I'm subscribed to several mail lists, and this is the only 
-> one "complaining". And as I do not know what messages bounced, I can 
-> not investigate it.
->
-> My guess is that those emails were clear and flagrant spam, and as 
-> such were rejected by my ISP.
->
-> The mail list should refuse them on entry and not resend them to the 
-> listers.
->
-> - -- Cheers,
->        Carlos E. R.
->        (from 13.1 x86_64 "Bottle" at Telcontar)
-> -----BEGIN PGP SIGNATURE-----
-> Version: GnuPG v2.0.22 (GNU/Linux)
->
-> iEYEARECAAYFAlQa1CgACgkQtTMYHG2NR9W0ggCeJAObGhaHx9quXJPCQUggFo//
-> 9PwAnilNJEj3gfi+X+a29MVjo/MDEGvO
-> =CBjB
-> -----END PGP SIGNATURE-----
->
->
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
->    
-Carlos,
+Note that we acquire the ilock for each buffer on the page. Therefore
+during non-blocking writeback, it is possible to add an unwritten buffer
+to the ioend, clear the unwritten state, fail to acquire the ilock when
+mapping a subsequent buffer and cancel the ioend. If this occurs, the
+unwritten status of the buffer sitting in the ioend has been lost. The
+page will eventually hit writeback again, but xfs_vm_writepage() submits
+overwrite I/O instead of unwritten I/O and does not perform unwritten
+extent conversion at I/O completion. This leads to data corruption
+because unwritten extents are treated as holes on reads and zeroes are
+returned instead of reading from disk.
 
-I will forward your email to the SGI IT group.
+Modify xfs_cancel_ioend() to restore the buffer unwritten bit for ioends
+of type XFS_IO_UNWRITTEN. This ensures that unwritten extent conversion
+occurs once the page is eventually written back.
 
-Thanks,
-Troy McCorkell
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+---
 
+Hi all,
 
---------------010103060904090701090203
-Content-Type: text/html; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+This fixes the problem I've been chasing the past few days with regard
+to data corruption after hole punch. It turns out the problem isn't
+directly related to the hole punch after all. I found that the problem
+still occurs when I remove the truncate_pagecache_range() rounding from
+xfs_free_file_space(). The difference is data is still sitting in cache
+and the pages aren't thrown away until reclaimed. E.g., the file
+corruption is reproducible on subsequent remount. The current method of
+rounding the truncate throws the pages away such that the corruption is
+detectable immediately after the hole punch.
 
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
-<html>
-<head>
-  <meta content="text/html; charset=UTF-8" http-equiv="Content-Type">
-</head>
-<body text="#000000" bgcolor="#ffffff">
-On 09/18/2014 07:46 AM, Carlos E. R. wrote:
-<blockquote
- cite="mid:alpine.LSU.2.11.1409181438290.6675@Telcontar.valinor"
- type="cite">-----BEGIN PGP SIGNED MESSAGE-----
-  <br>
-Hash: SHA1
-  <br>
-  <br>
-  <br>
-  <br>
-Hi,
-  <br>
-  <br>
-Now an then I get messages like this:
-  <br>
-  <br>
-++·································
-  <br>
-Your membership in the mailing list xfs has been disabled due to
-  <br>
-excessive bounces The last bounce received from you was dated
-  <br>
-18-Sep-2014.  You will not get any more messages from this list until
-  <br>
-you re-enable your membership.  You will receive 3 more reminders like
-  <br>
-this before your membership in the list is deleted.
-  <br>
-  <br>
-To re-enable your membership, you can simply respond to this message
-  <br>
-(leaving the Subject: line intact), or visit the confirmation page at
-  <br>
-  <br>
-...
-  <br>
-  <br>
-·································++-
-  <br>
-  <br>
-  <br>
-Bounces? I'm subscribed to several mail lists, and this is the only one
-"complaining". And as I do not know what messages bounced, I can not
-investigate it.
-  <br>
-  <br>
-My guess is that those emails were clear and flagrant spam, and as such
-were rejected by my ISP.
-  <br>
-  <br>
-The mail list should refuse them on entry and not resend them to the
-listers.
-  <br>
-  <br>
-- -- Cheers,
-  <br>
-       Carlos E. R.
-  <br>
-       (from 13.1 x86_64 "Bottle" at Telcontar)
-  <br>
------BEGIN PGP SIGNATURE-----
-  <br>
-Version: GnuPG v2.0.22 (GNU/Linux)
-  <br>
-  <br>
-iEYEARECAAYFAlQa1CgACgkQtTMYHG2NR9W0ggCeJAObGhaHx9quXJPCQUggFo//
-  <br>
-9PwAnilNJEj3gfi+X+a29MVjo/MDEGvO
-  <br>
-=CBjB
-  <br>
------END PGP SIGNATURE-----<br>
-  <pre wrap="">
-<fieldset class="mimeAttachmentHeader"></fieldset>
-_______________________________________________
-xfs mailing list
-<a class="moz-txt-link-abbreviated" href="mailto:xfs@oss.sgi.com">xfs@oss.sgi.com</a>
-<a class="moz-txt-link-freetext" href="http://oss.sgi.com/mailman/listinfo/xfs">http://oss.sgi.com/mailman/listinfo/xfs</a>
-  </pre>
-</blockquote>
-Carlos,<br>
-<br>
-I will forward your email to the SGI IT group.<br>
-<br>
-Thanks,<br>
-Troy McCorkell<br>
-<br>
-</body>
-</html>
+This is only lightly tested so far with my hacky reproducer. The next
+step is to turn it into a regression test. xfstests test to follow...
 
---------------010103060904090701090203--
+Brian
 
+ fs/xfs/xfs_aops.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
---===============8383482003049895868==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index 2f50253..f5b2453 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -560,6 +560,13 @@ xfs_cancel_ioend(
+ 		do {
+ 			next_bh = bh->b_private;
+ 			clear_buffer_async_write(bh);
++			/*
++			 * The unwritten flag is cleared when added to the
++			 * ioend. We're not submitting for I/O so mark the
++			 * buffer unwritten again for next time around.
++			 */
++			if (ioend->io_type == XFS_IO_UNWRITTEN)
++				set_buffer_unwritten(bh);
+ 			unlock_buffer(bh);
+ 		} while ((bh = next_bh) != NULL);
+ 
+-- 
+1.8.3.1
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============8383482003049895868==--
