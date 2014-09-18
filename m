@@ -1,11 +1,11 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 4E2797F37
-	for <xfs@oss.sgi.com>; Thu, 18 Sep 2014 15:13:36 -0500 (CDT)
-Date: Thu, 18 Sep 2014 15:13:32 -0500
+	by oss.sgi.com (Postfix) with ESMTP id 2225F7F37
+	for <xfs@oss.sgi.com>; Thu, 18 Sep 2014 15:14:41 -0500 (CDT)
+Date: Thu, 18 Sep 2014 15:14:40 -0500
 From: Ben Myers <bpm@sgi.com>
-Subject: [PATCH 03/10] xfs: add xfs_nameops.normhash
-Message-ID: <20140918201332.GH4482@sgi.com>
+Subject: [PATCH 06/10] xfs: add unicode character database files
+Message-ID: <20140918201440.GI4482@sgi.com>
 References: <20140918195650.GI19952@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
@@ -27,224 +27,72 @@ Cc: tinguely@sgi.com, olaf@sgi.com, xfs@oss.sgi.com
 
 From: Olaf Weber <olaf@sgi.com>
 
-Add a normhash callout to the xfs_nameops. This callout takes an xfs_da_args
-structure as its argument, and calculates a hash value over the name. It may
-in the process create a normalized form of the name, and assign that to the
-norm/normlen fields in the xfs_da_args structure.
+Add files from the Unicode Character Database, version 7.0.0, to the source.
+A helper program that generates a trie used for normalization from these
+files is part of a separate commit.
 
 Signed-off-by: Olaf Weber <olaf@sgi.com>
 ---
- fs/xfs/libxfs/xfs_da_btree.c |  9 +++++++++
- fs/xfs/libxfs/xfs_da_btree.h |  3 +++
- fs/xfs/libxfs/xfs_dir2.c     | 42 +++++++++++++++++++++++++++++++++++++-----
- 3 files changed, 49 insertions(+), 5 deletions(-)
+[v2: Removed large unicode files prior to posting.  Get them as below. -bpm]
+[v3: Moved files to ucd8norm directory. -bpm]
 
-diff --git a/fs/xfs/libxfs/xfs_da_btree.c b/fs/xfs/libxfs/xfs_da_btree.c
-index 2c42ae2..07a3acf 100644
---- a/fs/xfs/libxfs/xfs_da_btree.c
-+++ b/fs/xfs/libxfs/xfs_da_btree.c
-@@ -1990,8 +1990,17 @@ xfs_default_hashname(
- 	return xfs_da_hashname(name->name, name->len);
- }
- 
-+STATIC int
-+xfs_da_normhash(
-+	struct xfs_da_args *args)
-+{
-+	args->hashval = xfs_da_hashname(args->name, args->namelen);
-+	return 0;
-+}
+cd fs/xfs/utf8norm/ucd
+wget http://www.unicode.org/Public/7.0.0/ucd/CaseFolding.txt
+wget http://www.unicode.org/Public/7.0.0/ucd/DerivedAge.txt
+wget http://www.unicode.org/Public/7.0.0/ucd/extracted/DerivedCombiningClass.txt
+wget http://www.unicode.org/Public/7.0.0/ucd/DerivedCoreProperties.txt
+wget http://www.unicode.org/Public/7.0.0/ucd/NormalizationCorrections.txt
+wget http://www.unicode.org/Public/7.0.0/ucd/NormalizationTest.txt
+wget http://www.unicode.org/Public/7.0.0/ucd/UnicodeData.txt
+for e in *.txt
+do
+	base=`basename $e .txt`
+	mv $e $base-7.0.0.txt
+done
+---
+ fs/xfs/utf8norm/ucd/README | 33 +++++++++++++++++++++++++++++++++
+ 1 file changed, 33 insertions(+)
+ create mode 100644 fs/xfs/utf8norm/ucd/README
+
+diff --git a/fs/xfs/utf8norm/ucd/README b/fs/xfs/utf8norm/ucd/README
+new file mode 100644
+index 0000000..d713e66
+--- /dev/null
++++ b/fs/xfs/utf8norm/ucd/README
+@@ -0,0 +1,33 @@
++The files in this directory are part of the Unicode Character Database
++for version 7.0.0 of the Unicode standard.
 +
- const struct xfs_nameops xfs_default_nameops = {
- 	.hashname	= xfs_default_hashname,
-+	.normhash	= xfs_da_normhash,
- 	.compname	= xfs_da_compname
- };
- 
-diff --git a/fs/xfs/libxfs/xfs_da_btree.h b/fs/xfs/libxfs/xfs_da_btree.h
-index 9ebcc23..6cdafee 100644
---- a/fs/xfs/libxfs/xfs_da_btree.h
-+++ b/fs/xfs/libxfs/xfs_da_btree.h
-@@ -61,7 +61,9 @@ enum xfs_dacmp {
- typedef struct xfs_da_args {
- 	struct xfs_da_geometry *geo;	/* da block geometry */
- 	const __uint8_t	*name;		/* string (maybe not NULL terminated) */
-+	const __uint8_t	*norm;		/* normalized name (may be NULL) */
- 	int		namelen;	/* length of string (maybe no NULL) */
-+	int		normlen;	/* length of normalized name */
- 	__uint8_t	filetype;	/* filetype of inode for directories */
- 	__uint8_t	*value;		/* set of bytes (maybe contain NULLs) */
- 	int		valuelen;	/* length of value */
-@@ -150,6 +152,7 @@ typedef struct xfs_da_state {
-  */
- struct xfs_nameops {
- 	xfs_dahash_t	(*hashname)(struct xfs_name *);
-+	int		(*normhash)(struct xfs_da_args *);
- 	enum xfs_dacmp	(*compname)(struct xfs_da_args *,
- 					const unsigned char *, int);
- };
-diff --git a/fs/xfs/libxfs/xfs_dir2.c b/fs/xfs/libxfs/xfs_dir2.c
-index 32e769b..55733a6 100644
---- a/fs/xfs/libxfs/xfs_dir2.c
-+++ b/fs/xfs/libxfs/xfs_dir2.c
-@@ -56,6 +56,21 @@ xfs_ascii_ci_hashname(
- 	return hash;
- }
- 
-+STATIC int
-+xfs_ascii_ci_normhash(
-+	struct xfs_da_args *args)
-+{
-+	xfs_dahash_t	hash;
-+	int		i;
++The full set of files can be found here:
 +
-+	for (i = 0, hash = 0; i < args->namelen; i++)
-+		hash = tolower(args->name[i]) ^ rol32(hash, 7);
++  http://www.unicode.org/Public/7.0.0/ucd/
 +
-+	args->hashval = hash;
-+	return 0;
-+}
++The latest released version of the UCD can be found here:
 +
++  http://www.unicode.org/Public/UCD/latest/
 +
- STATIC enum xfs_dacmp
- xfs_ascii_ci_compname(
- 	struct xfs_da_args *args,
-@@ -82,6 +97,7 @@ xfs_ascii_ci_compname(
- 
- static struct xfs_nameops xfs_ascii_ci_nameops = {
- 	.hashname	= xfs_ascii_ci_hashname,
-+	.normhash	= xfs_ascii_ci_normhash,
- 	.compname	= xfs_ascii_ci_compname,
- };
- 
-@@ -267,7 +283,6 @@ xfs_dir_createname(
- 	args->name = name->name;
- 	args->namelen = name->len;
- 	args->filetype = name->type;
--	args->hashval = dp->i_mount->m_dirnameops->hashname(name);
- 	args->inumber = inum;
- 	args->dp = dp;
- 	args->firstblock = first;
-@@ -276,6 +291,8 @@ xfs_dir_createname(
- 	args->whichfork = XFS_DATA_FORK;
- 	args->trans = tp;
- 	args->op_flags = XFS_DA_OP_ADDNAME | XFS_DA_OP_OKNOENT;
-+	if ((rval = dp->i_mount->m_dirnameops->normhash(args)))
-+		goto out_free;
- 
- 	if (dp->i_d.di_format == XFS_DINODE_FMT_LOCAL) {
- 		rval = xfs_dir2_sf_addname(args);
-@@ -299,6 +316,8 @@ xfs_dir_createname(
- 		rval = xfs_dir2_node_addname(args);
- 
- out_free:
-+	if (args->norm)
-+		kmem_free(args->norm);
- 	kmem_free(args);
- 	return rval;
- }
-@@ -365,13 +384,14 @@ xfs_dir_lookup(
- 	args->name = name->name;
- 	args->namelen = name->len;
- 	args->filetype = name->type;
--	args->hashval = dp->i_mount->m_dirnameops->hashname(name);
- 	args->dp = dp;
- 	args->whichfork = XFS_DATA_FORK;
- 	args->trans = tp;
- 	args->op_flags = XFS_DA_OP_OKNOENT;
- 	if (ci_name)
- 		args->op_flags |= XFS_DA_OP_CILOOKUP;
-+	if ((rval = dp->i_mount->m_dirnameops->normhash(args)))
-+		goto out_free;
- 
- 	if (dp->i_d.di_format == XFS_DINODE_FMT_LOCAL) {
- 		rval = xfs_dir2_sf_lookup(args);
-@@ -405,6 +425,9 @@ out_check_rval:
- 		}
- 	}
- out_free:
-+	if (args->norm)
-+		kmem_free(args->norm);
++The files in this directory are identical, except that they have been
++renamed with a suffix indicating the unicode version.
 +
- 	kmem_free(args);
- 	return rval;
- }
-@@ -437,7 +460,6 @@ xfs_dir_removename(
- 	args->name = name->name;
- 	args->namelen = name->len;
- 	args->filetype = name->type;
--	args->hashval = dp->i_mount->m_dirnameops->hashname(name);
- 	args->inumber = ino;
- 	args->dp = dp;
- 	args->firstblock = first;
-@@ -445,6 +467,8 @@ xfs_dir_removename(
- 	args->total = total;
- 	args->whichfork = XFS_DATA_FORK;
- 	args->trans = tp;
-+	if ((rval = dp->i_mount->m_dirnameops->normhash(args)))
-+		goto out_free;
- 
- 	if (dp->i_d.di_format == XFS_DINODE_FMT_LOCAL) {
- 		rval = xfs_dir2_sf_removename(args);
-@@ -467,6 +491,8 @@ xfs_dir_removename(
- 	else
- 		rval = xfs_dir2_node_removename(args);
- out_free:
-+	if (args->norm)
-+		kmem_free(args->norm);
- 	kmem_free(args);
- 	return rval;
- }
-@@ -502,7 +528,6 @@ xfs_dir_replace(
- 	args->name = name->name;
- 	args->namelen = name->len;
- 	args->filetype = name->type;
--	args->hashval = dp->i_mount->m_dirnameops->hashname(name);
- 	args->inumber = inum;
- 	args->dp = dp;
- 	args->firstblock = first;
-@@ -510,6 +535,8 @@ xfs_dir_replace(
- 	args->total = total;
- 	args->whichfork = XFS_DATA_FORK;
- 	args->trans = tp;
-+	if ((rval = dp->i_mount->m_dirnameops->normhash(args)))
-+		goto out_free;
- 
- 	if (dp->i_d.di_format == XFS_DINODE_FMT_LOCAL) {
- 		rval = xfs_dir2_sf_replace(args);
-@@ -532,6 +559,8 @@ xfs_dir_replace(
- 	else
- 		rval = xfs_dir2_node_replace(args);
- out_free:
-+	if (args->norm)
-+		kmem_free(args->norm);
- 	kmem_free(args);
- 	return rval;
- }
-@@ -564,12 +593,13 @@ xfs_dir_canenter(
- 	args->name = name->name;
- 	args->namelen = name->len;
- 	args->filetype = name->type;
--	args->hashval = dp->i_mount->m_dirnameops->hashname(name);
- 	args->dp = dp;
- 	args->whichfork = XFS_DATA_FORK;
- 	args->trans = tp;
- 	args->op_flags = XFS_DA_OP_JUSTCHECK | XFS_DA_OP_ADDNAME |
- 							XFS_DA_OP_OKNOENT;
-+	if ((rval = dp->i_mount->m_dirnameops->normhash(args)))
-+		goto out_free;
- 
- 	if (dp->i_d.di_format == XFS_DINODE_FMT_LOCAL) {
- 		rval = xfs_dir2_sf_addname(args);
-@@ -592,6 +622,8 @@ xfs_dir_canenter(
- 	else
- 		rval = xfs_dir2_node_addname(args);
- out_free:
-+	if (args->norm)
-+		kmem_free(args->norm);
- 	kmem_free(args);
- 	return rval;
- }
++Individual source links:
++
++  http://www.unicode.org/Public/7.0.0/ucd/CaseFolding.txt
++  http://www.unicode.org/Public/7.0.0/ucd/DerivedAge.txt
++  http://www.unicode.org/Public/7.0.0/ucd/extracted/DerivedCombiningClass.txt
++  http://www.unicode.org/Public/7.0.0/ucd/DerivedCoreProperties.txt
++  http://www.unicode.org/Public/7.0.0/ucd/NormalizationCorrections.txt
++  http://www.unicode.org/Public/7.0.0/ucd/NormalizationTest.txt
++  http://www.unicode.org/Public/7.0.0/ucd/UnicodeData.txt
++
++md5sums
++
++  9a92b2bfe56c6719def926bab524fefd  CaseFolding-7.0.0.txt
++  07b8b1027eb824cf0835314e94f23d2e  DerivedAge-7.0.0.txt
++  90c3340b16821e2f2153acdbe6fc6180  DerivedCombiningClass-7.0.0.txt
++  c41c0601f808116f623de47110ed4f93  DerivedCoreProperties-7.0.0.txt
++  522720ddfc150d8e63a2518634829bce  NormalizationCorrections-7.0.0.txt
++  1f35175eba4a2ad795db489f789ae352  NormalizationTest-7.0.0.txt
++  c8355655731d75e6a3de8c20d7e601ba  UnicodeData-7.0.0.txt
 -- 
 1.7.12.4
 
