@@ -1,13 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id D9F157F37
-	for <xfs@oss.sgi.com>; Thu, 18 Sep 2014 14:56:50 -0500 (CDT)
-Date: Thu, 18 Sep 2014 14:56:50 -0500
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 5A0407F37
+	for <xfs@oss.sgi.com>; Thu, 18 Sep 2014 15:08:20 -0500 (CDT)
+Date: Thu, 18 Sep 2014 15:08:16 -0500
 From: Ben Myers <bpm@sgi.com>
-Subject: [RFC v2] Unicode/UTF-8 support for XFS
-Message-ID: <20140918195650.GI19952@sgi.com>
+Subject: [PATCH 01/10] xfs: return the first match during case-insensitive
+	lookup.
+Message-ID: <20140918200816.GC4482@sgi.com>
+References: <20140918195650.GI19952@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
+In-Reply-To: <20140918195650.GI19952@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,232 +26,286 @@ Sender: xfs-bounces@oss.sgi.com
 To: linux-fsdevel@vger.kernel.org
 Cc: tinguely@sgi.com, olaf@sgi.com, xfs@oss.sgi.com
 
-Hi,
+From: Olaf Weber <olaf@sgi.com>
 
-I'm posting this RFC for Unicode support in XFS on Olaf's behalf, as he
-is busy with other projects.  This is the second revision of the series.
-The first is available here:
+Change the XFS case-insensitive lookup code to return the first match
+found, even if it is not an exact match. Whether a filesystem uses
+case-insensitive lookups is determined by a superblock bit set during
+filesystem creation.  This means that normal use cannot create two files
+that both match the same filename.
 
-http://oss.sgi.com/archives/xfs/2014-09/msg00169.html
+Signed-off-by: Olaf Weber <olaf@sgi.com>
+---
+ fs/xfs/libxfs/xfs_dir2_block.c | 17 +++------
+ fs/xfs/libxfs/xfs_dir2_leaf.c  | 37 ++++----------------
+ fs/xfs/libxfs/xfs_dir2_node.c  | 79 ++++++++++++++++--------------------------
+ fs/xfs/libxfs/xfs_dir2_sf.c    |  8 ++---
+ 4 files changed, 45 insertions(+), 96 deletions(-)
 
-In response to the initial feedback, the changes in version 2 include:
-
-* linux-fsdevel in the To: line,
-* Updated design notes,
-* Separation of the fs-independent trie and support code into utf8norm.ko,
-* A mechanism for loading the normalization module only when necessary.
-
-I'll post the whole series for completeness sake.  Many on -fsdevel will
-not be interested in the xfs-specific bits, but it may be helpful to
-have the full series as an example and for testing purposes.
-
-First there is a set of kernel bits, then some libxfs/xfsprogs stuff,
-and finally a test.  (Note: I am not posting the unicode database files
-due to their large size.  There are scripts to download them from
-unicode.org in the relevant commit headers.)
-
-TODO: Store the unicode version number of the filesystem on disk in the
-super block.
-
-Thanks,
-Ben
-
-Here are Olaf's design notes:
-
------------------------------------------------------------------------------
-Unicode/UTF-8 support for XFS
-
-So we had a customer request proper unicode support...
-
-
-* What does "supporting unicode" actually mean?
-
->From a text processing point of view, what a filesystem does with
-filenames is simple: it stores and retrieves them, and compares them
-for equality. It may reject certain byte sequences as invalid
-filenames (for example, no filename can contain an ASCII NUL).
-
-I've been taking it as a given that when a file is created with a
-certain byte sequence as its name, then a subsequent directory listing
-will contain that same byte sequence among the names listed.
-
-This leaves comparing names for equality, and in my view this is what
-"supporting unicode" revolves about.
-
-The present state of affairs is that different byte sequences are
-different filenames. This amounts to tolerating unicode without
-actually supporting it.
-
-To support unicode we have to interpret filenames. What happens when
-(part of) a filename cannot be interpreted? We can reject the
-filename, interpret the parts we can, or punt and accept it as an
-uninterpreted blob.
-
-Rejecting ill-formed filenames was my first choice, but I came around
-on the issue: there are too many ways in which you can end up with
-having to deal with ill-formed filenames that would leave a user with
-no recourse but to move whatever they're doing to a different
-filesystem. Unpacking a tarball with filenames in a different encoding
-is an example.
-
-Partial interpretation of an ill-formed filename just strikes me as
-the kind of bad idea that most half-houses are. I admit that I have no
-stronger objection to this than the fact that it makes the code even
-more complicated and fragile.
-
-Which leaves "blob" as the preferred option by default for coping with
-ill-formed filenames.
-
-When comparing well-formed filenames, the question now becomes which
-byte sequences are considered to be alternative spellings of the same
-filename. This is where normalization forms come into play, and the
-unicode standard has quite a bit to say about the subject.
-
-If all you're doing is comparison, then choosing NFD over NFC is easy,
-because the former is easier to calculate than the latter.
-
-If you want various spellings of "office" to compare equal, then
-picking NFKD over NFD for comparison is also an obvious
-choice. (Hand-picking individual compatibility forms is truly a bad
-idea.) Ways to spell "office": "o_f_f_i_c_e", "o_f_fi_c_e", and
-"o_ffi_c_e", using no ligatures, the fi ligature, or the ffi
-ligature. (Some fool thought it a good idea to add these ligatures to
-unicode, all we get to decide is how to cope.)
-
-The most contentious part is (should be) ignoring the codepoints with
-the Default_Ignorable_Code_Point property. I've included the list
-below. My argument, such as it is, is that these code points either
-have no visible rendering, or in cases like the soft hyphen, are only
-conditionally visible. The problem with these (as I see it) is that on
-seeing a filename that might contain them you cannot tell whether they
-are present. So I propose to ignore them for the purpose of comparing
-filenames for equality.
-
-Finally, case folding. First of all, it is optional. Then the issue is
-that you either go the language-specific route, or simplify the task
-by "just" doing a full casefold (C+F, in unicode parlance). Looking
-around the net I tend to find that if you're going to do casefolding
-at all, then a language-independent full casefold is preferred because
-it is the most predictable option. See
-http://www.w3.org/TR/charmod-norm/ for an example of that kind of
-reasoning.
-
-An additional question is whether case folding should be a fixed
-(mkfs-time) property of a filesystem or can be enabled and disabled on
-the fly. When mixing these modes, preferring exact matches is easy.
-But after case-sensitive creates of files named "README" and "readme",
-which of these two files will be found by case-insensitive lookups of
-"Readme", and "ReadMe"? Does the answer differ if the order in which
-the files were created is reversed? I do not have good answers to
-those questions, and absent such answers the behavior of a filesystem
-becomes hard to predict. This may not be a bug according to the
-design, but it will be experienced as a bug by users. This is why in
-these patches case folding is a property set at mkfs time.
-
-All of these choices can be argued with, but I do believe that the
-particular combination of choices I made is a defensible one.
-
-The code refers to these normalization forms as nfkdi and nfkdicf.
-
-
-* XFS-specific design notes.
-
-XFS uses byte strings for filenames, so UTF-8 is the expected format for
-unicode filenames. This does raise the question what criteria a byte string
-must meet to be UTF-8. We settled on the following:
- - Valid unicode code points are 0..0x10FFFF, except that
- - The surrogates 0xD800..0xDFFF are not valid code points, and
- - Valid UTF-8 must be a shortest encoding of a valid unicode code point.
-
-In addition, U+0 (ASCII NUL, '\0') is used to terminate byte strings (and
-is itself not part of the string). Moreover strings may be length-limited
-in addition to being NUL-terminated (there is no such thing as an embedded
-NUL in a length-limited string).
-
-The code uses ("leverages", in corp-speak) the existing XFS
-infrastructure for case-insensitive filenames. Like the CI code, the
-name used to create a file is stored on disk, and returned in a
-lookup. When comparing filenames the normalized forms of the names
-being compared are generated on the fly from the non-normalized forms
-stored on disk.
-
-If the borgbit (the bit enabling legacy ASCII-based CI in XFS) is set
-in the superblock, then case folding is added into the mix. This is
-the nfkdicf normalization form mentioned above. It allows for the
-creation of case-insensitive filesystems with UTF-8 support.
-
-
-* Implementation notes.
-
-Strings are normalized using a trie that stores the relevant
-information.  The trie itself is about 250kB in size, and lives in a
-separate module. The trie is not checked in: instead we add the source
-files from the Unicode Character Database and a program that creates
-the header containing the trie.
-
-The key for a lookup in the trie is a UTF-8 sequence. Each valid UTF-8
-sequence leads to a leaf. No invalid sequence does. This means that trie
-lookups can be used to validate UTF-8 sequences, which why there is no
-specialized code for the same purpose.
-
-The trie contains information for the version of unicode in which each
-code point was defined. This matters because non-normalized strings are
-stored on disk, and newer versions of unicode may introduce new normalized
-forms. Ideally, the version of unicode used by the filesystem is stored in
-the filesystem.
-
-The trie also accounts for corrections made in the past to normalizations.
-This has little value today, because any newly created filesystem would be
-using unicode version 7.0.0. It is included in order to show, not tell,
-that such corrections can be handled if they are added in future revisions.
-
-The algorithm used to calculate the sequences of bytes for the normalized
-form of a UTF-8 string is tricky. The core is found in utf8byte(), with an
-explanation in the preceeding comment.
-
-The non-XFS-specific supporting code functions have the prefix 'utf8n'
-if they handle length-limited strings, and 'utf8' if they handle
-NUL-terminated strings.
-
-----
-# Derived Property: Default_Ignorable_Code_Point
-#  Generated from
-#    Other_Default_Ignorable_Code_Point
-#  + Cf (Format characters)
-#  + Variation_Selector
-#  - White_Space
-#  - FFF9..FFFB (Annotation Characters)
-#  - 0600..0605, 06DD, 070F, 110BD (exceptional Cf characters that should be visible)
-
-00AD          ; Default_Ignorable_Code_Point # Cf       SOFT HYPHEN
-034F          ; Default_Ignorable_Code_Point # Mn       COMBINING GRAPHEME JOINER
-061C          ; Default_Ignorable_Code_Point # Cf       ARABIC LETTER MARK
-115F..1160    ; Default_Ignorable_Code_Point # Lo   [2] HANGUL CHOSEONG FILLER..HANGUL JUNGSEONG FILLER
-17B4..17B5    ; Default_Ignorable_Code_Point # Mn   [2] KHMER VOWEL INHERENT AQ..KHMER VOWEL INHERENT AA
-180B..180D    ; Default_Ignorable_Code_Point # Mn   [3] MONGOLIAN FREE VARIATION SELECTOR ONE..MONGOLIAN FREE VARIATION SELECTOR THREE
-180E          ; Default_Ignorable_Code_Point # Cf       MONGOLIAN VOWEL SEPARATOR
-200B..200F    ; Default_Ignorable_Code_Point # Cf   [5] ZERO WIDTH SPACE..RIGHT-TO-LEFT MARK
-202A..202E    ; Default_Ignorable_Code_Point # Cf   [5] LEFT-TO-RIGHT EMBEDDING..RIGHT-TO-LEFT OVERRIDE
-2060..2064    ; Default_Ignorable_Code_Point # Cf   [5] WORD JOINER..INVISIBLE PLUS
-2065          ; Default_Ignorable_Code_Point # Cn       <reserved-2065>
-2066..206F    ; Default_Ignorable_Code_Point # Cf  [10] LEFT-TO-RIGHT ISOLATE..NOMINAL DIGIT SHAPES
-3164          ; Default_Ignorable_Code_Point # Lo       HANGUL FILLER
-FE00..FE0F    ; Default_Ignorable_Code_Point # Mn  [16] VARIATION SELECTOR-1..VARIATION SELECTOR-16
-FEFF          ; Default_Ignorable_Code_Point # Cf       ZERO WIDTH NO-BREAK SPACE
-FFA0          ; Default_Ignorable_Code_Point # Lo       HALFWIDTH HANGUL FILLER
-FFF0..FFF8    ; Default_Ignorable_Code_Point # Cn   [9] <reserved-FFF0>..<reserved-FFF8>
-1BCA0..1BCA3  ; Default_Ignorable_Code_Point # Cf   [4] SHORTHAND FORMAT LETTER OVERLAP..SHORTHAND FORMAT UP STEP
-1D173..1D17A  ; Default_Ignorable_Code_Point # Cf   [8] MUSICAL SYMBOL BEGIN BEAM..MUSICAL SYMBOL END PHRASE
-E0000         ; Default_Ignorable_Code_Point # Cn       <reserved-E0000>
-E0001         ; Default_Ignorable_Code_Point # Cf       LANGUAGE TAG
-E0002..E001F  ; Default_Ignorable_Code_Point # Cn  [30] <reserved-E0002>..<reserved-E001F>
-E0020..E007F  ; Default_Ignorable_Code_Point # Cf  [96] TAG SPACE..CANCEL TAG
-E0080..E00FF  ; Default_Ignorable_Code_Point # Cn [128] <reserved-E0080>..<reserved-E00FF>
-E0100..E01EF  ; Default_Ignorable_Code_Point # Mn [240] VARIATION SELECTOR-17..VARIATION SELECTOR-256
-E01F0..E0FFF  ; Default_Ignorable_Code_Point # Cn [3600] <reserved-E01F0>..<reserved-E0FFF>
-
-# Total code points: 4173
-----
+diff --git a/fs/xfs/libxfs/xfs_dir2_block.c b/fs/xfs/libxfs/xfs_dir2_block.c
+index 9628cec..990bf0c 100644
+--- a/fs/xfs/libxfs/xfs_dir2_block.c
++++ b/fs/xfs/libxfs/xfs_dir2_block.c
+@@ -725,28 +725,21 @@ xfs_dir2_block_lookup_int(
+ 		dep = (xfs_dir2_data_entry_t *)
+ 			((char *)hdr + xfs_dir2_dataptr_to_off(args->geo, addr));
+ 		/*
+-		 * Compare name and if it's an exact match, return the index
+-		 * and buffer. If it's the first case-insensitive match, store
+-		 * the index and buffer and continue looking for an exact match.
++		 * Compare name and if it's a match, return the
++		 * index and buffer.
+ 		 */
+ 		cmp = mp->m_dirnameops->compname(args, dep->name, dep->namelen);
+-		if (cmp != XFS_CMP_DIFFERENT && cmp != args->cmpresult) {
++		if (cmp != XFS_CMP_DIFFERENT) {
+ 			args->cmpresult = cmp;
+ 			*bpp = bp;
+ 			*entno = mid;
+-			if (cmp == XFS_CMP_EXACT)
+-				return 0;
++			return 0;
+ 		}
+ 	} while (++mid < be32_to_cpu(btp->count) &&
+ 			be32_to_cpu(blp[mid].hashval) == hash);
+ 
+ 	ASSERT(args->op_flags & XFS_DA_OP_OKNOENT);
+-	/*
+-	 * Here, we can only be doing a lookup (not a rename or replace).
+-	 * If a case-insensitive match was found earlier, return success.
+-	 */
+-	if (args->cmpresult == XFS_CMP_CASE)
+-		return 0;
++	ASSERT(args->cmpresult == XFS_CMP_DIFFERENT);
+ 	/*
+ 	 * No match, release the buffer and return ENOENT.
+ 	 */
+diff --git a/fs/xfs/libxfs/xfs_dir2_leaf.c b/fs/xfs/libxfs/xfs_dir2_leaf.c
+index a19174e..3d572ee 100644
+--- a/fs/xfs/libxfs/xfs_dir2_leaf.c
++++ b/fs/xfs/libxfs/xfs_dir2_leaf.c
+@@ -1226,7 +1226,6 @@ xfs_dir2_leaf_lookup_int(
+ 	xfs_mount_t		*mp;		/* filesystem mount point */
+ 	xfs_dir2_db_t		newdb;		/* new data block number */
+ 	xfs_trans_t		*tp;		/* transaction pointer */
+-	xfs_dir2_db_t		cidb = -1;	/* case match data block no. */
+ 	enum xfs_dacmp		cmp;		/* name compare result */
+ 	struct xfs_dir2_leaf_entry *ents;
+ 	struct xfs_dir3_icleaf_hdr leafhdr;
+@@ -1290,46 +1289,22 @@ xfs_dir2_leaf_lookup_int(
+ 						be32_to_cpu(lep->address)));
+ 		/*
+ 		 * Compare name and if it's an exact match, return the index
+-		 * and buffer. If it's the first case-insensitive match, store
+-		 * the index and buffer and continue looking for an exact match.
++		 * and buffer
+ 		 */
+ 		cmp = mp->m_dirnameops->compname(args, dep->name, dep->namelen);
+-		if (cmp != XFS_CMP_DIFFERENT && cmp != args->cmpresult) {
++		if (cmp != XFS_CMP_DIFFERENT) {
+ 			args->cmpresult = cmp;
+ 			*indexp = index;
+-			/* case exact match: return the current buffer. */
+-			if (cmp == XFS_CMP_EXACT) {
+-				*dbpp = dbp;
+-				return 0;
+-			}
+-			cidb = curdb;
++			*dbpp = dbp;
++			return 0;
+ 		}
+ 	}
+ 	ASSERT(args->op_flags & XFS_DA_OP_OKNOENT);
+-	/*
+-	 * Here, we can only be doing a lookup (not a rename or remove).
+-	 * If a case-insensitive match was found earlier, re-read the
+-	 * appropriate data block if required and return it.
+-	 */
+-	if (args->cmpresult == XFS_CMP_CASE) {
+-		ASSERT(cidb != -1);
+-		if (cidb != curdb) {
+-			xfs_trans_brelse(tp, dbp);
+-			error = xfs_dir3_data_read(tp, dp,
+-					   xfs_dir2_db_to_da(args->geo, cidb),
+-					   -1, &dbp);
+-			if (error) {
+-				xfs_trans_brelse(tp, lbp);
+-				return error;
+-			}
+-		}
+-		*dbpp = dbp;
+-		return 0;
+-	}
++	ASSERT(args->cmpresult == XFS_CMP_DIFFERENT);
++
+ 	/*
+ 	 * No match found, return -ENOENT.
+ 	 */
+-	ASSERT(cidb == -1);
+ 	if (dbp)
+ 		xfs_trans_brelse(tp, dbp);
+ 	xfs_trans_brelse(tp, lbp);
+diff --git a/fs/xfs/libxfs/xfs_dir2_node.c b/fs/xfs/libxfs/xfs_dir2_node.c
+index 2ae6ac2..1778c40 100644
+--- a/fs/xfs/libxfs/xfs_dir2_node.c
++++ b/fs/xfs/libxfs/xfs_dir2_node.c
+@@ -679,6 +679,7 @@ xfs_dir2_leafn_lookup_for_entry(
+ 	xfs_dir2_data_entry_t	*dep;		/* data block entry */
+ 	xfs_inode_t		*dp;		/* incore directory inode */
+ 	int			error;		/* error return value */
++	int			di = -1;	/* data entry index */
+ 	int			index;		/* leaf entry index */
+ 	xfs_dir2_leaf_t		*leaf;		/* leaf structure */
+ 	xfs_dir2_leaf_entry_t	*lep;		/* leaf entry */
+@@ -709,6 +710,7 @@ xfs_dir2_leafn_lookup_for_entry(
+ 	if (state->extravalid) {
+ 		curbp = state->extrablk.bp;
+ 		curdb = state->extrablk.blkno;
++		di = state->extrablk.index;
+ 	}
+ 	/*
+ 	 * Loop over leaf entries with the right hash value.
+@@ -734,28 +736,20 @@ xfs_dir2_leafn_lookup_for_entry(
+ 		 */
+ 		if (newdb != curdb) {
+ 			/*
+-			 * If we had a block before that we aren't saving
+-			 * for a CI name, drop it
++			 * If we had a block, drop it
+ 			 */
+-			if (curbp && (args->cmpresult == XFS_CMP_DIFFERENT ||
+-						curdb != state->extrablk.blkno))
++			if (curbp) {
+ 				xfs_trans_brelse(tp, curbp);
++				di = -1;
++			}
+ 			/*
+-			 * If needing the block that is saved with a CI match,
+-			 * use it otherwise read in the new data block.
++			 * Read in the new data block.
+ 			 */
+-			if (args->cmpresult != XFS_CMP_DIFFERENT &&
+-					newdb == state->extrablk.blkno) {
+-				ASSERT(state->extravalid);
+-				curbp = state->extrablk.bp;
+-			} else {
+-				error = xfs_dir3_data_read(tp, dp,
+-						xfs_dir2_db_to_da(args->geo,
+-								  newdb),
++			error = xfs_dir3_data_read(tp, dp,
++					xfs_dir2_db_to_da(args->geo, newdb),
+ 						-1, &curbp);
+-				if (error)
+-					return error;
+-			}
++			if (error)
++				return error;
+ 			xfs_dir3_data_check(dp, curbp);
+ 			curdb = newdb;
+ 		}
+@@ -766,53 +760,40 @@ xfs_dir2_leafn_lookup_for_entry(
+ 			xfs_dir2_dataptr_to_off(args->geo,
+ 						be32_to_cpu(lep->address)));
+ 		/*
+-		 * Compare the entry and if it's an exact match, return
+-		 * EEXIST immediately. If it's the first case-insensitive
+-		 * match, store the block & inode number and continue looking.
++		 * Compare the entry and if it's a match, return
++		 * EEXIST immediately.
+ 		 */
+ 		cmp = mp->m_dirnameops->compname(args, dep->name, dep->namelen);
+-		if (cmp != XFS_CMP_DIFFERENT && cmp != args->cmpresult) {
+-			/* If there is a CI match block, drop it */
+-			if (args->cmpresult != XFS_CMP_DIFFERENT &&
+-						curdb != state->extrablk.blkno)
+-				xfs_trans_brelse(tp, state->extrablk.bp);
++		if (cmp != XFS_CMP_DIFFERENT) {
+ 			args->cmpresult = cmp;
+ 			args->inumber = be64_to_cpu(dep->inumber);
+ 			args->filetype = dp->d_ops->data_get_ftype(dep);
+-			*indexp = index;
+-			state->extravalid = 1;
+-			state->extrablk.bp = curbp;
+-			state->extrablk.blkno = curdb;
+-			state->extrablk.index = (int)((char *)dep -
+-							(char *)curbp->b_addr);
+-			state->extrablk.magic = XFS_DIR2_DATA_MAGIC;
+ 			curbp->b_ops = &xfs_dir3_data_buf_ops;
+ 			xfs_trans_buf_set_type(tp, curbp, XFS_BLFT_DIR_DATA_BUF);
+-			if (cmp == XFS_CMP_EXACT)
+-				return -EEXIST;
++			di = (int)((char *)dep - (char *)curbp->b_addr);
++			error = -EEXIST;
++			goto out;
++
+ 		}
+ 	}
++	/* Didn't find a match */
++	error = -ENOENT;
+ 	ASSERT(index == leafhdr.count || (args->op_flags & XFS_DA_OP_OKNOENT));
++out:
+ 	if (curbp) {
+-		if (args->cmpresult == XFS_CMP_DIFFERENT) {
+-			/* Giving back last used data block. */
+-			state->extravalid = 1;
+-			state->extrablk.bp = curbp;
+-			state->extrablk.index = -1;
+-			state->extrablk.blkno = curdb;
+-			state->extrablk.magic = XFS_DIR2_DATA_MAGIC;
+-			curbp->b_ops = &xfs_dir3_data_buf_ops;
+-			xfs_trans_buf_set_type(tp, curbp, XFS_BLFT_DIR_DATA_BUF);
+-		} else {
+-			/* If the curbp is not the CI match block, drop it */
+-			if (state->extrablk.bp != curbp)
+-				xfs_trans_brelse(tp, curbp);
+-		}
++		/* Giving back last used data block. */
++		state->extravalid = 1;
++		state->extrablk.bp = curbp;
++		state->extrablk.index = di;
++		state->extrablk.blkno = curdb;
++		state->extrablk.magic = XFS_DIR2_DATA_MAGIC;
++		curbp->b_ops = &xfs_dir3_data_buf_ops;
++		xfs_trans_buf_set_type(tp, curbp, XFS_BLFT_DIR_DATA_BUF);
+ 	} else {
+ 		state->extravalid = 0;
+ 	}
+ 	*indexp = index;
+-	return -ENOENT;
++	return error;
+ }
+ 
+ /*
+diff --git a/fs/xfs/libxfs/xfs_dir2_sf.c b/fs/xfs/libxfs/xfs_dir2_sf.c
+index 5079e05..e69fdb7 100644
+--- a/fs/xfs/libxfs/xfs_dir2_sf.c
++++ b/fs/xfs/libxfs/xfs_dir2_sf.c
+@@ -757,19 +757,19 @@ xfs_dir2_sf_lookup(
+ 	for (i = 0, sfep = xfs_dir2_sf_firstentry(sfp); i < sfp->count;
+ 	     i++, sfep = dp->d_ops->sf_nextentry(sfp, sfep)) {
+ 		/*
+-		 * Compare name and if it's an exact match, return the inode
+-		 * number. If it's the first case-insensitive match, store the
+-		 * inode number and continue looking for an exact match.
++		 * Compare name and if it's a match, return the inode
++		 * number.
+ 		 */
+ 		cmp = dp->i_mount->m_dirnameops->compname(args, sfep->name,
+ 								sfep->namelen);
+-		if (cmp != XFS_CMP_DIFFERENT && cmp != args->cmpresult) {
++		if (cmp != XFS_CMP_DIFFERENT) {
+ 			args->cmpresult = cmp;
+ 			args->inumber = dp->d_ops->sf_get_ino(sfp, sfep);
+ 			args->filetype = dp->d_ops->sf_get_ftype(sfep);
+ 			if (cmp == XFS_CMP_EXACT)
+ 				return -EEXIST;
+ 			ci_sfep = sfep;
++			break;
+ 		}
+ 	}
+ 	ASSERT(args->op_flags & XFS_DA_OP_OKNOENT);
+-- 
+1.7.12.4
 
 _______________________________________________
 xfs mailing list
