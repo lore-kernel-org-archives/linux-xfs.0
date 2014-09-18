@@ -1,16 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id A573C7F37
-	for <xfs@oss.sgi.com>; Thu, 18 Sep 2014 07:46:46 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 433E0AC002
-	for <xfs@oss.sgi.com>; Thu, 18 Sep 2014 05:46:43 -0700 (PDT)
-Date: Thu, 18 Sep 2014 14:46:32 +0200 (CEST)
-From: "Carlos E. R." <carlos.e.r@opensuse.org>
-Subject: What's up with this list?
-Message-ID: <alpine.LSU.2.11.1409181438290.6675@Telcontar.valinor>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 51DD07F37
+	for <xfs@oss.sgi.com>; Thu, 18 Sep 2014 10:33:56 -0500 (CDT)
+Received: from estes.americas.sgi.com (estes.americas.sgi.com [128.162.236.10])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 22059304043
+	for <xfs@oss.sgi.com>; Thu, 18 Sep 2014 08:33:53 -0700 (PDT)
+Received: from [128.162.232.11] (porter.americas.sgi.com [128.162.232.11])
+	by estes.americas.sgi.com (Postfix) with ESMTP id F2DD27002BF9
+	for <xfs@oss.sgi.com>; Thu, 18 Sep 2014 10:33:52 -0500 (CDT)
+Message-ID: <541AFB60.5030403@sgi.com>
+Date: Thu, 18 Sep 2014 10:33:52 -0500
+From: Troy McCorkell <tdm@sgi.com>
 MIME-Version: 1.0
-Content-Type: MULTIPART/MIXED; BOUNDARY="-1463808511-51534903-1411044392=:6675"
+Subject: Re: What's up with this list?
+References: <alpine.LSU.2.11.1409181438290.6675@Telcontar.valinor>
+In-Reply-To: <alpine.LSU.2.11.1409181438290.6675@Telcontar.valinor>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -19,64 +23,185 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: multipart/mixed; boundary="===============8383482003049895868=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: XFS mailing list <xfs@oss.sgi.com>
-Cc: xfs-owner@oss.sgi.com
+To: xfs@oss.sgi.com
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
+This is a multi-part message in MIME format.
+--===============8383482003049895868==
+Content-Type: multipart/alternative;
+ boundary="------------010103060904090701090203"
 
----1463808511-51534903-1411044392=:6675
-Content-Type: TEXT/PLAIN; format=flowed; charset=UTF-8
-Content-Transfer-Encoding: 8BIT
+This is a multi-part message in MIME format.
+--------------010103060904090701090203
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 
------BEGIN PGP SIGNED MESSAGE-----
+On 09/18/2014 07:46 AM, Carlos E. R. wrote:
+> -----BEGIN PGP SIGNED MESSAGE-----
+> Hash: SHA1
+>
+>
+>
+> Hi,
+>
+> Now an then I get messages like this:
+>
+> ++·································
+> Your membership in the mailing list xfs has been disabled due to
+> excessive bounces The last bounce received from you was dated
+> 18-Sep-2014.  You will not get any more messages from this list until
+> you re-enable your membership.  You will receive 3 more reminders like
+> this before your membership in the list is deleted.
+>
+> To re-enable your membership, you can simply respond to this message
+> (leaving the Subject: line intact), or visit the confirmation page at
+>
+> ...
+>
+> ·································++-
+>
+>
+> Bounces? I'm subscribed to several mail lists, and this is the only 
+> one "complaining". And as I do not know what messages bounced, I can 
+> not investigate it.
+>
+> My guess is that those emails were clear and flagrant spam, and as 
+> such were rejected by my ISP.
+>
+> The mail list should refuse them on entry and not resend them to the 
+> listers.
+>
+> - -- Cheers,
+>        Carlos E. R.
+>        (from 13.1 x86_64 "Bottle" at Telcontar)
+> -----BEGIN PGP SIGNATURE-----
+> Version: GnuPG v2.0.22 (GNU/Linux)
+>
+> iEYEARECAAYFAlQa1CgACgkQtTMYHG2NR9W0ggCeJAObGhaHx9quXJPCQUggFo//
+> 9PwAnilNJEj3gfi+X+a29MVjo/MDEGvO
+> =CBjB
+> -----END PGP SIGNATURE-----
+>
+>
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+>    
+Carlos,
+
+I will forward your email to the SGI IT group.
+
+Thanks,
+Troy McCorkell
+
+
+--------------010103060904090701090203
+Content-Type: text/html; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+  <meta content="text/html; charset=UTF-8" http-equiv="Content-Type">
+</head>
+<body text="#000000" bgcolor="#ffffff">
+On 09/18/2014 07:46 AM, Carlos E. R. wrote:
+<blockquote
+ cite="mid:alpine.LSU.2.11.1409181438290.6675@Telcontar.valinor"
+ type="cite">-----BEGIN PGP SIGNED MESSAGE-----
+  <br>
 Hash: SHA1
-
-
-
+  <br>
+  <br>
+  <br>
+  <br>
 Hi,
-
+  <br>
+  <br>
 Now an then I get messages like this:
-
+  <br>
+  <br>
 ++·································
+  <br>
 Your membership in the mailing list xfs has been disabled due to
+  <br>
 excessive bounces The last bounce received from you was dated
-18-Sep-2014.  You will not get any more messages from this list until
-you re-enable your membership.  You will receive 3 more reminders like
+  <br>
+18-Sep-2014.  You will not get any more messages from this list until
+  <br>
+you re-enable your membership.  You will receive 3 more reminders like
+  <br>
 this before your membership in the list is deleted.
-
+  <br>
+  <br>
 To re-enable your membership, you can simply respond to this message
+  <br>
 (leaving the Subject: line intact), or visit the confirmation page at
-
+  <br>
+  <br>
 ...
-
+  <br>
+  <br>
 ·································++-
-
-
-Bounces? I'm subscribed to several mail lists, and this is the only one 
-"complaining". And as I do not know what messages bounced, I can not 
+  <br>
+  <br>
+  <br>
+Bounces? I'm subscribed to several mail lists, and this is the only one
+"complaining". And as I do not know what messages bounced, I can not
 investigate it.
-
-My guess is that those emails were clear and flagrant spam, and as such 
+  <br>
+  <br>
+My guess is that those emails were clear and flagrant spam, and as such
 were rejected by my ISP.
-
-The mail list should refuse them on entry and not resend them to the 
+  <br>
+  <br>
+The mail list should refuse them on entry and not resend them to the
 listers.
-
-- -- 
-Cheers,
-        Carlos E. R.
-        (from 13.1 x86_64 "Bottle" at Telcontar)
+  <br>
+  <br>
+- -- Cheers,
+  <br>
+       Carlos E. R.
+  <br>
+       (from 13.1 x86_64 "Bottle" at Telcontar)
+  <br>
 -----BEGIN PGP SIGNATURE-----
+  <br>
 Version: GnuPG v2.0.22 (GNU/Linux)
-
+  <br>
+  <br>
 iEYEARECAAYFAlQa1CgACgkQtTMYHG2NR9W0ggCeJAObGhaHx9quXJPCQUggFo//
+  <br>
 9PwAnilNJEj3gfi+X+a29MVjo/MDEGvO
+  <br>
 =CBjB
------END PGP SIGNATURE-----
----1463808511-51534903-1411044392=:6675
+  <br>
+-----END PGP SIGNATURE-----<br>
+  <pre wrap="">
+<fieldset class="mimeAttachmentHeader"></fieldset>
+_______________________________________________
+xfs mailing list
+<a class="moz-txt-link-abbreviated" href="mailto:xfs@oss.sgi.com">xfs@oss.sgi.com</a>
+<a class="moz-txt-link-freetext" href="http://oss.sgi.com/mailman/listinfo/xfs">http://oss.sgi.com/mailman/listinfo/xfs</a>
+  </pre>
+</blockquote>
+Carlos,<br>
+<br>
+I will forward your email to the SGI IT group.<br>
+<br>
+Thanks,<br>
+Troy McCorkell<br>
+<br>
+</body>
+</html>
+
+--------------010103060904090701090203--
+
+
+--===============8383482003049895868==
 Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
@@ -87,4 +212,4 @@ xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
 
----1463808511-51534903-1411044392=:6675--
+--===============8383482003049895868==--
