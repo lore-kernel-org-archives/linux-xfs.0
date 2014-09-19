@@ -1,16 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 7E5ED7F37
-	for <xfs@oss.sgi.com>; Thu, 18 Sep 2014 17:23:52 -0500 (CDT)
-Date: Thu, 18 Sep 2014 17:23:48 -0500
-From: Ben Myers <bpm@sgi.com>
-Subject: Re: [RFC v2] Unicode/UTF-8 support for XFS
-Message-ID: <20140918222348.GC4482@sgi.com>
-References: <20140918195650.GI19952@sgi.com> <20140918211010.GB4482@sgi.com>
-	<20140918212417.GF16677@lenny.home.zabbo.net>
+	by oss.sgi.com (Postfix) with ESMTP id 477BC7F3F
+	for <xfs@oss.sgi.com>; Fri, 19 Sep 2014 01:38:01 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id B9A34AC002
+	for <xfs@oss.sgi.com>; Thu, 18 Sep 2014 23:37:57 -0700 (PDT)
+Received: from mail-pd0-f177.google.com (mail-pd0-f177.google.com
+	[209.85.192.177]) by cuda.sgi.com with ESMTP id
+	SGtn38TxfUp9dbCu (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 18 Sep 2014 23:37:52 -0700 (PDT)
+Received: by mail-pd0-f177.google.com with SMTP id y10so1939795pdj.22
+	for <xfs@oss.sgi.com>; Thu, 18 Sep 2014 23:37:52 -0700 (PDT)
+Date: Fri, 19 Sep 2014 14:37:48 +0800
+From: Eryu Guan <guaneryu@gmail.com>
+Subject: Re: [PATCH] xfstests: remove check_scratch_fs in btrfs/012
+Message-ID: <20140919063748.GA13950@dhcp-13-216.nay.redhat.com>
+References: <1409714759-9805-1-git-send-email-bo.li.liu@oracle.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20140918212417.GF16677@lenny.home.zabbo.net>
+In-Reply-To: <1409714759-9805-1-git-send-email-bo.li.liu@oracle.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,31 +32,54 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Zach Brown <zab@zabbo.net>
-Cc: linux-fsdevel@vger.kernel.org, tinguely@sgi.com, olaf@sgi.com, xfs@oss.sgi.com
+To: Liu Bo <bo.li.liu@oracle.com>
+Cc: linux-btrfs <linux-btrfs@vger.kernel.org>, xfs@oss.sgi.com
 
-On Thu, Sep 18, 2014 at 02:24:17PM -0700, Zach Brown wrote:
-> On Thu, Sep 18, 2014 at 04:10:10PM -0500, Ben Myers wrote:
-> > On Thu, Sep 18, 2014 at 02:56:50PM -0500, Ben Myers wrote:
-> > > I'm posting this RFC for Unicode support in XFS on Olaf's behalf, as he
-> > > is busy with other projects.
-> > 
-> > Patch 7 of each series is the trie generator and utf8 normalization
-> > module.  Either it's just a little slow or it's over the message size
-> > limit on vger at a little over 100k.
+On Wed, Sep 03, 2014 at 11:25:59AM +0800, Liu Bo wrote:
+> From: Liu Bo <liub.liubo@gmail.com>
 > 
-> Probably, yeah:
+> btrfs/012 is a case to verify btrfs-convert feature, it converts an ext4 to
+> btrfs firstly and do something, then rolls back to ext4.
 > 
-> http://vger.kernel.org/majordomo-info.html
+> So at last we have a ext4 on the scratch device, but setting _require_scratch
+> will force a btrfsck on a ext4 fs because $FSTYP here is btrfs, and it ends up
+> with a failure report of _check_btrfs_filesystem.
 > 
-> "
->   * Message size exceeding 100 000 characters causes blocking.
-> "
+> Now that we have deliberately check the final ext4 fs in btrfs/012, just do not
+> set _require_scratch in this case.
+> 
+> Signed-off-by: Liu Bo <liub.liubo@gmail.com>
+> ---
+>  tests/btrfs/012 | 1 -
+>  1 file changed, 1 deletion(-)
+> 
+> diff --git a/tests/btrfs/012 b/tests/btrfs/012
+> index f7e5da5..12f6462 100755
+> --- a/tests/btrfs/012
+> +++ b/tests/btrfs/012
+> @@ -52,7 +52,6 @@ _cleanup()
+>  # Modify as appropriate.
+>  _supported_fs btrfs
+>  _supported_os Linux
+> -_require_scratch
 
-D'oh!  I'll split it up.
+The test still requires a scratch device, so we cannot simply remove
+this line. Now we can use _require_scratch_nocheck helper, and it
+works fine based on my test.
 
 Thanks,
-Ben
+Eryu
+
+>  
+>  BTRFS_CONVERT_PROG="`set_prog_path btrfs-convert`"
+>  MKFS_EXT4_PROG="`set_prog_path mkfs.ext4`"
+> -- 
+> 1.8.1.4
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
