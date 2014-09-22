@@ -1,23 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id D91BA7F4E
-	for <xfs@oss.sgi.com>; Mon, 22 Sep 2014 15:54:46 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id B7B30304048
-	for <xfs@oss.sgi.com>; Mon, 22 Sep 2014 13:54:46 -0700 (PDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 659927F4E
+	for <xfs@oss.sgi.com>; Mon, 22 Sep 2014 15:57:21 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 022E6AC007
+	for <xfs@oss.sgi.com>; Mon, 22 Sep 2014 13:57:17 -0700 (PDT)
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	NAVtheAUvvfNBDnk for <xfs@oss.sgi.com>;
-	Mon, 22 Sep 2014 13:54:41 -0700 (PDT)
-Date: Tue, 23 Sep 2014 06:54:38 +1000
+	hgPmozFQ0JGotKGq for <xfs@oss.sgi.com>;
+	Mon, 22 Sep 2014 13:57:16 -0700 (PDT)
+Date: Tue, 23 Sep 2014 06:57:14 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 06/10] xfs: add unicode character database files
-Message-ID: <20140922205438.GM4267@dastard>
+Subject: Re: [PATCH 07/10] xfs: add trie generator and supporting code for
+	UTF-8.
+Message-ID: <20140922205714.GN4267@dastard>
 References: <20140918195650.GI19952@sgi.com>
- <20140918201440.GI4482@sgi.com>
+ <20140918201518.GJ4482@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20140918201440.GI4482@sgi.com>
+In-Reply-To: <20140918201518.GJ4482@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,42 +34,56 @@ Sender: xfs-bounces@oss.sgi.com
 To: Ben Myers <bpm@sgi.com>
 Cc: linux-fsdevel@vger.kernel.org, tinguely@sgi.com, olaf@sgi.com, xfs@oss.sgi.com
 
-On Thu, Sep 18, 2014 at 03:14:40PM -0500, Ben Myers wrote:
+On Thu, Sep 18, 2014 at 03:15:19PM -0500, Ben Myers wrote:
 > From: Olaf Weber <olaf@sgi.com>
 > 
-> Add files from the Unicode Character Database, version 7.0.0, to the source.
-> A helper program that generates a trie used for normalization from these
-> files is part of a separate commit.
+> mkutf8data.c is the source for a program that generates utf8data.h, which
+> contains the trie that utf8norm.c uses. The trie is generated from the
+> Unicode 7.0.0 data files. The format of the utf8data[] table is described
+> in utf8norm.c.
+> 
+> Supporting functions for UTF-8 normalization are in utf8norm.c with the
+> header utf8norm.h. Two normalization forms are supported: nfkdi and nfkdicf.
+> 
+>   nfkdi:
+>    - Apply unicode normalization form NFKD.
+>    - Remove any Default_Ignorable_Code_Point.
+> 
+>   nfkdicf:
+>    - Apply unicode normalization form NFKD.
+>    - Remove any Default_Ignorable_Code_Point.
+>    - Apply a full casefold (C + F).
+> 
+> For the purposes of the code, a string is valid UTF-8 if:
+> 
+>  - The values encoded are 0x1..0x10FFFF.
+>  - The surrogate codepoints 0xD800..0xDFFFF are not encoded.
+>  - The shortest possible encoding is used for all values.
+> 
+> The supporting functions work on null-terminated strings (utf8 prefix) and
+> on length-limited strings (utf8n prefix).
 > 
 > Signed-off-by: Olaf Weber <olaf@sgi.com>
-> ---
-> [v2: Removed large unicode files prior to posting.  Get them as below. -bpm]
-> [v3: Moved files to ucd8norm directory. -bpm]
 > 
-> cd fs/xfs/utf8norm/ucd
-> wget http://www.unicode.org/Public/7.0.0/ucd/CaseFolding.txt
-> wget http://www.unicode.org/Public/7.0.0/ucd/DerivedAge.txt
-> wget http://www.unicode.org/Public/7.0.0/ucd/extracted/DerivedCombiningClass.txt
-> wget http://www.unicode.org/Public/7.0.0/ucd/DerivedCoreProperties.txt
-> wget http://www.unicode.org/Public/7.0.0/ucd/NormalizationCorrections.txt
-> wget http://www.unicode.org/Public/7.0.0/ucd/NormalizationTest.txt
-> wget http://www.unicode.org/Public/7.0.0/ucd/UnicodeData.txt
-> for e in *.txt
-> do
-> 	base=`basename $e .txt`
-> 	mv $e $base-7.0.0.txt
-> done
 > ---
->  fs/xfs/utf8norm/ucd/README | 33 +++++++++++++++++++++++++++++++++
+> [v2: the trie is now separated into utf8norm.ko;
+>      utf8version is now a function and exported;
+>      introduced CONFIG_XFS_UTF8. -bpm]
+> ---
+>  fs/xfs/Kconfig               |    8 +
+>  fs/xfs/Makefile              |    2 +-
+>  fs/xfs/utf8norm/Makefile     |   37 +
+>  fs/xfs/utf8norm/mkutf8data.c | 3239 ++++++++++++++++++++++++++++++++++++++++++
+>  fs/xfs/utf8norm/utf8norm.c   |  649 +++++++++
+>  fs/xfs/utf8norm/utf8norm.h   |  116 ++
 
-This probably needs to live somewhere under lib/.  There's nothing
-XFS specific in it and the translations should be the same for
-anything that wants to parse unicode.
+Again, nothing XFS specific here. It's being built as a separate
+module and the only thing that XFS uses are exported functions, so
+it really should be generic library code....
 
 Cheers,
 
 Dave.
-
 -- 
 Dave Chinner
 david@fromorbit.com
