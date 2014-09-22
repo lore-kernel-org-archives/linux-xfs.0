@@ -1,23 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 27E3D7F3F
-	for <xfs@oss.sgi.com>; Sat, 20 Sep 2014 18:45:06 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id C873A7F4E
+	for <xfs@oss.sgi.com>; Mon, 22 Sep 2014 08:19:01 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 12B86304039
-	for <xfs@oss.sgi.com>; Sat, 20 Sep 2014 16:45:05 -0700 (PDT)
-Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
-	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	c60ChyGZA5zDNqZC for <xfs@oss.sgi.com>;
-	Sat, 20 Sep 2014 16:45:03 -0700 (PDT)
-Date: Sun, 21 Sep 2014 09:45:00 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs/062: add xfs unwritten extent data corruption
-	reproducer
-Message-ID: <20140920234500.GK4267@dastard>
-References: <1411150385-32121-1-git-send-email-bfoster@redhat.com>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id B6B468F8035
+	for <xfs@oss.sgi.com>; Mon, 22 Sep 2014 06:18:58 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id XPzIDTqJbY4a1Y1P (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Mon, 22 Sep 2014 06:18:57 -0700 (PDT)
+Received: from int-mx10.intmail.prod.int.phx2.redhat.com
+	(int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id s8MDIu83030626
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256
+	verify=FAIL) for <xfs@oss.sgi.com>; Mon, 22 Sep 2014 09:18:57 -0400
+Date: Mon, 22 Sep 2014 09:18:55 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH] xfs_repair: validate & fix inode CRCs
+Message-ID: <20140922131855.GA29156@bfoster.bfoster>
+References: <5418AC01.30006@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1411150385-32121-1-git-send-email-bfoster@redhat.com>
+In-Reply-To: <5418AC01.30006@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,240 +34,99 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
-Cc: fstests@vger.kernel.org, xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-On Fri, Sep 19, 2014 at 02:13:05PM -0400, Brian Foster wrote:
-> XFS had a data corruption problem where writeback of pages to unwritten
-> extents would fail to run unwritten extent conversion at I/O completion.
-> This causes subsequent reads of written, but unconverted regions to
-> return zeroes. This occurs on sub-page block size filesystems when
-> writeback contends for the inode lock (e.g., with a file writer).
+On Tue, Sep 16, 2014 at 04:30:41PM -0500, Eric Sandeen wrote:
+> xfs_repair doesn't ever check an inode's CRC, so it never repairs
+> them.  If the root inode or realtime inodes have bad crcs, the
+> fs won't even mount and can't be fixed (without using xfs_db).
 > 
-> Add a test that creates the conditions to reproduce the data corruption
-> and detect it by looking for unwritten extents after all said extents
-> have been overwritten.
+> It's fairly straightforward to just test the inode CRC before
+> we do any other checking or modification of the inode, once we
+> get past the "verify only" phase of process_dinode_int();
+> just mark it dirty if it's wrong and needs to be re-written.
 > 
-> Signed-off-by: Brian Foster <bfoster@redhat.com>
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 > ---
 > 
-> Hi all,
+> forgive the gratuitous big honkin' comment line, but
+> process_dinode_int is so long, I thought the visual delimiter was
+> useful.  ;)
 > 
-> Here's a test for the data corruption issue I sent a fix for yesterday:
+> diff --git a/repair/dinode.c b/repair/dinode.c
+> index 8891e84..27c0da6 100644
+> --- a/repair/dinode.c
+> +++ b/repair/dinode.c
+> @@ -2524,6 +2524,30 @@ _("bad (negative) size %" PRId64 " on inode %" PRIu64 "\n"),
+>  	if (verify_mode)
+>  		return retval;
+>  
+> +	/* =========== END OF VERIFY MODE =================== */
+> +
+> +	/*
+> +	 * We'd really like to know if the CRC is bad before we
+> +	 * go fixing anything; that way we have some hint about
+> +	 * bit-rot vs bugs.  Also, any changes will invalidate the
+> +	 * existing CRC, so this is the only valid point to test it.
+> +	 *
+> +	 * Of course if we make any modifications after this, the
+> +	 * inode gets rewritten, and CRC is updated automagically.
+> +	 */
+> +	if (xfs_sb_version_hascrc(&mp->m_sb)) {
+> +		ASSERT(!verify_mode);
+> +		if(!xfs_verify_cksum((char *)dino, mp->m_sb.sb_inodesize,
+> +                		XFS_DINODE_CRC_OFF)) {
+> +			do_warn(_("bad CRC for inode %" PRIu64), lino);
+> +			if (!no_modify) {
+> +				do_warn(_(", will rewrite\n"));
+> +				*dirty = 1;
+> +			} else
+> +				do_warn(_(", would rewrite\n"));
+> +		}
+> +	}
+> +
+
+So we verify each inode first in process_inode_chunk() and then follow
+on with process_dinode(). There's a comment further up in
+process_dinode_int() that indicates we explicitly do not check the crc
+at that point, presumably considering verify_mode. I only see one call
+to each of verify_inode() and process_dinode() (in that order). The
+other process_dinode_int() caller is verify_uncertain_dinode(), which
+looks like it occurs ultimately from process_uncertain_aginodes() in
+phase 3.
+
+I suppose that logic makes sense, but it's not totally clear tbh. We do
+fix up the crc in the caller if the inode is marked dirty. It also seems
+like it's possible to modify the inode before this point where we check
+the crc. Given that, it seems like we could just add an "if
+(!verify_mode)" hunk to the preexisting hascrc() hunk further up in the
+function..?
+
+I don't really have a clear beat on this at the moment. I think what I'm
+getting after is that right now if we see the new crc message, it isn't
+necessarily clear if that is because repair changed something or it is
+legitimately wrong on-disk, depending on how the inode might be
+corrupted or if the inode is free (do we care about crc's in that case?
+it looks like we miss that as well). It would be nice if we had some
+kind of consistent rule for this scenario, such as "always print the
+error if the crc is wrong" (e.g., before we make any modifications) or
+"only print the error if the crc is the only thing wrong" (e.g., we've
+already verified the inode and the crc itself is wrong). Either way it
+seems inappropriate to print a crc error that might be caused by repair
+itself.
+
+Brian
+
+>  	/*
+>  	 * clear the next unlinked field if necessary on a good
+>  	 * inode only during phase 4 -- when checking for inodes
 > 
-> 	http://oss.sgi.com/archives/xfs/2014-09/msg00259.html
 > 
-> It took a little time to improve the effectiveness of the test, but I've
-> been able to run it in current form for 90+ iterations without a false
-> negative (e.g., test passes when it shouldn't) on my setup. It runs in
-> ~30s when there is no failure.
-> 
-> Brian
-> 
->  tests/xfs/062     | 114 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
->  tests/xfs/062.out |   5 +++
->  tests/xfs/group   |   1 +
->  3 files changed, 120 insertions(+)
->  create mode 100755 tests/xfs/062
->  create mode 100644 tests/xfs/062.out
-
-There's nothing XFS specific about this test. Yes, it exposes a bug
-on XFS, but every filesystem should be able to run and pass this
-test.
-
-> 
-> diff --git a/tests/xfs/062 b/tests/xfs/062
-> new file mode 100755
-> index 0000000..61f8cf4
-> --- /dev/null
-> +++ b/tests/xfs/062
-> @@ -0,0 +1,114 @@
-> +#! /bin/bash
-> +# FS QA Test No. 062
-> +#
-> +# This test implements a data corruption scenario on XFS filesystems with
-> +# sub-page sized blocks and unwritten extents. Inode lock contention during
-> +# writeback of pages to unwritten extents leads to failure to convert those
-> +# extents on I/O completion. This causes data corruption as unwritten extents
-> +# are always read back as zeroes.
-> +#
-> +#-----------------------------------------------------------------------
-> +# Copyright (c) 2014 Red Hat, Inc.  All Rights Reserved.
-> +#
-> +# This program is free software; you can redistribute it and/or
-> +# modify it under the terms of the GNU General Public License as
-> +# published by the Free Software Foundation.
-> +#
-> +# This program is distributed in the hope that it would be useful,
-> +# but WITHOUT ANY WARRANTY; without even the implied warranty of
-> +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-> +# GNU General Public License for more details.
-> +#
-> +# You should have received a copy of the GNU General Public License
-> +# along with this program; if not, write the Free Software Foundation,
-> +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-> +#-----------------------------------------------------------------------
-> +#
-> +
-> +seq=`basename $0`
-> +seqres=$RESULT_DIR/$seq
-> +echo "QA output created by $seq"
-> +
-> +here=`pwd`
-> +status=1	# failure is the default!
-> +trap "_cleanup; exit \$status" 0 1 2 3 15
-
-Always need to set $tmp here. It's used by things like
-_scratch_mkfs.
-
-> +
-> +_cleanup()
-> +{
-> +	cd /
-> +	kill -9 $syncpid > /dev/null 2>&1
-
-wait
-rm -f $tmp.*
-
-> +}
-> +
-> +# get standard environment, filters and checks
-> +. ./common/rc
-> +. ./common/punch
-> +
-> +# real QA test starts here
-> +
-> +_syncloop()
-> +{
-> +	while [ true ]
-> +	do
-> +		sync
-> +	done
-
-while [....]; do
-	.....
-done
-
-> +}
-> +
-> +# Modify as appropriate.
-> +_supported_fs xfs
-> +_supported_os Linux
-> +_require_scratch
-> +_require_xfs_io_command "falloc"
-
-_require_xfs_io_command "fiemap"
-
-> +
-> +_scratch_mkfs >/dev/null 2>&1
-> +_scratch_mount
-> +
-> +# run background sync thread
-> +_syncloop &
-> +syncpid=$!
-> +
-> +for iters in $(seq 1 100)
-> +do
-> +	rm -f $SCRATCH_MNT/file
-> +
-> +	# create a delalloc block in each page of the first 64k of the file
-> +	for pgoff in $(seq 0 0x1000 0xf000)
-> +	do
-> +		offset=$((pgoff + 0xc00))
-> +		$XFS_IO_PROG -fc "pwrite $offset 0x1" $SCRATCH_MNT/file \
-> +			 > /dev/null 2>&1
-> +	done
-
-	for .... ; do
-		.....
-	done
-
-is the normal way of doing this. Also it's worth splitting the
-xfs_io command across multiple lines as you have done later on to
-make it more readable. Maybe, also, redirect the output to
-$seqres.full so it's there for debugging failures rather than
-/dev/null.
-
-> +
-> +	# preallocate the first 64k and overwite, writing past 64k to contend
-> +	# with writeback
-> +	$XFS_IO_PROG \
-> +		-c "falloc 0 0x10000"	\
-> +		-c "pwrite 0 0x100000"	\
-> +		-c "fsync"		\
-> +		$SCRATCH_MNT/file > /dev/null 2>&1
-> +
-> +	# Check for unwritten extents. We should have none since we wrote over
-> +	# the entire preallocated region and ran fsync.
-> +	xfs_bmap -v $SCRATCH_MNT/file | _filter_bmap | grep unwritten \
-> +		> /dev/null 2>&1
-
-Use $XFS_IO_PROG -c "fiemap -v" and dump the output to $seqres.full.
-
-> +	if [ $? == 0 ]
-> +	then
-> +		xfs_bmap -v $SCRATCH_MNT/file
-> +		break
-> +	fi
-
-	if [...]; then.
-
-That's also a failure, right? So shouldn't it set status=1 and exit,
-leaving the cleanup function to kill and wait for everything to
-finish?
-
-> +done
-> +
-> +echo $iters iterations
-> +
-> +kill $syncpid
-> +wait
-> +
-> +# clear page cache and dump the file
-> +_scratch_unmount
-> +_scratch_mount
-
-_scratch_remount
-
-> +hexdump $SCRATCH_MNT/file
-> +
-> +_scratch_unmount
-> +_check_scratch_fs
-
-Don't need to do that anymore.
-
-> +
-> +status=0
-> +exit
-> diff --git a/tests/xfs/062.out b/tests/xfs/062.out
-> new file mode 100644
-> index 0000000..420f2e4
-> --- /dev/null
-> +++ b/tests/xfs/062.out
-> @@ -0,0 +1,5 @@
-> +QA output created by 062
-> +100 iterations
-> +0000000 cdcd cdcd cdcd cdcd cdcd cdcd cdcd cdcd
-> +*
-> +0100000
-> diff --git a/tests/xfs/group b/tests/xfs/group
-> index 09bce15..685cbe7 100644
-> --- a/tests/xfs/group
-> +++ b/tests/xfs/group
-> @@ -57,6 +57,7 @@
->  059 dump ioctl auto quick
->  060 dump ioctl auto quick
->  061 dump ioctl auto quick
-> +062 auto quick
-
-and the rw group, too.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
