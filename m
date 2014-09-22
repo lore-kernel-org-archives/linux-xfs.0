@@ -1,24 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 659927F4E
-	for <xfs@oss.sgi.com>; Mon, 22 Sep 2014 15:57:21 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 2D30D7F4E
+	for <xfs@oss.sgi.com>; Mon, 22 Sep 2014 16:05:57 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 022E6AC007
-	for <xfs@oss.sgi.com>; Mon, 22 Sep 2014 13:57:17 -0700 (PDT)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id F2E7B8F8050
+	for <xfs@oss.sgi.com>; Mon, 22 Sep 2014 14:05:53 -0700 (PDT)
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	hgPmozFQ0JGotKGq for <xfs@oss.sgi.com>;
-	Mon, 22 Sep 2014 13:57:16 -0700 (PDT)
-Date: Tue, 23 Sep 2014 06:57:14 +1000
+	xmBNTWd1vFVT1YA5 for <xfs@oss.sgi.com>;
+	Mon, 22 Sep 2014 14:05:51 -0700 (PDT)
+Date: Tue, 23 Sep 2014 07:05:49 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 07/10] xfs: add trie generator and supporting code for
-	UTF-8.
-Message-ID: <20140922205714.GN4267@dastard>
-References: <20140918195650.GI19952@sgi.com>
- <20140918201518.GJ4482@sgi.com>
+Subject: Re: Repair XFS from 1/3 of the table
+Message-ID: <20140922210548.GO4267@dastard>
+References: <CAJiJ=8+1P1odzJGpWRvPQh84KQMx5ukzFS9pACjRr7aHGiTpXQ@mail.gmail.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20140918201518.GJ4482@sgi.com>
+In-Reply-To: <CAJiJ=8+1P1odzJGpWRvPQh84KQMx5ukzFS9pACjRr7aHGiTpXQ@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,55 +29,64 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Ben Myers <bpm@sgi.com>
-Cc: linux-fsdevel@vger.kernel.org, tinguely@sgi.com, olaf@sgi.com, xfs@oss.sgi.com
+To: Alessio Di Maria <alessio.dimaria@gmail.com>
+Cc: xfs@oss.sgi.com
 
-On Thu, Sep 18, 2014 at 03:15:19PM -0500, Ben Myers wrote:
-> From: Olaf Weber <olaf@sgi.com>
-> 
-> mkutf8data.c is the source for a program that generates utf8data.h, which
-> contains the trie that utf8norm.c uses. The trie is generated from the
-> Unicode 7.0.0 data files. The format of the utf8data[] table is described
-> in utf8norm.c.
-> 
-> Supporting functions for UTF-8 normalization are in utf8norm.c with the
-> header utf8norm.h. Two normalization forms are supported: nfkdi and nfkdicf.
-> 
->   nfkdi:
->    - Apply unicode normalization form NFKD.
->    - Remove any Default_Ignorable_Code_Point.
-> 
->   nfkdicf:
->    - Apply unicode normalization form NFKD.
->    - Remove any Default_Ignorable_Code_Point.
->    - Apply a full casefold (C + F).
-> 
-> For the purposes of the code, a string is valid UTF-8 if:
-> 
->  - The values encoded are 0x1..0x10FFFF.
->  - The surrogate codepoints 0xD800..0xDFFFF are not encoded.
->  - The shortest possible encoding is used for all values.
-> 
-> The supporting functions work on null-terminated strings (utf8 prefix) and
-> on length-limited strings (utf8n prefix).
-> 
-> Signed-off-by: Olaf Weber <olaf@sgi.com>
-> 
-> ---
-> [v2: the trie is now separated into utf8norm.ko;
->      utf8version is now a function and exported;
->      introduced CONFIG_XFS_UTF8. -bpm]
-> ---
->  fs/xfs/Kconfig               |    8 +
->  fs/xfs/Makefile              |    2 +-
->  fs/xfs/utf8norm/Makefile     |   37 +
->  fs/xfs/utf8norm/mkutf8data.c | 3239 ++++++++++++++++++++++++++++++++++++++++++
->  fs/xfs/utf8norm/utf8norm.c   |  649 +++++++++
->  fs/xfs/utf8norm/utf8norm.h   |  116 ++
+On Fri, Sep 19, 2014 at 10:58:49PM +0200, Alessio Di Maria wrote:
+> Hi, for fist i'm sorry for my bad English..
+> so,
+> I'm trying to do a recovery from my NAS,
+> After it stopped, 3 disk of 4 was reinitialized so, raid partition was
+> deleted on disk 1 2 and 3, and first about 5m was zero filled..
 
-Again, nothing XFS specific here. It's being built as a separate
-module and the only thing that XFS uses are exported functions, so
-it really should be generic library code....
+So you lost the root inode and a lot of other critical metadata.
+
+> I'm actually work on a copy of that...
+> in my luck, the XFS superblock was on 4th disk..
+> I was able to rebuild RAID5 with the original configuration and now i can
+> read RAW files up to few kb... i was able to read a 15Mb zip file, and some
+> big jpeg, so i can say that RAID it's working fine
+> 
+> At sector 384 of the raid volume start the xfs superblock, i made a
+> loopback at this offset,
+> mounting it.. but obviusly it said that was not clean.
+> making xfs_repair i get anything, but with xfs_repair -L i had infinite
+> list of lost inode, and than i was able to mount the partition,
+> but with any file, only the lost + found directory with few but complete
+> files...
+
+That happens when you lose the root inode.
+
+> On the NAS there were Big Files of ISCSI, in the lost + found i find one of
+> this, big 100Gb.. now i don't know how i can recovery the rest..
+
+If you had regions of of the drives zeroed, then you've lost data
+randomly in the files in the filesystem. It's basically
+unrecoverable if you don't have a backup.
+
+> Is it possible to find lost inode?
+
+You can google for xfs_irecover, but you've already run xfs_repair
+and so it's going to be mostly useless at this point.
+
+> i tryied with many programs to get back the original Filesystem but
+> anything up the Lost + Found directory after the repair...
+> I know that XFS is based on sparse file, and so i can't find my file and
+> hope to copy it contigusly (about 5Gb) cose the fs reidirect zero filled
+> zone... in addiction i can't do a RAW recovery cose in the deep of 2.7Tb i
+> find MFT entryies and system files inner ISCSI units...
+> So what chache?
+> Wha can i do myself?
+
+If xfs_repair hasn't recovered the inodes that contained the files
+you care about, then it's almost certain that you've lost
+those files forever unless you have a backup. You can try grepping
+the raw device for sectors that contain signatures you care about,
+but that only works for contiguous files that were lost (that's
+effectively what photorec does).
+
+Other than that, there's nothing that can be done to recover what
+has been lost from the corpse you have on your hands...
 
 Cheers,
 
