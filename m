@@ -1,20 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 44B3229DF9
-	for <xfs@oss.sgi.com>; Tue, 23 Sep 2014 12:25:38 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 0C44E29DF9
+	for <xfs@oss.sgi.com>; Tue, 23 Sep 2014 13:34:26 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 226098F8052
-	for <xfs@oss.sgi.com>; Tue, 23 Sep 2014 10:25:34 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id aJxQaOYC7vlXRpbu for <xfs@oss.sgi.com>;
-	Tue, 23 Sep 2014 10:25:32 -0700 (PDT)
-Message-ID: <5421AD0F.4040109@sandeen.net>
-Date: Tue, 23 Sep 2014 12:25:35 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
-MIME-Version: 1.0
-Subject: Re: compiling xfs-progs 3.2.x
-References: <20140923184149.05a57dba@harpe.intellique.com>
-In-Reply-To: <20140923184149.05a57dba@harpe.intellique.com>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 90297AC007
+	for <xfs@oss.sgi.com>; Tue, 23 Sep 2014 11:34:25 -0700 (PDT)
+Received: from a.mx.filmlight.ltd.uk (a.mx.filmlight.ltd.uk [77.107.81.250])
+	by cuda.sgi.com with SMTP id vF9YNc75bLkbQ4Ad for
+	<xfs@oss.sgi.com>; Tue, 23 Sep 2014 11:34:20 -0700 (PDT)
+Subject: Re: [PATCH 07a/13] xfsprogs: add trie generator for UTF-8.
+From: Roger Willcocks <roger@filmlight.ltd.uk>
+In-Reply-To: <20140919160612.GF4482@sgi.com>
+References: <20140918195650.GI19952@sgi.com> <20140918203114.GN4482@sgi.com>
+	<20140919160612.GF4482@sgi.com>
+Date: Tue, 23 Sep 2014 19:34:19 +0100
+Message-Id: <1411497259.4842.163.camel@localhost.localdomain>
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,60 +28,31 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Emmanuel Florac <eflorac@intellique.com>, xfs@oss.sgi.com
-
-On 9/23/14 11:41 AM, Emmanuel Florac wrote:
-> 
-> Hi list,
-> xfs-progs 3.1.x compile easily, however I can't get around compiling
-> 3.2.x (debian 7.6) :
-> 
->  ./configure
-> ./configure: line 2098: AC_PROG_LIBTOOL: command not found
-> ./configure: line 2204: syntax error near unexpected token `xfsprogs'
-> ./configure: line 2204: `AC_PACKAGE_GLOBALS(xfsprogs)'
-> 
-> Any hint on where to start would be appreciated. Libtool version is the
-> same as testing and unstable (2.4.2).
-> 
-> Thanks,
-> 
-
-I'm not at all autoconf savvy, so just guessing here.
-
-there were very few changes to configure.ac since v3.1.11:
+To: Ben Myers <bpm@sgi.com>
+Cc: linux-fsdevel@vger.kernel.org, tinguely@sgi.com, olaf@sgi.com, xfs@oss.sgi.com
 
 
-diff --git a/configure.ac b/configure.ac
-index b968977..ae17c68 100644
---- a/configure.ac
-+++ b/configure.ac
-@@ -1,4 +1,4 @@
--AC_INIT([xfsprogs], [3.1.11])
-+AC_INIT([xfsprogs], [3.2.0-alpha2])
- AC_PREREQ(2.50)
- AC_CONFIG_AUX_DIR([.])
- AC_CONFIG_MACRO_DIR([m4])
-@@ -112,12 +112,14 @@ AC_HAVE_FIEMAP
- AC_HAVE_PREADV
- AC_HAVE_SYNC_FILE_RANGE
- AC_HAVE_BLKID_TOPO($enable_blkid)
-+AC_HAVE_READDIR
- 
- AC_CHECK_SIZEOF([long])
- AC_CHECK_SIZEOF([char *])
- AC_TYPE_PSINT
- AC_TYPE_PSUNSIGNED
- AC_TYPE_U32
-+AC_TYPE_UMODE_T
- AC_MANUAL_FORMAT
- 
- AC_CONFIG_FILES([include/builddefs])
+On Fri, 2014-09-19 at 11:06 -0500, Ben Myers wrote:
+> +#define AGE_NAME       "DerivedAge.txt"
+> +#define CCC_NAME       "DerivedCombiningClass.txt"
+> +#define PROP_NAME      "DerivedCoreProperties.txt"
+> +#define DATA_NAME      "UnicodeData.txt"
+> +#define FOLD_NAME      "CaseFolding.txt"
+> +#define NORM_NAME      "NormalizationCorrections.txt"
+> +#define TEST_NAME      "NormalizationTest.txt"
+
+Is there a reason why you're using multiple text-based data files (and
+hand-parsing them) when there's an xml formatted flat file available ?
+
+http://www.unicode.org/Public/UCD/latest/ucdxml/
 
 
-if you do a make realclean & re-make, does it help?  (if you check out v3.1.11 and do the same, does it still build?)
+And a 2nd question - why does the trie need to encode "the the unicode
+version in which the codepoint was assigned an interpretation" ?
 
--Eric
+
+-- 
+Roger Willcocks <roger@filmlight.ltd.uk>
 
 _______________________________________________
 xfs mailing list
