@@ -1,9 +1,9 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 From: xfs@oss.sgi.com
-Subject: [XFS updates] XFS development tree branch, xfs-shift-extents-rework,
-	created. xfs-for-linus-3.17-rc3-6-g8b5279e
-Message-Id: <20140923133029.5C0777F47@oss.sgi.com>
-Date: Tue, 23 Sep 2014 08:30:29 -0500 (CDT)
+Subject: [XFS updates] XFS development tree branch, xfs-misc-fixes-for-3.18-2,
+	created. v3.16-11814-g2ebff7b
+Message-Id: <20140923133047.BB95A7F51@oss.sgi.com>
+Date: Tue, 23 Sep 2014 08:30:47 -0500 (CDT)
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,174 +23,160 @@ This is an automated email from the git hooks/post-receive script. It was
 generated because a ref change was pushed to the repository containing
 the project "XFS development tree".
 
-The branch, xfs-shift-extents-rework has been created
-        at  8b5279e33f241a074a9c8649bba8f77a2167b798 (commit)
+The branch, xfs-misc-fixes-for-3.18-2 has been created
+        at  2ebff7bbd785c86e12956388b9e6f6bb8ea5d21e (commit)
 
 - Log -----------------------------------------------------------------
-commit 8b5279e33f241a074a9c8649bba8f77a2167b798
-Author: Brian Foster <bfoster@redhat.com>
-Date:   Tue Sep 23 15:39:05 2014 +1000
-
-    xfs: only writeback and truncate pages for the freed range
-    
-    xfs_free_file_space() only affects the range of the file for which space
-    is being freed. It currently writes and truncates the page cache from
-    the start offset of the free to EOF.
-    
-    Modify xfs_free_file_space() to write back and truncate page cache of
-    just the range being freed.
-    
-    Signed-off-by: Brian Foster <bfoster@redhat.com>
-    Reviewed-by: Dave Chinner <dchinner@redhat.com>
-    Signed-off-by: Dave Chinner <david@fromorbit.com>
-
-commit f71721d061e872a39b2680d13f309c1eb6893438
-Author: Brian Foster <bfoster@redhat.com>
-Date:   Tue Sep 23 15:39:05 2014 +1000
-
-    xfs: writeback and inval. file range to be shifted by collapse
-    
-    The collapse range operation currently writes the entire file before
-    starting the collapse to avoid changes in the in-core extent list due to
-    writeback causing the extent count to change. Now that collapse range is
-    fsb based rather than extent index based it can sustain changes in the
-    extent list during the shift sequence without disruption.
-    
-    Modify xfs_collapse_file_space() to writeback and invalidate pages
-    associated with the range of the file to be shifted.
-    xfs_free_file_space() currently has similar behavior, but the space free
-    need only affect the region of the file that is freed and this could
-    change in the future.
-    
-    Also update the comments to reflect the current implementation. We
-    retain the eofblocks trim permanently as a best option for dealing with
-    delalloc extents. We don't shift delalloc extents because this scenario
-    only occurs with post-eof preallocation (since data must be flushed such
-    that the cache can be invalidated and data can be shifted). That means
-    said space must also be initialized before being shifted into the
-    accessible region of the file only to be immediately truncated off as
-    the last part of the collapse. In other words, the eofblocks trim will
-    happen anyways, we just run it first to ensure the file remains in a
-    consistent state throughout the collapse.
-    
-    Finally, detect and fail explicitly in the event of a delalloc extent
-    during the extent shift. The implementation does not support delalloc
-    extents and the caller is expected to prevent this scenario in advance
-    as is done by collapse.
-    
-    Signed-off-by: Brian Foster <bfoster@redhat.com>
-    Reviewed-by: Dave Chinner <dchinner@redhat.com>
-    Signed-off-by: Dave Chinner <david@fromorbit.com>
-
-commit a979bdfea10a61dce0055b4d416d640f4f5f495e
-Author: Brian Foster <bfoster@redhat.com>
-Date:   Tue Sep 23 15:39:04 2014 +1000
-
-    xfs: refactor single extent shift into xfs_bmse_shift_one() helper
-    
-    xfs_bmap_shift_extents() has a variety of conditions and error checks
-    that make the logic difficult to follow and indent heavy. Refactor the
-    loop body of this function into a new xfs_bmse_shift_one() helper. This
-    simplifies the error checks, eliminates index decrement on merge hack by
-    pushing the index increment down into the helper, and makes the code
-    more readable by reducing multiple levels of indentation.
-    
-    This is a code refactor only. The behavior of extent shift and collapse
-    range is not modified.
-    
-    Signed-off-by: Brian Foster <bfoster@redhat.com>
-    Reviewed-by: Dave Chinner <dchinner@redhat.com>
-    Signed-off-by: Dave Chinner <david@fromorbit.com>
-
-commit ddb19e3180fa42362a04e86771d758be1de0bb13
-Author: Brian Foster <bfoster@redhat.com>
-Date:   Tue Sep 23 15:38:09 2014 +1000
-
-    xfs: refactor shift-by-merge into xfs_bmse_merge() helper
-    
-    The extent shift mechanism in xfs_bmap_shift_extents() is complicated
-    and handles several different, non-deterministic scenarios. These
-    include extent shifts, extent merges and potential btree updates in
-    either of the former scenarios.
-    
-    Refactor the code to be more linear and readable. The loop logic in
-    xfs_bmap_shift_extents() and some initial error checking is adjusted
-    slightly. The associated btree lookup and update/delete operations are
-    condensed into single blocks of code. This reduces the number of
-    btree-specific blocks and facilitates the separation of the merge
-    operation into a new xfs_bmse_merge() and xfs_bmse_can_merge() helpers.
-    
-    This is a code refactor only. The behavior of extent shift and collapse
-    range is not modified.
-    
-    Signed-off-by: Brian Foster <bfoster@redhat.com>
-    Reviewed-by: Dave Chinner <dchinner@redhat.com>
-    Signed-off-by: Dave Chinner <david@fromorbit.com>
-
-commit 2c845f5a5f238f42376b6551a7f7716952c8f509
-Author: Brian Foster <bfoster@redhat.com>
-Date:   Tue Sep 23 15:37:09 2014 +1000
-
-    xfs: track collapse via file offset rather than extent index
-    
-    The collapse range implementation uses a transaction per extent shift.
-    The progress of the overall operation is tracked via the current extent
-    index of the in-core extent list. This is racy because the ilock must be
-    dropped and reacquired for each transaction according to locking and log
-    reservation rules. Therefore, writeback to prior regions of the file is
-    possible and can change the extent count. This changes the extent to
-    which the current index refers and causes the collapse to fail mid
-    operation. To avoid this problem, the entire file is currently written
-    back before the collapse operation starts.
-    
-    To eliminate the need to flush the entire file, use the file offset
-    (fsb) to track the progress of the overall extent shift operation rather
-    than the extent index. Modify xfs_bmap_shift_extents() to
-    unconditionally convert the start_fsb parameter to an extent index and
-    return the file offset of the extent where the shift left off, if
-    further extents exist. The bulk of ths function can remain based on
-    extent index as ilock is held by the caller. xfs_collapse_file_space()
-    now uses the fsb output as the starting point for the subsequent shift.
-    
-    Signed-off-by: Brian Foster <bfoster@redhat.com>
-    Reviewed-by: Dave Chinner <dchinner@redhat.com>
-    Signed-off-by: Dave Chinner <david@fromorbit.com>
-
-commit 0d085a529b427d97710e6a41f8a4f23e1757cd12
+commit 2ebff7bbd785c86e12956388b9e6f6bb8ea5d21e
 Author: Dave Chinner <dchinner@redhat.com>
-Date:   Tue Sep 23 15:36:27 2014 +1000
+Date:   Tue Sep 23 22:55:00 2014 +1000
 
-    xfs: ensure WB_SYNC_ALL writeback handles partial pages correctly
+    xfs: flush entire last page of old EOF on truncate up
     
-    XFS has been having trouble with stray delayed allocation extents
-    beyond EOF for a long time. Recent changes to the collapse range
-    code has triggered erroneous EBUSY errors on page invalidtion for
-    block size smaller than page size filesystems. These
-    have been caused by dirty buffers beyond EOF on a partial page which
-    do not get written to disk during a sync.
+    On a sub-page sized filesystem, truncating a mapped region down
+    leaves us in a world of hurt. We truncate the pagecache, zeroing the
+    newly unused tail, then punch blocks out from under the page. If we
+    then truncate the file back up immediately, we expose that unmapped
+    hole to a dirty page mapped into the user application, and that's
+    where it all goes wrong.
     
-    The issue is that write-ahead in xfs_cluster_write() finds such a
-    partial page and handles it by leaving the page dirty but pushing it
-    into a writeback state. This used to work just fine, as the
-    write_cache_pages() code would then find the dirty partial page in
-    the next mapping tree lookup as the dirty tag is still set.
+    In truncating the page cache, we avoid unmapping the tail page of
+    the cache because it still contains valid data. The problem is that
+    it also contains a hole after the truncate, but nobody told the mm
+    subsystem that. Therefore, if the page is dirty before the truncate,
+    we'll never get a .page_mkwrite callout after we extend the file and
+    the application writes data into the hole on the page.  Hence when
+    we come to writing that region of the page, it has no blocks and no
+    delayed allocation reservation and hence we toss the data away.
     
-    Unfortunately, when we moved to a mark and sweep approach to
-    writeback to fix other writeback sync issues, we broken this. THe
-    act of marking the page as under writeback now clears the TOWRITE
-    tag in the radix tree, even though the page is still dirty. This
-    causes the TOWRITE tag to be cleared, and hence the next lookup on
-    the mapping tree does not find the dirty partial page and so doesn't
-    try to write it again.
+    This patch adds code to the truncate up case to solve it, by
+    ensuring the partial page at the old EOF is always cleaned after we
+    do any zeroing and move the EOF upwards. We can't actually serialise
+    the page writeback and truncate against page faults (yes, that
+    problem AGAIN) so this is really just a best effort and assumes it
+    is extremely unlikely that someone is concurrently writing to the
+    page at the EOF while extending the file.
     
-    This same writeback bug was found recently in ext4 and fixed in
-    commit 1c8349a ("ext4: fix data integrity sync in ordered mode")
-    without communication to the wider filesystem community. We can use
-    exactly the same fix here so the TOWRITE flag is not cleared on
-    partial page writes.
+    Signed-off-by: Dave Chinner <dchinner@redhat.com>
+    Reviewed-by: Brian Foster <bfoster@redhat.com>
+    Signed-off-by: Dave Chinner <david@fromorbit.com>
+
+commit 7abbb8f928e5b7cea1edd077131b2ace665c6712
+Author: Dave Chinner <david@fromorbit.com>
+Date:   Tue Sep 23 16:20:11 2014 +1000
+
+    xfs: xfs_swap_extent_flush can be static
     
-    cc: stable@vger.kernel.org # dependent on 1c8349a17137b93f0a83f276c764a6df1b9a116e
-    Root-cause-found-by: Brian Foster <bfoster@redhat.com>
+    Fix sparse warning introduced by commit 4ef897a ("xfs: flush both
+    inodes in xfs_swap_extents").
+    
+    Signed-off-by: Fengguang Wu <fengguang.wu@intel.com>
+    Reviewed-by: Dave Chinner <dchinner@redhat.com>
+    Signed-off-by: Dave Chinner <david@fromorbit.com>
+
+commit 02cc18764c753befcdc163d1bc668a6599a54585
+Author: Dave Chinner <david@fromorbit.com>
+Date:   Tue Sep 23 16:15:45 2014 +1000
+
+    xfs: xfs_buf_write_fail_rl_state can be static
+    
+    Fix sparse warning introduced by commit ac8809f9 ("xfs: abort
+    metadata writeback on permanent errors").
+    
+    Signed-off-by: Fengguang Wu <fengguang.wu@intel.com>
+    Reviewed-by: Dave Chinner <dchinner@redhat.com>
+    Signed-off-by: Dave Chinner <david@fromorbit.com>
+
+commit ea95961df714f7fc446aa4bedfc61510ed1b59cc
+Author: Fengguang Wu <fengguang.wu@intel.com>
+Date:   Tue Sep 23 16:11:43 2014 +1000
+
+    xfs: xfs_rtget_summary can be static
+    
+    Fix sparse warning introduced by commit afabfd3 ("xfs: combine
+    xfs_rtmodify_summary and xfs_rtget_summary").
+    
+    Signed-off-by: Fengguang Wu <fengguang.wu@intel.com>
+    Reviewed-by: Dave Chinner <dchinner@redhat.com>
+    Signed-off-by: Dave Chinner <david@fromorbit.com>
+
+commit e3cf17962a757e59fed2cbcbda6373c1b35a35dd
+Author: Fabian Frederick <fabf@skynet.be>
+Date:   Tue Sep 23 16:05:55 2014 +1000
+
+    xfs: remove second xfs_quota.h inclusion in xfs_icache.c
+    
+    xfs_quota.h was included twice.
+    
+    Signed-off-by: Fabian Frederick <fabf@skynet.be>
+    Reviewed-by: Dave Chinner <dchinner@redhat.com>
+    Signed-off-by: Dave Chinner <david@fromorbit.com>
+
+commit fb040131561a6b34cefb92cdf598218104abeda0
+Author: Eric Sandeen <sandeen@sandeen.net>
+Date:   Tue Sep 23 16:05:32 2014 +1000
+
+    xfs: don't ASSERT on corrupt ftype
+    
+    xfs_dir3_data_get_ftype() gets the file type off disk, but ASSERTs
+    if it's invalid:
+    
+         ASSERT(type < XFS_DIR3_FT_MAX);
+    
+    We shouldn't ASSERT on bad values read from disk.  V3 dirs are
+    CRC-protected, but V2 dirs + ftype are not.
+    
+    Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+    Reviewed-by: Dave Chinner <dchinner@redhat.com>
+    Signed-off-by: Dave Chinner <david@fromorbit.com>
+
+commit 8af3dcd3c89aef10375bdd79d5f336b22b57487c
+Author: Dave Chinner <dchinner@redhat.com>
+Date:   Tue Sep 23 15:57:59 2014 +1000
+
+    xfs: xlog_cil_force_lsn doesn't always wait correctly
+    
+    When running a tight mount/unmount loop on an older kernel, RedHat
+    QE found that unmount would occasionally hang in
+    xfs_buf_unpin_wait() on the superblock buffer. Tracing and other
+    debug work by Eric Sandeen indicated that it was hanging on the
+    writing of the superblock during unmount immediately after logging
+    the superblock counters in a synchronous transaction. Further debug
+    indicated that the synchronous transaction was not waiting for
+    completion correctly, and we narrowed it down to
+    xlog_cil_force_lsn() returning NULLCOMMITLSN and hence not pushing
+    the transaction in the iclog buffer to disk correctly.
+    
+    While this unmount superblock write code is now very different in
+    mainline kernels, the xlog_cil_force_lsn() code is identical, and it
+    was bisected to the backport of commit f876e44 ("xfs: always do log
+    forces via the workqueue"). This commit made the CIL push
+    asynchronous for log forces and hence exposed a race condition that
+    couldn't occur on a synchronous push.
+    
+    Essentially, the xlog_cil_force_lsn() relied implicitly on the fact
+    that the sequence push would be complete by the time
+    xlog_cil_push_now() returned, resulting in the context being pushed
+    being in the committing list. When it was made asynchronous, it was
+    recognised that there was a race condition in detecting whether an
+    asynchronous push has started or not and code was added to handle
+    it.
+    
+    Unfortunately, the fix was not quite right and left a race condition
+    where it it would detect an empty CIL while a push was in progress
+    before the context had been added to the committing list. This was
+    incorrectly seen as a "nothing to do" condition and so would tell
+    xfs_log_force_lsn() that there is nothing to wait for, and hence it
+    would push the iclogbufs in memory.
+    
+    The fix is simple, but explaining the logic and the race condition
+    is a lot more complex. The fix is to add the context to the
+    committing list before we start emptying the CIL. This allows us to
+    detect the difference between an empty "do nothing" push and a push
+    that has not started by adding a discrete "emptying the CIL" state
+    to avoid the transient, incorrect "empty" condition that the
+    (unchanged) waiting code was seeing.
+    
     Signed-off-by: Dave Chinner <dchinner@redhat.com>
     Reviewed-by: Brian Foster <bfoster@redhat.com>
     Signed-off-by: Dave Chinner <david@fromorbit.com>
