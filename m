@@ -1,21 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 0C44E29DF9
-	for <xfs@oss.sgi.com>; Tue, 23 Sep 2014 13:34:26 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 90297AC007
-	for <xfs@oss.sgi.com>; Tue, 23 Sep 2014 11:34:25 -0700 (PDT)
-Received: from a.mx.filmlight.ltd.uk (a.mx.filmlight.ltd.uk [77.107.81.250])
-	by cuda.sgi.com with SMTP id vF9YNc75bLkbQ4Ad for
-	<xfs@oss.sgi.com>; Tue, 23 Sep 2014 11:34:20 -0700 (PDT)
-Subject: Re: [PATCH 07a/13] xfsprogs: add trie generator for UTF-8.
-From: Roger Willcocks <roger@filmlight.ltd.uk>
-In-Reply-To: <20140919160612.GF4482@sgi.com>
-References: <20140918195650.GI19952@sgi.com> <20140918203114.GN4482@sgi.com>
-	<20140919160612.GF4482@sgi.com>
-Date: Tue, 23 Sep 2014 19:34:19 +0100
-Message-Id: <1411497259.4842.163.camel@localhost.localdomain>
-Mime-Version: 1.0
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 9294F29DF9
+	for <xfs@oss.sgi.com>; Tue, 23 Sep 2014 13:57:21 -0500 (CDT)
+Date: Tue, 23 Sep 2014 13:57:21 -0500
+From: Ben Myers <bpm@sgi.com>
+Subject: Re: [PATCH 07/10] xfs: add trie generator and supporting code for
+	UTF-8.
+Message-ID: <20140923185721.GV19952@sgi.com>
+References: <20140918195650.GI19952@sgi.com> <20140918201518.GJ4482@sgi.com>
+	<20140922205714.GN4267@dastard>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20140922205714.GN4267@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,31 +24,62 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Ben Myers <bpm@sgi.com>
+To: Dave Chinner <david@fromorbit.com>
 Cc: linux-fsdevel@vger.kernel.org, tinguely@sgi.com, olaf@sgi.com, xfs@oss.sgi.com
 
+On Tue, Sep 23, 2014 at 06:57:14AM +1000, Dave Chinner wrote:
+> On Thu, Sep 18, 2014 at 03:15:19PM -0500, Ben Myers wrote:
+> > From: Olaf Weber <olaf@sgi.com>
+> > 
+> > mkutf8data.c is the source for a program that generates utf8data.h, which
+> > contains the trie that utf8norm.c uses. The trie is generated from the
+> > Unicode 7.0.0 data files. The format of the utf8data[] table is described
+> > in utf8norm.c.
+> > 
+> > Supporting functions for UTF-8 normalization are in utf8norm.c with the
+> > header utf8norm.h. Two normalization forms are supported: nfkdi and nfkdicf.
+> > 
+> >   nfkdi:
+> >    - Apply unicode normalization form NFKD.
+> >    - Remove any Default_Ignorable_Code_Point.
+> > 
+> >   nfkdicf:
+> >    - Apply unicode normalization form NFKD.
+> >    - Remove any Default_Ignorable_Code_Point.
+> >    - Apply a full casefold (C + F).
+> > 
+> > For the purposes of the code, a string is valid UTF-8 if:
+> > 
+> >  - The values encoded are 0x1..0x10FFFF.
+> >  - The surrogate codepoints 0xD800..0xDFFFF are not encoded.
+> >  - The shortest possible encoding is used for all values.
+> > 
+> > The supporting functions work on null-terminated strings (utf8 prefix) and
+> > on length-limited strings (utf8n prefix).
+> > 
+> > Signed-off-by: Olaf Weber <olaf@sgi.com>
+> > 
+> > ---
+> > [v2: the trie is now separated into utf8norm.ko;
+> >      utf8version is now a function and exported;
+> >      introduced CONFIG_XFS_UTF8. -bpm]
+> > ---
+> >  fs/xfs/Kconfig               |    8 +
+> >  fs/xfs/Makefile              |    2 +-
+> >  fs/xfs/utf8norm/Makefile     |   37 +
+> >  fs/xfs/utf8norm/mkutf8data.c | 3239 ++++++++++++++++++++++++++++++++++++++++++
+> >  fs/xfs/utf8norm/utf8norm.c   |  649 +++++++++
+> >  fs/xfs/utf8norm/utf8norm.h   |  116 ++
+> 
+> Again, nothing XFS specific here. It's being built as a separate
+> module and the only thing that XFS uses are exported functions, so
+> it really should be generic library code....
 
-On Fri, 2014-09-19 at 11:06 -0500, Ben Myers wrote:
-> +#define AGE_NAME       "DerivedAge.txt"
-> +#define CCC_NAME       "DerivedCombiningClass.txt"
-> +#define PROP_NAME      "DerivedCoreProperties.txt"
-> +#define DATA_NAME      "UnicodeData.txt"
-> +#define FOLD_NAME      "CaseFolding.txt"
-> +#define NORM_NAME      "NormalizationCorrections.txt"
-> +#define TEST_NAME      "NormalizationTest.txt"
+I'll get this moved to lib/ as you suggested elsewhere in the
+thread.
 
-Is there a reason why you're using multiple text-based data files (and
-hand-parsing them) when there's an xml formatted flat file available ?
-
-http://www.unicode.org/Public/UCD/latest/ucdxml/
-
-
-And a 2nd question - why does the trie need to encode "the the unicode
-version in which the codepoint was assigned an interpretation" ?
-
-
--- 
-Roger Willcocks <roger@filmlight.ltd.uk>
+Thanks,
+	Ben
 
 _______________________________________________
 xfs mailing list
