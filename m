@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 929807F3F
-	for <xfs@oss.sgi.com>; Wed, 24 Sep 2014 03:42:21 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 80BDB8F8035
-	for <xfs@oss.sgi.com>; Wed, 24 Sep 2014 01:42:18 -0700 (PDT)
-Received: from mail-wi0-f177.google.com (mail-wi0-f177.google.com
-	[209.85.212.177]) by cuda.sgi.com with ESMTP id
-	Y7atORvWRxpTbzoq (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 24 Sep 2014 01:42:16 -0700 (PDT)
-Received: by mail-wi0-f177.google.com with SMTP id q5so6733003wiv.4
-	for <xfs@oss.sgi.com>; Wed, 24 Sep 2014 01:42:15 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id A1C1C7F3F
+	for <xfs@oss.sgi.com>; Wed, 24 Sep 2014 03:45:26 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 8DD6E8F8033
+	for <xfs@oss.sgi.com>; Wed, 24 Sep 2014 01:45:26 -0700 (PDT)
+Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
+	with ESMTP id JyeX9wA9xSuVWHUz (version=TLSv1 cipher=AES256-SHA
+	bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 24 Sep 2014 01:45:23 -0700 (PDT)
+Date: Wed, 24 Sep 2014 10:45:19 +0200
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [PATCH 2/2] ext4: Fix mmap data corruption when blocksize <
+	pagesize
+Message-ID: <20140924084519.GA21987@quack.suse.cz>
+References: <1411484603-17756-1-git-send-email-jack@suse.cz>
+	<1411484603-17756-3-git-send-email-jack@suse.cz>
 MIME-Version: 1.0
-In-Reply-To: <201409240903.46899.arekm@maven.pl>
-References: <201409240903.46899.arekm@maven.pl>
-Date: Wed, 24 Sep 2014 10:42:15 +0200
-Message-ID: <CAM5tkX-mOO6EtJczQZC-23-vk7LwSczTL8CB6pgLTSLH0q94fg@mail.gmail.com>
-Subject: Re: "No space left on device" from hell
-From: =?UTF-8?Q?Fran_Tsao_Sant=C3=ADn?= <tsao@members.fsf.org>
+Content-Disposition: inline
+In-Reply-To: <1411484603-17756-3-git-send-email-jack@suse.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,65 +27,56 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============4471387697769802843=="
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: =?UTF-8?Q?Arkadiusz_Mi=C5=9Bkiewicz?= <arekm@maven.pl>
-Cc: xfs@oss.sgi.com
+To: linux-fsdevel@vger.kernel.org
+Cc: Jan Kara <jack@suse.cz>, xfs@oss.sgi.com, linux-mm@kvack.org, Ted Tso <tytso@mit.edu>, linux-ext4@vger.kernel.org
 
---===============4471387697769802843==
-Content-Type: multipart/alternative; boundary=bcaec53f398136b64d0503cba94d
+On Tue 23-09-14 17:03:23, Jan Kara wrote:
+> Use block_create_hole() when hole is being created in a file so that
+> ->page_mkwrite() will get called for the partial tail page if it is
+> mmaped (see the first patch in the series for details).
+  Just out of curiosity I did a change similar to this one for ext4 to XFS
+and indeed it fixed generic/030 test failures for XFS with blocksize 1k.
 
---bcaec53f398136b64d0503cba94d
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+								Honza
 
-2014-09-24 9:03 GMT+02:00 Arkadiusz Mi=C5=9Bkiewicz <arekm@maven.pl>:
+PS: I forgot to CC xfs list in the original posting. You can find the VFS
+    patch e.g. at http://www.spinics.net/lists/linux-mm/msg78976.html
 
->
-> Hello.
->
-> 3.10.40 kernel and creating files causes "No space left on device". After
-> deleting some files I can create new files again until the problem happen=
-s
-> again.
-
-
-Are you sure the problem is the filesystem device? Maybe you are running a
-process that fills up another device i.e. shm.
-
---bcaec53f398136b64d0503cba94d
-Content-Type: text/html; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
-
-<div dir=3D"ltr"><br><div class=3D"gmail_extra"><div class=3D"gmail_quote">=
-2014-09-24 9:03 GMT+02:00 Arkadiusz Mi=C5=9Bkiewicz <span dir=3D"ltr">&lt;<=
-a href=3D"mailto:arekm@maven.pl" target=3D"_blank">arekm@maven.pl</a>&gt;</=
-span>:<br><blockquote class=3D"gmail_quote" style=3D"margin:0px 0px 0px 0.8=
-ex;border-left:1px solid rgb(204,204,204);padding-left:1ex"><br>
-Hello.<br>
-<br>
-3.10.40 kernel and creating files causes &quot;No space left on device&quot=
-;. After<br>
-deleting some files I can create new files again until the problem happens<=
-br>
-again.</blockquote><div><br>Are you sure the problem is the filesystem devi=
-ce? Maybe you are running
- a process that fills up another device i.e. shm.<br><br>=C2=A0</div></div>=
-</div></div>
-
---bcaec53f398136b64d0503cba94d--
-
-
---===============4471387697769802843==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+> Signed-off-by: Jan Kara <jack@suse.cz>
+> ---
+>  fs/ext4/inode.c | 6 +++++-
+>  1 file changed, 5 insertions(+), 1 deletion(-)
+> 
+> diff --git a/fs/ext4/inode.c b/fs/ext4/inode.c
+> index 3aa26e9117c4..fdcb007c2c9e 100644
+> --- a/fs/ext4/inode.c
+> +++ b/fs/ext4/inode.c
+> @@ -4536,8 +4536,12 @@ int ext4_setattr(struct dentry *dentry, struct iattr *attr)
+>  				ext4_orphan_del(NULL, inode);
+>  				goto err_out;
+>  			}
+> -		} else
+> +		} else {
+> +			loff_t old_size = inode->i_size;
+> +
+>  			i_size_write(inode, attr->ia_size);
+> +			block_create_hole(inode, old_size, inode->i_size);
+> +		}
+>  
+>  		/*
+>  		 * Blocks are going to be removed from the inode. Wait
+> -- 
+> 1.8.1.4
+> 
+-- 
+Jan Kara <jack@suse.cz>
+SUSE Labs, CR
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============4471387697769802843==--
