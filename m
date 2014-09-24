@@ -1,27 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 8E8CB7F5A
-	for <xfs@oss.sgi.com>; Wed, 24 Sep 2014 14:06:38 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 7D5E88F8033
-	for <xfs@oss.sgi.com>; Wed, 24 Sep 2014 12:06:35 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id oFBMffDsKFMCPnmV (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 24 Sep 2014 12:06:34 -0700 (PDT)
-Received: from int-mx13.intmail.prod.int.phx2.redhat.com
-	(int-mx13.intmail.prod.int.phx2.redhat.com [10.5.11.26])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id s8OJ6XT6020806
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256
-	verify=FAIL) for <xfs@oss.sgi.com>; Wed, 24 Sep 2014 15:06:33 -0400
-Received: from bfoster.bfoster ([10.18.41.237])
-	by int-mx13.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id s8OJ6XAd016743
-	for <xfs@oss.sgi.com>; Wed, 24 Sep 2014 15:06:33 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH] xfs: flush the range before zero range conversion
-Date: Wed, 24 Sep 2014 15:06:31 -0400
-Message-Id: <1411585591-55975-1-git-send-email-bfoster@redhat.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id C7C3E7F5A
+	for <xfs@oss.sgi.com>; Wed, 24 Sep 2014 14:06:50 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 56026AC008
+	for <xfs@oss.sgi.com>; Wed, 24 Sep 2014 12:06:47 -0700 (PDT)
+Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
+	[65.41.216.221]) by cuda.sgi.com with ESMTP id SpUhdk0qfeuYybix
+	for <xfs@oss.sgi.com>; Wed, 24 Sep 2014 12:06:46 -0700 (PDT)
+Message-ID: <54231653.7050600@hardwarefreak.com>
+Date: Wed, 24 Sep 2014 14:06:59 -0500
+From: Stan Hoeppner <stan@hardwarefreak.com>
+MIME-Version: 1.0
+Subject: Re: How to format RAID1 correctly
+References: <5422146A.90206@evermeet.cx>	<54222763.40107@sandeen.net>	<5422285B.6010306@evermeet.cx>	<542234F6.4080000@hardwarefreak.com>
+	<5422376D.3000204@evermeet.cx>	<542243E6.1040302@hardwarefreak.com>
+	<5422E912.1000708@evermeet.cx>
+In-Reply-To: <5422E912.1000708@evermeet.cx>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,77 +25,55 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Helmut Tessarek <tessarek@evermeet.cx>, Eric Sandeen <sandeen@sandeen.net>, xfs@oss.sgi.com
 
-XFS currently discards delalloc blocks within the target range of a zero
-range request. Unaligned start and end offsets are zeroed through the
-page cache and the internal, aligned blocks are converted to unwritten
-extents.
 
-If EOF is page aligned and covered by a delayed allocation extent. The
-inode size is not updated until I/O completion. If a zero range request
-discards a delalloc range that covers page aligned EOF as such, the
-inode size update never occurs. For example:
 
-$ rm -f /mnt/file
-$ xfs_io -fc "pwrite 0 64k" -c "zero 60k 4k" /mnt/file
-$ stat -c "%s" /mnt/file
-65536
-$ umount /mnt
-$ mount <dev> /mnt
-$ stat -c "%s" /mnt/file
-61440
+On 09/24/2014 10:53 AM, Helmut Tessarek wrote:
+> On 2014-09-24 0:09, Stan Hoeppner wrote:
+>> If you create any striped arrays, especially parity arrays, with md make
+>> sure to manually specify chunk size and match it to your workload.  The
+>> current default is 512KB.  This is too large for a great many workloads,
+>> specifically those that are metadata heavy or manipulate many small
+>> files.  512KB wastes space and with parity arrays causes RMW, hammering
+>> throughput and increasing latency.
+> 
+> Thanks again for the valueable information.
+> 
+> I used to work with databases on storage subsystems, so placing GBs of
+> database containers for tableapaces on arrays with a larger stripe size
+> was actually beneficial.
+> For log files and other data I usually used different cache settings and
+> strip sizes.
+> 
+> So how does this work with SW RAID?
+> 
+> Does the XFS chunk size equal the amount of data touched by a single r/w
+> operation?
 
-Update xfs_zero_file_space() to flush the range rather than discard
-delalloc blocks to ensure that inode size updates occur appropriately.
+No.  The XFS stripe unit size (chunk size) must/should equal the
+underlying RAID stripe unit size (chunk).  As Eric said, all this does
+is help XFS align allocations to the underlying RAID geometry in an
+attempt to get more full chunk/stripe writes on the disks.
 
-Signed-off-by: Brian Foster <bfoster@redhat.com>
----
+Note we both said allocation.  The XFS sunit/swidth settings have no
+affect with file appends or writing into preallocated files.
 
-I suppose we could be more clever here and only flush the range in this
-particular scenario, but I'm not sure if there's a major benefit there.
-FWIW, this implicitly addresses the indlen==0 assert failures described
-in the xfs_bmap_del_extent() rfc, but doesn't necessarily mean we
-shouldn't fix that code IMO.
+> I'm asking because data is usually written in page/extent sizes for
+> databases. Even if I have a container with 50GB, I might only have to
+> read/write a 4k page.
 
-Brian
+db operations are going to be append or modify-in-place.  Neither will
+benefit from aligning XFS to the RAID geometry.  Appending the db logs
+is also not allocation.  So in practical terms, you simply would not use
+the "-d" striping options during mkfs.xfs.  Use the defaults.
 
- fs/xfs/xfs_bmap_util.c | 14 +++++++-------
- 1 file changed, 7 insertions(+), 7 deletions(-)
-
-diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-index d8b77b5..24d634d 100644
---- a/fs/xfs/xfs_bmap_util.c
-+++ b/fs/xfs/xfs_bmap_util.c
-@@ -1394,14 +1394,14 @@ xfs_zero_file_space(
- 
- 	if (start_boundary < end_boundary - 1) {
- 		/*
--		 * punch out delayed allocation blocks and the page cache over
--		 * the conversion range
-+		 * Writeback the range to ensure any inode size updates due to
-+		 * appending writes make it to disk (otherwise we could just
-+		 * punch out the delalloc blocks).
- 		 */
--		xfs_ilock(ip, XFS_ILOCK_EXCL);
--		error = xfs_bmap_punch_delalloc_range(ip,
--				XFS_B_TO_FSBT(mp, start_boundary),
--				XFS_B_TO_FSB(mp, end_boundary - start_boundary));
--		xfs_iunlock(ip, XFS_ILOCK_EXCL);
-+		error = filemap_write_and_wait_range(VFS_I(ip)->i_mapping,
-+				start_boundary, end_boundary - 1);
-+		if (error)
-+			goto out;
- 		truncate_pagecache_range(VFS_I(ip), start_boundary,
- 					 end_boundary - 1);
- 
--- 
-1.8.3.1
+Cheers,
+Stan
 
 _______________________________________________
 xfs mailing list
