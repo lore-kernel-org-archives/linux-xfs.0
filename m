@@ -1,21 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 001727F4E
-	for <xfs@oss.sgi.com>; Tue, 23 Sep 2014 18:12:42 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 170C77F3F
+	for <xfs@oss.sgi.com>; Tue, 23 Sep 2014 19:46:43 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id D448D304039
-	for <xfs@oss.sgi.com>; Tue, 23 Sep 2014 16:12:38 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id BQnRmRpq4WElZ5H3 for <xfs@oss.sgi.com>;
-	Tue, 23 Sep 2014 16:12:34 -0700 (PDT)
-Message-ID: <5421FE61.30508@sandeen.net>
-Date: Tue, 23 Sep 2014 18:12:33 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 05113304048
+	for <xfs@oss.sgi.com>; Tue, 23 Sep 2014 17:46:39 -0700 (PDT)
+Received: from atvie01s.evermeet.cx (evermeet.cx [77.244.245.66]) by
+	cuda.sgi.com with ESMTP id pAAVrkwyonDJ2QtJ (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 23 Sep 2014 17:46:37 -0700 (PDT)
+Received: from [10.0.0.40] (135-23-85-229.cpe.pppoe.ca [135.23.85.229])
+	(authenticated bits=0)
+	by atvie01s.evermeet.cx (8.14.9/8.14.9) with ESMTP id s8O0kXKW008177
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES128-SHA bits=128 verify=NO)
+	for <xfs@oss.sgi.com>; Wed, 24 Sep 2014 02:46:34 +0200
+Message-ID: <5422146A.90206@evermeet.cx>
+Date: Tue, 23 Sep 2014 20:46:34 -0400
+From: Helmut Tessarek <tessarek@evermeet.cx>
 MIME-Version: 1.0
-Subject: Re: Corrupted file system
-References: <5839367.DyqsVHbRuQ@myrada>	<CAA43vkWP5MEv=EoUxthjniyiiLm8hZNSS-agcm2C3dBDMXQ8Zw@mail.gmail.com>
-	<6825577.fQrC5yyUIR@myrada>
-In-Reply-To: <6825577.fQrC5yyUIR@myrada>
+Subject: How to format RAID1 correctly
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,27 +31,64 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Diane Trout <diane@caltech.edu>, Sean Caron <scaron@umich.edu>
-Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
-On 9/23/14 5:29 PM, Diane Trout wrote:
-> Hello,
-> 
-> Yes, I had my doubts about that there's anything reasonable one could do after 
-> part of the file system was randomized. I'll trying updating to xfsprogs 3.2.1 
-> and see if that does any better.
+The information provided in the FAQ and on several web sites is not really
+useful regarding RAID1.
 
-Yes - you didn't mention which version you used, but I'd definitely try something
-current.  The bug rings a bell, maybe fixed now.
+According to the FAQ (entry 35):
+The correct options to format a RAID1 (2 disks) with 64k chunk size is:
+mkfs.xfs -d su=64k -d sw=1 /dev/mapper/data
+But it also states that it would be automatically detected and used correctly,
+yet
+mkfs.xfs /dev/mapper/data
+yields a different result:
 
-To be safe, you can always make an xfs_metadump image (use -o to not obfuscate
-filenames for convenience), xfs_mdrestore that, and point repair at that fs image.
-Then you'll see what it *would* do before you *do* do.  ;)
+[root@atvie01s ~]# mkfs.xfs -f /dev/mapper/data
 
-But yeah, depending on the damage done to the storage, you may be in trouble
-that repair can't help with.  Depends on the failure, though.
+meta-data=/dev/mapper/data       isize=256    agcount=4,
+agsize=244173876 blks
+         =                       sectsz=4096  attr=2, projid32bit=1
+         =                       crc=0        finobt=0
+data     =                       bsize=4096   blocks=976695504, imaxpct=5
+         =                       sunit=0      swidth=0 blks
+naming   =version 2              bsize=4096   ascii-ci=0 ftype=0
+log      =internal log           bsize=4096   blocks=476902, version=2
+         =                       sectsz=4096  sunit=1 blks, lazy-count=1
+realtime =none                   extsz=4096   blocks=0, rtextents=0
 
--Eric
+Formel 1:
+
+[root@atvie01s ~]# mkfs.xfs -f -d su=64k -d sw=1 /dev/mapper/data
+
+meta-data=/dev/mapper/data       isize=256    agcount=32,
+agsize=30521728 blks
+         =                       sectsz=4096  attr=2, projid32bit=1
+         =                       crc=0        finobt=0
+data     =                       bsize=4096   blocks=976695296, imaxpct=5
+         =                       sunit=16     swidth=16 blks
+naming   =version 2              bsize=4096   ascii-ci=0 ftype=0
+log      =internal log           bsize=4096   blocks=476902, version=2
+         =                       sectsz=4096  sunit=1 blks, lazy-count=1
+realtime =none                   extsz=4096   blocks=0, rtextents=0
+
+
+Another inconsistency is that RAID1 doesn't use striping, so the chunk size
+should be irrelevant in the first place.
+
+So what is ultimately the correct way to format a RAID1?
+
+Cheers,
+  K. C.
+
+-- 
+regards Helmut K. C. Tessarek
+lookup http://sks.pkqs.net for KeyID 0xC11F128D
+
+/*
+   Thou shalt not follow the NULL pointer for chaos and madness
+   await thee at its end.
+*/
 
 _______________________________________________
 xfs mailing list
