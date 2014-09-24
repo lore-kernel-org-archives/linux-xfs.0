@@ -1,22 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id DD8067F3F
-	for <xfs@oss.sgi.com>; Tue, 23 Sep 2014 23:09:01 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id CB94E304032
-	for <xfs@oss.sgi.com>; Tue, 23 Sep 2014 21:08:58 -0700 (PDT)
-Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
-	[65.41.216.221]) by cuda.sgi.com with ESMTP id h44o89fdek3uFVET
-	for <xfs@oss.sgi.com>; Tue, 23 Sep 2014 21:08:57 -0700 (PDT)
-Message-ID: <542243E6.1040302@hardwarefreak.com>
-Date: Tue, 23 Sep 2014 23:09:10 -0500
-From: Stan Hoeppner <stan@hardwarefreak.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id B521D7F3F
+	for <xfs@oss.sgi.com>; Wed, 24 Sep 2014 02:03:56 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 600C1AC004
+	for <xfs@oss.sgi.com>; Wed, 24 Sep 2014 00:03:53 -0700 (PDT)
+Received: from mail-lb0-f170.google.com (mail-lb0-f170.google.com
+	[209.85.217.170]) by cuda.sgi.com with ESMTP id
+	SFODCmnDmcretLbj (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 24 Sep 2014 00:03:50 -0700 (PDT)
+Received: by mail-lb0-f170.google.com with SMTP id z11so4700026lbi.1
+	for <xfs@oss.sgi.com>; Wed, 24 Sep 2014 00:03:48 -0700 (PDT)
+Received: from t400.localnet ([91.234.176.246])
+	by mx.google.com with ESMTPSA id ug7sm5450280lac.48.2014.09.24.00.03.47
+	for <xfs@oss.sgi.com>
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+	Wed, 24 Sep 2014 00:03:47 -0700 (PDT)
+From: Arkadiusz =?utf-8?q?Mi=C5=9Bkiewicz?= <arekm@maven.pl>
+Subject: "No space left on device" from hell
+Date: Wed, 24 Sep 2014 09:03:46 +0200
 MIME-Version: 1.0
-Subject: Re: How to format RAID1 correctly
-References: <5422146A.90206@evermeet.cx>
-	<54222763.40107@sandeen.net>	<5422285B.6010306@evermeet.cx>
-	<542234F6.4080000@hardwarefreak.com> <5422376D.3000204@evermeet.cx>
-In-Reply-To: <5422376D.3000204@evermeet.cx>
+Message-Id: <201409240903.46899.arekm@maven.pl>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,34 +30,65 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Helmut Tessarek <tessarek@evermeet.cx>, Eric Sandeen <sandeen@sandeen.net>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On 09/23/2014 10:15 PM, Helmut Tessarek wrote:
-> On 23.09.14 23:05 , stan hoeppner wrote:
->> It confuses many people who are new to md RAID1.  The above is the
->> *bitmap* chunk size, not the array chunk size.  There is no array chunk
->> size for RAID1 as there is no striping.  You must have striping to have
->> chunks.  With md RAID1 every 4KB page write is simply mirrored to each
->> physical disk.
-> 
-> Thanks for the info. I'm used to big ass storage subsystems, but new to SW
-> RAID. I seems I have some catching up to do.
-
-If you create any striped arrays, especially parity arrays, with md make
-sure to manually specify chunk size and match it to your workload.  The
-current default is 512KB.  This is too large for a great many workloads,
-specifically those that are metadata heavy or manipulate many small
-files.  512KB wastes space and with parity arrays causes RMW, hammering
-throughput and increasing latency.
-
-Cheers,
-Stan
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+CkhlbGxvLgoKMy4xMC40MCBrZXJuZWwgYW5kIGNyZWF0aW5nIGZpbGVzIGNhdXNlcyAiTm8gc3Bh
+Y2UgbGVmdCBvbiBkZXZpY2UiLiBBZnRlciAKZGVsZXRpbmcgc29tZSBmaWxlcyBJIGNhbiBjcmVh
+dGUgbmV3IGZpbGVzIGFnYWluIHVudGlsIHRoZSBwcm9ibGVtIGhhcHBlbnMgCmFnYWluLgoKQW55
+IGlkZWFzIHdoYXQgaXMgZ29pbmcgb24gYW5kLCB3aGF0IGlzIG1vcmUgaW1wb3J0YW50LCBob3cg
+dG8gZml4IHRoZSAKcHJvYmxlbT8KCiMgZGYgLWgKL2Rldi9tYXBwZXIvdmdzeXMtaG9tZSAgNjAw
+RyAgMzY4RyAgMjMyRyAgNjIlIC9ob21lCgojIGRmIC1pCi9kZXYvbWFwcGVyL3Znc3lzLWhvbWUg
+NjI5MTQ1NjAwIDc5ODI4OTUgNjIxMTYyNzA1ICAgIDIlIC9ob21lCgojIHhmc19pbmZvIC9ob21l
+Cm1ldGEtZGF0YT0vZGV2L21hcHBlci92Z3N5cy1ob21lIGlzaXplPTI1NiAgICBhZ2NvdW50PTgs
+IGFnc2l6ZT0xOTY2MDgwMCBibGtzCiAgICAgICAgID0gICAgICAgICAgICAgICAgICAgICAgIHNl
+Y3Rzej01MTIgICBhdHRyPTIsIHByb2ppZDMyYml0PTEKICAgICAgICAgPSAgICAgICAgICAgICAg
+ICAgICAgICAgY3JjPTAgICAgICAgIGZpbm9idD0wCmRhdGEgICAgID0gICAgICAgICAgICAgICAg
+ICAgICAgIGJzaXplPTQwOTYgICBibG9ja3M9MTU3Mjg2NDAwLCBpbWF4cGN0PTI1CiAgICAgICAg
+ID0gICAgICAgICAgICAgICAgICAgICAgIHN1bml0PTAgICAgICBzd2lkdGg9MCBibGtzCm5hbWlu
+ZyAgID12ZXJzaW9uIDIgICAgICAgICAgICAgIGJzaXplPTQwOTYgICBhc2NpaS1jaT0wIGZ0eXBl
+PTAKbG9nICAgICAgPWludGVybmFsICAgICAgICAgICAgICAgYnNpemU9NDA5NiAgIGJsb2Nrcz0z
+ODQwMCwgdmVyc2lvbj0yCiAgICAgICAgID0gICAgICAgICAgICAgICAgICAgICAgIHNlY3Rzej01
+MTIgICBzdW5pdD0wIGJsa3MsIGxhenktY291bnQ9MQpyZWFsdGltZSA9bm9uZSAgICAgICAgICAg
+ICAgICAgICBleHRzej00MDk2ICAgYmxvY2tzPTAsIHJ0ZXh0ZW50cz0KCmltYXhwY3Q9MjUlIGJ1
+dCBjdXJyZW50IGlub2RlcyB0YWtlIG9ubHkgYWJvdXQgMkdCLCBtdWNoIGxlc3MgdGhhdCAyNSUg
+b2YgCjYwMEcsIHNvIHRoYXQgc2hvdWxkbid0IGJlIHByb2JsZW0KCi9kZXYvbWFwcGVyL3Znc3lz
+LWhvbWUgL2hvbWUgeGZzIApydyxub3N1aWQsbm9kZXYscmVsYXRpbWUsYXR0cjIsaW5vZGU2NCx1
+c3JxdW90YSxwcmpxdW90YSAwIDAKCnNvIGlub2RlNjQgaXMgbm90IGEgcHJvYmxlbQoKIyB4ZnNf
+cXVvdGEgLWMgICJxdW90YSAtcCAwIiAvaG9tZQpEaXNrIHF1b3RhcyBmb3IgUHJvamVjdCAjMCAo
+MCkKRmlsZXN5c3RlbSAgICAgICAgICAgICAgQmxvY2tzICAgICAgUXVvdGEgICAgICBMaW1pdCAg
+V2Fybi9UaW1lICAgICAgTW91bnRlZCAKb24KL2Rldi9tYXBwZXIvdmdzeXMtaG9tZQogICAgICAg
+ICAgICAgICAgICAgICAgMjc4NDg4MDQgICAgICAgICAgMCAgICAgICAgICAwICAgMDAgWy0tLS0t
+LS0tXSAvaG9tZQojIHhmc19xdW90YSAtYyAgInF1b3RhIC11IDAiIC9ob21lCkRpc2sgcXVvdGFz
+IGZvciBVc2VyIHJvb3QgKDApCkZpbGVzeXN0ZW0gICAgICAgICAgICAgIEJsb2NrcyAgICAgIFF1
+b3RhICAgICAgTGltaXQgIFdhcm4vVGltZSAgICAgIE1vdW50ZWQgCm9uCi9kZXYvbWFwcGVyL3Zn
+c3lzLWhvbWUKICAgICAgICAgICAgICAgICAgICAgICAgMTAzNDg0ICAgICAgICAgIDAgICAgICAg
+ICAgMCAgIDAwIFstLS0tLS0tLV0gL2hvbWUKIyB4ZnNfcXVvdGEgLWMgICJxdW90YSAtaSAwIiAv
+aG9tZQpEaXNrIHF1b3RhcyBmb3IgVXNlciByb290ICgwKQpGaWxlc3lzdGVtICAgICAgICAgICAg
+ICAgRmlsZXMgICAgICBRdW90YSAgICAgIExpbWl0ICBXYXJuL1RpbWUgICAgICBNb3VudGVkIApv
+bgovZGV2L21hcHBlci92Z3N5cy1ob21lCiAgICAgICAgICAgICAgICAgICAgICAgICAgODMzNiAg
+ICAgICAgICAwICAgICAgICAgIDAgICAwMCBbLS0tLS0tLS1dIC9ob21lCgpzbyBxdW90YSBpcyBu
+b3QgYSBwcm9ibGVtLCB0b28uCgojIHhmc19kYiAtciAiLWMgZnJlZXNwIC1zIiAgL2Rldi9tYXBw
+ZXIvdmdzeXMtaG9tZQogICBmcm9tICAgICAgdG8gZXh0ZW50cyAgYmxvY2tzICAgIHBjdAogICAg
+ICAxICAgICAgIDEgICAgMzQyNiAgICAzNDI2ICAgMC4wMQogICAgICAyICAgICAgIDMgICAgMzMx
+OSAgICA4MDI2ICAgMC4wMQogICAgICA0ICAgICAgIDcgICAgMzY5NCAgIDE5MDI3ICAgMC4wMwog
+ICAgICA4ICAgICAgMTUgICAyMzIyNSAgMzMwMzc4ICAgMC41NAogICAgIDE2ICAgICAgMzEgICAg
+IDM5NiAgICA4MTgwICAgMC4wMQogICAgIDMyICAgICAgNjMgICAgICA3NSAgICAzMjU2ICAgMC4w
+MQogICAgIDY0ICAgICAxMjcgICAgICA0NCAgICAzNDQzICAgMC4wMQogICAgMTI4ICAgICAyNTUg
+ICAgICAyNiAgICA0ODkyICAgMC4wMQogICAgMjU2ICAgICA1MTEgICAgICAzMiAgIDEwNzM3ICAg
+MC4wMgogICAgNTEyICAgIDEwMjMgICAgICAgNSAgICAzODY3ICAgMC4wMQogICAxMDI0ICAgIDIw
+NDcgICAgICAgOCAgIDEzNTc2ICAgMC4wMgogICAyMDQ4ICAgIDQwOTUgICAgICAgNSAgIDEzODkz
+ICAgMC4wMgogICA0MDk2ICAgIDgxOTEgICAgICAgMyAgIDE2ODk2ICAgMC4wMwogICA4MTkyICAg
+MTYzODMgICAgICAgMSAgIDE1NTMyICAgMC4wMwogIDE2Mzg0ICAgMzI3NjcgICAgICAgMSAgIDE3
+NzMxICAgMC4wMwoxMDQ4NTc2IDIwOTcxNTEgICAgICAgMSAxNDE0OTUyICAgMi4zMwoxNjc3NzIx
+NiAxOTY2MDgwMCAgICAgICAzIDU4OTEzOTY1ICA5Ni45MAp0b3RhbCBmcmVlIGV4dGVudHMgMzQy
+NjQKdG90YWwgZnJlZSBibG9ja3MgNjA4MDE3NzcKYXZlcmFnZSBmcmVlIGV4dGVudCBzaXplIDE3
+NzQuNTEKCnVuZm9ydHVuYXRlbHkgbm8gaWRlYSBob3cgdG8gaW50ZXJwcmV0IHRoaXMuIE1hbiBw
+YWdlIGlzbid0IGhlbHBmdWwuCgoKaHR0cDovL3NwcnVuZ2UudXMvSVZqRQoodHJhY2UtY21kIG9m
+IHRvdWNoIC9ob21lL3ggLi4uIGJ1dCBsb29rcyB0byBiZSBwYXJ0aWFsIG9ubHkpCgotLSAKQXJr
+YWRpdXN6IE1pxZtraWV3aWN6LCBhcmVrbSAvIG1hdmVuLnBsCgpfX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dp
+LmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
