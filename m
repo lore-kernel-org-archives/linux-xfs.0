@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id E7CB97F47
-	for <xfs@oss.sgi.com>; Wed, 24 Sep 2014 11:18:22 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id C7E6A8F8039
-	for <xfs@oss.sgi.com>; Wed, 24 Sep 2014 09:18:19 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id Ldo6vJ5Kmyp0BW7H for <xfs@oss.sgi.com>;
-	Wed, 24 Sep 2014 09:18:17 -0700 (PDT)
-Message-ID: <5422EECA.10301@sandeen.net>
-Date: Wed, 24 Sep 2014 11:18:18 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+	by oss.sgi.com (Postfix) with ESMTP id 0E58A7F4E
+	for <xfs@oss.sgi.com>; Wed, 24 Sep 2014 11:25:12 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id EEF618F8037
+	for <xfs@oss.sgi.com>; Wed, 24 Sep 2014 09:25:11 -0700 (PDT)
+Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
+	with ESMTP id eTDAwEUgKsy73nIP (version=TLSv1 cipher=AES256-SHA
+	bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 24 Sep 2014 09:25:10 -0700 (PDT)
+Date: Wed, 24 Sep 2014 18:25:07 +0200
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [PATCH 4/4] Adds ioctl interface support for ext4 project
+Message-ID: <20140924162507.GC27000@quack.suse.cz>
+References: <1411567470-31799-1-git-send-email-lixi@ddn.com>
+	<1411567470-31799-5-git-send-email-lixi@ddn.com>
 MIME-Version: 1.0
-Subject: Re: How to format RAID1 correctly
-References: <5422146A.90206@evermeet.cx>
-	<54222763.40107@sandeen.net>	<5422285B.6010306@evermeet.cx>
-	<542234F6.4080000@hardwarefreak.com> <5422376D.3000204@evermeet.cx>
-	<542243E6.1040302@hardwarefreak.com> <5422E912.1000708@evermeet.cx>
-In-Reply-To: <5422E912.1000708@evermeet.cx>
+Content-Disposition: inline
+In-Reply-To: <1411567470-31799-5-git-send-email-lixi@ddn.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,34 +30,164 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Helmut Tessarek <tessarek@evermeet.cx>, Stan Hoeppner <stan@hardwarefreak.com>, xfs@oss.sgi.com
+To: Li Xi <pkuelelixi@gmail.com>
+Cc: adilger@dilger.ca, jack@suse.cz, linux-api@vger.kernel.org, xfs@oss.sgi.com, hch@infradead.org, dmonakhov@openvz.org, viro@zeniv.linux.org.uk, linux-fsdevel@vger.kernel.org, tytso@mit.edu, linux-ext4@vger.kernel.org
 
-On 9/24/14 10:53 AM, Helmut Tessarek wrote:
-> On 2014-09-24 0:09, Stan Hoeppner wrote:
->> If you create any striped arrays, especially parity arrays, with md make
->> sure to manually specify chunk size and match it to your workload.  The
->> current default is 512KB.  This is too large for a great many workloads,
->> specifically those that are metadata heavy or manipulate many small
->> files.  512KB wastes space and with parity arrays causes RMW, hammering
->> throughput and increasing latency.
-> 
-> Thanks again for the valueable information.
-> 
-> I used to work with databases on storage subsystems, so placing GBs of
-> database containers for tableapaces on arrays with a larger stripe size
-> was actually beneficial.
-> For log files and other data I usually used different cache settings and
-> strip sizes.
-> 
-> So how does this work with SW RAID?
-> 
-> Does the XFS chunk size equal the amount of data touched by a single r/w
-> operation?
+On Wed 24-09-14 22:04:30, Li Xi wrote:
+> This patch adds ioctl interface for setting/getting project of ext4.
+  The patch looks good to me. I was just wondering whether it won't be
+useful to add an ioctl() which isn't ext4 specific. We could just extend
+->setattr() to allow setting of project ID (most filesystems would just
+return -EOPNOTSUPP but ext4 and xfs could do the right thing) and then call
+->setattr from the generic ioctl. That way userspace won't have to care
+about filesystem type when setting project ID... What do others think?
 
-It has more to do with where allocations start, so that allocations
-don't cross stripe boundaries if possible.
+								Honza
 
--Eric
+> Signed-off-by: Li Xi <lixi@ddn.com>
+> ---
+>  Documentation/filesystems/ext4.txt |    4 ++
+>  fs/ext4/ext4.h                     |    2 +
+>  fs/ext4/ioctl.c                    |   85 ++++++++++++++++++++++++++++++++++++
+>  3 files changed, 91 insertions(+), 0 deletions(-)
+> 
+> diff --git a/Documentation/filesystems/ext4.txt b/Documentation/filesystems/ext4.txt
+> index 919a329..9c98e62 100644
+> --- a/Documentation/filesystems/ext4.txt
+> +++ b/Documentation/filesystems/ext4.txt
+> @@ -609,6 +609,10 @@ EXT4_IOC_SWAP_BOOT	      Swap i_blocks and associated attributes
+>  			      The data blocks of the previous boot loader
+>  			      will be associated with the given inode.
+>  
+> + EXT4_IOC_GETPROJECT	      Get project ID associated with inode.
+> +
+> + EXT4_IOC_SETPROJECT	      Set Project ID associated with inode.
+> +
+>  ..............................................................................
+>  
+>  References
+> diff --git a/fs/ext4/ext4.h b/fs/ext4/ext4.h
+> index f8be9bf..51946fd 100644
+> --- a/fs/ext4/ext4.h
+> +++ b/fs/ext4/ext4.h
+> @@ -617,6 +617,8 @@ enum {
+>  #define EXT4_IOC_RESIZE_FS		_IOW('f', 16, __u64)
+>  #define EXT4_IOC_SWAP_BOOT		_IO('f', 17)
+>  #define EXT4_IOC_PRECACHE_EXTENTS	_IO('f', 18)
+> +#define EXT4_IOC_GETPROJECT		_IOR('f', 19, long)
+> +#define EXT4_IOC_SETPROJECT		_IOW('f', 20, long)
+>  
+>  #if defined(__KERNEL__) && defined(CONFIG_COMPAT)
+>  /*
+> diff --git a/fs/ext4/ioctl.c b/fs/ext4/ioctl.c
+> index 0f2252e..93b7ff4 100644
+> --- a/fs/ext4/ioctl.c
+> +++ b/fs/ext4/ioctl.c
+> @@ -14,6 +14,8 @@
+>  #include <linux/compat.h>
+>  #include <linux/mount.h>
+>  #include <linux/file.h>
+> +#include <linux/quotaops.h>
+> +#include <linux/quota.h>
+>  #include <asm/uaccess.h>
+>  #include "ext4_jbd2.h"
+>  #include "ext4.h"
+> @@ -611,6 +613,89 @@ resizefs_out:
+>  	case EXT4_IOC_PRECACHE_EXTENTS:
+>  		return ext4_ext_precache(inode);
+>  
+> +	case EXT4_IOC_GETPROJECT:
+> +	{
+> +		__u32 projid;
+> +
+> +		projid = (__u32)from_kprojid(&init_user_ns,
+> +					     EXT4_I(inode)->i_projid);
+> +		return put_user(projid, (__u32 __user *) arg);
+> +	}
+> +	case EXT4_IOC_SETPROJECT:
+> +	{
+> +		__u32 projid;
+> +		int err;
+> +		handle_t *handle;
+> +		kprojid_t kprojid;
+> +		struct ext4_iloc iloc;
+> +		struct ext4_inode *raw_inode;
+> +
+> +		struct dquot *transfer_to[EXT4_MAXQUOTAS] = { };
+> +
+> +		/* Make sure caller can change project. */
+> +		if (!capable(CAP_SYS_ADMIN))
+> +			return -EACCES;
+> +
+> +		if (get_user(projid, (__u32 __user *) arg))
+> +			return -EFAULT;
+> +
+> +		kprojid = make_kprojid(&init_user_ns, (projid_t)projid);
+> +
+> +		if (projid_eq(kprojid, EXT4_I(inode)->i_projid))
+> +			return 0;
+> +
+> +		err = mnt_want_write_file(filp);
+> +		if (err)
+> +			return err;
+> +
+> +		err = -EPERM;
+> +		mutex_lock(&inode->i_mutex);
+> +		/* Is it quota file? Do not allow user to mess with it */
+> +		if (IS_NOQUOTA(inode))
+> +			goto project_out;
+> +
+> +		dquot_initialize(inode);
+> +
+> +		handle = ext4_journal_start(inode, EXT4_HT_QUOTA,
+> +			EXT4_QUOTA_INIT_BLOCKS(sb) +
+> +			EXT4_QUOTA_DEL_BLOCKS(sb) + 3);
+> +		if (IS_ERR(handle)) {
+> +			err = PTR_ERR(handle);
+> +			goto project_out;
+> +		}
+> +
+> +		err = ext4_reserve_inode_write(handle, inode, &iloc);
+> +		if (err)
+> +			goto project_stop;
+> +
+> +		raw_inode = ext4_raw_inode(&iloc);
+> +		if ((EXT4_INODE_SIZE(inode->i_sb) <=
+> +		     EXT4_GOOD_OLD_INODE_SIZE) ||
+> +		    (!EXT4_FITS_IN_INODE(raw_inode, ei, i_projid))) {
+> +		    	err = -EFBIG;
+> +		    	goto project_stop;
+> +		}
+> +
+> +		transfer_to[PRJQUOTA] = dqget(sb, make_kqid_projid(kprojid));
+> +		if (!transfer_to[PRJQUOTA])
+> +			goto project_set;
+> +
+> +		err = __dquot_transfer(inode, transfer_to);
+> +		dqput(transfer_to[PRJQUOTA]);
+> +		if (err)
+> +			goto project_stop;
+> +
+> +project_set:
+> +		EXT4_I(inode)->i_projid = kprojid;
+> +		inode->i_ctime = ext4_current_time(inode);
+> +		err = ext4_mark_iloc_dirty(handle, inode, &iloc);
+> +project_stop:
+> +		ext4_journal_stop(handle);
+> +project_out:
+> +		mutex_unlock(&inode->i_mutex);
+> +		mnt_drop_write_file(filp);
+> +		return err;
+> +	}
+>  	default:
+>  		return -ENOTTY;
+>  	}
+> -- 
+> 1.7.1
+> 
+-- 
+Jan Kara <jack@suse.cz>
+SUSE Labs, CR
 
 _______________________________________________
 xfs mailing list
