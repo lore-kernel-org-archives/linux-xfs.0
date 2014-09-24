@@ -1,22 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 768397F3F
-	for <xfs@oss.sgi.com>; Tue, 23 Sep 2014 21:05:16 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 5BAA9304048
-	for <xfs@oss.sgi.com>; Tue, 23 Sep 2014 19:05:13 -0700 (PDT)
-Received: from atvie01s.evermeet.cx (evermeet.cx [77.244.245.66]) by
-	cuda.sgi.com with ESMTP id gvDLIWajZ4uNoz7T (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 23 Sep 2014 19:05:05 -0700 (PDT)
-Received: from [10.0.0.40] (135-23-85-229.cpe.pppoe.ca [135.23.85.229])
-	(authenticated bits=0)
-	by atvie01s.evermeet.cx (8.14.9/8.14.9) with ESMTP id s8O252Cq008420
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES128-SHA bits=128 verify=NO)
-	for <xfs@oss.sgi.com>; Wed, 24 Sep 2014 04:05:04 +0200
-Message-ID: <542226CD.6050106@evermeet.cx>
-Date: Tue, 23 Sep 2014 22:05:01 -0400
-From: Helmut Tessarek <tessarek@evermeet.cx>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 1360B7F3F
+	for <xfs@oss.sgi.com>; Tue, 23 Sep 2014 21:07:37 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id A1F67AC006
+	for <xfs@oss.sgi.com>; Tue, 23 Sep 2014 19:07:33 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id hB9ThZMKbyeZjNF6 for <xfs@oss.sgi.com>;
+	Tue, 23 Sep 2014 19:07:32 -0700 (PDT)
+Message-ID: <54222763.40107@sandeen.net>
+Date: Tue, 23 Sep 2014 21:07:31 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
 Subject: Re: How to format RAID1 correctly
 References: <5422146A.90206@evermeet.cx>
@@ -33,30 +27,72 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Helmut Tessarek <tessarek@evermeet.cx>, xfs@oss.sgi.com
 
-On 23.09.14 20:46 , Helmut Tessarek wrote:
+On 9/23/14 7:46 PM, Helmut Tessarek wrote:
+> The information provided in the FAQ and on several web sites is not really
+> useful regarding RAID1.
+> 
+> According to the FAQ (entry 35):
+> The correct options to format a RAID1 (2 disks) with 64k chunk size is:
+> mkfs.xfs -d su=64k -d sw=1 /dev/mapper/data
+
+I don't see that text in the faq... where is it?  I see:
+
+> So if your RAID controller has a stripe size of 64KB, and you have a RAID-6 with 8 disks, use
+> 
+>  su = 64k
+>  sw = 6 (RAID-6 of 8 disks has 6 data disks)
+
+but!  your raid doesn't have a 64k stripe, so that doesn't apply.
+
+> But it also states that it would be automatically detected and used correctly,
+> yet
+> mkfs.xfs /dev/mapper/data
+> yields a different result:
+> 
+> [root@atvie01s ~]# mkfs.xfs -f /dev/mapper/data
+> 
+> meta-data=/dev/mapper/data       isize=256    agcount=4,
+> agsize=244173876 blks
+>          =                       sectsz=4096  attr=2, projid32bit=1
+>          =                       crc=0        finobt=0
+> data     =                       bsize=4096   blocks=976695504, imaxpct=5
+>          =                       sunit=0      swidth=0 blks
+
+no geometry because md0 raid1 doesn't export any stripe geometry.
+
+> Formel 1:
+> 
+> [root@atvie01s ~]# mkfs.xfs -f -d su=64k -d sw=1 /dev/mapper/data
+> 
+> meta-data=/dev/mapper/data       isize=256    agcount=32,
+> agsize=30521728 blks
+>          =                       sectsz=4096  attr=2, projid32bit=1
+>          =                       crc=0        finobt=0
+> data     =                       bsize=4096   blocks=976695296, imaxpct=5
+>          =                       sunit=16     swidth=16 blks
+
+You specified it, so mkfs obeyed.
+
+> naming   =version 2              bsize=4096   ascii-ci=0 ftype=0
+> log      =internal log           bsize=4096   blocks=476902, version=2
+>          =                       sectsz=4096  sunit=1 blks, lazy-count=1
+> realtime =none                   extsz=4096   blocks=0, rtextents=0
+> 
+> 
+> Another inconsistency is that RAID1 doesn't use striping, so the chunk size
+> should be irrelevant in the first place.
+
+agreed - but I don't see anything in the faq about raid1 stripes.
+Am I missing something?
+
 > So what is ultimately the correct way to format a RAID1?
 
-According to sandeen in #xfs the correct way is:
+for software md raid over individual disks, bare mkfs should do the right
+thing.
 
-mkfs.xfs /dev/md0
-
-Makes sense, since no striping is involved.
-
-Just wanted to clarify and I did.
-
-Cheers,
- K. C.
-
--- 
-regards Helmut K. C. Tessarek
-lookup http://sks.pkqs.net for KeyID 0xC11F128D
-
-/*
-   Thou shalt not follow the NULL pointer for chaos and madness
-   await thee at its end.
-*/
+-Eric
 
 _______________________________________________
 xfs mailing list
