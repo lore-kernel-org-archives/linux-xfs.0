@@ -1,27 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id B521D7F3F
-	for <xfs@oss.sgi.com>; Wed, 24 Sep 2014 02:03:56 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 60D807F3F
+	for <xfs@oss.sgi.com>; Wed, 24 Sep 2014 02:53:54 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 600C1AC004
-	for <xfs@oss.sgi.com>; Wed, 24 Sep 2014 00:03:53 -0700 (PDT)
-Received: from mail-lb0-f170.google.com (mail-lb0-f170.google.com
-	[209.85.217.170]) by cuda.sgi.com with ESMTP id
-	SFODCmnDmcretLbj (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 24 Sep 2014 00:03:50 -0700 (PDT)
-Received: by mail-lb0-f170.google.com with SMTP id z11so4700026lbi.1
-	for <xfs@oss.sgi.com>; Wed, 24 Sep 2014 00:03:48 -0700 (PDT)
-Received: from t400.localnet ([91.234.176.246])
-	by mx.google.com with ESMTPSA id ug7sm5450280lac.48.2014.09.24.00.03.47
-	for <xfs@oss.sgi.com>
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-	Wed, 24 Sep 2014 00:03:47 -0700 (PDT)
-From: Arkadiusz =?utf-8?q?Mi=C5=9Bkiewicz?= <arekm@maven.pl>
-Subject: "No space left on device" from hell
-Date: Wed, 24 Sep 2014 09:03:46 +0200
-MIME-Version: 1.0
-Message-Id: <201409240903.46899.arekm@maven.pl>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id F1246AC004
+	for <xfs@oss.sgi.com>; Wed, 24 Sep 2014 00:53:53 -0700 (PDT)
+Received: from mailout3.samsung.com (mailout3.samsung.com [203.254.224.33]) by
+	cuda.sgi.com with ESMTP id 4Ik1NLSzO8W8Ar6T (version=TLSv1
+	cipher=RC4-MD5 bits=128 verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 24 Sep 2014 00:53:51 -0700 (PDT)
+Received: from epcpsbgr2.samsung.com
+	(u142.gpu120.samsung.co.kr [203.254.230.142])
+	by mailout3.samsung.com (Oracle Communications Messaging Server
+	7u4-24.01 (7.0.4.24.0) 64bit (built Nov 17 2011))
+	with ESMTP id <0NCE00483B9QDNA0@mailout3.samsung.com> for
+	xfs@oss.sgi.com; Wed, 24 Sep 2014 16:53:50 +0900 (KST)
+From: Namjae Jeon <namjae.jeon@samsung.com>
+Subject: Unifying XFS_IOC_SWAPEXT and EXT4_IOC_MOV_EXT (was Re: [PATCH 2/3]
+	xfs: Add support IOC_MOV_DATA ioctl)
+Date: Wed, 24 Sep 2014 16:53:49 +0900
+Message-id: <000001cfd7cc$ad447a00$07cd6e00$@samsung.com>
+MIME-version: 1.0
+Content-language: ko
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,65 +30,47 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: 'Dave Chinner' <david@fromorbit.com>, 'Theodore Ts'o' <tytso@mit.edu>, 'Dmitry Monakhov' <dmonakhov@openvz.org>, 'Christoph Hellwig' <hch@infradead.org>, 'linux-ext4' <linux-ext4@vger.kernel.org>, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, 'Luk?? Czerner' <lczerner@redhat.com>, 'Brian Foster' <bfoster@redhat.com>, 'Ashish Sangwan' <a.sangwan@samsung.com>, xfs@oss.sgi.com
 
-CkhlbGxvLgoKMy4xMC40MCBrZXJuZWwgYW5kIGNyZWF0aW5nIGZpbGVzIGNhdXNlcyAiTm8gc3Bh
-Y2UgbGVmdCBvbiBkZXZpY2UiLiBBZnRlciAKZGVsZXRpbmcgc29tZSBmaWxlcyBJIGNhbiBjcmVh
-dGUgbmV3IGZpbGVzIGFnYWluIHVudGlsIHRoZSBwcm9ibGVtIGhhcHBlbnMgCmFnYWluLgoKQW55
-IGlkZWFzIHdoYXQgaXMgZ29pbmcgb24gYW5kLCB3aGF0IGlzIG1vcmUgaW1wb3J0YW50LCBob3cg
-dG8gZml4IHRoZSAKcHJvYmxlbT8KCiMgZGYgLWgKL2Rldi9tYXBwZXIvdmdzeXMtaG9tZSAgNjAw
-RyAgMzY4RyAgMjMyRyAgNjIlIC9ob21lCgojIGRmIC1pCi9kZXYvbWFwcGVyL3Znc3lzLWhvbWUg
-NjI5MTQ1NjAwIDc5ODI4OTUgNjIxMTYyNzA1ICAgIDIlIC9ob21lCgojIHhmc19pbmZvIC9ob21l
-Cm1ldGEtZGF0YT0vZGV2L21hcHBlci92Z3N5cy1ob21lIGlzaXplPTI1NiAgICBhZ2NvdW50PTgs
-IGFnc2l6ZT0xOTY2MDgwMCBibGtzCiAgICAgICAgID0gICAgICAgICAgICAgICAgICAgICAgIHNl
-Y3Rzej01MTIgICBhdHRyPTIsIHByb2ppZDMyYml0PTEKICAgICAgICAgPSAgICAgICAgICAgICAg
-ICAgICAgICAgY3JjPTAgICAgICAgIGZpbm9idD0wCmRhdGEgICAgID0gICAgICAgICAgICAgICAg
-ICAgICAgIGJzaXplPTQwOTYgICBibG9ja3M9MTU3Mjg2NDAwLCBpbWF4cGN0PTI1CiAgICAgICAg
-ID0gICAgICAgICAgICAgICAgICAgICAgIHN1bml0PTAgICAgICBzd2lkdGg9MCBibGtzCm5hbWlu
-ZyAgID12ZXJzaW9uIDIgICAgICAgICAgICAgIGJzaXplPTQwOTYgICBhc2NpaS1jaT0wIGZ0eXBl
-PTAKbG9nICAgICAgPWludGVybmFsICAgICAgICAgICAgICAgYnNpemU9NDA5NiAgIGJsb2Nrcz0z
-ODQwMCwgdmVyc2lvbj0yCiAgICAgICAgID0gICAgICAgICAgICAgICAgICAgICAgIHNlY3Rzej01
-MTIgICBzdW5pdD0wIGJsa3MsIGxhenktY291bnQ9MQpyZWFsdGltZSA9bm9uZSAgICAgICAgICAg
-ICAgICAgICBleHRzej00MDk2ICAgYmxvY2tzPTAsIHJ0ZXh0ZW50cz0KCmltYXhwY3Q9MjUlIGJ1
-dCBjdXJyZW50IGlub2RlcyB0YWtlIG9ubHkgYWJvdXQgMkdCLCBtdWNoIGxlc3MgdGhhdCAyNSUg
-b2YgCjYwMEcsIHNvIHRoYXQgc2hvdWxkbid0IGJlIHByb2JsZW0KCi9kZXYvbWFwcGVyL3Znc3lz
-LWhvbWUgL2hvbWUgeGZzIApydyxub3N1aWQsbm9kZXYscmVsYXRpbWUsYXR0cjIsaW5vZGU2NCx1
-c3JxdW90YSxwcmpxdW90YSAwIDAKCnNvIGlub2RlNjQgaXMgbm90IGEgcHJvYmxlbQoKIyB4ZnNf
-cXVvdGEgLWMgICJxdW90YSAtcCAwIiAvaG9tZQpEaXNrIHF1b3RhcyBmb3IgUHJvamVjdCAjMCAo
-MCkKRmlsZXN5c3RlbSAgICAgICAgICAgICAgQmxvY2tzICAgICAgUXVvdGEgICAgICBMaW1pdCAg
-V2Fybi9UaW1lICAgICAgTW91bnRlZCAKb24KL2Rldi9tYXBwZXIvdmdzeXMtaG9tZQogICAgICAg
-ICAgICAgICAgICAgICAgMjc4NDg4MDQgICAgICAgICAgMCAgICAgICAgICAwICAgMDAgWy0tLS0t
-LS0tXSAvaG9tZQojIHhmc19xdW90YSAtYyAgInF1b3RhIC11IDAiIC9ob21lCkRpc2sgcXVvdGFz
-IGZvciBVc2VyIHJvb3QgKDApCkZpbGVzeXN0ZW0gICAgICAgICAgICAgIEJsb2NrcyAgICAgIFF1
-b3RhICAgICAgTGltaXQgIFdhcm4vVGltZSAgICAgIE1vdW50ZWQgCm9uCi9kZXYvbWFwcGVyL3Zn
-c3lzLWhvbWUKICAgICAgICAgICAgICAgICAgICAgICAgMTAzNDg0ICAgICAgICAgIDAgICAgICAg
-ICAgMCAgIDAwIFstLS0tLS0tLV0gL2hvbWUKIyB4ZnNfcXVvdGEgLWMgICJxdW90YSAtaSAwIiAv
-aG9tZQpEaXNrIHF1b3RhcyBmb3IgVXNlciByb290ICgwKQpGaWxlc3lzdGVtICAgICAgICAgICAg
-ICAgRmlsZXMgICAgICBRdW90YSAgICAgIExpbWl0ICBXYXJuL1RpbWUgICAgICBNb3VudGVkIApv
-bgovZGV2L21hcHBlci92Z3N5cy1ob21lCiAgICAgICAgICAgICAgICAgICAgICAgICAgODMzNiAg
-ICAgICAgICAwICAgICAgICAgIDAgICAwMCBbLS0tLS0tLS1dIC9ob21lCgpzbyBxdW90YSBpcyBu
-b3QgYSBwcm9ibGVtLCB0b28uCgojIHhmc19kYiAtciAiLWMgZnJlZXNwIC1zIiAgL2Rldi9tYXBw
-ZXIvdmdzeXMtaG9tZQogICBmcm9tICAgICAgdG8gZXh0ZW50cyAgYmxvY2tzICAgIHBjdAogICAg
-ICAxICAgICAgIDEgICAgMzQyNiAgICAzNDI2ICAgMC4wMQogICAgICAyICAgICAgIDMgICAgMzMx
-OSAgICA4MDI2ICAgMC4wMQogICAgICA0ICAgICAgIDcgICAgMzY5NCAgIDE5MDI3ICAgMC4wMwog
-ICAgICA4ICAgICAgMTUgICAyMzIyNSAgMzMwMzc4ICAgMC41NAogICAgIDE2ICAgICAgMzEgICAg
-IDM5NiAgICA4MTgwICAgMC4wMQogICAgIDMyICAgICAgNjMgICAgICA3NSAgICAzMjU2ICAgMC4w
-MQogICAgIDY0ICAgICAxMjcgICAgICA0NCAgICAzNDQzICAgMC4wMQogICAgMTI4ICAgICAyNTUg
-ICAgICAyNiAgICA0ODkyICAgMC4wMQogICAgMjU2ICAgICA1MTEgICAgICAzMiAgIDEwNzM3ICAg
-MC4wMgogICAgNTEyICAgIDEwMjMgICAgICAgNSAgICAzODY3ICAgMC4wMQogICAxMDI0ICAgIDIw
-NDcgICAgICAgOCAgIDEzNTc2ICAgMC4wMgogICAyMDQ4ICAgIDQwOTUgICAgICAgNSAgIDEzODkz
-ICAgMC4wMgogICA0MDk2ICAgIDgxOTEgICAgICAgMyAgIDE2ODk2ICAgMC4wMwogICA4MTkyICAg
-MTYzODMgICAgICAgMSAgIDE1NTMyICAgMC4wMwogIDE2Mzg0ICAgMzI3NjcgICAgICAgMSAgIDE3
-NzMxICAgMC4wMwoxMDQ4NTc2IDIwOTcxNTEgICAgICAgMSAxNDE0OTUyICAgMi4zMwoxNjc3NzIx
-NiAxOTY2MDgwMCAgICAgICAzIDU4OTEzOTY1ICA5Ni45MAp0b3RhbCBmcmVlIGV4dGVudHMgMzQy
-NjQKdG90YWwgZnJlZSBibG9ja3MgNjA4MDE3NzcKYXZlcmFnZSBmcmVlIGV4dGVudCBzaXplIDE3
-NzQuNTEKCnVuZm9ydHVuYXRlbHkgbm8gaWRlYSBob3cgdG8gaW50ZXJwcmV0IHRoaXMuIE1hbiBw
-YWdlIGlzbid0IGhlbHBmdWwuCgoKaHR0cDovL3NwcnVuZ2UudXMvSVZqRQoodHJhY2UtY21kIG9m
-IHRvdWNoIC9ob21lL3ggLi4uIGJ1dCBsb29rcyB0byBiZSBwYXJ0aWFsIG9ubHkpCgotLSAKQXJr
-YWRpdXN6IE1pxZtraWV3aWN6LCBhcmVrbSAvIG1hdmVuLnBsCgpfX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dp
-LmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
+
+> 
+> FWIW, what we ideally need for these sorts of defrag programs is
+> per-file freezing. i.e. we freeze the file to be defragged, then do
+> the copy in userspace, swap/move the copied range and then unfreeze
+> it once complete.  That guarantees that the file is not modified in
+> any way while userspace is doing the defrag...
+I am trying to unify xfs_swap extent and ext4 move extent so that both of these 
+could be called via new ioctl mov_data. Both ioctl have different interface
+because  both xfs and ext4 have different way of avoiding change in source file
+while defrag is running. XFS uses xfs_bstat_t while ext4 performs copying of
+data within kernel space after taking mutex lock.
+To make them use same approach, we should use something like file sealing as
+suggessted by you.
+First of all, I am trying to find proper way of sealing file as suggested by
+you. I am considering to use S_IMMUTABLE flag set to avoid file modification
+during defrag. I am thinking of first syncing  dirty pages, then truncating
+page cache pages of inode and lastly setting immutable flag of inode.
+This will block further attempts of modifying the file by opening new file
+pointer but already open file pointer can still change it.
+Although immutable file mean file can not be modified, there is no immutable
+check condition in write path and mmap path.
+I am wondering it is just missing to add immutable check condition or there
+is other reason I am not aware.
+
+Thanks!
+> 
+> Cheers,
+> 
+> Dave.
+> --
+> Dave Chinner
+> david@fromorbit.com
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
