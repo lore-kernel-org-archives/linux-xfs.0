@@ -1,24 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 692A47FA3
-	for <xfs@oss.sgi.com>; Thu, 25 Sep 2014 10:14:30 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 36E9D304062
-	for <xfs@oss.sgi.com>; Thu, 25 Sep 2014 08:14:30 -0700 (PDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 1834A7FAF
+	for <xfs@oss.sgi.com>; Thu, 25 Sep 2014 10:21:55 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 9C41EAC003
+	for <xfs@oss.sgi.com>; Thu, 25 Sep 2014 08:21:51 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id JXCZEEVdIATEdome (version=TLSv1
+	cuda.sgi.com with ESMTP id DItW6nT0vAJDjicl (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 25 Sep 2014 08:14:29 -0700 (PDT)
-Date: Thu, 25 Sep 2014 11:14:24 -0400
+	Thu, 25 Sep 2014 08:21:50 -0700 (PDT)
+Date: Thu, 25 Sep 2014 11:21:45 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH] generic/033: add xfs delalloc indirect block depletion
-	reproducer
-Message-ID: <20140925151424.GC47304@bfoster.bfoster>
-References: <1411584425-52709-1-git-send-email-bfoster@redhat.com>
-	<20140925035416.GC13950@dhcp-13-216.nay.redhat.com>
+Subject: Re: [PATCH] xfs: flush the range before zero range conversion
+Message-ID: <20140925152145.GD47304@bfoster.bfoster>
+References: <1411585591-55975-1-git-send-email-bfoster@redhat.com>
+	<20140925120155.GF4945@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20140925035416.GC13950@dhcp-13-216.nay.redhat.com>
+In-Reply-To: <20140925120155.GF4945@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,201 +30,69 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eryu Guan <guaneryu@gmail.com>
-Cc: fstests@vger.kernel.org, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-On Thu, Sep 25, 2014 at 11:54:16AM +0800, Eryu Guan wrote:
-> On Wed, Sep 24, 2014 at 02:47:05PM -0400, Brian Foster wrote:
-> > XFS allocates extra indirect blocks for delayed allocation extents at
-> > write time. When delalloc extents are split, the existing indirect block
-> > reservation was historically divided up evenly among the new extents
-> > even though the overall requirement for two extents could exceed the
-> > requirement for the original. Repeated delalloc extent splits ultimately
-> > leads to extents with 0 indirect blocks and in turn leads to assert
-> > failures in XFS.
+On Thu, Sep 25, 2014 at 10:01:55PM +1000, Dave Chinner wrote:
+> On Wed, Sep 24, 2014 at 03:06:31PM -0400, Brian Foster wrote:
+> > XFS currently discards delalloc blocks within the target range of a zero
+> > range request. Unaligned start and end offsets are zeroed through the
+> > page cache and the internal, aligned blocks are converted to unwritten
+> > extents.
 > > 
-> > Add a test to stress indirect block reservation for delayed allocation
-> > extents. The test converts a single delalloc extent to many and operates
-> > on the remaining extents to detect or trigger potential problems.
+> > If EOF is page aligned and covered by a delayed allocation extent. The
+> > inode size is not updated until I/O completion. If a zero range request
+> > discards a delalloc range that covers page aligned EOF as such, the
+> > inode size update never occurs. For example:
+> > 
+> > $ rm -f /mnt/file
+> > $ xfs_io -fc "pwrite 0 64k" -c "zero 60k 4k" /mnt/file
+> > $ stat -c "%s" /mnt/file
+> > 65536
+> > $ umount /mnt
+> > $ mount <dev> /mnt
+> > $ stat -c "%s" /mnt/file
+> > 61440
+> > 
+> > Update xfs_zero_file_space() to flush the range rather than discard
+> > delalloc blocks to ensure that inode size updates occur appropriately.
 > > 
 > > Signed-off-by: Brian Foster <bfoster@redhat.com>
 > > ---
 > > 
-> > Here's a simple reproducer for the indirect block reservation problem
-> > called out here:
-> > 
-> > http://oss.sgi.com/archives/xfs/2014-09/msg00337.html
-> > 
-> > It reproduces the assert failures described therein:
-> > 
-> > XFS: Assertion failed: startblockval(del.br_startblock) > 0, file: fs/xfs/libxfs/xfs_bmap.c, line: 5281
-> > 
-> > Note that this test also unintentionally fails on XFS. The test file
-> > ends up zero-sized after the remount and thus hexdump doesn't produce
-> > any output. This doesn't occur on ext4, I suspect due to the fact that
-> > the range being zeroed is flushed beforehand, though I could be wrong
-> > about that.
+> > I suppose we could be more clever here and only flush the range in this
+> > particular scenario, but I'm not sure if there's a major benefit there.
 > 
-> Tested with ext4 and xfs, and ext4 passes/xfs fails the test as
-> described here.
+> Punching the delalloc range rather than flushing the file
+> was done intentionally - this was added primarily for speeding up
+> the zeroing of large VM image files. i.e. it's an extent
+> manipulation operation rather than a data Io operation. Flushing the
+> file defeats the primary reason for the operation existing.
 > 
-> Reviewed-by: Eryu Guan <eguan@redhat.com>
-> 
-> With one nitpick below..
-> 
-> > 
-> > In any event, this calls out a separate bug in XFS where if appending
-> > data is chucked from cache by zero range before written back (eof is
-> > page aligned), we lose the on-disk inode size update and the inode size
-> > changes unexpectedly across the remount (assuming nothing else changes
-> > the size, of course).
-> > 
-> > Brian
-> > 
-> >  tests/generic/033     | 88 +++++++++++++++++++++++++++++++++++++++++++++++++++
-> >  tests/generic/033.out |  4 +++
-> >  tests/generic/group   |  1 +
-> >  3 files changed, 93 insertions(+)
-> >  create mode 100755 tests/generic/033
-> >  create mode 100644 tests/generic/033.out
-> > 
-> > diff --git a/tests/generic/033 b/tests/generic/033
-> > new file mode 100755
-> > index 0000000..41198b7
-> > --- /dev/null
-> > +++ b/tests/generic/033
-> > @@ -0,0 +1,88 @@
-> > +#! /bin/bash
-> > +# FS QA Test No. 033
-> > +#
-> > +# This test stresses indirect block reservation for delayed allocation extents.
-> > +# XFS reserves extra blocks for deferred allocation of delalloc extents. These
-> > +# reserved blocks can be divided among more extents than anticipated if the
-> > +# original extent for which the blocks were reserved is split into multiple
-> > +# delalloc extents. If this scenario repeats, eventually some extents are left
-> > +# without any indirect block reservation whatsoever. This leads to assert
-> > +# failures and possibly other problems in XFS.
-> > +#
-> > +#-----------------------------------------------------------------------
-> > +# Copyright (c) 2014 Red Hat, Inc.  All Rights Reserved.
-> > +#
-> > +# This program is free software; you can redistribute it and/or
-> > +# modify it under the terms of the GNU General Public License as
-> > +# published by the Free Software Foundation.
-> > +#
-> > +# This program is distributed in the hope that it would be useful,
-> > +# but WITHOUT ANY WARRANTY; without even the implied warranty of
-> > +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-> > +# GNU General Public License for more details.
-> > +#
-> > +# You should have received a copy of the GNU General Public License
-> > +# along with this program; if not, write the Free Software Foundation,
-> > +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-> > +#-----------------------------------------------------------------------
-> > +#
-> > +
-> > +seq=`basename $0`
-> > +seqres=$RESULT_DIR/$seq
-> > +echo "QA output created by $seq"
-> > +
-> > +here=`pwd`
-> > +tmp=/tmp/$$
-> > +status=1	# failure is the default!
-> > +trap "_cleanup; exit \$status" 0 1 2 3 15
-> > +
-> > +_cleanup()
-> > +{
-> > +	cd /
-> > +	rm -f $tmp.*
-> > +}
-> > +
-> > +# get standard environment, filters and checks
-> > +. ./common/rc
-> > +. ./common/filter
-> > +
-> > +# real QA test starts here
-> > +rm -f $seqres.full
-> > +
-> > +# Modify as appropriate.
-> > +_supported_fs generic
-> > +_supported_os Linux
-> > +_require_scratch
-> > +_require_xfs_io_command "fzero"
-> > +
-> > +_scratch_mkfs >/dev/null 2>&1
-> > +_scratch_mount
-> > +
-> > +file=$SCRATCH_MNT/file.$seq
-> > +bytes=$((64 * 1024))
-> > +
-> > +# create sequential delayed allocation
-> > +$XFS_IO_PROG -f -c "pwrite 0 $bytes" $file | _filter_xfs_io \
-> > +	>> $seqres.full 2>&1
-> 
-> The output of xfs_io is redirected to $seqres.full, so it's not
-> necessary to be filtered, for debug purpose.
-> 
-> And the following two xfs_io calls.
+> We can easily detect this situation and just zero the last block in
+> the file directly after punching out all the delalloc state. This
+> should happen anyway when the region to be zeroed is not page
+> aligned....
 > 
 
-Indeed, I'll post v2. Thanks for the review.
+Hmm, good point. xfs_iozero() goes through page cache. It seems like
+that should work and it's something we already have to handle in this
+path. I'll give it a shot.
 
 Brian
 
-> Thanks,
-> Eryu
+> > FWIW, this implicitly addresses the indlen==0 assert failures described
+> > in the xfs_bmap_del_extent() rfc, but doesn't necessarily mean we
+> > shouldn't fix that code IMO.
 > 
-> > +
-> > +# Zero every other 4k range to split the larger delalloc extent into many more
-> > +# smaller extents. Use zero instead of hole punch because the former does not
-> > +# force writeback (and hence delalloc conversion). It can simply discard
-> > +# delalloc blocks and convert the ranges to unwritten.
-> > +endoff=$((bytes - 4096))
-> > +for i in $(seq 0 8192 $endoff); do
-> > +	$XFS_IO_PROG -c "fzero -k $i 4k" $file | _filter_xfs_io \
-> > +		>> $seqres.full 2>&1
-> > +done
-> > +
-> > +# now zero the opposite set to remove remaining delalloc extents
-> > +for i in $(seq 4096 8192 $endoff); do
-> > +	$XFS_IO_PROG -c "fzero -k $i 4k" $file | _filter_xfs_io	\
-> > +		>> $seqres.full 2>&1
-> > +done
-> > +
-> > +_scratch_remount
-> > +hexdump $file
-> > +
-> > +status=0
-> > +exit
-> > diff --git a/tests/generic/033.out b/tests/generic/033.out
-> > new file mode 100644
-> > index 0000000..419d831
-> > --- /dev/null
-> > +++ b/tests/generic/033.out
-> > @@ -0,0 +1,4 @@
-> > +QA output created by 033
-> > +0000000 0000 0000 0000 0000 0000 0000 0000 0000
-> > +*
-> > +0010000
-> > diff --git a/tests/generic/group b/tests/generic/group
-> > index 8e0c22a..1227408 100644
-> > --- a/tests/generic/group
-> > +++ b/tests/generic/group
-> > @@ -32,6 +32,7 @@
-> >  027 auto enospc
-> >  028 auto quick
-> >  032 auto quick rw
-> > +033 auto quick rw
-> >  053 acl repair auto quick
-> >  062 attr udf auto quick
-> >  068 other auto freeze dangerous stress
-> > -- 
-> > 1.8.3.1
-> > 
-> > _______________________________________________
-> > xfs mailing list
-> > xfs@oss.sgi.com
-> > http://oss.sgi.com/mailman/listinfo/xfs
+> We punch delalloc extents elsewhere, so that still needs fixing.
+> 
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
 > 
 > _______________________________________________
 > xfs mailing list
