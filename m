@@ -1,26 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 2266A7F8A
-	for <xfs@oss.sgi.com>; Thu, 25 Sep 2014 02:59:30 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 7DE7E7F8B
+	for <xfs@oss.sgi.com>; Thu, 25 Sep 2014 03:13:14 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id AFEFDAC004
-	for <xfs@oss.sgi.com>; Thu, 25 Sep 2014 00:59:29 -0700 (PDT)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 4FCEF8F8087
+	for <xfs@oss.sgi.com>; Thu, 25 Sep 2014 01:13:10 -0700 (PDT)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	dPTc82bhXgWSzyfE for <xfs@oss.sgi.com>;
-	Thu, 25 Sep 2014 00:59:27 -0700 (PDT)
-Date: Thu, 25 Sep 2014 17:59:12 +1000
+	N5mxBqR6WoBN4liM for <xfs@oss.sgi.com>;
+	Thu, 25 Sep 2014 01:13:08 -0700 (PDT)
+Date: Thu, 25 Sep 2014 18:12:54 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 4/4] Adds ioctl interface support for ext4 project
-Message-ID: <20140925075912.GG4758@dastard>
-References: <1411567470-31799-1-git-send-email-lixi@ddn.com>
-	<1411567470-31799-5-git-send-email-lixi@ddn.com>
-	<20140924162507.GC27000@quack.suse.cz>
-	<20140924162634.GA16886@infradead.org>
-	<20140924170105.GE27000@quack.suse.cz>
+Subject: Re: XFS issue xfs goes offline with various messages drive not
+	recoverable without reboot
+Message-ID: <20140925081254.GH4758@dastard>
+References: <dd6d1d6e9fa7469584e72574347bb088@BN1PR0301MB0625.namprd03.prod.outlook.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20140924170105.GE27000@quack.suse.cz>
+In-Reply-To: <dd6d1d6e9fa7469584e72574347bb088@BN1PR0301MB0625.namprd03.prod.outlook.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,63 +30,71 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Jan Kara <jack@suse.cz>
-Cc: adilger@dilger.ca, tytso@mit.edu, linux-api@vger.kernel.org, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, dmonakhov@openvz.org, viro@zeniv.linux.org.uk, Li Xi <pkuelelixi@gmail.com>, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org
+To: Simon Dray <sdray@Espial.com>
+Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-On Wed, Sep 24, 2014 at 07:01:05PM +0200, Jan Kara wrote:
-> On Wed 24-09-14 09:26:34, Christoph Hellwig wrote:
-> > On Wed, Sep 24, 2014 at 06:25:07PM +0200, Jan Kara wrote:
-> > > On Wed 24-09-14 22:04:30, Li Xi wrote:
-> > > > This patch adds ioctl interface for setting/getting project of ext4.
-> > >   The patch looks good to me. I was just wondering whether it won't be
-> > > useful to add an ioctl() which isn't ext4 specific. We could just extend
-> > > ->setattr() to allow setting of project ID (most filesystems would just
-> > > return -EOPNOTSUPP but ext4 and xfs could do the right thing) and then call
-> > > ->setattr from the generic ioctl. That way userspace won't have to care
-> > > about filesystem type when setting project ID... What do others think?
-> > 
-> > Absolutely.  In general I also wonder why this patch doesn't implement
-> > the full XFS API.  Maybe there is a reason it was considered and
-> > rejected, but it would be helpful to document why.
->   Do you mean full get/setfsxattr API?
+On Thu, Sep 25, 2014 at 07:30:23AM +0000, Simon Dray wrote:
+> Dear Sirs
+> 
+> I wonder if you can help with an issue we see re-occuring on a regular basis with one of our HP systems which uses a HP 420 Raid controller
 
-That's a good start.
+tl;dr: more information is needed about your system to make sense of
+the problem. See here:
 
-The bigger issue in my mind is that we already have a fully featured
-quota API that supports project quotas and userspace tools available
-that manipulate it. xfstests already uses those tools and API
-for testing project quotas.
+http://xfs.org/index.php/XFS_FAQ#Q:_What_information_should_I_include_when_reporting_a_problem.3F
 
-This whole patchset reinvents all the quota APIs, and will require
-adding support in userspace, and hence require re-inventing all the
-test infrastructure we already have because it won't be compatible
-with the existing project quota test code.
+> Action taken
+> 
+> We first saw the following:
+> [root@ content]# ls
+> ls: cannot open directory .: Input/output error
 
->   That basically contains project ID,
-> flags (those that are currently get/set with FS_IOC_GETFLAGS/SETFLAGS), and
-> extent size hint right?
+The filesystem has shut down due to a fatal error.
 
-It's a different set of flag definitions. We translate the interface
-XFS_XFLAG_* values to/from the inode on-disk XFS_DIFLAG_* inode values, just
-like we translate the VFS FS_*_FL flags that get passed through the
-FS_IOC_GETFLAGS/SETFLAGS ioctl.
+> We try to run:
+> [root@ /]# xfs_check /dev/md0
+> xfs_check: /dev/md0 contains a mounted and writable filesystem
+> fatal error -- couldn't initialize XFS library
 
-> That seems workable and it would also make setting
-> of PROJINHERIT flag fs agnostic. Only we would have to create some generic
-> flags namespace and merge into that ext4 flags and have a translation
-> function for the old ext4 flags.
+FYI, xfs_check was deprecated a quite a while ago. It no longer
+exists in current releases....
 
-The XFS_XFLAGS_* are already filesystem agnostic - they are flags
-that are only used for interfacing with userspace and hence only
-exist at the ioctl copy in/out layer.....
+> We also tried to umount the /dev/md0 before runniing xfs_check but no luck. We received the error: device is in use
 
-> Also I'm afraid we may quickly run out of
-> 32 available flags in xflags so we'd need to extend that. But all this
-> seems to be doable.
+That can happen if the storage has gone bad and IOs have been lost.
 
-The struct fsxattr was designed to be extensible - it has unused
-padding and enough space in the flags field to allow us to
-conditionally use that padding....
+> We use xfs for one of our large raid file systems and we are seeing the xfs filesystem go offline with the following messages in dmesg
+> 
+> messages-20140921:Sep 18 23:01: kernel: XFS (md0): Device md0: metadata write error block 0x5e28623d8
+
+What messages occurred before this? Something reported an IO error
+back to XFS, and so that something should have logged an error
+message...
+
+> messages-20140921:Sep 18 23:01:04 kernel: XFS (md0): I/O error occurred: meta-data dev md0 block 0x445cccc40 ("xlog_iodone") error 5 buf count 32768
+> messages-20140921:Sep 18 23:01:04 kernel: XFS (md0): xfs_do_force_shutdown(0x2) called from line 891 of file fs/xfs/xfs_log.c. Return address = 0xffffffffa2c428dc
+> messages-20140921:Sep 18 23:01:04 kernel: XFS (md0): Log I/O Error Detected. Shutting down filesystem
+> messages-20140921:Sep 18 23:01:04 kernel: XFS (md0): Please umount the filesystem and rectify the problem(s)
+> messages-20140921:Sep 18 23:01:04 kernel: XFS (md0): xfs_imap_to_bp: xfs_trans_read_buf() returned error 5.
+> messages-20140921:Sep 18 23:01:04 kernel: XFS (md0): xfs_iunlink_remove: xfs_itobp() returned error 5.
+
+Yup, kernel code is at least 2 years old, because we removed
+xfs_itobp in mid 2012... ;)
+
+> In all occurrences the only way to recover from this is to reboot
+> the system and allow xfs_repair to run during boot this clears the
+> issue until next time
+> 
+> We have checked the RAID health and nothing seems to be amiss, if
+> you could help with this it would be much appreciated
+
+That's par for the course when hardware raid goes AWOL - they almost
+never report that they had a problem when they hang (e.g. firmware
+crashes so can't log an event to say it crashed).
+
+But really, more information about your system and more complete
+logs are needed to be able to make any progress triaging the
+problem.
 
 Cheers,
 
