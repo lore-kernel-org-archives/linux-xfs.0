@@ -1,26 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 77BEF7F6C
-	for <xfs@oss.sgi.com>; Thu, 25 Sep 2014 10:07:11 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 57369304062
-	for <xfs@oss.sgi.com>; Thu, 25 Sep 2014 08:07:08 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id 692A47FA3
+	for <xfs@oss.sgi.com>; Thu, 25 Sep 2014 10:14:30 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 36E9D304062
+	for <xfs@oss.sgi.com>; Thu, 25 Sep 2014 08:14:30 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id MniOlrjtDKAiVSul (version=TLSv1
+	cuda.sgi.com with ESMTP id JXCZEEVdIATEdome (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 25 Sep 2014 08:07:07 -0700 (PDT)
-Date: Thu, 25 Sep 2014 11:07:04 -0400
+	Thu, 25 Sep 2014 08:14:29 -0700 (PDT)
+Date: Thu, 25 Sep 2014 11:14:24 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [RFC PATCH] xfs: borrow indirect blocks from freed extent when
-	available
-Message-ID: <20140925150703.GB47304@bfoster.bfoster>
-References: <1411500538-6831-1-git-send-email-bfoster@redhat.com>
-	<20140923215816.GC4322@dastard>
-	<20140924122746.GA53094@bfoster.bfoster>
-	<20140924233014.GB4758@dastard>
+Subject: Re: [PATCH] generic/033: add xfs delalloc indirect block depletion
+	reproducer
+Message-ID: <20140925151424.GC47304@bfoster.bfoster>
+References: <1411584425-52709-1-git-send-email-bfoster@redhat.com>
+	<20140925035416.GC13950@dhcp-13-216.nay.redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20140924233014.GB4758@dastard>
+In-Reply-To: <20140925035416.GC13950@dhcp-13-216.nay.redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,136 +31,201 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: Eryu Guan <guaneryu@gmail.com>
+Cc: fstests@vger.kernel.org, xfs@oss.sgi.com
 
-On Thu, Sep 25, 2014 at 09:30:14AM +1000, Dave Chinner wrote:
-> On Wed, Sep 24, 2014 at 08:27:46AM -0400, Brian Foster wrote:
-> > On Wed, Sep 24, 2014 at 07:58:16AM +1000, Dave Chinner wrote:
-> > > On Tue, Sep 23, 2014 at 03:28:58PM -0400, Brian Foster wrote:
-> > > > xfs_bmap_del_extent() handles extent removal from the in-core and
-> > > > on-disk extent lists. When removing a delalloc range, it updates the
-> > > > indirect block reservation appropriately based on the removal. It
-> > > > currently enforces that the new indirect block reservation is less than
-> > > > or equal to the original. This is normally the case in all situations
-> > > > except for when the removed range creates a hole in a single delalloc
-> > > > extent, thus splitting a single delalloc extent in two.
-> > > > 
-> > > > The indirect block reservation is divided evenly between the two new
-> > > > extents in this scenario. However, it is possible with small enough
-> > > > extents to split an indlen==1 extent into two such slightly smaller
-> > > > extents. This leaves one extent with 0 indirect blocks and leads to
-> > > > assert failures in other areas (e.g., xfs_bunmapi() if the extent
-> > > > happens to be removed).
-> > > 
-> > > I had long suspected we had an issue in this code, but was never
-> > > able to nail down a reproducer that triggered it. Do you have a
-> > > reproducer, or did you find this by reading/tracing the code?
-> > > 
+On Thu, Sep 25, 2014 at 11:54:16AM +0800, Eryu Guan wrote:
+> On Wed, Sep 24, 2014 at 02:47:05PM -0400, Brian Foster wrote:
+> > XFS allocates extra indirect blocks for delayed allocation extents at
+> > write time. When delalloc extents are split, the existing indirect block
+> > reservation was historically divided up evenly among the new extents
+> > even though the overall requirement for two extents could exceed the
+> > requirement for the original. Repeated delalloc extent splits ultimately
+> > leads to extents with 0 indirect blocks and in turn leads to assert
+> > failures in XFS.
 > > 
-> > I have a setup on which fsx reproduces an instance of this within a few
-> > minutes consistently. It looks like the same sequence of events each
-> > occurrence so I can try to derive a more specific test case for it. I
-> > suspect the right sequence of delayed allocation followed by hole
-> > punching or zeroing should be able to trigger it.
-> 
-> *nod*
-> 
-> > > > Refactor xfs_bunmapi() to make the updates that must be consistent
-> > > > against the inode (e.g., delalloc block counter, quota reservation)
-> > > > right before the extent is deleted. Move the sb block counter update
-> > > > after the extent is deleted and update xfs_bmap_del_extent() to steal
-> > > > some blocks from the freed extent if a larger overall indirect
-> > > > reservation is required by the extent removal.
-> > > > 
-> > > > Signed-off-by: Brian Foster <bfoster@redhat.com>
-> > > > ---
-> > > > 
-> > > > Hi all,
-> > > > 
-> > > > I'm seeing the following assert more frequently with fsx and the recent
-> > > > xfs_free_file_space() changes (at least on 1k fsb fs'):
-> > > > 
-> > > > XFS: Assertion failed: startblockval(del.br_startblock) > 0, file: fs/xfs/libxfs/xfs_bmap.c, line: 5281
-> > > > 
-> > > > This occurs for the reason described in the commit log description. This
-> > > > is a quick experiment I wanted to test to verify the problem goes away
-> > > > (so far, so good). Very lightly tested so far.
-> > > 
-> > > I suspect it's also the cause of these occasional assert failures
-> > > that I see:
-> > > 
-> > > XFS: Assertion failed: tp->t_blk_res_used <= tp->t_blk_res, file: fs/xfs/xfs_trans.c, line: 327
-> > > 
-> > > during delalloc conversion because there wasn't a space reservation
-> > > for the blocks allocated (i.e. indlen was zero) and so we overrun
-> > > the transaction block reservation.
-> > > 
+> > Add a test to stress indirect block reservation for delayed allocation
+> > extents. The test converts a single delalloc extent to many and operates
+> > on the remaining extents to detect or trigger potential problems.
 > > 
-> > Interesting, I've seen this as well though I'll have to go back and see
-> > where I was getting it from. I did run fsx overnight without any assert
-> > failures at all, which seems rare lately. ;) I wasn't running my usual
-> > parallel fsstress however. I've started that and I reproduce an instance
-> > of that assert failure within a few minutes, so if related it appears
-> > this might not be the only contributer. I'll look more into that one
-> > next.
+> > Signed-off-by: Brian Foster <bfoster@redhat.com>
+> > ---
+> > 
+> > Here's a simple reproducer for the indirect block reservation problem
+> > called out here:
+> > 
+> > http://oss.sgi.com/archives/xfs/2014-09/msg00337.html
+> > 
+> > It reproduces the assert failures described therein:
+> > 
+> > XFS: Assertion failed: startblockval(del.br_startblock) > 0, file: fs/xfs/libxfs/xfs_bmap.c, line: 5281
+> > 
+> > Note that this test also unintentionally fails on XFS. The test file
+> > ends up zero-sized after the remount and thus hexdump doesn't produce
+> > any output. This doesn't occur on ext4, I suspect due to the fact that
+> > the range being zeroed is flushed beforehand, though I could be wrong
+> > about that.
 > 
-> I knew I'd looked at this before:
+> Tested with ext4 and xfs, and ext4 passes/xfs fails the test as
+> described here.
 > 
-> http://oss.sgi.com/archives/xfs/2014-03/msg00314.html
+> Reviewed-by: Eryu Guan <eguan@redhat.com>
 > 
-> That got lost because I wrote it in a topic branch and not my usual
-> working branch, so when I dropped the topic branch. Guilt, however,
-> keeps all the patches from topic branches around, and so when I just
-> did a grep for da_new across .git/patch, this showed up.
+> With one nitpick below..
 > 
-> It's basically the same "steal blocks from the deleted extent
-> reservation fix, and it was trying to address the above failure.
-> However, there are some other details in it (like changing the
-> location of delalloc accounting updates) that might be relevant.
+> > 
+> > In any event, this calls out a separate bug in XFS where if appending
+> > data is chucked from cache by zero range before written back (eof is
+> > page aligned), we lose the on-disk inode size update and the inode size
+> > changes unexpectedly across the remount (assuming nothing else changes
+> > the size, of course).
+> > 
+> > Brian
+> > 
+> >  tests/generic/033     | 88 +++++++++++++++++++++++++++++++++++++++++++++++++++
+> >  tests/generic/033.out |  4 +++
+> >  tests/generic/group   |  1 +
+> >  3 files changed, 93 insertions(+)
+> >  create mode 100755 tests/generic/033
+> >  create mode 100644 tests/generic/033.out
+> > 
+> > diff --git a/tests/generic/033 b/tests/generic/033
+> > new file mode 100755
+> > index 0000000..41198b7
+> > --- /dev/null
+> > +++ b/tests/generic/033
+> > @@ -0,0 +1,88 @@
+> > +#! /bin/bash
+> > +# FS QA Test No. 033
+> > +#
+> > +# This test stresses indirect block reservation for delayed allocation extents.
+> > +# XFS reserves extra blocks for deferred allocation of delalloc extents. These
+> > +# reserved blocks can be divided among more extents than anticipated if the
+> > +# original extent for which the blocks were reserved is split into multiple
+> > +# delalloc extents. If this scenario repeats, eventually some extents are left
+> > +# without any indirect block reservation whatsoever. This leads to assert
+> > +# failures and possibly other problems in XFS.
+> > +#
+> > +#-----------------------------------------------------------------------
+> > +# Copyright (c) 2014 Red Hat, Inc.  All Rights Reserved.
+> > +#
+> > +# This program is free software; you can redistribute it and/or
+> > +# modify it under the terms of the GNU General Public License as
+> > +# published by the Free Software Foundation.
+> > +#
+> > +# This program is distributed in the hope that it would be useful,
+> > +# but WITHOUT ANY WARRANTY; without even the implied warranty of
+> > +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> > +# GNU General Public License for more details.
+> > +#
+> > +# You should have received a copy of the GNU General Public License
+> > +# along with this program; if not, write the Free Software Foundation,
+> > +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+> > +#-----------------------------------------------------------------------
+> > +#
+> > +
+> > +seq=`basename $0`
+> > +seqres=$RESULT_DIR/$seq
+> > +echo "QA output created by $seq"
+> > +
+> > +here=`pwd`
+> > +tmp=/tmp/$$
+> > +status=1	# failure is the default!
+> > +trap "_cleanup; exit \$status" 0 1 2 3 15
+> > +
+> > +_cleanup()
+> > +{
+> > +	cd /
+> > +	rm -f $tmp.*
+> > +}
+> > +
+> > +# get standard environment, filters and checks
+> > +. ./common/rc
+> > +. ./common/filter
+> > +
+> > +# real QA test starts here
+> > +rm -f $seqres.full
+> > +
+> > +# Modify as appropriate.
+> > +_supported_fs generic
+> > +_supported_os Linux
+> > +_require_scratch
+> > +_require_xfs_io_command "fzero"
+> > +
+> > +_scratch_mkfs >/dev/null 2>&1
+> > +_scratch_mount
+> > +
+> > +file=$SCRATCH_MNT/file.$seq
+> > +bytes=$((64 * 1024))
+> > +
+> > +# create sequential delayed allocation
+> > +$XFS_IO_PROG -f -c "pwrite 0 $bytes" $file | _filter_xfs_io \
+> > +	>> $seqres.full 2>&1
+> 
+> The output of xfs_io is redirected to $seqres.full, so it's not
+> necessary to be filtered, for debug purpose.
+> 
+> And the following two xfs_io calls.
 > 
 
-Ah, right. I thought I had seen something like this before. In fact I
-had it in my head that we already did something like this when I
-narrowed in on the code so I was somewhat surprised, but I didn't go
-back and look through the list. That explains that. :)
-
-This version moves the entire delalloc accounting hunk after the
-xfs_bmap_del_extent() call. I think the problem with that is the sb
-counter is the only record keeping that encompasses data blocks and
-indirect blocks, which is why I only moved that update in xfs_bunmapi().
-That's also precisely why I consider using a separate parameter rather
-than updating br_blockcount.
-
-Let me know if you wanted to resurrect this one, otherwise I'll try to
-double check all of that when I get back to reworking mine...
-
-> 
-> I'm pretty sure the test case was simply something like:
-> 
-> xfs_io -f -c "pwrite 0 1m" \
-> 	  -c "fzero 4k 8k" \
-> 	  -c "fzero 16k 8k" \
-> 	  -c "fzero 32k 8k" \
-> 	  -c "fzero 64k 8k" \
-> 	 .....
-> 
-> To basically split the delalloc extent repeatedly and hence drain
-> the reservation.
-> 
-
-Yep, thanks. I assume you saw the test I posted:
-
-http://oss.sgi.com/archives/xfs/2014-09/msg00371.html
+Indeed, I'll post v2. Thanks for the review.
 
 Brian
 
-> Cheers,
+> Thanks,
+> Eryu
 > 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+> > +
+> > +# Zero every other 4k range to split the larger delalloc extent into many more
+> > +# smaller extents. Use zero instead of hole punch because the former does not
+> > +# force writeback (and hence delalloc conversion). It can simply discard
+> > +# delalloc blocks and convert the ranges to unwritten.
+> > +endoff=$((bytes - 4096))
+> > +for i in $(seq 0 8192 $endoff); do
+> > +	$XFS_IO_PROG -c "fzero -k $i 4k" $file | _filter_xfs_io \
+> > +		>> $seqres.full 2>&1
+> > +done
+> > +
+> > +# now zero the opposite set to remove remaining delalloc extents
+> > +for i in $(seq 4096 8192 $endoff); do
+> > +	$XFS_IO_PROG -c "fzero -k $i 4k" $file | _filter_xfs_io	\
+> > +		>> $seqres.full 2>&1
+> > +done
+> > +
+> > +_scratch_remount
+> > +hexdump $file
+> > +
+> > +status=0
+> > +exit
+> > diff --git a/tests/generic/033.out b/tests/generic/033.out
+> > new file mode 100644
+> > index 0000000..419d831
+> > --- /dev/null
+> > +++ b/tests/generic/033.out
+> > @@ -0,0 +1,4 @@
+> > +QA output created by 033
+> > +0000000 0000 0000 0000 0000 0000 0000 0000 0000
+> > +*
+> > +0010000
+> > diff --git a/tests/generic/group b/tests/generic/group
+> > index 8e0c22a..1227408 100644
+> > --- a/tests/generic/group
+> > +++ b/tests/generic/group
+> > @@ -32,6 +32,7 @@
+> >  027 auto enospc
+> >  028 auto quick
+> >  032 auto quick rw
+> > +033 auto quick rw
+> >  053 acl repair auto quick
+> >  062 attr udf auto quick
+> >  068 other auto freeze dangerous stress
+> > -- 
+> > 1.8.3.1
+> > 
+> > _______________________________________________
+> > xfs mailing list
+> > xfs@oss.sgi.com
+> > http://oss.sgi.com/mailman/listinfo/xfs
 > 
 > _______________________________________________
 > xfs mailing list
