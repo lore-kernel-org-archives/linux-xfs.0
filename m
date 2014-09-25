@@ -1,26 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 462737F7B
-	for <xfs@oss.sgi.com>; Wed, 24 Sep 2014 22:54:25 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 253F18F8035
-	for <xfs@oss.sgi.com>; Wed, 24 Sep 2014 20:54:22 -0700 (PDT)
-Received: from mail-pd0-f173.google.com (mail-pd0-f173.google.com
-	[209.85.192.173]) by cuda.sgi.com with ESMTP id
-	xbWfEcCOVFPhIB4s (version=TLSv1 cipher=RC4-SHA bits=128
+	by oss.sgi.com (Postfix) with ESMTP id 4FC9D7F7E
+	for <xfs@oss.sgi.com>; Thu, 25 Sep 2014 01:08:33 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 122848F8035
+	for <xfs@oss.sgi.com>; Wed, 24 Sep 2014 23:08:30 -0700 (PDT)
+Received: from mail-ie0-f179.google.com (mail-ie0-f179.google.com
+	[209.85.223.179]) by cuda.sgi.com with ESMTP id
+	6qRMN30kgVAoBb0v (version=TLSv1 cipher=RC4-SHA bits=128
 	verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 24 Sep 2014 20:54:20 -0700 (PDT)
-Received: by mail-pd0-f173.google.com with SMTP id w10so234596pde.18
-	for <xfs@oss.sgi.com>; Wed, 24 Sep 2014 20:54:20 -0700 (PDT)
-Date: Thu, 25 Sep 2014 11:54:16 +0800
-From: Eryu Guan <guaneryu@gmail.com>
-Subject: Re: [PATCH] generic/033: add xfs delalloc indirect block depletion
-	reproducer
-Message-ID: <20140925035416.GC13950@dhcp-13-216.nay.redhat.com>
-References: <1411584425-52709-1-git-send-email-bfoster@redhat.com>
+	Wed, 24 Sep 2014 23:08:27 -0700 (PDT)
+Received: by mail-ie0-f179.google.com with SMTP id tp5so8310372ieb.10
+	for <xfs@oss.sgi.com>; Wed, 24 Sep 2014 23:08:27 -0700 (PDT)
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1411584425-52709-1-git-send-email-bfoster@redhat.com>
+In-Reply-To: <CAD2VtShVThd0j0-YgGE6fAe28DJ1U-CCRR3Sj9eNjTLKp7FygA@mail.gmail.com>
+References: <CAD2VtSjwu3eB+mrs2vX0G4+MJbHyNGVXvVR+P_ssNY6rydvijA@mail.gmail.com>
+	<20140716124757.GC36312@bfoster.bfoster>
+	<CAD2VtShVThd0j0-YgGE6fAe28DJ1U-CCRR3Sj9eNjTLKp7FygA@mail.gmail.com>
+From: Hrishikesh Barua <talonx@gmail.com>
+Date: Thu, 25 Sep 2014 11:37:47 +0530
+Message-ID: <CAD2VtSgdYt2zxmEeWEXmK2B44BKuB-wRKvX4H=jRA9Rj7pyamA@mail.gmail.com>
+Subject: Re: Occassional problems with unfreeze
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,201 +29,156 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============1469768198030386226=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
-Cc: fstests@vger.kernel.org, xfs@oss.sgi.com
+To: Brian Foster <bfoster@redhat.com>, xfs@oss.sgi.com
 
-On Wed, Sep 24, 2014 at 02:47:05PM -0400, Brian Foster wrote:
-> XFS allocates extra indirect blocks for delayed allocation extents at
-> write time. When delalloc extents are split, the existing indirect block
-> reservation was historically divided up evenly among the new extents
-> even though the overall requirement for two extents could exceed the
-> requirement for the original. Repeated delalloc extent splits ultimately
-> leads to extents with 0 indirect blocks and in turn leads to assert
-> failures in XFS.
-> 
-> Add a test to stress indirect block reservation for delayed allocation
-> extents. The test converts a single delalloc extent to many and operates
-> on the remaining extents to detect or trigger potential problems.
-> 
-> Signed-off-by: Brian Foster <bfoster@redhat.com>
-> ---
-> 
-> Here's a simple reproducer for the indirect block reservation problem
-> called out here:
-> 
-> http://oss.sgi.com/archives/xfs/2014-09/msg00337.html
-> 
-> It reproduces the assert failures described therein:
-> 
-> XFS: Assertion failed: startblockval(del.br_startblock) > 0, file: fs/xfs/libxfs/xfs_bmap.c, line: 5281
-> 
-> Note that this test also unintentionally fails on XFS. The test file
-> ends up zero-sized after the remount and thus hexdump doesn't produce
-> any output. This doesn't occur on ext4, I suspect due to the fact that
-> the range being zeroed is flushed beforehand, though I could be wrong
-> about that.
+--===============1469768198030386226==
+Content-Type: multipart/alternative; boundary=001a11c219e4007a950503dda13a
 
-Tested with ext4 and xfs, and ext4 passes/xfs fails the test as
-described here.
+--001a11c219e4007a950503dda13a
+Content-Type: text/plain; charset=UTF-8
 
-Reviewed-by: Eryu Guan <eguan@redhat.com>
+This happened again yesterday and I took the "echo w >
+/proc/sysrq-trigger".
+Output - http://pastebin.com/rpKNSYY7
 
-With one nitpick below..
+- Hrish
 
-> 
-> In any event, this calls out a separate bug in XFS where if appending
-> data is chucked from cache by zero range before written back (eof is
-> page aligned), we lose the on-disk inode size update and the inode size
-> changes unexpectedly across the remount (assuming nothing else changes
-> the size, of course).
-> 
-> Brian
-> 
->  tests/generic/033     | 88 +++++++++++++++++++++++++++++++++++++++++++++++++++
->  tests/generic/033.out |  4 +++
->  tests/generic/group   |  1 +
->  3 files changed, 93 insertions(+)
->  create mode 100755 tests/generic/033
->  create mode 100644 tests/generic/033.out
-> 
-> diff --git a/tests/generic/033 b/tests/generic/033
-> new file mode 100755
-> index 0000000..41198b7
-> --- /dev/null
-> +++ b/tests/generic/033
-> @@ -0,0 +1,88 @@
-> +#! /bin/bash
-> +# FS QA Test No. 033
-> +#
-> +# This test stresses indirect block reservation for delayed allocation extents.
-> +# XFS reserves extra blocks for deferred allocation of delalloc extents. These
-> +# reserved blocks can be divided among more extents than anticipated if the
-> +# original extent for which the blocks were reserved is split into multiple
-> +# delalloc extents. If this scenario repeats, eventually some extents are left
-> +# without any indirect block reservation whatsoever. This leads to assert
-> +# failures and possibly other problems in XFS.
-> +#
-> +#-----------------------------------------------------------------------
-> +# Copyright (c) 2014 Red Hat, Inc.  All Rights Reserved.
-> +#
-> +# This program is free software; you can redistribute it and/or
-> +# modify it under the terms of the GNU General Public License as
-> +# published by the Free Software Foundation.
-> +#
-> +# This program is distributed in the hope that it would be useful,
-> +# but WITHOUT ANY WARRANTY; without even the implied warranty of
-> +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-> +# GNU General Public License for more details.
-> +#
-> +# You should have received a copy of the GNU General Public License
-> +# along with this program; if not, write the Free Software Foundation,
-> +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-> +#-----------------------------------------------------------------------
-> +#
-> +
-> +seq=`basename $0`
-> +seqres=$RESULT_DIR/$seq
-> +echo "QA output created by $seq"
-> +
-> +here=`pwd`
-> +tmp=/tmp/$$
-> +status=1	# failure is the default!
-> +trap "_cleanup; exit \$status" 0 1 2 3 15
-> +
-> +_cleanup()
-> +{
-> +	cd /
-> +	rm -f $tmp.*
-> +}
-> +
-> +# get standard environment, filters and checks
-> +. ./common/rc
-> +. ./common/filter
-> +
-> +# real QA test starts here
-> +rm -f $seqres.full
-> +
-> +# Modify as appropriate.
-> +_supported_fs generic
-> +_supported_os Linux
-> +_require_scratch
-> +_require_xfs_io_command "fzero"
-> +
-> +_scratch_mkfs >/dev/null 2>&1
-> +_scratch_mount
-> +
-> +file=$SCRATCH_MNT/file.$seq
-> +bytes=$((64 * 1024))
-> +
-> +# create sequential delayed allocation
-> +$XFS_IO_PROG -f -c "pwrite 0 $bytes" $file | _filter_xfs_io \
-> +	>> $seqres.full 2>&1
+On 16 July 2014 18:53, Hrishikesh Barua <talonx@gmail.com> wrote:
 
-The output of xfs_io is redirected to $seqres.full, so it's not
-necessary to be filtered, for debug purpose.
+>
+> On 16 July 2014 18:17, Brian Foster <bfoster@redhat.com> wrote:
+>
+>>
+>> That one looks like a freeze hang whereas you see an unfreeze hang.
+>>
+> You are right. My bad.
+>
+>
+>> Perhaps similar to this:
+>>
+>> https://bugzilla.redhat.com/show_bug.cgi?id=1052004
+>>
+> Looks like I can't access that bug report, even after logging in. The
+> error message says  "Most likely the bug has been restricted for internal
+> development processes and we cannot grant access."
+>
+>>
+>> >
+>> > No resolution seems to have happened there. Is this a known bug, or has
+>> it
+>> > been fixed since (I'm running xfsprogs 3.1.7) ?
+>> >
+>>
+>> Do you have the hung task output for when this occurs (echo w >
+>> /proc/sysrq-trigger)?
+>>
+> No, but I'll get it the next time it happens. Thanks for the tip.
+>
+>>
+>> Brian
+>>
+>> > Regards
+>> > Hrish
+>>
+>> > _______________________________________________
+>> > xfs mailing list
+>> > xfs@oss.sgi.com
+>> > http://oss.sgi.com/mailman/listinfo/xfs
+>>
+>>
+>
 
-And the following two xfs_io calls.
 
-Thanks,
-Eryu
+-- 
+You can't be normal and expect abnormal returns - Jeffrey Pfeffer
+------------------------------------------
+http://code.deepinspace.net
+------------------------------------------
 
-> +
-> +# Zero every other 4k range to split the larger delalloc extent into many more
-> +# smaller extents. Use zero instead of hole punch because the former does not
-> +# force writeback (and hence delalloc conversion). It can simply discard
-> +# delalloc blocks and convert the ranges to unwritten.
-> +endoff=$((bytes - 4096))
-> +for i in $(seq 0 8192 $endoff); do
-> +	$XFS_IO_PROG -c "fzero -k $i 4k" $file | _filter_xfs_io \
-> +		>> $seqres.full 2>&1
-> +done
-> +
-> +# now zero the opposite set to remove remaining delalloc extents
-> +for i in $(seq 4096 8192 $endoff); do
-> +	$XFS_IO_PROG -c "fzero -k $i 4k" $file | _filter_xfs_io	\
-> +		>> $seqres.full 2>&1
-> +done
-> +
-> +_scratch_remount
-> +hexdump $file
-> +
-> +status=0
-> +exit
-> diff --git a/tests/generic/033.out b/tests/generic/033.out
-> new file mode 100644
-> index 0000000..419d831
-> --- /dev/null
-> +++ b/tests/generic/033.out
-> @@ -0,0 +1,4 @@
-> +QA output created by 033
-> +0000000 0000 0000 0000 0000 0000 0000 0000 0000
-> +*
-> +0010000
-> diff --git a/tests/generic/group b/tests/generic/group
-> index 8e0c22a..1227408 100644
-> --- a/tests/generic/group
-> +++ b/tests/generic/group
-> @@ -32,6 +32,7 @@
->  027 auto enospc
->  028 auto quick
->  032 auto quick rw
-> +033 auto quick rw
->  053 acl repair auto quick
->  062 attr udf auto quick
->  068 other auto freeze dangerous stress
-> -- 
-> 1.8.3.1
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+--001a11c219e4007a950503dda13a
+Content-Type: text/html; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+
+<div dir=3D"ltr"><div><div>This happened again yesterday and I took the &qu=
+ot;echo w &gt; /proc/sysrq-trigger&quot;. <br></div>Output - <a href=3D"htt=
+p://pastebin.com/rpKNSYY7">http://pastebin.com/rpKNSYY7</a><br><br></div>- =
+Hrish<br></div><div class=3D"gmail_extra"><br><div class=3D"gmail_quote">On=
+ 16 July 2014 18:53, Hrishikesh Barua <span dir=3D"ltr">&lt;<a href=3D"mail=
+to:talonx@gmail.com" target=3D"_blank">talonx@gmail.com</a>&gt;</span> wrot=
+e:<br><blockquote class=3D"gmail_quote" style=3D"margin:0 0 0 .8ex;border-l=
+eft:1px #ccc solid;padding-left:1ex"><div dir=3D"ltr"><div class=3D"gmail_e=
+xtra"><br><div class=3D"gmail_quote"><span class=3D"">On 16 July 2014 18:17=
+, Brian Foster <span dir=3D"ltr">&lt;<a href=3D"mailto:bfoster@redhat.com" =
+target=3D"_blank">bfoster@redhat.com</a>&gt;</span> wrote:<br><blockquote c=
+lass=3D"gmail_quote" style=3D"margin:0px 0px 0px 0.8ex;border-left:1px soli=
+d rgb(204,204,204);padding-left:1ex">
+<div>
+<br>
+</div>That one looks like a freeze hang whereas you see an unfreeze hang.<b=
+r></blockquote></span><div>You are right. My bad.<br>=C2=A0<br></div><span =
+class=3D""><blockquote class=3D"gmail_quote" style=3D"margin:0px 0px 0px 0.=
+8ex;border-left:1px solid rgb(204,204,204);padding-left:1ex">
+
+Perhaps similar to this:<br>
+<br>
+<a href=3D"https://bugzilla.redhat.com/show_bug.cgi?id=3D1052004" target=3D=
+"_blank">https://bugzilla.redhat.com/show_bug.cgi?id=3D1052004</a><br></blo=
+ckquote></span><div>Looks like I can&#39;t access that bug report, even aft=
+er logging in. The error message says=C2=A0 &quot;Most likely the bug has b=
+een restricted for internal development processes and we cannot grant acces=
+s.&quot; <br>
+</div><span class=3D""><blockquote class=3D"gmail_quote" style=3D"margin:0p=
+x 0px 0px 0.8ex;border-left:1px solid rgb(204,204,204);padding-left:1ex">
+<div><br>
+&gt;<br>
+&gt; No resolution seems to have happened there. Is this a known bug, or ha=
+s it<br>
+&gt; been fixed since (I&#39;m running xfsprogs 3.1.7) ?<br>
+&gt;<br>
+<br>
+</div>Do you have the hung task output for when this occurs (echo w &gt;<br=
+>
+/proc/sysrq-trigger)?<br></blockquote></span><div>No, but I&#39;ll get it t=
+he next time it happens. Thanks for the tip.<br></div><span class=3D""><blo=
+ckquote class=3D"gmail_quote" style=3D"margin:0px 0px 0px 0.8ex;border-left=
+:1px solid rgb(204,204,204);padding-left:1ex">
+
+<br>
+Brian<br>
+<br>
+&gt; Regards<br>
+&gt; Hrish<br>
+<br>
+&gt; _______________________________________________<br>
+&gt; xfs mailing list<br>
+&gt; <a href=3D"mailto:xfs@oss.sgi.com" target=3D"_blank">xfs@oss.sgi.com</=
+a><br>
+&gt; <a href=3D"http://oss.sgi.com/mailman/listinfo/xfs" target=3D"_blank">=
+http://oss.sgi.com/mailman/listinfo/xfs</a><br>
+<br>
+</blockquote></span></div><br></div></div>
+</blockquote></div><br><br clear=3D"all"><br>-- <br>You can&#39;t be normal=
+ and expect abnormal returns - Jeffrey Pfeffer<br>-------------------------=
+-----------------<br><a href=3D"http://code.deepinspace.net" target=3D"_bla=
+nk">http://code.deepinspace.net</a><br>------------------------------------=
+------
+</div>
+
+--001a11c219e4007a950503dda13a--
+
+
+--===============1469768198030386226==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============1469768198030386226==--
