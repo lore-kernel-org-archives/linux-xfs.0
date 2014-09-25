@@ -1,24 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 1AAE47FD0
-	for <xfs@oss.sgi.com>; Thu, 25 Sep 2014 16:03:40 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 092DF304039
-	for <xfs@oss.sgi.com>; Thu, 25 Sep 2014 14:03:36 -0700 (PDT)
-Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
-	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	JKib7tZNwBaec7bK for <xfs@oss.sgi.com>;
-	Thu, 25 Sep 2014 14:03:34 -0700 (PDT)
-Date: Fri, 26 Sep 2014 07:03:30 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 1/3] xfs: consider freeze levels in xfs_fs_writable()
-Message-ID: <20140925210330.GG4945@dastard>
-References: <1411647632-28240-1-git-send-email-david@fromorbit.com>
-	<1411647632-28240-2-git-send-email-david@fromorbit.com>
-	<20140925161756.GA25798@infradead.org>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id DCB367FD3
+	for <xfs@oss.sgi.com>; Thu, 25 Sep 2014 16:05:59 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 7A7E6AC001
+	for <xfs@oss.sgi.com>; Thu, 25 Sep 2014 14:05:56 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id 681CBNxsEZkjgP9b for <xfs@oss.sgi.com>;
+	Thu, 25 Sep 2014 14:05:54 -0700 (PDT)
+Message-ID: <542483B3.3070104@sandeen.net>
+Date: Thu, 25 Sep 2014 16:05:55 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20140925161756.GA25798@infradead.org>
+Subject: Re: irregular mkfs.xfs results on identical HW
+References: <54247484.2030808@physik.uni-freiburg.de>
+In-Reply-To: <54247484.2030808@physik.uni-freiburg.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,45 +27,78 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: "Gamel Anton J." <anton.gamel@physik.uni-freiburg.de>, xfs@oss.sgi.com
 
-On Thu, Sep 25, 2014 at 09:17:56AM -0700, Christoph Hellwig wrote:
-> > index d36bdbc..9073895 100644
-> > --- a/fs/xfs/xfs_mount.c
-> > +++ b/fs/xfs/xfs_mount.c
-> > @@ -607,7 +607,7 @@ xfs_mount_reset_sbqflags(
-> >  	 * If the fs is readonly, let the incore superblock run
-> >  	 * with quotas off but don't flush the update out to disk
-> >  	 */
-> > -	if (mp->m_flags & XFS_MOUNT_RDONLY)
-> > +	if (!xfs_fs_writable(mp, SB_UNFROZEN))
+On 9/25/14 3:01 PM, Gamel Anton J. wrote:
+> Dear all,
 > 
-> This adds a new caller of xfs_fs_writable, which isn't mentioned in the
-> changelog.
+> servers with identical disk setup (HW RAID0 H310a):
 
-I can mention it, but it's so trivial I didn't think it was worth
-it.
+and identical xfsprogs versions?  Are these linux boxes?
 
-> > +	/*
-> > +	 * We can be called during the fs freeze process, and we need to be
-> > +	 * able to write the superblock in that case.
-> > +	 */
-> > +	if (!xfs_fs_writable(mp, SB_FREEZE_FS))
-> >  		return 0;
+> Disk /dev/sda: 598.9 GB, 598879502336 bytes
+> /dev/sda1               1       49152   394813439+  82  Linux swap / Solaris
+> /dev/sda2           49153       50176     8225280   83  Linux
+> /dev/sda3            6399       72809   533446357+  44  Unknown
 > 
-> And this already changes the checked freeze level, also not mentioned.
+> mkfs.xfs creates on 28 of them:
+> meta-data=/dev/sda3              isize=256    agcount=16, agsize=8335099 blks
 
-The changelog says "Hence allow the caller to pass in the freeze
-level it is allowed to write" which is exactly what this code is
-doing.
+agcount was higher on older mkfs's...
 
-Cheers,
+>          =                       sectsz=512   attr=1, projid32bit=0
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+attr=1?  that looks ancient.  The only way to override the default (2) is with
+a commandline argument, unless your mkfs is so old that it has different defaults.
+
+check your xfsprogs versions on both hosts.
+
+-Eric
+
+> data     =                       bsize=4096   blocks=133361584, imaxpct=25
+>          =                       sunit=0      swidth=0 blks
+> naming   =version 2              bsize=4096   ascii-ci=0
+> log      =internal               bsize=4096   blocks=32768, version=1
+>          =                       sectsz=512   sunit=0 blks, lazy-count=1
+> realtime =none                   extsz=4096   blocks=0, rtextents=0
+> 
+> but on four out of them:
+> meta-data=/dev/sda3              isize=256    agcount=4, agsize=33340398 blks
+>          =                       sectsz=512   attr=2, projid32bit=0
+> data     =                       bsize=4096   blocks=133361589, imaxpct=25
+>          =                       sunit=0      swidth=0 blks
+> naming   =version 2              bsize=4096   ascii-ci=0
+> log      =internal               bsize=4096   blocks=65117, version=2
+>          =                       sectsz=512   sunit=0 blks, lazy-count=1
+> realtime =none                   extsz=4096   blocks=0, rtextents=0
+> 
+> I did not find a way to add mkfs.xfs options to get the identical
+> filesystem setup on all nodes, e.g.
+> # mkfs.xfs -d agcount=16 -b size=4096 /dev/sda3 -f
+> meta-data=/dev/sda3              isize=256    agcount=16, agsize=8335100 blks
+>          =                       sectsz=512   attr=2, projid32bit=0
+> data     =                       bsize=4096   blocks=133361589, imaxpct=25
+>          =                       sunit=0      swidth=0 blks
+> naming   =version 2              bsize=4096   ascii-ci=0
+> log      =internal log           bsize=4096   blocks=65117, version=2
+>          =                       sectsz=512   sunit=0 blks, lazy-count=1
+> realtime =none                   extsz=4096   blocks=0, rtextents=0
+> 
+> The only way it worked was to dump nodeA:/dev/sda3 to nodeB:/dev/sda3
+> Is there an explanation? May be I missed something ... hints?
+> 
+> Cheers and thanks in advance
+> 
+> Anton
+> 
+> 
+> 
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+> 
 
 _______________________________________________
 xfs mailing list
