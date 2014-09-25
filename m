@@ -1,25 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 72AC37F80
-	for <xfs@oss.sgi.com>; Thu, 25 Sep 2014 02:19:23 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 43E088F8035
-	for <xfs@oss.sgi.com>; Thu, 25 Sep 2014 00:19:19 -0700 (PDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 771907F78
+	for <xfs@oss.sgi.com>; Thu, 25 Sep 2014 02:26:57 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 62655304051
+	for <xfs@oss.sgi.com>; Thu, 25 Sep 2014 00:26:57 -0700 (PDT)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	VFR3PpyQKDikm9hn for <xfs@oss.sgi.com>;
-	Thu, 25 Sep 2014 00:19:07 -0700 (PDT)
-Date: Thu, 25 Sep 2014 17:18:52 +1000
+	RDQnsJfFZKfpE8a2 for <xfs@oss.sgi.com>;
+	Thu, 25 Sep 2014 00:26:54 -0700 (PDT)
+Date: Thu, 25 Sep 2014 17:26:40 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Occassional problems with unfreeze
-Message-ID: <20140925071852.GE4758@dastard>
-References: <CAD2VtSjwu3eB+mrs2vX0G4+MJbHyNGVXvVR+P_ssNY6rydvijA@mail.gmail.com>
-	<20140716124757.GC36312@bfoster.bfoster>
-	<CAD2VtShVThd0j0-YgGE6fAe28DJ1U-CCRR3Sj9eNjTLKp7FygA@mail.gmail.com>
-	<CAD2VtSgdYt2zxmEeWEXmK2B44BKuB-wRKvX4H=jRA9Rj7pyamA@mail.gmail.com>
+Subject: Re: [PATCH 4/4] Adds ioctl interface support for ext4 project
+Message-ID: <20140925072640.GF4758@dastard>
+References: <1411567470-31799-1-git-send-email-lixi@ddn.com>
+	<1411567470-31799-5-git-send-email-lixi@ddn.com>
+	<20140924162507.GC27000@quack.suse.cz>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <CAD2VtSgdYt2zxmEeWEXmK2B44BKuB-wRKvX4H=jRA9Rj7pyamA@mail.gmail.com>
+In-Reply-To: <20140924162507.GC27000@quack.suse.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,32 +31,27 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Hrishikesh Barua <talonx@gmail.com>
-Cc: Brian Foster <bfoster@redhat.com>, xfs@oss.sgi.com
+To: Jan Kara <jack@suse.cz>
+Cc: adilger@dilger.ca, tytso@mit.edu, linux-api@vger.kernel.org, xfs@oss.sgi.com, hch@infradead.org, dmonakhov@openvz.org, viro@zeniv.linux.org.uk, Li Xi <pkuelelixi@gmail.com>, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org
 
-On Thu, Sep 25, 2014 at 11:37:47AM +0530, Hrishikesh Barua wrote:
-> This happened again yesterday and I took the "echo w >
-> /proc/sysrq-trigger".
-> Output - http://pastebin.com/rpKNSYY7
+On Wed, Sep 24, 2014 at 06:25:07PM +0200, Jan Kara wrote:
+> On Wed 24-09-14 22:04:30, Li Xi wrote:
+> > This patch adds ioctl interface for setting/getting project of ext4.
+>   The patch looks good to me. I was just wondering whether it won't be
+> useful to add an ioctl() which isn't ext4 specific. We could just extend
+> ->setattr() to allow setting of project ID (most filesystems would just
+> return -EOPNOTSUPP but ext4 and xfs could do the right thing) and then call
+> ->setattr from the generic ioctl. That way userspace won't have to care
+> about filesystem type when setting project ID... What do others think?
 
-How long have you been ignoring these messages for?
+I've repeatedly said that these ext4 project ID patches should
+implement the same interfaces as XFS rather than creating a new set
+of incompatible, ext4 specific interfaces to do implement the same
+functionality.
 
-[30278027.798067] XFS (xvdj): xlog_space_left: head behind tail
-[30278027.798069]   tail_cycle = 1085, tail_bytes = 1041920
-[30278027.798070]   GH   cycle = 1085, GH   bytes = 1039296
-
-XFS is emitting that warning several times a second. Isn't that a
-pretty good sign that there's something not quite right and is worth
-reporting?
-
-Indeed, you are running an old kern (3.2.0-54) which means it won't
-have this fix:
-
-3948659 xfs: Account log unmount transaction correctly
-
-And that's likely to be the source of all your freeze/unfreeze
-problems because it will eventually hang the log when it's leaked
-all it's space in the ether....
+There is no good reason for forcing userspace to re-invent tools
+that already exist just to manage identical functionality in
+different filesystems.
 
 Cheers,
 
