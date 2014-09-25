@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id F2DF47F9E
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 61CF07F9F
 	for <xfs@oss.sgi.com>; Thu, 25 Sep 2014 07:34:48 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id C4BFE304059
-	for <xfs@oss.sgi.com>; Thu, 25 Sep 2014 05:34:48 -0700 (PDT)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 00F95AC00A
+	for <xfs@oss.sgi.com>; Thu, 25 Sep 2014 05:34:47 -0700 (PDT)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	foB6ox3rnIyimH6H for <xfs@oss.sgi.com>;
-	Thu, 25 Sep 2014 05:34:47 -0700 (PDT)
+	t1DptmG3u0PjhAun for <xfs@oss.sgi.com>;
+	Thu, 25 Sep 2014 05:34:46 -0700 (PDT)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.80)
-	(envelope-from <dave@fromorbit.com>) id 1XX8Fb-0006nG-V9
-	for xfs@oss.sgi.com; Thu, 25 Sep 2014 22:34:24 +1000
+	(envelope-from <dave@fromorbit.com>) id 1XX8Fb-0006nD-TZ
+	for xfs@oss.sgi.com; Thu, 25 Sep 2014 22:34:23 +1000
 Received: from dave by disappointment with local (Exim 4.82_1-5b7a7c0-XX)
-	(envelope-from <dave@disappointment.disaster>) id 1XX8Fb-0007gt-U2
+	(envelope-from <dave@disappointment.disaster>) id 1XX8Fb-0007ge-SW
 	for xfs@oss.sgi.com; Thu, 25 Sep 2014 22:34:23 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 08/11] xfs: kill xfs_bioerror_relse
-Date: Thu, 25 Sep 2014 22:34:18 +1000
-Message-Id: <1411648461-29003-9-git-send-email-david@fromorbit.com>
+Subject: [PATCH 05/11] xfs: rework xfs_buf_bio_endio error handling
+Date: Thu, 25 Sep 2014 22:34:15 +1000
+Message-Id: <1411648461-29003-6-git-send-email-david@fromorbit.com>
 In-Reply-To: <1411648461-29003-1-git-send-email-david@fromorbit.com>
 References: <1411648461-29003-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,104 +39,81 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-There is only one caller now - xfs_trans_read_buf_map() - and it has
-very well defined call semantics - read, synchronous, and b_iodone
-is NULL. Hence it's pretty clear what error handling is necessary
-for this case. The bigger problem of untangling
-xfs_trans_read_buf_map error handling is left to a future patch.
+Currently the report of a bio error from completion
+immediately marks the buffer with an error. The issue is that this
+is racy w.r.t. synchronous IO - the submitter can see b_error being
+set before the IO is complete, and hence we cannot differentiate
+between submission failures and completion failures.
+
+Add an internal b_io_error field protected by the b_lock to catch IO
+completion errors, and only propagate that to the buffer during
+final IO completion handling. Hence we can tell in xfs_buf_iorequest
+if we've had a submission failure bey checking bp->b_error before
+dropping our b_io_remaining reference - that reference will prevent
+b_io_error values from being propagated to b_error in the event that
+completion races with submission.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_buf.c       | 39 ---------------------------------------
- fs/xfs/xfs_buf.h       |  2 --
- fs/xfs/xfs_trans_buf.c |  9 ++++++---
- 3 files changed, 6 insertions(+), 44 deletions(-)
+ fs/xfs/xfs_buf.c | 18 ++++++++++++++++--
+ fs/xfs/xfs_buf.h |  1 +
+ 2 files changed, 17 insertions(+), 2 deletions(-)
 
 diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-index cc6a558..4696ff5 100644
+index 08f9fca..a8f4a39 100644
 --- a/fs/xfs/xfs_buf.c
 +++ b/fs/xfs/xfs_buf.c
-@@ -1074,45 +1074,6 @@ xfs_buf_ioerror_alert(
- 		(__uint64_t)XFS_BUF_ADDR(bp), func, -bp->b_error, bp->b_length);
- }
+@@ -1008,6 +1008,13 @@ xfs_buf_ioend(
  
--/*
-- * Same as xfs_bioerror, except that we are releasing the buffer
-- * here ourselves, and avoiding the xfs_buf_ioend call.
-- * This is meant for userdata errors; metadata bufs come with
-- * iodone functions attached, so that we can track down errors.
-- */
--int
--xfs_bioerror_relse(
--	struct xfs_buf	*bp)
--{
--	int64_t		fl = bp->b_flags;
--	/*
--	 * No need to wait until the buffer is unpinned.
--	 * We aren't flushing it.
--	 *
--	 * chunkhold expects B_DONE to be set, whether
--	 * we actually finish the I/O or not. We don't want to
--	 * change that interface.
--	 */
--	XFS_BUF_UNREAD(bp);
--	XFS_BUF_DONE(bp);
--	xfs_buf_stale(bp);
--	bp->b_iodone = NULL;
--	if (!(fl & XBF_ASYNC)) {
--		/*
--		 * Mark b_error and B_ERROR _both_.
--		 * Lot's of chunkcache code assumes that.
--		 * There's no reason to mark error for
--		 * ASYNC buffers.
--		 */
--		xfs_buf_ioerror(bp, -EIO);
--		complete(&bp->b_iowait);
--	} else {
--		xfs_buf_relse(bp);
--	}
--
--	return -EIO;
--}
--
- int
- xfs_bwrite(
- 	struct xfs_buf		*bp)
+ 	bp->b_flags &= ~(XBF_READ | XBF_WRITE | XBF_READ_AHEAD);
+ 
++	/*
++	 * Pull in IO completion errors now. We are guaranteed to be running
++	 * single threaded, so we don't need the lock to read b_io_error.
++	 */
++	if (!bp->b_error && bp->b_io_error)
++		xfs_buf_ioerror(bp, bp->b_io_error);
++
+ 	/* Only validate buffers that were read without errors */
+ 	if (read && !bp->b_error && bp->b_ops) {
+ 		ASSERT(!bp->b_iodone);
+@@ -1192,8 +1199,12 @@ xfs_buf_bio_end_io(
+ 	 * don't overwrite existing errors - otherwise we can lose errors on
+ 	 * buffers that require multiple bios to complete.
+ 	 */
+-	if (!bp->b_error)
+-		xfs_buf_ioerror(bp, error);
++	if (error) {
++		spin_lock(&bp->b_lock);
++		if (!bp->b_io_error)
++			bp->b_io_error = error;
++		spin_unlock(&bp->b_lock);
++	}
+ 
+ 	if (!bp->b_error && xfs_buf_is_vmapped(bp) && (bp->b_flags & XBF_READ))
+ 		invalidate_kernel_vmap_range(bp->b_addr, xfs_buf_vmap_len(bp));
+@@ -1379,6 +1390,9 @@ xfs_buf_iorequest(
+ 	if (bp->b_flags & XBF_WRITE)
+ 		xfs_buf_wait_unpin(bp);
+ 
++	/* clear the internal error state to avoid spurious errors */
++	bp->b_io_error = 0;
++
+ 	/*
+ 	 * Take references to the buffer. For XBF_ASYNC buffers, holding a
+ 	 * reference for as long as submission takes is all that is necessary
 diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
-index 44db8cd..d8f57f6 100644
+index 4585c15..44db8cd 100644
 --- a/fs/xfs/xfs_buf.h
 +++ b/fs/xfs/xfs_buf.h
-@@ -297,8 +297,6 @@ extern void xfs_buf_iomove(xfs_buf_t *, size_t, size_t, void *,
- #define xfs_buf_zero(bp, off, len) \
- 	    xfs_buf_iomove((bp), (off), (len), NULL, XBRW_ZERO)
- 
--extern int xfs_bioerror_relse(struct xfs_buf *);
--
- /* Buffer Utility Routines */
- extern xfs_caddr_t xfs_buf_offset(xfs_buf_t *, size_t);
- 
-diff --git a/fs/xfs/xfs_trans_buf.c b/fs/xfs/xfs_trans_buf.c
-index 96c898e..db4be5b 100644
---- a/fs/xfs/xfs_trans_buf.c
-+++ b/fs/xfs/xfs_trans_buf.c
-@@ -324,11 +324,14 @@ xfs_trans_read_buf_map(
- 			 */
- 			if (XFS_FORCED_SHUTDOWN(mp)) {
- 				trace_xfs_bdstrat_shut(bp, _RET_IP_);
--				xfs_bioerror_relse(bp);
--			} else {
--				xfs_buf_iorequest(bp);
-+				bp->b_flags &= ~(XBF_READ | XBF_DONE);
-+				xfs_buf_ioerror(bp, -EIO);
-+				xfs_buf_stale(bp);
-+				xfs_buf_relse(bp);
-+				return -EIO;
- 			}
- 
-+			xfs_buf_iorequest(bp);
- 			error = xfs_buf_iowait(bp);
- 			if (error) {
- 				xfs_buf_ioerror_alert(bp, __func__);
+@@ -158,6 +158,7 @@ typedef struct xfs_buf {
+ 	struct list_head	b_lru;		/* lru list */
+ 	spinlock_t		b_lock;		/* internal state lock */
+ 	unsigned int		b_state;	/* internal state flags */
++	int			b_io_error;	/* internal IO error state */
+ 	wait_queue_head_t	b_waiters;	/* unpin waiters */
+ 	struct list_head	b_list;
+ 	struct xfs_perag	*b_pag;		/* contains rbtree root */
 -- 
 2.0.0
 
