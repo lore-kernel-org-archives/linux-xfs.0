@@ -1,21 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id E76607F78
-	for <xfs@oss.sgi.com>; Wed, 24 Sep 2014 19:50:25 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 656E1AC004
-	for <xfs@oss.sgi.com>; Wed, 24 Sep 2014 17:50:25 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id m0GbEEXuYcQfboHY for <xfs@oss.sgi.com>;
-	Wed, 24 Sep 2014 17:50:23 -0700 (PDT)
-Message-ID: <542366CF.3040905@sandeen.net>
-Date: Wed, 24 Sep 2014 19:50:23 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 462737F7B
+	for <xfs@oss.sgi.com>; Wed, 24 Sep 2014 22:54:25 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 253F18F8035
+	for <xfs@oss.sgi.com>; Wed, 24 Sep 2014 20:54:22 -0700 (PDT)
+Received: from mail-pd0-f173.google.com (mail-pd0-f173.google.com
+	[209.85.192.173]) by cuda.sgi.com with ESMTP id
+	xbWfEcCOVFPhIB4s (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 24 Sep 2014 20:54:20 -0700 (PDT)
+Received: by mail-pd0-f173.google.com with SMTP id w10so234596pde.18
+	for <xfs@oss.sgi.com>; Wed, 24 Sep 2014 20:54:20 -0700 (PDT)
+Date: Thu, 25 Sep 2014 11:54:16 +0800
+From: Eryu Guan <guaneryu@gmail.com>
+Subject: Re: [PATCH] generic/033: add xfs delalloc indirect block depletion
+	reproducer
+Message-ID: <20140925035416.GC13950@dhcp-13-216.nay.redhat.com>
+References: <1411584425-52709-1-git-send-email-bfoster@redhat.com>
 MIME-Version: 1.0
-Subject: Re: Corrupted file system
-References: <5839367.DyqsVHbRuQ@myrada> <705802842.F0QjhfVGQR@myrada>
-	<54233051.4070709@sandeen.net> <2047180.98c6Ryq0NE@myrada>
-In-Reply-To: <2047180.98c6Ryq0NE@myrada>
+Content-Disposition: inline
+In-Reply-To: <1411584425-52709-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,97 +29,199 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="windows-1252"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Diane Trout <diane@caltech.edu>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: Brian Foster <bfoster@redhat.com>
+Cc: fstests@vger.kernel.org, xfs@oss.sgi.com
 
-On 9/24/14 7:25 PM, Diane Trout wrote:
-> Huh.
-> =
+On Wed, Sep 24, 2014 at 02:47:05PM -0400, Brian Foster wrote:
+> XFS allocates extra indirect blocks for delayed allocation extents at
+> write time. When delalloc extents are split, the existing indirect block
+> reservation was historically divided up evenly among the new extents
+> even though the overall requirement for two extents could exceed the
+> requirement for the original. Repeated delalloc extent splits ultimately
+> leads to extents with 0 indirect blocks and in turn leads to assert
+> failures in XFS.
+> 
+> Add a test to stress indirect block reservation for delayed allocation
+> extents. The test converts a single delalloc extent to many and operates
+> on the remaining extents to detect or trigger potential problems.
+> 
+> Signed-off-by: Brian Foster <bfoster@redhat.com>
+> ---
+> 
+> Here's a simple reproducer for the indirect block reservation problem
+> called out here:
+> 
+> http://oss.sgi.com/archives/xfs/2014-09/msg00337.html
+> 
+> It reproduces the assert failures described therein:
+> 
+> XFS: Assertion failed: startblockval(del.br_startblock) > 0, file: fs/xfs/libxfs/xfs_bmap.c, line: 5281
+> 
+> Note that this test also unintentionally fails on XFS. The test file
+> ends up zero-sized after the remount and thus hexdump doesn't produce
+> any output. This doesn't occur on ext4, I suspect due to the fact that
+> the range being zeroed is flushed beforehand, though I could be wrong
+> about that.
 
-> I'd managed to make a metadump using the 3.1.7 version of the tools. Then=
- I =
+Tested with ext4 and xfs, and ext4 passes/xfs fails the test as
+described here.
 
-> tried to run xfs_repair on the partition, and now xfs_metadump is segfaul=
-ting =
+Reviewed-by: Eryu Guan <eguan@redhat.com>
 
-> on the partition.
-> =
+With one nitpick below..
 
-> Would the older metadata dump be useful?
+> 
+> In any event, this calls out a separate bug in XFS where if appending
+> data is chucked from cache by zero range before written back (eof is
+> page aligned), we lose the on-disk inode size update and the inode size
+> changes unexpectedly across the remount (assuming nothing else changes
+> the size, of course).
+> 
+> Brian
+> 
+>  tests/generic/033     | 88 +++++++++++++++++++++++++++++++++++++++++++++++++++
+>  tests/generic/033.out |  4 +++
+>  tests/generic/group   |  1 +
+>  3 files changed, 93 insertions(+)
+>  create mode 100755 tests/generic/033
+>  create mode 100644 tests/generic/033.out
+> 
+> diff --git a/tests/generic/033 b/tests/generic/033
+> new file mode 100755
+> index 0000000..41198b7
+> --- /dev/null
+> +++ b/tests/generic/033
+> @@ -0,0 +1,88 @@
+> +#! /bin/bash
+> +# FS QA Test No. 033
+> +#
+> +# This test stresses indirect block reservation for delayed allocation extents.
+> +# XFS reserves extra blocks for deferred allocation of delalloc extents. These
+> +# reserved blocks can be divided among more extents than anticipated if the
+> +# original extent for which the blocks were reserved is split into multiple
+> +# delalloc extents. If this scenario repeats, eventually some extents are left
+> +# without any indirect block reservation whatsoever. This leads to assert
+> +# failures and possibly other problems in XFS.
+> +#
+> +#-----------------------------------------------------------------------
+> +# Copyright (c) 2014 Red Hat, Inc.  All Rights Reserved.
+> +#
+> +# This program is free software; you can redistribute it and/or
+> +# modify it under the terms of the GNU General Public License as
+> +# published by the Free Software Foundation.
+> +#
+> +# This program is distributed in the hope that it would be useful,
+> +# but WITHOUT ANY WARRANTY; without even the implied warranty of
+> +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> +# GNU General Public License for more details.
+> +#
+> +# You should have received a copy of the GNU General Public License
+> +# along with this program; if not, write the Free Software Foundation,
+> +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+> +#-----------------------------------------------------------------------
+> +#
+> +
+> +seq=`basename $0`
+> +seqres=$RESULT_DIR/$seq
+> +echo "QA output created by $seq"
+> +
+> +here=`pwd`
+> +tmp=/tmp/$$
+> +status=1	# failure is the default!
+> +trap "_cleanup; exit \$status" 0 1 2 3 15
+> +
+> +_cleanup()
+> +{
+> +	cd /
+> +	rm -f $tmp.*
+> +}
+> +
+> +# get standard environment, filters and checks
+> +. ./common/rc
+> +. ./common/filter
+> +
+> +# real QA test starts here
+> +rm -f $seqres.full
+> +
+> +# Modify as appropriate.
+> +_supported_fs generic
+> +_supported_os Linux
+> +_require_scratch
+> +_require_xfs_io_command "fzero"
+> +
+> +_scratch_mkfs >/dev/null 2>&1
+> +_scratch_mount
+> +
+> +file=$SCRATCH_MNT/file.$seq
+> +bytes=$((64 * 1024))
+> +
+> +# create sequential delayed allocation
+> +$XFS_IO_PROG -f -c "pwrite 0 $bytes" $file | _filter_xfs_io \
+> +	>> $seqres.full 2>&1
 
-sure.  Compress it & send me a private note with it attached (or with a loc=
-ation
-if it's too big to email)
+The output of xfs_io is redirected to $seqres.full, so it's not
+necessary to be filtered, for debug purpose.
 
--Eric
+And the following two xfs_io calls.
 
-> I'd need to rebuild xfsprogs before the stack trace would be useful... de=
-bian =
+Thanks,
+Eryu
 
-> likes to strip the symbols and they didn't make a -dbg package.
-> =
-
-> Diane
-> =
-
-> On Wednesday, September 24, 2014 15:57:53 Eric Sandeen wrote:
->> If you want to make a metadata image, compress it, and send it my way I'=
-d be
->> glad to look at it - I've been doing some repair work lately.
->>
->> -Eric
->>
->> On 9/24/14 3:38 PM, Diane Trout wrote:
->>> On Wednesday, September 24, 2014 12:08:40 Emmanuel Florac wrote:
->>>> Le Tue, 23 Sep 2014 15:02:57 -0700
->>>>
->>>> Diane Trout <diane@caltech.edu> =E9crivait:
->>>>> I had a raid failure at work that ended up corrupting an xfs
->>>>> filesystem the tail of the xfs_repair command looks like the below. I
->>>>> was able to generate a metadata dump but is there a point to making
->>>>> it available?
->>>>>
->>>>> It does crash repeatedly at the same place
->>>>
->>>> Did you try the very latest xfs_repair?
->>>
->>> I grabbed the one out of debian unstable (3.2.1), verified that it was
->>> your
->>> latest release and used that. I didn't try building the version in git.
->>>
->>> It did get much further than version 3.1.7+b1 (debian stable)
->>>
->>> Diane
->>>
->>> Phase 6 - check inode connectivity...
->>>
->>>         - resetting contents of realtime bitmap and summary inodes
->>>         - traversing filesystem ...
->>>
->>> entry "lymphoblastoid" in dir ino 256 doesn't have a .. entry, will set=
- it
->>> in ino 2051.
->>> bad hash table for directory inode 256 (no data entry): rebuilding
->>> rebuilding directory inode 256
->>> 7f70c79c8700: Badness in key lookup (length)
->>> bp=3D(bno 0x3480, len 4096 bytes) key=3D(bno 0x3480, len 8192 bytes)
->>> Metadata corruption detected at block 0x4000070/0x1000
->>> xfs_da_do_buf(2): XFS_CORRUPTION_ERROR
->>>
->>> fatal error -- can't read block 8388608 for directory inode 259, error =
-117
->>>
->>>
->>> _______________________________________________
->>> xfs mailing list
->>> xfs@oss.sgi.com
->>> http://oss.sgi.com/mailman/listinfo/xfs
-> =
-
+> +
+> +# Zero every other 4k range to split the larger delalloc extent into many more
+> +# smaller extents. Use zero instead of hole punch because the former does not
+> +# force writeback (and hence delalloc conversion). It can simply discard
+> +# delalloc blocks and convert the ranges to unwritten.
+> +endoff=$((bytes - 4096))
+> +for i in $(seq 0 8192 $endoff); do
+> +	$XFS_IO_PROG -c "fzero -k $i 4k" $file | _filter_xfs_io \
+> +		>> $seqres.full 2>&1
+> +done
+> +
+> +# now zero the opposite set to remove remaining delalloc extents
+> +for i in $(seq 4096 8192 $endoff); do
+> +	$XFS_IO_PROG -c "fzero -k $i 4k" $file | _filter_xfs_io	\
+> +		>> $seqres.full 2>&1
+> +done
+> +
+> +_scratch_remount
+> +hexdump $file
+> +
+> +status=0
+> +exit
+> diff --git a/tests/generic/033.out b/tests/generic/033.out
+> new file mode 100644
+> index 0000000..419d831
+> --- /dev/null
+> +++ b/tests/generic/033.out
+> @@ -0,0 +1,4 @@
+> +QA output created by 033
+> +0000000 0000 0000 0000 0000 0000 0000 0000 0000
+> +*
+> +0010000
+> diff --git a/tests/generic/group b/tests/generic/group
+> index 8e0c22a..1227408 100644
+> --- a/tests/generic/group
+> +++ b/tests/generic/group
+> @@ -32,6 +32,7 @@
+>  027 auto enospc
+>  028 auto quick
+>  032 auto quick rw
+> +033 auto quick rw
+>  053 acl repair auto quick
+>  062 attr udf auto quick
+>  068 other auto freeze dangerous stress
+> -- 
+> 1.8.3.1
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
