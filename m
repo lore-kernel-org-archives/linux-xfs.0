@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id F3CEE7F9A
-	for <xfs@oss.sgi.com>; Thu, 25 Sep 2014 07:34:44 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id E18658F804C
-	for <xfs@oss.sgi.com>; Thu, 25 Sep 2014 05:34:44 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id 0C2D57F9A
+	for <xfs@oss.sgi.com>; Thu, 25 Sep 2014 07:34:46 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id E5C4E8F804C
+	for <xfs@oss.sgi.com>; Thu, 25 Sep 2014 05:34:45 -0700 (PDT)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	G5gHe9zGISclVZGy for <xfs@oss.sgi.com>;
-	Thu, 25 Sep 2014 05:34:43 -0700 (PDT)
+	pVRGT3vBttjag3fD for <xfs@oss.sgi.com>;
+	Thu, 25 Sep 2014 05:34:44 -0700 (PDT)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.80)
-	(envelope-from <dave@fromorbit.com>) id 1XX8Fb-0006nA-Rz
+	(envelope-from <dave@fromorbit.com>) id 1XX8Fb-0006n9-RG
 	for xfs@oss.sgi.com; Thu, 25 Sep 2014 22:34:23 +1000
 Received: from dave by disappointment with local (Exim 4.82_1-5b7a7c0-XX)
-	(envelope-from <dave@disappointment.disaster>) id 1XX8Fb-0007gP-Qd
+	(envelope-from <dave@disappointment.disaster>) id 1XX8Fb-0007gK-QG
 	for xfs@oss.sgi.com; Thu, 25 Sep 2014 22:34:23 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 02/11] xfs: Don't use xfs_buf_iowait in the delwri buffer code
-Date: Thu, 25 Sep 2014 22:34:12 +1000
-Message-Id: <1411648461-29003-3-git-send-email-david@fromorbit.com>
+Subject: [PATCH 01/11] xfs: force the log before shutting down
+Date: Thu, 25 Sep 2014 22:34:11 +1000
+Message-Id: <1411648461-29003-2-git-send-email-david@fromorbit.com>
 In-Reply-To: <1411648461-29003-1-git-send-email-david@fromorbit.com>
 References: <1411648461-29003-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,74 +39,89 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-For the special case of delwri buffer submission and waiting, we
-don't need to issue IO synchronously at all. The second pass to call
-xfs_buf_iowait() can be replaced with  blocking on xfs_buf_lock() -
-the buffer will be unlocked when the async IO is complete.
+When we have marked the filesystem for shutdown, we want to prevent
+any further buffer IO from being submitted. However, we currently
+force the log after marking the filesystem as shut down, hence
+allowing IO to the log *after* we have marked both the filesystem
+and the log as in an error state.
 
-This formalises a sane the method of waiting for async IO - take an
-extra reference, submit the IO, call xfs_buf_lock() when you want to
-wait for IO completion. i.e.:
-
-	bp = xfs_buf_find();
-	xfs_buf_hold(bp);
-	bp->b_flags |= XBF_ASYNC;
-	xfs_buf_iosubmit(bp);
-	xfs_buf_lock(bp)
-	error = bp->b_error;
-	....
-	xfs_buf_relse(bp);
-
-While this is somewhat racy for gathering IO errors, none of the
-code that calls xfs_buf_delwri_submit() will race against other
-users of the buffers being submitted. Even if they do, we don't
-really care if the error is detected by the delwri code or the user
-we raced against. Either way, the error will be detected and
-handled.
+Clean this up by forcing the log before we mark the filesytem with
+an error. This replaces the pure CIL flush that we currently have
+which works around this same issue (i.e the CIL can't be flushed
+once the shutdown flags are set) and hence enables us to clean up
+the logic substantially.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_buf.c | 18 +++++++++++++-----
- 1 file changed, 13 insertions(+), 5 deletions(-)
+ fs/xfs/xfs_log.c | 37 +++++++++----------------------------
+ 1 file changed, 9 insertions(+), 28 deletions(-)
 
-diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-index ec65050..f1bd238 100644
---- a/fs/xfs/xfs_buf.c
-+++ b/fs/xfs/xfs_buf.c
-@@ -1813,12 +1813,17 @@ __xfs_buf_delwri_submit(
- 	blk_start_plug(&plug);
- 	list_for_each_entry_safe(bp, n, io_list, b_list) {
- 		bp->b_flags &= ~(_XBF_DELWRI_Q | XBF_ASYNC | XBF_WRITE_FAIL);
--		bp->b_flags |= XBF_WRITE;
-+		bp->b_flags |= XBF_WRITE | XBF_ASYNC;
+diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+index b1131fe..a598955 100644
+--- a/fs/xfs/xfs_log.c
++++ b/fs/xfs/xfs_log.c
+@@ -3924,13 +3924,14 @@ xfs_log_force_umount(
+ 	retval = 0;
  
--		if (!wait) {
--			bp->b_flags |= XBF_ASYNC;
-+		/*
-+		 * we do all Io submission async. This means if we need to wait
-+		 * for IO completion we need to take an extra reference so the
-+		 * buffer is still valid on the other side.
-+		 */
-+		if (wait)
-+			xfs_buf_hold(bp);
-+		else
- 			list_del_init(&bp->b_list);
--		}
- 		xfs_bdstrat_cb(bp);
- 	}
- 	blk_finish_plug(&plug);
-@@ -1866,7 +1871,10 @@ xfs_buf_delwri_submit(
- 		bp = list_first_entry(&io_list, struct xfs_buf, b_list);
+ 	/*
+-	 * Flush the in memory commit item list before marking the log as
+-	 * being shut down. We need to do it in this order to ensure all the
+-	 * completed transactions are flushed to disk with the xfs_log_force()
+-	 * call below.
++	 * Flush all the completed transactions to disk before marking the log
++	 * being shut down. We need to do it in this order to ensure that
++	 * completed operations are safely on disk before we shut down, and that
++	 * we don't have to issue any buffer IO after the shutdown flags are set
++	 * to guarantee this.
+ 	 */
+ 	if (!logerror)
+-		xlog_cil_force(log);
++		_xfs_log_force(mp, XFS_LOG_SYNC, NULL);
  
- 		list_del_init(&bp->b_list);
--		error2 = xfs_buf_iowait(bp);
-+
-+		/* locking the buffer will wait for async IO completion. */
-+		xfs_buf_lock(bp);
-+		error2 = bp->b_error;
- 		xfs_buf_relse(bp);
- 		if (!error)
- 			error = error2;
+ 	/*
+ 	 * mark the filesystem and the as in a shutdown state and wake
+@@ -3942,18 +3943,11 @@ xfs_log_force_umount(
+ 		XFS_BUF_DONE(mp->m_sb_bp);
+ 
+ 	/*
+-	 * This flag is sort of redundant because of the mount flag, but
+-	 * it's good to maintain the separation between the log and the rest
+-	 * of XFS.
++	 * Mark the log and the iclogs with IO error flags to prevent any
++	 * further log IO from being issued or completed.
+ 	 */
+ 	log->l_flags |= XLOG_IO_ERROR;
+-
+-	/*
+-	 * If we hit a log error, we want to mark all the iclogs IOERROR
+-	 * while we're still holding the loglock.
+-	 */
+-	if (logerror)
+-		retval = xlog_state_ioerror(log);
++	retval = xlog_state_ioerror(log);
+ 	spin_unlock(&log->l_icloglock);
+ 
+ 	/*
+@@ -3966,19 +3960,6 @@ xfs_log_force_umount(
+ 	xlog_grant_head_wake_all(&log->l_reserve_head);
+ 	xlog_grant_head_wake_all(&log->l_write_head);
+ 
+-	if (!(log->l_iclog->ic_state & XLOG_STATE_IOERROR)) {
+-		ASSERT(!logerror);
+-		/*
+-		 * Force the incore logs to disk before shutting the
+-		 * log down completely.
+-		 */
+-		_xfs_log_force(mp, XFS_LOG_SYNC, NULL);
+-
+-		spin_lock(&log->l_icloglock);
+-		retval = xlog_state_ioerror(log);
+-		spin_unlock(&log->l_icloglock);
+-	}
+-
+ 	/*
+ 	 * Wake up everybody waiting on xfs_log_force. Wake the CIL push first
+ 	 * as if the log writes were completed. The abort handling in the log
 -- 
 2.0.0
 
