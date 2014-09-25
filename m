@@ -1,28 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 5706A7F8D
-	for <xfs@oss.sgi.com>; Thu, 25 Sep 2014 06:35:28 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 375CF8F8035
-	for <xfs@oss.sgi.com>; Thu, 25 Sep 2014 04:35:25 -0700 (PDT)
-Received: from mail-pa0-f52.google.com (mail-pa0-f52.google.com
-	[209.85.220.52]) by cuda.sgi.com with ESMTP id 42VXxpa9rdDdU2bB
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 25 Sep 2014 04:35:24 -0700 (PDT)
-Received: by mail-pa0-f52.google.com with SMTP id hz1so10687822pad.25
-	for <xfs@oss.sgi.com>; Thu, 25 Sep 2014 04:35:23 -0700 (PDT)
-Mime-Version: 1.0 (Mac OS X Mail 7.3 \(1878.6\))
-Subject: Re: [PATCH 4/4] Adds ioctl interface support for ext4 project
-From: lixi <pkuelelixi@gmail.com>
-In-Reply-To: <20140925075912.GG4758@dastard>
-Date: Thu, 25 Sep 2014 19:34:38 +0800
-Message-Id: <C31A739F-4502-4B40-9AE3-F2FE49291657@gmail.com>
-References: <1411567470-31799-1-git-send-email-lixi@ddn.com>
-	<1411567470-31799-5-git-send-email-lixi@ddn.com>
-	<20140924162507.GC27000@quack.suse.cz>
-	<20140924162634.GA16886@infradead.org>
-	<20140924170105.GE27000@quack.suse.cz>
-	<20140925075912.GG4758@dastard>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id B592E7F90
+	for <xfs@oss.sgi.com>; Thu, 25 Sep 2014 07:02:03 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 51D49AC003
+	for <xfs@oss.sgi.com>; Thu, 25 Sep 2014 05:01:59 -0700 (PDT)
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	GpTmTx7JAKNmFV8Z for <xfs@oss.sgi.com>;
+	Thu, 25 Sep 2014 05:01:58 -0700 (PDT)
+Date: Thu, 25 Sep 2014 22:01:55 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] xfs: flush the range before zero range conversion
+Message-ID: <20140925120155.GF4945@dastard>
+References: <1411585591-55975-1-git-send-email-bfoster@redhat.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <1411585591-55975-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,101 +25,67 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="gb2312"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Andreas Dilger <adilger@dilger.ca>, Jan Kara <jack@suse.cz>, linux-api@vger.kernel.org, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, Dmitry Monakhov <dmonakhov@openvz.org>, viro@zeniv.linux.org.uk, linux-fsdevel@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, Ext4 Developers List <linux-ext4@vger.kernel.org>
+To: Brian Foster <bfoster@redhat.com>
+Cc: xfs@oss.sgi.com
 
-CtTaIDIwMTTE6jnUwjI1yNWjrM/CzuczOjU5o6xEYXZlIENoaW5uZXIgPGRhdmlkQGZyb21vcmJp
-dC5jb20+INC0tcCjugoKPiBPbiBXZWQsIFNlcCAyNCwgMjAxNCBhdCAwNzowMTowNVBNICswMjAw
-LCBKYW4gS2FyYSB3cm90ZToKPj4gT24gV2VkIDI0LTA5LTE0IDA5OjI2OjM0LCBDaHJpc3RvcGgg
-SGVsbHdpZyB3cm90ZToKPj4+IE9uIFdlZCwgU2VwIDI0LCAyMDE0IGF0IDA2OjI1OjA3UE0gKzAy
-MDAsIEphbiBLYXJhIHdyb3RlOgo+Pj4+IE9uIFdlZCAyNC0wOS0xNCAyMjowNDozMCwgTGkgWGkg
-d3JvdGU6Cj4+Pj4+IFRoaXMgcGF0Y2ggYWRkcyBpb2N0bCBpbnRlcmZhY2UgZm9yIHNldHRpbmcv
-Z2V0dGluZyBwcm9qZWN0IG9mIGV4dDQuCj4+Pj4gIFRoZSBwYXRjaCBsb29rcyBnb29kIHRvIG1l
-LiBJIHdhcyBqdXN0IHdvbmRlcmluZyB3aGV0aGVyIGl0IHdvbid0IGJlCj4+Pj4gdXNlZnVsIHRv
-IGFkZCBhbiBpb2N0bCgpIHdoaWNoIGlzbid0IGV4dDQgc3BlY2lmaWMuIFdlIGNvdWxkIGp1c3Qg
-ZXh0ZW5kCj4+Pj4gLT5zZXRhdHRyKCkgdG8gYWxsb3cgc2V0dGluZyBvZiBwcm9qZWN0IElEICht
-b3N0IGZpbGVzeXN0ZW1zIHdvdWxkIGp1c3QKPj4+PiByZXR1cm4gLUVPUE5PVFNVUFAgYnV0IGV4
-dDQgYW5kIHhmcyBjb3VsZCBkbyB0aGUgcmlnaHQgdGhpbmcpIGFuZCB0aGVuIGNhbGwKPj4+PiAt
-PnNldGF0dHIgZnJvbSB0aGUgZ2VuZXJpYyBpb2N0bC4gVGhhdCB3YXkgdXNlcnNwYWNlIHdvbid0
-IGhhdmUgdG8gY2FyZQo+Pj4+IGFib3V0IGZpbGVzeXN0ZW0gdHlwZSB3aGVuIHNldHRpbmcgcHJv
-amVjdCBJRC4uLiBXaGF0IGRvIG90aGVycyB0aGluaz8KPj4+IAo+Pj4gQWJzb2x1dGVseS4gIElu
-IGdlbmVyYWwgSSBhbHNvIHdvbmRlciB3aHkgdGhpcyBwYXRjaCBkb2Vzbid0IGltcGxlbWVudAo+
-Pj4gdGhlIGZ1bGwgWEZTIEFQSS4gIE1heWJlIHRoZXJlIGlzIGEgcmVhc29uIGl0IHdhcyBjb25z
-aWRlcmVkIGFuZAo+Pj4gcmVqZWN0ZWQsIGJ1dCBpdCB3b3VsZCBiZSBoZWxwZnVsIHRvIGRvY3Vt
-ZW50IHdoeS4KPj4gIERvIHlvdSBtZWFuIGZ1bGwgZ2V0L3NldGZzeGF0dHIgQVBJPwo+IAo+IFRo
-YXQncyBhIGdvb2Qgc3RhcnQuCj4gCj4gVGhlIGJpZ2dlciBpc3N1ZSBpbiBteSBtaW5kIGlzIHRo
-YXQgd2UgYWxyZWFkeSBoYXZlIGEgZnVsbHkgZmVhdHVyZWQKPiBxdW90YSBBUEkgdGhhdCBzdXBw
-b3J0cyBwcm9qZWN0IHF1b3RhcyBhbmQgdXNlcnNwYWNlIHRvb2xzIGF2YWlsYWJsZQo+IHRoYXQg
-bWFuaXB1bGF0ZSBpdC4geGZzdGVzdHMgYWxyZWFkeSB1c2VzIHRob3NlIHRvb2xzIGFuZCBBUEkK
-PiBmb3IgdGVzdGluZyBwcm9qZWN0IHF1b3Rhcy4KPiAKPiBUaGlzIHdob2xlIHBhdGNoc2V0IHJl
-aW52ZW50cyBhbGwgdGhlIHF1b3RhIEFQSXMsIGFuZCB3aWxsIHJlcXVpcmUKPiBhZGRpbmcgc3Vw
-cG9ydCBpbiB1c2Vyc3BhY2UsIGFuZCBoZW5jZSByZXF1aXJlIHJlLWludmVudGluZyBhbGwgdGhl
-Cj4gdGVzdCBpbmZyYXN0cnVjdHVyZSB3ZSBhbHJlYWR5IGhhdmUgYmVjYXVzZSBpdCB3b24ndCBi
-ZSBjb21wYXRpYmxlCj4gd2l0aCB0aGUgZXhpc3RpbmcgcHJvamVjdCBxdW90YSB0ZXN0IGNvZGUu
-Cj4gCj4+ICBUaGF0IGJhc2ljYWxseSBjb250YWlucyBwcm9qZWN0IElELAo+PiBmbGFncyAodGhv
-c2UgdGhhdCBhcmUgY3VycmVudGx5IGdldC9zZXQgd2l0aCBGU19JT0NfR0VURkxBR1MvU0VURkxB
-R1MpLCBhbmQKPj4gZXh0ZW50IHNpemUgaGludCByaWdodD8KPiAKPiBJdCdzIGEgZGlmZmVyZW50
-IHNldCBvZiBmbGFnIGRlZmluaXRpb25zLiBXZSB0cmFuc2xhdGUgdGhlIGludGVyZmFjZQo+IFhG
-U19YRkxBR18qIHZhbHVlcyB0by9mcm9tIHRoZSBpbm9kZSBvbi1kaXNrIFhGU19ESUZMQUdfKiBp
-bm9kZSB2YWx1ZXMsIGp1c3QKPiBsaWtlIHdlIHRyYW5zbGF0ZSB0aGUgVkZTIEZTXypfRkwgZmxh
-Z3MgdGhhdCBnZXQgcGFzc2VkIHRocm91Z2ggdGhlCj4gRlNfSU9DX0dFVEZMQUdTL1NFVEZMQUdT
-IGlvY3RsLgo+IAo+PiBUaGF0IHNlZW1zIHdvcmthYmxlIGFuZCBpdCB3b3VsZCBhbHNvIG1ha2Ug
-c2V0dGluZwo+PiBvZiBQUk9KSU5IRVJJVCBmbGFnIGZzIGFnbm9zdGljLiBPbmx5IHdlIHdvdWxk
-IGhhdmUgdG8gY3JlYXRlIHNvbWUgZ2VuZXJpYwo+PiBmbGFncyBuYW1lc3BhY2UgYW5kIG1lcmdl
-IGludG8gdGhhdCBleHQ0IGZsYWdzIGFuZCBoYXZlIGEgdHJhbnNsYXRpb24KPj4gZnVuY3Rpb24g
-Zm9yIHRoZSBvbGQgZXh0NCBmbGFncy4KPiAKPiBUaGUgWEZTX1hGTEFHU18qIGFyZSBhbHJlYWR5
-IGZpbGVzeXN0ZW0gYWdub3N0aWMgLSB0aGV5IGFyZSBmbGFncwo+IHRoYXQgYXJlIG9ubHkgdXNl
-ZCBmb3IgaW50ZXJmYWNpbmcgd2l0aCB1c2Vyc3BhY2UgYW5kIGhlbmNlIG9ubHkKPiBleGlzdCBh
-dCB0aGUgaW9jdGwgY29weSBpbi9vdXQgbGF5ZXIuLi4uLgo+IAo+PiBBbHNvIEknbSBhZnJhaWQg
-d2UgbWF5IHF1aWNrbHkgcnVuIG91dCBvZgo+PiAzMiBhdmFpbGFibGUgZmxhZ3MgaW4geGZsYWdz
-IHNvIHdlJ2QgbmVlZCB0byBleHRlbmQgdGhhdC4gQnV0IGFsbCB0aGlzCj4+IHNlZW1zIHRvIGJl
-IGRvYWJsZS4KPiAKPiBUaGUgc3RydWN0IGZzeGF0dHIgd2FzIGRlc2lnbmVkIHRvIGJlIGV4dGVu
-c2libGUgLSBpdCBoYXMgdW51c2VkCj4gcGFkZGluZyBhbmQgZW5vdWdoIHNwYWNlIGluIHRoZSBm
-bGFncyBmaWVsZCB0byBhbGxvdyB1cyB0bwo+IGNvbmRpdGlvbmFsbHkgdXNlIHRoYXQgcGFkZGlu
-Z6GtLgoKSGkgRGF2ZSwKCkkgd2FzIG1vc3RseSB3b3JraW5nIG9uIHRoZSBzZW1hbnRpY3Mgb2Yg
-aW5oZXJpdCBmbGFnIG9uIHRoZXNlIHBhdGNoZXMuIEFuZApJIGRpZG6hr3QgcmVhbGl6ZWQgdGhh
-dCB0aGUgaW50ZXJmYWNlIGRpZmZlcmVuY2VzIHdvdWxkIGJvdGhlciB5b3Ugc28gbXVjaC4gU29y
-cnkKZm9yIHRoYXQuCgpJIGFncmVlIHRoYXQgd2Ugc2hvdWxkIGNob29zZSBhIGdvb2QgaW50ZXJm
-YWNlLiBJdCB3b3VsZCBiZSBnb29kIHRoYXQgaXQgaXMKZ2VuZXJhbCBzbyB0aGF0IGl0IHdvcmtz
-IHdlbGwgZm9yIGFsbCBmaWxlIHN5c3RlbXMuIEkgYWdyZWUgdGhhdCBhZGRpbmcgYW4KZXh0NCBz
-cGVjaWZpYyBpb2N0bCgpIGlzIGZhciBmcm9tIHRoZSBiZXN0IGNob2ljZS4gSSBhbSB3aWxsaW5n
-IHRvIGNoYW5nZSBpdCB0bwphbnkgZ2VuZXJhbCBpbnRlcmZhY2UuIEEgZ2VuZXJhbCBpb2N0bCgp
-IHNvdW5kcyBnb29kIHRvIG1lLiBFeHRlbmQgc2V0YXR0cigpCmFuZCBnZXRhdHRyKCkgZm9yIHBy
-b2plY3QgSUQgc291bmRzIGV2ZW4gYmV0dGVyLCBzaW5jZSBwcm9qZWN0IElEIGxvb2tzIGxpa2UK
-VUlEL0dJRC4gQW5kIGdlbmVyYWwgeGF0dHIgbmFtZSBpcyBhbm90aGVyIGNob2ljZS4gQnV0IGl0
-IGlzIG1pZ2h0IGJlIGEgbGl0dGxlCmJpdCBjb25mdXNpbmcgaWYgd2UgdXNlIHhhdHRyIGFjdHVh
-bGx5LCBzaW5jZSB3ZSBhcmUgbm90IHNhdmluZyBwcm9qZWN0IElEIGFzCmV4dGVuZGVkIGF0dHJp
-YnV0ZSBvbiBFeHQ0LiBBbnkgY2hvaWNlIGlzIGZpbmUgd2l0aCBtZSwgYXMgbG9uZyBhcyB0aGUK
-aW1wbGVtZW50YXRpb24gd29uJ3QgaW50cm9kdWNlIG5hc3R5IGNvZGVzIG9yIGluY29uc2lzdGVu
-dCBkZXNpZ24uCgpIb3dldmVyLCB0aGUgcHJvYmxlbSBpcywgSSBkbyBub3QgcXVpdGUgdW5kZXJz
-dGFuZCB3aHkgd2Ugc2hvdWxkIGtlZXAKdGhlIGludGVyZmFjZSBleGFjdGx5IHRoZSBzYW1lIHdp
-dGggWEZTLiBJdCB3b3VsZCBiZSBnb29kIGlmIHdlIGNhbi4gQnV0CmFzIGZhciBhcyBJIGNhbiBz
-ZWUsIGl0IHNlZW1zIGhhcmQuIFhGUyB1c2VzIGEgbG90IGludGVyZmFjZXMgd2hpY2ggYXJlCm5v
-dCBzbyBzdGFuZGFyZCBhbmQgdXNlZCBieSBvdGhlciBmaWxlIHN5c3RlbXMuIEZvciBleGFtcGxl
-LCBzdHJ1Y3QKZnN4YXR0ciBpcyBub3QgdXNlZCBieSBvdGhlciBmaWxlIHN5c3RlbXMgYXQgYWxs
-IGV4Y2VwdCBYRlMuIEkgYW0gbm90IHN1cmUKd2h5IHdlIHNob3VsZCBpbnRyb2R1Y2UgdGhpcyBp
-bnRvIEV4dDQgaWYgdGhlcmUgYXJlIGEgbG90IG9mIG90aGVyIGJldHRlcgp3YXlzLiBJIHdvdWxk
-IGJlIGhhcHB5IHRvIGNoYW5nZSB0byBYRlMgaW50ZXJmYWNlcywgaWYgaXQgaXMgZ2VuZXJhbC4K
-SG93ZXZlciwgSSBkb26hr3QgdGhpbmsgaXQgaXMgZ2VuZXJhbCBlbm91Z2guCgpJIGtub3cgeGZz
-dGVzdCBpcyB1c2luZyB0aGUgZXhpc3RpbmcgcHJvamVjdCBxdW90YSBpbnRlcmZhY2VzIG9mIFhG
-Uy4gQW5kCm1heWJlIHRoZXJlIGFyZSBzb21lIGFwcGxpY2F0aW9ucyB3aGljaCBhcmUgdXNpbmcg
-dGhlbSB0b28uIEJ1dAprZWVwaW5nIHRoZSBpbnRlcmZhY2VzIGV4YWN0bHkgdGhlIHNhbWUgd2l0
-aCBYRlMgd291bGQgY29zdCBzbyBtdWNoCmVmZm9ydCB0aGF0IEmhr2QgbGlrZSB0byBnZXQgZW5v
-dWdoIHJlYXNvbnMgYmVmb3JlIHN0YXJ0IHdvcmtpbmcgb24gaXQuIElzIGl0CnJlYWxseSBuZWNl
-c3Nhcnk/IEkgYW0gbm90IHNvIHN1cmUuIEl0IGlzIHNvIGVhc3kgdG8gY2hhbmdlIHVzZXIKc3Bh
-Y2UgYXBwbGljYXRpb25zIGNvbXBhcmluZyB0byBjaGFuZ2luZyBhIHdlaXJkIGludGVyZmFjZXMu
-IEZvcgpleGFtcGxlLCBJIHRoaW5rIGl0IHdvbqGvdCBjb3N0IGV2ZW4gbW9yZSB0aGFuIGEgZGF5
-IHRvIGFkZCB4ZnN0ZXN0CnN1cHBvcnQgZm9yIG5ldyBFeHQ0IHByb2plY3QgcXVvdGEuIEFuZCBz
-aW5jZSBwcm9qZWN0IHF1b3RhIGlzIGZhciBmcm9tCmEgd2lkZWx5IHVzZWQgZmVhdHVyZSwgSSBk
-b26hr3QgdGhpbmsgdGhlcmUgaXMgbXVjaCBjb21wYXRpYmlsaXR5IHByb2JsZW1zCmZvciBleGlz
-dGluZyBhcHBsaWNhdGlvbnMuICBBbmQgSWYgdGhlIG5ldyBwcm9qZWN0IGludGVyZmFjZSBhcmUg
-Z2VuZXJhbAplbm91Z2gsIHRoZXJlIHdvbqGvdCBiZSBhbnkgY29tcGF0aWJpbGl0eSBwcm9ibGVt
-cyBmb3IgbmV3IGFwcGxpY2F0aW9ucwphdCBhbGwuCgpJIG1pZ2h0IG1pc3NlZCBzb21ldGhpbmcg
-aW1wb3J0YW50LiBTbyBwbGVhc2UgbGV0IG1lIGtub3cgaWYgeW91IGhhdmUKYW55IGFkdmljZXMu
-CgpSZWdhcmRzLAogICAgICAgICAgICAgICAgICAgICAgICAgLSBMaSBYaQpfX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bv
-c3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
+On Wed, Sep 24, 2014 at 03:06:31PM -0400, Brian Foster wrote:
+> XFS currently discards delalloc blocks within the target range of a zero
+> range request. Unaligned start and end offsets are zeroed through the
+> page cache and the internal, aligned blocks are converted to unwritten
+> extents.
+> 
+> If EOF is page aligned and covered by a delayed allocation extent. The
+> inode size is not updated until I/O completion. If a zero range request
+> discards a delalloc range that covers page aligned EOF as such, the
+> inode size update never occurs. For example:
+> 
+> $ rm -f /mnt/file
+> $ xfs_io -fc "pwrite 0 64k" -c "zero 60k 4k" /mnt/file
+> $ stat -c "%s" /mnt/file
+> 65536
+> $ umount /mnt
+> $ mount <dev> /mnt
+> $ stat -c "%s" /mnt/file
+> 61440
+> 
+> Update xfs_zero_file_space() to flush the range rather than discard
+> delalloc blocks to ensure that inode size updates occur appropriately.
+> 
+> Signed-off-by: Brian Foster <bfoster@redhat.com>
+> ---
+> 
+> I suppose we could be more clever here and only flush the range in this
+> particular scenario, but I'm not sure if there's a major benefit there.
+
+Punching the delalloc range rather than flushing the file
+was done intentionally - this was added primarily for speeding up
+the zeroing of large VM image files. i.e. it's an extent
+manipulation operation rather than a data Io operation. Flushing the
+file defeats the primary reason for the operation existing.
+
+We can easily detect this situation and just zero the last block in
+the file directly after punching out all the delalloc state. This
+should happen anyway when the region to be zeroed is not page
+aligned....
+
+> FWIW, this implicitly addresses the indlen==0 assert failures described
+> in the xfs_bmap_del_extent() rfc, but doesn't necessarily mean we
+> shouldn't fix that code IMO.
+
+We punch delalloc extents elsewhere, so that still needs fixing.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
