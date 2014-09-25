@@ -1,23 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 09F327F80
-	for <xfs@oss.sgi.com>; Thu, 25 Sep 2014 02:30:28 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id EAE218F8035
-	for <xfs@oss.sgi.com>; Thu, 25 Sep 2014 00:30:27 -0700 (PDT)
-Received: from na01-bn1-obe.outbound.protection.outlook.com
-	(mail-bn1on0117.outbound.protection.outlook.com
-	[157.56.110.117]) by cuda.sgi.com with ESMTP id
-	DNmXxuPn36o54qZw (version=TLSv1 cipher=AES256-SHA bits=256
-	verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 25 Sep 2014 00:30:25 -0700 (PDT)
-From: Simon Dray <sdray@Espial.com>
-Subject: XFS issue xfs goes offline with various messages drive not
-	recoverable without reboot
-Date: Thu, 25 Sep 2014 07:30:23 +0000
-Message-ID: <dd6d1d6e9fa7469584e72574347bb088@BN1PR0301MB0625.namprd03.prod.outlook.com>
-Content-Language: en-US
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 2266A7F8A
+	for <xfs@oss.sgi.com>; Thu, 25 Sep 2014 02:59:30 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id AFEFDAC004
+	for <xfs@oss.sgi.com>; Thu, 25 Sep 2014 00:59:29 -0700 (PDT)
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	dPTc82bhXgWSzyfE for <xfs@oss.sgi.com>;
+	Thu, 25 Sep 2014 00:59:27 -0700 (PDT)
+Date: Thu, 25 Sep 2014 17:59:12 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 4/4] Adds ioctl interface support for ext4 project
+Message-ID: <20140925075912.GG4758@dastard>
+References: <1411567470-31799-1-git-send-email-lixi@ddn.com>
+	<1411567470-31799-5-git-send-email-lixi@ddn.com>
+	<20140924162507.GC27000@quack.suse.cz>
+	<20140924162634.GA16886@infradead.org>
+	<20140924170105.GE27000@quack.suse.cz>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20140924170105.GE27000@quack.suse.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,294 +29,76 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============6668784180750477343=="
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: Jan Kara <jack@suse.cz>
+Cc: adilger@dilger.ca, tytso@mit.edu, linux-api@vger.kernel.org, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, dmonakhov@openvz.org, viro@zeniv.linux.org.uk, Li Xi <pkuelelixi@gmail.com>, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org
 
---===============6668784180750477343==
-Content-Language: en-US
-Content-Type: multipart/alternative;
-	boundary="_000_dd6d1d6e9fa7469584e72574347bb088BN1PR0301MB0625namprd03_"
+On Wed, Sep 24, 2014 at 07:01:05PM +0200, Jan Kara wrote:
+> On Wed 24-09-14 09:26:34, Christoph Hellwig wrote:
+> > On Wed, Sep 24, 2014 at 06:25:07PM +0200, Jan Kara wrote:
+> > > On Wed 24-09-14 22:04:30, Li Xi wrote:
+> > > > This patch adds ioctl interface for setting/getting project of ext4.
+> > >   The patch looks good to me. I was just wondering whether it won't be
+> > > useful to add an ioctl() which isn't ext4 specific. We could just extend
+> > > ->setattr() to allow setting of project ID (most filesystems would just
+> > > return -EOPNOTSUPP but ext4 and xfs could do the right thing) and then call
+> > > ->setattr from the generic ioctl. That way userspace won't have to care
+> > > about filesystem type when setting project ID... What do others think?
+> > 
+> > Absolutely.  In general I also wonder why this patch doesn't implement
+> > the full XFS API.  Maybe there is a reason it was considered and
+> > rejected, but it would be helpful to document why.
+>   Do you mean full get/setfsxattr API?
 
---_000_dd6d1d6e9fa7469584e72574347bb088BN1PR0301MB0625namprd03_
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+That's a good start.
 
-Dear Sirs
+The bigger issue in my mind is that we already have a fully featured
+quota API that supports project quotas and userspace tools available
+that manipulate it. xfstests already uses those tools and API
+for testing project quotas.
 
-I wonder if you can help with an issue we see re-occuring on a regular basi=
-s with one of our HP systems which uses a HP 420 Raid controller
+This whole patchset reinvents all the quota APIs, and will require
+adding support in userspace, and hence require re-inventing all the
+test infrastructure we already have because it won't be compatible
+with the existing project quota test code.
 
-Action taken
+>   That basically contains project ID,
+> flags (those that are currently get/set with FS_IOC_GETFLAGS/SETFLAGS), and
+> extent size hint right?
 
-We first saw the following:
-[root@ content]# ls
-ls: cannot open directory .: Input/output error
+It's a different set of flag definitions. We translate the interface
+XFS_XFLAG_* values to/from the inode on-disk XFS_DIFLAG_* inode values, just
+like we translate the VFS FS_*_FL flags that get passed through the
+FS_IOC_GETFLAGS/SETFLAGS ioctl.
 
+> That seems workable and it would also make setting
+> of PROJINHERIT flag fs agnostic. Only we would have to create some generic
+> flags namespace and merge into that ext4 flags and have a translation
+> function for the old ext4 flags.
 
-[root@ /]# ls -ltr
-ls: cannot access content
-total 358
-d?????????? ? ? ? ? ? content
-drwxr-xr-x. 2 root root 4096 Jun 28 2011 srv
-drwxr-xr-x. 2 root root 4096 Jun 28 2011 media
-drwxr-xr-x. 2 root root 4096 Feb 22 2012 cgroup
-drwx------. 2 root root 16384 Jul 21 2012 lost+found
-drwxr-xr-x. 2 root root 4096 Jul 21 2012 selinux
+The XFS_XFLAGS_* are already filesystem agnostic - they are flags
+that are only used for interfacing with userspace and hence only
+exist at the ioctl copy in/out layer.....
 
-We try to run:
-[root@ /]# xfs_check /dev/md0
-xfs_check: /dev/md0 contains a mounted and writable filesystem
-fatal error -- couldn't initialize XFS library
-We also tried to umount the /dev/md0 before runniing xfs_check but no luck.=
- We received the error: device is in use
+> Also I'm afraid we may quickly run out of
+> 32 available flags in xflags so we'd need to extend that. But all this
+> seems to be doable.
 
-We use xfs for one of our large raid file systems and we are seeing the xfs=
- filesystem go offline with the following messages in dmesg
+The struct fsxattr was designed to be extensible - it has unused
+padding and enough space in the flags field to allow us to
+conditionally use that padding....
 
-messages-20140921:Sep 18 23:01: kernel: XFS (md0): Device md0: metadata wri=
-te error block 0x5e28623d8
-messages-20140921:Sep 18 23:01:04 kernel: XFS (md0): I/O error occurred: me=
-ta-data dev md0 block 0x445cccc40 ("xlog_iodone") error 5 buf count 32768
-messages-20140921:Sep 18 23:01:04 kernel: XFS (md0): xfs_do_force_shutdown(=
-0x2) called from line 891 of file fs/xfs/xfs_log.c. Return address =3D 0xff=
-ffffffa2c428dc
-messages-20140921:Sep 18 23:01:04 kernel: XFS (md0): Log I/O Error Detected=
-. Shutting down filesystem
-messages-20140921:Sep 18 23:01:04 kernel: XFS (md0): Please umount the file=
-system and rectify the problem(s)
-messages-20140921:Sep 18 23:01:04 kernel: XFS (md0): xfs_imap_to_bp: xfs_tr=
-ans_read_buf() returned error 5.
-messages-20140921:Sep 18 23:01:04 kernel: XFS (md0): xfs_iunlink_remove: xf=
-s_itobp() returned error 5.
-messages-20140921:Sep 18 23:01:04 kernel: XFS (md0): I/O error occurred: me=
-ta-data dev md0 block 0x445cccc80 ("xlog_iodone") error 5 buf count 32768
-messages-20140921:Sep 18 23:01:04 kernel: XFS (md0): xfs_do_force_shutdown(=
-0x2) called from line 891 of file fs/xfs/xfs_log.c. Return address =3D 0xff=
-ffffffa2c428dc
+Cheers,
 
-XFS (md0): xfs_log_force: error 5 returned.
-XFS (md0): xfs_log_force: error 5 returned.
-XFS (md0): xfs_log_force: error 5 returned.
-
-In all occurrences the only way to recover from this is to reboot the syste=
-m and allow xfs_repair to run during boot this clears the issue until next =
-time
-
-We have checked the RAID health and nothing seems to be amiss, if you could=
- help with this it would be much appreciated
-
-
-Best regards Simon
-
-
-Simon Dray *
-
-p: +44.1223 716.400
-p: +44.1223 716.476
-e: sdray@espial.com
-
-1st Floor, 335 Cambridge Science Park, Milton Road, Cambridge, Cambridgeshi=
-re, CB4 0WN, United Kingdom.
-
-Understanding is a three-edged sword
-
-
---_000_dd6d1d6e9fa7469584e72574347bb088BN1PR0301MB0625namprd03_
-Content-Type: text/html; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
-
-<html xmlns:v=3D"urn:schemas-microsoft-com:vml" xmlns:o=3D"urn:schemas-micr=
-osoft-com:office:office" xmlns:w=3D"urn:schemas-microsoft-com:office:word" =
-xmlns:m=3D"http://schemas.microsoft.com/office/2004/12/omml" xmlns=3D"http:=
-//www.w3.org/TR/REC-html40">
-<head>
-<meta http-equiv=3D"Content-Type" content=3D"text/html; charset=3Dus-ascii"=
->
-<meta name=3D"Generator" content=3D"Microsoft Word 12 (filtered medium)">
-<style><!--
-/* Font Definitions */
-@font-face
-	{font-family:Wingdings;
-	panose-1:5 0 0 0 0 0 0 0 0 0;}
-@font-face
-	{font-family:"Cambria Math";
-	panose-1:2 4 5 3 5 4 6 3 2 4;}
-@font-face
-	{font-family:Calibri;
-	panose-1:2 15 5 2 2 2 4 3 2 4;}
-@font-face
-	{font-family:Corbel;
-	panose-1:2 11 5 3 2 2 4 2 2 4;}
-/* Style Definitions */
-p.MsoNormal, li.MsoNormal, div.MsoNormal
-	{margin:0cm;
-	margin-bottom:.0001pt;
-	font-size:11.0pt;
-	font-family:"Calibri","sans-serif";}
-a:link, span.MsoHyperlink
-	{mso-style-priority:99;
-	color:blue;
-	text-decoration:underline;}
-a:visited, span.MsoHyperlinkFollowed
-	{mso-style-priority:99;
-	color:purple;
-	text-decoration:underline;}
-span.EmailStyle17
-	{mso-style-type:personal-compose;
-	font-family:"Calibri","sans-serif";
-	color:windowtext;}
-.MsoChpDefault
-	{mso-style-type:export-only;}
-@page WordSection1
-	{size:612.0pt 792.0pt;
-	margin:72.0pt 72.0pt 72.0pt 72.0pt;}
-div.WordSection1
-	{page:WordSection1;}
---></style><!--[if gte mso 9]><xml>
-<o:shapedefaults v:ext=3D"edit" spidmax=3D"1026" />
-</xml><![endif]--><!--[if gte mso 9]><xml>
-<o:shapelayout v:ext=3D"edit">
-<o:idmap v:ext=3D"edit" data=3D"1" />
-</o:shapelayout></xml><![endif]-->
-</head>
-<body lang=3D"EN-GB" link=3D"blue" vlink=3D"purple">
-<div class=3D"WordSection1">
-<p class=3D"MsoNormal">Dear Sirs <o:p></o:p></p>
-<p class=3D"MsoNormal"><o:p>&nbsp;</o:p></p>
-<p class=3D"MsoNormal">I wonder if you can help with an issue we see re-occ=
-uring on a regular basis with one of our HP systems which uses a HP 420 Rai=
-d controller
-<o:p></o:p></p>
-<p class=3D"MsoNormal"><o:p>&nbsp;</o:p></p>
-<p class=3D"MsoNormal">Action taken <o:p></o:p></p>
-<p class=3D"MsoNormal"><o:p>&nbsp;</o:p></p>
-<p class=3D"MsoNormal">We first saw the following: <br>
-[root@ content]# ls <br>
-ls: cannot open directory .: Input/output error <br>
-<br>
-<br>
-[root@ /]# ls -ltr <br>
-ls: cannot access content <br>
-total 358 <br>
-d?????????? ? ? ? ? ? content <br>
-drwxr-xr-x. 2 root root 4096 Jun 28 2011 srv <br>
-drwxr-xr-x. 2 root root 4096 Jun 28 2011 media <br>
-drwxr-xr-x. 2 root root 4096 Feb 22 2012 cgroup <br>
-drwx------. 2 root root 16384 Jul 21 2012 lost&#43;found <br>
-drwxr-xr-x. 2 root root 4096 Jul 21 2012 selinux <br>
-<br>
-We try to run: <br>
-[root@ /]# xfs_check /dev/md0 <br>
-xfs_check: /dev/md0 contains a mounted and writable filesystem <br>
-fatal error -- couldn't initialize XFS library <br>
-We also tried to umount the /dev/md0 before runniing xfs_check but no luck.=
- We received the error: device is in use<o:p></o:p></p>
-<p class=3D"MsoNormal"><o:p>&nbsp;</o:p></p>
-<p class=3D"MsoNormal">We use xfs for one of our large raid file systems an=
-d we are seeing the xfs filesystem go offline with the following messages i=
-n dmesg
-<o:p></o:p></p>
-<p class=3D"MsoNormal"><o:p>&nbsp;</o:p></p>
-<p class=3D"MsoNormal">messages-20140921:Sep 18 23:01: kernel: XFS (md0): D=
-evice md0: metadata write error block 0x5e28623d8
-<br>
-messages-20140921:Sep 18 23:01:04 kernel: XFS (md0): I/O error occurred: me=
-ta-data dev md0 block 0x445cccc40 (&quot;xlog_iodone&quot;) error 5 buf cou=
-nt 32768
-<br>
-messages-20140921:Sep 18 23:01:04 kernel: XFS (md0): xfs_do_force_shutdown(=
-0x2) called from line 891 of file fs/xfs/xfs_log.c. Return address =3D 0xff=
-ffffffa2c428dc
-<br>
-messages-20140921:Sep 18 23:01:04 kernel: XFS (md0): Log I/O Error Detected=
-. Shutting down filesystem
-<br>
-messages-20140921:Sep 18 23:01:04 kernel: XFS (md0): Please umount the file=
-system and rectify the problem(s)
-<br>
-messages-20140921:Sep 18 23:01:04 kernel: XFS (md0): xfs_imap_to_bp: xfs_tr=
-ans_read_buf() returned error 5.
-<br>
-messages-20140921:Sep 18 23:01:04 kernel: XFS (md0): xfs_iunlink_remove: xf=
-s_itobp() returned error 5.
-<br>
-messages-20140921:Sep 18 23:01:04 kernel: XFS (md0): I/O error occurred: me=
-ta-data dev md0 block 0x445cccc80 (&quot;xlog_iodone&quot;) error 5 buf cou=
-nt 32768
-<br>
-messages-20140921:Sep 18 23:01:04 kernel: XFS (md0): xfs_do_force_shutdown(=
-0x2) called from line 891 of file fs/xfs/xfs_log.c. Return address =3D 0xff=
-ffffffa2c428dc<o:p></o:p></p>
-<p class=3D"MsoNormal"><o:p>&nbsp;</o:p></p>
-<p class=3D"MsoNormal">XFS (md0): xfs_log_force: error 5 returned. <br>
-XFS (md0): xfs_log_force: error 5 returned. <br>
-XFS (md0): xfs_log_force: error 5 returned.<o:p></o:p></p>
-<p class=3D"MsoNormal"><o:p>&nbsp;</o:p></p>
-<p class=3D"MsoNormal">In all occurrences the only way to recover from this=
- is to reboot the system and allow xfs_repair to run during boot this clear=
-s the issue until next time
-<o:p></o:p></p>
-<p class=3D"MsoNormal"><o:p>&nbsp;</o:p></p>
-<p class=3D"MsoNormal">We have checked the RAID health and nothing seems to=
- be amiss, if you could help with this it would be much appreciated
-<o:p></o:p></p>
-<p class=3D"MsoNormal"><o:p>&nbsp;</o:p></p>
-<p class=3D"MsoNormal"><o:p>&nbsp;</o:p></p>
-<p class=3D"MsoNormal">Best regards Simon <o:p></o:p></p>
-<p class=3D"MsoNormal"><o:p>&nbsp;</o:p></p>
-<p class=3D"MsoNormal"><b><span lang=3D"EN-CA" style=3D"font-family:&quot;A=
-rial&quot;,&quot;sans-serif&quot;"><o:p>&nbsp;</o:p></span></b></p>
-<p class=3D"MsoNormal"><span lang=3D"EN-CA" style=3D"font-size:10.0pt;font-=
-family:&quot;Arial&quot;,&quot;sans-serif&quot;">Simon Dray
-</span><span lang=3D"EN-CA" style=3D"font-size:10.0pt;font-family:Wingdings=
-">s</span><span lang=3D"EN-CA" style=3D"font-size:10.0pt;font-family:&quot;=
-Arial&quot;,&quot;sans-serif&quot;">
-<o:p></o:p></span></p>
-<p class=3D"MsoNormal"><span lang=3D"EN-CA" style=3D"font-size:10.0pt;font-=
-family:&quot;Arial&quot;,&quot;sans-serif&quot;"><o:p>&nbsp;</o:p></span></=
-p>
-<p class=3D"MsoNormal"><span lang=3D"EN-CA" style=3D"font-size:10.0pt;font-=
-family:&quot;Arial&quot;,&quot;sans-serif&quot;">p: &#43;44.1223 716.400<o:=
-p></o:p></span></p>
-<p class=3D"MsoNormal"><span lang=3D"EN-CA" style=3D"font-size:10.0pt;font-=
-family:&quot;Arial&quot;,&quot;sans-serif&quot;">p: &#43;44.1223 716.476
-<o:p></o:p></span></p>
-<p class=3D"MsoNormal"><span lang=3D"EN-CA" style=3D"font-size:10.0pt;font-=
-family:&quot;Arial&quot;,&quot;sans-serif&quot;">e: sdray@espial.com
-<o:p></o:p></span></p>
-<p class=3D"MsoNormal" style=3D"margin-bottom:12.0pt"><span style=3D"font-s=
-ize:8.0pt;font-family:&quot;Corbel&quot;,&quot;sans-serif&quot;"><o:p>&nbsp=
-;</o:p></span></p>
-<p class=3D"MsoNormal"><span style=3D"font-size:10.0pt;font-family:&quot;Ar=
-ial&quot;,&quot;sans-serif&quot;">1st Floor, 335 Cambridge Science Park, Mi=
-lton Road, Cambridge, Cambridgeshire, CB4 0WN, United Kingdom.
-<o:p></o:p></span></p>
-<p class=3D"MsoNormal"><span style=3D"font-size:10.0pt;font-family:&quot;Ar=
-ial&quot;,&quot;sans-serif&quot;"><o:p>&nbsp;</o:p></span></p>
-<p class=3D"MsoNormal" style=3D"margin-bottom:12.0pt"><span style=3D"font-s=
-ize:8.0pt;font-family:&quot;Corbel&quot;,&quot;sans-serif&quot;">Understand=
-ing is a three-edged sword</span><span style=3D"font-size:8.0pt;font-family=
-:&quot;Corbel&quot;,&quot;sans-serif&quot;;color:black"><o:p></o:p></span><=
-/p>
-<p class=3D"MsoNormal"><o:p>&nbsp;</o:p></p>
-</div>
-</body>
-</html>
-
---_000_dd6d1d6e9fa7469584e72574347bb088BN1PR0301MB0625namprd03_--
-
-
---===============6668784180750477343==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============6668784180750477343==--
