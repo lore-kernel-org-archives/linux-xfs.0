@@ -1,27 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id CEADD7F9A
-	for <xfs@oss.sgi.com>; Thu, 25 Sep 2014 08:52:20 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 8A6278F8039
-	for <xfs@oss.sgi.com>; Thu, 25 Sep 2014 06:52:20 -0700 (PDT)
-Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id 939kXG9C95zcUsNK (version=TLSv1 cipher=AES256-SHA
-	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 25 Sep 2014 06:52:18 -0700 (PDT)
-Date: Thu, 25 Sep 2014 15:52:13 +0200
-From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH 4/4] Adds ioctl interface support for ext4 project
-Message-ID: <20140925135213.GB15352@quack.suse.cz>
-References: <1411567470-31799-1-git-send-email-lixi@ddn.com>
-	<1411567470-31799-5-git-send-email-lixi@ddn.com>
-	<20140924162507.GC27000@quack.suse.cz>
-	<20140924162634.GA16886@infradead.org>
-	<20140924170105.GE27000@quack.suse.cz>
-	<20140925075912.GG4758@dastard>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 77BEF7F6C
+	for <xfs@oss.sgi.com>; Thu, 25 Sep 2014 10:07:11 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 57369304062
+	for <xfs@oss.sgi.com>; Thu, 25 Sep 2014 08:07:08 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id MniOlrjtDKAiVSul (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 25 Sep 2014 08:07:07 -0700 (PDT)
+Date: Thu, 25 Sep 2014 11:07:04 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [RFC PATCH] xfs: borrow indirect blocks from freed extent when
+	available
+Message-ID: <20140925150703.GB47304@bfoster.bfoster>
+References: <1411500538-6831-1-git-send-email-bfoster@redhat.com>
+	<20140923215816.GC4322@dastard>
+	<20140924122746.GA53094@bfoster.bfoster>
+	<20140924233014.GB4758@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20140925075912.GG4758@dastard>
+In-Reply-To: <20140924233014.GB4758@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,82 +34,140 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
-Cc: adilger@dilger.ca, Jan Kara <jack@suse.cz>, linux-api@vger.kernel.org, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, dmonakhov@openvz.org, viro@zeniv.linux.org.uk, Li Xi <pkuelelixi@gmail.com>, linux-fsdevel@vger.kernel.org, tytso@mit.edu, linux-ext4@vger.kernel.org
+Cc: xfs@oss.sgi.com
 
-On Thu 25-09-14 17:59:12, Dave Chinner wrote:
-> On Wed, Sep 24, 2014 at 07:01:05PM +0200, Jan Kara wrote:
-> > On Wed 24-09-14 09:26:34, Christoph Hellwig wrote:
-> > > On Wed, Sep 24, 2014 at 06:25:07PM +0200, Jan Kara wrote:
-> > > > On Wed 24-09-14 22:04:30, Li Xi wrote:
-> > > > > This patch adds ioctl interface for setting/getting project of ext4.
-> > > >   The patch looks good to me. I was just wondering whether it won't be
-> > > > useful to add an ioctl() which isn't ext4 specific. We could just extend
-> > > > ->setattr() to allow setting of project ID (most filesystems would just
-> > > > return -EOPNOTSUPP but ext4 and xfs could do the right thing) and then call
-> > > > ->setattr from the generic ioctl. That way userspace won't have to care
-> > > > about filesystem type when setting project ID... What do others think?
+On Thu, Sep 25, 2014 at 09:30:14AM +1000, Dave Chinner wrote:
+> On Wed, Sep 24, 2014 at 08:27:46AM -0400, Brian Foster wrote:
+> > On Wed, Sep 24, 2014 at 07:58:16AM +1000, Dave Chinner wrote:
+> > > On Tue, Sep 23, 2014 at 03:28:58PM -0400, Brian Foster wrote:
+> > > > xfs_bmap_del_extent() handles extent removal from the in-core and
+> > > > on-disk extent lists. When removing a delalloc range, it updates the
+> > > > indirect block reservation appropriately based on the removal. It
+> > > > currently enforces that the new indirect block reservation is less than
+> > > > or equal to the original. This is normally the case in all situations
+> > > > except for when the removed range creates a hole in a single delalloc
+> > > > extent, thus splitting a single delalloc extent in two.
+> > > > 
+> > > > The indirect block reservation is divided evenly between the two new
+> > > > extents in this scenario. However, it is possible with small enough
+> > > > extents to split an indlen==1 extent into two such slightly smaller
+> > > > extents. This leaves one extent with 0 indirect blocks and leads to
+> > > > assert failures in other areas (e.g., xfs_bunmapi() if the extent
+> > > > happens to be removed).
 > > > 
-> > > Absolutely.  In general I also wonder why this patch doesn't implement
-> > > the full XFS API.  Maybe there is a reason it was considered and
-> > > rejected, but it would be helpful to document why.
-> >   Do you mean full get/setfsxattr API?
+> > > I had long suspected we had an issue in this code, but was never
+> > > able to nail down a reproducer that triggered it. Do you have a
+> > > reproducer, or did you find this by reading/tracing the code?
+> > > 
+> > 
+> > I have a setup on which fsx reproduces an instance of this within a few
+> > minutes consistently. It looks like the same sequence of events each
+> > occurrence so I can try to derive a more specific test case for it. I
+> > suspect the right sequence of delayed allocation followed by hole
+> > punching or zeroing should be able to trigger it.
 > 
-> That's a good start.
+> *nod*
 > 
-> The bigger issue in my mind is that we already have a fully featured
-> quota API that supports project quotas and userspace tools available
-> that manipulate it. xfstests already uses those tools and API
-> for testing project quotas.
-  Well, the VFS quota API is trivially extended by adding additional quota
-type so I don't really see about which reinventing of quota API are you
-speaking here...
+> > > > Refactor xfs_bunmapi() to make the updates that must be consistent
+> > > > against the inode (e.g., delalloc block counter, quota reservation)
+> > > > right before the extent is deleted. Move the sb block counter update
+> > > > after the extent is deleted and update xfs_bmap_del_extent() to steal
+> > > > some blocks from the freed extent if a larger overall indirect
+> > > > reservation is required by the extent removal.
+> > > > 
+> > > > Signed-off-by: Brian Foster <bfoster@redhat.com>
+> > > > ---
+> > > > 
+> > > > Hi all,
+> > > > 
+> > > > I'm seeing the following assert more frequently with fsx and the recent
+> > > > xfs_free_file_space() changes (at least on 1k fsb fs'):
+> > > > 
+> > > > XFS: Assertion failed: startblockval(del.br_startblock) > 0, file: fs/xfs/libxfs/xfs_bmap.c, line: 5281
+> > > > 
+> > > > This occurs for the reason described in the commit log description. This
+> > > > is a quick experiment I wanted to test to verify the problem goes away
+> > > > (so far, so good). Very lightly tested so far.
+> > > 
+> > > I suspect it's also the cause of these occasional assert failures
+> > > that I see:
+> > > 
+> > > XFS: Assertion failed: tp->t_blk_res_used <= tp->t_blk_res, file: fs/xfs/xfs_trans.c, line: 327
+> > > 
+> > > during delalloc conversion because there wasn't a space reservation
+> > > for the blocks allocated (i.e. indlen was zero) and so we overrun
+> > > the transaction block reservation.
+> > > 
+> > 
+> > Interesting, I've seen this as well though I'll have to go back and see
+> > where I was getting it from. I did run fsx overnight without any assert
+> > failures at all, which seems rare lately. ;) I wasn't running my usual
+> > parallel fsstress however. I've started that and I reproduce an instance
+> > of that assert failure within a few minutes, so if related it appears
+> > this might not be the only contributer. I'll look more into that one
+> > next.
+> 
+> I knew I'd looked at this before:
+> 
+> http://oss.sgi.com/archives/xfs/2014-03/msg00314.html
+> 
+> That got lost because I wrote it in a topic branch and not my usual
+> working branch, so when I dropped the topic branch. Guilt, however,
+> keeps all the patches from topic branches around, and so when I just
+> did a grep for da_new across .git/patch, this showed up.
+> 
+> It's basically the same "steal blocks from the deleted extent
+> reservation fix, and it was trying to address the above failure.
+> However, there are some other details in it (like changing the
+> location of delalloc accounting updates) that might be relevant.
+> 
 
-> This whole patchset reinvents all the quota APIs, and will require
-> adding support in userspace, and hence require re-inventing all the
-> test infrastructure we already have because it won't be compatible
-> with the existing project quota test code.
-  Well, quota-tools will have to extended to know about the new quota type.
-Yes. But that's easy to do. I think teaching xfs quota tools to work with
-ext4 will be a bigger project plus I don't think I want to force sysadmins
-which are used to work with quota-tools to switch to other utilities just
-because of project quotas.
+Ah, right. I thought I had seen something like this before. In fact I
+had it in my head that we already did something like this when I
+narrowed in on the code so I was somewhat surprised, but I didn't go
+back and look through the list. That explains that. :)
 
-Regarding xfstests - I've checked and most of the project quota tests in
-xfs directory aren't directly usable for ext4 anyway because of other
-functionality ext4 doesn't support. So we'll need to distill the least
-common denominator from them anyway...
+This version moves the entire delalloc accounting hunk after the
+xfs_bmap_del_extent() call. I think the problem with that is the sb
+counter is the only record keeping that encompasses data blocks and
+indirect blocks, which is why I only moved that update in xfs_bunmapi().
+That's also precisely why I consider using a separate parameter rather
+than updating br_blockcount.
 
-> >   That basically contains project ID,
-> > flags (those that are currently get/set with FS_IOC_GETFLAGS/SETFLAGS), and
-> > extent size hint right?
-> 
-> It's a different set of flag definitions. We translate the interface
-> XFS_XFLAG_* values to/from the inode on-disk XFS_DIFLAG_* inode values, just
-> like we translate the VFS FS_*_FL flags that get passed through the
-> FS_IOC_GETFLAGS/SETFLAGS ioctl.
-> 
-> > That seems workable and it would also make setting
-> > of PROJINHERIT flag fs agnostic. Only we would have to create some generic
-> > flags namespace and merge into that ext4 flags and have a translation
-> > function for the old ext4 flags.
-> 
-> The XFS_XFLAGS_* are already filesystem agnostic - they are flags
-> that are only used for interfacing with userspace and hence only
-> exist at the ioctl copy in/out layer.....
-> 
-> > Also I'm afraid we may quickly run out of
-> > 32 available flags in xflags so we'd need to extend that. But all this
-> > seems to be doable.
-> 
-> The struct fsxattr was designed to be extensible - it has unused
-> padding and enough space in the flags field to allow us to
-> conditionally use that padding....
-  Yeah, this should all be easy.
+Let me know if you wanted to resurrect this one, otherwise I'll try to
+double check all of that when I get back to reworking mine...
 
-								Honza
--- 
-Jan Kara <jack@suse.cz>
-SUSE Labs, CR
+> 
+> I'm pretty sure the test case was simply something like:
+> 
+> xfs_io -f -c "pwrite 0 1m" \
+> 	  -c "fzero 4k 8k" \
+> 	  -c "fzero 16k 8k" \
+> 	  -c "fzero 32k 8k" \
+> 	  -c "fzero 64k 8k" \
+> 	 .....
+> 
+> To basically split the delalloc extent repeatedly and hence drain
+> the reservation.
+> 
+
+Yep, thanks. I assume you saw the test I posted:
+
+http://oss.sgi.com/archives/xfs/2014-09/msg00371.html
+
+Brian
+
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
