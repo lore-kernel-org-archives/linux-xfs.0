@@ -1,27 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 03ACE7F82
-	for <xfs@oss.sgi.com>; Wed, 24 Sep 2014 18:37:53 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 832F77F76
+	for <xfs@oss.sgi.com>; Wed, 24 Sep 2014 19:25:32 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id C88A6304039
-	for <xfs@oss.sgi.com>; Wed, 24 Sep 2014 16:37:52 -0700 (PDT)
-Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
-	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	KHbiuVYRaSyhVOw4 for <xfs@oss.sgi.com>;
-	Wed, 24 Sep 2014 16:37:51 -0700 (PDT)
-Received: from disappointment.disaster.area ([192.168.1.110]
-	helo=disappointment) by dastard with esmtp (Exim 4.80)
-	(envelope-from <dave@fromorbit.com>) id 1XWw81-0004yG-LJ
-	for xfs@oss.sgi.com; Thu, 25 Sep 2014 09:37:45 +1000
-Received: from dave by disappointment with local (Exim 4.82_1-5b7a7c0-XX)
-	(envelope-from <dave@disappointment.disaster>) id 1XWw81-00056t-Ju
-	for xfs@oss.sgi.com; Thu, 25 Sep 2014 09:37:45 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 3/4] xfs: xfs_kset should be static
-Date: Thu, 25 Sep 2014 09:37:42 +1000
-Message-Id: <1411601863-19594-4-git-send-email-david@fromorbit.com>
-In-Reply-To: <1411601863-19594-1-git-send-email-david@fromorbit.com>
-References: <1411601863-19594-1-git-send-email-david@fromorbit.com>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 2FC67AC002
+	for <xfs@oss.sgi.com>; Wed, 24 Sep 2014 17:25:29 -0700 (PDT)
+Received: from chaos.caltech.edu (chaos.caltech.edu [131.215.34.119]) by
+	cuda.sgi.com with ESMTP id Ef7HBpce5xxBaFdS (version=TLSv1
+	cipher=AES128-SHA bits=128 verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 24 Sep 2014 17:25:28 -0700 (PDT)
+From: Diane Trout <diane@caltech.edu>
+Subject: Re: Corrupted file system
+Date: Wed, 24 Sep 2014 17:25:12 -0700
+Message-ID: <2047180.98c6Ryq0NE@myrada>
+In-Reply-To: <54233051.4070709@sandeen.net>
+References: <5839367.DyqsVHbRuQ@myrada> <705802842.F0QjhfVGQR@myrada>
+	<54233051.4070709@sandeen.net>
+MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,68 +25,97 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-From: Dave Chinner <dchinner@redhat.com>
+Huh.
 
-As it is accessed through the struct xfs_mount and can be set up
-entirely from fs/xfs/xfs_super.c
+I'd managed to make a metadump using the 3.1.7 version of the tools. Then I =
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- fs/xfs/xfs_mount.c | 3 ---
- fs/xfs/xfs_super.c | 3 ++-
- 2 files changed, 2 insertions(+), 4 deletions(-)
+tried to run xfs_repair on the partition, and now xfs_metadump is segfaulti=
+ng =
 
-diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-index fbf0384..d36bdbc 100644
---- a/fs/xfs/xfs_mount.c
-+++ b/fs/xfs/xfs_mount.c
-@@ -61,8 +61,6 @@ static DEFINE_MUTEX(xfs_uuid_table_mutex);
- static int xfs_uuid_table_size;
- static uuid_t *xfs_uuid_table;
- 
--extern struct kset *xfs_kset;
--
- /*
-  * See if the UUID is unique among mounted XFS filesystems.
-  * Mount fails if UUID is nil or a FS with the same UUID is already mounted.
-@@ -729,7 +727,6 @@ xfs_mountfs(
- 
- 	xfs_set_maxicount(mp);
- 
--	mp->m_kobj.kobject.kset = xfs_kset;
- 	error = xfs_sysfs_init(&mp->m_kobj, &xfs_mp_ktype, NULL, mp->m_fsname);
- 	if (error)
- 		goto out;
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index dcd4b93..9f622fe 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -63,7 +63,7 @@ static const struct super_operations xfs_super_operations;
- static kmem_zone_t *xfs_ioend_zone;
- mempool_t *xfs_ioend_pool;
- 
--struct kset *xfs_kset;			/* top-level xfs sysfs dir */
-+static struct kset *xfs_kset;		/* top-level xfs sysfs dir */
- #ifdef DEBUG
- static struct xfs_kobj xfs_dbg_kobj;	/* global debug sysfs attrs */
- #endif
-@@ -1411,6 +1411,7 @@ xfs_fs_fill_super(
- 	atomic_set(&mp->m_active_trans, 0);
- 	INIT_DELAYED_WORK(&mp->m_reclaim_work, xfs_reclaim_worker);
- 	INIT_DELAYED_WORK(&mp->m_eofblocks_work, xfs_eofblocks_worker);
-+	mp->m_kobj.kobject.kset = xfs_kset;
- 
- 	mp->m_super = sb;
- 	sb->s_fs_info = mp;
--- 
-2.0.0
+on the partition.
+
+Would the older metadata dump be useful?
+
+I'd need to rebuild xfsprogs before the stack trace would be useful... debi=
+an =
+
+likes to strip the symbols and they didn't make a -dbg package.
+
+Diane
+
+On Wednesday, September 24, 2014 15:57:53 Eric Sandeen wrote:
+> If you want to make a metadata image, compress it, and send it my way I'd=
+ be
+> glad to look at it - I've been doing some repair work lately.
+> =
+
+> -Eric
+> =
+
+> On 9/24/14 3:38 PM, Diane Trout wrote:
+> > On Wednesday, September 24, 2014 12:08:40 Emmanuel Florac wrote:
+> >> Le Tue, 23 Sep 2014 15:02:57 -0700
+> >> =
+
+> >> Diane Trout <diane@caltech.edu> =E9crivait:
+> >>> I had a raid failure at work that ended up corrupting an xfs
+> >>> filesystem the tail of the xfs_repair command looks like the below. I
+> >>> was able to generate a metadata dump but is there a point to making
+> >>> it available?
+> >>> =
+
+> >>> It does crash repeatedly at the same place
+> >> =
+
+> >> Did you try the very latest xfs_repair?
+> > =
+
+> > I grabbed the one out of debian unstable (3.2.1), verified that it was
+> > your
+> > latest release and used that. I didn't try building the version in git.
+> > =
+
+> > It did get much further than version 3.1.7+b1 (debian stable)
+> > =
+
+> > Diane
+> > =
+
+> > Phase 6 - check inode connectivity...
+> > =
+
+> >         - resetting contents of realtime bitmap and summary inodes
+> >         - traversing filesystem ...
+> > =
+
+> > entry "lymphoblastoid" in dir ino 256 doesn't have a .. entry, will set=
+ it
+> > in ino 2051.
+> > bad hash table for directory inode 256 (no data entry): rebuilding
+> > rebuilding directory inode 256
+> > 7f70c79c8700: Badness in key lookup (length)
+> > bp=3D(bno 0x3480, len 4096 bytes) key=3D(bno 0x3480, len 8192 bytes)
+> > Metadata corruption detected at block 0x4000070/0x1000
+> > xfs_da_do_buf(2): XFS_CORRUPTION_ERROR
+> > =
+
+> > fatal error -- can't read block 8388608 for directory inode 259, error =
+117
+> > =
+
+> > =
+
+> > _______________________________________________
+> > xfs mailing list
+> > xfs@oss.sgi.com
+> > http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
