@@ -1,28 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 3B35E7FDD
-	for <xfs@oss.sgi.com>; Thu, 25 Sep 2014 19:18:39 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 29EAD8F8033
-	for <xfs@oss.sgi.com>; Thu, 25 Sep 2014 17:18:36 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id DEFCA7FE0
+	for <xfs@oss.sgi.com>; Thu, 25 Sep 2014 20:59:42 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id B023A8F8035
+	for <xfs@oss.sgi.com>; Thu, 25 Sep 2014 18:59:42 -0700 (PDT)
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	2DjEf0eNsytVHvOw for <xfs@oss.sgi.com>;
-	Thu, 25 Sep 2014 17:18:33 -0700 (PDT)
-Date: Fri, 26 Sep 2014 10:10:49 +1000
+	OyDZSEEPjHNnCZvW for <xfs@oss.sgi.com>;
+	Thu, 25 Sep 2014 18:59:34 -0700 (PDT)
+Date: Fri, 26 Sep 2014 11:59:31 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 4/4] Adds ioctl interface support for ext4 project
-Message-ID: <20140926001049.GK4945@dastard>
-References: <1411567470-31799-1-git-send-email-lixi@ddn.com>
-	<1411567470-31799-5-git-send-email-lixi@ddn.com>
-	<20140924162507.GC27000@quack.suse.cz>
-	<20140924162634.GA16886@infradead.org>
-	<20140924170105.GE27000@quack.suse.cz>
-	<20140925075912.GG4758@dastard>
-	<C31A739F-4502-4B40-9AE3-F2FE49291657@gmail.com>
+Subject: Re: [RFC PATCH] xfs: borrow indirect blocks from freed extent when
+	available
+Message-ID: <20140926015931.GL4945@dastard>
+References: <1411500538-6831-1-git-send-email-bfoster@redhat.com>
+	<20140923215816.GC4322@dastard>
+	<20140924122746.GA53094@bfoster.bfoster>
+	<20140924233014.GB4758@dastard>
+	<20140925150703.GB47304@bfoster.bfoster>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <C31A739F-4502-4B40-9AE3-F2FE49291657@gmail.com>
+In-Reply-To: <20140925150703.GB47304@bfoster.bfoster>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,139 +30,74 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: lixi <pkuelelixi@gmail.com>
-Cc: Andreas Dilger <adilger@dilger.ca>, Jan Kara <jack@suse.cz>, linux-api@vger.kernel.org, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, Dmitry Monakhov <dmonakhov@openvz.org>, viro@zeniv.linux.org.uk, linux-fsdevel@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, Ext4 Developers List <linux-ext4@vger.kernel.org>
+To: Brian Foster <bfoster@redhat.com>
+Cc: xfs@oss.sgi.com
 
-T24gVGh1LCBTZXAgMjUsIDIwMTQgYXQgMDc6MzQ6MzhQTSArMDgwMCwgbGl4aSB3cm90ZToKPiBI
-aSBEYXZlLAo+IAo+IEkgd2FzIG1vc3RseSB3b3JraW5nIG9uIHRoZSBzZW1hbnRpY3Mgb2YgaW5o
-ZXJpdCBmbGFnIG9uIHRoZXNlIHBhdGNoZXMuIEFuZAo+IEkgZGlkbuKAmXQgcmVhbGl6ZWQgdGhh
-dCB0aGUgaW50ZXJmYWNlIGRpZmZlcmVuY2VzIHdvdWxkIGJvdGhlciB5b3Ugc28gbXVjaC4gU29y
-cnkKPiBmb3IgdGhhdC4KCkl0J3Mgbm90IHRoZSBkaWZmZXJlbmNlcyB0aGF0IGJvdGhlciBtZSAt
-IGl0J3MgdGhlIGZhY3QgdGhhdCBJIHdhcwpyZXBlYXRlZGx5IGlnbm9yZWQgdW50aWwgc29tZW9u
-ZSBlbHNlIHJhaXNlZCB0aGUgc2FtZSBpc3N1ZS4uLi4KCj4gSSBhZ3JlZSB0aGF0IHdlIHNob3Vs
-ZCBjaG9vc2UgYSBnb29kIGludGVyZmFjZS4gSXQgd291bGQgYmUgZ29vZCB0aGF0IGl0IGlzCj4g
-Z2VuZXJhbCBzbyB0aGF0IGl0IHdvcmtzIHdlbGwgZm9yIGFsbCBmaWxlIHN5c3RlbXMuIEkgYWdy
-ZWUgdGhhdCBhZGRpbmcgYW4KPiBleHQ0IHNwZWNpZmljIGlvY3RsKCkgaXMgZmFyIGZyb20gdGhl
-IGJlc3QgY2hvaWNlLiBJIGFtIHdpbGxpbmcgdG8gY2hhbmdlIGl0IHRvCj4gYW55IGdlbmVyYWwg
-aW50ZXJmYWNlLiBBIGdlbmVyYWwgaW9jdGwoKSBzb3VuZHMgZ29vZCB0byBtZS4gRXh0ZW5kIHNl
-dGF0dHIoKQo+IGFuZCBnZXRhdHRyKCkgZm9yIHByb2plY3QgSUQgc291bmRzIGV2ZW4gYmV0dGVy
-LCBzaW5jZSBwcm9qZWN0IElEIGxvb2tzIGxpa2UKPiBVSUQvR0lELgoKQWgsIG5vLCBwcm9qZWN0
-IElEIGlzIG5vdCBhIHVpZC9naWQuIEl0J3MgYSBjb21wbGV0ZWx5IGluZGVwZW5kZW50CmNvbnN0
-cnVjdC4KClsgV2hpY2ggYnJpbmdzIG1lIHRvLCBvbmNlIGFnYWluLCB0aGUgaXNzdWUgb2YgYmVp
-bmcgaWdub3JlZCBkdXJpbmcKcmV2aWV3czogcHJvamVjdCBJRHMgc2hvdWxkIG5vdCBiZSBtYXBw
-ZWQgYnkgdXNlciBuYW1lc3BhY2VzLCBub3IgYmUKYWNjZXNzaWJsZSBmcm9tIGFueXRoaW5nIG90
-aGVyIHRoYW4gdGhlIGluaXQgbmFtZXNwYWNlLgoKSW4gWEZTIHdlJ3ZlIHR1cm5lZCBvZmYgYWNj
-ZXNzIHRvIHByb2plY3QgSURzIHdpdGhpbiBuYW1lc3BhY2UKY29udGFpbmVycyBiZWNhdXNlIHRo
-ZXkgYXJlIHVzZWQgZm9yIGNvbnRhaW5lciBzcGFjZSBtYW5hZ2VtZW50CihpLmUuIGJ5IHRoZSBp
-bml0IG5hbWVzcGFjZSkgdG8gbWFuYWdlIHRoZSBhbW91bnQgb2YgZmlsZXN5c3RlbQpzcGFjZSBh
-IGNvbnRhaW5lciBvciBzZXQgb2YgY29udGFpbmVycyBjYW4gdXNlLiBXZSBkbyBub3Qgd2FudApw
-cm9qZWN0IElEcyB0byBiZSBtYW5pcHVsYXRlZCBmcm9tIHdpdGhpbiBzdWNoIGNvbnRhaW5lcnMs
-IGFuZAp0aGVyZWZvcmUgaGF2ZSB0byBwcmV2ZW50IGFjY2VzcyB0byB0aGVtIGZyb20gd2l0aGlu
-IHVzZXIKbmFtZXNwYWNlcy4gXQoKPiBBbmQgZ2VuZXJhbCB4YXR0ciBuYW1lIGlzIGFub3RoZXIg
-Y2hvaWNlLiBCdXQgaXQgaXMgbWlnaHQgYmUgYSBsaXR0bGUKPiBiaXQgY29uZnVzaW5nIGlmIHdl
-IHVzZSB4YXR0ciBhY3R1YWxseSwgc2luY2Ugd2UgYXJlIG5vdCBzYXZpbmcgcHJvamVjdCBJRCBh
-cwo+IGV4dGVuZGVkIGF0dHJpYnV0ZSBvbiBFeHQ0LiBBbnkgY2hvaWNlIGlzIGZpbmUgd2l0aCBt
-ZSwgYXMgbG9uZyBhcyB0aGUKPiBpbXBsZW1lbnRhdGlvbiB3b24ndCBpbnRyb2R1Y2UgbmFzdHkg
-Y29kZXMgb3IgaW5jb25zaXN0ZW50IGRlc2lnbi4KCldlIGNhbiBlYXNpbHkgY3JlYXRlIGFub3Ro
-ZXIgaW9jdGwgbmFtZSBpZiB3ZSBoYXZlIHRvLiBJdCBqdXN0IG5lZWRzCnN0byBiZSBkZWZpbmVk
-IHRvIHRoZSBzYW1lIHZhbHVlIGFzIHRoZSBYRlMgaW9jdGwgbmFtZXMgY3VycmVudGx5CmFyZS4g
-V2UndmUgZG9uZSB0aGlzIGJlZm9yZSB3aGVuIG1ha2luZyBpb2N0bHMgdGhhdCBvcmlnaW5hdGVk
-IGluClhGUyBnZW5lcmljIChlLmcuIHdpdGggZnJlZXplL3RoYXcgaW9jdGxzKS4uLi4KCj4gSG93
-ZXZlciwgdGhlIHByb2JsZW0gaXMsIEkgZG8gbm90IHF1aXRlIHVuZGVyc3RhbmQgd2h5IHdlIHNo
-b3VsZCBrZWVwCj4gdGhlIGludGVyZmFjZSBleGFjdGx5IHRoZSBzYW1lIHdpdGggWEZTLiBJdCB3
-b3VsZCBiZSBnb29kIGlmIHdlIGNhbi4gQnV0Cj4gYXMgZmFyIGFzIEkgY2FuIHNlZSwgaXQgc2Vl
-bXMgaGFyZC4gWEZTIHVzZXMgYSBsb3QgaW50ZXJmYWNlcyB3aGljaCBhcmUKPiBub3Qgc28gc3Rh
-bmRhcmQgYW5kIHVzZWQgYnkgb3RoZXIgZmlsZSBzeXN0ZW1zLiBGb3IgZXhhbXBsZSwgc3RydWN0
-Cj4gZnN4YXR0ciBpcyBub3QgdXNlZCBieSBvdGhlciBmaWxlIHN5c3RlbXMgYXQgYWxsIGV4Y2Vw
-dCBYRlMuCgpNb3ZpbmcgYSBleGlzdGluZyBzdHJ1Y3R1cmUgZGVmaW5pdGlvbnMgdG8gYSBkaWZm
-ZXJlbnQgaGVhZGVyIGZpbGUKaXMgdG9vIGhhcmQ/Cgo+IEkgYW0gbm90IHN1cmUgd2h5IHdlIHNo
-b3VsZCBpbnRyb2R1Y2UgdGhpcyBpbnRvIEV4dDQgaWYgdGhlcmUgYXJlCj4gYSBsb3Qgb2Ygb3Ro
-ZXIgYmV0dGVyIHdheXMuIEkgd291bGQgYmUgaGFwcHkgdG8gY2hhbmdlIHRvIFhGUwo+IGludGVy
-ZmFjZXMsIGlmIGl0IGlzIGdlbmVyYWwuICBIb3dldmVyLCBJIGRvbuKAmXQgdGhpbmsgaXQgaXMK
-PiBnZW5lcmFsIGVub3VnaC4KCkhvdyBpcyBpdCBub3QgZ2VuZXJhbCBlbm91Z2g/IEV4YW1wbGVz
-LCBwbGVhc2UsIG5vdCBoYW5kd2F2aW5nOgp3aGljaCBiaXQgb2YgdGhlIHF1b3RhIGludGVyZmFj
-ZSBjYW4ndCBleHQ0IHVzZSBiZWNhdXNlIGl0J3MgWEZTCnNwZWNpZmljPwoKV2UgYWxyZWFkeSBo
-YXZlIGEgcGVyZmVjdGx5IGZ1bmN0aW9uYWwgaW50ZXJmYWNlIGFuZCBhIGxhcmdlIGJvZHkgb2YK
-Y29kZSB0aGF0IGltcGxlbWVudHMgYW5kIHRlc3RzIGl0LiBZb3UncmUgc2F5aW5nICJvaCwgaXQn
-cyB0b28gbXVjaAp3b3JrIGZvciBtZSB0byBpbXBsZW1lbnQgYW4gZXhpc3RpbmcgaW50ZXJmYWNl
-IiBhbmQgaWdub3JpbmcgdGhlCmZhY3QgdGhhdCBub3QgaW1wbGVtZW50aW5nIHRoZSBleGlzdGlu
-ZyBpbnRlcmZhY2UgZm9yY2VzIGEgaHVnZQphbW91bnQgb2YgZG93bnN0cmVhbSB3b3JrLiBlLmcu
-CgoJLSB3ZSBuZWVkIGNvbXBsZXRlbHkgbmV3IHRlc3QgaW5mcmFzdHJ1Y3R1cmUgdG8gcmVwbGlj
-YXRlCgkgIGV4aXN0aW5nIHRlc3RzLgoJLSB3ZSBuZWVkIG5ldyB0ZXN0cyB0byBlbnN1cmUgdGhl
-IGRpZmZlcmVudCBBUElzIGFuZAoJICB1dGlsaXRpZXMgcHJvdmlkZSB0aGUgc2FtZSBmdW5jdGlv
-bmFsaXR5LCBhbmQgdGhhdCB0aGUKCSAgd29yayBpZGVudGljYWxseS4KCS0gYWRtaW5pc3RyYXRv
-cnMgYXJlIGdvaW5nIHRvIGhhdmUgdG8gbGVhcm4gaG93IGV4dDQgaXMKCSAgZGlmZmVyZW50IHRv
-IHdoYXQgdGhleSBhbHJlYWR5IGtub3cgYW5kIHVuZGVyc3RhbmQuCgktIGFkbWluaXN0cmF0b3Jz
-IHRoYXQgaGFzIHRvb2xzIHdyaXR0ZW4gdG8gbWFuYWdlIHByb2plY3QKCSAgcXVvdGFzIGlzIGdv
-aW5nIHRvIGhhdmUgdG8gcmV3cml0ZSB0aGVtIHRvIHN1cHBvcnQgZXh0NC4KCkl0J3MgYW4gZW50
-aXJlbHkgc2VsZmlzaCBhcmd1bWVudCB0aGF0IGlnbm9yZXMgd2hhdCBhbHJlYWR5IGV4aXN0aW5n
-Cm91dCBpbiB1c2Vyc3BhY2UuIGkuZS4geW91J3JlIHNheWluZyB0aGF0IGV4aXN0aW5nIGRvd25z
-dHJlYW0gdXNlcnMgb2YKcHJvamVjdCBxdW90YXMgc2ltcGxlIGRvbid0IG1hdHRlciB0byB5b3Uu
-Li4KCj4gSSBrbm93IHhmc3Rlc3QgaXMgdXNpbmcgdGhlIGV4aXN0aW5nIHByb2plY3QgcXVvdGEg
-aW50ZXJmYWNlcyBvZiBYRlMuIEFuZAo+IG1heWJlIHRoZXJlIGFyZSBzb21lIGFwcGxpY2F0aW9u
-cyB3aGljaCBhcmUgdXNpbmcgdGhlbSB0b28uIEJ1dAo+IGtlZXBpbmcgdGhlIGludGVyZmFjZXMg
-ZXhhY3RseSB0aGUgc2FtZSB3aXRoIFhGUyB3b3VsZCBjb3N0IHNvIG11Y2gKPiBlZmZvcnQgdGhh
-dCBJ4oCZZCBsaWtlIHRvIGdldCBlbm91Z2ggcmVhc29ucyBiZWZvcmUgc3RhcnQgd29ya2luZyBv
-biBpdC4gSXMgaXQKPiByZWFsbHkgbmVjZXNzYXJ5PyBJIGFtIG5vdCBzbyBzdXJlLgoKWW91IGhh
-dmUgdG8gaGF2ZSBhIHN0cm9uZ2VyIGFyZ3VtZW50IHRoYW4gdGhhdCB0byBqdXN0aWZ5IGNyZWF0
-aW5nIGEKbmV3IGluY29tcGF0aWJsZSB1c2VyIGludGVyZmFjZS4gVGhlIFhGUyBpbnRlcmZhY2Vz
-IGhhdmUgYmVlbgphdmFpbGFibGUgZm9yIG1vcmUgdGhhbiAxMCB5ZWFycyBhbmQgc3VwcG9ydCBh
-bGwgdGhlIGZ1bmN0aW9uYWxpdHkKZXh0NCByZXF1aXJlcy4gSWYgaXQgd2FzIGFueSBvdGhlciB1
-c2Vyc3BhY2UgaW50ZXJmYWNlIChlLmcuCnN5c2NhbGxzKSBvciBhbnkgZmlsZXN5c3RlbSBvdGhl
-ciB0aGFuIGV4dDQgdGhlcmUgd291bGQgYmUgcGVvcGxlCmZyb20gYWxsIG92ZXIgdGVsbGluZyB5
-b3UgInVzZSB0aGUgZXhpc3RpbmcgaW50ZXJmYWNlcyEiIGFuZCB5b3UnZApuZWVkIHZlcnkgc3Ry
-b25nIHJlYXNvbnMgZm9yIGNyZWF0aW5nIGEgbmV3IG9uZS4KCmkuZS4geW91IG5lZWQgdG8gZGVt
-b25zdHJhdGUgdGhhdCB0aGUgZXhpc3RpbmcgaW50ZXJmYWNlcyBhcmUKaW5hZGVxdWF0ZSBmb3Ig
-dGhlIGludGVuZGVkIHB1cnBvc2Ugb2YgdGhlIG5ldyBmdW5jdGlvbmFsaXR5LiBUaGF0J3MKY2xl
-YXJseSBub3QgdGhlIGNhc2UgaGVyZSBzbyB3aHkgc2hvdWxkIHdlIGFsbG93IHlvdSB0byBjcmVh
-dGUgYW4KaW5jb21wYXRpYmxlIHVzZXJzcGFjZSBBUEkgcmF0aGVyIHRoYW4gdXNlIHRoZSBleGlz
-dGluZywgZnVsbHkKZnVuY3Rpb25hbCBBUEk/Cgo+IEl0IGlzIHNvIGVhc3kgdG8gY2hhbmdlIHVz
-ZXIgc3BhY2UgYXBwbGljYXRpb25zIGNvbXBhcmluZyB0bwo+IGNoYW5naW5nIGEgd2VpcmQgaW50
-ZXJmYWNlcy4KClRoZSBleGlzdGluZyBnZW5lcmljIHF1b3RhIHRvb2xzIChpLmUgcXVvdGFjdGws
-IHJlcHF1b3RhLCBldGMpCmFscmVhZHkgaW1wbGVtZW50IHRoZSBYRlMgcXVvdGEgQVBJIHRvIGJl
-IGFibGUgdG8gcXVlcnkgWEZTCmZpbGVzeXN0ZW1zLiAgVGhlcmUncyBubyAiY2hhbmdpbmcgdG8g
-d2llcmQgaW50ZXJmYWNlcyIgbmVjZXNzYXJ5CmZvciB1c2Vyc3BhY2U7IGl0J3MgYWxyZWFkeSBh
-bGwgdGhlcmUuIEhlbmNlIGFueSB3b3JrIHlvdSBkbyB0byBhZGQKcHJvamVjdCBxdW90YSBhd2Fy
-ZW5lc3MgdG8gdGhvc2UgZ2VuZXJpYyB1c2Vyc3BhY2UgdG9vbHMgd2lsbCBuZWVkIHRvCmFkZCB0
-aGUgc3VwcG9ydCB0byB0aGUgWEZTIHF1ZXJpZXMgYW55d2F5LgoKSU9XcywgeW91J3JlIG5vdCBt
-YWtpbmcgaXQgYW55IGVhc2llciBmb3IgeW91cnNlbGYgaW4gdXNlcnNwYWNlIGJ5CmNyZWF0aW5n
-IGEgbmV3IEFQSSBmb3IgZXh0NCAtIGl0IGp1c3QgZG91YmxlcyB0aGUgYW1vdW50IG9mIHdvcmsg
-eW91CmhhdmUgdG8gaW4gdXNlcnNwYWNlIHRvIG1ha2UgZXhpc3RpbmcgdG9vbHMgcHJvamVjdCBx
-dW90YSBhd2FyZS4KCj4gRm9yCj4gZXhhbXBsZSwgSSB0aGluayBpdCB3b27igJl0IGNvc3QgZXZl
-biBtb3JlIHRoYW4gYSBkYXkgdG8gYWRkIHhmc3Rlc3QKPiBzdXBwb3J0IGZvciBuZXcgRXh0NCBw
-cm9qZWN0IHF1b3RhLgoKQSBkYXkgb2Ygd2hvc2UgdGltZT8gCgpFdmVyIHRob3VnaHQgYWJvdXQg
-aG93IG11Y2ggdGltZSBpdCB3aWxsIHRha2UgcmV2aWV3ZXJzIHRvIGxvb2sgYXQKeW91ciB0ZXN0
-cyBhbmQgaXRlcmF0ZSBvdmVyIHRoZW0gdG8gZ2V0IGl0IGFsbCByaWdodD8gSWYgeW91J3JlCmlu
-dHJvZHVjaW5nIG5ldyB1c2Vyc3BhY2UgaW5mcmFzdHJ1Y3R1cmUgdGhhdCB4ZnN0ZXN0cyB3aWxs
-IG5lZWQgdG8KZGVwZW5kIG9uIGFuZCB0ZXN0IGZvciwgdGhlbiBpdCdzIGEgbG90IG1vcmUgdGhh
-biBqdXN0IHdyaXRpbmcgbmV3CnRlc3RzLgoKSW5kZWVkLCBJJ20gbGlrZWx5IHRvIHdhbnQgbmV3
-IHByb2plY3QgcXVvdGEgdGVzdHMgdG8gYmUgZ2VuZXJpYwooaS5lLiB3b3JrcyBhbmQgcGFzc2Vz
-IG9uIGFueSBmaWxlc3lzdGVtIHRoYXQgc3VwcG9ydHMgcHJvamVjdApxdW90YXMpIHdpdGggdGhl
-IGludHJvZHVjdGlvbiBvZiBleHQ0IHByb2plY3QgcXVvdGEgc3VwcG9ydC4gSXQncwp0aGUgc2Ft
-ZSBmdW5jdGlvbmFsaXR5IGFuZCBzbyBpdCBzaG91bGQgd29yayB0aGUgc2FtZSBqdXN0IGxpa2Ug
-dXNlcgphbmQgZ3JvdXAgcXVvdGFzIGRvIGFjcm9zcyBhbGwgZmlsZXN5c3RlbXMuCgo+IEFuZCBz
-aW5jZSBwcm9qZWN0IHF1b3RhIGlzIGZhciBmcm9tCj4gYSB3aWRlbHkgdXNlZCBmZWF0dXJlLAoK
-SSBkb24ndCB0aGluayB5b3UgcmVhbGlzZSBxdWl0ZSBob3cgd2lkZXNwcmVhZCBpdCdzIHVzZSBp
-cyBvbiBYRlMuCgo+IEkgZG9u4oCZdCB0aGluayB0aGVyZSBpcyBtdWNoIGNvbXBhdGliaWxpdHkg
-cHJvYmxlbXMKPiBmb3IgZXhpc3RpbmcgYXBwbGljYXRpb25zLiAgQW5kIElmIHRoZSBuZXcgcHJv
-amVjdCBpbnRlcmZhY2UgYXJlIGdlbmVyYWwKPiBlbm91Z2gsIHRoZXJlIHdvbuKAmXQgYmUgYW55
-IGNvbXBhdGliaWxpdHkgcHJvYmxlbXMgZm9yIG5ldyBhcHBsaWNhdGlvbnMKPiBhdCBhbGwuCgpB
-Z2FpbiwgeW91IGFyZSBpZ25vcmluZyB0aGUgY29tcGF0aWJpbGl0eSBwcm9ibGVtcyB3aXRoIGV4
-aXN0aW5nCmFwcGxpY2F0aW9ucyB0aGF0IGFyZSBwcm9qZWN0IHF1b3RhIGF3YXJlLiBGb3IgdGhl
-bSB5b3UgYXJlCipjcmVhdGluZyBuZXcgY29tcGF0aWJpbGl0eSBwcm9ibGVtcyogYnkgaW1wbGVt
-ZW50aW5nIGEgbmV3CmludGVyZmFjZS4gaS5lLiBFeGlzdGluZyBhcHBsaWNhdGlvbnMgd2lsbCBu
-b3Qgd29yayBvbiBleHQ0LCBhbmQKbmV3IGFwcGxpY2F0aW9ucyB3cml0dGVuIHRvIHdvcmsgb24g
-ZXh0NCB3b24ndCB3b3JrIG9uIFhGUy4KClRoYXQncyB0aGUgY3J1eCBvZiB0aGUgaXNzdWUgLSB3
-ZSBoYXZlIGV4aXN0aW5nIGFwcGxpY2F0aW9ucyB1c2luZwp0aGUgZXhpc3RpbmcgaW50ZXJmYWNl
-IGFuZCBzbyBpbnRyb2R1Y2luZyBhIG5ldyBpbnRlcmZhY2UgaW50cm9kdWNlcwpjb21wYXRpYmls
-aXR5IHByb2JsZW1zLiAgWW91IGNhbid0IGp1c3Qgd2F2ZSB0aGlzIHByb2JsZW0gYXdheQpiZWNh
-dXNlIHlvdSBkb24ndCB0aGluayB0aGUgZXhpc3RpbmcgaW50ZXJmYWNlIG1hdHRlcnMuCgoiSXQn
-cyBlYXNpZXIgZm9yIG1lIHRvIGNyZWF0ZSBhIG5ldyBpbnRlcmZhY2UiIGlzIG5vdCBhIHZhbGlk
-IHJlYXNvbgpmb3IgY3JlYXRpbmcgYSBuZXcgaW50ZXJmYWNlLi4uLgoKQ2hlZXJzLAoKRGF2ZS4K
-LS0gCkRhdmUgQ2hpbm5lcgpkYXZpZEBmcm9tb3JiaXQuY29tCgpfX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dp
-LmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
+On Thu, Sep 25, 2014 at 11:07:04AM -0400, Brian Foster wrote:
+> On Thu, Sep 25, 2014 at 09:30:14AM +1000, Dave Chinner wrote:
+> > I knew I'd looked at this before:
+> > 
+> > http://oss.sgi.com/archives/xfs/2014-03/msg00314.html
+> > 
+> > That got lost because I wrote it in a topic branch and not my usual
+> > working branch, so when I dropped the topic branch. Guilt, however,
+> > keeps all the patches from topic branches around, and so when I just
+> > did a grep for da_new across .git/patch, this showed up.
+> > 
+> > It's basically the same "steal blocks from the deleted extent
+> > reservation fix, and it was trying to address the above failure.
+> > However, there are some other details in it (like changing the
+> > location of delalloc accounting updates) that might be relevant.
+> > 
+> 
+> Ah, right. I thought I had seen something like this before. In fact I
+> had it in my head that we already did something like this when I
+> narrowed in on the code so I was somewhat surprised, but I didn't go
+> back and look through the list. That explains that. :)
+> 
+> This version moves the entire delalloc accounting hunk after the
+> xfs_bmap_del_extent() call. I think the problem with that is the sb
+> counter is the only record keeping that encompasses data blocks and
+> indirect blocks, which is why I only moved that update in xfs_bunmapi().
+> That's also precisely why I consider using a separate parameter rather
+> than updating br_blockcount.
+> 
+> Let me know if you wanted to resurrect this one, otherwise I'll try to
+> double check all of that when I get back to reworking mine...
+
+It doesn't need to be resurrected if you've got a better fix. ;)
+
+> > I'm pretty sure the test case was simply something like:
+> > 
+> > xfs_io -f -c "pwrite 0 1m" \
+> > 	  -c "fzero 4k 8k" \
+> > 	  -c "fzero 16k 8k" \
+> > 	  -c "fzero 32k 8k" \
+> > 	  -c "fzero 64k 8k" \
+> > 	 .....
+> > 
+> > To basically split the delalloc extent repeatedly and hence drain
+> > the reservation.
+> > 
+> 
+> Yep, thanks. I assume you saw the test I posted:
+> 
+> http://oss.sgi.com/archives/xfs/2014-09/msg00371.html
+
+Yup, I did see that later in the day....
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
