@@ -1,27 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id BB7737FF3
-	for <xfs@oss.sgi.com>; Fri, 26 Sep 2014 12:13:40 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 5532FAC004
-	for <xfs@oss.sgi.com>; Fri, 26 Sep 2014 10:13:40 -0700 (PDT)
-Received: from mail.samba.org (fn.samba.org [216.83.154.106]) by cuda.sgi.com
-	with ESMTP id WLghTvkb8MWkV7ku (version=TLSv1 cipher=AES256-SHA
-	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 26 Sep 2014 10:13:39 -0700 (PDT)
-Date: Fri, 26 Sep 2014 10:13:36 -0700
-From: Jeremy Allison <jra@samba.org>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 5D3017F52
+	for <xfs@oss.sgi.com>; Fri, 26 Sep 2014 12:30:15 -0500 (CDT)
+Date: Fri, 26 Sep 2014 12:30:14 -0500
+From: Ben Myers <bpm@sgi.com>
 Subject: Re: [RFC v2] Unicode/UTF-8 support for XFS
-Message-ID: <20140926171336.GC6012@samba2>
+Message-ID: <20140926173014.GK19952@sgi.com>
 References: <20140918195650.GI19952@sgi.com> <20140922222611.GZ4322@dastard>
 	<5422C540.1060007@sgi.com> <20140924231024.GA4758@dastard>
 	<54257D3F.70302@sgi.com> <20140926165605.GA25274@infradead.org>
-	<20140926170407.GB6012@samba2>
-	<20140926170604.GA21287@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20140926170604.GA21287@infradead.org>
-Reply-To: Jeremy Allison <jra@samba.org>
+In-Reply-To: <20140926165605.GA25274@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,26 +25,46 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
-Cc: tinguely@sgi.com, xfs@oss.sgi.com, Ben Myers <bpm@sgi.com>, Olaf Weber <olaf@sgi.com>, linux-fsdevel@vger.kernel.org, Jeremy Allison <jra@samba.org>
+Cc: linux-fsdevel@vger.kernel.org, tinguely@sgi.com, Olaf Weber <olaf@sgi.com>, xfs@oss.sgi.com
 
-On Fri, Sep 26, 2014 at 10:06:04AM -0700, Christoph Hellwig wrote:
-> On Fri, Sep 26, 2014 at 10:04:07AM -0700, Jeremy Allison wrote:
-> > Actually, I'm so eager for case-insensitive matching I'd
-> > take "at format time", as with ZFS :-) :-).
+Hey Christoph,
+
+On Fri, Sep 26, 2014 at 09:56:05AM -0700, Christoph Hellwig wrote:
+> On Fri, Sep 26, 2014 at 04:50:39PM +0200, Olaf Weber wrote:
+> > >It's a chicken and egg situation. I'd much prefer we enforce clean
+> > >utf8 from the start, because if we don't we'll never be able to do
+> > >that. And other filesystems (e.g. ZFS) allow you to do reject
+> > >anything that is not clean utf8....
+> > 
+> > As I understand it, this is optional in ZFS. I wonder what people's
+> > experiences are with this.
 > 
-> You already get this with XFS as long as you limit yourself to
-> 7-bit ASCII :)
+> It is as optional as your utf8 support for XFS is.  But they do
+> enforce valid utf8 if they use utf8 normalization for file name
+> comparisms, be that case sensitive or insensitive.  Take a look at the
+> zfs(8) man page.
 
-Thankyou for playing, here's a $10 gift token... No, that
-won't do I'm afraid :-).
+The way I'm reading that man page, it seems like with ZFS you have one
+option to choose whether to use normalization:
 
-> And utf-8 with Olaf's patches as-is.
-> 
-> Maybe time to give them some testing?
+'nomalization = "none|FormD|FormKCf"'
 
-I might do that, once I've finished rebuilding
-my home server (remember kids, RAID5 is *NOT* a
-backup :-) :-).
+And a separate option to choose whether to accept non-utf8 filenames:
+
+'utf8only = "on|off".
+
+The default setting appears to be that ZFS does allow non-utf8
+filenames.
+
+Whereas with Olaf's series you have one option that turns normalization
+on or off, and he is not giving you a choice of whether non-utf8
+filenames will be accepted (they will be accepted).
+
+So IIUC there is a distinction:  The utf8 support for ZFS is "more
+optional" than the utf8 support for XFS.
+
+Regards,
+	Ben
 
 _______________________________________________
 xfs mailing list
