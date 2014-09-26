@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 3F2577FFB
-	for <xfs@oss.sgi.com>; Fri, 26 Sep 2014 07:06:11 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 0DB65304059
-	for <xfs@oss.sgi.com>; Fri, 26 Sep 2014 05:06:10 -0700 (PDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 8F5938012
+	for <xfs@oss.sgi.com>; Fri, 26 Sep 2014 07:08:36 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 26308AC004
+	for <xfs@oss.sgi.com>; Fri, 26 Sep 2014 05:08:36 -0700 (PDT)
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.9])
-	by cuda.sgi.com with ESMTP id ntZShAyZXtULi2Gt (version=TLSv1
+	by cuda.sgi.com with ESMTP id AT0tBNg39JAPY5jb (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 26 Sep 2014 05:06:09 -0700 (PDT)
-Date: Fri, 26 Sep 2014 05:05:56 -0700
+	Fri, 26 Sep 2014 05:08:34 -0700 (PDT)
+Date: Fri, 26 Sep 2014 05:08:34 -0700
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 4/5] xfs: reorganise transaction recovery item code
-Message-ID: <20140926120556.GC10574@infradead.org>
+Subject: Re: [PATCH 5/5] xfs: refactor recovery transaction start handling
+Message-ID: <20140926120834.GD10574@infradead.org>
 References: <1411697952-24741-1-git-send-email-david@fromorbit.com>
-	<1411697952-24741-5-git-send-email-david@fromorbit.com>
+	<1411697952-24741-6-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1411697952-24741-5-git-send-email-david@fromorbit.com>
+In-Reply-To: <1411697952-24741-6-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,13 +33,17 @@ Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On Fri, Sep 26, 2014 at 12:19:11PM +1000, Dave Chinner wrote:
+On Fri, Sep 26, 2014 at 12:19:12PM +1000, Dave Chinner wrote:
 > From: Dave Chinner <dchinner@redhat.com>
 > 
-> The code for managing transactions anf the items for recovery is
-> spread across 3 different locations in the file. Move them all
-> together so that it is easy to read the code without needing to jump
-> long distances in the file.
+> Rework the transaction lookup and allocation code in
+> xlog_recovery_process_ophdr() to remove fold two related call-once
+
+s/remove //
+
+> helper functions into a single helper. Then fold in all
+> XLOG_START_TRANS logic to that helper to clean up the remaining
+> logic in xlog_recovery_process_ophdr().
 > 
 > Signed-off-by: Dave Chinner <dchinner@redhat.com>
 
