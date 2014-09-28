@@ -1,8 +1,16 @@
-From: xfs@oss.sgi.com
-Subject: [XFS updates] XFS development tree branch, xfs-trans-recover-cleanup,
-	created. v3.16-11801-gb818cca
-Message-Id: <20140929000259.150717F84@oss.sgi.com>
-Date: Sun, 28 Sep 2014 19:02:57 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id AEE777F86
+	for <xfs@oss.sgi.com>; Sat, 27 Sep 2014 22:23:39 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 9D7378F804C
+	for <xfs@oss.sgi.com>; Sat, 27 Sep 2014 20:23:39 -0700 (PDT)
+Received: from roukyou.gr.jp (aa2011100065d305ae72.userreverse.dion.ne.jp
+	[211.5.174.114]) by cuda.sgi.com with SMTP id Zf2YMJsoIfpV5YjR
+	for <xfs@oss.sgi.com>; Sat, 27 Sep 2014 20:23:34 -0700 (PDT)
+Date: 28 Sep 2014 12:21:20 +0900
+From: MAILER-DAEMON@roukyou.gr.jp
+Subject: failure notice
+Message-Id: <20140928032339.81FB71B8003@cuda.sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -12,104 +20,56 @@ List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============3874075898928337015=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-This is an automated email from the git hooks/post-receive script. It was
-generated because a ref change was pushed to the repository containing
-the project "XFS development tree".
+--===============3874075898928337015==
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
+X-MIME-Autoconverted: from 8bit to quoted-printable by ucsinet22.oracle.com id s8S3NkSF017854
 
-The branch, xfs-trans-recover-cleanup has been created
-        at  b818cca1976d1a01754033ac08724e05d07cce8f (commit)
+Hi. This is the qmail-send program at roukyou.gr.jp.
+I'm afraid I wasn't able to deliver your message to the following address=
+es.
+This is a permanent error; I've given up. Sorry it didn't work out.
 
-- Log -----------------------------------------------------------------
-commit b818cca1976d1a01754033ac08724e05d07cce8f
-Author: Dave Chinner <dchinner@redhat.com>
-Date:   Mon Sep 29 09:45:54 2014 +1000
+<xfs@oss.sgi.com>:
+192.48.176.16 does not like recipient.
+Remote host said: 550 rejecting spoofed message
+Giving up on 192.48.176.16.
 
-    xfs: refactor recovery transaction start handling
-    
-    Rework the transaction lookup and allocation code in
-    xlog_recovery_process_ophdr() to fold two related call-once
-    helper functions into a single helper. Then fold in all the
-    XLOG_START_TRANS logic to that helper to clean up the remaining
-    logic in xlog_recovery_process_ophdr().
-    
-    Signed-off-by: Dave Chinner <dchinner@redhat.com>
-    Reviewed-by: Christoph Hellwig <hch@lst.de>
-    Signed-off-by: Dave Chinner <david@fromorbit.com>
+--- Below this line is a copy of the message.
 
-commit 76560669868d3b4d650d91d9bf467a8d81171766
-Author: Dave Chinner <dchinner@redhat.com>
-Date:   Mon Sep 29 09:45:42 2014 +1000
+Return-Path: <xfs@oss.sgi.com>
+Received: (qmail 32110 invoked by uid 0); 28 Sep 2014 12:19:39 +0900
+Received: from unknown (HELO rku-sv01) (127.0.0.1)
+  by localhost with SMTP; 28 Sep 2014 12:19:39 +0900
+Received: from 91.143.41.148 (91.143.41.148)
+ by rku-sv01 (F-Secure/virusgw_smtp/410/rku-sv01);
+ Sun, 28 Sep 2014 12:05:15 +0900 (JST)
+X-Virus-Status: clean(F-Secure/virusgw_smtp/410/rku-sv01)
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain;
+	charset=3D"windows-1251"
+From: <xfs@oss.sgi.com>
+To: <xfs@oss.sgi.com>
+Subject: =3D?utf-8?B?0JrQu3XQtdC9bdGB0LrQuGUg0LHQsNC30Ysg0YJl0LsgKzc5SdCX=
+Mzls0Jc40Lc3?=3D
 
-    xfs: reorganise transaction recovery item code
-    
-    The code for managing transactions anf the items for recovery is
-    spread across 3 different locations in the file. Move them all
-    together so that it is easy to read the code without needing to jump
-    long distances in the file.
-    
-    Signed-off-by: Dave Chinner <dchinner@redhat.com>
-    Reviewed-by: Christoph Hellwig <hch@lst.de>
-    Signed-off-by: Dave Chinner <david@fromorbit.com>
-
-commit 88b863db97a18a04c90ebd57d84e1b7863114dcb
-Author: Dave Chinner <dchinner@redhat.com>
-Date:   Mon Sep 29 09:45:32 2014 +1000
-
-    xfs: fix double free in xlog_recover_commit_trans
-    
-    When an error occurs during buffer submission in
-    xlog_recover_commit_trans(), we free the trans structure twice. Fix
-    it by only freeing the structure in the caller regardless of the
-    success or failure of the function.
-    
-    Signed-off-by: Dave Chinner <dchinner@redhat.com>
-    Reviewed-by: Christoph Hellwig <hch@lst.de>
-    Signed-off-by: Dave Chinner <david@fromorbit.com>
-
-commit e9131e50f9d0a632e3011d73f283ba69be0cc682
-Author: Dave Chinner <dchinner@redhat.com>
-Date:   Mon Sep 29 09:45:18 2014 +1000
-
-    xfs: recovery of XLOG_UNMOUNT_TRANS leaks memory
-    
-    The XLOG_UNMOUNT_TRANS case skips the transaction, despite the fact
-    an unmount record is always in a standalone transaction. Hence
-    whenever we come across one of these we need to free the transaction
-    structure associated with it as there is no commit record that
-    follows it.
-    
-    Signed-off-by: Dave Chinner <dchinner@redhat.com>
-    Reviewed-by: Christoph Hellwig <hch@lst.de>
-    Signed-off-by: Dave Chinner <david@fromorbit.com>
-
-commit eeb1168810d8a140f6834f8c4975f7bb3277d790
-Author: Dave Chinner <dchinner@redhat.com>
-Date:   Mon Sep 29 09:45:03 2014 +1000
-
-    xfs: refactor xlog_recover_process_data()
-    
-    Clean up xlog_recover_process_data() structure in preparation for
-    fixing the allocation and freeing context of the transaction being
-    recovered.
-    
-    Signed-off-by: Dave Chinner <dchinner@redhat.com>
-    Reviewed-by: Christoph Hellwig <hch@lst.de>
-    Signed-off-by: Dave Chinner <david@fromorbit.com>
-
------------------------------------------------------------------------
+=CA=EBu=E5=EDm=F1=EA=E8e =E1=E0=E7=FB =F2e=EB +79I=C739l=C78=E77
 
 
-hooks/post-receive
--- 
-XFS development tree
+--===============3874075898928337015==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Disposition: inline
+Content-Transfer-Encoding: 7bit
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============3874075898928337015==--
