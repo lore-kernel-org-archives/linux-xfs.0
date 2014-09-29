@@ -1,8 +1,8 @@
 From: xfs@oss.sgi.com
-Subject: [XFS updates] XFS development tree branch, for-next,
-	updated. xfs-for-linus-3.17-rc3-38-gbd438f8
-Message-Id: <20140929010135.7497C7FB0@oss.sgi.com>
-Date: Sun, 28 Sep 2014 20:01:35 -0500 (CDT)
+Subject: [XFS updates] XFS development tree branch, xfs-sparse-fixes,
+	created. v3.16-11811-gb972d07
+Message-Id: <20140929010115.084977FA7@oss.sgi.com>
+Date: Sun, 28 Sep 2014 20:01:14 -0500 (CDT)
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,35 +22,68 @@ This is an automated email from the git hooks/post-receive script. It was
 generated because a ref change was pushed to the repository containing
 the project "XFS development tree".
 
-The branch, for-next has been updated
-  bd438f8 Merge branch 'xfs-sparse-fixes' into for-next
-  b972d07 xfs: annotate user variables passed as void
-  e3aed1a xfs: xfs_kset should be static 
-  bf1ed38 xfs: xfs_qm_dquot_isolate needs locking annotations for sparse
-  e68ed77 xfs: fix use of agi_newino in finobt lookup
-      from  2f43bbd96e43d0b85803f5092be94bbb92d8eac9 (commit)
-
-Those revisions listed above that are new to this repository have
-not appeared on any other notification email; so we list those
-revisions in full, below.
+The branch, xfs-sparse-fixes has been created
+        at  b972d0797180d8414351d9dc8ff65071c692d058 (commit)
 
 - Log -----------------------------------------------------------------
-commit bd438f825f7badafe56d117ed906488c8541f95f
-Merge: 2f43bbd b972d07
-Author: Dave Chinner <david@fromorbit.com>
-Date:   Mon Sep 29 10:52:44 2014 +1000
+commit b972d0797180d8414351d9dc8ff65071c692d058
+Author: Dave Chinner <dchinner@redhat.com>
+Date:   Mon Sep 29 10:46:22 2014 +1000
 
-    Merge branch 'xfs-sparse-fixes' into for-next
+    xfs: annotate user variables passed as void
+    
+    Some argument callbacks can contain user buffers, and sparse warns
+    about passing them as void pointers. Cast appropriately to remove
+    the sparse warnings.
+    
+    Signed-off-by: Dave Chinner <dchinner@redhat.com>
+    Reviewed-by: Christoph Hellwig <hch@lst.de>
+    Signed-off-by: Dave Chinner <david@fromorbit.com>
+
+commit e3aed1a08190c038c4ea41b73ea6f07bc0e3290c
+Author: Dave Chinner <dchinner@redhat.com>
+Date:   Mon Sep 29 10:46:08 2014 +1000
+
+    xfs: xfs_kset should be static
+    
+    As it is accessed through the struct xfs_mount and can be set up
+    entirely from fs/xfs/xfs_super.c
+    
+    Signed-off-by: Dave Chinner <dchinner@redhat.com>
+    Reviewed-by: Christoph Hellwig <hch@lst.de>
+    Signed-off-by: Dave Chinner <david@fromorbit.com>
+
+commit bf1ed3833078e3bb0ba8cd03468090b9359d0912
+Author: Dave Chinner <dchinner@redhat.com>
+Date:   Mon Sep 29 10:43:40 2014 +1000
+
+    xfs: xfs_qm_dquot_isolate needs locking annotations for sparse
+    
+    To remove noise from the build.
+    
+    Signed-off-by: Dave Chinner <dchinner@redhat.com>
+    Reviewed-by: Christoph Hellwig <hch@lst.de>
+    Signed-off-by: Dave Chinner <david@fromorbit.com>
+
+commit e68ed77521f695d165cbae070f6dda8a4778438f
+Author: Dave Chinner <david@fromorbit.com>
+Date:   Mon Sep 29 10:43:15 2014 +1000
+
+    xfs: fix use of agi_newino in finobt lookup
+    
+    Sparse warns that we are passing the big-endian valueo f agi_newino
+    to the initial btree lookup function when trying to find a new
+    inode. This is wrong - we need to pass the host order value, not the
+    disk order value. This will adversely affect the next inode
+    allocated, but given that the free inode btree is usually much
+    smaller than the allocated inode btree it is much less likely to be
+    a performance issue if we start the search in the wrong place.
+    
+    Signed-off-by: Dave Chinner <dchinner@redhat.com>
+    Reviewed-by: Christoph Hellwig <hch@lst.de>
+    Signed-off-by: Dave Chinner <david@fromorbit.com>
 
 -----------------------------------------------------------------------
-
-Summary of changes:
- fs/xfs/libxfs/xfs_ialloc.c | 5 ++---
- fs/xfs/xfs_ioctl.c         | 8 ++++----
- fs/xfs/xfs_mount.c         | 3 ---
- fs/xfs/xfs_qm.c            | 1 +
- fs/xfs/xfs_super.c         | 3 ++-
- 5 files changed, 9 insertions(+), 11 deletions(-)
 
 
 hooks/post-receive
