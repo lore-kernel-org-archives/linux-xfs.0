@@ -1,23 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 4421A29DFF
-	for <xfs@oss.sgi.com>; Mon, 29 Sep 2014 14:09:44 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 23628304048
-	for <xfs@oss.sgi.com>; Mon, 29 Sep 2014 12:09:43 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id kIFOCuFfFrev4CFf (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 29 Sep 2014 12:09:42 -0700 (PDT)
-Date: Mon, 29 Sep 2014 15:09:39 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 11/11] xfs: simplify xfs_zero_remaining_bytes
-Message-ID: <20140929190939.GC35666@bfoster.bfoster>
-References: <1411648461-29003-1-git-send-email-david@fromorbit.com>
-	<1411648461-29003-12-git-send-email-david@fromorbit.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 62E19800D
+	for <xfs@oss.sgi.com>; Mon, 29 Sep 2014 15:17:19 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 38F2C8F8033
+	for <xfs@oss.sgi.com>; Mon, 29 Sep 2014 13:17:16 -0700 (PDT)
+Date: Mon, 29 Sep 2014 16:16:50 -0400
+Subject: Re: [RFC v2] Unicode/UTF-8 support for XFS
+Message-ID: <20140929201650.GA3640@fieldses.org>
+References: <20140918195650.GI19952@sgi.com> <20140922222611.GZ4322@dastard>
+	<5422C540.1060007@sgi.com> <20140924231024.GA4758@dastard>
+	<54257D3F.70302@sgi.com> <20140926165605.GA25274@infradead.org>
+	<20140926170407.GB6012@samba2> <5425C067.7080904@sgi.com>
+	<20140926194656.GC13066@samba2> <5425C6A6.3060003@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1411648461-29003-12-git-send-email-david@fromorbit.com>
+In-Reply-To: <5425C6A6.3060003@sgi.com>
+From: "J. Bruce Fields" <bfields@fieldses.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,102 +29,47 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: Olaf Weber <olaf@sgi.com>
+Cc: tinguely@sgi.com, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, Ben Myers <bpm@sgi.com>, linux-fsdevel@vger.kernel.org, Jeremy Allison <jra@samba.org>
 
-On Thu, Sep 25, 2014 at 10:34:21PM +1000, Dave Chinner wrote:
-> From: Christoph Hellwig <hch@infradead.org>
+On Fri, Sep 26, 2014 at 10:03:50PM +0200, Olaf Weber wrote:
+> On 26-09-14 21:46, Jeremy Allison wrote:
+> >On Fri, Sep 26, 2014 at 09:37:11PM +0200, Olaf Weber wrote:
+> >>
+> >>My argument against "mount time case-insensitivity" and for "mkfs
+> >>time case-insensitivity" is related to switching from the
+> >>case-sensitive domain to the case-insensitive one.
+> >>
+> >>For case-sensitive, from "README" to "readme" there are 64 different
+> >>possible filenames.  Let's say you create 63 out of these 64. Now
+> >>remount the filesystem case-insensitive, and try to open by the 64th
+> >>version of "readme". It is not an exact match for any of the 63
+> >>candidate files, and a case-insensitive match to all 63 candidate
+> >>files. Which of these 63 files should be opened, and why that one in
+> >>particular?
+> >
+> >I'm ok with "mkfs time case-insensitivity" - really !
+> >Most of my OEMs would set that and claim victory (few
+> >of them care much about NFS semantics :-).
 > 
-> xfs_zero_remaining_bytes() open codes a log of buffer manupulations
-					  lot
-> to do a read forllowed by a write. It can simply be replaced by an
-	       followed
-> uncached read followed by a xfs_bwrite() call.
-			    an
-> 
-> [Christoph, can I get your sign-off for this?]
-> 
-> Signed-off-by: Dave Chinner <david@fromorbit.com>
-> ---
+> I'd say you can have CIFS-style case-insensitive semantics or
+> NFS-style case-sensitive semantics, but not both.
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+Note the NFSv4 specs do claim to allow case insensitivity.  No idea how
+well clients deal with it.
 
->  fs/xfs/xfs_bmap_util.c | 44 ++++++++++++++------------------------------
->  1 file changed, 14 insertions(+), 30 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-> index 41d9488..c2aaa58 100644
-> --- a/fs/xfs/xfs_bmap_util.c
-> +++ b/fs/xfs/xfs_bmap_util.c
-> @@ -1122,14 +1122,6 @@ xfs_zero_remaining_bytes(
->  	if (endoff > XFS_ISIZE(ip))
->  		endoff = XFS_ISIZE(ip);
->  
-> -	bp = xfs_buf_get_uncached(XFS_IS_REALTIME_INODE(ip) ?
-> -					mp->m_rtdev_targp : mp->m_ddev_targp,
-> -				  BTOBB(mp->m_sb.sb_blocksize), 0);
-> -	if (!bp)
-> -		return -ENOMEM;
-> -
-> -	xfs_buf_unlock(bp);
-> -
->  	for (offset = startoff; offset <= endoff; offset = lastoffset + 1) {
->  		uint lock_mode;
->  
-> @@ -1152,32 +1144,24 @@ xfs_zero_remaining_bytes(
->  		ASSERT(imap.br_startblock != DELAYSTARTBLOCK);
->  		if (imap.br_state == XFS_EXT_UNWRITTEN)
->  			continue;
-> -		XFS_BUF_UNDONE(bp);
-> -		XFS_BUF_UNWRITE(bp);
-> -		XFS_BUF_READ(bp);
-> -		XFS_BUF_SET_ADDR(bp, xfs_fsb_to_db(ip, imap.br_startblock));
->  
-> -		error = xfs_buf_submit_wait(bp);
-> -		if (error) {
-> -			xfs_buf_ioerror_alert(bp,
-> -					"xfs_zero_remaining_bytes(read)");
-> -			break;
-> -		}
-> +		error = xfs_buf_read_uncached(XFS_IS_REALTIME_INODE(ip) ?
-> +				mp->m_rtdev_targp : mp->m_ddev_targp,
-> +				xfs_fsb_to_db(ip, imap.br_startblock),
-> +				BTOBB(mp->m_sb.sb_blocksize),
-> +				0, &bp, NULL);
-> +		if (error)
-> +			return error;
-> +
->  		memset(bp->b_addr +
-> -			(offset - XFS_FSB_TO_B(mp, imap.br_startoff)),
-> -		      0, lastoffset - offset + 1);
-> -		XFS_BUF_UNDONE(bp);
-> -		XFS_BUF_UNREAD(bp);
-> -		XFS_BUF_WRITE(bp);
-> +				(offset - XFS_FSB_TO_B(mp, imap.br_startoff)),
-> +		       0, lastoffset - offset + 1);
->  
-> -		error = xfs_buf_submit_wait(bp);
-> -		if (error) {
-> -			xfs_buf_ioerror_alert(bp,
-> -					"xfs_zero_remaining_bytes(write)");
-> -			break;
-> -		}
-> +		error = xfs_bwrite(bp);
-> +		xfs_buf_relse(bp);
-> +		if (error)
-> +			return error;
->  	}
-> -	xfs_buf_free(bp);
->  	return error;
->  }
->  
-> -- 
-> 2.0.0
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+I think rfc3530bis has the most up to date language on NFSv4
+internationalization issues:
+
+	http://tools.ietf.org/html/draft-ietf-nfsv4-rfc3530bis-33
+
+(One nit in the current knfsd: the server doesn't correctly report the
+case_insensitive attribute.  If it had some flag it could check in the
+filesystem's superblock then it could do that right instead of just
+assuming 0 as it currently does (see FATTR4_WORD0_CASE_INSENSITIVE in
+fs/nfsd/nfs4xdr.c:nfsd4_encode_fattr).)
+
+--b.
 
 _______________________________________________
 xfs mailing list
