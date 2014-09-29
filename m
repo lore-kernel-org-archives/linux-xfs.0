@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 88B427FBA
-	for <xfs@oss.sgi.com>; Sun, 28 Sep 2014 20:41:45 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 77259304032
-	for <xfs@oss.sgi.com>; Sun, 28 Sep 2014 18:41:42 -0700 (PDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id C6A107F51
+	for <xfs@oss.sgi.com>; Sun, 28 Sep 2014 20:42:05 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 72373AC007
+	for <xfs@oss.sgi.com>; Sun, 28 Sep 2014 18:42:05 -0700 (PDT)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	nECE9PsMhVGk9Fgg for <xfs@oss.sgi.com>;
-	Sun, 28 Sep 2014 18:41:37 -0700 (PDT)
+	0pA2IqNhnfxHfo1j for <xfs@oss.sgi.com>;
+	Sun, 28 Sep 2014 18:42:03 -0700 (PDT)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.80)
-	(envelope-from <dave@fromorbit.com>) id 1XYPxu-0000rQ-3F
-	for xfs@oss.sgi.com; Mon, 29 Sep 2014 11:41:26 +1000
+	(envelope-from <dave@fromorbit.com>) id 1XYPyJ-0000rX-MG
+	for xfs@oss.sgi.com; Mon, 29 Sep 2014 11:41:51 +1000
 Received: from dave by disappointment with local (Exim 4.82_1-5b7a7c0-XX)
-	(envelope-from <dave@disappointment.disaster>) id 1XYPxu-0003BO-25
-	for xfs@oss.sgi.com; Mon, 29 Sep 2014 11:41:26 +1000
+	(envelope-from <dave@disappointment.disaster>) id 1XYPyJ-0003Ce-L0
+	for xfs@oss.sgi.com; Mon, 29 Sep 2014 11:41:51 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH] xfs: compat_xfs_bstat does not have forkoff
-Date: Mon, 29 Sep 2014 11:41:26 +1000
-Message-Id: <1411954886-12200-1-git-send-email-david@fromorbit.com>
+Subject: [PATCH] xfs: kill time.h
+Date: Mon, 29 Sep 2014 11:41:51 +1000
+Message-Id: <1411954911-12278-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -37,50 +37,133 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-struct compat_xfs_bstat is missing the di_forkoff field and so does
-not fully translate the structure correctly. Fix it.
+The typedef for timespecs and nanotime() are completely unnecessary,
+and delay() can be moved to fs/xfs/linux.h, which means this file
+can go away.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_ioctl32.c | 2 ++
- fs/xfs/xfs_ioctl32.h | 3 ++-
- 2 files changed, 4 insertions(+), 1 deletion(-)
+ fs/xfs/kmem.c            |  1 -
+ fs/xfs/time.h            | 36 ------------------------------------
+ fs/xfs/xfs_inode.c       |  4 ++--
+ fs/xfs/xfs_linux.h       |  6 +++++-
+ fs/xfs/xfs_trans_inode.c |  2 +-
+ 5 files changed, 8 insertions(+), 41 deletions(-)
+ delete mode 100644 fs/xfs/time.h
 
-diff --git a/fs/xfs/xfs_ioctl32.c b/fs/xfs/xfs_ioctl32.c
-index a554646..94ce027 100644
---- a/fs/xfs/xfs_ioctl32.c
-+++ b/fs/xfs/xfs_ioctl32.c
-@@ -160,6 +160,7 @@ xfs_ioctl32_bstat_copyin(
- 	    get_user(bstat->bs_gen,	&bstat32->bs_gen)	||
- 	    get_user(bstat->bs_projid_lo, &bstat32->bs_projid_lo) ||
- 	    get_user(bstat->bs_projid_hi, &bstat32->bs_projid_hi) ||
-+	    get_user(bstat->bs_forkoff,	&bstat32->bs_forkoff)	||
- 	    get_user(bstat->bs_dmevmask, &bstat32->bs_dmevmask)	||
- 	    get_user(bstat->bs_dmstate,	&bstat32->bs_dmstate)	||
- 	    get_user(bstat->bs_aextents, &bstat32->bs_aextents))
-@@ -214,6 +215,7 @@ xfs_bulkstat_one_fmt_compat(
- 	    put_user(buffer->bs_gen,	  &p32->bs_gen)		||
- 	    put_user(buffer->bs_projid,	  &p32->bs_projid)	||
- 	    put_user(buffer->bs_projid_hi,	&p32->bs_projid_hi)	||
-+	    put_user(buffer->bs_forkoff,  &p32->bs_forkoff)	||
- 	    put_user(buffer->bs_dmevmask, &p32->bs_dmevmask)	||
- 	    put_user(buffer->bs_dmstate,  &p32->bs_dmstate)	||
- 	    put_user(buffer->bs_aextents, &p32->bs_aextents))
-diff --git a/fs/xfs/xfs_ioctl32.h b/fs/xfs/xfs_ioctl32.h
-index 80f4060..b1bb454 100644
---- a/fs/xfs/xfs_ioctl32.h
-+++ b/fs/xfs/xfs_ioctl32.h
-@@ -67,8 +67,9 @@ typedef struct compat_xfs_bstat {
- 	__u32		bs_gen;		/* generation count		*/
- 	__u16		bs_projid_lo;	/* lower part of project id	*/
- #define	bs_projid	bs_projid_lo	/* (previously just bs_projid)	*/
-+	__u16		bs_forkoff;	/* inode fork offset in bytes	*/
- 	__u16		bs_projid_hi;	/* high part of project id	*/
--	unsigned char	bs_pad[12];	/* pad space, unused		*/
-+	unsigned char	bs_pad[10];	/* pad space, unused		*/
- 	__u32		bs_dmevmask;	/* DMIG event mask		*/
- 	__u16		bs_dmstate;	/* DMIG state info		*/
- 	__u16		bs_aextents;	/* attribute number of extents	*/
+diff --git a/fs/xfs/kmem.c b/fs/xfs/kmem.c
+index 844e288..53e95b2 100644
+--- a/fs/xfs/kmem.c
++++ b/fs/xfs/kmem.c
+@@ -21,7 +21,6 @@
+ #include <linux/swap.h>
+ #include <linux/blkdev.h>
+ #include <linux/backing-dev.h>
+-#include "time.h"
+ #include "kmem.h"
+ #include "xfs_message.h"
+ 
+diff --git a/fs/xfs/time.h b/fs/xfs/time.h
+deleted file mode 100644
+index 387e695..0000000
+--- a/fs/xfs/time.h
++++ /dev/null
+@@ -1,36 +0,0 @@
+-/*
+- * Copyright (c) 2000-2003,2005 Silicon Graphics, Inc.
+- * All Rights Reserved.
+- *
+- * This program is free software; you can redistribute it and/or
+- * modify it under the terms of the GNU General Public License as
+- * published by the Free Software Foundation.
+- *
+- * This program is distributed in the hope that it would be useful,
+- * but WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+- * GNU General Public License for more details.
+- *
+- * You should have received a copy of the GNU General Public License
+- * along with this program; if not, write the Free Software Foundation,
+- * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+- */
+-#ifndef __XFS_SUPPORT_TIME_H__
+-#define __XFS_SUPPORT_TIME_H__
+-
+-#include <linux/sched.h>
+-#include <linux/time.h>
+-
+-typedef struct timespec timespec_t;
+-
+-static inline void delay(long ticks)
+-{
+-	schedule_timeout_uninterruptible(ticks);
+-}
+-
+-static inline void nanotime(struct timespec *tvp)
+-{
+-	*tvp = CURRENT_TIME;
+-}
+-
+-#endif /* __XFS_SUPPORT_TIME_H__ */
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index e5bbc1f..f07b443 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -654,7 +654,7 @@ xfs_ialloc(
+ 	xfs_inode_t	*ip;
+ 	uint		flags;
+ 	int		error;
+-	timespec_t	tv;
++	struct timespec	tv;
+ 
+ 	/*
+ 	 * Call the space management code to pick
+@@ -720,7 +720,7 @@ xfs_ialloc(
+ 	ip->i_d.di_nextents = 0;
+ 	ASSERT(ip->i_d.di_nblocks == 0);
+ 
+-	nanotime(&tv);
++	tv = current_fs_time(mp->m_super);
+ 	ip->i_d.di_mtime.t_sec = (__int32_t)tv.tv_sec;
+ 	ip->i_d.di_mtime.t_nsec = (__int32_t)tv.tv_nsec;
+ 	ip->i_d.di_atime = ip->i_d.di_mtime;
+diff --git a/fs/xfs/xfs_linux.h b/fs/xfs/xfs_linux.h
+index d10dc8f..6a51619 100644
+--- a/fs/xfs/xfs_linux.h
++++ b/fs/xfs/xfs_linux.h
+@@ -56,7 +56,6 @@ typedef __uint64_t __psunsigned_t;
+ 
+ #include "kmem.h"
+ #include "mrlock.h"
+-#include "time.h"
+ #include "uuid.h"
+ 
+ #include <linux/semaphore.h>
+@@ -179,6 +178,11 @@ typedef __uint64_t __psunsigned_t;
+ #define MAX(a,b)	(max(a,b))
+ #define howmany(x, y)	(((x)+((y)-1))/(y))
+ 
++static inline void delay(long ticks)
++{
++	schedule_timeout_uninterruptible(ticks);
++}
++
+ /*
+  * XFS wrapper structure for sysfs support. It depends on external data
+  * structures and is embedded in various internal data structures to implement
+diff --git a/fs/xfs/xfs_trans_inode.c b/fs/xfs/xfs_trans_inode.c
+index 50c3f56..cdb4d86 100644
+--- a/fs/xfs/xfs_trans_inode.c
++++ b/fs/xfs/xfs_trans_inode.c
+@@ -70,7 +70,7 @@ xfs_trans_ichgtime(
+ 	int			flags)
+ {
+ 	struct inode		*inode = VFS_I(ip);
+-	timespec_t		tv;
++	struct timespec		tv;
+ 
+ 	ASSERT(tp);
+ 	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
 -- 
 2.0.0
 
