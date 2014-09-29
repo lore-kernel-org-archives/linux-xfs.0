@@ -1,22 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id C5D1B29DFF
-	for <xfs@oss.sgi.com>; Mon, 29 Sep 2014 05:44:45 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id A33208F8035
-	for <xfs@oss.sgi.com>; Mon, 29 Sep 2014 03:44:45 -0700 (PDT)
-Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id 57zBV85N6cpMkLeR (version=TLSv1 cipher=AES256-SHA
-	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 29 Sep 2014 03:44:44 -0700 (PDT)
-Date: Mon, 29 Sep 2014 03:44:43 -0700
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id BAB3A7FD7
+	for <xfs@oss.sgi.com>; Mon, 29 Sep 2014 06:06:13 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 65FC9AC005
+	for <xfs@oss.sgi.com>; Mon, 29 Sep 2014 04:06:10 -0700 (PDT)
+Date: Mon, 29 Sep 2014 04:06:08 -0700
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] xfs: kill time.h
-Message-ID: <20140929104443.GB10847@infradead.org>
-References: <1411954911-12278-1-git-send-email-david@fromorbit.com>
+Subject: Re: [RFC v2] Unicode/UTF-8 support for XFS
+Message-ID: <20140929110608.GB17258@infradead.org>
+References: <20140918195650.GI19952@sgi.com> <20140922222611.GZ4322@dastard>
+	<5422C540.1060007@sgi.com> <20140924231024.GA4758@dastard>
+	<54257D3F.70302@sgi.com> <20140926165605.GA25274@infradead.org>
+	<20140926170407.GB6012@samba2> <5425C067.7080904@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1411954911-12278-1-git-send-email-david@fromorbit.com>
+In-Reply-To: <5425C067.7080904@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,20 +28,25 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: Olaf Weber <olaf@sgi.com>
+Cc: tinguely@sgi.com, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, Ben Myers <bpm@sgi.com>, linux-fsdevel@vger.kernel.org, Jeremy Allison <jra@samba.org>
 
-On Mon, Sep 29, 2014 at 11:41:51AM +1000, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
+On Fri, Sep 26, 2014 at 09:37:11PM +0200, Olaf Weber wrote:
+> My argument against "mount time case-insensitivity" and for "mkfs time
+> case-insensitivity" is related to switching from the case-sensitive domain
+> to the case-insensitive one.
 > 
-> The typedef for timespecs and nanotime() are completely unnecessary,
-> and delay() can be moved to fs/xfs/linux.h, which means this file
-> can go away.
+> For case-sensitive, from "README" to "readme" there are 64 different
+> possible filenames.  Let's say you create 63 out of these 64. Now remount
+> the filesystem case-insensitive, and try to open by the 64th version of
+> "readme". It is not an exact match for any of the 63 candidate files, and a
+> case-insensitive match to all 63 candidate files. Which of these 63 files
+> should be opened, and why that one in particular?
 
-Looks good, but shouldn't we just kill delay(), too? There's just
-11 callers, and none of them in libxfs.
-
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Well, the point is not that we use the CI-capable hash all the time.  I
+fully expect the current XFS behavior to remain the default for normal
+systems forever.  I just want to make sure that the CI implementation
+you chose can also allow mixed lookups if we desire.
 
 _______________________________________________
 xfs mailing list
