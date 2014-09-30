@@ -1,28 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 1C5987F76
-	for <xfs@oss.sgi.com>; Tue, 30 Sep 2014 12:56:04 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 16E567F81
+	for <xfs@oss.sgi.com>; Tue, 30 Sep 2014 13:22:56 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 09B9A304048
-	for <xfs@oss.sgi.com>; Tue, 30 Sep 2014 10:56:03 -0700 (PDT)
-Received: from mail-wg0-f44.google.com (mail-wg0-f44.google.com
-	[74.125.82.44]) by cuda.sgi.com with ESMTP id 20dNo40ZBkAxpf1g
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 30 Sep 2014 10:55:58 -0700 (PDT)
-Received: by mail-wg0-f44.google.com with SMTP id y10so3343816wgg.27
-	for <xfs@oss.sgi.com>; Tue, 30 Sep 2014 10:55:57 -0700 (PDT)
-Received: from t400.localnet (85-222-71-204.home.aster.pl. [85.222.71.204])
-	by mx.google.com with ESMTPSA id g6sm19989737wjf.13.2014.09.30.10.55.56
-	for <xfs@oss.sgi.com>
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-	Tue, 30 Sep 2014 10:55:56 -0700 (PDT)
-From: Arkadiusz =?utf-8?q?Mi=C5=9Bkiewicz?= <arekm@maven.pl>
-Subject: Re: Why not move xfs infra-structure to "public" services
-Date: Tue, 30 Sep 2014 19:55:55 +0200
-References: <20140930141857.GA2053@localhost.localdomain>
-In-Reply-To: <20140930141857.GA2053@localhost.localdomain>
-MIME-Version: 1.0
-Message-Id: <201409301955.55208.arekm@maven.pl>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 061A3304048
+	for <xfs@oss.sgi.com>; Tue, 30 Sep 2014 11:22:52 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id FmBmjag5kgW7C2KG (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 30 Sep 2014 11:22:52 -0700 (PDT)
+Received: from int-mx14.intmail.prod.int.phx2.redhat.com
+	(int-mx14.intmail.prod.int.phx2.redhat.com [10.5.11.27])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id s8UIMpUr007368
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256
+	verify=FAIL) for <xfs@oss.sgi.com>; Tue, 30 Sep 2014 14:22:51 -0400
+Received: from bfoster.bfoster ([10.18.41.237])
+	by int-mx14.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id s8UIMoMx015218
+	for <xfs@oss.sgi.com>; Tue, 30 Sep 2014 14:22:51 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: [PATCH] xfs: fix check for maximum allowable extent record file offset
+Date: Tue, 30 Sep 2014 14:22:49 -0400
+Message-Id: <1412101369-52751-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,22 +30,68 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-T24gVHVlc2RheSAzMCBvZiBTZXB0ZW1iZXIgMjAxNCwgQ2FybG9zIE1haW9saW5vIHdyb3RlOgo+
-IEhpIGd1eXMsCj4gCj4gSSdtIHNvcnJ5IGZvciB0aGlzIGtpbmQgb2YgImZhbmN5IiBxdWVzdGlv
-biBmcm9tIG15IHNpZGUsIGJ1dCBJJ20gd29uZGVyaW5nCj4gd2h5IHhmcyBwcm9qZWN0IGluZnJh
-LXN0cnVjdHVyZSAobWFpbGluZyBsaXN0LCBnaXQgdHJlZXMpLCBkb2VzIG5vdCB1c2UKPiB0aGUg
-InVzdWFsIHB1YmxpYyIgc2VydmljZXMuIEkgbWVhbiwgZG9lcyBhbnlvbmUgdGhvdWdodCBhYm91
-dCBtb3ZpbmcgeGZzCj4gbWFpbGluZyBsaXN0IHRvIHZnZXIua2VybmVsLm9yZywgYW5kIHRoZSBn
-aXQgdHJlZXMgdG8gZ2l0Lmtlcm5lbC5vcmc/Cgp2Z2VyLmtlcm5lbC5vcmcgaGFzIHJ1ZGUgcG9z
-dG1hc3RlcnMgKGF0IGxlYXN0IG9uZSBvZiB0aGVtKSB0aGF0IGFyZSB1bndpbGxpbmcgCnRvIGhl
-bHAgd2l0aCB2Z2VyIHJlbGF0ZWQgaXNzdWVzLgoKUGVyc29uYWwgZXhwZXJpZW5jZSB1bmZvcnR1
-bmF0ZWx5LgoKLS0gCkFya2FkaXVzeiBNacWba2lld2ljeiwgYXJla20gLyBtYXZlbi5wbAoKX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KeGZzIG1haWxpbmcg
-bGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8v
-eGZzCg==
+The maximum allowable file size on XFS is 2^63-1 (0x7fffffffffffffff).
+This value is unaligned with respect to typical order of 2 block sizes.
+Therefore, the maximum allowable block offset in a file is (2^63-1) /
+blocksize. xfs_repair calculates the max file offset as such in
+parse_sb_version().
+
+However, if we write to the maximum byte offset of a file:
+
+$ xfs_io -fc "pwrite `echo "2^63-1-1" | bc` 1" /mnt/file
+wrote 1/1 bytes at offset 9223372036854775806
+1.000000 bytes, 1 ops; 0.0000 sec (21.230 KiB/sec and 21739.1304 ops/sec)
+
+... xfs_repair complains that the file contains an invalid extent (4k
+blocks):
+
+...
+inode 99 - extent offset too large - start 9, count 1, offset 2251799813685247
+...
+
+This occurs because xfs_repair uses a >= comparison against the start
+offset of the record. Byte offset 2251799813685247 is 2^63-4096, and
+thus is the maximum valid block offset in the file. Fix the comparison
+to complain only if the start offset of the record is greater than the
+maximum allowable start offset.
+
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+---
+
+Hi all,
+
+This allows xfstests test xfs/071 to pass without a post-test corruption
+(repair) failure.
+
+Brian
+
+ repair/dinode.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/repair/dinode.c b/repair/dinode.c
+index 38a6562..f734a18 100644
+--- a/repair/dinode.c
++++ b/repair/dinode.c
+@@ -667,7 +667,7 @@ _("inode %" PRIu64 " - bad extent overflows - start %" PRIu64 ", "
+ 					irec.br_startoff);
+ 				goto done;
+ 		}
+-		if (irec.br_startoff >= fs_max_file_offset)  {
++		if (irec.br_startoff > fs_max_file_offset)  {
+ 			do_warn(
+ _("inode %" PRIu64 " - extent offset too large - start %" PRIu64 ", "
+   "count %" PRIu64 ", offset %" PRIu64 "\n"),
+-- 
+1.8.3.1
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
