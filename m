@@ -1,23 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 6DA3C7FC6
-	for <xfs@oss.sgi.com>; Mon, 29 Sep 2014 23:39:21 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 78AA27F7C
+	for <xfs@oss.sgi.com>; Tue, 30 Sep 2014 00:55:35 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 4D0B1304059
-	for <xfs@oss.sgi.com>; Mon, 29 Sep 2014 21:39:21 -0700 (PDT)
-Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
-	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	YTXzNC5svUZUnE1D for <xfs@oss.sgi.com>;
-	Mon, 29 Sep 2014 21:39:17 -0700 (PDT)
-Date: Tue, 30 Sep 2014 14:39:13 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Question: How to use systemtap count the total inode read from
-	disk
-Message-ID: <20140930043913.GP4758@dastard>
-References: <6AA21C22F0A5DA478922644AD2EC308C8C986B@SHSMSX101.ccr.corp.intel.com>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 16A6EAC004
+	for <xfs@oss.sgi.com>; Mon, 29 Sep 2014 22:55:31 -0700 (PDT)
+Received: from mail-wg0-f41.google.com (mail-wg0-f41.google.com
+	[74.125.82.41]) by cuda.sgi.com with ESMTP id d5vH8bisgAvG6EQE
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Mon, 29 Sep 2014 22:55:30 -0700 (PDT)
+Received: by mail-wg0-f41.google.com with SMTP id k14so14766836wgh.24
+	for <xfs@oss.sgi.com>; Mon, 29 Sep 2014 22:55:29 -0700 (PDT)
+Date: Tue, 30 Sep 2014 07:55:27 +0200
+From: Iustin Pop <iusty@k1024.org>
+Subject: Re: [PATCH 0/2] xfs: cleanup XFS_IOC_SETXATTR behaviour
+Message-ID: <20140930055527.GA15186@teal.hq.k1024.org>
+References: <1412041565-18873-1-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <6AA21C22F0A5DA478922644AD2EC308C8C986B@SHSMSX101.ccr.corp.intel.com>
+In-Reply-To: <1412041565-18873-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,40 +27,26 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "Ma, Jianpeng" <jianpeng.ma@intel.com>
-Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-On Tue, Sep 30, 2014 at 02:39:28AM +0000, Ma, Jianpeng wrote:
-> Hi all,
->   I want to count the total read inode from disk. 
-
-XFS already does that for you:
-
-$ pminfo -tf xfs.inode_ops.ig_missed
-
-xfs.inode_ops.ig_missed [number of failed in memory inode lookup operations]
-    value 1835354
-$
-
-And that's the number read from disk as reported by PCP.  If you
-don't have PCP:
-
-$ awk '/ig/ {print $5}' /proc/fs/xfs/stat
-1835354
-$
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gVHVlLCBTZXAgMzAsIDIwMTQgYXQgMTE6NDY6MDNBTSArMTAwMCwgRGF2ZSBDaGlubmVyIHdy
+b3RlOgo+IEhpIGZvbGtzLAo+IAo+IEEgd2hpbGUgYmFjayBJdXN0aW4gUG9wIHNlbnQgYSBwYXRj
+aCB0byBmaXggYSBwcm9ibGVtIHdpdGggYmVpbmcKPiB1bmFibGUgdG8gc2V0IGV4dGVudCBzaXpl
+IGhpbnQgdmFsdWVzIG9uIGRpcmVjdG9yaWVzLiBUaGF0IHBhdGNoIC0KPiBhbG9uZyB3aXRoIG5l
+dyB4ZnN0ZXN0cyBmdW5jdGlvbmFsaXR5IHRvIGFsd2F5cyBjaGVjayB0aGUgc2NyYXRjaAo+IGRl
+dmljZSBhZnRlciBhIHRlc3QgLSBoYXMgcG9pbnRlZCBvdXQgdGhhdCB3ZSBhbGxvdyBjZXJ0YWlu
+Cj4gZGlyZWN0b3J5IG9ubHkgaW5vZGUgZmxhZ3MgdG8gYmUgc2V0IG9uIG90aGVyIHR5cGVzIG9m
+IGlub2RlcyAoZS5nLgo+IHJlZ3VsYXIgZmlsZXMpLiBJdCBhbHNvIHBvaW50ZWQgb3V0IHRoYXQg
+d2UgY291bGQgc2V0IGV4dGVudCBzaXplCj4gaGludHMgb24gaW5vZGVzIHRoYXQgZG9uJ3QgaGF2
+ZSBleHRlbnQgc2l6ZSBoaW50IGZsYWdzIHNldC4KClvigKZdCgo+IFRob3VnaHRzLCBjb21tZW50
+cywgZmxhbWVzPwoKVGhhbmtzIGZvciBzZW5kaW5nIHRoZXNlIC0gSSBkaWRuJ3QgZm9yZ2V0IGFi
+b3V0IG15IHBhdGNoZXMsIGp1c3Qgd2FzCmJ1c3kgd2l0aCBvdGhlciBzdHVmZi4gSSB3YXMgcGxh
+bm5pbmcgdG8gdXBkYXRlIHRob3NlIHBhdGNoZXMgYmFzZWQgb24KeW91ciBjb21tZW50cyBhbmQg
+cmVzZW5kIHRoZW0gaW4gdGhlIG5leHQgd2VlayBvciBzby4KCml1c3RpbgoKX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNA
+b3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCg==
