@@ -1,22 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 62E19800D
-	for <xfs@oss.sgi.com>; Mon, 29 Sep 2014 15:17:19 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 38F2C8F8033
-	for <xfs@oss.sgi.com>; Mon, 29 Sep 2014 13:17:16 -0700 (PDT)
-Date: Mon, 29 Sep 2014 16:16:50 -0400
-Subject: Re: [RFC v2] Unicode/UTF-8 support for XFS
-Message-ID: <20140929201650.GA3640@fieldses.org>
-References: <20140918195650.GI19952@sgi.com> <20140922222611.GZ4322@dastard>
-	<5422C540.1060007@sgi.com> <20140924231024.GA4758@dastard>
-	<54257D3F.70302@sgi.com> <20140926165605.GA25274@infradead.org>
-	<20140926170407.GB6012@samba2> <5425C067.7080904@sgi.com>
-	<20140926194656.GC13066@samba2> <5425C6A6.3060003@sgi.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <5425C6A6.3060003@sgi.com>
-From: "J. Bruce Fields" <bfields@fieldses.org>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id E3E338016
+	for <xfs@oss.sgi.com>; Mon, 29 Sep 2014 20:46:28 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id BBDB5304066
+	for <xfs@oss.sgi.com>; Mon, 29 Sep 2014 18:46:28 -0700 (PDT)
+Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
+	[150.101.137.129]) by cuda.sgi.com with ESMTP id
+	uQf1QTxmoglZK2ik for <xfs@oss.sgi.com>;
+	Mon, 29 Sep 2014 18:46:23 -0700 (PDT)
+From: Dave Chinner <david@fromorbit.com>
+Subject: [PATCH 0/2] xfs: cleanup XFS_IOC_SETXATTR behaviour
+Date: Tue, 30 Sep 2014 11:46:03 +1000
+Message-Id: <1412041565-18873-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,51 +21,45 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Olaf Weber <olaf@sgi.com>
-Cc: tinguely@sgi.com, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, Ben Myers <bpm@sgi.com>, linux-fsdevel@vger.kernel.org, Jeremy Allison <jra@samba.org>
+To: xfs@oss.sgi.com
+Cc: iusty@k1024.org
 
-On Fri, Sep 26, 2014 at 10:03:50PM +0200, Olaf Weber wrote:
-> On 26-09-14 21:46, Jeremy Allison wrote:
-> >On Fri, Sep 26, 2014 at 09:37:11PM +0200, Olaf Weber wrote:
-> >>
-> >>My argument against "mount time case-insensitivity" and for "mkfs
-> >>time case-insensitivity" is related to switching from the
-> >>case-sensitive domain to the case-insensitive one.
-> >>
-> >>For case-sensitive, from "README" to "readme" there are 64 different
-> >>possible filenames.  Let's say you create 63 out of these 64. Now
-> >>remount the filesystem case-insensitive, and try to open by the 64th
-> >>version of "readme". It is not an exact match for any of the 63
-> >>candidate files, and a case-insensitive match to all 63 candidate
-> >>files. Which of these 63 files should be opened, and why that one in
-> >>particular?
-> >
-> >I'm ok with "mkfs time case-insensitivity" - really !
-> >Most of my OEMs would set that and claim victory (few
-> >of them care much about NFS semantics :-).
-> 
-> I'd say you can have CIFS-style case-insensitive semantics or
-> NFS-style case-sensitive semantics, but not both.
+Hi folks,
 
-Note the NFSv4 specs do claim to allow case insensitivity.  No idea how
-well clients deal with it.
+A while back Iustin Pop sent a patch to fix a problem with being
+unable to set extent size hint values on directories. That patch -
+along with new xfstests functionality to always check the scratch
+device after a test - has pointed out that we allow certain
+directory only inode flags to be set on other types of inodes (e.g.
+regular files). It also pointed out that we could set extent size
+hints on inodes that don't have extent size hint flags set.
 
-I think rfc3530bis has the most up to date language on NFSv4
-internationalization issues:
+This patchset does not attempt to fix the original problem, not add
+any new validation of what is passed from userspace. Instead, it
+simply ensures that what we end up with on disk is valid. That is,
+directory only flags are only set on directory inodes, and extent
+size hints are set if the inode flags are set, otherwise it is
+cleared.  Hence we don't end up with "invalid" state on disk, and so
+xfstests doesn't get upset with directory only flags being set on
+non directory inodes.
 
-	http://tools.ietf.org/html/draft-ietf-nfsv4-rfc3530bis-33
+Further followups will be needed to address the original issue of
+changing extent size hints on directories and handling invalid
+flag/value combinations from userspace. I have not attempted to
+solve that problem here because it could have impact on userspace
+application behaviour and that's a different issue to ensuring we
+end up with valid inode state on disk.
 
-(One nit in the current knfsd: the server doesn't correctly report the
-case_insensitive attribute.  If it had some flag it could check in the
-filesystem's superblock then it could do that right instead of just
-assuming 0 as it currently does (see FATTR4_WORD0_CASE_INSENSITIVE in
-fs/nfsd/nfs4xdr.c:nfsd4_encode_fattr).)
+Thoughts, comments, flames?
 
---b.
+Cheers,
+
+Dave.
 
 _______________________________________________
 xfs mailing list
