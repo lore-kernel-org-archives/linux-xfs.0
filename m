@@ -1,26 +1,31 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id C7F1A7F55
-	for <xfs@oss.sgi.com>; Tue, 30 Sep 2014 00:58:36 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 8C7B38F8033
-	for <xfs@oss.sgi.com>; Mon, 29 Sep 2014 22:58:33 -0700 (PDT)
-Received: from mail-wi0-f170.google.com (mail-wi0-f170.google.com
-	[209.85.212.170]) by cuda.sgi.com with ESMTP id
-	kAdFs7OzIQ5o9T2O (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 29 Sep 2014 22:58:32 -0700 (PDT)
-Received: by mail-wi0-f170.google.com with SMTP id n3so784680wiv.3
-	for <xfs@oss.sgi.com>; Mon, 29 Sep 2014 22:58:30 -0700 (PDT)
-Date: Tue, 30 Sep 2014 07:58:29 +0200
-From: Iustin Pop <iusty@k1024.org>
-Subject: Re: [PATCH 2/2] xfs: only set extent size hint when asked
-Message-ID: <20140930055829.GB15186@teal.hq.k1024.org>
-References: <1412041565-18873-1-git-send-email-david@fromorbit.com>
-	<1412041565-18873-3-git-send-email-david@fromorbit.com>
+	by oss.sgi.com (Postfix) with ESMTP id 19EC97F72
+	for <xfs@oss.sgi.com>; Tue, 30 Sep 2014 09:19:06 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id EE2CE8F8037
+	for <xfs@oss.sgi.com>; Tue, 30 Sep 2014 07:19:02 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id RYKTbSYpInfWH7k1 (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 30 Sep 2014 07:19:02 -0700 (PDT)
+Received: from int-mx11.intmail.prod.int.phx2.redhat.com
+	(int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id s8UEJ1x8005086
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256
+	verify=FAIL) for <xfs@oss.sgi.com>; Tue, 30 Sep 2014 10:19:01 -0400
+Received: from localhost.localdomain (ovpn-113-132.phx2.redhat.com
+	[10.3.113.132])
+	by int-mx11.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id s8UEIwlX030998
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NO)
+	for <xfs@oss.sgi.com>; Tue, 30 Sep 2014 10:19:00 -0400
+Date: Tue, 30 Sep 2014 11:18:57 -0300
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: Why not move xfs infra-structure to "public" services
+Message-ID: <20140930141857.GA2053@localhost.localdomain>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1412041565-18873-3-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,61 +38,27 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Tue, Sep 30, 2014 at 11:46:05AM +1000, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
-> 
-> Currently the extent size hint is set unconditionally in
-> xfs_ioctl_setattr(), even when the FSX_EXTSIZE flag is not set. This
-> means we can set values from uninitialised stack variables. Hence
-> only set the extent size hint from userspace when both the mask
-> falg is set and the inode has the XFS_DIFLAG_EXTSIZE flag set to
-> indicate that we should have an extent size hint set on the inode.
-> 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> ---
->  fs/xfs/xfs_ioctl.c | 16 ++++++++++++++--
->  1 file changed, 14 insertions(+), 2 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-> index 87c3bd1..24c926b 100644
-> --- a/fs/xfs/xfs_ioctl.c
-> +++ b/fs/xfs/xfs_ioctl.c
-> @@ -1231,13 +1231,25 @@ xfs_ioctl_setattr(
->  
->  	}
->  
-> -	if (mask & FSX_EXTSIZE)
-> -		ip->i_d.di_extsize = fa->fsx_extsize >> mp->m_sb.sb_blocklog;
->  	if (mask & FSX_XFLAGS) {
->  		xfs_set_diflags(ip, fa->fsx_xflags);
->  		xfs_diflags_to_linux(ip);
->  	}
->  
-> +	/*
-> +	 * Only set the extent size hint if we've already determined that the
-> +	 * extent size hint should be set on the inode. If no extent size flags
-> +	 * are set on the inode then unconditionally clear the extent size hint.
-> +	 */
-> +	if (mask & FSX_EXTSIZE) {
-> +		int	extsize = 0;
-> +
-> +		if (ip->i_d.di_flags &
-> +				(XFS_DIFLAG_EXTSIZE | XFS_DIFLAG_EXTSZINHERIT))
-> +			extsize = fa->fsx_extsize >> mp->m_sb.sb_blocklog;
-> +		ip->i_d.di_extsize = extsize;
+Hi guys,
 
-Quick question: this sounds sane, but it will have the following effect
-(if I understand things correctly): updating other flags on the inode
-(e.g. XFS_XFLAG_NOATIME) might change the recorded extent size. True, it
-will correct the size if not appropriate and it will have a noop impact,
-but still it will be an unrelated inode change. Would it make sense to
-document this in the xfsctl man page then?
+I'm sorry for this kind of "fancy" question from my side, but I'm wondering why
+xfs project infra-structure (mailing list, git trees), does not use the "usual
+public" services. I mean, does anyone thought about moving xfs mailing list to
+vger.kernel.org, and the git trees to git.kernel.org?
 
-thanks,
-iustin
+Sorry about been asking it mainly because I'm too lazy to keep deleting spams
+from my inbox, and also, because having 'everything I need' in a single place
+(kernel.org) would make my life easier (and probably many other lives :).
+
+Anyway, it's just a question/suggestion, please don't get me wrong here.
+IIRC there were some discussion regarding this some time ago, but, I'm not
+sure where the discussion stopped and/or if any decision were taken.
+
+Cheers o>
+
+-- 
+Carlos
 
 _______________________________________________
 xfs mailing list
