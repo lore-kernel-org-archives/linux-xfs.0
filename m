@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 723A17F76
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 8081F7F81
 	for <xfs@oss.sgi.com>; Wed,  1 Oct 2014 14:31:48 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id F01FCAC010
-	for <xfs@oss.sgi.com>; Wed,  1 Oct 2014 12:31:47 -0700 (PDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 6A2A130406B
+	for <xfs@oss.sgi.com>; Wed,  1 Oct 2014 12:31:48 -0700 (PDT)
 Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id Xe4yJjhrNuAdQW4s (version=TLSv1 cipher=AES256-SHA
+	with ESMTP id ZMkwtjn5QvuJfqGX (version=TLSv1 cipher=AES256-SHA
 	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 01 Oct 2014 12:31:43 -0700 (PDT)
+	Wed, 01 Oct 2014 12:31:47 -0700 (PDT)
 From: Jan Kara <jack@suse.cz>
-Subject: [PATCH 02/12] gfs2: Set allowed quota types
-Date: Wed,  1 Oct 2014 21:31:24 +0200
-Message-Id: <1412191894-9113-3-git-send-email-jack@suse.cz>
+Subject: [PATCH 09/12] ocfs2: Convert to private i_dquot field
+Date: Wed,  1 Oct 2014 21:31:31 +0200
+Message-Id: <1412191894-9113-10-git-send-email-jack@suse.cz>
 In-Reply-To: <1412191894-9113-1-git-send-email-jack@suse.cz>
 References: <1412191894-9113-1-git-send-email-jack@suse.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -31,27 +31,68 @@ Sender: xfs-bounces@oss.sgi.com
 To: linux-fsdevel@vger.kernel.org
 Cc: Dave Kleikamp <shaggy@kernel.org>, jfs-discussion@lists.sourceforge.net, tytso@mit.edu, Jeff Mahoney <jeffm@suse.de>, Mark Fasheh <mfasheh@suse.com>, reiserfs-devel@vger.kernel.org, xfs@oss.sgi.com, cluster-devel@redhat.com, Joel Becker <jlbec@evilplan.org>, Jan Kara <jack@suse.cz>, linux-ext4@vger.kernel.org, Steven Whitehouse <swhiteho@redhat.com>, ocfs2-devel@oss.oracle.com
 
-We support user and group quotas. Tell vfs about it.
-
-CC: Steven Whitehouse <swhiteho@redhat.com>
-CC: cluster-devel@redhat.com
+CC: Mark Fasheh <mfasheh@suse.com>
+CC: Joel Becker <jlbec@evilplan.org>
+CC: ocfs2-devel@oss.oracle.com
 Signed-off-by: Jan Kara <jack@suse.cz>
 ---
- fs/gfs2/ops_fstype.c | 1 +
- 1 file changed, 1 insertion(+)
+ fs/ocfs2/inode.h |  4 ++++
+ fs/ocfs2/super.c | 12 ++++++++++++
+ 2 files changed, 16 insertions(+)
 
-diff --git a/fs/gfs2/ops_fstype.c b/fs/gfs2/ops_fstype.c
-index d3eae244076e..3032e6d069b5 100644
---- a/fs/gfs2/ops_fstype.c
-+++ b/fs/gfs2/ops_fstype.c
-@@ -1083,6 +1083,7 @@ static int fill_super(struct super_block *sb, struct gfs2_args *args, int silent
- 	sb->s_xattr = gfs2_xattr_handlers;
- 	sb->s_qcop = &gfs2_quotactl_ops;
- 	sb_dqopt(sb)->flags |= DQUOT_QUOTA_SYS_FILE;
-+	sb_dqopt(sb)->allowed_types = (1 << USRQUOTA) | (1 << GRPQUOTA);
- 	sb->s_time_gran = 1;
- 	sb->s_maxbytes = MAX_LFS_FILESIZE;
+diff --git a/fs/ocfs2/inode.h b/fs/ocfs2/inode.h
+index a6c991c0fc98..aed65d3aff57 100644
+--- a/fs/ocfs2/inode.h
++++ b/fs/ocfs2/inode.h
+@@ -80,6 +80,10 @@ struct ocfs2_inode_info
+ 	 */
+ 	tid_t i_sync_tid;
+ 	tid_t i_datasync_tid;
++
++#ifdef CONFIG_QUOTA
++	struct dquot *i_dquot[MAXQUOTAS];
++#endif
+ };
  
+ /*
+diff --git a/fs/ocfs2/super.c b/fs/ocfs2/super.c
+index ddb662b32447..190dc8620ae0 100644
+--- a/fs/ocfs2/super.c
++++ b/fs/ocfs2/super.c
+@@ -157,6 +157,13 @@ static const struct super_operations ocfs2_sops = {
+ 	.quota_write	= ocfs2_quota_write,
+ };
+ 
++static const int ocfs2_inode_fields[IF_FIELD_NR] = {
++#ifdef CONFIG_QUOTA
++	[IF_DQUOTS] = offsetof(struct ocfs2_inode_info, i_dquot) -
++		      offsetof(struct ocfs2_inode_info, vfs_inode),
++#endif
++};
++
+ enum {
+ 	Opt_barrier,
+ 	Opt_err_panic,
+@@ -563,6 +570,9 @@ static struct inode *ocfs2_alloc_inode(struct super_block *sb)
+ 
+ 	oi->i_sync_tid = 0;
+ 	oi->i_datasync_tid = 0;
++#ifdef CONFIG_QUOTA
++	memset(&oi->i_dquot, 0, sizeof(oi->i_dquot));
++#endif
+ 
+ 	jbd2_journal_init_jbd_inode(&oi->ip_jinode, &oi->vfs_inode);
+ 	return &oi->vfs_inode;
+@@ -2069,7 +2079,9 @@ static int ocfs2_initialize_super(struct super_block *sb,
+ 	sb->s_export_op = &ocfs2_export_ops;
+ 	sb->s_qcop = &ocfs2_quotactl_ops;
+ 	sb->dq_op = &ocfs2_quota_operations;
++	sb_dqopt(sb)->allowed_types = (1 << USRQUOTA) | (1 << GRPQUOTA);
+ 	sb->s_xattr = ocfs2_xattr_handlers;
++	sb_init_inode_fields(sb, ocfs2_inode_fields);
+ 	sb->s_time_gran = 1;
+ 	sb->s_flags |= MS_NOATIME;
+ 	/* this is needed to support O_LARGEFILE */
 -- 
 1.8.1.4
 
