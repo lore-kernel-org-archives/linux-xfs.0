@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 4DB7A7F6F
-	for <xfs@oss.sgi.com>; Wed,  1 Oct 2014 17:52:38 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id BFB487F6F
+	for <xfs@oss.sgi.com>; Wed,  1 Oct 2014 17:54:35 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id CEFE0AC001
-	for <xfs@oss.sgi.com>; Wed,  1 Oct 2014 15:52:37 -0700 (PDT)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 9C2E38F8037
+	for <xfs@oss.sgi.com>; Wed,  1 Oct 2014 15:54:35 -0700 (PDT)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	6agLvnf1Ne5QWqbP for <xfs@oss.sgi.com>;
-	Wed, 01 Oct 2014 15:52:35 -0700 (PDT)
-Date: Thu, 2 Oct 2014 08:52:21 +1000
+	teAzBHhWiuhN40Fd for <xfs@oss.sgi.com>;
+	Wed, 01 Oct 2014 15:54:33 -0700 (PDT)
+Date: Thu, 2 Oct 2014 08:54:20 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs: kill time.h
-Message-ID: <20141001225221.GA10298@dastard>
-References: <1411954911-12278-1-git-send-email-david@fromorbit.com>
-	<20140929104443.GB10847@infradead.org>
+Subject: Re: [PATCH] xfs: compat_xfs_bstat does not have forkoff
+Message-ID: <20141001225420.GB10298@dastard>
+References: <1411954886-12200-1-git-send-email-david@fromorbit.com>
+	<20140929104318.GA10847@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20140929104443.GB10847@infradead.org>
+In-Reply-To: <20140929104318.GA10847@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,18 +33,31 @@ Sender: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
-On Mon, Sep 29, 2014 at 03:44:43AM -0700, Christoph Hellwig wrote:
-> On Mon, Sep 29, 2014 at 11:41:51AM +1000, Dave Chinner wrote:
+On Mon, Sep 29, 2014 at 03:43:18AM -0700, Christoph Hellwig wrote:
+> On Mon, Sep 29, 2014 at 11:41:26AM +1000, Dave Chinner wrote:
 > > From: Dave Chinner <dchinner@redhat.com>
 > > 
-> > The typedef for timespecs and nanotime() are completely unnecessary,
-> > and delay() can be moved to fs/xfs/linux.h, which means this file
-> > can go away.
+> > struct compat_xfs_bstat is missing the di_forkoff field and so does
+> > not fully translate the structure correctly. Fix it.
+> > 
+> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> > ---
+> >  fs/xfs/xfs_ioctl32.c | 2 ++
+> >  fs/xfs/xfs_ioctl32.h | 3 ++-
+> >  2 files changed, 4 insertions(+), 1 deletion(-)
 > 
-> Looks good, but shouldn't we just kill delay(), too? There's just
-> 11 callers, and none of them in libxfs.
+> Looks good,
+> 
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> 
+> Any chance to get an xfstests test that verifies the forkoff value?
+> Even if it would only reproduce this bug when running 32-bit userspace
+> on a 64-bit kernel it would be useful I think.
 
-Eventually, yes. ;)
+There are already xfs_fsr tests that are dependent on forkoff being
+set to correctly defrag a file successfully. The fact that nobody
+has noticed that these fail tends to imply nobody runs xfstests with
+a 32 bit userspace on 64 bit kernels....
 
 Cheers,
 
