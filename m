@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 9D7357F6F
-	for <xfs@oss.sgi.com>; Wed,  1 Oct 2014 17:35:15 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 3CE19AC003
-	for <xfs@oss.sgi.com>; Wed,  1 Oct 2014 15:35:12 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 7D27B7F6F
+	for <xfs@oss.sgi.com>; Wed,  1 Oct 2014 17:42:32 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 5969B8F8037
+	for <xfs@oss.sgi.com>; Wed,  1 Oct 2014 15:42:29 -0700 (PDT)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	Tgf7zrWU0uD22otW for <xfs@oss.sgi.com>;
-	Wed, 01 Oct 2014 15:35:10 -0700 (PDT)
-Date: Thu, 2 Oct 2014 08:34:56 +1000
+	ypfTla1USai935pK for <xfs@oss.sgi.com>;
+	Wed, 01 Oct 2014 15:42:22 -0700 (PDT)
+Date: Thu, 2 Oct 2014 08:41:55 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs: fix the xfs_iflush_done callback search
-Message-ID: <20141001223456.GV4758@dastard>
-References: <20141001191803.153063401@sgi.com>
+Subject: Re: Test xfs/287 failure
+Message-ID: <20141001224155.GW4758@dastard>
+References: <20141001152314.GH17405@quack.suse.cz>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20141001191803.153063401@sgi.com>
+In-Reply-To: <20141001152314.GH17405@quack.suse.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,55 +29,55 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Mark Tinguely <tinguely@sgi.com>
+To: Jan Kara <jack@suse.cz>
 Cc: xfs@oss.sgi.com
 
-On Wed, Oct 01, 2014 at 04:18:02PM -0500, Mark Tinguely wrote:
-> Commit "xfs: remove all the inodes on a buffer from the AIL in bulk"
-> made the xfs inode flush callback more efficient by combining all
-> the inode writes on the buffer and the deletions of the inode log
-> item from AIL.
+On Wed, Oct 01, 2014 at 05:23:14PM +0200, Jan Kara wrote:
+>   Hello,
 > 
-> The initial loop in this patch should be looping through all
-> the log items on the buffer to see which items have
-> xfs_iflush_done as their callback function. But currently,
-> only the log item passed to the function has its callback
-> compared to xfs_iflush_done. If the log item pointer passed to
-> the function does have the xfs_iflush_done callback function,
-> then all the log items on the buffer are removed from the
-> li_bio_list on the buffer b_fspriv and could be removed from
-> the AIL eventhough they may have not been written yet.
-
-Looks like a bug, but what I don't know from this description is
-the symptoms and impact of this bug being hit? Is there a risk of
-filesystem corruption on crash or power loss? Perhaps it's a data
-loss issue? I can't tell, and for anyone scanning the commit logs to
-determine if they need to backport the fix will be asking the same
-questions.
-
-Also, is there a reproducable test case for it?
-
-> Signed-off-by: Mark Tinguely <tinguely@sgi.com>
-> ---
->  fs/xfs/xfs_inode_item.c |    2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+>   so after installing latest xfsdump (just pulled git repo at oss.sgi.com),
+> I'm getting failure in test xfs/287. The failure is:
+> xfs/287 2s ... 2s
+> _check_xfs_filesystem: filesystem on /dev/vdb2 is inconsistent (r) (see
+> /var/lib/xfstests/results//xfs/287.full)
 > 
-> Index: b/fs/xfs/xfs_inode_item.c
-> ===================================================================
-> --- a/fs/xfs/xfs_inode_item.c
-> +++ b/fs/xfs/xfs_inode_item.c
-> @@ -615,7 +615,7 @@ xfs_iflush_done(
->  	blip = bp->b_fspriv;
->  	prev = NULL;
->  	while (blip != NULL) {
-> -		if (lip->li_cb != xfs_iflush_done) {
-> +		if (blip->li_cb != xfs_iflush_done) {
+> And the 287.full has:
+> ...
+> Phase 3 - for each AG...
+>         - scan (but don't clear) agi unlinked lists...
+>         - process known inodes and perform inode discovery...
+>         - agno = 0
+> directory flags set on non-directory inode 133
+> directory flags set on non-directory inode 134
+> directory flags set on non-directory inode 133
+> would fix bad flags.
+> directory flags set on non-directory inode 134
+> would fix bad flags.
+> ...
+> 
+> Complete file is attached. I'm using also the latest xfsprogs from git and
+> kernel 3.17.0-rc5 (plus couple of my patches but these should have no
+> influence).
 
-Looks correct, but more info needed...
+It's a bug, but a minor inconvenience at worst. I sent patches to
+fix this a couple of days ago:
 
-Cheers,
+http://oss.sgi.com/archives/xfs/2014-09/msg00510.html
 
-Dave.
+$ sudo ./check xfs/287
+FSTYP         -- xfs (debug)
+PLATFORM      -- Linux/x86_64 test4 3.17.0-rc7-dgc+
+MKFS_OPTIONS  -- -f -bsize=4096 /dev/ram1
+MOUNT_OPTIONS -- /dev/ram1 /mnt/scr
+
+xfs/287 1s ... 1s
+Ran: xfs/287
+Passed all 1 tests
+
+$
+
+-Dave.
+
 -- 
 Dave Chinner
 david@fromorbit.com
