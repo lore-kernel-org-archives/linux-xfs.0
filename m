@@ -1,22 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 7D27B7F6F
-	for <xfs@oss.sgi.com>; Wed,  1 Oct 2014 17:42:32 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 5969B8F8037
-	for <xfs@oss.sgi.com>; Wed,  1 Oct 2014 15:42:29 -0700 (PDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 4DB7A7F6F
+	for <xfs@oss.sgi.com>; Wed,  1 Oct 2014 17:52:38 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id CEFE0AC001
+	for <xfs@oss.sgi.com>; Wed,  1 Oct 2014 15:52:37 -0700 (PDT)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	ypfTla1USai935pK for <xfs@oss.sgi.com>;
-	Wed, 01 Oct 2014 15:42:22 -0700 (PDT)
-Date: Thu, 2 Oct 2014 08:41:55 +1000
+	6agLvnf1Ne5QWqbP for <xfs@oss.sgi.com>;
+	Wed, 01 Oct 2014 15:52:35 -0700 (PDT)
+Date: Thu, 2 Oct 2014 08:52:21 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Test xfs/287 failure
-Message-ID: <20141001224155.GW4758@dastard>
-References: <20141001152314.GH17405@quack.suse.cz>
+Subject: Re: [PATCH] xfs: kill time.h
+Message-ID: <20141001225221.GA10298@dastard>
+References: <1411954911-12278-1-git-send-email-david@fromorbit.com>
+	<20140929104443.GB10847@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20141001152314.GH17405@quack.suse.cz>
+In-Reply-To: <20140929104443.GB10847@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,55 +30,25 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Jan Kara <jack@suse.cz>
+To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
-On Wed, Oct 01, 2014 at 05:23:14PM +0200, Jan Kara wrote:
->   Hello,
+On Mon, Sep 29, 2014 at 03:44:43AM -0700, Christoph Hellwig wrote:
+> On Mon, Sep 29, 2014 at 11:41:51AM +1000, Dave Chinner wrote:
+> > From: Dave Chinner <dchinner@redhat.com>
+> > 
+> > The typedef for timespecs and nanotime() are completely unnecessary,
+> > and delay() can be moved to fs/xfs/linux.h, which means this file
+> > can go away.
 > 
->   so after installing latest xfsdump (just pulled git repo at oss.sgi.com),
-> I'm getting failure in test xfs/287. The failure is:
-> xfs/287 2s ... 2s
-> _check_xfs_filesystem: filesystem on /dev/vdb2 is inconsistent (r) (see
-> /var/lib/xfstests/results//xfs/287.full)
-> 
-> And the 287.full has:
-> ...
-> Phase 3 - for each AG...
->         - scan (but don't clear) agi unlinked lists...
->         - process known inodes and perform inode discovery...
->         - agno = 0
-> directory flags set on non-directory inode 133
-> directory flags set on non-directory inode 134
-> directory flags set on non-directory inode 133
-> would fix bad flags.
-> directory flags set on non-directory inode 134
-> would fix bad flags.
-> ...
-> 
-> Complete file is attached. I'm using also the latest xfsprogs from git and
-> kernel 3.17.0-rc5 (plus couple of my patches but these should have no
-> influence).
+> Looks good, but shouldn't we just kill delay(), too? There's just
+> 11 callers, and none of them in libxfs.
 
-It's a bug, but a minor inconvenience at worst. I sent patches to
-fix this a couple of days ago:
+Eventually, yes. ;)
 
-http://oss.sgi.com/archives/xfs/2014-09/msg00510.html
+Cheers,
 
-$ sudo ./check xfs/287
-FSTYP         -- xfs (debug)
-PLATFORM      -- Linux/x86_64 test4 3.17.0-rc7-dgc+
-MKFS_OPTIONS  -- -f -bsize=4096 /dev/ram1
-MOUNT_OPTIONS -- /dev/ram1 /mnt/scr
-
-xfs/287 1s ... 1s
-Ran: xfs/287
-Passed all 1 tests
-
-$
-
--Dave.
-
+Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
