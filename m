@@ -1,23 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id E776C7F63
-	for <xfs@oss.sgi.com>; Wed,  1 Oct 2014 17:57:15 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 711127F6A
+	for <xfs@oss.sgi.com>; Wed,  1 Oct 2014 18:04:01 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id C62F18F8035
-	for <xfs@oss.sgi.com>; Wed,  1 Oct 2014 15:57:15 -0700 (PDT)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 0D812AC011
+	for <xfs@oss.sgi.com>; Wed,  1 Oct 2014 16:03:57 -0700 (PDT)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	pVXXuqhwjInurNzR for <xfs@oss.sgi.com>;
-	Wed, 01 Oct 2014 15:57:13 -0700 (PDT)
-Date: Thu, 2 Oct 2014 08:56:36 +1000
+	aF4qHAHckOAD5A1x for <xfs@oss.sgi.com>;
+	Wed, 01 Oct 2014 16:03:56 -0700 (PDT)
+Date: Thu, 2 Oct 2014 09:03:42 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 2/2] xfs: fix crc field handling in xfs_sb_to/from_disk
-Message-ID: <20141001225636.GC10298@dastard>
-References: <542C1B36.5080804@redhat.com> <542C1CB8.103@sandeen.net>
-	<20141001155604.GB787@infradead.org>
+Subject: Re: [PATCH 09/11] xfs: introduce xfs_buf_submit[_wait]
+Message-ID: <20141001230342.GD10298@dastard>
+References: <1411648461-29003-1-git-send-email-david@fromorbit.com>
+	<1411648461-29003-10-git-send-email-david@fromorbit.com>
+	<20140926123338.GA18558@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20141001155604.GB787@infradead.org>
+In-Reply-To: <20140926123338.GA18558@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,15 +32,16 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
-Cc: Eric Sandeen <sandeen@sandeen.net>, xfs-oss <xfs@oss.sgi.com>
+Cc: xfs@oss.sgi.com
 
-On Wed, Oct 01, 2014 at 08:56:04AM -0700, Christoph Hellwig wrote:
-> Looks good (although it will conflict with Dave's sb_to_disk rework..)
+On Fri, Sep 26, 2014 at 05:33:38AM -0700, Christoph Hellwig wrote:
+> Looks good, although I still think this would benefit from a helper
+> like the one below (patch lightly tested).
+> 
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
 
-That's ok. I'm slipping that superblock logging change to the next
-merge window as I haven't had a chance to look at the problems you
-reported yet and it's too close to the next merge window to be
-debugging changes to on-disk format handling code...
+Thanks. I'll queue the helper patch up for after the next merge
+window.
 
 Cheers,
 
