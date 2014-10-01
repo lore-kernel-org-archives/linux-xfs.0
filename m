@@ -1,20 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 9D8867F6F
-	for <xfs@oss.sgi.com>; Wed,  1 Oct 2014 16:02:34 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 7DDD77F83
+	for <xfs@oss.sgi.com>; Wed,  1 Oct 2014 16:02:37 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 89CF0304077
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 6C7CA8F8035
 	for <xfs@oss.sgi.com>; Wed,  1 Oct 2014 14:02:34 -0700 (PDT)
 Received: from casper.infradead.org (casper.infradead.org [85.118.1.10]) by
-	cuda.sgi.com with ESMTP id v7sZFVrKiaRz7Mzb (version=TLSv1
+	cuda.sgi.com with ESMTP id 4khp9U2AFyWDJG9E (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 01 Oct 2014 14:02:30 -0700 (PDT)
+	Wed, 01 Oct 2014 14:02:32 -0700 (PDT)
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 1/3] xfs: add RWF_NONBLOCK support
-Date: Wed,  1 Oct 2014 23:04:52 +0200
-Message-Id: <1412197494-7655-2-git-send-email-hch@lst.de>
+Subject: [PATCH 3/3] fs: add a flag for per-operation O_DSYNC semantics
+Date: Wed,  1 Oct 2014 23:04:54 +0200
+Message-Id: <1412197494-7655-4-git-send-email-hch@lst.de>
 In-Reply-To: <1412197494-7655-1-git-send-email-hch@lst.de>
 References: <1412197494-7655-1-git-send-email-hch@lst.de>
+MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,81 +24,117 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Milosz Tanski <milosz@adfin.com>
 Cc: linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com
 
-Add support for non-blocking reads.  The guts are handled by the generic
-code, the only addition is a non-blocking variant of xfs_rw_ilock.
-
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/xfs_file.c | 30 +++++++++++++++++++++++++-----
- 1 file changed, 25 insertions(+), 5 deletions(-)
-
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index cf61271..f9efffc 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -61,6 +61,23 @@ xfs_rw_ilock(
- 	xfs_ilock(ip, type);
- }
- 
-+static inline bool
-+xfs_rw_ilock_nowait(
-+	struct xfs_inode	*ip,
-+	int			type)
-+{
-+	if (type & XFS_IOLOCK_EXCL) {
-+		if (!mutex_trylock(&VFS_I(ip)->i_mutex))
-+			return false;
-+	}
-+	if (!xfs_ilock_nowait(ip, type)) {
-+		mutex_unlock(&VFS_I(ip)->i_mutex);
-+		return false;
-+	}
-+
-+	return true;
-+}
-+
- static inline void
- xfs_rw_iunlock(
- 	struct xfs_inode	*ip,
-@@ -246,10 +263,6 @@ xfs_file_read_iter(
- 
- 	XFS_STATS_INC(xs_read_calls);
- 
--	/* XXX: need a non-blocking iolock helper, shouldn't be too hard */
--	if (iocb->ki_rwflags & RWF_NONBLOCK)
--		return -EAGAIN;
--
- 	if (unlikely(file->f_flags & O_DIRECT))
- 		ioflags |= XFS_IO_ISDIRECT;
- 	if (file->f_mode & FMODE_NOCMTIME)
-@@ -287,7 +300,14 @@ xfs_file_read_iter(
- 	 * This allows the normal direct IO case of no page cache pages to
- 	 * proceeed concurrently without serialisation.
- 	 */
--	xfs_rw_ilock(ip, XFS_IOLOCK_SHARED);
-+	if (iocb->ki_rwflags & RWF_NONBLOCK) {
-+		if (ioflags & XFS_IO_ISDIRECT)
-+			return -EAGAIN;
-+		if (!xfs_rw_ilock_nowait(ip, XFS_IOLOCK_SHARED))
-+			return -EAGAIN;
-+	} else {
-+		xfs_rw_ilock(ip, XFS_IOLOCK_SHARED);
-+	}
- 	if ((ioflags & XFS_IO_ISDIRECT) && inode->i_mapping->nrpages) {
- 		xfs_rw_iunlock(ip, XFS_IOLOCK_SHARED);
- 		xfs_rw_ilock(ip, XFS_IOLOCK_EXCL);
--- 
-1.9.1
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+V2l0aCB0aGUgbmV3IHJlYWQvd3JpdGUgd2l0aCBmbGFncyBzeXNjYWxscyB3ZSBjYW4gc3VwcG9y
+dCBhIGZsYWcKdG8gZW5hYmxlIE9fRFNZTkMgc2VtYW50aWNzIG9uIGEgcGVyLW9wZXJhdGlvbiBi
+YXNpcy4gIFRoaXMg0ZZzCnVzZWZ1bCB0byBpbXBsZW1lbnQgcHJvdG9jb2xzIGxpa2UgU01CLCBO
+RlMgb3IgU0NTSSB0aGF0IGhhdmUgc3VjaApwZXItb3BlcmF0aW9uIGZsYWdzLgoKRXhhbXBsZSBw
+cm9ncmFtIGJlbG93OgoKY2F0ID4gcHdyaXRldjIuYyA8PCBFT0YKCiAgICAgICAgKG9mZl90KSB2
+YWwsICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgXAogICAgICAgIChvZmZfdCkgKCgoKHVp
+bnQ2NF90KSAodmFsKSkgPj4gKHNpemVvZiAobG9uZykgKiA0KSkgPj4gKHNpemVvZiAobG9uZykg
+KiA0KSkKCnN0YXRpYyBzc2l6ZV90CnB3cml0ZXYyKGludCBmZCwgY29uc3Qgc3RydWN0IGlvdmVj
+ICppb3YsIGludCBpb3ZjbnQsIG9mZl90IG9mZnNldCwgaW50IGZsYWdzKQp7CiAgICAgICAgcmV0
+dXJuIHN5c2NhbGwoX19OUl9wd3JpdGV2MiwgZmQsIGlvdiwgaW92Y250LCBMT19ISV9MT05HKG9m
+ZnNldCksCgkJCSBmbGFncyk7Cn0KCmludCBtYWluKGludCBhcmdjLCBjaGFyICoqYXJndikKewoJ
+aW50IGZkID0gb3Blbihhcmd2WzFdLCBPX1dST05MWXxPX0NSRUFUfE9fVFJVTkMsIDA2NjYpOwoJ
+Y2hhciBidWZbMTAyNF07CglzdHJ1Y3QgaW92ZWMgaW92ID0geyAuaW92X2Jhc2UgPSBidWYsIC5p
+b3ZfbGVuID0gMTAyNCB9OwoJaW50IHJldDsKCiAgICAgICAgaWYgKGZkIDwgMCkgewogICAgICAg
+ICAgICAgICAgcGVycm9yKCJvcGVuIik7CiAgICAgICAgICAgICAgICByZXR1cm4gMDsKICAgICAg
+ICB9CgoJbWVtc2V0KGJ1ZiwgMHhmZSwgc2l6ZW9mKGJ1ZikpOwoKCXJldCA9IHB3cml0ZXYyKGZk
+LCAmaW92LCAxLCAwLCBSV0ZfRFNZTkMpOwoJaWYgKHJldCA8IDApCgkJcGVycm9yKCJwd3JpdGV2
+MiIpOwoJZWxzZQoJCXByaW50ZigicmV0ID0gJWRcbiIsIHJldCk7CgoJcmV0dXJuIDA7Cn0KRU9G
+CgpTaWduZWQtb2ZmLWJ5OiBDaHJpc3RvcGggSGVsbHdpZyA8aGNoQGxzdC5kZT4KLS0tCiBmcy9j
+ZXBoL2ZpbGUuYyAgICAgfCAgNCArKystCiBmcy9mdXNlL2ZpbGUuYyAgICAgfCAgMiArKwogZnMv
+bmZzL2ZpbGUuYyAgICAgIHwgMTAgKysrKysrLS0tLQogZnMvb2NmczIvZmlsZS5jICAgIHwgIDYg
+KysrKy0tCiBmcy9yZWFkX3dyaXRlLmMgICAgfCAxMSArKysrKysrKy0tLQogaW5jbHVkZS9saW51
+eC9mcy5oIHwgIDMgKystCiBtbS9maWxlbWFwLmMgICAgICAgfCAgNCArKystCiA3IGZpbGVzIGNo
+YW5nZWQsIDI4IGluc2VydGlvbnMoKyksIDEyIGRlbGV0aW9ucygtKQoKZGlmZiAtLWdpdCBhL2Zz
+L2NlcGgvZmlsZS5jIGIvZnMvY2VwaC9maWxlLmMKaW5kZXggMmViMDJmOC4uZTU5ZjFmMSAxMDA2
+NDQKLS0tIGEvZnMvY2VwaC9maWxlLmMKKysrIGIvZnMvY2VwaC9maWxlLmMKQEAgLTk2OCw3ICs5
+NjgsOSBAQCByZXRyeV9zbmFwOgogCWNlcGhfcHV0X2NhcF9yZWZzKGNpLCBnb3QpOwogCiAJaWYg
+KHdyaXR0ZW4gPj0gMCAmJgotCSAgICAoKGZpbGUtPmZfZmxhZ3MgJiBPX1NZTkMpIHx8IElTX1NZ
+TkMoZmlsZS0+Zl9tYXBwaW5nLT5ob3N0KSB8fAorCSAgICAoKGZpbGUtPmZfZmxhZ3MgJiBPX1NZ
+TkMpIHx8CisJICAgICBJU19TWU5DKGZpbGUtPmZfbWFwcGluZy0+aG9zdCkgfHwKKwkgICAgIChp
+b2NiLT5raV9yd2ZsYWdzICYgUldGX0RTWU5DKSB8fAogCSAgICAgY2VwaF9vc2RtYXBfZmxhZyhv
+c2RjLT5vc2RtYXAsIENFUEhfT1NETUFQX05FQVJGVUxMKSkpIHsKIAkJZXJyID0gdmZzX2ZzeW5j
+X3JhbmdlKGZpbGUsIHBvcywgcG9zICsgd3JpdHRlbiAtIDEsIDEpOwogCQlpZiAoZXJyIDwgMCkK
+ZGlmZiAtLWdpdCBhL2ZzL2Z1c2UvZmlsZS5jIGIvZnMvZnVzZS9maWxlLmMKaW5kZXggY2FhOGQ5
+NS4uYmI0ZmIyMyAxMDA2NDQKLS0tIGEvZnMvZnVzZS9maWxlLmMKKysrIGIvZnMvZnVzZS9maWxl
+LmMKQEAgLTEyNDgsNiArMTI0OCw4IEBAIHN0YXRpYyBzc2l6ZV90IGZ1c2VfZmlsZV93cml0ZV9p
+dGVyKHN0cnVjdCBraW9jYiAqaW9jYiwgc3RydWN0IGlvdl9pdGVyICpmcm9tKQogCQl3cml0dGVu
+ICs9IHdyaXR0ZW5fYnVmZmVyZWQ7CiAJCWlvY2ItPmtpX3BvcyA9IHBvcyArIHdyaXR0ZW5fYnVm
+ZmVyZWQ7CiAJfSBlbHNlIHsKKwkJaWYgKGlvY2ItPmtpX3J3ZmxhZ3MgJiBSV0ZfRFNZTkMpCisJ
+CQlyZXR1cm4gLUVJTlZBTDsKIAkJd3JpdHRlbiA9IGZ1c2VfcGVyZm9ybV93cml0ZShmaWxlLCBt
+YXBwaW5nLCBmcm9tLCBwb3MpOwogCQlpZiAod3JpdHRlbiA+PSAwKQogCQkJaW9jYi0+a2lfcG9z
+ID0gcG9zICsgd3JpdHRlbjsKZGlmZiAtLWdpdCBhL2ZzL25mcy9maWxlLmMgYi9mcy9uZnMvZmls
+ZS5jCmluZGV4IDUyNGRkODAuLmE5ZTZjYzQgMTAwNjQ0Ci0tLSBhL2ZzL25mcy9maWxlLmMKKysr
+IGIvZnMvbmZzL2ZpbGUuYwpAQCAtNjIxLDEzICs2MjEsMTUgQEAgc3RhdGljIGNvbnN0IHN0cnVj
+dCB2bV9vcGVyYXRpb25zX3N0cnVjdCBuZnNfZmlsZV92bV9vcHMgPSB7CiAJLnJlbWFwX3BhZ2Vz
+ID0gZ2VuZXJpY19maWxlX3JlbWFwX3BhZ2VzLAogfTsKIAotc3RhdGljIGludCBuZnNfbmVlZF9z
+eW5jX3dyaXRlKHN0cnVjdCBmaWxlICpmaWxwLCBzdHJ1Y3QgaW5vZGUgKmlub2RlKQorc3RhdGlj
+IGludCBuZnNfbmVlZF9zeW5jX3dyaXRlKHN0cnVjdCBraW9jYiAqaW9jYiwgc3RydWN0IGlub2Rl
+ICppbm9kZSkKIHsKIAlzdHJ1Y3QgbmZzX29wZW5fY29udGV4dCAqY3R4OwogCi0JaWYgKElTX1NZ
+TkMoaW5vZGUpIHx8IChmaWxwLT5mX2ZsYWdzICYgT19EU1lOQykpCisJaWYgKElTX1NZTkMoaW5v
+ZGUpIHx8CisJICAgIChpb2NiLT5raV9maWxwLT5mX2ZsYWdzICYgT19EU1lOQykgfHwKKwkgICAg
+KGlvY2ItPmtpX3J3ZmxhZ3MgJiBSV0ZfRFNZTkMpKQogCQlyZXR1cm4gMTsKLQljdHggPSBuZnNf
+ZmlsZV9vcGVuX2NvbnRleHQoZmlscCk7CisJY3R4ID0gbmZzX2ZpbGVfb3Blbl9jb250ZXh0KGlv
+Y2ItPmtpX2ZpbHApOwogCWlmICh0ZXN0X2JpdChORlNfQ09OVEVYVF9FUlJPUl9XUklURSwgJmN0
+eC0+ZmxhZ3MpIHx8CiAJICAgIG5mc19jdHhfa2V5X3RvX2V4cGlyZShjdHgpKQogCQlyZXR1cm4g
+MTsKQEAgLTY3NCw3ICs2NzYsNyBAQCBzc2l6ZV90IG5mc19maWxlX3dyaXRlKHN0cnVjdCBraW9j
+YiAqaW9jYiwgc3RydWN0IGlvdl9pdGVyICpmcm9tKQogCQl3cml0dGVuID0gcmVzdWx0OwogCiAJ
+LyogUmV0dXJuIGVycm9yIHZhbHVlcyBmb3IgT19EU1lOQyBhbmQgSVNfU1lOQygpICovCi0JaWYg
+KHJlc3VsdCA+PSAwICYmIG5mc19uZWVkX3N5bmNfd3JpdGUoZmlsZSwgaW5vZGUpKSB7CisJaWYg
+KHJlc3VsdCA+PSAwICYmIG5mc19uZWVkX3N5bmNfd3JpdGUoaW9jYiwgaW5vZGUpKSB7CiAJCWlu
+dCBlcnIgPSB2ZnNfZnN5bmMoZmlsZSwgMCk7CiAJCWlmIChlcnIgPCAwKQogCQkJcmVzdWx0ID0g
+ZXJyOwpkaWZmIC0tZ2l0IGEvZnMvb2NmczIvZmlsZS5jIGIvZnMvb2NmczIvZmlsZS5jCmluZGV4
+IGQ5NmY2MGQuLjhmMjk3MTQgMTAwNjQ0Ci0tLSBhL2ZzL29jZnMyL2ZpbGUuYworKysgYi9mcy9v
+Y2ZzMi9maWxlLmMKQEAgLTIzNzUsOCArMjM3NSwxMCBAQCBvdXRfZGlvOgogCS8qIGJ1ZmZlcmVk
+IGFpbyB3b3VsZG4ndCBoYXZlIHByb3BlciBsb2NrIGNvdmVyYWdlIHRvZGF5ICovCiAJQlVHX09O
+KHJldCA9PSAtRUlPQ0JRVUVVRUQgJiYgIShmaWxlLT5mX2ZsYWdzICYgT19ESVJFQ1QpKTsKIAot
+CWlmICgoKGZpbGUtPmZfZmxhZ3MgJiBPX0RTWU5DKSAmJiAhZGlyZWN0X2lvKSB8fCBJU19TWU5D
+KGlub2RlKSB8fAotCSAgICAoKGZpbGUtPmZfZmxhZ3MgJiBPX0RJUkVDVCkgJiYgIWRpcmVjdF9p
+bykpIHsKKwlpZiAoKChmaWxlLT5mX2ZsYWdzICYgT19EU1lOQykgJiYgIWRpcmVjdF9pbykgfHwK
+KwkgICAgSVNfU1lOQyhpbm9kZSkgfHwKKwkgICAgKChmaWxlLT5mX2ZsYWdzICYgT19ESVJFQ1Qp
+ICYmICFkaXJlY3RfaW8pIHx8CisJICAgIChpb2NiLT5raV9yd2ZsYWdzICYgUldGX0RTWU5DKSkg
+ewogCQlyZXQgPSBmaWxlbWFwX2ZkYXRhd3JpdGVfcmFuZ2UoZmlsZS0+Zl9tYXBwaW5nLCAqcHBv
+cywKIAkJCQkJICAgICAgICpwcG9zICsgY291bnQgLSAxKTsKIAkJaWYgKHJldCA8IDApCmRpZmYg
+LS1naXQgYS9mcy9yZWFkX3dyaXRlLmMgYi9mcy9yZWFkX3dyaXRlLmMKaW5kZXggNTU5MmExOC4u
+OGFmODkyNSAxMDA2NDQKLS0tIGEvZnMvcmVhZF93cml0ZS5jCisrKyBiL2ZzL3JlYWRfd3JpdGUu
+YwpAQCAtODM3LDggKzgzNywxMyBAQCBzdGF0aWMgc3NpemVfdCBkb19yZWFkdl93cml0ZXYoaW50
+IHR5cGUsIHN0cnVjdCBmaWxlICpmaWxlLAogCQlyZXQgPSBkb19pdGVyX3JlYWR2X3dyaXRldihm
+aWxlLCB0eXBlLCBpb3YsIG5yX3NlZ3MsIHRvdF9sZW4sCiAJCQkJCQlwb3MsIGl0ZXJfZm4sIGZs
+YWdzKTsKIAl9IGVsc2UgewotCQlpZiAodHlwZSA9PSBSRUFEICYmIChmbGFncyAmIFJXRl9OT05C
+TE9DSykpCi0JCQlyZXR1cm4gLUVBR0FJTjsKKwkJaWYgKHR5cGUgPT0gUkVBRCkgeworCQkJaWYg
+KGZsYWdzICYgUldGX05PTkJMT0NLKQorCQkJCXJldHVybiAtRUFHQUlOOworCQl9IGVsc2Ugewor
+CQkJaWYgKGZsYWdzICYgUldGX0RTWU5DKQorCQkJCXJldHVybiAtRUlOVkFMOworCQl9CiAKIAkJ
+aWYgKGZudikKIAkJCXJldCA9IGRvX3N5bmNfcmVhZHZfd3JpdGV2KGZpbGUsIGlvdiwgbnJfc2Vn
+cywgdG90X2xlbiwKQEAgLTg4Niw3ICs4OTEsNyBAQCBzc2l6ZV90IHZmc193cml0ZXYoc3RydWN0
+IGZpbGUgKmZpbGUsIGNvbnN0IHN0cnVjdCBpb3ZlYyBfX3VzZXIgKnZlYywKIAkJcmV0dXJuIC1F
+QkFERjsKIAlpZiAoIShmaWxlLT5mX21vZGUgJiBGTU9ERV9DQU5fV1JJVEUpKQogCQlyZXR1cm4g
+LUVJTlZBTDsKLQlpZiAoZmxhZ3MgJiB+MCkKKwlpZiAoZmxhZ3MgJiB+UldGX0RTWU5DKQogCQly
+ZXR1cm4gLUVJTlZBTDsKIAogCXJldHVybiBkb19yZWFkdl93cml0ZXYoV1JJVEUsIGZpbGUsIHZl
+YywgdmxlbiwgcG9zLCBmbGFncyk7CmRpZmYgLS1naXQgYS9pbmNsdWRlL2xpbnV4L2ZzLmggYi9p
+bmNsdWRlL2xpbnV4L2ZzLmgKaW5kZXggY2Y3NTlmYS4uMDA1ZTdjOCAxMDA2NDQKLS0tIGEvaW5j
+bHVkZS9saW51eC9mcy5oCisrKyBiL2luY2x1ZGUvbGludXgvZnMuaApAQCAtMTQ3OCw3ICsxNDc4
+LDggQEAgc3RydWN0IGJsb2NrX2RldmljZV9vcGVyYXRpb25zOwogI2RlZmluZSBIQVZFX1VOTE9D
+S0VEX0lPQ1RMIDEKIAogLyogVGhlc2UgZmxhZ3MgYXJlIHVzZWQgZm9yIHRoZSByZWFkdi93cml0
+ZXYgc3lzY2FsbHMgd2l0aCBmbGFncy4gKi8KLSNkZWZpbmUgUldGX05PTkJMT0NLIDB4MDAwMDAw
+MDEKKyNkZWZpbmUgUldGX05PTkJMT0NLCTB4MDAwMDAwMDEKKyNkZWZpbmUgUldGX0RTWU5DCTB4
+MDAwMDAwMDIKIAogc3RydWN0IGlvdl9pdGVyOwogCmRpZmYgLS1naXQgYS9tbS9maWxlbWFwLmMg
+Yi9tbS9maWxlbWFwLmMKaW5kZXggZjlmZmI2Zi4uNDA4MzFhZSAxMDA2NDQKLS0tIGEvbW0vZmls
+ZW1hcC5jCisrKyBiL21tL2ZpbGVtYXAuYwpAQCAtMjY1OSw3ICsyNjU5LDkgQEAgaW50IGdlbmVy
+aWNfd3JpdGVfc3luYyhzdHJ1Y3Qga2lvY2IgKmlvY2IsIGxvZmZfdCBjb3VudCkKIAlzdHJ1Y3Qg
+ZmlsZSAqZmlsZSA9IGlvY2ItPmtpX2ZpbHA7CiAKIAlpZiAoY291bnQgPiAwICYmCi0JICAgICgo
+ZmlsZS0+Zl9mbGFncyAmIE9fRFNZTkMpIHx8IElTX1NZTkMoZmlsZS0+Zl9tYXBwaW5nLT5ob3N0
+KSkpIHsKKwkgICAgKChmaWxlLT5mX2ZsYWdzICYgT19EU1lOQykgfHwKKwkgICAgIChpb2NiLT5r
+aV9yd2ZsYWdzICYgUldGX0RTWU5DKSB8fAorCSAgICAgSVNfU1lOQyhmaWxlLT5mX21hcHBpbmct
+Pmhvc3QpKSkgewogCSAgICAJYm9vbCBmZGF0YXN5bmMgPSAhKGZpbGUtPmZfZmxhZ3MgJiBfX09f
+U1lOQyk7CiAJCXNzaXplX3QgcmV0ID0gMDsKIAotLSAKMS45LjEKCl9fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5z
+Z2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
