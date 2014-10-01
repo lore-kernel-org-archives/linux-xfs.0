@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 4BE6B7F78
-	for <xfs@oss.sgi.com>; Wed,  1 Oct 2014 06:58:26 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 19911304064
-	for <xfs@oss.sgi.com>; Wed,  1 Oct 2014 04:58:25 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id DA0777F78
+	for <xfs@oss.sgi.com>; Wed,  1 Oct 2014 07:00:08 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id C7E1A8F8049
+	for <xfs@oss.sgi.com>; Wed,  1 Oct 2014 05:00:05 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id jMP4DAtvaCuBSLYY (version=TLSv1
+	cuda.sgi.com with ESMTP id c6mSlojTCUJtQiYE (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 01 Oct 2014 04:58:24 -0700 (PDT)
-Date: Wed, 1 Oct 2014 07:58:18 -0400
+	Wed, 01 Oct 2014 05:00:04 -0700 (PDT)
+Date: Wed, 1 Oct 2014 07:59:59 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 1/2] xfs: project id inheritance is a directory only flag
-Message-ID: <20141001115817.GA53779@bfoster.bfoster>
+Subject: Re: [PATCH 2/2] xfs: only set extent size hint when asked
+Message-ID: <20141001115959.GB53779@bfoster.bfoster>
 References: <1412041565-18873-1-git-send-email-david@fromorbit.com>
-	<1412041565-18873-2-git-send-email-david@fromorbit.com>
+	<1412041565-18873-3-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1412041565-18873-2-git-send-email-david@fromorbit.com>
+In-Reply-To: <1412041565-18873-3-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,72 +33,61 @@ Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: iusty@k1024.org, xfs@oss.sgi.com
 
-On Tue, Sep 30, 2014 at 11:46:04AM +1000, Dave Chinner wrote:
+On Tue, Sep 30, 2014 at 11:46:05AM +1000, Dave Chinner wrote:
 > From: Dave Chinner <dchinner@redhat.com>
 > 
-> xfs_set_diflags() allows it to be set on non-directory inodes, and
-> this flags errors in xfs_repair. Further, inode allocation allows
-> the same directory-only flag to be inherited to non-directories.
-> Make sure directory inode flags don't appear on other types of
-> inodes.
+> Currently the extent size hint is set unconditionally in
+> xfs_ioctl_setattr(), even when the FSX_EXTSIZE flag is not set. This
+> means we can set values from uninitialised stack variables. Hence
+> only set the extent size hint from userspace when both the mask
+> falg is set and the inode has the XFS_DIFLAG_EXTSIZE flag set to
+> indicate that we should have an extent size hint set on the inode.
 > 
-> This fixes several xfstests scratch fileystem corruption reports
-> (e.g. xfs/050) now that xfstests checks scratch filesystems after
-> test completion.
-> 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> ---
+
+I'm not sure what you mean here by FSX_EXTSIZE not being checked. It
+looks like FSX_EXTSIZE is checked before and after the patch.
+
+Regardless, the fix looks Ok to me...
 
 Reviewed-by: Brian Foster <bfoster@redhat.com>
 
->  fs/xfs/xfs_inode.c | 4 ++--
->  fs/xfs/xfs_ioctl.c | 4 ++--
->  2 files changed, 4 insertions(+), 4 deletions(-)
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> ---
+>  fs/xfs/xfs_ioctl.c | 16 ++++++++++++++--
+>  1 file changed, 14 insertions(+), 2 deletions(-)
 > 
-> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-> index f07b443..8ed049d 100644
-> --- a/fs/xfs/xfs_inode.c
-> +++ b/fs/xfs/xfs_inode.c
-> @@ -769,6 +769,8 @@ xfs_ialloc(
->  					di_flags |= XFS_DIFLAG_EXTSZINHERIT;
->  					ip->i_d.di_extsize = pip->i_d.di_extsize;
->  				}
-> +				if (pip->i_d.di_flags & XFS_DIFLAG_PROJINHERIT)
-> +					di_flags |= XFS_DIFLAG_PROJINHERIT;
->  			} else if (S_ISREG(mode)) {
->  				if (pip->i_d.di_flags & XFS_DIFLAG_RTINHERIT)
->  					di_flags |= XFS_DIFLAG_REALTIME;
-> @@ -789,8 +791,6 @@ xfs_ialloc(
->  			if ((pip->i_d.di_flags & XFS_DIFLAG_NOSYMLINKS) &&
->  			    xfs_inherit_nosymlinks)
->  				di_flags |= XFS_DIFLAG_NOSYMLINKS;
-> -			if (pip->i_d.di_flags & XFS_DIFLAG_PROJINHERIT)
-> -				di_flags |= XFS_DIFLAG_PROJINHERIT;
->  			if ((pip->i_d.di_flags & XFS_DIFLAG_NODEFRAG) &&
->  			    xfs_inherit_nodefrag)
->  				di_flags |= XFS_DIFLAG_NODEFRAG;
 > diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-> index 7a6b406..87c3bd1 100644
+> index 87c3bd1..24c926b 100644
 > --- a/fs/xfs/xfs_ioctl.c
 > +++ b/fs/xfs/xfs_ioctl.c
-> @@ -968,8 +968,6 @@ xfs_set_diflags(
->  		di_flags |= XFS_DIFLAG_NOATIME;
->  	if (xflags & XFS_XFLAG_NODUMP)
->  		di_flags |= XFS_DIFLAG_NODUMP;
-> -	if (xflags & XFS_XFLAG_PROJINHERIT)
-> -		di_flags |= XFS_DIFLAG_PROJINHERIT;
->  	if (xflags & XFS_XFLAG_NODEFRAG)
->  		di_flags |= XFS_DIFLAG_NODEFRAG;
->  	if (xflags & XFS_XFLAG_FILESTREAM)
-> @@ -981,6 +979,8 @@ xfs_set_diflags(
->  			di_flags |= XFS_DIFLAG_NOSYMLINKS;
->  		if (xflags & XFS_XFLAG_EXTSZINHERIT)
->  			di_flags |= XFS_DIFLAG_EXTSZINHERIT;
-> +		if (xflags & XFS_XFLAG_PROJINHERIT)
-> +			di_flags |= XFS_DIFLAG_PROJINHERIT;
->  	} else if (S_ISREG(ip->i_d.di_mode)) {
->  		if (xflags & XFS_XFLAG_REALTIME)
->  			di_flags |= XFS_DIFLAG_REALTIME;
+> @@ -1231,13 +1231,25 @@ xfs_ioctl_setattr(
+>  
+>  	}
+>  
+> -	if (mask & FSX_EXTSIZE)
+> -		ip->i_d.di_extsize = fa->fsx_extsize >> mp->m_sb.sb_blocklog;
+>  	if (mask & FSX_XFLAGS) {
+>  		xfs_set_diflags(ip, fa->fsx_xflags);
+>  		xfs_diflags_to_linux(ip);
+>  	}
+>  
+> +	/*
+> +	 * Only set the extent size hint if we've already determined that the
+> +	 * extent size hint should be set on the inode. If no extent size flags
+> +	 * are set on the inode then unconditionally clear the extent size hint.
+> +	 */
+> +	if (mask & FSX_EXTSIZE) {
+> +		int	extsize = 0;
+> +
+> +		if (ip->i_d.di_flags &
+> +				(XFS_DIFLAG_EXTSIZE | XFS_DIFLAG_EXTSZINHERIT))
+> +			extsize = fa->fsx_extsize >> mp->m_sb.sb_blocklog;
+> +		ip->i_d.di_extsize = extsize;
+> +	}
+> +
+>  	xfs_trans_ichgtime(tp, ip, XFS_ICHGTIME_CHG);
+>  	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
+>  
 > -- 
 > 2.0.0
 > 
