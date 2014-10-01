@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id DEB517F88
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 9ACEB7F84
 	for <xfs@oss.sgi.com>; Wed,  1 Oct 2014 14:31:48 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 84F0BAC015
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 863958F804C
 	for <xfs@oss.sgi.com>; Wed,  1 Oct 2014 12:31:48 -0700 (PDT)
 Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id 7pIdOnDgPGYmB2GN (version=TLSv1 cipher=AES256-SHA
+	with ESMTP id PDnB68gePPjXfkld (version=TLSv1 cipher=AES256-SHA
 	bits=256 verify=NO) for <xfs@oss.sgi.com>;
 	Wed, 01 Oct 2014 12:31:47 -0700 (PDT)
 From: Jan Kara <jack@suse.cz>
-Subject: [PATCH 08/12] ext4: Convert to private i_dquot field
-Date: Wed,  1 Oct 2014 21:31:30 +0200
-Message-Id: <1412191894-9113-9-git-send-email-jack@suse.cz>
+Subject: [PATCH 12/12] vfs: Remove i_dquot field from inode
+Date: Wed,  1 Oct 2014 21:31:34 +0200
+Message-Id: <1412191894-9113-13-git-send-email-jack@suse.cz>
 In-Reply-To: <1412191894-9113-1-git-send-email-jack@suse.cz>
 References: <1412191894-9113-1-git-send-email-jack@suse.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -31,65 +31,71 @@ Sender: xfs-bounces@oss.sgi.com
 To: linux-fsdevel@vger.kernel.org
 Cc: Dave Kleikamp <shaggy@kernel.org>, jfs-discussion@lists.sourceforge.net, tytso@mit.edu, Jeff Mahoney <jeffm@suse.de>, Mark Fasheh <mfasheh@suse.com>, reiserfs-devel@vger.kernel.org, xfs@oss.sgi.com, cluster-devel@redhat.com, Joel Becker <jlbec@evilplan.org>, Jan Kara <jack@suse.cz>, linux-ext4@vger.kernel.org, Steven Whitehouse <swhiteho@redhat.com>, ocfs2-devel@oss.oracle.com
 
-CC: linux-ext4@vger.kernel.org
-CC: "Theodore Ts'o" <tytso@mit.edu>
+All filesystems using VFS quotas are now converted to use their private
+i_dquot fields. Remove the i_dquot field from generic inode structure.
+
 Signed-off-by: Jan Kara <jack@suse.cz>
 ---
- fs/ext4/ext4.h  |  4 ++++
- fs/ext4/super.c | 10 ++++++++++
- 2 files changed, 14 insertions(+)
+ fs/inode.c         |  3 ---
+ fs/super.c         | 10 ----------
+ include/linux/fs.h |  3 ---
+ 3 files changed, 16 deletions(-)
 
-diff --git a/fs/ext4/ext4.h b/fs/ext4/ext4.h
-index b0c225cdb52c..571a9f409e94 100644
---- a/fs/ext4/ext4.h
-+++ b/fs/ext4/ext4.h
-@@ -940,6 +940,10 @@ struct ext4_inode_info {
- 	tid_t i_sync_tid;
- 	tid_t i_datasync_tid;
+diff --git a/fs/inode.c b/fs/inode.c
+index 26753ba7b6d6..2ed95f7caa4f 100644
+--- a/fs/inode.c
++++ b/fs/inode.c
+@@ -143,9 +143,6 @@ int inode_init_always(struct super_block *sb, struct inode *inode)
+ 	inode->i_blocks = 0;
+ 	inode->i_bytes = 0;
+ 	inode->i_generation = 0;
+-#ifdef CONFIG_QUOTA
+-	memset(&inode->i_dquot, 0, sizeof(inode->i_dquot));
+-#endif
+ 	inode->i_pipe = NULL;
+ 	inode->i_bdev = NULL;
+ 	inode->i_cdev = NULL;
+diff --git a/fs/super.c b/fs/super.c
+index 3e70f2e22ea3..b9a214d2fe98 100644
+--- a/fs/super.c
++++ b/fs/super.c
+@@ -215,22 +215,12 @@ static struct super_block *alloc_super(struct file_system_type *type, int flags)
+ 	atomic_set(&s->s_active, 1);
+ 	mutex_init(&s->s_vfs_rename_mutex);
+ 	lockdep_set_class(&s->s_vfs_rename_mutex, &type->s_vfs_rename_key);
+-	/*
+-	 * For now MAXQUOTAS check in do_quotactl() will limit quota type
+-	 * appropriately. When each fs sets allowed_types, we can remove the
+-	 * line below
+-	 */
+-	s->s_dquot.allowed_types = (1 << USRQUOTA) | (1 << GRPQUOTA) |
+-				   (1 << PRJQUOTA);
+ 	mutex_init(&s->s_dquot.dqio_mutex);
+ 	mutex_init(&s->s_dquot.dqonoff_mutex);
+ 	s->s_maxbytes = MAX_NON_LFS;
+ 	s->s_op = &default_op;
+ 	s->s_time_gran = 1000000000;
+ 	s->cleancache_poolid = -1;
+-#ifdef CONFIG_QUOTA
+-	s->s_inode_fields[IF_DQUOTS] = offsetof(struct inode, i_dquot);
+-#endif
  
-+#ifdef CONFIG_QUOTA
-+	struct dquot *i_dquot[MAXQUOTAS];
-+#endif
-+
- 	/* Precomputed uuid+inum+igen checksum for seeding inode checksums */
- 	__u32 i_csum_seed;
- };
-diff --git a/fs/ext4/super.c b/fs/ext4/super.c
-index 0b28b36e7915..a4cccf9fba60 100644
---- a/fs/ext4/super.c
-+++ b/fs/ext4/super.c
-@@ -895,6 +895,7 @@ static struct inode *ext4_alloc_inode(struct super_block *sb)
- 	spin_lock_init(&(ei->i_block_reservation_lock));
- #ifdef CONFIG_QUOTA
- 	ei->i_reserved_quota = 0;
-+	memset(&ei->i_dquot, 0, sizeof(ei->i_dquot));
- #endif
- 	ei->jinode = NULL;
- 	INIT_LIST_HEAD(&ei->i_rsv_conversion_list);
-@@ -1143,6 +1144,13 @@ static const struct super_operations ext4_nojournal_sops = {
- 	.bdev_try_to_free_page = bdev_try_to_free_page,
- };
- 
-+static const int ext4_inode_fields[IF_FIELD_NR] = {
-+#ifdef CONFIG_QUOTA
-+	[IF_DQUOTS] = offsetof(struct ext4_inode_info, i_dquot) -
-+		      offsetof(struct ext4_inode_info, vfs_inode),
-+#endif
-+};
-+
- static const struct export_operations ext4_export_ops = {
- 	.fh_to_dentry = ext4_fh_to_dentry,
- 	.fh_to_parent = ext4_fh_to_parent,
-@@ -3916,7 +3924,9 @@ static int ext4_fill_super(struct super_block *sb, void *data, int silent)
- 		sb->s_qcop = &ext4_qctl_sysfile_operations;
- 	else
- 		sb->s_qcop = &ext4_qctl_operations;
-+	sb_dqopt(sb)->allowed_types = (1 << USRQUOTA) | (1 << GRPQUOTA);
- #endif
-+	sb_init_inode_fields(sb, ext4_inode_fields);
- 	memcpy(sb->s_uuid, es->s_uuid, sizeof(es->s_uuid));
- 
- 	INIT_LIST_HEAD(&sbi->s_orphan); /* unlinked but open files */
+ 	s->s_shrink.seeks = DEFAULT_SEEKS;
+ 	s->s_shrink.scan_objects = super_cache_scan;
+diff --git a/include/linux/fs.h b/include/linux/fs.h
+index d49434866da5..fb669113c37c 100644
+--- a/include/linux/fs.h
++++ b/include/linux/fs.h
+@@ -595,9 +595,6 @@ struct inode {
+ 	const struct file_operations	*i_fop;	/* former ->i_op->default_file_ops */
+ 	struct file_lock	*i_flock;
+ 	struct address_space	i_data;
+-#ifdef CONFIG_QUOTA
+-	struct dquot		*i_dquot[MAXQUOTAS];
+-#endif
+ 	struct list_head	i_devices;
+ 	union {
+ 		struct pipe_inode_info	*i_pipe;
 -- 
 1.8.1.4
 
