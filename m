@@ -1,22 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 5D38C7F6F
-	for <xfs@oss.sgi.com>; Wed,  1 Oct 2014 16:18:16 -0500 (CDT)
-Received: from dhcp-128-162-232-226.americas.sgi.com
-	(dhcp-128-162-232-226.americas.sgi.com [128.162.232.226])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id E0509AC001
-	for <xfs@oss.sgi.com>; Wed,  1 Oct 2014 14:18:15 -0700 (PDT)
-Received: from dhcp-128-162-232-226.americas.sgi.com (localhost [127.0.0.1])
-	by dhcp-128-162-232-226.americas.sgi.com (8.14.5/8.14.5) with ESMTP id
-	s91LIIGS003059
-	for <xfs@oss.sgi.com>; Wed, 1 Oct 2014 16:18:18 -0500 (CDT)
-	(envelope-from tinguely@dhcp-128-162-232-226.americas.sgi.com)
-Message-Id: <20141001191803.153063401@sgi.com>
-Date: Wed, 01 Oct 2014 16:18:02 -0500
-From: Mark Tinguely <tinguely@sgi.com>
-Subject: [PATCH] xfs: fix the xfs_iflush_done callback search
-Content-Disposition: inline;
-	filename=xfs-fix-xfs_iflush_done-callback-search.patch
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 763B37F6F
+	for <xfs@oss.sgi.com>; Wed,  1 Oct 2014 17:23:46 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 65333304048
+	for <xfs@oss.sgi.com>; Wed,  1 Oct 2014 15:23:43 -0700 (PDT)
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	UUz1242yir2zhvpp for <xfs@oss.sgi.com>;
+	Wed, 01 Oct 2014 15:23:41 -0700 (PDT)
+Date: Thu, 2 Oct 2014 08:23:27 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 1/3] xfs: add RWF_NONBLOCK support
+Message-ID: <20141001222327.GT4758@dastard>
+References: <1412197494-7655-1-git-send-email-hch@lst.de>
+	<1412197494-7655-2-git-send-email-hch@lst.de>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <1412197494-7655-2-git-send-email-hch@lst.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,47 +26,53 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-fsdevel@vger.kernel.org, Milosz Tanski <milosz@adfin.com>, xfs@oss.sgi.com
 
-Commit "xfs: remove all the inodes on a buffer from the AIL in bulk"
-made the xfs inode flush callback more efficient by combining all
-the inode writes on the buffer and the deletions of the inode log
-item from AIL.
+On Wed, Oct 01, 2014 at 11:04:52PM +0200, Christoph Hellwig wrote:
+> Add support for non-blocking reads.  The guts are handled by the generic
+> code, the only addition is a non-blocking variant of xfs_rw_ilock.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  fs/xfs/xfs_file.c | 30 +++++++++++++++++++++++++-----
+>  1 file changed, 25 insertions(+), 5 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+> index cf61271..f9efffc 100644
+> --- a/fs/xfs/xfs_file.c
+> +++ b/fs/xfs/xfs_file.c
+> @@ -61,6 +61,23 @@ xfs_rw_ilock(
+>  	xfs_ilock(ip, type);
+>  }
+>  
+> +static inline bool
+> +xfs_rw_ilock_nowait(
+> +	struct xfs_inode	*ip,
+> +	int			type)
+> +{
+> +	if (type & XFS_IOLOCK_EXCL) {
+> +		if (!mutex_trylock(&VFS_I(ip)->i_mutex))
+> +			return false;
+> +	}
+> +	if (!xfs_ilock_nowait(ip, type)) {
+> +		mutex_unlock(&VFS_I(ip)->i_mutex);
 
-The initial loop in this patch should be looping through all
-the log items on the buffer to see which items have
-xfs_iflush_done as their callback function. But currently,
-only the log item passed to the function has its callback
-compared to xfs_iflush_done. If the log item pointer passed to
-the function does have the xfs_iflush_done callback function,
-then all the log items on the buffer are removed from the
-li_bio_list on the buffer b_fspriv and could be removed from
-the AIL eventhough they may have not been written yet.
+Shouldn't that be:
 
-Signed-off-by: Mark Tinguely <tinguely@sgi.com>
----
- fs/xfs/xfs_inode_item.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+		if (type & XFS_IOLOCK_EXCL) {
+			mutex_unlock(&VFS_I(ip)->i_mutex);
 
-Index: b/fs/xfs/xfs_inode_item.c
-===================================================================
---- a/fs/xfs/xfs_inode_item.c
-+++ b/fs/xfs/xfs_inode_item.c
-@@ -615,7 +615,7 @@ xfs_iflush_done(
- 	blip = bp->b_fspriv;
- 	prev = NULL;
- 	while (blip != NULL) {
--		if (lip->li_cb != xfs_iflush_done) {
-+		if (blip->li_cb != xfs_iflush_done) {
- 			prev = blip;
- 			blip = blip->li_bio_list;
- 			continue;
+Cheers,
 
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
