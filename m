@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id A6E3E7F87
-	for <xfs@oss.sgi.com>; Wed,  1 Oct 2014 10:55:30 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 85D0930406A
-	for <xfs@oss.sgi.com>; Wed,  1 Oct 2014 08:55:30 -0700 (PDT)
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.9])
-	by cuda.sgi.com with ESMTP id BZ5TAEgim7w193Z3 (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 01 Oct 2014 08:55:29 -0700 (PDT)
-Date: Wed, 1 Oct 2014 08:55:29 -0700
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 352C07F87
+	for <xfs@oss.sgi.com>; Wed,  1 Oct 2014 10:56:07 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 2267A8F8037
+	for <xfs@oss.sgi.com>; Wed,  1 Oct 2014 08:56:07 -0700 (PDT)
+Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
+	ESMTP id 7XSpSmnlL5f3HO66 (version=TLSv1 cipher=AES256-SHA
+	bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 01 Oct 2014 08:56:05 -0700 (PDT)
+Date: Wed, 1 Oct 2014 08:56:04 -0700
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 1/2] xfs: don't send null bp to xfs_trans_brelse()
-Message-ID: <20141001155529.GA787@infradead.org>
+Subject: Re: [PATCH 2/2] xfs: fix crc field handling in xfs_sb_to/from_disk
+Message-ID: <20141001155604.GB787@infradead.org>
 References: <542C1B36.5080804@redhat.com>
- <542C1C2B.5020803@sandeen.net>
+ <542C1CB8.103@sandeen.net>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <542C1C2B.5020803@sandeen.net>
+In-Reply-To: <542C1CB8.103@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,18 +33,7 @@ Sender: xfs-bounces@oss.sgi.com
 To: Eric Sandeen <sandeen@sandeen.net>
 Cc: xfs-oss <xfs@oss.sgi.com>
 
-On Wed, Oct 01, 2014 at 10:22:19AM -0500, Eric Sandeen wrote:
-> In this case, if bp is NULL, error is set, and we send a
-> NULL bp to xfs_trans_brelse, which will try to dereference it.
-> 
-> Test whether we actually have a buffer before we try to
-> free it.
-> 
-> Coverity spotted this.
-> 
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-
-Looks good,
+Looks good (although it will conflict with Dave's sb_to_disk rework..)
 
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 
