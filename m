@@ -1,20 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id EAF717F5A
-	for <xfs@oss.sgi.com>; Wed,  1 Oct 2014 14:31:46 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id D9D3D30406B
-	for <xfs@oss.sgi.com>; Wed,  1 Oct 2014 12:31:46 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id B89EF7F76
+	for <xfs@oss.sgi.com>; Wed,  1 Oct 2014 14:31:47 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 9EBF38F8054
+	for <xfs@oss.sgi.com>; Wed,  1 Oct 2014 12:31:47 -0700 (PDT)
 Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id sfWpnbVzCzzKcTaF (version=TLSv1 cipher=AES256-SHA
+	with ESMTP id 4q0IMDds8NXLSD7I (version=TLSv1 cipher=AES256-SHA
 	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 01 Oct 2014 12:31:45 -0700 (PDT)
+	Wed, 01 Oct 2014 12:31:43 -0700 (PDT)
 From: Jan Kara <jack@suse.cz>
-Subject: [PATCH 04/12] fs: Generic infrastructure for optional inode fields
-Date: Wed,  1 Oct 2014 21:31:26 +0200
-Message-Id: <1412191894-9113-5-git-send-email-jack@suse.cz>
-In-Reply-To: <1412191894-9113-1-git-send-email-jack@suse.cz>
-References: <1412191894-9113-1-git-send-email-jack@suse.cz>
+Subject: [PATCH 0/12 RFC] Moving i_dquot out of struct inode
+Date: Wed,  1 Oct 2014 21:31:22 +0200
+Message-Id: <1412191894-9113-1-git-send-email-jack@suse.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,78 +29,27 @@ Sender: xfs-bounces@oss.sgi.com
 To: linux-fsdevel@vger.kernel.org
 Cc: Dave Kleikamp <shaggy@kernel.org>, jfs-discussion@lists.sourceforge.net, tytso@mit.edu, Jeff Mahoney <jeffm@suse.de>, Mark Fasheh <mfasheh@suse.com>, reiserfs-devel@vger.kernel.org, xfs@oss.sgi.com, cluster-devel@redhat.com, Joel Becker <jlbec@evilplan.org>, Jan Kara <jack@suse.cz>, linux-ext4@vger.kernel.org, Steven Whitehouse <swhiteho@redhat.com>, ocfs2-devel@oss.oracle.com
 
-There are parts of struct inode which are used only by a few filesystems
-(e.g. i_dquot pointers, i_mapping->private_list, ...). Thus all the
-other filesystems are just wasting memory with these fields. On the
-other hand it isn't simple to just move these fields to filesystem
-specific part of inode because there is generic code which needs to peek
-into the fields and it is cumbersome to provide helpers into which fs
-has to stuff the field it is storing elsewhere.
+  Hello,
 
-We create a simple infrastructure which allows for optional inode fields
-stored in the fs-specific part of the inode. Accessing these fields has
-a slightly worse performance as we have to lookup their offset in the
-offset table stored in the superblock but in most cases this is
-acceptable. Notably, this offset-table mechanism is faster than having
-fs-specific hook functions which would need to be called to provide
-pointers to desired fields.
+  this patch set moves i_dquot array from struct inode into filesystem private
+part of the inode. Thus filesystems which don't need it save 2 pointers in
+their inodes (would be 3 after we add project quota support into generic
+quota).
 
-Signed-off-by: Jan Kara <jack@suse.cz>
----
- include/linux/fs.h | 24 ++++++++++++++++++++++++
- 1 file changed, 24 insertions(+)
+I have patches to move inode->i_data.private_list into filesystem private part
+of the inode which is going to save another 2 pointers using the same
+mechanism. However I didn't want to mix those in.
 
-diff --git a/include/linux/fs.h b/include/linux/fs.h
-index 94187721ad41..977f8fb6ca88 100644
---- a/include/linux/fs.h
-+++ b/include/linux/fs.h
-@@ -615,6 +615,11 @@ struct inode {
- 	void			*i_private; /* fs or device private pointer */
- };
- 
-+/* Optional inode fields (stored in filesystems inode if the fs needs them) */
-+enum {
-+	IF_FIELD_NR	/* Number of optional inode fields */
-+};
-+
- static inline int inode_unhashed(struct inode *inode)
- {
- 	return hlist_unhashed(&inode->i_hash);
-@@ -1236,6 +1241,11 @@ struct super_block {
- 	void 			*s_fs_info;	/* Filesystem private info */
- 	unsigned int		s_max_links;
- 	fmode_t			s_mode;
-+	/*
-+	 * We could have here just a pointer to the offsets array but this
-+	 * way we save one dereference when looking up field offsets
-+	 */
-+	int			s_inode_fields[IF_FIELD_NR];
- 
- 	/* Granularity of c/m/atime in ns.
- 	   Cannot be worse than a second */
-@@ -1286,6 +1296,20 @@ struct super_block {
- 	struct rcu_head		rcu;
- };
- 
-+static inline void *inode_field(const struct inode *inode, int field)
-+{
-+	int offset = inode->i_sb->s_inode_fields[field];
-+
-+	if (!offset)	/* Field not present? */
-+		return NULL;
-+	return ((char *)inode) + offset;
-+}
-+
-+static inline void sb_init_inode_fields(struct super_block *sb, int *fields)
-+{
-+	memcpy(sb->s_inode_fields, fields, sizeof(int) * IF_FIELD_NR);
-+}
-+
- extern struct timespec current_fs_time(struct super_block *sb);
- 
- /*
--- 
-1.8.1.4
+The patch series also contains a change to quotactl so that each filesystem
+can set quota types it supports. This is in the end unrelated change
+(originally it was necessary for i_dquot moving but in the end I changed
+things so that it's not anymore). I can move that into a separate series
+but I was somewhat reluctant to do that since that would mean another 6
+one-line patches to the same files we are changing here...
+
+Comments are welcome.
+
+								Honza
 
 _______________________________________________
 xfs mailing list
