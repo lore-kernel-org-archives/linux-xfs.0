@@ -1,30 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id B8F4F7F5A
-	for <xfs@oss.sgi.com>; Wed,  1 Oct 2014 10:18:20 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id A79ED8F8037
-	for <xfs@oss.sgi.com>; Wed,  1 Oct 2014 08:18:17 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id YIQqBfjaAV0yQwHE (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 01 Oct 2014 08:18:16 -0700 (PDT)
-Received: from int-mx13.intmail.prod.int.phx2.redhat.com
-	(int-mx13.intmail.prod.int.phx2.redhat.com [10.5.11.26])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id s91FIEGs031045
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256
-	verify=FAIL) for <xfs@oss.sgi.com>; Wed, 1 Oct 2014 11:18:15 -0400
-Received: from liberator.sandeen.net (ovpn01.gateway.prod.ext.phx2.redhat.com
-	[10.5.9.1])
-	by int-mx13.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id s91FIDJa026451
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES128-SHA bits=128 verify=NO)
-	for <xfs@oss.sgi.com>; Wed, 1 Oct 2014 11:18:14 -0400
-Message-ID: <542C1B36.5080804@redhat.com>
-Date: Wed, 01 Oct 2014 10:18:14 -0500
-From: Eric Sandeen <sandeen@redhat.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id CA31B7F5A
+	for <xfs@oss.sgi.com>; Wed,  1 Oct 2014 10:22:23 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 61E52AC009
+	for <xfs@oss.sgi.com>; Wed,  1 Oct 2014 08:22:19 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id TzQaPn3Ryn66R7Fu for <xfs@oss.sgi.com>;
+	Wed, 01 Oct 2014 08:22:18 -0700 (PDT)
+Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.4])
+	(using TLSv1.2 with cipher DHE-RSA-AES128-SHA (128/128 bits))
+	(No client certificate requested)
+	by sandeen.net (Postfix) with ESMTPSA id 389B265B63AA
+	for <xfs@oss.sgi.com>; Wed,  1 Oct 2014 10:22:18 -0500 (CDT)
+Message-ID: <542C1C2B.5020803@sandeen.net>
+Date: Wed, 01 Oct 2014 10:22:19 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: [PATCH 0/2 RESEND] xfs: small bugfixes
+Subject: [PATCH 1/2] xfs: don't send null bp to xfs_trans_brelse()
+References: <542C1B36.5080804@redhat.com>
+In-Reply-To: <542C1B36.5080804@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -39,12 +34,31 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs-oss <xfs@oss.sgi.com>
 
-These are 2 patches which were already sent for kernel
-& userspace; they made it to userspace, but I don't see
-them in for-next, so resending.
+In this case, if bp is NULL, error is set, and we send a
+NULL bp to xfs_trans_brelse, which will try to dereference it.
 
-Thanks,
--Eric
+Test whether we actually have a buffer before we try to
+free it.
+
+Coverity spotted this.
+
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
+
+diff --git a/fs/xfs/libxfs/xfs_da_btree.c b/fs/xfs/libxfs/xfs_da_btree.c
+index 2c42ae2..fd82753 100644
+--- a/fs/xfs/libxfs/xfs_da_btree.c
++++ b/fs/xfs/libxfs/xfs_da_btree.c
+@@ -2563,7 +2563,8 @@ xfs_da_get_buf(
+ 				    mapp, nmap, 0);
+ 	error = bp ? bp->b_error : -EIO;
+ 	if (error) {
+-		xfs_trans_brelse(trans, bp);
++		if (bp)
++			xfs_trans_brelse(trans, bp);
+ 		goto out_free;
+ 	}
+ 
 
 _______________________________________________
 xfs mailing list
