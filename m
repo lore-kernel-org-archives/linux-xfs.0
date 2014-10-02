@@ -1,22 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id B34A17F6B
-	for <xfs@oss.sgi.com>; Wed,  1 Oct 2014 18:26:14 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 235237F6F
+	for <xfs@oss.sgi.com>; Wed,  1 Oct 2014 21:06:29 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 809628F8037
-	for <xfs@oss.sgi.com>; Wed,  1 Oct 2014 16:26:14 -0700 (PDT)
-Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
-	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	Eu1konBVhNonQaCy for <xfs@oss.sgi.com>;
-	Wed, 01 Oct 2014 16:26:12 -0700 (PDT)
-Date: Thu, 2 Oct 2014 09:25:59 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs: check for null dquot in xfs_quota_calc_throttle()
-Message-ID: <20141001232559.GG10298@dastard>
-References: <542C28E5.506@redhat.com>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id C1A34AC001
+	for <xfs@oss.sgi.com>; Wed,  1 Oct 2014 19:06:25 -0700 (PDT)
+Received: from imap.thunk.org (imap.thunk.org [74.207.234.97]) by cuda.sgi.com
+	with ESMTP id aPIDD8NLGOOhxVBy (version=TLSv1 cipher=AES128-SHA
+	bits=128 verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 01 Oct 2014 19:06:23 -0700 (PDT)
+Date: Wed, 1 Oct 2014 22:06:19 -0400
+From: Theodore Ts'o <tytso@mit.edu>
+Subject: Re: [PATCH 1/2] vfs: Fix data corruption when blocksize < pagesize
+	for mmaped data
+Message-ID: <20141002020619.GA16766@thunk.org>
+References: <1411648916-16773-1-git-send-email-jack@suse.cz>
+	<1411648916-16773-2-git-send-email-jack@suse.cz>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <542C28E5.506@redhat.com>
+In-Reply-To: <1411648916-16773-2-git-send-email-jack@suse.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,35 +31,41 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: Jan Kara <jack@suse.cz>
+Cc: linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, xfs@oss.sgi.com
 
-On Wed, Oct 01, 2014 at 11:16:37AM -0500, Eric Sandeen wrote:
-> Coverity spotted this.
+On Thu, Sep 25, 2014 at 02:41:55PM +0200, Jan Kara wrote:
+> ->page_mkwrite() is used by filesystems to allocate blocks under a page
+> which is becoming writeably mmapped in some process' address space. This
+> allows a filesystem to return a page fault if there is not enough space
+> available, user exceeds quota or similar problem happens, rather than
+> silently discarding data later when writepage is called.
 > 
-> Granted, we *just* checked xfs_inod_dquot() in the caller (by calling
-> xfs_quota_need_throttle), but to be honest I don't know if this can
-> race, and this is the only place we don't check the return value -
-> and the check seems cheap and future-proof.
+> However VFS fails to call ->page_mkwrite() in all the cases where
+> filesystems need it when blocksize < pagesize. For example when
+> blocksize = 1024, pagesize = 4096 the following is problematic:
+>   ftruncate(fd, 0);
+>   pwrite(fd, buf, 1024, 0);
+>   map = mmap(NULL, 1024, PROT_WRITE, MAP_SHARED, fd, 0);
+>   map[0] = 'a';       ----> page_mkwrite() for index 0 is called
+>   ftruncate(fd, 10000); /* or even pwrite(fd, buf, 1, 10000) */
+>   mremap(map, 1024, 10000, 0);
+>   map[4095] = 'a';    ----> no page_mkwrite() called
 > 
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-> ---
+> At the moment ->page_mkwrite() is called, filesystem can allocate only
+> one block for the page because i_size == 1024. Otherwise it would create
+> blocks beyond i_size which is generally undesirable. But later at
+> ->writepage() time, we also need to store data at offset 4095 but we
+> don't have block allocated for it.
 > 
-> Sorry for the handwavy commit log, if it's obvious that it can
-> race, feel free to fix the description. ;)
+> This patch introduces a helper function filesystems can use to have
+> ->page_mkwrite() called at all the necessary moments.
+> 
+> Signed-off-by: Jan Kara <jack@suse.cz>
 
-Description changed simply to say:
+Applied to the ext4 tree, thanks.
 
-... this is the only place we don't check the return value, but the
-check is cheap and future-proof, so add it.
-
-And so:
-
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
-
--- 
-Dave Chinner
-david@fromorbit.com
+					- Ted
 
 _______________________________________________
 xfs mailing list
