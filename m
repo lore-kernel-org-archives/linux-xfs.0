@@ -1,11 +1,12 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id BA7317F37
-	for <xfs@oss.sgi.com>; Fri,  3 Oct 2014 17:01:21 -0500 (CDT)
-Date: Fri, 3 Oct 2014 17:01:18 -0500
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 077547F37
+	for <xfs@oss.sgi.com>; Fri,  3 Oct 2014 17:03:23 -0500 (CDT)
+Date: Fri, 3 Oct 2014 17:03:19 -0500
 From: Ben Myers <bpm@sgi.com>
-Subject: [PATCH 11/16] xfs: add xfs_nameops for utf8 and utf8+casefold.
-Message-ID: <20141003220118.GJ1865@sgi.com>
+Subject: [PATCH 12/16] xfs: apply utf-8 normalization rules to user
+	extended attribute names
+Message-ID: <20141003220319.GL1865@sgi.com>
 References: <20141003214758.GY1865@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
@@ -27,322 +28,310 @@ Cc: olaf@sgi.com, xfs@oss.sgi.com
 
 From: Olaf Weber <olaf@sgi.com>
 
-The xfs_utf8_nameops use the nfkdi normalization when comparing filenames,
-and are installed if the utf8bit is set in the super block.
-
-The xfs_utf8_ci_nameops use the nfkdicf normalization when comparing
-filenames, and are installed if both the utf8bit and the borgbit are set
-in the superblock.
-
-Normalized filenames are not stored on disk. Normalization will fail if a
-filename is not valid UTF-8, in which case the filename is treated as an
-opaque blob.
+Apply the same rules for UTF-8 normalization to the names of user-defined
+extended attributes. System attributes are excluded because they are not
+user-visible in the first place, and the kernel is expected to know what
+it is doing when naming them.
 
 Signed-off-by: Olaf Weber <olaf@sgi.com>
-
 ---
-[v2: updated to use utf8norm.ko module;
-     compiled conditionally on CONFIG_XFS_UTF8=y;
-     utf8version is now a function;
-     move xfs_utf8.[ch] into libxfs. --bpm]
-[v3: pass utf8version from the superblock through xfs_nameops
-     instead of the max version of the normalization module. --bpm]
----
- fs/xfs/Kconfig           |   9 ++
- fs/xfs/Makefile          |   2 +
- fs/xfs/libxfs/xfs_dir2.c |   4 +-
- fs/xfs/libxfs/xfs_utf8.c | 208 +++++++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/libxfs/xfs_utf8.h |   3 +
- fs/xfs/xfs_iops.c        |   2 +-
- 6 files changed, 225 insertions(+), 3 deletions(-)
+ fs/xfs/libxfs/xfs_attr.c      | 56 ++++++++++++++++++++++++++++++++++++-------
+ fs/xfs/libxfs/xfs_attr_leaf.c | 11 +++++++--
+ fs/xfs/libxfs/xfs_utf8.c      |  7 ++++++
+ fs/xfs/xfs_attr_list.c        | 12 +++++++++-
+ 4 files changed, 75 insertions(+), 11 deletions(-)
 
-diff --git a/fs/xfs/Kconfig b/fs/xfs/Kconfig
-index 5d47b4d..1e8a463 100644
---- a/fs/xfs/Kconfig
-+++ b/fs/xfs/Kconfig
-@@ -95,3 +95,12 @@ config XFS_DEBUG
- 	  not useful unless you are debugging a particular problem.
+diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
+index 353fb42..68e7ce3 100644
+--- a/fs/xfs/libxfs/xfs_attr.c
++++ b/fs/xfs/libxfs/xfs_attr.c
+@@ -83,12 +83,14 @@ xfs_attr_args_init(
+ 	const unsigned char	*name,
+ 	int			flags)
+ {
++	struct xfs_mount	*mp = dp->i_mount;
++	int			error;
  
- 	  Say N unless you are an XFS developer, or you play one on TV.
+ 	if (!name)
+ 		return -EINVAL;
+ 
+ 	memset(args, 0, sizeof(*args));
+-	args->geo = dp->i_mount->m_attr_geo;
++	args->geo = mp->m_attr_geo;
+ 	args->whichfork = XFS_ATTR_FORK;
+ 	args->dp = dp;
+ 	args->flags = flags;
+@@ -97,7 +99,11 @@ xfs_attr_args_init(
+ 	if (args->namelen >= MAXNAMELEN)
+ 		return -EFAULT;		/* match IRIX behaviour */
+ 
+-	args->hashval = xfs_da_hashname(args->name, args->namelen);
++	if (!xfs_sb_version_hasutf8(&mp->m_sb))
++		args->hashval = xfs_da_hashname(args->name, args->namelen);
++	else if ((error = mp->m_dirnameops->normhash(args)) != 0)
++		return error;
 +
-+config XFS_UTF8
-+	bool "XFS UTF-8 support"
-+	depends on XFS_FS
-+	select CONFIG_UTF8_NORMALIZATION
-+	help
-+	  Say Y here to enable utf8 normalization support in XFS.  You
-+	  will be able to mount and use filesystems created with the
-+	  utf8 mkfs.xfs option.
-diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
-index d617999..192aaca 100644
---- a/fs/xfs/Makefile
-+++ b/fs/xfs/Makefile
-@@ -114,6 +114,8 @@ xfs-$(CONFIG_XFS_QUOTA)		+= xfs_dquot.o \
- 				   xfs_qm.o \
- 				   xfs_quotaops.o
- 
-+xfs-$(CONFIG_XFS_UTF8)		+= libxfs/xfs_utf8.o
-+
- # xfs_rtbitmap is shared with libxfs
- xfs-$(CONFIG_XFS_RT)		+= xfs_rtalloc.o
- 
-diff --git a/fs/xfs/libxfs/xfs_dir2.c b/fs/xfs/libxfs/xfs_dir2.c
-index 2c89211..9cfbd6b 100644
---- a/fs/xfs/libxfs/xfs_dir2.c
-+++ b/fs/xfs/libxfs/xfs_dir2.c
-@@ -165,9 +165,9 @@ xfs_da_mount(
- 		/* XXX these are replaced in the next patch need
- 		   to do some kind of reordering here */
- 		if (xfs_sb_version_hasasciici(&mp->m_sb))
--			mp->m_dirnameops = &xfs_ascii_ci_nameops;
-+			mp->m_dirnameops = &xfs_utf8_ci_nameops;
- 		else
--			mp->m_dirnameops = &xfs_default_nameops;
-+			mp->m_dirnameops = &xfs_utf8_nameops;
- #else
- 		xfs_warn(mp,
- "Recompile XFS with CONFIG_XFS_UTF8 to mount this filesystem");
-diff --git a/fs/xfs/libxfs/xfs_utf8.c b/fs/xfs/libxfs/xfs_utf8.c
-index 7e63111..1e75299 100644
---- a/fs/xfs/libxfs/xfs_utf8.c
-+++ b/fs/xfs/libxfs/xfs_utf8.c
-@@ -68,3 +68,211 @@ xfs_utf8_version_ok(
- 
  	return 0;
  }
-+
-+/*
-+ * xfs nameops using nfkdi
-+ */
-+
-+static xfs_dahash_t
-+xfs_utf8_hashname(
-+	const unsigned char *name,
-+	int len,
-+	unsigned int sb_utf8version)
-+{
-+	utf8data_t	nfkdi;
-+	struct utf8cursor u8c;
-+	xfs_dahash_t	hash;
-+	int		val;
-+
-+	nfkdi = utf8nfkdi(sb_utf8version);
-+	hash = 0;
-+	if (utf8ncursor(&u8c, nfkdi, name, len) < 0)
-+		goto blob;
-+	while ((val = utf8byte(&u8c)) > 0)
-+		hash = val ^ rol32(hash, 7);
-+	/* In case of error treat the name as a binary blob. */
-+	if (val == 0)
-+		return hash;
-+blob:
-+	return xfs_da_hashname(name, len);
-+}
-+
-+static int
-+xfs_utf8_normhash(
-+	struct xfs_da_args *args)
-+{
-+	utf8data_t	nfkdi;
-+	struct utf8cursor u8c;
-+	unsigned char	*norm;
-+	ssize_t		normlen;
-+	int		c;
-+	unsigned int	sb_utf8version =
-+		args->dp->i_mount->m_sb.sb_utf8version;
-+
-+	nfkdi = utf8nfkdi(sb_utf8version);
-+	/* Failure to normalize is treated as a blob. */
-+	if ((normlen = utf8nlen(nfkdi, args->name, args->namelen)) < 0)
-+		goto blob;
-+	if (utf8ncursor(&u8c, nfkdi, args->name, args->namelen) < 0)
-+		goto blob;
-+	if (!(norm = kmem_alloc(normlen + 1, KM_NOFS|KM_MAYFAIL)))
-+		return -ENOMEM;
-+	args->norm = norm;
-+	args->normlen = normlen;
-+	while ((c = utf8byte(&u8c)) > 0)
-+		*norm++ = c;
-+	if (c == 0) {
-+		*norm = '\0';
-+		args->hashval = xfs_da_hashname(args->norm, args->normlen);
-+		return 0;
-+	}
-+	kmem_free(args->norm);
-+blob:
-+	args->norm = NULL;
-+	args->normlen = -1;
-+	args->hashval = xfs_da_hashname(args->name, args->namelen);
-+	return 0;
-+}
-+
-+static enum xfs_dacmp
-+xfs_utf8_compname(
-+	struct xfs_da_args *args,
-+	const unsigned char *name,
-+	int		len)
-+{
-+	utf8data_t	nfkdi;
-+	struct utf8cursor u8c;
-+	const unsigned char *norm;
-+	int		c;
-+	unsigned int	sb_utf8version =
-+		args->dp->i_mount->m_sb.sb_utf8version;
-+
-+	ASSERT(args->norm || args->normlen == -1);
-+
-+	/* Check for an exact match first. */
-+	if (args->namelen == len && memcmp(args->name, name, len) == 0)
-+		return XFS_CMP_EXACT;
-+	/* xfs_utf8_normhash() set args->normlen to -1 for a blob */
-+	if (args->normlen < 0)
-+		return XFS_CMP_DIFFERENT;
-+	nfkdi = utf8nfkdi(sb_utf8version);
-+	if (utf8ncursor(&u8c, nfkdi, name, len) < 0)
-+		return XFS_CMP_DIFFERENT;
-+	norm = args->norm;
-+	while ((c = utf8byte(&u8c)) > 0)
-+		if (c != *norm++)
-+			return XFS_CMP_DIFFERENT;
-+	if (c < 0 || *norm != '\0')
-+		return XFS_CMP_DIFFERENT;
-+	return XFS_CMP_MATCH;
-+}
-+
-+struct xfs_nameops xfs_utf8_nameops = {
-+	.hashname = xfs_utf8_hashname,
-+	.normhash = xfs_utf8_normhash,
-+	.compname = xfs_utf8_compname,
-+};
-+
-+/*
-+ * xfs nameops using nfkdicf
-+ */
-+
-+static xfs_dahash_t
-+xfs_utf8_ci_hashname(
-+	const unsigned char *name,
-+	int len,
-+	unsigned int sb_utf8version)
-+{
-+	utf8data_t	nfkdicf;
-+	struct utf8cursor u8c;
-+	xfs_dahash_t	hash;
-+	int		val;
-+
-+	nfkdicf = utf8nfkdicf(sb_utf8version);
-+	hash = 0;
-+	if (utf8ncursor(&u8c, nfkdicf, name, len) < 0)
-+		goto blob;
-+	while ((val = utf8byte(&u8c)) > 0)
-+		hash = val ^ rol32(hash, 7);
-+	/* In case of error treat the name as a binary blob. */
-+	if (val == 0)
-+		return hash;
-+blob:
-+	return xfs_da_hashname(name, len);
-+}
-+
-+static int
-+xfs_utf8_ci_normhash(
-+	struct xfs_da_args *args)
-+{
-+	utf8data_t	nfkdicf;
-+	struct utf8cursor u8c;
-+	unsigned char	*norm;
-+	ssize_t		normlen;
-+	int		c;
-+	unsigned int	sb_utf8version =
-+		args->dp->i_mount->m_sb.sb_utf8version;
-+
-+	nfkdicf = utf8nfkdicf(sb_utf8version);
-+	/* Failure to normalize is treated as a blob. */
-+	if ((normlen = utf8nlen(nfkdicf, args->name, args->namelen)) < 0)
-+		goto blob;
-+	if (utf8ncursor(&u8c, nfkdicf, args->name, args->namelen) < 0)
-+		goto blob;
-+	if (!(norm = kmem_alloc(normlen + 1, KM_NOFS|KM_MAYFAIL)))
-+		return -ENOMEM;
-+	args->norm = norm;
-+	args->normlen = normlen;
-+	while ((c = utf8byte(&u8c)) > 0)
-+		*norm++ = c;
-+	if (c == 0) {
-+		*norm = '\0';
-+		args->hashval = xfs_da_hashname(args->norm, args->normlen);
-+		return 0;
-+	}
-+	kmem_free(args->norm);
-+blob:
-+	args->norm = NULL;
-+	args->normlen = -1;
-+	args->hashval = xfs_da_hashname(args->name, args->namelen);
-+	return 0;
-+}
-+
-+static enum xfs_dacmp
-+xfs_utf8_ci_compname(
-+	struct xfs_da_args *args,
-+	const unsigned char *name,
-+	int		len)
-+{
-+	utf8data_t	nfkdicf;
-+	struct utf8cursor u8c;
-+	const unsigned char *norm;
-+	int		c;
-+	unsigned int	sb_utf8version =
-+		args->dp->i_mount->m_sb.sb_utf8version;
-+
-+	ASSERT(args->norm || args->normlen == -1);
-+
-+	/* Check for an exact match first. */
-+	if (args->namelen == len && memcmp(args->name, name, len) == 0)
-+		return XFS_CMP_EXACT;
-+	/* xfs_utf8_ci_normhash() set args->normlen to -1 for a blob */
-+	if (args->normlen < 0)
-+		return XFS_CMP_DIFFERENT;
-+	nfkdicf = utf8nfkdicf(sb_utf8version);
-+	if (utf8ncursor(&u8c, nfkdicf, name, len) < 0)
-+		return XFS_CMP_DIFFERENT;
-+	norm = args->norm;
-+	while ((c = utf8byte(&u8c)) > 0)
-+		if (c != *norm++)
-+			return XFS_CMP_DIFFERENT;
-+	if (c < 0 || *norm != '\0')
-+		return XFS_CMP_DIFFERENT;
-+	return XFS_CMP_MATCH;
-+}
-+
-+struct xfs_nameops xfs_utf8_ci_nameops = {
-+	.hashname = xfs_utf8_ci_hashname,
-+	.normhash = xfs_utf8_ci_normhash,
-+	.compname = xfs_utf8_ci_compname,
-+};
-diff --git a/fs/xfs/libxfs/xfs_utf8.h b/fs/xfs/libxfs/xfs_utf8.h
-index 8a700de..404db54 100644
---- a/fs/xfs/libxfs/xfs_utf8.h
-+++ b/fs/xfs/libxfs/xfs_utf8.h
-@@ -21,4 +21,7 @@
  
- extern int xfs_utf8_version_ok(struct xfs_mount *);
+@@ -154,6 +160,9 @@ xfs_attr_get(
+ 		error = xfs_attr_node_get(&args);
+ 	xfs_iunlock(ip, lock_mode);
  
-+extern struct xfs_nameops xfs_utf8_nameops;
-+extern struct xfs_nameops xfs_utf8_ci_nameops;
++	if (args.norm)
++		kmem_free(args.norm);
 +
- #endif /* XFS_UTF8_H */
-diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-index cea3d64..fbfb1bb 100644
---- a/fs/xfs/xfs_iops.c
-+++ b/fs/xfs/xfs_iops.c
-@@ -1257,7 +1257,7 @@ xfs_setup_inode(
- 		break;
- 	case S_IFDIR:
- 		lockdep_set_class(&ip->i_lock.mr_lock, &xfs_dir_ilock_class);
--		if (xfs_sb_version_hasasciici(&XFS_M(inode->i_sb)->m_sb))
-+		if (xfs_sb_version_hasci(&XFS_M(inode->i_sb)->m_sb))
- 			inode->i_op = &xfs_dir_ci_inode_operations;
- 		else
- 			inode->i_op = &xfs_dir_inode_operations;
+ 	*valuelenp = args.valuelen;
+ 	return error == -EEXIST ? 0 : error;
+ }
+@@ -216,8 +225,11 @@ xfs_attr_set(
+ 		return -EIO;
+ 
+ 	error = xfs_attr_args_init(&args, dp, name, flags);
+-	if (error)
++	if (error) {
++		if (args.norm)
++			kmem_free(args.norm);
+ 		return error;
++	}
+ 
+ 	args.value = value;
+ 	args.valuelen = valuelen;
+@@ -227,8 +239,11 @@ xfs_attr_set(
+ 	args.total = xfs_attr_calc_size(&args, &local);
+ 
+ 	error = xfs_qm_dqattach(dp, 0);
+-	if (error)
++	if (error) {
++		if (args.norm)
++			kmem_free(args.norm);
+ 		return error;
++	}
+ 
+ 	/*
+ 	 * If the inode doesn't have an attribute fork, add one.
+@@ -239,8 +254,11 @@ xfs_attr_set(
+ 			XFS_ATTR_SF_ENTSIZE_BYNAME(args.namelen, valuelen);
+ 
+ 		error = xfs_bmap_add_attrfork(dp, sf_size, rsvd);
+-		if (error)
++		if (error) {
++			if (args.norm)
++				kmem_free(args.norm);
+ 			return error;
++		}
+ 	}
+ 
+ 	/*
+@@ -270,6 +288,8 @@ xfs_attr_set(
+ 	error = xfs_trans_reserve(args.trans, &tres, args.total, 0);
+ 	if (error) {
+ 		xfs_trans_cancel(args.trans, 0);
++		if (args.norm)
++			kmem_free(args.norm);
+ 		return error;
+ 	}
+ 	xfs_ilock(dp, XFS_ILOCK_EXCL);
+@@ -280,6 +300,8 @@ xfs_attr_set(
+ 	if (error) {
+ 		xfs_iunlock(dp, XFS_ILOCK_EXCL);
+ 		xfs_trans_cancel(args.trans, XFS_TRANS_RELEASE_LOG_RES);
++		if (args.norm)
++			kmem_free(args.norm);
+ 		return error;
+ 	}
+ 
+@@ -327,6 +349,8 @@ xfs_attr_set(
+ 						 XFS_TRANS_RELEASE_LOG_RES);
+ 			xfs_iunlock(dp, XFS_ILOCK_EXCL);
+ 
++			if (args.norm)
++				kmem_free(args.norm);
+ 			return error ? error : err2;
+ 		}
+ 
+@@ -388,7 +412,8 @@ xfs_attr_set(
+ 	xfs_trans_log_inode(args.trans, dp, XFS_ILOG_CORE);
+ 	error = xfs_trans_commit(args.trans, XFS_TRANS_RELEASE_LOG_RES);
+ 	xfs_iunlock(dp, XFS_ILOCK_EXCL);
+-
++	if (args.norm)
++		kmem_free(args.norm);
+ 	return error;
+ 
+ out:
+@@ -397,6 +422,8 @@ out:
+ 			XFS_TRANS_RELEASE_LOG_RES|XFS_TRANS_ABORT);
+ 	}
+ 	xfs_iunlock(dp, XFS_ILOCK_EXCL);
++	if (args.norm)
++		kmem_free(args.norm);
+ 	return error;
+ }
+ 
+@@ -425,8 +452,11 @@ xfs_attr_remove(
+ 		return -ENOATTR;
+ 
+ 	error = xfs_attr_args_init(&args, dp, name, flags);
+-	if (error)
++	if (error) {
++		if (args.norm)
++			kmem_free(args.norm);
+ 		return error;
++	}
+ 
+ 	args.firstblock = &firstblock;
+ 	args.flist = &flist;
+@@ -439,8 +469,11 @@ xfs_attr_remove(
+ 	args.op_flags = XFS_DA_OP_OKNOENT;
+ 
+ 	error = xfs_qm_dqattach(dp, 0);
+-	if (error)
++	if (error) {
++		if (args.norm)
++			kmem_free(args.norm);
+ 		return error;
++	}
+ 
+ 	/*
+ 	 * Start our first transaction of the day.
+@@ -466,6 +499,8 @@ xfs_attr_remove(
+ 				  XFS_ATTRRM_SPACE_RES(mp), 0);
+ 	if (error) {
+ 		xfs_trans_cancel(args.trans, 0);
++		if (args.norm)
++			kmem_free(args.norm);
+ 		return error;
+ 	}
+ 
+@@ -506,6 +541,8 @@ xfs_attr_remove(
+ 	xfs_trans_log_inode(args.trans, dp, XFS_ILOG_CORE);
+ 	error = xfs_trans_commit(args.trans, XFS_TRANS_RELEASE_LOG_RES);
+ 	xfs_iunlock(dp, XFS_ILOCK_EXCL);
++	if (args.norm)
++		kmem_free(args.norm);
+ 
+ 	return error;
+ 
+@@ -515,6 +552,9 @@ out:
+ 			XFS_TRANS_RELEASE_LOG_RES|XFS_TRANS_ABORT);
+ 	}
+ 	xfs_iunlock(dp, XFS_ILOCK_EXCL);
++	if (args.norm)
++		kmem_free(args.norm);
++
+ 	return error;
+ }
+ 
+diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
+index b1f73db..c991a88 100644
+--- a/fs/xfs/libxfs/xfs_attr_leaf.c
++++ b/fs/xfs/libxfs/xfs_attr_leaf.c
+@@ -661,6 +661,7 @@ int
+ xfs_attr_shortform_to_leaf(xfs_da_args_t *args)
+ {
+ 	xfs_inode_t *dp;
++	struct xfs_mount *mp;
+ 	xfs_attr_shortform_t *sf;
+ 	xfs_attr_sf_entry_t *sfe;
+ 	xfs_da_args_t nargs;
+@@ -673,6 +674,7 @@ xfs_attr_shortform_to_leaf(xfs_da_args_t *args)
+ 	trace_xfs_attr_sf_to_leaf(args);
+ 
+ 	dp = args->dp;
++	mp = dp->i_mount;
+ 	ifp = dp->i_afp;
+ 	sf = (xfs_attr_shortform_t *)ifp->if_u1.if_data;
+ 	size = be16_to_cpu(sf->hdr.totsize);
+@@ -726,13 +728,18 @@ xfs_attr_shortform_to_leaf(xfs_da_args_t *args)
+ 		nargs.namelen = sfe->namelen;
+ 		nargs.value = &sfe->nameval[nargs.namelen];
+ 		nargs.valuelen = sfe->valuelen;
+-		nargs.hashval = xfs_da_hashname(sfe->nameval,
+-						sfe->namelen);
+ 		nargs.flags = XFS_ATTR_NSP_ONDISK_TO_ARGS(sfe->flags);
++		if (!xfs_sb_version_hasutf8(&mp->m_sb))
++			nargs.hashval = xfs_da_hashname(sfe->nameval,
++							sfe->namelen);
++		else if ((error = mp->m_dirnameops->normhash(&nargs)) != 0)
++			goto out;
+ 		error = xfs_attr3_leaf_lookup_int(bp, &nargs); /* set a->index */
+ 		ASSERT(error == -ENOATTR);
+ 		error = xfs_attr3_leaf_add(bp, &nargs);
+ 		ASSERT(error != -ENOSPC);
++		if (nargs.norm)
++			kmem_free(nargs.norm);
+ 		if (error)
+ 			goto out;
+ 		sfe = XFS_ATTR_SF_NEXTENTRY(sfe);
+diff --git a/fs/xfs/libxfs/xfs_utf8.c b/fs/xfs/libxfs/xfs_utf8.c
+index 1e75299..ede6228 100644
+--- a/fs/xfs/libxfs/xfs_utf8.c
++++ b/fs/xfs/libxfs/xfs_utf8.c
+@@ -38,6 +38,7 @@
+ #include "xfs_inode.h"
+ #include "xfs_inode_item.h"
+ #include "xfs_bmap.h"
++#include "xfs_attr.h"
+ #include "xfs_error.h"
+ #include "xfs_trace.h"
+ #include "xfs_utf8.h"
+@@ -109,6 +110,9 @@ xfs_utf8_normhash(
+ 	unsigned int	sb_utf8version =
+ 		args->dp->i_mount->m_sb.sb_utf8version;
+ 
++	/* Don't normalize system attribute names. */
++	if (args->flags & (ATTR_ROOT|ATTR_SECURE))
++		goto blob;
+ 	nfkdi = utf8nfkdi(sb_utf8version);
+ 	/* Failure to normalize is treated as a blob. */
+ 	if ((normlen = utf8nlen(nfkdi, args->name, args->namelen)) < 0)
+@@ -213,6 +217,9 @@ xfs_utf8_ci_normhash(
+ 	unsigned int	sb_utf8version =
+ 		args->dp->i_mount->m_sb.sb_utf8version;
+ 
++	/* Don't normalize system attribute names. */
++	if (args->flags & (ATTR_ROOT|ATTR_SECURE))
++		goto blob;
+ 	nfkdicf = utf8nfkdicf(sb_utf8version);
+ 	/* Failure to normalize is treated as a blob. */
+ 	if ((normlen = utf8nlen(nfkdicf, args->name, args->namelen)) < 0)
+diff --git a/fs/xfs/xfs_attr_list.c b/fs/xfs/xfs_attr_list.c
+index 62db83a..034199d 100644
+--- a/fs/xfs/xfs_attr_list.c
++++ b/fs/xfs/xfs_attr_list.c
+@@ -76,12 +76,14 @@ xfs_attr_shortform_list(xfs_attr_list_context_t *context)
+ 	xfs_attr_shortform_t *sf;
+ 	xfs_attr_sf_entry_t *sfe;
+ 	xfs_inode_t *dp;
++	struct xfs_mount *mp;
+ 	int sbsize, nsbuf, count, i;
+ 	int error;
+ 
+ 	ASSERT(context != NULL);
+ 	dp = context->dp;
+ 	ASSERT(dp != NULL);
++	mp = dp->i_mount;
+ 	ASSERT(dp->i_afp != NULL);
+ 	sf = (xfs_attr_shortform_t *)dp->i_afp->if_u1.if_data;
+ 	ASSERT(sf != NULL);
+@@ -154,7 +156,15 @@ xfs_attr_shortform_list(xfs_attr_list_context_t *context)
+ 		}
+ 
+ 		sbp->entno = i;
+-		sbp->hash = xfs_da_hashname(sfe->nameval, sfe->namelen);
++
++		/* ATTR_ROOT and ATTR_SECURE are never normalized. */
++		if (!xfs_sb_version_hasutf8(&mp->m_sb) ||
++		    (sfe->flags & (ATTR_ROOT|ATTR_SECURE))) {
++			sbp->hash = xfs_da_hashname(sfe->nameval, sfe->namelen);
++		} else {
++			sbp->hash = mp->m_dirnameops->hashname(sfe->nameval,
++				       sfe->namelen, mp->m_sb.sb_utf8version);
++		}
+ 		sbp->name = sfe->nameval;
+ 		sbp->namelen = sfe->namelen;
+ 		/* These are bytes, and both on-disk, don't endian-flip */
 -- 
 1.7.12.4
 
