@@ -1,11 +1,11 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 21E777F37
-	for <xfs@oss.sgi.com>; Fri,  3 Oct 2014 17:03:58 -0500 (CDT)
-Date: Fri, 3 Oct 2014 17:03:57 -0500
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id F41837F37
+	for <xfs@oss.sgi.com>; Fri,  3 Oct 2014 17:04:38 -0500 (CDT)
+Date: Fri, 3 Oct 2014 17:04:35 -0500
 From: Ben Myers <bpm@sgi.com>
-Subject: [PATCH 13/16] xfs: implement demand load of utf8norm.ko
-Message-ID: <20141003220357.GM1865@sgi.com>
+Subject: [PATCH 14/16] xfs: rename XFS_IOC_FSGEOM to XFS_IOC_FSGEOM_V2
+Message-ID: <20141003220435.GN1865@sgi.com>
 References: <20141003214758.GY1865@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
@@ -27,197 +27,147 @@ Cc: olaf@sgi.com, xfs@oss.sgi.com
 
 From: Ben Myers <bpm@sgi.com>
 
-The utf8 normalization module is large and there is no need to have it
-loaded unless an xfs filesystem with utf8 enabled has been mounted.
-This loads utf8norm.ko at mount time for filesystems that need
-it.
+We'll be creating a new versioned XFS_IOC_FSGEOMETRY ioctl and structure
+so rename the current revision to _V2.
 
 Signed-off-by: Ben Myers <bpm@sgi.com>
-
 ---
-[v2: updated for utf8version_is_supported. --bpm]
-[v3: removed CONFIG_XFS_UTF8_DEMAND_LOAD. --bpm]
----
- fs/xfs/libxfs/xfs_dir2.c |   9 +++++
- fs/xfs/libxfs/xfs_utf8.c | 100 +++++++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/libxfs/xfs_utf8.h |   3 ++
- fs/xfs/xfs_super.c       |   6 +++
- 4 files changed, 118 insertions(+)
+ fs/xfs/xfs_fs.h      |  8 ++++----
+ fs/xfs/xfs_fsops.c   |  2 +-
+ fs/xfs/xfs_fsops.h   |  3 ++-
+ fs/xfs/xfs_ioctl.c   | 12 ++++++------
+ fs/xfs/xfs_ioctl32.c |  4 ++--
+ 5 files changed, 15 insertions(+), 14 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_dir2.c b/fs/xfs/libxfs/xfs_dir2.c
-index 9cfbd6b..844044b 100644
---- a/fs/xfs/libxfs/xfs_dir2.c
-+++ b/fs/xfs/libxfs/xfs_dir2.c
-@@ -35,6 +35,9 @@
- #include "xfs_error.h"
- #include "xfs_trace.h"
- #include "xfs_dinode.h"
-+#ifdef CONFIG_XFS_UTF8
-+#include "xfs_utf8.h"
-+#endif
+diff --git a/fs/xfs/xfs_fs.h b/fs/xfs/xfs_fs.h
+index e845d75..fd45cbe 100644
+--- a/fs/xfs/xfs_fs.h
++++ b/fs/xfs/xfs_fs.h
+@@ -180,9 +180,9 @@ typedef struct xfs_fsop_geom_v1 {
+ } xfs_fsop_geom_v1_t;
  
- struct xfs_name xfs_name_dotdot = { (unsigned char *)"..", 2, XFS_DIR3_FT_DIR };
+ /*
+- * Output for XFS_IOC_FSGEOMETRY
++ * Output for XFS_IOC_FSGEOMETRY_V2
+  */
+-typedef struct xfs_fsop_geom {
++typedef struct xfs_fsop_geom_v2 {
+ 	__u32		blocksize;	/* filesystem (data) block size */
+ 	__u32		rtextsize;	/* realtime extent size		*/
+ 	__u32		agblocks;	/* fsblocks in an AG		*/
+@@ -204,7 +204,7 @@ typedef struct xfs_fsop_geom {
+ 	__u32		rtsectsize;	/* realtime sector size, bytes	*/
+ 	__u32		dirblocksize;	/* directory block size, bytes	*/
+ 	__u32		logsunit;	/* log stripe unit, bytes */
+-} xfs_fsop_geom_t;
++} xfs_fsop_geom_v2_t;
  
-@@ -159,6 +162,12 @@ xfs_da_mount(
+ /* Output for XFS_FS_COUNTS */
+ typedef struct xfs_fsop_counts {
+@@ -555,7 +555,7 @@ typedef struct xfs_swapext
+ #define XFS_IOC_FSSETDM_BY_HANDLE    _IOW ('X', 121, struct xfs_fsop_setdm_handlereq)
+ #define XFS_IOC_ATTRLIST_BY_HANDLE   _IOW ('X', 122, struct xfs_fsop_attrlist_handlereq)
+ #define XFS_IOC_ATTRMULTI_BY_HANDLE  _IOW ('X', 123, struct xfs_fsop_attrmulti_handlereq)
+-#define XFS_IOC_FSGEOMETRY	     _IOR ('X', 124, struct xfs_fsop_geom)
++#define XFS_IOC_FSGEOMETRY_V2	     _IOR ('X', 124, struct xfs_fsop_geom_v2)
+ #define XFS_IOC_GOINGDOWN	     _IOR ('X', 125, __uint32_t)
+ /*	XFS_IOC_GETFSUUID ---------- deprecated 140	 */
  
- 	if (xfs_sb_version_hasutf8(&mp->m_sb)) {
- #ifdef CONFIG_XFS_UTF8
-+		if (xfs_init_utf8_module(mp)) {
-+			kmem_free(mp->m_dir_geo);
-+			kmem_free(mp->m_attr_geo);
-+			return -ENOSYS;
-+		}
-+
- 		if (!xfs_utf8_version_ok(mp))
- 			return -ENOSYS;
- 
-diff --git a/fs/xfs/libxfs/xfs_utf8.c b/fs/xfs/libxfs/xfs_utf8.c
-index ede6228..09efcda 100644
---- a/fs/xfs/libxfs/xfs_utf8.c
-+++ b/fs/xfs/libxfs/xfs_utf8.c
-@@ -43,6 +43,106 @@
- #include "xfs_trace.h"
- #include "xfs_utf8.h"
- #include <linux/utf8norm.h>
-+#include <linux/kmod.h>
-+
-+static DEFINE_SPINLOCK(utf8norm_lock);
-+static int utf8norm_initialized;
-+
-+static int (*utf8version_is_supported_func)(unsigned int);
-+static utf8data_t (*utf8nfkdi_func)(unsigned int);
-+static utf8data_t (*utf8nfkdicf_func)(unsigned int);
-+static ssize_t (*utf8nlen_func)(utf8data_t, const char *, size_t);
-+static int (*utf8ncursor_func)(struct utf8cursor *, utf8data_t,
-+		const char *, size_t);
-+static int (*utf8byte_func)(struct utf8cursor *);
-+
-+static void
-+xfs_put_utf8_module_locked(void)
-+{
-+	if (utf8version_is_supported_func)
-+		symbol_put(utf8version_is_supported);
-+
-+	if (utf8nfkdi_func)
-+		symbol_put(utf8nfkdi);
-+
-+	if (utf8nfkdicf_func)
-+		symbol_put(utf8nfkdicf);
-+
-+	if (utf8nlen_func)
-+		symbol_put(utf8nlen);
-+
-+	if (utf8ncursor_func)
-+		symbol_put(utf8ncursor);
-+
-+	if (utf8byte_func)
-+		symbol_put(utf8byte);
-+}
-+
-+void
-+xfs_put_utf8_module(void)
-+{
-+	spin_lock(&utf8norm_lock);
-+	if (!utf8norm_initialized) {
-+		spin_unlock(&utf8norm_lock);
-+		return;
-+	}
-+	xfs_put_utf8_module_locked();
-+	spin_unlock(&utf8norm_lock);
-+}
-+
-+int
-+xfs_init_utf8_module(struct xfs_mount	*mp)
-+{
-+	request_module("utf8norm");
-+
-+	spin_lock(&utf8norm_lock);
-+	if (utf8norm_initialized) {
-+		spin_unlock(&utf8norm_lock);
-+		return 0;
-+	}
-+
-+	utf8version_is_supported_func = symbol_get(utf8version_is_supported);
-+	if (!utf8version_is_supported_func)
-+		goto error;
-+
-+	utf8nfkdi_func = symbol_get(utf8nfkdi);
-+	if (!utf8nfkdi_func)
-+		goto error;
-+
-+	utf8nfkdicf_func = symbol_get(utf8nfkdicf);
-+	if (!utf8nfkdicf_func)
-+		goto error;
-+
-+	utf8nlen_func = symbol_get(utf8nlen);
-+	if (!utf8nlen_func) 
-+		goto error;
-+
-+	utf8ncursor_func = symbol_get(utf8ncursor);
-+	if (!utf8ncursor_func)
-+		goto error;
-+
-+	utf8byte_func = symbol_get(utf8byte);
-+	if (!utf8byte_func)
-+		goto error;
-+
-+	utf8norm_initialized = 1;	
-+	spin_unlock(&utf8norm_lock);
-+	return 0;
-+error:
-+	xfs_put_utf8_module_locked();
-+	spin_unlock(&utf8norm_lock);
-+	xfs_warn(mp,
-+		"Failed to load utf8norm.ko which is required to "
-+		"mount a filesystem with utf8 support.");
-+	return -ENOSYS;
-+}
-+
-+#define utf8version_is_supported (*utf8version_is_supported_func)
-+#define utf8nfkdi (*utf8nfkdi_func)
-+#define utf8nfkdicf (*utf8nfkdicf_func)
-+#define utf8nlen (*utf8nlen_func)
-+#define utf8ncursor (*utf8ncursor_func)
-+#define utf8byte (*utf8byte_func)
- 
+diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
+index 1a83eef..b69468e 100644
+--- a/fs/xfs/xfs_fsops.c
++++ b/fs/xfs/xfs_fsops.c
+@@ -50,7 +50,7 @@
  int
- xfs_utf8_version_ok(
-diff --git a/fs/xfs/libxfs/xfs_utf8.h b/fs/xfs/libxfs/xfs_utf8.h
-index 404db54..b79ce05 100644
---- a/fs/xfs/libxfs/xfs_utf8.h
-+++ b/fs/xfs/libxfs/xfs_utf8.h
-@@ -24,4 +24,7 @@ extern int xfs_utf8_version_ok(struct xfs_mount *);
- extern struct xfs_nameops xfs_utf8_nameops;
- extern struct xfs_nameops xfs_utf8_ci_nameops;
+ xfs_fs_geometry(
+ 	xfs_mount_t		*mp,
+-	xfs_fsop_geom_t		*geo,
++	xfs_fsop_geom_v2_t	*geo,
+ 	int			new_version)
+ {
  
-+extern int xfs_init_utf8_module(struct xfs_mount *);
-+extern void xfs_put_utf8_module(void);
-+
- #endif /* XFS_UTF8_H */
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index b194652..60a3ebc 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -47,6 +47,9 @@
- #include "xfs_dinode.h"
- #include "xfs_filestream.h"
- #include "xfs_quota.h"
-+#ifdef CONFIG_XFS_UTF8
-+#include "xfs_utf8.h"
-+#endif
+diff --git a/fs/xfs/xfs_fsops.h b/fs/xfs/xfs_fsops.h
+index 1b6a98b..26e7343 100644
+--- a/fs/xfs/xfs_fsops.h
++++ b/fs/xfs/xfs_fsops.h
+@@ -18,7 +18,8 @@
+ #ifndef __XFS_FSOPS_H__
+ #define	__XFS_FSOPS_H__
  
- #include <linux/namei.h>
- #include <linux/init.h>
-@@ -1809,6 +1812,9 @@ exit_xfs_fs(void)
- 	xfs_mru_cache_uninit();
- 	xfs_destroy_workqueues();
- 	xfs_destroy_zones();
-+#ifdef CONFIG_XFS_UTF8
-+	xfs_put_utf8_module();
-+#endif
+-extern int xfs_fs_geometry(xfs_mount_t *mp, xfs_fsop_geom_t *geo, int nversion);
++extern int xfs_fs_geometry(xfs_mount_t *mp, xfs_fsop_geom_v2_t *geo,
++		int nversion);
+ extern int xfs_growfs_data(xfs_mount_t *mp, xfs_growfs_data_t *in);
+ extern int xfs_growfs_log(xfs_mount_t *mp, xfs_growfs_log_t *in);
+ extern int xfs_fs_counts(xfs_mount_t *mp, xfs_fsop_counts_t *cnt);
+diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+index 3799695..4393405 100644
+--- a/fs/xfs/xfs_ioctl.c
++++ b/fs/xfs/xfs_ioctl.c
+@@ -823,7 +823,7 @@ xfs_ioc_fsgeometry_v1(
+ 	xfs_mount_t		*mp,
+ 	void			__user *arg)
+ {
+-	xfs_fsop_geom_t         fsgeo;
++	xfs_fsop_geom_v2_t	fsgeo;
+ 	int			error;
+ 
+ 	error = xfs_fs_geometry(mp, &fsgeo, 3);
+@@ -841,18 +841,18 @@ xfs_ioc_fsgeometry_v1(
  }
  
- module_init(init_xfs_fs);
+ STATIC int
+-xfs_ioc_fsgeometry(
++xfs_ioc_fsgeometry_v2(
+ 	xfs_mount_t		*mp,
+ 	void			__user *arg)
+ {
+-	xfs_fsop_geom_t		fsgeo;
++	xfs_fsop_geom_v2_t	fsgeo;
+ 	int			error;
+ 
+ 	error = xfs_fs_geometry(mp, &fsgeo, 4);
+ 	if (error)
+ 		return error;
+ 
+-	if (copy_to_user(arg, &fsgeo, sizeof(fsgeo)))
++	if (copy_to_user(arg, &fsgeo, sizeof(xfs_fsop_geom_v2_t)))
+ 		return -EFAULT;
+ 	return 0;
+ }
+@@ -1564,8 +1564,8 @@ xfs_file_ioctl(
+ 	case XFS_IOC_FSGEOMETRY_V1:
+ 		return xfs_ioc_fsgeometry_v1(mp, arg);
+ 
+-	case XFS_IOC_FSGEOMETRY:
+-		return xfs_ioc_fsgeometry(mp, arg);
++	case XFS_IOC_FSGEOMETRY_V2:
++		return xfs_ioc_fsgeometry_v2(mp, arg);
+ 
+ 	case XFS_IOC_GETVERSION:
+ 		return put_user(inode->i_generation, (int __user *)arg);
+diff --git a/fs/xfs/xfs_ioctl32.c b/fs/xfs/xfs_ioctl32.c
+index a554646..207b224 100644
+--- a/fs/xfs/xfs_ioctl32.c
++++ b/fs/xfs/xfs_ioctl32.c
+@@ -64,7 +64,7 @@ xfs_compat_ioc_fsgeometry_v1(
+ 	struct xfs_mount	  *mp,
+ 	compat_xfs_fsop_geom_v1_t __user *arg32)
+ {
+-	xfs_fsop_geom_t		  fsgeo;
++	xfs_fsop_geom_v2_t	  fsgeo;
+ 	int			  error;
+ 
+ 	error = xfs_fs_geometry(mp, &fsgeo, 3);
+@@ -543,7 +543,7 @@ xfs_file_compat_ioctl(
+ 	switch (cmd) {
+ 	/* No size or alignment issues on any arch */
+ 	case XFS_IOC_DIOINFO:
+-	case XFS_IOC_FSGEOMETRY:
++	case XFS_IOC_FSGEOMETRY_V2:
+ 	case XFS_IOC_FSGETXATTR:
+ 	case XFS_IOC_FSSETXATTR:
+ 	case XFS_IOC_FSGETXATTRA:
 -- 
 1.7.12.4
 
