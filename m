@@ -1,11 +1,11 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 875197F47
-	for <xfs@oss.sgi.com>; Fri,  3 Oct 2014 17:15:55 -0500 (CDT)
-Date: Fri, 3 Oct 2014 17:15:55 -0500
+	by oss.sgi.com (Postfix) with ESMTP id B6BA77F47
+	for <xfs@oss.sgi.com>; Fri,  3 Oct 2014 17:16:15 -0500 (CDT)
+Date: Fri, 3 Oct 2014 17:16:15 -0500
 From: Ben Myers <bpm@sgi.com>
-Subject: [PATCH 32/35] xfsprogs: add utf8 support to mkfs.xfs
-Message-ID: <20141003221555.GF1865@sgi.com>
+Subject: [PATCH 33/35] xfsprogs: add utf8 support to xfs_repair
+Message-ID: <20141003221615.GG1865@sgi.com>
 References: <20141003214758.GY1865@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
@@ -27,258 +27,160 @@ Cc: olaf@sgi.com, xfs@oss.sgi.com
 
 From: Mark Tinguely <tinguely@sgi.com>
 
-Set the utf-8 feature bit.
+Fix the duplicate filename detection to use the utf-8 normalization
+routines.
 
 Signed-off-by: Mark Tinguely <tinguely@sgi.com>
 Signed-off-by: Ben Myers <bpm@sgi.com>
 
-[v2: add support for utf8version. -bpm]
+[XXX use sb_utf8version on the global xfs_mount.
+ TODO maybe add the xfs_mount to the args structure? --bpm]
 ---
- man/man8/mkfs.xfs.8 |  9 ++++-
- mkfs/xfs_mkfs.c     | 98 +++++++++++++++++++++++++++++++++++++++++++++++++++--
- mkfs/xfs_mkfs.h     |  3 +-
- 3 files changed, 105 insertions(+), 5 deletions(-)
+ db/check.c        |  2 +-
+ libxfs/xfs_utf8.c | 16 ++++++++--------
+ repair/phase6.c   | 36 +++++++++++++++++++++++++-----------
+ 3 files changed, 34 insertions(+), 20 deletions(-)
 
-diff --git a/man/man8/mkfs.xfs.8 b/man/man8/mkfs.xfs.8
-index ad9ff3d..aa43cf5 100644
---- a/man/man8/mkfs.xfs.8
-+++ b/man/man8/mkfs.xfs.8
-@@ -558,7 +558,7 @@ any power of 2 size from the filesystem block size up to 65536.
- .IP
- The
- .B version=ci
--option enables ASCII only case-insensitive filename lookup and version
-+option enables ASCII or UTF-8 case-insensitive filename lookup and version
- 2 directories. Filenames are case-preserving, that is, the names
- are stored in directories using the case they were created with.
- .IP
-@@ -582,6 +582,13 @@ When CRCs are enabled via
- the ftype functionality is always enabled. This feature can not be turned
- off for such filesystem configurations.
- .IP
-+.TP
-+.BI utf8[= value ]
-+This is used to enable the UTF-8 character set support. The
-+.I value
-+is either 0 or 1, with 1 signifying that UTF-8 character support is to be
-+enabled. If the value is omitted, 1 is assumed.
-+.IP
- .RE
- .TP
- .BI \-p " protofile"
-diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index c85258a..8cf5f9a 100644
---- a/mkfs/xfs_mkfs.c
-+++ b/mkfs/xfs_mkfs.c
-@@ -25,6 +25,7 @@
- #include <disk/volume.h>
- #endif
- #include "xfs_mkfs.h"
-+#include <xfs/utf8norm.h>
+diff --git a/db/check.c b/db/check.c
+index d317a71..9219cc8 100644
+--- a/db/check.c
++++ b/db/check.c
+@@ -2324,7 +2324,7 @@ process_data_dir_v2(
+ 			(char *)dep - (char *)data);
+ 		dir_hash_add(mp->m_dirnameops->hashname(dep->name,
+ 					dep->namelen,
+-					0 /* version for later */), addr);
++					mp->m_sb.sb_utf8version), addr);
+ 		ptr += xfs_dir3_data_entsize(mp, dep->namelen);
+ 		count++;
+ 		lastfree = 0;
+diff --git a/libxfs/xfs_utf8.c b/libxfs/xfs_utf8.c
+index f7042ef..e7a717e 100644
+--- a/libxfs/xfs_utf8.c
++++ b/libxfs/xfs_utf8.c
+@@ -106,8 +106,8 @@ xfs_utf8_normhash(
+ 	unsigned char	*norm;
+ 	ssize_t		normlen;
+ 	int		c;
+-	unsigned int	sb_utf8version =
+-		args->dp->i_mount->m_sb.sb_utf8version;
++	unsigned int	sb_utf8version = mp->m_sb.sb_utf8version;
++/* XXX		args->dp->i_mount->m_sb.sb_utf8version; */
  
- /*
-  * Device topology information.
-@@ -149,6 +150,8 @@ char	*nopts[] = {
- 	"version",
- #define	N_FTYPE		3
- 	"ftype",
-+#define	N_UTF8		4
-+	"utf8",
- 	NULL,
- };
+ 	/* Don't normalize system attribute names. */
+ 	if (args->flags & (ATTR_ROOT|ATTR_SECURE))
+@@ -147,8 +147,8 @@ xfs_utf8_compname(
+ 	struct utf8cursor u8c;
+ 	const unsigned char *norm;
+ 	int		c;
+-	unsigned int	sb_utf8version =
+-		args->dp->i_mount->m_sb.sb_utf8version;
++	unsigned int	sb_utf8version = mp->m_sb.sb_utf8version;
++/* XXX		args->dp->i_mount->m_sb.sb_utf8version; */
  
-@@ -958,6 +961,11 @@ main(
- 	int			nsflag;
- 	int			nvflag;
- 	int			nci;
-+	unsigned int		utf8;
-+	unsigned int		utf8_major;
-+	unsigned int		utf8_minor;
-+	unsigned int		utf8_revision;
-+	char			utf8_version_string[10];
- 	int			Nflag;
- 	int			discard = 1;
- 	char			*p;
-@@ -984,6 +992,7 @@ main(
- 	int			lazy_sb_counters;
- 	int			crcs_enabled;
- 	int			finobt;
-+	int			ret;
+ 	ASSERT(args->norm || args->normlen == -1);
  
- 	progname = basename(argv[0]);
- 	setlocale(LC_ALL, "");
-@@ -1004,6 +1013,7 @@ main(
- 	logagno = logblocks = rtblocks = rtextblocks = 0;
- 	Nflag = nlflag = nsflag = nvflag = nci = 0;
- 	nftype = dirftype = 0;		/* inode type information in the dir */
-+	utf8 = 0;			/* utf-8 support */
- 	dirblocklog = dirblocksize = 0;
- 	dirversion = XFS_DFL_DIR_VERSION;
- 	qflag = 0;
-@@ -1565,7 +1575,8 @@ _("cannot specify both crc and ftype\n"));
- 					if (nvflag)
- 						respec('n', nopts, N_VERSION);
- 					if (!strcasecmp(value, "ci")) {
--						nci = 1; /* ASCII CI mode */
-+						/* ASCII or UTF-8 CI mode */
-+						nci = 1;
- 					} else {
- 						dirversion = atoi(value);
- 						if (dirversion != 2)
-@@ -1587,6 +1598,62 @@ _("cannot specify both crc and ftype\n"));
- 					}
- 					nftype = 1;
- 					break;
-+				case N_UTF8:
-+					if (!value || *value == '\0')
-+						value = "7.0.0";
-+					ret = sscanf(value, "%d.%d.%d",
-+							&utf8_major,
-+							&utf8_minor,
-+							&utf8_revision);
-+					if (ret == 3) {
-+						utf8 = UNICODE_AGE(
-+							utf8_major,
-+							utf8_minor,
-+							utf8_revision);
-+						if (!utf8version_is_supported(
-+									utf8)) {
-+							fprintf(stderr,
-+_("utf8 version %d.%d.%d not supported\n"),
-+							utf8_major,
-+							utf8_minor,
-+							utf8_revision);
-+							usage();
-+						}
-+						break;
-+					}
-+					ret = sscanf(value, "%d.%d",
-+							&utf8_major,
-+							&utf8_minor);
-+					if (ret == 2) {
-+						utf8 = UNICODE_AGE(
-+							utf8_major,
-+							utf8_minor,
-+							0);
-+						if (!utf8version_is_supported(
-+									utf8)) {
-+							fprintf(stderr,
-+_("utf8 version %d.%d not supported\n"),
-+							utf8_major,
-+							utf8_minor);
-+							usage();
-+						}
-+						break;
-+					}
-+					ret = sscanf(value, "%d", &utf8_major);
-+					if (ret == 1) {
-+						utf8 = UNICODE_AGE(
-+							utf8_major,
-+							0, 0);
-+						if (!utf8version_is_supported(
-+									utf8)) {
-+							fprintf(stderr,
-+_("utf8 version %d not supported\n"),
-+							utf8_major);
-+							usage();
-+						}
-+						break;
-+					}
-+					/* fallthrough */
- 				default:
- 					unknown('n', value);
- 				}
-@@ -2460,7 +2527,8 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
- 	 */
- 	sbp->sb_features2 = XFS_SB_VERSION2_MKFS(crcs_enabled, lazy_sb_counters,
- 					attrversion == 2, !projid16bit, 0,
--					(!crcs_enabled && dirftype));
-+					(!crcs_enabled && dirftype),
-+					(!crcs_enabled && utf8));
- 	sbp->sb_versionnum = XFS_SB_VERSION_MKFS(crcs_enabled, iaflag,
- 					dsunit != 0,
- 					logversion == 2, attrversion == 1,
-@@ -2534,6 +2602,26 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
- 	if (crcs_enabled) {
- 		sbp->sb_features_incompat = XFS_SB_FEAT_INCOMPAT_FTYPE;
- 		dirftype = 1;
-+		/* turn on the utf-8 support */
-+		if (utf8)
-+			sbp->sb_features_incompat |= XFS_SB_FEAT_INCOMPAT_UTF8;
-+	}
-+	if (utf8) {
-+		int	major, minor, revision;
+@@ -213,8 +213,8 @@ xfs_utf8_ci_normhash(
+ 	unsigned char	*norm;
+ 	ssize_t		normlen;
+ 	int		c;
+-	unsigned int	sb_utf8version =
+-		args->dp->i_mount->m_sb.sb_utf8version;
++	unsigned int	sb_utf8version = mp->m_sb.sb_utf8version;
++/* XXX		args->dp->i_mount->m_sb.sb_utf8version; */
+ 
+ 	/* Don't normalize system attribute names. */
+ 	if (args->flags & (ATTR_ROOT|ATTR_SECURE))
+@@ -254,8 +254,8 @@ xfs_utf8_ci_compname(
+ 	struct utf8cursor u8c;
+ 	const unsigned char *norm;
+ 	int		c;
+-	unsigned int	sb_utf8version =
+-		args->dp->i_mount->m_sb.sb_utf8version;
++	unsigned int	sb_utf8version = mp->m_sb.sb_utf8version;
++/* XXX		args->dp->i_mount->m_sb.sb_utf8version; */
+ 
+ 	ASSERT(args->norm || args->normlen == -1);
+ 
+diff --git a/repair/phase6.c b/repair/phase6.c
+index c18ef69..eb3ea35 100644
+--- a/repair/phase6.c
++++ b/repair/phase6.c
+@@ -176,13 +176,15 @@ dir_hash_add(
+ 	unsigned char		*name,
+ 	__uint8_t		ftype)
+ {
+-	xfs_dahash_t		hash = 0;
+ 	int			byaddr;
+ 	int			byhash = 0;
+ 	dir_hash_ent_t		*p;
+ 	int			dup;
+ 	short			junk;
+ 	struct xfs_name		xname;
++	xfs_da_args_t		args;
 +
-+		major = utf8 >> UNICODE_MAJ_SHIFT;
-+		minor = (utf8 & 0xff00) >> UNICODE_MIN_SHIFT;
-+		revision = utf8 & 0xff;
++	memset(&args, 0, sizeof(xfs_da_args_t));
+ 
+ 	ASSERT(!hashtab->names_duped);
+ 
+@@ -195,20 +197,30 @@ dir_hash_add(
+ 	dup = 0;
+ 
+ 	if (!junk) {
+-		hash = mp->m_dirnameops->hashname(name, namelen,
+-				0 /* version for later */);
+-		byhash = DIR_HASH_FUNC(hashtab, hash);
++		int error;
 +
-+		if (!revision && !minor)
-+			sprintf(utf8_version_string, "%d", major);
-+		else if (!revision)
-+			sprintf(utf8_version_string, "%d.%d", major, minor);
-+		else
-+			sprintf(utf8_version_string, "%d.%d.%d",
-+						major, minor, revision);
-+	} else {
-+		strcpy(utf8_version_string, "0");
++		args.name = name;
++		args.namelen = namelen;
++		args.inumber = inum;
++		args.whichfork = XFS_DATA_FORK;
++
++		error = mp->m_dirnameops->normhash(&args);
++		if (error)
++			do_error(_("normalize has failed %d)\n"), error);
++
++		byhash = DIR_HASH_FUNC(hashtab, args.hashval);
+ 
+ 		/*
+ 		 * search hash bucket for existing name.
+ 		 */
+ 		for (p = hashtab->byhash[byhash]; p; p = p->nextbyhash) {
+-			if (p->hashval == hash && p->name.len == namelen) {
+-				if (memcmp(p->name.name, name, namelen) == 0) {
+-					dup = 1;
+-					junk = 1;
+-					break;
+-				}
++			if (p->hashval == args.hashval &&
++			    mp->m_dirnameops->compname(&args, p->name.name,
++						       p->name.len) !=
++							 XFS_CMP_DIFFERENT) {
++				dup = 1;
++				junk = 1;
++				break;
+ 			}
+ 		}
  	}
+@@ -227,7 +239,7 @@ dir_hash_add(
+ 	hashtab->last = p;
  
- 	if (!qflag || Nflag) {
-@@ -2544,6 +2632,7 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
- 		   "data     =%-22s bsize=%-6u blocks=%llu, imaxpct=%u\n"
- 		   "         =%-22s sunit=%-6u swidth=%u blks\n"
- 		   "naming   =version %-14u bsize=%-6u ascii-ci=%d ftype=%d\n"
-+		   "         =%-22s utf8=%s\n"
- 		   "log      =%-22s bsize=%-6d blocks=%lld, version=%d\n"
- 		   "         =%-22s sectsz=%-5u sunit=%d blks, lazy-count=%d\n"
- 		   "realtime =%-22s extsz=%-6d blocks=%lld, rtextents=%lld\n"),
-@@ -2553,6 +2642,7 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
- 			"", blocksize, (long long)dblocks, imaxpct,
- 			"", dsunit, dswidth,
- 			dirversion, dirblocksize, nci, dirftype,
-+			"", utf8_version_string,
- 			logfile, 1 << blocklog, (long long)logblocks,
- 			logversion, "", lsectorsize, lsunit, lazy_sb_counters,
- 			rtfile, rtextblocks << blocklog,
-@@ -2617,6 +2707,7 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
- 		sbp->sb_logsectlog = 0;
- 		sbp->sb_logsectsize = 0;
+ 	if (!(p->junkit = junk)) {
+-		p->hashval = hash;
++		p->hashval = args.hashval;
+ 		p->nextbyhash = hashtab->byhash[byhash];
+ 		hashtab->byhash[byhash] = p;
  	}
-+	sbp->sb_utf8version = utf8;
+@@ -236,6 +248,8 @@ dir_hash_add(
+ 	p->seen = 0;
+ 	p->name = xname;
  
- 	if (force_overwrite)
- 		zero_old_xfs_structures(&xi, sbp);
-@@ -3171,7 +3262,8 @@ usage( void )
- 			    sunit=value|su=num,sectlog=n|sectsize=num,\n\
- 			    lazy-count=0|1]\n\
- /* label */		[-L label (maximum 12 characters)]\n\
--/* naming */		[-n log=n|size=num,version=2|ci,ftype=0|1]\n\
-+/* naming */		[-n log=n|size=num,version=2|ci,ftype=0|1\n\
-+			    utf8=0|7]\n\
- /* no-op info only */	[-N]\n\
- /* prototype file */	[-p fname]\n\
- /* quiet */		[-q]\n\
-diff --git a/mkfs/xfs_mkfs.h b/mkfs/xfs_mkfs.h
-index 9df5f37..f40b284 100644
---- a/mkfs/xfs_mkfs.h
-+++ b/mkfs/xfs_mkfs.h
-@@ -37,13 +37,14 @@
- 	0 ) : XFS_SB_VERSION_1 )
++	if (args.norm)
++		kmem_free((void *) args.norm);
+ 	return !dup;
+ }
  
- #define XFS_SB_VERSION2_MKFS(crc, lazycount, attr2, projid32bit, parent, \
--			     ftype) (\
-+			     ftype, utf8) (\
- 	((lazycount) ? XFS_SB_VERSION2_LAZYSBCOUNTBIT : 0) |		\
- 	((attr2) ? XFS_SB_VERSION2_ATTR2BIT : 0) |			\
- 	((projid32bit) ? XFS_SB_VERSION2_PROJID32BIT : 0) |		\
- 	((parent) ? XFS_SB_VERSION2_PARENTBIT : 0) |			\
- 	((crc) ? XFS_SB_VERSION2_CRCBIT : 0) |				\
- 	((ftype) ? XFS_SB_VERSION2_FTYPE : 0) |				\
-+	((utf8) ? XFS_SB_VERSION2_UTF8BIT : 0) |			\
- 	0 )
- 
- #define	XFS_DFL_BLOCKSIZE_LOG	12		/* 4096 byte blocks */
 -- 
 1.7.12.4
 
