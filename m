@@ -1,12 +1,11 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id CFB3C7F54
-	for <xfs@oss.sgi.com>; Fri,  3 Oct 2014 17:13:51 -0500 (CDT)
-Date: Fri, 3 Oct 2014 17:13:50 -0500
+	by oss.sgi.com (Postfix) with ESMTP id 327167F53
+	for <xfs@oss.sgi.com>; Fri,  3 Oct 2014 17:14:20 -0500 (CDT)
+Date: Fri, 3 Oct 2014 17:14:19 -0500
 From: Ben Myers <bpm@sgi.com>
-Subject: [PATCH 28/35] libxfs: apply utf-8 normalization rules to user
-	extended attribute names
-Message-ID: <20141003221350.GB1865@sgi.com>
+Subject: [PATCH 29/35] libxfs: rename XFS_IOC_FSGEOM to XFS_IOC_FSGEOM_V2
+Message-ID: <20141003221419.GC1865@sgi.com>
 References: <20141003214758.GY1865@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
@@ -26,248 +25,208 @@ Sender: xfs-bounces@oss.sgi.com
 To: linux-fsdevel@vger.kernel.org
 Cc: olaf@sgi.com, xfs@oss.sgi.com
 
-From: Olaf Weber <olaf@sgi.com>
+From: Ben Myers <bpm@sgi.com>
 
-Apply the same rules for UTF-8 normalization to the names of user-defined
-extended attributes. System attributes are excluded because they are not
-user-visible in the first place, and the kernel is expected to know what
-it is doing when naming them.
+We'll be creating a new versioned XFS_IOC_FSGEOMETRY ioctl and structure
+so rename the current revision to _V2.
 
-Signed-off-by: Olaf Weber <olaf@sgi.com>
+Signed-off-by: Ben Myers <bpm@sgi.com>
 ---
- libxfs/xfs_attr.c      | 49 +++++++++++++++++++++++++++++++++++++++++--------
- libxfs/xfs_attr_leaf.c | 11 +++++++++--
- libxfs/xfs_utf8.c      |  6 ++++++
- 3 files changed, 56 insertions(+), 10 deletions(-)
+ growfs/xfs_growfs.c |  8 ++++----
+ include/xfs_fs.h    |  8 ++++----
+ io/bmap.c           |  2 +-
+ io/init.c           |  2 +-
+ io/io.h             |  6 +++---
+ io/open.c           | 10 +++++-----
+ quota/free.c        |  2 +-
+ 7 files changed, 19 insertions(+), 19 deletions(-)
 
-diff --git a/libxfs/xfs_attr.c b/libxfs/xfs_attr.c
-index 17519d3..c30703b 100644
---- a/libxfs/xfs_attr.c
-+++ b/libxfs/xfs_attr.c
-@@ -88,8 +88,9 @@ xfs_attr_get_int(
- 	int			*valuelenp,
- 	int			flags)
+diff --git a/growfs/xfs_growfs.c b/growfs/xfs_growfs.c
+index 8e611b6..c3df0c0 100644
+--- a/growfs/xfs_growfs.c
++++ b/growfs/xfs_growfs.c
+@@ -44,7 +44,7 @@ Options:\n\
+ 
+ void
+ report_info(
+-	xfs_fsop_geom_t	geo,
++	xfs_fsop_geom_v2_t	geo,
+ 	char		*mntpoint,
+ 	int		isint,
+ 	char		*logname,
+@@ -101,7 +101,7 @@ main(int argc, char **argv)
+ 	int			error;	/* we have hit an error */
+ 	long			esize;	/* new rt extent size */
+ 	int			ffd;	/* mount point file descriptor */
+-	xfs_fsop_geom_t		geo;	/* current fs geometry */
++	xfs_fsop_geom_v2_t	geo;	/* current fs geometry */
+ 	int			iflag;	/* -i flag */
+ 	int			isint;	/* log is currently internal */
+ 	int			lflag;	/* -l flag */
+@@ -109,7 +109,7 @@ main(int argc, char **argv)
+ 	int			maxpct;	/* -m flag value */
+ 	int			mflag;	/* -m flag */
+ 	int			nflag;	/* -n flag */
+-	xfs_fsop_geom_t		ngeo;	/* new fs geometry */
++	xfs_fsop_geom_v2_t	ngeo;	/* new fs geometry */
+ 	int			rflag;	/* -r flag */
+ 	long long		rsize;	/* new rt size in fs blocks */
+ 	int			ci;	/* ASCII case-insensitive fs */
+@@ -220,7 +220,7 @@ main(int argc, char **argv)
+ 	}
+ 
+ 	/* get the current filesystem size & geometry */
+-	if (xfsctl(fname, ffd, XFS_IOC_FSGEOMETRY, &geo) < 0) {
++	if (xfsctl(fname, ffd, XFS_IOC_FSGEOMETRY_V2, &geo) < 0) {
+ 		/*
+ 		 * OK, new xfsctl barfed - back off and try earlier version
+ 		 * as we're probably running an older kernel version.
+diff --git a/include/xfs_fs.h b/include/xfs_fs.h
+index c260ec6..38faf5d 100644
+--- a/include/xfs_fs.h
++++ b/include/xfs_fs.h
+@@ -180,9 +180,9 @@ typedef struct xfs_fsop_geom_v1 {
+ } xfs_fsop_geom_v1_t;
+ 
+ /*
+- * Output for XFS_IOC_FSGEOMETRY
++ * Output for XFS_IOC_FSGEOMETRY_V2
+  */
+-typedef struct xfs_fsop_geom {
++typedef struct xfs_fsop_geom_v2 {
+ 	__u32		blocksize;	/* filesystem (data) block size */
+ 	__u32		rtextsize;	/* realtime extent size		*/
+ 	__u32		agblocks;	/* fsblocks in an AG		*/
+@@ -204,7 +204,7 @@ typedef struct xfs_fsop_geom {
+ 	__u32		rtsectsize;	/* realtime sector size, bytes	*/
+ 	__u32		dirblocksize;	/* directory block size, bytes	*/
+ 	__u32		logsunit;	/* log stripe unit, bytes */
+-} xfs_fsop_geom_t;
++} xfs_fsop_geom_v2_t;
+ 
+ /* Output for XFS_FS_COUNTS */
+ typedef struct xfs_fsop_counts {
+@@ -553,7 +553,7 @@ typedef struct xfs_swapext
+ #define XFS_IOC_FSSETDM_BY_HANDLE    _IOW ('X', 121, struct xfs_fsop_setdm_handlereq)
+ #define XFS_IOC_ATTRLIST_BY_HANDLE   _IOW ('X', 122, struct xfs_fsop_attrlist_handlereq)
+ #define XFS_IOC_ATTRMULTI_BY_HANDLE  _IOW ('X', 123, struct xfs_fsop_attrmulti_handlereq)
+-#define XFS_IOC_FSGEOMETRY	     _IOR ('X', 124, struct xfs_fsop_geom)
++#define XFS_IOC_FSGEOMETRY_V2	     _IOR ('X', 124, struct xfs_fsop_geom_v2)
+ #define XFS_IOC_GOINGDOWN	     _IOR ('X', 125, __uint32_t)
+ /*	XFS_IOC_GETFSUUID ---------- deprecated 140	 */
+ 
+diff --git a/io/bmap.c b/io/bmap.c
+index a78cbb1..614eba1 100644
+--- a/io/bmap.c
++++ b/io/bmap.c
+@@ -70,7 +70,7 @@ bmap_f(
  {
--	xfs_da_args_t   args;
--	int             error;
-+	xfs_da_args_t   	args;
-+	struct xfs_mount	*mp = ip->i_mount;
-+	int             	error;
+ 	struct fsxattr		fsx;
+ 	struct getbmapx		*map;
+-	struct xfs_fsop_geom	fsgeo;
++	struct xfs_fsop_geom_v2	fsgeo;
+ 	int			map_size;
+ 	int			loop = 0;
+ 	int			flg = 0;
+diff --git a/io/init.c b/io/init.c
+index bfc35bf..9622a6c 100644
+--- a/io/init.c
++++ b/io/init.c
+@@ -127,7 +127,7 @@ init(
+ 	int		c, flags = 0;
+ 	char		*sp;
+ 	mode_t		mode = 0600;
+-	xfs_fsop_geom_t	geometry = { 0 };
++	xfs_fsop_geom_v2_t	geometry = { 0 };
  
- 	if (!xfs_inode_hasattr(ip))
- 		return ENOATTR;
-@@ -103,9 +104,12 @@ xfs_attr_get_int(
- 	args.value = value;
- 	args.valuelen = *valuelenp;
- 	args.flags = flags;
--	args.hashval = xfs_da_hashname(args.name, args.namelen);
- 	args.dp = ip;
- 	args.whichfork = XFS_ATTR_FORK;
-+	if (! xfs_sb_version_hasutf8(&mp->m_sb))
-+		args.hashval = xfs_da_hashname(args.name, args.namelen);
-+	else if ((error = mp->m_dirnameops->normhash(&args)) != 0)
-+		return error;
+ 	progname = basename(argv[0]);
+ 	setlocale(LC_ALL, "");
+diff --git a/io/io.h b/io/io.h
+index 1b3bca1..1837fe4 100644
+--- a/io/io.h
++++ b/io/io.h
+@@ -44,7 +44,7 @@ typedef struct fileio {
+ 	int		fd;		/* open file descriptor */
+ 	int		flags;		/* flags describing file state */
+ 	char		*name;		/* file name at time of open */
+-	xfs_fsop_geom_t	geom;		/* XFS filesystem geometry */
++	xfs_fsop_geom_v2_t	geom;	/* XFS filesystem geometry */
+ } fileio_t;
  
- 	/*
- 	 * Decide on what work routines to call based on the inode size.
-@@ -118,6 +122,9 @@ xfs_attr_get_int(
- 		error = xfs_attr_node_get(&args);
- 	}
+ extern fileio_t		*filetable;	/* open file table */
+@@ -74,8 +74,8 @@ extern void *check_mapping_range(mmap_region_t *, off64_t, size_t, int);
+  */
  
-+	if (args.norm)
-+		kmem_free((void *)args.norm);
-+
- 	/*
- 	 * Return the number of bytes in the value to the caller.
- 	 */
-@@ -239,12 +246,15 @@ xfs_attr_set_int(
- 	args.value = value;
- 	args.valuelen = valuelen;
- 	args.flags = flags;
--	args.hashval = xfs_da_hashname(args.name, args.namelen);
- 	args.dp = dp;
- 	args.firstblock = &firstblock;
- 	args.flist = &flist;
- 	args.whichfork = XFS_ATTR_FORK;
- 	args.op_flags = XFS_DA_OP_ADDNAME | XFS_DA_OP_OKNOENT;
-+	if (! xfs_sb_version_hasutf8(&mp->m_sb))
-+		args.hashval = xfs_da_hashname(args.name, args.namelen);
-+	else if ((error = mp->m_dirnameops->normhash(&args)) != 0)
-+		return error;
+ extern off64_t		filesize(void);
+-extern int		openfile(char *, xfs_fsop_geom_t *, int, mode_t);
+-extern int		addfile(char *, int , xfs_fsop_geom_t *, int);
++extern int		openfile(char *, xfs_fsop_geom_v2_t *, int, mode_t);
++extern int		addfile(char *, int , xfs_fsop_geom_v2_t *, int);
+ extern void		printxattr(uint, int, int, const char *, int, int);
  
- 	/* Size is now blocks for attribute data */
- 	args.total = xfs_attr_calc_size(dp, name->len, valuelen, &local);
-@@ -276,6 +286,8 @@ xfs_attr_set_int(
- 	error = xfs_trans_reserve(args.trans, &tres, args.total, 0);
- 	if (error) {
- 		xfs_trans_cancel(args.trans, 0);
-+		if (args.norm)
-+			kmem_free((void *)args.norm);
- 		return(error);
- 	}
- 	xfs_ilock(dp, XFS_ILOCK_EXCL);
-@@ -286,6 +298,8 @@ xfs_attr_set_int(
- 	if (error) {
- 		xfs_iunlock(dp, XFS_ILOCK_EXCL);
- 		xfs_trans_cancel(args.trans, XFS_TRANS_RELEASE_LOG_RES);
-+		if (args.norm)
-+			kmem_free((void *)args.norm);
- 		return (error);
- 	}
- 
-@@ -333,7 +347,8 @@ xfs_attr_set_int(
- 			err2 = xfs_trans_commit(args.trans,
- 						 XFS_TRANS_RELEASE_LOG_RES);
- 			xfs_iunlock(dp, XFS_ILOCK_EXCL);
--
-+			if (args.norm)
-+				kmem_free((void *)args.norm);
- 			return(error == 0 ? err2 : error);
- 		}
- 
-@@ -398,6 +413,8 @@ xfs_attr_set_int(
- 	xfs_trans_log_inode(args.trans, dp, XFS_ILOG_CORE);
- 	error = xfs_trans_commit(args.trans, XFS_TRANS_RELEASE_LOG_RES);
- 	xfs_iunlock(dp, XFS_ILOCK_EXCL);
-+	if (args.norm)
-+		kmem_free((void *)args.norm);
- 
- 	return(error);
- 
-@@ -406,6 +423,9 @@ out:
- 		xfs_trans_cancel(args.trans,
- 			XFS_TRANS_RELEASE_LOG_RES|XFS_TRANS_ABORT);
- 	xfs_iunlock(dp, XFS_ILOCK_EXCL);
-+	if (args.norm)
-+		kmem_free((void *)args.norm);
-+
- 	return(error);
- }
- 
-@@ -452,12 +472,15 @@ xfs_attr_remove_int(xfs_inode_t *dp, struct xfs_name *name, int flags)
- 	args.name = name->name;
- 	args.namelen = name->len;
- 	args.flags = flags;
--	args.hashval = xfs_da_hashname(args.name, args.namelen);
- 	args.dp = dp;
- 	args.firstblock = &firstblock;
- 	args.flist = &flist;
- 	args.total = 0;
- 	args.whichfork = XFS_ATTR_FORK;
-+	if (! xfs_sb_version_hasutf8(&mp->m_sb))
-+		args.hashval = xfs_da_hashname(args.name, args.namelen);
-+	else if ((error = mp->m_dirnameops->normhash(&args)) != 0)
-+		return error;
- 
- 	/*
- 	 * we have no control over the attribute names that userspace passes us
-@@ -470,8 +493,11 @@ xfs_attr_remove_int(xfs_inode_t *dp, struct xfs_name *name, int flags)
- 	 * Attach the dquots to the inode.
- 	 */
- 	error = xfs_qm_dqattach(dp, 0);
--	if (error)
--		return error;
-+	if (error) {
-+		if (args.norm)
-+			kmem_free((void *)args.norm);
-+			return error;
-+	}
- 
- 	/*
- 	 * Start our first transaction of the day.
-@@ -497,6 +523,8 @@ xfs_attr_remove_int(xfs_inode_t *dp, struct xfs_name *name, int flags)
- 				  XFS_ATTRRM_SPACE_RES(mp), 0);
- 	if (error) {
- 		xfs_trans_cancel(args.trans, 0);
-+		if (args.norm)
-+			kmem_free((void *)args.norm);
- 		return(error);
- 	}
- 
-@@ -546,6 +574,8 @@ xfs_attr_remove_int(xfs_inode_t *dp, struct xfs_name *name, int flags)
- 	xfs_trans_log_inode(args.trans, dp, XFS_ILOG_CORE);
- 	error = xfs_trans_commit(args.trans, XFS_TRANS_RELEASE_LOG_RES);
- 	xfs_iunlock(dp, XFS_ILOCK_EXCL);
-+	if (args.norm)
-+		kmem_free((void *)args.norm);
- 
- 	return(error);
- 
-@@ -554,6 +584,9 @@ out:
- 		xfs_trans_cancel(args.trans,
- 			XFS_TRANS_RELEASE_LOG_RES|XFS_TRANS_ABORT);
- 	xfs_iunlock(dp, XFS_ILOCK_EXCL);
-+	if (args.norm)
-+		kmem_free((void *)args.norm);
-+
- 	return(error);
- }
- 
-diff --git a/libxfs/xfs_attr_leaf.c b/libxfs/xfs_attr_leaf.c
-index f7f02ae..052a6a1 100644
---- a/libxfs/xfs_attr_leaf.c
-+++ b/libxfs/xfs_attr_leaf.c
-@@ -634,6 +634,7 @@ int
- xfs_attr_shortform_to_leaf(xfs_da_args_t *args)
+ extern unsigned int	recurse_all;
+diff --git a/io/open.c b/io/open.c
+index c106fa7..81c19c9 100644
+--- a/io/open.c
++++ b/io/open.c
+@@ -140,7 +140,7 @@ stat_f(
+ int
+ openfile(
+ 	char		*path,
+-	xfs_fsop_geom_t	*geom,
++	xfs_fsop_geom_v2_t	*geom,
+ 	int		flags,
+ 	mode_t		mode)
  {
- 	xfs_inode_t *dp;
-+	struct xfs_mount *mp;
- 	xfs_attr_shortform_t *sf;
- 	xfs_attr_sf_entry_t *sfe;
- 	xfs_da_args_t nargs;
-@@ -646,6 +647,7 @@ xfs_attr_shortform_to_leaf(xfs_da_args_t *args)
- 	trace_xfs_attr_sf_to_leaf(args);
+@@ -185,7 +185,7 @@ openfile(
+ 	if (!geom || !platform_test_xfs_fd(fd))
+ 		return fd;
  
- 	dp = args->dp;
-+	mp = dp->i_mount;
- 	ifp = dp->i_afp;
- 	sf = (xfs_attr_shortform_t *)ifp->if_u1.if_data;
- 	size = be16_to_cpu(sf->hdr.totsize);
-@@ -698,13 +700,18 @@ xfs_attr_shortform_to_leaf(xfs_da_args_t *args)
- 		nargs.namelen = sfe->namelen;
- 		nargs.value = &sfe->nameval[nargs.namelen];
- 		nargs.valuelen = sfe->valuelen;
--		nargs.hashval = xfs_da_hashname(sfe->nameval,
--						sfe->namelen);
- 		nargs.flags = XFS_ATTR_NSP_ONDISK_TO_ARGS(sfe->flags);
-+		if (! xfs_sb_version_hasutf8(&mp->m_sb))
-+			nargs.hashval = xfs_da_hashname(sfe->nameval,
-+							sfe->namelen);
-+		else if ((error = mp->m_dirnameops->normhash(&nargs)) != 0)
-+			goto out;
- 		error = xfs_attr3_leaf_lookup_int(bp, &nargs); /* set a->index */
- 		ASSERT(error == ENOATTR);
- 		error = xfs_attr3_leaf_add(bp, &nargs);
- 		ASSERT(error != ENOSPC);
-+		if (nargs.norm)
-+			 kmem_free((void *)nargs.norm);
- 		if (error)
- 			goto out;
- 		sfe = XFS_ATTR_SF_NEXTENTRY(sfe);
-diff --git a/libxfs/xfs_utf8.c b/libxfs/xfs_utf8.c
-index 3be1fbb..f7042ef 100644
---- a/libxfs/xfs_utf8.c
-+++ b/libxfs/xfs_utf8.c
-@@ -109,6 +109,9 @@ xfs_utf8_normhash(
- 	unsigned int	sb_utf8version =
- 		args->dp->i_mount->m_sb.sb_utf8version;
+-	if (xfsctl(path, fd, XFS_IOC_FSGEOMETRY, geom) < 0) {
++	if (xfsctl(path, fd, XFS_IOC_FSGEOMETRY_V2, geom) < 0) {
+ 		perror("XFS_IOC_FSGEOMETRY");
+ 		close(fd);
+ 		return -1;
+@@ -215,7 +215,7 @@ int
+ addfile(
+ 	char		*name,
+ 	int		fd,
+-	xfs_fsop_geom_t	*geometry,
++	xfs_fsop_geom_v2_t	*geometry,
+ 	int		flags)
+ {
+ 	char		*filename;
+@@ -284,7 +284,7 @@ open_f(
+ 	int		c, fd, flags = 0;
+ 	char		*sp;
+ 	mode_t		mode = 0600;
+-	xfs_fsop_geom_t	geometry = { 0 };
++	xfs_fsop_geom_v2_t	geometry = { 0 };
  
-+	/* Don't normalize system attribute names. */
-+	if (args->flags & (ATTR_ROOT|ATTR_SECURE))
-+		goto blob;
- 	nfkdi = utf8nfkdi(sb_utf8version);
- 	/* Failure to normalize is treated as a blob. */
- 	if ((normlen = utf8nlen(nfkdi, args->name, args->namelen)) < 0)
-@@ -213,6 +216,9 @@ xfs_utf8_ci_normhash(
- 	unsigned int	sb_utf8version =
- 		args->dp->i_mount->m_sb.sb_utf8version;
+ 	if (argc == 1) {
+ 		if (file)
+@@ -701,7 +701,7 @@ statfs_f(
+ 	char			**argv)
+ {
+ 	struct xfs_fsop_counts	fscounts;
+-	struct xfs_fsop_geom	fsgeo;
++	struct xfs_fsop_geom_v2	fsgeo;
+ 	struct statfs		st;
  
-+	/* Don't normalize system attribute names. */
-+	if (args->flags & (ATTR_ROOT|ATTR_SECURE))
-+		goto blob;
- 	nfkdicf = utf8nfkdicf(sb_utf8version);
- 	/* Failure to normalize is treated as a blob. */
- 	if ((normlen = utf8nlen(nfkdicf, args->name, args->namelen)) < 0)
+ 	printf(_("fd.path = \"%s\"\n"), file->name);
+diff --git a/quota/free.c b/quota/free.c
+index 79b52e9..b2e325b 100644
+--- a/quota/free.c
++++ b/quota/free.c
+@@ -59,7 +59,7 @@ mount_free_space_data(
+ 	__uint64_t		*rfree)
+ {
+ 	struct xfs_fsop_counts	fscounts;
+-	struct xfs_fsop_geom	fsgeo;
++	struct xfs_fsop_geom_v2	fsgeo;
+ 	struct statfs		st;
+ 	__uint64_t		logsize, count, free;
+ 	int			fd;
 -- 
 1.7.12.4
 
