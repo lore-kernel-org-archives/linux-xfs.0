@@ -1,11 +1,11 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 91B5D7F4E
-	for <xfs@oss.sgi.com>; Fri,  3 Oct 2014 17:15:16 -0500 (CDT)
-Date: Fri, 3 Oct 2014 17:15:16 -0500
+	by oss.sgi.com (Postfix) with ESMTP id 875197F47
+	for <xfs@oss.sgi.com>; Fri,  3 Oct 2014 17:15:55 -0500 (CDT)
+Date: Fri, 3 Oct 2014 17:15:55 -0500
 From: Ben Myers <bpm@sgi.com>
-Subject: [PATCH 31/35] xfsprogs: add utf8 support to growfs
-Message-ID: <20141003221516.GE1865@sgi.com>
+Subject: [PATCH 32/35] xfsprogs: add utf8 support to mkfs.xfs
+Message-ID: <20141003221555.GF1865@sgi.com>
 References: <20141003214758.GY1865@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
@@ -27,56 +27,191 @@ Cc: olaf@sgi.com, xfs@oss.sgi.com
 
 From: Mark Tinguely <tinguely@sgi.com>
 
-Add utf-8 to xfs_growfs and xfs_info.
+Set the utf-8 feature bit.
 
 Signed-off-by: Mark Tinguely <tinguely@sgi.com>
 Signed-off-by: Ben Myers <bpm@sgi.com>
 
-[v2: use versioned fsgeom ioctl. -bpm]
+[v2: add support for utf8version. -bpm]
 ---
- growfs/xfs_growfs.c | 85 ++++++++++++++++++++++++++++++++++++++---------------
- 1 file changed, 61 insertions(+), 24 deletions(-)
+ man/man8/mkfs.xfs.8 |  9 ++++-
+ mkfs/xfs_mkfs.c     | 98 +++++++++++++++++++++++++++++++++++++++++++++++++++--
+ mkfs/xfs_mkfs.h     |  3 +-
+ 3 files changed, 105 insertions(+), 5 deletions(-)
 
-diff --git a/growfs/xfs_growfs.c b/growfs/xfs_growfs.c
-index c3df0c0..5e9d575 100644
---- a/growfs/xfs_growfs.c
-+++ b/growfs/xfs_growfs.c
-@@ -18,6 +18,7 @@
- 
- #include <xfs/libxfs.h>
- #include <xfs/path.h>
+diff --git a/man/man8/mkfs.xfs.8 b/man/man8/mkfs.xfs.8
+index ad9ff3d..aa43cf5 100644
+--- a/man/man8/mkfs.xfs.8
++++ b/man/man8/mkfs.xfs.8
+@@ -558,7 +558,7 @@ any power of 2 size from the filesystem block size up to 65536.
+ .IP
+ The
+ .B version=ci
+-option enables ASCII only case-insensitive filename lookup and version
++option enables ASCII or UTF-8 case-insensitive filename lookup and version
+ 2 directories. Filenames are case-preserving, that is, the names
+ are stored in directories using the case they were created with.
+ .IP
+@@ -582,6 +582,13 @@ When CRCs are enabled via
+ the ftype functionality is always enabled. This feature can not be turned
+ off for such filesystem configurations.
+ .IP
++.TP
++.BI utf8[= value ]
++This is used to enable the UTF-8 character set support. The
++.I value
++is either 0 or 1, with 1 signifying that UTF-8 character support is to be
++enabled. If the value is omitted, 1 is assumed.
++.IP
+ .RE
+ .TP
+ .BI \-p " protofile"
+diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+index c85258a..8cf5f9a 100644
+--- a/mkfs/xfs_mkfs.c
++++ b/mkfs/xfs_mkfs.c
+@@ -25,6 +25,7 @@
+ #include <disk/volume.h>
+ #endif
+ #include "xfs_mkfs.h"
 +#include <xfs/utf8norm.h>
  
- static void
- usage(void)
-@@ -44,7 +45,8 @@ Options:\n\
+ /*
+  * Device topology information.
+@@ -149,6 +150,8 @@ char	*nopts[] = {
+ 	"version",
+ #define	N_FTYPE		3
+ 	"ftype",
++#define	N_UTF8		4
++	"utf8",
+ 	NULL,
+ };
  
- void
- report_info(
--	xfs_fsop_geom_v2_t	geo,
-+	xfs_fsop_geom_t	geo,
-+	int		oldioctl,
- 	char		*mntpoint,
- 	int		isint,
- 	char		*logname,
-@@ -57,8 +59,31 @@ report_info(
- 	int		crcs_enabled,
- 	int		cimode,
- 	int		ftype_enabled,
--	int		finobt_enabled)
-+	int		finobt_enabled,
-+	int		utf8)
- {
-+	char		utf8_version_string[10];
-+
-+	/* XXX Can we assume that geo.version has always been zeroed by
-+	 * the kernel so it is always meaningful? */
-+	if (!oldioctl && geo.version >= XFS_FSOP_GEOM_VERSION5 && utf8) {
+@@ -958,6 +961,11 @@ main(
+ 	int			nsflag;
+ 	int			nvflag;
+ 	int			nci;
++	unsigned int		utf8;
++	unsigned int		utf8_major;
++	unsigned int		utf8_minor;
++	unsigned int		utf8_revision;
++	char			utf8_version_string[10];
+ 	int			Nflag;
+ 	int			discard = 1;
+ 	char			*p;
+@@ -984,6 +992,7 @@ main(
+ 	int			lazy_sb_counters;
+ 	int			crcs_enabled;
+ 	int			finobt;
++	int			ret;
+ 
+ 	progname = basename(argv[0]);
+ 	setlocale(LC_ALL, "");
+@@ -1004,6 +1013,7 @@ main(
+ 	logagno = logblocks = rtblocks = rtextblocks = 0;
+ 	Nflag = nlflag = nsflag = nvflag = nci = 0;
+ 	nftype = dirftype = 0;		/* inode type information in the dir */
++	utf8 = 0;			/* utf-8 support */
+ 	dirblocklog = dirblocksize = 0;
+ 	dirversion = XFS_DFL_DIR_VERSION;
+ 	qflag = 0;
+@@ -1565,7 +1575,8 @@ _("cannot specify both crc and ftype\n"));
+ 					if (nvflag)
+ 						respec('n', nopts, N_VERSION);
+ 					if (!strcasecmp(value, "ci")) {
+-						nci = 1; /* ASCII CI mode */
++						/* ASCII or UTF-8 CI mode */
++						nci = 1;
+ 					} else {
+ 						dirversion = atoi(value);
+ 						if (dirversion != 2)
+@@ -1587,6 +1598,62 @@ _("cannot specify both crc and ftype\n"));
+ 					}
+ 					nftype = 1;
+ 					break;
++				case N_UTF8:
++					if (!value || *value == '\0')
++						value = "7.0.0";
++					ret = sscanf(value, "%d.%d.%d",
++							&utf8_major,
++							&utf8_minor,
++							&utf8_revision);
++					if (ret == 3) {
++						utf8 = UNICODE_AGE(
++							utf8_major,
++							utf8_minor,
++							utf8_revision);
++						if (!utf8version_is_supported(
++									utf8)) {
++							fprintf(stderr,
++_("utf8 version %d.%d.%d not supported\n"),
++							utf8_major,
++							utf8_minor,
++							utf8_revision);
++							usage();
++						}
++						break;
++					}
++					ret = sscanf(value, "%d.%d",
++							&utf8_major,
++							&utf8_minor);
++					if (ret == 2) {
++						utf8 = UNICODE_AGE(
++							utf8_major,
++							utf8_minor,
++							0);
++						if (!utf8version_is_supported(
++									utf8)) {
++							fprintf(stderr,
++_("utf8 version %d.%d not supported\n"),
++							utf8_major,
++							utf8_minor);
++							usage();
++						}
++						break;
++					}
++					ret = sscanf(value, "%d", &utf8_major);
++					if (ret == 1) {
++						utf8 = UNICODE_AGE(
++							utf8_major,
++							0, 0);
++						if (!utf8version_is_supported(
++									utf8)) {
++							fprintf(stderr,
++_("utf8 version %d not supported\n"),
++							utf8_major);
++							usage();
++						}
++						break;
++					}
++					/* fallthrough */
+ 				default:
+ 					unknown('n', value);
+ 				}
+@@ -2460,7 +2527,8 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
+ 	 */
+ 	sbp->sb_features2 = XFS_SB_VERSION2_MKFS(crcs_enabled, lazy_sb_counters,
+ 					attrversion == 2, !projid16bit, 0,
+-					(!crcs_enabled && dirftype));
++					(!crcs_enabled && dirftype),
++					(!crcs_enabled && utf8));
+ 	sbp->sb_versionnum = XFS_SB_VERSION_MKFS(crcs_enabled, iaflag,
+ 					dsunit != 0,
+ 					logversion == 2, attrversion == 1,
+@@ -2534,6 +2602,26 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
+ 	if (crcs_enabled) {
+ 		sbp->sb_features_incompat = XFS_SB_FEAT_INCOMPAT_FTYPE;
+ 		dirftype = 1;
++		/* turn on the utf-8 support */
++		if (utf8)
++			sbp->sb_features_incompat |= XFS_SB_FEAT_INCOMPAT_UTF8;
++	}
++	if (utf8) {
 +		int	major, minor, revision;
 +
-+		major = geo.utf8version >> UNICODE_MAJ_SHIFT;
-+		minor = (geo.utf8version & 0xff00) >> UNICODE_MIN_SHIFT;
-+		revision = geo.utf8version & 0xff;
++		major = utf8 >> UNICODE_MAJ_SHIFT;
++		minor = (utf8 & 0xff00) >> UNICODE_MIN_SHIFT;
++		revision = utf8 & 0xff;
 +
 +		if (!revision && !minor)
 +			sprintf(utf8_version_string, "%d", major);
@@ -84,135 +219,66 @@ index c3df0c0..5e9d575 100644
 +			sprintf(utf8_version_string, "%d.%d", major, minor);
 +		else
 +			sprintf(utf8_version_string, "%d.%d.%d",
-+					major, minor, revision);
++						major, minor, revision);
 +	} else {
-+		sprintf(utf8_version_string, "0");
-+	}
-+
- 	printf(_(
- 	    "meta-data=%-22s isize=%-6u agcount=%u, agsize=%u blks\n"
- 	    "         =%-22s sectsz=%-5u attr=%u, projid32bit=%u\n"
-@@ -66,6 +91,7 @@ report_info(
- 	    "data     =%-22s bsize=%-6u blocks=%llu, imaxpct=%u\n"
- 	    "         =%-22s sunit=%-6u swidth=%u blks\n"
- 	    "naming   =version %-14u bsize=%-6u ascii-ci=%d ftype=%d\n"
-+	    "         =%-22s utf8=%s\n"
- 	    "log      =%-22s bsize=%-6u blocks=%u, version=%u\n"
- 	    "         =%-22s sectsz=%-5u sunit=%u blks, lazy-count=%u\n"
- 	    "realtime =%-22s extsz=%-6u blocks=%llu, rtextents=%llu\n"),
-@@ -76,7 +102,8 @@ report_info(
- 		"", geo.blocksize, (unsigned long long)geo.datablocks,
- 			geo.imaxpct,
- 		"", geo.sunit, geo.swidth,
--  		dirversion, geo.dirblocksize, cimode, ftype_enabled,
-+		dirversion, geo.dirblocksize, cimode, ftype_enabled,
-+		"", utf8_version_string,
- 		isint ? _("internal") : logname ? logname : _("external"),
- 			geo.blocksize, geo.logblocks, logversion,
- 		"", geo.logsectsize, geo.logsunit / geo.blocksize, lazycount,
-@@ -101,7 +128,7 @@ main(int argc, char **argv)
- 	int			error;	/* we have hit an error */
- 	long			esize;	/* new rt extent size */
- 	int			ffd;	/* mount point file descriptor */
--	xfs_fsop_geom_v2_t	geo;	/* current fs geometry */
-+	xfs_fsop_geom_t		geo;	/* current fs geometry */
- 	int			iflag;	/* -i flag */
- 	int			isint;	/* log is currently internal */
- 	int			lflag;	/* -l flag */
-@@ -109,11 +136,12 @@ main(int argc, char **argv)
- 	int			maxpct;	/* -m flag value */
- 	int			mflag;	/* -m flag */
- 	int			nflag;	/* -n flag */
--	xfs_fsop_geom_v2_t	ngeo;	/* new fs geometry */
-+	xfs_fsop_geom_t		ngeo;	/* new fs geometry */
- 	int			rflag;	/* -r flag */
- 	long long		rsize;	/* new rt size in fs blocks */
- 	int			ci;	/* ASCII case-insensitive fs */
- 	int			lazycount; /* lazy superblock counters */
-+	int			utf8;	/* Unicode chars supported */
- 	int			xflag;	/* -x flag */
- 	char			*fname;	/* mount point name */
- 	char			*datadev; /* data device name */
-@@ -125,6 +153,7 @@ main(int argc, char **argv)
- 	int			crcs_enabled;
- 	int			ftype_enabled = 0;
- 	int			finobt_enabled;	/* free inode btree */
-+	int			oldioctl = 0;
- 
- 	progname = basename(argv[0]);
- 	setlocale(LC_ALL, "");
-@@ -219,21 +248,28 @@ main(int argc, char **argv)
- 		exit(1);
++		strcpy(utf8_version_string, "0");
  	}
  
--	/* get the current filesystem size & geometry */
--	if (xfsctl(fname, ffd, XFS_IOC_FSGEOMETRY_V2, &geo) < 0) {
--		/*
--		 * OK, new xfsctl barfed - back off and try earlier version
--		 * as we're probably running an older kernel version.
--		 * Only field added in the v2 geometry xfsctl is "logsunit"
--		 * so we'll zero that out for later display (as zero).
--		 */
--		geo.logsunit = 0;
--		if (xfsctl(fname, ffd, XFS_IOC_FSGEOMETRY_V1, &geo) < 0) {
--			fprintf(stderr, _(
--				"%s: cannot determine geometry of filesystem"
--				" mounted at %s: %s\n"),
--				progname, fname, strerror(errno));
--			exit(1);
-+	memset(&geo, '\0', sizeof(geo));
-+	geo.version = XFS_FSOP_GEOM_VERSION5;
-+	if (xfsctl(fname, ffd, XFS_IOC_FSGEOMETRY, &geo) < 0) {
-+	
-+		oldioctl = 1;
-+		/* get the current filesystem size & geometry */
-+		if (xfsctl(fname, ffd, XFS_IOC_FSGEOMETRY_V2, &geo) < 0) {
-+			/*
-+			 * OK, new xfsctl barfed - back off and try
-+			 * earlier version as we're probably running an
-+			 * older kernel version.  Only field added in
-+			 * the v2 geometry xfsctl is "logsunit" so we'll
-+			 * zero that out for later display (as zero).
-+			 */
-+			geo.logsunit = 0;
-+			if (xfsctl(fname, ffd, XFS_IOC_FSGEOMETRY_V1, &geo)
-+					< 0) {
-+				fprintf(stderr,
-+	_("%s: cannot determine geometry of filesystem mounted at %s: %s\n"),
-+					progname, fname, strerror(errno));
-+				exit(1);
-+			}
- 		}
+ 	if (!qflag || Nflag) {
+@@ -2544,6 +2632,7 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
+ 		   "data     =%-22s bsize=%-6u blocks=%llu, imaxpct=%u\n"
+ 		   "         =%-22s sunit=%-6u swidth=%u blks\n"
+ 		   "naming   =version %-14u bsize=%-6u ascii-ci=%d ftype=%d\n"
++		   "         =%-22s utf8=%s\n"
+ 		   "log      =%-22s bsize=%-6d blocks=%lld, version=%d\n"
+ 		   "         =%-22s sectsz=%-5u sunit=%d blks, lazy-count=%d\n"
+ 		   "realtime =%-22s extsz=%-6d blocks=%lld, rtextents=%lld\n"),
+@@ -2553,6 +2642,7 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
+ 			"", blocksize, (long long)dblocks, imaxpct,
+ 			"", dsunit, dswidth,
+ 			dirversion, dirblocksize, nci, dirftype,
++			"", utf8_version_string,
+ 			logfile, 1 << blocklog, (long long)logblocks,
+ 			logversion, "", lsectorsize, lsunit, lazy_sb_counters,
+ 			rtfile, rtextblocks << blocklog,
+@@ -2617,6 +2707,7 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
+ 		sbp->sb_logsectlog = 0;
+ 		sbp->sb_logsectsize = 0;
  	}
- 	isint = geo.logstart > 0;
-@@ -247,11 +283,12 @@ main(int argc, char **argv)
- 	crcs_enabled = geo.flags & XFS_FSOP_GEOM_FLAGS_V5SB ? 1 : 0;
- 	ftype_enabled = geo.flags & XFS_FSOP_GEOM_FLAGS_FTYPE ? 1 : 0;
- 	finobt_enabled = geo.flags & XFS_FSOP_GEOM_FLAGS_FINOBT ? 1 : 0;
-+	utf8 = geo.flags & XFS_FSOP_GEOM_FLAGS_UTF8 ? 1 : 0;
- 	if (nflag) {
--		report_info(geo, datadev, isint, logdev, rtdev,
-+		report_info(geo, oldioctl, datadev, isint, logdev, rtdev,
- 				lazycount, dirversion, logversion,
- 				attrversion, projid32bit, crcs_enabled, ci,
--				ftype_enabled, finobt_enabled);
-+				ftype_enabled, finobt_enabled, utf8);
- 		exit(0);
- 	}
++	sbp->sb_utf8version = utf8;
  
-@@ -286,10 +323,10 @@ main(int argc, char **argv)
- 		exit(1);
- 	}
+ 	if (force_overwrite)
+ 		zero_old_xfs_structures(&xi, sbp);
+@@ -3171,7 +3262,8 @@ usage( void )
+ 			    sunit=value|su=num,sectlog=n|sectsize=num,\n\
+ 			    lazy-count=0|1]\n\
+ /* label */		[-L label (maximum 12 characters)]\n\
+-/* naming */		[-n log=n|size=num,version=2|ci,ftype=0|1]\n\
++/* naming */		[-n log=n|size=num,version=2|ci,ftype=0|1\n\
++			    utf8=0|7]\n\
+ /* no-op info only */	[-N]\n\
+ /* prototype file */	[-p fname]\n\
+ /* quiet */		[-q]\n\
+diff --git a/mkfs/xfs_mkfs.h b/mkfs/xfs_mkfs.h
+index 9df5f37..f40b284 100644
+--- a/mkfs/xfs_mkfs.h
++++ b/mkfs/xfs_mkfs.h
+@@ -37,13 +37,14 @@
+ 	0 ) : XFS_SB_VERSION_1 )
  
--	report_info(geo, datadev, isint, logdev, rtdev,
-+	report_info(geo, oldioctl, datadev, isint, logdev, rtdev,
- 			lazycount, dirversion, logversion,
- 			attrversion, projid32bit, crcs_enabled, ci, ftype_enabled,
--			finobt_enabled);
-+			finobt_enabled, utf8);
+ #define XFS_SB_VERSION2_MKFS(crc, lazycount, attr2, projid32bit, parent, \
+-			     ftype) (\
++			     ftype, utf8) (\
+ 	((lazycount) ? XFS_SB_VERSION2_LAZYSBCOUNTBIT : 0) |		\
+ 	((attr2) ? XFS_SB_VERSION2_ATTR2BIT : 0) |			\
+ 	((projid32bit) ? XFS_SB_VERSION2_PROJID32BIT : 0) |		\
+ 	((parent) ? XFS_SB_VERSION2_PARENTBIT : 0) |			\
+ 	((crc) ? XFS_SB_VERSION2_CRCBIT : 0) |				\
+ 	((ftype) ? XFS_SB_VERSION2_FTYPE : 0) |				\
++	((utf8) ? XFS_SB_VERSION2_UTF8BIT : 0) |			\
+ 	0 )
  
- 	ddsize = xi.dsize;
- 	dlsize = ( xi.logBBsize? xi.logBBsize :
+ #define	XFS_DFL_BLOCKSIZE_LOG	12		/* 4096 byte blocks */
 -- 
 1.7.12.4
 
