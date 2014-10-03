@@ -1,11 +1,11 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 41CA37F37
-	for <xfs@oss.sgi.com>; Fri,  3 Oct 2014 16:58:07 -0500 (CDT)
-Date: Fri, 3 Oct 2014 16:58:06 -0500
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id F262A7F37
+	for <xfs@oss.sgi.com>; Fri,  3 Oct 2014 16:58:44 -0500 (CDT)
+Date: Fri, 3 Oct 2014 16:58:44 -0500
 From: Ben Myers <bpm@sgi.com>
-Subject: [PATCH 07/16] xfs: add xfs_nameops.normhash
-Message-ID: <20141003215806.GF1865@sgi.com>
+Subject: [PATCH 08/16] xfs: change interface of xfs_nameops.hashname
+Message-ID: <20141003215844.GG1865@sgi.com>
 References: <20141003214758.GY1865@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
@@ -27,224 +27,132 @@ Cc: olaf@sgi.com, xfs@oss.sgi.com
 
 From: Olaf Weber <olaf@sgi.com>
 
-Add a normhash callout to the xfs_nameops. This callout takes an xfs_da_args
-structure as its argument, and calculates a hash value over the name. It may
-in the process create a normalized form of the name, and assign that to the
-norm/normlen fields in the xfs_da_args structure.
+With the introduction of the xfs_nameops.normhash callout, all uses of the
+hashname callout now occur in places where an xfs_name structure must be
+explicitly created just to match the parameter passing convention of this
+callout. Change the arguments to a const unsigned char * and int instead.
 
 Signed-off-by: Olaf Weber <olaf@sgi.com>
+
+[v2: pass a 3rd argument for sb_utf8version to hashname.  --bpm]
 ---
- fs/xfs/libxfs/xfs_da_btree.c |  9 +++++++++
- fs/xfs/libxfs/xfs_da_btree.h |  3 +++
- fs/xfs/libxfs/xfs_dir2.c     | 42 +++++++++++++++++++++++++++++++++++++-----
- 3 files changed, 49 insertions(+), 5 deletions(-)
+ fs/xfs/libxfs/xfs_da_btree.c   | 18 ++++++++++--------
+ fs/xfs/libxfs/xfs_da_btree.h   |  3 ++-
+ fs/xfs/libxfs/xfs_dir2.c       |  8 +++++---
+ fs/xfs/libxfs/xfs_dir2_block.c |  4 +++-
+ fs/xfs/libxfs/xfs_dir2_data.c  |  4 +++-
+ 5 files changed, 23 insertions(+), 14 deletions(-)
 
 diff --git a/fs/xfs/libxfs/xfs_da_btree.c b/fs/xfs/libxfs/xfs_da_btree.c
-index 2c42ae2..07a3acf 100644
+index 07a3acf..ec6cc98 100644
 --- a/fs/xfs/libxfs/xfs_da_btree.c
 +++ b/fs/xfs/libxfs/xfs_da_btree.c
-@@ -1990,8 +1990,17 @@ xfs_default_hashname(
- 	return xfs_da_hashname(name->name, name->len);
+@@ -1973,6 +1973,15 @@ xfs_da_hashname(const __uint8_t *name, int namelen)
+ 	}
  }
  
-+STATIC int
-+xfs_da_normhash(
-+	struct xfs_da_args *args)
++xfs_dahash_t
++xfs_da_hashname_op(
++	const __uint8_t		*name,
++	int 			namelen,
++	unsigned int 		unused)
 +{
-+	args->hashval = xfs_da_hashname(args->name, args->namelen);
-+	return 0;
++	return xfs_da_hashname(name, namelen);
 +}
 +
+ enum xfs_dacmp
+ xfs_da_compname(
+ 	struct xfs_da_args *args,
+@@ -1983,13 +1992,6 @@ xfs_da_compname(
+ 					XFS_CMP_EXACT : XFS_CMP_DIFFERENT;
+ }
+ 
+-static xfs_dahash_t
+-xfs_default_hashname(
+-	struct xfs_name	*name)
+-{
+-	return xfs_da_hashname(name->name, name->len);
+-}
+-
+ STATIC int
+ xfs_da_normhash(
+ 	struct xfs_da_args *args)
+@@ -1999,7 +2001,7 @@ xfs_da_normhash(
+ }
+ 
  const struct xfs_nameops xfs_default_nameops = {
- 	.hashname	= xfs_default_hashname,
-+	.normhash	= xfs_da_normhash,
+-	.hashname	= xfs_default_hashname,
++	.hashname	= xfs_da_hashname_op,
+ 	.normhash	= xfs_da_normhash,
  	.compname	= xfs_da_compname
  };
- 
 diff --git a/fs/xfs/libxfs/xfs_da_btree.h b/fs/xfs/libxfs/xfs_da_btree.h
-index 9ebcc23..6cdafee 100644
+index 6cdafee..ce6888a 100644
 --- a/fs/xfs/libxfs/xfs_da_btree.h
 +++ b/fs/xfs/libxfs/xfs_da_btree.h
-@@ -61,7 +61,9 @@ enum xfs_dacmp {
- typedef struct xfs_da_args {
- 	struct xfs_da_geometry *geo;	/* da block geometry */
- 	const __uint8_t	*name;		/* string (maybe not NULL terminated) */
-+	const __uint8_t	*norm;		/* normalized name (may be NULL) */
- 	int		namelen;	/* length of string (maybe no NULL) */
-+	int		normlen;	/* length of normalized name */
- 	__uint8_t	filetype;	/* filetype of inode for directories */
- 	__uint8_t	*value;		/* set of bytes (maybe contain NULLs) */
- 	int		valuelen;	/* length of value */
-@@ -150,6 +152,7 @@ typedef struct xfs_da_state {
+@@ -151,7 +151,8 @@ typedef struct xfs_da_state {
+  * Name ops for directory and/or attr name operations
   */
  struct xfs_nameops {
- 	xfs_dahash_t	(*hashname)(struct xfs_name *);
-+	int		(*normhash)(struct xfs_da_args *);
+-	xfs_dahash_t	(*hashname)(struct xfs_name *);
++	xfs_dahash_t	(*hashname)(const unsigned char *, int,
++					unsigned int);
+ 	int		(*normhash)(struct xfs_da_args *);
  	enum xfs_dacmp	(*compname)(struct xfs_da_args *,
  					const unsigned char *, int);
- };
 diff --git a/fs/xfs/libxfs/xfs_dir2.c b/fs/xfs/libxfs/xfs_dir2.c
-index 32e769b..55733a6 100644
+index 55733a6..4eb0973 100644
 --- a/fs/xfs/libxfs/xfs_dir2.c
 +++ b/fs/xfs/libxfs/xfs_dir2.c
-@@ -56,6 +56,21 @@ xfs_ascii_ci_hashname(
+@@ -45,13 +45,15 @@ struct xfs_name xfs_name_dotdot = { (unsigned char *)"..", 2, XFS_DIR3_FT_DIR };
+  */
+ STATIC xfs_dahash_t
+ xfs_ascii_ci_hashname(
+-	struct xfs_name	*name)
++	const unsigned char *name,
++	int len,
++	unsigned int unused)
+ {
+ 	xfs_dahash_t	hash;
+ 	int		i;
+ 
+-	for (i = 0, hash = 0; i < name->len; i++)
+-		hash = tolower(name->name[i]) ^ rol32(hash, 7);
++	for (i = 0, hash = 0; i < len; i++)
++		hash = tolower(name[i]) ^ rol32(hash, 7);
+ 
  	return hash;
  }
- 
-+STATIC int
-+xfs_ascii_ci_normhash(
-+	struct xfs_da_args *args)
-+{
-+	xfs_dahash_t	hash;
-+	int		i;
-+
-+	for (i = 0, hash = 0; i < args->namelen; i++)
-+		hash = tolower(args->name[i]) ^ rol32(hash, 7);
-+
-+	args->hashval = hash;
-+	return 0;
-+}
-+
-+
- STATIC enum xfs_dacmp
- xfs_ascii_ci_compname(
- 	struct xfs_da_args *args,
-@@ -82,6 +97,7 @@ xfs_ascii_ci_compname(
- 
- static struct xfs_nameops xfs_ascii_ci_nameops = {
- 	.hashname	= xfs_ascii_ci_hashname,
-+	.normhash	= xfs_ascii_ci_normhash,
- 	.compname	= xfs_ascii_ci_compname,
- };
- 
-@@ -267,7 +283,6 @@ xfs_dir_createname(
- 	args->name = name->name;
- 	args->namelen = name->len;
- 	args->filetype = name->type;
--	args->hashval = dp->i_mount->m_dirnameops->hashname(name);
- 	args->inumber = inum;
- 	args->dp = dp;
- 	args->firstblock = first;
-@@ -276,6 +291,8 @@ xfs_dir_createname(
- 	args->whichfork = XFS_DATA_FORK;
- 	args->trans = tp;
- 	args->op_flags = XFS_DA_OP_ADDNAME | XFS_DA_OP_OKNOENT;
-+	if ((rval = dp->i_mount->m_dirnameops->normhash(args)))
-+		goto out_free;
- 
- 	if (dp->i_d.di_format == XFS_DINODE_FMT_LOCAL) {
- 		rval = xfs_dir2_sf_addname(args);
-@@ -299,6 +316,8 @@ xfs_dir_createname(
- 		rval = xfs_dir2_node_addname(args);
- 
- out_free:
-+	if (args->norm)
-+		kmem_free(args->norm);
- 	kmem_free(args);
- 	return rval;
- }
-@@ -365,13 +384,14 @@ xfs_dir_lookup(
- 	args->name = name->name;
- 	args->namelen = name->len;
- 	args->filetype = name->type;
--	args->hashval = dp->i_mount->m_dirnameops->hashname(name);
- 	args->dp = dp;
- 	args->whichfork = XFS_DATA_FORK;
- 	args->trans = tp;
- 	args->op_flags = XFS_DA_OP_OKNOENT;
- 	if (ci_name)
- 		args->op_flags |= XFS_DA_OP_CILOOKUP;
-+	if ((rval = dp->i_mount->m_dirnameops->normhash(args)))
-+		goto out_free;
- 
- 	if (dp->i_d.di_format == XFS_DINODE_FMT_LOCAL) {
- 		rval = xfs_dir2_sf_lookup(args);
-@@ -405,6 +425,9 @@ out_check_rval:
- 		}
- 	}
- out_free:
-+	if (args->norm)
-+		kmem_free(args->norm);
-+
- 	kmem_free(args);
- 	return rval;
- }
-@@ -437,7 +460,6 @@ xfs_dir_removename(
- 	args->name = name->name;
- 	args->namelen = name->len;
- 	args->filetype = name->type;
--	args->hashval = dp->i_mount->m_dirnameops->hashname(name);
- 	args->inumber = ino;
- 	args->dp = dp;
- 	args->firstblock = first;
-@@ -445,6 +467,8 @@ xfs_dir_removename(
- 	args->total = total;
- 	args->whichfork = XFS_DATA_FORK;
- 	args->trans = tp;
-+	if ((rval = dp->i_mount->m_dirnameops->normhash(args)))
-+		goto out_free;
- 
- 	if (dp->i_d.di_format == XFS_DINODE_FMT_LOCAL) {
- 		rval = xfs_dir2_sf_removename(args);
-@@ -467,6 +491,8 @@ xfs_dir_removename(
- 	else
- 		rval = xfs_dir2_node_removename(args);
- out_free:
-+	if (args->norm)
-+		kmem_free(args->norm);
- 	kmem_free(args);
- 	return rval;
- }
-@@ -502,7 +528,6 @@ xfs_dir_replace(
- 	args->name = name->name;
- 	args->namelen = name->len;
- 	args->filetype = name->type;
--	args->hashval = dp->i_mount->m_dirnameops->hashname(name);
- 	args->inumber = inum;
- 	args->dp = dp;
- 	args->firstblock = first;
-@@ -510,6 +535,8 @@ xfs_dir_replace(
- 	args->total = total;
- 	args->whichfork = XFS_DATA_FORK;
- 	args->trans = tp;
-+	if ((rval = dp->i_mount->m_dirnameops->normhash(args)))
-+		goto out_free;
- 
- 	if (dp->i_d.di_format == XFS_DINODE_FMT_LOCAL) {
- 		rval = xfs_dir2_sf_replace(args);
-@@ -532,6 +559,8 @@ xfs_dir_replace(
- 	else
- 		rval = xfs_dir2_node_replace(args);
- out_free:
-+	if (args->norm)
-+		kmem_free(args->norm);
- 	kmem_free(args);
- 	return rval;
- }
-@@ -564,12 +593,13 @@ xfs_dir_canenter(
- 	args->name = name->name;
- 	args->namelen = name->len;
- 	args->filetype = name->type;
--	args->hashval = dp->i_mount->m_dirnameops->hashname(name);
- 	args->dp = dp;
- 	args->whichfork = XFS_DATA_FORK;
- 	args->trans = tp;
- 	args->op_flags = XFS_DA_OP_JUSTCHECK | XFS_DA_OP_ADDNAME |
- 							XFS_DA_OP_OKNOENT;
-+	if ((rval = dp->i_mount->m_dirnameops->normhash(args)))
-+		goto out_free;
- 
- 	if (dp->i_d.di_format == XFS_DINODE_FMT_LOCAL) {
- 		rval = xfs_dir2_sf_addname(args);
-@@ -592,6 +622,8 @@ xfs_dir_canenter(
- 	else
- 		rval = xfs_dir2_node_addname(args);
- out_free:
-+	if (args->norm)
-+		kmem_free(args->norm);
- 	kmem_free(args);
- 	return rval;
- }
+diff --git a/fs/xfs/libxfs/xfs_dir2_block.c b/fs/xfs/libxfs/xfs_dir2_block.c
+index 990bf0c..12ebdd8 100644
+--- a/fs/xfs/libxfs/xfs_dir2_block.c
++++ b/fs/xfs/libxfs/xfs_dir2_block.c
+@@ -1231,7 +1231,9 @@ xfs_dir2_sf_to_block(
+ 		name.name = sfep->name;
+ 		name.len = sfep->namelen;
+ 		blp[2 + i].hashval = cpu_to_be32(mp->m_dirnameops->
+-							hashname(&name));
++					hashname(sfep->name,
++						 sfep->namelen,
++						 0 /* version for later */));
+ 		blp[2 + i].address = cpu_to_be32(xfs_dir2_byte_to_dataptr(
+ 						 (char *)dep - (char *)hdr));
+ 		offset = (int)((char *)(tagp + 1) - (char *)hdr);
+diff --git a/fs/xfs/libxfs/xfs_dir2_data.c b/fs/xfs/libxfs/xfs_dir2_data.c
+index fdd803f..25b0f7b 100644
+--- a/fs/xfs/libxfs/xfs_dir2_data.c
++++ b/fs/xfs/libxfs/xfs_dir2_data.c
+@@ -179,7 +179,9 @@ __xfs_dir3_data_check(
+ 						((char *)dep - (char *)hdr));
+ 			name.name = dep->name;
+ 			name.len = dep->namelen;
+-			hash = mp->m_dirnameops->hashname(&name);
++			hash = mp->m_dirnameops->hashname(dep->name,
++					dep->namelen,
++					0 /* version for later */);
+ 			for (i = 0; i < be32_to_cpu(btp->count); i++) {
+ 				if (be32_to_cpu(lep[i].address) == addr &&
+ 				    be32_to_cpu(lep[i].hashval) == hash)
 -- 
 1.7.12.4
 
