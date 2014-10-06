@@ -1,23 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 2CDB77F4E
-	for <xfs@oss.sgi.com>; Mon,  6 Oct 2014 17:17:40 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id BA1C0AC004
-	for <xfs@oss.sgi.com>; Mon,  6 Oct 2014 15:17:39 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 101447F4E
+	for <xfs@oss.sgi.com>; Mon,  6 Oct 2014 17:19:33 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id E0E898F8040
+	for <xfs@oss.sgi.com>; Mon,  6 Oct 2014 15:19:32 -0700 (PDT)
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	75IF61l4JaLw2FV0 for <xfs@oss.sgi.com>;
-	Mon, 06 Oct 2014 15:17:35 -0700 (PDT)
-Date: Tue, 7 Oct 2014 09:17:08 +1100
+	6qRdyrB0FN6NTtXm for <xfs@oss.sgi.com>;
+	Mon, 06 Oct 2014 15:19:30 -0700 (PDT)
+Date: Tue, 7 Oct 2014 09:19:28 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 08/16] xfs: change interface of xfs_nameops.hashname
-Message-ID: <20141006221708.GI2301@dastard>
+Subject: Re: [PATCH 05/16] xfs: return the first match during
+	case-insensitive lookup.
+Message-ID: <20141006221928.GJ2301@dastard>
 References: <20141003214758.GY1865@sgi.com>
- <20141003215844.GG1865@sgi.com>
+ <20141003215542.GD1865@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20141003215844.GG1865@sgi.com>
+In-Reply-To: <20141003215542.GD1865@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,29 +34,21 @@ Sender: xfs-bounces@oss.sgi.com
 To: Ben Myers <bpm@sgi.com>
 Cc: linux-fsdevel@vger.kernel.org, olaf@sgi.com, xfs@oss.sgi.com
 
-On Fri, Oct 03, 2014 at 04:58:44PM -0500, Ben Myers wrote:
+On Fri, Oct 03, 2014 at 04:55:42PM -0500, Ben Myers wrote:
 > From: Olaf Weber <olaf@sgi.com>
 > 
-> With the introduction of the xfs_nameops.normhash callout, all uses of the
-> hashname callout now occur in places where an xfs_name structure must be
-> explicitly created just to match the parameter passing convention of this
-> callout. Change the arguments to a const unsigned char * and int instead.
+> Change the XFS case-insensitive lookup code to return the first match
+> found, even if it is not an exact match. Whether a filesystem uses
+> case-insensitive lookups is determined by a superblock bit set during
+> filesystem creation.  This means that normal use cannot create two files
+> that both match the same filename.
 > 
 > Signed-off-by: Olaf Weber <olaf@sgi.com>
-> 
-> [v2: pass a 3rd argument for sb_utf8version to hashname.  --bpm]
 
-So now I've looked at most of the rest of the patch set, I think
-this is the wrong thing to do. I see no reason apart from "it's less
-typing" to drop the use of the xfs-name structure, but it removes a
-key piece of documentation from the code. i.e. that the name/namelen
-are an inseparable tuple and cannot be separated. Indeed, lots of
-the utf8 xfs code declares norm/normlen tuples on the stack for
-temporary use, so really this comes down to a matter of taste.
-
-And in that matter, I'd prefer that we keep the existing name
-abstaction and propagate it into the new code rather than the other
-way around.
+This is really dependent on whether we want to support mixed
+CI/non-CI filesystems, yes? i.e. if we want to support mixed case
+setups, then we need to keep the code as it stands? What is the
+downside of keeping the code unchaged and our options open?
 
 Cheers,
 
