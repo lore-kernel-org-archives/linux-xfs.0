@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 9862F7F4E
-	for <xfs@oss.sgi.com>; Mon,  6 Oct 2014 16:13:59 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id C9DF47F4E
+	for <xfs@oss.sgi.com>; Mon,  6 Oct 2014 16:26:02 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 874038F8040
-	for <xfs@oss.sgi.com>; Mon,  6 Oct 2014 14:13:56 -0700 (PDT)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id B7A5F8F8040
+	for <xfs@oss.sgi.com>; Mon,  6 Oct 2014 14:26:02 -0700 (PDT)
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	pahgDpbg8PEQD4Jo for <xfs@oss.sgi.com>;
-	Mon, 06 Oct 2014 14:13:54 -0700 (PDT)
-Date: Tue, 7 Oct 2014 08:13:51 +1100
+	JRtBu3G3w50xEFgn for <xfs@oss.sgi.com>;
+	Mon, 06 Oct 2014 14:26:00 -0700 (PDT)
+Date: Tue, 7 Oct 2014 08:25:58 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 16/16] xfs: add versioned fsgeom ioctl with utf8version
-	field
-Message-ID: <20141006211351.GE2301@dastard>
+Subject: Re: [PATCH 09/16] xfs: add a superblock feature bit to indicate
+	UTF-8 support.
+Message-ID: <20141006212558.GF2301@dastard>
 References: <20141003214758.GY1865@sgi.com>
- <20141003220546.GP1865@sgi.com>
+ <20141003215945.GH1865@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20141003220546.GP1865@sgi.com>
+In-Reply-To: <20141003215945.GH1865@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,159 +34,102 @@ Sender: xfs-bounces@oss.sgi.com
 To: Ben Myers <bpm@sgi.com>
 Cc: linux-fsdevel@vger.kernel.org, olaf@sgi.com, xfs@oss.sgi.com
 
-On Fri, Oct 03, 2014 at 05:05:46PM -0500, Ben Myers wrote:
-> From: Ben Myers <bpm@sgi.com>
+On Fri, Oct 03, 2014 at 04:59:46PM -0500, Ben Myers wrote:
+> From: Olaf Weber <olaf@sgi.com>
 > 
-> This adds a utf8version field to the xfs_fs_geom structure.  An
-> important characteristic of this version of the ioctl is that
-> fsgeo.version needs to be set by the caller to specify which version of
-> the structure to return.
+> When UTF-8 support is enabled, the xfs_dir_ci_inode_operations must be
+> installed. Add xfs_sb_version_hasci(), which tests both the borgbit and
+> the utf8bit, and returns true if at least one of them is set. Replace
+> calls to xfs_sb_version_hasasciici() as needed.
 > 
-> Signed-off-by: Ben Myers <bpm@sgi.com>
+> Signed-off-by: Olaf Weber <olaf@sgi.com>
 > ---
->  fs/xfs/xfs_fs.h    | 31 +++++++++++++++++++++++++++++++
->  fs/xfs/xfs_fsops.c | 13 ++++++++++++-
->  fs/xfs/xfs_fsops.h |  2 +-
->  fs/xfs/xfs_ioctl.c | 31 +++++++++++++++++++++++++++++++
->  4 files changed, 75 insertions(+), 2 deletions(-)
+>  fs/xfs/libxfs/xfs_sb.h | 24 +++++++++++++++++++++++-
+>  fs/xfs/xfs_fs.h        |  1 +
+>  fs/xfs/xfs_fsops.c     |  4 +++-
+>  fs/xfs/xfs_iops.c      |  4 ++--
+>  4 files changed, 29 insertions(+), 4 deletions(-)
 > 
-> diff --git a/fs/xfs/xfs_fs.h b/fs/xfs/xfs_fs.h
-> index fd45cbe..2f4d430 100644
-> --- a/fs/xfs/xfs_fs.h
-> +++ b/fs/xfs/xfs_fs.h
-> @@ -206,6 +206,34 @@ typedef struct xfs_fsop_geom_v2 {
->  	__u32		logsunit;	/* log stripe unit, bytes */
->  } xfs_fsop_geom_v2_t;
+> diff --git a/fs/xfs/libxfs/xfs_sb.h b/fs/xfs/libxfs/xfs_sb.h
+> index 2e73970..525eacb 100644
+> --- a/fs/xfs/libxfs/xfs_sb.h
+> +++ b/fs/xfs/libxfs/xfs_sb.h
+> @@ -70,6 +70,7 @@ struct xfs_trans;
+>  #define XFS_SB_VERSION2_RESERVED4BIT	0x00000004
+>  #define XFS_SB_VERSION2_ATTR2BIT	0x00000008	/* Inline attr rework */
+>  #define XFS_SB_VERSION2_PARENTBIT	0x00000010	/* parent pointers */
+> +#define XFS_SB_VERSION2_UTF8BIT		0x00000020      /* utf8 names */
+>  #define XFS_SB_VERSION2_PROJID32BIT	0x00000080	/* 32 bit project id */
+
+Can you explain why this bit is safe to use? I don't recall why
+XFS_SB_VERSION2_PROJID32BIT skipped several bits because there
+aren't any comments explaining why that value was chosen. Adding a
+comment about the 0x00000040 bit at the same time would be useful.
+
+>  #define XFS_SB_VERSION2_CRCBIT		0x00000100	/* metadata CRCs */
+>  #define XFS_SB_VERSION2_FTYPE		0x00000200	/* inode type in dir */
+> @@ -77,6 +78,7 @@ struct xfs_trans;
+>  #define	XFS_SB_VERSION2_OKBITS		\
+>  	(XFS_SB_VERSION2_LAZYSBCOUNTBIT	| \
+>  	 XFS_SB_VERSION2_ATTR2BIT	| \
+> +	 XFS_SB_VERSION2_UTF8BIT	| \
+>  	 XFS_SB_VERSION2_PROJID32BIT	| \
+>  	 XFS_SB_VERSION2_FTYPE)
 >  
-> +/*
-> + * Output for XFS_IOC_FSGEOMETRY
-> + */
-> +typedef struct xfs_fsop_geom {
-> +	__u32		blocksize;	/* filesystem (data) block size */
-> +	__u32		rtextsize;	/* realtime extent size		*/
-> +	__u32		agblocks;	/* fsblocks in an AG		*/
-> +	__u32		agcount;	/* number of allocation groups	*/
-> +	__u32		logblocks;	/* fsblocks in the log		*/
-> +	__u32		sectsize;	/* (data) sector size, bytes	*/
-> +	__u32		inodesize;	/* inode size in bytes		*/
-> +	__u32		imaxpct;	/* max allowed inode space(%)	*/
-> +	__u64		datablocks;	/* fsblocks in data subvolume	*/
-> +	__u64		rtblocks;	/* fsblocks in realtime subvol	*/
-> +	__u64		rtextents;	/* rt extents in realtime subvol*/
-> +	__u64		logstart;	/* starting fsblock of the log	*/
-> +	unsigned char	uuid[16];	/* unique id of the filesystem	*/
-> +	__u32		sunit;		/* stripe unit, fsblocks	*/
-> +	__u32		swidth;		/* stripe width, fsblocks	*/
-> +	__s32		version;	/* structure version		*/
-> +	__u32		flags;		/* superblock version flags	*/
-> +	__u32		logsectsize;	/* log sector size, bytes	*/
-> +	__u32		rtsectsize;	/* realtime sector size, bytes	*/
-> +	__u32		dirblocksize;	/* directory block size, bytes	*/
-> +	__u32		logsunit;	/* log stripe unit, bytes */
-> +	__u32		utf8version;	/* Unicode version		*/
-> +} xfs_fsop_geom_t;
-
-New structure defintion, not a redefinition of the old name, please.
-Drop the typedef, and the structure needs to be 64 bit size
-aligned so we don't get problems with 32 bit userspace on 64 bit
-kernels (e.g. we have a v1 compat ioctl handler because of this
-issue).
-
-Further, lets avoid needing to rev the ioctl again in future by
-adding a bunch of "must be zero" padding to the new structure so we
-can extend the information we push to userspace easily. i.e. padding
-only becomes meaningful when the superblock flag that exposes
-meaning is set. i.e. userspace can do this to conditionally access
-the ut8version value if it is meaningful:
-
-	utf8_ver = 0;
-	if (geo.flags & XFS_FSOP_GEOM_FLAGS_UTF8)
-		utf8_ver = geo->utf8version;
-
-i.e. let's make the new structure forwards compatible with new
-features...
-
-> @@ -115,6 +117,15 @@ xfs_fs_geometry(
->  				XFS_FSOP_GEOM_FLAGS_LOGV2 : 0);
->  		geo->logsunit = mp->m_sb.sb_logsunit;
->  	}
-> +	if (new_version >= XFS_FSOP_GEOM_VERSION5) {
-> +		geo->version = XFS_FSOP_GEOM_VERSION5;
-> +		geo->flags |= (xfs_sb_version_hasutf8(&mp->m_sb) ?
-> +				XFS_FSOP_GEOM_FLAGS_UTF8 : 0);
-> +		geo->utf8version = mp->m_sb.sb_utf8version;
-> +		if (bytes)
-> +			*bytes = sizeof(xfs_fsop_geom_v2_t) +
-> +				 sizeof(geo->utf8version);
-
-Further indication that the *bytes variable should die.
-
-> +	}
->  	return 0;
+> @@ -509,8 +511,10 @@ xfs_sb_has_ro_compat_feature(
 >  }
 >  
-> diff --git a/fs/xfs/xfs_fsops.h b/fs/xfs/xfs_fsops.h
-> index 74e1fee..b723f36 100644
-> --- a/fs/xfs/xfs_fsops.h
-> +++ b/fs/xfs/xfs_fsops.h
-> @@ -18,7 +18,7 @@
->  #ifndef __XFS_FSOPS_H__
->  #define	__XFS_FSOPS_H__
+>  #define XFS_SB_FEAT_INCOMPAT_FTYPE	(1 << 0)	/* filetype in dirent */
+> +#define XFS_SB_FEAT_INCOMPAT_UTF8	(1 << 1)	/* utf-8 name support */
+>  #define XFS_SB_FEAT_INCOMPAT_ALL \
+> -		(XFS_SB_FEAT_INCOMPAT_FTYPE)
+> +		(XFS_SB_FEAT_INCOMPAT_FTYPE | \
+> +		 XFS_SB_FEAT_INCOMPAT_UTF8)
+
+Don't add support to the filesystem until all the supporting
+code is in place. This avoids git bisects landing on commits in the
+series where the filesystem says it supports the feature bit it
+doesn't actually work. Add a patch at the end of the series that
+adds these bits to the feature masks.
+
 >  
-> -extern int xfs_fs_geometry(xfs_mount_t *mp, xfs_fsop_geom_v2_t *geo,
-> +extern int xfs_fs_geometry(xfs_mount_t *mp, void *buffer,
->  		int new_version, size_t *bytes);
->  extern int xfs_growfs_data(xfs_mount_t *mp, xfs_growfs_data_t *in);
->  extern int xfs_growfs_log(xfs_mount_t *mp, xfs_growfs_log_t *in);
-> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-> index 1657ce5..6308680 100644
-> --- a/fs/xfs/xfs_ioctl.c
-> +++ b/fs/xfs/xfs_ioctl.c
-> @@ -859,6 +859,34 @@ xfs_ioc_fsgeometry_v2(
->  	return 0;
+>  #define XFS_SB_FEAT_INCOMPAT_UNKNOWN	~XFS_SB_FEAT_INCOMPAT_ALL
+>  static inline bool
+> @@ -558,6 +562,24 @@ static inline int xfs_sb_version_hasfinobt(xfs_sb_t *sbp)
+>  		(sbp->sb_features_ro_compat & XFS_SB_FEAT_RO_COMPAT_FINOBT);
 >  }
 >  
-> +STATIC int
-> +xfs_ioc_fsgeometry(
-> +	struct xfs_mount	*mp,
-> +	void			__user *arg)
+> +static inline int xfs_sb_version_hasutf8(xfs_sb_t *sbp)
+
+bool, no typedefs.
+
 > +{
-> +	xfs_fsop_geom_t		fsgeo;
-> +	int			version, error;
-> +	size_t			bytes;
+> +	return (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5 &&
+> +		xfs_sb_has_incompat_feature(sbp, XFS_SB_FEAT_INCOMPAT_UTF8)) ||
+> +		(xfs_sb_version_hasmorebits(sbp) &&
+> +		(sbp->sb_features2 & XFS_SB_VERSION2_UTF8BIT));
+
+xfs_sb_version_hasmorebits() already checks for XFS_SB_VERSION_5,
+so this could be:
+
+	return xfs_sb_version_hasmorebits(sbp) &&
+		(xfs_sb_has_incompat_feature(sbp, XFS_SB_FEAT_INCOMPAT_UTF8) ||
+		 (sbp->sb_features2 & XFS_SB_VERSION2_UTF8BIT));
+
+
+> +}
 > +
-> +	/* offsetof(version)? XXX just get 32 bits? */
-> +	if (copy_from_user(&fsgeo, arg, sizeof(xfs_fsop_geom_v1_t)))
-> +		return -EFAULT;
+> +/*
+> + * Special case: there are a number of places where we need to test
+> + * both the borgbit and the utf8bit, and take the same action if
+> + * either of those is set.
+> + */
+> +static inline int xfs_sb_version_hasci(xfs_sb_t *sbp)
+> +{
 
-It's best to copy in the entire structure rather than play offset
-games.
+bool, no typedefs, and probably should be a separate patch.
 
-> +	version = fsgeo.version;
-> +
-> +	if (version < XFS_FSOP_GEOM_VERSION5)
-> +		return -EINVAL;
 
-Here it rejects anything that is not a v3 structure aware of the
-unicode extensions, which means it breaks any old recompiled
-application that hasn't been updated to support
-XFS_FSOP_GEOM_VERSION5 despite the fact that they will compile
-against headers with the new definition without warnings or errors.
-
-> +
-> +	memset(&fsgeo, 0, sizeof(fsgeo));
-> +	error = xfs_fs_geometry(mp, &fsgeo, version, &bytes);
-> +	if (error)
-> +		return error;
-> +
-> +	if (copy_to_user(arg, &fsgeo, bytes))
-> +		return -EFAULT;
-
-and you can use sizeof(struct xfs_fs_geom_v3) here instead of bytes.
-
-Cheers,
-
-Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
