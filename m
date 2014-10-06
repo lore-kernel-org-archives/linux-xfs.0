@@ -1,23 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 6644C7F4E
-	for <xfs@oss.sgi.com>; Mon,  6 Oct 2014 16:54:01 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 297D4304032
-	for <xfs@oss.sgi.com>; Mon,  6 Oct 2014 14:53:58 -0700 (PDT)
-Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
-	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	Do04nCfzAIYpUfMb for <xfs@oss.sgi.com>;
-	Mon, 06 Oct 2014 14:53:55 -0700 (PDT)
-Date: Tue, 7 Oct 2014 08:53:52 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 10/16] xfs: store utf8version in the superblock
-Message-ID: <20141006215352.GG2301@dastard>
-References: <20141003214758.GY1865@sgi.com>
- <20141003220031.GI1865@sgi.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id B66A67F4E
+	for <xfs@oss.sgi.com>; Mon,  6 Oct 2014 17:10:17 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 376E6AC002
+	for <xfs@oss.sgi.com>; Mon,  6 Oct 2014 15:10:14 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id DrtbbeWryUDzkLLY (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Mon, 06 Oct 2014 15:10:09 -0700 (PDT)
+Date: Mon, 6 Oct 2014 18:09:59 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH] xfs: fix zero range i_size problems
+Message-ID: <20141006220959.GA14395@bfoster.bfoster>
+References: <1412255533-8357-1-git-send-email-bfoster@redhat.com>
+	<20141006131111.GA61966@bfoster.bfoster>
+	<20141006202921.GA2301@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20141003220031.GI1865@sgi.com>
+In-Reply-To: <20141006202921.GA2301@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,306 +31,161 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Ben Myers <bpm@sgi.com>
-Cc: linux-fsdevel@vger.kernel.org, olaf@sgi.com, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-On Fri, Oct 03, 2014 at 05:00:31PM -0500, Ben Myers wrote:
-> From: Ben Myers <bpm@sgi.com>
+On Tue, Oct 07, 2014 at 07:29:21AM +1100, Dave Chinner wrote:
+> On Mon, Oct 06, 2014 at 09:11:11AM -0400, Brian Foster wrote:
+> > On Thu, Oct 02, 2014 at 09:12:13AM -0400, Brian Foster wrote:
+> > > The zero range operation is analogous to fallocate with the exception of
+> > > converting the range to zeroes. E.g., it attempts to allocate zeroed
+> > > blocks over the range specified by the caller. The XFS implementation
+> > > kills all delalloc blocks currently over the aligned range, converts the
+> > > range to allocated zero blocks (unwritten extents) and handles the
+> > > partial pages at the ends of the range by sending writes through the
+> > > pagecache.
+> > > 
+> > > The current implementation suffers from several problems associated with
+> > > inode size. If the aligned range covers an extending I/O, said I/O is
+> > > discarded and an inode size update from a previous write never makes it
+> > > to disk. Further, if an unaligned zero range extends beyond eof, the
+> > > page write induced for the partial end page can itself increase the
+> > > inode size, even if the zero range request is not supposed to update
+> > > i_size (via KEEP_SIZE, similar to an fallocate beyond EOF).
+> > > 
+> > > Update xfs_zero_file_space() to forego using buffered I/O for partial
+> > > pages. Instead, convert the block aligned (rather than page aligned)
+> > > range to unwritten extents, update the partial blocks on disk and use
+> > > existing pagecache functionality to ensure cached pages are consistent
+> > > with data on disk.
+> > > 
+> > > Signed-off-by: Brian Foster <bfoster@redhat.com>
+> > > ---
+> > > 
+> > > This passes xfstests and survived an overnight fsx run (+300m ops) on a
+> > > 1k fsb fs. The tradeoff that I've observed from this implementation is
+> > > that fzero is now also likely to trigger the problem described in the
+> > > recently posted xfs/053 test:
+> > > 
+> > > http://oss.sgi.com/archives/xfs/2014-09/msg00473.html
+> > > 
+> > > This is slightly unfortunate, but as I understand it that problem is
+> > > more fundamentally associated with extent conversion and writeback vs.
+> > > any particular fs operation that might expose it.
+> > > 
+> > > Brian
+> > > 
+> > 
+> > I spent the past few days trying to reproduce and nail down some of the
+> > delalloc related asserts reproduced by generic/269 and discovered that
+> > zero range is at least one cause of the problem. This patch actually
+> > addresses that particular problem, yet introduces another similar
+> > variant of the problem.
+> > 
+> > The original cause is "leakage" of speculative preallocation blocks into
+> > the addressable range of the file (within eof) without any pages
+> > associated with the delalloc extent. This means that it isn't
+> > necessarily sufficient to writeback a particular delalloc range to
+> > convert it. This sets a landmine for direct I/O or inode eviction to
+> > step on when it comes time to perform I/O over the range or clean the
+> > inode.
+> > 
+> > For example:
+> > 
+> > # xfs_io -fc "pwrite 0 128k" -c "fzero -k 1m 54321" /mnt/file
+> > wrote 131072/131072 bytes at offset 0
+> > 128 KiB, 32 ops; 0.0000 sec (786.164 MiB/sec and 201257.8616 ops/sec)
+> > # xfs_io -d -c "pread 128k 128k" /mnt/file 
+> > Segmentation fault
+> > 
+> > The first command creates a delalloc extent with preallocation and then
+> > runs a non-file-size-extending zero range beyond the end of the file
+> > with an unaligned end offset (note that doing the zero range within the
+> > same process is required to ensure prealloc isn't trimmed by close()).
+> > As discussed above, this results in an internal I/O that increases
+> > i_size and leaks the previous preallocation within eof.
 > 
-> The utf8 version a filesystem was created with needs to be stored in
-> order that normalizations will remain stable over the lifetime of the
-> filesystem.  Convert sb_pad to sb_utf8version in the super block.  This
-> also adds checks at mount time to see whether the unicode normalization
-> module has support for the version of unicode that the filesystem
-> requires.  If not we fail the mount.
+> This is a bug within the zero range code - we should never try to
+> sub-block zeroing beyond EOF unless we are extending the file size
+> and need to zero blocks/prealloc that already exists. Extending the
+> file should only be done through xfs_setattr_size(). If the range to
+> be zeroed beyond EOF is smaller than a block, then we should just
+> prealloc the entire block because the EOF extension (whenever it is
+> done) will do IO that results in the block being fully zeroed,
+> anyway.
 > 
-> Signed-off-by: Ben Myers <bpm@sgi.com>
-> ---
->  fs/xfs/libxfs/xfs_dir2.c | 28 ++++++++++++++++---
->  fs/xfs/libxfs/xfs_sb.c   |  4 +--
->  fs/xfs/libxfs/xfs_sb.h   | 10 ++++---
->  fs/xfs/libxfs/xfs_utf8.c | 70 ++++++++++++++++++++++++++++++++++++++++++++++++
->  fs/xfs/libxfs/xfs_utf8.h | 24 +++++++++++++++++
->  5 files changed, 126 insertions(+), 10 deletions(-)
->  create mode 100644 fs/xfs/libxfs/xfs_utf8.c
->  create mode 100644 fs/xfs/libxfs/xfs_utf8.h
+
+Right, the original purpose of this patch was to address that problem.
+The way it fell out, I didn't end up using xfs_iozero() at all.
+Technically, it still has the potential to do sub-block zeroing
+post-eof, but it doesn't matter because it isn't doing buffered I/O.
+Sure, it's pointless in the post-eof case, but not problematic and not
+something I thought worth complicating the code over. FWIW, I also don't
+really see any reason to reintroduce xfs_iozero() into this rework.
+
+The larger point is that the current, broken zero range seems to also be
+a primary cause of the umount and direct I/O delalloc asserts that I see
+via generic/269.
+
+BTW, any thoughts on how we could end up with contiguous but independent
+delalloc extents in the in-core list?
+
+> > The patch here addresses the zero range problem simply by avoiding
+> > xfs_iozero(). It introduces a similar problem...
 > 
-> diff --git a/fs/xfs/libxfs/xfs_dir2.c b/fs/xfs/libxfs/xfs_dir2.c
-> index 4eb0973..2c89211 100644
-> --- a/fs/xfs/libxfs/xfs_dir2.c
-> +++ b/fs/xfs/libxfs/xfs_dir2.c
-> @@ -157,10 +157,30 @@ xfs_da_mount(
->  				(uint)sizeof(xfs_da_node_entry_t);
->  	dageo->magicpct = (dageo->blksize * 37) / 100;
->  
-> -	if (xfs_sb_version_hasasciici(&mp->m_sb))
-> -		mp->m_dirnameops = &xfs_ascii_ci_nameops;
-> -	else
-> -		mp->m_dirnameops = &xfs_default_nameops;
-> +	if (xfs_sb_version_hasutf8(&mp->m_sb)) {
-> +#ifdef CONFIG_XFS_UTF8
-> +		if (!xfs_utf8_version_ok(mp))
-> +			return -ENOSYS;
-> +
-> +		/* XXX these are replaced in the next patch need
-> +		   to do some kind of reordering here */
-> +		if (xfs_sb_version_hasasciici(&mp->m_sb))
-> +			mp->m_dirnameops = &xfs_ascii_ci_nameops;
-> +		else
-> +			mp->m_dirnameops = &xfs_default_nameops;
-> +#else
-> +		xfs_warn(mp,
-> +"Recompile XFS with CONFIG_XFS_UTF8 to mount this filesystem");
-> +		kmem_free(mp->m_dir_geo);
-> +		kmem_free(mp->m_attr_geo);
-> +		return -ENOSYS;
-> +#endif
+> Right, same conclusion, different reasoning. ;)
+> 
+> > > +	/*
+> > > +	 * Writeback the partial pages if either the start or end is not page
+> > > +	 * aligned to prevent writeback races with partial block zeroing.
+> > > +	 * truncate_pagecache_range() handles partial page zeroing if the pages
+> > > +	 * are cached.
+> > > +	 */
+> > > +	if (!PAGE_ALIGNED(offset) || !PAGE_ALIGNED(offset + len)) {
+> > > +		filemap_write_and_wait_range(VFS_I(ip)->i_mapping, offset,
+> > > +					     start_boundary);
+> > > +		filemap_write_and_wait_range(VFS_I(ip)->i_mapping, end_boundary,
+> > > +					     offset + len);
+> > > +	}
+> > > +	truncate_pagecache_range(VFS_I(ip), offset, offset + len - 1);
+> > 
+> > ... here because the request can still fail with ENOSPC during block
+> > allocation after we have truncated pagecache for the entire range but
+> > before we might have killed the delalloc blocks in the range. This leads
+> > to the same delalloc blocks not covered by pagecache problem.
+> 
+> Another reason for punching the delalloc blocks first. ;)
+> 
+> > I suspect the fix is to truncate the pagecache in smaller portions as we
+> > proceed through the function, but I'll have to give it a try. I *think*
+> > it's important to handle the truncate before making any extent
+> > modifications lest weird things happen with writeback.
+> 
+> Or we could just punch the delalloc blocks on failure. i.e. punching
+> delalloc blocks is used only for error handling (like in the buffer
+> write error handling case). It will at least "zero" the delalloc
+> portions of the range on failure...
+> 
 
-This config check doesn't belong here. Validation of superblock
-fields vs the current config goes in the superblock verifier. I also
-think that indication of UTF8 support being compiled in needs to go
-in the XFS_VERSION_STRING, not have ifdef hackery added into the
-code.
+I started reordering things and whatnot and noticed that much of this
+code is duplicated in xfs_free_file_space(). IOW, we can probably get
+this behavior with a significantly more simple implementation that
+basically consists of a page cache truncate, a call to
+xfs_free_file_space() and a call to xfs_alloc_file_space().
 
-i.e. the mount should fail very early on with a superblock
-verification failure from xfs_mount_validate_sb().
+That unnecessarily punches out all extents rather than just the delalloc
+extents, but also naturally leaves the file in an expected state (the
+range is zeroed) if the preallocation fails anywhere along the way. I'm
+wondering if it's worth it. Thoughts?
 
+Brian
 
-> +	} else {
-> +		if (xfs_sb_version_hasasciici(&mp->m_sb))
-> +			mp->m_dirnameops = &xfs_ascii_ci_nameops;
-> +		else
-> +			mp->m_dirnameops = &xfs_default_nameops;
-> +	}
->  
->  	return 0;
->  }
-> diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
-> index ad525a5..1ee7d33 100644
-> --- a/fs/xfs/libxfs/xfs_sb.c
-> +++ b/fs/xfs/libxfs/xfs_sb.c
-> @@ -99,7 +99,7 @@ static const struct {
->  	{ offsetof(xfs_sb_t, sb_features_incompat),	0 },
->  	{ offsetof(xfs_sb_t, sb_features_log_incompat),	0 },
->  	{ offsetof(xfs_sb_t, sb_crc),		0 },
-> -	{ offsetof(xfs_sb_t, sb_pad),		0 },
-> +	{ offsetof(xfs_sb_t, sb_utf8version),	0 },
->  	{ offsetof(xfs_sb_t, sb_pquotino),	0 },
->  	{ offsetof(xfs_sb_t, sb_lsn),		0 },
->  	{ sizeof(xfs_sb_t),			0 }
-> @@ -443,7 +443,7 @@ __xfs_sb_from_disk(
->  	to->sb_features_incompat = be32_to_cpu(from->sb_features_incompat);
->  	to->sb_features_log_incompat =
->  				be32_to_cpu(from->sb_features_log_incompat);
-> -	to->sb_pad = 0;
-> +	to->sb_utf8version = be32_to_cpu(from->sb_utf8version);
->  	to->sb_pquotino = be64_to_cpu(from->sb_pquotino);
->  	to->sb_lsn = be64_to_cpu(from->sb_lsn);
->  	/* Convert on-disk flags to in-memory flags? */
-> diff --git a/fs/xfs/libxfs/xfs_sb.h b/fs/xfs/libxfs/xfs_sb.h
-> index 525eacb..dc7b6c6 100644
-> --- a/fs/xfs/libxfs/xfs_sb.h
-> +++ b/fs/xfs/libxfs/xfs_sb.h
-> @@ -159,7 +159,7 @@ typedef struct xfs_sb {
->  	__uint32_t	sb_features_log_incompat;
->  
->  	__uint32_t	sb_crc;		/* superblock crc */
-> -	__uint32_t	sb_pad;
-> +	__uint32_t	sb_utf8version;	/* unicode version */
->  
->  	xfs_ino_t	sb_pquotino;	/* project quota inode */
->  	xfs_lsn_t	sb_lsn;		/* last write sequence */
-> @@ -245,7 +245,7 @@ typedef struct xfs_dsb {
->  	__be32		sb_features_log_incompat;
->  
->  	__le32		sb_crc;		/* superblock crc */
-> -	__be32		sb_pad;
-> +	__be32		sb_utf8version;	/* version of unicode */
->  
->  	__be64		sb_pquotino;	/* project quota inode */
->  	__be64		sb_lsn;		/* last write sequence */
-> @@ -271,7 +271,7 @@ typedef enum {
->  	XFS_SBS_LOGSECTLOG, XFS_SBS_LOGSECTSIZE, XFS_SBS_LOGSUNIT,
->  	XFS_SBS_FEATURES2, XFS_SBS_BAD_FEATURES2, XFS_SBS_FEATURES_COMPAT,
->  	XFS_SBS_FEATURES_RO_COMPAT, XFS_SBS_FEATURES_INCOMPAT,
-> -	XFS_SBS_FEATURES_LOG_INCOMPAT, XFS_SBS_CRC, XFS_SBS_PAD,
-> +	XFS_SBS_FEATURES_LOG_INCOMPAT, XFS_SBS_CRC, XFS_SBS_UTF8VERSION,
->  	XFS_SBS_PQUOTINO, XFS_SBS_LSN,
->  	XFS_SBS_FIELDCOUNT
->  } xfs_sb_field_t;
-> @@ -303,6 +303,7 @@ typedef enum {
->  #define XFS_SB_FEATURES_INCOMPAT XFS_SB_MVAL(FEATURES_INCOMPAT)
->  #define XFS_SB_FEATURES_LOG_INCOMPAT XFS_SB_MVAL(FEATURES_LOG_INCOMPAT)
->  #define XFS_SB_CRC		XFS_SB_MVAL(CRC)
-> +#define XFS_SB_UTF8VERSION	XFS_SB_MVAL(UTF8VERSION)
->  #define XFS_SB_PQUOTINO		XFS_SB_MVAL(PQUOTINO)
->  #define	XFS_SB_NUM_BITS		((int)XFS_SBS_FIELDCOUNT)
->  #define	XFS_SB_ALL_BITS		((1LL << XFS_SB_NUM_BITS) - 1)
-> @@ -313,7 +314,8 @@ typedef enum {
->  	 XFS_SB_ICOUNT | XFS_SB_IFREE | XFS_SB_FDBLOCKS | XFS_SB_FEATURES2 | \
->  	 XFS_SB_BAD_FEATURES2 | XFS_SB_FEATURES_COMPAT | \
->  	 XFS_SB_FEATURES_RO_COMPAT | XFS_SB_FEATURES_INCOMPAT | \
-> -	 XFS_SB_FEATURES_LOG_INCOMPAT | XFS_SB_PQUOTINO)
-> +	 XFS_SB_FEATURES_LOG_INCOMPAT | XFS_SB_UTF8VERSION | \
-> +	 XFS_SB_PQUOTINO)
-
-We should never be modifying the utf8 version number from the
-kernel, so this shouldn't be set in the XFS_SB_MOD_BITS mask.
-
-> diff --git a/fs/xfs/libxfs/xfs_utf8.c b/fs/xfs/libxfs/xfs_utf8.c
-> new file mode 100644
-> index 0000000..7e63111
-> --- /dev/null
-> +++ b/fs/xfs/libxfs/xfs_utf8.c
-> @@ -0,0 +1,70 @@
-> +/*
-> + * Copyright (c) 2014 SGI.
-> + * All rights reserved.
-> + *
-> + * This program is free software; you can redistribute it and/or
-> + * modify it under the terms of the GNU General Public License as
-> + * published by the Free Software Foundation.
-> + *
-> + * This program is distributed in the hope that it would be useful,
-> + * but WITHOUT ANY WARRANTY; without even the implied warranty of
-> + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-> + * GNU General Public License for more details.
-> + *
-> + * You should have received a copy of the GNU General Public License
-> + * along with this program; if not, write the Free Software Foundation,
-> + * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-> + */
-> +
-> +#include "xfs.h"
-> +#include "xfs_fs.h"
-> +#include "xfs_types.h"
-> +#include "xfs_bit.h"
-> +#include "xfs_log_format.h"
-> +#include "xfs_inum.h"
-> +#include "xfs_trans.h"
-> +#include "xfs_trans_resv.h"
-> +#include "xfs_sb.h"
-> +#include "xfs_ag.h"
-> +#include "xfs_da_format.h"
-> +#include "xfs_da_btree.h"
-> +#include "xfs_dir2.h"
-> +#include "xfs_mount.h"
-> +#include "xfs_da_btree.h"
-> +#include "xfs_format.h"
-> +#include "xfs_bmap_btree.h"
-> +#include "xfs_alloc_btree.h"
-> +#include "xfs_dinode.h"
-> +#include "xfs_inode.h"
-> +#include "xfs_inode_item.h"
-> +#include "xfs_bmap.h"
-> +#include "xfs_error.h"
-> +#include "xfs_trace.h"
-> +#include "xfs_utf8.h"
-
-This may sound pedantic, but in all the libxfs rework I've managed
-to standadise the initial include file order to be roughly:
-
-#include "xfs.h"
-#include "xfs_fs.h"
-#include "xfs_shared.h"
-#include "xfs_format.h"
-#include "xfs_log_format.h"
-#include "xfs_trans_resv.h"
-#include "xfs_bit.h"
-#include "xfs_inum.h"
-#include "xfs_sb.h"
-#include "xfs_ag.h"
-#include "xfs_mount.h"
-#include "xfs_da_format.h"
-
-i.e. include all the type, shared and on-disk format information
-first. Can you re-order these to follow the same convention?
-
-> +#include <linux/utf8norm.h>
-
-And that should end up being included from fs/xfs/xfs_linux.h,
-because we can't include things directly from the linux kernel
-headers in fs/xfs/libxfs/ files.
-
-> +
-> +int
-
-Bool.
-
-> +xfs_utf8_version_ok(
-> +	struct xfs_mount	*mp)
-> +{
-> +	int	major, minor, revision;
-> +
-> +	if (utf8version_is_supported(mp->m_sb.sb_utf8version))
-> +		return 1;
-
-return true;
-> +
-> +	major = mp->m_sb.sb_utf8version >> UNICODE_MAJ_SHIFT;
-> +	minor = (mp->m_sb.sb_utf8version & 0xff00) >> UNICODE_MIN_SHIFT;
-> +	revision = mp->m_sb.sb_utf8version & 0xff;
-> +
-> +	if (revision) {
-> +		xfs_warn(mp,
-> +		"Unicode version %d.%d.%d not supported by utf8norm.ko",
-> +		major, minor, revision);
-> +	} else {
-> +		xfs_warn(mp,
-> +		"Unicode version %d.%d not supported by utf8norm.ko",
-> +		major, minor);
-> +	}
-
-why do you need two different print statements? Version X.Y.0 is
-pretty much recognisable as being the same as X.Y....
-
-> +
-> +	return 0;
-
-return false;
-
-> +}
-> diff --git a/fs/xfs/libxfs/xfs_utf8.h b/fs/xfs/libxfs/xfs_utf8.h
-> new file mode 100644
-> index 0000000..8a700de
-> --- /dev/null
-> +++ b/fs/xfs/libxfs/xfs_utf8.h
-> @@ -0,0 +1,24 @@
-> +/*
-> + * Copyright (c) 2014 SGI.
-> + * All rights reserved.
-> + *
-> + * This program is free software; you can redistribute it and/or
-> + * modify it under the terms of the GNU General Public License as
-> + * published by the Free Software Foundation.
-> + *
-> + * This program is distributed in the hope that it would be useful,
-> + * but WITHOUT ANY WARRANTY; without even the implied warranty of
-> + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-> + * GNU General Public License for more details.
-> + *
-> + * You should have received a copy of the GNU General Public License
-> + * along with this program; if not, write the Free Software Foundation,
-> + * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-> + */
-> +
-> +#ifndef XFS_UTF8_H
-> +#define XFS_UTF8_H
-> +
-> +extern int xfs_utf8_version_ok(struct xfs_mount *);
-> +
-> +#endif /* XFS_UTF8_H */
-
-Do we really need a separate header file for this?
-fs/xfs/libxfs/xfs_shared.h was created for such one-off or
-limited definitions that need to be shared with userspace...
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
