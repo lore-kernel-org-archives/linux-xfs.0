@@ -1,24 +1,39 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id A30CD7F3F
-	for <xfs@oss.sgi.com>; Tue,  7 Oct 2014 02:59:53 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 2BC807F3F
+	for <xfs@oss.sgi.com>; Tue,  7 Oct 2014 04:26:05 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 91E2C8F804C
-	for <xfs@oss.sgi.com>; Tue,  7 Oct 2014 00:59:53 -0700 (PDT)
-Received: from smtp5-g21.free.fr (smtp5-g21.free.fr [212.27.42.5]) by
-	cuda.sgi.com with ESMTP id 5BMKXpNE0Dgy8gqB (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 07 Oct 2014 00:59:48 -0700 (PDT)
-Received: from galadriel.home (unknown [82.235.234.79])
-	by smtp5-g21.free.fr (Postfix) with ESMTP id D4E3DD480B1
-	for <xfs@oss.sgi.com>; Tue,  7 Oct 2014 09:58:43 +0200 (CEST)
-Date: Tue, 7 Oct 2014 09:59:49 +0200
-From: Emmanuel Florac <eflorac@intellique.com>
-Subject: Re: Corrupted filesystem: thoughts?
-Message-ID: <20141007095949.2dce6d72@galadriel.home>
-In-Reply-To: <20141007093533.66ba8c7b@galadriel.home>
-References: <20141007093533.66ba8c7b@galadriel.home>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 1A80D30404E
+	for <xfs@oss.sgi.com>; Tue,  7 Oct 2014 02:26:02 -0700 (PDT)
+Received: from mail-wg0-f51.google.com (mail-wg0-f51.google.com
+	[74.125.82.51]) by cuda.sgi.com with ESMTP id O7yTRzldnsAvzkPc
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Tue, 07 Oct 2014 02:25:59 -0700 (PDT)
+Received: by mail-wg0-f51.google.com with SMTP id b13so8751823wgh.22
+	for <xfs@oss.sgi.com>; Tue, 07 Oct 2014 02:25:58 -0700 (PDT)
+Received: from Telcontar.valinor (177.Red-79-159-63.staticIP.rima-tde.net.
+	[79.159.63.177]) by mx.google.com with ESMTPSA id
+	l10sm13971971wif.20.2014.10.07.02.25.56 for <xfs@oss.sgi.com>
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+	Tue, 07 Oct 2014 02:25:57 -0700 (PDT)
+Received: from localhost (localhost [127.0.0.1])
+	by Telcontar.valinor (Postfix) with ESMTP id 50B8161301
+	for <xfs@oss.sgi.com>; Tue,  7 Oct 2014 11:25:54 +0200 (CEST)
+Received: from Telcontar.valinor ([127.0.0.1])
+	by localhost (Telcontar.valinor [127.0.0.1]) (amavisd-new, port 10024)
+	with LMTP id U2wBT7cGNg37 for <xfs@oss.sgi.com>;
+	Tue,  7 Oct 2014 11:25:54 +0200 (CEST)
+Received: from [127.0.0.1] (localhost [127.0.0.1])
+	by Telcontar.valinor (Postfix) with ESMTP id 093D96112D
+	for <xfs@oss.sgi.com>; Tue,  7 Oct 2014 11:25:53 +0200 (CEST)
+Message-ID: <5433B1A1.90500@opensuse.org>
+Date: Tue, 07 Oct 2014 11:25:53 +0200
+From: "Carlos E. R." <carlos.e.r@opensuse.org>
 MIME-Version: 1.0
+Subject: Re: Question about services
+References: <7e633ff6302413da933e04671cd98cdc@bairesdev.com>	<20141006175243.GA4680@hades.localdomain>	<54331346.7050005@telefonica.net>
+	<20141007005826.GA30678@hades.localdomain>
+In-Reply-To: <20141007005826.GA30678@hades.localdomain>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,54 +42,50 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: XFS mail list <xfs@oss.sgi.com>
 
-TGUgVHVlLCA3IE9jdCAyMDE0IDA5OjM1OjMzICswMjAwIHZvdXMgw6ljcml2aWV6OgoKPiBLZXJu
-ZWwgaXMgYSBwbGFpbiB2YW5pbGxhIDMuMi41NCBhbWQ2NC4gQXMgYSBwcmVjYXV0aW9uIEkndmUg
-bWFkZSBhCj4gbGlzdCBvZiB0aGUgd2hvbGUgZmlsZXN5c3RlbSB3aXRoIGlub2RlIG51bWJlcnMg
-dG8gYmUgYWJsZSB0byByZW5hbWUKPiBsb3N0IGZpbGVzIGluIG5vcmVjb3ZlcnkgbW9kZS4uLiBV
-bmZvcnR1bmF0ZWx5IEkgY2Fubm90IGRvIGEgbWV0YWR1bXAKPiBiZWNhdXNlIG9mIGxhY2sgb2Yg
-cm9vbSBlbHNld2hlcmUuCgpBdCBlbmQgb2YgcmVwYWlyIEkndmUgZ290IGxvYWRzIG9mIHRoZXNl
-OgoKbGlieGZzX3dyaXRlYnVmcjogd3JpdGUgdmVyaWZlciBmYWlsZWQgb24gYm5vIDB4MTAwMDBm
-MzQ4LzB4MTAwMApNZXRhZGF0YSBjb3JydXB0aW9uIGRldGVjdGVkIGF0IGJsb2NrIDB4ODAyYjJh
-ODgvMHgxMDAwCmxpYnhmc193cml0ZWJ1ZnI6IHdyaXRlIHZlcmlmZXIgZmFpbGVkIG9uIGJubyAw
-eDgwMmIyYTg4LzB4MTAwMApNZXRhZGF0YSBjb3JydXB0aW9uIGRldGVjdGVkIGF0IGJsb2NrIDB4
-ODAwZTQ0MjAvMHgxMDAwCmxpYnhmc193cml0ZWJ1ZnI6IHdyaXRlIHZlcmlmZXIgZmFpbGVkIG9u
-IGJubyAweDgwMGU0NDIwLzB4MTAwMApNZXRhZGF0YSBjb3JydXB0aW9uIGRldGVjdGVkIGF0IGJs
-b2NrIDB4OTA3NWQ4LzB4MTAwMApsaWJ4ZnNfd3JpdGVidWZyOiB3cml0ZSB2ZXJpZmVyIGZhaWxl
-ZCBvbiBibm8gMHg5MDc1ZDgvMHgxMDAwCk1ldGFkYXRhIGNvcnJ1cHRpb24gZGV0ZWN0ZWQgYXQg
-YmxvY2sgMHgxNDMzOTAvMHgxMDAwCmxpYnhmc193cml0ZWJ1ZnI6IHdyaXRlIHZlcmlmZXIgZmFp
-bGVkIG9uIGJubyAweDE0MzM5MC8weDEwMDAKTWV0YWRhdGEgY29ycnVwdGlvbiBkZXRlY3RlZCBh
-dCBibG9jayAweDE0MjE2MC8weDEwMDAKbGlieGZzX3dyaXRlYnVmcjogd3JpdGUgdmVyaWZlciBm
-YWlsZWQgb24gYm5vIDB4MTQyMTYwLzB4MTAwMApNZXRhZGF0YSBjb3JydXB0aW9uIGRldGVjdGVk
-IGF0IGJsb2NrIDB4MTk3NDAwLzB4MTAwMApsaWJ4ZnNfd3JpdGVidWZyOiB3cml0ZSB2ZXJpZmVy
-IGZhaWxlZCBvbiBibm8gMHgxOTc0MDAvMHgxMDAwCk1ldGFkYXRhIGNvcnJ1cHRpb24gZGV0ZWN0
-ZWQgYXQgYmxvY2sgMHgxMGZlZTAvMHgxMDAwCmxpYnhmc193cml0ZWJ1ZnI6IHdyaXRlIHZlcmlm
-ZXIgZmFpbGVkIG9uIGJubyAweDEwZmVlMC8weDEwMDAKTWV0YWRhdGEgY29ycnVwdGlvbiBkZXRl
-Y3RlZCBhdCBibG9jayAweDE0NWQwMC8weDEwMDAKbGlieGZzX3dyaXRlYnVmcjogd3JpdGUgdmVy
-aWZlciBmYWlsZWQgb24gYm5vIDB4MTQ1ZDAwLzB4MTAwMApNZXRhZGF0YSBjb3JydXB0aW9uIGRl
-dGVjdGVkIGF0IGJsb2NrIDB4MThlNjU4LzB4MTAwMApsaWJ4ZnNfd3JpdGVidWZyOiB3cml0ZSB2
-ZXJpZmVyIGZhaWxlZCBvbiBibm8gMHgxOGU2NTgvMHgxMDAwCk1ldGFkYXRhIGNvcnJ1cHRpb24g
-ZGV0ZWN0ZWQgYXQgYmxvY2sgMHgxOTJkOTgvMHgxMDAwCmxpYnhmc193cml0ZWJ1ZnI6IHdyaXRl
-IHZlcmlmZXIgZmFpbGVkIG9uIGJubyAweDE5MmQ5OC8weDEwMDAKTWV0YWRhdGEgY29ycnVwdGlv
-biBkZXRlY3RlZCBhdCBibG9jayAweDExNjY2OC8weDEwMDAKbGlieGZzX3dyaXRlYnVmcjogd3Jp
-dGUgdmVyaWZlciBmYWlsZWQgb24gYm5vIDB4MTE2NjY4LzB4MTAwMApNZXRhZGF0YSBjb3JydXB0
-aW9uIGRldGVjdGVkIGF0IGJsb2NrIDB4Zjk0MjgvMHgxMDAwCmxpYnhmc193cml0ZWJ1ZnI6IHdy
-aXRlIHZlcmlmZXIgZmFpbGVkIG9uIGJubyAweGY5NDI4LzB4MTAwMApNZXRhZGF0YSBjb3JydXB0
-aW9uIGRldGVjdGVkIGF0IGJsb2NrIDB4NDI2OTgvMHgxMDAwCmxpYnhmc193cml0ZWJ1ZnI6IHdy
-aXRlIHZlcmlmZXIgZmFpbGVkIG9uIGJubyAweDQyNjk4LzB4MTAwMApNZXRhZGF0YSBjb3JydXB0
-aW9uIGRldGVjdGVkIGF0IGJsb2NrIDB4NDRkYjgvMHgxMDAwCmxpYnhmc193cml0ZWJ1ZnI6IHdy
-aXRlIHZlcmlmZXIgZmFpbGVkIG9uIGJubyAweDQ0ZGI4LzB4MTAwMAoKYW5kIDEwNTM4IGZpbGVz
-IGluIGxvc3QrZm91bmQuLi4KCi0tIAotLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0KRW1tYW51ZWwgRmxvcmFjICAg
-ICB8ICAgRGlyZWN0aW9uIHRlY2huaXF1ZQogICAgICAgICAgICAgICAgICAgIHwgICBJbnRlbGxp
-cXVlCiAgICAgICAgICAgICAgICAgICAgfAk8ZWZsb3JhY0BpbnRlbGxpcXVlLmNvbT4KICAgICAg
-ICAgICAgICAgICAgICB8ICAgKzMzIDEgNzggOTQgODQgMDIKLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tCgpfX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBs
-aXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94
-ZnMK
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
+
+On 2014-10-07 02:58, Carlos Maiolino wrote:
+> Whatever, this got me, well written scam :)
+
+Absolutely :-)
+It fooled my spamassassin.
+
+And if he were not, he would have clarified by now.
+Someone that sends what looks like a business letter to an individual,
+by name, to a list mail address, showing that he doesn't know what
+that list is about, is suspect. He is either daft, or it was mass
+email, not really targeted.
+
+Searching on the "from" name, he is known as spammer:
+
+http://denvercodemonkey.com/blog/2013/12/spam-from-software-outsourcing-company-bairesdev/
+
+http://mainsleaze.spambouncer.org/spam-from-software-outsourcing-company-bairesdev/
+
+
+So that nails the coffin ;-)
+
+- -- 
+Cheers / Saludos,
+
+		Carlos E. R.
+		(from 13.1 x86_64 "Bottle" at Telcontar)
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.22 (GNU/Linux)
+
+iEYEARECAAYFAlQzsaAACgkQtTMYHG2NR9U4qACeJ7/WKIEQBDdl3Khd78HLifMm
+VeAAn1B/iVMs8AtQV4/WRZ0LIbAKjyJF
+=fOYv
+-----END PGP SIGNATURE-----
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
