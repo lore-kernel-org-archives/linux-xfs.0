@@ -1,23 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 73C987F3F
-	for <xfs@oss.sgi.com>; Tue,  7 Oct 2014 05:59:37 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 513768F8049
-	for <xfs@oss.sgi.com>; Tue,  7 Oct 2014 03:59:37 -0700 (PDT)
-Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
-	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	HC65kLv9fKSuFzIV for <xfs@oss.sgi.com>;
-	Tue, 07 Oct 2014 03:59:35 -0700 (PDT)
-Date: Tue, 7 Oct 2014 21:59:33 +1100
-From: Dave Chinner <david@fromorbit.com>
+	by oss.sgi.com (Postfix) with ESMTP id ABD687F3F
+	for <xfs@oss.sgi.com>; Tue,  7 Oct 2014 06:22:13 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 8B9928F8049
+	for <xfs@oss.sgi.com>; Tue,  7 Oct 2014 04:22:10 -0700 (PDT)
+Received: from smtp5-g21.free.fr (smtp5-g21.free.fr [212.27.42.5]) by
+	cuda.sgi.com with ESMTP id vAj3MHSshEgiLzqx (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 07 Oct 2014 04:22:08 -0700 (PDT)
+Date: Tue, 7 Oct 2014 13:22:10 +0200
+From: Emmanuel Florac <eflorac@intellique.com>
 Subject: Re: Corrupted filesystem: thoughts?
-Message-ID: <20141007105933.GP2301@dastard>
+Message-ID: <20141007132210.55b2183a@harpe.intellique.com>
+In-Reply-To: <20141007105657.GO2301@dastard>
 References: <20141007093533.66ba8c7b@galadriel.home>
-	<20141007095949.2dce6d72@galadriel.home>
+	<20141007105657.GO2301@dastard>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20141007095949.2dce6d72@galadriel.home>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,41 +25,29 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Emmanuel Florac <eflorac@intellique.com>
+To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On Tue, Oct 07, 2014 at 09:59:49AM +0200, Emmanuel Florac wrote:
-> Le Tue, 7 Oct 2014 09:35:33 +0200 vous =E9criviez:
-> =
-
-> > Kernel is a plain vanilla 3.2.54 amd64. As a precaution I've made a
-> > list of the whole filesystem with inode numbers to be able to rename
-> > lost files in norecovery mode... Unfortunately I cannot do a metadump
-> > because of lack of room elsewhere.
-> =
-
-> At end of repair I've got loads of these:
-> =
-
-> libxfs_writebufr: write verifer failed on bno 0x10000f348/0x1000
-> Metadata corruption detected at block 0x802b2a88/0x1000
-
-Upgrade to 3.2.1 as there were a bunch of fixes for issues that
-caused these messages in that release.
-
-Cheers,
-
-Dave.
--- =
-
-Dave Chinner
-david@fromorbit.com
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+TGUgVHVlLCA3IE9jdCAyMDE0IDIxOjU2OjU3ICsxMTAwCkRhdmUgQ2hpbm5lciA8ZGF2aWRAZnJv
+bW9yYml0LmNvbT4gw6ljcml2YWl0OgoKPiBJcyB0aGUgbG9nIGNsZWFuPyAodXNlIHhmc19sb2dw
+cmludCAtdCA8ZGV2PiB0byBkZXRlcm1pbmUgdGhhdCkKPiAKCk5vLCBpdCB3YXNuJ3QsIHRoYXQg
+d2FzIHByb2JhYmx5IHRoZSBzb3VyY2Ugb2YgbW9zdCBvZiB0aGUgb21pbm91cwptZXNzYWdlcy4g
+VGhlIG1hbnkgZmlsZXMgaW4gbG9zdCtmb3VuZCB3ZXJlIHByb2JhYmx5IGRlbGV0ZWQgZmlsZXMK
+CkluIGNhc2UgdGhpcyBtYXkgaGVscCBzb21lb25lLCBiZWZvcmUgcnVubmluZyB4ZnNfcmVwYWly
+IEkndmUgbW91bnRlZAp0aGUgdm9sdW1lIGluICJybyxub25yZWNvdmVyeSIgbW9kZSwgdGhlbiBy
+YW4gdGhpcyBjb21tYW5kIHRvIG1ha2UgYQpsaXN0aW5nIG9mIGZpbGVzIHdpdGggdGhlaXIgaW5v
+ZGVzOiAKCiBmaW5kIC9tbnQvcmFpZC8gLXByaW50MCB8IHhhcmdzIC0tbnVsbCBscyAtZGkgfCBn
+emlwIC0gPiBGSUxFTElTVC5negoKTm93IEkgY2FuIHJlY29ubmVjdCBtYW51YWxseSBtb3N0IG9m
+IHRoZSBmaWxlcyBpbiBsb3N0K2ZvdW5kIGJ5CnNlYXJjaGluZyBmb3IgdGhlbSBpbiBGSUxFTElT
+VC4KCi0tIAotLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0KRW1tYW51ZWwgRmxvcmFjICAgICB8ICAgRGlyZWN0aW9u
+IHRlY2huaXF1ZQogICAgICAgICAgICAgICAgICAgIHwgICBJbnRlbGxpcXVlCiAgICAgICAgICAg
+ICAgICAgICAgfAk8ZWZsb3JhY0BpbnRlbGxpcXVlLmNvbT4KICAgICAgICAgICAgICAgICAgICB8
+ICAgKzMzIDEgNzggOTQgODQgMDIKLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tCgpfX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dp
+LmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
