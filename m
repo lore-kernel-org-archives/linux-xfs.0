@@ -1,39 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 2BC807F3F
-	for <xfs@oss.sgi.com>; Tue,  7 Oct 2014 04:26:05 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 787BB7F3F
+	for <xfs@oss.sgi.com>; Tue,  7 Oct 2014 05:57:37 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 1A80D30404E
-	for <xfs@oss.sgi.com>; Tue,  7 Oct 2014 02:26:02 -0700 (PDT)
-Received: from mail-wg0-f51.google.com (mail-wg0-f51.google.com
-	[74.125.82.51]) by cuda.sgi.com with ESMTP id O7yTRzldnsAvzkPc
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 07 Oct 2014 02:25:59 -0700 (PDT)
-Received: by mail-wg0-f51.google.com with SMTP id b13so8751823wgh.22
-	for <xfs@oss.sgi.com>; Tue, 07 Oct 2014 02:25:58 -0700 (PDT)
-Received: from Telcontar.valinor (177.Red-79-159-63.staticIP.rima-tde.net.
-	[79.159.63.177]) by mx.google.com with ESMTPSA id
-	l10sm13971971wif.20.2014.10.07.02.25.56 for <xfs@oss.sgi.com>
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-	Tue, 07 Oct 2014 02:25:57 -0700 (PDT)
-Received: from localhost (localhost [127.0.0.1])
-	by Telcontar.valinor (Postfix) with ESMTP id 50B8161301
-	for <xfs@oss.sgi.com>; Tue,  7 Oct 2014 11:25:54 +0200 (CEST)
-Received: from Telcontar.valinor ([127.0.0.1])
-	by localhost (Telcontar.valinor [127.0.0.1]) (amavisd-new, port 10024)
-	with LMTP id U2wBT7cGNg37 for <xfs@oss.sgi.com>;
-	Tue,  7 Oct 2014 11:25:54 +0200 (CEST)
-Received: from [127.0.0.1] (localhost [127.0.0.1])
-	by Telcontar.valinor (Postfix) with ESMTP id 093D96112D
-	for <xfs@oss.sgi.com>; Tue,  7 Oct 2014 11:25:53 +0200 (CEST)
-Message-ID: <5433B1A1.90500@opensuse.org>
-Date: Tue, 07 Oct 2014 11:25:53 +0200
-From: "Carlos E. R." <carlos.e.r@opensuse.org>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 0707CAC002
+	for <xfs@oss.sgi.com>; Tue,  7 Oct 2014 03:57:33 -0700 (PDT)
+Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
+	[150.101.137.143]) by cuda.sgi.com with ESMTP id
+	QmLWyePNtZBFrYze for <xfs@oss.sgi.com>;
+	Tue, 07 Oct 2014 03:57:29 -0700 (PDT)
+Date: Tue, 7 Oct 2014 21:56:57 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: Corrupted filesystem: thoughts?
+Message-ID: <20141007105657.GO2301@dastard>
+References: <20141007093533.66ba8c7b@galadriel.home>
 MIME-Version: 1.0
-Subject: Re: Question about services
-References: <7e633ff6302413da933e04671cd98cdc@bairesdev.com>	<20141006175243.GA4680@hades.localdomain>	<54331346.7050005@telefonica.net>
-	<20141007005826.GA30678@hades.localdomain>
-In-Reply-To: <20141007005826.GA30678@hades.localdomain>
+Content-Disposition: inline
+In-Reply-To: <20141007093533.66ba8c7b@galadriel.home>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -46,44 +29,47 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: XFS mail list <xfs@oss.sgi.com>
+To: Emmanuel Florac <eflorac@intellique.com>
+Cc: xfs@oss.sgi.com
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA1
+On Tue, Oct 07, 2014 at 09:35:33AM +0200, Emmanuel Florac wrote:
+> 
+> Here we go again: Adaptec RAID adapters don't play well with HGST 3TB
+> drives for some reason. When a drive fails, the filesystem is almost
+> always corrupted. This one looks pretty bad according to the output of
+> the latest "xfs_repair -n" of the 15 TB filesystem. Here is a sample 
+> of the 2MB log:
 
-On 2014-10-07 02:58, Carlos Maiolino wrote:
-> Whatever, this got me, well written scam :)
+Is the log clean? (use xfs_logprint -t <dev> to determine that)
 
-Absolutely :-)
-It fooled my spamassassin.
+xfs_repair -n ignores dirty logs, so the state on disk it may be
+reporting on can be inconsistent and that inconsistency is "fixed"
+by running log recovery.
 
-And if he were not, he would have clarified by now.
-Someone that sends what looks like a business letter to an individual,
-by name, to a list mail address, showing that he doesn't know what
-that list is about, is suspect. He is either daft, or it was mass
-email, not really targeted.
+> Phase 1 - find and verify superblock...
+>         - reporting progress in intervals of 15 minutes
+> Phase 2 - using internal log
+>         - scan filesystem freespace and inode maps...
+> out-of-order bno btree record 83 (332943 42) block 27/4681
+> out-of-order bno btree record 90 (322762 76) block 27/4681
+> out-of-order bno btree record 91 (331903 125) block 27/4681
 
-Searching on the "from" name, he is known as spammer:
+That implies that some updates to the btree block haven't occurred
+that compact out the old entries (that are now out of order). That
+can either occur due to writes going missing, or log recovery not
+being run....
 
-http://denvercodemonkey.com/blog/2013/12/spam-from-software-outsourcing-company-bairesdev/
+Most of the issues could be caused by having a dirty log that needs
+recovery, so that is the first thing to check. Note that a
+non-dry-run xfs_repair will warn and abort if the log is dirty,
+unlike "xfs_repair -n".
 
-http://mainsleaze.spambouncer.org/spam-from-software-outsourcing-company-bairesdev/
+Cheers,
 
-
-So that nails the coffin ;-)
-
-- -- 
-Cheers / Saludos,
-
-		Carlos E. R.
-		(from 13.1 x86_64 "Bottle" at Telcontar)
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.22 (GNU/Linux)
-
-iEYEARECAAYFAlQzsaAACgkQtTMYHG2NR9U4qACeJ7/WKIEQBDdl3Khd78HLifMm
-VeAAn1B/iVMs8AtQV4/WRZ0LIbAKjyJF
-=fOYv
------END PGP SIGNATURE-----
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
