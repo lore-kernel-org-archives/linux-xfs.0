@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 101447F4E
-	for <xfs@oss.sgi.com>; Mon,  6 Oct 2014 17:19:33 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id E0E898F8040
-	for <xfs@oss.sgi.com>; Mon,  6 Oct 2014 15:19:32 -0700 (PDT)
-Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
-	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	6qRdyrB0FN6NTtXm for <xfs@oss.sgi.com>;
-	Mon, 06 Oct 2014 15:19:30 -0700 (PDT)
-Date: Tue, 7 Oct 2014 09:19:28 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 05/16] xfs: return the first match during
-	case-insensitive lookup.
-Message-ID: <20141006221928.GJ2301@dastard>
-References: <20141003214758.GY1865@sgi.com>
- <20141003215542.GD1865@sgi.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id AE6337F4E
+	for <xfs@oss.sgi.com>; Mon,  6 Oct 2014 20:54:11 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 3B2ECAC005
+	for <xfs@oss.sgi.com>; Mon,  6 Oct 2014 18:54:10 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id NWmLnlL6XeoPa1PF (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Mon, 06 Oct 2014 18:54:09 -0700 (PDT)
+Date: Mon, 6 Oct 2014 21:58:26 -0300
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: Re: Question about services
+Message-ID: <20141007005826.GA30678@hades.localdomain>
+References: <7e633ff6302413da933e04671cd98cdc@bairesdev.com>
+	<20141006175243.GA4680@hades.localdomain>
+	<54331346.7050005@telefonica.net>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20141003215542.GD1865@sgi.com>
+In-Reply-To: <54331346.7050005@telefonica.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,31 +31,37 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Ben Myers <bpm@sgi.com>
-Cc: linux-fsdevel@vger.kernel.org, olaf@sgi.com, xfs@oss.sgi.com
+To: "Carlos E. R." <robin.listas@telefonica.net>
+Cc: XFS mail list <xfs@oss.sgi.com>
 
-On Fri, Oct 03, 2014 at 04:55:42PM -0500, Ben Myers wrote:
-> From: Olaf Weber <olaf@sgi.com>
+Whatever, this got me, well written scam :)
+
+
+On Tue, Oct 07, 2014 at 12:10:14AM +0200, Carlos E. R. wrote:
+> On 2014-10-06 19:52, Carlos Maiolino wrote:
+> > This looks to be sent as a 'private' email, but you sent it to a public mail
+> > list?
 > 
-> Change the XFS case-insensitive lookup code to return the first match
-> found, even if it is not an exact match. Whether a filesystem uses
-> case-insensitive lookups is determined by a superblock bit set during
-> filesystem creation.  This means that normal use cannot create two files
-> that both match the same filename.
+> Don't listen to it, it is just another spammer.
+> Thunderbird warns that it is a possible scam.
 > 
-> Signed-off-by: Olaf Weber <olaf@sgi.com>
+> -- 
+> Cheers / Saludos,
+> 
+> 		Carlos E. R.
+> 		(from 13.1 x86_64 "Bottle" at Telcontar)
+> 
 
-This is really dependent on whether we want to support mixed
-CI/non-CI filesystems, yes? i.e. if we want to support mixed case
-setups, then we need to keep the code as it stands? What is the
-downside of keeping the code unchaged and our options open?
 
-Cheers,
 
-Dave.
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+
+
 -- 
-Dave Chinner
-david@fromorbit.com
+Carlos
 
 _______________________________________________
 xfs mailing list
