@@ -1,23 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id A0BB57F3F
-	for <xfs@oss.sgi.com>; Tue,  7 Oct 2014 21:58:10 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 809C3304048
-	for <xfs@oss.sgi.com>; Tue,  7 Oct 2014 19:58:07 -0700 (PDT)
-Received: from mail-la0-f45.google.com (mail-la0-f45.google.com
-	[209.85.215.45]) by cuda.sgi.com with ESMTP id BMFYhsAfoTX02gV2
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 07 Oct 2014 19:58:02 -0700 (PDT)
-Received: by mail-la0-f45.google.com with SMTP id q1so7569290lam.4
-	for <xfs@oss.sgi.com>; Tue, 07 Oct 2014 19:58:01 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id DF37C7F3F
+	for <xfs@oss.sgi.com>; Wed,  8 Oct 2014 03:43:02 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id CDB95304048
+	for <xfs@oss.sgi.com>; Wed,  8 Oct 2014 01:42:59 -0700 (PDT)
+Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
+	with ESMTP id 3hFdT2kmpWH5o1hD (version=TLSv1 cipher=AES256-SHA
+	bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 08 Oct 2014 01:42:54 -0700 (PDT)
+Date: Wed, 8 Oct 2014 10:42:51 +0200
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [PATCH 03/12] xfs: Set allowed quota types
+Message-ID: <20141008084251.GB11781@quack.suse.cz>
+References: <1412191894-9113-1-git-send-email-jack@suse.cz>
+	<1412191894-9113-4-git-send-email-jack@suse.cz>
+	<20141006203028.GB2301@dastard>
+	<20141007192935.GF30038@quack.suse.cz>
+	<3391F66C-E2A7-4FC8-8696-3C1600D54DA9@dilger.ca>
 MIME-Version: 1.0
-In-Reply-To: <1412197494-7655-1-git-send-email-hch@lst.de>
-References: <1412197494-7655-1-git-send-email-hch@lst.de>
-Date: Tue, 7 Oct 2014 22:58:01 -0400
-Message-ID: <CANP1eJHc+OeicA1i2-Ct2q+Tj6bBYivBinJX8X=W4xyMwG3hdg@mail.gmail.com>
-Subject: Re: preadv2/pwritev2 updates
-From: Milosz Tanski <milosz@adfin.com>
+Content-Disposition: inline
+In-Reply-To: <3391F66C-E2A7-4FC8-8696-3C1600D54DA9@dilger.ca>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,44 +33,62 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@lst.de>
-Cc: "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, xfs@oss.sgi.com
+To: Andreas Dilger <adilger@dilger.ca>
+Cc: Dave Kleikamp <shaggy@kernel.org>, jfs-discussion@lists.sourceforge.net, Jan Kara <jack@suse.cz>, Jeff Mahoney <jeffm@suse.de>, Mark Fasheh <mfasheh@suse.com>, reiserfs-devel@vger.kernel.org, xfs@oss.sgi.com, cluster-devel <cluster-devel@redhat.com>, Joel Becker <jlbec@evilplan.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, tytso@mit.edu, Ext4 Developers List <linux-ext4@vger.kernel.org>, Steven Whitehouse <swhiteho@redhat.com>, ocfs2-devel@oss.oracle.com
 
-I'm haven't gotten to many comments back from the last set of patches.
-So I imagine that people are okay with the interface and the general
-code.
+On Tue 07-10-14 13:46:20, Andreas Dilger wrote:
+> On Oct 7, 2014, at 1:29 PM, Jan Kara <jack@suse.cz> wrote:
+> > On Tue 07-10-14 07:30:28, Dave Chinner wrote:
+> >> On Wed, Oct 01, 2014 at 09:31:25PM +0200, Jan Kara wrote:
+> >>> We support user, group, and project quotas. Tell VFS about it.
+> >>> 
+> >>> CC: xfs@oss.sgi.com
+> >>> CC: Dave Chinner <david@fromorbit.com>
+> >>> Signed-off-by: Jan Kara <jack@suse.cz>
+> >>> ---
+> >>> fs/xfs/xfs_super.c | 2 ++
+> >>> 1 file changed, 2 insertions(+)
+> >>> 
+> >>> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+> >>> index b194652033cd..b32e998e8cbc 100644
+> >>> --- a/fs/xfs/xfs_super.c
+> >>> +++ b/fs/xfs/xfs_super.c
+> >>> @@ -1419,6 +1419,8 @@ xfs_fs_fill_super(
+> >>> 	sb->s_export_op = &xfs_export_operations;
+> >>> #ifdef CONFIG_XFS_QUOTA
+> >>> 	sb->s_qcop = &xfs_quotactl_operations;
+> >>> +	sb->s_dquot.allowed_types = (1 << USRQUOTA) | (1 << GRPQUOTA) |
+> >>> +				    (1 << PRJQUOTA);
+> >> 
+> >> Would it be better to define masks for these rather than open
+> >> coding these shifts everywhere?
+> >  I can do that. Any suggestion for a name? I was thinking about it for a
+> > while and couldn't come up with anything satisfactory...
+> 
+> Better to have QUOTA at the start, and TYPE in the name, so maybe:
+> 
+> enum quota_types {
+> 	QUOTA_TYPE_USR = 1 << USRQUOTA,
+> 	QUOTA_TYPE_GRP = 1 << GRPQUOTA,
+> 	QUOTA_TYPE_PRJ = 1 << PRJQUOTA,
+> };
+> 
+> or maybe "enum quota_type_mask" or similar.
+> 
+> I prefer named enums over #defines since this makes it more clear
+> when declaring variables like "allowed_types" what valid values are
+> instead of just "int" that someone might mistakenly set to USRQUOTA
+> directly or something.
+  OK, QUOTA_TYPE_USR etc. looks good. I'm not so sure about named enum. I'd
+be fine with named enum for USRQUOTA, GRPQUOTA, etc. - i.e., types which
+should have one of the named values but for a bitmask with arbitrary
+combinations of flags it looks confusing to me (although technically
+it would work).
 
-The next submission will probably rename the call to preadv6/pwritev6
-just to follow the interface ... but I don't think they'll be any
-other changes; so no need to wait on me. How should we go about
-packaging this up for mainline inclusion?
-
-Additionally, I've been testing it with out application in and in the
-test environment we've a 30% reduction in average response time. We
-might be kind of a best case since we do a fair amount of CPU / IO
-bound work overlapped and this lets us skip the threadpool queue in a
-huge chunk of the cases. But the gains are real... for a real
-application.
-
-On Wed, Oct 1, 2014 at 5:04 PM, Christoph Hellwig <hch@lst.de> wrote:
-> Hi Miklos,
->
-> attached are the patches that go on top of your
-> "[RFC v3 0/4] vfs: Non-blockling buffered fs read (page cache only)"
-> series.  The first one adds RWF_NONBLOCK to XFS, the other two
-> add a new RWF_DSYNC flag that adds a per-operation O_DSYNC flag.
->
-
-
-
+								Honza
 -- 
-Milosz Tanski
-CTO
-16 East 34th Street, 15th floor
-New York, NY 10016
-
-p: 646-253-9055
-e: milosz@adfin.com
+Jan Kara <jack@suse.cz>
+SUSE Labs, CR
 
 _______________________________________________
 xfs mailing list
