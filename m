@@ -1,24 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 3A7237F3F
-	for <xfs@oss.sgi.com>; Thu,  9 Oct 2014 15:38:25 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 28CE230405F
-	for <xfs@oss.sgi.com>; Thu,  9 Oct 2014 13:38:20 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id 34AFE7F3F
+	for <xfs@oss.sgi.com>; Thu,  9 Oct 2014 16:07:40 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 0695F304071
+	for <xfs@oss.sgi.com>; Thu,  9 Oct 2014 14:07:39 -0700 (PDT)
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	ZoqefTh0zzpR9FkS for <xfs@oss.sgi.com>;
-	Thu, 09 Oct 2014 13:38:17 -0700 (PDT)
-Date: Fri, 10 Oct 2014 07:38:14 +1100
+	Altif76I731ixVqS for <xfs@oss.sgi.com>;
+	Thu, 09 Oct 2014 14:07:34 -0700 (PDT)
+Date: Fri, 10 Oct 2014 08:07:32 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 05/16] xfs: return the first match during
-	case-insensitive lookup.
-Message-ID: <20141009203814.GB4376@dastard>
-References: <20141003214758.GY1865@sgi.com> <20141003215542.GD1865@sgi.com>
-	<20141006221928.GJ2301@dastard> <20141009154240.GC1865@sgi.com>
+Subject: Re: gather write metrics on multiple files
+Message-ID: <20141009210732.GC4376@dastard>
+References: <543611CF.6030904@hardwarefreak.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20141009154240.GC1865@sgi.com>
+In-Reply-To: <543611CF.6030904@hardwarefreak.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,48 +29,51 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Ben Myers <bpm@sgi.com>
-Cc: linux-fsdevel@vger.kernel.org, olaf@sgi.com, xfs@oss.sgi.com
+To: Stan Hoeppner <stan@hardwarefreak.com>
+Cc: xfs@oss.sgi.com
 
-On Thu, Oct 09, 2014 at 10:42:40AM -0500, Ben Myers wrote:
-> On Tue, Oct 07, 2014 at 09:19:28AM +1100, Dave Chinner wrote:
-> > On Fri, Oct 03, 2014 at 04:55:42PM -0500, Ben Myers wrote:
-> > > From: Olaf Weber <olaf@sgi.com>
-> > > 
-> > > Change the XFS case-insensitive lookup code to return the first match
-> > > found, even if it is not an exact match. Whether a filesystem uses
-> > > case-insensitive lookups is determined by a superblock bit set during
-> > > filesystem creation.  This means that normal use cannot create two files
-> > > that both match the same filename.
-> > > 
-> > > Signed-off-by: Olaf Weber <olaf@sgi.com>
-> > 
-> > This is really dependent on whether we want to support mixed
-> > CI/non-CI filesystems, yes? i.e. if we want to support mixed case
-> > setups, then we need to keep the code as it stands?
-> 
-> It depends upon what semantics you decide are correct in the mixed case.
-> This is just one solution.
+On Wed, Oct 08, 2014 at 11:40:47PM -0500, Stan Hoeppner wrote:
+> Does anyone know of a utility that can track writes to files in an
+> XFS directory tree, or filesystem wide for that matter, and gather
+> filesystem blocks written per second data, or simply KiB/s, etc?
+> I need to analyze an application's actual IO behavior to see if it
+> matches what I'm being told the application is supposed to be
+> doing.
 
-Ok, so we need this code or somethign very similar to support mixed
-case filesystems.  Can you tell us what the other possible solutions
-and semantics have been considered?
+iotop uses the task accounting infrastructure to give you
+per-process IO stats:
 
-> > What is the downside of keeping the code unchaged and our
-> > options open?
-> 
-> The code that is being removed here was for the case when you
-> could have multiple filenames that match for a lookup, which was
-> only possible when the ascii-ci bit was implemented as a mount
-> option.
+Total DISK READ :      27.18 K/s | Total DISK WRITE :     395.10 M/s
+Actual DISK READ:      27.18 K/s | Actual DISK WRITE:     395.10 M/s
+  TID  PRIO  USER     DISK READ  DISK WRITE  SWAPIN     IO>    COMMAND
+14822 be/4 dave       27.18 K/s  395.10 M/s  0.00 % 87.43 % dd if=/dev/zero of=foo bs=1024k count=16384 oflag=direct
+ 5430 be/4 dave        0.00 B/s    3.88 K/s  0.00 %  0.00 % plasma-desktop
+    1 be/4 root        0.00 B/s    0.00 B/s  0.00 %  0.00 % init [2]
+    2 be/4 root        0.00 B/s    0.00 B/s  0.00 %  0.00 % [kthreadd]
+....
 
-Yes, I know what the code did - it allowed us to support mixed case
-ascii-ci filesystems. All you've said is "if we remove mixed case
-support the code is cleaner" but not addressed the issue at hand.
+For whole device stats, "iostat -d -x -m <device> 5" will get you 5
+second averages of the IO to a device, request sizes, queue depths,
+latencies, etc. blktrace/blkparse can give you way more information
+that you care about in the IO subsystem - iowatcher (formerly
+seekwatcher) is a good visualation tool that sits on top of
+blktrace...
 
-I'll try asking the same question a different way: if we keep this
-code, will it work for mixed case unicode filesystem or do we have
-to re-implement mixed case matching differently?
+PCP (i.e using pmchart for live graphing of performance metrics) is
+probably useful here, too.
+
+As for limiting the stats gathering to a subset of the filesystem
+there isn't really anything that does that. You probably would need
+to do some perf or system tap magic to filter read/write ops
+in some way. A good place to start might be here:
+
+http://www.brendangregg.com/perf.html
+
+Specifically his iosnoop tool is a simple template that you can customise to your
+own needs:
+
+http://www.brendangregg.com/blog/2014-07-16/iosnoop-for-linux.html
+http://www.brendangregg.com/blog/2014-07-23/linux-iosnoop-latency-heat-maps.html
 
 Cheers,
 
