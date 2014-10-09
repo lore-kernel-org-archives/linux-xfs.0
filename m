@@ -1,24 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 59BDF7F3F
-	for <xfs@oss.sgi.com>; Thu,  9 Oct 2014 00:24:03 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 39176304048
-	for <xfs@oss.sgi.com>; Wed,  8 Oct 2014 22:24:00 -0700 (PDT)
-Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
-	[65.41.216.221]) by cuda.sgi.com with ESMTP id OSAFvP9AQMdxxCGg
-	for <xfs@oss.sgi.com>; Wed, 08 Oct 2014 22:23:59 -0700 (PDT)
-Received: from [192.168.100.53] (mo-65-41-216-221.sta.embarqhsd.net
-	[65.41.216.221])
-	by greer.hardwarefreak.com (Postfix) with ESMTPA id D8FAE6C121
-	for <xfs@oss.sgi.com>; Thu,  9 Oct 2014 00:23:58 -0500 (CDT)
-Message-ID: <54361C04.5090404@hardwarefreak.com>
-Date: Thu, 09 Oct 2014 00:24:20 -0500
-From: Stan Hoeppner <stan@hardwarefreak.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 566987F3F
+	for <xfs@oss.sgi.com>; Thu,  9 Oct 2014 02:12:04 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id E5750AC006
+	for <xfs@oss.sgi.com>; Thu,  9 Oct 2014 00:12:00 -0700 (PDT)
+Received: from smtp2-g21.free.fr (smtp2-g21.free.fr [212.27.42.2]) by
+	cuda.sgi.com with ESMTP id I94Q4Xyhv1TpOaKr (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 09 Oct 2014 00:11:55 -0700 (PDT)
+From: Victor Stinner <victor.stinner@enovance.com>
+Subject: Re: Can you help me to investiage a soft lockup?
+Date: Thu, 09 Oct 2014 09:11:52 +0200
+Message-ID: <1673046.E2St3OFZUd@smithers>
+In-Reply-To: <20141008212346.GS2301@dastard>
+References: <1211918248.8179166.1412774638265.JavaMail.zimbra@enovance.com>
+	<734140413.8186921.1412777666412.JavaMail.zimbra@enovance.com>
+	<20141008212346.GS2301@dastard>
 MIME-Version: 1.0
-Subject: Re: gather write metrics on multiple files
-References: <543611CF.6030904@hardwarefreak.com> <543613E7.70508@gmail.com>
-In-Reply-To: <543613E7.70508@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,36 +32,19 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-On 10/08/2014 11:49 PM, Joe Landman wrote:
-> On 10/09/2014 12:40 AM, Stan Hoeppner wrote:
->> Does anyone know of a utility that can track writes to files in an
->> XFS directory tree, or filesystem wide for that matter, and gather
->> filesystem blocks written per second data, or simply KiB/s, etc?  I
->> need to analyze an application's actual IO behavior to see if it
->> matches what I'm being told the application is supposed to be doing.
->>
-> 
-> We've written a few for this purpose (local IO probing).
-> 
-> Start with collectl (looks at /proc/diskstats), and others.  Our tools go to /proc/diskstats, and use this to compute BW and IOPs per device.
-> 
-> If you need to log it for a long time, set up a time series database (we use influxdb and the graphite plugin).  Then grab your favorite metrics tool that talks to graphite/influxdb (I like https://github.com/joelandman/sios-metrics for obvious reasons), and start collecting data.
+Hi,
 
-I'm told we have 800 threads writing to nearly as many files concurrently on a single XFS on a 12+2 spindle RAID6 LUN.  Achieved data rate is currently ~300 MiB/s.  Some of these are files are supposedly being written at a rate of only 32KiB every 2-3 seconds, while some (two) are ~50 MiB/s.  I need to determine how many bytes we're writing to each of the low rate files, and how many files, to figure out RMW mitigation strategies.  Out of the apparent 800 streams 700 are these low data rate suckers, one stream writing per file.  
+On Thursday 09 October 2014 08:23:46 Dave Chinner wrote:
+> You best bet would be to upgrade to a more recent kernel rather than
+> try to indentify and backport a bunch of fixes to an old kernel...
 
-Nary a stock RAID controller is going to be able to assemble full stripes out of these small slow writes.  With a 768 KiB stripe that's what, 24 seconds to fill it at 2 seconds per 32 KiB IO?  I've been playing with bcache for a few days but it actually drops throughput by about 30% no matter how I turn its knobs.  Unless I can get Kent to respond to some of my questions bcache will be a dead end.  I had high hopes for it, thinking it would turn these small random IOs into larger sequential writes.  It may actually be doing so, but it's doing something else too, and badly.  IO times go through the roof once bcache starts gobbling IOs, and throughput to the LUNs drops significantly even though bcache is writing 50-100 MIB/s to the SSD.  Not sure what's causing that.
+I don't know the Linux kernel enough to feel confident to backport changes. So 
+upgrading is the safest option. Eric Sandeen gave me the same advice. We will 
+try to upgrade to Linux 3.13.
 
+Thanks for your reply.
 
->> Thanks, Stan
->>
->> _______________________________________________ xfs mailing list
->> xfs@oss.sgi.com http://oss.sgi.com/mailman/listinfo/xfs
->>
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+Victor
 
 _______________________________________________
 xfs mailing list
