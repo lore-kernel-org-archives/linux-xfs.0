@@ -1,18 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 6BDC57F75
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id C1D7E7F7B
 	for <xfs@oss.sgi.com>; Fri, 10 Oct 2014 09:24:11 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 2D735304071
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 92F428F8059
 	for <xfs@oss.sgi.com>; Fri, 10 Oct 2014 07:24:11 -0700 (PDT)
 Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id Spqmvu3qEREFB5An (version=TLSv1 cipher=AES256-SHA
+	with ESMTP id hp9q7MzE8FyKIZzA (version=TLSv1 cipher=AES256-SHA
 	bits=256 verify=NO) for <xfs@oss.sgi.com>;
 	Fri, 10 Oct 2014 07:24:09 -0700 (PDT)
 From: Jan Kara <jack@suse.cz>
-Subject: [PATCH] ocfs2: Fix quota file corruption
-Date: Fri, 10 Oct 2014 16:23:28 +0200
-Message-Id: <1412951028-4085-24-git-send-email-jack@suse.cz>
+Subject: [PATCH] printk: enable interrupts before calling
+	console_trylock_for_printk()
+Date: Fri, 10 Oct 2014 16:23:31 +0200
+Message-Id: <1412951028-4085-27-git-send-email-jack@suse.cz>
 In-Reply-To: <1412951028-4085-1-git-send-email-jack@suse.cz>
 References: <1412951028-4085-1-git-send-email-jack@suse.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -29,87 +30,109 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: linux-fsdevel@vger.kernel.org
-Cc: Dave Kleikamp <shaggy@kernel.org>, jfs-discussion@lists.sourceforge.net, tytso@mit.edu, Jeff Mahoney <jeffm@suse.de>, Mark Fasheh <mfasheh@suse.de>, Mark Fasheh <mfasheh@suse.com>, reiserfs-devel@vger.kernel.org, stable@vger.kernel.org, xfs@oss.sgi.com, cluster-devel@redhat.com, Joel Becker <jlbec@evilplan.org>, Goldwyn Rodrigues <rgoldwyn@suse.de>, Jan Kara <jack@suse.cz>, linux-ext4@vger.kernel.org, Steven Whitehouse <swhiteho@redhat.com>, ocfs2-devel@oss.oracle.com, viro@zeniv.linux.org.uk
+Cc: Dave Kleikamp <shaggy@kernel.org>, jfs-discussion@lists.sourceforge.net, tytso@mit.edu, Jeff Mahoney <jeffm@suse.de>, Mark Fasheh <mfasheh@suse.com>, reiserfs-devel@vger.kernel.org, xfs@oss.sgi.com, cluster-devel@redhat.com, Joel Becker <jlbec@evilplan.org>, Jan Kara <jack@suse.cz>, linux-ext4@vger.kernel.org, Steven Whitehouse <swhiteho@redhat.com>, ocfs2-devel@oss.oracle.com, viro@zeniv.linux.org.uk
 
-Global quota files are accessed from different nodes. Thus we cannot
-cache offset of quota structure in the quota file after we drop our
-node reference count to it because after that moment quota structure may
-be freed and reallocated elsewhere by a different node resulting in
-corruption of quota file.
+We need interrupts disabled when calling console_trylock_for_printk()
+only so that cpu id we pass to can_use_console() remains valid (for
+other things console_sem provides all the exclusion we need and
+deadlocks on console_sem due to interrupts are impossible because we use
+down_trylock()).  However if we are rescheduled, we are guaranteed to
+run on an online cpu so we can easily just get the cpu id in
+can_use_console().
 
-Fix the problem by clearing dq_off when we are releasing dquot
-structure. We also remove the DB_READ_B handling because it is useless -
-DQ_ACTIVE_B is set iff DQ_READ_B is set.
+We can lose a bit of performance when we enable interrupts in
+vprintk_emit() and then disable them again in console_unlock() but OTOH
+it can somewhat reduce interrupt latency caused by console_unlock().
 
-CC: stable@vger.kernel.org
-CC: Goldwyn Rodrigues <rgoldwyn@suse.de>
-CC: Mark Fasheh <mfasheh@suse.de>
+We differ from (reverted) commit 939f04bec1a4 in that we avoid calling
+console_unlock() from vprintk_emit() with lockdep enabled as that has
+unveiled quite some bugs leading to system freezes during boot (e.g.
+https://lkml.org/lkml/2014/5/30/242,
+https://lkml.org/lkml/2014/6/28/521).
+
+Tested-by: Andreas Bombe <aeb@debian.org>
 Signed-off-by: Jan Kara <jack@suse.cz>
 ---
- fs/ocfs2/quota_global.c | 27 +++++++++++++++++----------
- fs/ocfs2/quota_local.c  |  4 ----
- 2 files changed, 17 insertions(+), 14 deletions(-)
+ kernel/printk/printk.c | 31 +++++++++++++++++++++----------
+ 1 file changed, 21 insertions(+), 10 deletions(-)
 
-diff --git a/fs/ocfs2/quota_global.c b/fs/ocfs2/quota_global.c
-index aaa50611ec66..d7b5108789e2 100644
---- a/fs/ocfs2/quota_global.c
-+++ b/fs/ocfs2/quota_global.c
-@@ -717,6 +717,12 @@ static int ocfs2_release_dquot(struct dquot *dquot)
- 	 */
- 	if (status < 0)
- 		mlog_errno(status);
-+	/*
-+	 * Clear dq_off so that we search for the structure in quota file next
-+	 * time we acquire it. The structure might be deleted and reallocated
-+	 * elsewhere by another node while our dquot structure is on freelist.
-+	 */
-+	dquot->dq_off = 0;
- 	clear_bit(DQ_ACTIVE_B, &dquot->dq_flags);
- out_trans:
- 	ocfs2_commit_trans(osb, handle);
-@@ -756,16 +762,17 @@ static int ocfs2_acquire_dquot(struct dquot *dquot)
- 	status = ocfs2_lock_global_qf(info, 1);
- 	if (status < 0)
- 		goto out;
--	if (!test_bit(DQ_READ_B, &dquot->dq_flags)) {
--		status = ocfs2_qinfo_lock(info, 0);
--		if (status < 0)
--			goto out_dq;
--		status = qtree_read_dquot(&info->dqi_gi, dquot);
--		ocfs2_qinfo_unlock(info, 0);
--		if (status < 0)
--			goto out_dq;
--	}
--	set_bit(DQ_READ_B, &dquot->dq_flags);
-+	status = ocfs2_qinfo_lock(info, 0);
-+	if (status < 0)
-+		goto out_dq;
-+	/*
-+	 * We always want to read dquot structure from disk because we don't
-+	 * know what happened with it while it was on freelist.
-+	 */
-+	status = qtree_read_dquot(&info->dqi_gi, dquot);
-+	ocfs2_qinfo_unlock(info, 0);
-+	if (status < 0)
-+		goto out_dq;
+ Andrew, can you please queue this patch? Thanks.
+
+diff --git a/kernel/printk/printk.c b/kernel/printk/printk.c
+index 13e839dbca07..fe4154d83fe4 100644
+--- a/kernel/printk/printk.c
++++ b/kernel/printk/printk.c
+@@ -1416,10 +1416,9 @@ static int have_callable_console(void)
+ /*
+  * Can we actually use the console at this time on this cpu?
+  *
+- * Console drivers may assume that per-cpu resources have
+- * been allocated. So unless they're explicitly marked as
+- * being able to cope (CON_ANYTIME) don't call them until
+- * this CPU is officially up.
++ * Console drivers may assume that per-cpu resources have been allocated. So
++ * unless they're explicitly marked as being able to cope (CON_ANYTIME) don't
++ * call them until this CPU is officially up.
+  */
+ static inline int can_use_console(unsigned int cpu)
+ {
+@@ -1432,8 +1431,10 @@ static inline int can_use_console(unsigned int cpu)
+  * console_lock held, and 'console_locked' set) if it
+  * is successful, false otherwise.
+  */
+-static int console_trylock_for_printk(unsigned int cpu)
++static int console_trylock_for_printk(void)
+ {
++	unsigned int cpu = smp_processor_id();
++
+ 	if (!console_trylock())
+ 		return 0;
+ 	/*
+@@ -1608,7 +1609,8 @@ asmlinkage int vprintk_emit(int facility, int level,
+ 		 */
+ 		if (!oops_in_progress && !lockdep_recursing(current)) {
+ 			recursion_bug = 1;
+-			goto out_restore_irqs;
++			local_irq_restore(flags);
++			return 0;
+ 		}
+ 		zap_locks();
+ 	}
+@@ -1716,21 +1718,30 @@ asmlinkage int vprintk_emit(int facility, int level,
  
- 	OCFS2_DQUOT(dquot)->dq_use_count++;
- 	OCFS2_DQUOT(dquot)->dq_origspace = dquot->dq_dqb.dqb_curspace;
-diff --git a/fs/ocfs2/quota_local.c b/fs/ocfs2/quota_local.c
-index 2e4344be3b96..2001862bf2b1 100644
---- a/fs/ocfs2/quota_local.c
-+++ b/fs/ocfs2/quota_local.c
-@@ -1303,10 +1303,6 @@ int ocfs2_local_release_dquot(handle_t *handle, struct dquot *dquot)
- 	ocfs2_journal_dirty(handle, od->dq_chunk->qc_headerbh);
+ 	logbuf_cpu = UINT_MAX;
+ 	raw_spin_unlock(&logbuf_lock);
++	lockdep_on();
++	local_irq_restore(flags);
  
- out:
--	/* Clear the read bit so that next time someone uses this
--	 * dquot he reads fresh info from disk and allocates local
--	 * dquot structure */
--	clear_bit(DQ_READ_B, &dquot->dq_flags);
- 	return status;
+ 	/* If called from the scheduler, we can not call up(). */
+ 	if (!in_sched) {
++		lockdep_off();
++		/*
++		 * Disable preemption to avoid being preempted while holding
++		 * console_sem which would prevent anyone from printing to
++		 * console
++		 */
++		preempt_disable();
++
+ 		/*
+ 		 * Try to acquire and then immediately release the console
+ 		 * semaphore.  The release will print out buffers and wake up
+ 		 * /dev/kmsg and syslog() users.
+ 		 */
+-		if (console_trylock_for_printk(this_cpu))
++		if (console_trylock_for_printk())
+ 			console_unlock();
++		preempt_enable();
++		lockdep_on();
+ 	}
+ 
+-	lockdep_on();
+-out_restore_irqs:
+-	local_irq_restore(flags);
+ 	return printed_len;
  }
- 
+ EXPORT_SYMBOL(vprintk_emit);
 -- 
 1.8.1.4
 
