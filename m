@@ -1,19 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id E958D7F81
-	for <xfs@oss.sgi.com>; Fri, 10 Oct 2014 09:24:11 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id A2D818F8065
-	for <xfs@oss.sgi.com>; Fri, 10 Oct 2014 07:24:11 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id 9A8307F8E
+	for <xfs@oss.sgi.com>; Fri, 10 Oct 2014 09:24:12 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 89B168F8059
+	for <xfs@oss.sgi.com>; Fri, 10 Oct 2014 07:24:12 -0700 (PDT)
 Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id x0NUfvlgnaFFCpSP (version=TLSv1 cipher=AES256-SHA
+	with ESMTP id vuqvm4NmTi0EQULC (version=TLSv1 cipher=AES256-SHA
 	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 10 Oct 2014 07:24:09 -0700 (PDT)
+	Fri, 10 Oct 2014 07:24:11 -0700 (PDT)
 From: Jan Kara <jack@suse.cz>
-Subject: [PATCH] timer: Fix lock inversion between hrtimer_bases.lock and
-	scheduler locks
-Date: Fri, 10 Oct 2014 16:23:35 +0200
-Message-Id: <1412951028-4085-31-git-send-email-jack@suse.cz>
+Subject: [PATCH 2/2 RESEND] bdi: Avoid oops on device removal
+Date: Fri, 10 Oct 2014 16:23:43 +0200
+Message-Id: <1412951028-4085-39-git-send-email-jack@suse.cz>
 In-Reply-To: <1412951028-4085-1-git-send-email-jack@suse.cz>
 References: <1412951028-4085-1-git-send-email-jack@suse.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -30,247 +29,143 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: linux-fsdevel@vger.kernel.org
-Cc: Dave Kleikamp <shaggy@kernel.org>, jfs-discussion@lists.sourceforge.net, tytso@mit.edu, Jeff Mahoney <jeffm@suse.de>, Mark Fasheh <mfasheh@suse.com>, reiserfs-devel@vger.kernel.org, xfs@oss.sgi.com, cluster-devel@redhat.com, Joel Becker <jlbec@evilplan.org>, Jan Kara <jack@suse.cz>, linux-ext4@vger.kernel.org, Steven Whitehouse <swhiteho@redhat.com>, ocfs2-devel@oss.oracle.com, viro@zeniv.linux.org.uk
+Cc: Dave Kleikamp <shaggy@kernel.org>, jfs-discussion@lists.sourceforge.net, tytso@mit.edu, Jeff Mahoney <jeffm@suse.de>, Mark Fasheh <mfasheh@suse.com>, reiserfs-devel@vger.kernel.org, stable@vger.kernel.org, xfs@oss.sgi.com, cluster-devel@redhat.com, Joel Becker <jlbec@evilplan.org>, Jan Kara <jack@suse.cz>, linux-ext4@vger.kernel.org, Steven Whitehouse <swhiteho@redhat.com>, ocfs2-devel@oss.oracle.com, viro@zeniv.linux.org.uk
 
-clockevents_increase_min_delta() calls printk() from under
-hrtimer_bases.lock. That causes lock inversion on scheduler locks because
-printk() can call into the scheduler. Lockdep puts it as:
+After 839a8e8660b67 "writeback: replace custom worker pool
+implementation with unbound workqueue" when device is removed while we
+are writing to it we crash in bdi_writeback_workfn() ->
+set_worker_desc() because bdi->dev is NULL.  This can happen because
+even though bdi_unregister() cancels all pending flushing work, nothing
+really prevents new ones from being queued from balance_dirty_pages() or
+other places.
 
-======================================================
-[ INFO: possible circular locking dependency detected ]
-3.15.0-rc8-06195-g939f04b #2 Not tainted
--------------------------------------------------------
-trinity-main/74 is trying to acquire lock:
- (&port_lock_key){-.....}, at: [<811c60be>] serial8250_console_write+0x8c/0x10c
+Fix the problem by clearing BDI_registered bit in bdi_unregister() and
+checking it before scheduling of any flushing work.
 
-but task is already holding lock:
- (hrtimer_bases.lock){-.-...}, at: [<8103caeb>] hrtimer_try_to_cancel+0x13/0x66
-
-which lock already depends on the new lock.
-
-the existing dependency chain (in reverse order) is:
-
--> #5 (hrtimer_bases.lock){-.-...}:
-       [<8104a942>] lock_acquire+0x92/0x101
-       [<8142f11d>] _raw_spin_lock_irqsave+0x2e/0x3e
-       [<8103c918>] __hrtimer_start_range_ns+0x1c/0x197
-       [<8107ec20>] perf_swevent_start_hrtimer.part.41+0x7a/0x85
-       [<81080792>] task_clock_event_start+0x3a/0x3f
-       [<810807a4>] task_clock_event_add+0xd/0x14
-       [<8108259a>] event_sched_in+0xb6/0x17a
-       [<810826a2>] group_sched_in+0x44/0x122
-       [<81082885>] ctx_sched_in.isra.67+0x105/0x11f
-       [<810828e6>] perf_event_sched_in.isra.70+0x47/0x4b
-       [<81082bf6>] __perf_install_in_context+0x8b/0xa3
-       [<8107eb8e>] remote_function+0x12/0x2a
-       [<8105f5af>] smp_call_function_single+0x2d/0x53
-       [<8107e17d>] task_function_call+0x30/0x36
-       [<8107fb82>] perf_install_in_context+0x87/0xbb
-       [<810852c9>] SYSC_perf_event_open+0x5c6/0x701
-       [<810856f9>] SyS_perf_event_open+0x17/0x19
-       [<8142f8ee>] syscall_call+0x7/0xb
-
--> #4 (&ctx->lock){......}:
-       [<8104a942>] lock_acquire+0x92/0x101
-       [<8142f04c>] _raw_spin_lock+0x21/0x30
-       [<81081df3>] __perf_event_task_sched_out+0x1dc/0x34f
-       [<8142cacc>] __schedule+0x4c6/0x4cb
-       [<8142cae0>] schedule+0xf/0x11
-       [<8142f9a6>] work_resched+0x5/0x30
-
--> #3 (&rq->lock){-.-.-.}:
-       [<8104a942>] lock_acquire+0x92/0x101
-       [<8142f04c>] _raw_spin_lock+0x21/0x30
-       [<81040873>] __task_rq_lock+0x33/0x3a
-       [<8104184c>] wake_up_new_task+0x25/0xc2
-       [<8102474b>] do_fork+0x15c/0x2a0
-       [<810248a9>] kernel_thread+0x1a/0x1f
-       [<814232a2>] rest_init+0x1a/0x10e
-       [<817af949>] start_kernel+0x303/0x308
-       [<817af2ab>] i386_start_kernel+0x79/0x7d
-
--> #2 (&p->pi_lock){-.-...}:
-       [<8104a942>] lock_acquire+0x92/0x101
-       [<8142f11d>] _raw_spin_lock_irqsave+0x2e/0x3e
-       [<810413dd>] try_to_wake_up+0x1d/0xd6
-       [<810414cd>] default_wake_function+0xb/0xd
-       [<810461f3>] __wake_up_common+0x39/0x59
-       [<81046346>] __wake_up+0x29/0x3b
-       [<811b8733>] tty_wakeup+0x49/0x51
-       [<811c3568>] uart_write_wakeup+0x17/0x19
-       [<811c5dc1>] serial8250_tx_chars+0xbc/0xfb
-       [<811c5f28>] serial8250_handle_irq+0x54/0x6a
-       [<811c5f57>] serial8250_default_handle_irq+0x19/0x1c
-       [<811c56d8>] serial8250_interrupt+0x38/0x9e
-       [<810510e7>] handle_irq_event_percpu+0x5f/0x1e2
-       [<81051296>] handle_irq_event+0x2c/0x43
-       [<81052cee>] handle_level_irq+0x57/0x80
-       [<81002a72>] handle_irq+0x46/0x5c
-       [<810027df>] do_IRQ+0x32/0x89
-       [<8143036e>] common_interrupt+0x2e/0x33
-       [<8142f23c>] _raw_spin_unlock_irqrestore+0x3f/0x49
-       [<811c25a4>] uart_start+0x2d/0x32
-       [<811c2c04>] uart_write+0xc7/0xd6
-       [<811bc6f6>] n_tty_write+0xb8/0x35e
-       [<811b9beb>] tty_write+0x163/0x1e4
-       [<811b9cd9>] redirected_tty_write+0x6d/0x75
-       [<810b6ed6>] vfs_write+0x75/0xb0
-       [<810b7265>] SyS_write+0x44/0x77
-       [<8142f8ee>] syscall_call+0x7/0xb
-
--> #1 (&tty->write_wait){-.....}:
-       [<8104a942>] lock_acquire+0x92/0x101
-       [<8142f11d>] _raw_spin_lock_irqsave+0x2e/0x3e
-       [<81046332>] __wake_up+0x15/0x3b
-       [<811b8733>] tty_wakeup+0x49/0x51
-       [<811c3568>] uart_write_wakeup+0x17/0x19
-       [<811c5dc1>] serial8250_tx_chars+0xbc/0xfb
-       [<811c5f28>] serial8250_handle_irq+0x54/0x6a
-       [<811c5f57>] serial8250_default_handle_irq+0x19/0x1c
-       [<811c56d8>] serial8250_interrupt+0x38/0x9e
-       [<810510e7>] handle_irq_event_percpu+0x5f/0x1e2
-       [<81051296>] handle_irq_event+0x2c/0x43
-       [<81052cee>] handle_level_irq+0x57/0x80
-       [<81002a72>] handle_irq+0x46/0x5c
-       [<810027df>] do_IRQ+0x32/0x89
-       [<8143036e>] common_interrupt+0x2e/0x33
-       [<8142f23c>] _raw_spin_unlock_irqrestore+0x3f/0x49
-       [<811c25a4>] uart_start+0x2d/0x32
-       [<811c2c04>] uart_write+0xc7/0xd6
-       [<811bc6f6>] n_tty_write+0xb8/0x35e
-       [<811b9beb>] tty_write+0x163/0x1e4
-       [<811b9cd9>] redirected_tty_write+0x6d/0x75
-       [<810b6ed6>] vfs_write+0x75/0xb0
-       [<810b7265>] SyS_write+0x44/0x77
-       [<8142f8ee>] syscall_call+0x7/0xb
-
--> #0 (&port_lock_key){-.....}:
-       [<8104a62d>] __lock_acquire+0x9ea/0xc6d
-       [<8104a942>] lock_acquire+0x92/0x101
-       [<8142f11d>] _raw_spin_lock_irqsave+0x2e/0x3e
-       [<811c60be>] serial8250_console_write+0x8c/0x10c
-       [<8104e402>] call_console_drivers.constprop.31+0x87/0x118
-       [<8104f5d5>] console_unlock+0x1d7/0x398
-       [<8104fb70>] vprintk_emit+0x3da/0x3e4
-       [<81425f76>] printk+0x17/0x19
-       [<8105bfa0>] clockevents_program_min_delta+0x104/0x116
-       [<8105c548>] clockevents_program_event+0xe7/0xf3
-       [<8105cc1c>] tick_program_event+0x1e/0x23
-       [<8103c43c>] hrtimer_force_reprogram+0x88/0x8f
-       [<8103c49e>] __remove_hrtimer+0x5b/0x79
-       [<8103cb21>] hrtimer_try_to_cancel+0x49/0x66
-       [<8103cb4b>] hrtimer_cancel+0xd/0x18
-       [<8107f102>] perf_swevent_cancel_hrtimer.part.60+0x2b/0x30
-       [<81080705>] task_clock_event_stop+0x20/0x64
-       [<81080756>] task_clock_event_del+0xd/0xf
-       [<81081350>] event_sched_out+0xab/0x11e
-       [<810813e0>] group_sched_out+0x1d/0x66
-       [<81081682>] ctx_sched_out+0xaf/0xbf
-       [<81081e04>] __perf_event_task_sched_out+0x1ed/0x34f
-       [<8142cacc>] __schedule+0x4c6/0x4cb
-       [<8142cae0>] schedule+0xf/0x11
-       [<8142f9a6>] work_resched+0x5/0x30
-
-other info that might help us debug this:
-
-Chain exists of:
-  &port_lock_key --> &ctx->lock --> hrtimer_bases.lock
-
- Possible unsafe locking scenario:
-
-       CPU0                    CPU1
-       ----                    ----
-  lock(hrtimer_bases.lock);
-                               lock(&ctx->lock);
-                               lock(hrtimer_bases.lock);
-  lock(&port_lock_key);
-
- *** DEADLOCK ***
-
-4 locks held by trinity-main/74:
- #0:  (&rq->lock){-.-.-.}, at: [<8142c6f3>] __schedule+0xed/0x4cb
- #1:  (&ctx->lock){......}, at: [<81081df3>] __perf_event_task_sched_out+0x1dc/0x34f
- #2:  (hrtimer_bases.lock){-.-...}, at: [<8103caeb>] hrtimer_try_to_cancel+0x13/0x66
- #3:  (console_lock){+.+...}, at: [<8104fb5d>] vprintk_emit+0x3c7/0x3e4
-
-stack backtrace:
-CPU: 0 PID: 74 Comm: trinity-main Not tainted 3.15.0-rc8-06195-g939f04b #2
- 00000000 81c3a310 8b995c14 81426f69 8b995c44 81425a99 8161f671 8161f570
- 8161f538 8161f559 8161f538 8b995c78 8b142bb0 00000004 8b142fdc 8b142bb0
- 8b995ca8 8104a62d 8b142fac 000016f2 81c3a310 00000001 00000001 00000003
-Call Trace:
- [<81426f69>] dump_stack+0x16/0x18
- [<81425a99>] print_circular_bug+0x18f/0x19c
- [<8104a62d>] __lock_acquire+0x9ea/0xc6d
- [<8104a942>] lock_acquire+0x92/0x101
- [<811c60be>] ? serial8250_console_write+0x8c/0x10c
- [<811c6032>] ? wait_for_xmitr+0x76/0x76
- [<8142f11d>] _raw_spin_lock_irqsave+0x2e/0x3e
- [<811c60be>] ? serial8250_console_write+0x8c/0x10c
- [<811c60be>] serial8250_console_write+0x8c/0x10c
- [<8104af87>] ? lock_release+0x191/0x223
- [<811c6032>] ? wait_for_xmitr+0x76/0x76
- [<8104e402>] call_console_drivers.constprop.31+0x87/0x118
- [<8104f5d5>] console_unlock+0x1d7/0x398
- [<8104fb70>] vprintk_emit+0x3da/0x3e4
- [<81425f76>] printk+0x17/0x19
- [<8105bfa0>] clockevents_program_min_delta+0x104/0x116
- [<8105cc1c>] tick_program_event+0x1e/0x23
- [<8103c43c>] hrtimer_force_reprogram+0x88/0x8f
- [<8103c49e>] __remove_hrtimer+0x5b/0x79
- [<8103cb21>] hrtimer_try_to_cancel+0x49/0x66
- [<8103cb4b>] hrtimer_cancel+0xd/0x18
- [<8107f102>] perf_swevent_cancel_hrtimer.part.60+0x2b/0x30
- [<81080705>] task_clock_event_stop+0x20/0x64
- [<81080756>] task_clock_event_del+0xd/0xf
- [<81081350>] event_sched_out+0xab/0x11e
- [<810813e0>] group_sched_out+0x1d/0x66
- [<81081682>] ctx_sched_out+0xaf/0xbf
- [<81081e04>] __perf_event_task_sched_out+0x1ed/0x34f
- [<8104416d>] ? __dequeue_entity+0x23/0x27
- [<81044505>] ? pick_next_task_fair+0xb1/0x120
- [<8142cacc>] __schedule+0x4c6/0x4cb
- [<81047574>] ? trace_hardirqs_off_caller+0xd7/0x108
- [<810475b0>] ? trace_hardirqs_off+0xb/0xd
- [<81056346>] ? rcu_irq_exit+0x64/0x77
-
-Fix the problem by using printk_deferred() which does not call into the
-scheduler.
-
-Reported-by: Fengguang Wu <fengguang.wu@intel.com>
+Fixes: 839a8e8660b6777e7fe4e80af1a048aebe2b5977
+CC: stable@vger.kernel.org
+Reviewed-by: Tejun Heo <tj@kernel.org>
 Signed-off-by: Jan Kara <jack@suse.cz>
 ---
- kernel/time/clockevents.c | 10 ++++++----
- 1 file changed, 6 insertions(+), 4 deletions(-)
+ fs/fs-writeback.c           | 23 ++++++++++++++++++-----
+ include/linux/backing-dev.h |  2 +-
+ mm/backing-dev.c            | 13 +++++++++----
+ 3 files changed, 28 insertions(+), 10 deletions(-)
 
-diff --git a/kernel/time/clockevents.c b/kernel/time/clockevents.c
-index ad362c260ef4..9c94c19f1305 100644
---- a/kernel/time/clockevents.c
-+++ b/kernel/time/clockevents.c
-@@ -146,7 +146,8 @@ static int clockevents_increase_min_delta(struct clock_event_device *dev)
- {
- 	/* Nothing to do if we already reached the limit */
- 	if (dev->min_delta_ns >= MIN_DELTA_LIMIT) {
--		printk(KERN_WARNING "CE: Reprogramming failure. Giving up\n");
-+		printk_deferred(KERN_WARNING
-+				"CE: Reprogramming failure. Giving up\n");
- 		dev->next_event.tv64 = KTIME_MAX;
- 		return -ETIME;
- 	}
-@@ -159,9 +160,10 @@ static int clockevents_increase_min_delta(struct clock_event_device *dev)
- 	if (dev->min_delta_ns > MIN_DELTA_LIMIT)
- 		dev->min_delta_ns = MIN_DELTA_LIMIT;
+diff --git a/fs/fs-writeback.c b/fs/fs-writeback.c
+index 8277b76be983..c24e7b8b521b 100644
+--- a/fs/fs-writeback.c
++++ b/fs/fs-writeback.c
+@@ -94,16 +94,29 @@ static inline struct inode *wb_inode(struct list_head *head)
+ #define CREATE_TRACE_POINTS
+ #include <trace/events/writeback.h>
  
--	printk(KERN_WARNING "CE: %s increased min_delta_ns to %llu nsec\n",
--	       dev->name ? dev->name : "?",
--	       (unsigned long long) dev->min_delta_ns);
-+	printk_deferred(KERN_WARNING
-+			"CE: %s increased min_delta_ns to %llu nsec\n",
-+			dev->name ? dev->name : "?",
-+			(unsigned long long) dev->min_delta_ns);
- 	return 0;
++static void bdi_wakeup_thread(struct backing_dev_info *bdi)
++{
++	spin_lock_bh(&bdi->wb_lock);
++	if (test_bit(BDI_registered, &bdi->state))
++		mod_delayed_work(bdi_wq, &bdi->wb.dwork, 0);
++	spin_unlock_bh(&bdi->wb_lock);
++}
++
+ static void bdi_queue_work(struct backing_dev_info *bdi,
+ 			   struct wb_writeback_work *work)
+ {
+ 	trace_writeback_queue(bdi, work);
+ 
+ 	spin_lock_bh(&bdi->wb_lock);
++	if (!test_bit(BDI_registered, &bdi->state)) {
++		if (work->done)
++			complete(work->done);
++		goto out_unlock;
++	}
+ 	list_add_tail(&work->list, &bdi->work_list);
+-	spin_unlock_bh(&bdi->wb_lock);
+-
+ 	mod_delayed_work(bdi_wq, &bdi->wb.dwork, 0);
++out_unlock:
++	spin_unlock_bh(&bdi->wb_lock);
  }
  
+ static void
+@@ -119,7 +132,7 @@ __bdi_start_writeback(struct backing_dev_info *bdi, long nr_pages,
+ 	work = kzalloc(sizeof(*work), GFP_ATOMIC);
+ 	if (!work) {
+ 		trace_writeback_nowork(bdi);
+-		mod_delayed_work(bdi_wq, &bdi->wb.dwork, 0);
++		bdi_wakeup_thread(bdi);
+ 		return;
+ 	}
+ 
+@@ -166,7 +179,7 @@ void bdi_start_background_writeback(struct backing_dev_info *bdi)
+ 	 * writeback as soon as there is no other work to do.
+ 	 */
+ 	trace_writeback_wake_background(bdi);
+-	mod_delayed_work(bdi_wq, &bdi->wb.dwork, 0);
++	bdi_wakeup_thread(bdi);
+ }
+ 
+ /*
+@@ -1025,7 +1038,7 @@ void bdi_writeback_workfn(struct work_struct *work)
+ 	current->flags |= PF_SWAPWRITE;
+ 
+ 	if (likely(!current_is_workqueue_rescuer() ||
+-		   list_empty(&bdi->bdi_list))) {
++		   !test_bit(BDI_registered, &bdi->state))) {
+ 		/*
+ 		 * The normal path.  Keep writing back @bdi until its
+ 		 * work_list is empty.  Note that this path is also taken
+diff --git a/include/linux/backing-dev.h b/include/linux/backing-dev.h
+index 24819001f5c8..e488e9459a93 100644
+--- a/include/linux/backing-dev.h
++++ b/include/linux/backing-dev.h
+@@ -95,7 +95,7 @@ struct backing_dev_info {
+ 	unsigned int max_ratio, max_prop_frac;
+ 
+ 	struct bdi_writeback wb;  /* default writeback info for this bdi */
+-	spinlock_t wb_lock;	  /* protects work_list */
++	spinlock_t wb_lock;	  /* protects work_list & wb.dwork scheduling */
+ 
+ 	struct list_head work_list;
+ 
+diff --git a/mm/backing-dev.c b/mm/backing-dev.c
+index fab8401fc54e..09d9591b7708 100644
+--- a/mm/backing-dev.c
++++ b/mm/backing-dev.c
+@@ -297,7 +297,10 @@ void bdi_wakeup_thread_delayed(struct backing_dev_info *bdi)
+ 	unsigned long timeout;
+ 
+ 	timeout = msecs_to_jiffies(dirty_writeback_interval * 10);
+-	queue_delayed_work(bdi_wq, &bdi->wb.dwork, timeout);
++	spin_lock_bh(&bdi->wb_lock);
++	if (test_bit(BDI_registered, &bdi->state))
++		queue_delayed_work(bdi_wq, &bdi->wb.dwork, timeout);
++	spin_unlock_bh(&bdi->wb_lock);
+ }
+ 
+ /*
+@@ -310,9 +313,6 @@ static void bdi_remove_from_list(struct backing_dev_info *bdi)
+ 	spin_unlock_bh(&bdi_lock);
+ 
+ 	synchronize_rcu_expedited();
+-
+-	/* bdi_list is now unused, clear it to mark @bdi dying */
+-	INIT_LIST_HEAD(&bdi->bdi_list);
+ }
+ 
+ int bdi_register(struct backing_dev_info *bdi, struct device *parent,
+@@ -363,6 +363,11 @@ static void bdi_wb_shutdown(struct backing_dev_info *bdi)
+ 	 */
+ 	bdi_remove_from_list(bdi);
+ 
++	/* Make sure nobody queues further work */
++	spin_lock_bh(&bdi->wb_lock);
++	clear_bit(BDI_registered, &bdi->state);
++	spin_unlock_bh(&bdi->wb_lock);
++
+ 	/*
+ 	 * Drain work list and shutdown the delayed_work.  At this point,
+ 	 * @bdi->bdi_list is empty telling bdi_Writeback_workfn() that @bdi
 -- 
 1.8.1.4
 
