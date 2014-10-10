@@ -1,19 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 679FE7F3F
-	for <xfs@oss.sgi.com>; Fri, 10 Oct 2014 05:28:25 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 374E0304077
-	for <xfs@oss.sgi.com>; Fri, 10 Oct 2014 03:28:25 -0700 (PDT)
-Received: from mout.gmx.net (mout.gmx.net [212.227.15.18]) by cuda.sgi.com
-	with ESMTP id Esea6o5WBgfKz2uv (version=TLSv1 cipher=AES256-SHA
-	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 10 Oct 2014 03:28:23 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id F3B5E7F3F
+	for <xfs@oss.sgi.com>; Fri, 10 Oct 2014 07:08:01 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id D399430407B
+	for <xfs@oss.sgi.com>; Fri, 10 Oct 2014 05:07:58 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id FFXddYGzglNebutV (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Fri, 10 Oct 2014 05:07:57 -0700 (PDT)
+Received: from int-mx14.intmail.prod.int.phx2.redhat.com
+	(int-mx14.intmail.prod.int.phx2.redhat.com [10.5.11.27])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id s9AC7tHr019252
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256
+	verify=FAIL) for <xfs@oss.sgi.com>; Fri, 10 Oct 2014 08:07:56 -0400
+Date: Fri, 10 Oct 2014 08:07:54 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH] xfs: lock for removing item from cil->xc_cil in
+	xlog_cil_push
+Message-ID: <20141010120754.GB18297@bfoster.bfoster>
+References: <929991500.42327290.1412926226461.JavaMail.zimbra@redhat.com>
+	<2090211370.42327532.1412926306812.JavaMail.zimbra@redhat.com>
 MIME-Version: 1.0
-Message-ID: <trinity-12bbf763-e77a-4618-89ec-4c7b638c45df-1412936901876@3capp-gmx-bs24>
-From: Dragon <Sunghost@gmx.de>
-Subject: Re: XFS Filesystem is broken and cant repair and mount!
-Date: Fri, 10 Oct 2014 12:28:21 +0200
+Content-Disposition: inline
+In-Reply-To: <2090211370.42327532.1412926306812.JavaMail.zimbra@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,30 +32,70 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============4851399635512705568=="
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Xu Wang <xuw@redhat.com>
+Cc: xfs@oss.sgi.com
 
---===============4851399635512705568==
-Content-Type: text/html; charset=UTF-8
-
-<html><head></head><body><div style="font-family: Verdana;font-size: 12.0px;"><div>
-<pre><span class="sig">Hi Emmanuel,</span></pre>
-
-<div><span class="sig">i acknowledge your answer. i think its an hardware problem. i looked now for over 4 houres to find out how i match ata14. with the disk, but no script or tool like lshw shows the correct match. I also use an extra sata3 controller with Marvel </span>88SE9230 Chip on it. My Kernel is from stable wheezy 3.2.0-4-amd64 and i think its an bug for this card / controller. I know this is not longer an xfs Problem, but perhabs someone can help to solve this problem.</div>
-</div></div></body></html>
-
-
---===============4851399635512705568==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
-
---===============4851399635512705568==--
+T24gRnJpLCBPY3QgMTAsIDIwMTQgYXQgMDM6MzE6NDZBTSAtMDQwMCwgWHUgV2FuZyB3cm90ZToK
+PiBGcm9tIDU5YzZiYWJhYjdjNGNlODcwODAzNjAxODE0M2QyYWNjMTQ3N2NjN2YgTW9uIFNlcCAx
+NyAwMDowMDowMCAyMDAxCj4gRnJvbTogR2VvcmdlIFdhbmcgPHh1d0ByZWRoYXQuY29tPgo+IERh
+dGU6IEZyaSwgMTAgT2N0IDIwMTQgMTU6MDI6MTQgKzA4MDAKPiBTdWJqZWN0OiBbUEFUQ0hdIFtQ
+QVRDSF0geGZzOiBsb2NrIGZvciByZW1vdmluZyBpdGVtIGZyb20gY2lsLT54Y19jaWwgaW4KPiAg
+eGxvZ19jaWxfcHVzaAo+IAo+IFRoZXJlIGlzIGEgcmFjZSBjb25kaXRpb24gd2hlbiB4bG9nX2Np
+bF9mb3JjZV9sc24gYW5kIHhsb2dfY2lsX3B1c2ggZm9yCj4gY2lsLT54Y19jaWwgaXRlbXMuIFdo
+ZW4gZnVuY3Rpb24geGxvZ19jaWxfcHVzaF9ub3cgY2FsbGVkIGluCj4geGxvZ19jaWxfZm9yY2Vf
+bHNuLCBhbmQgdGhlIHhsb2dfY2lsX3B1c2ggcnVuIGluIHdvcmtxdWV1ZSBqdXN0IHJlYWNoZXMg
+dGhlIHBvaW50IGZvcgo+IHNldHRpbmcgY2lsLT54Y19jdXJyZW50X3NlcXVlbmNlLCB0aGUgeGxv
+Z19jaWxfZm9yY2VfbHNuIGdvdCB0aGUgbG9jawo+IGFuZCBjaGVjayB0aGUgInNlcXVlbmNlID09
+IGNpbC0+eGNfY3VycmVudF9zZXF1ZW5jZSAmJgo+ICFsaXN0X2VtcHR5KCZjaWwtPnhjX2NpbCki
+IGZvciByZXN0YXJ0LiBUaGUgc3RhdGVtZW50ICJzZXF1ZW5jZSA9PQo+IGNpbC0+eGNfY3VycmVu
+dF9zZXF1ZW5jZSIgaXMgdHJ1ZSwgYnV0IHRoZSBjaWwtPnhjX2NpbCBpcyBlbXB0eQo+IGFjY29y
+ZGluZyB0byB0aGUgeGxvZ19jaWxfcHVzaCByZW1vdmVkIHRoZSBpdGVtcyBpbiBjaWwtPnhjX2Np
+bCB3aXRob3V0Cj4gbG9jayBwcm90ZWN0aW9ubC4gU28gdGhlIGZ1bmN0aW9uIHhsb2dfY2lsX2Zv
+cmNlX2xzbiB3aWxsIHJldHVybgo+IE5VTExDT01NSVRMU04sIHdoaWNoIG1lYW5zIHRoZSBjaWwg
+bG9nIGZvciBjdXJyZW50IHNlcXVlbmNlIHdpbGwgbm90IGJlCj4gc3VibWl0dGVkIHRvIGRpc2su
+IEFuZCBpZiB0aGVyZSBpcyBubyBtb3JlIG9wZXJhdGlvbnMoZm9yIGV4YW1wbGUsIHdoZW4KPiB1
+bm1vdW50IGZzLCB0aGlzIHNpdHVhdGlvbiBoYXBwZW5lZCBpbgo+IHhmc191bm1vdW50ZnMtPnhm
+c19sb2dfc2Jjb3VudC0+eGZzX3RyYW5zX2NvbW1pdCksIHRoZSB4ZnMgd2lsbCBoYW5nIHVwLgo+
+IAo+IFNpZ25lZC1vZmYtYnk6IEdlb3JnZSBXYW5nIDx4dXdAcmVkaGF0LmNvbT4KPiAtLS0KCklz
+bid0IHRoaXMgZml4ZWQgYnkgdGhlIGZvbGxvd2luZyBjb21taXQ/Cgo4YWYzZGNkMyB4ZnM6IHhs
+b2dfY2lsX2ZvcmNlX2xzbiBkb2Vzbid0IGFsd2F5cyB3YWl0IGNvcnJlY3RseQoKV2l0aCB0aGF0
+IHBhdGNoLCB4bG9nX2NpbF9wdXNoKCkgYWRkcyB0aGUgY3R4IHRvIHRoZSBjb21taXR0aW5nIGxp
+c3QKYmVmb3JlIGRyYWluaW5nIHRoZSBjdHggYW5kIHVwZGF0aW5nIHRoZSBjdXJyZW50IHNlcXVl
+bmNlIG51bWJlci4KeGxvZ19jaWxfZm9yY2VfbHNuKCkgd2Fsa3MgdGhlIGNvbW1pdHRpbmcgbGlz
+dCBhbmQgY2hlY2tzIHRoZSBzZXF1ZW5jZQpudW1iZXIgYW5kIGN0eCBsaXN0LCBhbGwgdW5kZXIg
+dGhlIHB1c2ggbG9jay4KClRoYXQgbWVhbnMgdGhhdCB4bG9nX2NpbF9mb3JjZV9sc24oKSBzaG91
+bGQgc2VlIHRoZSBjdHggZWl0aGVyIG9uIHRoZQpjb21taXR0aW5nIGxpc3QgYW5kIHdhaXQgZm9y
+IGl0IChjb21taXRfbHNuICE9IE5VTEwpLCBvciBub3Qgb24gdGhlCmNvbW1pdHRpbmcgbGlzdCBh
+dCBhbGwuIElmIGl0J3Mgbm90IG9uIHRoZSBjb21taXR0aW5nIGxpc3QgeWV0LAp4bG9nX2NpbF9w
+dXNoKCkgd29uJ3QgaGF2ZSBlaXRoZXIgZHJhaW5lZCB0aGUgY3R4IG9yIHVwZGF0ZWQgdGhlCnNl
+cXVlbmNlIG51bWJlciwgYXMgaXQgYWRkcyB0byB0aGUgY29tbWl0dGluZyBsaXN0IGZpcnN0IGFu
+ZCB0aGF0CnJlcXVpcmVzIHRoZSBwdXNoIGxvY2sgKHdoaWNoIHhsb2dfY2lsX2ZvcmNlX2xzbigp
+IGhvbGRzIGFuZCBkb2Vzbid0CnJlbGVhc2UgdW50aWwgYWZ0ZXIgdGhlIHJlc3RhcnQgY2hlY2sp
+LgoKQW0gSSBtaXNzaW5nIHNvbWV0aGluZz8gRG8geW91IHJlcHJvZHVjZSBhIHByb2JsZW0gd2l0
+aCB0aGUgbGF0ZXN0IHRyZWUKdGhhdCBpbmNsdWRlcyB0aGUgYWJvdmUgcGF0Y2g/CgpCcmlhbgoK
+PiAgZnMveGZzL3hmc19sb2dfY2lsLmMgfCAzICsrLQo+ICAxIGZpbGUgY2hhbmdlZCwgMiBpbnNl
+cnRpb25zKCspLCAxIGRlbGV0aW9uKC0pCj4gCj4gZGlmZiAtLWdpdCBhL2ZzL3hmcy94ZnNfbG9n
+X2NpbC5jIGIvZnMveGZzL3hmc19sb2dfY2lsLmMKPiBpbmRleCBmNmI3OWU1Li45N2JhNTI3IDEw
+MDY0NAo+IC0tLSBhL2ZzL3hmcy94ZnNfbG9nX2NpbC5jCj4gKysrIGIvZnMveGZzL3hmc19sb2df
+Y2lsLmMKPiBAQCAtNDc4LDYgKzQ3OCw4IEBAIHhsb2dfY2lsX3B1c2goCj4gICAgICAqLwo+ICAg
+ICBsdiA9IE5VTEw7Cj4gICAgIG51bV9pb3ZlY3MgPSAwOwo+ICsKPiArICAgc3Bpbl9sb2NrKCZj
+aWwtPnhjX3B1c2hfbG9jayk7Cj4gICAgIHdoaWxlICghbGlzdF9lbXB0eSgmY2lsLT54Y19jaWwp
+KSB7Cj4gICAgICAgICBzdHJ1Y3QgeGZzX2xvZ19pdGVtICppdGVtOwo+IAo+IEBAIC01MzAsNyAr
+NTMyLDYgQEAgeGxvZ19jaWxfcHVzaCgKPiAgICAgICogYWdhaW5zdCB0aGUgY3VycmVudCBzZXF1
+ZW5jZSBpbiBsb2cgZm9yY2VzIHdpdGhvdXQgcmlza2luZwo+ICAgICAgKiBkZWZlcmVuY2luZyBh
+IGZyZWVkIGNvbnRleHQgcG9pbnRlci4KPiAgICAgICovCj4gLSAgIHNwaW5fbG9jaygmY2lsLT54
+Y19wdXNoX2xvY2spOwo+ICAgICBjaWwtPnhjX2N1cnJlbnRfc2VxdWVuY2UgPSBuZXdfY3R4LT5z
+ZXF1ZW5jZTsKPiAgICAgbGlzdF9hZGQoJmN0eC0+Y29tbWl0dGluZywgJmNpbC0+eGNfY29tbWl0
+dGluZyk7Cj4gICAgIHNwaW5fdW5sb2NrKCZjaWwtPnhjX3B1c2hfbG9jayk7Cj4gLS0gCj4gMS45
+LjMKPiAKPiAKPiAtLSAKPiBHZW9yZ2UgV2FuZyDnjovml60KPiAKPiBLZXJuZWwgUXVhbnRpdHkg
+RW5naW5lZXIKPiBSZWQgSGF0IFNvZnR3YXJlIChCZWlqaW5nKSBDby4sTHRkCj4gSVJDOnh1dwo+
+IFRlbDorODYtMDEwLTYyNjA4MDQxCj4gUGhvbmU6MTU5MDEyMzE1NzkKPiA5L0YsIFRvd2VyIEMs
+IFJheWNvbQo+IAo+IF9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fCj4geGZzIG1haWxpbmcgbGlzdAo+IHhmc0Bvc3Muc2dpLmNvbQo+IGh0dHA6Ly9vc3Muc2dp
+LmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDov
+L29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCg==
