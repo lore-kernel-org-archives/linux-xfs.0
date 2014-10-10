@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 9F7787F91
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id C8ECE7F93
 	for <xfs@oss.sgi.com>; Fri, 10 Oct 2014 09:24:12 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 2F311AC014
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id A7B6C8F8050
 	for <xfs@oss.sgi.com>; Fri, 10 Oct 2014 07:24:12 -0700 (PDT)
 Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id vgszfcsGQVpM4G9z (version=TLSv1 cipher=AES256-SHA
+	with ESMTP id OSFpvRgBdeD7GZz2 (version=TLSv1 cipher=AES256-SHA
 	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 10 Oct 2014 07:24:10 -0700 (PDT)
+	Fri, 10 Oct 2014 07:24:11 -0700 (PDT)
 From: Jan Kara <jack@suse.cz>
-Subject: [PATCH 2/2] printk: Debug patch 2
-Date: Fri, 10 Oct 2014 16:23:48 +0200
-Message-Id: <1412951028-4085-44-git-send-email-jack@suse.cz>
+Subject: [PATCH 2/2] ext4: Fix hole punching for files with indirect blocks
+Date: Fri, 10 Oct 2014 16:23:45 +0200
+Message-Id: <1412951028-4085-41-git-send-email-jack@suse.cz>
 In-Reply-To: <1412951028-4085-1-git-send-email-jack@suse.cz>
 References: <1412951028-4085-1-git-send-email-jack@suse.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -29,43 +29,56 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: linux-fsdevel@vger.kernel.org
-Cc: Dave Kleikamp <shaggy@kernel.org>, jfs-discussion@lists.sourceforge.net, tytso@mit.edu, Jeff Mahoney <jeffm@suse.de>, Mark Fasheh <mfasheh@suse.com>, reiserfs-devel@vger.kernel.org, xfs@oss.sgi.com, cluster-devel@redhat.com, Joel Becker <jlbec@evilplan.org>, Jan Kara <jack@suse.cz>, linux-ext4@vger.kernel.org, Steven Whitehouse <swhiteho@redhat.com>, ocfs2-devel@oss.oracle.com, viro@zeniv.linux.org.uk
+Cc: Dave Kleikamp <shaggy@kernel.org>, jfs-discussion@lists.sourceforge.net, tytso@mit.edu, Jeff Mahoney <jeffm@suse.de>, Mark Fasheh <mfasheh@suse.com>, reiserfs-devel@vger.kernel.org, stable@vger.kernel.org, xfs@oss.sgi.com, cluster-devel@redhat.com, Joel Becker <jlbec@evilplan.org>, Jan Kara <jack@suse.cz>, linux-ext4@vger.kernel.org, Steven Whitehouse <swhiteho@redhat.com>, ocfs2-devel@oss.oracle.com, viro@zeniv.linux.org.uk
 
+Hole punching code for files with indirect blocks wrongly computed
+number of blocks which need to be cleared when traversing the indirect
+block tree. That could result in punching more blocks than actually
+requested and thus effectively cause a data loss. For example:
+
+fallocate -n -p 10240000 4096
+
+will punch the range 10240000 - 12632064 instead of the range 1024000 -
+10244096. Fix the calculation.
+
+CC: stable@vger.kernel.org
+Fixes: 8bad6fc813a3a5300f51369c39d315679fd88c72
 Signed-off-by: Jan Kara <jack@suse.cz>
 ---
- kernel/printk/printk.c | 14 ++++++++------
- 1 file changed, 8 insertions(+), 6 deletions(-)
+ fs/ext4/indirect.c | 12 ++++++++++--
+ 1 file changed, 10 insertions(+), 2 deletions(-)
 
-diff --git a/kernel/printk/printk.c b/kernel/printk/printk.c
-index a39f4129f848..00a9ad5c2708 100644
---- a/kernel/printk/printk.c
-+++ b/kernel/printk/printk.c
-@@ -1718,17 +1718,19 @@ asmlinkage int vprintk_emit(int facility, int level,
- 
- 	logbuf_cpu = UINT_MAX;
- 	raw_spin_unlock(&logbuf_lock);
--	local_irq_restore(flags);
--
--	/* If called from the scheduler, we can not call up(). */
--	if (in_sched)
--		return printed_len;
--
- 	/*
- 	 * Disable preemption to avoid being preempted while holding
- 	 * console_sem which would prevent anyone from printing to console
- 	 */
- 	preempt_disable();
-+	local_irq_restore(flags);
+diff --git a/fs/ext4/indirect.c b/fs/ext4/indirect.c
+index 9d381707a6fc..771949c82715 100644
+--- a/fs/ext4/indirect.c
++++ b/fs/ext4/indirect.c
+@@ -1310,16 +1310,24 @@ static int free_hole_blocks(handle_t *handle, struct inode *inode,
+ 		blk = *i_data;
+ 		if (level > 0) {
+ 			ext4_lblk_t first2;
++			ext4_lblk_t count2;
 +
-+	/* If called from the scheduler, we can not call up(). */
-+	if (in_sched) {
-+		preempt_enable();
-+		return printed_len;
-+	}
-+
- 	/*
- 	 * Try to acquire and then immediately release the console semaphore.
- 	 * The release will print out buffers and wake up /dev/kmsg and syslog()
+ 			bh = sb_bread(inode->i_sb, le32_to_cpu(blk));
+ 			if (!bh) {
+ 				EXT4_ERROR_INODE_BLOCK(inode, le32_to_cpu(blk),
+ 						       "Read failure");
+ 				return -EIO;
+ 			}
+-			first2 = (first > offset) ? first - offset : 0;
++			if (first > offset) {
++				first2 = first - offset;
++				count2 = count;
++			} else {
++				first2 = 0;
++				count2 = count - (offset - first);
++			}
+ 			ret = free_hole_blocks(handle, inode, bh,
+ 					       (__le32 *)bh->b_data, level - 1,
+-					       first2, count - offset,
++					       first2, count2,
+ 					       inode->i_sb->s_blocksize >> 2);
+ 			if (ret) {
+ 				brelse(bh);
 -- 
 1.8.1.4
 
