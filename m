@@ -1,26 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 952347F4E
-	for <xfs@oss.sgi.com>; Mon, 20 Oct 2014 18:57:24 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 3FCE47F47
+	for <xfs@oss.sgi.com>; Fri, 10 Oct 2014 09:24:12 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 812EE304051
-	for <xfs@oss.sgi.com>; Mon, 20 Oct 2014 16:57:24 -0700 (PDT)
-Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
-	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	v7ZAhx3S9G8C1NtH for <xfs@oss.sgi.com>;
-	Mon, 20 Oct 2014 16:57:22 -0700 (PDT)
-Date: Tue, 21 Oct 2014 10:57:19 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Can't build RPM of xfstests
-Message-ID: <20141020235719.GQ17506@dastard>
-References: <648473255763364B961A02AC3BE1060D03C7940C13@MX19A.corp.emc.com>
-	<20141020014750.GL7169@dastard> <54448313.7040602@sandeen.net>
-	<30CA1845-C213-49EA-8809-F1E7A98AE7F9@gmail.com>
-	<54451427.9060306@sandeen.net> <20141020230840.GP17506@dastard>
-	<CAGpXXZJ1A=Zq74KGveo5D=uAr6GTdA_1=DqXYwm2x9rG8ggDBA@mail.gmail.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <CAGpXXZJ1A=Zq74KGveo5D=uAr6GTdA_1=DqXYwm2x9rG8ggDBA@mail.gmail.com>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 2ED5E304053
+	for <xfs@oss.sgi.com>; Fri, 10 Oct 2014 07:24:12 -0700 (PDT)
+Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
+	with ESMTP id L4clYAO2OaW9yxuN (version=TLSv1 cipher=AES256-SHA
+	bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Fri, 10 Oct 2014 07:24:11 -0700 (PDT)
+From: Jan Kara <jack@suse.cz>
+Subject: [PATCH] block: Make rq_affinity = 1 work as expected
+Date: Fri, 10 Oct 2014 16:23:09 +0200
+Message-Id: <1412951028-4085-5-git-send-email-jack@suse.cz>
+In-Reply-To: <1412951028-4085-1-git-send-email-jack@suse.cz>
+References: <1412951028-4085-1-git-send-email-jack@suse.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,79 +23,70 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Greg Freemyer <greg.freemyer@gmail.com>
-Cc: "Kaul, Yaniv" <Yaniv.Kaul@emc.com>, Eric Sandeen <sandeen@sandeen.net>, Eric Sandeen <esandeen@redhat.com>, fstests@vger.kernel.org, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: linux-fsdevel@vger.kernel.org
+Cc: Roland Dreier <roland@purestorage.com>, Dave Kleikamp <shaggy@kernel.org>, jfs-discussion@lists.sourceforge.net, tytso@mit.edu, Jeff Mahoney <jeffm@suse.de>, Christoph Hellwig <hch@infradead.org>, Mark Fasheh <mfasheh@suse.com>, reiserfs-devel@vger.kernel.org, xfs@oss.sgi.com, cluster-devel@redhat.com, Jens Axboe <jaxboe@fusionio.com>, Joel Becker <jlbec@evilplan.org>, Tao Ma <boyu.mt@taobao.com>, Dan Williams <dan.j.williams@intel.com>, linux-ext4@vger.kernel.org, Steven Whitehouse <swhiteho@redhat.com>, ocfs2-devel@oss.oracle.com, viro@zeniv.linux.org.uk
 
-On Mon, Oct 20, 2014 at 07:31:50PM -0400, Greg Freemyer wrote:
-> --
-> Greg Freemyer
-> 
-> 
-> On Mon, Oct 20, 2014 at 7:08 PM, Dave Chinner <david@fromorbit.com> wrote:
-> > On Mon, Oct 20, 2014 at 08:54:47AM -0500, Eric Sandeen wrote:
-> >> On 10/20/14 6:55 AM, Greg Freemyer wrote:
-> >>
-> >> > Opensuse is building rpms of 1.1.1 so the build infrastructure isn't
-> >> > too badly broken.  I don't know if they are following FHS, but I
-> >> > doubt they use /opt.
-> >>
-> >> The build works fine, it's the "Makepkgs" that I think is a bit odd,
-> >> at least for RPM packaging.
-> >
-> > It's just odd, regardless of what it is packaging.
-> >
-> >> Also, if we really want to encourage packaging, we should probably start
-> >> sticking official version numbers on it.  "1.1.1" was tagged in Dec 2012,
-> >> and there have been no "releases" since.
-> >
-> > There are more recent tags than that. There were some linux-v3.[6-8]
-> > tags added when kernels v3.[6-8] we released. Those tags are
-> > basically meaningless from a release perspective, though.
-> >
-> > As it is, for the purpose of the discussion I'll argue that we don't
-> > need official release versions or tarballs and that anyone who needs
-> > packages for xfstests is Doing it Wrong(tm).
-> 
-> A potential use case with openSUSE and why I "think" they packaged it
-> is to include a subset of xfstest in there automated testing.
+From: Tao Ma <boyu.mt@taobao.com>
 
-Sure - i'm just pointing out that you don't need RPM to do that -
-git it just as good for deploying automated testing infrastructure
-;)
+Commit 5757a6d76c introduced a new rq_affinity = 2 so as to make
+the request completed in the __make_request cpu. But it makes the
+old rq_affinity = 1 not work any more. The root cause is that
+if the 'cpu' and 'req->cpu' is in the same group and cpu != req->cpu,
+ccpu will be the same as group_cpu, so the completion will be
+excuted in the 'cpu' not 'group_cpu'.
 
-....
+This patch fix problem by simpling removing group_cpu and the codes
+are more explicit now. If ccpu == cpu, we complete in cpu, otherwise
+we raise_blk_irq to ccpu.
 
-> Notice for example that ext4 is a testsuite selection in the testsuite
-> pull down.  I assume that testsuite uses xfstests to exercise ext4
-> prior to an automated release of factory.
-> 
-> The 2014-10-17 build of a couple days ago is an example of a build
-> that failed the ext4 testsuite:
-> https://openqa.opensuse.org/tests/27955
+Cc: Christoph Hellwig <hch@infradead.org>
+Cc: Roland Dreier <roland@purestorage.com>
+Cc: Dan Williams <dan.j.williams@intel.com>
+Cc: Jens Axboe <jaxboe@fusionio.com>
+Signed-off-by: Tao Ma <boyu.mt@taobao.com>
+Reviewed-by: Shaohua Li <shaohua.li@intel.com>
+Signed-off-by: Jens Axboe <jaxboe@fusionio.com>
+---
+ block/blk-softirq.c | 8 +++-----
+ 1 file changed, 3 insertions(+), 5 deletions(-)
 
-That doesn't appear to anything to do with xfstests. It appears to
-be a "can we install opensuse" installer test that happens to be run
-on ext4. i.e. it's really product level testing (i.e. whether the
-opensuse build worked) not whether the filesystem works as it's
-supposed to.
-
-> I don't see automated tests for xfs or btrfs which is a surprise since
-> both of them are default filesystem choices for factory.  (btrfs is
-> the default choice for / and xfs is the default for /home).
-
-Seeing as it's not actually doing filesystem level testing, it
-probably doesn't matter at all.
-
-Cheers,
-
-Dave.
+diff --git a/block/blk-softirq.c b/block/blk-softirq.c
+index 475fab809a80..487addc85bb5 100644
+--- a/block/blk-softirq.c
++++ b/block/blk-softirq.c
+@@ -103,7 +103,7 @@ static struct notifier_block __cpuinitdata blk_cpu_notifier = {
+ 
+ void __blk_complete_request(struct request *req)
+ {
+-	int ccpu, cpu, group_cpu = NR_CPUS;
++	int ccpu, cpu;
+ 	struct request_queue *q = req->q;
+ 	unsigned long flags;
+ 
+@@ -117,14 +117,12 @@ void __blk_complete_request(struct request *req)
+ 	 */
+ 	if (test_bit(QUEUE_FLAG_SAME_COMP, &q->queue_flags) && req->cpu != -1) {
+ 		ccpu = req->cpu;
+-		if (!test_bit(QUEUE_FLAG_SAME_FORCE, &q->queue_flags)) {
++		if (!test_bit(QUEUE_FLAG_SAME_FORCE, &q->queue_flags))
+ 			ccpu = blk_cpu_to_group(ccpu);
+-			group_cpu = blk_cpu_to_group(cpu);
+-		}
+ 	} else
+ 		ccpu = cpu;
+ 
+-	if (ccpu == cpu || ccpu == group_cpu) {
++	if (ccpu == cpu) {
+ 		struct list_head *list;
+ do_local:
+ 		list = &__get_cpu_var(blk_cpu_done);
 -- 
-Dave Chinner
-david@fromorbit.com
+1.8.1.4
 
 _______________________________________________
 xfs mailing list
