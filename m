@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 7D4ED7F4E
+	by oss.sgi.com (Postfix) with ESMTP id 733F97F47
 	for <xfs@oss.sgi.com>; Fri, 10 Oct 2014 09:24:08 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 4EC778F8059
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 45F8A8F8050
 	for <xfs@oss.sgi.com>; Fri, 10 Oct 2014 07:24:08 -0700 (PDT)
 Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id VfpcUWUA9DXUAEpx (version=TLSv1 cipher=AES256-SHA
+	with ESMTP id QVNuwQveEEz2apKQ (version=TLSv1 cipher=AES256-SHA
 	bits=256 verify=NO) for <xfs@oss.sgi.com>;
 	Fri, 10 Oct 2014 07:24:06 -0700 (PDT)
 From: Jan Kara <jack@suse.cz>
-Subject: [PATCH] ext4: Speedup WB_SYNC_ALL pass
-Date: Fri, 10 Oct 2014 16:23:20 +0200
-Message-Id: <1412951028-4085-16-git-send-email-jack@suse.cz>
+Subject: [PATCH] ext3: Fix deadlock in data=journal mode when fs is frozen
+Date: Fri, 10 Oct 2014 16:23:11 +0200
+Message-Id: <1412951028-4085-7-git-send-email-jack@suse.cz>
 In-Reply-To: <1412951028-4085-1-git-send-email-jack@suse.cz>
 References: <1412951028-4085-1-git-send-email-jack@suse.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -31,71 +31,88 @@ Sender: xfs-bounces@oss.sgi.com
 To: linux-fsdevel@vger.kernel.org
 Cc: Dave Kleikamp <shaggy@kernel.org>, jfs-discussion@lists.sourceforge.net, tytso@mit.edu, Jeff Mahoney <jeffm@suse.de>, Mark Fasheh <mfasheh@suse.com>, reiserfs-devel@vger.kernel.org, xfs@oss.sgi.com, cluster-devel@redhat.com, Joel Becker <jlbec@evilplan.org>, Jan Kara <jack@suse.cz>, linux-ext4@vger.kernel.org, Steven Whitehouse <swhiteho@redhat.com>, ocfs2-devel@oss.oracle.com, viro@zeniv.linux.org.uk
 
-When doing filesystem wide sync, there's no need to force transaction
-commit (or synchronously write inode buffer) separately for each inode
-because ext4_sync_fs() takes care of forcing commit at the end (VFS
-takes care of flushing buffer cache, respectively). Most of the time
-this slowness doesn't manifest because previous WB_SYNC_NONE writeback
-doesn't leave much to write but when there are processes aggressively
-creating new files and several filesystems to sync, the sync slowness
-can be noticeable. In the following test script sync(1) takes around 6
-minutes when there are two ext4 filesystems mounted on a standard SATA
-drive. After this patch sync takes a couple of seconds so we have about
-two orders of magnitude improvement.
+When ext3 is used in data=journal mode, syncing filesystem makes sure
+all the data is committed in the journal but the data doesn't have to be
+checkpointed. ext3_freeze() then takes care of checkpointing all the
+data so all buffer heads are clean but pages can still have dangling
+dirty bits. So when flusher thread comes later when filesystem is
+frozen, it tries to write back dirty pages, ext3_journalled_writepage()
+tries to start a transaction and hangs waiting for frozen fs causing a
+deadlock because a holder of s_umount semaphore may be waiting for
+flusher thread to complete.
 
-      function run_writers
-      {
-        for (( i = 0; i < 10; i++ )); do
-          mkdir $1/dir$i
-          for (( j = 0; j < 40000; j++ )); do
-            dd if=/dev/zero of=$1/dir$i/$j bs=4k count=4 &>/dev/null
-          done &
-        done
-      }
-
-      for dir in "$@"; do
-        run_writers $dir
-      done
-
-      sleep 40
-      time sync
+The fix is luckily relatively easy. We don't have to start a transaction
+in ext3_journalled_writepage() when a page is just dirty (and doesn't
+have PageChecked set) because in that case all buffers should be already
+mapped (mapping must happen before writing a buffer to the journal) and
+it is enough to write them out. This optimization also solves the deadlock
+because block_write_full_page() will just find out there's no buffer to
+write and do nothing.
 
 Signed-off-by: Jan Kara <jack@suse.cz>
 ---
- fs/ext4/inode.c | 13 +++++++++++--
- 1 file changed, 11 insertions(+), 2 deletions(-)
+ fs/ext3/inode.c | 33 +++++++++++++++++----------------
+ 1 file changed, 17 insertions(+), 16 deletions(-)
 
-diff --git a/fs/ext4/inode.c b/fs/ext4/inode.c
-index 6e39895a91b8..7850584b0679 100644
---- a/fs/ext4/inode.c
-+++ b/fs/ext4/inode.c
-@@ -4443,7 +4443,12 @@ int ext4_write_inode(struct inode *inode, struct writeback_control *wbc)
- 			return -EIO;
- 		}
+  JFYI: I've added this patch to my tree.
+
+diff --git a/fs/ext3/inode.c b/fs/ext3/inode.c
+index f5157d0d1b43..695abe738a24 100644
+--- a/fs/ext3/inode.c
++++ b/fs/ext3/inode.c
+@@ -1716,17 +1716,17 @@ static int ext3_journalled_writepage(struct page *page,
+ 	WARN_ON_ONCE(IS_RDONLY(inode) &&
+ 		     !(EXT3_SB(inode->i_sb)->s_mount_state & EXT3_ERROR_FS));
  
--		if (wbc->sync_mode != WB_SYNC_ALL)
-+		/*
-+		 * No need to force transaction in WB_SYNC_NONE mode. Also
-+		 * ext4_sync_fs() will force the commit after everything is
-+		 * written.
-+		 */
-+		if (wbc->sync_mode != WB_SYNC_ALL || wbc->for_sync)
- 			return 0;
+-	if (ext3_journal_current_handle())
+-		goto no_write;
+-
+ 	trace_ext3_journalled_writepage(page);
+-	handle = ext3_journal_start(inode, ext3_writepage_trans_blocks(inode));
+-	if (IS_ERR(handle)) {
+-		ret = PTR_ERR(handle);
+-		goto no_write;
+-	}
+-
+ 	if (!page_has_buffers(page) || PageChecked(page)) {
++		if (ext3_journal_current_handle())
++			goto no_write;
++
++		handle = ext3_journal_start(inode,
++					    ext3_writepage_trans_blocks(inode));
++		if (IS_ERR(handle)) {
++			ret = PTR_ERR(handle);
++			goto no_write;
++		}
+ 		/*
+ 		 * It's mmapped pagecache.  Add buffers and journal it.  There
+ 		 * doesn't seem much point in redirtying the page here.
+@@ -1749,17 +1749,18 @@ static int ext3_journalled_writepage(struct page *page,
+ 		atomic_set(&EXT3_I(inode)->i_datasync_tid,
+ 			   handle->h_transaction->t_tid);
+ 		unlock_page(page);
++		err = ext3_journal_stop(handle);
++		if (!ret)
++			ret = err;
+ 	} else {
+ 		/*
+-		 * It may be a page full of checkpoint-mode buffers.  We don't
+-		 * really know unless we go poke around in the buffer_heads.
+-		 * But block_write_full_page will do the right thing.
++		 * It is a page full of checkpoint-mode buffers. Go and write
++		 * them. They should have been already mapped when they went
++		 * to the journal so provide NULL get_block function to catch
++		 * errors.
+ 		 */
+-		ret = block_write_full_page(page, ext3_get_block, wbc);
++		ret = block_write_full_page(page, NULL, wbc);
+ 	}
+-	err = ext3_journal_stop(handle);
+-	if (!ret)
+-		ret = err;
+ out:
+ 	return ret;
  
- 		err = ext4_force_commit(inode->i_sb);
-@@ -4453,7 +4458,11 @@ int ext4_write_inode(struct inode *inode, struct writeback_control *wbc)
- 		err = __ext4_get_inode_loc(inode, &iloc, 0);
- 		if (err)
- 			return err;
--		if (wbc->sync_mode == WB_SYNC_ALL)
-+		/*
-+		 * sync(2) will flush the whole buffer cache. No need to do
-+		 * it here separately for each inode.
-+		 */
-+		if (wbc->sync_mode == WB_SYNC_ALL && !wbc->for_sync)
- 			sync_dirty_buffer(iloc.bh);
- 		if (buffer_req(iloc.bh) && !buffer_uptodate(iloc.bh)) {
- 			EXT4_ERROR_INODE_BLOCK(inode, iloc.bh->b_blocknr,
 -- 
 1.8.1.4
 
