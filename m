@@ -1,19 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 2CBA47F5A
+	by oss.sgi.com (Postfix) with ESMTP id 5FAE07F4E
 	for <xfs@oss.sgi.com>; Fri, 10 Oct 2014 09:24:09 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 0B2BD8F8059
-	for <xfs@oss.sgi.com>; Fri, 10 Oct 2014 07:24:08 -0700 (PDT)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 3F6968F8066
+	for <xfs@oss.sgi.com>; Fri, 10 Oct 2014 07:24:09 -0700 (PDT)
 Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id gYDP3qBUvkOiYaHB (version=TLSv1 cipher=AES256-SHA
+	with ESMTP id w3i1vv1u6RFG16du (version=TLSv1 cipher=AES256-SHA
 	bits=256 verify=NO) for <xfs@oss.sgi.com>;
 	Fri, 10 Oct 2014 07:24:04 -0700 (PDT)
 From: Jan Kara <jack@suse.cz>
-Subject: [PATCH] block: free q->flush_rq in blk_init_allocated_queue error
-	paths
-Date: Fri, 10 Oct 2014 16:23:07 +0200
-Message-Id: <1412951028-4085-3-git-send-email-jack@suse.cz>
+Subject: [PATCH] ext3: Speedup WB_SYNC_ALL pass
+Date: Fri, 10 Oct 2014 16:23:12 +0200
+Message-Id: <1412951028-4085-8-git-send-email-jack@suse.cz>
 In-Reply-To: <1412951028-4085-1-git-send-email-jack@suse.cz>
 References: <1412951028-4085-1-git-send-email-jack@suse.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -30,53 +29,59 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: linux-fsdevel@vger.kernel.org
-Cc: Dave Kleikamp <shaggy@kernel.org>, jfs-discussion@lists.sourceforge.net, tytso@mit.edu, Jeff Mahoney <jeffm@suse.de>, Jens Axboe <axboe@fb.com>, Mark Fasheh <mfasheh@suse.com>, reiserfs-devel@vger.kernel.org, xfs@oss.sgi.com, cluster-devel@redhat.com, Dave Jones <davej@fedoraproject.org>, Joel Becker <jlbec@evilplan.org>, Dave Jones <davej@redhat.com>, linux-ext4@vger.kernel.org, Linus Torvalds <torvalds@linux-foundation.org>, Steven Whitehouse <swhiteho@redhat.com>, ocfs2-devel@oss.oracle.com, viro@zeniv.linux.org.uk
+Cc: Dave Kleikamp <shaggy@kernel.org>, jfs-discussion@lists.sourceforge.net, tytso@mit.edu, Jeff Mahoney <jeffm@suse.de>, Mark Fasheh <mfasheh@suse.com>, reiserfs-devel@vger.kernel.org, xfs@oss.sgi.com, cluster-devel@redhat.com, Joel Becker <jlbec@evilplan.org>, Jan Kara <jack@suse.cz>, linux-ext4@vger.kernel.org, Steven Whitehouse <swhiteho@redhat.com>, ocfs2-devel@oss.oracle.com, viro@zeniv.linux.org.uk
 
-From: Dave Jones <davej@redhat.com>
+When doing filesystem wide sync, there's no need to force transaction
+commit separately for each inode because ext3_sync_fs() takes care of
+forcing commit at the end. Most of the time this slowness doesn't
+manifest because previous WB_SYNC_NONE writeback doesn't leave much to
+write but when there are processes aggressively creating new files and
+several filesystems to sync, the sync slowness can be noticeable. In the
+following test script sync(1) takes around 6 minutes when there are two
+ext3 filesystems mounted on a standard SATA drive. After this patch sync
+takes a couple of seconds so we have about two orders of magnitude
+improvement.
 
-Commit 7982e90c3a57 ("block: fix q->flush_rq NULL pointer crash on
-dm-mpath flush") moved an allocation to blk_init_allocated_queue(), but
-neglected to free that allocation on the error paths that follow.
+function run_writers
+{
+  for (( i = 0; i < 10; i++ )); do
+    mkdir $1/dir$i
+    for (( j = 0; j < 40000; j++ )); do
+      dd if=/dev/zero of=$1/dir$i/$j bs=4k count=4 &>/dev/null
+    done &
+  done
+}
 
-Signed-off-by: Dave Jones <davej@fedoraproject.org>
-Acked-by: Mike Snitzer <snitzer@redhat.com>
-Signed-off-by: Jens Axboe <axboe@fb.com>
-Signed-off-by: Linus Torvalds <torvalds@linux-foundation.org>
+for dir in "$@"; do
+  run_writers $dir
+done
+
+sleep 40
+time sync
+
+Signed-off-by: Jan Kara <jack@suse.cz>
 ---
- block/blk-core.c | 8 ++++++--
- 1 file changed, 6 insertions(+), 2 deletions(-)
+ fs/ext3/inode.c | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
 
-diff --git a/block/blk-core.c b/block/blk-core.c
-index 4cd5ffc18442..bfe16d5af9f9 100644
---- a/block/blk-core.c
-+++ b/block/blk-core.c
-@@ -713,7 +713,7 @@ blk_init_allocated_queue(struct request_queue *q, request_fn_proc *rfn,
- 		return NULL;
- 
- 	if (blk_init_rl(&q->root_rl, q, GFP_KERNEL))
--		return NULL;
-+		goto fail;
- 
- 	q->request_fn		= rfn;
- 	q->prep_rq_fn		= NULL;
-@@ -737,12 +737,16 @@ blk_init_allocated_queue(struct request_queue *q, request_fn_proc *rfn,
- 	/* init elevator */
- 	if (elevator_init(q, NULL)) {
- 		mutex_unlock(&q->sysfs_lock);
--		return NULL;
-+		goto fail;
+diff --git a/fs/ext3/inode.c b/fs/ext3/inode.c
+index 384b6ebb655f..14c2faf3c312 100644
+--- a/fs/ext3/inode.c
++++ b/fs/ext3/inode.c
+@@ -3253,7 +3253,12 @@ int ext3_write_inode(struct inode *inode, struct writeback_control *wbc)
+ 		return -EIO;
  	}
  
- 	mutex_unlock(&q->sysfs_lock);
+-	if (wbc->sync_mode != WB_SYNC_ALL)
++	/*
++	 * No need to force transaction in WB_SYNC_NONE mode. Also
++	 * ext3_sync_fs() will force the commit after everything is
++	 * written.
++	 */
++	if (wbc->sync_mode != WB_SYNC_ALL || wbc->for_sync)
+ 		return 0;
  
- 	return q;
-+
-+fail:
-+	kfree(q->flush_rq);
-+	return NULL;
- }
- EXPORT_SYMBOL(blk_init_allocated_queue);
- 
+ 	return ext3_force_commit(inode->i_sb);
 -- 
 1.8.1.4
 
