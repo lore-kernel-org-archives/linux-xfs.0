@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 5FAE07F4E
+	by oss.sgi.com (Postfix) with ESMTP id 67D917F5D
 	for <xfs@oss.sgi.com>; Fri, 10 Oct 2014 09:24:09 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 3F6968F8066
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 2AC118F8065
 	for <xfs@oss.sgi.com>; Fri, 10 Oct 2014 07:24:09 -0700 (PDT)
 Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id w3i1vv1u6RFG16du (version=TLSv1 cipher=AES256-SHA
+	with ESMTP id FkmHruFLKUtr9D57 (version=TLSv1 cipher=AES256-SHA
 	bits=256 verify=NO) for <xfs@oss.sgi.com>;
 	Fri, 10 Oct 2014 07:24:04 -0700 (PDT)
 From: Jan Kara <jack@suse.cz>
-Subject: [PATCH] ext3: Speedup WB_SYNC_ALL pass
-Date: Fri, 10 Oct 2014 16:23:12 +0200
-Message-Id: <1412951028-4085-8-git-send-email-jack@suse.cz>
+Subject: [PATCH] block: improve rq_affinity placement
+Date: Fri, 10 Oct 2014 16:23:08 +0200
+Message-Id: <1412951028-4085-4-git-send-email-jack@suse.cz>
 In-Reply-To: <1412951028-4085-1-git-send-email-jack@suse.cz>
 References: <1412951028-4085-1-git-send-email-jack@suse.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -29,59 +29,70 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: linux-fsdevel@vger.kernel.org
-Cc: Dave Kleikamp <shaggy@kernel.org>, jfs-discussion@lists.sourceforge.net, tytso@mit.edu, Jeff Mahoney <jeffm@suse.de>, Mark Fasheh <mfasheh@suse.com>, reiserfs-devel@vger.kernel.org, xfs@oss.sgi.com, cluster-devel@redhat.com, Joel Becker <jlbec@evilplan.org>, Jan Kara <jack@suse.cz>, linux-ext4@vger.kernel.org, Steven Whitehouse <swhiteho@redhat.com>, ocfs2-devel@oss.oracle.com, viro@zeniv.linux.org.uk
+Cc: Dave Kleikamp <shaggy@kernel.org>, jfs-discussion@lists.sourceforge.net, tytso@mit.edu, Jeff Mahoney <jeffm@suse.de>, Mark Fasheh <mfasheh@suse.com>, reiserfs-devel@vger.kernel.org, xfs@oss.sgi.com, cluster-devel@redhat.com, Joel Becker <jlbec@evilplan.org>, Jens Axboe <jaxboe@fusionio.com>, Shaohua Li <shaohua.li@intel.com>, linux-ext4@vger.kernel.org, Steven Whitehouse <swhiteho@redhat.com>, ocfs2-devel@oss.oracle.com, viro@zeniv.linux.org.uk
 
-When doing filesystem wide sync, there's no need to force transaction
-commit separately for each inode because ext3_sync_fs() takes care of
-forcing commit at the end. Most of the time this slowness doesn't
-manifest because previous WB_SYNC_NONE writeback doesn't leave much to
-write but when there are processes aggressively creating new files and
-several filesystems to sync, the sync slowness can be noticeable. In the
-following test script sync(1) takes around 6 minutes when there are two
-ext3 filesystems mounted on a standard SATA drive. After this patch sync
-takes a couple of seconds so we have about two orders of magnitude
-improvement.
+From: Shaohua Li <shaohua.li@intel.com>
 
-function run_writers
-{
-  for (( i = 0; i < 10; i++ )); do
-    mkdir $1/dir$i
-    for (( j = 0; j < 40000; j++ )); do
-      dd if=/dev/zero of=$1/dir$i/$j bs=4k count=4 &>/dev/null
-    done &
-  done
-}
+This patch reverts commit 35ae66e0a09ab70ed(block: Make rq_affinity = 1
+work as expected). The purpose is to avoid an unnecessary IPI.
+Let's take an example. My test box has cpu 0-7, one socket. Say request is
+added from CPU 1, blk_complete_request() occurs at CPU 7. Without the reverted
+patch, softirq will be done at CPU 7. With it, an IPI will be directed to CPU
+0, and softirq will be done at CPU 0. In this case, doing softirq at CPU 0 and
+CPU 7 have no difference from cache sharing point view and we can avoid an
+ipi if doing it in CPU 7.
+An immediate concern is this is just like QUEUE_FLAG_SAME_FORCE, but actually
+not. blk_complete_request() is running in interrupt handler, and currently
+I/O controller doesn't support multiple interrupts (I checked several LSI
+cards and AHCI), so only one CPU can run blk_complete_request(). This is
+still quite different as QUEUE_FLAG_SAME_FORCE.
+Since only one CPU runs softirq, the only difference with below patch is
+softirq not always runs at the first CPU of a group.
 
-for dir in "$@"; do
-  run_writers $dir
-done
-
-sleep 40
-time sync
-
-Signed-off-by: Jan Kara <jack@suse.cz>
+Signed-off-by: Shaohua Li <shaohua.li@intel.com>
+Signed-off-by: Jens Axboe <jaxboe@fusionio.com>
 ---
- fs/ext3/inode.c | 7 ++++++-
- 1 file changed, 6 insertions(+), 1 deletion(-)
+ block/blk-softirq.c | 16 +++++++++++++---
+ 1 file changed, 13 insertions(+), 3 deletions(-)
 
-diff --git a/fs/ext3/inode.c b/fs/ext3/inode.c
-index 384b6ebb655f..14c2faf3c312 100644
---- a/fs/ext3/inode.c
-+++ b/fs/ext3/inode.c
-@@ -3253,7 +3253,12 @@ int ext3_write_inode(struct inode *inode, struct writeback_control *wbc)
- 		return -EIO;
- 	}
+diff --git a/block/blk-softirq.c b/block/blk-softirq.c
+index 487addc85bb5..58340d0cb23a 100644
+--- a/block/blk-softirq.c
++++ b/block/blk-softirq.c
+@@ -103,7 +103,7 @@ static struct notifier_block __cpuinitdata blk_cpu_notifier = {
  
--	if (wbc->sync_mode != WB_SYNC_ALL)
+ void __blk_complete_request(struct request *req)
+ {
+-	int ccpu, cpu;
++	int ccpu, cpu, group_cpu = NR_CPUS;
+ 	struct request_queue *q = req->q;
+ 	unsigned long flags;
+ 
+@@ -117,12 +117,22 @@ void __blk_complete_request(struct request *req)
+ 	 */
+ 	if (test_bit(QUEUE_FLAG_SAME_COMP, &q->queue_flags) && req->cpu != -1) {
+ 		ccpu = req->cpu;
+-		if (!test_bit(QUEUE_FLAG_SAME_FORCE, &q->queue_flags))
++		if (!test_bit(QUEUE_FLAG_SAME_FORCE, &q->queue_flags)) {
+ 			ccpu = blk_cpu_to_group(ccpu);
++			group_cpu = blk_cpu_to_group(cpu);
++		}
+ 	} else
+ 		ccpu = cpu;
+ 
+-	if (ccpu == cpu) {
 +	/*
-+	 * No need to force transaction in WB_SYNC_NONE mode. Also
-+	 * ext3_sync_fs() will force the commit after everything is
-+	 * written.
++	 * If current CPU and requested CPU are in the same group, running
++	 * softirq in current CPU. One might concern this is just like
++	 * QUEUE_FLAG_SAME_FORCE, but actually not. blk_complete_request() is
++	 * running in interrupt handler, and currently I/O controller doesn't
++	 * support multiple interrupts, so current CPU is unique actually. This
++	 * avoids IPI sending from current CPU to the first CPU of a group.
 +	 */
-+	if (wbc->sync_mode != WB_SYNC_ALL || wbc->for_sync)
- 		return 0;
- 
- 	return ext3_force_commit(inode->i_sb);
++	if (ccpu == cpu || ccpu == group_cpu) {
+ 		struct list_head *list;
+ do_local:
+ 		list = &__get_cpu_var(blk_cpu_done);
 -- 
 1.8.1.4
 
