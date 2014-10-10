@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 6F6DD7F76
+	by oss.sgi.com (Postfix) with ESMTP id 7325E7F78
 	for <xfs@oss.sgi.com>; Fri, 10 Oct 2014 09:24:11 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 328E68F8050
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 5258F8F8065
 	for <xfs@oss.sgi.com>; Fri, 10 Oct 2014 07:24:11 -0700 (PDT)
 Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id qwp5qyvDVeqhGCCl (version=TLSv1 cipher=AES256-SHA
+	with ESMTP id aOEn2sRBJOdCaWgy (version=TLSv1 cipher=AES256-SHA
 	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 10 Oct 2014 07:24:09 -0700 (PDT)
+	Fri, 10 Oct 2014 07:24:10 -0700 (PDT)
 From: Jan Kara <jack@suse.cz>
-Subject: [PATCH] quota: Fix race between dqput() and dquot_scan_active()
-Date: Fri, 10 Oct 2014 16:23:32 +0200
-Message-Id: <1412951028-4085-28-git-send-email-jack@suse.cz>
+Subject: [PATCH] writeback: plug writeback at a high level
+Date: Fri, 10 Oct 2014 16:23:41 +0200
+Message-Id: <1412951028-4085-37-git-send-email-jack@suse.cz>
 In-Reply-To: <1412951028-4085-1-git-send-email-jack@suse.cz>
 References: <1412951028-4085-1-git-send-email-jack@suse.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -29,68 +29,83 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: linux-fsdevel@vger.kernel.org
-Cc: Dave Kleikamp <shaggy@kernel.org>, jfs-discussion@lists.sourceforge.net, tytso@mit.edu, Jeff Mahoney <jeffm@suse.de>, Mark Fasheh <mfasheh@suse.com>, reiserfs-devel@vger.kernel.org, xfs@oss.sgi.com, cluster-devel@redhat.com, Joel Becker <jlbec@evilplan.org>, Jan Kara <jack@suse.cz>, linux-ext4@vger.kernel.org, Steven Whitehouse <swhiteho@redhat.com>, ocfs2-devel@oss.oracle.com, viro@zeniv.linux.org.uk
+Cc: Dave Kleikamp <shaggy@kernel.org>, jfs-discussion@lists.sourceforge.net, tytso@mit.edu, Jeff Mahoney <jeffm@suse.de>, Mark Fasheh <mfasheh@suse.com>, reiserfs-devel@vger.kernel.org, xfs@oss.sgi.com, cluster-devel@redhat.com, Joel Becker <jlbec@evilplan.org>, Dave Chinner <dchinner@redhat.com>, Jan Kara <jack@suse.cz>, linux-ext4@vger.kernel.org, Steven Whitehouse <swhiteho@redhat.com>, ocfs2-devel@oss.oracle.com, viro@zeniv.linux.org.uk
 
-Currently last dqput() can race with dquot_scan_active() causing it to
-call callback for an already deactivated dquot. The race is as follows:
+From: Dave Chinner <dchinner@redhat.com>
 
-CPU1					CPU2
-  dqput()
-    spin_lock(&dq_list_lock);
-    if (atomic_read(&dquot->dq_count) > 1) {
-     - not taken
-    if (test_bit(DQ_ACTIVE_B, &dquot->dq_flags)) {
-      spin_unlock(&dq_list_lock);
-      ->release_dquot(dquot);
-        if (atomic_read(&dquot->dq_count) > 1)
-         - not taken
-					  dquot_scan_active()
-					    spin_lock(&dq_list_lock);
-					    if (!test_bit(DQ_ACTIVE_B, &dquot->dq_flags))
-					     - not taken
-					    atomic_inc(&dquot->dq_count);
-					    spin_unlock(&dq_list_lock);
-        - proceeds to release dquot
-					    ret = fn(dquot, priv);
-					     - called for inactive dquot
+tl;dr: 3 lines of code, 86% better fsmark thoughput consuming 13%
+less CPU and 43% lower runtime.
 
-Fix the problem by making sure possible ->release_dquot() is finished by
-the time we call the callback and new calls to it will notice reference
-dquot_scan_active() has taken and bail out.
+Doing writeback on lots of little files causes terrible IOPS storms
+because of the per-mapping writeback plugging we do. This
+essentially causes imeediate dispatch of IO for each mapping,
+regardless of the context in which writeback is occurring.
 
+IOWs, running a concurrent write-lots-of-small 4k files using fsmark
+on XFS results in a huge number of IOPS being issued for data
+writes.  Metadata writes are sorted and plugged at a high level by
+XFS, so aggregate nicely into large IOs.
+
+However, data writeback IOs are dispatched in individual 4k IOs -
+even when the blocks of two consecutively written files are
+adjacent - because the underlying block device is fast enough not to
+congest on such IO. This behaviour is not SSD related - anything
+with hardware caches is going to see the same benefits as the IO
+rates are limited only by how fast adjacent IOs can be sent to the
+hardware caches for aggregation.
+
+Hence the speed of the physical device is irrelevant to this common
+writeback workload (happens every time you untar a tarball!) -
+performance is limited by the overhead of dispatching individual
+IOs from a single writeback thread.
+
+Test VM: 16p, 16GB RAM, 2xSSD in RAID0, 500TB sparse XFS filesystem,
+metadata CRCs enabled.
+
+Test:
+
+$ ./fs_mark  -D  10000  -S0  -n  10000  -s  4096  -L  120  -d
+/mnt/scratch/0  -d  /mnt/scratch/1  -d  /mnt/scratch/2  -d
+/mnt/scratch/3  -d  /mnt/scratch/4  -d  /mnt/scratch/5  -d
+/mnt/scratch/6  -d  /mnt/scratch/7
+
+Result:
+		wall	sys	create rate	Physical write IO
+		time	CPU	(avg files/s)	 IOPS	Bandwidth
+		-----	-----	-------------	------	---------
+unpatched	5m54s	15m32s	32,500+/-2200	28,000	150MB/s
+patched		3m19s	13m28s	52,900+/-1800	 1,500	280MB/s
+improvement	-43.8%	-13.3%	  +62.7%	-94.6%	+86.6%
+
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
 Signed-off-by: Jan Kara <jack@suse.cz>
 ---
- fs/quota/dquot.c | 14 +++++++++++---
- 1 file changed, 11 insertions(+), 3 deletions(-)
+ fs/fs-writeback.c | 5 +++++
+ 1 file changed, 5 insertions(+)
 
-  This is the last patch needed to make ocfs2 quotas rock solid in my testing.
-I will carry it in my tree and push it to Linus soon.
-
-diff --git a/fs/quota/dquot.c b/fs/quota/dquot.c
-index 831d49a4111f..cfc8dcc16043 100644
---- a/fs/quota/dquot.c
-+++ b/fs/quota/dquot.c
-@@ -581,9 +581,17 @@ int dquot_scan_active(struct super_block *sb,
- 		dqstats_inc(DQST_LOOKUPS);
- 		dqput(old_dquot);
- 		old_dquot = dquot;
--		ret = fn(dquot, priv);
--		if (ret < 0)
--			goto out;
-+		/*
-+		 * ->release_dquot() can be racing with us. Our reference
-+		 * protects us from new calls to it so just wait for any
-+		 * outstanding call and recheck the DQ_ACTIVE_B after that.
-+		 */
-+		wait_on_dquot(dquot);
-+		if (test_bit(DQ_ACTIVE_B, &dquot->dq_flags)) {
-+			ret = fn(dquot, priv);
-+			if (ret < 0)
-+				goto out;
-+		}
- 		spin_lock(&dq_list_lock);
- 		/* We are safe to continue now because our dquot could not
- 		 * be moved out of the inuse list while we hold the reference */
+diff --git a/fs/fs-writeback.c b/fs/fs-writeback.c
+index 279292ba9403..d935fd3796ba 100644
+--- a/fs/fs-writeback.c
++++ b/fs/fs-writeback.c
+@@ -599,6 +599,9 @@ static long generic_writeback_inodes(struct wb_writeback_work *work)
+ 	unsigned long end_time = jiffies + HZ / 10;
+ 	long write_chunk;
+ 	long wrote = 0;  /* count both pages and inodes */
++	struct blk_plug plug;
++
++	blk_start_plug(&plug);
+ 
+ 	spin_lock(&wb->list_lock);
+ 	while (1) {
+@@ -688,6 +691,8 @@ static long generic_writeback_inodes(struct wb_writeback_work *work)
+ out:
+ 	spin_unlock(&wb->list_lock);
+ 
++	blk_finish_plug(&plug);
++
+ 	return wrote;
+ }
+ 
 -- 
 1.8.1.4
 
