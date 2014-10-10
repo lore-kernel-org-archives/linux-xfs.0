@@ -1,19 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id D3BF67F7C
+	by oss.sgi.com (Postfix) with ESMTP id D56A07F7E
 	for <xfs@oss.sgi.com>; Fri, 10 Oct 2014 09:24:11 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id C2C05304075
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id B5FD2304071
 	for <xfs@oss.sgi.com>; Fri, 10 Oct 2014 07:24:11 -0700 (PDT)
 Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id 7qI9cXOShu0UtJFK (version=TLSv1 cipher=AES256-SHA
+	with ESMTP id CrdUW4SR1wHnkF0A (version=TLSv1 cipher=AES256-SHA
 	bits=256 verify=NO) for <xfs@oss.sgi.com>;
 	Fri, 10 Oct 2014 07:24:10 -0700 (PDT)
 From: Jan Kara <jack@suse.cz>
-Subject: [PATCH 1/2] vfs: Fix data corruption when blocksize < pagesize for
-	mmaped data
-Date: Fri, 10 Oct 2014 16:23:39 +0200
-Message-Id: <1412951028-4085-35-git-send-email-jack@suse.cz>
+Subject: [PATCH 2/2] ext3: Don't check quota format when there are no quota
+	files
+Date: Fri, 10 Oct 2014 16:23:44 +0200
+Message-Id: <1412951028-4085-40-git-send-email-jack@suse.cz>
 In-Reply-To: <1412951028-4085-1-git-send-email-jack@suse.cz>
 References: <1412951028-4085-1-git-send-email-jack@suse.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -30,162 +30,39 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: linux-fsdevel@vger.kernel.org
-Cc: Dave Kleikamp <shaggy@kernel.org>, jfs-discussion@lists.sourceforge.net, tytso@mit.edu, Jeff Mahoney <jeffm@suse.de>, Mark Fasheh <mfasheh@suse.com>, reiserfs-devel@vger.kernel.org, xfs@oss.sgi.com, cluster-devel@redhat.com, Joel Becker <jlbec@evilplan.org>, Jan Kara <jack@suse.cz>, linux-ext4@vger.kernel.org, Steven Whitehouse <swhiteho@redhat.com>, ocfs2-devel@oss.oracle.com, viro@zeniv.linux.org.uk
+Cc: Dave Kleikamp <shaggy@kernel.org>, jfs-discussion@lists.sourceforge.net, tytso@mit.edu, Jeff Mahoney <jeffm@suse.de>, Mark Fasheh <mfasheh@suse.com>, reiserfs-devel@vger.kernel.org, stable@vger.kernel.org, xfs@oss.sgi.com, cluster-devel@redhat.com, Joel Becker <jlbec@evilplan.org>, Jan Kara <jack@suse.cz>, linux-ext4@vger.kernel.org, Steven Whitehouse <swhiteho@redhat.com>, ocfs2-devel@oss.oracle.com, viro@zeniv.linux.org.uk
 
-->page_mkwrite() is used by filesystems to allocate blocks under a page
-which is becoming writeably mmapped in some process' address space. This
-allows a filesystem to return a page fault if there is not enough space
-available, user exceeds quota or similar problem happens, rather than
-silently discarding data later when writepage is called.
+The check whether quota format is set even though there are no
+quota files with journalled quota is pointless and it actually
+makes it impossible to turn off journalled quotas (as there's
+no way to unset journalled quota format). Just remove the check.
 
-However VFS fails to call ->page_mkwrite() in all the cases where
-filesystems need it when blocksize < pagesize. For example when
-blocksize = 1024, pagesize = 4096 the following is problematic:
-  ftruncate(fd, 0);
-  pwrite(fd, buf, 1024, 0);
-  map = mmap(NULL, 1024, PROT_WRITE, MAP_SHARED, fd, 0);
-  map[0] = 'a';       ----> page_mkwrite() for index 0 is called
-  ftruncate(fd, 10000); /* or even pwrite(fd, buf, 1, 10000) */
-  mremap(map, 1024, 10000, 0);
-  map[4095] = 'a';    ----> no page_mkwrite() called
-
-At the moment ->page_mkwrite() is called, filesystem can allocate only
-one block for the page because i_size == 1024. Otherwise it would create
-blocks beyond i_size which is generally undesirable. But later at
-->writepage() time, we also need to store data at offset 4095 but we
-don't have block allocated for it.
-
-This patch introduces a helper function filesystems can use to have
-->page_mkwrite() called at all the necessary moments.
-
+CC: stable@vger.kernel.org
 Signed-off-by: Jan Kara <jack@suse.cz>
 ---
- fs/buffer.c        |  3 +++
- include/linux/mm.h |  8 ++++++++
- mm/truncate.c      | 57 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
- 3 files changed, 68 insertions(+)
+ fs/ext3/super.c | 7 -------
+ 1 file changed, 7 deletions(-)
 
-diff --git a/fs/buffer.c b/fs/buffer.c
-index 8f05111bbb8b..3ba5a6a1bc5f 100644
---- a/fs/buffer.c
-+++ b/fs/buffer.c
-@@ -2080,6 +2080,7 @@ int generic_write_end(struct file *file, struct address_space *mapping,
- 			struct page *page, void *fsdata)
- {
- 	struct inode *inode = mapping->host;
-+	loff_t old_size = inode->i_size;
- 	int i_size_changed = 0;
- 
- 	copied = block_write_end(file, mapping, pos, len, copied, page, fsdata);
-@@ -2099,6 +2100,8 @@ int generic_write_end(struct file *file, struct address_space *mapping,
- 	unlock_page(page);
- 	page_cache_release(page);
- 
-+	if (old_size < pos)
-+		pagecache_isize_extended(inode, old_size, pos);
- 	/*
- 	 * Don't mark the inode dirty under page lock. First, it unnecessarily
- 	 * makes the holding time of page lock longer. Second, it forces lock
-diff --git a/include/linux/mm.h b/include/linux/mm.h
-index 8981cc882ed2..f0e53e5a3b17 100644
---- a/include/linux/mm.h
-+++ b/include/linux/mm.h
-@@ -1155,6 +1155,14 @@ static inline void unmap_shared_mapping_range(struct address_space *mapping,
- 
- extern void truncate_pagecache(struct inode *inode, loff_t new);
- extern void truncate_setsize(struct inode *inode, loff_t newsize);
-+#ifdef CONFIG_MMU
-+void pagecache_isize_extended(struct inode *inode, loff_t from, loff_t to);
-+#else
-+static inline void pagecache_isize_extended(struct inode *inode, loff_t from,
-+					    loff_t to)
-+{
-+}
-+#endif
- void truncate_pagecache_range(struct inode *inode, loff_t offset, loff_t end);
- int truncate_inode_page(struct address_space *mapping, struct page *page);
- int generic_error_remove_page(struct address_space *mapping, struct page *page);
-diff --git a/mm/truncate.c b/mm/truncate.c
-index 96d167372d89..261eaf6e5a19 100644
---- a/mm/truncate.c
-+++ b/mm/truncate.c
-@@ -20,6 +20,7 @@
- #include <linux/buffer_head.h>	/* grr. try_to_release_page,
- 				   do_invalidatepage */
- #include <linux/cleancache.h>
-+#include <linux/rmap.h>
- #include "internal.h"
- 
- static void clear_exceptional_entry(struct address_space *mapping,
-@@ -719,12 +720,68 @@ EXPORT_SYMBOL(truncate_pagecache);
-  */
- void truncate_setsize(struct inode *inode, loff_t newsize)
- {
-+	loff_t oldsize = inode->i_size;
-+
- 	i_size_write(inode, newsize);
-+	if (newsize > oldsize)
-+		pagecache_isize_extended(inode, oldsize, newsize);
- 	truncate_pagecache(inode, newsize);
- }
- EXPORT_SYMBOL(truncate_setsize);
- 
- /**
-+ * pagecache_isize_extended - update pagecache after extension of i_size
-+ * @inode:	inode for which i_size was extended
-+ * @from:	original inode size
-+ * @to:		new inode size
-+ *
-+ * Handle extension of inode size either caused by extending truncate or by
-+ * write starting after current i_size. We mark the page straddling current
-+ * i_size RO so that page_mkwrite() is called on the nearest write access to
-+ * the page.  This way filesystem can be sure that page_mkwrite() is called on
-+ * the page before user writes to the page via mmap after the i_size has been
-+ * changed.
-+ *
-+ * The function must be called after i_size is updated so that page fault
-+ * coming after we unlock the page will already see the new i_size.
-+ * The function must be called while we still hold i_mutex - this not only
-+ * makes sure i_size is stable but also that userspace cannot observe new
-+ * i_size value before we are prepared to store mmap writes at new inode size.
-+ */
-+void pagecache_isize_extended(struct inode *inode, loff_t from, loff_t to)
-+{
-+	int bsize = 1 << inode->i_blkbits;
-+	loff_t rounded_from;
-+	struct page *page;
-+	pgoff_t index;
-+
-+	WARN_ON(!mutex_is_locked(&inode->i_mutex));
-+	WARN_ON(to > inode->i_size);
-+
-+	if (from >= to || bsize == PAGE_CACHE_SIZE)
-+		return;
-+	/* Page straddling @from will not have any hole block created? */
-+	rounded_from = round_up(from, bsize);
-+	if (to <= rounded_from || !(rounded_from & (PAGE_CACHE_SIZE - 1)))
-+		return;
-+
-+	index = from >> PAGE_CACHE_SHIFT;
-+	page = find_lock_page(inode->i_mapping, index);
-+	/* Page not cached? Nothing to do */
-+	if (!page)
-+		return;
-+	/*
-+	 * See clear_page_dirty_for_io() for details why set_page_dirty()
-+	 * is needed.
-+	 */
-+	if (page_mkclean(page))
-+		set_page_dirty(page);
-+	unlock_page(page);
-+	page_cache_release(page);
-+}
-+EXPORT_SYMBOL(pagecache_isize_extended);
-+
-+/**
-  * truncate_pagecache_range - unmap and remove pagecache that is hole-punched
-  * @inode: inode
-  * @lstart: offset of beginning of hole
+I'm going to queue this patch unless someone objects.
+
+diff --git a/fs/ext3/super.c b/fs/ext3/super.c
+index 622e88249024..2c42e739e3d1 100644
+--- a/fs/ext3/super.c
++++ b/fs/ext3/super.c
+@@ -1354,13 +1354,6 @@ set_qf_format:
+ 					"not specified.");
+ 			return 0;
+ 		}
+-	} else {
+-		if (sbi->s_jquota_fmt) {
+-			ext3_msg(sb, KERN_ERR, "error: journaled quota format "
+-					"specified with no journaling "
+-					"enabled.");
+-			return 0;
+-		}
+ 	}
+ #endif
+ 	return 1;
 -- 
 1.8.1.4
 
