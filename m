@@ -1,24 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 9F2457F3F
-	for <xfs@oss.sgi.com>; Fri, 10 Oct 2014 02:31:49 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 6D8388F8054
-	for <xfs@oss.sgi.com>; Fri, 10 Oct 2014 00:31:49 -0700 (PDT)
-Received: from mx4-phx2.redhat.com (mx4-phx2.redhat.com [209.132.183.25]) by
-	cuda.sgi.com with ESMTP id cDExp2cM5XcydnYH (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 10 Oct 2014 00:31:47 -0700 (PDT)
-Received: from zmail24.collab.prod.int.phx2.redhat.com
-	(zmail24.collab.prod.int.phx2.redhat.com [10.5.83.30])
-	by mx4-phx2.redhat.com (8.13.8/8.13.8) with ESMTP id s9A7VkUk020680
-	for <xfs@oss.sgi.com>; Fri, 10 Oct 2014 03:31:46 -0400
-Date: Fri, 10 Oct 2014 03:31:46 -0400 (EDT)
-From: Xu Wang <xuw@redhat.com>
-Message-ID: <2090211370.42327532.1412926306812.JavaMail.zimbra@redhat.com>
-In-Reply-To: <929991500.42327290.1412926226461.JavaMail.zimbra@redhat.com>
-Subject: [PATCH] xfs: lock for removing item from cil->xc_cil in xlog_cil_push
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 72D377F3F
+	for <xfs@oss.sgi.com>; Fri, 10 Oct 2014 03:47:44 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 00187AC008
+	for <xfs@oss.sgi.com>; Fri, 10 Oct 2014 01:47:40 -0700 (PDT)
+Received: from mout.gmx.net (mout.gmx.net [212.227.15.15]) by cuda.sgi.com
+	with ESMTP id kbixuK1vhtOEpjqx (version=TLSv1 cipher=AES256-SHA
+	bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Fri, 10 Oct 2014 01:47:39 -0700 (PDT)
 MIME-Version: 1.0
+Message-ID: <trinity-439c7424-8997-4a12-ad12-2c1aa0e49227-1412930857944@3capp-gmx-bs24>
+From: Dragon <Sunghost@gmx.de>
+Subject: Re: XFS Filesystem is broken and cant repair and mount!
+Date: Fri, 10 Oct 2014 10:47:38 +0200
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,48 +22,32 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: multipart/mixed; boundary="===============6888876633827038933=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-RnJvbSA1OWM2YmFiYWI3YzRjZTg3MDgwMzYwMTgxNDNkMmFjYzE0NzdjYzdmIE1vbiBTZXAgMTcg
-MDA6MDA6MDAgMjAwMQpGcm9tOiBHZW9yZ2UgV2FuZyA8eHV3QHJlZGhhdC5jb20+CkRhdGU6IEZy
-aSwgMTAgT2N0IDIwMTQgMTU6MDI6MTQgKzA4MDAKU3ViamVjdDogW1BBVENIXSBbUEFUQ0hdIHhm
-czogbG9jayBmb3IgcmVtb3ZpbmcgaXRlbSBmcm9tIGNpbC0+eGNfY2lsIGluCiB4bG9nX2NpbF9w
-dXNoCgpUaGVyZSBpcyBhIHJhY2UgY29uZGl0aW9uIHdoZW4geGxvZ19jaWxfZm9yY2VfbHNuIGFu
-ZCB4bG9nX2NpbF9wdXNoIGZvcgpjaWwtPnhjX2NpbCBpdGVtcy4gV2hlbiBmdW5jdGlvbiB4bG9n
-X2NpbF9wdXNoX25vdyBjYWxsZWQgaW4KeGxvZ19jaWxfZm9yY2VfbHNuLCBhbmQgdGhlIHhsb2df
-Y2lsX3B1c2ggcnVuIGluIHdvcmtxdWV1ZSBqdXN0IHJlYWNoZXMgdGhlIHBvaW50IGZvcgpzZXR0
-aW5nIGNpbC0+eGNfY3VycmVudF9zZXF1ZW5jZSwgdGhlIHhsb2dfY2lsX2ZvcmNlX2xzbiBnb3Qg
-dGhlIGxvY2sKYW5kIGNoZWNrIHRoZSAic2VxdWVuY2UgPT0gY2lsLT54Y19jdXJyZW50X3NlcXVl
-bmNlICYmCiFsaXN0X2VtcHR5KCZjaWwtPnhjX2NpbCkiIGZvciByZXN0YXJ0LiBUaGUgc3RhdGVt
-ZW50ICJzZXF1ZW5jZSA9PQpjaWwtPnhjX2N1cnJlbnRfc2VxdWVuY2UiIGlzIHRydWUsIGJ1dCB0
-aGUgY2lsLT54Y19jaWwgaXMgZW1wdHkKYWNjb3JkaW5nIHRvIHRoZSB4bG9nX2NpbF9wdXNoIHJl
-bW92ZWQgdGhlIGl0ZW1zIGluIGNpbC0+eGNfY2lsIHdpdGhvdXQKbG9jayBwcm90ZWN0aW9ubC4g
-U28gdGhlIGZ1bmN0aW9uIHhsb2dfY2lsX2ZvcmNlX2xzbiB3aWxsIHJldHVybgpOVUxMQ09NTUlU
-TFNOLCB3aGljaCBtZWFucyB0aGUgY2lsIGxvZyBmb3IgY3VycmVudCBzZXF1ZW5jZSB3aWxsIG5v
-dCBiZQpzdWJtaXR0ZWQgdG8gZGlzay4gQW5kIGlmIHRoZXJlIGlzIG5vIG1vcmUgb3BlcmF0aW9u
-cyhmb3IgZXhhbXBsZSwgd2hlbgp1bm1vdW50IGZzLCB0aGlzIHNpdHVhdGlvbiBoYXBwZW5lZCBp
-bgp4ZnNfdW5tb3VudGZzLT54ZnNfbG9nX3NiY291bnQtPnhmc190cmFuc19jb21taXQpLCB0aGUg
-eGZzIHdpbGwgaGFuZyB1cC4KClNpZ25lZC1vZmYtYnk6IEdlb3JnZSBXYW5nIDx4dXdAcmVkaGF0
-LmNvbT4KLS0tCiBmcy94ZnMveGZzX2xvZ19jaWwuYyB8IDMgKystCiAxIGZpbGUgY2hhbmdlZCwg
-MiBpbnNlcnRpb25zKCspLCAxIGRlbGV0aW9uKC0pCgpkaWZmIC0tZ2l0IGEvZnMveGZzL3hmc19s
-b2dfY2lsLmMgYi9mcy94ZnMveGZzX2xvZ19jaWwuYwppbmRleCBmNmI3OWU1Li45N2JhNTI3IDEw
-MDY0NAotLS0gYS9mcy94ZnMveGZzX2xvZ19jaWwuYworKysgYi9mcy94ZnMveGZzX2xvZ19jaWwu
-YwpAQCAtNDc4LDYgKzQ3OCw4IEBAIHhsb2dfY2lsX3B1c2goCiAgICAgKi8KICAgIGx2ID0gTlVM
-TDsKICAgIG51bV9pb3ZlY3MgPSAwOworCisgICBzcGluX2xvY2soJmNpbC0+eGNfcHVzaF9sb2Nr
-KTsKICAgIHdoaWxlICghbGlzdF9lbXB0eSgmY2lsLT54Y19jaWwpKSB7CiAgICAgICAgc3RydWN0
-IHhmc19sb2dfaXRlbSAqaXRlbTsKCkBAIC01MzAsNyArNTMyLDYgQEAgeGxvZ19jaWxfcHVzaCgK
-ICAgICAqIGFnYWluc3QgdGhlIGN1cnJlbnQgc2VxdWVuY2UgaW4gbG9nIGZvcmNlcyB3aXRob3V0
-IHJpc2tpbmcKICAgICAqIGRlZmVyZW5jaW5nIGEgZnJlZWQgY29udGV4dCBwb2ludGVyLgogICAg
-ICovCi0gICBzcGluX2xvY2soJmNpbC0+eGNfcHVzaF9sb2NrKTsKICAgIGNpbC0+eGNfY3VycmVu
-dF9zZXF1ZW5jZSA9IG5ld19jdHgtPnNlcXVlbmNlOwogICAgbGlzdF9hZGQoJmN0eC0+Y29tbWl0
-dGluZywgJmNpbC0+eGNfY29tbWl0dGluZyk7CiAgICBzcGluX3VubG9jaygmY2lsLT54Y19wdXNo
-X2xvY2spOwotLSAKMS45LjMKCgotLSAKR2VvcmdlIFdhbmcg546L5petCgpLZXJuZWwgUXVhbnRp
-dHkgRW5naW5lZXIKUmVkIEhhdCBTb2Z0d2FyZSAoQmVpamluZykgQ28uLEx0ZApJUkM6eHV3ClRl
-bDorODYtMDEwLTYyNjA4MDQxClBob25lOjE1OTAxMjMxNTc5CjkvRiwgVG93ZXIgQywgUmF5Y29t
-CgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwp4ZnMgbWFp
-bGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0
-aW5mby94ZnMK
+--===============6888876633827038933==
+Content-Type: text/html; charset=UTF-8
+
+<html><head></head><body><div style="font-family: Verdana;font-size: 12.0px;"><div>Hello,</div>
+
+<div>i checked the syslog again, right before the next crash of xfs-filesystem occures, the raiddevice was successfull mounted and XFS says: Mounting Filesystem - Ending clean mount. Than i start to copy, in the log some snmpd events are logged, but i think these doesnt influence the system, than bang - kernel: ffff88031f3b2000: ..... - xfs internal error xfs_btree_check_sblock at line 119 file /build/linux-eKuxrT/linux-3.2.60/fs/xfs/xfs_btree.c caller 0xfffffffa03f08ca&nbsp; - than trace of xfs_corruption - xfs corruption detected. unmount and run xfs_repair - xfs_do_force shutdown 0x8 called from line 3729 .. corruption of memory data detected. shutting filesystem. buffer i/o error on device md2 ... xfs xfs_log_force: error 5 returned - than some ata1.00 errors PHY RDY changed - serror: recovComm Persist PHYRdyChg 10B8b - failed command read fpdma queued, ata1.00 status. drdy eh complete .... how can i find out which drive is ata1.0?</div>
+
+<div>&nbsp;</div>
+
+<div>Sorry have to manualy write this. Hope you can help...</div></div></body></html>
+
+
+--===============6888876633827038933==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============6888876633827038933==--
