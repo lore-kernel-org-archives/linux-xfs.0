@@ -1,18 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id ECC6E7FA2
-	for <xfs@oss.sgi.com>; Fri, 10 Oct 2014 09:55:19 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 8A8E4AC008
-	for <xfs@oss.sgi.com>; Fri, 10 Oct 2014 07:55:19 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 62CE47FA3
+	for <xfs@oss.sgi.com>; Fri, 10 Oct 2014 09:55:20 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 31D1D8F8065
+	for <xfs@oss.sgi.com>; Fri, 10 Oct 2014 07:55:20 -0700 (PDT)
 Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id fC7vpXduJSqzNYM3 (version=TLSv1 cipher=AES256-SHA
+	with ESMTP id yczTItOrqQesh2IK (version=TLSv1 cipher=AES256-SHA
 	bits=256 verify=NO) for <xfs@oss.sgi.com>;
 	Fri, 10 Oct 2014 07:55:18 -0700 (PDT)
 From: Jan Kara <jack@suse.cz>
-Subject: [PATCH 0/12 v2] Moving i_dquot out of struct inode
-Date: Fri, 10 Oct 2014 16:54:58 +0200
-Message-Id: <1412952910-7142-1-git-send-email-jack@suse.cz>
+Subject: [PATCH 02/12] gfs2: Set allowed quota types
+Date: Fri, 10 Oct 2014 16:55:00 +0200
+Message-Id: <1412952910-7142-3-git-send-email-jack@suse.cz>
+In-Reply-To: <1412952910-7142-1-git-send-email-jack@suse.cz>
+References: <1412952910-7142-1-git-send-email-jack@suse.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,35 +31,29 @@ Sender: xfs-bounces@oss.sgi.com
 To: linux-fsdevel@vger.kernel.org
 Cc: Dave Kleikamp <shaggy@kernel.org>, jfs-discussion@lists.sourceforge.net, tytso@mit.edu, Jeff Mahoney <jeffm@suse.de>, Mark Fasheh <mfasheh@suse.com>, reiserfs-devel@vger.kernel.org, xfs@oss.sgi.com, cluster-devel@redhat.com, Joel Becker <jlbec@evilplan.org>, Jan Kara <jack@suse.cz>, linux-ext4@vger.kernel.org, Steven Whitehouse <swhiteho@redhat.com>, ocfs2-devel@oss.oracle.com, viro@zeniv.linux.org.uk
 
-  Hello,
+We support user and group quotas. Tell vfs about it.
 
-  this patch set moves i_dquot array from struct inode into filesystem private
-part of the inode. Thus filesystems which don't need it save 2 pointers in
-their inodes (would be 3 after we add project quota support into generic
-quota).
+Acked-by: Steven Whitehouse <swhiteho@redhat.com>
+CC: cluster-devel@redhat.com
+Signed-off-by: Jan Kara <jack@suse.cz>
+---
+ fs/gfs2/ops_fstype.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-I have patches to move inode->i_data.private_list into filesystem private part
-of the inode which is going to save another 2 pointers using the same
-mechanism. However I didn't want to mix those in.
-
-The patch series also contains a change to quotactl so that each filesystem
-can set quota types it supports. This is in the end unrelated change
-(originally it was necessary for i_dquot moving but in the end I changed
-things so that it's not anymore). I can move that into a separate series
-but I was somewhat reluctant to do that since that would mean another 6
-one-line patches to the same files we are changing here...
-
-If noone has any objections, I'd like to queue this series into my tree for
-the next merge window. For that I'd prefer to get acks from affected fs
-maintainers (the changes are pretty trivial and I don't feel it's a must but
-still I'd prefer fs maintainers to ack they are aware of the changes).
-
-								Honza
-
-Changes since v1:
-* Inode field names are now named enum
-* Quota type masks now have names like QTYPE_MASK_{USR|GRP|PRJ} instead of
-  opencoding shifts.
+diff --git a/fs/gfs2/ops_fstype.c b/fs/gfs2/ops_fstype.c
+index d3eae244076e..23854d24eb50 100644
+--- a/fs/gfs2/ops_fstype.c
++++ b/fs/gfs2/ops_fstype.c
+@@ -1083,6 +1083,7 @@ static int fill_super(struct super_block *sb, struct gfs2_args *args, int silent
+ 	sb->s_xattr = gfs2_xattr_handlers;
+ 	sb->s_qcop = &gfs2_quotactl_ops;
+ 	sb_dqopt(sb)->flags |= DQUOT_QUOTA_SYS_FILE;
++	sb_dqopt(sb)->allowed_types = QTYPE_MASK_USR | QTYPE_MASK_GRP;
+ 	sb->s_time_gran = 1;
+ 	sb->s_maxbytes = MAX_LFS_FILESIZE;
+ 
+-- 
+1.8.1.4
 
 _______________________________________________
 xfs mailing list
