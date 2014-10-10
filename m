@@ -1,29 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id F3B5E7F3F
-	for <xfs@oss.sgi.com>; Fri, 10 Oct 2014 07:08:01 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id D399430407B
-	for <xfs@oss.sgi.com>; Fri, 10 Oct 2014 05:07:58 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id FFXddYGzglNebutV (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 10 Oct 2014 05:07:57 -0700 (PDT)
-Received: from int-mx14.intmail.prod.int.phx2.redhat.com
-	(int-mx14.intmail.prod.int.phx2.redhat.com [10.5.11.27])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id s9AC7tHr019252
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256
-	verify=FAIL) for <xfs@oss.sgi.com>; Fri, 10 Oct 2014 08:07:56 -0400
-Date: Fri, 10 Oct 2014 08:07:54 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH] xfs: lock for removing item from cil->xc_cil in
-	xlog_cil_push
-Message-ID: <20141010120754.GB18297@bfoster.bfoster>
-References: <929991500.42327290.1412926226461.JavaMail.zimbra@redhat.com>
-	<2090211370.42327532.1412926306812.JavaMail.zimbra@redhat.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <2090211370.42327532.1412926306812.JavaMail.zimbra@redhat.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 7868D7F3F
+	for <xfs@oss.sgi.com>; Fri, 10 Oct 2014 09:24:06 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 08254AC008
+	for <xfs@oss.sgi.com>; Fri, 10 Oct 2014 07:24:05 -0700 (PDT)
+Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
+	with ESMTP id ipepvnoxMI0FuC5W (version=TLSv1 cipher=AES256-SHA
+	bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Fri, 10 Oct 2014 07:24:04 -0700 (PDT)
+From: Jan Kara <jack@suse.cz>
+Subject: [PATCH 1/2 RESEND] bdi: Fix hung task on sync
+Date: Fri, 10 Oct 2014 16:23:06 +0200
+Message-Id: <1412951028-4085-2-git-send-email-jack@suse.cz>
+In-Reply-To: <1412951028-4085-1-git-send-email-jack@suse.cz>
+References: <1412951028-4085-1-git-send-email-jack@suse.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,70 +23,96 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Xu Wang <xuw@redhat.com>
-Cc: xfs@oss.sgi.com
+To: linux-fsdevel@vger.kernel.org
+Cc: Dave Kleikamp <shaggy@kernel.org>, jfs-discussion@lists.sourceforge.net, tytso@mit.edu, Jeff Mahoney <jeffm@suse.de>, Mark Fasheh <mfasheh@suse.com>, Derek Basehore <dbasehore@chromium.org>, reiserfs-devel@vger.kernel.org, stable@vger.kernel.org, xfs@oss.sgi.com, cluster-devel@redhat.com, Joel Becker <jlbec@evilplan.org>, Jan Kara <jack@suse.cz>, linux-ext4@vger.kernel.org, Steven Whitehouse <swhiteho@redhat.com>, ocfs2-devel@oss.oracle.com, viro@zeniv.linux.org.uk
 
-T24gRnJpLCBPY3QgMTAsIDIwMTQgYXQgMDM6MzE6NDZBTSAtMDQwMCwgWHUgV2FuZyB3cm90ZToK
-PiBGcm9tIDU5YzZiYWJhYjdjNGNlODcwODAzNjAxODE0M2QyYWNjMTQ3N2NjN2YgTW9uIFNlcCAx
-NyAwMDowMDowMCAyMDAxCj4gRnJvbTogR2VvcmdlIFdhbmcgPHh1d0ByZWRoYXQuY29tPgo+IERh
-dGU6IEZyaSwgMTAgT2N0IDIwMTQgMTU6MDI6MTQgKzA4MDAKPiBTdWJqZWN0OiBbUEFUQ0hdIFtQ
-QVRDSF0geGZzOiBsb2NrIGZvciByZW1vdmluZyBpdGVtIGZyb20gY2lsLT54Y19jaWwgaW4KPiAg
-eGxvZ19jaWxfcHVzaAo+IAo+IFRoZXJlIGlzIGEgcmFjZSBjb25kaXRpb24gd2hlbiB4bG9nX2Np
-bF9mb3JjZV9sc24gYW5kIHhsb2dfY2lsX3B1c2ggZm9yCj4gY2lsLT54Y19jaWwgaXRlbXMuIFdo
-ZW4gZnVuY3Rpb24geGxvZ19jaWxfcHVzaF9ub3cgY2FsbGVkIGluCj4geGxvZ19jaWxfZm9yY2Vf
-bHNuLCBhbmQgdGhlIHhsb2dfY2lsX3B1c2ggcnVuIGluIHdvcmtxdWV1ZSBqdXN0IHJlYWNoZXMg
-dGhlIHBvaW50IGZvcgo+IHNldHRpbmcgY2lsLT54Y19jdXJyZW50X3NlcXVlbmNlLCB0aGUgeGxv
-Z19jaWxfZm9yY2VfbHNuIGdvdCB0aGUgbG9jawo+IGFuZCBjaGVjayB0aGUgInNlcXVlbmNlID09
-IGNpbC0+eGNfY3VycmVudF9zZXF1ZW5jZSAmJgo+ICFsaXN0X2VtcHR5KCZjaWwtPnhjX2NpbCki
-IGZvciByZXN0YXJ0LiBUaGUgc3RhdGVtZW50ICJzZXF1ZW5jZSA9PQo+IGNpbC0+eGNfY3VycmVu
-dF9zZXF1ZW5jZSIgaXMgdHJ1ZSwgYnV0IHRoZSBjaWwtPnhjX2NpbCBpcyBlbXB0eQo+IGFjY29y
-ZGluZyB0byB0aGUgeGxvZ19jaWxfcHVzaCByZW1vdmVkIHRoZSBpdGVtcyBpbiBjaWwtPnhjX2Np
-bCB3aXRob3V0Cj4gbG9jayBwcm90ZWN0aW9ubC4gU28gdGhlIGZ1bmN0aW9uIHhsb2dfY2lsX2Zv
-cmNlX2xzbiB3aWxsIHJldHVybgo+IE5VTExDT01NSVRMU04sIHdoaWNoIG1lYW5zIHRoZSBjaWwg
-bG9nIGZvciBjdXJyZW50IHNlcXVlbmNlIHdpbGwgbm90IGJlCj4gc3VibWl0dGVkIHRvIGRpc2su
-IEFuZCBpZiB0aGVyZSBpcyBubyBtb3JlIG9wZXJhdGlvbnMoZm9yIGV4YW1wbGUsIHdoZW4KPiB1
-bm1vdW50IGZzLCB0aGlzIHNpdHVhdGlvbiBoYXBwZW5lZCBpbgo+IHhmc191bm1vdW50ZnMtPnhm
-c19sb2dfc2Jjb3VudC0+eGZzX3RyYW5zX2NvbW1pdCksIHRoZSB4ZnMgd2lsbCBoYW5nIHVwLgo+
-IAo+IFNpZ25lZC1vZmYtYnk6IEdlb3JnZSBXYW5nIDx4dXdAcmVkaGF0LmNvbT4KPiAtLS0KCklz
-bid0IHRoaXMgZml4ZWQgYnkgdGhlIGZvbGxvd2luZyBjb21taXQ/Cgo4YWYzZGNkMyB4ZnM6IHhs
-b2dfY2lsX2ZvcmNlX2xzbiBkb2Vzbid0IGFsd2F5cyB3YWl0IGNvcnJlY3RseQoKV2l0aCB0aGF0
-IHBhdGNoLCB4bG9nX2NpbF9wdXNoKCkgYWRkcyB0aGUgY3R4IHRvIHRoZSBjb21taXR0aW5nIGxp
-c3QKYmVmb3JlIGRyYWluaW5nIHRoZSBjdHggYW5kIHVwZGF0aW5nIHRoZSBjdXJyZW50IHNlcXVl
-bmNlIG51bWJlci4KeGxvZ19jaWxfZm9yY2VfbHNuKCkgd2Fsa3MgdGhlIGNvbW1pdHRpbmcgbGlz
-dCBhbmQgY2hlY2tzIHRoZSBzZXF1ZW5jZQpudW1iZXIgYW5kIGN0eCBsaXN0LCBhbGwgdW5kZXIg
-dGhlIHB1c2ggbG9jay4KClRoYXQgbWVhbnMgdGhhdCB4bG9nX2NpbF9mb3JjZV9sc24oKSBzaG91
-bGQgc2VlIHRoZSBjdHggZWl0aGVyIG9uIHRoZQpjb21taXR0aW5nIGxpc3QgYW5kIHdhaXQgZm9y
-IGl0IChjb21taXRfbHNuICE9IE5VTEwpLCBvciBub3Qgb24gdGhlCmNvbW1pdHRpbmcgbGlzdCBh
-dCBhbGwuIElmIGl0J3Mgbm90IG9uIHRoZSBjb21taXR0aW5nIGxpc3QgeWV0LAp4bG9nX2NpbF9w
-dXNoKCkgd29uJ3QgaGF2ZSBlaXRoZXIgZHJhaW5lZCB0aGUgY3R4IG9yIHVwZGF0ZWQgdGhlCnNl
-cXVlbmNlIG51bWJlciwgYXMgaXQgYWRkcyB0byB0aGUgY29tbWl0dGluZyBsaXN0IGZpcnN0IGFu
-ZCB0aGF0CnJlcXVpcmVzIHRoZSBwdXNoIGxvY2sgKHdoaWNoIHhsb2dfY2lsX2ZvcmNlX2xzbigp
-IGhvbGRzIGFuZCBkb2Vzbid0CnJlbGVhc2UgdW50aWwgYWZ0ZXIgdGhlIHJlc3RhcnQgY2hlY2sp
-LgoKQW0gSSBtaXNzaW5nIHNvbWV0aGluZz8gRG8geW91IHJlcHJvZHVjZSBhIHByb2JsZW0gd2l0
-aCB0aGUgbGF0ZXN0IHRyZWUKdGhhdCBpbmNsdWRlcyB0aGUgYWJvdmUgcGF0Y2g/CgpCcmlhbgoK
-PiAgZnMveGZzL3hmc19sb2dfY2lsLmMgfCAzICsrLQo+ICAxIGZpbGUgY2hhbmdlZCwgMiBpbnNl
-cnRpb25zKCspLCAxIGRlbGV0aW9uKC0pCj4gCj4gZGlmZiAtLWdpdCBhL2ZzL3hmcy94ZnNfbG9n
-X2NpbC5jIGIvZnMveGZzL3hmc19sb2dfY2lsLmMKPiBpbmRleCBmNmI3OWU1Li45N2JhNTI3IDEw
-MDY0NAo+IC0tLSBhL2ZzL3hmcy94ZnNfbG9nX2NpbC5jCj4gKysrIGIvZnMveGZzL3hmc19sb2df
-Y2lsLmMKPiBAQCAtNDc4LDYgKzQ3OCw4IEBAIHhsb2dfY2lsX3B1c2goCj4gICAgICAqLwo+ICAg
-ICBsdiA9IE5VTEw7Cj4gICAgIG51bV9pb3ZlY3MgPSAwOwo+ICsKPiArICAgc3Bpbl9sb2NrKCZj
-aWwtPnhjX3B1c2hfbG9jayk7Cj4gICAgIHdoaWxlICghbGlzdF9lbXB0eSgmY2lsLT54Y19jaWwp
-KSB7Cj4gICAgICAgICBzdHJ1Y3QgeGZzX2xvZ19pdGVtICppdGVtOwo+IAo+IEBAIC01MzAsNyAr
-NTMyLDYgQEAgeGxvZ19jaWxfcHVzaCgKPiAgICAgICogYWdhaW5zdCB0aGUgY3VycmVudCBzZXF1
-ZW5jZSBpbiBsb2cgZm9yY2VzIHdpdGhvdXQgcmlza2luZwo+ICAgICAgKiBkZWZlcmVuY2luZyBh
-IGZyZWVkIGNvbnRleHQgcG9pbnRlci4KPiAgICAgICovCj4gLSAgIHNwaW5fbG9jaygmY2lsLT54
-Y19wdXNoX2xvY2spOwo+ICAgICBjaWwtPnhjX2N1cnJlbnRfc2VxdWVuY2UgPSBuZXdfY3R4LT5z
-ZXF1ZW5jZTsKPiAgICAgbGlzdF9hZGQoJmN0eC0+Y29tbWl0dGluZywgJmNpbC0+eGNfY29tbWl0
-dGluZyk7Cj4gICAgIHNwaW5fdW5sb2NrKCZjaWwtPnhjX3B1c2hfbG9jayk7Cj4gLS0gCj4gMS45
-LjMKPiAKPiAKPiAtLSAKPiBHZW9yZ2UgV2FuZyDnjovml60KPiAKPiBLZXJuZWwgUXVhbnRpdHkg
-RW5naW5lZXIKPiBSZWQgSGF0IFNvZnR3YXJlIChCZWlqaW5nKSBDby4sTHRkCj4gSVJDOnh1dwo+
-IFRlbDorODYtMDEwLTYyNjA4MDQxCj4gUGhvbmU6MTU5MDEyMzE1NzkKPiA5L0YsIFRvd2VyIEMs
-IFJheWNvbQo+IAo+IF9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fCj4geGZzIG1haWxpbmcgbGlzdAo+IHhmc0Bvc3Muc2dpLmNvbQo+IGh0dHA6Ly9vc3Muc2dp
-LmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDov
-L29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCg==
+From: Derek Basehore <dbasehore@chromium.org>
+
+bdi_wakeup_thread_delayed() used the mod_delayed_work() function to
+schedule work to writeback dirty inodes. The problem with this is that
+it can delay work that is scheduled for immediate execution, such as the
+work from sync_inodes_sb().  This can happen since mod_delayed_work()
+can now steal work from a work_queue.  This fixes the problem by using
+queue_delayed_work() instead. This is a regression caused by
+839a8e8660b6 "writeback: replace custom worker pool implementation with
+unbound workqueue".
+
+The reason that this causes a problem is that laptop-mode will change
+the delay, dirty_writeback_centisecs, to 60000 (10 minutes) by default.
+In the case that bdi_wakeup_thread_delayed() races with
+sync_inodes_sb(), sync will be stopped for 10 minutes and trigger a hung
+task. Even if dirty_writeback_centisecs is not long enough to cause a
+hung task, we still don't want to delay sync for that long.
+
+We fix the problem by using queue_delayed_work() when we want to
+schedule writeback sometime in future. This function doesn't change the
+timer if it is already armed.
+
+For the same reason, we also change bdi_writeback_workfn() to
+immediately queue the work again in the case that the work_list is not
+empty. The same problem can happen if the sync work is run on the rescue
+worker.
+
+Fixes: 839a8e8660b6777e7fe4e80af1a048aebe2b5977
+CC: stable@vger.kernel.org
+Reviewed-by: Tejun Heo <tj@kernel.org>
+Signed-off-by: Derek Basehore <dbasehore@chromium.org>
+Signed-off-by: Jan Kara <jack@suse.cz>
+---
+ fs/fs-writeback.c | 8 ++++----
+ mm/backing-dev.c  | 5 ++++-
+ 2 files changed, 8 insertions(+), 5 deletions(-)
+
+diff --git a/fs/fs-writeback.c b/fs/fs-writeback.c
+index e0259a163f98..8277b76be983 100644
+--- a/fs/fs-writeback.c
++++ b/fs/fs-writeback.c
+@@ -1047,10 +1047,10 @@ void bdi_writeback_workfn(struct work_struct *work)
+ 		trace_writeback_pages_written(pages_written);
+ 	}
+ 
+-	if (!list_empty(&bdi->work_list) ||
+-	    (wb_has_dirty_io(wb) && dirty_writeback_interval))
+-		queue_delayed_work(bdi_wq, &wb->dwork,
+-			msecs_to_jiffies(dirty_writeback_interval * 10));
++	if (!list_empty(&bdi->work_list))
++		mod_delayed_work(bdi_wq, &wb->dwork, 0);
++	else if (wb_has_dirty_io(wb) && dirty_writeback_interval)
++		bdi_wakeup_thread_delayed(bdi);
+ 
+ 	current->flags &= ~PF_SWAPWRITE;
+ }
+diff --git a/mm/backing-dev.c b/mm/backing-dev.c
+index ce682f7a4f29..fab8401fc54e 100644
+--- a/mm/backing-dev.c
++++ b/mm/backing-dev.c
+@@ -288,13 +288,16 @@ int bdi_has_dirty_io(struct backing_dev_info *bdi)
+  * Note, we wouldn't bother setting up the timer, but this function is on the
+  * fast-path (used by '__mark_inode_dirty()'), so we save few context switches
+  * by delaying the wake-up.
++ *
++ * We have to be careful not to postpone flush work if it is scheduled for
++ * earlier. Thus we use queue_delayed_work().
+  */
+ void bdi_wakeup_thread_delayed(struct backing_dev_info *bdi)
+ {
+ 	unsigned long timeout;
+ 
+ 	timeout = msecs_to_jiffies(dirty_writeback_interval * 10);
+-	mod_delayed_work(bdi_wq, &bdi->wb.dwork, timeout);
++	queue_delayed_work(bdi_wq, &bdi->wb.dwork, timeout);
+ }
+ 
+ /*
+-- 
+1.8.1.4
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
