@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 28FAD7F72
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 64D547F74
 	for <xfs@oss.sgi.com>; Fri, 10 Oct 2014 09:24:11 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 1841E8F8050
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 441E1304053
 	for <xfs@oss.sgi.com>; Fri, 10 Oct 2014 07:24:11 -0700 (PDT)
 Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id dgk5MuGl0vVWapnc (version=TLSv1 cipher=AES256-SHA
+	with ESMTP id vFwYum9GLTQfdWAp (version=TLSv1 cipher=AES256-SHA
 	bits=256 verify=NO) for <xfs@oss.sgi.com>;
 	Fri, 10 Oct 2014 07:24:10 -0700 (PDT)
 From: Jan Kara <jack@suse.cz>
-Subject: [PATCH] udf: Print error when inode is loaded
-Date: Fri, 10 Oct 2014 16:23:37 +0200
-Message-Id: <1412951028-4085-33-git-send-email-jack@suse.cz>
+Subject: [PATCH 2/2] ext4: Fix mmap data corruption when blocksize < pagesize
+Date: Fri, 10 Oct 2014 16:23:46 +0200
+Message-Id: <1412951028-4085-42-git-send-email-jack@suse.cz>
 In-Reply-To: <1412951028-4085-1-git-send-email-jack@suse.cz>
 References: <1412951028-4085-1-git-send-email-jack@suse.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -31,24 +31,33 @@ Sender: xfs-bounces@oss.sgi.com
 To: linux-fsdevel@vger.kernel.org
 Cc: Dave Kleikamp <shaggy@kernel.org>, jfs-discussion@lists.sourceforge.net, tytso@mit.edu, Jeff Mahoney <jeffm@suse.de>, Mark Fasheh <mfasheh@suse.com>, reiserfs-devel@vger.kernel.org, xfs@oss.sgi.com, cluster-devel@redhat.com, Joel Becker <jlbec@evilplan.org>, Jan Kara <jack@suse.cz>, linux-ext4@vger.kernel.org, Steven Whitehouse <swhiteho@redhat.com>, ocfs2-devel@oss.oracle.com, viro@zeniv.linux.org.uk
 
+Use truncate_isize_extended() when hole is being created in a file so that
+->page_mkwrite() will get called for the partial tail page if it is
+mmaped (see the first patch in the series for details).
+
 Signed-off-by: Jan Kara <jack@suse.cz>
 ---
- fs/udf/super.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ fs/ext4/inode.c | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
 
-diff --git a/fs/udf/super.c b/fs/udf/super.c
-index 5401fc33f5cc..479875155d77 100644
---- a/fs/udf/super.c
-+++ b/fs/udf/super.c
-@@ -962,7 +962,7 @@ struct inode *udf_find_metadata_inode_efe(struct super_block *sb,
- 	metadata_fe = udf_iget(sb, &addr);
+diff --git a/fs/ext4/inode.c b/fs/ext4/inode.c
+index 3aa26e9117c4..9e269489e094 100644
+--- a/fs/ext4/inode.c
++++ b/fs/ext4/inode.c
+@@ -4536,8 +4536,12 @@ int ext4_setattr(struct dentry *dentry, struct iattr *attr)
+ 				ext4_orphan_del(NULL, inode);
+ 				goto err_out;
+ 			}
+-		} else
++		} else {
++			loff_t oldsize = inode->i_size;
++
+ 			i_size_write(inode, attr->ia_size);
++			pagecache_isize_extended(inode, oldsize, inode->i_size);
++		}
  
- 	if (IS_ERR(metadata_fe)) {
--		udf_warn(sb, "metadata inode efe not found\n");
-+		udf_warn(sb, "metadata inode efe not found: %d\n", PTR_ERR(metadata_fe));
- 		return metadata_fe;
- 	}
- 	if (UDF_I(metadata_fe)->i_alloc_type != ICBTAG_FLAG_AD_SHORT) {
+ 		/*
+ 		 * Blocks are going to be removed from the inode. Wait
 -- 
 1.8.1.4
 
