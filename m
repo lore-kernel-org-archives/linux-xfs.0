@@ -1,22 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 6D2647F4E
-	for <xfs@oss.sgi.com>; Sun, 12 Oct 2014 17:48:41 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id A880C7F4E
+	for <xfs@oss.sgi.com>; Sun, 12 Oct 2014 17:51:55 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 06EEEAC004
-	for <xfs@oss.sgi.com>; Sun, 12 Oct 2014 15:48:40 -0700 (PDT)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 523C3AC005
+	for <xfs@oss.sgi.com>; Sun, 12 Oct 2014 15:51:55 -0700 (PDT)
 Received: from DUB004-OMC4S10.hotmail.com (dub004-omc4s10.hotmail.com
-	[157.55.2.85]) by cuda.sgi.com with ESMTP id v6UB8F2uumSDnz3b
+	[157.55.2.85]) by cuda.sgi.com with ESMTP id 1OCpPfMn8H3YsExQ
 	(version=TLSv1 cipher=AES256-SHA bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Sun, 12 Oct 2014 15:48:38 -0700 (PDT)
-Message-ID: <DUB113-W8015EC9E74D26138852F2FB6AF0@phx.gbl>
+	<xfs@oss.sgi.com>; Sun, 12 Oct 2014 15:51:51 -0700 (PDT)
+Message-ID: <DUB113-W2303B0C5DFF6F30A385A83B6AF0@phx.gbl>
 From: tom mason <tom_in_canada@hotmail.com>
 Subject: RE: Mount: Structure needs cleaning
-Date: Sun, 12 Oct 2014 22:48:36 +0000
-In-Reply-To: <DUB113-W9BCC0D296AF7CD5D9D02FB6AF0@phx.gbl>
+Date: Sun, 12 Oct 2014 22:51:49 +0000
+In-Reply-To: <DUB113-W8015EC9E74D26138852F2FB6AF0@phx.gbl>
 References: <1413103408756-35026.post@n7.nabble.com>,
 	<20141012142008.GB35667@bfoster.bfoster>,
-	<DUB113-W9BCC0D296AF7CD5D9D02FB6AF0@phx.gbl>
+	<DUB113-W9BCC0D296AF7CD5D9D02FB6AF0@phx.gbl>,
+	<DUB113-W8015EC9E74D26138852F2FB6AF0@phx.gbl>
 MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -26,32 +27,31 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============8571539183317979841=="
+Content-Type: multipart/mixed; boundary="===============0992010562802258848=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Brian Foster <bfoster@redhat.com>
 Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
---===============8571539183317979841==
+--===============0992010562802258848==
 Content-Type: multipart/alternative;
-	boundary="_edfca06b-45a4-450b-ab16-8ae5d896b14c_"
+	boundary="_7109ffa0-b93c-4751-8a76-8b3511522604_"
 
---_edfca06b-45a4-450b-ab16-8ae5d896b14c_
+--_7109ffa0-b93c-4751-8a76-8b3511522604_
 Content-Type: text/plain; charset="koi8-r"
 Content-Transfer-Encoding: quoted-printable
 
-ok - so I worked out & tried the xfs_repair command:
+and now xfs_check:
 
-root@ubuntu:~# xfs_repair -n /dev/sdc2
-Phase 1 - find and verify superblock...
-superblock read failed=2C offset 62448377856=2C size 131072=2C ag 2=2C rval=
- -1
-
-fatal error -- Input/output error
-
-=0A=
-=0A=
-=0A=
+root@ubuntu:~# xfs_check /dev/sdc2
+ERROR: The filesystem has valuable metadata changes in a log which needs to
+be replayed.  Mount the filesystem to replay the log=2C and unmount it befo=
+re
+re-running xfs_check.  If you are unable to mount the filesystem=2C then us=
+e
+the xfs_repair -L option to destroy the log and attempt a repair.
+Note that destroying the log may cause corruption -- please attempt a mount
+of the filesystem before doing this.
 
 
 > Date: Sun=2C 12 Oct 2014 10:20:08 -0400
@@ -215,9 +215,9 @@ Tom
 
 > > xfs@oss.sgi.com
 > > http://oss.sgi.com/mailman/listinfo/xfs
- 		 	   		   		 	   		  =
+ 		 	   		   		 	   		   		 	   		  =
 
---_edfca06b-45a4-450b-ab16-8ae5d896b14c_
+--_7109ffa0-b93c-4751-8a76-8b3511522604_
 Content-Type: text/html; charset="koi8-r"
 Content-Transfer-Encoding: quoted-printable
 
@@ -236,53 +236,47 @@ font-family:Calibri
 }
 --></style></head>
 <body class=3D'hmmessage'><div dir=3D'ltr'><font style=3D"font-size: 10pt=
-=3B" size=3D"2">ok - so I worked out &amp=3B tried the xfs_repair command:<=
-/font><font style=3D"font-size: 10pt=3B" size=3D"2"><br></font><font style=
-=3D"font-size: 10pt=3B" size=3D"2"><br></font><font style=3D"font-size: 10p=
-t=3B" size=3D"2">root@ubuntu:~# xfs_repair -n /dev/sdc2</font><font style=
-=3D"font-size: 10pt=3B" size=3D"2"><br></font><font style=3D"font-size: 10p=
-t=3B" size=3D"2">Phase 1 - find and verify superblock...</font><font style=
-=3D"font-size: 10pt=3B" size=3D"2"><br></font><font style=3D"font-size: 10p=
-t=3B" size=3D"2">superblock read failed=2C offset 62448377856=2C size 13107=
-2=2C ag 2=2C rval -1</font><font style=3D"font-size: 10pt=3B" size=3D"2"><b=
-r></font><font style=3D"font-size: 10pt=3B" size=3D"2"><br></font><font sty=
-le=3D"font-size: 10pt=3B" size=3D"2">fatal error -- Input/output error</fon=
-t><br><br><div>=0A=
-=0A=
-<style><!--=0A=
-.ExternalClass .ecxhmmessage P {=0A=
-padding:0px=3B=0A=
-}=0A=
-=0A=
-.ExternalClass body.ecxhmmessage {=0A=
-font-size:12pt=3B=0A=
-font-family:Calibri=3B=0A=
-}=0A=
-=0A=
---></style>=0A=
-<div dir=3D"ltr"><br><br><div><font style=3D"font-size:8pt=3B" size=3D"1">&=
-gt=3B Date: Sun=2C 12 Oct 2014 10:20:08 -0400</font><font style=3D"font-siz=
-e:8pt=3B" size=3D"1"><br></font><font style=3D"font-size:8pt=3B" size=3D"1"=
->&gt=3B From: bfoster@redhat.com</font><font style=3D"font-size:8pt=3B" siz=
-e=3D"1"><br></font><font style=3D"font-size:8pt=3B" size=3D"1">&gt=3B To: t=
-om_in_canada@hotmail.com</font><font style=3D"font-size:8pt=3B" size=3D"1">=
-<br></font><font style=3D"font-size:8pt=3B" size=3D"1">&gt=3B CC: xfs@oss.s=
-gi.com</font><font style=3D"font-size:8pt=3B" size=3D"1"><br></font><font s=
-tyle=3D"font-size:8pt=3B" size=3D"1">&gt=3B Subject: Re: Mount: Structure n=
-eeds cleaning</font><font style=3D"font-size:8pt=3B" size=3D"1"><br></font>=
-<font style=3D"font-size:8pt=3B" size=3D"1">&gt=3B </font><font style=3D"fo=
-nt-size:8pt=3B" size=3D"1"><br></font><font style=3D"font-size:8pt=3B" size=
-=3D"1">&gt=3B On Sun=2C Oct 12=2C 2014 at 01:43:28AM -0700=2C tommason wrot=
-e:</font><font style=3D"font-size:8pt=3B" size=3D"1"><br></font><font style=
-=3D"font-size:8pt=3B" size=3D"1">&gt=3B &gt=3B Hi=2C</font><font style=3D"f=
+=3B" size=3D"2">and now xfs_check:</font><font style=3D"font-size: 10pt=3B"=
+ size=3D"2"><br></font><font style=3D"font-size: 10pt=3B" size=3D"2"><br></=
+font><div><font style=3D"font-size: 10pt=3B" size=3D"2">root@ubuntu:~# xfs_=
+check /dev/sdc2</font><font style=3D"font-size: 10pt=3B" size=3D"2"><br></f=
+ont><font style=3D"font-size: 10pt=3B" size=3D"2">ERROR: The filesystem has=
+ valuable metadata changes in a log which needs to</font><font style=3D"fon=
+t-size: 10pt=3B" size=3D"2"><br></font><font style=3D"font-size: 10pt=3B" s=
+ize=3D"2">be replayed.&nbsp=3B Mount the filesystem to replay the log=2C an=
+d unmount it before</font><font style=3D"font-size: 10pt=3B" size=3D"2"><br=
+></font><font style=3D"font-size: 10pt=3B" size=3D"2">re-running xfs_check.=
+&nbsp=3B If you are unable to mount the filesystem=2C then use</font><font =
+style=3D"font-size: 10pt=3B" size=3D"2"><br></font><font style=3D"font-size=
+: 10pt=3B" size=3D"2">the xfs_repair -L option to destroy the log and attem=
+pt a repair.</font><font style=3D"font-size: 10pt=3B" size=3D"2"><br></font=
+><font style=3D"font-size: 10pt=3B" size=3D"2">Note that destroying the log=
+ may cause corruption -- please attempt a mount</font><font style=3D"font-s=
+ize: 10pt=3B" size=3D"2"><br></font><font style=3D"font-size: 10pt=3B" size=
+=3D"2">of the filesystem before doing this.</font><br><br><div dir=3D"ltr">=
+<div><div dir=3D"ltr"><br><div><font style=3D"font-size:8pt=3B" size=3D"1">=
+&gt=3B Date: Sun=2C 12 Oct 2014 10:20:08 -0400</font><font style=3D"font-si=
+ze:8pt=3B" size=3D"1"><br></font><font style=3D"font-size:8pt=3B" size=3D"1=
+">&gt=3B From: bfoster@redhat.com</font><font style=3D"font-size:8pt=3B" si=
+ze=3D"1"><br></font><font style=3D"font-size:8pt=3B" size=3D"1">&gt=3B To: =
+tom_in_canada@hotmail.com</font><font style=3D"font-size:8pt=3B" size=3D"1"=
+><br></font><font style=3D"font-size:8pt=3B" size=3D"1">&gt=3B CC: xfs@oss.=
+sgi.com</font><font style=3D"font-size:8pt=3B" size=3D"1"><br></font><font =
+style=3D"font-size:8pt=3B" size=3D"1">&gt=3B Subject: Re: Mount: Structure =
+needs cleaning</font><font style=3D"font-size:8pt=3B" size=3D"1"><br></font=
+><font style=3D"font-size:8pt=3B" size=3D"1">&gt=3B </font><font style=3D"f=
 ont-size:8pt=3B" size=3D"1"><br></font><font style=3D"font-size:8pt=3B" siz=
-e=3D"1">&gt=3B &gt=3B </font><font style=3D"font-size:8pt=3B" size=3D"1"><b=
-r></font><font style=3D"font-size:8pt=3B" size=3D"1">&gt=3B &gt=3B First up=
- - my knowledge of linux is pretty sparse - I've used it a few times</font>=
-<font style=3D"font-size:8pt=3B" size=3D"1"><br></font><font style=3D"font-=
-size:8pt=3B" size=3D"1">&gt=3B &gt=3B before=2C so please be gentle!</font>=
-<font style=3D"font-size:8pt=3B" size=3D"1"><br></font><font style=3D"font-=
-size:8pt=3B" size=3D"1">&gt=3B &gt=3B </font><font style=3D"font-size:8pt=
+e=3D"1">&gt=3B On Sun=2C Oct 12=2C 2014 at 01:43:28AM -0700=2C tommason wro=
+te:</font><font style=3D"font-size:8pt=3B" size=3D"1"><br></font><font styl=
+e=3D"font-size:8pt=3B" size=3D"1">&gt=3B &gt=3B Hi=2C</font><font style=3D"=
+font-size:8pt=3B" size=3D"1"><br></font><font style=3D"font-size:8pt=3B" si=
+ze=3D"1">&gt=3B &gt=3B </font><font style=3D"font-size:8pt=3B" size=3D"1"><=
+br></font><font style=3D"font-size:8pt=3B" size=3D"1">&gt=3B &gt=3B First u=
+p - my knowledge of linux is pretty sparse - I've used it a few times</font=
+><font style=3D"font-size:8pt=3B" size=3D"1"><br></font><font style=3D"font=
+-size:8pt=3B" size=3D"1">&gt=3B &gt=3B before=2C so please be gentle!</font=
+><font style=3D"font-size:8pt=3B" size=3D"1"><br></font><font style=3D"font=
+-size:8pt=3B" size=3D"1">&gt=3B &gt=3B </font><font style=3D"font-size:8pt=
 =3B" size=3D"1"><br></font><font style=3D"font-size:8pt=3B" size=3D"1">&gt=
 =3B &gt=3B I've had a neil poulton network space for some time now - it fre=
 aked out a</font><font style=3D"font-size:8pt=3B" size=3D"1"><br></font><fo=
@@ -484,13 +478,13 @@ yle=3D"font-size:8pt=3B" size=3D"1"><br></font><font style=3D"font-size:8pt=
 =3D"1">&gt=3B &gt=3B xfs@oss.sgi.com</font><font style=3D"font-size:8pt=3B"=
  size=3D"1"><br></font><font style=3D"font-size:8pt=3B" size=3D"1">&gt=3B &=
 gt=3B http://oss.sgi.com/mailman/listinfo/xfs</font><br></div> 		 	   		  <=
-/div></div> 		 	   		  </div></body>
+/div></div> 		 	   		  </div></div> 		 	   		  </div></body>
 </html>=
 
---_edfca06b-45a4-450b-ab16-8ae5d896b14c_--
+--_7109ffa0-b93c-4751-8a76-8b3511522604_--
 
 
---===============8571539183317979841==
+--===============0992010562802258848==
 Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
@@ -501,4 +495,4 @@ xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
 
---===============8571539183317979841==--
+--===============0992010562802258848==--
