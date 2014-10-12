@@ -1,22 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 0AF387F4E
-	for <xfs@oss.sgi.com>; Sun, 12 Oct 2014 09:20:13 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 77066AC003
-	for <xfs@oss.sgi.com>; Sun, 12 Oct 2014 07:20:13 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id vBLQzyPOh37CYRBd (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Sun, 12 Oct 2014 07:20:12 -0700 (PDT)
-Date: Sun, 12 Oct 2014 10:20:08 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: Mount: Structure needs cleaning
-Message-ID: <20141012142008.GB35667@bfoster.bfoster>
-References: <1413103408756-35026.post@n7.nabble.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 49DB97F4E
+	for <xfs@oss.sgi.com>; Sun, 12 Oct 2014 13:26:23 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 3862E30404E
+	for <xfs@oss.sgi.com>; Sun, 12 Oct 2014 11:26:19 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id agAmG89bvqfz7h3f for <xfs@oss.sgi.com>;
+	Sun, 12 Oct 2014 11:26:18 -0700 (PDT)
+Message-ID: <543AC7C9.5040503@sandeen.net>
+Date: Sun, 12 Oct 2014 13:26:17 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1413103408756-35026.post@n7.nabble.com>
+Subject: [PATCH] xfs: fix agno increment in xfs_inumbers() loop
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,74 +25,49 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: tommason <tom_in_canada@hotmail.com>
-Cc: xfs@oss.sgi.com
+To: xfs-oss <xfs@oss.sgi.com>, Jie Liu <jeff.liu@oracle.com>
 
-On Sun, Oct 12, 2014 at 01:43:28AM -0700, tommason wrote:
-> Hi,
-> 
-> First up - my knowledge of linux is pretty sparse - I've used it a few times
-> before, so please be gentle!
-> 
-> I've had a neil poulton network space for some time now - it freaked out a
-> while ago and I managed to rig it up to a Ubuntu liveCD via a SATA dock and
-> rescue the files.
-> 
-> This has now happened again - the drive would not get out of a cycle and was
-> not spinning properly. Bring out the dock and liveCD (this time Knoppix).
-> All good. This time however as I eagerly copied files to another drive (a
-> USB powered lacie rugged thing) and left it overnight i woke up to an error.
-> I was copying around 500GB in a few diffferent chunks. The first error it
-> reported was I think error 15? mount structure needs cleaning...
-> 
+commit c7cb51d xfs: fix error handling at xfs_inumbers
+caused a regression in xfs_inumbers, which in turn broke
+xfsdump, causing incomplete dumps.
 
-Logs? Kernel version? etc.
+The loop in xfs_inumbers() needs to fill the user-supplied
+buffers, and iterates via xfs_btree_increment, reading new
+ags as needed.
 
-http://xfs.org/index.php/XFS_FAQ#Q:_What_information_should_I_include_when_reporting_a_problem.3F
+But the first time through the loop, if xfs_btree_increment()
+succeeds, we continue, which triggers the ++agno at the bottom
+of the loop, and we skip to soon to the next ag - without
+the proper setup under next_ag to read the next ag.
 
-> I then tried with a Ubuntu liveCD - same error. This is maybe where I made a
-> bit of an error of my own. In an attempt to shake it out of it's stupor I
-> 'stupidly' plugged it into windows and opened up the disk utility (sorry I'm
-> generally mac based) and deleted in total 5 partitions (3x8mb, 1x250odd mb &
-> 1x600mbish partition) This left the partition that I assumed contained all
-> my files: a 920GB partition. Tried to look at it again on Linux & (both
-> Knoppix & Ubuntu) and the error message had changed slightly. It now reads:
-> "Error mounting /dev/sdc2 at
-> /media/ubuntu/e8b90eb2-8718-4964-939d-8a2b899b68bd: Command-line `mount -t
-> "xfs" -o "uhelper=udisks2,nodev,nosuid" "/dev/sdc2"
-> "/media/ubuntu/e8b90eb2-8718-4964-939d-8a2b899b68bd"' exited with non-zero
-> exit status 32: mount: Structure needs cleaning"
-> 
+Fix this by removing the agno increment from the loop conditional,
+and only increment agno if we have actually hit the code under
+the next_ag: target.
 
-To be clear, you've deleted partitions other than the partition of
-interest? I suppose that shouldn't effect things either way, but I'm not
-really sure what the disk utility might do. It might be worth checking
-whether 'file -s <device>' still identifies the partition as an XFS
-filesystem..?
+Cc: stable@vger.kernel.org
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
 
-Beyond that, I'd suggest to capture and post the logs of the failed
-mount and perhaps the output of 'xfs_repair -n <dev>.' This will attempt
-a dry-run (e.g., no modifications) check and repair of the filesystem.
+p.s. it's alarming that apparently no test in the dump group
+detects this problem!  I'll look into it.
 
-Brian
+So I can say that I've tested this with xfstests, but I guess
+that doesn't matter much, yet.
 
-> This drive has all my audio and video stored on it! Any help to move me
-> toward a solution would be much appreciated!
-> 
-> Thanks for your time...
-> 
-> Tom 
-> 
-> 
-> 
-> --
-> View this message in context: http://xfs.9218.n7.nabble.com/Mount-Structure-needs-cleaning-tp35026.html
-> Sent from the Xfs - General mailing list archive at Nabble.com.
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+diff --git a/fs/xfs/xfs_itable.c b/fs/xfs/xfs_itable.c
+index f71be9c..f1deb96 100644
+--- a/fs/xfs/xfs_itable.c
++++ b/fs/xfs/xfs_itable.c
+@@ -639,7 +639,8 @@ next_ag:
+ 		xfs_buf_relse(agbp);
+ 		agbp = NULL;
+ 		agino = 0;
+-	} while (++agno < mp->m_sb.sb_agcount);
++		agno++;
++	} while (agno < mp->m_sb.sb_agcount);
+ 
+ 	if (!error) {
+ 		if (bufidx) {
 
 _______________________________________________
 xfs mailing list
