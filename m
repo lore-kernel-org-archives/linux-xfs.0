@@ -1,18 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 49DB97F4E
-	for <xfs@oss.sgi.com>; Sun, 12 Oct 2014 13:26:23 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 3862E30404E
-	for <xfs@oss.sgi.com>; Sun, 12 Oct 2014 11:26:19 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id agAmG89bvqfz7h3f for <xfs@oss.sgi.com>;
-	Sun, 12 Oct 2014 11:26:18 -0700 (PDT)
-Message-ID: <543AC7C9.5040503@sandeen.net>
-Date: Sun, 12 Oct 2014 13:26:17 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 256357F4E
+	for <xfs@oss.sgi.com>; Sun, 12 Oct 2014 13:54:24 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id E9F1E8F8049
+	for <xfs@oss.sgi.com>; Sun, 12 Oct 2014 11:54:20 -0700 (PDT)
+Received: from ZenIV.linux.org.uk (zeniv.linux.org.uk [195.92.253.2]) by
+	cuda.sgi.com with ESMTP id abE3onNqQnXqlBIK (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Sun, 12 Oct 2014 11:54:15 -0700 (PDT)
+Date: Sun, 12 Oct 2014 19:53:16 +0100
+From: Al Viro <viro@ZenIV.linux.org.uk>
+Subject: Re: [PATCH 0/12 v2] Moving i_dquot out of struct inode
+Message-ID: <20141012185316.GQ7996@ZenIV.linux.org.uk>
+References: <1412952910-7142-1-git-send-email-jack@suse.cz>
+	<20141011133452.GA29004@infradead.org>
 MIME-Version: 1.0
-Subject: [PATCH] xfs: fix agno increment in xfs_inumbers() loop
+Content-Disposition: inline
+In-Reply-To: <20141011133452.GA29004@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,49 +30,20 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs-oss <xfs@oss.sgi.com>, Jie Liu <jeff.liu@oracle.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Dave Kleikamp <shaggy@kernel.org>, jfs-discussion@lists.sourceforge.net, Jan Kara <jack@suse.cz>, Jeff Mahoney <jeffm@suse.de>, Mark Fasheh <mfasheh@suse.com>, reiserfs-devel@vger.kernel.org, xfs@oss.sgi.com, cluster-devel@redhat.com, Joel Becker <jlbec@evilplan.org>, linux-fsdevel@vger.kernel.org, tytso@mit.edu, linux-ext4@vger.kernel.org, Steven Whitehouse <swhiteho@redhat.com>, ocfs2-devel@oss.oracle.com
 
-commit c7cb51d xfs: fix error handling at xfs_inumbers
-caused a regression in xfs_inumbers, which in turn broke
-xfsdump, causing incomplete dumps.
+On Sat, Oct 11, 2014 at 06:34:52AM -0700, Christoph Hellwig wrote:
+> I still very much disagree with the s_inode_fields indirection.  Please
+> find a patch below to remove it, and use a get_dquots super_block
+> operation instead.  This leads to less and better readable code,
+> and serves 4 bytes in every inode in the system.  Additionally the
+> indirection could easily be optimized away by directly passing the
+> dquot array in various functions, but for now I'd like to keep it
+> simple.
 
-The loop in xfs_inumbers() needs to fill the user-supplied
-buffers, and iterates via xfs_btree_increment, reading new
-ags as needed.
-
-But the first time through the loop, if xfs_btree_increment()
-succeeds, we continue, which triggers the ++agno at the bottom
-of the loop, and we skip to soon to the next ag - without
-the proper setup under next_ag to read the next ag.
-
-Fix this by removing the agno increment from the loop conditional,
-and only increment agno if we have actually hit the code under
-the next_ag: target.
-
-Cc: stable@vger.kernel.org
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
-
-p.s. it's alarming that apparently no test in the dump group
-detects this problem!  I'll look into it.
-
-So I can say that I've tested this with xfstests, but I guess
-that doesn't matter much, yet.
-
-diff --git a/fs/xfs/xfs_itable.c b/fs/xfs/xfs_itable.c
-index f71be9c..f1deb96 100644
---- a/fs/xfs/xfs_itable.c
-+++ b/fs/xfs/xfs_itable.c
-@@ -639,7 +639,8 @@ next_ag:
- 		xfs_buf_relse(agbp);
- 		agbp = NULL;
- 		agino = 0;
--	} while (++agno < mp->m_sb.sb_agcount);
-+		agno++;
-+	} while (agno < mp->m_sb.sb_agcount);
- 
- 	if (!error) {
- 		if (bufidx) {
+Indeed.  This "array of offsets" approach is asking for trouble.  Please,
+don't go there - playing that way with type safety is a bad idea.
 
 _______________________________________________
 xfs mailing list
