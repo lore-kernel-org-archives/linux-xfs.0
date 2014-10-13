@@ -1,24 +1,32 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 7671E7F4E
-	for <xfs@oss.sgi.com>; Mon, 13 Oct 2014 04:48:24 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 5B3808F804B
-	for <xfs@oss.sgi.com>; Mon, 13 Oct 2014 02:48:21 -0700 (PDT)
-Received: from mail-vc0-f169.google.com (mail-vc0-f169.google.com
-	[209.85.220.169]) by cuda.sgi.com with ESMTP id
-	BKkaRsRaiKxV7JhS (version=TLSv1 cipher=RC4-SHA bits=128
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id BC9487F4E
+	for <xfs@oss.sgi.com>; Mon, 13 Oct 2014 05:05:59 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 935A6304059
+	for <xfs@oss.sgi.com>; Mon, 13 Oct 2014 03:05:56 -0700 (PDT)
+Received: from st11p01mm-asmtp002.mac.com (st11p01mm-asmtp002.mac.com
+	[17.172.204.237]) by cuda.sgi.com with ESMTP id
+	3IRZZxkYyjaLsYCL (version=TLSv1 cipher=RC4-MD5 bits=128
 	verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 13 Oct 2014 02:48:19 -0700 (PDT)
-Received: by mail-vc0-f169.google.com with SMTP id hy4so5583865vcb.28
-	for <xfs@oss.sgi.com>; Mon, 13 Oct 2014 02:48:18 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20141013013715.GD4503@dastard>
-References: <20141013013715.GD4503@dastard>
-Date: Mon, 13 Oct 2014 05:48:18 -0400
-Message-ID: <CA+55aFwcE=OX7FvckrsZRopCAxw0QnEu5iQUEM5JBoDVzg7uEA@mail.gmail.com>
-Subject: Re: [GIT PULL] xfs: updates for 3.18-rc1
-From: Linus Torvalds <torvalds@linux-foundation.org>
+	Mon, 13 Oct 2014 03:05:53 -0700 (PDT)
+Received: from [192.168.142.67] (unknown [82.71.189.231])
+	by st11p01mm-asmtp002.mac.com
+	(Oracle Communications Messaging Server 7u4-27.10(7.0.4.27.9) 64bit
+	(built Jun
+	6 2014)) with ESMTPSA id <0NDD004OUO1PQM50@st11p01mm-asmtp002.mac.com>
+	for xfs@oss.sgi.com; Mon, 13 Oct 2014 10:05:52 +0000 (GMT)
+References: <1413103408756-35026.post@n7.nabble.com>
+	<20141012142008.GB35667@bfoster.bfoster>
+	<DUB113-W9BCC0D296AF7CD5D9D02FB6AF0@phx.gbl>
+	<DUB113-W8015EC9E74D26138852F2FB6AF0@phx.gbl>
+	<20141012231001.GC5267@dastard>
+In-reply-to: <20141012231001.GC5267@dastard>
+MIME-version: 1.0 (1.0)
+Message-id: <A78F010F-2624-465E-8D16-0D89D39FD093@me.com>
+From: Tom Mason <tom_mason@me.com>
+Subject: Re: Mount: Structure needs cleaning
+Date: Mon, 13 Oct 2014 11:05:49 +0100
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,70 +40,102 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com
+Cc: Brian Foster <bfoster@redhat.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-On Sun, Oct 12, 2014 at 9:37 PM, Dave Chinner <david@fromorbit.com> wrote:
->
-> i.e. I have generated this pull-req from the base tree I've been working
-> on (3.17-rc2) but there have already been commits merged into a more
-> recent upstream tree (3.17-rc4) in this tree. When I generate the
-> pull request from the underlying 3.17-rc2 branch, it includes all
-> those commits, both in the summary and the diffstat. If I base the
-> pull request off 3.17, the base commit is the last one that was
-> merged into your tree, and the diffstat and commit list reflect
-> that.
 
-That's fine, and works for me too. This is normal and expected for
-stuff that has gotten into my tree other ways (ie bugfixes that were
-cherrypicked to be backported from development trees etc).  I'm used
-to it, and while I hope people minimize it (not only because of
-multiple commits showing up with the same patch, but because it can
-easily cause stupid merge conflicts because the development tree then
-made further changes on top of the same patch), it's also very much
-considered "normal development".
 
-That said, when there are actual *common* commits as in your case (as
-opposed to cherrypicked commits that generate duplicate commits with
-the same patch), I would generally suggest you just let "git
-merge-base" figure it all out from my latest tree. That way it takes
-into account the stuff that you sent earlier on its own.
 
-But this is not a big deal.
 
-> So my question is this: Which tree should I generate the pull
-> request from? I flipped a coin an generated this one from 3.17-rc2,
-> but if you'd prefer to see just the commits/diffstat that aren't in
-> your tree, let me know and I'll do it differently next time....
+> On 13 Oct 2014, at 00:10, Dave Chinner <david@fromorbit.com> wrote:
+> 
+> [ please don't top post. ]
+> 
+> On Sun, Oct 12, 2014 at 10:48:36PM +0000, tom mason wrote:
+>>> Date: Sun, 12 Oct 2014 10:20:08 -0400
+>>> From: bfoster@redhat.com
+>>> To: tom_in_canada@hotmail.com
+>>> CC: xfs@oss.sgi.com
+>>> Subject: Re: Mount: Structure needs cleaning
+>>> 
+>>>> On Sun, Oct 12, 2014 at 01:43:28AM -0700, tommason wrote:
+>>>> Hi,
+>>>> 
+>>>> First up - my knowledge of linux is pretty sparse - I've used it a few times
+>>>> before, so please be gentle!
+>>>> 
+>>>> I've had a neil poulton network space for some time now - it freaked out a
+>>>> while ago and I managed to rig it up to a Ubuntu liveCD via a SATA dock and
+>>>> rescue the files.
+>>>> 
+>>>> This has now happened again - the drive would not get out of a cycle and was
+>>>> not spinning properly. Bring out the dock and liveCD (this time Knoppix).
+>>>> All good. This time however as I eagerly copied files to another drive (a
+>>>> USB powered lacie rugged thing) and left it overnight i woke up to an error.
+>>>> I was copying around 500GB in a few diffferent chunks. The first error it
+>>>> reported was I think error 15? mount structure needs cleaning...
+>> 
+>> 
+>>> Logs? Kernel version? etc.
+>> 
+>> Hey Brian,
+>> Apologies! I'm pretty new to all this so you'll have to walk me through it if possible - how do I check the logs?
+>> 
+>> - Linux ubuntu 3.13.0-32-generic #57-Ubuntu SMP Tue Jul 15 03:51:08 UTC 2014 x86_64 x86_64 x86_64 GNU/Linux
+>> - xfs_repair version 3.1.9
+>> 
+>> ok - so I worked out & tried the xfs_repair command:
+>> 
+>> root@ubuntu:~# xfs_repair -n /dev/sdc2
+>> Phase 1 - find and verify superblock...
+>> superblock read failed, offset 62448377856, size 131072, ag 2, rval -1
+>> 
+>> fatal error -- Input/output error
+> 
+> Which means the filesystem tried to read the offset at 62GB and the
+> underlying device failed it with EIO. That's not an XFS failure.
+> What error is there in dmesg when you run that xfs_repair command?
 
-Normally, I'd suggest the easiest way to handle things is to have a
-"linus" branch that tracks my upstream, and then just generate the
-pull request off that. Git will figure out the latest merge base and
-just do the right thing, and you don't need to really think about
-where you forked things off, and which parts you have already sent to
-me.
+What's EIO?
+'Error in dmesg' How would I report this info to you? 
 
-As mentioned, even then the diffstat doesn't always end up being
-exactly right, because the history with partially merged branches, and
-with potential cherry-picked commits. So I am not surprised or upset
-if the diffstat doesn't always match, it happens quite commonly. I go
-on a rant when that i sdue to bad development practices, but I don't
-see anything like that in your tree.
 
-Some people avoid this by actually generating a test-merge (to warn me
-about upcoming conflicts etc), and then generate the diffstat from
-that test merge instead of just using the plain "git diff" in the
-git-pull-request helper scripts. Whatever works. This is not a huge
-deal, exactly because it's "normal development" (unlike the
-back-merges issue).
 
-And in this case, it looks like you don't even have cherry-picks, but
-just shared common branches, some of which you sent earlier. It looks
-like the diffstat if you just use my current tree as the other point
-of the git merge-base is correct, although I haven't actually done the
-merge itself yet (still waiting for the build for the previous merge
-to finish).
 
-                Linus
+
+> 
+>>> http://xfs.org/index.php/XFS_FAQ#Q:_What_information_should_I_include_when_reporting_a_problem.3F
+> 
+> This asks you to post the contents of /proc/partitions, which is
+> what the kernel thinks are the partition sizes.
+
+How do I do this?
+
+
+> 
+>> Yes it's a NAS drive and so I assume had some kind of proprietary
+>> OS on the other partitions (this is where i might have messed up
+>> by deleting?!) I'm pretty sure that the drive in bold below (sdc2)
+>> is the one I'm after which is xfs...
+> 
+> Ummm, exactly what are you trying to do with this drive/filesystem?
+> What device did the drive come from in the first place?
+
+It's a lacie 'Neil poulton' network space1 1tb NAS drive (see first paragraph of post) - it recently stopped working and was stuck in a 'spin cycle' - it contains my music and video backups. I'm trying to recover the files...
+
+Cheers,
+
+Tom
+
+
+
+> 
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+> 
 
 _______________________________________________
 xfs mailing list
