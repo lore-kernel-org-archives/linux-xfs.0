@@ -1,30 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 3BAE17F4E
-	for <xfs@oss.sgi.com>; Mon, 13 Oct 2014 17:38:42 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 0C7AD8F8054
-	for <xfs@oss.sgi.com>; Mon, 13 Oct 2014 15:38:41 -0700 (PDT)
-Received: from st11p01mm-asmtp002.mac.com (st11p01mm-asmtp002.mac.com
-	[17.172.204.237]) by cuda.sgi.com with ESMTP id
-	S9lW2FGCnCfnDOXy (version=TLSv1 cipher=RC4-MD5 bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 13 Oct 2014 15:38:40 -0700 (PDT)
-Received: from [192.168.1.75]
-	(host86-134-5-249.range86-134.btcentralplus.com [86.134.5.249])
-	by st11p01mm-asmtp002.mac.com
-	(Oracle Communications Messaging Server 7u4-27.10(7.0.4.27.9) 64bit
-	(built Jun
-	6 2014)) with ESMTPSA id <0NDE008CKMWA4230@st11p01mm-asmtp002.mac.com>
-	for xfs@oss.sgi.com; Mon, 13 Oct 2014 22:38:40 +0000 (GMT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 695117F4E
+	for <xfs@oss.sgi.com>; Mon, 13 Oct 2014 18:44:55 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id EBE05AC00D
+	for <xfs@oss.sgi.com>; Mon, 13 Oct 2014 16:44:51 -0700 (PDT)
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	d87OAQsaxlpDypvC for <xfs@oss.sgi.com>;
+	Mon, 13 Oct 2014 16:44:49 -0700 (PDT)
+Date: Tue, 14 Oct 2014 10:44:46 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: Mount: Structure needs cleaning
+Message-ID: <20141013234446.GE5267@dastard>
 References: <4ddef393-ad9e-49a1-80d7-9c29bcd74c8f@me.com>
 	<20141013220940.GE17506@dastard>
-MIME-version: 1.0 (1.0)
-In-reply-to: <20141013220940.GE17506@dastard>
-Message-id: <EC9978C1-65B4-48B8-9C3D-980341A752E8@me.com>
-From: Tom Mason <tom_mason@me.com>
-Subject: Re: Mount: Structure needs cleaning
-Date: Mon, 13 Oct 2014 23:38:34 +0100
+	<A3692196-7EEC-4D6D-A6C9-F39A209A26E3@me.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <A3692196-7EEC-4D6D-A6C9-F39A209A26E3@me.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,95 +27,27 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
+To: Tom Mason <tom_mason@me.com>
 Cc: Brian Foster <bfoster@redhat.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-CgoKCj4gT24gMTMgT2N0IDIwMTQsIGF0IDIzOjA5LCBEYXZlIENoaW5uZXIgPGRhdmlkQGZyb21v
-cmJpdC5jb20+IHdyb3RlOgo+IAo+PiBPbiBNb24sIE9jdCAxMywgMjAxNCBhdCAwODozMzo1N1BN
-ICswMDAwLCBUb20gTWFzb24gd3JvdGU6Cj4+IAo+PiAKPj4+IE9uIE9jdCAxMywgMjAxNCwgYXQg
-MTE6MTkgQU0sIEVtbWFudWVsIEZsb3JhYyA8ZWZsb3JhY0BpbnRlbGxpcXVlLmNvbT4gd3JvdGU6
-Cj4+PiAKPj4+IExlIE1vbiwgMTMgT2N0IDIwMTQgMTE6MDU6NDkgKzAxMDAKPj4+IFRvbSBNYXNv
-biA8dG9tX21hc29uQG1lLmNvbSAgICA+IMOpY3JpdmFpdDoKPj4+IAo+Pj4+PiBXaGljaCBtZWFu
-cyB0aGUgZmlsZXN5c3RlbSB0cmllZCB0byByZWFkIHRoZSBvZmZzZXQgYXQgNjJHQiBhbmQgdGhl
-Cj4+Pj4+IHVuZGVybHlpbmcgZGV2aWNlIGZhaWxlZCBpdCB3aXRoIEVJTy4gVGhhdCdzIG5vdCBh
-biBYRlMgZmFpbHVyZS4KPj4+Pj4gV2hhdCBlcnJvciBpcyB0aGVyZSBpbiBkbWVzZyB3aGVuIHlv
-dSBydW4gdGhhdCB4ZnNfcmVwYWlyIGNvbW1hbmQ/Cj4+Pj4gCj4+Pj4gV2hhdCdzIEVJTz8KPj4+
-PiAnRXJyb3IgaW4gZG1lc2cnIEhvdyB3b3VsZCBJIHJlcG9ydCB0aGlzIGluZm8gdG8geW91Pwo+
-IC4uLi4KPj4gWyAgODYyLjQ1NjA2M10gdXNiIDEtMzogbmV3IGhpZ2gtc3BlZWQgVVNCIGRldmlj
-ZSBudW1iZXIgNCB1c2luZyBlaGNpLXBjaQo+PiBbICA4NjIuNTkxNTk1XSB1c2IgMS0zOiBOZXcg
-VVNCIGRldmljZSBmb3VuZCwgaWRWZW5kb3I9MWJjZiwgaWRQcm9kdWN0PTBjMzEKPj4gWyAgODYy
-LjU5MTYwMV0gdXNiIDEtMzogTmV3IFVTQiBkZXZpY2Ugc3RyaW5nczogTWZyPTIsIFByb2R1Y3Q9
-MywgU2VyaWFsTnVtYmVyPTEKPj4gWyAgODYyLjU5MTYwNF0gdXNiIDEtMzogUHJvZHVjdDogVVNC
-IHRvIFNlcmlhbC1BVEEgYnJpZGdlCj4+IFsgIDg2Mi41OTE2MDhdIHVzYiAxLTM6IE1hbnVmYWN0
-dXJlcjogU3VucGx1cyBJbm5vdmF0aW9uIFRlY2hub2xvZ3kuCj4+IFsgIDg2Mi41OTE2MTFdIHVz
-YiAxLTM6IFNlcmlhbE51bWJlcjogRkFGRkZGRjBGREYxM0ZGMUJGOTAxMzA1Cj4+IFsgIDg2NC42
-ODM0NjBdIHVzYi1zdG9yYWdlIDEtMzoxLjA6IFVTQiBNYXNzIFN0b3JhZ2UgZGV2aWNlIGRldGVj
-dGVkCj4+IFsgIDg2NC42ODM2MzhdIHNjc2k2IDogdXNiLXN0b3JhZ2UgMS0zOjEuMAo+PiBbICA4
-NjQuNjgzNzA4XSB1c2Jjb3JlOiByZWdpc3RlcmVkIG5ldyBpbnRlcmZhY2UgZHJpdmVyIHVzYi1z
-dG9yYWdlCj4+IFsgIDg2NS42OTAyMzVdIHNjc2kgNjowOjA6MDogRGlyZWN0LUFjY2VzcyAgICAg
-U0FNU1VORyAgSEQxMDNVSiAgICAgICAgICAgICAgIFBROiAwIEFOU0k6IDQKPj4gWyAgODY1LjY5
-MDQ2NF0gc2QgNjowOjA6MDogQXR0YWNoZWQgc2NzaSBnZW5lcmljIHNnMiB0eXBlIDAKPj4gWyAg
-ODY1LjY5NDYxOV0gc2QgNjowOjA6MDogW3NkYl0gMTk1MzUyNTE2OCA1MTItYnl0ZSBsb2dpY2Fs
-IGJsb2NrczogKDEuMDAgVEIvOTMxIEdpQikKPj4gWyAgODY1LjcwMDk3MF0gc2QgNjowOjA6MDog
-W3NkYl0gV3JpdGUgUHJvdGVjdCBpcyBvZmYKPj4gWyAgODY1LjcwMDk3M10gc2QgNjowOjA6MDog
-W3NkYl0gTW9kZSBTZW5zZTogMzggMDAgMDAgMDAKPj4gWyAgODY1LjcwNzM1MF0gc2QgNjowOjA6
-MDogW3NkYl0gTm8gQ2FjaGluZyBtb2RlIHBhZ2UgZm91bmQKPj4gWyAgODY1LjcwNzM1Ml0gc2Qg
-NjowOjA6MDogW3NkYl0gQXNzdW1pbmcgZHJpdmUgY2FjaGU6IHdyaXRlIHRocm91Z2gKPj4gWyAg
-ODY1LjcyMTU5Ml0gc2QgNjowOjA6MDogW3NkYl0gTm8gQ2FjaGluZyBtb2RlIHBhZ2UgZm91bmQK
-Pj4gWyAgODY1LjcyMTU5NV0gc2QgNjowOjA6MDogW3NkYl0gQXNzdW1pbmcgZHJpdmUgY2FjaGU6
-IHdyaXRlIHRocm91Z2gKPj4gWyAgODY1Ljc0MTM0M10gIHNkYjogc2RiMSA8ID4gc2RiMgo+PiBb
-ICA4NjUuNzgwODUyXSBzZCA2OjA6MDowOiBbc2RiXSBObyBDYWNoaW5nIG1vZGUgcGFnZSBmb3Vu
-ZAo+PiBbICA4NjUuNzgwODU1XSBzZCA2OjA6MDowOiBbc2RiXSBBc3N1bWluZyBkcml2ZSBjYWNo
-ZTogd3JpdGUgdGhyb3VnaAo+PiBbICA4NjUuNzgwODU3XSBzZCA2OjA6MDowOiBbc2RiXSBBdHRh
-Y2hlZCBTQ1NJIGRpc2sKPiAKPiBEZXZpY2UgcGx1Z2dlZCBpbi4uLi4KPiAKPj4gWyAgODY5LjU5
-NDA2Nl0gU0dJIFhGUyB3aXRoIEFDTHMsIHNlY3VyaXR5IGF0dHJpYnV0ZXMsIHJlYWx0aW1lLCBs
-YXJnZSBibG9jay9pbm9kZSBudW1iZXJzLCBubyBkZWJ1ZyBlbmFibGVkCj4+IFsgIDg2OS42MDky
-MjhdIFhGUyAoc2RiMik6IE1vdW50aW5nIEZpbGVzeXN0ZW0KPj4gWyAgODY5LjY4NzIyMF0gWEZT
-IChzZGIyKTogSW50ZXJuYWwgZXJyb3IgeGxvZ19jbGVhcl9zdGFsZV9ibG9ja3MoMikgYXQgbGlu
-ZSAxMzY4IG9mIGZpbGUgL2J1aWxkL2J1aWxkZC9saW51eC0zLjEzLjAvZnMveGZzL3hmc19sb2df
-cmVjb3Zlci5jLiAgQ2FsbGVyIDB4ZmZmZmZmZmZhMDdhODk1MQo+IC4uLi4uCj4+IFsgIDg2OS42
-ODc0NDJdIFhGUyAoc2RiMik6IGZhaWxlZCB0byBsb2NhdGUgbG9nIHRhaWwKPj4gWyAgODY5LjY4
-NzQ0NF0gWEZTIChzZGIyKTogbG9nIG1vdW50L3JlY292ZXJ5IGZhaWxlZDogZXJyb3IgMTE3Cj4+
-IFsgIDg2OS42ODc0ODZdIFhGUyAoc2RiMik6IGxvZyBtb3VudCBmYWlsZWQKPiAKPiBBbmQgdGhh
-dCBpcyBYRlMgdGVsbGluZyB1cyB0aGF0IHRoZSBsb2cgaXMgY29ycnVwdCBhbmQgY2FuJ3QgYmUK
-PiByZWNvdmVyZWQuCj4gCj4+IFsgMTQwNC40NjA3NDVdIHNkIDY6MDowOjA6IFtzZGJdIFVuaGFu
-ZGxlZCBzZW5zZSBjb2RlCj4+IFsgMTQwNC40NjA3NTFdIHNkIDY6MDowOjA6IFtzZGJdIFsgMTQw
-NC40NjA3NTNdIFJlc3VsdDoKPj4gaG9zdGJ5dGU9RElEX09LIGRyaXZlcmJ5dGU9RFJJVkVSX1NF
-TlNFCj4+IFsgMTQwNC40NjA3NTZdIHNkIDY6MDowOjA6IFtzZGJdIFsgMTQwNC40NjA3NThdIFNl
-bnNlIEtleSA6IE1lZGl1bQo+PiBFcnJvciBbY3VycmVudF0KPj4gWyAxNDA0LjQ2MDc2M10gc2Qg
-NjowOjA6MDogW3NkYl0gWyAxNDA0LjQ2MDc2Nl0gQWRkLiBTZW5zZToKPj4gVW5yZWNvdmVyZWQg
-cmVhZCBlcnJvcgo+PiBbIDE0MDQuNDYwNzY5XSBzZCA2OjA6MDowOiBbc2RiXSBDREI6Cj4+IFsg
-MTQwNC40NjA3NzFdIFJlYWQoMTApOiAyOCAwMCAwNyA2MyBiZiA4ZCAwMCAwMCBlYiAwMAo+PiBb
-IDE0MDQuNDYwNzgxXSBlbmRfcmVxdWVzdDogY3JpdGljYWwgbWVkaXVtIGVycm9yLCBkZXYgc2Ri
-LCBzZWN0b3IgMTIzOTc3NjEzCj4+IFsgMTQ4OS41MDc3MjddIHNkIDY6MDowOjA6IFtzZGJdIFVu
-aGFuZGxlZCBzZW5zZSBjb2RlCj4+IFsgMTQ4OS41MDc3MzRdIHNkIDY6MDowOjA6IFtzZGJdIFsg
-MTQ4OS41MDc3MzZdIFJlc3VsdDoKPj4gaG9zdGJ5dGU9RElEX09LIGRyaXZlcmJ5dGU9RFJJVkVS
-X1NFTlNFCj4+IFsgMTQ4OS41MDc3MzldIHNkIDY6MDowOjA6IFtzZGJdIFsgMTQ4OS41MDc3NDFd
-IFNlbnNlIEtleSA6IE1lZGl1bQo+PiBFcnJvciBbY3VycmVudF0KPj4gWyAxNDg5LjUwNzc0Nl0g
-c2QgNjowOjA6MDogW3NkYl0gWyAxNDg5LjUwNzc0OV0gQWRkLiBTZW5zZToKPj4gVW5yZWNvdmVy
-ZWQgcmVhZCBlcnJvcgo+PiBbIDE0ODkuNTA3NzUyXSBzZCA2OjA6MDowOiBbc2RiXSBDREI6Cj4+
-IFsgMTQ4OS41MDc3NTRdIFJlYWQoMTApOiAyOCAwMCAwNyA2MyBiZiA4ZCAwMCAwMCBlYiAwMAo+
-PiBbIDE0ODkuNTA3NzY5XSBlbmRfcmVxdWVzdDogY3JpdGljYWwgbWVkaXVtIGVycm9yLCBkZXYg
-c2RiLCBzZWN0b3IgMTIzOTc3NjEzCj4gCj4gQW5kIHRoYXQgaXMgd2hlbiB5b3UgcmFuIHhmc19y
-ZXBhaXIgMTAgbWludXRlcyBsYXRlcj8gVEhvc2UgYXJlIElPCj4gZXJyb3JzLCBhbmQgdGhlICJV
-bnJlY292ZXJlZCByZWFkIGVycm9yIiBhbmQgImNyaXRpY2FsIG1lZGl1bSBlcnJvciIKPiBtZXNz
-YWdlcyBpbmRpY2F0ZSB0aGF0IHRoZSBkcml2ZSBoYXMgbG9zdCB0aGUgZGF0YSBpbiB0aG9zZSBz
-ZWN0b3JzCj4gcGVybWFuZW50bHkuIGkuZS4gdGhlIGRpc2sgaGFzIHBoeXNpY2FsbHkgZmFpbGVk
-IGFuZCBpdCBuZWVkcyB0byBiZQo+IHJlcGxhY2VkLiBBcyBFbW1hbnVlbCBoYXMgYWxyZWFkeSBt
-ZW50aW9uZWQsIHRoZSBiZXN0IHlvdSBjYW4KPiBwcm9iYWJseSBkbyBhdCB0aGlzIHBvaW50IG1v
-dW50IHRoZSBmaWxlc3lzdGVtICItbyBybyxub3JlY292ZXIiIGFuZAo+IGNvcHkgZXZlcnl0aGlu
-ZyB5b3UgY2FuIG9mZiBvbnRvIGEgbmV3IGRyaXZlLi4uLgo+IAo+IENoZWVycywKPiAKPiBEYXZl
-Lgo+IC0tIAo+IERhdmUgQ2hpbm5lcgo+IGRhdmlkQGZyb21vcmJpdC5jb20KQnR3IC0gYmVmb3Jl
-IEkgZ2V0IHJpZCBvZiB0aGlzIG9sZCBzYW1zdW5nIDF0YiBkcml2ZSwgdGhlIGZvbGRlcidzIHBy
-b3BlcnRpZXMgaW4gdGhlIGZhaWxlZCBkcml2ZSBhY3R1YWxseSByZXBvcnQgYSBsb3QgaGlnaGVy
-IGZvciBmaWxlIG51bWJlcnMgYW5kIHNpemVzIHRoYW4gZXZlbnR1YWxseSBnZXQgY29waWVkIC0g
-aXQgcmVwb3J0czoKIkVycm9yIHdoaWxlIGNvcHlpbmcKVGhlcmUgd2FzIGFuIGVycm9yIGdldHRp
-bmcgaW5mb3JtYXRpb24gYWJvdXQgdGhlIGZpbGVzIGluIHRoZSBmb2xkZXIgJ3h4eHh4JyBubyBk
-YXRhIGF2YWlsYWJsZSIKLi4uaXMgdGhlcmUgYSB3YXkgYXJvdW5kIHRoaXMgb3IgaXMgdGhpcyBt
-eSBsb3N0IGRhdGE/Cl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9t
-YWlsbWFuL2xpc3RpbmZvL3hmcwo=
+On Mon, Oct 13, 2014 at 11:25:47PM +0100, Tom Mason wrote:
+> Noob question: Could this have occurred due to me copying too many
+> differing folders all 100gb+ when I first mounted the drive
+> successfully in knoppix? Or was this drive just going to go
+> anyway? 
+
+The drive is dying - it's not related to anything you did.
+
+-Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
