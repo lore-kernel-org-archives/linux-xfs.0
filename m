@@ -1,30 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 2EC717F4E
-	for <xfs@oss.sgi.com>; Mon, 13 Oct 2014 17:26:00 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 3BAE17F4E
+	for <xfs@oss.sgi.com>; Mon, 13 Oct 2014 17:38:42 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id C0D90AC00C
-	for <xfs@oss.sgi.com>; Mon, 13 Oct 2014 15:25:56 -0700 (PDT)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 0C7AD8F8054
+	for <xfs@oss.sgi.com>; Mon, 13 Oct 2014 15:38:41 -0700 (PDT)
 Received: from st11p01mm-asmtp002.mac.com (st11p01mm-asmtp002.mac.com
 	[17.172.204.237]) by cuda.sgi.com with ESMTP id
-	MlfzlTQFqVNCeCCn (version=TLSv1 cipher=RC4-MD5 bits=128
+	S9lW2FGCnCfnDOXy (version=TLSv1 cipher=RC4-MD5 bits=128
 	verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 13 Oct 2014 15:25:52 -0700 (PDT)
+	Mon, 13 Oct 2014 15:38:40 -0700 (PDT)
 Received: from [192.168.1.75]
 	(host86-134-5-249.range86-134.btcentralplus.com [86.134.5.249])
 	by st11p01mm-asmtp002.mac.com
 	(Oracle Communications Messaging Server 7u4-27.10(7.0.4.27.9) 64bit
 	(built Jun
-	6 2014)) with ESMTPSA id <0NDE0019YMB012B0@st11p01mm-asmtp002.mac.com>
-	for xfs@oss.sgi.com; Mon, 13 Oct 2014 22:25:52 +0000 (GMT)
+	6 2014)) with ESMTPSA id <0NDE008CKMWA4230@st11p01mm-asmtp002.mac.com>
+	for xfs@oss.sgi.com; Mon, 13 Oct 2014 22:38:40 +0000 (GMT)
 References: <4ddef393-ad9e-49a1-80d7-9c29bcd74c8f@me.com>
 	<20141013220940.GE17506@dastard>
 MIME-version: 1.0 (1.0)
 In-reply-to: <20141013220940.GE17506@dastard>
-Message-id: <A3692196-7EEC-4D6D-A6C9-F39A209A26E3@me.com>
+Message-id: <EC9978C1-65B4-48B8-9C3D-980341A752E8@me.com>
 From: Tom Mason <tom_mason@me.com>
 Subject: Re: Mount: Structure needs cleaning
-Date: Mon, 13 Oct 2014 23:25:47 +0100
+Date: Mon, 13 Oct 2014 23:38:34 +0100
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -115,12 +115,13 @@ IGFuZCBpdCBuZWVkcyB0byBiZQo+IHJlcGxhY2VkLiBBcyBFbW1hbnVlbCBoYXMgYWxyZWFkeSBt
 ZW50aW9uZWQsIHRoZSBiZXN0IHlvdSBjYW4KPiBwcm9iYWJseSBkbyBhdCB0aGlzIHBvaW50IG1v
 dW50IHRoZSBmaWxlc3lzdGVtICItbyBybyxub3JlY292ZXIiIGFuZAo+IGNvcHkgZXZlcnl0aGlu
 ZyB5b3UgY2FuIG9mZiBvbnRvIGEgbmV3IGRyaXZlLi4uLgo+IAo+IENoZWVycywKPiAKPiBEYXZl
-CgpUaGFua3MgZ3V5cyAtIG11Y2ggYXBwcmVjaWF0ZWQsIG1hbmFnZWQgdG8gbW91bnQgdGhlIGRy
-aXZlIGFnYWluIGFuZCBoYXZlIHNhdmVkIHNvbWUgbW9yZSBmaWxlcyBhbHRob3VnaCBJIGhhdmUg
-bG9zdCBhIGxvdCA6ICggCgpOb29iIHF1ZXN0aW9uOiBDb3VsZCB0aGlzIGhhdmUgb2NjdXJyZWQg
-ZHVlIHRvIG1lIGNvcHlpbmcgdG9vIG1hbnkgZGlmZmVyaW5nIGZvbGRlcnMgYWxsIDEwMGdiKyB3
-aGVuIEkgZmlyc3QgbW91bnRlZCB0aGUgZHJpdmUgc3VjY2Vzc2Z1bGx5IGluIGtub3BwaXg/IE9y
-IHdhcyB0aGlzIGRyaXZlIGp1c3QgZ29pbmcgdG8gZ28gYW55d2F5PyAKCkNoZWVycyEKVG9tCl9f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5n
-IGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZv
-L3hmcwo=
+Lgo+IC0tIAo+IERhdmUgQ2hpbm5lcgo+IGRhdmlkQGZyb21vcmJpdC5jb20KQnR3IC0gYmVmb3Jl
+IEkgZ2V0IHJpZCBvZiB0aGlzIG9sZCBzYW1zdW5nIDF0YiBkcml2ZSwgdGhlIGZvbGRlcidzIHBy
+b3BlcnRpZXMgaW4gdGhlIGZhaWxlZCBkcml2ZSBhY3R1YWxseSByZXBvcnQgYSBsb3QgaGlnaGVy
+IGZvciBmaWxlIG51bWJlcnMgYW5kIHNpemVzIHRoYW4gZXZlbnR1YWxseSBnZXQgY29waWVkIC0g
+aXQgcmVwb3J0czoKIkVycm9yIHdoaWxlIGNvcHlpbmcKVGhlcmUgd2FzIGFuIGVycm9yIGdldHRp
+bmcgaW5mb3JtYXRpb24gYWJvdXQgdGhlIGZpbGVzIGluIHRoZSBmb2xkZXIgJ3h4eHh4JyBubyBk
+YXRhIGF2YWlsYWJsZSIKLi4uaXMgdGhlcmUgYSB3YXkgYXJvdW5kIHRoaXMgb3IgaXMgdGhpcyBt
+eSBsb3N0IGRhdGE/Cl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9t
+YWlsbWFuL2xpc3RpbmZvL3hmcwo=
