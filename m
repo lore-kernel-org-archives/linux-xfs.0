@@ -1,23 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 3578B7F4E
-	for <xfs@oss.sgi.com>; Mon, 13 Oct 2014 16:56:05 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 1599D8F8064
-	for <xfs@oss.sgi.com>; Mon, 13 Oct 2014 14:56:01 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id 41A137F4E
+	for <xfs@oss.sgi.com>; Mon, 13 Oct 2014 17:09:48 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 308458F8054
+	for <xfs@oss.sgi.com>; Mon, 13 Oct 2014 15:09:45 -0700 (PDT)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	8IG2W6eVC3mDrSpf for <xfs@oss.sgi.com>;
-	Mon, 13 Oct 2014 14:55:59 -0700 (PDT)
-Date: Tue, 14 Oct 2014 08:55:31 +1100
+	E9x2ca7p3bre89nW for <xfs@oss.sgi.com>;
+	Mon, 13 Oct 2014 15:09:42 -0700 (PDT)
+Date: Tue, 14 Oct 2014 09:09:40 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [GIT PULL] xfs: updates for 3.18-rc1
-Message-ID: <20141013215531.GD17506@dastard>
-References: <20141013013715.GD4503@dastard>
-	<CA+55aFwcE=OX7FvckrsZRopCAxw0QnEu5iQUEM5JBoDVzg7uEA@mail.gmail.com>
+Subject: Re: Mount: Structure needs cleaning
+Message-ID: <20141013220940.GE17506@dastard>
+References: <4ddef393-ad9e-49a1-80d7-9c29bcd74c8f@me.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <CA+55aFwcE=OX7FvckrsZRopCAxw0QnEu5iQUEM5JBoDVzg7uEA@mail.gmail.com>
+In-Reply-To: <4ddef393-ad9e-49a1-80d7-9c29bcd74c8f@me.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,93 +25,114 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com
+To: Tom Mason <tom_mason@me.com>
+Cc: Brian Foster <bfoster@redhat.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-On Mon, Oct 13, 2014 at 05:48:18AM -0400, Linus Torvalds wrote:
-> On Sun, Oct 12, 2014 at 9:37 PM, Dave Chinner <david@fromorbit.com> wrote:
+On Mon, Oct 13, 2014 at 08:33:57PM +0000, Tom Mason wrote:
+> =
+
+> =
+
+> On Oct 13, 2014, at 11:19 AM, Emmanuel Florac <eflorac@intellique.com> wr=
+ote:
+> =
+
+> >Le Mon, 13 Oct 2014 11:05:49 +0100
+> >Tom Mason <tom_mason@me.com    > =E9crivait:
 > >
-> > i.e. I have generated this pull-req from the base tree I've been working
-> > on (3.17-rc2) but there have already been commits merged into a more
-> > recent upstream tree (3.17-rc4) in this tree. When I generate the
-> > pull request from the underlying 3.17-rc2 branch, it includes all
-> > those commits, both in the summary and the diffstat. If I base the
-> > pull request off 3.17, the base commit is the last one that was
-> > merged into your tree, and the diffstat and commit list reflect
-> > that.
-> 
-> That's fine, and works for me too. This is normal and expected for
-> stuff that has gotten into my tree other ways (ie bugfixes that were
-> cherrypicked to be backported from development trees etc).  I'm used
-> to it, and while I hope people minimize it (not only because of
-> multiple commits showing up with the same patch, but because it can
-> easily cause stupid merge conflicts because the development tree then
-> made further changes on top of the same patch), it's also very much
-> considered "normal development".
-> 
-> That said, when there are actual *common* commits as in your case (as
-> opposed to cherrypicked commits that generate duplicate commits with
-> the same patch), I would generally suggest you just let "git
-> merge-base" figure it all out from my latest tree. That way it takes
-> into account the stuff that you sent earlier on its own.
+> >       >      > Which means the filesystem tried to read the offset at 6=
+2GB and the
+> >       >      > underlying device failed it with EIO. That's not an XFS =
+failure.
+> >       >      > What error is there in dmesg when you run that xfs_repai=
+r command?
+> >       >
+> >       > What's EIO?
+> >       > 'Error in dmesg' How would I report this info to you?
+....
+> [  862.456063] usb 1-3: new high-speed USB device number 4 using ehci-pci
+> [  862.591595] usb 1-3: New USB device found, idVendor=3D1bcf, idProduct=
+=3D0c31
+> [  862.591601] usb 1-3: New USB device strings: Mfr=3D2, Product=3D3, Ser=
+ialNumber=3D1
+> [  862.591604] usb 1-3: Product: USB to Serial-ATA bridge
+> [  862.591608] usb 1-3: Manufacturer: Sunplus Innovation Technology.
+> [  862.591611] usb 1-3: SerialNumber: FAFFFFF0FDF13FF1BF901305
+> [  864.683460] usb-storage 1-3:1.0: USB Mass Storage device detected
+> [  864.683638] scsi6 : usb-storage 1-3:1.0
+> [  864.683708] usbcore: registered new interface driver usb-storage
+> [  865.690235] scsi 6:0:0:0: Direct-Access     SAMSUNG  HD103UJ          =
+     PQ: 0 ANSI: 4
+> [  865.690464] sd 6:0:0:0: Attached scsi generic sg2 type 0
+> [  865.694619] sd 6:0:0:0: [sdb] 1953525168 512-byte logical blocks: (1.0=
+0 TB/931 GiB)
+> [  865.700970] sd 6:0:0:0: [sdb] Write Protect is off
+> [  865.700973] sd 6:0:0:0: [sdb] Mode Sense: 38 00 00 00
+> [  865.707350] sd 6:0:0:0: [sdb] No Caching mode page found
+> [  865.707352] sd 6:0:0:0: [sdb] Assuming drive cache: write through
+> [  865.721592] sd 6:0:0:0: [sdb] No Caching mode page found
+> [  865.721595] sd 6:0:0:0: [sdb] Assuming drive cache: write through
+> [  865.741343]  sdb: sdb1 < > sdb2
+> [  865.780852] sd 6:0:0:0: [sdb] No Caching mode page found
+> [  865.780855] sd 6:0:0:0: [sdb] Assuming drive cache: write through
+> [  865.780857] sd 6:0:0:0: [sdb] Attached SCSI disk
 
-Ok, that seems easy enough to check. I wasn't aware of git
-merge-base, so thanks for letting me know about it.
+Device plugged in....
 
-> But this is not a big deal.
-> 
-> > So my question is this: Which tree should I generate the pull
-> > request from? I flipped a coin an generated this one from 3.17-rc2,
-> > but if you'd prefer to see just the commits/diffstat that aren't in
-> > your tree, let me know and I'll do it differently next time....
-> 
-> Normally, I'd suggest the easiest way to handle things is to have a
-> "linus" branch that tracks my upstream, and then just generate the
-> pull request off that. Git will figure out the latest merge base and
-> just do the right thing, and you don't need to really think about
-> where you forked things off, and which parts you have already sent to
-> me.
+> [  869.594066] SGI XFS with ACLs, security attributes, realtime, large bl=
+ock/inode numbers, no debug enabled
+> [  869.609228] XFS (sdb2): Mounting Filesystem
+> [  869.687220] XFS (sdb2): Internal error xlog_clear_stale_blocks(2) at l=
+ine 1368 of file /build/buildd/linux-3.13.0/fs/xfs/xfs_log_recover.c.  Call=
+er 0xffffffffa07a8951
+.....
+> [  869.687442] XFS (sdb2): failed to locate log tail
+> [  869.687444] XFS (sdb2): log mount/recovery failed: error 117
+> [  869.687486] XFS (sdb2): log mount failed
 
-OK, that's exactly what I would have done if the coin flip landed
-the other way.  I'll use that method in future.
+And that is XFS telling us that the log is corrupt and can't be
+recovered.
 
-> As mentioned, even then the diffstat doesn't always end up being
-> exactly right, because the history with partially merged branches, and
-> with potential cherry-picked commits. So I am not surprised or upset
-> if the diffstat doesn't always match, it happens quite commonly. I go
-> on a rant when that i sdue to bad development practices, but I don't
-> see anything like that in your tree.
+> [ 1404.460745] sd 6:0:0:0: [sdb] Unhandled sense code
+> [ 1404.460751] sd 6:0:0:0: [sdb] [ 1404.460753] Result:
+> hostbyte=3DDID_OK driverbyte=3DDRIVER_SENSE
+> [ 1404.460756] sd 6:0:0:0: [sdb] [ 1404.460758] Sense Key : Medium
+> Error [current]
+> [ 1404.460763] sd 6:0:0:0: [sdb] [ 1404.460766] Add. Sense:
+> Unrecovered read error
+> [ 1404.460769] sd 6:0:0:0: [sdb] CDB:
+> [ 1404.460771] Read(10): 28 00 07 63 bf 8d 00 00 eb 00
+> [ 1404.460781] end_request: critical medium error, dev sdb, sector 123977=
+613
+> [ 1489.507727] sd 6:0:0:0: [sdb] Unhandled sense code
+> [ 1489.507734] sd 6:0:0:0: [sdb] [ 1489.507736] Result:
+> hostbyte=3DDID_OK driverbyte=3DDRIVER_SENSE
+> [ 1489.507739] sd 6:0:0:0: [sdb] [ 1489.507741] Sense Key : Medium
+> Error [current]
+> [ 1489.507746] sd 6:0:0:0: [sdb] [ 1489.507749] Add. Sense:
+> Unrecovered read error
+> [ 1489.507752] sd 6:0:0:0: [sdb] CDB:
+> [ 1489.507754] Read(10): 28 00 07 63 bf 8d 00 00 eb 00
+> [ 1489.507769] end_request: critical medium error, dev sdb, sector 123977=
+613
 
-That's good to know - I'm trying to keep the topic branches as
-stable as possible so you can see when they were first pushed into
-the tree, if/when fixes are appended to them and the dependencies
-between them so bisects won't break. If you do see something wrong
-or dodgy, just yell. ;)
-
-> Some people avoid this by actually generating a test-merge (to warn me
-> about upcoming conflicts etc), and then generate the diffstat from
-> that test merge instead of just using the plain "git diff" in the
-> git-pull-request helper scripts. Whatever works. This is not a huge
-> deal, exactly because it's "normal development" (unlike the
-> back-merges issue).
-
-*nod*
-
-Definitely "normal development" - I do that "test merge" as part of
-my day-to-day workflow. My test tree (i.e. what I point overnight
-xfstests runs at) is your TOT + the current XFS for-next + any patch
-sets I'm reviewing, testing and/or developing....
-
-Thanks for the info, Linus.
+And that is when you ran xfs_repair 10 minutes later? THose are IO
+errors, and the "Unrecovered read error" and "critical medium error"
+messages indicate that the drive has lost the data in those sectors
+permanently. i.e. the disk has physically failed and it needs to be
+replaced. As Emmanuel has already mentioned, the best you can
+probably do at this point mount the filesystem "-o ro,norecover" and
+copy everything you can off onto a new drive....
 
 Cheers,
 
 Dave.
--- 
+-- =
+
 Dave Chinner
 david@fromorbit.com
 
