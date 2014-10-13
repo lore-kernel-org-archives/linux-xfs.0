@@ -1,22 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 41A137F4E
-	for <xfs@oss.sgi.com>; Mon, 13 Oct 2014 17:09:48 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 308458F8054
-	for <xfs@oss.sgi.com>; Mon, 13 Oct 2014 15:09:45 -0700 (PDT)
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	E9x2ca7p3bre89nW for <xfs@oss.sgi.com>;
-	Mon, 13 Oct 2014 15:09:42 -0700 (PDT)
-Date: Tue, 14 Oct 2014 09:09:40 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Mount: Structure needs cleaning
-Message-ID: <20141013220940.GE17506@dastard>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 2EC717F4E
+	for <xfs@oss.sgi.com>; Mon, 13 Oct 2014 17:26:00 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id C0D90AC00C
+	for <xfs@oss.sgi.com>; Mon, 13 Oct 2014 15:25:56 -0700 (PDT)
+Received: from st11p01mm-asmtp002.mac.com (st11p01mm-asmtp002.mac.com
+	[17.172.204.237]) by cuda.sgi.com with ESMTP id
+	MlfzlTQFqVNCeCCn (version=TLSv1 cipher=RC4-MD5 bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Mon, 13 Oct 2014 15:25:52 -0700 (PDT)
+Received: from [192.168.1.75]
+	(host86-134-5-249.range86-134.btcentralplus.com [86.134.5.249])
+	by st11p01mm-asmtp002.mac.com
+	(Oracle Communications Messaging Server 7u4-27.10(7.0.4.27.9) 64bit
+	(built Jun
+	6 2014)) with ESMTPSA id <0NDE0019YMB012B0@st11p01mm-asmtp002.mac.com>
+	for xfs@oss.sgi.com; Mon, 13 Oct 2014 22:25:52 +0000 (GMT)
 References: <4ddef393-ad9e-49a1-80d7-9c29bcd74c8f@me.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <4ddef393-ad9e-49a1-80d7-9c29bcd74c8f@me.com>
+	<20141013220940.GE17506@dastard>
+MIME-version: 1.0 (1.0)
+In-reply-to: <20141013220940.GE17506@dastard>
+Message-id: <A3692196-7EEC-4D6D-A6C9-F39A209A26E3@me.com>
+From: Tom Mason <tom_mason@me.com>
+Subject: Re: Mount: Structure needs cleaning
+Date: Mon, 13 Oct 2014 23:25:47 +0100
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,118 +33,94 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Tom Mason <tom_mason@me.com>
+To: Dave Chinner <david@fromorbit.com>
 Cc: Brian Foster <bfoster@redhat.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-On Mon, Oct 13, 2014 at 08:33:57PM +0000, Tom Mason wrote:
-> =
-
-> =
-
-> On Oct 13, 2014, at 11:19 AM, Emmanuel Florac <eflorac@intellique.com> wr=
-ote:
-> =
-
-> >Le Mon, 13 Oct 2014 11:05:49 +0100
-> >Tom Mason <tom_mason@me.com    > =E9crivait:
-> >
-> >       >      > Which means the filesystem tried to read the offset at 6=
-2GB and the
-> >       >      > underlying device failed it with EIO. That's not an XFS =
-failure.
-> >       >      > What error is there in dmesg when you run that xfs_repai=
-r command?
-> >       >
-> >       > What's EIO?
-> >       > 'Error in dmesg' How would I report this info to you?
-....
-> [  862.456063] usb 1-3: new high-speed USB device number 4 using ehci-pci
-> [  862.591595] usb 1-3: New USB device found, idVendor=3D1bcf, idProduct=
-=3D0c31
-> [  862.591601] usb 1-3: New USB device strings: Mfr=3D2, Product=3D3, Ser=
-ialNumber=3D1
-> [  862.591604] usb 1-3: Product: USB to Serial-ATA bridge
-> [  862.591608] usb 1-3: Manufacturer: Sunplus Innovation Technology.
-> [  862.591611] usb 1-3: SerialNumber: FAFFFFF0FDF13FF1BF901305
-> [  864.683460] usb-storage 1-3:1.0: USB Mass Storage device detected
-> [  864.683638] scsi6 : usb-storage 1-3:1.0
-> [  864.683708] usbcore: registered new interface driver usb-storage
-> [  865.690235] scsi 6:0:0:0: Direct-Access     SAMSUNG  HD103UJ          =
-     PQ: 0 ANSI: 4
-> [  865.690464] sd 6:0:0:0: Attached scsi generic sg2 type 0
-> [  865.694619] sd 6:0:0:0: [sdb] 1953525168 512-byte logical blocks: (1.0=
-0 TB/931 GiB)
-> [  865.700970] sd 6:0:0:0: [sdb] Write Protect is off
-> [  865.700973] sd 6:0:0:0: [sdb] Mode Sense: 38 00 00 00
-> [  865.707350] sd 6:0:0:0: [sdb] No Caching mode page found
-> [  865.707352] sd 6:0:0:0: [sdb] Assuming drive cache: write through
-> [  865.721592] sd 6:0:0:0: [sdb] No Caching mode page found
-> [  865.721595] sd 6:0:0:0: [sdb] Assuming drive cache: write through
-> [  865.741343]  sdb: sdb1 < > sdb2
-> [  865.780852] sd 6:0:0:0: [sdb] No Caching mode page found
-> [  865.780855] sd 6:0:0:0: [sdb] Assuming drive cache: write through
-> [  865.780857] sd 6:0:0:0: [sdb] Attached SCSI disk
-
-Device plugged in....
-
-> [  869.594066] SGI XFS with ACLs, security attributes, realtime, large bl=
-ock/inode numbers, no debug enabled
-> [  869.609228] XFS (sdb2): Mounting Filesystem
-> [  869.687220] XFS (sdb2): Internal error xlog_clear_stale_blocks(2) at l=
-ine 1368 of file /build/buildd/linux-3.13.0/fs/xfs/xfs_log_recover.c.  Call=
-er 0xffffffffa07a8951
-.....
-> [  869.687442] XFS (sdb2): failed to locate log tail
-> [  869.687444] XFS (sdb2): log mount/recovery failed: error 117
-> [  869.687486] XFS (sdb2): log mount failed
-
-And that is XFS telling us that the log is corrupt and can't be
-recovered.
-
-> [ 1404.460745] sd 6:0:0:0: [sdb] Unhandled sense code
-> [ 1404.460751] sd 6:0:0:0: [sdb] [ 1404.460753] Result:
-> hostbyte=3DDID_OK driverbyte=3DDRIVER_SENSE
-> [ 1404.460756] sd 6:0:0:0: [sdb] [ 1404.460758] Sense Key : Medium
-> Error [current]
-> [ 1404.460763] sd 6:0:0:0: [sdb] [ 1404.460766] Add. Sense:
-> Unrecovered read error
-> [ 1404.460769] sd 6:0:0:0: [sdb] CDB:
-> [ 1404.460771] Read(10): 28 00 07 63 bf 8d 00 00 eb 00
-> [ 1404.460781] end_request: critical medium error, dev sdb, sector 123977=
-613
-> [ 1489.507727] sd 6:0:0:0: [sdb] Unhandled sense code
-> [ 1489.507734] sd 6:0:0:0: [sdb] [ 1489.507736] Result:
-> hostbyte=3DDID_OK driverbyte=3DDRIVER_SENSE
-> [ 1489.507739] sd 6:0:0:0: [sdb] [ 1489.507741] Sense Key : Medium
-> Error [current]
-> [ 1489.507746] sd 6:0:0:0: [sdb] [ 1489.507749] Add. Sense:
-> Unrecovered read error
-> [ 1489.507752] sd 6:0:0:0: [sdb] CDB:
-> [ 1489.507754] Read(10): 28 00 07 63 bf 8d 00 00 eb 00
-> [ 1489.507769] end_request: critical medium error, dev sdb, sector 123977=
-613
-
-And that is when you ran xfs_repair 10 minutes later? THose are IO
-errors, and the "Unrecovered read error" and "critical medium error"
-messages indicate that the drive has lost the data in those sectors
-permanently. i.e. the disk has physically failed and it needs to be
-replaced. As Emmanuel has already mentioned, the best you can
-probably do at this point mount the filesystem "-o ro,norecover" and
-copy everything you can off onto a new drive....
-
-Cheers,
-
-Dave.
--- =
-
-Dave Chinner
-david@fromorbit.com
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+CgoKCj4gT24gMTMgT2N0IDIwMTQsIGF0IDIzOjA5LCBEYXZlIENoaW5uZXIgPGRhdmlkQGZyb21v
+cmJpdC5jb20+IHdyb3RlOgo+IAo+PiBPbiBNb24sIE9jdCAxMywgMjAxNCBhdCAwODozMzo1N1BN
+ICswMDAwLCBUb20gTWFzb24gd3JvdGU6Cj4+IAo+PiAKPj4+IE9uIE9jdCAxMywgMjAxNCwgYXQg
+MTE6MTkgQU0sIEVtbWFudWVsIEZsb3JhYyA8ZWZsb3JhY0BpbnRlbGxpcXVlLmNvbT4gd3JvdGU6
+Cj4+PiAKPj4+IExlIE1vbiwgMTMgT2N0IDIwMTQgMTE6MDU6NDkgKzAxMDAKPj4+IFRvbSBNYXNv
+biA8dG9tX21hc29uQG1lLmNvbSAgICA+IMOpY3JpdmFpdDoKPj4+IAo+Pj4+PiBXaGljaCBtZWFu
+cyB0aGUgZmlsZXN5c3RlbSB0cmllZCB0byByZWFkIHRoZSBvZmZzZXQgYXQgNjJHQiBhbmQgdGhl
+Cj4+Pj4+IHVuZGVybHlpbmcgZGV2aWNlIGZhaWxlZCBpdCB3aXRoIEVJTy4gVGhhdCdzIG5vdCBh
+biBYRlMgZmFpbHVyZS4KPj4+Pj4gV2hhdCBlcnJvciBpcyB0aGVyZSBpbiBkbWVzZyB3aGVuIHlv
+dSBydW4gdGhhdCB4ZnNfcmVwYWlyIGNvbW1hbmQ/Cj4+Pj4gCj4+Pj4gV2hhdCdzIEVJTz8KPj4+
+PiAnRXJyb3IgaW4gZG1lc2cnIEhvdyB3b3VsZCBJIHJlcG9ydCB0aGlzIGluZm8gdG8geW91Pwo+
+IC4uLi4KPj4gWyAgODYyLjQ1NjA2M10gdXNiIDEtMzogbmV3IGhpZ2gtc3BlZWQgVVNCIGRldmlj
+ZSBudW1iZXIgNCB1c2luZyBlaGNpLXBjaQo+PiBbICA4NjIuNTkxNTk1XSB1c2IgMS0zOiBOZXcg
+VVNCIGRldmljZSBmb3VuZCwgaWRWZW5kb3I9MWJjZiwgaWRQcm9kdWN0PTBjMzEKPj4gWyAgODYy
+LjU5MTYwMV0gdXNiIDEtMzogTmV3IFVTQiBkZXZpY2Ugc3RyaW5nczogTWZyPTIsIFByb2R1Y3Q9
+MywgU2VyaWFsTnVtYmVyPTEKPj4gWyAgODYyLjU5MTYwNF0gdXNiIDEtMzogUHJvZHVjdDogVVNC
+IHRvIFNlcmlhbC1BVEEgYnJpZGdlCj4+IFsgIDg2Mi41OTE2MDhdIHVzYiAxLTM6IE1hbnVmYWN0
+dXJlcjogU3VucGx1cyBJbm5vdmF0aW9uIFRlY2hub2xvZ3kuCj4+IFsgIDg2Mi41OTE2MTFdIHVz
+YiAxLTM6IFNlcmlhbE51bWJlcjogRkFGRkZGRjBGREYxM0ZGMUJGOTAxMzA1Cj4+IFsgIDg2NC42
+ODM0NjBdIHVzYi1zdG9yYWdlIDEtMzoxLjA6IFVTQiBNYXNzIFN0b3JhZ2UgZGV2aWNlIGRldGVj
+dGVkCj4+IFsgIDg2NC42ODM2MzhdIHNjc2k2IDogdXNiLXN0b3JhZ2UgMS0zOjEuMAo+PiBbICA4
+NjQuNjgzNzA4XSB1c2Jjb3JlOiByZWdpc3RlcmVkIG5ldyBpbnRlcmZhY2UgZHJpdmVyIHVzYi1z
+dG9yYWdlCj4+IFsgIDg2NS42OTAyMzVdIHNjc2kgNjowOjA6MDogRGlyZWN0LUFjY2VzcyAgICAg
+U0FNU1VORyAgSEQxMDNVSiAgICAgICAgICAgICAgIFBROiAwIEFOU0k6IDQKPj4gWyAgODY1LjY5
+MDQ2NF0gc2QgNjowOjA6MDogQXR0YWNoZWQgc2NzaSBnZW5lcmljIHNnMiB0eXBlIDAKPj4gWyAg
+ODY1LjY5NDYxOV0gc2QgNjowOjA6MDogW3NkYl0gMTk1MzUyNTE2OCA1MTItYnl0ZSBsb2dpY2Fs
+IGJsb2NrczogKDEuMDAgVEIvOTMxIEdpQikKPj4gWyAgODY1LjcwMDk3MF0gc2QgNjowOjA6MDog
+W3NkYl0gV3JpdGUgUHJvdGVjdCBpcyBvZmYKPj4gWyAgODY1LjcwMDk3M10gc2QgNjowOjA6MDog
+W3NkYl0gTW9kZSBTZW5zZTogMzggMDAgMDAgMDAKPj4gWyAgODY1LjcwNzM1MF0gc2QgNjowOjA6
+MDogW3NkYl0gTm8gQ2FjaGluZyBtb2RlIHBhZ2UgZm91bmQKPj4gWyAgODY1LjcwNzM1Ml0gc2Qg
+NjowOjA6MDogW3NkYl0gQXNzdW1pbmcgZHJpdmUgY2FjaGU6IHdyaXRlIHRocm91Z2gKPj4gWyAg
+ODY1LjcyMTU5Ml0gc2QgNjowOjA6MDogW3NkYl0gTm8gQ2FjaGluZyBtb2RlIHBhZ2UgZm91bmQK
+Pj4gWyAgODY1LjcyMTU5NV0gc2QgNjowOjA6MDogW3NkYl0gQXNzdW1pbmcgZHJpdmUgY2FjaGU6
+IHdyaXRlIHRocm91Z2gKPj4gWyAgODY1Ljc0MTM0M10gIHNkYjogc2RiMSA8ID4gc2RiMgo+PiBb
+ICA4NjUuNzgwODUyXSBzZCA2OjA6MDowOiBbc2RiXSBObyBDYWNoaW5nIG1vZGUgcGFnZSBmb3Vu
+ZAo+PiBbICA4NjUuNzgwODU1XSBzZCA2OjA6MDowOiBbc2RiXSBBc3N1bWluZyBkcml2ZSBjYWNo
+ZTogd3JpdGUgdGhyb3VnaAo+PiBbICA4NjUuNzgwODU3XSBzZCA2OjA6MDowOiBbc2RiXSBBdHRh
+Y2hlZCBTQ1NJIGRpc2sKPiAKPiBEZXZpY2UgcGx1Z2dlZCBpbi4uLi4KPiAKPj4gWyAgODY5LjU5
+NDA2Nl0gU0dJIFhGUyB3aXRoIEFDTHMsIHNlY3VyaXR5IGF0dHJpYnV0ZXMsIHJlYWx0aW1lLCBs
+YXJnZSBibG9jay9pbm9kZSBudW1iZXJzLCBubyBkZWJ1ZyBlbmFibGVkCj4+IFsgIDg2OS42MDky
+MjhdIFhGUyAoc2RiMik6IE1vdW50aW5nIEZpbGVzeXN0ZW0KPj4gWyAgODY5LjY4NzIyMF0gWEZT
+IChzZGIyKTogSW50ZXJuYWwgZXJyb3IgeGxvZ19jbGVhcl9zdGFsZV9ibG9ja3MoMikgYXQgbGlu
+ZSAxMzY4IG9mIGZpbGUgL2J1aWxkL2J1aWxkZC9saW51eC0zLjEzLjAvZnMveGZzL3hmc19sb2df
+cmVjb3Zlci5jLiAgQ2FsbGVyIDB4ZmZmZmZmZmZhMDdhODk1MQo+IC4uLi4uCj4+IFsgIDg2OS42
+ODc0NDJdIFhGUyAoc2RiMik6IGZhaWxlZCB0byBsb2NhdGUgbG9nIHRhaWwKPj4gWyAgODY5LjY4
+NzQ0NF0gWEZTIChzZGIyKTogbG9nIG1vdW50L3JlY292ZXJ5IGZhaWxlZDogZXJyb3IgMTE3Cj4+
+IFsgIDg2OS42ODc0ODZdIFhGUyAoc2RiMik6IGxvZyBtb3VudCBmYWlsZWQKPiAKPiBBbmQgdGhh
+dCBpcyBYRlMgdGVsbGluZyB1cyB0aGF0IHRoZSBsb2cgaXMgY29ycnVwdCBhbmQgY2FuJ3QgYmUK
+PiByZWNvdmVyZWQuCj4gCj4+IFsgMTQwNC40NjA3NDVdIHNkIDY6MDowOjA6IFtzZGJdIFVuaGFu
+ZGxlZCBzZW5zZSBjb2RlCj4+IFsgMTQwNC40NjA3NTFdIHNkIDY6MDowOjA6IFtzZGJdIFsgMTQw
+NC40NjA3NTNdIFJlc3VsdDoKPj4gaG9zdGJ5dGU9RElEX09LIGRyaXZlcmJ5dGU9RFJJVkVSX1NF
+TlNFCj4+IFsgMTQwNC40NjA3NTZdIHNkIDY6MDowOjA6IFtzZGJdIFsgMTQwNC40NjA3NThdIFNl
+bnNlIEtleSA6IE1lZGl1bQo+PiBFcnJvciBbY3VycmVudF0KPj4gWyAxNDA0LjQ2MDc2M10gc2Qg
+NjowOjA6MDogW3NkYl0gWyAxNDA0LjQ2MDc2Nl0gQWRkLiBTZW5zZToKPj4gVW5yZWNvdmVyZWQg
+cmVhZCBlcnJvcgo+PiBbIDE0MDQuNDYwNzY5XSBzZCA2OjA6MDowOiBbc2RiXSBDREI6Cj4+IFsg
+MTQwNC40NjA3NzFdIFJlYWQoMTApOiAyOCAwMCAwNyA2MyBiZiA4ZCAwMCAwMCBlYiAwMAo+PiBb
+IDE0MDQuNDYwNzgxXSBlbmRfcmVxdWVzdDogY3JpdGljYWwgbWVkaXVtIGVycm9yLCBkZXYgc2Ri
+LCBzZWN0b3IgMTIzOTc3NjEzCj4+IFsgMTQ4OS41MDc3MjddIHNkIDY6MDowOjA6IFtzZGJdIFVu
+aGFuZGxlZCBzZW5zZSBjb2RlCj4+IFsgMTQ4OS41MDc3MzRdIHNkIDY6MDowOjA6IFtzZGJdIFsg
+MTQ4OS41MDc3MzZdIFJlc3VsdDoKPj4gaG9zdGJ5dGU9RElEX09LIGRyaXZlcmJ5dGU9RFJJVkVS
+X1NFTlNFCj4+IFsgMTQ4OS41MDc3MzldIHNkIDY6MDowOjA6IFtzZGJdIFsgMTQ4OS41MDc3NDFd
+IFNlbnNlIEtleSA6IE1lZGl1bQo+PiBFcnJvciBbY3VycmVudF0KPj4gWyAxNDg5LjUwNzc0Nl0g
+c2QgNjowOjA6MDogW3NkYl0gWyAxNDg5LjUwNzc0OV0gQWRkLiBTZW5zZToKPj4gVW5yZWNvdmVy
+ZWQgcmVhZCBlcnJvcgo+PiBbIDE0ODkuNTA3NzUyXSBzZCA2OjA6MDowOiBbc2RiXSBDREI6Cj4+
+IFsgMTQ4OS41MDc3NTRdIFJlYWQoMTApOiAyOCAwMCAwNyA2MyBiZiA4ZCAwMCAwMCBlYiAwMAo+
+PiBbIDE0ODkuNTA3NzY5XSBlbmRfcmVxdWVzdDogY3JpdGljYWwgbWVkaXVtIGVycm9yLCBkZXYg
+c2RiLCBzZWN0b3IgMTIzOTc3NjEzCj4gCj4gQW5kIHRoYXQgaXMgd2hlbiB5b3UgcmFuIHhmc19y
+ZXBhaXIgMTAgbWludXRlcyBsYXRlcj8gVEhvc2UgYXJlIElPCj4gZXJyb3JzLCBhbmQgdGhlICJV
+bnJlY292ZXJlZCByZWFkIGVycm9yIiBhbmQgImNyaXRpY2FsIG1lZGl1bSBlcnJvciIKPiBtZXNz
+YWdlcyBpbmRpY2F0ZSB0aGF0IHRoZSBkcml2ZSBoYXMgbG9zdCB0aGUgZGF0YSBpbiB0aG9zZSBz
+ZWN0b3JzCj4gcGVybWFuZW50bHkuIGkuZS4gdGhlIGRpc2sgaGFzIHBoeXNpY2FsbHkgZmFpbGVk
+IGFuZCBpdCBuZWVkcyB0byBiZQo+IHJlcGxhY2VkLiBBcyBFbW1hbnVlbCBoYXMgYWxyZWFkeSBt
+ZW50aW9uZWQsIHRoZSBiZXN0IHlvdSBjYW4KPiBwcm9iYWJseSBkbyBhdCB0aGlzIHBvaW50IG1v
+dW50IHRoZSBmaWxlc3lzdGVtICItbyBybyxub3JlY292ZXIiIGFuZAo+IGNvcHkgZXZlcnl0aGlu
+ZyB5b3UgY2FuIG9mZiBvbnRvIGEgbmV3IGRyaXZlLi4uLgo+IAo+IENoZWVycywKPiAKPiBEYXZl
+CgpUaGFua3MgZ3V5cyAtIG11Y2ggYXBwcmVjaWF0ZWQsIG1hbmFnZWQgdG8gbW91bnQgdGhlIGRy
+aXZlIGFnYWluIGFuZCBoYXZlIHNhdmVkIHNvbWUgbW9yZSBmaWxlcyBhbHRob3VnaCBJIGhhdmUg
+bG9zdCBhIGxvdCA6ICggCgpOb29iIHF1ZXN0aW9uOiBDb3VsZCB0aGlzIGhhdmUgb2NjdXJyZWQg
+ZHVlIHRvIG1lIGNvcHlpbmcgdG9vIG1hbnkgZGlmZmVyaW5nIGZvbGRlcnMgYWxsIDEwMGdiKyB3
+aGVuIEkgZmlyc3QgbW91bnRlZCB0aGUgZHJpdmUgc3VjY2Vzc2Z1bGx5IGluIGtub3BwaXg/IE9y
+IHdhcyB0aGlzIGRyaXZlIGp1c3QgZ29pbmcgdG8gZ28gYW55d2F5PyAKCkNoZWVycyEKVG9tCl9f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5n
+IGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZv
+L3hmcwo=
