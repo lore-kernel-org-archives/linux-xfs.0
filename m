@@ -1,27 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 7115F7F3F
+	by oss.sgi.com (Postfix) with ESMTP id 71EBB7F47
 	for <xfs@oss.sgi.com>; Tue, 14 Oct 2014 16:59:23 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id F174EAC013
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id F3E40AC014
 	for <xfs@oss.sgi.com>; Tue, 14 Oct 2014 14:59:19 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id SxBohGwDwLvNaxr8 (version=TLSv1
+	cuda.sgi.com with ESMTP id hoQ9mzYe9EDTqh6n (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
 	Tue, 14 Oct 2014 14:59:18 -0700 (PDT)
 Received: from int-mx13.intmail.prod.int.phx2.redhat.com
 	(int-mx13.intmail.prod.int.phx2.redhat.com [10.5.11.26])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id s9ELxHQl019374
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id s9ELxHBR008288
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256
-	verify=FAIL) for <xfs@oss.sgi.com>; Tue, 14 Oct 2014 17:59:17 -0400
+	verify=FAIL) for <xfs@oss.sgi.com>; Tue, 14 Oct 2014 17:59:18 -0400
 Received: from bfoster.bfoster ([10.18.41.237])
 	by int-mx13.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id s9ELxHWv017884
+	id s9ELxHK0017888
 	for <xfs@oss.sgi.com>; Tue, 14 Oct 2014 17:59:17 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH 0/2] fix up indlen reservations on extent split
-Date: Tue, 14 Oct 2014 17:59:13 -0400
-Message-Id: <1413323955-19976-1-git-send-email-bfoster@redhat.com>
+Subject: [PATCH 2/2] xfs: borrow indirect blocks from freed extent when
+	available
+Date: Tue, 14 Oct 2014 17:59:15 -0400
+Message-Id: <1413323955-19976-3-git-send-email-bfoster@redhat.com>
+In-Reply-To: <1413323955-19976-1-git-send-email-bfoster@redhat.com>
+References: <1413323955-19976-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -37,31 +40,157 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Hi all,
+xfs_bmap_del_extent() handles extent removal from the in-core and
+on-disk extent lists. When removing a delalloc range, it updates the
+indirect block reservation appropriately based on the removal. It
+currently enforces that the new indirect block reservation is less than
+or equal to the original. This is normally the case in all situations
+except for in certain cases when the removed range creates a hole in a
+single delalloc extent, thus splitting a single delalloc extent in two.
 
-Here's a couple patches to fix up the indirect block reservation
-problem when splitting delalloc extents, described in more detail in the
-patch 2 commit log.
+It is possible with small enough extents to split an indlen==1 extent
+into two such slightly smaller extents. This leaves one extent with 0
+indirect blocks and leads to assert failures in other areas (e.g.,
+xfs_bunmapi() if the extent happens to be removed).
 
-This runs through xfstests without any explosions and quiets down
-generic/033 when used in combination with the zero range rework (current
-for-next includes the writeback on zero range workaround that also
-prevents generic/033 asserts).
+Refactor the indirect reservation code into a new helper function
+invoked by xfs_bunmapi(). Allow the helper to steal blocks from the
+deleted extent if necessary to satisfy the worst case indirect
+reservation of the new extents. This is safe now that the caller does
+not update icsb counters until the extent is removed (such stolen blocks
+simply remain accounted as allocated). Fall back to the original
+reservation using the existing algorithm and warn if we end up with
+extents without any reservation at all to detect this more easily in the
+future.
 
-Brian
+This allows generic/033 to run on XFS without assert failures.
 
-v1:
-- xfs_bunmapi() code into independent patch.
-- Refactor fix into separate helper function.
-rfc: http://oss.sgi.com/archives/xfs/2014-09/msg00337.html
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+---
+ fs/xfs/libxfs/xfs_bmap.c | 100 ++++++++++++++++++++++++++++++++++++++---------
+ 1 file changed, 81 insertions(+), 19 deletions(-)
 
-Brian Foster (2):
-  xfs: update icsb freeblocks counter after extent deletion
-  xfs: borrow indirect blocks from freed extent when available
-
- fs/xfs/libxfs/xfs_bmap.c | 159 ++++++++++++++++++++++++++++++++++-------------
- 1 file changed, 116 insertions(+), 43 deletions(-)
-
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index 5abd22b..64b88b6 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -4701,6 +4701,68 @@ error0:
+ }
+ 
+ /*
++ * When a delalloc extent is split (e.g., due to a hole punch), the original
++ * indlen reservation must be shared across the two new extents that are left
++ * behind.
++ *
++ * Provided the worst case indlen for two extents, limit the total reservation
++ * against that of the original extent. We may want to steal blocks from any
++ * extra that might be available according to the caller to make up a deficiency
++ * (e.g., if the original reservation consists of one block). The number of such
++ * stolen blocks is returned. The availability and accounting of stealable
++ * blocks is the responsibility of the caller.
++ */
++static xfs_filblks_t
++xfs_bmap_limit_indlen(
++	xfs_filblks_t			ores,		/* original res. */
++	xfs_filblks_t			*indlen1,	/* ext1 worst indlen */
++	xfs_filblks_t			*indlen2,	/* ext2 worst indlen */
++	xfs_filblks_t			avail)		/* stealable blocks */
++{
++	xfs_filblks_t			nres;		/* new total res. */
++	xfs_filblks_t			temp;
++	xfs_filblks_t			temp2;
++	xfs_filblks_t			stolen = 0;
++
++	temp = *indlen1;
++	temp2 = *indlen2;
++	nres = temp + temp2;
++
++	/*
++	 * Steal as many blocks as we can to try and satisfy the worst case
++	 * indlen of both new extents.
++	 */
++	while (nres > ores && avail) {
++		nres--;
++		avail--;
++		stolen++;
++	}
++
++	/*
++	 * If we've exhausted stealable blocks and still haven't satisfied the
++	 * worst case reservation, we have no choice but to pare back until
++	 * covered by the original reservation.
++	 */
++	while (nres > ores) {
++		if (temp) {
++			temp--;
++			nres--;
++		}
++		if (nres == ores)
++			break;
++		if (temp2) {
++			temp2--;
++			nres--;
++		}
++	}
++
++	*indlen1 = temp;
++	*indlen2 = temp2;
++
++	return stolen;
++}
++
++/*
+  * Called by xfs_bmapi to update file extent records and the btree
+  * after removing space (or undoing a delayed allocation).
+  */
+@@ -4963,28 +5025,28 @@ xfs_bmap_del_extent(
+ 			XFS_IFORK_NEXT_SET(ip, whichfork,
+ 				XFS_IFORK_NEXTENTS(ip, whichfork) + 1);
+ 		} else {
++			xfs_filblks_t	stolen;
+ 			ASSERT(whichfork == XFS_DATA_FORK);
+-			temp = xfs_bmap_worst_indlen(ip, temp);
++
++			/*
++			 * Fix up the indlen reservations. We can safely steal
++			 * blocks from the deleted extent as this simply fudges
++			 * the icsb fdblocks accounting in xfs_bunmapi().
++			 */
++			temp = xfs_bmap_worst_indlen(ip, got.br_blockcount);
++			temp2 = xfs_bmap_worst_indlen(ip, new.br_blockcount);
++			stolen = xfs_bmap_limit_indlen(da_old, &temp, &temp2,
++						       del->br_blockcount);
++			da_new = temp + temp2 - stolen;
++			del->br_blockcount -= stolen;
++
++			/*
++			 * Set the reservation for each extent. Warn if either
++			 * is zero as this can lead to delalloc problems.
++			 */
++			WARN_ON_ONCE(!temp || !temp2);
+ 			xfs_bmbt_set_startblock(ep, nullstartblock((int)temp));
+-			temp2 = xfs_bmap_worst_indlen(ip, temp2);
+ 			new.br_startblock = nullstartblock((int)temp2);
+-			da_new = temp + temp2;
+-			while (da_new > da_old) {
+-				if (temp) {
+-					temp--;
+-					da_new--;
+-					xfs_bmbt_set_startblock(ep,
+-						nullstartblock((int)temp));
+-				}
+-				if (da_new == da_old)
+-					break;
+-				if (temp2) {
+-					temp2--;
+-					da_new--;
+-					new.br_startblock =
+-						nullstartblock((int)temp2);
+-				}
+-			}
+ 		}
+ 		trace_xfs_bmap_post_update(ip, *idx, state, _THIS_IP_);
+ 		xfs_iext_insert(ip, *idx + 1, 1, &new, state);
 -- 
 1.8.3.1
 
