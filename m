@@ -1,24 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 204D37F3F
-	for <xfs@oss.sgi.com>; Tue, 14 Oct 2014 06:38:11 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id BE64BAC010
-	for <xfs@oss.sgi.com>; Tue, 14 Oct 2014 04:38:10 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id V8s4tbrPXzJCKhlg (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 14 Oct 2014 04:38:08 -0700 (PDT)
-Date: Tue, 14 Oct 2014 07:37:58 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH v4] xfs: rework zero range to prevent invalid i_size
-	updates
-Message-ID: <20141014113758.GA64776@bfoster.bfoster>
-References: <1413220285-24886-1-git-send-email-bfoster@redhat.com>
-	<20141014001806.GG5267@dastard> <20141014005058.GH5267@dastard>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 64CA67F3F
+	for <xfs@oss.sgi.com>; Tue, 14 Oct 2014 10:04:09 -0500 (CDT)
+Date: Tue, 14 Oct 2014 10:04:05 -0500
+From: Ben Myers <bpm@sgi.com>
+Subject: Re: [PATCH 05/16] xfs: return the first match during
+	case-insensitive lookup.
+Message-ID: <20141014150405.GA2199@sgi.com>
+References: <20141003214758.GY1865@sgi.com> <20141003215542.GD1865@sgi.com>
+	<20141006221928.GJ2301@dastard> <20141009154240.GC1865@sgi.com>
+	<20141009203814.GB4376@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20141014005058.GH5267@dastard>
+In-Reply-To: <20141009203814.GB4376@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,42 +26,67 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+Cc: linux-fsdevel@vger.kernel.org, olaf@sgi.com, xfs@oss.sgi.com
 
-On Tue, Oct 14, 2014 at 11:50:58AM +1100, Dave Chinner wrote:
-> On Tue, Oct 14, 2014 at 11:18:06AM +1100, Dave Chinner wrote:
-> > I'm running 3.17 + for-next + a handful of local patches, but this
-> > is the only patch that modifies anything in this area. I'll remove
-> > all the other patches I have just to check....
+Dave,
+
+On Fri, Oct 10, 2014 at 07:38:14AM +1100, Dave Chinner wrote:
+> On Thu, Oct 09, 2014 at 10:42:40AM -0500, Ben Myers wrote:
+> > On Tue, Oct 07, 2014 at 09:19:28AM +1100, Dave Chinner wrote:
+> > > On Fri, Oct 03, 2014 at 04:55:42PM -0500, Ben Myers wrote:
+> > > > From: Olaf Weber <olaf@sgi.com>
+> > > > 
+> > > > Change the XFS case-insensitive lookup code to return the first match
+> > > > found, even if it is not an exact match. Whether a filesystem uses
+> > > > case-insensitive lookups is determined by a superblock bit set during
+> > > > filesystem creation.  This means that normal use cannot create two files
+> > > > that both match the same filename.
+> > > > 
+> > > > Signed-off-by: Olaf Weber <olaf@sgi.com>
+> > > 
+> > > This is really dependent on whether we want to support mixed
+> > > CI/non-CI filesystems, yes? i.e. if we want to support mixed case
+> > > setups, then we need to keep the code as it stands?
+> > 
+> > It depends upon what semantics you decide are correct in the mixed case.
+> > This is just one solution.
 > 
-> When this is the only patch on top of 3.17+for-next it still
-> triggers.
+> Ok, so we need this code or somethign very similar to support mixed
+> case filesystems.  Can you tell us what the other possible solutions
+> and semantics have been considered?
+
+There was some discussion of this in the v2 posting of this rfc.
+
+http://marc.info/?l=linux-xfs&m=141176024430150&w=2
+
+Olaf's "readme" example at the above link is a pretty good example of
+what we're facing.  And I don't have a good answer for which file to
+open.  So for now we're just going for the cleanest solution.
+
+> > > What is the downside of keeping the code unchaged and our
+> > > options open?
+> > 
+> > The code that is being removed here was for the case when you
+> > could have multiple filenames that match for a lookup, which was
+> > only possible when the ascii-ci bit was implemented as a mount
+> > option.
 > 
+> Yes, I know what the code did - it allowed us to support mixed case
+> ascii-ci filesystems. All you've said is "if we remove mixed case
+> support the code is cleaner" but not addressed the issue at hand.
 
-Interesting, I didn't catch this. I do reproduce with v4 and v3. Note
-that this is the assert for having at least 1 indirect block
-reservation, so it's a separate problem (not a stale delalloc problem):
+I also tried to explain that as the codebase stands today, removal of
+this code does not represent a loss of functionality.  It is dead code.
 
-http://oss.sgi.com/archives/xfs/2014-09/msg00337.html
+> I'll try asking the same question a different way: if we keep this
+> code, will it work for mixed case unicode filesystem or do we have
+> to re-implement mixed case matching differently?
 
-What looks like is going on here is this patch regresses current
-for-next due to our previous zero range workaround to flush on zero
-range.  This was originally reproducible on tot, the zero range flush
-quiets it down by forcing delalloc conversion, and this patch
-reintroduces it simply by eliminating the flush.
+If you definately want to keep this code around I'll look into this, but
+right now I don't have plans to extend the patchset to support mixed
+case insensitivity in a single filesystem.
 
-I've just recently got back to fixing that problem. I have a couple
-patches that need more testing, but I'll try to get them posted for
-review today.
-
-Brian
-
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+-Ben
 
 _______________________________________________
 xfs mailing list
