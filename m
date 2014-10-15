@@ -1,22 +1,35 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id DA3B37F3F
-	for <xfs@oss.sgi.com>; Wed, 15 Oct 2014 07:59:44 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id A943B7F3F
+	for <xfs@oss.sgi.com>; Wed, 15 Oct 2014 08:05:47 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id AC1CE304032
-	for <xfs@oss.sgi.com>; Wed, 15 Oct 2014 05:59:41 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id OgTdDQObRwJhjw2O (version=TLSv1
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 4729DAC003
+	for <xfs@oss.sgi.com>; Wed, 15 Oct 2014 06:05:44 -0700 (PDT)
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
+	cuda.sgi.com with ESMTP id CmsCtdInzVVnRw4j (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 15 Oct 2014 05:59:37 -0700 (PDT)
-Date: Wed, 15 Oct 2014 08:59:27 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH] xfs: bulkstat doesn't release AGI buffer on error
-Message-ID: <20141015125927.GA63003@bfoster.bfoster>
-References: <1413324728-4008-1-git-send-email-david@fromorbit.com>
+	Wed, 15 Oct 2014 06:05:43 -0700 (PDT)
+Received: from acsinet21.oracle.com (acsinet21.oracle.com [141.146.126.237])
+	by userp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with
+	ESMTP id s9FD5fm2029260
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <xfs@oss.sgi.com>; Wed, 15 Oct 2014 13:05:42 GMT
+Received: from userz7021.oracle.com (userz7021.oracle.com [156.151.31.85])
+	by acsinet21.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
+	s9FD5efu017694
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=FAIL)
+	for <xfs@oss.sgi.com>; Wed, 15 Oct 2014 13:05:41 GMT
+Received: from abhmp0005.oracle.com (abhmp0005.oracle.com [141.146.116.11])
+	by userz7021.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
+	s9FD5epS002734 for <xfs@oss.sgi.com>; Wed, 15 Oct 2014 13:05:40 GMT
+Date: Wed, 15 Oct 2014 16:05:35 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+Subject: Re: xfs: use after free on error in xfs_qm_log_quotaoff()
+Message-ID: <20141015130535.GN26918@mwanda>
+References: <20140219095305.GA22351@elgon.mountain>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1413324728-4008-1-git-send-email-david@fromorbit.com>
+In-Reply-To: <20140219095305.GA22351@elgon.mountain>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,85 +42,45 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Wed, Oct 15, 2014 at 09:12:08AM +1100, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
-> 
-> The recent refactoring of the bulkstat code left a small landmine in
-> the code. If a inobt read fails, then the tree walk is aborted and
-> returns without releasing the AGI buffer or freeing the cursor. This
-> can lead to a subsequent bulkstat call hanging trying to grab the
-> AGI buffer again.
-> 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> ---
+This bug is still around.
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+regards,
+dan carpenter
 
->  fs/xfs/xfs_itable.c | 16 ++++++++++------
->  1 file changed, 10 insertions(+), 6 deletions(-)
+On Wed, Feb 19, 2014 at 12:53:05PM +0300, Dan Carpenter wrote:
+> Smatch complains here.  I don't think I have reported this one before.
+> It feels very familiar but I have grepped my outbox.
 > 
-> diff --git a/fs/xfs/xfs_itable.c b/fs/xfs/xfs_itable.c
-> index f1deb96..ef8ea05 100644
-> --- a/fs/xfs/xfs_itable.c
-> +++ b/fs/xfs/xfs_itable.c
-> @@ -427,7 +427,7 @@ xfs_bulkstat(
->  
->  			error = xfs_bulkstat_grab_ichunk(cur, agino, &icount, &r);
->  			if (error)
-> -				break;
-> +				goto del_cursor;
->  			if (icount) {
->  				irbp->ir_startino = r.ir_startino;
->  				irbp->ir_freecount = r.ir_freecount;
-> @@ -442,7 +442,7 @@ xfs_bulkstat(
->  			error = xfs_inobt_lookup(cur, 0, XFS_LOOKUP_GE, &tmp);
->  		}
->  		if (error)
-> -			break;
-> +			goto del_cursor;
->  
->  		/*
->  		 * Loop through inode btree records in this ag,
-> @@ -454,7 +454,7 @@ xfs_bulkstat(
->  			error = xfs_inobt_get_rec(cur, &r, &i);
->  			if (error || i == 0) {
->  				end_of_ag = 1;
-> -				break;
-> +				goto del_cursor;
->  			}
->  
->  			/*
-> @@ -476,13 +476,17 @@ xfs_bulkstat(
->  			error = xfs_btree_increment(cur, 0, &tmp);
->  			cond_resched();
->  		}
-> +
->  		/*
-> -		 * Drop the btree buffers and the agi buffer.
-> -		 * We can't hold any of the locks these represent
-> -		 * when calling iget.
-> +		 * Drop the btree buffers and the agi buffer as we can't hold any
-> +		 * of the locks these represent when calling iget. If there is a
-> +		 * pending error, then we are done.
->  		 */
-> +del_cursor:
->  		xfs_btree_del_cursor(cur, XFS_BTREE_NOERROR);
->  		xfs_buf_relse(agbp);
-> +		if (error)
-> +			break;
->  		/*
->  		 * Now format all the good inodes into the user's buffer.
->  		 */
-> -- 
-> 2.0.0
+> 	fs/xfs/xfs_qm_syscalls.c:814 xfs_qm_log_quotaoff()
+> 	warn: 'tp' was already freed.
 > 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+> fs/xfs/xfs_qm_syscalls.c
+>    804          /*
+>    805           * We have to make sure that the transaction is secure on disk before we
+>    806           * return and actually stop quota accounting. So, make it synchronous.
+>    807           * We don't care about quotoff's performance.
+>    808           */
+>    809          xfs_trans_set_sync(tp);
+>    810          error = xfs_trans_commit(tp, 0);
+>                         ^^^^^^^^^^^^^^^^
+> This function frees tp.
+> 
+>    811  
+>    812  error0:
+>    813          if (error) {
+>    814                  xfs_trans_cancel(tp, 0);
+>                         ^^^^^^^^^^^^^^^^^
+> Use after free.
+> 
+>    815                  /*
+>    816                   * No one else is modifying sb_qflags, so this is OK.
+>    817                   * We still hold the quotaofflock.
+>    818                   */
+> 
+> regards,
+> dan carpenter
 
 _______________________________________________
 xfs mailing list
