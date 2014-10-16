@@ -1,20 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id C470D7F3F
-	for <xfs@oss.sgi.com>; Thu, 16 Oct 2014 08:45:11 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 63C4CAC003
-	for <xfs@oss.sgi.com>; Thu, 16 Oct 2014 06:45:07 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id B0P9wzx9QhQHDCTC for <xfs@oss.sgi.com>;
-	Thu, 16 Oct 2014 06:45:06 -0700 (PDT)
-Message-ID: <543FCBE0.2040609@sandeen.net>
-Date: Thu, 16 Oct 2014 08:45:04 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id BDFDE7F3F
+	for <xfs@oss.sgi.com>; Thu, 16 Oct 2014 16:05:07 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 8F08F8F8039
+	for <xfs@oss.sgi.com>; Thu, 16 Oct 2014 14:05:04 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id 6ETOOeMFB6NCs9S8 (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 16 Oct 2014 14:05:00 -0700 (PDT)
+Received: from int-mx09.intmail.prod.int.phx2.redhat.com
+	(int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id s9GL4xxC020659
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256
+	verify=FAIL) for <xfs@oss.sgi.com>; Thu, 16 Oct 2014 17:04:59 -0400
+Date: Thu, 16 Oct 2014 17:04:57 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 1/2] xfs_vn_rename by xfs_vn_rename2
+Message-ID: <20141016210457.GA33732@bfoster.bfoster>
+References: <1413397042-32229-1-git-send-email-cmaiolino@redhat.com>
+	<1413397042-32229-2-git-send-email-cmaiolino@redhat.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfs: bulkstat doesn't release AGI buffer on error
-References: <1413324728-4008-1-git-send-email-david@fromorbit.com>
-In-Reply-To: <1413324728-4008-1-git-send-email-david@fromorbit.com>
+Content-Disposition: inline
+In-Reply-To: <1413397042-32229-2-git-send-email-cmaiolino@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,80 +35,95 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>, xfs@oss.sgi.com
+To: Carlos Maiolino <cmaiolino@redhat.com>
+Cc: xfs@oss.sgi.com
 
-On 10/14/14 5:12 PM, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
+On Wed, Oct 15, 2014 at 03:17:21PM -0300, Carlos Maiolino wrote:
+> To be able to support RENAME_EXCHANGE flag from renameat2() system call, XFS
+> must have its inode_operations updated, exporting .rename2 method, instead of
+> .rename.
 > 
-> The recent refactoring of the bulkstat code left a small landmine in
-> the code. If a inobt read fails, then the tree walk is aborted and
-> returns without releasing the AGI buffer or freeing the cursor. This
-> can lead to a subsequent bulkstat call hanging trying to grab the
-> AGI buffer again.
+> This patch just replaces the (now old) .rename method by .rename2, using the
+> same infra-structure, but checking rename flags.
 > 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
-
-Can you add a cc: stable, too?
-
+> calls to .rename2 using RENAME_EXCHANGE flag, although now handled inside XFS,
+> still returns -EINVAL.
+> 
+> RENAME_NOREPLACE is handled via VFS and we don't need to care about it inside
+> xfs_vn_rename2.
+> 
+> Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
 > ---
->  fs/xfs/xfs_itable.c | 16 ++++++++++------
->  1 file changed, 10 insertions(+), 6 deletions(-)
+>  fs/xfs/xfs_iops.c | 17 +++++++++++------
+>  1 file changed, 11 insertions(+), 6 deletions(-)
 > 
-> diff --git a/fs/xfs/xfs_itable.c b/fs/xfs/xfs_itable.c
-> index f1deb96..ef8ea05 100644
-> --- a/fs/xfs/xfs_itable.c
-> +++ b/fs/xfs/xfs_itable.c
-> @@ -427,7 +427,7 @@ xfs_bulkstat(
+> diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+> index 7212949..b2b92c7 100644
+> --- a/fs/xfs/xfs_iops.c
+> +++ b/fs/xfs/xfs_iops.c
+> @@ -379,22 +379,27 @@ xfs_vn_symlink(
+>  }
 >  
->  			error = xfs_bulkstat_grab_ichunk(cur, agino, &icount, &r);
->  			if (error)
-> -				break;
-> +				goto del_cursor;
->  			if (icount) {
->  				irbp->ir_startino = r.ir_startino;
->  				irbp->ir_freecount = r.ir_freecount;
-> @@ -442,7 +442,7 @@ xfs_bulkstat(
->  			error = xfs_inobt_lookup(cur, 0, XFS_LOOKUP_GE, &tmp);
->  		}
->  		if (error)
-> -			break;
-> +			goto del_cursor;
+>  STATIC int
+> -xfs_vn_rename(
+> +xfs_vn_rename2(
+
+The function rename seems unnecessary..? Meh, not a big deal to me
+either way. Otherwise, this one seems Ok.
+
+Brian
+
+>  	struct inode	*odir,
+>  	struct dentry	*odentry,
+>  	struct inode	*ndir,
+> -	struct dentry	*ndentry)
+> +	struct dentry	*ndentry,
+> +	unsigned int	flags)
+>  {
+>  	struct inode	*new_inode = ndentry->d_inode;
+>  	struct xfs_name	oname;
+>  	struct xfs_name	nname;
 >  
->  		/*
->  		 * Loop through inode btree records in this ag,
-> @@ -454,7 +454,7 @@ xfs_bulkstat(
->  			error = xfs_inobt_get_rec(cur, &r, &i);
->  			if (error || i == 0) {
->  				end_of_ag = 1;
-> -				break;
-> +				goto del_cursor;
->  			}
->  
->  			/*
-> @@ -476,13 +476,17 @@ xfs_bulkstat(
->  			error = xfs_btree_increment(cur, 0, &tmp);
->  			cond_resched();
->  		}
+> +	/* XFS does not support RENAME_EXCHANGE yet */
+> +	if (flags & ~RENAME_NOREPLACE)
+> +		return -EINVAL;
 > +
->  		/*
-> -		 * Drop the btree buffers and the agi buffer.
-> -		 * We can't hold any of the locks these represent
-> -		 * when calling iget.
-> +		 * Drop the btree buffers and the agi buffer as we can't hold any
-> +		 * of the locks these represent when calling iget. If there is a
-> +		 * pending error, then we are done.
->  		 */
-> +del_cursor:
->  		xfs_btree_del_cursor(cur, XFS_BTREE_NOERROR);
->  		xfs_buf_relse(agbp);
-> +		if (error)
-> +			break;
->  		/*
->  		 * Now format all the good inodes into the user's buffer.
->  		 */
+>  	xfs_dentry_to_name(&oname, odentry, 0);
+>  	xfs_dentry_to_name(&nname, ndentry, odentry->d_inode->i_mode);
+>  
+>  	return xfs_rename(XFS_I(odir), &oname, XFS_I(odentry->d_inode),
+> -			  XFS_I(ndir), &nname, new_inode ?
+> -						XFS_I(new_inode) : NULL);
+> +			  XFS_I(ndir), &nname,
+> +			  new_inode ? XFS_I(new_inode) : NULL);
+>  }
+>  
+>  /*
+> @@ -1117,7 +1122,7 @@ static const struct inode_operations xfs_dir_inode_operations = {
+>  	 */
+>  	.rmdir			= xfs_vn_unlink,
+>  	.mknod			= xfs_vn_mknod,
+> -	.rename			= xfs_vn_rename,
+> +	.rename2		= xfs_vn_rename2,
+>  	.get_acl		= xfs_get_acl,
+>  	.set_acl		= xfs_set_acl,
+>  	.getattr		= xfs_vn_getattr,
+> @@ -1145,7 +1150,7 @@ static const struct inode_operations xfs_dir_ci_inode_operations = {
+>  	 */
+>  	.rmdir			= xfs_vn_unlink,
+>  	.mknod			= xfs_vn_mknod,
+> -	.rename			= xfs_vn_rename,
+> +	.rename2		= xfs_vn_rename2,
+>  	.get_acl		= xfs_get_acl,
+>  	.set_acl		= xfs_set_acl,
+>  	.getattr		= xfs_vn_getattr,
+> -- 
+> 2.1.0
 > 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
