@@ -1,24 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 862C67F3F
-	for <xfs@oss.sgi.com>; Thu, 16 Oct 2014 06:01:35 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 126CCAC003
-	for <xfs@oss.sgi.com>; Thu, 16 Oct 2014 04:01:31 -0700 (PDT)
-Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id PQmJ8tqC92SWRi6i (version=TLSv1 cipher=AES256-SHA
-	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 16 Oct 2014 04:01:29 -0700 (PDT)
-Date: Thu, 16 Oct 2014 13:01:27 +0200
-From: Jan Kara <jack@suse.cz>
-Subject: Re: [vfs] WARNING: CPU: 3 PID: 2339 at mm/truncate.c:758
-	pagecache_isize_extended+0xdd/0x120()
-Message-ID: <20141016110127.GD6085@quack.suse.cz>
-References: <20141016100913.GA8140@wfg-t540p.sh.intel.com>
+	by oss.sgi.com (Postfix) with ESMTP id F40397F3F
+	for <xfs@oss.sgi.com>; Thu, 16 Oct 2014 06:52:48 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 840C7AC003
+	for <xfs@oss.sgi.com>; Thu, 16 Oct 2014 04:52:48 -0700 (PDT)
+Received: from mail-ob0-f169.google.com (mail-ob0-f169.google.com
+	[209.85.214.169]) by cuda.sgi.com with ESMTP id
+	7TTq1RaadIsrT3Rb (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 16 Oct 2014 04:52:44 -0700 (PDT)
+Received: by mail-ob0-f169.google.com with SMTP id m8so2706820obr.28
+	for <xfs@oss.sgi.com>; Thu, 16 Oct 2014 04:52:43 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: multipart/mixed; boundary="IJpNTDwzlM2Ie8A6"
-Content-Disposition: inline
-In-Reply-To: <20141016100913.GA8140@wfg-t540p.sh.intel.com>
+Date: Thu, 16 Oct 2014 07:52:43 -0400
+Message-ID: <CA+5PVA4FqAUXbtTtC-hZnAaw=869kfrAjM1vRrqcP=zgveAKJg@mail.gmail.com>
+Subject: XFS lockdep with Linux v3.17-5503-g35a9ad8af0bb
+From: Josh Boyer <jwboyer@fedoraproject.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,106 +25,132 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Fengguang Wu <fengguang.wu@intel.com>
-Cc: Theodore Ts'o <tytso@mit.edu>, LKML <linux-kernel@vger.kernel.org>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>, Linux-Fsdevel <linux-fsdevel@vger.kernel.org>, Jan Kara <jack@suse.cz>, lkp@01.org
+To: Dave Chinner <david@fromorbit.com>, Eric Sandeen <sandeen@redhat.com>
+Cc: "Linux-Kernel@Vger. Kernel. Org" <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com
 
+Hi All,
 
---IJpNTDwzlM2Ie8A6
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Colin reported a lockdep spew with XFS using Linus' tree last week.
+The lockdep report is below.  He noted that his application was using
+splice.
 
-On Thu 16-10-14 18:09:13, Wu Fengguang wrote:
-> Hi Jan,
-> 
-> Your patch gives a warning on the xfs code path. :)
-> 
-> git://git.kernel.org/pub/scm/linux/kernel/git/tytso/ext4.git dev
-> commit be330474e2d0533a7a6185e567f3654fec096dbd ("vfs: fix data corruption when blocksize < pagesize for mmaped data")
-...
+josh
 
-> <5>[   25.956576] XFS (sda1): Mounting V4 Filesystem
-> <6>[   26.194468] XFS (sda1): Ending clean mount
-> <4>[   27.258450] ------------[ cut here ]------------
-> <4>[   27.258789] WARNING: CPU: 3 PID: 2339 at mm/truncate.c:758 pagecache_isize_extended+0xdd/0x120()
-  Ah, I believe this is:
-WARN_ON(!mutex_is_locked(&inode->i_mutex));
-  because XFS doesn't use i_mutex but its private rwlock. I forgot to check
-dmesg after running xfstests for XFS and didn't notice this. Anyway, the
-solution is to just remove the assertion since it doesn't hold for all
-filesystems. Patch for that is attached. Thanks Fengguang for catching
-this.
+[1] https://bugzilla.redhat.com/show_bug.cgi?id=1152813
 
-								Honza
+[14689.265161] ======================================================
+[14689.265175] [ INFO: possible circular locking dependency detected ]
+[14689.265186] 3.18.0-0.rc0.git2.1.fc22.x86_64 #1 Not tainted
+[14689.265190] -------------------------------------------------------
+[14689.265199] atomic/1144 is trying to acquire lock:
+[14689.265203]  (&sb->s_type->i_mutex_key#13){+.+.+.}, at:
+[<ffffffffa01465ba>] xfs_file_buffered_aio_write.isra.10+0x7a/0x310
+[xfs]
+[14689.265245]
+but task is already holding lock:
+[14689.265249]  (&pipe->mutex/1){+.+.+.}, at: [<ffffffff8126937e>]
+pipe_lock+0x1e/0x20
+[14689.265262]
+which lock already depends on the new lock.
 
-> <4>[   27.259443] Modules linked in: ipmi_watchdog ipmi_msghandler btrfs xor raid6_pq sg sr_mod cdrom sd_mod firewire_ohci firewire_core crc_itu_t snd_hda_codec_realtek pcspkr snd_hda_codec_generic ahci libahci libata snd_hda_intel i2c_i801 snd_hda_controller parport_pc parport snd_hda_codec snd_hwdep snd_pcm snd_timer shpchp snd x38_edac edac_core soundcore acpi_cpufreq
-> <4>[   27.262734] CPU: 3 PID: 2339 Comm: fallocate Not tainted 3.17.0-gda9a9f1 #1
-> <4>[   27.263153] Hardware name:                  /        , BIOS VVRBLI9J.86A.2891.2007.0511.1144 05/11/2007
-> <4>[   27.263780]  0000000000000009 ffff88007a43fd88 ffffffff81859ea6 0000000000000000
-> <4>[   27.264492]  ffff88007a43fdc0 ffffffff8106ef0d 0000000000001000 ffff88005b6f05a8
-> <4>[   27.265199]  0000000000000000 ffff88005b6f05a8 0000000004000000 ffff88007a43fdd0
-> <4>[   27.265906] Call Trace:
-> <4>[   27.266165]  [<ffffffff81859ea6>] dump_stack+0x4d/0x66
-> <4>[   27.266511]  [<ffffffff8106ef0d>] warn_slowpath_common+0x7d/0xa0
-> <4>[   27.266900]  [<ffffffff8106efea>] warn_slowpath_null+0x1a/0x20
-> <4>[   27.267286]  [<ffffffff8117020d>] pagecache_isize_extended+0xdd/0x120
-> <4>[   27.267690]  [<ffffffff811712b7>] truncate_setsize+0x27/0x40
-> <4>[   27.268068]  [<ffffffff8133eab7>] xfs_setattr_size+0x157/0x3a0
-> <4>[   27.268442]  [<ffffffff8134c827>] ? xfs_trans_commit+0x157/0x250
-> <4>[   27.268821]  [<ffffffff813336df>] xfs_file_fallocate+0x2df/0x300
-> <4>[   27.269215]  [<ffffffff811dbb09>] ? __sb_start_write+0x49/0xf0
-> <4>[   27.269596]  [<ffffffff813923b4>] ? selinux_file_permission+0xc4/0x120
-> <4>[   27.270009]  [<ffffffff811d7563>] do_fallocate+0x123/0x1b0
-> <4>[   27.270380]  [<ffffffff811d7633>] SyS_fallocate+0x43/0x70
-> <4>[   27.270738]  [<ffffffff81862c69>] system_call_fastpath+0x16/0x1b
-> <4>[   27.271119] ---[ end trace 6a3b1350ad399610 ]---
-> <4>[   27.274498] ------------[ cut here ]------------
+[14689.265268]
+the existing dependency chain (in reverse order) is:
+[14689.265287]
+-> #2 (&pipe->mutex/1){+.+.+.}:
+[14689.265296]        [<ffffffff810ffde4>] lock_acquire+0xa4/0x1d0
+[14689.265303]        [<ffffffff8183e5b5>] mutex_lock_nested+0x85/0x440
+[14689.265310]        [<ffffffff8126937e>] pipe_lock+0x1e/0x20
+[14689.265315]        [<ffffffff8129836a>] splice_to_pipe+0x2a/0x260
+[14689.265321]        [<ffffffff81298b9f>]
+__generic_file_splice_read+0x57f/0x620
+[14689.265328]        [<ffffffff81298c7b>] generic_file_splice_read+0x3b/0x90
+[14689.265334]        [<ffffffffa0145b20>] xfs_file_splice_read+0xb0/0x1e0 [xfs]
+[14689.265350]        [<ffffffff812976ac>] do_splice_to+0x6c/0x90
+[14689.265356]        [<ffffffff81299e7d>] SyS_splice+0x6dd/0x800
+[14689.265362]        [<ffffffff81842f69>] system_call_fastpath+0x16/0x1b
+[14689.265368]
+-> #1 (&(&ip->i_iolock)->mr_lock){++++++}:
+[14689.265424]        [<ffffffff810ffde4>] lock_acquire+0xa4/0x1d0
+[14689.265494]        [<ffffffff810f87be>] down_write_nested+0x5e/0xc0
+[14689.265553]        [<ffffffffa0153529>] xfs_ilock+0xb9/0x1c0 [xfs]
+[14689.265629]        [<ffffffffa01465c7>]
+xfs_file_buffered_aio_write.isra.10+0x87/0x310 [xfs]
+[14689.265693]        [<ffffffffa01468da>] xfs_file_write_iter+0x8a/0x130 [xfs]
+[14689.265749]        [<ffffffff8126019e>] new_sync_write+0x8e/0xd0
+[14689.265811]        [<ffffffff81260a3a>] vfs_write+0xba/0x200
+[14689.265862]        [<ffffffff812616ac>] SyS_write+0x5c/0xd0
+[14689.265912]        [<ffffffff81842f69>] system_call_fastpath+0x16/0x1b
+[14689.265963]
+-> #0 (&sb->s_type->i_mutex_key#13){+.+.+.}:
+[14689.266024]        [<ffffffff810ff45e>] __lock_acquire+0x1b0e/0x1c10
+[14689.266024]        [<ffffffff810ffde4>] lock_acquire+0xa4/0x1d0
+[14689.266024]        [<ffffffff8183e5b5>] mutex_lock_nested+0x85/0x440
+[14689.266024]        [<ffffffffa01465ba>]
+xfs_file_buffered_aio_write.isra.10+0x7a/0x310 [xfs]
+[14689.266024]        [<ffffffffa01468da>] xfs_file_write_iter+0x8a/0x130 [xfs]
+[14689.266024]        [<ffffffff81297ffc>] iter_file_splice_write+0x2ec/0x4b0
+[14689.266024]        [<ffffffff81299b21>] SyS_splice+0x381/0x800
+[14689.266024]        [<ffffffff81842f69>] system_call_fastpath+0x16/0x1b
+[14689.266024]
+other info that might help us debug this:
 
---IJpNTDwzlM2Ie8A6
-Content-Type: text/x-patch; charset=us-ascii
-Content-Disposition: attachment; filename="0001-mm-Remove-false-WARN_ON-from-pagecache_isize_extende.patch"
+[14689.266024] Chain exists of:
+  &sb->s_type->i_mutex_key#13 --> &(&ip->i_iolock)->mr_lock --> &pipe->mutex/1
 
->From de3426d6495f4b44b14c09b7c7202e9a86d864b9 Mon Sep 17 00:00:00 2001
-From: Jan Kara <jack@suse.cz>
-Date: Thu, 16 Oct 2014 12:58:42 +0200
-Subject: [PATCH] mm: Remove false WARN_ON from pagecache_isize_extended()
+[14689.266024]  Possible unsafe locking scenario:
 
-The WARN_ON checking whether i_mutex is held in
-pagecache_isize_extended() was wrong because some filesystems (e.g.
-XFS) use different locks for serialization of truncates / writes. So
-just remove the check.
+[14689.266024]        CPU0                    CPU1
+[14689.266024]        ----                    ----
+[14689.266024]   lock(&pipe->mutex/1);
+[14689.266024]                                lock(&(&ip->i_iolock)->mr_lock);
+[14689.266024]                                lock(&pipe->mutex/1);
+[14689.266024]   lock(&sb->s_type->i_mutex_key#13);
+[14689.266024]
+ *** DEADLOCK ***
 
-Signed-off-by: Jan Kara <jack@suse.cz>
----
- mm/truncate.c | 1 -
- 1 file changed, 1 deletion(-)
-
-diff --git a/mm/truncate.c b/mm/truncate.c
-index 261eaf6e5a19..c646084e5eec 100644
---- a/mm/truncate.c
-+++ b/mm/truncate.c
-@@ -755,7 +755,6 @@ void pagecache_isize_extended(struct inode *inode, loff_t from, loff_t to)
- 	struct page *page;
- 	pgoff_t index;
- 
--	WARN_ON(!mutex_is_locked(&inode->i_mutex));
- 	WARN_ON(to > inode->i_size);
- 
- 	if (from >= to || bsize == PAGE_CACHE_SIZE)
--- 
-1.8.1.4
-
-
---IJpNTDwzlM2Ie8A6
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+[14689.266024] 2 locks held by atomic/1144:
+[14689.266024]  #0:  (sb_writers#8){.+.+.+}, at: [<ffffffff81299f1f>]
+SyS_splice+0x77f/0x800
+[14689.266024]  #1:  (&pipe->mutex/1){+.+.+.}, at:
+[<ffffffff8126937e>] pipe_lock+0x1e/0x20
+[14689.266024]
+stack backtrace:
+[14689.266024] CPU: 0 PID: 1144 Comm: atomic Not tainted
+3.18.0-0.rc0.git2.1.fc22.x86_64 #1
+[14689.266024] Hardware name: Red Hat KVM, BIOS 0.5.1 01/01/2011
+[14689.266024]  0000000000000000 00000000fd91796b ffff88003793bad0
+ffffffff81838f3e
+[14689.266024]  ffffffff82c03eb0 ffff88003793bb10 ffffffff81836b36
+ffff88003793bb70
+[14689.266024]  ffff88003828a670 ffff880038289a40 0000000000000002
+ffff880038289ab0
+[14689.266024] Call Trace:
+[14689.266024]  [<ffffffff81838f3e>] dump_stack+0x4d/0x66
+[14689.266024]  [<ffffffff81836b36>] print_circular_bug+0x201/0x20f
+[14689.266024]  [<ffffffff810ff45e>] __lock_acquire+0x1b0e/0x1c10
+[14689.266024]  [<ffffffff8101c8c0>] ? dump_trace+0x170/0x350
+[14689.266024]  [<ffffffff810ffde4>] lock_acquire+0xa4/0x1d0
+[14689.266024]  [<ffffffffa01465ba>] ?
+xfs_file_buffered_aio_write.isra.10+0x7a/0x310 [xfs]
+[14689.266024]  [<ffffffff8183e5b5>] mutex_lock_nested+0x85/0x440
+[14689.266024]  [<ffffffffa01465ba>] ?
+xfs_file_buffered_aio_write.isra.10+0x7a/0x310 [xfs]
+[14689.266024]  [<ffffffffa01465ba>] ?
+xfs_file_buffered_aio_write.isra.10+0x7a/0x310 [xfs]
+[14689.266024]  [<ffffffff810fd36c>] ? mark_held_locks+0x7c/0xb0
+[14689.266024]  [<ffffffffa01465ba>]
+xfs_file_buffered_aio_write.isra.10+0x7a/0x310 [xfs]
+[14689.266024]  [<ffffffff8126937e>] ? pipe_lock+0x1e/0x20
+[14689.266024]  [<ffffffffa01468da>] xfs_file_write_iter+0x8a/0x130 [xfs]
+[14689.266024]  [<ffffffff81297ffc>] iter_file_splice_write+0x2ec/0x4b0
+[14689.266024]  [<ffffffff81299b21>] SyS_splice+0x381/0x800
+[14689.266024]  [<ffffffff81842f69>] system_call_fastpath+0x16/0x1b
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---IJpNTDwzlM2Ie8A6--
