@@ -1,21 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id B209B7F3F
-	for <xfs@oss.sgi.com>; Sat, 18 Oct 2014 13:16:40 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 741E97F3F
+	for <xfs@oss.sgi.com>; Sat, 18 Oct 2014 14:26:33 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id A0827304039
-	for <xfs@oss.sgi.com>; Sat, 18 Oct 2014 11:16:37 -0700 (PDT)
-Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
-	[65.41.216.221]) by cuda.sgi.com with ESMTP id IO7nuROTSzc8HjF3
-	for <xfs@oss.sgi.com>; Sat, 18 Oct 2014 11:16:33 -0700 (PDT)
-Message-ID: <5442AE9A.7030703@hardwarefreak.com>
-Date: Sat, 18 Oct 2014 13:16:58 -0500
-From: Stan Hoeppner <stan@hardwarefreak.com>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 03772AC004
+	for <xfs@oss.sgi.com>; Sat, 18 Oct 2014 12:26:29 -0700 (PDT)
+Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
+	with ESMTP id 33EtsRY77L1KsxV2 (version=TLSv1 cipher=AES256-SHA
+	bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Sat, 18 Oct 2014 12:26:27 -0700 (PDT)
+Date: Sat, 18 Oct 2014 21:26:24 +0200
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [PATCH 0/12 v2] Moving i_dquot out of struct inode
+Message-ID: <20141018192624.GA16478@quack.suse.cz>
+References: <1412952910-7142-1-git-send-email-jack@suse.cz>
+	<20141011133452.GA29004@infradead.org>
+	<20141017192428.GA19788@quack.suse.cz>
+	<20141018151738.GG30355@infradead.org>
 MIME-Version: 1.0
-Subject: Re: gather write metrics on multiple files
-References: <543611CF.6030904@hardwarefreak.com>	<543613E7.70508@gmail.com>	<54361C04.5090404@hardwarefreak.com>	<20141009211339.GD4376@dastard>
-	<544202AE.3000003@hardwarefreak.com>
-In-Reply-To: <544202AE.3000003@hardwarefreak.com>
+Content-Disposition: inline
+In-Reply-To: <20141018151738.GG30355@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,59 +32,21 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Dave Kleikamp <shaggy@kernel.org>, jfs-discussion@lists.sourceforge.net, Jan Kara <jack@suse.cz>, Jeff Mahoney <jeffm@suse.de>, Mark Fasheh <mfasheh@suse.com>, reiserfs-devel@vger.kernel.org, xfs@oss.sgi.com, cluster-devel@redhat.com, Joel Becker <jlbec@evilplan.org>, linux-fsdevel@vger.kernel.org, tytso@mit.edu, linux-ext4@vger.kernel.org, Steven Whitehouse <swhiteho@redhat.com>, ocfs2-devel@oss.oracle.com, viro@zeniv.linux.org.uk
 
-On 10/18/2014 01:03 AM, Stan Hoeppner wrote:
-> On 10/09/2014 04:13 PM, Dave Chinner wrote:
-> ...
->>> I'm told we have 800 threads writing to nearly as many files
->>> concurrently on a single XFS on a 12+2 spindle RAID6 LUN.
->>> Achieved data rate is currently ~300 MiB/s.  Some of these are
->>> files are supposedly being written at a rate of only 32KiB every
->>> 2-3 seconds, while some (two) are ~50 MiB/s.  I need to determine
->>> how many bytes we're writing to each of the low rate files, and
->>> how many files, to figure out RMW mitigation strategies.  Out of
->>> the apparent 800 streams 700 are these low data rate suckers, one
->>> stream writing per file.  
->>>
->>> Nary a stock RAID controller is going to be able to assemble full
->>> stripes out of these small slow writes.  With a 768 KiB stripe
->>> that's what, 24 seconds to fill it at 2 seconds per 32 KiB IO?
->>
->> Raid controllers don't typically have the resources to track
->> hundreds of separate write streams at a time. Most don't have the
->> memory available to track that many active write streams, and those
->> that do probably can't proritise writeback sanely given how slowly
->> most cachelines would be touched. The fast writers would simply tune
->> over the slower writer caches way too quickly.
->>
->> Perhaps you need to change the application to make the slow writers
->> buffer stripe sized writes in memory and flush them 768k at a
->> time...
+On Sat 18-10-14 08:17:38, Christoph Hellwig wrote:
+> On Fri, Oct 17, 2014 at 09:24:28PM +0200, Jan Kara wrote:
+> >   I don't see the 4-bytes per inode saving, what am I missing? Frankly, I
+> > don't see a difference in readability but since you and Al agree on that I
+> > concede to your taste :)
 > 
-> All buffers are now 768K multiples--6144, 768, 768, and I'm told the app should be writing out full buffers.  However I'm not seeing the throughput increase I should given the amount that the RMWs should have decreased, which, if my math is correct, should be about half (80) the raw actuator seek rate of these drives (7.2k SAS).  Something isn't right.  I'm guessing it's the controller firmware, maybe the test app, or both.  The test app backs off then ramps up when response times at the controller go up and back down.  And it's not super accurate or timely about it.  The lowest interval setting possible is 10 seconds.  Which is way too high when a controller goes into congestion.
-> 
-> Does XFS give alignment hints with O_DIRECT writes into preallocated files?  The filesystems were aligned at make time w/768K stripe width, so each prealloc file should be aligned on a stripe boundary.  I've played with the various queue settings, even tried deadline instead of noop hoping more LBAs could be sorted before hitting the controller.  Can't seem to get a repeatable increase.  I've nr_requests at 524288, rq_affinity 2, read_ahead_kb 0 since reads are <20% of the IO, add_random 0, etc.  Nothing seems to help really.
-
-Some additional background:
-
-    Num. Streams     = 350
-    WRITING:
-        Num. Write Threads  = 100
-        Avg. Write Rate     =       72 KiB/s
-        Avg. Write Intvl    = 10666.666 ms
-        Num. Write Buffers  = 426
-        Write Buffer Size   = 768 KiB
-        Write Buffer Mem.   = 327168 KiB
-        Group Write Rate    =    25200 KiB/s
-        Avg. Buffer Rate    = 32.812 bufs/s
-        Avg. Buffer Intvl.  = 30.476 ms
-        Avg. Thread Intvl.  = 3047.600 ms
-
-The 350 streams are written to 350 preallocated files in parallel.  Yes, a seek monster.  Writing without AIO currently.  I'm bumping the rate to 2x during the run but that isn't reflected above.  The above is the default setup.  The app can't dump the running setup.  The previous non buffer aligned config used 160KB write buffers.
-
-Stan
+> It's the removal of s_inode_fields that saves 4 bytes.
+  But that was in the superblock, not in the inode...
+								Honza
+-- 
+Jan Kara <jack@suse.cz>
+SUSE Labs, CR
 
 _______________________________________________
 xfs mailing list
