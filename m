@@ -1,22 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 3C29E7F3F
-	for <xfs@oss.sgi.com>; Sat, 18 Oct 2014 01:03:05 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 1A9EF8F8039
-	for <xfs@oss.sgi.com>; Fri, 17 Oct 2014 23:03:02 -0700 (PDT)
-Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
-	[65.41.216.221]) by cuda.sgi.com with ESMTP id FPZPPk9ykOhgWiMB
-	for <xfs@oss.sgi.com>; Fri, 17 Oct 2014 23:03:01 -0700 (PDT)
-Message-ID: <544202AE.3000003@hardwarefreak.com>
-Date: Sat, 18 Oct 2014 01:03:26 -0500
-From: Stan Hoeppner <stan@hardwarefreak.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 2036E7F3F
+	for <xfs@oss.sgi.com>; Sat, 18 Oct 2014 04:26:46 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id C0762AC004
+	for <xfs@oss.sgi.com>; Sat, 18 Oct 2014 02:26:42 -0700 (PDT)
+Received: from mail-qg0-f43.google.com (mail-qg0-f43.google.com
+	[209.85.192.43]) by cuda.sgi.com with ESMTP id kv4nICdtOgBbfgLS
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Sat, 18 Oct 2014 02:26:41 -0700 (PDT)
+Received: by mail-qg0-f43.google.com with SMTP id j107so1579088qga.2
+	for <xfs@oss.sgi.com>; Sat, 18 Oct 2014 02:26:40 -0700 (PDT)
 MIME-Version: 1.0
-Subject: Re: gather write metrics on multiple files
-References: <543611CF.6030904@hardwarefreak.com>
-	<543613E7.70508@gmail.com>	<54361C04.5090404@hardwarefreak.com>
-	<20141009211339.GD4376@dastard>
-In-Reply-To: <20141009211339.GD4376@dastard>
+Date: Sat, 18 Oct 2014 17:26:40 +0800
+Message-ID: <CALSoAzD4ccHXBuD6mT3ggqMf1j_kDEK-RNMOeRLq+N+NiWVQXg@mail.gmail.com>
+Subject: Problem about very high Average Read/Write Request Time
+From: quanjun hu <huquanjun@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,48 +24,61 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============7723553068838953914=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On 10/09/2014 04:13 PM, Dave Chinner wrote:
-...
->> I'm told we have 800 threads writing to nearly as many files
->> concurrently on a single XFS on a 12+2 spindle RAID6 LUN.
->> Achieved data rate is currently ~300 MiB/s.  Some of these are
->> files are supposedly being written at a rate of only 32KiB every
->> 2-3 seconds, while some (two) are ~50 MiB/s.  I need to determine
->> how many bytes we're writing to each of the low rate files, and
->> how many files, to figure out RMW mitigation strategies.  Out of
->> the apparent 800 streams 700 are these low data rate suckers, one
->> stream writing per file.  
->>
->> Nary a stock RAID controller is going to be able to assemble full
->> stripes out of these small slow writes.  With a 768 KiB stripe
->> that's what, 24 seconds to fill it at 2 seconds per 32 KiB IO?
-> 
-> Raid controllers don't typically have the resources to track
-> hundreds of separate write streams at a time. Most don't have the
-> memory available to track that many active write streams, and those
-> that do probably can't proritise writeback sanely given how slowly
-> most cachelines would be touched. The fast writers would simply tune
-> over the slower writer caches way too quickly.
-> 
-> Perhaps you need to change the application to make the slow writers
-> buffer stripe sized writes in memory and flush them 768k at a
-> time...
+--===============7723553068838953914==
+Content-Type: multipart/alternative; boundary=001a11c11fca3e7f820505af14a9
 
-All buffers are now 768K multiples--6144, 768, 768, and I'm told the app should be writing out full buffers.  However I'm not seeing the throughput increase I should given the amount that the RMWs should have decreased, which, if my math is correct, should be about half (80) the raw actuator seek rate of these drives (7.2k SAS).  Something isn't right.  I'm guessing it's the controller firmware, maybe the test app, or both.  The test app backs off then ramps up when response times at the controller go up and back down.  And it's not super accurate or timely about it.  The lowest interval setting possible is 10 seconds.  Which is way too high when a controller goes into congestion.
+--001a11c11fca3e7f820505af14a9
+Content-Type: text/plain; charset=UTF-8
 
-Does XFS give alignment hints with O_DIRECT writes into preallocated files?  The filesystems were aligned at make time w/768K stripe width, so each prealloc file should be aligned on a stripe boundary.  I've played with the various queue settings, even tried deadline instead of noop hoping more LBAs could be sorted before hitting the controller.  Can't seem to get a repeatable increase.  I've nr_requests at 524288, rq_affinity 2, read_ahead_kb 0 since reads are <20% of the IO, add_random 0, etc.  Nothing seems to help really.
+Hi,
+   I am using xfs on a raid 5 (~100TB) and put log on external ssd device,
+the mount information is:
+/dev/sdc on /data/fhgfs/fhgfs_storage type xfs
+(rw,relatime,attr2,delaylog,logdev=/dev/sdb1,sunit=512,swidth=15872,noquota).
+  when doing only reading / only writing , the speed is very fast(~1.5G),
+but when do both the speed is very slow (100M), and high r_await(160) and
+w_await(200000).
+   1. how can I reduce average request time?
+   2. can I use ssd as write/read cache for xfs?
 
-Thanks,
-Stan
+Best regards,
+Quanjun
+
+--001a11c11fca3e7f820505af14a9
+Content-Type: text/html; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+
+<div dir=3D"ltr">Hi,<div>=C2=A0 =C2=A0I am using xfs on a raid 5 (~100TB) a=
+nd put log on external ssd device, the mount information is:</div><div>/dev=
+/sdc on /data/fhgfs/fhgfs_storage type xfs (rw,relatime,attr2,delaylog,logd=
+ev=3D/dev/sdb1,sunit=3D512,swidth=3D15872,noquota).<br></div><div>=C2=A0 wh=
+en doing only reading / only writing , the speed is very fast(~1.5G), but w=
+hen do both the speed is very slow (100M), and high r_await(160) and w_awai=
+t(200000).</div><div>=C2=A0 =C2=A01. how can I reduce average request time?=
+</div><div>=C2=A0 =C2=A02. can I use ssd as write/read cache for xfs?</div>=
+<div><br></div><div><span class=3D"" style=3D"font-family:arial,sans-serif;=
+font-size:12.8000001907349px;background:rgb(255,255,204)">Best</span><span =
+style=3D"font-family:arial,sans-serif;font-size:12.8000001907349px">=C2=A0r=
+egards,</span><br></div><div><span style=3D"font-family:arial,sans-serif;fo=
+nt-size:12.8000001907349px">Quanjun</span></div><div><br></div></div>
+
+--001a11c11fca3e7f820505af14a9--
+
+
+--===============7723553068838953914==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============7723553068838953914==--
