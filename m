@@ -1,26 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 236F17F51
-	for <xfs@oss.sgi.com>; Sun, 19 Oct 2014 09:16:43 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 11E5F304048
-	for <xfs@oss.sgi.com>; Sun, 19 Oct 2014 07:16:40 -0700 (PDT)
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.9])
-	by cuda.sgi.com with ESMTP id ykczJU2yhPNWeprh (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Sun, 19 Oct 2014 07:16:35 -0700 (PDT)
-Date: Sun, 19 Oct 2014 07:16:28 -0700
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 0/12 v2] Moving i_dquot out of struct inode
-Message-ID: <20141019141628.GA2485@infradead.org>
-References: <1412952910-7142-1-git-send-email-jack@suse.cz>
-	<20141011133452.GA29004@infradead.org>
-	<20141017192428.GA19788@quack.suse.cz>
-	<20141018151738.GG30355@infradead.org>
-	<20141018192624.GA16478@quack.suse.cz>
+	by oss.sgi.com (Postfix) with ESMTP id 705587F4E
+	for <xfs@oss.sgi.com>; Sun, 19 Oct 2014 16:16:31 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 3E653304039
+	for <xfs@oss.sgi.com>; Sun, 19 Oct 2014 14:16:30 -0700 (PDT)
+Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
+	[65.41.216.221]) by cuda.sgi.com with ESMTP id mfbFy01W6WvqlJT6
+	for <xfs@oss.sgi.com>; Sun, 19 Oct 2014 14:16:29 -0700 (PDT)
+Message-ID: <54442A48.6050503@hardwarefreak.com>
+Date: Sun, 19 Oct 2014 16:16:56 -0500
+From: Stan Hoeppner <stan@hardwarefreak.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20141018192624.GA16478@quack.suse.cz>
+Subject: Re: Problem about very high Average Read/Write Request Time
+References: <CALSoAzD4ccHXBuD6mT3ggqMf1j_kDEK-RNMOeRLq+N+NiWVQXg@mail.gmail.com>
+In-Reply-To: <CALSoAzD4ccHXBuD6mT3ggqMf1j_kDEK-RNMOeRLq+N+NiWVQXg@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,13 +27,32 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Jan Kara <jack@suse.cz>
-Cc: cluster-devel@redhat.com, jfs-discussion@lists.sourceforge.net, tytso@mit.edu, Jeff Mahoney <jeffm@suse.de>, Dave Kleikamp <shaggy@kernel.org>, Mark Fasheh <mfasheh@suse.com>, reiserfs-devel@vger.kernel.org, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, Joel Becker <jlbec@evilplan.org>, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, Steven Whitehouse <swhiteho@redhat.com>, ocfs2-devel@oss.oracle.com, viro@zeniv.linux.org.uk
+To: quanjun hu <huquanjun@gmail.com>, xfs@oss.sgi.com
 
-On Sat, Oct 18, 2014 at 09:26:24PM +0200, Jan Kara wrote:
->   But that was in the superblock, not in the inode...
+On 10/18/2014 04:26 AM, quanjun hu wrote:
+> Hi,
+>    I am using xfs on a raid 5 (~100TB) and put log on external ssd device, the mount information is:
+> /dev/sdc on /data/fhgfs/fhgfs_storage type xfs (rw,relatime,attr2,delaylog,logdev=/dev/sdb1,sunit=512,swidth=15872,noquota).
+>   when doing only reading / only writing , the speed is very fast(~1.5G), but when do both the speed is very slow (100M), and high r_await(160) and w_await(200000).
+>    1. how can I reduce average request time?
+>    2. can I use ssd as write/read cache for xfs?
 
-You're right!  Sorry for the confusion.
+You apparently have 31 effective SATA 7.2k RPM spindles with 256 KiB chunk, 7.75 MiB stripe width, in RAID5.  That should yield 3-4.6 GiB/s of streaming throughput assuming no cable, expander, nor HBA limitations.  You're achieving only 1/3rd to 1/2 of this.  Which hardware RAID controller is this?  What are the specs?  Cache RAM, host and back end cable count and type?
+
+When you say read or write is fast individually, but read+write is slow, what types of files are you reading and writing, and how many in parallel?  This combined pattern is likely the cause of the slowdown due to excessive seeking in the drives.
+
+As others mentioned this isn't an XFS problem.  The problem is that your RAID geometry doesn't match your workload.  Your very wide parity stripe is apparently causing excessive seeking with your read+write workload due to read-modify-write operations.  To mitigate this, and to increase resiliency, you should switch to RAID6 with a smaller chunk.  If you need maximum capacity make a single RAID6 array with 16 KiB chunk size.  This will yield a 496 KiB stripe width, increasing the odds that all writes are a full stripe, and hopefully eliminating much of the RMW problem.
+
+A better option might be making three 10 drive RAID6 arrays (two spares) with 32 KiB chunk, 256 KiB stripe width, and concatenating the 3 arrays with mdadm --linear.  You'd have 24 spindles of capacity and throughput instead of 31, but no more RMW operations, or at least very few.  You'd format the linear md device with
+
+# mkfs.xfs -d su=32k,sw=8 /dev/mdX
+
+As long as your file accesses are spread fairly evenly across at least 3 directories you should achieve excellent parallel throughput, though single file streaming throughput will peak at 800-1200 MiB/s, that of 8 drives.  With a little understanding of how this setup works, you can write two streaming files and read a third without any of the 3 competing with one another for disk seeks/bandwidth--which is your current problem.  Or you could do one read and one write to each of 3 directories, and no pair of two would interfere with the other pairs.  Scale up from here.
+
+Basically what we're doing is isolating each RAID LUN into a set of directories.  When you write to one of those directories the file goes into only one of the 3 RAID arrays.  Doing this isolates RMWs for a given write to only a subset of your disks, and minimizes the amount of seeks generated by parallel accesses.
+
+Cheers,
+Stan
 
 _______________________________________________
 xfs mailing list
