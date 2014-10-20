@@ -1,25 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 19DC37F4E
-	for <xfs@OSS.SGI.com>; Mon, 20 Oct 2014 03:00:45 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id A68C9AC001
-	for <xfs@OSS.SGI.com>; Mon, 20 Oct 2014 01:00:41 -0700 (PDT)
-Received: from out3-smtp.messagingengine.com (out3-smtp.messagingengine.com
-	[66.111.4.27]) by cuda.sgi.com with ESMTP id 9UR18FAmQuseAy6i
-	(version=TLSv1 cipher=AES256-SHA bits=256 verify=NO) for
-	<xfs@OSS.SGI.com>; Mon, 20 Oct 2014 01:00:36 -0700 (PDT)
-Received: from compute4.internal (compute4.nyi.internal [10.202.2.44])
-	by gateway2.nyi.internal (Postfix) with ESMTP id 220D1205D2
-	for <xfs@OSS.SGI.com>; Mon, 20 Oct 2014 04:00:36 -0400 (EDT)
-Message-ID: <5444C122.4080104@fastmail.fm>
-Date: Mon, 20 Oct 2014 10:00:34 +0200
-From: Bernd Schubert <bernd.schubert@fastmail.fm>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 72F277F4E
+	for <xfs@oss.sgi.com>; Mon, 20 Oct 2014 06:55:16 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 5E1FD304039
+	for <xfs@oss.sgi.com>; Mon, 20 Oct 2014 04:55:16 -0700 (PDT)
+Received: from mail-qa0-f52.google.com (mail-qa0-f52.google.com
+	[209.85.216.52]) by cuda.sgi.com with ESMTP id biscktEOpYCitoxS
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Mon, 20 Oct 2014 04:55:14 -0700 (PDT)
+Received: by mail-qa0-f52.google.com with SMTP id dc16so3131433qab.39
+	for <xfs@oss.sgi.com>; Mon, 20 Oct 2014 04:55:14 -0700 (PDT)
+In-Reply-To: <54448313.7040602@sandeen.net>
+References: <648473255763364B961A02AC3BE1060D03C7940C13@MX19A.corp.emc.com>
+	<20141020014750.GL7169@dastard> <54448313.7040602@sandeen.net>
 MIME-Version: 1.0
-Subject: Re: Problem about very high Average Read/Write Request Time
-References: <CALSoAzD4ccHXBuD6mT3ggqMf1j_kDEK-RNMOeRLq+N+NiWVQXg@mail.gmail.com>	<20141018143848.3baf3266@galadriel.home>
-	<21571.36364.518119.806191@tree.ty.sabi.co.uk>
-In-Reply-To: <21571.36364.518119.806191@tree.ty.sabi.co.uk>
+Subject: Re: Can't build RPM of xfstests
+From: Greg Freemyer <greg.freemyer@gmail.com>
+Date: Mon, 20 Oct 2014 07:55:08 -0400
+Message-ID: <30CA1845-C213-49EA-8809-F1E7A98AE7F9@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,41 +31,92 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Peter Grandi <pg@xfs.list.sabi.co.UK>, Linux fs XFS <xfs@OSS.SGI.com>
-
-On 10/19/2014 12:10 PM, Peter Grandi wrote:
->>> I am using xfs on a raid 5 (~100TB) and put log on external
->>> ssd device, the mount information is: /dev/sdc on
->>> /data/fhgfs/fhgfs_storage type xfs
->>> (rw,relatime,attr2,delaylog,logdev=/dev/sdb1,sunit=512,swidth=15872,noquota).
->>> when doing only reading / only writing , the speed is very
->>> fast(~1.5G), but when do both the speed is very slow (100M),
->>> and high r_await(160) and w_await(200000).
-> 
->> What are your kernel version, mount options and xfs_info output ?
-> 
-> Those are usually important details, but in this case the
-> information that matters is already present.
-> 
-> There is a ratio of 31 (thirty one) between 'swidth' and 'sunit'
-> and assuming that this reflects the geometry of the RAID5 set
-> and given commonly available disk sizes it can be guessed that
-> with amazing "bravery" someone has configured a RAID5 out of 32
-> (thirty two) high capacity/low IOPS 3TB drives, or something
-> similar.
-> 
->   It is even "braver" than that: if the device name
->   "/data/fhgfs/fhgfs_storage" is dedscriptive, this "brave"
->   RAID5 set is supposed to hold the object storage layer of a
->   BeeFS highly parallel filesystem, and therefore will likely
->   have mostly-random accesses.
-> 
-
-Where do you get the assumption from that FhGFS/BeeGFS is going to do
-random reads/writes or the application of top of it is going to do that?
+To: Eric Sandeen <sandeen@sandeen.net>, Dave Chinner <david@fromorbit.com>, "Kaul, Yaniv" <Yaniv.Kaul@emc.com>
+Cc: esandeen@redhat.com, fstests@vger.kernel.org, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
 
-Bernd
+
+On October 19, 2014 11:35:47 PM EDT, Eric Sandeen <sandeen@sandeen.net> wrote:
+>On 10/19/14 8:47 PM, Dave Chinner wrote:
+>> [ cc fstests@vger.kernel.org ]
+>
+>...
+>
+>>> === rpm ===
+>>> /bin/sed -e's|@pkg_name@|xfstests|g' \
+>>> 	    -e's|@pkg_version@|1.1.1|g' \
+>>> 	    -e's|@pkg_release@|1|g' \
+>>> 	    -e's|@pkg_distribution@|Linux|g' \
+>>> 	    -e's|@build_root@|/tmp/34943|g' \
+>>> 	    -e'/^BuildRoot: *$/d' \
+>>> 	    -e's|@make@|/usr/bin/gmake|g' < xfstests.spec.in >
+>xfstests.spec
+>>> /usr/bin/rpmbuild -ba --rcfile ./rpm-4.rc xfstests.spec
+>>> error: File /root/rpmbuild/SOURCES/xfstests-1.1.1.src.tar.gz: No
+>such file or directory
+>>> gmake[1]: *** [dist] Error 1
+>> 
+>> I've never tried to build xfstests packages, so I'd make the
+>> assumption that the package build infrastructure is broken and needs
+>> fixing.  That's looking for the tarball in the wrong place. My naive
+>> reading of that is rpmbuild is expecting to run as root, not as a
+>> jenkins user....
+>> 
+>> Eric, you're the local RPM expert - any ideas?
+>> 
+>> FWIW, I'll take whatever patches you guys come up with that make it
+>> build rpms properly. ;)
+>
+>xfstests rpms have just never been a priority for me.  I run it just
+>fine out
+>of a checked-out git repo, and it doesn't require installation; on the
+>other
+>hand, making it palatable for a proper FHS-compliant distro package
+>would
+>require a fair bit of restructuring beyond just the packaging scripts.
+>
+>And... I honestly have no idea how the Makepkgs stuff is supposed to
+>work.
+>
+>I've never been a fan of upstream containing packaging bits anyway;
+>different
+>distros have different requirements, and the Makepkgs script has always
+>seemed
+>weird.  RPM/specfiles are supposed to drive the build - the build isn't
+>supposed
+>to drive rpm.  I think it'd be best to make a distro-specific specfile
+>which knows how
+>to handle an xfstests tarball.  Trying to reverse engineer Makepkgs
+>doesn't sound
+>fun to me; rpmbuild knows how to do this stuff.  Dropping a generic RPM
+>specfile
+>into the top level dir would probably be enough to get it off the
+>ground even if
+>it doesn't conform to any particular distro's packaging rules.
+>
+>I think it's up to those who want rpms to dig into this, for now. 
+>Dumping all
+>files into /opt/xfstests is probably simplest, since FHS-compliance is
+>probably a
+>long ways off.
+>
+>-Eric
+
+Opensuse is building rpms of 1.1.1 so the build infrastructure isn't too badly broken.  I don't know if they are following FHS, but I doubt they use /opt.
+
+The opensuse package/specfile can be found at: https://build.opensuse.org/package/show/filesystems/xfstests
+
+The rpms including the source rpm can be downloaded from:
+http://software.opensuse.org/download.html?project=filesystems&package=xfstests
+
+Note the specfile applies a patch to change the install aspect of the tarball immediately after untar'ing it.  
+
+I don't maintain that so I don't know why the patch is needed.
+
+Greg
+
+-- 
+Sent from my Android phone with K-9 Mail. Please excuse my brevity.
 
 _______________________________________________
 xfs mailing list
