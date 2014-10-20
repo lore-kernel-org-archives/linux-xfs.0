@@ -1,22 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 1B0F87F4E
-	for <xfs@oss.sgi.com>; Sun, 19 Oct 2014 20:48:28 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 0717D8F8039
-	for <xfs@oss.sgi.com>; Sun, 19 Oct 2014 18:48:27 -0700 (PDT)
-Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
-	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	WMaFy3mIp6obbpUq for <xfs@oss.sgi.com>;
-	Sun, 19 Oct 2014 18:48:24 -0700 (PDT)
-Date: Mon, 20 Oct 2014 12:47:50 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Can't build RPM of xfstests
-Message-ID: <20141020014750.GL7169@dastard>
-References: <648473255763364B961A02AC3BE1060D03C7940C13@MX19A.corp.emc.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 19DC37F4E
+	for <xfs@OSS.SGI.com>; Mon, 20 Oct 2014 03:00:45 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id A68C9AC001
+	for <xfs@OSS.SGI.com>; Mon, 20 Oct 2014 01:00:41 -0700 (PDT)
+Received: from out3-smtp.messagingengine.com (out3-smtp.messagingengine.com
+	[66.111.4.27]) by cuda.sgi.com with ESMTP id 9UR18FAmQuseAy6i
+	(version=TLSv1 cipher=AES256-SHA bits=256 verify=NO) for
+	<xfs@OSS.SGI.com>; Mon, 20 Oct 2014 01:00:36 -0700 (PDT)
+Received: from compute4.internal (compute4.nyi.internal [10.202.2.44])
+	by gateway2.nyi.internal (Postfix) with ESMTP id 220D1205D2
+	for <xfs@OSS.SGI.com>; Mon, 20 Oct 2014 04:00:36 -0400 (EDT)
+Message-ID: <5444C122.4080104@fastmail.fm>
+Date: Mon, 20 Oct 2014 10:00:34 +0200
+From: Bernd Schubert <bernd.schubert@fastmail.fm>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <648473255763364B961A02AC3BE1060D03C7940C13@MX19A.corp.emc.com>
+Subject: Re: Problem about very high Average Read/Write Request Time
+References: <CALSoAzD4ccHXBuD6mT3ggqMf1j_kDEK-RNMOeRLq+N+NiWVQXg@mail.gmail.com>	<20141018143848.3baf3266@galadriel.home>
+	<21571.36364.518119.806191@tree.ty.sabi.co.uk>
+In-Reply-To: <21571.36364.518119.806191@tree.ty.sabi.co.uk>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,64 +32,41 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "Kaul, Yaniv" <Yaniv.Kaul@emc.com>
-Cc: esandeen@redhat.com, fstests@vger.kernel.org, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: Peter Grandi <pg@xfs.list.sabi.co.UK>, Linux fs XFS <xfs@OSS.SGI.com>
 
-[ cc fstests@vger.kernel.org ]
-
-On Sun, Oct 12, 2014 at 02:58:50AM -0400, Kaul, Yaniv wrote:
-> I'm getting the sources from https://kernel.googlesource.com/pub/scm/fs/xfs/xfstests-dev (as I can't use git directly, only over HTTP(s) due to company policy)
-> I'm trying to compile the RPM on either CentOS 6.5 or 7, both fail identically. Log snippets:
+On 10/19/2014 12:10 PM, Peter Grandi wrote:
+>>> I am using xfs on a raid 5 (~100TB) and put log on external
+>>> ssd device, the mount information is: /dev/sdc on
+>>> /data/fhgfs/fhgfs_storage type xfs
+>>> (rw,relatime,attr2,delaylog,logdev=/dev/sdb1,sunit=512,swidth=15872,noquota).
+>>> when doing only reading / only writing , the speed is very
+>>> fast(~1.5G), but when do both the speed is very slow (100M),
+>>> and high r_await(160) and w_await(200000).
 > 
-> == dist, log is Logs/dist
-> make: Entering directory `/var/jenkins/workspace/xfstests-build/build'
-> /bin/tar: xfstests-1.1.1/m4/general_headers.m4: Cannot stat: No such file or directory
-> /bin/tar: Exiting with failure status due to previous errors
-> Wrote: /var/jenkins/workspace/xfstests-build/build/xfstests-1.1.1.src.tar.gz
-> === install ===
-> gmake[1]: Entering directory `/var/jenkins/workspace/xfstests-build'
-> Building include
-> Building lib
-> Building ltp
-> Building src
-> Building aio-dio-regress
-> Building m4
-> Building common
-> Building tests
-> /usr/bin/gmake --no-print-directory Q=@ -C include install
-> ...
-> gmake[1]: Leaving directory `/var/jenkins/workspace/xfstests-build'
-> === tar ===
-> Wrote: /var/jenkins/workspace/xfstests-build/build/tar/xfstests-1.1.1.tar.gz
-> === rpm ===
-> /bin/sed -e's|@pkg_name@|xfstests|g' \
-> 	    -e's|@pkg_version@|1.1.1|g' \
-> 	    -e's|@pkg_release@|1|g' \
-> 	    -e's|@pkg_distribution@|Linux|g' \
-> 	    -e's|@build_root@|/tmp/34943|g' \
-> 	    -e'/^BuildRoot: *$/d' \
-> 	    -e's|@make@|/usr/bin/gmake|g' < xfstests.spec.in > xfstests.spec
-> /usr/bin/rpmbuild -ba --rcfile ./rpm-4.rc xfstests.spec
-> error: File /root/rpmbuild/SOURCES/xfstests-1.1.1.src.tar.gz: No such file or directory
-> gmake[1]: *** [dist] Error 1
+>> What are your kernel version, mount options and xfs_info output ?
+> 
+> Those are usually important details, but in this case the
+> information that matters is already present.
+> 
+> There is a ratio of 31 (thirty one) between 'swidth' and 'sunit'
+> and assuming that this reflects the geometry of the RAID5 set
+> and given commonly available disk sizes it can be guessed that
+> with amazing "bravery" someone has configured a RAID5 out of 32
+> (thirty two) high capacity/low IOPS 3TB drives, or something
+> similar.
+> 
+>   It is even "braver" than that: if the device name
+>   "/data/fhgfs/fhgfs_storage" is dedscriptive, this "brave"
+>   RAID5 set is supposed to hold the object storage layer of a
+>   BeeFS highly parallel filesystem, and therefore will likely
+>   have mostly-random accesses.
+> 
 
-I've never tried to build xfstests packages, so I'd make the
-assumption that the package build infrastructure is broken and needs
-fixing.  That's looking for the tarball in the wrong place. My naive
-reading of that is rpmbuild is expecting to run as root, not as a
-jenkins user....
+Where do you get the assumption from that FhGFS/BeeGFS is going to do
+random reads/writes or the application of top of it is going to do that?
 
-Eric, you're the local RPM expert - any ideas?
 
-FWIW, I'll take whatever patches you guys come up with that make it
-build rpms properly. ;)
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Bernd
 
 _______________________________________________
 xfs mailing list
