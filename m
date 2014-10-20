@@ -1,23 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 067497F4E
-	for <xfs@oss.sgi.com>; Mon, 20 Oct 2014 08:21:57 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id E8E27304032
-	for <xfs@oss.sgi.com>; Mon, 20 Oct 2014 06:21:53 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id EPyi9hkNnYIRIXmu (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 20 Oct 2014 06:21:53 -0700 (PDT)
-Date: Mon, 20 Oct 2014 09:21:48 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH] xfs: fix error handling in xfs_qm_log_quotaoff()
-Message-ID: <20141020132148.GB30254@bfoster.bfoster>
-References: <1413466773-56087-1-git-send-email-bfoster@redhat.com>
-	<20141020003120.GJ7169@dastard>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 4DC137F4E
+	for <xfs@oss.sgi.com>; Mon, 20 Oct 2014 08:54:51 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id C387CAC002
+	for <xfs@oss.sgi.com>; Mon, 20 Oct 2014 06:54:50 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id nonGgGBbfyHAewPa for <xfs@oss.sgi.com>;
+	Mon, 20 Oct 2014 06:54:48 -0700 (PDT)
+Message-ID: <54451427.9060306@sandeen.net>
+Date: Mon, 20 Oct 2014 08:54:47 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20141020003120.GJ7169@dastard>
+Subject: Re: Can't build RPM of xfstests
+References: <648473255763364B961A02AC3BE1060D03C7940C13@MX19A.corp.emc.com>
+	<20141020014750.GL7169@dastard> <54448313.7040602@sandeen.net>
+	<30CA1845-C213-49EA-8809-F1E7A98AE7F9@gmail.com>
+In-Reply-To: <30CA1845-C213-49EA-8809-F1E7A98AE7F9@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,88 +29,38 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Dan Carpenter <dan.carpenter@oracle.com>, xfs@oss.sgi.com
+To: Greg Freemyer <greg.freemyer@gmail.com>, Dave Chinner <david@fromorbit.com>, "Kaul, Yaniv" <Yaniv.Kaul@emc.com>
+Cc: esandeen@redhat.com, fstests@vger.kernel.org, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-On Mon, Oct 20, 2014 at 11:31:20AM +1100, Dave Chinner wrote:
-> On Thu, Oct 16, 2014 at 09:39:33AM -0400, Brian Foster wrote:
-> > The error handling in xfs_qm_log_quotaoff() has a couple problems. If
-> > xfs_trans_commit() fails, we fall through to the error block and call
-> > xfs_trans_cancel(). This is incorrect on commit failure. If
-> > xfs_trans_reserve() fails, we jump to the error block, cancel the tp and
-> > restore the superblock qflags to oldsbqflag. However, oldsbqflag has
-> > been initialized to zero and not yet updated from the original flags so
-> > we set the flags to zero.
-> > 
-> > Fix up the error handling in xfs_qm_log_quotaoff() to not restore flags
-> > if they haven't been modified and not cancel the tp on commit failure.
-> > 
-> > Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
-> > Signed-off-by: Brian Foster <bfoster@redhat.com>
-> > ---
-> >  fs/xfs/xfs_qm_syscalls.c | 35 ++++++++++++++++++++---------------
-> >  1 file changed, 20 insertions(+), 15 deletions(-)
-> > 
-> > diff --git a/fs/xfs/xfs_qm_syscalls.c b/fs/xfs/xfs_qm_syscalls.c
-> > index 80f2d77..f2d454e 100644
-> > --- a/fs/xfs/xfs_qm_syscalls.c
-> > +++ b/fs/xfs/xfs_qm_syscalls.c
-> > @@ -784,13 +784,17 @@ xfs_qm_log_quotaoff(
-> >  {
-> >  	xfs_trans_t	       *tp;
-> >  	int			error;
-> > -	xfs_qoff_logitem_t     *qoffi=NULL;
-> > -	uint			oldsbqflag=0;
-> > +	xfs_qoff_logitem_t     *qoffi;
-> > +	uint			oldsbqflag;
-> > +
-> > +	*qoffstartp = NULL;
-> >  
-> >  	tp = xfs_trans_alloc(mp, XFS_TRANS_QM_QUOTAOFF);
-> >  	error = xfs_trans_reserve(tp, &M_RES(mp)->tr_qm_quotaoff, 0, 0);
-> > -	if (error)
-> > -		goto error0;
-> > +	if (error) {
-> > +		xfs_trans_cancel(tp, 0);
-> > +		return error;
-> > +	}
-> >  
-> >  	qoffi = xfs_trans_get_qoff_item(tp, NULL, flags & XFS_ALL_QUOTA_ACCT);
-> >  	xfs_trans_log_quotaoff_item(tp, qoffi);
-> > @@ -809,19 +813,20 @@ xfs_qm_log_quotaoff(
-> >  	 */
-> >  	xfs_trans_set_sync(tp);
-> >  	error = xfs_trans_commit(tp, 0);
-> > +	if (error)
-> > +		goto error_flags;
-> 
-> 
-> If the commit fails, the filesystem will be shut down and the state
-> of the quota flags is completely irrelevant at this point so there's
-> no reason to restore them. Indeed, is restoring them even the right
-> thing to do? The commit *may* have made it to disk, but a
-> subsequent error during completion handling resulted in the commit
-> failing....
-> 
+On 10/20/14 6:55 AM, Greg Freemyer wrote:
 
-Good point. We don't seem to try and undo this kind of state change
-anywhere else that I can see either. At most, we release references or
-free memory or other such things that aren't tied to the transaction in
-any way.
+> Opensuse is building rpms of 1.1.1 so the build infrastructure isn't
+> too badly broken.  I don't know if they are following FHS, but I
+> doubt they use /opt.
 
-Brian
+The build works fine, it's the "Makepkgs" that I think is a bit odd,
+at least for RPM packaging.
 
-> Cheers,
+Also, if we really want to encourage packaging, we should probably start
+sticking official version numbers on it.  "1.1.1" was tagged in Dec 2012,
+and there have been no "releases" since.
+
+> The opensuse package/specfile can be found at:
+> https://build.opensuse.org/package/show/filesystems/xfstests
 > 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+> The rpms including the source rpm can be downloaded from: 
+> http://software.opensuse.org/download.html?project=filesystems&package=xfstests
+>
+>  Note the specfile applies a patch to change the install aspect of
+> the tarball immediately after untar'ing it.
 > 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+> I don't maintain that so I don't know why the patch is needed.
+
+Ok, cool, I'll take a look at the specfile & patch.  I had also packaged
+it up for our internal QA use long ago, and had to make a few changes
+as well.
+
+-Eric
 
 _______________________________________________
 xfs mailing list
