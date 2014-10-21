@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id EFBEF7F60
-	for <xfs@oss.sgi.com>; Tue, 21 Oct 2014 09:38:55 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 7D8E3AC003
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 41A657F61
+	for <xfs@oss.sgi.com>; Tue, 21 Oct 2014 09:38:56 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 039E88F804B
 	for <xfs@oss.sgi.com>; Tue, 21 Oct 2014 07:38:55 -0700 (PDT)
 Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id CjzqyTFJYObJaxMd (version=TLSv1 cipher=AES256-SHA
+	with ESMTP id gzeaG2yGszsNO7q3 (version=TLSv1 cipher=AES256-SHA
 	bits=256 verify=NO) for <xfs@oss.sgi.com>;
 	Tue, 21 Oct 2014 07:38:54 -0700 (PDT)
 From: Jan Kara <jack@suse.cz>
-Subject: [PATCH 09/12] ocfs2: Convert to private i_dquot field
-Date: Tue, 21 Oct 2014 16:38:33 +0200
-Message-Id: <1413902316-17997-10-git-send-email-jack@suse.cz>
+Subject: [PATCH 12/12] vfs: Remove i_dquot field from inode
+Date: Tue, 21 Oct 2014 16:38:36 +0200
+Message-Id: <1413902316-17997-13-git-send-email-jack@suse.cz>
 In-Reply-To: <1413902316-17997-1-git-send-email-jack@suse.cz>
 References: <1413902316-17997-1-git-send-email-jack@suse.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -31,72 +31,77 @@ Sender: xfs-bounces@oss.sgi.com
 To: linux-fsdevel@vger.kernel.org
 Cc: Dave Kleikamp <shaggy@kernel.org>, jfs-discussion@lists.sourceforge.net, tytso@mit.edu, Jeff Mahoney <jeffm@suse.de>, Mark Fasheh <mfasheh@suse.com>, reiserfs-devel@vger.kernel.org, xfs@oss.sgi.com, cluster-devel@redhat.com, Joel Becker <jlbec@evilplan.org>, Jan Kara <jack@suse.cz>, linux-ext4@vger.kernel.org, hch@lst.de, Steven Whitehouse <swhiteho@redhat.com>, ocfs2-devel@oss.oracle.com, viro@zeniv.linux.org.uk
 
-CC: Mark Fasheh <mfasheh@suse.com>
-CC: Joel Becker <jlbec@evilplan.org>
-CC: ocfs2-devel@oss.oracle.com
+All filesystems using VFS quotas are now converted to use their private
+i_dquot fields. Remove the i_dquot field from generic inode structure.
+
 Signed-off-by: Jan Kara <jack@suse.cz>
 ---
- fs/ocfs2/inode.h |  4 ++++
- fs/ocfs2/super.c | 10 ++++++++++
- 2 files changed, 14 insertions(+)
+ fs/inode.c         | 3 ---
+ fs/quota/dquot.c   | 3 ---
+ fs/super.c         | 7 -------
+ include/linux/fs.h | 3 ---
+ 4 files changed, 16 deletions(-)
 
-diff --git a/fs/ocfs2/inode.h b/fs/ocfs2/inode.h
-index a9b76de46047..1bb2e27eaad7 100644
---- a/fs/ocfs2/inode.h
-+++ b/fs/ocfs2/inode.h
-@@ -80,6 +80,10 @@ struct ocfs2_inode_info
- 	 */
- 	tid_t i_sync_tid;
- 	tid_t i_datasync_tid;
-+
-+#ifdef CONFIG_QUOTA
-+	struct dquot *i_dquot[MAXQUOTAS];
-+#endif
- };
+diff --git a/fs/inode.c b/fs/inode.c
+index 26753ba7b6d6..2ed95f7caa4f 100644
+--- a/fs/inode.c
++++ b/fs/inode.c
+@@ -143,9 +143,6 @@ int inode_init_always(struct super_block *sb, struct inode *inode)
+ 	inode->i_blocks = 0;
+ 	inode->i_bytes = 0;
+ 	inode->i_generation = 0;
+-#ifdef CONFIG_QUOTA
+-	memset(&inode->i_dquot, 0, sizeof(inode->i_dquot));
+-#endif
+ 	inode->i_pipe = NULL;
+ 	inode->i_bdev = NULL;
+ 	inode->i_cdev = NULL;
+diff --git a/fs/quota/dquot.c b/fs/quota/dquot.c
+index 8144ff2b561d..5bc5f254ac1f 100644
+--- a/fs/quota/dquot.c
++++ b/fs/quota/dquot.c
+@@ -895,9 +895,6 @@ EXPORT_SYMBOL(dqget);
  
- /*
-diff --git a/fs/ocfs2/super.c b/fs/ocfs2/super.c
-index 93c85bc745e1..9a97986d54f5 100644
---- a/fs/ocfs2/super.c
-+++ b/fs/ocfs2/super.c
-@@ -143,6 +143,11 @@ static int ocfs2_susp_quotas(struct ocfs2_super *osb, int unsuspend);
- static int ocfs2_enable_quotas(struct ocfs2_super *osb);
- static void ocfs2_disable_quotas(struct ocfs2_super *osb);
+ static inline struct dquot **i_dquot(struct inode *inode)
+ {
+-	/* Temporary workaround until all filesystems are converted. */
+-	if (!inode->i_sb->s_op->get_dquots)
+-		return inode->i_dquot;
+ 	return inode->i_sb->s_op->get_dquots(inode);
+ }
  
-+static struct dquot **ocfs2_get_dquots(struct inode *inode)
-+{
-+	return OCFS2_I(inode)->i_dquot;
-+}
-+
- static const struct super_operations ocfs2_sops = {
- 	.statfs		= ocfs2_statfs,
- 	.alloc_inode	= ocfs2_alloc_inode,
-@@ -155,6 +160,7 @@ static const struct super_operations ocfs2_sops = {
- 	.show_options   = ocfs2_show_options,
- 	.quota_read	= ocfs2_quota_read,
- 	.quota_write	= ocfs2_quota_write,
-+	.get_dquots	= ocfs2_get_dquots,
- };
- 
- enum {
-@@ -563,6 +569,9 @@ static struct inode *ocfs2_alloc_inode(struct super_block *sb)
- 
- 	oi->i_sync_tid = 0;
- 	oi->i_datasync_tid = 0;
-+#ifdef CONFIG_QUOTA
-+	memset(&oi->i_dquot, 0, sizeof(oi->i_dquot));
-+#endif
- 
- 	jbd2_journal_init_jbd_inode(&oi->ip_jinode, &oi->vfs_inode);
- 	return &oi->vfs_inode;
-@@ -2073,6 +2082,7 @@ static int ocfs2_initialize_super(struct super_block *sb,
- 	sb->s_export_op = &ocfs2_export_ops;
- 	sb->s_qcop = &ocfs2_quotactl_ops;
- 	sb->dq_op = &ocfs2_quota_operations;
-+	sb_dqopt(sb)->allowed_types = QTYPE_MASK_USR | QTYPE_MASK_GRP;
- 	sb->s_xattr = ocfs2_xattr_handlers;
- 	sb->s_time_gran = 1;
- 	sb->s_flags |= MS_NOATIME;
+diff --git a/fs/super.c b/fs/super.c
+index 5e70cc327dae..eae088f6aaae 100644
+--- a/fs/super.c
++++ b/fs/super.c
+@@ -218,13 +218,6 @@ static struct super_block *alloc_super(struct file_system_type *type, int flags)
+ 	atomic_set(&s->s_active, 1);
+ 	mutex_init(&s->s_vfs_rename_mutex);
+ 	lockdep_set_class(&s->s_vfs_rename_mutex, &type->s_vfs_rename_key);
+-	/*
+-	 * For now MAXQUOTAS check in do_quotactl() will limit quota type
+-	 * appropriately. When each fs sets allowed_types, we can remove the
+-	 * line below
+-	 */
+-	s->s_dquot.allowed_types = QTYPE_MASK_USR | QTYPE_MASK_GRP |
+-				   QTYPE_MASK_PRJ;
+ 	mutex_init(&s->s_dquot.dqio_mutex);
+ 	mutex_init(&s->s_dquot.dqonoff_mutex);
+ 	s->s_maxbytes = MAX_NON_LFS;
+diff --git a/include/linux/fs.h b/include/linux/fs.h
+index b714e8e0415d..ab3513abf30f 100644
+--- a/include/linux/fs.h
++++ b/include/linux/fs.h
+@@ -593,9 +593,6 @@ struct inode {
+ 	const struct file_operations	*i_fop;	/* former ->i_op->default_file_ops */
+ 	struct file_lock	*i_flock;
+ 	struct address_space	i_data;
+-#ifdef CONFIG_QUOTA
+-	struct dquot		*i_dquot[MAXQUOTAS];
+-#endif
+ 	struct list_head	i_devices;
+ 	union {
+ 		struct pipe_inode_info	*i_pipe;
 -- 
 1.8.1.4
 
