@@ -1,30 +1,34 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 5DED07F50
-	for <xfs@OSS.SGI.com>; Tue, 21 Oct 2014 14:42:45 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id B60397F50
+	for <xfs@oss.sgi.com>; Tue, 21 Oct 2014 15:45:23 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 4C52D304051
-	for <xfs@OSS.SGI.com>; Tue, 21 Oct 2014 12:42:41 -0700 (PDT)
-Received: from woodbine.london.02.net (woodbine.london.02.net
-	[87.194.255.145]) by cuda.sgi.com with ESMTP id
-	JqiHO9JBrdKg3HLB for <xfs@OSS.SGI.com>;
-	Tue, 21 Oct 2014 12:42:36 -0700 (PDT)
-Received: from ty.sabi.co.UK (94.192.123.208) by woodbine.london.02.net
-	(8.5.140)
-	id 53BD9B4503B2AE6B for xfs@OSS.SGI.com; Tue, 21 Oct 2014 21:13:17 +0100
-Received: from from [127.0.0.1] (helo=tree.ty.sabi.co.uk)
-	by ty.sabi.co.UK with esmtp(Exim 4.76 #1) id 1Xge9Y-0004bk-Si
-	for <xfs@OSS.SGI.com>; Tue, 21 Oct 2014 19:27:28 +0100
-MIME-Version: 1.0
-Message-ID: <21574.42382.795064.152229@tree.ty.sabi.co.uk>
-Date: Tue, 21 Oct 2014 19:27:26 +0100
-Subject: Re: Problem about very high Average Read/Write Request Time
-In-Reply-To: <5444C122.4080104@fastmail.fm>
-References: <CALSoAzD4ccHXBuD6mT3ggqMf1j_kDEK-RNMOeRLq+N+NiWVQXg@mail.gmail.com>
-	<20141018143848.3baf3266@galadriel.home>
-	<21571.36364.518119.806191@tree.ty.sabi.co.uk>
-	<5444C122.4080104@fastmail.fm>
-From: pg@xfs.list.sabi.co.UK (Peter Grandi)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 9615B8F8033
+	for <xfs@oss.sgi.com>; Tue, 21 Oct 2014 13:45:20 -0700 (PDT)
+Received: from st11p01mm-asmtp002.mac.com (st11p01mm-asmtp002.mac.com
+	[17.172.204.237]) by cuda.sgi.com with ESMTP id
+	5YYbDEqAmIf2u1nV (version=TLSv1 cipher=RC4-MD5 bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 21 Oct 2014 13:45:19 -0700 (PDT)
+Received: from [192.168.1.75]
+	(host86-147-72-48.range86-147.btcentralplus.com [86.147.72.48])
+	by st11p01mm-asmtp002.mac.com
+	(Oracle Communications Messaging Server 7u4-27.10(7.0.4.27.9) 64bit
+	(built Jun
+	6 2014)) with ESMTPSA id <0NDT00I1IAYONS20@st11p01mm-asmtp002.mac.com>
+	for xfs@oss.sgi.com; Tue, 21 Oct 2014 20:44:51 +0000 (GMT)
+References: <4ddef393-ad9e-49a1-80d7-9c29bcd74c8f@me.com>
+	<20141013220940.GE17506@dastard>
+	<EC9978C1-65B4-48B8-9C3D-980341A752E8@me.com>
+	<20141014125506.4bbeaefd@harpe.intellique.com>
+	<7630F174-D8AF-412D-8BBA-C3B1F7E05B9F@me.com>
+	<20141014183804.2baa8dd5@harpe.intellique.com>
+MIME-version: 1.0 (1.0)
+In-reply-to: <20141014183804.2baa8dd5@harpe.intellique.com>
+Message-id: <2D4D8948-5EAE-4C51-983E-5598A148F0B1@me.com>
+From: Tom Mason <tom_mason@me.com>
+Subject: Re: Mount: Structure needs cleaning
+Date: Tue, 21 Oct 2014 21:44:48 +0100
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,101 +37,34 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Linux fs XFS <xfs@OSS.SGI.com>
+To: Emmanuel Florac <eflorac@intellique.com>
+Cc: Brian Foster <bfoster@redhat.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
->> [ ... ]  supposed to hold the object storage layer of a BeeFS
->> highly parallel filesystem, and therefore will likely have
->> mostly-random accesses.
-
-> Where do you get the assumption from that FhGFS/BeeGFS is
-> going to do random reads/writes or the application of top of
-> it is going to do that?
-
-In this specific case it is not an assumption, thanks to the
-prominent fact that the original poster was testing (locally I
-guess) and complaining about concurrent read/writes, which
-result in random like arm movement even if each of the read and
-write streams are entirely sequential. I even pointed this out,
-probably not explicitly enough:
-
-  >> when doing only reading / only writing , the speed is very
-  >> fast(~1.5G), but when do both the speed is very slow
-  >> (100M), and high r_await(160) and w_await(200000).
-
-  BTW the 100MB/s aggregate over 31 drives means around 3MB/s
-  per drive, which seems pretty good for a RW workload with
-  mostly-random accesses with high RMW correlation.
-
-Also if this testing was appropriate then it was because the
-intended workload was indeed concurrent reads and writes to the
-object store.
-
-It is not a mere assumption in the general case either; it
-is both commonly observed and a simple deduction, because of
-the nature of distributed filesystems and in particular parallel
-HPC ones like Lustre or BeeGFS, but also AFS and even NFS ones.
-
-* Clients have caches. Therefore most of the locality in the
-  (read) access patterns will hopefully be filtered out by the
-  client cache. This applies (ideally) to any distributed
-  filesystem.
-* HPC/parallel servers tend to whave many clients (e.g. for an
-  it could be 10,000 clients and 500 object storage servers) and
-  hopefully each client works on a different subset of the data
-  tree, and distribution of data objects onto servers hopefully
-  random.
-  Therefore it is likely that many clients will access with
-  concurrent read and write many different files on the same
-  server resulting in many random "hotspots" in each server's
-  load.
-  Note that each client could be doing entirely sequential IO to
-  each file they access, but the concurrent accesses do possibly
-  widely scattered files will turn that into random IO at the
-  server level.
-
-Just about the only case where sequential client workloads don't
-become random workloads at the server is when the client
-workload is such that only one file is "hot" per server.
-
-There is an additional issue favouring random access patterns:
-
-  * Typically large fileservers are setup with a lot of storage
-    because of anticipated lifetime usage, so they start mostly
-    empty.
-  * Most filesystems then allocate new data in regular patterns,
-    often starting from the beginning of available storage, in
-    an attempt to minimize arm travel time usually (XFS uses
-    various heuristics, which are somewhat different whether the
-    option 'inode64' is specified or not).
-  * Unfortunately as the filetree becomes larger new allocations
-    have to be made farther away, resulting in longer travel
-    times and more apparent randomness at the storage server
-    level.
-  * Eventually if the object server reaches a steady state where
-    roughly as much data is deleted and created the free storage
-    areas will become widely scattered, leading to essentially
-    random allocation, the more random the more capacity used.
-
-  Leaving a significant percentage of capacity free, like at
-  least 10% and more like 20%, greatly increases the chance of
-  finding free space near to put new data near to existing
-  "related" data. This increases locality, but only at the
-  single-stream level; therefore is usually does not help that
-  much widely shared distributed servers; and in particular does
-  not apply that much to object stores, because usually they
-  obscure which data object is related to which data object.
-
-The above issues are pretty much "network and distributed
-filesystems for beginners" notes, but in significant part also
-apply to widely shared non network and non distributed servers
-on which XFS is often used, so they may be usefully mentioned
-in this list.
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+CgoKCj4gT24gMTQgT2N0IDIwMTQsIGF0IDE3OjM4LCBFbW1hbnVlbCBGbG9yYWMgPGVmbG9yYWNA
+aW50ZWxsaXF1ZS5jb20+IHdyb3RlOgo+IAo+IExlIFR1ZSwgMTQgT2N0IDIwMTQgMTY6NDY6Mzkg
+KzAxMDAKPiBUb20gTWFzb24gPHRvbV9tYXNvbkBtZS5jb20+IMOpY3JpdmFpdDoKPiAKPj4+IFRv
+IGNvcHkgdGhlIGRpc2sgb24gYW5vdGhlciBvbmUsIHlvdSBjYW4gdXNlIGRkcmVzY3VlIG9yIGRk
+IHdpdGgKPj4+ICJub2Vycm9yIiBvcHRpb24uCj4+PiAtLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLSAgCj4+IFRoYW5rcyBhZ2FpbiEKPj4gQ2FuIEkgY3JlYXRlIGFuIGlt
+YWdlIG9uIGEgbmV3IE5BUyBkcml2ZSBzdWNoIGFzIGEgc2VhZ2F0ZSAzdGIKPj4gJ0NlbnRyYWwg
+bmV0d29yayBhdHRhY2hlZCBzdG9yYWdlIE5BUycgU1RDRzMwMDAyMDAgd2l0aG91dAo+PiBpbnRl
+cmZlcmluZyB3aXRoIGl0cyBjYXBhYmlsaXRpZXMgYXMgYSBOQVMgZHJpdmU/Cj4gCj4gWWVzIG9m
+IGNvdXJzZSwgc2ltcGx5IG1ha2UgYSBmaWxlIGltYWdlIG9uIHRoZSBzaGFyZWQgdm9sdW1lIDoK
+PiAKPiAKPiBkZCBpZj0vZGV2L3NkYjIgbm9lcnJvciBvZj0vbW91bnRwb2ludC9teW5hcy9kaXNr
+MVRCLmltZwo+IAo+IFRoZW4geW91IGNhbiBydW4geGZzX3JlcGFpciBvbiB0aGUgaW1hZ2UgZmls
+ZToKPiAKPiB4ZnNfcmVwYWlyIC1mIC9tb3VudHBvaW50L215bmFzL2Rpc2sxVEIuaW1nCj4gCj4g
+T3IgcnVuIHBob3RvcmVjIG9uIGl0IAo+IAo+IHBob3RvcmVjIC9tb3VudHBvaW50L215bmFzL2Rp
+c2sxVEIuaW1nCkhlbGxvIGFnYWluIQpJIGhhdmUgYSBuZXcgTkFTIERyaXZlIGNvbm5lY3RlZCB0
+byBteSBuZXR3b3JrLCAzdGIuIEhvdyB3b3VsZCBJIGZpbmQgdGhpcyB0aHJvdWdoIG15IHVidW50
+dSBsaXZlY2Qgc28gdGhhdCBJIGNhbiBwdXQgYW4gaW1hZ2Ugb2YgdGhlIGJyb2tlbiBkaXNrIG9u
+IGl0PyBJdCBzaG93cyB1cCBpbiBuYXV0aWx1cyB3aXRoIHNldmVyYWwgc2VydmVyIGljb25zICh0
+aHJlZSBncmV5IGJveGVzIHN0YWNrZWQgb24gdG9wIG9mIG9uZSBhbm90aGVyKQotU2VhZ2F0ZS00
+MURBMzUKLVNFQUdBVEUtNDFEQTM1Ci1TZWFnYXRlIENlbnRyYWwgc2hhcmVkIHN0b3JhZ2UgKFNl
+YWdhdGUtNDFEQTM1KQotU0ZUUCBmaWxlIHRyYW5zZmVyIG9uIFNlYWdhdGUtNDFEQTM1CkNoZWVy
+cyEKVG9tCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhm
+cyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFu
+L2xpc3RpbmZvL3hmcwo=
