@@ -1,23 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id BFD357F47
-	for <xfs@oss.sgi.com>; Tue, 21 Oct 2014 02:45:33 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 5DFB3AC002
-	for <xfs@oss.sgi.com>; Tue, 21 Oct 2014 00:45:30 -0700 (PDT)
-Received: from mail.lichtvoll.de (mondschein.lichtvoll.de [194.150.191.11]) by
-	cuda.sgi.com with ESMTP id dyopBXzunEnghtp1 for
-	<xfs@oss.sgi.com>; Tue, 21 Oct 2014 00:45:26 -0700 (PDT)
-Received: from merkaba.localnet (blackhole.teamix.net [194.150.191.251])
-	by mail.lichtvoll.de (Postfix) with ESMTPSA id 713D443E
-	for <xfs@oss.sgi.com>; Tue, 21 Oct 2014 09:45:25 +0200 (CEST)
-From: Martin Steigerwald <Martin@lichtvoll.de>
-Subject: Re: High I/O waits
-Date: Tue, 21 Oct 2014 09:45:24 +0200
-Message-ID: <1594296.7DZVsZW4j9@merkaba>
-In-Reply-To: <5446001A.5000909@ocius.nl>
-References: <5446001A.5000909@ocius.nl>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id E31577F3F
+	for <xfs@oss.sgi.com>; Tue, 21 Oct 2014 07:57:25 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id B11728F8039
+	for <xfs@oss.sgi.com>; Tue, 21 Oct 2014 05:57:25 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id lbC1AfmlTIgiAyZB (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 21 Oct 2014 05:57:21 -0700 (PDT)
+Date: Tue, 21 Oct 2014 10:56:54 -0200
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: Re: [PATCH 1/2] xfs_vn_rename by xfs_vn_rename2
+Message-ID: <20141021125654.GA26932@hades.localdomain>
+References: <1413397042-32229-1-git-send-email-cmaiolino@redhat.com>
+	<1413397042-32229-2-git-send-email-cmaiolino@redhat.com>
+	<20141016210457.GA33732@bfoster.bfoster>
+	<20141017093556.GA9146@infradead.org>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20141017093556.GA9146@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,33 +32,40 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Brian Foster <bfoster@redhat.com>, xfs@oss.sgi.com
 
-Am Dienstag, 21. Oktober 2014, 08:41:30 schrieb Stefan Bottelier | Ocius.nl:
-> Hello,
+Hi Brian, Chris.
 
-Hi Stefan,
+Sorry my delay to reply, I was in a software conference this week, and barely
+accessed my e-mails.
 
-> We have change ore servers from Linux kernel 3.2.63 to 3.12.30, and now
-> we have very more I/O waits on the block device.
-> Are the some big changes in this version ? And we mount now with /sdb
-> /srv but are the some mount options for better performance ?
+I can certainly re-do this patch to avoid the name change.
+
+I used a new name to follow the VFS convention, although I also agree we
+'should' get rig of several versions and keep just newer updates to the same
+syscalls.
+
+So, I'll re-do this patch and send a V2.
+
+Cheers
+
+
+On Fri, Oct 17, 2014 at 02:35:56AM -0700, Christoph Hellwig wrote:
+> On Thu, Oct 16, 2014 at 05:04:57PM -0400, Brian Foster wrote:
+> > The function rename seems unnecessary..? Meh, not a big deal to me
+> > either way. Otherwise, this one seems Ok.
 > 
-> I hope somebody can help me with this.
+> Yeah, we might as well keep the old name.  As far as I'm concerned
+> I'd love to get rid of the two different IOPS in the VFS, too.
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
-Not yet, as your report lacks any details necessary to even make a guess what 
-the cause of your problem might be.
-
-Please read
-
-http://xfs.org/index.php/XFS_FAQ#Q:_What_information_should_I_include_when_reporting_a_problem.3F
-
-and add the necessary information.
-
-Ciao,
 -- 
-Martin 'Helios' Steigerwald - http://www.Lichtvoll.de
-GPG: 03B0 0D6C 0040 0710 4AFA  B82F 991B EAAC A599 84C7
+Carlos
 
 _______________________________________________
 xfs mailing list
