@@ -1,24 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id A57577F59
-	for <xfs@oss.sgi.com>; Thu, 23 Oct 2014 07:05:40 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 9381C304070
-	for <xfs@oss.sgi.com>; Thu, 23 Oct 2014 05:05:37 -0700 (PDT)
-Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id MmHZu0STDIiYqSbr (version=TLSv1 cipher=AES256-SHA
-	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 23 Oct 2014 05:05:32 -0700 (PDT)
-Date: Thu, 23 Oct 2014 14:05:29 +0200
-From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH 09/12] ocfs2: Convert to private i_dquot field
-Message-ID: <20141023120529.GA20067@quack.suse.cz>
-References: <1413902316-17997-1-git-send-email-jack@suse.cz>
-	<1413902316-17997-10-git-send-email-jack@suse.cz>
-	<20141023102554.GB5238@localhost>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id CB09A7F5E
+	for <xfs@OSS.SGI.com>; Thu, 23 Oct 2014 11:20:47 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 9D0A48F804C
+	for <xfs@OSS.SGI.com>; Thu, 23 Oct 2014 09:20:44 -0700 (PDT)
+Received: from out1-smtp.messagingengine.com (out1-smtp.messagingengine.com
+	[66.111.4.25]) by cuda.sgi.com with ESMTP id ykD793YgYf5upNQt
+	(version=TLSv1 cipher=AES256-SHA bits=256 verify=NO) for
+	<xfs@OSS.SGI.com>; Thu, 23 Oct 2014 09:20:39 -0700 (PDT)
+Received: from compute4.internal (compute4.nyi.internal [10.202.2.44])
+	by gateway2.nyi.internal (Postfix) with ESMTP id F2F9B20A44
+	for <xfs@OSS.SGI.com>; Thu, 23 Oct 2014 12:20:38 -0400 (EDT)
+Message-ID: <54492AD5.3040704@fastmail.fm>
+Date: Thu, 23 Oct 2014 18:20:37 +0200
+From: Bernd Schubert <bernd.schubert@fastmail.fm>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20141023102554.GB5238@localhost>
+Subject: Re: Problem about very high Average Read/Write Request Time
+References: <CALSoAzD4ccHXBuD6mT3ggqMf1j_kDEK-RNMOeRLq+N+NiWVQXg@mail.gmail.com>	<20141018143848.3baf3266@galadriel.home>	<21571.36364.518119.806191@tree.ty.sabi.co.uk>	<5444C122.4080104@fastmail.fm>
+	<21574.42382.795064.152229@tree.ty.sabi.co.uk>
+In-Reply-To: <21574.42382.795064.152229@tree.ty.sabi.co.uk>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,105 +32,132 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Joel Becker <jlbec@evilplan.org>
-Cc: Dave Kleikamp <shaggy@kernel.org>, jfs-discussion@lists.sourceforge.net, Jan Kara <jack@suse.cz>, Jeff Mahoney <jeffm@suse.de>, Mark Fasheh <mfasheh@suse.com>, reiserfs-devel@vger.kernel.org, xfs@oss.sgi.com, cluster-devel@redhat.com, viro@zeniv.linux.org.uk, linux-fsdevel@vger.kernel.org, tytso@mit.edu, linux-ext4@vger.kernel.org, hch@lst.de, Steven Whitehouse <swhiteho@redhat.com>, ocfs2-devel@oss.oracle.com
+To: Peter Grandi <pg@xfs.list.sabi.co.UK>, Linux fs XFS <xfs@OSS.SGI.com>, quanjun hu <huquanjun@gmail.com>
 
-On Thu 23-10-14 11:25:57, Joel Becker wrote:
-> On Tue, Oct 21, 2014 at 04:38:33PM +0200, Jan Kara wrote:
-> > CC: Mark Fasheh <mfasheh@suse.com>
-> > CC: Joel Becker <jlbec@evilplan.org>
-> > CC: ocfs2-devel@oss.oracle.com
-> > Signed-off-by: Jan Kara <jack@suse.cz>
-> > ---
-> >  fs/ocfs2/inode.h |  4 ++++
-> >  fs/ocfs2/super.c | 10 ++++++++++
-> >  2 files changed, 14 insertions(+)
-> > 
-> > diff --git a/fs/ocfs2/inode.h b/fs/ocfs2/inode.h
-> > index a9b76de46047..1bb2e27eaad7 100644
-> > --- a/fs/ocfs2/inode.h
-> > +++ b/fs/ocfs2/inode.h
-> > @@ -80,6 +80,10 @@ struct ocfs2_inode_info
-> >  	 */
-> >  	tid_t i_sync_tid;
-> >  	tid_t i_datasync_tid;
-> > +
-> > +#ifdef CONFIG_QUOTA
-> > +	struct dquot *i_dquot[MAXQUOTAS];
-> > +#endif
-> >  };
-> >  
-> >  /*
-> > diff --git a/fs/ocfs2/super.c b/fs/ocfs2/super.c
-> > index 93c85bc745e1..9a97986d54f5 100644
-> > --- a/fs/ocfs2/super.c
-> > +++ b/fs/ocfs2/super.c
-> > @@ -143,6 +143,11 @@ static int ocfs2_susp_quotas(struct ocfs2_super *osb, int unsuspend);
-> >  static int ocfs2_enable_quotas(struct ocfs2_super *osb);
-> >  static void ocfs2_disable_quotas(struct ocfs2_super *osb);
-> >  
-> > +static struct dquot **ocfs2_get_dquots(struct inode *inode)
-> > +{
-> > +	return OCFS2_I(inode)->i_dquot;
-> > +}
+On 10/21/2014 08:27 PM, Peter Grandi wrote:
+>>> [ ... ]  supposed to hold the object storage layer of a BeeFS
+>>> highly parallel filesystem, and therefore will likely have
+>>> mostly-random accesses.
 > 
-> Call me silly, but given that ocfs2_inode_info->i_dquot; is wrapped in
-> CONFIG_QUOTA, shouldn't this accessor be as well?  Is GCC really smart
-> enough to ignore the undefined member because ocfs2_get_dquots() isn't
-> called?
-  Actually, ocfs2 selects QUOTA so it cannot happen that CONFIG_QUOTA isn't
-defined for ocfs2. I'll remove the CONFIG_QUOTA checks from ocfs2 patch.
+>> Where do you get the assumption from that FhGFS/BeeGFS is
+>> going to do random reads/writes or the application of top of
+>> it is going to do that?
+> 
+> In this specific case it is not an assumption, thanks to the
+> prominent fact that the original poster was testing (locally I
+> guess) and complaining about concurrent read/writes, which
+> result in random like arm movement even if each of the read and
+> write streams are entirely sequential. I even pointed this out,
+> probably not explicitly enough:
+> 
+>   >> when doing only reading / only writing , the speed is very
+>   >> fast(~1.5G), but when do both the speed is very slow
+>   >> (100M), and high r_await(160) and w_await(200000).
 
-								Honza
+The OP is trying to figure out what is going on. Low speed and high
+latencies are not sufficient information to speculate about the cause.
+
 > 
-> Joel
+>   BTW the 100MB/s aggregate over 31 drives means around 3MB/s
+>   per drive, which seems pretty good for a RW workload with
+>   mostly-random accesses with high RMW correlation.
+
+The op did not provide sufficient information about the IO pattern to
+know if there is RMW or random access involved.
+
 > 
-> > +
-> >  static const struct super_operations ocfs2_sops = {
-> >  	.statfs		= ocfs2_statfs,
-> >  	.alloc_inode	= ocfs2_alloc_inode,
-> > @@ -155,6 +160,7 @@ static const struct super_operations ocfs2_sops = {
-> >  	.show_options   = ocfs2_show_options,
-> >  	.quota_read	= ocfs2_quota_read,
-> >  	.quota_write	= ocfs2_quota_write,
-> > +	.get_dquots	= ocfs2_get_dquots,
-> >  };
-> >  
-> >  enum {
-> > @@ -563,6 +569,9 @@ static struct inode *ocfs2_alloc_inode(struct super_block *sb)
-> >  
-> >  	oi->i_sync_tid = 0;
-> >  	oi->i_datasync_tid = 0;
-> > +#ifdef CONFIG_QUOTA
-> > +	memset(&oi->i_dquot, 0, sizeof(oi->i_dquot));
-> > +#endif
-> >  
-> >  	jbd2_journal_init_jbd_inode(&oi->ip_jinode, &oi->vfs_inode);
-> >  	return &oi->vfs_inode;
-> > @@ -2073,6 +2082,7 @@ static int ocfs2_initialize_super(struct super_block *sb,
-> >  	sb->s_export_op = &ocfs2_export_ops;
-> >  	sb->s_qcop = &ocfs2_quotactl_ops;
-> >  	sb->dq_op = &ocfs2_quota_operations;
-> > +	sb_dqopt(sb)->allowed_types = QTYPE_MASK_USR | QTYPE_MASK_GRP;
-> >  	sb->s_xattr = ocfs2_xattr_handlers;
-> >  	sb->s_time_gran = 1;
-> >  	sb->s_flags |= MS_NOATIME;
-> > -- 
-> > 1.8.1.4
-> > 
+> Also if this testing was appropriate then it was because the
+> intended workload was indeed concurrent reads and writes to the
+> object store.
 > 
-> -- 
+> It is not a mere assumption in the general case either; it
+> is both commonly observed and a simple deduction, because of
+> the nature of distributed filesystems and in particular parallel
+> HPC ones like Lustre or BeeGFS, but also AFS and even NFS ones.
 > 
-> "I'm so tired of being tired,
->  Sure as night will follow day.
->  Most things I worry about
->  Never happen anyway."
+> * Clients have caches. Therefore most of the locality in the
+
+Correct is: Client *might* have caches. Besides of application directio,
+for BeeGFS the cache type is a configuration option.
+
+>   (read) access patterns will hopefully be filtered out by the
+>   client cache. This applies (ideally) to any distributed
+>   filesystem.
+
+You cannot filter out everything, e.g. random reads of a large file.
+Local or remote file system does not matter here.
+
+> * HPC/parallel servers tend to whave many clients (e.g. for an
+>   it could be 10,000 clients and 500 object storage servers) and
+>   hopefully each client works on a different subset of the data
+>   tree, and distribution of data objects onto servers hopefully
+>   random.
+>   Therefore it is likely that many clients will access with
+>   concurrent read and write many different files on the same
+>   server resulting in many random "hotspots" in each server's
+>   load.
+
+If that would be important here there would be no difference between
+single write and parallel read/write. So irrelevant.
+
+>   Note that each client could be doing entirely sequential IO to
+>   each file they access, but the concurrent accesses do possibly
+>   widely scattered files will turn that into random IO at the
+>   server level.
+
+How does this matter if the op is comparing 1-thread write vs. 2-thread
+read/write?
+
 > 
-> 			http://www.jlbec.org/
-> 			jlbec@evilplan.org
--- 
-Jan Kara <jack@suse.cz>
-SUSE Labs, CR
+> Just about the only case where sequential client workloads don't
+> become random workloads at the server is when the client
+> workload is such that only one file is "hot" per server.
+> 
+> There is an additional issue favouring random access patterns:
+> 
+>   * Typically large fileservers are setup with a lot of storage
+>     because of anticipated lifetime usage, so they start mostly
+>     empty.
+>   * Most filesystems then allocate new data in regular patterns,
+>     often starting from the beginning of available storage, in
+>     an attempt to minimize arm travel time usually (XFS uses
+>     various heuristics, which are somewhat different whether the
+>     option 'inode64' is specified or not).
+>   * Unfortunately as the filetree becomes larger new allocations
+>     have to be made farther away, resulting in longer travel
+>     times and more apparent randomness at the storage server
+>     level.
+>   * Eventually if the object server reaches a steady state where
+>     roughly as much data is deleted and created the free storage
+>     areas will become widely scattered, leading to essentially
+>     random allocation, the more random the more capacity used.
+
+All of that is irrelevant if a single write is fast and a parallel
+read/write is slow.
+
+> 
+>   Leaving a significant percentage of capacity free, like at
+>   least 10% and more like 20%, greatly increases the chance of
+>   finding free space near to put new data near to existing
+>   "related" data. This increases locality, but only at the
+>   single-stream level; therefore is usually does not help that
+>   much widely shared distributed servers; and in particular does
+>   not apply that much to object stores, because usually they
+>   obscure which data object is related to which data object.
+> 
+> The above issues are pretty much "network and distributed
+> filesystems for beginners" notes, but in significant part also
+> apply to widely shared non network and non distributed servers
+> on which XFS is often used, so they may be usefully mentioned
+> in this list.
+
+It is lots of text and does not help the op at all. And the
+claim/speculation that the parallel file system would introduce random
+access is also wrong.
+
+
+Before anyone can even start to speculate, the op first needs to provide
+the exact IO pattern and information about /dev/sdc.
 
 _______________________________________________
 xfs mailing list
