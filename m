@@ -1,30 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 3C7C07F6F
-	for <xfs@oss.sgi.com>; Thu, 23 Oct 2014 18:44:53 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id C999AAC003
-	for <xfs@oss.sgi.com>; Thu, 23 Oct 2014 16:44:52 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id 85B9D7F6B
+	for <xfs@oss.sgi.com>; Thu, 23 Oct 2014 18:59:14 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 2250EAC001
+	for <xfs@oss.sgi.com>; Thu, 23 Oct 2014 16:59:13 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id JsVl88TTj5RqwPe7 (version=TLSv1
+	cuda.sgi.com with ESMTP id aAmskvs53fkMQYtV (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 23 Oct 2014 16:44:51 -0700 (PDT)
-Received: from int-mx09.intmail.prod.int.phx2.redhat.com
-	(int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id s9NNioid014944
+	Thu, 23 Oct 2014 16:59:13 -0700 (PDT)
+Received: from int-mx14.intmail.prod.int.phx2.redhat.com
+	(int-mx14.intmail.prod.int.phx2.redhat.com [10.5.11.27])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id s9NNxCt6031156
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256
-	verify=FAIL) for <xfs@oss.sgi.com>; Thu, 23 Oct 2014 19:44:51 -0400
+	verify=FAIL) for <xfs@oss.sgi.com>; Thu, 23 Oct 2014 19:59:12 -0400
 Received: from liberator.sandeen.net (ovpn01.gateway.prod.ext.rdu2.redhat.com
 	[10.11.146.1])
-	by int-mx09.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id s9NNinem027618
+	by int-mx14.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id s9NNxBiV008293
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES128-SHA bits=128 verify=NO)
-	for <xfs@oss.sgi.com>; Thu, 23 Oct 2014 19:44:50 -0400
-Message-ID: <544992F1.8050803@redhat.com>
-Date: Thu, 23 Oct 2014 18:44:49 -0500
+	for <xfs@oss.sgi.com>; Thu, 23 Oct 2014 19:59:12 -0400
+Message-ID: <5449964F.1040504@redhat.com>
+Date: Thu, 23 Oct 2014 18:59:11 -0500
 From: Eric Sandeen <sandeen@redhat.com>
 MIME-Version: 1.0
-Subject: [PATCH] xfsprogs: fix harmless sparse endian nit
+Subject: [PATCH] xfsprogs: two more completely harmless sparse nits
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -39,30 +39,35 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs-oss <xfs@oss.sgi.com>
 
-h_crc is __le32 but cpu_to_be32() is... __be32.  So sparse
-complains, even though it's harmless.
-
-Although sparse is smart about bare 0s, and we could
-drop the swap, other places explicitly swap to keep
-things clear (I guess?) so "swap" the 0 with the proper
-routine.
-
 Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 ---
 
-diff --git a/libxfs/rdwr.c b/libxfs/rdwr.c
-index 9ee89d3..dd8baa6 100644
---- a/libxfs/rdwr.c
-+++ b/libxfs/rdwr.c
-@@ -187,7 +187,7 @@ libxfs_log_header(
- 		head->h_len = cpu_to_be32(sunit - BBSIZE);
- 	else
- 		head->h_len = cpu_to_be32(20);
--	head->h_crc = cpu_to_be32(0);
-+	head->h_crc = cpu_to_le32(0);
- 	head->h_prev_block = cpu_to_be32(-1);
- 	head->h_num_logops = cpu_to_be32(1);
- 	head->h_cycle_data[0] = cpu_to_be32(0xb0c0d0d0);
+diff --git a/repair/prefetch.c b/repair/prefetch.c
+index 65f8456..7ea0d36 100644
+--- a/repair/prefetch.c
++++ b/repair/prefetch.c
+@@ -171,7 +171,7 @@ pf_read_bmbt_reclist(
+ 	struct xfs_buf_map	map_array[MAP_ARRAY_SZ];
+ 	struct xfs_buf_map	*map = map_array;
+ 	int			max_extents = MAP_ARRAY_SZ;
+-	int			nmaps = 0;;
++	int			nmaps = 0;
+ 	unsigned int		len = 0;
+ 	int			ret = 0;
+ 
+diff --git a/rtcp/xfs_rtcp.c b/rtcp/xfs_rtcp.c
+index b81b1e1..5f26a62 100644
+--- a/rtcp/xfs_rtcp.c
++++ b/rtcp/xfs_rtcp.c
+@@ -25,7 +25,7 @@ int pflag;
+ char *progname;
+ 
+ void
+-usage()
++usage(void)
+ {
+ 	fprintf(stderr, _("%s [-e extsize] [-p] [-V] source target\n"), progname);
+ 	exit(2);
 
 _______________________________________________
 xfs mailing list
