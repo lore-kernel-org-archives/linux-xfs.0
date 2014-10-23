@@ -1,26 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id C9B047F51
-	for <xfs@oss.sgi.com>; Thu, 23 Oct 2014 03:53:59 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 4D39FAC004
-	for <xfs@oss.sgi.com>; Thu, 23 Oct 2014 01:53:56 -0700 (PDT)
-Received: from newverein.lst.de (verein.lst.de [213.95.11.211]) by
-	cuda.sgi.com with ESMTP id uhxA3ZPeUXkGtB6u (version=TLSv1
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 25D4F7F55
+	for <xfs@oss.sgi.com>; Thu, 23 Oct 2014 05:26:13 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id D8F718F8049
+	for <xfs@oss.sgi.com>; Thu, 23 Oct 2014 03:26:12 -0700 (PDT)
+Received: from ZenIV.linux.org.uk (zeniv.linux.org.uk [195.92.253.2]) by
+	cuda.sgi.com with ESMTP id nBFNzRxZpVUFjov6 (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 23 Oct 2014 01:53:54 -0700 (PDT)
-Date: Thu, 23 Oct 2014 10:53:50 +0200
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 02/12] quota: Allow each filesystem to specify which
-	quota types it supports
-Message-ID: <20141023085349.GA30381@lst.de>
+	Thu, 23 Oct 2014 03:26:10 -0700 (PDT)
+Date: Thu, 23 Oct 2014 11:25:57 +0100
+From: Joel Becker <jlbec@evilplan.org>
+Subject: Re: [PATCH 09/12] ocfs2: Convert to private i_dquot field
+Message-ID: <20141023102554.GB5238@localhost>
 References: <1413902316-17997-1-git-send-email-jack@suse.cz>
-	<1413902316-17997-3-git-send-email-jack@suse.cz>
-	<20141022162915.GB18443@lst.de>
-	<20141022165150.GA12809@quack.suse.cz>
+	<1413902316-17997-10-git-send-email-jack@suse.cz>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20141022165150.GA12809@quack.suse.cz>
+In-Reply-To: <1413902316-17997-10-git-send-email-jack@suse.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,24 +31,96 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Jan Kara <jack@suse.cz>
-Cc: Dave Kleikamp <shaggy@kernel.org>, jfs-discussion@lists.sourceforge.net, tytso@mit.edu, Jeff Mahoney <jeffm@suse.de>, Mark Fasheh <mfasheh@suse.com>, reiserfs-devel@vger.kernel.org, xfs@oss.sgi.com, cluster-devel@redhat.com, Joel Becker <jlbec@evilplan.org>, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, Steven Whitehouse <swhiteho@redhat.com>, ocfs2-devel@oss.oracle.com, viro@zeniv.linux.org.uk
+Cc: Dave Kleikamp <shaggy@kernel.org>, jfs-discussion@lists.sourceforge.net, tytso@mit.edu, Jeff Mahoney <jeffm@suse.de>, Mark Fasheh <mfasheh@suse.com>, reiserfs-devel@vger.kernel.org, xfs@oss.sgi.com, cluster-devel@redhat.com, viro@zeniv.linux.org.uk, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, hch@lst.de, Steven Whitehouse <swhiteho@redhat.com>, ocfs2-devel@oss.oracle.com
 
-On Wed, Oct 22, 2014 at 06:51:50PM +0200, Jan Kara wrote:
->   So there are two reasons:
-> 1) Currently if you call quotactl() with invalid quota type you'll get
-> EINVAL. To maintain this with addition of project quotas you need to check
-> the types early before calling check_quotactl_permission() and other
-> checks.
+On Tue, Oct 21, 2014 at 04:38:33PM +0200, Jan Kara wrote:
+> CC: Mark Fasheh <mfasheh@suse.com>
+> CC: Joel Becker <jlbec@evilplan.org>
+> CC: ocfs2-devel@oss.oracle.com
+> Signed-off-by: Jan Kara <jack@suse.cz>
+> ---
+>  fs/ocfs2/inode.h |  4 ++++
+>  fs/ocfs2/super.c | 10 ++++++++++
+>  2 files changed, 14 insertions(+)
 > 
-> 2) I didn't want filesystem quotactl callbacks to deal with quota types
-> they don't support. Sure each fs could do a type check in the callback but
-> this looked easier.
-> 
-> Now I see your point about s_dquot and I can move allowed_types out of
-> s_dquot if that makes you happier. But otherwise what I did still seems as
-> the best solution to me.
+> diff --git a/fs/ocfs2/inode.h b/fs/ocfs2/inode.h
+> index a9b76de46047..1bb2e27eaad7 100644
+> --- a/fs/ocfs2/inode.h
+> +++ b/fs/ocfs2/inode.h
+> @@ -80,6 +80,10 @@ struct ocfs2_inode_info
+>  	 */
+>  	tid_t i_sync_tid;
+>  	tid_t i_datasync_tid;
+> +
+> +#ifdef CONFIG_QUOTA
+> +	struct dquot *i_dquot[MAXQUOTAS];
+> +#endif
+>  };
+>  
+>  /*
+> diff --git a/fs/ocfs2/super.c b/fs/ocfs2/super.c
+> index 93c85bc745e1..9a97986d54f5 100644
+> --- a/fs/ocfs2/super.c
+> +++ b/fs/ocfs2/super.c
+> @@ -143,6 +143,11 @@ static int ocfs2_susp_quotas(struct ocfs2_super *osb, int unsuspend);
+>  static int ocfs2_enable_quotas(struct ocfs2_super *osb);
+>  static void ocfs2_disable_quotas(struct ocfs2_super *osb);
+>  
+> +static struct dquot **ocfs2_get_dquots(struct inode *inode)
+> +{
+> +	return OCFS2_I(inode)->i_dquot;
+> +}
 
-Moving it out of s_dquot seems very sensible to me.
+Call me silly, but given that ocfs2_inode_info->i_dquot; is wrapped in
+CONFIG_QUOTA, shouldn't this accessor be as well?  Is GCC really smart
+enough to ignore the undefined member because ocfs2_get_dquots() isn't
+called?
+
+Joel
+
+> +
+>  static const struct super_operations ocfs2_sops = {
+>  	.statfs		= ocfs2_statfs,
+>  	.alloc_inode	= ocfs2_alloc_inode,
+> @@ -155,6 +160,7 @@ static const struct super_operations ocfs2_sops = {
+>  	.show_options   = ocfs2_show_options,
+>  	.quota_read	= ocfs2_quota_read,
+>  	.quota_write	= ocfs2_quota_write,
+> +	.get_dquots	= ocfs2_get_dquots,
+>  };
+>  
+>  enum {
+> @@ -563,6 +569,9 @@ static struct inode *ocfs2_alloc_inode(struct super_block *sb)
+>  
+>  	oi->i_sync_tid = 0;
+>  	oi->i_datasync_tid = 0;
+> +#ifdef CONFIG_QUOTA
+> +	memset(&oi->i_dquot, 0, sizeof(oi->i_dquot));
+> +#endif
+>  
+>  	jbd2_journal_init_jbd_inode(&oi->ip_jinode, &oi->vfs_inode);
+>  	return &oi->vfs_inode;
+> @@ -2073,6 +2082,7 @@ static int ocfs2_initialize_super(struct super_block *sb,
+>  	sb->s_export_op = &ocfs2_export_ops;
+>  	sb->s_qcop = &ocfs2_quotactl_ops;
+>  	sb->dq_op = &ocfs2_quota_operations;
+> +	sb_dqopt(sb)->allowed_types = QTYPE_MASK_USR | QTYPE_MASK_GRP;
+>  	sb->s_xattr = ocfs2_xattr_handlers;
+>  	sb->s_time_gran = 1;
+>  	sb->s_flags |= MS_NOATIME;
+> -- 
+> 1.8.1.4
+> 
+
+-- 
+
+"I'm so tired of being tired,
+ Sure as night will follow day.
+ Most things I worry about
+ Never happen anyway."
+
+			http://www.jlbec.org/
+			jlbec@evilplan.org
 
 _______________________________________________
 xfs mailing list
