@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 212BD7F60
-	for <xfs@OSS.SGI.com>; Thu, 23 Oct 2014 18:01:32 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 5812D7F60
+	for <xfs@OSS.SGI.com>; Thu, 23 Oct 2014 18:01:34 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 10377304051
-	for <xfs@OSS.SGI.com>; Thu, 23 Oct 2014 16:01:28 -0700 (PDT)
-Received: from honeysuckle.london.02.net (honeysuckle.london.02.net
-	[87.194.255.144]) by cuda.sgi.com with ESMTP id
-	qa2WUDYzvMjuTojD for <xfs@OSS.SGI.com>;
-	Thu, 23 Oct 2014 16:01:26 -0700 (PDT)
-Received: from ty.sabi.co.UK (94.192.123.208) by honeysuckle.london.02.net
+	by relay3.corp.sgi.com (Postfix) with ESMTP id CCD58AC005
+	for <xfs@OSS.SGI.com>; Thu, 23 Oct 2014 16:01:30 -0700 (PDT)
+Received: from woodbine.london.02.net (woodbine.london.02.net
+	[87.194.255.145]) by cuda.sgi.com with ESMTP id
+	fBt4Gx2RFxaLaVeU for <xfs@OSS.SGI.com>;
+	Thu, 23 Oct 2014 16:01:25 -0700 (PDT)
+Received: from ty.sabi.co.UK (94.192.123.208) by woodbine.london.02.net
 	(8.5.140)
-	id 53BD70B603AFBD3A for xfs@OSS.SGI.com; Fri, 24 Oct 2014 00:26:44 +0100
+	id 53BD9B4503BD6A2D for xfs@OSS.SGI.com; Fri, 24 Oct 2014 00:32:22 +0100
 Received: from from [127.0.0.1] (helo=tree.ty.sabi.co.uk)
-	by ty.sabi.co.UK with esmtp(Exim 4.76 #1) id 1XhOhg-0000mR-6X
-	for <xfs@OSS.SGI.com>; Thu, 23 Oct 2014 21:09:48 +0100
+	by ty.sabi.co.UK with esmtp(Exim 4.76 #1) id 1XhRNX-0001FT-9Z
+	for <xfs@OSS.SGI.com>; Fri, 24 Oct 2014 00:01:11 +0100
 MIME-Version: 1.0
-Message-ID: <21577.24715.712978.617220@tree.ty.sabi.co.uk>
-Date: Thu, 23 Oct 2014 21:09:47 +0100
+Message-ID: <21577.34998.793883.747715@tree.ty.sabi.co.uk>
+Date: Fri, 24 Oct 2014 00:01:10 +0100
 Subject: Re: Problem about very high Average Read/Write Request Time
 In-Reply-To: <54492AD5.3040704@fastmail.fm>
 References: <CALSoAzD4ccHXBuD6mT3ggqMf1j_kDEK-RNMOeRLq+N+NiWVQXg@mail.gmail.com>
@@ -43,101 +43,167 @@ To: Linux fs XFS <xfs@OSS.SGI.com>
 
 [ ... ]
 
->>>>> There is a ratio of 31 (thirty one) between 'swidth' and
->>>>> 'sunit' and assuming that this reflects the geometry of the
->>>>> RAID5 set and given commonly available disk sizes it can be
->>>>> guessed that with amazing "bravery" someone has configured a
->>>>> RAID5 out of 32 (thirty two) high capacity/low IOPS 3TB
->>>>> drives, or something similar.
+>>>> [ ... ] if the device name "/data/fhgfs/fhgfs_storage" is
+>>>> dedscriptive, this "brave" RAID5 set is supposed to hold
+>>>> the object storage layer of a BeeFS highly parallel
+>>>> filesystem, and therefore will likely have mostly-random
+>>>> accesses.
 [ ... ]
->>>>> if the device name "/data/fhgfs/fhgfs_storage" is
->>>>> dedscriptive, this "brave" RAID5 set is supposed to hold the
->>>>> object storage layer of a BeeFS highly parallel filesystem,
->>>>> and therefore will likely have mostly-random accesses.
-[ ... ]
->>>>> It is notable but not surprising that XFS works well even
->>>>> with such a "brave" choice of block storage layer, untainted
->>>>> by any "cowardly" consideration of the effects of RMW and
->>>>> using drives designed for capacity rather than IOPS.
-
->>>> Also if this testing was appropriate then it was because the
->>>> intended workload was indeed concurrent reads and writes to
->>>> the object store.
-
 >>> Where do you get the assumption from that FhGFS/BeeGFS is
 >>> going to do random reads/writes or the application of top of
 >>> it is going to do that?
 
->> In this specific case it is not an assumption, thanks to the
->> prominent fact that the original poster was testing (locally I
->> guess) and complaining about concurrent read/writes, which
->> result in random like arm movement even if each of the read and
->> write streams are entirely sequential.
-
+>> It is not a mere assumption in the general case either; it is
+>> both commonly observed and a simple deduction, because of the
+>> nature of distributed filesystems and in particular parallel
+>> HPC ones like Lustre or BeeGFS, but also AFS and even NFS ones.
 [ ... ]
 
-> Low speed and high latencies are not sufficient information to
-> speculate about the cause.
+>> * Clients have caches.
 
-It is pleasing that you seem to know at least that by themselves
-=ABLow speed and high latencies=BB are indeed not sufficient.
+> Correct is: Client *might* have caches. Besides of application
+> directio, for BeeGFS the cache type is a configuration option.
 
-But in =ABthe specific case=BB what is sufficient to make a good guess
-is what I wrote, which you seem to have been unable to notice or
-understand.
+Perhaps you have missed the explicit qualification =ABin the
+general case=BB of =ABdistributed filesystems and in particular
+parallel HPC ones=BB or perhaps you lack familiarity with =ABLustre
+or BeeGFS, but also AFS and even NFS ones=BB most of which have
+client caches and usually enabled, and that might justify your
+inability to consider =ABthe general case=BB.
 
->> BTW the 100MB/s aggregate over 31 drives means around 3MB/s
->> per drive, which seems pretty good for a RW workload with
->> mostly-random accesses with high RMW correlation.
+>> Therefore most of the locality in the (read) access patterns
+>> will hopefully be filtered out by the client cache. This
+>> applies (ideally) to any distributed filesystem.
 
-> The op did not provide sufficient information about the IO
-> pattern to know if there is RMW or random access involved.
+> You cannot filter out everything, e.g. random reads of a large
+> file.
 
-The op of =ABthe specific case=BB reported that the XFS filesystem is
-configured for a 32-wide RAID5 set and that:
+It is good but somewhat pointless that you can understand the
+meaning of =ABmost of the locality in the (read) access patterns
+will hopefully be filtered out by the client cache=BB and agree
+with it, and supply an example, but unfortunately you seem to
+have the naive expectation that:
 
- > when doing only reading / only writing , the speed is very
- > fast(~1.5G), but when do both the speed is very slow
+>> Local or remote file system does not matter here.
 
-and perhaps your did not notice that; or did not notice or
-understand that I wrote subsequently, as you seemed to be
-requesting a detailed explanation of my conclusion, that:
+It can matter as:
 
->> [ ... ] concurrent read/writes, which result in random like
->> arm movement even if each of the read and write streams are
->> entirely sequential. [ ... ]
+* In the local case there is a single cache for all concurrent
+  applications, while in the distributed case there is hopefully
+  a separate cache per node, which segments the references (as
+  well as hopefully providing a lot more cache space).
+* In the purely local case there is usually just one level of
+  caching, in the distribured case usually there are two levels,
+  often resulting in rather different access patterns to the
+  object stores in the server.
 
-Because then there are at least two hotspots, the read one and the
-write one, except in the very special case that an application is
-reading and writing the same block each time.
+So the degree of filtering can be and often is quite different;
+which is usually quite important because network transfers add a
+cost.
 
-Even worse, since in =ABthe specific case=BB we have an "imaginative"
-32-wide RAID5 unless the writes are exactly aligned with the large
-stripes there is going to be a lot of RMW resulting in the arms
-going back and forth (and even if aligned many RAID implementation
-still end up doing a fair bit of RMW).
+As to these three comments I am perplexed:
 
-Knowing that and that it is a 32-wide RAID5 and the disks are 3TB
-in size (low IOPS per GB) and that the result is poor for single
-threaded but reasonable for double threaded, and that XFS in
-general behaves pretty well should be sufficient to give a
-reasonable guess:
+>> Therefore it is likely that many clients will access with
+>> concurrent read and write many different files on the same
+>> server resulting in many random "hotspots" in each server's
+>> load.
 
- >>>>> This issue should be moved to the 'linux-raid' mailing list
- >>>>> as from the reported information it has nothing to do with
- >>>>> XFS.
+> If that would be important here there would be no difference
+> between single write and parallel read/write.
+[ ... ]
+>> each client could be doing entirely sequential IO to each
+>> file they access, but the concurrent accesses do possibly
+>> widely scattered files will turn that into random IO at the
+>> server level.
+[ ... ]
+> How does this matter if the op is comparing 1-thread write
+> vs. 2-thread read/write?
 
-But I am just repeating what you seem to have been unable to read
-or understand...
+>> * Eventually if the object server reaches a steady state
+>> where roughly as much data is deleted and created the free
+>> storage areas will become widely scattered, leading to
+>> essentially random allocation, the more random the more
+>> capacity used.
 
-PS: as to people following this discussions, there can be many
-reasons why that 31-wide RAID5, which is such a very "brave"
-setup, is behaving like that on randomish access patterns arising
-from concurrent read-write, such as initial sync still going on,
-not so good default settings or scheduling of so many hw (as
-suggested by the 'sdc' instead of 'md$N') RAID HAs, etc., and some
-of these interact with how XFS operates, but it is indeed a
-discussion for the Linux RAID list at least first.
+> All of that is irrelevant if a single write is fast and a
+> parallel read/write is slow.
+
+Because you seem rather confusedm, as my explanation was the
+answer to this question you asked:
+
+  >>> Where do you get the assumption from that FhGFS/BeeGFS is
+  >>> going to do random reads/writes or the application of top
+  >>> of it is going to do that?
+
+and in it you mention no special case like =AB1-thread write=BB, or
+=AB2-thread read/write=BB.
+
+Also such simple special cases don't happen much in =ABthe object
+storage layer=BB of any realistic =ABhighly parallel filesystem=BB,
+which are often large with vast and varied workloads, as I tried
+to remind you:
+
+  >> HPC/parallel servers tend to whave many clients (e.g. for
+  >> an it could be 10,000 clients and 500 object storage
+  >> servers) and hopefully each client works on a different
+  >> subset of the data tree, and distribution of data objects
+  >> onto servers hopefully random.
+
+Therefore there are likely to be many dozens or even hundreds of
+threads accessing objects per object store, with every pattern
+of read and write and to rather unrelated objects, not just 1 or
+2 threads and single write or read/write.
+
+That's one reason why XFS is so often used for those object
+stores: it is particularly well suited to highly multithreaded
+access patterns to many files, as the XFS has benefited from
+quite a bit of effort in finer grained locking, and XFS uses
+some mostly effective heuristics to distribute files across the
+storage it uses in hopefully "best" ways.
+
+>> The above issues are pretty much "network and distributed
+>> filesystems for beginners" notes,
+
+> It is lots of text
+
+In my original reply I was terse and did not explain every
+reason why =ABthe object storage layer of a BeeFS highly parallel
+filesystem=BB is =ABlikely have mostly-random accesses=BB because I
+assumed it is common knowledge among somewhat skilled readers;
+but to a point I am also patient with beginners, even those who
+seem to become confused about which question they themselves
+asked.
+
+Also I am trying to quote context because you seem confused as
+to what the content of even your questions is.
+
+> and does not help the op at all.
+
+That seems unfortunately right, as to me you still seem very
+confused as to the workloads likely experienced by object stores
+for highly parallel filesystems despite my efforts in trying to
+answer in detail the question you asked:
+
+  >>> Where do you get the assumption from that FhGFS/BeeGFS is
+  >>> going to do random reads/writes or the application of top
+  >>> of it is going to do that?
+
+At least as I already pointed out my answer to your question is
+at least somewhat topical for the XFS list, for example by
+hinting about using less "brave" configurations than 32-disk
+RAID5 sets.
+
+> And the claim/speculation that the parallel file system would
+> introduce random access is also wrong.
+
+As far as I can see it was only who you mentioned that because I
+discussed just the consequences of the likely access patterns of
+=ABthe application of top of it=BB part of your question.
+
+It seemed strange to me that you would ask why =ABFhGFS/BeeGFS is
+going to do random reads/writes=BB because filesystems typically
+don't do =ABread/writes=BB except as a consequence of application
+requests, so I ignored that other part of your question.
 
 _______________________________________________
 xfs mailing list
