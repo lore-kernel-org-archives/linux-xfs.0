@@ -1,23 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 0052B7F54
-	for <xfs@OSS.SGI.com>; Sat, 25 Oct 2014 06:00:27 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id B4867304039
-	for <xfs@OSS.SGI.com>; Sat, 25 Oct 2014 04:00:22 -0700 (PDT)
-Received: from woodbine.london.02.net (woodbine.london.02.net
-	[87.194.255.145]) by cuda.sgi.com with ESMTP id
-	yVmLlBPDrICdMFoE for <xfs@OSS.SGI.com>;
-	Sat, 25 Oct 2014 04:00:20 -0700 (PDT)
-Received: from ty.sabi.co.UK (94.192.123.208) by woodbine.london.02.net
-	(8.5.140)
-	id 53BD9B4503C4A41B for xfs@OSS.SGI.com; Sat, 25 Oct 2014 12:31:29 +0100
-Received: from from [127.0.0.1] (helo=tree.ty.sabi.co.uk)
-	by ty.sabi.co.UK with esmtp(Exim 4.76 #1) id 1Xhz4w-0002hp-9U
-	for <xfs@OSS.SGI.com>; Sat, 25 Oct 2014 12:00:14 +0100
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 779257F56
+	for <xfs@OSS.SGI.com>; Sat, 25 Oct 2014 07:36:44 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id EA48DAC004
+	for <xfs@OSS.SGI.com>; Sat, 25 Oct 2014 05:36:40 -0700 (PDT)
+Received: from honeysuckle.london.02.net (honeysuckle.london.02.net
+	[87.194.255.144]) by cuda.sgi.com with ESMTP id
+	2Jg3Qgb9odKANIbC for <xfs@OSS.SGI.com>;
+	Sat, 25 Oct 2014 05:36:38 -0700 (PDT)
 MIME-Version: 1.0
-Message-ID: <21579.33469.878654.99125@tree.ty.sabi.co.uk>
-Date: Sat, 25 Oct 2014 12:00:13 +0100
+Message-ID: <21579.39245.719113.999373@tree.ty.sabi.co.uk>
+Date: Sat, 25 Oct 2014 13:36:29 +0100
 Subject: Re: Problem about very high Average Read/Write Request Time
 In-Reply-To: <20141024214525.GA4317@dastard>
 References: <CALSoAzD4ccHXBuD6mT3ggqMf1j_kDEK-RNMOeRLq+N+NiWVQXg@mail.gmail.com>
@@ -43,148 +37,101 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Linux fs XFS <xfs@OSS.SGI.com>
 
-> [ ... ] entitled to point out how tenuous your thread of logic
-> is - if he didn't I was going to say exactly the same thing
+Stan Hoeppner:
 
-You are both entitled to your opinions, but not to have them
-unchallenged, also when they are bare statements.
+  =ABDoing this via subterfuge simply reduces people's level of
+  respect for you=BB
 
-> based entirely on a house of assumptions you haven't actually
-> verified.
+  =ABIn your 10,000th attempt to generate self gratification by
+  demonstrating your superior knowledge (actually lack thereof)
+  on this list, all you could have possibly achieved here is
+  confusing the OP even further. I find it sad that you've
+  decided to prey on the young, the inexperienced, after
+  realizing the educated began ignoring you long ago.=BB
 
-That seems highly imaginative as my guesses that conclusion that:
+Cristoph Hellwig:
 
-  http://oss.sgi.com/archives/xfs/2014-10/msg00335.html
-  > This issue should be moved to the 'linux-raid' mailing list as
-  > from the reported information it has nothing to do with XFS.
-    =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D
+  =ABhe's made himself a name as not only beeing technically
+  incompetent but also extremly abrasive.=BB
 
-were factually based:
+  =ABBut please stop giving advise taken out of the thin air to
+  people on the lists that might actually believe whatever
+  madness you just dreamed up.=BB
 
-  http://oss.sgi.com/archives/xfs/2014-10/msg00335.html
-  > There is a ratio of 31 (thirty one) between 'swidth' and
-  > 'sunit' and assuming that this reflects the geometry of the
-  > RAID5 set and given commonly available disk sizes it can be
-  > guessed that with amazing "bravery" someone has configured a
-  > RAID5 out of 32 (thirty two) high capacity/low IOPS 3TB
-  > drives, or something similar.
+Dave Chinner:
 
-That there is a ratio of 31 is a verified fact, and so is that
-the reported size of the block device was 100TB. Much of the
-rest is arithmetic and I indicated that there were was some
-guesswork involved, mostly assuming that those reported facts
-were descriptive of the actual configuration.
+  =ABJust ignore the troll, Stan.=BB
 
-Simply for brevity I did not also point out specifically that
-the reported facts that =ABhigh r_await(160) and w_await(200000)=BB
-and the "Subject:" =ABvery high Average Read/Write Request Time=BB
-contributed to indicating a (big) issue with the storage layer.
-and that the presumed width of the array of 32 is congruentn with
-typical enclosure capacities.
+  =ABBut instead of taking the evidence-based verification path,
+  you've resorted to personal attacks to defend your tenuous
+  logic.=BB
 
-Another poster went far further in guesswork, and stated what I
-was describing as guesses instead as obvious facts:
+  =AByou've made a habit of this behaviour. Every discussion
+  thread you enter ends up with you abusing someone because they
+  dared to either question your assertions or didn't understand
+  what you said precisely.=BB
 
-  http://oss.sgi.com/archives/xfs/2014-10/msg00337.html
-  > As others mentioned this isn't an XFS problem. The problem is that
-  > your RAID geometry doesn't match your workload. Your very wide
-  > parity stripe is apparently causing excessive seeking with your
-  > read+write workload due to read-modify-write operations.
+  =AByou've finally reached my Intolerable Dickhead On The
+  Internet Threshold. Given that this is on the XFS mailing
+  list, and I'm the XFS Maintainer it falls to me to draw a line
+  in the sand: such behaviour is not acceptible in this forum.=BB
 
-and went on to make a whole discussion wholly unrelated to XFS
-based on that:
+According to Russel Cattelan (the owner of XFS the mailing list
+at least in 2012) and "other prominent members of the XFS team"
+the statements I quoted above are =ABacceptible in this forum=BB:
 
-  > To mitigate this, and to increase resiliency, you should
-  > switch to RAID6 with a smaller chunk. If you need maximum
-  > capacity make a single RAID6 array with 16 KiB chunk size.
-  > This will yield a 496 KiB stripe width, increasing the odds
-  > that all writes are a full stripe, and hopefully eliminating
-  > much of the RMW problem.
+  http://oss.sgi.com/archives/xfs/2012-04/threads.html#00051
+
+  =AB[ ... ] turning the XFS mailing list in a disreputable
+  vehicle for offtopic and offensive flaming. This to me this
+  looks like mobbing, beause coordinated personal attacks have
+  been done by a small group of people [ ... ]=BB
   =
 
-  > A better option might be making three 10 drive RAID6 arrays
-  > (two spares) with 32 KiB chunk, 256 KiB stripe width, and
-  > concatenating the 3 arrays with mdadm --linear.
+  Russell Cattelan: =ABYou must be joking! I'm not about to ban
+  one of the most knowledgeable and productive xfs developers
+  from the email list.=BB
 
-The above assumptions and offtopic suggestions have been
-unquestioned; by myself too, even if I disagree with some of the
-recommendations, also as I think them premature because we don't
-know what the requirements really are beyond what can be guessed
-from =ABthe reported information=BB. That's also why I suggested to
-continue the discussion on the Linux RAID list.
+  =ABWell, if one of these guys post offtopic and malicious rants,
+  I guess that his being an XFS developer should not matter.
+  With being an XFS developer comes also some responsibility to
+  maintain a technical and professional tone in the XFS mailing
+  list, and not to abuse his position. Same for the others.=BB
+ =
 
-The guess that the filesystem was meant to be an object store is
-also based on a verified fact:
+  Russel Cattelan: =ABI see nothing particularly offensive about
+  these posts.=BB
 
-  > if the device name "/data/fhgfs/fhgfs_storage" is dedscriptive,
-  > this "brave" RAID5 set is supposed to hold the object storage
-  > layer of a BeeFS
+  =ABThey personal attacks about competence and character. They
+  are pure flames, and because they are coordinated they seem to
+  be mobbing. To me, you seem to be expliciting endorsing the
+  use of the XFS mailing list to publish "ad hominem" attacks
+  and mobbing.=BB
 
-Also BP did not initially question my analysis of the 100TB
-filesystem case, but asked a wholly separate question asking to
-explain this aside:
+  Russel Cattelan: =ABI can understand you may upset about what
+  Christoph said he has every right to state his opinions on
+  things no matter how much you disagree.=BB
 
-  > the object storage layer of a BeeFS highly parallel filesystem,
-  > and therefore will likely have mostly-random accesses.
+  =ABBut his opinions are on offtopic "things": the topic of the
+  XFS mailing list is XFS, not people's competence or character,
+  or rants/attacks on people. Some of the links I have sent you
+  contain no technical content, purely personal attacks. How can
+  this be legitimate XFS content?=BB
 
-To that question I provided a reasonable and detailed
-*technical* explanation, both as to the specific case and in
-general, and linking it to both the original question by QH and
-to the list topic which is XFS. As a reminder this thread seems
-to me to contain 3 distinct even if connected *technical*
-topics:
+  Russell Cattelan: =ABWell I'm afraid I'm going to respectfully
+  disagree.  I don't have the full story of everything that
+  happened but none of the post you pointed out are totally off
+  topic.
 
-  * Whether the report about the 100TB RAID based XFS filesystem
-    contained evidence indicating an XFS issue or a RAID issue;
-    this was introduced by QH.
-  * Whether concurrent randomish read-writes tend to be the
-    workload observed by object stores in large parallel HPC
-    systems; this was introduced by BP.
-  * Whether concurrent randomish read-write would happen in the
-    use of that specific filesystem as an object store; this was
-    introduced by myself to link QH's original question to BP's
-    new question, because strictly speaking BP's question seemed
-    to me offtopic in the XFS mailing list.
+  There seems to be some question about what you have said
+  previously about XFS, which to me would seem on topic.
 
-Then BP seemed to switch topics again by mentioning 1 and 2
-threaded read-write in the context of the general issue of the
-access patterns of large parallel HPC filesystem object stores,
-and that seemed strange to me, as I commented, so I ignore it.
+  I have forwarded your email to Christoph and the other
+  prominent members of the XFS team and if they feel further
+  action is warranted we can revisit the issue.
 
-> appropriate response would be to ask the OP to describe their
-> workload and storage in more detail
-
-Indeed, and I suggested to move the discussion to the Linux RAID
-mailing list for that purpose, because the evidence quoted above
-seemed to indicate that a 32-wide RAID5 was involved, as in:
-
-  > This issue should be moved to the 'linux-raid' mailing list as
-  > from the reported information it has nothing to do with XFS.
-    =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D
-
-This left free QH to report more information as someone asked to
-indicate the issue was relevant more to the XFS list than to the
-Linux RAID list, or to move to the Linux RAID list with more
-details.
-
-Again, the suggestion to continue the discussion in another list
-that seemed more useful to QH was based on simple inferences
-based on 3 reported facts: 31 ratio, 100TB size, "fast" single
-threaded speed vs. slow concurrent read/write speeds (and the
-concurrent high wait times).
-
-You and BP are entitled to think those are not good guesses
-(just as SH instead took them as good ones) and it would be
-interesting if you provided substantive reason why the
-suggestion to continue the discussion in the Linux RAID list was
-inappropriate, but you haven't contributed any other than your
-say-so.
-
-Also while suggestions have been made to QH to provide more
-details and/or move the discussion to the Linux RAID list by
-different people, notably this has not happened yet.
+  Based on what you have sent I do not feel there is grounds for
+  action.=BB
 
 _______________________________________________
 xfs mailing list
