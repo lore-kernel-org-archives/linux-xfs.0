@@ -1,28 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 779257F56
-	for <xfs@OSS.SGI.com>; Sat, 25 Oct 2014 07:36:44 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id EA48DAC004
-	for <xfs@OSS.SGI.com>; Sat, 25 Oct 2014 05:36:40 -0700 (PDT)
-Received: from honeysuckle.london.02.net (honeysuckle.london.02.net
-	[87.194.255.144]) by cuda.sgi.com with ESMTP id
-	2Jg3Qgb9odKANIbC for <xfs@OSS.SGI.com>;
-	Sat, 25 Oct 2014 05:36:38 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id DB8087F58
+	for <xfs@oss.sgi.com>; Sat, 25 Oct 2014 10:51:29 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 68A9EAC003
+	for <xfs@oss.sgi.com>; Sat, 25 Oct 2014 08:51:26 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id EfzUS1p40wnt8Dd7 for <xfs@oss.sgi.com>;
+	Sat, 25 Oct 2014 08:51:24 -0700 (PDT)
+Message-ID: <544BC6FA.8090101@sandeen.net>
+Date: Sat, 25 Oct 2014 10:51:22 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Message-ID: <21579.39245.719113.999373@tree.ty.sabi.co.uk>
-Date: Sat, 25 Oct 2014 13:36:29 +0100
-Subject: Re: Problem about very high Average Read/Write Request Time
-In-Reply-To: <20141024214525.GA4317@dastard>
-References: <CALSoAzD4ccHXBuD6mT3ggqMf1j_kDEK-RNMOeRLq+N+NiWVQXg@mail.gmail.com>
-	<20141018143848.3baf3266@galadriel.home>
-	<21571.36364.518119.806191@tree.ty.sabi.co.uk>
-	<5444C122.4080104@fastmail.fm>
-	<21574.42382.795064.152229@tree.ty.sabi.co.uk>
-	<54492AD5.3040704@fastmail.fm>
-	<21577.24715.712978.617220@tree.ty.sabi.co.uk>
-	<20141024214525.GA4317@dastard>
-From: pg@xfs.list.sabi.co.UK (Peter Grandi)
+Subject: Re: makefs alignment issue
+References: <544AB289.8010005@hardwarefreak.com>	<544AB338.2050905@sandeen.net>	<544ACDC4.1070501@hardwarefreak.com>	<544AD077.4080305@sandeen.net>	<544AD234.3060100@sandeen.net>
+	<544B1439.6060509@hardwarefreak.com>
+In-Reply-To: <544B1439.6060509@hardwarefreak.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,107 +24,71 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Linux fs XFS <xfs@OSS.SGI.com>
+To: Stan Hoeppner <stan@hardwarefreak.com>, xfs@oss.sgi.com
 
-Stan Hoeppner:
+On 10/24/14 10:08 PM, Stan Hoeppner wrote:
+> On 10/24/2014 05:27 PM, Eric Sandeen wrote:
+>> On 10/24/14 5:19 PM, Eric Sandeen wrote:
+>>> On 10/24/14 5:08 PM, Stan Hoeppner wrote:
+>>>>
+>>>> On 10/24/2014 03:14 PM, Eric Sandeen wrote:
+>>>
+>>> ...
+>>>
+>>>>>> Any ideas how to verify what's going on here and fix it?
+>>>>>
+>>>>> # blockdev --getiomin --getioopt /dev/s2d_a1l003
+>>
+>> Also, what does it show for the underlying non-multipath device(s)?
+> 
+> # blockdev --getiomin --getioopt /dev/sdj
+> 512
+> 1048576
+> # blockdev --getiomin --getioopt /dev/sdf
+> 512
+> 1048576
 
-  =ABDoing this via subterfuge simply reduces people's level of
-  respect for you=BB
+Ok, so dm multipath is just bubbling up what the device itself
+is claiming; not dm's doing.
 
-  =ABIn your 10,000th attempt to generate self gratification by
-  demonstrating your superior knowledge (actually lack thereof)
-  on this list, all you could have possibly achieved here is
-  confusing the OP even further. I find it sad that you've
-  decided to prey on the young, the inexperienced, after
-  realizing the educated began ignoring you long ago.=BB
+I forgot to ask (and you forgot to report...!) what version
+of xfsprogs you're using....
 
-Cristoph Hellwig:
+Currently, blkid_get_topology() in xfsprogs does:
 
-  =ABhe's made himself a name as not only beeing technically
-  incompetent but also extremly abrasive.=BB
+        /*
+         * Blkid reports the information in terms of bytes, but we want it in
+         * terms of 512 bytes blocks (just to convert it to bytes later..)
+         *
+         * If the reported values are the same as the physical sector size
+         * do not bother to report anything.  It will just cause warnings
+         * if people specify larger stripe units or widths manually.
+         */
+        val = blkid_topology_get_minimum_io_size(tp);
+        if (val > *psectorsize)
+                *sunit = val >> 9;
+        val = blkid_topology_get_optimal_io_size(tp);
+        if (val > *psectorsize)
+                *swidth = val >> 9;
 
-  =ABBut please stop giving advise taken out of the thin air to
-  people on the lists that might actually believe whatever
-  madness you just dreamed up.=BB
+so in your case sunit probably wouldn't get set (can you confirm with
+# blockdev --getpbsz that the physical sector size is also 512?)
 
-Dave Chinner:
+But the optimal size is > physical sector so swidth gets set.
 
-  =ABJust ignore the troll, Stan.=BB
+Bleah...  can you just collect all of:
 
-  =ABBut instead of taking the evidence-based verification path,
-  you've resorted to personal attacks to defend your tenuous
-  logic.=BB
+# blockdev --getpbsz --getss --getiomin --getioopt
 
-  =AByou've made a habit of this behaviour. Every discussion
-  thread you enter ends up with you abusing someone because they
-  dared to either question your assertions or didn't understand
-  what you said precisely.=BB
+for your underlying devices, and I'll dig into how xfsprogs is behaving for
+those values.  I have a hunch that we should be ignoring stripe units of 512
+even if the "width" claims to be something larger.
 
-  =AByou've finally reached my Intolerable Dickhead On The
-  Internet Threshold. Given that this is on the XFS mailing
-  list, and I'm the XFS Maintainer it falls to me to draw a line
-  in the sand: such behaviour is not acceptible in this forum.=BB
-
-According to Russel Cattelan (the owner of XFS the mailing list
-at least in 2012) and "other prominent members of the XFS team"
-the statements I quoted above are =ABacceptible in this forum=BB:
-
-  http://oss.sgi.com/archives/xfs/2012-04/threads.html#00051
-
-  =AB[ ... ] turning the XFS mailing list in a disreputable
-  vehicle for offtopic and offensive flaming. This to me this
-  looks like mobbing, beause coordinated personal attacks have
-  been done by a small group of people [ ... ]=BB
-  =
-
-  Russell Cattelan: =ABYou must be joking! I'm not about to ban
-  one of the most knowledgeable and productive xfs developers
-  from the email list.=BB
-
-  =ABWell, if one of these guys post offtopic and malicious rants,
-  I guess that his being an XFS developer should not matter.
-  With being an XFS developer comes also some responsibility to
-  maintain a technical and professional tone in the XFS mailing
-  list, and not to abuse his position. Same for the others.=BB
- =
-
-  Russel Cattelan: =ABI see nothing particularly offensive about
-  these posts.=BB
-
-  =ABThey personal attacks about competence and character. They
-  are pure flames, and because they are coordinated they seem to
-  be mobbing. To me, you seem to be expliciting endorsing the
-  use of the XFS mailing list to publish "ad hominem" attacks
-  and mobbing.=BB
-
-  Russel Cattelan: =ABI can understand you may upset about what
-  Christoph said he has every right to state his opinions on
-  things no matter how much you disagree.=BB
-
-  =ABBut his opinions are on offtopic "things": the topic of the
-  XFS mailing list is XFS, not people's competence or character,
-  or rants/attacks on people. Some of the links I have sent you
-  contain no technical content, purely personal attacks. How can
-  this be legitimate XFS content?=BB
-
-  Russell Cattelan: =ABWell I'm afraid I'm going to respectfully
-  disagree.  I don't have the full story of everything that
-  happened but none of the post you pointed out are totally off
-  topic.
-
-  There seems to be some question about what you have said
-  previously about XFS, which to me would seem on topic.
-
-  I have forwarded your email to Christoph and the other
-  prominent members of the XFS team and if they feel further
-  action is warranted we can revisit the issue.
-
-  Based on what you have sent I do not feel there is grounds for
-  action.=BB
+-Eric
 
 _______________________________________________
 xfs mailing list
