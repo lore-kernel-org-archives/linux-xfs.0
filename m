@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 63CB07F5F
-	for <xfs@oss.sgi.com>; Sat, 25 Oct 2014 12:34:51 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id E643EAC003
-	for <xfs@oss.sgi.com>; Sat, 25 Oct 2014 10:34:47 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id 7A3907F56
+	for <xfs@oss.sgi.com>; Sat, 25 Oct 2014 13:12:22 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 097BEAC007
+	for <xfs@oss.sgi.com>; Sat, 25 Oct 2014 11:12:21 -0700 (PDT)
 Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
-	[65.41.216.221]) by cuda.sgi.com with ESMTP id y7m7ZmfrKwM8BKMt
-	for <xfs@oss.sgi.com>; Sat, 25 Oct 2014 10:34:46 -0700 (PDT)
-Message-ID: <544BDF55.9040804@hardwarefreak.com>
-Date: Sat, 25 Oct 2014 12:35:17 -0500
+	[65.41.216.221]) by cuda.sgi.com with ESMTP id outve3t8rOO3ZHSI
+	for <xfs@oss.sgi.com>; Sat, 25 Oct 2014 11:12:17 -0700 (PDT)
+Received: from [134.64.128.163] (unknown [192.65.45.20])
+	by greer.hardwarefreak.com (Postfix) with ESMTPA id 536036C0A6
+	for <xfs@oss.sgi.com>; Sat, 25 Oct 2014 13:12:17 -0500 (CDT)
+Message-ID: <544BE820.6040905@hardwarefreak.com>
+Date: Sat, 25 Oct 2014 13:12:48 -0500
 From: Stan Hoeppner <stan@hardwarefreak.com>
 MIME-Version: 1.0
-Subject: Re: makefs alignment issue
-References: <544AB289.8010005@hardwarefreak.com>	<544AB338.2050905@sandeen.net>	<544ACDC4.1070501@hardwarefreak.com>	<544AD077.4080305@sandeen.net>	<544AD234.3060100@sandeen.net>
-	<544B1439.6060509@hardwarefreak.com> <544BC6FA.8090101@sandeen.net>
-In-Reply-To: <544BC6FA.8090101@sandeen.net>
+Subject: file streams allocator behavior
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,121 +28,65 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
+I recall reading a while back something about disabling the filestreams
+allocator, or at least changing its behavior, but I'm unable to find that.
 
-On 10/25/2014 10:51 AM, Eric Sandeen wrote:
-> On 10/24/14 10:08 PM, Stan Hoeppner wrote:
->> On 10/24/2014 05:27 PM, Eric Sandeen wrote:
->>> On 10/24/14 5:19 PM, Eric Sandeen wrote:
->>>> On 10/24/14 5:08 PM, Stan Hoeppner wrote:
->>>>>
->>>>> On 10/24/2014 03:14 PM, Eric Sandeen wrote:
->>>>
->>>> ...
->>>>
->>>>>>> Any ideas how to verify what's going on here and fix it?
->>>>>>
->>>>>> # blockdev --getiomin --getioopt /dev/s2d_a1l003
->>>
->>> Also, what does it show for the underlying non-multipath device(s)?
->>
->> # blockdev --getiomin --getioopt /dev/sdj
->> 512
->> 1048576
->> # blockdev --getiomin --getioopt /dev/sdf
->> 512
->> 1048576
-> 
-> Ok, so dm multipath is just bubbling up what the device itself
-> is claiming; not dm's doing.
-> 
-> I forgot to ask (and you forgot to report...!) what version
-> of xfsprogs you're using....
+What I'm trying to do is use parallel dd w/O_DIRECT to write 44 files in
+parallel to 44 directories, thus all 44 AGs, in one test, then write 44
+files to one dir, one AG, in another test.  The purpose of this
+quick/dirty exercise is to demonstrate throughput differences due to
+full platter seeking in the former case and localized seeking in the
+latter case.
 
-Sorry Eric, my bad.  I should know better after all these years. :(
-It's old Debian 6.0 IIRC, let's see...
+But of course the problem I'm running into in the single directory case
+is that the filestreams allocator starts writing all of the 44 files
+into the appropriate AG, but then begins allocating extents for each
+file in other AGs.  This is of course defeating the purpose of the tests.
 
-# xfs_repair -V
-xfs_repair version 3.1.4
+> /mnt/VOL1/43# for i in `seq 0 43`;do xfs_bmap -v test-$i;done
+> test-0:
+>  EXT: FILE-OFFSET         BLOCK-RANGE              AG AG-OFFSET            TOTAL FLAGS
+>    0: [0..1535]:          92341791520..92341793055 43 (160..1695)           1536 01111
+>    1: [1536..3071]:       92341794688..92341796223 43 (3328..4863)          1536 00011
+...
+>   88: [135168..136703]:   9972480..9974015          0 (9972480..9974015)    1536 00011
+>   89: [136704..138239]:   9984768..9986303          0 (9984768..9986303)    1536 00011
+...
+>  146: [224256..225791]:   2158167552..2158169087    1 (10684032..10685567)  1536
+>  147: [225792..227327]:   2158181376..2158182911    1 (10697856..10699391)  1536
+...
+>  160: [245760..254975]:   10744866688..10744875903  5 (7449088..7458303)    9216 00011
+>  161: [254976..256511]:   10744877440..10744878975  5 (7459840..7461375)    1536 00011
+...
+...
+> test-43:
+>  EXT: FILE-OFFSET         BLOCK-RANGE              AG AG-OFFSET             TOTAL FLAGS
+>    0: [0..1535]:          92341936000..92341937535 43 (144640..146175)       1536 00011
+>    1: [1536..3071]:       92342003584..92342005119 43 (212224..213759)       1536 00011
+...
+>   69: [105984..107519]:   4303912064..4303913599    2 (8945024..8946559)     1536 00011
+>   70: [107520..109055]:   4303922816..4303924351    2 (8955776..8957311)     1536 00011
+...
+...
+>  180: [276480..278015]:   8598943744..8598945279    4 (9009664..9011199)     1536 00011
+...
+>  181: [278016..279551]:   10744961920..10744963455  5 (7544320..7545855)     1536 00011
+>  182: [279552..281087]:   10744968064..10744969599  5 (7550464..7551999)     1536 00011
+...
+...
 
-> Currently, blkid_get_topology() in xfsprogs does:
-> 
->         /*
->          * Blkid reports the information in terms of bytes, but we want it in
->          * terms of 512 bytes blocks (just to convert it to bytes later..)
->          *
->          * If the reported values are the same as the physical sector size
->          * do not bother to report anything.  It will just cause warnings
->          * if people specify larger stripe units or widths manually.
->          */
->         val = blkid_topology_get_minimum_io_size(tp);
->         if (val > *psectorsize)
->                 *sunit = val >> 9;
->         val = blkid_topology_get_optimal_io_size(tp);
->         if (val > *psectorsize)
->                 *swidth = val >> 9;
-> 
-> so in your case sunit probably wouldn't get set (can you confirm with
-> # blockdev --getpbsz that the physical sector size is also 512?)
+Files being created are 1.6 GB.  Filesystem is 44 TB.  AGs are 1 TB.
+AGs are 0-43.  Directories, /mnt/VOL1/0 - /mnt/VOL1/43.  Device is a
+single RAID5 LUN.
 
-# blockdev --getpbsz /dev/dm-0
-512
-
-> But the optimal size is > physical sector so swidth gets set.
-> 
-> Bleah...  can you just collect all of:
-> 
-> # blockdev --getpbsz --getss --getiomin --getioopt
-
-# blockdev --getpbsz --getss --getiomin --getioopt /dev/sdj
-512
-512
-512
-1048576
-
-# blockdev --getpbsz --getss --getiomin --getioopt /dev/sdh
-512
-512
-512
-1048576
-
-> for your underlying devices, and I'll dig into how xfsprogs is behaving for
-> those values.  I have a hunch that we should be ignoring stripe units of 512
-> even if the "width" claims to be something larger.
-
-Just a hunch? :)
-
-If the same interface is used for Linux logical block devices (md, dm,
-lvm, etc) and hardware RAID, I have a hunch it may be better to
-determine that, if possible, before doing anything with these values.
-As you said previously, and I agree 100%, a lot of RAID vendors don't
-export meaningful information here.  In this specific case, I think the
-RAID engineers are exporting a value, 1 MB, that works best for their
-cache management, or some other path in their firmware.  They're
-concerned with host interface xfer into the controller, not the IOs on
-the back end to the disks.  They don't see this as an end-to-end deal.
-In fact, I'd guess most of these folks see their device as performing
-magic, and it doesn't matter what comes in or goes out either end.
-"We'll take care of it."
-
-I don't know what underlying SCSI command is used for populating
-optimal_io_size.  I'm guessing this has different meaning for different
-folks.  You say optimal_io_size is the same as RAID width.  Apply that
-to this case:
-
-hardware RAID 60 LUN, 4 arrays
-16+2 RAID6, 256 KB stripe unit, 4096 KB stripe width
-16 MB LUN stripe width
-optimal_io_size = 16 MB
-
-Is that an appropriate value for optimal_io_size even if this is the
-RAID width?  I'm not saying it isn't.  I don't know.  I don't know what
-other layers of the Linux and RAID firmware stacks are affected by this,
-nor how they're affected.
+How can I disable or change the filestreams behavior so all files go
+into the one AG for the single directory test?
 
 Thanks,
 Stan
+
 
 _______________________________________________
 xfs mailing list
