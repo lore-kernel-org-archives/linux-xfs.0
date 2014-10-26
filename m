@@ -1,20 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id E36477F3F
-	for <xfs@oss.sgi.com>; Sat, 25 Oct 2014 16:26:28 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id C31D08F8049
-	for <xfs@oss.sgi.com>; Sat, 25 Oct 2014 14:26:25 -0700 (PDT)
-Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
-	[65.41.216.221]) by cuda.sgi.com with ESMTP id A8bIq7Y2v6Qvtzri
-	for <xfs@oss.sgi.com>; Sat, 25 Oct 2014 14:26:25 -0700 (PDT)
-Message-ID: <544C159E.8010408@hardwarefreak.com>
-Date: Sat, 25 Oct 2014 16:26:54 -0500
-From: Stan Hoeppner <stan@hardwarefreak.com>
-MIME-Version: 1.0
+	by oss.sgi.com (Postfix) with ESMTP id E73B57F4E
+	for <xfs@oss.sgi.com>; Sun, 26 Oct 2014 09:26:13 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id C6A6C8F8033
+	for <xfs@oss.sgi.com>; Sun, 26 Oct 2014 07:26:10 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id 1njxEsmtZTPumNLM (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Sun, 26 Oct 2014 07:26:09 -0700 (PDT)
+Date: Sun, 26 Oct 2014 10:26:01 -0400
+From: Brian Foster <bfoster@redhat.com>
 Subject: Re: file streams allocator behavior
+Message-ID: <20141026142559.GA61711@bfoster.bfoster>
 References: <544BF26F.6000708@clear.net.nz>
-In-Reply-To: <544BF26F.6000708@clear.net.nz>
+	<544C159E.8010408@hardwarefreak.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <544C159E.8010408@hardwarefreak.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,34 +30,55 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Richard Scobie <r.scobie@clear.net.nz>, xfs@oss.sgi.com
+To: Stan Hoeppner <stan@hardwarefreak.com>
+Cc: Richard Scobie <r.scobie@clear.net.nz>, xfs@oss.sgi.com
 
-On 10/25/2014 01:56 PM, Richard Scobie wrote:
-> Stan Hoeppner said:
+On Sat, Oct 25, 2014 at 04:26:54PM -0500, Stan Hoeppner wrote:
+> On 10/25/2014 01:56 PM, Richard Scobie wrote:
+> > Stan Hoeppner said:
+> > 
+> >> How can I disable or change the filestreams behavior so all files go
+> >> into the one AG for the single directory test?
+> > 
+> > Hi Stan,
+> > 
+> > Instead of mounting with -o filestreams, would using the chattr flag
+> > instead help?
+> > 
+> > See
+> > http://xfs.org/docs/xfsdocs-xml-dev/XFS_User_Guide/tmp/en-US/html/ch06s16.html
 > 
->> How can I disable or change the filestreams behavior so all files go
->> into the one AG for the single directory test?
+> That won't help.  That turns it on (if it's not enabled by default these
+> days).  I need to turn off the behavior I'm seeing, whether it's due to
+> the filestreams allocator or default inode64.  Then again it may not be
+> possible to turn it off...
 > 
-> Hi Stan,
+> Anyone have other ideas on how to accomplish my goal?  Parallel writes
+> to a single AG on the outer platter edge vs the same to all AGs across
+> the entire platter?  I'm simply trying to demonstrate the differences in
+> aggregate bandwidth due to the extra seek latency of all AGs case.
 > 
-> Instead of mounting with -o filestreams, would using the chattr flag
-> instead help?
-> 
-> See
-> http://xfs.org/docs/xfsdocs-xml-dev/XFS_User_Guide/tmp/en-US/html/ch06s16.html
 
-That won't help.  That turns it on (if it's not enabled by default these
-days).  I need to turn off the behavior I'm seeing, whether it's due to
-the filestreams allocator or default inode64.  Then again it may not be
-possible to turn it off...
+What about just preallocating the files? Obviously this removes block
+allocation contention from your experiment, but it's not clear if that's
+relevant to your test. If I create a smaller, but analogous fs to yours,
+I seem to get this behavior from just doing an fallocate of each file in
+advance.
 
-Anyone have other ideas on how to accomplish my goal?  Parallel writes
-to a single AG on the outer platter edge vs the same to all AGs across
-the entire platter?  I'm simply trying to demonstrate the differences in
-aggregate bandwidth due to the extra seek latency of all AGs case.
+E.g., Create directory 0, fallocate 44 files all of which end up in AG
+0. Create directory 1, fallocate 44 files which end up in AG 1, etc.
+>From there you can do direct I/O overwrites to 44 files across each AG
+or 44 files in any single AG.
 
-Thanks,
-Stan
+Brian
+
+> Thanks,
+> Stan
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
