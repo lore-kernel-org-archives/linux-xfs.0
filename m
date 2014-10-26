@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 8C7FC7F4E
-	for <xfs@oss.sgi.com>; Sun, 26 Oct 2014 17:18:50 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 8332A7F4E
+	for <xfs@oss.sgi.com>; Sun, 26 Oct 2014 18:43:34 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 4B293304048
-	for <xfs@oss.sgi.com>; Sun, 26 Oct 2014 15:18:50 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id 5SnwDmnnBpapLSWt (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Sun, 26 Oct 2014 15:18:45 -0700 (PDT)
-Date: Sun, 26 Oct 2014 18:18:11 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: file streams allocator behavior
-Message-ID: <20141026221811.GA13113@bfoster.bfoster>
-References: <544BF26F.6000708@clear.net.nz>
-	<544C159E.8010408@hardwarefreak.com>
-	<20141026142559.GA61711@bfoster.bfoster>
-	<544D2EE1.3080304@hardwarefreak.com>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 463D9304032
+	for <xfs@oss.sgi.com>; Sun, 26 Oct 2014 16:43:31 -0700 (PDT)
+Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
+	[150.101.137.145]) by cuda.sgi.com with ESMTP id
+	6s0cVtVBysl8E6Yo for <xfs@oss.sgi.com>;
+	Sun, 26 Oct 2014 16:43:29 -0700 (PDT)
+Date: Mon, 27 Oct 2014 10:43:25 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: makefs alignment issue
+Message-ID: <20141026234325.GB6880@dastard>
+References: <544AB289.8010005@hardwarefreak.com> <544AB338.2050905@sandeen.net>
+	<544ACDC4.1070501@hardwarefreak.com> <544AD077.4080305@sandeen.net>
+	<544AD234.3060100@sandeen.net> <544B1439.6060509@hardwarefreak.com>
+	<544BC6FA.8090101@sandeen.net> <544BDF55.9040804@hardwarefreak.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <544D2EE1.3080304@hardwarefreak.com>
+In-Reply-To: <544BDF55.9040804@hardwarefreak.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,64 +33,56 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Stan Hoeppner <stan@hardwarefreak.com>
-Cc: Richard Scobie <r.scobie@clear.net.nz>, xfs@oss.sgi.com
+Cc: Eric Sandeen <sandeen@sandeen.net>, xfs@oss.sgi.com
 
-On Sun, Oct 26, 2014 at 12:26:57PM -0500, Stan Hoeppner wrote:
-> 
-> 
-> On 10/26/2014 09:26 AM, Brian Foster wrote:
-> > On Sat, Oct 25, 2014 at 04:26:54PM -0500, Stan Hoeppner wrote:
-> >> On 10/25/2014 01:56 PM, Richard Scobie wrote:
-> >>> Stan Hoeppner said:
-> >>>
-> >>>> How can I disable or change the filestreams behavior so all files go
-> >>>> into the one AG for the single directory test?
-> >>>
-> >>> Hi Stan,
-> >>>
-> >>> Instead of mounting with -o filestreams, would using the chattr flag
-> >>> instead help?
-> >>>
-> >>> See
-> >>> http://xfs.org/docs/xfsdocs-xml-dev/XFS_User_Guide/tmp/en-US/html/ch06s16.html
-> >>
-> >> That won't help.  That turns it on (if it's not enabled by default these
-> >> days).  I need to turn off the behavior I'm seeing, whether it's due to
-> >> the filestreams allocator or default inode64.  Then again it may not be
-> >> possible to turn it off...
-> >>
-> >> Anyone have other ideas on how to accomplish my goal?  Parallel writes
-> >> to a single AG on the outer platter edge vs the same to all AGs across
-> >> the entire platter?  I'm simply trying to demonstrate the differences in
-> >> aggregate bandwidth due to the extra seek latency of all AGs case.
-> >>
-> > 
-> > What about just preallocating the files? Obviously this removes block
-> > allocation contention from your experiment, but it's not clear if that's
-> > relevant to your test. If I create a smaller, but analogous fs to yours,
-> > I seem to get this behavior from just doing an fallocate of each file in
-> > advance.
-> > 
-> > E.g., Create directory 0, fallocate 44 files all of which end up in AG
-> > 0. Create directory 1, fallocate 44 files which end up in AG 1, etc.
-> > From there you can do direct I/O overwrites to 44 files across each AG
-> > or 44 files in any single AG.
-> 
-> I figured preallocating would get me what I want but I've never used
-> fallocate, nor dd into fallocated files.  Is there anything special
-> required here with dd, or can I simply specify the filename to dd, and
-> make sure bs + count doesn't go beyond EOF?
-> 
+On Sat, Oct 25, 2014 at 12:35:17PM -0500, Stan Hoeppner wrote:
+> If the same interface is used for Linux logical block devices (md, dm,
+> lvm, etc) and hardware RAID, I have a hunch it may be better to
+> determine that, if possible, before doing anything with these values.
+> As you said previously, and I agree 100%, a lot of RAID vendors don't
+> export meaningful information here.  In this specific case, I think the
+> RAID engineers are exporting a value, 1 MB, that works best for their
+> cache management, or some other path in their firmware.  They're
+> concerned with host interface xfer into the controller, not the IOs on
+> the back end to the disks.  They don't see this as an end-to-end deal.
+> In fact, I'd guess most of these folks see their device as performing
+> magic, and it doesn't matter what comes in or goes out either end.
+> "We'll take care of it."
 
-Ah, yeah. dd will truncate the file by default iirc, which would free
-the preallocated blocks and start from scratch. Specify 'conv=notrunc'
-as part of the command line to get around that.
+Deja vu. This is an isochronous RAID array you are having trouble
+with, isn't it?
 
-Brian
+FWIW, do your problems go away when you make you hardware LUN width
+a multiple of the cache segment size?
 
-> Thanks,
-> Stan
+> optimal_io_size.  I'm guessing this has different meaning for different
+> folks.  You say optimal_io_size is the same as RAID width.  Apply that
+> to this case:
 > 
+> hardware RAID 60 LUN, 4 arrays
+> 16+2 RAID6, 256 KB stripe unit, 4096 KB stripe width
+> 16 MB LUN stripe width
+> optimal_io_size = 16 MB
+> 
+> Is that an appropriate value for optimal_io_size even if this is the
+> RAID width?  I'm not saying it isn't.  I don't know.  I don't know what
+> other layers of the Linux and RAID firmware stacks are affected by this,
+> nor how they're affected.
+
+yup, i'd expect minimum = 4MB (i.e stripe unit 4MB so we align to
+the underlying RAID6 luns) and optimal = 16MB for the stripe width
+(and so with swalloc we align to the first lun in the RAID0).
+
+This should be passed up unchanged through the stack if none of the
+software layers are doing other geometry modifications (e.g. more
+raid, thinp, etc).
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
