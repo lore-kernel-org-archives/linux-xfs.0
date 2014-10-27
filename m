@@ -1,27 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 9AB1E7F4E
-	for <xfs@oss.sgi.com>; Mon, 27 Oct 2014 06:26:04 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 288DFAC002
-	for <xfs@oss.sgi.com>; Mon, 27 Oct 2014 04:26:00 -0700 (PDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id DDB8C7F55
+	for <xfs@oss.sgi.com>; Mon, 27 Oct 2014 06:26:06 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id BCDDD304051
+	for <xfs@oss.sgi.com>; Mon, 27 Oct 2014 04:26:06 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id Y9sZNT5PBeahpBgs (version=TLSv1
+	cuda.sgi.com with ESMTP id 8qPjDHiuQzBQiIOV (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 27 Oct 2014 04:25:56 -0700 (PDT)
-Received: from int-mx14.intmail.prod.int.phx2.redhat.com
-	(int-mx14.intmail.prod.int.phx2.redhat.com [10.5.11.27])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id s9RBPt0o031121
+	Mon, 27 Oct 2014 04:26:05 -0700 (PDT)
+Received: from int-mx10.intmail.prod.int.phx2.redhat.com
+	(int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id s9RBQ4aQ031176
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256
-	verify=FAIL) for <xfs@oss.sgi.com>; Mon, 27 Oct 2014 07:25:56 -0400
-Date: Mon, 27 Oct 2014 07:25:54 -0400
+	verify=FAIL) for <xfs@oss.sgi.com>; Mon, 27 Oct 2014 07:26:05 -0400
+Date: Mon, 27 Oct 2014 07:26:03 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH] xfsprogs: fix endian mishap in xfs_dialloc_ag()
-Message-ID: <20141027112552.GA39598@bfoster.bfoster>
-References: <54498FE9.4000103@redhat.com>
+Subject: Re: [PATCH] xfsprogs: fix harmless sparse endian nit
+Message-ID: <20141027112603.GB39598@bfoster.bfoster>
+References: <544992F1.8050803@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <54498FE9.4000103@redhat.com>
+In-Reply-To: <544992F1.8050803@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -37,36 +37,36 @@ Sender: xfs-bounces@oss.sgi.com
 To: Eric Sandeen <sandeen@redhat.com>
 Cc: xfs-oss <xfs@oss.sgi.com>
 
-On Thu, Oct 23, 2014 at 06:31:53PM -0500, Eric Sandeen wrote:
-> Fixes a regression introduced by:
+On Thu, Oct 23, 2014 at 06:44:49PM -0500, Eric Sandeen wrote:
+> h_crc is __le32 but cpu_to_be32() is... __be32.  So sparse
+> complains, even though it's harmless.
 > 
-> 88fc730 xfs: use and update the finobt on inode allocation
-> 
-> which passed the non-swapped version of agi->agi_newino to
-> xfs_inobt_lookup()
-> 
-> Caught by make C=2, ftw!
+> Although sparse is smart about bare 0s, and we could
+> drop the swap, other places explicitly swap to keep
+> things clear (I guess?) so "swap" the 0 with the proper
+> routine.
 > 
 > Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 > ---
 
+Looks good. I agree that the swap helps with clarity.
+
 Reviewed-by: Brian Foster <bfoster@redhat.com>
 
 > 
-> diff --git a/libxfs/xfs_ialloc.c b/libxfs/xfs_ialloc.c
-> index 5462c54..b20a9ec 100644
-> --- a/libxfs/xfs_ialloc.c
-> +++ b/libxfs/xfs_ialloc.c
-> @@ -1057,7 +1057,8 @@ xfs_dialloc_ag(
->  		 * most recently allocated inode.
->  		 */
->  		if (agi->agi_newino != cpu_to_be32(NULLAGINO)) {
-> -			error = xfs_inobt_lookup(cur, agi->agi_newino,
-> +			error = xfs_inobt_lookup(cur,
-> +						 be32_to_cpu(agi->agi_newino),
->  						 XFS_LOOKUP_EQ, &i);
->  			if (error)
->  				goto error_cur;
+> diff --git a/libxfs/rdwr.c b/libxfs/rdwr.c
+> index 9ee89d3..dd8baa6 100644
+> --- a/libxfs/rdwr.c
+> +++ b/libxfs/rdwr.c
+> @@ -187,7 +187,7 @@ libxfs_log_header(
+>  		head->h_len = cpu_to_be32(sunit - BBSIZE);
+>  	else
+>  		head->h_len = cpu_to_be32(20);
+> -	head->h_crc = cpu_to_be32(0);
+> +	head->h_crc = cpu_to_le32(0);
+>  	head->h_prev_block = cpu_to_be32(-1);
+>  	head->h_num_logops = cpu_to_be32(1);
+>  	head->h_cycle_data[0] = cpu_to_be32(0xb0c0d0d0);
 > 
 > _______________________________________________
 > xfs mailing list
