@@ -1,23 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id C5F387F7E
-	for <xfs@oss.sgi.com>; Mon, 27 Oct 2014 16:50:39 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 090E97F8B
+	for <xfs@oss.sgi.com>; Mon, 27 Oct 2014 18:03:38 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 53F66AC007
-	for <xfs@oss.sgi.com>; Mon, 27 Oct 2014 14:50:39 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id 6LWBKYdPGoF8DM1X (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 27 Oct 2014 14:50:37 -0700 (PDT)
-Date: Mon, 27 Oct 2014 17:50:34 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH V2] xfs_io: add sync and syncfs commands
-Message-ID: <20141027215033.GA62546@bfoster.bfoster>
-References: <544A9511.70500@redhat.com>
- <544E951B.9030600@sandeen.net>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 7BC29AC006
+	for <xfs@oss.sgi.com>; Mon, 27 Oct 2014 16:03:34 -0700 (PDT)
+Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
+	[65.41.216.221]) by cuda.sgi.com with ESMTP id sHh9YpAcN74VtOhk
+	for <xfs@oss.sgi.com>; Mon, 27 Oct 2014 16:03:33 -0700 (PDT)
+Message-ID: <544ECF65.8090806@hardwarefreak.com>
+Date: Mon, 27 Oct 2014 18:04:05 -0500
+From: Stan Hoeppner <stan@hardwarefreak.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <544E951B.9030600@sandeen.net>
+Subject: Re: makefs alignment issue
+References: <544AB289.8010005@hardwarefreak.com> <544AB338.2050905@sandeen.net>
+	<544ACDC4.1070501@hardwarefreak.com>
+	<544AD077.4080305@sandeen.net> <544AD234.3060100@sandeen.net>
+	<544B1439.6060509@hardwarefreak.com> <544BC6FA.8090101@sandeen.net>
+	<544BDF55.9040804@hardwarefreak.com>
+	<20141026234325.GB6880@dastard>
+In-Reply-To: <20141026234325.GB6880@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,207 +32,69 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Eric Sandeen <sandeen@redhat.com>, xfs-oss <xfs@oss.sgi.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: Eric Sandeen <sandeen@sandeen.net>, xfs@oss.sgi.com
 
-On Mon, Oct 27, 2014 at 01:55:23PM -0500, Eric Sandeen wrote:
-> There's no easy way to invoke syncfs from the commandline,
-> as far as I know, so add it to xfs_io to be handy.
+On 10/26/2014 06:43 PM, Dave Chinner wrote:
+> On Sat, Oct 25, 2014 at 12:35:17PM -0500, Stan Hoeppner wrote:
+>> If the same interface is used for Linux logical block devices (md, dm,
+>> lvm, etc) and hardware RAID, I have a hunch it may be better to
+>> determine that, if possible, before doing anything with these values.
+>> As you said previously, and I agree 100%, a lot of RAID vendors don't
+>> export meaningful information here.  In this specific case, I think the
+>> RAID engineers are exporting a value, 1 MB, that works best for their
+>> cache management, or some other path in their firmware.  They're
+>> concerned with host interface xfer into the controller, not the IOs on
+>> the back end to the disks.  They don't see this as an end-to-end deal.
+>> In fact, I'd guess most of these folks see their device as performing
+>> magic, and it doesn't matter what comes in or goes out either end.
+>> "We'll take care of it."
 > 
-> Add sync while we're at it, just for completeness.
-> 
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-> ---
+> Deja vu. This is an isochronous RAID array you are having trouble
+> with, isn't it?
 
-Looks good to me.
+I don't believe so.  I'm pretty sure the parity rotates; i.e. standard
+RAID5/6.
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+> FWIW, do your problems go away when you make you hardware LUN width
+> a multiple of the cache segment size?
 
+Hadn't tried it.  And I don't have the opportunity now as my contract
+has ended.  However the problems we were having weren't related to
+controller issues but excessive seeking.  I mentioned this in that
+(rather lengthy) previous reply.
+
+>> optimal_io_size.  I'm guessing this has different meaning for different
+>> folks.  You say optimal_io_size is the same as RAID width.  Apply that
+>> to this case:
+>>
+>> hardware RAID 60 LUN, 4 arrays
+>> 16+2 RAID6, 256 KB stripe unit, 4096 KB stripe width
+>> 16 MB LUN stripe width
+>> optimal_io_size = 16 MB
+>>
+>> Is that an appropriate value for optimal_io_size even if this is the
+>> RAID width?  I'm not saying it isn't.  I don't know.  I don't know what
+>> other layers of the Linux and RAID firmware stacks are affected by this,
+>> nor how they're affected.
 > 
-> V2: sync doesn't need to have a file open
-> 
-> diff --git a/io/Makefile b/io/Makefile
-> index c16af87..82593a6 100644
-> --- a/io/Makefile
-> +++ b/io/Makefile
-> @@ -11,7 +11,7 @@ HFILES = init.h io.h
->  CFILES = init.c \
->  	attr.c bmap.c file.c freeze.c fsync.c getrusage.c imap.c link.c \
->  	mmap.c open.c parent.c pread.c prealloc.c pwrite.c seek.c shutdown.c \
-> -	truncate.c
-> +	sync.c truncate.c
->  
->  LLDLIBS = $(LIBXCMD) $(LIBHANDLE)
->  LTDEPENDENCIES = $(LIBXCMD) $(LIBHANDLE)
-> @@ -64,6 +64,10 @@ CFILES += sync_file_range.c
->  LCFLAGS += -DHAVE_SYNC_FILE_RANGE
->  endif
->  
-> +ifeq ($(HAVE_SYNCFS),yes)
-> +LCFLAGS += -DHAVE_SYNCFS
-> +endif
-> +
->  ifeq ($(ENABLE_READLINE),yes)
->  LLDLIBS += $(LIBREADLINE) $(LIBTERMCAP)
->  endif
-> diff --git a/io/init.c b/io/init.c
-> index bfc35bf..1b07518 100644
-> --- a/io/init.c
-> +++ b/io/init.c
-> @@ -80,8 +80,9 @@ init_commands(void)
->  	resblks_init();
->  	sendfile_init();
->  	shutdown_init();
-> -	truncate_init();
-> +	sync_init();
->  	sync_range_init();
-> +	truncate_init();
->  }
->  
->  static int
-> diff --git a/io/io.h b/io/io.h
-> index 1b3bca1..db8b513 100644
-> --- a/io/io.h
-> +++ b/io/io.h
-> @@ -109,6 +109,7 @@ extern void		pwrite_init(void);
->  extern void		quit_init(void);
->  extern void		seek_init(void);
->  extern void		shutdown_init(void);
-> +extern void		sync_init(void);
->  extern void		truncate_init(void);
->  
->  #ifdef HAVE_FADVISE
-> diff --git a/io/sync.c b/io/sync.c
-> new file mode 100644
-> index 0000000..683899b
-> --- /dev/null
-> +++ b/io/sync.c
-> @@ -0,0 +1,70 @@
-> +/*
-> + * Copyright (c) 2014 Red Hat, Inc.
-> + * All Rights Reserved.
-> + *
-> + * This program is free software; you can redistribute it and/or
-> + * modify it under the terms of the GNU General Public License as
-> + * published by the Free Software Foundation.
-> + *
-> + * This program is distributed in the hope that it would be useful,
-> + * but WITHOUT ANY WARRANTY; without even the implied warranty of
-> + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-> + * GNU General Public License for more details.
-> + *
-> + * You should have received a copy of the GNU General Public License
-> + * along with this program; if not, write the Free Software Foundation,
-> + * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-> + */
-> +
-> +#include <xfs/xfs.h>
-> +#include <xfs/command.h>
-> +#include "init.h"
-> +#include "io.h"
-> +
-> +static cmdinfo_t sync_cmd;
-> +
-> +static int
-> +sync_f(
-> +	int			argc,
-> +	char			**argv)
-> +{
-> +	/* sync can't fail */
-> +	sync();
-> +	return 0;
-> +}
-> +
-> +#ifdef HAVE_SYNCFS
-> +static cmdinfo_t syncfs_cmd;
-> +
-> +static int
-> +syncfs_f(
-> +	int			argc,
-> +	char			**argv)
-> +{
-> +	/* syncfs can't fail */
-> +	syncfs(file->fd);
-> +	return 0;
-> +}
-> +#endif
-> +
-> +void
-> +sync_init(void)
-> +{
-> +	sync_cmd.name = "sync";
-> +	sync_cmd.cfunc = sync_f;
-> +	sync_cmd.flags = CMD_NOMAP_OK | CMD_NOFILE_OK | CMD_FOREIGN_OK;
-> +	sync_cmd.oneline =
-> +		_("calls sync(2) to flush all in-core filesystem state to disk");
-> +
-> +	add_command(&sync_cmd);
-> +
-> +#ifdef HAVE_SYNCFS
-> +	syncfs_cmd.name = "syncfs";
-> +	syncfs_cmd.cfunc = syncfs_f;
-> +	syncfs_cmd.flags = CMD_NOMAP_OK | CMD_FOREIGN_OK;
-> +	syncfs_cmd.oneline =
-> +		_("calls syncfs(2) to flush all in-core filesystem state to disk");
-> +
-> +	add_command(&syncfs_cmd);
-> +#endif
-> +}
-> diff --git a/m4/package_libcdev.m4 b/m4/package_libcdev.m4
-> index 8267ba0..919ae0a 100644
-> --- a/m4/package_libcdev.m4
-> +++ b/m4/package_libcdev.m4
-> @@ -171,6 +171,23 @@ AC_DEFUN([AC_HAVE_SYNC_FILE_RANGE],
->    ])
->  
->  #
-> +# Check if we have a syncfs libc call (Linux)
-> +#
-> +AC_DEFUN([AC_HAVE_SYNCFS],
-> +  [ AC_MSG_CHECKING([for syncfs])
-> +    AC_TRY_LINK([
-> +#define _GNU_SOURCE
-> +#define _FILE_OFFSET_BITS 64
-> +#include <unistd.h>
-> +    ], [
-> +         syncfs(0);
-> +    ], have_sync_fs=yes
-> +       AC_MSG_RESULT(yes),
-> +       AC_MSG_RESULT(no))
-> +    AC_SUBST(have_syncfs)
-> +  ])
-> +
-> +#
->  # Check if we have a readdir libc call
->  #
->  AC_DEFUN([AC_HAVE_READDIR],
-> diff --git a/man/man8/xfs_io.8 b/man/man8/xfs_io.8
-> index e40fbf9..cf27b99 100644
-> --- a/man/man8/xfs_io.8
-> +++ b/man/man8/xfs_io.8
-> @@ -362,6 +362,16 @@ start writeback of dirty data in the given range (SYNC_FILE_RANGE_WRITE).
->  .RE
->  .PD
->  .TP
-> +.B sync
-> +Calls
-> +.BR sync (2)
-> +to flush all filesystems' in-core data to disk.
-> +.TP
-> +.B syncfs
-> +Calls
-> +.BR syncfs (2)
-> +to flush this filesystem's in-core data to disk.
-> +.TP
->  .BI resvsp " offset length"
->  Allocates reserved, unwritten space for part of a file using the
->  XFS_IOC_RESVSP system call described in the
-> 
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+> yup, i'd expect minimum = 4MB (i.e stripe unit 4MB so we align to
+> the underlying RAID6 luns) and optimal = 16MB for the stripe width
+> (and so with swalloc we align to the first lun in the RAID0).
+
+At minimum 4MB how does that affect journal writes which will be much
+smaller, especially with a large file streaming workload, for which this
+setup is appropriate?  Isn't the minimum a hard setting?  I.e. we can
+never do an IO less than 4MB?  Do other layers of the stack use this
+variable?  Are they expecting values this large?
+
+> This should be passed up unchanged through the stack if none of the
+> software layers are doing other geometry modifications (e.g. more
+> raid, thinp, etc).
+
+I agree, if RAID vendors all did the right thing...
+
+Stan
 
 _______________________________________________
 xfs mailing list
