@@ -1,27 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 5B9E07F99
-	for <xfs@oss.sgi.com>; Mon, 27 Oct 2014 19:33:33 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id CA5F07F9F
+	for <xfs@oss.sgi.com>; Mon, 27 Oct 2014 20:14:36 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 4A3E8304032
-	for <xfs@oss.sgi.com>; Mon, 27 Oct 2014 17:33:30 -0700 (PDT)
-Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
-	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	aGo8w7LdnjXe7Yr3 for <xfs@oss.sgi.com>;
-	Mon, 27 Oct 2014 17:33:27 -0700 (PDT)
-Date: Tue, 28 Oct 2014 11:32:19 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: makefs alignment issue
-Message-ID: <20141028003219.GC16186@dastard>
-References: <544AB289.8010005@hardwarefreak.com> <544AB338.2050905@sandeen.net>
-	<544ACDC4.1070501@hardwarefreak.com> <544AD077.4080305@sandeen.net>
-	<544AD234.3060100@sandeen.net> <544B1439.6060509@hardwarefreak.com>
-	<544BC6FA.8090101@sandeen.net> <544BDF55.9040804@hardwarefreak.com>
-	<20141026234325.GB6880@dastard>
-	<544ECF65.8090806@hardwarefreak.com>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id B8EAA304032
+	for <xfs@oss.sgi.com>; Mon, 27 Oct 2014 18:14:33 -0700 (PDT)
+Received: from mail-lb0-f180.google.com (mail-lb0-f180.google.com
+	[209.85.217.180]) by cuda.sgi.com with ESMTP id
+	eW3J86tY5tJUGDyw (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Mon, 27 Oct 2014 18:14:28 -0700 (PDT)
+Received: by mail-lb0-f180.google.com with SMTP id z12so3306487lbi.11
+	for <xfs@oss.sgi.com>; Mon, 27 Oct 2014 18:14:27 -0700 (PDT)
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <544ECF65.8090806@hardwarefreak.com>
+In-Reply-To: <20141027210523.GD6880@dastard>
+References: <20141016100913.GA8140@wfg-t540p.sh.intel.com>
+	<20141016110127.GD6085@quack.suse.cz>
+	<20141027010422.GA16186@dastard>
+	<20141027095812.GA16093@quack.suse.cz>
+	<20141027210523.GD6880@dastard>
+Date: Tue, 28 Oct 2014 09:14:27 +0800
+Message-ID: <CADJHv_uQgNYiQWZ5pRPk6t+x4yTPHbWnX7J6cJ5YFE-bofFFpg@mail.gmail.com>
+Subject: Re: [vfs] WARNING: CPU: 3 PID: 2339 at mm/truncate.c:758
+	pagecache_isize_extended+0xdd/0x120()
+From: Xiong Zhou <jencce.kernel@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,88 +36,88 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Stan Hoeppner <stan@hardwarefreak.com>
-Cc: Eric Sandeen <sandeen@sandeen.net>, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: Theodore Ts'o <tytso@mit.edu>, LKML <linux-kernel@vger.kernel.org>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>, Linux-Fsdevel <linux-fsdevel@vger.kernel.org>, Jan Kara <jack@suse.cz>, Fengguang Wu <fengguang.wu@intel.com>, lkp@01.org
 
-On Mon, Oct 27, 2014 at 06:04:05PM -0500, Stan Hoeppner wrote:
-> On 10/26/2014 06:43 PM, Dave Chinner wrote:
-> > On Sat, Oct 25, 2014 at 12:35:17PM -0500, Stan Hoeppner wrote:
-> >> If the same interface is used for Linux logical block devices (md, dm,
-> >> lvm, etc) and hardware RAID, I have a hunch it may be better to
-> >> determine that, if possible, before doing anything with these values.
-> >> As you said previously, and I agree 100%, a lot of RAID vendors don't
-> >> export meaningful information here.  In this specific case, I think the
-> >> RAID engineers are exporting a value, 1 MB, that works best for their
-> >> cache management, or some other path in their firmware.  They're
-> >> concerned with host interface xfer into the controller, not the IOs on
-> >> the back end to the disks.  They don't see this as an end-to-end deal.
-> >> In fact, I'd guess most of these folks see their device as performing
-> >> magic, and it doesn't matter what comes in or goes out either end.
-> >> "We'll take care of it."
-> > 
-> > Deja vu. This is an isochronous RAID array you are having trouble
-> > with, isn't it?
-> 
-> I don't believe so.  I'm pretty sure the parity rotates; i.e. standard
-> RAID5/6.
+still in rc2
+------------[ cut here ]------------
+WARNING: CPU: 0 PID: 18152 at mm/truncate.c:758
+pagecache_isize_extended+0xfd/0x110()
+Modules linked in: btrfs xor zlib_deflate raid6_pq ntfs fuse
+x86_pkg_temp_thermal wmi radeon e1000e ttm
+CPU: 0 PID: 18152 Comm: Cache I/O Tainted: G        W      3.18.0-rc2 #1
+Hardware name: Hewlett-Packard HP Compaq Elite 8300 MT/3397, BIOS K01
+v02.05 05/07/2012
+ 0000000000000009 ffff8800d1b3bd38 ffffffff81863216 0000000000000000
+ 0000000000000000 ffff8800d1b3bd78 ffffffff8105046c ffffea0002e0b600
+ 0000000000001000 ffff8800bb9a49a8 0000000000000000 0000000000031ada
+Call Trace:
+ [<ffffffff81863216>] dump_stack+0x46/0x58
+ [<ffffffff8105046c>] warn_slowpath_common+0x7c/0xa0
+ [<ffffffff81050535>] warn_slowpath_null+0x15/0x20
+ [<ffffffff8111ebbd>] pagecache_isize_extended+0xfd/0x110
+ [<ffffffff812ca780>] ? __xfs_get_blocks+0x4d0/0x4d0
+ [<ffffffff8111f8a2>] truncate_setsize+0x22/0x40
+ [<ffffffff812df5db>] xfs_setattr_size+0x10b/0x3c0
+ [<ffffffff812ecb3e>] ? xfs_trans_commit+0x13e/0x220
+ [<ffffffff812d4c57>] xfs_file_fallocate+0x2e7/0x300
+ [<ffffffff81167374>] ? __sb_start_write+0x44/0xd0
+ [<ffffffff811630da>] do_fallocate+0x12a/0x1d0
+ [<ffffffff811631c3>] SyS_fallocate+0x43/0x70
+ [<ffffffff8186ce29>] system_call_fastpath+0x12/0x17
+---[ end trace abf71ba1f4096942 ]---
 
-The location of parity doesn't dtermine that it is isochronous in
-behaviour or not. Often RAID5/6 is marketing speak for "single/dual
-parity", not the type of redundancy that is implemented in the
-hardware ;)
-
-
-> > FWIW, do your problems go away when you make you hardware LUN width
-> > a multiple of the cache segment size?
-> 
-> Hadn't tried it.  And I don't have the opportunity now as my contract
-> has ended.  However the problems we were having weren't related to
-> controller issues but excessive seeking.  I mentioned this in that
-> (rather lengthy) previous reply.
-
-Right, but if you had a 768k stripe width and a 1MB cache segment
-size, a cache segment operation would require two stripe widths to
-be operated on, and only one would be a whole stripe width. hence
-the possibility of doing more IOs than are necessary to populate
-or write back cache segments. i.e. it's a potential reason for
-why the back end disks didn't have anywhere near the expected seek
-capability they were supposed to have....
-
-> >> optimal_io_size.  I'm guessing this has different meaning for different
-> >> folks.  You say optimal_io_size is the same as RAID width.  Apply that
-> >> to this case:
-> >>
-> >> hardware RAID 60 LUN, 4 arrays
-> >> 16+2 RAID6, 256 KB stripe unit, 4096 KB stripe width
-> >> 16 MB LUN stripe width
-> >> optimal_io_size = 16 MB
-> >>
-> >> Is that an appropriate value for optimal_io_size even if this is the
-> >> RAID width?  I'm not saying it isn't.  I don't know.  I don't know what
-> >> other layers of the Linux and RAID firmware stacks are affected by this,
-> >> nor how they're affected.
-> > 
-> > yup, i'd expect minimum = 4MB (i.e stripe unit 4MB so we align to
-> > the underlying RAID6 luns) and optimal = 16MB for the stripe width
-> > (and so with swalloc we align to the first lun in the RAID0).
-> 
-> At minimum 4MB how does that affect journal writes which will be much
-> smaller, especially with a large file streaming workload, for which this
-> setup is appropriate?  Isn't the minimum a hard setting?  I.e. we can
-> never do an IO less than 4MB?  Do other layers of the stack use this
-> variable?  Are they expecting values this large?
-
-No, "minimum_io_size" is for "minimum *efficient* IO size" not the
-smallest supported IO size. The smallest supported IO sizes and
-atomic IO sizes are defined by hw_sector_size,
-physical_block_size and logical_block_size.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+2014-10-28 5:05 GMT+08:00 Dave Chinner <david@fromorbit.com>:
+> On Mon, Oct 27, 2014 at 10:58:12AM +0100, Jan Kara wrote:
+>> On Mon 27-10-14 12:04:22, Dave Chinner wrote:
+>> > On Thu, Oct 16, 2014 at 01:01:27PM +0200, Jan Kara wrote:
+>> > > From de3426d6495f4b44b14c09b7c7202e9a86d864b9 Mon Sep 17 00:00:00 2001
+>> > > From: Jan Kara <jack@suse.cz>
+>> > > Date: Thu, 16 Oct 2014 12:58:42 +0200
+>> > > Subject: [PATCH] mm: Remove false WARN_ON from pagecache_isize_extended()
+>> > >
+>> > > The WARN_ON checking whether i_mutex is held in
+>> > > pagecache_isize_extended() was wrong because some filesystems (e.g.
+>> > > XFS) use different locks for serialization of truncates / writes. So
+>> > > just remove the check.
+>> > >
+>> > > Signed-off-by: Jan Kara <jack@suse.cz>
+>> > > ---
+>> > >  mm/truncate.c | 1 -
+>> > >  1 file changed, 1 deletion(-)
+>> > >
+>> > > diff --git a/mm/truncate.c b/mm/truncate.c
+>> > > index 261eaf6e5a19..c646084e5eec 100644
+>> > > --- a/mm/truncate.c
+>> > > +++ b/mm/truncate.c
+>> > > @@ -755,7 +755,6 @@ void pagecache_isize_extended(struct inode *inode, loff_t from, loff_t to)
+>> > >   struct page *page;
+>> > >   pgoff_t index;
+>> > >
+>> > > - WARN_ON(!mutex_is_locked(&inode->i_mutex));
+>> > >   WARN_ON(to > inode->i_size);
+>> > >
+>> > >   if (from >= to || bsize == PAGE_CACHE_SIZE)
+>> >
+>> > Jan, Have you sent this patch upstream yet? I'm seeing it fire in
+>> > my testing in 3.18-rc1 kernels, so I was wondering what your plans
+>> > are for this...
+>>   I did send it but it got lost somewhere. I'll resend it.
+>
+> If it comes to it, I can push it through the XFS tree - I've got a
+> few patches I need to send for -rc3...
+>
+> Cheers,
+>
+> Dave.
+> --
+> Dave Chinner
+> david@fromorbit.com
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
 
 _______________________________________________
 xfs mailing list
