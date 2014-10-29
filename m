@@ -1,9 +1,9 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 From: xfs@oss.sgi.com
-Subject: [XFS updates] XFS development tree branch, xfs-fixes-for-3.18-rc3,
-	created. v3.18-rc2-4-gbae0989
-Message-Id: <20141029013357.B043E29DFA@oss.sgi.com>
-Date: Tue, 28 Oct 2014 20:33:57 -0500 (CDT)
+Subject: [XFS updates] XFS development tree branch, for-next,
+	updated. v3.18-rc2-4-gbae0989
+Message-Id: <20141029013413.4ADA229DFB@oss.sgi.com>
+Date: Tue, 28 Oct 2014 20:34:13 -0500 (CDT)
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,8 +23,18 @@ This is an automated email from the git hooks/post-receive script. It was
 generated because a ref change was pushed to the repository containing
 the project "XFS development tree".
 
-The branch, xfs-fixes-for-3.18-rc3 has been created
-        at  bae09893f6a5260c7030499ddfd0911899ae3d0c (commit)
+The branch, for-next has been updated
+  bae0989 xfs: rework zero range to prevent invalid i_size updates
+  3f7bc30 xfs: Check error during inode btree iteration in xfs_bulkstat()
+  a6bbce5 xfs: bulkstat doesn't release AGI buffer on error
+  d3dc366 Merge branch 'for-3.18/core' of git://git.kernel.dk/linux-block
+  6d11fb4 Merge branch 'for-linus' into for-3.18/core
+  ff9ea32 block, bdi: an active gendisk always has a request_queue associated with it
+      from  6889e783cd68b79f8330ad4d10a2571c67c3f7df (commit)
+
+Those revisions listed above that are new to this repository have
+not appeared on any other notification email; so we list those
+revisions in full, below.
 
 - Log -----------------------------------------------------------------
 commit bae09893f6a5260c7030499ddfd0911899ae3d0c
@@ -88,21 +98,6 @@ Date:   Wed Oct 29 11:20:27 2014 +1100
     Reviewed-by: Dave Chinner <dchinner@redhat.com>
     Signed-off-by: Dave Chinner <david@fromorbit.com>
 
-commit e9c5e12104c38d1d381a789ddefca2bfef99a8da
-Author: Jan Kara <jack@suse.cz>
-Date:   Wed Oct 29 11:19:27 2014 +1100
-
-    mm: Remove false WARN_ON from pagecache_isize_extended()
-    
-    The WARN_ON checking whether i_mutex is held in
-    pagecache_isize_extended() was wrong because some filesystems (e.g.
-    XFS) use different locks for serialization of truncates / writes. So
-    just remove the check.
-    
-    Signed-off-by: Jan Kara <jack@suse.cz>
-    Reviewed-by: Dave Chinner <dchinner@redhat.com>
-    Signed-off-by: Dave Chinner <david@fromorbit.com>
-
 commit 3f7bc307d477036177a86334dd02a95981b34ecc
 Author: Jan Kara <jack@suse.cz>
 Date:   Wed Oct 29 11:19:22 2014 +1100
@@ -140,6 +135,12 @@ Date:   Wed Oct 29 08:22:18 2014 +1100
     Signed-off-by: Dave Chinner <david@fromorbit.com>
 
 -----------------------------------------------------------------------
+
+Summary of changes:
+ fs/xfs/xfs_bmap_util.c | 72 ++++++++++++++------------------------------------
+ fs/xfs/xfs_buf.c       |  2 --
+ fs/xfs/xfs_itable.c    | 20 +++++++++-----
+ 3 files changed, 34 insertions(+), 60 deletions(-)
 
 
 hooks/post-receive
