@@ -1,22 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id B4DAF7F3F
-	for <xfs@oss.sgi.com>; Wed, 29 Oct 2014 16:26:04 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id A29058F8039
-	for <xfs@oss.sgi.com>; Wed, 29 Oct 2014 14:26:01 -0700 (PDT)
-Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
-	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	ZCrG9er4qs1lnKkt for <xfs@oss.sgi.com>;
-	Wed, 29 Oct 2014 14:25:59 -0700 (PDT)
-Date: Thu, 30 Oct 2014 08:25:56 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: xfsrestore report SUCCESS but not restore all files in kernel 3.17
-Message-ID: <20141029212556.GH13323@dastard>
-References: <CAGdb-8cnmCs=L0RPvE8+5jn3nmZoviiZtQBbo9S-BThA+3cBKg@mail.gmail.com>
+	by oss.sgi.com (Postfix) with ESMTP id 788A17F3F
+	for <xfs@oss.sgi.com>; Wed, 29 Oct 2014 16:37:50 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 470F68F8049
+	for <xfs@oss.sgi.com>; Wed, 29 Oct 2014 14:37:49 -0700 (PDT)
+Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
+	[65.41.216.221]) by cuda.sgi.com with ESMTP id kBf5DV2bpFj0fSGV
+	for <xfs@oss.sgi.com>; Wed, 29 Oct 2014 14:37:48 -0700 (PDT)
+Message-ID: <54515E4E.8010500@hardwarefreak.com>
+Date: Wed, 29 Oct 2014 16:38:22 -0500
+From: Stan Hoeppner <stan@hardwarefreak.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <CAGdb-8cnmCs=L0RPvE8+5jn3nmZoviiZtQBbo9S-BThA+3cBKg@mail.gmail.com>
+Subject: Re: [PATCH 1/2] xfsprogs: ignore stripe geom if sunit or swidth ==
+	physical sector size
+References: <544FD3E1.1060000@redhat.com>
+	<20141029183721.GA4226@bfoster.laptop>
+	<54513635.7050703@sandeen.net>
+In-Reply-To: <54513635.7050703@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,50 +30,49 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Tommy Wu <wu.tommy@gmail.com>
-Cc: xfs <xfs@oss.sgi.com>
+To: Eric Sandeen <sandeen@sandeen.net>, Brian Foster <bfoster@redhat.com>, Eric Sandeen <sandeen@redhat.com>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-On Wed, Oct 29, 2014 at 12:06:10PM +0800, Tommy Wu wrote:
-> /sbin/xfsrestore: session id: 6f114712-6fb6-4f35-a2f3-30ca1a0af5bb
-> /sbin/xfsrestore: media id: 2eb2ff54-1838-47b2-a8d5-5f520deaf5f5
-> /sbin/xfsrestore: searching media for directory dump
-> /sbin/xfsrestore: reading directories
-> /sbin/xfsrestore: 2035 directories and 33045 entries processed
-> /sbin/xfsrestore: directory post-processing
-> /sbin/xfsrestore: reading non-directory files
-> /sbin/xfsrestore: NOTE: ino 144 salvaging file, placing in
-> orphanage/143.0/Makefile
-> /sbin/xfsrestore: NOTE: ino 145 salvaging file, placing in
-> orphanage/143.0/bayer.png.b64
-.....
-> .... skip it....
-> /sbin/xfsrestore: NOTE: ino 50363235 gen 1622742662 not referenced: placing
-> in orphanage
+On 10/29/2014 01:47 PM, Eric Sandeen wrote:
+> On 10/29/14 1:37 PM, Brian Foster wrote:
+>> On Tue, Oct 28, 2014 at 12:35:29PM -0500, Eric Sandeen wrote:
+>>> Today, this geometry:
+>>>
+>>> # modprobe scsi_debug  opt_blks=2048 dev_size_mb=2048
+>>> # blockdev --getpbsz --getss --getiomin --getioopt  /dev/sdd
+>>> 512
+>>> 512
+>>> 512
+>>> 1048576
+>>>
+>>> will result in a warning at mkfs time, like this:
+>>>
+>>> # mkfs.xfs -f -d su=64k,sw=12 -l su=64k /dev/sdd
+>>> mkfs.xfs: Specified data stripe width 1536 is not the same as the volume stripe width 2048
+>>>
+>>> because our geometry discovery thinks it looks like a
+>>> valid striping setup which the commandline is overriding. 
+>>> However, a stripe unit of 512 really isn't indicative of
+>>> a proper stripe geometry.
+>>>
+>>
+>> So the assumption is that the storage reports a non-physical block size
+>> for minimum and optimal I/O sizes for geometry detection. There was a
+>> real world scenario of this, right? Any idea of the configuration
+>> details (e.g., raid layout) that resulted in an increased optimal I/O
+>> size but not minimum I/O size?
+> 
+> Stan?  :)
 
-FWIW, this can be expected behaviour if you run xfsdump on a live
-filesystem. From the DIAGNOSTICS section of the xfsdump man page:
+Yeah, it was pretty much what you pasted sans the log su, and it was a
+device-mapper device:
 
-	The message ``xfsdump: WARNING: unable to open directory:
-	ino N: Invalid argument'' can occur with filesystems which
-	are actively being modified while xfsdump is running.
-	This can happen to either directory or regular file inodes -
-	affected files will not end up in the dump, files below
-	affected directories will be placed in the orphanage
-	directory by xfsrestore.
+# mkfs.xfs -d su=64k,sw=12 /dev/dm-0
 
-This is exactly what you are seeing - files being placed in the
-orphanage on restore because they appear to have no parent directory
-inode referencing them.
+--
+Stan
 
-IOWs, you're likely seeing the effect of the filesystem changing
-while you are running xfsdump, not a bug in xfsdump or xfs_restore.
 
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
