@@ -1,20 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 2125E7F3F
-	for <xfs@oss.sgi.com>; Wed, 29 Oct 2014 13:17:43 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id E632330404E
-	for <xfs@oss.sgi.com>; Wed, 29 Oct 2014 11:17:39 -0700 (PDT)
-Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
-	[65.41.216.221]) by cuda.sgi.com with ESMTP id 1E5Ei6h7vZ82JXGe
-	for <xfs@oss.sgi.com>; Wed, 29 Oct 2014 11:17:38 -0700 (PDT)
-Message-ID: <54512F62.2080303@hardwarefreak.com>
-Date: Wed, 29 Oct 2014 13:18:10 -0500
-From: Stan Hoeppner <stan@hardwarefreak.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 3150E7F3F
+	for <xfs@oss.sgi.com>; Wed, 29 Oct 2014 13:23:09 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 1655A8F8035
+	for <xfs@oss.sgi.com>; Wed, 29 Oct 2014 11:23:09 -0700 (PDT)
+Received: from mail-qc0-f174.google.com (mail-qc0-f174.google.com
+	[209.85.216.174]) by cuda.sgi.com with ESMTP id
+	ppFCcfGUzg1CfACI (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 29 Oct 2014 11:23:07 -0700 (PDT)
+Received: by mail-qc0-f174.google.com with SMTP id r5so2826388qcx.19
+	for <xfs@oss.sgi.com>; Wed, 29 Oct 2014 11:23:07 -0700 (PDT)
 MIME-Version: 1.0
-Subject: Re: xfs fs on lvm, failed drive.
-References: <CA+r9EUGbxdXxP7uA1ufw=bSKE035VVHcK-Tyatr=fr-t_U=ZAw@mail.gmail.com>
-In-Reply-To: <CA+r9EUGbxdXxP7uA1ufw=bSKE035VVHcK-Tyatr=fr-t_U=ZAw@mail.gmail.com>
+In-Reply-To: <1414552144-12627-1-git-send-email-david@fromorbit.com>
+References: <1414552144-12627-1-git-send-email-david@fromorbit.com>
+Date: Wed, 29 Oct 2014 11:23:06 -0700
+Message-ID: <CAO85XkR+aMv2e1GvdatdUdJSqLXykEuvZ+JBJdd=gBpYHMQ0Dw@mail.gmail.com>
+Subject: Re: [PATCH 0/2] repair: fix AGFL rebuild problem
+From: Barkley Vowk <bvowk@box.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,46 +27,85 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============1123446063654318716=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Gary Artim <gartim@gmail.com>, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-On 10/29/2014 12:19 PM, Gary Artim wrote:
-> Hi...wondering if there is anyway I can salvage a directory on the lvm
-> volume that is xfs? thanks of any help, assembled:
-> 
-> parted /dev/sdx
-> mklabel gpt
-> mkpart primary xfs 1 -1 (sometime xfs doesnt work until the xfsprogs are
-> installed and reboot)
-> set 1 lvm on
-> 
-> do this for each drive.
-> pvcreate /dev/sdb1 /dev/sdc1 /dev/sdd1 /dev/sde1
-> vgcreate backup /dev/sdb1 /dev/sdc1 /dev/sdd1 /dev/sde1
-> lvcreate -L 9T -n backuplv backup
-> mkfs.xfs -L backuplv /dev/mapper/backup-backuplv
-> /dev/mapper/backup-backuplv /xfs xfs   (in fstab)
-> 
-> failed drive:
-> /dev/sdc1
+--===============1123446063654318716==
+Content-Type: multipart/alternative; boundary=001a11c11ed8f58bb8050693da48
 
-You've created an XFS filesystem atop a concatenation of non-redundant
-drives so this condition should not be unexpected.  It's not a directory
-you want to salvage, but the files within it.  If they reside on sdc1
-you're out of luck without using data recovery tools.  If they reside on
-sdb1, sdd1, or sde1, then running xfs_repair might make the FS mountable
-and get you access to them again.
+--001a11c11ed8f58bb8050693da48
+Content-Type: text/plain; charset=UTF-8
 
-That's assuming LVM is still running with one drive gone, or will still
-assemble the concatenation with one drive missing.  I don't use LVM.
+These patches fixed my issue.
 
-Cheers,
-Stan
+Thanks.
+
+On Tue, Oct 28, 2014 at 8:09 PM, Dave Chinner <david@fromorbit.com> wrote:
+
+> Hi folks,
+>
+> The following two patches fix a repair rebuild issue that was
+> reported to me. xfs_repair would appear to succeed, but subsequent
+> runs would report a freespace mismatch and then on mount trigger
+> a corruption error on the first allocation from AG 0.
+>
+> The problem as that the AGFL was not being correctly rebuilt due to
+> a very particular freespace pattern in AG 0 which required free
+> blocks in the AGFL to populate an empty AGFL. reapir silently
+> ignored this error, so it triggered allocation corruption errors
+> when the same AGFL fixup attempt failed on a mounted filesystem.
+>
+> The fix is relatively straight forward, as is the fixes to the
+> tracing code that I had to make before i could track down the issue.
+>
+> -Dave.
+>
+>
+
+--001a11c11ed8f58bb8050693da48
+Content-Type: text/html; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+
+<div dir=3D"ltr">These patches fixed my issue.=C2=A0<div><br></div><div>Tha=
+nks.=C2=A0</div></div><div class=3D"gmail_extra"><br><div class=3D"gmail_qu=
+ote">On Tue, Oct 28, 2014 at 8:09 PM, Dave Chinner <span dir=3D"ltr">&lt;<a=
+ href=3D"mailto:david@fromorbit.com" target=3D"_blank">david@fromorbit.com<=
+/a>&gt;</span> wrote:<br><blockquote class=3D"gmail_quote" style=3D"margin:=
+0 0 0 .8ex;border-left:1px #ccc solid;padding-left:1ex">Hi folks,<br>
+<br>
+The following two patches fix a repair rebuild issue that was<br>
+reported to me. xfs_repair would appear to succeed, but subsequent<br>
+runs would report a freespace mismatch and then on mount trigger<br>
+a corruption error on the first allocation from AG 0.<br>
+<br>
+The problem as that the AGFL was not being correctly rebuilt due to<br>
+a very particular freespace pattern in AG 0 which required free<br>
+blocks in the AGFL to populate an empty AGFL. reapir silently<br>
+ignored this error, so it triggered allocation corruption errors<br>
+when the same AGFL fixup attempt failed on a mounted filesystem.<br>
+<br>
+The fix is relatively straight forward, as is the fixes to the<br>
+tracing code that I had to make before i could track down the issue.<br>
+<span class=3D"HOEnZb"><font color=3D"#888888"><br>
+-Dave.<br>
+<br>
+</font></span></blockquote></div><br></div>
+
+--001a11c11ed8f58bb8050693da48--
+
+
+--===============1123446063654318716==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============1123446063654318716==--
