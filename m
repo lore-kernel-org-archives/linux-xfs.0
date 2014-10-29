@@ -1,9 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-From: xfs@oss.sgi.com
-Subject: [XFS updates] XFS development tree branch, xfs-fixes-for-3.18-rc3,
-	updated. v3.18-rc2-5-g31692c5
-Message-Id: <20141029103232.BAE887F54@oss.sgi.com>
-Date: Wed, 29 Oct 2014 05:32:32 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 8B9107F47
+	for <xfs@oss.sgi.com>; Wed, 29 Oct 2014 05:34:04 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 18C19AC00C
+	for <xfs@oss.sgi.com>; Wed, 29 Oct 2014 03:34:00 -0700 (PDT)
+Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
+	[150.101.137.145]) by cuda.sgi.com with ESMTP id
+	Oj5HbWrIan0jNE3Z for <xfs@oss.sgi.com>;
+	Wed, 29 Oct 2014 03:33:58 -0700 (PDT)
+Date: Wed, 29 Oct 2014 21:33:55 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: xfsrestore report SUCCESS but not restore all files in kernel 3.17
+Message-ID: <20141029103355.GI16186@dastard>
+References: <CAGdb-8cnmCs=L0RPvE8+5jn3nmZoviiZtQBbo9S-BThA+3cBKg@mail.gmail.com>
+	<5450686F.9070307@sandeen.net>
+	<CAGdb-8d5-GuB40ZgP6uM5aQMi+qqaeFd=xqzuxWhM+1AaoLSVw@mail.gmail.com>
+	<54506CD9.90403@sandeen.net>
+	<CAGdb-8cGAzT_0ck-pJyQX-OcnE_3FPCA9TesHW7c_raDSKEXWg@mail.gmail.com>
+	<20141029044017.GG16186@dastard>
+	<CAGdb-8e=wttjj+wTj8wqRWyUUz+AUmz-O0=r3+HoJ5zGgV-dkQ@mail.gmail.com>
+	<20141029075134.GB13323@dastard>
+	<CAGdb-8dhPe9wvoGnUsFo2Q3EZWka+i2DcFN-AqJV_G09+=4f2w@mail.gmail.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <CAGdb-8dhPe9wvoGnUsFo2Q3EZWka+i2DcFN-AqJV_G09+=4f2w@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -12,54 +33,31 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Tommy Wu <wu.tommy@gmail.com>
+Cc: Eric Sandeen <sandeen@sandeen.net>, xfs <xfs@oss.sgi.com>
 
-This is an automated email from the git hooks/post-receive script. It was
-generated because a ref change was pushed to the repository containing
-the project "XFS development tree".
+On Wed, Oct 29, 2014 at 05:21:52PM +0800, Tommy Wu wrote:
+> Same testing in same machine (just different kernel).
+> 
+> 3.18-rc2:
+> xfsdump will hang (the test.xfsdump.gz size stop around 57M)
 
-The branch, xfs-fixes-for-3.18-rc3 has been updated
-  31692c5 xfs: bulkstat needs to delete cursor at end of AG
-      from  bae09893f6a5260c7030499ddfd0911899ae3d0c (commit)
+Ugh, colliding fixes to the bulkstat code. pull again from
+the xfs-fixes-for-3.18-rc3 branch and the hang should be fixed.
 
-Those revisions listed above that are new to this repository have
-not appeared on any other notification email; so we list those
-revisions in full, below.
+/me wonders why the new dump xfstest didn't pick this up
 
-- Log -----------------------------------------------------------------
-commit 31692c5fe617d28d8099a9308d345e26f3e22dca
-Author: Dave Chinner <david@fromorbit.com>
-Date:   Wed Oct 29 21:22:39 2014 +1100
+Cheers,
 
-    xfs: bulkstat needs to delete cursor at end of AG
-    
-    Colliding bug fixes meant one fix breaks from the bulkstat loop
-    ("xfs: Check error during inode btree iteration in xfs_bulkstat()")
-    when in fact it should do what the other patch did introduced and
-    jump to the del_cursor label ("xfs: bulkstat doesn't release AGI
-    buffer on error").
-    
-    Failure to do so causes the end of AG detection
-    to hang on a locked AGI.
-    
-    Reported by: Tommy Wu <wu.tommy@gmail.com>
-    Signed-off-by: Dave Chinner <david@fromorbit.com>
+Dave.
 
------------------------------------------------------------------------
-
-Summary of changes:
- fs/xfs/xfs_itable.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-
-hooks/post-receive
 -- 
-XFS development tree
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
