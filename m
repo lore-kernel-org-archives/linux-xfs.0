@@ -1,22 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 7BF267F37
-	for <xfs@oss.sgi.com>; Tue, 28 Oct 2014 15:06:51 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 5A3BC8F8049
-	for <xfs@oss.sgi.com>; Tue, 28 Oct 2014 13:06:48 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id zkNYLKzvHMoID1im for <xfs@oss.sgi.com>;
-	Tue, 28 Oct 2014 13:06:46 -0700 (PDT)
-Message-ID: <544FF755.1010705@sandeen.net>
-Date: Tue, 28 Oct 2014 15:06:45 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+	by oss.sgi.com (Postfix) with ESMTP id BE6C17F37
+	for <xfs@oss.sgi.com>; Tue, 28 Oct 2014 19:23:01 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 8EE968F8035
+	for <xfs@oss.sgi.com>; Tue, 28 Oct 2014 17:22:58 -0700 (PDT)
+Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
+	[150.101.137.145]) by cuda.sgi.com with ESMTP id
+	z4CMAtCBLrvgdhXU for <xfs@oss.sgi.com>;
+	Tue, 28 Oct 2014 17:22:56 -0700 (PDT)
+Date: Wed, 29 Oct 2014 11:22:53 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH v5] xfs: rework zero range to prevent invalid i_size
+	updates
+Message-ID: <20141029002253.GE16186@dastard>
+References: <1413824781-10733-1-git-send-email-bfoster@redhat.com>
 MIME-Version: 1.0
-Subject: Re: Kernel crashes with trace ending in XFS code on RHEL6 variant
-	kernel
-References: <CA+tQb7GSvkgsxZT2awAkMjh9wY6JXBygLoenTrtFtmRMSVwuUA@mail.gmail.com>	<544FD577.9040605@sandeen.net>
-	<CAAxjCEyTq5UfmqzBbtXXQ=vWoHmCG5WJvLGsSwCfRL0P4qnCJw@mail.gmail.com>
-In-Reply-To: <CAAxjCEyTq5UfmqzBbtXXQ=vWoHmCG5WJvLGsSwCfRL0P4qnCJw@mail.gmail.com>
+Content-Disposition: inline
+In-Reply-To: <1413824781-10733-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,36 +30,79 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Stefan Ring <stefanrin@gmail.com>
-Cc: Jan Kokoska <jan@glow.cz>, Linux fs XFS <xfs@oss.sgi.com>
+To: Brian Foster <bfoster@redhat.com>
+Cc: xfs@oss.sgi.com
 
-On 10/28/14 3:01 PM, Stefan Ring wrote:
-> On Tue, Oct 28, 2014 at 6:42 PM, Eric Sandeen <sandeen@sandeen.net> wrote:
->> On 10/28/14 10:38 AM, Jan Kokoska wrote:
->>> Hi,
->>>
->>> I'm running OpenVZ (OS container) kernel variant of RHEL6 kernel on
->>
->> ... for which we have no source code? ;)
->>
->> I don't know what's in "2.6.32-openvz-amd64" so can't help much.
->>
->> What is at line 86 of xfs_aops.c in that kernel?
+On Mon, Oct 20, 2014 at 01:06:21PM -0400, Brian Foster wrote:
+> The zero range operation is analogous to fallocate with the exception of
+> converting the range to zeroes. E.g., it attempts to allocate zeroed
+> blocks over the range specified by the caller. The XFS implementation
+> kills all delalloc blocks currently over the aligned range, converts the
+> range to allocated zero blocks (unwritten extents) and handles the
+> partial pages at the ends of the range by sending writes through the
+> pagecache.
 > 
-> From my quick investigation, it would seem to be the line "bh = head =
-> page_buffers(page);" of xfs_count_page_state.
+> The current implementation suffers from several problems associated with
+> inode size. If the aligned range covers an extending I/O, said I/O is
+> discarded and an inode size update from a previous write never makes it
+> to disk. Further, if an unaligned zero range extends beyond eof, the
+> page write induced for the partial end page can itself increase the
+> inode size, even if the zero range request is not supposed to update
+> i_size (via KEEP_SIZE, similar to an fallocate beyond EOF).
+> 
+> The latter behavior not only incorrectly increases the inode size, but
+> can lead to stray delalloc blocks on the inode. Typically, post-eof
+> preallocation blocks are either truncated on release or inode eviction
+> or explicitly written to by xfs_zero_eof() on natural file size
+> extension. If the inode size increases due to zero range, however,
+> associated blocks leak into the address space having never been
+> converted or mapped to pagecache pages. A direct I/O to such an
+> uncovered range cannot convert the extent via writeback and will BUG().
+> For example:
+> 
+> $ xfs_io -fc "pwrite 0 128k" -c "fzero -k 1m 54321" <file>
+> ...
+> $ xfs_io -d -c "pread 128k 128k" <file>
+> <BUG>
+> 
+> If the entire delalloc extent happens to not have page coverage
+> whatsoever (e.g., delalloc conversion couldn't find a large enough free
+> space extent), even a full file writeback won't convert what's left of
+> the extent and we'll assert on inode eviction.
+> 
+> Rework xfs_zero_file_space() to avoid buffered I/O for partial pages.
+> Use the existing hole punch and prealloc mechanisms as primitives for
+> zero range. This implementation is not efficient nor ideal as we
+> writeback dirty data over the range and remove existing extents rather
+> than convert to unwrittern. The former writeback, however, is currently
+> the only mechanism available to ensure consistency between pagecache and
+> extent state. Even a pagecache truncate/delalloc punch prior to hole
+> punch has lead to inconsistencies due to racing with writeback.
+> 
+> This provides a consistent, correct implementation of zero range that
+> survives fsstress/fsx testing without assert failures. The
+> implementation can be optimized from this point forward once the
+> fundamental issue of pagecache and delalloc extent state consistency is
+> addressed.
+> 
+> Signed-off-by: Brian Foster <bfoster@redhat.com>
+> ---
+> 
+> v5:
+> - Further simplify to eliminate delalloc block punch.
 
-Yes, I think you're right, but my point is this is a kernel which we don't
-maintain.
+This now causes xfs/053 to fail, probably because it changes the
+behaviour to actually write the file and hence change EOF. Can you
+please check that this is working correctly, and if so submit
+patches to change xfs/053 to expect the file size to change
+and contain the correct data?
 
-Anyway, I don't know for sure offhand what this could be; 
-upstream ef5d437f71afdf4afdbab99213add99f4b1318fd looks related, but
-TBH I'm not sure if it's specific to S390.
+Cheers,
 
--Eric
-
-
-
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
