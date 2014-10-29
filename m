@@ -1,26 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 6236A7F37
-	for <xfs@oss.sgi.com>; Tue, 28 Oct 2014 23:40:58 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 4C314304032
-	for <xfs@oss.sgi.com>; Tue, 28 Oct 2014 21:40:57 -0700 (PDT)
-Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
-	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	s5igGcxwGnZ61oSo for <xfs@oss.sgi.com>;
-	Tue, 28 Oct 2014 21:40:55 -0700 (PDT)
-Date: Wed, 29 Oct 2014 15:40:17 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: xfsrestore report SUCCESS but not restore all files in kernel 3.17
-Message-ID: <20141029044017.GG16186@dastard>
-References: <CAGdb-8cnmCs=L0RPvE8+5jn3nmZoviiZtQBbo9S-BThA+3cBKg@mail.gmail.com>
-	<5450686F.9070307@sandeen.net>
-	<CAGdb-8d5-GuB40ZgP6uM5aQMi+qqaeFd=xqzuxWhM+1AaoLSVw@mail.gmail.com>
-	<54506CD9.90403@sandeen.net>
-	<CAGdb-8cGAzT_0ck-pJyQX-OcnE_3FPCA9TesHW7c_raDSKEXWg@mail.gmail.com>
+	by oss.sgi.com (Postfix) with ESMTP id E52627F37
+	for <xfs@oss.sgi.com>; Tue, 28 Oct 2014 23:58:45 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id C3344304032
+	for <xfs@oss.sgi.com>; Tue, 28 Oct 2014 21:58:45 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id qGrVrztkmd9Wn6n1 (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 28 Oct 2014 21:58:44 -0700 (PDT)
+Message-ID: <54507402.4000600@redhat.com>
+Date: Tue, 28 Oct 2014 23:58:42 -0500
+From: Eric Sandeen <sandeen@redhat.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <CAGdb-8cGAzT_0ck-pJyQX-OcnE_3FPCA9TesHW7c_raDSKEXWg@mail.gmail.com>
+Subject: [PATCH] xfs/068: fix expected output file for proper restore output
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,23 +26,31 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Tommy Wu <wu.tommy@gmail.com>
-Cc: Eric Sandeen <sandeen@sandeen.net>, xfs <xfs@oss.sgi.com>
+To: fstests@vger.kernel.org, xfs-oss <xfs@oss.sgi.com>
 
-On Wed, Oct 29, 2014 at 12:30:33PM +0800, Tommy Wu wrote:
-> both dump and restore with those 2 patches.
+Oh my, I did a very bad thing - I wrote a new test to
+check for xfsdump regressions, but did not create the
+.out file with a known-good kernel.
 
-Can you try the xfs-fixes-for-3.18-rc3 branch I pushed out this
-morning to the upstream git repo here:
+This matches output from older, stable kernels, and is the
+proper expected output.  Sorry about that!
 
-git://git.kernel.org/pub/scm/linux/kernel/git/dgc/linux-xfs.git
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
 
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+diff --git a/tests/xfs/068.out b/tests/xfs/068.out
+index c270c66..2196eee 100644
+--- a/tests/xfs/068.out
++++ b/tests/xfs/068.out
+@@ -22,7 +22,7 @@ xfsrestore: session id: ID
+ xfsrestore: media ID: ID
+ xfsrestore: searching media for directory dump
+ xfsrestore: reading directories
+-xfsrestore: 486 directories and 1590 entries processed
++xfsrestore: 495 directories and 1593 entries processed
+ xfsrestore: directory post-processing
+ xfsrestore: restoring non-directory files
+ xfsrestore: restore complete: SECS seconds elapsed
 
 _______________________________________________
 xfs mailing list
