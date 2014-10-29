@@ -1,30 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id D8FB37F3F
-	for <xfs@oss.sgi.com>; Wed, 29 Oct 2014 14:50:15 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 6F1977F3F
+	for <xfs@oss.sgi.com>; Wed, 29 Oct 2014 14:57:45 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id B7DCA8F804C
-	for <xfs@oss.sgi.com>; Wed, 29 Oct 2014 12:50:12 -0700 (PDT)
-Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
-	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	OSo8Eh1o5FTB7gNo for <xfs@oss.sgi.com>;
-	Wed, 29 Oct 2014 12:50:10 -0700 (PDT)
-Date: Thu, 30 Oct 2014 06:50:06 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: xfsrestore report SUCCESS but not restore all files in kernel 3.17
-Message-ID: <20141029195006.GD13323@dastard>
-References: <CAGdb-8d5-GuB40ZgP6uM5aQMi+qqaeFd=xqzuxWhM+1AaoLSVw@mail.gmail.com>
-	<54506CD9.90403@sandeen.net>
-	<CAGdb-8cGAzT_0ck-pJyQX-OcnE_3FPCA9TesHW7c_raDSKEXWg@mail.gmail.com>
-	<20141029044017.GG16186@dastard>
-	<CAGdb-8e=wttjj+wTj8wqRWyUUz+AUmz-O0=r3+HoJ5zGgV-dkQ@mail.gmail.com>
-	<20141029075134.GB13323@dastard>
-	<CAGdb-8dhPe9wvoGnUsFo2Q3EZWka+i2DcFN-AqJV_G09+=4f2w@mail.gmail.com>
-	<20141029103355.GI16186@dastard> <20141029104304.GC13323@dastard>
-	<CAGdb-8dxgsrywS_GtgM8Y7N1fYfxgZPr4sBQ1QiuqhJ_hHDFSg@mail.gmail.com>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id EC9A2AC001
+	for <xfs@oss.sgi.com>; Wed, 29 Oct 2014 12:57:44 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id rRNj2tL1r2iThIp0 (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 29 Oct 2014 12:57:43 -0700 (PDT)
+Date: Wed, 29 Oct 2014 15:57:36 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 2/2] xfsprogs: don't warn about log sunit size if it was
+	auto-discovered
+Message-ID: <20141029195736.GC2084@bfoster.laptop>
+References: <544FD3E1.1060000@redhat.com> <544FD47D.8020409@sandeen.net>
+	<20141029183841.GB4226@bfoster.laptop>
+	<545135D4.6010908@sandeen.net>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <CAGdb-8dxgsrywS_GtgM8Y7N1fYfxgZPr4sBQ1QiuqhJ_hHDFSg@mail.gmail.com>
+In-Reply-To: <545135D4.6010908@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -37,18 +32,71 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Tommy Wu <wu.tommy@gmail.com>
-Cc: Eric Sandeen <sandeen@sandeen.net>, xfs <xfs@oss.sgi.com>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Eric Sandeen <sandeen@redhat.com>, Stan Hoeppner <stan@hardwarefreak.com>, xfs-oss <xfs@oss.sgi.com>
 
-On Wed, Oct 29, 2014 at 08:32:52PM +0800, Tommy Wu wrote:
-> Does it just fix the hang issue or fix the dump corrupted issue?
+On Wed, Oct 29, 2014 at 01:45:40PM -0500, Eric Sandeen wrote:
+> On 10/29/14 1:38 PM, Brian Foster wrote:
+> > On Tue, Oct 28, 2014 at 12:38:05PM -0500, Eric Sandeen wrote:
+> >> Today, users doing a bare mkfs on storage with a large default
+> >> stripe size may be surprised to get this warning:
+> >>
+> >>  log stripe unit (%d bytes) is too large (maximum is 256KiB
+> >>  log stripe unit adjusted to 32KiB
+> >>
+> >> through no fault of their own.  The fallback is appropriate
+> >> and harmless, and there's no need to warn about this in the
+> >> defaults case.
+> >>
+> >> However, we keep the warning if a large log stripe unit was
+> >> specified by the user on the commandline.
+> >>
+> >> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> >> ---
+> ...
+> 
+> >> @@ -2379,11 +2383,15 @@ an AG size that is one stripe unit smaller, for example %llu.\n"),
+> >>  	}
+> >>  
+> >>  	if (logversion == 2 && (lsunit * blocksize) > 256 * 1024) {
+> >> -		fprintf(stderr,
+> >> +		/* Warn only if specified on commandline */
+> >> +		if (lsuflag || lsunitflag) {
+> >> +			fprintf(stderr,
+> >>  	_("log stripe unit (%d bytes) is too large (maximum is 256KiB)\n"),
+> >> -			(lsunit * blocksize));
+> >> +				(lsunit * blocksize));
+> >> +			fprintf(stderr,
+> >> +	_("log stripe unit adjusted to 32KiB\n"));
+> >> +		}
+> > 
+> > Right above this particular hunk we have the possibility of lsunit
+> > inheriting a value from dsunit. If the latter is specified by the user,
+> > we don't print the message for an arguably user-specified lsunit. Hmm,
+> > do we care about that case?
+> 
+> I don't think we do care.  I think we only care if the user manually
+> specified a log stripe unit and we're changing what they asked for.
+> 
+> I'd put "inheritance" in the "using default behaviors" case, and not
+> warn about it.
+> 
 
-The hang.
+Ok, sounds sane. I was thinking there might be some utility to the
+message for people with larger auto-detected stripe units, but we print
+the geometry anyways and those users are clearly Ok with default
+settings (Dave points out that 32k is the default).
 
--Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+The code looks Ok to me:
+
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+
+> -Eric
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
