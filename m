@@ -1,23 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 4F8CC7F3F
-	for <xfs@oss.sgi.com>; Wed, 29 Oct 2014 13:37:30 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 3C5C5304032
-	for <xfs@oss.sgi.com>; Wed, 29 Oct 2014 11:37:30 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id E95437F3F
+	for <xfs@oss.sgi.com>; Wed, 29 Oct 2014 13:38:48 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id A141D8F804C
+	for <xfs@oss.sgi.com>; Wed, 29 Oct 2014 11:38:48 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id 4yAoVZ6SKUME1G8j (version=TLSv1
+	cuda.sgi.com with ESMTP id Hwq4MhKT20khJYJv (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 29 Oct 2014 11:37:29 -0700 (PDT)
-Date: Wed, 29 Oct 2014 14:37:22 -0400
+	Wed, 29 Oct 2014 11:38:47 -0700 (PDT)
+Date: Wed, 29 Oct 2014 14:38:42 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 1/2] xfsprogs: ignore stripe geom if sunit or swidth ==
-	physical sector size
-Message-ID: <20141029183721.GA4226@bfoster.laptop>
+Subject: Re: [PATCH 2/2] xfsprogs: don't warn about log sunit size if it was
+	auto-discovered
+Message-ID: <20141029183841.GB4226@bfoster.laptop>
 References: <544FD3E1.1060000@redhat.com>
+ <544FD47D.8020409@sandeen.net>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <544FD3E1.1060000@redhat.com>
+In-Reply-To: <544FD47D.8020409@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,119 +31,91 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: Stan Hoeppner <stan@hardwarefreak.com>, xfs-oss <xfs@oss.sgi.com>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Eric Sandeen <sandeen@redhat.com>, Stan Hoeppner <stan@hardwarefreak.com>, xfs-oss <xfs@oss.sgi.com>
 
-On Tue, Oct 28, 2014 at 12:35:29PM -0500, Eric Sandeen wrote:
-> Today, this geometry:
+On Tue, Oct 28, 2014 at 12:38:05PM -0500, Eric Sandeen wrote:
+> Today, users doing a bare mkfs on storage with a large default
+> stripe size may be surprised to get this warning:
 > 
-> # modprobe scsi_debug  opt_blks=2048 dev_size_mb=2048
-> # blockdev --getpbsz --getss --getiomin --getioopt  /dev/sdd
-> 512
-> 512
-> 512
-> 1048576
+>  log stripe unit (%d bytes) is too large (maximum is 256KiB
+>  log stripe unit adjusted to 32KiB
 > 
-> will result in a warning at mkfs time, like this:
+> through no fault of their own.  The fallback is appropriate
+> and harmless, and there's no need to warn about this in the
+> defaults case.
 > 
-> # mkfs.xfs -f -d su=64k,sw=12 -l su=64k /dev/sdd
-> mkfs.xfs: Specified data stripe width 1536 is not the same as the volume stripe width 2048
+> However, we keep the warning if a large log stripe unit was
+> specified by the user on the commandline.
 > 
-> because our geometry discovery thinks it looks like a
-> valid striping setup which the commandline is overriding. 
-> However, a stripe unit of 512 really isn't indicative of
-> a proper stripe geometry.
-> 
-
-So the assumption is that the storage reports a non-physical block size
-for minimum and optimal I/O sizes for geometry detection. There was a
-real world scenario of this, right? Any idea of the configuration
-details (e.g., raid layout) that resulted in an increased optimal I/O
-size but not minimum I/O size?
-
-This seems reasonable to me and the code looks fine, save a trailing
-whitespace instance below. I'm just curious if there are any weird
-corner cases where there's value in the reported optimal I/O size or the
-real world situation was just noise.
-
-> Prior to this patch, we reset only sunit *or* swidth,
-> if either was equal to physical block size, but not
-> necessarily both.
-> 
-> Change the heuristic so that if either the discovered
-> sunit or the discovered swidth is physical block size,
-> we reset *both* to zero and ignore the geom completely.
-> 
-> While we're at it, don't pass &dummy in for multiple 
-> arguments to blkid_get_topology(); that'll mean that
-> inside the function, the last assignment wins, and could
-> lead to unexpected results.
-> 
-> Reported-by: Stan Hoeppner <stan@hardwarefreak.com>
 > Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 > ---
 > 
 > diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-> index 4546e35..a0fed31 100644
+> index a0fed31..66711cb 100644
 > --- a/mkfs/xfs_mkfs.c
 > +++ b/mkfs/xfs_mkfs.c
-> @@ -410,21 +410,27 @@ static void blkid_get_topology(
->  	*lsectorsize = val;
->  	val = blkid_topology_get_physical_sector_size(tp);
->  	*psectorsize = val;
-> +	val = blkid_topology_get_minimum_io_size(tp);
-> +	*sunit = val;
-> +	val = blkid_topology_get_optimal_io_size(tp);
-> +	*swidth = val;
+> @@ -946,6 +946,8 @@ main(
+>  	int			logversion;
+>  	int			lvflag;
+>  	int			lsflag;
+> +	int			lsuflag;
+> +	int			lsunitflag;
+>  	int			lsectorlog;
+>  	int			lsectorsize;
+>  	int			lslflag;
+> @@ -1004,7 +1006,7 @@ main(
+>  	sectorsize = lsectorsize = XFS_MIN_SECTORSIZE;
+>  	agsize = daflag = dasize = dblocks = 0;
+>  	ilflag = imflag = ipflag = isflag = 0;
+> -	liflag = laflag = lsflag = ldflag = lvflag = 0;
+> +	liflag = laflag = lsflag = lsuflag = lsunitflag = ldflag = lvflag = 0;
+>  	loginternal = 1;
+>  	logversion = 2;
+>  	logagno = logblocks = rtblocks = rtextblocks = 0;
+> @@ -1400,6 +1402,7 @@ main(
+>  						respec('l', lopts, L_SU);
+>  					lsu = cvtnum(
+>  						blocksize, sectorsize, value);
+> +					lsuflag = 1;
+>  					break;
+>  				case L_SUNIT:
+>  					if (!value || *value == '\0')
+> @@ -1412,6 +1415,7 @@ main(
+>  						usage();
+>  					}
+>  					lsunit = cvtnum(0, 0, value);
+> +					lsunitflag = 1;
+>  					break;
+>  				case L_NAME:
+>  				case L_DEV:
+> @@ -2379,11 +2383,15 @@ an AG size that is one stripe unit smaller, for example %llu.\n"),
+>  	}
 >  
->  	/*
-> -	 * Blkid reports the information in terms of bytes, but we want it in
-> -	 * terms of 512 bytes blocks (just to convert it to bytes later..)
-> -	 *
->  	 * If the reported values are the same as the physical sector size
-> -	 * do not bother to report anything.  It will just cause warnings
-> +	 * do not bother to report anything.  It will only cause warnings
->  	 * if people specify larger stripe units or widths manually.
->  	 */
-> -	val = blkid_topology_get_minimum_io_size(tp);
-> -	if (val > *psectorsize)
-> -		*sunit = val >> 9;
-> -	val = blkid_topology_get_optimal_io_size(tp);
-> -	if (val > *psectorsize)
-> -		*swidth = val >> 9;
-> +	if (*sunit == *psectorsize || *swidth == *psectorsize) {
-> +		*sunit = 0;
-> +		*swidth = 0;
-> +	}
-> +
-> +	/*
-> +	 * Blkid reports the information in terms of bytes, but we want it in
-> +	 * terms of 512 bytes blocks (only to convert it to bytes later..)
-> +	 */
-> +	*sunit = *sunit >> 9;
-> +	*swidth = *swidth >> 9;	
+>  	if (logversion == 2 && (lsunit * blocksize) > 256 * 1024) {
+> -		fprintf(stderr,
+> +		/* Warn only if specified on commandline */
+> +		if (lsuflag || lsunitflag) {
+> +			fprintf(stderr,
+>  	_("log stripe unit (%d bytes) is too large (maximum is 256KiB)\n"),
+> -			(lsunit * blocksize));
+> +				(lsunit * blocksize));
+> +			fprintf(stderr,
+> +	_("log stripe unit adjusted to 32KiB\n"));
+> +		}
 
-Trailing whitespace here.
+Right above this particular hunk we have the possibility of lsunit
+inheriting a value from dsunit. If the latter is specified by the user,
+we don't print the message for an arguably user-specified lsunit. Hmm,
+do we care about that case?
 
 Brian
 
->  
->  	if (blkid_topology_get_alignment_offset(tp) != 0) {
->  		fprintf(stderr,
-> @@ -484,10 +490,10 @@ static void get_topology(
+>  		lsunit = (32 * 1024) >> blocklog;
+> -		fprintf(stderr, _("log stripe unit adjusted to 32KiB\n"));
 >  	}
 >  
->  	if (xi->rtname && !xi->risfile) {
-> -		int dummy;
-> +		int sunit, lsectorsize, psectorsize;
->  
-> -		blkid_get_topology(xi->rtname, &dummy, &ft->rtswidth,
-> -				   &dummy, &dummy, force_overwrite);
-> +		blkid_get_topology(xi->rtname, &sunit, &ft->rtswidth,
-> +				   &lsectorsize, &psectorsize, force_overwrite);
->  	}
->  }
->  #else /* ENABLE_BLKID */
+>  	min_logblocks = max_trans_res(crcs_enabled, dirversion,
 > 
 > _______________________________________________
 > xfs mailing list
