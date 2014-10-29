@@ -1,22 +1,31 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id D06717F47
-	for <xfs@oss.sgi.com>; Wed, 29 Oct 2014 05:37:09 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 3150F7F3F
+	for <xfs@oss.sgi.com>; Wed, 29 Oct 2014 05:43:11 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 67A4FAC008
-	for <xfs@oss.sgi.com>; Wed, 29 Oct 2014 03:37:09 -0700 (PDT)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 1E98E8F8049
+	for <xfs@oss.sgi.com>; Wed, 29 Oct 2014 03:43:08 -0700 (PDT)
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	6qZbiHgHFYPfGIXX for <xfs@oss.sgi.com>;
-	Wed, 29 Oct 2014 03:37:07 -0700 (PDT)
-Date: Wed, 29 Oct 2014 21:36:36 +1100
+	cP8o4mFNGBWV8SQq for <xfs@oss.sgi.com>;
+	Wed, 29 Oct 2014 03:43:05 -0700 (PDT)
+Date: Wed, 29 Oct 2014 21:43:04 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [Question]: xfstests test generic/233 failure
-Message-ID: <20141029103636.GJ16186@dastard>
-References: <1414575977.17402.3.camel@G08JYZSD130126.localdomain>
+Subject: Re: xfsrestore report SUCCESS but not restore all files in kernel 3.17
+Message-ID: <20141029104304.GC13323@dastard>
+References: <CAGdb-8cnmCs=L0RPvE8+5jn3nmZoviiZtQBbo9S-BThA+3cBKg@mail.gmail.com>
+	<5450686F.9070307@sandeen.net>
+	<CAGdb-8d5-GuB40ZgP6uM5aQMi+qqaeFd=xqzuxWhM+1AaoLSVw@mail.gmail.com>
+	<54506CD9.90403@sandeen.net>
+	<CAGdb-8cGAzT_0ck-pJyQX-OcnE_3FPCA9TesHW7c_raDSKEXWg@mail.gmail.com>
+	<20141029044017.GG16186@dastard>
+	<CAGdb-8e=wttjj+wTj8wqRWyUUz+AUmz-O0=r3+HoJ5zGgV-dkQ@mail.gmail.com>
+	<20141029075134.GB13323@dastard>
+	<CAGdb-8dhPe9wvoGnUsFo2Q3EZWka+i2DcFN-AqJV_G09+=4f2w@mail.gmail.com>
+	<20141029103355.GI16186@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1414575977.17402.3.camel@G08JYZSD130126.localdomain>
+In-Reply-To: <20141029103355.GI16186@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,38 +38,22 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Zeng Linggang <zenglg.jy@cn.fujitsu.com>
-Cc: xfs@oss.sgi.com
+To: Tommy Wu <wu.tommy@gmail.com>
+Cc: Eric Sandeen <sandeen@sandeen.net>, xfs <xfs@oss.sgi.com>
 
-On Wed, Oct 29, 2014 at 05:46:17PM +0800, Zeng Linggang wrote:
-> Hello,
+On Wed, Oct 29, 2014 at 09:33:55PM +1100, Dave Chinner wrote:
+> On Wed, Oct 29, 2014 at 05:21:52PM +0800, Tommy Wu wrote:
+> > Same testing in same machine (just different kernel).
+> > 
+> > 3.18-rc2:
+> > xfsdump will hang (the test.xfsdump.gz size stop around 57M)
 > 
-> When I take XFS filesystem as test target, the case generic/233 often
-> fails in my test machines (RHEL7.0GA: 3.10.0-123) with output like this:
-> generic/233  [failed, exit status 1] - output mismatch (see
-> /var/lib/xfstests/results//generic/233.out.bad)
-> --- tests/generic/233.out       2014-10-22 14:17:06.239461640 +0800
-> +++ results/generic/233.out.bad 2014-10-23 14:39:48.210480319 +0800
-> @@ -4,4 +4,7 @@
-> seed = S
-> Comparing user usage
-> -Comparing group usage
-> +4c4
-> +< #1001     --   31348   32000   32000            772  1000  1000
-> +---
-> +> #1001     --   31144   32000   32000            772  1000  1000
-> ...
-> generic/231 and generic/270 also have the similar quota accounting mismatch.
+> Ugh, colliding fixes to the bulkstat code. pull again from
+> the xfs-fixes-for-3.18-rc3 branch and the hang should be fixed.
 
-fsstress can result in different file and directory layouts, hence
-result in different amounts of metadata in the filesystem. Metadata
-is also accounted to quotas (e.g. to the user who owns the
-directory) and so even if data usage is identical the metadata can
-still vary.
-
-I see these test give small variations quite frequently, but they
-are are usually only quite small (a handful of blocks) so I've never
-really worried about it too much.
+Ugh, I forgot the stable tag on the new commit, so I'm going to have
+to rebase that branch before it's ready to send to Linus. I'll do
+it in the morning when I'm more awake.
 
 Cheers,
 
