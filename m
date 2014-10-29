@@ -1,9 +1,9 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 From: xfs@oss.sgi.com
-Subject: [XFS updates] XFS development tree branch, for-next,
+Subject: [XFS updates] XFS development tree branch, xfs-fixes-for-3.18-rc3,
 	updated. v3.18-rc2-5-g31692c5
-Message-Id: <20141029103218.E549E7F47@oss.sgi.com>
-Date: Wed, 29 Oct 2014 05:32:18 -0500 (CDT)
+Message-Id: <20141029103232.BAE887F54@oss.sgi.com>
+Date: Wed, 29 Oct 2014 05:32:32 -0500 (CDT)
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,7 +23,7 @@ This is an automated email from the git hooks/post-receive script. It was
 generated because a ref change was pushed to the repository containing
 the project "XFS development tree".
 
-The branch, for-next has been updated
+The branch, xfs-fixes-for-3.18-rc3 has been updated
   31692c5 xfs: bulkstat needs to delete cursor at end of AG
       from  bae09893f6a5260c7030499ddfd0911899ae3d0c (commit)
 
