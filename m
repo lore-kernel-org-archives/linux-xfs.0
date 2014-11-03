@@ -1,28 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id F2CEA7F47
-	for <xfs@oss.sgi.com>; Mon,  3 Nov 2014 10:12:30 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id C3EB9304039
-	for <xfs@oss.sgi.com>; Mon,  3 Nov 2014 08:12:30 -0800 (PST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 3C7057F4E
+	for <xfs@oss.sgi.com>; Mon,  3 Nov 2014 10:12:32 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id B0753AC003
+	for <xfs@oss.sgi.com>; Mon,  3 Nov 2014 08:12:31 -0800 (PST)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id cs2ASH4HfeJnqDD4 (version=TLSv1
+	cuda.sgi.com with ESMTP id gw2G0O3Wa6fZhU1X (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 03 Nov 2014 08:12:29 -0800 (PST)
-Received: from int-mx11.intmail.prod.int.phx2.redhat.com
-	(int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id sA3GCTOh003983
+	Mon, 03 Nov 2014 08:12:30 -0800 (PST)
+Received: from int-mx09.intmail.prod.int.phx2.redhat.com
+	(int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id sA3GCSYY030032
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256
 	verify=FAIL) for <xfs@oss.sgi.com>; Mon, 3 Nov 2014 11:12:29 -0500
 Received: from bfoster.bfoster ([10.18.41.237])
-	by int-mx11.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id sA3GCSst023879
+	by int-mx09.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id sA3GCSJB017055
 	for <xfs@oss.sgi.com>; Mon, 3 Nov 2014 11:12:28 -0500
 From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH v2 14/17] xfs: skip unallocated regions of inode chunks in
-	xfs_ifree_cluster()
-Date: Mon,  3 Nov 2014 11:12:23 -0500
-Message-Id: <1415031146-9107-15-git-send-email-bfoster@redhat.com>
+Subject: [PATCH v2 06/17] xfs: pass inode count through ordered icreate log
+	item
+Date: Mon,  3 Nov 2014 11:12:15 -0500
+Message-Id: <1415031146-9107-7-git-send-email-bfoster@redhat.com>
 In-Reply-To: <1415031146-9107-1-git-send-email-bfoster@redhat.com>
 References: <1415031146-9107-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -40,195 +40,83 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-xfs_ifree_cluster() is called to mark all in-memory inodes and inode
-buffers as stale. This occurs after we've removed the inobt records and
-dropped any references of inobt data. xfs_ifree_cluster() uses the
-starting inode number to walk the namespace of inodes expected for a
-single chunk a cluster buffer at a time. The cluster buffer disk
-addresses are calculated by decoding the sequential inode numbers
-expected from the chunk.
+v5 superblocks use an ordered log item for logging the initialization of
+inode chunks. The icreate log item is currently hardcoded to an inode
+count of 64 inodes.
 
-The problem with this approach is that if the inode chunk being removed
-is a sparse chunk, not all of the buffer addresses that are calculated
-as part of this sequence may be inode clusters. Attempting to acquire
-the buffer based on expected inode characterstics (i.e., cluster length)
-can lead to errors and is generally incorrect.
-
-We already use a couple variables to carry requisite state from
-xfs_difree() to xfs_ifree_cluster(). Rather than add a third, define a
-new internal structure to carry the existing parameters through these
-functions. Add an alloc field that represents the physical allocation
-bitmap of inodes in the chunk being removed. Modify xfs_ifree_cluster()
-to check each inode against the bitmap and skip the clusters that were
-never allocated as real inodes on disk.
+The agbno and extent length are used to initialize the inode chunk from
+log recovery. While an incorrect inode count does not lead to bad inode
+chunk initialization, we should pass the correct inode count such that log
+recovery has enough data to perform meaningful validity checks on the
+chunk.
 
 Signed-off-by: Brian Foster <bfoster@redhat.com>
 ---
- fs/xfs/libxfs/xfs_ialloc.c | 18 +++++++++---------
- fs/xfs/libxfs/xfs_ialloc.h | 10 ++++++++--
- fs/xfs/xfs_inode.c         | 28 ++++++++++++++++++++--------
- 3 files changed, 37 insertions(+), 19 deletions(-)
+ fs/xfs/libxfs/xfs_ialloc.c | 7 ++++---
+ fs/xfs/libxfs/xfs_ialloc.h | 2 +-
+ fs/xfs/xfs_log_recover.c   | 4 ++--
+ 3 files changed, 7 insertions(+), 6 deletions(-)
 
 diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
-index af16d5e..1fbd0a8 100644
+index fcc8baa..b53fb5d 100644
 --- a/fs/xfs/libxfs/xfs_ialloc.c
 +++ b/fs/xfs/libxfs/xfs_ialloc.c
-@@ -1793,8 +1793,7 @@ xfs_difree_inobt(
- 	struct xfs_buf			*agbp,
- 	xfs_agino_t			agino,
- 	struct xfs_bmap_free		*flist,
--	int				*deleted,
--	xfs_ino_t			*first_ino,
-+	struct xfs_icluster		*xic,
- 	struct xfs_inobt_rec_incore	*orec)
- {
- 	struct xfs_agi			*agi = XFS_BUF_TO_AGI(agbp);
-@@ -1852,9 +1851,12 @@ xfs_difree_inobt(
+@@ -231,6 +231,7 @@ xfs_ialloc_inode_init(
+ 	struct xfs_mount	*mp,
+ 	struct xfs_trans	*tp,
+ 	struct list_head	*buffer_list,
++	int			icount,
+ 	xfs_agnumber_t		agno,
+ 	xfs_agblock_t		agbno,
+ 	xfs_agblock_t		length,
+@@ -286,7 +287,7 @@ xfs_ialloc_inode_init(
+ 		 * they track in the AIL as if they were physically logged.
+ 		 */
+ 		if (tp)
+-			xfs_icreate_log(tp, agno, agbno, mp->m_ialloc_inos,
++			xfs_icreate_log(tp, agno, agbno, icount,
+ 					mp->m_sb.sb_inodesize, length, gen);
+ 	} else
+ 		version = 2;
+@@ -505,8 +506,8 @@ xfs_ialloc_ag_alloc(
+ 	 * rather than a linear progression to prevent the next generation
+ 	 * number from being easily guessable.
  	 */
- 	if (!(mp->m_flags & XFS_MOUNT_IKEEP) &&
- 	    (rec.ir_free == XFS_INOBT_ALL_FREE)) {
-+		DECLARE_BITMAP(alloc, 64);
+-	error = xfs_ialloc_inode_init(args.mp, tp, NULL, agno, args.agbno,
+-			args.len, prandom_u32());
++	error = xfs_ialloc_inode_init(args.mp, tp, NULL, newlen, agno,
++			args.agbno, args.len, prandom_u32());
  
--		*deleted = 1;
--		*first_ino = XFS_AGINO_TO_INO(mp, agno, rec.ir_startino);
-+		xic->deleted = 1;
-+		xic->first_ino = XFS_AGINO_TO_INO(mp, agno, rec.ir_startino);
-+		xfs_inobt_ialloc_bitmap(alloc, &rec);
-+		xic->alloc = bitmap_to_u64(alloc, 64);
- 
- 		/*
- 		 * Remove the inode cluster from the AGI B+Tree, adjust the
-@@ -1879,7 +1881,7 @@ xfs_difree_inobt(
- 
- 		xfs_difree_inode_chunk(mp, agno, &rec, flist);
- 	} else {
--		*deleted = 0;
-+		xic->deleted = 0;
- 
- 		error = xfs_inobt_update(cur, &rec);
- 		if (error) {
-@@ -2018,8 +2020,7 @@ xfs_difree(
- 	struct xfs_trans	*tp,		/* transaction pointer */
- 	xfs_ino_t		inode,		/* inode to be freed */
- 	struct xfs_bmap_free	*flist,		/* extents to free */
--	int			*deleted,/* set if inode cluster was deleted */
--	xfs_ino_t		*first_ino)/* first inode in deleted cluster */
-+	struct xfs_icluster	*xic)	/* cluster info if deleted */
- {
- 	/* REFERENCED */
- 	xfs_agblock_t		agbno;	/* block number containing inode */
-@@ -2070,8 +2071,7 @@ xfs_difree(
- 	/*
- 	 * Fix up the inode allocation btree.
- 	 */
--	error = xfs_difree_inobt(mp, tp, agbp, agino, flist, deleted, first_ino,
--				 &rec);
-+	error = xfs_difree_inobt(mp, tp, agbp, agino, flist, xic, &rec);
  	if (error)
- 		goto error0;
- 
+ 		return error;
 diff --git a/fs/xfs/libxfs/xfs_ialloc.h b/fs/xfs/libxfs/xfs_ialloc.h
-index 62c1381..5aa8d6f 100644
+index 95ad1c0..62c1381 100644
 --- a/fs/xfs/libxfs/xfs_ialloc.h
 +++ b/fs/xfs/libxfs/xfs_ialloc.h
-@@ -28,6 +28,13 @@ struct xfs_btree_cur;
- /* Move inodes in clusters of this size */
- #define	XFS_INODE_BIG_CLUSTER_SIZE	8192
- 
-+struct xfs_icluster {
-+	bool		deleted;	/* record is deleted */
-+	xfs_ino_t	first_ino;	/* first inode number */
-+	xfs_inoalloc_t	alloc;		/* inode phys. allocation bitmap for
-+					 * sparse chunks */
-+};
-+
- /* Calculate and return the number of filesystem blocks per inode cluster */
- static inline int
- xfs_icluster_size_fsb(
-@@ -90,8 +97,7 @@ xfs_difree(
- 	struct xfs_trans *tp,		/* transaction pointer */
- 	xfs_ino_t	inode,		/* inode to be freed */
- 	struct xfs_bmap_free *flist,	/* extents to free */
--	int		*deleted,	/* set if inode cluster was deleted */
--	xfs_ino_t	*first_ino);	/* first inode in deleted cluster */
-+	struct xfs_icluster *ifree);	/* cluster info if deleted */
- 
- /*
-  * Return the location of the inode in imap, for mapping it into a buffer.
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 8ed049d..91a1739 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -2185,9 +2185,9 @@ xfs_iunlink_remove(
+@@ -156,7 +156,7 @@ int xfs_inobt_get_rec(struct xfs_btree_cur *cur,
+  * Inode chunk initialisation routine
   */
- STATIC int
- xfs_ifree_cluster(
--	xfs_inode_t	*free_ip,
--	xfs_trans_t	*tp,
--	xfs_ino_t	inum)
-+	xfs_inode_t		*free_ip,
-+	xfs_trans_t		*tp,
-+	struct xfs_icluster	*xic)
- {
- 	xfs_mount_t		*mp = free_ip->i_mount;
- 	int			blks_per_cluster;
-@@ -2200,13 +2200,26 @@ xfs_ifree_cluster(
- 	xfs_inode_log_item_t	*iip;
- 	xfs_log_item_t		*lip;
- 	struct xfs_perag	*pag;
-+	xfs_ino_t		inum;
+ int xfs_ialloc_inode_init(struct xfs_mount *mp, struct xfs_trans *tp,
+-			  struct list_head *buffer_list,
++			  struct list_head *buffer_list, int icount,
+ 			  xfs_agnumber_t agno, xfs_agblock_t agbno,
+ 			  xfs_agblock_t length, unsigned int gen);
  
-+	inum = xic->first_ino;
- 	pag = xfs_perag_get(mp, XFS_INO_TO_AGNO(mp, inum));
- 	blks_per_cluster = xfs_icluster_size_fsb(mp);
- 	inodes_per_cluster = blks_per_cluster << mp->m_sb.sb_inopblog;
- 	nbufs = mp->m_ialloc_blks / blks_per_cluster;
+diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+index 00cd7f3..e47fdf9 100644
+--- a/fs/xfs/xfs_log_recover.c
++++ b/fs/xfs/xfs_log_recover.c
+@@ -3093,8 +3093,8 @@ xlog_recover_do_icreate_pass2(
+ 			XFS_AGB_TO_DADDR(mp, agno, agbno), length, 0))
+ 		return 0;
  
- 	for (j = 0; j < nbufs; j++, inum += inodes_per_cluster) {
-+		/*
-+		 * The allocation bitmap tells us which inodes of the chunk were
-+		 * physically allocated. Skip the cluster if an inode falls into
-+		 * a sparse region.
-+		 */
-+		if ((xic->alloc & XFS_INOBT_MASK(inum - xic->first_ino)) == 0) {
-+			ASSERT(((inum - xic->first_ino) %
-+				inodes_per_cluster) == 0);
-+			continue;
-+		}
-+
- 		blkno = XFS_AGB_TO_DADDR(mp, XFS_INO_TO_AGNO(mp, inum),
- 					 XFS_INO_TO_AGBNO(mp, inum));
- 
-@@ -2364,8 +2377,7 @@ xfs_ifree(
- 	xfs_bmap_free_t	*flist)
- {
- 	int			error;
--	int			delete;
--	xfs_ino_t		first_ino;
-+	struct xfs_icluster	xic = { 0 };
- 
- 	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
- 	ASSERT(ip->i_d.di_nlink == 0);
-@@ -2381,7 +2393,7 @@ xfs_ifree(
- 	if (error)
- 		return error;
- 
--	error = xfs_difree(tp, ip->i_ino, flist, &delete, &first_ino);
-+	error = xfs_difree(tp, ip->i_ino, flist, &xic);
- 	if (error)
- 		return error;
- 
-@@ -2398,8 +2410,8 @@ xfs_ifree(
- 	ip->i_d.di_gen++;
- 	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
- 
--	if (delete)
--		error = xfs_ifree_cluster(ip, tp, first_ino);
-+	if (xic.deleted)
-+		error = xfs_ifree_cluster(ip, tp, &xic);
- 
- 	return error;
+-	xfs_ialloc_inode_init(mp, NULL, buffer_list, agno, agbno, length,
+-					be32_to_cpu(icl->icl_gen));
++	xfs_ialloc_inode_init(mp, NULL, buffer_list, count, agno, agbno, length,
++			      be32_to_cpu(icl->icl_gen));
+ 	return 0;
  }
+ 
 -- 
 1.8.3.1
 
