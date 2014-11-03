@@ -1,20 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 486BD7F59
-	for <xfs@oss.sgi.com>; Mon,  3 Nov 2014 10:41:20 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id C6EAFAC005
-	for <xfs@oss.sgi.com>; Mon,  3 Nov 2014 08:41:19 -0800 (PST)
-Received: from mail.emea.novell.com (mail.emea.novell.com [130.57.118.101]) by
-	cuda.sgi.com with ESMTP id 1vAOll21VmBOUXdH (version=TLSv1
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 8DCA37F47
+	for <xfs@oss.sgi.com>; Mon,  3 Nov 2014 10:58:27 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 5C95D8F804C
+	for <xfs@oss.sgi.com>; Mon,  3 Nov 2014 08:58:27 -0800 (PST)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id qk7hCF3AVz0jzRcP (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 03 Nov 2014 08:41:18 -0800 (PST)
-Message-Id: <5457BE390200007800044838@mail.emea.novell.com>
-Date: Mon, 03 Nov 2014 16:41:13 +0000
-From: "Jan Beulich" <JBeulich@suse.com>
-Subject: your patch "mm: Remove false WARN_ON from pagecache_isize_extended()"
-Mime-Version: 1.0
-Content-Disposition: inline
+	Mon, 03 Nov 2014 08:58:26 -0800 (PST)
+Received: from int-mx09.intmail.prod.int.phx2.redhat.com
+	(int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id sA3GwPSU018263
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256
+	verify=FAIL) for <xfs@oss.sgi.com>; Mon, 3 Nov 2014 11:58:25 -0500
+Received: from bfoster.bfoster ([10.18.41.237])
+	by int-mx09.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id sA3GCSvu017056
+	for <xfs@oss.sgi.com>; Mon, 3 Nov 2014 11:12:28 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: [PATCH v2 07/17] xfs: handle sparse inode chunks in icreate log
+	recovery
+Date: Mon,  3 Nov 2014 11:12:16 -0500
+Message-Id: <1415031146-9107-8-git-send-email-bfoster@redhat.com>
+In-Reply-To: <1415031146-9107-1-git-send-email-bfoster@redhat.com>
+References: <1415031146-9107-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,45 +33,58 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Jan Kara <jack@suse.cz>
-Cc: linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-Jan,
+Recovery of icreate transactions assumes hardcoded values for the inode
+count and chunk length.
 
-having run into that warning too, I looked into it a little, and now
-having found that patch am pretty uncertain: Both truncate_setsize()
-and pagecache_isize_extended() document that they want to be
-called with i_mutex held, so removing the WARN_ON() alone seems
-either incomplete or wrong. What I found to work without violating
-this documented requirement is the patch below.
+Sparse inode chunks are allocated in units of m_ialloc_min_blks. Update
+the icreate validity checks to allow for appropriately sized inode
+chunks and verify the inode count matches what is expected based on the
+extent length rather than assuming a hardcoded count.
 
-Jan
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+---
+ fs/xfs/xfs_log_recover.c | 19 +++++++++++++------
+ 1 file changed, 13 insertions(+), 6 deletions(-)
 
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -797,7 +797,7 @@ xfs_file_fallocate(
- 		     FALLOC_FL_COLLAPSE_RANGE | FALLOC_FL_ZERO_RANGE))
- 		return -EOPNOTSUPP;
- 
--	xfs_ilock(ip, XFS_IOLOCK_EXCL);
-+	xfs_rw_ilock(ip, XFS_IOLOCK_EXCL);
- 	if (mode & FALLOC_FL_PUNCH_HOLE) {
- 		error = xfs_free_file_space(ip, offset, len);
- 		if (error)
-@@ -877,7 +877,7 @@ xfs_file_fallocate(
+diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+index e47fdf9..d665b44 100644
+--- a/fs/xfs/xfs_log_recover.c
++++ b/fs/xfs/xfs_log_recover.c
+@@ -3070,12 +3070,19 @@ xlog_recover_do_icreate_pass2(
+ 		return -EINVAL;
  	}
  
- out_unlock:
--	xfs_iunlock(ip, XFS_IOLOCK_EXCL);
-+	xfs_rw_iunlock(ip, XFS_IOLOCK_EXCL);
- 	return error;
- }
+-	/* existing allocation is fixed value */
+-	ASSERT(count == mp->m_ialloc_inos);
+-	ASSERT(length == mp->m_ialloc_blks);
+-	if (count != mp->m_ialloc_inos ||
+-	     length != mp->m_ialloc_blks) {
+-		xfs_warn(log->l_mp, "xlog_recover_do_icreate_trans: bad count 2");
++	/* inode chunk is either full or sparse */
++	if (length != mp->m_ialloc_blks &&
++	    length != mp->m_ialloc_min_blks) {
++		xfs_warn(log->l_mp,
++			 "%s: unsupported chunk length", __FUNCTION__);
++		return -EINVAL;
++	}
++
++	/* verify inode count is consistent with extent length */
++	if ((count >> mp->m_sb.sb_inopblog) != length) {
++		xfs_warn(log->l_mp,
++			 "%s: inconsistent inode count and chunk length",
++			 __FUNCTION__);
+ 		return -EINVAL;
+ 	}
  
-
+-- 
+1.8.3.1
 
 _______________________________________________
 xfs mailing list
