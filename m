@@ -1,28 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 8899F7F5D
-	for <xfs@oss.sgi.com>; Mon,  3 Nov 2014 10:12:34 -0600 (CST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 7249B7F58
+	for <xfs@oss.sgi.com>; Mon,  3 Nov 2014 10:12:35 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 770B9304048
+	by relay3.corp.sgi.com (Postfix) with ESMTP id E505BAC005
 	for <xfs@oss.sgi.com>; Mon,  3 Nov 2014 08:12:34 -0800 (PST)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id pU4psoqAkbV5PQXx (version=TLSv1
+	cuda.sgi.com with ESMTP id G7WA0wiqVznDj1X0 (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 03 Nov 2014 08:12:29 -0800 (PST)
+	Mon, 03 Nov 2014 08:12:30 -0800 (PST)
 Received: from int-mx09.intmail.prod.int.phx2.redhat.com
 	(int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id sA3GCShv003973
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id sA3GCTup027598
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256
 	verify=FAIL) for <xfs@oss.sgi.com>; Mon, 3 Nov 2014 11:12:29 -0500
 Received: from bfoster.bfoster ([10.18.41.237])
 	by int-mx09.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id sA3GCS0j017061
-	for <xfs@oss.sgi.com>; Mon, 3 Nov 2014 11:12:28 -0500
+	id sA3GCSJD017055
+	for <xfs@oss.sgi.com>; Mon, 3 Nov 2014 11:12:29 -0500
 From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH v2 10/17] xfs: helpers to convert holemask to/from generic
-	bitmap
-Date: Mon,  3 Nov 2014 11:12:19 -0500
-Message-Id: <1415031146-9107-11-git-send-email-bfoster@redhat.com>
+Subject: [PATCH v2 15/17] xfs: use actual inode count for sparse records in
+	bulkstat/inumbers
+Date: Mon,  3 Nov 2014 11:12:24 -0500
+Message-Id: <1415031146-9107-16-git-send-email-bfoster@redhat.com>
 In-Reply-To: <1415031146-9107-1-git-send-email-bfoster@redhat.com>
 References: <1415031146-9107-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -40,125 +40,146 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-The inobt record holemask field is a condensed data type designed to fit
-into the existing on-disk record and is zero based (allocated regions
-are set to 0, sparse regions are set to 1) to provide backwards
-compatibility. This makes the type somewhat complex for use in higher
-level inode manipulations such as individual inode allocation, etc.
+The bulkstat and inumbers mechanisms make the assumption that inode
+records consist of a full 64 inode chunk in several places. E.g., this
+is used to track how many inodes have been processed overall as well as
+to determine when all in-use inodes of a record have been processed. The
+record processing, in particular, increments the record freecount for
+each in-use inode until it hits the expected max of 64.
 
-Rather than foist the complexity of dealing with this field to every bit
-of logic that requires inode granular information, create the
-xfs_inobt_ialloc_bitmap() helper to convert the holemask to an inode
-allocation bitmap. The inode allocation bitmap is inode granularity
-similar to the inobt record free mask and indicates which inodes of the
-chunk are physically allocated on disk, irrespective of whether the
-inode is considered allocated or free by the filesystem. The generic
-bitmap type requires the use of generic kernel bitmap APIs.
+This is invalid for sparse inode records. While all inodes might be
+marked free in the free mask regardless of whether they are allocated on
+disk, ir_freecount is based on the total number of physically allocated
+inodes and thus may be less than 64 inodes on a completely free inode
+chunk.
 
-The bitmap_to_u64() helper is provided to convert the bitmap back to a
-native 64-bit type (for native bitwise operations). This is required
-because the generic bitmap code represents a bitmap as an array of
-unsigned long in a little endian style (though each array value is cpu
-order). To ensure compatibility with various word sizes and endianness',
-bitmap_to_u64() exports the bitmap to little endian and swaps back to
-cpu byte order.
+Create the xfs_inobt_count() helper to calculate the total number of
+physically allocated inodes based on the holemask. Use the helper in
+xfs_bulkstat() and xfs_inumbers() instead of the fixed
+XFS_INODE_PER_CHUNK value to ensure correct accounting in the event of
+sparse inode records.
 
 Signed-off-by: Brian Foster <bfoster@redhat.com>
 ---
- fs/xfs/libxfs/xfs_format.h |  1 +
- fs/xfs/libxfs/xfs_ialloc.c | 67 ++++++++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 68 insertions(+)
+ fs/xfs/libxfs/xfs_ialloc.c | 29 +++++++++++++++++++++++++++++
+ fs/xfs/libxfs/xfs_ialloc.h |  5 +++++
+ fs/xfs/xfs_itable.c        | 16 +++++++++++-----
+ 3 files changed, 45 insertions(+), 5 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
-index c81c1a7..f2ff6d5 100644
---- a/fs/xfs/libxfs/xfs_format.h
-+++ b/fs/xfs/libxfs/xfs_format.h
-@@ -202,6 +202,7 @@ typedef __be32 xfs_alloc_ptr_t;
- #define	XFS_FIBT_CRC_MAGIC	0x46494233	/* 'FIB3' */
- 
- typedef	__uint64_t	xfs_inofree_t;
-+typedef	__uint64_t	xfs_inoalloc_t;
- #define	XFS_INODES_PER_CHUNK		(NBBY * sizeof(xfs_inofree_t))
- #define	XFS_INODES_PER_CHUNK_LOG	(XFS_NBBYLOG + 3)
- #define	XFS_INOBT_ALL_FREE		((xfs_inofree_t)-1)
 diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
-index d22dd8a..88ca72f 100644
+index 1fbd0a8..5e92422 100644
 --- a/fs/xfs/libxfs/xfs_ialloc.c
 +++ b/fs/xfs/libxfs/xfs_ialloc.c
-@@ -910,6 +910,73 @@ xfs_ialloc_get_rec(
- 	return 0;
+@@ -1002,6 +1002,35 @@ xfs_inobt_first_free_inode(
  }
  
-+static inline uint64_t
-+bitmap_to_u64(
-+	const unsigned long	*bitmap,
-+	int			nbits)
+ /*
++ * Calculate the real count of inodes in a chunk.
++ */
++int
++xfs_inobt_count(
++	struct xfs_mount		*mp,
++	struct xfs_inobt_rec_incore	*rec)
 +{
-+	__le64			lebitmap;
++	int	inocount;
++	DECLARE_BITMAP(allocbmap, XFS_INODES_PER_CHUNK);
 +
-+	ASSERT(nbits <= 64);
++	if (xfs_sb_version_hassparseinodes(&mp->m_sb)) {
++		/*
++		 * allocated inode bit count should match ir_count
++		 *
++		 * TODO: it might be preferable to tie this validation to an
++		 * fs operation rather than a simple utility function call
++		 */
++		xfs_inobt_ialloc_bitmap(allocbmap, rec);
++		inocount = bitmap_weight(allocbmap, XFS_INODES_PER_CHUNK);
++		WARN_ON(inocount != rec->ir_count);
++	}
 +
-+	/*
-+	 * The bitmap format depends on the native word size. E.g., bit 0 could
-+	 * land in the middle of the 64 bits on a big endian 32-bit arch (see
-+	 * arch/powerpc/include/asm/bitops.h). To handle this, export the bitmap
-+	 * as 64-bit little endian and convert back to native byte order.
-+	 */
-+	bitmap_copy_le(&lebitmap, bitmap, nbits);
-+	return le64_to_cpu(lebitmap);
++	if (!xfs_inobt_issparse(rec->ir_holemask))
++		return XFS_INODES_PER_CHUNK;
++
++	return rec->ir_count;
 +}
 +
 +/*
-+ * Convert the inode record holemask to an inode allocation bitmap. The inode
-+ * allocation bitmap is inode granularity and specifies whether an inode is
-+ * physically allocated on disk (not whether the inode is considered allocated
-+ * or free by the fs).
-+ *
-+ * We have to be careful with regard to byte order and word size since the
-+ * generic bitmap code uses primitive types.
-+ */
-+STATIC void
-+xfs_inobt_ialloc_bitmap(
-+	unsigned long			*allocbmap,
-+	struct xfs_inobt_rec_incore	*rec)
-+{
-+	int				nextbit;
-+	DECLARE_BITMAP(holemask, 16);
-+
-+	bitmap_zero(allocbmap, 64);
-+
-+	/*
-+	 * bitmaps are represented as an array of unsigned long (each in cpu
-+	 * byte order). ir_holemask is only 16 bits, so direct assignment is
-+	 * safe.
-+	 */
-+	ASSERT(sizeof(rec->ir_holemask) <= sizeof(holemask[0]));
-+	holemask[0] = rec->ir_holemask;
-+
-+	/*
-+	 * holemask is a 16-bit bitmap and inode records span 64 inodes. Thus
-+	 * each holemask bit represents multiple (XFS_INODES_PER_HOLEMASK_BIT)
-+	 * inodes. Since holemask bits represent holes, each set bit represents
-+	 * a region of the physical chunk that is not tracked by the record.
-+	 *
-+	 * We want an inode granularity allocation bitmap. We have to invert the
-+	 * holemask and set XFS_INODES_PER_HOLEMASK_BIT bits for each set bit.
-+	 * We invert and expand simultaneously by walking the unset (zeroed)
-+	 * holemask bits. For each zero bit in holemask, set the corresponding
-+	 * XFS_INODES_PER_HOLEMASK_BIT bits in the allocation bitmap.
-+	 */
-+	nextbit = find_first_zero_bit(holemask, 16);
-+	while (nextbit < 16) {
-+		bitmap_set(allocbmap, nextbit * XFS_INODES_PER_HOLEMASK_BIT,
-+			   XFS_INODES_PER_HOLEMASK_BIT);
-+
-+		nextbit = find_next_zero_bit(holemask, 16, nextbit + 1);
-+	}
-+}
-+
- /*
   * Allocate an inode using the inobt-only algorithm.
   */
+ STATIC int
+diff --git a/fs/xfs/libxfs/xfs_ialloc.h b/fs/xfs/libxfs/xfs_ialloc.h
+index 5aa8d6f..527d889 100644
+--- a/fs/xfs/libxfs/xfs_ialloc.h
++++ b/fs/xfs/libxfs/xfs_ialloc.h
+@@ -166,4 +166,9 @@ int xfs_ialloc_inode_init(struct xfs_mount *mp, struct xfs_trans *tp,
+ 			  xfs_agnumber_t agno, xfs_agblock_t agbno,
+ 			  xfs_agblock_t length, unsigned int gen);
+ 
++/*
++ * Calculate the real count of inodes in a chunk.
++ */
++int xfs_inobt_count(struct xfs_mount *mp, struct xfs_inobt_rec_incore *rec);
++
+ #endif	/* __XFS_IALLOC_H__ */
+diff --git a/fs/xfs/xfs_itable.c b/fs/xfs/xfs_itable.c
+index 7765ff7..b44a9f0 100644
+--- a/fs/xfs/xfs_itable.c
++++ b/fs/xfs/xfs_itable.c
+@@ -254,7 +254,8 @@ xfs_bulkstat_grab_ichunk(
+ 		}
+ 
+ 		irec->ir_free |= xfs_inobt_maskn(0, idx);
+-		*icount = XFS_INODES_PER_CHUNK - irec->ir_freecount;
++		*icount = xfs_inobt_count(cur->bc_mp, irec) -
++			  irec->ir_freecount;
+ 	}
+ 
+ 	return 0;
+@@ -285,7 +286,7 @@ xfs_bulkstat_ag_ichunk(
+ 
+ 	for (agino = irbp->ir_startino, chunkidx = clustidx = 0;
+ 	     XFS_BULKSTAT_UBLEFT(ubleft) &&
+-	     irbp->ir_freecount < XFS_INODES_PER_CHUNK;
++	     irbp->ir_freecount < xfs_inobt_count(mp, irbp);
+ 	     chunkidx++, clustidx++, agino++) {
+ 		int		fmterror;	/* bulkstat formatter result */
+ 		int		ubused;
+@@ -430,6 +431,8 @@ xfs_bulkstat(
+ 				goto del_cursor;
+ 			if (icount) {
+ 				irbp->ir_startino = r.ir_startino;
++				irbp->ir_holemask = r.ir_holemask;
++				irbp->ir_count = r.ir_count;
+ 				irbp->ir_freecount = r.ir_freecount;
+ 				irbp->ir_free = r.ir_free;
+ 				irbp++;
+@@ -461,13 +464,16 @@ xfs_bulkstat(
+ 			 * If this chunk has any allocated inodes, save it.
+ 			 * Also start read-ahead now for this chunk.
+ 			 */
+-			if (r.ir_freecount < XFS_INODES_PER_CHUNK) {
++			if (r.ir_freecount < xfs_inobt_count(mp, &r)) {
+ 				xfs_bulkstat_ichunk_ra(mp, agno, &r);
+ 				irbp->ir_startino = r.ir_startino;
++				irbp->ir_holemask = r.ir_holemask;
++				irbp->ir_count = r.ir_count;
+ 				irbp->ir_freecount = r.ir_freecount;
+ 				irbp->ir_free = r.ir_free;
+ 				irbp++;
+-				icount += XFS_INODES_PER_CHUNK - r.ir_freecount;
++				icount += xfs_inobt_count(mp, &r) -
++					  r.ir_freecount;
+ 			}
+ 			/*
+ 			 * Set agino to after this chunk and bump the cursor.
+@@ -620,7 +626,7 @@ xfs_inumbers(
+ 		buffer[bufidx].xi_startino =
+ 			XFS_AGINO_TO_INO(mp, agno, r.ir_startino);
+ 		buffer[bufidx].xi_alloccount =
+-			XFS_INODES_PER_CHUNK - r.ir_freecount;
++			xfs_inobt_count(mp, &r) - r.ir_freecount;
+ 		buffer[bufidx].xi_allocmask = ~r.ir_free;
+ 		if (++bufidx == bcount) {
+ 			long	written;
 -- 
 1.8.3.1
 
