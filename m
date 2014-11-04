@@ -1,28 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id D345F7F6B
-	for <xfs@oss.sgi.com>; Tue,  4 Nov 2014 06:15:20 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id C02708F8037
-	for <xfs@oss.sgi.com>; Tue,  4 Nov 2014 04:15:20 -0800 (PST)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id 28kCVG7XAlFVeUkH (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 04 Nov 2014 04:15:19 -0800 (PST)
-Date: Tue, 4 Nov 2014 07:15:07 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH v2 05/17] xfs: create macros/helpers for dealing with
-	sparse inode chunks
-Message-ID: <20141104121507.GB55611@bfoster.bfoster>
-References: <1415031146-9107-1-git-send-email-bfoster@redhat.com>
-	<1415031146-9107-6-git-send-email-bfoster@redhat.com>
-	<CA+o=1OWm3XWUgNXR1_CravnEBL8fD8dwyMvY4CN9rbAsw0Q4Sw@mail.gmail.com>
-	<20141103223407.GA14732@bfoster.bfoster>
-	<CA+o=1OWy=VSo3XYMd9LuxiqzRp=p+5iJ909uoJzgKYdOOyVcvg@mail.gmail.com>
-	<20141104013308.GC23575@dastard>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20141104013308.GC23575@dastard>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id C53B87F66
+	for <xfs@oss.sgi.com>; Tue,  4 Nov 2014 06:53:29 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 5184DAC003
+	for <xfs@oss.sgi.com>; Tue,  4 Nov 2014 04:53:28 -0800 (PST)
+Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
+	[150.101.137.143]) by cuda.sgi.com with ESMTP id
+	35wn9EjhX661B2sx for <xfs@oss.sgi.com>;
+	Tue, 04 Nov 2014 04:53:27 -0800 (PST)
+Received: from disappointment.disaster.area ([192.168.1.110]
+	helo=disappointment) by dastard with esmtp (Exim 4.80)
+	(envelope-from <dave@fromorbit.com>) id 1Xldbv-0008Ph-Qy
+	for xfs@oss.sgi.com; Tue, 04 Nov 2014 23:53:23 +1100
+Received: from dave by disappointment with local (Exim 4.82_1-5b7a7c0-XX)
+	(envelope-from <dave@disappointment.disaster>) id 1Xldbv-0001jD-Q4
+	for xfs@oss.sgi.com; Tue, 04 Nov 2014 23:53:23 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: [PATCH 1/6] xfs: bulkstat btree walk doesn't terminate
+Date: Tue,  4 Nov 2014 23:53:16 +1100
+Message-Id: <1415105601-6455-2-git-send-email-david@fromorbit.com>
+In-Reply-To: <1415105601-6455-1-git-send-email-david@fromorbit.com>
+References: <1415105601-6455-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,62 +30,100 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Fanael Linithien <fanael4@gmail.com>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Tue, Nov 04, 2014 at 12:33:08PM +1100, Dave Chinner wrote:
-> On Tue, Nov 04, 2014 at 12:56:17AM +0100, Fanael Linithien wrote:
-> > 2014-11-03 23:34 GMT+01:00 Brian Foster <bfoster@redhat.com>:
-> > > On Mon, Nov 03, 2014 at 11:12:12PM +0100, Fanael Linithien wrote:
-> > >> 2014-11-03 17:12 GMT+01:00 Brian Foster <bfoster@redhat.com>:
-> > >> >
-> > >> > +static inline bool xfs_inobt_issparse(uint16_t holemask)
-> > >> > +{
-> > >> > +       return holemask == 0 ? false : true;
-> > >> > +}
-> > >>
-> > >> Surely that should be "return holemask != 0;"?
-> > >>
-> > >
-> > > ir_holemask bits are set for holes in the inode chunk and unset for
-> > > allocated regions. This means that ir_holemask == 0 for a normal,
-> > > fully-allocated chunk and != 0 otherwise (some bits are set to indicate
-> > > the chunk has a hole). Check out the commit log for patch 4 for
-> > > reasoning.
-> > 
-> > Oh, I don't comment on the logic, as I don't really know much about
-> > XFS code. It's purely a stylistic suggestion: "holemask == 0 ? false :
-> > true" looks entirely equivalent to "holemask != 0".
-> 
-> Even that is unnecessary. booleans are handled by the
-> compiler quite nicely - just casting a bool
-> type will give the same result. i.e. (bool)holemask results in a
-> value of "false" if holemask is zero, "true" if holemask has any
-> value other than zero.
-> 
-> static inline bool xfs_inobt_issparse(uint16_t holemask)
-> {
->        return holemask;
-> }
-> 
-> Will give the desired result as there is an implicit typecast to
-> bool in that return statement.....
-> 
+From: Dave Chinner <dchinner@redhat.com>
 
-Indeed, thanks.
+The bulkstat code has several different ways of detecting the end of
+an AG when doing a walk. They are not consistently detected, and the
+code that checks for the end of AG conditions is not consistently
+coded. Hence the are conditions where the walk code can get stuck in
+an endless loop making no progress and not triggering any
+termination conditions.
 
-Brian
+Convert all the "tmp/i" status return codes from btree operations
+to a common name (stat) and apply end-of-ag detection to these
+operations consistently.
 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+cc: stable@vger.kernel.org
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/xfs_itable.c | 19 ++++++++++---------
+ 1 file changed, 10 insertions(+), 9 deletions(-)
+
+diff --git a/fs/xfs/xfs_itable.c b/fs/xfs/xfs_itable.c
+index 7765ff7..16737cb 100644
+--- a/fs/xfs/xfs_itable.c
++++ b/fs/xfs/xfs_itable.c
+@@ -356,7 +356,6 @@ xfs_bulkstat(
+ 	int			end_of_ag; /* set if we've seen the ag end */
+ 	int			error;	/* error code */
+ 	int                     fmterror;/* bulkstat formatter result */
+-	int			i;	/* loop index */
+ 	int			icount;	/* count of inodes good in irbuf */
+ 	size_t			irbsize; /* size of irec buffer in bytes */
+ 	xfs_ino_t		ino;	/* inode number (filesystem) */
+@@ -366,11 +365,11 @@ xfs_bulkstat(
+ 	xfs_ino_t		lastino; /* last inode number returned */
+ 	int			nirbuf;	/* size of irbuf */
+ 	int			rval;	/* return value error code */
+-	int			tmp;	/* result value from btree calls */
+ 	int			ubcount; /* size of user's buffer */
+ 	int			ubleft;	/* bytes left in user's buffer */
+ 	char			__user *ubufp;	/* pointer into user's buffer */
+ 	int			ubelem;	/* spaces used in user's buffer */
++	int			stat;
+ 
+ 	/*
+ 	 * Get the last inode value, see if there's nothing to do.
+@@ -436,13 +435,15 @@ xfs_bulkstat(
+ 				agino = r.ir_startino + XFS_INODES_PER_CHUNK;
+ 			}
+ 			/* Increment to the next record */
+-			error = xfs_btree_increment(cur, 0, &tmp);
++			error = xfs_btree_increment(cur, 0, &stat);
+ 		} else {
+ 			/* Start of ag.  Lookup the first inode chunk */
+-			error = xfs_inobt_lookup(cur, 0, XFS_LOOKUP_GE, &tmp);
++			error = xfs_inobt_lookup(cur, 0, XFS_LOOKUP_GE, &stat);
+ 		}
+-		if (error)
++		if (error || stat == 0) {
++			end_of_ag = 1;
+ 			goto del_cursor;
++		}
+ 
+ 		/*
+ 		 * Loop through inode btree records in this ag,
+@@ -451,8 +452,8 @@ xfs_bulkstat(
+ 		while (irbp < irbufend && icount < ubcount) {
+ 			struct xfs_inobt_rec_incore	r;
+ 
+-			error = xfs_inobt_get_rec(cur, &r, &i);
+-			if (error || i == 0) {
++			error = xfs_inobt_get_rec(cur, &r, &stat);
++			if (error || stat == 0) {
+ 				end_of_ag = 1;
+ 				goto del_cursor;
+ 			}
+@@ -473,8 +474,8 @@ xfs_bulkstat(
+ 			 * Set agino to after this chunk and bump the cursor.
+ 			 */
+ 			agino = r.ir_startino + XFS_INODES_PER_CHUNK;
+-			error = xfs_btree_increment(cur, 0, &tmp);
+-			if (error) {
++			error = xfs_btree_increment(cur, 0, &stat);
++			if (error || stat == 0) {
+ 				end_of_ag = 1;
+ 				goto del_cursor;
+ 			}
+-- 
+2.0.0
 
 _______________________________________________
 xfs mailing list
