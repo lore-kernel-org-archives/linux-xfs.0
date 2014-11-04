@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id D545B7F8C
-	for <xfs@oss.sgi.com>; Tue,  4 Nov 2014 12:58:29 -0600 (CST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 56A947F8C
+	for <xfs@oss.sgi.com>; Tue,  4 Nov 2014 12:58:57 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id A3F63304067
-	for <xfs@oss.sgi.com>; Tue,  4 Nov 2014 10:58:29 -0800 (PST)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 1638C8F8033
+	for <xfs@oss.sgi.com>; Tue,  4 Nov 2014 10:58:53 -0800 (PST)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id GLwU1yJoGrapEJlP (version=TLSv1
+	cuda.sgi.com with ESMTP id JqMc9BQvKOYmzBFP (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 04 Nov 2014 10:58:25 -0800 (PST)
-Date: Tue, 4 Nov 2014 13:58:21 -0500
+	Tue, 04 Nov 2014 10:58:52 -0800 (PST)
+Date: Tue, 4 Nov 2014 13:58:49 -0500
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 1/6] xfs: bulkstat btree walk doesn't terminate
-Message-ID: <20141104185821.GC55611@bfoster.bfoster>
+Subject: Re: [PATCH 3/6] xfs: bulkstat chunk-formatter has issues
+Message-ID: <20141104185849.GE55611@bfoster.bfoster>
 References: <1415105601-6455-1-git-send-email-david@fromorbit.com>
-	<1415105601-6455-2-git-send-email-david@fromorbit.com>
+	<1415105601-6455-4-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1415105601-6455-2-git-send-email-david@fromorbit.com>
+In-Reply-To: <1415105601-6455-4-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,97 +33,125 @@ Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On Tue, Nov 04, 2014 at 11:53:16PM +1100, Dave Chinner wrote:
+On Tue, Nov 04, 2014 at 11:53:18PM +1100, Dave Chinner wrote:
 > From: Dave Chinner <dchinner@redhat.com>
 > 
-> The bulkstat code has several different ways of detecting the end of
-> an AG when doing a walk. They are not consistently detected, and the
-> code that checks for the end of AG conditions is not consistently
-> coded. Hence the are conditions where the walk code can get stuck in
-> an endless loop making no progress and not triggering any
-> termination conditions.
+> The loop construct has issues:
+> 	- clustidx is completely unused, so remove it.
+> 	- the loop tries to be smart by terminating when the
+> 	  "freecount" tells it that all inodes are free. Just drop
+> 	  it as in most cases we have to scan all inodes in the
+> 	  chunk anyway.
+> 	- move the "user buffer left" condition check to the only
+> 	  point where we consume space int eh user buffer.
+> 	- move the initialisation of agino out of the loop, leaving
+> 	  just a simple loop control logic using the clusteridx.
 > 
-> Convert all the "tmp/i" status return codes from btree operations
-> to a common name (stat) and apply end-of-ag detection to these
-> operations consistently.
+> Also, double handling of the user buffer variables leads to problems
+> tracking the current state - use the cursor variables directly
+> rather than keeping local copies and then having to update the
+> cursor before returning.
 > 
-> cc: stable@vger.kernel.org
+> cc: <stable@vger.kernel.org>
 > Signed-off-by: Dave Chinner <dchinner@redhat.com>
 > ---
-
-Looks Ok...
-
-Reviewed-by: Brian Foster <bfoster@redhat.com>
-
->  fs/xfs/xfs_itable.c | 19 ++++++++++---------
->  1 file changed, 10 insertions(+), 9 deletions(-)
+>  fs/xfs/xfs_itable.c | 55 ++++++++++++++++++++---------------------------------
+>  1 file changed, 21 insertions(+), 34 deletions(-)
 > 
 > diff --git a/fs/xfs/xfs_itable.c b/fs/xfs/xfs_itable.c
-> index 7765ff7..16737cb 100644
+> index 50a3e59..ff31965 100644
 > --- a/fs/xfs/xfs_itable.c
 > +++ b/fs/xfs/xfs_itable.c
-> @@ -356,7 +356,6 @@ xfs_bulkstat(
->  	int			end_of_ag; /* set if we've seen the ag end */
->  	int			error;	/* error code */
->  	int                     fmterror;/* bulkstat formatter result */
-> -	int			i;	/* loop index */
->  	int			icount;	/* count of inodes good in irbuf */
->  	size_t			irbsize; /* size of irec buffer in bytes */
->  	xfs_ino_t		ino;	/* inode number (filesystem) */
-> @@ -366,11 +365,11 @@ xfs_bulkstat(
->  	xfs_ino_t		lastino; /* last inode number returned */
->  	int			nirbuf;	/* size of irbuf */
->  	int			rval;	/* return value error code */
-> -	int			tmp;	/* result value from btree calls */
->  	int			ubcount; /* size of user's buffer */
->  	int			ubleft;	/* bytes left in user's buffer */
->  	char			__user *ubufp;	/* pointer into user's buffer */
->  	int			ubelem;	/* spaces used in user's buffer */
-> +	int			stat;
+> @@ -283,59 +283,46 @@ xfs_bulkstat_ag_ichunk(
+>  	xfs_ino_t			*lastino)
+>  {
+>  	char				__user **ubufp = acp->ac_ubuffer;
+> -	int				ubleft = acp->ac_ubleft;
+> -	int				ubelem = acp->ac_ubelem;
+> -	int				chunkidx, clustidx;
+> +	int				chunkidx;
+>  	int				error = 0;
+>  	xfs_agino_t			agino;
 >  
->  	/*
->  	 * Get the last inode value, see if there's nothing to do.
-> @@ -436,13 +435,15 @@ xfs_bulkstat(
->  				agino = r.ir_startino + XFS_INODES_PER_CHUNK;
->  			}
->  			/* Increment to the next record */
-> -			error = xfs_btree_increment(cur, 0, &tmp);
-> +			error = xfs_btree_increment(cur, 0, &stat);
->  		} else {
->  			/* Start of ag.  Lookup the first inode chunk */
-> -			error = xfs_inobt_lookup(cur, 0, XFS_LOOKUP_GE, &tmp);
-> +			error = xfs_inobt_lookup(cur, 0, XFS_LOOKUP_GE, &stat);
+> -	for (agino = irbp->ir_startino, chunkidx = clustidx = 0;
+> -	     XFS_BULKSTAT_UBLEFT(ubleft) &&
+> -	     irbp->ir_freecount < XFS_INODES_PER_CHUNK;
+> -	     chunkidx++, clustidx++, agino++) {
+> -		int		fmterror;	/* bulkstat formatter result */
+> +	agino = irbp->ir_startino;
+> +	for (chunkidx = 0; chunkidx < XFS_INODES_PER_CHUNK;
+> +	     chunkidx++, agino++) {
+> +		int		fmterror;
+>  		int		ubused;
+>  		xfs_ino_t	ino = XFS_AGINO_TO_INO(mp, agno, agino);
+>  
+> -		ASSERT(chunkidx < XFS_INODES_PER_CHUNK);
+> -
+>  		/* Skip if this inode is free */
+>  		if (XFS_INOBT_MASK(chunkidx) & irbp->ir_free) {
+>  			*lastino = ino;
+>  			continue;
 >  		}
-> -		if (error)
-> +		if (error || stat == 0) {
-> +			end_of_ag = 1;
->  			goto del_cursor;
+>  
+> -		/*
+> -		 * Count used inodes as free so we can tell when the
+> -		 * chunk is used up.
+> -		 */
+> -		irbp->ir_freecount++;
+> -
+>  		/* Get the inode and fill in a single buffer */
+>  		ubused = statstruct_size;
+> -		error = formatter(mp, ino, *ubufp, ubleft, &ubused, &fmterror);
+> -		if (fmterror == BULKSTAT_RV_NOTHING) {
+> -			if (error && error != -ENOENT && error != -EINVAL) {
+> -				ubleft = 0;
+> -				break;
+> -			}
+> -			*lastino = ino;
+> -			continue;
+> -		}
+> -		if (fmterror == BULKSTAT_RV_GIVEUP) {
+> -			ubleft = 0;
+> +		error = formatter(mp, ino, *ubufp, acp->ac_ubleft,
+> +				  &ubused, &fmterror);
+> +		if (fmterror == BULKSTAT_RV_GIVEUP ||
+> +		    (error && error != -ENOENT && error != -EINVAL)) {
+> +			acp->ac_ubleft = 0;
+>  			ASSERT(error);
+>  			break;
+>  		}
+> -		if (*ubufp)
+> -			*ubufp += ubused;
+> -		ubleft -= ubused;
+> -		ubelem++;
+> +		if (fmterror == BULKSTAT_RV_NOTHING || error) {
+> +			*lastino = ino;
+> +			continue;
 > +		}
+
+Not introduced by this patch, but this looks like inconsistent error
+handling. The structure of the code suggests we intend to carry on in
+the event of ENOENT or EINVAL, but said errors can leak out of this
+function if we never get back to the formatter call (e.g., we're at the
+last inode or all subsequent inodes are free).
+
+Brian
+
+> +
+> +		*ubufp += ubused;
+> +		acp->ac_ubleft -= ubused;
+> +		acp->ac_ubelem++;
+>  		*lastino = ino;
+> -	}
 >  
->  		/*
->  		 * Loop through inode btree records in this ag,
-> @@ -451,8 +452,8 @@ xfs_bulkstat(
->  		while (irbp < irbufend && icount < ubcount) {
->  			struct xfs_inobt_rec_incore	r;
+> -	acp->ac_ubleft = ubleft;
+> -	acp->ac_ubelem = ubelem;
+> +		if (acp->ac_ubleft < statstruct_size)
+> +			break;
+> +	}
 >  
-> -			error = xfs_inobt_get_rec(cur, &r, &i);
-> -			if (error || i == 0) {
-> +			error = xfs_inobt_get_rec(cur, &r, &stat);
-> +			if (error || stat == 0) {
->  				end_of_ag = 1;
->  				goto del_cursor;
->  			}
-> @@ -473,8 +474,8 @@ xfs_bulkstat(
->  			 * Set agino to after this chunk and bump the cursor.
->  			 */
->  			agino = r.ir_startino + XFS_INODES_PER_CHUNK;
-> -			error = xfs_btree_increment(cur, 0, &tmp);
-> -			if (error) {
-> +			error = xfs_btree_increment(cur, 0, &stat);
-> +			if (error || stat == 0) {
->  				end_of_ag = 1;
->  				goto del_cursor;
->  			}
+>  	return error;
+>  }
 > -- 
 > 2.0.0
 > 
