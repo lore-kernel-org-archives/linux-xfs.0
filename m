@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 4BCE77F75
-	for <xfs@oss.sgi.com>; Tue,  4 Nov 2014 06:53:32 -0600 (CST)
+	by oss.sgi.com (Postfix) with ESMTP id 3A9C57F7C
+	for <xfs@oss.sgi.com>; Tue,  4 Nov 2014 06:53:33 -0600 (CST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 38E618F804C
-	for <xfs@oss.sgi.com>; Tue,  4 Nov 2014 04:53:32 -0800 (PST)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 27D8C8F804C
+	for <xfs@oss.sgi.com>; Tue,  4 Nov 2014 04:53:33 -0800 (PST)
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	5yj5xRa8CHxeeNQi for <xfs@oss.sgi.com>;
-	Tue, 04 Nov 2014 04:53:30 -0800 (PST)
+	jETrEURokfyRlhiF for <xfs@oss.sgi.com>;
+	Tue, 04 Nov 2014 04:53:31 -0800 (PST)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.80)
-	(envelope-from <dave@fromorbit.com>) id 1Xldbv-0008Pk-SP
+	(envelope-from <dave@fromorbit.com>) id 1Xldbv-0008Pi-RS
 	for xfs@oss.sgi.com; Tue, 04 Nov 2014 23:53:23 +1100
 Received: from dave by disappointment with local (Exim 4.82_1-5b7a7c0-XX)
-	(envelope-from <dave@disappointment.disaster>) id 1Xldbv-0001jS-RX
+	(envelope-from <dave@disappointment.disaster>) id 1Xldbv-0001jI-Qb
 	for xfs@oss.sgi.com; Tue, 04 Nov 2014 23:53:23 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 4/6] xfs: bulkstat main loop logic is a mess
-Date: Tue,  4 Nov 2014 23:53:19 +1100
-Message-Id: <1415105601-6455-5-git-send-email-david@fromorbit.com>
+Subject: [PATCH 2/6] xfs: bulkstat chunk formatting cursor is broken
+Date: Tue,  4 Nov 2014 23:53:17 +1100
+Message-Id: <1415105601-6455-3-git-send-email-david@fromorbit.com>
 In-Reply-To: <1415105601-6455-1-git-send-email-david@fromorbit.com>
 References: <1415105601-6455-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,145 +39,220 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-There are a bunch of variables tha tare more wildy scoped than they
-need to be, obfuscated user buffer checks and tortured "next inode"
-tracking. This all needs cleaning up to expose the real issues that
-need fixing.
+The xfs_bulkstat_agichunk formatting cursor takes buffer values from
+the main loop and passes them via the structure to the chunk
+formatter, and the writes the chnged values back into the main loop
+local variables. UNfortunately, this complex dance is full of corner
+cases that aren't handled correctly.
 
-cc: <stable@vger.kernel.org>
+The biggest problem is that it is double handling the information in
+both the main loop and the chunk formatting function, leading to
+inconsistent updates and endless loops where progress is not made.
+
+To fix this, push the struct xfs_bulkstat_agichunk outwards to be
+the primary holder of user buffer information. this removes the
+double handling in the main loop.
+
+Also, pass the last inode processed by the chunk formatter as a
+separate parameter as it purely an output variable and is not
+related to the user buffer consumption cursor.
+
+Finally, the chunk formatting code is not shared by anyone, so make
+it local to xfs_itable.c.
+
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_itable.c | 55 ++++++++++++++++++++++-------------------------------
- 1 file changed, 23 insertions(+), 32 deletions(-)
+ fs/xfs/xfs_itable.c | 59 +++++++++++++++++++++++++----------------------------
+ fs/xfs/xfs_itable.h | 16 ---------------
+ 2 files changed, 28 insertions(+), 47 deletions(-)
 
 diff --git a/fs/xfs/xfs_itable.c b/fs/xfs/xfs_itable.c
-index ff31965..fc4cf5d 100644
+index 16737cb..50a3e59 100644
 --- a/fs/xfs/xfs_itable.c
 +++ b/fs/xfs/xfs_itable.c
-@@ -345,30 +345,23 @@ xfs_bulkstat(
- 	xfs_agino_t		agino;	/* inode # in allocation group */
- 	xfs_agnumber_t		agno;	/* allocation group number */
+@@ -262,20 +262,26 @@ xfs_bulkstat_grab_ichunk(
+ 
+ #define XFS_BULKSTAT_UBLEFT(ubleft)	((ubleft) >= statstruct_size)
+ 
++struct xfs_bulkstat_agichunk {
++	char		__user **ac_ubuffer;/* pointer into user's buffer */
++	int		ac_ubleft;	/* bytes left in user's buffer */
++	int		ac_ubelem;	/* spaces used in user's buffer */
++};
++
+ /*
+  * Process inodes in chunk with a pointer to a formatter function
+  * that will iget the inode and fill in the appropriate structure.
+  */
+-int
++static int
+ xfs_bulkstat_ag_ichunk(
+ 	struct xfs_mount		*mp,
+ 	xfs_agnumber_t			agno,
+ 	struct xfs_inobt_rec_incore	*irbp,
+ 	bulkstat_one_pf			formatter,
+ 	size_t				statstruct_size,
+-	struct xfs_bulkstat_agichunk	*acp)
++	struct xfs_bulkstat_agichunk	*acp,
++	xfs_ino_t			*lastino)
+ {
+-	xfs_ino_t			lastino = acp->ac_lastino;
+ 	char				__user **ubufp = acp->ac_ubuffer;
+ 	int				ubleft = acp->ac_ubleft;
+ 	int				ubelem = acp->ac_ubelem;
+@@ -295,7 +301,7 @@ xfs_bulkstat_ag_ichunk(
+ 
+ 		/* Skip if this inode is free */
+ 		if (XFS_INOBT_MASK(chunkidx) & irbp->ir_free) {
+-			lastino = ino;
++			*lastino = ino;
+ 			continue;
+ 		}
+ 
+@@ -313,7 +319,7 @@ xfs_bulkstat_ag_ichunk(
+ 				ubleft = 0;
+ 				break;
+ 			}
+-			lastino = ino;
++			*lastino = ino;
+ 			continue;
+ 		}
+ 		if (fmterror == BULKSTAT_RV_GIVEUP) {
+@@ -325,10 +331,9 @@ xfs_bulkstat_ag_ichunk(
+ 			*ubufp += ubused;
+ 		ubleft -= ubused;
+ 		ubelem++;
+-		lastino = ino;
++		*lastino = ino;
+ 	}
+ 
+-	acp->ac_lastino = lastino;
+ 	acp->ac_ubleft = ubleft;
+ 	acp->ac_ubelem = ubelem;
+ 
+@@ -355,7 +360,6 @@ xfs_bulkstat(
  	xfs_btree_cur_t		*cur;	/* btree cursor for ialloc btree */
--	int			end_of_ag; /* set if we've seen the ag end */
--	int			error;	/* error code */
--	int			icount;	/* count of inodes good in irbuf */
+ 	int			end_of_ag; /* set if we've seen the ag end */
+ 	int			error;	/* error code */
+-	int                     fmterror;/* bulkstat formatter result */
+ 	int			icount;	/* count of inodes good in irbuf */
  	size_t			irbsize; /* size of irec buffer in bytes */
--	xfs_ino_t		ino;	/* inode number (filesystem) */
--	xfs_inobt_rec_incore_t	*irbp;	/* current irec buffer pointer */
- 	xfs_inobt_rec_incore_t	*irbuf;	/* start of irec buffer */
--	xfs_inobt_rec_incore_t	*irbufend; /* end of good irec buffer entries */
- 	xfs_ino_t		lastino; /* last inode number returned */
+ 	xfs_ino_t		ino;	/* inode number (filesystem) */
+@@ -366,10 +370,8 @@ xfs_bulkstat(
  	int			nirbuf;	/* size of irbuf */
  	int			rval;	/* return value error code */
  	int			ubcount; /* size of user's buffer */
--	int			stat;
- 	struct xfs_bulkstat_agichunk ac;
-+	int			error = 0;
+-	int			ubleft;	/* bytes left in user's buffer */
+-	char			__user *ubufp;	/* pointer into user's buffer */
+-	int			ubelem;	/* spaces used in user's buffer */
+ 	int			stat;
++	struct xfs_bulkstat_agichunk ac;
  
  	/*
  	 * Get the last inode value, see if there's nothing to do.
- 	 */
--	ino = (xfs_ino_t)*lastinop;
--	lastino = ino;
--	agno = XFS_INO_TO_AGNO(mp, ino);
--	agino = XFS_INO_TO_AGINO(mp, ino);
-+	lastino = *lastinop;
-+	agno = XFS_INO_TO_AGNO(mp, lastino);
-+	agino = XFS_INO_TO_AGINO(mp, lastino);
- 	if (agno >= mp->m_sb.sb_agcount ||
--	    ino != XFS_AGINO_TO_INO(mp, agno, agino)) {
-+	    lastino != XFS_AGINO_TO_INO(mp, agno, agino)) {
- 		*done = 1;
- 		*ubcountp = 0;
- 		return 0;
-@@ -393,8 +386,13 @@ xfs_bulkstat(
+@@ -386,11 +388,13 @@ xfs_bulkstat(
+ 	}
+ 
+ 	ubcount = *ubcountp; /* statstruct's */
+-	ubleft = ubcount * statstruct_size; /* bytes */
+-	*ubcountp = ubelem = 0;
++	ac.ac_ubuffer = &ubuffer;
++	ac.ac_ubleft = ubcount * statstruct_size; /* bytes */;
++	ac.ac_ubelem = 0;
++
++	*ubcountp = 0;
+ 	*done = 0;
+-	fmterror = 0;
+-	ubufp = ubuffer;
++
+ 	irbuf = kmem_zalloc_greedy(&irbsize, PAGE_SIZE, PAGE_SIZE * 4);
+ 	if (!irbuf)
+ 		return -ENOMEM;
+@@ -402,7 +406,7 @@ xfs_bulkstat(
  	 * inode returned; 0 means start of the allocation group.
  	 */
  	rval = 0;
--	while (XFS_BULKSTAT_UBLEFT(ac.ac_ubleft) && agno < mp->m_sb.sb_agcount) {
--		cond_resched();
-+	while (ac.ac_ubleft >= statstruct_size && agno < mp->m_sb.sb_agcount) {
-+		struct xfs_inobt_rec_incore	*irbp = irbuf;
-+		struct xfs_inobt_rec_incore	*irbufend = irbuf + nirbuf;
-+		bool				end_of_ag = false;
-+		int				icount = 0;
-+		int				stat;
-+
+-	while (XFS_BULKSTAT_UBLEFT(ubleft) && agno < mp->m_sb.sb_agcount) {
++	while (XFS_BULKSTAT_UBLEFT(ac.ac_ubleft) && agno < mp->m_sb.sb_agcount) {
+ 		cond_resched();
  		error = xfs_ialloc_read_agi(mp, NULL, agno, &agbp);
  		if (error)
- 			break;
-@@ -404,10 +402,6 @@ xfs_bulkstat(
- 		 */
- 		cur = xfs_inobt_init_cursor(mp, NULL, agbp, agno,
- 					    XFS_BTNUM_INO);
--		irbp = irbuf;
--		irbufend = irbuf + nirbuf;
--		end_of_ag = 0;
--		icount = 0;
- 		if (agino > 0) {
- 			/*
- 			 * In the middle of an allocation group, we need to get
-@@ -432,7 +426,7 @@ xfs_bulkstat(
- 			error = xfs_inobt_lookup(cur, 0, XFS_LOOKUP_GE, &stat);
- 		}
- 		if (error || stat == 0) {
--			end_of_ag = 1;
-+			end_of_ag = true;
- 			goto del_cursor;
- 		}
- 
-@@ -445,7 +439,7 @@ xfs_bulkstat(
- 
- 			error = xfs_inobt_get_rec(cur, &r, &stat);
- 			if (error || stat == 0) {
--				end_of_ag = 1;
-+				end_of_ag = true;
- 				goto del_cursor;
- 			}
- 
-@@ -467,7 +461,7 @@ xfs_bulkstat(
- 			agino = r.ir_startino + XFS_INODES_PER_CHUNK;
- 			error = xfs_btree_increment(cur, 0, &stat);
- 			if (error || stat == 0) {
--				end_of_ag = 1;
-+				end_of_ag = true;
- 				goto del_cursor;
- 			}
- 			cond_resched();
-@@ -488,7 +482,7 @@ del_cursor:
+@@ -497,28 +501,21 @@ del_cursor:
  		 */
  		irbufend = irbp;
  		for (irbp = irbuf;
--		     irbp < irbufend && XFS_BULKSTAT_UBLEFT(ac.ac_ubleft);
-+		     irbp < irbufend && ac.ac_ubleft >= statstruct_size;
- 		     irbp++) {
+-		     irbp < irbufend && XFS_BULKSTAT_UBLEFT(ubleft); irbp++) {
+-			struct xfs_bulkstat_agichunk ac;
+-
+-			ac.ac_lastino = lastino;
+-			ac.ac_ubuffer = &ubuffer;
+-			ac.ac_ubleft = ubleft;
+-			ac.ac_ubelem = ubelem;
++		     irbp < irbufend && XFS_BULKSTAT_UBLEFT(ac.ac_ubleft);
++		     irbp++) {
  			error = xfs_bulkstat_ag_ichunk(mp, agno, irbp,
- 					formatter, statstruct_size, &ac,
-@@ -499,17 +493,14 @@ del_cursor:
+-					formatter, statstruct_size, &ac);
++					formatter, statstruct_size, &ac,
++					&lastino);
+ 			if (error)
+ 				rval = error;
+ 
+-			lastino = ac.ac_lastino;
+-			ubleft = ac.ac_ubleft;
+-			ubelem = ac.ac_ubelem;
+-
  			cond_resched();
  		}
- 
--		/*
--		 * Set up for the next loop iteration.
--		 */
--		if (XFS_BULKSTAT_UBLEFT(ac.ac_ubleft)) {
--			if (end_of_ag) {
--				agno++;
--				agino = 0;
--			} else
--				agino = XFS_INO_TO_AGINO(mp, lastino);
--		} else
-+		if (error)
- 			break;
 +
-+		if (end_of_ag) {
-+			agno++;
-+			agino = 0;
-+		} else
-+			agino = XFS_INO_TO_AGINO(mp, lastino);
- 	}
- 	/*
+ 		/*
+ 		 * Set up for the next loop iteration.
+ 		 */
+-		if (XFS_BULKSTAT_UBLEFT(ubleft)) {
++		if (XFS_BULKSTAT_UBLEFT(ac.ac_ubleft)) {
+ 			if (end_of_ag) {
+ 				agno++;
+ 				agino = 0;
+@@ -531,11 +528,11 @@ del_cursor:
  	 * Done, we're either out of filesystem or space to put the data.
+ 	 */
+ 	kmem_free(irbuf);
+-	*ubcountp = ubelem;
++	*ubcountp = ac.ac_ubelem;
+ 	/*
+ 	 * Found some inodes, return them now and return the error next time.
+ 	 */
+-	if (ubelem)
++	if (ac.ac_ubelem)
+ 		rval = 0;
+ 	if (agno >= mp->m_sb.sb_agcount) {
+ 		/*
+diff --git a/fs/xfs/xfs_itable.h b/fs/xfs/xfs_itable.h
+index aaed080..6ea8b39 100644
+--- a/fs/xfs/xfs_itable.h
++++ b/fs/xfs/xfs_itable.h
+@@ -30,22 +30,6 @@ typedef int (*bulkstat_one_pf)(struct xfs_mount	*mp,
+ 			       int		*ubused,
+ 			       int		*stat);
+ 
+-struct xfs_bulkstat_agichunk {
+-	xfs_ino_t	ac_lastino;	/* last inode returned */
+-	char		__user **ac_ubuffer;/* pointer into user's buffer */
+-	int		ac_ubleft;	/* bytes left in user's buffer */
+-	int		ac_ubelem;	/* spaces used in user's buffer */
+-};
+-
+-int
+-xfs_bulkstat_ag_ichunk(
+-	struct xfs_mount		*mp,
+-	xfs_agnumber_t			agno,
+-	struct xfs_inobt_rec_incore	*irbp,
+-	bulkstat_one_pf			formatter,
+-	size_t				statstruct_size,
+-	struct xfs_bulkstat_agichunk	*acp);
+-
+ /*
+  * Values for stat return value.
+  */
 -- 
 2.0.0
 
