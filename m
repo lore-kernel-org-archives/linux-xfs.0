@@ -1,18 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 453857F69
-	for <xfs@oss.sgi.com>; Tue,  4 Nov 2014 05:58:28 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 2329F8F8035
-	for <xfs@oss.sgi.com>; Tue,  4 Nov 2014 03:58:25 -0800 (PST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 09F417F57
+	for <xfs@oss.sgi.com>; Tue,  4 Nov 2014 05:58:27 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id B4D01304051
+	for <xfs@oss.sgi.com>; Tue,  4 Nov 2014 03:58:26 -0800 (PST)
 Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id EgkmP06kqLWRnxcH (version=TLSv1 cipher=AES256-SHA
+	with ESMTP id sQN2Xe9NNYszSUnt (version=TLSv1 cipher=AES256-SHA
 	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 04 Nov 2014 03:58:23 -0800 (PST)
+	Tue, 04 Nov 2014 03:58:25 -0800 (PST)
 From: Jan Kara <jack@suse.cz>
-Subject: [PATCH 0/12 v4] Moving i_dquot out of struct inode
-Date: Tue,  4 Nov 2014 12:19:41 +0100
-Message-Id: <1415099993-18034-1-git-send-email-jack@suse.cz>
+Subject: [PATCH 06/12] ext2: Convert to private i_dquot field
+Date: Tue,  4 Nov 2014 12:19:47 +0100
+Message-Id: <1415099993-18034-7-git-send-email-jack@suse.cz>
+In-Reply-To: <1415099993-18034-1-git-send-email-jack@suse.cz>
+References: <1415099993-18034-1-git-send-email-jack@suse.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,39 +31,71 @@ Sender: xfs-bounces@oss.sgi.com
 To: linux-fsdevel@vger.kernel.org
 Cc: Dave Kleikamp <shaggy@kernel.org>, jfs-discussion@lists.sourceforge.net, tytso@mit.edu, Jeff Mahoney <jeffm@suse.de>, Mark Fasheh <mfasheh@suse.com>, reiserfs-devel@vger.kernel.org, xfs@oss.sgi.com, cluster-devel@redhat.com, Joel Becker <jlbec@evilplan.org>, Jan Kara <jack@suse.cz>, linux-ext4@vger.kernel.org, hch@lst.de, Steven Whitehouse <swhiteho@redhat.com>, ocfs2-devel@oss.oracle.com, viro@zeniv.linux.org.uk
 
-  Hello,
+CC: linux-ext4@vger.kernel.org
+Signed-off-by: Jan Kara <jack@suse.cz>
+---
+ fs/ext2/ext2.h  |  3 +++
+ fs/ext2/super.c | 10 ++++++++++
+ 2 files changed, 13 insertions(+)
 
-  here is a new version of my patch series which moves i_dquot array from
-struct inode into filesystem private part of the inode. Thus filesystems which
-don't need it save 2 pointers in their inodes (would be 3 after we add project
-quota support into generic quota).
-
-The patch series also contains a change to quotactl so that each filesystem
-can set quota types it supports. This is in the end unrelated change
-(originally it was necessary for i_dquot moving but in the end I changed
-things so that it's not anymore). I can move that into a separate series
-but I was somewhat reluctant to do that since that would mean another 6
-one-line patches to the same files we are changing here...
-
-If people like the patches, I will queue this series into my tree for
-the next merge window. For that I'd prefer to get acks from affected fs
-maintainers (the changes are pretty trivial and I don't feel it's a must but
-still I'd prefer fs maintainers to ack they are aware of the changes).
-
-								Honza
-
-Changes since v1:
-* Inode field names are now named enum
-* Quota type masks now have names like QTYPE_MASK_{USR|GRP|PRJ} instead of
-  opencoding shifts.
-
-Changes since v2:
-* Use ->get_dquots callback instead of inode fields framework
-* rebased on Linus' tree as of 3.18-rc1 + something.
-
-Changes since v3:
-* Moved bitmask of allowed quota types out of s_dquot into sb itself
-* Removed pointless #ifdef CONFIG_QUOTA from OCFS2
+diff --git a/fs/ext2/ext2.h b/fs/ext2/ext2.h
+index d9a17d0b124d..e4279ead4a05 100644
+--- a/fs/ext2/ext2.h
++++ b/fs/ext2/ext2.h
+@@ -689,6 +689,9 @@ struct ext2_inode_info {
+ 	struct mutex truncate_mutex;
+ 	struct inode	vfs_inode;
+ 	struct list_head i_orphan;	/* unlinked but open inodes */
++#ifdef CONFIG_QUOTA
++	struct dquot *i_dquot[MAXQUOTAS];
++#endif
+ };
+ 
+ /*
+diff --git a/fs/ext2/super.c b/fs/ext2/super.c
+index 170dc41e8bf4..ae55fddc26a9 100644
+--- a/fs/ext2/super.c
++++ b/fs/ext2/super.c
+@@ -166,6 +166,10 @@ static struct inode *ext2_alloc_inode(struct super_block *sb)
+ 		return NULL;
+ 	ei->i_block_alloc_info = NULL;
+ 	ei->vfs_inode.i_version = 1;
++#ifdef CONFIG_QUOTA
++	memset(&ei->i_dquot, 0, sizeof(ei->i_dquot));
++#endif
++
+ 	return &ei->vfs_inode;
+ }
+ 
+@@ -303,6 +307,10 @@ static int ext2_show_options(struct seq_file *seq, struct dentry *root)
+ #ifdef CONFIG_QUOTA
+ static ssize_t ext2_quota_read(struct super_block *sb, int type, char *data, size_t len, loff_t off);
+ static ssize_t ext2_quota_write(struct super_block *sb, int type, const char *data, size_t len, loff_t off);
++static struct dquot **ext2_get_dquots(struct inode *inode)
++{
++	return EXT2_I(inode)->i_dquot;
++}
+ #endif
+ 
+ static const struct super_operations ext2_sops = {
+@@ -320,6 +328,7 @@ static const struct super_operations ext2_sops = {
+ #ifdef CONFIG_QUOTA
+ 	.quota_read	= ext2_quota_read,
+ 	.quota_write	= ext2_quota_write,
++	.get_dquots	= ext2_get_dquots,
+ #endif
+ };
+ 
+@@ -1090,6 +1099,7 @@ static int ext2_fill_super(struct super_block *sb, void *data, int silent)
+ #ifdef CONFIG_QUOTA
+ 	sb->dq_op = &dquot_operations;
+ 	sb->s_qcop = &dquot_quotactl_ops;
++	sb->s_quota_types = QTYPE_MASK_USR | QTYPE_MASK_GRP;
+ #endif
+ 
+ 	root = ext2_iget(sb, EXT2_ROOT_INO);
+-- 
+1.8.1.4
 
 _______________________________________________
 xfs mailing list
