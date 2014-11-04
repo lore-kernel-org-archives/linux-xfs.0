@@ -1,18 +1,22 @@
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 69ACE7F4E
-	for <xfs@oss.sgi.com>; Thu,  6 Nov 2014 06:30:53 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 2B846304048
-	for <xfs@oss.sgi.com>; Thu,  6 Nov 2014 04:30:50 -0800 (PST)
-Received: from pmta333.dedicated.bmsend.com (pmta333.dedicated.bmsend.com
-	[216.4.238.164]) by cuda.sgi.com with ESMTP id jV3zSMOfcKyTmfLc
-	for <xfs@oss.sgi.com>; Thu, 06 Nov 2014 04:30:38 -0800 (PST)
-From: "Clark Bioscience" <info@clarkbio.com>
-Subject: The world No.1 mouse continuous ear tag applicator
-Date: Thu, 6 Nov 2014 07:30:23 -0500
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 6B10B7F3F
+	for <xfs@oss.sgi.com>; Tue,  4 Nov 2014 05:46:37 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id CCA3DAC005
+	for <xfs@oss.sgi.com>; Tue,  4 Nov 2014 03:46:36 -0800 (PST)
+Received: from mx05s02.atomsmtp.com (mx05s02.atomsmtp.com [77.95.225.47]) by
+	cuda.sgi.com with ESMTP id ebPUu1eRQDUJrDHs (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 04 Nov 2014 03:46:31 -0800 (PST)
+Received: from localhost ([127.0.0.1] helo=atomsmtp.com)
+	by atomsmtp.com with esmtp (Exim 4.76)
+	(envelope-from <info@oplus.co>) id 1XlcZC-0001H6-CB
+	for xfs@oss.sgi.com; Tue, 04 Nov 2014 11:46:30 +0000
+From: "info@oplus.co" <info@oplus.co>
+Subject: E-liquid Dealer Wanted
 MIME-Version: 1.0
-Message-Id: <20141106123049.BB66BA42185@cuda.sgi.com>
-Reply-To: info@clarkbio.com
+Date: Tue, 4 Nov 2014 13:46:28 +0200
+Message-Id: <1XlcZC-0001H6-CB@mx05s02.atomsmtp.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,360 +25,384 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============0796251808721865910=="
+Content-Type: multipart/mixed; boundary="===============3024451458779088219=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: xfs <xfs@oss.sgi.com>
 
---===============0796251808721865910==
+This is a multi-part message in MIME format
+
+--===============3024451458779088219==
 Content-Type: multipart/alternative;
-	boundary="----=_NextPart_415814885630919123023215"
+ boundary="BPTmPDAsCXhuiLHAtepgDvrmyzI=_KFXso"
 
-------=_NextPart_415814885630919123023215
-Content-type: text/plain; charset=UTF-8
+This is a multi-part message in MIME format
+
+--BPTmPDAsCXhuiLHAtepgDvrmyzI=_KFXso
+Content-Type: text/plain; charset="windows-1251"
 Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-The world No=2E1 mouse continuous ear tag applicator=0A=0ACustomers:=0A=0A=
-Clark Bioscience is excited to introduce our SMART Tager! SMART Tager is =
-the world No=2E1 continuous ear tag applicator, which allows for continuo=
-us and fast application of ear tags to lab animals for the purpose of lab=
-eling, category and managementUnlike any other ear applicators, SMART Tag=
-er is specifically designed, built for continuous ear tagging=2E 1 single=
- load of ear tag strip is able to label 10 animals=2E Easy, Fast and Effi=
-cient!=0AOther marvelous products: One-step Quickcolor Mycoplasma, Exposu=
-re Marker=0A=0AFor more information, please click our website: www=2Eclar=
-kbio=2Ecom=0A=0ABest Regards,=0AClark Bioscience
-
-View this email in your browser:=20
-
-http://clarkbio=2Ebmetrack=2Ecom/c/v=3Fe=3D59F2E2&c=3D6EA32&l=3DCE9A8F5&e=
-mail=3DrbKU7zvvsXCRJ5WwqyPEyw%3D%3D&relid=3DA0B0EA4
-
-You are receiving this email because of your relationship with Clark Bios=
-cience=2E Please reconfirm  Confirm URL :
-
-http://clarkbio=2Ebmetrack=2Ecom/c/opt=3Fe=3D59F2E2&c=3D6EA32&l=3DCE9A8F5=
-&email=3DrbKU7zvvsXCRJ5WwqyPEyw%3D%3D&relid=3DA0B0EA4
-
-  If you do not wish to receive any more emails, you can unsubscribe here=
- or report abuse
-http://clarkbio=2Ebmetrack=2Ecom/c/u=3Fe=3D59F2E2&c=3D6EA32&l=3DCE9A8F5&e=
-mail=3DrbKU7zvvsXCRJ5WwqyPEyw%3D%3D&relid=3DA0B0EA4
-
-
-
-This message was sent to xfs@oss=2Esgi=2Ecom by info@clarkbio=2Ecom
-
-You can modify/update your subscription via the link below
-Unsubscribe from all mailings
-
-http://clarkbio=2Ebmetrack=2Ecom/c/su=3Fe=3D59F2E2&c=3D6EA32&l=3DCE9A8F5&=
-email=3DrbKU7zvvsXCRJ5WwqyPEyw%3D%3D&relid=3DA0B0EA4
-
-Manage Subscription
-
-http://clarkbio=2Ebmetrack=2Ecom/c/s=3Fe=3D59F2E2&c=3D6EA32&l=3DCE9A8F5&e=
-mail=3DrbKU7zvvsXCRJ5WwqyPEyw%3D%3D&relid=3DA0B0EA4
-
-Forward Email
-
-http://clarkbio=2Ebmetrack=2Ecom/c/f=3Fe=3D59F2E2&c=3D6EA32&l=3DCE9A8F5&e=
-mail=3DrbKU7zvvsXCRJ5WwqyPEyw%3D%3D&relid=3DA0B0EA4
-
-Report Abuse
-
-http://clarkbio=2Ebmetrack=2Ecom/Abuse=3Fe=3D59F2E2&c=3D6EA32&l=3DCE9A8F5=
-&email=3DrbKU7zvvsXCRJ5WwqyPEyw%3D%3D&relid=3DA0B0EA4
-
-Address: 800 E Leigh street, unit58, va biotech center
-Richmond, va, 23219, Richmond, va, 23219
-
-
-------=_NextPart_415814885630919123023215
-Content-Type: text/html; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
-
-
-<!--=20
-|unsub|g=3D0&c=3D3962792&l=3D216639733&e=3Dxfs@oss=2Esgi=2Ecom&ver=3D2&Se=
-ntFromServer=3D216=2E4=2E238=2E164
- -->
-<!DOCTYPE html><html>=0A<head>=0A    <meta http-equiv=3D"Content-Type" co=
-ntent=3D"text/html; charset=3Dutf-8">=0A    <title>The world No=2E1 mouse=
- continuous ear tag applicator</title>=0A</head>=0A<body><style type=3D"t=
-ext/css" id=3Dbmeresponsecss>
-
- @media only screen and (max-width: 480px){
-body { margin: 0; padding: 0; }
-}
-
- @media only screen and (max-width: 480px){
-table[class=3Dcontainer-table], =2Ebmeheadertext, =2Econtainer-table{ wid=
-th: 95% !important;}=20
-}
-
- @media only screen and (max-width: 480px){
-=2Eheader{font-size: 24px !important;}=20
-}
-
- @media only screen and (max-width: 480px){
-=2Econtenttitle{font-size: 20px !important;line-height: 140% !important;}=
 =20
-}
-
- @media only screen and (max-width: 480px){
-=2Econtenttext{font-size: 16px !important;line-height: 140% !important;}=20=
-
-}
-
- @media only screen and (max-width: 480px){
-=2Esingle-col{display: block !important; width: 100% !important; float:le=
-ft; clear:both;}=20
-}
-
- @media only screen and (max-width: 480px){
-img=2Emobile-img-large { width: 100% !important; height:auto !important;d=
-isplay:block;}=20
-}
-
- @media only screen and (max-width: 480px){
-img=2EbmeRSSImage{max-width:320px; height:auto !important;}=20
-}
-
- @media only screen and (max-width: 480px){
-td[class=3D"preheader-table"]{padding: 10px 0 !important;}=20
-}
-
- @media only screen and (max-width: 480px){
-div[class=3D"bmeheadertext"]{font-size: 12px !important;line-height: 140%=
- !important;}=20
-}
-
- @media only screen and (max-width: 480px){
-td[class=3D"bmefootertext"], div[class=3D"bmefootertext"]{font-size: 12px=
- !important;padding-top: 10px;line-height: 140% !important;}=20
-}
-
- @media only screen and (max-width: 480px){
-div[class=3D"bmefooter"] td[width=3D"79%"], div[class=3D"bmefooter"] td[w=
-idth=3D"21%"]{display: block !important;width: 100%;}=20
-}
-
- @media only screen and (max-width: 480px){
-=2Emobile-footer, =2Emobile-footer a{ font-size: 13px !important; line-he=
-ight: 18px !important;}=20
-}
-
- @media only screen and (max-width: 480px){
-=2Emobile-footer{ text-align: center !important;}=20
-}
-
- @media only screen and (max-width: 480px){
-div=2Ebmefooter, div=2Ebmeheader{ display:block !important;}=20
-}
-
- @media only screen and (max-width: 480px){
-table[class=3D"share-tbl"] { padding-bottom: 15px; width: 100% !important=
-;}=20
-}
-
- @media only screen and (max-width: 480px){
-table[class=3D"share-tbl"] td { display: block !important; text- align: c=
-enter !important; width: 100% !important;}=20
-}
-
-</style>
-=0A<center>=0A   =20
-<table
- style=3D"width:600px; text-align:left;">=0A        <tr>=0A            <t=
-d
- style=3D"font-size:12px; font-family:Arial; color:#666;">Unable to read=EF=
-=BC=9F <a
- href=3D"http://clarkbio=2Ebmetrack=2Ecom/c/l=3Fu=3D4855C86&e=3D59F2E2&c=3D=
-6EA32&t=3D0&l=3DCE9A8F5&email=3DrbKU7zvvsXCRJ5WwqyPEyw%3D%3D" target=3D=5F=
-blank>view web version</a></td>=0A        </tr>=0A        <tr>=0A        =
-    <td><a
- href=3D"http://clarkbio=2Ebmetrack=2Ecom/c/l=3Fu=3D4855C87&e=3D59F2E2&c=3D=
-6EA32&t=3D0&l=3DCE9A8F5&email=3DrbKU7zvvsXCRJ5WwqyPEyw%3D%3D" target=3D=5F=
-blank><img
- src=3D"http://www=2Eclarkbio=2Ecom/assets/images/logo=2Epng" alt=3D"Clar=
-kbio" border=3D"0"></a></td>=0A        </tr>=0A        <tr>=0A           =
- <td
- style=3D""><h1 align=3D"center"
- style=3D"margin:0px; padding:8px 0px 10px 10px;font-size:18px; font-fami=
-ly:Arial; background:#ddd;">The world No=2E1 mouse continuous ear tag app=
-licator</h1></td>=0A        </tr>=0A        <tr>=0A            <td><a
- href=3D"http://clarkbio=2Ebmetrack=2Ecom/c/l=3Fu=3D4855C86&e=3D59F2E2&c=3D=
-6EA32&t=3D0&l=3DCE9A8F5&email=3DrbKU7zvvsXCRJ5WwqyPEyw%3D%3D" target=3D=5F=
-blank><img
- src=3D"http://www=2Eclarkbio=2Ecom/assets/images/sliders/banner1=2Epng" =
-alt=3D"smart tager" width=3D"600" border=3D"0"></a></td>=0A        </tr>=0A=
-        <tr>=0A            <td
- style=3D"font-size:12px; font-family:Arial; color:#666;">=0A            =
-    <p> Customers:</p>=0A                <p>Clark Bioscience is excited t=
-o introduce our <a
- href=3D"http://clarkbio=2Ebmetrack=2Ecom/c/l=3Fu=3D4855C86&e=3D59F2E2&c=3D=
-6EA32&t=3D0&l=3DCE9A8F5&email=3DrbKU7zvvsXCRJ5WwqyPEyw%3D%3D" target=3D=5F=
-blank>SMART Tager</a>! SMART Tager is the world No=2E1 continuous ear tag=
- applicator, which allows for continuous and fast application of ear tags=
- to lab animals for the purpose of labeling, category and management=2E <=
-/p>=0A                <p>Unlike any other ear applicators, SMART Tager is=
- specifically designed, built for continuous ear tagging=2E <span class=3D=
-"STYLE1">1 single load of ear tag strip is able to label 10 animals=2E Ea=
-sy, Fast and Efficient!</span></p>=0A                <p>For more informat=
-ion, please click <a
- href=3D"http://clarkbio=2Ebmetrack=2Ecom/c/l=3Fu=3D4855C86&e=3D59F2E2&c=3D=
-6EA32&t=3D0&l=3DCE9A8F5&email=3DrbKU7zvvsXCRJ5WwqyPEyw%3D%3D" target=3D=5F=
-blank>here</a> or below pic to watch our guide video=2E</p>=0A           =
-     <p>Best Regards,
-<br>=0A                Clark Bioscience </p>=0A                <p align=3D=
-"center"><a
- href=3D"http://clarkbio=2Ebmetrack=2Ecom/c/l=3Fu=3D4855C86&e=3D59F2E2&c=3D=
-6EA32&t=3D0&l=3DCE9A8F5&email=3DrbKU7zvvsXCRJ5WwqyPEyw%3D%3D" target=3D=5F=
-blank><img
- src=3D"http://www=2Eclarkbio=2Ecom/v=2Egif" alt=3D"SMART Tager" width=3D=
-"320" height=3D"150" border=3D"0"></a></p>=0A                <p align=3D"=
-center">=C2=A0</p></td>=0A        </tr>=0A=09=09<tr>=0A            <td
- style=3D""><h1 align=3D"center"
- style=3D"margin:0px; padding:8px 0px 10px 10px;font-size:18px; font-fami=
-ly:Arial; background:#ddd;">Other marvelous products </h1></td>=0A       =
- </tr>=0A=09=09<tr>=0A=09=09<td
- style=3D"margin:0px; padding:16px 0px 10px 10px;font-size:18px; font-siz=
-e:12px; font-family:Arial;" width=3D"300px"><div align=3D"center"><strong=
->One-step Quickcolor Mycoplasma</strong></div></td>=0A=09=09</tr>=0A=09=09=
-<tr>=0A            <td align=3D"center" valign=3D"middle"><a
- href=3D"http://clarkbio=2Ebmetrack=2Ecom/c/l=3Fu=3D4855C88&e=3D59F2E2&c=3D=
-6EA32&t=3D0&l=3DCE9A8F5&email=3DrbKU7zvvsXCRJ5WwqyPEyw%3D%3D" target=3D=5F=
-blank><img
- src=3D"http://www=2Eclarkbio=2Ecom/assets/images/clark=5Fb=2Epng"  alt=3D=
-"One-step Quickcolor Mycoplasma" border=3D"0"></a></td>=0A        </tr>=0A=
-=09=09<tr>=0A=09=09<td
- style=3D"margin:0px; padding:8px 0px 10px 10px; font-size:18px; font-siz=
-e:12px; font-family:Arial; color:#666; width=3D"300px"><div align=3D"cent=
-er">=0A=09=09  <p><strong>One-step , one hour, judg by the naked eye, eas=
-y and fast! Designed to detect the presence of mycoplasmas in cell cultur=
-ed media or other liquid sample=2E =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0<a=
-
- href=3D"http://clarkbio=2Ebmetrack=2Ecom/c/l=3Fu=3D4855C88&e=3D59F2E2&c=3D=
-6EA32&t=3D0&l=3DCE9A8F5&email=3DrbKU7zvvsXCRJ5WwqyPEyw%3D%3D" target=3D=5F=
-blank>View More>> </a></strong></p>=0A=09=09  </div></td>=0A=09=09</tr>=0A=
-=09=09<tr>=0A=09=09<td
- style=3D"margin:0px; padding:16px 0px 10px 10px;font-size:18px; font-siz=
-e:12px; font-family:Arial;"><div align=3D"center"><strong>Exposure Marker=
-</strong></div></td>=0A=09=09</tr>=0A=09=09=0A=09=09<tr>=0A            <t=
-d align=3D"center" valign=3D"middle"><a
- href=3D"http://clarkbio=2Ebmetrack=2Ecom/c/l=3Fu=3D4855C89&e=3D59F2E2&c=3D=
-6EA32&t=3D0&l=3DCE9A8F5&email=3DrbKU7zvvsXCRJ5WwqyPEyw%3D%3D" target=3D=5F=
-blank><img
- src=3D"http://www=2Eclarkbio=2Ecom/assets/images/clark=5Fc=2Epng"  alt=3D=
-"Exposure Marker" border=3D"0"></a></td>=0A        </tr>=0A=09=09<tr>=0A=09=
-=09<td
- style=3D"margin:0px; padding:8px 0px 10px 10px; font-size:18px; font-siz=
-e:12px; font-family:Arial; color:#666; width=3D"300px"><div align=3D"cent=
-er">=0A=09=09  <p><strong>Design for facility western blot, which can con=
-veniently monitors the electrophoresis progress and directly visualize pr=
-otein standard bands=2E =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0<a
- href=3D"http://clarkbio=2Ebmetrack=2Ecom/c/l=3Fu=3D4855C89&e=3D59F2E2&c=3D=
-6EA32&t=3D0&l=3DCE9A8F5&email=3DrbKU7zvvsXCRJ5WwqyPEyw%3D%3D" target=3D=5F=
-blank>View More>> </a></strong></p>=0A=09=09  </div></td>=0A=09=09</tr>=0A=
-        <tr>=0A            <td
- style=3D"font-family:Arial; font-size:12px; height:30px; line-height:30p=
-x; text-align:center; background:#ddd; color:#000;">=0A                Em=
-ail : <a
- href=3D"mailto:info@clarkbio=2Ecom">info@clarkbio=2Ecom</a>=C2=A0=C2=A0=C2=
-=A0=C2=A0Tel/Fax : <label
- style=3D"color:">309-226-4231/309-279-2304</label>=0A            </td>=0A=
-        </tr>=0A
-</table>    =0A</center>=0A<img
- src=3D'http://clarkbio=2Ebmetrack=2Ecom/c/o=3Fe=3D59F2E2&c=3D6EA32&l=3DC=
-E9A8F5&email=3DrbKU7zvvsXCRJ5WwqyPEyw%3D%3D&relid=3DA0B0EA4'></body>=0A</=
-html><!-- Online Path -->
-<div align=3D"center"  class=3D"bmeheader">
-<div
- style=3D"font-family:Arial, Verdana; font-size: 12px" class=3D"bmeheader=
-" align=3D"center">
-<table class=3D"container-table" width=3D"600" border=3D"0" cellspacing=3D=
-"0" cellpadding=3D"0"><tr><td align=3D"center" valign=3D"top" class=3D"pr=
-eheader-table"><div
- style=3D"font-size:11px; color:#666666; font-family:Arial, Helvetica, sa=
-ns-serif; padding-bottom:5px;" align=3D"center" class=3Dbmeheadertext>
-<a target=3D=5Fnew
- href=3D"http://clarkbio=2Ebmetrack=2Ecom/c/v=3Fe=3D59F2E2&c=3D6EA32&l=3D=
-CE9A8F5&email=3DrbKU7zvvsXCRJ5WwqyPEyw%3D%3D&relid=3DA0B0EA4">View this e=
-mail in your browser</a>
-
-<br />You are receiving this email because of your relationship with Clar=
-k Bioscience=2E Please <a target=3D=5Fnew
- style=3D'color:#0000ff;'
- href=3D'
-
-http://clarkbio=2Ebmetrack=2Ecom/c/opt=3Fe=3D59F2E2&c=3D6EA32&l=3DCE9A8F5=
-&email=3DrbKU7zvvsXCRJ5WwqyPEyw%3D%3D&relid=3DA0B0EA4'>reconfirm</a> your=
- interest in receiving email from us=2E  If you do not wish to receive an=
-y more emails, you can <a target=3D=5Fnew
- style=3D'color:#0000ff;'
- href=3D'
-
-http://clarkbio=2Ebmetrack=2Ecom/c/u=3Fe=3D59F2E2&c=3D6EA32&l=3DCE9A8F5&e=
-mail=3DrbKU7zvvsXCRJ5WwqyPEyw%3D%3D&relid=3DA0B0EA4'>unsubscribe here</a>=
-
-</div></td></tr>
-</table></div></div>
-<!-- /Online Path -->
+E-liquid Solution Provider
+   =20
 
 
-<!-- Footer Path -->
-<div align=3D"center"  class=3Dbmefooter><div class=3D"container-table"
- style=3D"text-align: left; padding-top:10px;color: #666666;font-family: =
-Arial,Helvetica,sans-serif; font-size: 11px;" align=3Dcenter>
 
-<table class=3D"container-table" width=3D"600" cellspacing=3D"0" cellpadd=
-ing=3D"0" border=3D"0" align=3D"center">
-<tr><td align=3Dleft width=3D"79%"
- style=3D"color: #666666;font-family: Arial,Helvetica,sans-serif; font-si=
-ze: 11px;" class=3D"mobile-footer bmefootertext">
-This message was sent to xfs@oss=2Esgi=2Ecom by info@clarkbio=2Ecom
-<div
- style=3D"padding-top: 10px; font-size: 11px;" class=3Dbmefootertext><a c=
-lass=3Dbmefootertext=20
- href=3D"http://clarkbio=2Ebmetrack=2Ecom/c/su=3Fe=3D59F2E2&c=3D6EA32&l=3D=
-CE9A8F5&email=3DrbKU7zvvsXCRJ5WwqyPEyw%3D%3D&relid=3DA0B0EA4">Unsubscribe=
-</a>   | <a class=3Dbmefootertext=20
- href=3D"http://clarkbio=2Ebmetrack=2Ecom/c/s=3Fe=3D59F2E2&c=3D6EA32&l=3D=
-CE9A8F5&email=3DrbKU7zvvsXCRJ5WwqyPEyw%3D%3D&relid=3DA0B0EA4">Manage Subs=
-cription</a>   |  <a class=3Dbmefootertext=20
- href=3D"http://clarkbio=2Ebmetrack=2Ecom/c/f=3Fe=3D59F2E2&c=3D6EA32&l=3D=
-CE9A8F5&email=3DrbKU7zvvsXCRJ5WwqyPEyw%3D%3D&relid=3DA0B0EA4">Forward Ema=
-il</a>  |  <a class=3Dbmefootertext=20
- href=3D"http://clarkbio=2Ebmetrack=2Ecom/Abuse=3Fe=3D59F2E2&c=3D6EA32&l=3D=
-CE9A8F5&email=3DrbKU7zvvsXCRJ5WwqyPEyw%3D%3D&relid=3DA0B0EA4">Report Abus=
-e</a>
-<br /></div>
-<br/></td></tr>
-</table></div></div><div align=3D"center"  class=3Dbmefooter>
-<div
- style=3D"text-align:left;">
+=20
 
-<table width=3D"600" cellspacing=3D"0" cellpadding=3D"0" border=3D"0" ali=
-gn=3D"center" class=3D"container-table"><tr><td
- style=3D"font-size: 11px; font-family: Arial,Helvetica,sans-serif; color=
-: #666666;" class=3D"mobile-footer bmefootertext">
-800 E Leigh street, unit58, va biotech center
-Richmond, va, 23219, Richmond, va, 23219</td></tr><tr><td>
-<br /></td></tr>
-</table></div></div><!-- /Footer Path -->
+Exciting updates from Oplus Tech!=20
 
-<!--=20
-|unsub|g=3D0&c=3D3962792&l=3D216639733&e=3Dxfs@oss=2Esgi=2Ecom&ver=3D2&Se=
-ntFromServer=3D216=2E4=2E238=2E164
- -->
+=20
 
-<!-- campaignid: 3962792 -->
+Ingredient Traceability:
+First and only e-liquid supplier allow end users to track test report =
+of every ingredient and finished products.=20
 
-------=_NextPart_415814885630919123023215--
+=20
+
+Class 10000
+Clean Workshop:
+Compliant with national GMP standard GB50457-2008. The highest standar=
+d in e-liquid industry.=20
+
+=20
+
+Live Video:
+Broadcast the the whole production to the public. See how your e-liqui=
+d is made in real time.=20
+
+=20
+
+German Flavor:
+PG: USP, Dow Chemicals; VG: USP, P&G Chemicals; Pharmaceutical Grade N=
+icotine, EP, USP.=20
 
 
---===============0796251808721865910==
+
+
+
+=20
+- Full Marketing Support
+- One Country One Distributor Sales Policy
+- Flexible Pricing and Global Delivery
+- Exclusive Access to Oplus New Products
+- Exceptional Design=20
+
+
+
+=20
+- Flavor Co-Development Service
+- Packaging Design Solution
+- Flexible Pricing and Global Delivery
+- Supply Chain Solution
+
+
+
+Sincerely Yours,
+Oplus Team=20
+
+Address: Guangming New District, Guangming Street,
+Guanguang Road, No.3009, Block B4,
+Shenzhen, Guangdong China=20
+Phone: +8613826510204
+Email: sales@oplus.co
+www.oplus.co=20
+
+
+Unsubscribe email
+
+
+--BPTmPDAsCXhuiLHAtepgDvrmyzI=_KFXso
+Content-Type: text/html; charset="windows-1251"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
+
+<HTML><HEAD></HEAD>
+<BODY>
+<DIV class=3DoplusWrapper style=3D"WIDTH: 100% !important; PADDING-BOTTOM: =
+0px; PADDING-TOP: 0px; PADDING-LEFT: 0px; MARGIN: 0px; MIN-HEIGHT: 100% !im=
+portant; PADDING-RIGHT: 0px; BACKGROUND-COLOR: #ffffff" marginheight=3D"0" =
+marginwidth=3D"0">
+<CENTER>
+<TABLE style=3D"HEIGHT: 100% !important; WIDTH: 100% !important; BORDER-COL=
+LAPSE: collapse; PADDING-BOTTOM: 0px; PADDING-TOP: 0px; PADDING-LEFT: 0px; =
+MARGIN: 0px; PADDING-RIGHT: 0px; BACKGROUND-COLOR: #ffffff" height=3D"100%"=
+ cellSpacing=3D0 cellPadding=3D0 width=3D"100%" align=3Dcenter border=3D0>
+<TBODY>
+<TR>
+<TD style=3D"HEIGHT: 100% !important; WIDTH: 100% !important" vAlign=3Dtop =
+align=3Dcenter>
+<TABLE style=3D"MAX-WIDTH: 600px; BORDER-COLLAPSE: collapse" cellSpacing=3D=
+0 cellPadding=3D0 align=3Dcenter border=3D0>
+<TBODY>
+<TR>
+<TD style=3D"FONT-SIZE: 16px; FONT-FAMILY: 'Arial', sans-serif; COLOR: #888=
+888; LINE-HEIGHT: 16px" align=3Dcenter>
+<TABLE style=3D"BORDER-COLLAPSE: collapse" cellSpacing=3D0 cellPadding=3D0 =
+width=3D200 align=3Dleft border=3D0>
+<TBODY>
+<TR>
+<TD height=3D45 vAlign=3Dbottom width=3D220><A href=3D"http://stat.atomsmtp=
+.com/stat/329d16c6645c1fc5cc5522a7a2df80ca/proc/aHR0cDovL29wbHVzLmNvLz91dG1=
+fc291cmNlPVN1YnNjcmliZV9vcGx1cyZ1dG1fbWVkaXVtPWVtYWlsJnV0bV9jYW1wYWlnbj1TdW=
+JzY3JpYmVfb3BsdXM=3D"><IMG style=3D"DISPLAY: block" border=3D0 alt=3DLogo s=
+rc=3D"http://oplus.co/email/template/logo.png" width=3D169 height=3D46> </A=
+></TD></TR></TBODY></TABLE>
+<TABLE style=3D"BORDER-COLLAPSE: collapse" cellSpacing=3D0 cellPadding=3D0 =
+width=3D254 align=3Dleft border=3D0>
+<TBODY>
+<TR>
+<TD height=3D45 vAlign=3Dbottom width=3D200>E-liquid Solution Provider</TD>=
+</TR></TBODY></TABLE>
+<TABLE style=3D"BORDER-COLLAPSE: collapse" cellSpacing=3D0 cellPadding=3D0 =
+width=3D146 align=3Dleft border=3D0>
+<TBODY>
+<TR>
+<TD height=3D45 vAlign=3Dbottom width=3D"100%" align=3Dright>
+<TABLE style=3D"BORDER-COLLAPSE: collapse" cellSpacing=3D0 cellPadding=3D0 =
+width=3D146 align=3Dright border=3D0>
+<TBODY>
+<TR>
+<TD height=3D34 width=3D35><A href=3D"http://stat.atomsmtp.com/stat/329d16c=
+6645c1fc5cc5522a7a2df80ca/proc/aHR0cDovL2ZhY2Vib29rLmNvbS9vcGx1c3RlY2hub2xv=
+Z3kvP3V0bV9zb3VyY2U9U3Vic2NyaWJlX29wbHVzJnV0bV9tZWRpdW09ZW1haWwmdXRtX2NhbXB=
+haWduPVN1YnNjcmliZV9vcGx1cw=3D=3D"><IMG style=3D"DISPLAY: block" border=3D0=
+ alt=3Dfacebook src=3D"http://oplus.co/email/template/facebook.png" width=
+=3D35 height=3D34> </A></TD>
+<TD height=3D34 width=3D3></TD>
+<TD height=3D34 width=3D34><A href=3D"http://stat.atomsmtp.com/stat/329d16c=
+6645c1fc5cc5522a7a2df80ca/proc/aHR0cHM6Ly90d2l0dGVyLmNvbS9PcGx1c1RlY2hub2xv=
+Z3k=3D"><IMG style=3D"DISPLAY: block" border=3D0 alt=3Dtwitter src=3D"http:=
+//oplus.co/email/template/twitter.png" width=3D34 height=3D34> </A></TD>
+<TD height=3D34 width=3D3></TD>
+<TD height=3D34 width=3D34><A href=3D"http://stat.atomsmtp.com/stat/329d16c=
+6645c1fc5cc5522a7a2df80ca/proc/aHR0cHM6Ly93d3cubGlua2VkaW4uY29tL2NvbXBhbnkv=
+b3BsdXMtdGVjaG5vbG9neT90cms9Y29tcGFueV9sb2dvLz91dG1fc291cmNlPVN1YnNjcmliZV9=
+vcGx1cyZ1dG1fbWVkaXVtPWVtYWlsJnV0bV9jYW1wYWlnbj1TdWJzY3JpYmVfb3BsdXM=3D"><I=
+MG style=3D"DISPLAY: block" border=3D0 alt=3Dlinkedin src=3D"http://oplus.c=
+o/email/template/linkedin.png" width=3D34 height=3D34> </A></TD>
+<TD height=3D34 width=3D3></TD>
+<TD height=3D34 width=3D34><A href=3D"http://stat.atomsmtp.com/stat/329d16c=
+6645c1fc5cc5522a7a2df80ca/proc/c2t5cGU6b3BsdXMudGVjaD9jaGF0"><IMG style=3D"=
+DISPLAY: block" border=3D0 alt=3Dskype src=3D"http://oplus.co/email/templat=
+e/skype.png" width=3D34 height=3D34> </A></TD></TR></TBODY></TABLE></TD></T=
+R></TBODY></TABLE></TD></TR>
+<TR>
+<TD height=3D25></TD></TR>
+<TR>
+<TD width=3D"100%"><A style=3D"DISPLAY: block" href=3D"http://stat.atomsmtp=
+.com/stat/329d16c6645c1fc5cc5522a7a2df80ca/proc/aHR0cDovL29wbHVzLmNvLz91dG1=
+fc291cmNlPVN1YnNjcmliZV9vcGx1cyZ1dG1fbWVkaXVtPWVtYWlsJnV0bV9jYW1wYWlnbj1TdW=
+JzY3JpYmVfb3BsdXM=3D"><IMG style=3D"DISPLAY: block" border=3D0 alt=3Dimage =
+src=3D"http://oplus.co/email/template/image.jpg" width=3D"100%"> </A></TD><=
+/TR>
+<TR>
+<TD height=3D25></TD></TR>
+<TR>
+<TD style=3D"FONT-SIZE: 16px; FONT-FAMILY: 'Arial', sans-serif; COLOR: #888=
+888; MIN-HEIGHT: 50px; LINE-HEIGHT: 20px" vAlign=3Dtop width=3D"100%" align=
+=3Dleft><SPAN>Exciting updates from Oplus Tech!</SPAN> </TD></TR>
+<TR>
+<TD height=3D15></TD></TR>
+<TR>
+<TD style=3D"FONT-SIZE: 12px; FONT-FAMILY: 'Arial', sans-serif; COLOR: #888=
+; TEXT-ALIGN: center; LINE-HEIGHT: 16px" width=3D600>
+<TABLE style=3D"BORDER-COLLAPSE: collapse" cellSpacing=3D0 cellPadding=3D0 =
+width=3D"25%" align=3Dleft border=3D0>
+<TBODY>
+<TR>
+<TD vAlign=3Dtop align=3Dcenter>
+<TABLE style=3D"BORDER-COLLAPSE: collapse; TEXT-ALIGN: center" cellSpacing=
+=3D0 cellPadding=3D4 border=3D0>
+<TBODY>
+<TR>
+<TD vAlign=3Dtop align=3Dcenter><A style=3D"DISPLAY: block" href=3D"http://=
+stat.atomsmtp.com/stat/329d16c6645c1fc5cc5522a7a2df80ca/proc/aHR0cDovL29wbH=
+VzLmNvL2VuZy9wcm9kdWN0Lz91dG1fc291cmNlPVN1YnNjcmliZV9vcGx1cyZ1dG1fbWVkaXVtP=
+WVtYWlsJnV0bV9jYW1wYWlnbj1TdWJzY3JpYmVfb3BsdXM=3D"><IMG style=3D"DISPLAY: b=
+lock" border=3D0 alt=3Dtracebility src=3D"http://oplus.co/email/template/tr=
+acebility.png" width=3D135> </A></TD></TR>
+<TR>
+<TD height=3D10 width=3D"100%"></TD></TR>
+<TR>
+<TD height=3D120 vAlign=3Dtop align=3Dcenter><SPAN style=3D"COLOR: #0099cc"=
+><STRONG>Ingredient Traceability:</STRONG></SPAN><BR><SPAN>First and only e=
+-liquid supplier allow end users to track test report of every ingredient a=
+nd finished products.</SPAN> </TD></TR></TBODY></TABLE></TD></TR></TBODY></=
+TABLE>
+<TABLE style=3D"BORDER-COLLAPSE: collapse" cellSpacing=3D0 cellPadding=3D0 =
+width=3D"25%" align=3Dleft border=3D0>
+<TBODY>
+<TR>
+<TD vAlign=3Dtop align=3Dcenter>
+<TABLE style=3D"BORDER-COLLAPSE: collapse" cellSpacing=3D0 cellPadding=3D4 =
+border=3D0>
+<TBODY>
+<TR>
+<TD vAlign=3Dtop align=3Dcenter><A style=3D"DISPLAY: block" href=3D"http://=
+stat.atomsmtp.com/stat/329d16c6645c1fc5cc5522a7a2df80ca/proc/aHR0cDovL29wbH=
+VzLmNvL2VuZy9wcm9kdWN0aW9uLz91dG1fc291cmNlPVN1YnNjcmliZV9vcGx1cyZ1dG1fbWVka=
+XVtPWVtYWlsJnV0bV9jYW1wYWlnbj1TdWJzY3JpYmVfb3BsdXM=3D"><IMG style=3D"DISPLA=
+Y: block" border=3D0 alt=3Dclass src=3D"http://oplus.co/email/template/clas=
+s.png" width=3D135> </A></TD></TR>
+<TR>
+<TD height=3D10 width=3D"100%"></TD></TR>
+<TR>
+<TD height=3D120 vAlign=3Dtop align=3Dcenter><SPAN style=3D"COLOR: #0099cc"=
+><STRONG>Class 10000<BR>Clean Workshop:</STRONG></SPAN><BR><SPAN>Compliant =
+with national GMP standard GB50457-2008. The highest standard in e-liquid i=
+ndustry.</SPAN> </TD></TR></TBODY></TABLE></TD></TR></TBODY></TABLE>
+<TABLE style=3D"BORDER-COLLAPSE: collapse" cellSpacing=3D0 cellPadding=3D0 =
+width=3D"25%" align=3Dleft border=3D0>
+<TBODY>
+<TR>
+<TD vAlign=3Dtop align=3Dcenter>
+<TABLE style=3D"BORDER-COLLAPSE: collapse" cellSpacing=3D0 cellPadding=3D4 =
+border=3D0>
+<TBODY>
+<TR>
+<TD vAlign=3Dtop align=3Dcenter><A style=3D"DISPLAY: block" href=3D"http://=
+stat.atomsmtp.com/stat/329d16c6645c1fc5cc5522a7a2df80ca/proc/aHR0cDovL29wbH=
+VzLmNvLz91dG1fc291cmNlPVN1YnNjcmliZV9vcGx1cyZ1dG1fbWVkaXVtPWVtYWlsJnV0bV9jY=
+W1wYWlnbj1TdWJzY3JpYmVfb3BsdXM=3D"><IMG style=3D"DISPLAY: block" border=3D0=
+ alt=3Dvideo src=3D"http://oplus.co/email/template/video.png" width=3D135> =
+</A></TD></TR>
+<TR>
+<TD height=3D10 width=3D"100%"></TD></TR>
+<TR>
+<TD height=3D120 vAlign=3Dtop align=3Dcenter><SPAN style=3D"COLOR: #0099cc"=
+><STRONG>Live Video:</STRONG></SPAN><BR><SPAN>Broadcast the the whole produ=
+ction to the public. See how your e-liquid is made in real time.</SPAN> </T=
+D></TR></TBODY></TABLE></TD></TR></TBODY></TABLE>
+<TABLE style=3D"BORDER-COLLAPSE: collapse" cellSpacing=3D0 cellPadding=3D0 =
+width=3D"25%" align=3Dleft border=3D0>
+<TBODY>
+<TR>
+<TD vAlign=3Dtop align=3Dcenter>
+<TABLE style=3D"BORDER-COLLAPSE: collapse" cellSpacing=3D0 cellPadding=3D4 =
+align=3Dcenter border=3D0>
+<TBODY>
+<TR>
+<TD vAlign=3Dtop align=3Dcenter><A style=3D"DISPLAY: block" href=3D"http://=
+stat.atomsmtp.com/stat/329d16c6645c1fc5cc5522a7a2df80ca/proc/aHR0cDovL29wbH=
+VzLmNvL2VuZy9wcm9kdWN0Lz91dG1fc291cmNlPVN1YnNjcmliZV9vcGx1cyZ1dG1fbWVkaXVtP=
+WVtYWlsJnV0bV9jYW1wYWlnbj1TdWJzY3JpYmVfb3BsdXM=3D"><IMG style=3D"DISPLAY: b=
+lock" border=3D0 alt=3Dgerman src=3D"http://oplus.co/email/template/german.=
+png" width=3D135> </A></TD></TR>
+<TR>
+<TD height=3D10 width=3D"100%"></TD></TR>
+<TR>
+<TD height=3D120 vAlign=3Dtop align=3Dcenter><SPAN style=3D"COLOR: #0099cc"=
+><STRONG>German Flavor:</STRONG></SPAN><BR><SPAN>PG: USP, Dow Chemicals; VG=
+: USP, P&amp;G Chemicals; Pharmaceutical Grade Nicotine, EP, USP.</SPAN> </=
+TD></TR></TBODY></TABLE></TD></TR></TBODY></TABLE></TD></TR>
+<TR>
+<TD height=3D20 width=3D"100%"></TD></TR>
+<TR>
+<TD bgColor=3D#0099cc height=3D1></TD></TR>
+<TR>
+<TD bgColor=3D#0099cc width=3D"100%">
+<TABLE style=3D"FONT-SIZE: 12px; FONT-FAMILY: 'Arial', san-serif; BORDER-CO=
+LLAPSE: collapse; COLOR: #fff; LINE-HEIGHT: 16px" cellSpacing=3D0 cellPaddi=
+ng=3D0 align=3Dright bgColor=3D#0099cc border=3D0>
+<TBODY>
+<TR>
+<TD vAlign=3Dtop align=3Dcenter><A style=3D"TEXT-DECORATION: none !importan=
+t; DISPLAY: block" href=3D"http://stat.atomsmtp.com/stat/329d16c6645c1fc5cc=
+5522a7a2df80ca/proc/aHR0cDovL29wbHVzLmNvL2VuZy9jb29wZXJhdGlvbi8/dXRtX3NvdXJ=
+jZT1TdWJzY3JpYmVfb3BsdXMmdXRtX21lZGl1bT1lbWFpbCZ1dG1fY2FtcGFpZ249U3Vic2NyaW=
+JlX29wbHVz"><IMG style=3D"MAX-WIDTH: 100%; DISPLAY: block" alt=3D"Oplus Bra=
+nd" src=3D"http://oplus.co/email/template/oplus_brand.jpg"></A> </TD></TR><=
+/TBODY></TABLE>
+<TABLE style=3D"FONT-SIZE: 12px; FONT-FAMILY: 'Arial', san-serif; BORDER-CO=
+LLAPSE: collapse; COLOR: #fff; LINE-HEIGHT: 16px" cellSpacing=3D0 cellPaddi=
+ng=3D12 align=3Dleft bgColor=3D#0099cc border=3D0>
+<TBODY>
+<TR>
+<TD bgColor=3D#0099cc>- Full Marketing Support<BR>- One Country One Distrib=
+utor Sales Policy<BR>- Flexible Pricing and Global Delivery<BR>- Exclusive =
+Access to Oplus New Products<BR>- Exceptional Design </TD></TR></TBODY></TA=
+BLE></TD></TR>
+<TR>
+<TD height=3D20 width=3D"100%"></TD></TR>
+<TR>
+<TD bgColor=3D#ff6633 height=3D1 width=3D"100%"></TD></TR>
+<TR>
+<TD style=3D"TEXT-ALIGN: center" bgColor=3D#ff6633 width=3D"100%">
+<TABLE style=3D"BORDER-COLLAPSE: collapse" cellSpacing=3D0 cellPadding=3D0 =
+align=3Dleft bgColor=3D#ff6633 border=3D0>
+<TBODY>
+<TR>
+<TD vAlign=3Dtop align=3Dcenter><A style=3D"TEXT-DECORATION: none !importan=
+t; DISPLAY: block" href=3D"http://stat.atomsmtp.com/stat/329d16c6645c1fc5cc=
+5522a7a2df80ca/proc/aHR0cDovL29wbHVzLmNvL2VuZy9jb29wZXJhdGlvbi8/dXRtX3NvdXJ=
+jZT1TdWJzY3JpYmVfb3BsdXMmdXRtX21lZGl1bT1lbWFpbCZ1dG1fY2FtcGFpZ249U3Vic2NyaW=
+JlX29wbHVz"><IMG style=3D"MAX-WIDTH: 100%; DISPLAY: block" alt=3D"Oplus OEM=
+" src=3D"http://oplus.co/email/template/oplus_oem.jpg"> </A></TD></TR></TBO=
+DY></TABLE>
+<TABLE style=3D"FONT-SIZE: 12px; FONT-FAMILY: 'Arial', san-serif; BORDER-CO=
+LLAPSE: collapse; COLOR: #fff; LINE-HEIGHT: 18px" cellSpacing=3D0 cellPaddi=
+ng=3D12 align=3Dleft bgColor=3D#ff6633 border=3D0>
+<TBODY>
+<TR>
+<TD bgColor=3D#ff6633 align=3Dleft>- Flavor Co-Development Service<BR>- Pac=
+kaging Design Solution<BR>- Flexible Pricing and Global Delivery<BR>- Suppl=
+y Chain Solution<BR></TD></TR></TBODY></TABLE></TD></TR>
+<TR>
+<TD height=3D10 width=3D"100%"></TD></TR>
+<TR>
+<TD style=3D"FONT-SIZE: 16px; FONT-FAMILY: 'Arial', sans-serif; COLOR: #888=
+; LINE-HEIGHT: 20px" height=3D50 vAlign=3Dtop width=3D"100%" align=3Dleft>S=
+incerely Yours,<BR>Oplus Team </TD></TR>
+<TR>
+<TD height=3D20 width=3D"100%"></TD></TR>
+<TR>
+<TD>
+<TABLE style=3D"FONT-SIZE: 12px; BORDER-COLLAPSE: collapse; COLOR: #fff; LI=
+NE-HEIGHT: 16px" cellSpacing=3D0 cellPadding=3D0 width=3D"100%" bgColor=3D#=
+0099cc border=3D0>
+<TBODY>
+<TR>
+<TD style=3D"BACKGROUND: url(http://oplus.co/email/template/oplus_bg.png) n=
+o-repeat 100% 0px" bgColor=3D#0099cc>
+<TABLE style=3D"FONT-SIZE: 12px; FONT-FAMILY: 'Arial', san-serif; BORDER-CO=
+LLAPSE: collapse; COLOR: #fff; LINE-HEIGHT: 18px" cellSpacing=3D0 cellPaddi=
+ng=3D13 align=3Dleft border=3D0>
+<TBODY>
+<TR>
+<TD vAlign=3Dmiddle>Address: Guangming New District, Guangming Street,<BR>G=
+uanguang Road, No.3009, Block B4,<BR>Shenzhen, Guangdong China </TD></TR></=
+TBODY></TABLE>
+<TABLE style=3D"FONT-SIZE: 12px; FONT-FAMILY: 'Arial', san-serif; BORDER-CO=
+LLAPSE: collapse; COLOR: #fff; LINE-HEIGHT: 16px" cellSpacing=3D0 cellPaddi=
+ng=3D13 width=3D170 align=3Dleft border=3D0>
+<TBODY>
+<TR>
+<TD vAlign=3Dmiddle><A style=3D"TEXT-DECORATION: none !important; COLOR: #f=
+ff !important" href=3D"http://stat.atomsmtp.com/stat/329d16c6645c1fc5cc5522=
+a7a2df80ca/proc/Iw=3D=3D">Phone: +8613826510204</A><BR><A style=3D"TEXT-DEC=
+ORATION: none !important; COLOR: #fff !important" href=3D"http://stat.atoms=
+mtp.com/stat/329d16c6645c1fc5cc5522a7a2df80ca/proc/Iw=3D=3D">Email: sales@o=
+plus.co</A><BR><A style=3D"TEXT-DECORATION: none !important; COLOR: #fff !i=
+mportant" href=3D"http://stat.atomsmtp.com/stat/329d16c6645c1fc5cc5522a7a2d=
+f80ca/proc/aHR0cDovL29wbHVzLmNvLz91dG1fc291cmNlPVN1YnNjcmliZV9vcGx1cyZ1dG1f=
+bWVkaXVtPWVtYWlsJnV0bV9jYW1wYWlnbj1TdWJzY3JpYmVfb3BsdXM=3D">www.oplus.co</A=
+> </TD></TR></TBODY></TABLE></TD></TR></TBODY></TABLE></TD></TR>
+<TR>
+<TD>
+<P align=3Dcenter><A id=3DlinkUnsub href=3D"mailto:info@oplus.co?subject=3D=
+Unsubscribe">Unsubscribe email</A></P></TD></TR></TBODY></TABLE></TD></TR><=
+/TBODY></TABLE></CENTER></DIV><br /><img src=3D"http://stat.atomsmtp.com/im=
+g/329d16c6645c1fc5cc5522a7a2df80ca" />
+
+</BODY></HTML>
+
+
+--BPTmPDAsCXhuiLHAtepgDvrmyzI=_KFXso--
+
+
+--===============3024451458779088219==
 Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
@@ -385,4 +413,4 @@ xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
 
---===============0796251808721865910==--
+--===============3024451458779088219==--
