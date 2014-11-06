@@ -1,25 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 21FE07F57
-	for <xfs@oss.sgi.com>; Thu,  6 Nov 2014 07:15:07 -0600 (CST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 44EF67F5E
+	for <xfs@oss.sgi.com>; Thu,  6 Nov 2014 07:15:09 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id F25328F8033
-	for <xfs@oss.sgi.com>; Thu,  6 Nov 2014 05:15:06 -0800 (PST)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 2506B304032
+	for <xfs@oss.sgi.com>; Thu,  6 Nov 2014 05:15:09 -0800 (PST)
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	sYr6sD7LH0Bx1gNy for <xfs@oss.sgi.com>;
-	Thu, 06 Nov 2014 05:15:04 -0800 (PST)
+	oOhQCytAHTOlS5Om for <xfs@oss.sgi.com>;
+	Thu, 06 Nov 2014 05:15:06 -0800 (PST)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.80)
-	(envelope-from <dave@fromorbit.com>) id 1XmMty-0007Es-Au
+	(envelope-from <dave@fromorbit.com>) id 1XmMty-0007Et-BP
 	for xfs@oss.sgi.com; Fri, 07 Nov 2014 00:15:02 +1100
 Received: from dave by disappointment with local (Exim 4.82_1-5b7a7c0-XX)
-	(envelope-from <dave@disappointment.disaster>) id 1XmMty-0002ZI-9Z
+	(envelope-from <dave@disappointment.disaster>) id 1XmMty-0002ZL-AR
 	for xfs@oss.sgi.com; Fri, 07 Nov 2014 00:15:02 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 0/6 v3] xfs: fix the bulkstat mess
-Date: Fri,  7 Nov 2014 00:14:53 +1100
-Message-Id: <1415279699-8739-1-git-send-email-david@fromorbit.com>
+Subject: [PATCH 1/6] xfs: bulkstat btree walk doesn't terminate
+Date: Fri,  7 Nov 2014 00:14:54 +1100
+Message-Id: <1415279699-8739-2-git-send-email-david@fromorbit.com>
+In-Reply-To: <1415279699-8739-1-git-send-email-david@fromorbit.com>
+References: <1415279699-8739-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,16 +37,94 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-HI folks,
+From: Dave Chinner <dchinner@redhat.com>
 
-This is the third version of the bulkstat fixup series. This version
-fixes the end-of-ag, end-of-user-buffer bug that was causing inodes
-to be skipped.
+The bulkstat code has several different ways of detecting the end of
+an AG when doing a walk. They are not consistently detected, and the
+code that checks for the end of AG conditions is not consistently
+coded. Hence the are conditions where the walk code can get stuck in
+an endless loop making no progress and not triggering any
+termination conditions.
 
-This passes all my ad hoc tests and xfstests, so please review and
-test so I can push this up to Linus ASAP.
+Convert all the "tmp/i" status return codes from btree operations
+to a common name (stat) and apply end-of-ag detection to these
+operations consistently.
 
--Dave.
+cc: stable@vger.kernel.org
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+---
+ fs/xfs/xfs_itable.c | 19 ++++++++++---------
+ 1 file changed, 10 insertions(+), 9 deletions(-)
+
+diff --git a/fs/xfs/xfs_itable.c b/fs/xfs/xfs_itable.c
+index 7765ff7..16737cb 100644
+--- a/fs/xfs/xfs_itable.c
++++ b/fs/xfs/xfs_itable.c
+@@ -356,7 +356,6 @@ xfs_bulkstat(
+ 	int			end_of_ag; /* set if we've seen the ag end */
+ 	int			error;	/* error code */
+ 	int                     fmterror;/* bulkstat formatter result */
+-	int			i;	/* loop index */
+ 	int			icount;	/* count of inodes good in irbuf */
+ 	size_t			irbsize; /* size of irec buffer in bytes */
+ 	xfs_ino_t		ino;	/* inode number (filesystem) */
+@@ -366,11 +365,11 @@ xfs_bulkstat(
+ 	xfs_ino_t		lastino; /* last inode number returned */
+ 	int			nirbuf;	/* size of irbuf */
+ 	int			rval;	/* return value error code */
+-	int			tmp;	/* result value from btree calls */
+ 	int			ubcount; /* size of user's buffer */
+ 	int			ubleft;	/* bytes left in user's buffer */
+ 	char			__user *ubufp;	/* pointer into user's buffer */
+ 	int			ubelem;	/* spaces used in user's buffer */
++	int			stat;
+ 
+ 	/*
+ 	 * Get the last inode value, see if there's nothing to do.
+@@ -436,13 +435,15 @@ xfs_bulkstat(
+ 				agino = r.ir_startino + XFS_INODES_PER_CHUNK;
+ 			}
+ 			/* Increment to the next record */
+-			error = xfs_btree_increment(cur, 0, &tmp);
++			error = xfs_btree_increment(cur, 0, &stat);
+ 		} else {
+ 			/* Start of ag.  Lookup the first inode chunk */
+-			error = xfs_inobt_lookup(cur, 0, XFS_LOOKUP_GE, &tmp);
++			error = xfs_inobt_lookup(cur, 0, XFS_LOOKUP_GE, &stat);
+ 		}
+-		if (error)
++		if (error || stat == 0) {
++			end_of_ag = 1;
+ 			goto del_cursor;
++		}
+ 
+ 		/*
+ 		 * Loop through inode btree records in this ag,
+@@ -451,8 +452,8 @@ xfs_bulkstat(
+ 		while (irbp < irbufend && icount < ubcount) {
+ 			struct xfs_inobt_rec_incore	r;
+ 
+-			error = xfs_inobt_get_rec(cur, &r, &i);
+-			if (error || i == 0) {
++			error = xfs_inobt_get_rec(cur, &r, &stat);
++			if (error || stat == 0) {
+ 				end_of_ag = 1;
+ 				goto del_cursor;
+ 			}
+@@ -473,8 +474,8 @@ xfs_bulkstat(
+ 			 * Set agino to after this chunk and bump the cursor.
+ 			 */
+ 			agino = r.ir_startino + XFS_INODES_PER_CHUNK;
+-			error = xfs_btree_increment(cur, 0, &tmp);
+-			if (error) {
++			error = xfs_btree_increment(cur, 0, &stat);
++			if (error || stat == 0) {
+ 				end_of_ag = 1;
+ 				goto del_cursor;
+ 			}
+-- 
+2.0.0
 
 _______________________________________________
 xfs mailing list
