@@ -1,27 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id C0CC77F6A
-	for <xfs@oss.sgi.com>; Thu,  6 Nov 2014 07:15:13 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id A17EC304048
-	for <xfs@oss.sgi.com>; Thu,  6 Nov 2014 05:15:13 -0800 (PST)
-Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
-	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	0tgH0cFfLTdDtbOF for <xfs@oss.sgi.com>;
-	Thu, 06 Nov 2014 05:15:11 -0800 (PST)
-Received: from disappointment.disaster.area ([192.168.1.110]
-	helo=disappointment) by dastard with esmtp (Exim 4.80)
-	(envelope-from <dave@fromorbit.com>) id 1XmMty-0007Ew-Cs
-	for xfs@oss.sgi.com; Fri, 07 Nov 2014 00:15:02 +1100
-Received: from dave by disappointment with local (Exim 4.82_1-5b7a7c0-XX)
-	(envelope-from <dave@disappointment.disaster>) id 1XmMty-0002Za-By
-	for xfs@oss.sgi.com; Fri, 07 Nov 2014 00:15:02 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 4/6] xfs: bulkstat main loop logic is a mess
-Date: Fri,  7 Nov 2014 00:14:57 +1100
-Message-Id: <1415279699-8739-5-git-send-email-david@fromorbit.com>
-In-Reply-To: <1415279699-8739-1-git-send-email-david@fromorbit.com>
-References: <1415279699-8739-1-git-send-email-david@fromorbit.com>
+	by oss.sgi.com (Postfix) with ESMTP id 4B7F17F55
+	for <xfs@oss.sgi.com>; Thu,  6 Nov 2014 08:27:59 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 39A73304043
+	for <xfs@oss.sgi.com>; Thu,  6 Nov 2014 06:27:56 -0800 (PST)
+Received: from mail1.g1.pair.com (mail1.g1.pair.com [66.39.3.162]) by
+	cuda.sgi.com with ESMTP id 9ili2qyfv2EzmDAN (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 06 Nov 2014 06:27:39 -0800 (PST)
+Date: Thu, 6 Nov 2014 15:27:41 +0100
+From: Emmanuel Florac <eflorac@intellique.com>
+Subject: Re: EIO and data corruption on XFS file system
+Message-ID: <20141106152741.2655245d@harpe.intellique.com>
+In-Reply-To: <BLU175-W376F83659C1C70DE51C3D9DF840@phx.gbl>
+References: <BLU175-W376F83659C1C70DE51C3D9DF840@phx.gbl>
+MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,160 +24,35 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: GuangYang <yguang11@outlook.com>
+Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-From: Dave Chinner <dchinner@redhat.com>
-
-There are a bunch of variables tha tare more wildy scoped than they
-need to be, obfuscated user buffer checks and tortured "next inode"
-tracking. This all needs cleaning up to expose the real issues that
-need fixing.
-
-cc: <stable@vger.kernel.org>
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Brian Foster <bfoster@redhat.com>
----
- fs/xfs/xfs_itable.c | 56 +++++++++++++++++++++++------------------------------
- 1 file changed, 24 insertions(+), 32 deletions(-)
-
-diff --git a/fs/xfs/xfs_itable.c b/fs/xfs/xfs_itable.c
-index 7ea2b11..acae335 100644
---- a/fs/xfs/xfs_itable.c
-+++ b/fs/xfs/xfs_itable.c
-@@ -348,30 +348,23 @@ xfs_bulkstat(
- 	xfs_agino_t		agino;	/* inode # in allocation group */
- 	xfs_agnumber_t		agno;	/* allocation group number */
- 	xfs_btree_cur_t		*cur;	/* btree cursor for ialloc btree */
--	int			end_of_ag; /* set if we've seen the ag end */
--	int			error;	/* error code */
--	int			icount;	/* count of inodes good in irbuf */
- 	size_t			irbsize; /* size of irec buffer in bytes */
--	xfs_ino_t		ino;	/* inode number (filesystem) */
--	xfs_inobt_rec_incore_t	*irbp;	/* current irec buffer pointer */
- 	xfs_inobt_rec_incore_t	*irbuf;	/* start of irec buffer */
--	xfs_inobt_rec_incore_t	*irbufend; /* end of good irec buffer entries */
- 	xfs_ino_t		lastino; /* last inode number returned */
- 	int			nirbuf;	/* size of irbuf */
- 	int			rval;	/* return value error code */
- 	int			ubcount; /* size of user's buffer */
--	int			stat;
- 	struct xfs_bulkstat_agichunk ac;
-+	int			error = 0;
- 
- 	/*
- 	 * Get the last inode value, see if there's nothing to do.
- 	 */
--	ino = (xfs_ino_t)*lastinop;
--	lastino = ino;
--	agno = XFS_INO_TO_AGNO(mp, ino);
--	agino = XFS_INO_TO_AGINO(mp, ino);
-+	lastino = *lastinop;
-+	agno = XFS_INO_TO_AGNO(mp, lastino);
-+	agino = XFS_INO_TO_AGINO(mp, lastino);
- 	if (agno >= mp->m_sb.sb_agcount ||
--	    ino != XFS_AGINO_TO_INO(mp, agno, agino)) {
-+	    lastino != XFS_AGINO_TO_INO(mp, agno, agino)) {
- 		*done = 1;
- 		*ubcountp = 0;
- 		return 0;
-@@ -396,8 +389,13 @@ xfs_bulkstat(
- 	 * inode returned; 0 means start of the allocation group.
- 	 */
- 	rval = 0;
--	while (XFS_BULKSTAT_UBLEFT(ac.ac_ubleft) && agno < mp->m_sb.sb_agcount) {
--		cond_resched();
-+	while (agno < mp->m_sb.sb_agcount) {
-+		struct xfs_inobt_rec_incore	*irbp = irbuf;
-+		struct xfs_inobt_rec_incore	*irbufend = irbuf + nirbuf;
-+		bool				end_of_ag = false;
-+		int				icount = 0;
-+		int				stat;
-+
- 		error = xfs_ialloc_read_agi(mp, NULL, agno, &agbp);
- 		if (error)
- 			break;
-@@ -407,10 +405,6 @@ xfs_bulkstat(
- 		 */
- 		cur = xfs_inobt_init_cursor(mp, NULL, agbp, agno,
- 					    XFS_BTNUM_INO);
--		irbp = irbuf;
--		irbufend = irbuf + nirbuf;
--		end_of_ag = 0;
--		icount = 0;
- 		if (agino > 0) {
- 			/*
- 			 * In the middle of an allocation group, we need to get
-@@ -435,7 +429,7 @@ xfs_bulkstat(
- 			error = xfs_inobt_lookup(cur, 0, XFS_LOOKUP_GE, &stat);
- 		}
- 		if (error || stat == 0) {
--			end_of_ag = 1;
-+			end_of_ag = true;
- 			goto del_cursor;
- 		}
- 
-@@ -448,7 +442,7 @@ xfs_bulkstat(
- 
- 			error = xfs_inobt_get_rec(cur, &r, &stat);
- 			if (error || stat == 0) {
--				end_of_ag = 1;
-+				end_of_ag = true;
- 				goto del_cursor;
- 			}
- 
-@@ -470,7 +464,7 @@ xfs_bulkstat(
- 			agino = r.ir_startino + XFS_INODES_PER_CHUNK;
- 			error = xfs_btree_increment(cur, 0, &stat);
- 			if (error || stat == 0) {
--				end_of_ag = 1;
-+				end_of_ag = true;
- 				goto del_cursor;
- 			}
- 			cond_resched();
-@@ -491,7 +485,7 @@ del_cursor:
- 		 */
- 		irbufend = irbp;
- 		for (irbp = irbuf;
--		     irbp < irbufend && XFS_BULKSTAT_UBLEFT(ac.ac_ubleft);
-+		     irbp < irbufend && ac.ac_ubleft >= statstruct_size;
- 		     irbp++) {
- 			error = xfs_bulkstat_ag_ichunk(mp, agno, irbp,
- 					formatter, statstruct_size, &ac,
-@@ -502,17 +496,15 @@ del_cursor:
- 			cond_resched();
- 		}
- 
--		/*
--		 * Set up for the next loop iteration.
--		 */
--		if (XFS_BULKSTAT_UBLEFT(ac.ac_ubleft)) {
--			if (end_of_ag) {
--				agno++;
--				agino = 0;
--			} else
--				agino = XFS_INO_TO_AGINO(mp, lastino);
--		} else
-+		/* If we've run out of space, we are done */
-+		if (ac.ac_ubleft < statstruct_size)
- 			break;
-+
-+		if (end_of_ag) {
-+			agno++;
-+			agino = 0;
-+		} else
-+			agino = XFS_INO_TO_AGINO(mp, lastino);
- 	}
- 	/*
- 	 * Done, we're either out of filesystem or space to put the data.
--- 
-2.0.0
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+TGUgVGh1LCA2IE5vdiAyMDE0IDEzOjAzOjQ1ICswMDAwCkd1YW5nWWFuZyA8eWd1YW5nMTFAb3V0
+bG9vay5jb20+IMOpY3JpdmFpdDoKCj4gSGVsbG8sV2hpbGUgd29ya2luZyBvbiB0aGUgc3RvcmFn
+ZSBzeXN0ZW0sIEkgZ290IG9uZSBxdWVzdGlvbiBpbgo+IHRlcm1zIG9mIHRoZSBYRlMgdXRpbGl0
+aWVzIHRvIGZpeCBmaWxlIHN5c3RlbSBjb3JydXB0aW9uLiBCYXNpY2FsbHksCj4gb3VyIHN0b3Jh
+Z2Ugc3lzdGVtIHB1dCAzIGNvcGllcyBvZiBkYXRhIGFuZCB0aGUgc3lzdGVtIHdvdWxkIGRldGVj
+dAo+IGRhdGEgaW5jb25zaXN0ZW5jeSBvbiByZWd1bGFyIGJhc2lzLCB0aGVyZSBhcmUgdHdvIHBh
+dHRlcm5zIHdlCj4gb2JzZXJ2ZWQgc28gZmFyOiAxKSB0aGUgZGF0YSBpcyBjb3JydXB0ZWQgd2hp
+Y2ggcmVzdWx0IGluIGFuIEVJTywgMikKPiBkYXRhIGlzIHN0aWxsIGFjY2Vzc2libGUgYnV0IHRo
+ZSBjb250ZW50IGlzIGNoYW5nZWQuIEkgYW0gd29uZGVyaW5nCj4gdGhlIHdheSB0byBmaXggc3Vj
+aCBpc3N1ZXMgZnJvbSBmaWxlIHN5c3RlbSdzIHBlcnNwZWN0aXZlLCBkbyB3ZQo+IGV4cGVjdCBo
+YXJkd2FyZSBmYWlsdXJlIGZvciBib3RoIGNhc2VzIG9yIHNvbWUgeGZzIHJlcGFpcmluZyB0b29s
+cwo+IGNvdWxkIGhlbHAgZm9yIHN1Y2ggY2FzZT8KClhGUyByZWxpZXMgb24gdGhlIHVuZGVybHlp
+bmcgaGFyZHdhcmUgdG8gbWFpbnRhaW4gZGF0YSBpbnRlZ3JpdHkuIFRoZQpsYXRlc3QgWEZTIHZl
+cnNpb24gY29tZXMgd2l0aCBtZXRhZGF0YSBjaGVja3N1bXMsIHdoaWNoIGFsbG93cwpjb3JyZWN0
+aW5nIGludmFsaWQgZGF0YSBpbiBmaWxlc3lzdGVtIHN0cnVjdHVyZXMsIGJ1dCBub3QgZGF0YS4K
+CkdlbmVyYWxseSBzcGVha2luZywgaWYgdGhlIGRhdGEgaXMgY29ycnVwdGVkIGJlY2F1c2Ugb2Yg
+ZmF1bHR5IGhhcmR3YXJlLAp4ZnNfcmVwYWlyIGNhbid0IGhlbHAuCgpyZWdhcmRzLAotLSAKLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tCkVtbWFudWVsIEZsb3JhYyAgICAgfCAgIERpcmVjdGlvbiB0ZWNobmlxdWUK
+ICAgICAgICAgICAgICAgICAgICB8ICAgSW50ZWxsaXF1ZQogICAgICAgICAgICAgICAgICAgIHwJ
+PGVmbG9yYWNAaW50ZWxsaXF1ZS5jb20+CiAgICAgICAgICAgICAgICAgICAgfCAgICszMyAxIDc4
+IDk0IDg0IDAyCi0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDov
+L29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCg==
