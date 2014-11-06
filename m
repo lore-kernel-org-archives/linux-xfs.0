@@ -1,9 +1,9 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 From: xfs@oss.sgi.com
-Subject: [XFS updates] XFS development tree branch, xfs-fixes-for-3.18-rc3,
+Subject: [XFS updates] XFS development tree branch, for-next,
 	updated. v3.18-rc2-11-g0027589
-Message-Id: <20141106214150.709A27F47@oss.sgi.com>
-Date: Thu,  6 Nov 2014 15:41:50 -0600 (CST)
+Message-Id: <20141106214228.7AA267F51@oss.sgi.com>
+Date: Thu,  6 Nov 2014 15:42:28 -0600 (CST)
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,7 +23,7 @@ This is an automated email from the git hooks/post-receive script. It was
 generated because a ref change was pushed to the repository containing
 the project "XFS development tree".
 
-The branch, xfs-fixes-for-3.18-rc3 has been updated
+The branch, for-next has been updated
   discards  31692c5fe617d28d8099a9308d345e26f3e22dca (commit)
   discards  bae09893f6a5260c7030499ddfd0911899ae3d0c (commit)
   discards  3f7bc307d477036177a86334dd02a95981b34ecc (commit)
