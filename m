@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 931FD7F3F
-	for <xfs@oss.sgi.com>; Thu,  6 Nov 2014 15:49:57 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 2036DAC008
-	for <xfs@oss.sgi.com>; Thu,  6 Nov 2014 13:49:54 -0800 (PST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id C67D67F4E
+	for <xfs@oss.sgi.com>; Thu,  6 Nov 2014 15:54:40 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id A5A4B304032
+	for <xfs@oss.sgi.com>; Thu,  6 Nov 2014 13:54:37 -0800 (PST)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	oMC8dEej3pXlGIom for <xfs@oss.sgi.com>;
-	Thu, 06 Nov 2014 13:49:52 -0800 (PST)
-Date: Fri, 7 Nov 2014 08:49:34 +1100
+	p1a4mN3Eb2lmTYAf for <xfs@oss.sgi.com>;
+	Thu, 06 Nov 2014 13:54:32 -0800 (PST)
+Date: Fri, 7 Nov 2014 08:54:01 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: scratch filesystem corruptions
-Message-ID: <20141106214934.GF23575@dastard>
-References: <545B541A.60800@oracle.com>
+Subject: Re: EIO and data corruption on XFS file system
+Message-ID: <20141106215400.GG23575@dastard>
+References: <BLU175-W376F83659C1C70DE51C3D9DF840@phx.gbl>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <545B541A.60800@oracle.com>
+In-Reply-To: <BLU175-W376F83659C1C70DE51C3D9DF840@phx.gbl>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,48 +29,31 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: alexander.tsvetkov@oracle.com
-Cc: xfs@oss.sgi.com
+To: GuangYang <yguang11@outlook.com>
+Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-On Thu, Nov 06, 2014 at 01:57:30PM +0300, alexander.tsvetkov@oracle.com wrote:
-> Hello,
-> 
-> I've noted that the enabling of scratch device post checks after
-> xfstests commit
-> "common: Check the file system consistency on SCRATCH_DEV" has
-> started to show
-> the scratch filesystem corruptions for the following tests runs:
-> xfs/050,134,187,244,287.
-> I have these corruptions reproduced with upstream linux kernel of
-> version 3.15 and
-> the latest xfsprogs/xfstests. Are these known issues?
+On Thu, Nov 06, 2014 at 01:03:45PM +0000, GuangYang wrote:
+> Hello,While working on the storage system, I got one question in
+> terms of the XFS utilities to fix file system corruption.
+> Basically, our storage system put 3 copies of data and the system
+> would detect data inconsistency on regular basis, there are two
+> patterns we observed so far:
+>
+> 1) the data is corrupted which result in an EIO,
 
-# ./check xfs/050 xfs/134 xfs/187 xfs/244 xfs/287
-FSTYP         -- xfs (non-debug)
-PLATFORM      -- Linux/x86_64 test2 3.18.0-rc2-dgc+
-MKFS_OPTIONS  -- -f -bsize=4096 /dev/vdb
-MOUNT_OPTIONS -- /dev/vdb /mnt/scratch
+Data corruption doesn't trigger EIO errors. EIO errors from the
+underlying storage might cause data corruption, but the only thing
+that can detect bad data is the application itself, not the kernel.
 
-xfs/050 3s ... 4s
-xfs/134 0s ... 0s
-xfs/187 1s ... 1s
-_check_xfs_filesystem: filesystem on /dev/vdb is inconsistent (c) (see /home/dave/src/xfstests-dev/results//xfs/187.full)
-_check_xfs_filesystem: filesystem on /dev/vdb is inconsistent (r) (see /home/dave/src/xfstests-dev/results//xfs/187.full)
-xfs/244 0s ... 1s
-xfs/287 1s ... 0s
-Ran: xfs/050 xfs/134 xfs/187 xfs/244 xfs/287
-Passed all 5 tests
+> 2) data is still accessible but the content is changed.
 
-# cat  ~/results/xfs/187.full
-....
-_check_xfs_filesystem: filesystem on /dev/vdb is inconsistent
-*** xfs_check output ***
-sb_features2 (0x2) not same as sb_bad_features2 (0xa)
-*** end xfs_check output
-.....
+Again, data being incorrect is generally not a filesystem issue
+unless there's a bug somewhere in the filesystem IO path. You'll
+need to give us a *lot* more information about your storage and
+application workload  if you think XFS is corrupting data. Start
+with:
 
-The xfs/187 failure needs investigation - that's a bad_features2
-mismatch, but it's been way down my list of priorities...
+http://xfs.org/index.php/XFS_FAQ#Q:_What_information_should_I_include_when_reporting_a_problem.3F
 
 Cheers,
 
