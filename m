@@ -1,21 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 4B7F17F55
-	for <xfs@oss.sgi.com>; Thu,  6 Nov 2014 08:27:59 -0600 (CST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id E49A57F3F
+	for <xfs@oss.sgi.com>; Thu,  6 Nov 2014 10:32:09 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 39A73304043
-	for <xfs@oss.sgi.com>; Thu,  6 Nov 2014 06:27:56 -0800 (PST)
-Received: from mail1.g1.pair.com (mail1.g1.pair.com [66.39.3.162]) by
-	cuda.sgi.com with ESMTP id 9ili2qyfv2EzmDAN (version=TLSv1
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 723DDAC006
+	for <xfs@oss.sgi.com>; Thu,  6 Nov 2014 08:32:06 -0800 (PST)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id xP889X1TwDWdNSP0 (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 06 Nov 2014 06:27:39 -0800 (PST)
-Date: Thu, 6 Nov 2014 15:27:41 +0100
-From: Emmanuel Florac <eflorac@intellique.com>
-Subject: Re: EIO and data corruption on XFS file system
-Message-ID: <20141106152741.2655245d@harpe.intellique.com>
-In-Reply-To: <BLU175-W376F83659C1C70DE51C3D9DF840@phx.gbl>
-References: <BLU175-W376F83659C1C70DE51C3D9DF840@phx.gbl>
+	Thu, 06 Nov 2014 08:32:05 -0800 (PST)
+Date: Thu, 6 Nov 2014 11:31:54 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 3/6] xfs: bulkstat chunk-formatter has issues
+Message-ID: <20141106163152.GB31429@bfoster.bfoster>
+References: <1415279699-8739-1-git-send-email-david@fromorbit.com>
+	<1415279699-8739-4-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <1415279699-8739-4-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,35 +26,141 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: GuangYang <yguang11@outlook.com>
-Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-TGUgVGh1LCA2IE5vdiAyMDE0IDEzOjAzOjQ1ICswMDAwCkd1YW5nWWFuZyA8eWd1YW5nMTFAb3V0
-bG9vay5jb20+IMOpY3JpdmFpdDoKCj4gSGVsbG8sV2hpbGUgd29ya2luZyBvbiB0aGUgc3RvcmFn
-ZSBzeXN0ZW0sIEkgZ290IG9uZSBxdWVzdGlvbiBpbgo+IHRlcm1zIG9mIHRoZSBYRlMgdXRpbGl0
-aWVzIHRvIGZpeCBmaWxlIHN5c3RlbSBjb3JydXB0aW9uLiBCYXNpY2FsbHksCj4gb3VyIHN0b3Jh
-Z2Ugc3lzdGVtIHB1dCAzIGNvcGllcyBvZiBkYXRhIGFuZCB0aGUgc3lzdGVtIHdvdWxkIGRldGVj
-dAo+IGRhdGEgaW5jb25zaXN0ZW5jeSBvbiByZWd1bGFyIGJhc2lzLCB0aGVyZSBhcmUgdHdvIHBh
-dHRlcm5zIHdlCj4gb2JzZXJ2ZWQgc28gZmFyOiAxKSB0aGUgZGF0YSBpcyBjb3JydXB0ZWQgd2hp
-Y2ggcmVzdWx0IGluIGFuIEVJTywgMikKPiBkYXRhIGlzIHN0aWxsIGFjY2Vzc2libGUgYnV0IHRo
-ZSBjb250ZW50IGlzIGNoYW5nZWQuIEkgYW0gd29uZGVyaW5nCj4gdGhlIHdheSB0byBmaXggc3Vj
-aCBpc3N1ZXMgZnJvbSBmaWxlIHN5c3RlbSdzIHBlcnNwZWN0aXZlLCBkbyB3ZQo+IGV4cGVjdCBo
-YXJkd2FyZSBmYWlsdXJlIGZvciBib3RoIGNhc2VzIG9yIHNvbWUgeGZzIHJlcGFpcmluZyB0b29s
-cwo+IGNvdWxkIGhlbHAgZm9yIHN1Y2ggY2FzZT8KClhGUyByZWxpZXMgb24gdGhlIHVuZGVybHlp
-bmcgaGFyZHdhcmUgdG8gbWFpbnRhaW4gZGF0YSBpbnRlZ3JpdHkuIFRoZQpsYXRlc3QgWEZTIHZl
-cnNpb24gY29tZXMgd2l0aCBtZXRhZGF0YSBjaGVja3N1bXMsIHdoaWNoIGFsbG93cwpjb3JyZWN0
-aW5nIGludmFsaWQgZGF0YSBpbiBmaWxlc3lzdGVtIHN0cnVjdHVyZXMsIGJ1dCBub3QgZGF0YS4K
-CkdlbmVyYWxseSBzcGVha2luZywgaWYgdGhlIGRhdGEgaXMgY29ycnVwdGVkIGJlY2F1c2Ugb2Yg
-ZmF1bHR5IGhhcmR3YXJlLAp4ZnNfcmVwYWlyIGNhbid0IGhlbHAuCgpyZWdhcmRzLAotLSAKLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tCkVtbWFudWVsIEZsb3JhYyAgICAgfCAgIERpcmVjdGlvbiB0ZWNobmlxdWUK
-ICAgICAgICAgICAgICAgICAgICB8ICAgSW50ZWxsaXF1ZQogICAgICAgICAgICAgICAgICAgIHwJ
-PGVmbG9yYWNAaW50ZWxsaXF1ZS5jb20+CiAgICAgICAgICAgICAgICAgICAgfCAgICszMyAxIDc4
-IDk0IDg0IDAyCi0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDov
-L29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCg==
+On Fri, Nov 07, 2014 at 12:14:56AM +1100, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> The loop construct has issues:
+> 	- clustidx is completely unused, so remove it.
+> 	- the loop tries to be smart by terminating when the
+> 	  "freecount" tells it that all inodes are free. Just drop
+> 	  it as in most cases we have to scan all inodes in the
+> 	  chunk anyway.
+> 	- move the "user buffer left" condition check to the only
+> 	  point where we consume space int eh user buffer.
+> 	- move the initialisation of agino out of the loop, leaving
+> 	  just a simple loop control logic using the clusteridx.
+> 
+> Also, double handling of the user buffer variables leads to problems
+> tracking the current state - use the cursor variables directly
+> rather than keeping local copies and then having to update the
+> cursor before returning.
+> 
+> cc: <stable@vger.kernel.org>
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> ---
+
+FYI, this looks exactly like the previous version. That seems fine
+because we still handle lastino separately from agino at this point.
+
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+
+>  fs/xfs/xfs_itable.c | 58 ++++++++++++++++++++++-------------------------------
+>  1 file changed, 24 insertions(+), 34 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_itable.c b/fs/xfs/xfs_itable.c
+> index 50a3e59..7ea2b11 100644
+> --- a/fs/xfs/xfs_itable.c
+> +++ b/fs/xfs/xfs_itable.c
+> @@ -283,59 +283,49 @@ xfs_bulkstat_ag_ichunk(
+>  	xfs_ino_t			*lastino)
+>  {
+>  	char				__user **ubufp = acp->ac_ubuffer;
+> -	int				ubleft = acp->ac_ubleft;
+> -	int				ubelem = acp->ac_ubelem;
+> -	int				chunkidx, clustidx;
+> +	int				chunkidx;
+>  	int				error = 0;
+>  	xfs_agino_t			agino;
+>  
+> -	for (agino = irbp->ir_startino, chunkidx = clustidx = 0;
+> -	     XFS_BULKSTAT_UBLEFT(ubleft) &&
+> -	     irbp->ir_freecount < XFS_INODES_PER_CHUNK;
+> -	     chunkidx++, clustidx++, agino++) {
+> -		int		fmterror;	/* bulkstat formatter result */
+> +	agino = irbp->ir_startino;
+> +	for (chunkidx = 0; chunkidx < XFS_INODES_PER_CHUNK;
+> +	     chunkidx++, agino++) {
+> +		int		fmterror;
+>  		int		ubused;
+>  		xfs_ino_t	ino = XFS_AGINO_TO_INO(mp, agno, agino);
+>  
+> -		ASSERT(chunkidx < XFS_INODES_PER_CHUNK);
+> -
+>  		/* Skip if this inode is free */
+>  		if (XFS_INOBT_MASK(chunkidx) & irbp->ir_free) {
+>  			*lastino = ino;
+>  			continue;
+>  		}
+>  
+> -		/*
+> -		 * Count used inodes as free so we can tell when the
+> -		 * chunk is used up.
+> -		 */
+> -		irbp->ir_freecount++;
+> -
+>  		/* Get the inode and fill in a single buffer */
+>  		ubused = statstruct_size;
+> -		error = formatter(mp, ino, *ubufp, ubleft, &ubused, &fmterror);
+> -		if (fmterror == BULKSTAT_RV_NOTHING) {
+> -			if (error && error != -ENOENT && error != -EINVAL) {
+> -				ubleft = 0;
+> -				break;
+> -			}
+> -			*lastino = ino;
+> -			continue;
+> -		}
+> -		if (fmterror == BULKSTAT_RV_GIVEUP) {
+> -			ubleft = 0;
+> +		error = formatter(mp, ino, *ubufp, acp->ac_ubleft,
+> +				  &ubused, &fmterror);
+> +		if (fmterror == BULKSTAT_RV_GIVEUP ||
+> +		    (error && error != -ENOENT && error != -EINVAL)) {
+> +			acp->ac_ubleft = 0;
+>  			ASSERT(error);
+>  			break;
+>  		}
+> -		if (*ubufp)
+> -			*ubufp += ubused;
+> -		ubleft -= ubused;
+> -		ubelem++;
+> +
+> +		/* be careful not to leak error if at end of chunk */
+> +		if (fmterror == BULKSTAT_RV_NOTHING || error) {
+> +			*lastino = ino;
+> +			error = 0;
+> +			continue;
+> +		}
+> +
+> +		*ubufp += ubused;
+> +		acp->ac_ubleft -= ubused;
+> +		acp->ac_ubelem++;
+>  		*lastino = ino;
+> -	}
+>  
+> -	acp->ac_ubleft = ubleft;
+> -	acp->ac_ubelem = ubelem;
+> +		if (acp->ac_ubleft < statstruct_size)
+> +			break;
+> +	}
+>  
+>  	return error;
+>  }
+> -- 
+> 2.0.0
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
