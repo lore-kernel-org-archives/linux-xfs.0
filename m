@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 44EF67F5E
-	for <xfs@oss.sgi.com>; Thu,  6 Nov 2014 07:15:09 -0600 (CST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id B587C7F62
+	for <xfs@oss.sgi.com>; Thu,  6 Nov 2014 07:15:10 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 2506B304032
-	for <xfs@oss.sgi.com>; Thu,  6 Nov 2014 05:15:09 -0800 (PST)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 95B9F8F8035
+	for <xfs@oss.sgi.com>; Thu,  6 Nov 2014 05:15:10 -0800 (PST)
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	oOhQCytAHTOlS5Om for <xfs@oss.sgi.com>;
-	Thu, 06 Nov 2014 05:15:06 -0800 (PST)
+	I7YIEq2P4NFzQfc2 for <xfs@oss.sgi.com>;
+	Thu, 06 Nov 2014 05:15:08 -0800 (PST)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.80)
-	(envelope-from <dave@fromorbit.com>) id 1XmMty-0007Et-BP
+	(envelope-from <dave@fromorbit.com>) id 1XmMty-0007Ex-DK
 	for xfs@oss.sgi.com; Fri, 07 Nov 2014 00:15:02 +1100
 Received: from dave by disappointment with local (Exim 4.82_1-5b7a7c0-XX)
-	(envelope-from <dave@disappointment.disaster>) id 1XmMty-0002ZL-AR
+	(envelope-from <dave@disappointment.disaster>) id 1XmMty-0002Zf-CQ
 	for xfs@oss.sgi.com; Fri, 07 Nov 2014 00:15:02 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 1/6] xfs: bulkstat btree walk doesn't terminate
-Date: Fri,  7 Nov 2014 00:14:54 +1100
-Message-Id: <1415279699-8739-2-git-send-email-david@fromorbit.com>
+Subject: [PATCH 5/6] xfs: bulkstat error handling is broken
+Date: Fri,  7 Nov 2014 00:14:58 +1100
+Message-Id: <1415279699-8739-6-git-send-email-david@fromorbit.com>
 In-Reply-To: <1415279699-8739-1-git-send-email-david@fromorbit.com>
 References: <1415279699-8739-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,90 +39,118 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-The bulkstat code has several different ways of detecting the end of
-an AG when doing a walk. They are not consistently detected, and the
-code that checks for the end of AG conditions is not consistently
-coded. Hence the are conditions where the walk code can get stuck in
-an endless loop making no progress and not triggering any
-termination conditions.
+The error propagation is a horror - xfs_bulkstat() returns
+a rval variable which is only set if there are formatter errors. Any
+sort of btree walk error or corruption will cause the bulkstat walk
+to terminate but will not pass an error back to userspace. Worse
+is the fact that formatter errors will also be ignored if any inodes
+were correctly formatted into the user buffer.
 
-Convert all the "tmp/i" status return codes from btree operations
-to a common name (stat) and apply end-of-ag detection to these
-operations consistently.
+Hence bulkstat can fail badly yet still report success to userspace.
+This causes significant issues with xfsdump not dumping everything
+in the filesystem yet reporting success. It's not until a restore
+fails that there is any indication that the dump was bad and tha
+bulkstat failed. This patch now triggers xfsdump to fail with
+bulkstat errors rather than silently missing files in the dump.
 
-cc: stable@vger.kernel.org
+This now causes bulkstat to fail when the lastino cookie does not
+fall inside an existing inode chunk. The pre-3.17 code tolerated
+that error by allowing the code to move to the next inode chunk
+as the agino target is guaranteed to fall into the next btree
+record.
+
+With the fixes up to this point in the series, xfsdump now passes on
+the troublesome filesystem image that exposes all these bugs.
+
+cc: <stable@vger.kernel.org>
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 Reviewed-by: Brian Foster <bfoster@redhat.com>
 ---
- fs/xfs/xfs_itable.c | 19 ++++++++++---------
- 1 file changed, 10 insertions(+), 9 deletions(-)
+ fs/xfs/xfs_itable.c | 29 +++++++++++++++++++----------
+ 1 file changed, 19 insertions(+), 10 deletions(-)
 
 diff --git a/fs/xfs/xfs_itable.c b/fs/xfs/xfs_itable.c
-index 7765ff7..16737cb 100644
+index acae335..ff3f431 100644
 --- a/fs/xfs/xfs_itable.c
 +++ b/fs/xfs/xfs_itable.c
-@@ -356,7 +356,6 @@ xfs_bulkstat(
- 	int			end_of_ag; /* set if we've seen the ag end */
- 	int			error;	/* error code */
- 	int                     fmterror;/* bulkstat formatter result */
--	int			i;	/* loop index */
- 	int			icount;	/* count of inodes good in irbuf */
- 	size_t			irbsize; /* size of irec buffer in bytes */
- 	xfs_ino_t		ino;	/* inode number (filesystem) */
-@@ -366,11 +365,11 @@ xfs_bulkstat(
+@@ -236,8 +236,10 @@ xfs_bulkstat_grab_ichunk(
+ 	XFS_WANT_CORRUPTED_RETURN(stat == 1);
+ 
+ 	/* Check if the record contains the inode in request */
+-	if (irec->ir_startino + XFS_INODES_PER_CHUNK <= agino)
+-		return -EINVAL;
++	if (irec->ir_startino + XFS_INODES_PER_CHUNK <= agino) {
++		*icount = 0;
++		return 0;
++	}
+ 
+ 	idx = agino - irec->ir_startino + 1;
+ 	if (idx < XFS_INODES_PER_CHUNK &&
+@@ -352,7 +354,6 @@ xfs_bulkstat(
+ 	xfs_inobt_rec_incore_t	*irbuf;	/* start of irec buffer */
  	xfs_ino_t		lastino; /* last inode number returned */
  	int			nirbuf;	/* size of irbuf */
- 	int			rval;	/* return value error code */
--	int			tmp;	/* result value from btree calls */
+-	int			rval;	/* return value error code */
  	int			ubcount; /* size of user's buffer */
- 	int			ubleft;	/* bytes left in user's buffer */
- 	char			__user *ubufp;	/* pointer into user's buffer */
- 	int			ubelem;	/* spaces used in user's buffer */
-+	int			stat;
+ 	struct xfs_bulkstat_agichunk ac;
+ 	int			error = 0;
+@@ -388,7 +389,6 @@ xfs_bulkstat(
+ 	 * Loop over the allocation groups, starting from the last
+ 	 * inode returned; 0 means start of the allocation group.
+ 	 */
+-	rval = 0;
+ 	while (agno < mp->m_sb.sb_agcount) {
+ 		struct xfs_inobt_rec_incore	*irbp = irbuf;
+ 		struct xfs_inobt_rec_incore	*irbufend = irbuf + nirbuf;
+@@ -491,13 +491,16 @@ del_cursor:
+ 					formatter, statstruct_size, &ac,
+ 					&lastino);
+ 			if (error)
+-				rval = error;
++				break;
  
- 	/*
- 	 * Get the last inode value, see if there's nothing to do.
-@@ -436,13 +435,15 @@ xfs_bulkstat(
- 				agino = r.ir_startino + XFS_INODES_PER_CHUNK;
- 			}
- 			/* Increment to the next record */
--			error = xfs_btree_increment(cur, 0, &tmp);
-+			error = xfs_btree_increment(cur, 0, &stat);
- 		} else {
- 			/* Start of ag.  Lookup the first inode chunk */
--			error = xfs_inobt_lookup(cur, 0, XFS_LOOKUP_GE, &tmp);
-+			error = xfs_inobt_lookup(cur, 0, XFS_LOOKUP_GE, &stat);
+ 			cond_resched();
  		}
--		if (error)
-+		if (error || stat == 0) {
-+			end_of_ag = 1;
- 			goto del_cursor;
-+		}
  
+-		/* If we've run out of space, we are done */
+-		if (ac.ac_ubleft < statstruct_size)
++		/*
++		 * If we've run out of space or had a formatting error, we
++		 * are now done
++		 */
++		if (ac.ac_ubleft < statstruct_size || error)
+ 			break;
+ 
+ 		if (end_of_ag) {
+@@ -511,11 +514,17 @@ del_cursor:
+ 	 */
+ 	kmem_free(irbuf);
+ 	*ubcountp = ac.ac_ubelem;
++
+ 	/*
+-	 * Found some inodes, return them now and return the error next time.
++	 * We found some inodes, so clear the error status and return them.
++	 * The lastino pointer will point directly at the inode that triggered
++	 * any error that occurred, so on the next call the error will be
++	 * triggered again and propagated to userspace as there will be no
++	 * formatted inodes in the buffer.
+ 	 */
+ 	if (ac.ac_ubelem)
+-		rval = 0;
++		error = 0;
++
+ 	if (agno >= mp->m_sb.sb_agcount) {
  		/*
- 		 * Loop through inode btree records in this ag,
-@@ -451,8 +452,8 @@ xfs_bulkstat(
- 		while (irbp < irbufend && icount < ubcount) {
- 			struct xfs_inobt_rec_incore	r;
+ 		 * If we ran out of filesystem, mark lastino as off
+@@ -527,7 +536,7 @@ del_cursor:
+ 	} else
+ 		*lastinop = (xfs_ino_t)lastino;
  
--			error = xfs_inobt_get_rec(cur, &r, &i);
--			if (error || i == 0) {
-+			error = xfs_inobt_get_rec(cur, &r, &stat);
-+			if (error || stat == 0) {
- 				end_of_ag = 1;
- 				goto del_cursor;
- 			}
-@@ -473,8 +474,8 @@ xfs_bulkstat(
- 			 * Set agino to after this chunk and bump the cursor.
- 			 */
- 			agino = r.ir_startino + XFS_INODES_PER_CHUNK;
--			error = xfs_btree_increment(cur, 0, &tmp);
--			if (error) {
-+			error = xfs_btree_increment(cur, 0, &stat);
-+			if (error || stat == 0) {
- 				end_of_ag = 1;
- 				goto del_cursor;
- 			}
+-	return rval;
++	return error;
+ }
+ 
+ int
 -- 
 2.0.0
 
