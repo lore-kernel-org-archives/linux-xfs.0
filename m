@@ -1,22 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id E6F9E7F3F
-	for <xfs@oss.sgi.com>; Fri,  7 Nov 2014 07:04:25 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id D50C88F8033
-	for <xfs@oss.sgi.com>; Fri,  7 Nov 2014 05:04:22 -0800 (PST)
-Received: from mail-qc0-f172.google.com (mail-qc0-f172.google.com
-	[209.85.216.172]) by cuda.sgi.com with ESMTP id
-	uvKw8SEyIwpTemBR (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 07 Nov 2014 05:04:20 -0800 (PST)
-Received: by mail-qc0-f172.google.com with SMTP id i17so2489593qcy.3
-	for <xfs@oss.sgi.com>; Fri, 07 Nov 2014 05:04:20 -0800 (PST)
-Date: Fri, 7 Nov 2014 08:04:16 -0500
-From: Jeff Layton <jlayton@poochiereds.net>
-Subject: kernel BUG at drivers/block/virtio_blk.c:172!
-Message-ID: <20141107080416.0837a88c@tlielax.poochiereds.net>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 400FA7F3F
+	for <xfs@oss.sgi.com>; Fri,  7 Nov 2014 08:06:12 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 028F5304032
+	for <xfs@oss.sgi.com>; Fri,  7 Nov 2014 06:06:08 -0800 (PST)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id w7WziMNNoNvTjIgI (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Fri, 07 Nov 2014 06:06:07 -0800 (PST)
+Date: Fri, 7 Nov 2014 09:05:57 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH] xfs: move global xfslogd workqueue to per-mount
+Message-ID: <20141107140557.GA2114@laptop.bfoster>
+References: <1414773271-48598-1-git-send-email-bfoster@redhat.com>
+	<20141106235948.GH23575@dastard>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20141106235948.GH23575@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,79 +30,116 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Rusty@oss.sgi.com, "Russell <rusty"@rustcorp.com.au, "Michael S. Tsirkin" <mst@redhat.com>, Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com, virtualization@lists.linux-foundation.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-In the latest Fedora rawhide kernel in the repos, I'm seeing the
-following oops when mounting xfs. rc2-ish kernels seem to be fine:
+On Fri, Nov 07, 2014 at 10:59:48AM +1100, Dave Chinner wrote:
+> On Fri, Oct 31, 2014 at 12:34:31PM -0400, Brian Foster wrote:
+> > The xfslogd workqueue is a global, single-job workqueue for buffer ioend
+> > processing. This means we allow for a single work item at a time for all
+> > possible XFS mounts on a system. fsstress testing in loopback XFS over
+> > XFS configurations has reproduced xfslogd deadlocks due to the single
+> > threaded nature of the queue and dependencies introduced between the
+> > separate XFS instances by online discard (-o discard).
+> > 
+> > Discard over a loopback device converts the discard request to a hole
+> > punch (fallocate) on the underlying file. Online discard requests are
+> > issued synchronously and from xfslogd context in XFS, hence the xfslogd
+> > workqueue is blocked in the upper fs waiting on a hole punch request to
+> > be servied in the lower fs. If the lower fs issues I/O that depends on
+> > xfslogd to complete, both filesystems end up hung indefinitely. This is
+> > reproduced reliabily by generic/013 on XFS->loop->XFS test devices with
+> > the '-o discard' mount option.
+> > 
+> > Further, docker implementations appear to use this kind of configuration
+> > for container instance filesystems by default (container fs->dm->
+> > loop->base fs) and therefore are subject to this deadlock when running
+> > on XFS.
+> > 
+> > Replace the global xfslogd workqueue with a per-mount variant. This
+> > guarantees each mount access to a single worker and prevents deadlocks
+> > due to inter-fs dependencies introduced by discard.
+> > 
+> > Signed-off-by: Brian Foster <bfoster@redhat.com>
+> > ---
+> > 
+> > Hi all,
+> > 
+> > Thoughts? An alternative was to increase max jobs on the existing
+> > workqueue, but this seems more in line with how we manage workqueues
+> > these days.
+> 
+> First thing is that it's no longer a "log" workqueue. It's an async
+> buffer completion workqueue, so we really should rename it.
+> Especially as this change would mean we now have m_log_workqueue
+> for the log and m_xfslogd_workqueue for buffer completion...
+> 
 
-[   64.669633] ------------[ cut here ]------------
-[   64.670008] kernel BUG at drivers/block/virtio_blk.c:172!
-[   64.670008] invalid opcode: 0000 [#1] SMP 
-[   64.670008] Modules linked in: xfs libcrc32c snd_hda_codec_generic snd_hda_intel snd_hda_controller snd_hda_codec snd_hwdep snd_seq snd_seq_device snd_pcm ppdev snd_timer snd virtio_net virtio_balloon soundcore serio_raw parport_pc virtio_console pvpanic parport i2c_piix4 nfsd auth_rpcgss nfs_acl lockd grace sunrpc qxl virtio_blk drm_kms_helper ttm drm ata_generic virtio_pci virtio_ring virtio pata_acpi
-[   64.670008] CPU: 1 PID: 705 Comm: mount Not tainted 3.18.0-0.rc3.git2.1.fc22.x86_64 #1
-[   64.670008] Hardware name: Bochs Bochs, BIOS Bochs 01/01/2011
-[   64.670008] task: ffff8800d94a4ec0 ti: ffff8800d9f38000 task.ti: ffff8800d9f38000
-[   64.670008] RIP: 0010:[<ffffffffa00287c0>]  [<ffffffffa00287c0>] virtio_queue_rq+0x290/0x2a0 [virtio_blk]
-[   64.670008] RSP: 0018:ffff8800d9f3b778  EFLAGS: 00010202
-[   64.670008] RAX: 0000000000000082 RBX: ffff8800d8375700 RCX: dead000000200200
-[   64.670008] RDX: 0000000000000001 RSI: ffff8800d8375700 RDI: ffff8800d82c4c00
-[   64.670008] RBP: ffff8800d9f3b7b8 R08: ffff8800d8375700 R09: 0000000000000001
-[   64.670008] R10: 0000000000000001 R11: 0000000000000004 R12: ffff8800d9f3b7e0
-[   64.670008] R13: ffff8800d82c4c00 R14: ffff880118629200 R15: 0000000000000000
-[   64.670008] FS:  00007f5c64dfd840(0000) GS:ffff88011b000000(0000) knlGS:0000000000000000
-[   64.670008] CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
-[   64.670008] CR2: 00007fffe6458fb8 CR3: 00000000d06d3000 CR4: 00000000000006e0
-[   64.670008] Stack:
-[   64.670008]  ffff880000000001 ffff8800d8375870 0000000000000001 ffff8800d82c4c00
-[   64.670008]  ffff8800d9f3b7e0 0000000000000000 ffff8800d8375700 ffff8800d82c4c48
-[   64.670008]  ffff8800d9f3b828 ffffffff813ec258 ffff8800d82c8000 0000000000000001
-[   64.670008] Call Trace:
-[   64.670008]  [<ffffffff813ec258>] __blk_mq_run_hw_queue+0x1c8/0x330
-[   64.670008]  [<ffffffff813ecd80>] blk_mq_run_hw_queue+0x70/0x90
-[   64.670008]  [<ffffffff813ee0cd>] blk_sq_make_request+0x24d/0x5c0
-[   64.670008]  [<ffffffff813dec68>] generic_make_request+0xf8/0x150
-[   64.670008]  [<ffffffff813ded38>] submit_bio+0x78/0x190
-[   64.670008]  [<ffffffffa02fc27e>] _xfs_buf_ioapply+0x2be/0x5f0 [xfs]
-[   64.670008]  [<ffffffffa0333628>] ? xlog_bread_noalign+0xa8/0xe0 [xfs]
-[   64.670008]  [<ffffffffa02ffe21>] xfs_buf_submit_wait+0x91/0x840 [xfs]
-[   64.670008]  [<ffffffffa0333628>] xlog_bread_noalign+0xa8/0xe0 [xfs]
-[   64.670008]  [<ffffffffa0333ea7>] xlog_bread+0x27/0x60 [xfs]
-[   64.670008]  [<ffffffffa03357f3>] xlog_find_verify_cycle+0xf3/0x1b0 [xfs]
-[   64.670008]  [<ffffffffa0335de5>] xlog_find_head+0x2f5/0x3e0 [xfs]
-[   64.670008]  [<ffffffffa0335f0c>] xlog_find_tail+0x3c/0x410 [xfs]
-[   64.670008]  [<ffffffffa033b12d>] xlog_recover+0x2d/0x120 [xfs]
-[   64.670008]  [<ffffffffa033cfdb>] ? xfs_trans_ail_init+0xcb/0x100 [xfs]
-[   64.670008]  [<ffffffffa0329c3d>] xfs_log_mount+0xdd/0x2c0 [xfs]
-[   64.670008]  [<ffffffffa031f744>] xfs_mountfs+0x514/0x9c0 [xfs]
-[   64.670008]  [<ffffffffa0320c8d>] ? xfs_mru_cache_create+0x18d/0x1f0 [xfs]
-[   64.670008]  [<ffffffffa0322ed0>] xfs_fs_fill_super+0x330/0x3b0 [xfs]
-[   64.670008]  [<ffffffff8126d4ac>] mount_bdev+0x1bc/0x1f0
-[   64.670008]  [<ffffffffa0322ba0>] ? xfs_parseargs+0xbe0/0xbe0 [xfs]
-[   64.670008]  [<ffffffffa0320fd5>] xfs_fs_mount+0x15/0x20 [xfs]
-[   64.670008]  [<ffffffff8126de58>] mount_fs+0x38/0x1c0
-[   64.670008]  [<ffffffff81202c15>] ? __alloc_percpu+0x15/0x20
-[   64.670008]  [<ffffffff812908f8>] vfs_kern_mount+0x68/0x160
-[   64.670008]  [<ffffffff81293d6c>] do_mount+0x22c/0xc20
-[   64.670008]  [<ffffffff8120d92e>] ? might_fault+0x5e/0xc0
-[   64.670008]  [<ffffffff811fcf1b>] ? memdup_user+0x4b/0x90
-[   64.670008]  [<ffffffff81294a8e>] SyS_mount+0x9e/0x100
-[   64.670008]  [<ffffffff8185e169>] system_call_fastpath+0x12/0x17
-[   64.670008] Code: 00 00 c7 86 78 01 00 00 02 00 00 00 48 c7 86 80 01 00 00 00 00 00 00 89 86 7c 01 00 00 e9 02 fe ff ff 66 0f 1f 84 00 00 00 00 00 <0f> 0b 66 66 66 66 66 2e 0f 1f 84 00 00 00 00 00 0f 1f 44 00 00 
-[   64.670008] RIP  [<ffffffffa00287c0>] virtio_queue_rq+0x290/0x2a0 [virtio_blk]
-[   64.670008]  RSP <ffff8800d9f3b778>
-[   64.715347] ---[ end trace c0ff4a0f2fb21f7f ]---
+Ok, sounds good. The name didn't make much sense to me given what it's
+doing. ;) I guess it's historical.
 
-It's reliably reproducible and I don't see this oops when I convert the
-same block device to ext4 and mount it. In this setup, the KVM guest
-has a virtio block device that has a LVM2 PV on it with an LV on it
-that contains the filesystem.
+> Indeed, is the struct xfs_mount the right place for this? Shouldn't
+> it be on the relevant buftarg that the buffer is associated with?
+> 
 
-Let me know if you need any other info to chase this down.
+That makes sense from a generic design perspective: an iodone queue per
+buffer target. That does introduce a behavior change that we need to
+consider the side effects of. This queue currently is one request at a
+time and retaining that configuration for per-buftarg queues still
+allows for concurrency between log buf iodone processing and metadata
+buf iodone processing when the log is a separate device.
 
-Thanks!
--- 
-Jeff Layton <jlayton@poochiereds.net>
+It's not clear to me why this is a max_active=1 queue, so for that
+reason I'm more hesitant to change behavior beyond what is a clear
+separation between mounts. Do we have any serialization/locking hacks
+around that depend on this condition? Also I suspect this means we
+increase the possibility of things like adding items to the AIL
+(xlog_iodone()) and pulling them off (e.g., xfs_iflush_done()) on
+separate cpus, which makes me wonder if there are hidden performance
+ramifications to such a change.
+
+Maybe none of this matters and the queue config is also a historical
+relic..?
+
+Brian
+
+> > Brian
+> > 
+> >  fs/xfs/xfs_buf.c   | 13 ++-----------
+> >  fs/xfs/xfs_mount.h |  1 +
+> >  fs/xfs/xfs_super.c | 11 ++++++++++-
+> >  3 files changed, 13 insertions(+), 12 deletions(-)
+> > 
+> > diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+> > index 24b4ebe..758bc2e 100644
+> > --- a/fs/xfs/xfs_buf.c
+> > +++ b/fs/xfs/xfs_buf.c
+> > @@ -44,8 +44,6 @@
+> >  
+> >  static kmem_zone_t *xfs_buf_zone;
+> >  
+> > -static struct workqueue_struct *xfslogd_workqueue;
+> > -
+> >  #ifdef XFS_BUF_LOCK_TRACKING
+> >  # define XB_SET_OWNER(bp)	((bp)->b_last_holder = current->pid)
+> >  # define XB_CLEAR_OWNER(bp)	((bp)->b_last_holder = -1)
+> > @@ -1053,7 +1051,8 @@ xfs_buf_ioend_async(
+> >  	struct xfs_buf	*bp)
+> >  {
+> >  	INIT_WORK(&bp->b_iodone_work, xfs_buf_ioend_work);
+> > -	queue_work(xfslogd_workqueue, &bp->b_iodone_work);
+> > +	queue_work(bp->b_target->bt_mount->m_xfslogd_workqueue,
+> > +		   &bp->b_iodone_work);
+> >  }
+> 
+> ie. queue_work(bp->b_target->bt_iodone_wq, &bp->b_iodone_work);
+> 
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
