@@ -1,29 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 15E3A7F3F
-	for <xfs@oss.sgi.com>; Thu,  6 Nov 2014 22:37:58 -0600 (CST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id E6F9E7F3F
+	for <xfs@oss.sgi.com>; Fri,  7 Nov 2014 07:04:25 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 961A8AC008
-	for <xfs@oss.sgi.com>; Thu,  6 Nov 2014 20:37:57 -0800 (PST)
-Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
-	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	wQC2HUu7LK5z2Bq9 for <xfs@oss.sgi.com>;
-	Thu, 06 Nov 2014 20:37:51 -0800 (PST)
-Date: Fri, 7 Nov 2014 15:37:18 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: xfsrestore report SUCCESS but not restore all files in kernel 3.17
-Message-ID: <20141107043718.GJ23575@dastard>
-References: <CAGdb-8dbGRu_GWB4qoeNP8Kso2hzkLcuFS9Pwtnm2xOkP2T0rQ@mail.gmail.com>
-	<20141030050306.GI13323@dastard>
-	<CAGdb-8dt23oO7nncZdtri1BeNyWkR-6UF_4QRZx2X-5+tFYSRw@mail.gmail.com>
-	<20141030230457.GK13323@dastard> <20141031000954.GL13323@dastard>
-	<CAGdb-8dP7nah4QuXYk_S8KbEu4Y6ZiT7tXz7dMLkwZ=VTkKQXA@mail.gmail.com>
-	<20141031034925.GM13323@dastard> <20141031042511.GN13323@dastard>
-	<CAGdb-8d7fb302zwaVwA0qVcCGEgRuzJStmF6sKdSak7uQpywrw@mail.gmail.com>
-	<CAGdb-8cynz7bhHLrBe+3J03yYbo_oAmDorwZ0E2=s4huuW8tfQ@mail.gmail.com>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id D50C88F8033
+	for <xfs@oss.sgi.com>; Fri,  7 Nov 2014 05:04:22 -0800 (PST)
+Received: from mail-qc0-f172.google.com (mail-qc0-f172.google.com
+	[209.85.216.172]) by cuda.sgi.com with ESMTP id
+	uvKw8SEyIwpTemBR (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Fri, 07 Nov 2014 05:04:20 -0800 (PST)
+Received: by mail-qc0-f172.google.com with SMTP id i17so2489593qcy.3
+	for <xfs@oss.sgi.com>; Fri, 07 Nov 2014 05:04:20 -0800 (PST)
+Date: Fri, 7 Nov 2014 08:04:16 -0500
+From: Jeff Layton <jlayton@poochiereds.net>
+Subject: kernel BUG at drivers/block/virtio_blk.c:172!
+Message-ID: <20141107080416.0837a88c@tlielax.poochiereds.net>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <CAGdb-8cynz7bhHLrBe+3J03yYbo_oAmDorwZ0E2=s4huuW8tfQ@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -36,22 +29,79 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Tommy Wu <wu.tommy@gmail.com>
-Cc: xfs <xfs@oss.sgi.com>
+To: Rusty@oss.sgi.com, "Russell <rusty"@rustcorp.com.au, "Michael S. Tsirkin" <mst@redhat.com>, Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com, virtualization@lists.linux-foundation.org
 
-On Fri, Nov 07, 2014 at 09:05:55AM +0800, Tommy Wu wrote:
-> just update to xfs-fixes-for-3.18-rc3.
-> it work fine now.
+In the latest Fedora rawhide kernel in the repos, I'm seeing the
+following oops when mounting xfs. rc2-ish kernels seem to be fine:
 
-Thanks for reporting the problem, providing all the information
-necessary to fix it and for testing the fixes!
+[   64.669633] ------------[ cut here ]------------
+[   64.670008] kernel BUG at drivers/block/virtio_blk.c:172!
+[   64.670008] invalid opcode: 0000 [#1] SMP 
+[   64.670008] Modules linked in: xfs libcrc32c snd_hda_codec_generic snd_hda_intel snd_hda_controller snd_hda_codec snd_hwdep snd_seq snd_seq_device snd_pcm ppdev snd_timer snd virtio_net virtio_balloon soundcore serio_raw parport_pc virtio_console pvpanic parport i2c_piix4 nfsd auth_rpcgss nfs_acl lockd grace sunrpc qxl virtio_blk drm_kms_helper ttm drm ata_generic virtio_pci virtio_ring virtio pata_acpi
+[   64.670008] CPU: 1 PID: 705 Comm: mount Not tainted 3.18.0-0.rc3.git2.1.fc22.x86_64 #1
+[   64.670008] Hardware name: Bochs Bochs, BIOS Bochs 01/01/2011
+[   64.670008] task: ffff8800d94a4ec0 ti: ffff8800d9f38000 task.ti: ffff8800d9f38000
+[   64.670008] RIP: 0010:[<ffffffffa00287c0>]  [<ffffffffa00287c0>] virtio_queue_rq+0x290/0x2a0 [virtio_blk]
+[   64.670008] RSP: 0018:ffff8800d9f3b778  EFLAGS: 00010202
+[   64.670008] RAX: 0000000000000082 RBX: ffff8800d8375700 RCX: dead000000200200
+[   64.670008] RDX: 0000000000000001 RSI: ffff8800d8375700 RDI: ffff8800d82c4c00
+[   64.670008] RBP: ffff8800d9f3b7b8 R08: ffff8800d8375700 R09: 0000000000000001
+[   64.670008] R10: 0000000000000001 R11: 0000000000000004 R12: ffff8800d9f3b7e0
+[   64.670008] R13: ffff8800d82c4c00 R14: ffff880118629200 R15: 0000000000000000
+[   64.670008] FS:  00007f5c64dfd840(0000) GS:ffff88011b000000(0000) knlGS:0000000000000000
+[   64.670008] CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
+[   64.670008] CR2: 00007fffe6458fb8 CR3: 00000000d06d3000 CR4: 00000000000006e0
+[   64.670008] Stack:
+[   64.670008]  ffff880000000001 ffff8800d8375870 0000000000000001 ffff8800d82c4c00
+[   64.670008]  ffff8800d9f3b7e0 0000000000000000 ffff8800d8375700 ffff8800d82c4c48
+[   64.670008]  ffff8800d9f3b828 ffffffff813ec258 ffff8800d82c8000 0000000000000001
+[   64.670008] Call Trace:
+[   64.670008]  [<ffffffff813ec258>] __blk_mq_run_hw_queue+0x1c8/0x330
+[   64.670008]  [<ffffffff813ecd80>] blk_mq_run_hw_queue+0x70/0x90
+[   64.670008]  [<ffffffff813ee0cd>] blk_sq_make_request+0x24d/0x5c0
+[   64.670008]  [<ffffffff813dec68>] generic_make_request+0xf8/0x150
+[   64.670008]  [<ffffffff813ded38>] submit_bio+0x78/0x190
+[   64.670008]  [<ffffffffa02fc27e>] _xfs_buf_ioapply+0x2be/0x5f0 [xfs]
+[   64.670008]  [<ffffffffa0333628>] ? xlog_bread_noalign+0xa8/0xe0 [xfs]
+[   64.670008]  [<ffffffffa02ffe21>] xfs_buf_submit_wait+0x91/0x840 [xfs]
+[   64.670008]  [<ffffffffa0333628>] xlog_bread_noalign+0xa8/0xe0 [xfs]
+[   64.670008]  [<ffffffffa0333ea7>] xlog_bread+0x27/0x60 [xfs]
+[   64.670008]  [<ffffffffa03357f3>] xlog_find_verify_cycle+0xf3/0x1b0 [xfs]
+[   64.670008]  [<ffffffffa0335de5>] xlog_find_head+0x2f5/0x3e0 [xfs]
+[   64.670008]  [<ffffffffa0335f0c>] xlog_find_tail+0x3c/0x410 [xfs]
+[   64.670008]  [<ffffffffa033b12d>] xlog_recover+0x2d/0x120 [xfs]
+[   64.670008]  [<ffffffffa033cfdb>] ? xfs_trans_ail_init+0xcb/0x100 [xfs]
+[   64.670008]  [<ffffffffa0329c3d>] xfs_log_mount+0xdd/0x2c0 [xfs]
+[   64.670008]  [<ffffffffa031f744>] xfs_mountfs+0x514/0x9c0 [xfs]
+[   64.670008]  [<ffffffffa0320c8d>] ? xfs_mru_cache_create+0x18d/0x1f0 [xfs]
+[   64.670008]  [<ffffffffa0322ed0>] xfs_fs_fill_super+0x330/0x3b0 [xfs]
+[   64.670008]  [<ffffffff8126d4ac>] mount_bdev+0x1bc/0x1f0
+[   64.670008]  [<ffffffffa0322ba0>] ? xfs_parseargs+0xbe0/0xbe0 [xfs]
+[   64.670008]  [<ffffffffa0320fd5>] xfs_fs_mount+0x15/0x20 [xfs]
+[   64.670008]  [<ffffffff8126de58>] mount_fs+0x38/0x1c0
+[   64.670008]  [<ffffffff81202c15>] ? __alloc_percpu+0x15/0x20
+[   64.670008]  [<ffffffff812908f8>] vfs_kern_mount+0x68/0x160
+[   64.670008]  [<ffffffff81293d6c>] do_mount+0x22c/0xc20
+[   64.670008]  [<ffffffff8120d92e>] ? might_fault+0x5e/0xc0
+[   64.670008]  [<ffffffff811fcf1b>] ? memdup_user+0x4b/0x90
+[   64.670008]  [<ffffffff81294a8e>] SyS_mount+0x9e/0x100
+[   64.670008]  [<ffffffff8185e169>] system_call_fastpath+0x12/0x17
+[   64.670008] Code: 00 00 c7 86 78 01 00 00 02 00 00 00 48 c7 86 80 01 00 00 00 00 00 00 89 86 7c 01 00 00 e9 02 fe ff ff 66 0f 1f 84 00 00 00 00 00 <0f> 0b 66 66 66 66 66 2e 0f 1f 84 00 00 00 00 00 0f 1f 44 00 00 
+[   64.670008] RIP  [<ffffffffa00287c0>] virtio_queue_rq+0x290/0x2a0 [virtio_blk]
+[   64.670008]  RSP <ffff8800d9f3b778>
+[   64.715347] ---[ end trace c0ff4a0f2fb21f7f ]---
 
-Cheers,
+It's reliably reproducible and I don't see this oops when I convert the
+same block device to ext4 and mount it. In this setup, the KVM guest
+has a virtio block device that has a LVM2 PV on it with an LV on it
+that contains the filesystem.
 
-Dave.
+Let me know if you need any other info to chase this down.
+
+Thanks!
 -- 
-Dave Chinner
-david@fromorbit.com
+Jeff Layton <jlayton@poochiereds.net>
 
 _______________________________________________
 xfs mailing list
