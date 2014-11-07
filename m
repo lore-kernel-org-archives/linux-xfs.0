@@ -1,12 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 65E8A7F47
-	for <xfs@oss.sgi.com>; Fri,  7 Nov 2014 09:38:57 -0600 (CST)
-Message-ID: <545CE78D.7030003@sgi.com>
-Date: Fri, 07 Nov 2014 09:38:53 -0600
-From: Troy McCorkell <tdm@sgi.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 6A7D77F3F
+	for <xfs@oss.sgi.com>; Fri,  7 Nov 2014 13:04:36 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 46FCD304039
+	for <xfs@oss.sgi.com>; Fri,  7 Nov 2014 11:04:35 -0800 (PST)
+Received: from mail-wi0-f181.google.com (mail-wi0-f181.google.com
+	[209.85.212.181]) by cuda.sgi.com with ESMTP id
+	HJRNIFJUxj4Z6e7g (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Fri, 07 Nov 2014 11:04:29 -0800 (PST)
+Received: by mail-wi0-f181.google.com with SMTP id n3so5507599wiv.8
+	for <xfs@oss.sgi.com>; Fri, 07 Nov 2014 11:04:27 -0800 (PST)
+From: Arkadiusz =?utf-8?q?Mi=C5=9Bkiewicz?= <arekm@maven.pl>
+Subject: [3.12,
+	3.14 STABLE]: xfs: avoid false quotacheck after unclean shutdown
+Date: Fri, 7 Nov 2014 20:04:25 +0100
 MIME-Version: 1.0
-Subject: oss.sgi.com - maintenance downtime Friday 11/14/2014 at 10:00 CST USA
+Message-Id: <201411072004.25752.arekm@maven.pl>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -15,21 +26,72 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: Troy McCorkell <tdm@sgi.com>
+To: stable@vger.kernel.org
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Eric Sandeen <sandeen@sandeen.net>, xfs@oss.sgi.com
 
-
-On Friday November 14, 2014 at 10:00 CST USA
-oss.sgi.com will be unavailable for a short period of time to perform 
-network maintenance.
-
-The outage is expected to last approximately 15 minutes.
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+CkhlbGxvLgoKUGxlYXNlIGFwcGx5LiBCcm9rZW4gaW4gMy4xMSwgZml4ZWQgaW4gMy4xNywgc28g
+My4xMiBhbmQgMy4xNCBtYXRlcmlhbCAoYXMgb3RoZXMgdHJlZXMgc2VlbQp0byBiZSB1bm1haW50
+YWluZWQgYWNjb3JkaW5nIHRvIGtlcm5lbC5vcmcpCgpUaGUgb25seSBkaWZmZXJlbmNlIGJldHdl
+ZW4gMy4xNyBmaXggYW5kIGF0dGFjaGVkIG9uZSBpcyBkcm9wcGluZyAibGlieGZzIiBwYXJ0IGZy
+b20gcGF0aHMKKGZzL3hmcy9saWJ4ZnMveGZzX3NiLmMgLT4gZnMveGZzL3hmc19zYi5jKQoKCnBz
+LiBjYyBncmVna2hAIGRpcmVjdGx5LCB0b28gYmVjYXVzZSB2Z2VyLmtlcm5lbCBkb2Vzbid0IGxp
+a2UgbXkgZG9tYWluIGFuZCBsaWtlbHkgdGhpcyBtYWlsCndvbid0IGJlIGRlbGl2ZXJlZCB0byBz
+dGFibGVALiBVbnNvbHZlZCBteXN0ZXJ5IGFuZCBubyBvbmUgY2FwYWJsZS93aWxsaW5nIHRvIHNv
+bHZlIGl0LgoKY29tbWl0IDVlZjgyOGM0MTUyNzI2ZjU2NzUxYzc4ZWE4NDRmMDhkMmIyYTRmYTMK
+QXV0aG9yOiBFcmljIFNhbmRlZW4gPHNhbmRlZW5Ac2FuZGVlbi5uZXQ+CkRhdGU6ICAgTW9uIEF1
+ZyA0IDExOjM1OjQ0IDIwMTQgKzEwMDAKCiAgICB4ZnM6IGF2b2lkIGZhbHNlIHF1b3RhY2hlY2sg
+YWZ0ZXIgdW5jbGVhbiBzaHV0ZG93bgogICAgCiAgICBUaGUgY29tbWl0CiAgICAKICAgIDgzZTc4
+MmUgeGZzOiBSZW1vdmUgaW5jb3JlIHVzZSBvZiBYRlNfT1FVT1RBX0VORkQgYW5kIFhGU19PUVVP
+VEFfQ0hLRAogICAgCiAgICBhZGRlZCBhIG5ldyBmdW5jdGlvbiB4ZnNfc2JfcXVvdGFfZnJvbV9k
+aXNrKCkgd2hpY2ggc3dhcHMKICAgIG9uLWRpc2sgWEZTX09RVU9UQV8qIGZsYWdzIGZvciBpbi1j
+b3JlIFhGU19HUVVPVEFfKiBhbmQgWEZTX1BRVU9UQV8qCiAgICBmbGFncyBhZnRlciB0aGUgc3Vw
+ZXJibG9jayBpcyByZWFkLgogICAgCiAgICBIb3dldmVyLCBpZiBsb2cgcmVjb3ZlcnkgaXMgcmVx
+dWlyZWQsIHRoZSBzdXBlcmJsb2NrIGlzIHJlYWQgYWdhaW4sCiAgICBhbmQgdGhlIG1vZGlmaWVk
+IGluLWNvcmUgZmxhZ3MgYXJlIHJlLXJlYWQgZnJvbSBkaXNrLCBzbyB3ZSBoYXZlCiAgICBYRlNf
+T1FVT1RBXyogZmxhZ3MgaW4gbWVtb3J5IGFnYWluLiAgVGhpcyBjYXVzZXMgdGhlCiAgICBYRlNf
+UU1fTkVFRF9RVU9UQUNIRUNLKCkgdGVzdCB0byBiZSB0cnVlLCBiZWNhdXNlIHRoZSBYRlNfT1FV
+T1RBX0NIS0QKICAgIGlzIHN0aWxsIHNldCwgYW5kIG5vdCBYRlNfR1FVT1RBX0NIS0Qgb3IgWEZT
+X1BRVU9UQV9DSEtELgogICAgCiAgICBDaGFuZ2UgeGZzX3NiX2Zyb21fZGlzayB0byBjYWxsIHhm
+c19zYl9xdW90YV9mcm9tIGRpc2sgYW5kIGFsd2F5cwogICAgY29udmVydCB0aGUgZGlzayBmbGFn
+cyB0byBpbi1tZW1vcnkgZmxhZ3MuCiAgICAKICAgIEFkZCBhIGxvd2VyLWxldmVsIGZ1bmN0aW9u
+IHdoaWNoIGNhbiBiZSBjYWxsZWQgd2l0aCAiZmFsc2UiIHRvCiAgICBub3QgY29udmVydCB0aGUg
+ZmxhZ3MsIHNvIHRoYXQgdGhlIHNiIHZlcmlmaWVyIGNhbiB2ZXJpZnkKICAgIGV4YWN0bHkgd2hh
+dCB3YXMgb24gZGlzaywgcGVyIEJyaWFuIEZvc3RlcidzIHN1Z2dlc3Rpb24uCiAgICAKICAgIFJl
+cG9ydGVkLWJ5OiBDeXJpbCBCLiA8Y2JheUBleGNlbGxlbmN5LmZyPgogICAgU2lnbmVkLW9mZi1i
+eTogRXJpYyBTYW5kZWVuIDxzYW5kZWVuQHJlZGhhdC5jb20+CgpkaWZmIC0tZ2l0IGEvZnMveGZz
+L3hmc19zYi5jIGIvZnMveGZzL3hmc19zYi5jCmluZGV4IGY1Y2EwMjguLjhkYjllOTIgMTAwNjQ0
+Ci0tLSBhL2ZzL3hmcy94ZnNfc2IuYworKysgYi9mcy94ZnMveGZzX3NiLmMKQEAgLTM4NiwxMCAr
+Mzg2LDExIEBAIHhmc19zYl9xdW90YV9mcm9tX2Rpc2soc3RydWN0IHhmc19zYiAqc2JwKQogCX0K
+IH0KIAotdm9pZAoteGZzX3NiX2Zyb21fZGlzaygKK3N0YXRpYyB2b2lkCitfX3hmc19zYl9mcm9t
+X2Rpc2soCiAJc3RydWN0IHhmc19zYgkqdG8sCi0JeGZzX2RzYl90CSpmcm9tKQorCXhmc19kc2Jf
+dAkqZnJvbSwKKwlib29sCQljb252ZXJ0X3hxdW90YSkKIHsKIAl0by0+c2JfbWFnaWNudW0gPSBi
+ZTMyX3RvX2NwdShmcm9tLT5zYl9tYWdpY251bSk7CiAJdG8tPnNiX2Jsb2Nrc2l6ZSA9IGJlMzJf
+dG9fY3B1KGZyb20tPnNiX2Jsb2Nrc2l6ZSk7CkBAIC00NDUsNiArNDQ2LDE3IEBAIHhmc19zYl9m
+cm9tX2Rpc2soCiAJdG8tPnNiX3BhZCA9IDA7CiAJdG8tPnNiX3BxdW90aW5vID0gYmU2NF90b19j
+cHUoZnJvbS0+c2JfcHF1b3Rpbm8pOwogCXRvLT5zYl9sc24gPSBiZTY0X3RvX2NwdShmcm9tLT5z
+Yl9sc24pOworCS8qIENvbnZlcnQgb24tZGlzayBmbGFncyB0byBpbi1tZW1vcnkgZmxhZ3M/ICov
+CisJaWYgKGNvbnZlcnRfeHF1b3RhKQorCQl4ZnNfc2JfcXVvdGFfZnJvbV9kaXNrKHRvKTsKK30K
+Kwordm9pZAoreGZzX3NiX2Zyb21fZGlzaygKKwlzdHJ1Y3QgeGZzX3NiCSp0bywKKwl4ZnNfZHNi
+X3QJKmZyb20pCit7CisJX194ZnNfc2JfZnJvbV9kaXNrKHRvLCBmcm9tLCB0cnVlKTsKIH0KIAog
+c3RhdGljIGlubGluZSB2b2lkCkBAIC01NjAsNyArNTcyLDExIEBAIHhmc19zYl92ZXJpZnkoCiAJ
+c3RydWN0IHhmc19tb3VudCAqbXAgPSBicC0+Yl90YXJnZXQtPmJ0X21vdW50OwogCXN0cnVjdCB4
+ZnNfc2IJc2I7CiAKLQl4ZnNfc2JfZnJvbV9kaXNrKCZzYiwgWEZTX0JVRl9UT19TQlAoYnApKTsK
+KwkvKgorCSAqIFVzZSBjYWxsIHZhcmlhbnQgd2hpY2ggZG9lc24ndCBjb252ZXJ0IHF1b3RhIGZs
+YWdzIGZyb20gZGlzayAKKwkgKiBmb3JtYXQsIGJlY2F1c2UgeGZzX21vdW50X3ZhbGlkYXRlX3Ni
+IGNoZWNrcyB0aGUgb24tZGlzayBmbGFncy4KKwkgKi8KKwlfX3hmc19zYl9mcm9tX2Rpc2soJnNi
+LCBYRlNfQlVGX1RPX1NCUChicCksIGZhbHNlKTsKIAogCS8qCiAJICogT25seSBjaGVjayB0aGUg
+aW4gcHJvZ3Jlc3MgZmllbGQgZm9yIHRoZSBwcmltYXJ5IHN1cGVyYmxvY2sgYXMKZGlmZiAtLWdp
+dCBhL2ZzL3hmcy94ZnNfbW91bnQuYyBiL2ZzL3hmcy94ZnNfbW91bnQuYwppbmRleCBkNWM0NGE2
+Li41NjEyYWE4IDEwMDY0NAotLS0gYS9mcy94ZnMveGZzX21vdW50LmMKKysrIGIvZnMveGZzL3hm
+c19tb3VudC5jCkBAIC0zMjQsNyArMzI0LDYgQEAgcmVyZWFkOgogCSAqIEluaXRpYWxpemUgdGhl
+IG1vdW50IHN0cnVjdHVyZSBmcm9tIHRoZSBzdXBlcmJsb2NrLgogCSAqLwogCXhmc19zYl9mcm9t
+X2Rpc2soc2JwLCBYRlNfQlVGX1RPX1NCUChicCkpOwotCXhmc19zYl9xdW90YV9mcm9tX2Rpc2so
+c2JwKTsKIAogCS8qCiAJICogSWYgd2UgaGF2ZW4ndCB2YWxpZGF0ZWQgdGhlIHN1cGVyYmxvY2ss
+IGRvIHNvIG5vdyBiZWZvcmUgd2UgdHJ5CgoKLS0gCkFya2FkaXVzeiBNacWba2lld2ljeiwgYXJl
+a20gLyAoIG1hdmVuLnBsIHwgcGxkLWxpbnV4Lm9yZyApCgpfX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNv
+bQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
