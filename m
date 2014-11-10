@@ -1,23 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 02F467F59
-	for <xfs@oss.sgi.com>; Sat,  8 Nov 2014 18:09:18 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id E406C8F8033
-	for <xfs@oss.sgi.com>; Sat,  8 Nov 2014 16:09:17 -0800 (PST)
-Received: from gproxy6-pub.mail.unifiedlayer.com
-	(gproxy6-pub.mail.unifiedlayer.com [67.222.39.168]) by
-	cuda.sgi.com with SMTP id CFxKZ8Ladh5rL2Jh for
-	<xfs@oss.sgi.com>; Sat, 08 Nov 2014 16:09:12 -0800 (PST)
-Date: Sun, 09 Nov 2014 00:08:57 +0000
-Message-ID: <20141109000857.Horde.Tr45nuj-d1SIP9KtnXGR5Q1@just41.justhost.com>
-From: cem@maiolino.org
-Subject: Re: beginners project: RENAME_WHITEOUT
-References: <20141107190959.GB21021@infradead.org>
-	<545D4EE5.6040901@sandeen.net> <20141108064033.GA3450@infradead.org>
-In-Reply-To: <20141108064033.GA3450@infradead.org>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 369187F67
+	for <xfs@oss.sgi.com>; Sun,  9 Nov 2014 20:54:41 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 15EE0304039
+	for <xfs@oss.sgi.com>; Sun,  9 Nov 2014 18:54:38 -0800 (PST)
+Received: from BLU004-OMC3S20.hotmail.com (blu004-omc3s20.hotmail.com
+	[65.55.116.95]) by cuda.sgi.com with ESMTP id XToAF6blQF9DIGJH
+	(version=TLSv1 cipher=AES256-SHA bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Sun, 09 Nov 2014 18:54:36 -0800 (PST)
+Message-ID: <BLU175-W25E6AA8331685E7FEBB900DF800@phx.gbl>
+From: GuangYang <yguang11@outlook.com>
+Subject: RE: EIO and data corruption on XFS file system
+Date: Mon, 10 Nov 2014 02:54:35 +0000
+In-Reply-To: <20141106152741.2655245d@harpe.intellique.com>
+References: <BLU175-W376F83659C1C70DE51C3D9DF840@phx.gbl>,
+	<20141106152741.2655245d@harpe.intellique.com>
 MIME-Version: 1.0
-Content-Disposition: inline
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,31 +25,54 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"; DelSp="Yes"
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Miklos Szeredi <miklos@szeredi.hu>, Eric Sandeen <sandeen@sandeen.net>, xfs@oss.sgi.com
+To: Emmanuel Florac <eflorac@intellique.com>
+Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
+Thanks=A0Emmanuel. That clarifies things a lot.
 
-Quoting Christoph Hellwig <hch@infradead.org>:
+Thanks,
+Guang
 
-> On Fri, Nov 07, 2014 at 04:59:49PM -0600, Eric Sandeen wrote:
->> On 11/7/14 1:09 PM, Christoph Hellwig wrote:
->> > The overlayfs merge introduces a new rename flag to create to whiteouts.
->> > Should be a fairly easy to implement.
->> >
->> > Miklos, do you have any good documentation and/or test cases for this?
->>
->> FWIW, Carlos just expressed some interest today in doing this, and it
->> builds on his earlier patches, yes?
+----------------------------------------
+> Date: Thu, 6 Nov 2014 15:27:41 +0100
+> From: eflorac@intellique.com
+> To: yguang11@outlook.com
+> CC: xfs@oss.sgi.com
+> Subject: Re: EIO and data corruption on XFS file system
 >
-> It's in the same area, but not otherwise related.  But I'd be happy if
-> he picks it up.
-
-consider it picked up..
-
+> Le Thu, 6 Nov 2014 13:03:45 +0000
+> GuangYang <yguang11@outlook.com> =E9crivait:
+>
+>> Hello,While working on the storage system, I got one question in
+>> terms of the XFS utilities to fix file system corruption. Basically,
+>> our storage system put 3 copies of data and the system would detect
+>> data inconsistency on regular basis, there are two patterns we
+>> observed so far: 1) the data is corrupted which result in an EIO, 2)
+>> data is still accessible but the content is changed. I am wondering
+>> the way to fix such issues from file system's perspective, do we
+>> expect hardware failure for both cases or some xfs repairing tools
+>> could help for such case?
+>
+> XFS relies on the underlying hardware to maintain data integrity. The
+> latest XFS version comes with metadata checksums, which allows
+> correcting invalid data in filesystem structures, but not data.
+>
+> Generally speaking, if the data is corrupted because of faulty hardware,
+> xfs_repair can't help.
+>
+> regards,
+> --
+> ------------------------------------------------------------------------
+> Emmanuel Florac | Direction technique
+> | Intellique
+> | <eflorac@intellique.com>
+> | +33 1 78 94 84 02
+> ------------------------------------------------------------------------
+ 		 	   		  =
 
 _______________________________________________
 xfs mailing list
