@@ -1,22 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 7BC837F66
-	for <xfs@oss.sgi.com>; Mon, 10 Nov 2014 03:25:43 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id EF29CAC05C
-	for <xfs@oss.sgi.com>; Mon, 10 Nov 2014 01:25:42 -0800 (PST)
-Received: from mail-qa0-f42.google.com (mail-qa0-f42.google.com
-	[209.85.216.42]) by cuda.sgi.com with ESMTP id 1ocN4eEgeCUhfO2A
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 39D5C7F5A
+	for <xfs@oss.sgi.com>; Mon, 10 Nov 2014 03:14:15 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 27F408F8037
+	for <xfs@oss.sgi.com>; Mon, 10 Nov 2014 01:14:12 -0800 (PST)
+Received: from mail-qa0-f52.google.com (mail-qa0-f52.google.com
+	[209.85.216.52]) by cuda.sgi.com with ESMTP id UsxXQh7g0laILqLb
 	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 10 Nov 2014 01:25:41 -0800 (PST)
-Received: by mail-qa0-f42.google.com with SMTP id k15so5086355qaq.29
-	for <xfs@oss.sgi.com>; Mon, 10 Nov 2014 01:25:40 -0800 (PST)
+	<xfs@oss.sgi.com>; Mon, 10 Nov 2014 01:14:10 -0800 (PST)
+Received: by mail-qa0-f52.google.com with SMTP id u7so4939447qaz.39
+	for <xfs@oss.sgi.com>; Mon, 10 Nov 2014 01:14:10 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <20141108234232.GJ28565@dastard>
+In-Reply-To: <20141107190959.GB21021@infradead.org>
 References: <20141107190959.GB21021@infradead.org>
-	<20141108234232.GJ28565@dastard>
-Date: Mon, 10 Nov 2014 10:25:40 +0100
-Message-ID: <CAJfpegsvZtCxV-GSJ4ON7=JeNkZ7o2=+fmbOTrxDAfm==b1XBw@mail.gmail.com>
+Date: Mon, 10 Nov 2014 10:14:09 +0100
+Message-ID: <CAJfpegsiJfYKv9ySH5fKPjDszy+26XFTM48T_gNTFr7rzp-U5g@mail.gmail.com>
 Subject: Re: beginners project: RENAME_WHITEOUT
 From: Miklos Szeredi <miklos@szeredi.hu>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -31,44 +30,19 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-On Sun, Nov 9, 2014 at 12:42 AM, Dave Chinner <david@fromorbit.com> wrote:
-> On Fri, Nov 07, 2014 at 11:09:59AM -0800, Christoph Hellwig wrote:
->> The overlayfs merge introduces a new rename flag to create to whiteouts.
->> Should be a fairly easy to implement.
->>
->> Miklos, do you have any good documentation and/or test cases for this?
+On Fri, Nov 7, 2014 at 8:09 PM, Christoph Hellwig <hch@infradead.org> wrote:
+> The overlayfs merge introduces a new rename flag to create to whiteouts.
+> Should be a fairly easy to implement.
 >
-> So overlayfs uses some weird char dev hack to implement whiteout
-> inodes in directories?  Why do we need a whiteout inode on disk?
-> what information is actually stored in the whiteout inode that
-> overlayfs actually needs?  Only readdir and lookup care about
-> whiteouts, and AFAICT nothing of the inode is ever used except
-> checking the chrdev/whiteoutdev hack via ovl_is_whiteout(dentry).
->
-> Indeed, whatever happened to just storing the whiteout in the dirent
-> via DT_WHT and using that information on lookup in the lower
-> filesystem to mark the dentry returned appropriately without needing
-> to lookup a real inode?
+> Miklos, do you have any good documentation and/or test cases for this?
 
-The filesystem is free to implement whiteouts a dirent without an actual inode.
+No test case for the RENAME_WHITEOUT flag yet.  I'll work on that.
 
-But we do need at least an inode in the VFS, since the whiteout needs
-to be presented to userspace when not part of the overlay.  The DT_WHT
-makes the typical mistake of trying to make the implementation nice,
-while not caring about user interfaces.
-
-This is usually a big mistake, user interfaces are much more important
-than implementation details, and an already existing file type on
-which all the usual operations work (stat, unlink) is much better in
-this respect than a completely new object which is unknown and
-unmanageable for the vast majority of applications.
-
-The special chardev was Linus' idea, but I agree with him completely
-on this point.  Introducing DT_WHT on the userspace API would be much
-more of a hack than reusing existing objects and operations.
+We do have a man page and an xfstest test case for RENAME_EXCHANGE,
+which is also important for overlayfs.
 
 Thanks,
 Miklos
