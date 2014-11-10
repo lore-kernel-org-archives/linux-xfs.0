@@ -1,19 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 93DE87F5A
-	for <xfs@oss.sgi.com>; Mon, 10 Nov 2014 17:03:55 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 73F4D8F8037
-	for <xfs@oss.sgi.com>; Mon, 10 Nov 2014 15:03:52 -0800 (PST)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id 6wf8GYMtKJOgMb3H (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 10 Nov 2014 15:03:51 -0800 (PST)
-Message-ID: <54614454.9080009@redhat.com>
-Date: Mon, 10 Nov 2014 17:03:48 -0600
-From: Eric Sandeen <sandeen@redhat.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id AAB357F3F
+	for <xfs@oss.sgi.com>; Mon, 10 Nov 2014 17:31:59 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 8A555304032
+	for <xfs@oss.sgi.com>; Mon, 10 Nov 2014 15:31:56 -0800 (PST)
+Received: from mail-pa0-f43.google.com (mail-pa0-f43.google.com
+	[209.85.220.43]) by cuda.sgi.com with ESMTP id MHj2dx75qZxtrt4m
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Mon, 10 Nov 2014 15:31:55 -0800 (PST)
+Received: by mail-pa0-f43.google.com with SMTP id eu11so9300637pac.30
+	for <xfs@oss.sgi.com>; Mon, 10 Nov 2014 15:31:54 -0800 (PST)
+Message-ID: <54614AE7.2080204@kernel.dk>
+Date: Mon, 10 Nov 2014 16:31:51 -0700
+From: Jens Axboe <axboe@kernel.dk>
 MIME-Version: 1.0
-Subject: [PATCH] xfstests: test xfs_copy for various sector and block sizes
+Subject: Re: kernel BUG at drivers/block/virtio_blk.c:172!
+References: <20141107080416.0837a88c@tlielax.poochiereds.net>
+	<87bnofnzop.fsf@rustcorp.com.au>
+In-Reply-To: <87bnofnzop.fsf@rustcorp.com.au>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,125 +27,37 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: fstests@vger.kernel.org, xfs-oss <xfs@oss.sgi.com>
+To: Rusty Russell <rusty@rustcorp.com.au>, Jeff Layton <jlayton@poochiereds.net>, "Michael S. Tsirkin" <mst@redhat.com>, Dave Chinner <david@fromorbit.com>
+Cc: Ming Lei <tom.leiming@gmail.com>, xfs@oss.sgi.com, virtualization@lists.linux-foundation.org
 
-This tests xfs_copy, copying all combinations of sector
-size and block size possible on the platform running the
-test.
+On 2014-11-10 02:59, Rusty Russell wrote:
+> Jeff Layton <jlayton@poochiereds.net> writes:
+>
+>> In the latest Fedora rawhide kernel in the repos, I'm seeing the
+>> following oops when mounting xfs. rc2-ish kernels seem to be fine:
+>>
+>> [   64.669633] ------------[ cut here ]------------
+>> [   64.670008] kernel BUG at drivers/block/virtio_blk.c:172!
+>
+> Hmm, that's:
+>
+> 	BUG_ON(req->nr_phys_segments + 2 > vblk->sg_elems);
+>
+> But during our probe routine we said:
+>
+> 	/* We can handle whatever the host told us to handle. */
+> 	blk_queue_max_segments(q, vblk->sg_elems-2);
+>
+> Jens?
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
+Known, I'm afraid, Ming is looking into it.
 
-diff --git a/tests/xfs/032 b/tests/xfs/032
-new file mode 100755
-index 0000000..edd9069
---- /dev/null
-+++ b/tests/xfs/032
-@@ -0,0 +1,80 @@
-+#! /bin/bash
-+# FS QA Test No. 032
-+#
-+# Test xfs_copy for all filesystem sector size / block size
-+# combinations possible on this platform.
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2014 Red Hat, Inc.  All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#
-+#-----------------------------------------------------------------------
-+#
-+
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=0	# success is the default!
-+trap "rm -f $tmp.*; exit \$status" 0 1 2 3 15
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+
-+# real QA test starts here
-+_supported_fs xfs
-+_supported_os IRIX Linux
-+
-+_require_scratch
-+
-+[ $here/src/feature ] || _notrun "src/feature not built, skipping this test"
-+
-+[ "$USE_EXTERNAL" = yes ] && _notrun "Cannot xfs_copy with external devices"
-+[ -n "$XFS_COPY_PROG" ] || _notrun "xfs_copy binary not yet installed"
-+
-+rm -f $seqres.full
-+
-+SECTORSIZE=`blockdev --getss $SCRATCH_DEV`
-+PAGESIZE=`src/feature -s`
-+IMGFILE=$TEST_DIR/${seq}_copy.img
-+
-+echo "Silence is golden."
-+
-+while [ $SECTORSIZE -le $PAGESIZE ]; do
-+	BLOCKSIZE=$SECTORSIZE;
-+
-+	while [ $BLOCKSIZE -le $PAGESIZE ]; do
-+
-+		echo "=== Sector size $SECTORSIZE Block size $BLOCKSIZE ==" >> $seqres.full
-+		_scratch_mkfs -s size=$SECTORSIZE -b size=$BLOCKSIZE -d size=1g >> $seqres.full 2>&1
-+		_scratch_mount
-+		# light population of the fs
-+		$FSSTRESS_PROG -n 100 -d $SCRATCH_MNT >> $seqres.full 2>&1
-+		_scratch_unmount
-+
-+		$XFS_COPY_PROG $SCRATCH_DEV $IMGFILE >> $seqres.full 2>&1 || \
-+			_fail "Copy failed for Sector size $SECTORSIZE Block size $BLOCKSIZE"
-+		$XFS_REPAIR_PROG $IMGFILE >> $seqres.full 2>&1 || \
-+			_fail "Copy corrupted for Sector size $SECTORSIZE Block size $BLOCKSIZE"
-+
-+		BLOCKSIZE=$(($BLOCKSIZE * 2));
-+	done
-+	SECTORSIZE=$(($SECTORSIZE * 2));
-+done
-+
-+# success, all done
-+exit
-diff --git a/tests/xfs/032.out b/tests/xfs/032.out
-new file mode 100644
-index 0000000..9265732
---- /dev/null
-+++ b/tests/xfs/032.out
-@@ -0,0 +1,2 @@
-+QA output created by 032
-+Silence is golden.
-diff --git a/tests/xfs/group b/tests/xfs/group
-index 4b8e51a..dd7f01f 100644
---- a/tests/xfs/group
-+++ b/tests/xfs/group
-@@ -29,6 +29,7 @@
- 029 mkfs logprint log auto quick
- 030 repair auto quick
- 031 repair mkfs auto quick
-+032 copy auto quick
- 033 repair auto quick
- 034 other auto quick
- 035 dump ioctl tape auto
+-- 
+Jens Axboe
 
 _______________________________________________
 xfs mailing list
