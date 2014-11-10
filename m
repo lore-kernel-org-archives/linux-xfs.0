@@ -1,23 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 39D5C7F5A
-	for <xfs@oss.sgi.com>; Mon, 10 Nov 2014 03:14:15 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 27F408F8037
-	for <xfs@oss.sgi.com>; Mon, 10 Nov 2014 01:14:12 -0800 (PST)
-Received: from mail-qa0-f52.google.com (mail-qa0-f52.google.com
-	[209.85.216.52]) by cuda.sgi.com with ESMTP id UsxXQh7g0laILqLb
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 10 Nov 2014 01:14:10 -0800 (PST)
-Received: by mail-qa0-f52.google.com with SMTP id u7so4939447qaz.39
-	for <xfs@oss.sgi.com>; Mon, 10 Nov 2014 01:14:10 -0800 (PST)
+	by oss.sgi.com (Postfix) with ESMTP id 3FCF87F62
+	for <xfs@oss.sgi.com>; Mon, 10 Nov 2014 03:57:46 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 2AEA18F8035
+	for <xfs@oss.sgi.com>; Mon, 10 Nov 2014 01:57:45 -0800 (PST)
+Received: from mx6-phx2.redhat.com (mx6-phx2.redhat.com [209.132.183.39]) by
+	cuda.sgi.com with ESMTP id UWM2HNNDrjdKXSFF (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Mon, 10 Nov 2014 01:57:44 -0800 (PST)
+Date: Mon, 10 Nov 2014 04:57:43 -0500 (EST)
+From: Nathan Scott <nathans@debian.org>
+Message-ID: <1329810397.11003116.1415613463138.JavaMail.zimbra@redhat.com>
+In-Reply-To: <242895341.10993728.1415612766093.JavaMail.zimbra@redhat.com>
+Subject: xfsprogs updates: deb updates for 3.2.2
 MIME-Version: 1.0
-In-Reply-To: <20141107190959.GB21021@infradead.org>
-References: <20141107190959.GB21021@infradead.org>
-Date: Mon, 10 Nov 2014 10:14:09 +0100
-Message-ID: <CAJfpegsiJfYKv9ySH5fKPjDszy+26XFTM48T_gNTFr7rzp-U5g@mail.gmail.com>
-Subject: Re: beginners project: RENAME_WHITEOUT
-From: Miklos Szeredi <miklos@szeredi.hu>
+Reply-To: Nathan Scott <nathans@debian.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,22 +28,52 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: Dave Chinner <dchinner@redhat.com>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-On Fri, Nov 7, 2014 at 8:09 PM, Christoph Hellwig <hch@infradead.org> wrote:
-> The overlayfs merge introduces a new rename flag to create to whiteouts.
-> Should be a fairly easy to implement.
->
-> Miklos, do you have any good documentation and/or test cases for this?
+Changes committed to git://oss.sgi.com/nathans/xfsprogs master
 
-No test case for the RENAME_WHITEOUT flag yet.  I'll work on that.
+ debian/changelog |    8 ++++++++
+ debian/control   |    2 +-
+ debian/copyright |    4 ++--
+ debian/rules     |    4 ++--
+ 4 files changed, 13 insertions(+), 5 deletions(-)
 
-We do have a man page and an xfstest test case for RENAME_EXCHANGE,
-which is also important for overlayfs.
+commit d55fa71e95b5dacfe342cfd073f4835f5b1822ce
+Author: Nathan Scott <nathans@debian.org>
+Date:   Mon Nov 10 20:52:31 2014 +1100
 
-Thanks,
-Miklos
+    packaging: update deb changelog for upcoming release
+    
+    Add list of resolved issues from merged patches into the
+    debian/changelog for processing with the next release.
+    
+    Signed-off-by: Nathan Scott <nathans@debian.org>
+
+commit 1293cdbcb76a271a809b38e8e583df09a03f6950
+Author: Nathan Scott <nathans@debian.org>
+Date:   Mon Nov 10 20:52:18 2014 +1100
+
+    packaging: clarify xfs header licensing within deb builds
+    
+    Tackles bug #751511 - ensuring the licensing information in
+    the debian/copyright file matches reality.  Use explanation
+    that Christoph Hellwig came up with, pretty much verbatim.
+    
+    Signed-off-by: Nathan Scott <nathans@debian.org>
+
+commit 67c88e33106a035ef51e1f8280c3526d56e08fe3
+Author: Nathan Scott <nathans@debian.org>
+Date:   Mon Nov 10 20:51:52 2014 +1100
+
+    packaging: rework dh_autoreconf invocation for deb builds
+    
+    Reviewed, tested and merged the final iteration of proposed
+    solutions to #757455 - resolving configure-script-generation
+    for clean ppc64le builds, originally.  Many thanks to Andreas
+    Barth and Matthias Klose for coming up with this solution.
+    
+    Signed-off-by: Nathan Scott <nathans@debian.org>
 
 _______________________________________________
 xfs mailing list
