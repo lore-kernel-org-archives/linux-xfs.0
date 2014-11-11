@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 9F4457F72
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 867037F6A
 	for <xfs@oss.sgi.com>; Tue, 11 Nov 2014 15:04:48 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 6FD508F8035
-	for <xfs@oss.sgi.com>; Tue, 11 Nov 2014 13:04:48 -0800 (PST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 14B2EAC007
+	for <xfs@oss.sgi.com>; Tue, 11 Nov 2014 13:04:47 -0800 (PST)
 Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id uieA65aZ1b0cp9tQ (version=TLSv1 cipher=AES256-SHA
+	with ESMTP id r7oIGLSYCQFBu2VJ (version=TLSv1 cipher=AES256-SHA
 	bits=256 verify=NO) for <xfs@oss.sgi.com>;
 	Tue, 11 Nov 2014 13:04:46 -0800 (PST)
 From: Jan Kara <jack@suse.cz>
-Subject: [PATCH 07/11] ext4: Use generic helpers for quotaon and quotaoff
-Date: Tue, 11 Nov 2014 22:04:21 +0100
-Message-Id: <1415739865-2438-8-git-send-email-jack@suse.cz>
+Subject: [PATCH 11/11] quota: Store maximum space limit in bytes
+Date: Tue, 11 Nov 2014 22:04:25 +0100
+Message-Id: <1415739865-2438-12-git-send-email-jack@suse.cz>
 In-Reply-To: <1415739865-2438-1-git-send-email-jack@suse.cz>
 References: <1415739865-2438-1-git-send-email-jack@suse.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -31,85 +31,126 @@ Sender: xfs-bounces@oss.sgi.com
 To: linux-fsdevel@vger.kernel.org
 Cc: linux-ext4@vger.kernel.org, Jan Kara <jack@suse.cz>, xfs@oss.sgi.com
 
-Ext4 can just use the generic helpers provided by quota code for turning
-quotas on and off when quota files are stored as system inodes. The only
-difference is the feature test in ext4_quota_on_sysfile() but the same
-is achieved in dquot_sysquota_on() by checking whether usage tracking for
-the corresponding quota type is enabled (which can happen only if quota
-feature is set).
+Currently maximum space limit quota format supports is in blocks however
+since we store space limits in bytes, this is somewhat confusing. So
+store the maximum limit in bytes as well. Also rename the field to match
+the new unit and related inode field to match the new naming scheme.
 
 Signed-off-by: Jan Kara <jack@suse.cz>
 ---
- fs/ext4/super.c | 34 ++--------------------------------
- 1 file changed, 2 insertions(+), 32 deletions(-)
+ fs/ocfs2/quota_local.c |  4 ++--
+ fs/quota/dquot.c       | 18 ++++--------------
+ fs/quota/quota_v1.c    |  4 ++--
+ fs/quota/quota_v2.c    | 10 +++++-----
+ include/linux/quota.h  |  4 ++--
+ 5 files changed, 15 insertions(+), 25 deletions(-)
 
-diff --git a/fs/ext4/super.c b/fs/ext4/super.c
-index 2c9e6864abd9..45be29119e42 100644
---- a/fs/ext4/super.c
-+++ b/fs/ext4/super.c
-@@ -1055,10 +1055,7 @@ static int ext4_mark_dquot_dirty(struct dquot *dquot);
- static int ext4_write_info(struct super_block *sb, int type);
- static int ext4_quota_on(struct super_block *sb, int type, int format_id,
- 			 struct path *path);
--static int ext4_quota_on_sysfile(struct super_block *sb, int type,
--				 int format_id);
- static int ext4_quota_off(struct super_block *sb, int type);
--static int ext4_quota_off_sysfile(struct super_block *sb, int type);
- static int ext4_quota_on_mount(struct super_block *sb, int type);
- static ssize_t ext4_quota_read(struct super_block *sb, int type, char *data,
- 			       size_t len, loff_t off);
-@@ -1090,8 +1087,8 @@ static const struct quotactl_ops ext4_qctl_operations = {
+diff --git a/fs/ocfs2/quota_local.c b/fs/ocfs2/quota_local.c
+index 10b653930ee2..465223b7592e 100644
+--- a/fs/ocfs2/quota_local.c
++++ b/fs/ocfs2/quota_local.c
+@@ -701,8 +701,8 @@ static int ocfs2_local_read_info(struct super_block *sb, int type)
+ 	/* We don't need the lock and we have to acquire quota file locks
+ 	 * which will later depend on this lock */
+ 	mutex_unlock(&sb_dqopt(sb)->dqio_mutex);
+-	info->dqi_maxblimit = 0x7fffffffffffffffLL;
+-	info->dqi_maxilimit = 0x7fffffffffffffffLL;
++	info->dqi_max_spc_limit = 0x7fffffffffffffffLL;
++	info->dqi_max_ino_limit = 0x7fffffffffffffffLL;
+ 	oinfo = kmalloc(sizeof(struct ocfs2_mem_dqinfo), GFP_NOFS);
+ 	if (!oinfo) {
+ 		mlog(ML_ERROR, "failed to allocate memory for ocfs2 quota"
+diff --git a/fs/quota/dquot.c b/fs/quota/dquot.c
+index 887ead8c88e2..2e28d47b8798 100644
+--- a/fs/quota/dquot.c
++++ b/fs/quota/dquot.c
+@@ -2462,16 +2462,6 @@ out_err:
+ }
+ EXPORT_SYMBOL(dquot_sysquota_off);
+ 
+-static inline qsize_t qbtos(qsize_t blocks)
+-{
+-	return blocks << QIF_DQBLKSIZE_BITS;
+-}
+-
+-static inline qsize_t stoqb(qsize_t space)
+-{
+-	return (space + QIF_DQBLKSIZE - 1) >> QIF_DQBLKSIZE_BITS;
+-}
+-
+ /* Generic routine for getting common part of quota structure */
+ static void do_get_dqblk(struct dquot *dquot, struct qc_dqblk *di)
+ {
+@@ -2521,13 +2511,13 @@ static int do_set_dqblk(struct dquot *dquot, struct qc_dqblk *di)
+ 		return -EINVAL;
+ 
+ 	if (((di->d_fieldmask & QC_SPC_SOFT) &&
+-	     stoqb(di->d_spc_softlimit) > dqi->dqi_maxblimit) ||
++	     di->d_spc_softlimit > dqi->dqi_max_spc_limit) ||
+ 	    ((di->d_fieldmask & QC_SPC_HARD) &&
+-	     stoqb(di->d_spc_hardlimit) > dqi->dqi_maxblimit) ||
++	     di->d_spc_hardlimit > dqi->dqi_max_spc_limit) ||
+ 	    ((di->d_fieldmask & QC_INO_SOFT) &&
+-	     (di->d_ino_softlimit > dqi->dqi_maxilimit)) ||
++	     (di->d_ino_softlimit > dqi->dqi_max_ino_limit)) ||
+ 	    ((di->d_fieldmask & QC_INO_HARD) &&
+-	     (di->d_ino_hardlimit > dqi->dqi_maxilimit)))
++	     (di->d_ino_hardlimit > dqi->dqi_max_ino_limit)))
+ 		return -ERANGE;
+ 
+ 	spin_lock(&dq_data_lock);
+diff --git a/fs/quota/quota_v1.c b/fs/quota/quota_v1.c
+index 469c6848b322..8fe79beced5c 100644
+--- a/fs/quota/quota_v1.c
++++ b/fs/quota/quota_v1.c
+@@ -169,8 +169,8 @@ static int v1_read_file_info(struct super_block *sb, int type)
+ 	}
+ 	ret = 0;
+ 	/* limits are stored as unsigned 32-bit data */
+-	dqopt->info[type].dqi_maxblimit = 0xffffffff;
+-	dqopt->info[type].dqi_maxilimit = 0xffffffff;
++	dqopt->info[type].dqi_max_spc_limit = 0xffffffffULL << QUOTABLOCK_BITS;
++	dqopt->info[type].dqi_max_ino_limit = 0xffffffff;
+ 	dqopt->info[type].dqi_igrace =
+ 			dqblk.dqb_itime ? dqblk.dqb_itime : MAX_IQ_TIME;
+ 	dqopt->info[type].dqi_bgrace =
+diff --git a/fs/quota/quota_v2.c b/fs/quota/quota_v2.c
+index 02751ec695c5..d1a8054bba9a 100644
+--- a/fs/quota/quota_v2.c
++++ b/fs/quota/quota_v2.c
+@@ -117,12 +117,12 @@ static int v2_read_file_info(struct super_block *sb, int type)
+ 	qinfo = info->dqi_priv;
+ 	if (version == 0) {
+ 		/* limits are stored as unsigned 32-bit data */
+-		info->dqi_maxblimit = 0xffffffff;
+-		info->dqi_maxilimit = 0xffffffff;
++		info->dqi_max_spc_limit = 0xffffffffULL << QUOTABLOCK_BITS;
++		info->dqi_max_ino_limit = 0xffffffff;
+ 	} else {
+-		/* used space is stored as unsigned 64-bit value */
+-		info->dqi_maxblimit = 0xffffffffffffffffULL;	/* 2^64-1 */
+-		info->dqi_maxilimit = 0xffffffffffffffffULL;
++		/* used space is stored as unsigned 64-bit value in bytes */
++		info->dqi_max_spc_limit = 0xffffffffffffffffULL; /* 2^64-1 */
++		info->dqi_max_ino_limit = 0xffffffffffffffffULL;
+ 	}
+ 	info->dqi_bgrace = le32_to_cpu(dinfo.dqi_bgrace);
+ 	info->dqi_igrace = le32_to_cpu(dinfo.dqi_igrace);
+diff --git a/include/linux/quota.h b/include/linux/quota.h
+index 903db093bbe9..36ce30130bea 100644
+--- a/include/linux/quota.h
++++ b/include/linux/quota.h
+@@ -211,8 +211,8 @@ struct mem_dqinfo {
+ 	unsigned long dqi_flags;
+ 	unsigned int dqi_bgrace;
+ 	unsigned int dqi_igrace;
+-	qsize_t dqi_maxblimit;
+-	qsize_t dqi_maxilimit;
++	qsize_t dqi_max_spc_limit;
++	qsize_t dqi_max_ino_limit;
+ 	void *dqi_priv;
  };
  
- static const struct quotactl_ops ext4_qctl_sysfile_operations = {
--	.quota_on_meta	= ext4_quota_on_sysfile,
--	.quota_off	= ext4_quota_off_sysfile,
-+	.sysquota_on	= dquot_sysquota_on,
-+	.sysquota_off	= dquot_sysquota_off,
- 	.quota_sync	= dquot_quota_sync,
- 	.get_info	= dquot_get_dqinfo,
- 	.set_info	= dquot_set_dqinfo,
-@@ -5273,21 +5270,6 @@ static int ext4_enable_quotas(struct super_block *sb)
- 	return 0;
- }
- 
--/*
-- * quota_on function that is used when QUOTA feature is set.
-- */
--static int ext4_quota_on_sysfile(struct super_block *sb, int type,
--				 int format_id)
--{
--	if (!EXT4_HAS_RO_COMPAT_FEATURE(sb, EXT4_FEATURE_RO_COMPAT_QUOTA))
--		return -EINVAL;
--
--	/*
--	 * USAGE was enabled at mount time. Only need to enable LIMITS now.
--	 */
--	return ext4_quota_enable(sb, type, format_id, DQUOT_LIMITS_ENABLED);
--}
--
- static int ext4_quota_off(struct super_block *sb, int type)
- {
- 	struct inode *inode = sb_dqopt(sb)->files[type];
-@@ -5314,18 +5296,6 @@ out:
- 	return dquot_quota_off(sb, type);
- }
- 
--/*
-- * quota_off function that is used when QUOTA feature is set.
-- */
--static int ext4_quota_off_sysfile(struct super_block *sb, int type)
--{
--	if (!EXT4_HAS_RO_COMPAT_FEATURE(sb, EXT4_FEATURE_RO_COMPAT_QUOTA))
--		return -EINVAL;
--
--	/* Disable only the limits. */
--	return dquot_disable(sb, type, DQUOT_LIMITS_ENABLED);
--}
--
- /* Read data from quotafile - avoid pagecache and such because we cannot afford
-  * acquiring the locks... As quota files are never truncated and quota code
-  * itself serializes the operations (and no one else should touch the files)
 -- 
 1.8.1.4
 
