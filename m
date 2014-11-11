@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 57D857F89
-	for <xfs@oss.sgi.com>; Tue, 11 Nov 2014 17:26:41 -0600 (CST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id ED6DF7F57
+	for <xfs@oss.sgi.com>; Tue, 11 Nov 2014 17:27:17 -0600 (CST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 36CEA8F8033
-	for <xfs@oss.sgi.com>; Tue, 11 Nov 2014 15:26:37 -0800 (PST)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id DA6A5304062
+	for <xfs@oss.sgi.com>; Tue, 11 Nov 2014 15:27:17 -0800 (PST)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	uhZeijuATid84YEF for <xfs@oss.sgi.com>;
-	Tue, 11 Nov 2014 15:26:36 -0800 (PST)
-Date: Wed, 12 Nov 2014 10:26:34 +1100
+	pvLHTVIWcHH9DDKW for <xfs@oss.sgi.com>;
+	Tue, 11 Nov 2014 15:27:16 -0800 (PST)
+Date: Wed, 12 Nov 2014 10:27:14 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 03/11] xfs: Remove some useless flags tests
-Message-ID: <20141111232634.GV28565@dastard>
+Subject: Re: [PATCH 01/11] xfs: Remove useless test
+Message-ID: <20141111232714.GW28565@dastard>
 References: <1415739865-2438-1-git-send-email-jack@suse.cz>
-	<1415739865-2438-4-git-send-email-jack@suse.cz>
+	<1415739865-2438-2-git-send-email-jack@suse.cz>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1415739865-2438-4-git-send-email-jack@suse.cz>
+In-Reply-To: <1415739865-2438-2-git-send-email-jack@suse.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,19 +33,15 @@ Sender: xfs-bounces@oss.sgi.com
 To: Jan Kara <jack@suse.cz>
 Cc: linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, xfs@oss.sgi.com
 
-On Tue, Nov 11, 2014 at 10:04:17PM +0100, Jan Kara wrote:
-> 'flags' have XFS_ALL_QUOTA_ACCT cleared immediately on function entry.
-> There's no point in checking these bits later in the function. Also
-> because we check something is going to change, we know some enforcement
-> bits are being added and thus there's no point in testing that later.
+On Tue, Nov 11, 2014 at 10:04:15PM +0100, Jan Kara wrote:
+> Q_XQUOTARM is never passed to xfs_fs_set_xstate() so remove the test.
 > 
 > Signed-off-by: Jan Kara <jack@suse.cz>
 
-Looks sane. I'll pick this up straight away.
+Looks fine - the higher layers ahave changed since this was added.
+I'll pick this one up straight away.
 
-Cheers,
-
-Dave.
+-Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
