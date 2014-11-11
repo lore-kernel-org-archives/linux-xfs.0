@@ -1,23 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 2D5A57F5E
-	for <xfs@oss.sgi.com>; Tue, 11 Nov 2014 12:00:33 -0600 (CST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 31F947F60
+	for <xfs@oss.sgi.com>; Tue, 11 Nov 2014 13:28:27 -0600 (CST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 1C01A304048
-	for <xfs@oss.sgi.com>; Tue, 11 Nov 2014 10:00:29 -0800 (PST)
-Received: from slmp-550-94.slc.westdc.net (slmp-550-94.slc.westdc.net
-	[50.115.112.57]) by cuda.sgi.com with ESMTP id 5Ekh0a3vDauAjT6N
-	(version=TLSv1 cipher=AES256-SHA bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 11 Nov 2014 10:00:28 -0800 (PST)
-Mime-Version: 1.0 (Mac OS X Mail 7.3 \(1878.6\))
-Subject: Re: Enforcing quota for root user
-From: Chris Murphy <lists@colorremedies.com>
-In-Reply-To: <54622CE8.7050508@hardwarefreak.com>
-Date: Tue, 11 Nov 2014 11:00:25 -0700
-Message-Id: <631A9090-F9FE-4B8E-88CD-1B30CAFC65B7@colorremedies.com>
-References: <67EDE14C-CCFB-4B42-8B78-FC6C813CD19A@free.fr>	<5461B333.8050609@hardwarefreak.com>
-	<F7ACFF71-460D-40E7-999C-BFC8D232EA81@free.fr>
-	<54622CE8.7050508@hardwarefreak.com>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 12CC18F8049
+	for <xfs@oss.sgi.com>; Tue, 11 Nov 2014 11:28:23 -0800 (PST)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id IAcFohK3IZKK4YOx (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 11 Nov 2014 11:28:23 -0800 (PST)
+Received: from int-mx09.intmail.prod.int.phx2.redhat.com
+	(int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id sABJSL3o002597
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256
+	verify=FAIL) for <xfs@oss.sgi.com>; Tue, 11 Nov 2014 14:28:22 -0500
+Date: Tue, 11 Nov 2014 14:28:20 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 1/2] Make xfs_vn_rename compliant with renameat2() syscall
+Message-ID: <20141111192819.GB38867@bfoster.bfoster>
+References: <1415725273-5083-1-git-send-email-cmaiolino@redhat.com>
+	<1415725273-5083-2-git-send-email-cmaiolino@redhat.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <1415725273-5083-2-git-send-email-cmaiolino@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,52 +31,123 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="windows-1252"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Stan Hoeppner <stan@hardwarefreak.com>, xfs@oss.sgi.com
+To: Carlos Maiolino <cmaiolino@redhat.com>
+Cc: xfs@oss.sgi.com
 
+On Tue, Nov 11, 2014 at 03:01:12PM -0200, Carlos Maiolino wrote:
+> To be able to support RENAME_EXCHANGE flag from renameat2() system call, XFS
+> must have its inode_operations updated, exporting .rename2 method, instead of
+> .rename.
+> 
+> This patch just replaces the (now old) .rename method by .rename2, using the
+> same infra-structure, but checking rename flags.
+> 
+> calls to .rename2 using RENAME_EXCHANGE flag, although now handled inside XFS,
+> still returns -EINVAL.
+> 
+> RENAME_NOREPLACE is handled via VFS and we don't need to care about it inside
+> xfs_vn_rename.
+> 
+> Changelog:
+> 
+> 	V2: Use xfs_vn_rename as-is, instead of rename it to xfs_vn_rename2
+> 
+> Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
+> ---
 
-On Nov 11, 2014, at 8:36 AM, Stan Hoeppner <stan@hardwarefreak.com> wrote:
+Thanks for rebasing these Carlos...
 
-> On 11/11/2014 04:22 AM, Cyril Scetbon wrote:
->> That's what I've read first, but someone showed me a sample where it wor=
-ks. He just told me he was using project quota. However, does it make sense=
- ? =
+>  fs/xfs/xfs_iops.c | 15 ++++++++++-----
+>  1 file changed, 10 insertions(+), 5 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+> index ec6dcdc..0b8704c 100644
+> --- a/fs/xfs/xfs_iops.c
+> +++ b/fs/xfs/xfs_iops.c
+> @@ -383,18 +383,23 @@ xfs_vn_rename(
+>  	struct inode	*odir,
+>  	struct dentry	*odentry,
+>  	struct inode	*ndir,
+> -	struct dentry	*ndentry)
+> +	struct dentry	*ndentry,
+> +	unsigned int	flags)
+>  {
+>  	struct inode	*new_inode = ndentry->d_inode;
+>  	struct xfs_name	oname;
+>  	struct xfs_name	nname;
+>  
+> +	/* XFS does not support RENAME_EXCHANGE yet */
+> +	if (flags & ~RENAME_NOREPLACE)
+> +		return -EINVAL;
+> +
+>  	xfs_dentry_to_name(&oname, odentry, 0);
+>  	xfs_dentry_to_name(&nname, ndentry, odentry->d_inode->i_mode);
 
->> I've also read somewhere else that quota is never enforced for root user=
- (id,gid=3D0) that's why I was testing it ....
-> =
+This still looks like a problem (as noted in v1). We can confirm with
+xfs_io on a v5 XFS (mkfs.xfs -m crc=1) as follows:
 
-> No, it doesn't make sense.  Why would you want to enforce quotas for root?
+- Original dir with a character device node and regular file:
 
-A week ago I tried this and project quotas appear to apply to root.
+# xfs_io -c "readdir -v" /mnt/
+00000000: d_ino: 0x00000040 d_off: 0x0000000a d_reclen: 0x18 d_type: DT_DIR d_name: .
+0000000a: d_ino: 0x00000040 d_off: 0x0000000c d_reclen: 0x18 d_type: DT_DIR d_name: ..
+0000000c: d_ino: 0x00000043 d_off: 0x0000000e d_reclen: 0x18 d_type: DT_CHR d_name: zero
+0000000e: d_ino: 0x00000044 d_off: 0x00000200 d_reclen: 0x18 d_type: DT_REG d_name: file
+...
 
-[root@localhost project_quota_test1]# xfs_quota -c df
-Filesystem           1K-blocks       Used  Available  Use% Pathname
-/dev/sdb              83845120     157980   83687140    0% /xfs_local
-/dev/sdb                102400     124928 9223372036854753280  122% /xfs_lo=
-cal/project_quota_test1
-[root@localhost project_quota_test1]# dd if=3D/dev/zero of=3Dtest100MB bs=
-=3D1M count=3D100
-dd: error writing =91test100MB=92: No space left on device
-79+0 records in
-78+0 records out
-81788928 bytes (82 MB) copied, 0.163849 s, 499 MB/s
-[root@localhost project_quota_test1]# xfs_quota -c df
-Filesystem           1K-blocks       Used  Available  Use% Pathname
-/dev/sdb              83845120     237748   83607372    0% /xfs_local
-/dev/sdb                102400     204800 9223372036854673408  200% /xfs_lo=
-cal/project_quota_test1
+- After rename exchange of zero and file:
 
+# xfs_io -c "readdir -v" /mnt/
+00000000: d_ino: 0x00000040 d_off: 0x0000000a d_reclen: 0x18 d_type: DT_DIR d_name: .
+0000000a: d_ino: 0x00000040 d_off: 0x0000000c d_reclen: 0x18 d_type: DT_DIR d_name: ..
+0000000c: d_ino: 0x00000044 d_off: 0x0000000e d_reclen: 0x18 d_type: DT_UNKNOWN d_name: zero
+0000000e: d_ino: 0x00000043 d_off: 0x00000200 d_reclen: 0x18 d_type: DT_CHR d_name: file
+...
 
-The available space value seems like a bug, at least it=92s not a sane/help=
-ful value. But I do get a no space left on device, and the file being writt=
-en is truncated at the hard limit for that project (directory).
+We can see that the file dentry inherited the d_type of zero, but the
+d_type of zero was reset.
 
+Brian
 
-Chris Murphy
+>  
+>  	return xfs_rename(XFS_I(odir), &oname, XFS_I(odentry->d_inode),
+> -			  XFS_I(ndir), &nname, new_inode ?
+> -						XFS_I(new_inode) : NULL);
+> +			  XFS_I(ndir), &nname,
+> +			  new_inode ? XFS_I(new_inode) : NULL);
+>  }
+>  
+>  /*
+> @@ -1147,7 +1152,7 @@ static const struct inode_operations xfs_dir_inode_operations = {
+>  	 */
+>  	.rmdir			= xfs_vn_unlink,
+>  	.mknod			= xfs_vn_mknod,
+> -	.rename			= xfs_vn_rename,
+> +	.rename2		= xfs_vn_rename,
+>  	.get_acl		= xfs_get_acl,
+>  	.set_acl		= xfs_set_acl,
+>  	.getattr		= xfs_vn_getattr,
+> @@ -1175,7 +1180,7 @@ static const struct inode_operations xfs_dir_ci_inode_operations = {
+>  	 */
+>  	.rmdir			= xfs_vn_unlink,
+>  	.mknod			= xfs_vn_mknod,
+> -	.rename			= xfs_vn_rename,
+> +	.rename2		= xfs_vn_rename,
+>  	.get_acl		= xfs_get_acl,
+>  	.set_acl		= xfs_set_acl,
+>  	.getattr		= xfs_vn_getattr,
+> -- 
+> 2.1.0
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
