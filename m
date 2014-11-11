@@ -1,20 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 291F67F37
-	for <xfs@oss.sgi.com>; Mon, 10 Nov 2014 18:37:43 -0600 (CST)
+	by oss.sgi.com (Postfix) with ESMTP id 49E7B7F3F
+	for <xfs@oss.sgi.com>; Mon, 10 Nov 2014 18:56:30 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 9B97FAC003
-	for <xfs@oss.sgi.com>; Mon, 10 Nov 2014 16:37:39 -0800 (PST)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id SqactCg0zVNrATcT for <xfs@oss.sgi.com>;
-	Mon, 10 Nov 2014 16:37:36 -0800 (PST)
-Message-ID: <54615A4D.2000703@sandeen.net>
-Date: Mon, 10 Nov 2014 18:37:33 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id D8D8AAC003
+	for <xfs@oss.sgi.com>; Mon, 10 Nov 2014 16:56:29 -0800 (PST)
+Received: from mail-ob0-f170.google.com (mail-ob0-f170.google.com
+	[209.85.214.170]) by cuda.sgi.com with ESMTP id
+	JYULSA9pxR4wLhfJ (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Mon, 10 Nov 2014 16:56:28 -0800 (PST)
+Received: by mail-ob0-f170.google.com with SMTP id nt9so7258802obb.29
+	for <xfs@oss.sgi.com>; Mon, 10 Nov 2014 16:56:28 -0800 (PST)
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfs_copy: fix ASSERT failure on 4k devices...
-References: <54613907.2000007@redhat.com>
-In-Reply-To: <54613907.2000007@redhat.com>
+In-Reply-To: <54614AE7.2080204@kernel.dk>
+References: <20141107080416.0837a88c@tlielax.poochiereds.net>
+	<87bnofnzop.fsf@rustcorp.com.au> <54614AE7.2080204@kernel.dk>
+Date: Tue, 11 Nov 2014 08:56:27 +0800
+Message-ID: <CACVXFVOgRMqCUASOaXQ7ys8yiKZFEH5SA-+mV=H0uvHuGseENQ@mail.gmail.com>
+Subject: Re: kernel BUG at drivers/block/virtio_blk.c:172!
+From: Ming Lei <tom.leiming@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,88 +32,50 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@redhat.com>, xfs-oss <xfs@oss.sgi.com>
-Cc: Zorro Lang <zlang@redhat.com>
+To: Jens Axboe <axboe@kernel.dk>
+Cc: "Michael S. Tsirkin" <mst@redhat.com>, Rusty Russell <rusty@rustcorp.com.au>, xfs@oss.sgi.com, Jeff Layton <jlayton@poochiereds.net>, Linux Virtualization <virtualization@lists.linux-foundation.org>
 
-Hm, realized that perhaps a more forceful $SUBJECT would have been better :)
+On Tue, Nov 11, 2014 at 7:31 AM, Jens Axboe <axboe@kernel.dk> wrote:
+> On 2014-11-10 02:59, Rusty Russell wrote:
+>>
+>> Jeff Layton <jlayton@poochiereds.net> writes:
+>>
+>>> In the latest Fedora rawhide kernel in the repos, I'm seeing the
+>>> following oops when mounting xfs. rc2-ish kernels seem to be fine:
+>>>
+>>> [   64.669633] ------------[ cut here ]------------
+>>> [   64.670008] kernel BUG at drivers/block/virtio_blk.c:172!
+>>
+>>
+>> Hmm, that's:
+>>
+>>         BUG_ON(req->nr_phys_segments + 2 > vblk->sg_elems);
+>>
+>> But during our probe routine we said:
+>>
+>>         /* We can handle whatever the host told us to handle. */
+>>         blk_queue_max_segments(q, vblk->sg_elems-2);
+>>
+>> Jens?
+>
+>
+> Known, I'm afraid, Ming is looking into it.
 
--Eric
+There is one obvious bug which should have been fixed by below
+patch(0001-block-blk-merge-fix-blk_recount_segments.patch"):
 
-On 11/10/14 4:15 PM, Eric Sandeen wrote:
-> After ffe9a9a xfsprogs: xfs_copy: fix data corruption of target,
-> xfs_copy started hitting an ASSERT for a 4k sector / 4k blocksize
-> filesystem:
-> 
-> # dd if=/dev/zero of=test.img bs=1M count=1024
-> # mkfs.xfs -s size=4096 test.img
-> # xfs_copy test.img xfs.img
-> xfs_copy: xfs_copy.c:720: main: Assertion `((((((xfs_daddr_t)(3 << (mp)->m_sectbb_log)) + 1) * (1<<9)) + first_residue) % source_blocksize) == 0' failed.
-> Aborted
-> 
-> I started digging through all the calculations below, and realized
-> that in the end, all it wants is the first filesystem block after
-> the AG header.  XFS_AGFL_BLOCK(mp) + 1 suffices for this purpose;
-> rip out the rest which seems overly complex and apparently bug-prone.
-> 
-> I tested this by creating a 4g filesystem with combinations of
-> sector & block size between 512 and 4k, copying in /lib/modules,
-> running an xfs_copy of that, and running repair against the copy;
-> it all looks good.  It took a long time, but I will create a
-> simpler/shorter xfstest based on this.
-> 
-> Reported-by: Zorro Lang <zlang@redhat.com>
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-> ---
-> 
-> diff --git a/copy/xfs_copy.c b/copy/xfs_copy.c
-> index 7ce5ec9..279527c 100644
-> --- a/copy/xfs_copy.c
-> +++ b/copy/xfs_copy.c
-> @@ -475,7 +475,7 @@ main(int argc, char **argv)
->  	int		open_flags;
->  	xfs_off_t	pos, end_pos;
->  	size_t		length;
-> -	int		c, first_residue, tmp_residue;
-> +	int		c;
->  	__uint64_t	size, sizeb;
->  	__uint64_t	numblocks = 0;
->  	int		wblocks = 0;
-> @@ -697,27 +697,13 @@ main(int argc, char **argv)
->  	ASSERT(source_blocksize % source_sectorsize == 0);
->  	ASSERT(source_sectorsize % BBSIZE == 0);
->  
-> -	if (source_blocksize > source_sectorsize)  {
-> -		/* get number of leftover sectors in last block of ag header */
-> -
-> -		tmp_residue = ((XFS_AGFL_DADDR(mp) + 1) * BBSIZE)
-> -					% source_blocksize;
-> -		first_residue = (tmp_residue == 0) ? 0 :
-> -			source_blocksize - tmp_residue;
-> -		ASSERT(first_residue % source_sectorsize == 0);
-> -	} else if (source_blocksize == source_sectorsize)  {
-> -		first_residue = 0;
-> -	} else  {
-> +	if (source_blocksize < source_sectorsize)  {
->  		do_log(_("Error:  filesystem block size is smaller than the"
->  			" disk sectorsize.\nAborting XFS copy now.\n"));
->  		exit(1);
->  	}
->  
-> -	first_agbno = (((XFS_AGFL_DADDR(mp) + 1) * BBSIZE)
-> -				+ first_residue) / source_blocksize;
-> -	ASSERT(first_agbno != 0);
-> -	ASSERT(((((XFS_AGFL_DADDR(mp) + 1) * BBSIZE)
-> -				+ first_residue) % source_blocksize) == 0);
-> +	first_agbno = XFS_AGFL_BLOCK(mp) + 1;
->  
->  	/* now open targets */
->  
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
-> 
+http://marc.info/?l=linux-virtualization&m=141562191719405&q=p3
+
+And there might be another one, I appreciate someone can post
+log which is printed by patch("blk-seg.patch") in below link if the
+bug still can be triggered even with above fix:
+
+http://marc.info/?l=linux-virtualization&m=141473040618467&q=p3
+
+
+Thanks,
+-- 
+Ming Lei
 
 _______________________________________________
 xfs mailing list
