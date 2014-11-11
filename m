@@ -1,25 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 6CEDB7F3F
-	for <xfs@oss.sgi.com>; Tue, 11 Nov 2014 04:23:03 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 5B348304032
-	for <xfs@oss.sgi.com>; Tue, 11 Nov 2014 02:23:00 -0800 (PST)
-Received: from mo68.mail-out.ovh.net (4.mo68.mail-out.ovh.net [46.105.59.63])
-	by cuda.sgi.com with ESMTP id a62Dt3jgKqzKTV4B (version=TLSv1
+	by oss.sgi.com (Postfix) with ESMTP id 43AA67F3F
+	for <xfs@oss.sgi.com>; Tue, 11 Nov 2014 07:37:10 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 06B54304039
+	for <xfs@oss.sgi.com>; Tue, 11 Nov 2014 05:37:09 -0800 (PST)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id SRiMdKIqcpreV5uW (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 11 Nov 2014 02:22:58 -0800 (PST)
-Received: from mail189.ha.ovh.net (b6.ovh.net [213.186.33.56])
-	by mo68.mail-out.ovh.net (Postfix) with SMTP id 36C32FFB070
-	for <xfs@oss.sgi.com>; Tue, 11 Nov 2014 11:22:52 +0100 (CET)
-Mime-Version: 1.0 (Mac OS X Mail 8.0 \(1990.1\))
-Subject: Re: Enforcing quota for root user
-From: Cyril Scetbon <cyril.scetbon@free.fr>
-In-Reply-To: <5461B333.8050609@hardwarefreak.com>
-Date: Tue, 11 Nov 2014 11:22:49 +0100
-Message-Id: <F7ACFF71-460D-40E7-999C-BFC8D232EA81@free.fr>
-References: <67EDE14C-CCFB-4B42-8B78-FC6C813CD19A@free.fr>
-	<5461B333.8050609@hardwarefreak.com>
+	Tue, 11 Nov 2014 05:37:08 -0800 (PST)
+Received: from int-mx13.intmail.prod.int.phx2.redhat.com
+	(int-mx13.intmail.prod.int.phx2.redhat.com [10.5.11.26])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id sABDb7Ur011545
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256
+	verify=FAIL) for <xfs@oss.sgi.com>; Tue, 11 Nov 2014 08:37:07 -0500
+Date: Tue, 11 Nov 2014 08:37:05 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH] xfs_copy: simplify first_agbno calculation
+Message-ID: <20141111133705.GA38867@bfoster.bfoster>
+References: <54613907.2000007@redhat.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <54613907.2000007@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,31 +34,93 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Stan Hoeppner <stan@hardwarefreak.com>
-Cc: xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: Zorro Lang <zlang@redhat.com>, xfs-oss <xfs@oss.sgi.com>
 
-That's what I've read first, but someone showed me a sample where it works. He just told me he was using project quota. However, does it make sense ? 
-I've also read somewhere else that quota is never enforced for root user (id,gid=0) that's why I was testing it ....
--- 
-Cyril SCETBON
+On Mon, Nov 10, 2014 at 04:15:35PM -0600, Eric Sandeen wrote:
+> After ffe9a9a xfsprogs: xfs_copy: fix data corruption of target,
+> xfs_copy started hitting an ASSERT for a 4k sector / 4k blocksize
+> filesystem:
+> 
+> # dd if=/dev/zero of=test.img bs=1M count=1024
+> # mkfs.xfs -s size=4096 test.img
+> # xfs_copy test.img xfs.img
+> xfs_copy: xfs_copy.c:720: main: Assertion `((((((xfs_daddr_t)(3 << (mp)->m_sectbb_log)) + 1) * (1<<9)) + first_residue) % source_blocksize) == 0' failed.
+> Aborted
+> 
+> I started digging through all the calculations below, and realized
+> that in the end, all it wants is the first filesystem block after
+> the AG header.  XFS_AGFL_BLOCK(mp) + 1 suffices for this purpose;
+> rip out the rest which seems overly complex and apparently bug-prone.
+> 
+> I tested this by creating a 4g filesystem with combinations of
+> sector & block size between 512 and 4k, copying in /lib/modules,
+> running an xfs_copy of that, and running repair against the copy;
+> it all looks good.  It took a long time, but I will create a
+> simpler/shorter xfstest based on this.
+> 
+> Reported-by: Zorro Lang <zlang@redhat.com>
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> ---
 
-> On 11 Nov 2014, at 07:56, Stan Hoeppner <stan@hardwarefreak.com> wrote:
+Looks Ok to me:
+
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+
+I just noticed the bug... so the problem was basically the assumption
+that sector size == BBSIZE?
+
+Brian
+
 > 
+> diff --git a/copy/xfs_copy.c b/copy/xfs_copy.c
+> index 7ce5ec9..279527c 100644
+> --- a/copy/xfs_copy.c
+> +++ b/copy/xfs_copy.c
+> @@ -475,7 +475,7 @@ main(int argc, char **argv)
+>  	int		open_flags;
+>  	xfs_off_t	pos, end_pos;
+>  	size_t		length;
+> -	int		c, first_residue, tmp_residue;
+> +	int		c;
+>  	__uint64_t	size, sizeb;
+>  	__uint64_t	numblocks = 0;
+>  	int		wblocks = 0;
+> @@ -697,27 +697,13 @@ main(int argc, char **argv)
+>  	ASSERT(source_blocksize % source_sectorsize == 0);
+>  	ASSERT(source_sectorsize % BBSIZE == 0);
+>  
+> -	if (source_blocksize > source_sectorsize)  {
+> -		/* get number of leftover sectors in last block of ag header */
+> -
+> -		tmp_residue = ((XFS_AGFL_DADDR(mp) + 1) * BBSIZE)
+> -					% source_blocksize;
+> -		first_residue = (tmp_residue == 0) ? 0 :
+> -			source_blocksize - tmp_residue;
+> -		ASSERT(first_residue % source_sectorsize == 0);
+> -	} else if (source_blocksize == source_sectorsize)  {
+> -		first_residue = 0;
+> -	} else  {
+> +	if (source_blocksize < source_sectorsize)  {
+>  		do_log(_("Error:  filesystem block size is smaller than the"
+>  			" disk sectorsize.\nAborting XFS copy now.\n"));
+>  		exit(1);
+>  	}
+>  
+> -	first_agbno = (((XFS_AGFL_DADDR(mp) + 1) * BBSIZE)
+> -				+ first_residue) / source_blocksize;
+> -	ASSERT(first_agbno != 0);
+> -	ASSERT(((((XFS_AGFL_DADDR(mp) + 1) * BBSIZE)
+> -				+ first_residue) % source_blocksize) == 0);
+> +	first_agbno = XFS_AGFL_BLOCK(mp) + 1;
+>  
+>  	/* now open targets */
+>  
 > 
-> 
-> On 11/10/2014 04:46 PM, Cyril Scetbon wrote:
->> Hi,
->> 
->> I'm trying to enforce quotas for the superuser without success. Can you
->> tell me what I'm doing wrong ?
-> 
-> http://xfs.org/docs/xfsdocs-xml-dev/XFS_User_Guide/tmp/en-US/html/ch08s04.html
-> 
-> Look at the last line.
-> 
-> Cheers,
-> Stan
-> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
