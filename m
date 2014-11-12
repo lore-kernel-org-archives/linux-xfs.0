@@ -1,18 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 0323A7F47
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 157B97F3F
 	for <xfs@oss.sgi.com>; Wed, 12 Nov 2014 12:57:23 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 94F7CAC00A
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 045D9304066
 	for <xfs@oss.sgi.com>; Wed, 12 Nov 2014 10:57:22 -0800 (PST)
 Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id 4thi5fjtssOx1I5k for <xfs@oss.sgi.com>;
-	Wed, 12 Nov 2014 10:57:21 -0800 (PST)
+	ESMTP id VblXDP4HUcMsWetg for <xfs@oss.sgi.com>;
+	Wed, 12 Nov 2014 10:57:22 -0800 (PST)
 From: Eric Sandeen <sandeen@redhat.com>
-Subject: [PATCH 2/9] xfsdump: Fix overflow of "question" string in
-	Media_prompt_erase()
-Date: Wed, 12 Nov 2014 12:57:11 -0600
-Message-Id: <1415818638-32700-3-git-send-email-sandeen@redhat.com>
+Subject: [PATCH 6/9] xfsdump: free suboptstrs if mlog_init1 fails
+Date: Wed, 12 Nov 2014 12:57:15 -0600
+Message-Id: <1415818638-32700-7-git-send-email-sandeen@redhat.com>
 In-Reply-To: <1415818638-32700-1-git-send-email-sandeen@redhat.com>
 References: <1415818638-32700-1-git-send-email-sandeen@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -30,38 +29,92 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-The string we were sprintf'ing is trivially longer than the array
-we allocated for it.
-
-Allocate something big enough, and snprintf to avoid overflow
+suboptstrs was never freed on error paths.
 
 Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 ---
- dump/content.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+ common/mlog.c |   19 +++++++++++--------
+ 1 files changed, 11 insertions(+), 8 deletions(-)
 
-diff --git a/dump/content.c b/dump/content.c
-index ac19021..786fc52 100644
---- a/dump/content.c
-+++ b/dump/content.c
-@@ -6174,7 +6174,7 @@ static bool_t
- Media_prompt_overwrite( drive_t *drivep )
- {
- 	fold_t fold;
--	char question[ 100 ];
-+	char question[ 110 ];
- 	char *preamblestr[ PREAMBLEMAX ];
- 	size_t preamblecnt;
- 	char *querystr[ QUERYMAX ];
-@@ -6201,7 +6201,7 @@ retry:
+diff --git a/common/mlog.c b/common/mlog.c
+index b0135b9..f1fa12f 100644
+--- a/common/mlog.c
++++ b/common/mlog.c
+@@ -149,6 +149,7 @@ mlog_init1( intgen_t argc, char *argv[ ] )
+ 	ix_t soix;
+ 	size_t vsymcnt;
+ 	intgen_t c;
++	bool_t retval = BOOL_FALSE;	/* Until proven otherwise */
  
- 	/* query: ask if overwrite ok
+ 	/* prepare an array of suboption token strings. this will be the
+ 	 * concatenation of the subsystem names with the verbosity symbols.
+@@ -192,7 +193,7 @@ mlog_init1( intgen_t argc, char *argv[ ] )
+ 					 progname,
+ 					 c );
+ 				usage( );
+-				return BOOL_FALSE;
++				goto out_free;
+ 			}
+ 			options = optarg;
+ 			while ( *options ) {
+@@ -208,7 +209,7 @@ mlog_init1( intgen_t argc, char *argv[ ] )
+ 						 progname,
+ 						 c );
+ 					usage( );
+-					return BOOL_FALSE;
++					goto out_free;
+ 				}
+ 				ASSERT( ( ix_t )suboptix
+ 					<
+@@ -224,7 +225,7 @@ mlog_init1( intgen_t argc, char *argv[ ] )
+ 							 c,
+ 						mlog_ss_names[ suboptix ] );
+ 						usage( );
+-						return BOOL_FALSE;
++						goto out_free;
+ 					}
+ 					ssix = ( ix_t )suboptix;
+ 					mlog_level_ss[ ssix ] =
+@@ -238,7 +239,7 @@ mlog_init1( intgen_t argc, char *argv[ ] )
+ 							 progname,
+ 							 c );
+ 						usage( );
+-						return BOOL_FALSE;
++						goto out_free;
+ 					}
+ 					ssix = MLOG_SS_GEN;
+ 					mlog_level_ss[ ssix ] =
+@@ -251,7 +252,7 @@ mlog_init1( intgen_t argc, char *argv[ ] )
+ 						 progname,
+ 						 c );
+ 					usage( );
+-					return BOOL_FALSE;
++					goto out_free;
+ 				}
+ 			}
+ 			break;
+@@ -267,8 +268,6 @@ mlog_init1( intgen_t argc, char *argv[ ] )
+ 		}
+ 	}
+ 
+-	free( ( void * )suboptstrs );
+-
+ 	/* give subsystems not explicitly called out the "general" verbosity
  	 */
--	sprintf( question,
-+	snprintf( question, sizeof(question),
- 		 "overwrite data on media in "
- 		 "drive %u?\n",
- 		 (unsigned int)drivep->d_index );
+ 	for ( ssix = 0 ; ssix < MLOG_SS_CNT ; ssix++ ) {
+@@ -301,7 +300,11 @@ mlog_init1( intgen_t argc, char *argv[ ] )
+ 
+ 	mlog_qlockh = QLOCKH_NULL;
+ 
+-	return BOOL_TRUE;
++	retval = BOOL_TRUE;
++
++out_free:
++	free( ( void * )suboptstrs );
++	return retval;
+ }
+ 
+ bool_t
 -- 
 1.7.1
 
