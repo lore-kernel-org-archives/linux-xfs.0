@@ -1,30 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id F0CD17F56
-	for <xfs@oss.sgi.com>; Wed, 12 Nov 2014 12:13:26 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 87E33AC008
-	for <xfs@oss.sgi.com>; Wed, 12 Nov 2014 10:13:23 -0800 (PST)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id rwtqbAUNFeUFEdqA (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 12 Nov 2014 10:13:22 -0800 (PST)
-Received: from int-mx11.intmail.prod.int.phx2.redhat.com
-	(int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id sACIDLD2001158
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256
-	verify=FAIL) for <xfs@oss.sgi.com>; Wed, 12 Nov 2014 13:13:21 -0500
-Received: from hades.localdomain.com (ovpn-113-66.phx2.redhat.com
-	[10.3.113.66])
-	by int-mx11.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id sACIDItM005401
-	for <xfs@oss.sgi.com>; Wed, 12 Nov 2014 13:13:20 -0500
-From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: [PATCH 1/2] Make xfs_vn_rename compliant with renameat2() syscall
-Date: Wed, 12 Nov 2014 16:13:02 -0200
-Message-Id: <1415815983-5615-2-git-send-email-cmaiolino@redhat.com>
-In-Reply-To: <1415815983-5615-1-git-send-email-cmaiolino@redhat.com>
-References: <1415815983-5615-1-git-send-email-cmaiolino@redhat.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 3A5C07F3F
+	for <xfs@oss.sgi.com>; Wed, 12 Nov 2014 12:18:29 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 18737304064
+	for <xfs@oss.sgi.com>; Wed, 12 Nov 2014 10:18:25 -0800 (PST)
+Received: from mail-pd0-f177.google.com (mail-pd0-f177.google.com
+	[209.85.192.177]) by cuda.sgi.com with ESMTP id
+	p5usgscyFPy0gtzG (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 12 Nov 2014 10:18:24 -0800 (PST)
+Received: by mail-pd0-f177.google.com with SMTP id v10so12612183pde.22
+	for <xfs@oss.sgi.com>; Wed, 12 Nov 2014 10:18:24 -0800 (PST)
+Message-ID: <5463A478.20603@kernel.dk>
+Date: Wed, 12 Nov 2014 11:18:32 -0700
+From: Jens Axboe <axboe@kernel.dk>
+MIME-Version: 1.0
+Subject: Re: kernel BUG at drivers/block/virtio_blk.c:172!
+References: <20141107080416.0837a88c@tlielax.poochiereds.net>	<87bnofnzop.fsf@rustcorp.com.au>	<54614AE7.2080204@kernel.dk>	<CACVXFVOgRMqCUASOaXQ7ys8yiKZFEH5SA-+mV=H0uvHuGseENQ@mail.gmail.com>	<20141111154250.GA16906@gmail.com>
+	<CACVXFVNXSmw=Gu_9JAtpF3uxupSMr4kN2ge-jnZMxZAMcaHrfw@mail.gmail.com>
+In-Reply-To: <CACVXFVNXSmw=Gu_9JAtpF3uxupSMr4kN2ge-jnZMxZAMcaHrfw@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,86 +28,21 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Ming Lei <tom.leiming@gmail.com>, Dongsu Park <dongsu.park@profitbricks.com>
+Cc: "Michael S. Tsirkin" <mst@redhat.com>, Rusty Russell <rusty@rustcorp.com.au>, xfs@oss.sgi.com, Lukas Czerner <lczerner@redhat.com>, Jeff Layton <jlayton@poochiereds.net>, Linux Virtualization <virtualization@lists.linux-foundation.org>, Christoph Hellwig <hch@lst.de>
 
-To be able to support RENAME_EXCHANGE flag from renameat2() system call, XFS
-must have its inode_operations updated, exporting .rename2 method, instead of
-.rename.
+On 11/11/2014 09:42 AM, Ming Lei wrote:
+> The attached patch should fix the problem, and hope it is the last one, :-)
 
-This patch just replaces the (now old) .rename method by .rename2, using the
-same infra-structure, but checking rename flags.
+Dongsu and Jeff, any of you test this variant? I think this is the last
+one, at least I hope so as well...
 
-calls to .rename2 using RENAME_EXCHANGE flag, although now handled inside XFS,
-still returns -EINVAL.
-
-RENAME_NOREPLACE is handled via VFS and we don't need to care about it inside
-xfs_vn_rename.
-
-Changelog:
-
-	V2: Use xfs_vn_rename as-is, instead of rename it to xfs_vn_rename2
-
-Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
----
- fs/xfs/xfs_iops.c | 15 ++++++++++-----
- 1 file changed, 10 insertions(+), 5 deletions(-)
-
-diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-index ec6dcdc..0b8704c 100644
---- a/fs/xfs/xfs_iops.c
-+++ b/fs/xfs/xfs_iops.c
-@@ -383,18 +383,23 @@ xfs_vn_rename(
- 	struct inode	*odir,
- 	struct dentry	*odentry,
- 	struct inode	*ndir,
--	struct dentry	*ndentry)
-+	struct dentry	*ndentry,
-+	unsigned int	flags)
- {
- 	struct inode	*new_inode = ndentry->d_inode;
- 	struct xfs_name	oname;
- 	struct xfs_name	nname;
- 
-+	/* XFS does not support RENAME_EXCHANGE yet */
-+	if (flags & ~RENAME_NOREPLACE)
-+		return -EINVAL;
-+
- 	xfs_dentry_to_name(&oname, odentry, 0);
- 	xfs_dentry_to_name(&nname, ndentry, odentry->d_inode->i_mode);
- 
- 	return xfs_rename(XFS_I(odir), &oname, XFS_I(odentry->d_inode),
--			  XFS_I(ndir), &nname, new_inode ?
--						XFS_I(new_inode) : NULL);
-+			  XFS_I(ndir), &nname,
-+			  new_inode ? XFS_I(new_inode) : NULL);
- }
- 
- /*
-@@ -1147,7 +1152,7 @@ static const struct inode_operations xfs_dir_inode_operations = {
- 	 */
- 	.rmdir			= xfs_vn_unlink,
- 	.mknod			= xfs_vn_mknod,
--	.rename			= xfs_vn_rename,
-+	.rename2		= xfs_vn_rename,
- 	.get_acl		= xfs_get_acl,
- 	.set_acl		= xfs_set_acl,
- 	.getattr		= xfs_vn_getattr,
-@@ -1175,7 +1180,7 @@ static const struct inode_operations xfs_dir_ci_inode_operations = {
- 	 */
- 	.rmdir			= xfs_vn_unlink,
- 	.mknod			= xfs_vn_mknod,
--	.rename			= xfs_vn_rename,
-+	.rename2		= xfs_vn_rename,
- 	.get_acl		= xfs_get_acl,
- 	.set_acl		= xfs_set_acl,
- 	.getattr		= xfs_vn_getattr,
 -- 
-2.1.0
+Jens Axboe
 
 _______________________________________________
 xfs mailing list
