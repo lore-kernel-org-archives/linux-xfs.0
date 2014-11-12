@@ -1,28 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 8B5457F3F
-	for <xfs@oss.sgi.com>; Wed, 12 Nov 2014 15:02:45 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 1C1DFAC008
-	for <xfs@oss.sgi.com>; Wed, 12 Nov 2014 13:02:41 -0800 (PST)
-Received: from mail-qa0-f50.google.com (mail-qa0-f50.google.com
-	[209.85.216.50]) by cuda.sgi.com with ESMTP id HlAcR9rhp5lk8VP5
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 12 Nov 2014 13:02:40 -0800 (PST)
-Received: by mail-qa0-f50.google.com with SMTP id bm13so8997414qab.23
-	for <xfs@oss.sgi.com>; Wed, 12 Nov 2014 13:02:40 -0800 (PST)
-Date: Wed, 12 Nov 2014 16:02:35 -0500
-From: Jeff Layton <jlayton@poochiereds.net>
-Subject: Re: kernel BUG at drivers/block/virtio_blk.c:172!
-Message-ID: <20141112160235.19d8aefc@tlielax.poochiereds.net>
-In-Reply-To: <5463A478.20603@kernel.dk>
-References: <20141107080416.0837a88c@tlielax.poochiereds.net>
-	<87bnofnzop.fsf@rustcorp.com.au> <54614AE7.2080204@kernel.dk>
-	<CACVXFVOgRMqCUASOaXQ7ys8yiKZFEH5SA-+mV=H0uvHuGseENQ@mail.gmail.com>
-	<20141111154250.GA16906@gmail.com>
-	<CACVXFVNXSmw=Gu_9JAtpF3uxupSMr4kN2ge-jnZMxZAMcaHrfw@mail.gmail.com>
-	<5463A478.20603@kernel.dk>
+	by oss.sgi.com (Postfix) with ESMTP id 3A9FF7F3F
+	for <xfs@oss.sgi.com>; Wed, 12 Nov 2014 15:25:18 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 66BFCAC00B
+	for <xfs@oss.sgi.com>; Wed, 12 Nov 2014 13:25:13 -0800 (PST)
+Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
+	[150.101.137.129]) by cuda.sgi.com with ESMTP id
+	EgwTp9FssEByGCRo for <xfs@oss.sgi.com>;
+	Wed, 12 Nov 2014 13:25:11 -0800 (PST)
+Date: Thu, 13 Nov 2014 08:25:07 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: Fwd: multiple processes hanging doing xfs ops -- 3.17.2
+Message-ID: <20141112212507.GZ23575@dastard>
+References: <5463BB52.3080601@tlinx.org>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <5463BB52.3080601@tlinx.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,22 +29,32 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Jens Axboe <axboe@kernel.dk>
-Cc: "Michael S. Tsirkin" <mst@redhat.com>, Ming Lei <tom.leiming@gmail.com>, Rusty Russell <rusty@rustcorp.com.au>, xfs@oss.sgi.com, Lukas Czerner <lczerner@redhat.com>, Linux Virtualization <virtualization@lists.linux-foundation.org>, Christoph Hellwig <hch@lst.de>, Dongsu Park <dongsu.park@profitbricks.com>
+To: L Walsh <xfs@tlinx.org>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-On Wed, 12 Nov 2014 11:18:32 -0700
-Jens Axboe <axboe@kernel.dk> wrote:
-
-> On 11/11/2014 09:42 AM, Ming Lei wrote:
-> > The attached patch should fix the problem, and hope it is the last one, :-)
+On Wed, Nov 12, 2014 at 11:56:02AM -0800, L Walsh wrote:
 > 
-> Dongsu and Jeff, any of you test this variant? I think this is the last
-> one, at least I hope so as well...
 > 
+> I just upped from 3.16.2 to 3.17.2 this morning, and after about 2 hours
+> uptime, got
+> several procs hanging in what looks like xfs territory.
+....
 
-Yes, thanks! That patch seems to fix the problem for me. You can add:
+> Nov 12 04:43:46 Ishtar kernel: [ 5886.496468] INFO: task xfsdump:38317 blocked for more than 120 seconds.
+....
+> Nov 12 04:43:46 Ishtar kernel: [ 5886.515691]  [<ffffffff8129b935>] xfs_bulkstat+0x165/0x4e0
 
-Tested-by: Jeff Layton <jlayton@poochiereds.net>
+You ran xfsdump and that triggered one of the bulkstat regressions
+in 3.17. The fixes have been queued to the next 3.17.x stable
+kernel, so you'll want to hold off running xfsdump or xfs_fsr until
+that kernel is released and you upgrade.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
