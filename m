@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id CAF767F3F
-	for <xfs@oss.sgi.com>; Wed, 12 Nov 2014 12:57:22 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id B98F5304043
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 0323A7F47
+	for <xfs@oss.sgi.com>; Wed, 12 Nov 2014 12:57:23 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 94F7CAC00A
 	for <xfs@oss.sgi.com>; Wed, 12 Nov 2014 10:57:22 -0800 (PST)
 Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id ZxHaHSYnTVwGwSam for <xfs@oss.sgi.com>;
+	ESMTP id 4thi5fjtssOx1I5k for <xfs@oss.sgi.com>;
 	Wed, 12 Nov 2014 10:57:21 -0800 (PST)
 From: Eric Sandeen <sandeen@redhat.com>
-Subject: [PATCH 3/9] xfsdump: fix wrong test for hard stack limit change
-	failure
-Date: Wed, 12 Nov 2014 12:57:12 -0600
-Message-Id: <1415818638-32700-4-git-send-email-sandeen@redhat.com>
+Subject: [PATCH 2/9] xfsdump: Fix overflow of "question" string in
+	Media_prompt_erase()
+Date: Wed, 12 Nov 2014 12:57:11 -0600
+Message-Id: <1415818638-32700-3-git-send-email-sandeen@redhat.com>
 In-Reply-To: <1415818638-32700-1-git-send-email-sandeen@redhat.com>
 References: <1415818638-32700-1-git-send-email-sandeen@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -30,30 +30,38 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-We test if ( rlimit64.rlim_cur < minstacksz ) to see whether
-we failed to increase rlimit64.rlim_max?  Weird.  Fix it.
+The string we were sprintf'ing is trivially longer than the array
+we allocated for it.
 
-(Granted, we raise both cur and max together, but it's odd to test
-one, and report the other).
+Allocate something big enough, and snprintf to avoid overflow
 
 Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 ---
- common/main.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ dump/content.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/common/main.c b/common/main.c
-index 8e7451f..326f801 100644
---- a/common/main.c
-+++ b/common/main.c
-@@ -2077,7 +2077,7 @@ set_rlimits( size64_t *vmszp )
- 			( void )setrlimit64( RLIMIT_STACK, &rlimit64 );
- 			rval = getrlimit64( RLIMIT_STACK, &rlimit64 );
- 			ASSERT( ! rval );
--			if ( rlimit64.rlim_cur < minstacksz ) {
-+			if ( rlimit64.rlim_max < minstacksz ) {
- 				mlog( MLOG_NORMAL
- 				      |
- 				      MLOG_WARNING
+diff --git a/dump/content.c b/dump/content.c
+index ac19021..786fc52 100644
+--- a/dump/content.c
++++ b/dump/content.c
+@@ -6174,7 +6174,7 @@ static bool_t
+ Media_prompt_overwrite( drive_t *drivep )
+ {
+ 	fold_t fold;
+-	char question[ 100 ];
++	char question[ 110 ];
+ 	char *preamblestr[ PREAMBLEMAX ];
+ 	size_t preamblecnt;
+ 	char *querystr[ QUERYMAX ];
+@@ -6201,7 +6201,7 @@ retry:
+ 
+ 	/* query: ask if overwrite ok
+ 	 */
+-	sprintf( question,
++	snprintf( question, sizeof(question),
+ 		 "overwrite data on media in "
+ 		 "drive %u?\n",
+ 		 (unsigned int)drivep->d_index );
 -- 
 1.7.1
 
