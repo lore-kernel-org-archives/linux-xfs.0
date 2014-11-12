@@ -1,17 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 157B97F3F
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 342517F50
 	for <xfs@oss.sgi.com>; Wed, 12 Nov 2014 12:57:23 -0600 (CST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 045D9304066
-	for <xfs@oss.sgi.com>; Wed, 12 Nov 2014 10:57:22 -0800 (PST)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 123BF8F8035
+	for <xfs@oss.sgi.com>; Wed, 12 Nov 2014 10:57:23 -0800 (PST)
 Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id VblXDP4HUcMsWetg for <xfs@oss.sgi.com>;
+	ESMTP id YIB3sFqKVqTauxZm for <xfs@oss.sgi.com>;
 	Wed, 12 Nov 2014 10:57:22 -0800 (PST)
 From: Eric Sandeen <sandeen@redhat.com>
-Subject: [PATCH 6/9] xfsdump: free suboptstrs if mlog_init1 fails
-Date: Wed, 12 Nov 2014 12:57:15 -0600
-Message-Id: <1415818638-32700-7-git-send-email-sandeen@redhat.com>
+Subject: [PATCH 5/9] xfsdump: remove some unreachable code
+Date: Wed, 12 Nov 2014 12:57:14 -0600
+Message-Id: <1415818638-32700-6-git-send-email-sandeen@redhat.com>
 In-Reply-To: <1415818638-32700-1-git-send-email-sandeen@redhat.com>
 References: <1415818638-32700-1-git-send-email-sandeen@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -29,92 +29,50 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-suboptstrs was never freed on error paths.
+in create_windows() we assign INFO_SIZE (which is defined to 4)
+to the infosize variable, then test whether it is <= 0.  Remove
+the pointless test.
+
+in tsi_cmd_ls(), inside a if ( ! isdirpr ) block, we test whether
+isdirpr might be true... remove it.
 
 Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 ---
- common/mlog.c |   19 +++++++++++--------
- 1 files changed, 11 insertions(+), 8 deletions(-)
+ invutil/cmenu.c |    2 --
+ restore/tree.c  |    5 ++---
+ 2 files changed, 2 insertions(+), 5 deletions(-)
 
-diff --git a/common/mlog.c b/common/mlog.c
-index b0135b9..f1fa12f 100644
---- a/common/mlog.c
-+++ b/common/mlog.c
-@@ -149,6 +149,7 @@ mlog_init1( intgen_t argc, char *argv[ ] )
- 	ix_t soix;
- 	size_t vsymcnt;
- 	intgen_t c;
-+	bool_t retval = BOOL_FALSE;	/* Until proven otherwise */
+diff --git a/invutil/cmenu.c b/invutil/cmenu.c
+index ff4abef..c4747b0 100644
+--- a/invutil/cmenu.c
++++ b/invutil/cmenu.c
+@@ -555,8 +555,6 @@ create_windows()
+ 	     menusize, COLS - 1);
  
- 	/* prepare an array of suboption token strings. this will be the
- 	 * concatenation of the subsystem names with the verbosity symbols.
-@@ -192,7 +193,7 @@ mlog_init1( intgen_t argc, char *argv[ ] )
- 					 progname,
- 					 c );
- 				usage( );
--				return BOOL_FALSE;
-+				goto out_free;
- 			}
- 			options = optarg;
- 			while ( *options ) {
-@@ -208,7 +209,7 @@ mlog_init1( intgen_t argc, char *argv[ ] )
- 						 progname,
- 						 c );
- 					usage( );
--					return BOOL_FALSE;
-+					goto out_free;
- 				}
- 				ASSERT( ( ix_t )suboptix
- 					<
-@@ -224,7 +225,7 @@ mlog_init1( intgen_t argc, char *argv[ ] )
- 							 c,
- 						mlog_ss_names[ suboptix ] );
- 						usage( );
--						return BOOL_FALSE;
-+						goto out_free;
- 					}
- 					ssix = ( ix_t )suboptix;
- 					mlog_level_ss[ ssix ] =
-@@ -238,7 +239,7 @@ mlog_init1( intgen_t argc, char *argv[ ] )
- 							 progname,
- 							 c );
- 						usage( );
--						return BOOL_FALSE;
-+						goto out_free;
- 					}
- 					ssix = MLOG_SS_GEN;
- 					mlog_level_ss[ ssix ] =
-@@ -251,7 +252,7 @@ mlog_init1( intgen_t argc, char *argv[ ] )
- 						 progname,
- 						 c );
- 					usage( );
--					return BOOL_FALSE;
-+					goto out_free;
- 				}
- 			}
- 			break;
-@@ -267,8 +268,6 @@ mlog_init1( intgen_t argc, char *argv[ ] )
- 		}
- 	}
+     infosize = INFO_SIZE;
+-    if(infosize <= 0)
+-	infosize = 1;
  
--	free( ( void * )suboptstrs );
--
- 	/* give subsystems not explicitly called out the "general" verbosity
+     infowin = newwin(infosize, COLS, menusize + 1, 0);
+     keypad(infowin, TRUE);
+diff --git a/restore/tree.c b/restore/tree.c
+index fda4fc5..21d3880 100644
+--- a/restore/tree.c
++++ b/restore/tree.c
+@@ -2905,11 +2905,10 @@ tsi_cmd_ls( void *ctxp,
  	 */
- 	for ( ssix = 0 ; ssix < MLOG_SS_CNT ; ssix++ ) {
-@@ -301,7 +300,11 @@ mlog_init1( intgen_t argc, char *argv[ ] )
+ 	if ( ! isdirpr ) {
+ 		( * pcb )( pctxp,
+-			   "    %s %10llu %s%s\n",
++			   "    %s %10llu %s\n",
+ 			   isselpr ? "*" : " ",
+ 			   ino,
+-			   tranp->t_inter.i_name,
+-			   isdirpr ? "/" : " " );
++			   tranp->t_inter.i_name);
  
- 	mlog_qlockh = QLOCKH_NULL;
- 
--	return BOOL_TRUE;
-+	retval = BOOL_TRUE;
-+
-+out_free:
-+	free( ( void * )suboptstrs );
-+	return retval;
- }
- 
- bool_t
+ 		return;
+ 	}
 -- 
 1.7.1
 
