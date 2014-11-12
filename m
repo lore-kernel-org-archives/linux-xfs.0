@@ -1,17 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 35E637F51
+	by oss.sgi.com (Postfix) with ESMTP id BCC3C7F47
 	for <xfs@oss.sgi.com>; Wed, 12 Nov 2014 12:57:23 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 248B1304043
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id AB4F8304043
 	for <xfs@oss.sgi.com>; Wed, 12 Nov 2014 10:57:23 -0800 (PST)
 Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id cF1w5IKX0jRwc7s1 for <xfs@oss.sgi.com>;
-	Wed, 12 Nov 2014 10:57:21 -0800 (PST)
+	ESMTP id 1Pw35NChj245xujq for <xfs@oss.sgi.com>;
+	Wed, 12 Nov 2014 10:57:22 -0800 (PST)
 From: Eric Sandeen <sandeen@redhat.com>
-Subject: [PATCH 4/9] xfsdump: remove pointless if (dirty);
-Date: Wed, 12 Nov 2014 12:57:13 -0600
-Message-Id: <1415818638-32700-5-git-send-email-sandeen@redhat.com>
+Subject: [PATCH 9/9] xfsdump: fix uninit ackstr in content_mediachange_query()
+Date: Wed, 12 Nov 2014 12:57:18 -0600
+Message-Id: <1415818638-32700-10-git-send-email-sandeen@redhat.com>
 In-Reply-To: <1415818638-32700-1-git-send-email-sandeen@redhat.com>
 References: <1415818638-32700-1-git-send-email-sandeen@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -29,29 +29,30 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-"dirty" seems to be a remnant of unfinished code; other bits of
-it are there but commented out, so comment out "if (dirty);" as
-well, which is a no-op if statement which can't be true.
+Today, this sends an uninitialized ackstr[0] to be mlog'd -
+who knows what we get out of it.  Other places follow this
+"count = 0, string = "\n"" pattern which seemsa bit odd, but
+better than printing uninitialized memory.
+
+To be completely honest, I have no test for this.
 
 Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 ---
- inventory/inv_stobj.c |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
+ restore/content.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-diff --git a/inventory/inv_stobj.c b/inventory/inv_stobj.c
-index becac17..84b15d9 100644
---- a/inventory/inv_stobj.c
-+++ b/inventory/inv_stobj.c
-@@ -976,7 +976,9 @@ stobj_delete_mobj(int fd,
- 
+diff --git a/restore/content.c b/restore/content.c
+index c99aed7..bc5b398 100644
+--- a/restore/content.c
++++ b/restore/content.c
+@@ -2915,6 +2915,7 @@ content_mediachange_query( void )
+ 			bagp = 0;
  		}
- 		free ( mfiles );
-+/*
- 		if ( dirty );
-+*/
- 	}
- 
- 	free ( strms );
+ 		ackcnt = 0;
++		ackstr[ ackcnt++ ] = "\n";
+ 		dlog_multi_ack( ackstr,
+ 				ackcnt );
+ 		querycnt = 0;
 -- 
 1.7.1
 
