@@ -1,15 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 1F5BD7F37
-	for <xfs@oss.sgi.com>; Thu, 13 Nov 2014 11:35:20 -0600 (CST)
-Message-ID: <5464EBD6.3040107@sgi.com>
-Date: Thu, 13 Nov 2014 11:35:18 -0600
-From: Mark Tinguely <tinguely@sgi.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id DBA6F7F37
+	for <xfs@oss.sgi.com>; Thu, 13 Nov 2014 11:36:04 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id CA9408F804C
+	for <xfs@oss.sgi.com>; Thu, 13 Nov 2014 09:36:01 -0800 (PST)
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.9])
+	by cuda.sgi.com with ESMTP id 59uAyjomEhWKmZKK (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 13 Nov 2014 09:36:01 -0800 (PST)
+Date: Thu, 13 Nov 2014 09:36:00 -0800
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 07/11] ext4: Use generic helpers for quotaon and quotaoff
+Message-ID: <20141113173600.GB31481@infradead.org>
+References: <1415739865-2438-1-git-send-email-jack@suse.cz>
+	<1415739865-2438-8-git-send-email-jack@suse.cz>
 MIME-Version: 1.0
-Subject: Re: [PATCH 4/9] xfsdump: remove pointless if (dirty);
-References: <1415818638-32700-1-git-send-email-sandeen@redhat.com>
-	<1415818638-32700-5-git-send-email-sandeen@redhat.com>
-In-Reply-To: <1415818638-32700-5-git-send-email-sandeen@redhat.com>
+Content-Disposition: inline
+In-Reply-To: <1415739865-2438-8-git-send-email-jack@suse.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -18,42 +26,24 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: xfs@oss.sgi.com
+To: Jan Kara <jack@suse.cz>
+Cc: linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, xfs@oss.sgi.com
 
-On 11/12/14 12:57, Eric Sandeen wrote:
-> "dirty" seems to be a remnant of unfinished code; other bits of
-> it are there but commented out, so comment out "if (dirty);" as
-> well, which is a no-op if statement which can't be true.
->
-> Signed-off-by: Eric Sandeen<sandeen@redhat.com>
-> ---
->   inventory/inv_stobj.c |    2 ++
->   1 files changed, 2 insertions(+), 0 deletions(-)
->
-> diff --git a/inventory/inv_stobj.c b/inventory/inv_stobj.c
-> index becac17..84b15d9 100644
-> --- a/inventory/inv_stobj.c
-> +++ b/inventory/inv_stobj.c
-> @@ -976,7 +976,9 @@ stobj_delete_mobj(int fd,
->
->   		}
->   		free ( mfiles );
-> +/*
->   		if ( dirty );
-> +*/
->   	}
->
->   	free ( strms );
+>  static const struct quotactl_ops ext4_qctl_sysfile_operations = {
+> -	.quota_on_meta	= ext4_quota_on_sysfile,
+> -	.quota_off	= ext4_quota_off_sysfile,
+> +	.sysquota_on	= dquot_sysquota_on,
+> +	.sysquota_off	= dquot_sysquota_off,
+>  	.quota_sync	= dquot_quota_sync,
+>  	.get_info	= dquot_get_dqinfo,
+>  	.set_info	= dquot_set_dqinfo,
 
-Why not remove all the references to dirty in the function?
-Like you said, it doesn't do anything.
-
---Mark.
+This vector now only has generic dquot_ methods.  Maybe move the
+vector to fs/quota/dquot.c and allow multiple filesystems to share it?
 
 _______________________________________________
 xfs mailing list
