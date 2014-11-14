@@ -1,21 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 769AE7F3F
-	for <xfs@oss.sgi.com>; Fri, 14 Nov 2014 12:57:48 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 54AB38F8040
-	for <xfs@oss.sgi.com>; Fri, 14 Nov 2014 10:57:48 -0800 (PST)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id 6bAOPCI1P9kaFnXG for <xfs@oss.sgi.com>;
-	Fri, 14 Nov 2014 10:57:46 -0800 (PST)
-Message-ID: <546650A8.9030002@sandeen.net>
-Date: Fri, 14 Nov 2014 12:57:44 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
-MIME-Version: 1.0
-Subject: Re: [PATCH 2/2] Add support to RENAME_EXCHANGE flag V7
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 889357F3F
+	for <xfs@oss.sgi.com>; Fri, 14 Nov 2014 13:12:45 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 0A8ADAC005
+	for <xfs@oss.sgi.com>; Fri, 14 Nov 2014 11:12:41 -0800 (PST)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id 8cBmMdPk9istCREB (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Fri, 14 Nov 2014 11:12:41 -0800 (PST)
+Received: from int-mx13.intmail.prod.int.phx2.redhat.com
+	(int-mx13.intmail.prod.int.phx2.redhat.com [10.5.11.26])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id sAEJCd7k010100
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256
+	verify=FAIL) for <xfs@oss.sgi.com>; Fri, 14 Nov 2014 14:12:40 -0500
+Date: Fri, 14 Nov 2014 14:12:35 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 1/2] Make xfs_vn_rename compliant with renameat2() syscall
+Message-ID: <20141114191234.GA3390@laptop.bfoster>
 References: <1415989940-20004-1-git-send-email-cmaiolino@redhat.com>
-	<1415989940-20004-3-git-send-email-cmaiolino@redhat.com>
-In-Reply-To: <1415989940-20004-3-git-send-email-cmaiolino@redhat.com>
+	<1415989940-20004-2-git-send-email-cmaiolino@redhat.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <1415989940-20004-2-git-send-email-cmaiolino@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,31 +35,91 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Carlos Maiolino <cmaiolino@redhat.com>, xfs@oss.sgi.com
+To: Carlos Maiolino <cmaiolino@redhat.com>
+Cc: xfs@oss.sgi.com
 
-On 11/14/14 12:32 PM, Carlos Maiolino wrote:
-> Adds a new function named xfs_cross_rename(), responsible to handle requests
-> from sys_renameat2() using RENAME_EXCHANGE flag.
+On Fri, Nov 14, 2014 at 04:32:19PM -0200, Carlos Maiolino wrote:
+> To be able to support RENAME_EXCHANGE flag from renameat2() system call, XFS
+> must have its inode_operations updated, exporting .rename2 method, instead of
+> .rename.
+> 
+> This patch just replaces the (now old) .rename method by .rename2, using the
+> same infra-structure, but checking rename flags.
+> 
+> calls to .rename2 using RENAME_EXCHANGE flag, although now handled inside XFS,
+> still returns -EINVAL.
+> 
+> RENAME_NOREPLACE is handled via VFS and we don't need to care about it inside
+> xfs_vn_rename.
+> 
+> Changelog:
+> 
+> 	V2: Use xfs_vn_rename as-is, instead of rename it to xfs_vn_rename2
+> 
+> Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
+> ---
 
-I really hate to do this, but, here:
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 
-> +	/*
-> +	* If we're renaming one or more directories across different parents,
-> +	* update the respective ".." entries (and link counts) to match the new
-> +	* parents.
-> +	*/
-
-and here:
- 
->  	/*
-> +	 * Handle RENAME_EXCHANGE flags
-> +	*/
-
-there are whitespace issues w/ the comments (need a " " before the "*")
-
-who knows, maybe Dave can fix them on commit ;)
-
--Eric
+>  fs/xfs/xfs_iops.c | 15 ++++++++++-----
+>  1 file changed, 10 insertions(+), 5 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+> index ec6dcdc..0b8704c 100644
+> --- a/fs/xfs/xfs_iops.c
+> +++ b/fs/xfs/xfs_iops.c
+> @@ -383,18 +383,23 @@ xfs_vn_rename(
+>  	struct inode	*odir,
+>  	struct dentry	*odentry,
+>  	struct inode	*ndir,
+> -	struct dentry	*ndentry)
+> +	struct dentry	*ndentry,
+> +	unsigned int	flags)
+>  {
+>  	struct inode	*new_inode = ndentry->d_inode;
+>  	struct xfs_name	oname;
+>  	struct xfs_name	nname;
+>  
+> +	/* XFS does not support RENAME_EXCHANGE yet */
+> +	if (flags & ~RENAME_NOREPLACE)
+> +		return -EINVAL;
+> +
+>  	xfs_dentry_to_name(&oname, odentry, 0);
+>  	xfs_dentry_to_name(&nname, ndentry, odentry->d_inode->i_mode);
+>  
+>  	return xfs_rename(XFS_I(odir), &oname, XFS_I(odentry->d_inode),
+> -			  XFS_I(ndir), &nname, new_inode ?
+> -						XFS_I(new_inode) : NULL);
+> +			  XFS_I(ndir), &nname,
+> +			  new_inode ? XFS_I(new_inode) : NULL);
+>  }
+>  
+>  /*
+> @@ -1147,7 +1152,7 @@ static const struct inode_operations xfs_dir_inode_operations = {
+>  	 */
+>  	.rmdir			= xfs_vn_unlink,
+>  	.mknod			= xfs_vn_mknod,
+> -	.rename			= xfs_vn_rename,
+> +	.rename2		= xfs_vn_rename,
+>  	.get_acl		= xfs_get_acl,
+>  	.set_acl		= xfs_set_acl,
+>  	.getattr		= xfs_vn_getattr,
+> @@ -1175,7 +1180,7 @@ static const struct inode_operations xfs_dir_ci_inode_operations = {
+>  	 */
+>  	.rmdir			= xfs_vn_unlink,
+>  	.mknod			= xfs_vn_mknod,
+> -	.rename			= xfs_vn_rename,
+> +	.rename2		= xfs_vn_rename,
+>  	.get_acl		= xfs_get_acl,
+>  	.set_acl		= xfs_set_acl,
+>  	.getattr		= xfs_vn_getattr,
+> -- 
+> 2.1.0
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
