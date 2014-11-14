@@ -1,14 +1,14 @@
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id ABE0F7F3F
-	for <xfs@oss.sgi.com>; Fri, 14 Nov 2014 11:09:14 -0600 (CST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 92B807F51
+	for <xfs@oss.sgi.com>; Fri, 14 Nov 2014 10:56:13 -0600 (CST)
 Received: from estes.americas.sgi.com (estes.americas.sgi.com [128.162.236.10])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 85B6130406B
-	for <xfs@oss.sgi.com>; Fri, 14 Nov 2014 09:09:11 -0800 (PST)
-Message-ID: <5466306A.6010804@sgi.com>
-Date: Fri, 14 Nov 2014 10:40:10 -0600
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 775858F8040
+	for <xfs@oss.sgi.com>; Fri, 14 Nov 2014 08:56:13 -0800 (PST)
+Message-ID: <5466342D.7030301@sgi.com>
+Date: Fri, 14 Nov 2014 10:56:13 -0600
 From: Troy McCorkell <tdm@sgi.com>
 MIME-Version: 1.0
-Subject: test - please ignore
+Subject: oss.sgi.com - network maintenance complete
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,9 +21,16 @@ Content-Transfer-Encoding: 7bit
 Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com, pcp@oss.sgi.com
+To: xfs@oss.sgi.com
+Cc: Troy McCorkell <tdm@sgi.com>
 
-test email to verify the network maintenance on oss.sgi.com
+
+The network maintenance on oss.sgi.com is complete.
+If you have problems accessing oss.sgi.com, please send me an email.
+
+Thanks,
+Troy McCorkell
+tdm@sgi.com
 
 _______________________________________________
 xfs mailing list
