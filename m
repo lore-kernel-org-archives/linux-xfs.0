@@ -1,32 +1,22 @@
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id BE97A7F3F
-	for <xfs@oss.sgi.com>; Fri, 14 Nov 2014 07:42:39 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 4D21DAC007
-	for <xfs@oss.sgi.com>; Fri, 14 Nov 2014 05:42:39 -0800 (PST)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id gwx3w2hUiBTKSVmA (version=TLSv1
+	by oss.sgi.com (Postfix) with ESMTP id 165E07F3F
+	for <xfs@oss.sgi.com>; Fri, 14 Nov 2014 02:47:32 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 87B4CAC005
+	for <xfs@oss.sgi.com>; Fri, 14 Nov 2014 00:47:31 -0800 (PST)
+Received: from infy.dailymailz.in (vps.dailymailz.in [173.214.188.66]) by
+	cuda.sgi.com with ESMTP id RsGDFiZTb5GcsQPG (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 14 Nov 2014 05:42:38 -0800 (PST)
-Received: from int-mx13.intmail.prod.int.phx2.redhat.com
-	(int-mx13.intmail.prod.int.phx2.redhat.com [10.5.11.26])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id sAEDgb9R013671
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256
-	verify=FAIL) for <xfs@oss.sgi.com>; Fri, 14 Nov 2014 08:42:37 -0500
-Received: from hades.localdomain (ovpn-113-81.phx2.redhat.com [10.3.113.81])
-	by int-mx13.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id sAEDgXp1026384
-	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NO)
-	for <xfs@oss.sgi.com>; Fri, 14 Nov 2014 08:42:36 -0500
-Date: Fri, 14 Nov 2014 11:42:32 -0200
-From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: Re: Wrong d_type presented by xfs_io
-Message-ID: <20141114134230.GB2240@hades.localdomain>
-References: <20141114124807.GA2240@hades.localdomain>
-	<20141114132359.GA36731@bfoster.bfoster>
+	Fri, 14 Nov 2014 00:47:26 -0800 (PST)
+Received: from dailymailz by infy.dailymailz.in with local (Exim 4.84)
+	(envelope-from <paragkothari81@gmail.com>) id 1XpCXM-0002PO-Kx
+	for xfs@oss.sgi.com; Fri, 14 Nov 2014 08:47:25 +0000
+Subject: Go Computerized with your Calls and Get More Attention
+Message-ID: <607cf3db1d6137ccaa9a1bbf4ef2885f@infinity.dailymailz.in>
+Date: Fri, 14 Nov 2014 06:23:05 +0000
+From: "Virtual Number" <paragkothari81@gmail.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20141114132359.GA36731@bfoster.bfoster>
+Reply-To: paragkothari81@gmail.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,87 +25,69 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============3995035357344269882=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-On Fri, Nov 14, 2014 at 08:24:00AM -0500, Brian Foster wrote:
-> On Fri, Nov 14, 2014 at 10:48:10AM -0200, Carlos Maiolino wrote:
-> > Hi guys,
-> > 
-> > I've been looking through an issue raised by Brian, regarding my RENAME_EXCHANGE
-> > patchset, where, apparently, the d_type of some files are reseted during the
-> > exchange. Brian presented an example here:
-> > 
-> > http://oss.sgi.com/archives/xfs/2014-11/msg00170.html
-> > 
-> > When trying to debug it, I've been trying to create and rename some FS objects
-> > to try to reproduce the issue, but, all the files I've been creating are shown
-> > as DT_UNKNOWN type:
-> > 
-> 
-> Hi Carlos,
-> 
-> I suspect you aren't using a v5 superblock. You can do that by passing
-> '-m crc=1' to mkfs. Does d_type work once you're on v5?
->
+--===============3995035357344269882==
+Content-Type: multipart/alternative; charset="UTF-8"; boundary="b1_14f6d0d21102438e3f6e3af4216deae1"
+Content-Transfer-Encoding: 8bit
 
-Yes, it works, thanks man :)
+--b1_14f6d0d21102438e3f6e3af4216deae1
+Content-Type: text/plain; format=flowed; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
 
- 
-> Brian
-> 
-> > ex:
-> > 
-> > /dev/vdb2 on /xfs/scratch type xfs (rw,relatime,seclabel,attr2,inode64,noquota)
-> > 
-> > [root@localhost scratch]# mkdir /xfs/scratch/dir1
-> > 
-> > [root@localhost scratch]# xfs_io -c "readdir -v" /xfs/scratch/
-> > 
-> > 00000006: d_ino: 0x00000083 d_off: 0x00000200 d_reclen: 0x18 d_type: DT_UNKNOWN
-> > d_name: dir1
-> > 
-> > 
-> > [root@localhost scratch]# mknod /xfs/scratch/mybdev b 253 19
-> > 
-> > 00000008: d_ino: 0x00000084 d_off: 0x00000200 d_reclen: 0x20 d_type: DT_UNKNOWN
-> > d_name: mybdev
-> > 
-> > 
-> > 
-> > 
-> > So, anyone knows if is there any problem with xfs_io, or, if I'm doing something
-> > wrong here?
-> > 
-> > [root@localhost scratch]# xfs_io -V
-> > xfs_io version 3.2.1
-> > 
-> > 
-> > or maybe, we have a bug somewhere else.
-> > 
-> > 
-> > Cheers
-> > 
-> > -- 
-> > Carlos
-> > 
-> > _______________________________________________
-> > xfs mailing list
-> > xfs@oss.sgi.com
-> > http://oss.sgi.com/mailman/listinfo/xfs
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+Your email client cannot read this email.
+To view it online, please go here:
+http://infinity.dailymailz.in/display.php?M=489744&C=b241f44e12f21a0dc1f8d3ac67374632&S=257&L=122&N=93
 
--- 
-Carlos
+
+To stop receiving these
+emails:http://infinity.dailymailz.in/unsubscribe.php?M=489744&C=b241f44e12f21a0dc1f8d3ac67374632&L=122&N=257
+
+--b1_14f6d0d21102438e3f6e3af4216deae1
+Content-Type: text/html; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+<head>
+</head>
+<body>
+Dear&nbsp;Sir/Madam,<br /><br />If you are looking to go live with Virtual
+Number services to attract your clients and get a better management of your
+call flow on regular basis with below features:<br /><br />1) Avoid Calls
+getting Missed<br />2) Getting Calls Recorded<br />3) Getting Calls
+Forwarded to different department<br />4) No Physical Infrasturcture and
+Investment<br /><br /><br />Solution starting @ Rs 12000 per year only<br
+/><br />You can cllick on link :&nbsp;<a
+href="http://infinity.dailymailz.in/link.php?M=489744&N=257&L=154&F=H">http://ivr.infisms.com/</a>&nbsp;
+to have an understanding of how it works<br /><br />Let us know if you have
+queries on this so we can get it planned and activated for you<br /><br
+/>Regards<br />Infinity Solution<br />Bulk Sms &amp; Bulk Email Service
+Provider&nbsp;<br />Handheld : +91 - 9898 439 675<br />Email :
+mitul@infisms.com<br /><br /><br />
+<img
+src="http://infinity.dailymailz.in/open.php?M=489744&L=122&N=257&F=H&image=.jpg"
+height="1" width="10"><br/><a
+href="http://infinity.dailymailz.in/unsubscribe.php?M=489744&C=b241f44e12f21a0dc1f8d3ac67374632&L=122&N=257">Click
+here to unsubscribe</a></body>
+</html>
+
+--b1_14f6d0d21102438e3f6e3af4216deae1--
+
+
+--===============3995035357344269882==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============3995035357344269882==--
