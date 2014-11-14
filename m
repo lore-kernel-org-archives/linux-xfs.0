@@ -1,28 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 555B37F3F
-	for <xfs@oss.sgi.com>; Fri, 14 Nov 2014 10:37:29 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 42E4A8F8039
-	for <xfs@oss.sgi.com>; Fri, 14 Nov 2014 08:37:26 -0800 (PST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 656EF7F3F
+	for <xfs@oss.sgi.com>; Fri, 14 Nov 2014 11:04:53 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id D7C67AC006
+	for <xfs@oss.sgi.com>; Fri, 14 Nov 2014 09:04:49 -0800 (PST)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id x4DMjloKpTMFxXwM (version=TLSv1
+	cuda.sgi.com with ESMTP id EgPAZ5kbSDEg5zQv (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 14 Nov 2014 08:17:10 -0800 (PST)
-Received: from int-mx10.intmail.prod.int.phx2.redhat.com
-	(int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id sAEGH9JG007842
+	Fri, 14 Nov 2014 09:04:48 -0800 (PST)
+Received: from int-mx14.intmail.prod.int.phx2.redhat.com
+	(int-mx14.intmail.prod.int.phx2.redhat.com [10.5.11.27])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id sAEGH9ei022092
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256
 	verify=FAIL) for <xfs@oss.sgi.com>; Fri, 14 Nov 2014 11:17:09 -0500
 Received: from bfoster.bfoster ([10.18.41.237])
-	by int-mx10.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id sAEGH8WR012329
+	by int-mx14.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id sAEGH8ND014169
 	for <xfs@oss.sgi.com>; Fri, 14 Nov 2014 11:17:08 -0500
 From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH 1/3] xfs: replace on-stack xfs_trans_res with pointer in
-	xfs_create()
-Date: Fri, 14 Nov 2014 11:17:05 -0500
-Message-Id: <1415981827-52993-2-git-send-email-bfoster@redhat.com>
+Subject: [PATCH 2/3] xfs: fix error handling in xfs_qm_log_quotaoff()
+Date: Fri, 14 Nov 2014 11:17:06 -0500
+Message-Id: <1415981827-52993-3-git-send-email-bfoster@redhat.com>
 In-Reply-To: <1415981827-52993-1-git-send-email-bfoster@redhat.com>
 References: <1415981827-52993-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -40,66 +39,80 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-There's no need to store a full struct xfs_trans_res on the stack in
-xfs_create() and copy the fields. Use a pointer to the appropriate
-structures embedded in the xfs_mount.
+The error handling in xfs_qm_log_quotaoff() has a couple problems. If
+xfs_trans_commit() fails, we fall through to the error block and call
+xfs_trans_cancel(). This is incorrect on commit failure. If
+xfs_trans_reserve() fails, we jump to the error block, cancel the tp and
+restore the superblock qflags to oldsbqflag. However, oldsbqflag has
+been initialized to zero and not yet updated from the original flags so
+we set the flags to zero.
 
+Fix up the error handling in xfs_qm_log_quotaoff() to not restore flags
+if they haven't been modified and not cancel the tp on commit failure.
+Remove the flag restore code altogether because commit error is the only
+failure condition and we don't know whether the transaction made it to
+disk.
+
+Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
 Signed-off-by: Brian Foster <bfoster@redhat.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/xfs_inode.c | 15 ++++++---------
- 1 file changed, 6 insertions(+), 9 deletions(-)
+ fs/xfs/xfs_qm_syscalls.c | 26 ++++++++++----------------
+ 1 file changed, 10 insertions(+), 16 deletions(-)
 
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 8ed049d..2ffb802 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -1082,7 +1082,7 @@ xfs_create(
- 	struct xfs_dquot	*udqp = NULL;
- 	struct xfs_dquot	*gdqp = NULL;
- 	struct xfs_dquot	*pdqp = NULL;
--	struct xfs_trans_res	tres;
-+	struct xfs_trans_res	*tres;
- 	uint			resblks;
+diff --git a/fs/xfs/xfs_qm_syscalls.c b/fs/xfs/xfs_qm_syscalls.c
+index 80f2d77..d1e0ab7 100644
+--- a/fs/xfs/xfs_qm_syscalls.c
++++ b/fs/xfs/xfs_qm_syscalls.c
+@@ -784,19 +784,21 @@ xfs_qm_log_quotaoff(
+ {
+ 	xfs_trans_t	       *tp;
+ 	int			error;
+-	xfs_qoff_logitem_t     *qoffi=NULL;
+-	uint			oldsbqflag=0;
++	xfs_qoff_logitem_t     *qoffi;
++
++	*qoffstartp = NULL;
  
- 	trace_xfs_create(dp, name);
-@@ -1105,13 +1105,11 @@ xfs_create(
- 	if (is_dir) {
- 		rdev = 0;
- 		resblks = XFS_MKDIR_SPACE_RES(mp, name->len);
--		tres.tr_logres = M_RES(mp)->tr_mkdir.tr_logres;
--		tres.tr_logcount = XFS_MKDIR_LOG_COUNT;
-+		tres = &M_RES(mp)->tr_mkdir;
- 		tp = xfs_trans_alloc(mp, XFS_TRANS_MKDIR);
- 	} else {
- 		resblks = XFS_CREATE_SPACE_RES(mp, name->len);
--		tres.tr_logres = M_RES(mp)->tr_create.tr_logres;
--		tres.tr_logcount = XFS_CREATE_LOG_COUNT;
-+		tres = &M_RES(mp)->tr_create;
- 		tp = xfs_trans_alloc(mp, XFS_TRANS_CREATE);
- 	}
+ 	tp = xfs_trans_alloc(mp, XFS_TRANS_QM_QUOTAOFF);
+ 	error = xfs_trans_reserve(tp, &M_RES(mp)->tr_qm_quotaoff, 0, 0);
+-	if (error)
+-		goto error0;
++	if (error) {
++		xfs_trans_cancel(tp, 0);
++		goto out;
++	}
  
-@@ -1123,17 +1121,16 @@ xfs_create(
- 	 * the case we'll drop the one we have and get a more
- 	 * appropriate transaction later.
+ 	qoffi = xfs_trans_get_qoff_item(tp, NULL, flags & XFS_ALL_QUOTA_ACCT);
+ 	xfs_trans_log_quotaoff_item(tp, qoffi);
+ 
+ 	spin_lock(&mp->m_sb_lock);
+-	oldsbqflag = mp->m_sb.sb_qflags;
+ 	mp->m_sb.sb_qflags = (mp->m_qflags & ~(flags)) & XFS_MOUNT_QUOTA_ALL;
+ 	spin_unlock(&mp->m_sb_lock);
+ 
+@@ -809,19 +811,11 @@ xfs_qm_log_quotaoff(
  	 */
--	tres.tr_logflags = XFS_TRANS_PERM_LOG_RES;
--	error = xfs_trans_reserve(tp, &tres, resblks, 0);
-+	error = xfs_trans_reserve(tp, tres, resblks, 0);
- 	if (error == -ENOSPC) {
- 		/* flush outstanding delalloc blocks and retry */
- 		xfs_flush_inodes(mp);
--		error = xfs_trans_reserve(tp, &tres, resblks, 0);
-+		error = xfs_trans_reserve(tp, tres, resblks, 0);
- 	}
- 	if (error == -ENOSPC) {
- 		/* No space at all so try a "no-allocation" reservation */
- 		resblks = 0;
--		error = xfs_trans_reserve(tp, &tres, 0, 0);
-+		error = xfs_trans_reserve(tp, tres, 0, 0);
- 	}
- 	if (error) {
- 		cancel_flags = 0;
+ 	xfs_trans_set_sync(tp);
+ 	error = xfs_trans_commit(tp, 0);
++	if (error)
++		goto out;
+ 
+-error0:
+-	if (error) {
+-		xfs_trans_cancel(tp, 0);
+-		/*
+-		 * No one else is modifying sb_qflags, so this is OK.
+-		 * We still hold the quotaofflock.
+-		 */
+-		spin_lock(&mp->m_sb_lock);
+-		mp->m_sb.sb_qflags = oldsbqflag;
+-		spin_unlock(&mp->m_sb_lock);
+-	}
+ 	*qoffstartp = qoffi;
++out:
+ 	return error;
+ }
+ 
 -- 
 1.8.3.1
 
