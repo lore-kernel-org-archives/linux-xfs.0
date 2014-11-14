@@ -1,31 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 6B9607F3F
-	for <xfs@oss.sgi.com>; Fri, 14 Nov 2014 07:24:08 -0600 (CST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 249117F3F
+	for <xfs@oss.sgi.com>; Fri, 14 Nov 2014 07:42:16 -0600 (CST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 09C2CAC006
-	for <xfs@oss.sgi.com>; Fri, 14 Nov 2014 05:24:07 -0800 (PST)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 1343E30404E
+	for <xfs@oss.sgi.com>; Fri, 14 Nov 2014 05:42:12 -0800 (PST)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id 1UkY68QwXBFnk2FV (version=TLSv1
+	cuda.sgi.com with ESMTP id JSpNlZlQyZBmehYS (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 14 Nov 2014 05:24:03 -0800 (PST)
-Received: from int-mx11.intmail.prod.int.phx2.redhat.com
-	(int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id sAEDO1vM009339
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256
-	verify=FAIL) for <xfs@oss.sgi.com>; Fri, 14 Nov 2014 08:24:02 -0500
-Received: from bfoster.bfoster ([10.18.41.237])
-	by int-mx11.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id sAEDO164000338
-	for <xfs@oss.sgi.com>; Fri, 14 Nov 2014 08:24:01 -0500
-Date: Fri, 14 Nov 2014 08:24:00 -0500
+	Fri, 14 Nov 2014 05:42:12 -0800 (PST)
+Date: Fri, 14 Nov 2014 08:42:08 -0500
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: Wrong d_type presented by xfs_io
-Message-ID: <20141114132359.GA36731@bfoster.bfoster>
-References: <20141114124807.GA2240@hades.localdomain>
+Subject: Re: Mismatch UUID
+Message-ID: <20141114134208.GB36731@bfoster.bfoster>
+References: <BLU172-W9B4FE524F07D7E6D5592BC48C0@phx.gbl>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20141114124807.GA2240@hades.localdomain>
+In-Reply-To: <BLU172-W9B4FE524F07D7E6D5592BC48C0@phx.gbl>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -38,64 +29,88 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Robert Tench <robtench@hotmail.com>
+Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-On Fri, Nov 14, 2014 at 10:48:10AM -0200, Carlos Maiolino wrote:
-> Hi guys,
+On Fri, Nov 14, 2014 at 07:57:42PM +1100, Robert Tench wrote:
+>                                                             Robert has a file to share with you on OneDrive. To view it, click the link below.                                                                                                        xfs.log                                                                            So finally have managed to find a way to save the complete log of running xfs_repair -n /dev.md4
 > 
-> I've been looking through an issue raised by Brian, regarding my RENAME_EXCHANGE
-> patchset, where, apparently, the d_type of some files are reseted during the
-> exchange. Brian presented an example here:
+> And below is the output of xfs_check /dev/md4
 > 
-> http://oss.sgi.com/archives/xfs/2014-11/msg00170.html
-> 
-> When trying to debug it, I've been trying to create and rename some FS objects
-> to try to reproduce the issue, but, all the files I've been creating are shown
-> as DT_UNKNOWN type:
+> root@ubuntu:~# xfs_check /dev/md4
+> * ERROR: mismatched uuid in log
+> *            SB : 813833a7-1bd3-4447-b575-09d1471bb652
+> *            log: ea3833af-25ce-9f91-b575-018fb49df3b1
+> ERROR: The filesystem has valuable metadata changes in a log which needs to
+> be replayed.  Mount the filesystem to replay the log, and unmount it before
+> re-running xfs_check.  If you are unable to mount the filesystem, then use
+> the xfs_repair -L option to destroy the log and attempt a repair.
+> Note that destroying the log may cause corruption -- please attempt a mount
+> of the filesystem before doing this.
 > 
 
-Hi Carlos,
+You want to use xfs_repair (-n) rather than xfs_check. I think you
+mentioned in your other email you've tried xfs_repair..? The above
+message indicates a dirty log, have you attempted to mount the device to
+replay the log?
 
-I suspect you aren't using a v5 superblock. You can do that by passing
-'-m crc=1' to mkfs. Does d_type work once you're on v5?
+> And the output from mdadm -D /dev/md4 is as follows
+> 
+
+How did you put the array back together? Did it assemble fine or did you
+have to recreate it? If the latter, how are you sure the geometry is
+correct (it looks like it's syncing)?
 
 Brian
 
-> ex:
+> root@ubuntu:~# mdadm -D /dev/md4
+> /dev/md4:
+>         Version : 1.0
+>   Creation Time : Fri Jan  1 01:31:17 2010
+>      Raid Level : raid5
+>      Array Size : 11712962560 (11170.35 GiB 11994.07 GB)
+>   Used Dev Size : 2928240640 (2792.59 GiB 2998.52 GB)
+>    Raid Devices : 5
+>   Total Devices : 5
+>     Persistence : Superblock is persistent
 > 
-> /dev/vdb2 on /xfs/scratch type xfs (rw,relatime,seclabel,attr2,inode64,noquota)
+>     Update Time : Fri Nov 14 15:58:16 2014
+>           State : clean 
+>  Active Devices : 5
+> Working Devices : 5
+>  Failed Devices : 0
+>   Spare Devices : 0
 > 
-> [root@localhost scratch]# mkdir /xfs/scratch/dir1
+>          Layout : left-symmetric
+>      Chunk Size : 512K
 > 
-> [root@localhost scratch]# xfs_io -c "readdir -v" /xfs/scratch/
+>            Name : (none):4
+>            UUID : e0829810:9782b51f:25529f65:8823419c
+>          Events : 1243386
 > 
-> 00000006: d_ino: 0x00000083 d_off: 0x00000200 d_reclen: 0x18 d_type: DT_UNKNOWN
-> d_name: dir1
-> 
-> 
-> [root@localhost scratch]# mknod /xfs/scratch/mybdev b 253 19
-> 
-> 00000008: d_ino: 0x00000084 d_off: 0x00000200 d_reclen: 0x20 d_type: DT_UNKNOWN
-> d_name: mybdev
-> 
-> 
-> 
-> 
-> So, anyone knows if is there any problem with xfs_io, or, if I'm doing something
-> wrong here?
-> 
-> [root@localhost scratch]# xfs_io -V
-> xfs_io version 3.2.1
+>     Number   Major   Minor   RaidDevice State
+>        0       8        2        0      active sync   /dev/sda2
+>        6       8       18        1      active sync   /dev/sdb2
+>        2       8       34        2      active sync   /dev/sdc2
+>        5       8       50        3      active sync   /dev/sdd2
+>        4       8       66        4      active sync   /dev/sde2
 > 
 > 
-> or maybe, we have a bug somewhere else.
+> And then the response from mdadm -E /dev/md4
+> 
+> root@ubuntu:~# mdadm -E /dev/md4
+> mdadm: No md superblock detected on /dev/md4.
+> 
+> Not sure what to do, any help would be appreciated
+> 
+> Regards,
+> 
+> Rob
 > 
 > 
-> Cheers
 > 
-> -- 
-> Carlos
-> 
+>                  		 	   		  
+
 > _______________________________________________
 > xfs mailing list
 > xfs@oss.sgi.com
