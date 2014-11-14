@@ -1,29 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 656EF7F3F
-	for <xfs@oss.sgi.com>; Fri, 14 Nov 2014 11:04:53 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id D7C67AC006
-	for <xfs@oss.sgi.com>; Fri, 14 Nov 2014 09:04:49 -0800 (PST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 572C97F3F
+	for <xfs@oss.sgi.com>; Fri, 14 Nov 2014 11:33:52 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 35B618F8040
+	for <xfs@oss.sgi.com>; Fri, 14 Nov 2014 09:33:52 -0800 (PST)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id EgPAZ5kbSDEg5zQv (version=TLSv1
+	cuda.sgi.com with ESMTP id sWs3X3itQjQqM57f (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 14 Nov 2014 09:04:48 -0800 (PST)
-Received: from int-mx14.intmail.prod.int.phx2.redhat.com
-	(int-mx14.intmail.prod.int.phx2.redhat.com [10.5.11.27])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id sAEGH9ei022092
+	Fri, 14 Nov 2014 09:33:51 -0800 (PST)
+Received: from int-mx11.intmail.prod.int.phx2.redhat.com
+	(int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id sAEHXokZ001232
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256
-	verify=FAIL) for <xfs@oss.sgi.com>; Fri, 14 Nov 2014 11:17:09 -0500
-Received: from bfoster.bfoster ([10.18.41.237])
-	by int-mx14.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id sAEGH8ND014169
-	for <xfs@oss.sgi.com>; Fri, 14 Nov 2014 11:17:08 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH 2/3] xfs: fix error handling in xfs_qm_log_quotaoff()
-Date: Fri, 14 Nov 2014 11:17:06 -0500
-Message-Id: <1415981827-52993-3-git-send-email-bfoster@redhat.com>
-In-Reply-To: <1415981827-52993-1-git-send-email-bfoster@redhat.com>
-References: <1415981827-52993-1-git-send-email-bfoster@redhat.com>
+	verify=FAIL) for <xfs@oss.sgi.com>; Fri, 14 Nov 2014 12:33:50 -0500
+Received: from hades.localdomain.com (ovpn-113-81.phx2.redhat.com
+	[10.3.113.81])
+	by int-mx11.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id sAEHXmpV000577
+	for <xfs@oss.sgi.com>; Fri, 14 Nov 2014 12:33:49 -0500
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: [PATCH 0/2] Add support to RENAME_EXCHANGE flag to XFS V6
+Date: Fri, 14 Nov 2014 15:33:28 -0200
+Message-Id: <1415986410-18367-1-git-send-email-cmaiolino@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -39,82 +38,40 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-The error handling in xfs_qm_log_quotaoff() has a couple problems. If
-xfs_trans_commit() fails, we fall through to the error block and call
-xfs_trans_cancel(). This is incorrect on commit failure. If
-xfs_trans_reserve() fails, we jump to the error block, cancel the tp and
-restore the superblock qflags to oldsbqflag. However, oldsbqflag has
-been initialized to zero and not yet updated from the original flags so
-we set the flags to zero.
+This patchset aims to implement RENAME_EXCHANGE support (from sys_renameat2) to
+XFS.
 
-Fix up the error handling in xfs_qm_log_quotaoff() to not restore flags
-if they haven't been modified and not cancel the tp on commit failure.
-Remove the flag restore code altogether because commit error is the only
-failure condition and we don't know whether the transaction made it to
-disk.
+For this to be achieved, XFS need to export a rename2() method, which I included
+in the first patch.
 
-Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
-Signed-off-by: Brian Foster <bfoster@redhat.com>
----
- fs/xfs/xfs_qm_syscalls.c | 26 ++++++++++----------------
- 1 file changed, 10 insertions(+), 16 deletions(-)
+The second patch is the real implementation of the RENAME_EXCHANGE flags, which
+most of the work I based on xfs_rename().
 
-diff --git a/fs/xfs/xfs_qm_syscalls.c b/fs/xfs/xfs_qm_syscalls.c
-index 80f2d77..d1e0ab7 100644
---- a/fs/xfs/xfs_qm_syscalls.c
-+++ b/fs/xfs/xfs_qm_syscalls.c
-@@ -784,19 +784,21 @@ xfs_qm_log_quotaoff(
- {
- 	xfs_trans_t	       *tp;
- 	int			error;
--	xfs_qoff_logitem_t     *qoffi=NULL;
--	uint			oldsbqflag=0;
-+	xfs_qoff_logitem_t     *qoffi;
-+
-+	*qoffstartp = NULL;
- 
- 	tp = xfs_trans_alloc(mp, XFS_TRANS_QM_QUOTAOFF);
- 	error = xfs_trans_reserve(tp, &M_RES(mp)->tr_qm_quotaoff, 0, 0);
--	if (error)
--		goto error0;
-+	if (error) {
-+		xfs_trans_cancel(tp, 0);
-+		goto out;
-+	}
- 
- 	qoffi = xfs_trans_get_qoff_item(tp, NULL, flags & XFS_ALL_QUOTA_ACCT);
- 	xfs_trans_log_quotaoff_item(tp, qoffi);
- 
- 	spin_lock(&mp->m_sb_lock);
--	oldsbqflag = mp->m_sb.sb_qflags;
- 	mp->m_sb.sb_qflags = (mp->m_qflags & ~(flags)) & XFS_MOUNT_QUOTA_ALL;
- 	spin_unlock(&mp->m_sb_lock);
- 
-@@ -809,19 +811,11 @@ xfs_qm_log_quotaoff(
- 	 */
- 	xfs_trans_set_sync(tp);
- 	error = xfs_trans_commit(tp, 0);
-+	if (error)
-+		goto out;
- 
--error0:
--	if (error) {
--		xfs_trans_cancel(tp, 0);
--		/*
--		 * No one else is modifying sb_qflags, so this is OK.
--		 * We still hold the quotaofflock.
--		 */
--		spin_lock(&mp->m_sb_lock);
--		mp->m_sb.sb_qflags = oldsbqflag;
--		spin_unlock(&mp->m_sb_lock);
--	}
- 	*qoffstartp = qoffi;
-+out:
- 	return error;
- }
- 
+This patchset passed the xfstests 23, 24 and 25 (specifically for 
+RENAME_EXCHANGE), and I also tested the projectID inheritance problem, where
+both paths must be under the same projectID to be able to change (I'm going to
+implement this test into the xfstests too).
+
+In this version of the patch, I tried to use xfs_rename for everything in
+common between a usual rename and the RENAME_EXCHANGE, using xfs_cross_rename()
+just for the needed stuff to accomplish RENAME_EXCHANGE requirements (as 
+suggested by Brian).
+
+Also, this new version contains a fix to ensure both files will have their
+i_mode updated, so that d_type object (in superblock V5) will contain the proper
+information after the exchange happens
+
+Carlos Maiolino (2):
+  Make xfs_vn_rename compliant with renameat2() syscall
+  Add support to RENAME_EXCHANGE flag V6
+
+ fs/xfs/xfs_inode.c | 112 ++++++++++++++++++++++++++++++++++++++++++++++++++++-
+ fs/xfs/xfs_inode.h |   2 +-
+ fs/xfs/xfs_iops.c  |  24 +++++++++---
+ 3 files changed, 130 insertions(+), 8 deletions(-)
+
 -- 
-1.8.3.1
+2.1.0
 
 _______________________________________________
 xfs mailing list
