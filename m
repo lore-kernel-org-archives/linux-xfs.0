@@ -1,24 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id D207F7F3F
-	for <xfs@oss.sgi.com>; Sat, 15 Nov 2014 08:27:38 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 7043BAC006
-	for <xfs@oss.sgi.com>; Sat, 15 Nov 2014 06:27:38 -0800 (PST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 39D657F3F
+	for <xfs@oss.sgi.com>; Sat, 15 Nov 2014 08:40:05 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 1A0AB304048
+	for <xfs@oss.sgi.com>; Sat, 15 Nov 2014 06:40:01 -0800 (PST)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id kKeqwpMJFAPrXegY (version=TLSv1
+	cuda.sgi.com with ESMTP id 2iApVv8BM134QNla (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Sat, 15 Nov 2014 06:27:34 -0800 (PST)
-Date: Sat, 15 Nov 2014 09:27:31 -0500
+	Sat, 15 Nov 2014 06:40:00 -0800 (PST)
+Date: Sat, 15 Nov 2014 09:39:51 -0500
 From: Brian Foster <bfoster@redhat.com>
 Subject: Re: Mismatch UUID
-Message-ID: <20141115142730.GA54930@bfoster.bfoster>
+Message-ID: <20141115143951.GB54930@bfoster.bfoster>
 References: <BLU172-W9B4FE524F07D7E6D5592BC48C0@phx.gbl>
-	<20141114134208.GB36731@bfoster.bfoster>
-	<BLU172-W1423188AD065CADCC115E6C48C0@phx.gbl>
+	<6AB68617-0884-486D-8B96-8FD22DBC76D1@colorremedies.com>
+	<546692DA.9040105@sandeen.net>
+	<BLU172-W19A7DE957502A2F854163FC48D0@phx.gbl>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <BLU172-W1423188AD065CADCC115E6C48C0@phx.gbl>
+In-Reply-To: <BLU172-W19A7DE957502A2F854163FC48D0@phx.gbl>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,147 +28,116 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Robert Tench <robtench@hotmail.com>
-Cc: xfs@oss.sgi.com
+Cc: Chris Murphy <lists@colorremedies.com>, Eric Sandeen <sandeen@sandeen.net>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-(Re-CC xfs list)
-
-On Sat, Nov 15, 2014 at 08:10:18AM +1100, Robert Tench wrote:
-> Hi Brian,
-> 
-> Thanks for your reply.
-> 
-> I had run xfs_repair -n previously which spewed out a ton of stuff, in the last email you would have received, there should be a link to hotmail onedrive where you could view the output of that command, I called it xfs.log
-> 
-
-I didn't see a link in the plaintext of the message. I see something now
-buried in an html attachment that my mailer doesn't interpret very well,
-and the link doesn't appear to work.
-
-> If I try to mount the array, it comes back with 'Structure needs Cleaning' and won't mount.
-> 
-> When I tried to reassemble the array, it would only begin with 2 of the 5 drives, as I know that 3 of the drives had different update times and were out of sync.
-> 
-> I ended up doing a force assemble, which created the array and went into a resync process (really not sure if I did the right thing here).
-> 
-
-It's been a while since I've played around with md raid. Do you have a
-command that you ran to put things back together? As was mentioned
-up-thread, using a create (-C) command could just force an array
-together in a particular geometry and write new metadata. This would
-make the array look fine afterwards, but then there's no way to know
-whether the array is actually in the original order and the data could
-very well be scrambled.
-
-Brian
-
-> As to the geometry of the raid, I hope I had it in the right order. I previously had a data recovery tech remote connect to my desktop who had a look at the array. He had also not been able to successfully mount the raid, it was him that told me the order of the drives, which happened to be the exact order of their placement in the drive bays of the lacie nas.
-> 
-> Is there a way to check whether I have the correct geometry, or by doing the force assemble it would now be impossible to tell?
-> 
-> The data recovery tech, was also having the same issue of mismatched UUID.
-> 
-> Any help is appreciated,
-> 
-> Rob
-> 
-> > Date: Fri, 14 Nov 2014 08:42:08 -0500
-> > From: bfoster@redhat.com
-> > To: robtench@hotmail.com
-> > CC: xfs@oss.sgi.com
-> > Subject: Re: Mismatch UUID
-> > 
-> > On Fri, Nov 14, 2014 at 07:57:42PM +1100, Robert Tench wrote:
-> > >                                                             Robert has a file to share with you on OneDrive. To view it, click the link below.                                                                                                        xfs.log                                                                            So finally have managed to find a way to save the complete log of running xfs_repair -n /dev.md4
-> > > 
-> > > And below is the output of xfs_check /dev/md4
-> > > 
-> > > root@ubuntu:~# xfs_check /dev/md4
-> > > * ERROR: mismatched uuid in log
-> > > *            SB : 813833a7-1bd3-4447-b575-09d1471bb652
-> > > *            log: ea3833af-25ce-9f91-b575-018fb49df3b1
-> > > ERROR: The filesystem has valuable metadata changes in a log which needs to
-> > > be replayed.  Mount the filesystem to replay the log, and unmount it before
-> > > re-running xfs_check.  If you are unable to mount the filesystem, then use
-> > > the xfs_repair -L option to destroy the log and attempt a repair.
-> > > Note that destroying the log may cause corruption -- please attempt a mount
-> > > of the filesystem before doing this.
-> > > 
-> > 
-> > You want to use xfs_repair (-n) rather than xfs_check. I think you
-> > mentioned in your other email you've tried xfs_repair..? The above
-> > message indicates a dirty log, have you attempted to mount the device to
-> > replay the log?
-> > 
-> > > And the output from mdadm -D /dev/md4 is as follows
-> > > 
-> > 
-> > How did you put the array back together? Did it assemble fine or did you
-> > have to recreate it? If the latter, how are you sure the geometry is
-> > correct (it looks like it's syncing)?
-> > 
-> > Brian
-> > 
-> > > root@ubuntu:~# mdadm -D /dev/md4
-> > > /dev/md4:
-> > >         Version : 1.0
-> > >   Creation Time : Fri Jan  1 01:31:17 2010
-> > >      Raid Level : raid5
-> > >      Array Size : 11712962560 (11170.35 GiB 11994.07 GB)
-> > >   Used Dev Size : 2928240640 (2792.59 GiB 2998.52 GB)
-> > >    Raid Devices : 5
-> > >   Total Devices : 5
-> > >     Persistence : Superblock is persistent
-> > > 
-> > >     Update Time : Fri Nov 14 15:58:16 2014
-> > >           State : clean 
-> > >  Active Devices : 5
-> > > Working Devices : 5
-> > >  Failed Devices : 0
-> > >   Spare Devices : 0
-> > > 
-> > >          Layout : left-symmetric
-> > >      Chunk Size : 512K
-> > > 
-> > >            Name : (none):4
-> > >            UUID : e0829810:9782b51f:25529f65:8823419c
-> > >          Events : 1243386
-> > > 
-> > >     Number   Major   Minor   RaidDevice State
-> > >        0       8        2        0      active sync   /dev/sda2
-> > >        6       8       18        1      active sync   /dev/sdb2
-> > >        2       8       34        2      active sync   /dev/sdc2
-> > >        5       8       50        3      active sync   /dev/sdd2
-> > >        4       8       66        4      active sync   /dev/sde2
-> > > 
-> > > 
-> > > And then the response from mdadm -E /dev/md4
-> > > 
-> > > root@ubuntu:~# mdadm -E /dev/md4
-> > > mdadm: No md superblock detected on /dev/md4.
-> > > 
-> > > Not sure what to do, any help would be appreciated
-> > > 
-> > > Regards,
-> > > 
-> > > Rob
-> > > 
-> > > 
-> > > 
-> > >                  		 	   		  
-> > 
-> > > _______________________________________________
-> > > xfs mailing list
-> > > xfs@oss.sgi.com
-> > > http://oss.sgi.com/mailman/listinfo/xfs
-> > 
->  		 	   		  
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gU2F0LCBOb3YgMTUsIDIwMTQgYXQgMDE6MTc6MzlQTSArMTEwMCwgUm9iZXJ0IFRlbmNoIHdy
+b3RlOgo+IEhpIGFsbCwKPiAKPiBNYW55IHRoYW5rcyBmb3IgdGhlIHJlcGxpZXMgc28gZmFyLgo+
+IAo+IFNvIGhlcmUgaXMgdGhlIHJlcG9uc2UgZnJvbSB0aGUgY29tbWFuZCBsaW5lIG1kYWRtIC1F
+IC9kZXYvc2RbYWJjZGVdMgo+IAo+IHVidW50dUB1YnVudHU6fiQgc3VkbyBtZGFkbSAtRSAvZGV2
+L3NkW2FiY2RlXTIKPiAvZGV2L3NkYTI6Cj4gICAgICAgICAgIE1hZ2ljIDogYTkyYjRlZmMKPiAg
+ICAgICAgIFZlcnNpb24gOiAxLjAKPiAgICAgRmVhdHVyZSBNYXAgOiAweDAKPiAgICAgIEFycmF5
+IFVVSUQgOiBlMDgyOTgxMDo5NzgyYjUxZjoyNTUyOWY2NTo4ODIzNDE5Ywo+ICAgICAgICAgICAg
+TmFtZSA6IChub25lKTo0Cj4gICBDcmVhdGlvbiBUaW1lIDogRnJpIEphbiAgMSAwMTozMToxNyAy
+MDEwCj4gICAgICBSYWlkIExldmVsIDogcmFpZDUKPiAgICBSYWlkIERldmljZXMgOiA1Cj4gCj4g
+IEF2YWlsIERldiBTaXplIDogNTg1NjQ4MTI4MCAoMjc5Mi41OSBHaUIgMjk5OC41MiBHQikKPiAg
+ICAgIEFycmF5IFNpemUgOiAxMTcxMjk2MjU2MCAoMTExNzAuMzUgR2lCIDExOTk0LjA3IEdCKQo+
+ICAgIFN1cGVyIE9mZnNldCA6IDU4NTY0ODE1MzYgc2VjdG9ycwo+ICAgICAgICAgICBTdGF0ZSA6
+IGNsZWFuCj4gICAgIERldmljZSBVVUlEIDogZDQwNWQwYzU6MmEwN2Q3ZWQ6MjdhYmNiNWE6MGVl
+YWRjN2QKPiAKPiAgICAgVXBkYXRlIFRpbWUgOiBGcmkgTm92IDE0IDE1OjU4OjE2IDIwMTQKPiAg
+ICAgICAgQ2hlY2tzdW0gOiBjMDgyZTliYiAtIGNvcnJlY3QKPiAgICAgICAgICBFdmVudHMgOiAx
+MjQzMzg2Cj4gCj4gICAgICAgICAgTGF5b3V0IDogbGVmdC1zeW1tZXRyaWMKPiAgICAgIENodW5r
+IFNpemUgOiA1MTJLCj4gCj4gICAgRGV2aWNlIFJvbGUgOiBBY3RpdmUgZGV2aWNlIDAKPiAgICBB
+cnJheSBTdGF0ZSA6IEFBQUFBICgnQScgPT0gYWN0aXZlLCAnLicgPT0gbWlzc2luZykKPiAvZGV2
+L3NkYjI6Cj4gICAgICAgICAgIE1hZ2ljIDogYTkyYjRlZmMKPiAgICAgICAgIFZlcnNpb24gOiAx
+LjAKPiAgICAgRmVhdHVyZSBNYXAgOiAweDAKPiAgICAgIEFycmF5IFVVSUQgOiBlMDgyOTgxMDo5
+NzgyYjUxZjoyNTUyOWY2NTo4ODIzNDE5Ywo+ICAgICAgICAgICAgTmFtZSA6IChub25lKTo0Cj4g
+ICBDcmVhdGlvbiBUaW1lIDogRnJpIEphbiAgMSAwMTozMToxNyAyMDEwCj4gICAgICBSYWlkIExl
+dmVsIDogcmFpZDUKPiAgICBSYWlkIERldmljZXMgOiA1Cj4gCj4gIEF2YWlsIERldiBTaXplIDog
+NTg1NjQ4MTI4MCAoMjc5Mi41OSBHaUIgMjk5OC41MiBHQikKPiAgICAgIEFycmF5IFNpemUgOiAx
+MTcxMjk2MjU2MCAoMTExNzAuMzUgR2lCIDExOTk0LjA3IEdCKQo+ICAgIFN1cGVyIE9mZnNldCA6
+IDU4NTY0ODE1MzYgc2VjdG9ycwo+ICAgICAgICAgICBTdGF0ZSA6IGNsZWFuCj4gICAgIERldmlj
+ZSBVVUlEIDogMzNhY2YyM2E6NTJhMGFkMDA6Y2RhNjlkOWY6NDY4YThjMTMKPiAKPiAgICAgVXBk
+YXRlIFRpbWUgOiBGcmkgTm92IDE0IDE1OjU4OjE2IDIwMTQKPiAgICAgICAgQ2hlY2tzdW0gOiAy
+MmZkYzUyNSAtIGNvcnJlY3QKPiAgICAgICAgICBFdmVudHMgOiAxMjQzMzg2Cj4gCj4gICAgICAg
+ICAgTGF5b3V0IDogbGVmdC1zeW1tZXRyaWMKPiAgICAgIENodW5rIFNpemUgOiA1MTJLCj4gCj4g
+ICAgRGV2aWNlIFJvbGUgOiBBY3RpdmUgZGV2aWNlIDEKPiAgICBBcnJheSBTdGF0ZSA6IEFBQUFB
+ICgnQScgPT0gYWN0aXZlLCAnLicgPT0gbWlzc2luZykKPiAvZGV2L3NkYzI6Cj4gICAgICAgICAg
+IE1hZ2ljIDogYTkyYjRlZmMKPiAgICAgICAgIFZlcnNpb24gOiAxLjAKPiAgICAgRmVhdHVyZSBN
+YXAgOiAweDAKPiAgICAgIEFycmF5IFVVSUQgOiBlMDgyOTgxMDo5NzgyYjUxZjoyNTUyOWY2NTo4
+ODIzNDE5Ywo+ICAgICAgICAgICAgTmFtZSA6IChub25lKTo0Cj4gICBDcmVhdGlvbiBUaW1lIDog
+RnJpIEphbiAgMSAwMTozMToxNyAyMDEwCj4gICAgICBSYWlkIExldmVsIDogcmFpZDUKPiAgICBS
+YWlkIERldmljZXMgOiA1Cj4gCj4gIEF2YWlsIERldiBTaXplIDogNTg1NjQ4MTI4MCAoMjc5Mi41
+OSBHaUIgMjk5OC41MiBHQikKPiAgICAgIEFycmF5IFNpemUgOiAxMTcxMjk2MjU2MCAoMTExNzAu
+MzUgR2lCIDExOTk0LjA3IEdCKQo+ICAgIFN1cGVyIE9mZnNldCA6IDU4NTY0ODE1MzYgc2VjdG9y
+cwo+ICAgICAgICAgICBTdGF0ZSA6IGNsZWFuCj4gICAgIERldmljZSBVVUlEIDogMWE0ZjIwZTI6
+MzQ5MjY1Njg6YWY1MzUxYTE6OWM5ZjYwZTkKPiAKPiAgICAgVXBkYXRlIFRpbWUgOiBGcmkgTm92
+IDE0IDE1OjU4OjE2IDIwMTQKPiAgICAgICAgQ2hlY2tzdW0gOiA5NmIyMWFjIC0gY29ycmVjdAo+
+ICAgICAgICAgIEV2ZW50cyA6IDEyNDMzODYKPiAKPiAgICAgICAgICBMYXlvdXQgOiBsZWZ0LXN5
+bW1ldHJpYwo+ICAgICAgQ2h1bmsgU2l6ZSA6IDUxMksKPiAKPiAgICBEZXZpY2UgUm9sZSA6IEFj
+dGl2ZSBkZXZpY2UgMgo+ICAgIEFycmF5IFN0YXRlIDogQUFBQUEgKCdBJyA9PSBhY3RpdmUsICcu
+JyA9PSBtaXNzaW5nKQo+IC9kZXYvc2RkMjoKPiAgICAgICAgICAgTWFnaWMgOiBhOTJiNGVmYwo+
+ICAgICAgICAgVmVyc2lvbiA6IDEuMAo+ICAgICBGZWF0dXJlIE1hcCA6IDB4MAo+ICAgICAgQXJy
+YXkgVVVJRCA6IGUwODI5ODEwOjk3ODJiNTFmOjI1NTI5ZjY1Ojg4MjM0MTljCj4gICAgICAgICAg
+ICBOYW1lIDogKG5vbmUpOjQKPiAgIENyZWF0aW9uIFRpbWUgOiBGcmkgSmFuICAxIDAxOjMxOjE3
+IDIwMTAKPiAgICAgIFJhaWQgTGV2ZWwgOiByYWlkNQo+ICAgIFJhaWQgRGV2aWNlcyA6IDUKPiAK
+PiAgQXZhaWwgRGV2IFNpemUgOiA1ODU2NDgxMjgwICgyNzkyLjU5IEdpQiAyOTk4LjUyIEdCKQo+
+ICAgICAgQXJyYXkgU2l6ZSA6IDExNzEyOTYyNTYwICgxMTE3MC4zNSBHaUIgMTE5OTQuMDcgR0Ip
+Cj4gICAgU3VwZXIgT2Zmc2V0IDogNTg1NjQ4MTUzNiBzZWN0b3JzCj4gICAgICAgICAgIFN0YXRl
+IDogY2xlYW4KPiAgICAgRGV2aWNlIFVVSUQgOiAwZWU2YjcxMToyNDJmYmQxODo0NGMyODM5ZTo2
+MGU4YWQwZAo+IAo+ICAgICBVcGRhdGUgVGltZSA6IEZyaSBOb3YgMTQgMTU6NTg6MTYgMjAxNAo+
+ICAgICAgICBDaGVja3N1bSA6IGFkYTA3NjIgLSBjb3JyZWN0Cj4gICAgICAgICAgRXZlbnRzIDog
+MTI0MzM4Ngo+IAo+ICAgICAgICAgIExheW91dCA6IGxlZnQtc3ltbWV0cmljCj4gICAgICBDaHVu
+ayBTaXplIDogNTEySwo+IAo+ICAgIERldmljZSBSb2xlIDogQWN0aXZlIGRldmljZSAzCj4gICAg
+QXJyYXkgU3RhdGUgOiBBQUFBQSAoJ0EnID09IGFjdGl2ZSwgJy4nID09IG1pc3NpbmcpCj4gL2Rl
+di9zZGUyOgo+ICAgICAgICAgICBNYWdpYyA6IGE5MmI0ZWZjCj4gICAgICAgICBWZXJzaW9uIDog
+MS4wCj4gICAgIEZlYXR1cmUgTWFwIDogMHgwCj4gICAgICBBcnJheSBVVUlEIDogZTA4Mjk4MTA6
+OTc4MmI1MWY6MjU1MjlmNjU6ODgyMzQxOWMKPiAgICAgICAgICAgIE5hbWUgOiAobm9uZSk6NAo+
+ICAgQ3JlYXRpb24gVGltZSA6IEZyaSBKYW4gIDEgMDE6MzE6MTcgMjAxMAo+ICAgICAgUmFpZCBM
+ZXZlbCA6IHJhaWQ1Cj4gICAgUmFpZCBEZXZpY2VzIDogNQo+IAo+ICBBdmFpbCBEZXYgU2l6ZSA6
+IDU4NTY0ODEyODAgKDI3OTIuNTkgR2lCIDI5OTguNTIgR0IpCj4gICAgICBBcnJheSBTaXplIDog
+MTE3MTI5NjI1NjAgKDExMTcwLjM1IEdpQiAxMTk5NC4wNyBHQikKPiAgICBTdXBlciBPZmZzZXQg
+OiA1ODU2NDgxNTM2IHNlY3RvcnMKPiAgICAgICAgICAgU3RhdGUgOiBjbGVhbgo+ICAgICBEZXZp
+Y2UgVVVJRCA6IGY4OWZkZDRjOjYyN2E2NjUwOjNkZTBkY2FiOjY3OTAwNzZmCj4gCj4gICAgIFVw
+ZGF0ZSBUaW1lIDogRnJpIE5vdiAxNCAxNTo1ODoxNiAyMDE0Cj4gICAgICAgIENoZWNrc3VtIDog
+ZWM1YmQyODkgLSBjb3JyZWN0Cj4gICAgICAgICAgRXZlbnRzIDogMTI0MzM4Ngo+IAo+ICAgICAg
+ICAgIExheW91dCA6IGxlZnQtc3ltbWV0cmljCj4gICAgICBDaHVuayBTaXplIDogNTEySwo+IAo+
+ICAgIERldmljZSBSb2xlIDogQWN0aXZlIGRldmljZSA0Cj4gICAgQXJyYXkgU3RhdGUgOiBBQUFB
+QSAoJ0EnID09IGFjdGl2ZSwgJy4nID09IG1pc3NpbmcpCj4gCj4gCj4gV2hhdCBJIGFtIGN1cmlv
+dXMgYWJvdXQgaXMgaG93IEkgc2hvdWxkIGdvIGFib3V0IGF0dGVtcHRpbmcgdG8gTW91bnQgdGhl
+IGRldmljZSBhbmQgdGhlIGNvbW1hbmQgbGluZSBuZWVkZWQuIEFtIEkgbW91bnRpbmcgdGhlIFJh
+aWQgQXJyYXkgL2Rldi9tZDQsIG9yIGFtIEkgdHJ5aW5nIHRvIG1vdW50IHRoZSBYRlMgZGF0YSBw
+YXJ0aXRpb25zIGNvbnRhaW5lZCB3aXRoaW4gd2l0aCB3b3VsZCBiZSBtYWRlIHVwIG9mIC9kZXYv
+c2RbYWJjZGUyXT8gSSBhbSBhIGxpdHRsZSBiaXQgY29uZnVzZWQgYnkgYWxsIHRoZSB2YXJpb3Vz
+IG9wdGlvbnMgYW5kIHdoYXQgSSBhbSBleGFjdGx5IHN1cHBvc2UgdG8gdXNlIGdpdmVuIGJlaW5n
+IGEgY29tcGxldGUgbGludXggbm92aWNlLgo+IAoKTm9ybWFsbHkgdGhlIGFycmF5ICgvZGV2L21k
+KikgaXMgdXNlZCBkaXJlY3RseSwgYnV0IEkgc3VwcG9zZSBpdCBjb3VsZApiZSBwYXJ0aXRpb25l
+ZC4gSXQgZGVwZW5kcyBvbiBob3cgdGhlIHN0b3JhZ2UgaXMgY29uZmlndXJlZC4gSXQgZG9lcwps
+b29rIGxpa2UgeW91IGhhdmUgc2V2ZXJhbCBhcnJheXMgY29uZmlndXJlZCBmcm9tIHRoZSBsb2cg
+c25pcHBldCBpbiB0aGUKc3Vic2VxdWVudCBtYWlsLgoKV2hhdCBkb2VzICdjYXQgL3Byb2MvbWRz
+dGF0JyBvbiB0aGUgYm94IHNob3c/IEhvdyBhYm91dCAnZmlsZSAtcwovZGV2L21kIyMnIGZvciBl
+YWNoIG1kIGRldmljZSBzcGVjaWZpZWQgaW4gdGhlIGZvcm1lciBvdXRwdXQ/CgpCcmlhbgoKPiBB
+bnkgaGVscCBpcyBhcHByZWNpYXRlZD8KPiAKPiBSb2IKPiAKPiAKPiA+IERhdGU6IEZyaSwgMTQg
+Tm92IDIwMTQgMTc6NDA6MTAgLTA2MDAKPiA+IEZyb206IHNhbmRlZW5Ac2FuZGVlbi5uZXQKPiA+
+IFRvOiBsaXN0c0Bjb2xvcnJlbWVkaWVzLmNvbTsgcm9idGVuY2hAaG90bWFpbC5jb20KPiA+IEND
+OiB4ZnNAb3NzLnNnaS5jb20KPiA+IFN1YmplY3Q6IFJlOiBNaXNtYXRjaCBVVUlECj4gPiAKPiA+
+IE9uIDExLzE0LzE0IDQ6MzEgUE0sIENocmlzIE11cnBoeSB3cm90ZToKPiA+IAo+ID4gPiBJdOKA
+mXMgdmVyeSBnb29kIHRvIGFzayBpbnN0ZWFkIG9mIGhhcGhhemFyZGx5IHRyeWluZyB0aGluZ3Mu
+IFRyeWluZyB0bwo+ID4gPiBub3JtYWxseSBtb3VudCB0aGUgZmlsZSBzeXN0ZW0gc2hvdWxkIGJl
+IHNhZmU7IGFuZCB0aGVuIHVzZSBkbWVzZyB0bwo+ID4gPiBjaGVjayBmb3Iga2VybmVsIG1lc3Nh
+Z2VzLiBUaGUgeGZzIGtlcm5lbCBjb2RlIGlzIHJlc3BvbnNpYmxlIGZvciBsb2cKPiA+ID4gcmVw
+bGF5IGFuZCBtYWtpbmcgbW9zdCBraW5kcyBvZiByZXBhaXJzLCBhbnl0aGluZyBpdCBjYW7igJl0
+IGRlYWwgd2l0aAo+ID4gPiB3aWxsIGJlIHJlcG9ydGVkIGFzIGEga2VybmVsIG1lc3NhZ2UuIElm
+IG1vdW50IGZhaWxzLCByZXBvcnQga2VybmVsCj4gPiA+IHhmcyByZWxhdGVkIG1lc3NhZ2VzLCBh
+bmQgYWxzbyB0aGUgcmVzdWx0cyBmcm9tIHhmc19jaGVjayAtbi4KPiA+IAo+ID4geGZzX3JlcGFp
+ciAtbgo+ID4gCj4gPiB4ZnNfY2hlY2sgaXMgZGVwcmVjYXRlZCBhbmQgaGFzIG5vIC1uIG9wdGlv
+biA7KQo+ID4gCj4gPiAtRXJpYwo+ICAJCSAJICAgCQkgIAoKPiBfX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fXwo+IHhmcyBtYWlsaW5nIGxpc3QKPiB4ZnNAb3Nz
+LnNnaS5jb20KPiBodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMKCl9fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxp
+c3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hm
+cwo=
