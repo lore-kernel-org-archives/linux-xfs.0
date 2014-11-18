@@ -1,24 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 2F3D67F3F
-	for <xfs@oss.sgi.com>; Tue, 18 Nov 2014 16:30:18 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 012108F8037
-	for <xfs@oss.sgi.com>; Tue, 18 Nov 2014 14:30:14 -0800 (PST)
+	by oss.sgi.com (Postfix) with ESMTP id 13CD87F47
+	for <xfs@oss.sgi.com>; Tue, 18 Nov 2014 16:35:32 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id F32588F8037
+	for <xfs@oss.sgi.com>; Tue, 18 Nov 2014 14:35:31 -0800 (PST)
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	WOAR8nI525Z4A0OI for <xfs@oss.sgi.com>;
-	Tue, 18 Nov 2014 14:30:01 -0800 (PST)
-Date: Wed, 19 Nov 2014 09:29:52 +1100
+	yBBEbDK3FRh7vmDb for <xfs@oss.sgi.com>;
+	Tue, 18 Nov 2014 14:35:29 -0800 (PST)
+Date: Wed, 19 Nov 2014 09:35:18 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 10/11] quota: Switch ->get_dqblk() and ->set_dqblk() to
-	use bytes as space units
-Message-ID: <20141118222952.GQ23575@dastard>
-References: <1415739865-2438-1-git-send-email-jack@suse.cz>
-	<1415739865-2438-11-git-send-email-jack@suse.cz>
+Subject: Re: How to determine the reserved blocks in xfs filesystem ?
+Message-ID: <20141118223518.GR23575@dastard>
+References: <CAJtCNH0tgtCw0F7322b_qvbM9-uGGSsLLiPQj6jk1yyvWDQMYg@mail.gmail.com>
+	<20141118133206.GA5226@bfoster.bfoster>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1415739865-2438-11-git-send-email-jack@suse.cz>
+In-Reply-To: <20141118133206.GA5226@bfoster.bfoster>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,79 +26,36 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Jan Kara <jack@suse.cz>
-Cc: linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, xfs@oss.sgi.com
+To: Brian Foster <bfoster@redhat.com>
+Cc: Mukul Malhotra <smilemukul2005@gmail.com>, xfs@oss.sgi.com
 
-On Tue, Nov 11, 2014 at 10:04:24PM +0100, Jan Kara wrote:
-> Currently ->get_dqblk() and ->set_dqblk() use struct fs_disk_quota which
-> tracks space limits and usage in 512-byte blocks. However VFS quotas
-> track usage in bytes (as some filesystems require that) and we need to
-> somehow pass this information. Upto now it wasn't a problem because we
-> didn't do any unit conversion (thus VFS quota routines happily stuck
-> number of bytes into d_bcount field of struct fd_disk_quota). Only if
-> you tried to use Q_XGETQUOTA or Q_XSETQLIM for VFS quotas (or Q_GETQUOTA
-> / Q_SETQUOTA for XFS quotas), you got bogus results but noone really
-> tried that. But when we want interfaces compatible we need to fix this.
-> 
-> So we bite the bullet and define another quota structure used for
-> passing information from/to ->get_dqblk()/->set_dqblk. It's somewhat
-> sad we have to have more conversion routines in fs/quota/quota.c but
-> it seems cleaner than overloading e.g. units of d_bcount to bytes.
-
-I don't really like the idea of having to copy the dquot information
-an extra time. We now:
-
-	- copy from internal dquot to the new qc_dqblk
-	- copy from the new qc_dqblk to if_dqblk/xfs_dqblk
-	- copy if_dqblk/xfs_dqblk to the user buffer.
-
-That's now three copies, and when we are having to deal with quota
-reports containing hundreds of thousands of dquots that's going to
-hrut performance.
-
-We could probably get away with just one copy by passing a
-filldir()-like context down into the filesystems to format their
-internal dquot information directly into the user buffer in the
-appropriate format. That way fs/quota/quota.c doesn't need
-conversion routines, filesystems can optimise the formating to
-minimise copying, and we can still provide generic routines for
-filesystems using the generic quota infrastructure....
-
-[...]
-
-> @@ -277,10 +287,73 @@ static int quota_getxstatev(struct super_block *sb, void __user *addr)
->  	return ret;
->  }
->  
-> +/* XFS blocks to space conversion */
-> +static u64 xfs_btos(u64 blocks)
-> +{
-> +	return blocks << 9;
-> +}
-> +
-> +/* Space to XFS blocks conversion */
-> +static u64 xfs_stob(u64 space)
-> +{
-> +	return (space + 511) >> 9;
-> +}
-
-Which is just redefining BBTOB() [Basic Blocks to Bytes] and BTOBB()
-with magic numbers and no explanation of what a "block" actually is.
-We already export those macros to userspace, and they are used by
-xfs_quota to convert the block counts to bytes....
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gVHVlLCBOb3YgMTgsIDIwMTQgYXQgMDg6MzI6MDdBTSAtMDUwMCwgQnJpYW4gRm9zdGVyIHdy
+b3RlOgo+IE9uIFR1ZSwgTm92IDE4LCAyMDE0IGF0IDA2OjA1OjU4UE0gKzA1MzAsIE11a3VsIE1h
+bGhvdHJhIHdyb3RlOgo+ID4g4oCLSGVsbG8sCj4gPiAKPiA+IERvZXMgeGZzIGhhdmUgcmVzZXJ2
+ZWQgYmxvY2tzIHRvbywgbGlrZSBleHQqID8gaWYgeWVzLCBob3cgY2FuIHRoZXkgYmUKPiA+IGRl
+dGVybWluZWQgP+KAiwo+ID4gCj4gCj4gWEZTIHJlc2VydmVzIGJsb2NrcyBpbnRlcm5hbGx5IHN1
+Y2ggdGhhdCBpdCBjYW4gcGVyZm9ybSBvcGVyYXRpb25zIHdoZW4KPiBhbGwgZnJlZSBzcGFjZSBp
+cyBjb25zdW1lZCwgZXRjLiBJdCBsb29rcyBsaWtlIDUlIGlzIHRoZSBkZWZhdWx0LgoKTm90IHF1
+aXRlLgoKICAgICAgICAvKgogICAgICAgICAqIFdlIGRlZmF1bHQgdG8gNSUgb3IgODE5MiBmc2Jz
+IG9mIHNwYWNlIHJlc2VydmVkLCB3aGljaGV2ZXIgaXMKICAgICAgICAgKiBzbWFsbGVyLiAgVGhp
+cyBpcyBpbnRlbmRlZCB0byBjb3ZlciBjb25jdXJyZW50IGFsbG9jYXRpb24KICAgICAgICAgKiB0
+cmFuc2FjdGlvbnMgd2hlbiB3ZSBpbml0aWFsbHkgaGl0IGVub3NwYy4gVGhlc2UgZWFjaCByZXF1
+aXJlIGEgNAogICAgICAgICAqIGJsb2NrIHJlc2VydmF0aW9uLiBIZW5jZSBieSBkZWZhdWx0IHdl
+IGNvdmVyIHJvdWdobHkgMjAwMCBjb25jdXJyZW50CiAgICAgICAgICogYWxsb2NhdGlvbiByZXNl
+cnZhdGlvbnMuCiAgICAgICAgICovCgpTbywgaW4gbW9zdCBjYXNlcywgdGhlcmUgYXJlIDMyTUIg
+b2YgcmVzZXJ2ZWQgYmxvY2tzIGF2YWlsYWJsZSBmb3IKaW50ZXJuYWwgZW1lcmdlbmN5IHVzZS4K
+Cj4gSSBkb24ndCB0aGluayBpdCdzICJsaWtlIGV4dDQsIiBob3dldmVyLCB3aGljaCByZXNlcnZl
+cyBibG9ja3MgZm9yIHRoZQo+IHJvb3QgdXNlci4gSSBkb24ndCBiZWxpZXZlIHRoZSByZXNlcnZl
+ZCBibG9ja3MgaW4gWEZTIGFyZSBhY2Nlc3NpYmxlIGZvcgo+IGZpbGUgYWxsb2NhdGlvbiBieSBh
+bnkgdXNlciB1bmxlc3MgdGhlIHJlc2VydmUgcG9vbCBpcyBtb2RpZmllZCBhcyBzdWNoLgoKTW9z
+dCBkZWZpbml0ZWx5IG5vdCAibGlrZSBleHQ0Ii4gVGhlIHJlc2VydmVkIGJsb2NrcyBhcmUgY29u
+c2lkZXJlZAoidXNlZCBzcGFjZSIgKGkuZS4gbm90IGF2YWlsYWJsZSB0byBhbnkgdXNlcikgYW5k
+IGFyZSByZXBvcnRlZCBhcwpzdWNoIGluIHN0YXRmcygpIG91dHB1dCAoZS5nLiB2aWEgZGYpLgoK
+Q2hlZXJzLAoKRGF2ZS4KLS0gCkRhdmUgQ2hpbm5lcgpkYXZpZEBmcm9tb3JiaXQuY29tCgpfX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBs
+aXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94
+ZnMK
