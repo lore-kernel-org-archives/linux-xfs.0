@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id D8B157F3F
-	for <xfs@oss.sgi.com>; Tue, 18 Nov 2014 06:36:03 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 68159AC007
-	for <xfs@oss.sgi.com>; Tue, 18 Nov 2014 04:36:03 -0800 (PST)
-Received: from mail-ig0-f177.google.com (mail-ig0-f177.google.com
-	[209.85.213.177]) by cuda.sgi.com with ESMTP id
-	BeOcV6UUQGLlRPdH (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 18 Nov 2014 04:35:59 -0800 (PST)
-Received: by mail-ig0-f177.google.com with SMTP id uq10so5688663igb.16
-	for <xfs@oss.sgi.com>; Tue, 18 Nov 2014 04:35:58 -0800 (PST)
+	by oss.sgi.com (Postfix) with ESMTP id 3CC8E7F3F
+	for <xfs@oss.sgi.com>; Tue, 18 Nov 2014 07:32:18 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id CEDD6AC00A
+	for <xfs@oss.sgi.com>; Tue, 18 Nov 2014 05:32:14 -0800 (PST)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id jB2CJ3N6DEUhxC9n (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 18 Nov 2014 05:32:13 -0800 (PST)
+Date: Tue, 18 Nov 2014 08:32:07 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: How to determine the reserved blocks in xfs filesystem ?
+Message-ID: <20141118133206.GA5226@bfoster.bfoster>
+References: <CAJtCNH0tgtCw0F7322b_qvbM9-uGGSsLLiPQj6jk1yyvWDQMYg@mail.gmail.com>
 MIME-Version: 1.0
-Date: Tue, 18 Nov 2014 18:05:58 +0530
-Message-ID: <CAJtCNH0tgtCw0F7322b_qvbM9-uGGSsLLiPQj6jk1yyvWDQMYg@mail.gmail.com>
-Subject: How to determine the reserved blocks in xfs filesystem ?
-From: Mukul Malhotra <smilemukul2005@gmail.com>
+Content-Disposition: inline
+In-Reply-To: <CAJtCNH0tgtCw0F7322b_qvbM9-uGGSsLLiPQj6jk1yyvWDQMYg@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,55 +25,32 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============1691934908567059533=="
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Mukul Malhotra <smilemukul2005@gmail.com>
+Cc: xfs@oss.sgi.com
 
---===============1691934908567059533==
-Content-Type: multipart/alternative; boundary=089e013a114e53a1d00508215631
-
---089e013a114e53a1d00508215631
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
-
-=E2=80=8BHello,
-
-Does xfs have reserved blocks too, like ext* ? if yes, how can they be
-determined ?=E2=80=8B
-
-Can you provide the specific command.
-
-Thanks
-Mukul
-
---089e013a114e53a1d00508215631
-Content-Type: text/html; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
-
-<div dir=3D"ltr"><div class=3D"gmail_default" style=3D"font-size:small"><br=
- clear=3D"all"></div><div><div class=3D"gmail_signature"><div dir=3D"ltr"><=
-div class=3D"gmail_default" style=3D"font-size:small">=E2=80=8BHello,<br><b=
-r>Does xfs have reserved blocks too, like ext* ? if yes, how can they be de=
-termined ?=E2=80=8B<br><br></div><div class=3D"gmail_default" style=3D"font=
--size:small">Can you provide the specific command.<br><br></div><div class=
-=3D"gmail_default" style=3D"font-size:small">Thanks<br></div><div class=3D"=
-gmail_default" style=3D"font-size:small">Mukul<br></div><br></div></div></d=
-iv>
-</div>
-
---089e013a114e53a1d00508215631--
-
-
---===============1691934908567059533==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
-
---===============1691934908567059533==--
+T24gVHVlLCBOb3YgMTgsIDIwMTQgYXQgMDY6MDU6NThQTSArMDUzMCwgTXVrdWwgTWFsaG90cmEg
+d3JvdGU6Cj4g4oCLSGVsbG8sCj4gCj4gRG9lcyB4ZnMgaGF2ZSByZXNlcnZlZCBibG9ja3MgdG9v
+LCBsaWtlIGV4dCogPyBpZiB5ZXMsIGhvdyBjYW4gdGhleSBiZQo+IGRldGVybWluZWQgP+KAiwo+
+IAoKWEZTIHJlc2VydmVzIGJsb2NrcyBpbnRlcm5hbGx5IHN1Y2ggdGhhdCBpdCBjYW4gcGVyZm9y
+bSBvcGVyYXRpb25zIHdoZW4KYWxsIGZyZWUgc3BhY2UgaXMgY29uc3VtZWQsIGV0Yy4gSXQgbG9v
+a3MgbGlrZSA1JSBpcyB0aGUgZGVmYXVsdC4KCkkgZG9uJ3QgdGhpbmsgaXQncyAibGlrZSBleHQ0
+LCIgaG93ZXZlciwgd2hpY2ggcmVzZXJ2ZXMgYmxvY2tzIGZvciB0aGUKcm9vdCB1c2VyLiBJIGRv
+bid0IGJlbGlldmUgdGhlIHJlc2VydmVkIGJsb2NrcyBpbiBYRlMgYXJlIGFjY2Vzc2libGUgZm9y
+CmZpbGUgYWxsb2NhdGlvbiBieSBhbnkgdXNlciB1bmxlc3MgdGhlIHJlc2VydmUgcG9vbCBpcyBt
+b2RpZmllZCBhcyBzdWNoLgoKPiBDYW4geW91IHByb3ZpZGUgdGhlIHNwZWNpZmljIGNvbW1hbmQu
+Cj4gCgpUaGUgZm9sbG93aW5nIGNvbW1hbmQgY2FuIGdldC9zZXQgdGhlIHJlc2VydmVkIGJsb2Nr
+IGNvdW50IG9uIGFuIGFjdGl2ZQptb3VudDoKCnhmc19pbyAteCAtYyAicmVzYmxrcyIgPG1udD4K
+Ck5vdGUgdGhhdCB0aGlzIGNhbiBsZWFkIHRvIHByb2JsZW1zIGlmIHJlZHVjZWQgdG9vIG11Y2gg
+YW5kIGFsbCBzcGFjZSBpcwpjb25zdW1lZCwgYXMgc29tZXRpbWVzIGJsb2NrIGFsbG9jYXRpb24g
+aXMgcmVxdWlyZWQgdG8gcGVyZm9ybSBzcGFjZQpmcmVlaW5nIG9wZXJhdGlvbnMgKHJlbW92aW5n
+IGEgZmlsZSwgZXRjLikuIFRoaXMgaXMgcHJvYmFibHkgYSByZWFzb24KdGhlIHJlc2Jsa3MgY29t
+bWFuZCBpcyBvbmx5IGF2YWlsYWJsZSBpbiB4ZnNfaW8gZXhwZXJ0IG1vZGUuIDspCgpCcmlhbgoK
+PiBUaGFua3MKPiBNdWt1bAoKPiBfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fXwo+IHhmcyBtYWlsaW5nIGxpc3QKPiB4ZnNAb3NzLnNnaS5jb20KPiBodHRwOi8v
+b3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMKCl9fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29t
+Cmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
