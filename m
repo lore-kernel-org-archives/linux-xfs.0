@@ -1,22 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 3CC8E7F3F
-	for <xfs@oss.sgi.com>; Tue, 18 Nov 2014 07:32:18 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id CEDD6AC00A
-	for <xfs@oss.sgi.com>; Tue, 18 Nov 2014 05:32:14 -0800 (PST)
+	by oss.sgi.com (Postfix) with ESMTP id 611847F3F
+	for <xfs@oss.sgi.com>; Tue, 18 Nov 2014 08:08:17 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 004DAAC007
+	for <xfs@oss.sgi.com>; Tue, 18 Nov 2014 06:08:13 -0800 (PST)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id jB2CJ3N6DEUhxC9n (version=TLSv1
+	cuda.sgi.com with ESMTP id ENEjkdCiLPTkN2J5 (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 18 Nov 2014 05:32:13 -0800 (PST)
-Date: Tue, 18 Nov 2014 08:32:07 -0500
+	Tue, 18 Nov 2014 06:08:13 -0800 (PST)
+Received: from int-mx13.intmail.prod.int.phx2.redhat.com
+	(int-mx13.intmail.prod.int.phx2.redhat.com [10.5.11.26])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id sAIE8BkJ024155
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256
+	verify=FAIL) for <xfs@oss.sgi.com>; Tue, 18 Nov 2014 09:08:12 -0500
+Received: from bfoster.bfoster ([10.18.41.237])
+	by int-mx13.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id sAIE8BUg024007
+	for <xfs@oss.sgi.com>; Tue, 18 Nov 2014 09:08:11 -0500
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: How to determine the reserved blocks in xfs filesystem ?
-Message-ID: <20141118133206.GA5226@bfoster.bfoster>
-References: <CAJtCNH0tgtCw0F7322b_qvbM9-uGGSsLLiPQj6jk1yyvWDQMYg@mail.gmail.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <CAJtCNH0tgtCw0F7322b_qvbM9-uGGSsLLiPQj6jk1yyvWDQMYg@mail.gmail.com>
+Subject: [PATCH] xfsprogs/repair: fix crash on zero record finobt
+	reconstruction
+Date: Tue, 18 Nov 2014 09:08:10 -0500
+Message-Id: <1416319690-27776-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,32 +31,99 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Mukul Malhotra <smilemukul2005@gmail.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-T24gVHVlLCBOb3YgMTgsIDIwMTQgYXQgMDY6MDU6NThQTSArMDUzMCwgTXVrdWwgTWFsaG90cmEg
-d3JvdGU6Cj4g4oCLSGVsbG8sCj4gCj4gRG9lcyB4ZnMgaGF2ZSByZXNlcnZlZCBibG9ja3MgdG9v
-LCBsaWtlIGV4dCogPyBpZiB5ZXMsIGhvdyBjYW4gdGhleSBiZQo+IGRldGVybWluZWQgP+KAiwo+
-IAoKWEZTIHJlc2VydmVzIGJsb2NrcyBpbnRlcm5hbGx5IHN1Y2ggdGhhdCBpdCBjYW4gcGVyZm9y
-bSBvcGVyYXRpb25zIHdoZW4KYWxsIGZyZWUgc3BhY2UgaXMgY29uc3VtZWQsIGV0Yy4gSXQgbG9v
-a3MgbGlrZSA1JSBpcyB0aGUgZGVmYXVsdC4KCkkgZG9uJ3QgdGhpbmsgaXQncyAibGlrZSBleHQ0
-LCIgaG93ZXZlciwgd2hpY2ggcmVzZXJ2ZXMgYmxvY2tzIGZvciB0aGUKcm9vdCB1c2VyLiBJIGRv
-bid0IGJlbGlldmUgdGhlIHJlc2VydmVkIGJsb2NrcyBpbiBYRlMgYXJlIGFjY2Vzc2libGUgZm9y
-CmZpbGUgYWxsb2NhdGlvbiBieSBhbnkgdXNlciB1bmxlc3MgdGhlIHJlc2VydmUgcG9vbCBpcyBt
-b2RpZmllZCBhcyBzdWNoLgoKPiBDYW4geW91IHByb3ZpZGUgdGhlIHNwZWNpZmljIGNvbW1hbmQu
-Cj4gCgpUaGUgZm9sbG93aW5nIGNvbW1hbmQgY2FuIGdldC9zZXQgdGhlIHJlc2VydmVkIGJsb2Nr
-IGNvdW50IG9uIGFuIGFjdGl2ZQptb3VudDoKCnhmc19pbyAteCAtYyAicmVzYmxrcyIgPG1udD4K
-Ck5vdGUgdGhhdCB0aGlzIGNhbiBsZWFkIHRvIHByb2JsZW1zIGlmIHJlZHVjZWQgdG9vIG11Y2gg
-YW5kIGFsbCBzcGFjZSBpcwpjb25zdW1lZCwgYXMgc29tZXRpbWVzIGJsb2NrIGFsbG9jYXRpb24g
-aXMgcmVxdWlyZWQgdG8gcGVyZm9ybSBzcGFjZQpmcmVlaW5nIG9wZXJhdGlvbnMgKHJlbW92aW5n
-IGEgZmlsZSwgZXRjLikuIFRoaXMgaXMgcHJvYmFibHkgYSByZWFzb24KdGhlIHJlc2Jsa3MgY29t
-bWFuZCBpcyBvbmx5IGF2YWlsYWJsZSBpbiB4ZnNfaW8gZXhwZXJ0IG1vZGUuIDspCgpCcmlhbgoK
-PiBUaGFua3MKPiBNdWt1bAoKPiBfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fXwo+IHhmcyBtYWlsaW5nIGxpc3QKPiB4ZnNAb3NzLnNnaS5jb20KPiBodHRwOi8v
-b3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMKCl9fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29t
-Cmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
+The inode btrees are reconstructed in phase 5. init_ino_cursor() helps
+determine the block requirements of the tree based on the number of
+records. If the finobt is empty, we can crash in the btree blocks
+calculation code due to a divide-by-zero error in the following line:
+
+	lptr->modulo = num_recs % lptr->num_blocks;
+
+This occurs if num_recs and in-turn lptr->num_blocks evaluate to zero.
+
+We already have an execution path for the zero record btree scenario.
+However, it is only invoked when no records are found in the in-core
+tree. The finobt zero-record scenario can occur with a populated in-core
+tree provided that none of the existing records contain free inodes.
+
+Move the zero-record handling code after the loop and use the record
+count to trigger it. This is safe because the loop iterator checks for
+ino_rec != NULL. This allows reuse of the same code regardless of
+whether the in-core tree is empty or non-empty but contains no records
+that meet the requirements for the particular on-disk tree under
+reconstruction (e.g., finobt).
+
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+---
+ repair/phase5.c | 35 ++++++++++++++++++-----------------
+ 1 file changed, 18 insertions(+), 17 deletions(-)
+
+diff --git a/repair/phase5.c b/repair/phase5.c
+index 3d58936..3a2cdbb 100644
+--- a/repair/phase5.c
++++ b/repair/phase5.c
+@@ -914,26 +914,10 @@ init_ino_cursor(xfs_mount_t *mp, xfs_agnumber_t agno, bt_status_t *btree_curs,
+ 	lptr = &btree_curs->level[0];
+ 	btree_curs->init = 1;
+ 
+-	if ((ino_rec = findfirst_inode_rec(agno)) == NULL)  {
+-		/*
+-		 * easy corner-case -- no inode records
+-		 */
+-		lptr->num_blocks = 1;
+-		lptr->modulo = 0;
+-		lptr->num_recs_pb = 0;
+-		lptr->num_recs_tot = 0;
+-
+-		btree_curs->num_levels = 1;
+-		btree_curs->num_tot_blocks = btree_curs->num_free_blocks = 1;
+-
+-		setup_cursor(mp, agno, btree_curs);
+-
+-		return;
+-	}
+-
+ 	/*
+ 	 * build up statistics
+ 	 */
++	ino_rec = findfirst_inode_rec(agno);
+ 	for (num_recs = 0; ino_rec != NULL; ino_rec = next_ino_rec(ino_rec))  {
+ 		rec_nfinos = 0;
+ 		for (i = 0; i < XFS_INODES_PER_CHUNK; i++)  {
+@@ -953,6 +937,23 @@ init_ino_cursor(xfs_mount_t *mp, xfs_agnumber_t agno, bt_status_t *btree_curs,
+ 		num_recs++;
+ 	}
+ 
++	if (num_recs == 0) {
++		/*
++		 * easy corner-case -- no inode records
++		 */
++		lptr->num_blocks = 1;
++		lptr->modulo = 0;
++		lptr->num_recs_pb = 0;
++		lptr->num_recs_tot = 0;
++
++		btree_curs->num_levels = 1;
++		btree_curs->num_tot_blocks = btree_curs->num_free_blocks = 1;
++
++		setup_cursor(mp, agno, btree_curs);
++
++		return;
++	}
++
+ 	blocks_allocated = lptr->num_blocks = howmany(num_recs,
+ 					XR_INOBT_BLOCK_MAXRECS(mp, 0));
+ 
+-- 
+1.8.3.1
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
