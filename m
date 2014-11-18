@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id D1C8F7F3F
-	for <xfs@oss.sgi.com>; Tue, 18 Nov 2014 12:24:49 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 5250BAC007
-	for <xfs@oss.sgi.com>; Tue, 18 Nov 2014 10:24:46 -0800 (PST)
-Received: from mout.web.de (mout.web.de [212.227.17.12]) by cuda.sgi.com with
-	ESMTP id hQMNVQfzKHKn2wPB (version=TLSv1 cipher=AES256-SHA
-	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 18 Nov 2014 10:24:44 -0800 (PST)
-Received: from [10.11.166.169] ([131.188.6.12]) by smtp.web.de (mrweb101) with
-	ESMTPSA (Nemesis) id 0Ma2YF-1XXKMQ1hdv-00Lm9O for <xfs@oss.sgi.com>;
-	Tue, 18 Nov 2014 19:24:41 +0100
-Message-ID: <546B8EE8.4040903@web.de>
-Date: Tue, 18 Nov 2014 19:24:40 +0100
-From: Markus <markus.rhonheimer@web.de>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 2F3D67F3F
+	for <xfs@oss.sgi.com>; Tue, 18 Nov 2014 16:30:18 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 012108F8037
+	for <xfs@oss.sgi.com>; Tue, 18 Nov 2014 14:30:14 -0800 (PST)
+Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
+	[150.101.137.145]) by cuda.sgi.com with ESMTP id
+	WOAR8nI525Z4A0OI for <xfs@oss.sgi.com>;
+	Tue, 18 Nov 2014 14:30:01 -0800 (PST)
+Date: Wed, 19 Nov 2014 09:29:52 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 10/11] quota: Switch ->get_dqblk() and ->set_dqblk() to
+	use bytes as space units
+Message-ID: <20141118222952.GQ23575@dastard>
+References: <1415739865-2438-1-git-send-email-jack@suse.cz>
+	<1415739865-2438-11-git-send-email-jack@suse.cz>
 MIME-Version: 1.0
-Subject: Re: Virtual Block device resize corrupts XFS
-References: <5468FC60.10901@web.de>
-In-Reply-To: <5468FC60.10901@web.de>
+Content-Disposition: inline
+In-Reply-To: <1415739865-2438-11-git-send-email-jack@suse.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,131 +27,79 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============1596525676802052445=="
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Jan Kara <jack@suse.cz>
+Cc: linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, xfs@oss.sgi.com
 
-This is a multi-part message in MIME format.
---===============1596525676802052445==
-Content-Type: multipart/alternative;
- boundary="------------000501090300030804080705"
+On Tue, Nov 11, 2014 at 10:04:24PM +0100, Jan Kara wrote:
+> Currently ->get_dqblk() and ->set_dqblk() use struct fs_disk_quota which
+> tracks space limits and usage in 512-byte blocks. However VFS quotas
+> track usage in bytes (as some filesystems require that) and we need to
+> somehow pass this information. Upto now it wasn't a problem because we
+> didn't do any unit conversion (thus VFS quota routines happily stuck
+> number of bytes into d_bcount field of struct fd_disk_quota). Only if
+> you tried to use Q_XGETQUOTA or Q_XSETQLIM for VFS quotas (or Q_GETQUOTA
+> / Q_SETQUOTA for XFS quotas), you got bogus results but noone really
+> tried that. But when we want interfaces compatible we need to fix this.
+> 
+> So we bite the bullet and define another quota structure used for
+> passing information from/to ->get_dqblk()/->set_dqblk. It's somewhat
+> sad we have to have more conversion routines in fs/quota/quota.c but
+> it seems cleaner than overloading e.g. units of d_bcount to bytes.
 
-This is a multi-part message in MIME format.
---------------000501090300030804080705
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
+I don't really like the idea of having to copy the dquot information
+an extra time. We now:
 
-Hi,
+	- copy from internal dquot to the new qc_dqblk
+	- copy from the new qc_dqblk to if_dqblk/xfs_dqblk
+	- copy if_dqblk/xfs_dqblk to the user buffer.
 
-I am in a foreign country right now, but I will be back next week, will 
-write all information down as soon as I am back.
+That's now three copies, and when we are having to deal with quota
+reports containing hundreds of thousands of dquots that's going to
+hrut performance.
 
-kind regards
+We could probably get away with just one copy by passing a
+filldir()-like context down into the filesystems to format their
+internal dquot information directly into the user buffer in the
+appropriate format. That way fs/quota/quota.c doesn't need
+conversion routines, filesystems can optimise the formating to
+minimise copying, and we can still provide generic routines for
+filesystems using the generic quota infrastructure....
 
-Markus
+[...]
 
-Am 16.11.2014 um 20:34 schrieb Markus Rhonheimer:
-> Hi,
->
-> I am running Centos 7 and have created a virtual block device with ZFS 
-> (ZVOL). I put XFS onto the block device without partitioning it.
->
-> This worked very well as storage disk for a VM.
->
-> A few days ago I wanted to increase the size of the block device, but 
-> accidently decreased it by 1 TB (from 7 to 6). I found out about it 
-> and immediately increased the size of the drive to 8 TB afterward.
->
-> The XFS partition can still be mounted and I can list the files on it, 
-> but xfs_repair -n says: "/Sorry/, /could not find valid secondary 
-> superblock"
->
-> /Is there the possibility to rescue some files?
->
-> kind regards
->
-> Markus
->
->
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+> @@ -277,10 +287,73 @@ static int quota_getxstatev(struct super_block *sb, void __user *addr)
+>  	return ret;
+>  }
+>  
+> +/* XFS blocks to space conversion */
+> +static u64 xfs_btos(u64 blocks)
+> +{
+> +	return blocks << 9;
+> +}
+> +
+> +/* Space to XFS blocks conversion */
+> +static u64 xfs_stob(u64 space)
+> +{
+> +	return (space + 511) >> 9;
+> +}
 
+Which is just redefining BBTOB() [Basic Blocks to Bytes] and BTOBB()
+with magic numbers and no explanation of what a "block" actually is.
+We already export those macros to userspace, and they are used by
+xfs_quota to convert the block counts to bytes....
 
---------------000501090300030804080705
-Content-Type: text/html; charset=windows-1252
-Content-Transfer-Encoding: 7bit
+Cheers,
 
-<html>
-  <head>
-    <meta content="text/html; charset=windows-1252"
-      http-equiv="Content-Type">
-  </head>
-  <body text="#000000" bgcolor="#FFFFFF">
-    <div class="moz-cite-prefix">Hi,<br>
-      <br>
-      I am in a foreign country right now, but I will be back next week,
-      will write all information down as soon as I am back.<br>
-      <br>
-      kind regards<br>
-      <br>
-      Markus<br>
-      <br>
-      Am 16.11.2014 um 20:34 schrieb Markus Rhonheimer:<br>
-    </div>
-    <blockquote cite="mid:5468FC60.10901@web.de" type="cite">
-      <meta http-equiv="content-type" content="text/html;
-        charset=windows-1252">
-      Hi,<br>
-      <br>
-      I am running Centos 7 and have created a virtual block device with
-      ZFS (ZVOL). I put XFS onto the block device without partitioning
-      it.<br>
-      <br>
-      This worked very well as storage disk for a VM.<br>
-      <br>
-      A few days ago I wanted to increase the size of the block device,
-      but accidently decreased it by 1 TB (from 7 to 6). I found out
-      about it and immediately increased the size of the drive to 8 TB
-      afterward.<br>
-      <br>
-      The XFS partition can still be mounted and I can list the files on
-      it, but xfs_repair -n says: "<span class="st"><em>Sorry</em>, <em>could
-
-          not find valid secondary superblock"<br>
-          <br>
-        </em>Is there the possibility to rescue some files?<br>
-        <br>
-        kind regards<br>
-        <br>
-        Markus<br>
-      </span> <br>
-      <fieldset class="mimeAttachmentHeader"></fieldset>
-      <br>
-      <pre wrap="">_______________________________________________
-xfs mailing list
-<a class="moz-txt-link-abbreviated" href="mailto:xfs@oss.sgi.com">xfs@oss.sgi.com</a>
-<a class="moz-txt-link-freetext" href="http://oss.sgi.com/mailman/listinfo/xfs">http://oss.sgi.com/mailman/listinfo/xfs</a>
-</pre>
-    </blockquote>
-    <br>
-  </body>
-</html>
-
---------------000501090300030804080705--
-
-
---===============1596525676802052445==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============1596525676802052445==--
