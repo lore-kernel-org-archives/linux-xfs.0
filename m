@@ -1,24 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 4F60E7F3F
-	for <xfs@oss.sgi.com>; Tue, 18 Nov 2014 18:19:58 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 2D8DE8F8035
-	for <xfs@oss.sgi.com>; Tue, 18 Nov 2014 16:19:55 -0800 (PST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 26C637F3F
+	for <xfs@oss.sgi.com>; Wed, 19 Nov 2014 16:12:58 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id AACABAC001
+	for <xfs@oss.sgi.com>; Wed, 19 Nov 2014 14:12:54 -0800 (PST)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id v0nsteM9J527uwzP (version=TLSv1
+	cuda.sgi.com with ESMTP id kwnBBm5dhjthbYfW (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 18 Nov 2014 16:19:54 -0800 (PST)
-Date: Tue, 18 Nov 2014 19:19:41 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: How to determine the reserved blocks in xfs filesystem ?
-Message-ID: <20141119001941.GA37095@bfoster.bfoster>
-References: <CAJtCNH0tgtCw0F7322b_qvbM9-uGGSsLLiPQj6jk1yyvWDQMYg@mail.gmail.com>
-	<20141118133206.GA5226@bfoster.bfoster>
-	<20141118223518.GR23575@dastard>
+	Wed, 19 Nov 2014 14:12:53 -0800 (PST)
+Received: from int-mx13.intmail.prod.int.phx2.redhat.com
+	(int-mx13.intmail.prod.int.phx2.redhat.com [10.5.11.26])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id sAJMCq9X025043
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256
+	verify=FAIL) for <xfs@oss.sgi.com>; Wed, 19 Nov 2014 17:12:52 -0500
+Received: from liberator.sandeen.net (ovpn01.gateway.prod.ext.phx2.redhat.com
+	[10.5.9.1])
+	by int-mx13.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id sAJMCpnB000656
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES128-SHA bits=128 verify=NO)
+	for <xfs@oss.sgi.com>; Wed, 19 Nov 2014 17:12:52 -0500
+Message-ID: <546D15E3.5000200@redhat.com>
+Date: Wed, 19 Nov 2014 16:12:51 -0600
+From: Eric Sandeen <sandeen@redhat.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20141118223518.GR23575@dastard>
+Subject: [PATCH] xfs: catch invalid negative blknos in _xfs_buf_find()
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,39 +33,39 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Mukul Malhotra <smilemukul2005@gmail.com>, xfs@oss.sgi.com
+To: xfs-oss <xfs@oss.sgi.com>
 
-T24gV2VkLCBOb3YgMTksIDIwMTQgYXQgMDk6MzU6MThBTSArMTEwMCwgRGF2ZSBDaGlubmVyIHdy
-b3RlOgo+IE9uIFR1ZSwgTm92IDE4LCAyMDE0IGF0IDA4OjMyOjA3QU0gLTA1MDAsIEJyaWFuIEZv
-c3RlciB3cm90ZToKPiA+IE9uIFR1ZSwgTm92IDE4LCAyMDE0IGF0IDA2OjA1OjU4UE0gKzA1MzAs
-IE11a3VsIE1hbGhvdHJhIHdyb3RlOgo+ID4gPiDigItIZWxsbywKPiA+ID4gCj4gPiA+IERvZXMg
-eGZzIGhhdmUgcmVzZXJ2ZWQgYmxvY2tzIHRvbywgbGlrZSBleHQqID8gaWYgeWVzLCBob3cgY2Fu
-IHRoZXkgYmUKPiA+ID4gZGV0ZXJtaW5lZCA/4oCLCj4gPiA+IAo+ID4gCj4gPiBYRlMgcmVzZXJ2
-ZXMgYmxvY2tzIGludGVybmFsbHkgc3VjaCB0aGF0IGl0IGNhbiBwZXJmb3JtIG9wZXJhdGlvbnMg
-d2hlbgo+ID4gYWxsIGZyZWUgc3BhY2UgaXMgY29uc3VtZWQsIGV0Yy4gSXQgbG9va3MgbGlrZSA1
-JSBpcyB0aGUgZGVmYXVsdC4KPiAKPiBOb3QgcXVpdGUuCj4gCj4gICAgICAgICAvKgo+ICAgICAg
-ICAgICogV2UgZGVmYXVsdCB0byA1JSBvciA4MTkyIGZzYnMgb2Ygc3BhY2UgcmVzZXJ2ZWQsIHdo
-aWNoZXZlciBpcwo+ICAgICAgICAgICogc21hbGxlci4gIFRoaXMgaXMgaW50ZW5kZWQgdG8gY292
-ZXIgY29uY3VycmVudCBhbGxvY2F0aW9uCj4gICAgICAgICAgKiB0cmFuc2FjdGlvbnMgd2hlbiB3
-ZSBpbml0aWFsbHkgaGl0IGVub3NwYy4gVGhlc2UgZWFjaCByZXF1aXJlIGEgNAo+ICAgICAgICAg
-ICogYmxvY2sgcmVzZXJ2YXRpb24uIEhlbmNlIGJ5IGRlZmF1bHQgd2UgY292ZXIgcm91Z2hseSAy
-MDAwIGNvbmN1cnJlbnQKPiAgICAgICAgICAqIGFsbG9jYXRpb24gcmVzZXJ2YXRpb25zLgo+ICAg
-ICAgICAgICovCj4gCj4gU28sIGluIG1vc3QgY2FzZXMsIHRoZXJlIGFyZSAzMk1CIG9mIHJlc2Vy
-dmVkIGJsb2NrcyBhdmFpbGFibGUgZm9yCj4gaW50ZXJuYWwgZW1lcmdlbmN5IHVzZS4KPiAKClll
-cCwgSSBnbG9zc2VkIHJpZ2h0IG92ZXIgdGhlIGhhcmQgY2FwLi4uIHRoYW5rcy4gOykKCkJyaWFu
-Cgo+ID4gSSBkb24ndCB0aGluayBpdCdzICJsaWtlIGV4dDQsIiBob3dldmVyLCB3aGljaCByZXNl
-cnZlcyBibG9ja3MgZm9yIHRoZQo+ID4gcm9vdCB1c2VyLiBJIGRvbid0IGJlbGlldmUgdGhlIHJl
-c2VydmVkIGJsb2NrcyBpbiBYRlMgYXJlIGFjY2Vzc2libGUgZm9yCj4gPiBmaWxlIGFsbG9jYXRp
-b24gYnkgYW55IHVzZXIgdW5sZXNzIHRoZSByZXNlcnZlIHBvb2wgaXMgbW9kaWZpZWQgYXMgc3Vj
-aC4KPiAKPiBNb3N0IGRlZmluaXRlbHkgbm90ICJsaWtlIGV4dDQiLiBUaGUgcmVzZXJ2ZWQgYmxv
-Y2tzIGFyZSBjb25zaWRlcmVkCj4gInVzZWQgc3BhY2UiIChpLmUuIG5vdCBhdmFpbGFibGUgdG8g
-YW55IHVzZXIpIGFuZCBhcmUgcmVwb3J0ZWQgYXMKPiBzdWNoIGluIHN0YXRmcygpIG91dHB1dCAo
-ZS5nLiB2aWEgZGYpLgo+IAo+IENoZWVycywKPiAKPiBEYXZlLgo+IC0tIAo+IERhdmUgQ2hpbm5l
-cgo+IGRhdmlkQGZyb21vcmJpdC5jb20KCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9v
-c3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
+Here blkno is a daddr_t, which is a __s64; it's possible to hold
+a value which is negative, and thus pass the (blkno >= eofs)
+test.  Then we try to do a xfs_perag_get() for a ridiculous
+agno via xfs_daddr_to_agno(), and bad things happen when that
+fails, and returns a null pag which is dereferenced shortly
+thereafter.
+
+Found via a user-supplied fuzzed image...
+
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
+
+diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+index 24b4ebe..f54a497 100644
+--- a/fs/xfs/xfs_buf.c
++++ b/fs/xfs/xfs_buf.c
+@@ -463,7 +463,7 @@ _xfs_buf_find(
+ 	 * have to check that the buffer falls within the filesystem bounds.
+ 	 */
+ 	eofs = XFS_FSB_TO_BB(btp->bt_mount, btp->bt_mount->m_sb.sb_dblocks);
+-	if (blkno >= eofs) {
++	if (blkno < 0 || blkno >= eofs) {
+ 		/*
+ 		 * XXX (dgc): we should really be returning -EFSCORRUPTED here,
+ 		 * but none of the higher level infrastructure supports
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
