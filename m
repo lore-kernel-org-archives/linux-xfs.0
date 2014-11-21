@@ -1,21 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 25A797F50
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 205D57F47
 	for <xfs@oss.sgi.com>; Fri, 21 Nov 2014 13:59:46 -0600 (CST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 0162F8F8037
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 0EAF4304062
 	for <xfs@oss.sgi.com>; Fri, 21 Nov 2014 11:59:45 -0800 (PST)
 Received: from imap.thunk.org (imap.thunk.org [74.207.234.97]) by cuda.sgi.com
-	with ESMTP id JJNvRDoHYG1nJpci (version=TLSv1 cipher=AES128-SHA
+	with ESMTP id owNCDA6KcHgYFzgk (version=TLSv1 cipher=AES128-SHA
 	bits=128 verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 21 Nov 2014 11:59:43 -0800 (PST)
+	Fri, 21 Nov 2014 11:59:44 -0800 (PST)
 From: Theodore Ts'o <tytso@mit.edu>
-Subject: [PATCH 1/4] fs: split update_time() into update_time() and
-	write_time()
-Date: Fri, 21 Nov 2014 14:59:21 -0500
-Message-Id: <1416599964-21892-2-git-send-email-tytso@mit.edu>
-In-Reply-To: <1416599964-21892-1-git-send-email-tytso@mit.edu>
-References: <1416599964-21892-1-git-send-email-tytso@mit.edu>
+Subject: [PATCH 0/4] add support for a lazytime mount option
+Date: Fri, 21 Nov 2014 14:59:20 -0500
+Message-Id: <1416599964-21892-1-git-send-email-tytso@mit.edu>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,217 +29,47 @@ Sender: xfs-bounces@oss.sgi.com
 To: linux-fsdevel@vger.kernel.org
 Cc: Ext4 Developers List <linux-ext4@vger.kernel.org>, Theodore Ts'o <tytso@mit.edu>, linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
 
-In preparation for adding support for the lazytime mount option, we
-need to be able to separate out the update_time() and write_time()
-inode operations.  Currently, only btrfs and xfs uses update_time().
+This is an updated version of what had originally been an
+ext4-specific patch which significantly improves performance by lazily
+writing timestamp updates (and in particular, mtime updates) to disk.
+The in-memory timestamps are always correct, but they are only written
+to disk when required for correctness.
 
-We needed to preserve update_time() because btrfs wants to have a
-special btrfs_root_readonly() check; otherwise we could drop the
-update_time() inode operation entirely.
+This provides a huge performance boost for ext4 due to how it handles
+journalling, but it's valuable for all file systems running on flash
+storage or drive-managed SMR disks by reducing the metadata write
+load.  So upon request, I've moved the functionality to the VFS layer.
+Once the /sbin/mount program adds support for MS_LAZYTIME, all file
+systems should be able to benefit from this optimization.
 
-Signed-off-by: Theodore Ts'o <tytso@mit.edu>
-Cc: xfs@oss.sgi.com
-Cc: linux-btrfs@vger.kernel.org
----
- fs/btrfs/inode.c   | 10 ++++++++++
- fs/inode.c         | 29 ++++++++++++++++++-----------
- fs/xfs/xfs_iops.c  | 39 ++++++++++++++++-----------------------
- include/linux/fs.h |  1 +
- 4 files changed, 45 insertions(+), 34 deletions(-)
+There is still an ext4-specific optimization, which may be applicable
+for other file systems which store more than one inode in a block, but
+it will require file system specific code.  It is purely optional,
+however.
 
-diff --git a/fs/btrfs/inode.c b/fs/btrfs/inode.c
-index d23362f..a5e0d0d 100644
---- a/fs/btrfs/inode.c
-+++ b/fs/btrfs/inode.c
-@@ -5574,6 +5574,11 @@ static int btrfs_update_time(struct inode *inode, struct timespec *now,
- 		inode->i_mtime = *now;
- 	if (flags & S_ATIME)
- 		inode->i_atime = *now;
-+	return 0;
-+}
-+
-+static int btrfs_write_time(struct inode *inode)
-+{
- 	return btrfs_dirty_inode(inode);
- }
- 
-@@ -9462,6 +9467,7 @@ static const struct inode_operations btrfs_dir_inode_operations = {
- 	.get_acl	= btrfs_get_acl,
- 	.set_acl	= btrfs_set_acl,
- 	.update_time	= btrfs_update_time,
-+	.write_time	= btrfs_write_time,
- 	.tmpfile        = btrfs_tmpfile,
- };
- static const struct inode_operations btrfs_dir_ro_inode_operations = {
-@@ -9470,6 +9476,7 @@ static const struct inode_operations btrfs_dir_ro_inode_operations = {
- 	.get_acl	= btrfs_get_acl,
- 	.set_acl	= btrfs_set_acl,
- 	.update_time	= btrfs_update_time,
-+	.write_time	= btrfs_write_time,
- };
- 
- static const struct file_operations btrfs_dir_file_operations = {
-@@ -9540,6 +9547,7 @@ static const struct inode_operations btrfs_file_inode_operations = {
- 	.get_acl	= btrfs_get_acl,
- 	.set_acl	= btrfs_set_acl,
- 	.update_time	= btrfs_update_time,
-+	.write_time	= btrfs_write_time,
- };
- static const struct inode_operations btrfs_special_inode_operations = {
- 	.getattr	= btrfs_getattr,
-@@ -9552,6 +9560,7 @@ static const struct inode_operations btrfs_special_inode_operations = {
- 	.get_acl	= btrfs_get_acl,
- 	.set_acl	= btrfs_set_acl,
- 	.update_time	= btrfs_update_time,
-+	.write_time	= btrfs_write_time,
- };
- static const struct inode_operations btrfs_symlink_inode_operations = {
- 	.readlink	= generic_readlink,
-@@ -9565,6 +9574,7 @@ static const struct inode_operations btrfs_symlink_inode_operations = {
- 	.listxattr	= btrfs_listxattr,
- 	.removexattr	= btrfs_removexattr,
- 	.update_time	= btrfs_update_time,
-+	.write_time	= btrfs_write_time,
- };
- 
- const struct dentry_operations btrfs_dentry_operations = {
-diff --git a/fs/inode.c b/fs/inode.c
-index 26753ba..8f5c4b5 100644
---- a/fs/inode.c
-+++ b/fs/inode.c
-@@ -1499,17 +1499,24 @@ static int relatime_need_update(struct vfsmount *mnt, struct inode *inode,
-  */
- static int update_time(struct inode *inode, struct timespec *time, int flags)
- {
--	if (inode->i_op->update_time)
--		return inode->i_op->update_time(inode, time, flags);
--
--	if (flags & S_ATIME)
--		inode->i_atime = *time;
--	if (flags & S_VERSION)
--		inode_inc_iversion(inode);
--	if (flags & S_CTIME)
--		inode->i_ctime = *time;
--	if (flags & S_MTIME)
--		inode->i_mtime = *time;
-+	int ret;
-+
-+	if (inode->i_op->update_time) {
-+		ret = inode->i_op->update_time(inode, time, flags);
-+		if (ret)
-+			return ret;
-+	} else {
-+		if (flags & S_ATIME)
-+			inode->i_atime = *time;
-+		if (flags & S_VERSION)
-+			inode_inc_iversion(inode);
-+		if (flags & S_CTIME)
-+			inode->i_ctime = *time;
-+		if (flags & S_MTIME)
-+			inode->i_mtime = *time;
-+	}
-+	if (inode->i_op->write_time)
-+		return inode->i_op->write_time(inode);
- 	mark_inode_dirty_sync(inode);
- 	return 0;
- }
-diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-index ec6dcdc..0e9653c 100644
---- a/fs/xfs/xfs_iops.c
-+++ b/fs/xfs/xfs_iops.c
-@@ -984,10 +984,8 @@ xfs_vn_setattr(
- }
- 
- STATIC int
--xfs_vn_update_time(
--	struct inode		*inode,
--	struct timespec		*now,
--	int			flags)
-+xfs_vn_write_time(
-+	struct inode		*inode)
- {
- 	struct xfs_inode	*ip = XFS_I(inode);
- 	struct xfs_mount	*mp = ip->i_mount;
-@@ -1004,21 +1002,16 @@ xfs_vn_update_time(
- 	}
- 
- 	xfs_ilock(ip, XFS_ILOCK_EXCL);
--	if (flags & S_CTIME) {
--		inode->i_ctime = *now;
--		ip->i_d.di_ctime.t_sec = (__int32_t)now->tv_sec;
--		ip->i_d.di_ctime.t_nsec = (__int32_t)now->tv_nsec;
--	}
--	if (flags & S_MTIME) {
--		inode->i_mtime = *now;
--		ip->i_d.di_mtime.t_sec = (__int32_t)now->tv_sec;
--		ip->i_d.di_mtime.t_nsec = (__int32_t)now->tv_nsec;
--	}
--	if (flags & S_ATIME) {
--		inode->i_atime = *now;
--		ip->i_d.di_atime.t_sec = (__int32_t)now->tv_sec;
--		ip->i_d.di_atime.t_nsec = (__int32_t)now->tv_nsec;
--	}
-+
-+	ip->i_d.di_ctime.t_sec = (__int32_t) inode->i_ctime.tv_sec;
-+	ip->i_d.di_ctime.t_nsec = (__int32_t) inode->i_ctime.tv_nsec;
-+
-+	ip->i_d.di_mtime.t_sec = (__int32_t)inode->i_mtime.tv_sec;
-+	ip->i_d.di_mtime.t_nsec = (__int32_t) inode->i_mtime.tv_nsec;
-+
-+	ip->i_d.di_atime.t_sec = (__int32_t) inode->i_atime.tv_sec;
-+	ip->i_d.di_atime.t_nsec = (__int32_t) inode->i_atime.tv_nsec;
-+
- 	xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL);
- 	xfs_trans_log_inode(tp, ip, XFS_ILOG_TIMESTAMP);
- 	return xfs_trans_commit(tp, 0);
-@@ -1129,7 +1122,7 @@ static const struct inode_operations xfs_inode_operations = {
- 	.removexattr		= generic_removexattr,
- 	.listxattr		= xfs_vn_listxattr,
- 	.fiemap			= xfs_vn_fiemap,
--	.update_time		= xfs_vn_update_time,
-+	.write_time		= xfs_vn_write_time,
- };
- 
- static const struct inode_operations xfs_dir_inode_operations = {
-@@ -1156,7 +1149,7 @@ static const struct inode_operations xfs_dir_inode_operations = {
- 	.getxattr		= generic_getxattr,
- 	.removexattr		= generic_removexattr,
- 	.listxattr		= xfs_vn_listxattr,
--	.update_time		= xfs_vn_update_time,
-+	.write_time		= xfs_vn_write_time,
- 	.tmpfile		= xfs_vn_tmpfile,
- };
- 
-@@ -1184,7 +1177,7 @@ static const struct inode_operations xfs_dir_ci_inode_operations = {
- 	.getxattr		= generic_getxattr,
- 	.removexattr		= generic_removexattr,
- 	.listxattr		= xfs_vn_listxattr,
--	.update_time		= xfs_vn_update_time,
-+	.write_time		= xfs_vn_write_time,
- 	.tmpfile		= xfs_vn_tmpfile,
- };
- 
-@@ -1198,7 +1191,7 @@ static const struct inode_operations xfs_symlink_inode_operations = {
- 	.getxattr		= generic_getxattr,
- 	.removexattr		= generic_removexattr,
- 	.listxattr		= xfs_vn_listxattr,
--	.update_time		= xfs_vn_update_time,
-+	.write_time		= xfs_vn_write_time,
- };
- 
- STATIC void
-diff --git a/include/linux/fs.h b/include/linux/fs.h
-index 9ab779e..3633239 100644
---- a/include/linux/fs.h
-+++ b/include/linux/fs.h
-@@ -1545,6 +1545,7 @@ struct inode_operations {
- 	int (*fiemap)(struct inode *, struct fiemap_extent_info *, u64 start,
- 		      u64 len);
- 	int (*update_time)(struct inode *, struct timespec *, int);
-+	int (*write_time)(struct inode *);
- 	int (*atomic_open)(struct inode *, struct dentry *,
- 			   struct file *, unsigned open_flag,
- 			   umode_t create_mode, int *opened);
+Please note the changes to update_time() and the new write_time() inode
+operations functions, which impact btrfs and xfs.  The changes are
+fairly simple, but I would appreciate confirmation from the btrfs and
+xfs teams that I got things right.   Thanks!!
+
+Theodore Ts'o (4):
+  fs: split update_time() into update_time() and write_time()
+  vfs: add support for a lazytime mount option
+  vfs: don't let the dirty time inodes get more than a day stale
+  ext4: add support for a lazytime mount option
+
+ fs/btrfs/inode.c        | 10 ++++++
+ fs/ext4/inode.c         | 46 +++++++++++++++++++++++++-
+ fs/ext4/super.c         |  9 +++++
+ fs/fs-writeback.c       | 39 +++++++++++++++++++++-
+ fs/inode.c              | 88 ++++++++++++++++++++++++++++++++++++++++++-------
+ fs/proc_namespace.c     |  1 +
+ fs/sync.c               |  7 ++++
+ fs/xfs/xfs_iops.c       | 39 +++++++++-------------
+ include/linux/fs.h      |  5 +++
+ include/uapi/linux/fs.h |  1 +
+ 10 files changed, 209 insertions(+), 36 deletions(-)
+
 -- 
 2.1.0
 
