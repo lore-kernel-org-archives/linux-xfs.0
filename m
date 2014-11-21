@@ -1,20 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 24B137F4E
-	for <xfs@oss.sgi.com>; Fri, 21 Nov 2014 13:59:46 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 018D78F8039
-	for <xfs@oss.sgi.com>; Fri, 21 Nov 2014 11:59:45 -0800 (PST)
-Received: from imap.thunk.org (imap.thunk.org [74.207.234.97]) by cuda.sgi.com
-	with ESMTP id ocBqjua5nDBS2niH (version=TLSv1 cipher=AES128-SHA
-	bits=128 verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 21 Nov 2014 11:59:43 -0800 (PST)
-From: Theodore Ts'o <tytso@mit.edu>
-Subject: [PATCH 4/4] ext4: add support for a lazytime mount option
-Date: Fri, 21 Nov 2014 14:59:24 -0500
-Message-Id: <1416599964-21892-5-git-send-email-tytso@mit.edu>
-In-Reply-To: <1416599964-21892-1-git-send-email-tytso@mit.edu>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id EA6157F3F
+	for <xfs@oss.sgi.com>; Fri, 21 Nov 2014 14:09:16 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 6A8E8AC008
+	for <xfs@oss.sgi.com>; Fri, 21 Nov 2014 12:09:13 -0800 (PST)
+Received: from mx0a-00082601.pphosted.com (mx0a-00082601.pphosted.com
+	[67.231.145.42]) by cuda.sgi.com with ESMTP id 8oV2rxfLTH9TAgf9
+	for <xfs@oss.sgi.com>; Fri, 21 Nov 2014 12:09:11 -0800 (PST)
+Date: Fri, 21 Nov 2014 15:08:48 -0500
+From: Chris Mason <clm@fb.com>
+Subject: Re: [PATCH 1/4] fs: split update_time() into update_time() and
+	write_time()
+Message-ID: <1416600528.24312.10@mail.thefacebook.com>
+In-Reply-To: <1416599964-21892-2-git-send-email-tytso@mit.edu>
 References: <1416599964-21892-1-git-send-email-tytso@mit.edu>
+	<1416599964-21892-2-git-send-email-tytso@mit.edu>
+MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,196 +25,30 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: linux-fsdevel@vger.kernel.org
-Cc: Ext4 Developers List <linux-ext4@vger.kernel.org>, Theodore Ts'o <tytso@mit.edu>, linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
+To: Theodore Ts'o <tytso@mit.edu>
+Cc: linux-fsdevel@vger.kernel.org, Ext4 Developers List <linux-ext4@vger.kernel.org>, linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
 
-Add an optimization for the MS_LAZYTIME mount option so that we will
-opportunistically write out any inodes with the I_DIRTY_TIME flag set
-in a particular inode table block when we need to update some inode in
-that inode table block anyway.
+On Fri, Nov 21, 2014 at 2:59 PM, Theodore Ts'o <tytso@mit.edu> wrote:
+> In preparation for adding support for the lazytime mount option, we
+> need to be able to separate out the update_time() and write_time()
+> inode operations.  Currently, only btrfs and xfs uses update_time().
+> 
+> We needed to preserve update_time() because btrfs wants to have a
+> special btrfs_root_readonly() check; otherwise we could drop the
+> update_time() inode operation entirely.
 
-Also add some temporary code so that we can set the lazytime mount
-option without needing a modified /sbin/mount program which can set
-MS_LAZYTIME.  We can eventually make this go away once util-linux has
-added support.
+No objections here, I'll give the queue a whirl.  You can add my 
+acked-by-or-Ill-fix-whatever-breaks
 
-Google-Bug-Id: 18297052
+I look forward to the patch that makes us all lazy by default.
 
-Signed-off-by: Theodore Ts'o <tytso@mit.edu>
----
- fs/ext4/inode.c    | 46 +++++++++++++++++++++++++++++++++++++++++++++-
- fs/ext4/super.c    |  9 +++++++++
- fs/inode.c         | 36 ++++++++++++++++++++++++++++++++++++
- include/linux/fs.h |  2 ++
- 4 files changed, 92 insertions(+), 1 deletion(-)
+-chris
 
-diff --git a/fs/ext4/inode.c b/fs/ext4/inode.c
-index 3356ab5..07ceafb 100644
---- a/fs/ext4/inode.c
-+++ b/fs/ext4/inode.c
-@@ -4163,6 +4163,49 @@ static int ext4_inode_blocks_set(handle_t *handle,
- }
- 
- /*
-+ * Opportunistically update the other time fields for other inodes in
-+ * the same inode table block.
-+ */
-+static void ext4_update_other_inodes_time(struct super_block *sb,
-+					  unsigned long orig_ino, char *buf)
-+{
-+	struct ext4_inode_info	*ei;
-+	struct ext4_inode	*raw_inode;
-+	unsigned long		ino;
-+	struct inode		*inode;
-+	int		i, inodes_per_block = EXT4_SB(sb)->s_inodes_per_block;
-+	int		inode_size = EXT4_INODE_SIZE(sb);
-+
-+	ino = orig_ino & ~(inodes_per_block - 1);
-+	for (i = 0; i < inodes_per_block; i++, ino++, buf += inode_size) {
-+		if (ino == orig_ino)
-+			continue;
-+		inode = find_active_inode_nowait(sb, ino);
-+		if (!inode ||
-+		    (inode->i_state & I_DIRTY_TIME) == 0) {
-+			iput(inode);
-+			continue;
-+		}
-+		raw_inode = (struct ext4_inode *) buf;
-+		ei = EXT4_I(inode);
-+
-+		spin_lock(&inode->i_lock);
-+		inode->i_state &= ~I_DIRTY_TIME;
-+		inode->i_ts_dirty_day = 0;
-+		spin_unlock(&inode->i_lock);
-+
-+		spin_lock(&ei->i_raw_lock);
-+		EXT4_INODE_SET_XTIME(i_ctime, inode, raw_inode);
-+		EXT4_INODE_SET_XTIME(i_mtime, inode, raw_inode);
-+		EXT4_INODE_SET_XTIME(i_atime, inode, raw_inode);
-+		ext4_inode_csum_set(inode, raw_inode, ei);
-+		spin_unlock(&ei->i_raw_lock);
-+		iput(inode);
-+	}
-+}
-+
-+
-+/*
-  * Post the struct inode info into an on-disk inode location in the
-  * buffer-cache.  This gobbles the caller's reference to the
-  * buffer_head in the inode location struct.
-@@ -4273,9 +4316,10 @@ static int ext4_do_update_inode(handle_t *handle,
- 	}
- 
- 	ext4_inode_csum_set(inode, raw_inode, ei);
--
- 	spin_unlock(&ei->i_raw_lock);
- 
-+	ext4_update_other_inodes_time(inode->i_sb, inode->i_ino, bh->b_data);
-+
- 	BUFFER_TRACE(bh, "call ext4_handle_dirty_metadata");
- 	rc = ext4_handle_dirty_metadata(handle, NULL, bh);
- 	if (!err)
-diff --git a/fs/ext4/super.c b/fs/ext4/super.c
-index 4b79f39..1ac1914 100644
---- a/fs/ext4/super.c
-+++ b/fs/ext4/super.c
-@@ -1133,6 +1133,7 @@ enum {
- 	Opt_noquota, Opt_barrier, Opt_nobarrier, Opt_err,
- 	Opt_usrquota, Opt_grpquota, Opt_i_version,
- 	Opt_stripe, Opt_delalloc, Opt_nodelalloc, Opt_mblk_io_submit,
-+	Opt_lazytime, Opt_nolazytime,
- 	Opt_nomblk_io_submit, Opt_block_validity, Opt_noblock_validity,
- 	Opt_inode_readahead_blks, Opt_journal_ioprio,
- 	Opt_dioread_nolock, Opt_dioread_lock,
-@@ -1195,6 +1196,8 @@ static const match_table_t tokens = {
- 	{Opt_i_version, "i_version"},
- 	{Opt_stripe, "stripe=%u"},
- 	{Opt_delalloc, "delalloc"},
-+	{Opt_lazytime, "lazytime"},
-+	{Opt_nolazytime, "nolazytime"},
- 	{Opt_nodelalloc, "nodelalloc"},
- 	{Opt_removed, "mblk_io_submit"},
- 	{Opt_removed, "nomblk_io_submit"},
-@@ -1450,6 +1453,12 @@ static int handle_mount_opt(struct super_block *sb, char *opt, int token,
- 	case Opt_i_version:
- 		sb->s_flags |= MS_I_VERSION;
- 		return 1;
-+	case Opt_lazytime:
-+		sb->s_flags |= MS_LAZYTIME;
-+		return 1;
-+	case Opt_nolazytime:
-+		sb->s_flags &= ~MS_LAZYTIME;
-+		return 1;
- 	}
- 
- 	for (m = ext4_mount_opts; m->token != Opt_err; m++)
-diff --git a/fs/inode.c b/fs/inode.c
-index f0d6232..89cfca7 100644
---- a/fs/inode.c
-+++ b/fs/inode.c
-@@ -1292,6 +1292,42 @@ struct inode *ilookup(struct super_block *sb, unsigned long ino)
- }
- EXPORT_SYMBOL(ilookup);
- 
-+/**
-+ * find_active_inode_nowait - find an active inode in the inode cache
-+ * @sb:		super block of file system to search
-+ * @ino:	inode number to search for
-+ *
-+ * Search for an active inode @ino in the inode cache, and if the
-+ * inode is in the cache, the inode is returned with an incremented
-+ * reference count.  If the inode is being freed or is newly
-+ * initialized, return nothing instead of trying to wait for the inode
-+ * initialization or destruction to be complete.
-+ */
-+struct inode *find_active_inode_nowait(struct super_block *sb,
-+				       unsigned long ino)
-+{
-+	struct hlist_head *head = inode_hashtable + hash(sb, ino);
-+	struct inode *inode, *ret_inode = NULL;
-+
-+	spin_lock(&inode_hash_lock);
-+	hlist_for_each_entry(inode, head, i_hash) {
-+		if ((inode->i_ino != ino) ||
-+		    (inode->i_sb != sb))
-+			continue;
-+		spin_lock(&inode->i_lock);
-+		if ((inode->i_state & (I_FREEING | I_WILL_FREE | I_NEW)) == 0) {
-+			__iget(inode);
-+			ret_inode = inode;
-+		}
-+		spin_unlock(&inode->i_lock);
-+		goto out;
-+	}
-+out:
-+	spin_unlock(&inode_hash_lock);
-+	return ret_inode;
-+}
-+EXPORT_SYMBOL(find_active_inode_nowait);
-+
- int insert_inode_locked(struct inode *inode)
- {
- 	struct super_block *sb = inode->i_sb;
-diff --git a/include/linux/fs.h b/include/linux/fs.h
-index e3574cd..dbbd642 100644
---- a/include/linux/fs.h
-+++ b/include/linux/fs.h
-@@ -2413,6 +2413,8 @@ extern struct inode *ilookup(struct super_block *sb, unsigned long ino);
- 
- extern struct inode * iget5_locked(struct super_block *, unsigned long, int (*test)(struct inode *, void *), int (*set)(struct inode *, void *), void *);
- extern struct inode * iget_locked(struct super_block *, unsigned long);
-+extern struct inode *find_active_inode_nowait(struct super_block *,
-+					      unsigned long);
- extern int insert_inode_locked4(struct inode *, unsigned long, int (*test)(struct inode *, void *), void *);
- extern int insert_inode_locked(struct inode *);
- #ifdef CONFIG_DEBUG_LOCK_ALLOC
--- 
-2.1.0
+
 
 _______________________________________________
 xfs mailing list
