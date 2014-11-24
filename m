@@ -1,20 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 6BFD07F88
-	for <xfs@oss.sgi.com>; Mon, 24 Nov 2014 13:06:30 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 4D3868F8050
-	for <xfs@oss.sgi.com>; Mon, 24 Nov 2014 11:06:27 -0800 (PST)
-Received: from mail-qg0-f46.google.com (mail-qg0-f46.google.com
-	[209.85.192.46]) by cuda.sgi.com with ESMTP id OaqhSp6FZClsHEnI
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 24 Nov 2014 11:06:26 -0800 (PST)
-Received: by mail-qg0-f46.google.com with SMTP id z107so5649026qgd.33
-	for <xfs@oss.sgi.com>; Mon, 24 Nov 2014 11:06:25 -0800 (PST)
-From: Peter Watkins <treestem@gmail.com>
-Subject: [PATCH] xfs: overflow in xfs_iomap_eof_align_last_fsb
-Date: Mon, 24 Nov 2014 14:06:13 -0500
-Message-Id: <1416855973-6359-1-git-send-email-treestem@gmail.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 595D57F4E
+	for <xfs@oss.sgi.com>; Mon, 24 Nov 2014 16:13:58 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id EB4DCAC009
+	for <xfs@oss.sgi.com>; Mon, 24 Nov 2014 14:13:54 -0800 (PST)
+Received: from fieldses.org (fieldses.org [174.143.236.118]) by cuda.sgi.com
+	with ESMTP id M4h0i0Ji4zONsUqg (version=TLSv1 cipher=AES256-SHA
+	bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Mon, 24 Nov 2014 14:11:47 -0800 (PST)
+Date: Mon, 24 Nov 2014 17:11:45 -0500
+Subject: Re: [PATCH-v2 0/5] add support for a lazytime mount option
+Message-ID: <20141124221145.GB24003@fieldses.org>
+References: <1416675267-2191-1-git-send-email-tytso@mit.edu>
+	<20141124090755.GA28534@infradead.org>
+	<20141124115727.GA19918@thunk.org>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20141124115727.GA19918@thunk.org>
+From: "J. Bruce Fields" <bfields@fieldses.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,77 +27,31 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: Peter Watkins <treestem@gmail.com>
+To: Theodore Ts'o <tytso@mit.edu>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-fsdevel@vger.kernel.org, Ext4 Developers List <linux-ext4@vger.kernel.org>, linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
 
-Someone else may have run into this already, if not please take
-a look.
+On Mon, Nov 24, 2014 at 06:57:27AM -0500, Theodore Ts'o wrote:
+> If we want to be paranoid, we handle i_version updates non-lazily; I
+> can see arguments in favor of that.
+> 
+> Ext4 only enables MS_I_VERSION if the user asks for it explicitly, so
+> it wouldn't cause me any problems.  However, xfs and btrfs enables it
+> by default, so that means xfs and btrfs wouldn't see the benefits of
+> lazytime (if you're going to have to push I_VERSION to disk, you might
+> as well update the [acm]time while you're at it).  I've always thought
+> that we *should* do is to only enable it if nfsv4 is serving the file
+> system, and not otherwise, though, which would also give us
+> consistency across all the file systems.
 
- Peter
+I guess you need to worry about the case where you shutdown nfsd, modify
+a file, then restart nfsd--you don't want a client to miss the
+modification in that case.
 
-If extsize is set and new_last_fsb is larger than 32 bits, the
-roundup to extsize will overflow the align variable. Instead,
-combine alignments by rounding extsize hint up to stripe size.
-
-Signed-off-by: Peter Watkins <treestem@gmail.com>
-Reviewed-by: Nathaniel W. Turner <nate@houseofnate.net>
----
- fs/xfs/xfs_iomap.c |   19 ++++++++++---------
- 1 file changed, 10 insertions(+), 9 deletions(-)
-
-diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index afcf3c9..0c4abfe 100644
---- a/fs/xfs/xfs_iomap.c
-+++ b/fs/xfs/xfs_iomap.c
-@@ -52,7 +52,7 @@ xfs_iomap_eof_align_last_fsb(
- 	xfs_extlen_t	extsize,
- 	xfs_fileoff_t	*last_fsb)
- {
--	xfs_fileoff_t	new_last_fsb = 0;
-+	xfs_fileoff_t	new_last_fsb;
- 	xfs_extlen_t	align = 0;
- 	int		eof, error;
- 
-@@ -70,23 +70,24 @@ xfs_iomap_eof_align_last_fsb(
- 		else if (mp->m_dalign)
- 			align = mp->m_dalign;
- 
--		if (align && XFS_ISIZE(ip) >= XFS_FSB_TO_B(mp, align))
--			new_last_fsb = roundup_64(*last_fsb, align);
-+		if (align && XFS_ISIZE(ip) < XFS_FSB_TO_B(mp, align))
-+			align = 0;
- 	}
- 
- 	/*
--	 * Always round up the allocation request to an extent boundary
--	 * (when file on a real-time subvolume or has di_extsize hint).
-+	 * Round up the allocation request to an extent boundary. If
-+	 * already aligned to a stripe, round extsize up to a stripe
-+	 * boundary.
- 	 */
- 	if (extsize) {
--		if (new_last_fsb)
--			align = roundup_64(new_last_fsb, extsize);
-+		if (align)
-+			align = roundup_64(extsize, align);
- 		else
- 			align = extsize;
--		new_last_fsb = roundup_64(*last_fsb, align);
- 	}
- 
--	if (new_last_fsb) {
-+	if (align) {
-+		new_last_fsb = roundup_64(*last_fsb, align);
- 		error = xfs_bmap_eof(ip, new_last_fsb, XFS_DATA_FORK, &eof);
- 		if (error)
- 			return error;
--- 
-1.7.9.5
+--b.
 
 _______________________________________________
 xfs mailing list
