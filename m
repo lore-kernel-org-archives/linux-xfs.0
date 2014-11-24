@@ -1,23 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id C898F7F69
-	for <xfs@oss.sgi.com>; Mon, 24 Nov 2014 05:57:45 -0600 (CST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 523397F6B
+	for <xfs@oss.sgi.com>; Mon, 24 Nov 2014 06:27:29 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 9A3F58F8037
-	for <xfs@oss.sgi.com>; Mon, 24 Nov 2014 03:57:42 -0800 (PST)
-Received: from imap.thunk.org (imap.thunk.org [74.207.234.97]) by cuda.sgi.com
-	with ESMTP id U23wJaji4KxkaTzA (version=TLSv1 cipher=AES128-SHA
-	bits=128 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 24 Nov 2014 03:57:40 -0800 (PST)
-Date: Mon, 24 Nov 2014 06:57:27 -0500
-From: Theodore Ts'o <tytso@mit.edu>
-Subject: Re: [PATCH-v2 0/5] add support for a lazytime mount option
-Message-ID: <20141124115727.GA19918@thunk.org>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id F2EDFAC003
+	for <xfs@oss.sgi.com>; Mon, 24 Nov 2014 04:27:25 -0800 (PST)
+Received: from mail-lb0-f176.google.com (mail-lb0-f176.google.com
+	[209.85.217.176]) by cuda.sgi.com with ESMTP id
+	kbGheNEFMmyao68Y (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Mon, 24 Nov 2014 04:27:23 -0800 (PST)
+Received: by mail-lb0-f176.google.com with SMTP id p9so6133449lbv.21
+	for <xfs@oss.sgi.com>; Mon, 24 Nov 2014 04:27:22 -0800 (PST)
+From: Rasmus Villemoes <linux@rasmusvillemoes.dk>
+Subject: Re: [PATCH-v2 3/5] vfs: don't let the dirty time inodes get more than
+	a day stale
 References: <1416675267-2191-1-git-send-email-tytso@mit.edu>
-	<20141124090755.GA28534@infradead.org>
+	<1416675267-2191-4-git-send-email-tytso@mit.edu>
+Date: Mon, 24 Nov 2014 13:27:21 +0100
+In-Reply-To: <1416675267-2191-4-git-send-email-tytso@mit.edu> (Theodore Ts'o's
+	message of "Sat, 22 Nov 2014 11:54:25 -0500")
+Message-ID: <87egss3hsm.fsf@rasmusvillemoes.dk>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20141124090755.GA28534@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,55 +34,56 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
+To: Theodore Ts'o <tytso@mit.edu>
 Cc: linux-fsdevel@vger.kernel.org, Ext4 Developers List <linux-ext4@vger.kernel.org>, linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
 
-On Mon, Nov 24, 2014 at 01:07:55AM -0800, Christoph Hellwig wrote:
-> What's the test coverage for this?  xfstest generic/192 tests that
-> atime is persisted over remounts, which we had a bug with when XFS
-> used to have a lazy atime implementation somewhat similar to the
-> proposal.
-> 
-> We should have something similar for c/mtime as well.  Also a test to
-> ensure timestamps are persisted afer a fsync, although right now I can't
-> imagine how to do that genericly as no other filesystem seems to have
-> an equivaent to XFS_IOC_GOINGDOWN.
+On Sat, Nov 22 2014, Theodore Ts'o <tytso@mit.edu> wrote:
 
-generic/003 will show up problems if there are any [acm]time
-persistences across remounts, so we have it already.  An earlier
-(buggy) version of this patch actually tripped generic/003, so I can
-attest that it works.
+> Guarantee that the on-disk timestamps will be no more than 24 hours
+> stale.
+>
+>  static int update_time(struct inode *inode, struct timespec *time, int flags)
+>  {
+> +	unsigned short days_since_boot = jiffies / (HZ * 86400);
+>  	int ret;
+>
 
-As far as testing to make sure timestamps are persisted after an
-fsync, we should be able to do something genericly using dm_flaky, I
-would imagine.  We'll need to suppress this in some circumstances
-where we know that the file system doesn't have a journal enabled (and
-thus has no such guarantees) but I have that issue today with the
-various dm_flaky tests, and what I would probably suggest doing is
-putting all of the dm_flaky tests in a separate xfstests group, so
-that when I test file system configurations in nojournal mode, I can
-suppress all of the dm_flakey tests very easily.
+This seems to wrap every 49 days (assuming 32 bit jiffies and HZ==1000),
+so on-disk updates can be delayed indefinitely, assuming just the right
+delays between writes.
 
-> It seems you also handle i_version updates lazily. although that's
-> not mentioned anywhere.  I actually have a clarification request out on
-> the IETF NFSv4 list about the persistance requirements for the change
-> counter but I've not seen an answer to it yet.
+>  	if (inode->i_op->update_time) {
+> @@ -1527,14 +1528,27 @@ static int update_time(struct inode *inode, struct timespec *time, int flags)
+>  		if (flags & S_MTIME)
+>  			inode->i_mtime = *time;
+>  	}
+> -	if (inode->i_sb->s_flags & MS_LAZYTIME) {
+> +	/*
+> +	 * If i_ts_dirty_day is zero, then either we have not deferred
+> +	 * timestamp updates, or the system has been up for less than
+> +	 * a day (so days_since_boot is zero), so we defer timestamp
+> +	 * updates in that case and set the I_DIRTY_TIME flag.  If a
+> +	 * day or more has passed, then i_ts_dirty_day will be
+> +	 * different from days_since_boot, and then we should update
+> +	 * the on-disk inode and then we can clear i_ts_dirty_day.
+> +	 */
 
-If we want to be paranoid, we handle i_version updates non-lazily; I
-can see arguments in favor of that.
+AFAICT days_since_boot is not actually 0 immediately after boot
+due to 
 
-Ext4 only enables MS_I_VERSION if the user asks for it explicitly, so
-it wouldn't cause me any problems.  However, xfs and btrfs enables it
-by default, so that means xfs and btrfs wouldn't see the benefits of
-lazytime (if you're going to have to push I_VERSION to disk, you might
-as well update the [acm]time while you're at it).  I've always thought
-that we *should* do is to only enable it if nfsv4 is serving the file
-system, and not otherwise, though, which would also give us
-consistency across all the file systems.
+#define INITIAL_JIFFIES ((unsigned long)(unsigned int) (-300*HZ))
 
-What do folks think?
+On 32 bit platforms, days_since_boot will be 0 shortly after, while on
+64 bit it will always be >= 49. Not exactly sure how this affects the
+above logic.
 
-					- Ted
+Would it make sense to introduce days_since_boot as a global variable
+and avoid these issues? This would presumably also make update_time a
+few cycles faster (avoiding a division-by-constant), but not sure if
+that's important. And something of course needs to update
+days_since_boot, but that should be doable.
+
+Rasmus
 
 _______________________________________________
 xfs mailing list
