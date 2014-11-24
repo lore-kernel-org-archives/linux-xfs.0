@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 288877F84
-	for <xfs@oss.sgi.com>; Mon, 24 Nov 2014 00:17:07 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 167FF8F804B
-	for <xfs@oss.sgi.com>; Sun, 23 Nov 2014 22:17:07 -0800 (PST)
-Received: from mailout2.samsung.com (mailout2.samsung.com [203.254.224.25]) by
-	cuda.sgi.com with ESMTP id du7EJEme8NlZHqWG (version=TLSv1
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 49E7E7F75
+	for <xfs@oss.sgi.com>; Mon, 24 Nov 2014 00:17:21 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 1637630404E
+	for <xfs@oss.sgi.com>; Sun, 23 Nov 2014 22:17:21 -0800 (PST)
+Received: from mailout3.samsung.com (mailout3.samsung.com [203.254.224.33]) by
+	cuda.sgi.com with ESMTP id 9M4z46A8GCKbQKIZ (version=TLSv1
 	cipher=RC4-MD5 bits=128 verify=NO) for <xfs@oss.sgi.com>;
-	Sun, 23 Nov 2014 22:17:05 -0800 (PST)
-Received: from epcpsbgr1.samsung.com
-	(u141.gpu120.samsung.co.kr [203.254.230.141])
-	by mailout2.samsung.com (Oracle Communications Messaging Server
+	Sun, 23 Nov 2014 22:17:19 -0800 (PST)
+Received: from epcpsbgr4.samsung.com
+	(u144.gpu120.samsung.co.kr [203.254.230.144])
+	by mailout3.samsung.com (Oracle Communications Messaging Server
 	7u4-24.01 (7.0.4.24.0) 64bit (built Nov 17 2011))
-	with ESMTP id <0NFJ007YL5GGCNA0@mailout2.samsung.com> for
-	xfs@oss.sgi.com; Mon, 24 Nov 2014 15:17:04 +0900 (KST)
+	with ESMTP id <0NFJ00LSE5GJH990@mailout3.samsung.com> for
+	xfs@oss.sgi.com; Mon, 24 Nov 2014 15:17:07 +0900 (KST)
 From: Namjae Jeon <namjae.jeon@samsung.com>
-Subject: [PATCH v6 8/10] xfstests: generic/041: Delayed allocation multi insert
-Date: Mon, 24 Nov 2014 15:17:03 +0900
-Message-id: <003101d007ae$43db3dd0$cb91b970$@samsung.com>
+Subject: [PATCH v6 9/10]  xfstests: fsstress: Add fallocate insert range
+Date: Mon, 24 Nov 2014 15:17:06 +0900
+Message-id: <003201d007ae$45a8d1e0$d0fa75a0$@samsung.com>
 MIME-version: 1.0
 Content-language: ko
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -36,189 +36,97 @@ Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>, Theodore Ts'o <tytso@mit.edu>
 Cc: linux-fsdevel@vger.kernel.org, linux-ext4 <linux-ext4@vger.kernel.org>, linux-kernel@vger.kernel.org, Ashish Sangwan <a.sangwan@samsung.com>, xfs@oss.sgi.com
 
-This testcase(041) tries to test various corner cases with delayed extents and
-pre-existing holes for finsert range functionality over different type of
-extents.
+This commit adds insert operation support for fsstress, which is
+meant to exercise fallocate FALLOC_FL_INSERT_RANGE support.
 
 Signed-off-by: Namjae Jeon <namjae.jeon@samsung.com>
 Signed-off-by: Ashish Sangwan <a.sangwan@samsung.com>
 ---
- tests/generic/041     | 65 +++++++++++++++++++++++++++++++++++++++++
- tests/generic/041.out | 80 +++++++++++++++++++++++++++++++++++++++++++++++++++
- tests/generic/group   |  1 +
- 3 files changed, 146 insertions(+)
- create mode 100644 tests/generic/041
- create mode 100644 tests/generic/041.out
+ ltp/fsstress.c | 19 ++++++++++++++++---
+ src/global.h   |  4 ++++
+ 2 files changed, 20 insertions(+), 3 deletions(-)
 
-diff --git a/tests/generic/041 b/tests/generic/041
-new file mode 100644
-index 0000000..abaa2f4
---- /dev/null
-+++ b/tests/generic/041
-@@ -0,0 +1,65 @@
-+#! /bin/bash
-+# FS QA Test No. generic/041
-+#
-+# Delayed allocation multi insert range tests
-+# This testcase is one of the 4 testcases which tries to
-+# test various corner cases for finsert range functionality over different
-+# type of extents. These tests are based on generic/255 test case.
-+# For the type of tests, check the description of _test_generic_punch
-+# in common/rc.
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2013 Samsung Electronics.  All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#
-+#-----------------------------------------------------------------------
-+#
-+
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1	# failure is the default!
-+
-+_cleanup()
+diff --git a/ltp/fsstress.c b/ltp/fsstress.c
+index b56fe5c..aa3e0c3 100644
+--- a/ltp/fsstress.c
++++ b/ltp/fsstress.c
+@@ -72,6 +72,7 @@ typedef enum {
+ 	OP_PUNCH,
+ 	OP_ZERO,
+ 	OP_COLLAPSE,
++	OP_INSERT,
+ 	OP_READ,
+ 	OP_READLINK,
+ 	OP_RENAME,
+@@ -170,6 +171,7 @@ void	mknod_f(int, long);
+ void	punch_f(int, long);
+ void	zero_f(int, long);
+ void	collapse_f(int, long);
++void	insert_f(int, long);
+ void	read_f(int, long);
+ void	readlink_f(int, long);
+ void	rename_f(int, long);
+@@ -209,6 +211,7 @@ opdesc_t	ops[] = {
+ 	{ OP_PUNCH, "punch", punch_f, 1, 1 },
+ 	{ OP_ZERO, "zero", zero_f, 1, 1 },
+ 	{ OP_COLLAPSE, "collapse", collapse_f, 1, 1 },
++	{ OP_INSERT, "insert", insert_f, 1, 1 },
+ 	{ OP_READ, "read", read_f, 1, 0 },
+ 	{ OP_READLINK, "readlink", readlink_f, 1, 0 },
+ 	{ OP_RENAME, "rename", rename_f, 2, 1 },
+@@ -2176,6 +2179,7 @@ struct print_flags falloc_flags [] = {
+ 	{ FALLOC_FL_NO_HIDE_STALE, "NO_HIDE_STALE"},
+ 	{ FALLOC_FL_COLLAPSE_RANGE, "COLLAPSE_RANGE"},
+ 	{ FALLOC_FL_ZERO_RANGE, "ZERO_RANGE"},
++	{ FALLOC_FL_INSERT_RANGE, "INSERT_RANGE"},
+ 	{ -1, NULL}
+ };
+ 
+@@ -2227,10 +2231,11 @@ do_fallocate(int opno, long r, int mode)
+ 	off %= maxfsize;
+ 	len = (off64_t)(random() % (1024 * 1024));
+ 	/*
+-	 * Collapse range requires off and len to be block aligned, make it
+-	 * more likely to be the case.
++	 * Collapse/insert range requires off and len to be block aligned,
++	 * make it more likely to be the case.
+ 	 */
+-	if ((mode & FALLOC_FL_COLLAPSE_RANGE) && (opno % 2)) {
++	if ((mode & (FALLOC_FL_COLLAPSE_RANGE | FALLOC_FL_INSERT_RANGE)) &&
++		(opno % 2)) {
+ 		off = ((off + stb.st_blksize - 1) & ~(stb.st_blksize - 1));
+ 		len = ((len + stb.st_blksize - 1) & ~(stb.st_blksize - 1));
+ 	}
+@@ -2656,6 +2661,14 @@ collapse_f(int opno, long r)
+ }
+ 
+ void
++insert_f(int opno, long r)
 +{
-+    rm -f $tmp.*
++#ifdef HAVE_LINUX_FALLOC_H
++	do_fallocate(opno, r, FALLOC_FL_INSERT_RANGE);
++#endif
 +}
 +
-+trap "_cleanup ; exit \$status" 0 1 2 3 15
++void
+ read_f(int opno, long r)
+ {
+ 	char		*buf;
+diff --git a/src/global.h b/src/global.h
+index 8180f66..f63246b 100644
+--- a/src/global.h
++++ b/src/global.h
+@@ -172,6 +172,10 @@
+ #define FALLOC_FL_ZERO_RANGE		0x10
+ #endif
+ 
++#ifndef FALLOC_FL_INSERT_RANGE
++#define FALLOC_FL_INSERT_RANGE		0x20
++#endif
 +
-+# get standard environment, filters and checks
-+# we need to include common/punch to get defination fo filter functions
-+. ./common/rc
-+. ./common/filter
-+. ./common/punch
-+
-+# real QA test starts here
-+_supported_fs generic
-+_supported_os Linux
-+
-+_require_xfs_io_command "fpunch"
-+_require_xfs_io_command "falloc"
-+_require_xfs_io_command "fiemap"
-+_require_xfs_io_command "finsert"
-+
-+testfile=$TEST_DIR/$seq.$$
-+
-+_test_generic_punch -d -k falloc fpunch finsert fiemap _filter_hole_fiemap $testfile
-+_check_test_fs
-+
-+status=0
-+exit
-diff --git a/tests/generic/041.out b/tests/generic/041.out
-new file mode 100644
-index 0000000..5fe3c5e
---- /dev/null
-+++ b/tests/generic/041.out
-@@ -0,0 +1,80 @@
-+QA output created by 041
-+	1. into a hole
-+cf845a781c107ec1346e849c9dd1b7e8
-+	2. into allocated space
-+0: [0..7]: extent
-+1: [8..23]: hole
-+2: [24..55]: extent
-+64e72217eebcbdf31b1b058f9f5f476a
-+	3. into unwritten space
-+0: [0..7]: extent
-+1: [8..23]: hole
-+2: [24..55]: extent
-+22b7303d274481990b5401b6263effe0
-+	4. hole -> data
-+0: [0..7]: extent
-+1: [8..31]: hole
-+2: [32..55]: extent
-+c4fef62ba1de9d91a977cfeec6632f19
-+	5. hole -> unwritten
-+0: [0..7]: extent
-+1: [8..31]: hole
-+2: [32..55]: extent
-+1ca74f7572a0f4ab477fdbb5682e5f61
-+	6. data -> hole
-+0: [0..7]: extent
-+1: [8..23]: hole
-+2: [24..31]: extent
-+3: [32..47]: hole
-+4: [48..55]: extent
-+be0f35d4292a20040766d87883b0abd1
-+	7. data -> unwritten
-+0: [0..7]: extent
-+1: [8..23]: hole
-+2: [24..47]: extent
-+3: [48..55]: hole
-+bddb1f3895268acce30d516a99cb0f2f
-+	8. unwritten -> hole
-+0: [0..7]: extent
-+1: [8..23]: hole
-+2: [24..31]: extent
-+3: [32..39]: hole
-+4: [40..55]: extent
-+f8fc47adc45b7cf72f988b3ddf5bff64
-+	9. unwritten -> data
-+0: [0..7]: extent
-+1: [8..23]: hole
-+2: [24..47]: extent
-+3: [48..55]: hole
-+c4fef62ba1de9d91a977cfeec6632f19
-+	10. hole -> data -> hole
-+0: [0..7]: extent
-+1: [8..39]: hole
-+2: [40..63]: extent
-+52af1bfcbf43f28af2328de32e0567e5
-+	11. data -> hole -> data
-+0: [0..7]: extent
-+1: [8..31]: hole
-+2: [32..39]: extent
-+3: [40..47]: hole
-+4: [48..63]: extent
-+e3a8d52acc4d91a8ed19d7b6f4f26a71
-+	12. unwritten -> data -> unwritten
-+0: [0..7]: extent
-+1: [8..31]: hole
-+2: [32..63]: extent
-+52af1bfcbf43f28af2328de32e0567e5
-+	13. data -> unwritten -> data
-+0: [0..7]: extent
-+1: [8..31]: hole
-+2: [32..63]: extent
-+2b22165f4a24a2c36fd05ef00b41df88
-+	14. data -> hole @ EOF
-+0: [0..23]: extent
-+1: [24..39]: hole
-+2: [40..55]: extent
-+aa0f20d1edcdbce60d8ef82700ba30c3
-+	15. data -> hole @ 0
-+0: [0..15]: hole
-+1: [16..55]: extent
-+86c9d033be2761385c9cfa203c426bb2
-diff --git a/tests/generic/group b/tests/generic/group
-index 9d5f72d..34e223d 100644
---- a/tests/generic/group
-+++ b/tests/generic/group
-@@ -43,6 +43,7 @@
- 038 auto quick prealloc
- 039 auto quick prealloc
- 040 auto quick prealloc
-+041 auto quick prealloc
- 053 acl repair auto quick
- 062 attr udf auto quick
- 068 other auto freeze dangerous stress
+ #endif /* HAVE_LINUX_FALLOC_H */
+ 
+ #endif /* GLOBAL_H */
 -- 
 1.7.11-rc0
 
