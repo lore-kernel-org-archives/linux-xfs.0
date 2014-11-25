@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 5DFD57F3F
-	for <xfs@oss.sgi.com>; Tue, 25 Nov 2014 11:19:36 -0600 (CST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id DE16E7F4E
+	for <xfs@oss.sgi.com>; Tue, 25 Nov 2014 11:30:49 -0600 (CST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 3D34E8F8052
-	for <xfs@oss.sgi.com>; Tue, 25 Nov 2014 09:19:33 -0800 (PST)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id CAF4830404E
+	for <xfs@oss.sgi.com>; Tue, 25 Nov 2014 09:30:46 -0800 (PST)
 Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id er7euhl4r5zy7d4n (version=TLSv1 cipher=AES256-SHA
+	with ESMTP id z8jKMOKppFLViTJK (version=TLSv1 cipher=AES256-SHA
 	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 25 Nov 2014 09:19:31 -0800 (PST)
-Date: Tue, 25 Nov 2014 18:19:27 +0100
+	Tue, 25 Nov 2014 09:30:45 -0800 (PST)
+Date: Tue, 25 Nov 2014 18:30:40 +0100
 From: Jan Kara <jack@suse.cz>
 Subject: Re: [PATCH 2/4] vfs: add support for a lazytime mount option
-Message-ID: <20141125171927.GC3228@quack.suse.cz>
+Message-ID: <20141125173040.GD3228@quack.suse.cz>
 References: <1416599964-21892-1-git-send-email-tytso@mit.edu>
 	<1416599964-21892-3-git-send-email-tytso@mit.edu>
 	<20141125015239.GD27262@dastard> <20141125043335.GF31339@thunk.org>
@@ -36,42 +36,48 @@ Cc: linux-fsdevel@vger.kernel.org, Ext4 Developers List <linux-ext4@vger.kernel.
 
 On Mon 24-11-14 23:33:35, Ted Tso wrote:
 > On Tue, Nov 25, 2014 at 12:52:39PM +1100, Dave Chinner wrote:
-> > Eviction is too late for this. I'm pretty sure that it won't get
-> > this far as iput_final() should catch the I_DIRTY_TIME in the !drop
-> > case via write_inode_now().
+> > > +static void flush_sb_dirty_time(struct super_block *sb)
+> > > +{
+>   ...
+> > > +}
+> > 
+> > This just seems wrong to me, not to mention extremely expensive when we have
+> > millions of cached inodes on the superblock.
 > 
-> Actually, the tracepoint for fs_lazytime_evict() does get triggered
-> from time to time; but only when the inode is evicted due to memory
-> pressure, i.e., via the evict_inodes() path.
+> #1, It only gets called on a sync(2) or syncfs(2), which can be pretty
+> expensive as it is, so I didn't really worry about it.
 > 
-> I thought about possibly doing this in iput_final(), but that would
-> mean that whenever we closed the last fd on the file, we would push
-> the inode out to disk.  For files that we are writing, that's not so
-> bad; but if we enable strictatime with lazytime, then we would be
-> updating the atime for inodes that had been only been read on every
-> close --- which in the case of say, all of the files in the kernel
-> tree, would be a little unfortunate.
-  Actually, I'd also prefer to do the writing from iput_final(). My main
-reason is that shrinker starts behaving very differently when you put
-inodes with I_DIRTY_TIME to the LRU. See inode_lru_isolate() and in
-particular:
-        /*
-         * Referenced or dirty inodes are still in use. Give them another
-         * pass
-         * through the LRU as we canot reclaim them now.
-         */
-        if (atomic_read(&inode->i_count) ||
-            (inode->i_state & ~I_REFERENCED)) {
-                list_del_init(&inode->i_lru);
-                spin_unlock(&inode->i_lock);
-                this_cpu_dec(nr_unused);
-                return LRU_REMOVED;
-        }
+> #2, We're already iterating over all of the inodes in the sync(2) or
+> syncfs(2) path, so the code path in question is already O(N) in the
+> number of inodes.
+> 
+> > Why can't we just add a function like mark_inode_dirty_time() which
+> > puts the inode on the dirty inode list with a writeback time 24
+> > hours in the future rather than 30s in the future?
+> 
+> I was concerned about putting them on the dirty inode list because it
+> would be extra inodes for the writeback threads would have to skip
+> over and ignore (since they would not be dirty in the inde or data
+> pages sense).
+  I agree this isn't going to work easily. Currently flusher relies on
+dirty list being sorted by i_dirtied_when and that gets harder to maintain
+if we ever have inodes with i_dirtied_when in future (we'd have to sort-in
+newly dirtied inodes).
 
-Regarding your concern that we'd write the inode when file is closed -
-that's not true. We'll write the inode only after corresponding dentry is
-evicted and thus drops inode reference. That doesn't seem too bad to me.
-
+> Another solution would be to use a separate linked list for dirtytime
+> inodes, but that means adding some extra fields to the inode
+> structure, which some might view as bloat.  Given #1 and #2 above,
+> yes, we're doubling the CPU cost for sync(2) and syncfs(2), since
+> we're not iterating over all of the inodes twice, but I believe that
+> is a better trade-off than bloating the inode structure with an extra
+> set of linked lists or increasing the CPU cost to the writeback path
+> (which gets executed way more often than the sync or syncfs paths).
+  This would be possible and as Boaz says, it might be possible to reuse
+the same list_head in the inode for this. Getting rid of the full scan of
+all superblock inodes would be nice (as the scan gets really expensive for
+large numbers of inodes (think of i_sb_lock contention) and this makes it
+twice as bad) so I'd prefer to do this if possible.
+ 
 								Honza
 -- 
 Jan Kara <jack@suse.cz>
