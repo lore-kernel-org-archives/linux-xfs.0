@@ -1,30 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id C89797F3F
-	for <xfs@oss.sgi.com>; Tue, 25 Nov 2014 07:49:37 -0600 (CST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 832697F54
+	for <xfs@oss.sgi.com>; Tue, 25 Nov 2014 07:49:40 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 675B1AC004
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 555B430404E
 	for <xfs@oss.sgi.com>; Tue, 25 Nov 2014 05:49:37 -0800 (PST)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id ngsfjP3PlWq5Ukbv (version=TLSv1
+	cuda.sgi.com with ESMTP id 2IrH5Mfc30PGLUxL (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 25 Nov 2014 05:49:35 -0800 (PST)
+	Tue, 25 Nov 2014 05:49:34 -0800 (PST)
 Received: from int-mx09.intmail.prod.int.phx2.redhat.com
 	(int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id sAPDnYLT015972
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id sAPDnYRi010371
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256
-	verify=FAIL) for <xfs@oss.sgi.com>; Tue, 25 Nov 2014 08:49:35 -0500
+	verify=FAIL) for <xfs@oss.sgi.com>; Tue, 25 Nov 2014 08:49:34 -0500
 Received: from hades.localdomain.com (ovpn-113-126.phx2.redhat.com
 	[10.3.113.126])
 	by int-mx09.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id sAPDnWJ1010509
-	for <xfs@oss.sgi.com>; Tue, 25 Nov 2014 08:49:34 -0500
+	id sAPDnWJ0010509
+	for <xfs@oss.sgi.com>; Tue, 25 Nov 2014 08:49:33 -0500
 From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: [PATCH 1/2] Make xfs_vn_rename compliant with renameat2() syscall
-Date: Tue, 25 Nov 2014 11:49:27 -0200
-Message-Id: <1416923368-28322-2-git-send-email-cmaiolino@redhat.com>
-In-Reply-To: <1416923368-28322-1-git-send-email-cmaiolino@redhat.com>
-References: <1416923368-28322-1-git-send-email-cmaiolino@redhat.com>
+Subject: [PATCH 0/2] Add support to RENAME_EXCHANGE flag to XFS V8
+Date: Tue, 25 Nov 2014 11:49:26 -0200
+Message-Id: <1416923368-28322-1-git-send-email-cmaiolino@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -40,77 +38,41 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-To be able to support RENAME_EXCHANGE flag from renameat2() system call, XFS
-must have its inode_operations updated, exporting .rename2 method, instead of
-.rename.
+This patchset aims to implement RENAME_EXCHANGE support (from sys_renameat2) to
+XFS.
 
-This patch just replaces the (now old) .rename method by .rename2, using the
-same infra-structure, but checking rename flags.
+For this to be achieved, XFS need to export a rename2() method, which I included
+in the first patch.
 
-calls to .rename2 using RENAME_EXCHANGE flag, although now handled inside XFS,
-still returns -EINVAL.
+The second patch is the real implementation of the RENAME_EXCHANGE flags, which
+most of the work I based on xfs_rename().
 
-RENAME_NOREPLACE is handled via VFS and we don't need to care about it inside
-xfs_vn_rename.
+This patchset passed the xfstests 23, 24 and 25 (specifically for 
+RENAME_EXCHANGE), and I also tested the projectID inheritance problem, where
+both paths must be under the same projectID to be able to change (I'm going to
+implement this test into the xfstests too).
 
-Changelog:
+In this version of the patch, I tried to use xfs_rename for everything in
+common between a usual rename and the RENAME_EXCHANGE, using xfs_cross_rename()
+just for the needed stuff to accomplish RENAME_EXCHANGE requirements (as 
+suggested by Brian).
 
-	V2: Use xfs_vn_rename as-is, instead of rename it to xfs_vn_rename2
+Also, this new version contains a fix to ensure both files will have their
+i_mode updated, so that d_type object (in superblock V5) will contain the proper
+information after the exchange happens
 
-Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
----
- fs/xfs/xfs_iops.c | 15 ++++++++++-----
- 1 file changed, 10 insertions(+), 5 deletions(-)
+Refer to specific patch descriptions for more information regarding new patch
+versions
 
-diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-index ec6dcdc..0b8704c 100644
---- a/fs/xfs/xfs_iops.c
-+++ b/fs/xfs/xfs_iops.c
-@@ -383,18 +383,23 @@ xfs_vn_rename(
- 	struct inode	*odir,
- 	struct dentry	*odentry,
- 	struct inode	*ndir,
--	struct dentry	*ndentry)
-+	struct dentry	*ndentry,
-+	unsigned int	flags)
- {
- 	struct inode	*new_inode = ndentry->d_inode;
- 	struct xfs_name	oname;
- 	struct xfs_name	nname;
- 
-+	/* XFS does not support RENAME_EXCHANGE yet */
-+	if (flags & ~RENAME_NOREPLACE)
-+		return -EINVAL;
-+
- 	xfs_dentry_to_name(&oname, odentry, 0);
- 	xfs_dentry_to_name(&nname, ndentry, odentry->d_inode->i_mode);
- 
- 	return xfs_rename(XFS_I(odir), &oname, XFS_I(odentry->d_inode),
--			  XFS_I(ndir), &nname, new_inode ?
--						XFS_I(new_inode) : NULL);
-+			  XFS_I(ndir), &nname,
-+			  new_inode ? XFS_I(new_inode) : NULL);
- }
- 
- /*
-@@ -1147,7 +1152,7 @@ static const struct inode_operations xfs_dir_inode_operations = {
- 	 */
- 	.rmdir			= xfs_vn_unlink,
- 	.mknod			= xfs_vn_mknod,
--	.rename			= xfs_vn_rename,
-+	.rename2		= xfs_vn_rename,
- 	.get_acl		= xfs_get_acl,
- 	.set_acl		= xfs_set_acl,
- 	.getattr		= xfs_vn_getattr,
-@@ -1175,7 +1180,7 @@ static const struct inode_operations xfs_dir_ci_inode_operations = {
- 	 */
- 	.rmdir			= xfs_vn_unlink,
- 	.mknod			= xfs_vn_mknod,
--	.rename			= xfs_vn_rename,
-+	.rename2		= xfs_vn_rename,
- 	.get_acl		= xfs_get_acl,
- 	.set_acl		= xfs_set_acl,
- 	.getattr		= xfs_vn_getattr,
+Carlos Maiolino (2):
+  Make xfs_vn_rename compliant with renameat2() syscall
+  Add support to RENAME_EXCHANGE flag V8
+
+ fs/xfs/xfs_inode.c | 112 ++++++++++++++++++++++++++++++++++++++++++++++++++++-
+ fs/xfs/xfs_inode.h |   2 +-
+ fs/xfs/xfs_iops.c  |  24 +++++++++---
+ 3 files changed, 130 insertions(+), 8 deletions(-)
+
 -- 
 2.1.0
 
