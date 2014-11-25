@@ -1,25 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 962A97F51
-	for <xfs@oss.sgi.com>; Mon, 24 Nov 2014 18:32:31 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 14CE8AC002
-	for <xfs@oss.sgi.com>; Mon, 24 Nov 2014 16:32:30 -0800 (PST)
-Received: from imap.thunk.org (imap.thunk.org [74.207.234.97]) by cuda.sgi.com
-	with ESMTP id 7hV1tkmXU8zqKJmp (version=TLSv1 cipher=AES128-SHA
-	bits=128 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 24 Nov 2014 16:32:29 -0800 (PST)
-Date: Mon, 24 Nov 2014 19:32:15 -0500
-From: Theodore Ts'o <tytso@mit.edu>
-Subject: Re: [PATCH-v2 0/5] add support for a lazytime mount option
-Message-ID: <20141125003215.GD31339@thunk.org>
-References: <1416675267-2191-1-git-send-email-tytso@mit.edu>
-	<20141124090755.GA28534@infradead.org>
-	<20141124115727.GA19918@thunk.org>
-	<20141124221145.GB24003@fieldses.org>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id AA09A7F51
+	for <xfs@oss.sgi.com>; Mon, 24 Nov 2014 19:52:48 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 6CE838F8035
+	for <xfs@oss.sgi.com>; Mon, 24 Nov 2014 17:52:45 -0800 (PST)
+Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
+	[150.101.137.145]) by cuda.sgi.com with ESMTP id
+	fOOHgY0Rr39OjSfB for <xfs@oss.sgi.com>;
+	Mon, 24 Nov 2014 17:52:43 -0800 (PST)
+Date: Tue, 25 Nov 2014 12:52:39 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 2/4] vfs: add support for a lazytime mount option
+Message-ID: <20141125015239.GD27262@dastard>
+References: <1416599964-21892-1-git-send-email-tytso@mit.edu>
+	<1416599964-21892-3-git-send-email-tytso@mit.edu>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20141124221145.GB24003@fieldses.org>
+In-Reply-To: <1416599964-21892-3-git-send-email-tytso@mit.edu>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,41 +30,168 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "J. Bruce Fields" <bfields@fieldses.org>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-fsdevel@vger.kernel.org, Ext4 Developers List <linux-ext4@vger.kernel.org>, linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
+To: Theodore Ts'o <tytso@mit.edu>
+Cc: linux-fsdevel@vger.kernel.org, Ext4 Developers List <linux-ext4@vger.kernel.org>, linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
 
-On Mon, Nov 24, 2014 at 05:11:45PM -0500, J. Bruce Fields wrote:
-> On Mon, Nov 24, 2014 at 06:57:27AM -0500, Theodore Ts'o wrote:
-> > If we want to be paranoid, we handle i_version updates non-lazily; I
-> > can see arguments in favor of that.
-> > 
-> > Ext4 only enables MS_I_VERSION if the user asks for it explicitly, so
-> > it wouldn't cause me any problems.  However, xfs and btrfs enables it
-> > by default, so that means xfs and btrfs wouldn't see the benefits of
-> > lazytime (if you're going to have to push I_VERSION to disk, you might
-> > as well update the [acm]time while you're at it).  I've always thought
-> > that we *should* do is to only enable it if nfsv4 is serving the file
-> > system, and not otherwise, though, which would also give us
-> > consistency across all the file systems.
+On Fri, Nov 21, 2014 at 02:59:22PM -0500, Theodore Ts'o wrote:
+> Add a new mount option which enables a new "lazytime" mode.  This mode
+> causes atime, mtime, and ctime updates to only be made to the
+> in-memory version of the inode.  The on-disk times will only get
+> updated when (a) if the inode needs to be updated for some non-time
+> related change, (b) if userspace calls fsync(), syncfs() or sync(), or
+> (c) just before an undeleted inode is evicted from memory.
 > 
-> I guess you need to worry about the case where you shutdown nfsd, modify
-> a file, then restart nfsd--you don't want a client to miss the
-> modification in that case.
+> This is OK according to POSIX because there are no guarantees after a
+> crash unless userspace explicitly requests via a fsync(2) call.
+> 
+> For workloads which feature a large number of random write to a
+> preallocated file, the lazytime mount option significantly reduces
+> writes to the inode table.  The repeated 4k writes to a single block
+> will result in undesirable stress on flash devices and SMR disk
+> drives.  Even on conventional HDD's, the repeated writes to the inode
+> table block will trigger Adjacent Track Interference (ATI) remediation
+> latencies, which very negatively impact 99.9 percentile latencies ---
+> which is a very big deal for web serving tiers (for example).
+> 
+> Google-Bug-Id: 18297052
+> 
+> Signed-off-by: Theodore Ts'o <tytso@mit.edu>
+> ---
+>  fs/fs-writeback.c       | 38 +++++++++++++++++++++++++++++++++++++-
+>  fs/inode.c              | 18 ++++++++++++++++++
+>  fs/proc_namespace.c     |  1 +
+>  fs/sync.c               |  7 +++++++
+>  include/linux/fs.h      |  1 +
+>  include/uapi/linux/fs.h |  1 +
+>  6 files changed, 65 insertions(+), 1 deletion(-)
+> 
+> diff --git a/fs/fs-writeback.c b/fs/fs-writeback.c
+> index ef9bef1..ce7de22 100644
+> --- a/fs/fs-writeback.c
+> +++ b/fs/fs-writeback.c
+> @@ -483,7 +483,7 @@ __writeback_single_inode(struct inode *inode, struct writeback_control *wbc)
+>  	if (!mapping_tagged(mapping, PAGECACHE_TAG_DIRTY))
+>  		inode->i_state &= ~I_DIRTY_PAGES;
+>  	dirty = inode->i_state & I_DIRTY;
+> -	inode->i_state &= ~(I_DIRTY_SYNC | I_DIRTY_DATASYNC);
+> +	inode->i_state &= ~(I_DIRTY_SYNC | I_DIRTY_DATASYNC | I_DIRTY_TIME);
+>  	spin_unlock(&inode->i_lock);
+>  	/* Don't write the inode if only I_DIRTY_PAGES was set */
+>  	if (dirty & (I_DIRTY_SYNC | I_DIRTY_DATASYNC)) {
+> @@ -1277,6 +1277,41 @@ static void wait_sb_inodes(struct super_block *sb)
+>  	iput(old_inode);
+>  }
+>  
+> +/*
+> + * This works like wait_sb_inodes(), but it is called *before* we kick
+> + * the bdi so the inodes can get written out.
+> + */
+> +static void flush_sb_dirty_time(struct super_block *sb)
+> +{
+> +	struct inode *inode, *old_inode = NULL;
+> +
+> +	WARN_ON(!rwsem_is_locked(&sb->s_umount));
+> +	spin_lock(&inode_sb_list_lock);
+> +	list_for_each_entry(inode, &sb->s_inodes, i_sb_list) {
+> +		int dirty_time;
+> +
+> +		spin_lock(&inode->i_lock);
+> +		if (inode->i_state & (I_FREEING|I_WILL_FREE|I_NEW)) {
+> +			spin_unlock(&inode->i_lock);
+> +			continue;
+> +		}
+> +		dirty_time = inode->i_state & I_DIRTY_TIME;
+> +		__iget(inode);
+> +		spin_unlock(&inode->i_lock);
+> +		spin_unlock(&inode_sb_list_lock);
+> +
+> +		iput(old_inode);
+> +		old_inode = inode;
+> +
+> +		if (dirty_time)
+> +			mark_inode_dirty(inode);
+> +		cond_resched();
+> +		spin_lock(&inode_sb_list_lock);
+> +	}
+> +	spin_unlock(&inode_sb_list_lock);
+> +	iput(old_inode);
+> +}
 
-Hmmm, is there a way we can determine whether the file system is being
-exported via nfsv4 is running, without using MS_I_VERSION?  Maybe a
-new flag?  We could just disable lazytime if nfsd is running but
-otherwise always increment i_version if lazytime is enabled.  My main
-concern with i_version updates was not the in-memry update of
-i_version, but rather the unnecessary extra metadata write "tax" that
-would be inflicted on all users, including the many that aren't
-serving files via NFSv4.
+This just seems wrong to me, not to mention extremely expensive when we have
+millions of cached inodes on the superblock.
 
-That way, if you shutdown the nfsv4 server, i_version would still be
-updated, but we wouldn't be forcing the writes to disk, but then when
-nfs v4 server is updated again, the i_version tax would be paid again.
+Why can't we just add a function like mark_inode_dirty_time() which
+puts the inode on the dirty inode list with a writeback time 24
+hours in the future rather than 30s in the future?
 
-       	      	 	 	    	      - Ted
+
+
+> --- a/fs/inode.c
+> +++ b/fs/inode.c
+> @@ -534,6 +534,18 @@ static void evict(struct inode *inode)
+>  	BUG_ON(!(inode->i_state & I_FREEING));
+>  	BUG_ON(!list_empty(&inode->i_lru));
+>  
+> +	if (inode->i_nlink && inode->i_state & I_DIRTY_TIME) {
+> +		if (inode->i_op->write_time)
+> +			inode->i_op->write_time(inode);
+> +		else if (inode->i_sb->s_op->write_inode) {
+> +			struct writeback_control wbc = {
+> +				.sync_mode = WB_SYNC_NONE,
+> +			};
+> +			mark_inode_dirty(inode);
+> +			inode->i_sb->s_op->write_inode(inode, &wbc);
+> +		}
+> +	}
+> +
+
+Eviction is too late for this. I'm pretty sure that it won't get
+this far as iput_final() should catch the I_DIRTY_TIME in the !drop
+case via write_inode_now().
+
+
+>  int vfs_fsync_range(struct file *file, loff_t start, loff_t end, int datasync)
+>  {
+> +	struct inode *inode = file->f_mapping->host;
+> +
+>  	if (!file->f_op->fsync)
+>  		return -EINVAL;
+> +	if (!datasync && inode->i_state & I_DIRTY_TIME) {
+
+FWIW, I'm surprised gcc isn't throwing warnings about that. Please
+make sure there isn't any ambiguity in the code by writing those
+checks like this:
+
+	if (!datasync && (inode->i_state & I_DIRTY_TIME)) {
+
+> +		spin_lock(&inode->i_lock);
+> +		inode->i_state |= I_DIRTY_SYNC;
+> +		spin_unlock(&inode->i_lock);
+> +	}
+>  	return file->f_op->fsync(file, start, end, datasync);
+
+When we mark the inode I_DIRTY_TIME, we should also be marking it
+I_DIRTY_SYNC so that all the sync operations know that they should
+be writing this inode. That's partly why I also think these inodes
+should be tracked on the dirty inode list....
+
+> diff --git a/include/linux/fs.h b/include/linux/fs.h
+> index 3633239..489b2f2 100644
+> --- a/include/linux/fs.h
+> +++ b/include/linux/fs.h
+> @@ -1721,6 +1721,7 @@ struct super_operations {
+>  #define __I_DIO_WAKEUP		9
+>  #define I_DIO_WAKEUP		(1 << I_DIO_WAKEUP)
+>  #define I_LINKABLE		(1 << 10)
+> +#define I_DIRTY_TIME		(1 << 11)
+>  
+>  #define I_DIRTY (I_DIRTY_SYNC | I_DIRTY_DATASYNC | I_DIRTY_PAGES)
+
+Shouldn't I_DIRTY also include I_DIRTY_TIME now?
+
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
