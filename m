@@ -1,22 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id C06D37F3F
-	for <xfs@oss.sgi.com>; Tue, 25 Nov 2014 17:32:12 -0600 (CST)
+	by oss.sgi.com (Postfix) with ESMTP id DECCA7F3F
+	for <xfs@oss.sgi.com>; Tue, 25 Nov 2014 17:49:52 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 5DED0AC00B
-	for <xfs@oss.sgi.com>; Tue, 25 Nov 2014 15:32:12 -0800 (PST)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 7B38BAC001
+	for <xfs@oss.sgi.com>; Tue, 25 Nov 2014 15:49:52 -0800 (PST)
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	50DH89Z4LANzo0KF for <xfs@oss.sgi.com>;
-	Tue, 25 Nov 2014 15:32:08 -0800 (PST)
-Date: Wed, 26 Nov 2014 10:18:28 +1100
+	z7oqjLvGEqVh6imS for <xfs@oss.sgi.com>;
+	Tue, 25 Nov 2014 15:49:34 -0800 (PST)
+Date: Wed, 26 Nov 2014 10:48:51 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs: overflow in xfs_iomap_eof_align_last_fsb
-Message-ID: <20141125231828.GA9561@dastard>
-References: <1416855973-6359-1-git-send-email-treestem@gmail.com>
+Subject: Re: [PATCH 3/4] vfs: don't let the dirty time inodes get more than a
+	day stale
+Message-ID: <20141125234851.GB9561@dastard>
+References: <1416599964-21892-1-git-send-email-tytso@mit.edu>
+	<1416599964-21892-4-git-send-email-tytso@mit.edu>
+	<20141125015332.GE27262@dastard> <20141125044508.GG31339@thunk.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1416855973-6359-1-git-send-email-treestem@gmail.com>
+In-Reply-To: <20141125044508.GG31339@thunk.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,84 +32,39 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Peter Watkins <treestem@gmail.com>
-Cc: xfs@oss.sgi.com
+To: Theodore Ts'o <tytso@mit.edu>
+Cc: linux-fsdevel@vger.kernel.org, Ext4 Developers List <linux-ext4@vger.kernel.org>, linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
 
-On Mon, Nov 24, 2014 at 02:06:13PM -0500, Peter Watkins wrote:
-> Someone else may have run into this already, if not please take
-> a look.
+On Mon, Nov 24, 2014 at 11:45:08PM -0500, Theodore Ts'o wrote:
+> On Tue, Nov 25, 2014 at 12:53:32PM +1100, Dave Chinner wrote:
+> > On Fri, Nov 21, 2014 at 02:59:23PM -0500, Theodore Ts'o wrote:
+> > > Guarantee that the on-disk timestamps will be no more than 24 hours
+> > > stale.
+> > > 
+> > > Signed-off-by: Theodore Ts'o <tytso@mit.edu>
+> > 
+> > If we put these inodes on the dirty inode list with at writeback
+> > time of 24 hours, this is completely unnecessary.
 > 
->  Peter
-> 
-> If extsize is set and new_last_fsb is larger than 32 bits, the
-> roundup to extsize will overflow the align variable. Instead,
-> combine alignments by rounding extsize hint up to stripe size.
+> What do you mean by "a writeback time of 24 hours"?  Do you mean
+> creating a new field in the inode which specifies when the writeback
+> should happen? 
 
-Change of allocator behaviour that will cause significant problems
-for applications that depend on deterministic behaviour from the
-extent size hint.
+No.
 
-i.e. The extsize hint is supposed to override all other alignments
-that are made - extent size hints are effectively a "unit of
-allocation".  Hence we round up to stripe unit/width, then apply the
-extent size hint alignment so that extent sizes are always aligned
-to the extent size hint....
+> I still worry about the dirty inode list getting
+> somewhat long large in the strictatime && lazytime case, and the inode
+> bloat nazi's coming after us for adding a new field to struct inode
+> structure.
 
-....
-> @@ -52,7 +52,7 @@ xfs_iomap_eof_align_last_fsb(
->  	xfs_extlen_t	extsize,
->  	xfs_fileoff_t	*last_fsb)
->  {
-> -	xfs_fileoff_t	new_last_fsb = 0;
-> +	xfs_fileoff_t	new_last_fsb;
+Use another pure inode time dirty list, and move the inode to the
+existing dirty list when it gets marked I_DIRTY.
 
-That can be declared in the context that uses it now.
+> Or do you mean trying to abuse the dirtied_when field in some way?
 
->  	xfs_extlen_t	align = 0;
->  	int		eof, error;
->  
-> @@ -70,23 +70,24 @@ xfs_iomap_eof_align_last_fsb(
->  		else if (mp->m_dalign)
->  			align = mp->m_dalign;
->  
-> -		if (align && XFS_ISIZE(ip) >= XFS_FSB_TO_B(mp, align))
-> -			new_last_fsb = roundup_64(*last_fsb, align);
-> +		if (align && XFS_ISIZE(ip) < XFS_FSB_TO_B(mp, align))
-> +			align = 0;
->  	}
->  
->  	/*
-> -	 * Always round up the allocation request to an extent boundary
-> -	 * (when file on a real-time subvolume or has di_extsize hint).
-> +	 * Round up the allocation request to an extent boundary. If
-> +	 * already aligned to a stripe, round extsize up to a stripe
-> +	 * boundary.
->  	 */
-
-Drop the comment change...
-
->  	if (extsize) {
-> -		if (new_last_fsb)
-> -			align = roundup_64(new_last_fsb, extsize);
-> +		if (align)
-> +			align = roundup_64(extsize, align);
-
-			align = roundup(align, extsize);
-
->  		else
->  			align = extsize;
-> -		new_last_fsb = roundup_64(*last_fsb, align);
->  	}
->  
-> -	if (new_last_fsb) {
-> +	if (align) {
-> +		new_last_fsb = roundup_64(*last_fsb, align);
-
-		xfs_fileoff_t	new_last_fsb = roundup_64(*last_fsb, align);
-
->  		error = xfs_bmap_eof(ip, new_last_fsb, XFS_DATA_FORK, &eof);
->  		if (error)
->  			return error;
+No abuse necessary at all. Just a different inode_dirtied_after()
+check is requires if the inode is on the time dirty list in
+move_expired_inodes().
 
 Cheers,
 
