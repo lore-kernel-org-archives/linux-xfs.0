@@ -1,27 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 730D37F3F
-	for <xfs@oss.sgi.com>; Tue, 25 Nov 2014 08:58:07 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 509628F8052
-	for <xfs@oss.sgi.com>; Tue, 25 Nov 2014 06:58:06 -0800 (PST)
-Received: from mail-lb0-f178.google.com (mail-lb0-f178.google.com
-	[209.85.217.178]) by cuda.sgi.com with ESMTP id
-	C8MaPAZ8RVyBuq8t (version=TLSv1 cipher=RC4-SHA bits=128
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 802BC7F3F
+	for <xfs@oss.sgi.com>; Tue, 25 Nov 2014 09:32:20 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 43191304067
+	for <xfs@oss.sgi.com>; Tue, 25 Nov 2014 07:32:17 -0800 (PST)
+Received: from mail-wi0-f175.google.com (mail-wi0-f175.google.com
+	[209.85.212.175]) by cuda.sgi.com with ESMTP id
+	6pZdU42f6G17C2oP (version=TLSv1 cipher=RC4-SHA bits=128
 	verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 25 Nov 2014 06:58:05 -0800 (PST)
-Received: by mail-lb0-f178.google.com with SMTP id f15so731537lbj.23
-	for <xfs@oss.sgi.com>; Tue, 25 Nov 2014 06:58:03 -0800 (PST)
-From: Rasmus Villemoes <linux@rasmusvillemoes.dk>
-Subject: Re: [PATCH-v3 3/6] vfs: don't let the dirty time inodes get more than
-	a day stale
-References: <1416893674-419-1-git-send-email-tytso@mit.edu>
-	<1416893674-419-4-git-send-email-tytso@mit.edu>
-Date: Tue, 25 Nov 2014 15:58:01 +0100
-In-Reply-To: <1416893674-419-4-git-send-email-tytso@mit.edu> (Theodore Ts'o's
-	message of "Tue, 25 Nov 2014 00:34:31 -0500")
-Message-ID: <87ioi3iayu.fsf@rasmusvillemoes.dk>
+	Tue, 25 Nov 2014 07:32:15 -0800 (PST)
+Received: by mail-wi0-f175.google.com with SMTP id l15so9549910wiw.2
+	for <xfs@oss.sgi.com>; Tue, 25 Nov 2014 07:32:14 -0800 (PST)
+Message-ID: <5474A0FB.1000504@gmail.com>
+Date: Tue, 25 Nov 2014 17:32:11 +0200
+From: Boaz Harrosh <openosd@gmail.com>
 MIME-Version: 1.0
+Subject: Re: [PATCH 2/4] vfs: add support for a lazytime mount option
+References: <1416599964-21892-1-git-send-email-tytso@mit.edu>
+	<1416599964-21892-3-git-send-email-tytso@mit.edu>
+	<20141125015239.GD27262@dastard> <20141125043335.GF31339@thunk.org>
+In-Reply-To: <20141125043335.GF31339@thunk.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,60 +33,36 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Theodore Ts'o <tytso@mit.edu>
-Cc: Linux Filesystem Development List <linux-fsdevel@vger.kernel.org>, Ext4 Developers List <linux-ext4@vger.kernel.org>, Linux btrfs Developers List <linux-btrfs@vger.kernel.org>, XFS Developers <xfs@oss.sgi.com>
+To: Theodore Ts'o <tytso@mit.edu>, Dave Chinner <david@fromorbit.com>
+Cc: linux-fsdevel@vger.kernel.org, Ext4 Developers List <linux-ext4@vger.kernel.org>, linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
 
-On Tue, Nov 25 2014, Theodore Ts'o <tytso@mit.edu> wrote:
+On 11/25/2014 06:33 AM, Theodore Ts'o wrote:
+<>
+> 
+> I was concerned about putting them on the dirty inode list because it
+> would be extra inodes for the writeback threads would have to skip
+> over and ignore (since they would not be dirty in the inde or data
+> pages sense).
+> 
+> Another solution would be to use a separate linked list for dirtytime
+> inodes, but that means adding some extra fields to the inode
+> structure, which some might view as bloat.  
 
->  static int update_time(struct inode *inode, struct timespec *time, int flags)
->  {
-> +	struct timespec uptime;
-> +	unsigned short daycode;
->  	int ret;
->  
->  	if (inode->i_op->update_time) {
-> @@ -1525,17 +1527,33 @@ static int update_time(struct inode *inode, struct timespec *time, int flags)
->  		if (flags & S_CTIME)
->  			inode->i_ctime = *time;
->  		if (flags & S_MTIME)
-> -			inode->i_mtime = *time;
-> +		inode->i_mtime = *time;
->  	}
-> +	/*
-> +	 * If i_ts_dirty_day is zero, then either we have not deferred
-> +	 * timestamp updates, or the system has been up for less than
-> +	 * a day (so days_since_boot is zero), so we defer timestamp
-> +	 * updates in that case and set the I_DIRTY_TIME flag.  If a
-> +	 * day or more has passed, then i_ts_dirty_day will be
-> +	 * different from days_since_boot, and then we should update
-> +	 * the on-disk inode and then we can clear i_ts_dirty_day.
-> +	 */
+You could use the same list-head for both lists. 
 
-I think days_since_boot was a lot clearer than daycode. In any case,
-please make the comment and the code consistent.
+If the inode is on the dirty-inode-list then no need to add it
+to the list-for-dirtytime, it will be written soon anyway.
+else you add it to the list-for-dirtytime.
 
->  	if ((inode->i_sb->s_flags & MS_LAZYTIME) &&
->  	    !(flags & S_VERSION)) {
->  		if (inode->i_state & I_DIRTY_TIME)
->  			return 0;
-> -		spin_lock(&inode->i_lock);
-> -		inode->i_state |= I_DIRTY_TIME;
-> -		spin_unlock(&inode->i_lock);
-> -		return 0;
-> +		get_monotonic_boottime(&uptime);
-> +		daycode = div_u64(uptime.tv_sec, (HZ * 86400));
+If you (real)dirty an inode then you first remove it from the
+list-for-dirtytime first, and then add it to the dirty-inode-list.
 
-You should probably divide by the number of seconds in a day, not the
-number of jiffies in a day.
+So at each given time it is only on one list
 
-Isn't div_u64 mostly for when the divisor is not known at compile time?
-Technically, "(u64)uptime.tv_sec / 86400" is of course a u64/u64 division,
-but the compiler should see that the divisor is only 32 bits and hence
-should be able to generate code which is at least as efficient as
-whatever inline asm the arch provides for u64/u32 divisions.
+<>
 
-
-Rasmus
+Cheers
+Boaz
 
 _______________________________________________
 xfs mailing list
