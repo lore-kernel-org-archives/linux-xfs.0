@@ -1,19 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id B0B947F5E
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id CDAC47F60
 	for <xfs@oss.sgi.com>; Mon, 24 Nov 2014 23:34:53 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 9FB05304032
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 90C9D8F8040
 	for <xfs@oss.sgi.com>; Mon, 24 Nov 2014 21:34:50 -0800 (PST)
 Received: from imap.thunk.org (imap.thunk.org [74.207.234.97]) by cuda.sgi.com
-	with ESMTP id FoVPHhaAlYPUfRBt (version=TLSv1 cipher=AES128-SHA
+	with ESMTP id DWE0IYsjRMigbScs (version=TLSv1 cipher=AES128-SHA
 	bits=128 verify=NO) for <xfs@oss.sgi.com>;
 	Mon, 24 Nov 2014 21:34:49 -0800 (PST)
 From: Theodore Ts'o <tytso@mit.edu>
-Subject: [PATCH-v3 6/6] btrfs: add an is_readonly() so btrfs can use common
-	code for update_time()
-Date: Tue, 25 Nov 2014 00:34:34 -0500
-Message-Id: <1416893674-419-7-git-send-email-tytso@mit.edu>
+Subject: [PATCH-v3 3/6] vfs: don't let the dirty time inodes get more than a
+	day stale
+Date: Tue, 25 Nov 2014 00:34:31 -0500
+Message-Id: <1416893674-419-4-git-send-email-tytso@mit.edu>
 In-Reply-To: <1416893674-419-1-git-send-email-tytso@mit.edu>
 References: <1416893674-419-1-git-send-email-tytso@mit.edu>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -32,157 +32,92 @@ Sender: xfs-bounces@oss.sgi.com
 To: Linux Filesystem Development List <linux-fsdevel@vger.kernel.org>
 Cc: Ext4 Developers List <linux-ext4@vger.kernel.org>, Theodore Ts'o <tytso@mit.edu>, Linux btrfs Developers List <linux-btrfs@vger.kernel.org>, XFS Developers <xfs@oss.sgi.com>
 
-The only reason btrfs cloned code from the VFS layer was so it could
-add a check to see if a subvolume is read-ony.  Instead of doing that,
-let's add a new inode operation which allows a file system to return
-an error if the inode is read-only, and use that in update_time().
-There may be other places where the VFS layer may want to know that
-btrfs would want to treat an inode is read-only.
-
-With this commit, there are no remaining users of update_time() in the
-inode operations structure, so we can remove it and simply things
-further.
+Guarantee that the on-disk timestamps will be no more than 24 hours
+stale.
 
 Signed-off-by: Theodore Ts'o <tytso@mit.edu>
-Cc: linux-btrfs@vger.kernel.org
 ---
- fs/btrfs/inode.c   | 26 ++++++--------------------
- fs/inode.c         | 22 +++++++++++-----------
- include/linux/fs.h |  2 +-
- 3 files changed, 18 insertions(+), 32 deletions(-)
+ fs/fs-writeback.c  |  1 +
+ fs/inode.c         | 28 +++++++++++++++++++++++-----
+ include/linux/fs.h |  1 +
+ 3 files changed, 25 insertions(+), 5 deletions(-)
 
-diff --git a/fs/btrfs/inode.c b/fs/btrfs/inode.c
-index a5e0d0d..0bfe3a4 100644
---- a/fs/btrfs/inode.c
-+++ b/fs/btrfs/inode.c
-@@ -5554,26 +5554,12 @@ static int btrfs_dirty_inode(struct inode *inode)
- 	return ret;
- }
+diff --git a/fs/fs-writeback.c b/fs/fs-writeback.c
+index ce7de22..eb04277 100644
+--- a/fs/fs-writeback.c
++++ b/fs/fs-writeback.c
+@@ -1141,6 +1141,7 @@ void __mark_inode_dirty(struct inode *inode, int flags)
+ 	if (flags & (I_DIRTY_SYNC | I_DIRTY_DATASYNC)) {
+ 		trace_writeback_dirty_inode_start(inode, flags);
  
--/*
-- * This is a copy of file_update_time.  We need this so we can return error on
-- * ENOSPC for updating the inode in the case of file write and mmap writes.
-- */
--static int btrfs_update_time(struct inode *inode, struct timespec *now,
--			     int flags)
-+static int btrfs_is_readonly(struct inode *inode)
- {
- 	struct btrfs_root *root = BTRFS_I(inode)->root;
++		inode->i_ts_dirty_day = 0;
+ 		if (sb->s_op->dirty_inode)
+ 			sb->s_op->dirty_inode(inode, flags);
  
- 	if (btrfs_root_readonly(root))
- 		return -EROFS;
--
--	if (flags & S_VERSION)
--		inode_inc_iversion(inode);
--	if (flags & S_CTIME)
--		inode->i_ctime = *now;
--	if (flags & S_MTIME)
--		inode->i_mtime = *now;
--	if (flags & S_ATIME)
--		inode->i_atime = *now;
- 	return 0;
- }
- 
-@@ -9466,8 +9452,8 @@ static const struct inode_operations btrfs_dir_inode_operations = {
- 	.permission	= btrfs_permission,
- 	.get_acl	= btrfs_get_acl,
- 	.set_acl	= btrfs_set_acl,
--	.update_time	= btrfs_update_time,
- 	.write_time	= btrfs_write_time,
-+	.is_readonly	= btrfs_is_readonly,
- 	.tmpfile        = btrfs_tmpfile,
- };
- static const struct inode_operations btrfs_dir_ro_inode_operations = {
-@@ -9475,8 +9461,8 @@ static const struct inode_operations btrfs_dir_ro_inode_operations = {
- 	.permission	= btrfs_permission,
- 	.get_acl	= btrfs_get_acl,
- 	.set_acl	= btrfs_set_acl,
--	.update_time	= btrfs_update_time,
- 	.write_time	= btrfs_write_time,
-+	.is_readonly	= btrfs_is_readonly,
- };
- 
- static const struct file_operations btrfs_dir_file_operations = {
-@@ -9546,8 +9532,8 @@ static const struct inode_operations btrfs_file_inode_operations = {
- 	.fiemap		= btrfs_fiemap,
- 	.get_acl	= btrfs_get_acl,
- 	.set_acl	= btrfs_set_acl,
--	.update_time	= btrfs_update_time,
- 	.write_time	= btrfs_write_time,
-+	.is_readonly	= btrfs_is_readonly,
- };
- static const struct inode_operations btrfs_special_inode_operations = {
- 	.getattr	= btrfs_getattr,
-@@ -9559,8 +9545,8 @@ static const struct inode_operations btrfs_special_inode_operations = {
- 	.removexattr	= btrfs_removexattr,
- 	.get_acl	= btrfs_get_acl,
- 	.set_acl	= btrfs_set_acl,
--	.update_time	= btrfs_update_time,
- 	.write_time	= btrfs_write_time,
-+	.is_readonly	= btrfs_is_readonly,
- };
- static const struct inode_operations btrfs_symlink_inode_operations = {
- 	.readlink	= generic_readlink,
-@@ -9573,8 +9559,8 @@ static const struct inode_operations btrfs_symlink_inode_operations = {
- 	.getxattr	= btrfs_getxattr,
- 	.listxattr	= btrfs_listxattr,
- 	.removexattr	= btrfs_removexattr,
--	.update_time	= btrfs_update_time,
- 	.write_time	= btrfs_write_time,
-+	.is_readonly	= btrfs_is_readonly,
- };
- 
- const struct dentry_operations btrfs_dentry_operations = {
 diff --git a/fs/inode.c b/fs/inode.c
-index 1f90591..e83c6d2 100644
+index 2093a84..34a443f 100644
 --- a/fs/inode.c
 +++ b/fs/inode.c
-@@ -1555,20 +1555,20 @@ static int update_time(struct inode *inode, struct timespec *time, int flags)
- 	unsigned short daycode;
+@@ -1511,6 +1511,8 @@ static int relatime_need_update(struct vfsmount *mnt, struct inode *inode,
+  */
+ static int update_time(struct inode *inode, struct timespec *time, int flags)
+ {
++	struct timespec uptime;
++	unsigned short daycode;
  	int ret;
  
--	if (inode->i_op->update_time) {
--		ret = inode->i_op->update_time(inode, time, flags);
-+	if (inode->i_op->is_readonly) {
-+		ret = inode->i_op->is_readonly(inode);
- 		if (ret)
- 			return ret;
--	} else {
--		if (flags & S_ATIME)
--			inode->i_atime = *time;
--		if (flags & S_VERSION)
--			inode_inc_iversion(inode);
--		if (flags & S_CTIME)
--			inode->i_ctime = *time;
--		if (flags & S_MTIME)
--		inode->i_mtime = *time;
- 	}
-+	if (flags & S_ATIME)
-+		inode->i_atime = *time;
-+	if (flags & S_VERSION)
-+		inode_inc_iversion(inode);
-+	if (flags & S_CTIME)
-+		inode->i_ctime = *time;
-+	if (flags & S_MTIME)
+ 	if (inode->i_op->update_time) {
+@@ -1525,17 +1527,33 @@ static int update_time(struct inode *inode, struct timespec *time, int flags)
+ 		if (flags & S_CTIME)
+ 			inode->i_ctime = *time;
+ 		if (flags & S_MTIME)
+-			inode->i_mtime = *time;
 +		inode->i_mtime = *time;
-+
- 	/*
- 	 * If i_ts_dirty_day is zero, then either we have not deferred
- 	 * timestamp updates, or the system has been up for less than
+ 	}
++	/*
++	 * If i_ts_dirty_day is zero, then either we have not deferred
++	 * timestamp updates, or the system has been up for less than
++	 * a day (so days_since_boot is zero), so we defer timestamp
++	 * updates in that case and set the I_DIRTY_TIME flag.  If a
++	 * day or more has passed, then i_ts_dirty_day will be
++	 * different from days_since_boot, and then we should update
++	 * the on-disk inode and then we can clear i_ts_dirty_day.
++	 */
+ 	if ((inode->i_sb->s_flags & MS_LAZYTIME) &&
+ 	    !(flags & S_VERSION)) {
+ 		if (inode->i_state & I_DIRTY_TIME)
+ 			return 0;
+-		spin_lock(&inode->i_lock);
+-		inode->i_state |= I_DIRTY_TIME;
+-		spin_unlock(&inode->i_lock);
+-		return 0;
++		get_monotonic_boottime(&uptime);
++		daycode = div_u64(uptime.tv_sec, (HZ * 86400));
++		if (!inode->i_ts_dirty_day ||
++		    inode->i_ts_dirty_day == daycode) {
++			spin_lock(&inode->i_lock);
++			inode->i_state |= I_DIRTY_TIME;
++			spin_unlock(&inode->i_lock);
++			inode->i_ts_dirty_day = daycode;
++			return 0;
++		}
+ 	}
++	inode->i_ts_dirty_day = 0;
+ 	if (inode->i_op->write_time)
+ 		return inode->i_op->write_time(inode);
+ 	mark_inode_dirty_sync(inode);
 diff --git a/include/linux/fs.h b/include/linux/fs.h
-index dbbd642..70711c8 100644
+index 489b2f2..e3574cd 100644
 --- a/include/linux/fs.h
 +++ b/include/linux/fs.h
-@@ -1545,8 +1545,8 @@ struct inode_operations {
- 	int (*removexattr) (struct dentry *, const char *);
- 	int (*fiemap)(struct inode *, struct fiemap_extent_info *, u64 start,
- 		      u64 len);
--	int (*update_time)(struct inode *, struct timespec *, int);
- 	int (*write_time)(struct inode *);
-+	int (*is_readonly)(struct inode *);
- 	int (*atomic_open)(struct inode *, struct dentry *,
- 			   struct file *, unsigned open_flag,
- 			   umode_t create_mode, int *opened);
+@@ -575,6 +575,7 @@ struct inode {
+ 	struct timespec		i_ctime;
+ 	spinlock_t		i_lock;	/* i_blocks, i_bytes, maybe i_size */
+ 	unsigned short          i_bytes;
++	unsigned short		i_ts_dirty_day;
+ 	unsigned int		i_blkbits;
+ 	blkcnt_t		i_blocks;
+ 
 -- 
 2.1.0
 
