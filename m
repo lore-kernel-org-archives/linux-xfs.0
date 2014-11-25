@@ -1,26 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id BC6147F47
-	for <xfs@oss.sgi.com>; Tue, 25 Nov 2014 14:18:20 -0600 (CST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id C06D37F3F
+	for <xfs@oss.sgi.com>; Tue, 25 Nov 2014 17:32:12 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 7FB4530404E
-	for <xfs@oss.sgi.com>; Tue, 25 Nov 2014 12:18:17 -0800 (PST)
-Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id FbAMwQfuoENZkOn6 (version=TLSv1 cipher=AES256-SHA
-	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 25 Nov 2014 12:18:15 -0800 (PST)
-Date: Tue, 25 Nov 2014 21:18:10 +0100
-From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH 2/4] vfs: add support for a lazytime mount option
-Message-ID: <20141125201810.GA18592@quack.suse.cz>
-References: <1416599964-21892-1-git-send-email-tytso@mit.edu>
-	<1416599964-21892-3-git-send-email-tytso@mit.edu>
-	<20141125015239.GD27262@dastard> <20141125043335.GF31339@thunk.org>
-	<20141125171927.GC3228@quack.suse.cz>
-	<20141125175716.GC11648@thunk.org>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 5DED0AC00B
+	for <xfs@oss.sgi.com>; Tue, 25 Nov 2014 15:32:12 -0800 (PST)
+Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
+	[150.101.137.143]) by cuda.sgi.com with ESMTP id
+	50DH89Z4LANzo0KF for <xfs@oss.sgi.com>;
+	Tue, 25 Nov 2014 15:32:08 -0800 (PST)
+Date: Wed, 26 Nov 2014 10:18:28 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] xfs: overflow in xfs_iomap_eof_align_last_fsb
+Message-ID: <20141125231828.GA9561@dastard>
+References: <1416855973-6359-1-git-send-email-treestem@gmail.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20141125175716.GC11648@thunk.org>
+In-Reply-To: <1416855973-6359-1-git-send-email-treestem@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,62 +29,91 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Theodore Ts'o <tytso@mit.edu>
-Cc: Jan Kara <jack@suse.cz>, xfs@oss.sgi.com, linux-fsdevel@vger.kernel.org, Ext4 Developers List <linux-ext4@vger.kernel.org>, linux-btrfs@vger.kernel.org
+To: Peter Watkins <treestem@gmail.com>
+Cc: xfs@oss.sgi.com
 
-On Tue 25-11-14 12:57:16, Ted Tso wrote:
-> On Tue, Nov 25, 2014 at 06:19:27PM +0100, Jan Kara wrote:
-> >   Actually, I'd also prefer to do the writing from iput_final(). My main
-> > reason is that shrinker starts behaving very differently when you put
-> > inodes with I_DIRTY_TIME to the LRU. See inode_lru_isolate() and in
-> > particular:
-> >         /*
-> >          * Referenced or dirty inodes are still in use. Give them another
-> >          * pass
-> >          * through the LRU as we canot reclaim them now.
-> >          */
-> >         if (atomic_read(&inode->i_count) ||
-> >             (inode->i_state & ~I_REFERENCED)) {
-> >                 list_del_init(&inode->i_lru);
-> >                 spin_unlock(&inode->i_lock);
-> >                 this_cpu_dec(nr_unused);
-> >                 return LRU_REMOVED;
-> >         }
+On Mon, Nov 24, 2014 at 02:06:13PM -0500, Peter Watkins wrote:
+> Someone else may have run into this already, if not please take
+> a look.
 > 
-> I must be missing something; how would the shirnker behave
-> differently?  I_DIRTY_TIME shouldn't have any effect on the shrinker;
-> note that I_DIRTY_TIME is *not* part of I_DIRTY, and this was quite
-> deliberate, because I didn't want I_DIRTY_TIME to have any affect on
-> any of the other parts of the writeback or inode management parts.
-  Sure, but the test tests whether the inode has *any other* bit than
-I_REFERENCED set. So I_DIRTY_TIME will trigger the test and we just remove
-the inode from lru list. You could exclude I_DIRTY_TIME from this test to
-avoid this problem but then the shrinker latency would get much larger
-because it will suddently do IO in evict(). So I still think doing the
-write in iput_final() is the best solution.
+>  Peter
+> 
+> If extsize is set and new_last_fsb is larger than 32 bits, the
+> roundup to extsize will overflow the align variable. Instead,
+> combine alignments by rounding extsize hint up to stripe size.
 
-> > Regarding your concern that we'd write the inode when file is closed -
-> > that's not true. We'll write the inode only after corresponding dentry is
-> > evicted and thus drops inode reference. That doesn't seem too bad to me.
-> 
-> True, fair enough.  It's not quite so lazy, but it should be close
-> enough.
-> 
-> I'm still not seeing the benefit in waiting until the last possible
-> minute to write out the timestamps; evict() can block as it is if
-> there are any writeback that needs to be completed, and if the
-> writeback happens to pages subject to delalloc, the timestamp update
-> could happen for free at that point.
-  Yeah, doing IO from evict is OK in princible but the change in shrinker
-success rate / latency worries me... It would certainly need careful
-testing under memory pressure & IO load with lots of outstanding timestamp
-updates and see how shrinker behaves (change in CPU consumption, numbers of
-evicted inodes, etc.).
+Change of allocator behaviour that will cause significant problems
+for applications that depend on deterministic behaviour from the
+extent size hint.
 
-							Honza
+i.e. The extsize hint is supposed to override all other alignments
+that are made - extent size hints are effectively a "unit of
+allocation".  Hence we round up to stripe unit/width, then apply the
+extent size hint alignment so that extent sizes are always aligned
+to the extent size hint....
+
+....
+> @@ -52,7 +52,7 @@ xfs_iomap_eof_align_last_fsb(
+>  	xfs_extlen_t	extsize,
+>  	xfs_fileoff_t	*last_fsb)
+>  {
+> -	xfs_fileoff_t	new_last_fsb = 0;
+> +	xfs_fileoff_t	new_last_fsb;
+
+That can be declared in the context that uses it now.
+
+>  	xfs_extlen_t	align = 0;
+>  	int		eof, error;
+>  
+> @@ -70,23 +70,24 @@ xfs_iomap_eof_align_last_fsb(
+>  		else if (mp->m_dalign)
+>  			align = mp->m_dalign;
+>  
+> -		if (align && XFS_ISIZE(ip) >= XFS_FSB_TO_B(mp, align))
+> -			new_last_fsb = roundup_64(*last_fsb, align);
+> +		if (align && XFS_ISIZE(ip) < XFS_FSB_TO_B(mp, align))
+> +			align = 0;
+>  	}
+>  
+>  	/*
+> -	 * Always round up the allocation request to an extent boundary
+> -	 * (when file on a real-time subvolume or has di_extsize hint).
+> +	 * Round up the allocation request to an extent boundary. If
+> +	 * already aligned to a stripe, round extsize up to a stripe
+> +	 * boundary.
+>  	 */
+
+Drop the comment change...
+
+>  	if (extsize) {
+> -		if (new_last_fsb)
+> -			align = roundup_64(new_last_fsb, extsize);
+> +		if (align)
+> +			align = roundup_64(extsize, align);
+
+			align = roundup(align, extsize);
+
+>  		else
+>  			align = extsize;
+> -		new_last_fsb = roundup_64(*last_fsb, align);
+>  	}
+>  
+> -	if (new_last_fsb) {
+> +	if (align) {
+> +		new_last_fsb = roundup_64(*last_fsb, align);
+
+		xfs_fileoff_t	new_last_fsb = roundup_64(*last_fsb, align);
+
+>  		error = xfs_bmap_eof(ip, new_last_fsb, XFS_DATA_FORK, &eof);
+>  		if (error)
+>  			return error;
+
+Cheers,
+
+Dave.
 -- 
-Jan Kara <jack@suse.cz>
-SUSE Labs, CR
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
