@@ -1,20 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 669737F5D
-	for <xfs@oss.sgi.com>; Wed, 26 Nov 2014 04:24:08 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 5560F30404E
-	for <xfs@oss.sgi.com>; Wed, 26 Nov 2014 02:24:08 -0800 (PST)
-Received: from imap.thunk.org (imap.thunk.org [74.207.234.97]) by cuda.sgi.com
-	with ESMTP id dL2D5Dhv5O9ws9xp (version=TLSv1 cipher=AES128-SHA
-	bits=128 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 26 Nov 2014 02:24:07 -0800 (PST)
-From: Theodore Ts'o <tytso@mit.edu>
-Subject: [PATCH-v4 5/7] vfs: add find_active_inode_nowait() function
-Date: Wed, 26 Nov 2014 05:23:55 -0500
-Message-Id: <1416997437-26092-6-git-send-email-tytso@mit.edu>
-In-Reply-To: <1416997437-26092-1-git-send-email-tytso@mit.edu>
-References: <1416997437-26092-1-git-send-email-tytso@mit.edu>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 6437D29DF7
+	for <xfs@oss.sgi.com>; Wed, 26 Nov 2014 09:58:25 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 027E7AC00D
+	for <xfs@oss.sgi.com>; Wed, 26 Nov 2014 07:58:21 -0800 (PST)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id nGyMy6HxJSnN2d0h for <xfs@oss.sgi.com>;
+	Wed, 26 Nov 2014 07:58:12 -0800 (PST)
+Message-ID: <5475F892.5000102@sandeen.net>
+Date: Wed, 26 Nov 2014 09:58:10 -0600
+From: Eric Sandeen <sandeen@sandeen.net>
+MIME-Version: 1.0
+Subject: Re: [PATCH] xfs: catch invalid negative blknos in _xfs_buf_find()
+References: <546D15E3.5000200@redhat.com>
+In-Reply-To: <546D15E3.5000200@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,91 +23,54 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Linux Filesystem Development List <linux-fsdevel@vger.kernel.org>
-Cc: Ext4 Developers List <linux-ext4@vger.kernel.org>, Theodore Ts'o <tytso@mit.edu>, Linux btrfs Developers List <linux-btrfs@vger.kernel.org>, XFS Developers <xfs@oss.sgi.com>
+To: Eric Sandeen <sandeen@redhat.com>, xfs-oss <xfs@oss.sgi.com>
 
-Add a new function find_active_inode_nowait() which will never block.
-If there is an inode being freed or is still being initialized, this
-function will return NULL instead of blocking waiting for an inode to
-be freed or to finish initializing.  Hence, a negative return from
-this function does not mean that inode number is free for use.  It is
-useful for callers that want to opportunistically do some work on an
-inode only if it is present and available in the cache, and where
-blocking is not an option.
+On 11/19/14 4:12 PM, Eric Sandeen wrote:
+> Here blkno is a daddr_t, which is a __s64; it's possible to hold
+> a value which is negative, and thus pass the (blkno >= eofs)
+> test.  Then we try to do a xfs_perag_get() for a ridiculous
+> agno via xfs_daddr_to_agno(), and bad things happen when that
+> fails, and returns a null pag which is dereferenced shortly
+> thereafter.
+> 
+> Found via a user-supplied fuzzed image...
+> 
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 
-Signed-off-by: Theodore Ts'o <tytso@mit.edu>
----
- fs/inode.c         | 36 ++++++++++++++++++++++++++++++++++++
- include/linux/fs.h |  2 ++
- 2 files changed, 38 insertions(+)
+Ok, so after further digging, I think this patch is fine on its own,
+and could use review.  How and if and when this function returns errors,
+and whether errors should get this far, etc, are all subjects for other
+patches.  IF we're range-checking here, we should do both halves
+of the range checking properly so ... review appreciated.
 
-diff --git a/fs/inode.c b/fs/inode.c
-index b2fea60..0b4c6ae 100644
---- a/fs/inode.c
-+++ b/fs/inode.c
-@@ -1283,6 +1283,42 @@ struct inode *ilookup(struct super_block *sb, unsigned long ino)
- }
- EXPORT_SYMBOL(ilookup);
- 
-+/**
-+ * find_active_inode_nowait - find an active inode in the inode cache
-+ * @sb:		super block of file system to search
-+ * @ino:	inode number to search for
-+ *
-+ * Search for an active inode @ino in the inode cache, and if the
-+ * inode is in the cache, the inode is returned with an incremented
-+ * reference count.  If the inode is being freed or is newly
-+ * initialized, return nothing instead of trying to wait for the inode
-+ * initialization or destruction to be complete.
-+ */
-+struct inode *find_active_inode_nowait(struct super_block *sb,
-+				       unsigned long ino)
-+{
-+	struct hlist_head *head = inode_hashtable + hash(sb, ino);
-+	struct inode *inode, *ret_inode = NULL;
-+
-+	spin_lock(&inode_hash_lock);
-+	hlist_for_each_entry(inode, head, i_hash) {
-+		if ((inode->i_ino != ino) ||
-+		    (inode->i_sb != sb))
-+			continue;
-+		spin_lock(&inode->i_lock);
-+		if ((inode->i_state & (I_FREEING | I_WILL_FREE | I_NEW)) == 0) {
-+			__iget(inode);
-+			ret_inode = inode;
-+		}
-+		spin_unlock(&inode->i_lock);
-+		goto out;
-+	}
-+out:
-+	spin_unlock(&inode_hash_lock);
-+	return ret_inode;
-+}
-+EXPORT_SYMBOL(find_active_inode_nowait);
-+
- int insert_inode_locked(struct inode *inode)
- {
- 	struct super_block *sb = inode->i_sb;
-diff --git a/include/linux/fs.h b/include/linux/fs.h
-index d0a2181..dc615ec 100644
---- a/include/linux/fs.h
-+++ b/include/linux/fs.h
-@@ -2419,6 +2419,8 @@ extern struct inode *ilookup(struct super_block *sb, unsigned long ino);
- 
- extern struct inode * iget5_locked(struct super_block *, unsigned long, int (*test)(struct inode *, void *), int (*set)(struct inode *, void *), void *);
- extern struct inode * iget_locked(struct super_block *, unsigned long);
-+extern struct inode *find_active_inode_nowait(struct super_block *,
-+					      unsigned long);
- extern int insert_inode_locked4(struct inode *, unsigned long, int (*test)(struct inode *, void *), void *);
- extern int insert_inode_locked(struct inode *);
- #ifdef CONFIG_DEBUG_LOCK_ALLOC
--- 
-2.1.0
+Thanks,
+-Eric
+
+> ---
+> 
+> diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+> index 24b4ebe..f54a497 100644
+> --- a/fs/xfs/xfs_buf.c
+> +++ b/fs/xfs/xfs_buf.c
+> @@ -463,7 +463,7 @@ _xfs_buf_find(
+>  	 * have to check that the buffer falls within the filesystem bounds.
+>  	 */
+>  	eofs = XFS_FSB_TO_BB(btp->bt_mount, btp->bt_mount->m_sb.sb_dblocks);
+> -	if (blkno >= eofs) {
+> +	if (blkno < 0 || blkno >= eofs) {
+>  		/*
+>  		 * XXX (dgc): we should really be returning -EFSCORRUPTED here,
+>  		 * but none of the higher level infrastructure supports
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+> 
 
 _______________________________________________
 xfs mailing list
