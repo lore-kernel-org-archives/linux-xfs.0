@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 37A0D7F5E
-	for <xfs@oss.sgi.com>; Wed, 26 Nov 2014 13:24:22 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id D6059AC00D
-	for <xfs@oss.sgi.com>; Wed, 26 Nov 2014 11:24:21 -0800 (PST)
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.9])
-	by cuda.sgi.com with ESMTP id vhw7R60sp9kXWeFA (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 26 Nov 2014 11:24:21 -0800 (PST)
-Date: Wed, 26 Nov 2014 11:24:20 -0800
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH-v4 6/7] ext4: add support for a lazytime mount option
-Message-ID: <20141126192420.GB20436@infradead.org>
-References: <1416997437-26092-1-git-send-email-tytso@mit.edu>
-	<1416997437-26092-7-git-send-email-tytso@mit.edu>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id B72D57F4E
+	for <xfs@oss.sgi.com>; Wed, 26 Nov 2014 13:26:58 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id A4553304062
+	for <xfs@oss.sgi.com>; Wed, 26 Nov 2014 11:26:58 -0800 (PST)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id bOC9ZLMT9HTtq9Bu for <xfs@oss.sgi.com>;
+	Wed, 26 Nov 2014 11:26:56 -0800 (PST)
+Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.4])
+	(using TLSv1.2 with cipher DHE-RSA-AES128-SHA (128/128 bits))
+	(No client certificate requested)
+	by sandeen.net (Postfix) with ESMTPSA id 5842F6565094
+	for <xfs@oss.sgi.com>; Wed, 26 Nov 2014 13:26:56 -0600 (CST)
+Message-ID: <5476297F.8080304@sandeen.net>
+Date: Wed, 26 Nov 2014 13:26:55 -0600
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1416997437-26092-7-git-send-email-tytso@mit.edu>
+Subject: no quota output if no usage?
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,11 +30,44 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Theodore Ts'o <tytso@mit.edu>
-Cc: Linux Filesystem Development List <linux-fsdevel@vger.kernel.org>, Ext4 Developers List <linux-ext4@vger.kernel.org>, Linux btrfs Developers List <linux-btrfs@vger.kernel.org>, XFS Developers <xfs@oss.sgi.com>
+To: xfs-oss <xfs@oss.sgi.com>
 
-The subject line seems incorrect, this seems to implement some form
-of dirty inode writeback clustering.
+This seems a bit weird:
+
+# xfs_quota -x -c 'quota -p project1' /mnt/test
+#
+
+Huh, did it work?
+
+# xfs_quota -x -c 'quota -pv project1' /mnt/test
+Disk quotas for Project project1 (1)
+Filesystem              Blocks      Quota      Limit  Warn/Time      Mounted on
+/dev/sdc2                    0    1024000    1228800   00 [--------] /mnt/test
+#
+
+Oh, ok!
+
+I don't know why reporting limits should depend on the verbose flag, but it
+has been that way since 2005 in quota_mount() :
+
+        if (!(flags & VERBOSE_FLAG)) {
+                count = 0;
+                if ((form & XFS_BLOCK_QUOTA) && d.d_bcount)
+                        count++;
+                if ((form & XFS_INODE_QUOTA) && d.d_icount)
+                        count++;
+                if ((form & XFS_RTBLOCK_QUOTA) && d.d_rtbcount)
+                        count++;
+                if (!count)
+                        return 0;
+        }
+
+I'm inclined to change it, but is it OK to change the output of this - might old
+scripts be relying on this (odd) silent behavior?  I think it can certainly cause
+confusion (as evidenced by at least one bug I'm looking at ...)
+
+Thanks,
+-Eric
 
 _______________________________________________
 xfs mailing list
