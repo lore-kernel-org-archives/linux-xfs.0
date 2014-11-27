@@ -1,26 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id A43DA7F4E
-	for <xfs@oss.sgi.com>; Thu, 27 Nov 2014 09:33:23 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 713648F804B
-	for <xfs@oss.sgi.com>; Thu, 27 Nov 2014 07:33:23 -0800 (PST)
-Received: from imap.thunk.org (imap.thunk.org [74.207.234.97]) by cuda.sgi.com
-	with ESMTP id 1UutqJ7fwxleQQzC (version=TLSv1 cipher=AES128-SHA
-	bits=128 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 27 Nov 2014 07:33:21 -0800 (PST)
-Date: Thu, 27 Nov 2014 10:33:15 -0500
-From: Theodore Ts'o <tytso@mit.edu>
-Subject: Re: [PATCH-v4 1/7] vfs: split update_time() into update_time() and
-	write_time()
-Message-ID: <20141127153315.GC14091@thunk.org>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 238B07F4E
+	for <xfs@oss.sgi.com>; Thu, 27 Nov 2014 09:42:06 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 0F173304039
+	for <xfs@oss.sgi.com>; Thu, 27 Nov 2014 07:42:05 -0800 (PST)
+Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
+	with ESMTP id tFoQfLRZERGEbqRn (version=TLSv1 cipher=AES256-SHA
+	bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 27 Nov 2014 07:42:04 -0800 (PST)
+Date: Thu, 27 Nov 2014 16:41:59 +0100
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [PATCH-v4 6/7] ext4: add support for a lazytime mount option
+Message-ID: <20141127154159.GA11922@quack.suse.cz>
 References: <1416997437-26092-1-git-send-email-tytso@mit.edu>
-	<1416997437-26092-2-git-send-email-tytso@mit.edu>
-	<20141126192328.GA20436@infradead.org>
-	<20141127144116.GA14091@thunk.org>
+	<1416997437-26092-7-git-send-email-tytso@mit.edu>
+	<20141126224843.GG9561@dastard>
+	<1A106262-D64C-4493-856F-AAAFC3BE2647@dilger.ca>
+	<20141126233537.GH9561@dastard>
+	<20141127132752.GF30152@quack.suse.cz>
+	<20141127133227.GA11872@quack.suse.cz>
+	<20141127152524.GB14091@thunk.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20141127144116.GA14091@thunk.org>
+In-Reply-To: <20141127152524.GB14091@thunk.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,285 +36,139 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Linux Filesystem Development List <linux-fsdevel@vger.kernel.org>, Ext4 Developers List <linux-ext4@vger.kernel.org>, Linux btrfs Developers List <linux-btrfs@vger.kernel.org>, XFS Developers <xfs@oss.sgi.com>
+To: Theodore Ts'o <tytso@mit.edu>
+Cc: Andreas Dilger <adilger@dilger.ca>, Jan Kara <jack@suse.cz>, XFS Developers <xfs@oss.sgi.com>, Linux Filesystem Development List <linux-fsdevel@vger.kernel.org>, Ext4 Developers List <linux-ext4@vger.kernel.org>, Linux btrfs Developers List <linux-btrfs@vger.kernel.org>
 
-Christoph, can you take a quick look at this?  I'm not sure I got the
-xfs inode transaction logging correct.
+On Thu 27-11-14 10:25:24, Ted Tso wrote:
+> This is what I'm currently playing with which I believe fixes the iput()
+> problem.  In fs/ext4/inode.c:
+> 
+> struct other_inode {
+> 	unsigned long		orig_ino;
+> 	struct ext4_inode	*raw_inode;
+> };
+> static int other_inode_match(struct inode * inode, unsigned long ino,
+> 			     void *data);
+> 
+> /*
+>  * Opportunistically update the other time fields for other inodes in
+>  * the same inode table block.
+>  */
+> static void ext4_update_other_inodes_time(struct super_block *sb,
+> 					  unsigned long orig_ino, char *buf)
+> {
+> 	struct other_inode oi;
+> 	unsigned long ino;
+> 	int i, inodes_per_block = EXT4_SB(sb)->s_inodes_per_block;
+> 	int inode_size = EXT4_INODE_SIZE(sb);
+> 
+> 	oi.orig_ino = orig_ino;
+> 	ino = orig_ino & ~(inodes_per_block - 1);
+> 	for (i = 0; i < inodes_per_block; i++, ino++, buf += inode_size) {
+> 		if (ino == orig_ino)
+> 			continue;
+> 		oi.raw_inode = (struct ext4_inode *) buf;
+> 		(void) find_inode_nowait(sb, ino, other_inode_match, &oi);
+> 	}
+> }
+> 
+> static int other_inode_match(struct inode * inode, unsigned long ino,
+> 			     void *data)
+> {
+> 	struct other_inode *oi = (struct other_inode *) data;
+> 
+> 	if ((inode->i_ino != ino) ||
+> 	    (inode->i_state & (I_FREEING | I_WILL_FREE | I_NEW)) ||
+> 	    ((inode->i_state & I_DIRTY_TIME) == 0))
+> 		return 0;
+> 	spin_lock(&inode->i_lock);
+> 	if (((inode->i_state & (I_FREEING | I_WILL_FREE | I_NEW)) == 0) &&
+> 	    (inode->i_state & I_DIRTY_TIME)) {
+> 		struct ext4_inode_info	*ei = EXT4_I(inode);
+> 
+> 		inode->i_state &= ~I_DIRTY_TIME;
+> 		inode->i_ts_dirty_day = 0;
+> 		spin_unlock(&inode->i_lock);
+> 		inode_requeue_dirtytime(inode);
+> 
+> 		spin_lock(&ei->i_raw_lock);
+> 		EXT4_INODE_SET_XTIME(i_ctime, inode, oi->raw_inode);
+> 		EXT4_INODE_SET_XTIME(i_mtime, inode, oi->raw_inode);
+> 		EXT4_INODE_SET_XTIME(i_atime, inode, oi->raw_inode);
+> 		ext4_inode_csum_set(inode, oi->raw_inode, ei);
+> 		spin_unlock(&ei->i_raw_lock);
+> 		trace_ext4_other_inode_update_time(inode, oi->orig_ino);
+> 		return -1;
+> 	}
+> 	spin_unlock(&inode->i_lock);
+> 	return -1;
+> }
+  Hum, but this puts lots of stuff under inode_hash_lock, including
+writeback list lock. I don't like this too much. I understand that getting
+handle for each inode is rather more CPU intensive but it should still be a
+clear win over the current situation and avoids entangling locks like this.
 
-Thanks!!
+								Honza
 
-						- Ted
-
-commit cd58addfa340c9cf88b1f9b2d31a42e2e65c7252
-Author: Theodore Ts'o <tytso@mit.edu>
-Date:   Thu Nov 27 10:14:27 2014 -0500
-
-    vfs: split update_time() into update_time() and write_time()
-    
-    In preparation for adding support for the lazytime mount option, we
-    need to be able to separate out the update_time() and write_time()
-    inode operations.  Previously, only btrfs and xfs uses update_time().
-    
-    With this patch, btrfs only needs write_time(), and xfs uses
-    update_time() to synchronize its on-disk and in-memory timestamps.
-    
-    Signed-off-by: Theodore Ts'o <tytso@mit.edu>
-    Cc: xfs@oss.sgi.com
-    Cc: linux-btrfs@vger.kernel.org
-    Acked-by: David Sterba <dsterba@suse.cz>
-
-diff --git a/include/linux/fs.h b/include/linux/fs.h
-index f4b0ecd..befd5d2 100644
---- a/include/linux/fs.h
-+++ b/include/linux/fs.h
-@@ -1545,7 +1545,8 @@ struct inode_operations {
- 	int (*fiemap)(struct inode *, struct fiemap_extent_info *, u64 start,
- 		      u64 len);
- 	int (*is_readonly)(struct inode *);
--	int (*update_time)(struct inode *, struct timespec *, int);
-+	void (*update_time)(struct inode *);
-+	int (*write_time)(struct inode *);
- 	int (*atomic_open)(struct inode *, struct dentry *,
- 			   struct file *, unsigned open_flag,
- 			   umode_t create_mode, int *opened);
-diff --git a/fs/inode.c b/fs/inode.c
-index 53f0173..94bc908 100644
---- a/fs/inode.c
-+++ b/fs/inode.c
-@@ -1506,9 +1506,6 @@ static int update_time(struct inode *inode, struct timespec *time, int flags)
-  		if (ret)
-  			return ret;
- 	}
--	if (inode->i_op->update_time)
--		return inode->i_op->update_time(inode, time, flags);
--
- 	if (flags & S_ATIME)
- 		inode->i_atime = *time;
- 	if (flags & S_VERSION)
-@@ -1517,6 +1514,10 @@ static int update_time(struct inode *inode, struct timespec *time, int flags)
- 		inode->i_ctime = *time;
- 	if (flags & S_MTIME)
- 		inode->i_mtime = *time;
-+	if (inode->i_op->update_time)
-+		inode->i_op->update_time(inode);
-+	if (inode->i_op->write_time)
-+		return inode->i_op->write_time(inode);
- 	mark_inode_dirty_sync(inode);
- 	return 0;
- }
-diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-index ec6dcdc..b69493d 100644
---- a/fs/xfs/xfs_iops.c
-+++ b/fs/xfs/xfs_iops.c
-@@ -983,42 +983,42 @@ xfs_vn_setattr(
- 	return error;
- }
- 
--STATIC int
-+STATIC void
- xfs_vn_update_time(
--	struct inode		*inode,
--	struct timespec		*now,
--	int			flags)
-+	struct inode		*inode)
-+{
-+	struct xfs_inode	*ip = XFS_I(inode);
-+
-+	trace_xfs_update_time(ip);
-+	xfs_ilock(ip, XFS_ILOCK_EXCL);
-+	ip->i_d.di_ctime.t_sec = (__int32_t) inode->i_ctime.tv_sec;
-+	ip->i_d.di_ctime.t_nsec = (__int32_t) inode->i_ctime.tv_nsec;
-+
-+	ip->i_d.di_mtime.t_sec = (__int32_t)inode->i_mtime.tv_sec;
-+	ip->i_d.di_mtime.t_nsec = (__int32_t) inode->i_mtime.tv_nsec;
-+
-+	ip->i_d.di_atime.t_sec = (__int32_t) inode->i_atime.tv_sec;
-+	ip->i_d.di_atime.t_nsec = (__int32_t) inode->i_atime.tv_nsec;
-+	xfs_iunlock(ip, XFS_ILOCK_EXCL);
-+}
-+
-+STATIC int
-+xfs_vn_write_time(
-+	struct inode		*inode)
- {
- 	struct xfs_inode	*ip = XFS_I(inode);
- 	struct xfs_mount	*mp = ip->i_mount;
- 	struct xfs_trans	*tp;
- 	int			error;
- 
--	trace_xfs_update_time(ip);
--
-+	trace_xfs_write_time(ip);
- 	tp = xfs_trans_alloc(mp, XFS_TRANS_FSYNC_TS);
- 	error = xfs_trans_reserve(tp, &M_RES(mp)->tr_fsyncts, 0, 0);
- 	if (error) {
- 		xfs_trans_cancel(tp, 0);
- 		return error;
- 	}
--
- 	xfs_ilock(ip, XFS_ILOCK_EXCL);
--	if (flags & S_CTIME) {
--		inode->i_ctime = *now;
--		ip->i_d.di_ctime.t_sec = (__int32_t)now->tv_sec;
--		ip->i_d.di_ctime.t_nsec = (__int32_t)now->tv_nsec;
--	}
--	if (flags & S_MTIME) {
--		inode->i_mtime = *now;
--		ip->i_d.di_mtime.t_sec = (__int32_t)now->tv_sec;
--		ip->i_d.di_mtime.t_nsec = (__int32_t)now->tv_nsec;
--	}
--	if (flags & S_ATIME) {
--		inode->i_atime = *now;
--		ip->i_d.di_atime.t_sec = (__int32_t)now->tv_sec;
--		ip->i_d.di_atime.t_nsec = (__int32_t)now->tv_nsec;
--	}
- 	xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL);
- 	xfs_trans_log_inode(tp, ip, XFS_ILOG_TIMESTAMP);
- 	return xfs_trans_commit(tp, 0);
-@@ -1130,6 +1130,7 @@ static const struct inode_operations xfs_inode_operations = {
- 	.listxattr		= xfs_vn_listxattr,
- 	.fiemap			= xfs_vn_fiemap,
- 	.update_time		= xfs_vn_update_time,
-+	.write_time		= xfs_vn_write_time,
- };
- 
- static const struct inode_operations xfs_dir_inode_operations = {
-@@ -1157,6 +1158,7 @@ static const struct inode_operations xfs_dir_inode_operations = {
- 	.removexattr		= generic_removexattr,
- 	.listxattr		= xfs_vn_listxattr,
- 	.update_time		= xfs_vn_update_time,
-+	.write_time		= xfs_vn_write_time,
- 	.tmpfile		= xfs_vn_tmpfile,
- };
- 
-@@ -1185,6 +1187,7 @@ static const struct inode_operations xfs_dir_ci_inode_operations = {
- 	.removexattr		= generic_removexattr,
- 	.listxattr		= xfs_vn_listxattr,
- 	.update_time		= xfs_vn_update_time,
-+	.write_time		= xfs_vn_write_time,
- 	.tmpfile		= xfs_vn_tmpfile,
- };
- 
-@@ -1199,6 +1202,7 @@ static const struct inode_operations xfs_symlink_inode_operations = {
- 	.removexattr		= generic_removexattr,
- 	.listxattr		= xfs_vn_listxattr,
- 	.update_time		= xfs_vn_update_time,
-+	.write_time		= xfs_vn_write_time,
- };
- 
- STATIC void
-diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-index 51372e3..09d261c 100644
---- a/fs/xfs/xfs_trace.h
-+++ b/fs/xfs/xfs_trace.h
-@@ -677,6 +677,7 @@ DEFINE_INODE_EVENT(xfs_file_fsync);
- DEFINE_INODE_EVENT(xfs_destroy_inode);
- DEFINE_INODE_EVENT(xfs_evict_inode);
- DEFINE_INODE_EVENT(xfs_update_time);
-+DEFINE_INODE_EVENT(xfs_write_time);
- 
- DEFINE_INODE_EVENT(xfs_dquot_dqalloc);
- DEFINE_INODE_EVENT(xfs_dquot_dqdetach);
-diff --git a/Documentation/filesystems/Locking b/Documentation/filesystems/Locking
-index b30753c..ee94a66 100644
---- a/Documentation/filesystems/Locking
-+++ b/Documentation/filesystems/Locking
-@@ -62,7 +62,8 @@ prototypes:
- 	ssize_t (*listxattr) (struct dentry *, char *, size_t);
- 	int (*removexattr) (struct dentry *, const char *);
- 	int (*fiemap)(struct inode *, struct fiemap_extent_info *, u64 start, u64 len);
--	void (*update_time)(struct inode *, struct timespec *, int);
-+	void (*update_time)(struct inode *);
-+	void (*write_time)(struct inode *);
- 	int (*atomic_open)(struct inode *, struct dentry *,
- 				struct file *, unsigned open_flag,
- 				umode_t create_mode, int *opened);
-@@ -95,6 +96,7 @@ listxattr:	no
- removexattr:	yes
- fiemap:		no
- update_time:	no
-+write_time:	no
- atomic_open:	yes
- tmpfile:	no
- dentry_open:	no
-diff --git a/fs/btrfs/inode.c b/fs/btrfs/inode.c
-index bd46a22..a81a0652 100644
---- a/fs/btrfs/inode.c
-+++ b/fs/btrfs/inode.c
-@@ -5563,26 +5563,8 @@ static int btrfs_is_readonly(struct inode *inode)
- 	return 0;
- }
- 
--/*
-- * This is a copy of file_update_time.  We need this so we can return error on
-- * ENOSPC for updating the inode in the case of file write and mmap writes.
-- */
--static int btrfs_update_time(struct inode *inode, struct timespec *now,
--			     int flags)
-+static int btrfs_write_time(struct inode *inode)
- {
--	struct btrfs_root *root = BTRFS_I(inode)->root;
--
--	if (btrfs_root_readonly(root))
--		return -EROFS;
--
--	if (flags & S_VERSION)
--		inode_inc_iversion(inode);
--	if (flags & S_CTIME)
--		inode->i_ctime = *now;
--	if (flags & S_MTIME)
--		inode->i_mtime = *now;
--	if (flags & S_ATIME)
--		inode->i_atime = *now;
- 	return btrfs_dirty_inode(inode);
- }
- 
-@@ -9471,7 +9453,7 @@ static const struct inode_operations btrfs_dir_inode_operations = {
- 	.get_acl	= btrfs_get_acl,
- 	.set_acl	= btrfs_set_acl,
- 	.is_readonly	= btrfs_is_readonly,
--	.update_time	= btrfs_update_time,
-+	.write_time	= btrfs_write_time,
- 	.tmpfile        = btrfs_tmpfile,
- };
- static const struct inode_operations btrfs_dir_ro_inode_operations = {
-@@ -9480,7 +9462,7 @@ static const struct inode_operations btrfs_dir_ro_inode_operations = {
- 	.get_acl	= btrfs_get_acl,
- 	.set_acl	= btrfs_set_acl,
- 	.is_readonly	= btrfs_is_readonly,
--	.update_time	= btrfs_update_time,
-+	.write_time	= btrfs_write_time,
- };
- 
- static const struct file_operations btrfs_dir_file_operations = {
-@@ -9551,7 +9533,7 @@ static const struct inode_operations btrfs_file_inode_operations = {
- 	.get_acl	= btrfs_get_acl,
- 	.set_acl	= btrfs_set_acl,
- 	.is_readonly	= btrfs_is_readonly,
--	.update_time	= btrfs_update_time,
-+	.write_time	= btrfs_write_time,
- };
- static const struct inode_operations btrfs_special_inode_operations = {
- 	.getattr	= btrfs_getattr,
-@@ -9564,7 +9546,7 @@ static const struct inode_operations btrfs_special_inode_operations = {
- 	.get_acl	= btrfs_get_acl,
- 	.set_acl	= btrfs_set_acl,
- 	.is_readonly	= btrfs_is_readonly,
--	.update_time	= btrfs_update_time,
-+	.write_time	= btrfs_write_time,
- };
- static const struct inode_operations btrfs_symlink_inode_operations = {
- 	.readlink	= generic_readlink,
-@@ -9578,7 +9560,7 @@ static const struct inode_operations btrfs_symlink_inode_operations = {
- 	.listxattr	= btrfs_listxattr,
- 	.removexattr	= btrfs_removexattr,
- 	.is_readonly	= btrfs_is_readonly,
--	.update_time	= btrfs_update_time,
-+	.write_time	= btrfs_write_time,
- };
- 
- const struct dentry_operations btrfs_dentry_operations = {
+> The above uses the following in fs/inode.c (which gets added instead of
+> find_active_inode_nowait):
+> 
+> /**
+>  * find_inode_nowait - find an inode in the inode cache
+>  * @sb:		super block of file system to search
+>  * @hashval:	hash value (usually inode number) to search for
+>  * @match:	callback used for comparisons between inodes
+>  * @data:	opaque data pointer to pass to @match
+>  *
+>  * Search for the inode specified by @hashval and @data in the inode
+>  * cache, where the helper function @match will return 0 if the inode
+>  * does not match, 1 if the inode does match, and -1 if the search
+>  * should be stopped.  The @match function must be responsible for
+>  * taking the i_lock spin_lock and checking i_state for an inode being
+>  * freed or being initialized, and incrementing the reference count
+>  * before returning 1.  It also must not sleep, since it is called with
+>  * the inode_hash_lock spinlock held.
+>  *
+>  * This is a even more generalized version of ilookup5() when the
+>  * function must never block --- find_inode() can block in
+>  * __wait_on_freeing_inode() --- or when the caller can not increment
+>  * the reference count because the resulting iput() might cause an
+>  * inode eviction().  The tradeoff is that the @match funtion must be
+>  * very carefully implemented.
+>  */
+> struct inode *find_inode_nowait(struct super_block *sb,
+> 				unsigned long hashval,
+> 				int (*match)(struct inode *, unsigned long,
+> 					     void *),
+> 				void *data)
+> {
+> 	struct hlist_head *head = inode_hashtable + hash(sb, hashval);
+> 	struct inode *inode, *ret_inode = NULL;
+> 	int mval;
+> 
+> 	spin_lock(&inode_hash_lock);
+> 	hlist_for_each_entry(inode, head, i_hash) {
+> 		if (inode->i_sb != sb)
+> 			continue;
+> 		mval = match(inode, hashval, data);
+> 		if (mval == 0)
+> 			continue;
+> 		if (mval == 1)
+> 			ret_inode = inode;
+> 		goto out;
+> 	}
+> out:
+> 	spin_unlock(&inode_hash_lock);
+> 	return ret_inode;
+> }
+> EXPORT_SYMBOL(find_inode_nowait);
+> 
+> Comments?
+> 
+> 							- Ted
+-- 
+Jan Kara <jack@suse.cz>
+SUSE Labs, CR
 
 _______________________________________________
 xfs mailing list
