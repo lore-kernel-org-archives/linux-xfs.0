@@ -1,23 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 9BB367F4E
-	for <xfs@oss.sgi.com>; Thu, 27 Nov 2014 07:14:32 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 19F42AC003
-	for <xfs@oss.sgi.com>; Thu, 27 Nov 2014 05:14:29 -0800 (PST)
+	by oss.sgi.com (Postfix) with ESMTP id 9EFC27F4E
+	for <xfs@oss.sgi.com>; Thu, 27 Nov 2014 07:27:59 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 39B79AC003
+	for <xfs@oss.sgi.com>; Thu, 27 Nov 2014 05:27:59 -0800 (PST)
 Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id 0OA9z4rrN9LYWCV8 (version=TLSv1 cipher=AES256-SHA
+	with ESMTP id 4U8xFk6SW7R3Tah4 (version=TLSv1 cipher=AES256-SHA
 	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 27 Nov 2014 05:14:26 -0800 (PST)
-Date: Thu, 27 Nov 2014 14:14:21 +0100
+	Thu, 27 Nov 2014 05:27:57 -0800 (PST)
+Date: Thu, 27 Nov 2014 14:27:52 +0100
 From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH-v4 2/7] vfs: add support for a lazytime mount option
-Message-ID: <20141127131421.GE30152@quack.suse.cz>
+Subject: Re: [PATCH-v4 6/7] ext4: add support for a lazytime mount option
+Message-ID: <20141127132752.GF30152@quack.suse.cz>
 References: <1416997437-26092-1-git-send-email-tytso@mit.edu>
-	<1416997437-26092-3-git-send-email-tytso@mit.edu>
+	<1416997437-26092-7-git-send-email-tytso@mit.edu>
+	<20141126224843.GG9561@dastard>
+	<1A106262-D64C-4493-856F-AAAFC3BE2647@dilger.ca>
+	<20141126233537.GH9561@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1416997437-26092-3-git-send-email-tytso@mit.edu>
+In-Reply-To: <20141126233537.GH9561@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,101 +33,113 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Theodore Ts'o <tytso@mit.edu>
-Cc: Linux Filesystem Development List <linux-fsdevel@vger.kernel.org>, Ext4 Developers List <linux-ext4@vger.kernel.org>, Linux btrfs Developers List <linux-btrfs@vger.kernel.org>, XFS Developers <xfs@oss.sgi.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: Andreas Dilger <adilger@dilger.ca>, Theodore Ts'o <tytso@mit.edu>, XFS Developers <xfs@oss.sgi.com>, Linux Filesystem Development List <linux-fsdevel@vger.kernel.org>, Ext4 Developers List <linux-ext4@vger.kernel.org>, Linux btrfs Developers List <linux-btrfs@vger.kernel.org>
 
-On Wed 26-11-14 05:23:52, Ted Tso wrote:
-> Add a new mount option which enables a new "lazytime" mode.  This mode
-> causes atime, mtime, and ctime updates to only be made to the
-> in-memory version of the inode.  The on-disk times will only get
-> updated when (a) if the inode needs to be updated for some non-time
-> related change, (b) if userspace calls fsync(), syncfs() or sync(), or
-> (c) just before an undeleted inode is evicted from memory.
+On Thu 27-11-14 10:35:37, Dave Chinner wrote:
+> On Wed, Nov 26, 2014 at 04:10:44PM -0700, Andreas Dilger wrote:
+> > On Nov 26, 2014, at 3:48 PM, Dave Chinner <david@fromorbit.com> wrote:
+> > > 
+> > > On Wed, Nov 26, 2014 at 05:23:56AM -0500, Theodore Ts'o wrote:
+> > >> Add an optimization for the MS_LAZYTIME mount option so that we will
+> > >> opportunistically write out any inodes with the I_DIRTY_TIME flag set
+> > >> in a particular inode table block when we need to update some inode
+> > >> in that inode table block anyway.
+> > >> 
+> > >> Also add some temporary code so that we can set the lazytime mount
+> > >> option without needing a modified /sbin/mount program which can set
+> > >> MS_LAZYTIME.  We can eventually make this go away once util-linux has
+> > >> added support.
+> > >> 
+> > >> Google-Bug-Id: 18297052
+> > >> 
+> > >> Signed-off-by: Theodore Ts'o <tytso@mit.edu>
+> > >> ---
+> > >> fs/ext4/inode.c             | 49 ++++++++++++++++++++++++++++++++++++++++++---
+> > >> fs/ext4/super.c             |  9 +++++++++
+> > >> include/trace/events/ext4.h | 30 +++++++++++++++++++++++++++
+> > >> 3 files changed, 85 insertions(+), 3 deletions(-)
+> > >> 
+> > >> diff --git a/fs/ext4/inode.c b/fs/ext4/inode.c
+> > >> index 5653fa4..8308c82 100644
+> > >> --- a/fs/ext4/inode.c
+> > >> +++ b/fs/ext4/inode.c
+> > >> @@ -4140,6 +4140,51 @@ static int ext4_inode_blocks_set(handle_t *handle,
+> > >> }
+> > >> 
+> > >> /*
+> > >> + * Opportunistically update the other time fields for other inodes in
+> > >> + * the same inode table block.
+> > >> + */
+> > >> +static void ext4_update_other_inodes_time(struct super_block *sb,
+> > >> +					  unsigned long orig_ino, char *buf)
+> > >> +{
+> > >> +	struct ext4_inode_info	*ei;
+> > >> +	struct ext4_inode	*raw_inode;
+> > >> +	unsigned long		ino;
+> > >> +	struct inode		*inode;
+> > >> +	int		i, inodes_per_block = EXT4_SB(sb)->s_inodes_per_block;
+> > >> +	int		inode_size = EXT4_INODE_SIZE(sb);
+> > >> +
+> > >> +	ino = orig_ino & ~(inodes_per_block - 1);
+> > >> +	for (i = 0; i < inodes_per_block; i++, ino++, buf += inode_size) {
+> > >> +		if (ino == orig_ino)
+> > >> +			continue;
+> > >> +		inode = find_active_inode_nowait(sb, ino);
+> > >> +		if (!inode ||
+> > >> +		    (inode->i_state & I_DIRTY_TIME) == 0 ||
+> > >> +		    !spin_trylock(&inode->i_lock)) {
+> > >> +			iput(inode);
+> > >> +			continue;
+> > >> +		}
+> > >> +		inode->i_state &= ~I_DIRTY_TIME;
+> > >> +		inode->i_ts_dirty_day = 0;
+> > >> +		spin_unlock(&inode->i_lock);
+> > >> +		inode_requeue_dirtytime(inode);
+> > >> +
+> > >> +		ei = EXT4_I(inode);
+> > >> +		raw_inode = (struct ext4_inode *) buf;
+> > >> +
+> > >> +		spin_lock(&ei->i_raw_lock);
+> > >> +		EXT4_INODE_SET_XTIME(i_ctime, inode, raw_inode);
+> > >> +		EXT4_INODE_SET_XTIME(i_mtime, inode, raw_inode);
+> > >> +		EXT4_INODE_SET_XTIME(i_atime, inode, raw_inode);
+> > >> +		ext4_inode_csum_set(inode, raw_inode, ei);
+> > >> +		spin_unlock(&ei->i_raw_lock);
+> > >> +		trace_ext4_other_inode_update_time(inode, orig_ino);
+> > >> +		iput(inode);
+> > >> +	}
+> > >> +}
+> > > 
+> > > Am I right in that this now does unlogged timestamp updates of
+> > > inodes? What happens when that buffer gets overwritten by log
+> > > recover after a crash? The timestamp updates get lost?
+> > > 
+> > > FYI, XFS has had all sorts of nasty log recovery corner cases
+> > > caused by log recovery overwriting non-logged inode updates like
+> > > this. In the past few years we've removed every single non-logged
+> > > inode update "optimisation" so that all changes (including timestamps)
+> > > are transactional so inode state on disk not matching what log
+> > > recovery wrote to disk for all the other inode metadata...
+> > > 
+> > > Optimistic unlogged inode updates are a slippery slope, and history
+> > > tells me that it doesn't lead to a nice place....
+> > 
+> > Since ext4/jbd2 is logging the whole block, unlike XFS which is doing
+> > logical journaling, this isn't an unlogged update.  It is just taking
+> > advantage of the fact that the whole block is going to be logged and
+> > written to the disk anyway.
 > 
-> This is OK according to POSIX because there are no guarantees after a
-> crash unless userspace explicitly requests via a fsync(2) call.
-> 
-> For workloads which feature a large number of random write to a
-> preallocated file, the lazytime mount option significantly reduces
-> writes to the inode table.  The repeated 4k writes to a single block
-> will result in undesirable stress on flash devices and SMR disk
-> drives.  Even on conventional HDD's, the repeated writes to the inode
-> table block will trigger Adjacent Track Interference (ATI) remediation
-> latencies, which very negatively impact 99.9 percentile latencies ---
-> which is a very big deal for web serving tiers (for example).
-  So this looks better to me than previous versions but I'm still not 100%
-happy :)
-
-Looking into the code & your patch I'd prefer to do something like:
-* add support for I_DIRTY_TIME in __mark_inode_dirty() - update_time will
-  call __mark_inode_dirty() with this flag if any of the times was updated.
-  That way we can just remove your ->write_time() callback - filesystems
-  can just handle this in their ->dirty_inode() methods if they wish.
-  __mark_inode_dirty() will take care of moving inode into proper writeback
-  list (i_dirty / i_dirty_time), dirtied_when will be set to current time.
-* change queue_io() to also call
-	moved += move_expired_inodes(&wb->b_dirty_time, &wb->b_io, time + 24hours)
-  For this you need to tweak move_expired_inodes() to take pointer to
-  timestamp instead of pointer to work but that's trivial. Also you want
-  probably leave time ->older_than_this value (i.e. without +24 hours) if
-  we are doing WB_SYNC_ALL writeback. With this you can remove
-  flush_sb_dirty_time() completely.
-* Changes for iput() & fsync stay as they are.
-
-And this should be all that's necessary. I'm not 100% sure about your dirty
-bits naming changes - let's see how that will look like when the above more
-substantial changes are done.
-
-One technical detail below:
-
-> diff --git a/fs/inode.c b/fs/inode.c
-> index 8f5c4b5..9e464cc 100644
-> --- a/fs/inode.c
-> +++ b/fs/inode.c
-> @@ -1430,11 +1430,22 @@ static void iput_final(struct inode *inode)
->   */
->  void iput(struct inode *inode)
->  {
-> -	if (inode) {
-> -		BUG_ON(inode->i_state & I_CLEAR);
-> -
-> -		if (atomic_dec_and_lock(&inode->i_count, &inode->i_lock))
-> -			iput_final(inode);
-> +	if (!inode)
-> +		return;
-> +	BUG_ON(inode->i_state & I_CLEAR);
-  I think we can better handle this without retry at this place like:
-	if (atomic_read(&inode->i_count) == 1 && inode->i_nlink &&
-	    (inode->i_state & I_DIRTY_TIME)) {
-		if (inode->i_op->write_time)
-			inode->i_op->write_time(inode);
-		else if (inode->i_sb->s_op->write_inode)
-			mark_inode_dirty_sync(inode);
-	}
-  Sure it will be one more read of i_count in the fast path but that's IMO
-negligible.
-
-BTW: Is the test for ->write_inode really needed? We don't do it e.g. in
-update_time().
-
-> +retry:
-> +	if (atomic_dec_and_lock(&inode->i_count, &inode->i_lock)) {
-> +		if (inode->i_nlink && (inode->i_state & I_DIRTY_TIME)) {
-> +			atomic_inc(&inode->i_count);
-> +			inode->i_state &= ~I_DIRTY_TIME;
-> +			spin_unlock(&inode->i_lock);
-> +			if (inode->i_op->write_time)
-> +				inode->i_op->write_time(inode);
-> +			else if (inode->i_sb->s_op->write_inode)
-> +				mark_inode_dirty_sync(inode);
-> +			goto retry;
-> +		}
-> +		iput_final(inode);
->  	}
->  }
->  EXPORT_SYMBOL(iput);
-
-								Honza
+> Urk - that's worse, isn't it? i.e the code above calls iput() from
+> within a current transaction context?  What happens if that drops
+> the last reference to the inode and it gets evicted due to racing
+> with an unlink? Won't that try to start another transaction to free
+> the inode (i.e. through ext4_evict_inode())?
+  Yeah, the patch looks buggy (and racy wrt concurrent updates of time
+stamps as well). I think if we want to do this optimization, we would need
+a function like "clear inode dirty bits for this range of inode numbers".
+That is doable atomically within VFS and although it looks somewhat ugly,
+the performance
 -- 
 Jan Kara <jack@suse.cz>
 SUSE Labs, CR
