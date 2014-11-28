@@ -1,9 +1,9 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 From: xfs@oss.sgi.com
-Subject: [XFS updates] XFS development tree branch, xfs-consolidate-format-defs,
-	created. v3.18-rc2-5-g508b6b3
-Message-Id: <20141128111621.F0B4E7F56@oss.sgi.com>
-Date: Fri, 28 Nov 2014 05:16:21 -0600 (CST)
+Subject: [XFS updates] XFS development tree branch, for-next,
+	updated. v3.18-rc2-23-g216875a
+Message-Id: <20141128111637.3A0E47F5F@oss.sgi.com>
+Date: Fri, 28 Nov 2014 05:16:36 -0600 (CST)
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,73 +23,133 @@ This is an automated email from the git hooks/post-receive script. It was
 generated because a ref change was pushed to the repository containing
 the project "XFS development tree".
 
-The branch, xfs-consolidate-format-defs has been created
-        at  508b6b3b73888e3296ff638b32f15327e63b7b42 (commit)
+The branch, for-next has been updated
+  216875a Merge branch 'xfs-consolidate-format-defs' into for-next
+  4bd47c1 Merge branch 'xfs-misc-fixes-for-3.19-1' into for-next
+  508b6b3 xfs: merge xfs_inum.h into xfs_format.h
+  bb58e61 xfs: move most of xfs_sb.h to xfs_format.h
+  4fb6e8a xfs: merge xfs_ag.h into xfs_format.h
+  5beda58 xfs: move acl structures to xfs_format.h
+  6d3ebaa xfs: merge xfs_dinode.h into xfs_format.h
+  db52d09e xfs: catch invalid negative blknos in _xfs_buf_find()
+  91ee575 xfs: allow lazy sb counter sync during filesystem freeze sequence
+  5d45ee1 xfs: fix error handling in xfs_qm_log_quotaoff()
+  062647a xfs: replace on-stack xfs_trans_res with pointer in xfs_create()
+  78c931b xfs: replace global xfslogd wq with per-mount wq
+      from  002758992693ae63c04122603ea9261a0a58d728 (commit)
+
+Those revisions listed above that are new to this repository have
+not appeared on any other notification email; so we list those
+revisions in full, below.
 
 - Log -----------------------------------------------------------------
-commit 508b6b3b73888e3296ff638b32f15327e63b7b42
-Author: Christoph Hellwig <hch@lst.de>
-Date:   Fri Nov 28 14:27:10 2014 +1100
+commit 216875a594e0b4fc72830e3690b8fbe7430738e2
+Merge: 4bd47c1 508b6b3
+Author: Dave Chinner <david@fromorbit.com>
+Date:   Fri Nov 28 14:52:16 2014 +1100
 
-    xfs: merge xfs_inum.h into xfs_format.h
-    
-    Signed-off-by: Christoph Hellwig <hch@lst.de>
-    Reviewed-by: Dave Chinner <dchinner@redhat.com>
-    Signed-off-by: Dave Chinner <david@fromorbit.com>
+    Merge branch 'xfs-consolidate-format-defs' into for-next
 
-commit bb58e6188a10f06dc65612a59ce3815da62ca3c1
-Author: Christoph Hellwig <hch@lst.de>
-Date:   Fri Nov 28 14:27:09 2014 +1100
+commit 4bd47c1bf4a64225a855ed77e259eeb37944ba33
+Merge: 0027589 db52d09e
+Author: Dave Chinner <david@fromorbit.com>
+Date:   Fri Nov 28 14:52:02 2014 +1100
 
-    xfs: move most of xfs_sb.h to xfs_format.h
-    
-    More on-disk format consolidation.
-    
-    Signed-off-by: Christoph Hellwig <hch@lst.de>
-    Reviewed-by: Dave Chinner <dchinner@redhat.com>
-    Signed-off-by: Dave Chinner <david@fromorbit.com>
-
-commit 4fb6e8ade2c70ef1a13f358963b3298fd8b72bcc
-Author: Christoph Hellwig <hch@lst.de>
-Date:   Fri Nov 28 14:25:04 2014 +1100
-
-    xfs: merge xfs_ag.h into xfs_format.h
-    
-    More on-disk format consolidation.  A few declarations that weren't on-disk
-    format related move into better suitable spots.
-    
-    Signed-off-by: Christoph Hellwig <hch@lst.de>
-    Reviewed-by: Dave Chinner <dchinner@redhat.com>
-    Signed-off-by: Dave Chinner <david@fromorbit.com>
-
-commit 5beda58bf269febe67eca91d5d5dc7c7d392232a
-Author: Christoph Hellwig <hch@lst.de>
-Date:   Fri Nov 28 14:24:37 2014 +1100
-
-    xfs: move acl structures to xfs_format.h
-    
-    Move the on-disk ACL format to xfs_format.h, so that repair can
-    use the common defintion.
-    
-    Signed-off-by: Christoph Hellwig <hch@lst.de>
-    Reviewed-by: Dave Chinner <dchinner@redhat.com>
-    Signed-off-by: Dave Chinner <david@fromorbit.com>
-
-commit 6d3ebaae7c20128bfa6965a8d5cee0d1deea8486
-Author: Christoph Hellwig <hch@lst.de>
-Date:   Fri Nov 28 14:24:06 2014 +1100
-
-    xfs: merge xfs_dinode.h into xfs_format.h
-    
-    More consolidatation for the on-disk format defintions.  Note that the
-    XFS_IS_REALTIME_INODE moves to xfs_linux.h instead as it is not related
-    to the on disk format, but depends on a CONFIG_ option.
-    
-    Signed-off-by: Christoph Hellwig <hch@lst.de>
-    Reviewed-by: Dave Chinner <dchinner@redhat.com>
-    Signed-off-by: Dave Chinner <david@fromorbit.com>
+    Merge branch 'xfs-misc-fixes-for-3.19-1' into for-next
 
 -----------------------------------------------------------------------
+
+Summary of changes:
+ fs/xfs/libxfs/xfs_ag.h             |  281 ---------
+ fs/xfs/libxfs/xfs_alloc.c          |    1 -
+ fs/xfs/libxfs/xfs_alloc.h          |    3 +
+ fs/xfs/libxfs/xfs_alloc_btree.c    |    1 -
+ fs/xfs/libxfs/xfs_attr.c           |    3 -
+ fs/xfs/libxfs/xfs_attr_leaf.c      |    2 -
+ fs/xfs/libxfs/xfs_attr_remote.c    |    2 -
+ fs/xfs/libxfs/xfs_bmap.c           |    3 -
+ fs/xfs/libxfs/xfs_bmap_btree.c     |    3 -
+ fs/xfs/libxfs/xfs_btree.c          |    2 -
+ fs/xfs/libxfs/xfs_da_btree.c       |    2 -
+ fs/xfs/libxfs/xfs_da_format.c      |    2 -
+ fs/xfs/libxfs/xfs_dinode.h         |  243 --------
+ fs/xfs/libxfs/xfs_dir2.c           |    4 -
+ fs/xfs/libxfs/xfs_dir2_block.c     |    3 -
+ fs/xfs/libxfs/xfs_dir2_data.c      |    2 -
+ fs/xfs/libxfs/xfs_dir2_leaf.c      |    2 -
+ fs/xfs/libxfs/xfs_dir2_node.c      |    2 -
+ fs/xfs/libxfs/xfs_dir2_sf.c        |    3 -
+ fs/xfs/libxfs/xfs_dquot_buf.c      |    2 -
+ fs/xfs/libxfs/xfs_format.h         | 1107 ++++++++++++++++++++++++++++++++++++
+ fs/xfs/libxfs/xfs_ialloc.c         |    3 -
+ fs/xfs/libxfs/xfs_ialloc.h         |    4 +
+ fs/xfs/libxfs/xfs_ialloc_btree.c   |    2 -
+ fs/xfs/libxfs/xfs_inode_buf.c      |    3 -
+ fs/xfs/libxfs/xfs_inode_fork.c     |    4 -
+ fs/xfs/libxfs/xfs_inum.h           |   60 --
+ fs/xfs/libxfs/xfs_log_format.h     |    2 +-
+ fs/xfs/libxfs/xfs_log_rlimit.c     |    2 -
+ fs/xfs/libxfs/xfs_rtbitmap.c       |    3 -
+ fs/xfs/libxfs/xfs_sb.c             |    2 -
+ fs/xfs/libxfs/xfs_sb.h             |  584 -------------------
+ fs/xfs/libxfs/xfs_symlink_remote.c |    2 -
+ fs/xfs/libxfs/xfs_trans_resv.c     |    2 -
+ fs/xfs/xfs_acl.c                   |    2 -
+ fs/xfs/xfs_acl.h                   |   36 --
+ fs/xfs/xfs_aops.c                  |    3 -
+ fs/xfs/xfs_attr_inactive.c         |    3 -
+ fs/xfs/xfs_attr_list.c             |    3 -
+ fs/xfs/xfs_bmap_util.c             |    3 -
+ fs/xfs/xfs_buf.c                   |   16 +-
+ fs/xfs/xfs_buf_item.c              |    2 +-
+ fs/xfs/xfs_dir2_readdir.c          |    3 -
+ fs/xfs/xfs_discard.c               |    1 -
+ fs/xfs/xfs_dquot.c                 |    2 -
+ fs/xfs/xfs_dquot_item.c            |    2 -
+ fs/xfs/xfs_error.c                 |    2 -
+ fs/xfs/xfs_export.c                |    2 -
+ fs/xfs/xfs_extent_busy.c           |    1 -
+ fs/xfs/xfs_extfree_item.c          |    3 +-
+ fs/xfs/xfs_file.c                  |    3 -
+ fs/xfs/xfs_filestream.c            |    3 -
+ fs/xfs/xfs_fsops.c                 |    2 -
+ fs/xfs/xfs_icache.c                |    2 -
+ fs/xfs/xfs_icache.h                |    8 +
+ fs/xfs/xfs_icreate_item.c          |    3 +-
+ fs/xfs/xfs_inode.c                 |   17 +-
+ fs/xfs/xfs_inode.h                 |    2 -
+ fs/xfs/xfs_inode_item.c            |    3 -
+ fs/xfs/xfs_ioctl.c                 |    3 -
+ fs/xfs/xfs_ioctl32.c               |    2 -
+ fs/xfs/xfs_iomap.c                 |    3 -
+ fs/xfs/xfs_iops.c                  |    3 -
+ fs/xfs/xfs_itable.c                |    4 -
+ fs/xfs/xfs_linux.h                 |    6 +
+ fs/xfs/xfs_log.c                   |    4 +-
+ fs/xfs/xfs_log_cil.c               |    3 +-
+ fs/xfs/xfs_log_recover.c           |    3 -
+ fs/xfs/xfs_message.c               |    3 +-
+ fs/xfs/xfs_mount.c                 |   32 +-
+ fs/xfs/xfs_mount.h                 |    8 +-
+ fs/xfs/xfs_qm.c                    |    2 -
+ fs/xfs/xfs_qm_bhv.c                |    2 -
+ fs/xfs/xfs_qm_syscalls.c           |   27 +-
+ fs/xfs/xfs_quotaops.c              |    2 -
+ fs/xfs/xfs_rtalloc.c               |    3 -
+ fs/xfs/xfs_super.c                 |   14 +-
+ fs/xfs/xfs_symlink.c               |    3 -
+ fs/xfs/xfs_trace.c                 |    2 -
+ fs/xfs/xfs_trans.c                 |    2 -
+ fs/xfs/xfs_trans_ail.c             |    3 +-
+ fs/xfs/xfs_trans_buf.c             |    2 -
+ fs/xfs/xfs_trans_dquot.c           |    2 -
+ fs/xfs/xfs_trans_extfree.c         |    3 +-
+ fs/xfs/xfs_trans_inode.c           |    2 -
+ fs/xfs/xfs_xattr.c                 |    2 -
+ 86 files changed, 1190 insertions(+), 1428 deletions(-)
+ delete mode 100644 fs/xfs/libxfs/xfs_ag.h
+ delete mode 100644 fs/xfs/libxfs/xfs_dinode.h
+ delete mode 100644 fs/xfs/libxfs/xfs_inum.h
 
 
 hooks/post-receive
