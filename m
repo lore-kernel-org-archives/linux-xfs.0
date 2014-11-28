@@ -1,24 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id BD77F7F4E
-	for <xfs@oss.sgi.com>; Thu, 27 Nov 2014 17:00:27 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id ABD9B8F804B
-	for <xfs@oss.sgi.com>; Thu, 27 Nov 2014 15:00:24 -0800 (PST)
-Received: from imap.thunk.org (imap.thunk.org [74.207.234.97]) by cuda.sgi.com
-	with ESMTP id FL26YCDIyLafuT06 (version=TLSv1 cipher=AES128-SHA
-	bits=128 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 27 Nov 2014 15:00:22 -0800 (PST)
-Date: Thu, 27 Nov 2014 18:00:16 -0500
-From: Theodore Ts'o <tytso@mit.edu>
-Subject: Re: [PATCH-v4 2/7] vfs: add support for a lazytime mount option
-Message-ID: <20141127230016.GH14091@thunk.org>
-References: <1416997437-26092-1-git-send-email-tytso@mit.edu>
-	<1416997437-26092-3-git-send-email-tytso@mit.edu>
-	<20141127131421.GE30152@quack.suse.cz>
+	by oss.sgi.com (Postfix) with ESMTP id 63A1C7F4E
+	for <xfs@oss.sgi.com>; Thu, 27 Nov 2014 18:59:41 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 41A8C8F8033
+	for <xfs@oss.sgi.com>; Thu, 27 Nov 2014 16:59:38 -0800 (PST)
+Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
+	[150.101.137.143]) by cuda.sgi.com with ESMTP id
+	5qtHNRI5BG71Oqny for <xfs@oss.sgi.com>;
+	Thu, 27 Nov 2014 16:59:33 -0800 (PST)
+Date: Fri, 28 Nov 2014 11:59:30 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: OS Upgrade Considerations For XFS Volume
+Message-ID: <20141128005930.GF27262@dastard>
+References: <CANoQhnbjv08FVe0iRFff0fNMV7u7POY9kPtAhCbe_Vz=d8kPxg@mail.gmail.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20141127131421.GE30152@quack.suse.cz>
+In-Reply-To: <CANoQhnbjv08FVe0iRFff0fNMV7u7POY9kPtAhCbe_Vz=d8kPxg@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,101 +29,42 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Jan Kara <jack@suse.cz>
-Cc: Linux Filesystem Development List <linux-fsdevel@vger.kernel.org>, Ext4 Developers List <linux-ext4@vger.kernel.org>, Linux btrfs Developers List <linux-btrfs@vger.kernel.org>, XFS Developers <xfs@oss.sgi.com>
+To: Bharathiraja P <raja@where2getit.com>
+Cc: xfs@oss.sgi.com
 
-On Thu, Nov 27, 2014 at 02:14:21PM +0100, Jan Kara wrote:
-> * change queue_io() to also call
-> 	moved += move_expired_inodes(&wb->b_dirty_time, &wb->b_io, time + 24hours)
->   For this you need to tweak move_expired_inodes() to take pointer to
->   timestamp instead of pointer to work but that's trivial. Also you want
->   probably leave time ->older_than_this value (i.e. without +24 hours) if
->   we are doing WB_SYNC_ALL writeback. With this you can remove
->   flush_sb_dirty_time() completely.
+On Thu, Nov 27, 2014 at 07:59:59PM +0530, Bharathiraja P wrote:
+> Hi there,
+> 
+> We recently upgraded our database system from OpenSuSE-11.4 to OpenSuSE-13.1
+> 
+> Post the upgrade we are noticing load spikes on our database system.
 
-Well.... it's not quite enough.  The problem is that for ext3 and
-ext4, the actual work of writing the inode happens in dirty_inode(),
-not in write_inode().  Which means we need to do something like this.
+And ...?
 
-I'm not entirely sure whether or not this is too ugly to live;
-personally, I think my hack of handling this in update_time() might be
-preferable....
+Is there any actual performance problem you've measured?
 
-diff --git a/fs/fs-writeback.c b/fs/fs-writeback.c
-index b93c529..95a42b3 100644
---- a/fs/fs-writeback.c
-+++ b/fs/fs-writeback.c
-@@ -253,7 +253,7 @@ static bool inode_dirtied_after(struct inode *inode, unsigned long t)
-  */
- static int move_expired_inodes(struct list_head *delaying_queue,
- 			       struct list_head *dispatch_queue,
--			       struct wb_writeback_work *work)
-+			       unsigned long *older_than_this)
- {
- 	LIST_HEAD(tmp);
- 	struct list_head *pos, *node;
-@@ -264,8 +264,8 @@ static int move_expired_inodes(struct list_head *delaying_queue,
- 
- 	while (!list_empty(delaying_queue)) {
- 		inode = wb_inode(delaying_queue->prev);
--		if (work->older_than_this &&
--		    inode_dirtied_after(inode, *work->older_than_this))
-+		if (older_than_this &&
-+		    inode_dirtied_after(inode, *older_than_this))
- 			break;
- 		list_move(&inode->i_wb_list, &tmp);
- 		moved++;
-@@ -309,9 +309,14 @@ out:
- static void queue_io(struct bdi_writeback *wb, struct wb_writeback_work *work)
- {
- 	int moved;
-+	unsigned long one_day_later = jiffies + (HZ * 86400);
-+
- 	assert_spin_locked(&wb->list_lock);
- 	list_splice_init(&wb->b_more_io, &wb->b_io);
--	moved = move_expired_inodes(&wb->b_dirty, &wb->b_io, work);
-+	moved = move_expired_inodes(&wb->b_dirty, &wb->b_io,
-+				    work->older_than_this);
-+	moved += move_expired_inodes(&wb->b_dirty_time, &wb->b_io,
-+				     &one_day_later);
- 	trace_writeback_queue_io(wb, work, moved);
- }
- 
-@@ -637,6 +642,17 @@ static long writeback_sb_inodes(struct super_block *sb,
- 		}
- 
- 		/*
-+		 * If the inode is marked dirty time but is not dirty,
-+		 * then at last for ext3 and ext4 we need to call
-+		 * mark_inode_dirty_sync in order to get the inode
-+		 * timestamp transferred to the on disk inode, since
-+		 * write_inode is a no-op for those file systems.  HACK HACK HACK
-+		 */
-+		if ((inode->i_state & I_DIRTY_TIME) &&
-+		    ((inode->i_state & (I_DIRTY_SYNC | I_DIRTY_DATASYNC)) == 0))
-+			mark_inode_dirty_sync(inode);
-+
-+		/*
- 		 * Don't bother with new inodes or inodes being freed, first
- 		 * kind does not need periodic writeout yet, and for the latter
- 		 * kind writeout is handled by the freer.
-@@ -1233,9 +1249,10 @@ void inode_requeue_dirtytime(struct inode *inode)
- 	spin_lock(&bdi->wb.list_lock);
- 	spin_lock(&inode->i_lock);
- 	if ((inode->i_state & I_DIRTY_WB) == 0) {
--		if (inode->i_state & I_DIRTY_TIME)
-+		if (inode->i_state & I_DIRTY_TIME) {
-+			inode->dirtied_when = jiffies;
- 			list_move(&inode->i_wb_list, &bdi->wb.b_dirty_time);
--		else
-+		} else
- 			list_del_init(&inode->i_wb_list);
- 	}
- 	spin_unlock(&inode->i_lock);
+> OpenSuSE 11.4 uses kernel-2.6.37 and OpenSuSE-13.1 uses kernel-3.11.10
+> 
+> There seems to be some changes related to XFS in new kernel and I'm getting
+> this error when I run xfs_logprint
+> 
+> ==============
+> sudo /usr/sbin/xfs_logprint /dev/mapper/pgsql-data
+> raja's password:
+> xfs_logprint:
+> xfs_logprint: /dev/mapper/pgsql-data contains a mounted and writable
 
-Comments?
+logprint is completely unreliable on an active and mounted
+filesystem. It's not going to tell you anything useful about any
+sort of performance issue - logprint is for debugging log recovery
+problems....
 
-						- Ted
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
