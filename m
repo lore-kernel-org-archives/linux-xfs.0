@@ -1,9 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-From: xfs@oss.sgi.com
-Subject: [XFS updates] XFS development tree branch, for-next,
-	updated. v3.18-rc2-23-g216875a
-Message-Id: <20141128111637.3A0E47F5F@oss.sgi.com>
-Date: Fri, 28 Nov 2014 05:16:36 -0600 (CST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 63E2A7F3F
+	for <xfs@oss.sgi.com>; Fri, 28 Nov 2014 06:41:49 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 35BEC8F8049
+	for <xfs@oss.sgi.com>; Fri, 28 Nov 2014 04:41:45 -0800 (PST)
+Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
+	with ESMTP id vFHHUY9mrAhfhFkJ (version=TLSv1 cipher=AES256-SHA
+	bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Fri, 28 Nov 2014 04:41:43 -0800 (PST)
+Date: Fri, 28 Nov 2014 13:41:35 +0100
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [PATCH-v4 2/7] vfs: add support for a lazytime mount option
+Message-ID: <20141128124135.GA27902@quack.suse.cz>
+References: <1416997437-26092-1-git-send-email-tytso@mit.edu>
+	<1416997437-26092-3-git-send-email-tytso@mit.edu>
+	<20141127131421.GE30152@quack.suse.cz>
+	<20141127201954.GF14091@thunk.org>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20141127201954.GF14091@thunk.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -12,149 +28,53 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Theodore Ts'o <tytso@mit.edu>
+Cc: Linux Filesystem Development List <linux-fsdevel@vger.kernel.org>, Ext4 Developers List <linux-ext4@vger.kernel.org>, Jan Kara <jack@suse.cz>, Linux btrfs Developers List <linux-btrfs@vger.kernel.org>, XFS Developers <xfs@oss.sgi.com>
 
-This is an automated email from the git hooks/post-receive script. It was
-generated because a ref change was pushed to the repository containing
-the project "XFS development tree".
+On Thu 27-11-14 15:19:54, Ted Tso wrote:
+> On Thu, Nov 27, 2014 at 02:14:21PM +0100, Jan Kara wrote:
+> > Looking into the code & your patch I'd prefer to do something like:
+> > * add support for I_DIRTY_TIME in __mark_inode_dirty() - update_time will
+> >   call __mark_inode_dirty() with this flag if any of the times was updated.
+> >   That way we can just remove your ->write_time() callback - filesystems
+> >   can just handle this in their ->dirty_inode() methods if they wish.
+> >   __mark_inode_dirty() will take care of moving inode into proper writeback
+> >   list (i_dirty / i_dirty_time), dirtied_when will be set to current time.
+> 
+> One of the tricky bits about this is that btrfs wants to be able to
+> return an error from write_time() which gets reflected up through
+> update_time() to the callers of file_update_time().  Currently
+> __mark_inode_dirty() and family return a void, and changing this is
+> going to be a bit of a mess, since doing this correctly would require
+> auditing all of the callers of mark_inode_dirty(),
+> mark_inode_dirty_sync(), __mark_inode_dirty(), etc.
+> 
+> Doing this would be a good thing, and eventually I think it would be
+> nice if we could allow the mark_inode_dirty() functions return an
+> error instead of void, but I wonder if that's a cleanup that's better
+> saved for later.  While we were at it, maybe we should rename
+> mark_inode_dirty() to inode_dirty(), since that way we can be sure
+> we've looked at all of the call site of mark_inode_dirty() and friends
+> --- and we have a number of file systems, including btrfs, ext3, and
+> ext4, where mark_inode_dirty() is doing a lot more than just marking
+> the inode is dirty, and the only reason why it's named that is mostly
+> historical.
+  Except that lots of callers of update_time() / file_update_time() just
+ignore the return value anyway. And frankly most of the time it's a
+simplification we can get away with. I agree that ultimately we should
+propagate and handle these errors but as you say above handling errors from
+__mark_inode_dirty() is what we'd really need - that handles the whole
+class of errors. So for now I would be OK, with just ignoring the error
+when updating time stamps.
 
-The branch, for-next has been updated
-  216875a Merge branch 'xfs-consolidate-format-defs' into for-next
-  4bd47c1 Merge branch 'xfs-misc-fixes-for-3.19-1' into for-next
-  508b6b3 xfs: merge xfs_inum.h into xfs_format.h
-  bb58e61 xfs: move most of xfs_sb.h to xfs_format.h
-  4fb6e8a xfs: merge xfs_ag.h into xfs_format.h
-  5beda58 xfs: move acl structures to xfs_format.h
-  6d3ebaa xfs: merge xfs_dinode.h into xfs_format.h
-  db52d09e xfs: catch invalid negative blknos in _xfs_buf_find()
-  91ee575 xfs: allow lazy sb counter sync during filesystem freeze sequence
-  5d45ee1 xfs: fix error handling in xfs_qm_log_quotaoff()
-  062647a xfs: replace on-stack xfs_trans_res with pointer in xfs_create()
-  78c931b xfs: replace global xfslogd wq with per-mount wq
-      from  002758992693ae63c04122603ea9261a0a58d728 (commit)
-
-Those revisions listed above that are new to this repository have
-not appeared on any other notification email; so we list those
-revisions in full, below.
-
-- Log -----------------------------------------------------------------
-commit 216875a594e0b4fc72830e3690b8fbe7430738e2
-Merge: 4bd47c1 508b6b3
-Author: Dave Chinner <david@fromorbit.com>
-Date:   Fri Nov 28 14:52:16 2014 +1100
-
-    Merge branch 'xfs-consolidate-format-defs' into for-next
-
-commit 4bd47c1bf4a64225a855ed77e259eeb37944ba33
-Merge: 0027589 db52d09e
-Author: Dave Chinner <david@fromorbit.com>
-Date:   Fri Nov 28 14:52:02 2014 +1100
-
-    Merge branch 'xfs-misc-fixes-for-3.19-1' into for-next
-
------------------------------------------------------------------------
-
-Summary of changes:
- fs/xfs/libxfs/xfs_ag.h             |  281 ---------
- fs/xfs/libxfs/xfs_alloc.c          |    1 -
- fs/xfs/libxfs/xfs_alloc.h          |    3 +
- fs/xfs/libxfs/xfs_alloc_btree.c    |    1 -
- fs/xfs/libxfs/xfs_attr.c           |    3 -
- fs/xfs/libxfs/xfs_attr_leaf.c      |    2 -
- fs/xfs/libxfs/xfs_attr_remote.c    |    2 -
- fs/xfs/libxfs/xfs_bmap.c           |    3 -
- fs/xfs/libxfs/xfs_bmap_btree.c     |    3 -
- fs/xfs/libxfs/xfs_btree.c          |    2 -
- fs/xfs/libxfs/xfs_da_btree.c       |    2 -
- fs/xfs/libxfs/xfs_da_format.c      |    2 -
- fs/xfs/libxfs/xfs_dinode.h         |  243 --------
- fs/xfs/libxfs/xfs_dir2.c           |    4 -
- fs/xfs/libxfs/xfs_dir2_block.c     |    3 -
- fs/xfs/libxfs/xfs_dir2_data.c      |    2 -
- fs/xfs/libxfs/xfs_dir2_leaf.c      |    2 -
- fs/xfs/libxfs/xfs_dir2_node.c      |    2 -
- fs/xfs/libxfs/xfs_dir2_sf.c        |    3 -
- fs/xfs/libxfs/xfs_dquot_buf.c      |    2 -
- fs/xfs/libxfs/xfs_format.h         | 1107 ++++++++++++++++++++++++++++++++++++
- fs/xfs/libxfs/xfs_ialloc.c         |    3 -
- fs/xfs/libxfs/xfs_ialloc.h         |    4 +
- fs/xfs/libxfs/xfs_ialloc_btree.c   |    2 -
- fs/xfs/libxfs/xfs_inode_buf.c      |    3 -
- fs/xfs/libxfs/xfs_inode_fork.c     |    4 -
- fs/xfs/libxfs/xfs_inum.h           |   60 --
- fs/xfs/libxfs/xfs_log_format.h     |    2 +-
- fs/xfs/libxfs/xfs_log_rlimit.c     |    2 -
- fs/xfs/libxfs/xfs_rtbitmap.c       |    3 -
- fs/xfs/libxfs/xfs_sb.c             |    2 -
- fs/xfs/libxfs/xfs_sb.h             |  584 -------------------
- fs/xfs/libxfs/xfs_symlink_remote.c |    2 -
- fs/xfs/libxfs/xfs_trans_resv.c     |    2 -
- fs/xfs/xfs_acl.c                   |    2 -
- fs/xfs/xfs_acl.h                   |   36 --
- fs/xfs/xfs_aops.c                  |    3 -
- fs/xfs/xfs_attr_inactive.c         |    3 -
- fs/xfs/xfs_attr_list.c             |    3 -
- fs/xfs/xfs_bmap_util.c             |    3 -
- fs/xfs/xfs_buf.c                   |   16 +-
- fs/xfs/xfs_buf_item.c              |    2 +-
- fs/xfs/xfs_dir2_readdir.c          |    3 -
- fs/xfs/xfs_discard.c               |    1 -
- fs/xfs/xfs_dquot.c                 |    2 -
- fs/xfs/xfs_dquot_item.c            |    2 -
- fs/xfs/xfs_error.c                 |    2 -
- fs/xfs/xfs_export.c                |    2 -
- fs/xfs/xfs_extent_busy.c           |    1 -
- fs/xfs/xfs_extfree_item.c          |    3 +-
- fs/xfs/xfs_file.c                  |    3 -
- fs/xfs/xfs_filestream.c            |    3 -
- fs/xfs/xfs_fsops.c                 |    2 -
- fs/xfs/xfs_icache.c                |    2 -
- fs/xfs/xfs_icache.h                |    8 +
- fs/xfs/xfs_icreate_item.c          |    3 +-
- fs/xfs/xfs_inode.c                 |   17 +-
- fs/xfs/xfs_inode.h                 |    2 -
- fs/xfs/xfs_inode_item.c            |    3 -
- fs/xfs/xfs_ioctl.c                 |    3 -
- fs/xfs/xfs_ioctl32.c               |    2 -
- fs/xfs/xfs_iomap.c                 |    3 -
- fs/xfs/xfs_iops.c                  |    3 -
- fs/xfs/xfs_itable.c                |    4 -
- fs/xfs/xfs_linux.h                 |    6 +
- fs/xfs/xfs_log.c                   |    4 +-
- fs/xfs/xfs_log_cil.c               |    3 +-
- fs/xfs/xfs_log_recover.c           |    3 -
- fs/xfs/xfs_message.c               |    3 +-
- fs/xfs/xfs_mount.c                 |   32 +-
- fs/xfs/xfs_mount.h                 |    8 +-
- fs/xfs/xfs_qm.c                    |    2 -
- fs/xfs/xfs_qm_bhv.c                |    2 -
- fs/xfs/xfs_qm_syscalls.c           |   27 +-
- fs/xfs/xfs_quotaops.c              |    2 -
- fs/xfs/xfs_rtalloc.c               |    3 -
- fs/xfs/xfs_super.c                 |   14 +-
- fs/xfs/xfs_symlink.c               |    3 -
- fs/xfs/xfs_trace.c                 |    2 -
- fs/xfs/xfs_trans.c                 |    2 -
- fs/xfs/xfs_trans_ail.c             |    3 +-
- fs/xfs/xfs_trans_buf.c             |    2 -
- fs/xfs/xfs_trans_dquot.c           |    2 -
- fs/xfs/xfs_trans_extfree.c         |    3 +-
- fs/xfs/xfs_trans_inode.c           |    2 -
- fs/xfs/xfs_xattr.c                 |    2 -
- 86 files changed, 1190 insertions(+), 1428 deletions(-)
- delete mode 100644 fs/xfs/libxfs/xfs_ag.h
- delete mode 100644 fs/xfs/libxfs/xfs_dinode.h
- delete mode 100644 fs/xfs/libxfs/xfs_inum.h
-
-
-hooks/post-receive
+								Honza
 -- 
-XFS development tree
+Jan Kara <jack@suse.cz>
+SUSE Labs, CR
 
 _______________________________________________
 xfs mailing list
