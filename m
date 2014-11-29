@@ -1,23 +1,38 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 96B8529DF7
-	for <xfs@oss.sgi.com>; Fri, 28 Nov 2014 10:40:11 -0600 (CST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 59A367F47
+	for <xfs@oss.sgi.com>; Sat, 29 Nov 2014 10:45:45 -0600 (CST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 83F1B8F8052
-	for <xfs@oss.sgi.com>; Fri, 28 Nov 2014 08:40:11 -0800 (PST)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id BqLTDUkgJdyruavj for <xfs@oss.sgi.com>;
-	Fri, 28 Nov 2014 08:40:09 -0800 (PST)
-Message-ID: <5478A566.2080500@sandeen.net>
-Date: Fri, 28 Nov 2014 10:40:06 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id DC3EDAC005
+	for <xfs@oss.sgi.com>; Sat, 29 Nov 2014 08:45:41 -0800 (PST)
+Received: from mout.web.de (mout.web.de [212.227.15.3]) by cuda.sgi.com with
+	ESMTP id EGFnmB4QXThC7Bg9 (version=TLSv1 cipher=AES256-SHA
+	bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Sat, 29 Nov 2014 08:45:40 -0800 (PST)
+Message-ID: <5479F823.60900@users.sourceforge.net>
+Date: Sat, 29 Nov 2014 17:45:23 +0100
+From: SF Markus Elfring <elfring@users.sourceforge.net>
 MIME-Version: 1.0
-Subject: Re: no quota output if no usage?
-References: <5476297F.8080304@sandeen.net>
-	<20141126212144.GD9561@dastard>	<54764582.6000005@sandeen.net>
-	<20141126221845.GE9561@dastard>	<54767030.7070706@sandeen.net>
-	<20141127093225.GB30152@quack.suse.cz>
-In-Reply-To: <20141127093225.GB30152@quack.suse.cz>
+Subject: [PATCH 1/1] XFS: Deletion of unnecessary checks before two function
+	calls
+References: <5307CAA2.8060406@users.sourceforge.net>
+	<alpine.DEB.2.02.1402212321410.2043@localhost6.localdomain6>
+	<530A086E.8010901@users.sourceforge.net>
+	<alpine.DEB.2.02.1402231635510.1985@localhost6.localdomain6>
+	<530A72AA.3000601@users.sourceforge.net>
+	<alpine.DEB.2.02.1402240658210.2090@localhost6.localdomain6>
+	<530B5FB6.6010207@users.sourceforge.net>
+	<alpine.DEB.2.10.1402241710370.2074@hadrien>
+	<530C5E18.1020800@users.sourceforge.net>
+	<alpine.DEB.2.10.1402251014170.2080@hadrien>
+	<530CD2C4.4050903@users.sourceforge.net>
+	<alpine.DEB.2.10.1402251840450.7035@hadrien>
+	<530CF8FF.8080600@users.sourceforge.net>
+	<alpine.DEB.2.02.1402252117150.2047@localhost6.localdomain6>
+	<530DD06F.4090703@users.sourceforge.net>
+	<alpine.DEB.2.02.1402262129250.2221@localhost6.localdomain6>
+	<5317A59D.4@users.sourceforge.net>
+In-Reply-To: <5317A59D.4@users.sourceforge.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,33 +45,73 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Jan Kara <jack@suse.cz>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: Dave Chinner <david@fromorbit.com>, xfs@oss.sgi.com
+Cc: Julia Lawall <julia.lawall@lip6.fr>, kernel-janitors@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 
-On 11/27/14 3:32 AM, Jan Kara wrote:
-> On Wed 26-11-14 18:28:32, Eric Sandeen wrote:
->> On 11/26/14 4:18 PM, Dave Chinner wrote:
->>
->>>> Or am I missing something ...
->>>
->>> Nope, I'm confusing different reporting command behaviour....
->>
->> Ok, so back to the original question: think it's cool to drop
->> the verbose requirement to find out limits when there is 0 usage?
->   Just as a data point quota(1) command from quota-tools also doesn't
-> report quota entries where no space & inode is accounted without -v option.
-> I never thought it's particularly useful but apparently it's some heritage
-> from the original implementation of quota in some Unix and so I decided to
-> maintain compatibility...
+From: Markus Elfring <elfring@users.sourceforge.net>
+Date: Sat, 29 Nov 2014 17:40:22 +0100
 
-Thanks - sounds like maybe the weight of history is behind this.  Perhaps
-it'll just be a documentation fix to clarify what happens when there's no
-block or inode used.
+The functions xfs_blkdev_put() and xfs_qm_dqrele() test whether their argument
+is NULL and then return immediately.
+Thus the test around the call is not needed.
 
--Eric
+This issue was detected by using the Coccinelle software.
 
-> 								Honza
-> 
+Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
+---
+ fs/xfs/xfs_qm.c    | 12 +++++-------
+ fs/xfs/xfs_super.c |  3 +--
+ 2 files changed, 6 insertions(+), 9 deletions(-)
+
+diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
+index d68f230..9a4b50a 100644
+--- a/fs/xfs/xfs_qm.c
++++ b/fs/xfs/xfs_qm.c
+@@ -1749,23 +1749,21 @@ xfs_qm_vop_dqalloc(
+ 	xfs_iunlock(ip, lockflags);
+ 	if (O_udqpp)
+ 		*O_udqpp = uq;
+-	else if (uq)
++	else
+ 		xfs_qm_dqrele(uq);
+ 	if (O_gdqpp)
+ 		*O_gdqpp = gq;
+-	else if (gq)
++	else
+ 		xfs_qm_dqrele(gq);
+ 	if (O_pdqpp)
+ 		*O_pdqpp = pq;
+-	else if (pq)
++	else
+ 		xfs_qm_dqrele(pq);
+ 	return 0;
+ 
+ error_rele:
+-	if (gq)
+-		xfs_qm_dqrele(gq);
+-	if (uq)
+-		xfs_qm_dqrele(uq);
++	xfs_qm_dqrele(gq);
++	xfs_qm_dqrele(uq);
+ 	return error;
+ }
+ 
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index 206b97f..97eaa25 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -796,8 +796,7 @@ xfs_open_devices(
+  out_free_ddev_targ:
+ 	xfs_free_buftarg(mp, mp->m_ddev_targp);
+  out_close_rtdev:
+-	if (rtdev)
+-		xfs_blkdev_put(rtdev);
++	xfs_blkdev_put(rtdev);
+  out_close_logdev:
+ 	if (logdev && logdev != ddev)
+ 		xfs_blkdev_put(logdev);
+-- 
+2.1.3
 
 _______________________________________________
 xfs mailing list
