@@ -1,26 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id F30727F54
-	for <xfs@oss.sgi.com>; Sun, 30 Nov 2014 18:32:39 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id D242B304053
-	for <xfs@oss.sgi.com>; Sun, 30 Nov 2014 16:32:39 -0800 (PST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 61F997F59
+	for <xfs@oss.sgi.com>; Sun, 30 Nov 2014 22:21:04 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 480F78F8037
+	for <xfs@oss.sgi.com>; Sun, 30 Nov 2014 20:21:04 -0800 (PST)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	N4QDCG6aC3Bsfxdl for <xfs@oss.sgi.com>;
-	Sun, 30 Nov 2014 16:32:36 -0800 (PST)
+	XvzsTB3AZHwSEXOH for <xfs@oss.sgi.com>;
+	Sun, 30 Nov 2014 20:21:02 -0800 (PST)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.80)
-	(envelope-from <dave@fromorbit.com>) id 1XvEuO-0001Kq-UP
-	for xfs@oss.sgi.com; Mon, 01 Dec 2014 11:32:08 +1100
+	(envelope-from <dave@fromorbit.com>) id 1XvIT5-0001d9-2Y
+	for xfs@oss.sgi.com; Mon, 01 Dec 2014 15:20:11 +1100
 Received: from dave by disappointment with local (Exim 4.82_1-5b7a7c0-XX)
-	(envelope-from <dave@disappointment.disaster>) id 1XvEuO-0007wU-Sr
-	for xfs@oss.sgi.com; Mon, 01 Dec 2014 11:32:08 +1100
+	(envelope-from <dave@disappointment.disaster>) id 1XvIT5-00026z-1H
+	for xfs@oss.sgi.com; Mon, 01 Dec 2014 15:20:11 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH] xfs: fix premature enospc on inode allocation
-Date: Mon,  1 Dec 2014 11:32:08 +1100
-Message-Id: <1417393928-30497-1-git-send-email-david@fromorbit.com>
-MIME-Version: 1.0
+Subject: [PATCH 2/2] xfs: cleanup xfs_bmse_merge returns
+Date: Mon,  1 Dec 2014 15:20:08 +1100
+Message-Id: <1417407608-8016-3-git-send-email-david@fromorbit.com>
+In-Reply-To: <1417407608-8016-1-git-send-email-david@fromorbit.com>
+References: <1417407608-8016-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,103 +30,80 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-RnJvbTogRGF2ZSBDaGlubmVyIDxkY2hpbm5lckByZWRoYXQuY29tPgoKQWZ0ZXIgZ3Jvd2luZyBh
-IGZpbGVzeXN0ZW0sIFhGUyBjYW4gZmFpbCB0byBhbGxvY2F0ZSBpbm9kZXMgZXZlbgp0aG91Z2gg
-dGhlcmUgaXMgYSBsYXJnZSBhbW91bnQgb2Ygc3BhY2UgYXZhaWxhYmxlIGluIHRoZSBmaWxlc3lz
-dGVtCmZvciBpbm9kZXMuIFRoZSBpc3N1ZSBpcyBjYXVzZWQgYnkgYSBuZWFybHkgZnVsbCBhbGxv
-Y2F0aW9uIGdyb3VwCmhhdmluZyBlbm91Z2ggZnJlZSBzcGFjZSBpbiBpdCB0byBiZSBjb25zaWRl
-cmVkIGZvciBpbm9kZQphbGxvY2F0aW9uLCBidXQgbm90IGVub3VnaCBjb250aWd1b3VzIGZyZWUg
-c3BhY2UgdG8gYWN0dWFsbHkKYWxsb2NhdGlvbiBpbm9kZXMuICBUaGlzIHNpdHVhdGlvbiByZXN1
-bHRzIGluIHN1Y2Nlc3NmdWwgc2VsZWN0aW9uCm9mIHRoZSBBRyBmb3IgYWxsb2NhdGlvbiwgdGhl
-biBmYWlsdXJlIG9mIHRoZSBhbGxvY2F0aW9uIHJlc3VsdGluZwppbiBFTk9TUEMgYmVpbmcgcmVw
-b3J0ZWQgdG8gdGhlIGNhbGxlci4KCkl0IGlzIGNhdXNlZCBieSB0d28gcG9zc2libGUgaXNzdWVz
-LiBGaXJzdGx5LCB3ZSBvbmx5IGNvbnNpZGVyIHRoZQpsb2duZXN0IGZyZWUgZXh0ZW50IGFuZCB3
-aGV0aGVyIGl0IHdvdWxkIGZpdCBhbiBpbm9kZSBjaHVuay4gSWYgdGhlCmV4dGVudCBpcyBub3Qg
-Y29ycmVjdGx5IGFsaWduZWQsIHRoZW4gd2UgY2FuJ3QgYWxsb2NhdGUgYW4gaW5vZGUKY2h1bmsg
-aW4gaXQgcmVnYXJkbGVzcyBvZiB0aGUgZmFjdCB0aGF0IGl0IGlzIGxhcmdlIGVub3VnaC4gVGhp
-cwp0ZW5kcyB0byBiZSBhIHBlcm1hbmVudCBlcnJvciB1bnRpbCBzcGFjZSBpbiB0aGUgQUcgaXMg
-ZnJlZWQuCgpUaGUgc2Vjb25kIGlzc3VlIGlzIHRoYXQgd2UgZG9uJ3QgYWN0dWFsbHkgbG9jayB0
-aGUgQUdJIG9yIEFHRiB3aGVuCndlIGFyZSBkb2luZyB0aGVzZSBjaGVja3MsIGFuZCBzbyBieSB0
-aGUgdGltZSB3ZSBnZXQgdG8gYWN0dWFsbHkKYWxsb2NhdGluZyB0aGUgaW5vZGUgY2h1bmsgdGhl
-IHNwYWNlIHdlIHRob3VnaHQgd2UgaGFkIGluIHRoZSBBRyBtYXkKaGF2ZSBiZWVuIGFsbG9jYXRl
-ZC4gVGhpcyB0ZW5kcyB0byBiZSBhIHNwdXJpb3VzIGVycm9yIGFzIGl0CnJlcXVpcmVzIGEgcmFj
-ZSB0byB0cmlnZ2VyLiBIZW5jZSB0aGlzIGNhc2UgaXMgaWdub3JlZCBpbiB0aGlzIHBhdGNoCmFz
-IHRoZSByZXBvcnRlZCBwcm9ibGVtIGlzIGZvciBwZXJtYW5lbnQgZXJyb3JzLgoKVGhlIGZpcnN0
-IGlzc3VlIGNvdWxkIGJlIGFkZHJlc3NlZCBieSBzaW1wbHkgdGFraW5nIGludG8gYWNjb3VudCB0
-aGUKYWxpZ25tZW50IHdoZW4gY2hlY2tpbmcgdGhlIGxvbmdlc3QgZXh0ZW50LiBUaGlzLCBob3dl
-dmVyLCB3b3VsZApwcmV2ZW50IGFsbG9jYXRpb24gaW4gQUdzIHRoYXQgaGF2ZSBhbGlnbmVkLCBl
-eGFjdCBzaXplZCBleHRlbnRzCmZyZWUuIEhvd2V2ZXIsIHRoaXMgY2FzZSBzaG91bGQgYmUgZmFp
-cmx5IHJhcmUgY29tcGFyZWQgdG8gdGhlCm51bWJlciBvZiBhbGxvY2F0aW9ucyB0aGF0IG9jY3Vy
-IG5lYXIgRU5PU1BDIHRoYXQgd291bGQgdHJpZ2dlciB0aGlzCmNvbmRpdGlvbi4KCkhlbmNlLCB3
-aGVuIHNlbGVjdGluZyB0aGUgaW5vZGUgQUcsIHRha2UgaW50byBhY2NvdW50IHRoZSBpbm9kZQpj
-bHVzdGVyIGFsaWdubWVudCB3aGVuIGNoZWNraW5nIHRoZSBsb2duZXN0IGZyZWUgZXh0ZW50IGlu
-IHRoZSBBRy4KSWYgd2UgY2FuJ3QgZmluZCBhbnkgQUdzIHdpdGggYSBjb250aWd1b3VzIGZyZWUg
-c3BhY2UgbGFyZ2UKZW5vdWdoIHRvIGJlIGFsaWduZWQsIGRyb3AgdGhlIGFsaWdubWVudCBhZGRp
-dGlvbiBhbmQganVzdCB0cnkgZm9yCmFuIEFHIHRoYXQgaGFzIGVub3VnaCBjb250aWd1b3VzIGZy
-ZWUgc3BhY2UgYXZhaWxhYmxlIGZvciBhbiBpbm9kZQpjaHVuay4gVGhpcyB3b24ndCBwcmV2ZW50
-IGlzc3VlcyBmcm9tIG9jY3VycmluZywgYnV0IHNob3VsZCBhdm9pZApzaXR1YXRpb25zIHdoZXJl
-IG90aGVyIEFHcyBoYXZlIGxvdHMgb2YgZnJlZSBzcGFjZSBidXQgdGhlIHNlbGVjdGVkCkFHIGNh
-bid0IGFsbG9jYXRlIGR1ZSB0byBhbGlnbm1lbnQgY29uc3RyYWludHMuCgpSZXBvcnRlZC1ieTog
-QXJrYWRpdXN6IE1pwr9raWV3aWN6IDxhcmVrbUBtYXZlbi5wbD4KU2lnbmVkLW9mZi1ieTogRGF2
-ZSBDaGlubmVyIDxkY2hpbm5lckByZWRoYXQuY29tPgotLS0KIGZzL3hmcy9saWJ4ZnMveGZzX2lh
-bGxvYy5jIHwgMzQgKysrKysrKysrKysrKysrKysrKysrKysrLS0tLS0tLS0tLQogMSBmaWxlIGNo
-YW5nZWQsIDI0IGluc2VydGlvbnMoKyksIDEwIGRlbGV0aW9ucygtKQoKZGlmZiAtLWdpdCBhL2Zz
-L3hmcy9saWJ4ZnMveGZzX2lhbGxvYy5jIGIvZnMveGZzL2xpYnhmcy94ZnNfaWFsbG9jLmMKaW5k
-ZXggZDFkYzU5MC4uNTM3NTdiZCAxMDA2NDQKLS0tIGEvZnMveGZzL2xpYnhmcy94ZnNfaWFsbG9j
-LmMKKysrIGIvZnMveGZzL2xpYnhmcy94ZnNfaWFsbG9jLmMKQEAgLTQ1LDEyICs0NSwxMiBAQAog
-ICovCiBzdGF0aWMgaW5saW5lIGludAogeGZzX2lhbGxvY19jbHVzdGVyX2FsaWdubWVudCgKLQl4
-ZnNfYWxsb2NfYXJnX3QJKmFyZ3MpCisJc3RydWN0IHhmc19tb3VudAkqbXApCiB7Ci0JaWYgKHhm
-c19zYl92ZXJzaW9uX2hhc2FsaWduKCZhcmdzLT5tcC0+bV9zYikgJiYKLQkgICAgYXJncy0+bXAt
-Pm1fc2Iuc2JfaW5vYWxpZ25tdCA+PQotCSAgICAgWEZTX0JfVE9fRlNCVChhcmdzLT5tcCwgYXJn
-cy0+bXAtPm1faW5vZGVfY2x1c3Rlcl9zaXplKSkKLQkJcmV0dXJuIGFyZ3MtPm1wLT5tX3NiLnNi
-X2lub2FsaWdubXQ7CisJaWYgKHhmc19zYl92ZXJzaW9uX2hhc2FsaWduKCZtcC0+bV9zYikgJiYK
-KwkgICAgbXAtPm1fc2Iuc2JfaW5vYWxpZ25tdCA+PQorCQkJWEZTX0JfVE9fRlNCVChtcCwgbXAt
-Pm1faW5vZGVfY2x1c3Rlcl9zaXplKSkKKwkJcmV0dXJuIG1wLT5tX3NiLnNiX2lub2FsaWdubXQ7
-CiAJcmV0dXJuIDE7CiB9CiAKQEAgLTQwOSw3ICs0MDksNyBAQCB4ZnNfaWFsbG9jX2FnX2FsbG9j
-KAogCQkgKiBidXQgbm90IHRvIHVzZSB0aGVtIGluIHRoZSBhY3R1YWwgZXhhY3QgYWxsb2NhdGlv
-bi4KIAkJICovCiAJCWFyZ3MuYWxpZ25tZW50ID0gMTsKLQkJYXJncy5taW5hbGlnbnNsb3AgPSB4
-ZnNfaWFsbG9jX2NsdXN0ZXJfYWxpZ25tZW50KCZhcmdzKSAtIDE7CisJCWFyZ3MubWluYWxpZ25z
-bG9wID0geGZzX2lhbGxvY19jbHVzdGVyX2FsaWdubWVudChhcmdzLm1wKSAtIDE7CiAKIAkJLyog
-QWxsb3cgc3BhY2UgZm9yIHRoZSBpbm9kZSBidHJlZSB0byBzcGxpdC4gKi8KIAkJYXJncy5taW5s
-ZWZ0ID0gYXJncy5tcC0+bV9pbl9tYXhsZXZlbHMgLSAxOwpAQCAtNDQ1LDcgKzQ0NSw3IEBAIHhm
-c19pYWxsb2NfYWdfYWxsb2MoCiAJCQlhcmdzLmFsaWdubWVudCA9IGFyZ3MubXAtPm1fZGFsaWdu
-OwogCQkJaXNhbGlnbmVkID0gMTsKIAkJfSBlbHNlCi0JCQlhcmdzLmFsaWdubWVudCA9IHhmc19p
-YWxsb2NfY2x1c3Rlcl9hbGlnbm1lbnQoJmFyZ3MpOworCQkJYXJncy5hbGlnbm1lbnQgPSB4ZnNf
-aWFsbG9jX2NsdXN0ZXJfYWxpZ25tZW50KGFyZ3MubXApOwogCQkvKgogCQkgKiBOZWVkIHRvIGZp
-Z3VyZSBvdXQgd2hlcmUgdG8gYWxsb2NhdGUgdGhlIGlub2RlIGJsb2Nrcy4KIAkJICogSWRlYWxs
-eSB0aGV5IHNob3VsZCBiZSBzcGFjZWQgb3V0IHRocm91Z2ggdGhlIGEuZy4KQEAgLTQ3NCw3ICs0
-NzQsNyBAQCB4ZnNfaWFsbG9jX2FnX2FsbG9jKAogCQlhcmdzLnR5cGUgPSBYRlNfQUxMT0NUWVBF
-X05FQVJfQk5POwogCQlhcmdzLmFnYm5vID0gYmUzMl90b19jcHUoYWdpLT5hZ2lfcm9vdCk7CiAJ
-CWFyZ3MuZnNibm8gPSBYRlNfQUdCX1RPX0ZTQihhcmdzLm1wLCBhZ25vLCBhcmdzLmFnYm5vKTsK
-LQkJYXJncy5hbGlnbm1lbnQgPSB4ZnNfaWFsbG9jX2NsdXN0ZXJfYWxpZ25tZW50KCZhcmdzKTsK
-KwkJYXJncy5hbGlnbm1lbnQgPSB4ZnNfaWFsbG9jX2NsdXN0ZXJfYWxpZ25tZW50KGFyZ3MubXAp
-OwogCQlpZiAoKGVycm9yID0geGZzX2FsbG9jX3ZleHRlbnQoJmFyZ3MpKSkKIAkJCXJldHVybiBl
-cnJvcjsKIAl9CkBAIC02MjksMTAgKzYyOSwyNCBAQCB4ZnNfaWFsbG9jX2FnX3NlbGVjdCgKIAkJ
-fQogCiAJCS8qCi0JCSAqIElzIHRoZXJlIGVub3VnaCBmcmVlIHNwYWNlIGZvciB0aGUgZmlsZSBw
-bHVzIGEgYmxvY2sgb2YKLQkJICogaW5vZGVzPyAoaWYgd2UgbmVlZCB0byBhbGxvY2F0ZSBzb21l
-KT8KKwkJICogQ2hlY2sgdGhhdCB0aGVyZSBlbm91Z2ggZnJlZSBzcGFjZSBmb3IgdGhlIGZpbGUg
-cGx1cyBhIGNodW5rCisJCSAqIG9mIGlub2RlcyBpZiB3ZSBuZWVkIHRvIGFsbG9jYXRlIHNvbWUu
-IElmIHRoaXMgaXMgdGhlIGZpcnN0CisJCSAqIHBhc3MgYWNyb3NzIHRoZSBBR3MsIHRha2UgaW50
-byBhY2NvdW50IHRoZSBwb3RlbnRpYWwgc3BhY2UKKwkJICogbmVlZGVkIGZvciBhbGlnbm1lbnQg
-b2YgaW5vZGUgY2h1bmtzIHdoZW4gY2hlY2tpbmcgdGhlCisJCSAqIGxvbmdlc3QgY29udGlndW91
-cyBmcmVlIHNwYWNlIGluIHRoZSBBRyAtIHRoaXMgcHJldmVudHMgdXMKKwkJICogZnJvbSBnZXR0
-aW5nIEVOT1NQQyBiZWNhdXNlIHdlIGhhdmUgZnJlZSBzcGFjZSBsYXJnZXIgdGhhbgorCQkgKiBt
-X2lhbGxvY19ibGtzIGJ1dCBhbGlnbm1lbnQgY29uc3RyYWludHMgcHJldmVudCB1cyBmcm9tIHVz
-aW5nCisJCSAqIGl0LgorCQkgKgorCQkgKiBJZiB3ZSBjYW4ndCBmaW5kIGFuIEFHIHdpdGggc3Bh
-Y2UgZm9yIGZ1bGwgYWxpZ25tZW50IHNsYWNrIHRvCisJCSAqIGJlIHRha2VuIGludG8gYWNjb3Vu
-dCwgd2UgbXVzdCBiZSBuZWFyIEVOT1NQQyBpbiBhbGwgQUdzLgorCQkgKiBIZW5jZSB3ZSBkb24n
-dCBpbmNsdWRlIGFsaWdubWVudCBmb3IgdGhlIHNlY29uZCBwYXNzIGFuZCBzbworCQkgKiBpZiB3
-ZSBmYWlsIGFsbG9jYXRpb24gZHVlIHRvIGFsaWdubWVudCBpc3N1ZXMgdGhlbiBpdCBpcyBtb3N0
-CisJCSAqIGxpa2VseSBhIHJlYWwgRU5PU1BDIGNvbmRpdGlvbi4KIAkJICovCiAJCWluZWVkID0g
-bXAtPm1faWFsbG9jX2Jsa3M7CisJCWlmIChmbGFncyAmJiBpbmVlZCA+IDEpCisJCQlpbmVlZCAr
-PSB4ZnNfaWFsbG9jX2NsdXN0ZXJfYWxpZ25tZW50KG1wKTsKIAkJbG9uZ2VzdCA9IHBhZy0+cGFn
-Zl9sb25nZXN0OwogCQlpZiAoIWxvbmdlc3QpCiAJCQlsb25nZXN0ID0gcGFnLT5wYWdmX2ZsY291
-bnQgPiAwOwotLSAKMi4wLjAKCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dp
-LmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
+From: Dave Chinner <dchinner@redhat.com>
+
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+
+xfs_bmse_merge() has a jump label for return that just returns the
+error value. Convert all the code to just return the error directly
+and use XFS_WANT_CORRUPTED_RETURN. This also allows the final call
+to xfs_bmbt_update() to return directly.
+
+Noticed while reviewing coccinelle return cleanup patches and
+wondering why the same return pattern as in xfs_bmse_shift_one()
+wasn't picked up by the checker pattern...
+
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/libxfs/xfs_bmap.c | 23 ++++++++---------------
+ 1 file changed, 8 insertions(+), 15 deletions(-)
+
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index 0628a67..5a42e2b 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -5489,32 +5489,25 @@ xfs_bmse_merge(
+ 	error = xfs_bmbt_lookup_eq(cur, got.br_startoff, got.br_startblock,
+ 				   got.br_blockcount, &i);
+ 	if (error)
+-		goto out_error;
+-	XFS_WANT_CORRUPTED_GOTO(i == 1, out_error);
++		return error;
++	XFS_WANT_CORRUPTED_RETURN(i == 1);
+ 
+ 	error = xfs_btree_delete(cur, &i);
+ 	if (error)
+-		goto out_error;
+-	XFS_WANT_CORRUPTED_GOTO(i == 1, out_error);
++		return error;
++	XFS_WANT_CORRUPTED_RETURN(i == 1);
+ 
+ 	/* lookup and update size of the previous extent */
+ 	error = xfs_bmbt_lookup_eq(cur, left.br_startoff, left.br_startblock,
+ 				   left.br_blockcount, &i);
+ 	if (error)
+-		goto out_error;
+-	XFS_WANT_CORRUPTED_GOTO(i == 1, out_error);
++		return error;
++	XFS_WANT_CORRUPTED_RETURN(i == 1);
+ 
+ 	left.br_blockcount = blockcount;
+ 
+-	error = xfs_bmbt_update(cur, left.br_startoff, left.br_startblock,
+-				left.br_blockcount, left.br_state);
+-	if (error)
+-		goto out_error;
+-
+-	return 0;
+-
+-out_error:
+-	return error;
++	return xfs_bmbt_update(cur, left.br_startoff, left.br_startblock,
++			       left.br_blockcount, left.br_state);
+ }
+ 
+ /*
+-- 
+2.0.0
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
