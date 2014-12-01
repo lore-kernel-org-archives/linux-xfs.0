@@ -1,27 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 5F1F67F5A
-	for <xfs@oss.sgi.com>; Mon,  1 Dec 2014 16:51:05 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 4B8D48F808F
-	for <xfs@oss.sgi.com>; Mon,  1 Dec 2014 14:51:05 -0800 (PST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 8A65C7F4E
+	for <xfs@oss.sgi.com>; Mon,  1 Dec 2014 17:23:13 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 78099304084
+	for <xfs@oss.sgi.com>; Mon,  1 Dec 2014 15:23:13 -0800 (PST)
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	k3gXeYCIYtbbR0ml for <xfs@oss.sgi.com>;
-	Mon, 01 Dec 2014 14:51:03 -0800 (PST)
-Date: Tue, 2 Dec 2014 09:51:00 +1100
+	pcTx19Jf1jICRdAq for <xfs@oss.sgi.com>;
+	Mon, 01 Dec 2014 15:23:11 -0800 (PST)
+Received: from disappointment.disaster.area ([192.168.1.110]
+	helo=disappointment) by dastard with esmtp (Exim 4.80)
+	(envelope-from <dave@fromorbit.com>) id 1XvaEH-0003vM-97
+	for xfs@oss.sgi.com; Tue, 02 Dec 2014 10:18:05 +1100
+Received: from dave by disappointment with local (Exim 4.82_1-5b7a7c0-XX)
+	(envelope-from <dave@disappointment.disaster>) id 1XvaEH-0005hh-7m
+	for xfs@oss.sgi.com; Tue, 02 Dec 2014 10:18:05 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: file journal fadvise
-Message-ID: <20141201225100.GO16151@dastard>
-References: <alpine.DEB.2.00.1411301013490.352@cobra.newdream.net>
-	<CALurOm2tEV=RqN21eFJvfU1zTtJkbz2gHDCk_Ntsy4oz9iwHoA@mail.gmail.com>
-	<alpine.DEB.2.00.1411301922220.352@cobra.newdream.net>
-	<547CBEFA.3000204@redhat.com>
-	<alpine.DEB.2.00.1412011122020.3471@cobra.newdream.net>
-	<547CEC36.6070309@redhat.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <547CEC36.6070309@redhat.com>
+Subject: [PATCH 1/2] xfs: move ftype conversion functions to libxfs
+Date: Tue,  2 Dec 2014 10:18:02 +1100
+Message-Id: <1417475883-21881-2-git-send-email-david@fromorbit.com>
+In-Reply-To: <1417475883-21881-1-git-send-email-david@fromorbit.com>
+References: <1417475883-21881-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,100 +30,140 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: mnelson@redhat.com
-Cc: Sage Weil <sweil@redhat.com>, ceph-devel <ceph-devel@vger.kernel.org>, =?utf-8?B?6ams5bu65pyL?= <majianpeng@gmail.com>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Mon, Dec 01, 2014 at 04:31:18PM -0600, Mark Nelson wrote:
-> 
-> 
-> On 12/01/2014 01:23 PM, Sage Weil wrote:
-> >On Mon, 1 Dec 2014, Mark Nelson wrote:
-> >>On 11/30/2014 09:26 PM, Sage Weil wrote:
-> >>>On Mon, 1 Dec 2014, ??? wrote:
-> >>>>Hi sage:
-> >>>>   For fadvise_random it only change the file readahead. I think it make
-> >>>>no sense for xfs
-> >>>>Becasue xfs don't like btrfs, the journal write always on old place(at
-> >>>>first allocated). We only can make those place contiguous.
-> >>>
-> >>>I'm thinking of the OSD journal, which can be a regular file.  I guess it
-> >>>would probably be an allocator mode, set via a XFS_XFLAG_* flag passed to
-> >>>an ioctl, which makes the delayed allocation especially unconcerned with
-> >>>keeping blocks contiguous.  It would need to be combined with the discard
-> >>>ioctl so that any journal write can be allocated wherever it is most
-> >>>convenient (hopefully contiguous to some other write).
-> >>>
-> >>>sage
-> >>
-> >>Hi Sage,
-> >>
-> >>Could you quick write down the steps you are thinking we'd take to implement
-> >>this?  I'm concerned about the amount of overhead this could cause but I want
-> >>to make sure I'm thinking about it correctly. Especially when trim happens and
-> >>what you think/expect to happens at the FS and device levels.
-> >
-> >1- set journal_discard = true
-> >2- add journal_preallocate = true config option, set it to false, and make
-> >the fallocate(2) call on journal create conditional on that.
-> >3- test with defaults (discard = false, preallocate = true) and
-> >compare it to discard = true + preallocate = false (with file journal).
-> >4- possibly add a call to set extsize to something small on the journal
-> >file.  Or give xfs some other appropriate hint, if one exists.
+From: Dave Chinner <dchinner@redhat.com>
 
-What behaviour are you wanting for a journal file? it sounds like
-you want it to behave like a wandering log: automatically allocating
-it's next block where-ever the previous write of any kind occurred?
+These functions are needed in userspace for repair and mkfs to
+do the right thing. Move them to libxfs so they can be easily
+shared.
 
-We can't actually do that in XFS - we have no idea where the last
-write IO occurred because that's several layers down the IO stack.
-We could store where the last allocation was, but that doesn't
-guarantee we can allocate another block contiguously to that. Even
-if we do, that then fragments whatever file the journal block now
-sits adjacent to.
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/libxfs/xfs_dir2.c      | 16 ++++++++++++++++
+ fs/xfs/libxfs/xfs_dir2.h      |  6 ++++++
+ fs/xfs/libxfs/xfs_dir2_priv.h |  6 ------
+ fs/xfs/xfs_dir2_readdir.c     | 18 +-----------------
+ fs/xfs/xfs_iops.c             |  2 +-
+ 5 files changed, 24 insertions(+), 24 deletions(-)
 
-The other issue is that block allocation is divided up into
-allocation groups, and allocation is mostly siloed to avoid randomly
-allocating a file into different AGs. Just randomly allocating
-blocks to a file is the polar opposite of everything the XFS
-allocation strategies do, hence a bit more clarity on what the
-overall goal is would be helpful. ;)
-
-> >
-> >sage
-> 
-> CCing XFS devel so we can get some feedback from those guys too.
-> 
-> Question:  Looking through our discard code in common/blkdev.cc, it
-> looks like the new discard implementation is using blkdiscard.  For
-> co-located journals should we be using fstrim_range?
-
-If you are talking about journals hosted in files on a filesystem,
-then discard is the wrong operation to be performing. Discard/trim
-operates solely on free filesystem space, and you have to free the
-space from the file before you can discard it. To free the space
-from the file you need to punch a hole in it. i.e. you need to use
-fallocate(FALLOC_FL_PUNCH_HOLE).
-
-> FWIW there were some performance tests done quite a while ago:
-> 
-> http://people.redhat.com/lczerner/discard/files/Performance_evaluation_of_Linux_DIscard_support_Dev_Con2011_Brno.pdf
-
-Quite frankly, you do not want to use realtime discard - it has too
-many performance issues associated with it, not to mention there are
-randomly broken firmwares out there that don't handle high volumes
-or frequent discard operations at all well (i.e. the devices hang
-and/or trash the wrong data).
-
-Cheers,
-
-Dave.
+diff --git a/fs/xfs/libxfs/xfs_dir2.c b/fs/xfs/libxfs/xfs_dir2.c
+index d399f17..a69fb3a 100644
+--- a/fs/xfs/libxfs/xfs_dir2.c
++++ b/fs/xfs/libxfs/xfs_dir2.c
+@@ -34,6 +34,22 @@
+ 
+ struct xfs_name xfs_name_dotdot = { (unsigned char *)"..", 2, XFS_DIR3_FT_DIR };
+ 
++/*
++ * @mode, if set, indicates that the type field needs to be set up.
++ * This uses the transformation from file mode to DT_* as defined in linux/fs.h
++ * for file type specification. This will be propagated into the directory
++ * structure if appropriate for the given operation and filesystem config.
++ */
++const unsigned char xfs_mode_to_ftype[S_IFMT >> S_SHIFT] = {
++	[0]			= XFS_DIR3_FT_UNKNOWN,
++	[S_IFREG >> S_SHIFT]    = XFS_DIR3_FT_REG_FILE,
++	[S_IFDIR >> S_SHIFT]    = XFS_DIR3_FT_DIR,
++	[S_IFCHR >> S_SHIFT]    = XFS_DIR3_FT_CHRDEV,
++	[S_IFBLK >> S_SHIFT]    = XFS_DIR3_FT_BLKDEV,
++	[S_IFIFO >> S_SHIFT]    = XFS_DIR3_FT_FIFO,
++	[S_IFSOCK >> S_SHIFT]   = XFS_DIR3_FT_SOCK,
++	[S_IFLNK >> S_SHIFT]    = XFS_DIR3_FT_SYMLINK,
++};
+ 
+ /*
+  * ASCII case-insensitive (ie. A-Z) support for directories that was
+diff --git a/fs/xfs/libxfs/xfs_dir2.h b/fs/xfs/libxfs/xfs_dir2.h
+index 4dff261..874720d 100644
+--- a/fs/xfs/libxfs/xfs_dir2.h
++++ b/fs/xfs/libxfs/xfs_dir2.h
+@@ -32,6 +32,12 @@ struct xfs_dir2_data_unused;
+ extern struct xfs_name	xfs_name_dotdot;
+ 
+ /*
++ * directory filetype conversion tables.
++ */
++#define S_SHIFT 12
++extern const unsigned char xfs_mode_to_ftype[];
++
++/*
+  * directory operations vector for encode/decode routines
+  */
+ struct xfs_dir_ops {
+diff --git a/fs/xfs/libxfs/xfs_dir2_priv.h b/fs/xfs/libxfs/xfs_dir2_priv.h
+index 27ce079..27096ba 100644
+--- a/fs/xfs/libxfs/xfs_dir2_priv.h
++++ b/fs/xfs/libxfs/xfs_dir2_priv.h
+@@ -161,12 +161,6 @@ extern int xfs_dir2_grow_inode(struct xfs_da_args *args, int space,
+ extern int xfs_dir_cilookup_result(struct xfs_da_args *args,
+ 				const unsigned char *name, int len);
+ 
+-#define S_SHIFT 12
+-extern const unsigned char xfs_mode_to_ftype[];
+-
+-extern unsigned char xfs_dir3_get_dtype(struct xfs_mount *mp,
+-					__uint8_t filetype);
+-
+ 
+ /* xfs_dir2_block.c */
+ extern int xfs_dir3_block_read(struct xfs_trans *tp, struct xfs_inode *dp,
+diff --git a/fs/xfs/xfs_dir2_readdir.c b/fs/xfs/xfs_dir2_readdir.c
+index b5a10d2..098cd78 100644
+--- a/fs/xfs/xfs_dir2_readdir.c
++++ b/fs/xfs/xfs_dir2_readdir.c
+@@ -41,7 +41,7 @@ static unsigned char xfs_dir3_filetype_table[] = {
+ 	DT_FIFO, DT_SOCK, DT_LNK, DT_WHT,
+ };
+ 
+-unsigned char
++static unsigned char
+ xfs_dir3_get_dtype(
+ 	struct xfs_mount	*mp,
+ 	__uint8_t		filetype)
+@@ -54,22 +54,6 @@ xfs_dir3_get_dtype(
+ 
+ 	return xfs_dir3_filetype_table[filetype];
+ }
+-/*
+- * @mode, if set, indicates that the type field needs to be set up.
+- * This uses the transformation from file mode to DT_* as defined in linux/fs.h
+- * for file type specification. This will be propagated into the directory
+- * structure if appropriate for the given operation and filesystem config.
+- */
+-const unsigned char xfs_mode_to_ftype[S_IFMT >> S_SHIFT] = {
+-	[0]			= XFS_DIR3_FT_UNKNOWN,
+-	[S_IFREG >> S_SHIFT]    = XFS_DIR3_FT_REG_FILE,
+-	[S_IFDIR >> S_SHIFT]    = XFS_DIR3_FT_DIR,
+-	[S_IFCHR >> S_SHIFT]    = XFS_DIR3_FT_CHRDEV,
+-	[S_IFBLK >> S_SHIFT]    = XFS_DIR3_FT_BLKDEV,
+-	[S_IFIFO >> S_SHIFT]    = XFS_DIR3_FT_FIFO,
+-	[S_IFSOCK >> S_SHIFT]   = XFS_DIR3_FT_SOCK,
+-	[S_IFLNK >> S_SHIFT]    = XFS_DIR3_FT_SYMLINK,
+-};
+ 
+ STATIC int
+ xfs_dir2_sf_getdents(
+diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+index f14a3e5..c50311c 100644
+--- a/fs/xfs/xfs_iops.c
++++ b/fs/xfs/xfs_iops.c
+@@ -35,7 +35,7 @@
+ #include "xfs_icache.h"
+ #include "xfs_symlink.h"
+ #include "xfs_da_btree.h"
+-#include "xfs_dir2_priv.h"
++#include "xfs_dir2.h"
+ #include "xfs_trans_space.h"
+ 
+ #include <linux/capability.h>
 -- 
-Dave Chinner
-david@fromorbit.com
+2.0.0
 
 _______________________________________________
 xfs mailing list
