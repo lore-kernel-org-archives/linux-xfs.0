@@ -1,28 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 8A1857F59
-	for <xfs@oss.sgi.com>; Mon,  1 Dec 2014 16:31:24 -0600 (CST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 5C08E29DF9
+	for <xfs@oss.sgi.com>; Mon,  1 Dec 2014 16:34:58 -0600 (CST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 73CE08F8065
-	for <xfs@oss.sgi.com>; Mon,  1 Dec 2014 14:31:24 -0800 (PST)
-Received: from mail-qg0-f54.google.com (mail-qg0-f54.google.com
-	[209.85.192.54]) by cuda.sgi.com with ESMTP id UaA3gVg2TPhUjj2u
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 01 Dec 2014 14:31:21 -0800 (PST)
-Received: by mail-qg0-f54.google.com with SMTP id q107so8398647qgd.13
-	for <xfs@oss.sgi.com>; Mon, 01 Dec 2014 14:31:20 -0800 (PST)
-From: Mark Nelson <mark.nelson@inktank.com>
-Message-ID: <547CEC36.6070309@redhat.com>
-Date: Mon, 01 Dec 2014 16:31:18 -0600
-MIME-Version: 1.0
-Subject: Re: file journal fadvise
-References: <alpine.DEB.2.00.1411301013490.352@cobra.newdream.net>
-	<CALurOm2tEV=RqN21eFJvfU1zTtJkbz2gHDCk_Ntsy4oz9iwHoA@mail.gmail.com>
-	<alpine.DEB.2.00.1411301922220.352@cobra.newdream.net>
-	<547CBEFA.3000204@redhat.com>
-	<alpine.DEB.2.00.1412011122020.3471@cobra.newdream.net>
-In-Reply-To: <alpine.DEB.2.00.1412011122020.3471@cobra.newdream.net>
-Reply-To: mnelson@redhat.com
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 49E8D304081
+	for <xfs@oss.sgi.com>; Mon,  1 Dec 2014 14:34:55 -0800 (PST)
+Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
+	[150.101.137.129]) by cuda.sgi.com with ESMTP id
+	mNQar373m5biM3Wf for <xfs@oss.sgi.com>;
+	Mon, 01 Dec 2014 14:34:53 -0800 (PST)
+Received: from disappointment.disaster.area ([192.168.1.110]
+	helo=disappointment) by dastard with esmtp (Exim 4.80)
+	(envelope-from <dave@fromorbit.com>) id 1XvZY6-0003nP-7F
+	for xfs@oss.sgi.com; Tue, 02 Dec 2014 09:34:30 +1100
+Received: from dave by disappointment with local (Exim 4.82_1-5b7a7c0-XX)
+	(envelope-from <dave@disappointment.disaster>) id 1XvZY6-0004YL-5y
+	for xfs@oss.sgi.com; Tue, 02 Dec 2014 09:34:30 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: [PATCH] xfs: active inodes stat is broken
+Date: Tue,  2 Dec 2014 09:34:30 +1100
+Message-Id: <1417473270-17467-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,109 +28,61 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Sage Weil <sweil@redhat.com>
-Cc: ceph-devel <ceph-devel@vger.kernel.org>, xfs@oss.sgi.com, =?UTF-8?B?6ams5bu65pyL?= <majianpeng@gmail.com>
+To: xfs@oss.sgi.com
 
+From: Dave Chinner <dchinner@redhat.com>
 
+vn_active only ever gets decremented, so it has a very large
+negative number.  Make it track the inode count we currently have
+allocated properly so we can easily track the size of the inode
+cache via tools like PCP.
 
-On 12/01/2014 01:23 PM, Sage Weil wrote:
-> On Mon, 1 Dec 2014, Mark Nelson wrote:
->> On 11/30/2014 09:26 PM, Sage Weil wrote:
->>> On Mon, 1 Dec 2014, ??? wrote:
->>>> Hi sage:
->>>>    For fadvise_random it only change the file readahead. I think it make
->>>> no sense for xfs
->>>> Becasue xfs don't like btrfs, the journal write always on old place(at
->>>> first allocated). We only can make those place contiguous.
->>>
->>> I'm thinking of the OSD journal, which can be a regular file.  I guess it
->>> would probably be an allocator mode, set via a XFS_XFLAG_* flag passed to
->>> an ioctl, which makes the delayed allocation especially unconcerned with
->>> keeping blocks contiguous.  It would need to be combined with the discard
->>> ioctl so that any journal write can be allocated wherever it is most
->>> convenient (hopefully contiguous to some other write).
->>>
->>> sage
->>
->> Hi Sage,
->>
->> Could you quick write down the steps you are thinking we'd take to implement
->> this?  I'm concerned about the amount of overhead this could cause but I want
->> to make sure I'm thinking about it correctly. Especially when trim happens and
->> what you think/expect to happens at the FS and device levels.
->
-> 1- set journal_discard = true
-> 2- add journal_preallocate = true config option, set it to false, and make
-> the fallocate(2) call on journal create conditional on that.
-> 3- test with defaults (discard = false, preallocate = true) and
-> compare it to discard = true + preallocate = false (with file journal).
-> 4- possibly add a call to set extsize to something small on the journal
-> file.  Or give xfs some other appropriate hint, if one exists.
->
-> sage
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/xfs_icache.c | 3 +++
+ fs/xfs/xfs_super.c  | 1 -
+ 2 files changed, 3 insertions(+), 1 deletion(-)
 
-CCing XFS devel so we can get some feedback from those guys too.
-
-Question:  Looking through our discard code in common/blkdev.cc, it 
-looks like the new discard implementation is using blkdiscard.  For 
-co-located journals should we be using fstrim_range?
-
-FWIW there were some performance tests done quite a while ago:
-
-http://people.redhat.com/lczerner/discard/files/Performance_evaluation_of_Linux_DIscard_support_Dev_Con2011_Brno.pdf
-
->
->>
->> Mark
->>
->>>
->>>
->>>>
->>>> Thanks!
->>>> Jianpeng
->>>>
->>>> 2014-12-01 2:46 GMT+08:00 Sage Weil <sweil@redhat.com>:
->>>>> Currently, when an OSD journal is stored as a file, we preallocate it as
->>>>> a
->>>>> large contiguous extent.  That means that for every journal write we're
->>>>> seeking back to wherever the journal is.  That possibly not ideal for
->>>>> writes.  For reads it's great, but that's the last thing we care about
->>>>> optimizing (we only read the journal after a failure, which is very
->>>>> rare).
->>>>>
->>>>> I wonder if we would do better if we:
->>>>>
->>>>>    1- trim/discard the old journal contents,
->>>>>    2- posix_fadvise RANDOM
->>>>>
->>>>> I'm not sure what the XFS behavior is in this case, but ideally it seems
->>>>> what we want it to do is write the journal wherever on disk it is most
->>>>> convenient... ideally contiguous with some other write that it is
->>>>> already
->>>>> doing.  If fadvise random doesn't do that, perhaps there is another
->>>>> allocator hint we can give it that will get us that behavior...
->>>>>
->>>>> sage
->>>>> --
->>>>> To unsubscribe from this list: send the line "unsubscribe ceph-devel" in
->>>>> the body of a message to majordomo@vger.kernel.org
->>>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>>> --
->>>> To unsubscribe from this list: send the line "unsubscribe ceph-devel" in
->>>> the body of a message to majordomo@vger.kernel.org
->>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>>>
->>>>
->> --
->> To unsubscribe from this list: send the line "unsubscribe ceph-devel" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>
->>
+diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+index 92ca910..8bc3d78 100644
+--- a/fs/xfs/xfs_icache.c
++++ b/fs/xfs/xfs_icache.c
+@@ -128,6 +128,7 @@ xfs_inode_free(
+ 	/* asserts to verify all state is correct here */
+ 	ASSERT(atomic_read(&ip->i_pincount) == 0);
+ 	ASSERT(!xfs_isiflocked(ip));
++	XFS_STATS_DEC(vn_active);
+ 
+ 	call_rcu(&VFS_I(ip)->i_rcu, xfs_inode_free_callback);
+ }
+@@ -287,6 +288,8 @@ xfs_iget_cache_miss(
+ 	if (!ip)
+ 		return -ENOMEM;
+ 
++	XFS_STATS_INC(vn_active);
++
+ 	error = xfs_iread(mp, tp, ip, flags);
+ 	if (error)
+ 		goto out_destroy;
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index fee11c8..6b95851 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -1005,7 +1005,6 @@ xfs_fs_evict_inode(
+ 	clear_inode(inode);
+ 	XFS_STATS_INC(vn_rele);
+ 	XFS_STATS_INC(vn_remove);
+-	XFS_STATS_DEC(vn_active);
+ 
+ 	xfs_inactive(ip);
+ }
+-- 
+2.0.0
 
 _______________________________________________
 xfs mailing list
