@@ -1,8 +1,19 @@
-From: xfs@oss.sgi.com
-Subject: [XFS updates] XFS development tree branch, xfs-misc-fixes-for-3.19-2,
-	created. v3.18-rc2-20-gb29c70f
-Message-Id: <20141204020716.3F93D29DF7@oss.sgi.com>
-Date: Wed,  3 Dec 2014 20:07:16 -0600 (CST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 9CDA77F58
+	for <xfs@oss.sgi.com>; Mon,  1 Dec 2014 15:23:07 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 1D508AC010
+	for <xfs@oss.sgi.com>; Mon,  1 Dec 2014 13:23:03 -0800 (PST)
+Received: from vps.zelie723.cf (vps.zelie723.cf [185.13.37.189]) by
+	cuda.sgi.com with ESMTP id Cea3SebV83X75VWu (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Mon, 01 Dec 2014 13:22:59 -0800 (PST)
+Date: Mon, 1 Dec 2014 22:22:57 +0100
+From: Pyrex Attraction <maeline@stanislawa457.cf>
+Subject: Je veux ca pour Noel
+Message-ID: <68e0ea73eb3030a1084a19c9ea5eb2f0@solene026.cf>
+MIME-Version: 1.0
+Reply-To: Pyrex Attraction <maeline@stanislawa457.cf>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -11,246 +22,233 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============9011980957095139750=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-This is an automated email from the git hooks/post-receive script. It was
-generated because a ref change was pushed to the repository containing
-the project "XFS development tree".
 
-The branch, xfs-misc-fixes-for-3.19-2 has been created
-        at  b29c70f59870dad0945b0e0b3fe3758ad528e268 (commit)
-
-- Log -----------------------------------------------------------------
-commit b29c70f59870dad0945b0e0b3fe3758ad528e268
-Author: Brian Foster <bfoster@redhat.com>
-Date:   Thu Dec 4 09:43:17 2014 +1100
-
-    xfs: split metadata and log buffer completion to separate workqueues
-    
-    XFS traditionally sends all buffer I/O completion work to a single
-    workqueue. This includes metadata buffer completion and log buffer
-    completion. The log buffer completion requires a high priority queue to
-    prevent stalls due to log forces getting stuck behind other queued work.
-    
-    Rather than continue to prioritize all buffer I/O completion due to the
-    needs of log completion, split log buffer completion off to
-    m_log_workqueue and move the high priority flag from m_buf_workqueue to
-    m_log_workqueue.
-    
-    Add a b_ioend_wq wq pointer to xfs_buf to allow completion workqueue
-    customization on a per-buffer basis. Initialize b_ioend_wq to
-    m_buf_workqueue by default in the generic buffer I/O submission path.
-    Finally, override the default wq with the high priority m_log_workqueue
-    in the log buffer I/O submission path.
-    
-    Signed-off-by: Brian Foster <bfoster@redhat.com>
-    Reviewed-by: Dave Chinner <dchinner@redhat.com>
-    Signed-off-by: Dave Chinner <david@fromorbit.com>
-
-commit 32296f865e8d41ff8c337ce6f0b97eeda08988a3
-Author: Dave Chinner <dchinner@redhat.com>
-Date:   Thu Dec 4 09:43:17 2014 +1100
-
-    xfs: fix set-but-unused warnings
-    
-    The kernel compile doesn't turn on these checks by default, so it's
-    only when I do a kernel-user sync that I find that there are lots of
-    compiler warnings waiting to be fixed. Fix up these set-but-unused
-    warnings.
-    
-    Signed-off-by: Dave Chinner <dchinner@redhat.com>
-    Reviewed-by: Eric Sandeen <sandeen@redhat.com>
-    Reviewed-by: Christoph Hellwig <hch@lst.de>
-    Signed-off-by: Dave Chinner <david@fromorbit.com>
-
-commit 9a2cc41cda189bea1fb9c41ef64d19949d3b2bcd
-Author: Dave Chinner <dchinner@redhat.com>
-Date:   Thu Dec 4 09:43:17 2014 +1100
-
-    xfs: move type conversion functions to xfs_dir.h
-    
-    These are currently considered private to libxfs, but they are
-    widely used by the userspace code to decode, walk and check
-    directory structures. Hence they really form part of the external
-    API and as such need to bemoved to xfs_dir2.h.
-    
-    Signed-off-by: Dave Chinner <dchinner@redhat.com>
-    Reviewed-by: Christoph Hellwig <hch@lst.de>
-    Signed-off-by: Dave Chinner <david@fromorbit.com>
-
-commit 1b767ee386c5f58660ca9be70d3076f2b6484e72
-Author: Dave Chinner <dchinner@redhat.com>
-Date:   Thu Dec 4 09:43:17 2014 +1100
-
-    xfs: move ftype conversion functions to libxfs
-    
-    These functions are needed in userspace for repair and mkfs to
-    do the right thing. Move them to libxfs so they can be easily
-    shared.
-    
-    Signed-off-by: Dave Chinner <dchinner@redhat.com>
-    Reviewed-by: Christoph Hellwig <hch@lst.de>
-    Signed-off-by: Dave Chinner <david@fromorbit.com>
-
-commit 2d3d0c53df99587e1d58759f805c3aae79fac453
-Author: Dave Chinner <dchinner@redhat.com>
-Date:   Thu Dec 4 09:43:13 2014 +1100
-
-    xfs: lobotomise xfs_trans_read_buf_map()
-    
-    There's a case in that code where it checks for a buffer match in a
-    transaction where the buffer is not marked done. i.e. trying to
-    catch a buffer we have locked in the transaction but have not
-    completed IO on.
-    
-    The only way we can find a buffer that has not had IO completed on
-    it is if it had readahead issued on it, but we never do readahead on
-    buffers that we have already joined into a transaction. Hence this
-    condition cannot occur, and buffers locked and joined into a
-    transaction should always be marked done and not under IO.
-    
-    Remove this code and re-order xfs_trans_read_buf_map() to remove
-    duplicated IO dispatch and error handling code.
-    
-    Signed-off-by: Dave Chinner <dchinner@redhat.com>
-    Reviewed-by: Christoph Hellwig <hch@lst.de>
-    Signed-off-by: Dave Chinner <david@fromorbit.com>
-
-commit cdc9cec7c0ff521edf8c0e9c9432bf8fdccfc702
-Author: Dave Chinner <dchinner@redhat.com>
-Date:   Thu Dec 4 09:42:40 2014 +1100
-
-    xfs: active inodes stat is broken
-    
-    vn_active only ever gets decremented, so it has a very large
-    negative number.  Make it track the inode count we currently have
-    allocated properly so we can easily track the size of the inode
-    cache via tools like PCP.
-    
-    Signed-off-by: Dave Chinner <dchinner@redhat.com>
-    Reviewed-by: Mark Tinguely <tinguely@sgi.com>
-    Signed-off-by: Dave Chinner <david@fromorbit.com>
-
-commit 4db431f57be2d32f35f46023b0c0d9f8b6e06e26
-Author: Dave Chinner <dchinner@redhat.com>
-Date:   Thu Dec 4 09:42:40 2014 +1100
-
-    xfs: cleanup xfs_bmse_merge returns
-    
-    Signed-off-by: Dave Chinner <dchinner@redhat.com>
-    
-    xfs_bmse_merge() has a jump label for return that just returns the
-    error value. Convert all the code to just return the error directly
-    and use XFS_WANT_CORRUPTED_RETURN. This also allows the final call
-    to xfs_bmbt_update() to return directly.
-    
-    Noticed while reviewing coccinelle return cleanup patches and
-    wondering why the same return pattern as in xfs_bmse_shift_one()
-    wasn't picked up by the checker pattern...
-    
-    Signed-off-by: Dave Chinner <dchinner@redhat.com>
-    Reviewed-by: Brian Foster <bfoster@redhat.com>
-    Signed-off-by: Dave Chinner <david@fromorbit.com>
-
-commit b11bd671ba8a0268753db25684115acde57d3d32
-Author: Dave Chinner <dchinner@redhat.com>
-Date:   Thu Dec 4 09:42:24 2014 +1100
-
-    xfs: cleanup xfs_bmse_shift_one goto mess
-    
-    xfs_bmse_shift_one() jumps around determining whether to shift or
-    merge, making the code flow difficult to follow. Clean it up and
-    use direct error returns (including XFS_WANT_CORRUPTED_RETURN) to
-    make the code flow better and be easier to read.
-    
-    Signed-off-by: Dave Chinner <dchinner@redhat.com>
-    Reviewed-by: Brian Foster <bfoster@redhat.com>
-    Signed-off-by: Dave Chinner <david@fromorbit.com>
-
-commit 7a1df1561609c14ac457d65d9a4a2b6c0f4204ad
-Author: Dave Chinner <dchinner@redhat.com>
-Date:   Thu Dec 4 09:42:21 2014 +1100
-
-    xfs: fix premature enospc on inode allocation
-    
-    After growing a filesystem, XFS can fail to allocate inodes even
-    though there is a large amount of space available in the filesystem
-    for inodes. The issue is caused by a nearly full allocation group
-    having enough free space in it to be considered for inode
-    allocation, but not enough contiguous free space to actually
-    allocation inodes.  This situation results in successful selection
-    of the AG for allocation, then failure of the allocation resulting
-    in ENOSPC being reported to the caller.
-    
-    It is caused by two possible issues. Firstly, we only consider the
-    lognest free extent and whether it would fit an inode chunk. If the
-    extent is not correctly aligned, then we can't allocate an inode
-    chunk in it regardless of the fact that it is large enough. This
-    tends to be a permanent error until space in the AG is freed.
-    
-    The second issue is that we don't actually lock the AGI or AGF when
-    we are doing these checks, and so by the time we get to actually
-    allocating the inode chunk the space we thought we had in the AG may
-    have been allocated. This tends to be a spurious error as it
-    requires a race to trigger. Hence this case is ignored in this patch
-    as the reported problem is for permanent errors.
-    
-    The first issue could be addressed by simply taking into account the
-    alignment when checking the longest extent. This, however, would
-    prevent allocation in AGs that have aligned, exact sized extents
-    free. However, this case should be fairly rare compared to the
-    number of allocations that occur near ENOSPC that would trigger this
-    condition.
-    
-    Hence, when selecting the inode AG, take into account the inode
-    cluster alignment when checking the lognest free extent in the AG.
-    If we can't find any AGs with a contiguous free space large
-    enough to be aligned, drop the alignment addition and just try for
-    an AG that has enough contiguous free space available for an inode
-    chunk. This won't prevent issues from occurring, but should avoid
-    situations where other AGs have lots of free space but the selected
-    AG can't allocate due to alignment constraints.
-    
-    Reported-by: Arkadiusz Miskiewicz <arekm@maven.pl>
-    Signed-off-by: Dave Chinner <dchinner@redhat.com>
-    Reviewed-by: Brian Foster <bfoster@redhat.com>
-    Signed-off-by: Dave Chinner <david@fromorbit.com>
-
-commit 76b57302526ae289e8094a51d6a71031ff3d058b
-Author: Peter Watkins <treestem@gmail.com>
-Date:   Thu Dec 4 09:30:51 2014 +1100
-
-    xfs: overflow in xfs_iomap_eof_align_last_fsb
-    
-    If extsize is set and new_last_fsb is larger than 32 bits, the
-    roundup to extsize will overflow the align variable. Instead,
-    combine alignments by rounding stripe size up to extsize.
-    
-    Signed-off-by: Peter Watkins <treestem@gmail.com>
-    Reviewed-by: Nathaniel W. Turner <nate@houseofnate.net>
-    Reviewed-by: Brian Foster <bfoster@redhat.com>
-    Signed-off-by: Dave Chinner <david@fromorbit.com>
-
-commit e77b8547ca9c4b87932e9da3db906bc016885d8d
-Merge: db52d09e d254aae
-Author: Dave Chinner <david@fromorbit.com>
-Date:   Thu Dec 4 09:18:21 2014 +1100
-
-    Merge branch 'xfs-coccinelle-cleanups' into xfs-misc-fixes-for-3.19-2
-
------------------------------------------------------------------------
+--===============9011980957095139750==
+Content-Type: multipart/alternative;
+	boundary="b1_07f334205e7b38bb9f1af58a08158589"
 
 
-hooks/post-receive
--- 
-XFS development tree
+--b1_07f334205e7b38bb9f1af58a08158589
+Content-Type: text/plain; charset = "UTF-8"
+Content-Transfer-Encoding: quoted-printable
+X-MIME-Autoconverted: from 8bit to quoted-printable by acsinet21.oracle.com id sB1LNGYR014935
+
+Si vous n'arrivez pas =C3=A0 visualiser cet email, cliquez ici
+AVEC LA GAMME=20
+ATTRACTION DE PYREX,
+LA CUISINE DEVIENT PLAISIR.=20
+JE D=C3=89COUVRE LA GAMME
+ UN CONCENTR=C3=89 D'INNOVATION POUR NOEL
+
+TOUJOURS PLUS D'AVANTAGES=20
+AVEC LES COFFRETS ATTRACTION DE PYREX
+Un prix incroyablement bas !
+Livraison gratuite express en 24h
+Possiblit=C3=A9 de gagner une FIAT 500
+Compatibilit=C3=A9 tous feux, dont induction=20
+Coffrets garantis 10 ans
+Pyrex=C2=AE est une marque d=C3=BBment enregistr=C3=A9e appartenant =C3=A0=
+ Corning Inc. La marque est utilis=C3=A9e sous licence par International =
+Cookware
+Une Exclusivit=C3=A9 Pyrex est =C3=A9dit=C3=A9 par Venise HBA pour le com=
+pte de Pyrex France
+Si vous ne souhaitez plus recvoir d'informations de notre part, vou pouve=
+z vous d=C3=A9sabonner.
+
+
+--b1_07f334205e7b38bb9f1af58a08158589
+Content-Type: text/html; charset = "UTF-8"
+Content-Transfer-Encoding: quoted-printable
+X-MIME-Autoconverted: from 8bit to quoted-printable by acsinet21.oracle.com id sB1LNGYR014935
+
+<html>
+<head>
+	<meta http-equiv=3D"Content-Type" content=3D"text/html; charset=3Dutf-8"=
+>
+	<meta name=3D"viewport" content=3D"width=3Ddevice-width, initial-scale=3D=
+1">
+	<title></title>
+</head>
+<body leftmargin=3D"0" topmargin=3D"0" marginwidth=3D"0" marginheight=3D"=
+0" bgcolor=3D"#F1EFF0" style=3D"font-family: arial, sans-serif;">
+	<table width=3D"700px" style=3D"margin:0 auto;" cellpadding=3D"0" cellsp=
+acing=3D"0">
+		<tr bgcolor=3D"#000" height=3D"28px"  style=3D"background:#000;">
+			<td align=3D"center" style=3D"border-bottom:3px solid #fb3539;">
+				<font color=3D"#FFF" style=3D"font-family:Arial, Helvetica, sans-seri=
+f;font-size:12px;color:#FFF;font-weight:blod;">
+					Si vous n'arrivez pas =C3=A0 visualiser cet email, <a href=3D"http:/=
+/adelie521.co.vu/w/LSzur1BbBt7Y1xzXOlbdRw/dDf892b1xU0ztvdGqnwD892kDg/763d=
+wJKbToI0JinbCw27636UDg" style=3D"text-decoration: underline;color:#FFF;" =
+target=3D"_blank"><b><u>cliquez ici</u></b></a>
+				</font>
+			</td>
+		</tr>
+
+		<tr valign=3D"top">
+			<td bgcolor=3D"#424242" background=3D"http://adelie521.co.vu/uploads/n=
+ews/pyrex4/images/bg_row1.jpg" style=3D"background-color:#424242;backgrou=
+nd:url(http://adelie521.co.vu/uploads/news/pyrex4/images/bg_row1.jpg);hei=
+ght:694px;" height=3D"694" align=3D"center">
+				<table cellpadding=3D"0" cellspacing=3D"0">
+					<tr valign=3D"top">
+						<td height=3D"375px" style=3D"375px;">
+							<table cellpadding=3D"0" cellspacing=3D"0" height=3D"103" width=3D=
+"616" background=3D"http://adelie521.co.vu/uploads/news/pyrex4/images/bg-=
+logo.jpg" style=3D"background:url(http://adelie521.co.vu/uploads/news/pyr=
+ex4/images/bg-logo.jpg);width:616px;height:103px;margin-top:35px;">
+								<tr>
+									<td width=3D"222px">
+										<a href=3D"http://adelie521.co.vu/l/LSzur1BbBt7Y1xzXOlbdRw/ZRdv=
+WW1OW3w2Y3LPM3FL892Q/763dwJKbToI0JinbCw27636UDg">
+											<span style=3D"display:block;height:73px;width:170px;"></span>
+										</a>
+									</td>
+									<td>
+										<a href=3D"http://adelie521.co.vu/l/LSzur1BbBt7Y1xzXOlbdRw/ZRdv=
+WW1OW3w2Y3LPM3FL892Q/763dwJKbToI0JinbCw27636UDg" style=3D"text-decoration=
+:none;color:#000;">
+											<font color=3D"#000" style=3D"text-align:left;line-height: 22p=
+x;font-size: 18px;color:#000;padding-left:20px;display:block;">
+												AVEC LA GAMME <br>
+												<span style=3D"font-size: 18px;font-weight:bold;">
+													ATTRACTION DE PYREX,<br>
+													LA CUISINE DEVIENT PLAISIR. <BR>
+												</span>
+											</font>
+										</a>
+									</td>
+								</tr>
+							</table>
+						</td>
+					</tr>
+
+					<tr>
+						<td align=3D"right">
+							<table cellpadding=3D"0" cellspacing=3D"0" align=3D"bottom">
+								<tr>
+									<td bgcolor=3D"#000" background=3D"http://adelie521.co.vu/upload=
+s/news/pyrex4/images/bg_je_decouvre.jpg" style=3D"background-color:#000;h=
+eight:41px;background:url(http://adelie521.co.vu/uploads/news/pyrex4/imag=
+es/bg_je_decouvre.jpg);width:391px;height:41px;" height=3D"41px" width=3D=
+"391px">
+										<font color=3D"#FFF" style=3D"color:#FFF;margin-left:93px;font-=
+weight:bold;font-size:16px;">
+											<a href=3D"http://adelie521.co.vu/l/LSzur1BbBt7Y1xzXOlbdRw/ZRd=
+vWW1OW3w2Y3LPM3FL892Q/763dwJKbToI0JinbCw27636UDg" style=3D"text-decoratio=
+n:none;color:#FFF;">
+												JE D=C3=89COUVRE LA GAMME
+											</a>
+										</font>
+									</td>
+								</tr>
+								<tr>
+									<td style=3D"padding-top:5px;">
+										<a href=3D"http://adelie521.co.vu/l/LSzur1BbBt7Y1xzXOlbdRw/ZRdv=
+WW1OW3w2Y3LPM3FL892Q/763dwJKbToI0JinbCw27636UDg" style=3D"text-decoration=
+:none;color:#000;">
+										<img src=3D"http://adelie521.co.vu/uploads/news/pyrex4/images/b=
+g-footer-je-decouvre.jpg" alt=3D"UN CONCENTR=C3=89 D'INNOVATION POUR NOEL=
+">
+										</a>
+									</td>
+								</tr>
+							</table>
+						</td>
+					</tr>
+				</table>
+			</td>
+		</tr>
+
+		<tr valign=3D"top">
+			<td bgcolor=3D"#424242" background=3D"http://adelie521.co.vu/uploads/n=
+ews/pyrex4/images/bg_row2.jpg" style=3D"background-color:#424242;backgrou=
+nd:url(http://adelie521.co.vu/uploads/news/pyrex4/images/bg_row2.jpg);hei=
+ght:301px;" height=3D"301" align=3D"center">
+				<font color=3D"#FFF" style=3D"font-size:19px;color:#FFF;">
+					<br>
+					<a href=3D"http://adelie521.co.vu/l/LSzur1BbBt7Y1xzXOlbdRw/ZRdvWW1OW=
+3w2Y3LPM3FL892Q/763dwJKbToI0JinbCw27636UDg" style=3D"text-decoration:none=
+;color:#FFF;">
+						TOUJOURS PLUS D'AVANTAGES <br>
+						<span style=3D"font-weight:bold;">AVEC LES COFFRETS ATTRACTION DE P=
+YREX</span>
+					</a>
+				</font>
+				<span style=3D"display:block;width:367px;height:183px;background:url(=
+http://adelie521.co.vu/uploads/news/pyrex4/images/bg-garanties.jpg);margi=
+n-top:20px;text-align:left;background-repeat:no-repeat;" background=3D"ht=
+tp://adelie521.co.vu/uploads/news/pyrex4/images/bg-garanties.jpg">
+					<font color=3D"#000" style=3D"margin-left:67px;color:#000;display:bl=
+ock;padding:10px 0 0 0;line-height: 33px;">
+						<a href=3D"http://adelie521.co.vu/l/LSzur1BbBt7Y1xzXOlbdRw/ZRdvWW1O=
+W3w2Y3LPM3FL892Q/763dwJKbToI0JinbCw27636UDg" style=3D"text-decoration:non=
+e;color:#000;">
+							Un prix <b>incroyablement bas !</b><br>
+							Livraison <b>gratuite</b> express en <b>24h</b><br>
+							Possiblit=C3=A9 de gagner une <b>FIAT 500</b><br>
+							Compatibilit=C3=A9 <b>tous feux,</b> dont induction <br>
+							Coffrets <b>garantis 10 ans</b>
+						</a>
+					</font>
+					=09
+				</span>
+			</td>
+	    </tr>
+
+		<tr bgcolor=3D"#000" style=3D"background:#000;">
+      		<td align=3D"center"  style=3D"padding:10px;border-bottom:2px sol=
+id #939393">
+	      		<font color=3D"#FFF" size=3D"0.5" style=3D"font-size:11px;color:=
+#FFF;">
+	      			Pyrex=C2=AE est une marque d=C3=BBment enregistr=C3=A9e apparte=
+nant =C3=A0 Corning Inc. La marque est utilis=C3=A9e sous licence par Int=
+ernational Cookware<br>
+Une Exclusivit=C3=A9 Pyrex est =C3=A9dit=C3=A9 par Venise HBA pour le com=
+pte de Pyrex France
+
+	      		</font>
+      		</td>
+	    </tr>
+
+	    <tr bgcolor=3D"#000" style=3D"background:#000;">
+      		<td align=3D"center"  style=3D"padding:10px;">
+	      		<font color=3D"#939393" size=3D"0.5" style=3D"font-size:10px;col=
+or:#939393;">
+	      			Si vous ne souhaitez plus recvoir d'informations de notre part,=
+ vou pouvez vous=20
+	      			<a href=3D"http://adelie521.co.vu/unsubscribe/e3c3wV314Wc3Ce0s8=
+92e5klA/dDf892b1xU0ztvdGqnwD892kDg/763dwJKbToI0JinbCw27636UDg" style=3D"c=
+olor:#939393;text-decoration:none;"  target=3D"_blank"><u>d=C3=A9sabonner=
+</u></a>.
+	      		</font>
+      		</td>
+	    </tr>
+	</table>
+</body>
+</html><img src=3D"http://adelie521.co.vu/t/763dwJKbToI0JinbCw27636UDg/LS=
+zur1BbBt7Y1xzXOlbdRw" alt=3D""/>
+
+
+
+--b1_07f334205e7b38bb9f1af58a08158589--
+
+
+
+--===============9011980957095139750==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Disposition: inline
+Content-Transfer-Encoding: 7bit
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============9011980957095139750==--
