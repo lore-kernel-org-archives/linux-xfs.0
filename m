@@ -1,20 +1,31 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 502547F57
-	for <xfs@oss.sgi.com>; Mon,  1 Dec 2014 21:13:54 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 0FBBA30409A
-	for <xfs@oss.sgi.com>; Mon,  1 Dec 2014 19:13:53 -0800 (PST)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id Y1QHz2WxjsAaMoLE for <xfs@oss.sgi.com>;
-	Mon, 01 Dec 2014 19:13:51 -0800 (PST)
-Message-ID: <547D2E6D.9030108@sandeen.net>
-Date: Mon, 01 Dec 2014 21:13:49 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
+	by oss.sgi.com (Postfix) with ESMTP id 14C657F54
+	for <xfs@oss.sgi.com>; Tue,  2 Dec 2014 03:20:40 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 0336330407F
+	for <xfs@oss.sgi.com>; Tue,  2 Dec 2014 01:20:36 -0800 (PST)
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.9])
+	by cuda.sgi.com with ESMTP id 5NBO4kdTCV334DmS (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 02 Dec 2014 01:20:35 -0800 (PST)
+Date: Tue, 2 Dec 2014 01:20:33 -0800
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH-v4 1/7] vfs: split update_time() into update_time() and
+	write_time()
+Message-ID: <20141202092033.GA29712@infradead.org>
+References: <1416997437-26092-1-git-send-email-tytso@mit.edu>
+	<1416997437-26092-2-git-send-email-tytso@mit.edu>
+	<20141126192328.GA20436@infradead.org>
+	<20141127144116.GA14091@thunk.org>
+	<20141127153315.GC14091@thunk.org>
+	<20141127164952.GA1622@infradead.org>
+	<20141127202731.GG14091@thunk.org>
+	<20141201092810.GA5538@infradead.org>
+	<20141201150450.GA3337@thunk.org>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfs: fix set-but-unused warnings
-References: <1417489741-11223-1-git-send-email-david@fromorbit.com>
-In-Reply-To: <1417489741-11223-1-git-send-email-david@fromorbit.com>
+Content-Disposition: inline
+In-Reply-To: <20141201150450.GA3337@thunk.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,457 +38,90 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>, xfs@oss.sgi.com
+To: Theodore Ts'o <tytso@mit.edu>
+Cc: Jan Kara <jack@suse.cz>, XFS Developers <xfs@oss.sgi.com>, Christoph Hellwig <hch@infradead.org>, Linux Filesystem Development List <linux-fsdevel@vger.kernel.org>, Ext4 Developers List <linux-ext4@vger.kernel.org>, Linux btrfs Developers List <linux-btrfs@vger.kernel.org>
 
-On 12/1/14 9:09 PM, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
+On Mon, Dec 01, 2014 at 10:04:50AM -0500, Theodore Ts'o wrote:
+> >  - convert ext3/4 to use ->update_time instead of the ->dirty_time
+> >    callout so it gets and exact notifications (preferably the few
+> >    remaining filesystems as well, although that shouldn't really be a
+> >    blocker)
 > 
-> The kernel compile doesn't turn on these checks by default, so it's
-> only when I do a kernel-user sync that I find that there are lots of
-> compiler warnings waiting to be fixed. Fix up these set-but-unused
-> warnings.
-
-Dang!
-
-Reviewed-by: Eric Sandeen <sandeen@sandeen.net>
-
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> ---
->  fs/xfs/libxfs/xfs_bmap.c       |  2 --
->  fs/xfs/libxfs/xfs_da_btree.c   |  4 ----
->  fs/xfs/libxfs/xfs_dir2_block.c |  8 --------
->  fs/xfs/libxfs/xfs_dir2_leaf.c  | 10 ----------
->  fs/xfs/libxfs/xfs_dir2_node.c  | 12 ------------
->  fs/xfs/libxfs/xfs_dir2_sf.c    | 10 ----------
->  fs/xfs/xfs_inode.c             | 12 ++----------
->  fs/xfs/xfs_iomap.c             |  2 --
->  fs/xfs/xfs_itable.c            |  2 --
->  9 files changed, 2 insertions(+), 60 deletions(-)
+> We could do that, although ext3/4's ->update_time() would be exactly
+> the same as the generic update_time() function, so there would be code
+> duplication.  If the goal is to get rid of the magic in
+> -->dirty_inode() being used to work around how the VFS makes changes
+> to fields that end up in the on-disk inode, we would need to audit a
+> lot of extra code paths; at the very least, in how the generic quota
+> code handles updates to i_size and i_blocks (for example).
 > 
-> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> index ecc4d01..b5eb474 100644
-> --- a/fs/xfs/libxfs/xfs_bmap.c
-> +++ b/fs/xfs/libxfs/xfs_bmap.c
-> @@ -5447,13 +5447,11 @@ xfs_bmse_merge(
->  	struct xfs_btree_cur		*cur,
->  	int				*logflags)	/* output */
->  {
-> -	struct xfs_ifork		*ifp;
->  	struct xfs_bmbt_irec		got;
->  	struct xfs_bmbt_irec		left;
->  	xfs_filblks_t			blockcount;
->  	int				error, i;
->  
-> -	ifp = XFS_IFORK_PTR(ip, whichfork);
->  	xfs_bmbt_get_all(gotp, &got);
->  	xfs_bmbt_get_all(leftp, &left);
->  	blockcount = left.br_blockcount + got.br_blockcount;
-> diff --git a/fs/xfs/libxfs/xfs_da_btree.c b/fs/xfs/libxfs/xfs_da_btree.c
-> index c41e751..9cb0115 100644
-> --- a/fs/xfs/libxfs/xfs_da_btree.c
-> +++ b/fs/xfs/libxfs/xfs_da_btree.c
-> @@ -512,7 +512,6 @@ xfs_da3_root_split(
->  	struct xfs_buf		*bp;
->  	struct xfs_inode	*dp;
->  	struct xfs_trans	*tp;
-> -	struct xfs_mount	*mp;
->  	struct xfs_dir2_leaf	*leaf;
->  	xfs_dablk_t		blkno;
->  	int			level;
-> @@ -532,7 +531,6 @@ xfs_da3_root_split(
->  
->  	dp = args->dp;
->  	tp = args->trans;
-> -	mp = state->mp;
->  	error = xfs_da_get_buf(tp, dp, blkno, -1, &bp, args->whichfork);
->  	if (error)
->  		return error;
-> @@ -2340,14 +2338,12 @@ xfs_da_shrink_inode(
->  	xfs_inode_t *dp;
->  	int done, error, w, count;
->  	xfs_trans_t *tp;
-> -	xfs_mount_t *mp;
->  
->  	trace_xfs_da_shrink_inode(args);
->  
->  	dp = args->dp;
->  	w = args->whichfork;
->  	tp = args->trans;
-> -	mp = dp->i_mount;
->  	count = args->geo->fsbcount;
->  	for (;;) {
->  		/*
-> diff --git a/fs/xfs/libxfs/xfs_dir2_block.c b/fs/xfs/libxfs/xfs_dir2_block.c
-> index c2e34c5..9354e19 100644
-> --- a/fs/xfs/libxfs/xfs_dir2_block.c
-> +++ b/fs/xfs/libxfs/xfs_dir2_block.c
-> @@ -350,7 +350,6 @@ xfs_dir2_block_addname(
->  	int			low;		/* low index for binary srch */
->  	int			lowstale;	/* low stale index */
->  	int			mid=0;		/* midpoint for binary srch */
-> -	xfs_mount_t		*mp;		/* filesystem mount point */
->  	int			needlog;	/* need to log header */
->  	int			needscan;	/* need to rescan freespace */
->  	__be16			*tagp;		/* pointer to tag value */
-> @@ -360,7 +359,6 @@ xfs_dir2_block_addname(
->  
->  	dp = args->dp;
->  	tp = args->trans;
-> -	mp = dp->i_mount;
->  
->  	/* Read the (one and only) directory block into bp. */
->  	error = xfs_dir3_block_read(tp, dp, &bp);
-> @@ -615,7 +613,6 @@ xfs_dir2_block_lookup(
->  	xfs_inode_t		*dp;		/* incore inode */
->  	int			ent;		/* entry index */
->  	int			error;		/* error return value */
-> -	xfs_mount_t		*mp;		/* filesystem mount point */
->  
->  	trace_xfs_dir2_block_lookup(args);
->  
-> @@ -626,7 +623,6 @@ xfs_dir2_block_lookup(
->  	if ((error = xfs_dir2_block_lookup_int(args, &bp, &ent)))
->  		return error;
->  	dp = args->dp;
-> -	mp = dp->i_mount;
->  	hdr = bp->b_addr;
->  	xfs_dir3_data_check(dp, bp);
->  	btp = xfs_dir2_block_tail_p(args->geo, hdr);
-> @@ -767,7 +763,6 @@ xfs_dir2_block_removename(
->  	xfs_inode_t		*dp;		/* incore inode */
->  	int			ent;		/* block leaf entry index */
->  	int			error;		/* error return value */
-> -	xfs_mount_t		*mp;		/* filesystem mount point */
->  	int			needlog;	/* need to log block header */
->  	int			needscan;	/* need to fixup bestfree */
->  	xfs_dir2_sf_hdr_t	sfh;		/* shortform header */
-> @@ -785,7 +780,6 @@ xfs_dir2_block_removename(
->  	}
->  	dp = args->dp;
->  	tp = args->trans;
-> -	mp = dp->i_mount;
->  	hdr = bp->b_addr;
->  	btp = xfs_dir2_block_tail_p(args->geo, hdr);
->  	blp = xfs_dir2_block_leaf_p(btp);
-> @@ -849,7 +843,6 @@ xfs_dir2_block_replace(
->  	xfs_inode_t		*dp;		/* incore inode */
->  	int			ent;		/* leaf entry index */
->  	int			error;		/* error return value */
-> -	xfs_mount_t		*mp;		/* filesystem mount point */
->  
->  	trace_xfs_dir2_block_replace(args);
->  
-> @@ -861,7 +854,6 @@ xfs_dir2_block_replace(
->  		return error;
->  	}
->  	dp = args->dp;
-> -	mp = dp->i_mount;
->  	hdr = bp->b_addr;
->  	btp = xfs_dir2_block_tail_p(args->geo, hdr);
->  	blp = xfs_dir2_block_leaf_p(btp);
-> diff --git a/fs/xfs/libxfs/xfs_dir2_leaf.c b/fs/xfs/libxfs/xfs_dir2_leaf.c
-> index ed41a0e..1061199 100644
-> --- a/fs/xfs/libxfs/xfs_dir2_leaf.c
-> +++ b/fs/xfs/libxfs/xfs_dir2_leaf.c
-> @@ -382,7 +382,6 @@ xfs_dir2_block_to_leaf(
->  	xfs_dir2_db_t		ldb;		/* leaf block's bno */
->  	xfs_dir2_leaf_t		*leaf;		/* leaf structure */
->  	xfs_dir2_leaf_tail_t	*ltp;		/* leaf's tail */
-> -	xfs_mount_t		*mp;		/* filesystem mount point */
->  	int			needlog;	/* need to log block header */
->  	int			needscan;	/* need to rescan bestfree */
->  	xfs_trans_t		*tp;		/* transaction pointer */
-> @@ -393,7 +392,6 @@ xfs_dir2_block_to_leaf(
->  	trace_xfs_dir2_block_to_leaf(args);
->  
->  	dp = args->dp;
-> -	mp = dp->i_mount;
->  	tp = args->trans;
->  	/*
->  	 * Add the leaf block to the inode.
-> @@ -624,7 +622,6 @@ xfs_dir2_leaf_addname(
->  	int			lfloghigh;	/* high leaf logging index */
->  	int			lowstale;	/* index of prev stale leaf */
->  	xfs_dir2_leaf_tail_t	*ltp;		/* leaf tail pointer */
-> -	xfs_mount_t		*mp;		/* filesystem mount point */
->  	int			needbytes;	/* leaf block bytes needed */
->  	int			needlog;	/* need to log data header */
->  	int			needscan;	/* need to rescan data free */
-> @@ -639,7 +636,6 @@ xfs_dir2_leaf_addname(
->  
->  	dp = args->dp;
->  	tp = args->trans;
-> -	mp = dp->i_mount;
->  
->  	error = xfs_dir3_leaf_read(tp, dp, args->geo->leafblk, -1, &lbp);
->  	if (error)
-> @@ -1354,11 +1350,9 @@ xfs_dir2_leaf_removename(
->  	xfs_dir2_leaf_t		*leaf;		/* leaf structure */
->  	xfs_dir2_leaf_entry_t	*lep;		/* leaf entry */
->  	xfs_dir2_leaf_tail_t	*ltp;		/* leaf tail structure */
-> -	xfs_mount_t		*mp;		/* filesystem mount point */
->  	int			needlog;	/* need to log data header */
->  	int			needscan;	/* need to rescan data frees */
->  	xfs_dir2_data_off_t	oldbest;	/* old value of best free */
-> -	xfs_trans_t		*tp;		/* transaction pointer */
->  	struct xfs_dir2_data_free *bf;		/* bestfree table */
->  	struct xfs_dir2_leaf_entry *ents;
->  	struct xfs_dir3_icleaf_hdr leafhdr;
-> @@ -1372,8 +1366,6 @@ xfs_dir2_leaf_removename(
->  		return error;
->  	}
->  	dp = args->dp;
-> -	tp = args->trans;
-> -	mp = dp->i_mount;
->  	leaf = lbp->b_addr;
->  	hdr = dbp->b_addr;
->  	xfs_dir3_data_check(dp, dbp);
-> @@ -1605,11 +1597,9 @@ xfs_dir2_leaf_trim_data(
->  	int			error;		/* error return value */
->  	xfs_dir2_leaf_t		*leaf;		/* leaf structure */
->  	xfs_dir2_leaf_tail_t	*ltp;		/* leaf tail structure */
-> -	xfs_mount_t		*mp;		/* filesystem mount point */
->  	xfs_trans_t		*tp;		/* transaction pointer */
->  
->  	dp = args->dp;
-> -	mp = dp->i_mount;
->  	tp = args->trans;
->  	/*
->  	 * Read the offending data block.  We need its buffer.
-> diff --git a/fs/xfs/libxfs/xfs_dir2_node.c b/fs/xfs/libxfs/xfs_dir2_node.c
-> index 78ceda1..41b80d3 100644
-> --- a/fs/xfs/libxfs/xfs_dir2_node.c
-> +++ b/fs/xfs/libxfs/xfs_dir2_node.c
-> @@ -295,7 +295,6 @@ xfs_dir2_leaf_to_node(
->  	int			i;		/* leaf freespace index */
->  	xfs_dir2_leaf_t		*leaf;		/* leaf structure */
->  	xfs_dir2_leaf_tail_t	*ltp;		/* leaf tail structure */
-> -	xfs_mount_t		*mp;		/* filesystem mount point */
->  	int			n;		/* count of live freespc ents */
->  	xfs_dir2_data_off_t	off;		/* freespace entry value */
->  	__be16			*to;		/* pointer to freespace entry */
-> @@ -305,7 +304,6 @@ xfs_dir2_leaf_to_node(
->  	trace_xfs_dir2_leaf_to_node(args);
->  
->  	dp = args->dp;
-> -	mp = dp->i_mount;
->  	tp = args->trans;
->  	/*
->  	 * Add a freespace block to the directory.
-> @@ -385,16 +383,12 @@ xfs_dir2_leafn_add(
->  	int			lfloghigh;	/* high leaf entry logging */
->  	int			lfloglow;	/* low leaf entry logging */
->  	int			lowstale;	/* previous stale entry */
-> -	xfs_mount_t		*mp;		/* filesystem mount point */
-> -	xfs_trans_t		*tp;		/* transaction pointer */
->  	struct xfs_dir3_icleaf_hdr leafhdr;
->  	struct xfs_dir2_leaf_entry *ents;
->  
->  	trace_xfs_dir2_leafn_add(args, index);
->  
->  	dp = args->dp;
-> -	mp = dp->i_mount;
-> -	tp = args->trans;
->  	leaf = bp->b_addr;
->  	dp->d_ops->leaf_hdr_from_disk(&leafhdr, leaf);
->  	ents = dp->d_ops->leaf_ents_p(leaf);
-> @@ -1168,7 +1162,6 @@ xfs_dir2_leafn_remove(
->  	xfs_dir2_leaf_entry_t	*lep;		/* leaf entry */
->  	int			longest;	/* longest data free entry */
->  	int			off;		/* data block entry offset */
-> -	xfs_mount_t		*mp;		/* filesystem mount point */
->  	int			needlog;	/* need to log data header */
->  	int			needscan;	/* need to rescan data frees */
->  	xfs_trans_t		*tp;		/* transaction pointer */
-> @@ -1180,7 +1173,6 @@ xfs_dir2_leafn_remove(
->  
->  	dp = args->dp;
->  	tp = args->trans;
-> -	mp = dp->i_mount;
->  	leaf = bp->b_addr;
->  	dp->d_ops->leaf_hdr_from_disk(&leafhdr, leaf);
->  	ents = dp->d_ops->leaf_ents_p(leaf);
-> @@ -1321,7 +1313,6 @@ xfs_dir2_leafn_split(
->  	xfs_da_args_t		*args;		/* operation arguments */
->  	xfs_dablk_t		blkno;		/* new leaf block number */
->  	int			error;		/* error return value */
-> -	xfs_mount_t		*mp;		/* filesystem mount point */
->  	struct xfs_inode	*dp;
->  
->  	/*
-> @@ -1329,7 +1320,6 @@ xfs_dir2_leafn_split(
->  	 */
->  	args = state->args;
->  	dp = args->dp;
-> -	mp = dp->i_mount;
->  	ASSERT(oldblk->magic == XFS_DIR2_LEAFN_MAGIC);
->  	error = xfs_da_grow_inode(args, &blkno);
->  	if (error) {
-> @@ -2229,12 +2219,10 @@ xfs_dir2_node_trim_free(
->  	xfs_inode_t		*dp;		/* incore directory inode */
->  	int			error;		/* error return code */
->  	xfs_dir2_free_t		*free;		/* freespace structure */
-> -	xfs_mount_t		*mp;		/* filesystem mount point */
->  	xfs_trans_t		*tp;		/* transaction pointer */
->  	struct xfs_dir3_icfree_hdr freehdr;
->  
->  	dp = args->dp;
-> -	mp = dp->i_mount;
->  	tp = args->trans;
->  	/*
->  	 * Read the freespace block.
-> diff --git a/fs/xfs/libxfs/xfs_dir2_sf.c b/fs/xfs/libxfs/xfs_dir2_sf.c
-> index 2baedc4..974d62e 100644
-> --- a/fs/xfs/libxfs/xfs_dir2_sf.c
-> +++ b/fs/xfs/libxfs/xfs_dir2_sf.c
-> @@ -452,13 +452,11 @@ xfs_dir2_sf_addname_hard(
->  	xfs_dir2_sf_hdr_t	*oldsfp;	/* original shortform dir */
->  	xfs_dir2_sf_entry_t	*sfep;		/* entry in new dir */
->  	xfs_dir2_sf_hdr_t	*sfp;		/* new shortform dir */
-> -	struct xfs_mount	*mp;
->  
->  	/*
->  	 * Copy the old directory to the stack buffer.
->  	 */
->  	dp = args->dp;
-> -	mp = dp->i_mount;
->  
->  	sfp = (xfs_dir2_sf_hdr_t *)dp->i_df.if_u1.if_data;
->  	old_isize = (int)dp->i_d.di_size;
-> @@ -539,7 +537,6 @@ xfs_dir2_sf_addname_pick(
->  	xfs_inode_t		*dp;		/* incore directory inode */
->  	int			holefit;	/* found hole it will fit in */
->  	int			i;		/* entry number */
-> -	xfs_mount_t		*mp;		/* filesystem mount point */
->  	xfs_dir2_data_aoff_t	offset;		/* data block offset */
->  	xfs_dir2_sf_entry_t	*sfep;		/* shortform entry */
->  	xfs_dir2_sf_hdr_t	*sfp;		/* shortform structure */
-> @@ -547,7 +544,6 @@ xfs_dir2_sf_addname_pick(
->  	int			used;		/* data bytes used */
->  
->  	dp = args->dp;
-> -	mp = dp->i_mount;
->  
->  	sfp = (xfs_dir2_sf_hdr_t *)dp->i_df.if_u1.if_data;
->  	size = dp->d_ops->data_entsize(args->namelen);
-> @@ -613,10 +609,8 @@ xfs_dir2_sf_check(
->  	int			offset;		/* data offset */
->  	xfs_dir2_sf_entry_t	*sfep;		/* shortform dir entry */
->  	xfs_dir2_sf_hdr_t	*sfp;		/* shortform structure */
-> -	struct xfs_mount	*mp;
->  
->  	dp = args->dp;
-> -	mp = dp->i_mount;
->  
->  	sfp = (xfs_dir2_sf_hdr_t *)dp->i_df.if_u1.if_data;
->  	offset = dp->d_ops->data_first_offset;
-> @@ -1013,12 +1007,10 @@ xfs_dir2_sf_toino4(
->  	int			oldsize;	/* old inode size */
->  	xfs_dir2_sf_entry_t	*sfep;		/* new sf entry */
->  	xfs_dir2_sf_hdr_t	*sfp;		/* new sf directory */
-> -	struct xfs_mount	*mp;
->  
->  	trace_xfs_dir2_sf_toino4(args);
->  
->  	dp = args->dp;
-> -	mp = dp->i_mount;
->  
->  	/*
->  	 * Copy the old directory to the buffer.
-> @@ -1091,12 +1083,10 @@ xfs_dir2_sf_toino8(
->  	int			oldsize;	/* old inode size */
->  	xfs_dir2_sf_entry_t	*sfep;		/* new sf entry */
->  	xfs_dir2_sf_hdr_t	*sfp;		/* new sf directory */
-> -	struct xfs_mount	*mp;
->  
->  	trace_xfs_dir2_sf_toino8(args);
->  
->  	dp = args->dp;
-> -	mp = dp->i_mount;
->  
->  	/*
->  	 * Copy the old directory to the buffer.
-> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-> index fb2f900..41f804e 100644
-> --- a/fs/xfs/xfs_inode.c
-> +++ b/fs/xfs/xfs_inode.c
-> @@ -2483,9 +2483,7 @@ xfs_remove(
->  	xfs_fsblock_t           first_block;
->  	int			cancel_flags;
->  	int			committed;
-> -	int			link_zero;
->  	uint			resblks;
-> -	uint			log_count;
->  
->  	trace_xfs_remove(dp, name);
->  
-> @@ -2500,13 +2498,10 @@ xfs_remove(
->  	if (error)
->  		goto std_return;
->  
-> -	if (is_dir) {
-> +	if (is_dir)
->  		tp = xfs_trans_alloc(mp, XFS_TRANS_RMDIR);
-> -		log_count = XFS_DEFAULT_LOG_COUNT;
-> -	} else {
-> +	else
->  		tp = xfs_trans_alloc(mp, XFS_TRANS_REMOVE);
-> -		log_count = XFS_REMOVE_LOG_COUNT;
-> -	}
->  	cancel_flags = XFS_TRANS_RELEASE_LOG_RES;
->  
->  	/*
-> @@ -2574,9 +2569,6 @@ xfs_remove(
->  	if (error)
->  		goto out_trans_cancel;
->  
-> -	/* Determine if this is the last link while the inode is locked */
-> -	link_zero = (ip->i_d.di_nlink == 0);
-> -
->  	xfs_bmap_init(&free_list, &first_block);
->  	error = xfs_dir_removename(tp, dp, name, ip->i_ino,
->  					&first_block, &free_list, resblks);
-> diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-> index 2262ce3..788b5fa 100644
-> --- a/fs/xfs/xfs_iomap.c
-> +++ b/fs/xfs/xfs_iomap.c
-> @@ -261,7 +261,6 @@ xfs_iomap_eof_want_preallocate(
->  {
->  	xfs_fileoff_t   start_fsb;
->  	xfs_filblks_t   count_fsb;
-> -	xfs_fsblock_t	firstblock;
->  	int		n, error, imaps;
->  	int		found_delalloc = 0;
->  
-> @@ -286,7 +285,6 @@ xfs_iomap_eof_want_preallocate(
->  	count_fsb = XFS_B_TO_FSB(mp, mp->m_super->s_maxbytes);
->  	while (count_fsb > 0) {
->  		imaps = nimaps;
-> -		firstblock = NULLFSBLOCK;
->  		error = xfs_bmapi_read(ip, start_fsb, count_fsb, imap, &imaps,
->  				       0);
->  		if (error)
-> diff --git a/fs/xfs/xfs_itable.c b/fs/xfs/xfs_itable.c
-> index 5930d66..82e3142 100644
-> --- a/fs/xfs/xfs_itable.c
-> +++ b/fs/xfs/xfs_itable.c
-> @@ -348,7 +348,6 @@ xfs_bulkstat(
->  	int			*done)	/* 1 if there are more stats to get */
->  {
->  	xfs_buf_t		*agbp;	/* agi header buffer */
-> -	xfs_agi_t		*agi;	/* agi header data */
->  	xfs_agino_t		agino;	/* inode # in allocation group */
->  	xfs_agnumber_t		agno;	/* allocation group number */
->  	xfs_btree_cur_t		*cur;	/* btree cursor for ialloc btree */
-> @@ -399,7 +398,6 @@ xfs_bulkstat(
->  		error = xfs_ialloc_read_agi(mp, NULL, agno, &agbp);
->  		if (error)
->  			break;
-> -		agi = XFS_BUF_TO_AGI(agbp);
->  		/*
->  		 * Allocate and initialize a btree cursor for ialloc btree.
->  		 */
+> And BTW, we don't actually have a dirty_time() function any more in
+> the current patch series.  update_time() is currently looking like
+> this:
+
+Sorry, I actually meant ->dirty_inode, which is where ext4 currently
+hooks in for time updates.  ->update_time was introduced to
+
+ a) more specificly catch the kind of update
+ b) allow the filesystem to take locks or a start a transaction
+    before the inode fields are updated to provide proper atomicy.
+
+It seems like the quota code has the same problem, but given that
+neither XFS nor btrfs use it it seems like no one cared enough to sort
+it out properly..
+
+> static int update_time(struct inode *inode, struct timespec *time, int flags)
+> {
+> 	if (inode->i_op->update_time)
+> 		return inode->i_op->update_time(inode, time, flags);
 > 
+> 	if (flags & S_ATIME)
+> 		inode->i_atime = *time;
+> 	if (flags & S_VERSION)
+> 		inode_inc_iversion(inode);
+> 	if (flags & S_CTIME)
+> 		inode->i_ctime = *time;
+> 	if (flags & S_MTIME)
+> 		inode->i_mtime = *time;
+> 
+> 	if ((inode->i_sb->s_flags & MS_LAZYTIME) && !(flags & S_VERSION) &&
+> 	    !(inode->i_state & I_DIRTY))
+> 		__mark_inode_dirty(inode, I_DIRTY_TIME);
+> 	else
+> 		__mark_inode_dirty(inode, I_DIRTY_SYNC);
+> 	return 0;
+
+Why do you need the additional I_DIRTY flag?  A "lesser"
+__mark_inode_dirty should never override a stronger one.
+
+Otherwise this looks fine to me, except that I would split the default
+implementation into a new generic_update_time helper.
+
+> XFS doesn't have a ->dirty_time yet, but that way XFS would be able to
+> use the I_DIRTY_TIME flag to log the journal timestamps if it so
+> desires, and perhaps drop the need for it to use update_time().
+
+We will probably always need a ->update_time to proide proper locking
+around the timestamp updates.
+
+> (And
+> with XFS doing logical journalling, it may be that you might want to
+> include the timestamp update in the journal if you have a journal
+> transaction open already, so the disk is spun up or likely to be spin
+> up anyway, right?)
+
+XFS transactions are explicitly opened and closed, so during the atime
+updates we'll never have one open.
+
+What we could try is to have CIL items that are on "indefinit" hold
+before they are batched into a checkpoint.  We'd still commit them to
+an in-memory transaction in ->upate_time for that.  All this requires
+a lot of through and will take some time, though.
+
+In the current from the generic lazytime might even be a loss for XFS as
+we're already really good at batching updates from multiple inodes in
+the same cluster for the in-place writeback, so I really don't want
+to just enable it without those optimizations without a lot of testing.
 
 _______________________________________________
 xfs mailing list
