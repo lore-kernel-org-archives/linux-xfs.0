@@ -1,22 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 73F757F54
-	for <xfs@oss.sgi.com>; Tue,  2 Dec 2014 10:59:32 -0600 (CST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 123C97F54
+	for <xfs@oss.sgi.com>; Tue,  2 Dec 2014 11:55:57 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 42FAE304059
-	for <xfs@oss.sgi.com>; Tue,  2 Dec 2014 08:59:31 -0800 (PST)
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.9])
-	by cuda.sgi.com with ESMTP id 2P7aA3CnfHmSPWbi (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 02 Dec 2014 08:59:30 -0800 (PST)
-Date: Tue, 2 Dec 2014 08:59:30 -0800
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] xfs: lobotomise xfs_trans_read_buf_map()
-Message-ID: <20141202165930.GA28571@infradead.org>
-References: <1417473290-17544-1-git-send-email-david@fromorbit.com>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id A2838AC004
+	for <xfs@oss.sgi.com>; Tue,  2 Dec 2014 09:55:53 -0800 (PST)
+Received: from mail-qg0-f42.google.com (mail-qg0-f42.google.com
+	[209.85.192.42]) by cuda.sgi.com with ESMTP id 7riVXvWaYEzq5bWG
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Tue, 02 Dec 2014 09:55:51 -0800 (PST)
+Received: by mail-qg0-f42.google.com with SMTP id z107so9867656qgd.29
+	for <xfs@oss.sgi.com>; Tue, 02 Dec 2014 09:55:50 -0800 (PST)
+Message-ID: <547DFD24.9070805@plexistor.com>
+Date: Tue, 02 Dec 2014 19:55:48 +0200
+From: Boaz Harrosh <boaz@plexistor.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1417473290-17544-1-git-send-email-david@fromorbit.com>
+Subject: Re: [PATCH-v5 1/5] vfs: add support for a lazytime mount option
+References: <1417154411-5367-1-git-send-email-tytso@mit.edu>
+	<1417154411-5367-2-git-send-email-tytso@mit.edu>
+	<20141128172323.GD738@quack.suse.cz>
+	<20141128181421.GA19461@google.com>
+	<20141202125820.GE9092@quack.suse.cz>
+In-Reply-To: <20141202125820.GE9092@quack.suse.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,64 +34,43 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: Jan Kara <jack@suse.cz>, Ted Ts'o <tytso@mit.edu>
+Cc: linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
 
-On Tue, Dec 02, 2014 at 09:34:50AM +1100, Dave Chinner wrote:
-> The only way we can find a buffer that has not had IO completed on
-> it is if it had readahead issued on it, but we never do readahead on
-> buffers that we have already joined into a transaction. Hence this
-> condition cannot occur, and buffers locked and joined into a
-> transaction should always be marked done and not under IO.
+On 12/02/2014 02:58 PM, Jan Kara wrote:
+> On Fri 28-11-14 13:14:21, Ted Tso wrote:
+>> On Fri, Nov 28, 2014 at 06:23:23PM +0100, Jan Kara wrote:
+>>> Hum, when someone calls fsync() for an inode, you likely want to sync
+>>> timestamps to disk even if everything else is clean. I think that doing
+>>> what you did in last version:
+>>> 	dirty = inode->i_state & I_DIRTY_INODE;
+>>> 	inode->i_state &= ~I_DIRTY_INODE;
+>>> 	spin_unlock(&inode->i_lock);
+>>> 	if (dirty & I_DIRTY_TIME)
+>>> 		mark_inode_dirty_sync(inode);
+>>> looks better to me. IMO when someone calls __writeback_single_inode() we
+>>> should write whatever we have...
+>>
+>> Yes, but we also have to distinguish between what happens on an
+>> fsync() versus what happens on a periodic writeback if I_DIRTY_PAGES
+>> (but not I_DIRTY_SYNC or I_DIRTY_DATASYNC) is set.  So there is a
+>> check in the fsync() code path to handle the concern you raised above.
+>   Ah, this is the thing you have been likely talking about but which I was
+> constantly missing in my thoughts. You don't want to write times when inode
+> has only dirty pages and timestamps - 
 
-Should we add an ASSERT that would trigger when someone tries
-to issue readahead on a buffer with b_transp set?
+This I do not understand. I thought that I_DIRTY_TIME, and the all
+lazytime mount option, is only for atime. So if there are dirty
+pages then there are also m/ctime that changed and surly we want to
+write these times to disk ASAP.
 
->  	bp = xfs_buf_read_map(target, map, nmaps, flags, ops);
-> -	if (bp == NULL) {
-> -		*bpp = NULL;
-> -		return (flags & XBF_TRYLOCK) ?
-> -					0 : -ENOMEM;
-> +	if (!bp) {
-> +		if (!(flags & XBF_TRYLOCK))
-> +			return -ENOMEM;
-> +		return tp ? 0 : -EAGAIN;
+if we are lazytime also with m/ctime then I think I would like an
+option for only atime lazy. because m/ctime is cardinal to some
+operations even though I might want atime lazy.
 
-Can you fix the inconsistent return for the trylock case in a follow on
-patch?  This difference doesn't look intentional to me, and I would
-be surprised if it's correctly handled in the callers.
-
->  	}
-> +
->  	if (bp->b_error) {
->  		error = bp->b_error;
-> +		if (!XFS_FORCED_SHUTDOWN(mp))
-> +			xfs_buf_ioerror_alert(bp, __func__);
-> +		bp->b_flags &= ~XBF_DONE;
->  		xfs_buf_stale(bp);
-> -		XFS_BUF_DONE(bp);
-
-The old non-tp case did a XFS_BUF_UNDONE, which you open code here,
-while the with-tp case did a XFS_BUF_DONE.  I think this change needs
-a little explanation.
-
->  #ifdef DEBUG
-> -	if (xfs_do_error && !(tp->t_flags & XFS_TRANS_DIRTY)) {
-> +	if (xfs_do_error && (!tp || !(tp->t_flags & XFS_TRANS_DIRTY))) {
->  		if (xfs_error_target == target) {
->  			if (((xfs_req_num++) % xfs_error_mod) == 0) {
-> -				xfs_force_shutdown(tp->t_mountp,
-> -						   SHUTDOWN_META_IO_ERROR);
->  				xfs_buf_relse(bp);
-> -				xfs_debug(mp, "Returning trans error!");
-> +				xfs_debug(mp, "Returning error!");
->  				return -EIO;
->  			}
->  		}
-
-I would suggest to kill this xfs_do_error error code, it's the last
-use of the never initialized xfs_do_error and xfs_error_target
-variables.
+Sorry for the slowness, I'm probably missing something
+Thanks
+Boaz
 
 _______________________________________________
 xfs mailing list
