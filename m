@@ -1,23 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id EF9F97F56
-	for <xfs@oss.sgi.com>; Tue,  2 Dec 2014 10:35:57 -0600 (CST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 73F757F54
+	for <xfs@oss.sgi.com>; Tue,  2 Dec 2014 10:59:32 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 8A02AAC002
-	for <xfs@oss.sgi.com>; Tue,  2 Dec 2014 08:35:54 -0800 (PST)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id 4KxchoInGaGHL0AX (version=TLSv1
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 42FAE304059
+	for <xfs@oss.sgi.com>; Tue,  2 Dec 2014 08:59:31 -0800 (PST)
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.9])
+	by cuda.sgi.com with ESMTP id 2P7aA3CnfHmSPWbi (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 02 Dec 2014 08:35:53 -0800 (PST)
-Date: Tue, 2 Dec 2014 11:35:48 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH] xfs: Correctly lock inode when removing suid and
-	security marks
-Message-ID: <20141202163548.GB2113@laptop.bfoster>
-References: <1417532489-26580-1-git-send-email-jack@suse.cz>
+	Tue, 02 Dec 2014 08:59:30 -0800 (PST)
+Date: Tue, 2 Dec 2014 08:59:30 -0800
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] xfs: lobotomise xfs_trans_read_buf_map()
+Message-ID: <20141202165930.GA28571@infradead.org>
+References: <1417473290-17544-1-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1417532489-26580-1-git-send-email-jack@suse.cz>
+In-Reply-To: <1417473290-17544-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,62 +29,64 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Jan Kara <jack@suse.cz>
+To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On Tue, Dec 02, 2014 at 04:01:29PM +0100, Jan Kara wrote:
-> Currently XFS calls file_remove_suid() without holding i_mutex. This is
-> wrong because that function can end up messing with file permissions and
-> security xattrs for which we need i_mutex held.
-> 
-> Fix the problem by grabbing iolock exclusively when we will need to
-> change anything in permissions / xattrs.
-> 
-> Signed-off-by: Jan Kara <jack@suse.cz>
-> ---
+On Tue, Dec 02, 2014 at 09:34:50AM +1100, Dave Chinner wrote:
+> The only way we can find a buffer that has not had IO completed on
+> it is if it had readahead issued on it, but we never do readahead on
+> buffers that we have already joined into a transaction. Hence this
+> condition cannot occur, and buffers locked and joined into a
+> transaction should always be marked done and not under IO.
 
-Hi Jan,
+Should we add an ASSERT that would trigger when someone tries
+to issue readahead on a buffer with b_transp set?
 
-This doesn't compile... it looks like we need to include the security.h
-header. FWIW, even then I get an undefined symbol error when compiling
-as a module (security_inode_need_killpriv() does not appear to be
-exported).
+>  	bp = xfs_buf_read_map(target, map, nmaps, flags, ops);
+> -	if (bp == NULL) {
+> -		*bpp = NULL;
+> -		return (flags & XBF_TRYLOCK) ?
+> -					0 : -ENOMEM;
+> +	if (!bp) {
+> +		if (!(flags & XBF_TRYLOCK))
+> +			return -ENOMEM;
+> +		return tp ? 0 : -EAGAIN;
 
-Brian
+Can you fix the inconsistent return for the trylock case in a follow on
+patch?  This difference doesn't look intentional to me, and I would
+be surprised if it's correctly handled in the callers.
 
->  fs/xfs/xfs_file.c | 12 ++++++++++++
->  1 file changed, 12 insertions(+)
-> 
-> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-> index eb596b419942..ad6636ac4943 100644
-> --- a/fs/xfs/xfs_file.c
-> +++ b/fs/xfs/xfs_file.c
-> @@ -521,6 +521,18 @@ restart:
->  	if (error)
->  		return error;
->  
-> +	/* For changing security info in file_remove_suid() we need i_mutex */
-> +	if (!IS_NOSEC(inode) && *iolock == XFS_IOLOCK_SHARED) {
-> +		struct dentry *dentry = file->f_path.dentry;
+>  	}
 > +
-> +		if (should_remove_suid(dentry) ||
-> +		    security_inode_need_killpriv(dentry)) {
-> +			xfs_rw_iunlock(ip, *iolock);
-> +			*iolock = XFS_IOLOCK_EXCL;
-> +			xfs_rw_ilock(ip, *iolock);
-> +			goto restart;
-> +		}
-> +	}
->  	/*
->  	 * If the offset is beyond the size of the file, we need to zero any
->  	 * blocks that fall between the existing EOF and the start of this
-> -- 
-> 1.8.1.4
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+>  	if (bp->b_error) {
+>  		error = bp->b_error;
+> +		if (!XFS_FORCED_SHUTDOWN(mp))
+> +			xfs_buf_ioerror_alert(bp, __func__);
+> +		bp->b_flags &= ~XBF_DONE;
+>  		xfs_buf_stale(bp);
+> -		XFS_BUF_DONE(bp);
+
+The old non-tp case did a XFS_BUF_UNDONE, which you open code here,
+while the with-tp case did a XFS_BUF_DONE.  I think this change needs
+a little explanation.
+
+>  #ifdef DEBUG
+> -	if (xfs_do_error && !(tp->t_flags & XFS_TRANS_DIRTY)) {
+> +	if (xfs_do_error && (!tp || !(tp->t_flags & XFS_TRANS_DIRTY))) {
+>  		if (xfs_error_target == target) {
+>  			if (((xfs_req_num++) % xfs_error_mod) == 0) {
+> -				xfs_force_shutdown(tp->t_mountp,
+> -						   SHUTDOWN_META_IO_ERROR);
+>  				xfs_buf_relse(bp);
+> -				xfs_debug(mp, "Returning trans error!");
+> +				xfs_debug(mp, "Returning error!");
+>  				return -EIO;
+>  			}
+>  		}
+
+I would suggest to kill this xfs_do_error error code, it's the last
+use of the never initialized xfs_do_error and xfs_error_target
+variables.
 
 _______________________________________________
 xfs mailing list
