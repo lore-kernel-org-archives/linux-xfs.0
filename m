@@ -1,25 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id A2E387F56
-	for <xfs@oss.sgi.com>; Tue,  2 Dec 2014 16:00:17 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 2FE6DAC00C
-	for <xfs@oss.sgi.com>; Tue,  2 Dec 2014 14:00:17 -0800 (PST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 2ADAB7F56
+	for <xfs@oss.sgi.com>; Tue,  2 Dec 2014 16:05:44 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 0A86E8F8033
+	for <xfs@oss.sgi.com>; Tue,  2 Dec 2014 14:05:40 -0800 (PST)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	csCC92gSDwxHJkXf for <xfs@oss.sgi.com>;
-	Tue, 02 Dec 2014 14:00:15 -0800 (PST)
-Date: Wed, 3 Dec 2014 08:59:47 +1100
+	kBMNbtxPtwGtP5py for <xfs@oss.sgi.com>;
+	Tue, 02 Dec 2014 14:05:36 -0800 (PST)
+Date: Wed, 3 Dec 2014 09:05:03 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs: Correctly lock inode when removing suid and
-	security marks
-Message-ID: <20141202215947.GD18131@dastard>
-References: <1417532489-26580-1-git-send-email-jack@suse.cz>
-	<20141202163548.GB2113@laptop.bfoster>
-	<20141202204756.GA944@quack.suse.cz>
+Subject: Re: [PATCH] xfs: fix set-but-unused warnings
+Message-ID: <20141202220503.GE18131@dastard>
+References: <1417489741-11223-1-git-send-email-david@fromorbit.com>
+	<20141202092310.GA25767@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20141202204756.GA944@quack.suse.cz>
+In-Reply-To: <20141202092310.GA25767@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,37 +30,25 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Jan Kara <jack@suse.cz>
-Cc: Brian Foster <bfoster@redhat.com>, xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-On Tue, Dec 02, 2014 at 09:47:56PM +0100, Jan Kara wrote:
-> On Tue 02-12-14 11:35:48, Brian Foster wrote:
-> > On Tue, Dec 02, 2014 at 04:01:29PM +0100, Jan Kara wrote:
-> > > Currently XFS calls file_remove_suid() without holding i_mutex. This is
-> > > wrong because that function can end up messing with file permissions and
-> > > security xattrs for which we need i_mutex held.
-> > > 
-> > > Fix the problem by grabbing iolock exclusively when we will need to
-> > > change anything in permissions / xattrs.
-> > > 
-> > > Signed-off-by: Jan Kara <jack@suse.cz>
-> > > ---
+On Tue, Dec 02, 2014 at 01:23:10AM -0800, Christoph Hellwig wrote:
+> On Tue, Dec 02, 2014 at 02:09:01PM +1100, Dave Chinner wrote:
+> > From: Dave Chinner <dchinner@redhat.com>
 > > 
-> > Hi Jan,
+> > The kernel compile doesn't turn on these checks by default, so it's
+> > only when I do a kernel-user sync that I find that there are lots of
+> > compiler warnings waiting to be fixed. Fix up these set-but-unused
+> > warnings.
 > > 
-> > This doesn't compile... it looks like we need to include the security.h
-> > header. FWIW, even then I get an undefined symbol error when compiling
-> > as a module (security_inode_need_killpriv() does not appear to be
-> > exported).
->   Sorry, forgot to amend the include in the commit. Regarding export of
-> security_inode_need_killpriv() - right, I had security XFS compiled in so I
-> didn't notice. Before I go and fix this up in the obvious way, does anyone
-> have better idea how to fix this than to second guess what
-> file_remove_suid() does? Maybe a VFS helper like file_needs_remove_suid()
-> will be cleaner than what I did?
+> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> 
+> Looks good.  Maybe we should enable those warnings for fs/xfs?
 
-Helper seems like a sane idea - that way the filesystems can use
-them as a matched pair if need be...
+I now have a local patch (-Werror -Wunused-but-set-variable) that
+catches these during my for-next integration testing workflow, so
+I should catch them (and other errors) during review....
 
 Cheers,
 
