@@ -1,22 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id C22767F54
-	for <xfs@oss.sgi.com>; Tue,  2 Dec 2014 09:01:41 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 602FAAC050
-	for <xfs@oss.sgi.com>; Tue,  2 Dec 2014 07:01:38 -0800 (PST)
-Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id VRICbdoY7LiLFed1 (version=TLSv1 cipher=AES256-SHA
-	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 02 Dec 2014 07:01:33 -0800 (PST)
-Received: from relay2.suse.de (charybdis-ext.suse.de [195.135.220.254])
-	by mx2.suse.de (Postfix) with ESMTP id F0B1EAC18
-	for <xfs@oss.sgi.com>; Tue,  2 Dec 2014 15:01:31 +0000 (UTC)
-From: Jan Kara <jack@suse.cz>
-Subject: [PATCH] xfs: Correctly lock inode when removing suid and security
-	marks
-Date: Tue,  2 Dec 2014 16:01:29 +0100
-Message-Id: <1417532489-26580-1-git-send-email-jack@suse.cz>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id B8CF77F54
+	for <xfs@oss.sgi.com>; Tue,  2 Dec 2014 10:24:52 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 9B0CC304032
+	for <xfs@oss.sgi.com>; Tue,  2 Dec 2014 08:24:49 -0800 (PST)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id xHH8r66ft28mBaqC (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 02 Dec 2014 08:24:45 -0800 (PST)
+Date: Tue, 2 Dec 2014 11:24:40 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH v2] xfs: overflow in xfs_iomap_eof_align_last_fsb
+Message-ID: <20141202162438.GA2113@laptop.bfoster>
+References: <1416855973-6359-1-git-send-email-treestem@gmail.com>
+	<1417473928-447-1-git-send-email-treestem@gmail.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <1417473928-447-1-git-send-email-treestem@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,51 +26,78 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: Jan Kara <jack@suse.cz>
+To: Peter Watkins <treestem@gmail.com>
+Cc: xfs@oss.sgi.com
 
-Currently XFS calls file_remove_suid() without holding i_mutex. This is
-wrong because that function can end up messing with file permissions and
-security xattrs for which we need i_mutex held.
+On Mon, Dec 01, 2014 at 05:45:28PM -0500, Peter Watkins wrote:
+> If extsize is set and new_last_fsb is larger than 32 bits, the
+> roundup to extsize will overflow the align variable. Instead,
+> combine alignments by rounding stripe size up to extsize.
+> 
+> Signed-off-by: Peter Watkins <treestem@gmail.com>
+> Reviewed-by: Nathaniel W. Turner <nate@houseofnate.net>
+> ---
 
-Fix the problem by grabbing iolock exclusively when we will need to
-change anything in permissions / xattrs.
+Looks fine to me:
 
-Signed-off-by: Jan Kara <jack@suse.cz>
----
- fs/xfs/xfs_file.c | 12 ++++++++++++
- 1 file changed, 12 insertions(+)
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index eb596b419942..ad6636ac4943 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -521,6 +521,18 @@ restart:
- 	if (error)
- 		return error;
- 
-+	/* For changing security info in file_remove_suid() we need i_mutex */
-+	if (!IS_NOSEC(inode) && *iolock == XFS_IOLOCK_SHARED) {
-+		struct dentry *dentry = file->f_path.dentry;
-+
-+		if (should_remove_suid(dentry) ||
-+		    security_inode_need_killpriv(dentry)) {
-+			xfs_rw_iunlock(ip, *iolock);
-+			*iolock = XFS_IOLOCK_EXCL;
-+			xfs_rw_ilock(ip, *iolock);
-+			goto restart;
-+		}
-+	}
- 	/*
- 	 * If the offset is beyond the size of the file, we need to zero any
- 	 * blocks that fall between the existing EOF and the start of this
--- 
-1.8.1.4
+>  fs/xfs/xfs_iomap.c |   13 ++++++-------
+>  1 file changed, 6 insertions(+), 7 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+> index afcf3c9..3fad071 100644
+> --- a/fs/xfs/xfs_iomap.c
+> +++ b/fs/xfs/xfs_iomap.c
+> @@ -52,7 +52,6 @@ xfs_iomap_eof_align_last_fsb(
+>  	xfs_extlen_t	extsize,
+>  	xfs_fileoff_t	*last_fsb)
+>  {
+> -	xfs_fileoff_t	new_last_fsb = 0;
+>  	xfs_extlen_t	align = 0;
+>  	int		eof, error;
+>  
+> @@ -70,8 +69,8 @@ xfs_iomap_eof_align_last_fsb(
+>  		else if (mp->m_dalign)
+>  			align = mp->m_dalign;
+>  
+> -		if (align && XFS_ISIZE(ip) >= XFS_FSB_TO_B(mp, align))
+> -			new_last_fsb = roundup_64(*last_fsb, align);
+> +		if (align && XFS_ISIZE(ip) < XFS_FSB_TO_B(mp, align))
+> +			align = 0;
+>  	}
+>  
+>  	/*
+> @@ -79,14 +78,14 @@ xfs_iomap_eof_align_last_fsb(
+>  	 * (when file on a real-time subvolume or has di_extsize hint).
+>  	 */
+>  	if (extsize) {
+> -		if (new_last_fsb)
+> -			align = roundup_64(new_last_fsb, extsize);
+> +		if (align)
+> +			align = roundup_64(align, extsize);
+>  		else
+>  			align = extsize;
+> -		new_last_fsb = roundup_64(*last_fsb, align);
+>  	}
+>  
+> -	if (new_last_fsb) {
+> +	if (align) {
+> +		xfs_fileoff_t	new_last_fsb = roundup_64(*last_fsb, align);
+>  		error = xfs_bmap_eof(ip, new_last_fsb, XFS_DATA_FORK, &eof);
+>  		if (error)
+>  			return error;
+> -- 
+> 1.7.9.5
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
