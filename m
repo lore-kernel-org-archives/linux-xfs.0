@@ -1,28 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 9A0037F56
-	for <xfs@oss.sgi.com>; Tue,  2 Dec 2014 15:01:44 -0600 (CST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 440947F56
+	for <xfs@oss.sgi.com>; Tue,  2 Dec 2014 15:02:25 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 8864A8F8033
-	for <xfs@oss.sgi.com>; Tue,  2 Dec 2014 13:01:41 -0800 (PST)
-Received: from imap.thunk.org (imap.thunk.org [74.207.234.97]) by cuda.sgi.com
-	with ESMTP id B1AufriIj7XxMCxO (version=TLSv1 cipher=AES128-SHA
-	bits=128 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 02 Dec 2014 13:01:40 -0800 (PST)
-Date: Tue, 2 Dec 2014 16:01:19 -0500
-From: Theodore Ts'o <tytso@mit.edu>
-Subject: Re: [PATCH-v5 1/5] vfs: add support for a lazytime mount option
-Message-ID: <20141202210119.GD13618@thunk.org>
-References: <1417154411-5367-1-git-send-email-tytso@mit.edu>
-	<1417154411-5367-2-git-send-email-tytso@mit.edu>
-	<20141128172323.GD738@quack.suse.cz>
-	<20141128181421.GA19461@google.com>
-	<20141202125820.GE9092@quack.suse.cz>
-	<547DFD24.9070805@plexistor.com> <20141202192337.GA13618@thunk.org>
-	<0CAF91FD-F713-4E98-8967-9CA0390CA784@dilger.ca>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 32AF4304039
+	for <xfs@oss.sgi.com>; Tue,  2 Dec 2014 13:02:22 -0800 (PST)
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	VrjfjNZxQOrcuqhR for <xfs@oss.sgi.com>;
+	Tue, 02 Dec 2014 13:02:20 -0800 (PST)
+Date: Wed, 3 Dec 2014 08:02:04 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] xfs: active inodes stat is broken
+Message-ID: <20141202210204.GA18131@dastard>
+References: <1417473270-17467-1-git-send-email-david@fromorbit.com>
+	<547DC411.3090202@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <0CAF91FD-F713-4E98-8967-9CA0390CA784@dilger.ca>
+In-Reply-To: <547DC411.3090202@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,20 +30,51 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Andreas Dilger <adilger@dilger.ca>
-Cc: Boaz Harrosh <boaz@plexistor.com>, Jan Kara <jack@suse.cz>, xfs@oss.sgi.com, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org
+To: Mark Tinguely <tinguely@sgi.com>
+Cc: xfs@oss.sgi.com
 
-On Tue, Dec 02, 2014 at 01:37:27PM -0700, Andreas Dilger wrote:
+On Tue, Dec 02, 2014 at 07:52:17AM -0600, Mark Tinguely wrote:
+> On 12/01/14 16:34, Dave Chinner wrote:
+> >From: Dave Chinner<dchinner@redhat.com>
+> >
+> >vn_active only ever gets decremented, so it has a very large
+> >negative number.  Make it track the inode count we currently have
+> >allocated properly so we can easily track the size of the inode
+> >cache via tools like PCP.
+> >
+> >Signed-off-by: Dave Chinner<dchinner@redhat.com>
+> >---
+> >  fs/xfs/xfs_icache.c | 3 +++
+> >  fs/xfs/xfs_super.c  | 1 -
+> >  2 files changed, 3 insertions(+), 1 deletion(-)
+> >
+> >diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+> >index 92ca910..8bc3d78 100644
+> >--- a/fs/xfs/xfs_icache.c
+> >+++ b/fs/xfs/xfs_icache.c
+> >@@ -128,6 +128,7 @@ xfs_inode_free(
+> >  	/* asserts to verify all state is correct here */
+> >  	ASSERT(atomic_read(&ip->i_pincount) == 0);
+> >  	ASSERT(!xfs_isiflocked(ip));
+> >+	XFS_STATS_DEC(vn_active);
+> >
+> >  	call_rcu(&VFS_I(ip)->i_rcu, xfs_inode_free_callback);
+> >  }
 > 
-> One thing that comes to mind is touch/utimes()/utimensat().  Those
-> should definitely not result in timestamps being kept only in memory
-> for 24h, since the whole point of those calls is to update the times.
-> It makes sense for these APIs to dirty the inode for proper writeout.
+> Would the inode allocated and freed in xfs_recover_inode_owner_change()
+> cause this the count to go negative?
 
-Not a problem.  Touch/utimes* go through notify_change() and
-->setattr, so they won't go through the I_DIRTY_TIME code path.
+Good catch - it will. Recovering swap extent operations is pretty
+rare, so I wouldn't have noticed an off-by-one-or-two on a normal
+system where there are several thousand allocated and cached inodes
+even at idle. I'll fix it.
 
-	      	   	    	    	- Ted
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
