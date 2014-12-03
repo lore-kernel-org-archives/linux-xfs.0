@@ -1,28 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 0157E7F3F
-	for <xfs@oss.sgi.com>; Wed,  3 Dec 2014 13:24:28 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id E4D3D304032
-	for <xfs@oss.sgi.com>; Wed,  3 Dec 2014 11:24:24 -0800 (PST)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id jvyEPALwIMDQNG9V (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 03 Dec 2014 11:24:23 -0800 (PST)
-Received: from int-mx10.intmail.prod.int.phx2.redhat.com
-	(int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id sB3JOLYU006917
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256
-	verify=FAIL) for <xfs@oss.sgi.com>; Wed, 3 Dec 2014 14:24:22 -0500
-Received: from bfoster.bfoster ([10.18.41.237])
-	by int-mx10.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id sB3JOLLn011187
-	for <xfs@oss.sgi.com>; Wed, 3 Dec 2014 14:24:21 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH v2] xfs: split metadata and log buffer completion to separate
-	workqueues
-Date: Wed,  3 Dec 2014 14:24:19 -0500
-Message-Id: <1417634659-16386-1-git-send-email-bfoster@redhat.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 8AE4F7F4E
+	for <xfs@oss.sgi.com>; Wed,  3 Dec 2014 13:54:49 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 5CB478F8049
+	for <xfs@oss.sgi.com>; Wed,  3 Dec 2014 11:54:49 -0800 (PST)
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	1UKJrZLEA9Hdn2NX for <xfs@oss.sgi.com>;
+	Wed, 03 Dec 2014 11:54:47 -0800 (PST)
+Date: Thu, 4 Dec 2014 06:54:33 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] xfs: lobotomise xfs_trans_read_buf_map()
+Message-ID: <20141203195433.GI18131@dastard>
+References: <1417473290-17544-1-git-send-email-david@fromorbit.com>
+	<20141202165930.GA28571@infradead.org>
+	<20141202224518.GG18131@dastard>
+	<20141203105122.GA3727@infradead.org> <547F19AE.6050808@sgi.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <547F19AE.6050808@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,142 +28,64 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Mark Tinguely <tinguely@sgi.com>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
-XFS traditionally sends all buffer I/O completion work to a single
-workqueue. This includes metadata buffer completion and log buffer
-completion. The log buffer completion requires a high priority queue to
-prevent stalls due to log forces getting stuck behind other queued work.
+On Wed, Dec 03, 2014 at 08:09:50AM -0600, Mark Tinguely wrote:
+> On 12/03/14 04:51, Christoph Hellwig wrote:
+> >On Wed, Dec 03, 2014 at 09:45:18AM +1100, Dave Chinner wrote:
+> >>>Can you fix the inconsistent return for the trylock case in a follow on
+> >>>patch?  This difference doesn't look intentional to me, and I would
+> >>>be surprised if it's correctly handled in the callers.
+> >>
+> >>Ok, I'll do an audit and make this common in a follow up patch. Just
+> >>to confirm:
+> >>
+> >>		if (!(flags & XBF_TRYLOCK))
+> >>			return -ENOMEM;
+> >>		return -EAGAIN;
+> >>
+> >>is what you want to see, right?
+> >
+> >Yes.
+> 
+> Even ENOMEM / EAGAIN could be wrong if _xfs_buf_find() was given an
+> illegal block number - then it would be EFSCORRUPT.
 
-Rather than continue to prioritize all buffer I/O completion due to the
-needs of log completion, split log buffer completion off to
-m_log_workqueue and move the high priority flag from m_buf_workqueue to
-m_log_workqueue.
+Well, in theory.  Yes, the comment I wrote in xfs_buf_find() at the
+time of adding the first check says we should return EFSCORRUPTED,
+but that's only indicative of the fact that we've been handed
+something that is bad. The code won't do anything different if it
+is handed ENOMEM or EFSCORRUPTED - the same error handling will
+occur, and the only difference will be a warning in the log.
 
-Add a b_ioend_wq wq pointer to xfs_buf to allow completion workqueue
-customization on a per-buffer basis. Initialize b_ioend_wq to
-m_buf_workqueue by default in the generic buffer I/O submission path.
-Finally, override the default wq with the high priority m_log_workqueue
-in the log buffer I/O submission path.
+> I think we need to push the error message from _xfs_buf_find(). I
+> played with it once and seemed to have lost it and can do it again
+> if no one else has the time.
 
-Signed-off-by: Brian Foster <bfoster@redhat.com>
----
+The check in _xfs_buf_find() is a loud warning because it
+indicates we failed to validate a block number at a higher layer.
+IOWs, if you see that warning fire in _xfs_buf_find(), we need to
+track down where that bad block number came from and why it wasn't
+correctly validated before we tried to actually use it. Those are
+the bugs we need to fix; reworking the buffer cache API so that
+_xfs_buf_find() can return an error won't fix those bugs, nor change
+the error handling behaviour of the callers of xfs_trans*buf[_map].
 
-v2:
-- Add bp->b_ioend_wq pointer to multiplex buffer I/O completion
-  workqueues.
-v1/rfc: http://oss.sgi.com/archives/xfs/2014-11/msg00240.html
+Hence I don't think we need to change _Xfs_buf_find() or the way it
+reports errors at all. Put the work into fixing the block number
+validation bugs it exposes...
 
- fs/xfs/xfs_buf.c   | 13 ++++++++++---
- fs/xfs/xfs_buf.h   |  3 ++-
- fs/xfs/xfs_log.c   |  4 ++++
- fs/xfs/xfs_super.c |  5 ++---
- 4 files changed, 18 insertions(+), 7 deletions(-)
+Cheers,
 
-diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-index a4ce390..bb502a3 100644
---- a/fs/xfs/xfs_buf.c
-+++ b/fs/xfs/xfs_buf.c
-@@ -1041,7 +1041,7 @@ xfs_buf_ioend_work(
- 	struct work_struct	*work)
- {
- 	struct xfs_buf		*bp =
--		container_of(work, xfs_buf_t, b_iodone_work);
-+		container_of(work, xfs_buf_t, b_ioend_work);
- 
- 	xfs_buf_ioend(bp);
- }
-@@ -1050,8 +1050,8 @@ void
- xfs_buf_ioend_async(
- 	struct xfs_buf	*bp)
- {
--	INIT_WORK(&bp->b_iodone_work, xfs_buf_ioend_work);
--	queue_work(bp->b_target->bt_mount->m_buf_workqueue, &bp->b_iodone_work);
-+	INIT_WORK(&bp->b_ioend_work, xfs_buf_ioend_work);
-+	queue_work(bp->b_ioend_wq, &bp->b_ioend_work);
- }
- 
- void
-@@ -1220,6 +1220,13 @@ _xfs_buf_ioapply(
- 	 */
- 	bp->b_error = 0;
- 
-+	/*
-+	 * Initialize the I/O completion workqueue if we haven't yet or the
-+	 * submitter has not opted to specify a custom one.
-+	 */
-+	if (!bp->b_ioend_wq)
-+		bp->b_ioend_wq = bp->b_target->bt_mount->m_buf_workqueue;
-+
- 	if (bp->b_flags & XBF_WRITE) {
- 		if (bp->b_flags & XBF_SYNCIO)
- 			rw = WRITE_SYNC;
-diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
-index 82002c0..75ff5d5 100644
---- a/fs/xfs/xfs_buf.h
-+++ b/fs/xfs/xfs_buf.h
-@@ -164,7 +164,8 @@ typedef struct xfs_buf {
- 	struct xfs_perag	*b_pag;		/* contains rbtree root */
- 	xfs_buftarg_t		*b_target;	/* buffer target (device) */
- 	void			*b_addr;	/* virtual address of buffer */
--	struct work_struct	b_iodone_work;
-+	struct work_struct	b_ioend_work;
-+	struct workqueue_struct	*b_ioend_wq;	/* I/O completion wq */
- 	xfs_buf_iodone_t	b_iodone;	/* I/O completion function */
- 	struct completion	b_iowait;	/* queue for I/O waiters */
- 	void			*b_fspriv;
-diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-index f6d6b8b..e408bf5 100644
---- a/fs/xfs/xfs_log.c
-+++ b/fs/xfs/xfs_log.c
-@@ -1806,6 +1806,8 @@ xlog_sync(
- 	XFS_BUF_ZEROFLAGS(bp);
- 	XFS_BUF_ASYNC(bp);
- 	bp->b_flags |= XBF_SYNCIO;
-+	/* use high priority completion wq */
-+	bp->b_ioend_wq = log->l_mp->m_log_workqueue;
- 
- 	if (log->l_mp->m_flags & XFS_MOUNT_BARRIER) {
- 		bp->b_flags |= XBF_FUA;
-@@ -1854,6 +1856,8 @@ xlog_sync(
- 		bp->b_flags |= XBF_SYNCIO;
- 		if (log->l_mp->m_flags & XFS_MOUNT_BARRIER)
- 			bp->b_flags |= XBF_FUA;
-+		/* use high priority completion wq */
-+		bp->b_ioend_wq = log->l_mp->m_log_workqueue;
- 
- 		ASSERT(XFS_BUF_ADDR(bp) <= log->l_logBBsize-1);
- 		ASSERT(XFS_BUF_ADDR(bp) + BTOBB(count) <= log->l_logBBsize);
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index fee11c8..7a833c3 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -839,8 +839,7 @@ xfs_init_mount_workqueues(
- 	struct xfs_mount	*mp)
- {
- 	mp->m_buf_workqueue = alloc_workqueue("xfs-buf/%s",
--			WQ_MEM_RECLAIM|WQ_HIGHPRI|WQ_FREEZABLE, 1,
--			mp->m_fsname);
-+			WQ_MEM_RECLAIM|WQ_FREEZABLE, 1, mp->m_fsname);
- 	if (!mp->m_buf_workqueue)
- 		goto out;
- 
-@@ -865,7 +864,7 @@ xfs_init_mount_workqueues(
- 		goto out_destroy_cil;
- 
- 	mp->m_log_workqueue = alloc_workqueue("xfs-log/%s",
--			WQ_FREEZABLE, 0, mp->m_fsname);
-+			WQ_FREEZABLE|WQ_HIGHPRI, 0, mp->m_fsname);
- 	if (!mp->m_log_workqueue)
- 		goto out_destroy_reclaim;
- 
+Dave.
 -- 
-1.8.3.1
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
