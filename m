@@ -1,22 +1,8 @@
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 2F73D7F3F
-	for <xfs@oss.sgi.com>; Thu,  4 Dec 2014 06:13:48 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 0D0DB304032
-	for <xfs@oss.sgi.com>; Thu,  4 Dec 2014 04:13:44 -0800 (PST)
-Received: from mail.scnaob.info ([69.12.85.96]) by cuda.sgi.com with ESMTP id
-	SOLmKy965vMFOI0W for <xfs@oss.sgi.com>;
-	Thu, 04 Dec 2014 04:13:41 -0800 (PST)
-Received: from unknown (HELO scnaob.info) (Solomon@scnaob.info@[69.12.85.96])
-	(envelope-sender <Solomon@scnaob.info>)
-	by mail.scnaob.info (qmail-ldap-1.03) with SMTP
-	for <xfs@oss.sgi.com>; 4 Dec 2014 12:13:40 -0000
-Date: Wed, 3 Dec 2014 16:00:45 +0800
-From: "tyjprinting" <Solomon@scnaob.info>
-Subject: Book Printing Service Inquiry -TYJ  Printing
-MIME-Version: 1.0
-Message-Id: <20141204121344.9E4F4106C166@cuda.sgi.com>
-Reply-To: tyjglobal@gmail.com
+From: xfs@oss.sgi.com
+Subject: [XFS updates] XFS development tree branch, for-next,
+	updated. v3.18-rc2-40-g6044e43
+Message-Id: <20141204020738.691957F47@oss.sgi.com>
+Date: Wed,  3 Dec 2014 20:07:38 -0600 (CST)
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,194 +11,82 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============3796498733607962847=="
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
-This is a multi-part message in MIME format
+This is an automated email from the git hooks/post-receive script. It was
+generated because a ref change was pushed to the repository containing
+the project "XFS development tree".
 
---===============3796498733607962847==
-Content-Type: multipart/alternative; charset=utf-8; boundary="HEOqjT4UXxqW8en0PsucYkVq8=_np8suKB"
+The branch, for-next has been updated
+  6044e43 Merge branch 'xfs-misc-fixes-for-3.19-2' into for-next
+  b29c70f xfs: split metadata and log buffer completion to separate workqueues
+  32296f8 xfs: fix set-but-unused warnings
+  9a2cc41 xfs: move type conversion functions to xfs_dir.h
+  1b767ee xfs: move ftype conversion functions to libxfs
+  2d3d0c5 xfs: lobotomise xfs_trans_read_buf_map()
+  cdc9cec xfs: active inodes stat is broken
+  4db431f xfs: cleanup xfs_bmse_merge returns
+  b11bd67 xfs: cleanup xfs_bmse_shift_one goto mess
+  7a1df15 xfs: fix premature enospc on inode allocation
+  76b5730 xfs: overflow in xfs_iomap_eof_align_last_fsb
+  e77b854 Merge branch 'xfs-coccinelle-cleanups' into xfs-misc-fixes-for-3.19-2
+      from  c14fc01340dd0afe58d8671acc3ea5e907e707ae (commit)
 
-This is a multi-part message in MIME format
+Those revisions listed above that are new to this repository have
+not appeared on any other notification email; so we list those
+revisions in full, below.
 
---HEOqjT4UXxqW8en0PsucYkVq8=_np8suKB
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Content-Disposition: inline
+- Log -----------------------------------------------------------------
+commit 6044e4386cd51dece882ea42352cdaaab0f24cad
+Merge: c14fc01 b29c70f
+Author: Dave Chinner <david@fromorbit.com>
+Date:   Thu Dec 4 09:46:17 2014 +1100
 
-RGVhciBTaXIsIA0KIA0KSSBhbSBoZXJlIHBsZWFzZWQgdG8gc2VsZi1yZWNvbW1lbmQgdXMgdG8g
-YmUgeW91ciByZWxpYWJsZSBwcmludGluZyBzdXBwbGllci4gDQogDQpXZSBoYXZlIHRoZSBjYXBh
-YmlsaXR5IG9mIHByaW50aW5nIGFuZCBiaW5kaW5nIGxhcmdlIHZvbHVtZXMgZm9yIHB1Ymxpc2hl
-cnMgb2YgRGljdGlvbmFyaWVzLCBUZXh0Ym9va3MsIENvbW1lcmNpYWwgbWFnYXppbmVzLCBub3Rl
-Ym9va3MgZXRjLg0KIA0KU2hvdWxkIHlvdSBoYXZlIGFueSBwcmludGluZyBuZWVkcywgcGxlYXNl
-IGNvbnRhY3QgdXMgYW55IHRpbWUuIFRoYW5rIHlvdSENCg0KDQoNCkhvcGUgdGhlcmUgd291bGQg
-YmUgZ29vZCBjb29wZXJhdGlvbiBiZXR3ZWVuIHVzIQ0KQmVzdCByZWdhcmRzDQpFdW5pY2UgUGVu
-ZyANCkd1YW5nemhvdSBUWUogQ28uLCBMaW1pdGVkICANClRlbDogKzg2MjAtODA1NDI4ODEgIEZh
-eDogKzg2MjAtODA1NDc4ODENCkFkZDogMzMgU2hpbGlhbiBSb2FkLCBEYWxvbmcgU3ViZGlzdHJp
-Y3QsIFBhbnl1LCA1MTE0NTAsIEd1YW5nemhvdSwgQ2hpbmENCldlYjogaHR0cDovL3d3dy50eWpw
-cmludGluZy5jb20gICAgDQpFLU1haWw6IGV1bmljZUB0eWpwcmludGluZy5jb20gDQpTa3lwZTog
-ZXVuaWNlLXR5anByaW50aW5nDQpZT1VSIFBSSU5UIE1BTkFHRU1FTlQgUEFSVE5FUiENCg==
+    Merge branch 'xfs-misc-fixes-for-3.19-2' into for-next
+    
+    Conflicts:
+    	fs/xfs/xfs_iops.c
 
---HEOqjT4UXxqW8en0PsucYkVq8=_np8suKB
-Content-Type: text/html; charset="utf-8"
-Content-Transfer-Encoding: base64
-Content-Disposition: inline
+-----------------------------------------------------------------------
 
-PEhUTUwgeG1sbnM6byA9ICJ1cm46c2NoZW1hcy1taWNyb3NvZnQtY29tOm9mZmljZTpvZmZpY2Ui
-IHhtbG5zOnN0MSA9ICJ1cm46c2NoZW1hcy1taWNyb3NvZnQtY29tOm9mZmljZTpzbWFydHRhZ3Mi
-PjxIRUFEPg0KPE1FVEEgY29udGVudD0idGV4dC9odG1sOyBjaGFyc2V0PXV0Zi04IiBodHRwLWVx
-dWl2PUNvbnRlbnQtVHlwZT4NCjxNRVRBIG5hbWU9R0VORVJBVE9SIGNvbnRlbnQ9Ik1TSFRNTCA4
-LjAwLjYwMDEuMjM1ODAiPjwvSEVBRD4NCjxCT0RZIHNjcm9sbD15ZXM+DQo8UD4mbmJzcDs8SFRN
-TCB4bWxuczpvID0gInVybjpzY2hlbWFzLW1pY3Jvc29mdC1jb206b2ZmaWNlOm9mZmljZSIgeG1s
-bnM6c3QxID0gInVybjpzY2hlbWFzLW1pY3Jvc29mdC1jb206b2ZmaWNlOnNtYXJ0dGFncyI+PEhF
-QUQ+DQo8TUVUQSBjb250ZW50PSJ0ZXh0L2h0bWw7IGNoYXJzZXQ9dW5pY29kZSIgaHR0cC1lcXVp
-dj1Db250ZW50LVR5cGU+DQo8TUVUQSBuYW1lPUdFTkVSQVRPUiBjb250ZW50PSJNU0hUTUwgOC4w
-MC42MDAxLjIzNTgwIj48L0hFQUQ+DQo8Qk9EWSBzY3JvbGw9eWVzPg0KPFAgc3R5bGU9Ik1BUkdJ
-TjogMGNtIDBjbSAwcHQiIGNsYXNzPU1zb05vcm1hbD48U1BBTiBzdHlsZT0iRk9OVC1GQU1JTFk6
-ICdUaW1lcyBOZXcgUm9tYW4nOyBGT05ULVNJWkU6IDEycHQiIGxhbmc9RU4tVVM+RGVhciBTaXIs
-IDxvOnA+PC9vOnA+PC9TUEFOPjwvUD4NCjxQIHN0eWxlPSJNQVJHSU46IDBjbSAwY20gMHB0IiBj
-bGFzcz1Nc29Ob3JtYWw+PFNQQU4gc3R5bGU9IkZPTlQtRkFNSUxZOiAnVGltZXMgTmV3IFJvbWFu
-JzsgRk9OVC1TSVpFOiAxMnB0IiBsYW5nPUVOLVVTPjxvOnA+Jm5ic3A7PC9vOnA+PC9TUEFOPjwv
-UD4NCjxQIHN0eWxlPSJMSU5FLUhFSUdIVDogMThwdDsgTUFSR0lOOiAwY20gMGNtIDBwdDsgQkFD
-S0dST1VORDogd2hpdGU7IG1zby1wYWdpbmF0aW9uOiB3aWRvdy1vcnBoYW4iIGNsYXNzPU1zb05v
-cm1hbD48U1BBTiBzdHlsZT0iRk9OVC1GQU1JTFk6ICdUaW1lcyBOZXcgUm9tYW4nOyBCQUNLR1JP
-VU5EOiB3aGl0ZTsgQ09MT1I6IGJsYWNrOyBGT05ULVNJWkU6IDEycHQ7IG1zby1mb250LWtlcm5p
-bmc6IDBwdCIgbGFuZz1FTi1VUz5JIGFtIGhlcmUgcGxlYXNlZCB0byBzZWxmLXJlY29tbWVuZCB1
-cyB0byBiZSB5b3VyIHJlbGlhYmxlIDxTVFJPTkc+cHJpbnRpbmcgc3VwcGxpZXIuPC9TVFJPTkc+
-PC9TUEFOPjxGT05UIGZhY2U9Q2FsaWJyaT48U1BBTiBzdHlsZT0iQkFDS0dST1VORDogd2hpdGU7
-IENPTE9SOiBibGFjazsgRk9OVC1TSVpFOiAxMnB0OyBtc28tZm9udC1rZXJuaW5nOiAwcHQ7IG1z
-by1iaWRpLWZvbnQtZmFtaWx5OiBDYWxpYnJpIiBsYW5nPUVOLVVTPiZuYnNwOzwvU1BBTj48U1BB
-TiBzdHlsZT0iQ09MT1I6IGJsYWNrOyBtc28tZm9udC1rZXJuaW5nOiAwcHQ7IG1zby1iaWRpLWZv
-bnQtZmFtaWx5OiBDYWxpYnJpOyBtc28tYmlkaS1mb250LXNpemU6IDEwLjVwdCIgbGFuZz1FTi1V
-Uz48bzpwPjwvbzpwPjwvU1BBTj48L0ZPTlQ+PC9QPg0KPFAgc3R5bGU9IkxJTkUtSEVJR0hUOiAx
-OHB0OyBNQVJHSU46IDBjbSAwY20gMHB0OyBCQUNLR1JPVU5EOiB3aGl0ZTsgbXNvLXBhZ2luYXRp
-b246IHdpZG93LW9ycGhhbiIgY2xhc3M9TXNvTm9ybWFsPjxTUEFOIHN0eWxlPSJDT0xPUjogYmxh
-Y2s7IG1zby1mb250LWtlcm5pbmc6IDBwdDsgbXNvLWJpZGktZm9udC1mYW1pbHk6IENhbGlicmk7
-IG1zby1iaWRpLWZvbnQtc2l6ZTogMTAuNXB0IiBsYW5nPUVOLVVTPjxvOnA+PEZPTlQgZmFjZT1D
-YWxpYnJpPjxTVFJPTkc+Jm5ic3A7PC9TVFJPTkc+PC9GT05UPjwvbzpwPjwvU1BBTj48L1A+PFNU
-Uk9ORz48U1BBTiBzdHlsZT0iRk9OVC1GQU1JTFk6ICdUaW1lcyBOZXcgUm9tYW4nOyBCQUNLR1JP
-VU5EOiB3aGl0ZTsgQ09MT1I6IGJsYWNrOyBGT05ULVNJWkU6IDEycHQ7IG1zby1mb250LWtlcm5p
-bmc6IDBwdCIgbGFuZz1FTi1VUz4NCjxQIHN0eWxlPSJURVhULVRSQU5TRk9STTogbm9uZTsgQkFD
-S0dST1VORC1DT0xPUjogcmdiKDI1NSwyNTUsMjU1KTsgVEVYVC1JTkRFTlQ6IDBweDsgTUFSR0lO
-OiAwY20gMGNtIDBwdDsgRk9OVDogMTZweC8xOHB0ICdUaW1lcyBOZXcgUm9tYW4nOyBXSElURS1T
-UEFDRTogbm9ybWFsOyBMRVRURVItU1BBQ0lORzogbm9ybWFsOyBDT0xPUjogcmdiKDAsMCwwKTsg
-V09SRC1TUEFDSU5HOiAwcHg7IC13ZWJraXQtdGV4dC1zdHJva2Utd2lkdGg6IDBweCIgY2xhc3M9
-TXNvTm9ybWFsPjxTUEFOIGxhbmc9RU4tVVM+PG86cD48Rk9OVCBmYWNlPUNhbGlicmk+PC9QPg0K
-PFAgc3R5bGU9IlRFWFQtVFJBTlNGT1JNOiBub25lOyBCQUNLR1JPVU5ELUNPTE9SOiByZ2IoMjU1
-LDI1NSwyNTUpOyBURVhULUlOREVOVDogMHB4OyBNQVJHSU46IDBjbSAwY20gMHB0OyBGT05UOiAx
-NnB4LzE4cHQgJ1RpbWVzIE5ldyBSb21hbic7IFdISVRFLVNQQUNFOiBub3JtYWw7IExFVFRFUi1T
-UEFDSU5HOiBub3JtYWw7IENPTE9SOiByZ2IoMCwwLDApOyBXT1JELVNQQUNJTkc6IDBweDsgLXdl
-YmtpdC10ZXh0LXN0cm9rZS13aWR0aDogMHB4IiBjbGFzcz1Nc29Ob3JtYWw+PFNQQU4gc3R5bGU9
-IkZPTlQtU0laRTogMTJwdCIgbGFuZz1FTi1VUz5XZTwvU1BBTj48U1BBTiBzdHlsZT0iRk9OVC1T
-SVpFOiAxMnB0IiBsYW5nPUVOLVVTPiZuYnNwO2hhdmUgdGhlIGNhcGFiaWxpdHkgb2Y8U1BBTiBj
-bGFzcz1BcHBsZS1jb252ZXJ0ZWQtc3BhY2U+Jm5ic3A7PC9TUEFOPjxTVFJPTkc+cHJpbnRpbmcg
-YW5kIGJpbmRpbmcgbGFyZ2Ugdm9sdW1lcyBmb3I8U1BBTiBjbGFzcz1BcHBsZS1jb252ZXJ0ZWQt
-c3BhY2U+Jm5ic3A7PC9TUEFOPjwvU1RST05HPjwvU1BBTj48U1RST05HPjxTUEFOIHN0eWxlPSJG
-T05ULVNJWkU6IDEycHQiIGxhbmc9RU4tVVM+cHVibGlzaGVycyBvZiBEaWN0aW9uYXJpZXMsIFRl
-eHRib29rcywgQ29tbWVyY2lhbCBtYWdhemluZXM8L1NQQU4+PFNQQU4gc3R5bGU9IkZPTlQtU0la
-RTogMTJwdCIgbGFuZz1FTi1VUz4sIG5vdGVib29rcyBldGMuPG86cD48L286cD48L1NQQU4+PC9T
-VFJPTkc+PC9QPg0KPFAgc3R5bGU9IlRFWFQtVFJBTlNGT1JNOiBub25lOyBCQUNLR1JPVU5ELUNP
-TE9SOiByZ2IoMjU1LDI1NSwyNTUpOyBURVhULUlOREVOVDogMHB4OyBNQVJHSU46IDBjbSAwY20g
-MHB0OyBGT05UOiAxNnB4LzE4cHQgJ1RpbWVzIE5ldyBSb21hbic7IFdISVRFLVNQQUNFOiBub3Jt
-YWw7IExFVFRFUi1TUEFDSU5HOiBub3JtYWw7IENPTE9SOiByZ2IoMCwwLDApOyBXT1JELVNQQUNJ
-Tkc6IDBweDsgLXdlYmtpdC10ZXh0LXN0cm9rZS13aWR0aDogMHB4IiBjbGFzcz1Nc29Ob3JtYWw+
-PFNQQU4gbGFuZz1FTi1VUz48bzpwPjxGT05UIGZhY2U9Q2FsaWJyaT4mbmJzcDs8L0ZPTlQ+PC9v
-OnA+PC9TUEFOPjwvUD48L0ZPTlQ+PC9vOnA+PC9TUEFOPg0KPFAgc3R5bGU9IlRFWFQtVFJBTlNG
-T1JNOiBub25lOyBCQUNLR1JPVU5ELUNPTE9SOiByZ2IoMjU1LDI1NSwyNTUpOyBURVhULUlOREVO
-VDogMHB4OyBNQVJHSU46IDBjbSAwY20gMHB0OyBGT05UOiAxNnB4LzE4cHQgJ1RpbWVzIE5ldyBS
-b21hbic7IFdISVRFLVNQQUNFOiBub3JtYWw7IExFVFRFUi1TUEFDSU5HOiBub3JtYWw7IENPTE9S
-OiByZ2IoMCwwLDApOyBXT1JELVNQQUNJTkc6IDBweDsgLXdlYmtpdC10ZXh0LXN0cm9rZS13aWR0
-aDogMHB4IiBjbGFzcz1Nc29Ob3JtYWw+PFNQQU4gc3R5bGU9IkZPTlQtU0laRTogMTJwdCIgbGFu
-Zz1FTi1VUz5TaG91bGQgeW91IGhhdmUgYW55IHByaW50aW5nIG5lZWRzLCBwbGVhc2UgY29udGFj
-dCB1cyBhbnkgdGltZTxTUEFOPi4gVGhhbmsgeW91ITwvU1BBTj48L1NQQU4+PC9QPjwvU1BBTj48
-L1NUUk9ORz48U1BBTiBzdHlsZT0iRk9OVC1GQU1JTFk6ICdUaW1lcyBOZXcgUm9tYW4nOyBGT05U
-LVNJWkU6IDEycHQiIGxhbmc9RU4tVVM+PG86cD4NCjxIUiBzdHlsZT0iQk9YLVNJWklORzogYm9y
-ZGVyLWJveDsgVEVYVC1UUkFOU0ZPUk06IG5vbmU7IFRFWFQtSU5ERU5UOiAwcHg7IFdJRFRIOiAy
-MTBweDsgRk9OVDogMTZweC8yNHB4ICdUaW1lcyBOZXcgUm9tYW4nOyBXSElURS1TUEFDRTogbm9y
-bWFsOyBMRVRURVItU1BBQ0lORzogbm9ybWFsOyBIRUlHSFQ6IDFweDsgQ09MT1I6IHJnYigwLDAs
-MCk7IFdPUkQtU1BBQ0lORzogMHB4OyAtd2Via2l0LXRleHQtc3Ryb2tlLXdpZHRoOiAwcHgiIGFs
-aWduPWxlZnQgY29sb3I9I2I1YzRkZiBTSVpFPTE+DQoNCjxESVYgc3R5bGU9IlRFWFQtVFJBTlNG
-T1JNOiBub25lOyBCQUNLR1JPVU5ELUNPTE9SOiByZ2IoMjU1LDI1NSwyNTUpOyBURVhULUlOREVO
-VDogMHB4OyBGT05UOiAxNnB4LzI0cHggJ1RpbWVzIE5ldyBSb21hbic7IFdISVRFLVNQQUNFOiBu
-b3JtYWw7IExFVFRFUi1TUEFDSU5HOiBub3JtYWw7IENPTE9SOiByZ2IoMCwwLDApOyBXT1JELVNQ
-QUNJTkc6IDBweDsgLXdlYmtpdC10ZXh0LXN0cm9rZS13aWR0aDogMHB4Ij48U1BBTiBpZD1fRm94
-RlJPTU5BTUU+DQo8RElWIHN0eWxlPSJNQVJHSU4tVE9QOiAxMHB4OyBNQVJHSU4tTEVGVDogMTBw
-eDsgRk9OVC1TSVpFOiAxMC41cHQ7IE1BUkdJTi1SSUdIVDogMTBweCI+DQo8RElWPjxTUEFOIHN0
-eWxlPSJGT05ULVNJWkU6IDEwLjVwdCI+DQo8RElWIHN0eWxlPSJGT05ULVNJWkU6IDEycHQiPjxT
-UEFOIGlkPV9Gb3hGUk9NTkFNRT48U1BBTiBzdHlsZT0iRk9OVC1TSVpFOiAxMC41cHQiPg0KPERJ
-Vj4NCjxESVYgc3R5bGU9Ik1BUkdJTi1UT1A6IDEwcHg7IE1BUkdJTi1MRUZUOiAxMHB4OyBGT05U
-LVNJWkU6IDEwLjVwdDsgTUFSR0lOLVJJR0hUOiAxMHB4Ij4NCjxESVY+DQo8RElWPg0KPERJViBz
-dHlsZT0iRk9OVC1TSVpFOiAxMnB0Ij48U1BBTiBzdHlsZT0iRk9OVC1TSVpFOiAxMnB0Ij4NCjxE
-SVY+PFNQQU4gc3R5bGU9IkZPTlQtU0laRTogMTJwdCI+DQo8RElWIHN0eWxlPSJGT05ULVNJWkU6
-IDEycHQiPg0KPFAgc3R5bGU9IlRFWFQtQUxJR046IGp1c3RpZnk7IExJTkUtSEVJR0hUOiAxOHB0
-OyBNQVJHSU46IDBjbSAwY20gMHB0OyBGT05ULVNJWkU6IDEwLjVwdCIgY2xhc3M9TXNvTm9ybWFs
-IGFsaWduPWxlZnQ+PFNQQU4gc3R5bGU9IkZPTlQtU0laRTogMTJwdCIgbGFuZz1FTi1VUz5Ib3Bl
-IHRoZXJlIHdvdWxkIGJlIGdvb2QgY29vcGVyYXRpb24gYmV0d2VlbiB1cyE8bzpwPjwvbzpwPjwv
-U1BBTj48L1A+DQo8UCBzdHlsZT0iVEVYVC1BTElHTjoganVzdGlmeTsgTElORS1IRUlHSFQ6IDE4
-cHQ7IE1BUkdJTjogMGNtIDBjbSAwcHQ7IEZPTlQtU0laRTogMTAuNXB0IiBjbGFzcz1Nc29Ob3Jt
-YWwgYWxpZ249bGVmdD48U1BBTiBzdHlsZT0iRk9OVC1TSVpFOiAxMnB0IiBsYW5nPUVOLVVTPkJl
-c3QgcmVnYXJkczxvOnA+PC9vOnA+PC9TUEFOPjwvUD4NCjxQIHN0eWxlPSJURVhULUFMSUdOOiBq
-dXN0aWZ5OyBMSU5FLUhFSUdIVDogMThwdDsgTUFSR0lOOiAwY20gMGNtIDBwdCIgY2xhc3M9TXNv
-Tm9ybWFsIGFsaWduPWxlZnQ+PFNQQU4gbGFuZz1FTi1VUz48Qj5FdW5pY2UgUGVuZyZuYnNwOzwv
-Qj48Rk9OVCBmYWNlPUFyaWFsPjxvOnA+PC9vOnA+PC9GT05UPjwvU1BBTj48L1A+DQo8UCBzdHls
-ZT0iVEVYVC1BTElHTjoganVzdGlmeTsgTElORS1IRUlHSFQ6IDE4cHQ7IE1BUkdJTjogMGNtIDBj
-bSAwcHQ7IEZPTlQtU0laRTogMTAuNXB0IiBjbGFzcz1Nc29Ob3JtYWwgYWxpZ249bGVmdD48ST48
-U1BBTiBzdHlsZT0iRk9OVC1TSVpFOiAxM3B0IiBsYW5nPUVOLVVTPkd1YW5nemhvdSBUWUogQ28u
-LCBMaW1pdGVkJm5ic3A7Jm5ic3A7PG86cD48L286cD48L1NQQU4+PC9JPjwvUD4NCjxQIHN0eWxl
-PSJURVhULUFMSUdOOiBqdXN0aWZ5OyBMSU5FLUhFSUdIVDogMThwdDsgTUFSR0lOOiAwY20gMGNt
-IDBwdDsgRk9OVC1TSVpFOiAxM3B4IiBjbGFzcz1Nc29Ob3JtYWwgYWxpZ249bGVmdD48ST48U1BB
-TiBsYW5nPUVOLVVTPlRlbDogKzg2MjAtODA1NDI4ODE8L1NQQU4+PC9JPjxJPjxTUEFOIHN0eWxl
-PSJGT05ULUZBTUlMWTog5a6L5L2TIiBsYW5nPUVOLVVTPiZuYnNwOyBGYXg6ICs4NjIwLTgwNTQ3
-ODgxPC9TUEFOPjwvST48L1A+DQo8UCBzdHlsZT0iVEVYVC1BTElHTjoganVzdGlmeTsgTElORS1I
-RUlHSFQ6IDE4cHQ7IE1BUkdJTjogMGNtIDBjbSAwcHQ7IEZPTlQtU0laRTogMTNweCIgY2xhc3M9
-TXNvTm9ybWFsIGFsaWduPWxlZnQ+PEk+PFNQQU4gc3R5bGU9IkZPTlQtRkFNSUxZOiDlrovkvZMi
-IGxhbmc9RU4tVVM+PC9TUEFOPjwvST48ST48U1BBTiBzdHlsZT0iRk9OVC1TSVpFOiAxMHB0IiBs
-YW5nPUVOLVVTPkFkZDogMzMgU2hpbGlhbiBSb2FkLCBEYWxvbmcgU3ViZGlzdHJpY3QsIFBhbnl1
-LCA1MTE0NTAsIEd1YW5nemhvdSwgQ2hpbmE8L1NQQU4+PC9JPjwvUD4NCjxQIHN0eWxlPSJURVhU
-LUFMSUdOOiBqdXN0aWZ5OyBMSU5FLUhFSUdIVDogMThwdDsgTUFSR0lOOiAwY20gMGNtIDBwdDsg
-Rk9OVC1TSVpFOiAxMC41cHQiIGNsYXNzPU1zb05vcm1hbCBhbGlnbj1sZWZ0PjxJPjxTUEFOIHN0
-eWxlPSJGT05ULVNJWkU6IDEwcHQiIGxhbmc9RU4tVVM+V2ViOiZuYnNwOzxVPjxBIHN0eWxlPSJD
-T0xPUjogYmx1ZSIgaHJlZj0iaHR0cDovL3d3dy50eWpwcmludGluZy5jb20vIj5odHRwOi8vd3d3
-LnR5anByaW50aW5nLmNvbTwvQT48L1U+PC9TUEFOPjwvST48ST48U1BBTiBzdHlsZT0iRk9OVC1G
-QU1JTFk6IOWui+S9kzsgRk9OVC1TSVpFOiAxMHB0IiBsYW5nPUVOLVVTPiZuYnNwOyZuYnNwOyZu
-YnNwOyZuYnNwOzwvU1BBTj48L0k+PC9QPg0KPFAgc3R5bGU9IlRFWFQtQUxJR046IGp1c3RpZnk7
-IExJTkUtSEVJR0hUOiAxOHB0OyBNQVJHSU46IDBjbSAwY20gMHB0OyBGT05ULVNJWkU6IDEwLjVw
-dCIgY2xhc3M9TXNvTm9ybWFsIGFsaWduPWxlZnQ+PEk+PFNQQU4gc3R5bGU9IkZPTlQtU0laRTog
-MTBwdCIgbGFuZz1FTi1VUz5FLU1haWw6Jm5ic3A7PEEgc3R5bGU9IkNPTE9SOiBibHVlIiBocmVm
-PSJtYWlsdG86ZXVuaWNlQHR5anByaW50aW5nLmNvbSI+ZXVuaWNlQHR5anByaW50aW5nLmNvbTwv
-QT48L1NQQU4+PC9JPjxJPjxTUEFOIHN0eWxlPSJGT05ULUZBTUlMWTog5a6L5L2TOyBGT05ULVNJ
-WkU6IDEwcHQiIGxhbmc9RU4tVVM+PG86cD48L286cD48L1NQQU4+PC9JPjxTUEFOIHN0eWxlPSJM
-SU5FLUhFSUdIVDogMS41OyBCQUNLR1JPVU5ELUNPTE9SOiB3aW5kb3c7IEZPTlQtRkFNSUxZOiAn
-JzsgRk9OVC1TSVpFOiAxMnB0IiB0aW1lcz0iIiBuZXc9IiIgcm9tYW4/Pzs9IiIgZm9udC1zaXpl
-Oj0iIiAxM3B4Oz0iIiBjb2xvcjo9IiIgcmdiKDAsPSIiIDAsPSIiIDApOz0iIiBiYWNrZ3JvdW5k
-LWNvbG9yOj0iIiByZ2JhKDAsPSIiIGZvbnQtd2VpZ2h0Oj0iIiBub3JtYWw7PSIiIGZvbnQtc3R5
-bGU6PSIiIGl0YWxpYzt0ZXh0LWRlY29yYXRpb246PSIiIG5vbmU7Pz0iIj4mbmJzcDs8L1NQQU4+
-PC9QPg0KPFAgc3R5bGU9IlRFWFQtQUxJR046IGp1c3RpZnk7IExJTkUtSEVJR0hUOiAxOHB0OyBN
-QVJHSU46IDBjbSAwY20gMHB0OyBGT05ULVNJWkU6IDEwLjVwdCIgY2xhc3M9TXNvTm9ybWFsIGFs
-aWduPWxlZnQ+PEk+PFNQQU4gc3R5bGU9IkZPTlQtU0laRTogMTBwdCIgbGFuZz1FTi1VUz5Ta3lw
-ZTogZXVuaWNlLXR5anByaW50aW5nPG86cD48L286cD48L1NQQU4+PC9JPjwvUD4NCjxQIHN0eWxl
-PSJURVhULUFMSUdOOiBqdXN0aWZ5OyBMSU5FLUhFSUdIVDogMThwdDsgTUFSR0lOOiAwY20gMGNt
-IDBwdDsgRk9OVC1TSVpFOiAxMC41cHQiIGNsYXNzPU1zb05vcm1hbCBhbGlnbj1sZWZ0PjxJPjxT
-UEFOIHN0eWxlPSJDT0xPUjogZ3JlZW47IEZPTlQtU0laRTogMTFwdCIgbGFuZz1FTi1VUz5ZT1VS
-IFBSSU5UIE1BTkFHRU1FTlQgUEFSVE5FUiE8L1NQQU4+PC9JPjwvUD48L0RJVj48L1NQQU4+PC9E
-SVY+PC9TUEFOPjwvRElWPjwvRElWPjwvRElWPjwvRElWPjwvRElWPjwvU1BBTj48L1NQQU4+PC9E
-SVY+PC9TUEFOPjwvRElWPjwvRElWPjwvU1BBTj48L0RJVj48L286cD48L1NQQU4+PC9CT0RZPjwv
-SFRNTD48L1A+PC9CT0RZPjwvSFRNTD4NCg0K
-
---HEOqjT4UXxqW8en0PsucYkVq8=_np8suKB--
+Summary of changes:
+ fs/xfs/libxfs/xfs_bmap.c       |  68 ++++++++------------
+ fs/xfs/libxfs/xfs_da_btree.c   |   4 --
+ fs/xfs/libxfs/xfs_dir2.c       |  16 +++++
+ fs/xfs/libxfs/xfs_dir2.h       | 140 +++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/libxfs/xfs_dir2_block.c |   8 ---
+ fs/xfs/libxfs/xfs_dir2_leaf.c  |  10 ---
+ fs/xfs/libxfs/xfs_dir2_node.c  |  12 ----
+ fs/xfs/libxfs/xfs_dir2_priv.h  | 140 -----------------------------------------
+ fs/xfs/libxfs/xfs_dir2_sf.c    |  10 ---
+ fs/xfs/libxfs/xfs_ialloc.c     |  34 +++++++---
+ fs/xfs/xfs_buf.c               |  13 +++-
+ fs/xfs/xfs_buf.h               |   3 +-
+ fs/xfs/xfs_dir2_readdir.c      |  18 +-----
+ fs/xfs/xfs_export.c            |   1 +
+ fs/xfs/xfs_icache.c            |   2 +
+ fs/xfs/xfs_inode.c             |  12 +---
+ fs/xfs/xfs_iomap.c             |  15 ++---
+ fs/xfs/xfs_iops.c              |   2 +-
+ fs/xfs/xfs_itable.c            |   2 -
+ fs/xfs/xfs_log.c               |   4 ++
+ fs/xfs/xfs_log_recover.c       |   1 +
+ fs/xfs/xfs_mount.c             |   1 +
+ fs/xfs/xfs_super.c             |   6 +-
+ fs/xfs/xfs_trans_buf.c         | 135 ++++++++++-----------------------------
+ 24 files changed, 271 insertions(+), 386 deletions(-)
 
 
---===============3796498733607962847==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+hooks/post-receive
+-- 
+XFS development tree
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============3796498733607962847==--
