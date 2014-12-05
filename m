@@ -1,24 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id AB2C47F3F
-	for <xfs@oss.sgi.com>; Thu,  4 Dec 2014 12:34:24 -0600 (CST)
+	by oss.sgi.com (Postfix) with ESMTP id 7AEE67F3F
+	for <xfs@oss.sgi.com>; Thu,  4 Dec 2014 18:14:33 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 7C4438F8033
-	for <xfs@oss.sgi.com>; Thu,  4 Dec 2014 10:34:24 -0800 (PST)
-Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id ZW9SF4JJsfAgiWeG (version=TLSv1 cipher=AES256-SHA
-	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 04 Dec 2014 10:34:18 -0800 (PST)
-Date: Thu, 4 Dec 2014 19:34:16 +0100
-From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH 2/5] fs: Fix WARN_ON in inode_set_mask()
-Message-ID: <20141204183416.GA23273@quack.suse.cz>
-References: <1417699659-14284-1-git-send-email-jack@suse.cz>
-	<1417699659-14284-3-git-send-email-jack@suse.cz>
-	<20141204143708.GM29748@ZenIV.linux.org.uk>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 5B18B8F8037
+	for <xfs@oss.sgi.com>; Thu,  4 Dec 2014 16:14:30 -0800 (PST)
+Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
+	[150.101.137.143]) by cuda.sgi.com with ESMTP id
+	9nWcAHNbUivo8zEj for <xfs@oss.sgi.com>;
+	Thu, 04 Dec 2014 16:14:24 -0800 (PST)
+Date: Fri, 5 Dec 2014 11:11:48 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] xfs: fix behaviour of XFS_IOC_FSSETXATTR on directories
+Message-ID: <20141205001148.GS9561@dastard>
+References: <20140829004607.GX20518@dastard>
+	<1417666466-31820-1-git-send-email-iustin@k1024.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20141204143708.GM29748@ZenIV.linux.org.uk>
+In-Reply-To: <1417666466-31820-1-git-send-email-iustin@k1024.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,25 +30,52 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Al Viro <viro@ZenIV.linux.org.uk>
-Cc: linux-fsdevel@vger.kernel.org, linux-security-module@vger.kernel.org, Jan Kara <jack@suse.cz>, xfs@oss.sgi.com
+To: Iustin Pop <iustin@k1024.org>
+Cc: xfs@oss.sgi.com
 
-On Thu 04-12-14 14:37:09, Al Viro wrote:
-> On Thu, Dec 04, 2014 at 02:27:36PM +0100, Jan Kara wrote:
-> > WARN_ON in inode_set_mask() warns if we don't clear all bits we are
-> > setting instead of reverse - warning when caller requests setting and
-> > clearing of the same bit.
+On Thu, Dec 04, 2014 at 05:14:26AM +0100, Iustin Pop wrote:
+> Currently, the ioctl handling code for XFS_IOC_FSSETXATTR treats all
+> targets as regular files: it refuses to change the extent size if
+> extents are allocated. This is wrong for directories, as there the
+> extent size is only used as a default for children.
 > 
-> WTF?  'mask' is "all bits we are asked to modify", 'flags' - "the values to
-> put into those bits".  Have you even looked at the callers, let alone
-> tested it?
-  Sorry, I misunderstood how the function is supposed to work. Discard this
-patch please.
+> The patch fixes this issue and improves validation of flag
+> combinations:
+> 
+> - only disallow extent size changes after extents have been allocated
+>   for regular files
+> - only allow XFS_XFLAG_EXTSIZE for regular files
+> - only allow XFS_XFLAG_EXTSZINHERIT for directories
+> - automatically clear the flags if the extent size is zero
+> 
+> Thanks to Dave Chinner for guidance on the proper fix for this issue.
 
-								Honza
+I'll have to remind myself of the context again - I think I have
+some patches in my local queue that I never finished that kill a lot
+of the mess around this code. I put that at the head of next week's
+queue...
+
+> Signed-off-by: Iustin Pop <iustin@k1024.org>
+> ---
+>  Trying to revive this fix. Note that this patch is on top of
+>  git://git.kernel.org/pub/scm/linux/kernel/git/dgc/linux-xfs.git master, which
+>  seems to have no commits since Oct 26; let me know if I should rebase it on
+>  top of something else.
+
+That's the right tree+branch to base dev patches on. I'll commit it
+to a topic branch based on linux-xfs/master unless it has
+dependencies on patches in other topic branches. Mostly you do not
+need to worry about that. If you want to see the latest development
+snapshot, then use the for-next branch (note: for-next gets rebased
+if necessary). I normally develop against linux-xfs/master, then
+merge into linux-xfs/for-next for integration testing....
+
+Cheers,
+
+Dave.
 -- 
-Jan Kara <jack@suse.cz>
-SUSE Labs, CR
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
