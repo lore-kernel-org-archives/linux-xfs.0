@@ -1,26 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id B26297F3F
-	for <xfs@oss.sgi.com>; Wed, 10 Dec 2014 05:11:34 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 58E94AC027
-	for <xfs@oss.sgi.com>; Wed, 10 Dec 2014 03:11:31 -0800 (PST)
-Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id 2VuRMpEJRDSxhjz9 (version=TLSv1 cipher=AES256-SHA
-	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 10 Dec 2014 03:11:28 -0800 (PST)
-Date: Wed, 10 Dec 2014 12:11:23 +0100
-From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH 4/5] fs: Remove security attributes on truncate
-Message-ID: <20141210111123.GB25671@quack.suse.cz>
-References: <1417699659-14284-1-git-send-email-jack@suse.cz>
-	<1417699659-14284-5-git-send-email-jack@suse.cz>
-	<5481D81F.8060308@schaufler-ca.com>
-	<20141209182732.GC22569@quack.suse.cz>
-	<54874691.2010902@schaufler-ca.com>
+	by oss.sgi.com (Postfix) with ESMTP id 659497F3F
+	for <xfs@oss.sgi.com>; Wed, 10 Dec 2014 06:36:45 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id CA7D6AC027
+	for <xfs@oss.sgi.com>; Wed, 10 Dec 2014 04:36:41 -0800 (PST)
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
+	cuda.sgi.com with ESMTP id GfRtBCZhdbOiXTAV (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 10 Dec 2014 04:36:39 -0800 (PST)
+Message-ID: <54883E33.5050004@oracle.com>
+Date: Wed, 10 Dec 2014 15:36:03 +0300
+From: Alexander Tsvetkov <alexander.tsvetkov@oracle.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <54874691.2010902@schaufler-ca.com>
+Subject: max_dir_size_kb mount option test
+Content-Type: multipart/mixed; boundary="------------060200040208070406030509"
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,132 +23,296 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Casey Schaufler <casey@schaufler-ca.com>
-Cc: linux-fsdevel@vger.kernel.org, linux-security-module@vger.kernel.org, Jan Kara <jack@suse.cz>, Al Viro <viro@ZenIV.linux.org.uk>, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-On Tue 09-12-14 10:59:29, Casey Schaufler wrote:
-> On 12/9/2014 10:27 AM, Jan Kara wrote:
-> > On Fri 05-12-14 08:06:55, Casey Schaufler wrote:
-> >> On 12/4/2014 5:27 AM, Jan Kara wrote:
-> >>> Similarly as we remove suid bit on truncate, we also want to remove
-> >>> security extended attributes.
-> >> NAK
-> >>
-> >> Are you out of your mind?
-> >>
-> >> In Smack and SELinux the security attributes are associated with the
-> >> container, not the data.
-> >   Is there some doc for this? It just seems strange to me that when a file
-> > is written we clear the attributes
-> 
-> This is not true for the LSM based attributes.
-> 
-> >  but when the file is truncated we don't.
-> 
-> Have I miss-interpreted what you meant by "security extended attributes"?
-> Do you mean filesystem xattrs beginning with "security.", such as
-> "security.selinux" or "security.SMACK64", or something else?
-  Sorry, I'm not a security guy so I may be using wrong terminology. I
-meant attributes that are removed when you call security_inode_killpriv().
-There's a comment in security.h like:
- * @inode_killpriv:
- *      The setuid bit is being removed.  Remove similar security labels.
- *      Called with the dentry->d_inode->i_mutex held.
- *      @dentry is the dentry being changed.
- *      Return 0 on success.  If error is returned, then the operation
- *      causing setuid bit removal is failed.
+This is a multi-part message in MIME format.
+--------------060200040208070406030509
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-So from that I'd think that security_inode_killpriv() should be called if
-we are removing SUID bit (i.e. also during truncate).
+Hello Dave,
 
-								Honza
+I've prepared test that runs some checks for ext4 mount option 
+max_dir_size_kb introduced in Linux Kernel 3.7, could you please look on it?
 
-> > What's the rationale behind this? To me both operations modify content of
-> > the file and thus I'd expect them to behave identically with respect to
-> > security attributes...
-> >
-> > 								Honza
-> >
-> >>> After this patch there's only one user of should_remove_suid() - ocfs2 -
-> >>> and indeed it's buggy because it doesn't clear security attributes on
-> >>> write. However fixing it is difficult because of special locking
-> >>> constraints.
-> >>>
-> >>> Signed-off-by: Jan Kara <jack@suse.cz>
-> >>> ---
-> >>>  fs/inode.c         | 5 ++---
-> >>>  fs/open.c          | 6 ++++--
-> >>>  include/linux/fs.h | 6 +++++-
-> >>>  3 files changed, 11 insertions(+), 6 deletions(-)
-> >>>
-> >>> diff --git a/fs/inode.c b/fs/inode.c
-> >>> index 6807a2707828..8595c7b8841c 100644
-> >>> --- a/fs/inode.c
-> >>> +++ b/fs/inode.c
-> >>> @@ -1603,9 +1603,8 @@ EXPORT_SYMBOL(should_remove_suid);
-> >>>   * response to write or truncate. Return 0 if nothing has to be changed.
-> >>>   * Negative value on error (change should be denied).
-> >>>   */
-> >>> -int file_needs_remove_privs(struct file *file)
-> >>> +int dentry_needs_remove_privs(struct dentry *dentry)
-> >>>  {
-> >>> -	struct dentry *dentry = file->f_path.dentry;
-> >>>  	struct inode *inode = dentry->d_inode;
-> >>>  	int mask = 0;
-> >>>  	int ret;
-> >>> @@ -1621,7 +1620,7 @@ int file_needs_remove_privs(struct file *file)
-> >>>  		mask |= ATTR_KILL_PRIV;
-> >>>  	return mask;
-> >>>  }
-> >>> -EXPORT_SYMBOL(file_needs_remove_privs);
-> >>> +EXPORT_SYMBOL(dentry_needs_remove_privs);
-> >>>  
-> >>>  static int __remove_privs(struct dentry *dentry, int kill)
-> >>>  {
-> >>> diff --git a/fs/open.c b/fs/open.c
-> >>> index de92c13b58be..e4e0863855d0 100644
-> >>> --- a/fs/open.c
-> >>> +++ b/fs/open.c
-> >>> @@ -51,8 +51,10 @@ int do_truncate(struct dentry *dentry, loff_t length, unsigned int time_attrs,
-> >>>  		newattrs.ia_valid |= ATTR_FILE;
-> >>>  	}
-> >>>  
-> >>> -	/* Remove suid/sgid on truncate too */
-> >>> -	ret = should_remove_suid(dentry);
-> >>> +	/* Remove suid/sgid and security markings on truncate too */
-> >>> +	ret = dentry_needs_remove_privs(dentry);
-> >>> +	if (ret < 0)
-> >>> +		return ret;
-> >>>  	if (ret)
-> >>>  		newattrs.ia_valid |= ret | ATTR_FORCE;
-> >>>  
-> >>> diff --git a/include/linux/fs.h b/include/linux/fs.h
-> >>> index aac707cced66..c5ccc311e8fb 100644
-> >>> --- a/include/linux/fs.h
-> >>> +++ b/include/linux/fs.h
-> >>> @@ -2429,7 +2429,11 @@ extern struct inode *new_inode(struct super_block *sb);
-> >>>  extern void free_inode_nonrcu(struct inode *inode);
-> >>>  extern int should_remove_suid(struct dentry *);
-> >>>  extern int file_remove_privs(struct file *);
-> >>> -extern int file_needs_remove_privs(struct file *file);
-> >>> +extern int dentry_needs_remove_privs(struct dentry *dentry);
-> >>> +static inline int file_needs_remove_privs(struct file *file)
-> >>> +{
-> >>> +	return dentry_needs_remove_privs(file->f_path.dentry);
-> >>> +}
-> >>>  
-> >>>  extern void __insert_inode_hash(struct inode *, unsigned long hashval);
-> >>>  static inline void insert_inode_hash(struct inode *inode)
-> 
+Thanks,
+Alexander Tsvetkov
+
+--------------060200040208070406030509
+Content-Type: text/x-patch;
+ name="max_dir_size_kb.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+ filename="max_dir_size_kb.patch"
+
+>From 21b1da618d0fcb4cd4666d10c41583274ed4eeed Mon Sep 17 00:00:00 2001
+From: Alexander Tsvetkov <alexander.tsvetkov@oracle.com>
+Date: Wed, 10 Dec 2014 15:31:02 +0300
+Subject: [PATCH] added test for max_dir_size_kb mount option
+
+---
+ tests/ext4/309     | 213 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/ext4/309.out |   2 +
+ tests/ext4/group   |   3 +-
+ 3 files changed, 217 insertions(+), 1 deletion(-)
+ create mode 100755 tests/ext4/309
+ create mode 100755 tests/ext4/309.out
+
+diff --git a/tests/ext4/309 b/tests/ext4/309
+new file mode 100755
+index 0000000..e2f4e43
+--- /dev/null
++++ b/tests/ext4/309
+@@ -0,0 +1,213 @@
++#! /bin/bash
++# FS QA Test
++#
++# Test for mount option max_dir_size_kb
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2014 Oracle and/or its affiliates.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#-----------------------------------------------------------------------
++#
++
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++tmp=/tmp/$$
++
++testdir=$SCRATCH_MNT/testdir
++testfile=$SCRATCH_MNT/testfile
++sdir=`dirname $0`
++sdir=`cd "$sdir"; pwd`
++
++echo "QA output created by $seq"
++echo "Silence is golden"
++rm -f $seqres.full
++
++status=1 # failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 15
++
++_cleanup() {
++   if [ ! -z SCRATCH_MNT ]; then
++      rm -fr $SCRATCH_MNT/test*
++      _scratch_unmount
++   fi
++}
++
++_filter_error() {
++   sed -n -e "s/.*\($1\).*/\"\1\"/p"
++}
++
++_clear_testdir() {
++   dirs="$testdir *$"
++   for i in $dirs; do
++      rm -fr $i/*
++   done
++}
++
++# $1 - device
++# $2 - options
++_make_ext4fs() {
++   device=$1
++   opts=$2
++   umount $device 1>/dev/null 2>&1
++   mkfs.ext4 $opts $device 1>/dev/null 2>&1
++}
++
++# $1 - options
++# $2 - mount point
++_make_loopfs() {
++   lpf=$testfile
++   dd if=/dev/zero of=$lpf bs=4k count=256 1>/dev/null 2>&1
++   loopdev=$(losetup -f)
++   losetup $loopdev $lpf
++   mkfs.ext4 -O ^dir_index,^has_journal $loopdev 1>/dev/null 2>&1
++   mount -t ext4 $1 $loopdev $2
++}
++
++# $1 - expected limit after items creation
++# $2 - command to create item
++# $3 - where to create (testdir by default)
++_create_items() {
++    limit=$1
++    create_cmd=$2
++    dir=${3:-$testdir}
++    sync
++    echo 3 > /proc/sys/vm/drop_caches
++    MAX_INUM=$(((limit*1024*2)/24))
++    for i in $(seq 0 $MAX_INUM); do
++       tmp_name=`mktemp -u`
++       item=`basename $tmp_name`
++       if [ -e $dir/$item ]; then
++          continue
++       fi 
++       create_cmd="$2 $dir/$item 2>$tmp.out 1>/dev/null"
++       eval "$create_cmd"
++       res=$?
++       if [ $res -ne 0 ]; then
++          _filter_error "No space left on device" < $tmp.out > $tmp.out2
++          if [ -s $tmp.out2 ]; then
++             cat $tmp.out2 | tr -d '\n' >> $seqres.full
++          else
++             echo "FAIL! expected ENOSPC" | tee -a $seqres.full
++          fi
++          break
++      fi
++   done
++   size=$(stat -c %s $dir)
++   size=$((size/1024))
++   if [ $size -gt $limit ]; then
++      echo "FAIL! expected dir size: $limit, actually: $size" | tee -a $seqres.full
++   fi
++   rm -f $tmp*
++}
++
++# get standard environment, filters and checks
++. ./common/rc
++
++# real QA test starts here
++
++_supported_fs ext4
++_supported_os Linux
++_require_scratch
++
++LIMIT1=8
++LIMIT2=16
++
++_make_ext4fs $SCRATCH_DEV "-O ^dir_index,^filetype"
++_scratch_mount "-o max_dir_size_kb=$LIMIT1"
++mkdir $testdir 2>/dev/null
++
++echo -e "\nExceed $LIMIT1 Kb limit with new files in testdir/: " >> $seqres.full
++_create_items $LIMIT1 "touch"
++
++echo -e "\nRemount with $LIMIT1 Kb limit,\nnew item in testdir/ should result to ENOSPC: " >>$seqres.full
++_scratch_mount "-o remount,max_dir_size_kb=$LIMIT1"
++_create_items $LIMIT1 "touch"
++
++echo -e "\nExceed $LIMIT2 Kb limit with new files in testdir/: " >> $seqres.full
++_scratch_mount "-o remount,max_dir_size_kb=$LIMIT2"
++_create_items $LIMIT2 "touch"
++
++echo -e "\nExceed $LIMIT2 Kb limit with new files in testdir2/: " >> $seqres.full
++mkdir $SCRATCH_MNT/testdir2 2>/dev/null
++_create_items $LIMIT2 "touch" "$SCRATCH_MNT/testdir2"
++
++echo -e "\nRemount with $LIMIT1 Kb limit,\nnew item in testdir/ should result to ENOSPC: " >> $seqres.full
++_scratch_mount "-o remount,max_dir_size_kb=$LIMIT1"
++_create_items $LIMIT2 "touch"
++echo -e "\nnew item in testdir2/ should result to ENOSPC: " >> $seqres.full
++_create_items $LIMIT2 "touch" "$SCRATCH_MNT/testdir2"
++_clear_testdir "$SCRATCH_MNT/testdir2"
++rmdir $testdir
++mkdir $testdir
++
++echo -e "\nExceed $LIMIT1 Kb directory limit with new subdirectories: " >> $seqres.full
++_create_items $LIMIT1 "mkdir"
++_clear_testdir
++
++echo -e "\nExceed $LIMIT1 Kb directory limit with symlinks: " >> $seqres.full
++dd if=/dev/urandom of=$testfile bs=1 seek=4096 count=4096 > /dev/null 2>&1
++_create_items $LIMIT1 "ln -s $testfile"
++_clear_testdir
++
++echo -e "\nExceed $LIMIT1 Kb directory limit with hardlinks: " >> $seqres.full
++_create_items $LIMIT1 "ln $testfile"
++_clear_testdir
++
++echo -e "\nExceed $LIMIT1 Kb directory limit with FIFOs: " >> $seqres.full
++_create_items $LIMIT1 "mkfifo"
++_clear_testdir
++
++echo -e "\nCreate ext4 fs on testdir/subdir with $LIMIT2 Kb limit," >> $seqres.full
++mkdir $testdir/subdir 2>/dev/null
++_make_ext4fs $TEST_DEV "-O ^dir_index,^filetype"
++mount -t ext4 -o max_dir_size_kb=$LIMIT2 $TEST_DEV $testdir/subdir
++
++echo "exceed $LIMIT1 Kb limit of testdir/:" >> $seqres.full
++_create_items $LIMIT1 "touch"
++
++echo -e "\nexceed $LIMIT2 Kb limit of testdir/subdir:" >> $seqres.full
++_create_items $LIMIT2 "touch" "$testdir/subdir"
++
++echo -e "\ntestdir/ limit $LIMIT2 Kb, testdir/subdir limit $LIMIT1 Kb," >> $seqres.full
++umount $TEST_DEV 1>/dev/null 2>&1
++_scratch_mount "-o remount,max_dir_size_kb=$LIMIT2"
++mount -t ext4 -o max_dir_size_kb=$LIMIT1 $TEST_DEV $testdir/subdir
++
++echo "exceed new $LIMIT2 Kb limit of testdir/ with a set of files:" >> $seqres.full
++_create_items $LIMIT2 "touch"
++echo -e "\nnew item in testdir/subdir should result to ENOSPC: " >> $seqres.full
++_create_items $LIMIT2 "touch" "$testdir/subdir"
++
++umount $TEST_DEV 1>/dev/null 2>&1
++_clear_testdir
++
++echo -e "\ntestdir/ limit $LIMIT2 Kb, loop fs: testdir/subdir limit $LIMIT1 Kb," >> $seqres.full
++mkdir $testdir/subdir
++
++_make_loopfs "-o max_dir_size_kb=$LIMIT1" "$testdir/subdir"
++
++echo "exceed $LIMIT1 Kb limit of testdir/subdir with a set of files:" >> $seqres.full
++_create_items $LIMIT1 "touch" "$testdir/subdir"
++
++echo -e "\nexceed $LIMIT2 Kb limit of testdir/ with a set of files:" >> $seqres.full
++_create_items $LIMIT2 "touch"
++
++umount $testdir/subdir
++losetup -d $loopdev
++_clear_testdir
++
++# success, all done
++status=0
++exit 0
+diff --git a/tests/ext4/309.out b/tests/ext4/309.out
+new file mode 100755
+index 0000000..56330d6
+--- /dev/null
++++ b/tests/ext4/309.out
+@@ -0,0 +1,2 @@
++QA output created by 309
++Silence is golden
+diff --git a/tests/ext4/group b/tests/ext4/group
+index aa6a53b..9bf1061 100644
+--- a/tests/ext4/group
++++ b/tests/ext4/group
+@@ -14,4 +14,5 @@
+ 305 auto
+ 306 auto rw resize quick
+ 307 auto ioctl rw
+-308 auto ioctl rw prealloc quick
+\ No newline at end of file
++308 auto ioctl rw prealloc quick
++309 auto
 -- 
-Jan Kara <jack@suse.cz>
-SUSE Labs, CR
+1.9.3
+
+
+--------------060200040208070406030509
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--------------060200040208070406030509--
