@@ -1,25 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 00ED07F3F
-	for <xfs@oss.sgi.com>; Wed, 10 Dec 2014 12:37:50 -0600 (CST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id BE68A7F3F
+	for <xfs@oss.sgi.com>; Wed, 10 Dec 2014 14:32:36 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 6951EAC023
-	for <xfs@oss.sgi.com>; Wed, 10 Dec 2014 10:37:46 -0800 (PST)
-Received: from internal-smtp3.wesleyan.edu (internal-smtp3.wesleyan.edu
-	[129.133.6.182]) by cuda.sgi.com with ESMTP id yiS9HrCVqQ45GCHV
-	(version=TLSv1 cipher=AES256-SHA bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 10 Dec 2014 10:37:44 -0800 (PST)
-Received: from exchcas3.wesad.wesleyan.edu (exchcas3.wesleyan.edu
-	[129.133.6.93])
-	by msa.wesleyan.edu (8.14.4/8.14.4) with ESMTP id sBAIbg6k020255
-	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=OK)
-	for <xfs@oss.sgi.com>; Wed, 10 Dec 2014 13:37:42 -0500
-From: "Meij, Henk" <hmeij@wesleyan.edu>
-Subject: xfs_quota off/remove
-Date: Wed, 10 Dec 2014 18:37:41 +0000
-Message-ID: <8688BD11DAC0574AA90295127E9E9F4AC04DD4FF@exchangewes8.wesad.wesleyan.edu>
-Content-Language: en-US
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 9D4A88F8035
+	for <xfs@oss.sgi.com>; Wed, 10 Dec 2014 12:32:36 -0800 (PST)
+Received: from mail-qg0-f52.google.com (mail-qg0-f52.google.com
+	[209.85.192.52]) by cuda.sgi.com with ESMTP id HCHA255iLKzKnhh6
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Wed, 10 Dec 2014 12:32:35 -0800 (PST)
+Received: by mail-qg0-f52.google.com with SMTP id a108so2687257qge.39
+	for <xfs@oss.sgi.com>; Wed, 10 Dec 2014 12:32:34 -0800 (PST)
+Message-ID: <5488ADDD.404@gmail.com>
+Date: Wed, 10 Dec 2014 15:32:29 -0500
+From: "Michael L. Semon" <mlsemon35@gmail.com>
 MIME-Version: 1.0
+Subject: Re: xfs_quota off/remove
+References: <8688BD11DAC0574AA90295127E9E9F4AC04DD4FF@exchangewes8.wesad.wesleyan.edu>
+In-Reply-To: <8688BD11DAC0574AA90295127E9E9F4AC04DD4FF@exchangewes8.wesad.wesleyan.edu>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,141 +26,168 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============7022712079796782389=="
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: "Meij, Henk" <hmeij@wesleyan.edu>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
---===============7022712079796782389==
-Content-Language: en-US
-Content-Type: multipart/alternative;
-	boundary="_000_8688BD11DAC0574AA90295127E9E9F4AC04DD4FFexchangewes8wes_"
+On 12/10/14 13:37, Meij, Henk wrote:
+> Is off/remove working for xfs_quota? I seem to not be able to zero
+> out the project quota metadata and move the project to another
+> partition. I did not remove the entries in the /etc/proj* files.
+> 
+> 
+> 
+> -Henk
+> 
+> 
+> 
+>  1308  xfs_quota -x -c 'project -s data_1_hmeij'
+>  1309  xfs_quota -x -c 'report -h -bi' /data/1
+> 
+> 
+> 
+> User quota on /data/1 (/dev/sdb1)
+>                         Blocks
+> User ID      Used   Soft   Hard Warn/Grace
+> ---------- ---------------------------------
+> root            0      0      0  00 [------]
+> hmeij      854.4M      0      0  00 [------]
+> 
+> Project quota on /data/1 (/dev/sdb1)
+>                         Blocks
+> Project ID   Used   Soft   Hard Warn/Grace
+> ---------- ---------------------------------
+> data_1_hmeij 854.4M      0      0  00 [------]
+> 
+> 
+> 
+>  1318  xfs_quota -x -c 'off' -c 'remove' /data/1
+> 
+>  1331  umount /data/1; mount /data1
+> 
+> 
+> 
+>  1333  xfs_quota -x -c 'report -h' /data/1
+> 
+> 
+> 
+> same report output, same metadata ...
 
---_000_8688BD11DAC0574AA90295127E9E9F4AC04DD4FFexchangewes8wes_
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+As an XFS user: Add me in on this thread?
 
-Is off/remove working for xfs_quota? I seem to not be able to zero out the =
-project quota metadata and move the project to another partition. I did not=
- remove the entries in the /etc/proj* files.
+On one hand, the man page for xfs_quota states for "off":  "Permanently
+switches quota off for the filesystem identified by the current path.
+Quota can only be switched back on subsequently by unmounting and then
+mounting again."
 
+It's confusing when permanent is not really permanent.  However,
+mounting without quotas leaves the quotas off.  The xfs_quota "state"
+command was helpful in showing the actual state of accounting and
+enforcement.  Also, to mount without uquota or without pquota still 
+disables uquota and pquota independently.
 
+I take it that project quotas have much to do with the attributes set 
+on the a projid directory and files created within it.
 
--Henk
+# Switching to add a secondary issue hit while trying to duplicate 
+# your issue...feel free to ask me to get my own thread.  Just wanted 
+# to record that here is where I hit an issue.
 
+On the other hand, for me to use the xfs_quota "off -p" command with
+even one file with project quota, the v4 filesystem here at work becomes
+impossible to unmount.  When only the containing directory for the
+project quota has zero files in it, the command works just fine.  CPU 
+usage for xfs_quota doesn't go over 2% while it is hanging.
 
+A forced crash (yikes!) yields nothing but input-related stack and the 
+KMS console not switching back to VGA.
 
- 1308  xfs_quota -x -c 'project -s data_1_hmeij'
- 1309  xfs_quota -x -c 'report -h -bi' /data/1
+Quotas haven't been touched on this box in a while, and they were set up
+maybe 3-4 years ago.
 
+An upgrade to the newest everything from git did not make things 
+better, though I'm keeping it because the previous git version worked 
+really well, other than for me wondering about xfs_quota.
 
+I'll try to get more from my testing boxes at home.
 
-User quota on /data/1 (/dev/sdb1)
-                        Blocks
-User ID      Used   Soft   Hard Warn/Grace
----------- ---------------------------------
-root            0      0      0  00 [------]
-hmeij      854.4M      0      0  00 [------]
+Thanks!
 
-Project quota on /data/1 (/dev/sdb1)
-                        Blocks
-Project ID   Used   Soft   Hard Warn/Grace
----------- ---------------------------------
-data_1_hmeij 854.4M      0      0  00 [------]
+Michael
 
+# Backing info:
 
+# scripts/ver_linux from kernel source:
 
- 1318  xfs_quota -x -c 'off' -c 'remove' /data/1
+# PC started out running Slackware 14, but it's been upgraded from 
+# mostly-official source in a lot of places.
 
- 1331  umount /data/1; mount /data1
+Linux ________ 3.10.62 #1 Sun Dec 7 19:13:27 EST 2014 i686 Intel(R) Pentium(R) 4 CPU 2.80GHz GenuineIntel GNU/Linux
+ 
+Gnu C                  4.8.3
+Gnu make               3.82
+binutils               2.24.51.0.3.20140127
+util-linux             2.21.2
+mount                  support
+module-init-tools      9
+e2fsprogs              1.42.8
+jfsutils               1.1.15
+reiserfsprogs          3.6.21
+xfsprogs               3.2.2
+pcmciautils            017
+quota-tools            3.17.
+PPP                    2.4.5
+Linux C Library        2.20
+Dynamic linker (ldd)   2.20
+Linux C++ Library      6.0.19
+Procps                 3.2.8
+Net-tools              1.60
+Kbd                    1.15.3
+oprofile               0.9.7
+Sh-utils               8.21
 
+# xfs_info:
 
+meta-data=/dev/sda8              isize=256    agcount=4, agsize=6160384 blks
+         =                       sectsz=512   attr=2, projid32bit=1
+         =                       crc=0        finobt=0
+data     =                       bsize=4096   blocks=24641536, imaxpct=25
+         =                       sunit=0      swidth=0 blks
+naming   =version 2              bsize=4096   ascii-ci=0 ftype=0
+log      =internal               bsize=4096   blocks=12032, version=2
+         =                       sectsz=512   sunit=0 blks, lazy-count=1
+realtime =none                   extsz=4096   blocks=0, rtextents=0
 
- 1333  xfs_quota -x -c 'report -h' /data/1
+# info from "mount" for this partition:
 
+/dev/sda8 on /storage type xfs (rw,uquota,pquota)
 
+# /proc/partitions
 
-same report output, same metadata ...
+major minor  #blocks  name
 
---_000_8688BD11DAC0574AA90295127E9E9F4AC04DD4FFexchangewes8wes_
-Content-Type: text/html; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-
-<html dir=3D"ltr">
-<head>
-<meta http-equiv=3D"Content-Type" content=3D"text/html; charset=3Diso-8859-=
-1">
-<meta name=3D"GENERATOR" content=3D"MSHTML 11.00.9600.17420">
-<style id=3D"owaParaStyle">P {
-	MARGIN-BOTTOM: 0px; MARGIN-TOP: 0px
-}
-</style>
-</head>
-<body fPStyle=3D"1" ocsi=3D"0">
-<div style=3D"direction: ltr;font-family: Arial;color: #000000;font-size: 1=
-0pt;">
-<p>Is off/remove working for xfs_quota? I seem to not be able to zero out t=
-he project quota metadata and move the project to another partition. I did =
-not remove the entries in the /etc/proj* files.</p>
-<p>&nbsp;</p>
-<p>-Henk</p>
-<p>&nbsp;</p>
-<p>&nbsp;1308&nbsp; xfs_quota -x -c 'project -s data_1_hmeij'<br>
-&nbsp;1309&nbsp; xfs_quota -x -c 'report -h -bi' /data/1</p>
-<p>&nbsp;</p>
-<p>User quota on /data/1 (/dev/sdb1)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nb=
-sp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp;&nbsp;&nbsp; <br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nb=
-sp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Blocks&nbsp=
-;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&n=
-bsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br>
-User ID&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Used&nbsp;&nbsp; Soft&nbsp;&nbsp; Har=
-d Warn/Grace&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nb=
-sp;&nbsp;&nbsp; <br>
----------- ---------------------------------&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&=
-nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br>
-root&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0&nb=
-sp;&nbsp;&nbsp;&nbsp;&nbsp; 0&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0&nbsp; 00 [---=
----]&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br>
-hmeij&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 854.4M&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0&=
-nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0&nbsp; 00 [------]&nbsp;&nbsp;&nbsp;&nbsp;&n=
-bsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </p>
-<p>Project quota on /data/1 (/dev/sdb1)<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nb=
-sp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Blocks&nbsp=
-;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <=
-br>
-Project ID&nbsp;&nbsp; Used&nbsp;&nbsp; Soft&nbsp;&nbsp; Hard Warn/Grace&nb=
-sp;&nbsp; <br>
----------- --------------------------------- <br>
-data_1_hmeij 854.4M&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp; 0&nbsp; 00 [------]</p>
-<p>&nbsp;</p>
-<p>&nbsp;1318&nbsp; xfs_quota -x -c 'off' -c 'remove' /data/1</p>
-<p><br>
-&nbsp;1331&nbsp; umount /data/1; mount /data1</p>
-<p>&nbsp;</p>
-<p>&nbsp;1333&nbsp; xfs_quota -x -c 'report -h' /data/1</p>
-<p>&nbsp;</p>
-<p>same report output, same metadata&nbsp;...<br>
-</p>
-</div>
-</body>
-</html>
-
---_000_8688BD11DAC0574AA90295127E9E9F4AC04DD4FFexchangewes8wes_--
-
-
---===============7022712079796782389==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+   8        0  156290904 sda
+   8        1    4200966 sda1
+   8        2          1 sda2
+   8        5    1048576 sda5
+   8        6   12582912 sda6
+   8        7   24600689 sda7
+   8        8   98566144 sda8
+   8        9   10485760 sda9
+   8       10    2097152 sda10
+   8       11    1349296 sda11
+   8       12    1347936 sda12
+   8       16   39062500 sdb
+   8       17   10485760 sdb1
+   8       18     524288 sdb2
+   8       19    1048576 sdb3
+   8       20   27002835 sdb4
+  11        0    1048575 sr0
+  11        1    1048575 sr1
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============7022712079796782389==--
