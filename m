@@ -1,25 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 908677F3F
-	for <xfs@oss.sgi.com>; Wed, 10 Dec 2014 15:11:41 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 70B778F8033
-	for <xfs@oss.sgi.com>; Wed, 10 Dec 2014 13:11:38 -0800 (PST)
-Received: from mail-qc0-f174.google.com (mail-qc0-f174.google.com
-	[209.85.216.174]) by cuda.sgi.com with ESMTP id
-	TnKDPbwNRGK3sMoc (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 10 Dec 2014 13:11:34 -0800 (PST)
-Received: by mail-qc0-f174.google.com with SMTP id c9so2855037qcz.33
-	for <xfs@oss.sgi.com>; Wed, 10 Dec 2014 13:11:34 -0800 (PST)
-Message-ID: <5488B704.2040602@gmail.com>
-Date: Wed, 10 Dec 2014 16:11:32 -0500
-From: "Michael L. Semon" <mlsemon35@gmail.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 8191A7F3F
+	for <xfs@oss.sgi.com>; Thu, 11 Dec 2014 05:39:37 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 4274B304048
+	for <xfs@oss.sgi.com>; Thu, 11 Dec 2014 03:39:36 -0800 (PST)
+Received: from smtp5-g21.free.fr (smtp5-g21.free.fr [212.27.42.5]) by
+	cuda.sgi.com with ESMTP id KvOhO9VzSfPUMRHk (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 11 Dec 2014 03:39:34 -0800 (PST)
+Received: from harpe.intellique.com (unknown [82.225.196.72])
+	by smtp5-g21.free.fr (Postfix) with ESMTP id 3994ED48072
+	for <xfs@oss.sgi.com>; Thu, 11 Dec 2014 12:38:07 +0100 (CET)
+Date: Thu, 11 Dec 2014 12:39:36 +0100
+From: Emmanuel Florac <eflorac@intellique.com>
+Subject: easily reproducible filesystem crash on rebuilding array
+Message-ID: <20141211123936.1f3d713d@harpe.intellique.com>
 MIME-Version: 1.0
-Subject: Re: xfs_quota off/remove
-References: <8688BD11DAC0574AA90295127E9E9F4AC04DD4FF@exchangewes8.wesad.wesleyan.edu>
-	<5488ADDD.404@gmail.com> <20141210204707.GC24183@dastard>
-In-Reply-To: <20141210204707.GC24183@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,69 +29,103 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>, "Meij, Henk" <hmeij@wesleyan.edu>
+To: xfs@oss.sgi.com
 
-On 12/10/14 15:47, Dave Chinner wrote:
-> On Wed, Dec 10, 2014 at 03:32:29PM -0500, Michael L. Semon wrote:
->> On one hand, the man page for xfs_quota states for "off":  "Permanently
->> switches quota off for the filesystem identified by the current path.
->> Quota can only be switched back on subsequently by unmounting and then
->> mounting again."
-> 
-> The *only* method for turning on quotas on XFS on is to mount the filesystem
-> with the appropriate mount options. You can turn them off in an on-line
-> fashion by running the "off" command, but you also need to remove
-> the mount options from the next mount, otherwise that turns them
-> back on.
-> 
-> If the word "permanently" is the problem, send a patch for th eman
-> page that explains it properly.
-> 
-> Cheers,
-> 
-> Dave.
 
-Thanks, Dave.  You, Mark, Eric, and Brian are superior to me at wording.  
-But here's my shot at it...
+Here's the setup: hardware RAID controller (Adaptec 7xx5 series, latest
+firmware), RAID-6 array (problem occured with different RAID width,
+sizes, and disk configuration), and different kernels from 3.2.x to
+3.16.x.
 
-Thanks!
+What happens: while the array is rebuilding, simultaneously reading and
+writing is a sure way to break the filesystem and at times, corrupt
+data.
 
-Michael
+If the array is NOT rebuilding, nothing ever happens. When using the
+array in read-only mode while it rebuilds, nothing ever happens.
+However, while the array is rebuilding, relatively heavy IO almost
+certainly brings up something as follows:
 
->From 51a3d00b134b72c095c1d4ec42ec619ddf4388bc Mon Sep 17 00:00:00 2001
-From: "Michael L. Semon" <mlsemon35@gmail.com>
-Date: Wed, 10 Dec 2014 15:58:10 -0500
-Subject: [PATCH] xfsprogs: clarify wording for xfs_quota off command
+Dec 10 17:00:56 TEST-ADAPTEC kernel: <1<<<<<<1<1<1>XFS (dm-0): Unmount and run xfs_repair<<<<<<<1<1<1>XFS (dm-0): Unmount and run xfs_repai<<<<<<<1<1<1>XFS (dm-0): Unmount and <<<<1<<1<1<1>XFS (dm-0): Unmount and run xfs_repair
+Dec 10 17:00:56 TEST-ADAPTEC kernel: <1<<<<<<1<1<1>XFS (dm-0): Unmount and run xf<<<<<<<1<1<1>XFS (dm-0): Unmount and run xfs_<<<<<<<1<1<1>XFS (dm-0): Unmount and run xfs<<<<<<<1<1<1>XFS (dm-0): Unmount and run<<<<<<<1<1><1>XFS (dm-0): Unmount and run<<<<<<<1><1<1>XFS (dm-0): Unmount and<<<<<<<1<1<1>XFS (dm-0): Unmount<<<<<<<1<1<1>XFS (dm-0): Unmount and run xfs_repair
+Dec 10 17:00:56 TEST-ADAPTEC kernel: <1<<<1<1<1>XFS (dm-0): Unmount and run xfs_<<<<<<<1<1<1>XFS (dm-0): Unmount and run xfs_repair
+Dec 10 17:00:56 TEST-ADAPTEC kernel: <1<<<1<1<1>XF<1>XFS (dm-0): Unmount and run xfs_repair
+Dec 10 17:00:58 TEST-ADAPTEC kernel: <1<<<<<<1<1>XFS (dm-0): Unmount and run xf<<<<1<1>XFS (dm-0): Unmount and run xfs_repa<<<<<<<1<1><1>XFS (dm-0): Unmount and run xfs_re<<<<<<<1<1<1>XFS (dm-0): Unmount and run xfs_r<<<<<<<1<1><1>XFS (dm-0): Unmount and run xfs_repair
+Dec 10 17:01:01 TEST-ADAPTEC kernel: <<<<<<<1<1<1>XFS (dm-0): Unmount and run xfs_repair<<<<<<<1<1<1>XFS (dm-0): Unmount and run xfs_repair
+Dec 10 17:01:01 TEST-ADAPTEC kernel: <<<<<<<1<1<1>XFS (dm-0): Unmount and run<<<<<<<1<1<1>XFS (dm-0): Unmount and run xfs_repair
+Dec 10 17:01:02 TEST-ADAPTEC kernel: CPU: 6 PID: 16818 Comm: cp Tainted: G           O  3.16.7-storiq64-opteron #1
+Dec 10 17:01:02 TEST-ADAPTEC kernel: Hardware name: Supermicro H8SGL/H8SGL, BIOS 3.0a       05/07/2013
+Dec 10 17:01:02 TEST-ADAPTEC kernel:  0000000000000000 0000000000000001 ffffffff814ca287 ffff88040404a4f8
+Dec 10 17:01:02 TEST-ADAPTEC kernel:  ffffffff81213f7d ffffffff81230203 ffff880200000001 ffff8802009ce703
+Dec 10 17:01:02 TEST-ADAPTEC kernel:  ffff8802aa193560 0000000000000001 0000000000000002 0000000000000000
+Dec 10 17:01:02 TEST-ADAPTEC kernel: Call Trace:
+Dec 10 17:01:02 TEST-ADAPTEC kernel:  [<ffffffff814ca287>] ? dump_stack+0x41/0x51
+Dec 10 17:01:02 TEST-ADAPTEC kernel:  [<ffffffff81213f7d>] ? xfs_alloc_fixup_trees+0x2dd/0x390
+Dec 10 17:01:02 TEST-ADAPTEC kernel:  [<ffffffff81230203>] ? xfs_btree_get_rec+0x53/0x90
+Dec 10 17:01:02 TEST-ADAPTEC kernel:  [<ffffffff812168a5>] ? xfs_alloc_ag_vextent_near+0x8a5/0xae0
+Dec 10 17:01:02 TEST-ADAPTEC kernel:  [<ffffffff81216ba5>] ? xfs_alloc_ag_vextent+0xc5/0x100
+Dec 10 17:01:02 TEST-ADAPTEC kernel:  [<ffffffff812178c1>] ? xfs_alloc_vextent+0x441/0x5f0
+Dec 10 17:01:02 TEST-ADAPTEC kernel:  [<ffffffff8121f573>] ? xfs_bmap_btalloc_nullfb+0x73/0xe0
+Dec 10 17:01:02 TEST-ADAPTEC kernel:  [<ffffffff81226aa1>] ? xfs_bmap_btalloc+0x481/0x720
+Dec 10 17:01:02 TEST-ADAPTEC kernel:  [<ffffffff812277ad>] ? xfs_bmapi_write+0x55d/0x9f0
+Dec 10 17:01:02 TEST-ADAPTEC kernel:  [<ffffffff8122a857>] ? xfs_btree_read_buf_block.constprop.28+0x87/0xc0
+Dec 10 17:01:02 TEST-ADAPTEC kernel:  [<ffffffff81231976>] ? xfs_da_grow_inode_int+0xd6/0x360
+Dec 10 17:01:02 TEST-ADAPTEC kernel:  [<ffffffff8109669d>] ? up+0xd/0x40
+Dec 10 17:01:02 TEST-ADAPTEC kernel:  [<ffffffff811fba30>] ? xfs_buf_unlock+0x10/0x60
+Dec 10 17:01:02 TEST-ADAPTEC kernel:  [<ffffffff811fb49e>] ? xfs_buf_rele+0x4e/0x170
+Dec 10 17:01:02 TEST-ADAPTEC kernel:  [<ffffffff8112d246>] ? cache_alloc_refill+0x96/0x2d0
+Dec 10 17:01:02 TEST-ADAPTEC kernel:  [<ffffffff8124b32f>] ? xfs_iread+0x11f/0x410
+Dec 10 17:01:02 TEST-ADAPTEC kernel:  [<ffffffff8123508f>] ? xfs_dir2_grow_inode+0x6f/0x130
+Dec 10 17:01:02 TEST-ADAPTEC kernel:  [<ffffffff812372b9>] ? xfs_dir2_sf_to_block+0xb9/0x5b0
+Dec 10 17:01:02 TEST-ADAPTEC kernel:  [<ffffffff812137be>] ? kmem_zone_alloc+0x6e/0xf0
+Dec 10 17:01:02 TEST-ADAPTEC kernel:  [<ffffffff8114ee0a>] ? unlock_new_inode+0x3a/0x60
+Dec 10 17:01:02 TEST-ADAPTEC kernel:  [<ffffffff8124544b>] ? xfs_ialloc+0x29b/0x530
+Dec 10 17:01:02 TEST-ADAPTEC kernel:  [<ffffffff8123edc3>] ? xfs_dir2_sf_addname+0x113/0x5d0
+Dec 10 17:01:02 TEST-ADAPTEC kernel:  [<ffffffff81235938>] ? xfs_dir_createname+0x168/0x1a0
+Dec 10 17:01:02 TEST-ADAPTEC kernel:  [<ffffffff81245f87>] ? xfs_create+0x547/0x710
+Dec 10 17:01:02 TEST-ADAPTEC kernel:  [<ffffffff8120981c>] ? xfs_generic_create+0xdc/0x250
+Dec 10 17:01:02 TEST-ADAPTEC kernel:  [<ffffffff811445c1>] ? vfs_create+0x71/0xc0
+Dec 10 17:01:02 TEST-ADAPTEC kernel:  [<ffffffff81144d45>] ? do_last.isra.62+0x735/0xd00
+Dec 10 17:01:02 TEST-ADAPTEC kernel:  [<ffffffff811415d1>] ? link_path_walk+0x61/0x7e0
+Dec 10 17:01:02 TEST-ADAPTEC kernel:  [<ffffffff811453de>] ? path_openat+0xce/0x5f0
+Dec 10 17:01:02 TEST-ADAPTEC kernel:  [<ffffffff81145a8b>] ? user_path_at_empty+0x6b/0xb0
+Dec 10 17:01:02 TEST-ADAPTEC kernel:  [<ffffffff81145b97>] ? do_filp_open+0x47/0xb0
+Dec 10 17:01:02 TEST-ADAPTEC kernel:  [<ffffffff811519da>] ? __alloc_fd+0x3a/0x100
+Dec 10 17:01:02 TEST-ADAPTEC kernel:  [<ffffffff81135bc0>] ? do_sys_open+0x140/0x230
+Dec 10 17:01:02 TEST-ADAPTEC kernel:  [<ffffffff814d08a9>] ? system_call_fastpath+0x16/0x1b
+Dec 10 17:01:02 TEST-ADAPTEC kernel: CPU: 6 PID: 16818 Comm: cp Tainted: G           O  3.16.7-storiq64-opteron #1
+Dec 10 17:01:02 TEST-ADAPTEC kernel: Hardware name: Supermicro H8SGL/H8SGL, BIOS 3.0a       05/07/2013
+Dec 10 17:01:02 TEST-ADAPTEC kernel:  0000000000000000 000000000000000c ffffffff814ca287 ffff88040cde45c8
+Dec 10 17:01:02 TEST-ADAPTEC kernel:  ffffffff81212fdf ffff8803201b1000 ffff8802aa193c68 ffff88040be30000
+Dec 10 17:01:02 TEST-ADAPTEC kernel:  ffffffff81245d8b 0000000000000023 ffff8802aa193ba8 ffff8802aa193ba4
+Dec 10 17:01:02 TEST-ADAPTEC kernel: Call Trace:
+Dec 10 17:01:02 TEST-ADAPTEC kernel:  [<ffffffff814ca287>] ? dump_stack+0x41/0x51
+Dec 10 17:01:02 TEST-ADAPTEC kernel:  [<ffffffff81212fdf>] ? xfs_trans_cancel+0xef/0x110
+Dec 10 17:01:02 TEST-ADAPTEC kernel:  [<ffffffff81245d8b>] ? xfs_create+0x34b/0x710
+Dec 10 17:01:02 TEST-ADAPTEC kernel:  [<ffffffff8120981c>] ? xfs_generic_create+0xdc/0x250
+Dec 10 17:01:02 TEST-ADAPTEC kernel:  [<ffffffff811445c1>] ? vfs_create+0x71/0xc0
+Dec 10 17:01:02 TEST-ADAPTEC kernel:  [<ffffffff81144d45>] ? do_last.isra.62+0x735/0xd00
+Dec 10 17:01:02 TEST-ADAPTEC kernel:  [<ffffffff811415d1>] ? link_path_walk+0x61/0x7e0
+Dec 10 17:01:02 TEST-ADAPTEC kernel:  [<ffffffff811453de>] ? path_openat+0xce/0x5f0
+Dec 10 17:01:02 TEST-ADAPTEC kernel:  [<ffffffff81145a8b>] ? user_path_at_empty+0x6b/0xb0
+Dec 10 17:01:02 TEST-ADAPTEC kernel:  [<ffffffff81145b97>] ? do_filp_open+0x47/0xb0
+Dec 10 17:01:02 TEST-ADAPTEC kernel:  [<ffffffff811519da>] ? __alloc_fd+0x3a/0x100
+Dec 10 17:01:02 TEST-ADAPTEC kernel:  [<ffffffff81135bc0>] ? do_sys_open+0x140/0x230
+Dec 10 17:01:02 TEST-ADAPTEC kernel:  [<ffffffff814d08a9>] ? system_call_fastpath+0x16/0x1b
+Dec 10 17:01:02 TEST-ADAPTEC kernel: XFS (dm-0): xfs_do_force_shutdown(0x8) called from line 959 of file fs/xfs/xfs_trans.c.  Return address = 0xffffffff81212ff8
+Dec 10 17:01:25 TEST-ADAPTEC kernel: XFS (dm-0): xfs_log_force: error 5 returned.
+Dec 10 17:01:55 TEST-ADAPTEC kernel: XFS (dm-0): xfs_log_force: error 5 returned.
+Dec 10 17:02:55 TEST-ADAPTEC last message repeated 2 times
 
-The xfs_quota "off" command claims to permanently shut off quotas, but
-then reminds the user that they can be turned on again by unmounting
-and mounting the filesystem again.  It's the kind of permanent that
-is not permanent.  Fix it.
+Any idea is welcome...
 
-Signed-off-by: Michael L. Semon <mlsemon35@gmail.com>
----
- man/man8/xfs_quota.8 | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/man/man8/xfs_quota.8 b/man/man8/xfs_quota.8
-index 8cc8ab7..c79627c 100644
---- a/man/man8/xfs_quota.8
-+++ b/man/man8/xfs_quota.8
-@@ -479,8 +479,8 @@ Disables quota enforcement, while leaving quota accounting active. The
- option (verbose) displays the state after the operation has completed.
- .TP
- .BR off " [ " \-gpu " ] [ " \-v " ]"
--Permanently switches quota off for the filesystem identified by the
--current path.
-+Stops quota enforcement and accounting for the filesystem identified by the
-+current path until the filesystem has been unmounted.
- Quota can only be switched back on subsequently by unmounting and
- then mounting again.
- .TP
 -- 
-1.8.5.4
-
+------------------------------------------------------------------------
+Emmanuel Florac     |   Direction technique
+                    |   Intellique
+                    |	<eflorac@intellique.com>
+                    |   +33 1 78 94 84 02
+------------------------------------------------------------------------
 
 _______________________________________________
 xfs mailing list
