@@ -1,20 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 139237F3F
-	for <xfs@oss.sgi.com>; Thu, 11 Dec 2014 17:05:13 -0600 (CST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id AD6D37F56
+	for <xfs@oss.sgi.com>; Fri, 12 Dec 2014 03:52:41 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id A4C59AC004
-	for <xfs@oss.sgi.com>; Thu, 11 Dec 2014 15:05:09 -0800 (PST)
-Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
-	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	99iS2QunL8y3pA9C for <xfs@oss.sgi.com>;
-	Thu, 11 Dec 2014 15:05:05 -0800 (PST)
-Date: Fri, 12 Dec 2014 10:04:09 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: [GIT PULL] xfs: updates for 3.19-rc1
-Message-ID: <20141211230409.GD9756@dastard>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 6DA7E304039
+	for <xfs@oss.sgi.com>; Fri, 12 Dec 2014 01:52:38 -0800 (PST)
+Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
+	with ESMTP id G7W2ifO0qH1HId3D (version=TLSv1 cipher=AES256-SHA
+	bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Fri, 12 Dec 2014 01:52:32 -0800 (PST)
+Date: Fri, 12 Dec 2014 10:52:30 +0100
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [PATCH 10/11] quota: Switch ->get_dqblk() and ->set_dqblk() to
+	use bytes as space units
+Message-ID: <20141212095230.GB4813@quack.suse.cz>
+References: <1415739865-2438-1-git-send-email-jack@suse.cz>
+	<1415739865-2438-11-git-send-email-jack@suse.cz>
+	<20141118222952.GQ23575@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
+In-Reply-To: <20141118222952.GQ23575@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,183 +32,87 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: torvalds@linux-foundation.org
-Cc: akpm@linux-foundation.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, Jan Kara <jack@suse.cz>, xfs@oss.sgi.com
 
-Hi Linus,
+On Wed 19-11-14 09:29:52, Dave Chinner wrote:
+> On Tue, Nov 11, 2014 at 10:04:24PM +0100, Jan Kara wrote:
+> > Currently ->get_dqblk() and ->set_dqblk() use struct fs_disk_quota which
+> > tracks space limits and usage in 512-byte blocks. However VFS quotas
+> > track usage in bytes (as some filesystems require that) and we need to
+> > somehow pass this information. Upto now it wasn't a problem because we
+> > didn't do any unit conversion (thus VFS quota routines happily stuck
+> > number of bytes into d_bcount field of struct fd_disk_quota). Only if
+> > you tried to use Q_XGETQUOTA or Q_XSETQLIM for VFS quotas (or Q_GETQUOTA
+> > / Q_SETQUOTA for XFS quotas), you got bogus results but noone really
+> > tried that. But when we want interfaces compatible we need to fix this.
+> > 
+> > So we bite the bullet and define another quota structure used for
+> > passing information from/to ->get_dqblk()/->set_dqblk. It's somewhat
+> > sad we have to have more conversion routines in fs/quota/quota.c but
+> > it seems cleaner than overloading e.g. units of d_bcount to bytes.
+> 
+> I don't really like the idea of having to copy the dquot information
+> an extra time. We now:
+> 
+> 	- copy from internal dquot to the new qc_dqblk
+> 	- copy from the new qc_dqblk to if_dqblk/xfs_dqblk
+> 	- copy if_dqblk/xfs_dqblk to the user buffer.
+> 
+> That's now three copies, and when we are having to deal with quota
+> reports containing hundreds of thousands of dquots that's going to
+> hrut performance.
+> 
+> We could probably get away with just one copy by passing a
+> filldir()-like context down into the filesystems to format their
+> internal dquot information directly into the user buffer in the
+> appropriate format. That way fs/quota/quota.c doesn't need
+> conversion routines, filesystems can optimise the formating to
+> minimise copying, and we can still provide generic routines for
+> filesystems using the generic quota infrastructure....
+  I was thinking about how this would look like. I don't have a problem to
+create a filldir() like callback that will be used for getting quota
+structures. However I don't see how we could reasonably get away with just
+one copy in general - that would mean that the interface functions in
+fs/quota.c (e.g. quota_getquota()) would have to determine whether XFS of
+VFS quota structures are used in the backing filesystem to provide proper
+callback and that's IMO too ugly to live.
 
-Can you please pull the current XFS updates from the tree below?
-There's relatively little change in this update; it is mainly bug
-fixes, cleanups and more of the on-going libxfs restructuring
-and on-disk format header consolidation work.
+We could definitely reduce the number of copies to two by changing e.g.
+copy_to_xfs_dqblk() to directly use __put_user() instead of first
+formatting proper structure on stack and then using copy_to_user(). However
+I'm not sure whether this will be any real performance win and using
+copy_to_user() seems easier to me...
 
--Dave.
+Anyway I'll probably try changing number of copies to two and see whether
+there's any measurable impact.
 
-The following changes since commit 002758992693ae63c04122603ea9261a0a58d728:
+> > @@ -277,10 +287,73 @@ static int quota_getxstatev(struct super_block *sb, void __user *addr)
+> >  	return ret;
+> >  }
+> >  
+> > +/* XFS blocks to space conversion */
+> > +static u64 xfs_btos(u64 blocks)
+> > +{
+> > +	return blocks << 9;
+> > +}
+> > +
+> > +/* Space to XFS blocks conversion */
+> > +static u64 xfs_stob(u64 space)
+> > +{
+> > +	return (space + 511) >> 9;
+> > +}
+> 
+> Which is just redefining BBTOB() [Basic Blocks to Bytes] and BTOBB()
+> with magic numbers and no explanation of what a "block" actually is.
+> We already export those macros to userspace, and they are used by
+> xfs_quota to convert the block counts to bytes....
+  Sure, I will use XFS macros.
 
-  xfs: track bulkstat progress by agino (2014-11-07 08:33:52 +1100)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/dgc/linux-xfs.git tags/xfs-for-linus-3.19-rc1
-
-for you to fetch changes up to 6044e4386cd51dece882ea42352cdaaab0f24cad:
-
-  Merge branch 'xfs-misc-fixes-for-3.19-2' into for-next (2014-12-04 09:46:17 +1100)
-
-----------------------------------------------------------------
-
-xfs: update for 3.19-rc1
-
-This update contains:
-o more on-disk format header consolidation
-o move some structures shared with userspace to libxfs
-o new per-mount workqueue to fix for deadlocks between nested loop
-  mounted filesystems
-o various bug fixes for ENOSPC, stats, quota off and preallocation
-o a bunch of compiler warning fixes for set-but-unused variables
-o various code cleanups
-
-----------------------------------------------------------------
-Brian Foster (5):
-      xfs: replace global xfslogd wq with per-mount wq
-      xfs: replace on-stack xfs_trans_res with pointer in xfs_create()
-      xfs: fix error handling in xfs_qm_log_quotaoff()
-      xfs: allow lazy sb counter sync during filesystem freeze sequence
-      xfs: split metadata and log buffer completion to separate workqueues
-
-Christoph Hellwig (5):
-      xfs: merge xfs_dinode.h into xfs_format.h
-      xfs: move acl structures to xfs_format.h
-      xfs: merge xfs_ag.h into xfs_format.h
-      xfs: move most of xfs_sb.h to xfs_format.h
-      xfs: merge xfs_inum.h into xfs_format.h
-
-Dave Chinner (13):
-      Merge branch 'xfs-misc-fixes-for-3.19-1' into for-next
-      Merge branch 'xfs-consolidate-format-defs' into for-next
-      Merge branch 'xfs-coccinelle-cleanups' into for-next
-      Merge branch 'xfs-coccinelle-cleanups' into xfs-misc-fixes-for-3.19-2
-      xfs: fix premature enospc on inode allocation
-      xfs: cleanup xfs_bmse_shift_one goto mess
-      xfs: cleanup xfs_bmse_merge returns
-      xfs: active inodes stat is broken
-      xfs: lobotomise xfs_trans_read_buf_map()
-      xfs: move ftype conversion functions to libxfs
-      xfs: move type conversion functions to xfs_dir.h
-      xfs: fix set-but-unused warnings
-      Merge branch 'xfs-misc-fixes-for-3.19-2' into for-next
-
-Eric Sandeen (1):
-      xfs: catch invalid negative blknos in _xfs_buf_find()
-
-Markus Elfring (1):
-      xfs: remove unnecessary null checks
-
-Peter Watkins (1):
-      xfs: overflow in xfs_iomap_eof_align_last_fsb
-
-kbuild test robot (3):
-      libxfs: fix simple_return.cocci warnings
-      xfs: fix simple_return.cocci warning in xfs_file_readdir
-      xfs: fix simple_return.cocci warning in xfs_bmse_shift_one
-
- fs/xfs/libxfs/xfs_ag.h             |  281 ---------
- fs/xfs/libxfs/xfs_alloc.c          |    1 -
- fs/xfs/libxfs/xfs_alloc.h          |    3 +
- fs/xfs/libxfs/xfs_alloc_btree.c    |    1 -
- fs/xfs/libxfs/xfs_attr.c           |    3 -
- fs/xfs/libxfs/xfs_attr_leaf.c      |    2 -
- fs/xfs/libxfs/xfs_attr_remote.c    |    2 -
- fs/xfs/libxfs/xfs_bmap.c           |   77 +--
- fs/xfs/libxfs/xfs_bmap_btree.c     |    3 -
- fs/xfs/libxfs/xfs_btree.c          |    2 -
- fs/xfs/libxfs/xfs_da_btree.c       |    6 -
- fs/xfs/libxfs/xfs_da_format.c      |    2 -
- fs/xfs/libxfs/xfs_dinode.h         |  243 --------
- fs/xfs/libxfs/xfs_dir2.c           |   20 +-
- fs/xfs/libxfs/xfs_dir2.h           |  140 +++++
- fs/xfs/libxfs/xfs_dir2_block.c     |   11 -
- fs/xfs/libxfs/xfs_dir2_data.c      |    2 -
- fs/xfs/libxfs/xfs_dir2_leaf.c      |   12 -
- fs/xfs/libxfs/xfs_dir2_node.c      |   14 -
- fs/xfs/libxfs/xfs_dir2_priv.h      |  140 -----
- fs/xfs/libxfs/xfs_dir2_sf.c        |   13 -
- fs/xfs/libxfs/xfs_dquot_buf.c      |    2 -
- fs/xfs/libxfs/xfs_format.h         | 1107 ++++++++++++++++++++++++++++++++++++
- fs/xfs/libxfs/xfs_ialloc.c         |   43 +-
- fs/xfs/libxfs/xfs_ialloc.h         |    4 +
- fs/xfs/libxfs/xfs_ialloc_btree.c   |    2 -
- fs/xfs/libxfs/xfs_inode_buf.c      |    3 -
- fs/xfs/libxfs/xfs_inode_fork.c     |    4 -
- fs/xfs/libxfs/xfs_inum.h           |   60 --
- fs/xfs/libxfs/xfs_log_format.h     |    2 +-
- fs/xfs/libxfs/xfs_log_rlimit.c     |    2 -
- fs/xfs/libxfs/xfs_rtbitmap.c       |    3 -
- fs/xfs/libxfs/xfs_sb.c             |    2 -
- fs/xfs/libxfs/xfs_sb.h             |  584 -------------------
- fs/xfs/libxfs/xfs_symlink_remote.c |    2 -
- fs/xfs/libxfs/xfs_trans_resv.c     |    2 -
- fs/xfs/xfs_acl.c                   |    2 -
- fs/xfs/xfs_acl.h                   |   36 --
- fs/xfs/xfs_aops.c                  |    3 -
- fs/xfs/xfs_attr_inactive.c         |    3 -
- fs/xfs/xfs_attr_list.c             |    3 -
- fs/xfs/xfs_bmap_util.c             |    3 -
- fs/xfs/xfs_buf.c                   |   27 +-
- fs/xfs/xfs_buf.h                   |    3 +-
- fs/xfs/xfs_buf_item.c              |    2 +-
- fs/xfs/xfs_dir2_readdir.c          |   21 +-
- fs/xfs/xfs_discard.c               |    1 -
- fs/xfs/xfs_dquot.c                 |    2 -
- fs/xfs/xfs_dquot_item.c            |    2 -
- fs/xfs/xfs_error.c                 |    2 -
- fs/xfs/xfs_export.c                |    3 +-
- fs/xfs/xfs_extent_busy.c           |    1 -
- fs/xfs/xfs_extfree_item.c          |    3 +-
- fs/xfs/xfs_file.c                  |    9 +-
- fs/xfs/xfs_filestream.c            |    3 -
- fs/xfs/xfs_fsops.c                 |    2 -
- fs/xfs/xfs_icache.c                |    4 +-
- fs/xfs/xfs_icache.h                |    8 +
- fs/xfs/xfs_icreate_item.c          |    3 +-
- fs/xfs/xfs_inode.c                 |   29 +-
- fs/xfs/xfs_inode.h                 |    2 -
- fs/xfs/xfs_inode_item.c            |    3 -
- fs/xfs/xfs_ioctl.c                 |    3 -
- fs/xfs/xfs_ioctl32.c               |    2 -
- fs/xfs/xfs_iomap.c                 |   18 +-
- fs/xfs/xfs_iops.c                  |    5 +-
- fs/xfs/xfs_itable.c                |    6 -
- fs/xfs/xfs_linux.h                 |    6 +
- fs/xfs/xfs_log.c                   |    8 +-
- fs/xfs/xfs_log_cil.c               |    3 +-
- fs/xfs/xfs_log_recover.c           |    4 +-
- fs/xfs/xfs_message.c               |    3 +-
- fs/xfs/xfs_mount.c                 |   33 +-
- fs/xfs/xfs_mount.h                 |    8 +-
- fs/xfs/xfs_qm.c                    |   14 +-
- fs/xfs/xfs_qm_bhv.c                |    2 -
- fs/xfs/xfs_qm_syscalls.c           |   27 +-
- fs/xfs/xfs_quotaops.c              |    2 -
- fs/xfs/xfs_rtalloc.c               |    3 -
- fs/xfs/xfs_super.c                 |   19 +-
- fs/xfs/xfs_symlink.c               |    3 -
- fs/xfs/xfs_trace.c                 |    2 -
- fs/xfs/xfs_trans.c                 |    2 -
- fs/xfs/xfs_trans_ail.c             |    3 +-
- fs/xfs/xfs_trans_buf.c             |  137 ++---
- fs/xfs/xfs_trans_dquot.c           |    2 -
- fs/xfs/xfs_trans_extfree.c         |    3 +-
- fs/xfs/xfs_trans_inode.c           |    2 -
- fs/xfs/xfs_xattr.c                 |    2 -
- 89 files changed, 1467 insertions(+), 1835 deletions(-)
- delete mode 100644 fs/xfs/libxfs/xfs_ag.h
- delete mode 100644 fs/xfs/libxfs/xfs_dinode.h
- delete mode 100644 fs/xfs/libxfs/xfs_inum.h
+								Honza
 -- 
-Dave Chinner
-david@fromorbit.com
+Jan Kara <jack@suse.cz>
+SUSE Labs, CR
 
 _______________________________________________
 xfs mailing list
