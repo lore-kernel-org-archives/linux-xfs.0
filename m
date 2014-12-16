@@ -1,27 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id E44027F4E
-	for <xfs@oss.sgi.com>; Tue, 16 Dec 2014 03:46:20 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 60672AC004
-	for <xfs@oss.sgi.com>; Tue, 16 Dec 2014 01:46:16 -0800 (PST)
-Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id TQAKLJNks2KWr88o (version=TLSv1 cipher=AES256-SHA
-	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 16 Dec 2014 01:46:14 -0800 (PST)
-Date: Tue, 16 Dec 2014 10:46:09 +0100
-From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH 4/5] fs: Remove security attributes on truncate
-Message-ID: <20141216094609.GC2421@quack.suse.cz>
-References: <1417699659-14284-1-git-send-email-jack@suse.cz>
-	<1417699659-14284-5-git-send-email-jack@suse.cz>
-	<5481D81F.8060308@schaufler-ca.com>
-	<20141209182732.GC22569@quack.suse.cz>
-	<54874691.2010902@schaufler-ca.com>
-	<20141210111123.GB25671@quack.suse.cz>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id E35937F51
+	for <xfs@oss.sgi.com>; Tue, 16 Dec 2014 05:08:25 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id B29AF8F8049
+	for <xfs@oss.sgi.com>; Tue, 16 Dec 2014 03:08:22 -0800 (PST)
+Received: from smtp5-g21.free.fr (smtp5-g21.free.fr [212.27.42.5]) by
+	cuda.sgi.com with ESMTP id G6ByjfKDujRjYAXG (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 16 Dec 2014 03:08:20 -0800 (PST)
+Received: from harpe.intellique.com (unknown [82.225.196.72])
+	by smtp5-g21.free.fr (Postfix) with ESMTP id E24D3D4802A
+	for <xfs@oss.sgi.com>; Tue, 16 Dec 2014 12:06:39 +0100 (CET)
+Date: Tue, 16 Dec 2014 12:08:21 +0100
+From: Emmanuel Florac <eflorac@intellique.com>
+Subject: Re: easily reproducible filesystem crash on rebuilding array [XFS
+	bug in my book]
+Message-ID: <20141216120821.587cf104@harpe.intellique.com>
+In-Reply-To: <20141215132500.13210fdb@harpe.intellique.com>
+References: <20141211123936.1f3d713d@harpe.intellique.com>
+	<20141215130715.4dfaaa8e@harpe.intellique.com>
+	<20141215132500.13210fdb@harpe.intellique.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20141210111123.GB25671@quack.suse.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,137 +30,119 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Casey Schaufler <casey@schaufler-ca.com>
-Cc: linux-fsdevel@vger.kernel.org, linux-security-module@vger.kernel.org, Jan Kara <jack@suse.cz>, Al Viro <viro@ZenIV.linux.org.uk>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Wed 10-12-14 12:11:23, Jan Kara wrote:
-> On Tue 09-12-14 10:59:29, Casey Schaufler wrote:
-> > On 12/9/2014 10:27 AM, Jan Kara wrote:
-> > > On Fri 05-12-14 08:06:55, Casey Schaufler wrote:
-> > >> On 12/4/2014 5:27 AM, Jan Kara wrote:
-> > >>> Similarly as we remove suid bit on truncate, we also want to remove
-> > >>> security extended attributes.
-> > >> NAK
-> > >>
-> > >> Are you out of your mind?
-> > >>
-> > >> In Smack and SELinux the security attributes are associated with the
-> > >> container, not the data.
-> > >   Is there some doc for this? It just seems strange to me that when a file
-> > > is written we clear the attributes
-> > 
-> > This is not true for the LSM based attributes.
-> > 
-> > >  but when the file is truncated we don't.
-> > 
-> > Have I miss-interpreted what you meant by "security extended attributes"?
-> > Do you mean filesystem xattrs beginning with "security.", such as
-> > "security.selinux" or "security.SMACK64", or something else?
->   Sorry, I'm not a security guy so I may be using wrong terminology. I
-> meant attributes that are removed when you call security_inode_killpriv().
-> There's a comment in security.h like:
->  * @inode_killpriv:
->  *      The setuid bit is being removed.  Remove similar security labels.
->  *      Called with the dentry->d_inode->i_mutex held.
->  *      @dentry is the dentry being changed.
->  *      Return 0 on success.  If error is returned, then the operation
->  *      causing setuid bit removal is failed.
-> 
-> So from that I'd think that security_inode_killpriv() should be called if
-> we are removing SUID bit (i.e. also during truncate).
-  Casey, so are you OK which this change?
-
-								Honza
-
-> > > What's the rationale behind this? To me both operations modify content of
-> > > the file and thus I'd expect them to behave identically with respect to
-> > > security attributes...
-> > >
-> > > 								Honza
-> > >
-> > >>> After this patch there's only one user of should_remove_suid() - ocfs2 -
-> > >>> and indeed it's buggy because it doesn't clear security attributes on
-> > >>> write. However fixing it is difficult because of special locking
-> > >>> constraints.
-> > >>>
-> > >>> Signed-off-by: Jan Kara <jack@suse.cz>
-> > >>> ---
-> > >>>  fs/inode.c         | 5 ++---
-> > >>>  fs/open.c          | 6 ++++--
-> > >>>  include/linux/fs.h | 6 +++++-
-> > >>>  3 files changed, 11 insertions(+), 6 deletions(-)
-> > >>>
-> > >>> diff --git a/fs/inode.c b/fs/inode.c
-> > >>> index 6807a2707828..8595c7b8841c 100644
-> > >>> --- a/fs/inode.c
-> > >>> +++ b/fs/inode.c
-> > >>> @@ -1603,9 +1603,8 @@ EXPORT_SYMBOL(should_remove_suid);
-> > >>>   * response to write or truncate. Return 0 if nothing has to be changed.
-> > >>>   * Negative value on error (change should be denied).
-> > >>>   */
-> > >>> -int file_needs_remove_privs(struct file *file)
-> > >>> +int dentry_needs_remove_privs(struct dentry *dentry)
-> > >>>  {
-> > >>> -	struct dentry *dentry = file->f_path.dentry;
-> > >>>  	struct inode *inode = dentry->d_inode;
-> > >>>  	int mask = 0;
-> > >>>  	int ret;
-> > >>> @@ -1621,7 +1620,7 @@ int file_needs_remove_privs(struct file *file)
-> > >>>  		mask |= ATTR_KILL_PRIV;
-> > >>>  	return mask;
-> > >>>  }
-> > >>> -EXPORT_SYMBOL(file_needs_remove_privs);
-> > >>> +EXPORT_SYMBOL(dentry_needs_remove_privs);
-> > >>>  
-> > >>>  static int __remove_privs(struct dentry *dentry, int kill)
-> > >>>  {
-> > >>> diff --git a/fs/open.c b/fs/open.c
-> > >>> index de92c13b58be..e4e0863855d0 100644
-> > >>> --- a/fs/open.c
-> > >>> +++ b/fs/open.c
-> > >>> @@ -51,8 +51,10 @@ int do_truncate(struct dentry *dentry, loff_t length, unsigned int time_attrs,
-> > >>>  		newattrs.ia_valid |= ATTR_FILE;
-> > >>>  	}
-> > >>>  
-> > >>> -	/* Remove suid/sgid on truncate too */
-> > >>> -	ret = should_remove_suid(dentry);
-> > >>> +	/* Remove suid/sgid and security markings on truncate too */
-> > >>> +	ret = dentry_needs_remove_privs(dentry);
-> > >>> +	if (ret < 0)
-> > >>> +		return ret;
-> > >>>  	if (ret)
-> > >>>  		newattrs.ia_valid |= ret | ATTR_FORCE;
-> > >>>  
-> > >>> diff --git a/include/linux/fs.h b/include/linux/fs.h
-> > >>> index aac707cced66..c5ccc311e8fb 100644
-> > >>> --- a/include/linux/fs.h
-> > >>> +++ b/include/linux/fs.h
-> > >>> @@ -2429,7 +2429,11 @@ extern struct inode *new_inode(struct super_block *sb);
-> > >>>  extern void free_inode_nonrcu(struct inode *inode);
-> > >>>  extern int should_remove_suid(struct dentry *);
-> > >>>  extern int file_remove_privs(struct file *);
-> > >>> -extern int file_needs_remove_privs(struct file *file);
-> > >>> +extern int dentry_needs_remove_privs(struct dentry *dentry);
-> > >>> +static inline int file_needs_remove_privs(struct file *file)
-> > >>> +{
-> > >>> +	return dentry_needs_remove_privs(file->f_path.dentry);
-> > >>> +}
-> > >>>  
-> > >>>  extern void __insert_inode_hash(struct inode *, unsigned long hashval);
-> > >>>  static inline void insert_inode_hash(struct inode *inode)
-> > 
-> -- 
-> Jan Kara <jack@suse.cz>
-> SUSE Labs, CR
--- 
-Jan Kara <jack@suse.cz>
-SUSE Labs, CR
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+TGUgTW9uLCAxNSBEZWMgMjAxNCAxMzoyNTowMCArMDEwMApFbW1hbnVlbCBGbG9yYWMgPGVmbG9y
+YWNAaW50ZWxsaXF1ZS5jb20+IMOpY3JpdmFpdDoKCj4gUmVhZGluZyB0aGUgc291cmNlIEkgc2Vl
+IHRoYXQgdGhlIGVycm9yIG9jY3VyZWQgaW4geGZzX2J1Zl9yZWFkX21hcCwgSQo+IHN1cHBvc2Ug
+aXQncyB3aGVuIHhmc2J1ZmQgdHJpZXMgdG8gc2NhbiBkaXJ0eSBtZXRhZGF0YT8gVGhpcyBpcyBh
+IHJlYWQKPiBlcnJvciwgc28gaXQgY291bGQgdmVyeSB3ZWxsIGJlIGEgc2ltcGxlIElPIHN0YXJ2
+YXRpb24gYXQgdGhlCj4gY29udHJvbGxlciBsZXZlbCAoYXMgdGhlIGNvbnRyb2xsZXIgcHJvYmFi
+bHkgZ2l2ZXMgcHJpb3JpdHkgdG8KPiB3aGF0ZXZlciB3cml0ZXMgYXJlIHBlbmRpbmcgb3ZlciBy
+ZWFkcykuCj4gCj4gTWF5YmUgc2V0dGluZyB4ZnNidWZkX2NlbnRpc2VjcyB0byB0aGUgbWF4IGNv
+dWxkIGhlbHAgaGVyZT8gVHJ5aW5nCj4gcmlnaHQgYXdheS4uLiBBbnkgYWR2aWNlIHdlbGNvbWUu
+Cj4gCgpBbGFzLCBzYW1lIHRoaW5nOwoKZG1lc2cgb3V0cHV0OgoKCmZmZmY4ODAwZGYxZjUwMjA6
+IDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwICAuLi4uLi4u
+Li4uLi4uLi4uCmZmZmY4ODAwZGYxZjUwMzA6IDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAw
+IDAwIDAwIDAwIDAwIDAwIDAwICAuLi4uLi4uLi4uLi4uLi4uClhGUyAoZG0tMCk6IE1ldGFkYXRh
+IGNvcnJ1cHRpb24gZGV0ZWN0ZWQgYXQgeGZzX2lub2RlX2J1Zl92ZXJpZnkrMHg2Yy8weGIwLCBi
+bG9jayAweGVmZmZmZmY0MApYRlMgKGRtLTApOiBVbm1vdW50IGFuZCBydW4geGZzX3JlcGFpcgpY
+RlMgKGRtLTApOiBGaXJzdCA2NCBieXRlcyBvZiBjb3JydXB0ZWQgbWV0YWRhdGEgYnVmZmVyOgpm
+ZmZmODgwMGRmMWY1MDAwOiAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAw
+MCAwMCAwMCAgLi4uLi4uLi4uLi4uLi4uLgpmZmZmODgwMGRmMWY1MDEwOiAwMCAwMCAwMCAwMCAw
+MCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAgLi4uLi4uLi4uLi4uLi4uLgpmZmZm
+ODgwMGRmMWY1MDIwOiAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAw
+MCAwMCAgLi4uLi4uLi4uLi4uLi4uLgpmZmZmODgwMGRmMWY1MDMwOiAwMCAwMCAwMCAwMCAwMCAw
+MCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAgLi4uLi4uLi4uLi4uLi4uLgpYRlMgKGRt
+LTApOiBNZXRhZGF0YSBjb3JydXB0aW9uIGRldGVjdGVkIGF0IHhmc19pbm9kZV9idWZfdmVyaWZ5
+KzB4NmMvMHhiMCwgYmxvY2sgMHhlZmZmZmZmNDAKWEZTIChkbS0wKTogVW5tb3VudCBhbmQgcnVu
+IHhmc19yZXBhaXIKWEZTIChkbS0wKTogRmlyc3QgNjQgYnl0ZXMgb2YgY29ycnVwdGVkIG1ldGFk
+YXRhIGJ1ZmZlcjoKZmZmZjg4MDBkZjFmNTAwMDogMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAg
+MDAgMDAgMDAgMDAgMDAgMDAgMDAgIC4uLi4uLi4uLi4uLi4uLi4KZmZmZjg4MDBkZjFmNTAxMDog
+MDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgIC4uLi4uLi4u
+Li4uLi4uLi4KZmZmZjg4MDBkZjFmNTAyMDogMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAg
+MDAgMDAgMDAgMDAgMDAgMDAgIC4uLi4uLi4uLi4uLi4uLi4KZmZmZjg4MDBkZjFmNTAzMDogMDAg
+MDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgIC4uLi4uLi4uLi4u
+Li4uLi4KWEZTIChkbS0wKTogTWV0YWRhdGEgY29ycnVwdGlvbiBkZXRlY3RlZCBhdCB4ZnNfaW5v
+ZGVfYnVmX3ZlcmlmeSsweDZjLzB4YjAsIGJsb2NrIDB4ZWZmZmZmZjQwClhGUyAoZG0tMCk6IFVu
+bW91bnQgYW5kIHJ1biB4ZnNfcmVwYWlyClhGUyAoZG0tMCk6IEZpcnN0IDY0IGJ5dGVzIG9mIGNv
+cnJ1cHRlZCBtZXRhZGF0YSBidWZmZXI6CmZmZmY4ODAwZGYxZjUwMDA6IDAwIDAwIDAwIDAwIDAw
+IDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwICAuLi4uLi4uLi4uLi4uLi4uCmZmZmY4
+ODAwZGYxZjUwMTA6IDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAw
+IDAwICAuLi4uLi4uLi4uLi4uLi4uCmZmZmY4ODAwZGYxZjUwMjA6IDAwIDAwIDAwIDAwIDAwIDAw
+IDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwICAuLi4uLi4uLi4uLi4uLi4uCmZmZmY4ODAw
+ZGYxZjUwMzA6IDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAw
+ICAuLi4uLi4uLi4uLi4uLi4uClhGUyAoZG0tMCk6IE1ldGFkYXRhIGNvcnJ1cHRpb24gZGV0ZWN0
+ZWQgYXQgeGZzX2lub2RlX2J1Zl92ZXJpZnkrMHg2Yy8weGIwLCBibG9jayAweGVmZmZmZmY0MApY
+RlMgKGRtLTApOiBVbm1vdW50IGFuZCBydW4geGZzX3JlcGFpcgpYRlMgKGRtLTApOiBGaXJzdCA2
+NCBieXRlcyBvZiBjb3JydXB0ZWQgbWV0YWRhdGEgYnVmZmVyOgpmZmZmODgwMGRmMWY1MDAwOiAw
+MCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAgLi4uLi4uLi4u
+Li4uLi4uLgpmZmZmODgwMGRmMWY1MDEwOiAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAw
+MCAwMCAwMCAwMCAwMCAwMCAgLi4uLi4uLi4uLi4uLi4uLgpmZmZmODgwMGRmMWY1MDIwOiAwMCAw
+MCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAgLi4uLi4uLi4uLi4u
+Li4uLgpmZmZmODgwMGRmMWY1MDMwOiAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAw
+MCAwMCAwMCAwMCAwMCAgLi4uLi4uLi4uLi4uLi4uLgpYRlMgKGRtLTApOiBNZXRhZGF0YSBjb3Jy
+dXB0aW9uIGRldGVjdGVkIGF0IHhmc19pbm9kZV9idWZfdmVyaWZ5KzB4NmMvMHhiMCwgYmxvY2sg
+MHhlZmZmZmZmNDAKWEZTIChkbS0wKTogVW5tb3VudCBhbmQgcnVuIHhmc19yZXBhaXIKWEZTIChk
+bS0wKTogRmlyc3QgNjQgYnl0ZXMgb2YgY29ycnVwdGVkIG1ldGFkYXRhIGJ1ZmZlcjoKZmZmZjg4
+MDBkZjFmNTAwMDogMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAg
+MDAgIC4uLi4uLi4uLi4uLi4uLi4KZmZmZjg4MDBkZjFmNTAxMDogMDAgMDAgMDAgMDAgMDAgMDAg
+MDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgIC4uLi4uLi4uLi4uLi4uLi4KZmZmZjg4MDBk
+ZjFmNTAyMDogMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAg
+IC4uLi4uLi4uLi4uLi4uLi4KZmZmZjg4MDBkZjFmNTAzMDogMDAgMDAgMDAgMDAgMDAgMDAgMDAg
+MDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgIC4uLi4uLi4uLi4uLi4uLi4KWEZTIChkbS0wKTog
+TWV0YWRhdGEgY29ycnVwdGlvbiBkZXRlY3RlZCBhdCB4ZnNfaW5vZGVfYnVmX3ZlcmlmeSsweDZj
+LzB4YjAsIGJsb2NrIDB4ZWZmZmZmZjQwClhGUyAoZG0tMCk6IFVubW91bnQgYW5kIHJ1biB4ZnNf
+cmVwYWlyClhGUyAoZG0tMCk6IEZpcnN0IDY0IGJ5dGVzIG9mIGNvcnJ1cHRlZCBtZXRhZGF0YSBi
+dWZmZXI6CmZmZmY4ODAwZGYxZjUwMDA6IDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAw
+IDAwIDAwIDAwIDAwIDAwICAuLi4uLi4uLi4uLi4uLi4uCmZmZmY4ODAwZGYxZjUwMTA6IDAwIDAw
+IDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwICAuLi4uLi4uLi4uLi4u
+Li4uCmZmZmY4ODAwZGYxZjUwMjA6IDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAw
+IDAwIDAwIDAwIDAwICAuLi4uLi4uLi4uLi4uLi4uCmZmZmY4ODAwZGYxZjUwMzA6IDAwIDAwIDAw
+IDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwICAuLi4uLi4uLi4uLi4uLi4u
+ClhGUyAoZG0tMCk6IE1ldGFkYXRhIGNvcnJ1cHRpb24gZGV0ZWN0ZWQgYXQgeGZzX2lub2RlX2J1
+Zl92ZXJpZnkrMHg2Yy8weGIwLCBibG9jayAweGVmZmZmZmY0MApYRlMgKGRtLTApOiBVbm1vdW50
+IGFuZCBydW4geGZzX3JlcGFpcgpYRlMgKGRtLTApOiBGaXJzdCA2NCBieXRlcyBvZiBjb3JydXB0
+ZWQgbWV0YWRhdGEgYnVmZmVyOgpmZmZmODgwMGRmMWY1MDAwOiAwMCAwMCAwMCAwMCAwMCAwMCAw
+MCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAgLi4uLi4uLi4uLi4uLi4uLgpmZmZmODgwMGRm
+MWY1MDEwOiAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAg
+Li4uLi4uLi4uLi4uLi4uLgpmZmZmODgwMGRmMWY1MDIwOiAwMCAwMCAwMCAwMCAwMCAwMCAwMCAw
+MCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAgLi4uLi4uLi4uLi4uLi4uLgpmZmZmODgwMGRmMWY1
+MDMwOiAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAgLi4u
+Li4uLi4uLi4uLi4uLgpYRlMgKGRtLTApOiBNZXRhZGF0YSBjb3JydXB0aW9uIGRldGVjdGVkIGF0
+IHhmc19pbm9kZV9idWZfdmVyaWZ5KzB4NmMvMHhiMCwgYmxvY2sgMHhlZmZmZmZmNDAKWEZTIChk
+bS0wKTogVW5tb3VudCBhbmQgcnVuIHhmc19yZXBhaXIKWEZTIChkbS0wKTogRmlyc3QgNjQgYnl0
+ZXMgb2YgY29ycnVwdGVkIG1ldGFkYXRhIGJ1ZmZlcjoKZmZmZjg4MDBkZjFmNTAwMDogMDAgMDAg
+MDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgIC4uLi4uLi4uLi4uLi4u
+Li4KZmZmZjg4MDBkZjFmNTAxMDogMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAg
+MDAgMDAgMDAgMDAgIC4uLi4uLi4uLi4uLi4uLi4KZmZmZjg4MDBkZjFmNTAyMDogMDAgMDAgMDAg
+MDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgIC4uLi4uLi4uLi4uLi4uLi4K
+ZmZmZjg4MDBkZjFmNTAzMDogMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAg
+MDAgMDAgMDAgIC4uLi4uLi4uLi4uLi4uLi4KWEZTIChkbS0wKTogbWV0YWRhdGEgSS9PIGVycm9y
+OiBibG9jayAweGVmZmZmZmY0MCAoInhmc190cmFuc19yZWFkX2J1Zl9tYXAiKSBlcnJvciAxMTcg
+bnVtYmxrcyAxNgpYRlMgKGRtLTApOiB4ZnNfZG9fZm9yY2Vfc2h1dGRvd24oMHgxKSBjYWxsZWQg
+ZnJvbSBsaW5lIDM4MyBvZiBmaWxlIGZzL3hmcy94ZnNfdHJhbnNfYnVmLmMuICBSZXR1cm4gYWRk
+cmVzcyA9IDB4ZmZmZmZmZmY4MTI1Y2M5MApYRlMgKGRtLTApOiBJL08gRXJyb3IgRGV0ZWN0ZWQu
+IFNodXR0aW5nIGRvd24gZmlsZXN5c3RlbQpYRlMgKGRtLTApOiBQbGVhc2UgdW1vdW50IHRoZSBm
+aWxlc3lzdGVtIGFuZCByZWN0aWZ5IHRoZSBwcm9ibGVtKHMpClhGUyAoZG0tMCk6IHhmc19pbWFw
+X3RvX2JwOiB4ZnNfdHJhbnNfcmVhZF9idWYoKSByZXR1cm5lZCBlcnJvciAxMTcuClhGUyAoZG0t
+MCk6IHhmc19sb2dfZm9yY2U6IGVycm9yIDUgcmV0dXJuZWQuClhGUyAoZG0tMCk6IHhmc19sb2df
+Zm9yY2U6IGVycm9yIDUgcmV0dXJuZWQuCgpUaGVyZSBpcyBubyBJTyBlcnJvciBhdCB0aGUgUkFJ
+RCBjb250cm9sbGVyIGxldmVsLCBhdCBhbGwuIFRoZSBidWZmZXIKaGFzbid0IGJlZW4gb3Zlcndy
+aXR0ZW4gd2l0aCB6ZXJvcywgSSdtIHByZXR0eSBzdXJlIGl0IGFjdHVhbGx5IHRpbWVkCm91dCBh
+bmQganVzdCByZWFkIG5vdGhpbmcuIFRoaXMgaXMgbm90IGEgY2FzZSBmb3IgYW4gSU8gZXJyb3Ig
+SU1PLCBhCnJldHJ5IHdvdWxkIGFsbW9zdCBjZXJ0YWlubHkgc3VjY2VlZDsgYWZ0ZXIgYWxsIHRo
+ZSBwcm9ibGVtIG9jY3VycmVkCmFmdGVyIG1vcmUgdGhhbiA4IGhvdXJzIG9mIGNvbnRpbnVvdXMg
+aGVhdnkgcmVhZC93cml0ZSBhY3Rpdml0eS4KCi0tIAotLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0KRW1tYW51ZWwg
+RmxvcmFjICAgICB8ICAgRGlyZWN0aW9uIHRlY2huaXF1ZQogICAgICAgICAgICAgICAgICAgIHwg
+ICBJbnRlbGxpcXVlCiAgICAgICAgICAgICAgICAgICAgfAk8ZWZsb3JhY0BpbnRlbGxpcXVlLmNv
+bT4KICAgICAgICAgICAgICAgICAgICB8ICAgKzMzIDEgNzggOTQgODQgMDIKLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwp4ZnMg
+bWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9s
+aXN0aW5mby94ZnMK
