@@ -1,26 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id DDB847F3F
-	for <xfs@oss.sgi.com>; Tue, 16 Dec 2014 14:04:50 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 5C6D8AC00A
-	for <xfs@oss.sgi.com>; Tue, 16 Dec 2014 12:04:47 -0800 (PST)
-Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
-	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	hmjT3DAmyB29f5Wk for <xfs@oss.sgi.com>;
-	Tue, 16 Dec 2014 12:04:44 -0800 (PST)
-Date: Wed, 17 Dec 2014 07:04:10 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: easily reproducible filesystem crash on rebuilding array [XFS
-	bug in my book]
-Message-ID: <20141216200410.GC15665@dastard>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id CD55E7F3F
+	for <xfs@oss.sgi.com>; Wed, 17 Dec 2014 05:22:05 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id AD1538F809C
+	for <xfs@oss.sgi.com>; Wed, 17 Dec 2014 03:22:02 -0800 (PST)
+Received: from smtp5-g21.free.fr (smtp5-g21.free.fr [212.27.42.5]) by
+	cuda.sgi.com with ESMTP id a4oK2BfYVQDfVeeJ (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 17 Dec 2014 03:21:58 -0800 (PST)
+Date: Wed, 17 Dec 2014 12:21:59 +0100
+From: Emmanuel Florac <eflorac@intellique.com>
+Subject: Re: easily reproducible filesystem crash on rebuilding array
+Message-ID: <20141217122159.284411fa@harpe.intellique.com>
+In-Reply-To: <20141216195815.GB15665@dastard>
 References: <20141211123936.1f3d713d@harpe.intellique.com>
 	<20141215130715.4dfaaa8e@harpe.intellique.com>
 	<20141215132500.13210fdb@harpe.intellique.com>
-	<20141216120821.587cf104@harpe.intellique.com>
+	<20141215201036.GQ24183@dastard>
+	<20141216123405.111c7ac0@harpe.intellique.com>
+	<20141216195815.GB15665@dastard>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20141216120821.587cf104@harpe.intellique.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,108 +29,44 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Emmanuel Florac <eflorac@intellique.com>
+To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On Tue, Dec 16, 2014 at 12:08:21PM +0100, Emmanuel Florac wrote:
-> Le Mon, 15 Dec 2014 13:25:00 +0100
-> Emmanuel Florac <eflorac@intellique.com> =E9crivait:
-> =
-
-> > Reading the source I see that the error occured in xfs_buf_read_map, I
-> > suppose it's when xfsbufd tries to scan dirty metadata? This is a read
-> > error, so it could very well be a simple IO starvation at the
-> > controller level (as the controller probably gives priority to
-> > whatever writes are pending over reads).
-> > =
-
-> > Maybe setting xfsbufd_centisecs to the max could help here? Trying
-> > right away... Any advice welcome.
-> > =
-
-> =
-
-> Alas, same thing;
-> =
-
-> dmesg output:
-> =
-
-> =
-
-> ffff8800df1f5020: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ......=
-..........
-> ffff8800df1f5030: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ......=
-..........
-> XFS (dm-0): Metadata corruption detected at xfs_inode_buf_verify+0x6c/0xb=
-0, block 0xeffffff40
-> XFS (dm-0): Unmount and run xfs_repair
-> XFS (dm-0): First 64 bytes of corrupted metadata buffer:
-> ffff8800df1f5000: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ......=
-..........
-> ffff8800df1f5010: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ......=
-..........
-> ffff8800df1f5020: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ......=
-..........
-> ffff8800df1f5030: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ......=
-..........
-> XFS (dm-0): Metadata corruption detected at xfs_inode_buf_verify+0x6c/0xb=
-0, block 0xeffffff40
-> XFS (dm-0): Unmount and run xfs_repair
-
-So the underlying storage stack is returning zeros without any IO
-errors here. It's probably a lookup operation, so it simply fails
-and returns the error to userspace. Every one of these messages is a
-separate read IO, but they are all returning zeros.
-
-....
-
-> XFS (dm-0): First 64 bytes of corrupted metadata buffer:
-> ffff8800df1f5000: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ......=
-..........
-> ffff8800df1f5010: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ......=
-..........
-> ffff8800df1f5020: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ......=
-..........
-> ffff8800df1f5030: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ......=
-..........
-> XFS (dm-0): metadata I/O error: block 0xeffffff40 ("xfs_trans_read_buf_ma=
-p") error 117 numblks 16
-> XFS (dm-0): xfs_do_force_shutdown(0x1) called from line 383 of file fs/xf=
-s/xfs_trans_buf.c.  Return address =3D 0xffffffff8125cc90
-> XFS (dm-0): I/O Error Detected. Shutting down filesystem
-> XFS (dm-0): Please umount the filesystem and rectify the problem(s)
-> XFS (dm-0): xfs_imap_to_bp: xfs_trans_read_buf() returned error 117.
-> XFS (dm-0): xfs_log_force: error 5 returned.
-> XFS (dm-0): xfs_log_force: error 5 returned.
-
-And here the same read error has occurred in a dirty transaction,
-and so the filesystem shut down.
-
-> There is no IO error at the RAID controller level, at all. The buffer
-> hasn't been overwritten with zeros, I'm pretty sure it actually timed
-> out and just read nothing. This is not a case for an IO error IMO, a
-> retry would almost certainly succeed; after all the problem occurred
-> after more than 8 hours of continuous heavy read/write activity.
-
-What you see above is a persistent corruption that has been
-reported several times as XFS has errored out and then re-read
-the data from disk multiple times. A retry would most certainly
-return zeros again.
-
-Cheers,
-
-Dave.
--- =
-
-Dave Chinner
-david@fromorbit.com
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+TGUgV2VkLCAxNyBEZWMgMjAxNCAwNjo1ODoxNSArMTEwMApEYXZlIENoaW5uZXIgPGRhdmlkQGZy
+b21vcmJpdC5jb20+IMOpY3JpdmFpdDoKCj4gT24gVHVlLCBEZWMgMTYsIDIwMTQgYXQgMTI6MzQ6
+MDVQTSArMDEwMCwgRW1tYW51ZWwgRmxvcmFjIHdyb3RlOgo+ID4gVGhlIFJBSUQgaGFyZHdhcmUg
+aXMgYW4gYWRhcHRlYyA3MTY4NSBydW5uaW5nIHRoZSBsYXRlc3QgZmlybXdhcmUKPiA+ICggMzIw
+MzMgKS4gVGhpcyBpcyBhIDE2IGRyaXZlcyBSQUlELTYgYXJyYXkgb2YgNCBUQiBIR1NUIGRyaXZl
+cy4gVGhlCj4gPiBwcm9ibGVtIG9jY3VycyByZXBlYXRseSB3aXRoIGFueSBjb21iaW5hdGlvbiBv
+ZiA3eHg1IGNvbnRyb2xsZXJzCj4gPiBhbmQgMyBvciA0IFRCIEhHU1QgZHJpdmVzIGluIFJBSUQt
+NiBvZiB2YXJpb3VzIHR5cGVzLCB3aXRoIFhGUyBvcgo+ID4gSkZTIChpdCBuZXZlciBvY2N1cnMg
+d2l0aCBlaXRoZXIgZXh0NCBvciByZWlzZXJmcykuCj4gCj4gRG8geW91IGhhdmUgc3lzdGVtcyB3
+aXRoIGFueSBvdGhlciB0eXBlIG9mIDMvNFRCIGRyaXZlcyBpbiB0aGVtPwoKTm8sIG9ubHkgSEdT
+VCBkcml2ZXMuCiAKPiA+IEFzIEkgbWVudGlvbmVkLCB3aGVuIHRoZSBkaXNrIGRyaXZlcyBjYWNo
+ZSBpcyBvbiB0aGUgY29ycnVwdGlvbiBpcwo+ID4gc2VyaW91cy4gV2l0aCBkaXNrIGNhY2hlIG9m
+ZiwgdGhlIGNvcnJ1cHRpb24gaXMgbWluaW1hbCwgaG93ZXZlciB0aGUKPiA+IGZpbGVzeXN0ZW0g
+c2h1dHMgZG93bi4KPiAKPiBUaGF0IHJlYWxseSBzb3VuZHMgbGlrZSBhIGhhcmR3YXJlIHByb2Js
+ZW0gLSBtYXliZSB3aXRoIHRoZSBkaXNrCj4gZHJpdmVzIHRoZW1zZWx2ZXMsIG5vdCBuZWNlc3Nh
+cmlseSB0aGUgY29udHJvbGxlci4KCkFjdHVhbGx5IHRoZSBwcm9ibGVtIG9jY3VycyB3aXRob3V0
+IGFueSBlcnJvciBpbiB0aGUgY29udHJvbGxlciBsb2csIG5vCklPIGVycm9yLCBubyBkaXNrIHRp
+bWUgb3V0LCBubyBiYWQgYmxvY2ssIG5vdGhpbmcuIFNvIGZhciBJIHdhcyBwcmV0dHkKY29uZmlk
+ZW50IGFib3V0IHRoZSBBZGFwdGVjIGZpcm13YXJlIGJlaW5nIHRoZSBjdWxwcml0LCBJJ20gbm90
+IHNvIHN1cmUKbm93LgoKCj4gPiA+IEknZCBzdGFydCB3aXRoIHVwZ3JhZGluZyB0aGUgZmlybXdh
+cmUgb24geW91ciBSQUlEIGNvbnRyb2xsZXIgYW5kCj4gPiA+IHR1cm5pbmcgdGhlIFhGUyBlcnJv
+ciBsZXZlbCB1cCB0byAxMS4uLi4KPiA+IAo+ID4gVGhlIGZpcm13YXJlIGlzIHRoZSBsYXRlc3Qg
+YXZhaWxhYmxlLiBIb3cgZG8gSSB0dXJuIGxvZ2dpbmcgdG8gMTEKPiA+IHBsZWFzZSA/Cj4gCj4g
+IyBlY2hvIDExID4gL3Byb2Mvc3lzL2ZzL3hmcy9lcnJvcl9sZXZlbAo+IAoKVGhhbmtzIGRvbmUs
+IHdoaWxlIHJ1bm5pbmcgYWdhaW4gYnV0ICp3aXRob3V0IHVzaW5nIGx2bSogdGhpcyB0aW1lLiBJ
+J20KY2hhbmdpbmcgb25lIHBhcmFtZXRlciBhdCBhIHRpbWUuLi4KCi0tIAotLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0KRW1tYW51ZWwgRmxvcmFjICAgICB8ICAgRGlyZWN0aW9uIHRlY2huaXF1ZQogICAgICAgICAg
+ICAgICAgICAgIHwgICBJbnRlbGxpcXVlCiAgICAgICAgICAgICAgICAgICAgfAk8ZWZsb3JhY0Bp
+bnRlbGxpcXVlLmNvbT4KICAgICAgICAgICAgICAgICAgICB8ICAgKzMzIDEgNzggOTQgODQgMDIK
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5j
+b20vbWFpbG1hbi9saXN0aW5mby94ZnMK
