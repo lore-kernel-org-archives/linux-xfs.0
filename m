@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 272E97F3F
-	for <xfs@oss.sgi.com>; Wed, 17 Dec 2014 15:02:50 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id ABEA1AC00A
-	for <xfs@oss.sgi.com>; Wed, 17 Dec 2014 13:02:46 -0800 (PST)
+	by oss.sgi.com (Postfix) with ESMTP id 6B3767F3F
+	for <xfs@oss.sgi.com>; Wed, 17 Dec 2014 15:23:00 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id ECFCCAC00D
+	for <xfs@oss.sgi.com>; Wed, 17 Dec 2014 13:22:59 -0800 (PST)
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	GvrathnBIR2vF1EY for <xfs@oss.sgi.com>;
-	Wed, 17 Dec 2014 13:02:43 -0800 (PST)
-Date: Thu, 18 Dec 2014 08:02:26 +1100
+	QHp2R0EYwYrHSp98 for <xfs@oss.sgi.com>;
+	Wed, 17 Dec 2014 13:22:57 -0800 (PST)
+Date: Thu, 18 Dec 2014 08:22:55 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Disconnected inodes after test xfs/261
-Message-ID: <20141217210226.GY24183@dastard>
-References: <20141217193535.GA8231@quack.suse.cz>
+Subject: Re: [PATCH] xfs: Keep sb_bad_features2 consistent with sb_features2
+Message-ID: <20141217212255.GZ24183@dastard>
+References: <1418848046-11265-1-git-send-email-jack@suse.cz>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20141217193535.GA8231@quack.suse.cz>
+In-Reply-To: <1418848046-11265-1-git-send-email-jack@suse.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,55 +32,49 @@ Sender: xfs-bounces@oss.sgi.com
 To: Jan Kara <jack@suse.cz>
 Cc: xfs@oss.sgi.com
 
-On Wed, Dec 17, 2014 at 08:35:35PM +0100, Jan Kara wrote:
->   Hello,
+On Wed, Dec 17, 2014 at 09:27:26PM +0100, Jan Kara wrote:
+> Currently when we modify sb_features2, we store the same value also in
+> sb_bad_features2. However in most places we forget to mark field
+> sb_bad_features2 for logging and thus it can happen that a change to it
+> is lost. This results in an inconsistent sb_features2 and
+> sb_bad_features2 fields e.g. after xfstests test xfs/187.
 > 
->   in my test KVM with today's Linus' kernel I'm getting xfs_repair
-> complaint about disconnected inodes after the test xfs/261 finishes
-> (with success). xfs_repair output is like:
-> xfs_repair -n /dev/vdb2
-> Phase 1 - find and verify superblock...
-> Phase 2 - using internal log
->         - scan filesystem freespace and inode maps...
->         - found root inode chunk
-> Phase 3 - for each AG...
->         - scan (but don't clear) agi unlinked lists...
->         - process known inodes and perform inode discovery...
->         - agno = 0
->         - agno = 1
->         - agno = 2
->         - agno = 3
->         - process newly discovered inodes...
-> Phase 4 - check for duplicate blocks...
->         - setting up duplicate extent list...
->         - check for inodes claiming duplicate blocks...
->         - agno = 0
->         - agno = 1
->         - agno = 2
->         - agno = 3
-> No modify flag set, skipping phase 5
-> Phase 6 - check inode connectivity...
->         - traversing filesystem ...
->         - traversal finished ...
->         - moving disconnected inodes to lost+found ...
-> disconnected inode 132, would move to lost+found
-> disconnected inode 133, would move to lost+found
-> Phase 7 - verify link counts...
-> No modify flag set, skipping filesystem flush and exiting.
+> Fix the problem by changing XFS_SB_FEATURES2 to actually mean both
+> sb_features2 and sb_bad_features2 fields since this is always what we
+> want to log. This isn't ideal because the fact that XFS_SB_FEATURES2
+> means two fields could cause some problem in future however the code is
+> hopefully less error prone that it is now.
+
+Actually, I have patches that fix this differently that I'm planning
+to push for the 3.20 cycle.  They get rid of the "update random SB
+fields" problem altogether simply by logging and updating the entire
+SB every time.
+
+http://oss.sgi.com/archives/xfs/2014-09/msg00448.html
+
+> Signed-off-by: Jan Kara <jack@suse.cz>
 > ---
-> Given how trivial test xfs/261 is, it seems like created private mtab files
-> that also get unlinked don't get added to AGI unlinked list before umount.
-> I didn't have a detailed look whether that's possible or not and probably
-> won't get to it before Christmas. So I'm sending this just in case someone
-> more knowledgeable has ideas earlier...
+>  fs/xfs/libxfs/xfs_format.h | 10 +++++-----
+>  fs/xfs/xfs_mount.c         |  5 ++---
+>  2 files changed, 7 insertions(+), 8 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
+> index fbd6da263571..476273287aaf 100644
+> --- a/fs/xfs/libxfs/xfs_format.h
+> +++ b/fs/xfs/libxfs/xfs_format.h
+> @@ -304,8 +304,8 @@ typedef enum {
+>  #define XFS_SB_ICOUNT		XFS_SB_MVAL(ICOUNT)
+>  #define XFS_SB_IFREE		XFS_SB_MVAL(IFREE)
+>  #define XFS_SB_FDBLOCKS		XFS_SB_MVAL(FDBLOCKS)
+> -#define XFS_SB_FEATURES2	XFS_SB_MVAL(FEATURES2)
+> -#define XFS_SB_BAD_FEATURES2	XFS_SB_MVAL(BAD_FEATURES2)
+> +#define XFS_SB_FEATURES2	(XFS_SB_MVAL(FEATURES2) | \
+> +				 XFS_SB_MVAL(BAD_FEATURES2))
 
-I don't see that here. If you mount/unmount the filesystem, does the
-warning go away? i.e. xfs_repair -n ignores the contents of
-the log, so if the unlinked list transactions are in the log then
-log recovery will make everything good again.
-
-That said, if unmount is not leaving the log clean, then we've still
-got an issue we need to get to the bottom of.
+That doesn't guarantee that both fields are updated together, just
+that the'll get logged and written together. The code still has to
+ensure both fields are updated beforehand. I have a patch to address
+this as well, and will post them soon.
 
 Cheers,
 
