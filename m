@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 6B3767F3F
-	for <xfs@oss.sgi.com>; Wed, 17 Dec 2014 15:23:00 -0600 (CST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 93CA67F3F
+	for <xfs@oss.sgi.com>; Wed, 17 Dec 2014 15:54:50 -0600 (CST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id ECFCCAC00D
-	for <xfs@oss.sgi.com>; Wed, 17 Dec 2014 13:22:59 -0800 (PST)
-Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
-	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	QHp2R0EYwYrHSp98 for <xfs@oss.sgi.com>;
-	Wed, 17 Dec 2014 13:22:57 -0800 (PST)
-Date: Thu, 18 Dec 2014 08:22:55 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs: Keep sb_bad_features2 consistent with sb_features2
-Message-ID: <20141217212255.GZ24183@dastard>
-References: <1418848046-11265-1-git-send-email-jack@suse.cz>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 81B2430407F
+	for <xfs@oss.sgi.com>; Wed, 17 Dec 2014 13:54:47 -0800 (PST)
+Received: from barracuda.pco-inc.com (barracuda.pco-inc.com [67.137.21.131])
+	by cuda.sgi.com with ESMTP id gWJ1zYz3t9dwYHXY for
+	<xfs@oss.sgi.com>; Wed, 17 Dec 2014 13:54:46 -0800 (PST)
+Received: from Edd.pcopen.net (edd.pcopen.net [10.0.0.19]) by
+	barracuda.pco-inc.com with ESMTP id wD7NSHKLqARDEvDq for
+	<xfs@oss.sgi.com>; Wed, 17 Dec 2014 13:54:42 -0800 (PST)
+From: William Brown <wbrown@openeye.net>
+Subject: XFSProg GPL Version
+Date: Wed, 17 Dec 2014 13:54:42 -0800
+Message-ID: <007401d01a44$104aa4d0$30dfee70$@net>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1418848046-11265-1-git-send-email-jack@suse.cz>
+Content-Language: en-us
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,65 +25,110 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============5003421644468892776=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Jan Kara <jack@suse.cz>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Wed, Dec 17, 2014 at 09:27:26PM +0100, Jan Kara wrote:
-> Currently when we modify sb_features2, we store the same value also in
-> sb_bad_features2. However in most places we forget to mark field
-> sb_bad_features2 for logging and thus it can happen that a change to it
-> is lost. This results in an inconsistent sb_features2 and
-> sb_bad_features2 fields e.g. after xfstests test xfs/187.
-> 
-> Fix the problem by changing XFS_SB_FEATURES2 to actually mean both
-> sb_features2 and sb_bad_features2 fields since this is always what we
-> want to log. This isn't ideal because the fact that XFS_SB_FEATURES2
-> means two fields could cause some problem in future however the code is
-> hopefully less error prone that it is now.
+--===============5003421644468892776==
+Content-Type: multipart/alternative;
+	boundary="----=_NextPart_000_0075_01D01A01.022764D0"
+Content-Language: en-us
 
-Actually, I have patches that fix this differently that I'm planning
-to push for the 3.20 cycle.  They get rid of the "update random SB
-fields" problem altogether simply by logging and updating the entire
-SB every time.
+------=_NextPart_000_0075_01D01A01.022764D0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 
-http://oss.sgi.com/archives/xfs/2014-09/msg00448.html
+Hello,
 
-> Signed-off-by: Jan Kara <jack@suse.cz>
-> ---
->  fs/xfs/libxfs/xfs_format.h | 10 +++++-----
->  fs/xfs/xfs_mount.c         |  5 ++---
->  2 files changed, 7 insertions(+), 8 deletions(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
-> index fbd6da263571..476273287aaf 100644
-> --- a/fs/xfs/libxfs/xfs_format.h
-> +++ b/fs/xfs/libxfs/xfs_format.h
-> @@ -304,8 +304,8 @@ typedef enum {
->  #define XFS_SB_ICOUNT		XFS_SB_MVAL(ICOUNT)
->  #define XFS_SB_IFREE		XFS_SB_MVAL(IFREE)
->  #define XFS_SB_FDBLOCKS		XFS_SB_MVAL(FDBLOCKS)
-> -#define XFS_SB_FEATURES2	XFS_SB_MVAL(FEATURES2)
-> -#define XFS_SB_BAD_FEATURES2	XFS_SB_MVAL(BAD_FEATURES2)
-> +#define XFS_SB_FEATURES2	(XFS_SB_MVAL(FEATURES2) | \
-> +				 XFS_SB_MVAL(BAD_FEATURES2))
+ 
 
-That doesn't guarantee that both fields are updated together, just
-that the'll get logged and written together. The code still has to
-ensure both fields are updated beforehand. I have a patch to address
-this as well, and will post them soon.
+Could you please tell me what version of GPL XFSProg was published under?
+Thank you.
 
-Cheers,
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+------=_NextPart_000_0075_01D01A01.022764D0
+Content-Type: text/html; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+
+<html xmlns:v=3D"urn:schemas-microsoft-com:vml" =
+xmlns:o=3D"urn:schemas-microsoft-com:office:office" =
+xmlns:w=3D"urn:schemas-microsoft-com:office:word" =
+xmlns:m=3D"http://schemas.microsoft.com/office/2004/12/omml" =
+xmlns=3D"http://www.w3.org/TR/REC-html40"><head><meta =
+http-equiv=3DContent-Type content=3D"text/html; =
+charset=3Dus-ascii"><meta name=3DGenerator content=3D"Microsoft Word 12 =
+(filtered medium)"><style><!--
+/* Font Definitions */
+@font-face
+	{font-family:"Cambria Math";
+	panose-1:2 4 5 3 5 4 6 3 2 4;}
+@font-face
+	{font-family:Calibri;
+	panose-1:2 15 5 2 2 2 4 3 2 4;}
+@font-face
+	{font-family:Tahoma;
+	panose-1:2 11 6 4 3 5 4 4 2 4;}
+/* Style Definitions */
+p.MsoNormal, li.MsoNormal, div.MsoNormal
+	{margin:0in;
+	margin-bottom:.0001pt;
+	font-size:11.0pt;
+	font-family:"Calibri","sans-serif";}
+a:link, span.MsoHyperlink
+	{mso-style-priority:99;
+	color:blue;
+	text-decoration:underline;}
+a:visited, span.MsoHyperlinkFollowed
+	{mso-style-priority:99;
+	color:purple;
+	text-decoration:underline;}
+p.MsoAcetate, li.MsoAcetate, div.MsoAcetate
+	{mso-style-priority:99;
+	mso-style-link:"Balloon Text Char";
+	margin:0in;
+	margin-bottom:.0001pt;
+	font-size:8.0pt;
+	font-family:"Tahoma","sans-serif";}
+span.EmailStyle17
+	{mso-style-type:personal-compose;
+	font-family:"Calibri","sans-serif";
+	color:windowtext;}
+span.BalloonTextChar
+	{mso-style-name:"Balloon Text Char";
+	mso-style-priority:99;
+	mso-style-link:"Balloon Text";
+	font-family:"Tahoma","sans-serif";}
+.MsoChpDefault
+	{mso-style-type:export-only;}
+@page WordSection1
+	{size:8.5in 11.0in;
+	margin:1.0in 1.0in 1.0in 1.0in;}
+div.WordSection1
+	{page:WordSection1;}
+--></style><!--[if gte mso 9]><xml>
+<o:shapedefaults v:ext=3D"edit" spidmax=3D"1026" />
+</xml><![endif]--><!--[if gte mso 9]><xml>
+<o:shapelayout v:ext=3D"edit">
+<o:idmap v:ext=3D"edit" data=3D"1" />
+</o:shapelayout></xml><![endif]--></head><body lang=3DEN-US link=3Dblue =
+vlink=3Dpurple><div class=3DWordSection1><p =
+class=3DMsoNormal>Hello,<o:p></o:p></p><p =
+class=3DMsoNormal><o:p>&nbsp;</o:p></p><p class=3DMsoNormal>Could you =
+please tell me what version of GPL XFSProg was published under? Thank =
+you.<o:p></o:p></p></div></body></html>
+------=_NextPart_000_0075_01D01A01.022764D0--
+
+
+--===============5003421644468892776==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============5003421644468892776==--
