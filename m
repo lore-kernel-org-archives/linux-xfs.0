@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 164867F74
+	by oss.sgi.com (Postfix) with ESMTP id 242257F83
 	for <xfs@oss.sgi.com>; Thu, 18 Dec 2014 09:38:04 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 05214304084
-	for <xfs@oss.sgi.com>; Thu, 18 Dec 2014 07:38:03 -0800 (PST)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 1384C30408C
+	for <xfs@oss.sgi.com>; Thu, 18 Dec 2014 07:38:04 -0800 (PST)
 Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id EsGsB9C7UCXTopSp (version=TLSv1 cipher=AES256-SHA
+	with ESMTP id AQztowRdtwWC6wZC (version=TLSv1 cipher=AES256-SHA
 	bits=256 verify=NO) for <xfs@oss.sgi.com>;
 	Thu, 18 Dec 2014 07:38:02 -0800 (PST)
 From: Jan Kara <jack@suse.cz>
-Subject: [PATCH 22/25] quota: Remove ->get_xstate and ->get_xstatev callbacks
-Date: Thu, 18 Dec 2014 16:37:36 +0100
-Message-Id: <1418917059-23870-23-git-send-email-jack@suse.cz>
+Subject: [PATCH 19/25] xfs: Remove some pointless quota checks
+Date: Thu, 18 Dec 2014 16:37:33 +0100
+Message-Id: <1418917059-23870-20-git-send-email-jack@suse.cz>
 In-Reply-To: <1418917059-23870-1-git-send-email-jack@suse.cz>
 References: <1418917059-23870-1-git-send-email-jack@suse.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -31,66 +31,117 @@ Sender: xfs-bounces@oss.sgi.com
 To: linux-fsdevel@vger.kernel.org
 Cc: cluster-devel@redhat.com, Jan Kara <jack@suse.cz>, ocfs2-devel@oss.oracle.com, xfs@oss.sgi.com
 
-These callbacks are now unused. Remove them.
+xfs_fs_get_xstate() and xfs_fs_get_xstatev() check whether there's quota
+running before calling xfs_qm_scall_getqstat() or
+xfs_qm_scall_getqstatv(). Thus we are certain that superblock supports
+quota and xfs_sb_version_hasquota() check is pointless. Similarly we
+know that when quota is running, mp->m_quotainfo will be allocated.
 
 Signed-off-by: Jan Kara <jack@suse.cz>
 ---
- fs/quota/quota.c      | 14 ++++----------
- include/linux/quota.h |  2 --
- 2 files changed, 4 insertions(+), 12 deletions(-)
+ fs/xfs/xfs_qm_syscalls.c | 59 ++++++++++++++++--------------------------------
+ 1 file changed, 20 insertions(+), 39 deletions(-)
 
-diff --git a/fs/quota/quota.c b/fs/quota/quota.c
-index 7d04b95dfbbf..cb52a1d9c91a 100644
---- a/fs/quota/quota.c
-+++ b/fs/quota/quota.c
-@@ -350,12 +350,9 @@ static int quota_getxstate(struct super_block *sb, void __user *addr)
- 	struct fs_quota_stat fqs;
- 	int ret;
+diff --git a/fs/xfs/xfs_qm_syscalls.c b/fs/xfs/xfs_qm_syscalls.c
+index 26070257fd39..8cb5090dcdbc 100644
+--- a/fs/xfs/xfs_qm_syscalls.c
++++ b/fs/xfs/xfs_qm_syscalls.c
+@@ -410,20 +410,12 @@ xfs_qm_scall_getqstat(
+ 	memset(out, 0, sizeof(fs_quota_stat_t));
  
--	if (!sb->s_qcop->get_xstate && !sb->s_qcop->get_state)
-+	if (!sb->s_qcop->get_state)
- 		return -ENOSYS;
--	if (sb->s_qcop->get_state)
--		ret = quota_getstate(sb, &fqs);
--	else
--		ret = sb->s_qcop->get_xstate(sb, &fqs);
-+	ret = quota_getstate(sb, &fqs);
- 	if (!ret && copy_to_user(addr, &fqs, sizeof(fqs)))
- 		return -EFAULT;
- 	return ret;
-@@ -414,7 +411,7 @@ static int quota_getxstatev(struct super_block *sb, void __user *addr)
- 	struct fs_quota_statv fqs;
- 	int ret;
- 
--	if (!sb->s_qcop->get_xstatev && !sb->s_qcop->get_state)
-+	if (!sb->s_qcop->get_state)
- 		return -ENOSYS;
- 
- 	memset(&fqs, 0, sizeof(fqs));
-@@ -428,10 +425,7 @@ static int quota_getxstatev(struct super_block *sb, void __user *addr)
- 	default:
- 		return -EINVAL;
+ 	out->qs_version = FS_QSTAT_VERSION;
+-	if (!xfs_sb_version_hasquota(&mp->m_sb)) {
+-		out->qs_uquota.qfs_ino = NULLFSINO;
+-		out->qs_gquota.qfs_ino = NULLFSINO;
+-		return 0;
+-	}
+-
+ 	out->qs_flags = (__uint16_t) xfs_qm_export_flags(mp->m_qflags &
+ 							(XFS_ALL_QUOTA_ACCT|
+ 							 XFS_ALL_QUOTA_ENFD));
+-	if (q) {
+-		uip = q->qi_uquotaip;
+-		gip = q->qi_gquotaip;
+-		pip = q->qi_pquotaip;
+-	}
++	uip = q->qi_uquotaip;
++	gip = q->qi_gquotaip;
++	pip = q->qi_pquotaip;
+ 	if (!uip && mp->m_sb.sb_uquotino != NULLFSINO) {
+ 		if (xfs_iget(mp, NULL, mp->m_sb.sb_uquotino,
+ 					0, 0, &uip) == 0)
+@@ -469,14 +461,13 @@ xfs_qm_scall_getqstat(
+ 		if (temppqip)
+ 			IRELE(pip);
  	}
--	if (sb->s_qcop->get_state)
--		ret = quota_getstatev(sb, &fqs);
--	else
--		ret = sb->s_qcop->get_xstatev(sb, &fqs);
-+	ret = quota_getstatev(sb, &fqs);
- 	if (!ret && copy_to_user(addr, &fqs, sizeof(fqs)))
- 		return -EFAULT;
- 	return ret;
-diff --git a/include/linux/quota.h b/include/linux/quota.h
-index 6ecac0f3b2ca..a07f2ed25284 100644
---- a/include/linux/quota.h
-+++ b/include/linux/quota.h
-@@ -408,8 +408,6 @@ struct quotactl_ops {
- 	int (*get_dqblk)(struct super_block *, struct kqid, struct qc_dqblk *);
- 	int (*set_dqblk)(struct super_block *, struct kqid, struct qc_dqblk *);
- 	int (*get_state)(struct super_block *, struct qc_state *);
--	int (*get_xstate)(struct super_block *, struct fs_quota_stat *);
--	int (*get_xstatev)(struct super_block *, struct fs_quota_statv *);
- 	int (*rm_xquota)(struct super_block *, unsigned int);
- };
+-	if (q) {
+-		out->qs_incoredqs = q->qi_dquots;
+-		out->qs_btimelimit = q->qi_btimelimit;
+-		out->qs_itimelimit = q->qi_itimelimit;
+-		out->qs_rtbtimelimit = q->qi_rtbtimelimit;
+-		out->qs_bwarnlimit = q->qi_bwarnlimit;
+-		out->qs_iwarnlimit = q->qi_iwarnlimit;
+-	}
++	out->qs_incoredqs = q->qi_dquots;
++	out->qs_btimelimit = q->qi_btimelimit;
++	out->qs_itimelimit = q->qi_itimelimit;
++	out->qs_rtbtimelimit = q->qi_rtbtimelimit;
++	out->qs_bwarnlimit = q->qi_bwarnlimit;
++	out->qs_iwarnlimit = q->qi_iwarnlimit;
++
+ 	return 0;
+ }
+ 
+@@ -497,13 +488,6 @@ xfs_qm_scall_getqstatv(
+ 	bool                    tempgqip = false;
+ 	bool                    temppqip = false;
+ 
+-	if (!xfs_sb_version_hasquota(&mp->m_sb)) {
+-		out->qs_uquota.qfs_ino = NULLFSINO;
+-		out->qs_gquota.qfs_ino = NULLFSINO;
+-		out->qs_pquota.qfs_ino = NULLFSINO;
+-		return 0;
+-	}
+-
+ 	out->qs_flags = (__uint16_t) xfs_qm_export_flags(mp->m_qflags &
+ 							(XFS_ALL_QUOTA_ACCT|
+ 							 XFS_ALL_QUOTA_ENFD));
+@@ -511,11 +495,9 @@ xfs_qm_scall_getqstatv(
+ 	out->qs_gquota.qfs_ino = mp->m_sb.sb_gquotino;
+ 	out->qs_pquota.qfs_ino = mp->m_sb.sb_pquotino;
+ 
+-	if (q) {
+-		uip = q->qi_uquotaip;
+-		gip = q->qi_gquotaip;
+-		pip = q->qi_pquotaip;
+-	}
++	uip = q->qi_uquotaip;
++	gip = q->qi_gquotaip;
++	pip = q->qi_pquotaip;
+ 	if (!uip && mp->m_sb.sb_uquotino != NULLFSINO) {
+ 		if (xfs_iget(mp, NULL, mp->m_sb.sb_uquotino,
+ 					0, 0, &uip) == 0)
+@@ -550,14 +532,13 @@ xfs_qm_scall_getqstatv(
+ 		if (temppqip)
+ 			IRELE(pip);
+ 	}
+-	if (q) {
+-		out->qs_incoredqs = q->qi_dquots;
+-		out->qs_btimelimit = q->qi_btimelimit;
+-		out->qs_itimelimit = q->qi_itimelimit;
+-		out->qs_rtbtimelimit = q->qi_rtbtimelimit;
+-		out->qs_bwarnlimit = q->qi_bwarnlimit;
+-		out->qs_iwarnlimit = q->qi_iwarnlimit;
+-	}
++	out->qs_incoredqs = q->qi_dquots;
++	out->qs_btimelimit = q->qi_btimelimit;
++	out->qs_itimelimit = q->qi_itimelimit;
++	out->qs_rtbtimelimit = q->qi_rtbtimelimit;
++	out->qs_bwarnlimit = q->qi_bwarnlimit;
++	out->qs_iwarnlimit = q->qi_iwarnlimit;
++
+ 	return 0;
+ }
  
 -- 
 1.8.4.5
