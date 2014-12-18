@@ -1,30 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 07AB47F50
-	for <xfs@oss.sgi.com>; Thu, 18 Dec 2014 15:39:45 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id E90A98F8035
-	for <xfs@oss.sgi.com>; Thu, 18 Dec 2014 13:39:44 -0800 (PST)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id GFmzyeMVfFfPnQZa (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 18 Dec 2014 13:39:43 -0800 (PST)
-Received: from int-mx14.intmail.prod.int.phx2.redhat.com
-	(int-mx14.intmail.prod.int.phx2.redhat.com [10.5.11.27])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id sBILdgta000623
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256
-	verify=FAIL) for <xfs@oss.sgi.com>; Thu, 18 Dec 2014 16:39:43 -0500
-Received: from liberator.sandeen.net (ovpn01.gateway.prod.ext.phx2.redhat.com
-	[10.5.9.1])
-	by int-mx14.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id sBILdf4n031942
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES128-SHA bits=128 verify=NO)
-	for <xfs@oss.sgi.com>; Thu, 18 Dec 2014 16:39:42 -0500
-Message-ID: <5493499D.5060303@redhat.com>
-Date: Thu, 18 Dec 2014 15:39:41 -0600
-From: Eric Sandeen <sandeen@redhat.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id C5F257F47
+	for <xfs@oss.sgi.com>; Thu, 18 Dec 2014 15:54:53 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 73033AC00C
+	for <xfs@oss.sgi.com>; Thu, 18 Dec 2014 13:54:50 -0800 (PST)
+Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
+	with ESMTP id 3lmoV6v9i0tLJATe (version=TLSv1 cipher=AES256-SHA
+	bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 18 Dec 2014 13:54:48 -0800 (PST)
+Date: Thu, 18 Dec 2014 22:54:42 +0100
+From: Jan Kara <jack@suse.cz>
+Subject: Re: Disconnected inodes after test xfs/261
+Message-ID: <20141218215442.GC24079@quack.suse.cz>
+References: <20141217193535.GA8231@quack.suse.cz>
+	<20141217210226.GY24183@dastard> <54934576.4090603@gmail.com>
 MIME-Version: 1.0
-Subject: [PATCH] xfs_quota: man page fix - project command requires arguments
+Content-Disposition: inline
+In-Reply-To: <54934576.4090603@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -37,36 +30,137 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs-oss <xfs@oss.sgi.com>
+To: "Michael L. Semon" <mlsemon35@gmail.com>
+Cc: Jan Kara <jack@suse.cz>, xfs@oss.sgi.com
 
-The xfs_quota man page states that the "project" command without
-arguments will list all project names and identifiers, but it has
-never done this; the project_f command has always been defined as
-requiring at least one argument.
-
-Fix the man page to reflect reality.
-
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
-
-diff --git a/man/man8/xfs_quota.8 b/man/man8/xfs_quota.8
-index 8cc8ab7..d74c157 100644
---- a/man/man8/xfs_quota.8
-+++ b/man/man8/xfs_quota.8
-@@ -565,12 +565,7 @@ instead of stdout.
- .I name
- ]
- .br
--Without arguments, this command lists known project names and identifiers
--(based on entries in the
--.I /etc/projects
--and
--.I /etc/projid
--files). The
-+The
- .BR \-c ,
- .BR \-C ,
- and
+On Thu 18-12-14 16:21:58, Michael L. Semon wrote:
+> On 12/17/14 16:02, Dave Chinner wrote:
+> > On Wed, Dec 17, 2014 at 08:35:35PM +0100, Jan Kara wrote:
+> >>   Hello,
+> >>
+> >>   in my test KVM with today's Linus' kernel I'm getting xfs_repair
+> >> complaint about disconnected inodes after the test xfs/261 finishes
+> >> (with success). xfs_repair output is like:
+> >> xfs_repair -n /dev/vdb2
+> >> Phase 1 - find and verify superblock...
+> >> Phase 2 - using internal log
+> >>         - scan filesystem freespace and inode maps...
+> >>         - found root inode chunk
+> >> Phase 3 - for each AG...
+> >>         - scan (but don't clear) agi unlinked lists...
+> >>         - process known inodes and perform inode discovery...
+> >>         - agno = 0
+> >>         - agno = 1
+> >>         - agno = 2
+> >>         - agno = 3
+> >>         - process newly discovered inodes...
+> >> Phase 4 - check for duplicate blocks...
+> >>         - setting up duplicate extent list...
+> >>         - check for inodes claiming duplicate blocks...
+> >>         - agno = 0
+> >>         - agno = 1
+> >>         - agno = 2
+> >>         - agno = 3
+> >> No modify flag set, skipping phase 5
+> >> Phase 6 - check inode connectivity...
+> >>         - traversing filesystem ...
+> >>         - traversal finished ...
+> >>         - moving disconnected inodes to lost+found ...
+> >> disconnected inode 132, would move to lost+found
+> >> disconnected inode 133, would move to lost+found
+> >> Phase 7 - verify link counts...
+> >> No modify flag set, skipping filesystem flush and exiting.
+> >> ---
+> >> Given how trivial test xfs/261 is, it seems like created private mtab files
+> >> that also get unlinked don't get added to AGI unlinked list before umount.
+> >> I didn't have a detailed look whether that's possible or not and probably
+> >> won't get to it before Christmas. So I'm sending this just in case someone
+> >> more knowledgeable has ideas earlier...
+> > 
+> > I don't see that here. If you mount/unmount the filesystem, does the
+> > warning go away? i.e. xfs_repair -n ignores the contents of
+> > the log, so if the unlinked list transactions are in the log then
+> > log recovery will make everything good again.
+> > 
+> > That said, if unmount is not leaving the log clean, then we've still
+> > got an issue we need to get to the bottom of.
+> > 
+> > Cheers,
+> > 
+> > Dave.
+> 
+> OK, I played with this a bit, though in all but one case, my XFS stack 
+> is new.  A bisect will be done to find when this started.  kernel 
+> 3.10.63 here at work is OK, where new xfsprogs is installed.
+> 
+> In trying out new kernels, I hit the "kernel too old" wall on boot.  
+> Therefore, a new system was brewed from slackware-current, and xfstests 
+> was installed on top of that.  This result is from the "huge-smp" 
+> vendor kernel, as it came from the original binary packages:
+> 
+> root@kyhorse:/var/lib/xfstests# uname -a
+> Linux kyhorse 3.14.24-smp #2 SMP Fri Nov 14 18:34:21 CST 2014 i686 Intel(R) Pentium(R) 4 CPU 1.80GHz GenuineIntel GNU/Linux
+> 
+> root@kyhorse:/var/lib/xfstests# ./check xfs/261
+> FSTYP         -- xfs (non-debug)
+> PLATFORM      -- Linux/i686 kyhorse 3.14.24-smp
+> MKFS_OPTIONS  -- -f -bsize=4096 /dev/sda7
+> MOUNT_OPTIONS -- /dev/sda7 /mnt/scratch
+> 
+> xfs/261 2s ... 3s
+> _check_xfs_filesystem: filesystem on /dev/sda7 is inconsistent (c) (see /var/lib/xfstests/results//xfs/261.full)
+> _check_xfs_filesystem: filesystem on /dev/sda7 is inconsistent (r) (see /var/lib/xfstests/results//xfs/261.full)
+> Ran: xfs/261
+> Passed all 1 tests
+> 
+> root@kyhorse:/var/lib/xfstests# xfs_repair $SCRQ ATCH_DEV
+> Phase 1 - find and verify superblock...
+> Phase 2 - using internal log
+>         - zero log...
+>         - scan filesystem freespace and inode maps...
+>         - found root inode chunk
+> Phase 3 - for each AG...
+>         - scan and clear agi unlinked lists...
+>         - process known inodes and perform inode discovery...
+>         - agno = 0
+>         - agno = 1
+>         - agno = 2
+>         - agno = 3
+>         - process newly discovered inodes...
+> Phase 4 - check for duplicate blocks...
+>         - setting up duplicate extent list...
+>         - check for inodes claiming duplicate blocks...
+>         - agno = 0
+>         - agno = 1
+>         - agno = 2
+>         - agno = 3
+> Phase 5 - rebuild AG headers and trees...
+>         - reset superblock...
+> Phase 6 - check inode connectivity...
+>         - resetting contents of realtime bitmap and summary inodes
+>         - traversing filesystem ...
+>         - traversal finished ...
+>         - moving disconnected inodes to lost+found ...
+> disconnected inode 132, moving to lost+found
+> disconnected inode 133, moving to lost+found
+> Phase 7 - verify and correct link counts...
+> Note - quota info will be regenerated on next quota mount.
+> done
+> 
+> A mount/umount sequence did not change matters.  xfsprogs appears to 
+> be version 3.1.11, glancing from the tarball names in the a/ directory 
+> here:
+> 
+> ftp://ftp.slackware.com/pub/slackware/slackware-current/slackware/
+> 
+> The new setup was just made bootable before I came in to work, and the 
+> bisect will start tonight and will hopefully be posted by Monday night.
+  I have found the culprit of the bug so no bisection is needed. See my
+other email in this thread...
+								Honza
+-- 
+Jan Kara <jack@suse.cz>
+SUSE Labs, CR
 
 _______________________________________________
 xfs mailing list
