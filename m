@@ -1,23 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id C5F257F47
-	for <xfs@oss.sgi.com>; Thu, 18 Dec 2014 15:54:53 -0600 (CST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 4B1727F3F
+	for <xfs@oss.sgi.com>; Thu, 18 Dec 2014 16:59:03 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 73033AC00C
-	for <xfs@oss.sgi.com>; Thu, 18 Dec 2014 13:54:50 -0800 (PST)
-Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id 3lmoV6v9i0tLJATe (version=TLSv1 cipher=AES256-SHA
-	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 18 Dec 2014 13:54:48 -0800 (PST)
-Date: Thu, 18 Dec 2014 22:54:42 +0100
-From: Jan Kara <jack@suse.cz>
-Subject: Re: Disconnected inodes after test xfs/261
-Message-ID: <20141218215442.GC24079@quack.suse.cz>
-References: <20141217193535.GA8231@quack.suse.cz>
-	<20141217210226.GY24183@dastard> <54934576.4090603@gmail.com>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 0CEBA30407F
+	for <xfs@oss.sgi.com>; Thu, 18 Dec 2014 14:59:02 -0800 (PST)
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	K35AjfZKfxoEbYvf for <xfs@oss.sgi.com>;
+	Thu, 18 Dec 2014 14:58:57 -0800 (PST)
+Date: Fri, 19 Dec 2014 09:58:43 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: easily reproducible filesystem crash on rebuilding array
+Message-ID: <20141218225843.GB24183@dastard>
+References: <20141211123936.1f3d713d@harpe.intellique.com>
+	<20141215130715.4dfaaa8e@harpe.intellique.com>
+	<20141215132500.13210fdb@harpe.intellique.com>
+	<20141215201036.GQ24183@dastard>
+	<20141216123405.111c7ac0@harpe.intellique.com>
+	<20141216195815.GB15665@dastard>
+	<20141218164042.15220bf3@harpe.intellique.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <54934576.4090603@gmail.com>
+In-Reply-To: <20141218164042.15220bf3@harpe.intellique.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,141 +31,90 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "Michael L. Semon" <mlsemon35@gmail.com>
-Cc: Jan Kara <jack@suse.cz>, xfs@oss.sgi.com
+To: Emmanuel Florac <eflorac@intellique.com>
+Cc: xfs@oss.sgi.com
 
-On Thu 18-12-14 16:21:58, Michael L. Semon wrote:
-> On 12/17/14 16:02, Dave Chinner wrote:
-> > On Wed, Dec 17, 2014 at 08:35:35PM +0100, Jan Kara wrote:
-> >>   Hello,
-> >>
-> >>   in my test KVM with today's Linus' kernel I'm getting xfs_repair
-> >> complaint about disconnected inodes after the test xfs/261 finishes
-> >> (with success). xfs_repair output is like:
-> >> xfs_repair -n /dev/vdb2
-> >> Phase 1 - find and verify superblock...
-> >> Phase 2 - using internal log
-> >>         - scan filesystem freespace and inode maps...
-> >>         - found root inode chunk
-> >> Phase 3 - for each AG...
-> >>         - scan (but don't clear) agi unlinked lists...
-> >>         - process known inodes and perform inode discovery...
-> >>         - agno = 0
-> >>         - agno = 1
-> >>         - agno = 2
-> >>         - agno = 3
-> >>         - process newly discovered inodes...
-> >> Phase 4 - check for duplicate blocks...
-> >>         - setting up duplicate extent list...
-> >>         - check for inodes claiming duplicate blocks...
-> >>         - agno = 0
-> >>         - agno = 1
-> >>         - agno = 2
-> >>         - agno = 3
-> >> No modify flag set, skipping phase 5
-> >> Phase 6 - check inode connectivity...
-> >>         - traversing filesystem ...
-> >>         - traversal finished ...
-> >>         - moving disconnected inodes to lost+found ...
-> >> disconnected inode 132, would move to lost+found
-> >> disconnected inode 133, would move to lost+found
-> >> Phase 7 - verify link counts...
-> >> No modify flag set, skipping filesystem flush and exiting.
-> >> ---
-> >> Given how trivial test xfs/261 is, it seems like created private mtab files
-> >> that also get unlinked don't get added to AGI unlinked list before umount.
-> >> I didn't have a detailed look whether that's possible or not and probably
-> >> won't get to it before Christmas. So I'm sending this just in case someone
-> >> more knowledgeable has ideas earlier...
-> > 
-> > I don't see that here. If you mount/unmount the filesystem, does the
-> > warning go away? i.e. xfs_repair -n ignores the contents of
-> > the log, so if the unlinked list transactions are in the log then
-> > log recovery will make everything good again.
-> > 
-> > That said, if unmount is not leaving the log clean, then we've still
-> > got an issue we need to get to the bottom of.
-> > 
-> > Cheers,
-> > 
-> > Dave.
-> 
-> OK, I played with this a bit, though in all but one case, my XFS stack 
-> is new.  A bisect will be done to find when this started.  kernel 
-> 3.10.63 here at work is OK, where new xfsprogs is installed.
-> 
-> In trying out new kernels, I hit the "kernel too old" wall on boot.  
-> Therefore, a new system was brewed from slackware-current, and xfstests 
-> was installed on top of that.  This result is from the "huge-smp" 
-> vendor kernel, as it came from the original binary packages:
-> 
-> root@kyhorse:/var/lib/xfstests# uname -a
-> Linux kyhorse 3.14.24-smp #2 SMP Fri Nov 14 18:34:21 CST 2014 i686 Intel(R) Pentium(R) 4 CPU 1.80GHz GenuineIntel GNU/Linux
-> 
-> root@kyhorse:/var/lib/xfstests# ./check xfs/261
-> FSTYP         -- xfs (non-debug)
-> PLATFORM      -- Linux/i686 kyhorse 3.14.24-smp
-> MKFS_OPTIONS  -- -f -bsize=4096 /dev/sda7
-> MOUNT_OPTIONS -- /dev/sda7 /mnt/scratch
-> 
-> xfs/261 2s ... 3s
-> _check_xfs_filesystem: filesystem on /dev/sda7 is inconsistent (c) (see /var/lib/xfstests/results//xfs/261.full)
-> _check_xfs_filesystem: filesystem on /dev/sda7 is inconsistent (r) (see /var/lib/xfstests/results//xfs/261.full)
-> Ran: xfs/261
-> Passed all 1 tests
-> 
-> root@kyhorse:/var/lib/xfstests# xfs_repair $SCRQ ATCH_DEV
-> Phase 1 - find and verify superblock...
-> Phase 2 - using internal log
->         - zero log...
->         - scan filesystem freespace and inode maps...
->         - found root inode chunk
-> Phase 3 - for each AG...
->         - scan and clear agi unlinked lists...
->         - process known inodes and perform inode discovery...
->         - agno = 0
->         - agno = 1
->         - agno = 2
->         - agno = 3
->         - process newly discovered inodes...
-> Phase 4 - check for duplicate blocks...
->         - setting up duplicate extent list...
->         - check for inodes claiming duplicate blocks...
->         - agno = 0
->         - agno = 1
->         - agno = 2
->         - agno = 3
-> Phase 5 - rebuild AG headers and trees...
->         - reset superblock...
-> Phase 6 - check inode connectivity...
->         - resetting contents of realtime bitmap and summary inodes
->         - traversing filesystem ...
->         - traversal finished ...
->         - moving disconnected inodes to lost+found ...
-> disconnected inode 132, moving to lost+found
-> disconnected inode 133, moving to lost+found
+On Thu, Dec 18, 2014 at 04:40:42PM +0100, Emmanuel Florac wrote:
+> Le Wed, 17 Dec 2014 06:58:15 +1100
+> Dave Chinner <david@fromorbit.com> =E9crivait:
+> =
+
+> > > =
+
+> > > The firmware is the latest available. How do I turn logging to 11
+> > > please ?  =
+
+> > =
+
+> > # echo 11 > /proc/sys/fs/xfs/error_level
+> =
+
+> OK, so now I've set the error level up, I've rerun my test without
+> using LVM, and the FS crashed again, this time more seriously. Here's
+> the significant exerpt from /var/log/messages:
+> =
+
+> Dec 18 03:56:05 TEST-ADAPTEC -- MARK --
+> Dec 18 04:00:04 TEST-ADAPTEC kernel: CPU: 0 PID: 1738 Comm: kworker/0:1H =
+Not tainted 3.16.7-storiq64-opteron #1
+> Dec 18 04:00:04 TEST-ADAPTEC kernel: Hardware name: Supermicro H8SGL/H8SG=
+L, BIOS 3.0a       05/07/2013
+> Dec 18 04:00:04 TEST-ADAPTEC kernel: Workqueue: xfslogd xfs_buf_iodone_wo=
+rk
+> Dec 18 04:00:04 TEST-ADAPTEC kernel:  0000000000000000 ffff88040e2d5080 f=
+fffffff814ca287 ffff88040e2d5120
+> Dec 18 04:00:04 TEST-ADAPTEC kernel:  ffffffff811fbb0d ffff8800df925940 f=
+fff88040e2d5120 ffff8800df925940
+> Dec 18 04:00:04 TEST-ADAPTEC kernel:  ffffffff810705a4 0000000000013f00 0=
+00000000deed450 ffff88040deed450
+> Dec 18 04:00:04 TEST-ADAPTEC kernel: Call Trace:
+> Dec 18 04:00:04 TEST-ADAPTEC kernel:  [<ffffffff814ca287>] ? dump_stack+0=
+x41/0x51
+> Dec 18 04:00:04 TEST-ADAPTEC kernel:  [<ffffffff811fbb0d>] ? xfs_buf_iodo=
+ne_work+0x8d/0xb0
+> Dec 18 04:00:04 TEST-ADAPTEC kernel:  [<ffffffff810705a4>] ? process_one_=
+work+0x174/0x420
+> Dec 18 04:00:04 TEST-ADAPTEC kernel:  [<ffffffff81070c4b>] ? worker_threa=
+d+0x10b/0x500
+> Dec 18 04:00:04 TEST-ADAPTEC kernel:  [<ffffffff814cc290>] ? __schedule+0=
+x2e0/0x750
+
+Where's the XFS error output? This is just the output from the
+dump_stack() call in the xfs error message code...
+
+Still, that's implying a write IO error being reporte din IO
+completion, not a read error, and that's different to the previous
+issue you've reported. It's also indicative of an error coming from
+the storage, not XFS...
+
+Do these problems *only* happen during or after a RAID rebuild?
+
 > Phase 7 - verify and correct link counts...
-> Note - quota info will be regenerated on next quota mount.
+> resetting inode 4294866029 nlinks from 2 to 5
+> resetting inode 150323855504 nlinks from 13 to 12
+> Metadata corruption detected at block 0x10809dc640/0x1000
+> libxfs_writebufr: write verifer failed on bno 0x10809dc640/0x1000
+> Metadata corruption detected at block 0x10809dc640/0x1000
+> libxfs_writebufr: write verifer failed on bno 0x10809dc640/0x1000
 > done
-> 
-> A mount/umount sequence did not change matters.  xfsprogs appears to 
-> be version 3.1.11, glancing from the tarball names in the a/ directory 
-> here:
-> 
-> ftp://ftp.slackware.com/pub/slackware/slackware-current/slackware/
-> 
-> The new setup was just made bootable before I came in to work, and the 
-> bisect will start tonight and will hopefully be posted by Monday night.
-  I have found the culprit of the bug so no bisection is needed. See my
-other email in this thread...
-								Honza
--- 
-Jan Kara <jack@suse.cz>
-SUSE Labs, CR
+
+I'd suggest you should be upgrading xfsprogs, because that's an
+error that shouldn't happen at the end of a repair. If the latest
+version (3.2.2) doesn't fix this problem, then please send me a
+compressed metadump so I can work out what corruption xfs_repair
+isn't fixing properly.
+
+Cheers,
+
+Dave.
+-- =
+
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
