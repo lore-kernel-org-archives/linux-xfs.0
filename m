@@ -1,27 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id E39E87F51
-	for <xfs@oss.sgi.com>; Thu, 18 Dec 2014 09:18:45 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id B4EFE30407E
-	for <xfs@oss.sgi.com>; Thu, 18 Dec 2014 07:18:42 -0800 (PST)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id cnqncAg1x3bFZVrW (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 18 Dec 2014 07:18:41 -0800 (PST)
-Received: from int-mx14.intmail.prod.int.phx2.redhat.com
-	(int-mx14.intmail.prod.int.phx2.redhat.com [10.5.11.27])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id sBIFIfC1005448
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256
-	verify=FAIL) for <xfs@oss.sgi.com>; Thu, 18 Dec 2014 10:18:41 -0500
-Date: Thu, 18 Dec 2014 10:18:35 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH] xfs_repair: fix max block offset test
-Message-ID: <20141218151835.GC13471@laptop.bfoster>
-References: <5489DA3B.5050908@redhat.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <5489DA3B.5050908@redhat.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id E903B7F58
+	for <xfs@oss.sgi.com>; Thu, 18 Dec 2014 09:37:52 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 76FAEAC00D
+	for <xfs@oss.sgi.com>; Thu, 18 Dec 2014 07:37:52 -0800 (PST)
+Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
+	with ESMTP id 4RJCigh9xpUzzOMU (version=TLSv1 cipher=AES256-SHA
+	bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 18 Dec 2014 07:37:51 -0800 (PST)
+From: Jan Kara <jack@suse.cz>
+Subject: [PATCH 0/25 RFC v2] quota: Unify VFS and XFS quota interfaces
+Date: Thu, 18 Dec 2014 16:37:14 +0100
+Message-Id: <1418917059-23870-1-git-send-email-jack@suse.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,65 +21,48 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: Eryu Guan <eguan@redhat.com>, xfs-oss <xfs@oss.sgi.com>
+To: linux-fsdevel@vger.kernel.org
+Cc: cluster-devel@redhat.com, Jan Kara <jack@suse.cz>, ocfs2-devel@oss.oracle.com, xfs@oss.sgi.com
 
-On Thu, Dec 11, 2014 at 11:54:03AM -0600, Eric Sandeen wrote:
-> Eryu pointed out that in fstest xfs/071, we find corruption
-> reported at the end.  This test attempts to do IO at the
-> maximum possible offsets, and repair yields:
-> 
-> inode 1027 - extent offset too large - start 70, count 1, offset 2251799813685247
-> correcting nextents for inode 1027
-> bad data fork in inode 1027
-> would have cleared inode 1027
-> 
-> Repair is complaining that an extent *starts* at the maximum
-> block, but AFAICT, starting there is just fine, as long as
-> we also end there.  i.e. a one-block extent at the limit
-> is just fine.
-> 
-> So change the xfs_repair test to allow this situation.
-> 
-> Reported-by: Eryu Guan <eguan@redhat.com>
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-> ---
+  Hello,
 
-Thought this looked familiar:
+  this is the second attempt to unify VFS and XFS quota interfaces so that XFS
+quotactls work for filesystems with VFS quotas and vice versa.  This is useful
+so that userspace doesn't have to care that much about which filesystem it is
+using at least when using basic quota functionality. In particular we should be
+able to reuse project quota tests in xfstests for ext4.
 
-http://oss.sgi.com/archives/xfs/2014-09/msg00524.html
+In this patch set I unify quotaon / quotaoff handling (Q_QUOTAON, Q_QUOTAOFF,
+Q_XQUOTAON, Q_XQUOTAOFF calls), fix some bugs in the Q_XGETQUOTA, Q_XSETQLIM,
+Q_GETQUOTA, Q_SETQUOTA calls done by Christoph some time ago, unify
+Q_GETXSTATE, Q_GETXSTATV with Q_GETINFO, and also wire up Q_SETINFO to work
+with XFS (and Q_XSETQLIM for id 0 to modify time limits for VFS quotas).
+So after these patches xfs_quota can manipulate quotas for ext4 filesystem and
+similarly quota-tools can be used to manipulate quotas for xfs filesystem.
 
-Either one is fine with me. If we use the fix below, I think we should
-update the error message since it technically refers to the extent
-offset and we slightly tweak the meaning of the failure.
+I have also verified that xfstests pass fine both for xfs and ext4 so
+hopefully I didn't introduce any regression in the current functionality (I
+also did a couple of manual checks for timer setting etc).
 
-Brian
+All the comments to the first version of the series are hopefully addressed,
+except for Dave's request to reduce number of copying of dquot information -
+I have benchmarked that reducing number of copies from 3 to 2 brings just 2%
+improvement in speed in my test setup and getting quota information isn't IMHO
+so performance critical that it would be worth the complications of the code.
 
-> 
-> diff --git a/repair/dinode.c b/repair/dinode.c
-> index 38a6562..ca57a61 100644
-> --- a/repair/dinode.c
-> +++ b/repair/dinode.c
-> @@ -667,7 +667,9 @@ _("inode %" PRIu64 " - bad extent overflows - start %" PRIu64 ", "
->  					irec.br_startoff);
->  				goto done;
->  		}
-> -		if (irec.br_startoff >= fs_max_file_offset)  {
-> +		/* Ensure this extent does not extend beyond the max offset */
-> +		if (irec.br_startoff + irec.br_blockcount - 1 >
-> +							fs_max_file_offset) {
->  			do_warn(
->  _("inode %" PRIu64 " - extent offset too large - start %" PRIu64 ", "
->    "count %" PRIu64 ", offset %" PRIu64 "\n"),
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+Patches are against Linus' tree as of today - I know XFS tree may have some
+conflicting changes (I think Dave even picked up some XFS patches from the
+beginning of the series) but I wanted the patch series to be self-contained.
+
+Comments are welcome. I would like to merge the patches via my tree in the
+next merge window but before I do that I'd like some review...
+
+								Honza
 
 _______________________________________________
 xfs mailing list
