@@ -1,22 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 2857E7F3F
-	for <xfs@oss.sgi.com>; Wed, 17 Dec 2014 16:11:41 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id B9DB3AC00A
-	for <xfs@oss.sgi.com>; Wed, 17 Dec 2014 14:11:40 -0800 (PST)
-Received: from barracuda.pco-inc.com (barracuda.pco-inc.com [67.137.21.131])
-	by cuda.sgi.com with ESMTP id vFMKhMIdJ1iCH2Bn for
-	<xfs@oss.sgi.com>; Wed, 17 Dec 2014 14:11:36 -0800 (PST)
-From: William Brown <wbrown@openeye.net>
-References: <007401d01a44$104aa4d0$30dfee70$@net>
-	<20141217220359.GA24183@dastard>
-In-Reply-To: <20141217220359.GA24183@dastard>
-Subject: RE: XFSProg GPL Version
-Date: Wed, 17 Dec 2014 14:11:33 -0800
-Message-ID: <007901d01a46$6af10e40$40d32ac0$@net>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 5BA957F3F
+	for <xfs@oss.sgi.com>; Wed, 17 Dec 2014 18:46:42 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 4A6BF30406B
+	for <xfs@oss.sgi.com>; Wed, 17 Dec 2014 16:46:39 -0800 (PST)
+Received: from mail-qa0-f49.google.com (mail-qa0-f49.google.com
+	[209.85.216.49]) by cuda.sgi.com with ESMTP id SzlZO9zD3zGzKuty
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Wed, 17 Dec 2014 16:46:37 -0800 (PST)
+Received: by mail-qa0-f49.google.com with SMTP id s7so132110qap.22
+	for <xfs@oss.sgi.com>; Wed, 17 Dec 2014 16:46:37 -0800 (PST)
+Message-ID: <549223D9.5020202@gmail.com>
+Date: Wed, 17 Dec 2014 19:46:17 -0500
+From: "Michael L. Semon" <mlsemon35@gmail.com>
 MIME-Version: 1.0
-Content-Language: en-us
+Subject: Re: Disconnected inodes after test xfs/261
+References: <20141217193535.GA8231@quack.suse.cz>
+	<20141217210226.GY24183@dastard>
+In-Reply-To: <20141217210226.GY24183@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,39 +31,71 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: 'Dave Chinner' <david@fromorbit.com>
+To: Dave Chinner <david@fromorbit.com>, Jan Kara <jack@suse.cz>
 Cc: xfs@oss.sgi.com
 
-Hello Dave,
-
-Thank you for confirming.
-
-
------Original Message-----
-From: Dave Chinner [mailto:david@fromorbit.com] 
-Sent: Wednesday, December 17, 2014 2:04 PM
-To: William Brown
-Cc: xfs@oss.sgi.com
-Subject: Re: XFSProg GPL Version
-
-On Wed, Dec 17, 2014 at 01:54:42PM -0800, William Brown wrote:
-> Hello,
+On 12/17/14 16:02, Dave Chinner wrote:
+> On Wed, Dec 17, 2014 at 08:35:35PM +0100, Jan Kara wrote:
+>>   Hello,
+>>
+>>   in my test KVM with today's Linus' kernel I'm getting xfs_repair
+>> complaint about disconnected inodes after the test xfs/261 finishes
+>> (with success). xfs_repair output is like:
+>> xfs_repair -n /dev/vdb2
+>> Phase 1 - find and verify superblock...
+>> Phase 2 - using internal log
+>>         - scan filesystem freespace and inode maps...
+>>         - found root inode chunk
+>> Phase 3 - for each AG...
+>>         - scan (but don't clear) agi unlinked lists...
+>>         - process known inodes and perform inode discovery...
+>>         - agno = 0
+>>         - agno = 1
+>>         - agno = 2
+>>         - agno = 3
+>>         - process newly discovered inodes...
+>> Phase 4 - check for duplicate blocks...
+>>         - setting up duplicate extent list...
+>>         - check for inodes claiming duplicate blocks...
+>>         - agno = 0
+>>         - agno = 1
+>>         - agno = 2
+>>         - agno = 3
+>> No modify flag set, skipping phase 5
+>> Phase 6 - check inode connectivity...
+>>         - traversing filesystem ...
+>>         - traversal finished ...
+>>         - moving disconnected inodes to lost+found ...
+>> disconnected inode 132, would move to lost+found
+>> disconnected inode 133, would move to lost+found
+>> Phase 7 - verify link counts...
+>> No modify flag set, skipping filesystem flush and exiting.
+>> ---
+>> Given how trivial test xfs/261 is, it seems like created private mtab files
+>> that also get unlinked don't get added to AGI unlinked list before umount.
+>> I didn't have a detailed look whether that's possible or not and probably
+>> won't get to it before Christmas. So I'm sending this just in case someone
+>> more knowledgeable has ideas earlier...
 > 
->  
+> I don't see that here. If you mount/unmount the filesystem, does the
+> warning go away? i.e. xfs_repair -n ignores the contents of
+> the log, so if the unlinked list transactions are in the log then
+> log recovery will make everything good again.
 > 
-> Could you please tell me what version of GPL XFSProg was published under?
-> Thank you.
+> That said, if unmount is not leaving the log clean, then we've still
+> got an issue we need to get to the bottom of.
+> 
+> Cheers,
+> 
+> Dave.
 
-It's in doc/COPYING.
+I've seen this but seemingly only on v4-superblock XFS and only with Dave's 
+xfsprogs RFC libxfs patches applied.  [Nice patchset, BTW.]  Will `git pull` 
+everything again, then take it home to the x86 dungeon and test it again.
 
-https://git.kernel.org/cgit/fs/xfs/xfsprogs-dev.git/tree/doc/COPYING
+Good luck!
 
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Michael
 
 _______________________________________________
 xfs mailing list
