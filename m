@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 950107F58
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id ADF6D7F72
 	for <xfs@oss.sgi.com>; Thu, 18 Dec 2014 09:38:02 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 253F1AC00C
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 8E15A304084
 	for <xfs@oss.sgi.com>; Thu, 18 Dec 2014 07:38:02 -0800 (PST)
 Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id SnUv4tUO8ewGy9gT (version=TLSv1 cipher=AES256-SHA
+	with ESMTP id Rb8s1mFRHeO5VSjt (version=TLSv1 cipher=AES256-SHA
 	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 18 Dec 2014 07:38:00 -0800 (PST)
+	Thu, 18 Dec 2014 07:38:01 -0800 (PST)
 From: Jan Kara <jack@suse.cz>
-Subject: [PATCH 13/25] quota: Don't store flags for v2 quota format
-Date: Thu, 18 Dec 2014 16:37:27 +0100
-Message-Id: <1418917059-23870-14-git-send-email-jack@suse.cz>
+Subject: [PATCH 12/25] quota: Make Q_XQUOTASYNC support VFS quota syncing
+Date: Thu, 18 Dec 2014 16:37:26 +0100
+Message-Id: <1418917059-23870-13-git-send-email-jack@suse.cz>
 In-Reply-To: <1418917059-23870-1-git-send-email-jack@suse.cz>
 References: <1418917059-23870-1-git-send-email-jack@suse.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -31,45 +31,30 @@ Sender: xfs-bounces@oss.sgi.com
 To: linux-fsdevel@vger.kernel.org
 Cc: cluster-devel@redhat.com, Jan Kara <jack@suse.cz>, ocfs2-devel@oss.oracle.com, xfs@oss.sgi.com
 
-Currently, v2 quota format blindly stored flags from in-memory dqinfo on
-disk, although there are no flags supported. Since it is stupid to store
-flags which have no effect, just store 0 unconditionally and don't
-bother loading it from disk.
-
-Note that userspace could have stored some flags there via Q_SETINFO
-quotactl and then later read them (although flags have no effect) but
-I'm pretty sure noone does that (most definitely quota-tools don't and
-quota interface doesn't have too much other users).
+Call ->quota_sync method from Q_XQUOTASYNC for better userspace
+compatibility.
 
 Signed-off-by: Jan Kara <jack@suse.cz>
 ---
- fs/quota/quota_v2.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+ fs/quota/quota.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-diff --git a/fs/quota/quota_v2.c b/fs/quota/quota_v2.c
-index d1a8054bba9a..8aa5a092de9f 100644
---- a/fs/quota/quota_v2.c
-+++ b/fs/quota/quota_v2.c
-@@ -126,7 +126,8 @@ static int v2_read_file_info(struct super_block *sb, int type)
+diff --git a/fs/quota/quota.c b/fs/quota/quota.c
+index 2cc50b35a3b5..5ec04321aace 100644
+--- a/fs/quota/quota.c
++++ b/fs/quota/quota.c
+@@ -477,8 +477,9 @@ static int do_quotactl(struct super_block *sb, int type, int cmd, qid_t id,
+ 	case Q_XQUOTASYNC:
+ 		if (sb->s_flags & MS_RDONLY)
+ 			return -EROFS;
+-		/* XFS quotas are fully coherent now, making this call a noop */
+-		return 0;
++		if (!sb->s_qcop->quota_sync)
++			return 0;
++		return sb->s_qcop->quota_sync(sb, type);
+ 	default:
+ 		return -EINVAL;
  	}
- 	info->dqi_bgrace = le32_to_cpu(dinfo.dqi_bgrace);
- 	info->dqi_igrace = le32_to_cpu(dinfo.dqi_igrace);
--	info->dqi_flags = le32_to_cpu(dinfo.dqi_flags);
-+	/* No flags currently supported */
-+	info->dqi_flags = le32_to_cpu(0);
- 	qinfo->dqi_sb = sb;
- 	qinfo->dqi_type = type;
- 	qinfo->dqi_blocks = le32_to_cpu(dinfo.dqi_blocks);
-@@ -157,7 +158,8 @@ static int v2_write_file_info(struct super_block *sb, int type)
- 	info->dqi_flags &= ~DQF_INFO_DIRTY;
- 	dinfo.dqi_bgrace = cpu_to_le32(info->dqi_bgrace);
- 	dinfo.dqi_igrace = cpu_to_le32(info->dqi_igrace);
--	dinfo.dqi_flags = cpu_to_le32(info->dqi_flags & DQF_MASK);
-+	/* No flags currently supported */
-+	dinfo.dqi_flags = 0;
- 	spin_unlock(&dq_data_lock);
- 	dinfo.dqi_blocks = cpu_to_le32(qinfo->dqi_blocks);
- 	dinfo.dqi_free_blk = cpu_to_le32(qinfo->dqi_free_blk);
 -- 
 1.8.4.5
 
