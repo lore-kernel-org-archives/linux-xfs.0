@@ -1,25 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 7371A7F3F
-	for <xfs@oss.sgi.com>; Fri, 19 Dec 2014 02:57:47 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 613A030407B
-	for <xfs@oss.sgi.com>; Fri, 19 Dec 2014 00:57:44 -0800 (PST)
-Received: from mail-la0-f44.google.com (mail-la0-f44.google.com
-	[209.85.215.44]) by cuda.sgi.com with ESMTP id 9xmi2xVZY5PSbJpl
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Fri, 19 Dec 2014 00:57:43 -0800 (PST)
-Received: by mail-la0-f44.google.com with SMTP id gd6so466821lab.3
-	for <xfs@oss.sgi.com>; Fri, 19 Dec 2014 00:57:42 -0800 (PST)
-Received: from localhost ([80.203.33.141])
-	by mx.google.com with ESMTPSA id fb6sm2525177lbc.46.2014.12.19.00.57.40
-	for <xfs@oss.sgi.com> (version=TLSv1.2 cipher=RC4-SHA bits=128/128);
-	Fri, 19 Dec 2014 00:57:41 -0800 (PST)
-Date: Fri, 19 Dec 2014 09:57:38 +0100
-From: Stevie Trujillo <stevie.trujillo@gmail.com>
-Subject: xfsdump questions
-Message-ID: <20141219095738.6b6e6c88@localhost>
-Mime-Version: 1.0
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id E15A27F3F
+	for <xfs@oss.sgi.com>; Fri, 19 Dec 2014 05:56:57 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 7F70EAC004
+	for <xfs@oss.sgi.com>; Fri, 19 Dec 2014 03:56:54 -0800 (PST)
+Received: from smtp5-g21.free.fr (smtp5-g21.free.fr [212.27.42.5]) by
+	cuda.sgi.com with ESMTP id orC9udnS6tST698j (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Fri, 19 Dec 2014 03:56:52 -0800 (PST)
+Date: Fri, 19 Dec 2014 12:57:20 +0100
+From: Emmanuel Florac <eflorac@intellique.com>
+Subject: Re: easily reproducible filesystem crash on rebuilding array
+Message-ID: <20141219125720.56c5f74d@galadriel.home>
+In-Reply-To: <20141218225843.GB24183@dastard>
+References: <20141211123936.1f3d713d@harpe.intellique.com>
+	<20141215130715.4dfaaa8e@harpe.intellique.com>
+	<20141215132500.13210fdb@harpe.intellique.com>
+	<20141215201036.GQ24183@dastard>
+	<20141216123405.111c7ac0@harpe.intellique.com>
+	<20141216195815.GB15665@dastard>
+	<20141218164042.15220bf3@harpe.intellique.com>
+	<20141218225843.GB24183@dastard>
+MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,31 +31,61 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-Hello!
+Le Fri, 19 Dec 2014 09:58:43 +1100 vous =E9criviez:
 
-Is xfsdump an ancient relic or something recommended to new users (I
-have never seen anyone recommending it)? I gave it a try and found the
-incremental backups to be really fast!
+> =
 
-How are incremental backups implemented? I saw that my inventory file
-is really small. Does it use some internal xfs metadata to detect
-changes? Is it resilient against all kinda renames and changing
-timestamps etc that a user might do? (I've previously used a backup
-system that broke when doing stuff like that)
+> Where's the XFS error output? This is just the output from the
+> dump_stack() call in the xfs error message code...
 
-Is it possible to backup (and restore) ctimes?
+Where is it supposed to display its errors? I thought it to be
+in /var/log/messages....
 
-I read that the incremental backups are limited to a depth of 10. Are
-they intended to be used in a binary tree like fashion?
+> Still, that's implying a write IO error being reporte din IO
+> completion, not a read error, and that's different to the previous
+> issue you've reported. It's also indicative of an error coming from
+> the storage, not XFS...
+>
+> Do these problems *only* happen during or after a RAID rebuild?
 
---
-Stevie Trujillo
+Only while the rebuild process is running. All works fine afterwards.
+ =
+
+> > Phase 7 - verify and correct link counts...
+> > resetting inode 4294866029 nlinks from 2 to 5
+> > resetting inode 150323855504 nlinks from 13 to 12
+> > Metadata corruption detected at block 0x10809dc640/0x1000
+> > libxfs_writebufr: write verifer failed on bno 0x10809dc640/0x1000
+> > Metadata corruption detected at block 0x10809dc640/0x1000
+> > libxfs_writebufr: write verifer failed on bno 0x10809dc640/0x1000
+> > done
+> =
+
+> I'd suggest you should be upgrading xfsprogs, because that's an
+> error that shouldn't happen at the end of a repair. If the latest
+> version (3.2.2) doesn't fix this problem, then please send me a
+> compressed metadump so I can work out what corruption xfs_repair
+> isn't fixing properly.
+
+It was 3.2.2 this time. However it seems to have fixe it anyway;
+running it a second time displays nothing special.
+Is a metadump of a clean filesystem of any use?
+
+-- =
+
+------------------------------------------------------------------------
+Emmanuel Florac     |   Direction technique
+                    |   Intellique
+                    |	<eflorac@intellique.com>
+                    |   +33 1 78 94 84 02
+------------------------------------------------------------------------
 
 _______________________________________________
 xfs mailing list
