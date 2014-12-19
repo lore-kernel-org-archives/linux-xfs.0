@@ -1,28 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id E15A27F3F
-	for <xfs@oss.sgi.com>; Fri, 19 Dec 2014 05:56:57 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 7F70EAC004
-	for <xfs@oss.sgi.com>; Fri, 19 Dec 2014 03:56:54 -0800 (PST)
-Received: from smtp5-g21.free.fr (smtp5-g21.free.fr [212.27.42.5]) by
-	cuda.sgi.com with ESMTP id orC9udnS6tST698j (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 19 Dec 2014 03:56:52 -0800 (PST)
-Date: Fri, 19 Dec 2014 12:57:20 +0100
-From: Emmanuel Florac <eflorac@intellique.com>
-Subject: Re: easily reproducible filesystem crash on rebuilding array
-Message-ID: <20141219125720.56c5f74d@galadriel.home>
-In-Reply-To: <20141218225843.GB24183@dastard>
-References: <20141211123936.1f3d713d@harpe.intellique.com>
-	<20141215130715.4dfaaa8e@harpe.intellique.com>
-	<20141215132500.13210fdb@harpe.intellique.com>
-	<20141215201036.GQ24183@dastard>
-	<20141216123405.111c7ac0@harpe.intellique.com>
-	<20141216195815.GB15665@dastard>
-	<20141218164042.15220bf3@harpe.intellique.com>
-	<20141218225843.GB24183@dastard>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 9D5B27F3F
+	for <xfs@oss.sgi.com>; Fri, 19 Dec 2014 12:54:27 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 8AFDE8F8059
+	for <xfs@oss.sgi.com>; Fri, 19 Dec 2014 10:54:26 -0800 (PST)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id mx20Hc2rTHLJj8fB for <xfs@oss.sgi.com>;
+	Fri, 19 Dec 2014 10:54:24 -0800 (PST)
+Message-ID: <5494745E.60500@sandeen.net>
+Date: Fri, 19 Dec 2014 12:54:22 -0600
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
+Subject: Re: [PATCH] xfs_repair: fix max block offset test
+References: <5489DA3B.5050908@redhat.com>
+	<20141218151835.GC13471@laptop.bfoster>
+In-Reply-To: <20141218151835.GC13471@laptop.bfoster>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,61 +24,57 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: Brian Foster <bfoster@redhat.com>, Eric Sandeen <sandeen@redhat.com>
+Cc: Eryu Guan <eguan@redhat.com>, xfs-oss <xfs@oss.sgi.com>
 
-Le Fri, 19 Dec 2014 09:58:43 +1100 vous =E9criviez:
+On 12/18/14 9:18 AM, Brian Foster wrote:
 
-> =
+hought this looked familiar:
+> 
+> http://oss.sgi.com/archives/xfs/2014-09/msg00524.html
+> 
+> Either one is fine with me. If we use the fix below, I think we should
+> update the error message since it technically refers to the extent
+> offset and we slightly tweak the meaning of the failure.
+> 
+> Brian
 
-> Where's the XFS error output? This is just the output from the
-> dump_stack() call in the xfs error message code...
+Ok, so here's what I wonder about with your patch.
 
-Where is it supposed to display its errors? I thought it to be
-in /var/log/messages....
++               if (irec.br_startoff > fs_max_file_offset)  {
 
-> Still, that's implying a write IO error being reporte din IO
-> completion, not a read error, and that's different to the previous
-> issue you've reported. It's also indicative of an error coming from
-> the storage, not XFS...
->
-> Do these problems *only* happen during or after a RAID rebuild?
+What if the extent starting logical offset is *at* fs_max_file_offset
+(which is sadly in blocks, not bytes, for extra confusion points),
+but the extent is 1GB in length?
 
-Only while the rebuild process is running. All works fine afterwards.
- =
+Isn't this a problem because we've now got files in the block which
+are beyond fs_max_file_offset, and probably also beyond sb_maxbytes?
 
-> > Phase 7 - verify and correct link counts...
-> > resetting inode 4294866029 nlinks from 2 to 5
-> > resetting inode 150323855504 nlinks from 13 to 12
-> > Metadata corruption detected at block 0x10809dc640/0x1000
-> > libxfs_writebufr: write verifer failed on bno 0x10809dc640/0x1000
-> > Metadata corruption detected at block 0x10809dc640/0x1000
-> > libxfs_writebufr: write verifer failed on bno 0x10809dc640/0x1000
-> > done
-> =
+I'm not sure I follow why you feel the message needs to change with
+my version:
 
-> I'd suggest you should be upgrading xfsprogs, because that's an
-> error that shouldn't happen at the end of a repair. If the latest
-> version (3.2.2) doesn't fix this problem, then please send me a
-> compressed metadump so I can work out what corruption xfs_repair
-> isn't fixing properly.
++		/* Ensure this extent does not extend beyond the max offset */
++		if (irec.br_startoff + irec.br_blockcount - 1 >
++							fs_max_file_offset) {
+                        do_warn(
+_("inode %" PRIu64 " - extent offset too large - start %" PRIu64 ", "
+  "count %" PRIu64 ", offset %" PRIu64 "\n"),
+                                ino, irec.br_startblock, irec.br_blockcount,
+                                irec.br_startoff);
 
-It was 3.2.2 this time. However it seems to have fixe it anyway;
-running it a second time displays nothing special.
-Is a metadump of a clean filesystem of any use?
+If any (block) offset in the file is beyond the max, then we say the offset is
+too large, and give it's physical block, its length, and its starting offset
+(granted, the message is a bit *weird* - br_startblock really doesn't matter
+here, but I don't think I've fundamentally changed the meaning of the test).
 
--- =
+However, I've come to learn that you are almost always right about subtleties
+like this, so perhaps you can explain again to me, using smaller words.  :)
 
-------------------------------------------------------------------------
-Emmanuel Florac     |   Direction technique
-                    |   Intellique
-                    |	<eflorac@intellique.com>
-                    |   +33 1 78 94 84 02
-------------------------------------------------------------------------
+-Eric
 
 _______________________________________________
 xfs mailing list
