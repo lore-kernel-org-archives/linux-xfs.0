@@ -1,30 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id BDB817F3F
-	for <xfs@oss.sgi.com>; Fri, 19 Dec 2014 17:06:14 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 4CF97AC002
-	for <xfs@oss.sgi.com>; Fri, 19 Dec 2014 15:06:11 -0800 (PST)
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	bVT9axREV74LURij for <xfs@oss.sgi.com>;
-	Fri, 19 Dec 2014 15:06:08 -0800 (PST)
-Date: Sat, 20 Dec 2014 10:06:05 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: easily reproducible filesystem crash on rebuilding array
-Message-ID: <20141219230605.GF24183@dastard>
-References: <20141211123936.1f3d713d@harpe.intellique.com>
-	<20141215130715.4dfaaa8e@harpe.intellique.com>
-	<20141215132500.13210fdb@harpe.intellique.com>
-	<20141215201036.GQ24183@dastard>
-	<20141216123405.111c7ac0@harpe.intellique.com>
-	<20141216195815.GB15665@dastard>
-	<20141218164042.15220bf3@harpe.intellique.com>
-	<20141218225843.GB24183@dastard>
-	<20141219125720.56c5f74d@galadriel.home>
+	by oss.sgi.com (Postfix) with ESMTP id 920087F3F
+	for <xfs@oss.sgi.com>; Sat, 20 Dec 2014 16:53:04 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 1F573AC002
+	for <xfs@oss.sgi.com>; Sat, 20 Dec 2014 14:53:00 -0800 (PST)
+Received: from mail-la0-f45.google.com (mail-la0-f45.google.com
+	[209.85.215.45]) by cuda.sgi.com with ESMTP id vfuB8dqU9mIYGFQa
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Sat, 20 Dec 2014 14:52:59 -0800 (PST)
+Received: by mail-la0-f45.google.com with SMTP id gq15so2483853lab.32
+	for <xfs@oss.sgi.com>; Sat, 20 Dec 2014 14:52:58 -0800 (PST)
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20141219125720.56c5f74d@galadriel.home>
+Date: Sat, 20 Dec 2014 23:52:57 +0100
+Message-ID: <CAHJqNbx8qrs6OosFq1TGz4jqzxh82zvLRzxQ1oWpOp5MP6h3oQ@mail.gmail.com>
+Subject: finobt option for end user
+From: Alphazo <alphazo@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,73 +24,65 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: multipart/mixed; boundary="===============2914340324470642357=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Emmanuel Florac <eflorac@intellique.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Fri, Dec 19, 2014 at 12:57:20PM +0100, Emmanuel Florac wrote:
-> Le Fri, 19 Dec 2014 09:58:43 +1100 vous =E9criviez:
-> =
+--===============2914340324470642357==
+Content-Type: multipart/alternative; boundary=001a11c3da2ec269bf050aadaf6f
 
-> > =
+--001a11c3da2ec269bf050aadaf6f
+Content-Type: text/plain; charset=UTF-8
 
-> > Where's the XFS error output? This is just the output from the
-> > dump_stack() call in the xfs error message code...
-> =
+Hello,
 
-> Where is it supposed to display its errors? I thought it to be
-> in /var/log/messages....
+I'm pretty new to XFS. I'm considering moving away from ext4 to XFS because
+of the new self-describing option, performance and reliability improvements
+that XFS went through over the past year. Now I'm puzzled with the new free
+inode btree option (finobt). I tried to find some documentation about it
+but couldn't find the pros or cons. So from an end-user perspective with a
+couple of TB worth of photos:
+- Does it improve overall reliability?
+- Does it provide faster fsck/repair?
+- Does it improve any read or write operation?
+- Is it safe to use and does it recover as well as with finobt=0?
+- What is the typical case for enabling it and would you recommend using it
+for any new fs creation?
 
-Depends on how you system is configured. have you turned down the
-dmesg error level?
+Thank you in advance for your pointers.
+Alphazo
 
-> > Still, that's implying a write IO error being reporte din IO
-> > completion, not a read error, and that's different to the previous
-> > issue you've reported. It's also indicative of an error coming from
-> > the storage, not XFS...
-> >
-> > Do these problems *only* happen during or after a RAID rebuild?
-> =
+--001a11c3da2ec269bf050aadaf6f
+Content-Type: text/html; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-> Only while the rebuild process is running. All works fine afterwards.
+<div dir=3D"ltr">Hello,<div><br></div><div>I&#39;m pretty new to XFS. I&#39=
+;m considering moving away from ext4 to XFS because of the new self-describ=
+ing option, performance and reliability improvements that XFS went through =
+over the past year. Now I&#39;m puzzled with the new free inode btree optio=
+n (finobt). I tried to find some documentation about it but couldn&#39;t fi=
+nd the pros or cons. So from an end-user perspective with a couple of TB wo=
+rth of photos:</div><div>- Does it improve overall reliability?</div><div>-=
+ Does it provide faster fsck/repair?</div><div>- Does it improve any read o=
+r write operation?</div><div>- Is it safe to use and does it recover as wel=
+l as with finobt=3D0?</div><div>- What is the typical case for enabling it =
+and would you recommend using it for any new fs creation?</div><div><br></d=
+iv><div>Thank you in advance for your pointers.</div><div>Alphazo</div></di=
+v>
 
-Which pretty much points to a RAID controller rebuild bug.
+--001a11c3da2ec269bf050aadaf6f--
 
-> > > Phase 7 - verify and correct link counts...
-> > > resetting inode 4294866029 nlinks from 2 to 5
-> > > resetting inode 150323855504 nlinks from 13 to 12
-> > > Metadata corruption detected at block 0x10809dc640/0x1000
-> > > libxfs_writebufr: write verifer failed on bno 0x10809dc640/0x1000
-> > > Metadata corruption detected at block 0x10809dc640/0x1000
-> > > libxfs_writebufr: write verifer failed on bno 0x10809dc640/0x1000
-> > > done
-> > =
 
-> > I'd suggest you should be upgrading xfsprogs, because that's an
-> > error that shouldn't happen at the end of a repair. If the latest
-> > version (3.2.2) doesn't fix this problem, then please send me a
-> > compressed metadump so I can work out what corruption xfs_repair
-> > isn't fixing properly.
-> =
-
-> It was 3.2.2 this time. However it seems to have fixe it anyway;
-> running it a second time displays nothing special.
-> Is a metadump of a clean filesystem of any use?
-
-Not really.
-
-Cheers,
-
-Dave.
--- =
-
-Dave Chinner
-david@fromorbit.com
+--===============2914340324470642357==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============2914340324470642357==--
