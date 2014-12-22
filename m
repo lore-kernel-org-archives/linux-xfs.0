@@ -1,24 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 2CD9C7F4E
-	for <xfs@oss.sgi.com>; Sun, 21 Dec 2014 17:42:02 -0600 (CST)
+	by oss.sgi.com (Postfix) with ESMTP id 93AC47F4E
+	for <xfs@oss.sgi.com>; Mon, 22 Dec 2014 04:09:13 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id A33C6AC001
-	for <xfs@oss.sgi.com>; Sun, 21 Dec 2014 15:42:01 -0800 (PST)
-Received: from mail-qg0-f54.google.com (mail-qg0-f54.google.com
-	[209.85.192.54]) by cuda.sgi.com with ESMTP id KCdP4aor3rH9Ie8F
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Sun, 21 Dec 2014 15:41:57 -0800 (PST)
-Received: by mail-qg0-f54.google.com with SMTP id l89so2782340qgf.27
-	for <xfs@oss.sgi.com>; Sun, 21 Dec 2014 15:41:56 -0800 (PST)
-Message-ID: <54975ABF.2030102@gmail.com>
-Date: Sun, 21 Dec 2014 18:41:51 -0500
-From: "Michael L. Semon" <mlsemon35@gmail.com>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 231FDAC002
+	for <xfs@oss.sgi.com>; Mon, 22 Dec 2014 02:09:09 -0800 (PST)
+Received: from mail-wi0-f178.google.com (mail-wi0-f178.google.com
+	[209.85.212.178]) by cuda.sgi.com with ESMTP id
+	M15VJ5UtVONb6rYY (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Mon, 22 Dec 2014 02:09:08 -0800 (PST)
+Received: by mail-wi0-f178.google.com with SMTP id em10so7368829wid.17
+	for <xfs@oss.sgi.com>; Mon, 22 Dec 2014 02:09:07 -0800 (PST)
 MIME-Version: 1.0
-Subject: Re: Disconnected inodes after test xfs/261
-References: <20141217193535.GA8231@quack.suse.cz>	<20141217210226.GY24183@dastard>	<20141218103642.GB13705@quack.suse.cz>	<20141218135555.GH13705@quack.suse.cz>
-	<20141219020327.GD24183@dastard>
-In-Reply-To: <20141219020327.GD24183@dastard>
+In-Reply-To: <20141221230818.GH24183@dastard>
+References: <B97466D39E354AFB808620584A4ABE5C@alyakaslap>
+	<54970DD9.6080707@sandeen.net> <20141221230818.GH24183@dastard>
+Date: Mon, 22 Dec 2014 12:09:07 +0200
+Message-ID: <CAOcd+r2ifn=iWFD0j1iYt8HZi3XsEfJX3DR5LPBdJ0tzDeZM=w@mail.gmail.com>
+Subject: Re: XFS corruption
+From: Alex Lyakas <alex@zadarastorage.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,179 +33,146 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+Cc: Eric Sandeen <sandeen@sandeen.net>, xfs@oss.sgi.com
 
-On 12/18/14 21:03, Dave Chinner wrote:
-> On Thu, Dec 18, 2014 at 02:55:55PM +0100, Jan Kara wrote:
->> On Thu 18-12-14 11:36:42, Jan Kara wrote:
->>> On Thu 18-12-14 08:02:26, Dave Chinner wrote:
->>>> On Wed, Dec 17, 2014 at 08:35:35PM +0100, Jan Kara wrote:
->>>>>   Hello,
->>>>>
->>>>>   in my test KVM with today's Linus' kernel I'm getting xfs_repair
->>>>> complaint about disconnected inodes after the test xfs/261 finishes
->>>>> (with success). xfs_repair output is like:
->>>>> xfs_repair -n /dev/vdb2
->>>>> Phase 1 - find and verify superblock...
->>>>> Phase 2 - using internal log
->>>>>         - scan filesystem freespace and inode maps...
->>>>>         - found root inode chunk
->>>>> Phase 3 - for each AG...
->>>>>         - scan (but don't clear) agi unlinked lists...
->>>>>         - process known inodes and perform inode discovery...
->>>>>         - agno = 0
->>>>>         - agno = 1
->>>>>         - agno = 2
->>>>>         - agno = 3
->>>>>         - process newly discovered inodes...
->>>>> Phase 4 - check for duplicate blocks...
->>>>>         - setting up duplicate extent list...
->>>>>         - check for inodes claiming duplicate blocks...
->>>>>         - agno = 0
->>>>>         - agno = 1
->>>>>         - agno = 2
->>>>>         - agno = 3
->>>>> No modify flag set, skipping phase 5
->>>>> Phase 6 - check inode connectivity...
->>>>>         - traversing filesystem ...
->>>>>         - traversal finished ...
->>>>>         - moving disconnected inodes to lost+found ...
->>>>> disconnected inode 132, would move to lost+found
->>>>> disconnected inode 133, would move to lost+found
->>>>> Phase 7 - verify link counts...
->>>>> No modify flag set, skipping filesystem flush and exiting.
->>>>> ---
->>>>> Given how trivial test xfs/261 is, it seems like created private mtab files
->>>>> that also get unlinked don't get added to AGI unlinked list before umount.
->>>>> I didn't have a detailed look whether that's possible or not and probably
->>>>> won't get to it before Christmas. So I'm sending this just in case someone
->>>>> more knowledgeable has ideas earlier...
->>>>
->>>> I don't see that here. If you mount/unmount the filesystem, does the
->>>> warning go away? i.e. xfs_repair -n ignores the contents of
->>>> the log, so if the unlinked list transactions are in the log then
->>>> log recovery will make everything good again.
->>>   No, the problem is still there after mounting and unmounting the
->>> filesystem.
->>>
->>> Given what Michael wrote: I'm running xfs_repair version 3.2.1, filesystem
->>> is V4.
->>>
->>> When I look via xfs_db at the inode I can see nlink is 1 which looks
->>> strange. So maybe the problem is somewhere else than I thought:
->>> xfs_db> inode 132
->>> xfs_db> p
->>> core.magic = 0x494e
->>> core.mode = 0100000
->>> core.version = 2
->>> core.format = 2 (extents)
->>> core.nlinkv2 = 1
->>> core.onlink = 0
->>> core.projid_lo = 0
->>> core.projid_hi = 0
->>> core.uid = 0
->>> core.gid = 0
->>> core.flushiter = 1
->>> core.atime.sec = Thu Dec 18 11:08:55 2014
->>> core.atime.nsec = 510013169
->>> core.mtime.sec = Thu Dec 18 11:08:55 2014
->>> core.mtime.nsec = 510013169
->>> core.ctime.sec = Thu Dec 18 11:08:55 2014
->>> core.ctime.nsec = 510013169
->>> core.size = 0
->>> core.nblocks = 1
->>> core.extsize = 0
->>> core.nextents = 1
->>> core.naextents = 0
->>> core.forkoff = 0
->>> core.aformat = 2 (extents)
->>> core.dmevmask = 0
->>> core.dmstate = 0
->>> core.newrtbm = 0
->>> core.prealloc = 0
->>> core.realtime = 0
->>> core.immutable = 0
->>> core.append = 0
->>> core.sync = 0
->>> core.noatime = 0
->>> core.nodump = 0
->>> core.rtinherit = 0
->>> core.projinherit = 0
->>> core.nosymlinks = 0
->>> core.extsz = 0
->>> core.extszinherit = 0
->>> core.nodefrag = 0
->>> core.filestream = 0
->>> core.gen = 0
->>> next_unlinked = null
->>> u.bmx[0] = [startoff,startblock,blockcount,extentflag] 0:[0,13,1,0]
->>>
->>> I have taken xfs_metadump just after test xfs/261 completed and xfs_repair
->>> reported error. It is attached.
->>   OK, so I understand better what's going on. The detached inodes are
->> actually inodes from quota files being created by quotacheck on mount. Test
->> xfs/261 first mounts with uquota - that adds user quota ino and quota
->> feature just fine. But then it mounts with gquota - now we go through
->> different path since xfs_sb_version_hasquota() is already true. We find
->> that group quota isn't initialized though and thus we still need to
->> allocate inode for group quota file. However the change to sb_gquotaino
->> isn't written out because the following test in xfs_sb_quota_to_disk()
->> fails:
->>
->> 	if ((*fields & XFS_SB_GQUOTINO) &&
->>                                 (from->sb_qflags & XFS_GQUOTA_ACCT))
->>                 to->sb_gquotino = cpu_to_be64(from->sb_gquotino);
->>
->> because from->sb_qflags doesn't have XFS_GQUOTA_ACCT set (only
->> mp->m_qflags has XFS_GQUOTA_ACCT set).
-> 
-> I think you've got that wrong, but at the same time got it right. ;)
-> 
-> That is, we get there through xfs_qm_mount_quotas(), which does this
-> in the the write_changes section:
-> 
->         spin_lock(&mp->m_sb_lock);
->         sbf = mp->m_sb.sb_qflags;
->         mp->m_sb.sb_qflags = mp->m_qflags & XFS_MOUNT_QUOTA_ALL;
->         spin_unlock(&mp->m_sb_lock);
-> 
->         if (sbf != (mp->m_qflags & XFS_MOUNT_QUOTA_ALL)) {
->                 if (xfs_qm_write_sb_changes(mp, XFS_SB_QFLAGS)) {
-> 
-> Hence (from->sb_qflags & XFS_GQUOTA_ACCT) evaluates are true because
-> we've copied mp->m_qflags into from->sb_qflags before logging the
-> change. that's the bit you got wrong.
-> 
-> However, the code there only passes XFS_SB_QFLAGS to xfs_log_sb(),
-> and that means (*fileds & XFS_SB_GQUOTINO) evaluates as false, and
-> we fail to write the new group quota inode. SO you are right in that
-> this is the check that is failing. :)
-> 
-> And, again, the reason I wasn't able to reproduce it is that I
-> tested on a kernel running that "get rid of field based superblock
-> logging", which meant the above check was simply:
-> 
-> 	if (from->sb_qflags & XFS_GQUOTA_ACCT)
-> 		to->sb_gquotino = cpu_to_be64(from->sb_gquotino);
-> 
-> and, from above, we know that this is set appropriately. Hence the
-> group quota inode was updated and the test did not fail.
-> 
-> FYI, I noticed a bunch of these sb logging field bugs a while back, which
-> is why I wrote the patch to simply get rid of it. You've found two
-> of those bugs in the past few days....
+Hi Eric, Dave,
 
-And I didn't do very well in hunting things down.  Bisect took me 
-back to "xfs: Start using pquotaino from the superblock", but that 
-first bisect step took me to 3.14 and probably over the recent 
-fixes.  Just chiming in to note that even before then, the new 
-xfsprogs is needed for xfs/261 to pass outright.  Also, the patches 
-cited elsewhere in this thread didn't seem to solve matters...but 
-the second patch had to be placed in by hand.
+Thank you for looking at this.
+
+On Mon, Dec 22, 2014 at 1:08 AM, Dave Chinner <david@fromorbit.com> wrote:
+> On Sun, Dec 21, 2014 at 12:13:45PM -0600, Eric Sandeen wrote:
+>> On 12/21/14 5:42 AM, Alex Lyakas wrote:
+>> > Greetings,
+>> > we encountered XFS corruption:
+>>
+>> > kernel: [774772.852316] ffff8801018c5000: 05 d1 fd 01 fd ff 2f ec 2f 8d 82 6a 81 fe c2 0f  .....././..j....
+>>
+>> There should have been 64 bytes of hexdump, not just the single line above, no?
+>
+> Yeah, really need the whole dmesg, because we've got readahead in
+> the picture here so the number of times the corruption error is seen
+> is actually important....
+>
+
+I uploaded the full dump, captured by our kmsg dumper here:
+https://drive.google.com/file/d/0ByBy89zr3kJNUkRfRG9TMWVnVkU/view?usp=sharing
+
+As far as I see, all the corruption warnings are the same, and they
+all print only one line of hex dump. There are some additional
+warnings, like:
+[812756.915765] XFS (dm-72): Access to block zero in inode 1946454529
+start_block: 0 start_off: 0 blkcnt: 0 extent-state: 0 lastx: 964
+[812756.915765]
+[812756.915772] XFS (dm-72): Access to block zero in inode 1946454529
+start_block: 0 start_off: 0 blkcnt: 0 extent-state: 0 lastx: 964
+[812756.915772]
+[812756.915815] XFS (dm-72): Access to block zero in inode 1946454529
+start_block: 0 start_off: 0 blkcnt: 0 extent-state: 0 lastx: 964
+
+Two more log files (one prior to the crash and one from another VM
+that took over after the crash). All corruption reports are the same.
+https://drive.google.com/file/d/0ByBy89zr3kJNSHRCaUxDQnBEZHc/view?usp=sharing
+https://drive.google.com/file/d/0ByBy89zr3kJNYk1hRTRaVDE4ZzA/view?usp=sharing
+
+Unfortunately, I did not capture the output of xfs_repair. I also have
+not captured the metadump. So I realize we do not have much to work
+on.
 
 Thanks!
+Alex.
 
-Michael
+
+>>
+>> > [813114.622928] IP: [<ffffffffa077bad9>] xfs_bmbt_get_all+0x9/0x20 [xfs]
+>> > [813114.622928] PGD 0
+>> > [813114.622928] Oops: 0000 [#1] SMP
+>> > [813114.622928] CPU 2
+>> > [813114.622928] Pid: 31120, comm: smbd Tainted: GF       W  O 3.8.13-030813-generic #201305111843 Bochs Bochs
+>> > [813114.622928] RIP: 0010:[<ffffffffa077bad9>]  [<ffffffffa077bad9>] xfs_bmbt_get_all+0x9/0x20 [xfs]
+>> > [813114.622928] RSP: 0018:ffff88010a193798  EFLAGS: 00010297
+>> > [813114.622928] RAX: 0000000000000964 RBX: ffff880180fa9c38 RCX: ffffa5a5a5a5a5a5
+>
+> RCX implies gotp->br_startblock was not overwritten by the
+> extent search. i.e. we've called xfs_bmap_search_multi_extents()
+> but no extent was actually found.
+>
+>> > We analyzed several suspects, but all of them fall on disk addresses
+>> > not near the corrupted disk address. I realize that running somewhat
+>> > outdated kernel + our changes within XFSs, points back at us, but
+>> > this is first time we see XFS corruption after about a year of this
+>> > code being exercised. So posting here, just in case this is a known
+>> > issue.
+>>
+>> well, xfs should _never_ oops, even if it encounters corruption.  So hopefully
+>> we can work backwards from the trace above to what went wrong here.
+>>
+>> offhand, in xfs_bmap_search_multi_extents():
+>>
+>>         ep = xfs_iext_bno_to_ext(ifp, bno, &lastx);
+>>         if (lastx > 0) {
+>>                 xfs_bmbt_get_all(xfs_iext_get_ext(ifp, lastx - 1), prevp);
+>>         }
+>>         if (lastx < (ifp->if_bytes / (uint)sizeof(xfs_bmbt_rec_t))) {
+>>                 xfs_bmbt_get_all(ep, gotp);
+>>                 *eofp = 0;
+>>
+>> xfs_iext_bno_to_ext() can return NULL with lastx set to 0:
+>>
+>>         nextents = ifp->if_bytes / (uint)sizeof(xfs_bmbt_rec_t);
+>>         if (nextents == 0) {
+>>                 *idxp = 0;
+>>                 return NULL;
+>>         }
+>>
+>> (where idxp is the &lastx we sent in)
+>
+>> and if we do that, it sure seems like the "if lastx < ...." test will wind up
+>> sending a null ep into xfs_bmbt_get_all, which would do a null ptr deref.
+>
+> No, it shouldn't because lastx = 0 to get it set that way
+> ifp->if_bytes / (uint)sizeof(xfs_bmbt_rec_t) must be zero.
+> Therefore, this:
+>
+>         if (lastx < (ifp->if_bytes / (uint)sizeof(xfs_bmbt_rec_t)))
+>
+> evaulates as:
+>
+>         if (0 < 0)
+>
+> which is not true, so we fall into the else case:
+>
+>         } else {
+>                 if (lastx > 0) {
+>                         *gotp = *prevp;
+>                 }
+>                 *eofp = 1;
+>                 ep = NULL;
+>         }
+>         *lastxp = lastx;
+>         return ep;
+>
+> Which basically overwrites *eofp and *lastxp, neither of which are
+> NULL.
+>
+> However, the stack trace clearly shows we've just called
+> xfs_bmap_search_multi_extents() - the "?" before the function name
+> means it found the symbol in the stack, but not in the direct line
+> of the frame pointers the current function stack points to.
+>
+> That makes me doubt the accuracy of the stack trace, because the
+> only caller of xfs_bmap_search_multi_extents() is
+> xfs_bmap_search_extents() and xfs_bmap_search_extents does not call
+> xfs_bmbt_get_all() directly like the stack trace would lead us to
+> beleive. Hence I don't think we can trust the stack trace to be
+> pointing use at the correct caller of xfs_bmbt_get_all(), which
+> makes it real hard to isolate the cause...
+>
+> Cheers,
+>
+> Dave.
+> --
+> Dave Chinner
+> david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
