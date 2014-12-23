@@ -1,24 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 55A807F4E
-	for <xfs@oss.sgi.com>; Mon, 22 Dec 2014 18:13:11 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 357C58F8037
-	for <xfs@oss.sgi.com>; Mon, 22 Dec 2014 16:13:08 -0800 (PST)
-Received: from mail-la0-f44.google.com (mail-la0-f44.google.com
-	[209.85.215.44]) by cuda.sgi.com with ESMTP id 4PFBRiin6184F36K
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 22 Dec 2014 16:13:07 -0800 (PST)
-Received: by mail-la0-f44.google.com with SMTP id gd6so4848838lab.3
-	for <xfs@oss.sgi.com>; Mon, 22 Dec 2014 16:13:05 -0800 (PST)
-Date: Tue, 23 Dec 2014 01:13:04 +0100
-From: Stevie Trujillo <stevie.trujillo@gmail.com>
-Subject: Re: xfsdump questions
-Message-ID: <20141223011304.730d180d@localhost>
-In-Reply-To: <20141222204325.GJ24183@dastard>
-References: <20141219095738.6b6e6c88@localhost>
-	<20141222204325.GJ24183@dastard>
-Mime-Version: 1.0
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id C9D1F7F51
+	for <xfs@oss.sgi.com>; Mon, 22 Dec 2014 18:32:46 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 6587EAC001
+	for <xfs@oss.sgi.com>; Mon, 22 Dec 2014 16:32:43 -0800 (PST)
+Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
+	[150.101.137.143]) by cuda.sgi.com with ESMTP id
+	tc2W068X8iXdmfSS for <xfs@oss.sgi.com>;
+	Mon, 22 Dec 2014 16:32:40 -0800 (PST)
+Date: Tue, 23 Dec 2014 11:32:37 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: weird quota issue
+Message-ID: <20141223003237.GA4521@dastard>
+References: <3BD1EE39-8C26-4C5B-94B5-492422EECEDA@mail.nih.gov>
+	<20141222204857.GK24183@dastard>
+	<6F43BF63-A44E-43F6-A184-9AAC10DDDFDF@grc.nia.nih.gov>
+	<20141222223540.GS15665@dastard>
+	<2F3F57BB-59EA-4FF9-9254-6A598DE7AC46@grc.nia.nih.gov>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <2F3F57BB-59EA-4FF9-9254-6A598DE7AC46@grc.nia.nih.gov>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,13 +33,33 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: "Weber, Charles (NIH/NIA/IRP) [C]" <weberc@grc.nia.nih.gov>
+Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-Thank you very much for your help!
+On Mon, Dec 22, 2014 at 05:46:42PM -0500, Weber, Charles (NIH/NIA/IRP) [C] wrote:
+> I wonder if it is a thin-provision issue? ~40TB allocated by the SAN but setup to not really allocate space until it is claimed by the OS. 
+> 
+>  xfs_db -c "sb 0" -c p /dev/dm-7
+> 
+....
+> versionnum = 0xb5e4
 
---
-Stevie Trujillo
+So the quota bit is set (0x40) hence quotas will attempt to be
+enabled.
+
+> uquotino = 131
+> gquotino = 0
+> qflags = 0
+
+But we have no quota enabled but a user quota inode allocated.
+the quota flags would have been written to zero by the initial
+failure, so this implies that reading the  user quota inode failed.
+Output of 'xfs_db -c "inode 131" -c p /dev/dm-7', please?
+
+-Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
