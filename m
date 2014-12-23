@@ -1,24 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id C0F4A7F3F
-	for <xfs@oss.sgi.com>; Tue, 23 Dec 2014 14:35:25 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id A1B10304032
-	for <xfs@oss.sgi.com>; Tue, 23 Dec 2014 12:35:22 -0800 (PST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 879FD7F3F
+	for <xfs@oss.sgi.com>; Tue, 23 Dec 2014 14:36:46 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 67DD78F8035
+	for <xfs@oss.sgi.com>; Tue, 23 Dec 2014 12:36:43 -0800 (PST)
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	EyGCBE0Hm7yG8eki for <xfs@oss.sgi.com>;
-	Tue, 23 Dec 2014 12:35:18 -0800 (PST)
-Date: Wed, 24 Dec 2014 07:35:15 +1100
+	XY4KTVuiB5vZnxX1 for <xfs@oss.sgi.com>;
+	Tue, 23 Dec 2014 12:36:41 -0800 (PST)
+Date: Wed, 24 Dec 2014 07:36:39 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: weird quota issue
-Message-ID: <20141223203515.GD4521@dastard>
-References: <3BD1EE39-8C26-4C5B-94B5-492422EECEDA@mail.nih.gov>
-	<258BE536A650F646814BA46CC06568980F6A8AD7@msgb01.nih.gov>
-	<20141223024248.GC4521@dastard> <201412230819.20935.arekm@maven.pl>
+Subject: Re: XFS corruption
+Message-ID: <20141223203639.GE4521@dastard>
+References: <B97466D39E354AFB808620584A4ABE5C@alyakaslap>
+	<54970DD9.6080707@sandeen.net> <20141221230818.GH24183@dastard>
+	<20141222144212.GA21897@laptop.bfoster>
+	<20141223003924.GB4521@dastard>
+	<CAOcd+r3Y3ZcnzcdXtk58oSKq7okN0V8fRHfd-phqJ+OwuGZ-sQ@mail.gmail.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <201412230819.20935.arekm@maven.pl>
+In-Reply-To: <CAOcd+r3Y3ZcnzcdXtk58oSKq7okN0V8fRHfd-phqJ+OwuGZ-sQ@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,38 +29,54 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Arkadiusz =?utf-8?Q?Mi=C5=9Bkiewicz?= <arekm@maven.pl>
-Cc: xfs@oss.sgi.com
+To: Alex Lyakas <alex@zadarastorage.com>
+Cc: Brian Foster <bfoster@redhat.com>, Eric Sandeen <sandeen@sandeen.net>, xfs@oss.sgi.com
 
-T24gVHVlLCBEZWMgMjMsIDIwMTQgYXQgMDg6MTk6MjBBTSArMDEwMCwgQXJrYWRpdXN6IE1pxZtr
-aWV3aWN6IHdyb3RlOgo+IE9uIFR1ZXNkYXkgMjMgb2YgRGVjZW1iZXIgMjAxNCwgRGF2ZSBDaGlu
-bmVyIHdyb3RlOgo+ID4gT24gVHVlLCBEZWMgMjMsIDIwMTQgYXQgMDI6MTI6MTVBTSArMDAwMCwg
-V2ViZXIsIENoYXJsZXMgKE5JSC9OSUEvSVJQKSBbRV0gCj4gd3JvdGU6Cj4gPiA+IGhlcmUgeW91
-IGdvCj4gPiA+IAo+ID4gPiAjIHhmc19kYiAtYyAiaW5vZGUgMTMxIiAtYyBwIC9kZXYvZG0tNwo+
-ID4gCj4gPiBOb3RoaW5nIG9idmlvdXNseSB3cm9uZyB0aGVyZSwgc28gdGhlcmUncyBubyBjbGVh
-ciBpbmRpY2F0aW9uIG9mIHdoeQo+ID4gdGhlIHF1b3RhIGluaXRpYWxpc2F0aW9uIGZhaWxlZC4K
-PiAKPiBncXVvdGlubyBzaG91bGQgYmUgc2V0IHRvIG51bGwsIHNldHRpbmcgaXQgdmlhIHhmc19k
-YiBzaG91bGQgZml4IHRoZSBwcm9ibGVtCgojIHVtb3VudCAvZGV2L2RtLTcKIyB4ZnNfZGIgLXgg
-LWMgInNiIDAiIC1jICJ3cml0ZSBncXVvdGlubyAtMSIgL2Rldi9kbS03Cgo+ID4gdXF1b3Rpbm8g
-PSAxMzEKPiA+IGdxdW90aW5vID0gMAo+ID4gcWZsYWdzID0gMAo+IAo+IE90aGVyd2lzZSB3ZSBl
-bmQgdXAgd2l0aCBteSBsYXN0IHByb2JsZW0KPiAKPiBodHRwOi8vb3NzLnNnaS5jb20vYXJjaGl2
-ZXMveGZzLzIwMTQtMDcvbXNnMDAxMjEuaHRtbAo+IAo+ICItIDMuMTAga2VybmVsIGlzIG5vdCBh
-YmxlIHRvIGhhbmRsZSBjYXNlIHdoZW4gdXF1b3Rpbm8gPT0gdmFsdWUsIGdxdW90aW5vID09IAo+
-IDAuIEZvciAzLjEwIHRoaXMgY2FzZSBpcyBpbXBvc3NpYmxlIC8gc2hvdWxkIG5ldmVyIGhhcHBl
-bi4gMy4xMCBleHBlY3RzIAo+ICh1cXVvdGlubyA9PSB2YWx1ZSwgZ3F1b3Rpbm8gPT0gbnVsbCkg
-b3IgKHVxdW90aW5vID09IHZhbHVlLCBncXVvdGlubyA9PSAKPiBvdGhlcnZhbHVlKSBvciAodXFv
-dGluZm8gPT0gbnVsbCwgZ3J1b3Rpbm8gPT0gdmFsdWUpIG9ubHkuIgo+IAo+IFNvIEkgZ3Vlc3Mg
-Mi42LjMyIGlzIGRvaW5nIHRoZSBzYW1lLgoKRXhjZXB0IHRoYXQgdGhlIHByb2JsZW0geW91IHNh
-dyByZXF1aXJlZCBydW5uaW5nIGEgMy4xNiBrZXJuZWwgdG8KdHJpZ2dlciB0aGUgdW5oYW5kbGVk
-IHN0YXRlLiBJIGNhbid0IHNlZSB3aHkgYSBzeXN0ZW0gb25seSBydW5uaW5nCmEgMi42LjMyIGtl
-cm5lbCB3b3VsZCBldmVyIGdldCBpbnRvIHRoaXMgc3RhdGUuLi4uCgo+IEFGQUlLIHhmc19yZXBh
-aXIgZG9lc24ndCBmaXggdGhpcyBpc3N1ZS4gTm90IHN1cmUuCgpDZXJ0YWlubHkgbm90IHRoZSBv
-bmUgdGhhdCBjb21lcyB3aXRoIGNlbnRvcyA2IC0gMCBhbmQgTlVMTCBhcmUgYm90aAp2YWxpZCB2
-YWx1ZXMuLi4KCkNoZWVycywKCkRhdmUuCi0tIApEYXZlIENoaW5uZXIKZGF2aWRAZnJvbW9yYml0
-LmNvbQoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KeGZz
-IG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4v
-bGlzdGluZm8veGZzCg==
+On Tue, Dec 23, 2014 at 11:57:13AM +0200, Alex Lyakas wrote:
+> Hi Dave,
+> 
+> On Tue, Dec 23, 2014 at 2:39 AM, Dave Chinner <david@fromorbit.com> wrote:
+> > commit 40194ecc6d78327d98e66de3213db96ca0a31e6f
+> > Author: Ben Myers <bpm@sgi.com>
+> > Date:   Fri Dec 6 12:30:11 2013 -0800
+> >
+> >     xfs: reinstate the ilock in xfs_readdir
+> >
+> >     Although it was removed in commit 051e7cd44ab8, ilock needs to be taken in
+> >     xfs_readdir because we might have to read the extent list in from disk.  This
+> >     keeps other threads from reading from or writing to the extent list while it i
+> >     being read in and is still in a transitional state.
+> >
+> >     This has been associated with "Access to block zero" messages on directories
+> >     with large numbers of extents resulting from excessive filesytem fragmentation
+> >     as well as extent list corruption.  Unfortunately no test case at this point.
+> >
+> >     Signed-off-by: Ben Myers <bpm@sgi.com>
+> >     Reviewed-by: Dave Chinner <dchinner@redhat.com>
+> >
+> > Seems to match the behaviour being seen.
+> >
+> > Alex, what type of inode is the one that is reporting the "access to
+> > block zero" errors?
+> I have just searched the relevant file system for this inode, but such
+> inode was not found:(
+> # find /export/XXX -mount -inum 1946454529
+> did not find anything. Perhaps it got deleted since the incident.
+
+It probably got cleared by xfs_repair because it was corrupt....
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
