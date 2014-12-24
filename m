@@ -1,21 +1,8 @@
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 59D777F62
-	for <xfs@oss.sgi.com>; Wed, 24 Dec 2014 02:59:45 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id DC58FAC009
-	for <xfs@oss.sgi.com>; Wed, 24 Dec 2014 00:59:41 -0800 (PST)
-Received: from mail-ig0-f199.google.com (mail-ig0-f199.google.com
-	[209.85.213.199]) by cuda.sgi.com with ESMTP id
-	TYEjrm77yZ8uhT0X (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 24 Dec 2014 00:59:40 -0800 (PST)
-Received: by mail-ig0-f199.google.com with SMTP id hl2so41091666igb.2
-	for <xfs@oss.sgi.com>; Wed, 24 Dec 2014 00:59:40 -0800 (PST)
-MIME-Version: 1.0
-Message-ID: <001a11c3a52e04ff4d050af2836d@google.com>
-Date: Wed, 24 Dec 2014 08:59:40 +0000
-Subject: =?GB2312?B?s8m5ps3iw7PV0re9t6ggv827p7+qt6LQwre9sLg=?=
-From: denisehead7861@gmail.com
+From: xfs@oss.sgi.com
+Subject: [XFS updates] XFS development tree branch, for-next,
+	updated. v3.19-rc1-6-gefdca7a
+Message-Id: <20141224040704.035F67F6C@oss.sgi.com>
+Date: Tue, 23 Dec 2014 22:07:03 -0600 (CST)
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,151 +11,57 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============0971631175204846431=="
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
---===============0971631175204846431==
-Content-Type: multipart/alternative; boundary=001a11c3a52e0568f6050af2838d
+This is an automated email from the git hooks/post-receive script. It was
+generated because a ref change was pushed to the repository containing
+the project "XFS development tree".
 
---001a11c3a52e0568f6050af2838d
-Content-Type: text/plain; charset=GB2312; format=flowed; delsp=yes
-Content-Transfer-Encoding: base64
+The branch, for-next has been updated
+  efdca7a Merge branch 'xfs-misc-fixes-for-3.20-1' into for-next
+  1a43ec0 xfs: Keep sb_bad_features2 consistent with sb_features2
+  77af574 xfs: remove extra newlines from xfs messages
+  96ab795 xfs: initialize log buf I/O completion wq on log alloc
+  d31a182 xfs: Add support to RENAME_EXCHANGE flag
+  dbe1b5c xfs: Make xfs_vn_rename compliant with renameat2() syscall
+      from  97bf6af1f928216fd6c5a66e8a57bfa95a659672 (commit)
 
-R09PR0xFzcuz9tbQufqjrM3iw7PG89K1tNPStcjL1LHP69Kq1rG907TTysC959futPO1xMvRy/fS
-/cfmR09PR0xFu/HIodPQDQq829a1tcTK/b7do6zWu8Tc0sDAtbetx73I7bz+o6zIu7b4y9m2yMi0
-utzC/dPWsrvOyLaoo6zP69Kqu/HIobTzwb+1xNPQ0PINCruvtcS829a10MXPorj8yseyu7/JxNyh
-o9S9wLTUvbbgtcTN4sOzyMvRodPDtqXS18jtvP7Wsb3TyKvH8svRy/e/zbun0MUNCs+ioaMNCsur
-z7LI7bz+1+7Qwsn9vLa1xNTGy9HL97mmxNy9q9Ta0Ke5+8nPu/G1w9LUz8LM4cn9oaPLq8+yyO28
-/rXE06bTw8T6v8nS1A0KtcO1vaO6DQoxo6y0+szmyta5pKOszOG439CnufujqLDR0rXO8dSxveK3
-xbP2wLTTw9TauPq9+NPF1sq/zbunus3Rr8XMo6kNCjKjrLuvsbu2r86q1ve2r6Osx8DPyM2s0NCj
-qLHcv6rVubvho6xCMkLJrrbg1uDJ2bXE0MXPorK7ttSzxqOpDQozo6zM1MytyP3B97/NyMujrLrN
-08XWyr/NyMu08r27tcCjqLHcv6q827jx1b2jrNf209DA+8jztcS2qbWlo6kNCjSjrL/sy9mzyb27
-0rvF+raptaWjqM341+O5u7Tzo6zX3NPQyvTT2sT6tcTEx9Cptqm1paOpDQo1o6zIw8irx/LHsdTa
-wvK80ra8vMfXocT6o6i21Mirx/LEv7Hqv83Iy9bcxtrW97avvajBosGqwuejrL6r17zNxrnj0KcN
-Crn7o6kNCjajrMjD0rXO8c3FttO4/M7ItqijqNK1zvHUsdb3tq+0tNTsu/q74aOsw7/M7NPQysLX
-9qOpDQo3o6y/zbun18rBz6OszfnAtNPKvP6jrMfhy8m53MDto6i/zbun18rBz7yv1tCjrM35wLTT
-yrz+19S2r9DOs8nBqs+1vMcNCsK8o6zT0NCnuKi1vNK1zvHNxbbTo6kNCjijrMfhy8nG9LavzeLD
-s9K1zvGjqNfuyN3S19XStb25pNf3yOu/2qOsTk/Vubvho6xOT8a9zKijrE5Pyta5pMvRy/e/zQ0K
-u6ejqQ0KMjgxNzUyNzgxMyC7ttOtvNNRIHu/ycPit9HA+9PDufPLvrOj08O1xLL6xre52Lz8tMqj
-rNTaz9/R3cq+yO28/rmmxNy6zdCnDQq5+30NCsj0srvQ6NKqtMvA4NPKvP7H68no1sO+3MrVo6yx
-p8e4tPLE0y0tLS0NCg0KDQoNCg0KDQoNCs7S0tHR+8frxPrM7tC0se21pSDR3cq+UVE6MjY1NjQ5
-MDMzNaGjINKqzO7QtLTLse21paOsx+u3w87Ko7oNCmh0dHBzOi8vZG9jcy5nb29nbGUuY29tL2Zv
-cm1zL2QvMXdhTmRCbHhpV255WkdaRGppUVZDbklMS1VzV2lsaURzUm5UN2tYZ2ZkV28vdmlld2Zv
-cm0/Yz0wJnc9MSZ1c3A9bWFpbF9mb3JtX2xpbmsNCg==
---001a11c3a52e0568f6050af2838d
-Content-Type: text/html; charset=GB2312
-Content-Transfer-Encoding: base64
+Those revisions listed above that are new to this repository have
+not appeared on any other notification email; so we list those
+revisions in full, below.
 
-PGh0bWw+PGJvZHkgaXRlbXNjb3BlIGl0ZW10eXBlPSJodHRwOi8vc2NoZW1hLm9yZy9FbWFpbE1l
-c3NhZ2UiIHN0eWxlPSIiPjxkaXYgY2xhc3M9InNzLWVtYWlsLWJvZHkiIHN0eWxlPSJkaXNwbGF5
-OmlubGluZTt3aWR0aDo1NzZweDsiPjxkaXYgaXRlbXByb3A9ImFjdGlvbiIgaXRlbXNjb3BlIGl0
-ZW10eXBlPSJodHRwOi8vc2NoZW1hLm9yZy9WaWV3QWN0aW9uIiBzdHlsZT0iIj48bWV0YSBpdGVt
-cHJvcD0ibmFtZSIgY29udGVudD0izO7QtLHttaUiIHN0eWxlPSIiPgo8bWV0YSBpdGVtcHJvcD0i
-dXJsIiBjb250ZW50PSJodHRwczovL2RvY3MuZ29vZ2xlLmNvbS9mb3Jtcy9kLzF3YU5kQmx4aVdu
-eVpHWkRqaVFWQ25JTEtVc1dpbGlEc1JuVDdrWGdmZFdvL3ZpZXdmb3JtP2M9MCZhbXA7dz0xJmFt
-cDt1c3A9bWFpbF9nb3RvX2Zvcm0iIHN0eWxlPSIiPjwvZGl2Pgo8cCBpdGVtcHJvcD0iZGVzY3Jp
-cHRpb24iIHN0eWxlPSIiPjxicj5HT09HTEXNy7P21tC5+qOszeLDs8bz0rW009K1yMvUsc/r0qrW
-sb3TtNPKwL3n1+6087XEy9HL99L9x+ZHT09HTEW78cih09C829a1tcTK/b7do6zWu8Tc0sDAtbet
-x73I7bz+o6zIu7b4y9m2yMi0utzC/dPWsrvOyLaoo6zP69Kqu/HIobTzwb+1xNPQ0PK7r7XEvNvW
-tdDFz6K4/MrHsru/ycTcoaPUvcC01L224LXEzeLDs8jL0aHTw7al0tfI7bz+1rG908irx/LL0cv3
-v827p9DFz6Khozxicj7Lq8+yyO28/tfu0MLJ/by2tcTUxsvRy/e5psTcvavU2tCnufvJz7vxtcPS
-1M/CzOHJ/aGjy6vPssjtvP61xNOm08PE+r/J0tS1w7W9o7o8cD4xo6y0+szmyta5pKOszOG439Cn
-ufujqLDR0rXO8dSxveK3xbP2wLTTw9TauPq9+NPF1sq/zbunus3Rr8XMo6k8YnI+MqOsu6+xu7av
-zqrW97avo6zHwM/IzazQ0KOosdy/qtW5u+GjrEIyQsmutuDW4MnZtcTQxc+isru21LPGo6k8cD4z
-o6zM1MytyP3B97/NyMujrLrN08XWyr/NyMu08r27tcCjqLHcv6q827jx1b2jrNf209DA+8jztcS2
-qbWlo6k8YnI+NKOsv+zL2bPJvbvSu8X6tqm1paOozfjX47m7tPOjrNfc09DK9NPaxPq1xMTH0Km2
-qbWlo6k8cD41o6zIw8irx/LHsdTawvK80ra8vMfXocT6o6i21Mirx/LEv7Hqv83Iy9bcxtrW97av
-vajBosGqwuejrL6r17zNxrnj0Ke5+6OpPGJyPjajrMjD0rXO8c3FttO4/M7ItqijqNK1zvHUsdb3
-tq+0tNTsu/q74aOsw7/M7NPQysLX9qOpPHA+N6Osv827p9fKwc+jrM35wLTTyrz+o6zH4cvJudzA
-7aOov827p9fKwc+8r9bQo6zN+cC008q8/tfUtq/QzrPJwarPtbzHwryjrNPQ0Ke4qLW80rXO8c3F
-ttOjqTxicj44o6zH4cvJxvS2r83iw7PStc7xo6jX7sjd0tfV0rW9uaTX98jrv9qjrE5P1bm74aOs
-Tk/Gvcyoo6xOT8rWuaTL0cv3v827p6OpPHA+MjgxNzUyNzgxMyC7ttOtvNNRIHu/ycPit9HA+9PD
-ufPLvrOj08O1xLL6xre52Lz8tMqjrNTaz9/R3cq+yO28/rmmxNy6zdCnuft9PHA+yPSyu9Do0qq0
-y8Dg08q8/sfryejWw77cytWjrLGnx7i08sTTLS0tLTwvcD48L3A+PC9wPjwvcD48L3A+PC9wPjwv
-cD4KyOe5+8T61Nqy6b+0u/LM4b27tMux7bWlyrHT9rW9zsrM4qOsx+s8YSBocmVmPSJodHRwczov
-L2RvY3MuZ29vZ2xlLmNvbS9mb3Jtcy9kLzF3YU5kQmx4aVdueVpHWkRqaVFWQ25JTEtVc1dpbGlE
-c1JuVDdrWGdmZFdvL3ZpZXdmb3JtP2M9MCZhbXA7dz0xJmFtcDt1c3A9bWFpbF9mb3JtX2xpbmsi
-IHN0eWxlPSIiPtTaz9/M7tC0PC9hPqGjCjxwPjwvcD4KPGRpdiBkaXI9Imx0ciIgc3R5bGU9IiI+
-PGRpdiBjbGFzcz0iZm9ybS1ib2R5IiBzdHlsZT0iIj48aDEgY2xhc3M9InNzLWZvcm0tdGl0bGUi
-IGRpcj0ibHRyIiBzdHlsZT0ibWFyZ2luOi42N2VtIDA7Ij7R3cq+UVE6MjY1NjQ5MDMzNTwvaDE+
-PC9kaXY+CjxkaXYgc3R5bGU9IndoaXRlLXNwYWNlOiBwcmUtd3JhcDsgZGlzcGxheTogaW5saW5l
-Ij4KCjwvZGl2Pgo8ZGl2IGNsYXNzPSJmb3JtLWJvZHkiIHN0eWxlPSIiPjxkaXYgY2xhc3M9InNz
-LWZvcm0iIHN0eWxlPSIiPjxmb3JtIGFjdGlvbj0iaHR0cHM6Ly9kb2NzLmdvb2dsZS5jb20vZm9y
-bXMvZC8xd2FOZEJseGlXbnlaR1pEamlRVkNuSUxLVXNXaWxpRHNSblQ3a1hnZmRXby9mb3JtUmVz
-cG9uc2UiIG1ldGhvZD0iUE9TVCIgaWQ9InNzLWZvcm0iIHRhcmdldD0iX3NlbGYiIG9uc3VibWl0
-PSIiIHN0eWxlPSIiPjxvbCByb2xlPSJsaXN0IiBjbGFzcz0ic3MtcXVlc3Rpb24tbGlzdCIgc3R5
-bGU9InBhZGRpbmctbGVmdDogMGxpc3Qtc3R5bGUtdHlwZTpub25lOyI+CjxkaXYgY2xhc3M9InNz
-LWZvcm0tcXVlc3Rpb24gZXJyb3Jib3gtZ29vZCIgcm9sZT0ibGlzdGl0ZW0iIHN0eWxlPSIiPgo8
-ZGl2IGRpcj0ibHRyIiBjbGFzcz0ic3MtaXRlbSAgc3MtcmFkaW8iIHN0eWxlPSJtYXJnaW46MTJw
-eCAwOyI+PGRpdiBjbGFzcz0ic3MtZm9ybS1lbnRyeSIgc3R5bGU9Im1hcmdpbi1ib3R0b206MS41
-ZW07dmVydGljYWwtYWxpZ246bWlkZGxlO21hcmdpbi1sZWZ0OjA7bWFyZ2luLXRvcDowO21heC13
-aWR0aDoxMDAlOyI+CjxsYWJlbCBjbGFzcz0ic3MtcS1pdGVtLWxhYmVsIiBmb3I9ImVudHJ5XzEw
-MjY1MTg0ODMiIHN0eWxlPSIiPjxkaXYgY2xhc3M9InNzLXEtdGl0bGUiIHN0eWxlPSJkaXNwbGF5
-OmJsb2NrO2ZvbnQtd2VpZ2h0OmJvbGQ7bWFyZ2luLXRvcDouODNlbTttYXJnaW4tYm90dG9tOi44
-M2VtOyI+zt6x6szizsrM4go8L2Rpdj4KPGRpdiBjbGFzcz0ic3MtcS1oZWxwIHNzLXNlY29uZGFy
-eS10ZXh0IiBkaXI9Imx0ciIgc3R5bGU9ImRpc3BsYXk6YmxvY2s7bWFyZ2luOi4xZW0gMCAuMjVl
-bSAwO2NvbG9yOiM2NjY7Ij48L2Rpdj48L2xhYmVsPgoKPHVsIGNsYXNzPSJzcy1jaG9pY2VzIiBy
-b2xlPSJyYWRpb2dyb3VwIiBhcmlhLWxhYmVsPSLO3rHqzOLOysziICAiIHN0eWxlPSJsaXN0LXN0
-eWxlOm5vbmU7cGFkZGluZzowO21hcmdpbjouNWVtIDAgMDsiPjxsaSBjbGFzcz0ic3MtY2hvaWNl
-LWl0ZW0iIHN0eWxlPSJtYXJnaW46MDtsaW5lLWhlaWdodDoxLjNlbTtwYWRkaW5nLWJvdHRvbTou
-NWVtOyI+PGxhYmVsPjxzcGFuIGNsYXNzPSJzcy1jaG9pY2UtaXRlbS1jb250cm9sIGdvb2ctaW5s
-aW5lLWJsb2NrIiBzdHlsZT0icG9zaXRpb246cmVsYXRpdmU7ZGlzcGxheTppbmxpbmUtYmxvY2s7
-Ij48aW5wdXQgdHlwZT0icmFkaW8iIG5hbWU9ImVudHJ5LjIxMzE3MjgwMTQiIHZhbHVlPSLRoc/u
-IDEiIGlkPSJncm91cF8yMTMxNzI4MDE0XzEiIHJvbGU9InJhZGlvIiBjbGFzcz0ic3MtcS1yYWRp
-byIgYXJpYS1sYWJlbD0i0aHP7iAxIiBzdHlsZT0iIj48L3NwYW4+CjxzcGFuIGNsYXNzPSJzcy1j
-aG9pY2UtbGFiZWwiIHN0eWxlPSIiPtGhz+4gMTwvc3Bhbj4KPC9sYWJlbD48L2xpPjwvdWw+Cgo8
-L2Rpdj48L2Rpdj48L2Rpdj4KPGlucHV0IHR5cGU9ImhpZGRlbiIgbmFtZT0iZHJhZnRSZXNwb25z
-ZSIgdmFsdWU9IlssLCZxdW90Oy0xOTE2MzYzODMxMjI0ODk4NzE3JnF1b3Q7XQoiIHN0eWxlPSIi
-Pgo8aW5wdXQgdHlwZT0iaGlkZGVuIiBuYW1lPSJwYWdlSGlzdG9yeSIgdmFsdWU9IjAiIHN0eWxl
-PSIiPgo8aW5wdXQgdHlwZT0iaGlkZGVuIiBuYW1lPSJ1c3AiIHZhbHVlPSJtYWlsX2Zvcm1fc3Vi
-bWl0IiBzdHlsZT0iIj4KCjxpbnB1dCB0eXBlPSJoaWRkZW4iIG5hbWU9ImZiengiIHZhbHVlPSIt
-MTkxNjM2MzgzMTIyNDg5ODcxNyIgc3R5bGU9IiI+Cgo8ZGl2IGNsYXNzPSJzcy1pdGVtIHNzLW5h
-dmlnYXRlIiBzdHlsZT0ibWFyZ2luOjEycHggMDsiPjx0YWJsZSBpZD0ibmF2aWdhdGlvbi10YWJs
-ZSIgc3R5bGU9IiI+PHRib2R5Pjx0cj48dGQgY2xhc3M9InNzLWZvcm0tZW50cnkgZ29vZy1pbmxp
-bmUtYmxvY2siIGlkPSJuYXZpZ2F0aW9uLWJ1dHRvbnMiIGRpcj0ibHRyIiBzdHlsZT0ibWFyZ2lu
-LWJvdHRvbToxLjVlbTt2ZXJ0aWNhbC1hbGlnbjptaWRkbGU7bWFyZ2luLWxlZnQ6MDttYXJnaW4t
-dG9wOjA7bWF4LXdpZHRoOjEwMCU7cG9zaXRpb246cmVsYXRpdmU7ZGlzcGxheTppbmxpbmUtYmxv
-Y2s7Ij4KPGlucHV0IHR5cGU9InN1Ym1pdCIgbmFtZT0ic3VibWl0IiB2YWx1ZT0izOG9uyIgaWQ9
-InNzLXN1Ym1pdCIgY2xhc3M9Impmay1idXR0b24gamZrLWJ1dHRvbi1hY3Rpb24gIiBzdHlsZT0i
-Ij4KPC90ZD4KPC90cj48L3Rib2R5PjwvdGFibGU+PC9kaXY+PC9vbD48L2Zvcm0+PC9kaXY+Cjxk
-aXYgY2xhc3M9InNzLWZvb3RlciIgc3R5bGU9IiI+PGRpdiBjbGFzcz0ic3MtYXR0cmlidXRpb24i
-IHN0eWxlPSIiPjwvZGl2Pgo8ZGl2IGNsYXNzPSJzcy1sZWdhbCIgc3R5bGU9IiI+PGRpdiBjbGFz
-cz0iZGlzY2xhaW1lci1zZXBhcmF0b3IiIHN0eWxlPSIiPjwvZGl2Pgo8ZGl2IGNsYXNzPSJkaXNj
-bGFpbWVyIiBkaXI9Imx0ciIgc3R5bGU9IiI+PGRpdiBjbGFzcz0icG93ZXJlZC1ieS1sb2dvIiBz
-dHlsZT0ibWFyZ2luLXRvcDoyZW07Ij48c3BhbiBjbGFzcz0icG93ZXJlZC1ieS10ZXh0IiBzdHls
-ZT0iIj68vMr1zOG5qaO6PC9zcGFuPgo8YSBocmVmPSJodHRwczovL3d3dy5nb29nbGUuY29tL2Zv
-cm1zL2Fib3V0Lz91dG1fc291cmNlPXByb2R1Y3QmYW1wO3V0bV9tZWRpdW09Zm9ybXNfbG9nbyZh
-bXA7dXRtX2NhbXBhaWduPWZvcm1zIiBzdHlsZT0iIj48ZGl2IGNsYXNzPSJzcy1sb2dvLWNvbnRh
-aW5lciIgc3R5bGU9IiI+PGltZyBzcmM9Imh0dHBzOi8vc3NsLmdzdGF0aWMuY29tL2RvY3MvZm9y
-bXMvZm9ybXNfbG9nb19zbWFsbF9kYXJrLnBuZyIgYWx0PSJHb29nbGUgse21pSIgc3R5bGU9IiI+
-PC9kaXY+PC9hPjwvZGl2Pgo8ZGl2IGNsYXNzPSJzcy10ZXJtcyIgc3R5bGU9ImNvbG9yOiM3Nzc7
-Zm9udC1zaXplOjExcHg7bWFyZ2luLXRvcDoxLjVlbTsiPjxzcGFuIGNsYXNzPSJkaXNjbGFpbWVy
-LW1zZyIgc3R5bGU9IiI+tMvE2sjdsrvKx9PJIEdvb2dsZSDL+bS0vaijrEdvb2dsZSCyu7bUxuTX
-98jOus61o7GjoaM8L3NwYW4+Cjxicj4KPGEgaHJlZj0iaHR0cHM6Ly9kb2NzLmdvb2dsZS5jb20v
-Zm9ybXMvZC8xd2FOZEJseGlXbnlaR1pEamlRVkNuSUxLVXNXaWxpRHNSblQ3a1hnZmRXby9yZXBv
-cnRhYnVzZT9zb3VyY2U9aHR0cHM6Ly9kb2NzLmdvb2dsZS5jb20vZm9ybXMvZC8xd2FOZEJseGlX
-bnlaR1pEamlRVkNuSUxLVXNXaWxpRHNSblQ3a1hnZmRXby92aWV3Zm9ybT9zaWQlM0Q0YTgxMmFk
-NTRjZDA3NmEwJTI2YyUzRDAlMjZ3JTNEMSUyNnRva2VuJTNEQ0lhOGUwb0JBQUEubW9CRXJuUGps
-R1JINVBxZWFsZnlUUS5fbmxRU0N6Tno2OEswVTVheHhJMi1RIiBzdHlsZT0iIj6+2bGowMTTw9DQ
-zqo8L2E+Ci0KPGEgaHJlZj0iaHR0cDovL3d3dy5nb29nbGUuY29tL2FjY291bnRzL1RPUyIgc3R5
-bGU9IiI+t/7O8cz1v+48L2E+Ci0KPGEgaHJlZj0iaHR0cDovL3d3dy5nb29nbGUuY29tL2dvb2ds
-ZS1kLXMvdGVybXMuaHRtbCIgc3R5bGU9IiI+xuTL+8z1v+48L2E+PC9kaXY+PC9kaXY+PC9kaXY+
-PC9kaXY+CjwvZGl2PjwvZGl2Pgo8YnI+CjxzdHlsZSB0eXBlPSJ0ZXh0L2NzcyIgbWVkaWE9InNj
-cmVlbiIgc3R5bGU9IiI+PC9zdHlsZT48L2Rpdj48L2JvZHk+PC9odG1sPg==
---001a11c3a52e0568f6050af2838d--
+- Log -----------------------------------------------------------------
+commit efdca7aa3c41bce7a092019b3f675fbaa3b8d23f
+Merge: d31a182 1a43ec0
+Author: Dave Chinner <david@fromorbit.com>
+Date:   Wed Dec 24 09:49:53 2014 +1100
+
+    Merge branch 'xfs-misc-fixes-for-3.20-1' into for-next
+
+-----------------------------------------------------------------------
+
+Summary of changes:
+ fs/xfs/libxfs/xfs_format.h |  10 ++--
+ fs/xfs/xfs_buf_item.c      |   2 +-
+ fs/xfs/xfs_inode.c         | 134 ++++++++++++++++++++++++++++++++++++++++++++-
+ fs/xfs/xfs_inode.h         |   2 +-
+ fs/xfs/xfs_iops.c          |  21 +++++--
+ fs/xfs/xfs_log.c           |  10 ++--
+ fs/xfs/xfs_mount.c         |   5 +-
+ fs/xfs/xfs_super.c         |   2 +-
+ 8 files changed, 163 insertions(+), 23 deletions(-)
 
 
---===============0971631175204846431==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+hooks/post-receive
+-- 
+XFS development tree
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============0971631175204846431==--
