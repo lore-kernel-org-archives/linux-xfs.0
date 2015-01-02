@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id B954B7F80
-	for <xfs@oss.sgi.com>; Fri,  2 Jan 2015 03:41:55 -0600 (CST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id A96007F90
+	for <xfs@oss.sgi.com>; Fri,  2 Jan 2015 03:42:29 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 98E348F8035
-	for <xfs@oss.sgi.com>; Fri,  2 Jan 2015 01:41:55 -0800 (PST)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 8934B304039
+	for <xfs@oss.sgi.com>; Fri,  2 Jan 2015 01:42:29 -0800 (PST)
 Received: from mailout3.samsung.com (mailout3.samsung.com [203.254.224.33]) by
-	cuda.sgi.com with ESMTP id xgPugKTVkVg5FfX1 (version=TLSv1
+	cuda.sgi.com with ESMTP id SRdw98slKmC781yW (version=TLSv1
 	cipher=RC4-MD5 bits=128 verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 02 Jan 2015 01:41:53 -0800 (PST)
-Received: from epcpsbgr2.samsung.com
-	(u142.gpu120.samsung.co.kr [203.254.230.142])
+	Fri, 02 Jan 2015 01:42:27 -0800 (PST)
+Received: from epcpsbgr4.samsung.com
+	(u144.gpu120.samsung.co.kr [203.254.230.144])
 	by mailout3.samsung.com (Oracle Communications Messaging Server
 	7u4-24.01 (7.0.4.24.0) 64bit (built Nov 17 2011))
-	with ESMTP id <0NHJ00CL0MXSWXB0@mailout3.samsung.com> for
-	xfs@oss.sgi.com; Fri, 02 Jan 2015 18:41:52 +0900 (KST)
+	with ESMTP id <0NHJ00C3RMYP0FC0@mailout3.samsung.com> for
+	xfs@oss.sgi.com; Fri, 02 Jan 2015 18:42:25 +0900 (KST)
 From: Namjae Jeon <namjae.jeon@samsung.com>
-Subject: [PATCH v7 6/11] xfstests: generic/040: Delayed allocation insert range
-Date: Fri, 02 Jan 2015 18:41:51 +0900
-Message-id: <004401d02670$562f2fb0$028d8f10$@samsung.com>
+Subject: [PATCH v7 8/11] xfstests: generic/042: Delayed allocation multi insert
+Date: Fri, 02 Jan 2015 18:42:25 +0900
+Message-id: <004601d02670$6a3c1720$3eb44560$@samsung.com>
 MIME-version: 1.0
 Content-language: ko
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -36,29 +36,30 @@ Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>, Theodore Ts'o <tytso@mit.edu>
 Cc: Brian Foster <bfoster@redhat.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Ashish Sangwan <a.sangwan@samsung.com>, linux-fsdevel@vger.kernel.org, linux-ext4 <linux-ext4@vger.kernel.org>
 
-This testcase(040) tries to test various corner cases with delayed extents
-for finsert range functionality over different type of extents.
+This testcase(042) tries to test various corner cases with delayed extents and
+pre-existing holes for finsert range functionality over different type of
+extents.
 
 Signed-off-by: Namjae Jeon <namjae.jeon@samsung.com>
 Signed-off-by: Ashish Sangwan <a.sangwan@samsung.com>
 ---
- tests/generic/040     | 65 ++++++++++++++++++++++++++++++++++++++++++
- tests/generic/040.out | 78 +++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/generic/042     | 65 +++++++++++++++++++++++++++++++++++++++++
+ tests/generic/042.out | 80 +++++++++++++++++++++++++++++++++++++++++++++++++++
  tests/generic/group   |  1 +
- 3 files changed, 144 insertions(+)
- create mode 100644 tests/generic/040
- create mode 100644 tests/generic/040.out
+ 3 files changed, 146 insertions(+)
+ create mode 100644 tests/generic/042
+ create mode 100644 tests/generic/042.out
 
-diff --git a/tests/generic/040 b/tests/generic/040
+diff --git a/tests/generic/042 b/tests/generic/042
 new file mode 100644
-index 0000000..0c49080
+index 0000000..ea9fd3c
 --- /dev/null
-+++ b/tests/generic/040
++++ b/tests/generic/042
 @@ -0,0 +1,65 @@
 +#! /bin/bash
-+# FS QA Test No. generic/040
++# FS QA Test No. generic/042
 +#
-+# Delayed allocation insert range tests
++# Delayed allocation multi insert range tests
 +# This testcase is one of the 4 testcases which tries to
 +# test various corner cases for finsert range functionality over different
 +# type of extents. These tests are based on generic/255 test case.
@@ -115,18 +116,18 @@ index 0000000..0c49080
 +
 +testfile=$TEST_DIR/$seq.$$
 +
-+_test_generic_punch -d falloc fpunch finsert fiemap _filter_hole_fiemap $testfile
++_test_generic_punch -d -k falloc fpunch finsert fiemap _filter_hole_fiemap $testfile
 +_check_test_fs
 +
 +status=0
 +exit
-diff --git a/tests/generic/040.out b/tests/generic/040.out
+diff --git a/tests/generic/042.out b/tests/generic/042.out
 new file mode 100644
-index 0000000..34b38f9
+index 0000000..1618e9d
 --- /dev/null
-+++ b/tests/generic/040.out
-@@ -0,0 +1,78 @@
-+QA output created by 040
++++ b/tests/generic/042.out
+@@ -0,0 +1,80 @@
++QA output created by 042
 +	1. into a hole
 +cf845a781c107ec1346e849c9dd1b7e8
 +	2. into allocated space
@@ -138,46 +139,48 @@ index 0000000..34b38f9
 +0: [0..7]: extent
 +1: [8..23]: hole
 +2: [24..55]: extent
-+cf845a781c107ec1346e849c9dd1b7e8
++22b7303d274481990b5401b6263effe0
 +	4. hole -> data
-+0: [0..31]: hole
-+1: [32..47]: extent
-+2: [48..55]: hole
-+adb08a6d94a3b5eff90fdfebb2366d31
++0: [0..7]: extent
++1: [8..31]: hole
++2: [32..55]: extent
++c4fef62ba1de9d91a977cfeec6632f19
 +	5. hole -> unwritten
-+0: [0..31]: hole
-+1: [32..47]: extent
-+2: [48..55]: hole
-+cf845a781c107ec1346e849c9dd1b7e8
++0: [0..7]: extent
++1: [8..31]: hole
++2: [32..55]: extent
++1ca74f7572a0f4ab477fdbb5682e5f61
 +	6. data -> hole
 +0: [0..7]: extent
 +1: [8..23]: hole
 +2: [24..31]: extent
-+3: [32..55]: hole
++3: [32..47]: hole
++4: [48..55]: extent
 +be0f35d4292a20040766d87883b0abd1
 +	7. data -> unwritten
 +0: [0..7]: extent
 +1: [8..23]: hole
 +2: [24..47]: extent
 +3: [48..55]: hole
-+be0f35d4292a20040766d87883b0abd1
++bddb1f3895268acce30d516a99cb0f2f
 +	8. unwritten -> hole
 +0: [0..7]: extent
 +1: [8..23]: hole
 +2: [24..31]: extent
-+3: [32..55]: hole
-+cf845a781c107ec1346e849c9dd1b7e8
++3: [32..39]: hole
++4: [40..55]: extent
++f8fc47adc45b7cf72f988b3ddf5bff64
 +	9. unwritten -> data
 +0: [0..7]: extent
 +1: [8..23]: hole
 +2: [24..47]: extent
 +3: [48..55]: hole
-+adb08a6d94a3b5eff90fdfebb2366d31
++c4fef62ba1de9d91a977cfeec6632f19
 +	10. hole -> data -> hole
-+0: [0..39]: hole
-+1: [40..47]: extent
-+2: [48..63]: hole
-+0487b3c52810f994c541aa166215375f
++0: [0..7]: extent
++1: [8..39]: hole
++2: [40..63]: extent
++52af1bfcbf43f28af2328de32e0567e5
 +	11. data -> hole -> data
 +0: [0..7]: extent
 +1: [8..31]: hole
@@ -189,7 +192,7 @@ index 0000000..34b38f9
 +0: [0..7]: extent
 +1: [8..31]: hole
 +2: [32..63]: extent
-+0487b3c52810f994c541aa166215375f
++52af1bfcbf43f28af2328de32e0567e5
 +	13. data -> unwritten -> data
 +0: [0..7]: extent
 +1: [8..31]: hole
@@ -205,14 +208,14 @@ index 0000000..34b38f9
 +1: [16..55]: extent
 +86c9d033be2761385c9cfa203c426bb2
 diff --git a/tests/generic/group b/tests/generic/group
-index d764c78..518cf49 100644
+index 62660cc..c0944b3 100644
 --- a/tests/generic/group
 +++ b/tests/generic/group
-@@ -42,6 +42,7 @@
- 037 metadata auto quick
- 038 auto stress
+@@ -44,6 +44,7 @@
  039 auto quick prealloc
-+040 auto quick prealloc
+ 040 auto quick prealloc
+ 041 auto quick prealloc
++042 auto quick prealloc
  053 acl repair auto quick
  062 attr udf auto quick
  068 other auto freeze dangerous stress
