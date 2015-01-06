@@ -1,22 +1,33 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 6B46A7F50
-	for <xfs@oss.sgi.com>; Tue,  6 Jan 2015 06:47:34 -0600 (CST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 92BE97F50
+	for <xfs@oss.sgi.com>; Tue,  6 Jan 2015 07:22:58 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 488738F8033
-	for <xfs@oss.sgi.com>; Tue,  6 Jan 2015 04:47:34 -0800 (PST)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 288F1AC001
+	for <xfs@oss.sgi.com>; Tue,  6 Jan 2015 05:22:54 -0800 (PST)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id kWiJYwoKl9CGbCi7 (version=TLSv1
+	cuda.sgi.com with ESMTP id uTFUIPlsuqgkpn6s (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 06 Jan 2015 04:47:33 -0800 (PST)
-Date: Tue, 6 Jan 2015 07:47:27 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: XFS corrupt after RAID failure and resync
-Message-ID: <20150106124727.GC5874@bfoster.bfoster>
-References: <CAOFq7B5PaPCJdAxyYa6feCXgGbkz+1Qs+Gfb2WG=5af=A+WOQg@mail.gmail.com>
+	Tue, 06 Jan 2015 05:22:54 -0800 (PST)
+Received: from int-mx10.intmail.prod.int.phx2.redhat.com
+	(int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id t06DMrBI002956
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256
+	verify=FAIL) for <xfs@oss.sgi.com>; Tue, 6 Jan 2015 08:22:53 -0500
+Received: from sh-el6.eng.rdu2.redhat.com (sh-el6.eng.rdu2.redhat.com
+	[10.10.160.69])
+	by int-mx10.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id t06DMpxW019927
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES128-SHA bits=128 verify=NO)
+	for <xfs@oss.sgi.com>; Tue, 6 Jan 2015 08:22:53 -0500
+Date: Tue, 6 Jan 2015 08:22:51 -0500
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: Re: [PATCH 0/2] Add support to RENAME_EXCHANGE flag to XFS V9
+Message-ID: <20150106132240.GA5833@sh-el6.eng.rdu2.redhat.com>
+References: <1418839984-2514-1-git-send-email-cmaiolino@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <CAOFq7B5PaPCJdAxyYa6feCXgGbkz+1Qs+Gfb2WG=5af=A+WOQg@mail.gmail.com>
+In-Reply-To: <1418839984-2514-1-git-send-email-cmaiolino@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,47 +40,69 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: David Raffelt <david.raffelt@florey.edu.au>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Tue, Jan 06, 2015 at 05:12:14PM +1100, David Raffelt wrote:
-> Hi again,
-> Some more information.... the kernel log show the following errors were
-> occurring after the RAID recovery, but before I reset the server.
+Ping?
+
+On Wed, Dec 17, 2014 at 01:13:02PM -0500, Carlos Maiolino wrote:
+> This patchset aims to implement RENAME_EXCHANGE support (from sys_renameat2) to
+> XFS.
 > 
-
-By after the raid recovery, you mean after the two drives had failed out
-and 1 hot spare was activated and resync completed? It certainly seems
-like something went wrong in this process. The output below looks like
-it's failing to read in some inodes. Is there any stack trace output
-that accompanies these error messages to confirm?
-
-I suppose I would try to verify that the array configuration looks sane,
-but after the hot spare resync and then one or two other drive
-replacements (was the hot spare ultimately replaced?), it's hard to say
-whether it might be recoverable.
-
-Brian
-
-> Jan 06 00:00:27 server kernel: XFS (md0): Corruption detected. Unmount and
-> run xfs_repair
-> Jan 06 00:00:27 server kernel: XFS (md0): Corruption detected. Unmount and
-> run xfs_repair
-> Jan 06 00:00:27 server kernel: XFS (md0): Corruption detected. Unmount and
-> run xfs_repair
-> Jan 06 00:00:27 server kernel: XFS (md0): metadata I/O error: block
-> 0x36b106c00 ("xfs_trans_read_buf_map") error 117 numblks 16
-> Jan 06 00:00:27 server kernel: XFS (md0): xfs_imap_to_bp:
-> xfs_trans_read_buf() returned error 117.
+> For this to be achieved, XFS need to export a rename2() method, which I included
+> in the first patch.
 > 
+> The second patch is the real implementation of the RENAME_EXCHANGE flags, which
+> most of the work I based on xfs_rename().
 > 
-> Thanks,
-> Dave
+> This patchset passed the xfstests 23, 24 and 25 (specifically for
+> RENAME_EXCHANGE), and I also tested the projectID inheritance problem, where
+> both paths must be under the same projectID to be able to change (I'm going to
+> implement this test into the xfstests too).
+> 
+> Changelog
+> 
+>  Make xfs_vn_rename compliant with renameat2() syscall
+> 
+> 	V2: Use xfs_vn_rename as-is, instead of rename it to xfs_vn_rename2
+> 
+>  Add support to RENAME_EXCHANGE flag
+> 
+> 	V2: - refactor xfs_cross_rename() to not duplicate code from xfs_rename()
+> 
+> 	V3: - fix indentation to avoid 80 column crossing, decrease the amount of
+> 	      arguments passed to xfs_cross_rename()
+> 	    - Rebase patches over the latest linux code
+> 
+> 	v4: - use a label/goto statement instead of an if conditional after
+> 	      xfs_cross_rename() return, to finish the rename operation
+> 	    - Make xfs_cross_rename() static
+> 	    - Fix some comments
+> 
+> 	V5: - Keep all the code under 80 columns
+> 
+> 	V6: - Ensure i_mode of both files are updated during exchange
+> 
+> 	V7: - Use struct names instead of typedefs in the xfs_cross_rename()
+> 	      definition
+> 
+> 	V8: - Replace src/target names for better variable names
+> 	    - Log and timestamp updates done in different places
+> 	    - Fix missing space in comments
+> 	    - get rid of {src,tgt}_is_directory and new_parent variables
+> 
+> 	V9: - Use flags to track down inode changes and update its timestamps
+> 	    - Fix some comments
+> 
+>  fs/xfs/xfs_inode.c | 134 ++++++++++++++++++++++++++++++++++++++++++++++++++++-
+>  fs/xfs/xfs_inode.h |   2 +-
+>  fs/xfs/xfs_iops.c  |  21 ++++++---
+>  3 files changed, 149 insertions(+), 8 deletions(-)
+> 
+> -- 
+> 1.9.3
 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+-- 
+Carlos
 
 _______________________________________________
 xfs mailing list
