@@ -1,25 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 52E7E7F5F
-	for <xfs@oss.sgi.com>; Tue,  6 Jan 2015 12:37:17 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 242F9304059
-	for <xfs@oss.sgi.com>; Tue,  6 Jan 2015 10:37:14 -0800 (PST)
-Received: from mail-pa0-f53.google.com (mail-pa0-f53.google.com
-	[209.85.220.53]) by cuda.sgi.com with ESMTP id 2EERH9CXh9IG9IDf
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 06 Jan 2015 10:37:12 -0800 (PST)
-Received: by mail-pa0-f53.google.com with SMTP id kq14so31594206pab.40
-	for <xfs@oss.sgi.com>; Tue, 06 Jan 2015 10:37:12 -0800 (PST)
-From: Jeff Layton <jeff.layton@primarydata.com>
-Date: Tue, 6 Jan 2015 10:37:08 -0800
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 736547F5F
+	for <xfs@oss.sgi.com>; Tue,  6 Jan 2015 12:39:54 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id EFF24AC003
+	for <xfs@oss.sgi.com>; Tue,  6 Jan 2015 10:39:53 -0800 (PST)
+Received: from mail-ig0-f173.google.com (mail-ig0-f173.google.com
+	[209.85.213.173]) by cuda.sgi.com with ESMTP id
+	ldZA0HFW6DAkXGJd (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 06 Jan 2015 10:39:52 -0800 (PST)
+Received: by mail-ig0-f173.google.com with SMTP id r2so4611475igi.0
+	for <xfs@oss.sgi.com>; Tue, 06 Jan 2015 10:39:52 -0800 (PST)
+Mime-Version: 1.0 (Mac OS X Mail 8.1 \(1993\))
 Subject: Re: a simple and scalable pNFS block layout server
-Message-ID: <20150106103708.70a06aba@synchrony.poochiereds.net>
-In-Reply-To: <20150106175611.GA16413@lst.de>
+From: Weston Andros Adamson <dros@primarydata.com>
+In-Reply-To: <20150106103708.70a06aba@synchrony.poochiereds.net>
+Date: Tue, 6 Jan 2015 13:39:50 -0500
+Message-Id: <9AFC48B6-B1DC-41CF-9D43-C27DF45A4809@primarydata.com>
 References: <1420561721-9150-1-git-send-email-hch@lst.de>
 	<20150106173222.GF12067@fieldses.org>
 	<20150106175611.GA16413@lst.de>
-MIME-Version: 1.0
+	<20150106103708.70a06aba@synchrony.poochiereds.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,39 +34,43 @@ Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@lst.de>
-Cc: "J. Bruce Fields" <bfields@fieldses.org>, linux-fsdevel@vger.kernel.org, linux-nfs@vger.kernel.org, Weston Andros Adamson <dros@primarydata.com>, xfs@oss.sgi.com
+To: Jeffrey Layton <jeff.layton@primarydata.com>
+Cc: "J. Bruce Fields" <bfields@fieldses.org>, linux-fsdevel@vger.kernel.org, linux-nfs list <linux-nfs@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, xfs@oss.sgi.com
 
-T24gVHVlLCA2IEphbiAyMDE1IDE4OjU2OjExICswMTAwCkNocmlzdG9waCBIZWxsd2lnIDxoY2hA
-bHN0LmRlPiB3cm90ZToKCj4gT24gVHVlLCBKYW4gMDYsIDIwMTUgYXQgMTI6MzI6MjJQTSAtMDUw
-MCwgSi4gQnJ1Y2UgRmllbGRzIHdyb3RlOgo+ID4gCS0gZG8gd2UgaGF2ZSBldmlkZW5jZSB0aGF0
-IHRoaXMgaXMgdXNlZnVsIGluIGl0cyBjdXJyZW50IGZvcm0/Cj4gCj4gV2hhdCBpcyB5b3VyIHRo
-cmVzaG9sZCBmb3IgdXNlZnVsbmVzcz8gIEl0IHBhc3NlcyB4ZnN0ZXN0cyBmaW5lLCBhbmQKPiBz
-aG93cyBsaW5lYXIgc2NhbGFiaWxpdHkgd2l0aCBtdWx0aXBsZSBjbGllbnRzIHRoYXQgZWFjaCBo
-YXZlIDEwR0IKPiBsaW5rcy4gCj4gCj4gPiAJLSBhbnkgYWR2aWNlIG9uIHRlc3Rpbmc/ICBJcyB0
-aGVyZSB3YXMgc29tZSBzaW1wbGUgdmlydHVhbCBzZXR1cAo+ID4gCSAgdGhhdCB3b3VsZCBhbGxv
-dyBhbnkgbG9zZXIgd2l0aCBubyBzcGVjaWFsIGhhcmR3YXJlIChlLmcuLCBtZSkKPiA+IAkgIHRv
-IGNoZWNrIHdoZXRoZXIgdGhleSd2ZSBicm9rZW4gdGhlIGJsb2NrIHNlcnZlcj8KPiAKPiBSdW4g
-dHdvIGt2bSBWTXMgdGhhdCBzaGFyZSB0aGUgc2FtZSBkaXNrLiAgQ3JlYXRlIGFuIFhGUyBmaWxl
-c3lzdGVtCj4gb24gdGhlIE1EUywgYW5kIGV4cG9ydCBpdC4gIElmIHRoZSBjbGllbnQgaGFzIGJs
-a21hcGQgcnVubmluZyAob24gRGViaWFuCj4gaXQgbmVlZHMgdG8gYmUgc3RhcnRlZCBtYW51YWxs
-eSkgaXQgd2lsbCB1c2UgcE5GUyBmb3IgYWNjZXNzaW5nIHRoZQo+IGZpbGVzeXN0ZW0uICBWZXJp
-ZnkgdGhhdCB1c2luZyB0aGUgcGVyLW9wZXJhdGlvbiBjb3VudGVycyBpbgo+IC9wcm9jL3NlbGYv
-bW91bnN0YXRzLiAgUmVwZWF0IHdpdGggYWRkaXRpb25hbCBjbGllbnRzIGFzIG5lc3NlY2FyeS4K
-PiAKPiBBbHRlcm5hdGl2ZWx5IHNldCB1cCBhIHNpbXBsZSBpU0NTSSB0YXJnZXQgdXNpbmcgdGd0
-IG9yIGxpbyBhbmQKPiBjb25uZWN0IHRvIGl0IGZyb20gbXVsdGlwbGUgY2xpZW50cy4KPiAKPiA+
-IAktIGFueSBkZWJ1Z2dpbmcgYWR2aWNlPyAgRS5nLiwgaGF2ZSB5b3UgY2hlY2tlZCBpZiBjdXJy
-ZW50Cj4gPiAJICB3aXJlc2hhcmsgY2FuIGhhbmRsZSB0aGUgTURTIHRyYWZmaWM/Cj4gCj4gVGhl
-IHdpcmVzaGFyZSB2ZXJzaW9uIEkndmUgdXNlZCBkZWNvZGVkIHRoZSBnZW5lcmljIHBORlMgb3Bl
-cmF0aW9ucwo+IGZpbmUsIGJ1dCBqdXN0IGR1bXBzIHRoZSBsYXlvdXQgc3BlY2lmaWNzIGFzIGhl
-eCBkYXRhLgo+IAo+IEVuYWJsZSB0aGUgdHJhY2UgcG9pbnRzIGFkZGVkIGluIHRoaXMgc2VyaWVz
-LCB0aGV5IHRyYWNrIGFsbCBzdGF0ZWlkCj4gaW50ZXJhY3Rpb25zIGluIHRoZSBzZXJ2ZXIuICBB
-ZGRpdNGWb25hbGx5IHRoZSBwbmZzIGRlYnVnIHByaW50a3Mgb24KPiBjbGllbnQgYW5kIHNlcnZl
-ciBkdW1wIGEgbG90IG9mIGluZm9ybWF0aW9uLgoKVGhlIHdpcmVzaGFyayBkZWNvZGVyIHJlYWxs
-eSBvbmx5IGhhbmRsZXMgZmlsZXMgbGF5b3V0cyByaWdodCBub3cuIERyb3MKaGFzIHNvbWUgcGF0
-Y2hlcyB0byBhZGQgZmxleGZpbGVzIHN1cHBvcnQgdG9vIChvbmNlIHRoZSBzcGVjIGlzIGEgYml0
-Cm1vcmUgZmluYWxpemVkKSBhbmQgYXQgdGhhdCBwb2ludCBpdCBzaG91bGRuJ3QgYmUgdG9vIGhh
-cmQgdG8gZml4IGl0IHRvCmhhbmRsZSBibG9jayBsYXlvdXQgYXMgd2VsbC4KCi0tIApKZWZmIExh
-eXRvbiA8amxheXRvbkBwcmltYXJ5ZGF0YS5jb20+CgpfX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpo
-dHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
+Cj4gT24gSmFuIDYsIDIwMTUsIGF0IDE6MzcgUE0sIEplZmYgTGF5dG9uIDxqZWZmLmxheXRvbkBw
+cmltYXJ5ZGF0YS5jb20+IHdyb3RlOgo+IAo+IE9uIFR1ZSwgNiBKYW4gMjAxNSAxODo1NjoxMSAr
+MDEwMAo+IENocmlzdG9waCBIZWxsd2lnIDxoY2hAbHN0LmRlPiB3cm90ZToKPiAKPj4gT24gVHVl
+LCBKYW4gMDYsIDIwMTUgYXQgMTI6MzI6MjJQTSAtMDUwMCwgSi4gQnJ1Y2UgRmllbGRzIHdyb3Rl
+Ogo+Pj4gCS0gZG8gd2UgaGF2ZSBldmlkZW5jZSB0aGF0IHRoaXMgaXMgdXNlZnVsIGluIGl0cyBj
+dXJyZW50IGZvcm0/Cj4+IAo+PiBXaGF0IGlzIHlvdXIgdGhyZXNob2xkIGZvciB1c2VmdWxuZXNz
+PyAgSXQgcGFzc2VzIHhmc3Rlc3RzIGZpbmUsIGFuZAo+PiBzaG93cyBsaW5lYXIgc2NhbGFiaWxp
+dHkgd2l0aCBtdWx0aXBsZSBjbGllbnRzIHRoYXQgZWFjaCBoYXZlIDEwR0IKPj4gbGlua3MuIAo+
+PiAKPj4+IAktIGFueSBhZHZpY2Ugb24gdGVzdGluZz8gIElzIHRoZXJlIHdhcyBzb21lIHNpbXBs
+ZSB2aXJ0dWFsIHNldHVwCj4+PiAJICB0aGF0IHdvdWxkIGFsbG93IGFueSBsb3NlciB3aXRoIG5v
+IHNwZWNpYWwgaGFyZHdhcmUgKGUuZy4sIG1lKQo+Pj4gCSAgdG8gY2hlY2sgd2hldGhlciB0aGV5
+J3ZlIGJyb2tlbiB0aGUgYmxvY2sgc2VydmVyPwo+PiAKPj4gUnVuIHR3byBrdm0gVk1zIHRoYXQg
+c2hhcmUgdGhlIHNhbWUgZGlzay4gIENyZWF0ZSBhbiBYRlMgZmlsZXN5c3RlbQo+PiBvbiB0aGUg
+TURTLCBhbmQgZXhwb3J0IGl0LiAgSWYgdGhlIGNsaWVudCBoYXMgYmxrbWFwZCBydW5uaW5nIChv
+biBEZWJpYW4KPj4gaXQgbmVlZHMgdG8gYmUgc3RhcnRlZCBtYW51YWxseSkgaXQgd2lsbCB1c2Ug
+cE5GUyBmb3IgYWNjZXNzaW5nIHRoZQo+PiBmaWxlc3lzdGVtLiAgVmVyaWZ5IHRoYXQgdXNpbmcg
+dGhlIHBlci1vcGVyYXRpb24gY291bnRlcnMgaW4KPj4gL3Byb2Mvc2VsZi9tb3Vuc3RhdHMuICBS
+ZXBlYXQgd2l0aCBhZGRpdGlvbmFsIGNsaWVudHMgYXMgbmVzc2VjYXJ5Lgo+PiAKPj4gQWx0ZXJu
+YXRpdmVseSBzZXQgdXAgYSBzaW1wbGUgaVNDU0kgdGFyZ2V0IHVzaW5nIHRndCBvciBsaW8gYW5k
+Cj4+IGNvbm5lY3QgdG8gaXQgZnJvbSBtdWx0aXBsZSBjbGllbnRzLgo+PiAKPj4+IAktIGFueSBk
+ZWJ1Z2dpbmcgYWR2aWNlPyAgRS5nLiwgaGF2ZSB5b3UgY2hlY2tlZCBpZiBjdXJyZW50Cj4+PiAJ
+ICB3aXJlc2hhcmsgY2FuIGhhbmRsZSB0aGUgTURTIHRyYWZmaWM/Cj4+IAo+PiBUaGUgd2lyZXNo
+YXJlIHZlcnNpb24gSSd2ZSB1c2VkIGRlY29kZWQgdGhlIGdlbmVyaWMgcE5GUyBvcGVyYXRpb25z
+Cj4+IGZpbmUsIGJ1dCBqdXN0IGR1bXBzIHRoZSBsYXlvdXQgc3BlY2lmaWNzIGFzIGhleCBkYXRh
+Lgo+PiAKPj4gRW5hYmxlIHRoZSB0cmFjZSBwb2ludHMgYWRkZWQgaW4gdGhpcyBzZXJpZXMsIHRo
+ZXkgdHJhY2sgYWxsIHN0YXRlaWQKPj4gaW50ZXJhY3Rpb25zIGluIHRoZSBzZXJ2ZXIuICBBZGRp
+dNGWb25hbGx5IHRoZSBwbmZzIGRlYnVnIHByaW50a3Mgb24KPj4gY2xpZW50IGFuZCBzZXJ2ZXIg
+ZHVtcCBhIGxvdCBvZiBpbmZvcm1hdGlvbi4KPiAKPiBUaGUgd2lyZXNoYXJrIGRlY29kZXIgcmVh
+bGx5IG9ubHkgaGFuZGxlcyBmaWxlcyBsYXlvdXRzIHJpZ2h0IG5vdy4gRHJvcwo+IGhhcyBzb21l
+IHBhdGNoZXMgdG8gYWRkIGZsZXhmaWxlcyBzdXBwb3J0IHRvbyAob25jZSB0aGUgc3BlYyBpcyBh
+IGJpdAo+IG1vcmUgZmluYWxpemVkKSBhbmQgYXQgdGhhdCBwb2ludCBpdCBzaG91bGRuJ3QgYmUg
+dG9vIGhhcmQgdG8gZml4IGl0IHRvCj4gaGFuZGxlIGJsb2NrIGxheW91dCBhcyB3ZWxsLgoKSSBz
+aG91bGQgYmUgcHVibGlzaGluZyB0aGVzZSBwYXRjaGVzIHNvb24uIFRoZSBvbmx5IGhvbGR1cCBp
+cyB3YWl0aW5nCm9uIHRoZSBJQU5BIGxheW91dCB0eXBlIGFzc2lnbm1lbnQuCgotZHJvcwoKX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KeGZzIG1haWxpbmcg
+bGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8v
+eGZzCg==
