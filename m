@@ -1,24 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id DCB717F60
-	for <xfs@oss.sgi.com>; Tue,  6 Jan 2015 00:12:23 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id BBF20304051
-	for <xfs@oss.sgi.com>; Mon,  5 Jan 2015 22:12:20 -0800 (PST)
-Received: from mail-gw2.its.unimelb.edu.au (mail-gw2.its.unimelb.edu.au
-	[128.250.5.151]) by cuda.sgi.com with ESMTP id 1oYvC2DAwGhHBtSv
-	for <xfs@oss.sgi.com>; Mon, 05 Jan 2015 22:12:18 -0800 (PST)
-Received: from mail-ie0-f176.google.com (mail-ie0-f176.google.com
-	[209.85.223.176]) (Authenticated sender: draffelt)
-	by mail-gw2.its.unimelb.edu.au (Postfix) with ESMTPSA id 2EA2819B2
-	for <xfs@oss.sgi.com>; Tue,  6 Jan 2015 17:12:17 +1100 (EST)
-Received: by mail-ie0-f176.google.com with SMTP id tr6so1194367ieb.7
-	for <xfs@oss.sgi.com>; Mon, 05 Jan 2015 22:12:15 -0800 (PST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 6ECCE7F56
+	for <xfs@oss.sgi.com>; Tue,  6 Jan 2015 02:35:19 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 5BF988F8033
+	for <xfs@oss.sgi.com>; Tue,  6 Jan 2015 00:35:16 -0800 (PST)
+Received: from awesome.dsw2k3.info (awesome.dsw2k3.info [217.188.63.246]) by
+	cuda.sgi.com with ESMTP id wMj1GsnXLxp0pENj (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 06 Jan 2015 00:35:11 -0800 (PST)
+Date: Tue, 6 Jan 2015 09:35:07 +0100
+From: Matthias Schniedermeyer <ms@citd.de>
+Subject: Re: What is a recommended XFS sector size for hybrid (512e) advanced
+	format hard drives?
+Message-ID: <20150106083507.GA9943@citd.de>
+References: <1806495.BCZcrVVEOf@shtub-cm> <54AA0A93.2010204@hardwarefreak.com>
 MIME-Version: 1.0
-Date: Tue, 6 Jan 2015 17:12:14 +1100
-Message-ID: <CAOFq7B5PaPCJdAxyYa6feCXgGbkz+1Qs+Gfb2WG=5af=A+WOQg@mail.gmail.com>
-Subject: XFS corrupt after RAID failure and resync
-From: David Raffelt <david.raffelt@florey.edu.au>
+Content-Disposition: inline
+In-Reply-To: <54AA0A93.2010204@hardwarefreak.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,66 +26,53 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============8693915912607194685=="
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Stan Hoeppner <stan@hardwarefreak.com>
+Cc: Hillel Lubman <shtetldik@gmail.com>, xfs@oss.sgi.com
 
---===============8693915912607194685==
-Content-Type: multipart/alternative; boundary=20cf302076e43c8513050bf5b09d
+On 04.01.2015 21:52, Stan Hoeppner wrote:
+> On 01/04/2015 06:56 PM, Hillel Lubman wrote:
+> ...
+> > Looking around I saw some references that it's preferable to use sector
+> > size (sectsz) of 4 KB when creating XFS partitions on hybrid (512e)
+> > advanced format hard drives and also some mentions of making that a
+> > default in mkfs.xfs. However I noticed that my current mkfs.xfs (3.2.1)
+> > used with current Debian testing (Linux 3.16.0) still uses 512 B sectors
+> > by default.
+> ...
+> > Can you please clarify what after all is the recommended sector size for
+> > such drives and why isn't it a default in mkfs.xfs (since supposedly
+> > defaults are generally recommended optimal settings unless you have some
+> > special use case).
+> ...
+> 
+> XFS sectsz is unimportant with these drives.  What matters is that any
+> partitions you create start and end on 4KB boundaries.  This will
+> prevent adjacent hardware sector RMW internal to the drive.  XFS writes
+> in 4KB filesystem blocks on Linux.  As long as the fsblocks are aligned
+> to the 4KB hardware sectors there's nothing more you can do to avoid
+> performance penalties with these drives.
 
---20cf302076e43c8513050bf5b09d
-Content-Type: text/plain; charset=UTF-8
+Not in my experience. My first (and lying about it) AF HDD had horrible 
+write performance until i re'mkfs.xfs'ed it with 4k sector-size. And yes 
+the aligned was 4k.
 
-Hi again,
-Some more information.... the kernel log show the following errors were
-occurring after the RAID recovery, but before I reset the server.
-
-Jan 06 00:00:27 server kernel: XFS (md0): Corruption detected. Unmount and
-run xfs_repair
-Jan 06 00:00:27 server kernel: XFS (md0): Corruption detected. Unmount and
-run xfs_repair
-Jan 06 00:00:27 server kernel: XFS (md0): Corruption detected. Unmount and
-run xfs_repair
-Jan 06 00:00:27 server kernel: XFS (md0): metadata I/O error: block
-0x36b106c00 ("xfs_trans_read_buf_map") error 117 numblks 16
-Jan 06 00:00:27 server kernel: XFS (md0): xfs_imap_to_bp:
-xfs_trans_read_buf() returned error 117.
-
-
-Thanks,
-Dave
-
---20cf302076e43c8513050bf5b09d
-Content-Type: text/html; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
-
-<div dir=3D"ltr"><div>Hi again,</div>Some more information.... the kernel l=
-og show the following errors were occurring after the RAID recovery, but be=
-fore I reset the server.<div><br></div><div>
-<div>Jan 06 00:00:27 server kernel: XFS (md0): Corruption detected. Unmount=
- and run xfs_repair<br></div><div><div>Jan 06 00:00:27=C2=A0server=C2=A0ker=
-nel: XFS (md0): Corruption detected. Unmount and run xfs_repair</div><div>J=
-an 06 00:00:27=C2=A0server=C2=A0kernel: XFS (md0): Corruption detected. Unm=
-ount and run xfs_repair</div><div>Jan 06 00:00:27=C2=A0server=C2=A0kernel: =
-XFS (md0): metadata I/O error: block 0x36b106c00=C2=A0(&quot;xfs_trans_read=
-_buf_map&quot;) error 117 numblks 16</div><div>Jan 06 00:00:27=C2=A0server=
-=C2=A0kernel: XFS (md0): xfs_imap_to_bp: xfs_trans_read_buf() returned erro=
-r 117.</div></div></div><div><br></div><div><br></div><div>Thanks,</div><di=
-v>Dave</div></div>
-
---20cf302076e43c8513050bf5b09d--
+But that was many years ago and i don't know if newer XFS (IIRC that was 
+before delay-log) would behave better. But as all of my storage after 
+the first AF HDD was either an AF HDD or a SSD i have been formating 
+everything with 4k sector-size for years.
 
 
---===============8693915912607194685==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+
+
+-- 
+
+Matthias
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============8693915912607194685==--
