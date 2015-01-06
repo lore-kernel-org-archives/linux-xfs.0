@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id C01317F69
-	for <xfs@oss.sgi.com>; Tue,  6 Jan 2015 10:29:39 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 3D0BDAC003
-	for <xfs@oss.sgi.com>; Tue,  6 Jan 2015 08:29:39 -0800 (PST)
+	by oss.sgi.com (Postfix) with ESMTP id 90DA57F6A
+	for <xfs@oss.sgi.com>; Tue,  6 Jan 2015 10:29:40 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 0A8BDAC003
+	for <xfs@oss.sgi.com>; Tue,  6 Jan 2015 08:29:36 -0800 (PST)
 Received: from casper.infradead.org (casper.infradead.org [85.118.1.10]) by
-	cuda.sgi.com with ESMTP id 7gShpayPblnazv2V (version=TLSv1
+	cuda.sgi.com with ESMTP id 60h7Cub0RdHMJEAW (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 06 Jan 2015 08:29:37 -0800 (PST)
+	Tue, 06 Jan 2015 08:29:35 -0800 (PST)
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 04/18] nfsd: move nfsd_fh_match to nfsfh.h
-Date: Tue,  6 Jan 2015 17:28:27 +0100
-Message-Id: <1420561721-9150-5-git-send-email-hch@lst.de>
+Subject: [PATCH 03/18] nfsd: factor out a helper to decode nfstime4 values
+Date: Tue,  6 Jan 2015 17:28:26 +0100
+Message-Id: <1420561721-9150-4-git-send-email-hch@lst.de>
 In-Reply-To: <1420561721-9150-1-git-send-email-hch@lst.de>
 References: <1420561721-9150-1-git-send-email-hch@lst.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -31,72 +31,84 @@ Sender: xfs-bounces@oss.sgi.com
 To: "J. Bruce Fields" <bfields@fieldses.org>
 Cc: linux-fsdevel@vger.kernel.org, linux-nfs@vger.kernel.org, Jeff Layton <jlayton@primarydata.com>, xfs@oss.sgi.com
 
-The pnfs code will need it too.  Also remove the nfsd_ prefix to match the
-other filehandle helpers in that file.
-
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/nfsd/nfs4state.c | 12 ++----------
- fs/nfsd/nfsfh.h     |  9 +++++++++
- 2 files changed, 11 insertions(+), 10 deletions(-)
+ fs/nfsd/nfs4xdr.c | 39 ++++++++++++++++++++++-----------------
+ 1 file changed, 22 insertions(+), 17 deletions(-)
 
-diff --git a/fs/nfsd/nfs4state.c b/fs/nfsd/nfs4state.c
-index 2505b68..aaa3f8e 100644
---- a/fs/nfsd/nfs4state.c
-+++ b/fs/nfsd/nfs4state.c
-@@ -408,14 +408,6 @@ static unsigned int file_hashval(struct knfsd_fh *fh)
- 	return nfsd_fh_hashval(fh) & (FILE_HASH_SIZE - 1);
+diff --git a/fs/nfsd/nfs4xdr.c b/fs/nfsd/nfs4xdr.c
+index 15f7b73..fe31178 100644
+--- a/fs/nfsd/nfs4xdr.c
++++ b/fs/nfsd/nfs4xdr.c
+@@ -235,6 +235,22 @@ static char *savemem(struct nfsd4_compoundargs *argp, __be32 *p, int nbytes)
  }
  
--static bool nfsd_fh_match(struct knfsd_fh *fh1, struct knfsd_fh *fh2)
--{
--	return fh1->fh_size == fh2->fh_size &&
--		!memcmp(fh1->fh_base.fh_pad,
--				fh2->fh_base.fh_pad,
--				fh1->fh_size);
--}
--
- static struct hlist_head file_hashtbl[FILE_HASH_SIZE];
- 
- static void
-@@ -3300,7 +3292,7 @@ find_file_locked(struct knfsd_fh *fh, unsigned int hashval)
- 	struct nfs4_file *fp;
- 
- 	hlist_for_each_entry_rcu(fp, &file_hashtbl[hashval], fi_hash) {
--		if (nfsd_fh_match(&fp->fi_fhandle, fh)) {
-+		if (fh_match(&fp->fi_fhandle, fh)) {
- 			if (atomic_inc_not_zero(&fp->fi_ref))
- 				return fp;
- 		}
-@@ -4294,7 +4286,7 @@ laundromat_main(struct work_struct *laundry)
- 
- static inline __be32 nfs4_check_fh(struct svc_fh *fhp, struct nfs4_ol_stateid *stp)
- {
--	if (!nfsd_fh_match(&fhp->fh_handle, &stp->st_stid.sc_file->fi_fhandle))
-+	if (!fh_match(&fhp->fh_handle, &stp->st_stid.sc_file->fi_fhandle))
- 		return nfserr_bad_stateid;
- 	return nfs_ok;
- }
-diff --git a/fs/nfsd/nfsfh.h b/fs/nfsd/nfsfh.h
-index 08236d7..e24d954 100644
---- a/fs/nfsd/nfsfh.h
-+++ b/fs/nfsd/nfsfh.h
-@@ -187,6 +187,15 @@ fh_init(struct svc_fh *fhp, int maxsize)
- 	return fhp;
- }
- 
-+static inline bool fh_match(struct knfsd_fh *fh1, struct knfsd_fh *fh2)
+ static __be32
++nfsd4_decode_time(struct nfsd4_compoundargs *argp, struct timespec *tv)
 +{
-+	if (fh1->fh_size != fh2->fh_size)
-+		return false;
-+	if (memcmp(fh1->fh_base.fh_pad, fh2->fh_base.fh_pad, fh1->fh_size) != 0)
-+		return false;
-+	return true;
++	DECODE_HEAD;
++	u64 sec;
++
++	READ_BUF(12);
++	p = xdr_decode_hyper(p, &sec);
++	tv->tv_sec = sec;
++	tv->tv_nsec = be32_to_cpup(p++);
++	if (tv->tv_nsec >= (u32)1000000000)
++		return nfserr_inval;
++
++	DECODE_TAIL;
 +}
 +
- #ifdef CONFIG_NFSD_V3
- /*
-  * The wcc data stored in current_fh should be cleared
++static __be32
+ nfsd4_decode_bitmap(struct nfsd4_compoundargs *argp, u32 *bmval)
+ {
+ 	u32 bmlen;
+@@ -267,7 +283,6 @@ nfsd4_decode_fattr(struct nfsd4_compoundargs *argp, u32 *bmval,
+ {
+ 	int expected_len, len = 0;
+ 	u32 dummy32;
+-	u64 sec;
+ 	char *buf;
+ 
+ 	DECODE_HEAD;
+@@ -358,15 +373,10 @@ nfsd4_decode_fattr(struct nfsd4_compoundargs *argp, u32 *bmval,
+ 		dummy32 = be32_to_cpup(p++);
+ 		switch (dummy32) {
+ 		case NFS4_SET_TO_CLIENT_TIME:
+-			/* We require the high 32 bits of 'seconds' to be 0, and we ignore
+-			   all 32 bits of 'nseconds'. */
+-			READ_BUF(12);
+ 			len += 12;
+-			p = xdr_decode_hyper(p, &sec);
+-			iattr->ia_atime.tv_sec = (time_t)sec;
+-			iattr->ia_atime.tv_nsec = be32_to_cpup(p++);
+-			if (iattr->ia_atime.tv_nsec >= (u32)1000000000)
+-				return nfserr_inval;
++			status = nfsd4_decode_time(argp, &iattr->ia_atime);
++			if (status)
++				return status;
+ 			iattr->ia_valid |= (ATTR_ATIME | ATTR_ATIME_SET);
+ 			break;
+ 		case NFS4_SET_TO_SERVER_TIME:
+@@ -382,15 +392,10 @@ nfsd4_decode_fattr(struct nfsd4_compoundargs *argp, u32 *bmval,
+ 		dummy32 = be32_to_cpup(p++);
+ 		switch (dummy32) {
+ 		case NFS4_SET_TO_CLIENT_TIME:
+-			/* We require the high 32 bits of 'seconds' to be 0, and we ignore
+-			   all 32 bits of 'nseconds'. */
+-			READ_BUF(12);
+ 			len += 12;
+-			p = xdr_decode_hyper(p, &sec);
+-			iattr->ia_mtime.tv_sec = sec;
+-			iattr->ia_mtime.tv_nsec = be32_to_cpup(p++);
+-			if (iattr->ia_mtime.tv_nsec >= (u32)1000000000)
+-				return nfserr_inval;
++			status = nfsd4_decode_time(argp, &iattr->ia_mtime);
++			if (status)
++				return status;
+ 			iattr->ia_valid |= (ATTR_MTIME | ATTR_MTIME_SET);
+ 			break;
+ 		case NFS4_SET_TO_SERVER_TIME:
 -- 
 1.9.1
 
