@@ -1,18 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 90DA57F6A
-	for <xfs@oss.sgi.com>; Tue,  6 Jan 2015 10:29:40 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 0A8BDAC003
-	for <xfs@oss.sgi.com>; Tue,  6 Jan 2015 08:29:36 -0800 (PST)
+	by oss.sgi.com (Postfix) with ESMTP id 7D2237F6A
+	for <xfs@oss.sgi.com>; Tue,  6 Jan 2015 10:29:41 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 09FABAC00A
+	for <xfs@oss.sgi.com>; Tue,  6 Jan 2015 08:29:40 -0800 (PST)
 Received: from casper.infradead.org (casper.infradead.org [85.118.1.10]) by
-	cuda.sgi.com with ESMTP id 60h7Cub0RdHMJEAW (version=TLSv1
+	cuda.sgi.com with ESMTP id FlvF1F15DZ97Ct3y (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 06 Jan 2015 08:29:35 -0800 (PST)
+	Tue, 06 Jan 2015 08:29:39 -0800 (PST)
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 03/18] nfsd: factor out a helper to decode nfstime4 values
-Date: Tue,  6 Jan 2015 17:28:26 +0100
-Message-Id: <1420561721-9150-4-git-send-email-hch@lst.de>
+Subject: [PATCH 06/18] nfsd: make lookup/alloc/unhash_stid available outside
+	nfs4state.c
+Date: Tue,  6 Jan 2015 17:28:29 +0100
+Message-Id: <1420561721-9150-7-git-send-email-hch@lst.de>
 In-Reply-To: <1420561721-9150-1-git-send-email-hch@lst.de>
 References: <1420561721-9150-1-git-send-email-hch@lst.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -33,82 +34,67 @@ Cc: linux-fsdevel@vger.kernel.org, linux-nfs@vger.kernel.org, Jeff Layton <jlayt
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/nfsd/nfs4xdr.c | 39 ++++++++++++++++++++++-----------------
- 1 file changed, 22 insertions(+), 17 deletions(-)
+ fs/nfsd/nfs4state.c | 8 ++++----
+ fs/nfsd/state.h     | 6 ++++++
+ 2 files changed, 10 insertions(+), 4 deletions(-)
 
-diff --git a/fs/nfsd/nfs4xdr.c b/fs/nfsd/nfs4xdr.c
-index 15f7b73..fe31178 100644
---- a/fs/nfsd/nfs4xdr.c
-+++ b/fs/nfsd/nfs4xdr.c
-@@ -235,6 +235,22 @@ static char *savemem(struct nfsd4_compoundargs *argp, __be32 *p, int nbytes)
+diff --git a/fs/nfsd/nfs4state.c b/fs/nfsd/nfs4state.c
+index aaa3f8e..e804e9b 100644
+--- a/fs/nfsd/nfs4state.c
++++ b/fs/nfsd/nfs4state.c
+@@ -486,7 +486,7 @@ static void nfs4_file_put_access(struct nfs4_file *fp, u32 access)
+ 		__nfs4_file_put_access(fp, O_RDONLY);
  }
  
- static __be32
-+nfsd4_decode_time(struct nfsd4_compoundargs *argp, struct timespec *tv)
-+{
-+	DECODE_HEAD;
-+	u64 sec;
-+
-+	READ_BUF(12);
-+	p = xdr_decode_hyper(p, &sec);
-+	tv->tv_sec = sec;
-+	tv->tv_nsec = be32_to_cpup(p++);
-+	if (tv->tv_nsec >= (u32)1000000000)
-+		return nfserr_inval;
-+
-+	DECODE_TAIL;
-+}
-+
-+static __be32
- nfsd4_decode_bitmap(struct nfsd4_compoundargs *argp, u32 *bmval)
+-static struct nfs4_stid *nfs4_alloc_stid(struct nfs4_client *cl,
++struct nfs4_stid *nfs4_alloc_stid(struct nfs4_client *cl,
+ 					 struct kmem_cache *slab)
  {
- 	u32 bmlen;
-@@ -267,7 +283,6 @@ nfsd4_decode_fattr(struct nfsd4_compoundargs *argp, u32 *bmval,
- {
- 	int expected_len, len = 0;
- 	u32 dummy32;
--	u64 sec;
- 	char *buf;
+ 	struct nfs4_stid *stid;
+@@ -690,7 +690,7 @@ static void nfs4_put_deleg_lease(struct nfs4_file *fp)
+ 	}
+ }
  
- 	DECODE_HEAD;
-@@ -358,15 +373,10 @@ nfsd4_decode_fattr(struct nfsd4_compoundargs *argp, u32 *bmval,
- 		dummy32 = be32_to_cpup(p++);
- 		switch (dummy32) {
- 		case NFS4_SET_TO_CLIENT_TIME:
--			/* We require the high 32 bits of 'seconds' to be 0, and we ignore
--			   all 32 bits of 'nseconds'. */
--			READ_BUF(12);
- 			len += 12;
--			p = xdr_decode_hyper(p, &sec);
--			iattr->ia_atime.tv_sec = (time_t)sec;
--			iattr->ia_atime.tv_nsec = be32_to_cpup(p++);
--			if (iattr->ia_atime.tv_nsec >= (u32)1000000000)
--				return nfserr_inval;
-+			status = nfsd4_decode_time(argp, &iattr->ia_atime);
-+			if (status)
-+				return status;
- 			iattr->ia_valid |= (ATTR_ATIME | ATTR_ATIME_SET);
- 			break;
- 		case NFS4_SET_TO_SERVER_TIME:
-@@ -382,15 +392,10 @@ nfsd4_decode_fattr(struct nfsd4_compoundargs *argp, u32 *bmval,
- 		dummy32 = be32_to_cpup(p++);
- 		switch (dummy32) {
- 		case NFS4_SET_TO_CLIENT_TIME:
--			/* We require the high 32 bits of 'seconds' to be 0, and we ignore
--			   all 32 bits of 'nseconds'. */
--			READ_BUF(12);
- 			len += 12;
--			p = xdr_decode_hyper(p, &sec);
--			iattr->ia_mtime.tv_sec = sec;
--			iattr->ia_mtime.tv_nsec = be32_to_cpup(p++);
--			if (iattr->ia_mtime.tv_nsec >= (u32)1000000000)
--				return nfserr_inval;
-+			status = nfsd4_decode_time(argp, &iattr->ia_mtime);
-+			if (status)
-+				return status;
- 			iattr->ia_valid |= (ATTR_MTIME | ATTR_MTIME_SET);
- 			break;
- 		case NFS4_SET_TO_SERVER_TIME:
+-static void unhash_stid(struct nfs4_stid *s)
++void nfs4_unhash_stid(struct nfs4_stid *s)
+ {
+ 	s->sc_type = 0;
+ }
+@@ -998,7 +998,7 @@ static void unhash_lock_stateid(struct nfs4_ol_stateid *stp)
+ 
+ 	list_del_init(&stp->st_locks);
+ 	unhash_ol_stateid(stp);
+-	unhash_stid(&stp->st_stid);
++	nfs4_unhash_stid(&stp->st_stid);
+ }
+ 
+ static void release_lock_stateid(struct nfs4_ol_stateid *stp)
+@@ -4437,7 +4437,7 @@ out_unlock:
+ 	return status;
+ }
+ 
+-static __be32
++__be32
+ nfsd4_lookup_stateid(struct nfsd4_compound_state *cstate,
+ 		     stateid_t *stateid, unsigned char typemask,
+ 		     struct nfs4_stid **s, struct nfsd_net *nn)
+diff --git a/fs/nfsd/state.h b/fs/nfsd/state.h
+index dab6553..55a3ece 100644
+--- a/fs/nfsd/state.h
++++ b/fs/nfsd/state.h
+@@ -545,6 +545,12 @@ struct nfsd_net;
+ extern __be32 nfs4_preprocess_stateid_op(struct net *net,
+ 		struct nfsd4_compound_state *cstate,
+ 		stateid_t *stateid, int flags, struct file **filp);
++__be32 nfsd4_lookup_stateid(struct nfsd4_compound_state *cstate,
++		     stateid_t *stateid, unsigned char typemask,
++		     struct nfs4_stid **s, struct nfsd_net *nn);
++struct nfs4_stid *nfs4_alloc_stid(struct nfs4_client *cl,
++		struct kmem_cache *slab);
++void nfs4_unhash_stid(struct nfs4_stid *s);
+ void nfs4_put_stid(struct nfs4_stid *s);
+ void nfs4_remove_reclaim_record(struct nfs4_client_reclaim *, struct nfsd_net *);
+ extern void nfs4_release_reclaim(struct nfsd_net *);
 -- 
 1.9.1
 
