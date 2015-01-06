@@ -1,23 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 1A1D97F9C
-	for <xfs@oss.sgi.com>; Tue,  6 Jan 2015 12:13:30 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 087218F8040
-	for <xfs@oss.sgi.com>; Tue,  6 Jan 2015 10:13:29 -0800 (PST)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id Sqwv2qi1KKLEeYSv (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 06 Jan 2015 10:13:28 -0800 (PST)
-Date: Tue, 6 Jan 2015 13:13:23 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH v7 11/11] xfstests: fsx: Add fallocate insert range
-	operation
-Message-ID: <20150106181323.GI5874@bfoster.bfoster>
-References: <004901d02670$835ac120$8a104360$@samsung.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 52E7E7F5F
+	for <xfs@oss.sgi.com>; Tue,  6 Jan 2015 12:37:17 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 242F9304059
+	for <xfs@oss.sgi.com>; Tue,  6 Jan 2015 10:37:14 -0800 (PST)
+Received: from mail-pa0-f53.google.com (mail-pa0-f53.google.com
+	[209.85.220.53]) by cuda.sgi.com with ESMTP id 2EERH9CXh9IG9IDf
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Tue, 06 Jan 2015 10:37:12 -0800 (PST)
+Received: by mail-pa0-f53.google.com with SMTP id kq14so31594206pab.40
+	for <xfs@oss.sgi.com>; Tue, 06 Jan 2015 10:37:12 -0800 (PST)
+From: Jeff Layton <jeff.layton@primarydata.com>
+Date: Tue, 6 Jan 2015 10:37:08 -0800
+Subject: Re: a simple and scalable pNFS block layout server
+Message-ID: <20150106103708.70a06aba@synchrony.poochiereds.net>
+In-Reply-To: <20150106175611.GA16413@lst.de>
+References: <1420561721-9150-1-git-send-email-hch@lst.de>
+	<20150106173222.GF12067@fieldses.org>
+	<20150106175611.GA16413@lst.de>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <004901d02670$835ac120$8a104360$@samsung.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,217 +28,43 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Namjae Jeon <namjae.jeon@samsung.com>
-Cc: Theodore Ts'o <tytso@mit.edu>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Ashish Sangwan <a.sangwan@samsung.com>, linux-fsdevel@vger.kernel.org, linux-ext4 <linux-ext4@vger.kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: "J. Bruce Fields" <bfields@fieldses.org>, linux-fsdevel@vger.kernel.org, linux-nfs@vger.kernel.org, Weston Andros Adamson <dros@primarydata.com>, xfs@oss.sgi.com
 
-On Fri, Jan 02, 2015 at 06:43:07PM +0900, Namjae Jeon wrote:
-> This commit adds fallocate FALLOC_FL_INSERT_RANGE support for fsx.
-> 
-> Signed-off-by: Namjae Jeon <namjae.jeon@samsung.com>
-> Signed-off-by: Ashish Sangwan <a.sangwan@samsung.com>
-> ---
->  ltp/fsx.c | 96 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++--
->  1 file changed, 94 insertions(+), 2 deletions(-)
-> 
-> diff --git a/ltp/fsx.c b/ltp/fsx.c
-> index 47d3ee8..9dc1655 100644
-> --- a/ltp/fsx.c
-> +++ b/ltp/fsx.c
-> @@ -95,7 +95,8 @@ int			logcount = 0;	/* total ops */
->  #define OP_PUNCH_HOLE		6
->  #define OP_ZERO_RANGE		7
->  #define OP_COLLAPSE_RANGE	8
-> -#define OP_MAX_FULL		9
-> +#define OP_INSERT_RANGE	9
-> +#define OP_MAX_FULL		10
->  
->  /* operation modifiers */
->  #define OP_CLOSEOPEN	100
-> @@ -145,6 +146,7 @@ int     fallocate_calls = 1;            /* -F flag disables */
->  int     punch_hole_calls = 1;           /* -H flag disables */
->  int     zero_range_calls = 1;           /* -z flag disables */
->  int	collapse_range_calls = 1;	/* -C flag disables */
-> +int	insert_range_calls = 1;		/* -i flag disables */
->  int 	mapped_reads = 1;		/* -R flag disables it */
->  int	fsxgoodfd = 0;
->  int	o_direct;			/* -Z */
-> @@ -339,6 +341,14 @@ logdump(void)
->  						     lp->args[0] + lp->args[1])
->  				prt("\t******CCCC");
->  			break;
-> +		case OP_INSERT_RANGE:
-> +			prt("INSERT 0x%x thru 0x%x\t(0x%x bytes)",
-> +			    lp->args[0], lp->args[0] + lp->args[1] - 1,
-> +			    lp->args[1]);
-> +			if (badoff >= lp->args[0] && badoff <
-> +						     lp->args[0] + lp->args[1])
-> +				prt("\t******CCCC");
-> +			break;
->  		case OP_SKIPPED:
->  			prt("SKIPPED (no operation)");
->  			break;
-> @@ -1012,6 +1022,59 @@ do_collapse_range(unsigned offset, unsigned length)
->  }
->  #endif
->  
-> +#ifdef FALLOC_FL_INSERT_RANGE
-> +void
-> +do_insert_range(unsigned offset, unsigned length)
-> +{
-> +	unsigned end_offset;
-> +	int mode = FALLOC_FL_INSERT_RANGE;
-> +
-> +	if (length == 0) {
-> +		if (!quiet && testcalls > simulatedopcount)
-> +			prt("skipping zero length insert range\n");
-> +		log4(OP_SKIPPED, OP_INSERT_RANGE, offset, length);
-> +		return;
-> +	}
-> +
-> +	if ((loff_t)offset >= file_size) {
-> +		if (!quiet && testcalls > simulatedopcount)
-> +			prt("skipping insert range behind EOF\n");
-> +		log4(OP_SKIPPED, OP_INSERT_RANGE, offset, length);
-> +		return;
-> +	}
-> +
-> +	log4(OP_INSERT_RANGE, offset, length, 0);
-> +
-> +	if (testcalls <= simulatedopcount)
-> +		return;
-> +
-> +	end_offset = offset + length;
-> +	if ((progressinterval && testcalls % progressinterval == 0) ||
-> +	    (debug && (monitorstart == -1 || monitorend == -1 ||
-> +		      end_offset <= monitorend))) {
-> +		prt("%lu insert\tfrom 0x%x to 0x%x, (0x%x bytes)\n", testcalls,
-> +			offset, offset+length, length);
-> +	}
-> +	if (fallocate(fd, mode, (loff_t)offset, (loff_t)length) == -1) {
-> +		prt("insert range: %x to %x\n", offset, length);
-> +		prterr("do_insert_range: fallocate");
-> +		report_failure(161);
-> +	}
-> +
-> +	memmove(good_buf + end_offset, good_buf + offset,
-> +		file_size - offset);
-> +	memset(good_buf + offset, '\0', length);
-> +	file_size += length;
-> +}
-> +
-> +#else
-> +void
-> +do_insert_range(unsigned offset, unsigned length)
-> +{
-> +	return;
-> +}
-> +#endif
-> +
->  #ifdef HAVE_LINUX_FALLOC_H
->  /* fallocate is basically a no-op unless extending, then a lot like a truncate */
->  void
-> @@ -1192,6 +1255,12 @@ test(void)
->  			goto out;
->  		}
->  		break;
-> +	case OP_INSERT_RANGE:
-> +		if (!insert_range_calls) {
-> +			log4(OP_SKIPPED, OP_INSERT_RANGE, offset, size);
-> +			goto out;
-> +		}
-> +		break;
->  	}
->  
->  	switch (op) {
-> @@ -1244,6 +1313,21 @@ test(void)
->  		}
->  		do_collapse_range(offset, size);
->  		break;
-> +	case OP_INSERT_RANGE:
-> +		TRIM_OFF_LEN(offset, size, (maxfilelen - 1) - file_size);
-
-I see a ton of "skipping insert beyond EOF" messages when I run fsx with
-this patch that boil down to that we trim against the max allowable file
-size increase rather than the current file size. I suspect the intent
-here is to not limit the insert length based on the file size. That
-makes sense, but that causes us to fail to mod the insert offset against
-the file size and thus generate a ton more noise.
-
-Could we either open code the trim to handle the offset/len correctly or
-break up the macro in a way that facilitates doing so? For example, a
-quick solution might be to create TRIM_OFF() and TRIM_LEN() based on the
-associated code in TRIM_OFF_LEN(), redefine TRIM_OFF_LEN() to use the
-new macros, and then the insert range code could do something like:
-
-	TRIM_OFF(offset, file_size - 1);
-	TRIM_LEN(offset, size, maxfilelen - file_size);
-	...
-
-Brian
-
-> +		offset = offset & ~(block_size - 1);
-> +		size = size & ~(block_size - 1);
-> +		if (size == 0) {
-> +			log4(OP_SKIPPED, OP_INSERT_RANGE, offset, size);
-> +			goto out;
-> +		}
-> +		if (file_size + size > maxfilelen) {
-> +			log4(OP_SKIPPED, OP_INSERT_RANGE, offset, size);
-> +			goto out;
-> +		}
-> +
-> +		do_insert_range(offset, size);
-> +		break;
->  	default:
->  		prterr("test: unknown operation");
->  		report_failure(42);
-> @@ -1307,6 +1391,9 @@ usage(void)
->  #ifdef FALLOC_FL_COLLAPSE_RANGE
->  "	-C: Do not use collapse range calls\n"
->  #endif
-> +#ifdef FALLOC_FL_INSERT_RANGE
-> +"	-i: Do not use insert range calls\n"
-> +#endif
->  "	-L: fsxLite - no file creations & no file size changes\n\
->  	-N numops: total # operations to do (default infinity)\n\
->  	-O: use oplen (see -o flag) for every op (default random)\n\
-> @@ -1493,7 +1580,7 @@ main(int argc, char **argv)
->  
->  	setvbuf(stdout, (char *)0, _IOLBF, 0); /* line buffered stdout */
->  
-> -	while ((ch = getopt(argc, argv, "b:c:dfl:m:no:p:qr:s:t:w:xyAD:FHzCLN:OP:RS:WZ"))
-> +	while ((ch = getopt(argc, argv, "b:c:dfl:m:no:p:qr:s:t:w:xyAD:FHzCiLN:OP:RS:WZ"))
->  	       != EOF)
->  		switch (ch) {
->  		case 'b':
-> @@ -1599,6 +1686,9 @@ main(int argc, char **argv)
->  		case 'C':
->  			collapse_range_calls = 0;
->  			break;
-> +		case 'i':
-> +			insert_range_calls = 0;
-> +			break;
->  		case 'L':
->  		        lite = 1;
->  			break;
-> @@ -1758,6 +1848,8 @@ main(int argc, char **argv)
->  		zero_range_calls = test_fallocate(FALLOC_FL_ZERO_RANGE);
->  	if (collapse_range_calls)
->  		collapse_range_calls = test_fallocate(FALLOC_FL_COLLAPSE_RANGE);
-> +	if (insert_range_calls)
-> +		insert_range_calls = test_fallocate(FALLOC_FL_INSERT_RANGE);
->  
->  	while (numops == -1 || numops--)
->  		test();
-> -- 
-> 1.7.11-rc0
-> 
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gVHVlLCA2IEphbiAyMDE1IDE4OjU2OjExICswMTAwCkNocmlzdG9waCBIZWxsd2lnIDxoY2hA
+bHN0LmRlPiB3cm90ZToKCj4gT24gVHVlLCBKYW4gMDYsIDIwMTUgYXQgMTI6MzI6MjJQTSAtMDUw
+MCwgSi4gQnJ1Y2UgRmllbGRzIHdyb3RlOgo+ID4gCS0gZG8gd2UgaGF2ZSBldmlkZW5jZSB0aGF0
+IHRoaXMgaXMgdXNlZnVsIGluIGl0cyBjdXJyZW50IGZvcm0/Cj4gCj4gV2hhdCBpcyB5b3VyIHRo
+cmVzaG9sZCBmb3IgdXNlZnVsbmVzcz8gIEl0IHBhc3NlcyB4ZnN0ZXN0cyBmaW5lLCBhbmQKPiBz
+aG93cyBsaW5lYXIgc2NhbGFiaWxpdHkgd2l0aCBtdWx0aXBsZSBjbGllbnRzIHRoYXQgZWFjaCBo
+YXZlIDEwR0IKPiBsaW5rcy4gCj4gCj4gPiAJLSBhbnkgYWR2aWNlIG9uIHRlc3Rpbmc/ICBJcyB0
+aGVyZSB3YXMgc29tZSBzaW1wbGUgdmlydHVhbCBzZXR1cAo+ID4gCSAgdGhhdCB3b3VsZCBhbGxv
+dyBhbnkgbG9zZXIgd2l0aCBubyBzcGVjaWFsIGhhcmR3YXJlIChlLmcuLCBtZSkKPiA+IAkgIHRv
+IGNoZWNrIHdoZXRoZXIgdGhleSd2ZSBicm9rZW4gdGhlIGJsb2NrIHNlcnZlcj8KPiAKPiBSdW4g
+dHdvIGt2bSBWTXMgdGhhdCBzaGFyZSB0aGUgc2FtZSBkaXNrLiAgQ3JlYXRlIGFuIFhGUyBmaWxl
+c3lzdGVtCj4gb24gdGhlIE1EUywgYW5kIGV4cG9ydCBpdC4gIElmIHRoZSBjbGllbnQgaGFzIGJs
+a21hcGQgcnVubmluZyAob24gRGViaWFuCj4gaXQgbmVlZHMgdG8gYmUgc3RhcnRlZCBtYW51YWxs
+eSkgaXQgd2lsbCB1c2UgcE5GUyBmb3IgYWNjZXNzaW5nIHRoZQo+IGZpbGVzeXN0ZW0uICBWZXJp
+ZnkgdGhhdCB1c2luZyB0aGUgcGVyLW9wZXJhdGlvbiBjb3VudGVycyBpbgo+IC9wcm9jL3NlbGYv
+bW91bnN0YXRzLiAgUmVwZWF0IHdpdGggYWRkaXRpb25hbCBjbGllbnRzIGFzIG5lc3NlY2FyeS4K
+PiAKPiBBbHRlcm5hdGl2ZWx5IHNldCB1cCBhIHNpbXBsZSBpU0NTSSB0YXJnZXQgdXNpbmcgdGd0
+IG9yIGxpbyBhbmQKPiBjb25uZWN0IHRvIGl0IGZyb20gbXVsdGlwbGUgY2xpZW50cy4KPiAKPiA+
+IAktIGFueSBkZWJ1Z2dpbmcgYWR2aWNlPyAgRS5nLiwgaGF2ZSB5b3UgY2hlY2tlZCBpZiBjdXJy
+ZW50Cj4gPiAJICB3aXJlc2hhcmsgY2FuIGhhbmRsZSB0aGUgTURTIHRyYWZmaWM/Cj4gCj4gVGhl
+IHdpcmVzaGFyZSB2ZXJzaW9uIEkndmUgdXNlZCBkZWNvZGVkIHRoZSBnZW5lcmljIHBORlMgb3Bl
+cmF0aW9ucwo+IGZpbmUsIGJ1dCBqdXN0IGR1bXBzIHRoZSBsYXlvdXQgc3BlY2lmaWNzIGFzIGhl
+eCBkYXRhLgo+IAo+IEVuYWJsZSB0aGUgdHJhY2UgcG9pbnRzIGFkZGVkIGluIHRoaXMgc2VyaWVz
+LCB0aGV5IHRyYWNrIGFsbCBzdGF0ZWlkCj4gaW50ZXJhY3Rpb25zIGluIHRoZSBzZXJ2ZXIuICBB
+ZGRpdNGWb25hbGx5IHRoZSBwbmZzIGRlYnVnIHByaW50a3Mgb24KPiBjbGllbnQgYW5kIHNlcnZl
+ciBkdW1wIGEgbG90IG9mIGluZm9ybWF0aW9uLgoKVGhlIHdpcmVzaGFyayBkZWNvZGVyIHJlYWxs
+eSBvbmx5IGhhbmRsZXMgZmlsZXMgbGF5b3V0cyByaWdodCBub3cuIERyb3MKaGFzIHNvbWUgcGF0
+Y2hlcyB0byBhZGQgZmxleGZpbGVzIHN1cHBvcnQgdG9vIChvbmNlIHRoZSBzcGVjIGlzIGEgYml0
+Cm1vcmUgZmluYWxpemVkKSBhbmQgYXQgdGhhdCBwb2ludCBpdCBzaG91bGRuJ3QgYmUgdG9vIGhh
+cmQgdG8gZml4IGl0IHRvCmhhbmRsZSBibG9jayBsYXlvdXQgYXMgd2VsbC4KCi0tIApKZWZmIExh
+eXRvbiA8amxheXRvbkBwcmltYXJ5ZGF0YS5jb20+CgpfX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpo
+dHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
