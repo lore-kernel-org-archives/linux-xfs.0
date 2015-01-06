@@ -1,26 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id B9A267FAB
-	for <xfs@oss.sgi.com>; Tue,  6 Jan 2015 13:05:23 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id A8634304053
-	for <xfs@oss.sgi.com>; Tue,  6 Jan 2015 11:05:20 -0800 (PST)
-Received: from mail-yk0-f169.google.com (mail-yk0-f169.google.com
-	[209.85.160.169]) by cuda.sgi.com with ESMTP id
-	xfAWdc7wWwuqaUaF (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 06 Jan 2015 11:05:19 -0800 (PST)
-Received: by mail-yk0-f169.google.com with SMTP id 79so11551951ykr.14
-	for <xfs@oss.sgi.com>; Tue, 06 Jan 2015 11:05:17 -0800 (PST)
+	by oss.sgi.com (Postfix) with ESMTP id CED6F7F4E
+	for <xfs@oss.sgi.com>; Tue,  6 Jan 2015 13:10:18 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id BB2E6304051
+	for <xfs@oss.sgi.com>; Tue,  6 Jan 2015 11:10:18 -0800 (PST)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id 4cF2iMF9GnM3U9Pl (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 06 Jan 2015 11:10:17 -0800 (PST)
+Date: Tue, 6 Jan 2015 14:10:10 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH v7 9/11] xfstests: generic/043: Test multiple fallocate
+	insert/collapse range calls
+Message-ID: <20150106191010.GJ5874@bfoster.bfoster>
+References: <004701d02670$73dcb0a0$5b9611e0$@samsung.com>
 MIME-Version: 1.0
-In-Reply-To: <54AC1511.1060908@sandeen.net>
-References: <1806495.BCZcrVVEOf@shtub-cm>
-	<54AC1511.1060908@sandeen.net>
-Date: Tue, 6 Jan 2015 12:05:17 -0700
-Message-ID: <CAJCQCtQqseJ_75WSjqqNMmSjYW-0-L_cWBDDECRVOkiTmHLeVA@mail.gmail.com>
-Subject: Re: What is a recommended XFS sector size for hybrid (512e) advanced
-	format hard drives?
-From: Chris Murphy <lists@colorremedies.com>
+Content-Disposition: inline
+In-Reply-To: <004701d02670$73dcb0a0$5b9611e0$@samsung.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,38 +30,183 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: Namjae Jeon <namjae.jeon@samsung.com>
+Cc: Theodore Ts'o <tytso@mit.edu>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Ashish Sangwan <a.sangwan@samsung.com>, linux-fsdevel@vger.kernel.org, linux-ext4 <linux-ext4@vger.kernel.org>
 
-On Tue, Jan 6, 2015 at 10:02 AM, Eric Sandeen <sandeen@sandeen.net> wrote:
-> however, some drives lie about these sizes, and then mkfs.xfs can't know.
-> Try the blockdev command above to see.
+On Fri, Jan 02, 2015 at 06:42:41PM +0900, Namjae Jeon wrote:
+> This testcase(043) tries to test finsert range a single alternate block
+> mulitiple times and test merge code of collase range.
+> 
+> Signed-off-by: Namjae Jeon <namjae.jeon@samsung.com>
+> Signed-off-by: Ashish Sangwan <a.sangwan@samsung.com>
+> Cc: Brian Foster <bfoster@redhat.com>
+> ---
+>  tests/generic/043     | 107 ++++++++++++++++++++++++++++++++++++++++++++++++++
+>  tests/generic/043.out |   7 ++++
+>  tests/generic/group   |   1 +
+>  3 files changed, 115 insertions(+)
+>  create mode 100644 tests/generic/043
+>  create mode 100644 tests/generic/043.out
+> 
+> diff --git a/tests/generic/043 b/tests/generic/043
+> new file mode 100644
+> index 0000000..6aebc1e
+> --- /dev/null
+> +++ b/tests/generic/043
+> @@ -0,0 +1,107 @@
+> +#! /bin/bash
+> +# FS QA Test No. generic/043
+> +#
+> +# Test multiple fallocate insert/collapse range calls on same file.
+> +# For different blocksizes, Call insert range a single alternate block
+> +# multiple times until the file is left with 100 extents and as much
+> +# number of extents. And Call collapse range about the previously inserted
+> +# ranges to test merge code of collapse range.
+> +# Also check for file system consistency after completing this operation
+> +# for each blocksize.
+> +#-----------------------------------------------------------------------
+> +# Copyright (c) 2014 Samsung Electronics.  All Rights Reserved.
+> +#
+> +# This program is free software; you can redistribute it and/or
+> +# modify it under the terms of the GNU General Public License as
+> +# published by the Free Software Foundation.
+> +#
+> +# This program is distributed in the hope that it would be useful,
+> +# but WITHOUT ANY WARRANTY; without even the implied warranty of
+> +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> +# GNU General Public License for more details.
+> +#
+> +# You should have received a copy of the GNU General Public License
+> +# along with this program; if not, write the Free Software Foundation,
+> +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+> +#
+> +#-----------------------------------------------------------------------
+> +#
+> +
+> +seq=`basename $0`
+> +seqres=$RESULT_DIR/$seq
+> +echo "QA output created by $seq"
+> +
+> +here=`pwd`
+> +tmp=/tmp/$$
+> +status=1	# failure is the default!
+> +trap "rm -f $tmp.*; exit \$status" 0 1 2 3 15
+> +
+> +# get standard environment, filters and checks
+> +. ./common/rc
+> +. ./common/filter
+> +
+> +# real QA test starts here
+> +_supported_fs generic
+> +_supported_os Linux
+> +
+> +_require_scratch
+> +_require_xfs_io_command "fiemap"
+> +_require_xfs_io_command "finsert"
+> +_require_xfs_io_command "fcollapse"
+> +_do_die_on_error=y
+> +testfile=$SCRATCH_MNT/$seq.$$
+> +BLOCKS=100
+> +
+> +for (( BSIZE = 1024; BSIZE <= 4096; BSIZE *= 2 )); do
+> +
+> +	length=$(($BLOCKS * $BSIZE))
+> +	case $FSTYP in
+> +	xfs)
+> +	_scratch_mkfs -b size=$BSIZE >> $seqres.full 2>&1
+> +	;;
+> +	ext4)
+> +	_scratch_mkfs -b $BSIZE >> $seqres.full 2>&1
+> +	;;
+> +	esac
 
-blockdev and parted seem to get this wrong for a device for which
-smartctl and hdparm get correct
+I think we typically try to define things like blocksize in the test
+configuration. The MKFS_OPTIONS env. var. can be defined with the
+correct options for the associated fs being tested. That eliminates the
+need to loop and for the fs-specific _scratch_mkfs calls above.
 
+> +	_scratch_mount >> $seqres.full 2>&1
+> +
+> +	# Write file
+> +	$XFS_IO_PROG -f -c "pwrite 0 $length" -c fsync $testfile > /dev/null
+> +
+> +
+> +	# Insert alternate blocks 
 
-smartctl -a reports:
-Sector Sizes:     512 bytes logical, 4096 bytes physical
-hdparm -I reports:
-Logical  Sector size:                   512 bytes
-Physical Sector size:                  4096 bytes
+Trailing space in the above comment.
 
-parted reports:
-Sector size (logical/physical): 512B/512B
+> +	for (( j=0; j < $(($BLOCKS/2)); j++ )); do
+> +		offset=$((($j*$BSIZE)*2))
+> +		$XFS_IO_PROG -c "finsert $offset $BSIZE" $testfile > /dev/null
+> +	done
+> +
+> +	# Check if 100 extents are present
+> +	$XFS_IO_PROG -c "fiemap -v" $testfile | grep "^ *[0-9]*:" |wc -l
+> +
+> +	_check_scratch_fs
+> +	if [ $? -ne 0 ]; then
+> +		status=1
+> +		exit
+> +	fi
+> +
+> +	# Collapse alternate blocks 
 
-# blockdev --getss /dev/sdc
-512
-# blockdev --getpbsz /dev/sdc
-512
+... and here as well.
 
-And thus xfs_info on this device says sectsz=512 since I formatted
-with defaults.
+> +	for (( j=0; j < $(($BLOCKS/2)); j++ )); do
+> +		offset=$((($j*$BSIZE)))
+> +		$XFS_IO_PROG -c "fcollapse $offset $BSIZE" $testfile > /dev/null
+> +	done
+> +
+> +	# Check if 1 extents are present
+> +	$XFS_IO_PROG -c "fiemap -v" $testfile | grep "^ *[0-9]*:" |wc -l
+> +
+> +	_check_scratch_fs
+> +	if [ $? -ne 0 ]; then
+> +		status=1
+> +		exit
+> +	fi
+> +
 
+Maybe create a copy of the original file before we run through the
+insert and collapse sequence and cmp the files here as a last step?
 
+Brian
 
--- 
-Chris Murphy
+> +	umount $SCRATCH_MNT
+> +done
+> +
+> +# success, all done
+> +status=0
+> +exit
+> diff --git a/tests/generic/043.out b/tests/generic/043.out
+> new file mode 100644
+> index 0000000..fd4b804
+> --- /dev/null
+> +++ b/tests/generic/043.out
+> @@ -0,0 +1,7 @@
+> +QA output created by 043
+> +100
+> +1
+> +100
+> +1
+> +100
+> +1
+> diff --git a/tests/generic/group b/tests/generic/group
+> index c0944b3..0a10bdd 100644
+> --- a/tests/generic/group
+> +++ b/tests/generic/group
+> @@ -45,6 +45,7 @@
+>  040 auto quick prealloc
+>  041 auto quick prealloc
+>  042 auto quick prealloc
+> +043 auto quick prealloc
+>  053 acl repair auto quick
+>  062 attr udf auto quick
+>  068 other auto freeze dangerous stress
+> -- 
+> 1.8.5.5
+> 
 
 _______________________________________________
 xfs mailing list
