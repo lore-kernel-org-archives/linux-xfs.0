@@ -1,19 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 7D2237F6A
-	for <xfs@oss.sgi.com>; Tue,  6 Jan 2015 10:29:41 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 09FABAC00A
-	for <xfs@oss.sgi.com>; Tue,  6 Jan 2015 08:29:40 -0800 (PST)
+	by oss.sgi.com (Postfix) with ESMTP id 4A17D7F76
+	for <xfs@oss.sgi.com>; Tue,  6 Jan 2015 10:29:43 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id DCC1BAC008
+	for <xfs@oss.sgi.com>; Tue,  6 Jan 2015 08:29:42 -0800 (PST)
 Received: from casper.infradead.org (casper.infradead.org [85.118.1.10]) by
-	cuda.sgi.com with ESMTP id FlvF1F15DZ97Ct3y (version=TLSv1
+	cuda.sgi.com with ESMTP id u9FstsKTvPGBV5d5 (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 06 Jan 2015 08:29:39 -0800 (PST)
+	Tue, 06 Jan 2015 08:29:40 -0800 (PST)
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 06/18] nfsd: make lookup/alloc/unhash_stid available outside
+Subject: [PATCH 07/18] nfsd: make find/get/put file available outside
 	nfs4state.c
-Date: Tue,  6 Jan 2015 17:28:29 +0100
-Message-Id: <1420561721-9150-7-git-send-email-hch@lst.de>
+Date: Tue,  6 Jan 2015 17:28:30 +0100
+Message-Id: <1420561721-9150-8-git-send-email-hch@lst.de>
 In-Reply-To: <1420561721-9150-1-git-send-email-hch@lst.de>
 References: <1420561721-9150-1-git-send-email-hch@lst.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -34,67 +34,63 @@ Cc: linux-fsdevel@vger.kernel.org, linux-nfs@vger.kernel.org, Jeff Layton <jlayt
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/nfsd/nfs4state.c | 8 ++++----
- fs/nfsd/state.h     | 6 ++++++
- 2 files changed, 10 insertions(+), 4 deletions(-)
+ fs/nfsd/nfs4state.c | 10 ++--------
+ fs/nfsd/state.h     |  7 +++++++
+ 2 files changed, 9 insertions(+), 8 deletions(-)
 
 diff --git a/fs/nfsd/nfs4state.c b/fs/nfsd/nfs4state.c
-index aaa3f8e..e804e9b 100644
+index e804e9b..b2054d4 100644
 --- a/fs/nfsd/nfs4state.c
 +++ b/fs/nfsd/nfs4state.c
-@@ -486,7 +486,7 @@ static void nfs4_file_put_access(struct nfs4_file *fp, u32 access)
- 		__nfs4_file_put_access(fp, O_RDONLY);
+@@ -282,7 +282,7 @@ static void nfsd4_free_file_rcu(struct rcu_head *rcu)
+ 	kmem_cache_free(file_slab, fp);
  }
  
--static struct nfs4_stid *nfs4_alloc_stid(struct nfs4_client *cl,
-+struct nfs4_stid *nfs4_alloc_stid(struct nfs4_client *cl,
- 					 struct kmem_cache *slab)
+-static inline void
++void
+ put_nfs4_file(struct nfs4_file *fi)
  {
- 	struct nfs4_stid *stid;
-@@ -690,7 +690,7 @@ static void nfs4_put_deleg_lease(struct nfs4_file *fp)
+ 	might_lock(&state_lock);
+@@ -295,12 +295,6 @@ put_nfs4_file(struct nfs4_file *fi)
  	}
  }
  
--static void unhash_stid(struct nfs4_stid *s)
-+void nfs4_unhash_stid(struct nfs4_stid *s)
+-static inline void
+-get_nfs4_file(struct nfs4_file *fi)
+-{
+-	atomic_inc(&fi->fi_ref);
+-}
+-
+ static struct file *
+ __nfs4_get_fd(struct nfs4_file *f, int oflag)
  {
- 	s->sc_type = 0;
- }
-@@ -998,7 +998,7 @@ static void unhash_lock_stateid(struct nfs4_ol_stateid *stp)
- 
- 	list_del_init(&stp->st_locks);
- 	unhash_ol_stateid(stp);
--	unhash_stid(&stp->st_stid);
-+	nfs4_unhash_stid(&stp->st_stid);
+@@ -3300,7 +3294,7 @@ find_file_locked(struct knfsd_fh *fh, unsigned int hashval)
+ 	return NULL;
  }
  
- static void release_lock_stateid(struct nfs4_ol_stateid *stp)
-@@ -4437,7 +4437,7 @@ out_unlock:
- 	return status;
- }
- 
--static __be32
-+__be32
- nfsd4_lookup_stateid(struct nfsd4_compound_state *cstate,
- 		     stateid_t *stateid, unsigned char typemask,
- 		     struct nfs4_stid **s, struct nfsd_net *nn)
+-static struct nfs4_file *
++struct nfs4_file *
+ find_file(struct knfsd_fh *fh)
+ {
+ 	struct nfs4_file *fp;
 diff --git a/fs/nfsd/state.h b/fs/nfsd/state.h
-index dab6553..55a3ece 100644
+index 55a3ece..8bc961e 100644
 --- a/fs/nfsd/state.h
 +++ b/fs/nfsd/state.h
-@@ -545,6 +545,12 @@ struct nfsd_net;
- extern __be32 nfs4_preprocess_stateid_op(struct net *net,
- 		struct nfsd4_compound_state *cstate,
- 		stateid_t *stateid, int flags, struct file **filp);
-+__be32 nfsd4_lookup_stateid(struct nfsd4_compound_state *cstate,
-+		     stateid_t *stateid, unsigned char typemask,
-+		     struct nfs4_stid **s, struct nfsd_net *nn);
-+struct nfs4_stid *nfs4_alloc_stid(struct nfs4_client *cl,
-+		struct kmem_cache *slab);
-+void nfs4_unhash_stid(struct nfs4_stid *s);
- void nfs4_put_stid(struct nfs4_stid *s);
- void nfs4_remove_reclaim_record(struct nfs4_client_reclaim *, struct nfsd_net *);
- extern void nfs4_release_reclaim(struct nfsd_net *);
+@@ -573,6 +573,13 @@ extern struct nfs4_client_reclaim *nfs4_client_to_reclaim(const char *name,
+ 							struct nfsd_net *nn);
+ extern bool nfs4_has_reclaimed_state(const char *name, struct nfsd_net *nn);
+ 
++struct nfs4_file *find_file(struct knfsd_fh *fh);
++void put_nfs4_file(struct nfs4_file *fi);
++static inline void get_nfs4_file(struct nfs4_file *fi)
++{
++	atomic_inc(&fi->fi_ref);
++}
++
+ /* grace period management */
+ void nfsd4_end_grace(struct nfsd_net *nn);
+ 
 -- 
 1.9.1
 
