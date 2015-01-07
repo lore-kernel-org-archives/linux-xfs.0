@@ -1,24 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 49B957F8B
-	for <xfs@oss.sgi.com>; Wed,  7 Jan 2015 04:40:15 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 08E1E304039
-	for <xfs@oss.sgi.com>; Wed,  7 Jan 2015 02:40:14 -0800 (PST)
-Received: from newverein.lst.de (verein.lst.de [213.95.11.211]) by
-	cuda.sgi.com with ESMTP id zgELpLL9o2qqbIiB (version=TLSv1
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id D6C867F69
+	for <xfs@oss.sgi.com>; Wed,  7 Jan 2015 10:17:16 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 56AC8AC001
+	for <xfs@oss.sgi.com>; Wed,  7 Jan 2015 08:17:13 -0800 (PST)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id DLUzYFmi61QCF3HY (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 07 Jan 2015 02:40:13 -0800 (PST)
-Date: Wed, 7 Jan 2015 11:40:10 +0100
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 17/18] xfs: implement pnfs export operations
-Message-ID: <20150107104010.GD28783@lst.de>
-References: <1420561721-9150-1-git-send-email-hch@lst.de>
-	<1420561721-9150-18-git-send-email-hch@lst.de>
-	<20150107002434.GG31508@dastard>
+	Wed, 07 Jan 2015 08:16:41 -0800 (PST)
+Date: Wed, 7 Jan 2015 11:16:25 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: XFS corrupt after RAID failure and resync
+Message-ID: <20150107161625.GA2232@laptop.bfoster>
+References: <CAOFq7B5PaPCJdAxyYa6feCXgGbkz+1Qs+Gfb2WG=5af=A+WOQg@mail.gmail.com>
+	<44b127de199c445fa12c3b832a05f108@000s-ex-hub-qs1.unimelb.edu.au>
+	<CAOFq7B5HnEZFtVvoRORRwOxPhx5Txf9xJW=BG6GFbLMNk+_CEw@mail.gmail.com>
+	<8cc9a649ec2240faa4e38fd742437546@000S-EX-HUB-NP2.unimelb.edu.au>
+	<CAOFq7B6t8jrBBu81CuT2tqTyPEYROqkCJ4ChnxCtCvMGiGb7wg@mail.gmail.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20150107002434.GG31508@dastard>
+In-Reply-To: <CAOFq7B6t8jrBBu81CuT2tqTyPEYROqkCJ4ChnxCtCvMGiGb7wg@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,88 +29,277 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-nfs@vger.kernel.org, xfs@oss.sgi.com, "J. Bruce Fields" <bfields@fieldses.org>, Jeff Layton <jlayton@primarydata.com>, linux-fsdevel@vger.kernel.org, Christoph Hellwig <hch@lst.de>
+To: David Raffelt <david.raffelt@florey.edu.au>
+Cc: "stefanrin@gmail.com" <stefanrin@gmail.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-T24gV2VkLCBKYW4gMDcsIDIwMTUgYXQgMTE6MjQ6MzRBTSArMTEwMCwgRGF2ZSBDaGlubmVyIHdy
-b3RlOgo+ID4gZGlmZiAtLWdpdCBhL2ZzL3hmcy94ZnNfZnNvcHMuYyBiL2ZzL3hmcy94ZnNfZnNv
-cHMuYwo+ID4gaW5kZXggZmRjNjQyMi4uMmI4NmJlOCAxMDA2NDQKPiA+IC0tLSBhL2ZzL3hmcy94
-ZnNfZnNvcHMuYwo+ID4gKysrIGIvZnMveGZzL3hmc19mc29wcy5jCj4gPiBAQCAtNjAxLDYgKzYw
-MSw4IEBAIHhmc19ncm93ZnNfZGF0YSgKPiA+ICAJaWYgKCFtdXRleF90cnlsb2NrKCZtcC0+bV9n
-cm93bG9jaykpCj4gPiAgCQlyZXR1cm4gLUVXT1VMREJMT0NLOwo+ID4gIAllcnJvciA9IHhmc19n
-cm93ZnNfZGF0YV9wcml2YXRlKG1wLCBpbik7Cj4gPiArCWlmICghZXJyb3IpCj4gPiArCQltcC0+
-bV9nZW5lcmF0aW9uKys7Cj4gPiAgCW11dGV4X3VubG9jaygmbXAtPm1fZ3Jvd2xvY2spOwo+ID4g
-IAlyZXR1cm4gZXJyb3I7Cj4gPiAgfQo+IAo+IEkgY291bGRuJ3QgZmluZCBhbiBleHBsYW5hdGlv
-biBvZiB3aGF0IHRoaXMgZ2VuZXJhdGlvbiBudW1iZXIgaXMKPiBmb3IuIFdoYXQgYXJlIGl0J3Mg
-c2VtYW50aWNzIHcuci50LiBzZXJ2ZXIgY3Jhc2hlcz8KClRoZSBnZW5lcmF0aW9uIGlzIGluY3Jl
-bWVudGVkIHdoZW4gd2UgZ3JvdyB0aGUgZmlsZXN5c3RlbSwgc28gdGhhdAphIG5ldyBsYXlvdXQg
-KGJsb2NrIG1hcHBpbmcpIHJldHVybmVkIHRvIHRoZSBjbNGWZW50IHJlZmVyZXJzIHRvIHRoZQpu
-ZXcgTkZTIGRldmljZSBJRCwgd2hpY2ggd2lsbCBtYWtlIHRoZSBjbGllbnQgYXdhcmUgb2YgdGhl
-IG5ldyBzaXplLgoKVGhlIGRldmljZSBJRHMgYXJlbid0IHBlcnNpc3RlbnQsIHNvIGFmdGVyIGEg
-c2VydmVyIGNyYXNoIC8gcmVib290CndlJ2xsIHN0YXJ0IGF0IHplcm8gYWdhaW4uCgpJJ2xsIGFk
-ZCBjb21tZW50cyBleHBsYWluaW5nIHRoaXMgdG8gdGhlIGNvZGUuCgo+IFdoeSBkb2VzIHRoaXMg
-ZnVuY3Rpb24gZ2V0IHBhc3NlZCBhbiBvZmZzZXQgaXQgaXMgbm90IGFjdHVhbGx5IHVzZWQ/CgpI
-aXN0b3JpYyByZWFzb25zLi4KCj4gPiArc3RhdGljIGludAo+ID4gK3hmc19mc191cGRhdGVfZmxh
-Z3MoCj4gPiArCXN0cnVjdCB4ZnNfaW5vZGUJKmlwKQo+ID4gK3sKPiA+ICsJc3RydWN0IHhmc19t
-b3VudAkqbXAgPSBpcC0+aV9tb3VudDsKPiA+ICsJc3RydWN0IHhmc190cmFucwkqdHA7Cj4gPiAr
-CWludAkJCWVycm9yOwo+ID4gKwo+ID4gKwkvKgo+ID4gKwkgKiBVcGRhdGUgdGhlIG1vZGUsIGFu
-ZCBwcmVhbGxvYyBmbGFnIGJpdHMuCj4gPiArCSAqLwo+ID4gKwl0cCA9IHhmc190cmFuc19hbGxv
-YyhtcCwgWEZTX1RSQU5TX1dSSVRFSUQpOwo+ID4gKwllcnJvciA9IHhmc190cmFuc19yZXNlcnZl
-KHRwLCAmTV9SRVMobXApLT50cl93cml0ZWlkLCAwLCAwKTsKPiA+ICsJaWYgKGVycm9yKSB7Cj4g
-PiArCQl4ZnNfdHJhbnNfY2FuY2VsKHRwLCAwKTsKPiA+ICsJCXJldHVybiBlcnJvcjsKPiA+ICsJ
-fQo+ID4gKwo+ID4gKwl4ZnNfaWxvY2soaXAsIFhGU19JTE9DS19FWENMKTsKPiA+ICsJeGZzX3Ry
-YW5zX2lqb2luKHRwLCBpcCwgWEZTX0lMT0NLX0VYQ0wpOwo+ID4gKwlpcC0+aV9kLmRpX21vZGUg
-Jj0gflNfSVNVSUQ7Cj4gPiArCWlmIChpcC0+aV9kLmRpX21vZGUgJiBTX0lYR1JQKQo+ID4gKwkJ
-aXAtPmlfZC5kaV9tb2RlICY9IH5TX0lTR0lEOwo+ID4gKwo+ID4gKwlpcC0+aV9kLmRpX2ZsYWdz
-IHw9IFhGU19ESUZMQUdfUFJFQUxMT0M7Cj4gPiArCj4gPiArCXhmc190cmFuc19sb2dfaW5vZGUo
-dHAsIGlwLCBYRlNfSUxPR19DT1JFKTsKPiA+ICsJcmV0dXJuIHhmc190cmFuc19jb21taXQodHAs
-IDApOwo+ID4gK30KPiAKPiBUaGF0IG5lZWRzIHRpbWVzdGFtcCBjaGFuZ2VzIGFzIHdlbGwuIGku
-ZS46Cj4gCj4gCXhmc190cmFuc19pY2hndGltZSh0cCwgaXAsIFhGU19JQ0hHVElNRV9NT0QgfCBY
-RlNfSUNIR1RJTUVfQ0hHKTsKClRoZSB0aW1lIHN0YW1wcyBhcmUgb25seSB1cGRhdGVkIHdoZW4g
-d2UgYWN0dWFsbHkgY29tbWl0IHRoZSBkYXRhLgpVcGRhdGluZyB0aGVtIGhlcmUgbWlnaHQgYmUg
-aGFybWxlc3MsIGJ1dCBJJ2xsIGhhdmUgdG8gZGlnIGludG8gdGhlCnByb3RvY29sIHNwZWNpZmlj
-YXRpb24gYW5kIHRlc3RzIGEgYml0IG1vcmUgdG8gY2hlY2sgaWYgZG9pbmcgdGhlCmFkZGl0aW9u
-YWwgdGltZXN0YW1wIHVwZGF0ZSB3b3VsZCBiZSBoYXJtbGVzcy4KCj4gPiArCj4gPiArLyoKPiA+
-ICsgKiBHZXQgYSBsYXlvdXQgZm9yIHRoZSBwTkZTIGNsaWVudC4KPiA+ICsgKgo+ID4gKyAqIE5v
-dGUgdGhhdCBpbiB0aGUgYWxsb2NhdGlvbiBjYXNlIHdlIGRvIGZvcmNlIG91dCB0aGUgdHJhbnNh
-Y3Rpb24gaGVyZS4KPiA+ICsgKiBUaGVyZSBpcyBubyBtZXRhZGF0YSB1cGRhdGUgdGhhdCBpcyBy
-ZXF1aXJlZCB0byBiZSBzdGFibGUgZm9yIE5GUwo+ID4gKyAqIHNlbWFudGljcywgYW5kIGxheW91
-dHMgYXJlIG5vdCB2YWxpZCBvdmVyIGEgc2VydmVyIGNyYXNoLiAgSW5zdGVhZAo+ID4gKyAqIHdl
-J2xsIGhhdmUgdG8gYmUgY2FyZWZ1bCBpbiB0aGUgY29tbWl0IHJvdXRpbmUgYXMgaXQgbWlnaHQg
-cGFzcyB1cwo+ID4gKyAqIGJsb2NrcyBmb3IgYW4gYWxsb2NhdGlvbiB0aGF0IG5ldmVyIG1hZGUg
-aXQgdG8gZGlzayBpbiB0aGUgcmVjb3ZlcnkKPiA+ICsgKiBjYXNlLgo+IAo+IEkgdGhpbmsgeW91
-IGFyZSBzYXlpbmcgdGhhdCBiZWNhdXNlIGJsb2NrIGFsbG9jYXRpb24gaXMgYW4gYXN5bmMKPiB0
-cmFuc2FjdGlvbiwgdGhlbiB3ZSBoYXZlIHRvIGRlYWwgd2l0aCB0aGUgcG9zc2liaWxpdHkgdGhh
-dCB3ZSBjcmFzaAo+IGJlZm9yZSB0aGUgdHJhbnNhY3Rpb24gaGl0cyB0aGUgZGlzay4KPiAKPiBI
-b3cgb2Z0ZW4gZG8gd2UgaGF2ZSB0byBhbGxvY2F0ZQo+IG5ldyBibG9ja3MgbGlrZSB0aGlzPyBE
-byB3ZSBuZWVkIHRvIHVzZSBhc3luYyB0cmFuc2FjdGlvbnMgZm9yIHRoaXMKPiBjYXNlLCBvciBz
-aG91bGQgd2Ugc2ltcGx5IGRvIHRoZSBicnV0ZSBmb3JjZSB0aGluZyAoYnkgbWFraW5nIHRoZQo+
-IGFsbG9jYXRpb24gdHJhbnNhY3Rpb24gc3luY2hyb25vdXMpIGluaXRpYWxseSBhbmQgdGhlbiwg
-aWYKPiBwZXJmb3JtYW5jZSBwcm9ibGVtcyBhcmlzZSwgb3B0aW1pc2UgZnJvbSB0aGVyZT8KCkV2
-ZXJ5IGJsb2NrIGFsbG9jYXRpb24gZnJvbSBhIHBORlMgY2xpZW50IGdvZXMgdGhyb3VnaCB0aGlz
-IHBhdGgsIHNvCnllcyBpdCBpcyBwZXJmb3JtYW5jZSBjcml0aWNhbC4KCj4gPiArCXhmc19tYXBf
-aW9tYXAoaXAsIGlvbWFwLCAmaW1hcCwgb2Zmc2V0KTsKPiA+ICsJKmRldmljZV9nZW5lcmF0aW9u
-ID0gbXAtPm1fZ2VuZXJhdGlvbjsKPiAKPiBTbyB3aGVuZXZlciB0aGUgc2VydmVyIGZpcnN0IHN0
-YXJ0cyB1cCB0aGUgZ2VuZXJhdGlvbiBudW1iZXIgaW4gYQo+IG1hcCBpcyBnb2luZyB0byBiZSB6
-ZXJvIC0gd2hhdCBwdXJwb3NlIGRvZXMgdGhpcyBhY3R1YWxseSBzZXJ2ZT8KClNvIHRoYXQgd2Ug
-Y2FuIGNvbW11bmljYXRlIGlmIGEgZGV2aWNlIHdhcyBncm93biB0byB0aGUgY2xpZW50LCB3aGlj
-aAppbiB0aGlzIGNhc2UgbmVlZHMgdG8gcmUtcmVhZCB0aGUgZGV2aWNlIGluZm9ybWF0aW9uLgoK
-PiA+ICsJCWlmICghbGVuZ3RoKQo+ID4gKwkJCWNvbnRpbnVlOwo+ID4gKwo+ID4gKwkJZXJyb3Ig
-PSB4ZnNfaW9tYXBfd3JpdGVfdW53cml0dGVuKGlwLCBzdGFydCwgbGVuZ3RoKTsKPiA+ICsJCWlm
-IChlcnJvcikKPiA+ICsJCQlnb3RvIG91dF9kcm9wX2lvbG9jazsKPiA+ICsJfQo+ID4gKwo+ID4g
-KwkvKgo+ID4gKwkgKiBNYWtlIHN1cmUgcmVhZHMgdGhyb3VnaCB0aGUgcGFnZWNhY2hlIHNlZSB0
-aGUgbmV3IGRhdGEuCj4gPiArCSAqLwo+ID4gKwlpbnZhbGlkYXRlX2lub2RlX3BhZ2VzMihpbm9k
-ZS0+aV9tYXBwaW5nKTsKPiAKPiBQcm9iYWJseSBzaG91bGQgZG8gdGhhdCBmaXJzdC4gQWxzbywg
-d2hhdCBoYXBwZW5zIGlmIHRoZXJlIGlzIGxvY2FsCj4gZGlydHkgZGF0YSBvbiB0aGUgZmlsZSBh
-dCB0aGlzIHBvaW50PyBEb2Vzbid0IHRoaXMganVzdCB0b3NzIHRoZW0KPiBhd2F5PwoKSWYgdGhl
-cmUgd2FzIGxvY2FsIGRhdGEgaXQgd2lsbCBiZSB0b3NzZWQuICBGb3IgcmVndWxhciB3cml0ZXMg
-dGhpcyBjYW4ndApoYXBwZW4gYmVjYXVzZSB3ZSByZWFsbHkgb3V0c3RhbmRpbmcgbGF5b3V0cyBp
-biB0aGUgd3JpdGUgcGF0aC4gIEZvcgptbWFwIHdlIGZvciBub3cgaWdub3JlIHRoaXMgcHJvYmxl
-bSwgYXMgYSBwTkZTIHNlcnZlciBzaG91bGQgZ2VuZXJhbGx5Cm5vdCBiZSB1c2VkIGxvY2FsbHku
-ICAKCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBt
-YWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xp
-c3RpbmZvL3hmcwo=
+On Wed, Jan 07, 2015 at 10:47:00AM +1100, David Raffelt wrote:
+> Hi Brain,
+> Below is the root inode data. I'm currently running xfs_metadump and will
+> send you a link to the file.
+> Cheers!
+> David
+> 
+> 
+
+Thanks for the metadump. It appears that repair complains about the sb
+magic number and goes off scanning for secondary superblocks due to a
+bug in verify_set_primary_sb(). This function scans through all the
+superblocks and tries to find a consistent value across the set by
+tracking which valid sb value occurs most frequently. The bug is that
+even if enough valid superblocks are found, we return the validity of
+the last sb we happened to look at.
+
+In your case, 10 or so of the 32 superblocks are corrupted and the last
+one scanned ('sb 31,' 'p') is one of those. If I work around that issue,
+the repair continues on a bit. It generates a _ton_ of noise and
+eventually falls over somewhere else (and if I work around that, the
+cycle repeats yet again somewhere else). Anyways, I'm adding to my todo
+list to take a closer look at this code and perhaps put together a test
+case if we don't have enough coverage as is, but that problem doesn't
+appear to be gating the ability to recover this particular fs.
+
+Given that, and as Dave pointed out from the output below, the root
+inode is clearly completely zeroed out, it does appear that this array
+ended up pretty scrambled one way or another. The best I can recommend
+is to try and see if the array can be put back together in some manner
+that repair can cope with or restore from whatever backups might be
+available (others more familiar with md are better help here).
+
+It also might be a good idea to audit the array recovery process
+involved with this scenario for future occurrences, because clearly
+something went horribly wrong. E.g., was the hotspare or whatever other
+array mods made done via script or manually? Do the storage servers that
+run these arrays have sane shutdown/startup sequences in the event of
+degraded/syncing/busy arrays? etc. It might be worthwhile to try and
+reproduce some of these array failure conditions on a test box to
+identify any problems with the recovery process before it has to be run
+again on one of your other glusterfs servers.
+
+Brian
+
+> 
+> 
+> xfs_db> sb
+> xfs_db> p rootino
+> rootino = 1024
+> xfs_db> inode 1024
+> xfs_db> p
+> core.magic = 0
+> core.mode = 0
+> core.version = 0
+> core.format = 0 (dev)
+> core.uid = 0
+> core.gid = 0
+> core.flushiter = 0
+> core.atime.sec = Thu Jan  1 10:00:00 1970
+> core.atime.nsec = 000000000
+> core.mtime.sec = Thu Jan  1 10:00:00 1970
+> core.mtime.nsec = 000000000
+> core.ctime.sec = Thu Jan  1 10:00:00 1970
+> core.ctime.nsec = 000000000
+> core.size = 0
+> core.nblocks = 0
+> core.extsize = 0
+> core.nextents = 0
+> core.naextents = 0
+> core.forkoff = 0
+> core.aformat = 0 (dev)
+> core.dmevmask = 0
+> core.dmstate = 0
+> core.newrtbm = 0
+> core.prealloc = 0
+> core.realtime = 0
+> core.immutable = 0
+> core.append = 0
+> core.sync = 0
+> core.noatime = 0
+> core.nodump = 0
+> core.rtinherit = 0
+> core.projinherit = 0
+> core.nosymlinks = 0
+> core.extsz = 0
+> core.extszinherit = 0
+> core.nodefrag = 0
+> core.filestream = 0
+> core.gen = 0
+> next_unlinked = 0
+> u.dev = 0
+> 
+> 
+> On 7 January 2015 at 10:16, Brian Foster <bfoster@redhat.com> wrote:
+> 
+> > On Wed, Jan 07, 2015 at 07:34:37AM +1100, David Raffelt wrote:
+> > > Hi Brian and Stefan,
+> > > Thanks for your reply.  I checked the status of the array after the
+> > rebuild
+> > > (and before the reset).
+> > >
+> > > md0 : active raid6 sdd1[8] sdc1[4] sda1[3] sdb1[7] sdi1[5] sde1[1]
+> > >       14650667520 blocks super 1.2 level 6, 512k chunk, algorithm 2 [7/6]
+> > > [UUUUUU_]
+> > >
+> > > However given that I've never had any problems before with mdadm
+> > rebuilds I
+> > > did not think to check the data before rebooting.  Note that the array is
+> > > still in this state. Before the reboot I tried to run a smartctl check on
+> > > the failed drives and it could not read them. When I rebooted I did not
+> > > actually replace any drives, I just power cycled to see if I could
+> > > re-access the drives that were thrown out of the array. According to
+> > > smartctl they are completely fine.
+> > >
+> > > I guess there is no way I can re-add the old drives and remove the newly
+> > > synced drive?  Even though I immediately kicked all users off the system
+> > > when I got the mdadm alert, it's possible a small amount of data was
+> > > written to the array during the resync.
+> > >
+> > > It looks like the filesystem was not unmounted properly before reboot:
+> > > Jan 06 09:11:54 server systemd[1]: Failed unmounting /export/data.
+> > > Jan 06 09:11:54 server systemd[1]: Shutting down.
+> > >
+> > > Here is the mount errors in the log after rebooting:
+> > > Jan 06 09:15:17 server kernel: XFS (md0): Mounting Filesystem
+> > > Jan 06 09:15:17 server kernel: XFS (md0): Corruption detected. Unmount
+> > and
+> > > run xfs_repair
+> > > Jan 06 09:15:17 server kernel: XFS (md0): Corruption detected. Unmount
+> > and
+> > > run xfs_repair
+> > > Jan 06 09:15:17 server kernel: XFS (md0): Corruption detected. Unmount
+> > and
+> > > run xfs_repair
+> > > Jan 06 09:15:17 server kernel: XFS (md0): metadata I/O error: block 0x400
+> > > ("xfs_trans_read_buf_map") error 117 numblks 16
+> > > Jan 06 09:15:17 server kernel: XFS (md0): xfs_imap_to_bp:
+> > > xfs_trans_read_buf() returned error 117.
+> > > Jan 06 09:15:17 server kernel: XFS (md0): failed to read root inode
+> > >
+> >
+> > So it fails to read the root inode. You could also try to read said
+> > inode via xfs_db (e.g., 'sb,' 'p rootino,' 'inode <ino#>,' 'p') and see
+> > what it shows.
+> >
+> > Are you able to run xfs_metadump against the fs? If so and you're
+> > willing/able to make the dump available somewhere (compressed), I'd be
+> > interested to take a look to see what might be causing the difference in
+> > behavior between repair and xfs_db.
+> >
+> > Brian
+> >
+> > > xfs_repair -n -L also complains about a bad magic number.
+> > >
+> > > Unfortunately this 15TB RAID was part of a 45TB GlusterFS distributed
+> > > volume. It was only ever meant to be a scratch drive for intermediate
+> > > scientific results, however inevitably most users used it to store lots
+> > of
+> > > data. Oh well.
+> > >
+> > > Thanks again,
+> > > Dave
+> > >
+> > >
+> > >
+> > >
+> > >
+> > >
+> > >
+> > >
+> > >
+> > >
+> > >
+> > >
+> > > On 6 January 2015 at 23:47, Brian Foster <bfoster@redhat.com> wrote:
+> > >
+> > > > On Tue, Jan 06, 2015 at 05:12:14PM +1100, David Raffelt wrote:
+> > > > > Hi again,
+> > > > > Some more information.... the kernel log show the following errors
+> > were
+> > > > > occurring after the RAID recovery, but before I reset the server.
+> > > > >
+> > > >
+> > > > By after the raid recovery, you mean after the two drives had failed
+> > out
+> > > > and 1 hot spare was activated and resync completed? It certainly seems
+> > > > like something went wrong in this process. The output below looks like
+> > > > it's failing to read in some inodes. Is there any stack trace output
+> > > > that accompanies these error messages to confirm?
+> > > >
+> > > > I suppose I would try to verify that the array configuration looks
+> > sane,
+> > > > but after the hot spare resync and then one or two other drive
+> > > > replacements (was the hot spare ultimately replaced?), it's hard to say
+> > > > whether it might be recoverable.
+> > > >
+> > > > Brian
+> > > >
+> > > > > Jan 06 00:00:27 server kernel: XFS (md0): Corruption detected.
+> > Unmount
+> > > > and
+> > > > > run xfs_repair
+> > > > > Jan 06 00:00:27 server kernel: XFS (md0): Corruption detected.
+> > Unmount
+> > > > and
+> > > > > run xfs_repair
+> > > > > Jan 06 00:00:27 server kernel: XFS (md0): Corruption detected.
+> > Unmount
+> > > > and
+> > > > > run xfs_repair
+> > > > > Jan 06 00:00:27 server kernel: XFS (md0): metadata I/O error: block
+> > > > > 0x36b106c00 ("xfs_trans_read_buf_map") error 117 numblks 16
+> > > > > Jan 06 00:00:27 server kernel: XFS (md0): xfs_imap_to_bp:
+> > > > > xfs_trans_read_buf() returned error 117.
+> > > > >
+> > > > >
+> > > > > Thanks,
+> > > > > Dave
+> > > >
+> > > > > _______________________________________________
+> > > > > xfs mailing list
+> > > > > xfs@oss.sgi.com
+> > > > > http://oss.sgi.com/mailman/listinfo/xfs
+> > > >
+> > > >
+> > >
+> > >
+> > > --
+> > > *David Raffelt (PhD)*
+> > > Postdoctoral Fellow
+> > >
+> > > The Florey Institute of Neuroscience and Mental Health
+> > > Melbourne Brain Centre - Austin Campus
+> > > 245 Burgundy Street
+> > > Heidelberg Vic 3084
+> > > Ph: +61 3 9035 7024
+> > > www.florey.edu.au
+> >
+> > > _______________________________________________
+> > > xfs mailing list
+> > > xfs@oss.sgi.com
+> > > http://oss.sgi.com/mailman/listinfo/xfs
+> >
+> >
+> 
+> 
+> -- 
+> *David Raffelt (PhD)*
+> Postdoctoral Fellow
+> 
+> The Florey Institute of Neuroscience and Mental Health
+> Melbourne Brain Centre - Austin Campus
+> 245 Burgundy Street
+> Heidelberg Vic 3084
+> Ph: +61 3 9035 7024
+> www.florey.edu.au
+
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
