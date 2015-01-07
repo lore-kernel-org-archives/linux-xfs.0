@@ -1,25 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 30A077F5E
-	for <xfs@oss.sgi.com>; Tue,  6 Jan 2015 23:36:22 -0600 (CST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 18AF17F58
+	for <xfs@oss.sgi.com>; Tue,  6 Jan 2015 23:46:29 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 0CD34304043
-	for <xfs@oss.sgi.com>; Tue,  6 Jan 2015 21:36:21 -0800 (PST)
-Received: from mail-qg0-f41.google.com (mail-qg0-f41.google.com
-	[209.85.192.41]) by cuda.sgi.com with ESMTP id pabNDd9WSfHAiv5q
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 06 Jan 2015 21:36:21 -0800 (PST)
-Received: by mail-qg0-f41.google.com with SMTP id e89so474821qgf.14
-	for <xfs@oss.sgi.com>; Tue, 06 Jan 2015 21:36:20 -0800 (PST)
-From: Hillel Lubman <shtetldik@gmail.com>
-Subject: Re: What is a recommended XFS sector size for hybrid (512e) advanced
-	format hard drives?
-Date: Wed, 07 Jan 2015 00:36:19 -0500
-Message-ID: <1564490.3HJmP8WlOV@shtub-cm>
-In-Reply-To: <54ACC472.4010104@sandeen.net>
-References: <1806495.BCZcrVVEOf@shtub-cm> <2511571.nTXGg0tW6M@shtub-cm>
-	<54ACC472.4010104@sandeen.net>
-MIME-Version: 1.0
+	by relay1.corp.sgi.com (Postfix) with ESMTP id EB80F8F8035
+	for <xfs@oss.sgi.com>; Tue,  6 Jan 2015 21:46:28 -0800 (PST)
+Received: from mailout4.samsung.com (mailout4.samsung.com [203.254.224.34]) by
+	cuda.sgi.com with ESMTP id MaDbiPldlhrdruEj (version=TLSv1
+	cipher=RC4-MD5 bits=128 verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 06 Jan 2015 21:46:27 -0800 (PST)
+Received: from epcpsbgr1.samsung.com
+	(u141.gpu120.samsung.co.kr [203.254.230.141])
+	by mailout4.samsung.com (Oracle Communications Messaging Server
+	7u4-24.01 (7.0.4.24.0) 64bit (built Nov 17 2011))
+	with ESMTP id <0NHS004LJLDCD0A0@mailout4.samsung.com> for
+	xfs@oss.sgi.com; Wed, 07 Jan 2015 14:46:25 +0900 (KST)
+From: Namjae Jeon <namjae.jeon@samsung.com>
+References: <004001d02670$33d2f3c0$9b78db40$@samsung.com>
+	<20150106163326.GF5874@bfoster.bfoster>
+In-reply-to: <20150106163326.GF5874@bfoster.bfoster>
+Subject: RE: [PATCH v7 2/11] xfs: Add support FALLOC_FL_INSERT_RANGE for
+	fallocate
+Date: Wed, 07 Jan 2015 14:46:24 +0900
+Message-id: <001601d02a3d$459aaa00$d0cffe00$@samsung.com>
+MIME-version: 1.0
+Content-language: ko
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,81 +33,108 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============6877865085562556749=="
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: xfs@oss.sgi.com
+To: 'Brian Foster' <bfoster@redhat.com>
+Cc: 'Theodore Ts'o' <tytso@mit.edu>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, 'Ashish Sangwan' <a.sangwan@samsung.com>, linux-fsdevel@vger.kernel.org, 'linux-ext4' <linux-ext4@vger.kernel.org>
 
-This is a multi-part message in MIME format.
-
---===============6877865085562556749==
-Content-Type: multipart/alternative; boundary="nextPart1702992.cZmYT4SFY6"
-Content-Transfer-Encoding: 7Bit
-
-This is a multi-part message in MIME format.
-
---nextPart1702992.cZmYT4SFY6
-Content-Transfer-Encoding: 7Bit
-Content-Type: text/plain; charset="us-ascii"
-
-On Tuesday, January 06, 2015 23:30:26 Eric Sandeen wrote:
-> On 1/6/15 11:17 PM, Hillel Lubman wrote:
 > 
-> > I see. Indeed, on the drive where I get sectsz as 512 by default, blockdev --getss --getpbsz reports:
-> > 
-> > 512
-> > 512
+> On Fri, Jan 02, 2015 at 06:40:54PM +0900, Namjae Jeon wrote:
+> > This patch implements fallocate's FALLOC_FL_INSERT_RANGE for XFS.
+> >
+> > 1) Make sure that both offset and len are block size aligned.
+> > 2) Update the i_size of inode by len bytes.
+> > 3) Compute the file's logical block number against offset. If the computed
+> >    block number is not the starting block of the extent, split the extent
+> >    such that the block number is the starting block of the extent.
+> > 4) Shift all the extents which are lying bewteen [offset, last allocated extent]
+> >    towards right by len bytes. This step will make a hole of len bytes
+> >    at offset.
+> >
+> > Signed-off-by: Namjae Jeon <namjae.jeon@samsung.com>
+> > Signed-off-by: Ashish Sangwan <a.sangwan@samsung.com>
+> > Cc: Brian Foster<bfoster@redhat.com>
+> > ---
 > 
-> what kind of drive is this; is it usb, SATA, or ?
+> Hi Namjae,
+Hi Brian,
 > 
-> c) not sure why there are 2 different answers.  Knowing what kind of drive
-> it is would be good; mkfs.xfs just uses whatever blkid says.
+> Just a few small things...
 > 
 
-One is a recent portable WD USB3 drive (elements) and another is a regular 3.5" internal AF WD black in an enclosure (also attached through USB3). I didn't recently test the case of a drive attached through regular SATA.
+> > +	} else {
+> > +		startoff = got.br_startoff + offset_shift_fsb;
+> > +		/*
+> > +		 * If this is not the last extent in the file, make sure there's
+> > +		 * enough room between current extent and next extent for
+> > +		 * accomodating the shift.
+> 
+> Spelling nit:	   accommodating
+Okay, I will fix it.
 
-Regards,
-Hillel.
+> 
+> > +		 */
+> > +		if (*current_ext < (total_extents - 1)) {
+> > +			contp = xfs_iext_get_ext(ifp, *current_ext + 1);
+> > +			xfs_bmbt_get_all(contp, &cont);
+> > +			if (startoff + got.br_blockcount > cont.br_startoff)
+> > +				return -EINVAL;
+> > +			if (xfs_bmse_can_merge(&got, &cont,  offset_shift_fsb))
+> > +				WARN_ON_ONCE(1);
+> 
+> Ok, but a comment before the check would be nice should somebody have to
+> look up the warning that fires here. E.g.,:
+> 
+> /*
+>  * Unlike a left shift (which involves a hole punch), a right shift does
+>  * not modify extent neighbors in any way. We should never find
+>  * mergeable extents in this scenario. Check anyways and warn if we
+>  * encounter two extents that could be one.
+>  */
+Okay, I will update it.
 
---nextPart1702992.cZmYT4SFY6
-Content-Transfer-Encoding: 7Bit
-Content-Type: text/html; charset="us-ascii"
+> > -	/*
+> > -	 * There may be delalloc extents in the data fork before the range we
+> > -	 * are collapsing out, so we cannot use the count of real extents here.
+> > -	 * Instead we have to calculate it from the incore fork.
+> > -	 */
+> > -	total_extents = ifp->if_bytes / sizeof(xfs_bmbt_rec_t);
+> > -	while (nexts++ < num_exts && current_ext < total_extents) {
+> > +	/* some sanity checking before we finally start shifting extents */
+> > +	if ((SHIFT == SHIFT_LEFT && current_ext > stop_extent) ||
+> > +	     (SHIFT == SHIFT_RIGHT && current_ext < stop_extent)) {
+> > +		error = EIO;
+> > +		goto del_cursor;
+> > +	}
+> 
+> If stop_extent is consistently exclusive now, we probably need to use >=
+> and <= here (e.g., 'stop_extent' should never be shifted).
+You're Right. I will fix it.
+> 
+> > +
 
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd">
-<html><head><meta name="qrichtext" content="1" /><style type="text/css">
-p, li { white-space: pre-wrap; }
-</style></head><body style=" font-family:'Arial'; font-size:10pt; font-weight:400; font-style:normal;">
-<p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;">On Tuesday, January 06, 2015 23:30:26 Eric Sandeen wrote:</p>
-<p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;">&gt; On 1/6/15 11:17 PM, Hillel Lubman wrote:</p>
-<p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;">&gt; </p>
-<p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;">&gt; &gt; I see. Indeed, on the drive where I get sectsz as 512 by default, blockdev --getss --getpbsz reports:</p>
-<p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;">&gt; &gt; </p>
-<p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;">&gt; &gt; 512</p>
-<p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;">&gt; &gt; 512</p>
-<p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;">&gt; </p>
-<p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;">&gt; what kind of drive is this; is it usb, SATA, or ?</p>
-<p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;">&gt; </p>
-<p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;">&gt; c) not sure why there are 2 different answers.  Knowing what kind of drive</p>
-<p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;">&gt; it is would be good; mkfs.xfs just uses whatever blkid says.</p>
-<p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;">&gt; </p>
-<p style="-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; ">&nbsp;</p>
-<p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;">One is a recent portable WD USB3 drive (elements) and another is a regular 3.5&quot; internal AF WD black in an enclosure (also attached through USB3). I didn't recently test the case of a drive attached through regular SATA.</p>
-<p style="-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; ">&nbsp;</p>
-<p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;">Regards,</p>
-<p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;">Hillel.</p></body></html>
---nextPart1702992.cZmYT4SFY6--
-
-
---===============6877865085562556749==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+> > +del_cursor:
+> > +	if (cur) {
+> > +		cur->bc_private.b.allocated = 0;
+> > +		xfs_btree_del_cursor(cur,
+> > +				error ? XFS_BTREE_ERROR : XFS_BTREE_NOERROR);
+> > +	}
+> > +	xfs_trans_log_inode(tp, ip, logflags);
+> 
+> 	if (logflags)
+> 		xfs_trans_log_inode(tp, ip, logflags);
+Okay.
+> 
+> Otherwise, the rest looks pretty good. I'll try to do some testing with
+> it soon.
+Thanks very much for your review!!
+> 
+> Brian
+> 
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============6877865085562556749==--
