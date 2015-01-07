@@ -1,18 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 2F59D7F8E
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 5D88F7F94
 	for <xfs@oss.sgi.com>; Wed,  7 Jan 2015 16:26:12 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id BFF6DAC008
-	for <xfs@oss.sgi.com>; Wed,  7 Jan 2015 14:26:11 -0800 (PST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 3D994304051
+	for <xfs@oss.sgi.com>; Wed,  7 Jan 2015 14:26:12 -0800 (PST)
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	qFfYxo7LVy7OxmhS for <xfs@oss.sgi.com>;
-	Wed, 07 Jan 2015 14:26:09 -0800 (PST)
+	XUlZ24JoCazy6aWa for <xfs@oss.sgi.com>;
+	Wed, 07 Jan 2015 14:26:10 -0800 (PST)
 From: Dave Chinner <david@fromorbit.com>
-Subject: [RFC PATCH 0/6] xfs: truncate vs page fault IO exclusion
-Date: Thu,  8 Jan 2015 09:25:37 +1100
-Message-Id: <1420669543-8093-1-git-send-email-david@fromorbit.com>
+Subject: [RFC PATCH 3/6] xfs: use i_mmaplock on write faults
+Date: Thu,  8 Jan 2015 09:25:40 +1100
+Message-Id: <1420669543-8093-4-git-send-email-david@fromorbit.com>
+In-Reply-To: <1420669543-8093-1-git-send-email-david@fromorbit.com>
+References: <1420669543-8093-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,58 +31,101 @@ Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 Cc: linux-fsdevel@vger.kernel.org, linux-mm@kvack.org
 
-Hi folks,
+From: Dave Chinner <dchinner@redhat.com>
 
-This patch set is an attempt to address issues with XFS
-truncate and hole-punch code from racing with page faults that enter
-the IO path. This is traditionally deadlock prone due to the
-inversion of filesystem IO path locks and the mmap_sem.
+Take the i_mmaplock over write page faults. These come through the
+->page_mkwrite callout, so we need to wrap that calls with the
+i_mmaplock.
 
-To avoid this issue, I have introduced a new "i_mmaplock" rwsem into
-the XFS code similar to the IO lock, but this lock is only taken in
-the mmap fault paths on entry into the filesystem (i.e. ->fault and
-->page_mkwrite).
+This gives us a lock order of mmap_sem -> i_mmaplock -> page_lock
+-> i_lock.
 
-The concept is that if we invalidate the page cache over a range
-after taking both the existing i_iolock and the new i_mmaplock, we
-will have prevented any vector for repopulation of the page cache
-over the invalidated range until one of the io and mmap locks has
-been dropped. i.e. we can guarantee that both the syscall IO path
-and page faults won't race with whatever operation the filesystem is
-performing...
+Also, move the page_mkwrite wrapper to the same region of xfs_file.c
+as the read fault wrappers and add a tracepoint.
 
-The introduction of a new lock is necessary to avoid deadlocks due
-to mmap_sem entanglement. It has a defined lock order during page
-faults of:
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/xfs_file.c  | 39 ++++++++++++++++++++++++---------------
+ fs/xfs/xfs_trace.h |  1 +
+ 2 files changed, 25 insertions(+), 15 deletions(-)
 
-mmap_sem
--> i_mmaplock (read)
-   -> page lock
-      -> i_ilock (get blocks)
-
-This lock is then taken by any extent manipulation code in XFS in
-addition to the IO lock which has the lock ordering of
-
-i_iolock (write)
--> i_mmaplock (write)
-   -> page lock (data writeback, page invalidation)
-      -> i_lock (data writeback)
-   -> i_lock (modification transaction)
-
-Hence we have consistent lock ordering (which has been validated so
-far by testing with lockdep enabled) for page fault IO vs
-truncate, hole punch, extent shifts, etc.
-
-This patchset passes xfstests and various benchmarks and stress
-workloads, so the real question is now:
-
-	What have I missed?
-
-Comments, thoughts, flames?
-
--Dave.
-
-GI: [RFC PATCH 1/6] xfs: introduce mmap/truncate lock
+diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+index 87535e6..e6e7e75 100644
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@ -961,20 +961,6 @@ xfs_file_mmap(
+ }
+ 
+ /*
+- * mmap()d file has taken write protection fault and is being made
+- * writable. We can set the page state up correctly for a writable
+- * page, which means we can do correct delalloc accounting (ENOSPC
+- * checking!) and unwritten extent mapping.
+- */
+-STATIC int
+-xfs_vm_page_mkwrite(
+-	struct vm_area_struct	*vma,
+-	struct vm_fault		*vmf)
+-{
+-	return block_page_mkwrite(vma, vmf, xfs_get_blocks);
+-}
+-
+-/*
+  * This type is designed to indicate the type of offset we would like
+  * to search from page cache for xfs_seek_hole_data().
+  */
+@@ -1375,6 +1361,29 @@ xfs_filemap_fault(
+ 	return error;
+ }
+ 
++/*
++ * mmap()d file has taken write protection fault and is being made writable. We
++ * can set the page state up correctly for a writable page, which means we can
++ * do correct delalloc accounting (ENOSPC checking!) and unwritten extent
++ * mapping.
++ */
++STATIC int
++xfs_filemap_page_mkwrite(
++	struct vm_area_struct	*vma,
++	struct vm_fault		*vmf)
++{
++	struct xfs_inode	*ip = XFS_I(vma->vm_file->f_mapping->host);
++	int			error;
++
++	trace_xfs_filemap_page_mkwrite(ip);
++
++	xfs_ilock(ip, XFS_MMAPLOCK_SHARED);
++	error = block_page_mkwrite(vma, vmf, xfs_get_blocks);
++	xfs_iunlock(ip, XFS_MMAPLOCK_SHARED);
++
++	return error;
++}
++
+ const struct file_operations xfs_file_operations = {
+ 	.llseek		= xfs_file_llseek,
+ 	.read		= new_sync_read,
+@@ -1409,6 +1418,6 @@ const struct file_operations xfs_dir_file_operations = {
+ static const struct vm_operations_struct xfs_file_vm_ops = {
+ 	.fault		= xfs_filemap_fault,
+ 	.map_pages	= filemap_map_pages,
+-	.page_mkwrite	= xfs_vm_page_mkwrite,
++	.page_mkwrite	= xfs_filemap_page_mkwrite,
+ 	.remap_pages	= generic_file_remap_pages,
+ };
+diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+index c496153..b1e059b 100644
+--- a/fs/xfs/xfs_trace.h
++++ b/fs/xfs/xfs_trace.h
+@@ -686,6 +686,7 @@ DEFINE_INODE_EVENT(xfs_inode_clear_eofblocks_tag);
+ DEFINE_INODE_EVENT(xfs_inode_free_eofblocks_invalid);
+ 
+ DEFINE_INODE_EVENT(xfs_filemap_fault);
++DEFINE_INODE_EVENT(xfs_filemap_page_mkwrite);
+ 
+ DECLARE_EVENT_CLASS(xfs_iref_class,
+ 	TP_PROTO(struct xfs_inode *ip, unsigned long caller_ip),
+-- 
+2.0.0
 
 _______________________________________________
 xfs mailing list
