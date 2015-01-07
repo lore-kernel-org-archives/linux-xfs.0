@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 629D07F8D
-	for <xfs@oss.sgi.com>; Wed,  7 Jan 2015 04:31:58 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id E7A5CAC001
-	for <xfs@oss.sgi.com>; Wed,  7 Jan 2015 02:31:54 -0800 (PST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 49B957F8B
+	for <xfs@oss.sgi.com>; Wed,  7 Jan 2015 04:40:15 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 08E1E304039
+	for <xfs@oss.sgi.com>; Wed,  7 Jan 2015 02:40:14 -0800 (PST)
 Received: from newverein.lst.de (verein.lst.de [213.95.11.211]) by
-	cuda.sgi.com with ESMTP id 7eCRAH3ZEwDy5iSU (version=TLSv1
+	cuda.sgi.com with ESMTP id zgELpLL9o2qqbIiB (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 07 Jan 2015 02:31:53 -0800 (PST)
-Date: Wed, 7 Jan 2015 11:31:52 +0100
+	Wed, 07 Jan 2015 02:40:13 -0800 (PST)
+Date: Wed, 7 Jan 2015 11:40:10 +0100
 From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 18/18] xfs: recall pNFS layouts on conflicting access
-Message-ID: <20150107103152.GC28783@lst.de>
+Subject: Re: [PATCH 17/18] xfs: implement pnfs export operations
+Message-ID: <20150107104010.GD28783@lst.de>
 References: <1420561721-9150-1-git-send-email-hch@lst.de>
-	<1420561721-9150-19-git-send-email-hch@lst.de>
-	<20150106231846.GE31508@dastard>
+	<1420561721-9150-18-git-send-email-hch@lst.de>
+	<20150107002434.GG31508@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20150106231846.GE31508@dastard>
+In-Reply-To: <20150107002434.GG31508@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,35 +27,88 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: linux-nfs@vger.kernel.org, xfs@oss.sgi.com, "J. Bruce Fields" <bfields@fieldses.org>, Jeff Layton <jlayton@primarydata.com>, linux-fsdevel@vger.kernel.org, Christoph Hellwig <hch@lst.de>
 
-On Wed, Jan 07, 2015 at 10:18:46AM +1100, Dave Chinner wrote:
-> On Tue, Jan 06, 2015 at 05:28:41PM +0100, Christoph Hellwig wrote:
-> > Recall all outstanding pNFS layouts and truncates, writes and similar extent
-> > list modifying operations.
-> 
-> This is not sufficient to isolate extent manipulations. mmap writes
-> can trigger allocation through ->page_mkwrite, and can also trigger
-> extent conversion at IO completion without first needing allocation.
-> 
-> Maybe I'm missing something - this patchset needs some comments
-> documenting the locking used in XFS to co-ordinate layout coherency
-> at the client side with IO that is in progress for clients with
-> overlapping block maps, as well as against server side application
-> IO.
-
-Ys, the description was a little to dense.  We only care about extent list
-manipulations that remove or change existing block mappings.  Newly
-allocated blocks don't concern the pNFS operation.
-
-I'll take care of better documentation.
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gV2VkLCBKYW4gMDcsIDIwMTUgYXQgMTE6MjQ6MzRBTSArMTEwMCwgRGF2ZSBDaGlubmVyIHdy
+b3RlOgo+ID4gZGlmZiAtLWdpdCBhL2ZzL3hmcy94ZnNfZnNvcHMuYyBiL2ZzL3hmcy94ZnNfZnNv
+cHMuYwo+ID4gaW5kZXggZmRjNjQyMi4uMmI4NmJlOCAxMDA2NDQKPiA+IC0tLSBhL2ZzL3hmcy94
+ZnNfZnNvcHMuYwo+ID4gKysrIGIvZnMveGZzL3hmc19mc29wcy5jCj4gPiBAQCAtNjAxLDYgKzYw
+MSw4IEBAIHhmc19ncm93ZnNfZGF0YSgKPiA+ICAJaWYgKCFtdXRleF90cnlsb2NrKCZtcC0+bV9n
+cm93bG9jaykpCj4gPiAgCQlyZXR1cm4gLUVXT1VMREJMT0NLOwo+ID4gIAllcnJvciA9IHhmc19n
+cm93ZnNfZGF0YV9wcml2YXRlKG1wLCBpbik7Cj4gPiArCWlmICghZXJyb3IpCj4gPiArCQltcC0+
+bV9nZW5lcmF0aW9uKys7Cj4gPiAgCW11dGV4X3VubG9jaygmbXAtPm1fZ3Jvd2xvY2spOwo+ID4g
+IAlyZXR1cm4gZXJyb3I7Cj4gPiAgfQo+IAo+IEkgY291bGRuJ3QgZmluZCBhbiBleHBsYW5hdGlv
+biBvZiB3aGF0IHRoaXMgZ2VuZXJhdGlvbiBudW1iZXIgaXMKPiBmb3IuIFdoYXQgYXJlIGl0J3Mg
+c2VtYW50aWNzIHcuci50LiBzZXJ2ZXIgY3Jhc2hlcz8KClRoZSBnZW5lcmF0aW9uIGlzIGluY3Jl
+bWVudGVkIHdoZW4gd2UgZ3JvdyB0aGUgZmlsZXN5c3RlbSwgc28gdGhhdAphIG5ldyBsYXlvdXQg
+KGJsb2NrIG1hcHBpbmcpIHJldHVybmVkIHRvIHRoZSBjbNGWZW50IHJlZmVyZXJzIHRvIHRoZQpu
+ZXcgTkZTIGRldmljZSBJRCwgd2hpY2ggd2lsbCBtYWtlIHRoZSBjbGllbnQgYXdhcmUgb2YgdGhl
+IG5ldyBzaXplLgoKVGhlIGRldmljZSBJRHMgYXJlbid0IHBlcnNpc3RlbnQsIHNvIGFmdGVyIGEg
+c2VydmVyIGNyYXNoIC8gcmVib290CndlJ2xsIHN0YXJ0IGF0IHplcm8gYWdhaW4uCgpJJ2xsIGFk
+ZCBjb21tZW50cyBleHBsYWluaW5nIHRoaXMgdG8gdGhlIGNvZGUuCgo+IFdoeSBkb2VzIHRoaXMg
+ZnVuY3Rpb24gZ2V0IHBhc3NlZCBhbiBvZmZzZXQgaXQgaXMgbm90IGFjdHVhbGx5IHVzZWQ/CgpI
+aXN0b3JpYyByZWFzb25zLi4KCj4gPiArc3RhdGljIGludAo+ID4gK3hmc19mc191cGRhdGVfZmxh
+Z3MoCj4gPiArCXN0cnVjdCB4ZnNfaW5vZGUJKmlwKQo+ID4gK3sKPiA+ICsJc3RydWN0IHhmc19t
+b3VudAkqbXAgPSBpcC0+aV9tb3VudDsKPiA+ICsJc3RydWN0IHhmc190cmFucwkqdHA7Cj4gPiAr
+CWludAkJCWVycm9yOwo+ID4gKwo+ID4gKwkvKgo+ID4gKwkgKiBVcGRhdGUgdGhlIG1vZGUsIGFu
+ZCBwcmVhbGxvYyBmbGFnIGJpdHMuCj4gPiArCSAqLwo+ID4gKwl0cCA9IHhmc190cmFuc19hbGxv
+YyhtcCwgWEZTX1RSQU5TX1dSSVRFSUQpOwo+ID4gKwllcnJvciA9IHhmc190cmFuc19yZXNlcnZl
+KHRwLCAmTV9SRVMobXApLT50cl93cml0ZWlkLCAwLCAwKTsKPiA+ICsJaWYgKGVycm9yKSB7Cj4g
+PiArCQl4ZnNfdHJhbnNfY2FuY2VsKHRwLCAwKTsKPiA+ICsJCXJldHVybiBlcnJvcjsKPiA+ICsJ
+fQo+ID4gKwo+ID4gKwl4ZnNfaWxvY2soaXAsIFhGU19JTE9DS19FWENMKTsKPiA+ICsJeGZzX3Ry
+YW5zX2lqb2luKHRwLCBpcCwgWEZTX0lMT0NLX0VYQ0wpOwo+ID4gKwlpcC0+aV9kLmRpX21vZGUg
+Jj0gflNfSVNVSUQ7Cj4gPiArCWlmIChpcC0+aV9kLmRpX21vZGUgJiBTX0lYR1JQKQo+ID4gKwkJ
+aXAtPmlfZC5kaV9tb2RlICY9IH5TX0lTR0lEOwo+ID4gKwo+ID4gKwlpcC0+aV9kLmRpX2ZsYWdz
+IHw9IFhGU19ESUZMQUdfUFJFQUxMT0M7Cj4gPiArCj4gPiArCXhmc190cmFuc19sb2dfaW5vZGUo
+dHAsIGlwLCBYRlNfSUxPR19DT1JFKTsKPiA+ICsJcmV0dXJuIHhmc190cmFuc19jb21taXQodHAs
+IDApOwo+ID4gK30KPiAKPiBUaGF0IG5lZWRzIHRpbWVzdGFtcCBjaGFuZ2VzIGFzIHdlbGwuIGku
+ZS46Cj4gCj4gCXhmc190cmFuc19pY2hndGltZSh0cCwgaXAsIFhGU19JQ0hHVElNRV9NT0QgfCBY
+RlNfSUNIR1RJTUVfQ0hHKTsKClRoZSB0aW1lIHN0YW1wcyBhcmUgb25seSB1cGRhdGVkIHdoZW4g
+d2UgYWN0dWFsbHkgY29tbWl0IHRoZSBkYXRhLgpVcGRhdGluZyB0aGVtIGhlcmUgbWlnaHQgYmUg
+aGFybWxlc3MsIGJ1dCBJJ2xsIGhhdmUgdG8gZGlnIGludG8gdGhlCnByb3RvY29sIHNwZWNpZmlj
+YXRpb24gYW5kIHRlc3RzIGEgYml0IG1vcmUgdG8gY2hlY2sgaWYgZG9pbmcgdGhlCmFkZGl0aW9u
+YWwgdGltZXN0YW1wIHVwZGF0ZSB3b3VsZCBiZSBoYXJtbGVzcy4KCj4gPiArCj4gPiArLyoKPiA+
+ICsgKiBHZXQgYSBsYXlvdXQgZm9yIHRoZSBwTkZTIGNsaWVudC4KPiA+ICsgKgo+ID4gKyAqIE5v
+dGUgdGhhdCBpbiB0aGUgYWxsb2NhdGlvbiBjYXNlIHdlIGRvIGZvcmNlIG91dCB0aGUgdHJhbnNh
+Y3Rpb24gaGVyZS4KPiA+ICsgKiBUaGVyZSBpcyBubyBtZXRhZGF0YSB1cGRhdGUgdGhhdCBpcyBy
+ZXF1aXJlZCB0byBiZSBzdGFibGUgZm9yIE5GUwo+ID4gKyAqIHNlbWFudGljcywgYW5kIGxheW91
+dHMgYXJlIG5vdCB2YWxpZCBvdmVyIGEgc2VydmVyIGNyYXNoLiAgSW5zdGVhZAo+ID4gKyAqIHdl
+J2xsIGhhdmUgdG8gYmUgY2FyZWZ1bCBpbiB0aGUgY29tbWl0IHJvdXRpbmUgYXMgaXQgbWlnaHQg
+cGFzcyB1cwo+ID4gKyAqIGJsb2NrcyBmb3IgYW4gYWxsb2NhdGlvbiB0aGF0IG5ldmVyIG1hZGUg
+aXQgdG8gZGlzayBpbiB0aGUgcmVjb3ZlcnkKPiA+ICsgKiBjYXNlLgo+IAo+IEkgdGhpbmsgeW91
+IGFyZSBzYXlpbmcgdGhhdCBiZWNhdXNlIGJsb2NrIGFsbG9jYXRpb24gaXMgYW4gYXN5bmMKPiB0
+cmFuc2FjdGlvbiwgdGhlbiB3ZSBoYXZlIHRvIGRlYWwgd2l0aCB0aGUgcG9zc2liaWxpdHkgdGhh
+dCB3ZSBjcmFzaAo+IGJlZm9yZSB0aGUgdHJhbnNhY3Rpb24gaGl0cyB0aGUgZGlzay4KPiAKPiBI
+b3cgb2Z0ZW4gZG8gd2UgaGF2ZSB0byBhbGxvY2F0ZQo+IG5ldyBibG9ja3MgbGlrZSB0aGlzPyBE
+byB3ZSBuZWVkIHRvIHVzZSBhc3luYyB0cmFuc2FjdGlvbnMgZm9yIHRoaXMKPiBjYXNlLCBvciBz
+aG91bGQgd2Ugc2ltcGx5IGRvIHRoZSBicnV0ZSBmb3JjZSB0aGluZyAoYnkgbWFraW5nIHRoZQo+
+IGFsbG9jYXRpb24gdHJhbnNhY3Rpb24gc3luY2hyb25vdXMpIGluaXRpYWxseSBhbmQgdGhlbiwg
+aWYKPiBwZXJmb3JtYW5jZSBwcm9ibGVtcyBhcmlzZSwgb3B0aW1pc2UgZnJvbSB0aGVyZT8KCkV2
+ZXJ5IGJsb2NrIGFsbG9jYXRpb24gZnJvbSBhIHBORlMgY2xpZW50IGdvZXMgdGhyb3VnaCB0aGlz
+IHBhdGgsIHNvCnllcyBpdCBpcyBwZXJmb3JtYW5jZSBjcml0aWNhbC4KCj4gPiArCXhmc19tYXBf
+aW9tYXAoaXAsIGlvbWFwLCAmaW1hcCwgb2Zmc2V0KTsKPiA+ICsJKmRldmljZV9nZW5lcmF0aW9u
+ID0gbXAtPm1fZ2VuZXJhdGlvbjsKPiAKPiBTbyB3aGVuZXZlciB0aGUgc2VydmVyIGZpcnN0IHN0
+YXJ0cyB1cCB0aGUgZ2VuZXJhdGlvbiBudW1iZXIgaW4gYQo+IG1hcCBpcyBnb2luZyB0byBiZSB6
+ZXJvIC0gd2hhdCBwdXJwb3NlIGRvZXMgdGhpcyBhY3R1YWxseSBzZXJ2ZT8KClNvIHRoYXQgd2Ug
+Y2FuIGNvbW11bmljYXRlIGlmIGEgZGV2aWNlIHdhcyBncm93biB0byB0aGUgY2xpZW50LCB3aGlj
+aAppbiB0aGlzIGNhc2UgbmVlZHMgdG8gcmUtcmVhZCB0aGUgZGV2aWNlIGluZm9ybWF0aW9uLgoK
+PiA+ICsJCWlmICghbGVuZ3RoKQo+ID4gKwkJCWNvbnRpbnVlOwo+ID4gKwo+ID4gKwkJZXJyb3Ig
+PSB4ZnNfaW9tYXBfd3JpdGVfdW53cml0dGVuKGlwLCBzdGFydCwgbGVuZ3RoKTsKPiA+ICsJCWlm
+IChlcnJvcikKPiA+ICsJCQlnb3RvIG91dF9kcm9wX2lvbG9jazsKPiA+ICsJfQo+ID4gKwo+ID4g
+KwkvKgo+ID4gKwkgKiBNYWtlIHN1cmUgcmVhZHMgdGhyb3VnaCB0aGUgcGFnZWNhY2hlIHNlZSB0
+aGUgbmV3IGRhdGEuCj4gPiArCSAqLwo+ID4gKwlpbnZhbGlkYXRlX2lub2RlX3BhZ2VzMihpbm9k
+ZS0+aV9tYXBwaW5nKTsKPiAKPiBQcm9iYWJseSBzaG91bGQgZG8gdGhhdCBmaXJzdC4gQWxzbywg
+d2hhdCBoYXBwZW5zIGlmIHRoZXJlIGlzIGxvY2FsCj4gZGlydHkgZGF0YSBvbiB0aGUgZmlsZSBh
+dCB0aGlzIHBvaW50PyBEb2Vzbid0IHRoaXMganVzdCB0b3NzIHRoZW0KPiBhd2F5PwoKSWYgdGhl
+cmUgd2FzIGxvY2FsIGRhdGEgaXQgd2lsbCBiZSB0b3NzZWQuICBGb3IgcmVndWxhciB3cml0ZXMg
+dGhpcyBjYW4ndApoYXBwZW4gYmVjYXVzZSB3ZSByZWFsbHkgb3V0c3RhbmRpbmcgbGF5b3V0cyBp
+biB0aGUgd3JpdGUgcGF0aC4gIEZvcgptbWFwIHdlIGZvciBub3cgaWdub3JlIHRoaXMgcHJvYmxl
+bSwgYXMgYSBwTkZTIHNlcnZlciBzaG91bGQgZ2VuZXJhbGx5Cm5vdCBiZSB1c2VkIGxvY2FsbHku
+ICAKCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBt
+YWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xp
+c3RpbmZvL3hmcwo=
