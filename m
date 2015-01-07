@@ -1,27 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 734C37F85
-	for <xfs@oss.sgi.com>; Wed,  7 Jan 2015 04:28:09 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 4343A304039
-	for <xfs@oss.sgi.com>; Wed,  7 Jan 2015 02:28:06 -0800 (PST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id A1BD57F88
+	for <xfs@oss.sgi.com>; Wed,  7 Jan 2015 04:30:29 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 7EBD68F8035
+	for <xfs@oss.sgi.com>; Wed,  7 Jan 2015 02:30:29 -0800 (PST)
 Received: from newverein.lst.de (verein.lst.de [213.95.11.211]) by
-	cuda.sgi.com with ESMTP id TRGOq3Y0W664UFDx (version=TLSv1
+	cuda.sgi.com with ESMTP id Hr8yEuZmHOndDD7t (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 07 Jan 2015 02:28:04 -0800 (PST)
-Date: Wed, 7 Jan 2015 11:28:02 +0100
+	Wed, 07 Jan 2015 02:30:28 -0800 (PST)
+Date: Wed, 7 Jan 2015 11:30:26 +0100
 From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 14/18] nfsd: pNFS block layout driver
-Message-ID: <20150107102802.GA28783@lst.de>
+Subject: Re: [PATCH 02/18] fs: add FL_LAYOUT lease type
+Message-ID: <20150107103026.GB28783@lst.de>
 References: <1420561721-9150-1-git-send-email-hch@lst.de>
-	<1420561721-9150-15-git-send-email-hch@lst.de>
-	<20150106171658.GD12067@fieldses.org>
-	<20150106173957.GA16200@lst.de>
-	<20150106193949.GD28003@fieldses.org>
-	<20150106114205.4151269c@synchrony.poochiereds.net>
+	<1420561721-9150-3-git-send-email-hch@lst.de>
+	<20150106104652.49078615@synchrony.poochiereds.net>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20150106114205.4151269c@synchrony.poochiereds.net>
+In-Reply-To: <20150106104652.49078615@synchrony.poochiereds.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -37,16 +34,30 @@ Sender: xfs-bounces@oss.sgi.com
 To: Jeff Layton <jeff.layton@primarydata.com>
 Cc: "J. Bruce Fields" <bfields@fieldses.org>, linux-fsdevel@vger.kernel.org, linux-nfs@vger.kernel.org, Christoph Hellwig <hch@lst.de>, xfs@oss.sgi.com
 
-On Tue, Jan 06, 2015 at 11:42:05AM -0800, Jeff Layton wrote:
-> Or maybe an "on" switch?
-> 
-> We have some patches (not posted currently) that add a "pnfs" export
-> option. Maybe we should add that and only enable pnfs on exports that
-> have that option present?
+On Tue, Jan 06, 2015 at 10:46:52AM -0800, Jeff Layton wrote:
+> So with the current code, layouts are always whole-file?
 
-I would defintively prefer the off switch.  I can add one if people want
-it, but export options are a little annoying as they require support
-not only in the kernel but also in nfs-utils.
+layouts aren't whole-file, but layout recalls are.
+
+> Tracking layouts as a lease-like object seems reasonable, but I'm not
+> 100% thrilled with overloading all of the lease code with this. Perhaps
+> it should be its own sort of object with a separate API to manage them?
+> That would also make it easier to support layouts that are not for the
+> entire file.
+> 
+> To that end, it might be nice to hold off on taking this until we
+> deprecate the i_flock list as we can then give layouts their own
+> list_head in the file_lock_context. It would also make it easier to use
+> a new sort of object to represent layouts.
+> 
+> I just cleaned up that patchset last week, and will re-post it soon
+> once I give it a bit of testing this week.
+
+I'm happy to add support to your reworked locks/leases/etc handling
+for this.  As for which one gets merged first I'd say which one
+is in a mergeable shape earlier.  If you're confident to get your
+rework in ASAP I'm happy to rebase it on top, otherwise doing it
+the other way around sounds easier.
 
 _______________________________________________
 xfs mailing list
