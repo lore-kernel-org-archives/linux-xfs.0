@@ -1,22 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id BF09E7F5E
-	for <xfs@oss.sgi.com>; Tue,  6 Jan 2015 23:30:30 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id AC3D5304039
-	for <xfs@oss.sgi.com>; Tue,  6 Jan 2015 21:30:30 -0800 (PST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 724E47F5E
+	for <xfs@oss.sgi.com>; Tue,  6 Jan 2015 23:31:49 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 611BA8F8033
+	for <xfs@oss.sgi.com>; Tue,  6 Jan 2015 21:31:49 -0800 (PST)
 Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id midUnWrcuYYHcLW1 for <xfs@oss.sgi.com>;
-	Tue, 06 Jan 2015 21:30:28 -0800 (PST)
-Message-ID: <54ACC472.4010104@sandeen.net>
-Date: Tue, 06 Jan 2015 23:30:26 -0600
+	ESMTP id u5NDXy2bFKtLxrOm for <xfs@oss.sgi.com>;
+	Tue, 06 Jan 2015 21:31:45 -0800 (PST)
+Message-ID: <54ACC4C0.2030802@sandeen.net>
+Date: Tue, 06 Jan 2015 23:31:44 -0600
 From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
 Subject: Re: What is a recommended XFS sector size for hybrid (512e) advanced
 	format hard drives?
-References: <1806495.BCZcrVVEOf@shtub-cm> <54AC1511.1060908@sandeen.net>
-	<2511571.nTXGg0tW6M@shtub-cm>
-In-Reply-To: <2511571.nTXGg0tW6M@shtub-cm>
+References: <1806495.BCZcrVVEOf@shtub-cm>
+	<54AC1511.1060908@sandeen.net>	<CAJCQCtQqseJ_75WSjqqNMmSjYW-0-L_cWBDDECRVOkiTmHLeVA@mail.gmail.com>	<54AC363E.1090109@sandeen.net>	<CAJCQCtRUq9ozu74TBjm4G-yoC0kQa7Vr8nUTNzke6O7DTWQPXw@mail.gmail.com>
+	<CAJCQCtS8M5w76bzr4TzB9CQo+tTOwsfAu8+x5h7p9W_RMfEgFA@mail.gmail.com>
+In-Reply-To: <CAJCQCtS8M5w76bzr4TzB9CQo+tTOwsfAu8+x5h7p9W_RMfEgFA@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,35 +30,31 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Hillel Lubman <shtetldik@gmail.com>
-Cc: xfs@oss.sgi.com
+To: Chris Murphy <lists@colorremedies.com>
+Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-On 1/6/15 11:17 PM, Hillel Lubman wrote:
+On 1/6/15 1:55 PM, Chris Murphy wrote:
+> What's sectsz= used for? Historically this would be sectsz=512,
+> bsize=4096 before AF hard drives appeared. So is sectsz used for
+> optimizing sub blocksize changes? e.g. if only 50 bytes needs
+> changing, the fs doesn't need to read modify and write the entire 4096
+> block, just change the affected sector?
 
-> I see. Indeed, on the drive where I get sectsz as 512 by default, blockdev --getss --getpbsz reports:
-> 
-> 512
-> 512
+Nope, filesystem data blocks are always fully written, but the sector
+size is i.e. the minimum _log_ IO size.
 
-what kind of drive is this; is it usb, SATA, or ?
-
-> However hdparm -I reports:
-> 
-> Logical Sector size: 512 bytes
-> 
-> Physical Sector size: 4096 bytes
-> 
-> So is it still worthwhile making sectsz 4 KB explicitly instead of
-> using mkfs.xfs default in such case? And on a side note, since there
-> is a more reliable way to figure that info out, may be mkfs.xfs
-> should rather use that?
->
-
-a) probably can't hurt
-b) probably doesn't matter ;)
-
-c) not sure why there are 2 different answers.  Knowing what kind of drive
-it is would be good; mkfs.xfs just uses whatever blkid says.
++/*
++ * The xfs_buftarg contains 2 notions of "sector size" -
++ *
++ * 1) The metadata sector size, which is the minimum unit and
++ *    alignment of IO which will be performed by metadata operations.
++ * 2) The device logical sector size
++ *
++ * The first is specified at mkfs time, and is stored on-disk in the
++ * superblock's sb_sectsize.
++ *
++ * The latter is derived from the underlying device, and controls direct IO
++ * alignment constraints.
 
 -Eric
 
