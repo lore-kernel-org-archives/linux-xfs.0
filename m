@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id A1BD57F88
-	for <xfs@oss.sgi.com>; Wed,  7 Jan 2015 04:30:29 -0600 (CST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 629D07F8D
+	for <xfs@oss.sgi.com>; Wed,  7 Jan 2015 04:31:58 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 7EBD68F8035
-	for <xfs@oss.sgi.com>; Wed,  7 Jan 2015 02:30:29 -0800 (PST)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id E7A5CAC001
+	for <xfs@oss.sgi.com>; Wed,  7 Jan 2015 02:31:54 -0800 (PST)
 Received: from newverein.lst.de (verein.lst.de [213.95.11.211]) by
-	cuda.sgi.com with ESMTP id Hr8yEuZmHOndDD7t (version=TLSv1
+	cuda.sgi.com with ESMTP id 7eCRAH3ZEwDy5iSU (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 07 Jan 2015 02:30:28 -0800 (PST)
-Date: Wed, 7 Jan 2015 11:30:26 +0100
+	Wed, 07 Jan 2015 02:31:53 -0800 (PST)
+Date: Wed, 7 Jan 2015 11:31:52 +0100
 From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 02/18] fs: add FL_LAYOUT lease type
-Message-ID: <20150107103026.GB28783@lst.de>
+Subject: Re: [PATCH 18/18] xfs: recall pNFS layouts on conflicting access
+Message-ID: <20150107103152.GC28783@lst.de>
 References: <1420561721-9150-1-git-send-email-hch@lst.de>
-	<1420561721-9150-3-git-send-email-hch@lst.de>
-	<20150106104652.49078615@synchrony.poochiereds.net>
+	<1420561721-9150-19-git-send-email-hch@lst.de>
+	<20150106231846.GE31508@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20150106104652.49078615@synchrony.poochiereds.net>
+In-Reply-To: <20150106231846.GE31508@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,33 +31,29 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Jeff Layton <jeff.layton@primarydata.com>
-Cc: "J. Bruce Fields" <bfields@fieldses.org>, linux-fsdevel@vger.kernel.org, linux-nfs@vger.kernel.org, Christoph Hellwig <hch@lst.de>, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-nfs@vger.kernel.org, xfs@oss.sgi.com, "J. Bruce Fields" <bfields@fieldses.org>, Jeff Layton <jlayton@primarydata.com>, linux-fsdevel@vger.kernel.org, Christoph Hellwig <hch@lst.de>
 
-On Tue, Jan 06, 2015 at 10:46:52AM -0800, Jeff Layton wrote:
-> So with the current code, layouts are always whole-file?
-
-layouts aren't whole-file, but layout recalls are.
-
-> Tracking layouts as a lease-like object seems reasonable, but I'm not
-> 100% thrilled with overloading all of the lease code with this. Perhaps
-> it should be its own sort of object with a separate API to manage them?
-> That would also make it easier to support layouts that are not for the
-> entire file.
+On Wed, Jan 07, 2015 at 10:18:46AM +1100, Dave Chinner wrote:
+> On Tue, Jan 06, 2015 at 05:28:41PM +0100, Christoph Hellwig wrote:
+> > Recall all outstanding pNFS layouts and truncates, writes and similar extent
+> > list modifying operations.
 > 
-> To that end, it might be nice to hold off on taking this until we
-> deprecate the i_flock list as we can then give layouts their own
-> list_head in the file_lock_context. It would also make it easier to use
-> a new sort of object to represent layouts.
+> This is not sufficient to isolate extent manipulations. mmap writes
+> can trigger allocation through ->page_mkwrite, and can also trigger
+> extent conversion at IO completion without first needing allocation.
 > 
-> I just cleaned up that patchset last week, and will re-post it soon
-> once I give it a bit of testing this week.
+> Maybe I'm missing something - this patchset needs some comments
+> documenting the locking used in XFS to co-ordinate layout coherency
+> at the client side with IO that is in progress for clients with
+> overlapping block maps, as well as against server side application
+> IO.
 
-I'm happy to add support to your reworked locks/leases/etc handling
-for this.  As for which one gets merged first I'd say which one
-is in a mergeable shape earlier.  If you're confident to get your
-rework in ASAP I'm happy to rebase it on top, otherwise doing it
-the other way around sounds easier.
+Ys, the description was a little to dense.  We only care about extent list
+manipulations that remove or change existing block mappings.  Newly
+allocated blocks don't concern the pNFS operation.
+
+I'll take care of better documentation.
 
 _______________________________________________
 xfs mailing list
