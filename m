@@ -1,24 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id E6D827F50
-	for <xfs@oss.sgi.com>; Wed,  7 Jan 2015 15:11:52 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id D30B58F8035
-	for <xfs@oss.sgi.com>; Wed,  7 Jan 2015 13:11:49 -0800 (PST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 4B59F7F4E
+	for <xfs@oss.sgi.com>; Wed,  7 Jan 2015 15:43:11 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id DCE85AC001
+	for <xfs@oss.sgi.com>; Wed,  7 Jan 2015 13:43:10 -0800 (PST)
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	cdwnLz600t0zaaJu for <xfs@oss.sgi.com>;
-	Wed, 07 Jan 2015 13:11:43 -0800 (PST)
-Date: Thu, 8 Jan 2015 08:11:40 +1100
+	HENJiXTJBRiiYyhq for <xfs@oss.sgi.com>;
+	Wed, 07 Jan 2015 13:43:08 -0800 (PST)
+Received: from disappointment.disaster.area ([192.168.1.110]
+	helo=disappointment) by dastard with esmtp (Exim 4.80)
+	(envelope-from <dave@fromorbit.com>) id 1Y8yNe-0005HR-0A
+	for xfs@oss.sgi.com; Thu, 08 Jan 2015 08:43:06 +1100
+Received: from dave by disappointment with local (Exim 4.82_1-5b7a7c0-XX)
+	(envelope-from <dave@disappointment.disaster>) id 1Y8yNd-0001u3-UR
+	for xfs@oss.sgi.com; Thu, 08 Jan 2015 08:43:05 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 17/18] xfs: implement pnfs export operations
-Message-ID: <20150107211140.GC25000@dastard>
-References: <1420561721-9150-1-git-send-email-hch@lst.de>
-	<1420561721-9150-18-git-send-email-hch@lst.de>
-	<20150107002434.GG31508@dastard> <20150107104010.GD28783@lst.de>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20150107104010.GD28783@lst.de>
+Subject: [PATCH 0/4] libxfs: code rearrangement
+Date: Thu,  8 Jan 2015 08:42:59 +1100
+Message-Id: <1420666983-7275-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,101 +28,25 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@lst.de>
-Cc: "J. Bruce Fields" <bfields@fieldses.org>, linux-fsdevel@vger.kernel.org, linux-nfs@vger.kernel.org, Jeff Layton <jlayton@primarydata.com>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-T24gV2VkLCBKYW4gMDcsIDIwMTUgYXQgMTE6NDA6MTBBTSArMDEwMCwgQ2hyaXN0b3BoIEhlbGx3
-aWcgd3JvdGU6Cj4gT24gV2VkLCBKYW4gMDcsIDIwMTUgYXQgMTE6MjQ6MzRBTSArMTEwMCwgRGF2
-ZSBDaGlubmVyIHdyb3RlOgo+ID4gPiBkaWZmIC0tZ2l0IGEvZnMveGZzL3hmc19mc29wcy5jIGIv
-ZnMveGZzL3hmc19mc29wcy5jCj4gPiA+IGluZGV4IGZkYzY0MjIuLjJiODZiZTggMTAwNjQ0Cj4g
-PiA+IC0tLSBhL2ZzL3hmcy94ZnNfZnNvcHMuYwo+ID4gPiArKysgYi9mcy94ZnMveGZzX2Zzb3Bz
-LmMKPiA+ID4gQEAgLTYwMSw2ICs2MDEsOCBAQCB4ZnNfZ3Jvd2ZzX2RhdGEoCj4gPiA+ICAJaWYg
-KCFtdXRleF90cnlsb2NrKCZtcC0+bV9ncm93bG9jaykpCj4gPiA+ICAJCXJldHVybiAtRVdPVUxE
-QkxPQ0s7Cj4gPiA+ICAJZXJyb3IgPSB4ZnNfZ3Jvd2ZzX2RhdGFfcHJpdmF0ZShtcCwgaW4pOwo+
-ID4gPiArCWlmICghZXJyb3IpCj4gPiA+ICsJCW1wLT5tX2dlbmVyYXRpb24rKzsKPiA+ID4gIAlt
-dXRleF91bmxvY2soJm1wLT5tX2dyb3dsb2NrKTsKPiA+ID4gIAlyZXR1cm4gZXJyb3I7Cj4gPiA+
-ICB9Cj4gPiAKPiA+IEkgY291bGRuJ3QgZmluZCBhbiBleHBsYW5hdGlvbiBvZiB3aGF0IHRoaXMg
-Z2VuZXJhdGlvbiBudW1iZXIgaXMKPiA+IGZvci4gV2hhdCBhcmUgaXQncyBzZW1hbnRpY3Mgdy5y
-LnQuIHNlcnZlciBjcmFzaGVzPwo+IAo+IFRoZSBnZW5lcmF0aW9uIGlzIGluY3JlbWVudGVkIHdo
-ZW4gd2UgZ3JvdyB0aGUgZmlsZXN5c3RlbSwgc28gdGhhdAo+IGEgbmV3IGxheW91dCAoYmxvY2sg
-bWFwcGluZykgcmV0dXJuZWQgdG8gdGhlIGNs0ZZlbnQgcmVmZXJlcnMgdG8gdGhlCj4gbmV3IE5G
-UyBkZXZpY2UgSUQsIHdoaWNoIHdpbGwgbWFrZSB0aGUgY2xpZW50IGF3YXJlIG9mIHRoZSBuZXcg
-c2l6ZS4KPiAKPiBUaGUgZGV2aWNlIElEcyBhcmVuJ3QgcGVyc2lzdGVudCwgc28gYWZ0ZXIgYSBz
-ZXJ2ZXIgY3Jhc2ggLyByZWJvb3QKPiB3ZSdsbCBzdGFydCBhdCB6ZXJvIGFnYWluLgoKU28gd2hh
-dCBoYXBwZW5zIGlmIGEgZ3JvdyBvY2N1cnMsIHRoZW4gdGhlIHNlcnZlciBjcmFzaGVzLCBhbmQg
-dGhlCmNsaWVudCBvbiByZWJvb3Qgc2VlcyB0aGUgc2FtZSBnZW5lcmF0aW9uIGFzIGJlZm9yZSB0
-aGUgZ3JvdwpvY2N1cmVkPwoKUGVyaGFwcyBpdCB3b3VsZCBiZSBiZXR0ZXIgdG8ganVzdCBpbml0
-aWFsaXNlIHRoZSBnZW5lcmF0aW9uIHdpdGggYQpyYW5kb20gbnVtYmVyPwoKPiBJJ2xsIGFkZCBj
-b21tZW50cyBleHBsYWluaW5nIHRoaXMgdG8gdGhlIGNvZGUuCj4gCj4gPiBXaHkgZG9lcyB0aGlz
-IGZ1bmN0aW9uIGdldCBwYXNzZWQgYW4gb2Zmc2V0IGl0IGlzIG5vdCBhY3R1YWxseSB1c2VkPwo+
-IAo+IEhpc3RvcmljIHJlYXNvbnMuLgo+IAo+ID4gPiArc3RhdGljIGludAo+ID4gPiAreGZzX2Zz
-X3VwZGF0ZV9mbGFncygKPiA+ID4gKwlzdHJ1Y3QgeGZzX2lub2RlCSppcCkKPiA+ID4gK3sKPiA+
-ID4gKwlzdHJ1Y3QgeGZzX21vdW50CSptcCA9IGlwLT5pX21vdW50Owo+ID4gPiArCXN0cnVjdCB4
-ZnNfdHJhbnMJKnRwOwo+ID4gPiArCWludAkJCWVycm9yOwo+ID4gPiArCj4gPiA+ICsJLyoKPiA+
-ID4gKwkgKiBVcGRhdGUgdGhlIG1vZGUsIGFuZCBwcmVhbGxvYyBmbGFnIGJpdHMuCj4gPiA+ICsJ
-ICovCj4gPiA+ICsJdHAgPSB4ZnNfdHJhbnNfYWxsb2MobXAsIFhGU19UUkFOU19XUklURUlEKTsK
-PiA+ID4gKwllcnJvciA9IHhmc190cmFuc19yZXNlcnZlKHRwLCAmTV9SRVMobXApLT50cl93cml0
-ZWlkLCAwLCAwKTsKPiA+ID4gKwlpZiAoZXJyb3IpIHsKPiA+ID4gKwkJeGZzX3RyYW5zX2NhbmNl
-bCh0cCwgMCk7Cj4gPiA+ICsJCXJldHVybiBlcnJvcjsKPiA+ID4gKwl9Cj4gPiA+ICsKPiA+ID4g
-Kwl4ZnNfaWxvY2soaXAsIFhGU19JTE9DS19FWENMKTsKPiA+ID4gKwl4ZnNfdHJhbnNfaWpvaW4o
-dHAsIGlwLCBYRlNfSUxPQ0tfRVhDTCk7Cj4gPiA+ICsJaXAtPmlfZC5kaV9tb2RlICY9IH5TX0lT
-VUlEOwo+ID4gPiArCWlmIChpcC0+aV9kLmRpX21vZGUgJiBTX0lYR1JQKQo+ID4gPiArCQlpcC0+
-aV9kLmRpX21vZGUgJj0gflNfSVNHSUQ7Cj4gPiA+ICsKPiA+ID4gKwlpcC0+aV9kLmRpX2ZsYWdz
-IHw9IFhGU19ESUZMQUdfUFJFQUxMT0M7Cj4gPiA+ICsKPiA+ID4gKwl4ZnNfdHJhbnNfbG9nX2lu
-b2RlKHRwLCBpcCwgWEZTX0lMT0dfQ09SRSk7Cj4gPiA+ICsJcmV0dXJuIHhmc190cmFuc19jb21t
-aXQodHAsIDApOwo+ID4gPiArfQo+ID4gCj4gPiBUaGF0IG5lZWRzIHRpbWVzdGFtcCBjaGFuZ2Vz
-IGFzIHdlbGwuIGkuZS46Cj4gPiAKPiA+IAl4ZnNfdHJhbnNfaWNoZ3RpbWUodHAsIGlwLCBYRlNf
-SUNIR1RJTUVfTU9EIHwgWEZTX0lDSEdUSU1FX0NIRyk7Cj4gCj4gVGhlIHRpbWUgc3RhbXBzIGFy
-ZSBvbmx5IHVwZGF0ZWQgd2hlbiB3ZSBhY3R1YWxseSBjb21taXQgdGhlIGRhdGEuCj4gVXBkYXRp
-bmcgdGhlbSBoZXJlIG1pZ2h0IGJlIGhhcm1sZXNzLCBidXQgSSdsbCBoYXZlIHRvIGRpZyBpbnRv
-IHRoZQo+IHByb3RvY29sIHNwZWNpZmljYXRpb24gYW5kIHRlc3RzIGEgYml0IG1vcmUgdG8gY2hl
-Y2sgaWYgZG9pbmcgdGhlCj4gYWRkaXRpb25hbCB0aW1lc3RhbXAgdXBkYXRlIHdvdWxkIGJlIGhh
-cm1sZXNzLgo+IAo+ID4gPiArCj4gPiA+ICsvKgo+ID4gPiArICogR2V0IGEgbGF5b3V0IGZvciB0
-aGUgcE5GUyBjbGllbnQuCj4gPiA+ICsgKgo+ID4gPiArICogTm90ZSB0aGF0IGluIHRoZSBhbGxv
-Y2F0aW9uIGNhc2Ugd2UgZG8gZm9yY2Ugb3V0IHRoZSB0cmFuc2FjdGlvbiBoZXJlLgo+ID4gPiAr
-ICogVGhlcmUgaXMgbm8gbWV0YWRhdGEgdXBkYXRlIHRoYXQgaXMgcmVxdWlyZWQgdG8gYmUgc3Rh
-YmxlIGZvciBORlMKPiA+ID4gKyAqIHNlbWFudGljcywgYW5kIGxheW91dHMgYXJlIG5vdCB2YWxp
-ZCBvdmVyIGEgc2VydmVyIGNyYXNoLiAgSW5zdGVhZAo+ID4gPiArICogd2UnbGwgaGF2ZSB0byBi
-ZSBjYXJlZnVsIGluIHRoZSBjb21taXQgcm91dGluZSBhcyBpdCBtaWdodCBwYXNzIHVzCj4gPiA+
-ICsgKiBibG9ja3MgZm9yIGFuIGFsbG9jYXRpb24gdGhhdCBuZXZlciBtYWRlIGl0IHRvIGRpc2sg
-aW4gdGhlIHJlY292ZXJ5Cj4gPiA+ICsgKiBjYXNlLgo+ID4gCj4gPiBJIHRoaW5rIHlvdSBhcmUg
-c2F5aW5nIHRoYXQgYmVjYXVzZSBibG9jayBhbGxvY2F0aW9uIGlzIGFuIGFzeW5jCj4gPiB0cmFu
-c2FjdGlvbiwgdGhlbiB3ZSBoYXZlIHRvIGRlYWwgd2l0aCB0aGUgcG9zc2liaWxpdHkgdGhhdCB3
-ZSBjcmFzaAo+ID4gYmVmb3JlIHRoZSB0cmFuc2FjdGlvbiBoaXRzIHRoZSBkaXNrLgo+ID4gCj4g
-PiBIb3cgb2Z0ZW4gZG8gd2UgaGF2ZSB0byBhbGxvY2F0ZQo+ID4gbmV3IGJsb2NrcyBsaWtlIHRo
-aXM/IERvIHdlIG5lZWQgdG8gdXNlIGFzeW5jIHRyYW5zYWN0aW9ucyBmb3IgdGhpcwo+ID4gY2Fz
-ZSwgb3Igc2hvdWxkIHdlIHNpbXBseSBkbyB0aGUgYnJ1dGUgZm9yY2UgdGhpbmcgKGJ5IG1ha2lu
-ZyB0aGUKPiA+IGFsbG9jYXRpb24gdHJhbnNhY3Rpb24gc3luY2hyb25vdXMpIGluaXRpYWxseSBh
-bmQgdGhlbiwgaWYKPiA+IHBlcmZvcm1hbmNlIHByb2JsZW1zIGFyaXNlLCBvcHRpbWlzZSBmcm9t
-IHRoZXJlPwo+IAo+IEV2ZXJ5IGJsb2NrIGFsbG9jYXRpb24gZnJvbSBhIHBORlMgY2xpZW50IGdv
-ZXMgdGhyb3VnaCB0aGlzIHBhdGgsIHNvCj4geWVzIGl0IGlzIHBlcmZvcm1hbmNlIGNyaXRpY2Fs
-LgoKU3VyZSwgYnV0IGhvdyBtYW55IGFsbG9jYXRpb25zIHBlciBzZWNvbmQgYXJlIHdlIGV4cGVj
-dGluZyB0byBoYXZlCnRvIHN1cHBvcnQ/IFdlIGNhbiBkbyB0ZW5zIG9mIHRob3VzYW5kcyBvZiBz
-eW5jaHJvbm91cyB0cmFuc2FjdGlvbnMKcGVyIHNlY29uZCBvbiBsdW5zIHdpdGggbm9uLXZvbGF0
-aWxlIHdyaXRlIGNhY2hlcywgc28gSSdtIHJlYWxseQp3b25kZXJpbmcgaG93IG11Y2ggb2YgYSBs
-aW1pdGF0aW9uIHRoaXMgaXMgZ29pbmcgdG8gYmUgaW4gdGhlIHJlYWwKd29ybGQuIERvIHlvdSBo
-YXZlIGFueSBudW1iZXJzPwoKPiA+IFNvIHdoZW5ldmVyIHRoZSBzZXJ2ZXIgZmlyc3Qgc3RhcnRz
-IHVwIHRoZSBnZW5lcmF0aW9uIG51bWJlciBpbiBhCj4gPiBtYXAgaXMgZ29pbmcgdG8gYmUgemVy
-byAtIHdoYXQgcHVycG9zZSBkb2VzIHRoaXMgYWN0dWFsbHkgc2VydmU/Cj4gCj4gU28gdGhhdCB3
-ZSBjYW4gY29tbXVuaWNhdGUgaWYgYSBkZXZpY2Ugd2FzIGdyb3duIHRvIHRoZSBjbGllbnQsIHdo
-aWNoCj4gaW4gdGhpcyBjYXNlIG5lZWRzIHRvIHJlLXJlYWQgdGhlIGRldmljZSBpbmZvcm1hdGlv
-bi4KCldoeSBkb2VzIGl0IG5lZWQgdG8gcmVyZWFkIHRoZSBkZXZpY2UgaW5mb3JtYXRpb24/IHRo
-ZSBsYXlvdXRzIHRoYXQKYXJlIGhhbmRsZWQgdG8gaXQgYXJlIHN0aWxsIGdvaW5nIHRvIGJlIHZh
-bGlkIGZyb20gdGhlIHNlcnZlciBQT1YuLi4KCj4gPiA+ICsJLyoKPiA+ID4gKwkgKiBNYWtlIHN1
-cmUgcmVhZHMgdGhyb3VnaCB0aGUgcGFnZWNhY2hlIHNlZSB0aGUgbmV3IGRhdGEuCj4gPiA+ICsJ
-ICovCj4gPiA+ICsJaW52YWxpZGF0ZV9pbm9kZV9wYWdlczIoaW5vZGUtPmlfbWFwcGluZyk7Cj4g
-PiAKPiA+IFByb2JhYmx5IHNob3VsZCBkbyB0aGF0IGZpcnN0LiBBbHNvLCB3aGF0IGhhcHBlbnMg
-aWYgdGhlcmUgaXMgbG9jYWwKPiA+IGRpcnR5IGRhdGEgb24gdGhlIGZpbGUgYXQgdGhpcyBwb2lu
-dD8gRG9lc24ndCB0aGlzIGp1c3QgdG9zcyB0aGVtCj4gPiBhd2F5Pwo+IAo+IElmIHRoZXJlIHdh
-cyBsb2NhbCBkYXRhIGl0IHdpbGwgYmUgdG9zc2VkLiAgRm9yIHJlZ3VsYXIgd3JpdGVzIHRoaXMg
-Y2FuJ3QKPiBoYXBwZW4gYmVjYXVzZSB3ZSByZWFsbHkgb3V0c3RhbmRpbmcgbGF5b3V0cyBpbiB0
-aGUgd3JpdGUgcGF0aC4gIEZvcgo+IG1tYXAgd2UgZm9yIG5vdyBpZ25vcmUgdGhpcyBwcm9ibGVt
-LCBhcyBhIHBORlMgc2VydmVyIHNob3VsZCBnZW5lcmFsbHkKPiBub3QgYmUgdXNlZCBsb2NhbGx5
-LiAgCgpDb21tZW50cywgcGxlYXNlLiA7KQoKQ2hlZXJzLAoKRGF2ZS4KLS0gCkRhdmUgQ2hpbm5l
-cgpkYXZpZEBmcm9tb3JiaXQuY29tCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3Nz
-LnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
+Hi folks,
+
+Here's a few small patches that reflect changes to the libxfs layout
+as I've been working on the userspace update. The header files are
+common to both user and kernel space, so shoul dbe in libxfs, and
+there's a couple of bmap related structures and function prototypes
+that can be moved back to libxfs now that the kernel stack split
+code have moved into the btree code.
+
+-Dave.
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
