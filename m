@@ -1,24 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id CB8157F47
-	for <xfs@oss.sgi.com>; Thu,  8 Jan 2015 17:40:19 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 5B221AC003
-	for <xfs@oss.sgi.com>; Thu,  8 Jan 2015 15:40:16 -0800 (PST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 0FB0F7F47
+	for <xfs@oss.sgi.com>; Thu,  8 Jan 2015 17:41:53 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id D5B9C8F8035
+	for <xfs@oss.sgi.com>; Thu,  8 Jan 2015 15:41:49 -0800 (PST)
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	D9SydPGmU6UgxkGh for <xfs@oss.sgi.com>;
-	Thu, 08 Jan 2015 15:40:14 -0800 (PST)
-Date: Fri, 9 Jan 2015 10:20:30 +1100
+	8noDTfgdRHGGaHpp for <xfs@oss.sgi.com>;
+	Thu, 08 Jan 2015 15:41:48 -0800 (PST)
+Date: Fri, 9 Jan 2015 10:23:28 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 2/3] xfs: consolidate superblock logging functions
-Message-ID: <20150108232030.GL25000@dastard>
-References: <1420667465-7453-1-git-send-email-david@fromorbit.com>
-	<1420667465-7453-3-git-send-email-david@fromorbit.com>
-	<20150108143632.GB33789@bfoster.bfoster>
+Subject: Re: [PATCH] xfs: inodes are new until the dentry cache is set up
+Message-ID: <20150108232328.GM25000@dastard>
+References: <1420667576-7592-1-git-send-email-david@fromorbit.com>
+	<20150108153205.GE33789@bfoster.bfoster>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20150108143632.GB33789@bfoster.bfoster>
+In-Reply-To: <20150108153205.GE33789@bfoster.bfoster>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,105 +33,80 @@ Sender: xfs-bounces@oss.sgi.com
 To: Brian Foster <bfoster@redhat.com>
 Cc: xfs@oss.sgi.com
 
-On Thu, Jan 08, 2015 at 09:36:33AM -0500, Brian Foster wrote:
-> On Thu, Jan 08, 2015 at 08:51:04AM +1100, Dave Chinner wrote:
+On Thu, Jan 08, 2015 at 10:32:05AM -0500, Brian Foster wrote:
+> On Thu, Jan 08, 2015 at 08:52:56AM +1100, Dave Chinner wrote:
 > > From: Dave Chinner <dchinner@redhat.com>
 > > 
-> > We now have several superblock loggin functions that are identical
-> > except for the transaction reservation and whether it shoul dbe a
-> > synchronous transaction or not. Consolidate these all into a single
-> > function, a single reserveration and a sync flag and call it
-> > xfs_sync_sb().
+> > Al Viro noticed a generic set of issues to do with filehandle lookup
+> > racing with dentry cache setup. They involve a filehandle lookup
+> > occurring while an inode is being created and the filehandle lookup
+> > racing with the dentry creation for the real file. This can lead to
+> > multiple dentries for the one path being instantiated. There are a
+> > host of other issues around this same set of paths.
 > > 
-> > Also, xfs_mod_sb() is not really a modification function - it's the
-> > operation of logging the superblock buffer. hence change the name of
-> > it to reflect this.
+> > The underlying cause is that file handle lookup only waits on inode
+> > cache instantiation rather than full dentry cache instantiation. XFS
+> > is mostly immune to the problems discovered due to it's own internal
+> > inode cache, but there are a couple of corner cases where races can
+> > happen.
 > > 
-> > Note that we have to change the mp->m_update_flags that are passed
-> > around at mount time to a boolean simply to indicate a superblock
-> > update is needed.
+> > We currently clear the XFS_INEW flag when the inode is fully set up
+> > after insertion into the cache. Newly allocated inodes are inserted
+> > locked and so aren't usable until the allocation transaction
+> > commits. This, however, occurs before the dentry and security
+> > information is fully initialised and hence the inode is unlocked and
+> > available for lookups to find too early.
+> > 
+> > To solve the problem, only clear the XFS_INEW flag for newly created
+> > inodes once the dentry is fully instantiated. This means lookups
+> > will retry until the XFS_INEW flag is removed from the inode and
+> > hence avoids the race conditions in questions.
 > > 
 > > Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> > ---
-> 
-> A question and one other little thing...
-
-[snip]
-
-> >  #define XFS_TRANS_QM_DQCLUSTER		32
-> >  #define XFS_TRANS_QM_QINOCREATE		33
-> >  #define XFS_TRANS_QM_QUOTAOFF_END	34
-> > -#define XFS_TRANS_SB_UNIT		35
-> > -#define XFS_TRANS_FSYNC_TS		36
-> > -#define	XFS_TRANS_GROWFSRT_ALLOC	37
-> > -#define	XFS_TRANS_GROWFSRT_ZERO		38
-> > -#define	XFS_TRANS_GROWFSRT_FREE		39
-> > -#define	XFS_TRANS_SWAPEXT		40
-> > -#define	XFS_TRANS_SB_COUNT		41
-> > -#define	XFS_TRANS_CHECKPOINT		42
-> > -#define	XFS_TRANS_ICREATE		43
-> > -#define	XFS_TRANS_CREATE_TMPFILE	44
-> > -#define	XFS_TRANS_TYPE_MAX		44
-> > +#define XFS_TRANS_FSYNC_TS		35
-> > +#define	XFS_TRANS_GROWFSRT_ALLOC	36
-> > +#define	XFS_TRANS_GROWFSRT_ZERO		37
-> > +#define	XFS_TRANS_GROWFSRT_FREE		38
-> > +#define	XFS_TRANS_SWAPEXT		39
-> > +#define	XFS_TRANS_CHECKPOINT		40
-> > +#define	XFS_TRANS_ICREATE		41
-> > +#define	XFS_TRANS_CREATE_TMPFILE	42
-> > +#define	XFS_TRANS_TYPE_MAX		43
-> >  /* new transaction types need to be reflected in xfs_logprint(8) */
+....
+> > diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+> > index ce80eeb..8be5bb5 100644
+> > --- a/fs/xfs/xfs_iops.c
+> > +++ b/fs/xfs/xfs_iops.c
+> > @@ -186,6 +186,8 @@ xfs_generic_create(
+> >  	else
+> >  		d_instantiate(dentry, inode);
 > >  
-> >  #define XFS_TRANS_TYPES \
-> > @@ -113,7 +111,6 @@ extern const struct xfs_buf_ops xfs_symlink_buf_ops;
-> >  	{ XFS_TRANS_SETATTR_SIZE,	"SETATTR_SIZE" }, \
-> >  	{ XFS_TRANS_INACTIVE,		"INACTIVE" }, \
-> >  	{ XFS_TRANS_CREATE,		"CREATE" }, \
-> > -	{ XFS_TRANS_CREATE_TMPFILE,	"CREATE_TMPFILE" }, \
-> >  	{ XFS_TRANS_CREATE_TRUNC,	"CREATE_TRUNC" }, \
-> >  	{ XFS_TRANS_TRUNCATE_FILE,	"TRUNCATE_FILE" }, \
-> >  	{ XFS_TRANS_REMOVE,		"REMOVE" }, \
-> > @@ -134,23 +131,23 @@ extern const struct xfs_buf_ops xfs_symlink_buf_ops;
-> >  	{ XFS_TRANS_ATTR_RM,		"ATTR_RM" }, \
-> >  	{ XFS_TRANS_ATTR_FLAG,		"ATTR_FLAG" }, \
-> >  	{ XFS_TRANS_CLEAR_AGI_BUCKET,	"CLEAR_AGI_BUCKET" }, \
-> > -	{ XFS_TRANS_QM_SBCHANGE,	"QM_SBCHANGE" }, \
-> > +	{ XFS_TRANS_SB_CHANGE,		"SBCHANGE" }, \
-> > +	{ XFS_TRANS_DUMMY1,		"DUMMY1" }, \
-> > +	{ XFS_TRANS_DUMMY2,		"DUMMY2" }, \
-> 
-> I take it we can't just remove these dummy types, for userspace
-> compatibility reasons, right? At least, it looks like logprint could get
-> confused if other transaction types inherited these values.
-
-With delayed logging, userspace will never see these as they never
-get to disk. Userspace will only ever see checkpoints and unmount
-records. My plan is to eventually remove this stuff from the kernel
-(it isn['t used anymore except in tracing) and define it in
-xfs_logprint in a way that works for current and legacy filesystems.
-So for the moment, I'm just making the kernel/user values
-consistent.
-
-> > @@ -1574,29 +1574,6 @@ xfs_qm_dqfree_one(
-> >  	xfs_qm_dqdestroy(dqp);
-> >  }
+> > +	xfs_finish_inode_setup(ip);
+> > +
+> >   out_free_acl:
+> >  	if (default_acl)
+> >  		posix_acl_release(default_acl);
+> > @@ -194,6 +196,7 @@ xfs_generic_create(
+> >  	return error;
 > >  
-> > -/*
-> > - * Start a transaction and write the incore superblock changes to
-> > - * disk. flags parameter indicates which fields have changed.
-> > - */
-> > -int
-> > -xfs_qm_write_sb_changes(
+> >   out_cleanup_inode:
+> > +	xfs_finish_inode_setup(ip);
+> >  	if (!tmpfile)
+> >  		xfs_cleanup_inode(dir, inode, dentry);
+> >  	iput(inode);
+> > @@ -366,9 +369,11 @@ xfs_vn_symlink(
+> >  		goto out_cleanup_inode;
+> >  
+> >  	d_instantiate(dentry, inode);
+> > +	xfs_finish_inode_setup(cip);
+> >  	return 0;
+> >  
+> >   out_cleanup_inode:
+> > +	xfs_finish_inode_setup(cip);
+> >  	xfs_cleanup_inode(dir, inode, dentry);
+> >  	iput(inode);
+> >   out:
 > 
-> This guy still has a function declaration in xfs_qm.h. The rest looks
-> good to me:
+> Ok, but what about post-inode-allocation failure conditions down in
+> xfs_create()? I don't know if there's any real harm in releasing an
+> I_NEW inode, but iput_final() does throw a warning. Same general
+> question applies to xfs_create_tmpfile(), etc..
 
-Good catch, I'll kill it.
+Ah, good point, I missed those.
 
-> Reviewed-by: Brian Foster <bfoster@redhat.com>
-
-Thanks!
+Where/how are you getting warnings thrown? I'm not seeing anything
+from xfstests runs?
 
 -Dave.
 -- 
