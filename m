@@ -1,20 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 926AA7FA5
-	for <xfs@oss.sgi.com>; Wed,  7 Jan 2015 16:26:13 -0600 (CST)
+	by oss.sgi.com (Postfix) with ESMTP id 66A8F7F3F
+	for <xfs@oss.sgi.com>; Thu,  8 Jan 2015 02:09:25 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 814AA8F8040
-	for <xfs@oss.sgi.com>; Wed,  7 Jan 2015 14:26:13 -0800 (PST)
-Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
-	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	uFGSG8ChtJtEjoIi for <xfs@oss.sgi.com>;
-	Wed, 07 Jan 2015 14:26:11 -0800 (PST)
-From: Dave Chinner <david@fromorbit.com>
-Subject: [RFC PATCH 1/6] xfs: introduce mmap/truncate lock
-Date: Thu,  8 Jan 2015 09:25:38 +1100
-Message-Id: <1420669543-8093-2-git-send-email-david@fromorbit.com>
-In-Reply-To: <1420669543-8093-1-git-send-email-david@fromorbit.com>
-References: <1420669543-8093-1-git-send-email-david@fromorbit.com>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 46CA88F8039
+	for <xfs@oss.sgi.com>; Thu,  8 Jan 2015 00:09:21 -0800 (PST)
+Received: from mail-yk0-f175.google.com (mail-yk0-f175.google.com
+	[209.85.160.175]) by cuda.sgi.com with ESMTP id
+	4ZmD4n6iA36YWCMu (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 08 Jan 2015 00:09:19 -0800 (PST)
+Received: by mail-yk0-f175.google.com with SMTP id 200so641796ykr.6
+	for <xfs@oss.sgi.com>; Thu, 08 Jan 2015 00:09:18 -0800 (PST)
+MIME-Version: 1.0
+Date: Thu, 8 Jan 2015 01:09:18 -0700
+Message-ID: <CAJCQCtQJhg_Tn0zL0tcJLvwuJ2qafYM05g0DmsRWgZm-_es8vQ@mail.gmail.com>
+Subject: Re: XFS corrupt after RAID failure and resync
+From: Chris Murphy <lists@colorremedies.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,316 +25,127 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: linux-fsdevel@vger.kernel.org, linux-mm@kvack.org
+To: David Raffelt <david.raffelt@florey.edu.au>
+Cc: Chris Murphy <lists@colorremedies.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-From: Dave Chinner <dchinner@redhat.com>
+On Wed, Jan 7, 2015 at 12:05 AM, David Raffelt
+<david.raffelt@florey.edu.au> wrote:
 
-Right now we cannot serialise mmap against truncate or hole punch
-sanely. ->page_mkwrite is not able to take locks that the read IO
-path normally takes (i.e. the inode iolock) because that could
-result in lock inversions (read - iolock - page fault - page_mkwrite
-- iolock) and so we cannot use an IO path lock to serialise page
-write faults against truncate operations.
+> Yes, after the 2 disks were dropped I definitely had a working degraded
+> drive with 5/7 . I only see XFS errors in the kernel log soon AFTER the hot
+> spare finished syncing.
 
-Instead, introduce a new lock that is used *only* in the
-->page_mkwrite path that is the equivalent of the iolock. The lock
-ordering in a page fault is i_mmaplock -> page lock -> i_ilock,
-and so in truncate we can i_iolock -> i_mmaplock and so lock out
-new write faults during the process of truncation.
+I suggest moving this to the linux-raid@ list and include the following:
 
-Because i_mmap_lock is outside the page lock, we can hold it across
-all the same operations we hold the i_iolock for. The only
-difference is that we never hold the i_mmaplock in the normal IO
-path and so do not ever have the possibility that we can page fault
-inside it. Hence there are no recursion issues on the i_mmap_lock
-and so we can use it to serialise page fault IO against inode
-modification operations that affect the IO path.
+brief description: e.g. 7 drive raid6 array, 2 drives got booted at
+some point due to errors, a hotspare starts rebuilding and finishes,
+then XFS errors appear in the log, and xfs_repair -n results suggest a
+bad RAID assembly
 
-This patch introduces the i_mmaplock infrastructure, lockdep
-annotations and initialisation/destruction code. Use of the new lock
-will be in subsequent patches.
+kernel version
+mdadm version
+drive model numbers as well as their SCT ERC values
+mdadm -E for all drives
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- fs/xfs/xfs_inode.c | 86 ++++++++++++++++++++++++++++++++++++++++++++----------
- fs/xfs/xfs_inode.h | 29 +++++++++++++-----
- fs/xfs/xfs_super.c |  2 ++
- 3 files changed, 95 insertions(+), 22 deletions(-)
+The list can take all of this. I'm not sure if it'll also take a large
+journal but I'd try it first before using a URL.
 
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 400791a..573b49c 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -150,6 +150,8 @@ xfs_ilock(
- 	 */
- 	ASSERT((lock_flags & (XFS_IOLOCK_SHARED | XFS_IOLOCK_EXCL)) !=
- 	       (XFS_IOLOCK_SHARED | XFS_IOLOCK_EXCL));
-+	ASSERT((lock_flags & (XFS_MMAPLOCK_SHARED | XFS_MMAPLOCK_EXCL)) !=
-+	       (XFS_MMAPLOCK_SHARED | XFS_MMAPLOCK_EXCL));
- 	ASSERT((lock_flags & (XFS_ILOCK_SHARED | XFS_ILOCK_EXCL)) !=
- 	       (XFS_ILOCK_SHARED | XFS_ILOCK_EXCL));
- 	ASSERT((lock_flags & ~(XFS_LOCK_MASK | XFS_LOCK_DEP_MASK)) == 0);
-@@ -159,6 +161,11 @@ xfs_ilock(
- 	else if (lock_flags & XFS_IOLOCK_SHARED)
- 		mraccess_nested(&ip->i_iolock, XFS_IOLOCK_DEP(lock_flags));
- 
-+	if (lock_flags & XFS_MMAPLOCK_EXCL)
-+		mrupdate_nested(&ip->i_mmaplock, XFS_IOLOCK_DEP(lock_flags));
-+	else if (lock_flags & XFS_MMAPLOCK_SHARED)
-+		mraccess_nested(&ip->i_mmaplock, XFS_IOLOCK_DEP(lock_flags));
-+
- 	if (lock_flags & XFS_ILOCK_EXCL)
- 		mrupdate_nested(&ip->i_lock, XFS_ILOCK_DEP(lock_flags));
- 	else if (lock_flags & XFS_ILOCK_SHARED)
-@@ -191,6 +198,8 @@ xfs_ilock_nowait(
- 	 */
- 	ASSERT((lock_flags & (XFS_IOLOCK_SHARED | XFS_IOLOCK_EXCL)) !=
- 	       (XFS_IOLOCK_SHARED | XFS_IOLOCK_EXCL));
-+	ASSERT((lock_flags & (XFS_MMAPLOCK_SHARED | XFS_MMAPLOCK_EXCL)) !=
-+	       (XFS_MMAPLOCK_SHARED | XFS_MMAPLOCK_EXCL));
- 	ASSERT((lock_flags & (XFS_ILOCK_SHARED | XFS_ILOCK_EXCL)) !=
- 	       (XFS_ILOCK_SHARED | XFS_ILOCK_EXCL));
- 	ASSERT((lock_flags & ~(XFS_LOCK_MASK | XFS_LOCK_DEP_MASK)) == 0);
-@@ -202,21 +211,35 @@ xfs_ilock_nowait(
- 		if (!mrtryaccess(&ip->i_iolock))
- 			goto out;
- 	}
-+
-+	if (lock_flags & XFS_MMAPLOCK_EXCL) {
-+		if (!mrtryupdate(&ip->i_mmaplock))
-+			goto out_undo_iolock;
-+	} else if (lock_flags & XFS_MMAPLOCK_SHARED) {
-+		if (!mrtryaccess(&ip->i_mmaplock))
-+			goto out_undo_iolock;
-+	}
-+
- 	if (lock_flags & XFS_ILOCK_EXCL) {
- 		if (!mrtryupdate(&ip->i_lock))
--			goto out_undo_iolock;
-+			goto out_undo_mmaplock;
- 	} else if (lock_flags & XFS_ILOCK_SHARED) {
- 		if (!mrtryaccess(&ip->i_lock))
--			goto out_undo_iolock;
-+			goto out_undo_mmaplock;
- 	}
- 	return 1;
- 
-- out_undo_iolock:
-+out_undo_mmaplock:
-+	if (lock_flags & XFS_MMAPLOCK_EXCL)
-+		mrunlock_excl(&ip->i_mmaplock);
-+	else if (lock_flags & XFS_MMAPLOCK_SHARED)
-+		mrunlock_shared(&ip->i_mmaplock);
-+out_undo_iolock:
- 	if (lock_flags & XFS_IOLOCK_EXCL)
- 		mrunlock_excl(&ip->i_iolock);
- 	else if (lock_flags & XFS_IOLOCK_SHARED)
- 		mrunlock_shared(&ip->i_iolock);
-- out:
-+out:
- 	return 0;
- }
- 
-@@ -244,6 +267,8 @@ xfs_iunlock(
- 	 */
- 	ASSERT((lock_flags & (XFS_IOLOCK_SHARED | XFS_IOLOCK_EXCL)) !=
- 	       (XFS_IOLOCK_SHARED | XFS_IOLOCK_EXCL));
-+	ASSERT((lock_flags & (XFS_MMAPLOCK_SHARED | XFS_MMAPLOCK_EXCL)) !=
-+	       (XFS_MMAPLOCK_SHARED | XFS_MMAPLOCK_EXCL));
- 	ASSERT((lock_flags & (XFS_ILOCK_SHARED | XFS_ILOCK_EXCL)) !=
- 	       (XFS_ILOCK_SHARED | XFS_ILOCK_EXCL));
- 	ASSERT((lock_flags & ~(XFS_LOCK_MASK | XFS_LOCK_DEP_MASK)) == 0);
-@@ -254,6 +279,11 @@ xfs_iunlock(
- 	else if (lock_flags & XFS_IOLOCK_SHARED)
- 		mrunlock_shared(&ip->i_iolock);
- 
-+	if (lock_flags & XFS_MMAPLOCK_EXCL)
-+		mrunlock_excl(&ip->i_mmaplock);
-+	else if (lock_flags & XFS_MMAPLOCK_SHARED)
-+		mrunlock_shared(&ip->i_mmaplock);
-+
- 	if (lock_flags & XFS_ILOCK_EXCL)
- 		mrunlock_excl(&ip->i_lock);
- 	else if (lock_flags & XFS_ILOCK_SHARED)
-@@ -271,11 +301,14 @@ xfs_ilock_demote(
- 	xfs_inode_t		*ip,
- 	uint			lock_flags)
- {
--	ASSERT(lock_flags & (XFS_IOLOCK_EXCL|XFS_ILOCK_EXCL));
--	ASSERT((lock_flags & ~(XFS_IOLOCK_EXCL|XFS_ILOCK_EXCL)) == 0);
-+	ASSERT(lock_flags & (XFS_IOLOCK_EXCL|XFS_MMAPLOCK_EXCL|XFS_ILOCK_EXCL));
-+	ASSERT((lock_flags &
-+		~(XFS_IOLOCK_EXCL|XFS_MMAPLOCK_EXCL|XFS_ILOCK_EXCL)) == 0);
- 
- 	if (lock_flags & XFS_ILOCK_EXCL)
- 		mrdemote(&ip->i_lock);
-+	if (lock_flags & XFS_MMAPLOCK_EXCL)
-+		mrdemote(&ip->i_mmaplock);
- 	if (lock_flags & XFS_IOLOCK_EXCL)
- 		mrdemote(&ip->i_iolock);
- 
-@@ -294,6 +327,12 @@ xfs_isilocked(
- 		return rwsem_is_locked(&ip->i_lock.mr_lock);
- 	}
- 
-+	if (lock_flags & (XFS_MMAPLOCK_EXCL|XFS_MMAPLOCK_SHARED)) {
-+		if (!(lock_flags & XFS_MMAPLOCK_SHARED))
-+			return !!ip->i_mmaplock.mr_writer;
-+		return rwsem_is_locked(&ip->i_mmaplock.mr_lock);
-+	}
-+
- 	if (lock_flags & (XFS_IOLOCK_EXCL|XFS_IOLOCK_SHARED)) {
- 		if (!(lock_flags & XFS_IOLOCK_SHARED))
- 			return !!ip->i_iolock.mr_writer;
-@@ -314,14 +353,27 @@ int xfs_lock_delays;
- #endif
- 
- /*
-- * Bump the subclass so xfs_lock_inodes() acquires each lock with
-- * a different value
-+ * Bump the subclass so xfs_lock_inodes() acquires each lock with a different
-+ * value. This shouldn't be called for page fault locking, but we also need to
-+ * ensure we don't overrun the number of lockdep subclasses for the iolock or
-+ * mmaplock as that is limited to 12 by the mmap lock lockdep annotations.
-  */
- static inline int
- xfs_lock_inumorder(int lock_mode, int subclass)
- {
--	if (lock_mode & (XFS_IOLOCK_SHARED|XFS_IOLOCK_EXCL))
-+	if (lock_mode & (XFS_IOLOCK_SHARED|XFS_IOLOCK_EXCL)) {
-+		ASSERT(subclass + XFS_LOCK_INUMORDER <
-+			(1 << (XFS_MMAPLOCK_SHIFT - XFS_IOLOCK_SHIFT)));
- 		lock_mode |= (subclass + XFS_LOCK_INUMORDER) << XFS_IOLOCK_SHIFT;
-+	}
-+
-+	if (lock_mode & (XFS_MMAPLOCK_SHARED|XFS_MMAPLOCK_EXCL)) {
-+		ASSERT(subclass + XFS_LOCK_INUMORDER <
-+			(1 << (XFS_ILOCK_SHIFT - XFS_MMAPLOCK_SHIFT)));
-+		lock_mode |= (subclass + XFS_LOCK_INUMORDER) <<
-+							XFS_MMAPLOCK_SHIFT;
-+	}
-+
- 	if (lock_mode & (XFS_ILOCK_SHARED|XFS_ILOCK_EXCL))
- 		lock_mode |= (subclass + XFS_LOCK_INUMORDER) << XFS_ILOCK_SHIFT;
- 
-@@ -440,10 +492,10 @@ again:
- }
- 
- /*
-- * xfs_lock_two_inodes() can only be used to lock one type of lock
-- * at a time - the iolock or the ilock, but not both at once. If
-- * we lock both at once, lockdep will report false positives saying
-- * we have violated locking orders.
-+ * xfs_lock_two_inodes() can only be used to lock one type of lock at a time -
-+ * the iolock, the mmaplock or the ilock, but not more than one at a time. If we
-+ * lock more than one at a time, lockdep will report false positives saying we
-+ * have violated locking orders.
-  */
- void
- xfs_lock_two_inodes(
-@@ -455,8 +507,12 @@ xfs_lock_two_inodes(
- 	int			attempts = 0;
- 	xfs_log_item_t		*lp;
- 
--	if (lock_mode & (XFS_IOLOCK_SHARED|XFS_IOLOCK_EXCL))
--		ASSERT((lock_mode & (XFS_ILOCK_SHARED|XFS_ILOCK_EXCL)) == 0);
-+	if (lock_mode & (XFS_IOLOCK_SHARED|XFS_IOLOCK_EXCL)) {
-+		ASSERT(!(lock_mode & (XFS_MMAPLOCK_SHARED|XFS_MMAPLOCK_EXCL)));
-+		ASSERT(!(lock_mode & (XFS_ILOCK_SHARED|XFS_ILOCK_EXCL)));
-+	} else if (lock_mode & (XFS_MMAPLOCK_SHARED|XFS_MMAPLOCK_EXCL))
-+		ASSERT(!(lock_mode & (XFS_ILOCK_SHARED|XFS_ILOCK_EXCL)));
-+
- 	ASSERT(ip0->i_ino != ip1->i_ino);
- 
- 	if (ip0->i_ino > ip1->i_ino) {
-diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
-index de97ccc..8e7a12a 100644
---- a/fs/xfs/xfs_inode.h
-+++ b/fs/xfs/xfs_inode.h
-@@ -56,6 +56,7 @@ typedef struct xfs_inode {
- 	struct xfs_inode_log_item *i_itemp;	/* logging information */
- 	mrlock_t		i_lock;		/* inode lock */
- 	mrlock_t		i_iolock;	/* inode IO lock */
-+	mrlock_t		i_mmaplock;	/* inode mmap IO lock */
- 	atomic_t		i_pincount;	/* inode pin count */
- 	spinlock_t		i_flags_lock;	/* inode i_flags lock */
- 	/* Miscellaneous state. */
-@@ -263,15 +264,20 @@ static inline int xfs_isiflocked(struct xfs_inode *ip)
- #define	XFS_IOLOCK_SHARED	(1<<1)
- #define	XFS_ILOCK_EXCL		(1<<2)
- #define	XFS_ILOCK_SHARED	(1<<3)
-+#define	XFS_MMAPLOCK_EXCL	(1<<4)
-+#define	XFS_MMAPLOCK_SHARED	(1<<5)
- 
- #define XFS_LOCK_MASK		(XFS_IOLOCK_EXCL | XFS_IOLOCK_SHARED \
--				| XFS_ILOCK_EXCL | XFS_ILOCK_SHARED)
-+				| XFS_ILOCK_EXCL | XFS_ILOCK_SHARED \
-+				| XFS_MMAPLOCK_EXCL | XFS_MMAPLOCK_SHARED)
- 
- #define XFS_LOCK_FLAGS \
- 	{ XFS_IOLOCK_EXCL,	"IOLOCK_EXCL" }, \
- 	{ XFS_IOLOCK_SHARED,	"IOLOCK_SHARED" }, \
- 	{ XFS_ILOCK_EXCL,	"ILOCK_EXCL" }, \
--	{ XFS_ILOCK_SHARED,	"ILOCK_SHARED" }
-+	{ XFS_ILOCK_SHARED,	"ILOCK_SHARED" }, \
-+	{ XFS_MMAPLOCK_EXCL,	"MMAPLOCK_EXCL" }, \
-+	{ XFS_MMAPLOCK_SHARED,	"MMAPLOCK_SHARED" }
- 
- 
- /*
-@@ -302,17 +308,26 @@ static inline int xfs_isiflocked(struct xfs_inode *ip)
- #define XFS_IOLOCK_SHIFT	16
- #define	XFS_IOLOCK_PARENT	(XFS_LOCK_PARENT << XFS_IOLOCK_SHIFT)
- 
-+#define XFS_MMAPLOCK_SHIFT	20
-+
- #define XFS_ILOCK_SHIFT		24
- #define	XFS_ILOCK_PARENT	(XFS_LOCK_PARENT << XFS_ILOCK_SHIFT)
- #define	XFS_ILOCK_RTBITMAP	(XFS_LOCK_RTBITMAP << XFS_ILOCK_SHIFT)
- #define	XFS_ILOCK_RTSUM		(XFS_LOCK_RTSUM << XFS_ILOCK_SHIFT)
- 
--#define XFS_IOLOCK_DEP_MASK	0x00ff0000
-+#define XFS_IOLOCK_DEP_MASK	0x000f0000
-+#define XFS_MMAPLOCK_DEP_MASK	0x00f00000
- #define XFS_ILOCK_DEP_MASK	0xff000000
--#define XFS_LOCK_DEP_MASK	(XFS_IOLOCK_DEP_MASK | XFS_ILOCK_DEP_MASK)
--
--#define XFS_IOLOCK_DEP(flags)	(((flags) & XFS_IOLOCK_DEP_MASK) >> XFS_IOLOCK_SHIFT)
--#define XFS_ILOCK_DEP(flags)	(((flags) & XFS_ILOCK_DEP_MASK) >> XFS_ILOCK_SHIFT)
-+#define XFS_LOCK_DEP_MASK	(XFS_IOLOCK_DEP_MASK | \
-+				 XFS_MMAPLOCK_DEP_MASK | \
-+				 XFS_ILOCK_DEP_MASK)
-+
-+#define XFS_IOLOCK_DEP(flags)	(((flags) & XFS_IOLOCK_DEP_MASK) \
-+					>> XFS_IOLOCK_SHIFT)
-+#define XFS_MMAPLOCK_DEP(flags)	(((flags) & XFS_MMAPLOCK_DEP_MASK) \
-+					>> XFS_MMAPLOCK_SHIFT)
-+#define XFS_ILOCK_DEP(flags)	(((flags) & XFS_ILOCK_DEP_MASK) \
-+					>> XFS_ILOCK_SHIFT)
- 
- /*
-  * For multiple groups support: if S_ISGID bit is set in the parent
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index afd6bae..40d2ac5 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -986,6 +986,8 @@ xfs_fs_inode_init_once(
- 	atomic_set(&ip->i_pincount, 0);
- 	spin_lock_init(&ip->i_flags_lock);
- 
-+	mrlock_init(&ip->i_mmaplock, MRLOCK_ALLOW_EQUAL_PRI|MRLOCK_BARRIER,
-+		     "xfsino", ip->i_ino);
- 	mrlock_init(&ip->i_lock, MRLOCK_ALLOW_EQUAL_PRI|MRLOCK_BARRIER,
- 		     "xfsino", ip->i_ino);
- }
+For the journal, two things: first it's not going back far enough, the
+problems had already begun and it'd be good to have a lot more context
+so I'd dig back and find the first indication of a problem, you can
+use journalctl --since for this. It can take the form:
+
+journalctl --since "24 hours ago" or "2015-01-04 12:15:00"
+
+
+Also use the option -o short-monotonic which will use monotonic time,
+could come in handy, and is more like dmesg output.
+
+>> smarctl -l scterc /dev/sdX
+>
+>
+> I'm ashamed to say that this command only works on 1 of the 8 drives since
+> this is the only enterprise class drive (we are funded by small science
+> grants). We have been gradually replacing the desktop class drives as they
+> fail.
+
+The errors in your logs are a lot more extensive than what I'm used to
+seeing in cases of misconfiguration with desktop drives that lack
+configurable SCT ERC. But the failure is consistent with that common
+misconfiguration. The problem with desktop drives is the combination
+of long error recoveries for bad sectors along with a short kernel
+SCSI command timer. So what happens is the kernel thinks the drive has
+hung up, and does a link reset. In reality the drive is probably in a
+so called "deep recovery" but doesn't get a chance to report an
+explicit read error. An explicit read error includes the affected
+sector LBA which the md kernel code can then use to rebuild the data
+from parity and overwrite the bad sector which fixes the problem.
+
+However...
+
+
+>> This has to be issued per drive, no shortcut available by specifying
+>> all letters at once in brackets. And then lastly this one:
+>>
+>> cat /sys/block/sd[abcdefg]/device/timeout
+>>
+>> Again plug in the correct letters.
+>
+>
+> All devices are set to 30 seconds.
+
+This effectively prevents consumer drives from reporting marginally
+bad blocks. If they're clearly bad, drive ECC reports read errors
+fairly quickly. If they're fuzzy, then the ECC does a bunch of retries
+potentially well beyond 30 seconds. I've heard times of 2-3 minutes,
+which seems crazy but, that's apparently how long it can be before the
+drive will give up and report a read error. And that read error is
+necessary for RAID to work correctly.
+
+So what you need to do for all drives that do not have configurable SCT ERC, is:
+
+echo 180 > /sys/block/sdX/device/timeout
+
+That way the kernel will wait up to 3 minutes. The drive will almost
+certainly report an explicit read error in less than that, and then md
+can fix the problem by writing over that bad sector. To force this
+correction actively rather than passively you should schedule a scrub
+of all arrays:
+
+echo check > /sys/block/mdX/md/sync_action
+
+You can do this on complete arrays in normal operation. I wouldn't do
+this on the degraded array though. Consult linux-raid@ and do what's
+suggested there.
+
+
+
+
+>> Right well it's not fore sure toast yet. Also, one of the things
+>> gluster is intended to mitigate is the loss of an entire brick, which
+>> is what happened, but you need another 15TB of space to do
+>> distributed-replicated on your scratch space. If you can tolerate
+>> upwards of 48 hour single disk rebuild times, there are now 8TB HGST
+>> Helium drives :-P
+>
+>
+> Just to confirm, we have 3x15TB bricks in a 45TB volume. Don't we need
+> complete duplication in a distributed-replicated Gluster volume, or can we
+> get away with only 1 more brick?
+
+If you want all the data to be replicated you need double the storage.
+But you can have more than one volume, such that one has replication
+and the other doesn't. The bricks used for replication volumes don't
+both have to be raid6. It could be one raid6 and one raid5, or one
+raid6 and one raid0. It's a risk assessment.
+
+
 -- 
-2.0.0
+Chris Murphy
 
 _______________________________________________
 xfs mailing list
