@@ -1,20 +1,25 @@
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 344F17F55
-	for <xfs@oss.sgi.com>; Sun, 11 Jan 2015 14:47:47 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id B83A3AC001
-	for <xfs@oss.sgi.com>; Sun, 11 Jan 2015 12:47:43 -0800 (PST)
-Received: from off.jpinbook.com (off.jpinbook.com [104.236.107.123]) by
-	cuda.sgi.com with ESMTP id 1QhG1ObmyvMGIT7S for
-	<xfs@oss.sgi.com>; Sun, 11 Jan 2015 12:47:41 -0800 (PST)
-Received: by off.jpinbook.com id hmbgn60001gs for <xfs@oss.sgi.com>;
-	Sun, 11 Jan 2015 15:47:43 -0500 (envelope-from
-	<touchfirec-xfs=oss.sgi.com@jpinbook.com>)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id E14087F3F
+	for <xfs@oss.sgi.com>; Thu,  8 Jan 2015 08:00:02 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id A3F8E8F8040
+	for <xfs@oss.sgi.com>; Thu,  8 Jan 2015 05:59:59 -0800 (PST)
+Received: from dante.webservicestudio.eu (dante.webservicestudio.eu
+	[91.197.229.200]) by cuda.sgi.com with ESMTP id
+	5VpWoRgt9DJfXTAK (version=TLSv1 cipher=AES256-SHA bits=256
+	verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 08 Jan 2015 05:59:49 -0800 (PST)
+Received: from localhost ([127.0.0.1]:52647 helo=dante.webservicestudio.eu)
+	by dante.webservicestudio.eu with smtp (Exim 4.84)
+	(envelope-from <consensi@gestioneconsensi.com>) id 1Y9Dcq-0008MJ-Ox
+	for xfs@oss.sgi.com; Thu, 08 Jan 2015 13:59:48 +0000
+Subject: GestioneContatti
+Date: Thu, 8 Jan 2015 13:59:48 +0000
+From: GestioneConsensi <consensi@gestioneconsensi.com>
+Message-ID: <ea3c4a0dd08713c3b66945ce2bf7698a@gestioneconsensi.com>
+List-Owner: <mailto:consensi@gestioneconsensi.com>
 MIME-Version: 1.0
-Date: Sun, 11 Jan 2015 15:47:43 -0500
-Message-Id: <SC4P1ruok2P36F7Z5Hww59bueiXPSg@jpinbook.com>
-Subject: You'll Never Use A Laptop Again.
-From: TouchFire <touchfirec@jpinbook.com>
+Reply-To: GestioneConsensi <consensi@gestioneconsensi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,35 +28,120 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============4833525971751094776=="
+Content-Type: multipart/mixed; boundary="===============6482357306684168761=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
---===============4833525971751094776==
-Content-Type: multipart/alternative; boundary="dfb772dfd76a4ef7a056ef4f314f7c"
+--===============6482357306684168761==
+Content-Type: multipart/alternative;
+	boundary="b1_ea3c4a0dd08713c3b66945ce2bf7698a"
 
---dfb772dfd76a4ef7a056ef4f314f7c
-Content-Type: text/plain;
+--b1_ea3c4a0dd08713c3b66945ce2bf7698a
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+
+Richiesta consenso
+
+Versione OnLine <http://www.gestioneconsensi.com/online.php>
+
+Gentile *Lettore,*
+nel rispetto delle vigenti normative chiediamo il consenso a fornirLe
+informazioni inerenti manuali e metodi vincenti sui giochi di calcio
+scommesse e lotto.
+Utilizzare i link sotto per negare o dare il consenso.
+
+Grazie per l'attenzione.
+Barbara Canzi
+GiocateVincenti
+
+Nego il consenso
+http://gestioneconsensi.com/phplist/?p=3Dunsubscribe&uid=3D9dc0c71f70ff6342=
+ae51eb924f7f4470
+Do il consenso
+
+Procedi <http://www.gestioneconsensi.com>
+
+ Sponsored by BG Ads: *Ulcera distrutta*
+<http://www.ulceradistrutta.com>
 
 
- Touchfire      Touchfire, Inc. | 1117 NW 54th Street | Seattle, WA 98107   To unsubscribe click here     Touchfire: Every iPad Accessory Rolled Into One | Touchfire's Case and Keyboard: Type Faster and More Accurately | Unlimited Viewing and Typing Positions | Magnetically Mounts to Metal Surfaces | Provides Ultimate Protection - Durable, Shock-absorbing Material | Increases Volume On iPad By 50%   
+Questo messaggio =C3=A8 stato inviato a xfs@oss.sgi.com da=0Aconsensi@gesti=
+oneconsensi.com
 
---dfb772dfd76a4ef7a056ef4f314f7c
-Content-Type: text/html;
+Per modificare eventuali tuoi dati e scegliere le preferenze personali
+vai qui=0A<http://gestioneconsensi.com/phplist/?p=3Dpreferences&uid=3D9dc0c=
+71f70ff6342ae51eb924f7f4470>
 
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<html><head><title> Touchfire </title><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"></head><body bgcolor="#D3E5E2" leftmargin="0" topmargin="0" marginwidth="0" marginheight="0"><table width="100%" border="0" cellspacing="0" cellpadding="0" align="center"><tr><td bgcolor="#D3E5E2" style="height:84px; width:600px;" align="center"> <a href="http://jpinbook.com/RqvbDO5thCj3pZPU8fZZ/VsTOTmz5u2JR8bqZwDy~f5mU87g7KViOu5999YgQxzynuNav9ImXiLg8j~XekuAIhBdFa~GZXnl3PVdqyhokiiMRQtxXn4DUKZpT23~UxEZKnBnYXog~SOeHVKuhttYmUKI8C61KjtREpKgGDz1LwXozgzWS6PhaduuTTgMe~KIXsqmmA05NUzeUSz9Wl5B36ax8N20X2aOfvz_Zx47LpQZwYnufcd5bZOPnfpBlmnYrJ8GZyYEg2MVs04XbkhOGUE9tWSZ_p4j5O9SoaQopqsGIYkyz6ZhaJNEv1QuBrcPDVuGe9J8YiQIy3YKmPJy9N1o5Dq9AA4XMybuEkaMHNAnskTKvTIo0wQXFPJeNSpd0nJIa22dxvTM_3UV23nkV3Fousb0byMJ~0L4YNiIE74QDnwEKMTjZy4k2jHvrbWH~zOZedeGGoHucs58Ydho1lJEJhirfHsZP_fsyJlkHhUDPtbJ8vu7TY6QwgFNK1FtWuvBjx1iumqw359lLb5Q1SZDzZI0220CUlMfa2ee03aZx2LSDZcwhiOMM9PIA40NMMvVyZwZomvZbf5YiWrSI8wL9VBf1oYBJ
- 9WfoRyiStlHIzDzXc8ZenK0QLj4vJWY_n77QMJk3SCBkeZigk8v~RY~QGwUw82SeKFbLlKPqkBOVVDDPXFoIX4sYdqmxsvDu2g7PcSvutrs__uOzHARLLGV5GhjPkLxe5JbyAT1QmNy41zSEkenPdoq2kYT1xdq3d8UJGTtjnT~gy405Bkn2xrYeCBfozcMdHoP0ITn7eFaSAAVeVh1UvO6gArxK6w0u7uBx3Ha4agaZeQNEd4aAmJjO~YXShqoO5Is4Te04zhJVrMvhhQOMSm77~1_zbdgrMlnpd4RgDjMsXam~hnEy5iod7AUfxCtFEEDImKDmJU20Vy8ZP5Ywg8PXltJiIMRJ4pKRM38I80u2z8Lqf1wIhqrvWVo_u0mgX~nfGopyYT9_m1qExtlV6RBQ9MmHKIaIWIL4gr10CwYWZbDl"><img border="0" src="http://jpinbook.com/img/tfck.jpg/" width="600" height="996" alt="Touchfire Case &amp; Keyboard"></a> </td> </tr></table><table width="100%" border="0" cellspacing="0" cellpadding="0"><tr><td valign="top" align="center" style="font-family: Helvetica, Arial, sans-serif; font-size: 12px; font-weight: normal; color: #333333; line-height: 9px; width:100%;"> <p> Touchfire, Inc. | 1117 NW 54th Street | Seattle, WA 98107 </p> <p> To unsubscribe <a href="http://jpinbook.com/uUv2EkXpTRbfXPJ/368722a09baf57a27b39c0ba1f12b194/ML~h8M6DoK_2SYa
- u
- 6hv6t3XgFOkLNA5tx8dc4YlLF625jbNV_HBficBRUdLQtzxgc1uU28JofA10j6Slh3I0~klL~iyyOUSTUDbz4JF6_sDYFoGpCvqxJwbdu9atCDh67ByK1IUv9CzcfP4B6EvxEjqx7dcp8FQPnIjzcUqW2~T0pL68meLgQLELGufXUcDwkE78JgAq_xbuGlUQIdcGl0mKem69NLWtfe8jSH0fuZ1HI0gfoux4VWly0RslNxx8j5X~cRJayNyvfSZ6r7mj1YLXSTksmDGlaSYFvudo6LU14QJF8SCPQW6MUA~VamhjrrQyBntD1nTiOufF8JtRbqT~OtHas0bTSFa427xyi7VYx_pPfD2ymj8TgrNmAakn58F9RGjvmroRFvHxzyKUkX~KtELn1yeOy7zWA85KYVhqWVBOssFu0NZMVznXuD38JIIam2RZCDklRSoezmu~QiKtq71ZKw0hmApt3VbxzUeO9s2Qp5vaHuaVquNDYW8PMoiXDaxp">click here</a> </p> </td> <td valign="top" bgcolor="#D3E5E2" align="center" style="height: 30px; font-family: Helvetica, Arial, sans-serif; font-size: 12px; font-weight: normal; color: #d3e5e2; letter-spacing: -1px; line-height: 9px;"> <p> Touchfire: Every iPad Accessory Rolled Into One | Touchfire's Case and Keyboard: Type Faster and More Accurately | Unlimited Viewing and Typing Positions | Magnetically Mounts to Metal Surfaces | Provides Ultimate Protection - Durable, Shock-a
- b
- sorbing Material | Increases Volume On iPad By 50% </p> </td> </tr></table></body></html>
+oppure puoi disicriverti=0A<http://gestioneconsensi.com/phplist/?p=3Dunsubs=
+cribe&uid=3D9dc0c71f70ff6342ae51eb924f7f4470>
+per sempre dal nostro archivio.
 
---dfb772dfd76a4ef7a056ef4f314f7c--
+=20
 
 
---===============4833525971751094776==
+-- powered by phpList, www.phplist.com --
+
+
+
+--b1_ea3c4a0dd08713c3b66945ce2bf7698a
+Content-Type: text/html; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.=
+w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">=0A<html xmlns=3D"http://www.=
+w3.org/1999/xhtml" dir=3D"ltr" lang=3D"en-US" xml:lang=3D"en"><head><meta h=
+ttp-equiv=3D"Content-Type" content=3D"text/html; charset=3DUTF-8" />=0A<met=
+a name=3D"language" content=3D"IT" /><head><title>Richiesta consenso</title=
+>=0A<style>a{text-decoration:none;color:#2F3335;}a:hover{text-decoration:un=
+derline;color:#000080;}table{margin:20px 20px;}=0A.rot{border: 1px #494234;=
+-moz-box-shadow:3px 3px 1px 1px #333333;-webkit-box-shadow:3px 3px 1px 1px =
+#333333;box-shadow:3px 3px 1px 1px #333333;border-radius:5px;-moz-border-ra=
+dius:5px;-webkit-border-radius:5px;}</style>=0A</head><body>=0A=0A<table bo=
+rder=3D"0" cellpadding=3D"0" cellspacing=3D"0" width=3D"440" class=3D"rot">=
+<tr><td width=3D"50%"></td>=0A<td align=3D"center" bgcolor=3D"#CCCCCC" clas=
+s=3D"rot">=0A<FONT FACE=3D"Calibri,Arial" SIZE=3D"3"><a href=3D"http://www.=
+gestioneconsensi.com/online.php">Versione OnLine</a> =0A</td></tr><tr><td c=
+olspan=3D"2" width=3D"500" style=3D"padding:8px;text-align:justify;"><br><F=
+ONT FACE=3D"Calibri,Arial" SIZE=3D"4" ALIGN=3D"justify">=0AGentile <b>Letto=
+re,</b><br>nel rispetto delle vigenti normative chiediamo il consenso a for=
+nirLe=0Ainformazioni inerenti manuali e metodi vincenti sui giochi di calci=
+o scommesse e lotto.<br>Utilizzare i link sotto per negare o dare il consen=
+so.<br>=0AGrazie per l'attenzione.<br>Barbara Canzi<br>GiocateVincenti<br><=
+/td></tr><tr bgcolor=3D"#CCCCCC">=0A<td align=3D"center"><FONT FACE=3D"Cali=
+bri,Arial" SIZE=3D"4">Nego il consenso<br><a href=3D"http://gestioneconsens=
+i.com/phplist/?p=3Dunsubscribe&amp;uid=3D9dc0c71f70ff6342ae51eb924f7f4470">=
+Unsubscribe</a></td>=0A<td width=3D"50%" align=3D"center" style=3D"padding-=
+top:6px;"><FONT FACE=3D"Calibri,Arial" SIZE=3D"4">Do il consenso<br>=0A<a h=
+ref=3D"http://www.gestioneconsensi.com">Procedi</a></td></tr>=0A<tr><td col=
+span=3D"2" style=3D"padding-left:6px;"><font face=3D"Calibri,Arial" size=3D=
+"4">----<br>=0ASponsor:<br>come risolvere tutti i problemi di <b>stomaco</b=
+> in pochi giorni,<br>=0A<a href=3D"http://www.ulceradistrutta.com" target=
+=3D"_blank"><b><u>clicca qui</u></b></a></font><br><br>=0A</td></tr></table=
+><br /><div class=3D"footer" style=3D"text-align:left; font-size: 75%;">
+Questo messaggio &egrave; stato inviato a xfs@oss.sgi.com da consensi@gesti=
+oneconsensi.com<br>
+Per modificare eventuali tuoi dati e scegliere le preferenze personali vai =
+<a href=3D"http://gestioneconsensi.com/phplist/?p=3Dpreferences&amp;uid=3D9=
+dc0c71f70ff6342ae51eb924f7f4470">qui</a>=20
+oppure puoi <a href=3D"http://gestioneconsensi.com/phplist/?p=3Dunsubscribe=
+&amp;uid=3D9dc0c71f70ff6342ae51eb924f7f4470">disicriverti</a> per sempre da=
+l nostro archivio.</div>
+
+  =0A<div style=3D"clear: both; font-family: arial, verdana, sans-serif; fo=
+nt-size: 8px; font-variant: small-caps; font-weight: normal; padding: 2px; =
+padding-left:10px;padding-top:20px;">powered by <a href=3D"http://www.phpli=
+st.com/poweredby?utm_source=3Ddownload3.0.8&amp;utm_medium=3Dpoweredtxt&amp=
+;utm_campaign=3DphpList" target=3D"_blank" title=3D"powered by phpList vers=
+ion 3.0.8, &copy; phpList ltd">phpList</a></div><img src=3D"http://gestione=
+consensi.com/phplist/ut.php?u=3D9dc0c71f70ff6342ae51eb924f7f4470&amp;m=3D13=
+" width=3D"1" height=3D"1" border=3D"0" /></body></html>
+
+
+--b1_ea3c4a0dd08713c3b66945ce2bf7698a--
+
+
+--===============6482357306684168761==
 Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
@@ -62,4 +152,4 @@ xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
 
---===============4833525971751094776==--
+--===============6482357306684168761==--
