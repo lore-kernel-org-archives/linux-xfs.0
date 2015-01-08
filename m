@@ -1,37 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 9B6947F3F
-	for <xfs@oss.sgi.com>; Thu,  8 Jan 2015 15:29:21 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 7BF5F304051
-	for <xfs@oss.sgi.com>; Thu,  8 Jan 2015 13:29:18 -0800 (PST)
-Received: from mail-we0-f196.google.com (mail-we0-f196.google.com
-	[74.125.82.196]) by cuda.sgi.com with ESMTP id opuzaV7qHnHz7xl2
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 08 Jan 2015 13:29:01 -0800 (PST)
-Received: by mail-we0-f196.google.com with SMTP id k48so1457283wev.3
-	for <xfs@oss.sgi.com>; Thu, 08 Jan 2015 13:29:00 -0800 (PST)
-Received: from Telcontar.valinor (33.Red-83-34-5.dynamicIP.rima-tde.net.
-	[83.34.5.33])
-	by mx.google.com with ESMTPSA id ej10sm8094286wib.2.2015.01.08.13.28.58
-	for <xfs@oss.sgi.com>
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-	Thu, 08 Jan 2015 13:28:58 -0800 (PST)
-Received: from localhost (localhost [127.0.0.1])
-	by Telcontar.valinor (Postfix) with ESMTP id A1D70604CA
-	for <xfs@oss.sgi.com>; Thu,  8 Jan 2015 22:28:55 +0100 (CET)
-Received: from Telcontar.valinor ([127.0.0.1])
-	by localhost (Telcontar.valinor [127.0.0.1]) (amavisd-new, port 10024)
-	with LMTP id K_DVcvPD-7Z9 for <xfs@oss.sgi.com>;
-	Thu,  8 Jan 2015 22:28:54 +0100 (CET)
-Received: from localhost (localhost [127.0.0.1])
-	by Telcontar.valinor (Postfix) with ESMTP id 5D8BF603CE
-	for <xfs@oss.sgi.com>; Thu,  8 Jan 2015 22:28:53 +0100 (CET)
-Date: Thu, 8 Jan 2015 22:28:52 +0100 (CET)
-From: "Carlos E. R." <carlos.e.r@opensuse.org>
-Subject: About XFS size in 32/64 bit Linux
-Message-ID: <alpine.LSU.2.11.1501082223080.5948@Telcontar.valinor>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 534E17F3F
+	for <xfs@oss.sgi.com>; Thu,  8 Jan 2015 15:45:17 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 238A08F8049
+	for <xfs@oss.sgi.com>; Thu,  8 Jan 2015 13:45:17 -0800 (PST)
+Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
+	[150.101.137.145]) by cuda.sgi.com with ESMTP id
+	qYx47r1ykojrys8w for <xfs@oss.sgi.com>;
+	Thu, 08 Jan 2015 13:45:11 -0800 (PST)
+Date: Fri, 9 Jan 2015 08:45:09 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [RFC PATCH 0/6] xfs: truncate vs page fault IO exclusion
+Message-ID: <20150108214509.GH25000@dastard>
+References: <1420669543-8093-1-git-send-email-david@fromorbit.com>
+	<20150108122448.GA18034@infradead.org>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20150108122448.GA18034@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -40,37 +26,49 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: XFS mailing list <xfs@oss.sgi.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, xfs@oss.sgi.com
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA1
+On Thu, Jan 08, 2015 at 04:24:48AM -0800, Christoph Hellwig wrote:
+> > This patchset passes xfstests and various benchmarks and stress
+> > workloads, so the real question is now:
+> > 
+> > 	What have I missed?
+> > 
+> > Comments, thoughts, flames?
+> 
+> Why is this done in XFS and not in generic code?
 
+We might be able to do that. Indeed, if the concept is considered
+sound, then this was the next question I was going to ask everyone.
+I just don't know enough about other filesystem locking to be able
+to say "this will always work", hence the wide distribution of the
+RFC.  Different filesystems have different locking heirarchies, and
+so there may be some are not able to use this technique
+(cluster/network fs?)....
 
+In the end, however, the main reason I decided on doing it in XFS
+first was things like that swap extent operation that requires us to
+lock multiple locks on two inodes in a specific order. We already
+have all the infrastructure in XFS to enforce and *validate at
+runtime* the specific lock ordering required, so it just made it a
+no-brainer to do it this way first.
 
-Hi,
+We also have several entry points in XFS that don't go through the
+VFS that needed this page fault serialisation and they currently
+only use XFS internal locks to serialise against IO.  Again, doing
+it in XFS first is the easy-to-validate solution.
 
-I'm about to prepare an XFS partitioned 2TB hard disk in an external 
-enclosure (USB/eSATA), using openSUSE 13.1 64 bit, but I intend to use it 
-mostly under 13.1 32 bit (kernel 3.11.10)
-
-Should I expect problems? Something to be aware of? Limits when using 32 
-bit, perhaps?
-
-- -- 
 Cheers,
-        Carlos E. R.
-        (from openSUSE 13.1 x86_64 "Bottle" at Telcontar)
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.22 (GNU/Linux)
 
-iEYEARECAAYFAlSu9pUACgkQtTMYHG2NR9VwZQCfcy2Q6fVYLVnsMjrsjdYplLnw
-TtQAn1MWvkwwcrUBQp0+18dJA+DjP08o
-=wGL7
------END PGP SIGNATURE-----
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
