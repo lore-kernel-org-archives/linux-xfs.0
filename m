@@ -1,23 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id E7FAA7F3F
-	for <xfs@oss.sgi.com>; Thu,  8 Jan 2015 08:36:47 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 78F73AC009
-	for <xfs@oss.sgi.com>; Thu,  8 Jan 2015 06:36:47 -0800 (PST)
+	by oss.sgi.com (Postfix) with ESMTP id EBA307F50
+	for <xfs@oss.sgi.com>; Thu,  8 Jan 2015 08:39:21 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 94366AC005
+	for <xfs@oss.sgi.com>; Thu,  8 Jan 2015 06:39:21 -0800 (PST)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id Sn153fLYV83LTClH (version=TLSv1
+	cuda.sgi.com with ESMTP id mLaF8FKYg9TRnnrV (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 08 Jan 2015 06:36:46 -0800 (PST)
-Date: Thu, 8 Jan 2015 09:36:40 -0500
+	Thu, 08 Jan 2015 06:39:20 -0800 (PST)
+Date: Thu, 8 Jan 2015 09:39:13 -0500
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 3/3] xfs: sanitise sb_bad_features2 handling
-Message-ID: <20150108143640.GC33789@bfoster.bfoster>
-References: <1420667465-7453-1-git-send-email-david@fromorbit.com>
-	<1420667465-7453-4-git-send-email-david@fromorbit.com>
+Subject: Re: [PATCH] xfs: fix implicit bool to int conversion
+Message-ID: <20150108143913.GD33789@bfoster.bfoster>
+References: <1420721391-22717-1-git-send-email-der.herr@hofr.at>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1420667465-7453-4-git-send-email-david@fromorbit.com>
+In-Reply-To: <1420721391-22717-1-git-send-email-der.herr@hofr.at>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,144 +29,44 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: Nicholas Mc Guire <der.herr@hofr.at>
+Cc: linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-On Thu, Jan 08, 2015 at 08:51:05AM +1100, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
+On Thu, Jan 08, 2015 at 01:49:51PM +0100, Nicholas Mc Guire wrote:
+> try_wait_for_completion returns bool so the wrapper function
+> xfs_dqflock_nowait should probably also return bool and not int. 
 > 
-> We currently have to ensure that every time we update sb_features2
-> that we update sb_bad_features2. Now that we log and format the
-> superblock in it's entirety we actually don't have to care because
-> we can simply update the sb_bad_features2 when we format it into the
-> buffer. This removes the need for anything but the mount and
-> superblock formatting code to care about sb_bad_features2, and
-> hence removes the possibility that we forget to update bad_features2
-> when necessary in the future.
-> 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> Signed-off-by: Nicholas Mc Guire <der.herr@hofr.at>
 > ---
+
+Indeed...
 
 Reviewed-by: Brian Foster <bfoster@redhat.com>
 
->  fs/xfs/libxfs/xfs_format.h | 14 +++++++-------
->  fs/xfs/libxfs/xfs_sb.c     |  8 +++++++-
->  fs/xfs/xfs_mount.c         | 23 +++++++++++------------
->  3 files changed, 25 insertions(+), 20 deletions(-)
 > 
-> diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
-> index 4762732..8eb7189 100644
-> --- a/fs/xfs/libxfs/xfs_format.h
-> +++ b/fs/xfs/libxfs/xfs_format.h
-> @@ -151,10 +151,13 @@ typedef struct xfs_sb {
->  	__uint32_t	sb_features2;	/* additional feature bits */
->  
->  	/*
-> -	 * bad features2 field as a result of failing to pad the sb
-> -	 * structure to 64 bits. Some machines will be using this field
-> -	 * for features2 bits. Easiest just to mark it bad and not use
-> -	 * it for anything else.
-> +	 * bad features2 field as a result of failing to pad the sb structure to
-> +	 * 64 bits. Some machines will be using this field for features2 bits.
-> +	 * Easiest just to mark it bad and not use it for anything else.
-> +	 *
-> +	 * This is not kept up to date in memory; it is always overwritten by
-> +	 * the value in sb_features2 when formatting the incore superblock to
-> +	 * the disk buffer.
->  	 */
->  	__uint32_t	sb_bad_features2;
->  
-> @@ -453,13 +456,11 @@ static inline void xfs_sb_version_addattr2(struct xfs_sb *sbp)
->  {
->  	sbp->sb_versionnum |= XFS_SB_VERSION_MOREBITSBIT;
->  	sbp->sb_features2 |= XFS_SB_VERSION2_ATTR2BIT;
-> -	sbp->sb_bad_features2 |= XFS_SB_VERSION2_ATTR2BIT;
+> patch was only compile tested x86_64_defconfig + CONFIG_XFS_FS=m
+> CONFIG_XFS_QUOTA=y
+> 
+> patch is against linux-next 3.19.0-rc3 -next-20150107
+> 
+>  fs/xfs/xfs_dquot.h |    2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/fs/xfs/xfs_dquot.h b/fs/xfs/xfs_dquot.h
+> index c24c67e..2f536f3 100644
+> --- a/fs/xfs/xfs_dquot.h
+> +++ b/fs/xfs/xfs_dquot.h
+> @@ -86,7 +86,7 @@ static inline void xfs_dqflock(xfs_dquot_t *dqp)
+>  	wait_for_completion(&dqp->q_flush);
 >  }
 >  
->  static inline void xfs_sb_version_removeattr2(struct xfs_sb *sbp)
+> -static inline int xfs_dqflock_nowait(xfs_dquot_t *dqp)
+> +static inline bool xfs_dqflock_nowait(xfs_dquot_t *dqp)
 >  {
->  	sbp->sb_features2 &= ~XFS_SB_VERSION2_ATTR2BIT;
-> -	sbp->sb_bad_features2 &= ~XFS_SB_VERSION2_ATTR2BIT;
->  	if (!sbp->sb_features2)
->  		sbp->sb_versionnum &= ~XFS_SB_VERSION_MOREBITSBIT;
+>  	return try_wait_for_completion(&dqp->q_flush);
 >  }
-> @@ -475,7 +476,6 @@ static inline void xfs_sb_version_addprojid32bit(struct xfs_sb *sbp)
->  {
->  	sbp->sb_versionnum |= XFS_SB_VERSION_MOREBITSBIT;
->  	sbp->sb_features2 |= XFS_SB_VERSION2_PROJID32BIT;
-> -	sbp->sb_bad_features2 |= XFS_SB_VERSION2_PROJID32BIT;
->  }
->  
->  /*
-> diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
-> index 6ee3af6..b440839 100644
-> --- a/fs/xfs/libxfs/xfs_sb.c
-> +++ b/fs/xfs/libxfs/xfs_sb.c
-> @@ -488,7 +488,6 @@ xfs_sb_to_disk(
->  	to->sb_fdblocks = cpu_to_be64(from->sb_fdblocks);
->  	to->sb_frextents = cpu_to_be64(from->sb_frextents);
->  
-> -
->  	to->sb_flags = from->sb_flags;
->  	to->sb_shared_vn = from->sb_shared_vn;
->  	to->sb_inoalignmt = cpu_to_be32(from->sb_inoalignmt);
-> @@ -498,6 +497,13 @@ xfs_sb_to_disk(
->  	to->sb_logsectlog = from->sb_logsectlog;
->  	to->sb_logsectsize = cpu_to_be16(from->sb_logsectsize);
->  	to->sb_logsunit = cpu_to_be32(from->sb_logsunit);
-> +
-> +	/*
-> +	 * We need to ensure that bad_features2 always matches features2.
-> +	 * Hence we enforce that here rather than having to remember to do it
-> +	 * everywhere else that updates features2.
-> +	 */
-> +	from->sb_bad_features2 = from->sb_features2;
->  	to->sb_features2 = cpu_to_be32(from->sb_features2);
->  	to->sb_bad_features2 = cpu_to_be32(from->sb_bad_features2);
->  
-> diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-> index 5ef9aa2..4fa80e6 100644
-> --- a/fs/xfs/xfs_mount.c
-> +++ b/fs/xfs/xfs_mount.c
-> @@ -640,25 +640,24 @@ xfs_mountfs(
->  	xfs_sb_mount_common(mp, sbp);
->  
->  	/*
-> -	 * Check for a mismatched features2 values.  Older kernels
-> -	 * read & wrote into the wrong sb offset for sb_features2
-> -	 * on some platforms due to xfs_sb_t not being 64bit size aligned
-> -	 * when sb_features2 was added, which made older superblock
-> -	 * reading/writing routines swap it as a 64-bit value.
-> +	 * Check for a mismatched features2 values.  Older kernels read & wrote
-> +	 * into the wrong sb offset for sb_features2 on some platforms due to
-> +	 * xfs_sb_t not being 64bit size aligned when sb_features2 was added,
-> +	 * which made older superblock reading/writing routines swap it as a
-> +	 * 64-bit value.
->  	 *
->  	 * For backwards compatibility, we make both slots equal.
->  	 *
-> -	 * If we detect a mismatched field, we OR the set bits into the
-> -	 * existing features2 field in case it has already been modified; we
-> -	 * don't want to lose any features.  We then update the bad location
-> -	 * with the ORed value so that older kernels will see any features2
-> -	 * flags, and mark the two fields as needing updates once the
-> -	 * transaction subsystem is online.
-> +	 * If we detect a mismatched field, we OR the set bits into the existing
-> +	 * features2 field in case it has already been modified; we don't want
-> +	 * to lose any features.  We then update the bad location with the ORed
-> +	 * value so that older kernels will see any features2 flags. The
-> +	 * superblock writeback code ensures the new sb_features2 is copied to
-> +	 * sb_bad_features2 before it is logged or written to disk.
->  	 */
->  	if (xfs_sb_has_mismatched_features2(sbp)) {
->  		xfs_warn(mp, "correcting sb_features alignment problem");
->  		sbp->sb_features2 |= sbp->sb_bad_features2;
-> -		sbp->sb_bad_features2 = sbp->sb_features2;
->  		mp->m_update_sb = true;
->  
->  		/*
 > -- 
-> 2.0.0
+> 1.7.10.4
 > 
 > _______________________________________________
 > xfs mailing list
