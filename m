@@ -1,19 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 82AAD7F3F
-	for <xfs@oss.sgi.com>; Fri,  9 Jan 2015 03:35:03 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 502DC304051
-	for <xfs@oss.sgi.com>; Fri,  9 Jan 2015 01:35:00 -0800 (PST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 5B0E27F3F
+	for <xfs@oss.sgi.com>; Fri,  9 Jan 2015 03:35:05 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 3B03D8F804B
+	for <xfs@oss.sgi.com>; Fri,  9 Jan 2015 01:35:02 -0800 (PST)
 Received: from mail.kernel.org ([198.145.29.136]) by cuda.sgi.com with ESMTP
-	id VAR6Fzr8R4Ly1kgn for <xfs@oss.sgi.com>;
-	Fri, 09 Jan 2015 01:34:58 -0800 (PST)
+	id oCJT1NcUdcNokOgU for <xfs@oss.sgi.com>;
+	Fri, 09 Jan 2015 01:35:01 -0800 (PST)
 From: Jaegeuk Kim <jaegeuk@kernel.org>
-Subject: [PATCH 2/2] f2fs: support fs shutdown
-Date: Fri,  9 Jan 2015 01:34:36 -0800
-Message-Id: <1420796076-82847-2-git-send-email-jaegeuk@kernel.org>
-In-Reply-To: <1420796076-82847-1-git-send-email-jaegeuk@kernel.org>
-References: <1420796076-82847-1-git-send-email-jaegeuk@kernel.org>
+Subject: [PATCH 1/2] xfs: introduce a generic shutdown ioctl
+Date: Fri,  9 Jan 2015 01:34:35 -0800
+Message-Id: <1420796076-82847-1-git-send-email-jaegeuk@kernel.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,81 +28,65 @@ Sender: xfs-bounces@oss.sgi.com
 To: linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, xfs@oss.sgi.com
 Cc: Jaegeuk Kim <jaegeuk@kernel.org>
 
-This patch add an ioctl to shutdown f2fs, which stops all the further block
-writes after this point.
+This patch introduces a generic ioctl for fs shutdown used by xfs.
 
-The ioctl, FS_IOC_SHUTDOWN, provides the following three options.
-
-1. FS_GOING_DOWN_FULLSYNC
- : this will flush all the data and dentry blocks, and do checkpoint before
- shutdown.
-
-2. FS_GOING_DOWN_METASYNC
- : this will do checkpoint before shutdown.
-
-3. FS_GOING_DOWN_NOSYNC
- : this will trigger shutdown as is.
-
+Cc: Dave Chinner <david@fromorbit.com>
 Signed-off-by: Jaegeuk Kim <jaegeuk@kernel.org>
 ---
- fs/f2fs/file.c | 37 +++++++++++++++++++++++++++++++++++++
- 1 file changed, 37 insertions(+)
+ fs/xfs/xfs_fs.h         | 8 ++++----
+ include/uapi/linux/fs.h | 8 ++++++++
+ 2 files changed, 12 insertions(+), 4 deletions(-)
 
-diff --git a/fs/f2fs/file.c b/fs/f2fs/file.c
-index 5df3367..a7114858 100644
---- a/fs/f2fs/file.c
-+++ b/fs/f2fs/file.c
-@@ -1020,6 +1020,41 @@ static int f2fs_ioc_abort_volatile_write(struct file *filp)
- 	return ret;
- }
+diff --git a/fs/xfs/xfs_fs.h b/fs/xfs/xfs_fs.h
+index 18dc721..fe0eeee 100644
+--- a/fs/xfs/xfs_fs.h
++++ b/fs/xfs/xfs_fs.h
+@@ -484,9 +484,9 @@ typedef struct xfs_swapext
+ /*
+  * Flags for going down operation
+  */
+-#define XFS_FSOP_GOING_FLAGS_DEFAULT		0x0	/* going down */
+-#define XFS_FSOP_GOING_FLAGS_LOGFLUSH		0x1	/* flush log but not data */
+-#define XFS_FSOP_GOING_FLAGS_NOLOGFLUSH		0x2	/* don't flush log nor data */
++#define XFS_FSOP_GOING_FLAGS_DEFAULT	FS_GOING_DOWN_FULLSYNC
++#define XFS_FSOP_GOING_FLAGS_LOGFLUSH	FS_GOING_DOWN_METASYNC
++#define XFS_FSOP_GOING_FLAGS_NOLOGFLUSH	FS_GOING_DOWN_NOSYNC
  
-+static int f2fs_ioc_shutdown(struct file *filp, unsigned long arg)
-+{
-+	struct inode *inode = file_inode(filp);
-+	struct f2fs_sb_info *sbi = F2FS_I_SB(inode);
-+	struct super_block *sb = sbi->sb;
-+	__u32 in;
+ /*
+  * ioctl commands that are used by Linux filesystems
+@@ -555,7 +555,7 @@ typedef struct xfs_swapext
+ #define XFS_IOC_ATTRLIST_BY_HANDLE   _IOW ('X', 122, struct xfs_fsop_attrlist_handlereq)
+ #define XFS_IOC_ATTRMULTI_BY_HANDLE  _IOW ('X', 123, struct xfs_fsop_attrmulti_handlereq)
+ #define XFS_IOC_FSGEOMETRY	     _IOR ('X', 124, struct xfs_fsop_geom)
+-#define XFS_IOC_GOINGDOWN	     _IOR ('X', 125, __uint32_t)
++#define XFS_IOC_GOINGDOWN	     FS_IOC_SHUTDOWN
+ /*	XFS_IOC_GETFSUUID ---------- deprecated 140	 */
+ 
+ 
+diff --git a/include/uapi/linux/fs.h b/include/uapi/linux/fs.h
+index 3735fa0..a4e4be5 100644
+--- a/include/uapi/linux/fs.h
++++ b/include/uapi/linux/fs.h
+@@ -157,6 +157,7 @@ struct inodes_stat_t {
+ #define FIFREEZE	_IOWR('X', 119, int)	/* Freeze */
+ #define FITHAW		_IOWR('X', 120, int)	/* Thaw */
+ #define FITRIM		_IOWR('X', 121, struct fstrim_range)	/* Trim */
++#define FS_IOC_SHUTDOWN	_IOR('X', 125, __u32)	/* Shutdown */
+ 
+ #define	FS_IOC_GETFLAGS			_IOR('f', 1, long)
+ #define	FS_IOC_SETFLAGS			_IOW('f', 2, long)
+@@ -205,4 +206,11 @@ struct inodes_stat_t {
+ #define SYNC_FILE_RANGE_WRITE		2
+ #define SYNC_FILE_RANGE_WAIT_AFTER	4
+ 
++/*
++ * Flags for going down operation used by FS_IOC_GOINGDOWN
++ */
++#define FS_GOING_DOWN_FULLSYNC	0x0	/* going down with full sync */
++#define FS_GOING_DOWN_METASYNC	0x1	/* going down with metadata */
++#define FS_GOING_DOWN_NOSYNC	0x2	/* going down */
 +
-+	if (!capable(CAP_SYS_ADMIN))
-+		return -EPERM;
-+
-+	if (get_user(in, (__u32 __user *)arg))
-+		return -EFAULT;
-+
-+	switch (in) {
-+	case FS_GOING_DOWN_FULLSYNC:
-+		sb = freeze_bdev(sb->s_bdev);
-+		if (sb && !IS_ERR(sb)) {
-+			f2fs_stop_checkpoint(sbi);
-+			thaw_bdev(sb->s_bdev, sb);
-+		}
-+		break;
-+	case FS_GOING_DOWN_METASYNC:
-+		/* do checkpoint only */
-+		f2fs_sync_fs(sb, 1);
-+		f2fs_stop_checkpoint(sbi);
-+		break;
-+	case FS_GOING_DOWN_NOSYNC:
-+		f2fs_stop_checkpoint(sbi);
-+		break;
-+	default:
-+		return -EINVAL;
-+	}
-+	return 0;
-+}
-+
- static int f2fs_ioc_fitrim(struct file *filp, unsigned long arg)
- {
- 	struct inode *inode = file_inode(filp);
-@@ -1067,6 +1102,8 @@ long f2fs_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
- 		return f2fs_ioc_release_volatile_write(filp);
- 	case F2FS_IOC_ABORT_VOLATILE_WRITE:
- 		return f2fs_ioc_abort_volatile_write(filp);
-+	case FS_IOC_SHUTDOWN:
-+		return f2fs_ioc_shutdown(filp, arg);
- 	case FITRIM:
- 		return f2fs_ioc_fitrim(filp, arg);
- 	default:
+ #endif /* _UAPI_LINUX_FS_H */
 -- 
 2.1.1
 
