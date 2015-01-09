@@ -1,29 +1,9 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id CD4E97F3F
-	for <xfs@oss.sgi.com>; Thu,  8 Jan 2015 20:18:56 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id AC645304048
-	for <xfs@oss.sgi.com>; Thu,  8 Jan 2015 18:18:56 -0800 (PST)
-Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
-	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	CTnFoC1RUgzsl3kx for <xfs@oss.sgi.com>;
-	Thu, 08 Jan 2015 18:18:54 -0800 (PST)
-Date: Fri, 9 Jan 2015 13:17:50 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v2] xfs: use generic FS_IOC_GOINGDOWN for ioctl
-Message-ID: <20150109021750.GO25000@dastard>
-References: <1420740661-72288-2-git-send-email-jaegeuk@kernel.org>
-	<54AEE06C.90806@sandeen.net> <20150108201843.GA74570@jaegeuk-mac02>
-	<54AEE98D.5010103@sandeen.net> <20150108205416.GE25000@dastard>
-	<20150108211853.GB74570@jaegeuk-mac02>
-	<20150108220412.GI25000@dastard>
-	<20150108221630.GA76957@jaegeuk-mac02>
-	<20150109014151.GB79749@jaegeuk-mac02>
-	<20150109014833.GA80010@jaegeuk-mac02>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20150109014833.GA80010@jaegeuk-mac02>
+From: xfs@oss.sgi.com
+Subject: [XFS updates] XFS development tree branch, for-next,
+	updated. v3.19-rc1-18-gad7df6e
+Message-Id: <20150109024803.BF3E27F47@oss.sgi.com>
+Date: Thu,  8 Jan 2015 20:48:03 -0600 (CST)
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,75 +12,266 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Jaegeuk Kim <jaegeuk@kernel.org>
-Cc: linux-fsdevel@vger.kernel.org, Eric Sandeen <sandeen@sandeen.net>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Thu, Jan 08, 2015 at 05:48:33PM -0800, Jaegeuk Kim wrote:
-> Change log from v1:
->  o remove the obsolete options.
-> 
-> -- >8 --
-> 
-> This patch uses XFS_IOC_GOINGDOWN for a generic ioctl command, FS_IOC_GOINGDOWN.
+This is an automated email from the git hooks/post-receive script. It was
+generated because a ref change was pushed to the repository containing
+the project "XFS development tree".
 
-Please send the initial rename patch and the XFS changing patches as
-a linked series to the same mailing lists.
+The branch, for-next has been updated
+  ad7df6e Merge branch 'xfs-sb-logging-rework' into for-next
+  6bcf093 Merge branch 'xfs-misc-fixes-for-3.20-2' into for-next
+  324f8e7 xfs: sanitise sb_bad_features2 handling
+  7b2b916 xfs: consolidate superblock logging functions
+  82a0064 xfs: remove bitfield based superblock updates
+  43fd1fc xfs: fix implicit bool to int conversion
+  d32057f xfs: pass a 64-bit count argument to xfs_iomap_write_unwritten
+  64af7a6 xfs: remove deprecated sysctls
+  aa5d95c xfs: move xfs_bmap_finish prototype
+  9799b43 xfs: move struct xfs_bmalloca to libxfs
+  5ebdc21 xfs: move xfs_types.h to libxfs
+  2155355 xfs: move xfs_fs.h to libxfs
+      from  efdca7aa3c41bce7a092019b3f675fbaa3b8d23f (commit)
 
-> Cc: Dave Chinner <david@fromorbit.com>
-> Signed-off-by: Jaegeuk Kim <jaegeuk@kernel.org>
-> ---
->  fs/xfs/xfs_fs.h    | 9 +--------
->  fs/xfs/xfs_fsops.c | 6 +++---
->  2 files changed, 4 insertions(+), 11 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_fs.h b/fs/xfs/xfs_fs.h
-> index 18dc721..a44f528 100644
-> --- a/fs/xfs/xfs_fs.h
-> +++ b/fs/xfs/xfs_fs.h
-> @@ -482,13 +482,6 @@ typedef struct xfs_swapext
->  } xfs_swapext_t;
->  
->  /*
-> - * Flags for going down operation
-> - */
-> -#define XFS_FSOP_GOING_FLAGS_DEFAULT		0x0	/* going down */
-> -#define XFS_FSOP_GOING_FLAGS_LOGFLUSH		0x1	/* flush log but not data */
-> -#define XFS_FSOP_GOING_FLAGS_NOLOGFLUSH		0x2	/* don't flush log nor data */
+Those revisions listed above that are new to this repository have
+not appeared on any other notification email; so we list those
+revisions in full, below.
 
-We are going to need those to remain as we have to support them
-forever more.
+- Log -----------------------------------------------------------------
+commit ad7df6e858efe516e5f0d85832140307e8bb2966
+Merge: 6bcf093 324f8e7
+Author: Dave Chinner <david@fromorbit.com>
+Date:   Fri Jan 9 11:08:31 2015 +1100
 
-i.e.
+    Merge branch 'xfs-sb-logging-rework' into for-next
+    
+    Conflicts:
+    	fs/xfs/xfs_mount.c
 
-#define XFS_FSOP_GOING_FLAGS_DEFAULT	FS_SHUTDOWN_FULLSYNC
-#define XFS_FSOP_GOING_FLAGS_LOGFLUSH	FS_SHUTDOWN_METASYNC
-#define XFS_FSOP_GOING_FLAGS_NOLOGFLUSH	FS_SHUTDOWN_NOSYNC
+commit 6bcf0939ff12464c7ea24c056826b8a26def9b06
+Merge: efdca7a 43fd1fc
+Author: Dave Chinner <david@fromorbit.com>
+Date:   Fri Jan 9 11:06:17 2015 +1100
 
-> -
-> -/*
->   * ioctl commands that are used by Linux filesystems
->   */
->  #define XFS_IOC_GETXFLAGS	FS_IOC_GETFLAGS
-> @@ -555,7 +548,7 @@ typedef struct xfs_swapext
->  #define XFS_IOC_ATTRLIST_BY_HANDLE   _IOW ('X', 122, struct xfs_fsop_attrlist_handlereq)
->  #define XFS_IOC_ATTRMULTI_BY_HANDLE  _IOW ('X', 123, struct xfs_fsop_attrmulti_handlereq)
->  #define XFS_IOC_FSGEOMETRY	     _IOR ('X', 124, struct xfs_fsop_geom)
-> -#define XFS_IOC_GOINGDOWN	     _IOR ('X', 125, __uint32_t)
-> +#define XFS_IOC_GOINGDOWN	     FS_IOC_GOINGDOWN
->  /*	XFS_IOC_GETFSUUID ---------- deprecated 140	 */
+    Merge branch 'xfs-misc-fixes-for-3.20-2' into for-next
 
-Can we call the new ioctl name FS_IOC_SHUTDOWN?
+commit 324f8e7e534a19771a567bd54600605ce948fa17
+Author: Dave Chinner <dchinner@redhat.com>
+Date:   Fri Jan 9 11:05:47 2015 +1100
 
-Cheers,
+    xfs: sanitise sb_bad_features2 handling
+    
+    We currently have to ensure that every time we update sb_features2
+    that we update sb_bad_features2. Now that we log and format the
+    superblock in it's entirety we actually don't have to care because
+    we can simply update the sb_bad_features2 when we format it into the
+    buffer. This removes the need for anything but the mount and
+    superblock formatting code to care about sb_bad_features2, and
+    hence removes the possibility that we forget to update bad_features2
+    when necessary in the future.
+    
+    Signed-off-by: Dave Chinner <dchinner@redhat.com>
+    Reviewed-by: Brian Foster <bfoster@redhat.com>
+    Signed-off-by: Dave Chinner <david@fromorbit.com>
 
-Dave.
+commit 7b2b9162b882688113c876a6f2fc2eebea5f8a18
+Author: Dave Chinner <dchinner@redhat.com>
+Date:   Fri Jan 9 11:04:48 2015 +1100
+
+    xfs: consolidate superblock logging functions
+    
+    We now have several superblock loggin functions that are identical
+    except for the transaction reservation and whether it shoul dbe a
+    synchronous transaction or not. Consolidate these all into a single
+    function, a single reserveration and a sync flag and call it
+    xfs_sync_sb().
+    
+    Also, xfs_mod_sb() is not really a modification function - it's the
+    operation of logging the superblock buffer. hence change the name of
+    it to reflect this.
+    
+    Note that we have to change the mp->m_update_flags that are passed
+    around at mount time to a boolean simply to indicate a superblock
+    update is needed.
+    
+    Signed-off-by: Dave Chinner <dchinner@redhat.com>
+    Reviewed-by: Brian Foster <bfoster@redhat.com>
+    Signed-off-by: Dave Chinner <david@fromorbit.com>
+
+commit 82a0064d5954394c55ef76cafdf563b2373cb21f
+Author: Dave Chinner <dchinner@redhat.com>
+Date:   Fri Jan 9 11:02:44 2015 +1100
+
+    xfs: remove bitfield based superblock updates
+    
+    When we log changes to the superblock, we first have to write them
+    to the on-disk buffer, and then log that. Right now we have a
+    complex bitfield based arrangement to only write the modified field
+    to the buffer before we log it.
+    
+    This used to be necessary as a performance optimisation because we
+    logged the superblock buffer in every extent or inode allocation or
+    freeing, and so performance was extremely important. We haven't done
+    this for years, however, ever since the lazy superblock counters
+    pulled the superblock logging out of the transaction commit
+    fast path.
+    
+    Hence we have a bunch of complexity that is not necessary that makes
+    writing the in-core superblock to disk much more complex than it
+    needs to be. We only need to log the superblock now during
+    management operations (e.g. during mount, unmount or quota control
+    operations) so it is not a performance critical path anymore.
+    
+    As such, remove the complex field based logging mechanism and
+    replace it with a simple conversion function similar to what we use
+    for all other on-disk structures.
+    
+    This means we always log the entirity of the superblock, but again
+    because we rarely modify the superblock this is not an issue for log
+    bandwidth or CPU time. Indeed, if we do log the superblock
+    frequently, delayed logging will minimise the impact of this
+    overhead.
+    
+    Signed-off-by: Dave Chinner <dchinner@redhat.com>
+    Reviewed-by: Brian Foster <bfoster@redhat.com>
+    Signed-off-by: Dave Chinner <david@fromorbit.com>
+
+commit 43fd1fce9643586e0995ee5d11fb40641575348a
+Author: Nicholas Mc Guire <der.herr@hofr.at>
+Date:   Fri Jan 9 10:48:58 2015 +1100
+
+    xfs: fix implicit bool to int conversion
+    
+    try_wait_for_completion returns bool so the wrapper function
+    xfs_dqflock_nowait should probably also return bool and not int.
+    
+    Signed-off-by: Nicholas Mc Guire <der.herr@hofr.at>
+    Reviewed-by: Brian Foster <bfoster@redhat.com>
+    Signed-off-by: Dave Chinner <david@fromorbit.com>
+
+commit d32057fc84c141af22ddf07b58e52570e52369cd
+Author: Christoph Hellwig <hch@lst.de>
+Date:   Fri Jan 9 10:48:12 2015 +1100
+
+    xfs: pass a 64-bit count argument to xfs_iomap_write_unwritten
+    
+    The code is already ready for it, and the pnfs layout commit code expects
+    to be able to pass a larger than 32-bit argument.
+    
+    Signed-off-by: Christoph Hellwig <hch@lst.de>
+    Reviewed-by: Dave Chinner <dchinner@redhat.com>
+    Signed-off-by: Dave Chinner <david@fromorbit.com>
+
+commit 64af7a6ea5a4c7e12ae79415250d054424b7e0c2
+Author: Dave Chinner <dchinner@redhat.com>
+Date:   Fri Jan 9 10:47:43 2015 +1100
+
+    xfs: remove deprecated sysctls
+    
+    xfsbufd_centisecs and age_buffer_centisecs were due for removal in
+    3.14. We forgot to do that - it's now well past time to remove these
+    deprecated, unused sysctls.
+    
+    Signed-off-by: Dave Chinner <dchinner@redhat.com>
+    Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+    Signed-off-by: Dave Chinner <david@fromorbit.com>
+
+commit aa5d95c1b57792119804c587b9a468019219d7e0
+Author: Dave Chinner <dchinner@redhat.com>
+Date:   Fri Jan 9 10:47:14 2015 +1100
+
+    xfs: move xfs_bmap_finish prototype
+    
+    This function is used libxfs code, but is implemented separately in
+    userspace. Move the function prototype to xfs_bmap.h so that the
+    prototype is shared even if the implementations aren't.
+    
+    Signed-off-by: Dave Chinner <dchinner@redhat.com>
+    Reviewed-by: Christoph Hellwig <hch@lst.de>
+    Signed-off-by: Dave Chinner <david@fromorbit.com>
+
+commit 9799b438ce21662fa173ffc0b30d93567a71dfa0
+Author: Dave Chinner <dchinner@redhat.com>
+Date:   Fri Jan 9 10:46:49 2015 +1100
+
+    xfs: move struct xfs_bmalloca to libxfs
+    
+    It no long is used for stack splits, so strip the kernel workqueue
+    bits from it and push it back into libxfs/xfs_bmap.h so that
+    it can be shared with the userspace code.
+    
+    Signed-off-by: Dave Chinner <dchinner@redhat.com>
+    Reviewed-by: Christoph Hellwig <hch@lst.de>
+    Signed-off-by: Dave Chinner <david@fromorbit.com>
+
+commit 5ebdc213ac02877e23fe7594d4b92b120488aac9
+Author: Dave Chinner <dchinner@redhat.com>
+Date:   Fri Jan 9 10:46:31 2015 +1100
+
+    xfs: move xfs_types.h to libxfs
+    
+    The types used by the core XFS code are common between kernel and
+    userspace. xfs_types.h is duplicated in both kernel and userspace,
+    so move it to libxfs along with all the other shared code.
+    
+    Signed-off-by: Dave Chinner <dchinner@redhat.com>
+    Reviewed-by: Christoph Hellwig <hch@lst.de>
+    Signed-off-by: Dave Chinner <david@fromorbit.com>
+
+commit 2155355fda502e75cd942db101fbb08e1a826ba8
+Author: Dave Chinner <dchinner@redhat.com>
+Date:   Fri Jan 9 10:45:13 2015 +1100
+
+    xfs: move xfs_fs.h to libxfs
+    
+    Ioctl API definitions are shared with userspace, so move the header
+    file that defines them all to libxfs along with all the other code
+    shared with userspace.
+    
+    Signed-off-by: Dave Chinner <dchinner@redhat.com>
+    Reviewed-by: Christoph Hellwig <hch@lst.de>
+    Signed-off-by: Dave Chinner <david@fromorbit.com>
+
+-----------------------------------------------------------------------
+
+Summary of changes:
+ fs/xfs/libxfs/xfs_attr_leaf.c   |   2 +-
+ fs/xfs/libxfs/xfs_bmap.c        |  14 +-
+ fs/xfs/libxfs/xfs_bmap.h        |  33 ++++
+ fs/xfs/libxfs/xfs_format.h      |  14 +-
+ fs/xfs/{ => libxfs}/xfs_fs.h    |   0
+ fs/xfs/libxfs/xfs_sb.c          | 333 +++++++++++++++++-----------------------
+ fs/xfs/libxfs/xfs_sb.h          |  11 +-
+ fs/xfs/libxfs/xfs_shared.h      |  33 ++--
+ fs/xfs/libxfs/xfs_trans_resv.c  |  14 --
+ fs/xfs/libxfs/xfs_trans_resv.h  |   1 -
+ fs/xfs/{ => libxfs}/xfs_types.h |   0
+ fs/xfs/xfs_bmap_util.h          |  37 +----
+ fs/xfs/xfs_dquot.h              |   2 +-
+ fs/xfs/xfs_fsops.c              |  33 +---
+ fs/xfs/xfs_iomap.c              |   2 +-
+ fs/xfs/xfs_iomap.h              |   2 +-
+ fs/xfs/xfs_log.c                |  18 ++-
+ fs/xfs/xfs_mount.c              | 106 +++----------
+ fs/xfs/xfs_mount.h              |   5 +-
+ fs/xfs/xfs_qm.c                 |  43 +-----
+ fs/xfs/xfs_qm.h                 |   1 -
+ fs/xfs/xfs_qm_syscalls.c        |  14 +-
+ fs/xfs/xfs_super.c              |  13 +-
+ fs/xfs/xfs_sysctl.c             |  18 ---
+ 24 files changed, 265 insertions(+), 484 deletions(-)
+ rename fs/xfs/{ => libxfs}/xfs_fs.h (100%)
+ rename fs/xfs/{ => libxfs}/xfs_types.h (100%)
+
+
+hooks/post-receive
 -- 
-Dave Chinner
-david@fromorbit.com
+XFS development tree
 
 _______________________________________________
 xfs mailing list
