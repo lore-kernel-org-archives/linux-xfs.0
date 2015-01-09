@@ -1,22 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 6805F7F3F
-	for <xfs@oss.sgi.com>; Fri,  9 Jan 2015 09:45:35 -0600 (CST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id B12E97F3F
+	for <xfs@oss.sgi.com>; Fri,  9 Jan 2015 10:51:36 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 0523EAC006
-	for <xfs@oss.sgi.com>; Fri,  9 Jan 2015 07:45:34 -0800 (PST)
-Received: from smtp5-g21.free.fr (smtp5-g21.free.fr [212.27.42.5]) by
-	cuda.sgi.com with ESMTP id SQO7cEfBju06ROpv (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 09 Jan 2015 07:45:30 -0800 (PST)
-Date: Fri, 9 Jan 2015 16:45:34 +0100
-From: Emmanuel Florac <eflorac@intellique.com>
-Subject: Re: Oops mounting a corrupted XFS filesystem (with the "kernel BUG"
-	message)
-Message-ID: <20150109164534.12deeb25@harpe.intellique.com>
-In-Reply-To: <54AFF6E0.3050303@sgi.com>
-References: <20150109120558.2610d8aa@harpe.intellique.com>
-	<54AFF6E0.3050303@sgi.com>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 806B98F8040
+	for <xfs@oss.sgi.com>; Fri,  9 Jan 2015 08:51:36 -0800 (PST)
+Received: from mail-qa0-f51.google.com (mail-qa0-f51.google.com
+	[209.85.216.51]) by cuda.sgi.com with ESMTP id Ebuj4DIL03gTpypG
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Fri, 09 Jan 2015 08:51:35 -0800 (PST)
+Received: by mail-qa0-f51.google.com with SMTP id i13so7750214qae.10
+	for <xfs@oss.sgi.com>; Fri, 09 Jan 2015 08:51:34 -0800 (PST)
+From: Jeff Layton <jeff.layton@primarydata.com>
+Date: Fri, 9 Jan 2015 08:51:30 -0800
+Subject: Re: [PATCH 09/18] nfsd: implement pNFS operations
+Message-ID: <20150109085130.0f862d24@synchrony.poochiereds.net>
+In-Reply-To: <20150109100551.GA23173@lst.de>
+References: <1420561721-9150-1-git-send-email-hch@lst.de>
+	<1420561721-9150-10-git-send-email-hch@lst.de>
+	<20150108164851.03b64e16@synchrony.poochiereds.net>
+	<20150109100551.GA23173@lst.de>
 MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -26,32 +29,55 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Mark Tinguely <tinguely@sgi.com>
-Cc: XFS mailing list <xfs@oss.sgi.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-nfs@vger.kernel.org, trond.myklebust@primarydata.com, Sachin Bhamare <sachin.bhamare@primarydata.com>, xfs@oss.sgi.com, "J. Bruce Fields" <bfields@fieldses.org>, linux-fsdevel@vger.kernel.org, thomas.haynes@primarydata.com, Jeff Layton <jeff.layton@primarydata.com>
 
-TGUgRnJpLCAwOSBKYW4gMjAxNSAwOTo0MjoyNCAtMDYwMApNYXJrIFRpbmd1ZWx5IDx0aW5ndWVs
-eUBzZ2kuY29tPiDDqWNyaXZhaXQ6Cgo+IFRoZSBkb3VibGUgZnJlZSBvb3BzIHBhcnQgb2YgdGhp
-cyBidWcgd2FzIG15IGZhdWx0IGFuZCBmaXhlZCBhcyBwYXJ0Cj4gb2YgYSBsb2cgcmVjb3Zlcnkg
-cmVvcmdhbml6YXRpb246Cj4gCj4gY29tbWl0IDg4Yjg2M2RiOTdhMThhMDRjOTBlYmQ1N2Q4NGUx
-Yjc4NjMxMTRkY2IKPiBBdXRob3I6IERhdmUgQ2hpbm5lciA8ZGNoaW5uZXJAcmVkaGF0LmNvbT4K
-PiBEYXRlOiAgIE1vbiBTZXAgMjkgMDk6NDU6MzIgMjAxNCArMTAwMAo+IAo+ICAgICAgeGZzOiBm
-aXggZG91YmxlIGZyZWUgaW4geGxvZ19yZWNvdmVyX2NvbW1pdF90cmFucwo+IAo+ICAgICAgV2hl
-biBhbiBlcnJvciBvY2N1cnMgZHVyaW5nIGJ1ZmZlciBzdWJtaXNzaW9uIGluCj4gICAgICB4bG9n
-X3JlY292ZXJfY29tbWl0X3RyYW5zKCksIHdlIGZyZWUgdGhlIHRyYW5zIHN0cnVjdHVyZSB0d2lj
-ZS4KPiBGaXggaXQgYnkgb25seSBmcmVlaW5nIHRoZSBzdHJ1Y3R1cmUgaW4gdGhlIGNhbGxlciBy
-ZWdhcmRsZXNzIG9mIHRoZQo+ICAgICAgc3VjY2VzcyBvciBmYWlsdXJlIG9mIHRoZSBmdW5jdGlv
-bi4KPiAKPiBUaGUgb3JpZ2luYWwgY29ycnVwdGVkIG1ldGFkYXRhIGlzIHByb2JhYmx5IGNhdXNl
-ZCBieSB5b3VyIFJBSUQuCj4gCgpZZXMsIHByb2JhYmx5LiBCdXQgdGhlIHBhcnQgd2l0aCAia2Vy
-bmVsIEJVRyIgcHJvYmFibHkgaXNuJ3QgOikKCi0tIAotLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0KRW1tYW51ZWwg
-RmxvcmFjICAgICB8ICAgRGlyZWN0aW9uIHRlY2huaXF1ZQogICAgICAgICAgICAgICAgICAgIHwg
-ICBJbnRlbGxpcXVlCiAgICAgICAgICAgICAgICAgICAgfAk8ZWZsb3JhY0BpbnRlbGxpcXVlLmNv
-bT4KICAgICAgICAgICAgICAgICAgICB8ICAgKzMzIDEgNzggOTQgODQgMDIKLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwp4ZnMg
-bWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9s
-aXN0aW5mby94ZnMK
+On Fri, 9 Jan 2015 11:05:51 +0100
+Christoph Hellwig <hch@lst.de> wrote:
+
+> On Thu, Jan 08, 2015 at 04:48:51PM -0800, Jeff Layton wrote:
+> > > +	nfsd4_return_all_file_layouts(stp->st_stateowner->so_client,
+> > > +				      stp->st_stid.sc_file);
+> > > +
+> > 
+> > Shouldn't the above be conditional on whether the lg_roc was true?
+> 
+> There is no support for non-lg_roc layouts at the moment.
+> 
+> In general I've avoided adding code that isn't used, as they can't
+> be tested and thus most likely won't work.
+
+Ok, it'd be good to document that in some comments then for the sake of
+posterity (maybe it is later in the set -- I haven't gotten to the end
+yet).
+
+Now, that said...I think that your ROC semantics are wrong here. You
+also have to take delegations into account. [1]
+
+Basically the semantics that you want are that nfsd should do all of
+the ROC stuff on last close iff there are no outstanding delegations or
+on delegreturn iff there are no opens.
+
+What we ended up doing in the unreleased code we have was to create a
+new per-client and per-file object (that we creatively called an
+"odstate"). An open stateid and a delegation stateid would hold a
+reference to this object which is put when those stateids are freed.
+When its refcount goes to zero, then we'd free any outstanding layouts
+on the file for that client and free the object.
+
+You probably want to do something similar here.
+
+[1]: Tom and Trond mentioned that there's a RFC5661 errata pending for
+     this, but I don't see it right offhand.
+
+-- 
+Jeff Layton <jlayton@primarydata.com>
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
