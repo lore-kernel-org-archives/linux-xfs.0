@@ -1,24 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 7C8957F3F
-	for <xfs@oss.sgi.com>; Thu,  8 Jan 2015 18:25:42 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id F08C4AC006
-	for <xfs@oss.sgi.com>; Thu,  8 Jan 2015 16:25:41 -0800 (PST)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id dNkXFVEbFFHLcfOI (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 08 Jan 2015 16:25:37 -0800 (PST)
-Date: Thu, 8 Jan 2015 19:25:33 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH] xfs: inodes are new until the dentry cache is set up
-Message-ID: <20150109002532.GA45173@bfoster.bfoster>
-References: <1420667576-7592-1-git-send-email-david@fromorbit.com>
-	<20150108153205.GE33789@bfoster.bfoster>
-	<20150108232328.GM25000@dastard>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id ABD047F3F
+	for <xfs@oss.sgi.com>; Thu,  8 Jan 2015 18:49:01 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 8C50C304048
+	for <xfs@oss.sgi.com>; Thu,  8 Jan 2015 16:48:58 -0800 (PST)
+Received: from mail-qc0-f179.google.com (mail-qc0-f179.google.com
+	[209.85.216.179]) by cuda.sgi.com with ESMTP id
+	CKTn90UwFKVx7At8 (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 08 Jan 2015 16:48:57 -0800 (PST)
+Received: by mail-qc0-f179.google.com with SMTP id c9so5588983qcz.10
+	for <xfs@oss.sgi.com>; Thu, 08 Jan 2015 16:48:56 -0800 (PST)
+From: Jeff Layton <jeff.layton@primarydata.com>
+Date: Thu, 8 Jan 2015 16:48:51 -0800
+Subject: Re: [PATCH 09/18] nfsd: implement pNFS operations
+Message-ID: <20150108164851.03b64e16@synchrony.poochiereds.net>
+In-Reply-To: <1420561721-9150-10-git-send-email-hch@lst.de>
+References: <1420561721-9150-1-git-send-email-hch@lst.de>
+	<1420561721-9150-10-git-send-email-hch@lst.de>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20150108232328.GM25000@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,97 +32,85 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: Christoph Hellwig <hch@lst.de>
+Cc: "J. Bruce Fields" <bfields@fieldses.org>, linux-fsdevel@vger.kernel.org, linux-nfs@vger.kernel.org, xfs@oss.sgi.com
 
-On Fri, Jan 09, 2015 at 10:23:28AM +1100, Dave Chinner wrote:
-> On Thu, Jan 08, 2015 at 10:32:05AM -0500, Brian Foster wrote:
-> > On Thu, Jan 08, 2015 at 08:52:56AM +1100, Dave Chinner wrote:
-> > > From: Dave Chinner <dchinner@redhat.com>
-> > > 
-> > > Al Viro noticed a generic set of issues to do with filehandle lookup
-> > > racing with dentry cache setup. They involve a filehandle lookup
-> > > occurring while an inode is being created and the filehandle lookup
-> > > racing with the dentry creation for the real file. This can lead to
-> > > multiple dentries for the one path being instantiated. There are a
-> > > host of other issues around this same set of paths.
-> > > 
-> > > The underlying cause is that file handle lookup only waits on inode
-> > > cache instantiation rather than full dentry cache instantiation. XFS
-> > > is mostly immune to the problems discovered due to it's own internal
-> > > inode cache, but there are a couple of corner cases where races can
-> > > happen.
-> > > 
-> > > We currently clear the XFS_INEW flag when the inode is fully set up
-> > > after insertion into the cache. Newly allocated inodes are inserted
-> > > locked and so aren't usable until the allocation transaction
-> > > commits. This, however, occurs before the dentry and security
-> > > information is fully initialised and hence the inode is unlocked and
-> > > available for lookups to find too early.
-> > > 
-> > > To solve the problem, only clear the XFS_INEW flag for newly created
-> > > inodes once the dentry is fully instantiated. This means lookups
-> > > will retry until the XFS_INEW flag is removed from the inode and
-> > > hence avoids the race conditions in questions.
-> > > 
-> > > Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> ....
-> > > diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-> > > index ce80eeb..8be5bb5 100644
-> > > --- a/fs/xfs/xfs_iops.c
-> > > +++ b/fs/xfs/xfs_iops.c
-> > > @@ -186,6 +186,8 @@ xfs_generic_create(
-> > >  	else
-> > >  		d_instantiate(dentry, inode);
-> > >  
-> > > +	xfs_finish_inode_setup(ip);
-> > > +
-> > >   out_free_acl:
-> > >  	if (default_acl)
-> > >  		posix_acl_release(default_acl);
-> > > @@ -194,6 +196,7 @@ xfs_generic_create(
-> > >  	return error;
-> > >  
-> > >   out_cleanup_inode:
-> > > +	xfs_finish_inode_setup(ip);
-> > >  	if (!tmpfile)
-> > >  		xfs_cleanup_inode(dir, inode, dentry);
-> > >  	iput(inode);
-> > > @@ -366,9 +369,11 @@ xfs_vn_symlink(
-> > >  		goto out_cleanup_inode;
-> > >  
-> > >  	d_instantiate(dentry, inode);
-> > > +	xfs_finish_inode_setup(cip);
-> > >  	return 0;
-> > >  
-> > >   out_cleanup_inode:
-> > > +	xfs_finish_inode_setup(cip);
-> > >  	xfs_cleanup_inode(dir, inode, dentry);
-> > >  	iput(inode);
-> > >   out:
-> > 
-> > Ok, but what about post-inode-allocation failure conditions down in
-> > xfs_create()? I don't know if there's any real harm in releasing an
-> > I_NEW inode, but iput_final() does throw a warning. Same general
-> > question applies to xfs_create_tmpfile(), etc..
+On Tue,  6 Jan 2015 17:28:32 +0100
+Christoph Hellwig <hch@lst.de> wrote:
+
+> Add support for the GETDEVICEINFO, LAYOUTGET, LAYOUTCOMMIT and
+> LAYOUTRETURN NFSv4.1 operations, as well as backing code to manage
+> outstanding layouts and devices.
 > 
-> Ah, good point, I missed those.
+> Layout management is very straight forward, with a nfs4_layout_stateid
+> structure that extents nfs4_stid to manage layout stateids as the
+> top-level structure.  It is linked into the nfs4_file and nfs4_client
+> structures like the other stateids, and contains a linked list of
+> layouts that hang of the stateid.  The actual layout operations are
+> implemented in layout drivers that are not part of this commit, but
+> will be added later.
 > 
-> Where/how are you getting warnings thrown? I'm not seeing anything
-> from xfstests runs?
+> The worst part of this commit is the management of the pNFS device IDs,
+> which suffers from a specification that is not sanely implementable due
+> to the fact that the device-IDs are global and not bound to an export,
+> and have a small enough size so that we can't store the fsid portion of
+> a file handle, and must never be reused.  As we still do need perform all
+> export authentication and validation checks on a device ID passed to
+> GETDEVICEINFO we are caught between a rock and a hard place.  To work
+> around this issue we add a new hash that maps from a 64-bit integer to a
+> fsid so that we can look up the export to authenticate against it,
+> a 32-bit integer as a generation that we can bump when changing the device,
+> and a currently unused 32-bit integer that could be used in the future
+> to handle more than a single device per export.  Entries in this hash
+> table are never deleted as we can't reuse the ids anyway, and would have
+> a severe lifetime problem anyway as Linux export structures are temporary
+> structures that can go away under load.
+> 
+> Parts of the XDR data, structures and marshaling/unmarshaling code, as
+> well as many concepts are derived from the old pNFS server implementation
+> from Andy Adamson, Benny Halevy, Dean Hildebrand, Marc Eshel, Fred Isaman,
+> Mike Sager, Ricardo Labiaga and many others.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  fs/nfsd/Kconfig                 |  10 +
+>  fs/nfsd/Makefile                |   1 +
+>  fs/nfsd/export.c                |   8 +
+>  fs/nfsd/export.h                |   2 +
+>  fs/nfsd/nfs4layouts.c           | 486 ++++++++++++++++++++++++++++++++++++++++
+>  fs/nfsd/nfs4proc.c              | 266 ++++++++++++++++++++++
+>  fs/nfsd/nfs4state.c             |  16 +-
+>  fs/nfsd/nfs4xdr.c               | 306 +++++++++++++++++++++++++
+>  fs/nfsd/nfsctl.c                |   9 +-
+>  fs/nfsd/nfsd.h                  |  16 +-
+>  fs/nfsd/pnfs.h                  |  80 +++++++
+>  fs/nfsd/state.h                 |  21 ++
+>  fs/nfsd/xdr4.h                  |  60 +++++
+>  include/linux/nfs4.h            |   1 +
+>  include/uapi/linux/nfsd/debug.h |   1 +
+>  15 files changed, 1279 insertions(+), 4 deletions(-)
+>  create mode 100644 fs/nfsd/nfs4layouts.c
+>  create mode 100644 fs/nfsd/pnfs.h
 > 
 
-Oh, I hadn't reproduced warnings as such. I was just digging down that
-path and came across this in iput_final():
+[...]
 
-	WARN_ON(inode->i_state & I_NEW);
+> @@ -4845,6 +4856,9 @@ nfsd4_close(struct svc_rqst *rqstp, struct nfsd4_compound_state *cstate,
+>  	update_stateid(&stp->st_stid.sc_stateid);
+>  	memcpy(&close->cl_stateid, &stp->st_stid.sc_stateid, sizeof(stateid_t));
+>  
+> +	nfsd4_return_all_file_layouts(stp->st_stateowner->so_client,
+> +				      stp->st_stid.sc_file);
+> +
 
-Brian
+Shouldn't the above be conditional on whether the lg_roc was true?
 
-> -Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+>  	nfsd4_close_open_stateid(stp);
+>  
+>  	/* put reference from nfs4_preprocess_seqid_op */
+
+-- 
+Jeff Layton <jlayton@primarydata.com>
 
 _______________________________________________
 xfs mailing list
