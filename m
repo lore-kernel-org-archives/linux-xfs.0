@@ -1,21 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 987EC7F4E
-	for <xfs@oss.sgi.com>; Fri,  9 Jan 2015 14:36:36 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 5C4708F8049
-	for <xfs@oss.sgi.com>; Fri,  9 Jan 2015 12:36:33 -0800 (PST)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id F7dRK5C1ptFKlLfZ for <xfs@oss.sgi.com>;
-	Fri, 09 Jan 2015 12:36:31 -0800 (PST)
-Message-ID: <54B03BCC.7040207@sandeen.net>
-Date: Fri, 09 Jan 2015 14:36:28 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id C7B6F7F58
+	for <xfs@oss.sgi.com>; Fri,  9 Jan 2015 17:02:14 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 49928AC00F
+	for <xfs@oss.sgi.com>; Fri,  9 Jan 2015 15:02:11 -0800 (PST)
+Received: from mail-yh0-f51.google.com (mail-yh0-f51.google.com
+	[209.85.213.51]) by cuda.sgi.com with ESMTP id 9W0zV9AGobCjp0Cq
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Fri, 09 Jan 2015 15:02:06 -0800 (PST)
+Received: by mail-yh0-f51.google.com with SMTP id a41so5444699yho.10
+	for <xfs@oss.sgi.com>; Fri, 09 Jan 2015 15:02:06 -0800 (PST)
+Date: Fri, 9 Jan 2015 15:02:02 -0800
+From: Tom Haynes <thomas.haynes@primarydata.com>
+Subject: Re: [PATCH 03/18] nfsd: factor out a helper to decode nfstime4 values
+Message-ID: <20150109230202.GB107259@kitty>
+References: <1420561721-9150-1-git-send-email-hch@lst.de>
+	<1420561721-9150-4-git-send-email-hch@lst.de>
 MIME-Version: 1.0
-Subject: Re: [PATCH 2/2] xfs: mark the xfs-alloc workqueue as high priority
-References: <54B01927.2010506@redhat.com> <54B019F4.8030009@sandeen.net>
-	<20150109182310.GA2785@htj.dyndns.org>
-In-Reply-To: <20150109182310.GA2785@htj.dyndns.org>
+Content-Disposition: inline
+In-Reply-To: <1420561721-9150-4-git-send-email-hch@lst.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,221 +32,106 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Tejun Heo <tj@kernel.org>
-Cc: Eric Sandeen <sandeen@redhat.com>, xfs-oss <xfs@oss.sgi.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: "J. Bruce Fields" <bfields@fieldses.org>, linux-fsdevel@vger.kernel.org, linux-nfs@vger.kernel.org, Jeff Layton <jlayton@primarydata.com>, xfs@oss.sgi.com
 
-On 1/9/15 12:23 PM, Tejun Heo wrote:
-> Hello, Eric.
+On Tue, Jan 06, 2015 at 05:28:26PM +0100, Christoph Hellwig wrote:
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  fs/nfsd/nfs4xdr.c | 39 ++++++++++++++++++++++-----------------
+>  1 file changed, 22 insertions(+), 17 deletions(-)
 > 
-> On Fri, Jan 09, 2015 at 12:12:04PM -0600, Eric Sandeen wrote:
->> I had a case reported where a system under high stress
->> got deadlocked.  A btree split was handed off to the xfs
->> allocation workqueue, and it is holding the xfs_ilock
->> exclusively.  However, other xfs_end_io workers are
->> not running, because they are waiting for that lock.
->> As a result, the xfs allocation workqueue never gets
->> run, and everything grinds to a halt.
+> diff --git a/fs/nfsd/nfs4xdr.c b/fs/nfsd/nfs4xdr.c
+> index 15f7b73..fe31178 100644
+> --- a/fs/nfsd/nfs4xdr.c
+> +++ b/fs/nfsd/nfs4xdr.c
+> @@ -235,6 +235,22 @@ static char *savemem(struct nfsd4_compoundargs *argp, __be32 *p, int nbytes)
+>  }
+>  
+>  static __be32
+> +nfsd4_decode_time(struct nfsd4_compoundargs *argp, struct timespec *tv)
+> +{
+> +	DECODE_HEAD;
+> +	u64 sec;
+> +
+> +	READ_BUF(12);
+> +	p = xdr_decode_hyper(p, &sec);
+> +	tv->tv_sec = sec;
+> +	tv->tv_nsec = be32_to_cpup(p++);
+> +	if (tv->tv_nsec >= (u32)1000000000)
+> +		return nfserr_inval;
+> +
+> +	DECODE_TAIL;
+> +}
+> +
+> +static __be32
+>  nfsd4_decode_bitmap(struct nfsd4_compoundargs *argp, u32 *bmval)
+>  {
+>  	u32 bmlen;
+> @@ -267,7 +283,6 @@ nfsd4_decode_fattr(struct nfsd4_compoundargs *argp, u32 *bmval,
+>  {
+>  	int expected_len, len = 0;
+>  	u32 dummy32;
+> -	u64 sec;
+>  	char *buf;
+>  
+>  	DECODE_HEAD;
+> @@ -358,15 +373,10 @@ nfsd4_decode_fattr(struct nfsd4_compoundargs *argp, u32 *bmval,
+>  		dummy32 = be32_to_cpup(p++);
+>  		switch (dummy32) {
+>  		case NFS4_SET_TO_CLIENT_TIME:
+> -			/* We require the high 32 bits of 'seconds' to be 0, and we ignore
+> -			   all 32 bits of 'nseconds'. */
+
+Have you done away with these requirements?
+
+> -			READ_BUF(12);
+>  			len += 12;
+
+I think this code makes it clear that the magic number 12 is the
+same on both lines. With the change, that gets lost.
+
+Do I think that the 12 will ever change? No.
+
+Do I think this becomes more "magic"? Yes.
+ 
+> -			p = xdr_decode_hyper(p, &sec);
+> -			iattr->ia_atime.tv_sec = (time_t)sec;
+> -			iattr->ia_atime.tv_nsec = be32_to_cpup(p++);
+> -			if (iattr->ia_atime.tv_nsec >= (u32)1000000000)
+> -				return nfserr_inval;
+> +			status = nfsd4_decode_time(argp, &iattr->ia_atime);
+> +			if (status)
+> +				return status;
+>  			iattr->ia_valid |= (ATTR_ATIME | ATTR_ATIME_SET);
+>  			break;
+>  		case NFS4_SET_TO_SERVER_TIME:
+> @@ -382,15 +392,10 @@ nfsd4_decode_fattr(struct nfsd4_compoundargs *argp, u32 *bmval,
+>  		dummy32 = be32_to_cpup(p++);
+>  		switch (dummy32) {
+>  		case NFS4_SET_TO_CLIENT_TIME:
+> -			/* We require the high 32 bits of 'seconds' to be 0, and we ignore
+> -			   all 32 bits of 'nseconds'. */
+> -			READ_BUF(12);
+>  			len += 12;
+> -			p = xdr_decode_hyper(p, &sec);
+> -			iattr->ia_mtime.tv_sec = sec;
+> -			iattr->ia_mtime.tv_nsec = be32_to_cpup(p++);
+> -			if (iattr->ia_mtime.tv_nsec >= (u32)1000000000)
+> -				return nfserr_inval;
+> +			status = nfsd4_decode_time(argp, &iattr->ia_mtime);
+> +			if (status)
+> +				return status;
+>  			iattr->ia_valid |= (ATTR_MTIME | ATTR_MTIME_SET);
+>  			break;
+>  		case NFS4_SET_TO_SERVER_TIME:
+> -- 
+> 1.9.1
 > 
-> I'm having a difficult time following the exact deadlock.  Can you
-> please elaborate in more detail?
-
-Sure, sorry.  This is cut & paste from a bug, so hopefully not too disjoint.
-
-And, FWIW, this is a RHEL7 kernel, so not most recent upstream.  I could
-possibly ask the reporter to retest upstream; sadly they are using
-proprietary tests.
-
-There are many stuck threads; the oldest is this:
-
-crash> bt 39292
-PID: 39292  TASK: c000000038240000  CPU: 27  COMMAND: "aio-stress"
- #0 [c00000003ad02a40] __switch_to at c0000000000164d8
- #1 [c00000003ad02c10] __switch_to at c0000000000164d8
- #2 [c00000003ad02c70] __schedule at c000000000900200
- #3 [c00000003ad02ec0] schedule_timeout at c0000000008fd018
- #4 [c00000003ad02fc0] wait_for_completion at c000000000900e08
- #5 [c00000003ad03040] xfs_btree_split at d000000005c58ec0 [xfs]
- #6 [c00000003ad03100] xfs_btree_make_block_unfull at d000000005c5bd5c [xfs]
- #7 [c00000003ad03190] xfs_btree_insrec at d000000005c5c214 [xfs]
- #8 [c00000003ad03290] xfs_btree_insert at d000000005c5c51c [xfs]
- #9 [c00000003ad03320] xfs_bmap_add_extent_hole_real at d000000005c4a630 [xfs]
-#10 [c00000003ad033d0] xfs_bmapi_write at d000000005c51f08 [xfs]
-#11 [c00000003ad03570] xfs_iomap_write_direct at d000000005c268fc [xfs]
-#12 [c00000003ad03660] __xfs_get_blocks at d000000005c0b2b8 [xfs]
-#13 [c00000003ad03710] do_direct_IO at c00000000033f6c4
-#14 [c00000003ad03830] __blockdev_direct_IO at c000000000341428
-#15 [c00000003ad03a20] xfs_vm_direct_IO at d000000005c09d18 [xfs]
-#16 [c00000003ad03af0] generic_file_direct_write at c00000000021d1c0
-#17 [c00000003ad03ba0] xfs_file_dio_aio_write at d000000005cb3154 [xfs]
-#18 [c00000003ad03c40] xfs_file_aio_write at d000000005c1beb0 [xfs]
-#19 [c00000003ad03cc0] do_io_submit at c000000000359c00
-
-And the xfsalloc / btree split worker is not on any active task.
-Digging further, it's on a queue, but not started.
-
-The work queue which contains it is this:
-
-crash> list -H 0xc000000001cd7b18 -o work_struct.entry -s work_struct
-c0000006182ceed8
-struct work_struct {
-  data = {
-    counter = -4611686018397073147
-  }, 
-  entry = {
-    next = 0xc0000006182c31f8, 
-    prev = 0xc000000001cd7b18
-  }, 
-  func = 0xd000000005c0b570 <xfs_end_io>
-}
-c0000006182c31f0
-struct work_struct {
-  data = {
-    counter = -4611686018397073147
-  }, 
-  entry = {
-    next = 0xc0000006182c0750, 
-    prev = 0xc0000006182ceee0
-  }, 
-  func = 0xd000000005c0b570 <xfs_end_io>
-}
-c0000006182c0748
-struct work_struct {
-  data = {
-    counter = -4611686018397073147
-  }, 
-  entry = {
-    next = 0xc00000003ad030a8, 
-    prev = 0xc0000006182c31f8
-  }, 
-  func = 0xd000000005c0b570 <xfs_end_io>
-}
-c00000003ad030a0
-struct work_struct {
-  data = {
-    counter = -4611686018397087739
-  }, 
-  entry = {
-    next = 0xc0000006182c5e08, 
-    prev = 0xc0000006182c0750
-  }, 
-  func = 0xd000000005c58ef0 <xfs_btree_split_worker>
-}
-
-...
-
-so that's our stuck split worker, behind xfs_end_io's.
-
-if we look at the oldest stuck aio-stress task waiting for the work item to complete, there is an inode in its stack frames:
-
-crash> xfs_inode c0000000b1dca800
-
-and we find that it has an i_lock held, with waiters:
-
-  i_lock = {
-    mr_lock = {
-      count = -8589934591, 
-      wait_lock = {
-        raw_lock = {
-          slock = 0
-        }
-      }, 
-      wait_list = {
-        next = 0xc00000005a003a20, 
-        prev = 0xc00000003f483a20
-      }
-    }
-  }, 
-
-If we ask crash about those waiters, we see they are other kworker threads:
-
-crash> kmem 0xc00000005a003a20
-...
-    PID: 50959
-COMMAND: "kworker/27:2"
-...
-crash> kmem 0xc00000003f483a20
-...
-    PID: 29528
-COMMAND: "kworker/27:10"
-...
-
-and pid 50959 is indeed the 2nd-to-last listed uninterruptable sleep pid.
-
-crash> bt 50959
-...
- #3 [c00000005a003a00] rwsem_down_write_failed at c000000000903224
- #4 [c00000005a003a90] down_write at c0000000008ff68c
- #5 [c00000005a003ac0] xfs_ilock at d000000005c78ea8 [xfs]
- #6 [c00000005a003b00] xfs_iomap_write_unwritten at d000000005c272dc [xfs]
- #7 [c00000005a003c20] xfs_end_io at d000000005c0b680 [xfs]
- #8 [c00000005a003c50] process_one_work at c0000000000ecadc
-
-doing bt -FF on that yields:
-
- #5 [c00000005a003ac0] xfs_ilock at d000000005c78ea8 [xfs]
-    c00000005a003ac0: [c00000005a003b00:kmalloc-16384] [c0000005e6fb2000:kmalloc-2048] 
-    c00000005a003ad0: xfs_ilock+232    xfs_table_header+19848 
-    c00000005a003ae0: 0000000000000000 0000000000006970 
-    c00000005a003af0: 0000000000000008 [c0000000b1dca800:xfs_inode]
-
-which is the same inode, c0000000b1dca800
-
-The oldest stuck aio-stress process is (again) down this path:
-
-crash> bt 39292
-PID: 39292  TASK: c000000038240000  CPU: 27  COMMAND: "aio-stress"
-...
- #4 [c00000003ad02fc0] wait_for_completion at c000000000900e08
- #5 [c00000003ad03040] xfs_btree_split at d000000005c58ec0 [xfs]
- #6 [c00000003ad03100] xfs_btree_make_block_unfull at d000000005c5bd5c [xfs]
- #7 [c00000003ad03190] xfs_btree_insrec at d000000005c5c214 [xfs]
- #8 [c00000003ad03290] xfs_btree_insert at d000000005c5c51c [xfs]
- #9 [c00000003ad03320] xfs_bmap_add_extent_hole_real at d000000005c4a630 [xfs]
-#10 [c00000003ad033d0] xfs_bmapi_write at d000000005c51f08 [xfs]
-#11 [c00000003ad03570] xfs_iomap_write_direct at d000000005c268fc [xfs]
-#12 [c00000003ad03660] __xfs_get_blocks at d000000005c0b2b8 [xfs]
-#13 [c00000003ad03710] do_direct_IO at c00000000033f6c4
-#14 [c00000003ad03830] __blockdev_direct_IO at c000000000341428
-
-and xfs_iomap_write_direct() takes the ilock exclusively.
-
-        xfs_ilock(ip, XFS_ILOCK_EXCL);
-
-before calling xfs_bmapi_write(), so it must be the holder.  Until this work item runs, everything else working on this inode is stuck, but it's not getting run, behind other items waiting for the lock it holds.
-
--Eric
-
->> To be honest, it's not clear to me how the workqueue
->> subsystem manages this sort of thing.  But in testing,
->> making the allocation workqueue high priority so that
->> it gets added to the front of the pending work list,
->> resolves the problem.  We did similar things for
->> the xfs-log workqueues, for similar reasons.
-> 
-> Ummm, this feel pretty voodoo.  In practice, it'd change the order of
-> things being executed and may make certain deadlocks unlikely enough,
-> but I don't think this can be a proper fix.
-> 
->> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
->> index e5bdca9..9c549e1 100644
->> --- a/fs/xfs/xfs_super.c
->> +++ b/fs/xfs/xfs_super.c
->> @@ -874,7 +874,7 @@ xfs_init_mount_workqueues(
->>  		goto out_destroy_log;
->>  
->>  	mp->m_alloc_workqueue = alloc_workqueue("xfs-alloc/%s",
->> -			WQ_MEM_RECLAIM|WQ_FREEZABLE, 0, mp->m_fsname);
->> +		       WQ_MEM_RECLAIM|WQ_FREEZABLE|WQ_HIGHPRI, 0, mp->m_fsname);
-> 
-> And this at least deserves way more explanation.
-> 
->>  	if (!mp->m_alloc_workqueue)
->>  		goto out_destroy_eofblocks;
->>  
->>
-> 
-> Thanks.
-> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-nfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
 _______________________________________________
 xfs mailing list
