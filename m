@@ -1,25 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 9EAB37F3F
-	for <xfs@oss.sgi.com>; Fri,  9 Jan 2015 12:23:16 -0600 (CST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 316027F3F
+	for <xfs@oss.sgi.com>; Fri,  9 Jan 2015 14:03:12 -0600 (CST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 2C8E6AC006
-	for <xfs@oss.sgi.com>; Fri,  9 Jan 2015 10:23:16 -0800 (PST)
-Received: from mail-qa0-f46.google.com (mail-qa0-f46.google.com
-	[209.85.216.46]) by cuda.sgi.com with ESMTP id 6BRY366FzWkpSu7D
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 2002D304043
+	for <xfs@oss.sgi.com>; Fri,  9 Jan 2015 12:03:09 -0800 (PST)
+Received: from mail-qa0-f47.google.com (mail-qa0-f47.google.com
+	[209.85.216.47]) by cuda.sgi.com with ESMTP id a7BGh33KIFcHCaHF
 	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Fri, 09 Jan 2015 10:23:14 -0800 (PST)
-Received: by mail-qa0-f46.google.com with SMTP id j7so428376qaq.5
-	for <xfs@oss.sgi.com>; Fri, 09 Jan 2015 10:23:14 -0800 (PST)
-Date: Fri, 9 Jan 2015 13:23:10 -0500
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 2/2] xfs: mark the xfs-alloc workqueue as high priority
-Message-ID: <20150109182310.GA2785@htj.dyndns.org>
-References: <54B01927.2010506@redhat.com>
- <54B019F4.8030009@sandeen.net>
+	<xfs@oss.sgi.com>; Fri, 09 Jan 2015 12:03:07 -0800 (PST)
+Received: by mail-qa0-f47.google.com with SMTP id f12so3519489qad.6
+	for <xfs@oss.sgi.com>; Fri, 09 Jan 2015 12:03:06 -0800 (PST)
+Received: from yholen.ds (rrcs-97-76-23-49.se.biz.rr.com. [97.76.23.49])
+	by mx.google.com with ESMTPSA id w94sm7879929qgw.6.2015.01.09.12.03.05
+	for <xfs@oss.sgi.com>
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+	Fri, 09 Jan 2015 12:03:06 -0800 (PST)
+Message-ID: <54B033ED.9010805@gmail.com>
+Date: Fri, 09 Jan 2015 15:02:53 -0500
+From: "Michael L. Semon" <mlsemon35@gmail.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <54B019F4.8030009@sandeen.net>
+Subject: [RFC] xfs: remedy small writes during wrapped-log recovery
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,56 +33,74 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Eric Sandeen <sandeen@redhat.com>, xfs-oss <xfs@oss.sgi.com>
+To: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-Hello, Eric.
+Hi!  I like this patch and am confident with it on x86.  However,
+a) it has no x86_64 coverage; and b) xfstests xfs/306 in particular
+emits more of this output:
 
-On Fri, Jan 09, 2015 at 12:12:04PM -0600, Eric Sandeen wrote:
-> I had a case reported where a system under high stress
-> got deadlocked.  A btree split was handed off to the xfs
-> allocation workqueue, and it is holding the xfs_ilock
-> exclusively.  However, other xfs_end_io workers are
-> not running, because they are waiting for that lock.
-> As a result, the xfs allocation workqueue never gets
-> run, and everything grinds to a halt.
+    buffer_io_error: nnnn callbacks suppressed
 
-I'm having a difficult time following the exact deadlock.  Can you
-please elaborate in more detail?
+Might someone evaluate this patch or the intent of the patch?
 
-> To be honest, it's not clear to me how the workqueue
-> subsystem manages this sort of thing.  But in testing,
-> making the allocation workqueue high priority so that
-> it gets added to the front of the pending work list,
-> resolves the problem.  We did similar things for
-> the xfs-log workqueues, for similar reasons.
+The intent:
 
-Ummm, this feel pretty voodoo.  In practice, it'd change the order of
-things being executed and may make certain deadlocks unlikely enough,
-but I don't think this can be a proper fix.
+For XFS filesystems that don't change much, such as the /boot and
+alternate / partitions here, mount times were about 17s instead of
+0.4s while the log is in a wrapped state, write caches off.  This 
+patch fixes the issue on v4- and v5-superblock XFS filesystems.
 
-> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-> index e5bdca9..9c549e1 100644
-> --- a/fs/xfs/xfs_super.c
-> +++ b/fs/xfs/xfs_super.c
-> @@ -874,7 +874,7 @@ xfs_init_mount_workqueues(
->  		goto out_destroy_log;
->  
->  	mp->m_alloc_workqueue = alloc_workqueue("xfs-alloc/%s",
-> -			WQ_MEM_RECLAIM|WQ_FREEZABLE, 0, mp->m_fsname);
-> +		       WQ_MEM_RECLAIM|WQ_FREEZABLE|WQ_HIGHPRI, 0, mp->m_fsname);
+xfs_repair can solve this issue short-term and also cut wrapped-log 
+mount time in half short-term for v5 file systems.  Don't know if 
+that's a mkfs.xfs issue or just coincidence.
 
-And this at least deserves way more explanation.
+A bisect still needs to be done to determine when the slow mount 
+behavior started.  It could very well be that somebody fixed the 
+buffer_io_error messages that I saw long ago, and the solution made 
+some mounts here rather miserable.
 
->  	if (!mp->m_alloc_workqueue)
->  		goto out_destroy_eofblocks;
->  
-> 
+Thanks!
 
-Thanks.
+Michael
 
+The patch:
+
+xlog_write_log_records() has an algorithm to "Greedily allocate a
+buffer big enough...," starting with ffs(blocks), adding two sensible
+checks, and then feeding it to a loop with checks of its own.
+
+However, when blocks is an odd number, the number that becomes nbblks
+to the xlog_bwrite() function ends up being 2 (1 << 1).  The most
+obvious effect is that when the log wraps, a write of two odd-sized
+log regions on an 8-GB XFS filesystem will take around 2049 calls 
+to xlog_bwrite() instead of the "two separate I/Os" suggested in
+xlog_clear_stale_blocks().
+
+Fix this by changing the ffs(blocks) to fls(blocks).
+
+There is a similar ffs(blocks) check in xlog_find_verify_cycle().
+This was not investigated.
+
+Signed-off-by: Michael L. Semon <mlsemon35@gmail.com>
+---
+ fs/xfs/xfs_log_recover.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+index a5a945f..13381eb 100644
+--- a/fs/xfs/xfs_log_recover.c
++++ b/fs/xfs/xfs_log_recover.c
+@@ -1242,7 +1242,7 @@ xlog_write_log_records(
+ 	 * a smaller size.  We need to be able to write at least a
+ 	 * log sector, or we're out of luck.
+ 	 */
+-	bufblks = 1 << ffs(blocks);
++	bufblks = 1 << fls(blocks);
+ 	while (bufblks > log->l_logBBsize)
+ 		bufblks >>= 1;
+ 	while (!(bp = xlog_get_bp(log, bufblks))) {
 -- 
-tejun
+1.8.4
 
 _______________________________________________
 xfs mailing list
