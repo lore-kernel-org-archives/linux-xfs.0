@@ -1,28 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 07F767F50
-	for <xfs@oss.sgi.com>; Sun, 11 Jan 2015 00:33:21 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id BF4548F8035
-	for <xfs@oss.sgi.com>; Sat, 10 Jan 2015 22:33:17 -0800 (PST)
-Received: from mail-qg0-f53.google.com (mail-qg0-f53.google.com
-	[209.85.192.53]) by cuda.sgi.com with ESMTP id EVFhjtDUZmuMirOD
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Sat, 10 Jan 2015 22:33:16 -0800 (PST)
-Received: by mail-qg0-f53.google.com with SMTP id l89so14191778qgf.12
-	for <xfs@oss.sgi.com>; Sat, 10 Jan 2015 22:33:16 -0800 (PST)
-Date: Sun, 11 Jan 2015 01:33:12 -0500
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 2/2] xfs: mark the xfs-alloc workqueue as high priority
-Message-ID: <20150111063312.GA3984@htj.dyndns.org>
-References: <54B01927.2010506@redhat.com> <54B019F4.8030009@sandeen.net>
-	<20150109182310.GA2785@htj.dyndns.org>
-	<54B03BCC.7040207@sandeen.net>
-	<20150110192852.GD25319@htj.dyndns.org>
-	<54B1BE0E.7020302@sandeen.net>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 6F0B77F50
+	for <xfs@oss.sgi.com>; Sun, 11 Jan 2015 05:42:53 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 0E1D5AC001
+	for <xfs@oss.sgi.com>; Sun, 11 Jan 2015 03:42:49 -0800 (PST)
+Received: from newverein.lst.de (verein.lst.de [213.95.11.211]) by
+	cuda.sgi.com with ESMTP id 9F1fjIHIWG2zxHpd (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Sun, 11 Jan 2015 03:42:44 -0800 (PST)
+Date: Sun, 11 Jan 2015 12:42:42 +0100
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH 03/18] nfsd: factor out a helper to decode nfstime4 values
+Message-ID: <20150111114242.GA11939@lst.de>
+References: <1420561721-9150-1-git-send-email-hch@lst.de>
+	<1420561721-9150-4-git-send-email-hch@lst.de>
+	<20150109230202.GB107259@kitty>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <54B1BE0E.7020302@sandeen.net>
+In-Reply-To: <20150109230202.GB107259@kitty>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,50 +31,37 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Eric Sandeen <sandeen@redhat.com>, xfs-oss <xfs@oss.sgi.com>
+To: Tom Haynes <thomas.haynes@primarydata.com>
+Cc: linux-nfs@vger.kernel.org, xfs@oss.sgi.com, "J. Bruce Fields" <bfields@fieldses.org>, Jeff Layton <jlayton@primarydata.com>, linux-fsdevel@vger.kernel.org, Christoph Hellwig <hch@lst.de>
 
-Hello,
-
-On Sat, Jan 10, 2015 at 06:04:30PM -0600, Eric Sandeen wrote:
-> > The only reasons that work item would stay there are
-> > 
-> > * The rescuer is already executing something else from that workqueue
-> >   and that one is stuck.
+On Fri, Jan 09, 2015 at 03:02:02PM -0800, Tom Haynes wrote:
+> >  	DECODE_HEAD;
+> > @@ -358,15 +373,10 @@ nfsd4_decode_fattr(struct nfsd4_compoundargs *argp, u32 *bmval,
+> >  		dummy32 = be32_to_cpup(p++);
+> >  		switch (dummy32) {
+> >  		case NFS4_SET_TO_CLIENT_TIME:
+> > -			/* We require the high 32 bits of 'seconds' to be 0, and we ignore
+> > -			   all 32 bits of 'nseconds'. */
 > 
-> I'll have to look at that.  I hope I still have access to the core...
+> Have you done away with these requirements?
 
-Yes, if this is happening, the rescuer worker which has the name of
-the workqueue would be stuck somewhere.
+No, the comment just go lost, I'll add it bacl.
 
-> > * The worker pool is still considered to be making forward progress -
-> >   there's a worker which isn't blocked and can burn CPU cycles.
 > 
-> AFAICT, the first thing in the pool is the xffs_end_io blocked waiting for the ilock.
+> > -			READ_BUF(12);
+> >  			len += 12;
 > 
-> I assume it's only the first one that matters?
-
-Whatever work item which is executing on that pool on that CPU.
-Checking the tasks which are runnable on that CPU should show it.
-
-> > Again, if xfs is using workqueue correctly, that work item shouldn't
-> > get stuck at all.  What other workqueues are doing is irrelevant.
+> I think this code makes it clear that the magic number 12 is the
+> same on both lines. With the change, that gets lost.
 > 
-> and yet here we are; one of us must be missing something.  It's quite
-> possibly me :) but we definitely have this thing wedged, and moving
-> the xfsalloc item to the front via high priority did solve it.  Not saying
-> it's the right solution, just a data point.
+> Do I think that the 12 will ever change? No.
+> 
+> Do I think this becomes more "magic"? Yes.
 
-It sure is possible that workqueue is misbehaving but I'm pretty
-doubtful that it'd be, especially given that xfs issue has been around
-for quite a while, which excludes recent regressions in the rescuer
-logic, and that there hasn't been any other case of failed forward
-progress guarantee.
-
-Thanks.
-
--- 
-tejun
+Sure. but the whole counting the number to be decoded in setattr
+is magic to start with.  I guess we could replace it with some magic
+pointer arithmetic on argp->p, but is that really worth it?  Should
+be a separate patch for sure.
 
 _______________________________________________
 xfs mailing list
