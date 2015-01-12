@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 458DF7F51
-	for <xfs@oss.sgi.com>; Mon, 12 Jan 2015 09:35:26 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 17D848F8035
-	for <xfs@oss.sgi.com>; Mon, 12 Jan 2015 07:35:25 -0800 (PST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id D48547F51
+	for <xfs@oss.sgi.com>; Mon, 12 Jan 2015 09:52:14 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 5F866AC007
+	for <xfs@oss.sgi.com>; Mon, 12 Jan 2015 07:52:14 -0800 (PST)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id pDVQ7cakeCDHdUB7 (version=TLSv1
+	cuda.sgi.com with ESMTP id 04IEVEIBzVTgM6BH (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 12 Jan 2015 07:35:24 -0800 (PST)
-Date: Mon, 12 Jan 2015 10:35:21 -0500
+	Mon, 12 Jan 2015 07:52:13 -0800 (PST)
+Date: Mon, 12 Jan 2015 10:52:07 -0500
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 1/2] xfs: make global xfsalloc workqueue per-mount
-Message-ID: <20150112153521.GC25944@bfoster.bfoster>
-References: <54B01927.2010506@redhat.com>
- <54B019A5.2060907@sandeen.net>
+Subject: Re: extremely slow file creation/deletion after xfs ran full
+Message-ID: <20150112155206.GD25944@bfoster.bfoster>
+References: <54B387A1.6000807@aei.mpg.de>
+ <54B3CC6A.4080405@aei.mpg.de>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <54B019A5.2060907@sandeen.net>
+In-Reply-To: <54B3CC6A.4080405@aei.mpg.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,205 +30,98 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Eric Sandeen <sandeen@redhat.com>, xfs-oss <xfs@oss.sgi.com>
+To: Carsten Aulbert <Carsten.Aulbert@aei.mpg.de>
+Cc: xfs@oss.sgi.com
 
-On Fri, Jan 09, 2015 at 12:10:45PM -0600, Eric Sandeen wrote:
-> The xfsalloc workquaue is the last remaining global work
-> queue, something we've been moving away from in general.
-> Make this one per-mount like every other workqueue.
+On Mon, Jan 12, 2015 at 02:30:18PM +0100, Carsten Aulbert wrote:
+> Hi again
 > 
-> This also renames it from "xfsalloc" to "xfs-alloc" to
-> match the naming convention.
+> (sorry that I reply to my own email, rather than Brian's, but I've only
+> just subscribed to the list), I'll try to address Brian's email in here
+> with fake quotation. Sorry for breaking the threading :(
 > 
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-> ---
+> Brian Foster wrote:
+> > Based on the size and consumption of the fs, first thing that comes
+> > to mind is perhaps fragmented use of inode records. E.g., inode
+> > records are spread all over the storage with handfulls of inodes
+> > free here and there, which means individual inode allocation can
+> > take a hit searching for the record with free inodes. I don't think
+> > that explains rm performance though.
+> 
+> > It might be interesting to grab a couple perf traces of the touch
+> > and rm commands and see what cpu usage looks like. E.g., 'perf
+> > record -g touch <file>,' 'perf report -g,' etc.
+> 
+> I've attached both perf outputs and after reviewing them briefly I think
+> slowness is caused by different means, i.e. only the touch one is in
+> xfs' territory.
+> 
 
-Looks good to me regardless of the ongoing discussion on the queue
-priority:
+Ok, well if something else causes the rm slowness, the scattered free
+inode scenario might be more likely.
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+I can't see any symbols associated with the perf output. I suspect
+because I'm not running on your kernel. It might be better to run 'perf
+report -g' and copy/paste the stack trace for some of the larger
+consumers.
 
+> > 	30265117 xfs: Fix rounding in xfs_alloc_fix_len()
+> >
+> > That originally went into 3.16 and I don't see it in the 3.14 stable
+> > branch. Did xfs_repair actually report anything wrong?
 > 
-> diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-> index a6fbf44..72d28d1 100644
-> --- a/fs/xfs/libxfs/xfs_alloc.c
-> +++ b/fs/xfs/libxfs/xfs_alloc.c
-> @@ -36,8 +36,6 @@
->  #include "xfs_buf_item.h"
->  #include "xfs_log.h"
->  
-> -struct workqueue_struct *xfs_alloc_wq;
-> -
->  #define XFS_ABSDIFF(a,b)	(((a) <= (b)) ? ((b) - (a)) : ((a) - (b)))
->  
->  #define	XFSA_FIXUP_BNO_OK	1
-> diff --git a/fs/xfs/libxfs/xfs_alloc.h b/fs/xfs/libxfs/xfs_alloc.h
-> index d1b4b6a..39933a1 100644
-> --- a/fs/xfs/libxfs/xfs_alloc.h
-> +++ b/fs/xfs/libxfs/xfs_alloc.h
-> @@ -24,8 +24,6 @@ struct xfs_mount;
->  struct xfs_perag;
->  struct xfs_trans;
->  
-> -extern struct workqueue_struct *xfs_alloc_wq;
-> -
->  /*
->   * Freespace allocation types.  Argument to xfs_alloc_[v]extent.
->   */
-> diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
-> index 81cad43..a8a1369 100644
-> --- a/fs/xfs/libxfs/xfs_btree.c
-> +++ b/fs/xfs/libxfs/xfs_btree.c
-> @@ -2574,7 +2574,7 @@ xfs_btree_split(
->  	args.done = &done;
->  	args.kswapd = current_is_kswapd();
->  	INIT_WORK_ONSTACK(&args.work, xfs_btree_split_worker);
-> -	queue_work(xfs_alloc_wq, &args.work);
-> +	queue_work(cur->bc_mp->m_alloc_workqueue, &args.work);
->  	wait_for_completion(&done);
->  	destroy_work_on_stack(&args.work);
->  	return args.result;
-> diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-> index 22ccf69..7d57a5f 100644
-> --- a/fs/xfs/xfs_mount.h
-> +++ b/fs/xfs/xfs_mount.h
-> @@ -175,6 +175,7 @@ typedef struct xfs_mount {
->  	struct workqueue_struct	*m_reclaim_workqueue;
->  	struct workqueue_struct	*m_log_workqueue;
->  	struct workqueue_struct *m_eofblocks_workqueue;
-> +	struct workqueue_struct *m_alloc_workqueue;
->  } xfs_mount_t;
->  
->  /*
-> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-> index 19cbda1..e5bdca9 100644
-> --- a/fs/xfs/xfs_super.c
-> +++ b/fs/xfs/xfs_super.c
-> @@ -873,8 +873,15 @@ xfs_init_mount_workqueues(
->  	if (!mp->m_eofblocks_workqueue)
->  		goto out_destroy_log;
->  
-> +	mp->m_alloc_workqueue = alloc_workqueue("xfs-alloc/%s",
-> +			WQ_MEM_RECLAIM|WQ_FREEZABLE, 0, mp->m_fsname);
-> +	if (!mp->m_alloc_workqueue)
-> +		goto out_destroy_eofblocks;
-> +
->  	return 0;
->  
-> +out_destroy_eofblocks:
-> +	destroy_workqueue(mp->m_eofblocks_workqueue);
->  out_destroy_log:
->  	destroy_workqueue(mp->m_log_workqueue);
->  out_destroy_reclaim:
-> @@ -895,6 +902,7 @@ STATIC void
->  xfs_destroy_mount_workqueues(
->  	struct xfs_mount	*mp)
->  {
-> +	destroy_workqueue(mp->m_alloc_workqueue);
->  	destroy_workqueue(mp->m_eofblocks_workqueue);
->  	destroy_workqueue(mp->m_log_workqueue);
->  	destroy_workqueue(mp->m_reclaim_workqueue);
-> @@ -1717,29 +1725,6 @@ xfs_destroy_zones(void)
->  }
->  
->  STATIC int __init
-> -xfs_init_workqueues(void)
-> -{
-> -	/*
-> -	 * The allocation workqueue can be used in memory reclaim situations
-> -	 * (writepage path), and parallelism is only limited by the number of
-> -	 * AGs in all the filesystems mounted. Hence use the default large
-> -	 * max_active value for this workqueue.
-> -	 */
-> -	xfs_alloc_wq = alloc_workqueue("xfsalloc",
-> -			WQ_MEM_RECLAIM|WQ_FREEZABLE, 0);
-> -	if (!xfs_alloc_wq)
-> -		return -ENOMEM;
-> -
-> -	return 0;
-> -}
-> -
-> -STATIC void
-> -xfs_destroy_workqueues(void)
-> -{
-> -	destroy_workqueue(xfs_alloc_wq);
-> -}
-> -
-> -STATIC int __init
->  init_xfs_fs(void)
->  {
->  	int			error;
-> @@ -1753,13 +1738,9 @@ init_xfs_fs(void)
->  	if (error)
->  		goto out;
->  
-> -	error = xfs_init_workqueues();
-> -	if (error)
-> -		goto out_destroy_zones;
-> -
->  	error = xfs_mru_cache_init();
->  	if (error)
-> -		goto out_destroy_wq;
-> +		goto out_destroy_zones;
->  
->  	error = xfs_buf_init();
->  	if (error)
-> @@ -1776,7 +1757,7 @@ init_xfs_fs(void)
->  	xfs_kset = kset_create_and_add("xfs", NULL, fs_kobj);
->  	if (!xfs_kset) {
->  		error = -ENOMEM;
-> -		goto out_sysctl_unregister;;
-> +		goto out_sysctl_unregister;
->  	}
->  
->  #ifdef DEBUG
-> @@ -1795,27 +1776,25 @@ init_xfs_fs(void)
->  		goto out_qm_exit;
->  	return 0;
->  
-> - out_qm_exit:
-> +out_qm_exit:
->  	xfs_qm_exit();
-> - out_remove_kobj:
-> +out_remove_kobj:
->  #ifdef DEBUG
->  	xfs_sysfs_del(&xfs_dbg_kobj);
-> - out_kset_unregister:
-> +out_kset_unregister:
->  #endif
->  	kset_unregister(xfs_kset);
-> - out_sysctl_unregister:
-> +out_sysctl_unregister:
->  	xfs_sysctl_unregister();
-> - out_cleanup_procfs:
-> +out_cleanup_procfs:
->  	xfs_cleanup_procfs();
-> - out_buf_terminate:
-> +out_buf_terminate:
->  	xfs_buf_terminate();
-> - out_mru_cache_uninit:
-> +out_mru_cache_uninit:
->  	xfs_mru_cache_uninit();
-> - out_destroy_wq:
-> -	xfs_destroy_workqueues();
-> - out_destroy_zones:
-> +out_destroy_zones:
->  	xfs_destroy_zones();
-> - out:
-> +out:
->  	return error;
->  }
->  
-> @@ -1832,7 +1811,6 @@ exit_xfs_fs(void)
->  	xfs_cleanup_procfs();
->  	xfs_buf_terminate();
->  	xfs_mru_cache_uninit();
-> -	xfs_destroy_workqueues();
->  	xfs_destroy_zones();
->  }
->  
+> Nope, only displayed all the stages, but nothing was fixed.
 > 
+
+Ok, also seems like further indication of the problem fixed by the above
+commit.
+
+> > It seems like you have sufficiently large and available free
+> > space. That said, it's fairly common for filesytems to naturally
+> > drop in performance as free space becomes more limited. E.g., I
+> > think it's common practice to avoid regular usage while over 80%
+> > used if performance is a major concern. Also, I doubt xfs_fsr will
+> > do much to affect inode allocation performance, but I could be
+> > wrong.
+> 
+> Yes, we should have monitored that mount point rather than /tmp which we
+> did when bad things happened(TM). Given that we have a high
+> fragmentation of directories, would xfs_fsr help here at all?
+> 
+
+I don't _think_ that fsr will mess with directories, but I don't know
+for sure...
+
+> Regarding v5, currently we are copying data off that disk and will
+> create it anew with -m crc=1,finobt=1 on a recent 3.18 kernel. Apart
+> from that I don't know much we can further do to safe-guard us against
+> this happening again (well kepp it below 80% all the time as well).
+> 
+
+Sounds good. FWIW, something like the following should tell us how many
+free inodes are available in each ag, and thus whether we have to search
+for free inodes in existing records rather than allocate new ones:
+
+for i in $(seq 0 15); do
+	xfs_db -c "agi $i" -c "p freecount" <dev>
+done
+
+Brian
+
+> Thanks a lot for the remarks!
+> 
+> cheers
+> 
+> Carsten
+> 
+> -- 
+> Dr. Carsten Aulbert - Max Planck Institute for Gravitational Physics
+> Callinstrasse 38, 30167 Hannover, Germany
+> phone/fax: +49 511 762-17185 / -17193
+> https://wiki.atlas.aei.uni-hannover.de/foswiki/bin/view/ATLAS/WebHome
+
+
+
 > _______________________________________________
 > xfs mailing list
 > xfs@oss.sgi.com
