@@ -1,26 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 0190B7F3F
-	for <xfs@oss.sgi.com>; Tue, 13 Jan 2015 14:34:08 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id E0A2C304062
-	for <xfs@oss.sgi.com>; Tue, 13 Jan 2015 12:34:08 -0800 (PST)
+Received: from relay.sgi.com (unknown [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 7ADFC7F3F
+	for <xfs@oss.sgi.com>; Tue, 13 Jan 2015 14:38:51 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id A9389AC009
+	for <xfs@oss.sgi.com>; Tue, 13 Jan 2015 12:38:35 -0800 (PST)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	zlC5ynDtPJRFTwK7 for <xfs@oss.sgi.com>;
-	Tue, 13 Jan 2015 12:34:04 -0800 (PST)
-Date: Wed, 14 Jan 2015 07:33:32 +1100
+	YlYOGA8rFfdeqFUR for <xfs@oss.sgi.com>;
+	Tue, 13 Jan 2015 12:27:36 -0800 (PST)
+Date: Mon, 12 Jan 2015 14:04:01 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: extremely slow file creation/deletion after xfs ran full
-Message-ID: <20150113203332.GD29484@destitution>
-References: <54B387A1.6000807@aei.mpg.de> <54B3CC6A.4080405@aei.mpg.de>
-	<20150112155206.GD25944@bfoster.bfoster>
-	<54B3F19D.6030307@aei.mpg.de>
-	<20150112163749.GE25944@bfoster.bfoster>
-	<54B40552.50106@aei.mpg.de>
+Subject: Re: [PATCH 17/18] xfs: implement pnfs export operations
+Message-ID: <20150112030401.GA29484@destitution>
+References: <1420561721-9150-1-git-send-email-hch@lst.de>
+	<1420561721-9150-18-git-send-email-hch@lst.de>
+	<20150107002434.GG31508@dastard> <20150107104010.GD28783@lst.de>
+	<20150107211140.GC25000@dastard> <20150108124327.GA15222@lst.de>
+	<20150108210405.GG25000@dastard> <20150109114159.GA25728@lst.de>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <54B40552.50106@aei.mpg.de>
+In-Reply-To: <20150109114159.GA25728@lst.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,55 +33,50 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Carsten Aulbert <Carsten.Aulbert@aei.mpg.de>
-Cc: Brian Foster <bfoster@redhat.com>, xfs@oss.sgi.com
+To: Christoph Hellwig <hch@lst.de>
+Cc: "J. Bruce Fields" <bfields@fieldses.org>, linux-fsdevel@vger.kernel.org, linux-nfs@vger.kernel.org, Jeff Layton <jlayton@primarydata.com>, xfs@oss.sgi.com
 
-On Mon, Jan 12, 2015 at 06:33:06PM +0100, Carsten Aulbert wrote:
-> Hi
-> 
-> On 01/12/2015 05:37 PM, Brian Foster wrote:
-> > No, but it does show that there are a bunch of free inodes scattered
-> > throughout the existing records in most of the AGs. The finobt should
-> > definitely help avoid the allocation latency when this occurs.
+On Fri, Jan 09, 2015 at 12:41:59PM +0100, Christoph Hellwig wrote:
+> On Fri, Jan 09, 2015 at 08:04:05AM +1100, Dave Chinner wrote:
+> > > If the client sends the opaqueue device ID that contains the generation
+> > > after the grow to a server that had crashed / restarted the server
+> > > will reject it as the server starts at zero.  The causes the client
+> > > to get a new, valid device ID from the server.
 > > 
-> 
-> That is good to know/hope :)
-> 
-> > It is interesting that you have so many more free inodes in ag 0 (~53m
-> > as opposed to several hundreds/thousands in others). What does 'p count'
-> > show for each ag? Was this fs grown to the current size over time?
+> > But if the server fs has a generation number of zero when it
+> > crashes, how does the client tell that it needs a new device ID from
+> > the server?
+> >
+> > > Unlike the NFS file hadles which are persistent the device IDs are volatile
+> > > handles that can go away (and have really horrible life time rules..).
 > > 
-> "p count" seems to "thin out" over ag:
+> > Right. How the clients detect that "going away" when the device
+> > generation is zero both before and after a server crash is the
+> > question I'm asking....
 > 
-> count = 513057792
+> The server tells the client by rejecting the operation using the
+> device ID.
 
-AG 0 has > 500 allocated million inodes, and > 50 million free
-inodes.  Traversal of the inode btree to find free inodes is going
-to be costly in both CPU time and memory footprint. The other AGs
-have much fewer inodes, so searches are much less costly.
+Ok, so:
 
-That's why allocation will be sometimes slow and sometimes fast - it
-depends on what AG the inode is being allocated from.
+client				server
 
-> count = 16596224
-> count = 15387584
-> count = 14958528
-> count = 4096960
-> count = 4340416
-> count = 4987968
-> count = 3321792
-> count = 5041856
-> count = 5485376
-> count = 5233088
-> count = 5810432
-> count = 5271552
-> count = 5464000
-> count = 365440
+get layout
+dev id == 0
+				grow
+				gen++ (=1)
+				crash
+				....
+				gen = 0 (initialised after boot)
 
-This pattern seems to match a filesystem that was running under
-inode32 for most of it's life, and is now using inode64 and hence
-spreading the subdirectories and hence new inodes over all AGs
-instead of just limiting them to AG 0....
+commit layout
+dev id == 0
+				server executes op, even though
+				device has changed....
+
+What prevents this? Shouldn't the server be rejecting the commit
+layout operation as there was a grow operation between the client
+operations?
 
 Cheers,
 
