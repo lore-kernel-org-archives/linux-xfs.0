@@ -1,26 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 2C1987F50
-	for <xfs@oss.sgi.com>; Mon, 12 Jan 2015 00:14:31 -0600 (CST)
+	by oss.sgi.com (Postfix) with ESMTP id EA1127F51
+	for <xfs@oss.sgi.com>; Mon, 12 Jan 2015 02:37:02 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id E1B708F804B
-	for <xfs@oss.sgi.com>; Sun, 11 Jan 2015 22:14:27 -0800 (PST)
-Received: from mail-yk0-f175.google.com (mail-yk0-f175.google.com
-	[209.85.160.175]) by cuda.sgi.com with ESMTP id
-	RRMnJYHkDPZuFCE3 (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Sun, 11 Jan 2015 22:14:24 -0800 (PST)
-Received: by mail-yk0-f175.google.com with SMTP id 200so8485507ykr.6
-	for <xfs@oss.sgi.com>; Sun, 11 Jan 2015 22:14:23 -0800 (PST)
-Date: Mon, 12 Jan 2015 01:14:19 -0500
-From: Tom Haynes <thomas.haynes@primarydata.com>
-Subject: Re: [PATCH 14/18] nfsd: pNFS block layout driver
-Message-ID: <20150112061419.GB107426@slacker.internal.excfb.com>
-References: <1420561721-9150-1-git-send-email-hch@lst.de>
-	<1420561721-9150-15-git-send-email-hch@lst.de>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id AB3808F8035
+	for <xfs@oss.sgi.com>; Mon, 12 Jan 2015 00:36:59 -0800 (PST)
+Received: from smtp.welcomes-you.com (welcomes-you.com [144.76.218.113]) by
+	cuda.sgi.com with ESMTP id ggmQ4AglzlQpgvqp for
+	<xfs@oss.sgi.com>; Mon, 12 Jan 2015 00:36:53 -0800 (PST)
+Received: from localhost (localhost.localdomain [127.0.0.1])
+	by smtp.welcomes-you.com (Postfix) with ESMTP id 2837331A2C2F
+	for <xfs@oss.sgi.com>; Mon, 12 Jan 2015 09:36:52 +0100 (CET)
+Message-ID: <54B387A1.6000807@aei.mpg.de>
+Date: Mon, 12 Jan 2015 09:36:49 +0100
+From: Carsten Aulbert <Carsten.Aulbert@aei.mpg.de>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1420561721-9150-15-git-send-email-hch@lst.de>
+Subject: extremely slow file creation/deletion after xfs ran full
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,616 +28,210 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@lst.de>
-Cc: "J. Bruce Fields" <bfields@fieldses.org>, linux-fsdevel@vger.kernel.org, linux-nfs@vger.kernel.org, Jeff Layton <jlayton@primarydata.com>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Tue, Jan 06, 2015 at 05:28:37PM +0100, Christoph Hellwig wrote:
-> Add a small shim between core nfsd and filesystems to translate the
-> somewhat cumbersome pNFS data structures and semantics to something
-> more palatable for Linux filesystems.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  .../filesystems/nfs/pnfs-block-server.txt          |  40 +++++
->  fs/nfsd/Makefile                                   |   2 +-
->  fs/nfsd/blocklayout.c                              | 194 +++++++++++++++++++++
->  fs/nfsd/blocklayoutxdr.c                           | 157 +++++++++++++++++
->  fs/nfsd/blocklayoutxdr.h                           |  62 +++++++
->  fs/nfsd/nfs4layouts.c                              |   7 +
->  fs/nfsd/pnfs.h                                     |   1 +
->  7 files changed, 462 insertions(+), 1 deletion(-)
->  create mode 100644 Documentation/filesystems/nfs/pnfs-block-server.txt
->  create mode 100644 fs/nfsd/blocklayout.c
->  create mode 100644 fs/nfsd/blocklayoutxdr.c
->  create mode 100644 fs/nfsd/blocklayoutxdr.h
-> 
-> diff --git a/Documentation/filesystems/nfs/pnfs-block-server.txt b/Documentation/filesystems/nfs/pnfs-block-server.txt
-> new file mode 100644
-> index 0000000..f45d399
-> --- /dev/null
-> +++ b/Documentation/filesystems/nfs/pnfs-block-server.txt
-> @@ -0,0 +1,40 @@
-> +pNFS block layout server user guide
-> +
-> +The Linux NFS server now supports the pNFS block layout extension.  In this
-> +case the NFS server acts as Metadata Server (MDS) for pNFS, which in addition
-> +to handling all the metadata access to the NFS export also hands out layouts
-> +to the clients to directly access the underlying block devices that is
+Hi
 
-to the clients. The layout allows the client to directly access the underlying block devices that (are)
+a couple of days ago, one of our XFS pools ran full which did not
+realize due to some bogged monitoring.
 
-> +shared with the client.  Note that there are no Data Servers (DSs) in the
-> +block layout flavor of pNFS.
+After deleting files, the FS is not filled to about 80-85% and file
+creation as well as deletion is extremely slow:
 
-Which is why the spec calls them storage devices. 
+$ cd /srv
+$ time touch test
+touch test  0.00s user 0.17s system 5% cpu 2.993 total
+$ time touch test
+touch test  0.00s user 0.00s system 0% cpu 0.002 total
+$ time rm test
+rm test  0.00s user 0.00s system 0% cpu 4.954 total
 
-> +
-> +To use pNFS block layouts with with the Linux NFS server the exported file
-> +system needs to support the pNFS block layouts (current just XFS), and the
+As we had seen some XFS error messages like XFS: Internal error
+XFS_WANT_CORRUPTED_GOTO[1] shortly before the file system was completely
+filled, we umounted it and ran successfully xfs_repair on it[2].
 
-currently 
+We started to dig into fragmentation levels, but to be honest, I'm not
+too sure how to interpret the numbers. All seem pretty innocent to me
+except the very high directory fragmentation:
 
-> +file system must sit on shared storage (typically iSCSI) that is accessible
-> +to the clients as well as the server.  The file system needs to either sit
-> +directly on the exported volume, or on a RAID 0 using the MD software RAID
+# mount
+[...]
+/dev/sdb1 on /srv type xfs (rw,relatime,attr2,inode64,noquota)
 
-a RAID 0 what?
+# uname -a
+Linux einstein4 3.14.24-atlas #1 SMP Wed Nov 19 08:29:23 UTC 2014 x86_64
+GNU/Linux
 
-> +driver with the version 1 superblock format.  If the filesystem uses sits
+(after the reboot to add more RAM, before 3.14.11)
+# df -h /dev/sdb1
+Filesystem      Size  Used Avail Use% Mounted on
+/dev/sdb1        15T   12T  2.7T  82% /srv
 
-In general, /filesystem/file system/
+# df -i /dev/sdb1
+Filesystem         Inodes     IUsed      IFree IUse% Mounted on
+/dev/sdb1      3105468352 554441361 2551026991   18% /srv
 
-/filesystem uses/file system it uses/
+# xfs_info /dev/sdb1
+meta-data=/dev/sdb1              isize=256    agcount=15,
+agsize=268435455 blks
+         =                       sectsz=512   attr=2
+data     =                       bsize=4096   blocks=3881835478, imaxpct=5
+         =                       sunit=0      swidth=0 blks
+naming   =version 2              bsize=4096   ascii-ci=0
+log      =internal               bsize=4096   blocks=521728, version=2
+         =                       sectsz=512   sunit=0 blks, lazy-count=1
+realtime =none                   extsz=4096   blocks=0, rtextents=0
 
-> +on a RAID 0 device the clients will automatically stripe their I/O over
-> +multiple LUNs.
-> +
-> +On the server pNFS block volume support is automatically if the file system
-> +support its.  On the client make sure the kernel has the CONFIG_PNFS_BLOCK
+(underneath is a Areca backed 16 disk raid 10 and yes, possibly we
+should have gone to more AGs, hindsight is great ;))
 
-/its/it/
+# xfs_db -r -c "frag" /dev/sdb1
+actual 562488447, ideal 553668062, fragmentation factor 1.57%
+# xfs_db -r -c "freesp" /dev/sdb1
+   from      to extents  blocks    pct
+      1       1 9669664 9669664   1.36
+      2       3 5634086 12956862   1.83
+      4       7 1720988 8320694   1.17
+      8      15  314377 3088702   0.44
+     16      31  231279 4941737   0.70
+     32      63 10501367 372068430  52.45
+     64     127 2604359 204737946  28.86
+    128     255  377595 63623350   8.97
+    256     511   58744 20198673   2.85
+    512    1023    8843 5759074   0.81
+   1024    2047    1044 1418464   0.20
+   2048    4095     255  685540   0.10
+   4096    8191      81  453953   0.06
+   8192   16383      14  126863   0.02
+  16384   32767      18  373876   0.05
+  32768   65535      11  435041   0.06
+  65536  131071       6  458767   0.06
 
-> +option enabled, the blkmapd daemon from nfs-utils is running, and the
-> +file system, is mounted using the NFSv4.1 protocol version (mount -o vers=4.1).
+# xfs_db -r -c "frag -d" /dev/sdb1
+actual 7987218, ideal 67532, fragmentation factor 99.15%
+# xfs_db -r -c "frag -f" /dev/sdb1
+actual 555079796, ideal 554171759, fragmentation factor 0.16%
 
-/system, is/system is/
+Finally, we still xfs error messages in the kernel logs[3].
 
-> +
-> +If the nfsd server needs to fence a non-responding client it calls
-> +/sbin/nfsd-recall-failed with the first argument set to the IP address of
-> +the client, and the second argument set to the device node without the /dev
-> +prefix for the filesystem to be fenced. Below is an example file that show
+Questions:
+  * Would xfs_fsr be able to cure this problem?
+  * Would moving to xfsprogs 3.2 and kernel > 3.15 with on disk format 5
+plus crc help to protect against this "wear"?
 
-/show/shows/
+Cheers
 
-> +how to translate the device into a serial number from SCSI EVPD 0x80:
-> +
-> +cat > /sbin/nfsd-recall-failed << EOF
-> +#!/bin/sh
-> +
-> +CLIENT="$1"
-> +DEV="/dev/$2"
-> +EVPD=`sg_inq --page=0x80 ${DEV} | \
-> +	grep "Unit serial number:" | \
-> +	awk -F ': ' '{print $2}'`
-> +
-> +echo "fencing client ${CLIENT} serial ${EVPD}" >> /var/log/pnfsd-fence.log
-> +EOF
-> diff --git a/fs/nfsd/Makefile b/fs/nfsd/Makefile
-> index 6cba933..9a6028e 100644
-> --- a/fs/nfsd/Makefile
-> +++ b/fs/nfsd/Makefile
-> @@ -17,4 +17,4 @@ nfsd-$(CONFIG_NFSD_V3)	+= nfs3proc.o nfs3xdr.o
->  nfsd-$(CONFIG_NFSD_V3_ACL) += nfs3acl.o
->  nfsd-$(CONFIG_NFSD_V4)	+= nfs4proc.o nfs4xdr.o nfs4state.o nfs4idmap.o \
->  			   nfs4acl.o nfs4callback.o nfs4recover.o
-> -nfsd-$(CONFIG_NFSD_PNFS) += nfs4layouts.o
-> +nfsd-$(CONFIG_NFSD_PNFS) += nfs4layouts.o blocklayout.o blocklayoutxdr.o
-> diff --git a/fs/nfsd/blocklayout.c b/fs/nfsd/blocklayout.c
-> new file mode 100644
-> index 0000000..a14e358
-> --- /dev/null
-> +++ b/fs/nfsd/blocklayout.c
-> @@ -0,0 +1,194 @@
-> +/*
-> + * Copyright (c) 2014 Christoph Hellwig.
-> + */
-> +#include <linux/exportfs.h>
-> +#include <linux/genhd.h>
-> +#include <linux/slab.h>
-> +#include <linux/raid_class.h>
-> +
-> +#include <linux/nfsd/debug.h>
-> +
-> +#include "blocklayoutxdr.h"
-> +#include "pnfs.h"
-> +
-> +#define NFSDDBG_FACILITY	NFSDDBG_PNFS
-> +
-> +
-> +static int
-> +nfsd4_block_get_device_info_simple(struct super_block *sb,
-> +		struct nfsd4_getdeviceinfo *gdp)
-> +{
-> +	struct pnfs_block_deviceaddr *dev;
-> +	struct pnfs_block_volume *b;
-> +
-> +	dev = kzalloc(sizeof(struct pnfs_block_deviceaddr) +
-> +		      sizeof(struct pnfs_block_volume), GFP_KERNEL);
-> +	if (!dev)
-> +		return -ENOMEM;
-> +	gdp->gd_device = dev;
-> +
-> +	dev->nr_volumes = 1;
-> +	b = &dev->volumes[0];
-> +
-> +	b->type = PNFS_BLOCK_VOLUME_SIMPLE;
-> +	b->simple.sig_len = PNFS_BLOCK_UUID_LEN;
-> +	return sb->s_export_op->get_uuid(sb, b->simple.sig, &b->simple.sig_len,
-> +			&b->simple.offset);
-> +}
-> +
-> +static __be32
-> +nfsd4_block_proc_getdeviceinfo(struct super_block *sb,
-> +		struct nfsd4_getdeviceinfo *gdp)
-> +{
-> +	if (sb->s_bdev != sb->s_bdev->bd_contains)
-> +		return nfserr_inval;
-> +	return nfserrno(nfsd4_block_get_device_info_simple(sb, gdp));
-> +}
-> +
-> +static __be32
-> +nfsd4_block_proc_layoutget(struct inode *inode, const struct svc_fh *fhp,
-> +		struct nfsd4_layoutget *args)
-> +{
-> +	struct nfsd4_layout_seg *seg = &args->lg_seg;
-> +	struct super_block *sb = inode->i_sb;
-> +	u32 block_size = (1 << inode->i_blkbits);
-> +	struct pnfs_block_extent *bex;
-> +	struct iomap iomap;
-> +	u32 device_generation = 0;
-> +	int error;
-> +
-> +	/*
-> +	 * We do not attempt to support I/O smaller than the fs block size,
-> +	 * or not aligned to it.
-> +	 */
-> +	if (args->lg_minlength < block_size) {
-> +		dprintk("pnfsd: I/O too small\n");
-> +		goto out_layoutunavailable;
-> +	}
-> +	if (seg->offset & (block_size - 1)) {
-> +		dprintk("pnfsd: I/O misaligned\n");
-> +		goto out_layoutunavailable;
-> +	}
-> +
-> +	/*
-> +	 * Some clients barf on non-zero block numbers for NONE or INVALID
-> +	 * layouts, so make sure to zero the whole structure.
-> +	 */
-> +	error = -ENOMEM;
-> +	bex = kzalloc(sizeof(*bex), GFP_KERNEL);
-> +	if (!bex)
-> +		goto out_error;
+Carsten
 
-bex is allocated.
-
-> +	args->lg_content = bex;
-> +
-> +	error = sb->s_export_op->map_blocks(inode, seg->offset, seg->length,
-> +					    &iomap, seg->iomode != IOMODE_READ,
-> +					    &device_generation);
-> +	if (error) {
-> +		if (error == -ENXIO)
-> +			goto out_layoutunavailable;
-> +		goto out_error;
-> +	}
-> +
-> +	if (iomap.length < args->lg_minlength) {
-> +		dprintk("pnfsd: extent smaller than minlength\n");
-> +		goto out_layoutunavailable;
-> +	}
-> +
-> +	switch (iomap.type) {
-> +	case IOMAP_MAPPED:
-> +		if (seg->iomode == IOMODE_READ)
-> +			bex->es = PNFS_BLOCK_READ_DATA;
-> +		else
-> +			bex->es = PNFS_BLOCK_READWRITE_DATA;
-> +		bex->soff = (iomap.blkno << 9);
-> +		break;
-> +	case IOMAP_UNWRITTEN:
-> +		if (seg->iomode & IOMODE_RW) {
-> +			/*
-> +			 * Crack monkey special case from section 2.3.1.
-> +			 */
-> +			if (args->lg_minlength == 0) {
-> +				dprintk("pnfsd: no soup for you!\n");
-> +				goto out_layoutunavailable;
-> +			}
-> +
-> +			bex->es = PNFS_BLOCK_INVALID_DATA;
-> +			bex->soff = (iomap.blkno << 9);
-> +			break;
-> +		}
-> +		/*FALLTHRU*/
-> +	case IOMAP_HOLE:
-> +		if (seg->iomode == IOMODE_READ) {
-> +			bex->es = PNFS_BLOCK_NONE_DATA;
-> +			break;
-> +		}
-> +		/*FALLTHRU*/
-> +	case IOMAP_DELALLOC:
-> +	default:
-> +		WARN(1, "pnfsd: filesystem returned %d extent\n", iomap.type);
-> +		goto out_layoutunavailable;
-> +	}
-> +
-> +	error = nfsd4_set_deviceid(&bex->vol_id, fhp, device_generation);
-> +	if (error)
-> +		goto out_error;
-> +	bex->foff = iomap.offset;
-> +	bex->len = iomap.length;
-> +
-> +	seg->offset = iomap.offset;
-> +	seg->length = iomap.length;
-> +
-> +	args->lg_roc = 1;
-> +
-> +	dprintk("GET: %lld:%lld %d\n", bex->foff, bex->len, bex->es);
-> +	return 0;
-> +
-> +out_error:
-> +	seg->length = 0;
-> +	return nfserrno(error);
-> +out_layoutunavailable:
-> +	seg->length = 0;
-> +	return nfserr_layoutunavailable;
-
-What reclaims bex in both error cases??
-
-The call flow seems to be:
-
-nfsd4_proc_compound -> nfsd4_layoutget -> nfsd4_block_proc_layoutget
-
-lg_content gets freed in nfsd4_encode_layoutget() in all paths.
-
-nfsd4_encode_operation() calls nfsd4_encode_layoutget().
-
-But nfsd4_encode_layoutget() is not called in all paths:
-
-        p = xdr_reserve_space(xdr, 8);
-        if (!p) {
-                WARN_ON_ONCE(1);
-                return;  // leak
-        }
-...
-        if (op->opnum == OP_ILLEGAL)
-                goto status;  // Not really a leak, if we hit this, bigger issues apply.
-
-So bex is correctly accounted for, but in general
-nfsd4_encode_operation() can leak any operation
-specific memory.
+PS: Please Cc me, as I'm not subscribed ATM.
 
 
-> +}
-> +
-> +static __be32
-> +nfsd4_block_proc_layoutcommit(struct inode *inode,
-> +		struct nfsd4_layoutcommit *lcp)
-> +{
-> +	loff_t new_size = lcp->lc_last_wr + 1;
-> +	struct iattr iattr = { .ia_valid = 0 };
-> +	struct iomap *iomaps;
-> +	int nr_iomaps;
-> +	int error;
-> +
-> +	nr_iomaps = nfsd4_block_decode_layoutupdate(lcp->lc_up_layout,
-> +			lcp->lc_up_len, &iomaps, 1 << inode->i_blkbits);
-> +	if (nr_iomaps < 0)
-> +		return nfserrno(nr_iomaps);
-> +
-> +	if (lcp->lc_mtime.tv_nsec == UTIME_NOW)
-> +		lcp->lc_mtime = current_fs_time(inode->i_sb);
-> +	if (timespec_compare(&lcp->lc_mtime, &inode->i_mtime) > 0) {
-> +		iattr.ia_valid |= ATTR_ATIME | ATTR_CTIME | ATTR_MTIME;
-> +		iattr.ia_atime = iattr.ia_ctime = iattr.ia_mtime =
-> +				lcp->lc_mtime;
-> +	}
-> +
-> +	if (new_size > i_size_read(inode)) {
-> +		iattr.ia_valid |= ATTR_SIZE;
-> +		iattr.ia_size = new_size;
-> +	}
-> +
-> +	error = inode->i_sb->s_export_op->commit_blocks(inode, iomaps,
-> +			nr_iomaps, &iattr);
-> +	kfree(iomaps);
-> +	return nfserrno(error);
-> +}
-> +
-> +const struct nfsd4_layout_ops bl_layout_ops = {
-> +	.proc_getdeviceinfo	= nfsd4_block_proc_getdeviceinfo,
-> +	.encode_getdeviceinfo	= nfsd4_block_encode_getdeviceinfo,
-> +	.proc_layoutget		= nfsd4_block_proc_layoutget,
-> +	.encode_layoutget	= nfsd4_block_encode_layoutget,
-> +	.proc_layoutcommit	= nfsd4_block_proc_layoutcommit,
-> +};
-> diff --git a/fs/nfsd/blocklayoutxdr.c b/fs/nfsd/blocklayoutxdr.c
-> new file mode 100644
-> index 0000000..9da89fd
-> --- /dev/null
-> +++ b/fs/nfsd/blocklayoutxdr.c
-> @@ -0,0 +1,157 @@
-> +/*
-> + * Copyright (c) 2014 Christoph Hellwig.
-> + */
-> +#include <linux/sunrpc/svc.h>
-> +#include <linux/exportfs.h>
-> +#include <linux/nfs4.h>
-> +
-> +#include "nfsd.h"
-> +#include "blocklayoutxdr.h"
-> +
-> +#define NFSDDBG_FACILITY	NFSDDBG_PNFS
-> +
-> +
-> +__be32
-> +nfsd4_block_encode_layoutget(struct xdr_stream *xdr,
-> +		struct nfsd4_layoutget *lgp)
-> +{
-> +	struct pnfs_block_extent *b = lgp->lg_content;
-> +	int len = sizeof(__be32) + 5 * sizeof(__be64) + sizeof(__be32);
-> +	__be32 *p;
-> +
-> +	p = xdr_reserve_space(xdr, sizeof(__be32) + len);
-> +	if (!p)
-> +		return nfserr_toosmall;
-> +
-> +	*p++ = cpu_to_be32(len);
-> +	*p++ = cpu_to_be32(1);		/* we always return a single extent */
-> +
-> +	p = xdr_encode_opaque_fixed(p, &b->vol_id,
-> +			sizeof(struct nfsd4_deviceid));
-> +	p = xdr_encode_hyper(p, b->foff);
-> +	p = xdr_encode_hyper(p, b->len);
-> +	p = xdr_encode_hyper(p, b->soff);
-> +	*p++ = cpu_to_be32(b->es);
-> +	return 0;
-> +}
-> +
-> +static int
-> +nfsd4_block_encode_volume(struct xdr_stream *xdr, struct pnfs_block_volume *b)
-> +{
-> +	__be32 *p;
-> +	int len;
-> +
-> +	switch (b->type) {
-> +	case PNFS_BLOCK_VOLUME_SIMPLE:
-> +		len = 4 + 4 + 8 + 4 + b->simple.sig_len;
-> +		p = xdr_reserve_space(xdr, len);
-> +		if (!p)
-> +			return -ETOOSMALL;
-> +
-> +		*p++ = cpu_to_be32(b->type);
-> +		*p++ = cpu_to_be32(1);	/* single signature */
-> +		p = xdr_encode_hyper(p, b->simple.offset);
-> +		p = xdr_encode_opaque(p, b->simple.sig, b->simple.sig_len);
-> +		break;
-> +	default:
-> +		return -ENOTSUPP;
-> +	}
-> +
-> +	return len;
-> +}
-> +
-> +__be32
-> +nfsd4_block_encode_getdeviceinfo(struct xdr_stream *xdr,
-> +		struct nfsd4_getdeviceinfo *gdp)
-> +{
-> +	struct pnfs_block_deviceaddr *dev = gdp->gd_device;
-> +	int len = sizeof(__be32), ret, i;
-> +	__be32 *p;
-> +
-> +	p = xdr_reserve_space(xdr, len + sizeof(__be32));
-> +	if (!p)
-> +		return nfserr_resource;
-> +
-> +	for (i = 0; i < dev->nr_volumes; i++) {
-> +		ret = nfsd4_block_encode_volume(xdr, &dev->volumes[i]);
-> +		if (ret < 0)
-> +			return nfserrno(ret);
-> +		len += ret;
-> +	}
-> +
-> +	/*
-> +	 * Fill in the overall length and number of volumes at the beginning
-> +	 * of the layout.
-> +	 */
-> +	*p++ = cpu_to_be32(len);
-> +	*p++ = cpu_to_be32(dev->nr_volumes);
-> +	return 0;
-> +}
-> +
-> +int
-> +nfsd4_block_decode_layoutupdate(__be32 *p, u32 len, struct iomap **iomapp,
-> +		u32 block_size)
-> +{
-> +	struct iomap *iomaps;
-> +	u32 nr_iomaps, expected, i;
-> +
-> +	if (len < sizeof(u32)) {
-> +		dprintk("%s: extent array too small: %u\n", __func__, len);
-> +		return -EINVAL;
-> +	}
-> +
-> +	nr_iomaps = be32_to_cpup(p++);
-> +	expected = sizeof(__be32) + nr_iomaps * NFS4_BLOCK_EXTENT_SIZE;
-> +	if (len != expected) {
-> +		dprintk("%s: extent array size mismatch: %u/%u\n",
-> +			__func__, len, expected);
-> +		return -EINVAL;
-> +	}
-> +
-> +	iomaps = kcalloc(nr_iomaps, sizeof(*iomaps), GFP_KERNEL);
-> +	if (!iomaps) {
-> +		dprintk("%s: failed to allocate extent array\n", __func__);
-> +		return -ENOMEM;
-> +	}
-> +
-> +	for (i = 0; i < nr_iomaps; i++) {
-> +		struct pnfs_block_extent bex;
-> +
-> +		memcpy(&bex.vol_id, p, sizeof(struct nfsd4_deviceid));
-> +		p += XDR_QUADLEN(sizeof(struct nfsd4_deviceid));
-> +
-> +		p = xdr_decode_hyper(p, &bex.foff);
-> +		if (bex.foff & (block_size - 1)) {
-> +			dprintk("%s: unaligned offset %lld\n",
-> +				__func__, bex.foff);
-> +			goto fail;
-> +		}
-> +		p = xdr_decode_hyper(p, &bex.len);
-> +		if (bex.len & (block_size - 1)) {
-> +			dprintk("%s: unaligned length %lld\n",
-> +				__func__, bex.foff);
-> +			goto fail;
-> +		}
-> +		p = xdr_decode_hyper(p, &bex.soff);
-> +		if (bex.soff & (block_size - 1)) {
-> +			dprintk("%s: unaligned disk offset %lld\n",
-> +				__func__, bex.soff);
-> +			goto fail;
-> +		}
-> +		bex.es = be32_to_cpup(p++);
-> +		if (bex.es != PNFS_BLOCK_READWRITE_DATA) {
-> +			dprintk("%s: incorrect extent state %d\n",
-> +				__func__, bex.es);
-> +			goto fail;
-> +		}
-> +
-> +		iomaps[i].offset = bex.foff;
-> +		iomaps[i].length = bex.len;
-> +	}
-> +
-> +	*iomapp = iomaps;
-> +	return nr_iomaps;
-> +fail:
-> +	kfree(iomaps);
-> +	return -EINVAL;
-> +}
-> diff --git a/fs/nfsd/blocklayoutxdr.h b/fs/nfsd/blocklayoutxdr.h
-> new file mode 100644
-> index 0000000..fdc7903
-> --- /dev/null
-> +++ b/fs/nfsd/blocklayoutxdr.h
-> @@ -0,0 +1,62 @@
-> +#ifndef _NFSD_BLOCKLAYOUTXDR_H
-> +#define _NFSD_BLOCKLAYOUTXDR_H 1
-> +
-> +#include <linux/blkdev.h>
-> +#include "xdr4.h"
-> +
-> +struct iomap;
-> +struct xdr_stream;
-> +
-> +enum pnfs_block_extent_state {
-> +	PNFS_BLOCK_READWRITE_DATA	= 0,
-> +	PNFS_BLOCK_READ_DATA		= 1,
-> +	PNFS_BLOCK_INVALID_DATA		= 2,
-> +	PNFS_BLOCK_NONE_DATA		= 3,
-> +};
-> +
-> +struct pnfs_block_extent {
-> +	struct nfsd4_deviceid		vol_id;
-> +	u64				foff;
-> +	u64				len;
-> +	u64				soff;
-> +	enum pnfs_block_extent_state	es;
-> +};
-> +#define NFS4_BLOCK_EXTENT_SIZE		44
-> +
-> +enum pnfs_block_volume_type {
-> +	PNFS_BLOCK_VOLUME_SIMPLE	= 0,
-> +	PNFS_BLOCK_VOLUME_SLICE		= 1,
-> +	PNFS_BLOCK_VOLUME_CONCAT	= 2,
-> +	PNFS_BLOCK_VOLUME_STRIPE	= 3,
-> +};
-> +
-> +/*
-> + * Random upper cap for the uuid length to avoid unbounded allocation.
-> + * Not actually limited by the protocol.
-> + */
-> +#define PNFS_BLOCK_UUID_LEN	128
-> +
-> +struct pnfs_block_volume {
-> +	enum pnfs_block_volume_type	type;
-> +	union {
-> +		struct {
-> +			u64		offset;
-> +			u32		sig_len;
-> +			u8		sig[PNFS_BLOCK_UUID_LEN];
-> +		} simple;
-> +	};
-> +};
-> +
-> +struct pnfs_block_deviceaddr {
-> +	u32				nr_volumes;
-> +	struct pnfs_block_volume	volumes[];
-> +};
-> +
-> +__be32 nfsd4_block_encode_getdeviceinfo(struct xdr_stream *xdr,
-> +		struct nfsd4_getdeviceinfo *gdp);
-> +__be32 nfsd4_block_encode_layoutget(struct xdr_stream *xdr,
-> +		struct nfsd4_layoutget *lgp);
-> +int nfsd4_block_decode_layoutupdate(__be32 *p, u32 len, struct iomap **iomapp,
-> +		u32 block_size);
-> +
-> +#endif /* _NFSD_BLOCKLAYOUTXDR_H */
-> diff --git a/fs/nfsd/nfs4layouts.c b/fs/nfsd/nfs4layouts.c
-> index bb91981..8353b7a 100644
-> --- a/fs/nfsd/nfs4layouts.c
-> +++ b/fs/nfsd/nfs4layouts.c
-> @@ -26,6 +26,7 @@ static struct nfsd4_callback_ops nfsd4_cb_layout_ops;
->  static const struct lock_manager_operations nfsd4_layouts_lm_ops;
->  
->  const struct nfsd4_layout_ops *nfsd4_layout_ops[LAYOUT_TYPE_MAX] =  {
-> +	[LAYOUT_BLOCK_VOLUME]	= &bl_layout_ops,
->  };
->  
->  /* pNFS device ID to export fsid mapping */
-> @@ -116,6 +117,12 @@ nfsd4_set_deviceid(struct nfsd4_deviceid *id, const struct svc_fh *fhp,
->  
->  void nfsd4_setup_layout_type(struct svc_export *exp)
->  {
-> +	struct super_block *sb = exp->ex_path.mnt->mnt_sb;
-> +
-> +	if (sb->s_export_op->get_uuid &&
-> +	    sb->s_export_op->map_blocks &&
-> +	    sb->s_export_op->commit_blocks)
-> +		exp->ex_layout_type = LAYOUT_BLOCK_VOLUME;
->  }
->  
->  static void
-> diff --git a/fs/nfsd/pnfs.h b/fs/nfsd/pnfs.h
-> index fa37117..d6d94e1 100644
-> --- a/fs/nfsd/pnfs.h
-> +++ b/fs/nfsd/pnfs.h
-> @@ -34,6 +34,7 @@ struct nfsd4_layout_ops {
->  };
->  
->  extern const struct nfsd4_layout_ops *nfsd4_layout_ops[];
-> +extern const struct nfsd4_layout_ops bl_layout_ops;
->  
->  __be32 nfsd4_preprocess_layout_stateid(struct svc_rqst *rqstp,
->  		struct nfsd4_compound_state *cstate, stateid_t *stateid,
-> -- 
-> 1.9.1
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-nfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+[1]Jan  7 20:58:47 einstein4 kernel: [14029681.124548] XFS: Internal
+error XFS_WANT_CORRUPTED_GOTO at line 1419 of file fs/xfs/xfs_alloc.c.
+Caller 0xffffffffa023594d
+Jan  7 20:58:47 einstein4 kernel: [14029681.124657] CPU: 5 PID: 13437
+Comm: kworker/5:1 Not tainted 3.14.11-atlas #1
+Jan  7 20:58:47 einstein4 kernel: [14029681.124745] Hardware name:
+Supermicro X7DVL/X7DVL, BIOS 6.00 11/02/2007
+Jan  7 20:58:47 einstein4 kernel: [14029681.124860] Workqueue: xfsalloc
+xfs_bmapi_allocate_worker [xfs]
+Jan  7 20:58:47 einstein4 kernel: [14029681.124977]  0000000000000000
+ffff88013b7ebc80 ffffffff814e9555 ffff88017022bd30
+Jan  7 20:58:47 einstein4 kernel: [14029681.125247]  ffffffffa0234aed
+ffff88041877c380 0000000000000000 000000000000000c
+Jan  7 20:58:47 einstein4 kernel: [14029681.125514]  0000000000000000
+0000000100000000 0ff0b98800000000 0000000100000002
+Jan  7 20:58:47 einstein4 kernel: [14029681.125783] Call Trace:
+Jan  7 20:58:47 einstein4 kernel: [14029681.125856]
+[<ffffffff814e9555>] ? dump_stack+0x41/0x51
+Jan  7 20:58:47 einstein4 kernel: [14029681.125937]
+[<ffffffffa0234aed>] ? xfs_alloc_ag_vextent_size+0x33d/0x650 [xfs]
+Jan  7 20:58:47 einstein4 kernel: [14029681.126035]
+[<ffffffffa023594d>] ? xfs_alloc_ag_vextent+0x9d/0x100 [xfs]
+Jan  7 20:58:47 einstein4 kernel: [14029681.126118]
+[<ffffffffa02366c5>] ? xfs_alloc_vextent+0x485/0x610 [xfs]
+Jan  7 20:58:47 einstein4 kernel: [14029681.126202]
+[<ffffffffa0245ff4>] ? xfs_bmap_btalloc+0x2d4/0x790 [xfs]
+Jan  7 20:58:47 einstein4 kernel: [14029681.126286]
+[<ffffffffa0246ab1>] ? __xfs_bmapi_allocate+0xd1/0x2e0 [xfs]
+Jan  7 20:58:47 einstein4 kernel: [14029681.126366]
+[<ffffffffa0216375>] ? xfs_bmapi_allocate_worker+0x35/0x70 [xfs]
+Jan  7 20:58:47 einstein4 kernel: [14029681.126456]
+[<ffffffff8107d5db>] ? process_one_work+0x16b/0x400
+Jan  7 20:58:47 einstein4 kernel: [14029681.126529]
+[<ffffffff8107e9c6>] ? worker_thread+0x116/0x380
+Jan  7 20:58:47 einstein4 kernel: [14029681.126601]
+[<ffffffff8107e8b0>] ? manage_workers.isra.21+0x290/0x290
+Jan  7 20:58:47 einstein4 kernel: [14029681.126675]
+[<ffffffff81084bcc>] ? kthread+0xbc/0xe0
+Jan  7 20:58:47 einstein4 kernel: [14029681.126745]
+[<ffffffff81084b10>] ? flush_kthread_worker+0x80/0x80
+Jan  7 20:58:47 einstein4 kernel: [14029681.126819]
+[<ffffffff814f724c>] ? ret_from_fork+0x7c/0xb0
+Jan  7 20:58:47 einstein4 kernel: [14029681.126890]
+[<ffffffff81084b10>] ? flush_kthread_worker+0x80/0x80
+Jan  7 20:58:47 einstein4 kernel: [14029681.126973] XFS (sdb1): page
+discard on page ffffea000b973650, inode 0x8e56233bd, offset 172167168.
+
+[2] multiple times until we had enough RAM installed into the machine
+(24GB+swap space finally made the difference)
+
+[3] e.g.
+[170369.029932] ------------[ cut here ]------------
+[170369.029940] WARNING: CPU: 4 PID: 65 at fs/xfs/xfs_aops.c:1184
+xfs_vm_releasepage+0xb5/0xc0 [xfs]()
+[170369.029942] Modules linked in: dm_mod nfsv3 tun xt_nat autofs4
+ipt_REJECT ipt_MASQUERADE xt_state iptable_nat nf_nat_ipv4 nf_nat
+nf_conntrack_ipv4 nf_defrag_ipv4 nf_conntrack iptable_filter ip_tables
+xt_tcpudp x_tables nfsd auth_rpcgss oid_registry nfs_acl nfs lockd
+fscache sunrpc ext4 crc16 mbcache jbd2 ipmi_poweroff ipmi_watchdog
+ipmi_devintf ipmi_si ipmi_msghandler iTCO_wdt iTCO_vendor_support ttm
+drm_kms_helper drm coretemp i5000_edac edac_core lpc_ich i5k_amb
+mfd_core ioatdma sr_mod cdrom i2c_algo_bit i2c_i801 rng_core i2c_core
+joydev dca psmouse ehci_pci snd_pcm snd_timer snd soundcore pcspkr
+serio_raw shpchp processor parport_pc parport evdev kvm thermal_sys
+button xfs crc32c libcrc32c md_mod usb_storage hid_generic usbhid hid
+sd_mod sg crc_t10dif crct10dif_common floppy ahci libahci libata
+uhci_hcd e1000 ehci_hcd arcmsr usbcore usb_common scsi_mod e1000e ptp
+pps_core
+[170369.029986] CPU: 4 PID: 65 Comm: kswapd0 Tainted: G        W
+3.14.24-atlas #1
+[170369.029986] Hardware name: Supermicro X7DVL/X7DVL, BIOS 6.00 11/02/2007
+[170369.029987]  0000000000000009 ffff88060d461a18 ffffffff81529af8
+0000000000000000
+[170369.029989]  0000000000000000 ffff88060d461a58 ffffffff8106a37c
+ffff880610389d40
+[170369.029991]  ffff88060d461b28 ffffea000f39f8a0 ffff8805f722dd98
+ffffea000f39f8c0
+[170369.029994] Call Trace:
+[170369.029994]  [<ffffffff81529af8>] dump_stack+0x46/0x58
+[170369.029996]  [<ffffffff8106a37c>] warn_slowpath_common+0x8c/0xc0
+[170369.029998]  [<ffffffff8106a3ca>] warn_slowpath_null+0x1a/0x20
+[170369.030000]  [<ffffffffa0212225>] xfs_vm_releasepage+0xb5/0xc0 [xfs]
+[170369.030009]  [<ffffffff81182a10>] ? anon_vma_prepare+0x140/0x140
+[170369.030011]  [<ffffffff81149902>] try_to_release_page+0x32/0x50
+[170369.030014]  [<ffffffff8115ed7a>] shrink_active_list+0x3aa/0x3b0
+[170369.030016]  [<ffffffff8115f154>] shrink_lruvec+0x3d4/0x6a0
+[170369.030017]  [<ffffffff811aa001>] ?
+__mem_cgroup_largest_soft_limit_node+0x21/0xd0
+[170369.030019]  [<ffffffff811aa001>] ?
+__mem_cgroup_largest_soft_limit_node+0x21/0xd0
+[170369.030021]  [<ffffffff8115f486>] shrink_zone+0x66/0x1a0
+[170369.030023]  [<ffffffff8116065c>] balance_pgdat+0x3ac/0x600
+[170369.030025]  [<ffffffff81160a34>] kswapd+0x184/0x470
+[170369.030027]  [<ffffffff810ae460>] ? finish_wait+0x80/0x80
+[170369.030028]  [<ffffffff811608b0>] ? balance_pgdat+0x600/0x600
+[170369.030030]  [<ffffffff8108da79>] kthread+0xc9/0xe0
+[170369.030032]  [<ffffffff8108d9b0>] ? flush_kthread_worker+0x80/0x80
+[170369.030034]  [<ffffffff81538cfc>] ret_from_fork+0x7c/0xb0
+[170369.030035]  [<ffffffff8108d9b0>] ? flush_kthread_worker+0x80/0x80
+[170369.030038] ---[ end trace 9f4d705dbe4e039c ]---
+
+-- 
+Dr. Carsten Aulbert - Max Planck Institute for Gravitational Physics
+Callinstrasse 38, 30167 Hannover, Germany
+phone/fax: +49 511 762-17185 / -17193
+https://wiki.atlas.aei.uni-hannover.de/foswiki/bin/view/ATLAS/WebHome
 
 _______________________________________________
 xfs mailing list
