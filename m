@@ -1,23 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 858C47F5F
-	for <xfs@oss.sgi.com>; Tue, 13 Jan 2015 10:06:50 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 73C4E304043
-	for <xfs@oss.sgi.com>; Tue, 13 Jan 2015 08:06:50 -0800 (PST)
-Received: from mail-pd0-f173.google.com (mail-pd0-f173.google.com
-	[209.85.192.173]) by cuda.sgi.com with ESMTP id
-	2BXsSrv5Uyr6N34O (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 13 Jan 2015 08:06:46 -0800 (PST)
-Received: by mail-pd0-f173.google.com with SMTP id ft15so4184135pdb.4
-	for <xfs@oss.sgi.com>; Tue, 13 Jan 2015 08:06:45 -0800 (PST)
-From: Namjae Jeon <linkinjeon@gmail.com>
-Subject: [PATCH v8 11/11] xfstests: fsx: Add fallocate insert range operation
-Date: Wed, 14 Jan 2015 01:05:26 +0900
-Message-Id: <1421165126-3585-12-git-send-email-linkinjeon@gmail.com>
-In-Reply-To: <1421165126-3585-1-git-send-email-linkinjeon@gmail.com>
-References: <1421165126-3585-1-git-send-email-linkinjeon@gmail.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 5722C7F47
+	for <xfs@oss.sgi.com>; Tue, 13 Jan 2015 11:12:07 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 3145D8F8050
+	for <xfs@oss.sgi.com>; Tue, 13 Jan 2015 09:12:03 -0800 (PST)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id cNLjEM8rHZAc8NMs (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 13 Jan 2015 09:12:01 -0800 (PST)
+Date: Tue, 13 Jan 2015 12:11:54 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [RFC] xfs: remedy small writes during wrapped-log recovery
+Message-ID: <20150113171154.GA2107@laptop.bfoster>
+References: <54B033ED.9010805@gmail.com>
+	<20150112153022.GB25944@bfoster.bfoster>
+	<54B52A4F.5070504@gmail.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <54B52A4F.5070504@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,235 +27,151 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: david@fromorbit.com, tytso@mit.edu
-Cc: Namjae Jeon <linkinjeon@gmail.com>, Namjae Jeon <namjae.jeon@samsung.com>, bfoster@redhat.com, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, a.sangwan@samsung.com, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org
+To: "Michael L. Semon" <mlsemon35@gmail.com>
+Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-From: Namjae Jeon <namjae.jeon@samsung.com>
+On Tue, Jan 13, 2015 at 09:23:11AM -0500, Michael L. Semon wrote:
+> On 01/12/15 10:30, Brian Foster wrote:
+> > On Fri, Jan 09, 2015 at 03:02:53PM -0500, Michael L. Semon wrote:
+> >> Hi!  I like this patch and am confident with it on x86.  However,
+> >> a) it has no x86_64 coverage; and b) xfstests xfs/306 in particular
+> >> emits more of this output:
+> >>
+> >>     buffer_io_error: nnnn callbacks suppressed
+> >>
+> >> Might someone evaluate this patch or the intent of the patch?
+> >>
+> >> The intent:
+> >>
+> >> For XFS filesystems that don't change much, such as the /boot and
+> >> alternate / partitions here, mount times were about 17s instead of
+> >> 0.4s while the log is in a wrapped state, write caches off.  This 
+> >> patch fixes the issue on v4- and v5-superblock XFS filesystems.
+> >>
+> >> xfs_repair can solve this issue short-term and also cut wrapped-log 
+> >> mount time in half short-term for v5 file systems.  Don't know if 
+> >> that's a mkfs.xfs issue or just coincidence.
+> >>
+> >> A bisect still needs to be done to determine when the slow mount 
+> >> behavior started.  It could very well be that somebody fixed the 
+> >> buffer_io_error messages that I saw long ago, and the solution made 
+> >> some mounts here rather miserable.
+> >>
+> >> Thanks!
+> >>
+> >> Michael
+> >>
+> >> The patch:
+> >>
+> >> xlog_write_log_records() has an algorithm to "Greedily allocate a
+> >> buffer big enough...," starting with ffs(blocks), adding two sensible
+> >> checks, and then feeding it to a loop with checks of its own.
+> >>
+> >> However, when blocks is an odd number, the number that becomes nbblks
+> >> to the xlog_bwrite() function ends up being 2 (1 << 1).  The most
+> >> obvious effect is that when the log wraps, a write of two odd-sized
+> >> log regions on an 8-GB XFS filesystem will take around 2049 calls 
+> >> to xlog_bwrite() instead of the "two separate I/Os" suggested in
+> >> xlog_clear_stale_blocks().
+> >>
+> >> Fix this by changing the ffs(blocks) to fls(blocks).
+> >>
+> >> There is a similar ffs(blocks) check in xlog_find_verify_cycle().
+> >> This was not investigated.
+> >>
+> >> Signed-off-by: Michael L. Semon <mlsemon35@gmail.com>
+> >> ---
+> >>  fs/xfs/xfs_log_recover.c | 2 +-
+> >>  1 file changed, 1 insertion(+), 1 deletion(-)
+> >>
+> >> diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+> >> index a5a945f..13381eb 100644
+> >> --- a/fs/xfs/xfs_log_recover.c
+> >> +++ b/fs/xfs/xfs_log_recover.c
+> >> @@ -1242,7 +1242,7 @@ xlog_write_log_records(
+> >>  	 * a smaller size.  We need to be able to write at least a
+> >>  	 * log sector, or we're out of luck.
+> >>  	 */
+> >> -	bufblks = 1 << ffs(blocks);
+> >> +	bufblks = 1 << fls(blocks);
+> > 
+> > Interesting, it does seem like there is a bug here. Thanks for the
+> > test code to help reproduce.
+> > 
+> > The fix seems reasonable to me, but I'm also wondering if there is at
+> > least one other bug in this code. In the middle of that loop, we have
+> > the following:
+> > 
+> > 	...
+> > 
+> > 	/* We may need to do a read at the end to fill in part of
+> >  	* the buffer in the final sector not covered by the write.
+> >  	* If this is the same sector as the above read, skip it.
+> >  	*/
+> > 	ealign = round_down(end_block, sectbb);
+> > 	if (j == 0 && (start_block + endcount > ealign)) {
+> > 		offset = bp->b_addr + BBTOB(ealign - start_block);
+> > 		error = xlog_bread_offset(log, ealign, sectbb,
+> > 						bp, offset);
+> > 		...
+> > 	}
+> > 	...
+> > 
+> > ... but how have we really confirmed whether the end sector is
+> > equivalent to the first sector? It looks to me that we operate at basic
+> > block granularity but log I/O is managed at log sector alignment. So if
+> > the start basic block is not sector aligned, we read in the first sector
+> > and add records at the associated buffer offset. Similar if the end
+> > block is not sector aligned. If the buffer size spans multiple sectors
+> > and the start and end are not aligned, it looks like we could skip the
+> > read of the final sector.
+> 
+> > Perhaps I'm missing some context as to why this wouldn't occur..? It
+> > also seems strange that the offset calculation above uses start_block as
+> > the baseline start block value of the buffer, but the pre-loop balign
+> > code suggests the buffer might not be aligned to start_block...
+> > 
+> > Brian
+> 
+> I'm currently stumped on getting this code to fire.  For that matter, all 
+> blk_no and nbblks numbers are coming in to xlog_bwrite() neatly pre-
+> rounded, so the rounding functions in there don't change anything.  In 
+> all, an unsuccessful testing effort on my part.
+> 
 
-This commit adds fallocate FALLOC_FL_INSERT_RANGE support for fsx.
+Ok, so you're trying to hit the unaligned end block code quoted above? I
+don't have enough context to reason on if/how that might occur. I'd have
+to dig deeper into that code and the physical log code when I get a
+chance...
 
-Signed-off-by: Namjae Jeon <namjae.jeon@samsung.com>
-Signed-off-by: Ashish Sangwan <a.sangwan@samsung.com>
-Cc: Brian Foster<bfoster@redhat.com>
----
-Changelog
-v8:
- - create TRIM_OFF() and TRIM_LEN() and redeine redefine TRIM_OFF_LEN().
+IIRC, I did see similar rounded values when running your original test.
+It remained like that for most of the time and then every so often I'd
+get a few iterations that were not aligned and then resulted in the
+extra small buffer allocation.
 
- ltp/fsx.c |  122 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++-----
- 1 file changed, 113 insertions(+), 9 deletions(-)
+> Maybe the "env MKFS_OPTIONS='-m crc=1,finobt=1 -s size=4096' ./check -g 
+> auto" xfstests run will cough something up.  It will be waiting at home, 
+> at the end of the day.
+> 
+> Should I use fdisk on a spare disk and deliberately misalign the 
+> partitions?  Otherwise, there's a struggle to find misalignments, and 
+> my idea bucket was not very full, anyway ;-)
+> 
 
-diff --git a/ltp/fsx.c b/ltp/fsx.c
-index 3709419..741af34 100644
---- a/ltp/fsx.c
-+++ b/ltp/fsx.c
-@@ -95,7 +95,8 @@ int			logcount = 0;	/* total ops */
- #define OP_PUNCH_HOLE		6
- #define OP_ZERO_RANGE		7
- #define OP_COLLAPSE_RANGE	8
--#define OP_MAX_FULL		9
-+#define OP_INSERT_RANGE	9
-+#define OP_MAX_FULL		10
- 
- /* operation modifiers */
- #define OP_CLOSEOPEN	100
-@@ -145,6 +146,7 @@ int     fallocate_calls = 1;            /* -F flag disables */
- int     punch_hole_calls = 1;           /* -H flag disables */
- int     zero_range_calls = 1;           /* -z flag disables */
- int	collapse_range_calls = 1;	/* -C flag disables */
-+int	insert_range_calls = 1;		/* -i flag disables */
- int 	mapped_reads = 1;		/* -R flag disables it */
- int	fsxgoodfd = 0;
- int	o_direct;			/* -Z */
-@@ -339,6 +341,14 @@ logdump(void)
- 						     lp->args[0] + lp->args[1])
- 				prt("\t******CCCC");
- 			break;
-+		case OP_INSERT_RANGE:
-+			prt("INSERT 0x%x thru 0x%x\t(0x%x bytes)",
-+			    lp->args[0], lp->args[0] + lp->args[1] - 1,
-+			    lp->args[1]);
-+			if (badoff >= lp->args[0] && badoff <
-+						     lp->args[0] + lp->args[1])
-+				prt("\t******CCCC");
-+			break;
- 		case OP_SKIPPED:
- 			prt("SKIPPED (no operation)");
- 			break;
-@@ -1012,6 +1022,59 @@ do_collapse_range(unsigned offset, unsigned length)
- }
- #endif
- 
-+#ifdef FALLOC_FL_INSERT_RANGE
-+void
-+do_insert_range(unsigned offset, unsigned length)
-+{
-+	unsigned end_offset;
-+	int mode = FALLOC_FL_INSERT_RANGE;
-+
-+	if (length == 0) {
-+		if (!quiet && testcalls > simulatedopcount)
-+			prt("skipping zero length insert range\n");
-+		log4(OP_SKIPPED, OP_INSERT_RANGE, offset, length);
-+		return;
-+	}
-+
-+	if ((loff_t)offset >= file_size) {
-+		if (!quiet && testcalls > simulatedopcount)
-+			prt("skipping insert range behind EOF\n");
-+		log4(OP_SKIPPED, OP_INSERT_RANGE, offset, length);
-+		return;
-+	}
-+
-+	log4(OP_INSERT_RANGE, offset, length, 0);
-+
-+	if (testcalls <= simulatedopcount)
-+		return;
-+
-+	end_offset = offset + length;
-+	if ((progressinterval && testcalls % progressinterval == 0) ||
-+	    (debug && (monitorstart == -1 || monitorend == -1 ||
-+		      end_offset <= monitorend))) {
-+		prt("%lu insert\tfrom 0x%x to 0x%x, (0x%x bytes)\n", testcalls,
-+			offset, offset+length, length);
-+	}
-+	if (fallocate(fd, mode, (loff_t)offset, (loff_t)length) == -1) {
-+		prt("insert range: %x to %x\n", offset, length);
-+		prterr("do_insert_range: fallocate");
-+		report_failure(161);
-+	}
-+
-+	memmove(good_buf + end_offset, good_buf + offset,
-+		file_size - offset);
-+	memset(good_buf + offset, '\0', length);
-+	file_size += length;
-+}
-+
-+#else
-+void
-+do_insert_range(unsigned offset, unsigned length)
-+{
-+	return;
-+}
-+#endif
-+
- #ifdef HAVE_LINUX_FALLOC_H
- /* fallocate is basically a no-op unless extending, then a lot like a truncate */
- void
-@@ -1117,14 +1180,25 @@ docloseopen(void)
- 	}
- }
- 
--#define TRIM_OFF_LEN(off, len, size)	\
--do {					\
--	if (size)			\
-+
-+#define TRIM_OFF(off, size)	\
-+do {						\
-+	if (size)				\
- 		(off) %= (size);	\
--	else				\
--		(off) = 0;		\
--	if ((off) + (len) > (size))	\
--		(len) = (size) - (off);	\
-+	else					\
-+		(off) = 0;			\
-+} while (0)
-+
-+#define TRIM_LEN(off, len, size)	\
-+do {								\
-+	if ((off) + (len) > (size))		\
-+		(len) = (size) - (off);		\
-+} while (0)
-+
-+#define TRIM_OFF_LEN(off, len, size)	\
-+do {									\
-+	TRIM_OFF(off, size);				\
-+	TRIM_LEN(off, len, size);			\
- } while (0)
- 
- void
-@@ -1192,6 +1266,12 @@ test(void)
- 			goto out;
- 		}
- 		break;
-+	case OP_INSERT_RANGE:
-+		if (!insert_range_calls) {
-+			log4(OP_SKIPPED, OP_INSERT_RANGE, offset, size);
-+			goto out;
-+		}
-+		break;
- 	}
- 
- 	switch (op) {
-@@ -1244,6 +1324,22 @@ test(void)
- 		}
- 		do_collapse_range(offset, size);
- 		break;
-+	case OP_INSERT_RANGE:
-+		TRIM_OFF(offset, file_size);
-+		TRIM_LEN(offset, size, maxfilelen - file_size);
-+		offset = offset & ~(block_size - 1);
-+		size = size & ~(block_size - 1);
-+		if (size == 0) {
-+			log4(OP_SKIPPED, OP_INSERT_RANGE, offset, size);
-+			goto out;
-+		}
-+		if (file_size + size > maxfilelen) {
-+			log4(OP_SKIPPED, OP_INSERT_RANGE, offset, size);
-+			goto out;
-+		}
-+
-+		do_insert_range(offset, size);
-+		break;
- 	default:
- 		prterr("test: unknown operation");
- 		report_failure(42);
-@@ -1307,6 +1403,9 @@ usage(void)
- #ifdef FALLOC_FL_COLLAPSE_RANGE
- "	-C: Do not use collapse range calls\n"
- #endif
-+#ifdef FALLOC_FL_INSERT_RANGE
-+"	-i: Do not use insert range calls\n"
-+#endif
- "	-L: fsxLite - no file creations & no file size changes\n\
- 	-N numops: total # operations to do (default infinity)\n\
- 	-O: use oplen (see -o flag) for every op (default random)\n\
-@@ -1493,7 +1592,7 @@ main(int argc, char **argv)
- 
- 	setvbuf(stdout, (char *)0, _IOLBF, 0); /* line buffered stdout */
- 
--	while ((ch = getopt(argc, argv, "b:c:dfl:m:no:p:qr:s:t:w:xyAD:FHzCLN:OP:RS:WZ"))
-+	while ((ch = getopt(argc, argv, "b:c:dfl:m:no:p:qr:s:t:w:xyAD:FHzCiLN:OP:RS:WZ"))
- 	       != EOF)
- 		switch (ch) {
- 		case 'b':
-@@ -1599,6 +1698,9 @@ main(int argc, char **argv)
- 		case 'C':
- 			collapse_range_calls = 0;
- 			break;
-+		case 'i':
-+			insert_range_calls = 0;
-+			break;
- 		case 'L':
- 		        lite = 1;
- 			break;
-@@ -1758,6 +1860,8 @@ main(int argc, char **argv)
- 		zero_range_calls = test_fallocate(FALLOC_FL_ZERO_RANGE);
- 	if (collapse_range_calls)
- 		collapse_range_calls = test_fallocate(FALLOC_FL_COLLAPSE_RANGE);
-+	if (insert_range_calls)
-+		insert_range_calls = test_fallocate(FALLOC_FL_INSERT_RANGE);
- 
- 	while (numops == -1 || numops--)
- 		test();
--- 
-1.7.9.5
+I'm not so sure an unaligned partition will make a difference... I would
+think that would be abstracted from the fs. I'm never against testing
+and experimenting though. :)
+
+Brian
+
+> Thanks!
+> 
+> Michael
+> 
 
 _______________________________________________
 xfs mailing list
