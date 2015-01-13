@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (unknown [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 88C9B7F83
-	for <xfs@oss.sgi.com>; Tue, 13 Jan 2015 10:06:42 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id A0ACFAC00B
-	for <xfs@oss.sgi.com>; Tue, 13 Jan 2015 08:06:31 -0800 (PST)
-Received: from mail-pd0-f179.google.com (mail-pd0-f179.google.com
-	[209.85.192.179]) by cuda.sgi.com with ESMTP id
-	bvBAkX8AidJgHwUy (version=TLSv1 cipher=RC4-SHA bits=128
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 858C47F5F
+	for <xfs@oss.sgi.com>; Tue, 13 Jan 2015 10:06:50 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 73C4E304043
+	for <xfs@oss.sgi.com>; Tue, 13 Jan 2015 08:06:50 -0800 (PST)
+Received: from mail-pd0-f173.google.com (mail-pd0-f173.google.com
+	[209.85.192.173]) by cuda.sgi.com with ESMTP id
+	2BXsSrv5Uyr6N34O (version=TLSv1 cipher=RC4-SHA bits=128
 	verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 13 Jan 2015 08:06:29 -0800 (PST)
-Received: by mail-pd0-f179.google.com with SMTP id fp1so4148196pdb.10
-	for <xfs@oss.sgi.com>; Tue, 13 Jan 2015 08:06:28 -0800 (PST)
+	Tue, 13 Jan 2015 08:06:46 -0800 (PST)
+Received: by mail-pd0-f173.google.com with SMTP id ft15so4184135pdb.4
+	for <xfs@oss.sgi.com>; Tue, 13 Jan 2015 08:06:45 -0800 (PST)
 From: Namjae Jeon <linkinjeon@gmail.com>
-Subject: [PATCH v8 8/11] xfstests: generic/042: Delayed allocation multi insert
-Date: Wed, 14 Jan 2015 01:05:23 +0900
-Message-Id: <1421165126-3585-9-git-send-email-linkinjeon@gmail.com>
+Subject: [PATCH v8 11/11] xfstests: fsx: Add fallocate insert range operation
+Date: Wed, 14 Jan 2015 01:05:26 +0900
+Message-Id: <1421165126-3585-12-git-send-email-linkinjeon@gmail.com>
 In-Reply-To: <1421165126-3585-1-git-send-email-linkinjeon@gmail.com>
 References: <1421165126-3585-1-git-send-email-linkinjeon@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -36,189 +36,223 @@ Cc: Namjae Jeon <linkinjeon@gmail.com>, Namjae Jeon <namjae.jeon@samsung.com>, b
 
 From: Namjae Jeon <namjae.jeon@samsung.com>
 
-This testcase(042) tries to test various corner cases with delayed extents and
-pre-existing holes for finsert range functionality over different type of
-extents.
+This commit adds fallocate FALLOC_FL_INSERT_RANGE support for fsx.
 
 Signed-off-by: Namjae Jeon <namjae.jeon@samsung.com>
 Signed-off-by: Ashish Sangwan <a.sangwan@samsung.com>
+Cc: Brian Foster<bfoster@redhat.com>
 ---
- tests/generic/042     |   65 ++++++++++++++++++++++++++++++++++++++++
- tests/generic/042.out |   80 +++++++++++++++++++++++++++++++++++++++++++++++++
- tests/generic/group   |    1 +
- 3 files changed, 146 insertions(+)
- create mode 100644 tests/generic/042
- create mode 100644 tests/generic/042.out
+Changelog
+v8:
+ - create TRIM_OFF() and TRIM_LEN() and redeine redefine TRIM_OFF_LEN().
 
-diff --git a/tests/generic/042 b/tests/generic/042
-new file mode 100644
-index 0000000..ea9fd3c
---- /dev/null
-+++ b/tests/generic/042
-@@ -0,0 +1,65 @@
-+#! /bin/bash
-+# FS QA Test No. generic/042
-+#
-+# Delayed allocation multi insert range tests
-+# This testcase is one of the 4 testcases which tries to
-+# test various corner cases for finsert range functionality over different
-+# type of extents. These tests are based on generic/255 test case.
-+# For the type of tests, check the description of _test_generic_punch
-+# in common/rc.
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2014 Samsung Electronics.  All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#
-+#-----------------------------------------------------------------------
-+#
-+
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1	# failure is the default!
-+
-+_cleanup()
+ ltp/fsx.c |  122 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++-----
+ 1 file changed, 113 insertions(+), 9 deletions(-)
+
+diff --git a/ltp/fsx.c b/ltp/fsx.c
+index 3709419..741af34 100644
+--- a/ltp/fsx.c
++++ b/ltp/fsx.c
+@@ -95,7 +95,8 @@ int			logcount = 0;	/* total ops */
+ #define OP_PUNCH_HOLE		6
+ #define OP_ZERO_RANGE		7
+ #define OP_COLLAPSE_RANGE	8
+-#define OP_MAX_FULL		9
++#define OP_INSERT_RANGE	9
++#define OP_MAX_FULL		10
+ 
+ /* operation modifiers */
+ #define OP_CLOSEOPEN	100
+@@ -145,6 +146,7 @@ int     fallocate_calls = 1;            /* -F flag disables */
+ int     punch_hole_calls = 1;           /* -H flag disables */
+ int     zero_range_calls = 1;           /* -z flag disables */
+ int	collapse_range_calls = 1;	/* -C flag disables */
++int	insert_range_calls = 1;		/* -i flag disables */
+ int 	mapped_reads = 1;		/* -R flag disables it */
+ int	fsxgoodfd = 0;
+ int	o_direct;			/* -Z */
+@@ -339,6 +341,14 @@ logdump(void)
+ 						     lp->args[0] + lp->args[1])
+ 				prt("\t******CCCC");
+ 			break;
++		case OP_INSERT_RANGE:
++			prt("INSERT 0x%x thru 0x%x\t(0x%x bytes)",
++			    lp->args[0], lp->args[0] + lp->args[1] - 1,
++			    lp->args[1]);
++			if (badoff >= lp->args[0] && badoff <
++						     lp->args[0] + lp->args[1])
++				prt("\t******CCCC");
++			break;
+ 		case OP_SKIPPED:
+ 			prt("SKIPPED (no operation)");
+ 			break;
+@@ -1012,6 +1022,59 @@ do_collapse_range(unsigned offset, unsigned length)
+ }
+ #endif
+ 
++#ifdef FALLOC_FL_INSERT_RANGE
++void
++do_insert_range(unsigned offset, unsigned length)
 +{
-+    rm -f $tmp.*
++	unsigned end_offset;
++	int mode = FALLOC_FL_INSERT_RANGE;
++
++	if (length == 0) {
++		if (!quiet && testcalls > simulatedopcount)
++			prt("skipping zero length insert range\n");
++		log4(OP_SKIPPED, OP_INSERT_RANGE, offset, length);
++		return;
++	}
++
++	if ((loff_t)offset >= file_size) {
++		if (!quiet && testcalls > simulatedopcount)
++			prt("skipping insert range behind EOF\n");
++		log4(OP_SKIPPED, OP_INSERT_RANGE, offset, length);
++		return;
++	}
++
++	log4(OP_INSERT_RANGE, offset, length, 0);
++
++	if (testcalls <= simulatedopcount)
++		return;
++
++	end_offset = offset + length;
++	if ((progressinterval && testcalls % progressinterval == 0) ||
++	    (debug && (monitorstart == -1 || monitorend == -1 ||
++		      end_offset <= monitorend))) {
++		prt("%lu insert\tfrom 0x%x to 0x%x, (0x%x bytes)\n", testcalls,
++			offset, offset+length, length);
++	}
++	if (fallocate(fd, mode, (loff_t)offset, (loff_t)length) == -1) {
++		prt("insert range: %x to %x\n", offset, length);
++		prterr("do_insert_range: fallocate");
++		report_failure(161);
++	}
++
++	memmove(good_buf + end_offset, good_buf + offset,
++		file_size - offset);
++	memset(good_buf + offset, '\0', length);
++	file_size += length;
 +}
 +
-+trap "_cleanup ; exit \$status" 0 1 2 3 15
++#else
++void
++do_insert_range(unsigned offset, unsigned length)
++{
++	return;
++}
++#endif
 +
-+# get standard environment, filters and checks
-+# we need to include common/punch to get defination fo filter functions
-+. ./common/rc
-+. ./common/filter
-+. ./common/punch
+ #ifdef HAVE_LINUX_FALLOC_H
+ /* fallocate is basically a no-op unless extending, then a lot like a truncate */
+ void
+@@ -1117,14 +1180,25 @@ docloseopen(void)
+ 	}
+ }
+ 
+-#define TRIM_OFF_LEN(off, len, size)	\
+-do {					\
+-	if (size)			\
 +
-+# real QA test starts here
-+_supported_fs generic
-+_supported_os Linux
++#define TRIM_OFF(off, size)	\
++do {						\
++	if (size)				\
+ 		(off) %= (size);	\
+-	else				\
+-		(off) = 0;		\
+-	if ((off) + (len) > (size))	\
+-		(len) = (size) - (off);	\
++	else					\
++		(off) = 0;			\
++} while (0)
 +
-+_require_xfs_io_command "fpunch"
-+_require_xfs_io_command "falloc"
-+_require_xfs_io_command "fiemap"
-+_require_xfs_io_command "finsert"
++#define TRIM_LEN(off, len, size)	\
++do {								\
++	if ((off) + (len) > (size))		\
++		(len) = (size) - (off);		\
++} while (0)
 +
-+testfile=$TEST_DIR/$seq.$$
++#define TRIM_OFF_LEN(off, len, size)	\
++do {									\
++	TRIM_OFF(off, size);				\
++	TRIM_LEN(off, len, size);			\
+ } while (0)
+ 
+ void
+@@ -1192,6 +1266,12 @@ test(void)
+ 			goto out;
+ 		}
+ 		break;
++	case OP_INSERT_RANGE:
++		if (!insert_range_calls) {
++			log4(OP_SKIPPED, OP_INSERT_RANGE, offset, size);
++			goto out;
++		}
++		break;
+ 	}
+ 
+ 	switch (op) {
+@@ -1244,6 +1324,22 @@ test(void)
+ 		}
+ 		do_collapse_range(offset, size);
+ 		break;
++	case OP_INSERT_RANGE:
++		TRIM_OFF(offset, file_size);
++		TRIM_LEN(offset, size, maxfilelen - file_size);
++		offset = offset & ~(block_size - 1);
++		size = size & ~(block_size - 1);
++		if (size == 0) {
++			log4(OP_SKIPPED, OP_INSERT_RANGE, offset, size);
++			goto out;
++		}
++		if (file_size + size > maxfilelen) {
++			log4(OP_SKIPPED, OP_INSERT_RANGE, offset, size);
++			goto out;
++		}
 +
-+_test_generic_punch -d -k falloc fpunch finsert fiemap _filter_hole_fiemap $testfile
-+_check_test_fs
-+
-+status=0
-+exit
-diff --git a/tests/generic/042.out b/tests/generic/042.out
-new file mode 100644
-index 0000000..1618e9d
---- /dev/null
-+++ b/tests/generic/042.out
-@@ -0,0 +1,80 @@
-+QA output created by 042
-+	1. into a hole
-+cf845a781c107ec1346e849c9dd1b7e8
-+	2. into allocated space
-+0: [0..7]: extent
-+1: [8..23]: hole
-+2: [24..55]: extent
-+64e72217eebcbdf31b1b058f9f5f476a
-+	3. into unwritten space
-+0: [0..7]: extent
-+1: [8..23]: hole
-+2: [24..55]: extent
-+22b7303d274481990b5401b6263effe0
-+	4. hole -> data
-+0: [0..7]: extent
-+1: [8..31]: hole
-+2: [32..55]: extent
-+c4fef62ba1de9d91a977cfeec6632f19
-+	5. hole -> unwritten
-+0: [0..7]: extent
-+1: [8..31]: hole
-+2: [32..55]: extent
-+1ca74f7572a0f4ab477fdbb5682e5f61
-+	6. data -> hole
-+0: [0..7]: extent
-+1: [8..23]: hole
-+2: [24..31]: extent
-+3: [32..47]: hole
-+4: [48..55]: extent
-+be0f35d4292a20040766d87883b0abd1
-+	7. data -> unwritten
-+0: [0..7]: extent
-+1: [8..23]: hole
-+2: [24..47]: extent
-+3: [48..55]: hole
-+bddb1f3895268acce30d516a99cb0f2f
-+	8. unwritten -> hole
-+0: [0..7]: extent
-+1: [8..23]: hole
-+2: [24..31]: extent
-+3: [32..39]: hole
-+4: [40..55]: extent
-+f8fc47adc45b7cf72f988b3ddf5bff64
-+	9. unwritten -> data
-+0: [0..7]: extent
-+1: [8..23]: hole
-+2: [24..47]: extent
-+3: [48..55]: hole
-+c4fef62ba1de9d91a977cfeec6632f19
-+	10. hole -> data -> hole
-+0: [0..7]: extent
-+1: [8..39]: hole
-+2: [40..63]: extent
-+52af1bfcbf43f28af2328de32e0567e5
-+	11. data -> hole -> data
-+0: [0..7]: extent
-+1: [8..31]: hole
-+2: [32..39]: extent
-+3: [40..47]: hole
-+4: [48..63]: extent
-+e3a8d52acc4d91a8ed19d7b6f4f26a71
-+	12. unwritten -> data -> unwritten
-+0: [0..7]: extent
-+1: [8..31]: hole
-+2: [32..63]: extent
-+52af1bfcbf43f28af2328de32e0567e5
-+	13. data -> unwritten -> data
-+0: [0..7]: extent
-+1: [8..31]: hole
-+2: [32..63]: extent
-+2b22165f4a24a2c36fd05ef00b41df88
-+	14. data -> hole @ EOF
-+0: [0..23]: extent
-+1: [24..39]: hole
-+2: [40..55]: extent
-+aa0f20d1edcdbce60d8ef82700ba30c3
-+	15. data -> hole @ 0
-+0: [0..15]: hole
-+1: [16..55]: extent
-+86c9d033be2761385c9cfa203c426bb2
-diff --git a/tests/generic/group b/tests/generic/group
-index 62660cc..c0944b3 100644
---- a/tests/generic/group
-+++ b/tests/generic/group
-@@ -44,6 +44,7 @@
- 039 auto quick prealloc
- 040 auto quick prealloc
- 041 auto quick prealloc
-+042 auto quick prealloc
- 053 acl repair auto quick
- 062 attr udf auto quick
- 068 other auto freeze dangerous stress
++		do_insert_range(offset, size);
++		break;
+ 	default:
+ 		prterr("test: unknown operation");
+ 		report_failure(42);
+@@ -1307,6 +1403,9 @@ usage(void)
+ #ifdef FALLOC_FL_COLLAPSE_RANGE
+ "	-C: Do not use collapse range calls\n"
+ #endif
++#ifdef FALLOC_FL_INSERT_RANGE
++"	-i: Do not use insert range calls\n"
++#endif
+ "	-L: fsxLite - no file creations & no file size changes\n\
+ 	-N numops: total # operations to do (default infinity)\n\
+ 	-O: use oplen (see -o flag) for every op (default random)\n\
+@@ -1493,7 +1592,7 @@ main(int argc, char **argv)
+ 
+ 	setvbuf(stdout, (char *)0, _IOLBF, 0); /* line buffered stdout */
+ 
+-	while ((ch = getopt(argc, argv, "b:c:dfl:m:no:p:qr:s:t:w:xyAD:FHzCLN:OP:RS:WZ"))
++	while ((ch = getopt(argc, argv, "b:c:dfl:m:no:p:qr:s:t:w:xyAD:FHzCiLN:OP:RS:WZ"))
+ 	       != EOF)
+ 		switch (ch) {
+ 		case 'b':
+@@ -1599,6 +1698,9 @@ main(int argc, char **argv)
+ 		case 'C':
+ 			collapse_range_calls = 0;
+ 			break;
++		case 'i':
++			insert_range_calls = 0;
++			break;
+ 		case 'L':
+ 		        lite = 1;
+ 			break;
+@@ -1758,6 +1860,8 @@ main(int argc, char **argv)
+ 		zero_range_calls = test_fallocate(FALLOC_FL_ZERO_RANGE);
+ 	if (collapse_range_calls)
+ 		collapse_range_calls = test_fallocate(FALLOC_FL_COLLAPSE_RANGE);
++	if (insert_range_calls)
++		insert_range_calls = test_fallocate(FALLOC_FL_INSERT_RANGE);
+ 
+ 	while (numops == -1 || numops--)
+ 		test();
 -- 
 1.7.9.5
 
