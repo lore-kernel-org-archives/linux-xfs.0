@@ -1,21 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 282E97F62
-	for <xfs@oss.sgi.com>; Tue, 13 Jan 2015 10:06:18 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id ED53E304043
-	for <xfs@oss.sgi.com>; Tue, 13 Jan 2015 08:06:17 -0800 (PST)
-Received: from mail-pd0-f175.google.com (mail-pd0-f175.google.com
-	[209.85.192.175]) by cuda.sgi.com with ESMTP id
-	DRDeCE8p8Zxob4jg (version=TLSv1 cipher=RC4-SHA bits=128
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 3B9537F5F
+	for <xfs@oss.sgi.com>; Tue, 13 Jan 2015 10:06:36 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 1ACC68F8040
+	for <xfs@oss.sgi.com>; Tue, 13 Jan 2015 08:06:36 -0800 (PST)
+Received: from mail-pd0-f180.google.com (mail-pd0-f180.google.com
+	[209.85.192.180]) by cuda.sgi.com with ESMTP id
+	eMXT6jroyubCjtYl (version=TLSv1 cipher=RC4-SHA bits=128
 	verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 13 Jan 2015 08:06:16 -0800 (PST)
-Received: by mail-pd0-f175.google.com with SMTP id g10so4178565pdj.6
-	for <xfs@oss.sgi.com>; Tue, 13 Jan 2015 08:06:16 -0800 (PST)
+	Tue, 13 Jan 2015 08:06:34 -0800 (PST)
+Received: by mail-pd0-f180.google.com with SMTP id fl12so4154942pdb.11
+	for <xfs@oss.sgi.com>; Tue, 13 Jan 2015 08:06:33 -0800 (PST)
 From: Namjae Jeon <linkinjeon@gmail.com>
-Subject: [PATCH v8 7/11] xfstests: generic/041: Multi insert range tests
-Date: Wed, 14 Jan 2015 01:05:22 +0900
-Message-Id: <1421165126-3585-8-git-send-email-linkinjeon@gmail.com>
+Subject: [PATCH v8 9/11] xfstests: generic/043: Test multiple fallocate
+	insert/collapse range calls
+Date: Wed, 14 Jan 2015 01:05:24 +0900
+Message-Id: <1421165126-3585-10-git-send-email-linkinjeon@gmail.com>
 In-Reply-To: <1421165126-3585-1-git-send-email-linkinjeon@gmail.com>
 References: <1421165126-3585-1-git-send-email-linkinjeon@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -36,34 +37,40 @@ Cc: Namjae Jeon <linkinjeon@gmail.com>, Namjae Jeon <namjae.jeon@samsung.com>, b
 
 From: Namjae Jeon <namjae.jeon@samsung.com>
 
-This testcase(041) tries to test various corner cases with pre-existing holes
-for finsert range functionality over different type of extents.
+This testcase(043) tries to test finsert range a single alternate block
+mulitiple times and test merge code of collase range.
 
 Signed-off-by: Namjae Jeon <namjae.jeon@samsung.com>
 Signed-off-by: Ashish Sangwan <a.sangwan@samsung.com>
+Cc: Brian Foster<bfoster@redhat.com>
 ---
- tests/generic/041     |   65 ++++++++++++++++++++++++++++++++++++++++
- tests/generic/041.out |   80 +++++++++++++++++++++++++++++++++++++++++++++++++
- tests/generic/group   |    1 +
- 3 files changed, 146 insertions(+)
- create mode 100644 tests/generic/041
- create mode 100644 tests/generic/041.out
+Changelog
+v8:
+ - use MKFS_OPTION to use blocksize in configuration and remove loop.
+ - remove trailing space.
+ - compare original file and test file to check data integrity.
 
-diff --git a/tests/generic/041 b/tests/generic/041
+ tests/generic/043     |  100 +++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/generic/043.out |    3 ++
+ tests/generic/group   |    1 +
+ 3 files changed, 104 insertions(+)
+ create mode 100644 tests/generic/043
+ create mode 100644 tests/generic/043.out
+
+diff --git a/tests/generic/043 b/tests/generic/043
 new file mode 100644
-index 0000000..29e0f31
+index 0000000..a5a2d0b
 --- /dev/null
-+++ b/tests/generic/041
-@@ -0,0 +1,65 @@
++++ b/tests/generic/043
+@@ -0,0 +1,100 @@
 +#! /bin/bash
-+# FS QA Test No. generic/041
++# FS QA Test No. generic/043
 +#
-+# Multi insert range tests
-+# This testcase is one of the 4 testcases which tries to
-+# test various corner cases for finsert range functionality over different
-+# type of extents. These tests are based on generic/255 test case.
-+# For the type of tests, check the description of _test_generic_punch
-+# in common/rc.
++# Test multiple fallocate insert/collapse range calls on same file.
++# Call insert range a single alternate block multiple times until the file
++# is left with 100 extents and as much number of extents. And Call collapse
++# range about the previously inserted ranges to test merge code of collapse
++# range. Also check for data integrity and file system consistency.
 +#-----------------------------------------------------------------------
 +# Copyright (c) 2014 Samsung Electronics.  All Rights Reserved.
 +#
@@ -90,131 +97,90 @@ index 0000000..29e0f31
 +here=`pwd`
 +tmp=/tmp/$$
 +status=1	# failure is the default!
-+
-+_cleanup()
-+{
-+    rm -f $tmp.*
-+}
-+
-+trap "_cleanup ; exit \$status" 0 1 2 3 15
++trap "rm -f $tmp.*; exit \$status" 0 1 2 3 15
 +
 +# get standard environment, filters and checks
-+# we need to include common/punch to get defination fo filter functions
 +. ./common/rc
 +. ./common/filter
-+. ./common/punch
 +
 +# real QA test starts here
 +_supported_fs generic
 +_supported_os Linux
 +
-+_require_xfs_io_command "fpunch"
-+_require_xfs_io_command "falloc"
++_require_scratch
 +_require_xfs_io_command "fiemap"
 +_require_xfs_io_command "finsert"
++_require_xfs_io_command "fcollapse"
++_do_die_on_error=y
++src=$SCRATCH_MNT/testfile
++dest=$SCRATCH_MNT/testfile.dest
++BLOCKS=100
++BSIZE=`get_block_size $SCRATCH_MNT`
 +
-+testfile=$TEST_DIR/$seq.$$
++_scratch_mkfs MKFS_OPTIONS >> $seqres.full 2>&1
++_scratch_mount >> $seqres.full 2>&1
++length=$(($BLOCKS * $BSIZE))
 +
-+_test_generic_punch -k falloc fpunch finsert fiemap _filter_hole_fiemap $testfile
-+_check_test_fs
++# Write file
++$XFS_IO_PROG -f -c "pwrite 0 $length" -c fsync $src > /dev/null
++cp $src $dest
 +
++# Insert alternate blocks
++for (( j=0; j < $(($BLOCKS/2)); j++ )); do
++	offset=$((($j*$BSIZE)*2))
++	$XFS_IO_PROG -c "finsert $offset $BSIZE" $dest > /dev/null
++done
++
++# Check if 100 extents are present
++$XFS_IO_PROG -c "fiemap -v" $dest | grep "^ *[0-9]*:" |wc -l
++
++_check_scratch_fs
++if [ $? -ne 0 ]; then
++	status=1
++	exit
++fi
++
++# Collapse alternate blocks
++for (( j=0; j < $(($BLOCKS/2)); j++ )); do
++	offset=$((($j*$BSIZE)))
++	$XFS_IO_PROG -c "fcollapse $offset $BSIZE" $dest > /dev/null
++done
++
++# Check if 1 extents are present
++$XFS_IO_PROG -c "fiemap -v" $dest | grep "^ *[0-9]*:" |wc -l
++
++# compare original file and test file.
++cmp $src $dest || _fail "file bytes check failed"
++
++_check_scratch_fs
++if [ $? -ne 0 ]; then
++	status=1
++	exit
++fi
++
++umount $SCRATCH_MNT
++
++# success, all done
 +status=0
 +exit
-diff --git a/tests/generic/041.out b/tests/generic/041.out
+diff --git a/tests/generic/043.out b/tests/generic/043.out
 new file mode 100644
-index 0000000..5fe3c5e
+index 0000000..47a66aa
 --- /dev/null
-+++ b/tests/generic/041.out
-@@ -0,0 +1,80 @@
-+QA output created by 041
-+	1. into a hole
-+cf845a781c107ec1346e849c9dd1b7e8
-+	2. into allocated space
-+0: [0..7]: extent
-+1: [8..23]: hole
-+2: [24..55]: extent
-+64e72217eebcbdf31b1b058f9f5f476a
-+	3. into unwritten space
-+0: [0..7]: extent
-+1: [8..23]: hole
-+2: [24..55]: extent
-+22b7303d274481990b5401b6263effe0
-+	4. hole -> data
-+0: [0..7]: extent
-+1: [8..31]: hole
-+2: [32..55]: extent
-+c4fef62ba1de9d91a977cfeec6632f19
-+	5. hole -> unwritten
-+0: [0..7]: extent
-+1: [8..31]: hole
-+2: [32..55]: extent
-+1ca74f7572a0f4ab477fdbb5682e5f61
-+	6. data -> hole
-+0: [0..7]: extent
-+1: [8..23]: hole
-+2: [24..31]: extent
-+3: [32..47]: hole
-+4: [48..55]: extent
-+be0f35d4292a20040766d87883b0abd1
-+	7. data -> unwritten
-+0: [0..7]: extent
-+1: [8..23]: hole
-+2: [24..47]: extent
-+3: [48..55]: hole
-+bddb1f3895268acce30d516a99cb0f2f
-+	8. unwritten -> hole
-+0: [0..7]: extent
-+1: [8..23]: hole
-+2: [24..31]: extent
-+3: [32..39]: hole
-+4: [40..55]: extent
-+f8fc47adc45b7cf72f988b3ddf5bff64
-+	9. unwritten -> data
-+0: [0..7]: extent
-+1: [8..23]: hole
-+2: [24..47]: extent
-+3: [48..55]: hole
-+c4fef62ba1de9d91a977cfeec6632f19
-+	10. hole -> data -> hole
-+0: [0..7]: extent
-+1: [8..39]: hole
-+2: [40..63]: extent
-+52af1bfcbf43f28af2328de32e0567e5
-+	11. data -> hole -> data
-+0: [0..7]: extent
-+1: [8..31]: hole
-+2: [32..39]: extent
-+3: [40..47]: hole
-+4: [48..63]: extent
-+e3a8d52acc4d91a8ed19d7b6f4f26a71
-+	12. unwritten -> data -> unwritten
-+0: [0..7]: extent
-+1: [8..31]: hole
-+2: [32..63]: extent
-+52af1bfcbf43f28af2328de32e0567e5
-+	13. data -> unwritten -> data
-+0: [0..7]: extent
-+1: [8..31]: hole
-+2: [32..63]: extent
-+2b22165f4a24a2c36fd05ef00b41df88
-+	14. data -> hole @ EOF
-+0: [0..23]: extent
-+1: [24..39]: hole
-+2: [40..55]: extent
-+aa0f20d1edcdbce60d8ef82700ba30c3
-+	15. data -> hole @ 0
-+0: [0..15]: hole
-+1: [16..55]: extent
-+86c9d033be2761385c9cfa203c426bb2
++++ b/tests/generic/043.out
+@@ -0,0 +1,3 @@
++QA output created by 043
++100
++1
 diff --git a/tests/generic/group b/tests/generic/group
-index 518cf49..62660cc 100644
+index c0944b3..0a10bdd 100644
 --- a/tests/generic/group
 +++ b/tests/generic/group
-@@ -43,6 +43,7 @@
- 038 auto stress
- 039 auto quick prealloc
+@@ -45,6 +45,7 @@
  040 auto quick prealloc
-+041 auto quick prealloc
+ 041 auto quick prealloc
+ 042 auto quick prealloc
++043 auto quick prealloc
  053 acl repair auto quick
  062 attr udf auto quick
  068 other auto freeze dangerous stress
