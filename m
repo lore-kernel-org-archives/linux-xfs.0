@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 0D48F7F7E
-	for <xfs@oss.sgi.com>; Tue, 13 Jan 2015 10:06:40 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id EF9D730405F
-	for <xfs@oss.sgi.com>; Tue, 13 Jan 2015 08:06:39 -0800 (PST)
-Received: from mail-pa0-f43.google.com (mail-pa0-f43.google.com
-	[209.85.220.43]) by cuda.sgi.com with ESMTP id HvKls2rK3cDYjsop
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 13 Jan 2015 08:06:38 -0800 (PST)
-Received: by mail-pa0-f43.google.com with SMTP id kx10so4477812pab.2
-	for <xfs@oss.sgi.com>; Tue, 13 Jan 2015 08:06:38 -0800 (PST)
+Received: from relay.sgi.com (unknown [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 88C9B7F83
+	for <xfs@oss.sgi.com>; Tue, 13 Jan 2015 10:06:42 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id A0ACFAC00B
+	for <xfs@oss.sgi.com>; Tue, 13 Jan 2015 08:06:31 -0800 (PST)
+Received: from mail-pd0-f179.google.com (mail-pd0-f179.google.com
+	[209.85.192.179]) by cuda.sgi.com with ESMTP id
+	bvBAkX8AidJgHwUy (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 13 Jan 2015 08:06:29 -0800 (PST)
+Received: by mail-pd0-f179.google.com with SMTP id fp1so4148196pdb.10
+	for <xfs@oss.sgi.com>; Tue, 13 Jan 2015 08:06:28 -0800 (PST)
 From: Namjae Jeon <linkinjeon@gmail.com>
-Subject: [PATCH v8 10/11] xfstests: fsstress: Add fallocate insert range
-	operation
-Date: Wed, 14 Jan 2015 01:05:25 +0900
-Message-Id: <1421165126-3585-11-git-send-email-linkinjeon@gmail.com>
+Subject: [PATCH v8 8/11] xfstests: generic/042: Delayed allocation multi insert
+Date: Wed, 14 Jan 2015 01:05:23 +0900
+Message-Id: <1421165126-3585-9-git-send-email-linkinjeon@gmail.com>
 In-Reply-To: <1421165126-3585-1-git-send-email-linkinjeon@gmail.com>
 References: <1421165126-3585-1-git-send-email-linkinjeon@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -36,98 +36,189 @@ Cc: Namjae Jeon <linkinjeon@gmail.com>, Namjae Jeon <namjae.jeon@samsung.com>, b
 
 From: Namjae Jeon <namjae.jeon@samsung.com>
 
-This commit adds insert operation support for fsstress, which is
-meant to exercise fallocate FALLOC_FL_INSERT_RANGE support.
+This testcase(042) tries to test various corner cases with delayed extents and
+pre-existing holes for finsert range functionality over different type of
+extents.
 
 Signed-off-by: Namjae Jeon <namjae.jeon@samsung.com>
 Signed-off-by: Ashish Sangwan <a.sangwan@samsung.com>
-Reviewed-by: Brian Foster <bfoster@redhat.com>
 ---
- ltp/fsstress.c |   19 ++++++++++++++++---
- src/global.h   |    4 ++++
- 2 files changed, 20 insertions(+), 3 deletions(-)
+ tests/generic/042     |   65 ++++++++++++++++++++++++++++++++++++++++
+ tests/generic/042.out |   80 +++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/generic/group   |    1 +
+ 3 files changed, 146 insertions(+)
+ create mode 100644 tests/generic/042
+ create mode 100644 tests/generic/042.out
 
-diff --git a/ltp/fsstress.c b/ltp/fsstress.c
-index b56fe5c..aa3e0c3 100644
---- a/ltp/fsstress.c
-+++ b/ltp/fsstress.c
-@@ -72,6 +72,7 @@ typedef enum {
- 	OP_PUNCH,
- 	OP_ZERO,
- 	OP_COLLAPSE,
-+	OP_INSERT,
- 	OP_READ,
- 	OP_READLINK,
- 	OP_RENAME,
-@@ -170,6 +171,7 @@ void	mknod_f(int, long);
- void	punch_f(int, long);
- void	zero_f(int, long);
- void	collapse_f(int, long);
-+void	insert_f(int, long);
- void	read_f(int, long);
- void	readlink_f(int, long);
- void	rename_f(int, long);
-@@ -209,6 +211,7 @@ opdesc_t	ops[] = {
- 	{ OP_PUNCH, "punch", punch_f, 1, 1 },
- 	{ OP_ZERO, "zero", zero_f, 1, 1 },
- 	{ OP_COLLAPSE, "collapse", collapse_f, 1, 1 },
-+	{ OP_INSERT, "insert", insert_f, 1, 1 },
- 	{ OP_READ, "read", read_f, 1, 0 },
- 	{ OP_READLINK, "readlink", readlink_f, 1, 0 },
- 	{ OP_RENAME, "rename", rename_f, 2, 1 },
-@@ -2176,6 +2179,7 @@ struct print_flags falloc_flags [] = {
- 	{ FALLOC_FL_NO_HIDE_STALE, "NO_HIDE_STALE"},
- 	{ FALLOC_FL_COLLAPSE_RANGE, "COLLAPSE_RANGE"},
- 	{ FALLOC_FL_ZERO_RANGE, "ZERO_RANGE"},
-+	{ FALLOC_FL_INSERT_RANGE, "INSERT_RANGE"},
- 	{ -1, NULL}
- };
- 
-@@ -2227,10 +2231,11 @@ do_fallocate(int opno, long r, int mode)
- 	off %= maxfsize;
- 	len = (off64_t)(random() % (1024 * 1024));
- 	/*
--	 * Collapse range requires off and len to be block aligned, make it
--	 * more likely to be the case.
-+	 * Collapse/insert range requires off and len to be block aligned,
-+	 * make it more likely to be the case.
- 	 */
--	if ((mode & FALLOC_FL_COLLAPSE_RANGE) && (opno % 2)) {
-+	if ((mode & (FALLOC_FL_COLLAPSE_RANGE | FALLOC_FL_INSERT_RANGE)) &&
-+		(opno % 2)) {
- 		off = ((off + stb.st_blksize - 1) & ~(stb.st_blksize - 1));
- 		len = ((len + stb.st_blksize - 1) & ~(stb.st_blksize - 1));
- 	}
-@@ -2656,6 +2661,14 @@ collapse_f(int opno, long r)
- }
- 
- void
-+insert_f(int opno, long r)
+diff --git a/tests/generic/042 b/tests/generic/042
+new file mode 100644
+index 0000000..ea9fd3c
+--- /dev/null
++++ b/tests/generic/042
+@@ -0,0 +1,65 @@
++#! /bin/bash
++# FS QA Test No. generic/042
++#
++# Delayed allocation multi insert range tests
++# This testcase is one of the 4 testcases which tries to
++# test various corner cases for finsert range functionality over different
++# type of extents. These tests are based on generic/255 test case.
++# For the type of tests, check the description of _test_generic_punch
++# in common/rc.
++#-----------------------------------------------------------------------
++# Copyright (c) 2014 Samsung Electronics.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#
++#-----------------------------------------------------------------------
++#
++
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++
++_cleanup()
 +{
-+#ifdef HAVE_LINUX_FALLOC_H
-+	do_fallocate(opno, r, FALLOC_FL_INSERT_RANGE);
-+#endif
++    rm -f $tmp.*
 +}
 +
-+void
- read_f(int opno, long r)
- {
- 	char		*buf;
-diff --git a/src/global.h b/src/global.h
-index 8180f66..f63246b 100644
---- a/src/global.h
-+++ b/src/global.h
-@@ -172,6 +172,10 @@
- #define FALLOC_FL_ZERO_RANGE		0x10
- #endif
- 
-+#ifndef FALLOC_FL_INSERT_RANGE
-+#define FALLOC_FL_INSERT_RANGE		0x20
-+#endif
++trap "_cleanup ; exit \$status" 0 1 2 3 15
 +
- #endif /* HAVE_LINUX_FALLOC_H */
- 
- #endif /* GLOBAL_H */
++# get standard environment, filters and checks
++# we need to include common/punch to get defination fo filter functions
++. ./common/rc
++. ./common/filter
++. ./common/punch
++
++# real QA test starts here
++_supported_fs generic
++_supported_os Linux
++
++_require_xfs_io_command "fpunch"
++_require_xfs_io_command "falloc"
++_require_xfs_io_command "fiemap"
++_require_xfs_io_command "finsert"
++
++testfile=$TEST_DIR/$seq.$$
++
++_test_generic_punch -d -k falloc fpunch finsert fiemap _filter_hole_fiemap $testfile
++_check_test_fs
++
++status=0
++exit
+diff --git a/tests/generic/042.out b/tests/generic/042.out
+new file mode 100644
+index 0000000..1618e9d
+--- /dev/null
++++ b/tests/generic/042.out
+@@ -0,0 +1,80 @@
++QA output created by 042
++	1. into a hole
++cf845a781c107ec1346e849c9dd1b7e8
++	2. into allocated space
++0: [0..7]: extent
++1: [8..23]: hole
++2: [24..55]: extent
++64e72217eebcbdf31b1b058f9f5f476a
++	3. into unwritten space
++0: [0..7]: extent
++1: [8..23]: hole
++2: [24..55]: extent
++22b7303d274481990b5401b6263effe0
++	4. hole -> data
++0: [0..7]: extent
++1: [8..31]: hole
++2: [32..55]: extent
++c4fef62ba1de9d91a977cfeec6632f19
++	5. hole -> unwritten
++0: [0..7]: extent
++1: [8..31]: hole
++2: [32..55]: extent
++1ca74f7572a0f4ab477fdbb5682e5f61
++	6. data -> hole
++0: [0..7]: extent
++1: [8..23]: hole
++2: [24..31]: extent
++3: [32..47]: hole
++4: [48..55]: extent
++be0f35d4292a20040766d87883b0abd1
++	7. data -> unwritten
++0: [0..7]: extent
++1: [8..23]: hole
++2: [24..47]: extent
++3: [48..55]: hole
++bddb1f3895268acce30d516a99cb0f2f
++	8. unwritten -> hole
++0: [0..7]: extent
++1: [8..23]: hole
++2: [24..31]: extent
++3: [32..39]: hole
++4: [40..55]: extent
++f8fc47adc45b7cf72f988b3ddf5bff64
++	9. unwritten -> data
++0: [0..7]: extent
++1: [8..23]: hole
++2: [24..47]: extent
++3: [48..55]: hole
++c4fef62ba1de9d91a977cfeec6632f19
++	10. hole -> data -> hole
++0: [0..7]: extent
++1: [8..39]: hole
++2: [40..63]: extent
++52af1bfcbf43f28af2328de32e0567e5
++	11. data -> hole -> data
++0: [0..7]: extent
++1: [8..31]: hole
++2: [32..39]: extent
++3: [40..47]: hole
++4: [48..63]: extent
++e3a8d52acc4d91a8ed19d7b6f4f26a71
++	12. unwritten -> data -> unwritten
++0: [0..7]: extent
++1: [8..31]: hole
++2: [32..63]: extent
++52af1bfcbf43f28af2328de32e0567e5
++	13. data -> unwritten -> data
++0: [0..7]: extent
++1: [8..31]: hole
++2: [32..63]: extent
++2b22165f4a24a2c36fd05ef00b41df88
++	14. data -> hole @ EOF
++0: [0..23]: extent
++1: [24..39]: hole
++2: [40..55]: extent
++aa0f20d1edcdbce60d8ef82700ba30c3
++	15. data -> hole @ 0
++0: [0..15]: hole
++1: [16..55]: extent
++86c9d033be2761385c9cfa203c426bb2
+diff --git a/tests/generic/group b/tests/generic/group
+index 62660cc..c0944b3 100644
+--- a/tests/generic/group
++++ b/tests/generic/group
+@@ -44,6 +44,7 @@
+ 039 auto quick prealloc
+ 040 auto quick prealloc
+ 041 auto quick prealloc
++042 auto quick prealloc
+ 053 acl repair auto quick
+ 062 attr udf auto quick
+ 068 other auto freeze dangerous stress
 -- 
 1.7.9.5
 
