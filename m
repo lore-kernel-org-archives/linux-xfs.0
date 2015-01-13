@@ -1,21 +1,34 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id E72B77F3F
-	for <xfs@oss.sgi.com>; Tue, 13 Jan 2015 14:42:50 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id C57F9304043
-	for <xfs@oss.sgi.com>; Tue, 13 Jan 2015 12:42:50 -0800 (PST)
-Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
-	[65.41.216.221]) by cuda.sgi.com with ESMTP id UyzA35I6ipZXyC62
-	for <xfs@oss.sgi.com>; Tue, 13 Jan 2015 12:42:48 -0800 (PST)
-Message-ID: <54B58367.1070008@hardwarefreak.com>
-Date: Tue, 13 Jan 2015 14:43:19 -0600
-From: Stan Hoeppner <stan@hardwarefreak.com>
+Received: from relay.sgi.com (unknown [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 46DCB7F3F
+	for <xfs@oss.sgi.com>; Tue, 13 Jan 2015 14:46:50 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 69AA4AC003
+	for <xfs@oss.sgi.com>; Tue, 13 Jan 2015 12:46:39 -0800 (PST)
+Received: from mail-qc0-f173.google.com (mail-qc0-f173.google.com
+	[209.85.216.173]) by cuda.sgi.com with ESMTP id
+	6FH41qm6gEV98lc4 (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 13 Jan 2015 12:46:36 -0800 (PST)
+Received: by mail-qc0-f173.google.com with SMTP id i17so4301552qcy.4
+	for <xfs@oss.sgi.com>; Tue, 13 Jan 2015 12:46:36 -0800 (PST)
+Date: Tue, 13 Jan 2015 15:46:33 -0500
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH 2/2] xfs: mark the xfs-alloc workqueue as high priority
+Message-ID: <20150113204633.GC9489@htj.dyndns.org>
+References: <20150109182310.GA2785@htj.dyndns.org>
+	<54B03BCC.7040207@sandeen.net>
+	<20150110192852.GD25319@htj.dyndns.org>
+	<54B429EB.9050807@sandeen.net>
+	<20150112225314.GC22156@htj.dyndns.org>
+	<54B454E2.70707@sandeen.net>
+	<20150112233755.GD22156@htj.dyndns.org>
+	<54B56D2B.6090401@sandeen.net>
+	<20150113201900.GA9489@htj.dyndns.org>
+	<54B58041.9070502@sandeen.net>
 MIME-Version: 1.0
-Subject: Re: extremely slow file creation/deletion after xfs ran full
-References: <54B387A1.6000807@aei.mpg.de>	<54B3CC6A.4080405@aei.mpg.de>	<20150112155206.GD25944@bfoster.bfoster>	<54B3F19D.6030307@aei.mpg.de>	<20150112163749.GE25944@bfoster.bfoster>	<54B40552.50106@aei.mpg.de>
-	<54B57ACD.60600@hardwarefreak.com> <54B57C59.9070207@aei.mpg.de>
-In-Reply-To: <54B57C59.9070207@aei.mpg.de>
+Content-Disposition: inline
+In-Reply-To: <54B58041.9070502@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,50 +41,42 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Carsten Aulbert <Carsten.Aulbert@aei.mpg.de>, Brian Foster <bfoster@redhat.com>
-Cc: xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Eric Sandeen <sandeen@redhat.com>, xfs-oss <xfs@oss.sgi.com>
 
-On 01/13/2015 02:13 PM, Carsten Aulbert wrote:
-> Hi Stan
+Hello, Eric.
+
+On Tue, Jan 13, 2015 at 02:29:53PM -0600, Eric Sandeen wrote:
+> > Can you please also report the value of nr_running?  That's what
+> > regulates the kick off of new workers and rescuers.
 > 
-> On 01/13/2015 09:06 PM, Stan Hoeppner wrote:
->> This workload seems more suited to a database than a filesystem. Though
->> surely you've already considered such, and chose not to go that route.
->>
+> sorry about that, swapped nr_workers w/ nr_running in my brain:
 > 
-> Yepp, but as we do not fully control the server software and need to
-> work further on the binary blobs arriving, a database is also not that
-> well suited for it, but yes, we looked into it (and run mysql, marida,
-> cassandra, mongo, postgresql, ...)
-> 
->> With high fragmentation you get lots of seeking.  What model disks are
->> these?  What is your RAID10 geometry?  Are your partitions properly
->> aligned to that geometry, and to the drives (512n/512e)?
-> 
-> Disks are 2TB Hitachi SATA drives (Ultrastar, HUA722020ALA330). As these
-> are some yrs old, they are native 512byte ones. They are connected via
-> an Areca 1261ML controller with a Supermicro backplane.
-> 
-> RAID striping is not ideal (128kByte per member disk) and thus our xfs
-> layout is not ideal as well. Things we plan to change with the next
-> attempt ;)
+>   nr_running = {
+>     counter = 0
+>   }, 
 
-With your file sizes that seems a recipe for hotspots.  What do the
-controller metrics tell you about IOs per drive, bytes per drive?  Are
-they balanced?
+So,
 
-> After the arrival of "advanced format" HDD and SSDs we usually try to
-> align everything to full 1 MByte or larger, just to be sure any
-> combination of 512b, 4kb, ... will eventually align :)
+	nr_workers == 15,
+	nr_idle == 0,
+	nr_running == 0,
 
-It's not that simple with striping.  Partitions need to start and end on
-stripe boundaries, not simply multiples of 4KB or 1MB as with single
-disks. If you use non power of 2 drive counts in a stripe, aligning at
-multiples of 1MB will screw ya, e.g. 12 drives * 64KB is a 768KB stripe.
+That means one worker must be playing the role of manager by executing
+manage_workers() whic his also responsible for kicking off the
+rescuers if it fails to create new workers in a short period of time.
+The manager is identifier as the holder of pool->manager_arb and while
+a manager is trying to creat a worker, pool->mayday_timer must be
+armed continuously firing off every MAYDAY_INTERVAL summoning rescuers
+to the pool, which should be visible through the pool_pwq->mayday_node
+corresponding to the stalled pool being queued on wq->maydays.
 
-Stan
+Can you post the full dump of the pool, wq and all kworkers?
 
+Thanks.
 
+-- 
+tejun
 
 _______________________________________________
 xfs mailing list
