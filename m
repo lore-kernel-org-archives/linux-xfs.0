@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 359657F3F
-	for <xfs@oss.sgi.com>; Wed, 14 Jan 2015 14:16:25 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id EA4428F8039
-	for <xfs@oss.sgi.com>; Wed, 14 Jan 2015 12:16:24 -0800 (PST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id B759C7F3F
+	for <xfs@oss.sgi.com>; Wed, 14 Jan 2015 14:17:22 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id A4CB9304053
+	for <xfs@oss.sgi.com>; Wed, 14 Jan 2015 12:17:22 -0800 (PST)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id OKYmAETmvuU0SZvK (version=TLSv1
+	cuda.sgi.com with ESMTP id QzZ010ynNBG5P0tq (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 14 Jan 2015 12:16:19 -0800 (PST)
-Date: Wed, 14 Jan 2015 15:16:10 -0500
+	Wed, 14 Jan 2015 12:17:17 -0800 (PST)
+Date: Wed, 14 Jan 2015 15:17:10 -0500
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH v8 11/11] xfstests: fsx: Add fallocate insert range
-	operation
-Message-ID: <20150114201610.GA49511@bfoster.bfoster>
+Subject: Re: [PATCH v8 9/11] xfstests: generic/043: Test multiple fallocate
+	insert/collapse range calls
+Message-ID: <20150114201710.GB49511@bfoster.bfoster>
 References: <1421165126-3585-1-git-send-email-linkinjeon@gmail.com>
-	<1421165126-3585-12-git-send-email-linkinjeon@gmail.com>
+	<1421165126-3585-10-git-send-email-linkinjeon@gmail.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1421165126-3585-12-git-send-email-linkinjeon@gmail.com>
+In-Reply-To: <1421165126-3585-10-git-send-email-linkinjeon@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,10 +34,11 @@ Sender: xfs-bounces@oss.sgi.com
 To: Namjae Jeon <linkinjeon@gmail.com>
 Cc: tytso@mit.edu, Namjae Jeon <namjae.jeon@samsung.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, a.sangwan@samsung.com, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org
 
-On Wed, Jan 14, 2015 at 01:05:26AM +0900, Namjae Jeon wrote:
+On Wed, Jan 14, 2015 at 01:05:24AM +0900, Namjae Jeon wrote:
 > From: Namjae Jeon <namjae.jeon@samsung.com>
 > 
-> This commit adds fallocate FALLOC_FL_INSERT_RANGE support for fsx.
+> This testcase(043) tries to test finsert range a single alternate block
+> mulitiple times and test merge code of collase range.
 > 
 > Signed-off-by: Namjae Jeon <namjae.jeon@samsung.com>
 > Signed-off-by: Ashish Sangwan <a.sangwan@samsung.com>
@@ -45,225 +46,185 @@ On Wed, Jan 14, 2015 at 01:05:26AM +0900, Namjae Jeon wrote:
 > ---
 > Changelog
 > v8:
->  - create TRIM_OFF() and TRIM_LEN() and redeine redefine TRIM_OFF_LEN().
+>  - use MKFS_OPTION to use blocksize in configuration and remove loop.
+>  - remove trailing space.
+>  - compare original file and test file to check data integrity.
 > 
->  ltp/fsx.c |  122 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++-----
->  1 file changed, 113 insertions(+), 9 deletions(-)
+>  tests/generic/043     |  100 +++++++++++++++++++++++++++++++++++++++++++++++++
+>  tests/generic/043.out |    3 ++
+>  tests/generic/group   |    1 +
+>  3 files changed, 104 insertions(+)
+>  create mode 100644 tests/generic/043
+>  create mode 100644 tests/generic/043.out
 > 
-> diff --git a/ltp/fsx.c b/ltp/fsx.c
-> index 3709419..741af34 100644
-> --- a/ltp/fsx.c
-> +++ b/ltp/fsx.c
-> @@ -95,7 +95,8 @@ int			logcount = 0;	/* total ops */
->  #define OP_PUNCH_HOLE		6
->  #define OP_ZERO_RANGE		7
->  #define OP_COLLAPSE_RANGE	8
-> -#define OP_MAX_FULL		9
-> +#define OP_INSERT_RANGE	9
-> +#define OP_MAX_FULL		10
->  
->  /* operation modifiers */
->  #define OP_CLOSEOPEN	100
-> @@ -145,6 +146,7 @@ int     fallocate_calls = 1;            /* -F flag disables */
->  int     punch_hole_calls = 1;           /* -H flag disables */
->  int     zero_range_calls = 1;           /* -z flag disables */
->  int	collapse_range_calls = 1;	/* -C flag disables */
-> +int	insert_range_calls = 1;		/* -i flag disables */
->  int 	mapped_reads = 1;		/* -R flag disables it */
->  int	fsxgoodfd = 0;
->  int	o_direct;			/* -Z */
-> @@ -339,6 +341,14 @@ logdump(void)
->  						     lp->args[0] + lp->args[1])
->  				prt("\t******CCCC");
->  			break;
-> +		case OP_INSERT_RANGE:
-> +			prt("INSERT 0x%x thru 0x%x\t(0x%x bytes)",
-> +			    lp->args[0], lp->args[0] + lp->args[1] - 1,
-> +			    lp->args[1]);
-> +			if (badoff >= lp->args[0] && badoff <
-> +						     lp->args[0] + lp->args[1])
-> +				prt("\t******CCCC");
-> +			break;
->  		case OP_SKIPPED:
->  			prt("SKIPPED (no operation)");
->  			break;
-> @@ -1012,6 +1022,59 @@ do_collapse_range(unsigned offset, unsigned length)
->  }
->  #endif
->  
-> +#ifdef FALLOC_FL_INSERT_RANGE
-> +void
-> +do_insert_range(unsigned offset, unsigned length)
-> +{
-> +	unsigned end_offset;
-> +	int mode = FALLOC_FL_INSERT_RANGE;
+> diff --git a/tests/generic/043 b/tests/generic/043
+> new file mode 100644
+> index 0000000..a5a2d0b
+> --- /dev/null
+> +++ b/tests/generic/043
+> @@ -0,0 +1,100 @@
+> +#! /bin/bash
+> +# FS QA Test No. generic/043
+> +#
+> +# Test multiple fallocate insert/collapse range calls on same file.
+> +# Call insert range a single alternate block multiple times until the file
+> +# is left with 100 extents and as much number of extents. And Call collapse
+> +# range about the previously inserted ranges to test merge code of collapse
+> +# range. Also check for data integrity and file system consistency.
+> +#-----------------------------------------------------------------------
+> +# Copyright (c) 2014 Samsung Electronics.  All Rights Reserved.
+> +#
+> +# This program is free software; you can redistribute it and/or
+> +# modify it under the terms of the GNU General Public License as
+> +# published by the Free Software Foundation.
+> +#
+> +# This program is distributed in the hope that it would be useful,
+> +# but WITHOUT ANY WARRANTY; without even the implied warranty of
+> +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> +# GNU General Public License for more details.
+> +#
+> +# You should have received a copy of the GNU General Public License
+> +# along with this program; if not, write the Free Software Foundation,
+> +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+> +#
+> +#-----------------------------------------------------------------------
+> +#
 > +
-> +	if (length == 0) {
-> +		if (!quiet && testcalls > simulatedopcount)
-> +			prt("skipping zero length insert range\n");
-> +		log4(OP_SKIPPED, OP_INSERT_RANGE, offset, length);
-> +		return;
-> +	}
+> +seq=`basename $0`
+> +seqres=$RESULT_DIR/$seq
+> +echo "QA output created by $seq"
 > +
-> +	if ((loff_t)offset >= file_size) {
-> +		if (!quiet && testcalls > simulatedopcount)
-> +			prt("skipping insert range behind EOF\n");
-> +		log4(OP_SKIPPED, OP_INSERT_RANGE, offset, length);
-> +		return;
-> +	}
+> +here=`pwd`
+> +tmp=/tmp/$$
+> +status=1	# failure is the default!
+> +trap "rm -f $tmp.*; exit \$status" 0 1 2 3 15
 > +
-> +	log4(OP_INSERT_RANGE, offset, length, 0);
+> +# get standard environment, filters and checks
+> +. ./common/rc
+> +. ./common/filter
 > +
-> +	if (testcalls <= simulatedopcount)
-> +		return;
+> +# real QA test starts here
+> +_supported_fs generic
+> +_supported_os Linux
 > +
-> +	end_offset = offset + length;
-> +	if ((progressinterval && testcalls % progressinterval == 0) ||
-> +	    (debug && (monitorstart == -1 || monitorend == -1 ||
-> +		      end_offset <= monitorend))) {
-> +		prt("%lu insert\tfrom 0x%x to 0x%x, (0x%x bytes)\n", testcalls,
-> +			offset, offset+length, length);
-> +	}
-> +	if (fallocate(fd, mode, (loff_t)offset, (loff_t)length) == -1) {
-> +		prt("insert range: %x to %x\n", offset, length);
-> +		prterr("do_insert_range: fallocate");
-> +		report_failure(161);
-> +	}
-> +
-> +	memmove(good_buf + end_offset, good_buf + offset,
-> +		file_size - offset);
-> +	memset(good_buf + offset, '\0', length);
-> +	file_size += length;
-> +}
-> +
-> +#else
-> +void
-> +do_insert_range(unsigned offset, unsigned length)
-> +{
-> +	return;
-> +}
-> +#endif
-> +
->  #ifdef HAVE_LINUX_FALLOC_H
->  /* fallocate is basically a no-op unless extending, then a lot like a truncate */
->  void
-> @@ -1117,14 +1180,25 @@ docloseopen(void)
->  	}
->  }
->  
-> -#define TRIM_OFF_LEN(off, len, size)	\
-> -do {					\
-> -	if (size)			\
-> +
-> +#define TRIM_OFF(off, size)	\
-> +do {						\
-> +	if (size)				\
->  		(off) %= (size);	\
-> -	else				\
-> -		(off) = 0;		\
-> -	if ((off) + (len) > (size))	\
-> -		(len) = (size) - (off);	\
-> +	else					\
-> +		(off) = 0;			\
-> +} while (0)
-> +
-> +#define TRIM_LEN(off, len, size)	\
-> +do {								\
-> +	if ((off) + (len) > (size))		\
-> +		(len) = (size) - (off);		\
-> +} while (0)
-> +
-> +#define TRIM_OFF_LEN(off, len, size)	\
-> +do {									\
-> +	TRIM_OFF(off, size);				\
-> +	TRIM_LEN(off, len, size);			\
->  } while (0)
->  
->  void
-> @@ -1192,6 +1266,12 @@ test(void)
->  			goto out;
->  		}
->  		break;
-> +	case OP_INSERT_RANGE:
-> +		if (!insert_range_calls) {
-> +			log4(OP_SKIPPED, OP_INSERT_RANGE, offset, size);
-> +			goto out;
-> +		}
-> +		break;
->  	}
->  
->  	switch (op) {
-> @@ -1244,6 +1324,22 @@ test(void)
->  		}
->  		do_collapse_range(offset, size);
->  		break;
-> +	case OP_INSERT_RANGE:
-> +		TRIM_OFF(offset, file_size);
-> +		TRIM_LEN(offset, size, maxfilelen - file_size);
+> +_require_scratch
+> +_require_xfs_io_command "fiemap"
+> +_require_xfs_io_command "finsert"
+> +_require_xfs_io_command "fcollapse"
+> +_do_die_on_error=y
 
-Ugh, I hit a crash down in do_insert_range() due to the memset() on
-good_buf going off the end of the buffer. It looks like the TRIM_LEN()
-here is not correct and can result in a really large length value.
+What is _do_die_on_error for? Seems like that's only relevant for using
+_do()?
 
-Perhaps something like TRIM_LEN(file_size, length, maxfilelen) is what
-we want for insert range ops?
+> +src=$SCRATCH_MNT/testfile
+> +dest=$SCRATCH_MNT/testfile.dest
+> +BLOCKS=100
+> +BSIZE=`get_block_size $SCRATCH_MNT`
+> +
+
+rm -f $seqres.full
+
+... to clear out the old .full file.
+
+> +_scratch_mkfs MKFS_OPTIONS >> $seqres.full 2>&1
+
+You don't need MKFS_OPTIONS here. In fact, this currently causes a mkfs
+failure (missing $) that we don't detect because we aren't checking that
+the mkfs actually succeeds. All we need to do here is:
+
+_scratch_mkfs >> $seqres.full 2>&1 || _fail "mkfs failed"
+
+If you dig down into _scratch_mkfs(), you'll see that it already
+includes $MKFS_OPTIONS and thus formats the fs as specified by the test
+config.
+
+It might also be a good idea to check that the _scratch_mount below
+succeeds as well...
+
+> +_scratch_mount >> $seqres.full 2>&1
+> +length=$(($BLOCKS * $BSIZE))
+> +
+> +# Write file
+> +$XFS_IO_PROG -f -c "pwrite 0 $length" -c fsync $src > /dev/null
+> +cp $src $dest
+> +
+
+It seems quite unlikely for this to not create a single extent given the
+smallish file size and freshly created fs, but who knows with various fs
+types, test configurations, test device sizes, etc. Another option could
+be to check the starting extent count and verify the ending extent count
+matches, rather than assume hardcoded values of 1.
+
+To be honest, even just including the starting extent count in the
+golden output (e.g., add an fiemap command here as well) might be good
+enough to distinguish that failure path from something going wrong in
+the collapse path, should it ever occur.
+
+> +# Insert alternate blocks
+> +for (( j=0; j < $(($BLOCKS/2)); j++ )); do
+> +	offset=$((($j*$BSIZE)*2))
+> +	$XFS_IO_PROG -c "finsert $offset $BSIZE" $dest > /dev/null
+> +done
+> +
+> +# Check if 100 extents are present
+> +$XFS_IO_PROG -c "fiemap -v" $dest | grep "^ *[0-9]*:" |wc -l
+> +
+> +_check_scratch_fs
+> +if [ $? -ne 0 ]; then
+> +	status=1
+> +	exit
+> +fi
+> +
+> +# Collapse alternate blocks
+> +for (( j=0; j < $(($BLOCKS/2)); j++ )); do
+> +	offset=$((($j*$BSIZE)))
+> +	$XFS_IO_PROG -c "fcollapse $offset $BSIZE" $dest > /dev/null
+> +done
+> +
+> +# Check if 1 extents are present
+> +$XFS_IO_PROG -c "fiemap -v" $dest | grep "^ *[0-9]*:" |wc -l
+> +
+> +# compare original file and test file.
+> +cmp $src $dest || _fail "file bytes check failed"
+> +
+> +_check_scratch_fs
+> +if [ $? -ne 0 ]; then
+> +	status=1
+> +	exit
+> +fi
+> +
+> +umount $SCRATCH_MNT
+> +
+
+The scratch device is unmounted and checked after each test that uses it
+so the above is unnecessary.
 
 Brian
 
-> +		offset = offset & ~(block_size - 1);
-> +		size = size & ~(block_size - 1);
-> +		if (size == 0) {
-> +			log4(OP_SKIPPED, OP_INSERT_RANGE, offset, size);
-> +			goto out;
-> +		}
-> +		if (file_size + size > maxfilelen) {
-> +			log4(OP_SKIPPED, OP_INSERT_RANGE, offset, size);
-> +			goto out;
-> +		}
-> +
-> +		do_insert_range(offset, size);
-> +		break;
->  	default:
->  		prterr("test: unknown operation");
->  		report_failure(42);
-> @@ -1307,6 +1403,9 @@ usage(void)
->  #ifdef FALLOC_FL_COLLAPSE_RANGE
->  "	-C: Do not use collapse range calls\n"
->  #endif
-> +#ifdef FALLOC_FL_INSERT_RANGE
-> +"	-i: Do not use insert range calls\n"
-> +#endif
->  "	-L: fsxLite - no file creations & no file size changes\n\
->  	-N numops: total # operations to do (default infinity)\n\
->  	-O: use oplen (see -o flag) for every op (default random)\n\
-> @@ -1493,7 +1592,7 @@ main(int argc, char **argv)
->  
->  	setvbuf(stdout, (char *)0, _IOLBF, 0); /* line buffered stdout */
->  
-> -	while ((ch = getopt(argc, argv, "b:c:dfl:m:no:p:qr:s:t:w:xyAD:FHzCLN:OP:RS:WZ"))
-> +	while ((ch = getopt(argc, argv, "b:c:dfl:m:no:p:qr:s:t:w:xyAD:FHzCiLN:OP:RS:WZ"))
->  	       != EOF)
->  		switch (ch) {
->  		case 'b':
-> @@ -1599,6 +1698,9 @@ main(int argc, char **argv)
->  		case 'C':
->  			collapse_range_calls = 0;
->  			break;
-> +		case 'i':
-> +			insert_range_calls = 0;
-> +			break;
->  		case 'L':
->  		        lite = 1;
->  			break;
-> @@ -1758,6 +1860,8 @@ main(int argc, char **argv)
->  		zero_range_calls = test_fallocate(FALLOC_FL_ZERO_RANGE);
->  	if (collapse_range_calls)
->  		collapse_range_calls = test_fallocate(FALLOC_FL_COLLAPSE_RANGE);
-> +	if (insert_range_calls)
-> +		insert_range_calls = test_fallocate(FALLOC_FL_INSERT_RANGE);
->  
->  	while (numops == -1 || numops--)
->  		test();
+> +# success, all done
+> +status=0
+> +exit
+> diff --git a/tests/generic/043.out b/tests/generic/043.out
+> new file mode 100644
+> index 0000000..47a66aa
+> --- /dev/null
+> +++ b/tests/generic/043.out
+> @@ -0,0 +1,3 @@
+> +QA output created by 043
+> +100
+> +1
+> diff --git a/tests/generic/group b/tests/generic/group
+> index c0944b3..0a10bdd 100644
+> --- a/tests/generic/group
+> +++ b/tests/generic/group
+> @@ -45,6 +45,7 @@
+>  040 auto quick prealloc
+>  041 auto quick prealloc
+>  042 auto quick prealloc
+> +043 auto quick prealloc
+>  053 acl repair auto quick
+>  062 attr udf auto quick
+>  068 other auto freeze dangerous stress
 > -- 
 > 1.7.9.5
 > 
