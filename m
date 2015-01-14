@@ -1,35 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 3B2227F3F
-	for <xfs@oss.sgi.com>; Tue, 13 Jan 2015 17:36:02 -0600 (CST)
+	by oss.sgi.com (Postfix) with ESMTP id A29B47F3F
+	for <xfs@oss.sgi.com>; Wed, 14 Jan 2015 00:07:28 -0600 (CST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 2906E8F8040
-	for <xfs@oss.sgi.com>; Tue, 13 Jan 2015 15:35:59 -0800 (PST)
-Received: from mail-qc0-f173.google.com (mail-qc0-f173.google.com
-	[209.85.216.173]) by cuda.sgi.com with ESMTP id
-	djlVB09ODB7HLaen (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 13 Jan 2015 15:35:56 -0800 (PST)
-Received: by mail-qc0-f173.google.com with SMTP id i17so4954536qcy.4
-	for <xfs@oss.sgi.com>; Tue, 13 Jan 2015 15:35:55 -0800 (PST)
-Date: Tue, 13 Jan 2015 18:35:52 -0500
-From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH wq/for-3.19] workqueue: fix subtle pool management issue
-	which can stall whole worker_pool
-Message-ID: <20150113233552.GH9489@htj.dyndns.org>
-References: <20150110192852.GD25319@htj.dyndns.org>
-	<54B429EB.9050807@sandeen.net>
-	<20150112225314.GC22156@htj.dyndns.org>
-	<54B454E2.70707@sandeen.net>
-	<20150112233755.GD22156@htj.dyndns.org>
-	<54B56D2B.6090401@sandeen.net>
-	<20150113201900.GA9489@htj.dyndns.org>
-	<54B58041.9070502@sandeen.net>
-	<20150113204633.GC9489@htj.dyndns.org>
-	<54B5A313.2030300@sandeen.net>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 812708F8050
+	for <xfs@oss.sgi.com>; Tue, 13 Jan 2015 22:07:25 -0800 (PST)
+Received: from smtp.welcomes-you.com (welcomes-you.com [144.76.218.113]) by
+	cuda.sgi.com with ESMTP id 5wJWK7b9F01PABIP for
+	<xfs@oss.sgi.com>; Tue, 13 Jan 2015 22:07:18 -0800 (PST)
+Message-ID: <54B60784.5090505@aei.mpg.de>
+Date: Wed, 14 Jan 2015 07:07:00 +0100
+From: Carsten Aulbert <Carsten.Aulbert@aei.mpg.de>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <54B5A313.2030300@sandeen.net>
+Subject: Re: extremely slow file creation/deletion after xfs ran full
+References: <54B387A1.6000807@aei.mpg.de>	<54B3CC6A.4080405@aei.mpg.de>	<20150112155206.GD25944@bfoster.bfoster>	<54B3F19D.6030307@aei.mpg.de>	<20150112163749.GE25944@bfoster.bfoster>	<54B40552.50106@aei.mpg.de>
+	<54B57ACD.60600@hardwarefreak.com> <54B57C59.9070207@aei.mpg.de>
+	<54B58367.1070008@hardwarefreak.com>
+In-Reply-To: <54B58367.1070008@hardwarefreak.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -42,130 +29,35 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Eric Sandeen <sandeen@redhat.com>, xfs-oss <xfs@oss.sgi.com>
+To: Stan Hoeppner <stan@hardwarefreak.com>
+Cc: xfs@oss.sgi.com
 
-Hello,
+Hi Stan
 
-This is the preliminary patch that I have.  I haven't tested it yet.
-Once testing is complete, I'll re-post with test results and apply the
-patch.
+On 01/13/2015 09:43 PM, Stan Hoeppner wrote:
+> With your file sizes that seems a recipe for hotspots.  What do the
+> controller metrics tell you about IOs per drive, bytes per drive?  Are
+> they balanced?
+> 
 
-Thanks and sorry about the trouble.
+They looked ok from 10000ft, but unfortunately, the controller is not
+that talkative :(
 
------- 8< ------
-A worker_pool's forward progress is guaranteed by the fact that the
-last idle worker assumes the manager role to create more workers and
-summon the rescuers if creating workers doesn't succeed in timely
-manner before proceeding to execute work items.
+>> After the arrival of "advanced format" HDD and SSDs we usually try to
+>> align everything to full 1 MByte or larger, just to be sure any
+>> combination of 512b, 4kb, ... will eventually align :)
+> 
+> It's not that simple with striping.  Partitions need to start and end on
+> stripe boundaries, not simply multiples of 4KB or 1MB as with single
+> disks. If you use non power of 2 drive counts in a stripe, aligning at
+> multiples of 1MB will screw ya, e.g. 12 drives * 64KB is a 768KB stripe.
 
-This manager role is implemented in manage_workers(), which indicates
-whether the worker may proceed to work item execution with its return
-value.  This is necessary because multiple workers may contend for the
-manager role, and, if there already is a manager, others should
-proceed to work item execution.
+At the moment there are 16 disks (or 8 "data" disks), so here, power of
+2 still prevails. But still, very valid remark!
 
-Unfortunately, the function also indicates that the worker may proceed
-to work item execution if need_to_create_worker() is false before
-releasing pool->lock.  need_to_create_worker() tests the following
-conditions.
+Cheers
 
-	pending work items && !nr_running && !nr_idle
-
-The first and third conditions are protected by pool->lock and thus
-won't change while holding pool->lock; however, nr_running can change
-asynchronously as other workers block and resume and while it's likely
-to be zero, as someone woke this worker up, some other workers could
-have become runnable inbetween making it non-zero.
-
-If this happens, manage_worker() could return false even with zero
-nr_idle making the worker, the last idle one, proceed to execute work
-items.  If then all workers of the pool end up blocking on a resource
-which can only be released by a work item which is pending on that
-pool, the whole pool can deadlock as there's no one to create more
-workers or summon the rescuers.
-
-This patch fixes the problem by making manage_workers() return false
-iff there's already another manager, which ensures that the last
-worker doesn't start executing work items.
-
-Signed-off-by: Tejun Heo <tj@kernel.org>
-Reported-by: Eric Sandeen <sandeen@sandeen.net>
-Link: http://lkml.kernel.org/g/54B019F4.8030009@sandeen.net
-Cc: Dave Chinner <david@fromorbit.com>
-Cc: Lai Jiangshan <laijs@cn.fujitsu.com>
-Cc: stable@vger.kernel.org
----
- kernel/workqueue.c |   25 +++++++++----------------
- 1 file changed, 9 insertions(+), 16 deletions(-)
-
---- a/kernel/workqueue.c
-+++ b/kernel/workqueue.c
-@@ -1841,17 +1841,13 @@ static void pool_mayday_timeout(unsigned
-  * spin_lock_irq(pool->lock) which may be released and regrabbed
-  * multiple times.  Does GFP_KERNEL allocations.  Called only from
-  * manager.
-- *
-- * Return:
-- * %false if no action was taken and pool->lock stayed locked, %true
-- * otherwise.
-  */
--static bool maybe_create_worker(struct worker_pool *pool)
-+static void maybe_create_worker(struct worker_pool *pool)
- __releases(&pool->lock)
- __acquires(&pool->lock)
- {
- 	if (!need_to_create_worker(pool))
--		return false;
-+		return;
- restart:
- 	spin_unlock_irq(&pool->lock);
- 
-@@ -1877,7 +1873,6 @@ restart:
- 	 */
- 	if (need_to_create_worker(pool))
- 		goto restart;
--	return true;
- }
- 
- /**
-@@ -1897,16 +1892,14 @@ restart:
-  * multiple times.  Does GFP_KERNEL allocations.
-  *
-  * Return:
-- * %false if the pool don't need management and the caller can safely start
-- * processing works, %true indicates that the function released pool->lock
-- * and reacquired it to perform some management function and that the
-- * conditions that the caller verified while holding the lock before
-- * calling the function might no longer be true.
-+ * %false if the pool doesn't need management and the caller can safely
-+ * start processing works, %true if management function was performed and
-+ * the conditions that the caller verified before calling the function may
-+ * no longer be true.
-  */
- static bool manage_workers(struct worker *worker)
- {
- 	struct worker_pool *pool = worker->pool;
--	bool ret = false;
- 
- 	/*
- 	 * Anyone who successfully grabs manager_arb wins the arbitration
-@@ -1919,12 +1912,12 @@ static bool manage_workers(struct worker
- 	 * actual management, the pool may stall indefinitely.
- 	 */
- 	if (!mutex_trylock(&pool->manager_arb))
--		return ret;
-+		return false;
- 
--	ret |= maybe_create_worker(pool);
-+	maybe_create_worker(pool);
- 
- 	mutex_unlock(&pool->manager_arb);
--	return ret;
-+	return true;
- }
- 
- /**
+Carsten
 
 _______________________________________________
 xfs mailing list
