@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 2E28A7F4E
-	for <xfs@oss.sgi.com>; Thu, 15 Jan 2015 07:28:07 -0600 (CST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 5AC7D7F55
+	for <xfs@oss.sgi.com>; Thu, 15 Jan 2015 07:28:09 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 0D594304043
-	for <xfs@oss.sgi.com>; Thu, 15 Jan 2015 05:28:03 -0800 (PST)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 4929E8F8066
+	for <xfs@oss.sgi.com>; Thu, 15 Jan 2015 05:28:06 -0800 (PST)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id OfajrLL08sLsz7TR (version=TLSv1
+	cuda.sgi.com with ESMTP id fA1nC2GHrNjxZB19 (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 15 Jan 2015 05:27:57 -0800 (PST)
-Date: Thu, 15 Jan 2015 08:27:54 -0500
+	Thu, 15 Jan 2015 05:28:03 -0800 (PST)
+Date: Thu, 15 Jan 2015 08:28:01 -0500
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 1/3] xfs: Remove useless test
-Message-ID: <20150115132754.GA23696@bfoster.bfoster>
+Subject: Re: [PATCH 2/3] xfs: Remove some useless flags tests
+Message-ID: <20150115132800.GB23696@bfoster.bfoster>
 References: <1421317085-14350-1-git-send-email-jack@suse.cz>
-	<1421317085-14350-2-git-send-email-jack@suse.cz>
+	<1421317085-14350-3-git-send-email-jack@suse.cz>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1421317085-14350-2-git-send-email-jack@suse.cz>
+In-Reply-To: <1421317085-14350-3-git-send-email-jack@suse.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,30 +33,60 @@ Sender: xfs-bounces@oss.sgi.com
 To: Jan Kara <jack@suse.cz>
 Cc: xfs@oss.sgi.com
 
-On Thu, Jan 15, 2015 at 11:18:03AM +0100, Jan Kara wrote:
-> Q_XQUOTARM is never passed to xfs_fs_set_xstate() so remove the test.
+On Thu, Jan 15, 2015 at 11:18:04AM +0100, Jan Kara wrote:
+> 'flags' have XFS_ALL_QUOTA_ACCT cleared immediately on function entry.
+> There's no point in checking these bits later in the function. Also
+> because we check something is going to change, we know some enforcement
+> bits are being added and thus there's no point in testing that later.
 > 
 > Signed-off-by: Jan Kara <jack@suse.cz>
 > ---
 
 Reviewed-by: Brian Foster <bfoster@redhat.com>
 
->  fs/xfs/xfs_quotaops.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+>  fs/xfs/xfs_qm_syscalls.c | 15 ++++-----------
+>  1 file changed, 4 insertions(+), 11 deletions(-)
 > 
-> diff --git a/fs/xfs/xfs_quotaops.c b/fs/xfs/xfs_quotaops.c
-> index 7542bbeca6a1..8fcd20dbf89a 100644
-> --- a/fs/xfs/xfs_quotaops.c
-> +++ b/fs/xfs/xfs_quotaops.c
-> @@ -75,7 +75,7 @@ xfs_fs_set_xstate(
+> diff --git a/fs/xfs/xfs_qm_syscalls.c b/fs/xfs/xfs_qm_syscalls.c
+> index b8a565edb4ae..a8c673dbff32 100644
+> --- a/fs/xfs/xfs_qm_syscalls.c
+> +++ b/fs/xfs/xfs_qm_syscalls.c
+> @@ -326,22 +326,16 @@ xfs_qm_scall_quotaon(
+>  		return -EINVAL;
+>  	}
 >  
->  	if (sb->s_flags & MS_RDONLY)
->  		return -EROFS;
-> -	if (op != Q_XQUOTARM && !XFS_IS_QUOTA_RUNNING(mp))
-> +	if (!XFS_IS_QUOTA_RUNNING(mp))
->  		return -ENOSYS;
+> -	/* No fs can turn on quotas with a delayed effect */
+> -	ASSERT((flags & XFS_ALL_QUOTA_ACCT) == 0);
+> -
+>  	/*
+>  	 * Can't enforce without accounting. We check the superblock
+>  	 * qflags here instead of m_qflags because rootfs can have
+>  	 * quota acct on ondisk without m_qflags' knowing.
+>  	 */
+> -	if (((flags & XFS_UQUOTA_ACCT) == 0 &&
+> -	     (mp->m_sb.sb_qflags & XFS_UQUOTA_ACCT) == 0 &&
+> +	if (((mp->m_sb.sb_qflags & XFS_UQUOTA_ACCT) == 0 &&
+>  	     (flags & XFS_UQUOTA_ENFD)) ||
+> -	    ((flags & XFS_GQUOTA_ACCT) == 0 &&
+> -	     (mp->m_sb.sb_qflags & XFS_GQUOTA_ACCT) == 0 &&
+> +	    ((mp->m_sb.sb_qflags & XFS_GQUOTA_ACCT) == 0 &&
+>  	     (flags & XFS_GQUOTA_ENFD)) ||
+> -	    ((flags & XFS_PQUOTA_ACCT) == 0 &&
+> -	     (mp->m_sb.sb_qflags & XFS_PQUOTA_ACCT) == 0 &&
+> +	    ((mp->m_sb.sb_qflags & XFS_PQUOTA_ACCT) == 0 &&
+>  	     (flags & XFS_PQUOTA_ENFD))) {
+>  		xfs_debug(mp,
+>  			"%s: Can't enforce without acct, flags=%x sbflags=%x",
+> @@ -380,8 +374,7 @@ xfs_qm_scall_quotaon(
+>  	     ((mp->m_sb.sb_qflags & XFS_PQUOTA_ACCT) !=
+>  	     (mp->m_qflags & XFS_PQUOTA_ACCT)) ||
+>  	     ((mp->m_sb.sb_qflags & XFS_GQUOTA_ACCT) !=
+> -	     (mp->m_qflags & XFS_GQUOTA_ACCT)) ||
+> -	    (flags & XFS_ALL_QUOTA_ENFD) == 0)
+> +	     (mp->m_qflags & XFS_GQUOTA_ACCT)))
+>  		return 0;
 >  
->  	if (uflags & FS_QUOTA_UDQ_ACCT)
+>  	if (! XFS_IS_QUOTA_RUNNING(mp))
 > -- 
 > 2.1.2
 > 
