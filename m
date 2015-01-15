@@ -1,23 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 187347F5E
-	for <xfs@oss.sgi.com>; Thu, 15 Jan 2015 07:28:23 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id DD3DB304032
-	for <xfs@oss.sgi.com>; Thu, 15 Jan 2015 05:28:22 -0800 (PST)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id VReTDxhK6hXZ2akI (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 15 Jan 2015 05:28:07 -0800 (PST)
-Date: Thu, 15 Jan 2015 08:28:05 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 3/3] xfs: Remove some pointless quota checks
-Message-ID: <20150115132805.GC23696@bfoster.bfoster>
-References: <1421317085-14350-1-git-send-email-jack@suse.cz>
-	<1421317085-14350-4-git-send-email-jack@suse.cz>
+	by oss.sgi.com (Postfix) with ESMTP id DF5D37F4E
+	for <xfs@oss.sgi.com>; Thu, 15 Jan 2015 15:44:51 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id CCEE3304048
+	for <xfs@oss.sgi.com>; Thu, 15 Jan 2015 13:44:51 -0800 (PST)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id pcpCohwbYAk5QNhs for <xfs@oss.sgi.com>;
+	Thu, 15 Jan 2015 13:44:44 -0800 (PST)
+Message-ID: <54B834CB.2030400@sandeen.net>
+Date: Thu, 15 Jan 2015 15:44:43 -0600
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1421317085-14350-4-git-send-email-jack@suse.cz>
+Subject: Re: [PATCH 1/2] repair: fix unnecessary secondary scan if only last
+	sb is corrupt
+References: <1421179693-17227-1-git-send-email-bfoster@redhat.com>
+	<1421179693-17227-2-git-send-email-bfoster@redhat.com>
+In-Reply-To: <1421179693-17227-2-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,132 +29,68 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Jan Kara <jack@suse.cz>
-Cc: xfs@oss.sgi.com
+To: Brian Foster <bfoster@redhat.com>, xfs@oss.sgi.com
 
-On Thu, Jan 15, 2015 at 11:18:05AM +0100, Jan Kara wrote:
-> xfs_fs_get_xstate() and xfs_fs_get_xstatev() check whether there's quota
-> running before calling xfs_qm_scall_getqstat() or
-> xfs_qm_scall_getqstatv(). Thus we are certain that superblock supports
-> quota and xfs_sb_version_hasquota() check is pointless. Similarly we
-> know that when quota is running, mp->m_quotainfo will be allocated.
+On 1/13/15 2:08 PM, Brian Foster wrote:
+> verify_set_primary_sb() scans the secondary superbocks based on the
+> geometry specified in the primary and determines the most likely correct
+> geometry by tracking how many superblocks are consistent across the set.
+> The most frequent geometry is copied into the primary superblock. The
+> return value is checked by the caller (phase1()) to determine whether a
+> brute force secondary scan is necessary.
 > 
-> Signed-off-by: Jan Kara <jack@suse.cz>
+> This generally occurs when not enough secondary sb's are consistent to
+> declare the geometry correct. If enough secondaries are consistent,
+> verify_set_primary_sb() returns the status of the last secondary sb that
+> was scanned. Corruptions to secondary supers other than the last are
+> thus resolved fine. If the last secondary is corrupt, however, an error
+> is returned to phase1(). This causes a brute force scan even if enough
+> supers were found to repair the last secondary.
+> 
+> Move the initialization of retval to after the sb scan to return an
+> error only if not enough secondary supers were found to declare a
+> correct geometry.
+> 
+> Signed-off-by: Brian Foster <bfoster@redhat.com>
+
+Nice.  Brute-force scan is awful, doing it when unnecessary stinks!  :)
+
+could this be fstest-ed?
+
+Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+
 > ---
-
-Reviewed-by: Brian Foster <bfoster@redhat.com>
-
->  fs/xfs/xfs_qm_syscalls.c | 59 ++++++++++++++++--------------------------------
->  1 file changed, 20 insertions(+), 39 deletions(-)
+>  repair/sb.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
 > 
-> diff --git a/fs/xfs/xfs_qm_syscalls.c b/fs/xfs/xfs_qm_syscalls.c
-> index a8c673dbff32..784c41b3ad84 100644
-> --- a/fs/xfs/xfs_qm_syscalls.c
-> +++ b/fs/xfs/xfs_qm_syscalls.c
-> @@ -411,20 +411,12 @@ xfs_qm_scall_getqstat(
->  	memset(out, 0, sizeof(fs_quota_stat_t));
->  
->  	out->qs_version = FS_QSTAT_VERSION;
-> -	if (!xfs_sb_version_hasquota(&mp->m_sb)) {
-> -		out->qs_uquota.qfs_ino = NULLFSINO;
-> -		out->qs_gquota.qfs_ino = NULLFSINO;
-> -		return 0;
-> -	}
-> -
->  	out->qs_flags = (__uint16_t) xfs_qm_export_flags(mp->m_qflags &
->  							(XFS_ALL_QUOTA_ACCT|
->  							 XFS_ALL_QUOTA_ENFD));
-> -	if (q) {
-> -		uip = q->qi_uquotaip;
-> -		gip = q->qi_gquotaip;
-> -		pip = q->qi_pquotaip;
-> -	}
-> +	uip = q->qi_uquotaip;
-> +	gip = q->qi_gquotaip;
-> +	pip = q->qi_pquotaip;
->  	if (!uip && mp->m_sb.sb_uquotino != NULLFSINO) {
->  		if (xfs_iget(mp, NULL, mp->m_sb.sb_uquotino,
->  					0, 0, &uip) == 0)
-> @@ -470,14 +462,13 @@ xfs_qm_scall_getqstat(
->  		if (temppqip)
->  			IRELE(pip);
->  	}
-> -	if (q) {
-> -		out->qs_incoredqs = q->qi_dquots;
-> -		out->qs_btimelimit = q->qi_btimelimit;
-> -		out->qs_itimelimit = q->qi_itimelimit;
-> -		out->qs_rtbtimelimit = q->qi_rtbtimelimit;
-> -		out->qs_bwarnlimit = q->qi_bwarnlimit;
-> -		out->qs_iwarnlimit = q->qi_iwarnlimit;
-> -	}
-> +	out->qs_incoredqs = q->qi_dquots;
-> +	out->qs_btimelimit = q->qi_btimelimit;
-> +	out->qs_itimelimit = q->qi_itimelimit;
-> +	out->qs_rtbtimelimit = q->qi_rtbtimelimit;
-> +	out->qs_bwarnlimit = q->qi_bwarnlimit;
-> +	out->qs_iwarnlimit = q->qi_iwarnlimit;
-> +
->  	return 0;
+> diff --git a/repair/sb.c b/repair/sb.c
+> index ad27756..dc154f7 100644
+> --- a/repair/sb.c
+> +++ b/repair/sb.c
+> @@ -724,7 +724,6 @@ verify_set_primary_sb(xfs_sb_t		*rsb,
+>  	 * sector size rather than the sector size in @rsb.
+>  	 */
+>  	size = NUM_AGH_SECTS * (1 << (XFS_MAX_SECTORSIZE_LOG));
+> -	retval = 0;
+>  	list = NULL;
+>  	num_ok = 0;
+>  	*sb_modified = 0;
+> @@ -779,6 +778,7 @@ verify_set_primary_sb(xfs_sb_t		*rsb,
+>  	/*
+>  	 * see if we have enough superblocks to bother with
+>  	 */
+> +	retval = 0;
+>  	if (num_ok < num_sbs / 2) {
+>  		retval = XR_INSUFF_SEC_SB;
+>  		goto out_free_list;
+> @@ -868,5 +868,5 @@ out_free_list:
+>  	free_geo(list);
+>  	free(sb);
+>  	free(checked);
+> -	return(retval);
+> +	return retval;
 >  }
->  
-> @@ -498,13 +489,6 @@ xfs_qm_scall_getqstatv(
->  	bool                    tempgqip = false;
->  	bool                    temppqip = false;
->  
-> -	if (!xfs_sb_version_hasquota(&mp->m_sb)) {
-> -		out->qs_uquota.qfs_ino = NULLFSINO;
-> -		out->qs_gquota.qfs_ino = NULLFSINO;
-> -		out->qs_pquota.qfs_ino = NULLFSINO;
-> -		return 0;
-> -	}
-> -
->  	out->qs_flags = (__uint16_t) xfs_qm_export_flags(mp->m_qflags &
->  							(XFS_ALL_QUOTA_ACCT|
->  							 XFS_ALL_QUOTA_ENFD));
-> @@ -512,11 +496,9 @@ xfs_qm_scall_getqstatv(
->  	out->qs_gquota.qfs_ino = mp->m_sb.sb_gquotino;
->  	out->qs_pquota.qfs_ino = mp->m_sb.sb_pquotino;
->  
-> -	if (q) {
-> -		uip = q->qi_uquotaip;
-> -		gip = q->qi_gquotaip;
-> -		pip = q->qi_pquotaip;
-> -	}
-> +	uip = q->qi_uquotaip;
-> +	gip = q->qi_gquotaip;
-> +	pip = q->qi_pquotaip;
->  	if (!uip && mp->m_sb.sb_uquotino != NULLFSINO) {
->  		if (xfs_iget(mp, NULL, mp->m_sb.sb_uquotino,
->  					0, 0, &uip) == 0)
-> @@ -551,14 +533,13 @@ xfs_qm_scall_getqstatv(
->  		if (temppqip)
->  			IRELE(pip);
->  	}
-> -	if (q) {
-> -		out->qs_incoredqs = q->qi_dquots;
-> -		out->qs_btimelimit = q->qi_btimelimit;
-> -		out->qs_itimelimit = q->qi_itimelimit;
-> -		out->qs_rtbtimelimit = q->qi_rtbtimelimit;
-> -		out->qs_bwarnlimit = q->qi_bwarnlimit;
-> -		out->qs_iwarnlimit = q->qi_iwarnlimit;
-> -	}
-> +	out->qs_incoredqs = q->qi_dquots;
-> +	out->qs_btimelimit = q->qi_btimelimit;
-> +	out->qs_itimelimit = q->qi_itimelimit;
-> +	out->qs_rtbtimelimit = q->qi_rtbtimelimit;
-> +	out->qs_bwarnlimit = q->qi_bwarnlimit;
-> +	out->qs_iwarnlimit = q->qi_iwarnlimit;
-> +
->  	return 0;
->  }
->  
-> -- 
-> 2.1.2
 > 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
