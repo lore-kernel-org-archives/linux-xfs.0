@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 7764D7F61
-	for <xfs@oss.sgi.com>; Fri, 16 Jan 2015 06:48:10 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 3EB7F304043
-	for <xfs@oss.sgi.com>; Fri, 16 Jan 2015 04:48:10 -0800 (PST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 95C637F75
+	for <xfs@oss.sgi.com>; Fri, 16 Jan 2015 06:48:11 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 7A6B98F8052
+	for <xfs@oss.sgi.com>; Fri, 16 Jan 2015 04:48:11 -0800 (PST)
 Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id v9rhEEzgwRJ0AxL7 (version=TLSv1 cipher=AES256-SHA
+	with ESMTP id p2CaAV0rw8v1WZkL (version=TLSv1 cipher=AES256-SHA
 	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 16 Jan 2015 04:48:07 -0800 (PST)
+	Fri, 16 Jan 2015 04:48:08 -0800 (PST)
 From: Jan Kara <jack@suse.cz>
-Subject: [PATCH 08/17] quota: Store maximum space limit in bytes
-Date: Fri, 16 Jan 2015 13:47:42 +0100
-Message-Id: <1421412471-4747-9-git-send-email-jack@suse.cz>
+Subject: [PATCH 16/17] xfs: Add support for Q_SETINFO
+Date: Fri, 16 Jan 2015 13:47:50 +0100
+Message-Id: <1421412471-4747-17-git-send-email-jack@suse.cz>
 In-Reply-To: <1421412471-4747-1-git-send-email-jack@suse.cz>
 References: <1421412471-4747-1-git-send-email-jack@suse.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -31,126 +31,99 @@ Sender: xfs-bounces@oss.sgi.com
 To: linux-fsdevel@vger.kernel.org
 Cc: cluster-devel@redhat.com, Jan Kara <jack@suse.cz>, ocfs2-devel@oss.oracle.com, xfs@oss.sgi.com
 
-Currently maximum space limit quota format supports is in blocks however
-since we store space limits in bytes, this is somewhat confusing. So
-store the maximum limit in bytes as well. Also rename the field to match
-the new unit and related inode field to match the new naming scheme.
+Add support to XFS so that time limits can be set through Q_SETINFO
+quotactl.
 
 Signed-off-by: Jan Kara <jack@suse.cz>
 ---
- fs/ocfs2/quota_local.c |  4 ++--
- fs/quota/dquot.c       | 18 ++++--------------
- fs/quota/quota_v1.c    |  4 ++--
- fs/quota/quota_v2.c    | 10 +++++-----
- include/linux/quota.h  |  4 ++--
- 5 files changed, 15 insertions(+), 25 deletions(-)
+ fs/xfs/xfs_qm.h          |  2 ++
+ fs/xfs/xfs_qm_syscalls.c | 25 +++++++++++++++++++++++++
+ fs/xfs/xfs_quotaops.c    | 16 ++++++++++++++++
+ 3 files changed, 43 insertions(+)
 
-diff --git a/fs/ocfs2/quota_local.c b/fs/ocfs2/quota_local.c
-index 55f832f553cb..89c0b2620814 100644
---- a/fs/ocfs2/quota_local.c
-+++ b/fs/ocfs2/quota_local.c
-@@ -701,8 +701,8 @@ static int ocfs2_local_read_info(struct super_block *sb, int type)
- 	/* We don't need the lock and we have to acquire quota file locks
- 	 * which will later depend on this lock */
- 	mutex_unlock(&sb_dqopt(sb)->dqio_mutex);
--	info->dqi_maxblimit = 0x7fffffffffffffffLL;
--	info->dqi_maxilimit = 0x7fffffffffffffffLL;
-+	info->dqi_max_spc_limit = 0x7fffffffffffffffLL;
-+	info->dqi_max_ino_limit = 0x7fffffffffffffffLL;
- 	oinfo = kmalloc(sizeof(struct ocfs2_mem_dqinfo), GFP_NOFS);
- 	if (!oinfo) {
- 		mlog(ML_ERROR, "failed to allocate memory for ocfs2 quota"
-diff --git a/fs/quota/dquot.c b/fs/quota/dquot.c
-index 79f49d04ad20..02d571cb010a 100644
---- a/fs/quota/dquot.c
-+++ b/fs/quota/dquot.c
-@@ -2467,16 +2467,6 @@ out_err:
+diff --git a/fs/xfs/xfs_qm.h b/fs/xfs/xfs_qm.h
+index d308e9610548..c1a9761d37db 100644
+--- a/fs/xfs/xfs_qm.h
++++ b/fs/xfs/xfs_qm.h
+@@ -170,6 +170,8 @@ extern int		xfs_qm_scall_setqlim(struct xfs_mount *, xfs_dqid_t, uint,
+ 					struct qc_dqblk *);
+ extern int		xfs_qm_scall_getstate(struct xfs_mount *,
+ 					struct qc_state *);
++extern int		xfs_qm_scall_setinfo(struct xfs_mount *, uint,
++					struct qc_info *);
+ extern int		xfs_qm_scall_quotaon(struct xfs_mount *, uint);
+ extern int		xfs_qm_scall_quotaoff(struct xfs_mount *, uint);
+ 
+diff --git a/fs/xfs/xfs_qm_syscalls.c b/fs/xfs/xfs_qm_syscalls.c
+index 5ccafb4c7e79..9ede1ffec8d8 100644
+--- a/fs/xfs/xfs_qm_syscalls.c
++++ b/fs/xfs/xfs_qm_syscalls.c
+@@ -451,6 +451,31 @@ int xfs_qm_scall_getstate(struct xfs_mount *mp, struct qc_state *state)
+ 	return 0;
  }
- EXPORT_SYMBOL(dquot_quota_disable);
  
--static inline qsize_t qbtos(qsize_t blocks)
--{
--	return blocks << QIF_DQBLKSIZE_BITS;
--}
--
--static inline qsize_t stoqb(qsize_t space)
--{
--	return (space + QIF_DQBLKSIZE - 1) >> QIF_DQBLKSIZE_BITS;
--}
--
- /* Generic routine for getting common part of quota structure */
- static void do_get_dqblk(struct dquot *dquot, struct qc_dqblk *di)
++#define XFS_QC_SETINFO_MASK (QC_TIMER_MASK | QC_WARNS_MASK)
++
++/*
++ * Adjust quota timers & warnings
++ */
++int xfs_qm_scall_setinfo(struct xfs_mount *mp, uint type, struct qc_info *info)
++{
++	struct qc_dqblk newlim;
++
++	if (info->i_fieldmask & ~XFS_QC_SETINFO_MASK)
++		return -EINVAL;
++	if ((info->i_fieldmask & XFS_QC_SETINFO_MASK) == 0)
++		return 0;
++
++	newlim.d_fieldmask = info->i_fieldmask;
++	newlim.d_spc_timer = info->i_spc_timelimit;
++	newlim.d_ino_timer = info->i_ino_timelimit;
++	newlim.d_rt_spc_timer = info->i_rt_spc_timelimit;
++	newlim.d_ino_warns = info->i_ino_warnlimit;
++	newlim.d_spc_warns = info->i_spc_warnlimit;
++	newlim.d_rt_spc_warns = info->i_rt_spc_warnlimit;
++
++	return xfs_qm_scall_setqlim(mp, 0, type, &newlim);
++}
++
+ #define XFS_QC_MASK \
+ 	(QC_LIMIT_MASK | QC_TIMER_MASK | QC_WARNS_MASK)
+ 
+diff --git a/fs/xfs/xfs_quotaops.c b/fs/xfs/xfs_quotaops.c
+index 698e6faac519..a25f482955a7 100644
+--- a/fs/xfs/xfs_quotaops.c
++++ b/fs/xfs/xfs_quotaops.c
+@@ -45,6 +45,21 @@ static int xfs_fs_get_quota_state(struct super_block *sb, struct qc_state *s)
+ 	return xfs_qm_scall_getstate(XFS_M(sb), s);
+ }
+ 
++static int xfs_fs_set_info(struct super_block *sb, int type,
++			   struct qc_info *info)
++{
++	struct xfs_mount	*mp = XFS_M(sb);
++
++	if (sb->s_flags & MS_RDONLY)
++		return -EROFS;
++	if (!XFS_IS_QUOTA_RUNNING(mp))
++		return -ENOSYS;
++	if (!XFS_IS_QUOTA_ON(mp))
++		return -ESRCH;
++
++	return xfs_qm_scall_setinfo(mp, xfs_quota_type(type), info);
++}
++
+ static unsigned int xfs_quota_flags(unsigned int uflags)
  {
-@@ -2526,13 +2516,13 @@ static int do_set_dqblk(struct dquot *dquot, struct qc_dqblk *di)
- 		return -EINVAL;
+ 	unsigned int flags = 0;
+@@ -159,6 +174,7 @@ xfs_fs_set_dqblk(
  
- 	if (((di->d_fieldmask & QC_SPC_SOFT) &&
--	     stoqb(di->d_spc_softlimit) > dqi->dqi_maxblimit) ||
-+	     di->d_spc_softlimit > dqi->dqi_max_spc_limit) ||
- 	    ((di->d_fieldmask & QC_SPC_HARD) &&
--	     stoqb(di->d_spc_hardlimit) > dqi->dqi_maxblimit) ||
-+	     di->d_spc_hardlimit > dqi->dqi_max_spc_limit) ||
- 	    ((di->d_fieldmask & QC_INO_SOFT) &&
--	     (di->d_ino_softlimit > dqi->dqi_maxilimit)) ||
-+	     (di->d_ino_softlimit > dqi->dqi_max_ino_limit)) ||
- 	    ((di->d_fieldmask & QC_INO_HARD) &&
--	     (di->d_ino_hardlimit > dqi->dqi_maxilimit)))
-+	     (di->d_ino_hardlimit > dqi->dqi_max_ino_limit)))
- 		return -ERANGE;
- 
- 	spin_lock(&dq_data_lock);
-diff --git a/fs/quota/quota_v1.c b/fs/quota/quota_v1.c
-index 469c6848b322..8fe79beced5c 100644
---- a/fs/quota/quota_v1.c
-+++ b/fs/quota/quota_v1.c
-@@ -169,8 +169,8 @@ static int v1_read_file_info(struct super_block *sb, int type)
- 	}
- 	ret = 0;
- 	/* limits are stored as unsigned 32-bit data */
--	dqopt->info[type].dqi_maxblimit = 0xffffffff;
--	dqopt->info[type].dqi_maxilimit = 0xffffffff;
-+	dqopt->info[type].dqi_max_spc_limit = 0xffffffffULL << QUOTABLOCK_BITS;
-+	dqopt->info[type].dqi_max_ino_limit = 0xffffffff;
- 	dqopt->info[type].dqi_igrace =
- 			dqblk.dqb_itime ? dqblk.dqb_itime : MAX_IQ_TIME;
- 	dqopt->info[type].dqi_bgrace =
-diff --git a/fs/quota/quota_v2.c b/fs/quota/quota_v2.c
-index b291602e1193..8aa5a092de9f 100644
---- a/fs/quota/quota_v2.c
-+++ b/fs/quota/quota_v2.c
-@@ -117,12 +117,12 @@ static int v2_read_file_info(struct super_block *sb, int type)
- 	qinfo = info->dqi_priv;
- 	if (version == 0) {
- 		/* limits are stored as unsigned 32-bit data */
--		info->dqi_maxblimit = 0xffffffff;
--		info->dqi_maxilimit = 0xffffffff;
-+		info->dqi_max_spc_limit = 0xffffffffULL << QUOTABLOCK_BITS;
-+		info->dqi_max_ino_limit = 0xffffffff;
- 	} else {
--		/* used space is stored as unsigned 64-bit value */
--		info->dqi_maxblimit = 0xffffffffffffffffULL;	/* 2^64-1 */
--		info->dqi_maxilimit = 0xffffffffffffffffULL;
-+		/* used space is stored as unsigned 64-bit value in bytes */
-+		info->dqi_max_spc_limit = 0xffffffffffffffffULL; /* 2^64-1 */
-+		info->dqi_max_ino_limit = 0xffffffffffffffffULL;
- 	}
- 	info->dqi_bgrace = le32_to_cpu(dinfo.dqi_bgrace);
- 	info->dqi_igrace = le32_to_cpu(dinfo.dqi_igrace);
-diff --git a/include/linux/quota.h b/include/linux/quota.h
-index 0938159d65c8..d534e8ed308a 100644
---- a/include/linux/quota.h
-+++ b/include/linux/quota.h
-@@ -216,8 +216,8 @@ struct mem_dqinfo {
- 	unsigned long dqi_flags;
- 	unsigned int dqi_bgrace;
- 	unsigned int dqi_igrace;
--	qsize_t dqi_maxblimit;
--	qsize_t dqi_maxilimit;
-+	qsize_t dqi_max_spc_limit;
-+	qsize_t dqi_max_ino_limit;
- 	void *dqi_priv;
- };
- 
+ const struct quotactl_ops xfs_quotactl_operations = {
+ 	.get_state		= xfs_fs_get_quota_state,
++	.set_info		= xfs_fs_set_info,
+ 	.quota_enable		= xfs_quota_enable,
+ 	.quota_disable		= xfs_quota_disable,
+ 	.rm_xquota		= xfs_fs_rm_xquota,
 -- 
 2.1.2
 
