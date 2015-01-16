@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id C35027F58
-	for <xfs@oss.sgi.com>; Fri, 16 Jan 2015 06:48:07 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 7F613304039
-	for <xfs@oss.sgi.com>; Fri, 16 Jan 2015 04:48:07 -0800 (PST)
+	by oss.sgi.com (Postfix) with ESMTP id EA3E57F5F
+	for <xfs@oss.sgi.com>; Fri, 16 Jan 2015 06:48:08 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id CCEDA304043
+	for <xfs@oss.sgi.com>; Fri, 16 Jan 2015 04:48:08 -0800 (PST)
 Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id xwteK9y3z8MlktP2 (version=TLSv1 cipher=AES256-SHA
+	with ESMTP id TpEL4tBsL5Bk9sBo (version=TLSv1 cipher=AES256-SHA
 	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 16 Jan 2015 04:48:03 -0800 (PST)
+	Fri, 16 Jan 2015 04:48:07 -0800 (PST)
 From: Jan Kara <jack@suse.cz>
-Subject: [PATCH 01/17] quota: Split ->set_xstate callback into two
-Date: Fri, 16 Jan 2015 13:47:35 +0100
-Message-Id: <1421412471-4747-2-git-send-email-jack@suse.cz>
+Subject: [PATCH 14/17] quota: Remove ->get_xstate and ->get_xstatev callbacks
+Date: Fri, 16 Jan 2015 13:47:48 +0100
+Message-Id: <1421412471-4747-15-git-send-email-jack@suse.cz>
 In-Reply-To: <1421412471-4747-1-git-send-email-jack@suse.cz>
 References: <1421412471-4747-1-git-send-email-jack@suse.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -31,168 +31,67 @@ Sender: xfs-bounces@oss.sgi.com
 To: linux-fsdevel@vger.kernel.org
 Cc: cluster-devel@redhat.com, Jan Kara <jack@suse.cz>, ocfs2-devel@oss.oracle.com, xfs@oss.sgi.com
 
-Split ->set_xstate callback into two callbacks - one for turning quotas
-on (->quota_enable) and one for turning quotas off (->quota_disable). That
-way we don't have to pass quotactl command into the callback which seems
-cleaner.
+These callbacks are now unused. Remove them.
 
 Signed-off-by: Jan Kara <jack@suse.cz>
 ---
- fs/quota/quota.c      | 20 ++++++++++++++----
- fs/xfs/xfs_quotaops.c | 58 ++++++++++++++++++++++++++++++++-------------------
- include/linux/quota.h |  3 ++-
- 3 files changed, 54 insertions(+), 27 deletions(-)
+ fs/quota/quota.c      | 14 ++++----------
+ include/linux/quota.h |  2 --
+ 2 files changed, 4 insertions(+), 12 deletions(-)
 
 diff --git a/fs/quota/quota.c b/fs/quota/quota.c
-index 2aa4151f99d2..5b307e2b5719 100644
+index 7d04b95dfbbf..cb52a1d9c91a 100644
 --- a/fs/quota/quota.c
 +++ b/fs/quota/quota.c
-@@ -198,15 +198,26 @@ static int quota_setquota(struct super_block *sb, int type, qid_t id,
- 	return sb->s_qcop->set_dqblk(sb, qid, &fdq);
- }
+@@ -350,12 +350,9 @@ static int quota_getxstate(struct super_block *sb, void __user *addr)
+ 	struct fs_quota_stat fqs;
+ 	int ret;
  
--static int quota_setxstate(struct super_block *sb, int cmd, void __user *addr)
-+static int quota_enable(struct super_block *sb, void __user *addr)
- {
- 	__u32 flags;
- 
- 	if (copy_from_user(&flags, addr, sizeof(flags)))
- 		return -EFAULT;
--	if (!sb->s_qcop->set_xstate)
-+	if (!sb->s_qcop->quota_enable)
+-	if (!sb->s_qcop->get_xstate && !sb->s_qcop->get_state)
++	if (!sb->s_qcop->get_state)
  		return -ENOSYS;
--	return sb->s_qcop->set_xstate(sb, flags, cmd);
-+	return sb->s_qcop->quota_enable(sb, flags);
-+}
-+
-+static int quota_disable(struct super_block *sb, void __user *addr)
-+{
-+	__u32 flags;
-+
-+	if (copy_from_user(&flags, addr, sizeof(flags)))
-+		return -EFAULT;
-+	if (!sb->s_qcop->quota_disable)
-+		return -ENOSYS;
-+	return sb->s_qcop->quota_disable(sb, flags);
- }
+-	if (sb->s_qcop->get_state)
+-		ret = quota_getstate(sb, &fqs);
+-	else
+-		ret = sb->s_qcop->get_xstate(sb, &fqs);
++	ret = quota_getstate(sb, &fqs);
+ 	if (!ret && copy_to_user(addr, &fqs, sizeof(fqs)))
+ 		return -EFAULT;
+ 	return ret;
+@@ -414,7 +411,7 @@ static int quota_getxstatev(struct super_block *sb, void __user *addr)
+ 	struct fs_quota_statv fqs;
+ 	int ret;
  
- static int quota_getxstate(struct super_block *sb, void __user *addr)
-@@ -335,8 +346,9 @@ static int do_quotactl(struct super_block *sb, int type, int cmd, qid_t id,
- 			return -ENOSYS;
- 		return sb->s_qcop->quota_sync(sb, type);
- 	case Q_XQUOTAON:
-+		return quota_enable(sb, addr);
- 	case Q_XQUOTAOFF:
--		return quota_setxstate(sb, cmd, addr);
-+		return quota_disable(sb, addr);
- 	case Q_XQUOTARM:
- 		return quota_rmxquota(sb, addr);
- 	case Q_XGETQSTAT:
-diff --git a/fs/xfs/xfs_quotaops.c b/fs/xfs/xfs_quotaops.c
-index 8fcd20dbf89a..a46bb8094307 100644
---- a/fs/xfs/xfs_quotaops.c
-+++ b/fs/xfs/xfs_quotaops.c
-@@ -64,19 +64,9 @@ xfs_fs_get_xstatev(
- 	return xfs_qm_scall_getqstatv(mp, fqs);
- }
+-	if (!sb->s_qcop->get_xstatev && !sb->s_qcop->get_state)
++	if (!sb->s_qcop->get_state)
+ 		return -ENOSYS;
  
--STATIC int
--xfs_fs_set_xstate(
--	struct super_block	*sb,
--	unsigned int		uflags,
--	int			op)
-+static unsigned int xfs_quota_flags(unsigned int uflags)
- {
--	struct xfs_mount	*mp = XFS_M(sb);
--	unsigned int		flags = 0;
--
--	if (sb->s_flags & MS_RDONLY)
--		return -EROFS;
--	if (!XFS_IS_QUOTA_RUNNING(mp))
--		return -ENOSYS;
-+	unsigned int flags = 0;
- 
- 	if (uflags & FS_QUOTA_UDQ_ACCT)
- 		flags |= XFS_UQUOTA_ACCT;
-@@ -91,16 +81,39 @@ xfs_fs_set_xstate(
- 	if (uflags & FS_QUOTA_PDQ_ENFD)
- 		flags |= XFS_PQUOTA_ENFD;
- 
--	switch (op) {
--	case Q_XQUOTAON:
--		return xfs_qm_scall_quotaon(mp, flags);
--	case Q_XQUOTAOFF:
--		if (!XFS_IS_QUOTA_ON(mp))
--			return -EINVAL;
--		return xfs_qm_scall_quotaoff(mp, flags);
--	}
-+	return flags;
-+}
-+
-+STATIC int
-+xfs_quota_enable(
-+	struct super_block	*sb,
-+	unsigned int		uflags)
-+{
-+	struct xfs_mount	*mp = XFS_M(sb);
-+
-+	if (sb->s_flags & MS_RDONLY)
-+		return -EROFS;
-+	if (!XFS_IS_QUOTA_RUNNING(mp))
-+		return -ENOSYS;
-+
-+	return xfs_qm_scall_quotaon(mp, xfs_quota_flags(uflags));
-+}
-+
-+STATIC int
-+xfs_quota_disable(
-+	struct super_block	*sb,
-+	unsigned int		uflags)
-+{
-+	struct xfs_mount	*mp = XFS_M(sb);
-+
-+	if (sb->s_flags & MS_RDONLY)
-+		return -EROFS;
-+	if (!XFS_IS_QUOTA_RUNNING(mp))
-+		return -ENOSYS;
-+	if (!XFS_IS_QUOTA_ON(mp))
-+		return -EINVAL;
- 
--	return -EINVAL;
-+	return xfs_qm_scall_quotaoff(mp, xfs_quota_flags(uflags));
- }
- 
- STATIC int
-@@ -166,7 +179,8 @@ xfs_fs_set_dqblk(
- const struct quotactl_ops xfs_quotactl_operations = {
- 	.get_xstatev		= xfs_fs_get_xstatev,
- 	.get_xstate		= xfs_fs_get_xstate,
--	.set_xstate		= xfs_fs_set_xstate,
-+	.quota_enable		= xfs_quota_enable,
-+	.quota_disable		= xfs_quota_disable,
- 	.rm_xquota		= xfs_fs_rm_xquota,
- 	.get_dqblk		= xfs_fs_get_dqblk,
- 	.set_dqblk		= xfs_fs_set_dqblk,
+ 	memset(&fqs, 0, sizeof(fqs));
+@@ -428,10 +425,7 @@ static int quota_getxstatev(struct super_block *sb, void __user *addr)
+ 	default:
+ 		return -EINVAL;
+ 	}
+-	if (sb->s_qcop->get_state)
+-		ret = quota_getstatev(sb, &fqs);
+-	else
+-		ret = sb->s_qcop->get_xstatev(sb, &fqs);
++	ret = quota_getstatev(sb, &fqs);
+ 	if (!ret && copy_to_user(addr, &fqs, sizeof(fqs)))
+ 		return -EFAULT;
+ 	return ret;
 diff --git a/include/linux/quota.h b/include/linux/quota.h
-index 0c42113607ce..79e8b03f75fb 100644
+index 6ecac0f3b2ca..a07f2ed25284 100644
 --- a/include/linux/quota.h
 +++ b/include/linux/quota.h
-@@ -328,13 +328,14 @@ struct quotactl_ops {
- 	int (*quota_on)(struct super_block *, int, int, struct path *);
- 	int (*quota_on_meta)(struct super_block *, int, int);
- 	int (*quota_off)(struct super_block *, int);
-+	int (*quota_enable)(struct super_block *, unsigned int);
-+	int (*quota_disable)(struct super_block *, unsigned int);
- 	int (*quota_sync)(struct super_block *, int);
- 	int (*get_info)(struct super_block *, int, struct if_dqinfo *);
- 	int (*set_info)(struct super_block *, int, struct if_dqinfo *);
- 	int (*get_dqblk)(struct super_block *, struct kqid, struct fs_disk_quota *);
- 	int (*set_dqblk)(struct super_block *, struct kqid, struct fs_disk_quota *);
- 	int (*get_xstate)(struct super_block *, struct fs_quota_stat *);
--	int (*set_xstate)(struct super_block *, unsigned int, int);
- 	int (*get_xstatev)(struct super_block *, struct fs_quota_statv *);
+@@ -408,8 +408,6 @@ struct quotactl_ops {
+ 	int (*get_dqblk)(struct super_block *, struct kqid, struct qc_dqblk *);
+ 	int (*set_dqblk)(struct super_block *, struct kqid, struct qc_dqblk *);
+ 	int (*get_state)(struct super_block *, struct qc_state *);
+-	int (*get_xstate)(struct super_block *, struct fs_quota_stat *);
+-	int (*get_xstatev)(struct super_block *, struct fs_quota_statv *);
  	int (*rm_xquota)(struct super_block *, unsigned int);
  };
+ 
 -- 
 2.1.2
 
