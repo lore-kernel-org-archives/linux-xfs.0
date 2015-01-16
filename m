@@ -1,21 +1,31 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 134597F50
-	for <xfs@oss.sgi.com>; Thu, 15 Jan 2015 17:15:11 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 025AD8F8040
-	for <xfs@oss.sgi.com>; Thu, 15 Jan 2015 15:15:07 -0800 (PST)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id ENg4DxssyGwUa4VE for <xfs@oss.sgi.com>;
-	Thu, 15 Jan 2015 15:15:04 -0800 (PST)
-Message-ID: <54B849F7.70400@sandeen.net>
-Date: Thu, 15 Jan 2015 17:15:03 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
-MIME-Version: 1.0
-Subject: Re: [PATCH 2/2] repair: remove unused strided secondary sb scan logic
-References: <1421179693-17227-1-git-send-email-bfoster@redhat.com>
-	<1421179693-17227-3-git-send-email-bfoster@redhat.com>
-In-Reply-To: <1421179693-17227-3-git-send-email-bfoster@redhat.com>
+	by oss.sgi.com (Postfix) with ESMTP id 9A1B67F4E
+	for <xfs@oss.sgi.com>; Fri, 16 Jan 2015 01:26:49 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 5C0998F8033
+	for <xfs@oss.sgi.com>; Thu, 15 Jan 2015 23:26:46 -0800 (PST)
+Received: from mailout4.samsung.com (mailout4.samsung.com [203.254.224.34]) by
+	cuda.sgi.com with ESMTP id wIOs408CxWduFTvy (version=TLSv1
+	cipher=RC4-MD5 bits=128 verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 15 Jan 2015 23:26:39 -0800 (PST)
+Received: from epcpsbgr5.samsung.com
+	(u145.gpu120.samsung.co.kr [203.254.230.145])
+	by mailout4.samsung.com (Oracle Communications Messaging Server
+	7u4-24.01 (7.0.4.24.0) 64bit (built Nov 17 2011))
+	with ESMTP id <0NI900J5QE0DNH40@mailout4.samsung.com> for
+	xfs@oss.sgi.com; Fri, 16 Jan 2015 16:26:37 +0900 (KST)
+From: Namjae Jeon <namjae.jeon@samsung.com>
+References: <1421165126-3585-1-git-send-email-linkinjeon@gmail.com>
+	<1421165126-3585-3-git-send-email-linkinjeon@gmail.com>
+	<20150115122906.GC18876@bfoster.bfoster>
+In-reply-to: <20150115122906.GC18876@bfoster.bfoster>
+Subject: RE: [PATCH v8 2/11] xfs: Add support FALLOC_FL_INSERT_RANGE for
+	fallocate
+Date: Fri, 16 Jan 2015 16:26:36 +0900
+Message-id: <005101d0315d$c31ad6e0$495084a0$@samsung.com>
+MIME-version: 1.0
+Content-language: ko
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,167 +38,35 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>, xfs@oss.sgi.com
+To: 'Brian Foster' <bfoster@redhat.com>, 'Namjae Jeon' <linkinjeon@gmail.com>
+Cc: tytso@mit.edu, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, a.sangwan@samsung.com, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org
 
-On 1/13/15 2:08 PM, Brian Foster wrote:
-> verify_set_primary_sb() scans and verifies secondary superblocks based
-> on the primary sb. It currently defines a maximum number of 8
-> superblocks to scan per iteration. It also implements a strided
-> algorithm that appears intended to ultimately scan every secondary,
-> albeit in a strided order.
+> On Wed, Jan 14, 2015 at 01:05:17AM +0900, Namjae Jeon wrote:
+> > From: Namjae Jeon <namjae.jeon@samsung.com>
+> >
+> > This patch implements fallocate's FALLOC_FL_INSERT_RANGE for XFS.
+> >
+> > 1) Make sure that both offset and len are block size aligned.
+> > 2) Update the i_size of inode by len bytes.
+> > 3) Compute the file's logical block number against offset. If the computed
+> >    block number is not the starting block of the extent, split the extent
+> >    such that the block number is the starting block of the extent.
+> > 4) Shift all the extents which are lying bewteen [offset, last allocated extent]
+> >    towards right by len bytes. This step will make a hole of len bytes
+> >    at offset.
+> >
+> > Signed-off-by: Namjae Jeon <namjae.jeon@samsung.com>
+> > Signed-off-by: Ashish Sangwan <a.sangwan@samsung.com>
+> > Cc: Brian Foster<bfoster@redhat.com>
+> > ---
 > 
-> Given that the algorithm is written to hit every sb and the stride value
-> is initialized as follows:
+> Fixes look good (I assume nothing else changed between the few nits
+> called out in v7) and survives overnight fsstress and fsx testing
+> without any explosions:
+Yes, I am also running test for long time, If there is any issue, will share.
+Thanks for your review and help :)
 > 
-> 	num_sbs = MIN(NUM_SBS, rsb->sb_agcount);
-> 	skip = howmany(num_sbs, rsb->sb_agcount);
-> 
-> ... which is guaranteed to be 1 since the howmany() parameters are
-> backwards, the strided algorithm doesn't appear to accomplish anything
-> that can't be done with a simple for loop. In other words, despite the
-> max value and strided algorithm, repair always scans all of the
-> secondary superblocks in incremental order.
-> 
-> Therefore, remove the strided algorithm bits and replace with a simple
-> for loop. As a result of this cleanup, also remove the 'checked' buffer
-> used to track repeated ag visits and the now unused NUM_SBS definition.
-> 
-> Signed-off-by: Brian Foster <bfoster@redhat.com>
-
-This looks fine too.  I can't see any reason to do the strided check,
-even if it works...
-
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
-
-> ---
->  repair/globals.h |  2 --
->  repair/sb.c      | 63 ++++++++++++++++++--------------------------------------
->  2 files changed, 20 insertions(+), 45 deletions(-)
-> 
-> diff --git a/repair/globals.h b/repair/globals.h
-> index 6207ca1..f386686 100644
-> --- a/repair/globals.h
-> +++ b/repair/globals.h
-> @@ -57,7 +57,6 @@
->  #define XR_LOG2BSIZE_MIN	9	/* min/max fs blocksize (log2) */
->  #define XR_LOG2BSIZE_MAX	16	/* 2^XR_* == blocksize */
->  
-> -#define	NUM_SBS			8	/* max # of sbs to verify */
->  #define NUM_AGH_SECTS		4	/* # of components in an ag header */
->  
->  /*
-> @@ -88,7 +87,6 @@ EXTERN char	*iobuf;			/* large buffer */
->  EXTERN int	iobuf_size;
->  EXTERN char	*smallbuf;		/* small (1-4 page) buffer */
->  EXTERN int	smallbuf_size;
-> -EXTERN char	*sb_bufs[NUM_SBS];	/* superblock buffers */
->  EXTERN int	sbbuf_size;
->  
->  /* direct I/O info */
-> diff --git a/repair/sb.c b/repair/sb.c
-> index dc154f7..a663728 100644
-> --- a/repair/sb.c
-> +++ b/repair/sb.c
-> @@ -702,20 +702,11 @@ verify_set_primary_sb(xfs_sb_t		*rsb,
->  	xfs_sb_t	*sb;
->  	fs_geo_list_t	*list;
->  	fs_geo_list_t	*current;
-> -	char		*checked;
->  	xfs_agnumber_t	agno;
->  	int		num_sbs;
-> -	int		skip;
->  	int		size;
->  	int		num_ok;
->  	int		retval;
-> -	int		round;
-> -
-> -	/*
-> -	 * select the number of secondaries to try for
-> -	 */
-> -	num_sbs = MIN(NUM_SBS, rsb->sb_agcount);
-> -	skip = howmany(num_sbs, rsb->sb_agcount);
->  
->  	/*
->  	 * We haven't been able to validate the sector size yet properly
-> @@ -727,51 +718,38 @@ verify_set_primary_sb(xfs_sb_t		*rsb,
->  	list = NULL;
->  	num_ok = 0;
->  	*sb_modified = 0;
-> +	num_sbs = rsb->sb_agcount;
->  
->  	sb = (xfs_sb_t *) alloc_ag_buf(size);
-> -	checked = calloc(rsb->sb_agcount, sizeof(char));
-> -	if (!checked) {
-> -		do_error(_("calloc failed in verify_set_primary_sb\n"));
-> -		exit(1);
-> -	}
->  
->  	/*
->  	 * put the primary sb geometry info onto the geometry list
->  	 */
-> -	checked[sb_index] = 1;
->  	get_sb_geometry(&geo, rsb);
->  	list = add_geo(list, &geo, sb_index);
->  
->  	/*
-> -	 * grab N secondaries.  check them off as we get them
-> -	 * so we only process each one once
-> +	 * scan the secondaries and check them off as we get them so we only
-> +	 * process each one once
->  	 */
-> -	for (round = 0; round < skip; round++)  {
-> -		for (agno = round; agno < rsb->sb_agcount; agno += skip)  {
-> -			if (checked[agno])
-> -				continue;
-> +	for (agno = 1; agno < rsb->sb_agcount; agno++) {
-> +		off = (xfs_off_t)agno * rsb->sb_agblocks << rsb->sb_blocklog;
->  
-> -			off = (xfs_off_t)agno * rsb->sb_agblocks << rsb->sb_blocklog;
-> -
-> -			checked[agno] = 1;
-> -			retval = get_sb(sb, off, size, agno);
-> -			if (retval == XR_EOF)
-> -				goto out_free_list;
-> -
-> -			if (retval == XR_OK) {
-> -				/*
-> -				 * save away geometry info.
-> -				 * don't bother checking the sb
-> -				 * against the agi/agf as the odds
-> -				 * of the sb being corrupted in a way
-> -				 * that it is internally consistent
-> -				 * but not consistent with the rest
-> -				 * of the filesystem is really really low.
-> -				 */
-> -				get_sb_geometry(&geo, sb);
-> -				list = add_geo(list, &geo, agno);
-> -				num_ok++;
-> -			}
-> +		retval = get_sb(sb, off, size, agno);
-> +		if (retval == XR_EOF)
-> +			goto out_free_list;
-> +
-> +		if (retval == XR_OK) {
-> +			/*
-> +			 * save away geometry info. don't bother checking the
-> +			 * sb against the agi/agf as the odds of the sb being
-> +			 * corrupted in a way that it is internally consistent
-> +			 * but not consistent with the rest of the filesystem is
-> +			 * really really low.
-> +			 */
-> +			get_sb_geometry(&geo, sb);
-> +			list = add_geo(list, &geo, agno);
-> +			num_ok++;
->  		}
->  	}
->  
-> @@ -867,6 +845,5 @@ verify_set_primary_sb(xfs_sb_t		*rsb,
->  out_free_list:
->  	free_geo(list);
->  	free(sb);
-> -	free(checked);
->  	return retval;
->  }
+> Reviewed-by: Brian Foster <bfoster@redhat.com>
 > 
 
 _______________________________________________
