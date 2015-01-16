@@ -1,18 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 1927F7F4E
-	for <xfs@oss.sgi.com>; Fri, 16 Jan 2015 06:48:06 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 01C2B8F804B
-	for <xfs@oss.sgi.com>; Fri, 16 Jan 2015 04:48:05 -0800 (PST)
+	by oss.sgi.com (Postfix) with ESMTP id 63A867F4E
+	for <xfs@oss.sgi.com>; Fri, 16 Jan 2015 06:48:07 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 519A98F804B
+	for <xfs@oss.sgi.com>; Fri, 16 Jan 2015 04:48:07 -0800 (PST)
 Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id bxNVEqR8h9WT0CzP (version=TLSv1 cipher=AES256-SHA
+	with ESMTP id wA2PzRwaWM25qF9H (version=TLSv1 cipher=AES256-SHA
 	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 16 Jan 2015 04:48:03 -0800 (PST)
+	Fri, 16 Jan 2015 04:48:02 -0800 (PST)
 From: Jan Kara <jack@suse.cz>
-Subject: [PATCH 0/17 v3] quota: Unify VFS and XFS quota interfaces
-Date: Fri, 16 Jan 2015 13:47:34 +0100
-Message-Id: <1421412471-4747-1-git-send-email-jack@suse.cz>
+Subject: [PATCH 04/17] ext4: Use generic helpers for quotaon and quotaoff
+Date: Fri, 16 Jan 2015 13:47:38 +0100
+Message-Id: <1421412471-4747-5-git-send-email-jack@suse.cz>
+In-Reply-To: <1421412471-4747-1-git-send-email-jack@suse.cz>
+References: <1421412471-4747-1-git-send-email-jack@suse.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,47 +31,102 @@ Sender: xfs-bounces@oss.sgi.com
 To: linux-fsdevel@vger.kernel.org
 Cc: cluster-devel@redhat.com, Jan Kara <jack@suse.cz>, ocfs2-devel@oss.oracle.com, xfs@oss.sgi.com
 
-  Hello,
+Ext4 can just use the generic helpers provided by quota code for turning
+quotas on and off when quota files are stored as system inodes. The only
+difference is the feature test in ext4_quota_on_sysfile() but the same
+is achieved in dquot_quota_enable() by checking whether usage tracking
+for the corresponding quota type is enabled (which can happen only if
+quota feature is set).
 
-  this is another iteration of patches to unify VFS and XFS quota interfaces so
-that XFS quotactls work for filesystems with VFS quotas and vice versa.  This
-is useful so that userspace doesn't have to care that much about which
-filesystem it is using at least when using basic quota functionality. In
-particular we should be able to reuse project quota tests in xfstests for ext4.
+Signed-off-by: Jan Kara <jack@suse.cz>
+---
+ fs/ext4/super.c | 42 +-----------------------------------------
+ 1 file changed, 1 insertion(+), 41 deletions(-)
 
-The patches are based on quota cleanup series [1] and XFS cleanup series [2]
-I've sent previously and based on 3.19-rc4 + for-next branch of XFS tree.  I
-could further split this series into per-quotactl series but frankly I don't
-think it will help reviewers in any way (the patches in the current series are
-already ordered by quotactl).
-
-I would like to get some review especially of the fs-specific parts of the
-series - mostly for XFS where things aren't always trivial.
-
-Some more details about the series below:
-
-In this patch set I unify quotaon / quotaoff handling (Q_QUOTAON, Q_QUOTAOFF,
-Q_XQUOTAON, Q_XQUOTAOFF calls), fix some bugs in the Q_XGETQUOTA, Q_XSETQLIM,
-Q_GETQUOTA, Q_SETQUOTA calls done by Christoph some time ago, unify
-Q_GETXSTATE, Q_GETXSTATV with Q_GETINFO, and also wire up Q_SETINFO to work
-with XFS (and Q_XSETQLIM for id 0 to modify time limits for VFS quotas).
-So after these patches xfs_quota can manipulate quotas for ext4 filesystem and
-similarly quota-tools can be used to manipulate quotas for xfs filesystem.
-
-I have also verified that xfstests pass fine both for xfs and ext4 so
-hopefully I didn't introduce any regression in the current functionality (I
-also did a couple of manual checks for timer setting etc).
-
-All the comments to the first version of the series are hopefully addressed,
-except for Dave's request to reduce number of copying of dquot information -
-I have benchmarked that reducing number of copies from 3 to 2 brings just 2%
-improvement in speed in my test setup and getting quota information isn't IMHO
-so performance critical that it would be worth the complications of the code.
-
-								Honza
-
-[1] http://www.spinics.net/lists/linux-fsdevel/msg81903.html
-[2] http://www.spinics.net/lists/xfs/msg31389.html
+diff --git a/fs/ext4/super.c b/fs/ext4/super.c
+index 74c5f53595fb..ac64edbe501d 100644
+--- a/fs/ext4/super.c
++++ b/fs/ext4/super.c
+@@ -1046,10 +1046,7 @@ static int ext4_mark_dquot_dirty(struct dquot *dquot);
+ static int ext4_write_info(struct super_block *sb, int type);
+ static int ext4_quota_on(struct super_block *sb, int type, int format_id,
+ 			 struct path *path);
+-static int ext4_quota_on_sysfile(struct super_block *sb, int type,
+-				 int format_id);
+ static int ext4_quota_off(struct super_block *sb, int type);
+-static int ext4_quota_off_sysfile(struct super_block *sb, int type);
+ static int ext4_quota_on_mount(struct super_block *sb, int type);
+ static ssize_t ext4_quota_read(struct super_block *sb, int type, char *data,
+ 			       size_t len, loff_t off);
+@@ -1084,16 +1081,6 @@ static const struct quotactl_ops ext4_qctl_operations = {
+ 	.get_dqblk	= dquot_get_dqblk,
+ 	.set_dqblk	= dquot_set_dqblk
+ };
+-
+-static const struct quotactl_ops ext4_qctl_sysfile_operations = {
+-	.quota_on_meta	= ext4_quota_on_sysfile,
+-	.quota_off	= ext4_quota_off_sysfile,
+-	.quota_sync	= dquot_quota_sync,
+-	.get_info	= dquot_get_dqinfo,
+-	.set_info	= dquot_set_dqinfo,
+-	.get_dqblk	= dquot_get_dqblk,
+-	.set_dqblk	= dquot_set_dqblk
+-};
+ #endif
+ 
+ static const struct super_operations ext4_sops = {
+@@ -3935,7 +3922,7 @@ static int ext4_fill_super(struct super_block *sb, void *data, int silent)
+ #ifdef CONFIG_QUOTA
+ 	sb->dq_op = &ext4_quota_operations;
+ 	if (EXT4_HAS_RO_COMPAT_FEATURE(sb, EXT4_FEATURE_RO_COMPAT_QUOTA))
+-		sb->s_qcop = &ext4_qctl_sysfile_operations;
++		sb->s_qcop = &dquot_quotactl_sysfile_ops;
+ 	else
+ 		sb->s_qcop = &ext4_qctl_operations;
+ 	sb->s_quota_types = QTYPE_MASK_USR | QTYPE_MASK_GRP;
+@@ -5288,21 +5275,6 @@ static int ext4_enable_quotas(struct super_block *sb)
+ 	return 0;
+ }
+ 
+-/*
+- * quota_on function that is used when QUOTA feature is set.
+- */
+-static int ext4_quota_on_sysfile(struct super_block *sb, int type,
+-				 int format_id)
+-{
+-	if (!EXT4_HAS_RO_COMPAT_FEATURE(sb, EXT4_FEATURE_RO_COMPAT_QUOTA))
+-		return -EINVAL;
+-
+-	/*
+-	 * USAGE was enabled at mount time. Only need to enable LIMITS now.
+-	 */
+-	return ext4_quota_enable(sb, type, format_id, DQUOT_LIMITS_ENABLED);
+-}
+-
+ static int ext4_quota_off(struct super_block *sb, int type)
+ {
+ 	struct inode *inode = sb_dqopt(sb)->files[type];
+@@ -5329,18 +5301,6 @@ out:
+ 	return dquot_quota_off(sb, type);
+ }
+ 
+-/*
+- * quota_off function that is used when QUOTA feature is set.
+- */
+-static int ext4_quota_off_sysfile(struct super_block *sb, int type)
+-{
+-	if (!EXT4_HAS_RO_COMPAT_FEATURE(sb, EXT4_FEATURE_RO_COMPAT_QUOTA))
+-		return -EINVAL;
+-
+-	/* Disable only the limits. */
+-	return dquot_disable(sb, type, DQUOT_LIMITS_ENABLED);
+-}
+-
+ /* Read data from quotafile - avoid pagecache and such because we cannot afford
+  * acquiring the locks... As quota files are never truncated and quota code
+  * itself serializes the operations (and no one else should touch the files)
+-- 
+2.1.2
 
 _______________________________________________
 xfs mailing list
