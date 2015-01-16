@@ -1,18 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 5C4517F75
-	for <xfs@oss.sgi.com>; Fri, 16 Jan 2015 06:48:15 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 17B548F8050
-	for <xfs@oss.sgi.com>; Fri, 16 Jan 2015 04:48:15 -0800 (PST)
+Received: from relay.sgi.com (unknown [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 2E2AB7F4E
+	for <xfs@oss.sgi.com>; Fri, 16 Jan 2015 06:48:23 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 51B78AC002
+	for <xfs@oss.sgi.com>; Fri, 16 Jan 2015 04:48:07 -0800 (PST)
 Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id 4oFRGNldiR7cp3e4 (version=TLSv1 cipher=AES256-SHA
+	with ESMTP id lecylN1VSVY3LH2e (version=TLSv1 cipher=AES256-SHA
 	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 16 Jan 2015 04:48:09 -0800 (PST)
+	Fri, 16 Jan 2015 04:48:03 -0800 (PST)
 From: Jan Kara <jack@suse.cz>
-Subject: [PATCH 17/17] quota: Hook up Q_XSETQLIM for id 0 to ->set_info
-Date: Fri, 16 Jan 2015 13:47:51 +0100
-Message-Id: <1421412471-4747-18-git-send-email-jack@suse.cz>
+Subject: [PATCH 02/17] quota: Wire up ->quota_{enable,
+	disable} callbacks into Q_QUOTA{ON, OFF}
+Date: Fri, 16 Jan 2015 13:47:36 +0100
+Message-Id: <1421412471-4747-3-git-send-email-jack@suse.cz>
 In-Reply-To: <1421412471-4747-1-git-send-email-jack@suse.cz>
 References: <1421412471-4747-1-git-send-email-jack@suse.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -31,78 +32,88 @@ Sender: xfs-bounces@oss.sgi.com
 To: linux-fsdevel@vger.kernel.org
 Cc: cluster-devel@redhat.com, Jan Kara <jack@suse.cz>, ocfs2-devel@oss.oracle.com, xfs@oss.sgi.com
 
-Setting timers or warning counts for id 0 via Q_XSETQLIM is used to
-actually set time limits and warning limits for all users. Hook up
-->set_info to this so that VFS quota time limits get set the same
-way as XFS ones.
-
-When doing this Q_XSETQLIM for XFS is effectively split into two
-independent transactions - one for setting timers and warning limits and
-one for setting space and inode limits. Although this is inefficient, it
-is rare enough that it does not matter.
+Make Q_QUOTAON / Q_QUOTAOFF quotactl call ->quota_enable /
+->quota_disable callback when provided. To match current behavior of
+ocfs2 & ext4 we make these quotactls turn on / off quota enforcement for
+appropriate quota type.
 
 Signed-off-by: Jan Kara <jack@suse.cz>
 ---
- fs/quota/quota.c | 39 +++++++++++++++++++++++++++++++++++++++
- 1 file changed, 39 insertions(+)
+ fs/quota/quota.c         | 31 +++++++++++++++++++++++++++----
+ include/linux/quotaops.h |  2 ++
+ 2 files changed, 29 insertions(+), 4 deletions(-)
 
 diff --git a/fs/quota/quota.c b/fs/quota/quota.c
-index f39bf4725184..813cb94fc81d 100644
+index 5b307e2b5719..748716ffee48 100644
 --- a/fs/quota/quota.c
 +++ b/fs/quota/quota.c
-@@ -500,6 +500,30 @@ static void copy_from_xfs_dqblk(struct qc_dqblk *dst, struct fs_disk_quota *src)
- 		dst->d_fieldmask |= QC_RT_SPACE;
+@@ -66,18 +66,43 @@ static int quota_sync_all(int type)
+ 	return ret;
  }
  
-+static void copy_qcinfo_from_xfs_dqblk(struct qc_info *dst,
-+				       struct fs_disk_quota *src)
++unsigned int qtype_limit_flag(int type)
 +{
-+	memset(dst, 0, sizeof(*dst));
-+	dst->i_spc_timelimit = src->d_btimer;
-+	dst->i_ino_timelimit = src->d_itimer;
-+	dst->i_rt_spc_timelimit = src->d_rtbtimer;
-+	dst->i_ino_warnlimit = src->d_iwarns;
-+	dst->i_spc_warnlimit = src->d_bwarns;
-+	dst->i_rt_spc_warnlimit = src->d_rtbwarns;
-+	if (src->d_fieldmask & FS_DQ_BWARNS)
-+		dst->i_fieldmask |= QC_SPC_WARNS;
-+	if (src->d_fieldmask & FS_DQ_IWARNS)
-+		dst->i_fieldmask |= QC_INO_WARNS;
-+	if (src->d_fieldmask & FS_DQ_RTBWARNS)
-+		dst->i_fieldmask |= QC_RT_SPC_WARNS;
-+	if (src->d_fieldmask & FS_DQ_BTIMER)
-+		dst->i_fieldmask |= QC_SPC_TIMER;
-+	if (src->d_fieldmask & FS_DQ_ITIMER)
-+		dst->i_fieldmask |= QC_INO_TIMER;
-+	if (src->d_fieldmask & FS_DQ_RTBTIMER)
-+		dst->i_fieldmask |= QC_RT_SPC_TIMER;
++	switch (type) {
++	case USRQUOTA:
++		return FS_QUOTA_UDQ_ENFD;
++	case GRPQUOTA:
++		return FS_QUOTA_GDQ_ENFD;
++	case PRJQUOTA:
++		return FS_QUOTA_PDQ_ENFD;
++	}
++	return 0;
 +}
 +
- static int quota_setxquota(struct super_block *sb, int type, qid_t id,
- 			   void __user *addr)
+ static int quota_quotaon(struct super_block *sb, int type, int cmd, qid_t id,
+ 		         struct path *path)
  {
-@@ -514,6 +538,21 @@ static int quota_setxquota(struct super_block *sb, int type, qid_t id,
- 	qid = make_kqid(current_user_ns(), type, id);
- 	if (!qid_valid(qid))
- 		return -EINVAL;
-+	/* Are we actually setting timer / warning limits for all users? */
-+	if (from_kqid(&init_user_ns, qid) == 0 &&
-+	    fdq.d_fieldmask & (FS_DQ_WARNS_MASK | FS_DQ_TIMER_MASK)) {
-+		struct qc_info qinfo;
-+		int ret;
-+
-+		if (!sb->s_qcop->set_info)
-+			return -EINVAL;
-+		copy_qcinfo_from_xfs_dqblk(&qinfo, &fdq);
-+		ret = sb->s_qcop->set_info(sb, type, &qinfo);
-+		if (ret)
-+			return ret;
-+		/* These are already done */
-+		fdq.d_fieldmask &= ~(FS_DQ_WARNS_MASK | FS_DQ_TIMER_MASK);
-+	}
- 	copy_from_xfs_dqblk(&qdq, &fdq);
- 	return sb->s_qcop->set_dqblk(sb, qid, &qdq);
+-	if (!sb->s_qcop->quota_on && !sb->s_qcop->quota_on_meta)
++	if (!sb->s_qcop->quota_on && !sb->s_qcop->quota_on_meta &&
++	    !sb->s_qcop->quota_enable)
+ 		return -ENOSYS;
+ 	if (sb->s_qcop->quota_on_meta)
+ 		return sb->s_qcop->quota_on_meta(sb, type, id);
++	if (sb->s_qcop->quota_enable)
++		return sb->s_qcop->quota_enable(sb, qtype_limit_flag(type));
+ 	if (IS_ERR(path))
+ 		return PTR_ERR(path);
+ 	return sb->s_qcop->quota_on(sb, type, id, path);
  }
+ 
++static int quota_quotaoff(struct super_block *sb, int type)
++{
++	if (!sb->s_qcop->quota_off && !sb->s_qcop->quota_disable)
++		return -ENOSYS;
++	if (sb->s_qcop->quota_disable)
++		return sb->s_qcop->quota_disable(sb, qtype_limit_flag(type));
++	return sb->s_qcop->quota_off(sb, type);
++}
++
+ static int quota_getfmt(struct super_block *sb, int type, void __user *addr)
+ {
+ 	__u32 fmt;
+@@ -328,9 +353,7 @@ static int do_quotactl(struct super_block *sb, int type, int cmd, qid_t id,
+ 	case Q_QUOTAON:
+ 		return quota_quotaon(sb, type, cmd, id, path);
+ 	case Q_QUOTAOFF:
+-		if (!sb->s_qcop->quota_off)
+-			return -ENOSYS;
+-		return sb->s_qcop->quota_off(sb, type);
++		return quota_quotaoff(sb, type);
+ 	case Q_GETFMT:
+ 		return quota_getfmt(sb, type, addr);
+ 	case Q_GETINFO:
+diff --git a/include/linux/quotaops.h b/include/linux/quotaops.h
+index f23538a6e411..20b77d115551 100644
+--- a/include/linux/quotaops.h
++++ b/include/linux/quotaops.h
+@@ -386,4 +386,6 @@ static inline void dquot_release_reservation_block(struct inode *inode,
+ 	__dquot_free_space(inode, nr << inode->i_blkbits, DQUOT_SPACE_RESERVE);
+ }
+ 
++unsigned int qtype_limit_flag(int type);
++
+ #endif /* _LINUX_QUOTAOPS_ */
 -- 
 2.1.2
 
