@@ -1,33 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 85C097F4E
-	for <xfs@oss.sgi.com>; Fri, 16 Jan 2015 01:30:29 -0600 (CST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id D81B37F4E
+	for <xfs@oss.sgi.com>; Fri, 16 Jan 2015 06:09:58 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 5440B304032
-	for <xfs@oss.sgi.com>; Thu, 15 Jan 2015 23:30:29 -0800 (PST)
-Received: from mailout4.samsung.com (mailout4.samsung.com [203.254.224.34]) by
-	cuda.sgi.com with ESMTP id RnCSEZENEmorsufm (version=TLSv1
-	cipher=RC4-MD5 bits=128 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 15 Jan 2015 23:30:26 -0800 (PST)
-Received: from epcpsbgr5.samsung.com
-	(u145.gpu120.samsung.co.kr [203.254.230.145])
-	by mailout4.samsung.com (Oracle Communications Messaging Server
-	7u4-24.01 (7.0.4.24.0) 64bit (built Nov 17 2011))
-	with ESMTP id <0NI900JOSE6PNH40@mailout4.samsung.com> for
-	xfs@oss.sgi.com; Fri, 16 Jan 2015 16:30:25 +0900 (KST)
-From: Namjae Jeon <namjae.jeon@samsung.com>
-References: <1421165126-3585-1-git-send-email-linkinjeon@gmail.com>
-	<1421165126-3585-10-git-send-email-linkinjeon@gmail.com>
-	<20150114201710.GB49511@bfoster.bfoster>
-	<004301d030ac$0ad62960$20827c20$@samsung.com>
-	<20150115122831.GA18876@bfoster.bfoster>
-In-reply-to: <20150115122831.GA18876@bfoster.bfoster>
-Subject: RE: [PATCH v8 9/11] xfstests: generic/043: Test multiple fallocate
-	insert/collapse range calls
-Date: Fri, 16 Jan 2015 16:30:24 +0900
-Message-id: <005301d0315e$4af0db50$e0d291f0$@samsung.com>
-MIME-version: 1.0
-Content-language: ko
+	by relay1.corp.sgi.com (Postfix) with ESMTP id A92C98F8040
+	for <xfs@oss.sgi.com>; Fri, 16 Jan 2015 04:09:58 -0800 (PST)
+Received: from mail-pa0-f47.google.com (mail-pa0-f47.google.com
+	[209.85.220.47]) by cuda.sgi.com with ESMTP id xesFCbXRDLsWl9DT
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Fri, 16 Jan 2015 04:09:52 -0800 (PST)
+Received: by mail-pa0-f47.google.com with SMTP id kq14so23939565pab.6
+	for <xfs@oss.sgi.com>; Fri, 16 Jan 2015 04:09:52 -0800 (PST)
+Received: from dhruv-MacBookAir ([14.97.30.63])
+	by mx.google.com with ESMTPSA id ul5sm3986649pab.36.2015.01.16.04.09.17
+	for <xfs@oss.sgi.com> (version=TLSv1 cipher=RC4-SHA bits=128/128);
+	Fri, 16 Jan 2015 04:09:51 -0800 (PST)
+Message-ID: <54b8ff8f.e596420a.3a19.ffffc530@mx.google.com>
+From: Dhruvesh Rathore <adrscube@gmail.com>
+Date: Fri, 16 Jan 2015 17:39:03 +0530
+Subject: [PATCH 1/2] xfs_spaceman: XFS_IOC_FIEMAPFS ioctl replacing previous
+	FS_IOC_FIEMAPFS
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -36,262 +28,212 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: 'Brian Foster' <bfoster@redhat.com>
-Cc: 'Namjae Jeon' <linkinjeon@gmail.com>, tytso@mit.edu, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, a.sangwan@samsung.com, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org
+To: xfs@oss.sgi.com
 
-> On Thu, Jan 15, 2015 at 07:14:26PM +0900, Namjae Jeon wrote:
-> >
-> > > > +_require_scratch
-> > > > +_require_xfs_io_command "fiemap"
-> > > > +_require_xfs_io_command "finsert"
-> > > > +_require_xfs_io_command "fcollapse"
-> > > > +_do_die_on_error=y
-> > >
-> > > What is _do_die_on_error for? Seems like that's only relevant for using
-> > > _do()?
-> > >
-> > > > +src=$SCRATCH_MNT/testfile
-> > > > +dest=$SCRATCH_MNT/testfile.dest
-> > > > +BLOCKS=100
-> > > > +BSIZE=`get_block_size $SCRATCH_MNT`
-> > > > +
-> > >
-> > > rm -f $seqres.full
-> > >
-> > > ... to clear out the old .full file.
-> > >
-> > > > +_scratch_mkfs MKFS_OPTIONS >> $seqres.full 2>&1
-> > >
-> > > You don't need MKFS_OPTIONS here. In fact, this currently causes a mkfs
-> > > failure (missing $) that we don't detect because we aren't checking that
-> > > the mkfs actually succeeds. All we need to do here is:
-> > >
-> > > _scratch_mkfs >> $seqres.full 2>&1 || _fail "mkfs failed"
-> > >
-> > > If you dig down into _scratch_mkfs(), you'll see that it already
-> > > includes $MKFS_OPTIONS and thus formats the fs as specified by the test
-> > > config.
-> > >
-> > > It might also be a good idea to check that the _scratch_mount below
-> > > succeeds as well...
-> > >
-> > > > +_scratch_mount >> $seqres.full 2>&1
-> > > > +length=$(($BLOCKS * $BSIZE))
-> > > > +
-> > > > +# Write file
-> > > > +$XFS_IO_PROG -f -c "pwrite 0 $length" -c fsync $src > /dev/null
-> > > > +cp $src $dest
-> > > > +
-> > >
-> > > It seems quite unlikely for this to not create a single extent given the
-> > > smallish file size and freshly created fs, but who knows with various fs
-> > > types, test configurations, test device sizes, etc. Another option could
-> > > be to check the starting extent count and verify the ending extent count
-> > > matches, rather than assume hardcoded values of 1.
-> > >
-> > > To be honest, even just including the starting extent count in the
-> > > golden output (e.g., add an fiemap command here as well) might be good
-> > > enough to distinguish that failure path from something going wrong in
-> > > the collapse path, should it ever occur.
-> > >
-> > > > +# Insert alternate blocks
-> > > > +for (( j=0; j < $(($BLOCKS/2)); j++ )); do
-> > > > +	offset=$((($j*$BSIZE)*2))
-> > > > +	$XFS_IO_PROG -c "finsert $offset $BSIZE" $dest > /dev/null
-> > > > +done
-> > > > +
-> > > > +# Check if 100 extents are present
-> > > > +$XFS_IO_PROG -c "fiemap -v" $dest | grep "^ *[0-9]*:" |wc -l
-> > > > +
-> > > > +_check_scratch_fs
-> > > > +if [ $? -ne 0 ]; then
-> > > > +	status=1
-> > > > +	exit
-> > > > +fi
-> > > > +
-> > > > +# Collapse alternate blocks
-> > > > +for (( j=0; j < $(($BLOCKS/2)); j++ )); do
-> > > > +	offset=$((($j*$BSIZE)))
-> > > > +	$XFS_IO_PROG -c "fcollapse $offset $BSIZE" $dest > /dev/null
-> > > > +done
-> > > > +
-> > > > +# Check if 1 extents are present
-> > > > +$XFS_IO_PROG -c "fiemap -v" $dest | grep "^ *[0-9]*:" |wc -l
-> > > > +
-> > > > +# compare original file and test file.
-> > > > +cmp $src $dest || _fail "file bytes check failed"
-> > > > +
-> > > > +_check_scratch_fs
-> > > > +if [ $? -ne 0 ]; then
-> > > > +	status=1
-> > > > +	exit
-> > > > +fi
-> > > > +
-> > > > +umount $SCRATCH_MNT
-> > > > +
-> > >
-> > > The scratch device is unmounted and checked after each test that uses it
-> > > so the above is unnecessary.
-> > I checked your each review points. and updated patch.
-> >
-> > Could you please review below patch ?
-> > Thanks a lot!
-> >
-> > ------------------------------------------------------------------------------
-> > Subject: [PATCH v9 9/11] xfstests: generic/043: Test multiple fallocate
-> >  insert/collapse range calls
-> >
-> > This testcase(043) tries to test finsert range a single alternate block
-> > mulitiple times and test merge code of collase range.
-> >
-> > Signed-off-by: Namjae Jeon <namjae.jeon@samsung.com>
-> > Signed-off-by: Ashish Sangwan <a.sangwan@samsung.com>
-> > ---
-> >  tests/generic/043     |   96 +++++++++++++++++++++++++++++++++++++++++++++++++
-> >  tests/generic/043.out |    2 +
-> >  tests/generic/group   |    1 +
-> >  3 files changed, 99 insertions(+), 0 deletions(-)
-> >  create mode 100644 tests/generic/043
-> >  create mode 100644 tests/generic/043.out
-> >
-> > diff --git a/tests/generic/043 b/tests/generic/043
-> > new file mode 100644
-> > index 0000000..a6f91ce
-> > --- /dev/null
-> > +++ b/tests/generic/043
-> > @@ -0,0 +1,96 @@
-> > +#! /bin/bash
-> > +# FS QA Test No. generic/043
-> > +#
-> > +# Test multiple fallocate insert/collapse range calls on same file.
-> > +# Call insert range a single alternate block multiple times until the file
-> > +# is left with 100 extents and as much number of extents. And Call collapse
-> > +# range about the previously inserted ranges to test merge code of collapse
-> > +# range. Also check for data integrity and file system consistency.
-> > +#-----------------------------------------------------------------------
-> > +# Copyright (c) 2014 Samsung Electronics.  All Rights Reserved.
-> > +#
-> > +# This program is free software; you can redistribute it and/or
-> > +# modify it under the terms of the GNU General Public License as
-> > +# published by the Free Software Foundation.
-> > +#
-> > +# This program is distributed in the hope that it would be useful,
-> > +# but WITHOUT ANY WARRANTY; without even the implied warranty of
-> > +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-> > +# GNU General Public License for more details.
-> > +#
-> > +# You should have received a copy of the GNU General Public License
-> > +# along with this program; if not, write the Free Software Foundation,
-> > +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-> > +#
-> > +#-----------------------------------------------------------------------
-> > +#
-> > +
-> > +seq=`basename $0`
-> > +seqres=$RESULT_DIR/$seq
-> > +echo "QA output created by $seq"
-> > +
-> > +here=`pwd`
-> > +tmp=/tmp/$$
-> > +status=1	# failure is the default!
-> > +trap "rm -f $tmp.*; exit \$status" 0 1 2 3 15
-> > +
-> > +# get standard environment, filters and checks
-> > +. ./common/rc
-> > +. ./common/filter
-> > +
-> > +# real QA test starts here
-> > +_supported_fs generic
-> > +_supported_os Linux
-> > +
-> > +_require_scratch
-> > +_require_xfs_io_command "fiemap"
-> > +_require_xfs_io_command "finsert"
-> > +_require_xfs_io_command "fcollapse"
-> > +_do_die_on_error=always
-> 
-> Still not sure what the above is for, but otherwise this one looks fine
-> to me:
-Yes, It is not needed. I will remove it when I resend total patct-set.
-Thanks!
-> 
-> Reviewed-by: Brian Foster <bfoster@redhat.com>
-> 
-> > +src=$SCRATCH_MNT/testfile
-> > +dest=$SCRATCH_MNT/testfile.dest
-> > +BLOCKS=100
-> > +BSIZE=`get_block_size $SCRATCH_MNT`
-> > +rm -f $seqres.full
-> > +
-> > +_scratch_mkfs >> $seqres.full 2>&1 || _fail "mkfs failed"
-> > +_scratch_mount || _fail "mount failed"
-> > +length=$(($BLOCKS * $BSIZE))
-> > +
-> > +# Write file
-> > +_do "$XFS_IO_PROG -f -c \"pwrite 0 $length\" -c fsync $src"
-> > +cp $src $dest
-> > +extent_before=`$XFS_IO_PROG -c "fiemap -v" $dest | grep "^ *[0-9]*:" |wc -l`
-> > +
-> > +# Insert alternate blocks
-> > +for (( j=0; j < $(($BLOCKS/2)); j++ )); do
-> > +	offset=$((($j*$BSIZE)*2))
-> > +	_do "$XFS_IO_PROG -c \"finsert $offset $BSIZE\" $dest"
-> > +done
-> > +
-> > +# Check if 100 extents are present
-> > +$XFS_IO_PROG -c "fiemap -v" $dest | grep "^ *[0-9]*:" |wc -l
-> > +
-> > +_check_scratch_fs
-> > +if [ $? -ne 0 ]; then
-> > +	status=1
-> > +	exit
-> > +fi
-> > +
-> > +# Collapse alternate blocks
-> > +for (( j=0; j < $(($BLOCKS/2)); j++ )); do
-> > +	offset=$((($j*$BSIZE)))
-> > +	_do "$XFS_IO_PROG -c \"fcollapse $offset $BSIZE\" $dest"
-> > +done
-> > +
-> > +extent_after=`$XFS_IO_PROG -c "fiemap -v" $dest | grep "^ *[0-9]*:" |wc -l`
-> > +if [ $extent_before -ne $extent_after ]; then
-> > +	echo "extents mismatched before = $extent_before after = $extent_after"
-> > +fi
-> > +
-> > +# compare original file and test file.
-> > +cmp $src $dest || _fail "file bytes check failed"
-> > +
-> > +# success, all done
-> > +status=0
-> > +exit
-> > diff --git a/tests/generic/043.out b/tests/generic/043.out
-> > new file mode 100644
-> > index 0000000..28427c5
-> > --- /dev/null
-> > +++ b/tests/generic/043.out
-> > @@ -0,0 +1,2 @@
-> > +QA output created by 043
-> > +100
-> > diff --git a/tests/generic/group b/tests/generic/group
-> > index c0944b3..0a10bdd 100644
-> > --- a/tests/generic/group
-> > +++ b/tests/generic/group
-> > @@ -45,6 +45,7 @@
-> >  040 auto quick prealloc
-> >  041 auto quick prealloc
-> >  042 auto quick prealloc
-> > +043 auto quick prealloc
-> >  053 acl repair auto quick
-> >  062 attr udf auto quick
-> >  068 other auto freeze dangerous stress
-> > --
-> > 1.7.7
-> >
-> >
+The original kernel patch that Dave wrote for xfs_spaceman implemented
+FS_IOC_FIEMAPFS ioctl, here is the original fiemap extension patch:
+
+http://oss.sgi.com/archives/xfs/2012-10/msg00363.html
+
+These patches were not posted and were just forward ported to a current 
+3.18-rc7+ for-next XFS tree and were pushed to the fiemapfs branch in Dave's
+kernel tree at:
+
+git://git.kernel.org/pub/scm/linux/kernel/git/dgc/linux-xfs.git
+
+The original xfs_spaceman tool that Dave wrote to call the fiemap
+interface and make use of it is here:
+
+http://oss.sgi.com/archives/xfs/2012-10/msg00366.html
+
+Dave just updated it to the 3.2.2 code base and pushed it to the
+spaceman branch in this tree:
+
+git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git
+
+This patch is concerned with turning FS_IOC_FIEMAPFS, present in the earlier
+version of xfs_spaceman into an XFS specific ioctl called XFS_IOC_FIEMAPFS
+that uses the fiemap plumbing. Please do comment. 
+
+Signed-off-by: 
+Dhruvesh Rathore <dhruvesh_r@outlook.com>
+Amey Ruikar <ameyruikar@yahoo.com>
+Somdeep Dey <somdeepdey10@gmail.com>
+---
+linux-xfs/fs/xfs/xfs_fs.h		| 1 +
+linux-xfs/fs/xfs/xfs_ioctl.c		| 71 ++++-
+xfsprogs-3.2.2/include/xfs_fs.h		| 1 +
+xfsprogs-3.2.2/spaceman/freesp.c	| 10 ++++++---
+4 files changed, 79 insertions(+), 4 deletions(-) 
+
+---------------------------------------------------------------------------------------
+
+--- a/linux-xfs/fs/xfs/xfs_fs.h	2015-01-04 15:26:46.954401773 +0530
++++ b/linux-xfs/fs/xfs/xfs_fs.h	2015-01-04 11:29:54.531652554 +0530
+@@ -505,6 +505,7 @@
+ #define XFS_IOC_DIOINFO	_IOR ('X', 30, struct dioattr)
+ #define XFS_IOC_FSGETXATTR	_IOR ('X', 31, struct fsxattr)
+ #define XFS_IOC_FSSETXATTR	_IOW ('X', 32, struct fsxattr)
++#define XFS_IOC_FIEMAPFS	_IOWR('X', 33, struct fiemap)
+ #define XFS_IOC_ALLOCSP64	_IOW ('X', 36, struct xfs_flock64)
+ #define XFS_IOC_FREESP64	_IOW ('X', 37, struct xfs_flock64)
+ #define XFS_IOC_GETBMAP	_IOWR('X', 38, struct getbmap)
+
+----------------------------------------------------------------------------------------
+
+--- a/linux-xfs/fs/xfs/xfs_ioctl.c	2015-01-04 15:45:26.518359725 +0530
++++ b/linux-xfs/fs/xfs/xfs_ioctl.c	2015-01-04 15:24:06.030407817 +0530
+@@ -49,6 +49,8 @@
+ #include <linux/exportfs.h>
+ 
+ 
++/* So that the fiemap access checks can't overflow on 32 bit machines. */   		 
++#define FIEMAP_MAX_EXTENTS	(UINT_MAX / sizeof(struct fiemap_extent))		 
+ 
+ /*
+  * xfs_find_handle maps from userspace xfs_fsop_handlereq structure to
+@@ -1511,8 +1513,73 @@
+ 	return error;
+ }
+ 
++static int fiemap_check_ranges(struct super_block *sb,
++			       u64 start, u64 len, u64 *new_len)
++{
++	u64 maxbytes = (u64) sb->s_maxbytes;
++
++	*new_len = len;
++
++	if (len == 0)
++		return -EINVAL;
++
++	if (start > maxbytes)
++		return -EFBIG;
++
++	/*
++	 * Shrink request scope to what the fs can actually handle.
++	 */
++	if (len > maxbytes || (maxbytes - len) < start)
++		*new_len = maxbytes - start;
+ 
++	return 0;
++}
++
++static int xfsctl_fiemapfs(struct super_block *sb, unsigned long arg)				
++{
++	struct fiemap fiemap;									
++	struct fiemap __user *ufiemap = (struct fiemap __user *) arg;
++	struct fiemap_extent_info fieinfo = { 0, };
++	u64 len;
++	int error;
++
++	if (!sb->s_op->fiemapfs)
++		return -EOPNOTSUPP;
+ 
++	if (copy_from_user(&fiemap, ufiemap, sizeof(fiemap)))
++		return -EFAULT;
++
++	if (fiemap.fm_extent_count > FIEMAP_MAX_EXTENTS)
++		return -EINVAL;
++
++	error = fiemap_check_ranges(sb, fiemap.fm_start, fiemap.fm_length,
++				    &len);
++	if (error)
++		return error;
++
++	fieinfo.fi_flags = fiemap.fm_flags;
++	fieinfo.fi_extents_max = fiemap.fm_extent_count;
++	fieinfo.fi_extents_start = ufiemap->fm_extents;
++
++	if (fiemap.fm_extent_count != 0 &&
++	    !access_ok(VERIFY_WRITE, fieinfo.fi_extents_start,
++		       fieinfo.fi_extents_max * sizeof(struct fiemap_extent)))
++		return -EFAULT;
++
++	if (fiemap.fm_extent_count != 0 &&
++	    (fiemap.fm_flags & FIEMAPFS_FLAG_FREESP_SIZE_HINT) &&
++	    !access_ok(VERIFY_READ, fieinfo.fi_extents_start,
++		       sizeof(struct fiemap_extent)))
++		return -EFAULT;
++
++	error = sb->s_op->fiemapfs(sb, &fieinfo, fiemap.fm_start, len);
++	fiemap.fm_flags = fieinfo.fi_flags;
++	fiemap.fm_mapped_extents = fieinfo.fi_extents_mapped;
++	if (copy_to_user(ufiemap, &fiemap, sizeof(fiemap)))
++		error = -EFAULT;
++
++	return error;
++}
+ 
+ /*
+  * Note: some of the ioctl's return positive numbers as a
+@@ -1570,7 +1637,9 @@
+ 		return 0;
+ 	}
+ 
+-	
++	case XFS_IOC_FIEMAPFS:						
++	   return xfsctl_fiemapfs(inode->i_sb, p);			
++
+ 	case XFS_IOC_FSBULKSTAT_SINGLE:
+ 	case XFS_IOC_FSBULKSTAT:
+ 	case XFS_IOC_FSINUMBERS:
+
+--------------------------------------------------------------------------------------------
+
+--- a/xfsprogs-3.2.2/include/xfs_fs.h	2015-01-04 15:26:50.954401773 +0530
++++ b/xfsprogs-3.2.2/include/xfs_fs.h	2015-01-04 11:29:59.531652554 +0530
+@@ -505,6 +505,7 @@
+ #define XFS_IOC_DIOINFO	_IOR ('X', 30, struct dioattr)
+ #define XFS_IOC_FSGETXATTR	_IOR ('X', 31, struct fsxattr)
+ #define XFS_IOC_FSSETXATTR	_IOW ('X', 32, struct fsxattr)
++#define XFS_IOC_FIEMAPFS	_IOWR('X', 33, struct fiemap)
+ #define XFS_IOC_ALLOCSP64	_IOW ('X', 36, struct xfs_flock64)
+ #define XFS_IOC_FREESP64	_IOW ('X', 37, struct xfs_flock64)
+ #define XFS_IOC_GETBMAP	_IOWR('X', 38, struct getbmap)
+
+--------------------------------------------------------------------------------------------
+
+--- a/xfsprogs-3.2.2/spaceman/freesp.c	2015-01-04 15:39:58.446372047 +0530
++++ b/xfsprogs-3.2.2/spaceman/freesp.c	2015-01-04 15:38:30.294375357 +0530
+@@ -31,7 +31,7 @@
+ #define FIEMAPFS_FLAG_FREESP_SIZE_HINT	0x20000000
+ #define	FIEMAPFS_FLAG_FREESP_CONTINUE   0x10000000
+ 
+-#define FS_IOC_FIEMAPFS			_IOWR('f', 12, struct fiemap)
++#define XFS_IOC_FIEMAPFS			_IOWR('X', 33, struct fiemap)
+ #endif
+ 
+ typedef struct histent
+@@ -201,9 +201,9 @@
+ 		fiemap->fm_length = length;
+ 		fiemap->fm_extent_count = NR_EXTENTS;
+ 
+-		ret = ioctl(file->fd, XFS_IOC_FIEMAPFS, (unsigned long)fiemap);
++		ret = xfsctl(file->name,file->fd, XFS_IOC_FIEMAPFS, (unsigned long)fiemap);
+ 		if (ret < 0) {	
+-			fprintf(stderr, "%s: ioctl(FS_IOC_FIEMAPFS) [\"%s\"]: "	
++			fprintf(stderr, "%s: xfsctl(XFS_IOC_FIEMAPFS) [\"%s\"]: "	
+ 				"%s\n", progname, file->name, strerror(errno));
+ 			free(fiemap);
+ 			exitcode = 1;
+@@ -338,6 +338,10 @@
+ 
+ 	if (!init(argc, argv))
+ 		return 0;
++
++	if (dumpflag)
++		printf("%8s %8s %8s\n", "agno", "agbno", "len");	
++
+ 	for (agno = 0; agno < file->geom.agcount; agno++)  {
+ 		if (inaglist(agno))
+ 			scan_ag(agno);
+
+----------------------------------------------------------------------------------------------
 
 _______________________________________________
 xfs mailing list
