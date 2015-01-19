@@ -1,24 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 39E7E7F54
-	for <xfs@oss.sgi.com>; Mon, 19 Jan 2015 03:02:55 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 17A598F8040
-	for <xfs@oss.sgi.com>; Mon, 19 Jan 2015 01:02:51 -0800 (PST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 3A0B67F54
+	for <xfs@oss.sgi.com>; Mon, 19 Jan 2015 03:03:13 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 19652304032
+	for <xfs@oss.sgi.com>; Mon, 19 Jan 2015 01:03:10 -0800 (PST)
 Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id QcEuE7PG7Pv2UZqe (version=TLSv1 cipher=AES256-SHA
+	ESMTP id BCKCcnaQgx2Bw4bl (version=TLSv1 cipher=AES256-SHA
 	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 19 Jan 2015 01:02:50 -0800 (PST)
-Date: Mon, 19 Jan 2015 01:02:48 -0800
+	Mon, 19 Jan 2015 01:03:07 -0800 (PST)
+Date: Mon, 19 Jan 2015 01:03:06 -0800
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 03/17] quota: Add ->quota_{enable,disable} callbacks for
-	VFS quotas
-Message-ID: <20150119090248.GC27474@infradead.org>
+Subject: Re: [PATCH 04/17] ext4: Use generic helpers for quotaon and quotaoff
+Message-ID: <20150119090306.GD27474@infradead.org>
 References: <1421412471-4747-1-git-send-email-jack@suse.cz>
-	<1421412471-4747-4-git-send-email-jack@suse.cz>
+	<1421412471-4747-5-git-send-email-jack@suse.cz>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1421412471-4747-4-git-send-email-jack@suse.cz>
+In-Reply-To: <1421412471-4747-5-git-send-email-jack@suse.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,13 +33,9 @@ Sender: xfs-bounces@oss.sgi.com
 To: Jan Kara <jack@suse.cz>
 Cc: linux-fsdevel@vger.kernel.org, cluster-devel@redhat.com, ocfs2-devel@oss.oracle.com, xfs@oss.sgi.com
 
-On Fri, Jan 16, 2015 at 01:47:37PM +0100, Jan Kara wrote:
-> +EXPORT_SYMBOL(dquot_quota_enable);
+Looks good,
 
-> +EXPORT_SYMBOL(dquot_quota_disable);
-
-I can't find any modular users of this (in fact none outside this
-file), so I'd suggest to keep these local.
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
 _______________________________________________
 xfs mailing list
