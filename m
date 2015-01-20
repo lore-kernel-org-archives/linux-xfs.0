@@ -1,24 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 8B0117F3F
-	for <xfs@oss.sgi.com>; Tue, 20 Jan 2015 10:44:05 -0600 (CST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 8CE407F3F
+	for <xfs@oss.sgi.com>; Tue, 20 Jan 2015 10:53:44 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 187FCAC009
-	for <xfs@oss.sgi.com>; Tue, 20 Jan 2015 08:44:04 -0800 (PST)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 7B3DE304048
+	for <xfs@oss.sgi.com>; Tue, 20 Jan 2015 08:53:41 -0800 (PST)
 Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id HkcAkNbadl0vnKEv (version=TLSv1 cipher=AES256-SHA
+	with ESMTP id D1sh86DlOCGkokQu (version=TLSv1 cipher=AES256-SHA
 	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 20 Jan 2015 08:44:03 -0800 (PST)
-Date: Tue, 20 Jan 2015 17:44:00 +0100
+	Tue, 20 Jan 2015 08:53:40 -0800 (PST)
+Date: Tue, 20 Jan 2015 17:53:38 +0100
 From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH 1/3] xfs: Remove useless test
-Message-ID: <20150120164400.GB3648@quack.suse.cz>
-References: <1421317085-14350-1-git-send-email-jack@suse.cz>
-	<1421317085-14350-2-git-send-email-jack@suse.cz>
-	<20150115132754.GA23696@bfoster.bfoster>
+Subject: Re: [PATCH 07/17] quota: Switch ->get_dqblk() and ->set_dqblk() to
+	use bytes as space units
+Message-ID: <20150120165338.GC3648@quack.suse.cz>
+References: <1421412471-4747-1-git-send-email-jack@suse.cz>
+	<1421412471-4747-8-git-send-email-jack@suse.cz>
+	<20150119090720.GG27474@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20150115132754.GA23696@bfoster.bfoster>
+In-Reply-To: <20150119090720.GG27474@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,44 +32,45 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
-Cc: Jan Kara <jack@suse.cz>, xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Jan Kara <jack@suse.cz>, xfs@oss.sgi.com, cluster-devel@redhat.com, dchinner@redhat.com, linux-fsdevel@vger.kernel.org, ocfs2-devel@oss.oracle.com
 
-On Thu 15-01-15 08:27:54, Brian Foster wrote:
-> On Thu, Jan 15, 2015 at 11:18:03AM +0100, Jan Kara wrote:
-> > Q_XQUOTARM is never passed to xfs_fs_set_xstate() so remove the test.
-> > 
-> > Signed-off-by: Jan Kara <jack@suse.cz>
-> > ---
+On Mon 19-01-15 01:07:20, Christoph Hellwig wrote:
+> > diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
+> > index 18dc721ca19f..f718ba1f2ccb 100644
+> > --- a/fs/xfs/libxfs/xfs_fs.h
+> > +++ b/fs/xfs/libxfs/xfs_fs.h
+> > @@ -559,18 +559,4 @@ typedef struct xfs_swapext
+> >  /*	XFS_IOC_GETFSUUID ---------- deprecated 140	 */
+> >  
+> >  
+> > -#ifndef HAVE_BBMACROS
+> > -/*
+> > - * Block I/O parameterization.	A basic block (BB) is the lowest size of
+> > - * filesystem allocation, and must equal 512.  Length units given to bio
+> > - * routines are in BB's.
+> > - */
+> > -#define BBSHIFT		9
+> > -#define BBSIZE		(1<<BBSHIFT)
+> > -#define BBMASK		(BBSIZE-1)
+> > -#define BTOBB(bytes)	(((__u64)(bytes) + BBSIZE - 1) >> BBSHIFT)
+> > -#define BTOBBT(bytes)	((__u64)(bytes) >> BBSHIFT)
+> > -#define BBTOB(bbs)	((bbs) << BBSHIFT)
+> > -#endif
 > 
-> Reviewed-by: Brian Foster <bfoster@redhat.com>
-  Thanks for reviews! I've pulled the XFS cleanups from this series into my
-tree.
-								Honza
+> Please don't move these defintions around and just opencode them in
+> the quota code.
+  I have moved the definitions because Dave asked me to use them in the XFS
+parts of quota code (maybe he didn't realize that to be able to use them I
+have to move the definitions somewhere where quota code can include them).
+Dave? I personally don't care which variant will get used...
 
-> >  fs/xfs/xfs_quotaops.c | 2 +-
-> >  1 file changed, 1 insertion(+), 1 deletion(-)
-> > 
-> > diff --git a/fs/xfs/xfs_quotaops.c b/fs/xfs/xfs_quotaops.c
-> > index 7542bbeca6a1..8fcd20dbf89a 100644
-> > --- a/fs/xfs/xfs_quotaops.c
-> > +++ b/fs/xfs/xfs_quotaops.c
-> > @@ -75,7 +75,7 @@ xfs_fs_set_xstate(
-> >  
-> >  	if (sb->s_flags & MS_RDONLY)
-> >  		return -EROFS;
-> > -	if (op != Q_XQUOTARM && !XFS_IS_QUOTA_RUNNING(mp))
-> > +	if (!XFS_IS_QUOTA_RUNNING(mp))
-> >  		return -ENOSYS;
-> >  
-> >  	if (uflags & FS_QUOTA_UDQ_ACCT)
-> > -- 
-> > 2.1.2
-> > 
-> > _______________________________________________
-> > xfs mailing list
-> > xfs@oss.sgi.com
-> > http://oss.sgi.com/mailman/listinfo/xfs
+> Otherwise looks good:
+> 
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
+  Thanks.
+
+								Honza
 -- 
 Jan Kara <jack@suse.cz>
 SUSE Labs, CR
