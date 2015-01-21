@@ -1,23 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id C680C7F4E
-	for <xfs@oss.sgi.com>; Tue, 20 Jan 2015 22:13:15 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 54024AC005
-	for <xfs@oss.sgi.com>; Tue, 20 Jan 2015 20:13:12 -0800 (PST)
-Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
-	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	7AuizEyQrSJxHgF0 for <xfs@oss.sgi.com>;
-	Tue, 20 Jan 2015 20:13:07 -0800 (PST)
-Date: Wed, 21 Jan 2015 15:12:30 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfstests/xfs: xfs_repair secondary sb verification
-	regression test
-Message-ID: <20150121041230.GD16510@dastard>
-References: <1421677821-30752-1-git-send-email-bfoster@redhat.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1421677821-30752-1-git-send-email-bfoster@redhat.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 07F547F4E
+	for <xfs@oss.sgi.com>; Wed, 21 Jan 2015 09:13:09 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id EBC11304066
+	for <xfs@oss.sgi.com>; Wed, 21 Jan 2015 07:13:05 -0800 (PST)
+Received: from mail-pa0-f45.google.com (mail-pa0-f45.google.com
+	[209.85.220.45]) by cuda.sgi.com with ESMTP id 2vsUUtJvGRpdkuTp
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Wed, 21 Jan 2015 07:13:04 -0800 (PST)
+Received: by mail-pa0-f45.google.com with SMTP id lf10so53445061pab.4
+	for <xfs@oss.sgi.com>; Wed, 21 Jan 2015 07:13:04 -0800 (PST)
+From: Namjae Jeon <linkinjeon@gmail.com>
+Subject: [PATCH v9 0/11] fs: Introduce FALLOC_FL_INSERT_RANGE for fallocate
+Date: Thu, 22 Jan 2015 00:11:55 +0900
+Message-Id: <1421853126-4505-1-git-send-email-linkinjeon@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,115 +23,54 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
-Cc: fstests@vger.kernel.org, xfs@oss.sgi.com
+To: david@fromorbit.com, tytso@mit.edu
+Cc: Namjae Jeon <linkinjeon@gmail.com>, Namjae Jeon <namjae.jeon@samsung.com>, bfoster@redhat.com, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, a.sangwan@samsung.com, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org
 
-On Mon, Jan 19, 2015 at 09:30:21AM -0500, Brian Foster wrote:
-> The secondary superblock verification in xfs_repair was subject to a bug
-> that unnecessarily leads to a brute force superblock scan if the last
-> superblock in the fs happens to be corrupt. Normally, xfs_repair handles
-> one-off superblock corruption gracefully using a heuristic that finds
-> the most consistent superblock content across the set of secondary
-> superblocks.
-> 
-> Create a regression test for xfs_repair that corrupts the last
-> superblock in the fs. Verify the superblock is updated from the
-> previously verified sb content and a brute force scan is not initiated.
-> In the event of failure, detect that a brute force scan has started and
-> abort the repair in order to fail the test quickly.
-> 
-> To support the test, extend the xfs_repair filter to handle corrupted
-> superblock repair output and provide generic test output for arbitrary
-> AG counts.
-> 
-> Signed-off-by: Brian Foster <bfoster@redhat.com>
-> ---
-> 
-> Hi all,
-> 
-> This is an xfs_repair regression test to trigger the problem fixed by
-> the following previously posted fix:
-> 
-> http://oss.sgi.com/archives/xfs/2015-01/msg00244.html
-> 
-> Thoughts appreciated, thanks.
-...
-> +# Start and monitor an xfs_repair of the scratch device. This test can induce a
-> +# time consuming brute force superblock scan. Since a brute force scan means
-> +# test failure, detect it and end the repair.
-> +_xfs_repair_noscan()
-> +{
-> +	# invoke repair directly so we can kill the process if need be
-> +	$XFS_REPAIR_PROG $SCRATCH_DEV 2>&1 | tee -a $seqres.full > $tmp.repair &
-> +	repair_pid=$!
-> +
-> +	# monitor progress for as long as it is running
-> +	while [ `ps -q $repair_pid > /dev/null; echo $?` == 0 ]; do
+From: Namjae Jeon <namjae.jeon@samsung.com>
 
-	while [ `pgrep xfs_repair` -eq 0 ]; do
+In continuation of the work of making the process of non linear editing of
+media files faster, we introduce here the new flag FALLOC_FL_INSERT_RANGE
+for fallocate.
 
-> +		grep "couldn't verify primary superblock" $tmp.repair \
-> +			> /dev/null 2>&1
-> +		if [ $? == 0 ]; then
-> +			# we've started a brute force scan. kill repair and
-> +			# fail the test
-> +			kill -9 $repair_pid >> $seqres.full 2>&1
-> +			wait >> $seqres.full 2>&1
-> +
-> +			_fail "xfs_repair resorted to brute force scan"
-> +		fi
-> +
-> +		sleep 1
-> +	done
-> +
-> +	wait
-> +
-> +	cat $tmp.repair | _filter_repair
-> +}
-> +
-> +rm -f $seqres.full
-> +
-> +# get standard environment, filters and checks
-> +. ./common/rc
-> +. ./common/filter
-> +. ./common/repair
-> +
-> +# real QA test starts here
-> +
-> +# Modify as appropriate.
-> +_supported_fs xfs
-> +_supported_os Linux
-> +_require_scratch_nocheck
-> +
-> +_scratch_mkfs >> $seqres.full 2>&1 || _fail "mkfs failed"
-> +
-> +# corrupt the last secondary sb in the fs
-> +agcount=`$XFS_DB_PROG -c "sb" -c "p agcount" $SCRATCH_DEV | awk '{ print $3 }'`
+This flag will work opposite to the FALLOC_FL_COLLAPSE_RANGE flag.
+As such, specifying FALLOC_FL_INSERT_RANGE flag will create new space inside file
+by inserting a hole within the range specified by offset and len. 
+User can write new data in this space. e.g. ads.
+Like collapse range, currently we have the limitation that offset and len should
+be block size aligned for both XFS and Ext4.
 
-scratch_mkfs | _filter_mkfs 2> $tmp.mkfs
-. $tmp.mkfs
+The semantics of the flag are :
+1) It creates space within file by inserting a hole of  len bytes starting
+   at offset byte without overwriting any existing data. All the data blocks
+   from offset to EOF are shifted towards right to make hole space.
+2) It should be used exclusively. No other fallocate flag in combination.
+3) Offset and length supplied to fallocate should be fs block size aligned
+   in case of xfs and ext4.
+4) Insert range does not work for the case when offset is overlapping/beyond
+   i_size. If the user wants to insert space at the end of file they are
+   advised to use either ftruncate(2) or fallocate(2) with mode 0.
+5) It increses the size of file by len bytes.
 
-And now you have the agcount variable already set up (and most other
-fs geometry variables that mkfs outputs).
 
-> +last_secondary=$((agcount - 1))
-> +$XFS_DB_PROG -x -c "sb $last_secondary" -c "type data" \
-
-you can just use  "sb $((agcount - 1))" directly. The comment above
-tells us that it's the last secondary sb we are corrupting....
-
-Otherwise look sok.
-
-Cheers,
-
-Dave.
+Namjae Jeon (11):
+ fs: Add support FALLOC_FL_INSERT_RANGE for fallocate
+ xfs: Add support FALLOC_FL_INSERT_RANGE for fallocate
+ ext4: Add support FALLOC_FL_INSERT_RANGE for fallocate
+ xfsprogs: xfs_io: add finsert command for insert range via fallocate
+ xfstests: generic/039: Standard insert range tests
+ xfstests: generic/040: Delayed allocation insert range
+ xfstests: generic/041: Multi insert range tests
+ xfstests: generic/042: Delayed allocation multi insert
+ xfstests: generic/043: Test multiple fallocate insert/collapse range calls
+ xfstests: fsstress: Add fallocate insert range operation
+ xfstests: fsx: Add fallocate insert range operation
 -- 
-Dave Chinner
-david@fromorbit.com
+1.7.9.5
 
 _______________________________________________
 xfs mailing list
