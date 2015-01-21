@@ -1,22 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id CB7BF7F59
-	for <xfs@oss.sgi.com>; Wed, 21 Jan 2015 09:14:31 -0600 (CST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id CF7757F50
+	for <xfs@oss.sgi.com>; Wed, 21 Jan 2015 09:37:12 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 69D8BAC009
-	for <xfs@oss.sgi.com>; Wed, 21 Jan 2015 07:14:31 -0800 (PST)
-Received: from mail-pa0-f47.google.com (mail-pa0-f47.google.com
-	[209.85.220.47]) by cuda.sgi.com with ESMTP id Dq7PNEO2avomrCeL
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 21 Jan 2015 07:14:30 -0800 (PST)
-Received: by mail-pa0-f47.google.com with SMTP id lj1so9123096pab.6
-	for <xfs@oss.sgi.com>; Wed, 21 Jan 2015 07:14:30 -0800 (PST)
-From: Namjae Jeon <linkinjeon@gmail.com>
-Subject: [PATCH v9 11/11] xfstests: fsx: Add fallocate insert range operation
-Date: Thu, 22 Jan 2015 00:12:06 +0900
-Message-Id: <1421853126-4505-12-git-send-email-linkinjeon@gmail.com>
-In-Reply-To: <1421853126-4505-1-git-send-email-linkinjeon@gmail.com>
-References: <1421853126-4505-1-git-send-email-linkinjeon@gmail.com>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 9FB43304051
+	for <xfs@oss.sgi.com>; Wed, 21 Jan 2015 07:37:12 -0800 (PST)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id RlMa48iBHm9jVBCe (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 21 Jan 2015 07:37:11 -0800 (PST)
+From: Brian Foster <bfoster@redhat.com>
+Subject: [PATCH v2] xfstests/xfs: xfs_repair secondary sb verification
+	regression test
+Date: Wed, 21 Jan 2015 10:37:07 -0500
+Message-Id: <1421854627-30558-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,235 +27,220 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: david@fromorbit.com, tytso@mit.edu
-Cc: Namjae Jeon <linkinjeon@gmail.com>, Namjae Jeon <namjae.jeon@samsung.com>, bfoster@redhat.com, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, a.sangwan@samsung.com, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org
+To: fstests@vger.kernel.org
+Cc: xfs@oss.sgi.com
 
-From: Namjae Jeon <namjae.jeon@samsung.com>
+The secondary superblock verification in xfs_repair was subject to a bug
+that unnecessarily leads to a brute force superblock scan if the last
+superblock in the fs happens to be corrupt. Normally, xfs_repair handles
+one-off superblock corruption gracefully using a heuristic that finds
+the most consistent superblock content across the set of secondary
+superblocks.
 
-This commit adds fallocate FALLOC_FL_INSERT_RANGE support for fsx.
+Create a regression test for xfs_repair that corrupts the last
+superblock in the fs. Verify the superblock is updated from the
+previously verified sb content and a brute force scan is not initiated.
+In the event of failure, detect that a brute force scan has started and
+abort the repair in order to fail the test quickly.
 
-Signed-off-by: Namjae Jeon <namjae.jeon@samsung.com>
-Signed-off-by: Ashish Sangwan <a.sangwan@samsung.com>
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+To support the test, extend the xfs_repair filter to handle corrupted
+superblock repair output and provide generic test output for arbitrary
+AG counts.
+
+Signed-off-by: Brian Foster <bfoster@redhat.com>
 ---
-Changelog
-v9:
- - fix crash down due to the memset() on good buf going off
-   the end of the buffer.
 
-v8:
- - create TRIM_OFF() and TRIM_LEN() and redeine redefine TRIM_OFF_LEN().
+v2:
+- Use pgrep instead of ps to monitor xfs_repair process.
+- Use mkfs filter instead of xfs_db to obtain agcount of scratch fs.
+v1: http://oss.sgi.com/archives/xfs/2015-01/msg00321.html
 
- ltp/fsx.c |  124 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++-----
- 1 file changed, 114 insertions(+), 10 deletions(-)
+ common/repair     |   4 ++
+ tests/xfs/069     | 110 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/069.out |  27 ++++++++++++++
+ tests/xfs/group   |   1 +
+ 4 files changed, 142 insertions(+)
+ create mode 100755 tests/xfs/069
+ create mode 100644 tests/xfs/069.out
 
-diff --git a/ltp/fsx.c b/ltp/fsx.c
-index 3709419..9fed5b2 100644
---- a/ltp/fsx.c
-+++ b/ltp/fsx.c
-@@ -95,7 +95,8 @@ int			logcount = 0;	/* total ops */
- #define OP_PUNCH_HOLE		6
- #define OP_ZERO_RANGE		7
- #define OP_COLLAPSE_RANGE	8
--#define OP_MAX_FULL		9
-+#define OP_INSERT_RANGE	9
-+#define OP_MAX_FULL		10
- 
- /* operation modifiers */
- #define OP_CLOSEOPEN	100
-@@ -145,6 +146,7 @@ int     fallocate_calls = 1;            /* -F flag disables */
- int     punch_hole_calls = 1;           /* -H flag disables */
- int     zero_range_calls = 1;           /* -z flag disables */
- int	collapse_range_calls = 1;	/* -C flag disables */
-+int	insert_range_calls = 1;		/* -i flag disables */
- int 	mapped_reads = 1;		/* -R flag disables it */
- int	fsxgoodfd = 0;
- int	o_direct;			/* -Z */
-@@ -339,6 +341,14 @@ logdump(void)
- 						     lp->args[0] + lp->args[1])
- 				prt("\t******CCCC");
- 			break;
-+		case OP_INSERT_RANGE:
-+			prt("INSERT 0x%x thru 0x%x\t(0x%x bytes)",
-+			    lp->args[0], lp->args[0] + lp->args[1] - 1,
-+			    lp->args[1]);
-+			if (badoff >= lp->args[0] && badoff <
-+						     lp->args[0] + lp->args[1])
-+				prt("\t******CCCC");
-+			break;
- 		case OP_SKIPPED:
- 			prt("SKIPPED (no operation)");
- 			break;
-@@ -1012,6 +1022,59 @@ do_collapse_range(unsigned offset, unsigned length)
- }
- #endif
- 
-+#ifdef FALLOC_FL_INSERT_RANGE
-+void
-+do_insert_range(unsigned offset, unsigned length)
-+{
-+	unsigned end_offset;
-+	int mode = FALLOC_FL_INSERT_RANGE;
-+
-+	if (length == 0) {
-+		if (!quiet && testcalls > simulatedopcount)
-+			prt("skipping zero length insert range\n");
-+		log4(OP_SKIPPED, OP_INSERT_RANGE, offset, length);
-+		return;
-+	}
-+
-+	if ((loff_t)offset >= file_size) {
-+		if (!quiet && testcalls > simulatedopcount)
-+			prt("skipping insert range behind EOF\n");
-+		log4(OP_SKIPPED, OP_INSERT_RANGE, offset, length);
-+		return;
-+	}
-+
-+	log4(OP_INSERT_RANGE, offset, length, 0);
-+
-+	if (testcalls <= simulatedopcount)
-+		return;
-+
-+	end_offset = offset + length;
-+	if ((progressinterval && testcalls % progressinterval == 0) ||
-+	    (debug && (monitorstart == -1 || monitorend == -1 ||
-+		      end_offset <= monitorend))) {
-+		prt("%lu insert\tfrom 0x%x to 0x%x, (0x%x bytes)\n", testcalls,
-+			offset, offset+length, length);
-+	}
-+	if (fallocate(fd, mode, (loff_t)offset, (loff_t)length) == -1) {
-+		prt("insert range: %x to %x\n", offset, length);
-+		prterr("do_insert_range: fallocate");
-+		report_failure(161);
-+	}
-+
-+	memmove(good_buf + end_offset, good_buf + offset,
-+		file_size - offset);
-+	memset(good_buf + offset, '\0', length);
-+	file_size += length;
-+}
-+
-+#else
-+void
-+do_insert_range(unsigned offset, unsigned length)
-+{
-+	return;
-+}
-+#endif
-+
- #ifdef HAVE_LINUX_FALLOC_H
- /* fallocate is basically a no-op unless extending, then a lot like a truncate */
- void
-@@ -1117,14 +1180,25 @@ docloseopen(void)
- 	}
+diff --git a/common/repair b/common/repair
+index a157580..7a99546 100644
+--- a/common/repair
++++ b/common/repair
+@@ -88,6 +88,10 @@ s/(inode chunk) (\d+)\/(\d+)/AGNO\/INO/;
+ # sunit/swidth reset messages
+ s/^(Note - .*) were copied.*/\1 fields have been reset./;
+ s/^(Please) reset (with .*) if necessary/\1 set \2/;
++# corrupt sb messages
++s/(superblock) (\d+)/\1 AGNO/;
++s/(AG \#)(\d+)/\1AGNO/;
++s/(reset bad sb for ag) (\d+)/\1 AGNO/;
+ 	print;'
  }
  
--#define TRIM_OFF_LEN(off, len, size)	\
--do {					\
--	if (size)			\
--		(off) %= (size);	\
--	else				\
--		(off) = 0;		\
--	if ((off) + (len) > (size))	\
--		(len) = (size) - (off);	\
+diff --git a/tests/xfs/069 b/tests/xfs/069
+new file mode 100755
+index 0000000..1432761
+--- /dev/null
++++ b/tests/xfs/069
+@@ -0,0 +1,110 @@
++#! /bin/bash
++# FS QA Test No. 069
++#
++# As part of superblock verification, xfs_repair checks the primary sb and
++# verifies all secondary sb's against the primary. In the event of geometry
++# inconsistency, repair uses a heuristic that tracks the most frequently
++# occurring settings across the set of N (agcount) superblocks.
++#
++# xfs_repair was subject to a bug that disregards this heuristic in the event
++# that the last secondary superblock in the fs is corrupt. The side effect is an
++# unnecessary and potentially time consuming brute force superblock scan.
++#
++# This is a regression test for the aforementioned xfs_repair bug. We
++# intentionally corrupt the last superblock in the fs, run xfs_repair and
++# verify it repairs the fs correctly. We explicitly detect a brute force scan
++# and abort the repair to save time in the failure case.
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2015 Red Hat, Inc. All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#-----------------------------------------------------------------------
++#
 +
-+#define TRIM_OFF(off, size)			\
-+do {						\
-+	if (size)				\
-+		(off) %= (size);		\
-+	else					\
-+		(off) = 0;			\
-+} while (0)
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
 +
-+#define TRIM_LEN(off, len, size)		\
-+do {						\
-+	if ((off) + (len) > (size))		\
-+		(len) = (size) - (off);		\
-+} while (0)
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 15
 +
-+#define TRIM_OFF_LEN(off, len, size)		\
-+do {						\
-+	TRIM_OFF(off, size);			\
-+	TRIM_LEN(off, len, size);		\
- } while (0)
- 
- void
-@@ -1192,6 +1266,12 @@ test(void)
- 			goto out;
- 		}
- 		break;
-+	case OP_INSERT_RANGE:
-+		if (!insert_range_calls) {
-+			log4(OP_SKIPPED, OP_INSERT_RANGE, offset, size);
-+			goto out;
-+		}
-+		break;
- 	}
- 
- 	switch (op) {
-@@ -1244,6 +1324,22 @@ test(void)
- 		}
- 		do_collapse_range(offset, size);
- 		break;
-+	case OP_INSERT_RANGE:
-+		TRIM_OFF(offset, file_size);
-+		TRIM_LEN(file_size, size, maxfilelen);
-+		offset = offset & ~(block_size - 1);
-+		size = size & ~(block_size - 1);
-+		if (size == 0) {
-+			log4(OP_SKIPPED, OP_INSERT_RANGE, offset, size);
-+			goto out;
-+		}
-+		if (file_size + size > maxfilelen) {
-+			log4(OP_SKIPPED, OP_INSERT_RANGE, offset, size);
-+			goto out;
-+		}
++_cleanup()
++{
++	cd /
++	rm -f $tmp.*
++	killall -9 $XFS_REPAIR_PROG > /dev/null 2>&1
++	wait > /dev/null 2>&1
++}
 +
-+		do_insert_range(offset, size);
-+		break;
- 	default:
- 		prterr("test: unknown operation");
- 		report_failure(42);
-@@ -1307,6 +1403,9 @@ usage(void)
- #ifdef FALLOC_FL_COLLAPSE_RANGE
- "	-C: Do not use collapse range calls\n"
- #endif
-+#ifdef FALLOC_FL_INSERT_RANGE
-+"	-i: Do not use insert range calls\n"
-+#endif
- "	-L: fsxLite - no file creations & no file size changes\n\
- 	-N numops: total # operations to do (default infinity)\n\
- 	-O: use oplen (see -o flag) for every op (default random)\n\
-@@ -1493,7 +1592,7 @@ main(int argc, char **argv)
- 
- 	setvbuf(stdout, (char *)0, _IOLBF, 0); /* line buffered stdout */
- 
--	while ((ch = getopt(argc, argv, "b:c:dfl:m:no:p:qr:s:t:w:xyAD:FHzCLN:OP:RS:WZ"))
-+	while ((ch = getopt(argc, argv, "b:c:dfl:m:no:p:qr:s:t:w:xyAD:FHzCiLN:OP:RS:WZ"))
- 	       != EOF)
- 		switch (ch) {
- 		case 'b':
-@@ -1599,6 +1698,9 @@ main(int argc, char **argv)
- 		case 'C':
- 			collapse_range_calls = 0;
- 			break;
-+		case 'i':
-+			insert_range_calls = 0;
-+			break;
- 		case 'L':
- 		        lite = 1;
- 			break;
-@@ -1758,6 +1860,8 @@ main(int argc, char **argv)
- 		zero_range_calls = test_fallocate(FALLOC_FL_ZERO_RANGE);
- 	if (collapse_range_calls)
- 		collapse_range_calls = test_fallocate(FALLOC_FL_COLLAPSE_RANGE);
-+	if (insert_range_calls)
-+		insert_range_calls = test_fallocate(FALLOC_FL_INSERT_RANGE);
- 
- 	while (numops == -1 || numops--)
- 		test();
++# Start and monitor an xfs_repair of the scratch device. This test can induce a
++# time consuming brute force superblock scan. Since a brute force scan means
++# test failure, detect it and end the repair.
++_xfs_repair_noscan()
++{
++	# invoke repair directly so we can kill the process if need be
++	$XFS_REPAIR_PROG $SCRATCH_DEV 2>&1 | tee -a $seqres.full > $tmp.repair &
++	repair_pid=$!
++
++	# monitor progress for as long as it is running
++	while [ `pgrep xfs_repair` ]; do
++		grep "couldn't verify primary superblock" $tmp.repair \
++			> /dev/null 2>&1
++		if [ $? == 0 ]; then
++			# we've started a brute force scan. kill repair and
++			# fail the test
++			kill -9 $repair_pid >> $seqres.full 2>&1
++			wait >> $seqres.full 2>&1
++
++			_fail "xfs_repair resorted to brute force scan"
++		fi
++
++		sleep 1
++	done
++
++	wait
++
++	cat $tmp.repair | _filter_repair
++}
++
++rm -f $seqres.full
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++. ./common/repair
++
++# real QA test starts here
++
++# Modify as appropriate.
++_supported_fs xfs
++_supported_os Linux
++_require_scratch_nocheck
++
++_scratch_mkfs | _filter_mkfs > /dev/null 2> $tmp.mkfs || _fail "mkfs failed"
++
++. $tmp.mkfs # import agcount
++
++# corrupt the last secondary sb in the fs
++$XFS_DB_PROG -x -c "sb $((agcount - 1))" -c "type data" \
++	-c "write fill 0xff 0 512" $SCRATCH_DEV
++
++# attempt to repair
++_xfs_repair_noscan
++
++# success, all done
++status=0
++exit
+diff --git a/tests/xfs/069.out b/tests/xfs/069.out
+new file mode 100644
+index 0000000..c6b11d1
+--- /dev/null
++++ b/tests/xfs/069.out
+@@ -0,0 +1,27 @@
++QA output created by 069
++Phase 1 - find and verify superblock...
++Phase 2 - using <TYPEOF> log
++        - zero log...
++        - scan filesystem freespace and inode maps...
++bad magic number
++bad on-disk superblock AGNO - bad magic number
++primary/secondary superblock AGNO conflict - AG superblock geometry info conflicts with filesystem geometry
++zeroing unused portion of secondary superblock (AG #AGNO)
++reset bad sb for ag AGNO
++        - found root inode chunk
++Phase 3 - for each AG...
++        - scan and clear agi unlinked lists...
++        - process known inodes and perform inode discovery...
++        - process newly discovered inodes...
++Phase 4 - check for duplicate blocks...
++        - setting up duplicate extent list...
++        - check for inodes claiming duplicate blocks...
++Phase 5 - rebuild AG headers and trees...
++        - reset superblock...
++Phase 6 - check inode connectivity...
++        - resetting contents of realtime bitmap and summary inodes
++        - traversing filesystem ...
++        - traversal finished ...
++        - moving disconnected inodes to lost+found ...
++Phase 7 - verify and correct link counts...
++done
+diff --git a/tests/xfs/group b/tests/xfs/group
+index 496630d..9394703 100644
+--- a/tests/xfs/group
++++ b/tests/xfs/group
+@@ -66,6 +66,7 @@
+ 066 dump ioctl auto quick
+ 067 acl attr auto quick
+ 068 auto stress dump
++069 auto quick repair
+ 071 rw auto
+ 072 rw auto prealloc quick
+ 073 copy auto
 -- 
-1.7.9.5
+1.8.3.1
 
 _______________________________________________
 xfs mailing list
