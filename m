@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id B4C0A7F4E
-	for <xfs@oss.sgi.com>; Wed, 21 Jan 2015 16:06:03 -0600 (CST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 6A3C07F4E
+	for <xfs@oss.sgi.com>; Wed, 21 Jan 2015 16:06:20 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 52016AC008
-	for <xfs@oss.sgi.com>; Wed, 21 Jan 2015 14:06:00 -0800 (PST)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 58F4B304053
+	for <xfs@oss.sgi.com>; Wed, 21 Jan 2015 14:06:17 -0800 (PST)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id XQZKuyPDYDuxvE5p (version=TLSv1
+	cuda.sgi.com with ESMTP id TCz0wm7ngi0FZPUm (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 21 Jan 2015 14:05:59 -0800 (PST)
-Date: Wed, 21 Jan 2015 17:05:52 -0500
+	Wed, 21 Jan 2015 14:06:16 -0800 (PST)
+Date: Wed, 21 Jan 2015 17:06:09 -0500
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 2/3] xfs: inode unlink does not set AGI buffer type
-Message-ID: <20150121220552.GC7960@laptop.bfoster>
+Subject: Re: [PATCH 3/3] xfs: set buf types when converting extent formats
+Message-ID: <20150121220609.GD7960@laptop.bfoster>
 References: <1421800780-26008-1-git-send-email-david@fromorbit.com>
-	<1421800780-26008-3-git-send-email-david@fromorbit.com>
+	<1421800780-26008-4-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1421800780-26008-3-git-send-email-david@fromorbit.com>
+In-Reply-To: <1421800780-26008-4-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,50 +33,56 @@ Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: jack@suse.cz, xfs@oss.sgi.com
 
-On Wed, Jan 21, 2015 at 11:39:39AM +1100, Dave Chinner wrote:
+On Wed, Jan 21, 2015 at 11:39:40AM +1100, Dave Chinner wrote:
 > From: Dave Chinner <dchinner@redhat.com>
 > 
-> This leads to log recovery throwing errors like:
+> Conversion from local to extent format does not set the buffer type
+> correctly on the new extent buffer when a symlink data is moved out
+> of line.
 > 
-> XFS (md0): Mounting V5 Filesystem
-> XFS (md0): Starting recovery (logdev: internal)
-> XFS (md0): Unknown buffer type 0!
-> XFS (md0): _xfs_buf_ioapply: no ops on block 0xaea8802/0x1
-> ffff8800ffc53800: 58 41 47 49 .....
-> 
-> Which is the AGI buffer magic number.
-> 
-> Ensure that we set the type appropriately in both unlink list
-> addition and removal.
+> Fix the symlink code and leave a comment in the generic bmap code
+> reminding us that the format-specific data copy needs to set the
+> destination buffer type appropriately.
 > 
 > Signed-off-by: Dave Chinner <dchinner@redhat.com>
 > ---
 
 Reviewed-by: Brian Foster <bfoster@redhat.com>
 
->  fs/xfs/xfs_inode.c | 2 ++
->  1 file changed, 2 insertions(+)
+>  fs/xfs/libxfs/xfs_bmap.c           | 6 +++++-
+>  fs/xfs/libxfs/xfs_symlink_remote.c | 2 ++
+>  2 files changed, 7 insertions(+), 1 deletion(-)
 > 
-> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-> index 573b49c..f616c8f 100644
-> --- a/fs/xfs/xfs_inode.c
-> +++ b/fs/xfs/xfs_inode.c
-> @@ -2051,6 +2051,7 @@ xfs_iunlink(
->  	agi->agi_unlinked[bucket_index] = cpu_to_be32(agino);
->  	offset = offsetof(xfs_agi_t, agi_unlinked) +
->  		(sizeof(xfs_agino_t) * bucket_index);
-> +	xfs_trans_buf_set_type(tp, agibp, XFS_BLFT_AGI_BUF);
->  	xfs_trans_log_buf(tp, agibp, offset,
->  			  (offset + sizeof(xfs_agino_t) - 1));
->  	return 0;
-> @@ -2142,6 +2143,7 @@ xfs_iunlink_remove(
->  		agi->agi_unlinked[bucket_index] = cpu_to_be32(next_agino);
->  		offset = offsetof(xfs_agi_t, agi_unlinked) +
->  			(sizeof(xfs_agino_t) * bucket_index);
-> +		xfs_trans_buf_set_type(tp, agibp, XFS_BLFT_AGI_BUF);
->  		xfs_trans_log_buf(tp, agibp, offset,
->  				  (offset + sizeof(xfs_agino_t) - 1));
->  	} else {
+> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+> index 63a5bb9..61ec015 100644
+> --- a/fs/xfs/libxfs/xfs_bmap.c
+> +++ b/fs/xfs/libxfs/xfs_bmap.c
+> @@ -973,7 +973,11 @@ xfs_bmap_local_to_extents(
+>  	*firstblock = args.fsbno;
+>  	bp = xfs_btree_get_bufl(args.mp, tp, args.fsbno, 0);
+>  
+> -	/* initialise the block and copy the data */
+> +	/*
+> +	 * Initialise the block and copy the data
+> +	 *
+> +	 * Note: init_fn must set the buffer log item type correctly!
+> +	 */
+>  	init_fn(tp, bp, ip, ifp);
+>  
+>  	/* account for the change in fork size and log everything */
+> diff --git a/fs/xfs/libxfs/xfs_symlink_remote.c b/fs/xfs/libxfs/xfs_symlink_remote.c
+> index c80c523..e7e26bd 100644
+> --- a/fs/xfs/libxfs/xfs_symlink_remote.c
+> +++ b/fs/xfs/libxfs/xfs_symlink_remote.c
+> @@ -178,6 +178,8 @@ xfs_symlink_local_to_remote(
+>  	struct xfs_mount	*mp = ip->i_mount;
+>  	char			*buf;
+>  
+> +	xfs_trans_buf_set_type(tp, bp, XFS_BLFT_SYMLINK_BUF);
+> +
+>  	if (!xfs_sb_version_hascrc(&mp->m_sb)) {
+>  		bp->b_ops = NULL;
+>  		memcpy(bp->b_addr, ifp->if_u1.if_data, ifp->if_bytes);
 > -- 
 > 2.0.0
 > 
