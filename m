@@ -1,18 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 20A3F7F59
-	for <xfs@oss.sgi.com>; Tue, 20 Jan 2015 18:40:04 -0600 (CST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 3366D7F3F
+	for <xfs@oss.sgi.com>; Tue, 20 Jan 2015 20:35:59 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id B2E21AC00D
-	for <xfs@oss.sgi.com>; Tue, 20 Jan 2015 16:40:00 -0800 (PST)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 04B5B304032
+	for <xfs@oss.sgi.com>; Tue, 20 Jan 2015 18:35:55 -0800 (PST)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	Pz7ErXhkujeZtFr7 for <xfs@oss.sgi.com>;
-	Tue, 20 Jan 2015 16:39:59 -0800 (PST)
+	Tasx9hqAwICT0vfA for <xfs@oss.sgi.com>;
+	Tue, 20 Jan 2015 18:35:50 -0800 (PST)
+Date: Wed, 21 Jan 2015 13:34:44 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 0/3] xfs: buffer types need to be set
-Date: Wed, 21 Jan 2015 11:39:37 +1100
-Message-Id: <1421800780-26008-1-git-send-email-david@fromorbit.com>
+Subject: [PATCH 4/3] xfs: set superblock buffer type correctly
+Message-ID: <20150121023444.GI16552@dastard>
+References: <1421800780-26008-1-git-send-email-david@fromorbit.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <1421800780-26008-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,7 +25,6 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
@@ -29,26 +32,38 @@ Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 Cc: jack@suse.cz
 
-Hi Jan,
+From: Dave Chinner <dchinner@redhat.com>
 
-These three patches detect and fix the issues you reported with log
-recovery finding buffers with a format type of zero. The type of
-zero (XFS_BLFT_UNKNOWN_BUF) is only valid for buffers that have
-been cancelled (i.e. invalidated or marked stale as they have been
-freed), so the series adds asserts to ensure these conditions are
-met during transaction commit. Hence we shouldn't ever get new code
-that fails to set the buffer type getting through testing.
+When the superblock is modified in a transaction, the commonly
+modified fields are not actually copied to the superblock buffer to
+avoid the buffer lock becoming a serialisation point. However, there
+are some other operations that modify the superblock fields within
+the transaction that don't directly log to the superblock but rely
+on the changes to be applied during the transaction commit (to
+minimise the buffer lock hold time).
 
-The last two patches fix the cases that running xfstests uncovered
-where we don't set the buffer type appropriately. There may be more,
-but doing this much made my head hurt and xfstests is clean, so it's
-as much as I'm going to do right now. Can you test it and see if it
-runs clean (with CONFIG_XFS_WARN=y or CONFIG_XFS_DEBUG=y) on your
-test setup?
+When we do this, we fail to mark the buffer log item as being a
+superblock buffer and that can lead to the buffer not being marked
+with the corect type in the log and hence causing recovery issues.
+Fix it by setting the type correctly, similar to xfs_mod_sb()...
 
-Cheers,
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/xfs_trans.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-Dave.
+diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
+index fa3135b..eb90cd5 100644
+--- a/fs/xfs/xfs_trans.c
++++ b/fs/xfs/xfs_trans.c
+@@ -472,6 +472,7 @@ xfs_trans_apply_sb_deltas(
+ 		whole = 1;
+ 	}
+ 
++	xfs_trans_buf_set_type(tp, bp, XFS_BLFT_SB_BUF);
+ 	if (whole)
+ 		/*
+ 		 * Log the whole thing, the fields are noncontiguous.
 
 _______________________________________________
 xfs mailing list
