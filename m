@@ -1,26 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 9F6EA7F50
-	for <xfs@oss.sgi.com>; Wed, 21 Jan 2015 09:46:59 -0600 (CST)
+	by oss.sgi.com (Postfix) with ESMTP id ED78A7F4E
+	for <xfs@oss.sgi.com>; Wed, 21 Jan 2015 10:08:05 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 7E663304032
-	for <xfs@oss.sgi.com>; Wed, 21 Jan 2015 07:46:59 -0800 (PST)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id fm5ex3YalXPN7Vgr for <xfs@oss.sgi.com>;
-	Wed, 21 Jan 2015 07:46:57 -0800 (PST)
-Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.4])
-	(using TLSv1.2 with cipher DHE-RSA-AES128-SHA (128/128 bits))
-	(No client certificate requested)
-	by sandeen.net (Postfix) with ESMTPSA id B23BD61BA135
-	for <xfs@oss.sgi.com>; Wed, 21 Jan 2015 09:46:56 -0600 (CST)
-Message-ID: <54BFC9F0.9000604@sandeen.net>
-Date: Wed, 21 Jan 2015 09:46:56 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id BECC9304066
+	for <xfs@oss.sgi.com>; Wed, 21 Jan 2015 08:08:05 -0800 (PST)
+Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
+	with ESMTP id Cs7BrRhbbUNnNT73 (version=TLSv1 cipher=AES256-SHA
+	bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 21 Jan 2015 08:07:59 -0800 (PST)
+Date: Wed, 21 Jan 2015 17:07:57 +0100
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [PATCH 0/3] xfs: buffer types need to be set
+Message-ID: <20150121160757.GA20357@quack.suse.cz>
+References: <1421800780-26008-1-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
-Subject: Re: Quota Configuration
-References: <54BE9F21.5050602@medgenome.com>
-	<20150120190237.GA3142@sh-el6.eng.rdu2.redhat.com>
-In-Reply-To: <20150120190237.GA3142@sh-el6.eng.rdu2.redhat.com>
+Content-Disposition: inline
+In-Reply-To: <1421800780-26008-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,19 +29,35 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: jack@suse.cz, xfs@oss.sgi.com
 
-On 1/20/15 1:02 PM, Carlos Maiolino wrote:
-> For RHEL it would be better to ask your personal support representative,
-> but anyway, you can find Quotas documentation for XFS here:
+   Hi Dave,
+
+On Wed 21-01-15 11:39:37, Dave Chinner wrote:
+> These three patches detect and fix the issues you reported with log
+> recovery finding buffers with a format type of zero. The type of
+> zero (XFS_BLFT_UNKNOWN_BUF) is only valid for buffers that have
+> been cancelled (i.e. invalidated or marked stale as they have been
+> freed), so the series adds asserts to ensure these conditions are
+> met during transaction commit. Hence we shouldn't ever get new code
+> that fails to set the buffer type getting through testing.
 > 
-> http://xfs.org/docs/xfsdocs-xml-dev/XFS_User_Guide//tmp/en-US/html/index.html
+> The last two patches fix the cases that running xfstests uncovered
+> where we don't set the buffer type appropriately. There may be more,
+> but doing this much made my head hurt and xfstests is clean, so it's
+> as much as I'm going to do right now. Can you test it and see if it
+> runs clean (with CONFIG_XFS_WARN=y or CONFIG_XFS_DEBUG=y) on your
+> test setup?
+  Thanks for a quick response with patches. My test round has finished and
+the new assertion didn't trigger so things look fine. I've also provided a
+test kernel to the guy seeing these issues in the wild but there it took
+days / weeks to trigger so I wouldn't wait for it...
 
-Or read the fine RHEL documentation:
-
-https://access.redhat.com/documentation/en-US/Red_Hat_Enterprise_Linux/6/html/Storage_Administration_Guide/xfsquota.html
-
--Eric
+								Honza
+-- 
+Jan Kara <jack@suse.cz>
+SUSE Labs, CR
 
 _______________________________________________
 xfs mailing list
