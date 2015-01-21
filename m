@@ -1,23 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id D08EA7F4E
-	for <xfs@oss.sgi.com>; Wed, 21 Jan 2015 16:23:24 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id AD9188F8040
-	for <xfs@oss.sgi.com>; Wed, 21 Jan 2015 14:23:24 -0800 (PST)
-Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id qdN4guoFuBmAQJB7 (version=TLSv1 cipher=AES256-SHA
-	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 21 Jan 2015 14:23:23 -0800 (PST)
-Date: Wed, 21 Jan 2015 23:23:20 +0100
-From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH 0/17 v3] quota: Unify VFS and XFS quota interfaces
-Message-ID: <20150121222320.GA30154@quack.suse.cz>
-References: <1421412471-4747-1-git-send-email-jack@suse.cz>
-	<20150121213826.GL16510@dastard>
+	by oss.sgi.com (Postfix) with ESMTP id 7A52D7F4E
+	for <xfs@oss.sgi.com>; Wed, 21 Jan 2015 16:26:44 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 580758F8037
+	for <xfs@oss.sgi.com>; Wed, 21 Jan 2015 14:26:44 -0800 (PST)
+Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
+	[150.101.137.145]) by cuda.sgi.com with ESMTP id
+	U4Z4J7EYVyop9jTW for <xfs@oss.sgi.com>;
+	Wed, 21 Jan 2015 14:26:42 -0800 (PST)
+Date: Thu, 22 Jan 2015 09:26:39 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [RFC PATCH 0/6] xfs: truncate vs page fault IO exclusion
+Message-ID: <20150121222639.GJ16552@dastard>
+References: <1420669543-8093-1-git-send-email-david@fromorbit.com>
+	<20150108122448.GA18034@infradead.org>
+	<20150112174258.GN4468@quack.suse.cz>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20150121213826.GL16510@dastard>
+In-Reply-To: <20150112174258.GN4468@quack.suse.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,44 +31,37 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-fsdevel@vger.kernel.org, cluster-devel@redhat.com, Jan Kara <jack@suse.cz>, ocfs2-devel@oss.oracle.com, xfs@oss.sgi.com
+To: Jan Kara <jack@suse.cz>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, xfs@oss.sgi.com
 
-On Thu 22-01-15 08:38:26, Dave Chinner wrote:
-> On Fri, Jan 16, 2015 at 01:47:34PM +0100, Jan Kara wrote:
-> >   Hello,
+On Mon, Jan 12, 2015 at 06:42:58PM +0100, Jan Kara wrote:
+> On Thu 08-01-15 04:24:48, Christoph Hellwig wrote:
+> > > This patchset passes xfstests and various benchmarks and stress
+> > > workloads, so the real question is now:
+> > > 
+> > > 	What have I missed?
+> > > 
+> > > Comments, thoughts, flames?
 > > 
-> >   this is another iteration of patches to unify VFS and XFS quota interfaces so
-> > that XFS quotactls work for filesystems with VFS quotas and vice versa.  This
-> > is useful so that userspace doesn't have to care that much about which
-> > filesystem it is using at least when using basic quota functionality. In
-> > particular we should be able to reuse project quota tests in xfstests for ext4.
-> > 
-> > The patches are based on quota cleanup series [1] and XFS cleanup series [2]
-> > I've sent previously and based on 3.19-rc4 + for-next branch of XFS tree.  I
-> > could further split this series into per-quotactl series but frankly I don't
-> > think it will help reviewers in any way (the patches in the current series are
-> > already ordered by quotactl).
-> 
-> Hi Jan,
-> 
-> Do you have a this series in a git tree somewhere so it's easy to
-> merge and test?
-  I've pushed out the series to:
-git://git.kernel.org/pub/scm/linux/kernel/git/jack/linux-fs.git quota_interface
+> > Why is this done in XFS and not in generic code?
+>   I was also thinking about this. In the end I decided not to propose this
+> since the new rw-lock would grow struct inode and is actually necessary
+> only for filesystems implementing hole punching AFAICS. And that isn't
+> supported by that many filesystems. So fs private implementation which
+> isn't that complicated looked like a reasonable solution to me...
 
-  BTW, I've already implemented suggestions by Christoph so it's not
-exactly what was sent to the list (but very close). I'd also welcome your
-opinion on usage of BBTOB() and BTOBB() macros in fs/quota/quota.c - to be
-able to use them I have to move them out of fs/xfs/libxfs/xfs_fs.h to
-somewhere in include/. Christoph doesn't like it much and would prefer
-quota code just opencoded these macros. I don't really care but you two
-should agree :)
+Ok, so it seems that doing this in the filesystem itself as an
+initial solution is the way to move forward. Given that, this
+patchset has run through regression and stress testing for a couple
+of weeks without uncovering problems, so now I'm looking for reviews
+so I can commit it. Anyone?
 
-								Honza
+Cheers,
+
+Dave.
 -- 
-Jan Kara <jack@suse.cz>
-SUSE Labs, CR
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
