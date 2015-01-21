@@ -1,20 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 020847F58
+	by oss.sgi.com (Postfix) with ESMTP id 20A3F7F59
 	for <xfs@oss.sgi.com>; Tue, 20 Jan 2015 18:40:04 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 93DF6AC009
+	by relay3.corp.sgi.com (Postfix) with ESMTP id B2E21AC00D
 	for <xfs@oss.sgi.com>; Tue, 20 Jan 2015 16:40:00 -0800 (PST)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	CjSvpH1FTD8eOssD for <xfs@oss.sgi.com>;
-	Tue, 20 Jan 2015 16:39:58 -0800 (PST)
+	Pz7ErXhkujeZtFr7 for <xfs@oss.sgi.com>;
+	Tue, 20 Jan 2015 16:39:59 -0800 (PST)
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 3/3] xfs: set buf types when converting extent formats
-Date: Wed, 21 Jan 2015 11:39:40 +1100
-Message-Id: <1421800780-26008-4-git-send-email-david@fromorbit.com>
-In-Reply-To: <1421800780-26008-1-git-send-email-david@fromorbit.com>
-References: <1421800780-26008-1-git-send-email-david@fromorbit.com>
+Subject: [PATCH 0/3] xfs: buffer types need to be set
+Date: Wed, 21 Jan 2015 11:39:37 +1100
+Message-Id: <1421800780-26008-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,54 +29,26 @@ Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 Cc: jack@suse.cz
 
-From: Dave Chinner <dchinner@redhat.com>
+Hi Jan,
 
-Conversion from local to extent format does not set the buffer type
-correctly on the new extent buffer when a symlink data is moved out
-of line.
+These three patches detect and fix the issues you reported with log
+recovery finding buffers with a format type of zero. The type of
+zero (XFS_BLFT_UNKNOWN_BUF) is only valid for buffers that have
+been cancelled (i.e. invalidated or marked stale as they have been
+freed), so the series adds asserts to ensure these conditions are
+met during transaction commit. Hence we shouldn't ever get new code
+that fails to set the buffer type getting through testing.
 
-Fix the symlink code and leave a comment in the generic bmap code
-reminding us that the format-specific data copy needs to set the
-destination buffer type appropriately.
+The last two patches fix the cases that running xfstests uncovered
+where we don't set the buffer type appropriately. There may be more,
+but doing this much made my head hurt and xfstests is clean, so it's
+as much as I'm going to do right now. Can you test it and see if it
+runs clean (with CONFIG_XFS_WARN=y or CONFIG_XFS_DEBUG=y) on your
+test setup?
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- fs/xfs/libxfs/xfs_bmap.c           | 6 +++++-
- fs/xfs/libxfs/xfs_symlink_remote.c | 2 ++
- 2 files changed, 7 insertions(+), 1 deletion(-)
+Cheers,
 
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index 63a5bb9..61ec015 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -973,7 +973,11 @@ xfs_bmap_local_to_extents(
- 	*firstblock = args.fsbno;
- 	bp = xfs_btree_get_bufl(args.mp, tp, args.fsbno, 0);
- 
--	/* initialise the block and copy the data */
-+	/*
-+	 * Initialise the block and copy the data
-+	 *
-+	 * Note: init_fn must set the buffer log item type correctly!
-+	 */
- 	init_fn(tp, bp, ip, ifp);
- 
- 	/* account for the change in fork size and log everything */
-diff --git a/fs/xfs/libxfs/xfs_symlink_remote.c b/fs/xfs/libxfs/xfs_symlink_remote.c
-index c80c523..e7e26bd 100644
---- a/fs/xfs/libxfs/xfs_symlink_remote.c
-+++ b/fs/xfs/libxfs/xfs_symlink_remote.c
-@@ -178,6 +178,8 @@ xfs_symlink_local_to_remote(
- 	struct xfs_mount	*mp = ip->i_mount;
- 	char			*buf;
- 
-+	xfs_trans_buf_set_type(tp, bp, XFS_BLFT_SYMLINK_BUF);
-+
- 	if (!xfs_sb_version_hascrc(&mp->m_sb)) {
- 		bp->b_ops = NULL;
- 		memcpy(bp->b_addr, ifp->if_u1.if_data, ifp->if_bytes);
--- 
-2.0.0
+Dave.
 
 _______________________________________________
 xfs mailing list
