@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 51EEB7F54
-	for <xfs@oss.sgi.com>; Thu, 22 Jan 2015 05:11:16 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id C8A31AC009
-	for <xfs@oss.sgi.com>; Thu, 22 Jan 2015 03:11:15 -0800 (PST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id D41447F56
+	for <xfs@oss.sgi.com>; Thu, 22 Jan 2015 05:11:17 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id C18748F8049
+	for <xfs@oss.sgi.com>; Thu, 22 Jan 2015 03:11:14 -0800 (PST)
 Received: from casper.infradead.org (casper.infradead.org [85.118.1.10]) by
-	cuda.sgi.com with ESMTP id hoJY2WnNywVFD0Ad (version=TLSv1
+	cuda.sgi.com with ESMTP id 1CxAL9xVdCOpj3Dw (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 22 Jan 2015 03:11:14 -0800 (PST)
+	Thu, 22 Jan 2015 03:11:12 -0800 (PST)
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 04/20] nfsd: factor out a helper to decode nfstime4 values
-Date: Thu, 22 Jan 2015 12:09:50 +0100
-Message-Id: <1421925006-24231-5-git-send-email-hch@lst.de>
+Subject: [PATCH 02/20] fs: track fl_owner for leases
+Date: Thu, 22 Jan 2015 12:09:48 +0100
+Message-Id: <1421925006-24231-3-git-send-email-hch@lst.de>
 In-Reply-To: <1421925006-24231-1-git-send-email-hch@lst.de>
 References: <1421925006-24231-1-git-send-email-hch@lst.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -31,88 +31,80 @@ Sender: xfs-bounces@oss.sgi.com
 To: "J. Bruce Fields" <bfields@fieldses.org>
 Cc: linux-fsdevel@vger.kernel.org, linux-nfs@vger.kernel.org, Jeff Layton <jlayton@primarydata.com>, xfs@oss.sgi.com
 
+Just like for other lock types we should allow different owners to have
+a read lease on a file.  Currently this can't happen, but with the addition
+of pNFS layout leases we'll need this feature.
+
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/nfsd/nfs4xdr.c | 43 ++++++++++++++++++++++++++-----------------
- 1 file changed, 26 insertions(+), 17 deletions(-)
+ fs/locks.c          | 12 +++++++-----
+ fs/nfsd/nfs4state.c |  2 +-
+ 2 files changed, 8 insertions(+), 6 deletions(-)
 
-diff --git a/fs/nfsd/nfs4xdr.c b/fs/nfsd/nfs4xdr.c
-index 15f7b73..884ffa3 100644
---- a/fs/nfsd/nfs4xdr.c
-+++ b/fs/nfsd/nfs4xdr.c
-@@ -234,6 +234,26 @@ static char *savemem(struct nfsd4_compoundargs *argp, __be32 *p, int nbytes)
- 	return ret;
+diff --git a/fs/locks.c b/fs/locks.c
+index 2fc36b3..65350a23 100644
+--- a/fs/locks.c
++++ b/fs/locks.c
+@@ -1661,7 +1661,8 @@ generic_add_lease(struct file *filp, long arg, struct file_lock **flp, void **pr
+ 	 */
+ 	error = -EAGAIN;
+ 	list_for_each_entry(fl, &ctx->flc_lease, fl_list) {
+-		if (fl->fl_file == filp) {
++		if (fl->fl_file == filp &&
++		    fl->fl_owner == lease->fl_owner) {
+ 			my_fl = fl;
+ 			continue;
+ 		}
+@@ -1721,7 +1722,7 @@ out:
+ 	return error;
  }
  
-+/*
-+ * We require the high 32 bits of 'seconds' to be 0, and
-+ * we ignore all 32 bits of 'nseconds'.
-+ */
-+static __be32
-+nfsd4_decode_time(struct nfsd4_compoundargs *argp, struct timespec *tv)
-+{
-+	DECODE_HEAD;
-+	u64 sec;
-+
-+	READ_BUF(12);
-+	p = xdr_decode_hyper(p, &sec);
-+	tv->tv_sec = sec;
-+	tv->tv_nsec = be32_to_cpup(p++);
-+	if (tv->tv_nsec >= (u32)1000000000)
-+		return nfserr_inval;
-+
-+	DECODE_TAIL;
-+}
-+
- static __be32
- nfsd4_decode_bitmap(struct nfsd4_compoundargs *argp, u32 *bmval)
+-static int generic_delete_lease(struct file *filp)
++static int generic_delete_lease(struct file *filp, void *owner)
  {
-@@ -267,7 +287,6 @@ nfsd4_decode_fattr(struct nfsd4_compoundargs *argp, u32 *bmval,
- {
- 	int expected_len, len = 0;
- 	u32 dummy32;
--	u64 sec;
- 	char *buf;
+ 	int error = -EAGAIN;
+ 	struct file_lock *fl, *victim = NULL;
+@@ -1737,7 +1738,8 @@ static int generic_delete_lease(struct file *filp)
  
- 	DECODE_HEAD;
-@@ -358,15 +377,10 @@ nfsd4_decode_fattr(struct nfsd4_compoundargs *argp, u32 *bmval,
- 		dummy32 = be32_to_cpup(p++);
- 		switch (dummy32) {
- 		case NFS4_SET_TO_CLIENT_TIME:
--			/* We require the high 32 bits of 'seconds' to be 0, and we ignore
--			   all 32 bits of 'nseconds'. */
--			READ_BUF(12);
- 			len += 12;
--			p = xdr_decode_hyper(p, &sec);
--			iattr->ia_atime.tv_sec = (time_t)sec;
--			iattr->ia_atime.tv_nsec = be32_to_cpup(p++);
--			if (iattr->ia_atime.tv_nsec >= (u32)1000000000)
--				return nfserr_inval;
-+			status = nfsd4_decode_time(argp, &iattr->ia_atime);
-+			if (status)
-+				return status;
- 			iattr->ia_valid |= (ATTR_ATIME | ATTR_ATIME_SET);
+ 	spin_lock(&ctx->flc_lock);
+ 	list_for_each_entry(fl, &ctx->flc_lease, fl_list) {
+-		if (fl->fl_file == filp) {
++		if (fl->fl_file == filp &&
++		    fl->fl_owner == owner) {
+ 			victim = fl;
  			break;
- 		case NFS4_SET_TO_SERVER_TIME:
-@@ -382,15 +396,10 @@ nfsd4_decode_fattr(struct nfsd4_compoundargs *argp, u32 *bmval,
- 		dummy32 = be32_to_cpup(p++);
- 		switch (dummy32) {
- 		case NFS4_SET_TO_CLIENT_TIME:
--			/* We require the high 32 bits of 'seconds' to be 0, and we ignore
--			   all 32 bits of 'nseconds'. */
--			READ_BUF(12);
- 			len += 12;
--			p = xdr_decode_hyper(p, &sec);
--			iattr->ia_mtime.tv_sec = sec;
--			iattr->ia_mtime.tv_nsec = be32_to_cpup(p++);
--			if (iattr->ia_mtime.tv_nsec >= (u32)1000000000)
--				return nfserr_inval;
-+			status = nfsd4_decode_time(argp, &iattr->ia_mtime);
-+			if (status)
-+				return status;
- 			iattr->ia_valid |= (ATTR_MTIME | ATTR_MTIME_SET);
- 			break;
- 		case NFS4_SET_TO_SERVER_TIME:
+ 		}
+@@ -1778,7 +1780,7 @@ int generic_setlease(struct file *filp, long arg, struct file_lock **flp,
+ 
+ 	switch (arg) {
+ 	case F_UNLCK:
+-		return generic_delete_lease(filp);
++		return generic_delete_lease(filp, *priv);
+ 	case F_RDLCK:
+ 	case F_WRLCK:
+ 		if (!(*flp)->fl_lmops->lm_break) {
+@@ -1857,7 +1859,7 @@ static int do_fcntl_add_lease(unsigned int fd, struct file *filp, long arg)
+ int fcntl_setlease(unsigned int fd, struct file *filp, long arg)
+ {
+ 	if (arg == F_UNLCK)
+-		return vfs_setlease(filp, F_UNLCK, NULL, NULL);
++		return vfs_setlease(filp, F_UNLCK, NULL, (void **)&filp);
+ 	return do_fcntl_add_lease(fd, filp, arg);
+ }
+ 
+diff --git a/fs/nfsd/nfs4state.c b/fs/nfsd/nfs4state.c
+index 532a60c..30ff0d4 100644
+--- a/fs/nfsd/nfs4state.c
++++ b/fs/nfsd/nfs4state.c
+@@ -693,7 +693,7 @@ static void nfs4_put_deleg_lease(struct nfs4_file *fp)
+ 	spin_unlock(&fp->fi_lock);
+ 
+ 	if (filp) {
+-		vfs_setlease(filp, F_UNLCK, NULL, NULL);
++		vfs_setlease(filp, F_UNLCK, NULL, (void **)&fp);
+ 		fput(filp);
+ 	}
+ }
 -- 
 1.9.1
 
