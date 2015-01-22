@@ -1,23 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 613C77F59
-	for <xfs@oss.sgi.com>; Thu, 22 Jan 2015 10:21:04 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 4CB3C304051
-	for <xfs@oss.sgi.com>; Thu, 22 Jan 2015 08:21:04 -0800 (PST)
-Received: from newverein.lst.de (verein.lst.de [213.95.11.211]) by
-	cuda.sgi.com with ESMTP id gNGut3qnUmzPBtBE (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 22 Jan 2015 08:21:02 -0800 (PST)
-Date: Thu, 22 Jan 2015 17:21:00 +0100
-From: Christoph Hellwig <hch@lst.de>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 888367F54
+	for <xfs@oss.sgi.com>; Thu, 22 Jan 2015 14:01:35 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 68DA48F8049
+	for <xfs@oss.sgi.com>; Thu, 22 Jan 2015 12:01:32 -0800 (PST)
+Received: from fieldses.org (li207-46.members.linode.com [173.255.197.46]) by
+	cuda.sgi.com with ESMTP id oKxnjBbwSgvK7f7X for
+	<xfs@oss.sgi.com>; Thu, 22 Jan 2015 12:01:31 -0800 (PST)
+Date: Thu, 22 Jan 2015 15:01:30 -0500
+From: "J. Bruce Fields" <bfields@fieldses.org>
 Subject: Re: a simple and scalable pNFS block layout server V2
-Message-ID: <20150122162100.GA10801@lst.de>
+Message-ID: <20150122200130.GH898@fieldses.org>
 References: <1421925006-24231-1-git-send-email-hch@lst.de>
-	<0851E625-04F8-4DE0-971D-1EAB591B3F28@oracle.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <0851E625-04F8-4DE0-971D-1EAB591B3F28@oracle.com>
+In-Reply-To: <1421925006-24231-1-git-send-email-hch@lst.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,30 +24,65 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Chuck Lever <chuck.lever@oracle.com>
-Cc: "J. Bruce Fields" <bfields@fieldses.org>, linux-fsdevel@vger.kernel.org, Linux NFS Mailing List <linux-nfs@vger.kernel.org>, Jeff Layton <jlayton@primarydata.com>, xfs@oss.sgi.com
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-fsdevel@vger.kernel.org, linux-nfs@vger.kernel.org, Jeff Layton <jlayton@primarydata.com>, xfs@oss.sgi.com
 
-T24gVGh1LCBKYW4gMjIsIDIwMTUgYXQgMTE6MDQ6MTVBTSAtMDUwMCwgQ2h1Y2sgTGV2ZXIgd3Jv
-dGU6Cj4gSeKAmW0gc3RpbGwgbm90IGNsZWFyIG9uIHdoYXQgbGF5b3V0IHR5cGVzIGFyZSBzdXBw
-b3J0ZWQuIENsZWFybHkKPiB0aGUgYmxvY2sgbGF5b3V0IHR5cGUgaXMgc3VwcG9ydGVkLiBCdXQg
-eW91IG1lbnRpb24gWEZTIGhlcmUuIERvZXMKPiB0aGF0IG1lYW4gZmlsZSBsYXlvdXRzIGFyZSBh
-bHNvIHN1cHBvcnRlZCBub3c/IElmIHNvLCBjYW4geW91Cj4gYnJpZWZseSBkZXNjcmliZSB0aGUg
-YXJjaGl0ZWN0dXJlIGFuZCBhbnkgY3VycmVudCBsaW1pdGF0aW9ucz8KPiAKPiBEaWQgSSBtaXNz
-IGRvY3VtZW50YXRpb24gZm9yIGhvdyBhZG1pbmlzdHJhdG9ycyBjb25zdHJ1Y3QgbGF5b3V0cz8K
-Ck9ubHkgYmxvY2sgbGF5b3V0cyBhcmUgc3VwcG9ydGUgYXQgdGhlIG1vbWVudC4gIFRoZXkgYXJl
-IGF1dG9tYXRpY2FsbHkKZW5hYmxlZCB3aGVuIGFuIFhGUyBmaWxlc3lzdGVtIGlzIGV4cG9ydGVk
-LiAgIFRoZXJlIGlzIG5vIHJlcXVpcmVtZW50CmZvciB0aGUgYWRtaW5pc3RyYXRvciB0byBjb25z
-dHJ1Y3QgaW4gbGF5b3V0LCB0aGUgb25seSByZXF1aXJlbWVudApmb3Igd29ya2luZyBibG9jayBs
-YXlvdXRzIGlzIHNoYXJlZCBzdG9yYWdlIHRoYXQgaXMgYWNjZXNzaWJsZQp0byB0aGUgTkZTIFNl
-cnZlciAvIE1EUyBhbmQgdGhlIGNsaWVudHMgdGhhdCB3aXNoIHRvIHVzZSBwTkZT4oClCgpJZiB5
-b3UgYXJlIGludGVyZXN0ZWQgaW4gZmlsZSBsYXlvdXQgc3VwcG9ydCBwb3J0aW5nIG92ZXIgdGhl
-IGV4aXN0aW5nCmZpbGUgbGF5b3V0IGRyaXZlcnMgZnJvbSB0aGUgb2xkIHBORlMgc2VydmVyIHRy
-ZWUgc2hvdWxkIG9ubHkgYmUKYSBtb2RlcmF0ZSBlZmZvcnQsIGFuZCBhdCBsZWFzdCB0aGUgbGV4
-cCBjb2RlIHdvdWxkIGJlIGdyYXRlbHkKc2ltcGxpZmllZCBieSB0aGUgY29tbW9uIHJlY2FsbCBp
-bmZyYXN0cnVjdHVyZSBpbiB0aGlzIHNlcmllcy4KCl9fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0
-dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
+On Thu, Jan 22, 2015 at 12:09:46PM +0100, Christoph Hellwig wrote:
+> This series adds support for the pNFS operations in NFS v4.1, as well
+> as a block layout driver that can export block based filesystems that
+> implement a few additional export operations.  Support for XFS is
+> provided in this series, but other filesystems could be added easily.
+> 
+> The core pNFS code of course owns its heritage to the existing Linux
+> pNFS server prototype, but except for a few bits and pieces in the
+> XDR path nothing is left from it.
+> 
+> The design of this new pNFS server is fairly different from the old
+> one - while the old one implemented very little semantics in nfsd
+> and left almost everything to filesystems my implementation implements
+> as much as possible in common nfsd code, then dispatches to a layout
+> driver that still is part of nfsd and only then calls into the
+> filesystem, thus keeping it free from intimate pNFS knowledge.
+> 
+> This version of the code has been rebased to the locks-for-3.20
+> tree which adds a new lock context structure to the inode.  For now
+> we still (ab)use the lease list like in the last version.  Adding
+> a pNFS-specific list would duplicate a lot of code without much
+> benefit.  But during this research I came up with way to associate
+> a nfs4_file with a struct file at open time which should allow
+> to greatly simplify the pNFS and delegation code.  So stay tuned
+> for some patches in this area!
+
+Good, that could definitely use simplification.--b.
+
+> 
+> For now this also doesn't take errata 3901 for rfc 5661 into account
+> yet and sticks to the verified errata.  The changes in 3901 seem
+> useful in the longer run one verified and will be implemented
+> eventually. Note that the only existing pNFS block client (Linux)
+> would not benefit from the longer layout lifetimes anyway.
+> 
+> More details are document in the individual patch descriptions and
+> code comments.
+> 
+> This code is also available from:
+> 
+> 	git://git.infradead.org/users/hch/pnfs.git pnfsd-for-3.20-2
+> 
+> Changes since V1:
+> 	- rebased to the locks-for-3.20 tree
+> 	- fixed a memory leak in the nfsd4_encode_getdeviceinfo error path
+> 	- removed the always one lg_roc field
+> 	- added a nopnfs export option
+> 	- use a synchronous transaction in layoutget to simplify recovery
+> 	- various XFS fixes pointed out by Dave
+> 	- various documentation typo fixes
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
