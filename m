@@ -1,29 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 64B537F4E
-	for <xfs@oss.sgi.com>; Thu, 22 Jan 2015 02:52:28 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 356578F8039
-	for <xfs@oss.sgi.com>; Thu, 22 Jan 2015 00:52:25 -0800 (PST)
-Received: from mailout2.samsung.com (mailout2.samsung.com [203.254.224.25]) by
-	cuda.sgi.com with ESMTP id h9hT3axSGiyvHkoW (version=TLSv1
-	cipher=RC4-MD5 bits=128 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 22 Jan 2015 00:52:23 -0800 (PST)
-Received: from epcpsbgr5.samsung.com
-	(u145.gpu120.samsung.co.kr [203.254.230.145])
-	by mailout2.samsung.com (Oracle Communications Messaging Server
-	7u4-24.01 (7.0.4.24.0) 64bit (built Nov 17 2011))
-	with ESMTP id <0NIK000RALZ9D520@mailout2.samsung.com> for
-	xfs@oss.sgi.com; Thu, 22 Jan 2015 17:52:21 +0900 (KST)
-From: Namjae Jeon <namjae.jeon@samsung.com>
-References: <1421853126-4505-1-git-send-email-linkinjeon@gmail.com>
-	<CAHO5Pa3HnzP=KcBQOWDEkBqppMGXJ2kzfNKj21ruQ5SvWnms2g@mail.gmail.com>
-In-reply-to: <CAHO5Pa3HnzP=KcBQOWDEkBqppMGXJ2kzfNKj21ruQ5SvWnms2g@mail.gmail.com>
-Subject: RE: [PATCH v9 0/11] fs: Introduce FALLOC_FL_INSERT_RANGE for fallocate
-Date: Thu, 22 Jan 2015 17:52:21 +0900
-Message-id: <003901d03620$bbf4a450$33ddecf0$@samsung.com>
-MIME-version: 1.0
-Content-language: ko
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id E36E77F51
+	for <xfs@oss.sgi.com>; Thu, 22 Jan 2015 05:11:15 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id C96D330405F
+	for <xfs@oss.sgi.com>; Thu, 22 Jan 2015 03:11:15 -0800 (PST)
+Received: from casper.infradead.org (casper.infradead.org [85.118.1.10]) by
+	cuda.sgi.com with ESMTP id FnOrGDNYIMDBGRAj (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 22 Jan 2015 03:11:15 -0800 (PST)
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 05/20] nfsd: move nfsd_fh_match to nfsfh.h
+Date: Thu, 22 Jan 2015 12:09:51 +0100
+Message-Id: <1421925006-24231-6-git-send-email-hch@lst.de>
+In-Reply-To: <1421925006-24231-1-git-send-email-hch@lst.de>
+References: <1421925006-24231-1-git-send-email-hch@lst.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,87 +23,82 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: 'Michael Kerrisk' <mtk.manpages@gmail.com>
-Cc: 'Namjae Jeon' <linkinjeon@gmail.com>, 'Theodore Ts'o' <tytso@mit.edu>, 'Linux API' <linux-api@vger.kernel.org>, bfoster@redhat.com, 'Linux Kernel' <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, a.sangwan@samsung.com, 'Linux-Fsdevel' <linux-fsdevel@vger.kernel.org>, linux-ext4@vger.kernel.org
+To: "J. Bruce Fields" <bfields@fieldses.org>
+Cc: linux-fsdevel@vger.kernel.org, linux-nfs@vger.kernel.org, Jeff Layton <jlayton@primarydata.com>, xfs@oss.sgi.com
 
-> [CC += linux-api]
-> 
-> Hello Namjae
-> 
-> Please, all patches such as this that touch the user-space ABI must CC
-> linux-api@. (The kernel source file Documentation/SubmitChecklist
-> notes that all Linux kernel patches that change userspace interfaces
-> should be CCed to linux-api@vger.kernel.org.  See also
-> https://www.kernel.org/doc/man-pages/linux-api-ml.html )
-Hi Michael,
+The pnfs code will need it too.  Also remove the nfsd_ prefix to match the
+other filehandle helpers in that file.
 
-I will keep that in mind.
-Thank you!
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/nfsd/nfs4state.c | 12 ++----------
+ fs/nfsd/nfsfh.h     |  9 +++++++++
+ 2 files changed, 11 insertions(+), 10 deletions(-)
 
-> 
-> Thanks,
-> 
-> Michael
-> 
-> 
-> On Wed, Jan 21, 2015 at 4:11 PM, Namjae Jeon <linkinjeon@gmail.com> wrote:
-> > From: Namjae Jeon <namjae.jeon@samsung.com>
-> >
-> > In continuation of the work of making the process of non linear editing of
-> > media files faster, we introduce here the new flag FALLOC_FL_INSERT_RANGE
-> > for fallocate.
-> >
-> > This flag will work opposite to the FALLOC_FL_COLLAPSE_RANGE flag.
-> > As such, specifying FALLOC_FL_INSERT_RANGE flag will create new space inside file
-> > by inserting a hole within the range specified by offset and len.
-> > User can write new data in this space. e.g. ads.
-> > Like collapse range, currently we have the limitation that offset and len should
-> > be block size aligned for both XFS and Ext4.
-> >
-> > The semantics of the flag are :
-> > 1) It creates space within file by inserting a hole of  len bytes starting
-> >    at offset byte without overwriting any existing data. All the data blocks
-> >    from offset to EOF are shifted towards right to make hole space.
-> > 2) It should be used exclusively. No other fallocate flag in combination.
-> > 3) Offset and length supplied to fallocate should be fs block size aligned
-> >    in case of xfs and ext4.
-> > 4) Insert range does not work for the case when offset is overlapping/beyond
-> >    i_size. If the user wants to insert space at the end of file they are
-> >    advised to use either ftruncate(2) or fallocate(2) with mode 0.
-> > 5) It increses the size of file by len bytes.
-> >
-> >
-> > Namjae Jeon (11):
-> >  fs: Add support FALLOC_FL_INSERT_RANGE for fallocate
-> >  xfs: Add support FALLOC_FL_INSERT_RANGE for fallocate
-> >  ext4: Add support FALLOC_FL_INSERT_RANGE for fallocate
-> >  xfsprogs: xfs_io: add finsert command for insert range via fallocate
-> >  xfstests: generic/039: Standard insert range tests
-> >  xfstests: generic/040: Delayed allocation insert range
-> >  xfstests: generic/041: Multi insert range tests
-> >  xfstests: generic/042: Delayed allocation multi insert
-> >  xfstests: generic/043: Test multiple fallocate insert/collapse range calls
-> >  xfstests: fsstress: Add fallocate insert range operation
-> >  xfstests: fsx: Add fallocate insert range operation
-> > --
-> > 1.7.9.5
-> >
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > Please read the FAQ at  http://www.tux.org/lkml/
-> 
-> 
-> 
-> --
-> Michael Kerrisk Linux man-pages maintainer;
-> http://www.kernel.org/doc/man-pages/
-> Author of "The Linux Programming Interface", http://blog.man7.org/
+diff --git a/fs/nfsd/nfs4state.c b/fs/nfsd/nfs4state.c
+index 30ff0d4..b4f86f8 100644
+--- a/fs/nfsd/nfs4state.c
++++ b/fs/nfsd/nfs4state.c
+@@ -408,14 +408,6 @@ static unsigned int file_hashval(struct knfsd_fh *fh)
+ 	return nfsd_fh_hashval(fh) & (FILE_HASH_SIZE - 1);
+ }
+ 
+-static bool nfsd_fh_match(struct knfsd_fh *fh1, struct knfsd_fh *fh2)
+-{
+-	return fh1->fh_size == fh2->fh_size &&
+-		!memcmp(fh1->fh_base.fh_pad,
+-				fh2->fh_base.fh_pad,
+-				fh1->fh_size);
+-}
+-
+ static struct hlist_head file_hashtbl[FILE_HASH_SIZE];
+ 
+ static void
+@@ -3300,7 +3292,7 @@ find_file_locked(struct knfsd_fh *fh, unsigned int hashval)
+ 	struct nfs4_file *fp;
+ 
+ 	hlist_for_each_entry_rcu(fp, &file_hashtbl[hashval], fi_hash) {
+-		if (nfsd_fh_match(&fp->fi_fhandle, fh)) {
++		if (fh_match(&fp->fi_fhandle, fh)) {
+ 			if (atomic_inc_not_zero(&fp->fi_ref))
+ 				return fp;
+ 		}
+@@ -4295,7 +4287,7 @@ laundromat_main(struct work_struct *laundry)
+ 
+ static inline __be32 nfs4_check_fh(struct svc_fh *fhp, struct nfs4_ol_stateid *stp)
+ {
+-	if (!nfsd_fh_match(&fhp->fh_handle, &stp->st_stid.sc_file->fi_fhandle))
++	if (!fh_match(&fhp->fh_handle, &stp->st_stid.sc_file->fi_fhandle))
+ 		return nfserr_bad_stateid;
+ 	return nfs_ok;
+ }
+diff --git a/fs/nfsd/nfsfh.h b/fs/nfsd/nfsfh.h
+index 08236d7..e24d954 100644
+--- a/fs/nfsd/nfsfh.h
++++ b/fs/nfsd/nfsfh.h
+@@ -187,6 +187,15 @@ fh_init(struct svc_fh *fhp, int maxsize)
+ 	return fhp;
+ }
+ 
++static inline bool fh_match(struct knfsd_fh *fh1, struct knfsd_fh *fh2)
++{
++	if (fh1->fh_size != fh2->fh_size)
++		return false;
++	if (memcmp(fh1->fh_base.fh_pad, fh2->fh_base.fh_pad, fh1->fh_size) != 0)
++		return false;
++	return true;
++}
++
+ #ifdef CONFIG_NFSD_V3
+ /*
+  * The wcc data stored in current_fh should be cleared
+-- 
+1.9.1
 
 _______________________________________________
 xfs mailing list
