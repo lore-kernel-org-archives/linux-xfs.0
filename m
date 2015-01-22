@@ -1,22 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id DFC2D7F4E
-	for <xfs@oss.sgi.com>; Wed, 21 Jan 2015 22:11:05 -0600 (CST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 223DF7F4E
+	for <xfs@oss.sgi.com>; Thu, 22 Jan 2015 02:17:00 -0600 (CST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id CBE748F8037
-	for <xfs@oss.sgi.com>; Wed, 21 Jan 2015 20:11:02 -0800 (PST)
-Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
-	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	yZ0ZxQgd1UHuxWja for <xfs@oss.sgi.com>;
-	Wed, 21 Jan 2015 20:10:57 -0800 (PST)
-Received: from dave by dastard with local (Exim 4.80)
-	(envelope-from <david@fromorbit.com>) id 1YE94e-0005lv-2k
-	for xfs@oss.sgi.com; Thu, 22 Jan 2015 15:08:52 +1100
-Date: Thu, 22 Jan 2015 15:08:52 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: [ANNOUNCE] xfs: for-next branch updated to 438c3c8
-Message-ID: <20150122040851.GM16510@dastard>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 013B7304039
+	for <xfs@oss.sgi.com>; Thu, 22 Jan 2015 00:16:59 -0800 (PST)
+Received: from mail-ob0-f179.google.com (mail-ob0-f179.google.com
+	[209.85.214.179]) by cuda.sgi.com with ESMTP id
+	d4OTp17mHkPTcICQ (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 22 Jan 2015 00:16:55 -0800 (PST)
+Received: by mail-ob0-f179.google.com with SMTP id vb8so185031obc.10
+	for <xfs@oss.sgi.com>; Thu, 22 Jan 2015 00:16:55 -0800 (PST)
 MIME-Version: 1.0
+In-Reply-To: <1421853126-4505-1-git-send-email-linkinjeon@gmail.com>
+References: <1421853126-4505-1-git-send-email-linkinjeon@gmail.com>
+From: Michael Kerrisk <mtk.manpages@gmail.com>
+Date: Thu, 22 Jan 2015 09:16:34 +0100
+Message-ID: <CAHO5Pa3HnzP=KcBQOWDEkBqppMGXJ2kzfNKj21ruQ5SvWnms2g@mail.gmail.com>
+Subject: Re: [PATCH v9 0/11] fs: Introduce FALLOC_FL_INSERT_RANGE for fallocate
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,117 +27,84 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============3452081559054643900=="
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Namjae Jeon <linkinjeon@gmail.com>
+Cc: Theodore Ts'o <tytso@mit.edu>, Namjae Jeon <namjae.jeon@samsung.com>, Linux API <linux-api@vger.kernel.org>, bfoster@redhat.com, Linux Kernel <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, a.sangwan@samsung.com, Linux-Fsdevel <linux-fsdevel@vger.kernel.org>, linux-ext4@vger.kernel.org
+
+[CC += linux-api]
+
+Hello Namjae
+
+Please, all patches such as this that touch the user-space ABI must CC
+linux-api@. (The kernel source file Documentation/SubmitChecklist
+notes that all Linux kernel patches that change userspace interfaces
+should be CCed to linux-api@vger.kernel.org.  See also
+https://www.kernel.org/doc/man-pages/linux-api-ml.html )
+
+Thanks,
+
+Michael
 
 
---===============3452081559054643900==
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="RASg3xLB4tUQ4RcS"
-Content-Disposition: inline
+On Wed, Jan 21, 2015 at 4:11 PM, Namjae Jeon <linkinjeon@gmail.com> wrote:
+> From: Namjae Jeon <namjae.jeon@samsung.com>
+>
+> In continuation of the work of making the process of non linear editing of
+> media files faster, we introduce here the new flag FALLOC_FL_INSERT_RANGE
+> for fallocate.
+>
+> This flag will work opposite to the FALLOC_FL_COLLAPSE_RANGE flag.
+> As such, specifying FALLOC_FL_INSERT_RANGE flag will create new space inside file
+> by inserting a hole within the range specified by offset and len.
+> User can write new data in this space. e.g. ads.
+> Like collapse range, currently we have the limitation that offset and len should
+> be block size aligned for both XFS and Ext4.
+>
+> The semantics of the flag are :
+> 1) It creates space within file by inserting a hole of  len bytes starting
+>    at offset byte without overwriting any existing data. All the data blocks
+>    from offset to EOF are shifted towards right to make hole space.
+> 2) It should be used exclusively. No other fallocate flag in combination.
+> 3) Offset and length supplied to fallocate should be fs block size aligned
+>    in case of xfs and ext4.
+> 4) Insert range does not work for the case when offset is overlapping/beyond
+>    i_size. If the user wants to insert space at the end of file they are
+>    advised to use either ftruncate(2) or fallocate(2) with mode 0.
+> 5) It increses the size of file by len bytes.
+>
+>
+> Namjae Jeon (11):
+>  fs: Add support FALLOC_FL_INSERT_RANGE for fallocate
+>  xfs: Add support FALLOC_FL_INSERT_RANGE for fallocate
+>  ext4: Add support FALLOC_FL_INSERT_RANGE for fallocate
+>  xfsprogs: xfs_io: add finsert command for insert range via fallocate
+>  xfstests: generic/039: Standard insert range tests
+>  xfstests: generic/040: Delayed allocation insert range
+>  xfstests: generic/041: Multi insert range tests
+>  xfstests: generic/042: Delayed allocation multi insert
+>  xfstests: generic/043: Test multiple fallocate insert/collapse range calls
+>  xfstests: fsstress: Add fallocate insert range operation
+>  xfstests: fsx: Add fallocate insert range operation
+> --
+> 1.7.9.5
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
 
 
---RASg3xLB4tUQ4RcS
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
 
-Hi folks,
-
-The for-next branch of the xfs kernel repository at
-
-git://git.kernel.org/pub/scm/linux/kernel/git/dgc/linux-xfs.git
-
-has just been updated. Note that this update rebases the
-xfs-sb-logging-rework topic branch to correct and on-disk format
-handling regression Brian noticed.
-
-Also worth noting: I have stopped mirroring updates to the kernel
-tree on oss.sgi.com. I'm about to update the xfs.org wiki to reflect
-this.
-
-The new head of the for-next branch is commit:
-
-438c3c8 Merge branch 'xfs-buf-type-fixes' into for-next
-
-New Commits:
-
-Dave Chinner (9):
-      [4d11a40] xfs: remove bitfield based superblock updates
-      [61e63ec] xfs: consolidate superblock logging functions
-      [074e427] xfs: sanitise sb_bad_features2 handling
-      [465e2de] Merge branch 'xfs-sb-logging-rework' into for-next
-      [0d612fb] xfs: ensure buffer types are set correctly
-      [f19b872] xfs: inode unlink does not set AGI buffer type
-      [fe22d55] xfs: set buf types when converting extent formats
-      [3443a3b] xfs: set superblock buffer type correctly
-      [438c3c8] Merge branch 'xfs-buf-type-fixes' into for-next
-
-
-Code Diffstat:
-
- fs/xfs/libxfs/xfs_attr_leaf.c      |   2 +-
- fs/xfs/libxfs/xfs_bmap.c           |  20 +--
- fs/xfs/libxfs/xfs_format.h         |  14 +-
- fs/xfs/libxfs/xfs_sb.c             | 320 ++++++++++++++++-----------------=
-----
- fs/xfs/libxfs/xfs_sb.h             |  11 +-
- fs/xfs/libxfs/xfs_shared.h         |  33 ++--
- fs/xfs/libxfs/xfs_symlink_remote.c |   2 +
- fs/xfs/libxfs/xfs_trans_resv.c     |  14 --
- fs/xfs/libxfs/xfs_trans_resv.h     |   1 -
- fs/xfs/xfs_buf_item.c              |   4 +
- fs/xfs/xfs_fsops.c                 |  33 +---
- fs/xfs/xfs_inode.c                 |   2 +
- fs/xfs/xfs_log.c                   |  18 ++-
- fs/xfs/xfs_mount.c                 | 106 +++---------
- fs/xfs/xfs_mount.h                 |   5 +-
- fs/xfs/xfs_qm.c                    |  43 +----
- fs/xfs/xfs_qm.h                    |   1 -
- fs/xfs/xfs_qm_syscalls.c           |  14 +-
- fs/xfs/xfs_super.c                 |  13 +-
- fs/xfs/xfs_trans.c                 |   1 +
- 20 files changed, 240 insertions(+), 417 deletions(-)
---=20
-Dave Chinner
-david@fromorbit.com
-
---RASg3xLB4tUQ4RcS
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
-
-iQIcBAEBAgAGBQJUwHfTAAoJEK3oKUf0dfodrbwQANC2tmFT0tOxI9OR5ZnZ/IR8
-tR6RdMiJ0EO4U+caYmZU1QpnUy0YUaB+Nps77cM7//j2+FJjmg+sScHUxvCDqtjE
-oJxVEoaQlr04D4Q2Vg9RlYcAErAZyk2qs8TQz23YCpu0azizrID8XHMTmlDdVetN
-+QkSu+HGsn2JA5Qs9DW5uMmHf2r1XoODsuFpq9BYU4XkCIqj4Mu6jWTCvxRweWLS
-/PiSW6qlxTRVQmdrnXXyaKDJNGQ9JtQHNpbHA06j/X76kA7ZcWzweucB7Mbg+qB1
-wxq0ikHpALl5owtPPz5jgyWcxiUhSI+Tup7S3pt3CDvOx5f/M1sTi7IU/10zCK04
-gKA40CszFEI3w5gKyzjxBAifuh7KH/S9A3qz5TJx3ktj49XMXGFspIspmM84qIvT
-JL+zkwmXsCJvm5Hzn745u0MUJa8EOeyl25E2yp64oNNO1fivQIJEC5PXrAmCMudY
-nTkDnbUnIGhxt/Q+gF/PQWSjubvxWHwMd5KmNv0vlYUV+F0sPAChrEGMd4ZXkrLT
-QeGu1FPuRVyPt/8d/MoV8qIdB3WXp7no+e1mjkkf7VuaJ7zCYXZSI2pB3FDughNk
-qHlqwWNBAfF20VHLEanXDrHIuDrK/j4dK2i9Xc/BKXtlekiU4mxK8vQSLUg6r0in
-Z01BIJjv46KqYYtuIlFm
-=FikZ
------END PGP SIGNATURE-----
-
---RASg3xLB4tUQ4RcS--
-
-
---===============3452081559054643900==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+-- 
+Michael Kerrisk Linux man-pages maintainer;
+http://www.kernel.org/doc/man-pages/
+Author of "The Linux Programming Interface", http://blog.man7.org/
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============3452081559054643900==--
