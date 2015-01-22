@@ -1,24 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 577017F54
-	for <xfs@oss.sgi.com>; Thu, 22 Jan 2015 09:45:41 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 1ABC38F8037
-	for <xfs@oss.sgi.com>; Thu, 22 Jan 2015 07:45:37 -0800 (PST)
-Received: from mail-qa0-f46.google.com (mail-qa0-f46.google.com
-	[209.85.216.46]) by cuda.sgi.com with ESMTP id UFpmfNXctFoekR14
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 22 Jan 2015 07:45:33 -0800 (PST)
-Received: by mail-qa0-f46.google.com with SMTP id j7so1674738qaq.5
-	for <xfs@oss.sgi.com>; Thu, 22 Jan 2015 07:45:33 -0800 (PST)
-From: Jeff Layton <jeff.layton@primarydata.com>
-Date: Thu, 22 Jan 2015 10:45:30 -0500
-Subject: Re: [PATCH 03/20] fs: add FL_LAYOUT lease type
-Message-ID: <20150122104530.44297670@tlielax.poochiereds.net>
-In-Reply-To: <1421925006-24231-4-git-send-email-hch@lst.de>
+	by oss.sgi.com (Postfix) with ESMTP id D49107F56
+	for <xfs@oss.sgi.com>; Thu, 22 Jan 2015 10:04:29 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id C31F28F8039
+	for <xfs@oss.sgi.com>; Thu, 22 Jan 2015 08:04:26 -0800 (PST)
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
+	cuda.sgi.com with ESMTP id 63fFkbM9ZbFpivzz (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 22 Jan 2015 08:04:22 -0800 (PST)
+Mime-Version: 1.0 (Mac OS X Mail 7.3 \(1878.6\))
+Subject: Re: a simple and scalable pNFS block layout server V2
+From: Chuck Lever <chuck.lever@oracle.com>
+In-Reply-To: <1421925006-24231-1-git-send-email-hch@lst.de>
+Date: Thu, 22 Jan 2015 11:04:15 -0500
+Message-Id: <0851E625-04F8-4DE0-971D-1EAB591B3F28@oracle.com>
 References: <1421925006-24231-1-git-send-email-hch@lst.de>
-	<1421925006-24231-4-git-send-email-hch@lst.de>
-MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,45 +24,91 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="windows-1252"
+Content-Transfer-Encoding: quoted-printable
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@lst.de>
-Cc: "J. Bruce Fields" <bfields@fieldses.org>, linux-fsdevel@vger.kernel.org, linux-nfs@vger.kernel.org, xfs@oss.sgi.com
+Cc: "J. Bruce Fields" <bfields@fieldses.org>, linux-fsdevel@vger.kernel.org, Linux NFS Mailing List <linux-nfs@vger.kernel.org>, Jeff Layton <jlayton@primarydata.com>, xfs@oss.sgi.com
 
-On Thu, 22 Jan 2015 12:09:49 +0100
-Christoph Hellwig <hch@lst.de> wrote:
+Hi Christoph-
 
-> This (ab-)uses the file locking code to allow filesystems to recall
-> outstanding pNFS layouts on a file.  This new lease type is similar but
-> not quite the same as FL_DELEG.  A FL_LAYOUT lease can always be granted,
-> an a per-filesystem lock (XFS iolock for the initial implementation)
-> ensures not FL_LAYOUT leases granted when we would need to recall them.
-> 
-> Also included are changes that allow multiple outstanding read
-> leases of different types on the same file as long as they have a
-> differnt owner.  This wasn't a problem until now as nfsd never set
-> FL_LEASE leases, and no one else used FL_DELEG leases, but given that
-> nfsd will also issues FL_LAYOUT leases we will have to handle it now.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  fs/locks.c         | 14 ++++++++++----
->  include/linux/fs.h | 16 ++++++++++++++++
->  2 files changed, 26 insertions(+), 4 deletions(-)
-> 
+Very nice, and welcome, work.
 
-Abuse indeed. :)
+On Jan 22, 2015, at 6:09 AM, Christoph Hellwig <hch@lst.de> wrote:
 
-I'd probably prefer to move this to a separate list within the i_flctx
-instead of overloading the lease stuff, but I'm not religious about it.
+> This series adds support for the pNFS operations in NFS v4.1, as well
+> as a block layout driver that can export block based filesystems that
+> implement a few additional export operations.  Support for XFS is
+> provided in this series, but other filesystems could be added easily.
 
-I can live with this for now, and if and when we get around to
-representing different types of file locks with different types of
-structures, we can do that conversion then.
+I=92m still not clear on what layout types are supported. Clearly
+the block layout type is supported. But you mention XFS here. Does
+that mean file layouts are also supported now? If so, can you
+briefly describe the architecture and any current limitations?
 
-Acked-by: Jeff Layton <jlayton@primarydata.com>
+Did I miss documentation for how administrators construct layouts?
+
+> The core pNFS code of course owns its heritage to the existing Linux
+> pNFS server prototype, but except for a few bits and pieces in the
+> XDR path nothing is left from it.
+> =
+
+> The design of this new pNFS server is fairly different from the old
+> one - while the old one implemented very little semantics in nfsd
+> and left almost everything to filesystems my implementation implements
+> as much as possible in common nfsd code, then dispatches to a layout
+> driver that still is part of nfsd and only then calls into the
+> filesystem, thus keeping it free from intimate pNFS knowledge.
+> =
+
+> This version of the code has been rebased to the locks-for-3.20
+> tree which adds a new lock context structure to the inode.  For now
+> we still (ab)use the lease list like in the last version.  Adding
+> a pNFS-specific list would duplicate a lot of code without much
+> benefit.  But during this research I came up with way to associate
+> a nfs4_file with a struct file at open time which should allow
+> to greatly simplify the pNFS and delegation code.  So stay tuned
+> for some patches in this area!
+> =
+
+> For now this also doesn't take errata 3901 for rfc 5661 into account
+> yet and sticks to the verified errata.  The changes in 3901 seem
+> useful in the longer run one verified and will be implemented
+> eventually. Note that the only existing pNFS block client (Linux)
+> would not benefit from the longer layout lifetimes anyway.
+> =
+
+> More details are document in the individual patch descriptions and
+> code comments.
+> =
+
+> This code is also available from:
+> =
+
+> 	git://git.infradead.org/users/hch/pnfs.git pnfsd-for-3.20-2
+> =
+
+> Changes since V1:
+> 	- rebased to the locks-for-3.20 tree
+> 	- fixed a memory leak in the nfsd4_encode_getdeviceinfo error path
+> 	- removed the always one lg_roc field
+> 	- added a nopnfs export option
+> 	- use a synchronous transaction in layoutget to simplify recovery
+> 	- various XFS fixes pointed out by Dave
+> 	- various documentation typo fixes
+> =
+
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-nfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+--
+Chuck Lever
+chuck[dot]lever[at]oracle[dot]com
+
+
 
 _______________________________________________
 xfs mailing list
