@@ -1,17 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 888367F54
-	for <xfs@oss.sgi.com>; Thu, 22 Jan 2015 14:01:35 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 68DA48F8049
-	for <xfs@oss.sgi.com>; Thu, 22 Jan 2015 12:01:32 -0800 (PST)
+	by oss.sgi.com (Postfix) with ESMTP id E424E7F54
+	for <xfs@oss.sgi.com>; Thu, 22 Jan 2015 14:06:23 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id A58818F804B
+	for <xfs@oss.sgi.com>; Thu, 22 Jan 2015 12:06:20 -0800 (PST)
 Received: from fieldses.org (li207-46.members.linode.com [173.255.197.46]) by
-	cuda.sgi.com with ESMTP id oKxnjBbwSgvK7f7X for
-	<xfs@oss.sgi.com>; Thu, 22 Jan 2015 12:01:31 -0800 (PST)
-Date: Thu, 22 Jan 2015 15:01:30 -0500
+	cuda.sgi.com with ESMTP id ERpfIjIMg0nGOeXy for
+	<xfs@oss.sgi.com>; Thu, 22 Jan 2015 12:06:19 -0800 (PST)
+Date: Thu, 22 Jan 2015 15:06:18 -0500
 From: "J. Bruce Fields" <bfields@fieldses.org>
 Subject: Re: a simple and scalable pNFS block layout server V2
-Message-ID: <20150122200130.GH898@fieldses.org>
+Message-ID: <20150122200618.GI898@fieldses.org>
 References: <1421925006-24231-1-git-send-email-hch@lst.de>
 MIME-Version: 1.0
 Content-Disposition: inline
@@ -49,16 +49,22 @@ On Thu, Jan 22, 2015 at 12:09:46PM +0100, Christoph Hellwig wrote:
 > filesystem, thus keeping it free from intimate pNFS knowledge.
 > 
 > This version of the code has been rebased to the locks-for-3.20
-> tree which adds a new lock context structure to the inode.  For now
+> tree which adds a new lock context structure to the inode.
+
+By the way, Jeff, do you consider the lock changes are ready?  Would you
+mind if I pulled or cherry-picked them into the nfsd tree just to
+simplify merging this stuff for 3.20?  (Assuming it's going to be
+ready.)
+
+--b.
+
+> For now
 > we still (ab)use the lease list like in the last version.  Adding
 > a pNFS-specific list would duplicate a lot of code without much
 > benefit.  But during this research I came up with way to associate
 > a nfs4_file with a struct file at open time which should allow
 > to greatly simplify the pNFS and delegation code.  So stay tuned
 > for some patches in this area!
-
-Good, that could definitely use simplification.--b.
-
 > 
 > For now this also doesn't take errata 3901 for rfc 5661 into account
 > yet and sticks to the verified errata.  The changes in 3901 seem
