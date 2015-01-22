@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 853AD7F5A
-	for <xfs@oss.sgi.com>; Thu, 22 Jan 2015 07:42:06 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 74280304051
-	for <xfs@oss.sgi.com>; Thu, 22 Jan 2015 05:42:03 -0800 (PST)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id EMEFbRurGnsbBX2x (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 22 Jan 2015 05:41:59 -0800 (PST)
-Date: Thu, 22 Jan 2015 08:41:52 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [RFC PATCH 6/6] xfs: lock out page faults from extent swap
-	operations
-Message-ID: <20150122134152.GC25345@bfoster.bfoster>
-References: <1420669543-8093-1-git-send-email-david@fromorbit.com>
-	<1420669543-8093-7-git-send-email-david@fromorbit.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 577017F54
+	for <xfs@oss.sgi.com>; Thu, 22 Jan 2015 09:45:41 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 1ABC38F8037
+	for <xfs@oss.sgi.com>; Thu, 22 Jan 2015 07:45:37 -0800 (PST)
+Received: from mail-qa0-f46.google.com (mail-qa0-f46.google.com
+	[209.85.216.46]) by cuda.sgi.com with ESMTP id UFpmfNXctFoekR14
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Thu, 22 Jan 2015 07:45:33 -0800 (PST)
+Received: by mail-qa0-f46.google.com with SMTP id j7so1674738qaq.5
+	for <xfs@oss.sgi.com>; Thu, 22 Jan 2015 07:45:33 -0800 (PST)
+From: Jeff Layton <jeff.layton@primarydata.com>
+Date: Thu, 22 Jan 2015 10:45:30 -0500
+Subject: Re: [PATCH 03/20] fs: add FL_LAYOUT lease type
+Message-ID: <20150122104530.44297670@tlielax.poochiereds.net>
+In-Reply-To: <1421925006-24231-4-git-send-email-hch@lst.de>
+References: <1421925006-24231-1-git-send-email-hch@lst.de>
+	<1421925006-24231-4-git-send-email-hch@lst.de>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1420669543-8093-7-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,77 +31,41 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, xfs@oss.sgi.com
+To: Christoph Hellwig <hch@lst.de>
+Cc: "J. Bruce Fields" <bfields@fieldses.org>, linux-fsdevel@vger.kernel.org, linux-nfs@vger.kernel.org, xfs@oss.sgi.com
 
-On Thu, Jan 08, 2015 at 09:25:43AM +1100, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
+On Thu, 22 Jan 2015 12:09:49 +0100
+Christoph Hellwig <hch@lst.de> wrote:
+
+> This (ab-)uses the file locking code to allow filesystems to recall
+> outstanding pNFS layouts on a file.  This new lease type is similar but
+> not quite the same as FL_DELEG.  A FL_LAYOUT lease can always be granted,
+> an a per-filesystem lock (XFS iolock for the initial implementation)
+> ensures not FL_LAYOUT leases granted when we would need to recall them.
 > 
-> Extent swap operations are another extent manipulation operation
-> that we need to ensure does not race against mmap page faults. The
-> current code returns if the file is mapped prior to the swap being
-> done, but it could potentially race against new page faults while
-> the swap is in progress. Hence we should use the XFS_MMAPLOCK_EXCL
-> for this operation, too.
+> Also included are changes that allow multiple outstanding read
+> leases of different types on the same file as long as they have a
+> differnt owner.  This wasn't a problem until now as nfsd never set
+> FL_LEASE leases, and no one else used FL_DELEG leases, but given that
+> nfsd will also issues FL_LAYOUT leases we will have to handle it now.
 > 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 > ---
->  fs/xfs/xfs_bmap_util.c | 18 ++++++------------
->  1 file changed, 6 insertions(+), 12 deletions(-)
+>  fs/locks.c         | 14 ++++++++++----
+>  include/linux/fs.h | 16 ++++++++++++++++
+>  2 files changed, 26 insertions(+), 4 deletions(-)
 > 
-> diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-> index 22a5dcb..1420caf 100644
-> --- a/fs/xfs/xfs_bmap_util.c
-> +++ b/fs/xfs/xfs_bmap_util.c
-> @@ -1599,13 +1599,6 @@ xfs_swap_extent_flush(
->  	/* Verify O_DIRECT for ftmp */
->  	if (VFS_I(ip)->i_mapping->nrpages)
->  		return -EINVAL;
-> -
-> -	/*
-> -	 * Don't try to swap extents on mmap()d files because we can't lock
-> -	 * out races against page faults safely.
-> -	 */
-> -	if (mapping_mapped(VFS_I(ip)->i_mapping))
-> -		return -EBUSY;
->  	return 0;
->  }
->  
-> @@ -1633,13 +1626,14 @@ xfs_swap_extents(
->  	}
->  
->  	/*
-> -	 * Lock up the inodes against other IO and truncate to begin with.
-> -	 * Then we can ensure the inodes are flushed and have no page cache
-> -	 * safely. Once we have done this we can take the ilocks and do the rest
-> -	 * of the checks.
-> +	 * Lock the inodes against other IO, page faults and truncate to
-> +	 * begin with.  Then we can ensure the inodes are flushed and have no
-> +	 * page cache safely. Once we have done this we can take the ilocks and
-> +	 * do the rest of the checks.
->  	 */
-> -	lock_flags = XFS_IOLOCK_EXCL;
-> +	lock_flags = XFS_IOLOCK_EXCL | XFS_MMAPLOCK_EXCL;
->  	xfs_lock_two_inodes(ip, tip, XFS_IOLOCK_EXCL);
-> +	xfs_lock_two_inodes(ip, tip, XFS_MMAPLOCK_EXCL);
->  
->  	/* Verify that both files have the same format */
->  	if ((ip->i_d.di_mode & S_IFMT) != (tip->i_d.di_mode & S_IFMT)) {
 
-Not introduced by this patch, but it looks like we have a couple
-out_trans_cancel->out_unlock error paths after the inodes are joined to
-the transaction (with lock transfer) that can result in double unlocks.
-We might as well fix that up here one way or another as well...
+Abuse indeed. :)
 
-Brian
+I'd probably prefer to move this to a separate list within the i_flctx
+instead of overloading the lease stuff, but I'm not religious about it.
 
-> -- 
-> 2.0.0
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+I can live with this for now, and if and when we get around to
+representing different types of file locks with different types of
+structures, we can do that conversion then.
+
+Acked-by: Jeff Layton <jlayton@primarydata.com>
 
 _______________________________________________
 xfs mailing list
