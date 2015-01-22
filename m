@@ -1,20 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 745B37FB9
-	for <xfs@oss.sgi.com>; Thu, 22 Jan 2015 05:11:32 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 542D48F8049
-	for <xfs@oss.sgi.com>; Thu, 22 Jan 2015 03:11:32 -0800 (PST)
-Received: from casper.infradead.org (casper.infradead.org [85.118.1.10]) by
-	cuda.sgi.com with ESMTP id cuNCqp8VSG3yc1qH (version=TLSv1
+	by oss.sgi.com (Postfix) with ESMTP id 830C07F5A
+	for <xfs@oss.sgi.com>; Thu, 22 Jan 2015 07:09:19 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 457378F8037
+	for <xfs@oss.sgi.com>; Thu, 22 Jan 2015 05:09:18 -0800 (PST)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id GuPuxLP0e4vNF5uM (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 22 Jan 2015 03:11:30 -0800 (PST)
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 20/20] xfs: recall pNFS layouts on conflicting access
-Date: Thu, 22 Jan 2015 12:10:06 +0100
-Message-Id: <1421925006-24231-21-git-send-email-hch@lst.de>
-In-Reply-To: <1421925006-24231-1-git-send-email-hch@lst.de>
-References: <1421925006-24231-1-git-send-email-hch@lst.de>
+	Thu, 22 Jan 2015 05:09:14 -0800 (PST)
+Date: Thu, 22 Jan 2015 08:09:06 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [RFC PATCH 1/6] xfs: introduce mmap/truncate lock
+Message-ID: <20150122130905.GA25345@bfoster.bfoster>
+References: <1420669543-8093-1-git-send-email-david@fromorbit.com>
+	<1420669543-8093-2-git-send-email-david@fromorbit.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <1420669543-8093-2-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,210 +26,336 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "J. Bruce Fields" <bfields@fieldses.org>
-Cc: linux-fsdevel@vger.kernel.org, linux-nfs@vger.kernel.org, Jeff Layton <jlayton@primarydata.com>, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, xfs@oss.sgi.com
 
-Recall all outstanding pNFS layouts and truncates, writes and similar extent
-list modifying operations.
+On Thu, Jan 08, 2015 at 09:25:38AM +1100, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> Right now we cannot serialise mmap against truncate or hole punch
+> sanely. ->page_mkwrite is not able to take locks that the read IO
+> path normally takes (i.e. the inode iolock) because that could
+> result in lock inversions (read - iolock - page fault - page_mkwrite
+> - iolock) and so we cannot use an IO path lock to serialise page
+> write faults against truncate operations.
+> 
+> Instead, introduce a new lock that is used *only* in the
+> ->page_mkwrite path that is the equivalent of the iolock. The lock
+> ordering in a page fault is i_mmaplock -> page lock -> i_ilock,
+> and so in truncate we can i_iolock -> i_mmaplock and so lock out
+> new write faults during the process of truncation.
+> 
+> Because i_mmap_lock is outside the page lock, we can hold it across
+> all the same operations we hold the i_iolock for. The only
+> difference is that we never hold the i_mmaplock in the normal IO
+> path and so do not ever have the possibility that we can page fault
+> inside it. Hence there are no recursion issues on the i_mmap_lock
+> and so we can use it to serialise page fault IO against inode
+> modification operations that affect the IO path.
+> 
+> This patch introduces the i_mmaplock infrastructure, lockdep
+> annotations and initialisation/destruction code. Use of the new lock
+> will be in subsequent patches.
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> ---
+>  fs/xfs/xfs_inode.c | 86 ++++++++++++++++++++++++++++++++++++++++++++----------
+>  fs/xfs/xfs_inode.h | 29 +++++++++++++-----
+>  fs/xfs/xfs_super.c |  2 ++
+>  3 files changed, 95 insertions(+), 22 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+> index 400791a..573b49c 100644
+> --- a/fs/xfs/xfs_inode.c
+> +++ b/fs/xfs/xfs_inode.c
+> @@ -150,6 +150,8 @@ xfs_ilock(
+>  	 */
+>  	ASSERT((lock_flags & (XFS_IOLOCK_SHARED | XFS_IOLOCK_EXCL)) !=
+>  	       (XFS_IOLOCK_SHARED | XFS_IOLOCK_EXCL));
+> +	ASSERT((lock_flags & (XFS_MMAPLOCK_SHARED | XFS_MMAPLOCK_EXCL)) !=
+> +	       (XFS_MMAPLOCK_SHARED | XFS_MMAPLOCK_EXCL));
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/xfs_file.c  | 14 ++++++++++++--
- fs/xfs/xfs_ioctl.c |  9 +++++++--
- fs/xfs/xfs_iops.c  | 11 ++++++++---
- fs/xfs/xfs_pnfs.c  | 31 +++++++++++++++++++++++++++++++
- fs/xfs/xfs_pnfs.h  |  7 +++++++
- 5 files changed, 65 insertions(+), 7 deletions(-)
+The comment that precedes xfs_ilock() explains the locks that exist
+within the inode, locking order, etc. We should probably update it to
+explain how i_mmap_lock fits in as well (e.g., text from the commit log
+description would suffice, imo).
 
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index 712d312..56dcfce 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -36,6 +36,7 @@
- #include "xfs_trace.h"
- #include "xfs_log.h"
- #include "xfs_icache.h"
-+#include "xfs_pnfs.h"
- 
- #include <linux/aio.h>
- #include <linux/dcache.h>
-@@ -554,6 +555,10 @@ restart:
- 	if (error)
- 		return error;
- 
-+	error = xfs_break_layouts(inode, iolock);
-+	if (error)
-+		return error;
-+
- 	/*
- 	 * If the offset is beyond the size of the file, we need to zero any
- 	 * blocks that fall between the existing EOF and the start of this
-@@ -822,6 +827,7 @@ xfs_file_fallocate(
- 	struct xfs_inode	*ip = XFS_I(inode);
- 	long			error;
- 	enum xfs_prealloc_flags	flags = 0;
-+	uint			iolock = XFS_IOLOCK_EXCL;
- 	loff_t			new_size = 0;
- 
- 	if (!S_ISREG(inode->i_mode))
-@@ -830,7 +836,11 @@ xfs_file_fallocate(
- 		     FALLOC_FL_COLLAPSE_RANGE | FALLOC_FL_ZERO_RANGE))
- 		return -EOPNOTSUPP;
- 
--	xfs_ilock(ip, XFS_IOLOCK_EXCL);
-+	xfs_ilock(ip, iolock);
-+	error = xfs_break_layouts(inode, &iolock);
-+	if (error)
-+		goto out_unlock;
-+
- 	if (mode & FALLOC_FL_PUNCH_HOLE) {
- 		error = xfs_free_file_space(ip, offset, len);
- 		if (error)
-@@ -894,7 +904,7 @@ xfs_file_fallocate(
- 	}
- 
- out_unlock:
--	xfs_iunlock(ip, XFS_IOLOCK_EXCL);
-+	xfs_iunlock(ip, iolock);
- 	return error;
- }
- 
-diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-index d58bcd2..0b64310 100644
---- a/fs/xfs/xfs_ioctl.c
-+++ b/fs/xfs/xfs_ioctl.c
-@@ -39,6 +39,7 @@
- #include "xfs_icache.h"
- #include "xfs_symlink.h"
- #include "xfs_trans.h"
-+#include "xfs_pnfs.h"
- 
- #include <linux/capability.h>
- #include <linux/dcache.h>
-@@ -608,6 +609,7 @@ xfs_ioc_space(
- {
- 	struct iattr		iattr;
- 	enum xfs_prealloc_flags	flags = 0;
-+	uint			iolock = XFS_IOLOCK_EXCL;
- 	int			error;
- 
- 	/*
-@@ -636,7 +638,10 @@ xfs_ioc_space(
- 	if (error)
- 		return error;
- 
--	xfs_ilock(ip, XFS_IOLOCK_EXCL);
-+	xfs_ilock(ip, iolock);
-+	error = xfs_break_layouts(inode, &iolock);
-+	if (error)
-+		goto out_unlock;
- 
- 	switch (bf->l_whence) {
- 	case 0: /*SEEK_SET*/
-@@ -725,7 +730,7 @@ xfs_ioc_space(
- 	error = xfs_update_prealloc_flags(ip, flags);
- 
- out_unlock:
--	xfs_iunlock(ip, XFS_IOLOCK_EXCL);
-+	xfs_iunlock(ip, iolock);
- 	mnt_drop_write_file(filp);
- 	return error;
- }
-diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-index 6ff84e8..b1e849a 100644
---- a/fs/xfs/xfs_iops.c
-+++ b/fs/xfs/xfs_iops.c
-@@ -37,6 +37,7 @@
- #include "xfs_da_btree.h"
- #include "xfs_dir2.h"
- #include "xfs_trans_space.h"
-+#include "xfs_pnfs.h"
- 
- #include <linux/capability.h>
- #include <linux/xattr.h>
-@@ -970,9 +971,13 @@ xfs_vn_setattr(
- 	int			error;
- 
- 	if (iattr->ia_valid & ATTR_SIZE) {
--		xfs_ilock(ip, XFS_IOLOCK_EXCL);
--		error = xfs_setattr_size(ip, iattr);
--		xfs_iunlock(ip, XFS_IOLOCK_EXCL);
-+		uint		iolock = XFS_IOLOCK_EXCL;
-+
-+		xfs_ilock(ip, iolock);
-+		error = xfs_break_layouts(dentry->d_inode, &iolock);
-+		if (!error)
-+			error = xfs_setattr_size(ip, iattr);
-+		xfs_iunlock(ip, iolock);
- 	} else {
- 		error = xfs_setattr_nonsize(ip, iattr, 0);
- 	}
-diff --git a/fs/xfs/xfs_pnfs.c b/fs/xfs/xfs_pnfs.c
-index 5d25f5d..f2bbc2f 100644
---- a/fs/xfs/xfs_pnfs.c
-+++ b/fs/xfs/xfs_pnfs.c
-@@ -17,6 +17,37 @@
- #include "xfs_shared.h"
- #include "xfs_pnfs.h"
- 
-+/*
-+ * Ensure that we do not have any outstanding pNFS layouts that can be
-+ * used by clients to directly read from or write to this inode.
-+ * This must be called before every operation that can remove blocks
-+ * from the extent map.  Additionally we call it during the write
-+ * operation, where aren't concerned about exposing unallocated blocks
-+ * but just want to provide basic synchronization between a local
-+ * writer and pNFS clients.  mmap writes would also benefit from
-+ * this sort of synchronization, but due to the tricky locking
-+ * rules in the page fault path we don't bother.
-+ */
-+int
-+xfs_break_layouts(
-+	struct inode		*inode,
-+	uint			*iolock)
-+{
-+	struct xfs_inode	*ip = XFS_I(inode);
-+	int			error;
-+
-+	ASSERT(xfs_isilocked(ip, XFS_IOLOCK_SHARED|XFS_IOLOCK_EXCL));
-+
-+	while ((error = break_layout(inode, false) == -EWOULDBLOCK)) {
-+		xfs_iunlock(ip, *iolock);
-+		error = break_layout(inode, true);
-+		*iolock = XFS_IOLOCK_EXCL;
-+		xfs_ilock(ip, *iolock);
-+	}
-+
-+	return error;
-+}
-+
- int
- xfs_fs_get_uuid(
- 	struct super_block	*sb,
-diff --git a/fs/xfs/xfs_pnfs.h b/fs/xfs/xfs_pnfs.h
-index 0d91255..b7fbfce 100644
---- a/fs/xfs/xfs_pnfs.h
-+++ b/fs/xfs/xfs_pnfs.h
-@@ -7,5 +7,12 @@ int xfs_fs_map_blocks(struct inode *inode, loff_t offset, u64 length,
- 		struct iomap *iomap, bool write, u32 *device_generation);
- int xfs_fs_commit_blocks(struct inode *inode, struct iomap *maps, int nr_maps,
- 		struct iattr *iattr);
-+
-+int xfs_break_layouts(struct inode *inode, uint *iolock);
-+#else
-+static inline int xfs_break_layouts(struct inode *inode, uint *iolock)
-+{
-+	return 0;
-+}
- #endif /* CONFIG_NFSD_PNFS */
- #endif /* _XFS_PNFS_H */
--- 
-1.9.1
+>  	ASSERT((lock_flags & (XFS_ILOCK_SHARED | XFS_ILOCK_EXCL)) !=
+>  	       (XFS_ILOCK_SHARED | XFS_ILOCK_EXCL));
+>  	ASSERT((lock_flags & ~(XFS_LOCK_MASK | XFS_LOCK_DEP_MASK)) == 0);
+> @@ -159,6 +161,11 @@ xfs_ilock(
+>  	else if (lock_flags & XFS_IOLOCK_SHARED)
+>  		mraccess_nested(&ip->i_iolock, XFS_IOLOCK_DEP(lock_flags));
+>  
+> +	if (lock_flags & XFS_MMAPLOCK_EXCL)
+> +		mrupdate_nested(&ip->i_mmaplock, XFS_IOLOCK_DEP(lock_flags));
+> +	else if (lock_flags & XFS_MMAPLOCK_SHARED)
+> +		mraccess_nested(&ip->i_mmaplock, XFS_IOLOCK_DEP(lock_flags));
+> +
+
+XFS_MMAPLOCK_DEP()?
+
+>  	if (lock_flags & XFS_ILOCK_EXCL)
+>  		mrupdate_nested(&ip->i_lock, XFS_ILOCK_DEP(lock_flags));
+>  	else if (lock_flags & XFS_ILOCK_SHARED)
+> @@ -191,6 +198,8 @@ xfs_ilock_nowait(
+>  	 */
+>  	ASSERT((lock_flags & (XFS_IOLOCK_SHARED | XFS_IOLOCK_EXCL)) !=
+>  	       (XFS_IOLOCK_SHARED | XFS_IOLOCK_EXCL));
+> +	ASSERT((lock_flags & (XFS_MMAPLOCK_SHARED | XFS_MMAPLOCK_EXCL)) !=
+> +	       (XFS_MMAPLOCK_SHARED | XFS_MMAPLOCK_EXCL));
+>  	ASSERT((lock_flags & (XFS_ILOCK_SHARED | XFS_ILOCK_EXCL)) !=
+>  	       (XFS_ILOCK_SHARED | XFS_ILOCK_EXCL));
+>  	ASSERT((lock_flags & ~(XFS_LOCK_MASK | XFS_LOCK_DEP_MASK)) == 0);
+> @@ -202,21 +211,35 @@ xfs_ilock_nowait(
+>  		if (!mrtryaccess(&ip->i_iolock))
+>  			goto out;
+>  	}
+> +
+> +	if (lock_flags & XFS_MMAPLOCK_EXCL) {
+> +		if (!mrtryupdate(&ip->i_mmaplock))
+> +			goto out_undo_iolock;
+> +	} else if (lock_flags & XFS_MMAPLOCK_SHARED) {
+> +		if (!mrtryaccess(&ip->i_mmaplock))
+> +			goto out_undo_iolock;
+> +	}
+> +
+>  	if (lock_flags & XFS_ILOCK_EXCL) {
+>  		if (!mrtryupdate(&ip->i_lock))
+> -			goto out_undo_iolock;
+> +			goto out_undo_mmaplock;
+>  	} else if (lock_flags & XFS_ILOCK_SHARED) {
+>  		if (!mrtryaccess(&ip->i_lock))
+> -			goto out_undo_iolock;
+> +			goto out_undo_mmaplock;
+>  	}
+>  	return 1;
+>  
+> - out_undo_iolock:
+> +out_undo_mmaplock:
+> +	if (lock_flags & XFS_MMAPLOCK_EXCL)
+> +		mrunlock_excl(&ip->i_mmaplock);
+> +	else if (lock_flags & XFS_MMAPLOCK_SHARED)
+> +		mrunlock_shared(&ip->i_mmaplock);
+> +out_undo_iolock:
+>  	if (lock_flags & XFS_IOLOCK_EXCL)
+>  		mrunlock_excl(&ip->i_iolock);
+>  	else if (lock_flags & XFS_IOLOCK_SHARED)
+>  		mrunlock_shared(&ip->i_iolock);
+> - out:
+> +out:
+>  	return 0;
+>  }
+>  
+> @@ -244,6 +267,8 @@ xfs_iunlock(
+>  	 */
+>  	ASSERT((lock_flags & (XFS_IOLOCK_SHARED | XFS_IOLOCK_EXCL)) !=
+>  	       (XFS_IOLOCK_SHARED | XFS_IOLOCK_EXCL));
+> +	ASSERT((lock_flags & (XFS_MMAPLOCK_SHARED | XFS_MMAPLOCK_EXCL)) !=
+> +	       (XFS_MMAPLOCK_SHARED | XFS_MMAPLOCK_EXCL));
+>  	ASSERT((lock_flags & (XFS_ILOCK_SHARED | XFS_ILOCK_EXCL)) !=
+>  	       (XFS_ILOCK_SHARED | XFS_ILOCK_EXCL));
+>  	ASSERT((lock_flags & ~(XFS_LOCK_MASK | XFS_LOCK_DEP_MASK)) == 0);
+> @@ -254,6 +279,11 @@ xfs_iunlock(
+>  	else if (lock_flags & XFS_IOLOCK_SHARED)
+>  		mrunlock_shared(&ip->i_iolock);
+>  
+> +	if (lock_flags & XFS_MMAPLOCK_EXCL)
+> +		mrunlock_excl(&ip->i_mmaplock);
+> +	else if (lock_flags & XFS_MMAPLOCK_SHARED)
+> +		mrunlock_shared(&ip->i_mmaplock);
+> +
+>  	if (lock_flags & XFS_ILOCK_EXCL)
+>  		mrunlock_excl(&ip->i_lock);
+>  	else if (lock_flags & XFS_ILOCK_SHARED)
+> @@ -271,11 +301,14 @@ xfs_ilock_demote(
+>  	xfs_inode_t		*ip,
+>  	uint			lock_flags)
+>  {
+> -	ASSERT(lock_flags & (XFS_IOLOCK_EXCL|XFS_ILOCK_EXCL));
+> -	ASSERT((lock_flags & ~(XFS_IOLOCK_EXCL|XFS_ILOCK_EXCL)) == 0);
+> +	ASSERT(lock_flags & (XFS_IOLOCK_EXCL|XFS_MMAPLOCK_EXCL|XFS_ILOCK_EXCL));
+> +	ASSERT((lock_flags &
+> +		~(XFS_IOLOCK_EXCL|XFS_MMAPLOCK_EXCL|XFS_ILOCK_EXCL)) == 0);
+>  
+>  	if (lock_flags & XFS_ILOCK_EXCL)
+>  		mrdemote(&ip->i_lock);
+> +	if (lock_flags & XFS_MMAPLOCK_EXCL)
+> +		mrdemote(&ip->i_mmaplock);
+>  	if (lock_flags & XFS_IOLOCK_EXCL)
+>  		mrdemote(&ip->i_iolock);
+>  
+> @@ -294,6 +327,12 @@ xfs_isilocked(
+>  		return rwsem_is_locked(&ip->i_lock.mr_lock);
+>  	}
+>  
+> +	if (lock_flags & (XFS_MMAPLOCK_EXCL|XFS_MMAPLOCK_SHARED)) {
+> +		if (!(lock_flags & XFS_MMAPLOCK_SHARED))
+> +			return !!ip->i_mmaplock.mr_writer;
+> +		return rwsem_is_locked(&ip->i_mmaplock.mr_lock);
+> +	}
+> +
+>  	if (lock_flags & (XFS_IOLOCK_EXCL|XFS_IOLOCK_SHARED)) {
+>  		if (!(lock_flags & XFS_IOLOCK_SHARED))
+>  			return !!ip->i_iolock.mr_writer;
+> @@ -314,14 +353,27 @@ int xfs_lock_delays;
+>  #endif
+>  
+>  /*
+> - * Bump the subclass so xfs_lock_inodes() acquires each lock with
+> - * a different value
+> + * Bump the subclass so xfs_lock_inodes() acquires each lock with a different
+> + * value. This shouldn't be called for page fault locking, but we also need to
+> + * ensure we don't overrun the number of lockdep subclasses for the iolock or
+> + * mmaplock as that is limited to 12 by the mmap lock lockdep annotations.
+>   */
+>  static inline int
+>  xfs_lock_inumorder(int lock_mode, int subclass)
+>  {
+> -	if (lock_mode & (XFS_IOLOCK_SHARED|XFS_IOLOCK_EXCL))
+> +	if (lock_mode & (XFS_IOLOCK_SHARED|XFS_IOLOCK_EXCL)) {
+> +		ASSERT(subclass + XFS_LOCK_INUMORDER <
+> +			(1 << (XFS_MMAPLOCK_SHIFT - XFS_IOLOCK_SHIFT)));
+>  		lock_mode |= (subclass + XFS_LOCK_INUMORDER) << XFS_IOLOCK_SHIFT;
+> +	}
+> +
+> +	if (lock_mode & (XFS_MMAPLOCK_SHARED|XFS_MMAPLOCK_EXCL)) {
+> +		ASSERT(subclass + XFS_LOCK_INUMORDER <
+> +			(1 << (XFS_ILOCK_SHIFT - XFS_MMAPLOCK_SHIFT)));
+> +		lock_mode |= (subclass + XFS_LOCK_INUMORDER) <<
+> +							XFS_MMAPLOCK_SHIFT;
+> +	}
+> +
+>  	if (lock_mode & (XFS_ILOCK_SHARED|XFS_ILOCK_EXCL))
+>  		lock_mode |= (subclass + XFS_LOCK_INUMORDER) << XFS_ILOCK_SHIFT;
+>  
+> @@ -440,10 +492,10 @@ again:
+>  }
+>  
+>  /*
+> - * xfs_lock_two_inodes() can only be used to lock one type of lock
+> - * at a time - the iolock or the ilock, but not both at once. If
+> - * we lock both at once, lockdep will report false positives saying
+> - * we have violated locking orders.
+> + * xfs_lock_two_inodes() can only be used to lock one type of lock at a time -
+> + * the iolock, the mmaplock or the ilock, but not more than one at a time. If we
+> + * lock more than one at a time, lockdep will report false positives saying we
+> + * have violated locking orders.
+>   */
+>  void
+>  xfs_lock_two_inodes(
+> @@ -455,8 +507,12 @@ xfs_lock_two_inodes(
+>  	int			attempts = 0;
+>  	xfs_log_item_t		*lp;
+>  
+> -	if (lock_mode & (XFS_IOLOCK_SHARED|XFS_IOLOCK_EXCL))
+> -		ASSERT((lock_mode & (XFS_ILOCK_SHARED|XFS_ILOCK_EXCL)) == 0);
+> +	if (lock_mode & (XFS_IOLOCK_SHARED|XFS_IOLOCK_EXCL)) {
+> +		ASSERT(!(lock_mode & (XFS_MMAPLOCK_SHARED|XFS_MMAPLOCK_EXCL)));
+> +		ASSERT(!(lock_mode & (XFS_ILOCK_SHARED|XFS_ILOCK_EXCL)));
+> +	} else if (lock_mode & (XFS_MMAPLOCK_SHARED|XFS_MMAPLOCK_EXCL))
+> +		ASSERT(!(lock_mode & (XFS_ILOCK_SHARED|XFS_ILOCK_EXCL)));
+> +
+
+Should this last branch not also check for iolock flags? If not, how is
+that consistent with the function comment above?
+
+Brian
+
+>  	ASSERT(ip0->i_ino != ip1->i_ino);
+>  
+>  	if (ip0->i_ino > ip1->i_ino) {
+> diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
+> index de97ccc..8e7a12a 100644
+> --- a/fs/xfs/xfs_inode.h
+> +++ b/fs/xfs/xfs_inode.h
+> @@ -56,6 +56,7 @@ typedef struct xfs_inode {
+>  	struct xfs_inode_log_item *i_itemp;	/* logging information */
+>  	mrlock_t		i_lock;		/* inode lock */
+>  	mrlock_t		i_iolock;	/* inode IO lock */
+> +	mrlock_t		i_mmaplock;	/* inode mmap IO lock */
+>  	atomic_t		i_pincount;	/* inode pin count */
+>  	spinlock_t		i_flags_lock;	/* inode i_flags lock */
+>  	/* Miscellaneous state. */
+> @@ -263,15 +264,20 @@ static inline int xfs_isiflocked(struct xfs_inode *ip)
+>  #define	XFS_IOLOCK_SHARED	(1<<1)
+>  #define	XFS_ILOCK_EXCL		(1<<2)
+>  #define	XFS_ILOCK_SHARED	(1<<3)
+> +#define	XFS_MMAPLOCK_EXCL	(1<<4)
+> +#define	XFS_MMAPLOCK_SHARED	(1<<5)
+>  
+>  #define XFS_LOCK_MASK		(XFS_IOLOCK_EXCL | XFS_IOLOCK_SHARED \
+> -				| XFS_ILOCK_EXCL | XFS_ILOCK_SHARED)
+> +				| XFS_ILOCK_EXCL | XFS_ILOCK_SHARED \
+> +				| XFS_MMAPLOCK_EXCL | XFS_MMAPLOCK_SHARED)
+>  
+>  #define XFS_LOCK_FLAGS \
+>  	{ XFS_IOLOCK_EXCL,	"IOLOCK_EXCL" }, \
+>  	{ XFS_IOLOCK_SHARED,	"IOLOCK_SHARED" }, \
+>  	{ XFS_ILOCK_EXCL,	"ILOCK_EXCL" }, \
+> -	{ XFS_ILOCK_SHARED,	"ILOCK_SHARED" }
+> +	{ XFS_ILOCK_SHARED,	"ILOCK_SHARED" }, \
+> +	{ XFS_MMAPLOCK_EXCL,	"MMAPLOCK_EXCL" }, \
+> +	{ XFS_MMAPLOCK_SHARED,	"MMAPLOCK_SHARED" }
+>  
+>  
+>  /*
+> @@ -302,17 +308,26 @@ static inline int xfs_isiflocked(struct xfs_inode *ip)
+>  #define XFS_IOLOCK_SHIFT	16
+>  #define	XFS_IOLOCK_PARENT	(XFS_LOCK_PARENT << XFS_IOLOCK_SHIFT)
+>  
+> +#define XFS_MMAPLOCK_SHIFT	20
+> +
+>  #define XFS_ILOCK_SHIFT		24
+>  #define	XFS_ILOCK_PARENT	(XFS_LOCK_PARENT << XFS_ILOCK_SHIFT)
+>  #define	XFS_ILOCK_RTBITMAP	(XFS_LOCK_RTBITMAP << XFS_ILOCK_SHIFT)
+>  #define	XFS_ILOCK_RTSUM		(XFS_LOCK_RTSUM << XFS_ILOCK_SHIFT)
+>  
+> -#define XFS_IOLOCK_DEP_MASK	0x00ff0000
+> +#define XFS_IOLOCK_DEP_MASK	0x000f0000
+> +#define XFS_MMAPLOCK_DEP_MASK	0x00f00000
+>  #define XFS_ILOCK_DEP_MASK	0xff000000
+> -#define XFS_LOCK_DEP_MASK	(XFS_IOLOCK_DEP_MASK | XFS_ILOCK_DEP_MASK)
+> -
+> -#define XFS_IOLOCK_DEP(flags)	(((flags) & XFS_IOLOCK_DEP_MASK) >> XFS_IOLOCK_SHIFT)
+> -#define XFS_ILOCK_DEP(flags)	(((flags) & XFS_ILOCK_DEP_MASK) >> XFS_ILOCK_SHIFT)
+> +#define XFS_LOCK_DEP_MASK	(XFS_IOLOCK_DEP_MASK | \
+> +				 XFS_MMAPLOCK_DEP_MASK | \
+> +				 XFS_ILOCK_DEP_MASK)
+> +
+> +#define XFS_IOLOCK_DEP(flags)	(((flags) & XFS_IOLOCK_DEP_MASK) \
+> +					>> XFS_IOLOCK_SHIFT)
+> +#define XFS_MMAPLOCK_DEP(flags)	(((flags) & XFS_MMAPLOCK_DEP_MASK) \
+> +					>> XFS_MMAPLOCK_SHIFT)
+> +#define XFS_ILOCK_DEP(flags)	(((flags) & XFS_ILOCK_DEP_MASK) \
+> +					>> XFS_ILOCK_SHIFT)
+>  
+>  /*
+>   * For multiple groups support: if S_ISGID bit is set in the parent
+> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+> index afd6bae..40d2ac5 100644
+> --- a/fs/xfs/xfs_super.c
+> +++ b/fs/xfs/xfs_super.c
+> @@ -986,6 +986,8 @@ xfs_fs_inode_init_once(
+>  	atomic_set(&ip->i_pincount, 0);
+>  	spin_lock_init(&ip->i_flags_lock);
+>  
+> +	mrlock_init(&ip->i_mmaplock, MRLOCK_ALLOW_EQUAL_PRI|MRLOCK_BARRIER,
+> +		     "xfsino", ip->i_ino);
+>  	mrlock_init(&ip->i_lock, MRLOCK_ALLOW_EQUAL_PRI|MRLOCK_BARRIER,
+>  		     "xfsino", ip->i_ino);
+>  }
+> -- 
+> 2.0.0
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
