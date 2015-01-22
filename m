@@ -1,19 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 312237F60
-	for <xfs@oss.sgi.com>; Thu, 22 Jan 2015 05:11:29 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 105AD8F8049
-	for <xfs@oss.sgi.com>; Thu, 22 Jan 2015 03:11:29 -0800 (PST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 90B947F7D
+	for <xfs@oss.sgi.com>; Thu, 22 Jan 2015 05:11:28 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 1F089AC00D
+	for <xfs@oss.sgi.com>; Thu, 22 Jan 2015 03:11:28 -0800 (PST)
 Received: from casper.infradead.org (casper.infradead.org [85.118.1.10]) by
-	cuda.sgi.com with ESMTP id 4bAUAWvorwdYDwnT (version=TLSv1
+	cuda.sgi.com with ESMTP id fc451oqkekZqBb3P (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 22 Jan 2015 03:11:27 -0800 (PST)
+	Thu, 22 Jan 2015 03:11:26 -0800 (PST)
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 17/20] xfs: update the superblock using a synchronous
-	transaction in growfs
-Date: Thu, 22 Jan 2015 12:10:03 +0100
-Message-Id: <1421925006-24231-18-git-send-email-hch@lst.de>
+Subject: [PATCH 16/20] xfs: pass a 64-bit count argument to
+	xfs_iomap_write_unwritten
+Date: Thu, 22 Jan 2015 12:10:02 +0100
+Message-Id: <1421925006-24231-17-git-send-email-hch@lst.de>
 In-Reply-To: <1421925006-24231-1-git-send-email-hch@lst.de>
 References: <1421925006-24231-1-git-send-email-hch@lst.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -32,30 +32,40 @@ Sender: xfs-bounces@oss.sgi.com
 To: "J. Bruce Fields" <bfields@fieldses.org>
 Cc: linux-fsdevel@vger.kernel.org, linux-nfs@vger.kernel.org, Jeff Layton <jlayton@primarydata.com>, xfs@oss.sgi.com
 
-Growfs updates the secondary superblocks using synchronous unlogged
-buffer writes after committing the updates to the primary superblock.
-
-Mark the transaction to the primary superblock as synchronous so that
-we guarantee it is committed to disk before we update the secondary
-superblocks.
+The code is already ready for it, and the pnfs layout commit code expects
+to be able to pass a larger than 32-bit argument.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/xfs_fsops.c | 1 +
- 1 file changed, 1 insertion(+)
+ fs/xfs/xfs_iomap.c | 2 +-
+ fs/xfs/xfs_iomap.h | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
-index fdc6422..74c6211 100644
---- a/fs/xfs/xfs_fsops.c
-+++ b/fs/xfs/xfs_fsops.c
-@@ -488,6 +488,7 @@ xfs_growfs_data_private(
- 		xfs_trans_mod_sb(tp, XFS_TRANS_SB_FDBLOCKS, nfree);
- 	if (dpct)
- 		xfs_trans_mod_sb(tp, XFS_TRANS_SB_IMAXPCT, dpct);
-+	xfs_trans_set_sync(tp);
- 	error = xfs_trans_commit(tp, 0);
- 	if (error)
- 		return error;
+diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+index c980e2a..ccb1dd0 100644
+--- a/fs/xfs/xfs_iomap.c
++++ b/fs/xfs/xfs_iomap.c
+@@ -802,7 +802,7 @@ int
+ xfs_iomap_write_unwritten(
+ 	xfs_inode_t	*ip,
+ 	xfs_off_t	offset,
+-	size_t		count)
++	xfs_off_t	count)
+ {
+ 	xfs_mount_t	*mp = ip->i_mount;
+ 	xfs_fileoff_t	offset_fsb;
+diff --git a/fs/xfs/xfs_iomap.h b/fs/xfs/xfs_iomap.h
+index 411fbb8..8688e66 100644
+--- a/fs/xfs/xfs_iomap.h
++++ b/fs/xfs/xfs_iomap.h
+@@ -27,6 +27,6 @@ int xfs_iomap_write_delay(struct xfs_inode *, xfs_off_t, size_t,
+ 			struct xfs_bmbt_irec *);
+ int xfs_iomap_write_allocate(struct xfs_inode *, xfs_off_t,
+ 			struct xfs_bmbt_irec *);
+-int xfs_iomap_write_unwritten(struct xfs_inode *, xfs_off_t, size_t);
++int xfs_iomap_write_unwritten(struct xfs_inode *, xfs_off_t, xfs_off_t);
+ 
+ #endif /* __XFS_IOMAP_H__*/
 -- 
 1.9.1
 
