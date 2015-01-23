@@ -1,24 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 94FED7F59
-	for <xfs@oss.sgi.com>; Fri, 23 Jan 2015 08:06:19 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 837868F8040
-	for <xfs@oss.sgi.com>; Fri, 23 Jan 2015 06:06:16 -0800 (PST)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id Je7RGxdJ12VfzOQO (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 23 Jan 2015 06:06:15 -0800 (PST)
-Date: Fri, 23 Jan 2015 09:06:11 -0500
-From: Brian Foster <bfoster@redhat.com>
+	by oss.sgi.com (Postfix) with ESMTP id D6AF07F5E
+	for <xfs@oss.sgi.com>; Fri, 23 Jan 2015 08:35:47 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id A3C028F8049
+	for <xfs@oss.sgi.com>; Fri, 23 Jan 2015 06:35:47 -0800 (PST)
+Received: from mail-pa0-f48.google.com (mail-pa0-f48.google.com
+	[209.85.220.48]) by cuda.sgi.com with ESMTP id 6jIwqDzAdAIDAZjt
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Fri, 23 Jan 2015 06:35:46 -0800 (PST)
+Received: by mail-pa0-f48.google.com with SMTP id ey11so8954892pad.7
+	for <xfs@oss.sgi.com>; Fri, 23 Jan 2015 06:35:45 -0800 (PST)
+Message-ID: <54C25C3D.9070205@xtremenitro.org>
+Date: Fri, 23 Jan 2015 21:35:41 +0700
+From: Dewangga Bachrul Alam <dewanggaba@xtremenitro.org>
+MIME-Version: 1.0
 Subject: Re: Change sector size on existing partition
-Message-ID: <20150123140611.GB2864@laptop.bfoster>
 References: <54C246EC.90207@xtremenitro.org>
 	<20150123133933.GA2864@laptop.bfoster>
 	<54C250D3.9030706@xtremenitro.org>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <54C250D3.9030706@xtremenitro.org>
+	<20150123140611.GB2864@laptop.bfoster>
+In-Reply-To: <20150123140611.GB2864@laptop.bfoster>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,88 +29,99 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dewangga Bachrul Alam <dewanggaba@xtremenitro.org>
+To: Brian Foster <bfoster@redhat.com>
 Cc: xfs@oss.sgi.com
 
-On Fri, Jan 23, 2015 at 08:46:59PM +0700, Dewangga Bachrul Alam wrote:
-> Hi,
-> 
-> The device reported like this :
-> 
-> $ blockdev --getss --getpbsz --getiomin --getioopt /dev/dm-3
-> 512
-> 4096
-> 4096
-> 0
-> 
-
-What is dm-3? Is that a logical volume based on a volume group on top of
-your physical array? It might be good to get the equivalent data for the
-array device (md?) and at least one of the physical devices (sd?).
-
-> Then, the sector size should be 512. Don't know why it can be 4096. :( I
-> will try to backup them and reformat. Any suggestion for formating on
-> raid-10 array? The device is 4 x 1TB drives.
-> 
-
-According to the above you have 4k physical sectors and 512b logical
-sectors. IIUC, this means mkfs will use the physical size by default,
-but you can specify and the device can handle down to 512 sectors.
-
->From skimming through the link posted earlier, it sounds like you have
-an application that has a hardcoded dependency on 512b direct I/O
-requirements (e.g., buffer alignment) rather than being configurable..?
-Can you disable direct I/O and verify whether that works? Regardless, it
-might be wise to test out this 512b sector configuration (perhaps with a
-single or spare drive?) and verify this fixes the problem you're trying
-to solve before reconfiguring everything.
-
-Brian
-
-> On 01/23/2015 08:39 PM, Brian Foster wrote:
-> > On Fri, Jan 23, 2015 at 08:04:44PM +0700, Dewangga Bachrul Alam wrote:
-> >> Hi,
-> >>
-> >> I'm new to XFS, I have RAID-10 array with 4 disk, when I check with
-> >> xfs_info, the information print like this.
-> >>
-> >> $ xfs_info /var/lib/mysql
-> >> meta-data=/dev/mapper/vg_catalystdb01-lv_database isize=256
-> >> agcount=16, agsize=1600000 blks
-> >>          =                       sectsz=4096  attr=2, projid32bit=0
-> >> data     =                       bsize=4096   blocks=25600000, imaxpct=25
-> >>          =                       sunit=0      swidth=0 blks
-> >> naming   =version 2              bsize=4096   ascii-ci=0
-> >> log      =internal               bsize=4096   blocks=12500, version=2
-> >>          =                       sectsz=4096  sunit=1 blks, lazy-count=1
-> >> realtime =none                   extsz=4096   blocks=0, rtextents=0
-> >>
-> >> Is it possible to change `sectsz` value to 512 without re-format it? Or
-> >> any suggestion? I have issue with current sector size, my TokuDB
-> >> engines[1] can't start because of this.
-> >>
-> > 
-> > The only way to set things like sector size, block size, etc. is to
-> > reformat. I believe the default sector size is dependent on the physical
-> > device. You might want to report the following from your array device
-> > and perhaps from some or all of the member devices:
-> > 
-> > blockdev --getss --getpbsz --getiomin --getioopt <device>
-> > 
-> > Brian
-> > 
-> >> [1] https://groups.google.com/forum/#!topic/tokudb-user/kvQFJLCmKwo
-> >>
-> >> _______________________________________________
-> >> xfs mailing list
-> >> xfs@oss.sgi.com
-> >> http://oss.sgi.com/mailman/listinfo/xfs
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+SGksCgpPbiAwMS8yMy8yMDE1IDA5OjA2IFBNLCBCcmlhbiBGb3N0ZXIgd3JvdGU6Cj4gT24gRnJp
+LCBKYW4gMjMsIDIwMTUgYXQgMDg6NDY6NTlQTSArMDcwMCwgRGV3YW5nZ2EgQmFjaHJ1bCBBbGFt
+IHdyb3RlOgo+PiBIaSwKPj4KPj4gVGhlIGRldmljZSByZXBvcnRlZCBsaWtlIHRoaXMgOgo+Pgo+
+PiAkIGJsb2NrZGV2IC0tZ2V0c3MgLS1nZXRwYnN6IC0tZ2V0aW9taW4gLS1nZXRpb29wdCAvZGV2
+L2RtLTMKPj4gNTEyCj4+IDQwOTYKPj4gNDA5Ngo+PiAwCj4+Cj4gCj4gV2hhdCBpcyBkbS0zPyBJ
+cyB0aGF0IGEgbG9naWNhbCB2b2x1bWUgYmFzZWQgb24gYSB2b2x1bWUgZ3JvdXAgb24gdG9wIG9m
+Cj4geW91ciBwaHlzaWNhbCBhcnJheT8gSXQgbWlnaHQgYmUgZ29vZCB0byBnZXQgdGhlIGVxdWl2
+YWxlbnQgZGF0YSBmb3IgdGhlCj4gYXJyYXkgZGV2aWNlIChtZD8pIGFuZCBhdCBsZWFzdCBvbmUg
+b2YgdGhlIHBoeXNpY2FsIGRldmljZXMgKHNkPykuCj4gCgpkbS0zIGlzIGxvZ2ljYWwgcGFydGl0
+aW9uLCBub3QgbXkgcGh5c2ljYWwgYXJyYXkuIEhlcmUgaXMgbXkgcGFydGl0aW9uCnRhYmxlIDoK
+Ci0tCk5BTUUgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIE1BSjpNSU4gUk0gIFNJ
+WkUgUk8gVFlQRSBNT1VOVFBPSU5UCnNkYSAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgODowICAgIDAgIDEuOFQgIDAgZGlzawrilJzilIBzZGExICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICA4OjEgICAgMCAgNTAwTSAgMCBwYXJ0IC9ib290CuKUlOKUgHNkYTIg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIDg6MiAgICAwICAxLjhUICAwIHBhcnQK
+ICDilJzilIB2Z19jYXRhbHlzdGRiMDEtbHZfcm9vdCAoZG0tMCkgICAgIDI1MzowICAgIDAgICA1
+MEcgIDAgbHZtICAvCiAg4pSc4pSAdmdfY2F0YWx5c3RkYjAxLWx2X3N3YXAgKGRtLTEpICAgICAy
+NTM6MSAgICAwIDMxLjVHICAwIGx2bSAgW1NXQVBdCiAg4pSc4pSAdmdfY2F0YWx5c3RkYjAxLWx2
+X2hvbWUgKGRtLTIpICAgICAyNTM6MiAgICAwIDQ4LjhHICAwIGx2bSAgL2hvbWUKICDilJzilIB2
+Z19jYXRhbHlzdGRiMDEtbHZfZGF0YWJhc2UgKGRtLTMpIDI1MzozICAgIDAgOTcuN0cgIDAgbHZt
+Ci92YXIvbGliL215c3FsCiAg4pSc4pSAdmdfY2F0YWx5c3RkYjAxLWx2X3RtcCAoZG0tNCkgICAg
+ICAyNTM6NCAgICAwICAzLjlHICAwIGx2bSAgL3RtcAogIOKUnOKUgHZnX2NhdGFseXN0ZGIwMS1s
+dl92YXIgKGRtLTUpICAgICAgMjUzOjUgICAgMCAxOS41RyAgMCBsdm0gIC92YXIKICDilJzilIB2
+Z19jYXRhbHlzdGRiMDEtbHZfYXVkaXQgKGRtLTYpICAgIDI1Mzo2ICAgIDAgIDMuOUcgIDAgbHZt
+Ci92YXIvbG9nL2F1ZGl0CiAg4pSU4pSAdmdfY2F0YWx5c3RkYjAxLWx2X2xvZyAoZG0tNykgICAg
+ICAyNTM6NyAgICAwICA3LjhHICAwIGx2bSAgL3Zhci9sb2cKLS0KClhGUyBmaWxlIHN5c3RlbSBp
+cyBvbmx5IG1vdW50ZWQgb24gdmdfY2F0YWx5c3RkYjAxLWx2X2RhdGFiYXNlIChkbS0zKS4KCj4+
+IFRoZW4sIHRoZSBzZWN0b3Igc2l6ZSBzaG91bGQgYmUgNTEyLiBEb24ndCBrbm93IHdoeSBpdCBj
+YW4gYmUgNDA5Ni4gOiggSQo+PiB3aWxsIHRyeSB0byBiYWNrdXAgdGhlbSBhbmQgcmVmb3JtYXQu
+IEFueSBzdWdnZXN0aW9uIGZvciBmb3JtYXRpbmcgb24KPj4gcmFpZC0xMCBhcnJheT8gVGhlIGRl
+dmljZSBpcyA0IHggMVRCIGRyaXZlcy4KPj4KPiAKPiBBY2NvcmRpbmcgdG8gdGhlIGFib3ZlIHlv
+dSBoYXZlIDRrIHBoeXNpY2FsIHNlY3RvcnMgYW5kIDUxMmIgbG9naWNhbAo+IHNlY3RvcnMuIElJ
+VUMsIHRoaXMgbWVhbnMgbWtmcyB3aWxsIHVzZSB0aGUgcGh5c2ljYWwgc2l6ZSBieSBkZWZhdWx0
+LAo+IGJ1dCB5b3UgY2FuIHNwZWNpZnkgYW5kIHRoZSBkZXZpY2UgY2FuIGhhbmRsZSBkb3duIHRv
+IDUxMiBzZWN0b3JzLgo+IAo+IEZyb20gc2tpbW1pbmcgdGhyb3VnaCB0aGUgbGluayBwb3N0ZWQg
+ZWFybGllciwgaXQgc291bmRzIGxpa2UgeW91IGhhdmUKPiBhbiBhcHBsaWNhdGlvbiB0aGF0IGhh
+cyBhIGhhcmRjb2RlZCBkZXBlbmRlbmN5IG9uIDUxMmIgZGlyZWN0IEkvTwo+IHJlcXVpcmVtZW50
+cyAoZS5nLiwgYnVmZmVyIGFsaWdubWVudCkgcmF0aGVyIHRoYW4gYmVpbmcgY29uZmlndXJhYmxl
+Li4/Cj4gQ2FuIHlvdSBkaXNhYmxlIGRpcmVjdCBJL08gYW5kIHZlcmlmeSB3aGV0aGVyIHRoYXQg
+d29ya3M/IFJlZ2FyZGxlc3MsIGl0Cj4gbWlnaHQgYmUgd2lzZSB0byB0ZXN0IG91dCB0aGlzIDUx
+MmIgc2VjdG9yIGNvbmZpZ3VyYXRpb24gKHBlcmhhcHMgd2l0aCBhCj4gc2luZ2xlIG9yIHNwYXJl
+IGRyaXZlPykgYW5kIHZlcmlmeSB0aGlzIGZpeGVzIHRoZSBwcm9ibGVtIHlvdSdyZSB0cnlpbmcK
+PiB0byBzb2x2ZSBiZWZvcmUgcmVjb25maWd1cmluZyBldmVyeXRoaW5nLgo+IAoKSWYgSSBkaXNh
+YmxlIGRpcmVjdGlvLCB0aGUgYXBwbGljYXRpb24gd29ya3Mgd2VsbC4KClRoZW4sIEkndmUgcmVm
+b3JtYXQgdGhlIGV4aXN0aW5nIHBhcnRpdGlvbiwgYW5kIGVuYWJsZSBkaXJlY3RpbwpwYXJhbWV0
+ZXIuIEl0J3Mgd29ya3MuIEl0J3MgdGhlIG5ldyByZXN1bHQuCgokIHhmc19pbmZvIC9kZXYvZG0t
+MwptZXRhLWRhdGE9L2Rldi9tYXBwZXIvdmdfY2F0YWx5c3RkYjAxLWx2X2RhdGFiYXNlIGlzaXpl
+PTI1NgphZ2NvdW50PTE2LCBhZ3NpemU9MTYwMDAwMCBibGtzCiAgICAgICAgID0gICAgICAgICAg
+ICAgICAgICAgICAgIHNlY3Rzej01MTIgICBhdHRyPTIsIHByb2ppZDMyYml0PTAKZGF0YSAgICAg
+PSAgICAgICAgICAgICAgICAgICAgICAgYnNpemU9NDA5NiAgIGJsb2Nrcz0yNTYwMDAwMCwgaW1h
+eHBjdD0yNQogICAgICAgICA9ICAgICAgICAgICAgICAgICAgICAgICBzdW5pdD0wICAgICAgc3dp
+ZHRoPTAgYmxrcwpuYW1pbmcgICA9dmVyc2lvbiAyICAgICAgICAgICAgICBic2l6ZT00MDk2ICAg
+YXNjaWktY2k9MApsb2cgICAgICA9aW50ZXJuYWwgICAgICAgICAgICAgICBic2l6ZT00MDk2ICAg
+YmxvY2tzPTEyNTAwLCB2ZXJzaW9uPTIKICAgICAgICAgPSAgICAgICAgICAgICAgICAgICAgICAg
+c2VjdHN6PTUxMiAgIHN1bml0PTAgYmxrcywgbGF6eS1jb3VudD0xCnJlYWx0aW1lID1ub25lICAg
+ICAgICAgICAgICAgICAgIGV4dHN6PTQwOTYgICBibG9ja3M9MCwgcnRleHRlbnRzPTAKCgpUaGFu
+a3MgYnJvLgoKPiBCcmlhbgo+IAo+PiBPbiAwMS8yMy8yMDE1IDA4OjM5IFBNLCBCcmlhbiBGb3N0
+ZXIgd3JvdGU6Cj4+PiBPbiBGcmksIEphbiAyMywgMjAxNSBhdCAwODowNDo0NFBNICswNzAwLCBE
+ZXdhbmdnYSBCYWNocnVsIEFsYW0gd3JvdGU6Cj4+Pj4gSGksCj4+Pj4KPj4+PiBJJ20gbmV3IHRv
+IFhGUywgSSBoYXZlIFJBSUQtMTAgYXJyYXkgd2l0aCA0IGRpc2ssIHdoZW4gSSBjaGVjayB3aXRo
+Cj4+Pj4geGZzX2luZm8sIHRoZSBpbmZvcm1hdGlvbiBwcmludCBsaWtlIHRoaXMuCj4+Pj4KPj4+
+PiAkIHhmc19pbmZvIC92YXIvbGliL215c3FsCj4+Pj4gbWV0YS1kYXRhPS9kZXYvbWFwcGVyL3Zn
+X2NhdGFseXN0ZGIwMS1sdl9kYXRhYmFzZSBpc2l6ZT0yNTYKPj4+PiBhZ2NvdW50PTE2LCBhZ3Np
+emU9MTYwMDAwMCBibGtzCj4+Pj4gICAgICAgICAgPSAgICAgICAgICAgICAgICAgICAgICAgc2Vj
+dHN6PTQwOTYgIGF0dHI9MiwgcHJvamlkMzJiaXQ9MAo+Pj4+IGRhdGEgICAgID0gICAgICAgICAg
+ICAgICAgICAgICAgIGJzaXplPTQwOTYgICBibG9ja3M9MjU2MDAwMDAsIGltYXhwY3Q9MjUKPj4+
+PiAgICAgICAgICA9ICAgICAgICAgICAgICAgICAgICAgICBzdW5pdD0wICAgICAgc3dpZHRoPTAg
+Ymxrcwo+Pj4+IG5hbWluZyAgID12ZXJzaW9uIDIgICAgICAgICAgICAgIGJzaXplPTQwOTYgICBh
+c2NpaS1jaT0wCj4+Pj4gbG9nICAgICAgPWludGVybmFsICAgICAgICAgICAgICAgYnNpemU9NDA5
+NiAgIGJsb2Nrcz0xMjUwMCwgdmVyc2lvbj0yCj4+Pj4gICAgICAgICAgPSAgICAgICAgICAgICAg
+ICAgICAgICAgc2VjdHN6PTQwOTYgIHN1bml0PTEgYmxrcywgbGF6eS1jb3VudD0xCj4+Pj4gcmVh
+bHRpbWUgPW5vbmUgICAgICAgICAgICAgICAgICAgZXh0c3o9NDA5NiAgIGJsb2Nrcz0wLCBydGV4
+dGVudHM9MAo+Pj4+Cj4+Pj4gSXMgaXQgcG9zc2libGUgdG8gY2hhbmdlIGBzZWN0c3pgIHZhbHVl
+IHRvIDUxMiB3aXRob3V0IHJlLWZvcm1hdCBpdD8gT3IKPj4+PiBhbnkgc3VnZ2VzdGlvbj8gSSBo
+YXZlIGlzc3VlIHdpdGggY3VycmVudCBzZWN0b3Igc2l6ZSwgbXkgVG9rdURCCj4+Pj4gZW5naW5l
+c1sxXSBjYW4ndCBzdGFydCBiZWNhdXNlIG9mIHRoaXMuCj4+Pj4KPj4+Cj4+PiBUaGUgb25seSB3
+YXkgdG8gc2V0IHRoaW5ncyBsaWtlIHNlY3RvciBzaXplLCBibG9jayBzaXplLCBldGMuIGlzIHRv
+Cj4+PiByZWZvcm1hdC4gSSBiZWxpZXZlIHRoZSBkZWZhdWx0IHNlY3RvciBzaXplIGlzIGRlcGVu
+ZGVudCBvbiB0aGUgcGh5c2ljYWwKPj4+IGRldmljZS4gWW91IG1pZ2h0IHdhbnQgdG8gcmVwb3J0
+IHRoZSBmb2xsb3dpbmcgZnJvbSB5b3VyIGFycmF5IGRldmljZQo+Pj4gYW5kIHBlcmhhcHMgZnJv
+bSBzb21lIG9yIGFsbCBvZiB0aGUgbWVtYmVyIGRldmljZXM6Cj4+Pgo+Pj4gYmxvY2tkZXYgLS1n
+ZXRzcyAtLWdldHBic3ogLS1nZXRpb21pbiAtLWdldGlvb3B0IDxkZXZpY2U+Cj4+Pgo+Pj4gQnJp
+YW4KPj4+Cj4+Pj4gWzFdIGh0dHBzOi8vZ3JvdXBzLmdvb2dsZS5jb20vZm9ydW0vIyF0b3BpYy90
+b2t1ZGItdXNlci9rdlFGSkxDbUt3bwo+Pj4+Cj4+Pj4gX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX18KPj4+PiB4ZnMgbWFpbGluZyBsaXN0Cj4+Pj4geGZzQG9z
+cy5zZ2kuY29tCj4+Pj4gaHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCgpf
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGlu
+ZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5m
+by94ZnMK
