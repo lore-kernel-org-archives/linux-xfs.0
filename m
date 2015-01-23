@@ -1,26 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id C97987F4E
-	for <xfs@oss.sgi.com>; Thu, 22 Jan 2015 21:33:55 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 99E218F8050
-	for <xfs@oss.sgi.com>; Thu, 22 Jan 2015 19:33:55 -0800 (PST)
-Received: from mail-pd0-f174.google.com (mail-pd0-f174.google.com
-	[209.85.192.174]) by cuda.sgi.com with ESMTP id
-	YLZ1MTSTbNnqlRNo (version=TLSv1 cipher=RC4-SHA bits=128
+	by oss.sgi.com (Postfix) with ESMTP id 44C107F4E
+	for <xfs@oss.sgi.com>; Thu, 22 Jan 2015 21:34:09 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 327EE8F8050
+	for <xfs@oss.sgi.com>; Thu, 22 Jan 2015 19:34:09 -0800 (PST)
+Received: from mail-pd0-f173.google.com (mail-pd0-f173.google.com
+	[209.85.192.173]) by cuda.sgi.com with ESMTP id
+	UGbZme1wqyBgntGq (version=TLSv1 cipher=RC4-SHA bits=128
 	verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 22 Jan 2015 19:33:51 -0800 (PST)
-Received: by mail-pd0-f174.google.com with SMTP id ft15so5902222pdb.5
-	for <xfs@oss.sgi.com>; Thu, 22 Jan 2015 19:33:51 -0800 (PST)
+	Thu, 22 Jan 2015 19:34:07 -0800 (PST)
+Received: by mail-pd0-f173.google.com with SMTP id fp1so5907896pdb.4
+	for <xfs@oss.sgi.com>; Thu, 22 Jan 2015 19:34:07 -0800 (PST)
 Received: from dhruv-MacBookAir ([14.97.157.235])
-	by mx.google.com with ESMTPSA id rf7sm290497pab.3.2015.01.22.19.33.48
+	by mx.google.com with ESMTPSA id f3sm263091pdb.41.2015.01.22.19.34.04
 	for <xfs@oss.sgi.com> (version=TLSv1 cipher=RC4-SHA bits=128/128);
-	Thu, 22 Jan 2015 19:33:50 -0800 (PST)
-Message-ID: <54c1c11e.678c420a.37a1.13c6@mx.google.com>
+	Thu, 22 Jan 2015 19:34:06 -0800 (PST)
+Message-ID: <54c1c12e.230a460a.4729.11fc@mx.google.com>
 From: Dhruvesh Rathore <adrscube@gmail.com>
-Date: Fri, 23 Jan 2015 09:03:44 +0530
-Subject: [PATCH 1/2] xfs_spaceman: XFS_IOC_FIEMAPFS ioctl replacing previous
-	FS_IOC_FIEMAPFS
+Date: Fri, 23 Jan 2015 09:04:00 +0530
+Subject: [PATCH 2/2] xfs_spaceman: Accounting for AGFL blocks
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -36,8 +35,7 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-The original kernel patch that Dave wrote for xfs_spaceman implemented
-FS_IOC_FIEMAPFS ioctl, here is the original fiemap extension patch:
+Here is the original discussion that Dave wrote for xfs_spaceman:
 
 http://oss.sgi.com/archives/xfs/2012-10/msg00363.html
 
@@ -47,8 +45,7 @@ kernel tree at:
 
 git://git.kernel.org/pub/scm/linux/kernel/git/dgc/linux-xfs.git
 
-The original xfs_spaceman tool that Dave wrote to call the fiemap
-interface and make use of it is here:
+The original xfs_spaceman tool that Dave wrote is here:
 
 http://oss.sgi.com/archives/xfs/2012-10/msg00366.html
 
@@ -57,184 +54,151 @@ spaceman branch in this tree:
 
 git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git
 
-This patch is concerned with turning FS_IOC_FIEMAPFS, present in the earlier
-version of xfs_spaceman into an XFS specific ioctl called XFS_IOC_FIEMAPFS
-that uses the fiemap plumbing. Please do comment. 
+This xfs_spaceman utility previously failed to account for AGFL blocks.
+Old output (Before changes).
+
+$ sudo xfs_spaceman -c "freesp" /media/xfs
+   from      to extents  blocks    pct
+   1024    2047       1    1262   0.04
+   4096    8191       1    5126   0.15
+   8192   16383       3   35344   1.05
+  32768   65535       1   43989   1.31
+ 262144  524287       3 1334894  39.78
+ 524288  967428       2 1934840  57.66
+
+As you can see the AGFL blocks were unaccounted (4 per AG, and there 
+were 4 AGs in this filesystem).
+
+This patch is concerned with adding a new function which will walk the free
+extents in AGFL and account for these AGFL blocks, while file system scanning.
+
+New output (After implementing this patch).
+
+$ uname -a
+Linux dhruv-MacBookAir 3.18.0-rc7+ #3 SMP Thu Dec 25 15:29:59 IST 2014 x86_64 x86_64 x86_64 GNU/Linux
+$ sudo xfs_spaceman -V
+xfs_spaceman version 3.2.2
+$ sudo xfs_spaceman -c "freesp" /media/xfs
+   from      to extents  blocks    pct
+      1       1      16      16   0.00
+   1024    2047       1    1262   0.04
+   4096    8191       1    5126   0.15
+   8192   16383       3   35344   1.05
+  32768   65535       1   43989   1.31
+ 262144  524287       3 1334894  39.78
+ 524288  967428       2 1934840  57.66
+
+Please do comment.
 
 Signed-off-by: 
 Dhruvesh Rathore <dhruvesh_r@outlook.com>
 Amey Ruikar <ameyruikar@yahoo.com>
 Somdeep Dey <somdeepdey10@gmail.com>
 ---
-linux-xfs/fs/xfs/xfs_fs.h		| 1 +
-linux-xfs/fs/xfs/xfs_ioctl.c		| 71 ++++-
-xfsprogs-3.2.2/include/xfs_fs.h		| 1 +
-xfsprogs-3.2.2/spaceman/freesp.c	| 10 ++++++---
-4 files changed, 79 insertions(+), 4 deletions(-) 
+linux-xfs/fs/xfs/libxfs/xfs_alloc.c | 81 +++
+1 file changed, 81 insertions(+)
 
----------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------------------
 
---- a/linux-xfs/fs/xfs/xfs_fs.h	2015-01-04 15:26:46.954401773 +0530
-+++ b/linux-xfs/fs/xfs/xfs_fs.h	2015-01-04 11:29:54.531652554 +0530
-@@ -505,6 +505,7 @@
- #define XFS_IOC_DIOINFO	_IOR ('X', 30, struct dioattr)
- #define XFS_IOC_FSGETXATTR	_IOR ('X', 31, struct fsxattr)
- #define XFS_IOC_FSSETXATTR	_IOW ('X', 32, struct fsxattr)
-+#define XFS_IOC_FIEMAPFS	_IOWR('X', 33, struct fiemap)
- #define XFS_IOC_ALLOCSP64	_IOW ('X', 36, struct xfs_flock64)
- #define XFS_IOC_FREESP64	_IOW ('X', 37, struct xfs_flock64)
- #define XFS_IOC_GETBMAP	_IOWR('X', 38, struct getbmap)
-
-----------------------------------------------------------------------------------------
-
---- a/linux-xfs/fs/xfs/xfs_ioctl.c	2015-01-04 15:45:26.518359725 +0530
-+++ b/linux-xfs/fs/xfs/xfs_ioctl.c	2015-01-04 15:24:06.030407817 +0530
-@@ -49,6 +49,8 @@
- #include <linux/exportfs.h>
+--- a/linux-xfs/fs/xfs/libxfs/xfs_alloc.c	2015-01-08 19:34:52.927862215 +0530
++++ b/linux-xfs/fs/xfs/libxfs/xfs_alloc.c	2015-01-09 14:25:23.853599350 +0530
+@@ -2697,6 +2697,83 @@
  
- 
-+/* So that the fiemap access checks can't overflow on 32 bit machines. */   		 
-+#define FIEMAP_MAX_EXTENTS	(UINT_MAX / sizeof(struct fiemap_extent))		 
- 
- /*
-  * xfs_find_handle maps from userspace xfs_fsop_handlereq structure to
-@@ -1511,8 +1513,73 @@
- 	return error;
  }
  
-+static int fiemap_check_ranges(struct super_block *sb,
-+			       u64 start, u64 len, u64 *new_len)
++
++/*
++ * Walk the free extents in the AGFL (AG Free List) of each AG, and dump
++ * them all into the fieinfo.
++ * 
++ * With a freshly made filesystem, 4 blocks are reserved immediately after
++ * the free space B+tree root blocks (blocks 4 to 7). As they are used up
++ * additional blocks are reserved from the AG and added to the free list
++ * array. A typical device will have space for 128 elements in the array.
++ * The actual size can be determined using XFS_AGFL_SIZE macro. The array
++ * is maintained as a circular list and active elements are pointed by 
++ * AGF's agf_flfirst, agf_fllast and agf_flcount values.
++ */
++static int
++xfs_alloc_agfl_freespace_map(
++	struct xfs_buf		**agbp,	/* buffer for a.g. freelist header */
++	struct xfs_btree_cur    *cur,
++	struct fiemap_extent_info *fieinfo,
++	xfs_agblock_t		sagbno,
++	xfs_agblock_t		eagbno)
 +{
-+	u64 maxbytes = (u64) sb->s_maxbytes;
++	xfs_agf_t	*agf;		/* a.g. freespace structure */
++	xfs_buf_t	*agflbp;	/* buffer for a.g. freelist structure */
++	__be32		*agfl_bno;	/* Reference to freelist block */
++	int	 	j;
++	int 		index;
++	int 		error = 0;
 +
-+	*new_len = len;
-+
-+	if (len == 0)
-+		return -EINVAL;
-+
-+	if (start > maxbytes)
-+		return -EFBIG;
-+
-+	/*
-+	 * Shrink request scope to what the fs can actually handle.
-+	 */
-+	if (len > maxbytes || (maxbytes - len) < start)
-+		*new_len = maxbytes - start;
- 
-+	return 0;
-+}
-+
-+static int xfsctl_fiemapfs(struct super_block *sb, unsigned long arg)				
-+{
-+	struct fiemap fiemap;									
-+	struct fiemap __user *ufiemap = (struct fiemap __user *) arg;
-+	struct fiemap_extent_info fieinfo = { 0, };
-+	u64 len;
-+	int error;
-+
-+	if (!sb->s_op->fiemapfs)
-+		return -EOPNOTSUPP;
- 
-+	if (copy_from_user(&fiemap, ufiemap, sizeof(fiemap)))
-+		return -EFAULT;
-+
-+	if (fiemap.fm_extent_count > FIEMAP_MAX_EXTENTS)
-+		return -EINVAL;
-+
-+	error = fiemap_check_ranges(sb, fiemap.fm_start, fiemap.fm_length,
-+				    &len);
++	agf = XFS_BUF_TO_AGF(*agbp);
++	error = xfs_alloc_read_agfl(cur->bc_mp, NULL, be32_to_cpu(agf->agf_seqno),
++				    &agflbp);
 +	if (error)
 +		return error;
 +
-+	fieinfo.fi_flags = fiemap.fm_flags;
-+	fieinfo.fi_extents_max = fiemap.fm_extent_count;
-+	fieinfo.fi_extents_start = ufiemap->fm_extents;
++	agfl_bno = XFS_BUF_TO_AGFL_BNO(cur->bc_mp, agflbp);
++	
++	index = be32_to_cpu(agf->agf_flfirst);
++	
++	for(j=1 ; j<=be32_to_cpu(agf->agf_flcount); j++)
++        {
++	 xfs_agblock_t	fbno;
++	 xfs_extlen_t	flen;
++	 xfs_daddr_t	dbno;
++	 xfs_fileoff_t	dlen;	
++	 int		flags = 0;
 +
-+	if (fiemap.fm_extent_count != 0 &&
-+	    !access_ok(VERIFY_WRITE, fieinfo.fi_extents_start,
-+		       fieinfo.fi_extents_max * sizeof(struct fiemap_extent)))
-+		return -EFAULT;
++	/* Relative AG block number */
++	 fbno = be32_to_cpu(agfl_bno[index]);
++	/* Each entry in the AGFL is a single entry i.e length is 1 block */ 
++	 flen = 1;
 +
-+	if (fiemap.fm_extent_count != 0 &&
-+	    (fiemap.fm_flags & FIEMAPFS_FLAG_FREESP_SIZE_HINT) &&
-+	    !access_ok(VERIFY_READ, fieinfo.fi_extents_start,
-+		       sizeof(struct fiemap_extent)))
-+		return -EFAULT;
-+
-+	error = sb->s_op->fiemapfs(sb, &fieinfo, fiemap.fm_start, len);
-+	fiemap.fm_flags = fieinfo.fi_flags;
-+	fiemap.fm_mapped_extents = fieinfo.fi_extents_mapped;
-+	if (copy_to_user(ufiemap, &fiemap, sizeof(fiemap)))
-+		error = -EFAULT;
-+
++	/*
++	 * AGFL is maintained as a circular list. Following is needed
++	 * to handle array wrapping correctly.
++	 */	
++         if( index == ( (XFS_AGFL_SIZE(cur->bc_mp))-1 ) )
++	  index = 0;	/* First index of AGFL */
++         else
++          index++;	/* Next index in AGFL */
++        
++	/*
++	 * Use daddr format for all range/len calculations as that is
++	 * the format the range/len variables are supplied in by
++	 * userspace.
++	 */
++	 dbno = XFS_AGB_TO_DADDR(cur->bc_mp, cur->bc_private.a.agno, fbno);
++	 dlen = XFS_FSB_TO_BB(cur->bc_mp, flen);
++	 error = -fiemap_fill_next_extent(fieinfo, BBTOB(dbno),
++			                  BBTOB(dbno), BBTOB(dlen), flags);
++	 if (error)
++	   break;
++	}
++	xfs_buf_relse(agflbp);	/* Release the buffer */
 +	return error;
++
 +}
- 
++
  /*
-  * Note: some of the ioctl's return positive numbers as a
-@@ -1570,7 +1637,9 @@
- 		return 0;
- 	}
+  * Map the freespace from the requested range in the requested order.
+  *
+@@ -2802,6 +2879,10 @@
+ 		}
+ 		XFS_WANT_CORRUPTED_GOTO(i == 1, del_cursor);
  
--	
-+	case XFS_IOC_FIEMAPFS:						
-+	   return xfsctl_fiemapfs(inode->i_sb, p);			
++		/* Account for the free blocks in AGFL */		
++		error = xfs_alloc_agfl_freespace_map(&agbp, cur, fieinfo, sagno,
++					agno == eagno ? eagbno : NULLAGBLOCK);
 +
- 	case XFS_IOC_FSBULKSTAT_SINGLE:
- 	case XFS_IOC_FSBULKSTAT:
- 	case XFS_IOC_FSINUMBERS:
+ 		if (!bycnt) {
+ 			/*
+ 			 * if we are doing a bno ordered lookup, we can just
 
---------------------------------------------------------------------------------------------
-
---- a/xfsprogs-3.2.2/include/xfs_fs.h	2015-01-04 15:26:50.954401773 +0530
-+++ b/xfsprogs-3.2.2/include/xfs_fs.h	2015-01-04 11:29:59.531652554 +0530
-@@ -505,6 +505,7 @@
- #define XFS_IOC_DIOINFO	_IOR ('X', 30, struct dioattr)
- #define XFS_IOC_FSGETXATTR	_IOR ('X', 31, struct fsxattr)
- #define XFS_IOC_FSSETXATTR	_IOW ('X', 32, struct fsxattr)
-+#define XFS_IOC_FIEMAPFS	_IOWR('X', 33, struct fiemap)
- #define XFS_IOC_ALLOCSP64	_IOW ('X', 36, struct xfs_flock64)
- #define XFS_IOC_FREESP64	_IOW ('X', 37, struct xfs_flock64)
- #define XFS_IOC_GETBMAP	_IOWR('X', 38, struct getbmap)
-
---------------------------------------------------------------------------------------------
-
---- a/xfsprogs-3.2.2/spaceman/freesp.c	2015-01-04 15:39:58.446372047 +0530
-+++ b/xfsprogs-3.2.2/spaceman/freesp.c	2015-01-04 15:38:30.294375357 +0530
-@@ -31,7 +31,7 @@
- #define FIEMAPFS_FLAG_FREESP_SIZE_HINT	0x20000000
- #define	FIEMAPFS_FLAG_FREESP_CONTINUE   0x10000000
- 
--#define FS_IOC_FIEMAPFS			_IOWR('f', 12, struct fiemap)
-+#define XFS_IOC_FIEMAPFS			_IOWR('X', 33, struct fiemap)
- #endif
- 
- typedef struct histent
-@@ -201,9 +201,9 @@
- 		fiemap->fm_length = length;
- 		fiemap->fm_extent_count = NR_EXTENTS;
- 
--		ret = ioctl(file->fd, XFS_IOC_FIEMAPFS, (unsigned long)fiemap);
-+		ret = xfsctl(file->name,file->fd, XFS_IOC_FIEMAPFS, (unsigned long)fiemap);
- 		if (ret < 0) {	
--			fprintf(stderr, "%s: ioctl(FS_IOC_FIEMAPFS) [\"%s\"]: "	
-+			fprintf(stderr, "%s: xfsctl(XFS_IOC_FIEMAPFS) [\"%s\"]: "	
- 				"%s\n", progname, file->name, strerror(errno));
- 			free(fiemap);
- 			exitcode = 1;
-@@ -338,6 +338,10 @@
- 
- 	if (!init(argc, argv))
- 		return 0;
-+
-+	if (dumpflag)
-+		printf("%8s %8s %8s\n", "agno", "agbno", "len");	
-+
- 	for (agno = 0; agno < file->geom.agcount; agno++)  {
- 		if (inaglist(agno))
- 			scan_ag(agno);
-
-----------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------
 
 _______________________________________________
 xfs mailing list
