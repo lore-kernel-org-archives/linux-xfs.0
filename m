@@ -1,26 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id D6AF07F5E
-	for <xfs@oss.sgi.com>; Fri, 23 Jan 2015 08:35:47 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id A3C028F8049
-	for <xfs@oss.sgi.com>; Fri, 23 Jan 2015 06:35:47 -0800 (PST)
-Received: from mail-pa0-f48.google.com (mail-pa0-f48.google.com
-	[209.85.220.48]) by cuda.sgi.com with ESMTP id 6jIwqDzAdAIDAZjt
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Fri, 23 Jan 2015 06:35:46 -0800 (PST)
-Received: by mail-pa0-f48.google.com with SMTP id ey11so8954892pad.7
-	for <xfs@oss.sgi.com>; Fri, 23 Jan 2015 06:35:45 -0800 (PST)
-Message-ID: <54C25C3D.9070205@xtremenitro.org>
-Date: Fri, 23 Jan 2015 21:35:41 +0700
-From: Dewangga Bachrul Alam <dewanggaba@xtremenitro.org>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id E17CF7F60
+	for <xfs@oss.sgi.com>; Fri, 23 Jan 2015 09:29:54 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id CFA0B304053
+	for <xfs@oss.sgi.com>; Fri, 23 Jan 2015 07:29:51 -0800 (PST)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id 1ZSpH8rGARvMrrJF for <xfs@oss.sgi.com>;
+	Fri, 23 Jan 2015 07:29:49 -0800 (PST)
+Message-ID: <54C268ED.2000801@sandeen.net>
+Date: Fri, 23 Jan 2015 09:29:49 -0600
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
 Subject: Re: Change sector size on existing partition
 References: <54C246EC.90207@xtremenitro.org>
-	<20150123133933.GA2864@laptop.bfoster>
-	<54C250D3.9030706@xtremenitro.org>
-	<20150123140611.GB2864@laptop.bfoster>
-In-Reply-To: <20150123140611.GB2864@laptop.bfoster>
+In-Reply-To: <54C246EC.90207@xtremenitro.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,99 +23,92 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
-Cc: xfs@oss.sgi.com
+To: Dewangga Bachrul Alam <dewanggaba@xtremenitro.org>, xfs@oss.sgi.com
 
-SGksCgpPbiAwMS8yMy8yMDE1IDA5OjA2IFBNLCBCcmlhbiBGb3N0ZXIgd3JvdGU6Cj4gT24gRnJp
-LCBKYW4gMjMsIDIwMTUgYXQgMDg6NDY6NTlQTSArMDcwMCwgRGV3YW5nZ2EgQmFjaHJ1bCBBbGFt
-IHdyb3RlOgo+PiBIaSwKPj4KPj4gVGhlIGRldmljZSByZXBvcnRlZCBsaWtlIHRoaXMgOgo+Pgo+
-PiAkIGJsb2NrZGV2IC0tZ2V0c3MgLS1nZXRwYnN6IC0tZ2V0aW9taW4gLS1nZXRpb29wdCAvZGV2
-L2RtLTMKPj4gNTEyCj4+IDQwOTYKPj4gNDA5Ngo+PiAwCj4+Cj4gCj4gV2hhdCBpcyBkbS0zPyBJ
-cyB0aGF0IGEgbG9naWNhbCB2b2x1bWUgYmFzZWQgb24gYSB2b2x1bWUgZ3JvdXAgb24gdG9wIG9m
-Cj4geW91ciBwaHlzaWNhbCBhcnJheT8gSXQgbWlnaHQgYmUgZ29vZCB0byBnZXQgdGhlIGVxdWl2
-YWxlbnQgZGF0YSBmb3IgdGhlCj4gYXJyYXkgZGV2aWNlIChtZD8pIGFuZCBhdCBsZWFzdCBvbmUg
-b2YgdGhlIHBoeXNpY2FsIGRldmljZXMgKHNkPykuCj4gCgpkbS0zIGlzIGxvZ2ljYWwgcGFydGl0
-aW9uLCBub3QgbXkgcGh5c2ljYWwgYXJyYXkuIEhlcmUgaXMgbXkgcGFydGl0aW9uCnRhYmxlIDoK
-Ci0tCk5BTUUgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIE1BSjpNSU4gUk0gIFNJ
-WkUgUk8gVFlQRSBNT1VOVFBPSU5UCnNkYSAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgODowICAgIDAgIDEuOFQgIDAgZGlzawrilJzilIBzZGExICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICA4OjEgICAgMCAgNTAwTSAgMCBwYXJ0IC9ib290CuKUlOKUgHNkYTIg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIDg6MiAgICAwICAxLjhUICAwIHBhcnQK
-ICDilJzilIB2Z19jYXRhbHlzdGRiMDEtbHZfcm9vdCAoZG0tMCkgICAgIDI1MzowICAgIDAgICA1
-MEcgIDAgbHZtICAvCiAg4pSc4pSAdmdfY2F0YWx5c3RkYjAxLWx2X3N3YXAgKGRtLTEpICAgICAy
-NTM6MSAgICAwIDMxLjVHICAwIGx2bSAgW1NXQVBdCiAg4pSc4pSAdmdfY2F0YWx5c3RkYjAxLWx2
-X2hvbWUgKGRtLTIpICAgICAyNTM6MiAgICAwIDQ4LjhHICAwIGx2bSAgL2hvbWUKICDilJzilIB2
-Z19jYXRhbHlzdGRiMDEtbHZfZGF0YWJhc2UgKGRtLTMpIDI1MzozICAgIDAgOTcuN0cgIDAgbHZt
-Ci92YXIvbGliL215c3FsCiAg4pSc4pSAdmdfY2F0YWx5c3RkYjAxLWx2X3RtcCAoZG0tNCkgICAg
-ICAyNTM6NCAgICAwICAzLjlHICAwIGx2bSAgL3RtcAogIOKUnOKUgHZnX2NhdGFseXN0ZGIwMS1s
-dl92YXIgKGRtLTUpICAgICAgMjUzOjUgICAgMCAxOS41RyAgMCBsdm0gIC92YXIKICDilJzilIB2
-Z19jYXRhbHlzdGRiMDEtbHZfYXVkaXQgKGRtLTYpICAgIDI1Mzo2ICAgIDAgIDMuOUcgIDAgbHZt
-Ci92YXIvbG9nL2F1ZGl0CiAg4pSU4pSAdmdfY2F0YWx5c3RkYjAxLWx2X2xvZyAoZG0tNykgICAg
-ICAyNTM6NyAgICAwICA3LjhHICAwIGx2bSAgL3Zhci9sb2cKLS0KClhGUyBmaWxlIHN5c3RlbSBp
-cyBvbmx5IG1vdW50ZWQgb24gdmdfY2F0YWx5c3RkYjAxLWx2X2RhdGFiYXNlIChkbS0zKS4KCj4+
-IFRoZW4sIHRoZSBzZWN0b3Igc2l6ZSBzaG91bGQgYmUgNTEyLiBEb24ndCBrbm93IHdoeSBpdCBj
-YW4gYmUgNDA5Ni4gOiggSQo+PiB3aWxsIHRyeSB0byBiYWNrdXAgdGhlbSBhbmQgcmVmb3JtYXQu
-IEFueSBzdWdnZXN0aW9uIGZvciBmb3JtYXRpbmcgb24KPj4gcmFpZC0xMCBhcnJheT8gVGhlIGRl
-dmljZSBpcyA0IHggMVRCIGRyaXZlcy4KPj4KPiAKPiBBY2NvcmRpbmcgdG8gdGhlIGFib3ZlIHlv
-dSBoYXZlIDRrIHBoeXNpY2FsIHNlY3RvcnMgYW5kIDUxMmIgbG9naWNhbAo+IHNlY3RvcnMuIElJ
-VUMsIHRoaXMgbWVhbnMgbWtmcyB3aWxsIHVzZSB0aGUgcGh5c2ljYWwgc2l6ZSBieSBkZWZhdWx0
-LAo+IGJ1dCB5b3UgY2FuIHNwZWNpZnkgYW5kIHRoZSBkZXZpY2UgY2FuIGhhbmRsZSBkb3duIHRv
-IDUxMiBzZWN0b3JzLgo+IAo+IEZyb20gc2tpbW1pbmcgdGhyb3VnaCB0aGUgbGluayBwb3N0ZWQg
-ZWFybGllciwgaXQgc291bmRzIGxpa2UgeW91IGhhdmUKPiBhbiBhcHBsaWNhdGlvbiB0aGF0IGhh
-cyBhIGhhcmRjb2RlZCBkZXBlbmRlbmN5IG9uIDUxMmIgZGlyZWN0IEkvTwo+IHJlcXVpcmVtZW50
-cyAoZS5nLiwgYnVmZmVyIGFsaWdubWVudCkgcmF0aGVyIHRoYW4gYmVpbmcgY29uZmlndXJhYmxl
-Li4/Cj4gQ2FuIHlvdSBkaXNhYmxlIGRpcmVjdCBJL08gYW5kIHZlcmlmeSB3aGV0aGVyIHRoYXQg
-d29ya3M/IFJlZ2FyZGxlc3MsIGl0Cj4gbWlnaHQgYmUgd2lzZSB0byB0ZXN0IG91dCB0aGlzIDUx
-MmIgc2VjdG9yIGNvbmZpZ3VyYXRpb24gKHBlcmhhcHMgd2l0aCBhCj4gc2luZ2xlIG9yIHNwYXJl
-IGRyaXZlPykgYW5kIHZlcmlmeSB0aGlzIGZpeGVzIHRoZSBwcm9ibGVtIHlvdSdyZSB0cnlpbmcK
-PiB0byBzb2x2ZSBiZWZvcmUgcmVjb25maWd1cmluZyBldmVyeXRoaW5nLgo+IAoKSWYgSSBkaXNh
-YmxlIGRpcmVjdGlvLCB0aGUgYXBwbGljYXRpb24gd29ya3Mgd2VsbC4KClRoZW4sIEkndmUgcmVm
-b3JtYXQgdGhlIGV4aXN0aW5nIHBhcnRpdGlvbiwgYW5kIGVuYWJsZSBkaXJlY3RpbwpwYXJhbWV0
-ZXIuIEl0J3Mgd29ya3MuIEl0J3MgdGhlIG5ldyByZXN1bHQuCgokIHhmc19pbmZvIC9kZXYvZG0t
-MwptZXRhLWRhdGE9L2Rldi9tYXBwZXIvdmdfY2F0YWx5c3RkYjAxLWx2X2RhdGFiYXNlIGlzaXpl
-PTI1NgphZ2NvdW50PTE2LCBhZ3NpemU9MTYwMDAwMCBibGtzCiAgICAgICAgID0gICAgICAgICAg
-ICAgICAgICAgICAgIHNlY3Rzej01MTIgICBhdHRyPTIsIHByb2ppZDMyYml0PTAKZGF0YSAgICAg
-PSAgICAgICAgICAgICAgICAgICAgICAgYnNpemU9NDA5NiAgIGJsb2Nrcz0yNTYwMDAwMCwgaW1h
-eHBjdD0yNQogICAgICAgICA9ICAgICAgICAgICAgICAgICAgICAgICBzdW5pdD0wICAgICAgc3dp
-ZHRoPTAgYmxrcwpuYW1pbmcgICA9dmVyc2lvbiAyICAgICAgICAgICAgICBic2l6ZT00MDk2ICAg
-YXNjaWktY2k9MApsb2cgICAgICA9aW50ZXJuYWwgICAgICAgICAgICAgICBic2l6ZT00MDk2ICAg
-YmxvY2tzPTEyNTAwLCB2ZXJzaW9uPTIKICAgICAgICAgPSAgICAgICAgICAgICAgICAgICAgICAg
-c2VjdHN6PTUxMiAgIHN1bml0PTAgYmxrcywgbGF6eS1jb3VudD0xCnJlYWx0aW1lID1ub25lICAg
-ICAgICAgICAgICAgICAgIGV4dHN6PTQwOTYgICBibG9ja3M9MCwgcnRleHRlbnRzPTAKCgpUaGFu
-a3MgYnJvLgoKPiBCcmlhbgo+IAo+PiBPbiAwMS8yMy8yMDE1IDA4OjM5IFBNLCBCcmlhbiBGb3N0
-ZXIgd3JvdGU6Cj4+PiBPbiBGcmksIEphbiAyMywgMjAxNSBhdCAwODowNDo0NFBNICswNzAwLCBE
-ZXdhbmdnYSBCYWNocnVsIEFsYW0gd3JvdGU6Cj4+Pj4gSGksCj4+Pj4KPj4+PiBJJ20gbmV3IHRv
-IFhGUywgSSBoYXZlIFJBSUQtMTAgYXJyYXkgd2l0aCA0IGRpc2ssIHdoZW4gSSBjaGVjayB3aXRo
-Cj4+Pj4geGZzX2luZm8sIHRoZSBpbmZvcm1hdGlvbiBwcmludCBsaWtlIHRoaXMuCj4+Pj4KPj4+
-PiAkIHhmc19pbmZvIC92YXIvbGliL215c3FsCj4+Pj4gbWV0YS1kYXRhPS9kZXYvbWFwcGVyL3Zn
-X2NhdGFseXN0ZGIwMS1sdl9kYXRhYmFzZSBpc2l6ZT0yNTYKPj4+PiBhZ2NvdW50PTE2LCBhZ3Np
-emU9MTYwMDAwMCBibGtzCj4+Pj4gICAgICAgICAgPSAgICAgICAgICAgICAgICAgICAgICAgc2Vj
-dHN6PTQwOTYgIGF0dHI9MiwgcHJvamlkMzJiaXQ9MAo+Pj4+IGRhdGEgICAgID0gICAgICAgICAg
-ICAgICAgICAgICAgIGJzaXplPTQwOTYgICBibG9ja3M9MjU2MDAwMDAsIGltYXhwY3Q9MjUKPj4+
-PiAgICAgICAgICA9ICAgICAgICAgICAgICAgICAgICAgICBzdW5pdD0wICAgICAgc3dpZHRoPTAg
-Ymxrcwo+Pj4+IG5hbWluZyAgID12ZXJzaW9uIDIgICAgICAgICAgICAgIGJzaXplPTQwOTYgICBh
-c2NpaS1jaT0wCj4+Pj4gbG9nICAgICAgPWludGVybmFsICAgICAgICAgICAgICAgYnNpemU9NDA5
-NiAgIGJsb2Nrcz0xMjUwMCwgdmVyc2lvbj0yCj4+Pj4gICAgICAgICAgPSAgICAgICAgICAgICAg
-ICAgICAgICAgc2VjdHN6PTQwOTYgIHN1bml0PTEgYmxrcywgbGF6eS1jb3VudD0xCj4+Pj4gcmVh
-bHRpbWUgPW5vbmUgICAgICAgICAgICAgICAgICAgZXh0c3o9NDA5NiAgIGJsb2Nrcz0wLCBydGV4
-dGVudHM9MAo+Pj4+Cj4+Pj4gSXMgaXQgcG9zc2libGUgdG8gY2hhbmdlIGBzZWN0c3pgIHZhbHVl
-IHRvIDUxMiB3aXRob3V0IHJlLWZvcm1hdCBpdD8gT3IKPj4+PiBhbnkgc3VnZ2VzdGlvbj8gSSBo
-YXZlIGlzc3VlIHdpdGggY3VycmVudCBzZWN0b3Igc2l6ZSwgbXkgVG9rdURCCj4+Pj4gZW5naW5l
-c1sxXSBjYW4ndCBzdGFydCBiZWNhdXNlIG9mIHRoaXMuCj4+Pj4KPj4+Cj4+PiBUaGUgb25seSB3
-YXkgdG8gc2V0IHRoaW5ncyBsaWtlIHNlY3RvciBzaXplLCBibG9jayBzaXplLCBldGMuIGlzIHRv
-Cj4+PiByZWZvcm1hdC4gSSBiZWxpZXZlIHRoZSBkZWZhdWx0IHNlY3RvciBzaXplIGlzIGRlcGVu
-ZGVudCBvbiB0aGUgcGh5c2ljYWwKPj4+IGRldmljZS4gWW91IG1pZ2h0IHdhbnQgdG8gcmVwb3J0
-IHRoZSBmb2xsb3dpbmcgZnJvbSB5b3VyIGFycmF5IGRldmljZQo+Pj4gYW5kIHBlcmhhcHMgZnJv
-bSBzb21lIG9yIGFsbCBvZiB0aGUgbWVtYmVyIGRldmljZXM6Cj4+Pgo+Pj4gYmxvY2tkZXYgLS1n
-ZXRzcyAtLWdldHBic3ogLS1nZXRpb21pbiAtLWdldGlvb3B0IDxkZXZpY2U+Cj4+Pgo+Pj4gQnJp
-YW4KPj4+Cj4+Pj4gWzFdIGh0dHBzOi8vZ3JvdXBzLmdvb2dsZS5jb20vZm9ydW0vIyF0b3BpYy90
-b2t1ZGItdXNlci9rdlFGSkxDbUt3bwo+Pj4+Cj4+Pj4gX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX18KPj4+PiB4ZnMgbWFpbGluZyBsaXN0Cj4+Pj4geGZzQG9z
-cy5zZ2kuY29tCj4+Pj4gaHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCgpf
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGlu
-ZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5m
-by94ZnMK
+On 1/23/15 7:04 AM, Dewangga Bachrul Alam wrote:
+> Hi,
+> 
+> I'm new to XFS, I have RAID-10 array with 4 disk, when I check with
+> xfs_info, the information print like this.
+> 
+> $ xfs_info /var/lib/mysql
+> meta-data=/dev/mapper/vg_catalystdb01-lv_database isize=256
+> agcount=16, agsize=1600000 blks
+>          =                       sectsz=4096  attr=2, projid32bit=0
+> data     =                       bsize=4096   blocks=25600000, imaxpct=25
+>          =                       sunit=0      swidth=0 blks
+> naming   =version 2              bsize=4096   ascii-ci=0
+> log      =internal               bsize=4096   blocks=12500, version=2
+>          =                       sectsz=4096  sunit=1 blks, lazy-count=1
+> realtime =none                   extsz=4096   blocks=0, rtextents=0
+> 
+> Is it possible to change `sectsz` value to 512 without re-format it? Or
+> any suggestion? I have issue with current sector size, my TokuDB
+> engines[1] can't start because of this.
+> 
+> [1] https://groups.google.com/forum/#!topic/tokudb-user/kvQFJLCmKwo
+
+You almost certainly need this commit to resolve the issue.
+
+You didn't say here what kernel you were using, but from your other
+post it looks like CentOS 6.4.  Are you using stock xfsprogs from centos6.4
+as well?  I don't remember if it chooses 4k sectors for 4k physical block
+devices or not; unless you have a custom xfsprogs version or overrode
+sector size at mkfs time, I guess it must.
+
+commit 7c71ee78031c248dca13fc94dea9a4cc217db6cf
+Author: Eric Sandeen <sandeen@sandeen.net>
+Date:   Tue Jan 21 16:46:23 2014 -0600
+
+    xfs: allow logical-sector sized O_DIRECT
+    
+    Some time ago, mkfs.xfs started picking the storage physical
+    sector size as the default filesystem "sector size" in order
+    to avoid RMW costs incurred by doing IOs at logical sector
+    size alignments.
+    
+    However, this means that for a filesystem made with i.e.
+    a 4k sector size on an "advanced format" 4k/512 disk,
+    512-byte direct IOs are no longer allowed.  This means
+    that XFS has essentially turned this AF drive into a hard
+    4K device, from the filesystem on up.
+    
+    XFS's mkfs-specified "sector size" is really just controlling
+    the minimum size & alignment of filesystem metadata.
+    
+    There is no real need to tightly couple XFS's minimal
+    metadata size to the minimum allowed direct IO size;
+    XFS can continue doing metadata in optimal sizes, but
+    still allow smaller DIOs for apps which issue them,
+    for whatever reason.
+    
+    This patch adds a new field to the xfs_buftarg, so that
+    we now track 2 sizes:
+    
+     1) The metadata sector size, which is the minimum unit and
+        alignment of IO which will be performed by metadata operations.
+     2) The device logical sector size
+    
+    The first is used internally by the file system for metadata
+    alignment and IOs.
+    The second is used for the minimum allowed direct IO alignment.
+    
+    This has passed xfstests on filesystems made with 4k sectors,
+    including when run under the patch I sent to ignore
+    XFS_IOC_DIOINFO, and issue 512 DIOs anyway.  I also directly
+    tested end of block behavior on preallocated, sparse, and
+    existing files when we do a 512 IO into a 4k file on a
+    4k-sector filesystem, to be sure there were no unexpected
+    behaviors.
+    
+    Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
