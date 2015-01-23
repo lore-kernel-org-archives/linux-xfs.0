@@ -1,22 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 08C607F6B
-	for <xfs@oss.sgi.com>; Fri, 23 Jan 2015 10:44:12 -0600 (CST)
+	by oss.sgi.com (Postfix) with ESMTP id 11B937F6D
+	for <xfs@oss.sgi.com>; Fri, 23 Jan 2015 13:03:23 -0600 (CST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 8BD52AC002
-	for <xfs@oss.sgi.com>; Fri, 23 Jan 2015 08:44:08 -0800 (PST)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id Kr8kpt2M8YwifVTP for <xfs@oss.sgi.com>;
-	Fri, 23 Jan 2015 08:44:06 -0800 (PST)
-Message-ID: <54C27A55.5030701@sandeen.net>
-Date: Fri, 23 Jan 2015 10:44:05 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 873C1AC00A
+	for <xfs@oss.sgi.com>; Fri, 23 Jan 2015 11:03:19 -0800 (PST)
+Received: from mail.kernel.org ([198.145.29.136]) by cuda.sgi.com with ESMTP
+	id Qk6Nz2IGutOvNGWl for <xfs@oss.sgi.com>;
+	Fri, 23 Jan 2015 11:03:11 -0800 (PST)
+Date: Fri, 23 Jan 2015 11:03:04 -0800
+From: Jaegeuk Kim <jaegeuk@kernel.org>
+Subject: Re: [PATCH 1/2] xfs: introduce a generic shutdown ioctl
+Message-ID: <20150123190304.GA22493@jaegeuk-mac02.mot.com>
+References: <1420796076-82847-1-git-send-email-jaegeuk@kernel.org>
 MIME-Version: 1.0
-Subject: Re: Change sector size on existing partition
-References: <54C246EC.90207@xtremenitro.org>
-	<54C268ED.2000801@sandeen.net>	<54C26B5F.7000803@xtremenitro.org>
-	<54C26D8F.1040402@sandeen.net> <54C2761C.4050208@xtremenitro.org>
-In-Reply-To: <54C2761C.4050208@xtremenitro.org>
+Content-Disposition: inline
+In-Reply-To: <1420796076-82847-1-git-send-email-jaegeuk@kernel.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,31 +28,78 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dewangga Bachrul Alam <dewanggaba@xtremenitro.org>, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com, linux-kernel@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net
 
-On 1/23/15 10:26 AM, Dewangga Bachrul Alam wrote:
-> Hi,
+Hi Dave,
+
+Any obejction for this patch?
+Can I push this patch during the next merge window?
+
+Thanks,
+
+On Fri, Jan 09, 2015 at 01:34:35AM -0800, Jaegeuk Kim wrote:
+> This patch introduces a generic ioctl for fs shutdown used by xfs.
 > 
-> Thanks for your kind, but I don't know how to reproduce the errors, it
-> happens randomly. I try to reproduce on VM but nothing helps, I can't
-> create raid array on VM. :)
+> Cc: Dave Chinner <david@fromorbit.com>
+> Signed-off-by: Jaegeuk Kim <jaegeuk@kernel.org>
+> ---
+>  fs/xfs/xfs_fs.h         | 8 ++++----
+>  include/uapi/linux/fs.h | 8 ++++++++
+>  2 files changed, 12 insertions(+), 4 deletions(-)
 > 
-> But, I'm quite sure there is miscalculation or something else that make
-> 4k sector size on RAID-10 array.
-
-Well, as Brian mentioned in the other part of the thread, it's the logical
-and physical sector sizes that matter.  mkfs.xfs simply acts on what the
-device reports (i.e. the --getpbsz value).
-
-If for some reason your RAID-10 array is reporting 4k/4k and you don't expect
-that, you'll need to go digging through the block device configuration and
-maybe ask questions of those communities, too.
-
-It seems like you have interesting device stacking; use the blockdev command
-to check logical & physical sector size at each layer starting at the disk
-itself, and work your way up.
-
--Eric
+> diff --git a/fs/xfs/xfs_fs.h b/fs/xfs/xfs_fs.h
+> index 18dc721..fe0eeee 100644
+> --- a/fs/xfs/xfs_fs.h
+> +++ b/fs/xfs/xfs_fs.h
+> @@ -484,9 +484,9 @@ typedef struct xfs_swapext
+>  /*
+>   * Flags for going down operation
+>   */
+> -#define XFS_FSOP_GOING_FLAGS_DEFAULT		0x0	/* going down */
+> -#define XFS_FSOP_GOING_FLAGS_LOGFLUSH		0x1	/* flush log but not data */
+> -#define XFS_FSOP_GOING_FLAGS_NOLOGFLUSH		0x2	/* don't flush log nor data */
+> +#define XFS_FSOP_GOING_FLAGS_DEFAULT	FS_GOING_DOWN_FULLSYNC
+> +#define XFS_FSOP_GOING_FLAGS_LOGFLUSH	FS_GOING_DOWN_METASYNC
+> +#define XFS_FSOP_GOING_FLAGS_NOLOGFLUSH	FS_GOING_DOWN_NOSYNC
+>  
+>  /*
+>   * ioctl commands that are used by Linux filesystems
+> @@ -555,7 +555,7 @@ typedef struct xfs_swapext
+>  #define XFS_IOC_ATTRLIST_BY_HANDLE   _IOW ('X', 122, struct xfs_fsop_attrlist_handlereq)
+>  #define XFS_IOC_ATTRMULTI_BY_HANDLE  _IOW ('X', 123, struct xfs_fsop_attrmulti_handlereq)
+>  #define XFS_IOC_FSGEOMETRY	     _IOR ('X', 124, struct xfs_fsop_geom)
+> -#define XFS_IOC_GOINGDOWN	     _IOR ('X', 125, __uint32_t)
+> +#define XFS_IOC_GOINGDOWN	     FS_IOC_SHUTDOWN
+>  /*	XFS_IOC_GETFSUUID ---------- deprecated 140	 */
+>  
+>  
+> diff --git a/include/uapi/linux/fs.h b/include/uapi/linux/fs.h
+> index 3735fa0..a4e4be5 100644
+> --- a/include/uapi/linux/fs.h
+> +++ b/include/uapi/linux/fs.h
+> @@ -157,6 +157,7 @@ struct inodes_stat_t {
+>  #define FIFREEZE	_IOWR('X', 119, int)	/* Freeze */
+>  #define FITHAW		_IOWR('X', 120, int)	/* Thaw */
+>  #define FITRIM		_IOWR('X', 121, struct fstrim_range)	/* Trim */
+> +#define FS_IOC_SHUTDOWN	_IOR('X', 125, __u32)	/* Shutdown */
+>  
+>  #define	FS_IOC_GETFLAGS			_IOR('f', 1, long)
+>  #define	FS_IOC_SETFLAGS			_IOW('f', 2, long)
+> @@ -205,4 +206,11 @@ struct inodes_stat_t {
+>  #define SYNC_FILE_RANGE_WRITE		2
+>  #define SYNC_FILE_RANGE_WAIT_AFTER	4
+>  
+> +/*
+> + * Flags for going down operation used by FS_IOC_GOINGDOWN
+> + */
+> +#define FS_GOING_DOWN_FULLSYNC	0x0	/* going down with full sync */
+> +#define FS_GOING_DOWN_METASYNC	0x1	/* going down with metadata */
+> +#define FS_GOING_DOWN_NOSYNC	0x2	/* going down */
+> +
+>  #endif /* _UAPI_LINUX_FS_H */
+> -- 
+> 2.1.1
 
 _______________________________________________
 xfs mailing list
