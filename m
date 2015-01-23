@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 11B937F6D
-	for <xfs@oss.sgi.com>; Fri, 23 Jan 2015 13:03:23 -0600 (CST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 4E8C57F72
+	for <xfs@oss.sgi.com>; Fri, 23 Jan 2015 16:01:22 -0600 (CST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 873C1AC00A
-	for <xfs@oss.sgi.com>; Fri, 23 Jan 2015 11:03:19 -0800 (PST)
-Received: from mail.kernel.org ([198.145.29.136]) by cuda.sgi.com with ESMTP
-	id Qk6Nz2IGutOvNGWl for <xfs@oss.sgi.com>;
-	Fri, 23 Jan 2015 11:03:11 -0800 (PST)
-Date: Fri, 23 Jan 2015 11:03:04 -0800
-From: Jaegeuk Kim <jaegeuk@kernel.org>
-Subject: Re: [PATCH 1/2] xfs: introduce a generic shutdown ioctl
-Message-ID: <20150123190304.GA22493@jaegeuk-mac02.mot.com>
-References: <1420796076-82847-1-git-send-email-jaegeuk@kernel.org>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1420796076-82847-1-git-send-email-jaegeuk@kernel.org>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 2F1CC8F8040
+	for <xfs@oss.sgi.com>; Fri, 23 Jan 2015 14:01:19 -0800 (PST)
+Received: from mail-pd0-f180.google.com (mail-pd0-f180.google.com
+	[209.85.192.180]) by cuda.sgi.com with ESMTP id
+	I3YCaHsQ1qfQIPtf (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Fri, 23 Jan 2015 14:01:18 -0800 (PST)
+Received: by mail-pd0-f180.google.com with SMTP id ft15so10997016pdb.11
+	for <xfs@oss.sgi.com>; Fri, 23 Jan 2015 14:01:17 -0800 (PST)
+From: Brian Norris <computersforpeace@gmail.com>
+Subject: [PATCH] xfs: fix typo
+Date: Fri, 23 Jan 2015 14:00:51 -0800
+Message-Id: <1422050451-11486-1-git-send-email-computersforpeace@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,82 +24,36 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
-Cc: linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com, linux-kernel@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net
+Cc: Brian Norris <computersforpeace@gmail.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-Hi Dave,
+'tobe' should be two words.
 
-Any obejction for this patch?
-Can I push this patch during the next merge window?
+Signed-off-by: Brian Norris <computersforpeace@gmail.com>
+---
+ fs/xfs/xfs_aops.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Thanks,
-
-On Fri, Jan 09, 2015 at 01:34:35AM -0800, Jaegeuk Kim wrote:
-> This patch introduces a generic ioctl for fs shutdown used by xfs.
-> 
-> Cc: Dave Chinner <david@fromorbit.com>
-> Signed-off-by: Jaegeuk Kim <jaegeuk@kernel.org>
-> ---
->  fs/xfs/xfs_fs.h         | 8 ++++----
->  include/uapi/linux/fs.h | 8 ++++++++
->  2 files changed, 12 insertions(+), 4 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_fs.h b/fs/xfs/xfs_fs.h
-> index 18dc721..fe0eeee 100644
-> --- a/fs/xfs/xfs_fs.h
-> +++ b/fs/xfs/xfs_fs.h
-> @@ -484,9 +484,9 @@ typedef struct xfs_swapext
->  /*
->   * Flags for going down operation
->   */
-> -#define XFS_FSOP_GOING_FLAGS_DEFAULT		0x0	/* going down */
-> -#define XFS_FSOP_GOING_FLAGS_LOGFLUSH		0x1	/* flush log but not data */
-> -#define XFS_FSOP_GOING_FLAGS_NOLOGFLUSH		0x2	/* don't flush log nor data */
-> +#define XFS_FSOP_GOING_FLAGS_DEFAULT	FS_GOING_DOWN_FULLSYNC
-> +#define XFS_FSOP_GOING_FLAGS_LOGFLUSH	FS_GOING_DOWN_METASYNC
-> +#define XFS_FSOP_GOING_FLAGS_NOLOGFLUSH	FS_GOING_DOWN_NOSYNC
->  
->  /*
->   * ioctl commands that are used by Linux filesystems
-> @@ -555,7 +555,7 @@ typedef struct xfs_swapext
->  #define XFS_IOC_ATTRLIST_BY_HANDLE   _IOW ('X', 122, struct xfs_fsop_attrlist_handlereq)
->  #define XFS_IOC_ATTRMULTI_BY_HANDLE  _IOW ('X', 123, struct xfs_fsop_attrmulti_handlereq)
->  #define XFS_IOC_FSGEOMETRY	     _IOR ('X', 124, struct xfs_fsop_geom)
-> -#define XFS_IOC_GOINGDOWN	     _IOR ('X', 125, __uint32_t)
-> +#define XFS_IOC_GOINGDOWN	     FS_IOC_SHUTDOWN
->  /*	XFS_IOC_GETFSUUID ---------- deprecated 140	 */
->  
->  
-> diff --git a/include/uapi/linux/fs.h b/include/uapi/linux/fs.h
-> index 3735fa0..a4e4be5 100644
-> --- a/include/uapi/linux/fs.h
-> +++ b/include/uapi/linux/fs.h
-> @@ -157,6 +157,7 @@ struct inodes_stat_t {
->  #define FIFREEZE	_IOWR('X', 119, int)	/* Freeze */
->  #define FITHAW		_IOWR('X', 120, int)	/* Thaw */
->  #define FITRIM		_IOWR('X', 121, struct fstrim_range)	/* Trim */
-> +#define FS_IOC_SHUTDOWN	_IOR('X', 125, __u32)	/* Shutdown */
->  
->  #define	FS_IOC_GETFLAGS			_IOR('f', 1, long)
->  #define	FS_IOC_SETFLAGS			_IOW('f', 2, long)
-> @@ -205,4 +206,11 @@ struct inodes_stat_t {
->  #define SYNC_FILE_RANGE_WRITE		2
->  #define SYNC_FILE_RANGE_WAIT_AFTER	4
->  
-> +/*
-> + * Flags for going down operation used by FS_IOC_GOINGDOWN
-> + */
-> +#define FS_GOING_DOWN_FULLSYNC	0x0	/* going down with full sync */
-> +#define FS_GOING_DOWN_METASYNC	0x1	/* going down with metadata */
-> +#define FS_GOING_DOWN_NOSYNC	0x2	/* going down */
-> +
->  #endif /* _UAPI_LINUX_FS_H */
-> -- 
-> 2.1.1
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index 18e2f3bbae5e..af729e8975aa 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -1161,7 +1161,7 @@ xfs_vm_writepage(
+ 	ASSERT(iohead);
+ 
+ 	/*
+-	 * Any errors from this point onwards need tobe reported through the IO
++	 * Any errors from this point onwards need to be reported through the IO
+ 	 * completion path as we have marked the initial page as under writeback
+ 	 * and unlocked it.
+ 	 */
+-- 
+1.9.1
 
 _______________________________________________
 xfs mailing list
