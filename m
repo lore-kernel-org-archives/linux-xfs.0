@@ -1,25 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 77BCE7F69
-	for <xfs@oss.sgi.com>; Fri, 23 Jan 2015 10:26:11 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 62CF530405F
-	for <xfs@oss.sgi.com>; Fri, 23 Jan 2015 08:26:11 -0800 (PST)
-Received: from mail-pd0-f169.google.com (mail-pd0-f169.google.com
-	[209.85.192.169]) by cuda.sgi.com with ESMTP id
-	s9sU6Xjk2jWubviL (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 23 Jan 2015 08:26:09 -0800 (PST)
-Received: by mail-pd0-f169.google.com with SMTP id g10so6748614pdj.0
-	for <xfs@oss.sgi.com>; Fri, 23 Jan 2015 08:26:08 -0800 (PST)
-Message-ID: <54C2761C.4050208@xtremenitro.org>
-Date: Fri, 23 Jan 2015 23:26:04 +0700
-From: Dewangga Bachrul Alam <dewanggaba@xtremenitro.org>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 08C607F6B
+	for <xfs@oss.sgi.com>; Fri, 23 Jan 2015 10:44:12 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 8BD52AC002
+	for <xfs@oss.sgi.com>; Fri, 23 Jan 2015 08:44:08 -0800 (PST)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id Kr8kpt2M8YwifVTP for <xfs@oss.sgi.com>;
+	Fri, 23 Jan 2015 08:44:06 -0800 (PST)
+Message-ID: <54C27A55.5030701@sandeen.net>
+Date: Fri, 23 Jan 2015 10:44:05 -0600
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
 Subject: Re: Change sector size on existing partition
-References: <54C246EC.90207@xtremenitro.org> <54C268ED.2000801@sandeen.net>
-	<54C26B5F.7000803@xtremenitro.org> <54C26D8F.1040402@sandeen.net>
-In-Reply-To: <54C26D8F.1040402@sandeen.net>
+References: <54C246EC.90207@xtremenitro.org>
+	<54C268ED.2000801@sandeen.net>	<54C26B5F.7000803@xtremenitro.org>
+	<54C26D8F.1040402@sandeen.net> <54C2761C.4050208@xtremenitro.org>
+In-Reply-To: <54C2761C.4050208@xtremenitro.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,102 +25,37 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>, xfs@oss.sgi.com
+To: Dewangga Bachrul Alam <dewanggaba@xtremenitro.org>, xfs@oss.sgi.com
 
-SGksCgpUaGFua3MgZm9yIHlvdXIga2luZCwgYnV0IEkgZG9uJ3Qga25vdyBob3cgdG8gcmVwcm9k
-dWNlIHRoZSBlcnJvcnMsIGl0CmhhcHBlbnMgcmFuZG9tbHkuIEkgdHJ5IHRvIHJlcHJvZHVjZSBv
-biBWTSBidXQgbm90aGluZyBoZWxwcywgSSBjYW4ndApjcmVhdGUgcmFpZCBhcnJheSBvbiBWTS4g
-OikKCkJ1dCwgSSdtIHF1aXRlIHN1cmUgdGhlcmUgaXMgbWlzY2FsY3VsYXRpb24gb3Igc29tZXRo
-aW5nIGVsc2UgdGhhdCBtYWtlCjRrIHNlY3RvciBzaXplIG9uIFJBSUQtMTAgYXJyYXkuCgpBbmQg
-YW55d2F5LCBJIGZvdW5kIHNvbWV0aGluZyBpbnRlcmVzdGluZywgaXQgaGFwcGVucyBvbiBteSBv
-bGQKZGV2ZWxvcG1lbnQgc2VydmVyIHRvbywgYnV0IEkgZGlkbid0IHVzZSB0aGUgYXBwbGljYXRp
-b24gbGlrZSBvbiBuZXcKYm94LiBTbyBpdCdzIG5vIHByb2JsZW0uCgokIHhmc19pbmZvIC9kYXRh
-YmFzZS9teXNxbAptZXRhLWRhdGE9L2Rldi9tYXBwZXIvdmdfYWduaXJ1ZHJhLWx2X2RhdGFiYXNl
-IGlzaXplPTI1NiAgICBhZ2NvdW50PTMyLAphZ3NpemU9NzYyOTgyNCBibGtzCiAgICAgICAgID0g
-ICAgICAgICAgICAgICAgICAgICAgIHNlY3Rzej00MDk2ICBhdHRyPTIsIHByb2ppZDMyYml0PTAK
-ZGF0YSAgICAgPSAgICAgICAgICAgICAgICAgICAgICAgYnNpemU9NDA5NiAgIGJsb2Nrcz0yNDQx
-NTQzNjgsIGltYXhwY3Q9MjUKICAgICAgICAgPSAgICAgICAgICAgICAgICAgICAgICAgc3VuaXQ9
-MCAgICAgIHN3aWR0aD0wIGJsa3MKbmFtaW5nICAgPXZlcnNpb24gMiAgICAgICAgICAgICAgYnNp
-emU9NDA5NiAgIGFzY2lpLWNpPTAKbG9nICAgICAgPWludGVybmFsICAgICAgICAgICAgICAgYnNp
-emU9NDA5NiAgIGJsb2Nrcz0xMTkyMTYsIHZlcnNpb249MgogICAgICAgICA9ICAgICAgICAgICAg
-ICAgICAgICAgICBzZWN0c3o9NDA5NiAgc3VuaXQ9MSBibGtzLCBsYXp5LWNvdW50PTEKcmVhbHRp
-bWUgPW5vbmUgICAgICAgICAgICAgICAgICAgZXh0c3o9NDA5NiAgIGJsb2Nrcz0wLCBydGV4dGVu
-dHM9MAoKSXQncyBzb2Z0d2FyZSByYWlkLTEgYXJyYXkuIEhlcmUgaXMgdGhlIHBhcnRpdGlvbiB0
-YWJsZS4KCk5BTUUgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgTUFKOk1JTiBSTSAg
-IFNJWkUgUk8gVFlQRSAgTU9VTlRQT0lOVApzZGMgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgODozMiAgIDAgOTMxLjVHICAwIGRpc2sK4pSU4pSAc2RjMSAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICA4OjMzICAgMCA5MzEuNUcgIDAgcGFydAogIOKUlOKUgG1kMCAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIDk6MCAgICAwIDkzMS40RyAgMCByYWlkMQog
-ICAg4pSU4pSAdmdfYWduaXJ1ZHJhLWx2X2RhdGFiYXNlIChkbS0yKSAyNTM6MiAgICAwIDkzMS40
-RyAgMCBsdm0gICAvZGF0YWJhc2UKc2RhICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgIDg6MCAgICAwIDI3OS41RyAgMCBkaXNrCuKUnOKUgHNkYTEgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgODoxICAgIDAgICA1MDBNICAwIHBhcnQgIC9ib290CuKUlOKUgHNkYTIg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgODoyICAgIDAgICAyNzlHICAwIHBhcnQK
-ICDilJzilIB2Z19vcy1sdl9yb290IChkbS0wKSAgICAgICAgICAgICAgMjUzOjAgICAgMCAgIDI3
-MUcgIDAgbHZtICAgLwogIOKUlOKUgHZnX29zLWx2X3N3YXAgKGRtLTEpICAgICAgICAgICAgICAy
-NTM6MSAgICAwICAgICA4RyAgMCBsdm0gICBbU1dBUF0Kc2RiICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgIDg6MTYgICAwIDkzMS41RyAgMCBkaXNrCuKUlOKUgHNkYjEgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgODoxNyAgIDAgOTMxLjVHICAwIHBhcnQKICDilJTi
-lIBtZDAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICA5OjAgICAgMCA5MzEuNEcgIDAg
-cmFpZDEKICAgIOKUlOKUgHZnX2FnbmlydWRyYS1sdl9kYXRhYmFzZSAoZG0tMikgMjUzOjIgICAg
-MCA5MzEuNEcgIDAgbHZtICAgL2RhdGFiYXNlCnNyMCAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgIDExOjAgICAgMSAgMTAyNE0gIDAgcm9tCgokIHVuYW1lIC1hCkxpbnV4IGFnbmly
-dWRyYS54eHggMi42LjMyLTQzMS4yOS4yLmVsNi54ODZfNjQgIzEgU01QIFR1ZSBTZXAgOSAyMToz
-NjowNQpVVEMgMjAxNCB4ODZfNjQgeDg2XzY0IHg4Nl82NCBHTlUvTGludXgKCiQgY2F0IC9ldGMv
-cmVkaGF0LXJlbGVhc2UKQ2VudE9TIHJlbGVhc2UgNi41IChGaW5hbCkKCiQgeXVtIGhpc3Rvcnkg
-aW5mbyAxIHwgZ3JlcCB4ZnNwcm9ncyB8IGZwYXN0ZQpVcGxvYWRpbmcgKDAuMktpQikuLi4KaHR0
-cDovL3VyMS5jYS9qaWlrdiAtPiBodHRwOi8vcGFzdGUuZmVkb3JhcHJvamVjdC5vcmcvMTczNjM2
-LzE0MjIwMjk4CgpJdCdzIGNhbWUgZnJvbSBDZW50T1MgNi40LCB4ZnNwcm9ncyBkZWZhdWx0IHN0
-b2NrIDYuNCwgYXMgeW91IG1lbnRpb25lZApiZWZvcmUuCgpPbiAwMS8yMy8yMDE1IDEwOjQ5IFBN
-LCBFcmljIFNhbmRlZW4gd3JvdGU6Cj4gT24gMS8yMy8xNSA5OjQwIEFNLCBEZXdhbmdnYSBCYWNo
-cnVsIEFsYW0gd3JvdGU6Cj4+IEhpLAo+Pgo+PiBJJ20gc29ycnksIGRpZG50IGZpbGwgYW55IGlu
-Zm9ybWF0aW9uIGhlcmUsIGJ1dCBoZXJlIGlzIG15IG5vZGVzIGRldGFpbHMuCj4+Cj4+ICQgdW5h
-bWUgLWEKPj4gTGludXggY2F0YWx5c3QtZGIwMS5qa3QzZC54eHggMi42LjMyLTUwNC4zLjMuZWw2
-Lng4Nl82NCAjMSBTTVAgV2VkIERlYwo+PiAxNyAwMTo1NTowMiBVVEMgMjAxNCB4ODZfNjQgeDg2
-XzY0IHg4Nl82NCBHTlUvTGludXgKPj4KPj4gJCBjYXQgL2V0Yy9yZWRoYXQtcmVsZWFzZQo+PiBD
-ZW50T1MgcmVsZWFzZSA2LjYgKEZpbmFsKQo+Pgo+PiBUaGUgeGZzIGFuZCBwYXJ0aXRpb24gdGFi
-bGUgYnVpbGQgZnJvbSBhbmFjb25kYSBmcm9tIGZpcnN0IGluc3RhbGwsCj4+IGluc3RhbGF0aW9u
-IGNhbWUgZnJvbSBDZW50T1MgNi42LiBCdXQgaXQncyB3ZWlyZCwgb25seSB0aGlzIG5vZGUgaGFz
-IDRrCj4+IHNlY3RvciBzaXplLCB0aGUgb3RoZXJzIGlzIDUxMi4KPj4KPj4gY2F0YWx5c3QtZGIw
-MSQgeXVtIGhpc3RvcnkgaW5mbyAxIHwgZ3JlcCB4ZnNwcm9ncyB8IGZwYXN0ZQo+PiBVcGxvYWRp
-bmcgKDAuMktpQikuLi4KPj4gaHR0cDovL3VyMS5jYS9qaWh5dSAtPiBodHRwOi8vcGFzdGUuZmVk
-b3JhcHJvamVjdC5vcmcvMTczNjA2LzI3NDM0MTQyCj4gCj4gc28geGZzcHJvZ3MgdjMuMS4xCj4g
-Cj4gVGhpcyB3ZW50IGludG8gdjMuMS44Ogo+IAo+IGNvbW1pdCAyODdkMTY4YjU1MDg1N2NlNDBl
-MDRiNWY2MThkN2ViOTFiODcwMjJmCj4gQXV0aG9yOiBFcmljIFNhbmRlZW4gPHNhbmRlZW5Ac2Fu
-ZGVlbi5uZXQ+Cj4gRGF0ZTogICBUaHUgTWFyIDEgMjI6NDY6MzUgMjAxMiAtMDYwMAo+IAo+ICAg
-ICBta2ZzLnhmczogcHJvcGVybHkgaGFuZGxlIHBoeXNpY2FsIHNlY3RvciBzaXplCj4gICAgIAo+
-ICAgICBUaGlzIHNwbGl0cyB0aGUgZnNfdG9wb2xvZ3kgc3RydWN0dXJlICJzZWN0b3JzaXplIiBp
-bnRvCj4gICAgIGxvZ2ljYWwgJiBwaHlzaWNhbCwgYW5kIGdldHMgYm90aCB2aWEgYmxraWRfZ2V0
-X3RvcG9sb2d5KCkuCj4gICAgIAo+ICAgICBUaGlzIHByaW1hcmlseSBhbGxvd3MgdXMgdG8gZGVm
-YXVsdCB0byB1c2luZyB0aGUgcGh5c2ljYWwKPiAgICAgc2VjdG9yc2l6ZSBmb3IgbWtmcydzICJz
-ZWN0b3Igc2l6ZSIgdmFsdWUsIHRoZSBmdW5kYW1lbnRhbAo+ICAgICBzaXplIG9mIGFueSBJT3Mg
-dGhlIGZpbGVzeXN0ZW0gd2lsbCBwZXJmb3JtLgo+ICAgICAKPiAgICAgV2UgcmVkdWNlIG1rZnMu
-eGZzJ3MgInNlY3RvciBzaXplIiB0byBsb2dpY2FsIGlmCj4gICAgIGEgYmxvY2sgc2l6ZSA8IHBo
-eXNpY2FsIHNlY3RvciBzaXplIGlzIHNwZWNpZmllZC4KPiAgICAgVGhpcyBpcyBzdWJvcHRpbWFs
-LCBidXQgcGVybWlzc2FibGUuCj4gICAgIAo+ICAgICBGb3IgYmxvY2sgc2l6ZSA8IHNlY3RvciBz
-aXplLCBkaWZmZXJlbnRpYXRlIHRoZSBlcnJvcgo+ICAgICBtZXNzYWdlIGJhc2VkIG9uIHdoZXRo
-ZXIgdGhlIHNlY3RvciBzaXplIHdhcyBtYW51YWxseQo+ICAgICBzcGVjaWZpZWQsIG9yIGRlZHVj
-ZWQuCj4gICAgIAo+ICAgICBTaWduZWQtb2ZmLWJ5OiBFcmljIFNhbmRlZW4gPHNhbmRlZW5AcmVk
-aGF0LmNvbT4KPiAgICAgUmV2aWV3ZWQtYnk6IERhdmUgQ2hpbm5lciA8ZGNoaW5uZXJAcmVkaGF0
-LmNvbT4KPiAKPiBidXQgd2FzIGJhY2twb3J0ZWQgdG8gdGhlIFJIRUw2IHhmc3Byb2dzOgo+IAo+
-ICogVHVlIFNlcCAyNSAyMDEyIEVyaWMgU2FuZGVlbiA8c2FuZGVlbkByZWRoYXQuY29tPiAzLjEu
-MS04Cj4gLSBta2ZzLnhmczogYmV0dGVyIGhhbmRsZSBtaXNhbGlnbmVkIDRrIGRldmljZXMgKCM4
-MzY0MzMpCj4gLSBta2ZzLnhmczogZGVmYXVsdCB0byBwaHlzaWNhbCBzZWN0b3JzaXplICgjODM2
-NDMzKQo+IAo+IFNvLCBub3QgKmV4YWN0bHkqIGEgYnVnLCBiZWNhdXNlIHRoZSBhc3N1bXB0aW9u
-IHRoYXQgNTEyLWJ5dGUKPiBESU8gd2lsbCBhbHdheXMgd29yayBpcyBub3QgYSBnb29kIG9uZSwg
-YnV0IHRoZSBjb21taXQgSSBtZW50aW9uZWQKPiBpbiBteSBmaXJzdCBlbWFpbCB3aWxsIGxldCA1
-MTItYnl0ZSBESU9zIHdvcmsgYWdhaW4uCj4gCj4gSSdkIHRlbGwgeW91IHRvIGZpbGUgYSBidWcg
-d2l0aCB5b3VyIFJIRUwgc3VwcG9ydCBwZW9wbGUsIGJ1dAo+IENlbnRvcyAuLi4gOykgIFdlIHBy
-b2JhYmx5IHNob3VsZCBnZXQgdGhhdCBrZXJuZWwgY29tbWl0IGludG8gUkhFTDYKPiBpZiBwb3Nz
-aWJsZS4gIEknbSBraW5kIG9mIHN1cnByaXNlZCB3ZSBoYXZlbid0IHNlZW4gb3RoZXIgcmVwb3J0
-cy4KPiAKPiBCdXQsIGlmIHlvdSBldmVyIHdpbmQgdXAgd2l0aCBoYXJkIDRrLzRrIGRyaXZlcywg
-eW91ciBkYXRhYmFzZQo+IHN0aWxsIHdvbid0IHdvcmsuICBPbiBhbnkgZmlsZXN5c3RlbS4gIDop
-Cj4gCj4gSWYgeW91IGRvbid0IG1pbmQgZm9sbG93aW5nIHVwIHdpdGggdGhpcyBpbmZvcm10YXRp
-b24gaW4gdGhlIG90aGVyCj4gZm9ydW0sIHRoYXQgbWlnaHQgaGVscCBvdGhlcnMuCj4gCj4gLUVy
-aWMKPiAKCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhm
-cyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFu
-L2xpc3RpbmZvL3hmcwo=
+On 1/23/15 10:26 AM, Dewangga Bachrul Alam wrote:
+> Hi,
+> 
+> Thanks for your kind, but I don't know how to reproduce the errors, it
+> happens randomly. I try to reproduce on VM but nothing helps, I can't
+> create raid array on VM. :)
+> 
+> But, I'm quite sure there is miscalculation or something else that make
+> 4k sector size on RAID-10 array.
+
+Well, as Brian mentioned in the other part of the thread, it's the logical
+and physical sector sizes that matter.  mkfs.xfs simply acts on what the
+device reports (i.e. the --getpbsz value).
+
+If for some reason your RAID-10 array is reporting 4k/4k and you don't expect
+that, you'll need to go digging through the block device configuration and
+maybe ask questions of those communities, too.
+
+It seems like you have interesting device stacking; use the blockdev command
+to check logical & physical sector size at each layer starting at the disk
+itself, and work your way up.
+
+-Eric
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
