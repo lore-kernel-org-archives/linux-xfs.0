@@ -1,21 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 4E8C57F72
-	for <xfs@oss.sgi.com>; Fri, 23 Jan 2015 16:01:22 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 2F1CC8F8040
-	for <xfs@oss.sgi.com>; Fri, 23 Jan 2015 14:01:19 -0800 (PST)
-Received: from mail-pd0-f180.google.com (mail-pd0-f180.google.com
-	[209.85.192.180]) by cuda.sgi.com with ESMTP id
-	I3YCaHsQ1qfQIPtf (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 23 Jan 2015 14:01:18 -0800 (PST)
-Received: by mail-pd0-f180.google.com with SMTP id ft15so10997016pdb.11
-	for <xfs@oss.sgi.com>; Fri, 23 Jan 2015 14:01:17 -0800 (PST)
-From: Brian Norris <computersforpeace@gmail.com>
-Subject: [PATCH] xfs: fix typo
-Date: Fri, 23 Jan 2015 14:00:51 -0800
-Message-Id: <1422050451-11486-1-git-send-email-computersforpeace@gmail.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id D33C68014
+	for <xfs@oss.sgi.com>; Mon, 26 Jan 2015 08:34:43 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id A25C0304032
+	for <xfs@oss.sgi.com>; Mon, 26 Jan 2015 06:34:43 -0800 (PST)
+Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
+	with ESMTP id 2l8igNrOKpojuoJB (version=TLSv1 cipher=AES256-SHA
+	bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Mon, 26 Jan 2015 06:34:42 -0800 (PST)
+From: Jan Kara <jack@suse.cz>
+Subject: [PATCH 02/16] quota: Split ->set_xstate callback into two
+Date: Mon, 26 Jan 2015 15:34:19 +0100
+Message-Id: <1422282873-3381-3-git-send-email-jack@suse.cz>
+In-Reply-To: <1422282873-3381-1-git-send-email-jack@suse.cz>
+References: <1422282873-3381-1-git-send-email-jack@suse.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,31 +28,175 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Brian Norris <computersforpeace@gmail.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: linux-fsdevel@vger.kernel.org
+Cc: cluster-devel@redhat.com, Jan Kara <jack@suse.cz>, ocfs2-devel@oss.oracle.com, xfs@oss.sgi.com
 
-'tobe' should be two words.
+Split ->set_xstate callback into two callbacks - one for turning quotas
+on (->quota_enable) and one for turning quotas off (->quota_disable). That
+way we don't have to pass quotactl command into the callback which seems
+cleaner.
 
-Signed-off-by: Brian Norris <computersforpeace@gmail.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Jan Kara <jack@suse.cz>
 ---
- fs/xfs/xfs_aops.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ fs/quota/quota.c      | 20 +++++++++++++----
+ fs/xfs/xfs_quotaops.c | 59 ++++++++++++++++++++++++++++++++-------------------
+ include/linux/quota.h |  3 ++-
+ 3 files changed, 55 insertions(+), 27 deletions(-)
 
-diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index 18e2f3bbae5e..af729e8975aa 100644
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -1161,7 +1161,7 @@ xfs_vm_writepage(
- 	ASSERT(iohead);
+diff --git a/fs/quota/quota.c b/fs/quota/quota.c
+index 6f3856328eea..e2ae2b99e555 100644
+--- a/fs/quota/quota.c
++++ b/fs/quota/quota.c
+@@ -208,15 +208,26 @@ static int quota_setquota(struct super_block *sb, int type, qid_t id,
+ 	return sb->s_qcop->set_dqblk(sb, qid, &fdq);
+ }
  
- 	/*
--	 * Any errors from this point onwards need tobe reported through the IO
-+	 * Any errors from this point onwards need to be reported through the IO
- 	 * completion path as we have marked the initial page as under writeback
- 	 * and unlocked it.
- 	 */
+-static int quota_setxstate(struct super_block *sb, int cmd, void __user *addr)
++static int quota_enable(struct super_block *sb, void __user *addr)
+ {
+ 	__u32 flags;
+ 
+ 	if (copy_from_user(&flags, addr, sizeof(flags)))
+ 		return -EFAULT;
+-	if (!sb->s_qcop->set_xstate)
++	if (!sb->s_qcop->quota_enable)
+ 		return -ENOSYS;
+-	return sb->s_qcop->set_xstate(sb, flags, cmd);
++	return sb->s_qcop->quota_enable(sb, flags);
++}
++
++static int quota_disable(struct super_block *sb, void __user *addr)
++{
++	__u32 flags;
++
++	if (copy_from_user(&flags, addr, sizeof(flags)))
++		return -EFAULT;
++	if (!sb->s_qcop->quota_disable)
++		return -ENOSYS;
++	return sb->s_qcop->quota_disable(sb, flags);
+ }
+ 
+ static int quota_getxstate(struct super_block *sb, void __user *addr)
+@@ -447,8 +458,9 @@ static int do_quotactl(struct super_block *sb, int type, int cmd, qid_t id,
+ 			return -ENOSYS;
+ 		return sb->s_qcop->quota_sync(sb, type);
+ 	case Q_XQUOTAON:
++		return quota_enable(sb, addr);
+ 	case Q_XQUOTAOFF:
+-		return quota_setxstate(sb, cmd, addr);
++		return quota_disable(sb, addr);
+ 	case Q_XQUOTARM:
+ 		return quota_rmxquota(sb, addr);
+ 	case Q_XGETQSTAT:
+diff --git a/fs/xfs/xfs_quotaops.c b/fs/xfs/xfs_quotaops.c
+index a226203fa46a..6923905ab33d 100644
+--- a/fs/xfs/xfs_quotaops.c
++++ b/fs/xfs/xfs_quotaops.c
+@@ -64,19 +64,10 @@ xfs_fs_get_xstatev(
+ 	return xfs_qm_scall_getqstatv(mp, fqs);
+ }
+ 
+-STATIC int
+-xfs_fs_set_xstate(
+-	struct super_block	*sb,
+-	unsigned int		uflags,
+-	int			op)
++static unsigned int
++xfs_quota_flags(unsigned int uflags)
+ {
+-	struct xfs_mount	*mp = XFS_M(sb);
+-	unsigned int		flags = 0;
+-
+-	if (sb->s_flags & MS_RDONLY)
+-		return -EROFS;
+-	if (!XFS_IS_QUOTA_RUNNING(mp))
+-		return -ENOSYS;
++	unsigned int flags = 0;
+ 
+ 	if (uflags & FS_QUOTA_UDQ_ACCT)
+ 		flags |= XFS_UQUOTA_ACCT;
+@@ -91,16 +82,39 @@ xfs_fs_set_xstate(
+ 	if (uflags & FS_QUOTA_PDQ_ENFD)
+ 		flags |= XFS_PQUOTA_ENFD;
+ 
+-	switch (op) {
+-	case Q_XQUOTAON:
+-		return xfs_qm_scall_quotaon(mp, flags);
+-	case Q_XQUOTAOFF:
+-		if (!XFS_IS_QUOTA_ON(mp))
+-			return -EINVAL;
+-		return xfs_qm_scall_quotaoff(mp, flags);
+-	}
++	return flags;
++}
++
++STATIC int
++xfs_quota_enable(
++	struct super_block	*sb,
++	unsigned int		uflags)
++{
++	struct xfs_mount	*mp = XFS_M(sb);
++
++	if (sb->s_flags & MS_RDONLY)
++		return -EROFS;
++	if (!XFS_IS_QUOTA_RUNNING(mp))
++		return -ENOSYS;
++
++	return xfs_qm_scall_quotaon(mp, xfs_quota_flags(uflags));
++}
++
++STATIC int
++xfs_quota_disable(
++	struct super_block	*sb,
++	unsigned int		uflags)
++{
++	struct xfs_mount	*mp = XFS_M(sb);
++
++	if (sb->s_flags & MS_RDONLY)
++		return -EROFS;
++	if (!XFS_IS_QUOTA_RUNNING(mp))
++		return -ENOSYS;
++	if (!XFS_IS_QUOTA_ON(mp))
++		return -EINVAL;
+ 
+-	return -EINVAL;
++	return xfs_qm_scall_quotaoff(mp, xfs_quota_flags(uflags));
+ }
+ 
+ STATIC int
+@@ -166,7 +180,8 @@ xfs_fs_set_dqblk(
+ const struct quotactl_ops xfs_quotactl_operations = {
+ 	.get_xstatev		= xfs_fs_get_xstatev,
+ 	.get_xstate		= xfs_fs_get_xstate,
+-	.set_xstate		= xfs_fs_set_xstate,
++	.quota_enable		= xfs_quota_enable,
++	.quota_disable		= xfs_quota_disable,
+ 	.rm_xquota		= xfs_fs_rm_xquota,
+ 	.get_dqblk		= xfs_fs_get_dqblk,
+ 	.set_dqblk		= xfs_fs_set_dqblk,
+diff --git a/include/linux/quota.h b/include/linux/quota.h
+index 227f37f463c9..4da497b807c4 100644
+--- a/include/linux/quota.h
++++ b/include/linux/quota.h
+@@ -371,13 +371,14 @@ struct quotactl_ops {
+ 	int (*quota_on)(struct super_block *, int, int, struct path *);
+ 	int (*quota_on_meta)(struct super_block *, int, int);
+ 	int (*quota_off)(struct super_block *, int);
++	int (*quota_enable)(struct super_block *, unsigned int);
++	int (*quota_disable)(struct super_block *, unsigned int);
+ 	int (*quota_sync)(struct super_block *, int);
+ 	int (*get_info)(struct super_block *, int, struct if_dqinfo *);
+ 	int (*set_info)(struct super_block *, int, struct if_dqinfo *);
+ 	int (*get_dqblk)(struct super_block *, struct kqid, struct qc_dqblk *);
+ 	int (*set_dqblk)(struct super_block *, struct kqid, struct qc_dqblk *);
+ 	int (*get_xstate)(struct super_block *, struct fs_quota_stat *);
+-	int (*set_xstate)(struct super_block *, unsigned int, int);
+ 	int (*get_xstatev)(struct super_block *, struct fs_quota_statv *);
+ 	int (*rm_xquota)(struct super_block *, unsigned int);
+ };
 -- 
-1.9.1
+2.1.2
 
 _______________________________________________
 xfs mailing list
