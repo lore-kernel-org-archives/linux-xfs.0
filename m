@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 8B3BD801D
+	by oss.sgi.com (Postfix) with ESMTP id 72456801C
 	for <xfs@oss.sgi.com>; Mon, 26 Jan 2015 08:34:45 -0600 (CST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 19EA9AC006
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 0140BAC004
 	for <xfs@oss.sgi.com>; Mon, 26 Jan 2015 06:34:44 -0800 (PST)
 Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id xj5bROtwZHVNifvT (version=TLSv1 cipher=AES256-SHA
+	with ESMTP id jDNFpe4FZW6I3Ach (version=TLSv1 cipher=AES256-SHA
 	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 26 Jan 2015 06:34:44 -0800 (PST)
+	Mon, 26 Jan 2015 06:34:43 -0800 (PST)
 From: Jan Kara <jack@suse.cz>
-Subject: [PATCH 13/16] quota: Remove ->get_xstate and ->get_xstatev callbacks
-Date: Mon, 26 Jan 2015 15:34:30 +0100
-Message-Id: <1422282873-3381-14-git-send-email-jack@suse.cz>
+Subject: [PATCH 07/16] quota: Remove quota_on_meta callback
+Date: Mon, 26 Jan 2015 15:34:24 +0100
+Message-Id: <1422282873-3381-8-git-send-email-jack@suse.cz>
 In-Reply-To: <1422282873-3381-1-git-send-email-jack@suse.cz>
 References: <1422282873-3381-1-git-send-email-jack@suse.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -31,68 +31,44 @@ Sender: xfs-bounces@oss.sgi.com
 To: linux-fsdevel@vger.kernel.org
 Cc: cluster-devel@redhat.com, Jan Kara <jack@suse.cz>, ocfs2-devel@oss.oracle.com, xfs@oss.sgi.com
 
-These callbacks are now unused. Remove them.
+There are no more users for quota_on_meta callback. Just remove it.
 
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Jan Kara <jack@suse.cz>
 ---
- fs/quota/quota.c      | 14 ++++----------
- include/linux/quota.h |  2 --
- 2 files changed, 4 insertions(+), 12 deletions(-)
+ fs/quota/quota.c      | 5 +----
+ include/linux/quota.h | 1 -
+ 2 files changed, 1 insertion(+), 5 deletions(-)
 
 diff --git a/fs/quota/quota.c b/fs/quota/quota.c
-index 83939ff4c444..20d11cd21247 100644
+index ce78a70a596f..d14a799c7785 100644
 --- a/fs/quota/quota.c
 +++ b/fs/quota/quota.c
-@@ -350,12 +350,9 @@ static int quota_getxstate(struct super_block *sb, void __user *addr)
- 	struct fs_quota_stat fqs;
- 	int ret;
- 
--	if (!sb->s_qcop->get_xstate && !sb->s_qcop->get_state)
-+	if (!sb->s_qcop->get_state)
+@@ -82,11 +82,8 @@ unsigned int qtype_enforce_flag(int type)
+ static int quota_quotaon(struct super_block *sb, int type, int cmd, qid_t id,
+ 		         struct path *path)
+ {
+-	if (!sb->s_qcop->quota_on && !sb->s_qcop->quota_on_meta &&
+-	    !sb->s_qcop->quota_enable)
++	if (!sb->s_qcop->quota_on && !sb->s_qcop->quota_enable)
  		return -ENOSYS;
--	if (sb->s_qcop->get_state)
--		ret = quota_getstate(sb, &fqs);
--	else
--		ret = sb->s_qcop->get_xstate(sb, &fqs);
-+	ret = quota_getstate(sb, &fqs);
- 	if (!ret && copy_to_user(addr, &fqs, sizeof(fqs)))
- 		return -EFAULT;
- 	return ret;
-@@ -414,7 +411,7 @@ static int quota_getxstatev(struct super_block *sb, void __user *addr)
- 	struct fs_quota_statv fqs;
- 	int ret;
- 
--	if (!sb->s_qcop->get_xstatev && !sb->s_qcop->get_state)
-+	if (!sb->s_qcop->get_state)
- 		return -ENOSYS;
- 
- 	memset(&fqs, 0, sizeof(fqs));
-@@ -428,10 +425,7 @@ static int quota_getxstatev(struct super_block *sb, void __user *addr)
- 	default:
- 		return -EINVAL;
- 	}
--	if (sb->s_qcop->get_state)
--		ret = quota_getstatev(sb, &fqs);
--	else
--		ret = sb->s_qcop->get_xstatev(sb, &fqs);
-+	ret = quota_getstatev(sb, &fqs);
- 	if (!ret && copy_to_user(addr, &fqs, sizeof(fqs)))
- 		return -EFAULT;
- 	return ret;
+-	if (sb->s_qcop->quota_on_meta)
+-		return sb->s_qcop->quota_on_meta(sb, type, id);
+ 	if (sb->s_qcop->quota_enable)
+ 		return sb->s_qcop->quota_enable(sb, qtype_enforce_flag(type));
+ 	if (IS_ERR(path))
 diff --git a/include/linux/quota.h b/include/linux/quota.h
-index 6ecac0f3b2ca..a07f2ed25284 100644
+index 4da497b807c4..0938159d65c8 100644
 --- a/include/linux/quota.h
 +++ b/include/linux/quota.h
-@@ -408,8 +408,6 @@ struct quotactl_ops {
- 	int (*get_dqblk)(struct super_block *, struct kqid, struct qc_dqblk *);
- 	int (*set_dqblk)(struct super_block *, struct kqid, struct qc_dqblk *);
- 	int (*get_state)(struct super_block *, struct qc_state *);
--	int (*get_xstate)(struct super_block *, struct fs_quota_stat *);
--	int (*get_xstatev)(struct super_block *, struct fs_quota_statv *);
- 	int (*rm_xquota)(struct super_block *, unsigned int);
- };
- 
+@@ -369,7 +369,6 @@ struct qc_dqblk {
+ /* Operations handling requests from userspace */
+ struct quotactl_ops {
+ 	int (*quota_on)(struct super_block *, int, int, struct path *);
+-	int (*quota_on_meta)(struct super_block *, int, int);
+ 	int (*quota_off)(struct super_block *, int);
+ 	int (*quota_enable)(struct super_block *, unsigned int);
+ 	int (*quota_disable)(struct super_block *, unsigned int);
 -- 
 2.1.2
 
