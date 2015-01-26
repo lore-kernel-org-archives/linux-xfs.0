@@ -1,22 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 8A5FF8012
-	for <xfs@oss.sgi.com>; Fri, 30 Jan 2015 08:42:34 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 4CC05304053
-	for <xfs@oss.sgi.com>; Fri, 30 Jan 2015 06:42:31 -0800 (PST)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id geCG2lsARZqxcf5i (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 30 Jan 2015 06:42:30 -0800 (PST)
-Date: Fri, 30 Jan 2015 09:42:23 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH] xfs: don't allocate an ioend for direct I/O completions
-Message-ID: <20150130144223.GA27441@laptop.bfoster>
-References: <1422485661-520-1-git-send-email-hch@lst.de>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1422485661-520-1-git-send-email-hch@lst.de>
+	by oss.sgi.com (Postfix) with ESMTP id 537AB8013
+	for <xfs@oss.sgi.com>; Mon, 26 Jan 2015 08:34:45 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 32C99304043
+	for <xfs@oss.sgi.com>; Mon, 26 Jan 2015 06:34:45 -0800 (PST)
+Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
+	with ESMTP id Xmsqd0PutpJzjZEU (version=TLSv1 cipher=AES256-SHA
+	bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Mon, 26 Jan 2015 06:34:43 -0800 (PST)
+From: Jan Kara <jack@suse.cz>
+Subject: [PATCH 10/16] quota: Wire up Q_GETXSTATE and Q_GETXSTATV calls to
+	work with ->get_state
+Date: Mon, 26 Jan 2015 15:34:27 +0100
+Message-Id: <1422282873-3381-11-git-send-email-jack@suse.cz>
+In-Reply-To: <1422282873-3381-1-git-send-email-jack@suse.cz>
+References: <1422282873-3381-1-git-send-email-jack@suse.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,301 +24,198 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@lst.de>
-Cc: xfs@oss.sgi.com
+To: linux-fsdevel@vger.kernel.org
+Cc: cluster-devel@redhat.com, Jan Kara <jack@suse.cz>, ocfs2-devel@oss.oracle.com, xfs@oss.sgi.com
 
-On Wed, Jan 28, 2015 at 11:54:21PM +0100, Christoph Hellwig wrote:
-> Back in the days when the direct I/O ->end_io callback could be called
-> from interrupt context for AIO we needed a structure to hand off to the
-> workqueue, and reused the ioend structure for this purpose.  These days
-> ->end_io is always called from user or workqueue context, which allows us
-> to avoid this memory allocation and simplify the code significantly.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
+Add appropriate conversion functions so that filesystems supporting
+->get_state() method can be queried using Q_GETXSTATE and Q_GETXSTATV
+calls.
 
-Looks mostly Ok to me. In fact, with xfs_finish_ioend_sync() calling
-xfs_end_io() directly, I don't see how we currently get into the wq at
-all. Anyways, a few notes...
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Jan Kara <jack@suse.cz>
+---
+ fs/quota/quota.c | 138 +++++++++++++++++++++++++++++++++++++++++++++++++++++--
+ 1 file changed, 134 insertions(+), 4 deletions(-)
 
->  fs/xfs/xfs_aops.c | 133 ++++++++++++++++++++++++------------------------------
->  fs/xfs/xfs_aops.h |   3 --
->  2 files changed, 59 insertions(+), 77 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-> index 18e2f3b..31d3d7d 100644
-> --- a/fs/xfs/xfs_aops.c
-> +++ b/fs/xfs/xfs_aops.c
-> @@ -135,30 +135,22 @@ xfs_setfilesize_trans_alloc(
->   */
->  STATIC int
->  xfs_setfilesize(
-> -	struct xfs_ioend	*ioend)
-> +	struct xfs_inode	*ip,
-> +	struct xfs_trans	*tp,
-> +	xfs_off_t		offset,
-> +	size_t			size)
->  {
-> -	struct xfs_inode	*ip = XFS_I(ioend->io_inode);
-> -	struct xfs_trans	*tp = ioend->io_append_trans;
->  	xfs_fsize_t		isize;
->  
-> -	/*
-> -	 * The transaction may have been allocated in the I/O submission thread,
-> -	 * thus we need to mark ourselves as beeing in a transaction manually.
-> -	 * Similarly for freeze protection.
-> -	 */
-> -	current_set_flags_nested(&tp->t_pflags, PF_FSTRANS);
-> -	rwsem_acquire_read(&VFS_I(ip)->i_sb->s_writers.lock_map[SB_FREEZE_FS-1],
-> -			   0, 1, _THIS_IP_);
-> -
->  	xfs_ilock(ip, XFS_ILOCK_EXCL);
-> -	isize = xfs_new_eof(ip, ioend->io_offset + ioend->io_size);
-> +	isize = xfs_new_eof(ip, offset + size);
->  	if (!isize) {
->  		xfs_iunlock(ip, XFS_ILOCK_EXCL);
->  		xfs_trans_cancel(tp, 0);
->  		return 0;
->  	}
->  
-> -	trace_xfs_setfilesize(ip, ioend->io_offset, ioend->io_size);
-> +	trace_xfs_setfilesize(ip, offset, size);
->  
->  	ip->i_d.di_size = isize;
->  	xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL);
-> @@ -167,6 +159,25 @@ xfs_setfilesize(
->  	return xfs_trans_commit(tp, 0);
->  }
->  
-> +STATIC int
-> +xfs_setfilesize_ioend(
-> +	struct xfs_ioend	*ioend)
-> +{
-> +	struct xfs_inode	*ip = XFS_I(ioend->io_inode);
-> +	struct xfs_trans	*tp = ioend->io_append_trans;
-> +
-> +	/*
-> +	 * The transaction may have been allocated in the I/O submission thread,
-> +	 * thus we need to mark ourselves as beeing in a transaction manually.
-
-Copied from the the original, but since we're here: "being."
-
-> +	 * Similarly for freeze protection.
-> +	 */
-> +	current_set_flags_nested(&tp->t_pflags, PF_FSTRANS);
-> +	rwsem_acquire_read(&VFS_I(ip)->i_sb->s_writers.lock_map[SB_FREEZE_FS-1],
-> +			   0, 1, _THIS_IP_);
-> +
-> +	return xfs_setfilesize(ip, tp, ioend->io_offset, ioend->io_size);
-> +}
-> +
->  /*
->   * Schedule IO completion handling on the final put of an ioend.
->   *
-> @@ -182,8 +193,7 @@ xfs_finish_ioend(
->  
->  		if (ioend->io_type == XFS_IO_UNWRITTEN)
->  			queue_work(mp->m_unwritten_workqueue, &ioend->io_work);
-> -		else if (ioend->io_append_trans ||
-> -			 (ioend->io_isdirect && xfs_ioend_is_append(ioend)))
-> +		else if (ioend->io_append_trans)
->  			queue_work(mp->m_data_workqueue, &ioend->io_work);
->  		else
->  			xfs_destroy_ioend(ioend);
-> @@ -215,22 +225,8 @@ xfs_end_io(
->  	if (ioend->io_type == XFS_IO_UNWRITTEN) {
->  		error = xfs_iomap_write_unwritten(ip, ioend->io_offset,
->  						  ioend->io_size);
-> -	} else if (ioend->io_isdirect && xfs_ioend_is_append(ioend)) {
-> -		/*
-> -		 * For direct I/O we do not know if we need to allocate blocks
-> -		 * or not so we can't preallocate an append transaction as that
-> -		 * results in nested reservations and log space deadlocks. Hence
-> -		 * allocate the transaction here. While this is sub-optimal and
-> -		 * can block IO completion for some time, we're stuck with doing
-> -		 * it this way until we can pass the ioend to the direct IO
-> -		 * allocation callbacks and avoid nesting that way.
-> -		 */
-> -		error = xfs_setfilesize_trans_alloc(ioend);
-> -		if (error)
-> -			goto done;
-> -		error = xfs_setfilesize(ioend);
->  	} else if (ioend->io_append_trans) {
-> -		error = xfs_setfilesize(ioend);
-> +		error = xfs_setfilesize_ioend(ioend);
->  	} else {
->  		ASSERT(!xfs_ioend_is_append(ioend));
->  	}
-> @@ -273,7 +269,6 @@ xfs_alloc_ioend(
->  	 * all the I/O from calling the completion routine too early.
->  	 */
->  	atomic_set(&ioend->io_remaining, 1);
-> -	ioend->io_isdirect = 0;
->  	ioend->io_error = 0;
->  	ioend->io_list = NULL;
->  	ioend->io_type = type;
-> @@ -1459,11 +1454,7 @@ xfs_get_blocks_direct(
->   *
->   * If the private argument is non-NULL __xfs_get_blocks signals us that we
->   * need to issue a transaction to convert the range from unwritten to written
-> - * extents.  In case this is regular synchronous I/O we just call xfs_end_io
-> - * to do this and we are done.  But in case this was a successful AIO
-> - * request this handler is called from interrupt context, from which we
-> - * can't start transactions.  In that case offload the I/O completion to
-> - * the workqueues we also use for buffered I/O completion.
-> + * extents.
->   */
->  STATIC void
->  xfs_end_io_direct_write(
-> @@ -1472,7 +1463,12 @@ xfs_end_io_direct_write(
->  	ssize_t			size,
->  	void			*private)
->  {
-> -	struct xfs_ioend	*ioend = iocb->private;
-> +	struct inode		*inode = file_inode(iocb->ki_filp);
-> +	struct xfs_inode	*ip = XFS_I(inode);
-> +	struct xfs_mount	*mp = ip->i_mount;
-> +
-> +	if (XFS_FORCED_SHUTDOWN(mp))
-> +		return;
->  
->  	/*
->  	 * While the generic direct I/O code updates the inode size, it does
-> @@ -1480,22 +1476,33 @@ xfs_end_io_direct_write(
->  	 * end_io handler thinks the on-disk size is outside the in-core
->  	 * size.  To prevent this just update it a little bit earlier here.
->  	 */
-> -	if (offset + size > i_size_read(ioend->io_inode))
-> -		i_size_write(ioend->io_inode, offset + size);
-> +	if (offset + size > i_size_read(inode))
-> +		i_size_write(inode, offset + size);
->  
->  	/*
-> -	 * blockdev_direct_IO can return an error even after the I/O
-> -	 * completion handler was called.  Thus we need to protect
-> -	 * against double-freeing.
-> +	 * For direct I/O we do not know if we need to allocate blocks or not,
-> +	 * so we can't preallocate an append transaction, as that results in
-> +	 * nested reservations and log space deadlocks. Hence allocate the
-> +	 * transaction here. While this is sub-optimal and can block IO
-> +	 * completion for some time, we're stuck with doing it this way until
-> +	 * we can pass the ioend to the direct IO allocation callbacks and
-> +	 * avoid nesting that way.
->  	 */
-> -	iocb->private = NULL;
-> -
-> -	ioend->io_offset = offset;
-> -	ioend->io_size = size;
-> -	if (private && size > 0)
-> -		ioend->io_type = XFS_IO_UNWRITTEN;
-> +	if (private && size > 0) {
-> +		xfs_iomap_write_unwritten(ip, offset, size);
-> +	} else if (offset + size > ip->i_d.di_size) {
-> +		struct xfs_trans	*tp;
-> +		int			error;
-> +
-> +		tp = xfs_trans_alloc(mp, XFS_TRANS_FSYNC_TS);
-> +		error = xfs_trans_reserve(tp, &M_RES(mp)->tr_fsyncts, 0, 0);
-> +		if (error) {
-> +			xfs_trans_cancel(tp, 0);
-> +			return;
-> +		}
->  
-> -	xfs_finish_ioend_sync(ioend);
-
-I get an unused function warning for xfs_finish_ioend_sync() now, so I
-guess we should kill that.
-
-> +		xfs_setfilesize(ip, tp, offset, size);
-> +	}
->  }
->  
->  STATIC ssize_t
-> @@ -1507,39 +1514,17 @@ xfs_vm_direct_IO(
->  {
->  	struct inode		*inode = iocb->ki_filp->f_mapping->host;
->  	struct block_device	*bdev = xfs_find_bdev_for_inode(inode);
-> -	struct xfs_ioend	*ioend = NULL;
-> -	ssize_t			ret;
->  
->  	if (rw & WRITE) {
-
-A nit, but I guess you could kill the braces here now too.
-
-Brian
-
-> -		size_t size = iov_iter_count(iter);
-> -
-> -		/*
-> -		 * We cannot preallocate a size update transaction here as we
-> -		 * don't know whether allocation is necessary or not. Hence we
-> -		 * can only tell IO completion that one is necessary if we are
-> -		 * not doing unwritten extent conversion.
-> -		 */
-> -		iocb->private = ioend = xfs_alloc_ioend(inode, XFS_IO_DIRECT);
-> -		if (offset + size > XFS_I(inode)->i_d.di_size)
-> -			ioend->io_isdirect = 1;
-> -
-> -		ret = __blockdev_direct_IO(rw, iocb, inode, bdev, iter,
-> +		return __blockdev_direct_IO(rw, iocb, inode, bdev, iter,
->  					    offset, xfs_get_blocks_direct,
->  					    xfs_end_io_direct_write, NULL,
->  					    DIO_ASYNC_EXTEND);
-> -		if (ret != -EIOCBQUEUED && iocb->private)
-> -			goto out_destroy_ioend;
->  	} else {
-> -		ret = __blockdev_direct_IO(rw, iocb, inode, bdev, iter,
-> +		return __blockdev_direct_IO(rw, iocb, inode, bdev, iter,
->  					    offset, xfs_get_blocks_direct,
->  					    NULL, NULL, 0);
->  	}
-> -
-> -	return ret;
-> -
-> -out_destroy_ioend:
-> -	xfs_destroy_ioend(ioend);
-> -	return ret;
->  }
->  
->  /*
-> diff --git a/fs/xfs/xfs_aops.h b/fs/xfs/xfs_aops.h
-> index f94dd45..ac644e0 100644
-> --- a/fs/xfs/xfs_aops.h
-> +++ b/fs/xfs/xfs_aops.h
-> @@ -24,14 +24,12 @@ extern mempool_t *xfs_ioend_pool;
->   * Types of I/O for bmap clustering and I/O completion tracking.
->   */
->  enum {
-> -	XFS_IO_DIRECT = 0,	/* special case for direct I/O ioends */
->  	XFS_IO_DELALLOC,	/* covers delalloc region */
->  	XFS_IO_UNWRITTEN,	/* covers allocated but uninitialized data */
->  	XFS_IO_OVERWRITE,	/* covers already allocated extent */
->  };
->  
->  #define XFS_IO_TYPES \
-> -	{ 0,			"" }, \
->  	{ XFS_IO_DELALLOC,		"delalloc" }, \
->  	{ XFS_IO_UNWRITTEN,		"unwritten" }, \
->  	{ XFS_IO_OVERWRITE,		"overwrite" }
-> @@ -45,7 +43,6 @@ typedef struct xfs_ioend {
->  	unsigned int		io_type;	/* delalloc / unwritten */
->  	int			io_error;	/* I/O error code */
->  	atomic_t		io_remaining;	/* hold count */
-> -	unsigned int		io_isdirect : 1;/* direct I/O */
->  	struct inode		*io_inode;	/* file being written to */
->  	struct buffer_head	*io_buffer_head;/* buffer linked list head */
->  	struct buffer_head	*io_buffer_tail;/* buffer linked list tail */
-> -- 
-> 1.9.1
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+diff --git a/fs/quota/quota.c b/fs/quota/quota.c
+index 00d50fca1005..83939ff4c444 100644
+--- a/fs/quota/quota.c
++++ b/fs/quota/quota.c
+@@ -269,25 +269,152 @@ static int quota_disable(struct super_block *sb, void __user *addr)
+ 	return sb->s_qcop->quota_disable(sb, flags);
+ }
+ 
++static int quota_state_to_flags(struct qc_state *state)
++{
++	int flags = 0;
++
++	if (state->s_state[USRQUOTA].flags & QCI_ACCT_ENABLED)
++		flags |= FS_QUOTA_UDQ_ACCT;
++	if (state->s_state[USRQUOTA].flags & QCI_LIMITS_ENFORCED)
++		flags |= FS_QUOTA_UDQ_ENFD;
++	if (state->s_state[GRPQUOTA].flags & QCI_ACCT_ENABLED)
++		flags |= FS_QUOTA_GDQ_ACCT;
++	if (state->s_state[GRPQUOTA].flags & QCI_LIMITS_ENFORCED)
++		flags |= FS_QUOTA_GDQ_ENFD;
++	if (state->s_state[PRJQUOTA].flags & QCI_ACCT_ENABLED)
++		flags |= FS_QUOTA_PDQ_ACCT;
++	if (state->s_state[PRJQUOTA].flags & QCI_LIMITS_ENFORCED)
++		flags |= FS_QUOTA_PDQ_ENFD;
++	return flags;
++}
++
++static int quota_getstate(struct super_block *sb, struct fs_quota_stat *fqs)
++{
++	int type;
++	struct qc_state state;
++	int ret;
++
++	ret = sb->s_qcop->get_state(sb, &state);
++	if (ret < 0)
++		return ret;
++
++	memset(fqs, 0, sizeof(*fqs));
++	fqs->qs_version = FS_QSTAT_VERSION;
++	fqs->qs_flags = quota_state_to_flags(&state);
++	/* No quota enabled? */
++	if (!fqs->qs_flags)
++		return -ENOSYS;
++	fqs->qs_incoredqs = state.s_incoredqs;
++	/*
++	 * GETXSTATE quotactl has space for just one set of time limits so
++	 * report them for the first enabled quota type
++	 */
++	for (type = 0; type < XQM_MAXQUOTAS; type++)
++		if (state.s_state[type].flags & QCI_ACCT_ENABLED)
++			break;
++	BUG_ON(type == XQM_MAXQUOTAS);
++	fqs->qs_btimelimit = state.s_state[type].spc_timelimit;
++	fqs->qs_itimelimit = state.s_state[type].ino_timelimit;
++	fqs->qs_rtbtimelimit = state.s_state[type].rt_spc_timelimit;
++	fqs->qs_bwarnlimit = state.s_state[type].spc_warnlimit;
++	fqs->qs_iwarnlimit = state.s_state[type].ino_warnlimit;
++	if (state.s_state[USRQUOTA].flags & QCI_ACCT_ENABLED) {
++		fqs->qs_uquota.qfs_ino = state.s_state[USRQUOTA].ino;
++		fqs->qs_uquota.qfs_nblks = state.s_state[USRQUOTA].blocks;
++		fqs->qs_uquota.qfs_nextents = state.s_state[USRQUOTA].nextents;
++	}
++	if (state.s_state[GRPQUOTA].flags & QCI_ACCT_ENABLED) {
++		fqs->qs_gquota.qfs_ino = state.s_state[GRPQUOTA].ino;
++		fqs->qs_gquota.qfs_nblks = state.s_state[GRPQUOTA].blocks;
++		fqs->qs_gquota.qfs_nextents = state.s_state[GRPQUOTA].nextents;
++	}
++	if (state.s_state[PRJQUOTA].flags & QCI_ACCT_ENABLED) {
++		/*
++		 * Q_XGETQSTAT doesn't have room for both group and project
++		 * quotas.  So, allow the project quota values to be copied out
++		 * only if there is no group quota information available.
++		 */
++		if (!(state.s_state[GRPQUOTA].flags & QCI_ACCT_ENABLED)) {
++			fqs->qs_gquota.qfs_ino = state.s_state[PRJQUOTA].ino;
++			fqs->qs_gquota.qfs_nblks =
++					state.s_state[PRJQUOTA].blocks;
++			fqs->qs_gquota.qfs_nextents =
++					state.s_state[PRJQUOTA].nextents;
++		}
++	}
++	return 0;
++}
++
+ static int quota_getxstate(struct super_block *sb, void __user *addr)
+ {
+ 	struct fs_quota_stat fqs;
+ 	int ret;
+ 
+-	if (!sb->s_qcop->get_xstate)
++	if (!sb->s_qcop->get_xstate && !sb->s_qcop->get_state)
+ 		return -ENOSYS;
+-	ret = sb->s_qcop->get_xstate(sb, &fqs);
++	if (sb->s_qcop->get_state)
++		ret = quota_getstate(sb, &fqs);
++	else
++		ret = sb->s_qcop->get_xstate(sb, &fqs);
+ 	if (!ret && copy_to_user(addr, &fqs, sizeof(fqs)))
+ 		return -EFAULT;
+ 	return ret;
+ }
+ 
++static int quota_getstatev(struct super_block *sb, struct fs_quota_statv *fqs)
++{
++	int type;
++	struct qc_state state;
++	int ret;
++
++	ret = sb->s_qcop->get_state(sb, &state);
++	if (ret < 0)
++		return ret;
++
++	memset(fqs, 0, sizeof(*fqs));
++	fqs->qs_version = FS_QSTAT_VERSION;
++	fqs->qs_flags = quota_state_to_flags(&state);
++	/* No quota enabled? */
++	if (!fqs->qs_flags)
++		return -ENOSYS;
++	fqs->qs_incoredqs = state.s_incoredqs;
++	/*
++	 * GETXSTATV quotactl has space for just one set of time limits so
++	 * report them for the first enabled quota type
++	 */
++	for (type = 0; type < XQM_MAXQUOTAS; type++)
++		if (state.s_state[type].flags & QCI_ACCT_ENABLED)
++			break;
++	BUG_ON(type == XQM_MAXQUOTAS);
++	fqs->qs_btimelimit = state.s_state[type].spc_timelimit;
++	fqs->qs_itimelimit = state.s_state[type].ino_timelimit;
++	fqs->qs_rtbtimelimit = state.s_state[type].rt_spc_timelimit;
++	fqs->qs_bwarnlimit = state.s_state[type].spc_warnlimit;
++	fqs->qs_iwarnlimit = state.s_state[type].ino_warnlimit;
++	if (state.s_state[USRQUOTA].flags & QCI_ACCT_ENABLED) {
++		fqs->qs_uquota.qfs_ino = state.s_state[USRQUOTA].ino;
++		fqs->qs_uquota.qfs_nblks = state.s_state[USRQUOTA].blocks;
++		fqs->qs_uquota.qfs_nextents = state.s_state[USRQUOTA].nextents;
++	}
++	if (state.s_state[GRPQUOTA].flags & QCI_ACCT_ENABLED) {
++		fqs->qs_gquota.qfs_ino = state.s_state[GRPQUOTA].ino;
++		fqs->qs_gquota.qfs_nblks = state.s_state[GRPQUOTA].blocks;
++		fqs->qs_gquota.qfs_nextents = state.s_state[GRPQUOTA].nextents;
++	}
++	if (state.s_state[PRJQUOTA].flags & QCI_ACCT_ENABLED) {
++		fqs->qs_pquota.qfs_ino = state.s_state[PRJQUOTA].ino;
++		fqs->qs_pquota.qfs_nblks = state.s_state[PRJQUOTA].blocks;
++		fqs->qs_pquota.qfs_nextents = state.s_state[PRJQUOTA].nextents;
++	}
++	return 0;
++}
++
+ static int quota_getxstatev(struct super_block *sb, void __user *addr)
+ {
+ 	struct fs_quota_statv fqs;
+ 	int ret;
+ 
+-	if (!sb->s_qcop->get_xstatev)
++	if (!sb->s_qcop->get_xstatev && !sb->s_qcop->get_state)
+ 		return -ENOSYS;
+ 
+ 	memset(&fqs, 0, sizeof(fqs));
+@@ -301,7 +428,10 @@ static int quota_getxstatev(struct super_block *sb, void __user *addr)
+ 	default:
+ 		return -EINVAL;
+ 	}
+-	ret = sb->s_qcop->get_xstatev(sb, &fqs);
++	if (sb->s_qcop->get_state)
++		ret = quota_getstatev(sb, &fqs);
++	else
++		ret = sb->s_qcop->get_xstatev(sb, &fqs);
+ 	if (!ret && copy_to_user(addr, &fqs, sizeof(fqs)))
+ 		return -EFAULT;
+ 	return ret;
+-- 
+2.1.2
 
 _______________________________________________
 xfs mailing list
