@@ -1,20 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id D661E8029
-	for <xfs@oss.sgi.com>; Mon, 26 Jan 2015 08:34:46 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id C47DB304032
-	for <xfs@oss.sgi.com>; Mon, 26 Jan 2015 06:34:46 -0800 (PST)
-Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id QCswz7buEgTBMn9n (version=TLSv1 cipher=AES256-SHA
-	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 26 Jan 2015 06:34:45 -0800 (PST)
-From: Jan Kara <jack@suse.cz>
-Subject: [PATCH 16/16] quota: Hook up Q_XSETQLIM for id 0 to ->set_info
-Date: Mon, 26 Jan 2015 15:34:33 +0100
-Message-Id: <1422282873-3381-17-git-send-email-jack@suse.cz>
-In-Reply-To: <1422282873-3381-1-git-send-email-jack@suse.cz>
-References: <1422282873-3381-1-git-send-email-jack@suse.cz>
+	by oss.sgi.com (Postfix) with ESMTP id D7B907FCC
+	for <xfs@oss.sgi.com>; Mon, 26 Jan 2015 03:08:06 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id A9663304043
+	for <xfs@oss.sgi.com>; Mon, 26 Jan 2015 01:08:03 -0800 (PST)
+Received: from exchange01.SOBEY.COM ([61.139.78.4]) by cuda.sgi.com with ESMTP
+	id cWO9rqQBrVoxnyUE (version=TLSv1 cipher=AES128-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Mon, 26 Jan 2015 01:07:59 -0800 (PST)
+Date: Mon, 26 Jan 2015 17:07:37 +0800
+From: "lihongliang@sobey.com" <lihongliang@sobey.com>
+Subject: I think that get direct directory size int the xfs file system
+MIME-Version: 1.0
+Message-ID: <201501261707321631278@sobey.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,90 +22,72 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============2455807887705805592=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: linux-fsdevel@vger.kernel.org
-Cc: cluster-devel@redhat.com, Jan Kara <jack@suse.cz>, ocfs2-devel@oss.oracle.com, xfs@oss.sgi.com
+To: xfs <xfs@oss.sgi.com>
 
-Setting timers or warning counts for id 0 via Q_XSETQLIM is used to
-actually set time limits and warning limits for all users. Hook up
-->set_info to this so that VFS quota time limits get set the same
-way as XFS ones.
+--===============2455807887705805592==
+Content-Type: multipart/alternative;
+	boundary="----=_001_NextPart588647845785_=----"
 
-When doing this Q_XSETQLIM for XFS is effectively split into two
-independent transactions - one for setting timers and warning limits and
-one for setting space and inode limits. Although this is inefficient, it
-is rare enough that it does not matter.
+------=_001_NextPart588647845785_=----
+Content-Type: text/plain; charset="GB2312"
+Content-Transfer-Encoding: base64
 
-Signed-off-by: Jan Kara <jack@suse.cz>
----
- fs/quota/quota.c | 39 +++++++++++++++++++++++++++++++++++++++
- 1 file changed, 39 insertions(+)
+SGVsbG8NCiAgICAgICAgQ2FuIGdldCBkaXJlY3QgZGlyZWN0b3J5IHNpemUgaW50IHRoZSBYRlMg
+ZmlsZSBzeXN0ZW0/DQpleGFtcGxlo7oNCiByb290QGZpY3NOb2RlMSB0ZXN0MV0jIG1vdW50IHwg
+Z3JlcCB4ZnMgDQovZGV2L3NkYyBvbiAveGZzIHR5cGUgeGZzIChydyx1cXVvdGEpIA0KW3Jvb3RA
+Zmljc05vZGUxIHRlc3QxXSMgcHdkIA0KL3hmcy90ZXN0MSANCltyb290QGZpY3NOb2RlMSB0ZXN0
+MV0jIGxzIC1saCANCnRvdGFsIDVNIA0KLXJ3LXItLXItLSAxIHJvb3Qgcm9vdCAxLjBNIEphbiAy
+NiAwOTozMyBibG9jazEgDQotcnctci0tci0tIDEgcm9vdCByb290IDEuME0gSmFuIDI2IDA5OjMz
+IGJsb2NrMiANCi1ydy1yLS1yLS0gMSByb290IHJvb3QgMS4wTSBKYW4gMjYgMDk6MzMgYmxvY2sz
+IA0KLXJ3LXItLXItLSAxIHJvb3Qgcm9vdCAxLjBNIEphbiAyNiAwOTozMyBibG9jazQgDQotcnct
+ci0tci0tIDEgcm9vdCByb290IDEuME0gSmFuIDI2IDA5OjMzIGJsb2NrNSANCltyb290QGZpY3NO
+b2RlMSB0ZXN0MV0jICANCg0KICAgY2FuIEkgZ2V0IGRpcmVjdCBpdCAgYnkgY2FsbCBzeXN0ZW0g
+ZnVuY3Rpb24gdGhlIHRoYXQgdGhlIC94ZnMvdGVzdDEgaXMgNU0/DQoNCg0KbGlob25nbGlhbmdA
+c29iZXkuY29tDQo=
 
-diff --git a/fs/quota/quota.c b/fs/quota/quota.c
-index 741d5a178268..86ded7375c21 100644
---- a/fs/quota/quota.c
-+++ b/fs/quota/quota.c
-@@ -517,6 +517,30 @@ static void copy_from_xfs_dqblk(struct qc_dqblk *dst, struct fs_disk_quota *src)
- 		dst->d_fieldmask |= QC_RT_SPACE;
- }
- 
-+static void copy_qcinfo_from_xfs_dqblk(struct qc_info *dst,
-+				       struct fs_disk_quota *src)
-+{
-+	memset(dst, 0, sizeof(*dst));
-+	dst->i_spc_timelimit = src->d_btimer;
-+	dst->i_ino_timelimit = src->d_itimer;
-+	dst->i_rt_spc_timelimit = src->d_rtbtimer;
-+	dst->i_ino_warnlimit = src->d_iwarns;
-+	dst->i_spc_warnlimit = src->d_bwarns;
-+	dst->i_rt_spc_warnlimit = src->d_rtbwarns;
-+	if (src->d_fieldmask & FS_DQ_BWARNS)
-+		dst->i_fieldmask |= QC_SPC_WARNS;
-+	if (src->d_fieldmask & FS_DQ_IWARNS)
-+		dst->i_fieldmask |= QC_INO_WARNS;
-+	if (src->d_fieldmask & FS_DQ_RTBWARNS)
-+		dst->i_fieldmask |= QC_RT_SPC_WARNS;
-+	if (src->d_fieldmask & FS_DQ_BTIMER)
-+		dst->i_fieldmask |= QC_SPC_TIMER;
-+	if (src->d_fieldmask & FS_DQ_ITIMER)
-+		dst->i_fieldmask |= QC_INO_TIMER;
-+	if (src->d_fieldmask & FS_DQ_RTBTIMER)
-+		dst->i_fieldmask |= QC_RT_SPC_TIMER;
-+}
-+
- static int quota_setxquota(struct super_block *sb, int type, qid_t id,
- 			   void __user *addr)
- {
-@@ -531,6 +555,21 @@ static int quota_setxquota(struct super_block *sb, int type, qid_t id,
- 	qid = make_kqid(current_user_ns(), type, id);
- 	if (!qid_valid(qid))
- 		return -EINVAL;
-+	/* Are we actually setting timer / warning limits for all users? */
-+	if (from_kqid(&init_user_ns, qid) == 0 &&
-+	    fdq.d_fieldmask & (FS_DQ_WARNS_MASK | FS_DQ_TIMER_MASK)) {
-+		struct qc_info qinfo;
-+		int ret;
-+
-+		if (!sb->s_qcop->set_info)
-+			return -EINVAL;
-+		copy_qcinfo_from_xfs_dqblk(&qinfo, &fdq);
-+		ret = sb->s_qcop->set_info(sb, type, &qinfo);
-+		if (ret)
-+			return ret;
-+		/* These are already done */
-+		fdq.d_fieldmask &= ~(FS_DQ_WARNS_MASK | FS_DQ_TIMER_MASK);
-+	}
- 	copy_from_xfs_dqblk(&qdq, &fdq);
- 	return sb->s_qcop->set_dqblk(sb, qid, &qdq);
- }
--- 
-2.1.2
+------=_001_NextPart588647845785_=----
+Content-Type: text/html; charset="GB2312"
+Content-Transfer-Encoding: quoted-printable
+
+<html><head><meta http-equiv=3D"content-type" content=3D"text/html; charse=
+t=3DGB2312"><style>body { line-height: 1.5; }body { font-size: 10.5pt; fon=
+t-family: =CE=A2=C8=ED=D1=C5=BA=DA; color: rgb(0, 0, 0); line-height: 1.5;=
+ }</style></head><body>=0A<div><span></span>Hello</div><div><span style=3D=
+"background-color: rgba(0, 0, 0, 0);">&nbsp; &nbsp;&nbsp;</span><span styl=
+e=3D"background-color: rgba(0, 0, 0, 0); font-size: 10.5pt; line-height: 1=
+.5;">&nbsp; &nbsp; C</span><span style=3D"background-color: rgba(0, 0, 0, =
+0); font-size: 10.5pt; line-height: 1.5;">an get direct directory size int=
+ the XFS file system?</span></div><div>example=A3=BA</div><div><span style=
+=3D"background-color: rgba(0, 0, 0, 0); font-size: 10.5pt; line-height: 1.=
+5;">&nbsp;</span><span style=3D"background-color: rgba(0, 0, 0, 0); font-s=
+ize: 10.5pt; line-height: 1.5;">root@ficsNode1 test1]# mount | grep xfs&nb=
+sp;</span></div><span style=3D"background-color: rgba(0, 0, 0, 0);">/dev/s=
+dc on /xfs type xfs (rw,uquota)=0A<br>[root@ficsNode1 test1]# pwd =0A<br>/=
+xfs/test1=0A<br>[root@ficsNode1 test1]# ls -lh=0A<br>total 5M=0A<br>-rw-r-=
+-r-- 1 root root 1.0M Jan 26 09:33 block1=0A<br>-rw-r--r-- 1 root root 1.0=
+M Jan 26 09:33 block2=0A<br>-rw-r--r-- 1 root root 1.0M Jan 26 09:33 block=
+3=0A<br>-rw-r--r-- 1 root root 1.0M Jan 26 09:33 block4=0A<br>-rw-r--r-- 1=
+ root root 1.0M Jan 26 09:33 block5=0A<br>[root@ficsNode1 test1]#&nbsp;</s=
+pan>=0A<div><br></div><div>&nbsp; &nbsp;can I get direct it &nbsp;by call =
+system function the that the<b> /xfs/test1</b> is 5M?</div><hr style=3D"wi=
+dth: 210px; height: 1px;" color=3D"#b5c4df" size=3D"1" align=3D"left">=0A<=
+div><span><div style=3D"MARGIN: 10px; FONT-FAMILY: verdana; FONT-SIZE: 10p=
+t"><div>lihongliang@sobey.com</div></div></span></div>=0A</body></html>
+------=_001_NextPart588647845785_=------
+
+
+--===============2455807887705805592==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============2455807887705805592==--
