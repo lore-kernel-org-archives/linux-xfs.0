@@ -1,18 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 2BF318012
-	for <xfs@oss.sgi.com>; Mon, 26 Jan 2015 08:34:43 -0600 (CST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 8B3BD801D
+	for <xfs@oss.sgi.com>; Mon, 26 Jan 2015 08:34:45 -0600 (CST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 07A51304032
-	for <xfs@oss.sgi.com>; Mon, 26 Jan 2015 06:34:42 -0800 (PST)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 19EA9AC006
+	for <xfs@oss.sgi.com>; Mon, 26 Jan 2015 06:34:44 -0800 (PST)
 Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id pBZgKbLdI4UUVxif (version=TLSv1 cipher=AES256-SHA
+	with ESMTP id xj5bROtwZHVNifvT (version=TLSv1 cipher=AES256-SHA
 	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 26 Jan 2015 06:34:41 -0800 (PST)
+	Mon, 26 Jan 2015 06:34:44 -0800 (PST)
 From: Jan Kara <jack@suse.cz>
-Subject: [PATCH 00/16 v4] quota: Unify VFS and XFS quota interfaces
-Date: Mon, 26 Jan 2015 15:34:17 +0100
-Message-Id: <1422282873-3381-1-git-send-email-jack@suse.cz>
+Subject: [PATCH 13/16] quota: Remove ->get_xstate and ->get_xstatev callbacks
+Date: Mon, 26 Jan 2015 15:34:30 +0100
+Message-Id: <1422282873-3381-14-git-send-email-jack@suse.cz>
+In-Reply-To: <1422282873-3381-1-git-send-email-jack@suse.cz>
+References: <1422282873-3381-1-git-send-email-jack@suse.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,36 +31,70 @@ Sender: xfs-bounces@oss.sgi.com
 To: linux-fsdevel@vger.kernel.org
 Cc: cluster-devel@redhat.com, Jan Kara <jack@suse.cz>, ocfs2-devel@oss.oracle.com, xfs@oss.sgi.com
 
-  Hello,
+These callbacks are now unused. Remove them.
 
-  this is another iteration of patches to unify VFS and XFS quota interfaces so
-that XFS quotactls work for filesystems with VFS quotas and vice versa.  This
-is useful so that userspace doesn't have to care that much about which
-filesystem it is using at least when using basic quota functionality. In
-particular we should be able to reuse project quota tests in xfstests for ext4.
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Jan Kara <jack@suse.cz>
+---
+ fs/quota/quota.c      | 14 ++++----------
+ include/linux/quota.h |  2 --
+ 2 files changed, 4 insertions(+), 12 deletions(-)
 
-The patches are based on top of 'for_next' branch of my tree [1] which already
-contains quota cleanup series [2] and XFS cleanup series [3] I've sent
-previously. The patch series can also be pulled from 'quota_interface' branch
-of my tree.
-
-Since the previous version I have addressed all Christoph's comments (dropped
-patch for Q_XQUOTASYNC quotactl, moved some code around) and also put the fix
-for Q_GETQUOTA vs Q_XGETQUOTA breakage at the beginning of the series and
-added CC to stable for it since some users have hit the problem in practice.
-
-The patch series got already reviewed by Christoph (thanks!) upto unification
-of Q_GETXSTAT[EV] with Q_GETINFO so if noone objects in a few days, I'll push
-the reviewed part of the series to my tree in the second half of this week (so
-that it gets some exposure in linux-next before the merge window).
-
-Review of the remaining parts is welcome!
-
-								Honza
-
-[1] git://git.kernel.org/pub/scm/linux/kernel/git/jack/linux-fs.git
-[2] http://www.spinics.net/lists/linux-fsdevel/msg81903.html
-[3] http://www.spinics.net/lists/xfs/msg31389.html
+diff --git a/fs/quota/quota.c b/fs/quota/quota.c
+index 83939ff4c444..20d11cd21247 100644
+--- a/fs/quota/quota.c
++++ b/fs/quota/quota.c
+@@ -350,12 +350,9 @@ static int quota_getxstate(struct super_block *sb, void __user *addr)
+ 	struct fs_quota_stat fqs;
+ 	int ret;
+ 
+-	if (!sb->s_qcop->get_xstate && !sb->s_qcop->get_state)
++	if (!sb->s_qcop->get_state)
+ 		return -ENOSYS;
+-	if (sb->s_qcop->get_state)
+-		ret = quota_getstate(sb, &fqs);
+-	else
+-		ret = sb->s_qcop->get_xstate(sb, &fqs);
++	ret = quota_getstate(sb, &fqs);
+ 	if (!ret && copy_to_user(addr, &fqs, sizeof(fqs)))
+ 		return -EFAULT;
+ 	return ret;
+@@ -414,7 +411,7 @@ static int quota_getxstatev(struct super_block *sb, void __user *addr)
+ 	struct fs_quota_statv fqs;
+ 	int ret;
+ 
+-	if (!sb->s_qcop->get_xstatev && !sb->s_qcop->get_state)
++	if (!sb->s_qcop->get_state)
+ 		return -ENOSYS;
+ 
+ 	memset(&fqs, 0, sizeof(fqs));
+@@ -428,10 +425,7 @@ static int quota_getxstatev(struct super_block *sb, void __user *addr)
+ 	default:
+ 		return -EINVAL;
+ 	}
+-	if (sb->s_qcop->get_state)
+-		ret = quota_getstatev(sb, &fqs);
+-	else
+-		ret = sb->s_qcop->get_xstatev(sb, &fqs);
++	ret = quota_getstatev(sb, &fqs);
+ 	if (!ret && copy_to_user(addr, &fqs, sizeof(fqs)))
+ 		return -EFAULT;
+ 	return ret;
+diff --git a/include/linux/quota.h b/include/linux/quota.h
+index 6ecac0f3b2ca..a07f2ed25284 100644
+--- a/include/linux/quota.h
++++ b/include/linux/quota.h
+@@ -408,8 +408,6 @@ struct quotactl_ops {
+ 	int (*get_dqblk)(struct super_block *, struct kqid, struct qc_dqblk *);
+ 	int (*set_dqblk)(struct super_block *, struct kqid, struct qc_dqblk *);
+ 	int (*get_state)(struct super_block *, struct qc_state *);
+-	int (*get_xstate)(struct super_block *, struct fs_quota_stat *);
+-	int (*get_xstatev)(struct super_block *, struct fs_quota_statv *);
+ 	int (*rm_xquota)(struct super_block *, unsigned int);
+ };
+ 
+-- 
+2.1.2
 
 _______________________________________________
 xfs mailing list
