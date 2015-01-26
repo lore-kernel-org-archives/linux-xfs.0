@@ -1,18 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id E82E1801A
-	for <xfs@oss.sgi.com>; Mon, 26 Jan 2015 08:34:44 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id D677B304032
-	for <xfs@oss.sgi.com>; Mon, 26 Jan 2015 06:34:44 -0800 (PST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 2ADF28013
+	for <xfs@oss.sgi.com>; Mon, 26 Jan 2015 08:34:47 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id EF9AF8F8074
+	for <xfs@oss.sgi.com>; Mon, 26 Jan 2015 06:34:46 -0800 (PST)
 Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id tW9YeuQ9QVlKAi3b (version=TLSv1 cipher=AES256-SHA
+	with ESMTP id UE0BGh08gspFBRc8 (version=TLSv1 cipher=AES256-SHA
 	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 26 Jan 2015 06:34:44 -0800 (PST)
+	Mon, 26 Jan 2015 06:34:45 -0800 (PST)
 From: Jan Kara <jack@suse.cz>
-Subject: [PATCH 12/16] gfs2: Convert to using ->get_state callback
-Date: Mon, 26 Jan 2015 15:34:29 +0100
-Message-Id: <1422282873-3381-13-git-send-email-jack@suse.cz>
+Subject: [PATCH 14/16] quota: Make ->set_info use structure with neccesary
+	info to VFS and XFS
+Date: Mon, 26 Jan 2015 15:34:31 +0100
+Message-Id: <1422282873-3381-15-git-send-email-jack@suse.cz>
 In-Reply-To: <1422282873-3381-1-git-send-email-jack@suse.cz>
 References: <1422282873-3381-1-git-send-email-jack@suse.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -31,73 +32,175 @@ Sender: xfs-bounces@oss.sgi.com
 To: linux-fsdevel@vger.kernel.org
 Cc: cluster-devel@redhat.com, Jan Kara <jack@suse.cz>, ocfs2-devel@oss.oracle.com, xfs@oss.sgi.com
 
-Convert gfs2 to use ->get_state callback instead of ->get_xstate.
+Change ->set_info to take new qc_info structure which contains all the
+necessary information both for XFS and VFS. Convert Q_SETINFO handler
+to use this structure.
 
 Signed-off-by: Jan Kara <jack@suse.cz>
 ---
- fs/gfs2/quota.c | 28 +++++++++++++++-------------
- 1 file changed, 15 insertions(+), 13 deletions(-)
+ fs/quota/dquot.c         | 27 ++++++++++++++++-----------
+ fs/quota/quota.c         | 21 ++++++++++++++++++++-
+ include/linux/quota.h    | 21 +++++++++++++++++++--
+ include/linux/quotaops.h |  2 +-
+ 4 files changed, 56 insertions(+), 15 deletions(-)
 
-diff --git a/fs/gfs2/quota.c b/fs/gfs2/quota.c
-index 3e193cb36996..c76e031ccbb4 100644
---- a/fs/gfs2/quota.c
-+++ b/fs/gfs2/quota.c
-@@ -1467,32 +1467,34 @@ int gfs2_quotad(void *data)
- 	return 0;
- }
+diff --git a/fs/quota/dquot.c b/fs/quota/dquot.c
+index cf4edd87e854..f37b74eab807 100644
+--- a/fs/quota/dquot.c
++++ b/fs/quota/dquot.c
+@@ -2649,33 +2649,38 @@ int dquot_get_state(struct super_block *sb, struct qc_state *state)
+ EXPORT_SYMBOL(dquot_get_state);
  
--static int gfs2_quota_get_xstate(struct super_block *sb,
--				 struct fs_quota_stat *fqs)
-+static int gfs2_quota_get_state(struct super_block *sb, struct qc_state *state)
+ /* Generic routine for setting common part of quota file information */
+-int dquot_set_dqinfo(struct super_block *sb, int type, struct if_dqinfo *ii)
++int dquot_set_dqinfo(struct super_block *sb, int type, struct qc_info *ii)
  {
- 	struct gfs2_sbd *sdp = sb->s_fs_info;
+ 	struct mem_dqinfo *mi;
+ 	int err = 0;
  
--	memset(fqs, 0, sizeof(struct fs_quota_stat));
--	fqs->qs_version = FS_QSTAT_VERSION;
-+	memset(state, 0, sizeof(*state));
++	if ((ii->i_fieldmask & QC_WARNS_MASK) ||
++	    (ii->i_fieldmask & QC_RT_SPC_TIMER))
++		return -EINVAL;
+ 	mutex_lock(&sb_dqopt(sb)->dqonoff_mutex);
+ 	if (!sb_has_quota_active(sb, type)) {
+ 		err = -ESRCH;
+ 		goto out;
+ 	}
+ 	mi = sb_dqopt(sb)->info + type;
+-	if (ii->dqi_valid & IIF_FLAGS) {
+-		if (ii->dqi_flags & ~DQF_SETINFO_MASK ||
+-		    (ii->dqi_flags & DQF_ROOT_SQUASH &&
++	if (ii->i_fieldmask & QC_FLAGS) {
++		if ((ii->i_flags & QCI_ROOT_SQUASH &&
+ 		     mi->dqi_format->qf_fmt_id != QFMT_VFS_OLD)) {
+ 			err = -EINVAL;
+ 			goto out;
+ 		}
+ 	}
+ 	spin_lock(&dq_data_lock);
+-	if (ii->dqi_valid & IIF_BGRACE)
+-		mi->dqi_bgrace = ii->dqi_bgrace;
+-	if (ii->dqi_valid & IIF_IGRACE)
+-		mi->dqi_igrace = ii->dqi_igrace;
+-	if (ii->dqi_valid & IIF_FLAGS)
+-		mi->dqi_flags = (mi->dqi_flags & ~DQF_SETINFO_MASK) |
+-				(ii->dqi_flags & DQF_SETINFO_MASK);
++	if (ii->i_fieldmask & QC_SPC_TIMER)
++		mi->dqi_bgrace = ii->i_spc_timelimit;
++	if (ii->i_fieldmask & QC_INO_TIMER)
++		mi->dqi_igrace = ii->i_ino_timelimit;
++	if (ii->i_fieldmask & QC_FLAGS) {
++		if (ii->i_flags & QCI_ROOT_SQUASH)
++			mi->dqi_flags |= DQF_ROOT_SQUASH;
++		else
++			mi->dqi_flags &= ~DQF_ROOT_SQUASH;
++	}
+ 	spin_unlock(&dq_data_lock);
+ 	mark_info_dirty(sb, type);
+ 	/* Force write to disk */
+diff --git a/fs/quota/quota.c b/fs/quota/quota.c
+index 20d11cd21247..741d5a178268 100644
+--- a/fs/quota/quota.c
++++ b/fs/quota/quota.c
+@@ -149,12 +149,31 @@ static int quota_getinfo(struct super_block *sb, int type, void __user *addr)
+ static int quota_setinfo(struct super_block *sb, int type, void __user *addr)
+ {
+ 	struct if_dqinfo info;
++	struct qc_info qinfo;
  
- 	switch (sdp->sd_args.ar_quota) {
- 	case GFS2_QUOTA_ON:
--		fqs->qs_flags |= (FS_QUOTA_UDQ_ENFD | FS_QUOTA_GDQ_ENFD);
-+		state->s_state[USRQUOTA].flags |= QCI_LIMITS_ENFORCED;
-+		state->s_state[GRPQUOTA].flags |= QCI_LIMITS_ENFORCED;
- 		/*FALLTHRU*/
- 	case GFS2_QUOTA_ACCOUNT:
--		fqs->qs_flags |= (FS_QUOTA_UDQ_ACCT | FS_QUOTA_GDQ_ACCT);
-+		state->s_state[USRQUOTA].flags |= QCI_ACCT_ENABLED |
-+						  QCI_SYSFILE;
-+		state->s_state[GRPQUOTA].flags |= QCI_ACCT_ENABLED |
-+						  QCI_SYSFILE;
- 		break;
- 	case GFS2_QUOTA_OFF:
- 		break;
- 	}
--
- 	if (sdp->sd_quota_inode) {
--		fqs->qs_uquota.qfs_ino = GFS2_I(sdp->sd_quota_inode)->i_no_addr;
--		fqs->qs_uquota.qfs_nblks = sdp->sd_quota_inode->i_blocks;
-+		state->s_state[USRQUOTA].ino =
-+					GFS2_I(sdp->sd_quota_inode)->i_no_addr;
-+		state->s_state[USRQUOTA].blocks = sdp->sd_quota_inode->i_blocks;
- 	}
--	fqs->qs_uquota.qfs_nextents = 1; /* unsupported */
--	fqs->qs_gquota = fqs->qs_uquota; /* its the same inode in both cases */
--	fqs->qs_incoredqs = list_lru_count(&gfs2_qd_lru);
-+	state->s_state[USRQUOTA].nextents = 1;	/* unsupported */
-+	state->s_state[GRPQUOTA] = state->s_state[USRQUOTA];
-+	state->s_incoredqs = list_lru_count(&gfs2_qd_lru);
- 	return 0;
+ 	if (copy_from_user(&info, addr, sizeof(info)))
+ 		return -EFAULT;
+ 	if (!sb->s_qcop->set_info)
+ 		return -ENOSYS;
+-	return sb->s_qcop->set_info(sb, type, &info);
++	if (info.dqi_valid & ~(IIF_FLAGS | IIF_BGRACE | IIF_IGRACE))
++		return -EINVAL;
++	memset(&qinfo, 0, sizeof(qinfo));
++	if (info.dqi_valid & IIF_FLAGS) {
++		if (info.dqi_flags & ~DQF_SETINFO_MASK)
++			return -EINVAL;
++		if (info.dqi_flags & DQF_ROOT_SQUASH)
++			qinfo.i_flags |= QCI_ROOT_SQUASH;
++		qinfo.i_fieldmask |= QC_FLAGS;
++	}
++	if (info.dqi_valid & IIF_BGRACE) {
++		qinfo.i_spc_timelimit = info.dqi_bgrace;
++		qinfo.i_fieldmask |= QC_SPC_TIMER;
++	}
++	if (info.dqi_valid & IIF_IGRACE) {
++		qinfo.i_ino_timelimit = info.dqi_igrace;
++		qinfo.i_fieldmask |= QC_INO_TIMER;
++	}
++	return sb->s_qcop->set_info(sb, type, &qinfo);
  }
  
-@@ -1637,7 +1639,7 @@ out_put:
- 
- const struct quotactl_ops gfs2_quotactl_ops = {
- 	.quota_sync     = gfs2_quota_sync,
--	.get_xstate     = gfs2_quota_get_xstate,
-+	.get_state	= gfs2_quota_get_state,
- 	.get_dqblk	= gfs2_get_dqblk,
- 	.set_dqblk	= gfs2_set_dqblk,
+ static inline qsize_t qbtos(qsize_t blocks)
+diff --git a/include/linux/quota.h b/include/linux/quota.h
+index a07f2ed25284..3d521199a0bd 100644
+--- a/include/linux/quota.h
++++ b/include/linux/quota.h
+@@ -344,7 +344,10 @@ struct qc_dqblk {
+ 	int d_rt_spc_warns;	/* # warnings issued wrt RT space */
  };
+ 
+-/* Field specifiers for ->set_dqblk() in struct qc_dqblk */
++/*
++ * Field specifiers for ->set_dqblk() in struct qc_dqblk and also for
++ * ->set_info() in struct qc_info
++ */
+ #define	QC_INO_SOFT	(1<<0)
+ #define	QC_INO_HARD	(1<<1)
+ #define	QC_SPC_SOFT	(1<<2)
+@@ -365,6 +368,7 @@ struct qc_dqblk {
+ #define	QC_INO_COUNT	(1<<13)
+ #define	QC_RT_SPACE	(1<<14)
+ #define QC_ACCT_MASK (QC_SPACE | QC_INO_COUNT | QC_RT_SPACE)
++#define QC_FLAGS	(1<<15)
+ 
+ #define QCI_SYSFILE		(1 << 0)	/* Quota file is hidden from userspace */
+ #define QCI_ROOT_SQUASH		(1 << 1)	/* Root squash turned on */
+@@ -397,6 +401,19 @@ struct qc_state {
+ 	struct qc_type_state s_state[XQM_MAXQUOTAS];
+ };
+ 
++/* Structure for communicating via ->set_info */
++struct qc_info {
++	int i_fieldmask;	/* mask of fields to change in ->set_info() */
++	unsigned int i_flags;		/* Flags QCI_* */
++	unsigned int i_spc_timelimit;	/* Time after which space softlimit is
++					 * enforced */
++	unsigned int i_ino_timelimit;	/* Ditto for inode softlimit */
++	unsigned int i_rt_spc_timelimit;/* Ditto for real-time space */
++	unsigned int i_spc_warnlimit;	/* Limit for number of space warnings */
++	unsigned int i_ino_warnlimit;	/* Limit for number of inode warnings */
++	unsigned int i_rt_spc_warnlimit;	/* Ditto for real-time space */
++};
++
+ /* Operations handling requests from userspace */
+ struct quotactl_ops {
+ 	int (*quota_on)(struct super_block *, int, int, struct path *);
+@@ -404,7 +421,7 @@ struct quotactl_ops {
+ 	int (*quota_enable)(struct super_block *, unsigned int);
+ 	int (*quota_disable)(struct super_block *, unsigned int);
+ 	int (*quota_sync)(struct super_block *, int);
+-	int (*set_info)(struct super_block *, int, struct if_dqinfo *);
++	int (*set_info)(struct super_block *, int, struct qc_info *);
+ 	int (*get_dqblk)(struct super_block *, struct kqid, struct qc_dqblk *);
+ 	int (*set_dqblk)(struct super_block *, struct kqid, struct qc_dqblk *);
+ 	int (*get_state)(struct super_block *, struct qc_state *);
+diff --git a/include/linux/quotaops.h b/include/linux/quotaops.h
+index 6509a29523e2..9f4b07ba9e8c 100644
+--- a/include/linux/quotaops.h
++++ b/include/linux/quotaops.h
+@@ -96,7 +96,7 @@ int dquot_quota_off(struct super_block *sb, int type);
+ int dquot_writeback_dquots(struct super_block *sb, int type);
+ int dquot_quota_sync(struct super_block *sb, int type);
+ int dquot_get_state(struct super_block *sb, struct qc_state *state);
+-int dquot_set_dqinfo(struct super_block *sb, int type, struct if_dqinfo *ii);
++int dquot_set_dqinfo(struct super_block *sb, int type, struct qc_info *ii);
+ int dquot_get_dqblk(struct super_block *sb, struct kqid id,
+ 		struct qc_dqblk *di);
+ int dquot_set_dqblk(struct super_block *sb, struct kqid id,
 -- 
 2.1.2
 
