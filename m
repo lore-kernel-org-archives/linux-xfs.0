@@ -1,20 +1,32 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id A9E93801E
-	for <xfs@oss.sgi.com>; Mon, 26 Jan 2015 08:34:45 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 2AF95AC007
-	for <xfs@oss.sgi.com>; Mon, 26 Jan 2015 06:34:45 -0800 (PST)
-Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id A1qBrEFqcDA6KSFB (version=TLSv1 cipher=AES256-SHA
-	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 26 Jan 2015 06:34:43 -0800 (PST)
-From: Jan Kara <jack@suse.cz>
-Subject: [PATCH 06/16] ocfs2: Use generic helpers for quotaon and quotaoff
-Date: Mon, 26 Jan 2015 15:34:23 +0100
-Message-Id: <1422282873-3381-7-git-send-email-jack@suse.cz>
-In-Reply-To: <1422282873-3381-1-git-send-email-jack@suse.cz>
-References: <1422282873-3381-1-git-send-email-jack@suse.cz>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id B541380D7
+	for <xfs@oss.sgi.com>; Mon, 26 Jan 2015 10:29:51 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 83CE58F8071
+	for <xfs@oss.sgi.com>; Mon, 26 Jan 2015 08:29:51 -0800 (PST)
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
+	cuda.sgi.com with ESMTP id b2Mphgt9VhxPcIBy (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Mon, 26 Jan 2015 08:14:01 -0800 (PST)
+Received: from ucsinet22.oracle.com (ucsinet22.oracle.com [156.151.31.94])
+	by userp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with
+	ESMTP id t0QGE0XC024056
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <xfs@oss.sgi.com>; Mon, 26 Jan 2015 16:14:01 GMT
+Received: from userz7021.oracle.com (userz7021.oracle.com [156.151.31.85])
+	by ucsinet22.oracle.com (8.14.5+Sun/8.14.5) with ESMTP id
+	t0QGDx0O008806
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=FAIL)
+	for <xfs@oss.sgi.com>; Mon, 26 Jan 2015 16:14:00 GMT
+Received: from abhmp0019.oracle.com (abhmp0019.oracle.com [141.146.116.25])
+	by userz7021.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
+	t0QGDwdB024980 for <xfs@oss.sgi.com>; Mon, 26 Jan 2015 16:13:59 GMT
+Message-ID: <54C667F3.8040303@oracle.com>
+Date: Mon, 26 Jan 2015 19:14:43 +0300
+From: Alexander Tsvetkov <alexander.tsvetkov@oracle.com>
+MIME-Version: 1.0
+Subject: maxpct option for small xfs filesystems
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,78 +35,60 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: linux-fsdevel@vger.kernel.org
-Cc: cluster-devel@redhat.com, Jan Kara <jack@suse.cz>, ocfs2-devel@oss.oracle.com, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-Ocfs2 can just use the generic helpers provided by quota code for
-turning quotas on and off when quota files are stored as system inodes.
-The only difference is the feature test in ocfs2_quota_on() and that is
-covered by dquot_quota_enable() checking whether usage tracking is
-enabled (which can happen only if the filesystem has the quota feature
-set).
+Hello,
 
-Signed-off-by: Jan Kara <jack@suse.cz>
----
- fs/ocfs2/super.c | 32 +-------------------------------
- 1 file changed, 1 insertion(+), 31 deletions(-)
+I'm trying to understand the expected behaviour of "maxpct" option in 
+case of small xfs filesystem
+comparing the maximum percentage defined for this option with the 
+percentage of actually allocated
+inodes in filesystem, but the result of prepared test case doesn't 
+correspond to the expectations:
 
-diff --git a/fs/ocfs2/super.c b/fs/ocfs2/super.c
-index 83723179e1ec..706c71c2955d 100644
---- a/fs/ocfs2/super.c
-+++ b/fs/ocfs2/super.c
-@@ -1000,36 +1000,6 @@ static void ocfs2_disable_quotas(struct ocfs2_super *osb)
- 	}
- }
- 
--/* Handle quota on quotactl */
--static int ocfs2_quota_on(struct super_block *sb, int type, int format_id)
--{
--	unsigned int feature[OCFS2_MAXQUOTAS] = {
--					OCFS2_FEATURE_RO_COMPAT_USRQUOTA,
--					OCFS2_FEATURE_RO_COMPAT_GRPQUOTA};
--
--	if (!OCFS2_HAS_RO_COMPAT_FEATURE(sb, feature[type]))
--		return -EINVAL;
--
--	return dquot_enable(sb_dqopt(sb)->files[type], type,
--			    format_id, DQUOT_LIMITS_ENABLED);
--}
--
--/* Handle quota off quotactl */
--static int ocfs2_quota_off(struct super_block *sb, int type)
--{
--	return dquot_disable(sb, type, DQUOT_LIMITS_ENABLED);
--}
--
--static const struct quotactl_ops ocfs2_quotactl_ops = {
--	.quota_on_meta	= ocfs2_quota_on,
--	.quota_off	= ocfs2_quota_off,
--	.quota_sync	= dquot_quota_sync,
--	.get_info	= dquot_get_dqinfo,
--	.set_info	= dquot_set_dqinfo,
--	.get_dqblk	= dquot_get_dqblk,
--	.set_dqblk	= dquot_set_dqblk,
--};
--
- static int ocfs2_fill_super(struct super_block *sb, void *data, int silent)
- {
- 	struct dentry *root;
-@@ -2079,7 +2049,7 @@ static int ocfs2_initialize_super(struct super_block *sb,
- 	sb->s_op = &ocfs2_sops;
- 	sb->s_d_op = &ocfs2_dentry_ops;
- 	sb->s_export_op = &ocfs2_export_ops;
--	sb->s_qcop = &ocfs2_quotactl_ops;
-+	sb->s_qcop = &dquot_quotactl_sysfile_ops;
- 	sb->dq_op = &ocfs2_quota_operations;
- 	sb->s_quota_types = QTYPE_MASK_USR | QTYPE_MASK_GRP;
- 	sb->s_xattr = ocfs2_xattr_handlers;
--- 
-2.1.2
+[root@fedora ~]#mkfs.xfs -f -d size=16m -i maxpct=1 /dev/sdb2
+[root@fedora ~]# mount /dev/sdb2 /mnt/scratch/
+[root@fedora ~]# mount | grep scratch
+/dev/sdb2 on /mnt/scratch type xfs 
+(rw,relatime,seclabel,attr2,inode64,noquota)
+[root@fedora ~]# xfs_info /mnt/scratch/
+meta-data=/dev/sdb2        isize=256    agcount=1, agsize=4096 blks
+                  =                       sectsz=512   attr=2, projid32bit=1
+                  =                       crc=0        finobt=0
+data          =                       bsize=4096   blocks=4096, imaxpct=1
+                  =                       sunit=0      swidth=0 blks
+naming     =version 2        bsize=4096   ascii-ci=0 ftype=0
+log            =internal           bsize=4096   blocks=853, version=2
+                  =                       sectsz=512   sunit=0 blks, 
+lazy-count=1
+realtime    =none               extsz=4096   blocks=0, rtextents=0
+
+then trying to fill filesystem with lot of empty files until enospc 
+obtained and break the loop:
+
+[root@fedora ~]# for i in {0..100000}; do str=$(mktemp 
+--tmpdir=/mnt/scratch tmp.XXXXXXXXXX); echo $str; done
+
+filesystem is full with created files:
+
+[root@fedora ~]# df -Th | grep scratch
+/dev/sdb2      xfs        13M   13M  148K  99% /mnt/scratch
+
+and from the number of actually created inodes:
+
+[root@fedora ~]# xfs_db -c "blockget -n" -c "ncheck" /dev/sdb2 | wc -l
+40512
+
+it's calculated the space allocated for file inodes 9.9Mb (40512*256b 
+inode size) that is about 77% of filesystem
+space instead of defined maximum with maxpct=1% or even default 25% value.
+
+Thanks,
+Alexander Tsvetkov
 
 _______________________________________________
 xfs mailing list
