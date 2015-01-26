@@ -1,19 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id D7B907FCC
-	for <xfs@oss.sgi.com>; Mon, 26 Jan 2015 03:08:06 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id A9663304043
-	for <xfs@oss.sgi.com>; Mon, 26 Jan 2015 01:08:03 -0800 (PST)
-Received: from exchange01.SOBEY.COM ([61.139.78.4]) by cuda.sgi.com with ESMTP
-	id cWO9rqQBrVoxnyUE (version=TLSv1 cipher=AES128-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 26 Jan 2015 01:07:59 -0800 (PST)
-Date: Mon, 26 Jan 2015 17:07:37 +0800
-From: "lihongliang@sobey.com" <lihongliang@sobey.com>
-Subject: I think that get direct directory size int the xfs file system
-MIME-Version: 1.0
-Message-ID: <201501261707321631278@sobey.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 4DAD6802B
+	for <xfs@oss.sgi.com>; Mon, 26 Jan 2015 08:34:47 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id D0C87AC002
+	for <xfs@oss.sgi.com>; Mon, 26 Jan 2015 06:34:46 -0800 (PST)
+Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
+	with ESMTP id dBT3tSbKKkZHDane (version=TLSv1 cipher=AES256-SHA
+	bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Mon, 26 Jan 2015 06:34:45 -0800 (PST)
+From: Jan Kara <jack@suse.cz>
+Subject: [PATCH 15/16] xfs: Add support for Q_SETINFO
+Date: Mon, 26 Jan 2015 15:34:32 +0100
+Message-Id: <1422282873-3381-16-git-send-email-jack@suse.cz>
+In-Reply-To: <1422282873-3381-1-git-send-email-jack@suse.cz>
+References: <1422282873-3381-1-git-send-email-jack@suse.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,72 +23,81 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============2455807887705805592=="
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs <xfs@oss.sgi.com>
+To: linux-fsdevel@vger.kernel.org
+Cc: cluster-devel@redhat.com, Jan Kara <jack@suse.cz>, ocfs2-devel@oss.oracle.com, xfs@oss.sgi.com
 
---===============2455807887705805592==
-Content-Type: multipart/alternative;
-	boundary="----=_001_NextPart588647845785_=----"
+Add support to XFS so that time limits can be set through Q_SETINFO
+quotactl.
 
-------=_001_NextPart588647845785_=----
-Content-Type: text/plain; charset="GB2312"
-Content-Transfer-Encoding: base64
+Signed-off-by: Jan Kara <jack@suse.cz>
+---
+ fs/xfs/xfs_quotaops.c | 37 +++++++++++++++++++++++++++++++++++++
+ 1 file changed, 37 insertions(+)
 
-SGVsbG8NCiAgICAgICAgQ2FuIGdldCBkaXJlY3QgZGlyZWN0b3J5IHNpemUgaW50IHRoZSBYRlMg
-ZmlsZSBzeXN0ZW0/DQpleGFtcGxlo7oNCiByb290QGZpY3NOb2RlMSB0ZXN0MV0jIG1vdW50IHwg
-Z3JlcCB4ZnMgDQovZGV2L3NkYyBvbiAveGZzIHR5cGUgeGZzIChydyx1cXVvdGEpIA0KW3Jvb3RA
-Zmljc05vZGUxIHRlc3QxXSMgcHdkIA0KL3hmcy90ZXN0MSANCltyb290QGZpY3NOb2RlMSB0ZXN0
-MV0jIGxzIC1saCANCnRvdGFsIDVNIA0KLXJ3LXItLXItLSAxIHJvb3Qgcm9vdCAxLjBNIEphbiAy
-NiAwOTozMyBibG9jazEgDQotcnctci0tci0tIDEgcm9vdCByb290IDEuME0gSmFuIDI2IDA5OjMz
-IGJsb2NrMiANCi1ydy1yLS1yLS0gMSByb290IHJvb3QgMS4wTSBKYW4gMjYgMDk6MzMgYmxvY2sz
-IA0KLXJ3LXItLXItLSAxIHJvb3Qgcm9vdCAxLjBNIEphbiAyNiAwOTozMyBibG9jazQgDQotcnct
-ci0tci0tIDEgcm9vdCByb290IDEuME0gSmFuIDI2IDA5OjMzIGJsb2NrNSANCltyb290QGZpY3NO
-b2RlMSB0ZXN0MV0jICANCg0KICAgY2FuIEkgZ2V0IGRpcmVjdCBpdCAgYnkgY2FsbCBzeXN0ZW0g
-ZnVuY3Rpb24gdGhlIHRoYXQgdGhlIC94ZnMvdGVzdDEgaXMgNU0/DQoNCg0KbGlob25nbGlhbmdA
-c29iZXkuY29tDQo=
-
-------=_001_NextPart588647845785_=----
-Content-Type: text/html; charset="GB2312"
-Content-Transfer-Encoding: quoted-printable
-
-<html><head><meta http-equiv=3D"content-type" content=3D"text/html; charse=
-t=3DGB2312"><style>body { line-height: 1.5; }body { font-size: 10.5pt; fon=
-t-family: =CE=A2=C8=ED=D1=C5=BA=DA; color: rgb(0, 0, 0); line-height: 1.5;=
- }</style></head><body>=0A<div><span></span>Hello</div><div><span style=3D=
-"background-color: rgba(0, 0, 0, 0);">&nbsp; &nbsp;&nbsp;</span><span styl=
-e=3D"background-color: rgba(0, 0, 0, 0); font-size: 10.5pt; line-height: 1=
-.5;">&nbsp; &nbsp; C</span><span style=3D"background-color: rgba(0, 0, 0, =
-0); font-size: 10.5pt; line-height: 1.5;">an get direct directory size int=
- the XFS file system?</span></div><div>example=A3=BA</div><div><span style=
-=3D"background-color: rgba(0, 0, 0, 0); font-size: 10.5pt; line-height: 1.=
-5;">&nbsp;</span><span style=3D"background-color: rgba(0, 0, 0, 0); font-s=
-ize: 10.5pt; line-height: 1.5;">root@ficsNode1 test1]# mount | grep xfs&nb=
-sp;</span></div><span style=3D"background-color: rgba(0, 0, 0, 0);">/dev/s=
-dc on /xfs type xfs (rw,uquota)=0A<br>[root@ficsNode1 test1]# pwd =0A<br>/=
-xfs/test1=0A<br>[root@ficsNode1 test1]# ls -lh=0A<br>total 5M=0A<br>-rw-r-=
--r-- 1 root root 1.0M Jan 26 09:33 block1=0A<br>-rw-r--r-- 1 root root 1.0=
-M Jan 26 09:33 block2=0A<br>-rw-r--r-- 1 root root 1.0M Jan 26 09:33 block=
-3=0A<br>-rw-r--r-- 1 root root 1.0M Jan 26 09:33 block4=0A<br>-rw-r--r-- 1=
- root root 1.0M Jan 26 09:33 block5=0A<br>[root@ficsNode1 test1]#&nbsp;</s=
-pan>=0A<div><br></div><div>&nbsp; &nbsp;can I get direct it &nbsp;by call =
-system function the that the<b> /xfs/test1</b> is 5M?</div><hr style=3D"wi=
-dth: 210px; height: 1px;" color=3D"#b5c4df" size=3D"1" align=3D"left">=0A<=
-div><span><div style=3D"MARGIN: 10px; FONT-FAMILY: verdana; FONT-SIZE: 10p=
-t"><div>lihongliang@sobey.com</div></div></span></div>=0A</body></html>
-------=_001_NextPart588647845785_=------
-
-
---===============2455807887705805592==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+diff --git a/fs/xfs/xfs_quotaops.c b/fs/xfs/xfs_quotaops.c
+index df9835396c4f..bbe8ddf1f700 100644
+--- a/fs/xfs/xfs_quotaops.c
++++ b/fs/xfs/xfs_quotaops.c
+@@ -111,6 +111,42 @@ xfs_quota_type(int type)
+ 	}
+ }
+ 
++#define XFS_QC_SETINFO_MASK (QC_TIMER_MASK | QC_WARNS_MASK)
++
++/*
++ * Adjust quota timers & warnings
++ */
++static int
++xfs_fs_set_info(
++	struct super_block *sb,
++	int type,
++	struct qc_info *info)
++{
++	struct xfs_mount *mp = XFS_M(sb);
++	struct qc_dqblk newlim;
++
++	if (sb->s_flags & MS_RDONLY)
++		return -EROFS;
++	if (!XFS_IS_QUOTA_RUNNING(mp))
++		return -ENOSYS;
++	if (!XFS_IS_QUOTA_ON(mp))
++		return -ESRCH;
++	if (info->i_fieldmask & ~XFS_QC_SETINFO_MASK)
++		return -EINVAL;
++	if ((info->i_fieldmask & XFS_QC_SETINFO_MASK) == 0)
++		return 0;
++
++	newlim.d_fieldmask = info->i_fieldmask;
++	newlim.d_spc_timer = info->i_spc_timelimit;
++	newlim.d_ino_timer = info->i_ino_timelimit;
++	newlim.d_rt_spc_timer = info->i_rt_spc_timelimit;
++	newlim.d_ino_warns = info->i_ino_warnlimit;
++	newlim.d_spc_warns = info->i_spc_warnlimit;
++	newlim.d_rt_spc_warns = info->i_rt_spc_warnlimit;
++
++	return xfs_qm_scall_setqlim(mp, 0, xfs_quota_type(type), &newlim);
++}
++
+ static unsigned int
+ xfs_quota_flags(unsigned int uflags)
+ {
+@@ -226,6 +262,7 @@ xfs_fs_set_dqblk(
+ 
+ const struct quotactl_ops xfs_quotactl_operations = {
+ 	.get_state		= xfs_fs_get_quota_state,
++	.set_info		= xfs_fs_set_info,
+ 	.quota_enable		= xfs_quota_enable,
+ 	.quota_disable		= xfs_quota_disable,
+ 	.rm_xquota		= xfs_fs_rm_xquota,
+-- 
+2.1.2
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============2455807887705805592==--
