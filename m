@@ -1,18 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 0EDDB801B
-	for <xfs@oss.sgi.com>; Mon, 26 Jan 2015 08:34:45 -0600 (CST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id D1D768013
+	for <xfs@oss.sgi.com>; Mon, 26 Jan 2015 08:34:43 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id F169B304039
-	for <xfs@oss.sgi.com>; Mon, 26 Jan 2015 06:34:44 -0800 (PST)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 5255DAC002
+	for <xfs@oss.sgi.com>; Mon, 26 Jan 2015 06:34:43 -0800 (PST)
 Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id Q6jgHiQAbPGOeUJC (version=TLSv1 cipher=AES256-SHA
+	with ESMTP id CB2WvTLnphC48aZN (version=TLSv1 cipher=AES256-SHA
 	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 26 Jan 2015 06:34:43 -0800 (PST)
+	Mon, 26 Jan 2015 06:34:41 -0800 (PST)
 From: Jan Kara <jack@suse.cz>
-Subject: [PATCH 05/16] ext4: Use generic helpers for quotaon and quotaoff
-Date: Mon, 26 Jan 2015 15:34:22 +0100
-Message-Id: <1422282873-3381-6-git-send-email-jack@suse.cz>
+Subject: [PATCH 03/16] quota: Wire up ->quota_{enable,
+	disable} callbacks into Q_QUOTA{ON, OFF}
+Date: Mon, 26 Jan 2015 15:34:20 +0100
+Message-Id: <1422282873-3381-4-git-send-email-jack@suse.cz>
 In-Reply-To: <1422282873-3381-1-git-send-email-jack@suse.cz>
 References: <1422282873-3381-1-git-send-email-jack@suse.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -31,101 +32,89 @@ Sender: xfs-bounces@oss.sgi.com
 To: linux-fsdevel@vger.kernel.org
 Cc: cluster-devel@redhat.com, Jan Kara <jack@suse.cz>, ocfs2-devel@oss.oracle.com, xfs@oss.sgi.com
 
-Ext4 can just use the generic helpers provided by quota code for turning
-quotas on and off when quota files are stored as system inodes. The only
-difference is the feature test in ext4_quota_on_sysfile() but the same
-is achieved in dquot_quota_enable() by checking whether usage tracking
-for the corresponding quota type is enabled (which can happen only if
-quota feature is set).
+Make Q_QUOTAON / Q_QUOTAOFF quotactl call ->quota_enable /
+->quota_disable callback when provided. To match current behavior of
+ocfs2 & ext4 we make these quotactls turn on / off quota enforcement for
+appropriate quota type.
 
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Jan Kara <jack@suse.cz>
 ---
- fs/ext4/super.c | 42 +-----------------------------------------
- 1 file changed, 1 insertion(+), 41 deletions(-)
+ fs/quota/quota.c         | 31 +++++++++++++++++++++++++++----
+ include/linux/quotaops.h |  2 ++
+ 2 files changed, 29 insertions(+), 4 deletions(-)
 
-diff --git a/fs/ext4/super.c b/fs/ext4/super.c
-index 43c92b1685cb..927bcd17cfd7 100644
---- a/fs/ext4/super.c
-+++ b/fs/ext4/super.c
-@@ -1046,10 +1046,7 @@ static int ext4_mark_dquot_dirty(struct dquot *dquot);
- static int ext4_write_info(struct super_block *sb, int type);
- static int ext4_quota_on(struct super_block *sb, int type, int format_id,
- 			 struct path *path);
--static int ext4_quota_on_sysfile(struct super_block *sb, int type,
--				 int format_id);
- static int ext4_quota_off(struct super_block *sb, int type);
--static int ext4_quota_off_sysfile(struct super_block *sb, int type);
- static int ext4_quota_on_mount(struct super_block *sb, int type);
- static ssize_t ext4_quota_read(struct super_block *sb, int type, char *data,
- 			       size_t len, loff_t off);
-@@ -1084,16 +1081,6 @@ static const struct quotactl_ops ext4_qctl_operations = {
- 	.get_dqblk	= dquot_get_dqblk,
- 	.set_dqblk	= dquot_set_dqblk
- };
--
--static const struct quotactl_ops ext4_qctl_sysfile_operations = {
--	.quota_on_meta	= ext4_quota_on_sysfile,
--	.quota_off	= ext4_quota_off_sysfile,
--	.quota_sync	= dquot_quota_sync,
--	.get_info	= dquot_get_dqinfo,
--	.set_info	= dquot_set_dqinfo,
--	.get_dqblk	= dquot_get_dqblk,
--	.set_dqblk	= dquot_set_dqblk
--};
- #endif
- 
- static const struct super_operations ext4_sops = {
-@@ -3935,7 +3922,7 @@ static int ext4_fill_super(struct super_block *sb, void *data, int silent)
- #ifdef CONFIG_QUOTA
- 	sb->dq_op = &ext4_quota_operations;
- 	if (EXT4_HAS_RO_COMPAT_FEATURE(sb, EXT4_FEATURE_RO_COMPAT_QUOTA))
--		sb->s_qcop = &ext4_qctl_sysfile_operations;
-+		sb->s_qcop = &dquot_quotactl_sysfile_ops;
- 	else
- 		sb->s_qcop = &ext4_qctl_operations;
- 	sb->s_quota_types = QTYPE_MASK_USR | QTYPE_MASK_GRP;
-@@ -5288,21 +5275,6 @@ static int ext4_enable_quotas(struct super_block *sb)
- 	return 0;
+diff --git a/fs/quota/quota.c b/fs/quota/quota.c
+index e2ae2b99e555..ce78a70a596f 100644
+--- a/fs/quota/quota.c
++++ b/fs/quota/quota.c
+@@ -66,18 +66,43 @@ static int quota_sync_all(int type)
+ 	return ret;
  }
  
--/*
-- * quota_on function that is used when QUOTA feature is set.
-- */
--static int ext4_quota_on_sysfile(struct super_block *sb, int type,
--				 int format_id)
--{
--	if (!EXT4_HAS_RO_COMPAT_FEATURE(sb, EXT4_FEATURE_RO_COMPAT_QUOTA))
--		return -EINVAL;
--
--	/*
--	 * USAGE was enabled at mount time. Only need to enable LIMITS now.
--	 */
--	return ext4_quota_enable(sb, type, format_id, DQUOT_LIMITS_ENABLED);
--}
--
- static int ext4_quota_off(struct super_block *sb, int type)
++unsigned int qtype_enforce_flag(int type)
++{
++	switch (type) {
++	case USRQUOTA:
++		return FS_QUOTA_UDQ_ENFD;
++	case GRPQUOTA:
++		return FS_QUOTA_GDQ_ENFD;
++	case PRJQUOTA:
++		return FS_QUOTA_PDQ_ENFD;
++	}
++	return 0;
++}
++
+ static int quota_quotaon(struct super_block *sb, int type, int cmd, qid_t id,
+ 		         struct path *path)
  {
- 	struct inode *inode = sb_dqopt(sb)->files[type];
-@@ -5329,18 +5301,6 @@ out:
- 	return dquot_quota_off(sb, type);
+-	if (!sb->s_qcop->quota_on && !sb->s_qcop->quota_on_meta)
++	if (!sb->s_qcop->quota_on && !sb->s_qcop->quota_on_meta &&
++	    !sb->s_qcop->quota_enable)
+ 		return -ENOSYS;
+ 	if (sb->s_qcop->quota_on_meta)
+ 		return sb->s_qcop->quota_on_meta(sb, type, id);
++	if (sb->s_qcop->quota_enable)
++		return sb->s_qcop->quota_enable(sb, qtype_enforce_flag(type));
+ 	if (IS_ERR(path))
+ 		return PTR_ERR(path);
+ 	return sb->s_qcop->quota_on(sb, type, id, path);
  }
  
--/*
-- * quota_off function that is used when QUOTA feature is set.
-- */
--static int ext4_quota_off_sysfile(struct super_block *sb, int type)
--{
--	if (!EXT4_HAS_RO_COMPAT_FEATURE(sb, EXT4_FEATURE_RO_COMPAT_QUOTA))
--		return -EINVAL;
--
--	/* Disable only the limits. */
--	return dquot_disable(sb, type, DQUOT_LIMITS_ENABLED);
--}
--
- /* Read data from quotafile - avoid pagecache and such because we cannot afford
-  * acquiring the locks... As quota files are never truncated and quota code
-  * itself serializes the operations (and no one else should touch the files)
++static int quota_quotaoff(struct super_block *sb, int type)
++{
++	if (!sb->s_qcop->quota_off && !sb->s_qcop->quota_disable)
++		return -ENOSYS;
++	if (sb->s_qcop->quota_disable)
++		return sb->s_qcop->quota_disable(sb, qtype_enforce_flag(type));
++	return sb->s_qcop->quota_off(sb, type);
++}
++
+ static int quota_getfmt(struct super_block *sb, int type, void __user *addr)
+ {
+ 	__u32 fmt;
+@@ -440,9 +465,7 @@ static int do_quotactl(struct super_block *sb, int type, int cmd, qid_t id,
+ 	case Q_QUOTAON:
+ 		return quota_quotaon(sb, type, cmd, id, path);
+ 	case Q_QUOTAOFF:
+-		if (!sb->s_qcop->quota_off)
+-			return -ENOSYS;
+-		return sb->s_qcop->quota_off(sb, type);
++		return quota_quotaoff(sb, type);
+ 	case Q_GETFMT:
+ 		return quota_getfmt(sb, type, addr);
+ 	case Q_GETINFO:
+diff --git a/include/linux/quotaops.h b/include/linux/quotaops.h
+index 29e3455f7d41..ff0b665591d0 100644
+--- a/include/linux/quotaops.h
++++ b/include/linux/quotaops.h
+@@ -386,4 +386,6 @@ static inline void dquot_release_reservation_block(struct inode *inode,
+ 	__dquot_free_space(inode, nr << inode->i_blkbits, DQUOT_SPACE_RESERVE);
+ }
+ 
++unsigned int qtype_enforce_flag(int type);
++
+ #endif /* _LINUX_QUOTAOPS_ */
 -- 
 2.1.2
 
