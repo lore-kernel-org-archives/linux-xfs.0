@@ -1,18 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 4DAD6802B
-	for <xfs@oss.sgi.com>; Mon, 26 Jan 2015 08:34:47 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id D0C87AC002
-	for <xfs@oss.sgi.com>; Mon, 26 Jan 2015 06:34:46 -0800 (PST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id B2CFB801F
+	for <xfs@oss.sgi.com>; Mon, 26 Jan 2015 08:34:45 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 61B36304043
+	for <xfs@oss.sgi.com>; Mon, 26 Jan 2015 06:34:45 -0800 (PST)
 Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id dBT3tSbKKkZHDane (version=TLSv1 cipher=AES256-SHA
+	with ESMTP id H1oPxlnr5JyB9UsO (version=TLSv1 cipher=AES256-SHA
 	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 26 Jan 2015 06:34:45 -0800 (PST)
+	Mon, 26 Jan 2015 06:34:42 -0800 (PST)
 From: Jan Kara <jack@suse.cz>
-Subject: [PATCH 15/16] xfs: Add support for Q_SETINFO
-Date: Mon, 26 Jan 2015 15:34:32 +0100
-Message-Id: <1422282873-3381-16-git-send-email-jack@suse.cz>
+Subject: [PATCH 01/16] quota: Switch ->get_dqblk() and ->set_dqblk() to use
+	bytes as space units
+Date: Mon, 26 Jan 2015 15:34:18 +0100
+Message-Id: <1422282873-3381-2-git-send-email-jack@suse.cz>
 In-Reply-To: <1422282873-3381-1-git-send-email-jack@suse.cz>
 References: <1422282873-3381-1-git-send-email-jack@suse.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -29,71 +30,958 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: linux-fsdevel@vger.kernel.org
-Cc: cluster-devel@redhat.com, Jan Kara <jack@suse.cz>, ocfs2-devel@oss.oracle.com, xfs@oss.sgi.com
+Cc: cluster-devel@redhat.com, Jan Kara <jack@suse.cz>, stable@vger.kernel.org, ocfs2-devel@oss.oracle.com, xfs@oss.sgi.com
 
-Add support to XFS so that time limits can be set through Q_SETINFO
-quotactl.
+Currently ->get_dqblk() and ->set_dqblk() use struct fs_disk_quota which
+tracks space limits and usage in 512-byte blocks. However VFS quotas
+track usage in bytes (as some filesystems require that) and we need to
+somehow pass this information. Upto now it wasn't a problem because we
+didn't do any unit conversion (thus VFS quota routines happily stuck
+number of bytes into d_bcount field of struct fd_disk_quota). Only if
+you tried to use Q_XGETQUOTA or Q_XSETQLIM for VFS quotas (or Q_GETQUOTA
+/ Q_SETQUOTA for XFS quotas), you got bogus results. Hardly anyone
+tried this but reportedly some Samba users hit the problem in practice.
+So when we want interfaces compatible we need to fix this.
 
+We bite the bullet and define another quota structure used for passing
+information from/to ->get_dqblk()/->set_dqblk. It's somewhat sad we have
+to have more conversion routines in fs/quota/quota.c and another copying
+of quota structure slows down getting of quota information by about 2%
+but it seems cleaner than overloading e.g. units of d_bcount to bytes.
+
+CC: stable@vger.kernel.org
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Jan Kara <jack@suse.cz>
 ---
- fs/xfs/xfs_quotaops.c | 37 +++++++++++++++++++++++++++++++++++++
- 1 file changed, 37 insertions(+)
+ fs/gfs2/quota.c          |  49 +++++++-------
+ fs/quota/dquot.c         |  83 ++++++++++++------------
+ fs/quota/quota.c         | 162 +++++++++++++++++++++++++++++++++++++++--------
+ fs/xfs/xfs_qm.h          |   4 +-
+ fs/xfs/xfs_qm_syscalls.c | 156 +++++++++++++++++++--------------------------
+ fs/xfs/xfs_quotaops.c    |   8 +--
+ include/linux/quota.h    |  47 +++++++++++++-
+ include/linux/quotaops.h |   4 +-
+ 8 files changed, 318 insertions(+), 195 deletions(-)
 
-diff --git a/fs/xfs/xfs_quotaops.c b/fs/xfs/xfs_quotaops.c
-index df9835396c4f..bbe8ddf1f700 100644
---- a/fs/xfs/xfs_quotaops.c
-+++ b/fs/xfs/xfs_quotaops.c
-@@ -111,6 +111,42 @@ xfs_quota_type(int type)
+diff --git a/fs/gfs2/quota.c b/fs/gfs2/quota.c
+index c8b148bbdc8b..3e193cb36996 100644
+--- a/fs/gfs2/quota.c
++++ b/fs/gfs2/quota.c
+@@ -667,7 +667,7 @@ static void do_qc(struct gfs2_quota_data *qd, s64 change)
+ 
+ static int gfs2_adjust_quota(struct gfs2_inode *ip, loff_t loc,
+ 			     s64 change, struct gfs2_quota_data *qd,
+-			     struct fs_disk_quota *fdq)
++			     struct qc_dqblk *fdq)
+ {
+ 	struct inode *inode = &ip->i_inode;
+ 	struct gfs2_sbd *sdp = GFS2_SB(inode);
+@@ -697,16 +697,16 @@ static int gfs2_adjust_quota(struct gfs2_inode *ip, loff_t loc,
+ 	be64_add_cpu(&q.qu_value, change);
+ 	qd->qd_qb.qb_value = q.qu_value;
+ 	if (fdq) {
+-		if (fdq->d_fieldmask & FS_DQ_BSOFT) {
+-			q.qu_warn = cpu_to_be64(fdq->d_blk_softlimit >> sdp->sd_fsb2bb_shift);
++		if (fdq->d_fieldmask & QC_SPC_SOFT) {
++			q.qu_warn = cpu_to_be64(fdq->d_spc_softlimit >> sdp->sd_sb.sb_bsize_shift);
+ 			qd->qd_qb.qb_warn = q.qu_warn;
+ 		}
+-		if (fdq->d_fieldmask & FS_DQ_BHARD) {
+-			q.qu_limit = cpu_to_be64(fdq->d_blk_hardlimit >> sdp->sd_fsb2bb_shift);
++		if (fdq->d_fieldmask & QC_SPC_HARD) {
++			q.qu_limit = cpu_to_be64(fdq->d_spc_hardlimit >> sdp->sd_sb.sb_bsize_shift);
+ 			qd->qd_qb.qb_limit = q.qu_limit;
+ 		}
+-		if (fdq->d_fieldmask & FS_DQ_BCOUNT) {
+-			q.qu_value = cpu_to_be64(fdq->d_bcount >> sdp->sd_fsb2bb_shift);
++		if (fdq->d_fieldmask & QC_SPACE) {
++			q.qu_value = cpu_to_be64(fdq->d_space >> sdp->sd_sb.sb_bsize_shift);
+ 			qd->qd_qb.qb_value = q.qu_value;
+ 		}
  	}
+@@ -1497,7 +1497,7 @@ static int gfs2_quota_get_xstate(struct super_block *sb,
  }
  
-+#define XFS_QC_SETINFO_MASK (QC_TIMER_MASK | QC_WARNS_MASK)
-+
-+/*
-+ * Adjust quota timers & warnings
-+ */
-+static int
-+xfs_fs_set_info(
-+	struct super_block *sb,
-+	int type,
-+	struct qc_info *info)
+ static int gfs2_get_dqblk(struct super_block *sb, struct kqid qid,
+-			  struct fs_disk_quota *fdq)
++			  struct qc_dqblk *fdq)
+ {
+ 	struct gfs2_sbd *sdp = sb->s_fs_info;
+ 	struct gfs2_quota_lvb *qlvb;
+@@ -1505,7 +1505,7 @@ static int gfs2_get_dqblk(struct super_block *sb, struct kqid qid,
+ 	struct gfs2_holder q_gh;
+ 	int error;
+ 
+-	memset(fdq, 0, sizeof(struct fs_disk_quota));
++	memset(fdq, 0, sizeof(*fdq));
+ 
+ 	if (sdp->sd_args.ar_quota == GFS2_QUOTA_OFF)
+ 		return -ESRCH; /* Crazy XFS error code */
+@@ -1522,12 +1522,9 @@ static int gfs2_get_dqblk(struct super_block *sb, struct kqid qid,
+ 		goto out;
+ 
+ 	qlvb = (struct gfs2_quota_lvb *)qd->qd_gl->gl_lksb.sb_lvbptr;
+-	fdq->d_version = FS_DQUOT_VERSION;
+-	fdq->d_flags = (qid.type == USRQUOTA) ? FS_USER_QUOTA : FS_GROUP_QUOTA;
+-	fdq->d_id = from_kqid_munged(current_user_ns(), qid);
+-	fdq->d_blk_hardlimit = be64_to_cpu(qlvb->qb_limit) << sdp->sd_fsb2bb_shift;
+-	fdq->d_blk_softlimit = be64_to_cpu(qlvb->qb_warn) << sdp->sd_fsb2bb_shift;
+-	fdq->d_bcount = be64_to_cpu(qlvb->qb_value) << sdp->sd_fsb2bb_shift;
++	fdq->d_spc_hardlimit = be64_to_cpu(qlvb->qb_limit) << sdp->sd_sb.sb_bsize_shift;
++	fdq->d_spc_softlimit = be64_to_cpu(qlvb->qb_warn) << sdp->sd_sb.sb_bsize_shift;
++	fdq->d_space = be64_to_cpu(qlvb->qb_value) << sdp->sd_sb.sb_bsize_shift;
+ 
+ 	gfs2_glock_dq_uninit(&q_gh);
+ out:
+@@ -1536,10 +1533,10 @@ out:
+ }
+ 
+ /* GFS2 only supports a subset of the XFS fields */
+-#define GFS2_FIELDMASK (FS_DQ_BSOFT|FS_DQ_BHARD|FS_DQ_BCOUNT)
++#define GFS2_FIELDMASK (QC_SPC_SOFT|QC_SPC_HARD|QC_SPACE)
+ 
+ static int gfs2_set_dqblk(struct super_block *sb, struct kqid qid,
+-			  struct fs_disk_quota *fdq)
++			  struct qc_dqblk *fdq)
+ {
+ 	struct gfs2_sbd *sdp = sb->s_fs_info;
+ 	struct gfs2_inode *ip = GFS2_I(sdp->sd_quota_inode);
+@@ -1583,17 +1580,17 @@ static int gfs2_set_dqblk(struct super_block *sb, struct kqid qid,
+ 		goto out_i;
+ 
+ 	/* If nothing has changed, this is a no-op */
+-	if ((fdq->d_fieldmask & FS_DQ_BSOFT) &&
+-	    ((fdq->d_blk_softlimit >> sdp->sd_fsb2bb_shift) == be64_to_cpu(qd->qd_qb.qb_warn)))
+-		fdq->d_fieldmask ^= FS_DQ_BSOFT;
++	if ((fdq->d_fieldmask & QC_SPC_SOFT) &&
++	    ((fdq->d_spc_softlimit >> sdp->sd_sb.sb_bsize_shift) == be64_to_cpu(qd->qd_qb.qb_warn)))
++		fdq->d_fieldmask ^= QC_SPC_SOFT;
+ 
+-	if ((fdq->d_fieldmask & FS_DQ_BHARD) &&
+-	    ((fdq->d_blk_hardlimit >> sdp->sd_fsb2bb_shift) == be64_to_cpu(qd->qd_qb.qb_limit)))
+-		fdq->d_fieldmask ^= FS_DQ_BHARD;
++	if ((fdq->d_fieldmask & QC_SPC_HARD) &&
++	    ((fdq->d_spc_hardlimit >> sdp->sd_sb.sb_bsize_shift) == be64_to_cpu(qd->qd_qb.qb_limit)))
++		fdq->d_fieldmask ^= QC_SPC_HARD;
+ 
+-	if ((fdq->d_fieldmask & FS_DQ_BCOUNT) &&
+-	    ((fdq->d_bcount >> sdp->sd_fsb2bb_shift) == be64_to_cpu(qd->qd_qb.qb_value)))
+-		fdq->d_fieldmask ^= FS_DQ_BCOUNT;
++	if ((fdq->d_fieldmask & QC_SPACE) &&
++	    ((fdq->d_space >> sdp->sd_sb.sb_bsize_shift) == be64_to_cpu(qd->qd_qb.qb_value)))
++		fdq->d_fieldmask ^= QC_SPACE;
+ 
+ 	if (fdq->d_fieldmask == 0)
+ 		goto out_i;
+diff --git a/fs/quota/dquot.c b/fs/quota/dquot.c
+index d25c3243c196..29eb9dc5728a 100644
+--- a/fs/quota/dquot.c
++++ b/fs/quota/dquot.c
+@@ -2396,30 +2396,25 @@ static inline qsize_t stoqb(qsize_t space)
+ }
+ 
+ /* Generic routine for getting common part of quota structure */
+-static void do_get_dqblk(struct dquot *dquot, struct fs_disk_quota *di)
++static void do_get_dqblk(struct dquot *dquot, struct qc_dqblk *di)
+ {
+ 	struct mem_dqblk *dm = &dquot->dq_dqb;
+ 
+ 	memset(di, 0, sizeof(*di));
+-	di->d_version = FS_DQUOT_VERSION;
+-	di->d_flags = dquot->dq_id.type == USRQUOTA ?
+-			FS_USER_QUOTA : FS_GROUP_QUOTA;
+-	di->d_id = from_kqid_munged(current_user_ns(), dquot->dq_id);
+-
+ 	spin_lock(&dq_data_lock);
+-	di->d_blk_hardlimit = stoqb(dm->dqb_bhardlimit);
+-	di->d_blk_softlimit = stoqb(dm->dqb_bsoftlimit);
++	di->d_spc_hardlimit = dm->dqb_bhardlimit;
++	di->d_spc_softlimit = dm->dqb_bsoftlimit;
+ 	di->d_ino_hardlimit = dm->dqb_ihardlimit;
+ 	di->d_ino_softlimit = dm->dqb_isoftlimit;
+-	di->d_bcount = dm->dqb_curspace + dm->dqb_rsvspace;
+-	di->d_icount = dm->dqb_curinodes;
+-	di->d_btimer = dm->dqb_btime;
+-	di->d_itimer = dm->dqb_itime;
++	di->d_space = dm->dqb_curspace + dm->dqb_rsvspace;
++	di->d_ino_count = dm->dqb_curinodes;
++	di->d_spc_timer = dm->dqb_btime;
++	di->d_ino_timer = dm->dqb_itime;
+ 	spin_unlock(&dq_data_lock);
+ }
+ 
+ int dquot_get_dqblk(struct super_block *sb, struct kqid qid,
+-		    struct fs_disk_quota *di)
++		    struct qc_dqblk *di)
+ {
+ 	struct dquot *dquot;
+ 
+@@ -2433,70 +2428,70 @@ int dquot_get_dqblk(struct super_block *sb, struct kqid qid,
+ }
+ EXPORT_SYMBOL(dquot_get_dqblk);
+ 
+-#define VFS_FS_DQ_MASK \
+-	(FS_DQ_BCOUNT | FS_DQ_BSOFT | FS_DQ_BHARD | \
+-	 FS_DQ_ICOUNT | FS_DQ_ISOFT | FS_DQ_IHARD | \
+-	 FS_DQ_BTIMER | FS_DQ_ITIMER)
++#define VFS_QC_MASK \
++	(QC_SPACE | QC_SPC_SOFT | QC_SPC_HARD | \
++	 QC_INO_COUNT | QC_INO_SOFT | QC_INO_HARD | \
++	 QC_SPC_TIMER | QC_INO_TIMER)
+ 
+ /* Generic routine for setting common part of quota structure */
+-static int do_set_dqblk(struct dquot *dquot, struct fs_disk_quota *di)
++static int do_set_dqblk(struct dquot *dquot, struct qc_dqblk *di)
+ {
+ 	struct mem_dqblk *dm = &dquot->dq_dqb;
+ 	int check_blim = 0, check_ilim = 0;
+ 	struct mem_dqinfo *dqi = &sb_dqopt(dquot->dq_sb)->info[dquot->dq_id.type];
+ 
+-	if (di->d_fieldmask & ~VFS_FS_DQ_MASK)
++	if (di->d_fieldmask & ~VFS_QC_MASK)
+ 		return -EINVAL;
+ 
+-	if (((di->d_fieldmask & FS_DQ_BSOFT) &&
+-	     (di->d_blk_softlimit > dqi->dqi_maxblimit)) ||
+-	    ((di->d_fieldmask & FS_DQ_BHARD) &&
+-	     (di->d_blk_hardlimit > dqi->dqi_maxblimit)) ||
+-	    ((di->d_fieldmask & FS_DQ_ISOFT) &&
++	if (((di->d_fieldmask & QC_SPC_SOFT) &&
++	     stoqb(di->d_spc_softlimit) > dqi->dqi_maxblimit) ||
++	    ((di->d_fieldmask & QC_SPC_HARD) &&
++	     stoqb(di->d_spc_hardlimit) > dqi->dqi_maxblimit) ||
++	    ((di->d_fieldmask & QC_INO_SOFT) &&
+ 	     (di->d_ino_softlimit > dqi->dqi_maxilimit)) ||
+-	    ((di->d_fieldmask & FS_DQ_IHARD) &&
++	    ((di->d_fieldmask & QC_INO_HARD) &&
+ 	     (di->d_ino_hardlimit > dqi->dqi_maxilimit)))
+ 		return -ERANGE;
+ 
+ 	spin_lock(&dq_data_lock);
+-	if (di->d_fieldmask & FS_DQ_BCOUNT) {
+-		dm->dqb_curspace = di->d_bcount - dm->dqb_rsvspace;
++	if (di->d_fieldmask & QC_SPACE) {
++		dm->dqb_curspace = di->d_space - dm->dqb_rsvspace;
+ 		check_blim = 1;
+ 		set_bit(DQ_LASTSET_B + QIF_SPACE_B, &dquot->dq_flags);
+ 	}
+ 
+-	if (di->d_fieldmask & FS_DQ_BSOFT)
+-		dm->dqb_bsoftlimit = qbtos(di->d_blk_softlimit);
+-	if (di->d_fieldmask & FS_DQ_BHARD)
+-		dm->dqb_bhardlimit = qbtos(di->d_blk_hardlimit);
+-	if (di->d_fieldmask & (FS_DQ_BSOFT | FS_DQ_BHARD)) {
++	if (di->d_fieldmask & QC_SPC_SOFT)
++		dm->dqb_bsoftlimit = di->d_spc_softlimit;
++	if (di->d_fieldmask & QC_SPC_HARD)
++		dm->dqb_bhardlimit = di->d_spc_hardlimit;
++	if (di->d_fieldmask & (QC_SPC_SOFT | QC_SPC_HARD)) {
+ 		check_blim = 1;
+ 		set_bit(DQ_LASTSET_B + QIF_BLIMITS_B, &dquot->dq_flags);
+ 	}
+ 
+-	if (di->d_fieldmask & FS_DQ_ICOUNT) {
+-		dm->dqb_curinodes = di->d_icount;
++	if (di->d_fieldmask & QC_INO_COUNT) {
++		dm->dqb_curinodes = di->d_ino_count;
+ 		check_ilim = 1;
+ 		set_bit(DQ_LASTSET_B + QIF_INODES_B, &dquot->dq_flags);
+ 	}
+ 
+-	if (di->d_fieldmask & FS_DQ_ISOFT)
++	if (di->d_fieldmask & QC_INO_SOFT)
+ 		dm->dqb_isoftlimit = di->d_ino_softlimit;
+-	if (di->d_fieldmask & FS_DQ_IHARD)
++	if (di->d_fieldmask & QC_INO_HARD)
+ 		dm->dqb_ihardlimit = di->d_ino_hardlimit;
+-	if (di->d_fieldmask & (FS_DQ_ISOFT | FS_DQ_IHARD)) {
++	if (di->d_fieldmask & (QC_INO_SOFT | QC_INO_HARD)) {
+ 		check_ilim = 1;
+ 		set_bit(DQ_LASTSET_B + QIF_ILIMITS_B, &dquot->dq_flags);
+ 	}
+ 
+-	if (di->d_fieldmask & FS_DQ_BTIMER) {
+-		dm->dqb_btime = di->d_btimer;
++	if (di->d_fieldmask & QC_SPC_TIMER) {
++		dm->dqb_btime = di->d_spc_timer;
+ 		check_blim = 1;
+ 		set_bit(DQ_LASTSET_B + QIF_BTIME_B, &dquot->dq_flags);
+ 	}
+ 
+-	if (di->d_fieldmask & FS_DQ_ITIMER) {
+-		dm->dqb_itime = di->d_itimer;
++	if (di->d_fieldmask & QC_INO_TIMER) {
++		dm->dqb_itime = di->d_ino_timer;
+ 		check_ilim = 1;
+ 		set_bit(DQ_LASTSET_B + QIF_ITIME_B, &dquot->dq_flags);
+ 	}
+@@ -2506,7 +2501,7 @@ static int do_set_dqblk(struct dquot *dquot, struct fs_disk_quota *di)
+ 		    dm->dqb_curspace < dm->dqb_bsoftlimit) {
+ 			dm->dqb_btime = 0;
+ 			clear_bit(DQ_BLKS_B, &dquot->dq_flags);
+-		} else if (!(di->d_fieldmask & FS_DQ_BTIMER))
++		} else if (!(di->d_fieldmask & QC_SPC_TIMER))
+ 			/* Set grace only if user hasn't provided his own... */
+ 			dm->dqb_btime = get_seconds() + dqi->dqi_bgrace;
+ 	}
+@@ -2515,7 +2510,7 @@ static int do_set_dqblk(struct dquot *dquot, struct fs_disk_quota *di)
+ 		    dm->dqb_curinodes < dm->dqb_isoftlimit) {
+ 			dm->dqb_itime = 0;
+ 			clear_bit(DQ_INODES_B, &dquot->dq_flags);
+-		} else if (!(di->d_fieldmask & FS_DQ_ITIMER))
++		} else if (!(di->d_fieldmask & QC_INO_TIMER))
+ 			/* Set grace only if user hasn't provided his own... */
+ 			dm->dqb_itime = get_seconds() + dqi->dqi_igrace;
+ 	}
+@@ -2531,7 +2526,7 @@ static int do_set_dqblk(struct dquot *dquot, struct fs_disk_quota *di)
+ }
+ 
+ int dquot_set_dqblk(struct super_block *sb, struct kqid qid,
+-		  struct fs_disk_quota *di)
++		  struct qc_dqblk *di)
+ {
+ 	struct dquot *dquot;
+ 	int rc;
+diff --git a/fs/quota/quota.c b/fs/quota/quota.c
+index 2aa4151f99d2..6f3856328eea 100644
+--- a/fs/quota/quota.c
++++ b/fs/quota/quota.c
+@@ -118,17 +118,27 @@ static int quota_setinfo(struct super_block *sb, int type, void __user *addr)
+ 	return sb->s_qcop->set_info(sb, type, &info);
+ }
+ 
+-static void copy_to_if_dqblk(struct if_dqblk *dst, struct fs_disk_quota *src)
++static inline qsize_t qbtos(qsize_t blocks)
 +{
-+	struct xfs_mount *mp = XFS_M(sb);
-+	struct qc_dqblk newlim;
-+
-+	if (sb->s_flags & MS_RDONLY)
-+		return -EROFS;
-+	if (!XFS_IS_QUOTA_RUNNING(mp))
-+		return -ENOSYS;
-+	if (!XFS_IS_QUOTA_ON(mp))
-+		return -ESRCH;
-+	if (info->i_fieldmask & ~XFS_QC_SETINFO_MASK)
-+		return -EINVAL;
-+	if ((info->i_fieldmask & XFS_QC_SETINFO_MASK) == 0)
-+		return 0;
-+
-+	newlim.d_fieldmask = info->i_fieldmask;
-+	newlim.d_spc_timer = info->i_spc_timelimit;
-+	newlim.d_ino_timer = info->i_ino_timelimit;
-+	newlim.d_rt_spc_timer = info->i_rt_spc_timelimit;
-+	newlim.d_ino_warns = info->i_ino_warnlimit;
-+	newlim.d_spc_warns = info->i_spc_warnlimit;
-+	newlim.d_rt_spc_warns = info->i_rt_spc_warnlimit;
-+
-+	return xfs_qm_scall_setqlim(mp, 0, xfs_quota_type(type), &newlim);
++	return blocks << QIF_DQBLKSIZE_BITS;
 +}
 +
- static unsigned int
- xfs_quota_flags(unsigned int uflags)
++static inline qsize_t stoqb(qsize_t space)
++{
++	return (space + QIF_DQBLKSIZE - 1) >> QIF_DQBLKSIZE_BITS;
++}
++
++static void copy_to_if_dqblk(struct if_dqblk *dst, struct qc_dqblk *src)
  {
-@@ -226,6 +262,7 @@ xfs_fs_set_dqblk(
+ 	memset(dst, 0, sizeof(*dst));
+-	dst->dqb_bhardlimit = src->d_blk_hardlimit;
+-	dst->dqb_bsoftlimit = src->d_blk_softlimit;
+-	dst->dqb_curspace = src->d_bcount;
++	dst->dqb_bhardlimit = stoqb(src->d_spc_hardlimit);
++	dst->dqb_bsoftlimit = stoqb(src->d_spc_softlimit);
++	dst->dqb_curspace = src->d_space;
+ 	dst->dqb_ihardlimit = src->d_ino_hardlimit;
+ 	dst->dqb_isoftlimit = src->d_ino_softlimit;
+-	dst->dqb_curinodes = src->d_icount;
+-	dst->dqb_btime = src->d_btimer;
+-	dst->dqb_itime = src->d_itimer;
++	dst->dqb_curinodes = src->d_ino_count;
++	dst->dqb_btime = src->d_spc_timer;
++	dst->dqb_itime = src->d_ino_timer;
+ 	dst->dqb_valid = QIF_ALL;
+ }
+ 
+@@ -136,7 +146,7 @@ static int quota_getquota(struct super_block *sb, int type, qid_t id,
+ 			  void __user *addr)
+ {
+ 	struct kqid qid;
+-	struct fs_disk_quota fdq;
++	struct qc_dqblk fdq;
+ 	struct if_dqblk idq;
+ 	int ret;
+ 
+@@ -154,36 +164,36 @@ static int quota_getquota(struct super_block *sb, int type, qid_t id,
+ 	return 0;
+ }
+ 
+-static void copy_from_if_dqblk(struct fs_disk_quota *dst, struct if_dqblk *src)
++static void copy_from_if_dqblk(struct qc_dqblk *dst, struct if_dqblk *src)
+ {
+-	dst->d_blk_hardlimit = src->dqb_bhardlimit;
+-	dst->d_blk_softlimit  = src->dqb_bsoftlimit;
+-	dst->d_bcount = src->dqb_curspace;
++	dst->d_spc_hardlimit = qbtos(src->dqb_bhardlimit);
++	dst->d_spc_softlimit = qbtos(src->dqb_bsoftlimit);
++	dst->d_space = src->dqb_curspace;
+ 	dst->d_ino_hardlimit = src->dqb_ihardlimit;
+ 	dst->d_ino_softlimit = src->dqb_isoftlimit;
+-	dst->d_icount = src->dqb_curinodes;
+-	dst->d_btimer = src->dqb_btime;
+-	dst->d_itimer = src->dqb_itime;
++	dst->d_ino_count = src->dqb_curinodes;
++	dst->d_spc_timer = src->dqb_btime;
++	dst->d_ino_timer = src->dqb_itime;
+ 
+ 	dst->d_fieldmask = 0;
+ 	if (src->dqb_valid & QIF_BLIMITS)
+-		dst->d_fieldmask |= FS_DQ_BSOFT | FS_DQ_BHARD;
++		dst->d_fieldmask |= QC_SPC_SOFT | QC_SPC_HARD;
+ 	if (src->dqb_valid & QIF_SPACE)
+-		dst->d_fieldmask |= FS_DQ_BCOUNT;
++		dst->d_fieldmask |= QC_SPACE;
+ 	if (src->dqb_valid & QIF_ILIMITS)
+-		dst->d_fieldmask |= FS_DQ_ISOFT | FS_DQ_IHARD;
++		dst->d_fieldmask |= QC_INO_SOFT | QC_INO_HARD;
+ 	if (src->dqb_valid & QIF_INODES)
+-		dst->d_fieldmask |= FS_DQ_ICOUNT;
++		dst->d_fieldmask |= QC_INO_COUNT;
+ 	if (src->dqb_valid & QIF_BTIME)
+-		dst->d_fieldmask |= FS_DQ_BTIMER;
++		dst->d_fieldmask |= QC_SPC_TIMER;
+ 	if (src->dqb_valid & QIF_ITIME)
+-		dst->d_fieldmask |= FS_DQ_ITIMER;
++		dst->d_fieldmask |= QC_INO_TIMER;
+ }
+ 
+ static int quota_setquota(struct super_block *sb, int type, qid_t id,
+ 			  void __user *addr)
+ {
+-	struct fs_disk_quota fdq;
++	struct qc_dqblk fdq;
+ 	struct if_dqblk idq;
+ 	struct kqid qid;
+ 
+@@ -247,10 +257,78 @@ static int quota_getxstatev(struct super_block *sb, void __user *addr)
+ 	return ret;
+ }
+ 
++/*
++ * XFS defines BBTOB and BTOBB macros inside fs/xfs/ and we cannot move them
++ * out of there as xfsprogs rely on definitions being in that header file. So
++ * just define same functions here for quota purposes.
++ */
++#define XFS_BB_SHIFT 9
++
++static inline u64 quota_bbtob(u64 blocks)
++{
++	return blocks << XFS_BB_SHIFT;
++}
++
++static inline u64 quota_btobb(u64 bytes)
++{
++	return (bytes + (1 << XFS_BB_SHIFT) - 1) >> XFS_BB_SHIFT;
++}
++
++static void copy_from_xfs_dqblk(struct qc_dqblk *dst, struct fs_disk_quota *src)
++{
++	dst->d_spc_hardlimit = quota_bbtob(src->d_blk_hardlimit);
++	dst->d_spc_softlimit = quota_bbtob(src->d_blk_softlimit);
++	dst->d_ino_hardlimit = src->d_ino_hardlimit;
++	dst->d_ino_softlimit = src->d_ino_softlimit;
++	dst->d_space = quota_bbtob(src->d_bcount);
++	dst->d_ino_count = src->d_icount;
++	dst->d_ino_timer = src->d_itimer;
++	dst->d_spc_timer = src->d_btimer;
++	dst->d_ino_warns = src->d_iwarns;
++	dst->d_spc_warns = src->d_bwarns;
++	dst->d_rt_spc_hardlimit = quota_bbtob(src->d_rtb_hardlimit);
++	dst->d_rt_spc_softlimit = quota_bbtob(src->d_rtb_softlimit);
++	dst->d_rt_space = quota_bbtob(src->d_rtbcount);
++	dst->d_rt_spc_timer = src->d_rtbtimer;
++	dst->d_rt_spc_warns = src->d_rtbwarns;
++	dst->d_fieldmask = 0;
++	if (src->d_fieldmask & FS_DQ_ISOFT)
++		dst->d_fieldmask |= QC_INO_SOFT;
++	if (src->d_fieldmask & FS_DQ_IHARD)
++		dst->d_fieldmask |= QC_INO_HARD;
++	if (src->d_fieldmask & FS_DQ_BSOFT)
++		dst->d_fieldmask |= QC_SPC_SOFT;
++	if (src->d_fieldmask & FS_DQ_BHARD)
++		dst->d_fieldmask |= QC_SPC_HARD;
++	if (src->d_fieldmask & FS_DQ_RTBSOFT)
++		dst->d_fieldmask |= QC_RT_SPC_SOFT;
++	if (src->d_fieldmask & FS_DQ_RTBHARD)
++		dst->d_fieldmask |= QC_RT_SPC_HARD;
++	if (src->d_fieldmask & FS_DQ_BTIMER)
++		dst->d_fieldmask |= QC_SPC_TIMER;
++	if (src->d_fieldmask & FS_DQ_ITIMER)
++		dst->d_fieldmask |= QC_INO_TIMER;
++	if (src->d_fieldmask & FS_DQ_RTBTIMER)
++		dst->d_fieldmask |= QC_RT_SPC_TIMER;
++	if (src->d_fieldmask & FS_DQ_BWARNS)
++		dst->d_fieldmask |= QC_SPC_WARNS;
++	if (src->d_fieldmask & FS_DQ_IWARNS)
++		dst->d_fieldmask |= QC_INO_WARNS;
++	if (src->d_fieldmask & FS_DQ_RTBWARNS)
++		dst->d_fieldmask |= QC_RT_SPC_WARNS;
++	if (src->d_fieldmask & FS_DQ_BCOUNT)
++		dst->d_fieldmask |= QC_SPACE;
++	if (src->d_fieldmask & FS_DQ_ICOUNT)
++		dst->d_fieldmask |= QC_INO_COUNT;
++	if (src->d_fieldmask & FS_DQ_RTBCOUNT)
++		dst->d_fieldmask |= QC_RT_SPACE;
++}
++
+ static int quota_setxquota(struct super_block *sb, int type, qid_t id,
+ 			   void __user *addr)
+ {
+ 	struct fs_disk_quota fdq;
++	struct qc_dqblk qdq;
+ 	struct kqid qid;
+ 
+ 	if (copy_from_user(&fdq, addr, sizeof(fdq)))
+@@ -260,13 +338,44 @@ static int quota_setxquota(struct super_block *sb, int type, qid_t id,
+ 	qid = make_kqid(current_user_ns(), type, id);
+ 	if (!qid_valid(qid))
+ 		return -EINVAL;
+-	return sb->s_qcop->set_dqblk(sb, qid, &fdq);
++	copy_from_xfs_dqblk(&qdq, &fdq);
++	return sb->s_qcop->set_dqblk(sb, qid, &qdq);
++}
++
++static void copy_to_xfs_dqblk(struct fs_disk_quota *dst, struct qc_dqblk *src,
++			      int type, qid_t id)
++{
++	memset(dst, 0, sizeof(*dst));
++	dst->d_version = FS_DQUOT_VERSION;
++	dst->d_id = id;
++	if (type == USRQUOTA)
++		dst->d_flags = FS_USER_QUOTA;
++	else if (type == PRJQUOTA)
++		dst->d_flags = FS_PROJ_QUOTA;
++	else
++		dst->d_flags = FS_GROUP_QUOTA;
++	dst->d_blk_hardlimit = quota_btobb(src->d_spc_hardlimit);
++	dst->d_blk_softlimit = quota_btobb(src->d_spc_softlimit);
++	dst->d_ino_hardlimit = src->d_ino_hardlimit;
++	dst->d_ino_softlimit = src->d_ino_softlimit;
++	dst->d_bcount = quota_btobb(src->d_space);
++	dst->d_icount = src->d_ino_count;
++	dst->d_itimer = src->d_ino_timer;
++	dst->d_btimer = src->d_spc_timer;
++	dst->d_iwarns = src->d_ino_warns;
++	dst->d_bwarns = src->d_spc_warns;
++	dst->d_rtb_hardlimit = quota_btobb(src->d_rt_spc_hardlimit);
++	dst->d_rtb_softlimit = quota_btobb(src->d_rt_spc_softlimit);
++	dst->d_rtbcount = quota_btobb(src->d_rt_space);
++	dst->d_rtbtimer = src->d_rt_spc_timer;
++	dst->d_rtbwarns = src->d_rt_spc_warns;
+ }
+ 
+ static int quota_getxquota(struct super_block *sb, int type, qid_t id,
+ 			   void __user *addr)
+ {
+ 	struct fs_disk_quota fdq;
++	struct qc_dqblk qdq;
+ 	struct kqid qid;
+ 	int ret;
+ 
+@@ -275,8 +384,11 @@ static int quota_getxquota(struct super_block *sb, int type, qid_t id,
+ 	qid = make_kqid(current_user_ns(), type, id);
+ 	if (!qid_valid(qid))
+ 		return -EINVAL;
+-	ret = sb->s_qcop->get_dqblk(sb, qid, &fdq);
+-	if (!ret && copy_to_user(addr, &fdq, sizeof(fdq)))
++	ret = sb->s_qcop->get_dqblk(sb, qid, &qdq);
++	if (ret)
++		return ret;
++	copy_to_xfs_dqblk(&fdq, &qdq, type, id);
++	if (copy_to_user(addr, &fdq, sizeof(fdq)))
+ 		return -EFAULT;
+ 	return ret;
+ }
+diff --git a/fs/xfs/xfs_qm.h b/fs/xfs/xfs_qm.h
+index 3a07a937e232..41f6c0b9d51c 100644
+--- a/fs/xfs/xfs_qm.h
++++ b/fs/xfs/xfs_qm.h
+@@ -166,9 +166,9 @@ extern void		xfs_qm_dqrele_all_inodes(struct xfs_mount *, uint);
+ /* quota ops */
+ extern int		xfs_qm_scall_trunc_qfiles(struct xfs_mount *, uint);
+ extern int		xfs_qm_scall_getquota(struct xfs_mount *, xfs_dqid_t,
+-					uint, struct fs_disk_quota *);
++					uint, struct qc_dqblk *);
+ extern int		xfs_qm_scall_setqlim(struct xfs_mount *, xfs_dqid_t, uint,
+-					struct fs_disk_quota *);
++					struct qc_dqblk *);
+ extern int		xfs_qm_scall_getqstat(struct xfs_mount *,
+ 					struct fs_quota_stat *);
+ extern int		xfs_qm_scall_getqstatv(struct xfs_mount *,
+diff --git a/fs/xfs/xfs_qm_syscalls.c b/fs/xfs/xfs_qm_syscalls.c
+index 42a15ddedb07..d56a4f5155d5 100644
+--- a/fs/xfs/xfs_qm_syscalls.c
++++ b/fs/xfs/xfs_qm_syscalls.c
+@@ -39,7 +39,6 @@ STATIC int	xfs_qm_log_quotaoff(xfs_mount_t *, xfs_qoff_logitem_t **, uint);
+ STATIC int	xfs_qm_log_quotaoff_end(xfs_mount_t *, xfs_qoff_logitem_t *,
+ 					uint);
+ STATIC uint	xfs_qm_export_flags(uint);
+-STATIC uint	xfs_qm_export_qtype_flags(uint);
+ 
+ /*
+  * Turn off quota accounting and/or enforcement for all udquots and/or
+@@ -547,8 +546,8 @@ xfs_qm_scall_getqstatv(
+ 	return 0;
+ }
+ 
+-#define XFS_DQ_MASK \
+-	(FS_DQ_LIMIT_MASK | FS_DQ_TIMER_MASK | FS_DQ_WARNS_MASK)
++#define XFS_QC_MASK \
++	(QC_LIMIT_MASK | QC_TIMER_MASK | QC_WARNS_MASK)
+ 
+ /*
+  * Adjust quota limits, and start/stop timers accordingly.
+@@ -558,7 +557,7 @@ xfs_qm_scall_setqlim(
+ 	struct xfs_mount	*mp,
+ 	xfs_dqid_t		id,
+ 	uint			type,
+-	fs_disk_quota_t		*newlim)
++	struct qc_dqblk		*newlim)
+ {
+ 	struct xfs_quotainfo	*q = mp->m_quotainfo;
+ 	struct xfs_disk_dquot	*ddq;
+@@ -567,9 +566,9 @@ xfs_qm_scall_setqlim(
+ 	int			error;
+ 	xfs_qcnt_t		hard, soft;
+ 
+-	if (newlim->d_fieldmask & ~XFS_DQ_MASK)
++	if (newlim->d_fieldmask & ~XFS_QC_MASK)
+ 		return -EINVAL;
+-	if ((newlim->d_fieldmask & XFS_DQ_MASK) == 0)
++	if ((newlim->d_fieldmask & XFS_QC_MASK) == 0)
+ 		return 0;
+ 
+ 	/*
+@@ -607,11 +606,11 @@ xfs_qm_scall_setqlim(
+ 	/*
+ 	 * Make sure that hardlimits are >= soft limits before changing.
+ 	 */
+-	hard = (newlim->d_fieldmask & FS_DQ_BHARD) ?
+-		(xfs_qcnt_t) XFS_BB_TO_FSB(mp, newlim->d_blk_hardlimit) :
++	hard = (newlim->d_fieldmask & QC_SPC_HARD) ?
++		(xfs_qcnt_t) XFS_B_TO_FSB(mp, newlim->d_spc_hardlimit) :
+ 			be64_to_cpu(ddq->d_blk_hardlimit);
+-	soft = (newlim->d_fieldmask & FS_DQ_BSOFT) ?
+-		(xfs_qcnt_t) XFS_BB_TO_FSB(mp, newlim->d_blk_softlimit) :
++	soft = (newlim->d_fieldmask & QC_SPC_SOFT) ?
++		(xfs_qcnt_t) XFS_B_TO_FSB(mp, newlim->d_spc_softlimit) :
+ 			be64_to_cpu(ddq->d_blk_softlimit);
+ 	if (hard == 0 || hard >= soft) {
+ 		ddq->d_blk_hardlimit = cpu_to_be64(hard);
+@@ -624,11 +623,11 @@ xfs_qm_scall_setqlim(
+ 	} else {
+ 		xfs_debug(mp, "blkhard %Ld < blksoft %Ld", hard, soft);
+ 	}
+-	hard = (newlim->d_fieldmask & FS_DQ_RTBHARD) ?
+-		(xfs_qcnt_t) XFS_BB_TO_FSB(mp, newlim->d_rtb_hardlimit) :
++	hard = (newlim->d_fieldmask & QC_RT_SPC_HARD) ?
++		(xfs_qcnt_t) XFS_B_TO_FSB(mp, newlim->d_rt_spc_hardlimit) :
+ 			be64_to_cpu(ddq->d_rtb_hardlimit);
+-	soft = (newlim->d_fieldmask & FS_DQ_RTBSOFT) ?
+-		(xfs_qcnt_t) XFS_BB_TO_FSB(mp, newlim->d_rtb_softlimit) :
++	soft = (newlim->d_fieldmask & QC_RT_SPC_SOFT) ?
++		(xfs_qcnt_t) XFS_B_TO_FSB(mp, newlim->d_rt_spc_softlimit) :
+ 			be64_to_cpu(ddq->d_rtb_softlimit);
+ 	if (hard == 0 || hard >= soft) {
+ 		ddq->d_rtb_hardlimit = cpu_to_be64(hard);
+@@ -641,10 +640,10 @@ xfs_qm_scall_setqlim(
+ 		xfs_debug(mp, "rtbhard %Ld < rtbsoft %Ld", hard, soft);
+ 	}
+ 
+-	hard = (newlim->d_fieldmask & FS_DQ_IHARD) ?
++	hard = (newlim->d_fieldmask & QC_INO_HARD) ?
+ 		(xfs_qcnt_t) newlim->d_ino_hardlimit :
+ 			be64_to_cpu(ddq->d_ino_hardlimit);
+-	soft = (newlim->d_fieldmask & FS_DQ_ISOFT) ?
++	soft = (newlim->d_fieldmask & QC_INO_SOFT) ?
+ 		(xfs_qcnt_t) newlim->d_ino_softlimit :
+ 			be64_to_cpu(ddq->d_ino_softlimit);
+ 	if (hard == 0 || hard >= soft) {
+@@ -661,12 +660,12 @@ xfs_qm_scall_setqlim(
+ 	/*
+ 	 * Update warnings counter(s) if requested
+ 	 */
+-	if (newlim->d_fieldmask & FS_DQ_BWARNS)
+-		ddq->d_bwarns = cpu_to_be16(newlim->d_bwarns);
+-	if (newlim->d_fieldmask & FS_DQ_IWARNS)
+-		ddq->d_iwarns = cpu_to_be16(newlim->d_iwarns);
+-	if (newlim->d_fieldmask & FS_DQ_RTBWARNS)
+-		ddq->d_rtbwarns = cpu_to_be16(newlim->d_rtbwarns);
++	if (newlim->d_fieldmask & QC_SPC_WARNS)
++		ddq->d_bwarns = cpu_to_be16(newlim->d_spc_warns);
++	if (newlim->d_fieldmask & QC_INO_WARNS)
++		ddq->d_iwarns = cpu_to_be16(newlim->d_ino_warns);
++	if (newlim->d_fieldmask & QC_RT_SPC_WARNS)
++		ddq->d_rtbwarns = cpu_to_be16(newlim->d_rt_spc_warns);
+ 
+ 	if (id == 0) {
+ 		/*
+@@ -676,24 +675,24 @@ xfs_qm_scall_setqlim(
+ 		 * soft and hard limit values (already done, above), and
+ 		 * for warnings.
+ 		 */
+-		if (newlim->d_fieldmask & FS_DQ_BTIMER) {
+-			q->qi_btimelimit = newlim->d_btimer;
+-			ddq->d_btimer = cpu_to_be32(newlim->d_btimer);
++		if (newlim->d_fieldmask & QC_SPC_TIMER) {
++			q->qi_btimelimit = newlim->d_spc_timer;
++			ddq->d_btimer = cpu_to_be32(newlim->d_spc_timer);
+ 		}
+-		if (newlim->d_fieldmask & FS_DQ_ITIMER) {
+-			q->qi_itimelimit = newlim->d_itimer;
+-			ddq->d_itimer = cpu_to_be32(newlim->d_itimer);
++		if (newlim->d_fieldmask & QC_INO_TIMER) {
++			q->qi_itimelimit = newlim->d_ino_timer;
++			ddq->d_itimer = cpu_to_be32(newlim->d_ino_timer);
+ 		}
+-		if (newlim->d_fieldmask & FS_DQ_RTBTIMER) {
+-			q->qi_rtbtimelimit = newlim->d_rtbtimer;
+-			ddq->d_rtbtimer = cpu_to_be32(newlim->d_rtbtimer);
++		if (newlim->d_fieldmask & QC_RT_SPC_TIMER) {
++			q->qi_rtbtimelimit = newlim->d_rt_spc_timer;
++			ddq->d_rtbtimer = cpu_to_be32(newlim->d_rt_spc_timer);
+ 		}
+-		if (newlim->d_fieldmask & FS_DQ_BWARNS)
+-			q->qi_bwarnlimit = newlim->d_bwarns;
+-		if (newlim->d_fieldmask & FS_DQ_IWARNS)
+-			q->qi_iwarnlimit = newlim->d_iwarns;
+-		if (newlim->d_fieldmask & FS_DQ_RTBWARNS)
+-			q->qi_rtbwarnlimit = newlim->d_rtbwarns;
++		if (newlim->d_fieldmask & QC_SPC_WARNS)
++			q->qi_bwarnlimit = newlim->d_spc_warns;
++		if (newlim->d_fieldmask & QC_INO_WARNS)
++			q->qi_iwarnlimit = newlim->d_ino_warns;
++		if (newlim->d_fieldmask & QC_RT_SPC_WARNS)
++			q->qi_rtbwarnlimit = newlim->d_rt_spc_warns;
+ 	} else {
+ 		/*
+ 		 * If the user is now over quota, start the timelimit.
+@@ -798,7 +797,7 @@ xfs_qm_scall_getquota(
+ 	struct xfs_mount	*mp,
+ 	xfs_dqid_t		id,
+ 	uint			type,
+-	struct fs_disk_quota	*dst)
++	struct qc_dqblk		*dst)
+ {
+ 	struct xfs_dquot	*dqp;
+ 	int			error;
+@@ -822,28 +821,25 @@ xfs_qm_scall_getquota(
+ 	}
+ 
+ 	memset(dst, 0, sizeof(*dst));
+-	dst->d_version = FS_DQUOT_VERSION;
+-	dst->d_flags = xfs_qm_export_qtype_flags(dqp->q_core.d_flags);
+-	dst->d_id = be32_to_cpu(dqp->q_core.d_id);
+-	dst->d_blk_hardlimit =
+-		XFS_FSB_TO_BB(mp, be64_to_cpu(dqp->q_core.d_blk_hardlimit));
+-	dst->d_blk_softlimit =
+-		XFS_FSB_TO_BB(mp, be64_to_cpu(dqp->q_core.d_blk_softlimit));
++	dst->d_spc_hardlimit =
++		XFS_FSB_TO_B(mp, be64_to_cpu(dqp->q_core.d_blk_hardlimit));
++	dst->d_spc_softlimit =
++		XFS_FSB_TO_B(mp, be64_to_cpu(dqp->q_core.d_blk_softlimit));
+ 	dst->d_ino_hardlimit = be64_to_cpu(dqp->q_core.d_ino_hardlimit);
+ 	dst->d_ino_softlimit = be64_to_cpu(dqp->q_core.d_ino_softlimit);
+-	dst->d_bcount = XFS_FSB_TO_BB(mp, dqp->q_res_bcount);
+-	dst->d_icount = dqp->q_res_icount;
+-	dst->d_btimer = be32_to_cpu(dqp->q_core.d_btimer);
+-	dst->d_itimer = be32_to_cpu(dqp->q_core.d_itimer);
+-	dst->d_iwarns = be16_to_cpu(dqp->q_core.d_iwarns);
+-	dst->d_bwarns = be16_to_cpu(dqp->q_core.d_bwarns);
+-	dst->d_rtb_hardlimit =
+-		XFS_FSB_TO_BB(mp, be64_to_cpu(dqp->q_core.d_rtb_hardlimit));
+-	dst->d_rtb_softlimit =
+-		XFS_FSB_TO_BB(mp, be64_to_cpu(dqp->q_core.d_rtb_softlimit));
+-	dst->d_rtbcount = XFS_FSB_TO_BB(mp, dqp->q_res_rtbcount);
+-	dst->d_rtbtimer = be32_to_cpu(dqp->q_core.d_rtbtimer);
+-	dst->d_rtbwarns = be16_to_cpu(dqp->q_core.d_rtbwarns);
++	dst->d_space = XFS_FSB_TO_B(mp, dqp->q_res_bcount);
++	dst->d_ino_count = dqp->q_res_icount;
++	dst->d_spc_timer = be32_to_cpu(dqp->q_core.d_btimer);
++	dst->d_ino_timer = be32_to_cpu(dqp->q_core.d_itimer);
++	dst->d_ino_warns = be16_to_cpu(dqp->q_core.d_iwarns);
++	dst->d_spc_warns = be16_to_cpu(dqp->q_core.d_bwarns);
++	dst->d_rt_spc_hardlimit =
++		XFS_FSB_TO_B(mp, be64_to_cpu(dqp->q_core.d_rtb_hardlimit));
++	dst->d_rt_spc_softlimit =
++		XFS_FSB_TO_B(mp, be64_to_cpu(dqp->q_core.d_rtb_softlimit));
++	dst->d_rt_space = XFS_FSB_TO_B(mp, dqp->q_res_rtbcount);
++	dst->d_rt_spc_timer = be32_to_cpu(dqp->q_core.d_rtbtimer);
++	dst->d_rt_spc_warns = be16_to_cpu(dqp->q_core.d_rtbwarns);
+ 
+ 	/*
+ 	 * Internally, we don't reset all the timers when quota enforcement
+@@ -856,23 +852,23 @@ xfs_qm_scall_getquota(
+ 	     dqp->q_core.d_flags == XFS_DQ_GROUP) ||
+ 	    (!XFS_IS_PQUOTA_ENFORCED(mp) &&
+ 	     dqp->q_core.d_flags == XFS_DQ_PROJ)) {
+-		dst->d_btimer = 0;
+-		dst->d_itimer = 0;
+-		dst->d_rtbtimer = 0;
++		dst->d_spc_timer = 0;
++		dst->d_ino_timer = 0;
++		dst->d_rt_spc_timer = 0;
+ 	}
+ 
+ #ifdef DEBUG
+-	if (((XFS_IS_UQUOTA_ENFORCED(mp) && dst->d_flags == FS_USER_QUOTA) ||
+-	     (XFS_IS_GQUOTA_ENFORCED(mp) && dst->d_flags == FS_GROUP_QUOTA) ||
+-	     (XFS_IS_PQUOTA_ENFORCED(mp) && dst->d_flags == FS_PROJ_QUOTA)) &&
+-	    dst->d_id != 0) {
+-		if ((dst->d_bcount > dst->d_blk_softlimit) &&
+-		    (dst->d_blk_softlimit > 0)) {
+-			ASSERT(dst->d_btimer != 0);
++	if (((XFS_IS_UQUOTA_ENFORCED(mp) && type == XFS_DQ_USER) ||
++	     (XFS_IS_GQUOTA_ENFORCED(mp) && type == XFS_DQ_GROUP) ||
++	     (XFS_IS_PQUOTA_ENFORCED(mp) && type == XFS_DQ_PROJ)) &&
++	    id != 0) {
++		if ((dst->d_space > dst->d_spc_softlimit) &&
++		    (dst->d_spc_softlimit > 0)) {
++			ASSERT(dst->d_spc_timer != 0);
+ 		}
+-		if ((dst->d_icount > dst->d_ino_softlimit) &&
++		if ((dst->d_ino_count > dst->d_ino_softlimit) &&
+ 		    (dst->d_ino_softlimit > 0)) {
+-			ASSERT(dst->d_itimer != 0);
++			ASSERT(dst->d_ino_timer != 0);
+ 		}
+ 	}
+ #endif
+@@ -882,26 +878,6 @@ out_put:
+ }
+ 
+ STATIC uint
+-xfs_qm_export_qtype_flags(
+-	uint flags)
+-{
+-	/*
+-	 * Can't be more than one, or none.
+-	 */
+-	ASSERT((flags & (FS_PROJ_QUOTA | FS_USER_QUOTA)) !=
+-		(FS_PROJ_QUOTA | FS_USER_QUOTA));
+-	ASSERT((flags & (FS_PROJ_QUOTA | FS_GROUP_QUOTA)) !=
+-		(FS_PROJ_QUOTA | FS_GROUP_QUOTA));
+-	ASSERT((flags & (FS_USER_QUOTA | FS_GROUP_QUOTA)) !=
+-		(FS_USER_QUOTA | FS_GROUP_QUOTA));
+-	ASSERT((flags & (FS_PROJ_QUOTA|FS_USER_QUOTA|FS_GROUP_QUOTA)) != 0);
+-
+-	return (flags & XFS_DQ_USER) ?
+-		FS_USER_QUOTA : (flags & XFS_DQ_PROJ) ?
+-			FS_PROJ_QUOTA : FS_GROUP_QUOTA;
+-}
+-
+-STATIC uint
+ xfs_qm_export_flags(
+ 	uint flags)
+ {
+diff --git a/fs/xfs/xfs_quotaops.c b/fs/xfs/xfs_quotaops.c
+index 8fcd20dbf89a..a226203fa46a 100644
+--- a/fs/xfs/xfs_quotaops.c
++++ b/fs/xfs/xfs_quotaops.c
+@@ -131,7 +131,7 @@ STATIC int
+ xfs_fs_get_dqblk(
+ 	struct super_block	*sb,
+ 	struct kqid		qid,
+-	struct fs_disk_quota	*fdq)
++	struct qc_dqblk		*qdq)
+ {
+ 	struct xfs_mount	*mp = XFS_M(sb);
+ 
+@@ -141,14 +141,14 @@ xfs_fs_get_dqblk(
+ 		return -ESRCH;
+ 
+ 	return xfs_qm_scall_getquota(mp, from_kqid(&init_user_ns, qid),
+-				      xfs_quota_type(qid.type), fdq);
++				      xfs_quota_type(qid.type), qdq);
+ }
+ 
+ STATIC int
+ xfs_fs_set_dqblk(
+ 	struct super_block	*sb,
+ 	struct kqid		qid,
+-	struct fs_disk_quota	*fdq)
++	struct qc_dqblk		*qdq)
+ {
+ 	struct xfs_mount	*mp = XFS_M(sb);
+ 
+@@ -160,7 +160,7 @@ xfs_fs_set_dqblk(
+ 		return -ESRCH;
+ 
+ 	return xfs_qm_scall_setqlim(mp, from_kqid(&init_user_ns, qid),
+-				     xfs_quota_type(qid.type), fdq);
++				     xfs_quota_type(qid.type), qdq);
+ }
  
  const struct quotactl_ops xfs_quotactl_operations = {
- 	.get_state		= xfs_fs_get_quota_state,
-+	.set_info		= xfs_fs_set_info,
- 	.quota_enable		= xfs_quota_enable,
- 	.quota_disable		= xfs_quota_disable,
- 	.rm_xquota		= xfs_fs_rm_xquota,
+diff --git a/include/linux/quota.h b/include/linux/quota.h
+index 0c42113607ce..227f37f463c9 100644
+--- a/include/linux/quota.h
++++ b/include/linux/quota.h
+@@ -323,6 +323,49 @@ struct dquot_operations {
+ 
+ struct path;
+ 
++/* Structure for communicating via ->get_dqblk() & ->set_dqblk() */
++struct qc_dqblk {
++	int d_fieldmask;	/* mask of fields to change in ->set_dqblk() */
++	u64 d_spc_hardlimit;	/* absolute limit on used space */
++	u64 d_spc_softlimit;	/* preferred limit on used space */
++	u64 d_ino_hardlimit;	/* maximum # allocated inodes */
++	u64 d_ino_softlimit;	/* preferred inode limit */
++	u64 d_space;		/* Space owned by the user */
++	u64 d_ino_count;	/* # inodes owned by the user */
++	s64 d_ino_timer;	/* zero if within inode limits */
++				/* if not, we refuse service */
++	s64 d_spc_timer;	/* similar to above; for space */
++	int d_ino_warns;	/* # warnings issued wrt num inodes */
++	int d_spc_warns;	/* # warnings issued wrt used space */
++	u64 d_rt_spc_hardlimit;	/* absolute limit on realtime space */
++	u64 d_rt_spc_softlimit;	/* preferred limit on RT space */
++	u64 d_rt_space;		/* realtime space owned */
++	s64 d_rt_spc_timer;	/* similar to above; for RT space */
++	int d_rt_spc_warns;	/* # warnings issued wrt RT space */
++};
++
++/* Field specifiers for ->set_dqblk() in struct qc_dqblk */
++#define	QC_INO_SOFT	(1<<0)
++#define	QC_INO_HARD	(1<<1)
++#define	QC_SPC_SOFT	(1<<2)
++#define	QC_SPC_HARD	(1<<3)
++#define	QC_RT_SPC_SOFT	(1<<4)
++#define	QC_RT_SPC_HARD	(1<<5)
++#define QC_LIMIT_MASK (QC_INO_SOFT | QC_INO_HARD | QC_SPC_SOFT | QC_SPC_HARD | \
++		       QC_RT_SPC_SOFT | QC_RT_SPC_HARD)
++#define	QC_SPC_TIMER	(1<<6)
++#define	QC_INO_TIMER	(1<<7)
++#define	QC_RT_SPC_TIMER	(1<<8)
++#define QC_TIMER_MASK (QC_SPC_TIMER | QC_INO_TIMER | QC_RT_SPC_TIMER)
++#define	QC_SPC_WARNS	(1<<9)
++#define	QC_INO_WARNS	(1<<10)
++#define	QC_RT_SPC_WARNS	(1<<11)
++#define QC_WARNS_MASK (QC_SPC_WARNS | QC_INO_WARNS | QC_RT_SPC_WARNS)
++#define	QC_SPACE	(1<<12)
++#define	QC_INO_COUNT	(1<<13)
++#define	QC_RT_SPACE	(1<<14)
++#define QC_ACCT_MASK (QC_SPACE | QC_INO_COUNT | QC_RT_SPACE)
++
+ /* Operations handling requests from userspace */
+ struct quotactl_ops {
+ 	int (*quota_on)(struct super_block *, int, int, struct path *);
+@@ -331,8 +374,8 @@ struct quotactl_ops {
+ 	int (*quota_sync)(struct super_block *, int);
+ 	int (*get_info)(struct super_block *, int, struct if_dqinfo *);
+ 	int (*set_info)(struct super_block *, int, struct if_dqinfo *);
+-	int (*get_dqblk)(struct super_block *, struct kqid, struct fs_disk_quota *);
+-	int (*set_dqblk)(struct super_block *, struct kqid, struct fs_disk_quota *);
++	int (*get_dqblk)(struct super_block *, struct kqid, struct qc_dqblk *);
++	int (*set_dqblk)(struct super_block *, struct kqid, struct qc_dqblk *);
+ 	int (*get_xstate)(struct super_block *, struct fs_quota_stat *);
+ 	int (*set_xstate)(struct super_block *, unsigned int, int);
+ 	int (*get_xstatev)(struct super_block *, struct fs_quota_statv *);
+diff --git a/include/linux/quotaops.h b/include/linux/quotaops.h
+index f23538a6e411..29e3455f7d41 100644
+--- a/include/linux/quotaops.h
++++ b/include/linux/quotaops.h
+@@ -98,9 +98,9 @@ int dquot_quota_sync(struct super_block *sb, int type);
+ int dquot_get_dqinfo(struct super_block *sb, int type, struct if_dqinfo *ii);
+ int dquot_set_dqinfo(struct super_block *sb, int type, struct if_dqinfo *ii);
+ int dquot_get_dqblk(struct super_block *sb, struct kqid id,
+-		struct fs_disk_quota *di);
++		struct qc_dqblk *di);
+ int dquot_set_dqblk(struct super_block *sb, struct kqid id,
+-		struct fs_disk_quota *di);
++		struct qc_dqblk *di);
+ 
+ int __dquot_transfer(struct inode *inode, struct dquot **transfer_to);
+ int dquot_transfer(struct inode *inode, struct iattr *iattr);
 -- 
 2.1.2
 
