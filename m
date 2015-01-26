@@ -1,21 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 7E0B18019
-	for <xfs@oss.sgi.com>; Mon, 26 Jan 2015 08:34:44 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 1C660AC002
-	for <xfs@oss.sgi.com>; Mon, 26 Jan 2015 06:34:43 -0800 (PST)
-Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id LfjjsSjyfiiR6NCb (version=TLSv1 cipher=AES256-SHA
-	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 26 Jan 2015 06:34:42 -0800 (PST)
-From: Jan Kara <jack@suse.cz>
-Subject: [PATCH 04/16] quota: Add ->quota_{enable,
-	disable} callbacks for VFS quotas
-Date: Mon, 26 Jan 2015 15:34:21 +0100
-Message-Id: <1422282873-3381-5-git-send-email-jack@suse.cz>
-In-Reply-To: <1422282873-3381-1-git-send-email-jack@suse.cz>
-References: <1422282873-3381-1-git-send-email-jack@suse.cz>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 2E3BF7F8B
+	for <xfs@oss.sgi.com>; Mon, 26 Jan 2015 16:37:25 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 1CA2B8F8039
+	for <xfs@oss.sgi.com>; Mon, 26 Jan 2015 14:37:21 -0800 (PST)
+Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
+	[150.101.137.145]) by cuda.sgi.com with ESMTP id
+	ZEpwUVQYEOFAKDnL for <xfs@oss.sgi.com>;
+	Mon, 26 Jan 2015 14:37:18 -0800 (PST)
+Date: Tue, 27 Jan 2015 09:37:15 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: maxpct option for small xfs filesystems
+Message-ID: <20150126223715.GA7621@dastard>
+References: <54C667F3.8040303@oracle.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <54C667F3.8040303@oracle.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,151 +25,78 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: linux-fsdevel@vger.kernel.org
-Cc: cluster-devel@redhat.com, Jan Kara <jack@suse.cz>, ocfs2-devel@oss.oracle.com, xfs@oss.sgi.com
+To: Alexander Tsvetkov <alexander.tsvetkov@oracle.com>
+Cc: xfs@oss.sgi.com
 
-Add functions which translate ->quota_enable / ->quota_disable calls
-into appropriate changes in VFS quota. This will enable filesystems
-supporting VFS quota files in system inodes to be controlled via
-Q_XQUOTA[ON|OFF] quotactls for better userspace compatibility.
+On Mon, Jan 26, 2015 at 07:14:43PM +0300, Alexander Tsvetkov wrote:
+> Hello,
+> 
+> I'm trying to understand the expected behaviour of "maxpct" option
+> in case of small xfs filesystem
+> comparing the maximum percentage defined for this option with the
+> percentage of actually allocated
+> inodes in filesystem, but the result of prepared test case doesn't
+> correspond to the expectations:
+> 
+> [root@fedora ~]#mkfs.xfs -f -d size=16m -i maxpct=1 /dev/sdb2
 
-Also provide a vector for quotactl using these functions which can be
-used by filesystems with quota files stored in hidden system files.
+On 3.19-rc5, immediately after mount:
 
-Signed-off-by: Jan Kara <jack@suse.cz>
----
- fs/quota/dquot.c         | 91 ++++++++++++++++++++++++++++++++++++++++++++++++
- include/linux/quotaops.h |  1 +
- 2 files changed, 92 insertions(+)
+# df -i /mnt/scratch
+Filesystem     Inodes IUsed IFree IUse% Mounted on
+/dev/ram1         640     3   637    1% /mnt/scratch
 
-diff --git a/fs/quota/dquot.c b/fs/quota/dquot.c
-index 29eb9dc5728a..b47d0c17ea6f 100644
---- a/fs/quota/dquot.c
-+++ b/fs/quota/dquot.c
-@@ -2385,6 +2385,86 @@ out:
- }
- EXPORT_SYMBOL(dquot_quota_on_mount);
- 
-+static int dquot_quota_enable(struct super_block *sb, unsigned int flags)
-+{
-+	int ret;
-+	int type;
-+	struct quota_info *dqopt = sb_dqopt(sb);
-+
-+	if (!(dqopt->flags & DQUOT_QUOTA_SYS_FILE))
-+		return -ENOSYS;
-+	/* Accounting cannot be turned on while fs is mounted */
-+	flags &= ~(FS_QUOTA_UDQ_ACCT | FS_QUOTA_GDQ_ACCT | FS_QUOTA_PDQ_ACCT);
-+	if (!flags)
-+		return -EINVAL;
-+	for (type = 0; type < MAXQUOTAS; type++) {
-+		if (!(flags & qtype_enforce_flag(type)))
-+			continue;
-+		/* Can't enforce without accounting */
-+		if (!sb_has_quota_usage_enabled(sb, type))
-+			return -EINVAL;
-+		ret = dquot_enable(dqopt->files[type], type,
-+				   dqopt->info[type].dqi_fmt_id,
-+				   DQUOT_LIMITS_ENABLED);
-+		if (ret < 0)
-+			goto out_err;
-+	}
-+	return 0;
-+out_err:
-+	/* Backout enforcement enablement we already did */
-+	for (type--; type >= 0; type--)  {
-+		if (flags & qtype_enforce_flag(type))
-+			dquot_disable(sb, type, DQUOT_LIMITS_ENABLED);
-+	}
-+	/* Error code translation for better compatibility with XFS */
-+	if (ret == -EBUSY)
-+		ret = -EEXIST;
-+	return ret;
-+}
-+
-+static int dquot_quota_disable(struct super_block *sb, unsigned int flags)
-+{
-+	int ret;
-+	int type;
-+	struct quota_info *dqopt = sb_dqopt(sb);
-+
-+	if (!(dqopt->flags & DQUOT_QUOTA_SYS_FILE))
-+		return -ENOSYS;
-+	/*
-+	 * We don't support turning off accounting via quotactl. In principle
-+	 * quota infrastructure can do this but filesystems don't expect
-+	 * userspace to be able to do it.
-+	 */
-+	if (flags &
-+		  (FS_QUOTA_UDQ_ACCT | FS_QUOTA_GDQ_ACCT | FS_QUOTA_PDQ_ACCT))
-+		return -EOPNOTSUPP;
-+
-+	/* Filter out limits not enabled */
-+	for (type = 0; type < MAXQUOTAS; type++)
-+		if (!sb_has_quota_limits_enabled(sb, type))
-+			flags &= ~qtype_enforce_flag(type);
-+	/* Nothing left? */
-+	if (!flags)
-+		return -EEXIST;
-+	for (type = 0; type < MAXQUOTAS; type++) {
-+		if (flags & qtype_enforce_flag(type)) {
-+			ret = dquot_disable(sb, type, DQUOT_LIMITS_ENABLED);
-+			if (ret < 0)
-+				goto out_err;
-+		}
-+	}
-+	return 0;
-+out_err:
-+	/* Backout enforcement disabling we already did */
-+	for (type--; type >= 0; type--)  {
-+		if (flags & qtype_enforce_flag(type))
-+			dquot_enable(dqopt->files[type], type,
-+				     dqopt->info[type].dqi_fmt_id,
-+				     DQUOT_LIMITS_ENABLED);
-+	}
-+	return ret;
-+}
-+
- static inline qsize_t qbtos(qsize_t blocks)
- {
- 	return blocks << QIF_DQBLKSIZE_BITS;
-@@ -2614,6 +2694,17 @@ const struct quotactl_ops dquot_quotactl_ops = {
- };
- EXPORT_SYMBOL(dquot_quotactl_ops);
- 
-+const struct quotactl_ops dquot_quotactl_sysfile_ops = {
-+	.quota_enable	= dquot_quota_enable,
-+	.quota_disable	= dquot_quota_disable,
-+	.quota_sync	= dquot_quota_sync,
-+	.get_info	= dquot_get_dqinfo,
-+	.set_info	= dquot_set_dqinfo,
-+	.get_dqblk	= dquot_get_dqblk,
-+	.set_dqblk	= dquot_set_dqblk
-+};
-+EXPORT_SYMBOL(dquot_quotactl_sysfile_ops);
-+
- static int do_proc_dqstats(struct ctl_table *table, int write,
- 		     void __user *buffer, size_t *lenp, loff_t *ppos)
- {
-diff --git a/include/linux/quotaops.h b/include/linux/quotaops.h
-index ff0b665591d0..df73258cca47 100644
---- a/include/linux/quotaops.h
-+++ b/include/linux/quotaops.h
-@@ -166,6 +166,7 @@ static inline bool sb_has_quota_active(struct super_block *sb, int type)
-  */
- extern const struct dquot_operations dquot_operations;
- extern const struct quotactl_ops dquot_quotactl_ops;
-+extern const struct quotactl_ops dquot_quotactl_sysfile_ops;
- 
- #else
- 
+Which indicates that imaxpct=1 is being calculated correctly, before
+we even look at whether it is being enforced correctly or not.
+
+So, what kernel version?
+
+http://xfs.org/index.php/XFS_FAQ#Q:_What_information_should_I_include_when_reporting_a_problem.3F
+
+> [root@fedora ~]# for i in {0..100000}; do str=$(mktemp
+> --tmpdir=/mnt/scratch tmp.XXXXXXXXXX); echo $str; done
+
+Which is a complex (and very slow!) way of doing:
+
+# for i in {0..100000}; do echo > /mnt/scratch/$i ; done 2> /dev/null
+
+> filesystem is full with created files:
+> 
+> [root@fedora ~]# df -Th | grep scratch
+> /dev/sdb2      xfs        13M   13M  148K  99% /mnt/scratch
+
+# df -Th /mnt/scratch
+Filesystem     Type  Size  Used Avail Use% Mounted on
+/dev/ram1      xfs    13M  1.1M   12M   9% /mnt/scratch
+# df -i /mnt/scratch
+Filesystem     Inodes IUsed IFree IUse% Mounted on
+/dev/ram1         640   640     0  100% /mnt/scratch
+
+> and from the number of actually created inodes:
+> 
+> [root@fedora ~]# xfs_db -c "blockget -n" -c "ncheck" /dev/sdb2 | wc -l
+> 40512
+
+That's a directory structure entry count, equivalent to 'find
+/mnt/scratch | wc -l', not an allocated inode count which is what
+'df -i' reports. Even so, on 3.19-rc5:
+
+# xfs_db -c "blockget -n" -c "ncheck" /dev/ram1 | wc -l
+637
+
+which matches what 'df -i' tells us about allocated inodes and hence
+imaxpct is working as expected.
+
+Cheers,
+
+Dave.
 -- 
-2.1.2
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
