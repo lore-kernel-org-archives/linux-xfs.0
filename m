@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id A3C127F90
-	for <xfs@oss.sgi.com>; Mon, 26 Jan 2015 21:15:02 -0600 (CST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id A968F7F95
+	for <xfs@oss.sgi.com>; Mon, 26 Jan 2015 21:15:01 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 3CA49AC004
-	for <xfs@oss.sgi.com>; Mon, 26 Jan 2015 19:15:02 -0800 (PST)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 6E59D304039
+	for <xfs@oss.sgi.com>; Mon, 26 Jan 2015 19:15:01 -0800 (PST)
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	cQJ45bYMFWlDKJEK for <xfs@oss.sgi.com>;
-	Mon, 26 Jan 2015 19:15:00 -0800 (PST)
+	9kKAcGNCRyNQ33Gv for <xfs@oss.sgi.com>;
+	Mon, 26 Jan 2015 19:14:59 -0800 (PST)
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 5/9] xfs: kill xfs_ioctl_setattr behaviour mask
-Date: Tue, 27 Jan 2015 14:14:42 +1100
-Message-Id: <1422328486-24661-6-git-send-email-david@fromorbit.com>
+Subject: [PATCH 9/9] xfs: fix behaviour of XFS_IOC_FSSETXATTR on directories
+Date: Tue, 27 Jan 2015 14:14:46 +1100
+Message-Id: <1422328486-24661-10-git-send-email-david@fromorbit.com>
 In-Reply-To: <1422328486-24661-1-git-send-email-david@fromorbit.com>
 References: <1422328486-24661-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -31,259 +31,108 @@ Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 Cc: iustin@k1024.org
 
-From: Dave Chinner <dchinner@redhat.com>
+From: Iustin Pop <iustin@k1024.org>
 
-Now there is only one caller to xfs_ioctl_setattr that uses all the
-functionality of the function we can kill the behviour mask and
-start cleaning up the code.
+Currently, the ioctl handling code for XFS_IOC_FSSETXATTR treats all
+targets as regular files: it refuses to change the extent size if
+extents are allocated. This is wrong for directories, as there the
+extent size is only used as a default for children.
 
+The patch fixes this issue and improves validation of flag
+combinations:
+
+- only disallow extent size changes after extents have been allocated
+  for regular files
+- only allow XFS_XFLAG_EXTSIZE for regular files
+- only allow XFS_XFLAG_EXTSZINHERIT for directories
+- automatically clear the flags if the extent size is zero
+
+Thanks to Dave Chinner for guidance on the proper fix for this issue.
+
+[dchinner: ported changes onto cleanup series. Makes changes clear
+	   and obvious.]
+[dchinner: added comments documenting validity checking rules.]
+
+Signed-off-by: Iustin Pop <iustin@k1024.org>
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_ioctl.c | 168 +++++++++++++++++++++--------------------------------
- 1 file changed, 65 insertions(+), 103 deletions(-)
+ fs/xfs/xfs_ioctl.c | 39 +++++++++++++++++++++++++--------------
+ 1 file changed, 25 insertions(+), 14 deletions(-)
 
 diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-index c71f32d..563d2b4 100644
+index 561d142..5d9dc69 100644
 --- a/fs/xfs/xfs_ioctl.c
 +++ b/fs/xfs/xfs_ioctl.c
-@@ -1098,15 +1098,10 @@ out_cancel:
+@@ -1098,6 +1098,20 @@ out_cancel:
  	return ERR_PTR(error);
  }
  
--#define FSX_PROJID	1
--#define FSX_EXTSIZE	2
--#define FSX_XFLAGS	4
++/*
++ * extent size hint validation is somewhat cumbersome. Rules are:
++ *
++ * 1. extent size hint is only valid for directories and regular files
++ * 2. XFS_XFLAG_EXTSIZE is only valid for regular files
++ * 3. XFS_XFLAG_EXTSZINHERIT is only valid for directories.
++ * 4. can only be changed on regular files if no extents are allocated
++ * 5. can be changed on directories at any time
++ * 6. extsize hint of 0 turns off hints, clears inode flags.
++ * 7. Extent size must be a multiple of the appropriate block size.
++ * 8. for non-realtime files, the extent size hint must be limited
++ *    to half the AG size to avoid alignment extending the extent beyond the
++ *    limits of the AG.
++ */
+ int
+ xfs_ioctl_setattr_check_extsize(
+ 	struct xfs_inode	*ip,
+@@ -1105,20 +1119,17 @@ xfs_ioctl_setattr_check_extsize(
+ {
+ 	struct xfs_mount	*mp = ip->i_mount;
+ 
+-	/* Can't change extent size if any extents are allocated. */
+-	if (ip->i_d.di_nextents &&
++	if ((fa->fsx_xflags & XFS_XFLAG_EXTSIZE) && !S_ISREG(ip->i_d.di_mode))
++		return -EINVAL;
++
++	if ((fa->fsx_xflags & XFS_XFLAG_EXTSZINHERIT) &&
++	    !S_ISDIR(ip->i_d.di_mode))
++		return -EINVAL;
++
++	if (S_ISREG(ip->i_d.di_mode) && ip->i_d.di_nextents &&
+ 	    ((ip->i_d.di_extsize << mp->m_sb.sb_blocklog) != fa->fsx_extsize))
+ 		return -EINVAL;
+ 
+-	/*
+-	 * Extent size must be a multiple of the appropriate block size, if set
+-	 * at all. It must also be smaller than the maximum extent size
+-	 * supported by the filesystem.
+-	 *
+-	 * Also, for non-realtime files, limit the extent size hint to half the
+-	 * size of the AGs in the filesystem so alignment doesn't result in
+-	 * extents larger than an AG.
+-	 */
+ 	if (fa->fsx_extsize != 0) {
+ 		xfs_extlen_t    size;
+ 		xfs_fsblock_t   extsize_fsb;
+@@ -1138,7 +1149,9 @@ xfs_ioctl_setattr_check_extsize(
+ 
+ 		if (fa->fsx_extsize % size)
+ 			return -EINVAL;
+-	}
++	} else
++		fa->fsx_xflags &= ~(XFS_XFLAG_EXTSIZE | XFS_XFLAG_EXTSZINHERIT);
++
+ 	return 0;
+ }
+ 
+@@ -1169,8 +1182,6 @@ xfs_ioctl_setattr_check_projid(
+ 	return 0;
+ }
+ 
+-
 -
  STATIC int
  xfs_ioctl_setattr(
  	xfs_inode_t		*ip,
--	struct fsxattr		*fa,
--	int			mask)
-+	struct fsxattr		*fa)
- {
- 	struct xfs_mount	*mp = ip->i_mount;
- 	struct xfs_trans	*tp;
-@@ -1120,8 +1115,8 @@ xfs_ioctl_setattr(
- 	/*
- 	 * Disallow 32bit project ids when projid32bit feature is not enabled.
- 	 */
--	if ((mask & FSX_PROJID) && (fa->fsx_projid > (__uint16_t)-1) &&
--			!xfs_sb_version_hasprojid32bit(&ip->i_mount->m_sb))
-+	if (fa->fsx_projid > (__uint16_t)-1 &&
-+	    !xfs_sb_version_hasprojid32bit(&ip->i_mount->m_sb))
- 		return -EINVAL;
- 
- 	/*
-@@ -1132,7 +1127,7 @@ xfs_ioctl_setattr(
- 	 * If the IDs do change before we take the ilock, we're covered
- 	 * because the i_*dquot fields will get updated anyway.
- 	 */
--	if (XFS_IS_QUOTA_ON(mp) && (mask & FSX_PROJID)) {
-+	if (XFS_IS_QUOTA_ON(mp)) {
- 		code = xfs_qm_vop_dqalloc(ip, ip->i_d.di_uid,
- 					 ip->i_d.di_gid, fa->fsx_projid,
- 					 XFS_QMOPT_PQUOTA, &udqp, NULL, &pdqp);
-@@ -1149,72 +1144,53 @@ xfs_ioctl_setattr(
- 	 * Only allow changing of projid from init_user_ns since it is a
- 	 * non user namespace aware identifier.
- 	 */
--	if (mask & FSX_PROJID) {
--		if (current_user_ns() != &init_user_ns) {
--			code = -EINVAL;
--			goto error_return;
--		}
--
--		if (XFS_IS_QUOTA_RUNNING(mp) &&
--		    XFS_IS_PQUOTA_ON(mp) &&
--		    xfs_get_projid(ip) != fa->fsx_projid) {
--			ASSERT(tp);
--			code = xfs_qm_vop_chown_reserve(tp, ip, udqp, NULL,
--						pdqp, capable(CAP_FOWNER) ?
--						XFS_QMOPT_FORCE_RES : 0);
--			if (code)	/* out of quota */
--				goto error_return;
--		}
-+	if (current_user_ns() != &init_user_ns) {
-+		code = -EINVAL;
-+		goto error_return;
- 	}
- 
--	if (mask & FSX_EXTSIZE) {
--		/*
--		 * Can't change extent size if any extents are allocated.
--		 */
--		if (ip->i_d.di_nextents &&
--		    ((ip->i_d.di_extsize << mp->m_sb.sb_blocklog) !=
--		     fa->fsx_extsize)) {
--			code = -EINVAL;	/* EFBIG? */
-+	if (XFS_IS_QUOTA_RUNNING(mp) && XFS_IS_PQUOTA_ON(mp) &&
-+	    xfs_get_projid(ip) != fa->fsx_projid) {
-+		code = xfs_qm_vop_chown_reserve(tp, ip, udqp, NULL, pdqp,
-+				capable(CAP_FOWNER) ?  XFS_QMOPT_FORCE_RES : 0);
-+		if (code)	/* out of quota */
- 			goto error_return;
--		}
-+	}
- 
--		/*
--		 * Extent size must be a multiple of the appropriate block
--		 * size, if set at all. It must also be smaller than the
--		 * maximum extent size supported by the filesystem.
--		 *
--		 * Also, for non-realtime files, limit the extent size hint to
--		 * half the size of the AGs in the filesystem so alignment
--		 * doesn't result in extents larger than an AG.
--		 */
--		if (fa->fsx_extsize != 0) {
--			xfs_extlen_t    size;
--			xfs_fsblock_t   extsize_fsb;
-+	/* Can't change extent size if any extents are allocated. */
-+	code = -EINVAL;
-+	if (ip->i_d.di_nextents &&
-+	    ((ip->i_d.di_extsize << mp->m_sb.sb_blocklog) != fa->fsx_extsize))
-+		goto error_return;
- 
--			extsize_fsb = XFS_B_TO_FSB(mp, fa->fsx_extsize);
--			if (extsize_fsb > MAXEXTLEN) {
--				code = -EINVAL;
--				goto error_return;
--			}
--
--			if (XFS_IS_REALTIME_INODE(ip) ||
--			    ((mask & FSX_XFLAGS) &&
--			    (fa->fsx_xflags & XFS_XFLAG_REALTIME))) {
--				size = mp->m_sb.sb_rextsize <<
--				       mp->m_sb.sb_blocklog;
--			} else {
--				size = mp->m_sb.sb_blocksize;
--				if (extsize_fsb > mp->m_sb.sb_agblocks / 2) {
--					code = -EINVAL;
--					goto error_return;
--				}
--			}
--
--			if (fa->fsx_extsize % size) {
--				code = -EINVAL;
-+	/*
-+	 * Extent size must be a multiple of the appropriate block size, if set
-+	 * at all. It must also be smaller than the maximum extent size
-+	 * supported by the filesystem.
-+	 *
-+	 * Also, for non-realtime files, limit the extent size hint to half the
-+	 * size of the AGs in the filesystem so alignment doesn't result in
-+	 * extents larger than an AG.
-+	 */
-+	if (fa->fsx_extsize != 0) {
-+		xfs_extlen_t    size;
-+		xfs_fsblock_t   extsize_fsb;
-+
-+		extsize_fsb = XFS_B_TO_FSB(mp, fa->fsx_extsize);
-+		if (extsize_fsb > MAXEXTLEN)
-+			goto error_return;
-+
-+		if (XFS_IS_REALTIME_INODE(ip) ||
-+		    (fa->fsx_xflags & XFS_XFLAG_REALTIME)) {
-+			size = mp->m_sb.sb_rextsize << mp->m_sb.sb_blocklog;
-+		} else {
-+			size = mp->m_sb.sb_blocksize;
-+			if (extsize_fsb > mp->m_sb.sb_agblocks / 2)
- 				goto error_return;
--			}
- 		}
-+
-+		if (fa->fsx_extsize % size)
-+			goto error_return;
- 	}
- 
- 
-@@ -1223,32 +1199,25 @@ xfs_ioctl_setattr(
- 		goto error_return;
- 
- 	/*
--	 * Change file ownership.  Must be the owner or privileged.
-+	 * Change file ownership.  Must be the owner or privileged.  CAP_FSETID
-+	 * overrides the following restrictions:
-+	 *
-+	 * The set-user-ID and set-group-ID bits of a file will be cleared upon
-+	 * successful return from chown()
- 	 */
--	if (mask & FSX_PROJID) {
--		/*
--		 * CAP_FSETID overrides the following restrictions:
--		 *
--		 * The set-user-ID and set-group-ID bits of a file will be
--		 * cleared upon successful return from chown()
--		 */
--		if ((ip->i_d.di_mode & (S_ISUID|S_ISGID)) &&
--		    !capable_wrt_inode_uidgid(VFS_I(ip), CAP_FSETID))
--			ip->i_d.di_mode &= ~(S_ISUID|S_ISGID);
- 
--		/*
--		 * Change the ownerships and register quota modifications
--		 * in the transaction.
--		 */
--		if (xfs_get_projid(ip) != fa->fsx_projid) {
--			if (XFS_IS_QUOTA_RUNNING(mp) && XFS_IS_PQUOTA_ON(mp)) {
--				olddquot = xfs_qm_vop_chown(tp, ip,
--							&ip->i_pdquot, pdqp);
--			}
--			ASSERT(ip->i_d.di_version > 1);
--			xfs_set_projid(ip, fa->fsx_projid);
--		}
-+	if ((ip->i_d.di_mode & (S_ISUID|S_ISGID)) &&
-+	    !capable_wrt_inode_uidgid(VFS_I(ip), CAP_FSETID))
-+		ip->i_d.di_mode &= ~(S_ISUID|S_ISGID);
- 
-+	/* Change the ownerships and register project quota modifications */
-+	if (xfs_get_projid(ip) != fa->fsx_projid) {
-+		if (XFS_IS_QUOTA_RUNNING(mp) && XFS_IS_PQUOTA_ON(mp)) {
-+			olddquot = xfs_qm_vop_chown(tp, ip,
-+						&ip->i_pdquot, pdqp);
-+		}
-+		ASSERT(ip->i_d.di_version > 1);
-+		xfs_set_projid(ip, fa->fsx_projid);
- 	}
- 
- 	/*
-@@ -1256,14 +1225,10 @@ xfs_ioctl_setattr(
- 	 * extent size hint should be set on the inode. If no extent size flags
- 	 * are set on the inode then unconditionally clear the extent size hint.
- 	 */
--	if (mask & FSX_EXTSIZE) {
--		int	extsize = 0;
--
--		if (ip->i_d.di_flags &
--				(XFS_DIFLAG_EXTSIZE | XFS_DIFLAG_EXTSZINHERIT))
--			extsize = fa->fsx_extsize >> mp->m_sb.sb_blocklog;
--		ip->i_d.di_extsize = extsize;
--	}
-+	if (ip->i_d.di_flags & (XFS_DIFLAG_EXTSIZE | XFS_DIFLAG_EXTSZINHERIT))
-+		ip->i_d.di_extsize = fa->fsx_extsize >> mp->m_sb.sb_blocklog;
-+	else
-+		ip->i_d.di_extsize = 0;
- 
- 	code = xfs_trans_commit(tp, 0);
- 
-@@ -1290,18 +1255,15 @@ xfs_ioc_fssetxattr(
- 	void			__user *arg)
- {
- 	struct fsxattr		fa;
--	unsigned int		mask;
- 	int error;
- 
- 	if (copy_from_user(&fa, arg, sizeof(fa)))
- 		return -EFAULT;
- 
--	mask = FSX_XFLAGS | FSX_EXTSIZE | FSX_PROJID;
--
- 	error = mnt_want_write_file(filp);
- 	if (error)
- 		return error;
--	error = xfs_ioctl_setattr(ip, &fa, mask);
-+	error = xfs_ioctl_setattr(ip, &fa);
- 	mnt_drop_write_file(filp);
- 	return error;
- }
 -- 
 2.0.0
 
