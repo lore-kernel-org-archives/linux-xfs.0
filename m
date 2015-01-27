@@ -1,20 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 1B0BF7FA5
-	for <xfs@oss.sgi.com>; Mon, 26 Jan 2015 21:15:04 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id DF169304032
-	for <xfs@oss.sgi.com>; Mon, 26 Jan 2015 19:15:00 -0800 (PST)
-Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
-	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	xHi8xtlRAwlo8KhY for <xfs@oss.sgi.com>;
-	Mon, 26 Jan 2015 19:14:59 -0800 (PST)
-From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 6/9] xfs: XFS_IOCTL_SETXATTR can run in user namespaces
-Date: Tue, 27 Jan 2015 14:14:43 +1100
-Message-Id: <1422328486-24661-7-git-send-email-david@fromorbit.com>
-In-Reply-To: <1422328486-24661-1-git-send-email-david@fromorbit.com>
-References: <1422328486-24661-1-git-send-email-david@fromorbit.com>
+	by oss.sgi.com (Postfix) with ESMTP id 7B4F87FB6
+	for <xfs@oss.sgi.com>; Tue, 27 Jan 2015 06:45:22 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 69EFD304032
+	for <xfs@oss.sgi.com>; Tue, 27 Jan 2015 04:45:19 -0800 (PST)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id rkdEvTdLN9Feeg0e (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 27 Jan 2015 04:45:18 -0800 (PST)
+Date: Tue, 27 Jan 2015 07:44:59 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: I think that get direct directory size int the xfs file system
+Message-ID: <20150127124459.GA2115@laptop.bfoster>
+References: <201501261707321631278@sobey.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <201501261707321631278@sobey.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,72 +25,36 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: iustin@k1024.org
+To: "lihongliang@sobey.com" <lihongliang@sobey.com>
+Cc: xfs <xfs@oss.sgi.com>
 
-From: Dave Chinner <dchinner@redhat.com>
-
-Currently XFS_IOCTL_SETXATTR will fail if run in a user namespace as
-it it not allowed to change project IDs. The current code, however,
-also prevents any other change being made as well, so things like
-extent size hints cannot be set in user namespaces. This is wrong,
-so only disallow access to project IDs and related flags from inside
-the init namespace.
-
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- fs/xfs/xfs_ioctl.c | 22 +++++++++++++---------
- 1 file changed, 13 insertions(+), 9 deletions(-)
-
-diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-index 563d2b4..ae6e1e3 100644
---- a/fs/xfs/xfs_ioctl.c
-+++ b/fs/xfs/xfs_ioctl.c
-@@ -1120,6 +1120,19 @@ xfs_ioctl_setattr(
- 		return -EINVAL;
- 
- 	/*
-+	 * Project Quota ID state is only allowed to change from within the init
-+	 * namespace. Enforce that restriction only if we are trying to change
-+	 * the quota ID state. Everything else is allowed in user namespaces.
-+	 */
-+	if (current_user_ns() != &init_user_ns) {
-+		if (xfs_get_projid(ip) != fa->fsx_projid)
-+			return -EINVAL;
-+		if ((fa->fsx_xflags & XFS_XFLAG_PROJINHERIT) ^
-+		    (ip->i_d.di_flags & XFS_DIFLAG_PROJINHERIT))
-+			return -EINVAL;
-+	}
-+
-+	/*
- 	 * If disk quotas is on, we make sure that the dquots do exist on disk,
- 	 * before we start any other transactions. Trying to do this later
- 	 * is messy. We don't care to take a readlock to look at the ids
-@@ -1139,15 +1152,6 @@ xfs_ioctl_setattr(
- 	if (IS_ERR(tp))
- 		return PTR_ERR(tp);
- 
--	/*
--	 * Do a quota reservation only if projid is actually going to change.
--	 * Only allow changing of projid from init_user_ns since it is a
--	 * non user namespace aware identifier.
--	 */
--	if (current_user_ns() != &init_user_ns) {
--		code = -EINVAL;
--		goto error_return;
--	}
- 
- 	if (XFS_IS_QUOTA_RUNNING(mp) && XFS_IS_PQUOTA_ON(mp) &&
- 	    xfs_get_projid(ip) != fa->fsx_projid) {
--- 
-2.0.0
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gTW9uLCBKYW4gMjYsIDIwMTUgYXQgMDU6MDc6MzdQTSArMDgwMCwgbGlob25nbGlhbmdAc29i
+ZXkuY29tIHdyb3RlOgo+IEhlbGxvCj4gICAgICAgICBDYW4gZ2V0IGRpcmVjdCBkaXJlY3Rvcnkg
+c2l6ZSBpbnQgdGhlIFhGUyBmaWxlIHN5c3RlbT8KPiBleGFtcGxl77yaCj4gIHJvb3RAZmljc05v
+ZGUxIHRlc3QxXSMgbW91bnQgfCBncmVwIHhmcyAKPiAvZGV2L3NkYyBvbiAveGZzIHR5cGUgeGZz
+IChydyx1cXVvdGEpIAo+IFtyb290QGZpY3NOb2RlMSB0ZXN0MV0jIHB3ZCAKPiAveGZzL3Rlc3Qx
+IAo+IFtyb290QGZpY3NOb2RlMSB0ZXN0MV0jIGxzIC1saCAKPiB0b3RhbCA1TSAKPiAtcnctci0t
+ci0tIDEgcm9vdCByb290IDEuME0gSmFuIDI2IDA5OjMzIGJsb2NrMSAKPiAtcnctci0tci0tIDEg
+cm9vdCByb290IDEuME0gSmFuIDI2IDA5OjMzIGJsb2NrMiAKPiAtcnctci0tci0tIDEgcm9vdCBy
+b290IDEuME0gSmFuIDI2IDA5OjMzIGJsb2NrMyAKPiAtcnctci0tci0tIDEgcm9vdCByb290IDEu
+ME0gSmFuIDI2IDA5OjMzIGJsb2NrNCAKPiAtcnctci0tci0tIDEgcm9vdCByb290IDEuME0gSmFu
+IDI2IDA5OjMzIGJsb2NrNSAKPiBbcm9vdEBmaWNzTm9kZTEgdGVzdDFdIyAgCj4gCj4gICAgY2Fu
+IEkgZ2V0IGRpcmVjdCBpdCAgYnkgY2FsbCBzeXN0ZW0gZnVuY3Rpb24gdGhlIHRoYXQgdGhlIC94
+ZnMvdGVzdDEgaXMgNU0/Cj4gCgpObywgYmVjYXVzZSB0aGF0IDVNQiBkYXRhIHBvaW50IGlzIG5v
+dCBhIGRpcmVjdCBhdHRyaWJ1dGUgb2YgdGhlCmRpcmVjdG9yeS4gSXQncyB0aGUgc3VtIG9mIHRo
+ZSBzcGFjZSB1c2VkIGJ5IGZpbGVzIHdpdGhpbiB0aGUgZGlyZWN0b3J5LgpUaGUgYmxvY2tzIHVz
+ZWQgYnkgdGhlIGRpcmVjdG9yeSBpdHNlbGYgYXJlIGZpbGxlZCB3aXRoIGRpcmVjdG9yeQplbnRy
+aWVzIChlLmcuLCBkYXRhIHN0cnVjdHVyZXMgdGhhdCBjb250YWluIHRoZSBmaWxlIG5hbWVzIGxp
+c3RlZCBhYm92ZQphbG9uZyB3aXRoIGEgcmVmZXJlbmNlIHRvIGFuIGlub2RlKS4KCkEgdG9vbCBs
+aWtlIGxzIG9yIGR1IGlzIHVzZWQgdG8gcHJvY2VzcyBhIGRpcmVjdG9yeSB0byBvYnRhaW4gY3Vt
+dWxhdGl2ZQpkYXRhIHN1Y2ggYXMgdGhlIHRvdGFsIHNwYWNlIHVzZWQgYnkgZmlsZXMgaW4gc29t
+ZSBwYXJ0aWN1bGFyIHN1YnRyZWUuCgpCcmlhbgoKPiAKPiBsaWhvbmdsaWFuZ0Bzb2JleS5jb20K
+Cj4gX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KPiB4ZnMg
+bWFpbGluZyBsaXN0Cj4geGZzQG9zcy5zZ2kuY29tCj4gaHR0cDovL29zcy5zZ2kuY29tL21haWxt
+YW4vbGlzdGluZm8veGZzCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5j
+b20vbWFpbG1hbi9saXN0aW5mby94ZnMK
