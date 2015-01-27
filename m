@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id D8B727F96
-	for <xfs@oss.sgi.com>; Mon, 26 Jan 2015 21:15:01 -0600 (CST)
+	by oss.sgi.com (Postfix) with ESMTP id A3C127F90
+	for <xfs@oss.sgi.com>; Mon, 26 Jan 2015 21:15:02 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 71CFDAC005
-	for <xfs@oss.sgi.com>; Mon, 26 Jan 2015 19:15:01 -0800 (PST)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 3CA49AC004
+	for <xfs@oss.sgi.com>; Mon, 26 Jan 2015 19:15:02 -0800 (PST)
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	ZUrQuGput8j2yls5 for <xfs@oss.sgi.com>;
+	cQJ45bYMFWlDKJEK for <xfs@oss.sgi.com>;
 	Mon, 26 Jan 2015 19:15:00 -0800 (PST)
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 3/9] xfs: factor out xfs_ioctl_setattr transaciton preamble
-Date: Tue, 27 Jan 2015 14:14:40 +1100
-Message-Id: <1422328486-24661-4-git-send-email-david@fromorbit.com>
+Subject: [PATCH 5/9] xfs: kill xfs_ioctl_setattr behaviour mask
+Date: Tue, 27 Jan 2015 14:14:42 +1100
+Message-Id: <1422328486-24661-6-git-send-email-david@fromorbit.com>
 In-Reply-To: <1422328486-24661-1-git-send-email-david@fromorbit.com>
 References: <1422328486-24661-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -33,166 +33,257 @@ Cc: iustin@k1024.org
 
 From: Dave Chinner <dchinner@redhat.com>
 
-The setup of the transaction is done after a random smattering of
-checks and before another bunch of ioperations specific
-validity checks. Pull all the preamble out into a helper function
-that returns a transaction or error.
+Now there is only one caller to xfs_ioctl_setattr that uses all the
+functionality of the function we can kill the behviour mask and
+start cleaning up the code.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_ioctl.c | 96 +++++++++++++++++++++++++++++-------------------------
- 1 file changed, 51 insertions(+), 45 deletions(-)
+ fs/xfs/xfs_ioctl.c | 168 +++++++++++++++++++++--------------------------------
+ 1 file changed, 65 insertions(+), 103 deletions(-)
 
 diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-index ba98412..d06f596 100644
+index c71f32d..563d2b4 100644
 --- a/fs/xfs/xfs_ioctl.c
 +++ b/fs/xfs/xfs_ioctl.c
-@@ -1042,7 +1042,6 @@ xfs_ioctl_setattr_xflags(
- 	    !capable(CAP_LINUX_IMMUTABLE))
- 		return -EPERM;
- 
--	xfs_trans_ijoin(tp, ip, 0);
- 	xfs_set_diflags(ip, fa->fsx_xflags);
- 	xfs_diflags_to_linux(ip);
- 	xfs_trans_ichgtime(tp, ip, XFS_ICHGTIME_CHG);
-@@ -1051,6 +1050,54 @@ xfs_ioctl_setattr_xflags(
- 	return 0;
+@@ -1098,15 +1098,10 @@ out_cancel:
+ 	return ERR_PTR(error);
  }
  
-+/*
-+ * Set up the transaction structure for the setattr operation, checking that we
-+ * have permission to do so. On success, return a clean transaction and the
-+ * inode locked exclusively ready for futher operation specific checks. On
-+ * failure, return an error without modifying or locking the inode.
-+ */
-+static struct xfs_trans *
-+xfs_ioctl_setattr_get_trans(
-+	struct xfs_inode	*ip)
-+{
-+	struct xfs_mount	*mp = ip->i_mount;
-+	struct xfs_trans	*tp;
-+	int			error;
-+
-+	if (mp->m_flags & XFS_MOUNT_RDONLY)
-+		return ERR_PTR(-EROFS);
-+	if (XFS_FORCED_SHUTDOWN(mp))
-+		return ERR_PTR(-EIO);
-+
-+	tp = xfs_trans_alloc(mp, XFS_TRANS_SETATTR_NOT_SIZE);
-+	error = xfs_trans_reserve(tp, &M_RES(mp)->tr_ichange, 0, 0);
-+	if (error)
-+		goto out_cancel;
-+
-+	xfs_ilock(ip, XFS_ILOCK_EXCL);
-+	xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL);
-+
-+	/*
-+	 * CAP_FOWNER overrides the following restrictions:
-+	 *
-+	 * The user ID of the calling process must be equal to the file owner
-+	 * ID, except in cases where the CAP_FSETID capability is applicable.
-+	 */
-+	if (!inode_owner_or_capable(VFS_I(ip))) {
-+		error = -EPERM;
-+		goto out_cancel;
-+	}
-+
-+	if (mp->m_flags & XFS_MOUNT_WSYNC)
-+		xfs_trans_set_sync(tp);
-+
-+	return tp;
-+
-+out_cancel:
-+	xfs_trans_cancel(tp, 0);
-+	return ERR_PTR(error);
-+}
-+
- #define FSX_PROJID	1
- #define FSX_EXTSIZE	2
- #define FSX_XFLAGS	4
-@@ -1063,7 +1110,6 @@ xfs_ioctl_setattr(
+-#define FSX_PROJID	1
+-#define FSX_EXTSIZE	2
+-#define FSX_XFLAGS	4
+-
+ STATIC int
+ xfs_ioctl_setattr(
+ 	xfs_inode_t		*ip,
+-	struct fsxattr		*fa,
+-	int			mask)
++	struct fsxattr		*fa)
  {
  	struct xfs_mount	*mp = ip->i_mount;
  	struct xfs_trans	*tp;
--	unsigned int		lock_flags = 0;
- 	struct xfs_dquot	*udqp = NULL;
- 	struct xfs_dquot	*pdqp = NULL;
- 	struct xfs_dquot	*olddquot = NULL;
-@@ -1071,11 +1117,6 @@ xfs_ioctl_setattr(
- 
- 	trace_xfs_ioctl_setattr(ip);
- 
--	if (mp->m_flags & XFS_MOUNT_RDONLY)
--		return -EROFS;
--	if (XFS_FORCED_SHUTDOWN(mp))
--		return -EIO;
--
+@@ -1120,8 +1115,8 @@ xfs_ioctl_setattr(
  	/*
  	 * Disallow 32bit project ids when projid32bit feature is not enabled.
  	 */
-@@ -1099,29 +1140,9 @@ xfs_ioctl_setattr(
- 			return code;
+-	if ((mask & FSX_PROJID) && (fa->fsx_projid > (__uint16_t)-1) &&
+-			!xfs_sb_version_hasprojid32bit(&ip->i_mount->m_sb))
++	if (fa->fsx_projid > (__uint16_t)-1 &&
++	    !xfs_sb_version_hasprojid32bit(&ip->i_mount->m_sb))
+ 		return -EINVAL;
+ 
+ 	/*
+@@ -1132,7 +1127,7 @@ xfs_ioctl_setattr(
+ 	 * If the IDs do change before we take the ilock, we're covered
+ 	 * because the i_*dquot fields will get updated anyway.
+ 	 */
+-	if (XFS_IS_QUOTA_ON(mp) && (mask & FSX_PROJID)) {
++	if (XFS_IS_QUOTA_ON(mp)) {
+ 		code = xfs_qm_vop_dqalloc(ip, ip->i_d.di_uid,
+ 					 ip->i_d.di_gid, fa->fsx_projid,
+ 					 XFS_QMOPT_PQUOTA, &udqp, NULL, &pdqp);
+@@ -1149,72 +1144,53 @@ xfs_ioctl_setattr(
+ 	 * Only allow changing of projid from init_user_ns since it is a
+ 	 * non user namespace aware identifier.
+ 	 */
+-	if (mask & FSX_PROJID) {
+-		if (current_user_ns() != &init_user_ns) {
+-			code = -EINVAL;
+-			goto error_return;
+-		}
+-
+-		if (XFS_IS_QUOTA_RUNNING(mp) &&
+-		    XFS_IS_PQUOTA_ON(mp) &&
+-		    xfs_get_projid(ip) != fa->fsx_projid) {
+-			ASSERT(tp);
+-			code = xfs_qm_vop_chown_reserve(tp, ip, udqp, NULL,
+-						pdqp, capable(CAP_FOWNER) ?
+-						XFS_QMOPT_FORCE_RES : 0);
+-			if (code)	/* out of quota */
+-				goto error_return;
+-		}
++	if (current_user_ns() != &init_user_ns) {
++		code = -EINVAL;
++		goto error_return;
  	}
  
--	/*
--	 * For the other attributes, we acquire the inode lock and
--	 * first do an error checking pass.
--	 */
--	tp = xfs_trans_alloc(mp, XFS_TRANS_SETATTR_NOT_SIZE);
--	code = xfs_trans_reserve(tp, &M_RES(mp)->tr_ichange, 0, 0);
--	if (code)
--		goto error_return;
+-	if (mask & FSX_EXTSIZE) {
+-		/*
+-		 * Can't change extent size if any extents are allocated.
+-		 */
+-		if (ip->i_d.di_nextents &&
+-		    ((ip->i_d.di_extsize << mp->m_sb.sb_blocklog) !=
+-		     fa->fsx_extsize)) {
+-			code = -EINVAL;	/* EFBIG? */
++	if (XFS_IS_QUOTA_RUNNING(mp) && XFS_IS_PQUOTA_ON(mp) &&
++	    xfs_get_projid(ip) != fa->fsx_projid) {
++		code = xfs_qm_vop_chown_reserve(tp, ip, udqp, NULL, pdqp,
++				capable(CAP_FOWNER) ?  XFS_QMOPT_FORCE_RES : 0);
++		if (code)	/* out of quota */
+ 			goto error_return;
+-		}
++	}
+ 
+-		/*
+-		 * Extent size must be a multiple of the appropriate block
+-		 * size, if set at all. It must also be smaller than the
+-		 * maximum extent size supported by the filesystem.
+-		 *
+-		 * Also, for non-realtime files, limit the extent size hint to
+-		 * half the size of the AGs in the filesystem so alignment
+-		 * doesn't result in extents larger than an AG.
+-		 */
+-		if (fa->fsx_extsize != 0) {
+-			xfs_extlen_t    size;
+-			xfs_fsblock_t   extsize_fsb;
++	/* Can't change extent size if any extents are allocated. */
++	code = -EINVAL;
++	if (ip->i_d.di_nextents &&
++	    ((ip->i_d.di_extsize << mp->m_sb.sb_blocklog) != fa->fsx_extsize))
++		goto error_return;
+ 
+-			extsize_fsb = XFS_B_TO_FSB(mp, fa->fsx_extsize);
+-			if (extsize_fsb > MAXEXTLEN) {
+-				code = -EINVAL;
+-				goto error_return;
+-			}
 -
--	lock_flags = XFS_ILOCK_EXCL;
--	xfs_ilock(ip, lock_flags);
+-			if (XFS_IS_REALTIME_INODE(ip) ||
+-			    ((mask & FSX_XFLAGS) &&
+-			    (fa->fsx_xflags & XFS_XFLAG_REALTIME))) {
+-				size = mp->m_sb.sb_rextsize <<
+-				       mp->m_sb.sb_blocklog;
+-			} else {
+-				size = mp->m_sb.sb_blocksize;
+-				if (extsize_fsb > mp->m_sb.sb_agblocks / 2) {
+-					code = -EINVAL;
+-					goto error_return;
+-				}
+-			}
 -
--	/*
--	 * CAP_FOWNER overrides the following restrictions:
--	 *
--	 * The user ID of the calling process must be equal
--	 * to the file owner ID, except in cases where the
--	 * CAP_FSETID capability is applicable.
--	 */
--	if (!inode_owner_or_capable(VFS_I(ip))) {
--		code = -EPERM;
--		goto error_return;
+-			if (fa->fsx_extsize % size) {
+-				code = -EINVAL;
++	/*
++	 * Extent size must be a multiple of the appropriate block size, if set
++	 * at all. It must also be smaller than the maximum extent size
++	 * supported by the filesystem.
++	 *
++	 * Also, for non-realtime files, limit the extent size hint to half the
++	 * size of the AGs in the filesystem so alignment doesn't result in
++	 * extents larger than an AG.
++	 */
++	if (fa->fsx_extsize != 0) {
++		xfs_extlen_t    size;
++		xfs_fsblock_t   extsize_fsb;
++
++		extsize_fsb = XFS_B_TO_FSB(mp, fa->fsx_extsize);
++		if (extsize_fsb > MAXEXTLEN)
++			goto error_return;
++
++		if (XFS_IS_REALTIME_INODE(ip) ||
++		    (fa->fsx_xflags & XFS_XFLAG_REALTIME)) {
++			size = mp->m_sb.sb_rextsize << mp->m_sb.sb_blocklog;
++		} else {
++			size = mp->m_sb.sb_blocksize;
++			if (extsize_fsb > mp->m_sb.sb_agblocks / 2)
+ 				goto error_return;
+-			}
+ 		}
++
++		if (fa->fsx_extsize % size)
++			goto error_return;
+ 	}
+ 
+ 
+@@ -1223,32 +1199,25 @@ xfs_ioctl_setattr(
+ 		goto error_return;
+ 
+ 	/*
+-	 * Change file ownership.  Must be the owner or privileged.
++	 * Change file ownership.  Must be the owner or privileged.  CAP_FSETID
++	 * overrides the following restrictions:
++	 *
++	 * The set-user-ID and set-group-ID bits of a file will be cleared upon
++	 * successful return from chown()
+ 	 */
+-	if (mask & FSX_PROJID) {
+-		/*
+-		 * CAP_FSETID overrides the following restrictions:
+-		 *
+-		 * The set-user-ID and set-group-ID bits of a file will be
+-		 * cleared upon successful return from chown()
+-		 */
+-		if ((ip->i_d.di_mode & (S_ISUID|S_ISGID)) &&
+-		    !capable_wrt_inode_uidgid(VFS_I(ip), CAP_FSETID))
+-			ip->i_d.di_mode &= ~(S_ISUID|S_ISGID);
+ 
+-		/*
+-		 * Change the ownerships and register quota modifications
+-		 * in the transaction.
+-		 */
+-		if (xfs_get_projid(ip) != fa->fsx_projid) {
+-			if (XFS_IS_QUOTA_RUNNING(mp) && XFS_IS_PQUOTA_ON(mp)) {
+-				olddquot = xfs_qm_vop_chown(tp, ip,
+-							&ip->i_pdquot, pdqp);
+-			}
+-			ASSERT(ip->i_d.di_version > 1);
+-			xfs_set_projid(ip, fa->fsx_projid);
+-		}
++	if ((ip->i_d.di_mode & (S_ISUID|S_ISGID)) &&
++	    !capable_wrt_inode_uidgid(VFS_I(ip), CAP_FSETID))
++		ip->i_d.di_mode &= ~(S_ISUID|S_ISGID);
+ 
++	/* Change the ownerships and register project quota modifications */
++	if (xfs_get_projid(ip) != fa->fsx_projid) {
++		if (XFS_IS_QUOTA_RUNNING(mp) && XFS_IS_PQUOTA_ON(mp)) {
++			olddquot = xfs_qm_vop_chown(tp, ip,
++						&ip->i_pdquot, pdqp);
++		}
++		ASSERT(ip->i_d.di_version > 1);
++		xfs_set_projid(ip, fa->fsx_projid);
+ 	}
+ 
+ 	/*
+@@ -1256,14 +1225,10 @@ xfs_ioctl_setattr(
+ 	 * extent size hint should be set on the inode. If no extent size flags
+ 	 * are set on the inode then unconditionally clear the extent size hint.
+ 	 */
+-	if (mask & FSX_EXTSIZE) {
+-		int	extsize = 0;
+-
+-		if (ip->i_d.di_flags &
+-				(XFS_DIFLAG_EXTSIZE | XFS_DIFLAG_EXTSZINHERIT))
+-			extsize = fa->fsx_extsize >> mp->m_sb.sb_blocklog;
+-		ip->i_d.di_extsize = extsize;
 -	}
-+	tp = xfs_ioctl_setattr_get_trans(ip);
-+	if (IS_ERR(tp))
-+		return PTR_ERR(tp);
++	if (ip->i_d.di_flags & (XFS_DIFLAG_EXTSIZE | XFS_DIFLAG_EXTSZINHERIT))
++		ip->i_d.di_extsize = fa->fsx_extsize >> mp->m_sb.sb_blocklog;
++	else
++		ip->i_d.di_extsize = 0;
  
- 	/*
- 	 * Do a quota reservation only if projid is actually going to change.
-@@ -1244,20 +1265,7 @@ xfs_ioctl_setattr(
- 		ip->i_d.di_extsize = extsize;
- 	}
- 
--	/*
--	 * If this is a synchronous mount, make sure that the
--	 * transaction goes to disk before returning to the user.
--	 * This is slightly sub-optimal in that truncates require
--	 * two sync transactions instead of one for wsync filesystems.
--	 * One for the truncate and one for the timestamps since we
--	 * don't want to change the timestamps unless we're sure the
--	 * truncate worked.  Truncates are less than 1% of the laddis
--	 * mix so this probably isn't worth the trouble to optimize.
--	 */
--	if (mp->m_flags & XFS_MOUNT_WSYNC)
--		xfs_trans_set_sync(tp);
  	code = xfs_trans_commit(tp, 0);
--	xfs_iunlock(ip, lock_flags);
  
- 	/*
- 	 * Release any dquot(s) the inode had kept before chown.
-@@ -1272,8 +1280,6 @@ xfs_ioctl_setattr(
- 	xfs_qm_dqrele(udqp);
- 	xfs_qm_dqrele(pdqp);
- 	xfs_trans_cancel(tp, 0);
--	if (lock_flags)
--		xfs_iunlock(ip, lock_flags);
- 	return code;
+@@ -1290,18 +1255,15 @@ xfs_ioc_fssetxattr(
+ 	void			__user *arg)
+ {
+ 	struct fsxattr		fa;
+-	unsigned int		mask;
+ 	int error;
+ 
+ 	if (copy_from_user(&fa, arg, sizeof(fa)))
+ 		return -EFAULT;
+ 
+-	mask = FSX_XFLAGS | FSX_EXTSIZE | FSX_PROJID;
+-
+ 	error = mnt_want_write_file(filp);
+ 	if (error)
+ 		return error;
+-	error = xfs_ioctl_setattr(ip, &fa, mask);
++	error = xfs_ioctl_setattr(ip, &fa);
+ 	mnt_drop_write_file(filp);
+ 	return error;
  }
- 
 -- 
 2.0.0
 
