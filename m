@@ -1,18 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 92ACB7F90
+	by oss.sgi.com (Postfix) with ESMTP id D8B727F96
 	for <xfs@oss.sgi.com>; Mon, 26 Jan 2015 21:15:01 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 2EA81AC004
-	for <xfs@oss.sgi.com>; Mon, 26 Jan 2015 19:14:57 -0800 (PST)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 71CFDAC005
+	for <xfs@oss.sgi.com>; Mon, 26 Jan 2015 19:15:01 -0800 (PST)
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	O8yGX7KUYNV1ELjw for <xfs@oss.sgi.com>;
-	Mon, 26 Jan 2015 19:14:53 -0800 (PST)
+	ZUrQuGput8j2yls5 for <xfs@oss.sgi.com>;
+	Mon, 26 Jan 2015 19:15:00 -0800 (PST)
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 0/9] xfs: xfs_ioctl_setxattr rework
-Date: Tue, 27 Jan 2015 14:14:37 +1100
-Message-Id: <1422328486-24661-1-git-send-email-david@fromorbit.com>
+Subject: [PATCH 3/9] xfs: factor out xfs_ioctl_setattr transaciton preamble
+Date: Tue, 27 Jan 2015 14:14:40 +1100
+Message-Id: <1422328486-24661-4-git-send-email-david@fromorbit.com>
+In-Reply-To: <1422328486-24661-1-git-send-email-david@fromorbit.com>
+References: <1422328486-24661-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,42 +31,170 @@ Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 Cc: iustin@k1024.org
 
-Hi folks,
+From: Dave Chinner <dchinner@redhat.com>
 
-This is a series I started a few months ago when we first started
-talking about the issues with extent size hints on directories and
-the project ID inherit flags being set on regular files. The code
-is particularly nice and has no clear definition of what sort
-of changes we allow in the XFS_IOC_FSSETXATTR ioctl.
+The setup of the transaction is done after a random smattering of
+checks and before another bunch of ioperations specific
+validity checks. Pull all the preamble out into a helper function
+that returns a transaction or error.
 
-The first thing the series does is kill the FSX_* flags and separate
-out the two different use cases for the xfs_ioctl_setattr()
-function. The first is just changing a constrained set of flags via
-the xfs_ioc_setxflags(), and the second is supporting
-xfs_ioc_fssetxattr(). Factoring out the part of the code that sets
-just the inode flags appropriately allows us to kill the FSX_* flags
-completely.
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/xfs_ioctl.c | 96 +++++++++++++++++++++++++++++-------------------------
+ 1 file changed, 51 insertions(+), 45 deletions(-)
 
-The next patch then relaxes the overly defensive approach to
-restricting XFS_IOC_FSSETXATTR to only the init namespace. We really
-only need to restrict project ID changes - allowing changes to other
-parts of the inode are managed by user/group permissions which are
-already user namespace aware.
-
-The next part of the patch set factors out the validity checking
-of extent size changes and project ID changes from the setattr
-functions, making it much clearer the separation between checks and
-actions performed by xfs_ioctl_setattr() function.
-
-Finally, with all these changes, Iustin Pop's extent size change
-validity checking patch is ported on top. That now becomes a simple,
-obvious set of changes to an isolated function, and i've added
-comments to explain the rules allowing extent size hints to be
-changed.
-
-Comments, thoughts, flames, etc all welcome.
-
-- Dave.
+diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+index ba98412..d06f596 100644
+--- a/fs/xfs/xfs_ioctl.c
++++ b/fs/xfs/xfs_ioctl.c
+@@ -1042,7 +1042,6 @@ xfs_ioctl_setattr_xflags(
+ 	    !capable(CAP_LINUX_IMMUTABLE))
+ 		return -EPERM;
+ 
+-	xfs_trans_ijoin(tp, ip, 0);
+ 	xfs_set_diflags(ip, fa->fsx_xflags);
+ 	xfs_diflags_to_linux(ip);
+ 	xfs_trans_ichgtime(tp, ip, XFS_ICHGTIME_CHG);
+@@ -1051,6 +1050,54 @@ xfs_ioctl_setattr_xflags(
+ 	return 0;
+ }
+ 
++/*
++ * Set up the transaction structure for the setattr operation, checking that we
++ * have permission to do so. On success, return a clean transaction and the
++ * inode locked exclusively ready for futher operation specific checks. On
++ * failure, return an error without modifying or locking the inode.
++ */
++static struct xfs_trans *
++xfs_ioctl_setattr_get_trans(
++	struct xfs_inode	*ip)
++{
++	struct xfs_mount	*mp = ip->i_mount;
++	struct xfs_trans	*tp;
++	int			error;
++
++	if (mp->m_flags & XFS_MOUNT_RDONLY)
++		return ERR_PTR(-EROFS);
++	if (XFS_FORCED_SHUTDOWN(mp))
++		return ERR_PTR(-EIO);
++
++	tp = xfs_trans_alloc(mp, XFS_TRANS_SETATTR_NOT_SIZE);
++	error = xfs_trans_reserve(tp, &M_RES(mp)->tr_ichange, 0, 0);
++	if (error)
++		goto out_cancel;
++
++	xfs_ilock(ip, XFS_ILOCK_EXCL);
++	xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL);
++
++	/*
++	 * CAP_FOWNER overrides the following restrictions:
++	 *
++	 * The user ID of the calling process must be equal to the file owner
++	 * ID, except in cases where the CAP_FSETID capability is applicable.
++	 */
++	if (!inode_owner_or_capable(VFS_I(ip))) {
++		error = -EPERM;
++		goto out_cancel;
++	}
++
++	if (mp->m_flags & XFS_MOUNT_WSYNC)
++		xfs_trans_set_sync(tp);
++
++	return tp;
++
++out_cancel:
++	xfs_trans_cancel(tp, 0);
++	return ERR_PTR(error);
++}
++
+ #define FSX_PROJID	1
+ #define FSX_EXTSIZE	2
+ #define FSX_XFLAGS	4
+@@ -1063,7 +1110,6 @@ xfs_ioctl_setattr(
+ {
+ 	struct xfs_mount	*mp = ip->i_mount;
+ 	struct xfs_trans	*tp;
+-	unsigned int		lock_flags = 0;
+ 	struct xfs_dquot	*udqp = NULL;
+ 	struct xfs_dquot	*pdqp = NULL;
+ 	struct xfs_dquot	*olddquot = NULL;
+@@ -1071,11 +1117,6 @@ xfs_ioctl_setattr(
+ 
+ 	trace_xfs_ioctl_setattr(ip);
+ 
+-	if (mp->m_flags & XFS_MOUNT_RDONLY)
+-		return -EROFS;
+-	if (XFS_FORCED_SHUTDOWN(mp))
+-		return -EIO;
+-
+ 	/*
+ 	 * Disallow 32bit project ids when projid32bit feature is not enabled.
+ 	 */
+@@ -1099,29 +1140,9 @@ xfs_ioctl_setattr(
+ 			return code;
+ 	}
+ 
+-	/*
+-	 * For the other attributes, we acquire the inode lock and
+-	 * first do an error checking pass.
+-	 */
+-	tp = xfs_trans_alloc(mp, XFS_TRANS_SETATTR_NOT_SIZE);
+-	code = xfs_trans_reserve(tp, &M_RES(mp)->tr_ichange, 0, 0);
+-	if (code)
+-		goto error_return;
+-
+-	lock_flags = XFS_ILOCK_EXCL;
+-	xfs_ilock(ip, lock_flags);
+-
+-	/*
+-	 * CAP_FOWNER overrides the following restrictions:
+-	 *
+-	 * The user ID of the calling process must be equal
+-	 * to the file owner ID, except in cases where the
+-	 * CAP_FSETID capability is applicable.
+-	 */
+-	if (!inode_owner_or_capable(VFS_I(ip))) {
+-		code = -EPERM;
+-		goto error_return;
+-	}
++	tp = xfs_ioctl_setattr_get_trans(ip);
++	if (IS_ERR(tp))
++		return PTR_ERR(tp);
+ 
+ 	/*
+ 	 * Do a quota reservation only if projid is actually going to change.
+@@ -1244,20 +1265,7 @@ xfs_ioctl_setattr(
+ 		ip->i_d.di_extsize = extsize;
+ 	}
+ 
+-	/*
+-	 * If this is a synchronous mount, make sure that the
+-	 * transaction goes to disk before returning to the user.
+-	 * This is slightly sub-optimal in that truncates require
+-	 * two sync transactions instead of one for wsync filesystems.
+-	 * One for the truncate and one for the timestamps since we
+-	 * don't want to change the timestamps unless we're sure the
+-	 * truncate worked.  Truncates are less than 1% of the laddis
+-	 * mix so this probably isn't worth the trouble to optimize.
+-	 */
+-	if (mp->m_flags & XFS_MOUNT_WSYNC)
+-		xfs_trans_set_sync(tp);
+ 	code = xfs_trans_commit(tp, 0);
+-	xfs_iunlock(ip, lock_flags);
+ 
+ 	/*
+ 	 * Release any dquot(s) the inode had kept before chown.
+@@ -1272,8 +1280,6 @@ xfs_ioctl_setattr(
+ 	xfs_qm_dqrele(udqp);
+ 	xfs_qm_dqrele(pdqp);
+ 	xfs_trans_cancel(tp, 0);
+-	if (lock_flags)
+-		xfs_iunlock(ip, lock_flags);
+ 	return code;
+ }
+ 
+-- 
+2.0.0
 
 _______________________________________________
 xfs mailing list
