@@ -1,20 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id C695D7FCA
-	for <xfs@oss.sgi.com>; Wed, 28 Jan 2015 00:08:55 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 62FB5AC001
-	for <xfs@oss.sgi.com>; Tue, 27 Jan 2015 22:08:55 -0800 (PST)
-Received: from seldrel01.sonyericsson.com (seldrel01.sonyericsson.com
-	[212.209.106.2]) by cuda.sgi.com with ESMTP id YIlYLH5GWAWENzcd
-	(version=TLSv1 cipher=AES256-SHA bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 27 Jan 2015 22:08:53 -0800 (PST)
-From: "Wang, Yalin" <Yalin.Wang@sonymobile.com>
-Date: Wed, 28 Jan 2015 14:08:47 +0800
-Subject: [PATCH] xfs:change kmem_free to use generic kvfree()
-Message-ID: <35FD53F367049845BC99AC72306C23D1044A02027DFF@CNBJMBX05.corpusers.net>
-Content-Language: en-US
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 3B00D7FCA
+	for <xfs@oss.sgi.com>; Wed, 28 Jan 2015 04:41:12 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 0929E304048
+	for <xfs@oss.sgi.com>; Wed, 28 Jan 2015 02:41:11 -0800 (PST)
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
+	cuda.sgi.com with ESMTP id GQW5I7XpdB1GnKya (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 28 Jan 2015 02:41:09 -0800 (PST)
+Message-ID: <54C8BCEC.5050101@oracle.com>
+Date: Wed, 28 Jan 2015 13:41:48 +0300
+From: Alexander Tsvetkov <alexander.tsvetkov@oracle.com>
 MIME-Version: 1.0
+Subject: Re: maxpct option for small xfs filesystems
+References: <54C667F3.8040303@oracle.com> <20150126223715.GA7621@dastard>
+	<54C7BB78.4060203@oracle.com> <54C7BD60.5000104@sandeen.net>
+In-Reply-To: <54C7BD60.5000104@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,60 +25,103 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "'david@fromorbit.com'" <david@fromorbit.com>, "'xfs@oss.sgi.com'" <xfs@oss.sgi.com>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>
+To: Eric Sandeen <sandeen@sandeen.net>, Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-Change kmem_free to use kvfree() generic function,
-remove the duplicated code.
 
-Signed-off-by: Yalin Wang <yalin.wang@sonymobile.com>
----
- fs/xfs/kmem.c | 10 ----------
- fs/xfs/kmem.h |  5 ++++-
- 2 files changed, 4 insertions(+), 11 deletions(-)
+On 01/27/2015 07:31 PM, Eric Sandeen wrote:
+> On 1/27/15 10:23 AM, Alexander Tsvetkov wrote:
+>
+> ...
+>
+>> I have not the same results,  just installed 3.19-rc6 and repeated the test.,
+>> df -i reports 640 inodes for filesystem, but actually created 40512 files:
+>>
+>> [root@fedora ~]# mkfs.xfs -f -d size=16m -i maxpct=1 /dev/sdb2
+>> meta-data=/dev/sdb2              isize=256    agcount=1, agsize=4096 blks
+>>           =                       sectsz=512   attr=2, projid32bit=1
+>>           =                       crc=0        finobt=0
+>> data     =                       bsize=4096   blocks=4096, imaxpct=1
+>>           =                       sunit=0      swidth=0 blks
+>> naming   =version 2              bsize=4096   ascii-ci=0 ftype=0
+>> log      =internal log           bsize=4096   blocks=853, version=2
+>>           =                       sectsz=512   sunit=0 blks, lazy-count=1
+>> realtime =none                   extsz=4096   blocks=0, rtextents=0
+>> [root@fedora ~]# mount /dev/sdb2 /mnt/scratch/
+>> fill with files until enospc...
+>> [root@fedora ~]# df -i /mnt/scratch/
+>> Filesystem     Inodes IUsed IFree IUse% Mounted on
+>> /dev/sdb2         640   640     0  100% /mnt/scratch
+>> [root@fedora ~]# df -Th /mnt/scratch/
+>> Filesystem     Type  Size  Used Avail Use% Mounted on
+>> /dev/sdb2      xfs    13M   13M  156K  99% /mnt/scratch
+>> [root@fedora ~]# umount /mnt/scratch
+>> [root@fedora ~]# xfs_db -c "blockget -n" -c "ncheck" /dev/sdb2 | wc -l
+>> 40512
+> and what does df -i say after remount?
+Nothing changed after remount:
 
-diff --git a/fs/xfs/kmem.c b/fs/xfs/kmem.c
-index 53e95b2..a7a3a63 100644
---- a/fs/xfs/kmem.c
-+++ b/fs/xfs/kmem.c
-@@ -91,16 +91,6 @@ kmem_zalloc_large(size_t size, xfs_km_flags_t flags)
- 	return ptr;
- }
- 
--void
--kmem_free(const void *ptr)
--{
--	if (!is_vmalloc_addr(ptr)) {
--		kfree(ptr);
--	} else {
--		vfree(ptr);
--	}
--}
--
- void *
- kmem_realloc(const void *ptr, size_t newsize, size_t oldsize,
- 	     xfs_km_flags_t flags)
-diff --git a/fs/xfs/kmem.h b/fs/xfs/kmem.h
-index 64db0e5..cc6b768 100644
---- a/fs/xfs/kmem.h
-+++ b/fs/xfs/kmem.h
-@@ -63,7 +63,10 @@ kmem_flags_convert(xfs_km_flags_t flags)
- extern void *kmem_alloc(size_t, xfs_km_flags_t);
- extern void *kmem_zalloc_large(size_t size, xfs_km_flags_t);
- extern void *kmem_realloc(const void *, size_t, size_t, xfs_km_flags_t);
--extern void  kmem_free(const void *);
-+static inline void  kmem_free(const void *ptr)
-+{
-+	kvfree(ptr);
-+}
- 
- 
- extern void *kmem_zalloc_greedy(size_t *, size_t, size_t);
--- 
-2.2.2
+[root@fedora ~]# xfs_db -c "blockget -n" -c "ncheck" /dev/sdb2 | wc -l
+40512
+[root@fedora ~]# mount /dev/sdb2 /mnt/scratch/
+[root@fedora ~]# xfs_info /mnt/scratch/
+meta-data=/dev/sdb2 isize=256 agcount=1, agsize=4096 blks
+                  =                sectsz=512   attr=2, projid32bit=1
+                  =                crc=0 finobt=0
+data          =                bsize=4096   blocks=4096, imaxpct=1
+                  =                sunit=0      swidth=0 blks
+naming     =version 2 bsize=4096   ascii-ci=0 ftype=0
+log            =internal    bsize=4096   blocks=853, version=2
+                  =                sectsz=512   sunit=0 blks, lazy-count=1
+realtime    =none        extsz=4096   blocks=0, rtextents=0
+[root@fedora ~]# df -i /mnt/scratch/
+Filesystem     Inodes IUsed IFree IUse% Mounted on
+/dev/sdb2         640   640     0  100% /mnt/scratch
+[root@fedora ~]# umount /mnt/scratch
+[root@fedora ~]# xfs_db -c "blockget -n" -c "ncheck" /dev/sdb2 | wc -l
+40512
+[root@fedora ~]# mount /dev/sdb2 /mnt/scratch/
+[root@fedora ~]# df -i /mnt/scratch/
+Filesystem     Inodes IUsed IFree IUse% Mounted on
+/dev/sdb2         640   640     0  100% /mnt/scratch
+[root@fedora ~]# mount -o remount /dev/sdb2 /mnt/scratch/
+[root@fedora ~]# df -i /mnt/scratch/
+Filesystem     Inodes IUsed IFree IUse% Mounted on
+/dev/sdb2         640   640     0  100% /mnt/scratch
+[root@fedora ~]# umount /mnt/scratch
+[root@fedora ~]# xfs_db -c "blockget -n" -c "ncheck" /dev/sdb2 | wc -l
+40512
+
+>
+> This is actually a problem with the lazy superblock counters I've run into before,
+> but haven't yet fixed.  This kind of workload is such that it never trips the
+> runtime rebalancing.
+>
+>> Looking into ncheck output there are 40512 pairs reported in the output each with own unique
+>> inode number. ncheck doesn't report inodes count by definition, but what does these
+>> 40512 reported inode numbers mean if only actually 640 inodes were allocated? From another hand
+>> each new file should have associated meta-data in the corresponding allocated inode structure, so for
+>> 40512 newly created files I expect the same count of allocated inodes, is it correct?
+> Recheck df -i after remount, I think you will see many more than 640.
+Do you mean that ncheck reports right number of allocated inodes instead 
+of df -i? If counters are incorrect then the
+maxpct limit is not working as well, because there are much more of 
+filesystem space allocated for inodes then defined limit 1%.
+
+What is expected behaviour in this case when it's required for fs to 
+allocate new inodes starting to exceed defined maxpct
+percentage? Which error is expected to be returned to user, enospc or 
+probably just some warning?
+
+
+>
+> -Eric
+Thanks,
+Alexander Tsvetkov
 
 _______________________________________________
 xfs mailing list
