@@ -1,22 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 428D57F37
-	for <xfs@oss.sgi.com>; Wed, 28 Jan 2015 12:05:33 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 319188F8065
-	for <xfs@oss.sgi.com>; Wed, 28 Jan 2015 10:05:32 -0800 (PST)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id 5kP6j34rMWJ8jtH7 for <xfs@oss.sgi.com>;
-	Wed, 28 Jan 2015 10:05:28 -0800 (PST)
-Message-ID: <54C924E7.5020404@sandeen.net>
-Date: Wed, 28 Jan 2015 12:05:27 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 5C46C7F7B
+	for <xfs@oss.sgi.com>; Wed, 28 Jan 2015 15:00:18 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id CEA83AC004
+	for <xfs@oss.sgi.com>; Wed, 28 Jan 2015 13:00:14 -0800 (PST)
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	qWJACul62yR48bJU for <xfs@oss.sgi.com>;
+	Wed, 28 Jan 2015 13:00:12 -0800 (PST)
+Date: Thu, 29 Jan 2015 07:59:56 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 2/2] xfs_spaceman: Accounting for AGFL blocks
+Message-ID: <20150128205956.GA6282@dastard>
+References: <54c1c12e.230a460a.4729.11fc@mx.google.com>
+	<20150128015757.GT16552@dastard>
+	<CALJmpHP=vjz_ZY9sFpW8k2Y7TL+sz-WyjPeMoy4sM6XDTt8MTQ@mail.gmail.com>
 MIME-Version: 1.0
-Subject: Re: maxpct option for small xfs filesystems
-References: <54C667F3.8040303@oracle.com>
-	<20150126223715.GA7621@dastard>	<54C7BB78.4060203@oracle.com>
-	<54C7BD60.5000104@sandeen.net> <54C8BCEC.5050101@oracle.com>
-In-Reply-To: <54C8BCEC.5050101@oracle.com>
+Content-Disposition: inline
+In-Reply-To: <CALJmpHP=vjz_ZY9sFpW8k2Y7TL+sz-WyjPeMoy4sM6XDTt8MTQ@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,20 +31,27 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Alexander Tsvetkov <alexander.tsvetkov@oracle.com>, Dave Chinner <david@fromorbit.com>
+To: ADRS PICT <adrscube@gmail.com>
 Cc: xfs@oss.sgi.com
 
-On 1/28/15 4:41 AM, Alexander Tsvetkov wrote:
-> What is expected behaviour in this case when it's required for fs to allocate new inodes starting to exceed defined maxpct
-> percentage? Which error is expected to be returned to user, enospc or probably just some warning?
+On Wed, Jan 28, 2015 at 06:35:22PM +0530, ADRS PICT wrote:
+> On Wed, Jan 28, 2015 at 7:27 AM, Dave Chinner <david@fromorbit.com> wrote:
+> > Hmmm - I think something is still missing - what are the sagbno and
+> > eagbno parameters supposed to do?
+> 
+> Actually the parameters sagbno and eagbno are not needed in this
+> function and can be excluded.
 
-Sorry, I didn't answer this.  ENOSPC is expected.
+Why? Don't we still have to check the blocks found on the AGFL fll
+within the range requested by the user, like we do for every extent
+found in the btree?
 
-There's not a lot of value in enforcing this strictly to the last inode,
-because a % is fairly coarse anyway, but we should not blow right past
-it as we do today.
+Cheers,
 
--Eric
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
