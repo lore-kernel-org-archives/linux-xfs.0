@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 352167F6C
-	for <xfs@oss.sgi.com>; Wed, 28 Jan 2015 08:32:36 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 244D3304053
-	for <xfs@oss.sgi.com>; Wed, 28 Jan 2015 06:32:33 -0800 (PST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 56D3C7FCB
+	for <xfs@oss.sgi.com>; Wed, 28 Jan 2015 08:33:15 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id D3DDCAC001
+	for <xfs@oss.sgi.com>; Wed, 28 Jan 2015 06:33:14 -0800 (PST)
 Received: from mail-pa0-f44.google.com (mail-pa0-f44.google.com
-	[209.85.220.44]) by cuda.sgi.com with ESMTP id gFfsX2IEZh5a5iTK
+	[209.85.220.44]) by cuda.sgi.com with ESMTP id DOzseTHuG2tQkDbb
 	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 28 Jan 2015 06:32:32 -0800 (PST)
-Received: by mail-pa0-f44.google.com with SMTP id rd3so25883819pab.3
-	for <xfs@oss.sgi.com>; Wed, 28 Jan 2015 06:32:31 -0800 (PST)
+	<xfs@oss.sgi.com>; Wed, 28 Jan 2015 06:33:13 -0800 (PST)
+Received: by mail-pa0-f44.google.com with SMTP id rd3so25890501pab.3
+	for <xfs@oss.sgi.com>; Wed, 28 Jan 2015 06:33:12 -0800 (PST)
 Received: from dhruv-MacBookAir ([14.97.202.7])
-	by mx.google.com with ESMTPSA id nj8sm4934684pdb.42.2015.01.28.06.32.29
+	by mx.google.com with ESMTPSA id ri3sm4921242pdb.58.2015.01.28.06.33.10
 	for <xfs@oss.sgi.com> (version=TLSv1 cipher=RC4-SHA bits=128/128);
-	Wed, 28 Jan 2015 06:32:30 -0800 (PST)
-Message-ID: <54c8f2fe.e87f460a.137c.ffffc28b@mx.google.com>
+	Wed, 28 Jan 2015 06:33:12 -0800 (PST)
+Message-ID: <54c8f328.c38c460a.08e6.ffffc69b@mx.google.com>
 From: Dhruvesh Rathore <adrscube@gmail.com>
-Date: Wed, 28 Jan 2015 20:02:24 +0530
-Subject: [PATCH 0/4] xfs: xfs_spaceman utility rework
+Date: Wed, 28 Jan 2015 20:03:06 +0530
+Subject: [PATCH 1/4] xfs: Accounting for AGFL blocks in xfs_spaceman
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,63 +35,121 @@ Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
 
-The original kernel patch that Dave wrote for xfs_spaceman implemented
-FS_IOC_FIEMAPFS ioctl, here is the original fiemap extension patch:
+The xfs_spaceman utility previously failed to account for AGFL blocks.
+Old output (Before changes).
 
-http://oss.sgi.com/archives/xfs/2012-10/msg00363.html
+$ sudo xfs_spaceman -c "freesp" /media/xfs
+   from      to extents  blocks    pct
+   1024    2047       1    1262   0.04
+   4096    8191       1    5126   0.15
+   8192   16383       3   35344   1.05
+  32768   65535       1   43989   1.31
+ 262144  524287       3 1334894  39.78
+ 524288  967428       2 1934840  57.66
 
-These patches were not posted and were just forward ported to a current 
-3.18-rc7+ for-next XFS tree and were pushed to the fiemapfs branch in Dave's
-kernel tree at:
+As you can see the AGFL blocks were unaccounted (4 per AG, and there 
+were 4 AGs in this filesystem).
 
-git://git.kernel.org/pub/scm/linux/kernel/git/dgc/linux-xfs.git
+This patch is concerned with adding a new function which will walk the free
+extents in AGFL and account for these AGFL blocks, while file system scanning.
 
+New output (After implementing this patch).
 
-The original xfs_spaceman tool that Dave wrote to call the fiemap
-interface and make use of it is here:
+$ uname -a
+Linux dhruv-MacBookAir 3.18.0-rc7+ #3 SMP Thu Dec 25 15:29:59 IST 2014 x86_64 x86_64 x86_64 GNU/Linux
+$ sudo xfs_spaceman -V
+xfs_spaceman version 3.2.2
+$ sudo xfs_spaceman -c "freesp" /media/xfs
+   from      to extents  blocks    pct
+      1       1      16      16   0.00
+   1024    2047       1    1262   0.04
+   4096    8191       1    5126   0.15
+   8192   16383       3   35344   1.05
+  32768   65535       1   43989   1.31
+ 262144  524287       3 1334894  39.78
+ 524288  967428       2 1934840  57.66
 
-http://oss.sgi.com/archives/xfs/2012-10/msg00366.html
+-------------------------------------------------------------------------------------------
 
-Dave just updated it to the 3.2.2 code base and pushed it to the
-spaceman branch in this tree:
+Signed-off-by: Dhruvesh Rathore <dhruvesh_r@outlook.com>
+Signed-off-by: Amey Ruikar <ameyruikar@yahoo.com>
+Signed-off-by: Somdeep Dey <somdeepdey10@gmail.com>
+---
+fs/xfs/libxfs/xfs_alloc.c | 53 ++++++++++++++
+1 file changed, 53 insertions(+)
 
-git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git
+--- a/fs/xfs/libxfs/xfs_alloc.c	2015-01-28 15:25:02.396172903 +0530
++++ b/fs/xfs/libxfs/xfs_alloc.c	2015-01-28 15:13:46.936198272 +0530
 
-The description of patches in this series are as follows:
+@@ -2697,6 +2697,56 @@
+ 
+ }
+ 
++/*
++ * When we map free space we need to take into account the blocks
++ * that are indexed by the AGFL. They aren't found by walking the
++ * free space btrees, so we have to walk each AGFL to find them.
++ */
++static int
++xfs_alloc_agfl_freespace_map(
++	struct xfs_mount	*mp,
++	struct xfs_agf		*agf,
++	struct fiemap_extent_info *fieinfo,
++	xfs_agnumber_t		agno)
++{
++	xfs_buf_t		*agflbp;
++	__be32			*agfl_bno;
++	int			i;
++	int			error = 0;
++
++	error = xfs_alloc_read_agfl(mp, NULL, be32_to_cpu(agf->agf_seqno), &agflbp);
++
++	if (error)
++		return error;
++
++	agfl_bno = XFS_BUF_TO_AGFL_BNO(mp, agflbp);
++
++	for(i = be32_to_cpu(agf->agf_flfirst);
++		i <= be32_to_cpu(agf->agf_fllast);) {
++
++		xfs_daddr_t	dbno;
++		xfs_fileoff_t	dlen;	
++		int		flags = 0;
++
++		/*
++		 * Use daddr format for all range/len calculations as that is
++		 * the format the range/len variables are supplied in by
++		 * userspace.
++		 */
++
++		dbno = XFS_AGB_TO_DADDR(mp, agno, be32_to_cpu(agfl_bno[i]));
++		dlen = XFS_FSB_TO_BB(mp, 1);
++
++		error = -fiemap_fill_next_extent(fieinfo,BBTOB(dbno),
++						BBTOB(dbno), BBTOB(dlen), flags);
++		if (error)
++			break;
++		if (++i == XFS_AGFL_SIZE(mp))
++			i = 0;
++	}
++	xfs_buf_relse(agflbp);
++	return error;
++}
+ 
+ /*
+  * Map the freespace from the requested range in the requested order.
+@@ -2803,6 +2853,9 @@
+ 		}
+ 		XFS_WANT_CORRUPTED_GOTO(i == 1, del_cursor);
+ 
++		/* Account for the free blocks in AGFL */
++		error = xfs_alloc_agfl_freespace_map(mp, XFS_BUF_TO_AGF(agbp), fieinfo, agno);
++
+ 		if (!bycnt) {
+ 			/*
+ 			 * if we are doing a bno ordered lookup, we can just
 
-1) [PATCH 1/4] xfs: Accounting for AGFL blocks in xfs_spaceman
-	This patch adds functionality in xfs_spaceman allowing it to
-	account for AG Free List blocks. The previous version of
-	xfs_spaceman failed to account for AGFL blocks as they 
-	aren't found by walking the free space btrees, so we have to
-	walk each AGFL to find them. A new function 
-	xfs_alloc_agfl_freespace_map() is added which will walk the free
-	extents in AGFL and account for these AGFL blocks by using 
-	agf_flfirst, agf_fllast and agf_flcount fields.
-
-
-2) [PATCH 2/4] xfsprogs: Addition in debug option -d of xfs_spaceman
-	This patch allows adding a title for the contents which are
-	printed when xfs_spaceman is run with -d debug option from command
-	line. The titles added are agno, agbno and len.
-
-
-3) [PATCH 3/4] xfs: Adding XFS_IOC_FIEMAPFS ioctl for use in xfs_spaceman
-	This patch is concerned with the changes made in kernel space code
-	for adding a new XFS specific ioctl XFS_IOC_FIEMAPFS in xfs_spaceman.
-	This ioctl will replace a file based ioctl FS_IOC_FIEMAPFS, and allow
-	us to modify the ioctl as per requirement in the future.
-
-
-4) [PATCH 4/4] xfprogs: Adding XFS_IOC_FIEMAPFS ioctl for use inxfs_spaceman
-	This patch is concerened with the changes made in user space code
-	for using XFS_IOC_FIEMAPFS ioctl in xfs_spaceman, which will replace
-	FS_IOC_FIEMAPFS and make use of fiemap plumbing.
-
-Comments, thoughts etc are welcome.
-
-Regards,
-A-DRS.
+-------------------------------------------------------------------------------------------
 
 _______________________________________________
 xfs mailing list
