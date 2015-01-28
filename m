@@ -1,24 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 1AFE07F6D
-	for <xfs@oss.sgi.com>; Wed, 28 Jan 2015 08:33:57 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 092FD304051
-	for <xfs@oss.sgi.com>; Wed, 28 Jan 2015 06:33:56 -0800 (PST)
-Received: from mail-pa0-f45.google.com (mail-pa0-f45.google.com
-	[209.85.220.45]) by cuda.sgi.com with ESMTP id OBtwxNvfHNTisNe6
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 28 Jan 2015 06:33:55 -0800 (PST)
-Received: by mail-pa0-f45.google.com with SMTP id et14so25907289pad.4
-	for <xfs@oss.sgi.com>; Wed, 28 Jan 2015 06:33:55 -0800 (PST)
-Received: from dhruv-MacBookAir ([14.97.202.7])
-	by mx.google.com with ESMTPSA id ua7sm4983375pab.37.2015.01.28.06.33.53
-	for <xfs@oss.sgi.com> (version=TLSv1 cipher=RC4-SHA bits=128/128);
-	Wed, 28 Jan 2015 06:33:54 -0800 (PST)
-Message-ID: <54c8f352.8795420a.1e09.ffffc334@mx.google.com>
-From: Dhruvesh Rathore <adrscube@gmail.com>
-Date: Wed, 28 Jan 2015 20:03:49 +0530
-Subject: [PATCH 2/4] xfsprogs: Addition in debug option -d of xfs_spaceman
+	by oss.sgi.com (Postfix) with ESMTP id 416927F47
+	for <xfs@oss.sgi.com>; Wed, 28 Jan 2015 09:44:55 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 21821304048
+	for <xfs@oss.sgi.com>; Wed, 28 Jan 2015 07:44:51 -0800 (PST)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id fU1BJbm2wRs9VZCD for <xfs@oss.sgi.com>;
+	Wed, 28 Jan 2015 07:44:50 -0800 (PST)
+Message-ID: <54C903F1.30203@sandeen.net>
+Date: Wed, 28 Jan 2015 09:44:49 -0600
+From: Eric Sandeen <sandeen@sandeen.net>
+MIME-Version: 1.0
+Subject: Re: maxpct option for small xfs filesystems
+References: <54C667F3.8040303@oracle.com>
+	<20150126223715.GA7621@dastard>	<54C7BB78.4060203@oracle.com>
+	<54C7BD60.5000104@sandeen.net> <54C8BCEC.5050101@oracle.com>
+In-Reply-To: <54C8BCEC.5050101@oracle.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,141 +25,62 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Alexander Tsvetkov <alexander.tsvetkov@oracle.com>, Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
+On 1/28/15 4:41 AM, Alexander Tsvetkov wrote:
 
-The xfs_spaceman utility did not have a a proper title to the content
-displayed using -d (debug) option.
+...
 
-Old output (Before changes).
+>> and what does df -i say after remount?
+> Nothing changed after remount:
 
-$ sudo xfs_spaceman -c "freesp -d" /media/xfs
-       0        4        1
-       0        5        1
-       0        6        1
-       0        7        1
-       0   170382    11870
-       0   213742     1262
-       0   351845     5126
-       0   463591    11331
-       0   495531    12143
-       0   553400   414028
-       1        4        1
-       1        5        1
-       1        6        1
-       1        7        1
-       1        8   967420
-       2     2564        1
-       2     2565        1
-       2     2566        1
-       2     2567        1
-       2     2568   453578
-       2   456150    43989
-       2   500140   467288
-       3        4        1
-       3        5        1
-       3        6        1
-       3        7        1
-       3        8   967420
-   from      to extents  blocks    pct
-      1       1      16      16   0.00
-   1024    2047       1    1262   0.04
-   4096    8191       1    5126   0.15
-   8192   16383       3   35344   1.05
-  32768   65535       1   43989   1.31
- 262144  524287       3 1334894  39.78
- 524288  967428       2 1934840  57.66
-
-This patch adds a suitable title header to the output, making it much
-more redable to the user.
-
-New output (After implementing this patch).
-
-$ uname -a
-Linux dhruv-MacBookAir 3.18.0-rc7+ #3 SMP Thu Dec 25 15:29:59 IST 2014 x86_64 x86_64 x86_64 GNU/Linux
-$ sudo xfs_spaceman -V
-xfs_spaceman version 3.2.2
-$ sudo xfs_spaceman -c "freesp -d" /media/xfs
-    agno    agbno      len
-       0        4        1
-       0        5        1
-       0        6        1
-       0        7        1
-       0   170382    11870
-       0   213742     1262
-       0   351845     5126
-       0   463591    11331
-       0   495531    12143
-       0   553400   414028
-       1        4        1
-       1        5        1
-       1        6        1
-       1        7        1
-       1        8   967420
-       2     2564        1
-       2     2565        1
-       2     2566        1
-       2     2567        1
-       2     2568   453578
-       2   456150    43989
-       2   500140   467288
-       3        4        1
-       3        5        1
-       3        6        1
-       3        7        1
-       3        8   967420
-   from      to extents  blocks    pct
-      1       1      16      16   0.00
-   1024    2047       1    1262   0.04
-   4096    8191       1    5126   0.15
-   8192   16383       3   35344   1.05
-  32768   65535       1   43989   1.31
- 262144  524287       3 1334894  39.78
- 524288  967428       2 1934840  57.66
-
--------------------------------------------------------------------------------------------
-
-Signed-off-by: Dhruvesh Rathore <dhruvesh_r@outlook.com>
-Signed-off-by: Amey Ruikar <ameyruikar@yahoo.com>
-Signed-off-by: Somdeep Dey <somdeepdey10@gmail.com>
----
-spaceman/freesp.c | 3 +++
-1 file changed, 3 insertions(+)
-
---- a/spaceman/freesp.c	2015-01-28 19:17:43.471341809 +0530
-+++ b/spaceman/freesp.c	2015-01-28 19:17:11.279343228 +0530
-
-@@ -332,20 +332,23 @@
- static int
- freesp_f(
- 	int		argc,
- 	char		**argv)
- {
- 	xfs_agnumber_t	agno;		
+Sorry, I misremembered the problem.  :(
  
- 	if (!init(argc, argv))
- 		return 0;
- 
-+	if (dumpflag)
-+		printf("%8s %8s %8s\n", "agno", "agbno", "len");	
-+
- 	for (agno = 0; agno < file->geom.agcount; agno++)  {
- 		if (inaglist(agno))
- 			scan_ag(agno);
- 	}
- 	if (histcount)
- 		printhist();		
- 	if (summaryflag) {
- 		printf(_("total free extents %lld\n"), totexts);
- 		printf(_("total free blocks %lld\n"), totblocks);
- 		printf(_("average free extent size %g\n"),
+...
 
--------------------------------------------------------------------------------------------
+>>
+>> This is actually a problem with the lazy superblock counters I've run into before,
+>> but haven't yet fixed.  This kind of workload is such that it never trips the
+>> runtime rebalancing.
+>>
+>>> Looking into ncheck output there are 40512 pairs reported in the output each with own unique
+>>> inode number. ncheck doesn't report inodes count by definition, but what does these
+>>> 40512 reported inode numbers mean if only actually 640 inodes were allocated? From another hand
+>>> each new file should have associated meta-data in the corresponding allocated inode structure, so for
+>>> 40512 newly created files I expect the same count of allocated inodes, is it correct?
+>> Recheck df -i after remount, I think you will see many more than 640.
+
+> Do you mean that ncheck reports right number of allocated inodes instead of df -i? If counters are incorrect then the
+> maxpct limit is not working as well, because there are much more of filesystem space allocated for inodes then defined limit 1%.
+> 
+> What is expected behaviour in this case when it's required for fs to allocate new inodes starting to exceed defined maxpct
+> percentage? Which error is expected to be returned to user, enospc or probably just some warning?
+
+There are a couple of things going on here.
+
+XFS superblock counters are kept in per-cpu variables for scalability; at certain times these per-cpu counts are coalesced into a global counter based on various thresholds.  The thing about the inode counter is that it generally counts up, and it's the high thresholds that we care about (in order to determine if we've hit maxpct), but it's written as one of the low-threshold counters (as with free inodes / free space).
+
+So in your test, you're rapidly running up the counter on a single cpu, and it's not getting coalesced into the main counter, which is where the imaxpct test happens.  So that's why you're able to exceed imaxpct.
+
+The df -i (statfs) output is wrong because of a bug in xfs_fs_statfs.  For a filesystem like XFS which dynamically allocates and deallocates inodes, it's a little tricky to answer the question "how many inodes are available?"  It's limited by free space as well as by imaxpct. There's code in there which does this:
+
+        if (mp->m_maxicount)
+                statp->f_files = min_t(typeof(statp->f_files),
+                                        statp->f_files,
+                                        mp->m_maxicount);
+
+so it will never report more than mp->m_maxicount, which is essentially the imaxpct limit, even if we've actually allocated more than that.
+
+A simple fix for this is to recognize that imaxpct is something of a soft limit (it's not critical if we overrun by a few hundred or even thousand inodes), and if the superblock counter of allocated inodes (sbp->sb_icount) exceeds mp->m_maxicount due to such an overrun, we should report that (true) value instead.
+
+I'm working on a couple of patches which should fix both issues.
+
+-Eric
 
 _______________________________________________
 xfs mailing list
