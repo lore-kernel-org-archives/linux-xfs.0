@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id B45407F8E
-	for <xfs@oss.sgi.com>; Thu, 29 Jan 2015 09:34:01 -0600 (CST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 39ADD7F8E
+	for <xfs@oss.sgi.com>; Thu, 29 Jan 2015 09:34:27 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 3EC1FAC002
-	for <xfs@oss.sgi.com>; Thu, 29 Jan 2015 07:34:00 -0800 (PST)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 292438F8052
+	for <xfs@oss.sgi.com>; Thu, 29 Jan 2015 07:34:24 -0800 (PST)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id z2umY3pqDV0PDHgh (version=TLSv1
+	cuda.sgi.com with ESMTP id JAPtE2TzxwvKOA6e (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 29 Jan 2015 07:34:00 -0800 (PST)
-Date: Thu, 29 Jan 2015 10:33:47 -0500
+	Thu, 29 Jan 2015 07:34:23 -0800 (PST)
+Date: Thu, 29 Jan 2015 10:34:12 -0500
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 1/9] xfs: FSX_NONBLOCK is not used
-Message-ID: <20150129153347.GA17652@laptop.bfoster>
+Subject: Re: [PATCH 2/9] xfs: separate xflags from xfs_ioctl_setattr
+Message-ID: <20150129153412.GB17652@laptop.bfoster>
 References: <1422328486-24661-1-git-send-email-david@fromorbit.com>
-	<1422328486-24661-2-git-send-email-david@fromorbit.com>
+	<1422328486-24661-3-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1422328486-24661-2-git-send-email-david@fromorbit.com>
+In-Reply-To: <1422328486-24661-3-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,50 +33,145 @@ Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: iustin@k1024.org, xfs@oss.sgi.com
 
-On Tue, Jan 27, 2015 at 02:14:38PM +1100, Dave Chinner wrote:
+On Tue, Jan 27, 2015 at 02:14:39PM +1100, Dave Chinner wrote:
 > From: Dave Chinner <dchinner@redhat.com>
 > 
-> It is set if the filp is set ot non-blocking, but the flag is not
-> used anywhere. Hence we can kill it.
+> The setting of the extended flags is down through two separate
+> interfaces, but they are munged together into xfs_ioctl_setattr
+> and make that function far more complex than it needs to be.
+> Separate it out into a helper function along with all the other
+> common inode changes and transaction manipulations in
+> xfs_ioctl_setattr().
 > 
 > Signed-off-by: Dave Chinner <dchinner@redhat.com>
 > ---
 
 Reviewed-by: Brian Foster <bfoster@redhat.com>
 
->  fs/xfs/xfs_ioctl.c | 5 -----
->  1 file changed, 5 deletions(-)
+>  fs/xfs/xfs_ioctl.c | 89 +++++++++++++++++++++++++-----------------------------
+>  1 file changed, 41 insertions(+), 48 deletions(-)
 > 
 > diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-> index 8810959..09325ff 100644
+> index 09325ff..ba98412 100644
 > --- a/fs/xfs/xfs_ioctl.c
 > +++ b/fs/xfs/xfs_ioctl.c
-> @@ -1016,7 +1016,6 @@ xfs_diflags_to_linux(
+> @@ -1013,6 +1013,44 @@ xfs_diflags_to_linux(
+>  		inode->i_flags &= ~S_NOATIME;
+>  }
+>  
+> +static int
+> +xfs_ioctl_setattr_xflags(
+> +	struct xfs_trans	*tp,
+> +	struct xfs_inode	*ip,
+> +	struct fsxattr		*fa)
+> +{
+> +	struct xfs_mount	*mp = ip->i_mount;
+> +
+> +	/* Can't change realtime flag if any extents are allocated. */
+> +	if ((ip->i_d.di_nextents || ip->i_delayed_blks) &&
+> +	    XFS_IS_REALTIME_INODE(ip) != (fa->fsx_xflags & XFS_XFLAG_REALTIME))
+> +		return -EINVAL;
+> +
+> +	/* If realtime flag is set then must have realtime device */
+> +	if (fa->fsx_xflags & XFS_XFLAG_REALTIME) {
+> +		if (mp->m_sb.sb_rblocks == 0 || mp->m_sb.sb_rextsize == 0 ||
+> +		    (ip->i_d.di_extsize % mp->m_sb.sb_rextsize))
+> +			return -EINVAL;
+> +	}
+> +
+> +	/*
+> +	 * Can't modify an immutable/append-only file unless
+> +	 * we have appropriate permission.
+> +	 */
+> +	if (((ip->i_d.di_flags & (XFS_DIFLAG_IMMUTABLE | XFS_DIFLAG_APPEND)) ||
+> +	     (fa->fsx_xflags & (XFS_XFLAG_IMMUTABLE | XFS_XFLAG_APPEND))) &&
+> +	    !capable(CAP_LINUX_IMMUTABLE))
+> +		return -EPERM;
+> +
+> +	xfs_trans_ijoin(tp, ip, 0);
+> +	xfs_set_diflags(ip, fa->fsx_xflags);
+> +	xfs_diflags_to_linux(ip);
+> +	xfs_trans_ichgtime(tp, ip, XFS_ICHGTIME_CHG);
+> +	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
+> +	XFS_STATS_INC(xs_ig_attrchg);
+> +	return 0;
+> +}
+> +
 >  #define FSX_PROJID	1
 >  #define FSX_EXTSIZE	2
 >  #define FSX_XFLAGS	4
-> -#define FSX_NONBLOCK	8
+> @@ -1159,44 +1197,9 @@ xfs_ioctl_setattr(
+>  	}
 >  
->  STATIC int
->  xfs_ioctl_setattr(
-> @@ -1299,8 +1298,6 @@ xfs_ioc_fssetxattr(
->  		return -EFAULT;
 >  
->  	mask = FSX_XFLAGS | FSX_EXTSIZE | FSX_PROJID;
-> -	if (filp->f_flags & (O_NDELAY|O_NONBLOCK))
-> -		mask |= FSX_NONBLOCK;
+> -	if (mask & FSX_XFLAGS) {
+> -		/*
+> -		 * Can't change realtime flag if any extents are allocated.
+> -		 */
+> -		if ((ip->i_d.di_nextents || ip->i_delayed_blks) &&
+> -		    (XFS_IS_REALTIME_INODE(ip)) !=
+> -		    (fa->fsx_xflags & XFS_XFLAG_REALTIME)) {
+> -			code = -EINVAL;	/* EFBIG? */
+> -			goto error_return;
+> -		}
+> -
+> -		/*
+> -		 * If realtime flag is set then must have realtime data.
+> -		 */
+> -		if ((fa->fsx_xflags & XFS_XFLAG_REALTIME)) {
+> -			if ((mp->m_sb.sb_rblocks == 0) ||
+> -			    (mp->m_sb.sb_rextsize == 0) ||
+> -			    (ip->i_d.di_extsize % mp->m_sb.sb_rextsize)) {
+> -				code = -EINVAL;
+> -				goto error_return;
+> -			}
+> -		}
+> -
+> -		/*
+> -		 * Can't modify an immutable/append-only file unless
+> -		 * we have appropriate permission.
+> -		 */
+> -		if ((ip->i_d.di_flags &
+> -				(XFS_DIFLAG_IMMUTABLE|XFS_DIFLAG_APPEND) ||
+> -		     (fa->fsx_xflags &
+> -				(XFS_XFLAG_IMMUTABLE | XFS_XFLAG_APPEND))) &&
+> -		    !capable(CAP_LINUX_IMMUTABLE)) {
+> -			code = -EPERM;
+> -			goto error_return;
+> -		}
+> -	}
+> -
+> -	xfs_trans_ijoin(tp, ip, 0);
+> +	code = xfs_ioctl_setattr_xflags(tp, ip, fa);
+> +	if (code)
+> +		goto error_return;
 >  
->  	error = mnt_want_write_file(filp);
->  	if (error)
-> @@ -1343,8 +1340,6 @@ xfs_ioc_setxflags(
->  		return -EOPNOTSUPP;
+>  	/*
+>  	 * Change file ownership.  Must be the owner or privileged.
+> @@ -1227,11 +1230,6 @@ xfs_ioctl_setattr(
 >  
->  	mask = FSX_XFLAGS;
-> -	if (filp->f_flags & (O_NDELAY|O_NONBLOCK))
-> -		mask |= FSX_NONBLOCK;
->  	fa.fsx_xflags = xfs_merge_ioc_xflags(flags, xfs_ip2xflags(ip));
+>  	}
 >  
->  	error = mnt_want_write_file(filp);
+> -	if (mask & FSX_XFLAGS) {
+> -		xfs_set_diflags(ip, fa->fsx_xflags);
+> -		xfs_diflags_to_linux(ip);
+> -	}
+> -
+>  	/*
+>  	 * Only set the extent size hint if we've already determined that the
+>  	 * extent size hint should be set on the inode. If no extent size flags
+> @@ -1246,11 +1244,6 @@ xfs_ioctl_setattr(
+>  		ip->i_d.di_extsize = extsize;
+>  	}
+>  
+> -	xfs_trans_ichgtime(tp, ip, XFS_ICHGTIME_CHG);
+> -	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
+> -
+> -	XFS_STATS_INC(xs_ig_attrchg);
+> -
+>  	/*
+>  	 * If this is a synchronous mount, make sure that the
+>  	 * transaction goes to disk before returning to the user.
 > -- 
 > 2.0.0
 > 
