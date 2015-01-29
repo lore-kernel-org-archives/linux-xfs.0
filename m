@@ -1,24 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 8C6CC7FD3
-	for <xfs@oss.sgi.com>; Thu, 29 Jan 2015 16:58:24 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 36869AC004
-	for <xfs@oss.sgi.com>; Thu, 29 Jan 2015 14:58:24 -0800 (PST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 89F487FE0
+	for <xfs@oss.sgi.com>; Thu, 29 Jan 2015 17:37:20 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 777F1304039
+	for <xfs@oss.sgi.com>; Thu, 29 Jan 2015 15:37:17 -0800 (PST)
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	Ndhfg2cUAoDUp8Di for <xfs@oss.sgi.com>;
-	Thu, 29 Jan 2015 14:58:21 -0800 (PST)
-Date: Fri, 30 Jan 2015 09:57:50 +1100
+	ZnU52xKorS6iHYwH for <xfs@oss.sgi.com>;
+	Thu, 29 Jan 2015 15:37:15 -0800 (PST)
+Date: Fri, 30 Jan 2015 10:12:31 +1100
 From: Dave Chinner <david@fromorbit.com>
 Subject: Re: Unable to mount and repair filesystems
-Message-ID: <20150129225750.GC6282@dastard>
+Message-ID: <20150129231231.GD6282@dastard>
 References: <D90435AEFF34654AA1122988C66C8678023F0277C9@exchange.tsag.local>
 	<54CA9586.1010607@sandeen.net>
 	<D90435AEFF34654AA1122988C66C8678023F027956@exchange.tsag.local>
+	<54CAAAEC.1080803@sandeen.net>
+	<D90435AEFF34654AA1122988C66C8678023F0279AB@exchange.tsag.local>
+	<54CAB11A.7040509@sandeen.net>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <D90435AEFF34654AA1122988C66C8678023F027956@exchange.tsag.local>
+In-Reply-To: <54CAB11A.7040509@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,50 +34,49 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Gerard Beekmans <GBeekmans@tsag.net>
-Cc: Eric Sandeen <sandeen@sandeen.net>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>, Gerard Beekmans <GBeekmans@tsag.net>
 
-On Thu, Jan 29, 2015 at 09:27:32PM +0000, Gerard Beekmans wrote:
-> > -----Original Message-----
-> > Are you certain that the volume /
-> > storage behind dm-9 is in decent shape?  (i.e. is it really even
-> > an xfs filesystem?)
+On Thu, Jan 29, 2015 at 04:15:54PM -0600, Eric Sandeen wrote:
+> On 1/29/15 3:59 PM, Gerard Beekmans wrote:
+> I'm sure it's not related to this issue (unless it was very recently grown?
+> Was it grown shortly before the failures?)
+> 
+> Hm, it would have started at 4 AGs by default, and it's the 5th one that
+> looks bad; maybe that's a clue.  Are agf 6, 7, 8 etc also full of 0s?
+
+Gerard is using the default mount options, so XFS is issuing cache
+flushes and FUA with log writes. Hence if the new AG headers are
+zero yet the superblock says they are valid, then that's a storage
+bug.
+
+In more detail: we force the new AGs to be written to disk
+synchronously during the growfs operation before we commit the
+transaction. The superblock with the larger AG count can only get on
+disk after the transaction has been written to the log. Log writes
+trigger a storge device cache flush, which results in the IO
+ordering of:
+
+new AG header IO
+IO complete
+transaction commit
+....
+Device cache flush
+	(new AG headers guaranteed to be on disk)
+journal write (FUA)
+	(journal write guaranteed to be on disk)
 .....
-> The outage occurred at the SAN level making the NFS storage
-> unavailable which in turn turned off all the VMs running on it
-> (turned off in the virtual sense).
+superblock write IO.
 
-Define "SAN" outage. All this tells me is that the backing store
-went bad in some way and needed recovery, not what the actual
-problem in the SAN was. If it was a potential data loss event, then
-that's the prime candidate for the storage returning zeros where
-there should be data.
+Hence if the superblock is showing 25 AGs and the new ags from 4-25
+are not found on disk then either:
 
-The second candidate is the NFS server. What was the NFS server?
-Did the NFS server get rebooted? Did the NFS clients (i.e. the
-physical machines running the hypervisor, not the guests) get
-rebooted too?  If you reboot the server, the NFS clients are
-supposed to retransmit any unstable data they have to the server. If
-the clients are rebooted or the NFS mount forcible unmounted while
-the server is down, then that unstable data is lost forever.
+	a) if the grow was very recent the storage is not obeying
+	cache flushes and hence breaking fundamental IO ordering
+	behaviour; or,
 
-Really, fully zeroed blocks in critical XFS metadata blocks is
-almost always an indication of data loss somewhere in the lower
-layers of the storage stack.  As a precaution, though, if one vmdk
-is bad, I'd consider all the others as suspect, even if the
-filesystem checkers haven't thrown errors.  Random block data loss
-can really only be reliably recovered from backups, as user data is
-notoriously difficult to validate as correct.
-
-.....
-
-> It is possible that it is the vmware VMDK file that belongs to
-> this VM that is the issue but it does not appear to be corrupt
-> from a vmdk standpoint. Just the data inside of it.
-
-Also, you are using VMDK image files, that implies you are running
-ESX as your hypervisor, yes? If so, that limits our ability to help
-you track the source of the corruption...
+	b) if the growfs happened long ago, the storage has lost the
+	data that was written to stable media...
 
 Cheers,
 
