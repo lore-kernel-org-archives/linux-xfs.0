@@ -1,22 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id EA74129DF7
-	for <xfs@oss.sgi.com>; Thu, 29 Jan 2015 09:38:46 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id CA5E7304064
-	for <xfs@oss.sgi.com>; Thu, 29 Jan 2015 07:38:46 -0800 (PST)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id jjug16tOYnVTR3EF (version=TLSv1
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id BA89A7F99
+	for <xfs@oss.sgi.com>; Thu, 29 Jan 2015 09:49:42 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 54DD9AC002
+	for <xfs@oss.sgi.com>; Thu, 29 Jan 2015 07:49:42 -0800 (PST)
+Received: from mailserver.inist.fr (mailserver.inist.fr [193.54.107.40]) by
+	cuda.sgi.com with ESMTP id tn774JSPxPG4p1SC (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 29 Jan 2015 07:38:46 -0800 (PST)
-Date: Thu, 29 Jan 2015 10:38:35 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 0/9] xfs: xfs_ioctl_setxattr rework
-Message-ID: <20150129153834.GJ17652@laptop.bfoster>
-References: <1422328486-24661-1-git-send-email-david@fromorbit.com>
+	Thu, 29 Jan 2015 07:49:40 -0800 (PST)
+Received: from inist.fr  
+	by inist.fr (8.14.5/8.14.5) with ESMTP id t0TFncDF015620
+	for <xfs@oss.sgi.com>; Thu, 29 Jan 2015 16:49:38 +0100
+Received: from inist.fr
+	by inist.fr (8.14.5/8.14.5) with ESMTP id t0TFmGMR015475
+	for <xfs@oss.sgi.com>; Thu, 29 Jan 2015 16:48:16 +0100
+From: "SCHEFFER, Philippe" <Philippe.SCHEFFER@inist.fr>
+Date: Thu, 29 Jan 2015 16:48:15 +0100
+Subject: xfs_repair fails with corrupt dinode
+Message-ID: <587A9635632B174A943E53AF3B58A9082E3BE068CE@vanda>
+Content-Language: fr-FR
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1422328486-24661-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,58 +33,75 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: iustin@k1024.org, xfs@oss.sgi.com
+To: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-On Tue, Jan 27, 2015 at 02:14:37PM +1100, Dave Chinner wrote:
-> Hi folks,
-> 
-> This is a series I started a few months ago when we first started
-> talking about the issues with extent size hints on directories and
-> the project ID inherit flags being set on regular files. The code
-> is particularly nice and has no clear definition of what sort
-> of changes we allow in the XFS_IOC_FSSETXATTR ioctl.
-> 
-> The first thing the series does is kill the FSX_* flags and separate
-> out the two different use cases for the xfs_ioctl_setattr()
-> function. The first is just changing a constrained set of flags via
-> the xfs_ioc_setxflags(), and the second is supporting
-> xfs_ioc_fssetxattr(). Factoring out the part of the code that sets
-> just the inode flags appropriately allows us to kill the FSX_* flags
-> completely.
-> 
-> The next patch then relaxes the overly defensive approach to
-> restricting XFS_IOC_FSSETXATTR to only the init namespace. We really
-> only need to restrict project ID changes - allowing changes to other
-> parts of the inode are managed by user/group permissions which are
-> already user namespace aware.
-> 
-> The next part of the patch set factors out the validity checking
-> of extent size changes and project ID changes from the setattr
-> functions, making it much clearer the separation between checks and
-> actions performed by xfs_ioctl_setattr() function.
-> 
-> Finally, with all these changes, Iustin Pop's extent size change
-> validity checking patch is ported on top. That now becomes a simple,
-> obvious set of changes to an isolated function, and i've added
-> comments to explain the rules allowing extent size hints to be
-> changed.
-> 
-> Comments, thoughts, flames, etc all welcome.
-> 
+Hi,
 
-All in all this looks like a nice cleanup to me. By the way, you've got
-"xfs; ..." in some of the patch/mail headers instead of "xfs: ..."
+I have a corrupted xfs filesytem. When I try to repair I get this error :
+disconnected inode 1427919, moving to lost+found
+corrupt dinode 1427919, extent total = 1, nblocks = 0.  This is a bug.
+Please capture the filesystem metadata with xfs_metadump and
+report it to xfs@oss.sgi.com.
+cache_node_purge: refcount was 1, not zero (node=0x1f6c19620)
 
-Brian
+fatal error -- 117 - couldn't iget disconnected inode
 
-> - Dave.
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+I captured metada with xfs_metadump but the file is 1,4Gb long. I can't send it to you.
 
+I printed inode1427919 :
+
+xfs_db> inode 1427919
+xfs_db> print
+core.magic = 0x494e
+core.mode = 0100644
+core.version = 2
+core.format = 2 (extents)
+core.nlinkv2 = 1
+core.onlink = 0
+core.projid_lo = 0
+core.projid_hi = 0
+core.uid = 1144
+core.gid = 1144
+core.flushiter = 19
+core.atime.sec = Fri Jan  9 21:50:25 2015
+core.atime.nsec = 132886289
+core.mtime.sec = Wed Oct 15 16:28:33 2014
+core.mtime.nsec = 166360243
+core.ctime.sec = Wed Oct 15 16:28:33 2014
+core.ctime.nsec = 166360243
+core.size = 2536
+core.nblocks = 1
+core.extsize = 0
+core.nextents = 1
+core.naextents = 0
+core.forkoff = 0
+core.aformat = 2 (extents)
+core.dmevmask = 0
+core.dmstate = 0
+core.newrtbm = 0
+core.prealloc = 0
+core.realtime = 0
+core.immutable = 0
+core.append = 0
+core.sync = 0
+core.noatime = 0
+core.nodump = 0
+core.rtinherit = 0
+core.projinherit = 0
+core.nosymlinks = 0
+core.extsz = 0
+core.extszinherit = 0
+core.nodefrag = 0
+core.filestream = 0
+core.gen = 837444118
+next_unlinked = null
+u.bmx[0] = [startoff,startblock,blockcount,extentflag] 0:[0,320660992,1,0]
+
+What could I do for solve this problem.
+
+Thanks in advance.
+
+Philippe
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
