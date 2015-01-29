@@ -1,26 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id BA89A7F99
-	for <xfs@oss.sgi.com>; Thu, 29 Jan 2015 09:49:42 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 54DD9AC002
-	for <xfs@oss.sgi.com>; Thu, 29 Jan 2015 07:49:42 -0800 (PST)
-Received: from mailserver.inist.fr (mailserver.inist.fr [193.54.107.40]) by
-	cuda.sgi.com with ESMTP id tn774JSPxPG4p1SC (version=TLSv1
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id D3E537F58
+	for <xfs@oss.sgi.com>; Thu, 29 Jan 2015 10:32:04 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id C3146304051
+	for <xfs@oss.sgi.com>; Thu, 29 Jan 2015 08:32:01 -0800 (PST)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id D7LfbcxMVRGG5ZXf (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 29 Jan 2015 07:49:40 -0800 (PST)
-Received: from inist.fr  
-	by inist.fr (8.14.5/8.14.5) with ESMTP id t0TFncDF015620
-	for <xfs@oss.sgi.com>; Thu, 29 Jan 2015 16:49:38 +0100
-Received: from inist.fr
-	by inist.fr (8.14.5/8.14.5) with ESMTP id t0TFmGMR015475
-	for <xfs@oss.sgi.com>; Thu, 29 Jan 2015 16:48:16 +0100
-From: "SCHEFFER, Philippe" <Philippe.SCHEFFER@inist.fr>
-Date: Thu, 29 Jan 2015 16:48:15 +0100
-Subject: xfs_repair fails with corrupt dinode
-Message-ID: <587A9635632B174A943E53AF3B58A9082E3BE068CE@vanda>
-Content-Language: fr-FR
+	Thu, 29 Jan 2015 08:32:01 -0800 (PST)
+Date: Thu, 29 Jan 2015 10:46:52 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH] xfs:change kmem_free to use generic kvfree()
+Message-ID: <20150129154652.GK17652@laptop.bfoster>
+References: <35FD53F367049845BC99AC72306C23D1044A02027DFF@CNBJMBX05.corpusers.net>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <35FD53F367049845BC99AC72306C23D1044A02027DFF@CNBJMBX05.corpusers.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,75 +29,69 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: "Wang, Yalin" <Yalin.Wang@sonymobile.com>
+Cc: "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, "'xfs@oss.sgi.com'" <xfs@oss.sgi.com>
 
-Hi,
+On Wed, Jan 28, 2015 at 02:08:47PM +0800, Wang, Yalin wrote:
+> Change kmem_free to use kvfree() generic function,
+> remove the duplicated code.
+> 
+> Signed-off-by: Yalin Wang <yalin.wang@sonymobile.com>
+> ---
 
-I have a corrupted xfs filesytem. When I try to repair I get this error :
-disconnected inode 1427919, moving to lost+found
-corrupt dinode 1427919, extent total = 1, nblocks = 0.  This is a bug.
-Please capture the filesystem metadata with xfs_metadump and
-report it to xfs@oss.sgi.com.
-cache_node_purge: refcount was 1, not zero (node=0x1f6c19620)
+Looks good...
 
-fatal error -- 117 - couldn't iget disconnected inode
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 
-I captured metada with xfs_metadump but the file is 1,4Gb long. I can't send it to you.
+>  fs/xfs/kmem.c | 10 ----------
+>  fs/xfs/kmem.h |  5 ++++-
+>  2 files changed, 4 insertions(+), 11 deletions(-)
+> 
+> diff --git a/fs/xfs/kmem.c b/fs/xfs/kmem.c
+> index 53e95b2..a7a3a63 100644
+> --- a/fs/xfs/kmem.c
+> +++ b/fs/xfs/kmem.c
+> @@ -91,16 +91,6 @@ kmem_zalloc_large(size_t size, xfs_km_flags_t flags)
+>  	return ptr;
+>  }
+>  
+> -void
+> -kmem_free(const void *ptr)
+> -{
+> -	if (!is_vmalloc_addr(ptr)) {
+> -		kfree(ptr);
+> -	} else {
+> -		vfree(ptr);
+> -	}
+> -}
+> -
+>  void *
+>  kmem_realloc(const void *ptr, size_t newsize, size_t oldsize,
+>  	     xfs_km_flags_t flags)
+> diff --git a/fs/xfs/kmem.h b/fs/xfs/kmem.h
+> index 64db0e5..cc6b768 100644
+> --- a/fs/xfs/kmem.h
+> +++ b/fs/xfs/kmem.h
+> @@ -63,7 +63,10 @@ kmem_flags_convert(xfs_km_flags_t flags)
+>  extern void *kmem_alloc(size_t, xfs_km_flags_t);
+>  extern void *kmem_zalloc_large(size_t size, xfs_km_flags_t);
+>  extern void *kmem_realloc(const void *, size_t, size_t, xfs_km_flags_t);
+> -extern void  kmem_free(const void *);
+> +static inline void  kmem_free(const void *ptr)
+> +{
+> +	kvfree(ptr);
+> +}
+>  
+>  
+>  extern void *kmem_zalloc_greedy(size_t *, size_t, size_t);
+> -- 
+> 2.2.2
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
-I printed inode1427919 :
-
-xfs_db> inode 1427919
-xfs_db> print
-core.magic = 0x494e
-core.mode = 0100644
-core.version = 2
-core.format = 2 (extents)
-core.nlinkv2 = 1
-core.onlink = 0
-core.projid_lo = 0
-core.projid_hi = 0
-core.uid = 1144
-core.gid = 1144
-core.flushiter = 19
-core.atime.sec = Fri Jan  9 21:50:25 2015
-core.atime.nsec = 132886289
-core.mtime.sec = Wed Oct 15 16:28:33 2014
-core.mtime.nsec = 166360243
-core.ctime.sec = Wed Oct 15 16:28:33 2014
-core.ctime.nsec = 166360243
-core.size = 2536
-core.nblocks = 1
-core.extsize = 0
-core.nextents = 1
-core.naextents = 0
-core.forkoff = 0
-core.aformat = 2 (extents)
-core.dmevmask = 0
-core.dmstate = 0
-core.newrtbm = 0
-core.prealloc = 0
-core.realtime = 0
-core.immutable = 0
-core.append = 0
-core.sync = 0
-core.noatime = 0
-core.nodump = 0
-core.rtinherit = 0
-core.projinherit = 0
-core.nosymlinks = 0
-core.extsz = 0
-core.extszinherit = 0
-core.nodefrag = 0
-core.filestream = 0
-core.gen = 837444118
-next_unlinked = null
-u.bmx[0] = [startoff,startblock,blockcount,extentflag] 0:[0,320660992,1,0]
-
-What could I do for solve this problem.
-
-Thanks in advance.
-
-Philippe
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
