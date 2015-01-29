@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 9902F7F78
-	for <xfs@oss.sgi.com>; Thu, 29 Jan 2015 07:23:08 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 85623304043
-	for <xfs@oss.sgi.com>; Thu, 29 Jan 2015 05:23:08 -0800 (PST)
-Received: from mail-pa0-f52.google.com (mail-pa0-f52.google.com
-	[209.85.220.52]) by cuda.sgi.com with ESMTP id 9G2HuU8mFBn0K6bK
+	by oss.sgi.com (Postfix) with ESMTP id 0B1157F56
+	for <xfs@oss.sgi.com>; Thu, 29 Jan 2015 07:25:29 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id D08C4304062
+	for <xfs@oss.sgi.com>; Thu, 29 Jan 2015 05:25:28 -0800 (PST)
+Received: from mail-pa0-f50.google.com (mail-pa0-f50.google.com
+	[209.85.220.50]) by cuda.sgi.com with ESMTP id YnklkKgLxB57YYH2
 	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 29 Jan 2015 05:23:07 -0800 (PST)
-Received: by mail-pa0-f52.google.com with SMTP id kx10so39000497pab.11
-	for <xfs@oss.sgi.com>; Thu, 29 Jan 2015 05:23:07 -0800 (PST)
+	<xfs@oss.sgi.com>; Thu, 29 Jan 2015 05:25:27 -0800 (PST)
+Received: by mail-pa0-f50.google.com with SMTP id rd3so39028802pab.9
+	for <xfs@oss.sgi.com>; Thu, 29 Jan 2015 05:25:26 -0800 (PST)
 Received: from dhruv-MacBookAir ([14.97.215.112])
-	by mx.google.com with ESMTPSA id qs3sm7834185pbc.28.2015.01.29.05.23.04
+	by mx.google.com with ESMTPSA id ug6sm7934790pab.7.2015.01.29.05.25.24
 	for <xfs@oss.sgi.com> (version=TLSv1 cipher=RC4-SHA bits=128/128);
-	Thu, 29 Jan 2015 05:23:06 -0800 (PST)
-Message-ID: <54ca343a.43df440a.3c11.4474@mx.google.com>
+	Thu, 29 Jan 2015 05:25:26 -0800 (PST)
+Message-ID: <54ca34c6.4696420a.0f32.4513@mx.google.com>
 From: Dhruvesh Rathore <adrscube@gmail.com>
-Date: Thu, 29 Jan 2015 18:53:01 +0530
-Subject: [PATCH 1/4] xfs: Accounting for AGFL blocks in xfs_spaceman
+Date: Thu, 29 Jan 2015 18:55:21 +0530
+Subject: [PATCH 2/4] xfsprogs: Addition in debug option -d of xfs_spaceman
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,11 +35,41 @@ Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
 
-The xfs_spaceman utility previously failed to account for AGFL blocks.
+The xfs_spaceman utility did not have a a proper title to the content
+displayed using -d (debug) option.
+
 Old output (Before changes).
 
-$ sudo xfs_spaceman -c "freesp" /media/xfs
+$ sudo xfs_spaceman -c "freesp -d" /media/xfs
+       0        4        1
+       0        5        1
+       0        6        1
+       0        7        1
+       0   170382    11870
+       0   213742     1262
+       0   351845     5126
+       0   463591    11331
+       0   495531    12143
+       0   553400   414028
+       1        4        1
+       1        5        1
+       1        6        1
+       1        7        1
+       1        8   967420
+       2     2564        1
+       2     2565        1
+       2     2566        1
+       2     2567        1
+       2     2568   453578
+       2   456150    43989
+       2   500140   467288
+       3        4        1
+       3        5        1
+       3        6        1
+       3        7        1
+       3        8   967420
    from      to extents  blocks    pct
+      1       1      16      16   0.00
    1024    2047       1    1262   0.04
    4096    8191       1    5126   0.15
    8192   16383       3   35344   1.05
@@ -47,11 +77,8 @@ $ sudo xfs_spaceman -c "freesp" /media/xfs
  262144  524287       3 1334894  39.78
  524288  967428       2 1934840  57.66
 
-As you can see the AGFL blocks were unaccounted (4 per AG, and there 
-were 4 AGs in this filesystem).
-
-This patch is concerned with adding a new function which will walk the free
-extents in AGFL and account for these AGFL blocks, while file system scanning.
+This patch adds a suitable title header to the output, making it much
+more readable to the user.
 
 New output (After implementing this patch).
 
@@ -59,7 +86,35 @@ $ uname -a
 Linux dhruv-MacBookAir 3.18.0-rc7+ #3 SMP Thu Dec 25 15:29:59 IST 2014 x86_64 x86_64 x86_64 GNU/Linux
 $ sudo xfs_spaceman -V
 xfs_spaceman version 3.2.2
-$ sudo xfs_spaceman -c "freesp" /media/xfs
+$ sudo xfs_spaceman -c "freesp -d" /media/xfs
+    agno    agbno      len
+       0        4        1
+       0        5        1
+       0        6        1
+       0        7        1
+       0   170382    11870
+       0   213742     1262
+       0   351845     5126
+       0   463591    11331
+       0   495531    12143
+       0   553400   414028
+       1        4        1
+       1        5        1
+       1        6        1
+       1        7        1
+       1        8   967420
+       2     2564        1
+       2     2565        1
+       2     2566        1
+       2     2567        1
+       2     2568   453578
+       2   456150    43989
+       2   500140   467288
+       3        4        1
+       3        5        1
+       3        6        1
+       3        7        1
+       3        8   967420
    from      to extents  blocks    pct
       1       1      16      16   0.00
    1024    2047       1    1262   0.04
@@ -75,95 +130,36 @@ Signed-off-by: Dhruvesh Rathore <dhruvesh_r@outlook.com>
 Signed-off-by: Amey Ruikar <ameyruikar@yahoo.com>
 Signed-off-by: Somdeep Dey <somdeepdey10@gmail.com>
 ---
-fs/xfs/libxfs/xfs_alloc.c | 69 ++++++++++++++++
-1 file changed, 69 insertions(+)
+spaceman/freesp.c	| 3 +++
+1 file changed, 3 insertions(+)
 
---- a/fs/xfs/libxfs/xfs_alloc.c	2015-01-29 09:07:07.116439198 +0530
-+++ b/fs/xfs/libxfs/xfs_alloc.c	2015-01-29 09:06:39.664440229 +0530
+--- a/spaceman/freesp.c	2015-01-28 19:17:43.471341809 +0530
++++ b/spaceman/freesp.c	2015-01-28 19:17:11.279343228 +0530
 
-@@ -2698,6 +2698,71 @@
- }
+@@ -332,20 +332,23 @@
+ static int
+ freesp_f(
+ 	int		argc,
+ 	char		**argv)
+ {
+ 	xfs_agnumber_t	agno;		
  
+ 	if (!init(argc, argv))
+ 		return 0;
  
-+/*
-+ * When we map free space we need to take into account the blocks
-+ * that are indexed by the AGFL. They aren't found by walking the
-+ * free space btrees, so we have to walk each AGFL to find them.
-+ */
-+static int
-+xfs_alloc_agfl_freespace_map(
-+	struct xfs_mount	*mp,
-+	struct xfs_agf		*agf,
-+	struct fiemap_extent_info *fieinfo,
-+	xfs_agnumber_t		agno,
-+	xfs_agblock_t		sagbno,
-+	xfs_agblock_t		eagbno)
-+{
-+	xfs_buf_t		*agflbp;
-+	__be32			*agfl_bno;
-+	int			i;
-+	int			error = 0;
++	if (dumpflag)
++		printf("%8s %8s %8s\n", "agno", "agbno", "len");
 +
-+	error = xfs_alloc_read_agfl(mp, NULL, be32_to_cpu(agf->agf_seqno), &agflbp);
-+
-+	if (error)
-+		return error;
-+
-+	agfl_bno = XFS_BUF_TO_AGFL_BNO(mp, agflbp);
-+
-+	for(i = be32_to_cpu(agf->agf_flfirst);
-+		i <= be32_to_cpu(agf->agf_fllast);) {
-+
-+		xfs_agblock_t	fbno;
-+		xfs_extlen_t	flen;
-+		xfs_daddr_t	dbno;
-+		xfs_fileoff_t	dlen;	
-+		int		flags = 0;
-+
-+		fbno = be32_to_cpu(agfl_bno[i]);
-+		flen = 1;
-+
-+		/* range check - must be wholly withing requested range */
-+		if (fbno < sagbno ||
-+			(eagbno != NULLAGBLOCK && fbno + flen > eagbno)) {
-+		xfs_warn(mp, "10: %d/%d, %d/%d", sagbno, eagbno, fbno, flen);
-+			continue;
-+		}
-+
-+		/*
-+		 * Use daddr format for all range/len calculations as that is
-+		 * the format the range/len variables are supplied in by
-+		 * userspace.
-+		 */
-+
-+		dbno = XFS_AGB_TO_DADDR(mp, agno, fbno);
-+		dlen = XFS_FSB_TO_BB(mp, flen);
-+
-+		error = -fiemap_fill_next_extent(fieinfo,BBTOB(dbno),
-+						BBTOB(dbno), BBTOB(dlen), flags);
-+	
-+		if (error)
-+			break;
-+		if (++i == XFS_AGFL_SIZE(mp))
-+			i = 0;
-+	}
-+	xfs_buf_relse(agflbp);
-+	return error;
-+}
- 
- /*
-  * Map the freespace from the requested range in the requested order.
-@@ -2804,6 +2869,10 @@
- 		}
- 		XFS_WANT_CORRUPTED_GOTO(i == 1, del_cursor);
- 
-+		/* Account for the free blocks in AGFL */
-+		error = xfs_alloc_agfl_freespace_map(mp, XFS_BUF_TO_AGF(agbp), fieinfo, agno, sagbno,
-+						agno == eagno ? eagbno : NULLAGBLOCK);
-+
- 		if (!bycnt) {
- 			/*
- 			 * if we are doing a bno ordered lookup, we can just
+ 	for (agno = 0; agno < file->geom.agcount; agno++)  {
+ 		if (inaglist(agno))
+ 			scan_ag(agno);
+ 	}
+ 	if (histcount)
+ 		printhist();		
+ 	if (summaryflag) {
+ 		printf(_("total free extents %lld\n"), totexts);
+ 		printf(_("total free blocks %lld\n"), totblocks);
+ 		printf(_("average free extent size %g\n"),
 
 -------------------------------------------------------------------------------------------
 
