@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 39ADD7F8E
-	for <xfs@oss.sgi.com>; Thu, 29 Jan 2015 09:34:27 -0600 (CST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id E8F1D7F92
+	for <xfs@oss.sgi.com>; Thu, 29 Jan 2015 09:34:47 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 292438F8052
-	for <xfs@oss.sgi.com>; Thu, 29 Jan 2015 07:34:24 -0800 (PST)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 6833BAC002
+	for <xfs@oss.sgi.com>; Thu, 29 Jan 2015 07:34:47 -0800 (PST)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id JAPtE2TzxwvKOA6e (version=TLSv1
+	cuda.sgi.com with ESMTP id 1cEqo49Y6mP4Qb7l (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 29 Jan 2015 07:34:23 -0800 (PST)
-Date: Thu, 29 Jan 2015 10:34:12 -0500
+	Thu, 29 Jan 2015 07:34:46 -0800 (PST)
+Date: Thu, 29 Jan 2015 10:34:36 -0500
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 2/9] xfs: separate xflags from xfs_ioctl_setattr
-Message-ID: <20150129153412.GB17652@laptop.bfoster>
+Subject: Re: [PATCH 3/9] xfs: factor out xfs_ioctl_setattr transaciton preamble
+Message-ID: <20150129153436.GC17652@laptop.bfoster>
 References: <1422328486-24661-1-git-send-email-david@fromorbit.com>
-	<1422328486-24661-3-git-send-email-david@fromorbit.com>
+	<1422328486-24661-4-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1422328486-24661-3-git-send-email-david@fromorbit.com>
+In-Reply-To: <1422328486-24661-4-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,145 +33,178 @@ Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: iustin@k1024.org, xfs@oss.sgi.com
 
-On Tue, Jan 27, 2015 at 02:14:39PM +1100, Dave Chinner wrote:
+On Tue, Jan 27, 2015 at 02:14:40PM +1100, Dave Chinner wrote:
 > From: Dave Chinner <dchinner@redhat.com>
 > 
-> The setting of the extended flags is down through two separate
-> interfaces, but they are munged together into xfs_ioctl_setattr
-> and make that function far more complex than it needs to be.
-> Separate it out into a helper function along with all the other
-> common inode changes and transaction manipulations in
-> xfs_ioctl_setattr().
+> The setup of the transaction is done after a random smattering of
+> checks and before another bunch of ioperations specific
+> validity checks. Pull all the preamble out into a helper function
+> that returns a transaction or error.
 > 
 > Signed-off-by: Dave Chinner <dchinner@redhat.com>
 > ---
-
-Reviewed-by: Brian Foster <bfoster@redhat.com>
-
->  fs/xfs/xfs_ioctl.c | 89 +++++++++++++++++++++++++-----------------------------
->  1 file changed, 41 insertions(+), 48 deletions(-)
+>  fs/xfs/xfs_ioctl.c | 96 +++++++++++++++++++++++++++++-------------------------
+>  1 file changed, 51 insertions(+), 45 deletions(-)
 > 
 > diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-> index 09325ff..ba98412 100644
+> index ba98412..d06f596 100644
 > --- a/fs/xfs/xfs_ioctl.c
 > +++ b/fs/xfs/xfs_ioctl.c
-> @@ -1013,6 +1013,44 @@ xfs_diflags_to_linux(
->  		inode->i_flags &= ~S_NOATIME;
+> @@ -1042,7 +1042,6 @@ xfs_ioctl_setattr_xflags(
+>  	    !capable(CAP_LINUX_IMMUTABLE))
+>  		return -EPERM;
+>  
+> -	xfs_trans_ijoin(tp, ip, 0);
+>  	xfs_set_diflags(ip, fa->fsx_xflags);
+>  	xfs_diflags_to_linux(ip);
+>  	xfs_trans_ichgtime(tp, ip, XFS_ICHGTIME_CHG);
+> @@ -1051,6 +1050,54 @@ xfs_ioctl_setattr_xflags(
+>  	return 0;
 >  }
 >  
-> +static int
-> +xfs_ioctl_setattr_xflags(
-> +	struct xfs_trans	*tp,
-> +	struct xfs_inode	*ip,
-> +	struct fsxattr		*fa)
+> +/*
+> + * Set up the transaction structure for the setattr operation, checking that we
+> + * have permission to do so. On success, return a clean transaction and the
+> + * inode locked exclusively ready for futher operation specific checks. On
+
+					further
+
+> + * failure, return an error without modifying or locking the inode.
+> + */
+> +static struct xfs_trans *
+> +xfs_ioctl_setattr_get_trans(
+> +	struct xfs_inode	*ip)
 > +{
 > +	struct xfs_mount	*mp = ip->i_mount;
+> +	struct xfs_trans	*tp;
+> +	int			error;
 > +
-> +	/* Can't change realtime flag if any extents are allocated. */
-> +	if ((ip->i_d.di_nextents || ip->i_delayed_blks) &&
-> +	    XFS_IS_REALTIME_INODE(ip) != (fa->fsx_xflags & XFS_XFLAG_REALTIME))
-> +		return -EINVAL;
+> +	if (mp->m_flags & XFS_MOUNT_RDONLY)
+> +		return ERR_PTR(-EROFS);
+> +	if (XFS_FORCED_SHUTDOWN(mp))
+> +		return ERR_PTR(-EIO);
 > +
-> +	/* If realtime flag is set then must have realtime device */
-> +	if (fa->fsx_xflags & XFS_XFLAG_REALTIME) {
-> +		if (mp->m_sb.sb_rblocks == 0 || mp->m_sb.sb_rextsize == 0 ||
-> +		    (ip->i_d.di_extsize % mp->m_sb.sb_rextsize))
-> +			return -EINVAL;
-> +	}
+> +	tp = xfs_trans_alloc(mp, XFS_TRANS_SETATTR_NOT_SIZE);
+> +	error = xfs_trans_reserve(tp, &M_RES(mp)->tr_ichange, 0, 0);
+> +	if (error)
+> +		goto out_cancel;
+> +
+> +	xfs_ilock(ip, XFS_ILOCK_EXCL);
+> +	xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL);
 > +
 > +	/*
-> +	 * Can't modify an immutable/append-only file unless
-> +	 * we have appropriate permission.
+> +	 * CAP_FOWNER overrides the following restrictions:
+> +	 *
+> +	 * The user ID of the calling process must be equal to the file owner
+> +	 * ID, except in cases where the CAP_FSETID capability is applicable.
 > +	 */
-> +	if (((ip->i_d.di_flags & (XFS_DIFLAG_IMMUTABLE | XFS_DIFLAG_APPEND)) ||
-> +	     (fa->fsx_xflags & (XFS_XFLAG_IMMUTABLE | XFS_XFLAG_APPEND))) &&
-> +	    !capable(CAP_LINUX_IMMUTABLE))
-> +		return -EPERM;
+> +	if (!inode_owner_or_capable(VFS_I(ip))) {
+> +		error = -EPERM;
+> +		goto out_cancel;
+> +	}
 > +
-> +	xfs_trans_ijoin(tp, ip, 0);
-> +	xfs_set_diflags(ip, fa->fsx_xflags);
-> +	xfs_diflags_to_linux(ip);
-> +	xfs_trans_ichgtime(tp, ip, XFS_ICHGTIME_CHG);
-> +	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
-> +	XFS_STATS_INC(xs_ig_attrchg);
-> +	return 0;
+> +	if (mp->m_flags & XFS_MOUNT_WSYNC)
+> +		xfs_trans_set_sync(tp);
+> +
+> +	return tp;
+> +
+> +out_cancel:
+> +	xfs_trans_cancel(tp, 0);
+> +	return ERR_PTR(error);
 > +}
 > +
 >  #define FSX_PROJID	1
 >  #define FSX_EXTSIZE	2
 >  #define FSX_XFLAGS	4
-> @@ -1159,44 +1197,9 @@ xfs_ioctl_setattr(
->  	}
+> @@ -1063,7 +1110,6 @@ xfs_ioctl_setattr(
+>  {
+>  	struct xfs_mount	*mp = ip->i_mount;
+>  	struct xfs_trans	*tp;
+> -	unsigned int		lock_flags = 0;
+>  	struct xfs_dquot	*udqp = NULL;
+>  	struct xfs_dquot	*pdqp = NULL;
+>  	struct xfs_dquot	*olddquot = NULL;
+> @@ -1071,11 +1117,6 @@ xfs_ioctl_setattr(
 >  
+>  	trace_xfs_ioctl_setattr(ip);
 >  
-> -	if (mask & FSX_XFLAGS) {
-> -		/*
-> -		 * Can't change realtime flag if any extents are allocated.
-> -		 */
-> -		if ((ip->i_d.di_nextents || ip->i_delayed_blks) &&
-> -		    (XFS_IS_REALTIME_INODE(ip)) !=
-> -		    (fa->fsx_xflags & XFS_XFLAG_REALTIME)) {
-> -			code = -EINVAL;	/* EFBIG? */
-> -			goto error_return;
-> -		}
-> -
-> -		/*
-> -		 * If realtime flag is set then must have realtime data.
-> -		 */
-> -		if ((fa->fsx_xflags & XFS_XFLAG_REALTIME)) {
-> -			if ((mp->m_sb.sb_rblocks == 0) ||
-> -			    (mp->m_sb.sb_rextsize == 0) ||
-> -			    (ip->i_d.di_extsize % mp->m_sb.sb_rextsize)) {
-> -				code = -EINVAL;
-> -				goto error_return;
-> -			}
-> -		}
-> -
-> -		/*
-> -		 * Can't modify an immutable/append-only file unless
-> -		 * we have appropriate permission.
-> -		 */
-> -		if ((ip->i_d.di_flags &
-> -				(XFS_DIFLAG_IMMUTABLE|XFS_DIFLAG_APPEND) ||
-> -		     (fa->fsx_xflags &
-> -				(XFS_XFLAG_IMMUTABLE | XFS_XFLAG_APPEND))) &&
-> -		    !capable(CAP_LINUX_IMMUTABLE)) {
-> -			code = -EPERM;
-> -			goto error_return;
-> -		}
-> -	}
-> -
-> -	xfs_trans_ijoin(tp, ip, 0);
-> +	code = xfs_ioctl_setattr_xflags(tp, ip, fa);
-> +	if (code)
-> +		goto error_return;
->  
->  	/*
->  	 * Change file ownership.  Must be the owner or privileged.
-> @@ -1227,11 +1230,6 @@ xfs_ioctl_setattr(
->  
->  	}
->  
-> -	if (mask & FSX_XFLAGS) {
-> -		xfs_set_diflags(ip, fa->fsx_xflags);
-> -		xfs_diflags_to_linux(ip);
-> -	}
+> -	if (mp->m_flags & XFS_MOUNT_RDONLY)
+> -		return -EROFS;
+> -	if (XFS_FORCED_SHUTDOWN(mp))
+> -		return -EIO;
 > -
 >  	/*
->  	 * Only set the extent size hint if we've already determined that the
->  	 * extent size hint should be set on the inode. If no extent size flags
-> @@ -1246,11 +1244,6 @@ xfs_ioctl_setattr(
+>  	 * Disallow 32bit project ids when projid32bit feature is not enabled.
+>  	 */
+> @@ -1099,29 +1140,9 @@ xfs_ioctl_setattr(
+>  			return code;
+>  	}
+>  
+> -	/*
+> -	 * For the other attributes, we acquire the inode lock and
+> -	 * first do an error checking pass.
+> -	 */
+> -	tp = xfs_trans_alloc(mp, XFS_TRANS_SETATTR_NOT_SIZE);
+> -	code = xfs_trans_reserve(tp, &M_RES(mp)->tr_ichange, 0, 0);
+> -	if (code)
+> -		goto error_return;
+> -
+> -	lock_flags = XFS_ILOCK_EXCL;
+> -	xfs_ilock(ip, lock_flags);
+> -
+> -	/*
+> -	 * CAP_FOWNER overrides the following restrictions:
+> -	 *
+> -	 * The user ID of the calling process must be equal
+> -	 * to the file owner ID, except in cases where the
+> -	 * CAP_FSETID capability is applicable.
+> -	 */
+> -	if (!inode_owner_or_capable(VFS_I(ip))) {
+> -		code = -EPERM;
+> -		goto error_return;
+> -	}
+> +	tp = xfs_ioctl_setattr_get_trans(ip);
+> +	if (IS_ERR(tp))
+> +		return PTR_ERR(tp);
+>   
+
+We need to handle udqp and pdqp in this failure case. The rest looks Ok
+to me.
+
+Brian
+
+>  	/*
+>  	 * Do a quota reservation only if projid is actually going to change.
+> @@ -1244,20 +1265,7 @@ xfs_ioctl_setattr(
 >  		ip->i_d.di_extsize = extsize;
 >  	}
 >  
-> -	xfs_trans_ichgtime(tp, ip, XFS_ICHGTIME_CHG);
-> -	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
-> -
-> -	XFS_STATS_INC(xs_ig_attrchg);
-> -
+> -	/*
+> -	 * If this is a synchronous mount, make sure that the
+> -	 * transaction goes to disk before returning to the user.
+> -	 * This is slightly sub-optimal in that truncates require
+> -	 * two sync transactions instead of one for wsync filesystems.
+> -	 * One for the truncate and one for the timestamps since we
+> -	 * don't want to change the timestamps unless we're sure the
+> -	 * truncate worked.  Truncates are less than 1% of the laddis
+> -	 * mix so this probably isn't worth the trouble to optimize.
+> -	 */
+> -	if (mp->m_flags & XFS_MOUNT_WSYNC)
+> -		xfs_trans_set_sync(tp);
+>  	code = xfs_trans_commit(tp, 0);
+> -	xfs_iunlock(ip, lock_flags);
+>  
 >  	/*
->  	 * If this is a synchronous mount, make sure that the
->  	 * transaction goes to disk before returning to the user.
+>  	 * Release any dquot(s) the inode had kept before chown.
+> @@ -1272,8 +1280,6 @@ xfs_ioctl_setattr(
+>  	xfs_qm_dqrele(udqp);
+>  	xfs_qm_dqrele(pdqp);
+>  	xfs_trans_cancel(tp, 0);
+> -	if (lock_flags)
+> -		xfs_iunlock(ip, lock_flags);
+>  	return code;
+>  }
+>  
 > -- 
 > 2.0.0
 > 
