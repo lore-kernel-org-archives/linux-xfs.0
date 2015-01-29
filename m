@@ -1,20 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id B3AC57F47
-	for <xfs@oss.sgi.com>; Thu, 29 Jan 2015 04:40:28 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id A13A18F8052
-	for <xfs@oss.sgi.com>; Thu, 29 Jan 2015 02:40:25 -0800 (PST)
-Received: from smtpbg334.qq.com (smtpbg334.qq.com [14.17.43.229]) by
-	cuda.sgi.com with ESMTP id N9vxGkW7D9RpZDAW (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 29 Jan 2015 02:40:22 -0800 (PST)
-From: "=?ISO-8859-1?B?V2FuZyBTaGVuZy1IdWk=?=" <shhuiw@foxmail.com>
-Subject: question about one example in section 3.2.3 of "XFS Filesystem
-	Structure"
-Mime-Version: 1.0
-Date: Thu, 29 Jan 2015 18:39:51 +0800
-Message-ID: <tencent_42169E2221E1D724084C7345@qq.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id BAF937F77
+	for <xfs@oss.sgi.com>; Thu, 29 Jan 2015 06:58:21 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 9AAA1304043
+	for <xfs@oss.sgi.com>; Thu, 29 Jan 2015 04:58:18 -0800 (PST)
+Received: from mail-pa0-f49.google.com (mail-pa0-f49.google.com
+	[209.85.220.49]) by cuda.sgi.com with ESMTP id ATbbaOQmwnKyrJNz
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Thu, 29 Jan 2015 04:58:17 -0800 (PST)
+Received: by mail-pa0-f49.google.com with SMTP id fa1so38838665pad.8
+	for <xfs@oss.sgi.com>; Thu, 29 Jan 2015 04:58:16 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <CALJmpHNVSsdYp1pwfBjmhJHCnaXwrp071mwp20GfxaQynsYrNA@mail.gmail.com>
+References: <54c1c12e.230a460a.4729.11fc@mx.google.com>
+	<20150128015757.GT16552@dastard>
+	<CALJmpHP=vjz_ZY9sFpW8k2Y7TL+sz-WyjPeMoy4sM6XDTt8MTQ@mail.gmail.com>
+	<20150128205956.GA6282@dastard>
+	<CALJmpHOFVZer7YL8Kek6jk2U8f7JyBrJknYzVhyowht_EGm7DQ@mail.gmail.com>
+	<CALJmpHNVSsdYp1pwfBjmhJHCnaXwrp071mwp20GfxaQynsYrNA@mail.gmail.com>
+Date: Thu, 29 Jan 2015 18:28:16 +0530
+Message-ID: <CALJmpHNB=MN0=EsTbr-LpWgtCskgjpO0EDUSP-oR4bmD1RNawA@mail.gmail.com>
+Subject: Re: [PATCH 2/2] xfs_spaceman: Accounting for AGFL blocks
+From: Dhruvesh Rathore <adrscube@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,37 +35,39 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: =?ISO-8859-1?B?eGZz?= <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com, Dave Chinner <david@fromorbit.com>
 
-Dear,
+On Thu, Jan 29, 2015 at 9:18 AM, Dhruvesh Rathore <adrscube@gmail.com> wrote:
+> On Thu, Jan 29, 2015 at 2:29 AM, Dave Chinner <david@fromorbit.com> wrote:
+>> On Wed, Jan 28, 2015 at 06:35:22PM +0530, ADRS PICT wrote:
+>>> On Wed, Jan 28, 2015 at 7:27 AM, Dave Chinner <david@fromorbit.com> wrote:
+>>> > Hmmm - I think something is still missing - what are the sagbno and
+>>> > eagbno parameters supposed to do?
+>>>
+>>> Actually the parameters sagbno and eagbno are not needed in this
+>>> function and can be excluded.
+>>
+>> Why? Don't we still have to check the blocks found on the AGFL fll
+>> within the range requested by the user, like we do for every extent
+>> found in the btree?
+>
+> We had felt that the range check is not needed as we are fetching block numbers
+> from the allocation group free block array by the function
+> xfs_alloc_read_agfl().
+> And in xfs_alloc_read_agfl(), the error checking is done implicitly.
+>
+> However, after you have raised this point, it is clear to us that performing a
+> range check will be a good way to catch and display a warning if the blocks are
+> out of range.
+>
 
-I'm reading "XFS Filesystem Structure" from the link 
-             http://xfs.org/docs/xfsdocs-xml-dev/XFS_Filesystem_Structure//tmp/en-US/html/index.html
-and confused by one example in section 3.2.3:
-             http://xfs.org/docs/xfsdocs-xml-dev/XFS_Filesystem_Structure//tmp/en-US/html/AG_Free_List.html
----------------------------------------------------------------------------
-xfs_db> fsblock 7
-xfs_db> type bnobt
-xfs_db> p
-magic = 0x41425442
-level = 1
-numrecs = 4
-leftsib = null
-rightsib = null
-keys[1-4] = [startblock,blockcount]
-           1:[12,16] 2:[184586,3] 3:[225579,1] 4:[511629,1]
-ptrs[1-4] = 1:2 2:83347 3:6 4:4
-
-Blocks 2, 83347, 6 and 4 contain the leaves for the free space B+tree by starting block. Block 2 would contain offsets 16 up to but not including 184586 while block 4 would have all offsets from 511629 to the end of the AG. 
----------------------------------------------------------------------------
-
-I have thought block 2 contains offsets start from 12, and it will cover 16 free blocks.
-I wonder why block 2 contains offsets start at 16, instead of 12 here?
-
-Anyone help give out some explanation, please?
+We have assimilated the changes you pointed out and have sent the
+updated patches
+in a new thread.
 
 Regards,
-Wang Sheng-Hui
+A-DRS
+
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
