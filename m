@@ -1,25 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 9187F7F87
-	for <xfs@oss.sgi.com>; Thu, 29 Jan 2015 07:31:10 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 7045E304062
-	for <xfs@oss.sgi.com>; Thu, 29 Jan 2015 05:31:10 -0800 (PST)
-Received: from mail-pa0-f46.google.com (mail-pa0-f46.google.com
-	[209.85.220.46]) by cuda.sgi.com with ESMTP id SSr4go7VgwPlFO27
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 29 Jan 2015 05:31:08 -0800 (PST)
-Received: by mail-pa0-f46.google.com with SMTP id lj1so39092359pab.5
-	for <xfs@oss.sgi.com>; Thu, 29 Jan 2015 05:31:08 -0800 (PST)
-Received: from dhruv-MacBookAir ([14.97.215.112])
-	by mx.google.com with ESMTPSA id w8sm7832072pds.64.2015.01.29.05.31.06
-	for <xfs@oss.sgi.com> (version=TLSv1 cipher=RC4-SHA bits=128/128);
-	Thu, 29 Jan 2015 05:31:07 -0800 (PST)
-Message-ID: <54ca361b.6841460a.02cf.3cca@mx.google.com>
-From: Dhruvesh Rathore <adrscube@gmail.com>
-Date: Thu, 29 Jan 2015 19:01:02 +0530
-Subject: [PATCH 4/4] xfsprogs: Adding XFS_IOC_FIEMAPFS ioctl for use in
-	xfs_spaceman
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id B45407F8E
+	for <xfs@oss.sgi.com>; Thu, 29 Jan 2015 09:34:01 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 3EC1FAC002
+	for <xfs@oss.sgi.com>; Thu, 29 Jan 2015 07:34:00 -0800 (PST)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id z2umY3pqDV0PDHgh (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 29 Jan 2015 07:34:00 -0800 (PST)
+Date: Thu, 29 Jan 2015 10:33:47 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 1/9] xfs: FSX_NONBLOCK is not used
+Message-ID: <20150129153347.GA17652@laptop.bfoster>
+References: <1422328486-24661-1-git-send-email-david@fromorbit.com>
+	<1422328486-24661-2-git-send-email-david@fromorbit.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <1422328486-24661-2-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,72 +26,64 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: iustin@k1024.org, xfs@oss.sgi.com
 
+On Tue, Jan 27, 2015 at 02:14:38PM +1100, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> It is set if the filp is set ot non-blocking, but the flag is not
+> used anywhere. Hence we can kill it.
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> ---
 
-This patch is concerned with the changes to be done in userspace code for
-turning FS_IOC_FIEMAPFS present in the earlier version of xfs_spaceman 
-into an XFS specific ioctl called XFS_IOC_FIEMAPFS, which uses all existing
-fiemap insfrastructure.
-By introducing XFS_IOC_FIMEAPFS ioctl, it can be seperated from file based
-fiemap commands and allows us to review it and push it as we need, making the
-process much simpler.
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 
-----------------------------------------------------------------------------------------
-
-Signed-off-by: Dhruvesh Rathore <dhruvesh_r@outlook.com>
-Signed-off-by: Amey Ruikar <ameyruikar@yahoo.com>
-Signed-off-by: Somdeep Dey <somdeepdey10@gmail.com>
----
-include/xfs_fs.h	| 1 +
-spaceman/freesp.c	| 6 +++---
-2 files changed, 4 insertions(+), 3 deletions(-) 
-
---- a/include/xfs_fs.h	2015-01-29 15:26:50.954401773 +0530
-+++ b/include/xfs_fs.h	2015-01-29 11:29:59.531652554 +0530
-
-@@ -505,6 +505,7 @@
- #define XFS_IOC_DIOINFO	_IOR ('X', 30, struct dioattr)
- #define XFS_IOC_FSGETXATTR	_IOR ('X', 31, struct fsxattr)
- #define XFS_IOC_FSSETXATTR	_IOW ('X', 32, struct fsxattr)
-+#define XFS_IOC_FIEMAPFS	_IOWR('X', 33, struct fiemap)
- #define XFS_IOC_ALLOCSP64	_IOW ('X', 36, struct xfs_flock64)
- #define XFS_IOC_FREESP64	_IOW ('X', 37, struct xfs_flock64)
- #define XFS_IOC_GETBMAP	_IOWR('X', 38, struct getbmap)
-
-----------------------------------------------------------------------------------------
-
---- a/spaceman/freesp.c	2015-01-29 15:27:03.737227849 +0530
-+++ b/spaceman/freesp.c	2015-01-29 15:23:48.865235168 +0530
-
-@@ -31,7 +31,7 @@
- #define FIEMAPFS_FLAG_FREESP_SIZE_HINT	0x20000000
- #define	FIEMAPFS_FLAG_FREESP_CONTINUE   0x10000000
- 
--#define FS_IOC_FIEMAPFS			_IOWR('f', 12, struct fiemap)
-+#define XFS_IOC_FIEMAPFS			_IOWR('X', 33, struct fiemap)
- #endif
- 
- typedef struct histent
-@@ -201,9 +201,9 @@
- 		fiemap->fm_length = length;
- 		fiemap->fm_extent_count = NR_EXTENTS;
- 
--		ret = ioctl(file->fd, FS_IOC_FIEMAPFS, (unsigned long)fiemap);
-+		ret = xfsctl(file->name,file->fd, XFS_IOC_FIEMAPFS, (unsigned long)fiemap);
-		if (ret < 0) {
--			fprintf(stderr, "%s: ioctl(FS_IOC_FIEMAPFS) [\"%s\"]: "
-+			fprintf(stderr, "%s: xfsctl(XFS_IOC_FIEMAPFS) [\"%s\"]: "
- 				"%s\n", progname, file->name, strerror(errno));
- 			free(fiemap);
- 			exitcode = 1;
-
-----------------------------------------------------------------------------------------
+>  fs/xfs/xfs_ioctl.c | 5 -----
+>  1 file changed, 5 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+> index 8810959..09325ff 100644
+> --- a/fs/xfs/xfs_ioctl.c
+> +++ b/fs/xfs/xfs_ioctl.c
+> @@ -1016,7 +1016,6 @@ xfs_diflags_to_linux(
+>  #define FSX_PROJID	1
+>  #define FSX_EXTSIZE	2
+>  #define FSX_XFLAGS	4
+> -#define FSX_NONBLOCK	8
+>  
+>  STATIC int
+>  xfs_ioctl_setattr(
+> @@ -1299,8 +1298,6 @@ xfs_ioc_fssetxattr(
+>  		return -EFAULT;
+>  
+>  	mask = FSX_XFLAGS | FSX_EXTSIZE | FSX_PROJID;
+> -	if (filp->f_flags & (O_NDELAY|O_NONBLOCK))
+> -		mask |= FSX_NONBLOCK;
+>  
+>  	error = mnt_want_write_file(filp);
+>  	if (error)
+> @@ -1343,8 +1340,6 @@ xfs_ioc_setxflags(
+>  		return -EOPNOTSUPP;
+>  
+>  	mask = FSX_XFLAGS;
+> -	if (filp->f_flags & (O_NDELAY|O_NONBLOCK))
+> -		mask |= FSX_NONBLOCK;
+>  	fa.fsx_xflags = xfs_merge_ioc_xflags(flags, xfs_ip2xflags(ip));
+>  
+>  	error = mnt_want_write_file(filp);
+> -- 
+> 2.0.0
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
