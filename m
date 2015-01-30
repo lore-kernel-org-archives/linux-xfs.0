@@ -1,25 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 11DDA800A
-	for <xfs@oss.sgi.com>; Fri, 30 Jan 2015 08:38:40 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 00BFE8F808E
-	for <xfs@oss.sgi.com>; Fri, 30 Jan 2015 06:38:36 -0800 (PST)
-Received: from mailserver.inist.fr (mailserver.inist.fr [193.54.107.40]) by
-	cuda.sgi.com with ESMTP id wxzWc2HrXtCgICsl (version=TLSv1
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 8A5FF8012
+	for <xfs@oss.sgi.com>; Fri, 30 Jan 2015 08:42:34 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 4CC05304053
+	for <xfs@oss.sgi.com>; Fri, 30 Jan 2015 06:42:31 -0800 (PST)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id geCG2lsARZqxcf5i (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 30 Jan 2015 06:38:34 -0800 (PST)
-From: "SCHEFFER, Philippe" <Philippe.SCHEFFER@inist.fr>
-Date: Fri, 30 Jan 2015 15:37:11 +0100
-Subject: RE : RE : xfs_repair fails with corrupt dinode
-Message-ID: <587A9635632B174A943E53AF3B58A9082E3C81A6FD@vanda>
-References: <587A9635632B174A943E53AF3B58A9082E3BE068CE@vanda>
-	<20150129231538.GE6282@dastard>
-	<587A9635632B174A943E53AF3B58A9082E3C81A6FB@vanda>,
-	<20150130055232.GB4251@dastard>
-In-Reply-To: <20150130055232.GB4251@dastard>
-Content-Language: fr-FR
+	Fri, 30 Jan 2015 06:42:30 -0800 (PST)
+Date: Fri, 30 Jan 2015 09:42:23 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH] xfs: don't allocate an ioend for direct I/O completions
+Message-ID: <20150130144223.GA27441@laptop.bfoster>
+References: <1422485661-520-1-git-send-email-hch@lst.de>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <1422485661-520-1-git-send-email-hch@lst.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,115 +25,301 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: xfs@oss.sgi.com
 
-Successful with xfs_repair 3.1.9. Thanks!
-All data are in lost+found, But before the xfs_repair, it was already the c=
-ase.
-A probable consequence of the original problem.
+On Wed, Jan 28, 2015 at 11:54:21PM +0100, Christoph Hellwig wrote:
+> Back in the days when the direct I/O ->end_io callback could be called
+> from interrupt context for AIO we needed a structure to hand off to the
+> workqueue, and reused the ioend structure for this purpose.  These days
+> ->end_io is always called from user or workqueue context, which allows us
+> to avoid this memory allocation and simplify the code significantly.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
 
-Philippe
-________________________________________
-De : Dave Chinner [david@fromorbit.com]
-Date d'envoi : vendredi 30 janvier 2015 06:52
-=C0 : SCHEFFER, Philippe
-Cc : xfs@oss.sgi.com
-Objet : Re: RE : xfs_repair fails with corrupt dinode
+Looks mostly Ok to me. In fact, with xfs_finish_ioend_sync() calling
+xfs_end_io() directly, I don't see how we currently get into the wq at
+all. Anyways, a few notes...
 
-On Fri, Jan 30, 2015 at 01:42:07AM +0100, SCHEFFER, Philippe wrote:
-> xfs_repair -p log in attached file.
->
-> Philippe
-> ________________________________________
-> De : Dave Chinner [david@fromorbit.com]
-> Date d'envoi : vendredi 30 janvier 2015 00:15
-> =C0 : SCHEFFER, Philippe
-> Cc : xfs@oss.sgi.com
-> Objet : Re: xfs_repair fails with corrupt dinode
->
-> On Thu, Jan 29, 2015 at 04:48:15PM +0100, SCHEFFER, Philippe wrote:
-> > Hi,
-> >
-> > I have a corrupted xfs filesytem. When I try to repair I get this error=
- :
-> > disconnected inode 1427919, moving to lost+found
-> > corrupt dinode 1427919, extent total =3D 1, nblocks =3D 0.  This is a b=
-ug.
-> > Please capture the filesystem metadata with xfs_metadump and
-> > report it to xfs@oss.sgi.com.
-> > cache_node_purge: refcount was 1, not zero (node=3D0x1f6c19620)
-> >
-> > fatal error -- 117 - couldn't iget disconnected inode
-> >
-> > I captured metada with xfs_metadump but the file is 1,4Gb long. I can't=
- send it to you.
-> >
-> > I printed inode1427919 :
-> >
-> > xfs_db> inode 1427919
-> > xfs_db> print
-> > core.magic =3D 0x494e
-> ....
-> > core.format =3D 2 (extents)
-> ....
-> > core.size =3D 2536
-> > core.nblocks =3D 1
-> > core.extsize =3D 0
-> > core.nextents =3D 1
-> ....
-> > u.bmx[0] =3D [startoff,startblock,blockcount,extentflag] 0:[0,320660992=
-,1,0]
->
-> That's an inode with one extent of one block and looks perfectly
-> valid. We'll need the entire output of the xfs_repair run to see if
-> there were any prior actions taken on that inode by xfs_repair....
+>  fs/xfs/xfs_aops.c | 133 ++++++++++++++++++++++++------------------------------
+>  fs/xfs/xfs_aops.h |   3 --
+>  2 files changed, 59 insertions(+), 77 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+> index 18e2f3b..31d3d7d 100644
+> --- a/fs/xfs/xfs_aops.c
+> +++ b/fs/xfs/xfs_aops.c
+> @@ -135,30 +135,22 @@ xfs_setfilesize_trans_alloc(
+>   */
+>  STATIC int
+>  xfs_setfilesize(
+> -	struct xfs_ioend	*ioend)
+> +	struct xfs_inode	*ip,
+> +	struct xfs_trans	*tp,
+> +	xfs_off_t		offset,
+> +	size_t			size)
+>  {
+> -	struct xfs_inode	*ip = XFS_I(ioend->io_inode);
+> -	struct xfs_trans	*tp = ioend->io_append_trans;
+>  	xfs_fsize_t		isize;
+>  
+> -	/*
+> -	 * The transaction may have been allocated in the I/O submission thread,
+> -	 * thus we need to mark ourselves as beeing in a transaction manually.
+> -	 * Similarly for freeze protection.
+> -	 */
+> -	current_set_flags_nested(&tp->t_pflags, PF_FSTRANS);
+> -	rwsem_acquire_read(&VFS_I(ip)->i_sb->s_writers.lock_map[SB_FREEZE_FS-1],
+> -			   0, 1, _THIS_IP_);
+> -
+>  	xfs_ilock(ip, XFS_ILOCK_EXCL);
+> -	isize = xfs_new_eof(ip, ioend->io_offset + ioend->io_size);
+> +	isize = xfs_new_eof(ip, offset + size);
+>  	if (!isize) {
+>  		xfs_iunlock(ip, XFS_ILOCK_EXCL);
+>  		xfs_trans_cancel(tp, 0);
+>  		return 0;
+>  	}
+>  
+> -	trace_xfs_setfilesize(ip, ioend->io_offset, ioend->io_size);
+> +	trace_xfs_setfilesize(ip, offset, size);
+>  
+>  	ip->i_d.di_size = isize;
+>  	xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL);
+> @@ -167,6 +159,25 @@ xfs_setfilesize(
+>  	return xfs_trans_commit(tp, 0);
+>  }
+>  
+> +STATIC int
+> +xfs_setfilesize_ioend(
+> +	struct xfs_ioend	*ioend)
+> +{
+> +	struct xfs_inode	*ip = XFS_I(ioend->io_inode);
+> +	struct xfs_trans	*tp = ioend->io_append_trans;
+> +
+> +	/*
+> +	 * The transaction may have been allocated in the I/O submission thread,
+> +	 * thus we need to mark ourselves as beeing in a transaction manually.
 
-As i pointed out to Brian on IRC earlier:
+Copied from the the original, but since we're here: "being."
 
-data fork in regular inode 1427919 claims used block 320660992
-correcting nblocks for inode 1427919, was 1 - counted 0
+> +	 * Similarly for freeze protection.
+> +	 */
+> +	current_set_flags_nested(&tp->t_pflags, PF_FSTRANS);
+> +	rwsem_acquire_read(&VFS_I(ip)->i_sb->s_writers.lock_map[SB_FREEZE_FS-1],
+> +			   0, 1, _THIS_IP_);
+> +
+> +	return xfs_setfilesize(ip, tp, ioend->io_offset, ioend->io_size);
+> +}
+> +
+>  /*
+>   * Schedule IO completion handling on the final put of an ioend.
+>   *
+> @@ -182,8 +193,7 @@ xfs_finish_ioend(
+>  
+>  		if (ioend->io_type == XFS_IO_UNWRITTEN)
+>  			queue_work(mp->m_unwritten_workqueue, &ioend->io_work);
+> -		else if (ioend->io_append_trans ||
+> -			 (ioend->io_isdirect && xfs_ioend_is_append(ioend)))
+> +		else if (ioend->io_append_trans)
+>  			queue_work(mp->m_data_workqueue, &ioend->io_work);
+>  		else
+>  			xfs_destroy_ioend(ioend);
+> @@ -215,22 +225,8 @@ xfs_end_io(
+>  	if (ioend->io_type == XFS_IO_UNWRITTEN) {
+>  		error = xfs_iomap_write_unwritten(ip, ioend->io_offset,
+>  						  ioend->io_size);
+> -	} else if (ioend->io_isdirect && xfs_ioend_is_append(ioend)) {
+> -		/*
+> -		 * For direct I/O we do not know if we need to allocate blocks
+> -		 * or not so we can't preallocate an append transaction as that
+> -		 * results in nested reservations and log space deadlocks. Hence
+> -		 * allocate the transaction here. While this is sub-optimal and
+> -		 * can block IO completion for some time, we're stuck with doing
+> -		 * it this way until we can pass the ioend to the direct IO
+> -		 * allocation callbacks and avoid nesting that way.
+> -		 */
+> -		error = xfs_setfilesize_trans_alloc(ioend);
+> -		if (error)
+> -			goto done;
+> -		error = xfs_setfilesize(ioend);
+>  	} else if (ioend->io_append_trans) {
+> -		error = xfs_setfilesize(ioend);
+> +		error = xfs_setfilesize_ioend(ioend);
+>  	} else {
+>  		ASSERT(!xfs_ioend_is_append(ioend));
+>  	}
+> @@ -273,7 +269,6 @@ xfs_alloc_ioend(
+>  	 * all the I/O from calling the completion routine too early.
+>  	 */
+>  	atomic_set(&ioend->io_remaining, 1);
+> -	ioend->io_isdirect = 0;
+>  	ioend->io_error = 0;
+>  	ioend->io_list = NULL;
+>  	ioend->io_type = type;
+> @@ -1459,11 +1454,7 @@ xfs_get_blocks_direct(
+>   *
+>   * If the private argument is non-NULL __xfs_get_blocks signals us that we
+>   * need to issue a transaction to convert the range from unwritten to written
+> - * extents.  In case this is regular synchronous I/O we just call xfs_end_io
+> - * to do this and we are done.  But in case this was a successful AIO
+> - * request this handler is called from interrupt context, from which we
+> - * can't start transactions.  In that case offload the I/O completion to
+> - * the workqueues we also use for buffered I/O completion.
+> + * extents.
+>   */
+>  STATIC void
+>  xfs_end_io_direct_write(
+> @@ -1472,7 +1463,12 @@ xfs_end_io_direct_write(
+>  	ssize_t			size,
+>  	void			*private)
+>  {
+> -	struct xfs_ioend	*ioend = iocb->private;
+> +	struct inode		*inode = file_inode(iocb->ki_filp);
+> +	struct xfs_inode	*ip = XFS_I(inode);
+> +	struct xfs_mount	*mp = ip->i_mount;
+> +
+> +	if (XFS_FORCED_SHUTDOWN(mp))
+> +		return;
+>  
+>  	/*
+>  	 * While the generic direct I/O code updates the inode size, it does
+> @@ -1480,22 +1476,33 @@ xfs_end_io_direct_write(
+>  	 * end_io handler thinks the on-disk size is outside the in-core
+>  	 * size.  To prevent this just update it a little bit earlier here.
+>  	 */
+> -	if (offset + size > i_size_read(ioend->io_inode))
+> -		i_size_write(ioend->io_inode, offset + size);
+> +	if (offset + size > i_size_read(inode))
+> +		i_size_write(inode, offset + size);
+>  
+>  	/*
+> -	 * blockdev_direct_IO can return an error even after the I/O
+> -	 * completion handler was called.  Thus we need to protect
+> -	 * against double-freeing.
+> +	 * For direct I/O we do not know if we need to allocate blocks or not,
+> +	 * so we can't preallocate an append transaction, as that results in
+> +	 * nested reservations and log space deadlocks. Hence allocate the
+> +	 * transaction here. While this is sub-optimal and can block IO
+> +	 * completion for some time, we're stuck with doing it this way until
+> +	 * we can pass the ioend to the direct IO allocation callbacks and
+> +	 * avoid nesting that way.
+>  	 */
+> -	iocb->private = NULL;
+> -
+> -	ioend->io_offset = offset;
+> -	ioend->io_size = size;
+> -	if (private && size > 0)
+> -		ioend->io_type = XFS_IO_UNWRITTEN;
+> +	if (private && size > 0) {
+> +		xfs_iomap_write_unwritten(ip, offset, size);
+> +	} else if (offset + size > ip->i_d.di_size) {
+> +		struct xfs_trans	*tp;
+> +		int			error;
+> +
+> +		tp = xfs_trans_alloc(mp, XFS_TRANS_FSYNC_TS);
+> +		error = xfs_trans_reserve(tp, &M_RES(mp)->tr_fsyncts, 0, 0);
+> +		if (error) {
+> +			xfs_trans_cancel(tp, 0);
+> +			return;
+> +		}
+>  
+> -	xfs_finish_ioend_sync(ioend);
 
-So it looks like the inode has a cross linked block, repair dropped
-the block count by that one block, and then failed to remove the
-extent from the inode. So, a repair bug, that was...
+I get an unused function warning for xfs_finish_ioend_sync() now, so I
+guess we should kill that.
 
-commit e1f43b4c701b24d9b5bc85df858a8c36f0f0723b
-Author: Christoph Hellwig <hch@infradead.org>
-Date:   Thu Feb 2 07:39:10 2012 -0500
+> +		xfs_setfilesize(ip, tp, offset, size);
+> +	}
+>  }
+>  
+>  STATIC ssize_t
+> @@ -1507,39 +1514,17 @@ xfs_vm_direct_IO(
+>  {
+>  	struct inode		*inode = iocb->ki_filp->f_mapping->host;
+>  	struct block_device	*bdev = xfs_find_bdev_for_inode(inode);
+> -	struct xfs_ioend	*ioend = NULL;
+> -	ssize_t			ret;
+>  
+>  	if (rw & WRITE) {
 
-    repair: update extent count after zapping duplicate blocks
+A nit, but I guess you could kill the braces here now too.
 
-    When we find a duplicate extent in an extern format inode we do not zap
-    the whole inode, but just truncate it to the point where the duplicate
-    extent was found.  But the current code only updates di_nblocks for the
-    new size, but no di_nextents/di_anextents.  In most cases this isn't no=
-ticed,
-    but when moving such an inode to the lost+found directoy the consistency
-    check in xfs_iformat trips over it.  Fix this by updating the on-disk
-    extent count as part of the inode repair.
+Brian
 
-    Note that we zap btree format inodes with duplicate block completely
-    at this point, so this fix doesn't apply to them.
-
-    Reviewed-by: Mark Tinguely <tinguely@sgi.com>
-    Reported-by: Arkadiusz Mi??kiewicz <arekm@maven.pl>
-    Tested-by: Arkadiusz Mi??kiewicz <arekm@maven.pl>
-    Signed-off-by: Christoph Hellwig <hch@lst.de>
-
-.... fixed the 3 years ago. Upgrade your xfsprogs package and the
-problem should go away.
-
-Cheers,
-
-Dave.
---
-Dave Chinner
-david@fromorbit.com
+> -		size_t size = iov_iter_count(iter);
+> -
+> -		/*
+> -		 * We cannot preallocate a size update transaction here as we
+> -		 * don't know whether allocation is necessary or not. Hence we
+> -		 * can only tell IO completion that one is necessary if we are
+> -		 * not doing unwritten extent conversion.
+> -		 */
+> -		iocb->private = ioend = xfs_alloc_ioend(inode, XFS_IO_DIRECT);
+> -		if (offset + size > XFS_I(inode)->i_d.di_size)
+> -			ioend->io_isdirect = 1;
+> -
+> -		ret = __blockdev_direct_IO(rw, iocb, inode, bdev, iter,
+> +		return __blockdev_direct_IO(rw, iocb, inode, bdev, iter,
+>  					    offset, xfs_get_blocks_direct,
+>  					    xfs_end_io_direct_write, NULL,
+>  					    DIO_ASYNC_EXTEND);
+> -		if (ret != -EIOCBQUEUED && iocb->private)
+> -			goto out_destroy_ioend;
+>  	} else {
+> -		ret = __blockdev_direct_IO(rw, iocb, inode, bdev, iter,
+> +		return __blockdev_direct_IO(rw, iocb, inode, bdev, iter,
+>  					    offset, xfs_get_blocks_direct,
+>  					    NULL, NULL, 0);
+>  	}
+> -
+> -	return ret;
+> -
+> -out_destroy_ioend:
+> -	xfs_destroy_ioend(ioend);
+> -	return ret;
+>  }
+>  
+>  /*
+> diff --git a/fs/xfs/xfs_aops.h b/fs/xfs/xfs_aops.h
+> index f94dd45..ac644e0 100644
+> --- a/fs/xfs/xfs_aops.h
+> +++ b/fs/xfs/xfs_aops.h
+> @@ -24,14 +24,12 @@ extern mempool_t *xfs_ioend_pool;
+>   * Types of I/O for bmap clustering and I/O completion tracking.
+>   */
+>  enum {
+> -	XFS_IO_DIRECT = 0,	/* special case for direct I/O ioends */
+>  	XFS_IO_DELALLOC,	/* covers delalloc region */
+>  	XFS_IO_UNWRITTEN,	/* covers allocated but uninitialized data */
+>  	XFS_IO_OVERWRITE,	/* covers already allocated extent */
+>  };
+>  
+>  #define XFS_IO_TYPES \
+> -	{ 0,			"" }, \
+>  	{ XFS_IO_DELALLOC,		"delalloc" }, \
+>  	{ XFS_IO_UNWRITTEN,		"unwritten" }, \
+>  	{ XFS_IO_OVERWRITE,		"overwrite" }
+> @@ -45,7 +43,6 @@ typedef struct xfs_ioend {
+>  	unsigned int		io_type;	/* delalloc / unwritten */
+>  	int			io_error;	/* I/O error code */
+>  	atomic_t		io_remaining;	/* hold count */
+> -	unsigned int		io_isdirect : 1;/* direct I/O */
+>  	struct inode		*io_inode;	/* file being written to */
+>  	struct buffer_head	*io_buffer_head;/* buffer linked list head */
+>  	struct buffer_head	*io_buffer_tail;/* buffer linked list tail */
+> -- 
+> 1.9.1
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
