@@ -1,28 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id A5F7B7FF4
-	for <xfs@oss.sgi.com>; Fri, 30 Jan 2015 02:25:35 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 744688F804C
-	for <xfs@oss.sgi.com>; Fri, 30 Jan 2015 00:25:32 -0800 (PST)
-Received: from mail-pa0-f41.google.com (mail-pa0-f41.google.com
-	[209.85.220.41]) by cuda.sgi.com with ESMTP id 4RWezZqEqg2kWWeM
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Fri, 30 Jan 2015 00:25:31 -0800 (PST)
-Received: by mail-pa0-f41.google.com with SMTP id kq14so49766474pab.0
-	for <xfs@oss.sgi.com>; Fri, 30 Jan 2015 00:25:31 -0800 (PST)
+	by oss.sgi.com (Postfix) with ESMTP id 11DDA800A
+	for <xfs@oss.sgi.com>; Fri, 30 Jan 2015 08:38:40 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 00BFE8F808E
+	for <xfs@oss.sgi.com>; Fri, 30 Jan 2015 06:38:36 -0800 (PST)
+Received: from mailserver.inist.fr (mailserver.inist.fr [193.54.107.40]) by
+	cuda.sgi.com with ESMTP id wxzWc2HrXtCgICsl (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Fri, 30 Jan 2015 06:38:34 -0800 (PST)
+From: "SCHEFFER, Philippe" <Philippe.SCHEFFER@inist.fr>
+Date: Fri, 30 Jan 2015 15:37:11 +0100
+Subject: RE : RE : xfs_repair fails with corrupt dinode
+Message-ID: <587A9635632B174A943E53AF3B58A9082E3C81A6FD@vanda>
+References: <587A9635632B174A943E53AF3B58A9082E3BE068CE@vanda>
+	<20150129231538.GE6282@dastard>
+	<587A9635632B174A943E53AF3B58A9082E3C81A6FB@vanda>,
+	<20150130055232.GB4251@dastard>
+In-Reply-To: <20150130055232.GB4251@dastard>
+Content-Language: fr-FR
 MIME-Version: 1.0
-In-Reply-To: <20150130013456.GA4251@dastard>
-References: <54c1c12e.230a460a.4729.11fc@mx.google.com>
-	<20150128015757.GT16552@dastard>
-	<CALJmpHP=vjz_ZY9sFpW8k2Y7TL+sz-WyjPeMoy4sM6XDTt8MTQ@mail.gmail.com>
-	<20150128205956.GA6282@dastard>
-	<CALJmpHOFVZer7YL8Kek6jk2U8f7JyBrJknYzVhyowht_EGm7DQ@mail.gmail.com>
-	<20150130013456.GA4251@dastard>
-Date: Fri, 30 Jan 2015 13:55:30 +0530
-Message-ID: <CALJmpHO1MiPRFvE9P2mU0rtRgcftfNc3XXnxb=nPVYWt-=fU9g@mail.gmail.com>
-Subject: Re: [PATCH 2/2] xfs_spaceman: Accounting for AGFL blocks
-From: Dhruvesh Rathore <adrscube@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,61 +28,115 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-On Fri, Jan 30, 2015 at 7:04 AM, Dave Chinner <david@fromorbit.com> wrote:
-> [ please reply to the list! ]
+Successful with xfs_repair 3.1.9. Thanks!
+All data are in lost+found, But before the xfs_repair, it was already the c=
+ase.
+A probable consequence of the original problem.
 
-We apologize it was an honest mistake.
-We had hit reply instead of typing in the 'to field'.
+Philippe
+________________________________________
+De : Dave Chinner [david@fromorbit.com]
+Date d'envoi : vendredi 30 janvier 2015 06:52
+=C0 : SCHEFFER, Philippe
+Cc : xfs@oss.sgi.com
+Objet : Re: RE : xfs_repair fails with corrupt dinode
 
+On Fri, Jan 30, 2015 at 01:42:07AM +0100, SCHEFFER, Philippe wrote:
+> xfs_repair -p log in attached file.
 >
-> On Thu, Jan 29, 2015 at 09:18:03AM +0530, Dhruvesh Rathore wrote:
->> On Thu, Jan 29, 2015 at 2:29 AM, Dave Chinner <david@fromorbit.com> wrote:
->> > On Wed, Jan 28, 2015 at 06:35:22PM +0530, ADRS PICT wrote:
->> >> On Wed, Jan 28, 2015 at 7:27 AM, Dave Chinner <david@fromorbit.com> wrote:
->> >> > Hmmm - I think something is still missing - what are the sagbno and
->> >> > eagbno parameters supposed to do?
->> >>
->> >> Actually the parameters sagbno and eagbno are not needed in this
->> >> function and can be excluded.
->> >
->> > Why? Don't we still have to check the blocks found on the AGFL fll
->> > within the range requested by the user, like we do for every extent
->> > found in the btree?
->>
->> We had felt that the range check is not needed as we are fetching block numbers
->> from the allocation group free block array by the function
->> xfs_alloc_read_agfl().
->> And in xfs_alloc_read_agfl(), the error checking is done implicitly.
->>
->> However, after you have raised this point, it is clear to us that performing a
->> range check will be a good way to catch and display a warning if the blocks are
->> out of range.
-
-> The range checking is not for validity of the blocks themselves -
-> the ranges passed in come from the user. i.e. the user is asking for
-> free space blocks within a certain range on disk. The blocks in the
-> AGFL may or may not lie within that the user specified range, and so
-> need to be checked against the range (similar to btree extents) to
-> determine if they shoul dbe added to the FIEMAPFS output...
+> Philippe
+> ________________________________________
+> De : Dave Chinner [david@fromorbit.com]
+> Date d'envoi : vendredi 30 janvier 2015 00:15
+> =C0 : SCHEFFER, Philippe
+> Cc : xfs@oss.sgi.com
+> Objet : Re: xfs_repair fails with corrupt dinode
 >
+> On Thu, Jan 29, 2015 at 04:48:15PM +0100, SCHEFFER, Philippe wrote:
+> > Hi,
+> >
+> > I have a corrupted xfs filesytem. When I try to repair I get this error=
+ :
+> > disconnected inode 1427919, moving to lost+found
+> > corrupt dinode 1427919, extent total =3D 1, nblocks =3D 0.  This is a b=
+ug.
+> > Please capture the filesystem metadata with xfs_metadump and
+> > report it to xfs@oss.sgi.com.
+> > cache_node_purge: refcount was 1, not zero (node=3D0x1f6c19620)
+> >
+> > fatal error -- 117 - couldn't iget disconnected inode
+> >
+> > I captured metada with xfs_metadump but the file is 1,4Gb long. I can't=
+ send it to you.
+> >
+> > I printed inode1427919 :
+> >
+> > xfs_db> inode 1427919
+> > xfs_db> print
+> > core.magic =3D 0x494e
+> ....
+> > core.format =3D 2 (extents)
+> ....
+> > core.size =3D 2536
+> > core.nblocks =3D 1
+> > core.extsize =3D 0
+> > core.nextents =3D 1
+> ....
+> > u.bmx[0] =3D [startoff,startblock,blockcount,extentflag] 0:[0,320660992=
+,1,0]
+>
+> That's an inode with one extent of one block and looks perfectly
+> valid. We'll need the entire output of the xfs_repair run to see if
+> there were any prior actions taken on that inode by xfs_repair....
 
-We have incorporated the above changes, and sent the updated patches on
-the mailing list. Here are the links:
+As i pointed out to Brian on IRC earlier:
 
-http://oss.sgi.com/archives/xfs/2015-01/msg00484.html
-http://oss.sgi.com/archives/xfs/2015-01/msg00486.html
-http://oss.sgi.com/archives/xfs/2015-01/msg00487.html
-http://oss.sgi.com/archives/xfs/2015-01/msg00488.html
-http://oss.sgi.com/archives/xfs/2015-01/msg00489.html
+data fork in regular inode 1427919 claims used block 320660992
+correcting nblocks for inode 1427919, was 1 - counted 0
 
-Regards,
-A-DRS
+So it looks like the inode has a cross linked block, repair dropped
+the block count by that one block, and then failed to remove the
+extent from the inode. So, a repair bug, that was...
+
+commit e1f43b4c701b24d9b5bc85df858a8c36f0f0723b
+Author: Christoph Hellwig <hch@infradead.org>
+Date:   Thu Feb 2 07:39:10 2012 -0500
+
+    repair: update extent count after zapping duplicate blocks
+
+    When we find a duplicate extent in an extern format inode we do not zap
+    the whole inode, but just truncate it to the point where the duplicate
+    extent was found.  But the current code only updates di_nblocks for the
+    new size, but no di_nextents/di_anextents.  In most cases this isn't no=
+ticed,
+    but when moving such an inode to the lost+found directoy the consistency
+    check in xfs_iformat trips over it.  Fix this by updating the on-disk
+    extent count as part of the inode repair.
+
+    Note that we zap btree format inodes with duplicate block completely
+    at this point, so this fix doesn't apply to them.
+
+    Reviewed-by: Mark Tinguely <tinguely@sgi.com>
+    Reported-by: Arkadiusz Mi??kiewicz <arekm@maven.pl>
+    Tested-by: Arkadiusz Mi??kiewicz <arekm@maven.pl>
+    Signed-off-by: Christoph Hellwig <hch@lst.de>
+
+.... fixed the 3 years ago. Upgrade your xfsprogs package and the
+problem should go away.
+
+Cheers,
+
+Dave.
+--
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
