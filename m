@@ -1,25 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id A86A77F95
-	for <xfs@oss.sgi.com>; Thu, 29 Jan 2015 21:04:24 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 878388F80BB
-	for <xfs@oss.sgi.com>; Thu, 29 Jan 2015 19:04:21 -0800 (PST)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id biNBYuCtuld9xfu4 (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 29 Jan 2015 19:04:20 -0800 (PST)
-Date: Thu, 29 Jan 2015 22:04:11 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 6/9] xfs: XFS_IOCTL_SETXATTR can run in user namespaces
-Message-ID: <20150130030411.GA22916@bfoster.bfoster>
-References: <1422328486-24661-1-git-send-email-david@fromorbit.com>
-	<1422328486-24661-7-git-send-email-david@fromorbit.com>
-	<20150129153515.GF17652@laptop.bfoster>
-	<20150129235315.GG6282@dastard>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 9525D7FF6
+	for <xfs@oss.sgi.com>; Thu, 29 Jan 2015 23:52:40 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 402D9AC009
+	for <xfs@oss.sgi.com>; Thu, 29 Jan 2015 21:52:37 -0800 (PST)
+Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
+	[150.101.137.129]) by cuda.sgi.com with ESMTP id
+	HPvuGx5HXDn6K19E for <xfs@oss.sgi.com>;
+	Thu, 29 Jan 2015 21:52:35 -0800 (PST)
+Date: Fri, 30 Jan 2015 16:52:32 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: RE : xfs_repair fails with corrupt dinode
+Message-ID: <20150130055232.GB4251@dastard>
+References: <587A9635632B174A943E53AF3B58A9082E3BE068CE@vanda>
+	<20150129231538.GE6282@dastard>
+	<587A9635632B174A943E53AF3B58A9082E3C81A6FB@vanda>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20150129235315.GG6282@dastard>
+In-Reply-To: <587A9635632B174A943E53AF3B58A9082E3C81A6FB@vanda>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,95 +27,109 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: iustin@k1024.org, xfs@oss.sgi.com
+To: "SCHEFFER, Philippe" <Philippe.SCHEFFER@inist.fr>
+Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-On Fri, Jan 30, 2015 at 10:53:15AM +1100, Dave Chinner wrote:
-> On Thu, Jan 29, 2015 at 10:35:15AM -0500, Brian Foster wrote:
-> > On Tue, Jan 27, 2015 at 02:14:43PM +1100, Dave Chinner wrote:
-> > > From: Dave Chinner <dchinner@redhat.com>
-> > > 
-> > > Currently XFS_IOCTL_SETXATTR will fail if run in a user namespace as
-> > > it it not allowed to change project IDs. The current code, however,
-> > > also prevents any other change being made as well, so things like
-> > > extent size hints cannot be set in user namespaces. This is wrong,
-> > > so only disallow access to project IDs and related flags from inside
-> > > the init namespace.
-> > > 
-> > > Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> > > ---
-> > >  fs/xfs/xfs_ioctl.c | 22 +++++++++++++---------
-> > >  1 file changed, 13 insertions(+), 9 deletions(-)
-> > > 
-> > > diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-> > > index 563d2b4..ae6e1e3 100644
-> > > --- a/fs/xfs/xfs_ioctl.c
-> > > +++ b/fs/xfs/xfs_ioctl.c
-> > > @@ -1120,6 +1120,19 @@ xfs_ioctl_setattr(
-> > >  		return -EINVAL;
-> > >  
-> > >  	/*
-> > > +	 * Project Quota ID state is only allowed to change from within the init
-> > > +	 * namespace. Enforce that restriction only if we are trying to change
-> > > +	 * the quota ID state. Everything else is allowed in user namespaces.
-> > > +	 */
-> > > +	if (current_user_ns() != &init_user_ns) {
-> > > +		if (xfs_get_projid(ip) != fa->fsx_projid)
-> > > +			return -EINVAL;
-> > > +		if ((fa->fsx_xflags & XFS_XFLAG_PROJINHERIT) ^
-> > > +		    (ip->i_d.di_flags & XFS_DIFLAG_PROJINHERIT))
-> > 
-> > Why not use != here? Looks fine, anyways:
-> 
-> Because ^ has an implicit cast of the variables to boolean (i.e flag
-> set or not), whereas != will only work if XFS_XFLAG_PROJINHERIT =
-> XFS_DIFLAG_PROJINHERIT. Given that the moment we add more DIFLAGs to
-> the xfs inode, the current "XFLAG value must match DIFLAG value"
-> rule is going to be broken, I think that logical evaluation is a
-> much safer practice for these types of comparisons.
-> 
+On Fri, Jan 30, 2015 at 01:42:07AM +0100, SCHEFFER, Philippe wrote:
+> xfs_repair -p log in attached file.
+> =
 
-Hrm, I'm not following how a boolean cast occurs here. Isn't ^ a bitwise
-operation? If I tweak the DIFLAG_PROJINHERIT to bit 15 (rather than 9)
-and regenerate assembly for the code above, I end up with something like
-this:
+> Philippe
+> ________________________________________
+> De : Dave Chinner [david@fromorbit.com]
+> Date d'envoi : vendredi 30 janvier 2015 00:15
+> =C0 : SCHEFFER, Philippe
+> Cc : xfs@oss.sgi.com
+> Objet : Re: xfs_repair fails with corrupt dinode
+> =
 
-	/* -EINVAL */
-        movl    $-22, %eax      #, D.54727
+> On Thu, Jan 29, 2015 at 04:48:15PM +0100, SCHEFFER, Philippe wrote:
+> > Hi,
+> >
+> > I have a corrupted xfs filesytem. When I try to repair I get this error=
+ :
+> > disconnected inode 1427919, moving to lost+found
+> > corrupt dinode 1427919, extent total =3D 1, nblocks =3D 0.  This is a b=
+ug.
+> > Please capture the filesystem metadata with xfs_metadump and
+> > report it to xfs@oss.sgi.com.
+> > cache_node_purge: refcount was 1, not zero (node=3D0x1f6c19620)
+> >
+> > fatal error -- 117 - couldn't iget disconnected inode
+> >
+> > I captured metada with xfs_metadump but the file is 1,4Gb long. I can't=
+ send it to you.
+> >
+> > I printed inode1427919 :
+> >
+> > xfs_db> inode 1427919
+> > xfs_db> print
+> > core.magic =3D 0x494e
+> ....
+> > core.format =3D 2 (extents)
+> ....
+> > core.size =3D 2536
+> > core.nblocks =3D 1
+> > core.extsize =3D 0
+> > core.nextents =3D 1
+> ....
+> > u.bmx[0] =3D [startoff,startblock,blockcount,extentflag] 0:[0,320660992=
+,1,0]
+> =
 
-	...
+> That's an inode with one extent of one block and looks perfectly
+> valid. We'll need the entire output of the xfs_repair run to see if
+> there were any prior actions taken on that inode by xfs_repair....
 
-	/* load up the flags vars */
-        movzwl  354(%rdi), %ecx # ip_5(D)->i_d.di_flags,ip_5(D)->i_d.di_flags
-        movl    (%rsi), %edx    # fa_3(D)->fsx_xflags, D.54728
+As i pointed out to Brian on IRC earlier:
 
-	...
+data fork in regular inode 1427919 claims used block 320660992
+correcting nblocks for inode 1427919, was 1 - counted 0
 
-	/* grab the associated bits and cmp */
-        andl    $512, %edx      #, D.54728
-        andl    $32768, %ecx    #, D.54728
-        cmpl    %edx, %ecx      # D.54728, D.54728
+So it looks like the inode has a cross linked block, repair dropped
+the block count by that one block, and then failed to remove the
+extent from the inode. So, a repair bug, that was...
 
-	/* ret 0 if values are equal */
-        movl    $0, %edx        #, tmp99
-        cmove   %edx, %eax      # tmp99,, D.54727
-        ret
+commit e1f43b4c701b24d9b5bc85df858a8c36f0f0723b
+Author: Christoph Hellwig <hch@infradead.org>
+Date:   Thu Feb 2 07:39:10 2012 -0500
 
-So it seems like this breaks just the same if the bit meaning doesn't
-match between fields..?
+    repair: update extent count after zapping duplicate blocks
+    =
 
-Brian
+    When we find a duplicate extent in an extern format inode we do not zap
+    the whole inode, but just truncate it to the point where the duplicate
+    extent was found.  But the current code only updates di_nblocks for the
+    new size, but no di_nextents/di_anextents.  In most cases this isn't no=
+ticed,
+    but when moving such an inode to the lost+found directoy the consistency
+    check in xfs_iformat trips over it.  Fix this by updating the on-disk
+    extent count as part of the inode repair.
+    =
 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+    Note that we zap btree format inodes with duplicate block completely
+    at this point, so this fix doesn't apply to them.
+    =
+
+    Reviewed-by: Mark Tinguely <tinguely@sgi.com>
+    Reported-by: Arkadiusz Mi??kiewicz <arekm@maven.pl>
+    Tested-by: Arkadiusz Mi??kiewicz <arekm@maven.pl>
+    Signed-off-by: Christoph Hellwig <hch@lst.de>
+
+.... fixed the 3 years ago. Upgrade your xfsprogs package and the
+problem should go away.
+
+Cheers,
+
+Dave.
+-- =
+
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
