@@ -1,26 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 588AB7FFB
-	for <xfs@oss.sgi.com>; Fri, 30 Jan 2015 01:44:24 -0600 (CST)
+	by oss.sgi.com (Postfix) with ESMTP id A5F7B7FF4
+	for <xfs@oss.sgi.com>; Fri, 30 Jan 2015 02:25:35 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 387BB8F80B9
-	for <xfs@oss.sgi.com>; Thu, 29 Jan 2015 23:44:24 -0800 (PST)
-Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
-	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	UaBMg4VdzkUZy8YC for <xfs@oss.sgi.com>;
-	Thu, 29 Jan 2015 23:44:18 -0800 (PST)
-Date: Fri, 30 Jan 2015 18:44:16 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 6/9] xfs: XFS_IOCTL_SETXATTR can run in user namespaces
-Message-ID: <20150130074416.GC4251@dastard>
-References: <1422328486-24661-1-git-send-email-david@fromorbit.com>
-	<1422328486-24661-7-git-send-email-david@fromorbit.com>
-	<20150129153515.GF17652@laptop.bfoster>
-	<20150129235315.GG6282@dastard>
-	<20150130030411.GA22916@bfoster.bfoster>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 744688F804C
+	for <xfs@oss.sgi.com>; Fri, 30 Jan 2015 00:25:32 -0800 (PST)
+Received: from mail-pa0-f41.google.com (mail-pa0-f41.google.com
+	[209.85.220.41]) by cuda.sgi.com with ESMTP id 4RWezZqEqg2kWWeM
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Fri, 30 Jan 2015 00:25:31 -0800 (PST)
+Received: by mail-pa0-f41.google.com with SMTP id kq14so49766474pab.0
+	for <xfs@oss.sgi.com>; Fri, 30 Jan 2015 00:25:31 -0800 (PST)
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20150130030411.GA22916@bfoster.bfoster>
+In-Reply-To: <20150130013456.GA4251@dastard>
+References: <54c1c12e.230a460a.4729.11fc@mx.google.com>
+	<20150128015757.GT16552@dastard>
+	<CALJmpHP=vjz_ZY9sFpW8k2Y7TL+sz-WyjPeMoy4sM6XDTt8MTQ@mail.gmail.com>
+	<20150128205956.GA6282@dastard>
+	<CALJmpHOFVZer7YL8Kek6jk2U8f7JyBrJknYzVhyowht_EGm7DQ@mail.gmail.com>
+	<20150130013456.GA4251@dastard>
+Date: Fri, 30 Jan 2015 13:55:30 +0530
+Message-ID: <CALJmpHO1MiPRFvE9P2mU0rtRgcftfNc3XXnxb=nPVYWt-=fU9g@mail.gmail.com>
+Subject: Re: [PATCH 2/2] xfs_spaceman: Accounting for AGFL blocks
+From: Dhruvesh Rathore <adrscube@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,34 +35,57 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
-Cc: iustin@k1024.org, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>, xfs@oss.sgi.com
 
-On Thu, Jan 29, 2015 at 10:04:11PM -0500, Brian Foster wrote:
-> On Fri, Jan 30, 2015 at 10:53:15AM +1100, Dave Chinner wrote:
-> > On Thu, Jan 29, 2015 at 10:35:15AM -0500, Brian Foster wrote:
-> > > Why not use != here? Looks fine, anyways:
-> > 
-> > Because ^ has an implicit cast of the variables to boolean (i.e flag
-> > set or not), whereas != will only work if XFS_XFLAG_PROJINHERIT =
-> > XFS_DIFLAG_PROJINHERIT. Given that the moment we add more DIFLAGs to
-> > the xfs inode, the current "XFLAG value must match DIFLAG value"
-> > rule is going to be broken, I think that logical evaluation is a
-> > much safer practice for these types of comparisons.
-> > 
-> 
-> Hrm, I'm not following how a boolean cast occurs here. Isn't ^ a bitwise
-> operation?
+On Fri, Jan 30, 2015 at 7:04 AM, Dave Chinner <david@fromorbit.com> wrote:
+> [ please reply to the list! ]
 
-Ah, yes, you are right. I'mi not sure what type of crack I was
-smoking this morning (or when I wrote it). I'll fix it up....
+We apologize it was an honest mistake.
+We had hit reply instead of typing in the 'to field'.
 
-Cheers,
+>
+> On Thu, Jan 29, 2015 at 09:18:03AM +0530, Dhruvesh Rathore wrote:
+>> On Thu, Jan 29, 2015 at 2:29 AM, Dave Chinner <david@fromorbit.com> wrote:
+>> > On Wed, Jan 28, 2015 at 06:35:22PM +0530, ADRS PICT wrote:
+>> >> On Wed, Jan 28, 2015 at 7:27 AM, Dave Chinner <david@fromorbit.com> wrote:
+>> >> > Hmmm - I think something is still missing - what are the sagbno and
+>> >> > eagbno parameters supposed to do?
+>> >>
+>> >> Actually the parameters sagbno and eagbno are not needed in this
+>> >> function and can be excluded.
+>> >
+>> > Why? Don't we still have to check the blocks found on the AGFL fll
+>> > within the range requested by the user, like we do for every extent
+>> > found in the btree?
+>>
+>> We had felt that the range check is not needed as we are fetching block numbers
+>> from the allocation group free block array by the function
+>> xfs_alloc_read_agfl().
+>> And in xfs_alloc_read_agfl(), the error checking is done implicitly.
+>>
+>> However, after you have raised this point, it is clear to us that performing a
+>> range check will be a good way to catch and display a warning if the blocks are
+>> out of range.
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> The range checking is not for validity of the blocks themselves -
+> the ranges passed in come from the user. i.e. the user is asking for
+> free space blocks within a certain range on disk. The blocks in the
+> AGFL may or may not lie within that the user specified range, and so
+> need to be checked against the range (similar to btree extents) to
+> determine if they shoul dbe added to the FIEMAPFS output...
+>
+
+We have incorporated the above changes, and sent the updated patches on
+the mailing list. Here are the links:
+
+http://oss.sgi.com/archives/xfs/2015-01/msg00484.html
+http://oss.sgi.com/archives/xfs/2015-01/msg00486.html
+http://oss.sgi.com/archives/xfs/2015-01/msg00487.html
+http://oss.sgi.com/archives/xfs/2015-01/msg00488.html
+http://oss.sgi.com/archives/xfs/2015-01/msg00489.html
+
+Regards,
+A-DRS
 
 _______________________________________________
 xfs mailing list
