@@ -1,24 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 9525D7FF6
-	for <xfs@oss.sgi.com>; Thu, 29 Jan 2015 23:52:40 -0600 (CST)
+	by oss.sgi.com (Postfix) with ESMTP id B6E617FFF
+	for <xfs@oss.sgi.com>; Fri, 30 Jan 2015 00:28:29 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 402D9AC009
-	for <xfs@oss.sgi.com>; Thu, 29 Jan 2015 21:52:37 -0800 (PST)
-Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
-	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	HPvuGx5HXDn6K19E for <xfs@oss.sgi.com>;
-	Thu, 29 Jan 2015 21:52:35 -0800 (PST)
-Date: Fri, 30 Jan 2015 16:52:32 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: RE : xfs_repair fails with corrupt dinode
-Message-ID: <20150130055232.GB4251@dastard>
-References: <587A9635632B174A943E53AF3B58A9082E3BE068CE@vanda>
-	<20150129231538.GE6282@dastard>
-	<587A9635632B174A943E53AF3B58A9082E3C81A6FB@vanda>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 53D30AC005
+	for <xfs@oss.sgi.com>; Thu, 29 Jan 2015 22:28:25 -0800 (PST)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id gfilmcknv9QbBXJv for <xfs@oss.sgi.com>;
+	Thu, 29 Jan 2015 22:28:24 -0800 (PST)
+Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.4])
+	(using TLSv1.2 with cipher DHE-RSA-AES128-SHA (128/128 bits))
+	(No client certificate requested)
+	by sandeen.net (Postfix) with ESMTPSA id 66E9861C7C28
+	for <xfs@oss.sgi.com>; Fri, 30 Jan 2015 00:28:24 -0600 (CST)
+Message-ID: <54CB2487.6040602@sandeen.net>
+Date: Fri, 30 Jan 2015 00:28:23 -0600
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <587A9635632B174A943E53AF3B58A9082E3C81A6FB@vanda>
+Subject: [PATCH] libxfs: report VERSION in libxfs_fs_repair_cmn_err()
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,109 +26,29 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "SCHEFFER, Philippe" <Philippe.SCHEFFER@inist.fr>
-Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: xfs-oss <xfs@oss.sgi.com>
 
-On Fri, Jan 30, 2015 at 01:42:07AM +0100, SCHEFFER, Philippe wrote:
-> xfs_repair -p log in attached file.
-> =
+Because this is usually the first question asked...
 
-> Philippe
-> ________________________________________
-> De : Dave Chinner [david@fromorbit.com]
-> Date d'envoi : vendredi 30 janvier 2015 00:15
-> =C0 : SCHEFFER, Philippe
-> Cc : xfs@oss.sgi.com
-> Objet : Re: xfs_repair fails with corrupt dinode
-> =
+Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
+---
 
-> On Thu, Jan 29, 2015 at 04:48:15PM +0100, SCHEFFER, Philippe wrote:
-> > Hi,
-> >
-> > I have a corrupted xfs filesytem. When I try to repair I get this error=
- :
-> > disconnected inode 1427919, moving to lost+found
-> > corrupt dinode 1427919, extent total =3D 1, nblocks =3D 0.  This is a b=
-ug.
-> > Please capture the filesystem metadata with xfs_metadump and
-> > report it to xfs@oss.sgi.com.
-> > cache_node_purge: refcount was 1, not zero (node=3D0x1f6c19620)
-> >
-> > fatal error -- 117 - couldn't iget disconnected inode
-> >
-> > I captured metada with xfs_metadump but the file is 1,4Gb long. I can't=
- send it to you.
-> >
-> > I printed inode1427919 :
-> >
-> > xfs_db> inode 1427919
-> > xfs_db> print
-> > core.magic =3D 0x494e
-> ....
-> > core.format =3D 2 (extents)
-> ....
-> > core.size =3D 2536
-> > core.nblocks =3D 1
-> > core.extsize =3D 0
-> > core.nextents =3D 1
-> ....
-> > u.bmx[0] =3D [startoff,startblock,blockcount,extentflag] 0:[0,320660992=
-,1,0]
-> =
-
-> That's an inode with one extent of one block and looks perfectly
-> valid. We'll need the entire output of the xfs_repair run to see if
-> there were any prior actions taken on that inode by xfs_repair....
-
-As i pointed out to Brian on IRC earlier:
-
-data fork in regular inode 1427919 claims used block 320660992
-correcting nblocks for inode 1427919, was 1 - counted 0
-
-So it looks like the inode has a cross linked block, repair dropped
-the block count by that one block, and then failed to remove the
-extent from the inode. So, a repair bug, that was...
-
-commit e1f43b4c701b24d9b5bc85df858a8c36f0f0723b
-Author: Christoph Hellwig <hch@infradead.org>
-Date:   Thu Feb 2 07:39:10 2012 -0500
-
-    repair: update extent count after zapping duplicate blocks
-    =
-
-    When we find a duplicate extent in an extern format inode we do not zap
-    the whole inode, but just truncate it to the point where the duplicate
-    extent was found.  But the current code only updates di_nblocks for the
-    new size, but no di_nextents/di_anextents.  In most cases this isn't no=
-ticed,
-    but when moving such an inode to the lost+found directoy the consistency
-    check in xfs_iformat trips over it.  Fix this by updating the on-disk
-    extent count as part of the inode repair.
-    =
-
-    Note that we zap btree format inodes with duplicate block completely
-    at this point, so this fix doesn't apply to them.
-    =
-
-    Reviewed-by: Mark Tinguely <tinguely@sgi.com>
-    Reported-by: Arkadiusz Mi??kiewicz <arekm@maven.pl>
-    Tested-by: Arkadiusz Mi??kiewicz <arekm@maven.pl>
-    Signed-off-by: Christoph Hellwig <hch@lst.de>
-
-.... fixed the 3 years ago. Upgrade your xfsprogs package and the
-problem should go away.
-
-Cheers,
-
-Dave.
--- =
-
-Dave Chinner
-david@fromorbit.com
+diff --git a/libxfs/util.c b/libxfs/util.c
+index 9504e33..6464a1b 100644
+--- a/libxfs/util.c
++++ b/libxfs/util.c
+@@ -718,6 +718,7 @@ libxfs_fs_repair_cmn_err(int level, xfs_mount_t *mp, char *fmt, ...)
+ 	va_start(ap, fmt);
+ 	vfprintf(stderr, fmt, ap);
+ 	fprintf(stderr, "  This is a bug.\n");
++	fprintf(stderr, "%s version %s\n", progname, VERSION);
+ 	fprintf(stderr, "Please capture the filesystem metadata with "
+ 			"xfs_metadump and\nreport it to xfs@oss.sgi.com.\n");
+ 	va_end(ap);
 
 _______________________________________________
 xfs mailing list
