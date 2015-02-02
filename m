@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 2CA3E7F78
-	for <xfs@oss.sgi.com>; Wed, 18 Feb 2015 07:48:27 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id BBC05AC002
-	for <xfs@oss.sgi.com>; Wed, 18 Feb 2015 05:48:23 -0800 (PST)
-Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id f3CYHePgA5qbVqqw (version=TLSv1 cipher=AES256-SHA
-	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 18 Feb 2015 05:48:21 -0800 (PST)
-From: Jan Kara <jack@suse.cz>
-Subject: [PATCH 2/8] quota: Wire up Q_GETXSTATE and Q_GETXSTATV calls to work
-	with ->get_state
-Date: Wed, 18 Feb 2015 14:47:48 +0100
-Message-Id: <1424267274-11836-3-git-send-email-jack@suse.cz>
-In-Reply-To: <1424267274-11836-1-git-send-email-jack@suse.cz>
-References: <1424267274-11836-1-git-send-email-jack@suse.cz>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id B250B7FA3
+	for <xfs@oss.sgi.com>; Mon,  2 Feb 2015 01:01:28 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id A16AF8F8054
+	for <xfs@oss.sgi.com>; Sun,  1 Feb 2015 23:01:28 -0800 (PST)
+Received: from mga01.intel.com ([192.55.52.88]) by cuda.sgi.com with ESMTP id
+	Jhn8YswenvrHHMvF for <xfs@oss.sgi.com>;
+	Sun, 01 Feb 2015 23:01:23 -0800 (PST)
+Date: Mon, 2 Feb 2015 15:00:42 +0800
+From: kbuild test robot <fengguang.wu@intel.com>
+Subject: [dgc-xfs:xfs-ioctl-setattr-cleanup 10/12] fs/xfs/xfs_ioctl.c:1102:1:
+	sparse: symbol 'xfs_ioctl_setattr_check_extsize' was not declared.
+	Should it be static?
+Message-ID: <201502021535.BvQbm6Lm%fengguang.wu@intel.com>
+MIME-Version: 1.0
+Content-Disposition: inline
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,198 +24,32 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: linux-fsdevel@vger.kernel.org
-Cc: cluster-devel@redhat.com, Jan Kara <jack@suse.cz>, Steven Whitehouse <swhiteho@redhat.com>, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-kernel@vger.kernel.org, kbuild-all@01.org, xfs@oss.sgi.com
 
-Add appropriate conversion functions so that filesystems supporting
-->get_state() method can be queried using Q_GETXSTATE and Q_GETXSTATV
-calls.
+tree:   git://git.kernel.org/pub/scm/linux/kernel/git/dgc/linux-xfs xfs-ioctl-setattr-cleanup
+head:   9b94fcc39822b450af823b3d8cbef6b53ce87ed9
+commit: d4388d3c0988ec00787ad1f8e63b5e2a6abef1dc [10/12] xfs: factor extsize hint checking out of xfs_ioctl_setattr
+reproduce:
+  # apt-get install sparse
+  git checkout d4388d3c0988ec00787ad1f8e63b5e2a6abef1dc
+  make ARCH=x86_64 allmodconfig
+  make C=1 CF=-D__CHECK_ENDIAN__
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Signed-off-by: Jan Kara <jack@suse.cz>
+
+sparse warnings: (new ones prefixed by >>)
+
+>> fs/xfs/xfs_ioctl.c:1102:1: sparse: symbol 'xfs_ioctl_setattr_check_extsize' was not declared. Should it be static?
+
+Please review and possibly fold the followup patch.
+
 ---
- fs/quota/quota.c | 138 +++++++++++++++++++++++++++++++++++++++++++++++++++++--
- 1 file changed, 134 insertions(+), 4 deletions(-)
-
-diff --git a/fs/quota/quota.c b/fs/quota/quota.c
-index 00d50fca1005..83939ff4c444 100644
---- a/fs/quota/quota.c
-+++ b/fs/quota/quota.c
-@@ -269,25 +269,152 @@ static int quota_disable(struct super_block *sb, void __user *addr)
- 	return sb->s_qcop->quota_disable(sb, flags);
- }
- 
-+static int quota_state_to_flags(struct qc_state *state)
-+{
-+	int flags = 0;
-+
-+	if (state->s_state[USRQUOTA].flags & QCI_ACCT_ENABLED)
-+		flags |= FS_QUOTA_UDQ_ACCT;
-+	if (state->s_state[USRQUOTA].flags & QCI_LIMITS_ENFORCED)
-+		flags |= FS_QUOTA_UDQ_ENFD;
-+	if (state->s_state[GRPQUOTA].flags & QCI_ACCT_ENABLED)
-+		flags |= FS_QUOTA_GDQ_ACCT;
-+	if (state->s_state[GRPQUOTA].flags & QCI_LIMITS_ENFORCED)
-+		flags |= FS_QUOTA_GDQ_ENFD;
-+	if (state->s_state[PRJQUOTA].flags & QCI_ACCT_ENABLED)
-+		flags |= FS_QUOTA_PDQ_ACCT;
-+	if (state->s_state[PRJQUOTA].flags & QCI_LIMITS_ENFORCED)
-+		flags |= FS_QUOTA_PDQ_ENFD;
-+	return flags;
-+}
-+
-+static int quota_getstate(struct super_block *sb, struct fs_quota_stat *fqs)
-+{
-+	int type;
-+	struct qc_state state;
-+	int ret;
-+
-+	ret = sb->s_qcop->get_state(sb, &state);
-+	if (ret < 0)
-+		return ret;
-+
-+	memset(fqs, 0, sizeof(*fqs));
-+	fqs->qs_version = FS_QSTAT_VERSION;
-+	fqs->qs_flags = quota_state_to_flags(&state);
-+	/* No quota enabled? */
-+	if (!fqs->qs_flags)
-+		return -ENOSYS;
-+	fqs->qs_incoredqs = state.s_incoredqs;
-+	/*
-+	 * GETXSTATE quotactl has space for just one set of time limits so
-+	 * report them for the first enabled quota type
-+	 */
-+	for (type = 0; type < XQM_MAXQUOTAS; type++)
-+		if (state.s_state[type].flags & QCI_ACCT_ENABLED)
-+			break;
-+	BUG_ON(type == XQM_MAXQUOTAS);
-+	fqs->qs_btimelimit = state.s_state[type].spc_timelimit;
-+	fqs->qs_itimelimit = state.s_state[type].ino_timelimit;
-+	fqs->qs_rtbtimelimit = state.s_state[type].rt_spc_timelimit;
-+	fqs->qs_bwarnlimit = state.s_state[type].spc_warnlimit;
-+	fqs->qs_iwarnlimit = state.s_state[type].ino_warnlimit;
-+	if (state.s_state[USRQUOTA].flags & QCI_ACCT_ENABLED) {
-+		fqs->qs_uquota.qfs_ino = state.s_state[USRQUOTA].ino;
-+		fqs->qs_uquota.qfs_nblks = state.s_state[USRQUOTA].blocks;
-+		fqs->qs_uquota.qfs_nextents = state.s_state[USRQUOTA].nextents;
-+	}
-+	if (state.s_state[GRPQUOTA].flags & QCI_ACCT_ENABLED) {
-+		fqs->qs_gquota.qfs_ino = state.s_state[GRPQUOTA].ino;
-+		fqs->qs_gquota.qfs_nblks = state.s_state[GRPQUOTA].blocks;
-+		fqs->qs_gquota.qfs_nextents = state.s_state[GRPQUOTA].nextents;
-+	}
-+	if (state.s_state[PRJQUOTA].flags & QCI_ACCT_ENABLED) {
-+		/*
-+		 * Q_XGETQSTAT doesn't have room for both group and project
-+		 * quotas.  So, allow the project quota values to be copied out
-+		 * only if there is no group quota information available.
-+		 */
-+		if (!(state.s_state[GRPQUOTA].flags & QCI_ACCT_ENABLED)) {
-+			fqs->qs_gquota.qfs_ino = state.s_state[PRJQUOTA].ino;
-+			fqs->qs_gquota.qfs_nblks =
-+					state.s_state[PRJQUOTA].blocks;
-+			fqs->qs_gquota.qfs_nextents =
-+					state.s_state[PRJQUOTA].nextents;
-+		}
-+	}
-+	return 0;
-+}
-+
- static int quota_getxstate(struct super_block *sb, void __user *addr)
- {
- 	struct fs_quota_stat fqs;
- 	int ret;
- 
--	if (!sb->s_qcop->get_xstate)
-+	if (!sb->s_qcop->get_xstate && !sb->s_qcop->get_state)
- 		return -ENOSYS;
--	ret = sb->s_qcop->get_xstate(sb, &fqs);
-+	if (sb->s_qcop->get_state)
-+		ret = quota_getstate(sb, &fqs);
-+	else
-+		ret = sb->s_qcop->get_xstate(sb, &fqs);
- 	if (!ret && copy_to_user(addr, &fqs, sizeof(fqs)))
- 		return -EFAULT;
- 	return ret;
- }
- 
-+static int quota_getstatev(struct super_block *sb, struct fs_quota_statv *fqs)
-+{
-+	int type;
-+	struct qc_state state;
-+	int ret;
-+
-+	ret = sb->s_qcop->get_state(sb, &state);
-+	if (ret < 0)
-+		return ret;
-+
-+	memset(fqs, 0, sizeof(*fqs));
-+	fqs->qs_version = FS_QSTAT_VERSION;
-+	fqs->qs_flags = quota_state_to_flags(&state);
-+	/* No quota enabled? */
-+	if (!fqs->qs_flags)
-+		return -ENOSYS;
-+	fqs->qs_incoredqs = state.s_incoredqs;
-+	/*
-+	 * GETXSTATV quotactl has space for just one set of time limits so
-+	 * report them for the first enabled quota type
-+	 */
-+	for (type = 0; type < XQM_MAXQUOTAS; type++)
-+		if (state.s_state[type].flags & QCI_ACCT_ENABLED)
-+			break;
-+	BUG_ON(type == XQM_MAXQUOTAS);
-+	fqs->qs_btimelimit = state.s_state[type].spc_timelimit;
-+	fqs->qs_itimelimit = state.s_state[type].ino_timelimit;
-+	fqs->qs_rtbtimelimit = state.s_state[type].rt_spc_timelimit;
-+	fqs->qs_bwarnlimit = state.s_state[type].spc_warnlimit;
-+	fqs->qs_iwarnlimit = state.s_state[type].ino_warnlimit;
-+	if (state.s_state[USRQUOTA].flags & QCI_ACCT_ENABLED) {
-+		fqs->qs_uquota.qfs_ino = state.s_state[USRQUOTA].ino;
-+		fqs->qs_uquota.qfs_nblks = state.s_state[USRQUOTA].blocks;
-+		fqs->qs_uquota.qfs_nextents = state.s_state[USRQUOTA].nextents;
-+	}
-+	if (state.s_state[GRPQUOTA].flags & QCI_ACCT_ENABLED) {
-+		fqs->qs_gquota.qfs_ino = state.s_state[GRPQUOTA].ino;
-+		fqs->qs_gquota.qfs_nblks = state.s_state[GRPQUOTA].blocks;
-+		fqs->qs_gquota.qfs_nextents = state.s_state[GRPQUOTA].nextents;
-+	}
-+	if (state.s_state[PRJQUOTA].flags & QCI_ACCT_ENABLED) {
-+		fqs->qs_pquota.qfs_ino = state.s_state[PRJQUOTA].ino;
-+		fqs->qs_pquota.qfs_nblks = state.s_state[PRJQUOTA].blocks;
-+		fqs->qs_pquota.qfs_nextents = state.s_state[PRJQUOTA].nextents;
-+	}
-+	return 0;
-+}
-+
- static int quota_getxstatev(struct super_block *sb, void __user *addr)
- {
- 	struct fs_quota_statv fqs;
- 	int ret;
- 
--	if (!sb->s_qcop->get_xstatev)
-+	if (!sb->s_qcop->get_xstatev && !sb->s_qcop->get_state)
- 		return -ENOSYS;
- 
- 	memset(&fqs, 0, sizeof(fqs));
-@@ -301,7 +428,10 @@ static int quota_getxstatev(struct super_block *sb, void __user *addr)
- 	default:
- 		return -EINVAL;
- 	}
--	ret = sb->s_qcop->get_xstatev(sb, &fqs);
-+	if (sb->s_qcop->get_state)
-+		ret = quota_getstatev(sb, &fqs);
-+	else
-+		ret = sb->s_qcop->get_xstatev(sb, &fqs);
- 	if (!ret && copy_to_user(addr, &fqs, sizeof(fqs)))
- 		return -EFAULT;
- 	return ret;
--- 
-2.1.4
+0-DAY kernel test infrastructure                Open Source Technology Center
+http://lists.01.org/mailman/listinfo/kbuild                 Intel Corporation
 
 _______________________________________________
 xfs mailing list
