@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 3E9D47F96
-	for <xfs@oss.sgi.com>; Mon,  2 Feb 2015 01:07:22 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 2B9868F80C7
-	for <xfs@oss.sgi.com>; Sun,  1 Feb 2015 23:07:21 -0800 (PST)
-Received: from mga14.intel.com ([192.55.52.115]) by cuda.sgi.com with ESMTP id
-	mRmCKNLQGB6gcWhQ for <xfs@oss.sgi.com>;
-	Sun, 01 Feb 2015 23:07:20 -0800 (PST)
+	by oss.sgi.com (Postfix) with ESMTP id 214FB7F96
+	for <xfs@oss.sgi.com>; Mon,  2 Feb 2015 01:07:23 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id E764F8F80C7
+	for <xfs@oss.sgi.com>; Sun,  1 Feb 2015 23:07:22 -0800 (PST)
+Received: from mga03.intel.com (mga03.intel.com [134.134.136.65]) by
+	cuda.sgi.com with ESMTP id JsJOIE3mJ5rKbUYq for
+	<xfs@oss.sgi.com>; Sun, 01 Feb 2015 23:07:21 -0800 (PST)
 Date: Mon, 2 Feb 2015 15:06:25 +0800
 From: kbuild test robot <fengguang.wu@intel.com>
-Subject: [PATCH dgc-xfs] xfs: xfs_ioctl_setattr_check_projid can be static
-Message-ID: <20150202070625.GA12869@lkp-sb04>
-References: <201502021514.DMjnGg1n%fengguang.wu@intel.com>
+Subject: [dgc-xfs:xfs-ioctl-setattr-cleanup 11/12] fs/xfs/xfs_ioctl.c:1146:1:
+	sparse: symbol 'xfs_ioctl_setattr_check_projid' was not declared.
+	Should it be static?
+Message-ID: <201502021514.DMjnGg1n%fengguang.wu@intel.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <201502021514.DMjnGg1n%fengguang.wu@intel.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,26 +31,26 @@ Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: linux-kernel@vger.kernel.org, kbuild-all@01.org, xfs@oss.sgi.com
 
-fs/xfs/xfs_ioctl.c:1146:1: sparse: symbol 'xfs_ioctl_setattr_check_projid' was not declared. Should it be static?
+tree:   git://git.kernel.org/pub/scm/linux/kernel/git/dgc/linux-xfs xfs-ioctl-setattr-cleanup
+head:   9b94fcc39822b450af823b3d8cbef6b53ce87ed9
+commit: 23bd0735cfdf5322170a9ef48c7d47c2e6567ba8 [11/12] xfs: factor projid hint checking out of xfs_ioctl_setattr
+reproduce:
+  # apt-get install sparse
+  git checkout 23bd0735cfdf5322170a9ef48c7d47c2e6567ba8
+  make ARCH=x86_64 allmodconfig
+  make C=1 CF=-D__CHECK_ENDIAN__
 
-Signed-off-by: Fengguang Wu <fengguang.wu@intel.com>
+
+sparse warnings: (new ones prefixed by >>)
+
+   fs/xfs/xfs_ioctl.c:1102:1: sparse: symbol 'xfs_ioctl_setattr_check_extsize' was not declared. Should it be static?
+>> fs/xfs/xfs_ioctl.c:1146:1: sparse: symbol 'xfs_ioctl_setattr_check_projid' was not declared. Should it be static?
+
+Please review and possibly fold the followup patch.
+
 ---
- xfs_ioctl.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-index 1f186d2..1060513 100644
---- a/fs/xfs/xfs_ioctl.c
-+++ b/fs/xfs/xfs_ioctl.c
-@@ -1142,7 +1142,7 @@ xfs_ioctl_setattr_check_extsize(
- 	return 0;
- }
- 
--int
-+static int
- xfs_ioctl_setattr_check_projid(
- 	struct xfs_inode	*ip,
- 	struct fsxattr		*fa)
+0-DAY kernel test infrastructure                Open Source Technology Center
+http://lists.01.org/mailman/listinfo/kbuild                 Intel Corporation
 
 _______________________________________________
 xfs mailing list
