@@ -1,23 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id F36BE7FD8
-	for <xfs@oss.sgi.com>; Mon,  2 Feb 2015 10:44:11 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id D74728F8033
-	for <xfs@oss.sgi.com>; Mon,  2 Feb 2015 08:44:11 -0800 (PST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id DCE527FE5
+	for <xfs@oss.sgi.com>; Mon,  2 Feb 2015 10:48:52 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id CB713304053
+	for <xfs@oss.sgi.com>; Mon,  2 Feb 2015 08:48:49 -0800 (PST)
 Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id CEseJcEyEVZG63EY (version=TLSv1 cipher=AES256-SHA
+	ESMTP id IUqxgceC3AdCFSi4 (version=TLSv1 cipher=AES256-SHA
 	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 02 Feb 2015 08:44:10 -0800 (PST)
-Date: Mon, 2 Feb 2015 08:44:09 -0800
+	Mon, 02 Feb 2015 08:48:48 -0800 (PST)
+Date: Mon, 2 Feb 2015 08:48:47 -0800
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 2/5] xfs: use generic percpu counters for inode counter
-Message-ID: <20150202164409.GA695@infradead.org>
+Subject: Re: [PATCH 4/5] xfs: use generic percpu counters for free block
+	counter
+Message-ID: <20150202164847.GB695@infradead.org>
 References: <1422826983-29570-1-git-send-email-david@fromorbit.com>
-	<1422826983-29570-3-git-send-email-david@fromorbit.com>
+	<1422826983-29570-5-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1422826983-29570-3-git-send-email-david@fromorbit.com>
+In-Reply-To: <1422826983-29570-5-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,86 +34,85 @@ Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-> diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
-> index 4cf335b..7bfa527 100644
-> --- a/fs/xfs/libxfs/xfs_sb.c
-> +++ b/fs/xfs/libxfs/xfs_sb.c
-> @@ -357,7 +357,8 @@ __xfs_sb_from_disk(
->  	to->sb_rextslog = from->sb_rextslog;
->  	to->sb_inprogress = from->sb_inprogress;
->  	to->sb_imax_pct = from->sb_imax_pct;
-> -	to->sb_icount = be64_to_cpu(from->sb_icount);
-> +	if (percpu_counter_initialized(&to->sb_icount))
-> +		percpu_counter_set(&to->sb_icount, be64_to_cpu(from->sb_icount));
+>  	case XFS_SBS_FDBLOCKS:
+>  
+>  		if (delta > 0) {		/* Putting blocks back */
+> +			if (mp->m_resblks == mp->m_resblks_avail) {
+> +				percpu_counter_add(&mp->m_sb.sb_fdblocks, delta);
+> +				return 0;
+> +			}
+> +
+> +			/* put blocks back into reserve pool first */
+> +			spin_lock(&mp->m_sb_lock);
+> +			res_used = (long long)
+> +					(mp->m_resblks - mp->m_resblks_avail);
+> +
+>  			if (res_used > delta) {
+>  				mp->m_resblks_avail += delta;
+>  			} else {
+> +				delta -= res_used;
+>  				mp->m_resblks_avail = mp->m_resblks;
+> +				percpu_counter_add(&mp->m_sb.sb_fdblocks, delta);
+>  			}
+> +			spin_unlock(&mp->m_sb_lock);
+> +			return 0;
+>  
+> +		}
 
-Why would the percpu counter not be initialized here?  Oh, I guess
-this is for xfs_sb_verify().  But why can't xfs_mount_validate_sb simply
-operate on the disk endian SB to avoid that whole issue?
-
-> diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-> index 6015f54..df5ec55 100644
-> --- a/fs/xfs/xfs_mount.c
-> +++ b/fs/xfs/xfs_mount.c
-> @@ -1127,13 +1127,13 @@ xfs_mod_incore_sb_unlocked(
->  	 */
->  	switch (field) {
->  	case XFS_SBS_ICOUNT:
-> +		/* deltas are +/-64, hence the large batch size of 128. */
-> +		__percpu_counter_add(&mp->m_sb.sb_icount, delta, 128);
-> +		if (percpu_counter_compare(&mp->m_sb.sb_icount, 0) < 0) {
->  			ASSERT(0);
-> +			percpu_counter_add(&mp->m_sb.sb_icount, -delta);
->  			return -EINVAL;
+>  
+> +		/*
+> +		 * Taking blocks away, need to be more accurate the closer we
+> +		 * are to zero.
+> +		 *
+> +		 * batch size is set to a maximum of 1024 blocks - if we are
+> +		 * allocating of freeing extents larger than this then we aren't
+> +		 * going to be hammering the counter lock so a lock per update
+> +		 * is not a problem.
+> +		 *
+> +		 * If the counter has a value of less than 2 * max batch size,
+> +		 * then make everything serialise as we are real close to
+> +		 * ENOSPC.
+> +		 */
+> +#define __BATCH	1024
+> +		if (percpu_counter_compare(&mp->m_sb.sb_fdblocks,
+> +					   2 * __BATCH) < 0)
+> +			batch = 1;
+> +		else
+> +			batch = __BATCH;
+> +
+> +		__percpu_counter_add(&mp->m_sb.sb_fdblocks, delta, batch);
+> +		if (percpu_counter_compare(&mp->m_sb.sb_fdblocks,
+> +					   XFS_ALLOC_SET_ASIDE(mp)) >= 0) {
+> +			/* we had space! */
+> +			return 0;
 >  		}
->  		return 0;
->  	case XFS_SBS_IFREE:
->  		lcounter = (long long)mp->m_sb.sb_ifree;
-> @@ -1288,8 +1288,11 @@ xfs_mod_incore_sb(
->  	int			status;
 >  
->  #ifdef HAVE_PERCPU_SB
-> -	ASSERT(field < XFS_SBS_ICOUNT || field > XFS_SBS_FDBLOCKS);
-> +	ASSERT(field < XFS_SBS_IFREE || field > XFS_SBS_FDBLOCKS);
->  #endif
-> +	if (field == XFS_SBS_ICOUNT)
-> +		return xfs_mod_incore_sb_unlocked(mp, field, delta, rsvd);
+> +		/*
+> +		 * lock up the sb for dipping into reserves before releasing
+> +		 * the space that took us to ENOSPC.
+> +		 */
+> +		spin_lock(&mp->m_sb_lock);
+> +		percpu_counter_add(&mp->m_sb.sb_fdblocks, -delta);
+> +		if (!rsvd)
+> +			goto fdblocks_enospc;
+> +
+> +		lcounter = (long long)mp->m_resblks_avail + delta;
+> +		if (lcounter >= 0) {
+> +			mp->m_resblks_avail = lcounter;
+> +			spin_unlock(&mp->m_sb_lock);
+> +			return 0;
+> +		}
+> +		printk_once(KERN_WARNING
+> +			"Filesystem \"%s\": reserve blocks depleted! "
+> +			"Consider increasing reserve pool size.",
+> +			mp->m_fsname);
+> +fdblocks_enospc:
+> +		spin_unlock(&mp->m_sb_lock);
+> +		return -ENOSPC;
 > +
 
-Why is this multiplexd through xfs_mod_incore_sb_unlocked while needing
-a different locking context?  Shouldn't we simply use a different helper
-for this case?
-
->  	xfs_icsb_cnts_t *cntp;
->  	int		i;
->  
-> +	i = percpu_counter_init(&mp->m_sb.sb_icount, 0, GFP_KERNEL);
-> +	if (i)
-> +		return ENOMEM;
-> +
->  	mp->m_sb_cnts = alloc_percpu(xfs_icsb_cnts_t);
-> -	if (mp->m_sb_cnts == NULL)
-> +	if (!mp->m_sb_cnts) {
-> +		percpu_counter_destroy(&mp->m_sb.sb_icount);
->  		return -ENOMEM;
-> +	}
->  
->  	for_each_online_cpu(i) {
-
-Reusing a variable for both an errno value and a loop iterator is
-not very readable, just add an additional "error" variabe.
-
-Also percpu_counter_init returns a proper egative errno value, no need
-to turn that into the incorrect postive ENOMEM.
-
-Additionally should this use goto unwining?
-
->  	if (idelta) {
-> -		error = xfs_icsb_modify_counters(mp, XFS_SBS_ICOUNT,
-> -						 idelta, rsvd);
-> +		error = xfs_mod_incore_sb(mp, XFS_SBS_ICOUNT, idelta, rsvd);
-
-Why go through xfs_mod_incore_sb here instead of directly jumping to
-the function that does the work?
+This screams for having two different helpers for removing vs adding back
+reserved blocks.
 
 _______________________________________________
 xfs mailing list
