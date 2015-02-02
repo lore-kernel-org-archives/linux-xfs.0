@@ -1,25 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 043EB7FA9
-	for <xfs@oss.sgi.com>; Mon,  2 Feb 2015 01:30:29 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id E24298F804B
-	for <xfs@oss.sgi.com>; Sun,  1 Feb 2015 23:30:28 -0800 (PST)
-Received: from newverein.lst.de (verein.lst.de [213.95.11.211]) by
-	cuda.sgi.com with ESMTP id WrPkScWsHkYAL2uk (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Sun, 01 Feb 2015 23:30:27 -0800 (PST)
-Date: Mon, 2 Feb 2015 08:30:24 +0100
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 16/20] xfs: pass a 64-bit count argument to
-	xfs_iomap_write_unwritten
-Message-ID: <20150202073024.GA9399@lst.de>
-References: <1421925006-24231-1-git-send-email-hch@lst.de>
-	<1421925006-24231-17-git-send-email-hch@lst.de>
-	<20150129205232.GB11064@fieldses.org>
+	by oss.sgi.com (Postfix) with ESMTP id 721027FA9
+	for <xfs@oss.sgi.com>; Mon,  2 Feb 2015 02:41:07 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 506968F8033
+	for <xfs@oss.sgi.com>; Mon,  2 Feb 2015 00:41:07 -0800 (PST)
+Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
+	ESMTP id sCy5mBFTlytMymN0 (version=TLSv1 cipher=AES256-SHA
+	bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Mon, 02 Feb 2015 00:41:02 -0800 (PST)
+Date: Mon, 2 Feb 2015 00:41:02 -0800
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 1/5] xfs: struct xfs_sb is no longer tied to the on-disk
+	format
+Message-ID: <20150202084102.GA28121@infradead.org>
+References: <1422826983-29570-1-git-send-email-david@fromorbit.com>
+	<1422826983-29570-2-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20150129205232.GB11064@fieldses.org>
+In-Reply-To: <1422826983-29570-2-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,20 +31,43 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "J. Bruce Fields" <bfields@fieldses.org>
-Cc: linux-fsdevel@vger.kernel.org, linux-nfs@vger.kernel.org, Jeff Layton <jlayton@primarydata.com>, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-On Thu, Jan 29, 2015 at 03:52:32PM -0500, J. Bruce Fields wrote:
-> Who can give us ACKs on these last five fs/xfs patches?  (And is it
-> going to cause trouble if they go in through the nfsd tree?)
+>  /*
+> - * Superblock - in core version.  Must match the ondisk version below.
+> - * Must be padded to 64 bit alignment.
+> - */
+> -typedef struct xfs_sb {
+> -	__uint32_t	sb_magicnum;	/* magic number == XFS_SB_MAGIC */
+> -	__uint32_t	sb_blocksize;	/* logical block size, bytes */
 
+> -static inline int xfs_sb_version_hasfinobt(xfs_sb_t *sbp)
+> +static inline int xfs_sb_version_hasfinobt(struct xfs_sb *sbp)
 
-We'd need ACKs from Dave.  He already has pulled in two patches so
-we might run into some conflicts.  Maybe the best idea is to add the
-exportfs patch to both the XFS and nfsd trees, so each of them can
-pull in the rest?  Or we could commit the two XFS preparation patches
-to both tree and get something that compiles and works in the nfsd
-tree.
+So xfs_format.h now requires struct xfs_sb to be defined before it
+can be included?  I guess we need to move these macros around as well.
+
+> diff --git a/fs/xfs/xfs_super.h b/fs/xfs/xfs_super.h
+> index 2b830c2..a02236b 100644
+> --- a/fs/xfs/xfs_super.h
+> +++ b/fs/xfs/xfs_super.h
+> @@ -61,6 +61,87 @@ struct xfs_mount;
+>  struct xfs_buftarg;
+>  struct block_device;
+>  
+> +/*
+> + * Superblock - in core version.  This does not have ot match the size and shape
+> + * of the on-disk superblock, but must contain all the fields that we use in the
+> + * on-disk superblock.
+> + */
+> +struct xfs_sb {
+
+Is this really the right header?  xfs_super.h only really is for bits
+related to linux super block operastions.
+
+I'd expect to move it close to stuct xfs_mount, and maybe even merge
+it into that in the long run.
 
 _______________________________________________
 xfs mailing list
