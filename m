@@ -1,28 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id D5FC47FFE
-	for <xfs@oss.sgi.com>; Tue,  3 Feb 2015 10:08:53 -0600 (CST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 771D78005
+	for <xfs@oss.sgi.com>; Tue,  3 Feb 2015 10:33:34 -0600 (CST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 73C19AC003
-	for <xfs@oss.sgi.com>; Tue,  3 Feb 2015 08:08:50 -0800 (PST)
-Received: from fieldses.org (fieldses.org [173.255.197.46]) by cuda.sgi.com
-	with ESMTP id ZgSplsYgYFxg56KD for <xfs@oss.sgi.com>;
-	Tue, 03 Feb 2015 08:08:46 -0800 (PST)
-Date: Tue, 3 Feb 2015 11:08:45 -0500
-From: "J. Bruce Fields" <bfields@fieldses.org>
-Subject: Re: [PATCH 10/20] nfsd: implement pNFS operations
-Message-ID: <20150203160845.GO22301@fieldses.org>
-References: <1421925006-24231-1-git-send-email-hch@lst.de>
-	<1421925006-24231-11-git-send-email-hch@lst.de>
-	<20150129203346.GA11064@fieldses.org>
-	<20150202124349.GA15598@lst.de>
-	<20150202142832.GC22301@fieldses.org>
-	<20150202145619.GA18387@lst.de>
-	<20150202150032.GD22301@fieldses.org>
-	<20150202185638.GB23319@lst.de>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 66E60304053
+	for <xfs@oss.sgi.com>; Tue,  3 Feb 2015 08:33:31 -0800 (PST)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id QNCmGuxfVopHv1fy (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 03 Feb 2015 08:33:30 -0800 (PST)
+Received: from int-mx13.intmail.prod.int.phx2.redhat.com
+	(int-mx13.intmail.prod.int.phx2.redhat.com [10.5.11.26])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id t13GXTlm001762
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256
+	verify=FAIL) for <xfs@oss.sgi.com>; Tue, 3 Feb 2015 11:33:29 -0500
+Received: from liberator.sandeen.net (ovpn01.gateway.prod.ext.phx2.redhat.com
+	[10.5.9.1])
+	by int-mx13.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id t13GXSG1007457
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES128-SHA bits=128 verify=NO)
+	for <xfs@oss.sgi.com>; Tue, 3 Feb 2015 11:33:29 -0500
+Message-ID: <54D0F858.5010804@redhat.com>
+Date: Tue, 03 Feb 2015 10:33:28 -0600
+From: Eric Sandeen <sandeen@redhat.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20150202185638.GB23319@lst.de>
+Subject: [PATCH] xfs: fix panic_mask documentation
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,31 +37,34 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-fsdevel@vger.kernel.org, linux-nfs@vger.kernel.org, Jeff Layton <jlayton@primarydata.com>, xfs@oss.sgi.com
+To: xfs-oss <xfs@oss.sgi.com>
 
-On Mon, Feb 02, 2015 at 07:56:38PM +0100, Christoph Hellwig wrote:
-> On Mon, Feb 02, 2015 at 10:00:32AM -0500, J. Bruce Fields wrote:
-> > I'm planning to pull Jeff's tree and then apply these on top.  (Even if
-> > the conflict's fairly trivial I'm just happier being able to test the
-> > combination exactly as they're commited.)
-> > 
-> > I'll do that now, should be pushed out in an hour or two.
-> 
-> I've pushed out a pnfsd-for-3.20-3 branch to
-> git://git.infradead.org/users/hch/pnfs.git
-> 
-> Or do you want me to resend the whole thing?
+This bit of the docs didn't quite reflect reality.
 
-No, looks fine to me as is.  Thanks!  I'll play around with it a little
-more and then push it out.
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
 
-GETLAYOUT is going to be annoying if we need big layouts.  We'll have to
-figure out what to do with that reply size estimation, and clients will
-have to figure out how to get the maxresponsesized_cached right, I
-guess?  Oh well.
-
---b.
+diff --git a/Documentation/filesystems/xfs.txt b/Documentation/filesystems/xfs.txt
+index 5be51fd..157d440 100644
+--- a/Documentation/filesystems/xfs.txt
++++ b/Documentation/filesystems/xfs.txt
+@@ -287,7 +287,7 @@ The following sysctls are available for the XFS filesystem:
+ 		XFS_ERRLEVEL_LOW:       1
+ 		XFS_ERRLEVEL_HIGH:      5
+ 
+-  fs.xfs.panic_mask		(Min: 0  Default: 0  Max: 127)
++  fs.xfs.panic_mask		(Min: 0  Default: 0  Max: 255)
+ 	Causes certain error conditions to call BUG(). Value is a bitmask;
+ 	AND together the tags which represent errors which should cause panics:
+ 
+@@ -299,6 +299,7 @@ The following sysctls are available for the XFS filesystem:
+ 		XFS_PTAG_SHUTDOWN_CORRUPT       0x00000010
+ 		XFS_PTAG_SHUTDOWN_IOERROR       0x00000020
+ 		XFS_PTAG_SHUTDOWN_LOGERROR      0x00000040
++		XFS_PTAG_FSBLOCK_ZERO           0x00000080
+ 
+ 	This option is intended for debugging only.
+ 
 
 _______________________________________________
 xfs mailing list
