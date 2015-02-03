@@ -1,27 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 0EDD7801C
-	for <xfs@oss.sgi.com>; Tue,  3 Feb 2015 13:08:19 -0600 (CST)
+	by oss.sgi.com (Postfix) with ESMTP id 0578E7FCC
+	for <xfs@oss.sgi.com>; Tue,  3 Feb 2015 15:37:49 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id F286B8F8071
-	for <xfs@oss.sgi.com>; Tue,  3 Feb 2015 11:08:15 -0800 (PST)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id 8zlWoQshv0UmpaHI (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 03 Feb 2015 11:08:14 -0800 (PST)
-Received: from int-mx09.intmail.prod.int.phx2.redhat.com
-	(int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id t13J8BMO015035
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256
-	verify=FAIL) for <xfs@oss.sgi.com>; Tue, 3 Feb 2015 14:08:12 -0500
-Received: from bfoster.bfoster ([10.18.41.237])
-	by int-mx09.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id t13J8BoI021664
-	for <xfs@oss.sgi.com>; Tue, 3 Feb 2015 14:08:11 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH RFC] xfs: support min/max agbno args in block allocator
-Date: Tue,  3 Feb 2015 14:08:09 -0500
-Message-Id: <1422990489-34821-1-git-send-email-bfoster@redhat.com>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id E88998F8081
+	for <xfs@oss.sgi.com>; Tue,  3 Feb 2015 13:37:45 -0800 (PST)
+Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
+	ESMTP id E4PGRVvANdCZebAm (version=TLSv1 cipher=AES256-SHA
+	bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 03 Feb 2015 13:37:44 -0800 (PST)
+Date: Tue, 3 Feb 2015 13:37:44 -0800
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 1/5] xfs: struct xfs_sb is no longer tied to the on-disk
+	format
+Message-ID: <20150203213744.GA31631@infradead.org>
+References: <1422826983-29570-1-git-send-email-david@fromorbit.com>
+	<1422826983-29570-2-git-send-email-david@fromorbit.com>
+	<20150202084102.GA28121@infradead.org>
+	<20150202193020.GJ6282@dastard>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20150202193020.GJ6282@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,205 +29,23 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
-The block allocator supports various arguments to tweak block allocation
-behavior and set allocation requirements. The sparse inode chunk feature
-introduces a new requirement not supported by the current arguments.
-Sparse inode allocations must convert or merge into an inode record that
-describes a fixed length chunk (64 inodes x inodesize). Full inode chunk
-allocations by definition always result in valid inode records. Sparse
-chunk allocations are smaller and the associated records can refer to
-blocks not owned by the inode chunk. This model can result in invalid
-inode records in certain cases.
+On Tue, Feb 03, 2015 at 06:30:21AM +1100, Dave Chinner wrote:
+> > I'd expect to move it close to stuct xfs_mount, and maybe even merge
+> > it into that in the long run.
+> 
+> I guess moving the structure there is fine, but we still want all
+> the version functions to be shared with userspace, which then makes
+> for an interesting set of dependencies. Any other ideas?
 
-For example, if a sparse allocation occurs near the start of an AG, the
-aligned inode record for that chunk might refer to agbno 0. If an
-allocation occurs towards the end of the AG and the AG size is not
-aligned, the inode record could refer to blocks beyond the end of the
-AG. While neither of these scenarios directly result in corruption, they
-both insert invalid inode records and at minimum cause repair to
-complain, are unlikely to merge into full chunks over time and set land
-mines for other areas of code.
-
-To guarantee sparse inode chunk allocation creates valid inode records,
-support the ability to specify an agbno range limit for
-XFS_ALLOCTYPE_NEAR_BNO block allocations. The min/max agbno's are
-specified in the allocation arguments and limit the block allocation
-algorithms to that range. The starting 'agbno' hint is clamped to the
-range if the specified agbno is out of range. If no sufficient extent is
-available within the range, the allocation fails. For backwards
-compatibility, the min/max fields can be initialized to 0 to disable
-range limiting (e.g., equivalent to min=0,max=agsize).
-
-Signed-off-by: Brian Foster <bfoster@redhat.com>
----
-
-Hi all,
-
-This is a mechanism I hacked together to address the sparse inode chunk
-allocation issue described in the commit log description above. It's
-lightly tested and RFC because there are currently no users. I wanted to
-get any design thoughts before it's incorporated into the next sparse
-inode chunks set.
-
-For context, the sparse inode allocation code that takes advantage of
-this looks something like this:
-
-        /*
-         * The inode record will be aligned to full chunk size. We must
-         * prevent sparse allocation from AG boundaries that result in
-         * invalid inode records, such as records that start at agbno 0
-         * or extend beyond the AG.
-         *
-         * Set min agbno to the first aligned, non-zero agbno and max to
-         * the last aligned agbno that is at least one full chunk from
-         * the end of the AG.
-         */
-        args.min_agbno = args.mp->m_sb.sb_inoalignmt;
-        args.max_agbno = round_down(args.mp->m_sb.sb_agblocks,
-                                    args.mp->m_sb.sb_inoalignmt) -
-                         args.mp->m_ialloc_blks;
-	...
-
-Thoughts appreciated.
-
-Brian
-
- fs/xfs/libxfs/xfs_alloc.c | 42 +++++++++++++++++++++++++++++++++++++-----
- fs/xfs/libxfs/xfs_alloc.h |  2 ++
- 2 files changed, 39 insertions(+), 5 deletions(-)
-
-diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-index a6fbf44..0ddf6c9 100644
---- a/fs/xfs/libxfs/xfs_alloc.c
-+++ b/fs/xfs/libxfs/xfs_alloc.c
-@@ -149,13 +149,27 @@ xfs_alloc_compute_aligned(
- {
- 	xfs_agblock_t	bno;
- 	xfs_extlen_t	len;
-+	xfs_extlen_t	diff;
- 
- 	/* Trim busy sections out of found extent */
- 	xfs_extent_busy_trim(args, foundbno, foundlen, &bno, &len);
- 
-+	/*
-+	 * If we have a largish extent that happens to start before min_agbno,
-+	 * see if we can shift it into range...
-+	 */
-+	if (bno < args->min_agbno && bno + len > args->min_agbno) {
-+		diff = args->min_agbno - bno;
-+		if (len > diff) {
-+			bno += diff;
-+			len -= diff;
-+		}
-+	}
-+
- 	if (args->alignment > 1 && len >= args->minlen) {
- 		xfs_agblock_t	aligned_bno = roundup(bno, args->alignment);
--		xfs_extlen_t	diff = aligned_bno - bno;
-+
-+		diff = aligned_bno - bno;
- 
- 		*resbno = aligned_bno;
- 		*reslen = diff >= len ? 0 : len - diff;
-@@ -790,9 +804,13 @@ xfs_alloc_find_best_extent(
- 		 * The good extent is closer than this one.
- 		 */
- 		if (!dir) {
-+			if (*sbnoa > args->max_agbno)
-+				goto out_use_good;
- 			if (*sbnoa >= args->agbno + gdiff)
- 				goto out_use_good;
- 		} else {
-+			if (*sbnoa < args->min_agbno)
-+				goto out_use_good;
- 			if (*sbnoa <= args->agbno - gdiff)
- 				goto out_use_good;
- 		}
-@@ -879,6 +897,17 @@ xfs_alloc_ag_vextent_near(
- 	dofirst = prandom_u32() & 1;
- #endif
- 
-+	/* handle unitialized agbno range so caller doesn't have to */
-+	if (!args->min_agbno && !args->max_agbno)
-+		args->max_agbno = args->mp->m_sb.sb_agblocks - 1;
-+	ASSERT(args->min_agbno <= args->max_agbno);
-+
-+	/* clamp agbno to the range if it's outside */
-+	if (args->agbno < args->min_agbno)
-+		args->agbno = args->min_agbno;
-+	if (args->agbno > args->max_agbno)
-+		args->agbno = args->max_agbno;
-+
- restart:
- 	bno_cur_lt = NULL;
- 	bno_cur_gt = NULL;
-@@ -971,6 +1000,8 @@ restart:
- 						  &ltbnoa, &ltlena);
- 			if (ltlena < args->minlen)
- 				continue;
-+			if (ltbnoa < args->min_agbno || ltbnoa > args->max_agbno)
-+				continue;
- 			args->len = XFS_EXTLEN_MIN(ltlena, args->maxlen);
- 			xfs_alloc_fix_len(args);
- 			ASSERT(args->len >= args->minlen);
-@@ -1091,11 +1122,11 @@ restart:
- 			XFS_WANT_CORRUPTED_GOTO(i == 1, error0);
- 			xfs_alloc_compute_aligned(args, ltbno, ltlen,
- 						  &ltbnoa, &ltlena);
--			if (ltlena >= args->minlen)
-+			if (ltlena >= args->minlen && ltbnoa >= args->min_agbno)
- 				break;
- 			if ((error = xfs_btree_decrement(bno_cur_lt, 0, &i)))
- 				goto error0;
--			if (!i) {
-+			if (!i || ltbnoa < args->min_agbno) {
- 				xfs_btree_del_cursor(bno_cur_lt,
- 						     XFS_BTREE_NOERROR);
- 				bno_cur_lt = NULL;
-@@ -1107,11 +1138,11 @@ restart:
- 			XFS_WANT_CORRUPTED_GOTO(i == 1, error0);
- 			xfs_alloc_compute_aligned(args, gtbno, gtlen,
- 						  &gtbnoa, &gtlena);
--			if (gtlena >= args->minlen)
-+			if (gtlena >= args->minlen && gtbnoa <= args->max_agbno)
- 				break;
- 			if ((error = xfs_btree_increment(bno_cur_gt, 0, &i)))
- 				goto error0;
--			if (!i) {
-+			if (!i || gtbnoa > args->max_agbno) {
- 				xfs_btree_del_cursor(bno_cur_gt,
- 						     XFS_BTREE_NOERROR);
- 				bno_cur_gt = NULL;
-@@ -1211,6 +1242,7 @@ restart:
- 	ASSERT(ltnew >= ltbno);
- 	ASSERT(ltnew + rlen <= ltbnoa + ltlena);
- 	ASSERT(ltnew + rlen <= be32_to_cpu(XFS_BUF_TO_AGF(args->agbp)->agf_length));
-+	ASSERT(ltnew >= args->min_agbno && ltnew <= args->max_agbno);
- 	args->agbno = ltnew;
- 
- 	if ((error = xfs_alloc_fixup_trees(cnt_cur, bno_cur_lt, ltbno, ltlen,
-diff --git a/fs/xfs/libxfs/xfs_alloc.h b/fs/xfs/libxfs/xfs_alloc.h
-index d1b4b6a..29f27b2 100644
---- a/fs/xfs/libxfs/xfs_alloc.h
-+++ b/fs/xfs/libxfs/xfs_alloc.h
-@@ -112,6 +112,8 @@ typedef struct xfs_alloc_arg {
- 	xfs_extlen_t	total;		/* total blocks needed in xaction */
- 	xfs_extlen_t	alignment;	/* align answer to multiple of this */
- 	xfs_extlen_t	minalignslop;	/* slop for minlen+alignment calcs */
-+	xfs_agblock_t	min_agbno;	/* set an agbno range for NEAR allocs */
-+	xfs_agblock_t	max_agbno;	/* ... */
- 	xfs_extlen_t	len;		/* output: actual size of extent */
- 	xfs_alloctype_t	type;		/* allocation type XFS_ALLOCTYPE_... */
- 	xfs_alloctype_t	otype;		/* original allocation type */
--- 
-1.8.3.1
+Are they really worth the sharing?  If they are worth it we'll
+need somethign that can expect a xfs_sb/xfs_mount to be defined.
 
 _______________________________________________
 xfs mailing list
