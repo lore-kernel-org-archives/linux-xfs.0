@@ -1,27 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id DBB837F86
-	for <xfs@oss.sgi.com>; Wed,  4 Feb 2015 14:54:34 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 71111AC004
-	for <xfs@oss.sgi.com>; Wed,  4 Feb 2015 12:54:34 -0800 (PST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 601077F86
+	for <xfs@oss.sgi.com>; Wed,  4 Feb 2015 14:57:09 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 3D306304053
+	for <xfs@oss.sgi.com>; Wed,  4 Feb 2015 12:57:09 -0800 (PST)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	FRguyEGeA9nmd9Ul for <xfs@oss.sgi.com>;
-	Wed, 04 Feb 2015 12:54:29 -0800 (PST)
+	8lHg2duvnRB4nMLL for <xfs@oss.sgi.com>;
+	Wed, 04 Feb 2015 12:57:03 -0800 (PST)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.80)
-	(envelope-from <dave@fromorbit.com>) id 1YJ6xg-0003D8-74
-	for xfs@oss.sgi.com; Thu, 05 Feb 2015 07:54:12 +1100
+	(envelope-from <dave@fromorbit.com>) id 1YJ70D-0003Dq-7A
+	for xfs@oss.sgi.com; Thu, 05 Feb 2015 07:56:49 +1100
 Received: from dave by disappointment with local (Exim 4.82_1-5b7a7c0-XX)
-	(envelope-from <dave@disappointment.disaster>) id 1YJ6xg-0007EV-6D
-	for xfs@oss.sgi.com; Thu, 05 Feb 2015 07:54:12 +1100
+	(envelope-from <dave@disappointment.disaster>) id 1YJ70D-0007O4-5L
+	for xfs@oss.sgi.com; Thu, 05 Feb 2015 07:56:49 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 6/7] xfs: replace xfs_mod_incore_sb_batched
-Date: Thu,  5 Feb 2015 07:54:08 +1100
-Message-Id: <1423083249-27493-7-git-send-email-david@fromorbit.com>
-In-Reply-To: <1423083249-27493-1-git-send-email-david@fromorbit.com>
-References: <1423083249-27493-1-git-send-email-david@fromorbit.com>
+Subject: [PATCH] xfs: inodes are new until the dentry cache is set up
+Date: Thu,  5 Feb 2015 07:56:49 +1100
+Message-Id: <1423083409-28362-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -39,358 +37,433 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Introduce helper functions for modifying fields in the superblock
-into xfs_trans.c, the only caller of xfs_mod_incore_sb_batch().  We
-can then use these directly in xfs_trans_unreserve_and_mod_sb() and
-so remove another user of the xfs_mode_incore_sb() API without
-losing any functionality or scalability of the transaction commit
-code..
+Al Viro noticed a generic set of issues to do with filehandle lookup
+racing with dentry cache setup. They involve a filehandle lookup
+occurring while an inode is being created and the filehandle lookup
+racing with the dentry creation for the real file. This can lead to
+multiple dentries for the one path being instantiated. There are a
+host of other issues around this same set of paths.
 
-Based on a patch from Christoph Hellwig.
+The underlying cause is that file handle lookup only waits on inode
+cache instantiation rather than full dentry cache instantiation. XFS
+is mostly immune to the problems discovered due to it's own internal
+inode cache, but there are a couple of corner cases where races can
+happen.
+
+We currently clear the XFS_INEW flag when the inode is fully set up
+after insertion into the cache. Newly allocated inodes are inserted
+locked and so aren't usable until the allocation transaction
+commits. This, however, occurs before the dentry and security
+information is fully initialised and hence the inode is unlocked and
+available for lookups to find too early.
+
+To solve the problem, only clear the XFS_INEW flag for newly created
+inodes once the dentry is fully instantiated. This means lookups
+will retry until the XFS_INEW flag is removed from the inode and
+hence avoids the race conditions in questions.
+
+THis also means that xfs_create(), xfs_create_tmpfile() and
+xfs_symlink() need to finish the setup of the inode in their error
+paths if we had allocated the inode but failed later in the creation
+process. xfs_symlink(), in particular, needed a lot of help to make
+it's error handling match that of xfs_create().
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_mount.c |  51 --------------
- fs/xfs/xfs_mount.h |  11 ---
- fs/xfs/xfs_trans.c | 198 ++++++++++++++++++++++++++++++++++-------------------
- 3 files changed, 126 insertions(+), 134 deletions(-)
+ fs/xfs/xfs_icache.c  |  4 ++--
+ fs/xfs/xfs_inode.c   | 22 ++++++++++++--------
+ fs/xfs/xfs_inode.h   | 22 ++++++++++++++++++++
+ fs/xfs/xfs_iops.c    | 24 +++++++++-------------
+ fs/xfs/xfs_iops.h    |  2 --
+ fs/xfs/xfs_qm.c      | 13 ++++++++----
+ fs/xfs/xfs_symlink.c | 58 ++++++++++++++++++++++++++++++----------------------
+ 7 files changed, 90 insertions(+), 55 deletions(-)
 
-diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-index 284f528..9499e88 100644
---- a/fs/xfs/xfs_mount.c
-+++ b/fs/xfs/xfs_mount.c
-@@ -1354,57 +1354,6 @@ xfs_mod_incore_sb(
+diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+index 9771b7e..76a9f27 100644
+--- a/fs/xfs/xfs_icache.c
++++ b/fs/xfs/xfs_icache.c
+@@ -439,11 +439,11 @@ again:
+ 	*ipp = ip;
+ 
+ 	/*
+-	 * If we have a real type for an on-disk inode, we can set ops(&unlock)
++	 * If we have a real type for an on-disk inode, we can setup the inode
+ 	 * now.	 If it's a new inode being created, xfs_ialloc will handle it.
+ 	 */
+ 	if (xfs_iflags_test(ip, XFS_INEW) && ip->i_d.di_mode != 0)
+-		xfs_setup_inode(ip);
++		xfs_setup_existing_inode(ip);
+ 	return 0;
+ 
+ out_error_or_again:
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index daafa1f..d0414f3 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -818,7 +818,7 @@ xfs_ialloc(
+ 	xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL);
+ 	xfs_trans_log_inode(tp, ip, flags);
+ 
+-	/* now that we have an i_mode we can setup inode ops and unlock */
++	/* now that we have an i_mode we can setup the inode structure */
+ 	xfs_setup_inode(ip);
+ 
+ 	*ipp = ip;
+@@ -1235,12 +1235,14 @@ xfs_create(
+ 	xfs_trans_cancel(tp, cancel_flags);
+  out_release_inode:
+ 	/*
+-	 * Wait until after the current transaction is aborted to
+-	 * release the inode.  This prevents recursive transactions
+-	 * and deadlocks from xfs_inactive.
++	 * Wait until after the current transaction is aborted to finish the
++	 * setup of the inode and release the inode.  This prevents recursive
++	 * transactions and deadlocks from xfs_inactive.
+ 	 */
+-	if (ip)
++	if (ip) {
++		xfs_finish_inode_setup(ip);
+ 		IRELE(ip);
++	}
+ 
+ 	xfs_qm_dqrele(udqp);
+ 	xfs_qm_dqrele(gdqp);
+@@ -1345,12 +1347,14 @@ xfs_create_tmpfile(
+ 	xfs_trans_cancel(tp, cancel_flags);
+  out_release_inode:
+ 	/*
+-	 * Wait until after the current transaction is aborted to
+-	 * release the inode.  This prevents recursive transactions
+-	 * and deadlocks from xfs_inactive.
++	 * Wait until after the current transaction is aborted to finish the
++	 * setup of the inode and release the inode.  This prevents recursive
++	 * transactions and deadlocks from xfs_inactive.
+ 	 */
+-	if (ip)
++	if (ip) {
++		xfs_finish_inode_setup(ip);
+ 		IRELE(ip);
++	}
+ 
+ 	xfs_qm_dqrele(udqp);
+ 	xfs_qm_dqrele(gdqp);
+diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
+index 86cd6b3..8e82b41 100644
+--- a/fs/xfs/xfs_inode.h
++++ b/fs/xfs/xfs_inode.h
+@@ -390,6 +390,28 @@ int		xfs_zero_eof(struct xfs_inode *, xfs_off_t, xfs_fsize_t);
+ int		xfs_iozero(struct xfs_inode *, loff_t, size_t);
+ 
+ 
++/* from xfs_iops.c */
++/*
++ * When setting up a newly allocated inode, we need to call
++ * xfs_finish_inode_setup() once the inode is fully instantiated at
++ * the VFS level to prevent the rest of the world seeing the inode
++ * before we've completed instantiation. Otherwise we can do it
++ * the moment the inode lookup is complete.
++ */
++extern void xfs_setup_inode(struct xfs_inode *ip);
++static inline void xfs_finish_inode_setup(struct xfs_inode *ip)
++{
++	xfs_iflags_clear(ip, XFS_INEW);
++	barrier();
++	unlock_new_inode(VFS_I(ip));
++}
++
++static inline void xfs_setup_existing_inode(struct xfs_inode *ip)
++{
++	xfs_setup_inode(ip);
++	xfs_finish_inode_setup(ip);
++}
++
+ #define IHOLD(ip) \
+ do { \
+ 	ASSERT(atomic_read(&VFS_I(ip)->i_count) > 0) ; \
+diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+index ce80eeb..8be5bb5 100644
+--- a/fs/xfs/xfs_iops.c
++++ b/fs/xfs/xfs_iops.c
+@@ -186,6 +186,8 @@ xfs_generic_create(
+ 	else
+ 		d_instantiate(dentry, inode);
+ 
++	xfs_finish_inode_setup(ip);
++
+  out_free_acl:
+ 	if (default_acl)
+ 		posix_acl_release(default_acl);
+@@ -194,6 +196,7 @@ xfs_generic_create(
+ 	return error;
+ 
+  out_cleanup_inode:
++	xfs_finish_inode_setup(ip);
+ 	if (!tmpfile)
+ 		xfs_cleanup_inode(dir, inode, dentry);
+ 	iput(inode);
+@@ -366,9 +369,11 @@ xfs_vn_symlink(
+ 		goto out_cleanup_inode;
+ 
+ 	d_instantiate(dentry, inode);
++	xfs_finish_inode_setup(cip);
+ 	return 0;
+ 
+  out_cleanup_inode:
++	xfs_finish_inode_setup(cip);
+ 	xfs_cleanup_inode(dir, inode, dentry);
+ 	iput(inode);
+  out:
+@@ -1231,16 +1236,12 @@ xfs_diflags_to_iflags(
  }
  
  /*
-- * Change more than one field in the in-core superblock structure at a time.
+- * Initialize the Linux inode, set up the operation vectors and
+- * unlock the inode.
 - *
-- * The fields and changes to those fields are specified in the array of
-- * xfs_mod_sb structures passed in.  Either all of the specified deltas
-- * will be applied or none of them will.  If any modified field dips below 0,
-- * then all modifications will be backed out and EINVAL will be returned.
-- *
-- * Note that this function may not be used for the superblock values that
-- * are tracked with the in-memory per-cpu counters - a direct call to
-- * xfs_mod_incore_sb is required for these.
-- */
--int
--xfs_mod_incore_sb_batch(
--	struct xfs_mount	*mp,
--	xfs_mod_sb_t		*msb,
--	uint			nmsb,
--	int			rsvd)
--{
--	xfs_mod_sb_t		*msbp;
--	int			error = 0;
--
--	/*
--	 * Loop through the array of mod structures and apply each individually.
--	 * If any fail, then back out all those which have already been applied.
--	 * Do all of this within the scope of the m_sb_lock so that all of the
--	 * changes will be atomic.
--	 */
--	spin_lock(&mp->m_sb_lock);
--	for (msbp = msb; msbp < (msb + nmsb); msbp++) {
--		ASSERT(msbp->msb_field < XFS_SBS_ICOUNT ||
--		       msbp->msb_field > XFS_SBS_FDBLOCKS);
--
--		error = xfs_mod_incore_sb_unlocked(mp, msbp->msb_field,
--						   msbp->msb_delta, rsvd);
--		if (error)
--			goto unwind;
--	}
--	spin_unlock(&mp->m_sb_lock);
--	return 0;
--
--unwind:
--	while (--msbp >= msb) {
--		error = xfs_mod_incore_sb_unlocked(mp, msbp->msb_field,
--						   -msbp->msb_delta, rsvd);
--		ASSERT(error == 0);
--	}
--	spin_unlock(&mp->m_sb_lock);
--	return error;
--}
--
--/*
-  * xfs_getsb() is called to obtain the buffer for the superblock.
-  * The buffer is returned locked and read in from disk.
-  * The buffer should be released with a call to xfs_brelse().
-diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-index 8970489..66f28c1 100644
---- a/fs/xfs/xfs_mount.h
-+++ b/fs/xfs/xfs_mount.h
-@@ -249,15 +249,6 @@ xfs_daddr_to_agbno(struct xfs_mount *mp, xfs_daddr_t d)
- }
- 
- /*
-- * This structure is for use by the xfs_mod_incore_sb_batch() routine.
-- * xfs_growfs can specify a few fields which are more than int limit
-- */
--typedef struct xfs_mod_sb {
--	xfs_sb_field_t	msb_field;	/* Field to modify, see below */
--	int64_t		msb_delta;	/* Change to make to specified field */
--} xfs_mod_sb_t;
--
--/*
-  * Per-ag incore structure, copies of information in agf and agi, to improve the
-  * performance of allocation group selection.
-  */
-@@ -314,8 +305,6 @@ extern int	xfs_initialize_perag(xfs_mount_t *mp, xfs_agnumber_t agcount,
- 
- extern void	xfs_unmountfs(xfs_mount_t *);
- extern int	xfs_mod_incore_sb(xfs_mount_t *, xfs_sb_field_t, int64_t, int);
--extern int	xfs_mod_incore_sb_batch(xfs_mount_t *, xfs_mod_sb_t *,
--			uint, int);
- extern int	xfs_mod_icount(struct xfs_mount *mp, int64_t delta);
- extern int	xfs_mod_ifree(struct xfs_mount *mp, int64_t delta);
- extern int	xfs_mod_fdblocks(struct xfs_mount *mp, int64_t delta,
-diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
-index 4e4bc5a..220ef2c 100644
---- a/fs/xfs/xfs_trans.c
-+++ b/fs/xfs/xfs_trans.c
-@@ -485,6 +485,54 @@ xfs_trans_apply_sb_deltas(
- 				  sizeof(sbp->sb_frextents) - 1);
- }
- 
-+STATIC int
-+xfs_sb_mod8(
-+	uint8_t			*field,
-+	int8_t			delta)
-+{
-+	int8_t			counter = *field;
-+
-+	counter += delta;
-+	if (counter < 0) {
-+		ASSERT(0);
-+		return -EINVAL;
-+	}
-+	*field = counter;
-+	return 0;
-+}
-+
-+STATIC int
-+xfs_sb_mod32(
-+	uint32_t		*field,
-+	int32_t			delta)
-+{
-+	int32_t			counter = *field;
-+
-+	counter += delta;
-+	if (counter < 0) {
-+		ASSERT(0);
-+		return -EINVAL;
-+	}
-+	*field = counter;
-+	return 0;
-+}
-+
-+STATIC int
-+xfs_sb_mod64(
-+	uint64_t		*field,
-+	int64_t			delta)
-+{
-+	int64_t			counter = *field;
-+
-+	counter += delta;
-+	if (counter < 0) {
-+		ASSERT(0);
-+		return -EINVAL;
-+	}
-+	*field = counter;
-+	return 0;
-+}
-+
- /*
-  * xfs_trans_unreserve_and_mod_sb() is called to release unused reservations
-  * and apply superblock counter changes to the in-core superblock.  The
-@@ -492,13 +540,6 @@ xfs_trans_apply_sb_deltas(
-  * applied to the in-core superblock.  The idea is that that has already been
-  * done.
+- * When reading existing inodes from disk this is called directly
+- * from xfs_iget, when creating a new inode it is called from
+- * xfs_ialloc after setting up the inode.
++ * Initialize the Linux inode and set up the operation vectors.
   *
-- * This is done efficiently with a single call to xfs_mod_incore_sb_batch().
-- * However, we have to ensure that we only modify each superblock field only
-- * once because the application of the delta values may not be atomic. That can
-- * lead to ENOSPC races occurring if we have two separate modifcations of the
-- * free space counter to put back the entire reservation and then take away
-- * what we used.
-- *
-  * If we are not logging superblock counters, then the inode allocated/free and
-  * used block counts are not updated in the on disk superblock. In this case,
-  * XFS_TRANS_SB_DIRTY will not be set when the transaction is updated but we
-@@ -506,20 +547,15 @@ xfs_trans_apply_sb_deltas(
+- * We are always called with an uninitialised linux inode here.
+- * We need to initialise the necessary fields and take a reference
+- * on it.
++ * When reading existing inodes from disk this is called directly from xfs_iget,
++ * when creating a new inode it is called from xfs_ialloc after setting up the
++ * inode. These callers have different criteria for clearing XFS_INEW, so leave
++ * it up to the caller to deal with unlocking the inode appropriately.
   */
  void
- xfs_trans_unreserve_and_mod_sb(
--	xfs_trans_t	*tp)
-+	struct xfs_trans	*tp)
- {
--	xfs_mod_sb_t	msb[9];	/* If you add cases, add entries */
--	xfs_mod_sb_t	*msbp;
--	xfs_mount_t	*mp = tp->t_mountp;
--	/* REFERENCED */
--	int		error;
--	bool		rsvd = (tp->t_flags & XFS_TRANS_RESERVE) != 0;
--	int64_t		blkdelta = 0;
--	int64_t		rtxdelta = 0;
--	int64_t		idelta = 0;
--	int64_t		ifreedelta = 0;
+ xfs_setup_inode(
+@@ -1327,9 +1328,4 @@ xfs_setup_inode(
+ 		inode_has_no_xattr(inode);
+ 		cache_no_acl(inode);
+ 	}
 -
--	msbp = msb;
-+	struct xfs_mount	*mp = tp->t_mountp;
-+	bool			rsvd = (tp->t_flags & XFS_TRANS_RESERVE) != 0;
-+	int64_t			blkdelta = 0;
-+	int64_t			rtxdelta = 0;
-+	int64_t			idelta = 0;
-+	int64_t			ifreedelta = 0;
-+	int			error;
+-	xfs_iflags_clear(ip, XFS_INEW);
+-	barrier();
+-
+-	unlock_new_inode(inode);
+ }
+diff --git a/fs/xfs/xfs_iops.h b/fs/xfs/xfs_iops.h
+index 1c34e43..d4bcc29 100644
+--- a/fs/xfs/xfs_iops.h
++++ b/fs/xfs/xfs_iops.h
+@@ -25,8 +25,6 @@ extern const struct file_operations xfs_dir_file_operations;
  
- 	/* calculate deltas */
- 	if (tp->t_blk_res > 0)
-@@ -560,72 +596,90 @@ xfs_trans_unreserve_and_mod_sb(
- 			goto out_undo_icount;
+ extern ssize_t xfs_vn_listxattr(struct dentry *, char *data, size_t size);
+ 
+-extern void xfs_setup_inode(struct xfs_inode *);
+-
+ /*
+  * Internal setattr interfaces.
+  */
+diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
+index 3e81862..1f9e23c 100644
+--- a/fs/xfs/xfs_qm.c
++++ b/fs/xfs/xfs_qm.c
+@@ -719,6 +719,7 @@ xfs_qm_qino_alloc(
+ 	xfs_trans_t	*tp;
+ 	int		error;
+ 	int		committed;
++	bool		need_alloc = true;
+ 
+ 	*ip = NULL;
+ 	/*
+@@ -747,6 +748,7 @@ xfs_qm_qino_alloc(
+ 				return error;
+ 			mp->m_sb.sb_gquotino = NULLFSINO;
+ 			mp->m_sb.sb_pquotino = NULLFSINO;
++			need_alloc = false;
+ 		}
  	}
  
-+	if (rtxdelta == 0 && !(tp->t_flags & XFS_TRANS_SB_DIRTY))
-+		return;
-+
- 	/* apply remaining deltas */
-+	spin_lock(&mp->m_sb_lock);
- 	if (rtxdelta) {
--		error = xfs_mod_frextents(mp, rtxdelta);
-+		error = xfs_sb_mod64(&mp->m_sb.sb_frextents, rtxdelta);
+@@ -758,7 +760,7 @@ xfs_qm_qino_alloc(
+ 		return error;
+ 	}
+ 
+-	if (!*ip) {
++	if (need_alloc) {
+ 		error = xfs_dir_ialloc(&tp, NULL, S_IFREG, 1, 0, 0, 1, ip,
+ 								&committed);
+ 		if (error) {
+@@ -794,11 +796,14 @@ xfs_qm_qino_alloc(
+ 	spin_unlock(&mp->m_sb_lock);
+ 	xfs_log_sb(tp);
+ 
+-	if ((error = xfs_trans_commit(tp, XFS_TRANS_RELEASE_LOG_RES))) {
++	error = xfs_trans_commit(tp, XFS_TRANS_RELEASE_LOG_RES);
++	if (error) {
++		ASSERT(XFS_FORCED_SHUTDOWN(mp));
+ 		xfs_alert(mp, "%s failed (error %d)!", __func__, error);
+-		return error;
+ 	}
+-	return 0;
++	if (need_alloc)
++		xfs_finish_inode_setup(*ip);
++	return error;
+ }
+ 
+ 
+diff --git a/fs/xfs/xfs_symlink.c b/fs/xfs/xfs_symlink.c
+index 25791df..3df411e 100644
+--- a/fs/xfs/xfs_symlink.c
++++ b/fs/xfs/xfs_symlink.c
+@@ -177,7 +177,7 @@ xfs_symlink(
+ 	int			pathlen;
+ 	struct xfs_bmap_free	free_list;
+ 	xfs_fsblock_t		first_block;
+-	bool			unlock_dp_on_error = false;
++	bool                    unlock_dp_on_error = false;
+ 	uint			cancel_flags;
+ 	int			committed;
+ 	xfs_fileoff_t		first_fsb;
+@@ -221,7 +221,7 @@ xfs_symlink(
+ 			XFS_QMOPT_QUOTALL | XFS_QMOPT_INHERIT,
+ 			&udqp, &gdqp, &pdqp);
+ 	if (error)
+-		goto std_return;
++		return error;
+ 
+ 	tp = xfs_trans_alloc(mp, XFS_TRANS_SYMLINK);
+ 	cancel_flags = XFS_TRANS_RELEASE_LOG_RES;
+@@ -241,7 +241,7 @@ xfs_symlink(
+ 	}
+ 	if (error) {
+ 		cancel_flags = 0;
+-		goto error_return;
++		goto out_trans_cancel;
+ 	}
+ 
+ 	xfs_ilock(dp, XFS_ILOCK_EXCL | XFS_ILOCK_PARENT);
+@@ -252,7 +252,7 @@ xfs_symlink(
+ 	 */
+ 	if (dp->i_d.di_flags & XFS_DIFLAG_NOSYMLINKS) {
+ 		error = -EPERM;
+-		goto error_return;
++		goto out_trans_cancel;
+ 	}
+ 
+ 	/*
+@@ -261,7 +261,7 @@ xfs_symlink(
+ 	error = xfs_trans_reserve_quota(tp, mp, udqp, gdqp,
+ 						pdqp, resblks, 1, 0);
+ 	if (error)
+-		goto error_return;
++		goto out_trans_cancel;
+ 
+ 	/*
+ 	 * Check for ability to enter directory entry, if no space reserved.
+@@ -269,7 +269,7 @@ xfs_symlink(
+ 	if (!resblks) {
+ 		error = xfs_dir_canenter(tp, dp, link_name);
  		if (error)
- 			goto out_undo_ifree;
+-			goto error_return;
++			goto out_trans_cancel;
  	}
- 
--	if (tp->t_flags & XFS_TRANS_SB_DIRTY) {
--		if (tp->t_dblocks_delta != 0) {
--			msbp->msb_field = XFS_SBS_DBLOCKS;
--			msbp->msb_delta = tp->t_dblocks_delta;
--			msbp++;
--		}
--		if (tp->t_agcount_delta != 0) {
--			msbp->msb_field = XFS_SBS_AGCOUNT;
--			msbp->msb_delta = tp->t_agcount_delta;
--			msbp++;
--		}
--		if (tp->t_imaxpct_delta != 0) {
--			msbp->msb_field = XFS_SBS_IMAX_PCT;
--			msbp->msb_delta = tp->t_imaxpct_delta;
--			msbp++;
--		}
--		if (tp->t_rextsize_delta != 0) {
--			msbp->msb_field = XFS_SBS_REXTSIZE;
--			msbp->msb_delta = tp->t_rextsize_delta;
--			msbp++;
--		}
--		if (tp->t_rbmblocks_delta != 0) {
--			msbp->msb_field = XFS_SBS_RBMBLOCKS;
--			msbp->msb_delta = tp->t_rbmblocks_delta;
--			msbp++;
--		}
--		if (tp->t_rblocks_delta != 0) {
--			msbp->msb_field = XFS_SBS_RBLOCKS;
--			msbp->msb_delta = tp->t_rblocks_delta;
--			msbp++;
--		}
--		if (tp->t_rextents_delta != 0) {
--			msbp->msb_field = XFS_SBS_REXTENTS;
--			msbp->msb_delta = tp->t_rextents_delta;
--			msbp++;
--		}
--		if (tp->t_rextslog_delta != 0) {
--			msbp->msb_field = XFS_SBS_REXTSLOG;
--			msbp->msb_delta = tp->t_rextslog_delta;
--			msbp++;
--		}
+ 	/*
+ 	 * Initialize the bmap freelist prior to calling either
+@@ -282,15 +282,14 @@ xfs_symlink(
+ 	 */
+ 	error = xfs_dir_ialloc(&tp, dp, S_IFLNK | (mode & ~S_IFMT), 1, 0,
+ 			       prid, resblks > 0, &ip, NULL);
+-	if (error) {
+-		if (error == -ENOSPC)
+-			goto error_return;
+-		goto error1;
 -	}
--
--	/*
--	 * If we need to change anything, do it.
--	 */
--	if (msbp > msb) {
--		error = xfs_mod_incore_sb_batch(tp->t_mountp, msb,
--			(uint)(msbp - msb), rsvd);
-+	if (tp->t_dblocks_delta != 0) {
-+		error = xfs_sb_mod64(&mp->m_sb.sb_dblocks, tp->t_dblocks_delta);
- 		if (error)
- 			goto out_undo_frextents;
- 	}
--
-+	if (tp->t_agcount_delta != 0) {
-+		error = xfs_sb_mod32(&mp->m_sb.sb_agcount, tp->t_agcount_delta);
-+		if (error)
-+			goto out_undo_dblocks;
-+	}
-+	if (tp->t_imaxpct_delta != 0) {
-+		error = xfs_sb_mod8(&mp->m_sb.sb_imax_pct, tp->t_imaxpct_delta);
-+		if (error)
-+			goto out_undo_agcount;
-+	}
-+	if (tp->t_rextsize_delta != 0) {
-+		error = xfs_sb_mod32(&mp->m_sb.sb_rextsize,
-+				     tp->t_rextsize_delta);
-+		if (error)
-+			goto out_undo_imaxpct;
-+	}
-+	if (tp->t_rbmblocks_delta != 0) {
-+		error = xfs_sb_mod32(&mp->m_sb.sb_rbmblocks,
-+				     tp->t_rbmblocks_delta);
-+		if (error)
-+			goto out_undo_rextsize;
-+	}
-+	if (tp->t_rblocks_delta != 0) {
-+		error = xfs_sb_mod64(&mp->m_sb.sb_rblocks, tp->t_rblocks_delta);
-+		if (error)
-+			goto out_undo_rbmblocks;
-+	}
-+	if (tp->t_rextents_delta != 0) {
-+		error = xfs_sb_mod64(&mp->m_sb.sb_rextents,
-+				     tp->t_rextents_delta);
-+		if (error)
-+			goto out_undo_rblocks;
-+	}
-+	if (tp->t_rextslog_delta != 0) {
-+		error = xfs_sb_mod8(&mp->m_sb.sb_rextslog,
-+				     tp->t_rextslog_delta);
-+		if (error)
-+			goto out_undo_rextents;
-+	}
-+	spin_unlock(&mp->m_sb_lock);
- 	return;
++	if (error)
++		goto out_trans_cancel;
  
-+out_undo_rextents:
-+	if (tp->t_rextents_delta)
-+		xfs_sb_mod64(&mp->m_sb.sb_rextents, -tp->t_rextents_delta);
-+out_undo_rblocks:
-+	if (tp->t_rblocks_delta)
-+		xfs_sb_mod64(&mp->m_sb.sb_rblocks, -tp->t_rblocks_delta);
-+out_undo_rbmblocks:
-+	if (tp->t_rbmblocks_delta)
-+		xfs_sb_mod32(&mp->m_sb.sb_rbmblocks, -tp->t_rbmblocks_delta);
-+out_undo_rextsize:
-+	if (tp->t_rextsize_delta)
-+		xfs_sb_mod32(&mp->m_sb.sb_rextsize, -tp->t_rextsize_delta);
-+out_undo_imaxpct:
-+	if (tp->t_rextsize_delta)
-+		xfs_sb_mod8(&mp->m_sb.sb_imax_pct, -tp->t_imaxpct_delta);
-+out_undo_agcount:
-+	if (tp->t_agcount_delta)
-+		xfs_sb_mod32(&mp->m_sb.sb_agcount, -tp->t_agcount_delta);
-+out_undo_dblocks:
-+	if (tp->t_dblocks_delta)
-+		xfs_sb_mod64(&mp->m_sb.sb_dblocks, -tp->t_dblocks_delta);
- out_undo_frextents:
- 	if (rtxdelta)
--		xfs_mod_frextents(mp, -rtxdelta);
-+		xfs_sb_mod64(&mp->m_sb.sb_frextents, -rtxdelta);
- out_undo_ifree:
-+	spin_unlock(&mp->m_sb_lock);
- 	if (ifreedelta)
- 		xfs_mod_ifree(mp, -ifreedelta);
- out_undo_icount:
+ 	/*
+-	 * An error after we've joined dp to the transaction will result in the
+-	 * transaction cancel unlocking dp so don't do it explicitly in the
++	 * Now we join the directory inode to the transaction.  We do not do it
++	 * earlier because xfs_dir_ialloc might commit the previous transaction
++	 * (and release all the locks).  An error from here on will result in
++	 * the transaction cancel unlocking dp so don't do it explicitly in the
+ 	 * error path.
+ 	 */
+ 	xfs_trans_ijoin(tp, dp, XFS_ILOCK_EXCL);
+@@ -330,7 +329,7 @@ xfs_symlink(
+ 				  XFS_BMAPI_METADATA, &first_block, resblks,
+ 				  mval, &nmaps, &free_list);
+ 		if (error)
+-			goto error2;
++			goto out_bmap_cancel;
+ 
+ 		if (resblks)
+ 			resblks -= fs_blocks;
+@@ -348,7 +347,7 @@ xfs_symlink(
+ 					       BTOBB(byte_cnt), 0);
+ 			if (!bp) {
+ 				error = -ENOMEM;
+-				goto error2;
++				goto out_bmap_cancel;
+ 			}
+ 			bp->b_ops = &xfs_symlink_buf_ops;
+ 
+@@ -378,7 +377,7 @@ xfs_symlink(
+ 	error = xfs_dir_createname(tp, dp, link_name, ip->i_ino,
+ 					&first_block, &free_list, resblks);
+ 	if (error)
+-		goto error2;
++		goto out_bmap_cancel;
+ 	xfs_trans_ichgtime(tp, dp, XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
+ 	xfs_trans_log_inode(tp, dp, XFS_ILOG_CORE);
+ 
+@@ -392,10 +391,13 @@ xfs_symlink(
+ 	}
+ 
+ 	error = xfs_bmap_finish(&tp, &free_list, &committed);
+-	if (error) {
+-		goto error2;
+-	}
++	if (error)
++		goto out_bmap_cancel;
++
+ 	error = xfs_trans_commit(tp, XFS_TRANS_RELEASE_LOG_RES);
++	if (error)
++		goto out_release_inode;
++
+ 	xfs_qm_dqrele(udqp);
+ 	xfs_qm_dqrele(gdqp);
+ 	xfs_qm_dqrele(pdqp);
+@@ -403,20 +405,28 @@ xfs_symlink(
+ 	*ipp = ip;
+ 	return 0;
+ 
+- error2:
+-	IRELE(ip);
+- error1:
++out_bmap_cancel:
+ 	xfs_bmap_cancel(&free_list);
+ 	cancel_flags |= XFS_TRANS_ABORT;
+- error_return:
++out_trans_cancel:
+ 	xfs_trans_cancel(tp, cancel_flags);
++out_release_inode:
++	/*
++	 * Wait until after the current transaction is aborted to finish the
++	 * setup of the inode and release the inode.  This prevents recursive
++	 * transactions and deadlocks from xfs_inactive.
++	 */
++	if (ip) {
++		xfs_finish_inode_setup(ip);
++		IRELE(ip);
++	}
++
+ 	xfs_qm_dqrele(udqp);
+ 	xfs_qm_dqrele(gdqp);
+ 	xfs_qm_dqrele(pdqp);
+ 
+ 	if (unlock_dp_on_error)
+ 		xfs_iunlock(dp, XFS_ILOCK_EXCL);
+- std_return:
+ 	return error;
+ }
+ 
 -- 
 2.0.0
 
