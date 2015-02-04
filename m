@@ -1,27 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 349E97F83
-	for <xfs@oss.sgi.com>; Wed,  4 Feb 2015 14:54:30 -0600 (CST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 1E1997F84
+	for <xfs@oss.sgi.com>; Wed,  4 Feb 2015 14:54:31 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id B359FAC004
-	for <xfs@oss.sgi.com>; Wed,  4 Feb 2015 12:54:29 -0800 (PST)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 0D4D48F8066
+	for <xfs@oss.sgi.com>; Wed,  4 Feb 2015 12:54:27 -0800 (PST)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	kKKXAXHWmK8boXMb for <xfs@oss.sgi.com>;
-	Wed, 04 Feb 2015 12:54:27 -0800 (PST)
+	z3V0Qhzp8JybA8uE for <xfs@oss.sgi.com>;
+	Wed, 04 Feb 2015 12:54:26 -0800 (PST)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.80)
-	(envelope-from <dave@fromorbit.com>) id 1YJ6xg-0003D9-7X
+	(envelope-from <dave@fromorbit.com>) id 1YJ6xg-0003D2-4n
 	for xfs@oss.sgi.com; Thu, 05 Feb 2015 07:54:12 +1100
 Received: from dave by disappointment with local (Exim 4.82_1-5b7a7c0-XX)
-	(envelope-from <dave@disappointment.disaster>) id 1YJ6xg-0007Ea-6e
+	(envelope-from <dave@disappointment.disaster>) id 1YJ6xg-0007E3-3j
 	for xfs@oss.sgi.com; Thu, 05 Feb 2015 07:54:12 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 7/7] xfs: remove xfs_mod_incore_sb API
-Date: Thu,  5 Feb 2015 07:54:09 +1100
-Message-Id: <1423083249-27493-8-git-send-email-david@fromorbit.com>
-In-Reply-To: <1423083249-27493-1-git-send-email-david@fromorbit.com>
-References: <1423083249-27493-1-git-send-email-david@fromorbit.com>
+Subject: [PATCH 0/7 V2] xfs: use generic percpu counters for icsb
+Date: Thu,  5 Feb 2015 07:54:02 +1100
+Message-Id: <1423083249-27493-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -37,277 +35,58 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-From: Dave Chinner <dchinner@redhat.com>
+Hi folks,
 
-Now that there are no users of the bitfield based incore superblock
-modification API, just remove the whole damn lot of it, including
-all the bitfield definitions. This finally removes a lot of cruft
-that has been around for a long time.
+This is the second version of the generic per-cpu counter rework
+patch series. The first version can be found here:
 
-Credit goes to Christoph Hellwig for providing a great patch
-connecting all the dots to enale us to do this. This patch is
-derived from that work.
+http://oss.sgi.com/archives/xfs/2015-02/msg00000.html
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- fs/xfs/libxfs/xfs_format.h |  62 ---------------------
- fs/xfs/xfs_fsops.c         |   4 --
- fs/xfs/xfs_mount.c         | 136 ---------------------------------------------
- fs/xfs/xfs_mount.h         |   3 +-
- 4 files changed, 1 insertion(+), 204 deletions(-)
+New in V2:
 
-diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
-index 8eb7189..4daaa66 100644
---- a/fs/xfs/libxfs/xfs_format.h
-+++ b/fs/xfs/libxfs/xfs_format.h
-@@ -264,68 +264,6 @@ typedef struct xfs_dsb {
- 	/* must be padded to 64 bit alignment */
- } xfs_dsb_t;
- 
--/*
-- * Sequence number values for the fields.
-- */
--typedef enum {
--	XFS_SBS_MAGICNUM, XFS_SBS_BLOCKSIZE, XFS_SBS_DBLOCKS, XFS_SBS_RBLOCKS,
--	XFS_SBS_REXTENTS, XFS_SBS_UUID, XFS_SBS_LOGSTART, XFS_SBS_ROOTINO,
--	XFS_SBS_RBMINO, XFS_SBS_RSUMINO, XFS_SBS_REXTSIZE, XFS_SBS_AGBLOCKS,
--	XFS_SBS_AGCOUNT, XFS_SBS_RBMBLOCKS, XFS_SBS_LOGBLOCKS,
--	XFS_SBS_VERSIONNUM, XFS_SBS_SECTSIZE, XFS_SBS_INODESIZE,
--	XFS_SBS_INOPBLOCK, XFS_SBS_FNAME, XFS_SBS_BLOCKLOG,
--	XFS_SBS_SECTLOG, XFS_SBS_INODELOG, XFS_SBS_INOPBLOG, XFS_SBS_AGBLKLOG,
--	XFS_SBS_REXTSLOG, XFS_SBS_INPROGRESS, XFS_SBS_IMAX_PCT, XFS_SBS_ICOUNT,
--	XFS_SBS_IFREE, XFS_SBS_FDBLOCKS, XFS_SBS_FREXTENTS, XFS_SBS_UQUOTINO,
--	XFS_SBS_GQUOTINO, XFS_SBS_QFLAGS, XFS_SBS_FLAGS, XFS_SBS_SHARED_VN,
--	XFS_SBS_INOALIGNMT, XFS_SBS_UNIT, XFS_SBS_WIDTH, XFS_SBS_DIRBLKLOG,
--	XFS_SBS_LOGSECTLOG, XFS_SBS_LOGSECTSIZE, XFS_SBS_LOGSUNIT,
--	XFS_SBS_FEATURES2, XFS_SBS_BAD_FEATURES2, XFS_SBS_FEATURES_COMPAT,
--	XFS_SBS_FEATURES_RO_COMPAT, XFS_SBS_FEATURES_INCOMPAT,
--	XFS_SBS_FEATURES_LOG_INCOMPAT, XFS_SBS_CRC, XFS_SBS_PAD,
--	XFS_SBS_PQUOTINO, XFS_SBS_LSN,
--	XFS_SBS_FIELDCOUNT
--} xfs_sb_field_t;
--
--/*
-- * Mask values, defined based on the xfs_sb_field_t values.
-- * Only define the ones we're using.
-- */
--#define	XFS_SB_MVAL(x)		(1LL << XFS_SBS_ ## x)
--#define	XFS_SB_UUID		XFS_SB_MVAL(UUID)
--#define	XFS_SB_FNAME		XFS_SB_MVAL(FNAME)
--#define	XFS_SB_ROOTINO		XFS_SB_MVAL(ROOTINO)
--#define	XFS_SB_RBMINO		XFS_SB_MVAL(RBMINO)
--#define	XFS_SB_RSUMINO		XFS_SB_MVAL(RSUMINO)
--#define	XFS_SB_VERSIONNUM	XFS_SB_MVAL(VERSIONNUM)
--#define XFS_SB_UQUOTINO		XFS_SB_MVAL(UQUOTINO)
--#define XFS_SB_GQUOTINO		XFS_SB_MVAL(GQUOTINO)
--#define XFS_SB_QFLAGS		XFS_SB_MVAL(QFLAGS)
--#define XFS_SB_SHARED_VN	XFS_SB_MVAL(SHARED_VN)
--#define XFS_SB_UNIT		XFS_SB_MVAL(UNIT)
--#define XFS_SB_WIDTH		XFS_SB_MVAL(WIDTH)
--#define XFS_SB_ICOUNT		XFS_SB_MVAL(ICOUNT)
--#define XFS_SB_IFREE		XFS_SB_MVAL(IFREE)
--#define XFS_SB_FDBLOCKS		XFS_SB_MVAL(FDBLOCKS)
--#define XFS_SB_FEATURES2	(XFS_SB_MVAL(FEATURES2) | \
--				 XFS_SB_MVAL(BAD_FEATURES2))
--#define XFS_SB_FEATURES_COMPAT	XFS_SB_MVAL(FEATURES_COMPAT)
--#define XFS_SB_FEATURES_RO_COMPAT XFS_SB_MVAL(FEATURES_RO_COMPAT)
--#define XFS_SB_FEATURES_INCOMPAT XFS_SB_MVAL(FEATURES_INCOMPAT)
--#define XFS_SB_FEATURES_LOG_INCOMPAT XFS_SB_MVAL(FEATURES_LOG_INCOMPAT)
--#define XFS_SB_CRC		XFS_SB_MVAL(CRC)
--#define XFS_SB_PQUOTINO		XFS_SB_MVAL(PQUOTINO)
--#define	XFS_SB_NUM_BITS		((int)XFS_SBS_FIELDCOUNT)
--#define	XFS_SB_ALL_BITS		((1LL << XFS_SB_NUM_BITS) - 1)
--#define	XFS_SB_MOD_BITS		\
--	(XFS_SB_UUID | XFS_SB_ROOTINO | XFS_SB_RBMINO | XFS_SB_RSUMINO | \
--	 XFS_SB_VERSIONNUM | XFS_SB_UQUOTINO | XFS_SB_GQUOTINO | \
--	 XFS_SB_QFLAGS | XFS_SB_SHARED_VN | XFS_SB_UNIT | XFS_SB_WIDTH | \
--	 XFS_SB_ICOUNT | XFS_SB_IFREE | XFS_SB_FDBLOCKS | XFS_SB_FEATURES2 | \
--	 XFS_SB_FEATURES_COMPAT | XFS_SB_FEATURES_RO_COMPAT | \
--	 XFS_SB_FEATURES_INCOMPAT | XFS_SB_FEATURES_LOG_INCOMPAT | \
--	 XFS_SB_PQUOTINO)
--
- 
- /*
-  * Misc. Flags - warning - these will be cleared by xfs_repair unless
-diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
-index a45c82b4..6c248bf 100644
---- a/fs/xfs/xfs_fsops.c
-+++ b/fs/xfs/xfs_fsops.c
-@@ -686,10 +686,6 @@ xfs_reserve_blocks(
- 	 * what to do. This means that the amount of free space can
- 	 * change while we do this, so we need to retry if we end up
- 	 * trying to reserve more space than is available.
--	 *
--	 * We also use the xfs_mod_incore_sb() interface so that we
--	 * don't have to care about whether per cpu counter are
--	 * enabled, disabled or even compiled in....
- 	 */
- retry:
- 	spin_lock(&mp->m_sb_lock);
-diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-index 9499e88..6e6bc40 100644
---- a/fs/xfs/xfs_mount.c
-+++ b/fs/xfs/xfs_mount.c
-@@ -1218,142 +1218,6 @@ xfs_mod_frextents(
- }
- 
- /*
-- * xfs_mod_incore_sb_unlocked() is a utility routine commonly used to apply
-- * a delta to a specified field in the in-core superblock.  Simply
-- * switch on the field indicated and apply the delta to that field.
-- * Fields are not allowed to dip below zero, so if the delta would
-- * do this do not apply it and return EINVAL.
-- *
-- * The m_sb_lock must be held when this routine is called.
-- */
--STATIC int
--xfs_mod_incore_sb_unlocked(
--	xfs_mount_t	*mp,
--	xfs_sb_field_t	field,
--	int64_t		delta,
--	int		rsvd)
--{
--	int		scounter;	/* short counter for 32 bit fields */
--	long long	lcounter;	/* long counter for 64 bit fields */
--
--	/*
--	 * With the in-core superblock spin lock held, switch
--	 * on the indicated field.  Apply the delta to the
--	 * proper field.  If the fields value would dip below
--	 * 0, then do not apply the delta and return EINVAL.
--	 */
--	switch (field) {
--	case XFS_SBS_ICOUNT:
--	case XFS_SBS_IFREE:
--	case XFS_SBS_FDBLOCKS:
--	case XFS_SBS_FREXTENTS:
--		ASSERT(0);
--		return -EINVAL;
--	case XFS_SBS_DBLOCKS:
--		lcounter = (long long)mp->m_sb.sb_dblocks;
--		lcounter += delta;
--		if (lcounter < 0) {
--			ASSERT(0);
--			return -EINVAL;
--		}
--		mp->m_sb.sb_dblocks = lcounter;
--		return 0;
--	case XFS_SBS_AGCOUNT:
--		scounter = mp->m_sb.sb_agcount;
--		scounter += delta;
--		if (scounter < 0) {
--			ASSERT(0);
--			return -EINVAL;
--		}
--		mp->m_sb.sb_agcount = scounter;
--		return 0;
--	case XFS_SBS_IMAX_PCT:
--		scounter = mp->m_sb.sb_imax_pct;
--		scounter += delta;
--		if (scounter < 0) {
--			ASSERT(0);
--			return -EINVAL;
--		}
--		mp->m_sb.sb_imax_pct = scounter;
--		return 0;
--	case XFS_SBS_REXTSIZE:
--		scounter = mp->m_sb.sb_rextsize;
--		scounter += delta;
--		if (scounter < 0) {
--			ASSERT(0);
--			return -EINVAL;
--		}
--		mp->m_sb.sb_rextsize = scounter;
--		return 0;
--	case XFS_SBS_RBMBLOCKS:
--		scounter = mp->m_sb.sb_rbmblocks;
--		scounter += delta;
--		if (scounter < 0) {
--			ASSERT(0);
--			return -EINVAL;
--		}
--		mp->m_sb.sb_rbmblocks = scounter;
--		return 0;
--	case XFS_SBS_RBLOCKS:
--		lcounter = (long long)mp->m_sb.sb_rblocks;
--		lcounter += delta;
--		if (lcounter < 0) {
--			ASSERT(0);
--			return -EINVAL;
--		}
--		mp->m_sb.sb_rblocks = lcounter;
--		return 0;
--	case XFS_SBS_REXTENTS:
--		lcounter = (long long)mp->m_sb.sb_rextents;
--		lcounter += delta;
--		if (lcounter < 0) {
--			ASSERT(0);
--			return -EINVAL;
--		}
--		mp->m_sb.sb_rextents = lcounter;
--		return 0;
--	case XFS_SBS_REXTSLOG:
--		scounter = mp->m_sb.sb_rextslog;
--		scounter += delta;
--		if (scounter < 0) {
--			ASSERT(0);
--			return -EINVAL;
--		}
--		mp->m_sb.sb_rextslog = scounter;
--		return 0;
--	default:
--		ASSERT(0);
--		return -EINVAL;
--	}
--}
--
--/*
-- * xfs_mod_incore_sb() is used to change a field in the in-core
-- * superblock structure by the specified delta.  This modification
-- * is protected by the m_sb_lock.  Just use the xfs_mod_incore_sb_unlocked()
-- * routine to do the work.
-- */
--int
--xfs_mod_incore_sb(
--	struct xfs_mount	*mp,
--	xfs_sb_field_t		field,
--	int64_t			delta,
--	int			rsvd)
--{
--	int			status;
--
--#ifdef HAVE_PERCPU_SB
--	ASSERT(field < XFS_SBS_IFREE || field > XFS_SBS_FDBLOCKS);
--#endif
--
--	spin_lock(&mp->m_sb_lock);
--	status = xfs_mod_incore_sb_unlocked(mp, field, delta, rsvd);
--	spin_unlock(&mp->m_sb_lock);
--
--	return status;
--}
--
--/*
-  * xfs_getsb() is called to obtain the buffer for the superblock.
-  * The buffer is returned locked and read in from disk.
-  * The buffer should be released with a call to xfs_brelse().
-diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-index 66f28c1..616e1ba 100644
---- a/fs/xfs/xfs_mount.h
-+++ b/fs/xfs/xfs_mount.h
-@@ -302,9 +302,8 @@ extern __uint64_t xfs_default_resblks(xfs_mount_t *mp);
- extern int	xfs_mountfs(xfs_mount_t *mp);
- extern int	xfs_initialize_perag(xfs_mount_t *mp, xfs_agnumber_t agcount,
- 				     xfs_agnumber_t *maxagi);
--
- extern void	xfs_unmountfs(xfs_mount_t *);
--extern int	xfs_mod_incore_sb(xfs_mount_t *, xfs_sb_field_t, int64_t, int);
-+
- extern int	xfs_mod_icount(struct xfs_mount *mp, int64_t delta);
- extern int	xfs_mod_ifree(struct xfs_mount *mp, int64_t delta);
- extern int	xfs_mod_fdblocks(struct xfs_mount *mp, int64_t delta,
--- 
-2.0.0
+- drop the moving of the struct xfs_sb to xfs_super.h
+- fixed all the little things that Christoph and Brian noted.
+- keep the per-cpu counters in the struct xfs_mount and keep the
+  functions to sync them with the struct xfs_sb values when read
+  from disk or written to disk.
+- integrated Christoph Hellwig's additional cleanup patch. This was
+  done by:
+	- intergating xfs_mod_XXX factoring into the relevant percpu
+	  counter conversion patch
+	- separating out xfs_mod_frextents into it's won patch
+	- separating out the replacement of
+	  xfs_mod_incore_sb_batched
+	- doing all the now unused API removal in a separate patch
+
+The series passes xfstests without regressions, and no scalability
+issues have been seen in my performance tests on a 16p VM. SGI - you
+still need to test this, though. :)
+
+Thoughts, comments?
+
+-Dave.
+
+PS: diffstat of the series is now:
+
+ fs/xfs/libxfs/xfs_bmap.c   |  40 +--
+ fs/xfs/libxfs/xfs_format.h |  62 ----
+ fs/xfs/libxfs/xfs_ialloc.c |   6 +-
+ fs/xfs/libxfs/xfs_sb.c     |  12 +-
+ fs/xfs/xfs_fsops.c         |  20 +-
+ fs/xfs/xfs_iomap.c         |   3 +-
+ fs/xfs/xfs_linux.h         |   9 -
+ fs/xfs/xfs_log_recover.c   |   4 +-
+ fs/xfs/xfs_mount.c         | 919 ++++++-----------------------------------------
+ fs/xfs/xfs_mount.h         |  95 +----
+ fs/xfs/xfs_super.c         | 103 ++++--
+ fs/xfs/xfs_super.h         |   2 +
+ fs/xfs/xfs_trans.c         | 234 +++++++-----
+ 13 files changed, 381 insertions(+), 1128 deletions(-)
+
+So we have a net reduction of roughly 750 lines of code.  When
+combined with the changes to the superblock logging that has already
+been committed, we have reduced the superblock modification code by
+close to 1000 lines compared to 3.19...
 
 _______________________________________________
 xfs mailing list
