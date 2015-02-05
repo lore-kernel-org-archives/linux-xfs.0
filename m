@@ -1,23 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id B38AA7FFC
-	for <xfs@oss.sgi.com>; Thu,  5 Feb 2015 08:09:46 -0600 (CST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 025637FFC
+	for <xfs@oss.sgi.com>; Thu,  5 Feb 2015 08:10:14 -0600 (CST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 22B68AC001
-	for <xfs@oss.sgi.com>; Thu,  5 Feb 2015 06:09:43 -0800 (PST)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id E524E8F804C
+	for <xfs@oss.sgi.com>; Thu,  5 Feb 2015 06:10:13 -0800 (PST)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id lNJUfGqfjH3I5kvF (version=TLSv1
+	cuda.sgi.com with ESMTP id rdPaZPy9Upba6673 (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 05 Feb 2015 06:09:41 -0800 (PST)
-Date: Thu, 5 Feb 2015 09:09:33 -0500
+	Thu, 05 Feb 2015 06:10:12 -0800 (PST)
+Date: Thu, 5 Feb 2015 09:10:05 -0500
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 1/7] xfs: use generic percpu counters for inode counter
-Message-ID: <20150205140933.GC31625@laptop.bfoster>
+Subject: Re: [PATCH 2/7] xfs: use generic percpu counters for free inode
+	counter
+Message-ID: <20150205141005.GD31625@laptop.bfoster>
 References: <1423083249-27493-1-git-send-email-david@fromorbit.com>
-	<1423083249-27493-2-git-send-email-david@fromorbit.com>
+	<1423083249-27493-3-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1423083249-27493-2-git-send-email-david@fromorbit.com>
+In-Reply-To: <1423083249-27493-3-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,409 +34,349 @@ Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On Thu, Feb 05, 2015 at 07:54:03AM +1100, Dave Chinner wrote:
+On Thu, Feb 05, 2015 at 07:54:04AM +1100, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+> 
 > XFS has hand-rolled per-cpu counters for the superblock since before
-> there was any generic implementation. There are some warts around
-> the  use of them for the inode counter as the hand rolled counter is
-> designed to be accurate at zero, but has no specific accurracy at
-> any other value. This design causes problems for the maximum inode
-> count threshold enforcement, as there is no trigger that balances
-> the counters as they get close tothe maximum threshold.
+> there was any generic implementation. The free inode counter is not
+> used for any limit enforcement - the per-AG free inode counters are
+> used during allocation to determine if there are inode available for
+> allocation.
 > 
-> Instead of designing new triggers for balancing, just replace the
-> handrolled per-cpu counter with a generic counter.  This enables us
-> to update the counter through the normal superblock modification
-> funtions, but rather than do that we add a xfs_mod_icount() helper
-> function (from Christoph Hellwig) and keep the percpu counter
-> outside the superblock in the struct xfs_mount.
+> Hence we don't need any of the complexity of the hand-rolled
+> counters and we can simply replace them with generic per-cpu
+> counters similar to the inode counter.
 > 
-> This means we still need to initialise the per-cpu counter
-> specifically when we read the superblock, and vice versa when we
-> log/write it, but it does mean that we don't need to change any
-> other code.
+> This version introduces a xfs_mod_ifree() helper function from
+> Christoph Hellwig.
 > 
 > Signed-off-by: Dave Chinner <dchinner@redhat.com>
 > ---
->  fs/xfs/libxfs/xfs_ialloc.c |  6 ++--
->  fs/xfs/libxfs/xfs_sb.c     |  2 ++
->  fs/xfs/xfs_fsops.c         |  3 +-
->  fs/xfs/xfs_mount.c         | 76 +++++++++++++++++++++-------------------------
->  fs/xfs/xfs_mount.h         |  7 +++--
->  fs/xfs/xfs_super.c         |  7 +++--
->  fs/xfs/xfs_trans.c         |  5 ++-
->  7 files changed, 54 insertions(+), 52 deletions(-)
+
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+
+>  fs/xfs/libxfs/xfs_sb.c |  1 +
+>  fs/xfs/xfs_fsops.c     |  2 +-
+>  fs/xfs/xfs_mount.c     | 76 ++++++++++++++++++++++----------------------------
+>  fs/xfs/xfs_mount.h     |  2 ++
+>  fs/xfs/xfs_super.c     |  4 ++-
+>  fs/xfs/xfs_trans.c     |  5 ++--
+>  6 files changed, 42 insertions(+), 48 deletions(-)
 > 
-> diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
-> index 116ef1d..5b4ba9f 100644
-> --- a/fs/xfs/libxfs/xfs_ialloc.c
-> +++ b/fs/xfs/libxfs/xfs_ialloc.c
-> @@ -376,7 +376,8 @@ xfs_ialloc_ag_alloc(
->  	 */
->  	newlen = args.mp->m_ialloc_inos;
->  	if (args.mp->m_maxicount &&
-> -	    args.mp->m_sb.sb_icount + newlen > args.mp->m_maxicount)
-> +	    percpu_counter_read(&args.mp->m_icount) + newlen >
-> +							args.mp->m_maxicount)
->  		return -ENOSPC;
->  	args.minlen = args.maxlen = args.mp->m_ialloc_blks;
->  	/*
-> @@ -1340,7 +1341,8 @@ xfs_dialloc(
->  	 * inode.
->  	 */
->  	if (mp->m_maxicount &&
-> -	    mp->m_sb.sb_icount + mp->m_ialloc_inos > mp->m_maxicount) {
-> +	    percpu_counter_read(&mp->m_icount) + mp->m_ialloc_inos >
-> +							mp->m_maxicount) {
->  		noroom = 1;
->  		okalloc = 0;
->  	}
 > diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
-> index b0a5fe9..017cb2f 100644
+> index 017cb2f..b66aeab 100644
 > --- a/fs/xfs/libxfs/xfs_sb.c
 > +++ b/fs/xfs/libxfs/xfs_sb.c
-> @@ -771,6 +771,8 @@ xfs_log_sb(
->  	struct xfs_mount	*mp = tp->t_mountp;
+> @@ -772,6 +772,7 @@ xfs_log_sb(
 >  	struct xfs_buf		*bp = xfs_trans_getsb(tp, mp, 0);
 >  
-> +	mp->m_sb.sb_icount = percpu_counter_sum(&mp->m_icount);
-> +
+>  	mp->m_sb.sb_icount = percpu_counter_sum(&mp->m_icount);
+> +	mp->m_sb.sb_ifree = percpu_counter_sum(&mp->m_ifree);
+>  
 >  	xfs_sb_to_disk(XFS_BUF_TO_SBP(bp), &mp->m_sb);
 >  	xfs_trans_buf_set_type(tp, bp, XFS_BLFT_SB_BUF);
->  	xfs_trans_log_buf(tp, bp, 0, sizeof(struct xfs_dsb));
 > diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
-> index f711452..e1470f2 100644
+> index e1470f2..fa74d03 100644
 > --- a/fs/xfs/xfs_fsops.c
 > +++ b/fs/xfs/xfs_fsops.c
-> @@ -631,11 +631,12 @@ xfs_fs_counts(
->  	xfs_fsop_counts_t	*cnt)
+> @@ -632,11 +632,11 @@ xfs_fs_counts(
 >  {
 >  	xfs_icsb_sync_counters(mp, XFS_ICSB_LAZY_COUNT);
-> +	cnt->allocino = percpu_counter_read_positive(&mp->m_icount);
-> +
+>  	cnt->allocino = percpu_counter_read_positive(&mp->m_icount);
+> +	cnt->freeino = percpu_counter_read_positive(&mp->m_ifree);
+>  
 >  	spin_lock(&mp->m_sb_lock);
 >  	cnt->freedata = mp->m_sb.sb_fdblocks - XFS_ALLOC_SET_ASIDE(mp);
 >  	cnt->freertx = mp->m_sb.sb_frextents;
->  	cnt->freeino = mp->m_sb.sb_ifree;
-> -	cnt->allocino = mp->m_sb.sb_icount;
+> -	cnt->freeino = mp->m_sb.sb_ifree;
 >  	spin_unlock(&mp->m_sb_lock);
 >  	return 0;
 >  }
 > diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-> index 4fa80e6..702ea6a 100644
+> index 702ea6a..650e8f1 100644
 > --- a/fs/xfs/xfs_mount.c
 > +++ b/fs/xfs/xfs_mount.c
-> @@ -1099,6 +1099,21 @@ xfs_log_sbcount(xfs_mount_t *mp)
->  	return xfs_sync_sb(mp, true);
+> @@ -1114,6 +1114,20 @@ xfs_mod_icount(
+>  	return 0;
 >  }
 >  
+> +
 > +int
-> +xfs_mod_icount(
+> +xfs_mod_ifree(
 > +	struct xfs_mount	*mp,
 > +	int64_t			delta)
 > +{
-> +	/* deltas are +/-64, hence the large batch size of 128. */
-> +	__percpu_counter_add(&mp->m_icount, delta, 128);
-> +	if (percpu_counter_compare(&mp->m_icount, 0) < 0) {
+> +	percpu_counter_add(&mp->m_ifree, delta);
+> +	if (percpu_counter_compare(&mp->m_ifree, 0) < 0) {
 > +		ASSERT(0);
-> +		percpu_counter_add(&mp->m_icount, -delta);
+> +		percpu_counter_add(&mp->m_ifree, -delta);
 > +		return -EINVAL;
 > +	}
 > +	return 0;
 > +}
-> +
 >  /*
 >   * xfs_mod_incore_sb_unlocked() is a utility routine commonly used to apply
 >   * a delta to a specified field in the in-core superblock.  Simply
-> @@ -1127,14 +1142,8 @@ xfs_mod_incore_sb_unlocked(
+> @@ -1142,17 +1156,9 @@ xfs_mod_incore_sb_unlocked(
 >  	 */
 >  	switch (field) {
 >  	case XFS_SBS_ICOUNT:
-> -		lcounter = (long long)mp->m_sb.sb_icount;
+> -		ASSERT(0);
+> -		return -ENOSPC;
+>  	case XFS_SBS_IFREE:
+> -		lcounter = (long long)mp->m_sb.sb_ifree;
 > -		lcounter += delta;
 > -		if (lcounter < 0) {
 > -			ASSERT(0);
 > -			return -EINVAL;
 > -		}
-> -		mp->m_sb.sb_icount = lcounter;
+> -		mp->m_sb.sb_ifree = lcounter;
 > -		return 0;
 > +		ASSERT(0);
-> +		return -ENOSPC;
->  	case XFS_SBS_IFREE:
->  		lcounter = (long long)mp->m_sb.sb_ifree;
->  		lcounter += delta;
-> @@ -1288,8 +1297,9 @@ xfs_mod_incore_sb(
->  	int			status;
->  
->  #ifdef HAVE_PERCPU_SB
-> -	ASSERT(field < XFS_SBS_ICOUNT || field > XFS_SBS_FDBLOCKS);
-> +	ASSERT(field < XFS_SBS_IFREE || field > XFS_SBS_FDBLOCKS);
->  #endif
-
-Not really sure why the above changes, since XFS_SBS_IFREE >
-XFS_SBS_ICOUNT. This goes away, so it doesn't matter. :)
-
-Reviewed-by: Brian Foster <bfoster@redhat.com>
-
-> +
->  	spin_lock(&mp->m_sb_lock);
->  	status = xfs_mod_incore_sb_unlocked(mp, field, delta, rsvd);
->  	spin_unlock(&mp->m_sb_lock);
-> @@ -1492,7 +1502,6 @@ xfs_icsb_cpu_notify(
+> +		return -EINVAL;
+>  	case XFS_SBS_FDBLOCKS:
+>  		lcounter = (long long)
+>  			mp->m_sb.sb_fdblocks - XFS_ALLOC_SET_ASIDE(mp);
+> @@ -1502,7 +1508,6 @@ xfs_icsb_cpu_notify(
 >  	case CPU_ONLINE:
 >  	case CPU_ONLINE_FROZEN:
 >  		xfs_icsb_lock(mp);
-> -		xfs_icsb_balance_counter(mp, XFS_SBS_ICOUNT, 0);
->  		xfs_icsb_balance_counter(mp, XFS_SBS_IFREE, 0);
+> -		xfs_icsb_balance_counter(mp, XFS_SBS_IFREE, 0);
 >  		xfs_icsb_balance_counter(mp, XFS_SBS_FDBLOCKS, 0);
 >  		xfs_icsb_unlock(mp);
-> @@ -1504,17 +1513,14 @@ xfs_icsb_cpu_notify(
+>  		break;
+> @@ -1513,15 +1518,12 @@ xfs_icsb_cpu_notify(
 >  		 * re-enable the counters. */
 >  		xfs_icsb_lock(mp);
 >  		spin_lock(&mp->m_sb_lock);
-> -		xfs_icsb_disable_counter(mp, XFS_SBS_ICOUNT);
->  		xfs_icsb_disable_counter(mp, XFS_SBS_IFREE);
+> -		xfs_icsb_disable_counter(mp, XFS_SBS_IFREE);
 >  		xfs_icsb_disable_counter(mp, XFS_SBS_FDBLOCKS);
 >  
-> -		mp->m_sb.sb_icount += cntp->icsb_icount;
->  		mp->m_sb.sb_ifree += cntp->icsb_ifree;
+> -		mp->m_sb.sb_ifree += cntp->icsb_ifree;
 >  		mp->m_sb.sb_fdblocks += cntp->icsb_fdblocks;
 >  
 >  		memset(cntp, 0, sizeof(xfs_icsb_cnts_t));
 >  
-> -		xfs_icsb_balance_counter_locked(mp, XFS_SBS_ICOUNT, 0);
->  		xfs_icsb_balance_counter_locked(mp, XFS_SBS_IFREE, 0);
+> -		xfs_icsb_balance_counter_locked(mp, XFS_SBS_IFREE, 0);
 >  		xfs_icsb_balance_counter_locked(mp, XFS_SBS_FDBLOCKS, 0);
 >  		spin_unlock(&mp->m_sb_lock);
-> @@ -1531,11 +1537,18 @@ xfs_icsb_init_counters(
->  	xfs_mount_t	*mp)
->  {
->  	xfs_icsb_cnts_t *cntp;
-> +	int		error;
->  	int		i;
+>  		xfs_icsb_unlock(mp);
+> @@ -1544,10 +1546,14 @@ xfs_icsb_init_counters(
+>  	if (error)
+>  		return error;
 >  
-> +	error = percpu_counter_init(&mp->m_icount, 0, GFP_KERNEL);
+> +	error = percpu_counter_init(&mp->m_ifree, 0, GFP_KERNEL);
 > +	if (error)
-> +		return error;
+> +		goto free_icount;
 > +
 >  	mp->m_sb_cnts = alloc_percpu(xfs_icsb_cnts_t);
-> -	if (mp->m_sb_cnts == NULL)
-> +	if (!mp->m_sb_cnts) {
-> +		percpu_counter_destroy(&mp->m_icount);
->  		return -ENOMEM;
-> +	}
+>  	if (!mp->m_sb_cnts) {
+> -		percpu_counter_destroy(&mp->m_icount);
+> -		return -ENOMEM;
+> +		error = -ENOMEM;
+> +		goto free_ifree;
+>  	}
 >  
 >  	for_each_online_cpu(i) {
->  		cntp = (xfs_icsb_cnts_t *)per_cpu_ptr(mp->m_sb_cnts, i);
-> @@ -1563,13 +1576,14 @@ void
->  xfs_icsb_reinit_counters(
+> @@ -1570,6 +1576,12 @@ xfs_icsb_init_counters(
+>  #endif /* CONFIG_HOTPLUG_CPU */
+>  
+>  	return 0;
+> +
+> +free_ifree:
+> +	percpu_counter_destroy(&mp->m_ifree);
+> +free_icount:
+> +	percpu_counter_destroy(&mp->m_icount);
+> +	return error;
+>  }
+>  
+>  void
+> @@ -1577,6 +1589,7 @@ xfs_icsb_reinit_counters(
 >  	xfs_mount_t	*mp)
 >  {
-> +	percpu_counter_set(&mp->m_icount, mp->m_sb.sb_icount);
-> +
+>  	percpu_counter_set(&mp->m_icount, mp->m_sb.sb_icount);
+> +	percpu_counter_set(&mp->m_ifree, mp->m_sb.sb_ifree);
+>  
 >  	xfs_icsb_lock(mp);
 >  	/*
->  	 * start with all counters disabled so that the
+> @@ -1584,7 +1597,6 @@ xfs_icsb_reinit_counters(
 >  	 * initial balance kicks us off correctly
 >  	 */
 >  	mp->m_icsb_counters = -1;
-> -	xfs_icsb_balance_counter(mp, XFS_SBS_ICOUNT, 0);
->  	xfs_icsb_balance_counter(mp, XFS_SBS_IFREE, 0);
+> -	xfs_icsb_balance_counter(mp, XFS_SBS_IFREE, 0);
 >  	xfs_icsb_balance_counter(mp, XFS_SBS_FDBLOCKS, 0);
 >  	xfs_icsb_unlock(mp);
-> @@ -1583,6 +1597,9 @@ xfs_icsb_destroy_counters(
->  		unregister_hotcpu_notifier(&mp->m_icsb_notifier);
->  		free_percpu(mp->m_sb_cnts);
+>  }
+> @@ -1599,6 +1611,7 @@ xfs_icsb_destroy_counters(
 >  	}
-> +
-> +	percpu_counter_destroy(&mp->m_icount);
-> +
+>  
+>  	percpu_counter_destroy(&mp->m_icount);
+> +	percpu_counter_destroy(&mp->m_ifree);
+>  
 >  	mutex_destroy(&mp->m_icsb_mutex);
 >  }
->  
-> @@ -1645,7 +1662,6 @@ xfs_icsb_count(
+> @@ -1662,7 +1675,6 @@ xfs_icsb_count(
 >  
 >  	for_each_online_cpu(i) {
 >  		cntp = (xfs_icsb_cnts_t *)per_cpu_ptr(mp->m_sb_cnts, i);
-> -		cnt->icsb_icount += cntp->icsb_icount;
->  		cnt->icsb_ifree += cntp->icsb_ifree;
+> -		cnt->icsb_ifree += cntp->icsb_ifree;
 >  		cnt->icsb_fdblocks += cntp->icsb_fdblocks;
 >  	}
-> @@ -1659,7 +1675,7 @@ xfs_icsb_counter_disabled(
+>  
+> @@ -1675,7 +1687,7 @@ xfs_icsb_counter_disabled(
 >  	xfs_mount_t	*mp,
 >  	xfs_sb_field_t	field)
 >  {
-> -	ASSERT((field >= XFS_SBS_ICOUNT) && (field <= XFS_SBS_FDBLOCKS));
-> +	ASSERT((field >= XFS_SBS_IFREE) && (field <= XFS_SBS_FDBLOCKS));
+> -	ASSERT((field >= XFS_SBS_IFREE) && (field <= XFS_SBS_FDBLOCKS));
+> +	ASSERT(field == XFS_SBS_FDBLOCKS);
 >  	return test_bit(field, &mp->m_icsb_counters);
 >  }
 >  
-> @@ -1670,7 +1686,7 @@ xfs_icsb_disable_counter(
+> @@ -1686,7 +1698,7 @@ xfs_icsb_disable_counter(
 >  {
 >  	xfs_icsb_cnts_t	cnt;
 >  
-> -	ASSERT((field >= XFS_SBS_ICOUNT) && (field <= XFS_SBS_FDBLOCKS));
-> +	ASSERT((field >= XFS_SBS_IFREE) && (field <= XFS_SBS_FDBLOCKS));
+> -	ASSERT((field >= XFS_SBS_IFREE) && (field <= XFS_SBS_FDBLOCKS));
+> +	ASSERT(field == XFS_SBS_FDBLOCKS);
 >  
 >  	/*
 >  	 * If we are already disabled, then there is nothing to do
-> @@ -1689,9 +1705,6 @@ xfs_icsb_disable_counter(
+> @@ -1705,9 +1717,6 @@ xfs_icsb_disable_counter(
 >  
 >  		xfs_icsb_count(mp, &cnt, XFS_ICSB_LAZY_COUNT);
 >  		switch(field) {
-> -		case XFS_SBS_ICOUNT:
-> -			mp->m_sb.sb_icount = cnt.icsb_icount;
+> -		case XFS_SBS_IFREE:
+> -			mp->m_sb.sb_ifree = cnt.icsb_ifree;
 > -			break;
->  		case XFS_SBS_IFREE:
->  			mp->m_sb.sb_ifree = cnt.icsb_ifree;
+>  		case XFS_SBS_FDBLOCKS:
+>  			mp->m_sb.sb_fdblocks = cnt.icsb_fdblocks;
 >  			break;
-> @@ -1716,15 +1729,12 @@ xfs_icsb_enable_counter(
+> @@ -1729,15 +1738,12 @@ xfs_icsb_enable_counter(
 >  	xfs_icsb_cnts_t	*cntp;
 >  	int		i;
 >  
-> -	ASSERT((field >= XFS_SBS_ICOUNT) && (field <= XFS_SBS_FDBLOCKS));
-> +	ASSERT((field >= XFS_SBS_IFREE) && (field <= XFS_SBS_FDBLOCKS));
+> -	ASSERT((field >= XFS_SBS_IFREE) && (field <= XFS_SBS_FDBLOCKS));
+> +	ASSERT(field == XFS_SBS_FDBLOCKS);
 >  
 >  	xfs_icsb_lock_all_counters(mp);
 >  	for_each_online_cpu(i) {
 >  		cntp = per_cpu_ptr(mp->m_sb_cnts, i);
 >  		switch (field) {
-> -		case XFS_SBS_ICOUNT:
-> -			cntp->icsb_icount = count + resid;
+> -		case XFS_SBS_IFREE:
+> -			cntp->icsb_ifree = count + resid;
 > -			break;
->  		case XFS_SBS_IFREE:
->  			cntp->icsb_ifree = count + resid;
+>  		case XFS_SBS_FDBLOCKS:
+>  			cntp->icsb_fdblocks = count + resid;
 >  			break;
-> @@ -1750,8 +1760,6 @@ xfs_icsb_sync_counters_locked(
+> @@ -1760,8 +1766,6 @@ xfs_icsb_sync_counters_locked(
 >  
 >  	xfs_icsb_count(mp, &cnt, flags);
 >  
-> -	if (!xfs_icsb_counter_disabled(mp, XFS_SBS_ICOUNT))
-> -		mp->m_sb.sb_icount = cnt.icsb_icount;
->  	if (!xfs_icsb_counter_disabled(mp, XFS_SBS_IFREE))
->  		mp->m_sb.sb_ifree = cnt.icsb_ifree;
+> -	if (!xfs_icsb_counter_disabled(mp, XFS_SBS_IFREE))
+> -		mp->m_sb.sb_ifree = cnt.icsb_ifree;
 >  	if (!xfs_icsb_counter_disabled(mp, XFS_SBS_FDBLOCKS))
-> @@ -1805,12 +1813,6 @@ xfs_icsb_balance_counter_locked(
+>  		mp->m_sb.sb_fdblocks = cnt.icsb_fdblocks;
+>  }
+> @@ -1813,12 +1817,6 @@ xfs_icsb_balance_counter_locked(
 >  
 >  	/* update counters  - first CPU gets residual*/
 >  	switch (field) {
-> -	case XFS_SBS_ICOUNT:
-> -		count = mp->m_sb.sb_icount;
+> -	case XFS_SBS_IFREE:
+> -		count = mp->m_sb.sb_ifree;
 > -		resid = do_div(count, weight);
 > -		if (count < max(min, XFS_ICSB_INO_CNTR_REENABLE))
 > -			return;
 > -		break;
->  	case XFS_SBS_IFREE:
->  		count = mp->m_sb.sb_ifree;
+>  	case XFS_SBS_FDBLOCKS:
+>  		count = mp->m_sb.sb_fdblocks;
 >  		resid = do_div(count, weight);
-> @@ -1871,14 +1873,6 @@ again:
+> @@ -1873,14 +1871,6 @@ again:
 >  	}
 >  
 >  	switch (field) {
-> -	case XFS_SBS_ICOUNT:
-> -		lcounter = icsbp->icsb_icount;
+> -	case XFS_SBS_IFREE:
+> -		lcounter = icsbp->icsb_ifree;
 > -		lcounter += delta;
 > -		if (unlikely(lcounter < 0))
 > -			goto balance_counter;
-> -		icsbp->icsb_icount = lcounter;
+> -		icsbp->icsb_ifree = lcounter;
 > -		break;
 > -
->  	case XFS_SBS_IFREE:
->  		lcounter = icsbp->icsb_ifree;
->  		lcounter += delta;
+>  	case XFS_SBS_FDBLOCKS:
+>  		BUG_ON((mp->m_resblks - mp->m_resblks_avail) != 0);
+>  
 > diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-> index a5b2ff8..457c6e3 100644
+> index 457c6e3..0cb32ce 100644
 > --- a/fs/xfs/xfs_mount.h
 > +++ b/fs/xfs/xfs_mount.h
-> @@ -41,7 +41,6 @@ struct xfs_da_geometry;
->  typedef struct xfs_icsb_cnts {
->  	uint64_t	icsb_fdblocks;
->  	uint64_t	icsb_ifree;
-> -	uint64_t	icsb_icount;
->  	unsigned long	icsb_flags;
->  } xfs_icsb_cnts_t;
->  
-> @@ -81,8 +80,11 @@ typedef struct xfs_mount {
->  	struct super_block	*m_super;
->  	xfs_tid_t		m_tid;		/* next unused tid for fs */
->  	struct xfs_ail		*m_ail;		/* fs active log item list */
-> -	xfs_sb_t		m_sb;		/* copy of fs superblock */
-> +
-> +	struct xfs_sb		m_sb;		/* copy of fs superblock */
+> @@ -84,6 +84,7 @@ typedef struct xfs_mount {
+>  	struct xfs_sb		m_sb;		/* copy of fs superblock */
 >  	spinlock_t		m_sb_lock;	/* sb counter lock */
-> +	struct percpu_counter	m_icount;	/* allocated inodes counter */
-> +
+>  	struct percpu_counter	m_icount;	/* allocated inodes counter */
+> +	struct percpu_counter	m_ifree;	/* free inodes counter */
+>  
 >  	struct xfs_buf		*m_sb_bp;	/* buffer for superblock */
 >  	char			*m_fsname;	/* filesystem name */
->  	int			m_fsname_len;	/* strlen of fs name */
-> @@ -377,6 +379,7 @@ extern void	xfs_unmountfs(xfs_mount_t *);
->  extern int	xfs_mod_incore_sb(xfs_mount_t *, xfs_sb_field_t, int64_t, int);
+> @@ -380,6 +381,7 @@ extern int	xfs_mod_incore_sb(xfs_mount_t *, xfs_sb_field_t, int64_t, int);
 >  extern int	xfs_mod_incore_sb_batch(xfs_mount_t *, xfs_mod_sb_t *,
 >  			uint, int);
-> +extern int	xfs_mod_icount(struct xfs_mount *mp, int64_t delta);
+>  extern int	xfs_mod_icount(struct xfs_mount *mp, int64_t delta);
+> +extern int	xfs_mod_ifree(struct xfs_mount *mp, int64_t delta);
 >  extern int	xfs_mount_log_sb(xfs_mount_t *);
 >  extern struct xfs_buf *xfs_getsb(xfs_mount_t *, int);
 >  extern int	xfs_readsb(xfs_mount_t *, int);
 > diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-> index 40d2ac5..87e169f 100644
+> index 87e169f..e06aa6b 100644
 > --- a/fs/xfs/xfs_super.c
 > +++ b/fs/xfs/xfs_super.c
-> @@ -1087,6 +1087,7 @@ xfs_fs_statfs(
->  	xfs_sb_t		*sbp = &mp->m_sb;
+> @@ -1088,6 +1088,7 @@ xfs_fs_statfs(
 >  	struct xfs_inode	*ip = XFS_I(dentry->d_inode);
 >  	__uint64_t		fakeinos, id;
-> +	__uint64_t		icount;
+>  	__uint64_t		icount;
+> +	__uint64_t		ifree;
 >  	xfs_extlen_t		lsize;
 >  	__int64_t		ffree;
 >  
-> @@ -1098,6 +1099,7 @@ xfs_fs_statfs(
->  	statp->f_fsid.val[1] = (u32)(id >> 32);
+> @@ -1100,6 +1101,7 @@ xfs_fs_statfs(
 >  
 >  	xfs_icsb_sync_counters(mp, XFS_ICSB_LAZY_COUNT);
-> +	icount = percpu_counter_sum(&mp->m_icount);
+>  	icount = percpu_counter_sum(&mp->m_icount);
+> +	ifree = percpu_counter_sum(&mp->m_ifree);
 >  
 >  	spin_lock(&mp->m_sb_lock);
 >  	statp->f_bsize = sbp->sb_blocksize;
-> @@ -1106,15 +1108,14 @@ xfs_fs_statfs(
->  	statp->f_bfree = statp->f_bavail =
->  				sbp->sb_fdblocks - XFS_ALLOC_SET_ASIDE(mp);
->  	fakeinos = statp->f_bfree << sbp->sb_inopblog;
-> -	statp->f_files =
-> -	    MIN(sbp->sb_icount + fakeinos, (__uint64_t)XFS_MAXINUMBER);
-> +	statp->f_files = MIN(icount + fakeinos, (__uint64_t)XFS_MAXINUMBER);
->  	if (mp->m_maxicount)
->  		statp->f_files = min_t(typeof(statp->f_files),
->  					statp->f_files,
+> @@ -1115,7 +1117,7 @@ xfs_fs_statfs(
 >  					mp->m_maxicount);
 >  
 >  	/* make sure statp->f_ffree does not underflow */
-> -	ffree = statp->f_files - (sbp->sb_icount - sbp->sb_ifree);
-> +	ffree = statp->f_files - (icount - sbp->sb_ifree);
+> -	ffree = statp->f_files - (icount - sbp->sb_ifree);
+> +	ffree = statp->f_files - (icount - ifree);
 >  	statp->f_ffree = max_t(__int64_t, ffree, 0);
 >  
 >  	spin_unlock(&mp->m_sb_lock);
 > diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
-> index eb90cd5..9bc742b 100644
+> index 9bc742b..68680ce 100644
 > --- a/fs/xfs/xfs_trans.c
 > +++ b/fs/xfs/xfs_trans.c
-> @@ -554,8 +554,7 @@ xfs_trans_unreserve_and_mod_sb(
+> @@ -560,8 +560,7 @@ xfs_trans_unreserve_and_mod_sb(
 >  	}
 >  
->  	if (idelta) {
-> -		error = xfs_icsb_modify_counters(mp, XFS_SBS_ICOUNT,
-> -						 idelta, rsvd);
-> +		error = xfs_mod_icount(mp, idelta);
+>  	if (ifreedelta) {
+> -		error = xfs_icsb_modify_counters(mp, XFS_SBS_IFREE,
+> -						 ifreedelta, rsvd);
+> +		error = xfs_mod_ifree(mp, ifreedelta);
 >  		if (error)
->  			goto out_undo_fdblocks;
+>  			goto out_undo_icount;
 >  	}
-> @@ -634,7 +633,7 @@ out_undo_ifreecount:
->  		xfs_icsb_modify_counters(mp, XFS_SBS_IFREE, -ifreedelta, rsvd);
+> @@ -630,7 +629,7 @@ xfs_trans_unreserve_and_mod_sb(
+>  
+>  out_undo_ifreecount:
+>  	if (ifreedelta)
+> -		xfs_icsb_modify_counters(mp, XFS_SBS_IFREE, -ifreedelta, rsvd);
+> +		xfs_mod_ifree(mp, -ifreedelta);
 >  out_undo_icount:
 >  	if (idelta)
-> -		xfs_icsb_modify_counters(mp, XFS_SBS_ICOUNT, -idelta, rsvd);
-> +		xfs_mod_icount(mp, -idelta);
->  out_undo_fdblocks:
->  	if (blkdelta)
->  		xfs_icsb_modify_counters(mp, XFS_SBS_FDBLOCKS, -blkdelta, rsvd);
+>  		xfs_mod_icount(mp, -idelta);
 > -- 
 > 2.0.0
 > 
