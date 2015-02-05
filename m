@@ -1,26 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 2854B7F8B
-	for <xfs@oss.sgi.com>; Mon,  9 Feb 2015 02:47:06 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id EABDD304077
-	for <xfs@oss.sgi.com>; Mon,  9 Feb 2015 00:47:05 -0800 (PST)
-Received: from smtprelay.restena.lu (smtprelay.restena.lu [158.64.1.62]) by
-	cuda.sgi.com with ESMTP id KYv3PwroYx8AlQLl (version=TLSv1
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 990D17F58
+	for <xfs@oss.sgi.com>; Thu,  5 Feb 2015 16:05:59 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 78F9B8F8059
+	for <xfs@oss.sgi.com>; Thu,  5 Feb 2015 14:05:56 -0800 (PST)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id pIomQjPGpqN5uo4H (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 09 Feb 2015 00:47:03 -0800 (PST)
-Date: Mon, 9 Feb 2015 09:47:01 +0100
-From: Bruno =?UTF-8?B?UHLDqW1vbnQ=?= <bonbons@linux-vserver.org>
-Subject: Re: XFS crashing system with general protection fault
-Message-ID: <20150209094701.6b1d480d@pluto.restena.lu>
-In-Reply-To: <20150205221516.GT4251@dastard>
-References: <20141224111403.54d7226b@neptune.home>
-	<20141228115127.GN24183@dastard>
-	<20141229084452.615e1900@pluto.restena.lu>
-	<20150113081742.6c3a5823@pluto.restena.lu>
-	<20150205151007.7c954c01@pluto.restena.lu>
-	<20150205221516.GT4251@dastard>
+	Thu, 05 Feb 2015 14:05:55 -0800 (PST)
+Received: from int-mx10.intmail.prod.int.phx2.redhat.com
+	(int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id t15M5sJ3024407
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256
+	verify=FAIL) for <xfs@oss.sgi.com>; Thu, 5 Feb 2015 17:05:55 -0500
+Date: Thu, 5 Feb 2015 17:05:50 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH V2] xfs: fix panic_mask documentation
+Message-ID: <20150205220550.GL31625@laptop.bfoster>
+References: <54D0F858.5010804@redhat.com>
+ <54D39E01.3000108@redhat.com>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <54D39E01.3000108@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,64 +31,55 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-SGkgRGF2ZSwKCk9uIEZyaSwgNiBGZWIgMjAxNSAwOToxNToxNiArMTEwMCBEYXZlIENoaW5uZXIg
-d3JvdGU6Cj4gT24gVGh1LCBGZWIgMDUsIDIwMTUgYXQgMDM6MTA6MDdQTSArMDEwMCwgQnJ1bm8g
-UHLDqW1vbnQgd3JvdGU6Cj4gPiBIaSBEYXZlLAo+ID4gCj4gPiBOZXcgY3Jhc2gsIG5ldyB0cmFj
-ZSwgdGhpcyB0aW1lIG9uIDMuMTguMi4KPiA+IEl0IGxvb2tzIGxpa2UgdGhpcyB0aW1lIGEgTlVM
-TCBkZXJlZmVyZW5jZSBoYXBwZW5lZCBwcmlvciB0byB0b3VjaGVkIG1lbW9yeSBwb2lzb24gYmVp
-bmcgZGV0ZWN0ZWQuCj4gPiAKPiA+IE9uY2UgYWdhaW4gaXQncyBkdXJpbmcgbm9ybWFsIHN5c3Rl
-bSBvcGVyYXRpb24gKG5vIG1vdW50L3Vtb3VudCBhY3Rpdml0eSkKPiAKPiBDYW4geW91IHJlYnVp
-bGQgdGhlIGtlcm5lbCB3aXRoIENPTkZJR19YRlNfV0FSTj15IGFuZCBzZWUgaWYgdGhhdAo+IHRo
-cm93cyBhbnkgaW50ZXJlc3RpbmcgbWVzc2FnZXMgaW50byBsb2dzPwoKV2lsbCB0cnkgYW5kIHNl
-ZQoKPiBIb3dldmVyOgo+IAo+ID4gWzE5MDAzOTAuMjYxNDkxXSA9PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PQo+ID4gWzE5MDAzOTAuMjcyOTg5XSBCVUcgdGFza19zdHJ1Y3QgKFRhaW50ZWQ6IEcgICAgICBE
-IFcgICAgICk6IFBvaXNvbiBvdmVyd3JpdHRlbgo+ID4gWzE5MDAzOTAuMjgzMDIxXSAtLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLQo+ID4gWzE5MDAzOTAuMjgzMDIxXSAKPiA+IFsxOTAwMzkwLjI5NzA1Nl0g
-SU5GTzogMHhmZmZmODgwMjEzZDY1MWIzLTB4ZmZmZjg4MDIxM2Q2NTFiMy4gRmlyc3QgYnl0ZSAw
-eDZkIGluc3RlYWQgb2YgMHg2Ygo+ID4gWzE5MDAzOTAuMzA5MDQ0XSBJTkZPOiBTbGFiIDB4ZmZm
-ZmVhMDAwODRmNTgwMCBvYmplY3RzPTE2IHVzZWQ9MTYgZnA9MHggICAgICAgICAgKG51bGwpIGZs
-YWdzPTB4ODAwMDAwMDAwMDAwNDA4MAo+ID4gWzE5MDAzOTAuMzIzMDg3XSBJTkZPOiBPYmplY3Qg
-MHhmZmZmODgwMjEzZDY0YmEwIEBvZmZzZXQ9MTkzNjAgZnA9MHhmZmZmODgwMjEzZDYxZTQwCj4g
-PiBbMTkwMDM5MC4zMjMwODddIAo+ID4gWzE5MDAzOTAuMzM2OTg4XSBCeXRlcyBiNCBmZmZmODgw
-MjEzZDY0YjkwOiA2MCAyZCBkNiAxMyAwMiA4OCBmZiBmZiA1YSA1YSA1YSA1YSA1YSA1YSA1YSA1
-YSAgYC0uLi4uLi5aWlpaWlpaWgo+ID4gWzE5MDAzOTAuMzUwOTg4XSBPYmplY3QgZmZmZjg4MDIx
-M2Q2NGJhMDogNmIgNmIgNmIgNmIgNmIgNmIgNmIgNmIgNmIgNmIgNmIgNmIgNmIgNmIgNmIgNmIg
-IGtra2tra2tra2tra2tra2sKPiA+IFsxOTAwMzkwLjM2NDk0M10gT2JqZWN0IGZmZmY4ODAyMTNk
-NjRiYjA6IDZiIDZiIDZiIDZiIDZiIDZiIDZiIDZiIDZiIDZiIDZiIDZiIDZiIDZiIDZiIDZiICBr
-a2tra2tra2tra2tra2trCj4gLi4uLgo+ID4gWzE5MDAzOTEuNjc0NjM2XSBPYmplY3QgZmZmZjg4
-MDIxM2Q2NTFiMDogNmIgNmIgNmIgNmQgNmIgNmIgNmIgNmIgNmIgNmIgNmIgNmIgNmIgNmIgNmIg
-NmIgIGtra21ra2tra2tra2tra2sKPiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgIF5eCj4gCj4gVGhlcmUncyBhIHNpbmdsZSBiaXQgdGhhdCBoYXMg
-YmVlbiBmbGlwcGVkIGluIHRoZSB0YXNrX3N0cnVjdCBzbGFiLgo+IFNvIG1vcmUgdGhhbiBqdXN0
-IFhGUyBpcyBzZWVpbmcgbWVtb3J5IGNvcnJ1cHRpb24gLSB0aGlzIGlzIGluIGNvcmUKPiBrZXJu
-ZWwgc3RydWN0dXJlIHNsYWIgY2FjaGVzLiBJJ20gbm90IHN1cmUsIGVpdGhlciwgaG93IFhGUyBj
-b3VsZAo+IGNhdXNlIGNvcnJ1cHRpb24gaW4gdGhpcyBzbGFiLgo+IAo+IFNvLCBJJ2QgYmUgY2hl
-Y2tpbmcgYWxsIHRoZSBwcmV2aW91cyBtZW1vcnkgY29ycnVwdGlvbnMgdG8gc2VlIGlmCj4gdGhl
-eSBhcmUgc2luZ2xlIGJpdCBlcnJvcnMsIGFuZCBpZiB0aGVyZSBpcyBhbnkgcGF0dGVybiB0byB0
-aGUKPiBhZGRyZXNzZXMgYXQgd2hpY2ggdGhleSBvY2N1ci4gVGhlIGFib3ZlIGJpdCBmbGlwIG1h
-a2VzIG1lIHRoaW5rCj4gImhhcmR3YXJlIGlzc3VlIiBhbmQgZXZlcnl0aGluZyBlbHNlIHN0ZW1z
-IGZyb20gdGhhdC4uLgoKU3lzdGVtIGhhcyBFQ0MgUkFNIHNvIGZhdWx0eSBSQU0gbG9va3MgbGVz
-cyBwcm9iYWJsZSAobm8gY29tcGxhaW50IHNlZW4KYnkga2VybmVsIG5vciByZWNvcmRlZCBieSBm
-aXJtd2FyZSkuCgpBbGwgcHJldmlvdXMgY3Jhc2hlcyBmb3Igd2hpY2ggSSBoYXZlIHNvbWUgbG9n
-cyB3ZXJlIGRlcmVmZXJlbmNlIGFmdGVyCmZyZWUgYnV0IG5vdCBhdHRlbXB0IHRvIGFsbG9jYXRl
-IG1lbW9yeSBmcm9tIGEgbW9kaWZpZWQgcG9pc29uIGluIGZyZWUKc2xhYnMuCgoKVGhvdWdoIHdo
-YXQgZG9lcyB0aGF0IHNpbmdsZSBiaXQgcmVwcmVzZW50IGluIHRoYXQgYXJlYSBpZiBpdCB3YXMK
-dXNlZC9tb2RpZmllZCBhZnRlciBmcmVlPwoKCkFzIEkgaGF2ZSBzZWVuIHNvbWUgb3RoZXIgc2Vy
-dmVycyBteXN0ZXJpb3VzbHkgY3Jhc2ggYWZ0ZXIgbW9udGhzIG9mCnVwdGltZSAob3Igc29tZXRp
-bWUgb25seSB3ZWVrcykgSSB0aGluayBhIGtlcm5lbCBpc3N1ZS9yYWNlIGNvbmRpdGlvbiBpcwpt
-b3JlIGxpa2VseSB0aG91Z2ggSSBoYXZlIG5vIHRyYWNlcyBvciBvdGhlciBpbmZvIHRoYXQgd291
-bGQgaGVscCBoZXJlLgpBcyBzeXN0ZW1zIHJlY2VpdmUgbmV3ZXIga2VybmVscyBJJ20gZW5hYmxp
-bmcgbmV0Y29uc29sZSB0byBiZSBhYmxlIHRvCmNhcHR1cmUga2VybmVsIG1lc3NhZ2UgdG8gYmUg
-YWJsZSB0byBhbmFseXplIGZ1dHVyZSBzdWNoIGNyYXNoZXMuCgpDaGVlcnMsCkJydW5vCgo+IENo
-ZWVycywKPiAKPiBEYXZlLgoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2ku
-Y29tL21haWxtYW4vbGlzdGluZm8veGZzCg==
+On Thu, Feb 05, 2015 at 10:44:49AM -0600, Eric Sandeen wrote:
+> This bit of the docs didn't quite reflect reality.
+> 
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> ---
+
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+
+> 
+> V2: s/AND/OR/
+> 
+> diff --git a/Documentation/filesystems/xfs.txt b/Documentation/filesystems/xfs.txt
+> index 5be51fd..2e56845 100644
+> --- a/Documentation/filesystems/xfs.txt
+> +++ b/Documentation/filesystems/xfs.txt
+> @@ -287,9 +287,9 @@ The following sysctls are available for the XFS filesystem:
+>  		XFS_ERRLEVEL_LOW:       1
+>  		XFS_ERRLEVEL_HIGH:      5
+>  
+> -  fs.xfs.panic_mask		(Min: 0  Default: 0  Max: 127)
+> +  fs.xfs.panic_mask		(Min: 0  Default: 0  Max: 255)
+>  	Causes certain error conditions to call BUG(). Value is a bitmask;
+> -	AND together the tags which represent errors which should cause panics:
+> +	OR together the tags which represent errors which should cause panics:
+>  
+>  		XFS_NO_PTAG                     0
+>  		XFS_PTAG_IFLUSH                 0x00000001
+> @@ -299,6 +299,7 @@ The following sysctls are available for the XFS filesystem:
+>  		XFS_PTAG_SHUTDOWN_CORRUPT       0x00000010
+>  		XFS_PTAG_SHUTDOWN_IOERROR       0x00000020
+>  		XFS_PTAG_SHUTDOWN_LOGERROR      0x00000040
+> +		XFS_PTAG_FSBLOCK_ZERO           0x00000080
+>  
+>  	This option is intended for debugging only.
+>  
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
