@@ -1,25 +1,32 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 93DF88045
-	for <xfs@oss.sgi.com>; Thu,  5 Feb 2015 08:27:34 -0600 (CST)
+	by oss.sgi.com (Postfix) with ESMTP id CEB8F8021
+	for <xfs@oss.sgi.com>; Thu,  5 Feb 2015 10:44:56 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 7EFDF8F804C
-	for <xfs@oss.sgi.com>; Thu,  5 Feb 2015 06:27:34 -0800 (PST)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id B9E908F804B
+	for <xfs@oss.sgi.com>; Thu,  5 Feb 2015 08:44:56 -0800 (PST)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id 0T5RsQSB6vp2r5k1 (version=TLSv1
+	cuda.sgi.com with ESMTP id I6BKTPpxAXDddzzZ (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 05 Feb 2015 06:27:33 -0800 (PST)
-Date: Thu, 5 Feb 2015 09:27:07 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 6/7] xfs: replace xfs_mod_incore_sb_batched
-Message-ID: <20150205142707.GK31625@laptop.bfoster>
-References: <1423083249-27493-1-git-send-email-david@fromorbit.com>
-	<1423083249-27493-7-git-send-email-david@fromorbit.com>
-	<20150205141044.GH31625@laptop.bfoster>
-	<20150205141954.GA18047@infradead.org>
+	Thu, 05 Feb 2015 08:44:55 -0800 (PST)
+Received: from int-mx11.intmail.prod.int.phx2.redhat.com
+	(int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id t15GirNO019923
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256
+	verify=FAIL) for <xfs@oss.sgi.com>; Thu, 5 Feb 2015 11:44:54 -0500
+Received: from liberator.sandeen.net (ovpn01.gateway.prod.ext.phx2.redhat.com
+	[10.5.9.1])
+	by int-mx11.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id t15Gioup016699
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES128-SHA bits=128 verify=NO)
+	for <xfs@oss.sgi.com>; Thu, 5 Feb 2015 11:44:52 -0500
+Message-ID: <54D39E01.3000108@redhat.com>
+Date: Thu, 05 Feb 2015 10:44:49 -0600
+From: Eric Sandeen <sandeen@redhat.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20150205141954.GA18047@infradead.org>
+Subject: [PATCH V2] xfs: fix panic_mask documentation
+References: <54D0F858.5010804@redhat.com>
+In-Reply-To: <54D0F858.5010804@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,36 +39,39 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: xfs-oss <xfs@oss.sgi.com>
 
-On Thu, Feb 05, 2015 at 06:19:54AM -0800, Christoph Hellwig wrote:
-> On Thu, Feb 05, 2015 at 09:10:44AM -0500, Brian Foster wrote:
-> > >  	/* apply remaining deltas */
-> > > +	spin_lock(&mp->m_sb_lock);
-> > >  	if (rtxdelta) {
-> > > -		error = xfs_mod_frextents(mp, rtxdelta);
-> > > +		error = xfs_sb_mod64(&mp->m_sb.sb_frextents, rtxdelta);
-> > 
-> > Any reason why we don't continue to use the xfs_mod_frextents() function
-> > introduced in the previous patch? Seems like we should be consistent one
-> > way or the other.
-> 
-> We're already under the sb_lock and would need another lock roundtrip to
-> avoid a deadlock in that case.  But mit might be worth to simply make
-> the real time extent counter a percpu one to behave similar to the other
-> counters that can be manipulated outside of the transaction commit code.
-> 
+This bit of the docs didn't quite reflect reality.
 
-Ah, thanks... missed that the lock was taken there. This one looks fine
-to me as well:
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+V2: s/AND/OR/
 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+diff --git a/Documentation/filesystems/xfs.txt b/Documentation/filesystems/xfs.txt
+index 5be51fd..2e56845 100644
+--- a/Documentation/filesystems/xfs.txt
++++ b/Documentation/filesystems/xfs.txt
+@@ -287,9 +287,9 @@ The following sysctls are available for the XFS filesystem:
+ 		XFS_ERRLEVEL_LOW:       1
+ 		XFS_ERRLEVEL_HIGH:      5
+ 
+-  fs.xfs.panic_mask		(Min: 0  Default: 0  Max: 127)
++  fs.xfs.panic_mask		(Min: 0  Default: 0  Max: 255)
+ 	Causes certain error conditions to call BUG(). Value is a bitmask;
+-	AND together the tags which represent errors which should cause panics:
++	OR together the tags which represent errors which should cause panics:
+ 
+ 		XFS_NO_PTAG                     0
+ 		XFS_PTAG_IFLUSH                 0x00000001
+@@ -299,6 +299,7 @@ The following sysctls are available for the XFS filesystem:
+ 		XFS_PTAG_SHUTDOWN_CORRUPT       0x00000010
+ 		XFS_PTAG_SHUTDOWN_IOERROR       0x00000020
+ 		XFS_PTAG_SHUTDOWN_LOGERROR      0x00000040
++		XFS_PTAG_FSBLOCK_ZERO           0x00000080
+ 
+ 	This option is intended for debugging only.
+ 
 
 _______________________________________________
 xfs mailing list
