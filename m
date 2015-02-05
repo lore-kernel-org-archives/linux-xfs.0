@@ -1,28 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 2EC777FEF
+	by oss.sgi.com (Postfix) with ESMTP id 3D4AA8022
 	for <xfs@oss.sgi.com>; Thu,  5 Feb 2015 15:50:27 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 1E176304039
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 1E2D7304043
 	for <xfs@oss.sgi.com>; Thu,  5 Feb 2015 13:50:27 -0800 (PST)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id jRNwBO7nOVr0Zl9y (version=TLSv1
+	cuda.sgi.com with ESMTP id usEJi6GUpmzszlNv (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 05 Feb 2015 13:50:25 -0800 (PST)
-Received: from int-mx11.intmail.prod.int.phx2.redhat.com
-	(int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id t15LoO6Y009546
+	Thu, 05 Feb 2015 13:50:26 -0800 (PST)
+Received: from int-mx13.intmail.prod.int.phx2.redhat.com
+	(int-mx13.intmail.prod.int.phx2.redhat.com [10.5.11.26])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id t15LoOoh016185
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256
 	verify=FAIL) for <xfs@oss.sgi.com>; Thu, 5 Feb 2015 16:50:25 -0500
 Received: from bfoster.bfoster ([10.18.41.237])
-	by int-mx11.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id t15LoOr7008232
+	by int-mx13.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id t15LoO3W008100
 	for <xfs@oss.sgi.com>; Thu, 5 Feb 2015 16:50:24 -0500
 From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH 1/2] repair: fix v5 sb ino alignment calculation for large
-	blocksizes
-Date: Thu,  5 Feb 2015 16:50:22 -0500
-Message-Id: <1423173023-54866-2-git-send-email-bfoster@redhat.com>
+Subject: [PATCH 2/2] repair: check ino alignment value to avoid mod by zero
+Date: Thu,  5 Feb 2015 16:50:23 -0500
+Message-Id: <1423173023-54866-3-git-send-email-bfoster@redhat.com>
 In-Reply-To: <1423173023-54866-1-git-send-email-bfoster@redhat.com>
 References: <1423173023-54866-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -40,44 +39,52 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-xfs_repair validates the superblock inode alignment field against
-several possible valid values. On v5 superblocks, the inode alignment
-can be scaled up based on the inode size in relation to the minimum
-inode size.
+xfs_repair checks inode records for valid alignment according to the
+alignment specified in the superblock. It currently performs the
+alignment check whenever fs_aligned_inodes is set, which is determined
+based on whether the fs supports the field.
 
-If the block size is larger than the default cluster size (consider
-large page size arches such as ppc64), the initial alignment value
-calculates to zero. If the inode size is large enough such that
-sb_inoalignmt is not zero, sb_validate_ino_align() scales the align
-value by the factor of inode size increase. If align is zero, however,
-we multiply by zero, the subsequent check incorrectly fails and the
-overall superblock verification fails as well. To reproduce, format an
-fs as follows on ppc64 and run xfs_repair:
+Support for the field does not guarantee its value is non-zero, however.
+For example, a large block size fs on a large page size arch (e.g.,
+ppc64):
 
-	mkfs.xfs -f -m crc=1 -b size=64k -i size=2k <dev>
+	mkfs.xfs -f -m crc=1,finobt=1 -b size=64k <dev>
 
-Fix the scaled alignment calculation by scaling the default cluster size
-appropriately to avoid a multiplication by zero.
+... can lead to incorrect badly aligned inode record messages from
+xfs_repair and other problems.
+
+Update the inobt and finobt checks to verify that alignment is a
+non-zero value before attempting to use it to divide (mod) by zero.
 
 Signed-off-by: Brian Foster <bfoster@redhat.com>
 ---
- repair/sb.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ repair/scan.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
-diff --git a/repair/sb.c b/repair/sb.c
-index ad27756..2805fbd 100644
---- a/repair/sb.c
-+++ b/repair/sb.c
-@@ -196,7 +196,8 @@ sb_validate_ino_align(struct xfs_sb *sb)
- 	if (!xfs_sb_version_hascrc(sb))
- 		return false;
- 
--	align *= sb->sb_inodesize / XFS_DINODE_MIN_SIZE;
-+	align = (XFS_INODE_BIG_CLUSTER_SIZE *
-+		 sb->sb_inodesize / XFS_DINODE_MIN_SIZE) >> sb->sb_blocklog;
- 	if (align == sb->sb_inoalignmt)
- 		return true;
- 
+diff --git a/repair/scan.c b/repair/scan.c
+index 142d8d7..ce8d7f5 100644
+--- a/repair/scan.c
++++ b/repair/scan.c
+@@ -770,7 +770,8 @@ scan_single_ino_chunk(
+ 	    (inodes_per_block <= XFS_INODES_PER_CHUNK && off !=  0) ||
+ 	    (inodes_per_block > XFS_INODES_PER_CHUNK &&
+ 	     off % XFS_INODES_PER_CHUNK != 0) ||
+-	    (fs_aligned_inodes && agbno % fs_ino_alignment != 0))  {
++	    (fs_aligned_inodes && fs_ino_alignment &&
++	     agbno % fs_ino_alignment != 0))  {
+ 		do_warn(
+ 	_("badly aligned inode rec (starting inode = %" PRIu64 ")\n"),
+ 			lino);
+@@ -929,7 +930,8 @@ scan_single_finobt_chunk(
+ 	    (inodes_per_block <= XFS_INODES_PER_CHUNK && off !=  0) ||
+ 	    (inodes_per_block > XFS_INODES_PER_CHUNK &&
+ 	     off % XFS_INODES_PER_CHUNK != 0) ||
+-	    (fs_aligned_inodes && agbno % fs_ino_alignment != 0)) {
++	    (fs_aligned_inodes && fs_ino_alignment &&
++	     agbno % fs_ino_alignment != 0)) {
+ 		do_warn(
+ 	_("badly aligned finobt inode rec (starting inode = %" PRIu64 ")\n"),
+ 			lino);
 -- 
 1.8.3.1
 
