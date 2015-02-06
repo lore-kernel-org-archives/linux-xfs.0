@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 307117F63
-	for <xfs@oss.sgi.com>; Fri,  6 Feb 2015 16:23:14 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 1D7C1304043
-	for <xfs@oss.sgi.com>; Fri,  6 Feb 2015 14:23:13 -0800 (PST)
+	by oss.sgi.com (Postfix) with ESMTP id 142377F63
+	for <xfs@oss.sgi.com>; Fri,  6 Feb 2015 16:23:48 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id D8276304051
+	for <xfs@oss.sgi.com>; Fri,  6 Feb 2015 14:23:47 -0800 (PST)
 Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id g4AAJjA3pF4Ss4q9 for <xfs@oss.sgi.com>;
-	Fri, 06 Feb 2015 14:23:09 -0800 (PST)
-Message-ID: <54D53EB6.6000306@sandeen.net>
-Date: Fri, 06 Feb 2015 16:22:46 -0600
+	ESMTP id FNTKuyRgKaMWVSlz for <xfs@oss.sgi.com>;
+	Fri, 06 Feb 2015 14:23:45 -0800 (PST)
+Message-ID: <54D53EF0.5060705@sandeen.net>
+Date: Fri, 06 Feb 2015 16:23:44 -0600
 From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: [PATCH 1/2] xfs: pass mp to XFS_WANT_CORRUPTED_GOTO
+Subject: [PATCH 2/2] xfs: pass mp to XFS_WANT_CORRUPTED_RETURN
 References: <54D53E8C.8070207@redhat.com>
 In-Reply-To: <54D53E8C.8070207@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -29,7 +29,7 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Eric Sandeen <sandeen@redhat.com>, xfs-oss <xfs@oss.sgi.com>
 
-Today, if we hit an XFS_WANT_CORRUPTED_GOTO we don't print
+Today, if we hit an XFS_WANT_CORRUPTED_RETURN we don't print
 any information about which filesystem hit it.  Passing
 in the mp allows us to print the filesystem (device) name,
 which is a pretty critical piece of information.
@@ -40,944 +40,439 @@ Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 ---
 
 diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-index a6fbf44..d38d69a 100644
+index d38d69a..14a222f 100644
 --- a/fs/xfs/libxfs/xfs_alloc.c
 +++ b/fs/xfs/libxfs/xfs_alloc.c
-@@ -682,7 +682,7 @@ xfs_alloc_ag_vextent_exact(
- 	error = xfs_alloc_get_rec(bno_cur, &fbno, &flen, &i);
- 	if (error)
- 		goto error0;
--	XFS_WANT_CORRUPTED_GOTO(i == 1, error0);
-+	XFS_WANT_CORRUPTED_GOTO(args->mp, i == 1, error0);
- 	ASSERT(fbno <= args->agbno);
+@@ -315,6 +315,9 @@ xfs_alloc_fixup_trees(
+ 	xfs_agblock_t	nfbno2;		/* second new free startblock */
+ 	xfs_extlen_t	nflen1=0;	/* first new free length */
+ 	xfs_extlen_t	nflen2=0;	/* second new free length */
++	struct xfs_mount *mp;
++
++	mp = cnt_cur->bc_mp;
  
  	/*
-@@ -783,7 +783,7 @@ xfs_alloc_find_best_extent(
- 		error = xfs_alloc_get_rec(*scur, sbno, slen, &i);
- 		if (error)
- 			goto error0;
--		XFS_WANT_CORRUPTED_GOTO(i == 1, error0);
-+		XFS_WANT_CORRUPTED_GOTO(args->mp, i == 1, error0);
- 		xfs_alloc_compute_aligned(args, *sbno, *slen, sbnoa, slena);
+ 	 * Look up the record in the by-size tree if necessary.
+@@ -323,13 +326,13 @@ xfs_alloc_fixup_trees(
+ #ifdef DEBUG
+ 		if ((error = xfs_alloc_get_rec(cnt_cur, &nfbno1, &nflen1, &i)))
+ 			return error;
+-		XFS_WANT_CORRUPTED_RETURN(
++		XFS_WANT_CORRUPTED_RETURN(mp,
+ 			i == 1 && nfbno1 == fbno && nflen1 == flen);
+ #endif
+ 	} else {
+ 		if ((error = xfs_alloc_lookup_eq(cnt_cur, fbno, flen, &i)))
+ 			return error;
+-		XFS_WANT_CORRUPTED_RETURN(i == 1);
++		XFS_WANT_CORRUPTED_RETURN(mp, i == 1);
+ 	}
+ 	/*
+ 	 * Look up the record in the by-block tree if necessary.
+@@ -338,13 +341,13 @@ xfs_alloc_fixup_trees(
+ #ifdef DEBUG
+ 		if ((error = xfs_alloc_get_rec(bno_cur, &nfbno1, &nflen1, &i)))
+ 			return error;
+-		XFS_WANT_CORRUPTED_RETURN(
++		XFS_WANT_CORRUPTED_RETURN(mp,
+ 			i == 1 && nfbno1 == fbno && nflen1 == flen);
+ #endif
+ 	} else {
+ 		if ((error = xfs_alloc_lookup_eq(bno_cur, fbno, flen, &i)))
+ 			return error;
+-		XFS_WANT_CORRUPTED_RETURN(i == 1);
++		XFS_WANT_CORRUPTED_RETURN(mp, i == 1);
+ 	}
  
- 		/*
-@@ -946,7 +946,7 @@ restart:
- 				if ((error = xfs_alloc_get_rec(cnt_cur, &ltbno,
- 						&ltlen, &i)))
- 					goto error0;
--				XFS_WANT_CORRUPTED_GOTO(i == 1, error0);
-+				XFS_WANT_CORRUPTED_GOTO(args->mp, i == 1, error0);
- 				if (ltlen >= args->minlen)
- 					break;
- 				if ((error = xfs_btree_increment(cnt_cur, 0, &i)))
-@@ -966,7 +966,7 @@ restart:
- 			 */
- 			if ((error = xfs_alloc_get_rec(cnt_cur, &ltbno, &ltlen, &i)))
- 				goto error0;
--			XFS_WANT_CORRUPTED_GOTO(i == 1, error0);
-+			XFS_WANT_CORRUPTED_GOTO(args->mp, i == 1, error0);
- 			xfs_alloc_compute_aligned(args, ltbno, ltlen,
- 						  &ltbnoa, &ltlena);
- 			if (ltlena < args->minlen)
-@@ -999,7 +999,7 @@ restart:
- 		cnt_cur->bc_ptrs[0] = besti;
- 		if ((error = xfs_alloc_get_rec(cnt_cur, &ltbno, &ltlen, &i)))
- 			goto error0;
--		XFS_WANT_CORRUPTED_GOTO(i == 1, error0);
-+		XFS_WANT_CORRUPTED_GOTO(args->mp, i == 1, error0);
- 		ASSERT(ltbno + ltlen <= be32_to_cpu(XFS_BUF_TO_AGF(args->agbp)->agf_length));
- 		args->len = blen;
- 		if (!xfs_alloc_fix_minleft(args)) {
-@@ -1088,7 +1088,7 @@ restart:
- 		if (bno_cur_lt) {
- 			if ((error = xfs_alloc_get_rec(bno_cur_lt, &ltbno, &ltlen, &i)))
- 				goto error0;
--			XFS_WANT_CORRUPTED_GOTO(i == 1, error0);
-+			XFS_WANT_CORRUPTED_GOTO(args->mp, i == 1, error0);
- 			xfs_alloc_compute_aligned(args, ltbno, ltlen,
- 						  &ltbnoa, &ltlena);
- 			if (ltlena >= args->minlen)
-@@ -1104,7 +1104,7 @@ restart:
- 		if (bno_cur_gt) {
- 			if ((error = xfs_alloc_get_rec(bno_cur_gt, &gtbno, &gtlen, &i)))
- 				goto error0;
--			XFS_WANT_CORRUPTED_GOTO(i == 1, error0);
-+			XFS_WANT_CORRUPTED_GOTO(args->mp, i == 1, error0);
- 			xfs_alloc_compute_aligned(args, gtbno, gtlen,
- 						  &gtbnoa, &gtlena);
- 			if (gtlena >= args->minlen)
-@@ -1303,7 +1303,7 @@ restart:
- 			error = xfs_alloc_get_rec(cnt_cur, &fbno, &flen, &i);
- 			if (error)
- 				goto error0;
--			XFS_WANT_CORRUPTED_GOTO(i == 1, error0);
-+			XFS_WANT_CORRUPTED_GOTO(args->mp, i == 1, error0);
+ #ifdef DEBUG
+@@ -355,7 +358,7 @@ xfs_alloc_fixup_trees(
+ 		bnoblock = XFS_BUF_TO_BLOCK(bno_cur->bc_bufs[0]);
+ 		cntblock = XFS_BUF_TO_BLOCK(cnt_cur->bc_bufs[0]);
  
- 			xfs_alloc_compute_aligned(args, fbno, flen,
- 						  &rbno, &rlen);
-@@ -1342,7 +1342,7 @@ restart:
- 	 * This can't happen in the second case above.
+-		XFS_WANT_CORRUPTED_RETURN(
++		XFS_WANT_CORRUPTED_RETURN(mp,
+ 			bnoblock->bb_numrecs == cntblock->bb_numrecs);
+ 	}
+ #endif
+@@ -386,25 +389,25 @@ xfs_alloc_fixup_trees(
  	 */
- 	rlen = XFS_EXTLEN_MIN(args->maxlen, rlen);
--	XFS_WANT_CORRUPTED_GOTO(rlen == 0 ||
-+	XFS_WANT_CORRUPTED_GOTO(args->mp, rlen == 0 ||
- 			(rlen <= flen && rbno + rlen <= fbno + flen), error0);
- 	if (rlen < args->maxlen) {
- 		xfs_agblock_t	bestfbno;
-@@ -1362,13 +1362,13 @@ restart:
- 			if ((error = xfs_alloc_get_rec(cnt_cur, &fbno, &flen,
- 					&i)))
- 				goto error0;
--			XFS_WANT_CORRUPTED_GOTO(i == 1, error0);
-+			XFS_WANT_CORRUPTED_GOTO(args->mp, i == 1, error0);
- 			if (flen < bestrlen)
- 				break;
- 			xfs_alloc_compute_aligned(args, fbno, flen,
- 						  &rbno, &rlen);
- 			rlen = XFS_EXTLEN_MIN(args->maxlen, rlen);
--			XFS_WANT_CORRUPTED_GOTO(rlen == 0 ||
-+			XFS_WANT_CORRUPTED_GOTO(args->mp, rlen == 0 ||
- 				(rlen <= flen && rbno + rlen <= fbno + flen),
- 				error0);
- 			if (rlen > bestrlen) {
-@@ -1383,7 +1383,7 @@ restart:
- 		if ((error = xfs_alloc_lookup_eq(cnt_cur, bestfbno, bestflen,
- 				&i)))
- 			goto error0;
--		XFS_WANT_CORRUPTED_GOTO(i == 1, error0);
-+		XFS_WANT_CORRUPTED_GOTO(args->mp, i == 1, error0);
- 		rlen = bestrlen;
- 		rbno = bestrbno;
- 		flen = bestflen;
-@@ -1408,7 +1408,7 @@ restart:
- 	if (!xfs_alloc_fix_minleft(args))
- 		goto out_nominleft;
- 	rlen = args->len;
--	XFS_WANT_CORRUPTED_GOTO(rlen <= flen, error0);
-+	XFS_WANT_CORRUPTED_GOTO(args->mp, rlen <= flen, error0);
+ 	if ((error = xfs_btree_delete(cnt_cur, &i)))
+ 		return error;
+-	XFS_WANT_CORRUPTED_RETURN(i == 1);
++	XFS_WANT_CORRUPTED_RETURN(mp, i == 1);
  	/*
- 	 * Allocate and initialize a cursor for the by-block tree.
+ 	 * Add new by-size btree entry(s).
  	 */
-@@ -1422,7 +1422,7 @@ restart:
- 	cnt_cur = bno_cur = NULL;
- 	args->len = rlen;
- 	args->agbno = rbno;
--	XFS_WANT_CORRUPTED_GOTO(
-+	XFS_WANT_CORRUPTED_GOTO(args->mp,
- 		args->agbno + args->len <=
- 			be32_to_cpu(XFS_BUF_TO_AGF(args->agbp)->agf_length),
- 		error0);
-@@ -1467,7 +1467,7 @@ xfs_alloc_ag_vextent_small(
- 	if (i) {
- 		if ((error = xfs_alloc_get_rec(ccur, &fbno, &flen, &i)))
- 			goto error0;
--		XFS_WANT_CORRUPTED_GOTO(i == 1, error0);
-+		XFS_WANT_CORRUPTED_GOTO(args->mp, i == 1, error0);
+ 	if (nfbno1 != NULLAGBLOCK) {
+ 		if ((error = xfs_alloc_lookup_eq(cnt_cur, nfbno1, nflen1, &i)))
+ 			return error;
+-		XFS_WANT_CORRUPTED_RETURN(i == 0);
++		XFS_WANT_CORRUPTED_RETURN(mp, i == 0);
+ 		if ((error = xfs_btree_insert(cnt_cur, &i)))
+ 			return error;
+-		XFS_WANT_CORRUPTED_RETURN(i == 1);
++		XFS_WANT_CORRUPTED_RETURN(mp, i == 1);
+ 	}
+ 	if (nfbno2 != NULLAGBLOCK) {
+ 		if ((error = xfs_alloc_lookup_eq(cnt_cur, nfbno2, nflen2, &i)))
+ 			return error;
+-		XFS_WANT_CORRUPTED_RETURN(i == 0);
++		XFS_WANT_CORRUPTED_RETURN(mp, i == 0);
+ 		if ((error = xfs_btree_insert(cnt_cur, &i)))
+ 			return error;
+-		XFS_WANT_CORRUPTED_RETURN(i == 1);
++		XFS_WANT_CORRUPTED_RETURN(mp, i == 1);
  	}
  	/*
- 	 * Nothing in the btree, try the freelist.  Make sure
-@@ -1493,7 +1493,7 @@ xfs_alloc_ag_vextent_small(
- 			}
- 			args->len = 1;
- 			args->agbno = fbno;
--			XFS_WANT_CORRUPTED_GOTO(
-+			XFS_WANT_CORRUPTED_GOTO(args->mp,
- 				args->agbno + args->len <=
- 				be32_to_cpu(XFS_BUF_TO_AGF(args->agbp)->agf_length),
- 				error0);
-@@ -1579,7 +1579,7 @@ xfs_free_ag_extent(
- 		 */
- 		if ((error = xfs_alloc_get_rec(bno_cur, &ltbno, &ltlen, &i)))
- 			goto error0;
--		XFS_WANT_CORRUPTED_GOTO(i == 1, error0);
-+		XFS_WANT_CORRUPTED_GOTO(mp, i == 1, error0);
- 		/*
- 		 * It's not contiguous, though.
- 		 */
-@@ -1591,7 +1591,8 @@ xfs_free_ag_extent(
- 			 * space was invalid, it's (partly) already free.
- 			 * Very bad.
- 			 */
--			XFS_WANT_CORRUPTED_GOTO(ltbno + ltlen <= bno, error0);
-+			XFS_WANT_CORRUPTED_GOTO(mp,
-+						ltbno + ltlen <= bno, error0);
- 		}
- 	}
- 	/*
-@@ -1606,7 +1607,7 @@ xfs_free_ag_extent(
- 		 */
- 		if ((error = xfs_alloc_get_rec(bno_cur, &gtbno, &gtlen, &i)))
- 			goto error0;
--		XFS_WANT_CORRUPTED_GOTO(i == 1, error0);
-+		XFS_WANT_CORRUPTED_GOTO(mp, i == 1, error0);
- 		/*
- 		 * It's not contiguous, though.
- 		 */
-@@ -1618,7 +1619,7 @@ xfs_free_ag_extent(
- 			 * space was invalid, it's (partly) already free.
- 			 * Very bad.
- 			 */
--			XFS_WANT_CORRUPTED_GOTO(gtbno >= bno + len, error0);
-+			XFS_WANT_CORRUPTED_GOTO(mp, gtbno >= bno + len, error0);
- 		}
- 	}
- 	/*
-@@ -1635,31 +1636,31 @@ xfs_free_ag_extent(
- 		 */
- 		if ((error = xfs_alloc_lookup_eq(cnt_cur, ltbno, ltlen, &i)))
- 			goto error0;
--		XFS_WANT_CORRUPTED_GOTO(i == 1, error0);
-+		XFS_WANT_CORRUPTED_GOTO(mp, i == 1, error0);
- 		if ((error = xfs_btree_delete(cnt_cur, &i)))
- 			goto error0;
--		XFS_WANT_CORRUPTED_GOTO(i == 1, error0);
-+		XFS_WANT_CORRUPTED_GOTO(mp, i == 1, error0);
- 		/*
- 		 * Delete the old by-size entry on the right.
- 		 */
- 		if ((error = xfs_alloc_lookup_eq(cnt_cur, gtbno, gtlen, &i)))
- 			goto error0;
--		XFS_WANT_CORRUPTED_GOTO(i == 1, error0);
-+		XFS_WANT_CORRUPTED_GOTO(mp, i == 1, error0);
- 		if ((error = xfs_btree_delete(cnt_cur, &i)))
- 			goto error0;
--		XFS_WANT_CORRUPTED_GOTO(i == 1, error0);
-+		XFS_WANT_CORRUPTED_GOTO(mp, i == 1, error0);
- 		/*
- 		 * Delete the old by-block entry for the right block.
+ 	 * Fix up the by-block btree entry(s).
+@@ -415,7 +418,7 @@ xfs_alloc_fixup_trees(
  		 */
  		if ((error = xfs_btree_delete(bno_cur, &i)))
- 			goto error0;
--		XFS_WANT_CORRUPTED_GOTO(i == 1, error0);
-+		XFS_WANT_CORRUPTED_GOTO(mp, i == 1, error0);
+ 			return error;
+-		XFS_WANT_CORRUPTED_RETURN(i == 1);
++		XFS_WANT_CORRUPTED_RETURN(mp, i == 1);
+ 	} else {
  		/*
- 		 * Move the by-block cursor back to the left neighbor.
+ 		 * Update the by-block entry to start later|be shorter.
+@@ -429,10 +432,10 @@ xfs_alloc_fixup_trees(
  		 */
- 		if ((error = xfs_btree_decrement(bno_cur, 0, &i)))
- 			goto error0;
--		XFS_WANT_CORRUPTED_GOTO(i == 1, error0);
-+		XFS_WANT_CORRUPTED_GOTO(mp, i == 1, error0);
- #ifdef DEBUG
- 		/*
- 		 * Check that this is the right record: delete didn't
-@@ -1672,7 +1673,7 @@ xfs_free_ag_extent(
- 			if ((error = xfs_alloc_get_rec(bno_cur, &xxbno, &xxlen,
- 					&i)))
- 				goto error0;
--			XFS_WANT_CORRUPTED_GOTO(
-+			XFS_WANT_CORRUPTED_GOTO(mp,
- 				i == 1 && xxbno == ltbno && xxlen == ltlen,
- 				error0);
- 		}
-@@ -1695,17 +1696,17 @@ xfs_free_ag_extent(
- 		 */
- 		if ((error = xfs_alloc_lookup_eq(cnt_cur, ltbno, ltlen, &i)))
- 			goto error0;
--		XFS_WANT_CORRUPTED_GOTO(i == 1, error0);
-+		XFS_WANT_CORRUPTED_GOTO(mp, i == 1, error0);
- 		if ((error = xfs_btree_delete(cnt_cur, &i)))
- 			goto error0;
--		XFS_WANT_CORRUPTED_GOTO(i == 1, error0);
-+		XFS_WANT_CORRUPTED_GOTO(mp, i == 1, error0);
- 		/*
- 		 * Back up the by-block cursor to the left neighbor, and
- 		 * update its length.
- 		 */
- 		if ((error = xfs_btree_decrement(bno_cur, 0, &i)))
- 			goto error0;
--		XFS_WANT_CORRUPTED_GOTO(i == 1, error0);
-+		XFS_WANT_CORRUPTED_GOTO(mp, i == 1, error0);
- 		nbno = ltbno;
- 		nlen = len + ltlen;
- 		if ((error = xfs_alloc_update(bno_cur, nbno, nlen)))
-@@ -1721,10 +1722,10 @@ xfs_free_ag_extent(
- 		 */
- 		if ((error = xfs_alloc_lookup_eq(cnt_cur, gtbno, gtlen, &i)))
- 			goto error0;
--		XFS_WANT_CORRUPTED_GOTO(i == 1, error0);
-+		XFS_WANT_CORRUPTED_GOTO(mp, i == 1, error0);
- 		if ((error = xfs_btree_delete(cnt_cur, &i)))
- 			goto error0;
--		XFS_WANT_CORRUPTED_GOTO(i == 1, error0);
-+		XFS_WANT_CORRUPTED_GOTO(mp, i == 1, error0);
- 		/*
- 		 * Update the starting block and length of the right
- 		 * neighbor in the by-block tree.
-@@ -1743,7 +1744,7 @@ xfs_free_ag_extent(
- 		nlen = len;
+ 		if ((error = xfs_alloc_lookup_eq(bno_cur, nfbno2, nflen2, &i)))
+ 			return error;
+-		XFS_WANT_CORRUPTED_RETURN(i == 0);
++		XFS_WANT_CORRUPTED_RETURN(mp, i == 0);
  		if ((error = xfs_btree_insert(bno_cur, &i)))
- 			goto error0;
--		XFS_WANT_CORRUPTED_GOTO(i == 1, error0);
-+		XFS_WANT_CORRUPTED_GOTO(mp, i == 1, error0);
+ 			return error;
+-		XFS_WANT_CORRUPTED_RETURN(i == 1);
++		XFS_WANT_CORRUPTED_RETURN(mp, i == 1);
  	}
- 	xfs_btree_del_cursor(bno_cur, XFS_BTREE_NOERROR);
- 	bno_cur = NULL;
-@@ -1752,10 +1753,10 @@ xfs_free_ag_extent(
- 	 */
- 	if ((error = xfs_alloc_lookup_eq(cnt_cur, nbno, nlen, &i)))
- 		goto error0;
--	XFS_WANT_CORRUPTED_GOTO(i == 0, error0);
-+	XFS_WANT_CORRUPTED_GOTO(mp, i == 0, error0);
- 	if ((error = xfs_btree_insert(cnt_cur, &i)))
- 		goto error0;
--	XFS_WANT_CORRUPTED_GOTO(i == 1, error0);
-+	XFS_WANT_CORRUPTED_GOTO(mp, i == 1, error0);
- 	xfs_btree_del_cursor(cnt_cur, XFS_BTREE_NOERROR);
- 	cnt_cur = NULL;
- 
+ 	return 0;
+ }
 diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index b5eb474..c655a41 100644
+index c655a41..3d1a675 100644
 --- a/fs/xfs/libxfs/xfs_bmap.c
 +++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -410,7 +410,7 @@ xfs_bmap_check_leaf_extents(
- 				goto error_norelse;
- 		}
- 		block = XFS_BUF_TO_BLOCK(bp);
--		XFS_WANT_CORRUPTED_GOTO(
-+		XFS_WANT_CORRUPTED_GOTO(mp,
- 			xfs_bmap_sanity_check(mp, bp, level),
- 			error0);
- 		if (level == 0)
-@@ -424,7 +424,8 @@ xfs_bmap_check_leaf_extents(
- 		xfs_check_block(block, mp, 0, 0);
- 		pp = XFS_BMBT_PTR_ADDR(mp, block, 1, mp->m_bmap_dmxr[1]);
- 		bno = be64_to_cpu(*pp);
--		XFS_WANT_CORRUPTED_GOTO(XFS_FSB_SANITY_CHECK(mp, bno), error0);
-+		XFS_WANT_CORRUPTED_GOTO(mp,
-+					XFS_FSB_SANITY_CHECK(mp, bno), error0);
- 		if (bp_release) {
- 			bp_release = 0;
- 			xfs_trans_brelse(NULL, bp);
-@@ -1025,7 +1026,7 @@ xfs_bmap_add_attrfork_btree(
- 		if ((error = xfs_bmbt_lookup_ge(cur, 0, 0, 0, &stat)))
- 			goto error0;
- 		/* must be at least one entry */
--		XFS_WANT_CORRUPTED_GOTO(stat == 1, error0);
-+		XFS_WANT_CORRUPTED_GOTO(mp, stat == 1, error0);
- 		if ((error = xfs_btree_new_iroot(cur, flags, &stat)))
- 			goto error0;
- 		if (stat == 0) {
-@@ -1309,14 +1310,14 @@ xfs_bmap_read_extents(
- 		if (error)
- 			return error;
- 		block = XFS_BUF_TO_BLOCK(bp);
--		XFS_WANT_CORRUPTED_GOTO(
--			xfs_bmap_sanity_check(mp, bp, level),
--			error0);
-+		XFS_WANT_CORRUPTED_GOTO(mp,
-+			xfs_bmap_sanity_check(mp, bp, level), error0);
- 		if (level == 0)
- 			break;
- 		pp = XFS_BMBT_PTR_ADDR(mp, block, 1, mp->m_bmap_dmxr[1]);
- 		bno = be64_to_cpu(*pp);
--		XFS_WANT_CORRUPTED_GOTO(XFS_FSB_SANITY_CHECK(mp, bno), error0);
-+		XFS_WANT_CORRUPTED_GOTO(mp,
-+			XFS_FSB_SANITY_CHECK(mp, bno), error0);
- 		xfs_trans_brelse(tp, bp);
- 	}
+@@ -5458,6 +5458,7 @@ xfs_bmse_merge(
+ 	struct xfs_bmbt_irec		left;
+ 	xfs_filblks_t			blockcount;
+ 	int				error, i;
++	struct xfs_mount		*mp = ip->i_mount;
+ 
+ 	xfs_bmbt_get_all(gotp, &got);
+ 	xfs_bmbt_get_all(leftp, &left);
+@@ -5492,19 +5493,19 @@ xfs_bmse_merge(
+ 				   got.br_blockcount, &i);
+ 	if (error)
+ 		return error;
+-	XFS_WANT_CORRUPTED_RETURN(i == 1);
++	XFS_WANT_CORRUPTED_RETURN(mp, i == 1);
+ 
+ 	error = xfs_btree_delete(cur, &i);
+ 	if (error)
+ 		return error;
+-	XFS_WANT_CORRUPTED_RETURN(i == 1);
++	XFS_WANT_CORRUPTED_RETURN(mp, i == 1);
+ 
+ 	/* lookup and update size of the previous extent */
+ 	error = xfs_bmbt_lookup_eq(cur, left.br_startoff, left.br_startblock,
+ 				   left.br_blockcount, &i);
+ 	if (error)
+ 		return error;
+-	XFS_WANT_CORRUPTED_RETURN(i == 1);
++	XFS_WANT_CORRUPTED_RETURN(mp, i == 1);
+ 
+ 	left.br_blockcount = blockcount;
+ 
+@@ -5526,6 +5527,7 @@ xfs_bmse_shift_one(
+ 	int				*logflags)
+ {
+ 	struct xfs_ifork		*ifp;
++	struct xfs_mount		*mp;
+ 	xfs_fileoff_t			startoff;
+ 	struct xfs_bmbt_rec_host	*leftp;
+ 	struct xfs_bmbt_irec		got;
+@@ -5533,13 +5535,14 @@ xfs_bmse_shift_one(
+ 	int				error;
+ 	int				i;
+ 
++	mp = ip->i_mount;
+ 	ifp = XFS_IFORK_PTR(ip, whichfork);
+ 
+ 	xfs_bmbt_get_all(gotp, &got);
+ 	startoff = got.br_startoff - offset_shift_fsb;
+ 
+ 	/* delalloc extents should be prevented by caller */
+-	XFS_WANT_CORRUPTED_RETURN(!isnullstartblock(got.br_startblock));
++	XFS_WANT_CORRUPTED_RETURN(mp, !isnullstartblock(got.br_startblock));
+ 
  	/*
-@@ -1343,7 +1344,7 @@ xfs_bmap_read_extents(
- 				XFS_ERRLEVEL_LOW, ip->i_mount, block);
- 			goto error0;
- 		}
--		XFS_WANT_CORRUPTED_GOTO(
-+		XFS_WANT_CORRUPTED_GOTO(mp,
- 			xfs_bmap_sanity_check(mp, bp, 0),
- 			error0);
- 		/*
-@@ -1753,7 +1754,9 @@ xfs_bmap_add_extent_delay_real(
- 	xfs_filblks_t		temp=0;	/* value for da_new calculations */
- 	xfs_filblks_t		temp2=0;/* value for da_new calculations */
- 	int			tmp_rval;	/* partial logging flags */
-+	struct xfs_mount	*mp;
+ 	 * Check for merge if we've got an extent to the left, otherwise make
+@@ -5578,7 +5581,7 @@ xfs_bmse_shift_one(
+ 				   got.br_blockcount, &i);
+ 	if (error)
+ 		return error;
+-	XFS_WANT_CORRUPTED_RETURN(i == 1);
++	XFS_WANT_CORRUPTED_RETURN(mp, i == 1);
  
-+	mp  = bma->tp ? bma->tp->t_mountp : NULL;
- 	ifp = XFS_IFORK_PTR(bma->ip, XFS_DATA_FORK);
- 
- 	ASSERT(bma->idx >= 0);
-@@ -1864,15 +1867,15 @@ xfs_bmap_add_extent_delay_real(
- 					RIGHT.br_blockcount, &i);
- 			if (error)
- 				goto done;
--			XFS_WANT_CORRUPTED_GOTO(i == 1, done);
-+			XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
- 			error = xfs_btree_delete(bma->cur, &i);
- 			if (error)
- 				goto done;
--			XFS_WANT_CORRUPTED_GOTO(i == 1, done);
-+			XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
- 			error = xfs_btree_decrement(bma->cur, 0, &i);
- 			if (error)
- 				goto done;
--			XFS_WANT_CORRUPTED_GOTO(i == 1, done);
-+			XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
- 			error = xfs_bmbt_update(bma->cur, LEFT.br_startoff,
- 					LEFT.br_startblock,
- 					LEFT.br_blockcount +
-@@ -1905,7 +1908,7 @@ xfs_bmap_add_extent_delay_real(
- 					&i);
- 			if (error)
- 				goto done;
--			XFS_WANT_CORRUPTED_GOTO(i == 1, done);
-+			XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
- 			error = xfs_bmbt_update(bma->cur, LEFT.br_startoff,
- 					LEFT.br_startblock,
- 					LEFT.br_blockcount +
-@@ -1936,7 +1939,7 @@ xfs_bmap_add_extent_delay_real(
- 					RIGHT.br_blockcount, &i);
- 			if (error)
- 				goto done;
--			XFS_WANT_CORRUPTED_GOTO(i == 1, done);
-+			XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
- 			error = xfs_bmbt_update(bma->cur, PREV.br_startoff,
- 					new->br_startblock,
- 					PREV.br_blockcount +
-@@ -1966,12 +1969,12 @@ xfs_bmap_add_extent_delay_real(
- 					&i);
- 			if (error)
- 				goto done;
--			XFS_WANT_CORRUPTED_GOTO(i == 0, done);
-+			XFS_WANT_CORRUPTED_GOTO(mp, i == 0, done);
- 			bma->cur->bc_rec.b.br_state = XFS_EXT_NORM;
- 			error = xfs_btree_insert(bma->cur, &i);
- 			if (error)
- 				goto done;
--			XFS_WANT_CORRUPTED_GOTO(i == 1, done);
-+			XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
- 		}
- 		break;
- 
-@@ -1999,7 +2002,7 @@ xfs_bmap_add_extent_delay_real(
- 					&i);
- 			if (error)
- 				goto done;
--			XFS_WANT_CORRUPTED_GOTO(i == 1, done);
-+			XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
- 			error = xfs_bmbt_update(bma->cur, LEFT.br_startoff,
- 					LEFT.br_startblock,
- 					LEFT.br_blockcount +
-@@ -2036,12 +2039,12 @@ xfs_bmap_add_extent_delay_real(
- 					&i);
- 			if (error)
- 				goto done;
--			XFS_WANT_CORRUPTED_GOTO(i == 0, done);
-+			XFS_WANT_CORRUPTED_GOTO(mp, i == 0, done);
- 			bma->cur->bc_rec.b.br_state = XFS_EXT_NORM;
- 			error = xfs_btree_insert(bma->cur, &i);
- 			if (error)
- 				goto done;
--			XFS_WANT_CORRUPTED_GOTO(i == 1, done);
-+			XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
- 		}
- 
- 		if (xfs_bmap_needs_btree(bma->ip, XFS_DATA_FORK)) {
-@@ -2082,7 +2085,7 @@ xfs_bmap_add_extent_delay_real(
- 					RIGHT.br_blockcount, &i);
- 			if (error)
- 				goto done;
--			XFS_WANT_CORRUPTED_GOTO(i == 1, done);
-+			XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
- 			error = xfs_bmbt_update(bma->cur, new->br_startoff,
- 					new->br_startblock,
- 					new->br_blockcount +
-@@ -2120,12 +2123,12 @@ xfs_bmap_add_extent_delay_real(
- 					&i);
- 			if (error)
- 				goto done;
--			XFS_WANT_CORRUPTED_GOTO(i == 0, done);
-+			XFS_WANT_CORRUPTED_GOTO(mp, i == 0, done);
- 			bma->cur->bc_rec.b.br_state = XFS_EXT_NORM;
- 			error = xfs_btree_insert(bma->cur, &i);
- 			if (error)
- 				goto done;
--			XFS_WANT_CORRUPTED_GOTO(i == 1, done);
-+			XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
- 		}
- 
- 		if (xfs_bmap_needs_btree(bma->ip, XFS_DATA_FORK)) {
-@@ -2189,12 +2192,12 @@ xfs_bmap_add_extent_delay_real(
- 					&i);
- 			if (error)
- 				goto done;
--			XFS_WANT_CORRUPTED_GOTO(i == 0, done);
-+			XFS_WANT_CORRUPTED_GOTO(mp, i == 0, done);
- 			bma->cur->bc_rec.b.br_state = XFS_EXT_NORM;
- 			error = xfs_btree_insert(bma->cur, &i);
- 			if (error)
- 				goto done;
--			XFS_WANT_CORRUPTED_GOTO(i == 1, done);
-+			XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
- 		}
- 
- 		if (xfs_bmap_needs_btree(bma->ip, XFS_DATA_FORK)) {
-@@ -2307,6 +2310,7 @@ xfs_bmap_add_extent_unwritten_real(
- 					/* left is 0, right is 1, prev is 2 */
- 	int			rval=0;	/* return value (logging flags) */
- 	int			state = 0;/* state bits, accessed thru macros */
-+	struct xfs_mount	*mp = tp->t_mountp;
- 
- 	*logflagsp = 0;
- 
-@@ -2419,19 +2423,19 @@ xfs_bmap_add_extent_unwritten_real(
- 					RIGHT.br_startblock,
- 					RIGHT.br_blockcount, &i)))
- 				goto done;
--			XFS_WANT_CORRUPTED_GOTO(i == 1, done);
-+			XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
- 			if ((error = xfs_btree_delete(cur, &i)))
- 				goto done;
--			XFS_WANT_CORRUPTED_GOTO(i == 1, done);
-+			XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
- 			if ((error = xfs_btree_decrement(cur, 0, &i)))
- 				goto done;
--			XFS_WANT_CORRUPTED_GOTO(i == 1, done);
-+			XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
- 			if ((error = xfs_btree_delete(cur, &i)))
- 				goto done;
--			XFS_WANT_CORRUPTED_GOTO(i == 1, done);
-+			XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
- 			if ((error = xfs_btree_decrement(cur, 0, &i)))
- 				goto done;
--			XFS_WANT_CORRUPTED_GOTO(i == 1, done);
-+			XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
- 			if ((error = xfs_bmbt_update(cur, LEFT.br_startoff,
- 				LEFT.br_startblock,
- 				LEFT.br_blockcount + PREV.br_blockcount +
-@@ -2462,13 +2466,13 @@ xfs_bmap_add_extent_unwritten_real(
- 					PREV.br_startblock, PREV.br_blockcount,
- 					&i)))
- 				goto done;
--			XFS_WANT_CORRUPTED_GOTO(i == 1, done);
-+			XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
- 			if ((error = xfs_btree_delete(cur, &i)))
- 				goto done;
--			XFS_WANT_CORRUPTED_GOTO(i == 1, done);
-+			XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
- 			if ((error = xfs_btree_decrement(cur, 0, &i)))
- 				goto done;
--			XFS_WANT_CORRUPTED_GOTO(i == 1, done);
-+			XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
- 			if ((error = xfs_bmbt_update(cur, LEFT.br_startoff,
- 				LEFT.br_startblock,
- 				LEFT.br_blockcount + PREV.br_blockcount,
-@@ -2497,13 +2501,13 @@ xfs_bmap_add_extent_unwritten_real(
- 					RIGHT.br_startblock,
- 					RIGHT.br_blockcount, &i)))
- 				goto done;
--			XFS_WANT_CORRUPTED_GOTO(i == 1, done);
-+			XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
- 			if ((error = xfs_btree_delete(cur, &i)))
- 				goto done;
--			XFS_WANT_CORRUPTED_GOTO(i == 1, done);
-+			XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
- 			if ((error = xfs_btree_decrement(cur, 0, &i)))
- 				goto done;
--			XFS_WANT_CORRUPTED_GOTO(i == 1, done);
-+			XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
- 			if ((error = xfs_bmbt_update(cur, new->br_startoff,
- 				new->br_startblock,
- 				new->br_blockcount + RIGHT.br_blockcount,
-@@ -2530,7 +2534,7 @@ xfs_bmap_add_extent_unwritten_real(
- 					new->br_startblock, new->br_blockcount,
- 					&i)))
- 				goto done;
--			XFS_WANT_CORRUPTED_GOTO(i == 1, done);
-+			XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
- 			if ((error = xfs_bmbt_update(cur, new->br_startoff,
- 				new->br_startblock, new->br_blockcount,
- 				newext)))
-@@ -2567,7 +2571,7 @@ xfs_bmap_add_extent_unwritten_real(
- 					PREV.br_startblock, PREV.br_blockcount,
- 					&i)))
- 				goto done;
--			XFS_WANT_CORRUPTED_GOTO(i == 1, done);
-+			XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
- 			if ((error = xfs_bmbt_update(cur,
- 				PREV.br_startoff + new->br_blockcount,
- 				PREV.br_startblock + new->br_blockcount,
-@@ -2609,7 +2613,7 @@ xfs_bmap_add_extent_unwritten_real(
- 					PREV.br_startblock, PREV.br_blockcount,
- 					&i)))
- 				goto done;
--			XFS_WANT_CORRUPTED_GOTO(i == 1, done);
-+			XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
- 			if ((error = xfs_bmbt_update(cur,
- 				PREV.br_startoff + new->br_blockcount,
- 				PREV.br_startblock + new->br_blockcount,
-@@ -2619,7 +2623,7 @@ xfs_bmap_add_extent_unwritten_real(
- 			cur->bc_rec.b = *new;
- 			if ((error = xfs_btree_insert(cur, &i)))
- 				goto done;
--			XFS_WANT_CORRUPTED_GOTO(i == 1, done);
-+			XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
- 		}
- 		break;
- 
-@@ -2649,7 +2653,7 @@ xfs_bmap_add_extent_unwritten_real(
- 					PREV.br_startblock,
- 					PREV.br_blockcount, &i)))
- 				goto done;
--			XFS_WANT_CORRUPTED_GOTO(i == 1, done);
-+			XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
- 			if ((error = xfs_bmbt_update(cur, PREV.br_startoff,
- 				PREV.br_startblock,
- 				PREV.br_blockcount - new->br_blockcount,
-@@ -2687,7 +2691,7 @@ xfs_bmap_add_extent_unwritten_real(
- 					PREV.br_startblock, PREV.br_blockcount,
- 					&i)))
- 				goto done;
--			XFS_WANT_CORRUPTED_GOTO(i == 1, done);
-+			XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
- 			if ((error = xfs_bmbt_update(cur, PREV.br_startoff,
- 				PREV.br_startblock,
- 				PREV.br_blockcount - new->br_blockcount,
-@@ -2697,11 +2701,11 @@ xfs_bmap_add_extent_unwritten_real(
- 					new->br_startblock, new->br_blockcount,
- 					&i)))
- 				goto done;
--			XFS_WANT_CORRUPTED_GOTO(i == 0, done);
-+			XFS_WANT_CORRUPTED_GOTO(mp, i == 0, done);
- 			cur->bc_rec.b.br_state = XFS_EXT_NORM;
- 			if ((error = xfs_btree_insert(cur, &i)))
- 				goto done;
--			XFS_WANT_CORRUPTED_GOTO(i == 1, done);
-+			XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
- 		}
- 		break;
- 
-@@ -2735,7 +2739,7 @@ xfs_bmap_add_extent_unwritten_real(
- 					PREV.br_startblock, PREV.br_blockcount,
- 					&i)))
- 				goto done;
--			XFS_WANT_CORRUPTED_GOTO(i == 1, done);
-+			XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
- 			/* new right extent - oldext */
- 			if ((error = xfs_bmbt_update(cur, r[1].br_startoff,
- 				r[1].br_startblock, r[1].br_blockcount,
-@@ -2747,7 +2751,7 @@ xfs_bmap_add_extent_unwritten_real(
- 				new->br_startoff - PREV.br_startoff;
- 			if ((error = xfs_btree_insert(cur, &i)))
- 				goto done;
--			XFS_WANT_CORRUPTED_GOTO(i == 1, done);
-+			XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
- 			/*
- 			 * Reset the cursor to the position of the new extent
- 			 * we are about to insert as we can't trust it after
-@@ -2757,12 +2761,12 @@ xfs_bmap_add_extent_unwritten_real(
- 					new->br_startblock, new->br_blockcount,
- 					&i)))
- 				goto done;
--			XFS_WANT_CORRUPTED_GOTO(i == 0, done);
-+			XFS_WANT_CORRUPTED_GOTO(mp, i == 0, done);
- 			/* new middle extent - newext */
- 			cur->bc_rec.b.br_state = new->br_state;
- 			if ((error = xfs_btree_insert(cur, &i)))
- 				goto done;
--			XFS_WANT_CORRUPTED_GOTO(i == 1, done);
-+			XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
- 		}
- 		break;
- 
-@@ -2966,7 +2970,9 @@ xfs_bmap_add_extent_hole_real(
- 	xfs_bmbt_irec_t		right;	/* right neighbor extent entry */
- 	int			rval=0;	/* return value (logging flags) */
- 	int			state;	/* state bits, accessed thru macros */
-+	struct xfs_mount	*mp;
- 
-+	mp = bma->tp ? bma->tp->t_mountp : NULL;
- 	ifp = XFS_IFORK_PTR(bma->ip, whichfork);
- 
- 	ASSERT(bma->idx >= 0);
-@@ -3054,15 +3060,15 @@ xfs_bmap_add_extent_hole_real(
- 					&i);
- 			if (error)
- 				goto done;
--			XFS_WANT_CORRUPTED_GOTO(i == 1, done);
-+			XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
- 			error = xfs_btree_delete(bma->cur, &i);
- 			if (error)
- 				goto done;
--			XFS_WANT_CORRUPTED_GOTO(i == 1, done);
-+			XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
- 			error = xfs_btree_decrement(bma->cur, 0, &i);
- 			if (error)
- 				goto done;
--			XFS_WANT_CORRUPTED_GOTO(i == 1, done);
-+			XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
- 			error = xfs_bmbt_update(bma->cur, left.br_startoff,
- 					left.br_startblock,
- 					left.br_blockcount +
-@@ -3095,7 +3101,7 @@ xfs_bmap_add_extent_hole_real(
- 					&i);
- 			if (error)
- 				goto done;
--			XFS_WANT_CORRUPTED_GOTO(i == 1, done);
-+			XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
- 			error = xfs_bmbt_update(bma->cur, left.br_startoff,
- 					left.br_startblock,
- 					left.br_blockcount +
-@@ -3129,7 +3135,7 @@ xfs_bmap_add_extent_hole_real(
- 					right.br_blockcount, &i);
- 			if (error)
- 				goto done;
--			XFS_WANT_CORRUPTED_GOTO(i == 1, done);
-+			XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
- 			error = xfs_bmbt_update(bma->cur, new->br_startoff,
- 					new->br_startblock,
- 					new->br_blockcount +
-@@ -3159,12 +3165,12 @@ xfs_bmap_add_extent_hole_real(
- 					new->br_blockcount, &i);
- 			if (error)
- 				goto done;
--			XFS_WANT_CORRUPTED_GOTO(i == 0, done);
-+			XFS_WANT_CORRUPTED_GOTO(mp, i == 0, done);
- 			bma->cur->bc_rec.b.br_state = new->br_state;
- 			error = xfs_btree_insert(bma->cur, &i);
- 			if (error)
- 				goto done;
--			XFS_WANT_CORRUPTED_GOTO(i == 1, done);
-+			XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
- 		}
- 		break;
- 	}
-@@ -4799,7 +4805,7 @@ xfs_bmap_del_extent(
- 					got.br_startblock, got.br_blockcount,
- 					&i)))
- 				goto done;
--			XFS_WANT_CORRUPTED_GOTO(i == 1, done);
-+			XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
- 		}
- 		da_old = da_new = 0;
- 	} else {
-@@ -4833,7 +4839,7 @@ xfs_bmap_del_extent(
- 		}
- 		if ((error = xfs_btree_delete(cur, &i)))
- 			goto done;
--		XFS_WANT_CORRUPTED_GOTO(i == 1, done);
-+		XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
- 		break;
- 
- 	case 2:
-@@ -4933,7 +4939,8 @@ xfs_bmap_del_extent(
- 							got.br_startblock,
- 							temp, &i)))
- 						goto done;
--					XFS_WANT_CORRUPTED_GOTO(i == 1, done);
-+					XFS_WANT_CORRUPTED_GOTO(mp,
-+								i == 1, done);
- 					/*
- 					 * Update the btree record back
- 					 * to the original value.
-@@ -4954,7 +4961,7 @@ xfs_bmap_del_extent(
- 					error = -ENOSPC;
- 					goto done;
- 				}
--				XFS_WANT_CORRUPTED_GOTO(i == 1, done);
-+				XFS_WANT_CORRUPTED_GOTO(mp, i == 1, done);
- 			} else
- 				flags |= xfs_ilog_fext(whichfork);
- 			XFS_IFORK_NEXT_SET(ip, whichfork,
+ 	got.br_startoff = startoff;
+ 	return xfs_bmbt_update(cur, got.br_startoff, got.br_startblock,
 diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
-index 81cad43..8c5ce10 100644
+index 8c5ce10..c72283d 100644
 --- a/fs/xfs/libxfs/xfs_btree.c
 +++ b/fs/xfs/libxfs/xfs_btree.c
-@@ -2285,7 +2285,7 @@ xfs_btree_rshift(
- 	if (error)
- 		goto error0;
- 	i = xfs_btree_lastrec(tcur, level);
--	XFS_WANT_CORRUPTED_GOTO(i == 1, error0);
-+	XFS_WANT_CORRUPTED_GOTO(cur->bc_mp, i == 1, error0);
+@@ -168,7 +168,7 @@ xfs_btree_check_lptr(
+ 	xfs_fsblock_t		bno,	/* btree block disk address */
+ 	int			level)	/* btree block level */
+ {
+-	XFS_WANT_CORRUPTED_RETURN(
++	XFS_WANT_CORRUPTED_RETURN(cur->bc_mp,
+ 		level > 0 &&
+ 		bno != NULLFSBLOCK &&
+ 		XFS_FSB_SANITY_CHECK(cur->bc_mp, bno));
+@@ -187,7 +187,7 @@ xfs_btree_check_sptr(
+ {
+ 	xfs_agblock_t		agblocks = cur->bc_mp->m_sb.sb_agblocks;
  
- 	error = xfs_btree_increment(tcur, level, &i);
- 	if (error)
-@@ -3138,7 +3138,7 @@ xfs_btree_insert(
- 			goto error0;
- 		}
- 
--		XFS_WANT_CORRUPTED_GOTO(i == 1, error0);
-+		XFS_WANT_CORRUPTED_GOTO(cur->bc_mp, i == 1, error0);
- 		level++;
- 
- 		/*
-@@ -3582,15 +3582,15 @@ xfs_btree_delrec(
- 		 * Actually any entry but the first would suffice.
- 		 */
- 		i = xfs_btree_lastrec(tcur, level);
--		XFS_WANT_CORRUPTED_GOTO(i == 1, error0);
-+		XFS_WANT_CORRUPTED_GOTO(cur->bc_mp, i == 1, error0);
- 
- 		error = xfs_btree_increment(tcur, level, &i);
- 		if (error)
- 			goto error0;
--		XFS_WANT_CORRUPTED_GOTO(i == 1, error0);
-+		XFS_WANT_CORRUPTED_GOTO(cur->bc_mp, i == 1, error0);
- 
- 		i = xfs_btree_lastrec(tcur, level);
--		XFS_WANT_CORRUPTED_GOTO(i == 1, error0);
-+		XFS_WANT_CORRUPTED_GOTO(cur->bc_mp, i == 1, error0);
- 
- 		/* Grab a pointer to the block. */
- 		right = xfs_btree_get_block(tcur, level, &rbp);
-@@ -3634,12 +3634,12 @@ xfs_btree_delrec(
- 		rrecs = xfs_btree_get_numrecs(right);
- 		if (!xfs_btree_ptr_is_null(cur, &lptr)) {
- 			i = xfs_btree_firstrec(tcur, level);
--			XFS_WANT_CORRUPTED_GOTO(i == 1, error0);
-+			XFS_WANT_CORRUPTED_GOTO(cur->bc_mp, i == 1, error0);
- 
- 			error = xfs_btree_decrement(tcur, level, &i);
+-	XFS_WANT_CORRUPTED_RETURN(
++	XFS_WANT_CORRUPTED_RETURN(cur->bc_mp,
+ 		level > 0 &&
+ 		bno != NULLAGBLOCK &&
+ 		bno != 0 &&
+@@ -1825,7 +1825,7 @@ xfs_btree_lookup(
+ 			error = xfs_btree_increment(cur, 0, &i);
  			if (error)
  				goto error0;
--			XFS_WANT_CORRUPTED_GOTO(i == 1, error0);
-+			XFS_WANT_CORRUPTED_GOTO(cur->bc_mp, i == 1, error0);
- 		}
+-			XFS_WANT_CORRUPTED_RETURN(i == 1);
++			XFS_WANT_CORRUPTED_RETURN(cur->bc_mp, i == 1);
+ 			XFS_BTREE_TRACE_CURSOR(cur, XBT_EXIT);
+ 			*stat = 1;
+ 			return 0;
+diff --git a/fs/xfs/libxfs/xfs_dir2_data.c b/fs/xfs/libxfs/xfs_dir2_data.c
+index 5ff31be..de1ea16 100644
+--- a/fs/xfs/libxfs/xfs_dir2_data.c
++++ b/fs/xfs/libxfs/xfs_dir2_data.c
+@@ -89,7 +89,7 @@ __xfs_dir3_data_check(
+ 		 * so just ensure that the count falls somewhere inside the
+ 		 * block right now.
+ 		 */
+-		XFS_WANT_CORRUPTED_RETURN(be32_to_cpu(btp->count) <
++		XFS_WANT_CORRUPTED_RETURN(mp, be32_to_cpu(btp->count) <
+ 			((char *)btp - p) / sizeof(struct xfs_dir2_leaf_entry));
+ 		break;
+ 	case cpu_to_be32(XFS_DIR3_DATA_MAGIC):
+@@ -107,21 +107,21 @@ __xfs_dir3_data_check(
+ 	bf = ops->data_bestfree_p(hdr);
+ 	count = lastfree = freeseen = 0;
+ 	if (!bf[0].length) {
+-		XFS_WANT_CORRUPTED_RETURN(!bf[0].offset);
++		XFS_WANT_CORRUPTED_RETURN(mp, !bf[0].offset);
+ 		freeseen |= 1 << 0;
+ 	}
+ 	if (!bf[1].length) {
+-		XFS_WANT_CORRUPTED_RETURN(!bf[1].offset);
++		XFS_WANT_CORRUPTED_RETURN(mp, !bf[1].offset);
+ 		freeseen |= 1 << 1;
+ 	}
+ 	if (!bf[2].length) {
+-		XFS_WANT_CORRUPTED_RETURN(!bf[2].offset);
++		XFS_WANT_CORRUPTED_RETURN(mp, !bf[2].offset);
+ 		freeseen |= 1 << 2;
  	}
  
-@@ -3653,13 +3653,13 @@ xfs_btree_delrec(
- 		 * previous block.
+-	XFS_WANT_CORRUPTED_RETURN(be16_to_cpu(bf[0].length) >=
++	XFS_WANT_CORRUPTED_RETURN(mp, be16_to_cpu(bf[0].length) >=
+ 						be16_to_cpu(bf[1].length));
+-	XFS_WANT_CORRUPTED_RETURN(be16_to_cpu(bf[1].length) >=
++	XFS_WANT_CORRUPTED_RETURN(mp, be16_to_cpu(bf[1].length) >=
+ 						be16_to_cpu(bf[2].length));
+ 	/*
+ 	 * Loop over the data/unused entries.
+@@ -134,18 +134,18 @@ __xfs_dir3_data_check(
+ 		 * doesn't need to be there.
  		 */
- 		i = xfs_btree_firstrec(tcur, level);
--		XFS_WANT_CORRUPTED_GOTO(i == 1, error0);
-+		XFS_WANT_CORRUPTED_GOTO(cur->bc_mp, i == 1, error0);
- 
- 		error = xfs_btree_decrement(tcur, level, &i);
- 		if (error)
- 			goto error0;
- 		i = xfs_btree_firstrec(tcur, level);
--		XFS_WANT_CORRUPTED_GOTO(i == 1, error0);
-+		XFS_WANT_CORRUPTED_GOTO(cur->bc_mp, i == 1, error0);
- 
- 		/* Grab a pointer to the block. */
- 		left = xfs_btree_get_block(tcur, level, &lbp);
+ 		if (be16_to_cpu(dup->freetag) == XFS_DIR2_DATA_FREE_TAG) {
+-			XFS_WANT_CORRUPTED_RETURN(lastfree == 0);
+-			XFS_WANT_CORRUPTED_RETURN(
++			XFS_WANT_CORRUPTED_RETURN(mp, lastfree == 0);
++			XFS_WANT_CORRUPTED_RETURN(mp,
+ 				be16_to_cpu(*xfs_dir2_data_unused_tag_p(dup)) ==
+ 					       (char *)dup - (char *)hdr);
+ 			dfp = xfs_dir2_data_freefind(hdr, bf, dup);
+ 			if (dfp) {
+ 				i = (int)(dfp - bf);
+-				XFS_WANT_CORRUPTED_RETURN(
++				XFS_WANT_CORRUPTED_RETURN(mp,
+ 					(freeseen & (1 << i)) == 0);
+ 				freeseen |= 1 << i;
+ 			} else {
+-				XFS_WANT_CORRUPTED_RETURN(
++				XFS_WANT_CORRUPTED_RETURN(mp,
+ 					be16_to_cpu(dup->length) <=
+ 						be16_to_cpu(bf[2].length));
+ 			}
+@@ -160,13 +160,13 @@ __xfs_dir3_data_check(
+ 		 * The linear search is crude but this is DEBUG code.
+ 		 */
+ 		dep = (xfs_dir2_data_entry_t *)p;
+-		XFS_WANT_CORRUPTED_RETURN(dep->namelen != 0);
+-		XFS_WANT_CORRUPTED_RETURN(
++		XFS_WANT_CORRUPTED_RETURN(mp, dep->namelen != 0);
++		XFS_WANT_CORRUPTED_RETURN(mp,
+ 			!xfs_dir_ino_validate(mp, be64_to_cpu(dep->inumber)));
+-		XFS_WANT_CORRUPTED_RETURN(
++		XFS_WANT_CORRUPTED_RETURN(mp,
+ 			be16_to_cpu(*ops->data_entry_tag_p(dep)) ==
+ 					       (char *)dep - (char *)hdr);
+-		XFS_WANT_CORRUPTED_RETURN(
++		XFS_WANT_CORRUPTED_RETURN(mp,
+ 				ops->data_get_ftype(dep) < XFS_DIR3_FT_MAX);
+ 		count++;
+ 		lastfree = 0;
+@@ -183,14 +183,15 @@ __xfs_dir3_data_check(
+ 				    be32_to_cpu(lep[i].hashval) == hash)
+ 					break;
+ 			}
+-			XFS_WANT_CORRUPTED_RETURN(i < be32_to_cpu(btp->count));
++			XFS_WANT_CORRUPTED_RETURN(mp,
++						  i < be32_to_cpu(btp->count));
+ 		}
+ 		p += ops->data_entsize(dep->namelen);
+ 	}
+ 	/*
+ 	 * Need to have seen all the entries and all the bestfree slots.
+ 	 */
+-	XFS_WANT_CORRUPTED_RETURN(freeseen == 7);
++	XFS_WANT_CORRUPTED_RETURN(mp, freeseen == 7);
+ 	if (hdr->magic == cpu_to_be32(XFS_DIR2_BLOCK_MAGIC) ||
+ 	    hdr->magic == cpu_to_be32(XFS_DIR3_BLOCK_MAGIC)) {
+ 		for (i = stale = 0; i < be32_to_cpu(btp->count); i++) {
+@@ -198,13 +199,13 @@ __xfs_dir3_data_check(
+ 			    cpu_to_be32(XFS_DIR2_NULL_DATAPTR))
+ 				stale++;
+ 			if (i > 0)
+-				XFS_WANT_CORRUPTED_RETURN(
++				XFS_WANT_CORRUPTED_RETURN(mp,
+ 					be32_to_cpu(lep[i].hashval) >=
+ 						be32_to_cpu(lep[i - 1].hashval));
+ 		}
+-		XFS_WANT_CORRUPTED_RETURN(count ==
++		XFS_WANT_CORRUPTED_RETURN(mp, count ==
+ 			be32_to_cpu(btp->count) - be32_to_cpu(btp->stale));
+-		XFS_WANT_CORRUPTED_RETURN(stale == be32_to_cpu(btp->stale));
++		XFS_WANT_CORRUPTED_RETURN(mp, stale == be32_to_cpu(btp->stale));
+ 	}
+ 	return 0;
+ }
 diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
-index 116ef1d..f95c4ae 100644
+index f95c4ae..db04448 100644
 --- a/fs/xfs/libxfs/xfs_ialloc.c
 +++ b/fs/xfs/libxfs/xfs_ialloc.c
-@@ -783,12 +783,12 @@ xfs_dialloc_ag_inobt(
- 		error = xfs_inobt_lookup(cur, pagino, XFS_LOOKUP_LE, &i);
+@@ -700,7 +700,7 @@ xfs_ialloc_next_rec(
+ 		error = xfs_inobt_get_rec(cur, rec, &i);
  		if (error)
- 			goto error0;
--		XFS_WANT_CORRUPTED_GOTO(i == 1, error0);
-+		XFS_WANT_CORRUPTED_GOTO(mp, i == 1, error0);
+ 			return error;
+-		XFS_WANT_CORRUPTED_RETURN(i == 1);
++		XFS_WANT_CORRUPTED_RETURN(cur->bc_mp, i == 1);
+ 	}
  
- 		error = xfs_inobt_get_rec(cur, &rec, &j);
+ 	return 0;
+@@ -724,7 +724,7 @@ xfs_ialloc_get_rec(
+ 		error = xfs_inobt_get_rec(cur, rec, &i);
  		if (error)
- 			goto error0;
--		XFS_WANT_CORRUPTED_GOTO(j == 1, error0);
-+		XFS_WANT_CORRUPTED_GOTO(mp, j == 1, error0);
+ 			return error;
+-		XFS_WANT_CORRUPTED_RETURN(i == 1);
++		XFS_WANT_CORRUPTED_RETURN(cur->bc_mp, i == 1);
+ 	}
  
- 		if (rec.ir_freecount > 0) {
- 			/*
-@@ -944,19 +944,19 @@ newino:
+ 	return 0;
+@@ -1016,7 +1016,7 @@ xfs_dialloc_ag_finobt_near(
+ 		error = xfs_inobt_get_rec(lcur, rec, &i);
+ 		if (error)
+ 			return error;
+-		XFS_WANT_CORRUPTED_RETURN(i == 1);
++		XFS_WANT_CORRUPTED_RETURN(lcur->bc_mp, i == 1);
+ 
+ 		/*
+ 		 * See if we've landed in the parent inode record. The finobt
+@@ -1095,7 +1095,7 @@ xfs_dialloc_ag_finobt_newino(
+ 			error = xfs_inobt_get_rec(cur, rec, &i);
+ 			if (error)
+ 				return error;
+-			XFS_WANT_CORRUPTED_RETURN(i == 1);
++			XFS_WANT_CORRUPTED_RETURN(cur->bc_mp, i == 1);
+ 			return 0;
+ 		}
+ 	}
+@@ -1106,12 +1106,12 @@ xfs_dialloc_ag_finobt_newino(
  	error = xfs_inobt_lookup(cur, 0, XFS_LOOKUP_GE, &i);
  	if (error)
- 		goto error0;
--	XFS_WANT_CORRUPTED_GOTO(i == 1, error0);
-+	XFS_WANT_CORRUPTED_GOTO(mp, i == 1, error0);
+ 		return error;
+-	XFS_WANT_CORRUPTED_RETURN(i == 1);
++	XFS_WANT_CORRUPTED_RETURN(cur->bc_mp, i == 1);
  
- 	for (;;) {
- 		error = xfs_inobt_get_rec(cur, &rec, &i);
- 		if (error)
- 			goto error0;
--		XFS_WANT_CORRUPTED_GOTO(i == 1, error0);
-+		XFS_WANT_CORRUPTED_GOTO(mp, i == 1, error0);
- 		if (rec.ir_freecount > 0)
- 			break;
- 		error = xfs_btree_increment(cur, 0, &i);
- 		if (error)
- 			goto error0;
--		XFS_WANT_CORRUPTED_GOTO(i == 1, error0);
-+		XFS_WANT_CORRUPTED_GOTO(mp, i == 1, error0);
- 	}
+ 	error = xfs_inobt_get_rec(cur, rec, &i);
+ 	if (error)
+ 		return error;
+-	XFS_WANT_CORRUPTED_RETURN(i == 1);
++	XFS_WANT_CORRUPTED_RETURN(cur->bc_mp, i == 1);
  
- alloc_inode:
-@@ -1039,10 +1039,10 @@ xfs_dialloc_ag_finobt_near(
- 		error = xfs_inobt_get_rec(rcur, &rrec, &j);
- 		if (error)
- 			goto error_rcur;
--		XFS_WANT_CORRUPTED_GOTO(j == 1, error_rcur);
-+		XFS_WANT_CORRUPTED_GOTO(lcur->bc_mp, j == 1, error_rcur);
- 	}
+ 	return 0;
+ }
+@@ -1133,19 +1133,19 @@ xfs_dialloc_ag_update_inobt(
+ 	error = xfs_inobt_lookup(cur, frec->ir_startino, XFS_LOOKUP_EQ, &i);
+ 	if (error)
+ 		return error;
+-	XFS_WANT_CORRUPTED_RETURN(i == 1);
++	XFS_WANT_CORRUPTED_RETURN(cur->bc_mp, i == 1);
  
--	XFS_WANT_CORRUPTED_GOTO(i == 1 || j == 1, error_rcur);
-+	XFS_WANT_CORRUPTED_GOTO(lcur->bc_mp, i == 1 || j == 1, error_rcur);
- 	if (i == 1 && j == 1) {
- 		/*
- 		 * Both the left and right records are valid. Choose the closer
-@@ -1475,14 +1475,14 @@ xfs_difree_inobt(
- 			__func__, error);
- 		goto error0;
- 	}
--	XFS_WANT_CORRUPTED_GOTO(i == 1, error0);
-+	XFS_WANT_CORRUPTED_GOTO(mp, i == 1, error0);
- 	error = xfs_inobt_get_rec(cur, &rec, &i);
- 	if (error) {
- 		xfs_warn(mp, "%s: xfs_inobt_get_rec() returned error %d.",
- 			__func__, error);
- 		goto error0;
- 	}
--	XFS_WANT_CORRUPTED_GOTO(i == 1, error0);
-+	XFS_WANT_CORRUPTED_GOTO(mp, i == 1, error0);
- 	/*
- 	 * Get the offset in the inode chunk.
- 	 */
-@@ -1592,7 +1592,7 @@ xfs_difree_finobt(
- 		 * freed an inode in a previously fully allocated chunk. If not,
- 		 * something is out of sync.
- 		 */
--		XFS_WANT_CORRUPTED_GOTO(ibtrec->ir_freecount == 1, error);
-+		XFS_WANT_CORRUPTED_GOTO(mp, ibtrec->ir_freecount == 1, error);
- 
- 		error = xfs_inobt_insert_rec(cur, ibtrec->ir_freecount,
- 					     ibtrec->ir_free, &i);
-@@ -1613,12 +1613,12 @@ xfs_difree_finobt(
  	error = xfs_inobt_get_rec(cur, &rec, &i);
  	if (error)
- 		goto error;
--	XFS_WANT_CORRUPTED_GOTO(i == 1, error);
-+	XFS_WANT_CORRUPTED_GOTO(mp, i == 1, error);
+ 		return error;
+-	XFS_WANT_CORRUPTED_RETURN(i == 1);
++	XFS_WANT_CORRUPTED_RETURN(cur->bc_mp, i == 1);
+ 	ASSERT((XFS_AGINO_TO_OFFSET(cur->bc_mp, rec.ir_startino) %
+ 				   XFS_INODES_PER_CHUNK) == 0);
  
- 	rec.ir_free |= XFS_INOBT_MASK(offset);
- 	rec.ir_freecount++;
+ 	rec.ir_free &= ~XFS_INOBT_MASK(offset);
+ 	rec.ir_freecount--;
  
--	XFS_WANT_CORRUPTED_GOTO((rec.ir_free == ibtrec->ir_free) &&
-+	XFS_WANT_CORRUPTED_GOTO(mp, (rec.ir_free == ibtrec->ir_free) &&
- 				(rec.ir_freecount == ibtrec->ir_freecount),
- 				error);
+-	XFS_WANT_CORRUPTED_RETURN((rec.ir_free == frec->ir_free) &&
++	XFS_WANT_CORRUPTED_RETURN(cur->bc_mp, (rec.ir_free == frec->ir_free) &&
+ 				  (rec.ir_freecount == frec->ir_freecount));
  
-diff --git a/fs/xfs/xfs_discard.c b/fs/xfs/xfs_discard.c
-index 799e5a2..e85a951 100644
---- a/fs/xfs/xfs_discard.c
-+++ b/fs/xfs/xfs_discard.c
-@@ -84,7 +84,7 @@ xfs_trim_extents(
- 		error = xfs_alloc_get_rec(cur, &fbno, &flen, &i);
- 		if (error)
- 			goto out_del_cursor;
--		XFS_WANT_CORRUPTED_GOTO(i == 1, out_del_cursor);
-+		XFS_WANT_CORRUPTED_GOTO(mp, i == 1, out_del_cursor);
- 		ASSERT(flen <= be32_to_cpu(XFS_BUF_TO_AGF(agbp)->agf_longest));
- 
- 		/*
+ 	return xfs_inobt_update(cur, &rec);
 diff --git a/fs/xfs/xfs_error.h b/fs/xfs/xfs_error.h
-index 279a76e..13eeca3 100644
+index 13eeca3..c0394ed 100644
 --- a/fs/xfs/xfs_error.h
 +++ b/fs/xfs/xfs_error.h
-@@ -40,13 +40,13 @@ extern void xfs_verifier_error(struct xfs_buf *bp);
- /*
-  * Macros to set EFSCORRUPTED & return/branch.
-  */
--#define	XFS_WANT_CORRUPTED_GOTO(x,l)	\
-+#define	XFS_WANT_CORRUPTED_GOTO(mp, x, l)	\
+@@ -52,13 +52,13 @@ extern void xfs_verifier_error(struct xfs_buf *bp);
+ 		} \
+ 	}
+ 
+-#define	XFS_WANT_CORRUPTED_RETURN(x)	\
++#define	XFS_WANT_CORRUPTED_RETURN(mp, x)	\
  	{ \
  		int fs_is_ok = (x); \
  		ASSERT(fs_is_ok); \
  		if (unlikely(!fs_is_ok)) { \
- 			XFS_ERROR_REPORT("XFS_WANT_CORRUPTED_GOTO", \
+ 			XFS_ERROR_REPORT("XFS_WANT_CORRUPTED_RETURN", \
 -					 XFS_ERRLEVEL_LOW, NULL); \
 +					 XFS_ERRLEVEL_LOW, mp); \
- 			error = -EFSCORRUPTED; \
- 			goto l; \
+ 			return -EFSCORRUPTED; \
  		} \
+ 	}
+diff --git a/fs/xfs/xfs_itable.c b/fs/xfs/xfs_itable.c
+index 82e3142..8042989 100644
+--- a/fs/xfs/xfs_itable.c
++++ b/fs/xfs/xfs_itable.c
+@@ -229,7 +229,7 @@ xfs_bulkstat_grab_ichunk(
+ 	error = xfs_inobt_get_rec(cur, irec, &stat);
+ 	if (error)
+ 		return error;
+-	XFS_WANT_CORRUPTED_RETURN(stat == 1);
++	XFS_WANT_CORRUPTED_RETURN(cur->bc_mp, stat == 1);
+ 
+ 	/* Check if the record contains the inode in request */
+ 	if (irec->ir_startino + XFS_INODES_PER_CHUNK <= agino) {
 
 
 _______________________________________________
