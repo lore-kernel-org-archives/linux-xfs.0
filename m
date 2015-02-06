@@ -1,27 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id BE2B7803C
+	by oss.sgi.com (Postfix) with ESMTP id BF90A803D
 	for <xfs@oss.sgi.com>; Fri,  6 Feb 2015 13:53:08 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 4731B30407F
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 6663730407A
 	for <xfs@oss.sgi.com>; Fri,  6 Feb 2015 11:53:09 -0800 (PST)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id BQl2sdDHFFiDwJEs (version=TLSv1
+	cuda.sgi.com with ESMTP id j6Sodqn0tfdQ8Abh (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 06 Feb 2015 11:53:07 -0800 (PST)
-Received: from int-mx11.intmail.prod.int.phx2.redhat.com
-	(int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id t16Jr7Dx026127
+	Fri, 06 Feb 2015 11:53:08 -0800 (PST)
+Received: from int-mx13.intmail.prod.int.phx2.redhat.com
+	(int-mx13.intmail.prod.int.phx2.redhat.com [10.5.11.26])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id t16Jr7Ci032282
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256
-	verify=FAIL) for <xfs@oss.sgi.com>; Fri, 6 Feb 2015 14:53:07 -0500
+	verify=FAIL) for <xfs@oss.sgi.com>; Fri, 6 Feb 2015 14:53:08 -0500
 Received: from bfoster.bfoster ([10.18.41.237])
-	by int-mx11.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id t16Jr7Rq022352
+	by int-mx13.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id t16Jr7e7017041
 	for <xfs@oss.sgi.com>; Fri, 6 Feb 2015 14:53:07 -0500
 From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH v3 09/18] xfs: support min/max agbno args in block allocator
-Date: Fri,  6 Feb 2015 14:52:56 -0500
-Message-Id: <1423252385-3063-10-git-send-email-bfoster@redhat.com>
+Subject: [PATCH v3 13/18] xfs: update free inode record logic to support
+	sparse inode records
+Date: Fri,  6 Feb 2015 14:53:00 -0500
+Message-Id: <1423252385-3063-14-git-send-email-bfoster@redhat.com>
 In-Reply-To: <1423252385-3063-1-git-send-email-bfoster@redhat.com>
 References: <1423252385-3063-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,164 +40,54 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-The block allocator supports various arguments to tweak block allocation
-behavior and set allocation requirements. The sparse inode chunk feature
-introduces a new requirement not supported by the current arguments.
-Sparse inode allocations must convert or merge into an inode record that
-describes a fixed length chunk (64 inodes x inodesize). Full inode chunk
-allocations by definition always result in valid inode records. Sparse
-chunk allocations are smaller and the associated records can refer to
-blocks not owned by the inode chunk. This model can result in invalid
-inode records in certain cases.
+xfs_difree_inobt() uses logic in a couple places that assume inobt
+records refer to fully allocated chunks. Specifically, the use of
+mp->m_ialloc_inos can cause problems for inode chunks that are sparsely
+allocated. Sparse inode chunks can, by definition, define a smaller
+number of inodes than a full inode chunk.
 
-For example, if a sparse allocation occurs near the start of an AG, the
-aligned inode record for that chunk might refer to agbno 0. If an
-allocation occurs towards the end of the AG and the AG size is not
-aligned, the inode record could refer to blocks beyond the end of the
-AG. While neither of these scenarios directly result in corruption, they
-both insert invalid inode records and at minimum cause repair to
-complain, are unlikely to merge into full chunks over time and set land
-mines for other areas of code.
+Fix the logic that determines whether an inode record should be removed
+from the inobt to use the ir_free mask rather than ir_freecount.
 
-To guarantee sparse inode chunk allocation creates valid inode records,
-support the ability to specify an agbno range limit for
-XFS_ALLOCTYPE_NEAR_BNO block allocations. The min/max agbno's are
-specified in the allocation arguments and limit the block allocation
-algorithms to that range. The starting 'agbno' hint is clamped to the
-range if the specified agbno is out of range. If no sufficient extent is
-available within the range, the allocation fails. For backwards
-compatibility, the min/max fields can be initialized to 0 to disable
-range limiting (e.g., equivalent to min=0,max=agsize).
+Fix the agi counters modification to use ir_freecount to add the actual
+number of inodes freed rather than assuming a full inode chunk.
 
 Signed-off-by: Brian Foster <bfoster@redhat.com>
 ---
- fs/xfs/libxfs/xfs_alloc.c | 42 +++++++++++++++++++++++++++++++++++++-----
- fs/xfs/libxfs/xfs_alloc.h |  2 ++
- 2 files changed, 39 insertions(+), 5 deletions(-)
+ fs/xfs/libxfs/xfs_ialloc.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-index a6fbf44..0ddf6c9 100644
---- a/fs/xfs/libxfs/xfs_alloc.c
-+++ b/fs/xfs/libxfs/xfs_alloc.c
-@@ -149,13 +149,27 @@ xfs_alloc_compute_aligned(
- {
- 	xfs_agblock_t	bno;
- 	xfs_extlen_t	len;
-+	xfs_extlen_t	diff;
+diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
+index 2691d3e..e50e57a 100644
+--- a/fs/xfs/libxfs/xfs_ialloc.c
++++ b/fs/xfs/libxfs/xfs_ialloc.c
+@@ -1975,7 +1975,7 @@ xfs_difree_inobt(
+ 	 * When an inode cluster is free, it becomes eligible for removal
+ 	 */
+ 	if (!(mp->m_flags & XFS_MOUNT_IKEEP) &&
+-	    (rec.ir_freecount == mp->m_ialloc_inos)) {
++	    (rec.ir_free == XFS_INOBT_ALL_FREE)) {
  
- 	/* Trim busy sections out of found extent */
- 	xfs_extent_busy_trim(args, foundbno, foundlen, &bno, &len);
- 
-+	/*
-+	 * If we have a largish extent that happens to start before min_agbno,
-+	 * see if we can shift it into range...
-+	 */
-+	if (bno < args->min_agbno && bno + len > args->min_agbno) {
-+		diff = args->min_agbno - bno;
-+		if (len > diff) {
-+			bno += diff;
-+			len -= diff;
-+		}
-+	}
-+
- 	if (args->alignment > 1 && len >= args->minlen) {
- 		xfs_agblock_t	aligned_bno = roundup(bno, args->alignment);
--		xfs_extlen_t	diff = aligned_bno - bno;
-+
-+		diff = aligned_bno - bno;
- 
- 		*resbno = aligned_bno;
- 		*reslen = diff >= len ? 0 : len - diff;
-@@ -790,9 +804,13 @@ xfs_alloc_find_best_extent(
- 		 * The good extent is closer than this one.
+ 		*deleted = 1;
+ 		*first_ino = XFS_AGINO_TO_INO(mp, agno, rec.ir_startino);
+@@ -1985,7 +1985,7 @@ xfs_difree_inobt(
+ 		 * AGI and Superblock inode counts, and mark the disk space
+ 		 * to be freed when the transaction is committed.
  		 */
- 		if (!dir) {
-+			if (*sbnoa > args->max_agbno)
-+				goto out_use_good;
- 			if (*sbnoa >= args->agbno + gdiff)
- 				goto out_use_good;
- 		} else {
-+			if (*sbnoa < args->min_agbno)
-+				goto out_use_good;
- 			if (*sbnoa <= args->agbno - gdiff)
- 				goto out_use_good;
- 		}
-@@ -879,6 +897,17 @@ xfs_alloc_ag_vextent_near(
- 	dofirst = prandom_u32() & 1;
- #endif
- 
-+	/* handle unitialized agbno range so caller doesn't have to */
-+	if (!args->min_agbno && !args->max_agbno)
-+		args->max_agbno = args->mp->m_sb.sb_agblocks - 1;
-+	ASSERT(args->min_agbno <= args->max_agbno);
-+
-+	/* clamp agbno to the range if it's outside */
-+	if (args->agbno < args->min_agbno)
-+		args->agbno = args->min_agbno;
-+	if (args->agbno > args->max_agbno)
-+		args->agbno = args->max_agbno;
-+
- restart:
- 	bno_cur_lt = NULL;
- 	bno_cur_gt = NULL;
-@@ -971,6 +1000,8 @@ restart:
- 						  &ltbnoa, &ltlena);
- 			if (ltlena < args->minlen)
- 				continue;
-+			if (ltbnoa < args->min_agbno || ltbnoa > args->max_agbno)
-+				continue;
- 			args->len = XFS_EXTLEN_MIN(ltlena, args->maxlen);
- 			xfs_alloc_fix_len(args);
- 			ASSERT(args->len >= args->minlen);
-@@ -1091,11 +1122,11 @@ restart:
- 			XFS_WANT_CORRUPTED_GOTO(i == 1, error0);
- 			xfs_alloc_compute_aligned(args, ltbno, ltlen,
- 						  &ltbnoa, &ltlena);
--			if (ltlena >= args->minlen)
-+			if (ltlena >= args->minlen && ltbnoa >= args->min_agbno)
- 				break;
- 			if ((error = xfs_btree_decrement(bno_cur_lt, 0, &i)))
- 				goto error0;
--			if (!i) {
-+			if (!i || ltbnoa < args->min_agbno) {
- 				xfs_btree_del_cursor(bno_cur_lt,
- 						     XFS_BTREE_NOERROR);
- 				bno_cur_lt = NULL;
-@@ -1107,11 +1138,11 @@ restart:
- 			XFS_WANT_CORRUPTED_GOTO(i == 1, error0);
- 			xfs_alloc_compute_aligned(args, gtbno, gtlen,
- 						  &gtbnoa, &gtlena);
--			if (gtlena >= args->minlen)
-+			if (gtlena >= args->minlen && gtbnoa <= args->max_agbno)
- 				break;
- 			if ((error = xfs_btree_increment(bno_cur_gt, 0, &i)))
- 				goto error0;
--			if (!i) {
-+			if (!i || gtbnoa > args->max_agbno) {
- 				xfs_btree_del_cursor(bno_cur_gt,
- 						     XFS_BTREE_NOERROR);
- 				bno_cur_gt = NULL;
-@@ -1211,6 +1242,7 @@ restart:
- 	ASSERT(ltnew >= ltbno);
- 	ASSERT(ltnew + rlen <= ltbnoa + ltlena);
- 	ASSERT(ltnew + rlen <= be32_to_cpu(XFS_BUF_TO_AGF(args->agbp)->agf_length));
-+	ASSERT(ltnew >= args->min_agbno && ltnew <= args->max_agbno);
- 	args->agbno = ltnew;
- 
- 	if ((error = xfs_alloc_fixup_trees(cnt_cur, bno_cur_lt, ltbno, ltlen,
-diff --git a/fs/xfs/libxfs/xfs_alloc.h b/fs/xfs/libxfs/xfs_alloc.h
-index d1b4b6a..29f27b2 100644
---- a/fs/xfs/libxfs/xfs_alloc.h
-+++ b/fs/xfs/libxfs/xfs_alloc.h
-@@ -112,6 +112,8 @@ typedef struct xfs_alloc_arg {
- 	xfs_extlen_t	total;		/* total blocks needed in xaction */
- 	xfs_extlen_t	alignment;	/* align answer to multiple of this */
- 	xfs_extlen_t	minalignslop;	/* slop for minlen+alignment calcs */
-+	xfs_agblock_t	min_agbno;	/* set an agbno range for NEAR allocs */
-+	xfs_agblock_t	max_agbno;	/* ... */
- 	xfs_extlen_t	len;		/* output: actual size of extent */
- 	xfs_alloctype_t	type;		/* allocation type XFS_ALLOCTYPE_... */
- 	xfs_alloctype_t	otype;		/* original allocation type */
+-		ilen = mp->m_ialloc_inos;
++		ilen = rec.ir_freecount;
+ 		be32_add_cpu(&agi->agi_count, -ilen);
+ 		be32_add_cpu(&agi->agi_freecount, -(ilen - 1));
+ 		xfs_ialloc_log_agi(tp, agbp, XFS_AGI_COUNT | XFS_AGI_FREECOUNT);
+@@ -2108,7 +2108,7 @@ xfs_difree_finobt(
+ 	 * keeping inode chunks permanently on disk, remove the record.
+ 	 * Otherwise, update the record with the new information.
+ 	 */
+-	if (rec.ir_freecount == mp->m_ialloc_inos &&
++	if (rec.ir_free == XFS_INOBT_ALL_FREE &&
+ 	    !(mp->m_flags & XFS_MOUNT_IKEEP)) {
+ 		error = xfs_btree_delete(cur, &i);
+ 		if (error)
 -- 
 1.8.3.1
 
