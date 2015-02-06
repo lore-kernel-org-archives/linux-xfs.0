@@ -1,28 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 16EF7803C
+	by oss.sgi.com (Postfix) with ESMTP id 47655805A
 	for <xfs@oss.sgi.com>; Fri,  6 Feb 2015 13:53:11 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id A8D128F80A8
-	for <xfs@oss.sgi.com>; Fri,  6 Feb 2015 11:53:11 -0800 (PST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id D3D628F80A8
+	for <xfs@oss.sgi.com>; Fri,  6 Feb 2015 11:53:08 -0800 (PST)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id J5ZaSQrbGQMgrzjO (version=TLSv1
+	cuda.sgi.com with ESMTP id LWhyj6BUO0KvJzAn (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 06 Feb 2015 11:53:07 -0800 (PST)
+	Fri, 06 Feb 2015 11:53:08 -0800 (PST)
 Received: from int-mx14.intmail.prod.int.phx2.redhat.com
 	(int-mx14.intmail.prod.int.phx2.redhat.com [10.5.11.27])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id t16Jr7Rj032275
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id t16Jr7Kl026118
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256
 	verify=FAIL) for <xfs@oss.sgi.com>; Fri, 6 Feb 2015 14:53:07 -0500
 Received: from bfoster.bfoster ([10.18.41.237])
 	by int-mx14.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id t16Jr6e3023185
+	id t16Jr6dv023183
 	for <xfs@oss.sgi.com>; Fri, 6 Feb 2015 14:53:06 -0500
 From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH v3 02/18] xfs: use sparse chunk alignment for min. inode
-	allocation requirement
-Date: Fri,  6 Feb 2015 14:52:49 -0500
-Message-Id: <1423252385-3063-3-git-send-email-bfoster@redhat.com>
+Subject: [PATCH v3 01/18] xfs: add sparse inode chunk alignment superblock
+	field
+Date: Fri,  6 Feb 2015 14:52:48 -0500
+Message-Id: <1423252385-3063-2-git-send-email-bfoster@redhat.com>
 In-Reply-To: <1423252385-3063-1-git-send-email-bfoster@redhat.com>
 References: <1423252385-3063-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -40,68 +40,69 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-xfs_ialloc_ag_select() iterates through the allocation groups looking
-for free inodes or free space to determine whether to allow an inode
-allocation to proceed. If no free inodes are available, it assumes that
-an AG must have an extent longer than mp->m_ialloc_blks.
-
-Sparse inode chunk support currently allows for allocations smaller than
-the traditional inode chunk size specified in m_ialloc_blks. The current
-minimum sparse allocation is set in the superblock sb_spinoalignmt field
-at mkfs time. Create a new m_ialloc_min_blks field in xfs_mount and use
-this to represent the minimum supported allocation size for inode
-chunks. Initialize m_ialloc_min_blks at mount time based on whether
-sparse inodes are supported.
+Add sb_spinoalignmt to the superblock to specify sparse inode chunk
+alignment. This also currently represents the minimum allowable sparse
+chunk allocation size.
 
 Signed-off-by: Brian Foster <bfoster@redhat.com>
 ---
- fs/xfs/libxfs/xfs_ialloc.c | 2 +-
- fs/xfs/libxfs/xfs_sb.c     | 5 +++++
- fs/xfs/xfs_mount.h         | 2 ++
- 3 files changed, 8 insertions(+), 1 deletion(-)
+ fs/xfs/libxfs/xfs_format.h | 6 +++---
+ fs/xfs/libxfs/xfs_sb.c     | 4 ++--
+ 2 files changed, 5 insertions(+), 5 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
-index 116ef1d..6f2153e 100644
---- a/fs/xfs/libxfs/xfs_ialloc.c
-+++ b/fs/xfs/libxfs/xfs_ialloc.c
-@@ -644,7 +644,7 @@ xfs_ialloc_ag_select(
- 		 * if we fail allocation due to alignment issues then it is most
- 		 * likely a real ENOSPC condition.
- 		 */
--		ineed = mp->m_ialloc_blks;
-+		ineed = mp->m_ialloc_min_blks;
- 		if (flags && ineed > 1)
- 			ineed += xfs_ialloc_cluster_alignment(mp);
- 		longest = pag->pagf_longest;
+diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
+index 8eb7189..051c24d 100644
+--- a/fs/xfs/libxfs/xfs_format.h
++++ b/fs/xfs/libxfs/xfs_format.h
+@@ -170,7 +170,7 @@ typedef struct xfs_sb {
+ 	__uint32_t	sb_features_log_incompat;
+ 
+ 	__uint32_t	sb_crc;		/* superblock crc */
+-	__uint32_t	sb_pad;
++	xfs_extlen_t	sb_spinoalignmt;/* sparse inode chunk alignment */
+ 
+ 	xfs_ino_t	sb_pquotino;	/* project quota inode */
+ 	xfs_lsn_t	sb_lsn;		/* last write sequence */
+@@ -256,7 +256,7 @@ typedef struct xfs_dsb {
+ 	__be32		sb_features_log_incompat;
+ 
+ 	__le32		sb_crc;		/* superblock crc */
+-	__be32		sb_pad;
++	__be32		sb_spinoalignmt;/* sparse inode chunk alignment */
+ 
+ 	__be64		sb_pquotino;	/* project quota inode */
+ 	__be64		sb_lsn;		/* last write sequence */
+@@ -282,7 +282,7 @@ typedef enum {
+ 	XFS_SBS_LOGSECTLOG, XFS_SBS_LOGSECTSIZE, XFS_SBS_LOGSUNIT,
+ 	XFS_SBS_FEATURES2, XFS_SBS_BAD_FEATURES2, XFS_SBS_FEATURES_COMPAT,
+ 	XFS_SBS_FEATURES_RO_COMPAT, XFS_SBS_FEATURES_INCOMPAT,
+-	XFS_SBS_FEATURES_LOG_INCOMPAT, XFS_SBS_CRC, XFS_SBS_PAD,
++	XFS_SBS_FEATURES_LOG_INCOMPAT, XFS_SBS_CRC, XFS_SBS_SPINOALIGNMT,
+ 	XFS_SBS_PQUOTINO, XFS_SBS_LSN,
+ 	XFS_SBS_FIELDCOUNT
+ } xfs_sb_field_t;
 diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
-index eb22b5f..d6b4dbeb 100644
+index b0a5fe9..eb22b5f 100644
 --- a/fs/xfs/libxfs/xfs_sb.c
 +++ b/fs/xfs/libxfs/xfs_sb.c
-@@ -697,6 +697,11 @@ xfs_sb_mount_common(
- 	mp->m_ialloc_inos = (int)MAX((__uint16_t)XFS_INODES_PER_CHUNK,
- 					sbp->sb_inopblock);
- 	mp->m_ialloc_blks = mp->m_ialloc_inos >> sbp->sb_inopblog;
-+
-+	if (sbp->sb_spinoalignmt)
-+		mp->m_ialloc_min_blks = sbp->sb_spinoalignmt;
-+	else
-+		mp->m_ialloc_min_blks = mp->m_ialloc_blks;
+@@ -382,7 +382,7 @@ __xfs_sb_from_disk(
+ 				be32_to_cpu(from->sb_features_log_incompat);
+ 	/* crc is only used on disk, not in memory; just init to 0 here. */
+ 	to->sb_crc = 0;
+-	to->sb_pad = 0;
++	to->sb_spinoalignmt = be32_to_cpu(from->sb_spinoalignmt);
+ 	to->sb_pquotino = be64_to_cpu(from->sb_pquotino);
+ 	to->sb_lsn = be64_to_cpu(from->sb_lsn);
+ 	/* Convert on-disk flags to in-memory flags? */
+@@ -524,7 +524,7 @@ xfs_sb_to_disk(
+ 				cpu_to_be32(from->sb_features_incompat);
+ 		to->sb_features_log_incompat =
+ 				cpu_to_be32(from->sb_features_log_incompat);
+-		to->sb_pad = 0;
++		to->sb_spinoalignmt = cpu_to_be32(from->sb_spinoalignmt);
+ 		to->sb_lsn = cpu_to_be64(from->sb_lsn);
+ 	}
  }
- 
- /*
-diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-index a5b2ff8..97f17d5 100644
---- a/fs/xfs/xfs_mount.h
-+++ b/fs/xfs/xfs_mount.h
-@@ -136,6 +136,8 @@ typedef struct xfs_mount {
- 	__uint64_t		m_flags;	/* global mount flags */
- 	int			m_ialloc_inos;	/* inodes in inode allocation */
- 	int			m_ialloc_blks;	/* blocks in inode allocation */
-+	int			m_ialloc_min_blks;/* min blocks in sparse inode
-+						   * allocation */
- 	int			m_inoalign_mask;/* mask sb_inoalignmt if used */
- 	uint			m_qflags;	/* quota status flags */
- 	struct xfs_trans_resv	m_resv;		/* precomputed res values */
 -- 
 1.8.3.1
 
