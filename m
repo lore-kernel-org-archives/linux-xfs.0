@@ -1,30 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 31204804C
-	for <xfs@oss.sgi.com>; Fri,  6 Feb 2015 13:53:12 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 5D3E5AC00C
-	for <xfs@oss.sgi.com>; Fri,  6 Feb 2015 11:53:08 -0800 (PST)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id dOhIUWVhtfJoiJHk (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 06 Feb 2015 11:53:08 -0800 (PST)
-Received: from int-mx13.intmail.prod.int.phx2.redhat.com
-	(int-mx13.intmail.prod.int.phx2.redhat.com [10.5.11.26])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id t16Jr78X026123
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256
-	verify=FAIL) for <xfs@oss.sgi.com>; Fri, 6 Feb 2015 14:53:07 -0500
-Received: from bfoster.bfoster ([10.18.41.237])
-	by int-mx13.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id t16Jr7wX017039
-	for <xfs@oss.sgi.com>; Fri, 6 Feb 2015 14:53:07 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH v3 07/18] xfs: handle sparse inode chunks in icreate log
-	recovery
-Date: Fri,  6 Feb 2015 14:52:54 -0500
-Message-Id: <1423252385-3063-8-git-send-email-bfoster@redhat.com>
-In-Reply-To: <1423252385-3063-1-git-send-email-bfoster@redhat.com>
-References: <1423252385-3063-1-git-send-email-bfoster@redhat.com>
+	by oss.sgi.com (Postfix) with ESMTP id 049927F63
+	for <xfs@oss.sgi.com>; Fri,  6 Feb 2015 16:21:08 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 65B64AC00C
+	for <xfs@oss.sgi.com>; Fri,  6 Feb 2015 14:21:04 -0800 (PST)
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	pdAFX5SMCZl0ogUD for <xfs@oss.sgi.com>;
+	Fri, 06 Feb 2015 14:21:02 -0800 (PST)
+Date: Sat, 7 Feb 2015 09:20:47 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 19/20] xfs: implement pNFS export operations
+Message-ID: <20150206222047.GM12722@dastard>
+References: <1421925006-24231-1-git-send-email-hch@lst.de>
+	<1421925006-24231-20-git-send-email-hch@lst.de>
+	<20150205004758.GO4251@dastard> <20150205070858.GA593@lst.de>
+	<20150205135756.GA6386@lst.de>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20150205135756.GA6386@lst.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,58 +28,58 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Christoph Hellwig <hch@lst.de>
+Cc: "J. Bruce Fields" <bfields@fieldses.org>, linux-fsdevel@vger.kernel.org, linux-nfs@vger.kernel.org, Jeff Layton <jlayton@primarydata.com>, xfs@oss.sgi.com
 
-Recovery of icreate transactions assumes hardcoded values for the inode
-count and chunk length.
+On Thu, Feb 05, 2015 at 02:57:56PM +0100, Christoph Hellwig wrote:
+> I've updated the patch and pushed out a new pnfsd-for-3.20-4 branch.
+> 
+> The changes relative to the old one are below:
 
-Sparse inode chunks are allocated in units of m_ialloc_min_blks. Update
-the icreate validity checks to allow for appropriately sized inode
-chunks and verify the inode count matches what is expected based on the
-extent length rather than assuming a hardcoded count.
+Hi Christoph, with these changes I think this is fine to be merged
+with the experimental tag attached to it
 
-Signed-off-by: Brian Foster <bfoster@redhat.com>
----
- fs/xfs/xfs_log_recover.c | 19 +++++++++++++------
- 1 file changed, 13 insertions(+), 6 deletions(-)
+Acked-by: Dave Chinner <david@fromorbit.com>
 
-diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index ecc73d5..5a5ee20 100644
---- a/fs/xfs/xfs_log_recover.c
-+++ b/fs/xfs/xfs_log_recover.c
-@@ -3068,12 +3068,19 @@ xlog_recover_do_icreate_pass2(
- 		return -EINVAL;
- 	}
- 
--	/* existing allocation is fixed value */
--	ASSERT(count == mp->m_ialloc_inos);
--	ASSERT(length == mp->m_ialloc_blks);
--	if (count != mp->m_ialloc_inos ||
--	     length != mp->m_ialloc_blks) {
--		xfs_warn(log->l_mp, "xlog_recover_do_icreate_trans: bad count 2");
-+	/* inode chunk is either full or sparse */
-+	if (length != mp->m_ialloc_blks &&
-+	    length != mp->m_ialloc_min_blks) {
-+		xfs_warn(log->l_mp,
-+			 "%s: unsupported chunk length", __FUNCTION__);
-+		return -EINVAL;
-+	}
-+
-+	/* verify inode count is consistent with extent length */
-+	if ((count >> mp->m_sb.sb_inopblog) != length) {
-+		xfs_warn(log->l_mp,
-+			 "%s: inconsistent inode count and chunk length",
-+			 __FUNCTION__);
- 		return -EINVAL;
- 	}
- 
+I'm expecting the merge window to open on Monday so it's kinda late
+to be adding new stuff to the XFS tree and co-ordinating it with the
+NFS tree merge - how were you planning to get this to merged?
+
+I've already merged all but the two pNFSD support patches, so
+there's some duplicate commits in your pnfsd-for-3.20-4 branch.
+i.e. these commits in your tree:
+
+b8d5187 xfs: factor out a xfs_update_prealloc_flags() helper
+6d5ca2a xfs: update the superblock using a synchronous transaction in growfs
+e3ea93e xfs: pass a 64-bit count argument to xfs_iomap_write_unwritten
+
+are already merged into the xfs for-next branch as:
+
+8add71c xfs: factor out a xfs_update_prealloc_flags() helper
+f8079b8 xfs: growfs should use synchronous transactions
+d32057f xfs: pass a 64-bit count argument to xfs_iomap_write_unwritten
+
+A straight merge from your tree ends up with both sets of commits in
+the history. So a rebase on your side, or me pulling them into the
+XFS tree is probably required to keep the history clean.
+
+I didn't really want to add any more to the XFS tree this close to
+the merge window opening, but I've already got a regression fix that
+needs to be added, so perhaps I'll delay sending Linus a pull
+request for a week and just merge all of these XFS changes directly.
+
+What do you think?
+
+Cheers,
+
+Dave.
 -- 
-1.8.3.1
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
