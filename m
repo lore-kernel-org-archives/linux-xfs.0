@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 968357FA5
-	for <xfs@oss.sgi.com>; Fri,  6 Feb 2015 16:43:00 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 62E9D8F809E
-	for <xfs@oss.sgi.com>; Fri,  6 Feb 2015 14:43:00 -0800 (PST)
-Received: from fieldses.org (fieldses.org [173.255.197.46]) by cuda.sgi.com
-	with ESMTP id vuTXD7EoRnIPgjkA for <xfs@oss.sgi.com>;
-	Fri, 06 Feb 2015 14:42:58 -0800 (PST)
-Date: Fri, 6 Feb 2015 17:42:58 -0500
-From: "J. Bruce Fields" <bfields@fieldses.org>
-Subject: Re: [PATCH 19/20] xfs: implement pNFS export operations
-Message-ID: <20150206224258.GJ29783@fieldses.org>
-References: <1421925006-24231-1-git-send-email-hch@lst.de>
-	<1421925006-24231-20-git-send-email-hch@lst.de>
-	<20150205004758.GO4251@dastard> <20150205070858.GA593@lst.de>
-	<20150205135756.GA6386@lst.de> <20150206222047.GM12722@dastard>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 8A2427FC7
+	for <xfs@oss.sgi.com>; Fri,  6 Feb 2015 16:55:20 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id E74CEAC009
+	for <xfs@oss.sgi.com>; Fri,  6 Feb 2015 14:55:19 -0800 (PST)
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	MaApS1yPtHudyxNm for <xfs@oss.sgi.com>;
+	Fri, 06 Feb 2015 14:55:17 -0800 (PST)
+Date: Sat, 7 Feb 2015 09:54:52 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH v3 03/18] xfs: sparse inode chunks feature helpers and
+	mount requirements
+Message-ID: <20150206225452.GP12722@dastard>
+References: <1423252385-3063-1-git-send-email-bfoster@redhat.com>
+	<1423252385-3063-4-git-send-email-bfoster@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20150206222047.GM12722@dastard>
+In-Reply-To: <1423252385-3063-4-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,66 +31,92 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-fsdevel@vger.kernel.org, linux-nfs@vger.kernel.org, Jeff Layton <jlayton@primarydata.com>, Christoph Hellwig <hch@lst.de>, xfs@oss.sgi.com
+To: Brian Foster <bfoster@redhat.com>
+Cc: xfs@oss.sgi.com
 
-On Sat, Feb 07, 2015 at 09:20:47AM +1100, Dave Chinner wrote:
-> On Thu, Feb 05, 2015 at 02:57:56PM +0100, Christoph Hellwig wrote:
-> > I've updated the patch and pushed out a new pnfsd-for-3.20-4 branch.
-> > 
-> > The changes relative to the old one are below:
+On Fri, Feb 06, 2015 at 02:52:50PM -0500, Brian Foster wrote:
+> The sparse inode chunks feature uses the helper function to enable the
+> allocation of sparse inode chunks. The incompatible feature bit is set
+> on disk at mkfs time to prevent mount from unsupported kernels.
 > 
-> Hi Christoph, with these changes I think this is fine to be merged
-> with the experimental tag attached to it
+> Also, enforce the inode alignment requirements required for sparse inode
+> chunks at mount time. When enabled, full inode chunks (and all inode
+> record) alignment is increased from cluster size to inode chunk size.
+> Sparse inode alignment must match the cluster size of the fs. Both
+> superblock alignment fields are set as such by mkfs when sparse inode
+> support is enabled.
 > 
-> Acked-by: Dave Chinner <david@fromorbit.com>
+> Finally, warn that sparse inode chunks is an experimental feature until
+> further notice.
 > 
-> I'm expecting the merge window to open on Monday so it's kinda late
-> to be adding new stuff to the XFS tree and co-ordinating it with the
-> NFS tree merge - how were you planning to get this to merged?
-> 
-> I've already merged all but the two pNFSD support patches, so
-> there's some duplicate commits in your pnfsd-for-3.20-4 branch.
-> i.e. these commits in your tree:
-> 
-> b8d5187 xfs: factor out a xfs_update_prealloc_flags() helper
-> 6d5ca2a xfs: update the superblock using a synchronous transaction in growfs
-> e3ea93e xfs: pass a 64-bit count argument to xfs_iomap_write_unwritten
-> 
-> are already merged into the xfs for-next branch as:
-> 
-> 8add71c xfs: factor out a xfs_update_prealloc_flags() helper
-> f8079b8 xfs: growfs should use synchronous transactions
-> d32057f xfs: pass a 64-bit count argument to xfs_iomap_write_unwritten
-> 
-> A straight merge from your tree ends up with both sets of commits in
-> the history. So a rebase on your side, or me pulling them into the
-> XFS tree is probably required to keep the history clean.
-> 
-> I didn't really want to add any more to the XFS tree this close to
-> the merge window opening, but I've already got a regression fix that
-> needs to be added, so perhaps I'll delay sending Linus a pull
-> request for a week and just merge all of these XFS changes directly.
-> 
-> What do you think?
+> Signed-off-by: Brian Foster <bfoster@redhat.com>
+....
+> @@ -182,6 +182,28 @@ xfs_mount_validate_sb(
+>  			return -EFSCORRUPTED;
+>  	}
+>  
+> +	/*
+> +	 * Full inode chunks must be aligned to inode chunk size when
+> +	 * sparse inodes are enabled to support the sparse chunk
+> +	 * allocation algorithm and prevent overlapping inode records.
+> +	 */
+> +	if (xfs_sb_version_hassparseinodes(sbp)) {
+> +		uint32_t	align;
+> +
+> +		xfs_alert(mp,
+> +		"v5 superblock with sparse inode chunk support detected.\n"
+> +		"This feature is EXPERIMENTAL. Use at your own risk!");
 
-You'd basically just be pulling my tree (Christoph's is just my nfsd
-tree with his patches on top, and I've been testing with exactly that
-locally, just putting off pushing it out till we decide this.)
+No need to mention v5 superblocks here - we've already got that in
+the initial mount output. Say:
 
-So anyway, fine with me if you want to just pull that into the xfs tree.
-Mine's ready whenever, so if I send my pull pretty soon after the merge
-window and you send it a little later then we still keep the property
-that Linus's merge still has a diffstat only in our respective areas.
+"EXPERIMENTAL sparse inode chunk feature enabled. Use at your own risk!"
 
-(OK, it's a little more complicated because I've got the same
-arrangement with jlayton, so the order is jlayton's lock pull, then my
-nfsd pull, then your xfs pull.  Is this getting too complicated?
-jlayton and I are both ready to so and I think it'd work.)
+> +
+> +		align = XFS_INODES_PER_CHUNK * sbp->sb_inodesize
+> +				>> sbp->sb_blocklog;
+> +		if (sbp->sb_inoalignmt != align) {
+> +			xfs_warn(mp, "Invalid inode alignment (%u blks). "
+> +		"Must match inode chunk size (%u blks) with sparse inodes.",
 
-I'm also fine with duplicating those few patches, or whatever.
+"Inode block alignment (%u) must match chunk size (%u) for sparse inodes."
 
---b.
+That makes both error messages a single line a easy to grep for.
+
+> @@ -738,6 +738,22 @@ xfs_mountfs(
+>  	}
+>  
+>  	/*
+> +	 * If enabled, sparse inode chunk alignment is expected to match the
+> +	 * cluster size. Full inode chunk alignment must match the chunk size,
+> +	 * but that is checked on sb read verification...
+> +	 */
+> +	if (xfs_sb_version_hassparseinodes(&mp->m_sb) &&
+> +	    mp->m_sb.sb_spinoalignmt !=
+> +	    XFS_B_TO_FSBT(mp, mp->m_inode_cluster_size)) {
+
+Indent the second line of the comaprison so it's distinct from the
+logic comparison. i.e. at first glance the above looks like three
+logic conditions being compared, when in fact it is only two.
+
+	if (xfs_sb_version_hassparseinodes(&mp->m_sb) &&
+	    mp->m_sb.sb_spinoalignmt !=
+			XFS_B_TO_FSBT(mp, mp->m_inode_cluster_size)) {
+
+This makes it clear at a glance there are only two logic conditions
+in the if() statement.
+
+> +		xfs_warn(mp, "Invalid sparse inode chunk alignment (%u blks). "
+> +			 "Must match cluster size (%llu blks).",
+
+"Sparse inode chunk block alignment (%u) must match cluster size (%u)."
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
