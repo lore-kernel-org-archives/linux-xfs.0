@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 8A2427FC7
-	for <xfs@oss.sgi.com>; Fri,  6 Feb 2015 16:55:20 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id E74CEAC009
-	for <xfs@oss.sgi.com>; Fri,  6 Feb 2015 14:55:19 -0800 (PST)
+	by oss.sgi.com (Postfix) with ESMTP id 683EF7FDF
+	for <xfs@oss.sgi.com>; Fri,  6 Feb 2015 17:16:52 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id D8C6BAC009
+	for <xfs@oss.sgi.com>; Fri,  6 Feb 2015 15:16:48 -0800 (PST)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	MaApS1yPtHudyxNm for <xfs@oss.sgi.com>;
-	Fri, 06 Feb 2015 14:55:17 -0800 (PST)
-Date: Sat, 7 Feb 2015 09:54:52 +1100
+	PCeNae2jxG5OATHf for <xfs@oss.sgi.com>;
+	Fri, 06 Feb 2015 15:16:43 -0800 (PST)
+Date: Sat, 7 Feb 2015 10:16:15 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v3 03/18] xfs: sparse inode chunks feature helpers and
-	mount requirements
-Message-ID: <20150206225452.GP12722@dastard>
+Subject: Re: [PATCH v3 04/18] xfs: introduce inode record hole mask for
+	sparse inode chunks
+Message-ID: <20150206231615.GQ12722@dastard>
 References: <1423252385-3063-1-git-send-email-bfoster@redhat.com>
-	<1423252385-3063-4-git-send-email-bfoster@redhat.com>
+	<1423252385-3063-5-git-send-email-bfoster@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1423252385-3063-4-git-send-email-bfoster@redhat.com>
+In-Reply-To: <1423252385-3063-5-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,82 +34,140 @@ Sender: xfs-bounces@oss.sgi.com
 To: Brian Foster <bfoster@redhat.com>
 Cc: xfs@oss.sgi.com
 
-On Fri, Feb 06, 2015 at 02:52:50PM -0500, Brian Foster wrote:
-> The sparse inode chunks feature uses the helper function to enable the
-> allocation of sparse inode chunks. The incompatible feature bit is set
-> on disk at mkfs time to prevent mount from unsupported kernels.
+On Fri, Feb 06, 2015 at 02:52:51PM -0500, Brian Foster wrote:
+> The inode btrees track 64 inodes per record, regardless of inode size.
+> Thus, inode chunks on disk vary in size depending on the size of the
+> inodes. This creates a contiguous allocation requirement for new inode
+> chunks that can be difficult to satisfy on an aged and fragmented (free
+> space) filesystem.
 > 
-> Also, enforce the inode alignment requirements required for sparse inode
-> chunks at mount time. When enabled, full inode chunks (and all inode
-> record) alignment is increased from cluster size to inode chunk size.
-> Sparse inode alignment must match the cluster size of the fs. Both
-> superblock alignment fields are set as such by mkfs when sparse inode
-> support is enabled.
+> The inode record freecount currently uses 4 bytes on disk to track the
+> free inode count. With a maximum freecount value of 64, only one byte is
+> required. Convert the freecount field to a single byte and use two of
+> the remaining 3 higher order bytes left for the hole mask field. Use
+> the final leftover byte for the total count field.
 > 
-> Finally, warn that sparse inode chunks is an experimental feature until
-> further notice.
+> The hole mask field tracks holes in the chunks of physical space that
+> the inode record refers to. This facilitates the sparse allocation of
+> inode chunks when contiguous chunks are not available and allows the
+> inode btrees to identify what portions of the chunk contain valid
+> inodes. The total count field contains the total number of valid inodes
+> referred to by the record. This can also be deduced from the hole mask.
+> The count field provides clarity and redundancy for internal record
+> verification.
+> 
+> Note that both fields are initialized to zero to maintain backwards
+> compatibility with existing filesystems (e.g., the higher order bytes of
+> freecount are always 0). Tracking holes means that the hole mask is
+> initialized to zero and thus remains "valid" in accordance with a
+> non-sparse inode fs when no sparse chunks are physically allocated.
+> Update the inode record management functions to handle the new fields
+> and initialize to zero.
+> 
+> [XXX: The count field breaks backwards compatibility with !sparseinode
+> fs. Should we reconsider the addition of total count or the idea of
+> converting back and forth between sparse inode fs with a feature bit?]
 > 
 > Signed-off-by: Brian Foster <bfoster@redhat.com>
-....
-> @@ -182,6 +182,28 @@ xfs_mount_validate_sb(
->  			return -EFSCORRUPTED;
->  	}
+> ---
+>  fs/xfs/libxfs/xfs_format.h       |  8 ++++++--
+>  fs/xfs/libxfs/xfs_ialloc.c       | 12 ++++++++++--
+>  fs/xfs/libxfs/xfs_ialloc_btree.c |  4 +++-
+>  3 files changed, 19 insertions(+), 5 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
+> index 26e5d92..6c2f1be 100644
+> --- a/fs/xfs/libxfs/xfs_format.h
+> +++ b/fs/xfs/libxfs/xfs_format.h
+> @@ -1295,13 +1295,17 @@ static inline xfs_inofree_t xfs_inobt_maskn(int i, int n)
+>   */
+>  typedef struct xfs_inobt_rec {
+>  	__be32		ir_startino;	/* starting inode number */
+> -	__be32		ir_freecount;	/* count of free inodes (set bits) */
+> +	__be16		ir_holemask;	/* hole mask for sparse chunks */
+> +	__u8		ir_count;	/* total inode count */
+> +	__u8		ir_freecount;	/* count of free inodes (set bits) */
+>  	__be64		ir_free;	/* free inode mask */
+>  } xfs_inobt_rec_t;
+
+I think I'd prefer to see a union here so that we explicitly state
+what the difference in the on-disk format is. i.e. similar to how we
+express the difference in long and short btree block headers.
+
+struct xfs_inobt_rec {
+	__be32		ir_startino;	/* starting inode number */
+	__be32		ir_freecount;	/* count of free inodes (set bits) */
+	union {
+		struct {
+			__be32	ir_freecount;
+		} f;
+		struct {
+			__be16	ir_holemask;	/* hole mask for sparse chunks */
+			__u8	ir_count;	/* total inode count */
+			__u8	ir_freecount;	/* count of free inodes (set bits) */
+		} sp;
+	}
+	__be64		ir_free;	/* free inode mask */
+};
+
+This will prevent us from using the wrong method of
+referencing/modifying the record because we now need to be explicit
+in how we modify it...
+
+>  typedef struct xfs_inobt_rec_incore {
+>  	xfs_agino_t	ir_startino;	/* starting inode number */
+> -	__int32_t	ir_freecount;	/* count of free inodes (set bits) */
+> +	__uint16_t	ir_holemask;	/* hole mask for sparse chunks */
+> +	__uint8_t	ir_count;	/* total inode count */
+> +	__uint8_t	ir_freecount;	/* count of free inodes (set bits) */
+>  	xfs_inofree_t	ir_free;	/* free inode mask */
+>  } xfs_inobt_rec_incore_t;
+
+Though this is still fine - it doesn't need to explicitly follow the
+on-disk format structure, but it would be nice to be explicit on
+conversion to disk format records what we are actually using from
+this record.
+
+> diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
+> index 6f2153e..32fdb7c 100644
+> --- a/fs/xfs/libxfs/xfs_ialloc.c
+> +++ b/fs/xfs/libxfs/xfs_ialloc.c
+> @@ -65,6 +65,8 @@ xfs_inobt_lookup(
+>  	int			*stat)	/* success/failure */
+>  {
+>  	cur->bc_rec.i.ir_startino = ino;
+> +	cur->bc_rec.i.ir_holemask = 0;
+> +	cur->bc_rec.i.ir_count = 0;
+>  	cur->bc_rec.i.ir_freecount = 0;
+>  	cur->bc_rec.i.ir_free = 0;
+>  	return xfs_btree_lookup(cur, dir, stat);
+> @@ -82,7 +84,9 @@ xfs_inobt_update(
+>  	union xfs_btree_rec	rec;
 >  
-> +	/*
-> +	 * Full inode chunks must be aligned to inode chunk size when
-> +	 * sparse inodes are enabled to support the sparse chunk
-> +	 * allocation algorithm and prevent overlapping inode records.
-> +	 */
-> +	if (xfs_sb_version_hassparseinodes(sbp)) {
-> +		uint32_t	align;
-> +
-> +		xfs_alert(mp,
-> +		"v5 superblock with sparse inode chunk support detected.\n"
-> +		"This feature is EXPERIMENTAL. Use at your own risk!");
+>  	rec.inobt.ir_startino = cpu_to_be32(irec->ir_startino);
+> -	rec.inobt.ir_freecount = cpu_to_be32(irec->ir_freecount);
+> +	rec.inobt.ir_holemask = cpu_to_be16(irec->ir_holemask);
+> +	rec.inobt.ir_count = irec->ir_count;
+> +	rec.inobt.ir_freecount = irec->ir_freecount;
+>  	rec.inobt.ir_free = cpu_to_be64(irec->ir_free);
+>  	return xfs_btree_update(cur, &rec);
+>  }
 
-No need to mention v5 superblocks here - we've already got that in
-the initial mount output. Say:
+Hmmm - perhaps a similar set of helpers for sparse inode enabled
+filesystems
 
-"EXPERIMENTAL sparse inode chunk feature enabled. Use at your own risk!"
+> @@ -118,6 +124,8 @@ xfs_inobt_insert_rec(
+>  	xfs_inofree_t		free,
+>  	int			*stat)
+>  {
+> +	cur->bc_rec.i.ir_holemask = 0;
+> +	cur->bc_rec.i.ir_count = 0; /* zero for backwards compatibility */
+>  	cur->bc_rec.i.ir_freecount = freecount;
+>  	cur->bc_rec.i.ir_free = free;
+>  	return xfs_btree_insert(cur, stat);
 
-> +
-> +		align = XFS_INODES_PER_CHUNK * sbp->sb_inodesize
-> +				>> sbp->sb_blocklog;
-> +		if (sbp->sb_inoalignmt != align) {
-> +			xfs_warn(mp, "Invalid inode alignment (%u blks). "
-> +		"Must match inode chunk size (%u blks) with sparse inodes.",
-
-"Inode block alignment (%u) must match chunk size (%u) for sparse inodes."
-
-That makes both error messages a single line a easy to grep for.
-
-> @@ -738,6 +738,22 @@ xfs_mountfs(
->  	}
->  
->  	/*
-> +	 * If enabled, sparse inode chunk alignment is expected to match the
-> +	 * cluster size. Full inode chunk alignment must match the chunk size,
-> +	 * but that is checked on sb read verification...
-> +	 */
-> +	if (xfs_sb_version_hassparseinodes(&mp->m_sb) &&
-> +	    mp->m_sb.sb_spinoalignmt !=
-> +	    XFS_B_TO_FSBT(mp, mp->m_inode_cluster_size)) {
-
-Indent the second line of the comaprison so it's distinct from the
-logic comparison. i.e. at first glance the above looks like three
-logic conditions being compared, when in fact it is only two.
-
-	if (xfs_sb_version_hassparseinodes(&mp->m_sb) &&
-	    mp->m_sb.sb_spinoalignmt !=
-			XFS_B_TO_FSBT(mp, mp->m_inode_cluster_size)) {
-
-This makes it clear at a glance there are only two logic conditions
-in the if() statement.
-
-> +		xfs_warn(mp, "Invalid sparse inode chunk alignment (%u blks). "
-> +			 "Must match cluster size (%llu blks).",
-
-"Sparse inode chunk block alignment (%u) must match cluster size (%u)."
+That would make this sort of thing very clear - this doesn't look
+like it would work for a sparse chunk record...
 
 Cheers,
 
