@@ -1,32 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 532247F7B
-	for <xfs@oss.sgi.com>; Sun,  8 Feb 2015 17:41:37 -0600 (CST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id BEC0F7F7E
+	for <xfs@oss.sgi.com>; Sun,  8 Feb 2015 17:58:05 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 1367C304039
-	for <xfs@oss.sgi.com>; Sun,  8 Feb 2015 15:41:36 -0800 (PST)
-Received: from mailout1.samsung.com (mailout1.samsung.com [203.254.224.24]) by
-	cuda.sgi.com with ESMTP id aqu4BZIBSXI6oLK0 (version=TLSv1
-	cipher=RC4-MD5 bits=128 verify=NO) for <xfs@oss.sgi.com>;
-	Sun, 08 Feb 2015 15:41:34 -0800 (PST)
-Received: from epcpsbgr3.samsung.com
-	(u143.gpu120.samsung.co.kr [203.254.230.143])
-	by mailout1.samsung.com (Oracle Communications Messaging Server
-	7u4-24.01 (7.0.4.24.0) 64bit (built Nov 17 2011))
-	with ESMTP id <0NJH001FR8H2TN20@mailout1.samsung.com> for
-	xfs@oss.sgi.com; Mon, 09 Feb 2015 08:41:27 +0900 (KST)
-From: Namjae Jeon <namjae.jeon@samsung.com>
-References: <001f01d041cb$39fbbc70$adf33550$@samsung.com>
-	<54D45068.2030209@sandeen.net>
-	<002401d041cf$570eae40$052c0ac0$@samsung.com>
-	<20150206222227.GN12722@dastard>
-In-reply-to: <20150206222227.GN12722@dastard>
-Subject: RE: [PATCH] xfsprog: xfsio: update xfs_io manpage for
-	FALLOC_FL_INSERT_RANGE
-Date: Mon, 09 Feb 2015 08:41:26 +0900
-Message-id: <001501d043f8$c143a290$43cae7b0$@samsung.com>
-MIME-version: 1.0
-Content-language: ko
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 6F2938F8033
+	for <xfs@oss.sgi.com>; Sun,  8 Feb 2015 15:58:05 -0800 (PST)
+Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
+	[150.101.137.143]) by cuda.sgi.com with ESMTP id
+	bGGnFwVEfEs8pANg for <xfs@oss.sgi.com>;
+	Sun, 08 Feb 2015 15:58:02 -0800 (PST)
+Date: Mon, 9 Feb 2015 10:54:48 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH v3 08/18] xfs: helpers to convert holemask to/from
+	generic bitmap
+Message-ID: <20150208235448.GI4251@dastard>
+References: <1423252385-3063-1-git-send-email-bfoster@redhat.com>
+	<1423252385-3063-9-git-send-email-bfoster@redhat.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <1423252385-3063-9-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -39,48 +31,156 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: 'Dave Chinner' <david@fromorbit.com>
-Cc: linux-fsdevel@vger.kernel.org, 'Eric Sandeen' <sandeen@sandeen.net>, 'Ashish Sangwan' <a.sangwan@samsung.com>, xfs@oss.sgi.com
+To: Brian Foster <bfoster@redhat.com>
+Cc: xfs@oss.sgi.com
 
-> On Fri, Feb 06, 2015 at 02:39:56PM +0900, Namjae Jeon wrote:
-> > > On 2/5/15 11:10 PM, Namjae Jeon wrote:
-> > > > Update xfs_io manpage for FALLOC_FL_INSERT_RANGE.
-> > > >
-> > > > Signed-off-by: Namjae Jeon <namjae.jeon@samsung.com>
-> > > > Signed-off-by: Ashish Sangwan <a.sangwan@samsung.com>
-> > > > ---
-> > > >  man/man8/xfs_io.8 | 5 +++++
-> > > >  1 file changed, 5 insertions(+)
-> > > >
-> > > > diff --git a/man/man8/xfs_io.8 b/man/man8/xfs_io.8
-> > > > index cf27b99..416206f 100644
-> > > > --- a/man/man8/xfs_io.8
-> > > > +++ b/man/man8/xfs_io.8
-> > > > @@ -404,6 +404,11 @@ Call fallocate with FALLOC_FL_COLLAPSE_RANGE flag as described in the
-> > > >  manual page to de-allocates blocks and eliminates the hole created in this process
-> > > >  by shifting data blocks into the hole.
-> > > >  .TP
-> > > > +.BI finsert " offset length"
-> > > > +Call fallocate with FALLOC_FL_INSERT_RANGE flag as described in the
-> > > > +.BR fallocate (2)
-> > > > +manual page
-> > >
-> > Hi Eric,
-> > > So, it looks like the fallocate(2) manpage will need an update as well.  :)
-> > Right, I am planning to send the manpage patch for insert range when merging linus tree..
+On Fri, Feb 06, 2015 at 02:52:55PM -0500, Brian Foster wrote:
+> The inobt record holemask field is a condensed data type designed to fit
+> into the existing on-disk record and is zero based (allocated regions
+> are set to 0, sparse regions are set to 1) to provide backwards
+> compatibility. This makes the type somewhat complex for use in higher
+> level inode manipulations such as individual inode allocation, etc.
 > 
-> Best to have the man page with the rest of the code changes, that
-> way they all get reviewed at the same time. :)
-Agree. I will also send the manpage patch soon.
+> Rather than foist the complexity of dealing with this field to every bit
+> of logic that requires inode granular information, create the
+> xfs_inobt_ialloc_bitmap() helper to convert the holemask to an inode
+> allocation bitmap. The inode allocation bitmap is inode granularity
+> similar to the inobt record free mask and indicates which inodes of the
+> chunk are physically allocated on disk, irrespective of whether the
+> inode is considered allocated or free by the filesystem. The generic
+> bitmap type requires the use of generic kernel bitmap APIs.
+> 
+> The bitmap_to_u64() helper is provided to convert the bitmap back to a
+> native 64-bit type (for native bitwise operations). This is required
+> because the generic bitmap code represents a bitmap as an array of
+> unsigned long in a little endian style (though each array value is cpu
+> order). To ensure compatibility with various word sizes and endianness',
+> bitmap_to_u64() exports the bitmap to little endian and swaps back to
+> cpu byte order.
+> 
+> Signed-off-by: Brian Foster <bfoster@redhat.com>
+> ---
+>  fs/xfs/libxfs/xfs_ialloc.c | 69 ++++++++++++++++++++++++++++++++++++++++++++++
+>  1 file changed, 69 insertions(+)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
+> index 72ade0e..fc001d9 100644
+> --- a/fs/xfs/libxfs/xfs_ialloc.c
+> +++ b/fs/xfs/libxfs/xfs_ialloc.c
+> @@ -39,6 +39,8 @@
+>  #include "xfs_icache.h"
+>  #include "xfs_trace.h"
+>  
+> +STATIC void
+> +xfs_inobt_ialloc_bitmap(unsigned long *, struct xfs_inobt_rec_incore *);
 
-Thanks :)
-> 
-> Cheers,
-> 
-> Dave.
-> --
-> Dave Chinner
-> david@fromorbit.com
+xfs_inobt_irec_to_allocmap() seems more appropriate for what it does.
+I'd also suggest it should be in xfs_ialloc_btree.c, too.
+
+>  /*
+>   * Allocation group level functions.
+> @@ -739,6 +741,73 @@ xfs_ialloc_get_rec(
+>  	return 0;
+>  }
+>  
+> +static inline uint64_t
+> +bitmap_to_u64(
+> +	const unsigned long	*bitmap,
+> +	int			nbits)
+> +{
+> +	__le64			lebitmap;
+> +
+> +	ASSERT(nbits <= 64);
+> +
+> +	/*
+> +	 * The bitmap format depends on the native word size. E.g., bit 0 could
+> +	 * land in the middle of the 64 bits on a big endian 32-bit arch (see
+> +	 * arch/powerpc/include/asm/bitops.h). To handle this, export the bitmap
+> +	 * as 64-bit little endian and convert back to native byte order.
+> +	 */
+> +	bitmap_copy_le(&lebitmap, bitmap, nbits);
+> +	return le64_to_cpu(lebitmap);
+> +}
+
+Ok, so this is for doing logic operations on the bitmap, such as
+inverting or masking out a bunch of bits?
+
+The first use of this function is xfs_inobt_first_free_inode(), and
+the other use is in xfs_difree_inobt() to build the mask of inodes
+in the chunk that need to be freed, and in both those cases they do
+
+	xfs_inobt_ialloc_bitmap(alloc, rec)
+	allocmask = bitmap_to_u64(alloc, 64);
+
+and the local stack bitmap is otherwise unused. So, wouldn't a
+helper like:
+
+/*
+ * Return a host format mask of all the allocated inodes in the
+ * chunk. The bitmap format depends on the native word size (e.g.
+ * see arch/powerpc/include/asm/bitops.h) and so we have to marshall
+ * the bitmap through a defined endian conversion so that we can
+ * perform host native 64 bit logic operations on the resultant
+ * allocation mask.
+ *
+ * A bit value of 1 means the inode is allocated, a value of 0 means it
+ * is free.
+ */
+u64
+xfs_inobt_irec_to_allocmask(
+	struct xfs_inobt_rec_incore *irec)
+{
+	DECLARE_BITMAP(allocmap, 64),
+	__le64			lebitmap;
+
+	xfs_inobt_rec_to_allocmap(&allocmap, irec);
+	bitmap_copy_le(&lebitmap, allocmap, 64);
+	return le64_to_cpu(lebitmap);
+}
+
+> +
+> +/*
+> + * Convert the inode record holemask to an inode allocation bitmap. The inode
+> + * allocation bitmap is inode granularity and specifies whether an inode is
+> + * physically allocated on disk (not whether the inode is considered allocated
+> + * or free by the fs).
+> + *
+> + * We have to be careful with regard to byte order and word size since the
+> + * generic bitmap code uses primitive types.
+
+" a bit value of 1 means the inode is allocated, a value of 0 means
+it is free"
+
+> + */
+> +STATIC void
+> +xfs_inobt_ialloc_bitmap(
+> +	unsigned long			*allocbmap,
+> +	struct xfs_inobt_rec_incore	*rec)
+> +{
+> +	int				nextbit;
+> +	DECLARE_BITMAP(holemask, 16);
+> +
+> +	bitmap_zero(allocbmap, 64);
+> +
+> +	/*
+> +	 * bitmaps are represented as an array of unsigned long (each in cpu
+> +	 * byte order). ir_holemask is only 16 bits, so direct assignment is
+> +	 * safe.
+> +	 */
+> +	ASSERT(sizeof(rec->ir_holemask) <= sizeof(holemask[0]));
+
+BUILD_BUG_ON(sizeof(rec->ir_holemask) <= sizeof(holemask[0]));
+
+i.e. if we come across a platform where this fails, break the build
+rather than waiting for the unlikely event of someone running a
+debug kernel on that platform...
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
