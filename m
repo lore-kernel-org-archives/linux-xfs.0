@@ -1,19 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 372E87F4E
-	for <xfs@oss.sgi.com>; Sat,  7 Feb 2015 22:45:55 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 267078F8037
-	for <xfs@oss.sgi.com>; Sat,  7 Feb 2015 20:45:51 -0800 (PST)
-Received: from smtpbgbr1.qq.com (smtpbgbr1.qq.com [54.207.19.206]) by
-	cuda.sgi.com with ESMTP id W6uBixixhBaDDX2r (version=TLSv1
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id EA8AB7F51
+	for <xfs@oss.sgi.com>; Sun,  8 Feb 2015 07:34:41 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 863C5AC001
+	for <xfs@oss.sgi.com>; Sun,  8 Feb 2015 05:34:41 -0800 (PST)
+Received: from newverein.lst.de (verein.lst.de [213.95.11.211]) by
+	cuda.sgi.com with ESMTP id DHvCKWs48BIKNDp8 (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Sat, 07 Feb 2015 20:45:48 -0800 (PST)
-From: Wang Sheng-Hui <shhuiw@foxmail.com>
-Subject: [PATCH] xfs: move the comment on log device near the right log dev
-	check in xfs_mount_validate_sb
-Date: Sun,  8 Feb 2015 12:45:04 +0800
-Message-Id: <1423370704-3464-1-git-send-email-shhuiw@foxmail.com>
+	Sun, 08 Feb 2015 05:34:39 -0800 (PST)
+Date: Sun, 8 Feb 2015 14:34:35 +0100
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH 19/20] xfs: implement pNFS export operations
+Message-ID: <20150208133435.GA27081@lst.de>
+References: <1421925006-24231-1-git-send-email-hch@lst.de>
+	<1421925006-24231-20-git-send-email-hch@lst.de>
+	<20150205004758.GO4251@dastard> <20150205070858.GA593@lst.de>
+	<20150205135756.GA6386@lst.de> <20150206222047.GM12722@dastard>
+	<20150206224258.GJ29783@fieldses.org>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20150206224258.GJ29783@fieldses.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,66 +29,37 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: david@fromorbit.com, xfs@oss.sgi.com, sandeen@sandeen.net, hch@lst.de, bfoster@redhat.com, tinguely@sgi.com
+To: "J. Bruce Fields" <bfields@fieldses.org>
+Cc: linux-fsdevel@vger.kernel.org, linux-nfs@vger.kernel.org, Jeff Layton <jlayton@primarydata.com>, xfs@oss.sgi.com
 
-The beginning is about magic and version number check.
-Move the comment on log device near the log dev check logic.
+On Fri, Feb 06, 2015 at 05:42:58PM -0500, J. Bruce Fields wrote:
+> You'd basically just be pulling my tree (Christoph's is just my nfsd
+> tree with his patches on top, and I've been testing with exactly that
+> locally, just putting off pushing it out till we decide this.)
+> 
+> So anyway, fine with me if you want to just pull that into the xfs tree.
+> Mine's ready whenever, so if I send my pull pretty soon after the merge
+> window and you send it a little later then we still keep the property
+> that Linus's merge still has a diffstat only in our respective areas.
+> 
+> (OK, it's a little more complicated because I've got the same
+> arrangement with jlayton, so the order is jlayton's lock pull, then my
+> nfsd pull, then your xfs pull.  Is this getting too complicated?
+> jlayton and I are both ready to so and I think it'd work.)
+> 
+> I'm also fine with duplicating those few patches, or whatever.
 
-Signed-off-by: Wang Sheng-Hui <shhuiw@foxmail.com>
----
- fs/xfs/libxfs/xfs_sb.c | 17 +++++++++--------
- 1 file changed, 9 insertions(+), 8 deletions(-)
+Maybe the better idea is to pull the xfs tree in the nfsd tree, but
+that would require Dave sending an early pull request so that the
+nfsd pull doesn't get delayed.
 
-diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
-index 752915f..b4bb852 100644
---- a/fs/xfs/libxfs/xfs_sb.c
-+++ b/fs/xfs/libxfs/xfs_sb.c
-@@ -174,20 +174,13 @@ xfs_mount_validate_sb(
- 	bool		check_inprogress,
- 	bool		check_version)
- {
-+	/* check magic number and version number */
- 
--	/*
--	 * If the log device and data device have the
--	 * same device number, the log is internal.
--	 * Consequently, the sb_logstart should be non-zero.  If
--	 * we have a zero sb_logstart in this case, we may be trying to mount
--	 * a volume filesystem in a non-volume manner.
--	 */
- 	if (sbp->sb_magicnum != XFS_SB_MAGIC) {
- 		xfs_warn(mp, "bad magic number");
- 		return -EWRONGFS;
- 	}
- 
--
- 	if (!xfs_sb_good_version(sbp)) {
- 		xfs_warn(mp, "bad version");
- 		return -EWRONGFS;
-@@ -245,6 +238,14 @@ xfs_mount_validate_sb(
- 			return -EFSCORRUPTED;
- 	}
- 
-+	/*
-+	 * If the log device and data device have the
-+	 * same device number, the log is internal.
-+	 * Consequently, the sb_logstart should be non-zero.  If
-+	 * we have a zero sb_logstart in this case, we may be trying to mount
-+	 * a volume filesystem in a non-volume manner.
-+	 */
-+
- 	if (unlikely(
- 	    sbp->sb_logstart == 0 && mp->m_logdev_targp == mp->m_ddev_targp)) {
- 		xfs_warn(mp,
--- 
-2.1.2
-
-
+Or we just defer the pnfsd merge.  While I tried to get it in in time
+for 3.20 all the delays during review mean we're really late no and should
+punt it to 3.21.
 
 _______________________________________________
 xfs mailing list
