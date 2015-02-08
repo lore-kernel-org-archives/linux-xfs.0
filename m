@@ -1,24 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 809107F59
-	for <xfs@oss.sgi.com>; Fri,  6 Feb 2015 17:20:29 -0600 (CST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 372E87F4E
+	for <xfs@oss.sgi.com>; Sat,  7 Feb 2015 22:45:55 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id E0C04AC007
-	for <xfs@oss.sgi.com>; Fri,  6 Feb 2015 15:20:28 -0800 (PST)
-Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
-	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	8EwibELDnb9LoC3h for <xfs@oss.sgi.com>;
-	Fri, 06 Feb 2015 15:20:26 -0800 (PST)
-Date: Sat, 7 Feb 2015 10:19:46 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v3 07/18] xfs: handle sparse inode chunks in icreate log
-	recovery
-Message-ID: <20150206231946.GR12722@dastard>
-References: <1423252385-3063-1-git-send-email-bfoster@redhat.com>
-	<1423252385-3063-8-git-send-email-bfoster@redhat.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1423252385-3063-8-git-send-email-bfoster@redhat.com>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 267078F8037
+	for <xfs@oss.sgi.com>; Sat,  7 Feb 2015 20:45:51 -0800 (PST)
+Received: from smtpbgbr1.qq.com (smtpbgbr1.qq.com [54.207.19.206]) by
+	cuda.sgi.com with ESMTP id W6uBixixhBaDDX2r (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Sat, 07 Feb 2015 20:45:48 -0800 (PST)
+From: Wang Sheng-Hui <shhuiw@foxmail.com>
+Subject: [PATCH] xfs: move the comment on log device near the right log dev
+	check in xfs_mount_validate_sb
+Date: Sun,  8 Feb 2015 12:45:04 +0800
+Message-Id: <1423370704-3464-1-git-send-email-shhuiw@foxmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,60 +22,66 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
-Cc: xfs@oss.sgi.com
+To: david@fromorbit.com, xfs@oss.sgi.com, sandeen@sandeen.net, hch@lst.de, bfoster@redhat.com, tinguely@sgi.com
 
-On Fri, Feb 06, 2015 at 02:52:54PM -0500, Brian Foster wrote:
-> Recovery of icreate transactions assumes hardcoded values for the inode
-> count and chunk length.
-> 
-> Sparse inode chunks are allocated in units of m_ialloc_min_blks. Update
-> the icreate validity checks to allow for appropriately sized inode
-> chunks and verify the inode count matches what is expected based on the
-> extent length rather than assuming a hardcoded count.
-> 
-> Signed-off-by: Brian Foster <bfoster@redhat.com>
-> ---
->  fs/xfs/xfs_log_recover.c | 19 +++++++++++++------
->  1 file changed, 13 insertions(+), 6 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-> index ecc73d5..5a5ee20 100644
-> --- a/fs/xfs/xfs_log_recover.c
-> +++ b/fs/xfs/xfs_log_recover.c
-> @@ -3068,12 +3068,19 @@ xlog_recover_do_icreate_pass2(
->  		return -EINVAL;
->  	}
->  
-> -	/* existing allocation is fixed value */
-> -	ASSERT(count == mp->m_ialloc_inos);
-> -	ASSERT(length == mp->m_ialloc_blks);
-> -	if (count != mp->m_ialloc_inos ||
-> -	     length != mp->m_ialloc_blks) {
-> -		xfs_warn(log->l_mp, "xlog_recover_do_icreate_trans: bad count 2");
-> +	/* inode chunk is either full or sparse */
-> +	if (length != mp->m_ialloc_blks &&
-> +	    length != mp->m_ialloc_min_blks) {
-> +		xfs_warn(log->l_mp,
-> +			 "%s: unsupported chunk length", __FUNCTION__);
-> +		return -EINVAL;
-> +	}
+The beginning is about magic and version number check.
+Move the comment on log device near the log dev check logic.
 
-Hmmm - this would prevent recovery of sparse inode chunk allocation
-in multiples of mp->m_ialloc_min_blks, right? Surely we can allow
-any sub-chunk extent size to be allocated as long as alignment and
-size restrictions are met?
+Signed-off-by: Wang Sheng-Hui <shhuiw@foxmail.com>
+---
+ fs/xfs/libxfs/xfs_sb.c | 17 +++++++++--------
+ 1 file changed, 9 insertions(+), 8 deletions(-)
 
-Cheers,
-
-Dave.
+diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
+index 752915f..b4bb852 100644
+--- a/fs/xfs/libxfs/xfs_sb.c
++++ b/fs/xfs/libxfs/xfs_sb.c
+@@ -174,20 +174,13 @@ xfs_mount_validate_sb(
+ 	bool		check_inprogress,
+ 	bool		check_version)
+ {
++	/* check magic number and version number */
+ 
+-	/*
+-	 * If the log device and data device have the
+-	 * same device number, the log is internal.
+-	 * Consequently, the sb_logstart should be non-zero.  If
+-	 * we have a zero sb_logstart in this case, we may be trying to mount
+-	 * a volume filesystem in a non-volume manner.
+-	 */
+ 	if (sbp->sb_magicnum != XFS_SB_MAGIC) {
+ 		xfs_warn(mp, "bad magic number");
+ 		return -EWRONGFS;
+ 	}
+ 
+-
+ 	if (!xfs_sb_good_version(sbp)) {
+ 		xfs_warn(mp, "bad version");
+ 		return -EWRONGFS;
+@@ -245,6 +238,14 @@ xfs_mount_validate_sb(
+ 			return -EFSCORRUPTED;
+ 	}
+ 
++	/*
++	 * If the log device and data device have the
++	 * same device number, the log is internal.
++	 * Consequently, the sb_logstart should be non-zero.  If
++	 * we have a zero sb_logstart in this case, we may be trying to mount
++	 * a volume filesystem in a non-volume manner.
++	 */
++
+ 	if (unlikely(
+ 	    sbp->sb_logstart == 0 && mp->m_logdev_targp == mp->m_ddev_targp)) {
+ 		xfs_warn(mp,
 -- 
-Dave Chinner
-david@fromorbit.com
+2.1.2
+
+
 
 _______________________________________________
 xfs mailing list
