@@ -1,25 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 173727F63
-	for <xfs@oss.sgi.com>; Sun,  8 Feb 2015 10:06:12 -0600 (CST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id CDFAC7F60
+	for <xfs@oss.sgi.com>; Sun,  8 Feb 2015 15:21:10 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id CF5BE304032
-	for <xfs@oss.sgi.com>; Sun,  8 Feb 2015 08:06:11 -0800 (PST)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id 6le3WH3fl4eq1Uu4 (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Sun, 08 Feb 2015 08:06:10 -0800 (PST)
-Date: Sun, 8 Feb 2015 11:06:07 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH v3 07/18] xfs: handle sparse inode chunks in icreate log
-	recovery
-Message-ID: <20150208160607.GC2927@bfoster.bfoster>
-References: <1423252385-3063-1-git-send-email-bfoster@redhat.com>
-	<1423252385-3063-8-git-send-email-bfoster@redhat.com>
-	<20150206231946.GR12722@dastard>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 6D042AC004
+	for <xfs@oss.sgi.com>; Sun,  8 Feb 2015 13:21:07 -0800 (PST)
+Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
+	[150.101.137.143]) by cuda.sgi.com with ESMTP id
+	5uL5w5k7yBe85wIN for <xfs@oss.sgi.com>;
+	Sun, 08 Feb 2015 13:21:05 -0800 (PST)
+Date: Mon, 9 Feb 2015 08:20:51 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] xfs: move the comment on log device near the right log
+	dev check in xfs_mount_validate_sb
+Message-ID: <20150208212051.GZ4251@dastard>
+References: <1423370704-3464-1-git-send-email-shhuiw@foxmail.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20150206231946.GR12722@dastard>
+In-Reply-To: <1423370704-3464-1-git-send-email-shhuiw@foxmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,80 +30,43 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: Wang Sheng-Hui <shhuiw@foxmail.com>
+Cc: bfoster@redhat.com, tinguely@sgi.com, sandeen@sandeen.net, hch@lst.de, xfs@oss.sgi.com
 
-On Sat, Feb 07, 2015 at 10:19:46AM +1100, Dave Chinner wrote:
-> On Fri, Feb 06, 2015 at 02:52:54PM -0500, Brian Foster wrote:
-> > Recovery of icreate transactions assumes hardcoded values for the inode
-> > count and chunk length.
-> > 
-> > Sparse inode chunks are allocated in units of m_ialloc_min_blks. Update
-> > the icreate validity checks to allow for appropriately sized inode
-> > chunks and verify the inode count matches what is expected based on the
-> > extent length rather than assuming a hardcoded count.
-> > 
-> > Signed-off-by: Brian Foster <bfoster@redhat.com>
-> > ---
-> >  fs/xfs/xfs_log_recover.c | 19 +++++++++++++------
-> >  1 file changed, 13 insertions(+), 6 deletions(-)
-> > 
-> > diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-> > index ecc73d5..5a5ee20 100644
-> > --- a/fs/xfs/xfs_log_recover.c
-> > +++ b/fs/xfs/xfs_log_recover.c
-> > @@ -3068,12 +3068,19 @@ xlog_recover_do_icreate_pass2(
-> >  		return -EINVAL;
-> >  	}
-> >  
-> > -	/* existing allocation is fixed value */
-> > -	ASSERT(count == mp->m_ialloc_inos);
-> > -	ASSERT(length == mp->m_ialloc_blks);
-> > -	if (count != mp->m_ialloc_inos ||
-> > -	     length != mp->m_ialloc_blks) {
-> > -		xfs_warn(log->l_mp, "xlog_recover_do_icreate_trans: bad count 2");
-> > +	/* inode chunk is either full or sparse */
-> > +	if (length != mp->m_ialloc_blks &&
-> > +	    length != mp->m_ialloc_min_blks) {
-> > +		xfs_warn(log->l_mp,
-> > +			 "%s: unsupported chunk length", __FUNCTION__);
-> > +		return -EINVAL;
-> > +	}
+On Sun, Feb 08, 2015 at 12:45:04PM +0800, Wang Sheng-Hui wrote:
+> The beginning is about magic and version number check.
+> Move the comment on log device near the log dev check logic.
 > 
-> Hmmm - this would prevent recovery of sparse inode chunk allocation
-> in multiples of mp->m_ialloc_min_blks, right? Surely we can allow
-> any sub-chunk extent size to be allocated as long as alignment and
-> size restrictions are met?
+> Signed-off-by: Wang Sheng-Hui <shhuiw@foxmail.com>
+
+The comment is old and redundant. The error messages document the
+reason for the checks better than the comment and the comments about
+volume mounts date back to Irix and so aren't relevant any more. So
+just remove the comment.
+
+> ---
+>  fs/xfs/libxfs/xfs_sb.c | 17 +++++++++--------
+>  1 file changed, 9 insertions(+), 8 deletions(-)
 > 
+> diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
+> index 752915f..b4bb852 100644
+> --- a/fs/xfs/libxfs/xfs_sb.c
+> +++ b/fs/xfs/libxfs/xfs_sb.c
+> @@ -174,20 +174,13 @@ xfs_mount_validate_sb(
+>  	bool		check_inprogress,
+>  	bool		check_version)
+>  {
+> +	/* check magic number and version number */
 
-Indeed it does prevent recovery of allocations in multiples of
-m_ialloc_min_blks, but that is not supported at the moment so this alone
-shouldn't cause any problems. The reason for the limitation is the same
-general issue of dealing with allocations that may not be guaranteed to
-convert directly to valid inode records. In other words, this is the
-minimum allocation we can guarantee will span only a single record.
+No need to add a redundant comment - it is obvious what the code it
+refers to is checking.
 
-Now that I think about it after doing the whole agbno range thing,
-perhaps an 'end_align' allocation argument might be a way to deal with
-that one? For example, sparse allocs could request a cluster aligned
-start bno and a chunk aligned end bno..? That might require multiple
-sparse alloc attempts to take full advantage, probably requires more
-thought either way...
+Cheers,
 
-Also note that for all fs' that this feature supports (i.e., v5), the
-next multiple of the m_ialloc_min_blks corresponds to a full chunk (due
-to the cluster size scaling). Given all of that, I'd at least prefer to
-defer more advanced allocation support from this initial series as an
-enhancement (provided there's value).
-
-Brian
-
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
