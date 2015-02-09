@@ -1,27 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 0BB767F90
-	for <xfs@oss.sgi.com>; Mon,  9 Feb 2015 09:15:15 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id C2F048F8074
-	for <xfs@oss.sgi.com>; Mon,  9 Feb 2015 07:15:11 -0800 (PST)
+	by oss.sgi.com (Postfix) with ESMTP id D9AA77F90
+	for <xfs@oss.sgi.com>; Mon,  9 Feb 2015 09:20:15 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id B79038F8073
+	for <xfs@oss.sgi.com>; Mon,  9 Feb 2015 07:20:15 -0800 (PST)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id urTjWMqqvlg68aD4 (version=TLSv1
+	cuda.sgi.com with ESMTP id j8dgAgntHrZl9beK (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 09 Feb 2015 07:15:10 -0800 (PST)
-Date: Mon, 9 Feb 2015 10:15:02 -0500
+	Mon, 09 Feb 2015 07:20:14 -0800 (PST)
+Date: Mon, 9 Feb 2015 10:20:07 -0500
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH v3 04/18] xfs: introduce inode record hole mask for
-	sparse inode chunks
-Message-ID: <20150209151502.GB18336@laptop.bfoster>
+Subject: Re: [PATCH v3 10/18] xfs: allocate sparse inode chunks on full chunk
+	allocation failure
+Message-ID: <20150209152007.GD18336@laptop.bfoster>
 References: <1423252385-3063-1-git-send-email-bfoster@redhat.com>
-	<1423252385-3063-5-git-send-email-bfoster@redhat.com>
-	<20150206231615.GQ12722@dastard>
-	<20150208160600.GB2927@bfoster.bfoster>
-	<20150208215710.GC4251@dastard>
+	<1423252385-3063-11-git-send-email-bfoster@redhat.com>
+	<20150209012519.GK4251@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20150208215710.GC4251@dastard>
+In-Reply-To: <20150209012519.GK4251@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -37,233 +35,540 @@ Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On Mon, Feb 09, 2015 at 08:57:10AM +1100, Dave Chinner wrote:
-> On Sun, Feb 08, 2015 at 11:06:01AM -0500, Brian Foster wrote:
-> > On Sat, Feb 07, 2015 at 10:16:15AM +1100, Dave Chinner wrote:
-> > > On Fri, Feb 06, 2015 at 02:52:51PM -0500, Brian Foster wrote:
-> > > > The inode btrees track 64 inodes per record, regardless of inode size.
-> > > > Thus, inode chunks on disk vary in size depending on the size of the
-> > > > inodes. This creates a contiguous allocation requirement for new inode
-> > > > chunks that can be difficult to satisfy on an aged and fragmented (free
-> > > > space) filesystem.
-> > > > 
-> > > > The inode record freecount currently uses 4 bytes on disk to track the
-> > > > free inode count. With a maximum freecount value of 64, only one byte is
-> > > > required. Convert the freecount field to a single byte and use two of
-> > > > the remaining 3 higher order bytes left for the hole mask field. Use
-> > > > the final leftover byte for the total count field.
-> > > > 
-> > > > The hole mask field tracks holes in the chunks of physical space that
-> > > > the inode record refers to. This facilitates the sparse allocation of
-> > > > inode chunks when contiguous chunks are not available and allows the
-> > > > inode btrees to identify what portions of the chunk contain valid
-> > > > inodes. The total count field contains the total number of valid inodes
-> > > > referred to by the record. This can also be deduced from the hole mask.
-> > > > The count field provides clarity and redundancy for internal record
-> > > > verification.
-> > > > 
-> > > > Note that both fields are initialized to zero to maintain backwards
-> > > > compatibility with existing filesystems (e.g., the higher order bytes of
-> > > > freecount are always 0). Tracking holes means that the hole mask is
-> > > > initialized to zero and thus remains "valid" in accordance with a
-> > > > non-sparse inode fs when no sparse chunks are physically allocated.
-> > > > Update the inode record management functions to handle the new fields
-> > > > and initialize to zero.
-> > > > 
-> > > > [XXX: The count field breaks backwards compatibility with !sparseinode
-> > > > fs. Should we reconsider the addition of total count or the idea of
-> > > > converting back and forth between sparse inode fs with a feature bit?]
-> > > > 
-> > > > Signed-off-by: Brian Foster <bfoster@redhat.com>
-> > > > ---
-> > > >  fs/xfs/libxfs/xfs_format.h       |  8 ++++++--
-> > > >  fs/xfs/libxfs/xfs_ialloc.c       | 12 ++++++++++--
-> > > >  fs/xfs/libxfs/xfs_ialloc_btree.c |  4 +++-
-> > > >  3 files changed, 19 insertions(+), 5 deletions(-)
-> > > > 
-> > > > diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
-> > > > index 26e5d92..6c2f1be 100644
-> > > > --- a/fs/xfs/libxfs/xfs_format.h
-> > > > +++ b/fs/xfs/libxfs/xfs_format.h
-> > > > @@ -1295,13 +1295,17 @@ static inline xfs_inofree_t xfs_inobt_maskn(int i, int n)
-> > > >   */
-> > > >  typedef struct xfs_inobt_rec {
-> > > >  	__be32		ir_startino;	/* starting inode number */
-> > > > -	__be32		ir_freecount;	/* count of free inodes (set bits) */
-> > > > +	__be16		ir_holemask;	/* hole mask for sparse chunks */
-> > > > +	__u8		ir_count;	/* total inode count */
-> > > > +	__u8		ir_freecount;	/* count of free inodes (set bits) */
-> > > >  	__be64		ir_free;	/* free inode mask */
-> > > >  } xfs_inobt_rec_t;
-> > > 
-> > > I think I'd prefer to see a union here so that we explicitly state
-> > > what the difference in the on-disk format is. i.e. similar to how we
-> > > express the difference in long and short btree block headers.
-> > > 
-> > > struct xfs_inobt_rec {
-> > > 	__be32		ir_startino;	/* starting inode number */
-> > > 	__be32		ir_freecount;	/* count of free inodes (set bits) */
-> > > 	union {
-> > > 		struct {
-> > > 			__be32	ir_freecount;
-> > > 		} f;
-> > > 		struct {
-> > > 			__be16	ir_holemask;	/* hole mask for sparse chunks */
-> > > 			__u8	ir_count;	/* total inode count */
-> > > 			__u8	ir_freecount;	/* count of free inodes (set bits) */
-> > > 		} sp;
-> > > 	}
-> > > 	__be64		ir_free;	/* free inode mask */
-> > > };
-> > > 
-> > > This will prevent us from using the wrong method of
-> > > referencing/modifying the record because we now need to be explicit
-> > > in how we modify it...
-> > > 
+On Mon, Feb 09, 2015 at 12:25:19PM +1100, Dave Chinner wrote:
+> On Fri, Feb 06, 2015 at 02:52:57PM -0500, Brian Foster wrote:
+> > xfs_ialloc_ag_alloc() makes several attempts to allocate a full inode
+> > chunk. If all else fails, reduce the allocation to the minimum sparse
+> > granularity and attempt to allocate a sparse inode chunk.
 > > 
-> > I agree in principle. This is definitely explicit in that there are two
-> > variants of this structure that must be handled in a particular way.
-> > That said, 'sparse' and 'full' aren't quite logical differentiators
-> > given that we now have the ir_count field and that it is used whenever
-> > sparse inode support is enabled. In other words, a sparse enabled fs'
-> > always uses the 'sp' variant of the inobt record, regardless of whether
-> > the record happens to sparse.
-> 
-> Sure, that's fine for the in memory code, but we've always been
-> explicit about the disk format and marshalling to/from it,
-> especially in the cases where the structure on disk can have
-> multiple formats.
-> 
-
-Right, this makes sense...
-
-> > > > @@ -82,7 +84,9 @@ xfs_inobt_update(
-> > > >  	union xfs_btree_rec	rec;
-> > > >  
-> > > >  	rec.inobt.ir_startino = cpu_to_be32(irec->ir_startino);
-> > > > -	rec.inobt.ir_freecount = cpu_to_be32(irec->ir_freecount);
-> > > > +	rec.inobt.ir_holemask = cpu_to_be16(irec->ir_holemask);
-> > > > +	rec.inobt.ir_count = irec->ir_count;
-> > > > +	rec.inobt.ir_freecount = irec->ir_freecount;
-> > > >  	rec.inobt.ir_free = cpu_to_be64(irec->ir_free);
-> > > >  	return xfs_btree_update(cur, &rec);
-> > > >  }
-> > > 
-> > > Hmmm - perhaps a similar set of helpers for sparse inode enabled
-> > > filesystems
-> > > 
+> > If sparse chunk allocation succeeds, check whether an inobt record
+> > already exists that can track the chunk. If so, inherit and update the
+> > existing record. Otherwise, insert a new record for the sparse chunk.
 > > 
-> > We could do that for the insert/update helpers, but note again the
-> > separate helpers would not split along the lines of sparse vs full
-> > chunks. Even if we were to change the design such that they do, that
-> > would have th effect of complicating some of the subsequent code. For
-> 
-> I suspect it might, but I really don't like the idea of writing
-> fields that don't actually exist (and hence are always zero) in
-> the on-disk format to disk. See, for example, the v5 superblock
-> field writes are conditional in xfs_sb_to_disk, the v3 inode field
-> writes are conditional in xfs_dinode_to_disk, etc.
-> 
-
-Indeed. The point here is just that a v1/v2 differentiation might be
-more relevant than full vs. sparse. As it is, a sparse inode enabled fs
-uses all of the fields (e.g., ir_count == 64 on a full chunk). So this
-is more about providing clean backwards compatibility than deciding
-between two different "allocation types," so to speak.
-
-Beyond that, I'm more just probing for a clean use of the new on-disk
-format distinction. The references above actually use the associated
-feature checks in a single helper as opposed to a separate one, and that
-seems a bit more clean an approach to me.
-
-> > example, the merge/update code currently has no reason to care about
-> > whether it has created a full chunk out of multiple sparse chunks. This
-> > would require more code to make that distinction simply to pick the
-> > correct api, for something that can easily be done with a simple generic
-> > helper. The same goes for things like the finobt, where now
-> > lookup/update/insert has to make distinctions depending on the type of
-> > inode record.
-> 
-> That was another thing that wasn't clear to me - does the finobt
-> record format change on disk? I don't think it does, as it only
-> holds a free count and a free inode bitmask, so it doesn't care
-> which bits of the chunk are allocated or not....
-> 
-
-No, it shouldn't change the format. But if we have a separate set of
-inobt helpers, it has to use one or the other depending on the type of
-record holding the inode that is freed or allocated.
-
-> > An alternate approach could be to stick with the generic helpers, but
-> > try and tweak them to use the appropriate on-disk format depending on
-> > the record. Then again, how can one really identify one from the other
-> > in the lookup or _get_rec() scenarios?
-> 
-> Solving these problem was exactly why I suggested different helpers
-> - the btree ops structure that is chosen for the cursor is in a
-> place where we know what format we are using, and that avoids
-> needing "if (xfs_sb_version...)" checks in the helpers to determine
-> what format we need to use.
-> 
-
-Hmm, I'm not sure I follow the train of thought here. The examples above
-use exactly that kind of logic within the helper. Further, some of the
-inobt helpers (e.g., lookup, insert_rec() shown below) use the in-core
-record, so there really is no separate format at that level.
-
-> > > > @@ -118,6 +124,8 @@ xfs_inobt_insert_rec(
-> > > >  	xfs_inofree_t		free,
-> > > >  	int			*stat)
-> > > >  {
-> > > > +	cur->bc_rec.i.ir_holemask = 0;
-> > > > +	cur->bc_rec.i.ir_count = 0; /* zero for backwards compatibility */
-> > > >  	cur->bc_rec.i.ir_freecount = freecount;
-> > > >  	cur->bc_rec.i.ir_free = free;
-> > > >  	return xfs_btree_insert(cur, stat);
-> > > 
-> > > That would make this sort of thing very clear - this doesn't look
-> > > like it would work for a sparse chunk record...
+> > Update xfs_inobt_insert_rec() to take the holemask as a parameter and
+> > set the associated field on disk. Create the xfs_inobt_update_insert()
+> > helper to handle the sparse chunk allocation case - insert or update an
+> > existing record depending on whether it already exists.
 > > 
-> > Right... but this is just a plumbing patch and effectively a placeholder
-> > for the subsequent patches that implement the mechanism. I suppose the
-> > api could have been pulled back sooner into this patch, but I'd rather
-> > not reshuffle things just for that intermediate state. That context
-> > probably wasn't quite clear to me at the time.
+> > Signed-off-by: Brian Foster <bfoster@redhat.com>
+> > ---
+> >  fs/xfs/libxfs/xfs_ialloc.c | 397 +++++++++++++++++++++++++++++++++++++++++++--
+> >  fs/xfs/xfs_trace.h         |  47 ++++++
+> >  2 files changed, 426 insertions(+), 18 deletions(-)
 > > 
-> > Before I go one way or another here with regard to the on-disk data
-> > structure, care to take a look at the subsequent patch(es) that use
-> > these helpers? Patch 10 in particular pretty much sums up how these
-> > helpers are used for sparse inode record management.
+> > diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
+> > index fc001d9..090d114 100644
+> > --- a/fs/xfs/libxfs/xfs_ialloc.c
+> > +++ b/fs/xfs/libxfs/xfs_ialloc.c
+> > @@ -122,12 +122,16 @@ xfs_inobt_get_rec(
+> >  STATIC int
+> >  xfs_inobt_insert_rec(
+> >  	struct xfs_btree_cur	*cur,
+> > +	__uint16_t		holemask,
+> > +	__uint8_t		count,
+> >  	__int32_t		freecount,
+> >  	xfs_inofree_t		free,
+> >  	int			*stat)
+> >  {
+> > -	cur->bc_rec.i.ir_holemask = 0;
+> > -	cur->bc_rec.i.ir_count = 0; /* zero for backwards compatibility */
+> > +	ASSERT(count == 0 || xfs_sb_version_hassparseinodes(&cur->bc_mp->m_sb));
+> > +
+> > +	cur->bc_rec.i.ir_holemask = holemask;
+> > +	cur->bc_rec.i.ir_count = count;
+> >  	cur->bc_rec.i.ir_freecount = freecount;
+> >  	cur->bc_rec.i.ir_free = free;
+> >  	return xfs_btree_insert(cur, stat);
 > 
-> Yup, I'll get to it.
+> Ok, so I'd definitely prefer two separate helpers here so that we
+> don't need asserts or validity checking....
 > 
 
-Thanks. I've made a quick pass and most of it makes sense save some of
-the helper business we're discussing here. I can start into some of the
-higher level refactoring, try to incorporate the on-disk record format
-union as clean as I can and we can move forward using the code of the
-next version, if that's easier. ;)
+I think that's doable, but goes back to my earlier concern. For one,
+this uses the in-core record so I'm not sure what the difference would
+be beyond function signature and asserts. Second, this complicates
+callers like xfs_difree_finobt(). Which one should it use?
 
-> > FWIW, comments on the generic bitmap stuff is also appreciated as that's
-> > another area I'm not totally convinved is done right. :)
+> > @@ -151,6 +155,19 @@ xfs_inobt_insert(
+> >  	xfs_agino_t		thisino;
+> >  	int			i;
+> >  	int			error;
+> > +	uint8_t			count;
+> > +
+> > +	/*
+> > +	 * Only set ir_count in the inobt record if the sparse inodes feature is
+> > +	 * enabled. If disabled, we must maintain backwards compatibility with
+> > +	 * the older inobt record format where the current count and holemask
+> > +	 * fields map to the higher order bytes of freecount and thus must be
+> > +	 * zeroed.
+> > +	 */
+> > +	if (xfs_sb_version_hassparseinodes(&mp->m_sb))
+> > +		count = XFS_INODES_PER_CHUNK;
+> > +	else
+> > +		count = 0;
 > 
-> Why use the generic bitmap stuff rather than the existing XFS code?
-> If that's just an in-memory change to the free mask processing, then
-> it can be done separately to the sparse inode functionality, and
-> probably should be done first in the series....
+> I'd strongly suggest that we pass the holemask, count and freecount
+> from the caller, for reasons that will become obvious later.
+> 
+> > @@ -164,7 +181,7 @@ xfs_inobt_insert(
+> >  		}
+> >  		ASSERT(i == 0);
+> >  
+> > -		error = xfs_inobt_insert_rec(cur, XFS_INODES_PER_CHUNK,
+> > +		error = xfs_inobt_insert_rec(cur, 0, count, XFS_INODES_PER_CHUNK,
+> >  					     XFS_INOBT_ALL_FREE, &i);
+> >  		if (error) {
+> >  			xfs_btree_del_cursor(cur, XFS_BTREE_ERROR);
+> 
+> And this hunk would become:
+> 
+> 		if (xfs_sb_version_hassparseinodes(&mp->m_sb)) {
+> 			error = xfs_inobt_insert_sprec(cur, holemask, count,
+> 						       freecount, &i);
+> 						       holemask,
+> 		else
+> 			error = xfs_inobt_insert_rec(cur, count,
+> 						     freecount, &i);
 > 
 
-http://oss.sgi.com/archives/xfs/2014-07/msg00380.html
+Ok, but as alluded to previously with regard to the union discussion, I
+find the naming a little confusing. I see now that you refer to the
+record format as sparse whereas I refer to the record content as
+(potentially) sparse, so that clears up a bit. ;)
 
-Last comment in that mail. ;) To be honest, I liked the original code
-better because it didn't require the bitmap_to_u64() helper hack and
-ports directly to userspace (so far I've managed to get away with
-dropping that stuff entirely in userspace). Alternatively, I've done
-significantly more testing with the latest code than the initial version
-so I'd rather not change it back unless a real need arises.
+I guess I could get used to that. Thoughts on a v1/v2 naming scheme?
+Would we expect the new format to become ubiquitous eventually?
+
+> > @@ -174,8 +191,58 @@ xfs_inobt_insert(
+> >  	}
+> >  
+> >  	xfs_btree_del_cursor(cur, XFS_BTREE_NOERROR);
+> > +	return 0;
+> > +}
+> >  
+> > +/*
+> > + * Update or insert a new record based on a sparse inode chunk allocation.
+> > + *
+> > + * If a record already exists, the new record is an updated version of that
+> > + * record based on a merge of sparse inode chunks. Update the record in place.
+> > + * Otherwise, insert a new record in the tree. Note that the record to insert
+> > + * must already have been aligned and merged, if necessary.
+> > + */
+> > +STATIC int
+> > +xfs_inobt_update_insert(
+> > +	struct xfs_mount		*mp,
+> > +	struct xfs_trans		*tp,
+> > +	struct xfs_buf			*agbp,
+> > +	struct xfs_inobt_rec_incore	*rec,
+> > +	xfs_btnum_t			btnum)
+> > +{
+> > +	struct xfs_btree_cur		*cur;
+> > +	struct xfs_agi			*agi = XFS_BUF_TO_AGI(agbp);
+> > +	xfs_agnumber_t			agno = be32_to_cpu(agi->agi_seqno);
+> > +	int				i;
+> > +	int				error;
+> > +
+> > +	cur = xfs_inobt_init_cursor(mp, tp, agbp, agno, btnum);
+> > +
+> > +	error = xfs_inobt_lookup(cur, rec->ir_startino, XFS_LOOKUP_EQ, &i);
+> > +	if (error)
+> > +		goto error;
+> > +	if (i == 1) {
+> > +		/* found a record, update it with the merged record */
+> > +		error = xfs_inobt_update(cur, rec);
+> > +		if (error)
+> > +			goto error;
+> > +		goto out;
+> > +	}
+> > +
+> > +	/* no existing record, insert a new one */
+> > +	error = xfs_inobt_insert_rec(cur, rec->ir_holemask, rec->ir_count,
+> > +				     rec->ir_freecount, rec->ir_free, &i);
+> > +	if (error)
+> > +		goto error;
+> > +	XFS_WANT_CORRUPTED_GOTO(i == 1, error);
+> > +
+> > +out:
+> > +	xfs_btree_del_cursor(cur, XFS_BTREE_NOERROR);
+> >  	return 0;
+> > +
+> > +error:
+> > +	xfs_btree_del_cursor(cur, XFS_BTREE_ERROR);
+> > +	return error;
+> >  }
+> 
+> I think that the way you've factored out the sparse inode record
+> update code can do with some work. I'll come back to this.
+> 
+> > @@ -358,6 +453,183 @@ xfs_ialloc_inode_init(
+> >  }
+> >  
+> >  /*
+> > + * Align a record for a recently allocated sparse chunk. The input is a record
+> > + * that describes the unaligned chunk. The record is aligned such that it is fit
+> > + * for insertion (or merge) into the on-disk inode btrees.
+> > + */
+> > +STATIC void
+> > +xfs_align_sparse_rec(
+> > +	struct xfs_mount		*mp,
+> > +	struct xfs_inobt_rec_incore	*rec)
+> > +{
+> > +	xfs_agblock_t			agbno;
+> > +	xfs_agblock_t			mod;
+> > +	int				offset;
+> > +	uint16_t			allocmask;
+> > +
+> > +	agbno = XFS_AGINO_TO_AGBNO(mp, rec->ir_startino);
+> > +	mod = agbno % mp->m_sb.sb_inoalignmt;
+> > +	if (!mod)
+> > +		return;
+> > +
+> > +	/* calculate the inode offset and align startino */
+> > +	offset = mod << mp->m_sb.sb_inopblog;
+> > +	rec->ir_startino -= offset;
+> > +
+> > +	/*
+> > +	 * Since startino has been aligned down, we have to left shift
+> > +	 * ir_holemask such that it continues to represent the same physical
+> > +	 * inodes as the unaligned record. The unaligned record by definition
+> > +	 * tracks the allocated inodes with the lowest order bits.
+> > +	 *
+> > +	 * ir_holemask is inverted before the shift such that set bits represent
+> > +	 * allocated inodes. This makes it safe for the bit-shift to introduce
+> > +	 * zeroes in the lower order bits without corrupting the record.
+> > +	 *
+> > +	 * Note that no change is required for ir_count, ir_freecount or
+> > +	 * ir_free. The count values are not affected by alignment and ir_free
+> > +	 * is initialized to 1s for all inodes, sparse or otherwise.
+> > +	 */
+> > +	allocmask = ~rec->ir_holemask;
+> > +	allocmask <<= offset / XFS_INODES_PER_HOLEMASK_BIT;
+> > +	rec->ir_holemask = ~allocmask;
+> > +}
+> 
+> I don't understand why the holemask would need changing. I would
+> have expected this to be done before the hole mask has been placed
+> inside the record. Indeed, putting it into the record first means we
+> have to deal with inversions and jump through other hoops.
+> 
+
+Yes, the interface was designed around the implementation in v2 and was
+further enhanced to handle left or right merges. The latter was not part
+of a release of this code, but was implemented such that the merged
+record bits were abstracted from record insertion/update. The
+implementation was simplified a great deal with the alignment changes we
+discussed on irc, but the interface mostly remained as a remnant of the
+more complex implementation.
+
+> static void
+> xfs_align_sparse_ino(
+> 	struct xfs_mount	*mp,
+> 	xfs_agino_t		*startino,
+> 	uint16_t		*allocmask)
+> {
+> 	agbno = XFS_AGINO_TO_AGBNO(mp, *startino);
+> 	mod = agbno % mp->m_sb.sb_inoalignmt;
+> 	if (!mod)
+> 		return;
+> 
+> 	offset = mod << mp->m_sb.sb_inopblog;
+> 	*startino -= offset;
+> 	*allocmask <<= offset / XFS_INODES_PER_HOLEMASK_BIT;
+> }
+> 
+> And then place the result in the irec....
+> 
+> > +/*
+> > + * Determine whether a sparse inode records can be merged. The inode ranges
+> > + * must match and there must be no allocation overlap between the records.
+> > + */
+> 
+> Hmmm - src + target is not great for an operation where both records
+> are a source. Perhaps be explict in the comment? e.g.
+> 
+
+Another remnant of the old implementation where the src/tgt had more
+significance.
+
+> /*
+>  * Determine whether the source inode record can be merged into a
+>  * target record. Both records must be sparse, the inode ranges
+>  * must match and there must be no allocation overlap between the
+>  * records.
+>  */
+> 
+> > +STATIC bool
+> > +__xfs_inobt_can_merge(
+> > +	struct xfs_inobt_rec_incore	*trec,	/* tgt record */
+> > +	struct xfs_inobt_rec_incore	*srec)	/* src record */
+> 
+> If we detect overlap, isn't that an indication of corruption?
+> 
+
+Yeah.
+
+> > +{
+> > +	DECLARE_BITMAP(talloc, 64);
+> > +	DECLARE_BITMAP(salloc, 64);
+> > +	DECLARE_BITMAP(tmp, 64);
+> > +
+> > +	/* records must cover the same inode range */
+> > +	if (trec->ir_startino != srec->ir_startino)
+> > +		return false;
+> > +
+> > +	/* both records must be sparse */
+> > +	if (!xfs_inobt_issparse(trec->ir_holemask) ||
+> > +	    !xfs_inobt_issparse(srec->ir_holemask))
+> > +		return false;
+> > +
+> > +	/* can't exceed capacity of a full record */
+> > +	if (trec->ir_count + srec->ir_count > XFS_INODES_PER_CHUNK)
+> > +		return false;
+> 
+> probably also need to check that both records have inodes allocated
+> in them. ir_count == 0 is indicative of a corrupt record, right?
+> 
+
+Yeah, good point.
+
+> > +
+> > +	/* verify there is no allocation overlap */
+> > +	xfs_inobt_ialloc_bitmap(talloc, trec);
+> > +	xfs_inobt_ialloc_bitmap(salloc, srec);
+> > +
+> > +	bitmap_and(tmp, salloc, talloc, 64);
+> > +	if (!bitmap_empty(tmp, 64))
+> > +		return false;
+> 
+> And if one has an ir_count of zero, the bitmap will always be
+> zero....
+> 
+
+This is based on holemask which is indirectly checked by the issparse()
+checks above. The ir_count check still makes sense, regardless.
+
+> > +/*
+> > + * Merge two sparse inode records. The caller must call __xfs_inobt_can_merge()
+> > + * to ensure the merge is valid.
+> > + */
+> 
+> same thing about src/target here.
+> 
+
+Ok.
+
+> > +STATIC void
+> > +__xfs_inobt_rec_merge(
+> > +	struct xfs_inobt_rec_incore	*trec,	/* target */
+> > +	struct xfs_inobt_rec_incore	*srec)	/* src */
+> > +{
+> > +	ASSERT(trec->ir_startino == srec->ir_startino);
+> > +
+> > +	/* combine the counts */
+> > +	trec->ir_count += srec->ir_count;
+> > +	trec->ir_freecount += srec->ir_freecount;
+> > +
+> > +	/* merge the holemask */
+> > +	trec->ir_holemask &= srec->ir_holemask;
+> 
+> Comments in this function are not very useful. Please remind me:
+> does the holemask use bit value of 1 as allocated or as a hole?
+> My head is full of allocmask stuff and so I can't tell if a merge
+> should use |= or &= to get the correct value.
+> 
+
+Ok.
+
+> > +	/* merge the free mask */
+> > +	trec->ir_free &= srec->ir_free;
+> 
+> Same here.
+> 
+> > +}
+> > +
+> > +/*
+> > + * Determine whether a newly allocated sparse inode chunk record overlaps with
+> > + * an existing sparse record in the inobt. When sparse inode chunks are enabled,
+> > + * all inode chunk alignment is increased from cluster size to physical inode
+> > + * chunk size. This means that the smallest, non-zero gap between two inode
+> > + * chunks is at least one full inode chunk. When a sparse inode chunk is
+> > + * allocated, the containing record is also aligned in this manner such that
+> > + * future sparse allocations within that same range all align to the same record
+> > + * startino. This alignment policy supports the ability to merge sparse chunks
+> > + * into complete chunks over time.
+> > + *
+> > + * Given an newly allocated/aligned sparse inode record, look up whether a
+> > + * sparse record already exists at this startino. If so, merge the two records
+> > + * and return the merged record in nrec.
+> > + *
+> > + * An error is returned if records overlap but a merge is not possible. Given
+> > + * the alignment constraints described above, this should never happen and thus
+> > + * is treated as fs corruption.
+> > + */
+> > +STATIC int
+> > +xfs_inobt_rec_merge(
+> > +	struct xfs_mount		*mp,
+> > +	struct xfs_trans		*tp,
+> > +	struct xfs_buf			*agbp,
+> > +	xfs_btnum_t			btnum,
+> > +	struct xfs_inobt_rec_incore	*nrec)	/* in/out: new/merged rec. */
+> > +{
+> > +	struct xfs_btree_cur		*cur;
+> > +	struct xfs_agi			*agi = XFS_BUF_TO_AGI(agbp);
+> > +	xfs_agnumber_t			agno = be32_to_cpu(agi->agi_seqno);
+> > +	int				error;
+> > +	int				i;
+> > +	struct xfs_inobt_rec_incore	rec;
+> > +
+> > +	cur = xfs_inobt_init_cursor(mp, tp, agbp, agno, btnum);
+> > +
+> > +	/* the new record is pre-aligned so we know where to look */
+> > +	error = xfs_inobt_lookup(cur, nrec->ir_startino, XFS_LOOKUP_EQ, &i);
+> > +	if (error)
+> > +		goto error;
+> > +	/* if nothing there, we're done */
+> > +	if (i == 0)
+> > +		goto out;
+> > +
+> > +	error = xfs_inobt_get_rec(cur, &rec, &i);
+> > +	if (error)
+> > +		goto error;
+> > +	XFS_WANT_CORRUPTED_GOTO(i == 1, error);
+> > +	ASSERT(rec.ir_startino == nrec->ir_startino);
+> 
+> XFS_WANT_CORRUPTED_GOTO() is better than an assert here. On a debug
+> kernel, it will still assert, but on a production kernel it will
+> trigger a corruption error rather than potentially propagating a
+> corruption further.
+> 
+
+Indeed.
+
+> > +	/*
+> > +	 * This should never happen. If we have coexisting records that cannot
+> > +	 * merge, something is seriously wrong.
+> > +	 */
+> > +	if (!__xfs_inobt_can_merge(nrec, &rec)) {
+> > +		error = -EFSCORRUPTED;
+> > +		goto error;
+> > +	}
+> 
+> Ah, so it is a corruption issue if merges can't occur. ;)
+> 
+> 	XFS_WANT_CORRUPTED_GOTO(!__xfs_inobt_can_merge(nrec, &rec));
+> 
+> > @@ -514,6 +828,65 @@ xfs_ialloc_ag_alloc(
+> >  	 * Convert the results.
+> >  	 */
+> >  	newino = XFS_OFFBNO_TO_AGINO(args.mp, args.agbno, 0);
+> > +
+> > +	if (xfs_inobt_issparse(~allocmask)) {
+> > +		/*
+> > +		 * We've allocated a sparse chunk...
+> > +		 */
+> > +		rec.ir_startino = newino;
+> > +		rec.ir_holemask = ~allocmask;
+> > +		rec.ir_count = newlen;
+> > +		rec.ir_freecount = newlen;
+> > +		rec.ir_free = XFS_INOBT_ALL_FREE;
+> > +
+> > +		/* align record and update newino for agi_newino */
+> > +		xfs_align_sparse_rec(args.mp, &rec);
+> > +		newino = rec.ir_startino;
+> 
+> See my earlier comments about aligning before putting stuff into
+> the record, especially as you are having to pull modified
+> information straight back out of the record.
+> 
+> 
+> > +		error = xfs_inobt_rec_merge(args.mp, tp, agbp, XFS_BTNUM_INO,
+> > +					    &rec);
+> > +		if (!error)
+> > +			error = xfs_inobt_rec_check_count(args.mp, &rec);
+> > +		if (error == -EFSCORRUPTED) {
+> > +			xfs_alert(args.mp,
+> > +	"invalid sparse inode record: ino 0x%llx holemask 0x%x count %u",
+> > +				  XFS_AGINO_TO_INO(args.mp, agno,
+> > +						   rec.ir_startino),
+> > +				  rec.ir_holemask, rec.ir_count);
+> > +			xfs_force_shutdown(args.mp, SHUTDOWN_CORRUPT_INCORE);
+> > +		}
+> > +		if (error)
+> > +			return error;
+> > +
+> > +		error = xfs_inobt_update_insert(args.mp, tp, agbp, &rec,
+> > +						XFS_BTNUM_INO);
+> > +		if (error)
+> > +			return error;
+> > +
+> > +		if (xfs_sb_version_hasfinobt(&args.mp->m_sb)) {
+> > +			error = xfs_inobt_update_insert(args.mp, tp, agbp, &rec,
+> > +							XFS_BTNUM_FINO);
+> > +			if (error)
+> > +				return error;
+> > +		}
+> 
+> I think this needs to become a helper function, and the
+> implementation refactored. The reason I say this is that the
+> xfs_inobt_rec_merge() function already looks up the record that is
+> to be updated, and if it exists if calculates the merged record
+> value. If then drops all that state and returns the merged record.
+> 
+> Then we call xfs_inobt_update_insert() to determine if we have to
+> update the existing record with the merged record (i.e. build all
+> the state again), and then call xfs_inobt_update() on that record.
+> 
+> Essentially, if xfs_inobt_rec_merge() determines we have a merge
+> candidate, we should do the btree update there immediately, as well
+> as fix up the finobt record.
+> 
+
+This also sort of derives from the previous implementation where the
+merge could have adjusted the startino of the record via left and right
+searching, etc.
+
+Perhaps we can use a 'merged' parameter or something of that nature here
+to identify whether the record was merged and updated. Note that a merge
+to the inobt does not guarantee a merge to the finobt, however. An
+insert is required if the existing record had no free inodes. That was
+part of the reason for the update or insert helper. Given that, I'm not
+totally sure we can refactor in exactly this fashion, but I'll give it a
+try and see what falls out.
+
+> If we aren't doing a record merge and update, then it's just an
+> insert operation, and we can use the modified xfs_inobt_insert()
+> function I mentioned earlier to pass the partial chunk record
+> information for insertion. Perhaps even just pass the irec
+> structure...
+> 
+
+In general, I think creating the irec asap and passing that around as
+necessary (for shifting/merging/updates/etc.) is probably cleaner than
+sending around all the individual values.
 
 Brian
 
+> > +	} else {
+> > +		/* full chunk - insert new records to both btrees */
+> > +		error = xfs_inobt_insert(args.mp, tp, agbp, newino, newlen,
+> > +					 XFS_BTNUM_INO);
+> > +		if (error)
+> > +			return error;
+> > +
+> > +		if (xfs_sb_version_hasfinobt(&args.mp->m_sb)) {
+> > +			error = xfs_inobt_insert(args.mp, tp, agbp, newino,
+> > +						 newlen, XFS_BTNUM_FINO);
+> > +			if (error)
+> > +				return error;
+> > +		}
+> 
+> And this could pass an irec that indicates a full inode chunk rather
+> than just the subset of inofmration needed to describe a full inode
+> chunk.
+> 
+> Cheers,
+> 
+> Dave.
 > -- 
 > Dave Chinner
 > david@fromorbit.com
