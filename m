@@ -1,21 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id B250B7FA3
-	for <xfs@oss.sgi.com>; Mon,  2 Feb 2015 01:01:28 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id A16AF8F8054
-	for <xfs@oss.sgi.com>; Sun,  1 Feb 2015 23:01:28 -0800 (PST)
-Received: from mga01.intel.com ([192.55.52.88]) by cuda.sgi.com with ESMTP id
-	Jhn8YswenvrHHMvF for <xfs@oss.sgi.com>;
-	Sun, 01 Feb 2015 23:01:23 -0800 (PST)
-Date: Mon, 2 Feb 2015 15:00:42 +0800
-From: kbuild test robot <fengguang.wu@intel.com>
-Subject: [dgc-xfs:xfs-ioctl-setattr-cleanup 10/12] fs/xfs/xfs_ioctl.c:1102:1:
-	sparse: symbol 'xfs_ioctl_setattr_check_extsize' was not declared.
-	Should it be static?
-Message-ID: <201502021535.BvQbm6Lm%fengguang.wu@intel.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 2854B7F8B
+	for <xfs@oss.sgi.com>; Mon,  9 Feb 2015 02:47:06 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id EABDD304077
+	for <xfs@oss.sgi.com>; Mon,  9 Feb 2015 00:47:05 -0800 (PST)
+Received: from smtprelay.restena.lu (smtprelay.restena.lu [158.64.1.62]) by
+	cuda.sgi.com with ESMTP id KYv3PwroYx8AlQLl (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Mon, 09 Feb 2015 00:47:03 -0800 (PST)
+Date: Mon, 9 Feb 2015 09:47:01 +0100
+From: Bruno =?UTF-8?B?UHLDqW1vbnQ=?= <bonbons@linux-vserver.org>
+Subject: Re: XFS crashing system with general protection fault
+Message-ID: <20150209094701.6b1d480d@pluto.restena.lu>
+In-Reply-To: <20150205221516.GT4251@dastard>
+References: <20141224111403.54d7226b@neptune.home>
+	<20141228115127.GN24183@dastard>
+	<20141229084452.615e1900@pluto.restena.lu>
+	<20150113081742.6c3a5823@pluto.restena.lu>
+	<20150205151007.7c954c01@pluto.restena.lu>
+	<20150205221516.GT4251@dastard>
 MIME-Version: 1.0
-Content-Disposition: inline
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,34 +29,64 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
-Cc: linux-kernel@vger.kernel.org, kbuild-all@01.org, xfs@oss.sgi.com
+Cc: xfs@oss.sgi.com
 
-tree:   git://git.kernel.org/pub/scm/linux/kernel/git/dgc/linux-xfs xfs-ioctl-setattr-cleanup
-head:   9b94fcc39822b450af823b3d8cbef6b53ce87ed9
-commit: d4388d3c0988ec00787ad1f8e63b5e2a6abef1dc [10/12] xfs: factor extsize hint checking out of xfs_ioctl_setattr
-reproduce:
-  # apt-get install sparse
-  git checkout d4388d3c0988ec00787ad1f8e63b5e2a6abef1dc
-  make ARCH=x86_64 allmodconfig
-  make C=1 CF=-D__CHECK_ENDIAN__
-
-
-sparse warnings: (new ones prefixed by >>)
-
->> fs/xfs/xfs_ioctl.c:1102:1: sparse: symbol 'xfs_ioctl_setattr_check_extsize' was not declared. Should it be static?
-
-Please review and possibly fold the followup patch.
-
----
-0-DAY kernel test infrastructure                Open Source Technology Center
-http://lists.01.org/mailman/listinfo/kbuild                 Intel Corporation
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+SGkgRGF2ZSwKCk9uIEZyaSwgNiBGZWIgMjAxNSAwOToxNToxNiArMTEwMCBEYXZlIENoaW5uZXIg
+d3JvdGU6Cj4gT24gVGh1LCBGZWIgMDUsIDIwMTUgYXQgMDM6MTA6MDdQTSArMDEwMCwgQnJ1bm8g
+UHLDqW1vbnQgd3JvdGU6Cj4gPiBIaSBEYXZlLAo+ID4gCj4gPiBOZXcgY3Jhc2gsIG5ldyB0cmFj
+ZSwgdGhpcyB0aW1lIG9uIDMuMTguMi4KPiA+IEl0IGxvb2tzIGxpa2UgdGhpcyB0aW1lIGEgTlVM
+TCBkZXJlZmVyZW5jZSBoYXBwZW5lZCBwcmlvciB0byB0b3VjaGVkIG1lbW9yeSBwb2lzb24gYmVp
+bmcgZGV0ZWN0ZWQuCj4gPiAKPiA+IE9uY2UgYWdhaW4gaXQncyBkdXJpbmcgbm9ybWFsIHN5c3Rl
+bSBvcGVyYXRpb24gKG5vIG1vdW50L3Vtb3VudCBhY3Rpdml0eSkKPiAKPiBDYW4geW91IHJlYnVp
+bGQgdGhlIGtlcm5lbCB3aXRoIENPTkZJR19YRlNfV0FSTj15IGFuZCBzZWUgaWYgdGhhdAo+IHRo
+cm93cyBhbnkgaW50ZXJlc3RpbmcgbWVzc2FnZXMgaW50byBsb2dzPwoKV2lsbCB0cnkgYW5kIHNl
+ZQoKPiBIb3dldmVyOgo+IAo+ID4gWzE5MDAzOTAuMjYxNDkxXSA9PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PQo+ID4gWzE5MDAzOTAuMjcyOTg5XSBCVUcgdGFza19zdHJ1Y3QgKFRhaW50ZWQ6IEcgICAgICBE
+IFcgICAgICk6IFBvaXNvbiBvdmVyd3JpdHRlbgo+ID4gWzE5MDAzOTAuMjgzMDIxXSAtLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLQo+ID4gWzE5MDAzOTAuMjgzMDIxXSAKPiA+IFsxOTAwMzkwLjI5NzA1Nl0g
+SU5GTzogMHhmZmZmODgwMjEzZDY1MWIzLTB4ZmZmZjg4MDIxM2Q2NTFiMy4gRmlyc3QgYnl0ZSAw
+eDZkIGluc3RlYWQgb2YgMHg2Ygo+ID4gWzE5MDAzOTAuMzA5MDQ0XSBJTkZPOiBTbGFiIDB4ZmZm
+ZmVhMDAwODRmNTgwMCBvYmplY3RzPTE2IHVzZWQ9MTYgZnA9MHggICAgICAgICAgKG51bGwpIGZs
+YWdzPTB4ODAwMDAwMDAwMDAwNDA4MAo+ID4gWzE5MDAzOTAuMzIzMDg3XSBJTkZPOiBPYmplY3Qg
+MHhmZmZmODgwMjEzZDY0YmEwIEBvZmZzZXQ9MTkzNjAgZnA9MHhmZmZmODgwMjEzZDYxZTQwCj4g
+PiBbMTkwMDM5MC4zMjMwODddIAo+ID4gWzE5MDAzOTAuMzM2OTg4XSBCeXRlcyBiNCBmZmZmODgw
+MjEzZDY0YjkwOiA2MCAyZCBkNiAxMyAwMiA4OCBmZiBmZiA1YSA1YSA1YSA1YSA1YSA1YSA1YSA1
+YSAgYC0uLi4uLi5aWlpaWlpaWgo+ID4gWzE5MDAzOTAuMzUwOTg4XSBPYmplY3QgZmZmZjg4MDIx
+M2Q2NGJhMDogNmIgNmIgNmIgNmIgNmIgNmIgNmIgNmIgNmIgNmIgNmIgNmIgNmIgNmIgNmIgNmIg
+IGtra2tra2tra2tra2tra2sKPiA+IFsxOTAwMzkwLjM2NDk0M10gT2JqZWN0IGZmZmY4ODAyMTNk
+NjRiYjA6IDZiIDZiIDZiIDZiIDZiIDZiIDZiIDZiIDZiIDZiIDZiIDZiIDZiIDZiIDZiIDZiICBr
+a2tra2tra2tra2tra2trCj4gLi4uLgo+ID4gWzE5MDAzOTEuNjc0NjM2XSBPYmplY3QgZmZmZjg4
+MDIxM2Q2NTFiMDogNmIgNmIgNmIgNmQgNmIgNmIgNmIgNmIgNmIgNmIgNmIgNmIgNmIgNmIgNmIg
+NmIgIGtra21ra2tra2tra2tra2sKPiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgIF5eCj4gCj4gVGhlcmUncyBhIHNpbmdsZSBiaXQgdGhhdCBoYXMg
+YmVlbiBmbGlwcGVkIGluIHRoZSB0YXNrX3N0cnVjdCBzbGFiLgo+IFNvIG1vcmUgdGhhbiBqdXN0
+IFhGUyBpcyBzZWVpbmcgbWVtb3J5IGNvcnJ1cHRpb24gLSB0aGlzIGlzIGluIGNvcmUKPiBrZXJu
+ZWwgc3RydWN0dXJlIHNsYWIgY2FjaGVzLiBJJ20gbm90IHN1cmUsIGVpdGhlciwgaG93IFhGUyBj
+b3VsZAo+IGNhdXNlIGNvcnJ1cHRpb24gaW4gdGhpcyBzbGFiLgo+IAo+IFNvLCBJJ2QgYmUgY2hl
+Y2tpbmcgYWxsIHRoZSBwcmV2aW91cyBtZW1vcnkgY29ycnVwdGlvbnMgdG8gc2VlIGlmCj4gdGhl
+eSBhcmUgc2luZ2xlIGJpdCBlcnJvcnMsIGFuZCBpZiB0aGVyZSBpcyBhbnkgcGF0dGVybiB0byB0
+aGUKPiBhZGRyZXNzZXMgYXQgd2hpY2ggdGhleSBvY2N1ci4gVGhlIGFib3ZlIGJpdCBmbGlwIG1h
+a2VzIG1lIHRoaW5rCj4gImhhcmR3YXJlIGlzc3VlIiBhbmQgZXZlcnl0aGluZyBlbHNlIHN0ZW1z
+IGZyb20gdGhhdC4uLgoKU3lzdGVtIGhhcyBFQ0MgUkFNIHNvIGZhdWx0eSBSQU0gbG9va3MgbGVz
+cyBwcm9iYWJsZSAobm8gY29tcGxhaW50IHNlZW4KYnkga2VybmVsIG5vciByZWNvcmRlZCBieSBm
+aXJtd2FyZSkuCgpBbGwgcHJldmlvdXMgY3Jhc2hlcyBmb3Igd2hpY2ggSSBoYXZlIHNvbWUgbG9n
+cyB3ZXJlIGRlcmVmZXJlbmNlIGFmdGVyCmZyZWUgYnV0IG5vdCBhdHRlbXB0IHRvIGFsbG9jYXRl
+IG1lbW9yeSBmcm9tIGEgbW9kaWZpZWQgcG9pc29uIGluIGZyZWUKc2xhYnMuCgoKVGhvdWdoIHdo
+YXQgZG9lcyB0aGF0IHNpbmdsZSBiaXQgcmVwcmVzZW50IGluIHRoYXQgYXJlYSBpZiBpdCB3YXMK
+dXNlZC9tb2RpZmllZCBhZnRlciBmcmVlPwoKCkFzIEkgaGF2ZSBzZWVuIHNvbWUgb3RoZXIgc2Vy
+dmVycyBteXN0ZXJpb3VzbHkgY3Jhc2ggYWZ0ZXIgbW9udGhzIG9mCnVwdGltZSAob3Igc29tZXRp
+bWUgb25seSB3ZWVrcykgSSB0aGluayBhIGtlcm5lbCBpc3N1ZS9yYWNlIGNvbmRpdGlvbiBpcwpt
+b3JlIGxpa2VseSB0aG91Z2ggSSBoYXZlIG5vIHRyYWNlcyBvciBvdGhlciBpbmZvIHRoYXQgd291
+bGQgaGVscCBoZXJlLgpBcyBzeXN0ZW1zIHJlY2VpdmUgbmV3ZXIga2VybmVscyBJJ20gZW5hYmxp
+bmcgbmV0Y29uc29sZSB0byBiZSBhYmxlIHRvCmNhcHR1cmUga2VybmVsIG1lc3NhZ2UgdG8gYmUg
+YWJsZSB0byBhbmFseXplIGZ1dHVyZSBzdWNoIGNyYXNoZXMuCgpDaGVlcnMsCkJydW5vCgo+IENo
+ZWVycywKPiAKPiBEYXZlLgoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2ku
+Y29tL21haWxtYW4vbGlzdGluZm8veGZzCg==
