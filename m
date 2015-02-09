@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 2570A7FB6
-	for <xfs@oss.sgi.com>; Mon,  9 Feb 2015 14:31:57 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id DDA6C8F8087
-	for <xfs@oss.sgi.com>; Mon,  9 Feb 2015 12:31:56 -0800 (PST)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id hZfFlXygXzbrZsnt (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 09 Feb 2015 12:31:55 -0800 (PST)
-Date: Mon, 9 Feb 2015 15:31:50 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 6/6] xfs: lock out page faults from extent swap operations
-Message-ID: <20150209203150.GM18336@laptop.bfoster>
-References: <1423083859-28439-1-git-send-email-david@fromorbit.com>
-	<1423083859-28439-7-git-send-email-david@fromorbit.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id EA3767FAB
+	for <xfs@oss.sgi.com>; Mon,  9 Feb 2015 15:17:53 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id D8BEF304032
+	for <xfs@oss.sgi.com>; Mon,  9 Feb 2015 13:17:50 -0800 (PST)
+Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
+	[150.101.137.145]) by cuda.sgi.com with ESMTP id
+	8RImZhHksGcJJtpN for <xfs@oss.sgi.com>;
+	Mon, 09 Feb 2015 13:17:47 -0800 (PST)
+Date: Tue, 10 Feb 2015 08:17:44 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 0/2] xfs: pass mp to XFS_WANT_CORRUPTED_*
+Message-ID: <20150209211744.GT12722@dastard>
+References: <54D53E8C.8070207@redhat.com> <20150208213502.GA4251@dastard>
+	<20150209130926.GA18336@laptop.bfoster>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1423083859-28439-7-git-send-email-david@fromorbit.com>
+In-Reply-To: <20150209130926.GA18336@laptop.bfoster>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,109 +30,54 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: Brian Foster <bfoster@redhat.com>
+Cc: Eric Sandeen <sandeen@redhat.com>, xfs-oss <xfs@oss.sgi.com>
 
-On Thu, Feb 05, 2015 at 08:04:19AM +1100, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
+On Mon, Feb 09, 2015 at 08:09:26AM -0500, Brian Foster wrote:
+> On Mon, Feb 09, 2015 at 08:35:02AM +1100, Dave Chinner wrote:
+> > On Fri, Feb 06, 2015 at 04:22:04PM -0600, Eric Sandeen wrote:
+> > > These 2 patches provide information about which filesystem
+> > > hit the error...
+> > 
+> > If we are going to touch every one of these macros, then can we
+> > rename them to something a little shorter like XFS_CORRUPT_GOTO()
+> > and XFS_CORRUPT_RETURN() at the same time? That will make the code a
+> > little less eye-bleedy where there are lots of these statements,
+> > and make formatting of complex checks a bit easier, too...
+> > 
 > 
-> Extent swap operations are another extent manipulation operation
-> that we need to ensure does not race against mmap page faults. The
-> current code returns if the file is mapped prior to the swap being
-> done, but it could potentially race against new page faults while
-> the swap is in progress. Hence we should use the XFS_MMAPLOCK_EXCL
-> for this operation, too.
-> 
-> While there, fix the error path handling that can result in double
-> unlocks of the inodes when cancelling the swapext transaction.
-> 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> ---
+> XFS_CORRUPT_DOSOMETHING() jumps out to me as indicate corruption if the
+> logic statement evaluates as true rather than false. The latter (e.g.,
+> assert-like logic) is how they work today, so that could be a bit
+> confusing to somebody who isn't already familiar with how these macros
+> work.
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+Someone not familiar with XFS conventions is already going to get
+caught by "should be true" logic of these statements anyway as the
+logic is the opposite of BUG_ON() and WARN_ON(). i.e.  BUG_ON(1)
+will kill the kernel, while ASSERT(1) indicates everything is fine.
 
->  fs/xfs/xfs_bmap_util.c | 31 +++++++++++++++----------------
->  1 file changed, 15 insertions(+), 16 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-> index 22a5dcb..7efa23e 100644
-> --- a/fs/xfs/xfs_bmap_util.c
-> +++ b/fs/xfs/xfs_bmap_util.c
-> @@ -1599,13 +1599,6 @@ xfs_swap_extent_flush(
->  	/* Verify O_DIRECT for ftmp */
->  	if (VFS_I(ip)->i_mapping->nrpages)
->  		return -EINVAL;
-> -
-> -	/*
-> -	 * Don't try to swap extents on mmap()d files because we can't lock
-> -	 * out races against page faults safely.
-> -	 */
-> -	if (mapping_mapped(VFS_I(ip)->i_mapping))
-> -		return -EBUSY;
->  	return 0;
->  }
->  
-> @@ -1633,13 +1626,14 @@ xfs_swap_extents(
->  	}
->  
->  	/*
-> -	 * Lock up the inodes against other IO and truncate to begin with.
-> -	 * Then we can ensure the inodes are flushed and have no page cache
-> -	 * safely. Once we have done this we can take the ilocks and do the rest
-> -	 * of the checks.
-> +	 * Lock the inodes against other IO, page faults and truncate to
-> +	 * begin with.  Then we can ensure the inodes are flushed and have no
-> +	 * page cache safely. Once we have done this we can take the ilocks and
-> +	 * do the rest of the checks.
->  	 */
-> -	lock_flags = XFS_IOLOCK_EXCL;
-> +	lock_flags = XFS_IOLOCK_EXCL | XFS_MMAPLOCK_EXCL;
->  	xfs_lock_two_inodes(ip, tip, XFS_IOLOCK_EXCL);
-> +	xfs_lock_two_inodes(ip, tip, XFS_MMAPLOCK_EXCL);
->  
->  	/* Verify that both files have the same format */
->  	if ((ip->i_d.di_mode & S_IFMT) != (tip->i_d.di_mode & S_IFMT)) {
-> @@ -1666,8 +1660,16 @@ xfs_swap_extents(
->  		xfs_trans_cancel(tp, 0);
->  		goto out_unlock;
->  	}
-> +
-> +	/*
-> +	 * Lock and join the inodes to the tansaction so that transaction commit
-> +	 * or cancel will unlock the inodes from this point onwards.
-> +	 */
->  	xfs_lock_two_inodes(ip, tip, XFS_ILOCK_EXCL);
->  	lock_flags |= XFS_ILOCK_EXCL;
-> +	xfs_trans_ijoin(tp, ip, lock_flags);
-> +	xfs_trans_ijoin(tp, tip, lock_flags);
-> +
->  
->  	/* Verify all data are being swapped */
->  	if (sxp->sx_offset != 0 ||
-> @@ -1720,9 +1722,6 @@ xfs_swap_extents(
->  			goto out_trans_cancel;
->  	}
->  
-> -	xfs_trans_ijoin(tp, ip, lock_flags);
-> -	xfs_trans_ijoin(tp, tip, lock_flags);
-> -
->  	/*
->  	 * Before we've swapped the forks, lets set the owners of the forks
->  	 * appropriately. We have to do this as we are demand paging the btree
-> @@ -1856,5 +1855,5 @@ out_unlock:
->  
->  out_trans_cancel:
->  	xfs_trans_cancel(tp, 0);
-> -	goto out_unlock;
-> +	goto out;
->  }
-> -- 
-> 2.0.0
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+I suggested shortening the macro because it makes the code that uses
+it extensively shouty and hard to read because it splits logic
+statements across lines regularly (e.g __xfs_dir3_data_check).  I
+want to use this more extensively in verifiers to give better
+corruption detection reporting, but the current macro will make the
+verifier code rather ugly. Hence my suggestion to make it shorter,
+neater and a little less shouty...
+
+> Unfortunately, nothing shorter than the current naming immediately comes
+> to mind... :/ We could kill the XFS_ prefix I suppose or even invert the
+> logic of the calls, but that's certainly a more significant change.
+> Thoughts?
+
+No logic changes, please.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
