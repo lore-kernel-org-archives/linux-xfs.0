@@ -1,25 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 67C447F96
-	for <xfs@oss.sgi.com>; Mon,  9 Feb 2015 10:04:21 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 05CA2AC001
-	for <xfs@oss.sgi.com>; Mon,  9 Feb 2015 08:04:17 -0800 (PST)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id QOALhUFBfo0snaFp (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 09 Feb 2015 08:04:16 -0800 (PST)
-Date: Mon, 9 Feb 2015 10:15:21 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH v3 08/18] xfs: helpers to convert holemask to/from
-	generic bitmap
-Message-ID: <20150209151521.GC18336@laptop.bfoster>
-References: <1423252385-3063-1-git-send-email-bfoster@redhat.com>
-	<1423252385-3063-9-git-send-email-bfoster@redhat.com>
-	<20150208235448.GI4251@dastard>
+	by oss.sgi.com (Postfix) with ESMTP id 144927F98
+	for <xfs@oss.sgi.com>; Mon,  9 Feb 2015 10:42:50 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 973C5AC001
+	for <xfs@oss.sgi.com>; Mon,  9 Feb 2015 08:42:46 -0800 (PST)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id B3nEulSAVOQo2XXm for <xfs@oss.sgi.com>;
+	Mon, 09 Feb 2015 08:42:44 -0800 (PST)
+Message-ID: <54D8E383.4020906@sandeen.net>
+Date: Mon, 09 Feb 2015 10:42:43 -0600
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20150208235448.GI4251@dastard>
+Subject: Re: [PATCH 0/2] xfs: pass mp to XFS_WANT_CORRUPTED_*
+References: <54D53E8C.8070207@redhat.com> <20150208213502.GA4251@dastard>
+	<20150209130926.GA18336@laptop.bfoster>
+In-Reply-To: <20150209130926.GA18336@laptop.bfoster>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,178 +28,50 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: Brian Foster <bfoster@redhat.com>, Dave Chinner <david@fromorbit.com>
+Cc: Eric Sandeen <sandeen@redhat.com>, xfs-oss <xfs@oss.sgi.com>
 
-On Mon, Feb 09, 2015 at 10:54:48AM +1100, Dave Chinner wrote:
-> On Fri, Feb 06, 2015 at 02:52:55PM -0500, Brian Foster wrote:
-> > The inobt record holemask field is a condensed data type designed to fit
-> > into the existing on-disk record and is zero based (allocated regions
-> > are set to 0, sparse regions are set to 1) to provide backwards
-> > compatibility. This makes the type somewhat complex for use in higher
-> > level inode manipulations such as individual inode allocation, etc.
-> > 
-> > Rather than foist the complexity of dealing with this field to every bit
-> > of logic that requires inode granular information, create the
-> > xfs_inobt_ialloc_bitmap() helper to convert the holemask to an inode
-> > allocation bitmap. The inode allocation bitmap is inode granularity
-> > similar to the inobt record free mask and indicates which inodes of the
-> > chunk are physically allocated on disk, irrespective of whether the
-> > inode is considered allocated or free by the filesystem. The generic
-> > bitmap type requires the use of generic kernel bitmap APIs.
-> > 
-> > The bitmap_to_u64() helper is provided to convert the bitmap back to a
-> > native 64-bit type (for native bitwise operations). This is required
-> > because the generic bitmap code represents a bitmap as an array of
-> > unsigned long in a little endian style (though each array value is cpu
-> > order). To ensure compatibility with various word sizes and endianness',
-> > bitmap_to_u64() exports the bitmap to little endian and swaps back to
-> > cpu byte order.
-> > 
-> > Signed-off-by: Brian Foster <bfoster@redhat.com>
-> > ---
-> >  fs/xfs/libxfs/xfs_ialloc.c | 69 ++++++++++++++++++++++++++++++++++++++++++++++
-> >  1 file changed, 69 insertions(+)
-> > 
-> > diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
-> > index 72ade0e..fc001d9 100644
-> > --- a/fs/xfs/libxfs/xfs_ialloc.c
-> > +++ b/fs/xfs/libxfs/xfs_ialloc.c
-> > @@ -39,6 +39,8 @@
-> >  #include "xfs_icache.h"
-> >  #include "xfs_trace.h"
-> >  
-> > +STATIC void
-> > +xfs_inobt_ialloc_bitmap(unsigned long *, struct xfs_inobt_rec_incore *);
+On 2/9/15 7:09 AM, Brian Foster wrote:
+> On Mon, Feb 09, 2015 at 08:35:02AM +1100, Dave Chinner wrote:
+>> On Fri, Feb 06, 2015 at 04:22:04PM -0600, Eric Sandeen wrote:
+>>> These 2 patches provide information about which filesystem
+>>> hit the error...
+>>
+>> If we are going to touch every one of these macros, then can we
+>> rename them to something a little shorter like XFS_CORRUPT_GOTO()
+>> and XFS_CORRUPT_RETURN() at the same time? That will make the code a
+>> little less eye-bleedy where there are lots of these statements,
+>> and make formatting of complex checks a bit easier, too...
+>>
 > 
-> xfs_inobt_irec_to_allocmap() seems more appropriate for what it does.
-> I'd also suggest it should be in xfs_ialloc_btree.c, too.
+> XFS_CORRUPT_DOSOMETHING() jumps out to me as indicate corruption if the
+> logic statement evaluates as true rather than false. The latter (e.g.,
+> assert-like logic) is how they work today, so that could be a bit
+> confusing to somebody who isn't already familiar with how these macros
+> work.
 > 
+> Unfortunately, nothing shorter than the current naming immediately comes
+> to mind... :/ We could kill the XFS_ prefix I suppose or even invert the
+> logic of the calls, but that's certainly a more significant change.
+> Thoughts?
 
-Ok.
+Right, so today it's XFS_WANT_CORRUPTED_RETURN(thing_that_should_be_true)
+and I agree, that's always felt a bit odd.
 
-> >  /*
-> >   * Allocation group level functions.
-> > @@ -739,6 +741,73 @@ xfs_ialloc_get_rec(
-> >  	return 0;
-> >  }
-> >  
-> > +static inline uint64_t
-> > +bitmap_to_u64(
-> > +	const unsigned long	*bitmap,
-> > +	int			nbits)
-> > +{
-> > +	__le64			lebitmap;
-> > +
-> > +	ASSERT(nbits <= 64);
-> > +
-> > +	/*
-> > +	 * The bitmap format depends on the native word size. E.g., bit 0 could
-> > +	 * land in the middle of the 64 bits on a big endian 32-bit arch (see
-> > +	 * arch/powerpc/include/asm/bitops.h). To handle this, export the bitmap
-> > +	 * as 64-bit little endian and convert back to native byte order.
-> > +	 */
-> > +	bitmap_copy_le(&lebitmap, bitmap, nbits);
-> > +	return le64_to_cpu(lebitmap);
-> > +}
-> 
-> Ok, so this is for doing logic operations on the bitmap, such as
-> inverting or masking out a bunch of bits?
-> 
+Dave suggests XFS_CORRUPT_RETURN(thing_that_should_be_true)
 
-Yes, generally to convert to inode granularity for whatever operations
-require it (e.g., find a "real" free inode from ir_free).
+I guess the "WANT" was supposed to imply that the argument is the
+test that we "want" to be true? :)
 
-> The first use of this function is xfs_inobt_first_free_inode(), and
-> the other use is in xfs_difree_inobt() to build the mask of inodes
-> in the chunk that need to be freed, and in both those cases they do
-> 
-> 	xfs_inobt_ialloc_bitmap(alloc, rec)
-> 	allocmask = bitmap_to_u64(alloc, 64);
-> 
-> and the local stack bitmap is otherwise unused. So, wouldn't a
-> helper like:
-> 
-> /*
->  * Return a host format mask of all the allocated inodes in the
->  * chunk. The bitmap format depends on the native word size (e.g.
->  * see arch/powerpc/include/asm/bitops.h) and so we have to marshall
->  * the bitmap through a defined endian conversion so that we can
->  * perform host native 64 bit logic operations on the resultant
->  * allocation mask.
->  *
->  * A bit value of 1 means the inode is allocated, a value of 0 means it
->  * is free.
->  */
-> u64
-> xfs_inobt_irec_to_allocmask(
-> 	struct xfs_inobt_rec_incore *irec)
-> {
-> 	DECLARE_BITMAP(allocmap, 64),
-> 	__le64			lebitmap;
-> 
-> 	xfs_inobt_rec_to_allocmap(&allocmap, irec);
-> 	bitmap_copy_le(&lebitmap, allocmap, 64);
-> 	return le64_to_cpu(lebitmap);
-> }
-> 
+I'm not super excited about inverting every test, but we could ...
 
-Yeah, I went back and forth with doing the conversion within the
-original helper. We ultimately end up with a couple more callers that do
-use the generic bitmap, but this could be helpful to those that don't.
+XFS_CORRUPT_RETURN_IF_NOT(test) would be explicit, at least.
+Or XFS_CORRUPT_RETURN_UNLESS(test).
 
-> > +
-> > +/*
-> > + * Convert the inode record holemask to an inode allocation bitmap. The inode
-> > + * allocation bitmap is inode granularity and specifies whether an inode is
-> > + * physically allocated on disk (not whether the inode is considered allocated
-> > + * or free by the fs).
-> > + *
-> > + * We have to be careful with regard to byte order and word size since the
-> > + * generic bitmap code uses primitive types.
-> 
-> " a bit value of 1 means the inode is allocated, a value of 0 means
-> it is free"
-> 
+I can't think of a nice short name that conveys more meaning, either,
+but I'm not really sure that it's critical to change it at this point.
 
-Ok.
-
-> > + */
-> > +STATIC void
-> > +xfs_inobt_ialloc_bitmap(
-> > +	unsigned long			*allocbmap,
-> > +	struct xfs_inobt_rec_incore	*rec)
-> > +{
-> > +	int				nextbit;
-> > +	DECLARE_BITMAP(holemask, 16);
-> > +
-> > +	bitmap_zero(allocbmap, 64);
-> > +
-> > +	/*
-> > +	 * bitmaps are represented as an array of unsigned long (each in cpu
-> > +	 * byte order). ir_holemask is only 16 bits, so direct assignment is
-> > +	 * safe.
-> > +	 */
-> > +	ASSERT(sizeof(rec->ir_holemask) <= sizeof(holemask[0]));
-> 
-> BUILD_BUG_ON(sizeof(rec->ir_holemask) <= sizeof(holemask[0]));
-> 
-> i.e. if we come across a platform where this fails, break the build
-> rather than waiting for the unlikely event of someone running a
-> debug kernel on that platform...
-> 
-
-I assume the logic has to be inverted, but otherwise that's probably a
-better idea. Thanks.
-
-Brian
-
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+-Eric
 
 _______________________________________________
 xfs mailing list
