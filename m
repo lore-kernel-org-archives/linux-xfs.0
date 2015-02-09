@@ -1,25 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 6B0997FB6
-	for <xfs@oss.sgi.com>; Mon,  9 Feb 2015 15:58:31 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 05483AC007
-	for <xfs@oss.sgi.com>; Mon,  9 Feb 2015 13:58:30 -0800 (PST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 1615B7F54
+	for <xfs@oss.sgi.com>; Mon,  9 Feb 2015 16:18:43 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id EA8CE8F8033
+	for <xfs@oss.sgi.com>; Mon,  9 Feb 2015 14:18:39 -0800 (PST)
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	w1u8XdGuS1Cwcz6T for <xfs@oss.sgi.com>;
-	Mon, 09 Feb 2015 13:58:28 -0800 (PST)
-Date: Tue, 10 Feb 2015 08:58:27 +1100
+	4LSTyI20wTZiSkdZ for <xfs@oss.sgi.com>;
+	Mon, 09 Feb 2015 14:18:37 -0800 (PST)
+Date: Tue, 10 Feb 2015 09:18:29 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 0/2] xfs: pass mp to XFS_WANT_CORRUPTED_*
-Message-ID: <20150209215827.GW12722@dastard>
-References: <54D53E8C.8070207@redhat.com> <20150208213502.GA4251@dastard>
-	<20150209130926.GA18336@laptop.bfoster>
-	<20150209211744.GT12722@dastard>
-	<20150209214359.GN18336@laptop.bfoster>
+Subject: Re: XFS umount with IO errors seems to lead to memory corruption
+Message-ID: <20150209221829.GX12722@dastard>
+References: <CAGdUFVbs3kTTAtXjHux5sW-e9j82ouaRN3aEm+-AdVs6NLuJ+g@mail.gmail.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20150209214359.GN18336@laptop.bfoster>
+In-Reply-To: <CAGdUFVbs3kTTAtXjHux5sW-e9j82ouaRN3aEm+-AdVs6NLuJ+g@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,60 +29,72 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
-Cc: Eric Sandeen <sandeen@redhat.com>, xfs-oss <xfs@oss.sgi.com>
+To: Chris Holcombe <xfactor973@gmail.com>
+Cc: xfs@oss.sgi.com
 
-On Mon, Feb 09, 2015 at 04:43:59PM -0500, Brian Foster wrote:
-> On Tue, Feb 10, 2015 at 08:17:44AM +1100, Dave Chinner wrote:
-> > On Mon, Feb 09, 2015 at 08:09:26AM -0500, Brian Foster wrote:
-> > > On Mon, Feb 09, 2015 at 08:35:02AM +1100, Dave Chinner wrote:
-> > > > On Fri, Feb 06, 2015 at 04:22:04PM -0600, Eric Sandeen wrote:
-> > > > > These 2 patches provide information about which filesystem
-> > > > > hit the error...
-> > > > 
-> > > > If we are going to touch every one of these macros, then can we
-> > > > rename them to something a little shorter like XFS_CORRUPT_GOTO()
-> > > > and XFS_CORRUPT_RETURN() at the same time? That will make the code a
-> > > > little less eye-bleedy where there are lots of these statements,
-> > > > and make formatting of complex checks a bit easier, too...
-> > > > 
-> > > 
-> > > XFS_CORRUPT_DOSOMETHING() jumps out to me as indicate corruption if the
-> > > logic statement evaluates as true rather than false. The latter (e.g.,
-> > > assert-like logic) is how they work today, so that could be a bit
-> > > confusing to somebody who isn't already familiar with how these macros
-> > > work.
-> > 
-> > Someone not familiar with XFS conventions is already going to get
-> > caught by "should be true" logic of these statements anyway as the
-> > logic is the opposite of BUG_ON() and WARN_ON(). i.e.  BUG_ON(1)
-> > will kill the kernel, while ASSERT(1) indicates everything is fine.
-> > 
+On Mon, Feb 09, 2015 at 01:24:15PM -0800, Chris Holcombe wrote:
+> Hi Dave,
 > 
-> BUG_ON() and ASSERT() are self-explanatory, the latter being a pretty
-> standard/common thing ('man assert'). As Eric mentioned, the WANT bit of
-> the macro is what suggests assert-like semantics.
-> 
-> > I suggested shortening the macro because it makes the code that uses
-> > it extensively shouty and hard to read because it splits logic
-> > statements across lines regularly (e.g __xfs_dir3_data_check).  I
-> > want to use this more extensively in verifiers to give better
-> > corruption detection reporting, but the current macro will make the
-> > verifier code rather ugly. Hence my suggestion to make it shorter,
-> > neater and a little less shouty...
-> > 
-> 
-> Sure, but ASSERT_CORRUPT_RET() is the same length as the example above.
-> ASSERT_CORRUPT_GOTO() is only a few chars longer than the associated
-> example. We could still use WANT over ASSERT I suppose to shorten it up
-> further. Either of those are at least still self-explanatory in my
-> opinion.
+> http://www.spinics.net/lists/linux-xfs/msg00061.html
+> Back in Dec 2013 you responded to this message saying that you would
+> take a look at it.  Was a fix for this ever issued? 
 
-Thinking on it a bit further, the XFS_WANT_CORRUPTED macros have an
-internal ASSERT in them, so they are effectively an ASSERT
-statement. I could live with those names, especially as ASSERT is
-something that can be compiled into production kernels via
-CONFIG_XFS_WARN=y to turn them into error messages...
+Yes, it's been fixed, but that's not you problem.
+
+> I'm seeing very
+> similar stacktraces:
+> 
+>  INFO: task umount:29224 blocked for more than 120 seconds.
+>        Tainted: G        W     3.13.0-39-generic #66-Ubuntu
+>  "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+>  umount D ffff880c4fc34480     0 29224  29221 0x00000082
+>  ffff880201211db0 0000000000000086 ffff880c39cb1800 ffff880201211fd8
+>  0000000000014480 0000000000014480 ffff880c39cb1800 ffff880c33386480
+>  ffff880c395e4bc8 ffff880c333864c0 ffff880c333864e8 ffff880c33386490
+>  Call Trace:
+> 
+> [<ffffffff81723109>] schedule+0x29/0x70
+> [<ffffffffa023b0c9>] xfs_ail_push_all_sync+0xa9/0xe0 [xfs]
+> [<ffffffff810aafd0>] ? prepare_to_wait_event+0x100/0x100
+> [<ffffffffa0236f13>] xfs_log_quiesce+0x33/0x70 [xfs]
+> [<ffffffffa0236f62>] xfs_log_unmount+0x12/0x30 [xfs]
+> [<ffffffffa01ed846>] xfs_unmountfs+0xc6/0x150 [xfs]
+> [<ffffffffa01ef211>] xfs_fs_put_super+0x21/0x60 [xfs]
+> [<ffffffff811bf452>] generic_shutdown_super+0x72/0xf0
+> [<ffffffff811bf707>] kill_block_super+0x27/0x70
+> [<ffffffff811bf9ed>] deactivate_locked_super+0x3d/0x60
+> [<ffffffff811bffa6>] deactivate_super+0x46/0x60
+> [<ffffffff811dcd96>] mntput_no_expire+0xd6/0x170
+> [<ffffffff811de31e>] SyS_umount+0x8e/0x100
+> [<ffffffff8172f7ed>] system_call_fastpath+0x1a/0x1f
+
+That's XFS hung waiting for IO to complete during unmount.
+
+> These type of errors are showing up in the logs:
+> 
+> XFS (dm-8): metadata I/O error: block 0x0 ("xfs_buf_iodone_callbacks") error 19 numblks 1
+
+Error 19 = ENODEV.
+
+You pulled the drive out before you tried to unmount?
+
+> XFS (dm-8): Detected failing async write on buffer block 0x0. Retrying async write.
+
+Which means it's detecting that the write is failing, but the higher
+level has been told to keep trying until all metadata has been
+flushed. We probably need to tweak this slightly....
+
+Eric - this is another case where transient vs permanent error is
+somewhat squishy, and treating ENODEV as a permanent error would
+solve this issue (i.e. trigger a shutdown). Did you start doing
+anything in this area?
+
+AFAICT a ENODEV error on Linux is a permanent error because if you
+replug the device it will come back as a different device and the
+ENODEV onteh removed device will still persist. However, I'm not
+sure what dm-multipath ends up doing in this case - it's supposed to
+hide the same devices coming and going, so maybe it won't trigger
+this error at all...
 
 Cheers,
 
