@@ -1,22 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 12DA97F9F
-	for <xfs@oss.sgi.com>; Mon,  9 Feb 2015 12:25:48 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 01E8E8F804C
-	for <xfs@oss.sgi.com>; Mon,  9 Feb 2015 10:25:45 -0800 (PST)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id Zelwo7xhgQyGPs9N (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 09 Feb 2015 10:25:44 -0800 (PST)
-Date: Mon, 9 Feb 2015 13:25:38 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH] xfs: only trace buffer items if they exist
-Message-ID: <20150209182538.GG18336@laptop.bfoster>
-References: <1423198008-30748-1-git-send-email-david@fromorbit.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 13A3E7F9F
+	for <xfs@oss.sgi.com>; Mon,  9 Feb 2015 14:12:01 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id B1269AC006
+	for <xfs@oss.sgi.com>; Mon,  9 Feb 2015 12:12:00 -0800 (PST)
+Received: from fieldses.org (fieldses.org [173.255.197.46]) by cuda.sgi.com
+	with ESMTP id MUAwxLZx1GqqgjSr for <xfs@oss.sgi.com>;
+	Mon, 09 Feb 2015 12:11:55 -0800 (PST)
+Date: Mon, 9 Feb 2015 15:11:54 -0500
+From: "J. Bruce Fields" <bfields@fieldses.org>
+Subject: Re: [PATCH 19/20] xfs: implement pNFS export operations
+Message-ID: <20150209201154.GA27746@fieldses.org>
+References: <1421925006-24231-1-git-send-email-hch@lst.de>
+	<1421925006-24231-20-git-send-email-hch@lst.de>
+	<20150205004758.GO4251@dastard> <20150205070858.GA593@lst.de>
+	<20150205135756.GA6386@lst.de> <20150206222047.GM12722@dastard>
+	<20150206224258.GJ29783@fieldses.org>
+	<20150208133435.GA27081@lst.de>
+	<20150208090942.51e99687@tlielax.poochiereds.net>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1423198008-30748-1-git-send-email-david@fromorbit.com>
+In-Reply-To: <20150208090942.51e99687@tlielax.poochiereds.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,56 +34,52 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: y@disappointment.disaster, xfs@oss.sgi.com
+To: Jeff Layton <jeff.layton@primarydata.com>
+Cc: linux-nfs@vger.kernel.org, xfs@oss.sgi.com, Jeff Layton <jlayton@primarydata.com>, linux-fsdevel@vger.kernel.org, Christoph Hellwig <hch@lst.de>
 
-On Fri, Feb 06, 2015 at 03:46:48PM +1100, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
+On Sun, Feb 08, 2015 at 09:09:42AM -0500, Jeff Layton wrote:
+> On Sun, 8 Feb 2015 14:34:35 +0100
+> Christoph Hellwig <hch@lst.de> wrote:
 > 
-> The commit 2d3d0c5 ("xfs: lobotomise xfs_trans_read_buf_map()") left
-> a landmine in the tracing code: trace_xfs_trans_buf_read() is now
-> call on all buffers that are read through this interface rather than
-> just buffers in transactions. For buffers outside transaction
-> context, bp->b_fspriv is null, and so the buf log item tracing
-> functions cannot be called. This causes a NULL pointer dereference
-> in the trace_xfs_trans_buf_read() function when tracing is turned
-> on.
+> > On Fri, Feb 06, 2015 at 05:42:58PM -0500, J. Bruce Fields wrote:
+> > > You'd basically just be pulling my tree (Christoph's is just my nfsd
+> > > tree with his patches on top, and I've been testing with exactly that
+> > > locally, just putting off pushing it out till we decide this.)
+> > > 
+> > > So anyway, fine with me if you want to just pull that into the xfs tree.
+> > > Mine's ready whenever, so if I send my pull pretty soon after the merge
+> > > window and you send it a little later then we still keep the property
+> > > that Linus's merge still has a diffstat only in our respective areas.
+> > > 
+> > > (OK, it's a little more complicated because I've got the same
+> > > arrangement with jlayton, so the order is jlayton's lock pull, then my
+> > > nfsd pull, then your xfs pull.  Is this getting too complicated?
+> > > jlayton and I are both ready to so and I think it'd work.)
+> > > 
+> > > I'm also fine with duplicating those few patches, or whatever.
+> > 
+> > Maybe the better idea is to pull the xfs tree in the nfsd tree, but
+> > that would require Dave sending an early pull request so that the
+> > nfsd pull doesn't get delayed.
+> > 
+> > Or we just defer the pnfsd merge.  While I tried to get it in in time
+> > for 3.20 all the delays during review mean we're really late no and should
+> > punt it to 3.21.
 > 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> ---
+> FWIW, I plan to send a pull request for the locking changes as soon as
+> the merge window opens. Hopefully that won't be an issue for long...
 
-Ah, I hit this a week or so ago and completely forgot to dig into it.
-Thanks!
+This includes Christoph's branch (all but the final xfs commits):
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+	git://linux-nfs.org/~bfields/linux.git for-3.20
 
->  fs/xfs/xfs_trans_buf.c | 5 +++--
->  1 file changed, 3 insertions(+), 2 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_trans_buf.c b/fs/xfs/xfs_trans_buf.c
-> index 0a4d4ab..7579841 100644
-> --- a/fs/xfs/xfs_trans_buf.c
-> +++ b/fs/xfs/xfs_trans_buf.c
-> @@ -327,9 +327,10 @@ xfs_trans_read_buf_map(
->  		return -EIO;
->  	}
->  
-> -	if (tp)
-> +	if (tp) {
->  		_xfs_trans_bjoin(tp, bp, 1);
-> -	trace_xfs_trans_read_buf(bp->b_fspriv);
-> +		trace_xfs_trans_read_buf(bp->b_fspriv);
-> +	}
->  	*bpp = bp;
->  	return 0;
->  
-> -- 
-> 2.0.0
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+That's what I intend to submit.  Hope that's OK.  Then it's up to Dave
+whether he wants to pull that in and include the xfs patches.
+
+Worst case we end up with not-yet-usable pnfs code in 3.20, which
+wouldn't be ideal but shouldn't cause any serious problem either.
+
+--b.
 
 _______________________________________________
 xfs mailing list
