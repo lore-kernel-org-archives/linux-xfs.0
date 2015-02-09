@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id BEC0F7F7E
-	for <xfs@oss.sgi.com>; Sun,  8 Feb 2015 17:58:05 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 6F2938F8033
-	for <xfs@oss.sgi.com>; Sun,  8 Feb 2015 15:58:05 -0800 (PST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id BB5B57F7E
+	for <xfs@oss.sgi.com>; Sun,  8 Feb 2015 18:02:37 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 990BE304043
+	for <xfs@oss.sgi.com>; Sun,  8 Feb 2015 16:02:34 -0800 (PST)
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	bGGnFwVEfEs8pANg for <xfs@oss.sgi.com>;
-	Sun, 08 Feb 2015 15:58:02 -0800 (PST)
-Date: Mon, 9 Feb 2015 10:54:48 +1100
+	0AuXqas5PEjfnOxi for <xfs@oss.sgi.com>;
+	Sun, 08 Feb 2015 16:02:31 -0800 (PST)
+Date: Mon, 9 Feb 2015 11:01:12 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v3 08/18] xfs: helpers to convert holemask to/from
-	generic bitmap
-Message-ID: <20150208235448.GI4251@dastard>
+Subject: Re: [PATCH v3 09/18] xfs: support min/max agbno args in block
+	allocator
+Message-ID: <20150209000112.GJ4251@dastard>
 References: <1423252385-3063-1-git-send-email-bfoster@redhat.com>
-	<1423252385-3063-9-git-send-email-bfoster@redhat.com>
+	<1423252385-3063-10-git-send-email-bfoster@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1423252385-3063-9-git-send-email-bfoster@redhat.com>
+In-Reply-To: <1423252385-3063-10-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,146 +34,40 @@ Sender: xfs-bounces@oss.sgi.com
 To: Brian Foster <bfoster@redhat.com>
 Cc: xfs@oss.sgi.com
 
-On Fri, Feb 06, 2015 at 02:52:55PM -0500, Brian Foster wrote:
-> The inobt record holemask field is a condensed data type designed to fit
-> into the existing on-disk record and is zero based (allocated regions
-> are set to 0, sparse regions are set to 1) to provide backwards
-> compatibility. This makes the type somewhat complex for use in higher
-> level inode manipulations such as individual inode allocation, etc.
+On Fri, Feb 06, 2015 at 02:52:56PM -0500, Brian Foster wrote:
+> The block allocator supports various arguments to tweak block allocation
+> behavior and set allocation requirements. The sparse inode chunk feature
+> introduces a new requirement not supported by the current arguments.
+> Sparse inode allocations must convert or merge into an inode record that
+> describes a fixed length chunk (64 inodes x inodesize). Full inode chunk
+> allocations by definition always result in valid inode records. Sparse
+> chunk allocations are smaller and the associated records can refer to
+> blocks not owned by the inode chunk. This model can result in invalid
+> inode records in certain cases.
 > 
-> Rather than foist the complexity of dealing with this field to every bit
-> of logic that requires inode granular information, create the
-> xfs_inobt_ialloc_bitmap() helper to convert the holemask to an inode
-> allocation bitmap. The inode allocation bitmap is inode granularity
-> similar to the inobt record free mask and indicates which inodes of the
-> chunk are physically allocated on disk, irrespective of whether the
-> inode is considered allocated or free by the filesystem. The generic
-> bitmap type requires the use of generic kernel bitmap APIs.
+> For example, if a sparse allocation occurs near the start of an AG, the
+> aligned inode record for that chunk might refer to agbno 0. If an
+> allocation occurs towards the end of the AG and the AG size is not
+> aligned, the inode record could refer to blocks beyond the end of the
+> AG. While neither of these scenarios directly result in corruption, they
+> both insert invalid inode records and at minimum cause repair to
+> complain, are unlikely to merge into full chunks over time and set land
+> mines for other areas of code.
 > 
-> The bitmap_to_u64() helper is provided to convert the bitmap back to a
-> native 64-bit type (for native bitwise operations). This is required
-> because the generic bitmap code represents a bitmap as an array of
-> unsigned long in a little endian style (though each array value is cpu
-> order). To ensure compatibility with various word sizes and endianness',
-> bitmap_to_u64() exports the bitmap to little endian and swaps back to
-> cpu byte order.
+> To guarantee sparse inode chunk allocation creates valid inode records,
+> support the ability to specify an agbno range limit for
+> XFS_ALLOCTYPE_NEAR_BNO block allocations. The min/max agbno's are
+> specified in the allocation arguments and limit the block allocation
+> algorithms to that range. The starting 'agbno' hint is clamped to the
+> range if the specified agbno is out of range. If no sufficient extent is
+> available within the range, the allocation fails. For backwards
+> compatibility, the min/max fields can be initialized to 0 to disable
+> range limiting (e.g., equivalent to min=0,max=agsize).
 > 
 > Signed-off-by: Brian Foster <bfoster@redhat.com>
-> ---
->  fs/xfs/libxfs/xfs_ialloc.c | 69 ++++++++++++++++++++++++++++++++++++++++++++++
->  1 file changed, 69 insertions(+)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
-> index 72ade0e..fc001d9 100644
-> --- a/fs/xfs/libxfs/xfs_ialloc.c
-> +++ b/fs/xfs/libxfs/xfs_ialloc.c
-> @@ -39,6 +39,8 @@
->  #include "xfs_icache.h"
->  #include "xfs_trace.h"
->  
-> +STATIC void
-> +xfs_inobt_ialloc_bitmap(unsigned long *, struct xfs_inobt_rec_incore *);
 
-xfs_inobt_irec_to_allocmap() seems more appropriate for what it does.
-I'd also suggest it should be in xfs_ialloc_btree.c, too.
-
->  /*
->   * Allocation group level functions.
-> @@ -739,6 +741,73 @@ xfs_ialloc_get_rec(
->  	return 0;
->  }
->  
-> +static inline uint64_t
-> +bitmap_to_u64(
-> +	const unsigned long	*bitmap,
-> +	int			nbits)
-> +{
-> +	__le64			lebitmap;
-> +
-> +	ASSERT(nbits <= 64);
-> +
-> +	/*
-> +	 * The bitmap format depends on the native word size. E.g., bit 0 could
-> +	 * land in the middle of the 64 bits on a big endian 32-bit arch (see
-> +	 * arch/powerpc/include/asm/bitops.h). To handle this, export the bitmap
-> +	 * as 64-bit little endian and convert back to native byte order.
-> +	 */
-> +	bitmap_copy_le(&lebitmap, bitmap, nbits);
-> +	return le64_to_cpu(lebitmap);
-> +}
-
-Ok, so this is for doing logic operations on the bitmap, such as
-inverting or masking out a bunch of bits?
-
-The first use of this function is xfs_inobt_first_free_inode(), and
-the other use is in xfs_difree_inobt() to build the mask of inodes
-in the chunk that need to be freed, and in both those cases they do
-
-	xfs_inobt_ialloc_bitmap(alloc, rec)
-	allocmask = bitmap_to_u64(alloc, 64);
-
-and the local stack bitmap is otherwise unused. So, wouldn't a
-helper like:
-
-/*
- * Return a host format mask of all the allocated inodes in the
- * chunk. The bitmap format depends on the native word size (e.g.
- * see arch/powerpc/include/asm/bitops.h) and so we have to marshall
- * the bitmap through a defined endian conversion so that we can
- * perform host native 64 bit logic operations on the resultant
- * allocation mask.
- *
- * A bit value of 1 means the inode is allocated, a value of 0 means it
- * is free.
- */
-u64
-xfs_inobt_irec_to_allocmask(
-	struct xfs_inobt_rec_incore *irec)
-{
-	DECLARE_BITMAP(allocmap, 64),
-	__le64			lebitmap;
-
-	xfs_inobt_rec_to_allocmap(&allocmap, irec);
-	bitmap_copy_le(&lebitmap, allocmap, 64);
-	return le64_to_cpu(lebitmap);
-}
-
-> +
-> +/*
-> + * Convert the inode record holemask to an inode allocation bitmap. The inode
-> + * allocation bitmap is inode granularity and specifies whether an inode is
-> + * physically allocated on disk (not whether the inode is considered allocated
-> + * or free by the fs).
-> + *
-> + * We have to be careful with regard to byte order and word size since the
-> + * generic bitmap code uses primitive types.
-
-" a bit value of 1 means the inode is allocated, a value of 0 means
-it is free"
-
-> + */
-> +STATIC void
-> +xfs_inobt_ialloc_bitmap(
-> +	unsigned long			*allocbmap,
-> +	struct xfs_inobt_rec_incore	*rec)
-> +{
-> +	int				nextbit;
-> +	DECLARE_BITMAP(holemask, 16);
-> +
-> +	bitmap_zero(allocbmap, 64);
-> +
-> +	/*
-> +	 * bitmaps are represented as an array of unsigned long (each in cpu
-> +	 * byte order). ir_holemask is only 16 bits, so direct assignment is
-> +	 * safe.
-> +	 */
-> +	ASSERT(sizeof(rec->ir_holemask) <= sizeof(holemask[0]));
-
-BUILD_BUG_ON(sizeof(rec->ir_holemask) <= sizeof(holemask[0]));
-
-i.e. if we come across a platform where this fails, break the build
-rather than waiting for the unlikely event of someone running a
-debug kernel on that platform...
+Seems sane on reading the implementation. I'll see if I still think
+that way when I read the code that uses it ;)
 
 Cheers,
 
