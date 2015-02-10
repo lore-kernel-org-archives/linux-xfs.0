@@ -1,26 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 6C9947FBE
-	for <xfs@oss.sgi.com>; Tue, 10 Feb 2015 04:06:59 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 4C85E304043
-	for <xfs@oss.sgi.com>; Tue, 10 Feb 2015 02:06:58 -0800 (PST)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id AmeJsEq0a7UZYYk6 (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 10 Feb 2015 02:06:54 -0800 (PST)
-Date: Tue, 10 Feb 2015 08:06:47 -0200
-From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: Re: [PATCH 0/2] xfs: pass mp to XFS_WANT_CORRUPTED_*
-Message-ID: <20150210100647.GB1735@hades.maiolino.org>
-References: <54D53E8C.8070207@redhat.com> <20150208213502.GA4251@dastard>
-	<20150209130926.GA18336@laptop.bfoster>
-	<20150209211744.GT12722@dastard>
-	<20150209214359.GN18336@laptop.bfoster>
-	<20150209215827.GW12722@dastard> <54D94A2A.8020906@sandeen.net>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 4DB857FC3
+	for <xfs@oss.sgi.com>; Tue, 10 Feb 2015 04:18:00 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id CB411AC004
+	for <xfs@oss.sgi.com>; Tue, 10 Feb 2015 02:17:56 -0800 (PST)
+Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
+	[150.101.137.145]) by cuda.sgi.com with ESMTP id
+	AKlVNeWz7kI7gEy6 for <xfs@oss.sgi.com>;
+	Tue, 10 Feb 2015 02:17:54 -0800 (PST)
+Date: Tue, 10 Feb 2015 21:17:52 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 3/4] xfs: Adding XFS_IOC_FIEMAPFS ioctl for use in
+	xfs_spaceman
+Message-ID: <20150210101752.GB12722@dastard>
+References: <54ca35b7.2786440a.6990.450d@mx.google.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <54D94A2A.8020906@sandeen.net>
+In-Reply-To: <54ca35b7.2786440a.6990.450d@mx.google.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,51 +30,45 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Eric Sandeen <sandeen@redhat.com>, Brian Foster <bfoster@redhat.com>, xfs-oss <xfs@oss.sgi.com>
+To: Dhruvesh Rathore <adrscube@gmail.com>
+Cc: xfs@oss.sgi.com
 
-On Mon, Feb 09, 2015 at 06:00:42PM -0600, Eric Sandeen wrote:
-> On 2/9/15 3:58 PM, Dave Chinner wrote:
-> > On Mon, Feb 09, 2015 at 04:43:59PM -0500, Brian Foster wrote:
-> >> On Tue, Feb 10, 2015 at 08:17:44AM +1100, Dave Chinner wrote:
+On Thu, Jan 29, 2015 at 06:59:22PM +0530, Dhruvesh Rathore wrote:
 > 
-> ...
+> This patch is concerned with the changes to be done in kernel space code for
+> turning FS_IOC_FIEMAPFS present in the earlier version of xfs_spaceman 
+> into an XFS specific ioctl called XFS_IOC_FIEMAPFS, which uses all existing
+> fiemap insfrastructure.
+> By introducing XFS_IOC_FIMEAPFS ioctl, it can be seperated from file based
+> fiemap commands and allows us to review it and push it as we need, making the
+> process much simpler.
 > 
-> >> Sure, but ASSERT_CORRUPT_RET() is the same length as the example above.
-> >> ASSERT_CORRUPT_GOTO() is only a few chars longer than the associated
-> >> example. We could still use WANT over ASSERT I suppose to shorten it up
-> >> further. Either of those are at least still self-explanatory in my
-> >> opinion.
-> > 
-> > Thinking on it a bit further, the XFS_WANT_CORRUPTED macros have an
-> > internal ASSERT in them, so they are effectively an ASSERT
-> > statement. I could live with those names, especially as ASSERT is
-> > something that can be compiled into production kernels via
-> > CONFIG_XFS_WARN=y to turn them into error messages...
+> ----------------------------------------------------------------------------------------
 > 
-> Sooooo you all want "ASSERT_CORRUPTED_RET / ASSERT_CORRUPTED_GOTO" ?
-> 
-> In a light mauve? ;)
-> 
+> Signed-off-by: Dhruvesh Rathore <dhruvesh_r@outlook.com>
+> Signed-off-by: Amey Ruikar <ameyruikar@yahoo.com>
+> Signed-off-by: Somdeep Dey <somdeepdey10@gmail.com>
+> ---
+> fs/ioctl.c		| 3  ++-
+> include/linux/fs.h	| 6  ++++++
+> fs/xfs/xfs_ioctl.c	| 55 +++++++++++++
+> fs/xfs/xfs_fs.h		| 1  +
+> 4 files changed, 64 insertions(+), 1 deletion(-) 
 
-I could live with that, better a relative big macro's name than a shorter
-abbreviated one that you should buy a crystal ball to really understand what it
-means :)
+Ok, so this patch doesn't remove any of the now unused
+functionality I added to support the VFS based ioctl.
 
-> -Eric
-> 
-> > Cheers,
-> > 
-> > Dave.
-> > 
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+What I'm going to do with this is combine it with the initial
+"introduce FS_IOC_FIEMAP" patch I wrote (including all it's
+documentation!) as the first patch of the kernel side patch series
+to introduced XFS_IOC_FIEMAPFS.
 
+Cheers,
+
+Dave.
 -- 
-Carlos
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
