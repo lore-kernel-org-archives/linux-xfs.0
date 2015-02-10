@@ -1,29 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id E22937F77
-	for <xfs@oss.sgi.com>; Mon,  9 Feb 2015 18:04:32 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 71143AC004
-	for <xfs@oss.sgi.com>; Mon,  9 Feb 2015 16:04:29 -0800 (PST)
+	by oss.sgi.com (Postfix) with ESMTP id C11FB7FB4
+	for <xfs@oss.sgi.com>; Mon,  9 Feb 2015 18:34:43 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 414BFAC002
+	for <xfs@oss.sgi.com>; Mon,  9 Feb 2015 16:34:40 -0800 (PST)
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	A2G6PB9L7FI0z6wK for <xfs@oss.sgi.com>;
-	Mon, 09 Feb 2015 16:04:26 -0800 (PST)
-Date: Tue, 10 Feb 2015 11:04:23 +1100
+	thERVi7YnDjdqZmx for <xfs@oss.sgi.com>;
+	Mon, 09 Feb 2015 16:34:34 -0800 (PST)
+Date: Tue, 10 Feb 2015 11:34:32 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 19/20] xfs: implement pNFS export operations
-Message-ID: <20150210000423.GY12722@dastard>
-References: <1421925006-24231-1-git-send-email-hch@lst.de>
-	<1421925006-24231-20-git-send-email-hch@lst.de>
-	<20150205004758.GO4251@dastard> <20150205070858.GA593@lst.de>
-	<20150205135756.GA6386@lst.de> <20150206222047.GM12722@dastard>
-	<20150206224258.GJ29783@fieldses.org>
-	<20150208133435.GA27081@lst.de>
-	<20150208090942.51e99687@tlielax.poochiereds.net>
-	<20150209201154.GA27746@fieldses.org>
+Subject: [GIT PULL] xfs: updates for 3.20-rc1
+Message-ID: <20150210003432.GZ12722@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20150209201154.GA27746@fieldses.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -36,56 +27,165 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "J. Bruce Fields" <bfields@fieldses.org>
-Cc: linux-nfs@vger.kernel.org, xfs@oss.sgi.com, Jeff Layton <jlayton@primarydata.com>, linux-fsdevel@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Jeff Layton <jeff.layton@primarydata.com>
+To: torvalds@linux-foundation.org
+Cc: akpm@linux-foundation.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-On Mon, Feb 09, 2015 at 03:11:54PM -0500, J. Bruce Fields wrote:
-> On Sun, Feb 08, 2015 at 09:09:42AM -0500, Jeff Layton wrote:
-> > On Sun, 8 Feb 2015 14:34:35 +0100
-> > Christoph Hellwig <hch@lst.de> wrote:
-> > 
-> > > On Fri, Feb 06, 2015 at 05:42:58PM -0500, J. Bruce Fields wrote:
-> > > > You'd basically just be pulling my tree (Christoph's is just my nfsd
-> > > > tree with his patches on top, and I've been testing with exactly that
-> > > > locally, just putting off pushing it out till we decide this.)
-> > > > 
-> > > > So anyway, fine with me if you want to just pull that into the xfs tree.
-> > > > Mine's ready whenever, so if I send my pull pretty soon after the merge
-> > > > window and you send it a little later then we still keep the property
-> > > > that Linus's merge still has a diffstat only in our respective areas.
-> > > > 
-> > > > (OK, it's a little more complicated because I've got the same
-> > > > arrangement with jlayton, so the order is jlayton's lock pull, then my
-> > > > nfsd pull, then your xfs pull.  Is this getting too complicated?
-> > > > jlayton and I are both ready to so and I think it'd work.)
-> > > > 
-> > > > I'm also fine with duplicating those few patches, or whatever.
-> > > 
-> > > Maybe the better idea is to pull the xfs tree in the nfsd tree, but
-> > > that would require Dave sending an early pull request so that the
-> > > nfsd pull doesn't get delayed.
-> > > 
-> > > Or we just defer the pnfsd merge.  While I tried to get it in in time
-> > > for 3.20 all the delays during review mean we're really late no and should
-> > > punt it to 3.21.
-> > 
-> > FWIW, I plan to send a pull request for the locking changes as soon as
-> > the merge window opens. Hopefully that won't be an issue for long...
-> 
-> This includes Christoph's branch (all but the final xfs commits):
-> 
-> 	git://linux-nfs.org/~bfields/linux.git for-3.20
-> 
-> That's what I intend to submit.  Hope that's OK.  Then it's up to Dave
-> whether he wants to pull that in and include the xfs patches.
+Hi Linus,
 
-I'm about to send a pull request to Linus for the current XFS tree.
-Once that is merged, I'll pull in the remaining xfs-pnfs patches
-and send another pull request to Linus after the NFS tree is merged.
+Can you please pull the current XFS updates from the tree below?
 
-Cheers,
+It's a relatively small set of changes, mainly refactoring and bug
+fixes, with a few small feature additions. The tag below describes
+the changes in more detail.
 
-Dave.
+There is one very recent commit in the tree - I found a regression
+introduced in 3.19-rc1 on friday, and didn't get it reviewed in time
+for the final 3.19 release.  Everything else has soaked in
+linux-next for at least a week.
+
+FYI, I'll also be sending a second pull request later in the merge
+window for the XFS side of the PNFS block layout server support that
+is in Bruce's tree. We didn't get our git trees in a pile quickly
+enough once review was completed to merge stable commits between the
+trees, so once the new PNFS server code is merged I'll send the XFS
+changes that implement the new NFS server interfaces.
+
+-Dave.
+
+The following changes since commit 97bf6af1f928216fd6c5a66e8a57bfa95a659672:
+
+  Linux 3.19-rc1 (2014-12-20 17:08:50 -0800)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/dgc/linux-xfs.git tags/xfs-for-linus-3.20-rc1
+
+for you to fetch changes up to bad962662dbc60e76ec1baae34af56b1ba2dfa5f:
+
+  Merge branch 'xfs-misc-fixes-for-3.20-4' into for-next (2015-02-10 09:24:25 +1100)
+
+----------------------------------------------------------------
+
+xfs: update for 3.20-rc1
+
+This update contains:
+o RENAME_EXCHANGE support
+o Rework of the superblock logging infrastructure
+o Rework of the XFS_IOCTL_SETXATTR implementation
+	- enables use inside user namespaces
+	- fixes inconsistencies setting extent size hints
+o fixes for missing buffer type annotations used in log recovery
+o more consolidation of libxfs headers
+o preparation patches for block based PNFS support
+o miscellaneous bug fixes and cleanups
+
+----------------------------------------------------------------
+Brian Foster (2):
+      xfs: initialize log buf I/O completion wq on log alloc
+      xfs: remove incorrect error negation in attr_multi ioctl
+
+Carlos Maiolino (2):
+      xfs: Make xfs_vn_rename compliant with renameat2() syscall
+      xfs: Add support to RENAME_EXCHANGE flag
+
+Christoph Hellwig (4):
+      xfs: pass a 64-bit count argument to xfs_iomap_write_unwritten
+      xfs: factor out a xfs_update_prealloc_flags() helper
+      xfs: don't allocate an ioend for direct I/O completions
+      xfs: growfs should use synchronous transactions
+
+Dave Chinner (28):
+      Merge branch 'xfs-misc-fixes-for-3.20-1' into for-next
+      xfs: move xfs_fs.h to libxfs
+      xfs: move xfs_types.h to libxfs
+      xfs: move struct xfs_bmalloca to libxfs
+      xfs: move xfs_bmap_finish prototype
+      xfs: remove deprecated sysctls
+      Merge branch 'xfs-misc-fixes-for-3.20-2' into for-next
+      xfs: remove bitfield based superblock updates
+      xfs: consolidate superblock logging functions
+      xfs: sanitise sb_bad_features2 handling
+      Merge branch 'xfs-sb-logging-rework' into for-next
+      xfs: ensure buffer types are set correctly
+      xfs: inode unlink does not set AGI buffer type
+      xfs: set buf types when converting extent formats
+      xfs: set superblock buffer type correctly
+      Merge branch 'xfs-buf-type-fixes' into for-next
+      Merge branch 'xfs-misc-fixes-for-3.20-3' into for-next
+      xfs: FSX_NONBLOCK is not used
+      xfs: separate xflags from xfs_ioctl_setattr
+      xfs: factor out xfs_ioctl_setattr transaciton preamble
+      xfs: disaggregate xfs_ioctl_setattr
+      xfs: kill xfs_ioctl_setattr behaviour mask
+      xfs: XFS_IOCTL_SETXATTR can run in user namespaces
+      xfs: factor extsize hint checking out of xfs_ioctl_setattr
+      xfs: factor projid hint checking out of xfs_ioctl_setattr
+      Merge branch 'xfs-ioctl-setattr-cleanup' into for-next
+      xfs: only trace buffer items if they exist
+      Merge branch 'xfs-misc-fixes-for-3.20-4' into for-next
+
+Eric Sandeen (3):
+      xfs: remove extra newlines from xfs messages
+      xfs: fix panic_mask documentation
+      xfs: report proper f_files in statfs if we overshoot imaxpct
+
+Iustin Pop (1):
+      xfs: fix behaviour of XFS_IOC_FSSETXATTR on directories
+
+Jan Kara (1):
+      xfs: Keep sb_bad_features2 consistent with sb_features2
+
+Nicholas Mc Guire (1):
+      xfs: fix implicit bool to int conversion
+
+Wang, Yalin (1):
+      xfs: change kmem_free to use generic kvfree()
+
+kbuild test robot (1):
+      xfs: xfs_ioctl_setattr_check_projid can be static
+
+ Documentation/filesystems/xfs.txt  |   22 +-
+ fs/xfs/kmem.c                      |   10 -
+ fs/xfs/kmem.h                      |    5 +-
+ fs/xfs/libxfs/xfs_attr_leaf.c      |    2 +-
+ fs/xfs/libxfs/xfs_bmap.c           |   20 +-
+ fs/xfs/libxfs/xfs_bmap.h           |   33 +++
+ fs/xfs/libxfs/xfs_format.h         |   24 +-
+ fs/xfs/{ => libxfs}/xfs_fs.h       |    0
+ fs/xfs/libxfs/xfs_sb.c             |  320 ++++++++++-------------
+ fs/xfs/libxfs/xfs_sb.h             |   11 +-
+ fs/xfs/libxfs/xfs_shared.h         |   33 ++-
+ fs/xfs/libxfs/xfs_symlink_remote.c |    2 +
+ fs/xfs/libxfs/xfs_trans_resv.c     |   14 -
+ fs/xfs/libxfs/xfs_trans_resv.h     |    1 -
+ fs/xfs/{ => libxfs}/xfs_types.h    |    0
+ fs/xfs/xfs_aops.c                  |  149 +++++------
+ fs/xfs/xfs_aops.h                  |    3 -
+ fs/xfs/xfs_bmap_util.h             |   37 +--
+ fs/xfs/xfs_buf_item.c              |    6 +-
+ fs/xfs/xfs_dquot.h                 |    2 +-
+ fs/xfs/xfs_file.c                  |   64 +++--
+ fs/xfs/xfs_fsops.c                 |   34 +--
+ fs/xfs/xfs_inode.c                 |  136 +++++++++-
+ fs/xfs/xfs_inode.h                 |   11 +-
+ fs/xfs/xfs_ioctl.c                 |  501 +++++++++++++++++-------------------
+ fs/xfs/xfs_ioctl32.c               |    2 +-
+ fs/xfs/xfs_iomap.c                 |    2 +-
+ fs/xfs/xfs_iomap.h                 |    2 +-
+ fs/xfs/xfs_iops.c                  |   21 +-
+ fs/xfs/xfs_log.c                   |   28 +-
+ fs/xfs/xfs_mount.c                 |  107 ++------
+ fs/xfs/xfs_mount.h                 |    5 +-
+ fs/xfs/xfs_qm.c                    |   43 +---
+ fs/xfs/xfs_qm.h                    |    1 -
+ fs/xfs/xfs_qm_syscalls.c           |   14 +-
+ fs/xfs/xfs_super.c                 |   20 +-
+ fs/xfs/xfs_sysctl.c                |   18 --
+ fs/xfs/xfs_trans.c                 |    1 +
+ fs/xfs/xfs_trans_buf.c             |    5 +-
+ 39 files changed, 817 insertions(+), 892 deletions(-)
+ rename fs/xfs/{ => libxfs}/xfs_fs.h (100%)
+ rename fs/xfs/{ => libxfs}/xfs_types.h (100%)
 -- 
 Dave Chinner
 david@fromorbit.com
