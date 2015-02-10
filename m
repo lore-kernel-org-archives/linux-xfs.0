@@ -1,22 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 9B15F7FB6
-	for <xfs@oss.sgi.com>; Tue, 10 Feb 2015 16:14:51 -0600 (CST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id DBBF57FAB
+	for <xfs@oss.sgi.com>; Tue, 10 Feb 2015 16:19:36 -0600 (CST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 27C10AC005
-	for <xfs@oss.sgi.com>; Tue, 10 Feb 2015 14:14:50 -0800 (PST)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id CB00B304043
+	for <xfs@oss.sgi.com>; Tue, 10 Feb 2015 14:19:33 -0800 (PST)
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	0043BTFynNPnJCi5 for <xfs@oss.sgi.com>;
-	Tue, 10 Feb 2015 14:14:45 -0800 (PST)
-Date: Wed, 11 Feb 2015 09:14:21 +1100
+	rxUF82cos6XQPuqB for <xfs@oss.sgi.com>;
+	Tue, 10 Feb 2015 14:19:31 -0800 (PST)
+Date: Wed, 11 Feb 2015 09:19:14 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 2/4] xfsprogs: Addition in debug option -d of xfs_spaceman
-Message-ID: <20150210221421.GP4251@dastard>
-References: <54ca34c6.4696420a.0f32.4513@mx.google.com>
+Subject: Re: [PATCH 4/4] xfsprogs: Adding XFS_IOC_FIEMAPFS ioctl for use in
+	xfs_spaceman
+Message-ID: <20150210221914.GQ4251@dastard>
+References: <54ca361b.6841460a.02cf.3cca@mx.google.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <54ca34c6.4696420a.0f32.4513@mx.google.com>
+In-Reply-To: <54ca361b.6841460a.02cf.3cca@mx.google.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,42 +33,31 @@ Sender: xfs-bounces@oss.sgi.com
 To: Dhruvesh Rathore <adrscube@gmail.com>
 Cc: xfs@oss.sgi.com
 
-On Thu, Jan 29, 2015 at 06:55:21PM +0530, Dhruvesh Rathore wrote:
+On Thu, Jan 29, 2015 at 07:01:02PM +0530, Dhruvesh Rathore wrote:
 > 
-> The xfs_spaceman utility did not have a a proper title to the content
-> displayed using -d (debug) option.
+> This patch is concerned with the changes to be done in userspace code for
+> turning FS_IOC_FIEMAPFS present in the earlier version of xfs_spaceman 
+> into an XFS specific ioctl called XFS_IOC_FIEMAPFS, which uses all existing
+> fiemap insfrastructure.
+> By introducing XFS_IOC_FIMEAPFS ioctl, it can be seperated from file based
+> fiemap commands and allows us to review it and push it as we need, making the
+> process much simpler.
 .....
-> 
-> @@ -332,20 +332,23 @@
->  static int
->  freesp_f(
->  	int		argc,
->  	char		**argv)
->  {
->  	xfs_agnumber_t	agno;		
+>  typedef struct histent
+> @@ -201,9 +201,9 @@
+>  		fiemap->fm_length = length;
+>  		fiemap->fm_extent_count = NR_EXTENTS;
 >  
->  	if (!init(argc, argv))
->  		return 0;
->  
-> +	if (dumpflag)
-> +		printf("%8s %8s %8s\n", "agno", "agbno", "len");
-> +
->  	for (agno = 0; agno < file->geom.agcount; agno++)  {
->  		if (inaglist(agno))
->  			scan_ag(agno);
->  	}
->  	if (histcount)
->  		printhist();		
+> -		ret = ioctl(file->fd, FS_IOC_FIEMAPFS, (unsigned long)fiemap);
+> +		ret = xfsctl(file->name,file->fd, XFS_IOC_FIEMAPFS, (unsigned long)fiemap);
+> 		if (ret < 0) {
+  ^
+Patch hunk is corrupt: it is missing the leading whitespace to
+indicate "no change on this line".
 
-Patch does not apply to the current tree. It's got stray whitespace
-and lines in it that are in the original source file.
+I've fixed it up to apply the patch.
 
-I've fixed this up for the moment, but please make sure your
-patches apply to a clean tree.
-
-Cheers,
-
-Dave.
+-Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
