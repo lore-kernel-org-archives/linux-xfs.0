@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 7A1297F54
-	for <xfs@oss.sgi.com>; Wed, 11 Feb 2015 10:19:31 -0600 (CST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 6CBDD7F54
+	for <xfs@oss.sgi.com>; Wed, 11 Feb 2015 10:22:22 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 23E54AC004
-	for <xfs@oss.sgi.com>; Wed, 11 Feb 2015 08:19:31 -0800 (PST)
-Received: from mail-pa0-f43.google.com (mail-pa0-f43.google.com
-	[209.85.220.43]) by cuda.sgi.com with ESMTP id ot4hXldRZzTkZoeb
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 2FB478F8035
+	for <xfs@oss.sgi.com>; Wed, 11 Feb 2015 08:22:19 -0800 (PST)
+Received: from mail-pa0-f44.google.com (mail-pa0-f44.google.com
+	[209.85.220.44]) by cuda.sgi.com with ESMTP id 5GJLfdJQIzfL71Ci
 	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 11 Feb 2015 08:19:29 -0800 (PST)
-Received: by mail-pa0-f43.google.com with SMTP id fa1so4995955pad.2
-	for <xfs@oss.sgi.com>; Wed, 11 Feb 2015 08:19:29 -0800 (PST)
+	<xfs@oss.sgi.com>; Wed, 11 Feb 2015 08:22:17 -0800 (PST)
+Received: by mail-pa0-f44.google.com with SMTP id kq14so4985586pab.3
+	for <xfs@oss.sgi.com>; Wed, 11 Feb 2015 08:22:17 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <20150210101752.GB12722@dastard>
-References: <54ca35b7.2786440a.6990.450d@mx.google.com>
-	<20150210101752.GB12722@dastard>
-Date: Wed, 11 Feb 2015 21:49:29 +0530
-Message-ID: <CALJmpHOZKR4sDceZYq4MLpaej1pDE4KdT1dMvt+d6aw+Que=1g@mail.gmail.com>
-Subject: Re: [PATCH 3/4] xfs: Adding XFS_IOC_FIEMAPFS ioctl for use in
+In-Reply-To: <20150210221914.GQ4251@dastard>
+References: <54ca361b.6841460a.02cf.3cca@mx.google.com>
+	<20150210221914.GQ4251@dastard>
+Date: Wed, 11 Feb 2015 21:52:17 +0530
+Message-ID: <CALJmpHNTXxt8dZ62JahCqB+E=_DkO310zksa81cSC81VbJCfbw@mail.gmail.com>
+Subject: Re: [PATCH 4/4] xfsprogs: Adding XFS_IOC_FIEMAPFS ioctl for use in
 	xfs_spaceman
 From: Dhruvesh Rathore <adrscube@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -34,39 +34,37 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-On Tue, Feb 10, 2015 at 3:47 PM, Dave Chinner <david@fromorbit.com> wrote:
-> On Thu, Jan 29, 2015 at 06:59:22PM +0530, Dhruvesh Rathore wrote:
+On Wed, Feb 11, 2015 at 3:49 AM, Dave Chinner <david@fromorbit.com> wrote:
+> On Thu, Jan 29, 2015 at 07:01:02PM +0530, Dhruvesh Rathore wrote:
 >>
->> This patch is concerned with the changes to be done in kernel space code for
+>> This patch is concerned with the changes to be done in userspace code for
 >> turning FS_IOC_FIEMAPFS present in the earlier version of xfs_spaceman
 >> into an XFS specific ioctl called XFS_IOC_FIEMAPFS, which uses all existing
 >> fiemap insfrastructure.
 >> By introducing XFS_IOC_FIMEAPFS ioctl, it can be seperated from file based
 >> fiemap commands and allows us to review it and push it as we need, making the
 >> process much simpler.
+> .....
+>>  typedef struct histent
+>> @@ -201,9 +201,9 @@
+>>               fiemap->fm_length = length;
+>>               fiemap->fm_extent_count = NR_EXTENTS;
 >>
->> ----------------------------------------------------------------------------------------
->>
->> Signed-off-by: Dhruvesh Rathore <dhruvesh_r@outlook.com>
->> Signed-off-by: Amey Ruikar <ameyruikar@yahoo.com>
->> Signed-off-by: Somdeep Dey <somdeepdey10@gmail.com>
->> ---
->> fs/ioctl.c            | 3  ++-
->> include/linux/fs.h    | 6  ++++++
->> fs/xfs/xfs_ioctl.c    | 55 +++++++++++++
->> fs/xfs/xfs_fs.h               | 1  +
->> 4 files changed, 64 insertions(+), 1 deletion(-)
+>> -             ret = ioctl(file->fd, FS_IOC_FIEMAPFS, (unsigned long)fiemap);
+>> +             ret = xfsctl(file->name,file->fd, XFS_IOC_FIEMAPFS, (unsigned long)fiemap);
+>>               if (ret < 0) {
+>   ^
+> Patch hunk is corrupt: it is missing the leading whitespace to
+> indicate "no change on this line".
 >
-> Ok, so this patch doesn't remove any of the now unused
-> functionality I added to support the VFS based ioctl.
+> I've fixed it up to apply the patch.
 >
-> What I'm going to do with this is combine it with the initial
-> "introduce FS_IOC_FIEMAP" patch I wrote (including all it's
-> documentation!) as the first patch of the kernel side patch series
-> to introduced XFS_IOC_FIEMAPFS.
->
+> -Dave.
 
-Seems appropriate to us.
+We again apologize for the constant white space errors. We will surely make
+use of the various git commands that you have mentioned to ensure that we
+send clean patches.
+Thank you for reworking and applying the patches :)
 
 Regards,
 A-DRS
