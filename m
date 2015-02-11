@@ -1,20 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 42CB17F54
-	for <xfs@oss.sgi.com>; Wed, 11 Feb 2015 10:08:22 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id C5EB3AC004
-	for <xfs@oss.sgi.com>; Wed, 11 Feb 2015 08:08:18 -0800 (PST)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id 5KUv5mrattXXW0Hg for <xfs@oss.sgi.com>;
-	Wed, 11 Feb 2015 08:08:16 -0800 (PST)
-Message-ID: <54DB7E70.3060709@sandeen.net>
-Date: Wed, 11 Feb 2015 10:08:16 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
+	by oss.sgi.com (Postfix) with ESMTP id 5FB617F54
+	for <xfs@oss.sgi.com>; Wed, 11 Feb 2015 10:09:40 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id F012EAC005
+	for <xfs@oss.sgi.com>; Wed, 11 Feb 2015 08:09:39 -0800 (PST)
+Received: from mail-pd0-f172.google.com (mail-pd0-f172.google.com
+	[209.85.192.172]) by cuda.sgi.com with ESMTP id
+	P5NZEUIMk7km9e29 (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 11 Feb 2015 08:09:38 -0800 (PST)
+Received: by pdbfl12 with SMTP id fl12so5247105pdb.4
+	for <xfs@oss.sgi.com>; Wed, 11 Feb 2015 08:09:38 -0800 (PST)
 MIME-Version: 1.0
-Subject: Re: XFS buffer IO performance is very poor
-References: <tencent_39AFE52BC5E06F89B6B2B3ED@qq.com>
-In-Reply-To: <tencent_39AFE52BC5E06F89B6B2B3ED@qq.com>
+In-Reply-To: <20150211002840.GR4251@dastard>
+References: <54ca326a.a1c4440a.6b39.422e@mx.google.com>
+	<20150211002840.GR4251@dastard>
+Date: Wed, 11 Feb 2015 21:39:37 +0530
+Message-ID: <CALJmpHOQB-yvS-y8F5b6XFCkbHbJ1xmbAVjtSq2OcAYoCSkyPg@mail.gmail.com>
+Subject: Re: [PATCH 0/4] xfs: xfs_spaceman utility rework
+From: Dhruvesh Rathore <adrscube@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,30 +32,24 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: yy <yy@xspring.net>, xfs <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
-On 2/11/15 1:39 AM, yy wrote:
+> These tree branches have just been updated (via rebase) with all the
+> changes in these patches integrated. Please update your trees and
+> review and test the updated patches. The patches have been
+> reshuffled and reworked, so please make sure you are happy with the
+> attributions in the commit messages for the new patches.
+>
+> Cheers,
+>
+> Dave.
 
-<snip>
+We thank you for taking the time out to review the patches sent and working
+on them. We will test the updated patches by updating our tress and get back
+to you,
 
-(In addition to Brian's questions):
-
-> XFS format parametes:
-> 
-> #mkfs.xfs -d su=256k,sw=5 /dev/sdb1
-> 
-> #cat /proc/mounts
-> 
-> /dev/sdb1 /data1 xfs rw,noatime,attr2,delaylog,nobarrier,logbsize=256k,sunit=512,swidth=2560,noquota 0 0
-> 
-> #fdisk -ul
-> Device Boot      Start         End      Blocks   Id  System
-> /dev/sdb1             128  2929356359  1464678116   83  Linux
-
-so 128*512 = 64k; your partition doesn't start on a 256k stripe unit boundary,
-right?  Shouldn't it do so?
-
--Eric
+Regards,
+A-DRS
 
 _______________________________________________
 xfs mailing list
