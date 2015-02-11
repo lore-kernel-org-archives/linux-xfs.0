@@ -1,22 +1,32 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 39BB87F37
-	for <xfs@oss.sgi.com>; Wed, 11 Feb 2015 07:35:38 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id D8270AC004
-	for <xfs@oss.sgi.com>; Wed, 11 Feb 2015 05:35:37 -0800 (PST)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id b7BHE0l4oTCvCKEZ (version=TLSv1
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 877A97F50
+	for <xfs@oss.sgi.com>; Wed, 11 Feb 2015 07:50:39 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 75ACA304062
+	for <xfs@oss.sgi.com>; Wed, 11 Feb 2015 05:50:36 -0800 (PST)
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
+	cuda.sgi.com with ESMTP id kxxKrYlwcfGkx45T (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 11 Feb 2015 05:35:36 -0800 (PST)
-Date: Wed, 11 Feb 2015 08:35:33 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: XFS buffer IO performance is very poor
-Message-ID: <20150211133531.GA15701@bfoster.bfoster>
-References: <tencent_39AFE52BC5E06F89B6B2B3ED@qq.com>
+	Wed, 11 Feb 2015 05:50:33 -0800 (PST)
+Received: from acsinet21.oracle.com (acsinet21.oracle.com [141.146.126.237])
+	by aserp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with
+	ESMTP id t1BDoWI0013626
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <xfs@oss.sgi.com>; Wed, 11 Feb 2015 13:50:32 GMT
+Received: from userz7021.oracle.com (userz7021.oracle.com [156.151.31.85])
+	by acsinet21.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
+	t1BDoVkH005633
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=FAIL)
+	for <xfs@oss.sgi.com>; Wed, 11 Feb 2015 13:50:31 GMT
+Received: from abhmp0012.oracle.com (abhmp0012.oracle.com [141.146.116.18])
+	by userz7021.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
+	t1BDoU28024696 for <xfs@oss.sgi.com>; Wed, 11 Feb 2015 13:50:30 GMT
+Message-ID: <54DB5E70.80607@oracle.com>
+Date: Wed, 11 Feb 2015 16:51:44 +0300
+From: Alexander Tsvetkov <alexander.tsvetkov@oracle.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <tencent_39AFE52BC5E06F89B6B2B3ED@qq.com>
+Subject: xfs_logprint segfault with external log
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,95 +35,92 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: yy <yy@xspring.net>
-Cc: xfs <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
-T24gV2VkLCBGZWIgMTEsIDIwMTUgYXQgMDM6Mzk6NTJQTSArMDgwMCwgeXkgd3JvdGU6Cj4gSGks
-Cj4gSSBhbSBydW4gc29tZSB0ZXN0IHdpdGggZmlvIG9uIFhGUywgYW5kIEkgZm91bmQgdGhhdCBi
-dWZmZXIgSU8gaXMgdmVyeSBwb29yLiBUaGVzZSBhcmUgc29tZSByZXN1bHQ6Cj4gCj4gCj4gcmVh
-ZChpb3BzKSB3cml0ZShpb3BzKQo+IGRpcmVjdCBJTyArIGV4dDMgMTg0OCAgMTIzMgo+IGJ1ZmZl
-ciBJTyArIGV4dDMgMTk3NiAxMzE5Cj4gZGlyZWN0IElPICsgWEZTIDE5NTQgMTMwNAo+IGJ1ZmZl
-ciBJTyArIFhGUyAzMDcgMjAzCj4gCj4gCj4gSSBkbyBub3QgdW5kZXJzdGFuZCB3aHkgc3VjaCBh
-IGJpZyBkaWZmZXJlbmNl77yfZXh0MyBpcyBtdWNoIGJldHRlci4KPiBkaXJlY3QgSU8gcGFyYW1l
-dGVyczoKPiBmaW8gLS1maWxlbmFtZT0vZGF0YTEvZmlvLmRhdCDigJRkaXJlY3Q9MSAtLXRocmVh
-ZCAtLXJ3PXJhbmRydyAtLXJ3bWl4cmVhZD02MCAtLWlvZW5naW5lPWxpYmFpbyAtLXJ1bnRpbWU9
-MzAwIC0taW9kZXB0aD0xIC0tc2l6ZT00MEcgLS1udW1qb2JzPTMyIC1uYW1lPXRlc3RfcncgLS1n
-cm91cF9yZXBvcnRpbmcgLS1icz0xNmsg4oCUdGltZV9iYXNlCj4gCj4gCj4gYnVmZmVyIElPIHBh
-cmFtZXRlczoKPiBmaW8gLS1maWxlbmFtZT0vZGF0YTEvZmlvLmRhdCAtLWRpcmVjdD0wIC0tdGhy
-ZWFkIC0tcnc9cmFuZHJ3IC0tcndtaXhyZWFkPTYwIC0taW9lbmdpbmU9bGliYWlvIC0tcnVudGlt
-ZT0zMDAgLS1pb2RlcHRoPTEgLS1zaXplPTQwRyAtLW51bWpvYnM9MzIgLW5hbWU9dGVzdF9ydyAt
-LWdyb3VwX3JlcG9ydGluZyAtLWJzPTE2ayDigJR0aW1lX2Jhc2UKPiAKPiAKCkkganVzdCBnYXZl
-IHRoaXMgZmlvIGNvbW1hbmQgYSB3aGlybCBvbiBhIHJoZWw2IGJveCBJIGhhdmUgaGVyZS4gSXQK
-bG9va3MgdG8gbWUgdGhhdCB0aGlzIGlzIHNlbmRpbmcgMzIgcGFyYWxsZWwgcmFuZHJ3IGpvYnMg
-dG8gYSBzaW5nbGUKZmlsZS4gV2l0aCBidWZmZXJlZCBJL08sIHRoZXNlIHdyaXRlcyBhcmUgZXhj
-bHVzaXZlbHkgbG9ja2VkIHdoZXJlYXMKZGlyZWN0IEkvTyBpcyBzaGFyZWQgbG9ja2VkLgoKU28g
-eW91IGFyZW4ndCByZWFsbHkgZXhlcmNpc2luZyB0aGUgZmlsZXN5c3RlbSBvciBzdG9yYWdlIGJ5
-IHBvdW5kaW5nIG9uCnRoZSBzYW1lIGZpbGUgd2l0aCAzMiB0aHJlYWRzLiBJZiB5b3UgdXNlIHNl
-cGFyYXRlIGZpbGVzIGZvciBidWZmZXJlZApJL08gKGUuZy4sIHJlbW92ZSB0aGUgLS1maWxlbmFt
-ZSBwYXJhbSksIHlvdSdsbCBwcm9iYWJseSBzZWUgYSBidW1wIGluCmlvcHMuCgpCcmlhbgoKPiB0
-aGUgc3lzdGVtIEkndmUgdXNlZCBmb3IgbXkgdGVzdHM6Cj4gSFcgc2VydmVyOiA0IGNvcmVzIChJ
-bnRlbCksIDMyR0IgUkFNLCBydW5uaW5nIFJIRUwgNi41Cj4gS2VybmVsOjIuNi4zMi00MzEuZWw2
-Lng4Nl82NAo+IHN0b3JhZ2U6IDEwZGlza3MgUkFJRDErMCwgc3RyaXBlIHNpemU6IDI1NktCCj4g
-Cj4gCj4gWEZTIGZvcm1hdCBwYXJhbWV0ZXM6Cj4gI21rZnMueGZzIC1kIHN1PTI1Nmssc3c9NSAv
-ZGV2L3NkYjEKPiAjY2F0IC9wcm9jL21vdW50cwo+IC9kZXYvc2RiMSAvZGF0YTEgeGZzIHJ3LG5v
-YXRpbWUsYXR0cjIsZGVsYXlsb2csbm9iYXJyaWVyLGxvZ2JzaXplPTI1Nmssc3VuaXQ9NTEyLHN3
-aWR0aD0yNTYwLG5vcXVvdGEgMCAwCj4gI2ZkaXNrIC11bAo+IERldmljZSBCb290ICAgU3RhcnQg
-ICAgIEVuZCAgIEJsb2NrcyAgSWQgU3lzdGVtCj4gL2Rldi9zZGIxICAgICAgIDEyOCAyOTI5MzU2
-MzU5IDE0NjQ2NzgxMTYgIDgzIExpbnV4Cj4gCj4gCj4gCj4gCj4gIyBmaW8gLS1maWxlbmFtZT0v
-ZGF0YTEvZmlvLmRhdCAtLWRpcmVjdD0wIC0tdGhyZWFkIC0tcnc9cmFuZHJ3IC0tcndtaXhyZWFk
-PTYwIC0taW9lbmdpbmU9bGliYWlvIC0tcnVudGltZT0zMDAgLS1pb2RlcHRoPTEgLS1zaXplPTQw
-RyAtLW51bWpvYnM9MzIgLW5hbWU9dGVzdF9ydyAtLWdyb3VwX3JlcG9ydGluZyAtLWJzPTE2ayAt
-LXRpbWVfYmFzZQo+IHRlc3Rfcnc6IChnPTApOiBydz1yYW5kcncsIGJzPTE2Sy0xNksvMTZLLTE2
-Sy8xNkstMTZLLCBpb2VuZ2luZT1saWJhaW8sIGlvZGVwdGg9MQo+IC4uLgo+IHRlc3Rfcnc6IChn
-PTApOiBydz1yYW5kcncsIGJzPTE2Sy0xNksvMTZLLTE2Sy8xNkstMTZLLCBpb2VuZ2luZT1saWJh
-aW8sIGlvZGVwdGg9MQo+IGZpby0yLjAuMTMKPiBTdGFydGluZyAzMiB0aHJlYWRzCj4gSm9iczog
-MzIgKGY9MzIpOiBbbW1tbW1tbW1tbW1tbW1tbW1tbW1tbW1tbW1tbW1tbW1dIFsxMDAuMCUgZG9u
-ZV0gWzU0NjZLLzM2NDRLLzBLIC9zXSBbMzQxIC8yMjcgLzAgaW9wc10gW2V0YSAwMG06MDBzXQo+
-IHRlc3Rfcnc6IChncm91cGlkPTAsIGpvYnM9MzIpOiBlcnI9IDA6IHBpZD01NzExOiBXZWQgRmVi
-IDExIDE1OjI2OjMwIDIwMTUKPiAgcmVhZCA6IGlvPTE0NDIuMk1CLCBidz00OTIyLjNLQi9zLCBp
-b3BzPTMwNyAsIHJ1bnQ9MzAwMDEwbXNlYwo+ICAgc2xhdCAodXNlYyk6IG1pbj03ICwgbWF4PTEy
-NTM0NSAsIGF2Zz01NzY1LjUyLCBzdGRldj0zNzQxLjYxCj4gICBjbGF0ICh1c2VjKTogbWluPTAg
-LCBtYXg9MTkyICwgYXZnPSAyLjcyLCBzdGRldj0gMS4xMgo+ICAgbGF0ICh1c2VjKTogbWluPTcg
-LCBtYXg9MTI1MzQ4ICwgYXZnPTU3NzAuMDksIHN0ZGV2PTM3NDEuNjgKPiAgIGNsYXQgcGVyY2Vu
-dGlsZXMgKHVzZWMpOgo+ICAgfCAxLjAwdGg9WyAgMV0sIDUuMDB0aD1bICAyXSwgMTAuMDB0aD1b
-ICAyXSwgMjAuMDB0aD1bICAyXSwKPiAgIHwgMzAuMDB0aD1bICAyXSwgNDAuMDB0aD1bICAzXSwg
-NTAuMDB0aD1bICAzXSwgNjAuMDB0aD1bICAzXSwKPiAgIHwgNzAuMDB0aD1bICAzXSwgODAuMDB0
-aD1bICAzXSwgOTAuMDB0aD1bICAzXSwgOTUuMDB0aD1bICA0XSwKPiAgIHwgOTkuMDB0aD1bICA0
-XSwgOTkuNTB0aD1bICA0XSwgOTkuOTB0aD1bICAxNF0sIDk5Ljk1dGg9WyAgMTZdLAo+ICAgfCA5
-OS45OXRoPVsgIDIwXQo+ICAgYncgKEtCL3MpIDogbWluPSAgMTYsIG1heD0gNjk5LCBwZXI9My4y
-MiUsIGF2Zz0xNTguMzcsIHN0ZGV2PTg1Ljc5Cj4gIHdyaXRlOiBpbz05Nzg3MzZLQiwgYnc9MzI2
-Mi40S0IvcywgaW9wcz0yMDMgLCBydW50PTMwMDAxMG1zZWMKPiAgIHNsYXQgKHVzZWMpOiBtaW49
-MTAgLCBtYXg9NTc3MDQzICwgYXZnPTE0ODIxNS45Mywgc3RkZXY9MTI1NjUwLjQwCj4gICBjbGF0
-ICh1c2VjKTogbWluPTAgLCBtYXg9MTk4ICwgYXZnPSAyLjUwLCBzdGRldj0gMS4yNgo+ICAgbGF0
-ICh1c2VjKTogbWluPTExICwgbWF4PTU3NzA0OCAsIGF2Zz0xNDgyMjAuMjAsIHN0ZGV2PTEyNTY1
-MC45NAo+ICAgY2xhdCBwZXJjZW50aWxlcyAodXNlYyk6Cj4gICB8IDEuMDB0aD1bICAxXSwgNS4w
-MHRoPVsgIDFdLCAxMC4wMHRoPVsgIDFdLCAyMC4wMHRoPVsgIDJdLAo+ICAgfCAzMC4wMHRoPVsg
-IDJdLCA0MC4wMHRoPVsgIDJdLCA1MC4wMHRoPVsgIDNdLCA2MC4wMHRoPVsgIDNdLAo+ICAgfCA3
-MC4wMHRoPVsgIDNdLCA4MC4wMHRoPVsgIDNdLCA5MC4wMHRoPVsgIDNdLCA5NS4wMHRoPVsgIDNd
-LAo+ICAgfCA5OS4wMHRoPVsgIDRdLCA5OS41MHRoPVsgIDZdLCA5OS45MHRoPVsgIDE0XSwgOTku
-OTV0aD1bICAxNF0sCj4gICB8IDk5Ljk5dGg9WyAgMTddCj4gICBidyAoS0IvcykgOiBtaW49ICAy
-NSwgbWF4PSA0NDgsIHBlcj0zLjE3JSwgYXZnPTEwMy4yOCwgc3RkZXY9NDYuNzYKPiAgIGxhdCAo
-dXNlYykgOiAyPTYuNDAlLCA0PTg4LjM5JSwgMTA9NC45MyUsIDIwPTAuMjclLCA1MD0wLjAxJQo+
-ICAgbGF0ICh1c2VjKSA6IDEwMD0wLjAxJSwgMjUwPTAuMDElCj4gIGNwdSAgICAgOiB1c3I9MC4w
-MCUsIHN5cz0wLjEzJSwgY3R4PTIzODg1MywgbWFqZj0xODQ0Njc0NDA3MzcwOTU1MTUyMCwgbWlu
-Zj0xODQ0Njc0NDA3MzcwOTI3ODM3MQo+ICBJTyBkZXB0aHMgIDogMT0xMDAuMCUsIDI9MC4wJSwg
-ND0wLjAlLCA4PTAuMCUsIDE2PTAuMCUsIDMyPTAuMCUsID02ND0wLjAlCj4gICBzdWJtaXQgIDog
-MD0wLjAlLCA0PTEwMC4wJSwgOD0wLjAlLCAxNj0wLjAlLCAzMj0wLjAlLCA2ND0wLjAlLCA9NjQ9
-MC4wJQo+ICAgY29tcGxldGUgOiAwPTAuMCUsIDQ9MTAwLjAlLCA4PTAuMCUsIDE2PTAuMCUsIDMy
-PTAuMCUsIDY0PTAuMCUsID02ND0wLjAlCj4gICBpc3N1ZWQgIDogdG90YWw9cj05MjI5Ni93PTYx
-MTcxL2Q9MCwgc2hvcnQ9cj0wL3c9MC9kPTAKPiAKPiAKPiBSdW4gc3RhdHVzIGdyb3VwIDAgKGFs
-bCBqb2JzKToKPiAgUkVBRDogaW89MTQ0Mi4yTUIsIGFnZ3JiPTQ5MjJLQi9zLCBtaW5iPTQ5MjJL
-Qi9zLCBtYXhiPTQ5MjJLQi9zLCBtaW50PTMwMDAxMG1zZWMsIG1heHQ9MzAwMDEwbXNlYwo+ICBX
-UklURTogaW89OTc4NzM2S0IsIGFnZ3JiPTMyNjJLQi9zLCBtaW5iPTMyNjJLQi9zLCBtYXhiPTMy
-NjJLQi9zLCBtaW50PTMwMDAxMG1zZWMsIG1heHQ9MzAwMDEwbXNlYwo+IAo+IAo+IERpc2sgc3Rh
-dHMgKHJlYWQvd3JpdGUpOgo+ICBzZGI6IGlvcz04OTYxNi81NTE0MSwgbWVyZ2U9MC8wLCB0aWNr
-cz00NDI2MTEvMTcxMzI1LCBpbl9xdWV1ZT02MTM4MjMsIHV0aWw9OTcuMDglCgo+IF9fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCj4geGZzIG1haWxpbmcgbGlz
-dAo+IHhmc0Bvc3Muc2dpLmNvbQo+IGh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZv
-L3hmcwoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KeGZz
-IG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4v
-bGlzdGluZm8veGZzCg==
+Hello,
+
+I've obtained corrupted xfs log after some sanity xfs testing:
+
+"log=logfile
+log_size=855
+
+dd if=/dev/zero "of=$log" bs=4096 count=$log_size
+loopdev=$(losetup -f)
+losetup $loopdev $log
+
+mkfs.xfs -f -m crc=1 -llogdev=$loopdev,size=${log_size}b $SCRATCH_DEV
+mount -t xfs -ologdev=$loopdev $SCRATCH_DEV $SCRATCH_MNT
+./fdtree.sh  -l 4 -d 4 -C -o $SCRATCH_MNT
+sync
+umount $SCRATCH_MNT
+
+xfs_logprint -l $loopdev $SCRATCH_DEV"
+
+Test makes crc enabled xfs filesystem with the external log of minimal 
+allowed size and then creates on this fs the small directory tree
+with sub directories and files of fixed depth and size with help of 
+fdtree utility: https://computing.llnl.gov/?set=code&page=sio_downloads
+
+After that xfs_logprint stably reports bad data in log:
+
+"Oper (307): tid: eec9b0c7  len: 16  clientid: TRANS  flags: none
+EXTENTS inode data
+Oper (308): tid: 41000000  len: 805306368  clientid: ERROR  flags: none
+LOCAL attr data
+
+============================================================================
+cycle: 1        version: 2              lsn: 1,3138     tail_lsn: 1,2
+length of Log Record: 32256     prev offset: 3074               num ops: 375
+uuid: 39a962b7-4c0d-4e0e-8bcd-39471f93bc1d   format: little endian linux
+h_size: 32768
+----------------------------------------------------------------------------
+Oper (0): tid: eec9b0c7  len: 48  clientid: TRANS  flags: none
+**********************************************************************
+* ERROR: data block=3138                                              *
+**********************************************************************
+
+xfs_logprint: unknown log operation type (2e00)
+Bad data in log"
+
+Subsequent call to "xfs_repair -n -l $loopdev $SCRATCH_DEV" passes and 
+filesystem is mounted without errors.
+I've supposed the using of inappropriate log size so updated log_size to 
+default mkfs.xfs value for this device: "log_size=2560".
+After that xfs_logprint core dumped with segfault (race condition):
+
+"Feb 11 13:55:42 fedora.fedora kernel: xfs_logprint[14007]: segfault at 
+29f16768 ip 00000000004028ed sp 00007fff61b46850 error 4 in 
+xfs_logprint[400000+4e000]"
+
+I have the following configuration on vbox virtual machine with vdi, 
+fixed size /dev/sdb:
+
+[root@fedora alex]# cat /etc/issue
+Fedora release 20 (Heisenbug)
+Kernel \r on an \m (\l)
+[root@fedora alex]# uname -ir
+3.19.0-rc6 x86_64
+[root@fedora alex]# mkfs.xfs -V
+mkfs.xfs version 3.2.2
+[root@fedora alex]# xfs_logprint -V
+xfs_logprint version 3.2.2
+[root@fedora alex]# fdisk -l /dev/sdb
+
+Disk /dev/sdb: 8 GiB, 8589934592 bytes, 16777216 sectors
+Units: sectors of 1 * 512 = 512 bytes
+Sector size (logical/physical): 512 bytes / 512 bytes
+I/O size (minimum/optimal): 512 bytes / 512 bytes
+
+abrt data with sosreport are collected and available on request.
+
+Thanks,
+Alexander Tsvetkov
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
