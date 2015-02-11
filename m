@@ -1,20 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 707227F54
-	for <xfs@oss.sgi.com>; Wed, 11 Feb 2015 09:51:59 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 4D74A8F8073
-	for <xfs@oss.sgi.com>; Wed, 11 Feb 2015 07:51:59 -0800 (PST)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id kooJPcxdnPsF5I4t for <xfs@oss.sgi.com>;
-	Wed, 11 Feb 2015 07:51:57 -0800 (PST)
-Message-ID: <54DB7A9A.2070109@sandeen.net>
-Date: Wed, 11 Feb 2015 09:51:54 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id E52097F54
+	for <xfs@oss.sgi.com>; Wed, 11 Feb 2015 10:07:53 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id B620B304059
+	for <xfs@oss.sgi.com>; Wed, 11 Feb 2015 08:07:50 -0800 (PST)
+Received: from mail-pa0-f47.google.com (mail-pa0-f47.google.com
+	[209.85.220.47]) by cuda.sgi.com with ESMTP id Bpi4SOs4GBU8q5vf
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Wed, 11 Feb 2015 08:07:48 -0800 (PST)
+Received: by mail-pa0-f47.google.com with SMTP id lf10so4887234pab.6
+	for <xfs@oss.sgi.com>; Wed, 11 Feb 2015 08:07:48 -0800 (PST)
 MIME-Version: 1.0
-Subject: Re: xfs_logprint segfault with external log
-References: <54DB5E70.80607@oracle.com>
-In-Reply-To: <54DB5E70.80607@oracle.com>
+In-Reply-To: <20150210072559.GA12722@dastard>
+References: <54ca343a.43df440a.3c11.4474@mx.google.com>
+	<20150210072559.GA12722@dastard>
+Date: Wed, 11 Feb 2015 21:37:47 +0530
+Message-ID: <CALJmpHMDO04-r+OgoQdfp=wZjZ6Hm0KSqMd1DtPx2k7qsAS5GQ@mail.gmail.com>
+Subject: Re: [PATCH 1/4] xfs: Accounting for AGFL blocks in xfs_spaceman
+From: Dhruvesh Rathore <adrscube@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,77 +31,187 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Alexander Tsvetkov <alexander.tsvetkov@oracle.com>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On 2/11/15 7:51 AM, Alexander Tsvetkov wrote:
-> Hello,
-> 
-> I've obtained corrupted xfs log after some sanity xfs testing:
-> 
-> "log=logfile
-> log_size=855
-> 
-> dd if=/dev/zero "of=$log" bs=4096 count=$log_size
-> loopdev=$(losetup -f)
-> losetup $loopdev $log
-> 
-> mkfs.xfs -f -m crc=1 -llogdev=$loopdev,size=${log_size}b $SCRATCH_DEV
-> mount -t xfs -ologdev=$loopdev $SCRATCH_DEV $SCRATCH_MNT
-> ./fdtree.sh  -l 4 -d 4 -C -o $SCRATCH_MNT
-> sync
-> umount $SCRATCH_MNT
-> 
-> xfs_logprint -l $loopdev $SCRATCH_DEV"
-> 
-> Test makes crc enabled xfs filesystem with the external log of minimal allowed size and then creates on this fs the small directory tree
-> with sub directories and files of fixed depth and size with help of fdtree utility: https://computing.llnl.gov/?set=code&page=sio_downloads
-> 
-> After that xfs_logprint stably reports bad data in log:
+>> +     if (error)
+>> +             return error;
+>> +
+>> +     agfl_bno = XFS_BUF_TO_AGFL_BNO(mp, agflbp);
+>> +
+>> +     for(i = be32_to_cpu(agf->agf_flfirst);
+>> +             i <= be32_to_cpu(agf->agf_fllast);) {
+>
+> Whitespace after the "for" statement, and indentation of logic inside
+> for/if/while/etc needs to be aligned to the same column.
+>
+> As it is, this code doesn't work. Hint: what happens when last wraps
+> around back to the start ofthe freelist array? last < first, and
+> hence i > last....
+>
+> Yes, I know it the code is similar to what I suggested last time I
+> pointed out the iteration is wrong, but I'm often wrong, especially
+> about intricate details that I've just quickly pulled a solution for
+> off the top of my head.  IOWs, don't assume what I say is correct -
+> verifiy and test it, and then tell me I'm wrong.
+>
+> So, perhaps a different loop structure is appropriate?
 
-TBH, xfs_logprint has always been a little buggy in corners.  It's
-a diagnostic/developer tool, and as such has not been made as robust
-as tools that users need to use every day.  Still, we'd hope for
-no segfaults or errors.  ;)
+We had addressed this issue in the previous code version, but
+changed it when a doubt was raised in the previous patch comments.
+We will ensure that we verify and test the feedback we receive from
+now on. :)
 
-> "Oper (307): tid: eec9b0c7  len: 16  clientid: TRANS  flags: none
-> EXTENTS inode data
-> Oper (308): tid: 41000000  len: 805306368  clientid: ERROR  flags: none
-> LOCAL attr data
-> 
-> ============================================================================
-> cycle: 1        version: 2              lsn: 1,3138     tail_lsn: 1,2
-> length of Log Record: 32256     prev offset: 3074               num ops: 375
-> uuid: 39a962b7-4c0d-4e0e-8bcd-39471f93bc1d   format: little endian linux
-> h_size: 32768
-> ----------------------------------------------------------------------------
-> Oper (0): tid: eec9b0c7  len: 48  clientid: TRANS  flags: none
-> **********************************************************************
-> * ERROR: data block=3138                                              *
-> **********************************************************************
-> 
-> xfs_logprint: unknown log operation type (2e00)
-> Bad data in log"
+> Patch as applied to my tree is below. Please apply it to your tree
+> and test it.
+>
+> Cheers,
+>
+> Dave.
+> --
+> Dave Chinner
+> david@fromorbit.com
+>
+> xfs: Accounting for AGFL blocks in xfs_spaceman
+>
+> From: Dhruvesh Rathore <adrscube@gmail.com>
+>
+> The xfs_spaceman utility previously failed to account for AGFL
+> blocks.  Old output:
+>
+> $ sudo xfs_spaceman -c "freesp" /media/xfs
+>    from      to extents  blocks    pct
+>    1024    2047       1    1262   0.04
+>    4096    8191       1    5126   0.15
+>    8192   16383       3   35344   1.05
+>   32768   65535       1   43989   1.31
+>  262144  524287       3 1334894  39.78
+>  524288  967428       2 1934840  57.66
+>
+> As you can see the AGFL blocks were unaccounted (4 per AG, and there
+> were 4 AGs in this filesystem).  This patch adds a new function
+> which accounts for the the free extents tracked by the AGFL.
+>
+> New output:
+>
+> $ sudo xfs_spaceman -c "freesp" /media/xfs
+>    from      to extents  blocks    pct
+>       1       1      16      16   0.00
+>    1024    2047       1    1262   0.04
+>    4096    8191       1    5126   0.15
+>    8192   16383       3   35344   1.05
+>   32768   65535       1   43989   1.31
+>  262144  524287       3 1334894  39.78
+>  524288  967428       2 1934840  57.66
+>
+> [dchinner: fixed whitespace issues, agfl iteration logic,
+>            error handling]
+>
+> Signed-off-by: Dhruvesh Rathore <dhruvesh_r@outlook.com>
+> Signed-off-by: Amey Ruikar <ameyruikar@yahoo.com>
+> Signed-off-by: Somdeep Dey <somdeepdey10@gmail.com>
+>
+> ---
+>  fs/xfs/libxfs/xfs_alloc.c | 69 +++++++++++++++++++++++++++++++++++++++++++++++
+>  1 file changed, 69 insertions(+)
+>
+> diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+> index 1ae53ad..544c945 100644
+> --- a/fs/xfs/libxfs/xfs_alloc.c
+> +++ b/fs/xfs/libxfs/xfs_alloc.c
+> @@ -2633,6 +2633,68 @@ error0:
+>  }
+>
+>  /*
+> + * When we map free space we need to take into account the blocks
+> + * that are indexed by the AGFL. They aren't found by walking the
+> + * free space btrees, so we have to walk each AGFL to find them.
+> + */
+> +static int
+> +xfs_alloc_agfl_freespace_map(
+> +       struct xfs_mount        *mp,
+> +       struct xfs_agf          *agf,
+> +       struct fiemap_extent_info *fieinfo,
+> +       xfs_agnumber_t          agno,
+> +       xfs_agblock_t           sagbno,
+> +       xfs_agblock_t           eagbno)
+> +{
+> +       xfs_buf_t               *agflbp;
+> +       __be32                  *agfl_bno;
+> +       int                     i;
+> +       int                     error = 0;
+> +
+> +       error = xfs_alloc_read_agfl(mp, NULL, agno, &agflbp);
+> +       if (error)
+> +               return error;
+> +
+> +       agfl_bno = XFS_BUF_TO_AGFL_BNO(mp, agflbp);
+> +       for (i = be32_to_cpu(agf->agf_flfirst);;) {
+> +               xfs_agblock_t   fbno;
+> +               xfs_extlen_t    flen;
+> +               xfs_daddr_t     dbno;
+> +               xfs_fileoff_t   dlen;
+> +               int             flags = 0;
+> +
+> +               fbno = be32_to_cpu(agfl_bno[i]);
+> +               flen = 1;
+> +
+> +               /* range check - must be wholly withing requested range */
+> +               if (fbno < sagbno ||
+> +                   (eagbno != NULLAGBLOCK && fbno + flen > eagbno)) {
+> +                       xfs_warn(mp, "10: %d/%d, %d/%d",
+> +                                sagbno, eagbno, fbno, flen);
+> +                       continue;
+> +               }
+> +
+> +               /*
+> +                * Use daddr format for all range/len calculations as that is
+> +                * the format the range/len variables are supplied in by
+> +                * userspace.
+> +                */
+> +               dbno = XFS_AGB_TO_DADDR(mp, agno, fbno);
+> +               dlen = XFS_FSB_TO_BB(mp, flen);
+> +               error = fiemap_fill_next_extent(fieinfo, BBTOB(dbno),
+> +                                               BBTOB(dbno), BBTOB(dlen), flags);
+> +               if (error)
+> +                       break;
+> +               if (i == be32_to_cpu(agf->agf_fllast))
+> +                       break;
+> +               if (++i == XFS_AGFL_SIZE(mp))
+> +                       i = 0;
+> +       }
+> +       xfs_buf_relse(agflbp);
+> +       return error;
+> +}
+> +
+> +/*
+>   * Walk the extents in the tree given by the cursor, and dump them all into the
+>   * fieinfo. At the last extent in the tree, set the FIEMAP_EXTENT_LAST flag so
+>   * that we return only free space from this tree in a given request.
+> @@ -2793,6 +2855,13 @@ xfs_alloc_freespace_map(
+>                         goto put_agbp;
+>                 }
+>
+> +               /* Account for the free blocks in AGFL */
+> +               error = xfs_alloc_agfl_freespace_map(mp, XFS_BUF_TO_AGF(agbp),
+> +                                       fieinfo, agno, sagbno,
+> +                                       agno == eagno ? eagbno : NULLAGBLOCK);
+> +               if (error)
+> +                       goto put_agbp;
+> +
+>                 cur = xfs_allocbt_init_cursor(mp, NULL, agbp, agno,
+>                                               XFS_BTNUM_BNO);
+>                 error = xfs_alloc_lookup_ge(cur, sagbno, 1, &i);
+>
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
-It's probably just mis-parsing something.  i.e. more likely a logprint bug
-than an xfs bug.
+We thank you for taking the time out and working on the patches. We will
+apply the above reworked patch and test it, and get back to you.
 
-If you could provide an xfs_metadump of the filesystem at this point, that
-would probably be the simplest reproducer for us.  Fixing it may not be the
-very highest priority, but I have dug into and fixed logprint bugs in the
-past.  It's not very fun.  ;)
-
-
-> Subsequent call to "xfs_repair -n -l $loopdev $SCRATCH_DEV" passes and filesystem is mounted without errors.
-> I've supposed the using of inappropriate log size so updated log_size to default mkfs.xfs value for this device: "log_size=2560".
-> After that xfs_logprint core dumped with segfault (race condition):
-> 
-> "Feb 11 13:55:42 fedora.fedora kernel: xfs_logprint[14007]: segfault at 29f16768 ip 00000000004028ed sp 00007fff61b46850 error 4 in xfs_logprint[400000+4e000]"
-
-a metadump of this filesystem would be useful as well, assuming it reproduces the
-bug.
-
-Thanks,
--Eric
+Regards,
+A-DRS
 
 _______________________________________________
 xfs mailing list
