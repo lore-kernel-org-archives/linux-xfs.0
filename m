@@ -1,27 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 32DD17F5E
-	for <xfs@oss.sgi.com>; Thu, 12 Feb 2015 12:17:31 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 2111A304066
-	for <xfs@oss.sgi.com>; Thu, 12 Feb 2015 10:17:31 -0800 (PST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id B99117F54
+	for <xfs@oss.sgi.com>; Thu, 12 Feb 2015 12:17:30 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 7DA7B8F806F
+	for <xfs@oss.sgi.com>; Thu, 12 Feb 2015 10:17:30 -0800 (PST)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id d13bxWySgDkAzxqD (version=TLSv1
+	cuda.sgi.com with ESMTP id 99rn0fxFvsJ7vbIq (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 12 Feb 2015 10:17:30 -0800 (PST)
-Received: from int-mx10.intmail.prod.int.phx2.redhat.com
-	(int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id t1CIHTt6018944
+	Thu, 12 Feb 2015 10:17:29 -0800 (PST)
+Received: from int-mx14.intmail.prod.int.phx2.redhat.com
+	(int-mx14.intmail.prod.int.phx2.redhat.com [10.5.11.27])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id t1CIHTpU007685
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256
 	verify=FAIL) for <xfs@oss.sgi.com>; Thu, 12 Feb 2015 13:17:29 -0500
 Received: from bfoster.bfoster ([10.18.41.237])
-	by int-mx10.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id t1CIHSma026130
-	for <xfs@oss.sgi.com>; Thu, 12 Feb 2015 13:17:29 -0500
+	by int-mx14.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id t1CIHSSv025876
+	for <xfs@oss.sgi.com>; Thu, 12 Feb 2015 13:17:28 -0500
 From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH v4 16/18] xfs: only free allocated regions of inode chunks
-Date: Thu, 12 Feb 2015 13:17:23 -0500
-Message-Id: <1423765045-15791-17-git-send-email-bfoster@redhat.com>
+Subject: [PATCH v4 06/18] xfs: sparse inode chunks feature helpers and mount
+	requirements
+Date: Thu, 12 Feb 2015 13:17:13 -0500
+Message-Id: <1423765045-15791-7-git-send-email-bfoster@redhat.com>
 In-Reply-To: <1423765045-15791-1-git-send-email-bfoster@redhat.com>
 References: <1423765045-15791-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,122 +40,111 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-An inode chunk is currently added to the transaction free list based on
-a simple fsb conversion and hardcoded chunk length. The nature of sparse
-chunks is such that the physical chunk of inodes on disk may consist of
-one or more discontiguous parts. Blocks that reside in the holes of the
-inode chunk are not inodes and could be allocated to any other use or
-not allocated at all.
+The sparse inode chunks feature uses the helper function to enable the
+allocation of sparse inode chunks. The incompatible feature bit is set
+on disk at mkfs time to prevent mount from unsupported kernels.
 
-Refactor the existing xfs_bmap_add_free() call into the
-xfs_difree_inode_chunk() helper. The new helper uses the existing
-calculation if a chunk is not sparse. Otherwise, use the inobt record
-holemask to free the contiguous regions of the chunk.
+Also, enforce the inode alignment requirements required for sparse inode
+chunks at mount time. When enabled, full inode chunks (and all inode
+record) alignment is increased from cluster size to inode chunk size.
+Sparse inode alignment must match the cluster size of the fs. Both
+superblock alignment fields are set as such by mkfs when sparse inode
+support is enabled.
+
+Finally, warn that sparse inode chunks is an experimental feature until
+further notice.
 
 Signed-off-by: Brian Foster <bfoster@redhat.com>
 ---
- fs/xfs/libxfs/xfs_ialloc.c | 81 ++++++++++++++++++++++++++++++++++++++++++++--
- 1 file changed, 78 insertions(+), 3 deletions(-)
+ fs/xfs/libxfs/xfs_format.h |  7 +++++++
+ fs/xfs/libxfs/xfs_sb.c     | 21 +++++++++++++++++++++
+ fs/xfs/xfs_mount.c         | 16 ++++++++++++++++
+ 3 files changed, 44 insertions(+)
 
-diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
-index 62fc075..9b1d204 100644
---- a/fs/xfs/libxfs/xfs_ialloc.c
-+++ b/fs/xfs/libxfs/xfs_ialloc.c
-@@ -1801,6 +1801,83 @@ out_error:
- 	return error;
+diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
+index dbca93d..47005b1 100644
+--- a/fs/xfs/libxfs/xfs_format.h
++++ b/fs/xfs/libxfs/xfs_format.h
+@@ -519,6 +519,7 @@ xfs_sb_has_ro_compat_feature(
  }
  
-+/*
-+ * Free the blocks of an inode chunk. We must consider that the inode chunk
-+ * might be sparse and only free the regions that are allocated as part of the
-+ * chunk.
-+ */
-+STATIC void
-+xfs_difree_inode_chunk(
-+	struct xfs_mount		*mp,
-+	xfs_agnumber_t			agno,
-+	struct xfs_inobt_rec_incore	*rec,
-+	struct xfs_bmap_free		*flist)
+ #define XFS_SB_FEAT_INCOMPAT_FTYPE	(1 << 0)	/* filetype in dirent */
++#define XFS_SB_FEAT_INCOMPAT_SPINODES	(1 << 1)	/* sparse inode chunks */
+ #define XFS_SB_FEAT_INCOMPAT_ALL \
+ 		(XFS_SB_FEAT_INCOMPAT_FTYPE)
+ 
+@@ -568,6 +569,12 @@ static inline int xfs_sb_version_hasfinobt(xfs_sb_t *sbp)
+ 		(sbp->sb_features_ro_compat & XFS_SB_FEAT_RO_COMPAT_FINOBT);
+ }
+ 
++static inline bool xfs_sb_version_hassparseinodes(struct xfs_sb *sbp)
 +{
-+	xfs_agblock_t	sagbno = XFS_AGINO_TO_AGBNO(mp, rec->ir_startino);
-+	int		startidx, endidx;
-+	int		nextbit;
-+	xfs_agblock_t	agbno;
-+	int		contigblk;
-+	DECLARE_BITMAP(holemask, XFS_INOBT_HOLEMASK_BITS);
-+
-+	if (!xfs_inobt_issparse(rec->ir_holemask)) {
-+		/* not sparse, calculate extent info directly */
-+		xfs_bmap_add_free(XFS_AGB_TO_FSB(mp, agno,
-+				  XFS_AGINO_TO_AGBNO(mp, rec->ir_startino)),
-+				  mp->m_ialloc_blks, flist, mp);
-+		return;
-+	}
-+
-+	/* holemask is only 16-bits (fits in an unsigned long) */
-+	ASSERT(sizeof(rec->ir_holemask) <= sizeof(holemask[0]));
-+	holemask[0] = rec->ir_holemask;
-+
-+	/*
-+	 * Find contiguous ranges of zeroes (i.e., allocated regions) in the
-+	 * holemask and convert the start/end index of each range to an extent.
-+	 * We start with the start and end index both pointing at the first 0 in
-+	 * the mask.
-+	 */
-+	startidx = endidx = find_first_zero_bit(holemask,
-+						XFS_INOBT_HOLEMASK_BITS);
-+	nextbit = startidx + 1;
-+	while (startidx < XFS_INOBT_HOLEMASK_BITS) {
-+		nextbit = find_next_zero_bit(holemask, XFS_INOBT_HOLEMASK_BITS,
-+					     nextbit);
-+		/*
-+		 * If the next zero bit is contiguous, update the end index of
-+		 * the current range and continue.
-+		 */
-+		if (nextbit != XFS_INOBT_HOLEMASK_BITS &&
-+		    nextbit == endidx + 1) {
-+			endidx = nextbit;
-+			goto next;
-+		}
-+
-+		/*
-+		 * nextbit is not contiguous with the current end index. Convert
-+		 * the current start/end to an extent and add it to the free
-+		 * list.
-+		 */
-+		agbno = sagbno + (startidx * XFS_INODES_PER_HOLEMASK_BIT) /
-+				  mp->m_sb.sb_inopblock;
-+		contigblk = ((endidx - startidx + 1) *
-+			     XFS_INODES_PER_HOLEMASK_BIT) /
-+			    mp->m_sb.sb_inopblock;
-+
-+		ASSERT(agbno % mp->m_sb.sb_spino_align == 0);
-+		ASSERT(contigblk % mp->m_sb.sb_spino_align == 0);
-+		xfs_bmap_add_free(XFS_AGB_TO_FSB(mp, agno, agbno), contigblk,
-+				  flist, mp);
-+
-+		/* reset range to current bit and carry on... */
-+		startidx = endidx = nextbit;
-+
-+next:
-+		nextbit++;
-+	}
++	return XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5 &&
++		xfs_sb_has_incompat_feature(sbp, XFS_SB_FEAT_INCOMPAT_SPINODES);
 +}
 +
- STATIC int
- xfs_difree_inobt(
- 	struct xfs_mount		*mp,
-@@ -1892,9 +1969,7 @@ xfs_difree_inobt(
- 			goto error0;
- 		}
+ /*
+  * end of superblock version macros
+  */
+diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
+index 2b5b4fe..5b20a6c 100644
+--- a/fs/xfs/libxfs/xfs_sb.c
++++ b/fs/xfs/libxfs/xfs_sb.c
+@@ -182,6 +182,27 @@ xfs_mount_validate_sb(
+ 			return -EFSCORRUPTED;
+ 	}
  
--		xfs_bmap_add_free(XFS_AGB_TO_FSB(mp, agno,
--				  XFS_AGINO_TO_AGBNO(mp, rec.ir_startino)),
--				  mp->m_ialloc_blks, flist, mp);
-+		xfs_difree_inode_chunk(mp, agno, &rec, flist);
- 	} else {
- 		*deleted = 0;
++	/*
++	 * Full inode chunks must be aligned to inode chunk size when
++	 * sparse inodes are enabled to support the sparse chunk
++	 * allocation algorithm and prevent overlapping inode records.
++	 */
++	if (xfs_sb_version_hassparseinodes(sbp)) {
++		uint32_t	align;
++
++		xfs_alert(mp,
++	"EXPERIMENTAL sparse inode feature enabled. Use at your own risk!");
++
++		align = XFS_INODES_PER_CHUNK * sbp->sb_inodesize
++				>> sbp->sb_blocklog;
++		if (sbp->sb_inoalignmt != align) {
++			xfs_warn(mp,
++"Inode block alignment (%u) must match chunk size (%u) for sparse inodes.",
++				 sbp->sb_inoalignmt, align);
++			return -EINVAL;
++		}
++	}
++
+ 	if (unlikely(
+ 	    sbp->sb_logstart == 0 && mp->m_logdev_targp == mp->m_ddev_targp)) {
+ 		xfs_warn(mp,
+diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+index 4fa80e6..61fd023 100644
+--- a/fs/xfs/xfs_mount.c
++++ b/fs/xfs/xfs_mount.c
+@@ -738,6 +738,22 @@ xfs_mountfs(
+ 	}
  
+ 	/*
++	 * If enabled, sparse inode chunk alignment is expected to match the
++	 * cluster size. Full inode chunk alignment must match the chunk size,
++	 * but that is checked on sb read verification...
++	 */
++	if (xfs_sb_version_hassparseinodes(&mp->m_sb) &&
++	    mp->m_sb.sb_spino_align !=
++			XFS_B_TO_FSBT(mp, mp->m_inode_cluster_size)) {
++		xfs_warn(mp,
++	"Sparse inode block alignment (%u) must match cluster size (%llu).",
++			 mp->m_sb.sb_spino_align,
++			 XFS_B_TO_FSBT(mp, mp->m_inode_cluster_size));
++		error = -EINVAL;
++		goto out_remove_uuid;
++	}
++
++	/*
+ 	 * Set inode alignment fields
+ 	 */
+ 	xfs_set_inoalignment(mp);
 -- 
 1.8.3.1
 
