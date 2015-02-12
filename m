@@ -1,23 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id E8EDE7F54
-	for <xfs@oss.sgi.com>; Thu, 12 Feb 2015 17:17:41 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 69C85AC002
-	for <xfs@oss.sgi.com>; Thu, 12 Feb 2015 15:17:38 -0800 (PST)
+	by oss.sgi.com (Postfix) with ESMTP id 4F15B7F55
+	for <xfs@oss.sgi.com>; Thu, 12 Feb 2015 17:21:07 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id DFBE7AC005
+	for <xfs@oss.sgi.com>; Thu, 12 Feb 2015 15:21:06 -0800 (PST)
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	A68sZRG4i5jJimVr for <xfs@oss.sgi.com>;
-	Thu, 12 Feb 2015 15:17:35 -0800 (PST)
-Date: Fri, 13 Feb 2015 10:09:40 +1100
+	HBO8lP3AVix0g3MR for <xfs@oss.sgi.com>;
+	Thu, 12 Feb 2015 15:21:04 -0800 (PST)
+Received: from disappointment.disaster.area ([192.168.1.110]
+	helo=disappointment) by dastard with esmtp (Exim 4.80)
+	(envelope-from <dave@fromorbit.com>) id 1YM2xd-0004qy-VV
+	for xfs@oss.sgi.com; Fri, 13 Feb 2015 10:14:18 +1100
+Received: from dave by disappointment with local (Exim 4.82_1-5b7a7c0-XX)
+	(envelope-from <dave@disappointment.disaster>) id 1YM2xd-00034v-UU
+	for xfs@oss.sgi.com; Fri, 13 Feb 2015 10:14:17 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: xfs_logprint segfault with external log
-Message-ID: <20150212230940.GD12722@dastard>
-References: <54DB5E70.80607@oracle.com> <20150211205406.GT4251@dastard>
-	<54DC940D.4030009@oracle.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <54DC940D.4030009@oracle.com>
+Subject: [PATCH] xfs: xfs_alloc_fix_minleft can underflow near ENOSPC
+Date: Fri, 13 Feb 2015 10:14:17 +1100
+Message-Id: <1423782857-11800-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,84 +28,78 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Alexander Tsvetkov <alexander.tsvetkov@oracle.com>
-Cc: Eric Sandee <sandeen@sandeen.net>, xfs@oss.sgi.com
-
-On Thu, Feb 12, 2015 at 02:52:45PM +0300, Alexander Tsvetkov wrote:
-> On 02/11/2015 11:54 PM, Dave Chinner wrote:
-> >On Wed, Feb 11, 2015 at 04:51:44PM +0300, Alexander Tsvetkov wrote:
-> >>Hello,
-> >>
-> >>I've obtained corrupted xfs log after some sanity xfs testing:
-> >>
-> >>"log=logfile
-> >>log_size=855
-> >>
-> >>dd if=/dev/zero "of=$log" bs=4096 count=$log_size
-> >>loopdev=$(losetup -f)
-> >>losetup $loopdev $log
-> >>
-> >>mkfs.xfs -f -m crc=1 -llogdev=$loopdev,size=${log_size}b $SCRATCH_DEV
-> >>mount -t xfs -ologdev=$loopdev $SCRATCH_DEV $SCRATCH_MNT
-> >>./fdtree.sh  -l 4 -d 4 -C -o $SCRATCH_MNT
-> >>sync
-> >>umount $SCRATCH_MNT
-> >>
-> >>xfs_logprint -l $loopdev $SCRATCH_DEV"
-> >>
-> >>Test makes crc enabled xfs filesystem with the external log of
-> >>minimal allowed size and then creates on this fs the small directory
-> >>tree
-> >>with sub directories and files of fixed depth and size with help of
-> >>fdtree utility:
-> >>https://computing.llnl.gov/?set=code&page=sio_downloads
-> >Just take metadump image and put it somewhere we can down load it.
-> >
-> >>After that xfs_logprint stably reports bad data in log:
-
-Please try the patch below, it fixes the problem on the image you
-provided.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
-
-logprint: fix inode fork print record overrun
+To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-logprint checks for whether the inode log item extends across a log
-record boundary so that it doesn't try to dereference beyond the ned
-of the buffer containing the log items. It doesn' however, take into
-account log items with attribute forks in them, and so doesn't catch
-the overrun in this case. Fix it.
+Test generic/224 is failing with a corruption being detected on one
+of Michael's test boxes.  Debug that Michael added is indicating
+that the minleft trimming is resulting in an underflow:
 
-reported-by: Alexander Tsvetkov <alexander.tsvetkov@oracle.com>
+.....
+ before fixup:              rlen          1  args->len          0
+ after xfs_alloc_fix_len  : rlen          1  args->len          1
+ before goto out_nominleft: rlen          1  args->len          0
+ before fixup:              rlen          1  args->len          0
+ after xfs_alloc_fix_len  : rlen          1  args->len          1
+ after fixup:               rlen          1  args->len          1
+ before fixup:              rlen          1  args->len          0
+ after xfs_alloc_fix_len  : rlen          1  args->len          1
+ after fixup:               rlen 4294967295  args->len 4294967295
+ XFS: Assertion failed: fs_is_ok, file: fs/xfs/libxfs/xfs_alloc.c, line: 1424
+
+The "goto out_nominleft:" indicates that we are getting close to
+ENOSPC in the AG, and a couple of allocations later we underflow
+and the corruption check fires in xfs_alloc_ag_vextent_size().
+
+The issue is that the extent length fixups comaprisons are done
+with variables of xfs_extlen_t types. These are unsigned so an
+underflow looks like a really big value and hence is not detected
+as being smaller than the minimum length allowed for the extent.
+Hence the corruption check fires as it is noticing that the returned
+length is longer than the original extent length passed in.
+
+This can be easily fixed by ensuring we do the underflow test on
+signed values, the same way xfs_alloc_fix_len() prevents underflow.
+So we realise in future that these casts prevent underflows from
+going undetected, add comments to the code indicating this.
+
+Reported-by: Michael L. Semon <mlsemon35@gmail.com>
+Tested-by: Michael L. Semon <mlsemon35@gmail.com>
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- logprint/log_misc.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ fs/xfs/libxfs/xfs_alloc.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-diff --git a/logprint/log_misc.c b/logprint/log_misc.c
-index 521ab66..e4f2174 100644
---- a/logprint/log_misc.c
-+++ b/logprint/log_misc.c
-@@ -698,7 +698,7 @@ xlog_print_trans_inode(
-     xlog_print_trans_inode_core(&dino);
-     *ptr += xfs_icdinode_size(dino.di_version);
- 
--    if (*i == num_ops-1 && f->ilf_size == 3)  {
-+    if (*i == num_ops-1 && f->ilf_size >= 3) {
- 	return 1;
-     }
- 
+diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+index 710554c..41e3630 100644
+--- a/fs/xfs/libxfs/xfs_alloc.c
++++ b/fs/xfs/libxfs/xfs_alloc.c
+@@ -260,6 +260,7 @@ xfs_alloc_fix_len(
+ 		rlen = rlen - (k - args->mod);
+ 	else
+ 		rlen = rlen - args->prod + (args->mod - k);
++	/* casts to (int) catch length underflows */
+ 	if ((int)rlen < (int)args->minlen)
+ 		return;
+ 	ASSERT(rlen >= args->minlen && rlen <= args->maxlen);
+@@ -286,7 +287,8 @@ xfs_alloc_fix_minleft(
+ 	if (diff >= 0)
+ 		return 1;
+ 	args->len += diff;		/* shrink the allocated space */
+-	if (args->len >= args->minlen)
++	/* casts to (int) catch length underflows */
++	if ((int)args->len >= (int)args->minlen)
+ 		return 1;
+ 	args->agbno = NULLAGBLOCK;
+ 	return 0;
+-- 
+2.0.0
 
 _______________________________________________
 xfs mailing list
