@@ -1,28 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id E452A7F5A
+	by oss.sgi.com (Postfix) with ESMTP id F3E197F5D
 	for <xfs@oss.sgi.com>; Thu, 12 Feb 2015 12:17:30 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id D39AD304066
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id D4944304062
 	for <xfs@oss.sgi.com>; Thu, 12 Feb 2015 10:17:30 -0800 (PST)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id 1JndylwtqBy3MlQt (version=TLSv1
+	cuda.sgi.com with ESMTP id uexpTYpNsBDPU123 (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
 	Thu, 12 Feb 2015 10:17:29 -0800 (PST)
-Received: from int-mx09.intmail.prod.int.phx2.redhat.com
-	(int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id t1CIHT6F015121
+Received: from int-mx14.intmail.prod.int.phx2.redhat.com
+	(int-mx14.intmail.prod.int.phx2.redhat.com [10.5.11.27])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id t1CIHTRC018946
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256
 	verify=FAIL) for <xfs@oss.sgi.com>; Thu, 12 Feb 2015 13:17:29 -0500
 Received: from bfoster.bfoster ([10.18.41.237])
-	by int-mx09.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id t1CIHSjH030646
-	for <xfs@oss.sgi.com>; Thu, 12 Feb 2015 13:17:28 -0500
+	by int-mx14.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id t1CIHSSx025876
+	for <xfs@oss.sgi.com>; Thu, 12 Feb 2015 13:17:29 -0500
 From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH v4 05/18] xfs: use sparse chunk alignment for min. inode
-	allocation requirement
-Date: Thu, 12 Feb 2015 13:17:12 -0500
-Message-Id: <1423765045-15791-6-git-send-email-bfoster@redhat.com>
+Subject: [PATCH v4 14/18] xfs: randomly do sparse inode allocations in DEBUG
+	mode
+Date: Thu, 12 Feb 2015 13:17:21 -0500
+Message-Id: <1423765045-15791-15-git-send-email-bfoster@redhat.com>
 In-Reply-To: <1423765045-15791-1-git-send-email-bfoster@redhat.com>
 References: <1423765045-15791-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -40,68 +40,69 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-xfs_ialloc_ag_select() iterates through the allocation groups looking
-for free inodes or free space to determine whether to allow an inode
-allocation to proceed. If no free inodes are available, it assumes that
-an AG must have an extent longer than mp->m_ialloc_blks.
+Sparse inode allocations generally only occur when full inode chunk
+allocation fails. This requires some level of filesystem space usage and
+fragmentation.
 
-Sparse inode chunk support currently allows for allocations smaller than
-the traditional inode chunk size specified in m_ialloc_blks. The current
-minimum sparse allocation is set in the superblock sb_spino_align field
-at mkfs time. Create a new m_ialloc_min_blks field in xfs_mount and use
-this to represent the minimum supported allocation size for inode
-chunks. Initialize m_ialloc_min_blks at mount time based on whether
-sparse inodes are supported.
+For filesystems formatted with sparse inode chunks enabled, do random
+sparse inode chunk allocs when compiled in DEBUG mode to increase test
+coverage.
 
 Signed-off-by: Brian Foster <bfoster@redhat.com>
 ---
- fs/xfs/libxfs/xfs_ialloc.c | 2 +-
- fs/xfs/libxfs/xfs_sb.c     | 5 +++++
- fs/xfs/xfs_mount.h         | 2 ++
- 3 files changed, 8 insertions(+), 1 deletion(-)
+ fs/xfs/libxfs/xfs_ialloc.c | 15 +++++++++++++--
+ 1 file changed, 13 insertions(+), 2 deletions(-)
 
 diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
-index ffac044..07cce35 100644
+index 1c81f08..d96c5e1 100644
 --- a/fs/xfs/libxfs/xfs_ialloc.c
 +++ b/fs/xfs/libxfs/xfs_ialloc.c
-@@ -644,7 +644,7 @@ xfs_ialloc_ag_select(
- 		 * if we fail allocation due to alignment issues then it is most
- 		 * likely a real ENOSPC condition.
- 		 */
--		ineed = mp->m_ialloc_blks;
-+		ineed = mp->m_ialloc_min_blks;
- 		if (flags && ineed > 1)
- 			ineed += xfs_ialloc_cluster_alignment(mp);
- 		longest = pag->pagf_longest;
-diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
-index a461c2e..2b5b4fe 100644
---- a/fs/xfs/libxfs/xfs_sb.c
-+++ b/fs/xfs/libxfs/xfs_sb.c
-@@ -697,6 +697,11 @@ xfs_sb_mount_common(
- 	mp->m_ialloc_inos = (int)MAX((__uint16_t)XFS_INODES_PER_CHUNK,
- 					sbp->sb_inopblock);
- 	mp->m_ialloc_blks = mp->m_ialloc_inos >> sbp->sb_inopblog;
-+
-+	if (sbp->sb_spino_align)
-+		mp->m_ialloc_min_blks = sbp->sb_spino_align;
-+	else
-+		mp->m_ialloc_min_blks = mp->m_ialloc_blks;
- }
+@@ -609,9 +609,18 @@ xfs_ialloc_ag_alloc(
+ 	struct xfs_inobt_rec_incore rec;
+ 	struct xfs_perag *pag;
  
- /*
-diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-index a5b2ff8..97f17d5 100644
---- a/fs/xfs/xfs_mount.h
-+++ b/fs/xfs/xfs_mount.h
-@@ -136,6 +136,8 @@ typedef struct xfs_mount {
- 	__uint64_t		m_flags;	/* global mount flags */
- 	int			m_ialloc_inos;	/* inodes in inode allocation */
- 	int			m_ialloc_blks;	/* blocks in inode allocation */
-+	int			m_ialloc_min_blks;/* min blocks in sparse inode
-+						   * allocation */
- 	int			m_inoalign_mask;/* mask sb_inoalignmt if used */
- 	uint			m_qflags;	/* quota status flags */
- 	struct xfs_trans_resv	m_resv;		/* precomputed res values */
++	int		do_sparse = 0;
++
++#ifdef DEBUG
++	/* randomly do sparse inode allocations */
++	if (xfs_sb_version_hassparseinodes(&tp->t_mountp->m_sb))
++		do_sparse = prandom_u32() & 1;
++#endif
++
+ 	memset(&args, 0, sizeof(args));
+ 	args.tp = tp;
+ 	args.mp = tp->t_mountp;
++	args.fsbno = NULLFSBLOCK;
+ 
+ 	/*
+ 	 * Locking will ensure that we don't have two callers in here
+@@ -632,6 +641,8 @@ xfs_ialloc_ag_alloc(
+ 	agno = be32_to_cpu(agi->agi_seqno);
+ 	args.agbno = XFS_AGINO_TO_AGBNO(args.mp, newino) +
+ 		     args.mp->m_ialloc_blks;
++	if (do_sparse)
++		goto sparse_alloc;
+ 	if (likely(newino != NULLAGINO &&
+ 		  (args.agbno < be32_to_cpu(agi->agi_length)))) {
+ 		args.fsbno = XFS_AGB_TO_FSB(args.mp, agno, args.agbno);
+@@ -670,8 +681,7 @@ xfs_ialloc_ag_alloc(
+ 		 * subsequent requests.
+ 		 */
+ 		args.minalignslop = 0;
+-	} else
+-		args.fsbno = NULLFSBLOCK;
++	}
+ 
+ 	if (unlikely(args.fsbno == NULLFSBLOCK)) {
+ 		/*
+@@ -729,6 +739,7 @@ xfs_ialloc_ag_alloc(
+ 	if (xfs_sb_version_hassparseinodes(&args.mp->m_sb) &&
+ 	    args.mp->m_ialloc_min_blks < args.mp->m_ialloc_blks &&
+ 	    args.fsbno == NULLFSBLOCK) {
++sparse_alloc:
+ 		args.type = XFS_ALLOCTYPE_NEAR_BNO;
+ 		args.agbno = be32_to_cpu(agi->agi_root);
+ 		args.fsbno = XFS_AGB_TO_FSB(args.mp, agno, args.agbno);
 -- 
 1.8.3.1
 
