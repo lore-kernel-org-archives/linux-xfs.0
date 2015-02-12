@@ -1,29 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id EA4677F5A
-	for <xfs@oss.sgi.com>; Wed, 11 Feb 2015 16:54:42 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id D8E0B8F8035
-	for <xfs@oss.sgi.com>; Wed, 11 Feb 2015 14:54:39 -0800 (PST)
-Received: from fieldses.org (fieldses.org [173.255.197.46]) by cuda.sgi.com
-	with ESMTP id EN23bavXGqUewBkI for <xfs@oss.sgi.com>;
-	Wed, 11 Feb 2015 14:54:38 -0800 (PST)
-Date: Wed, 11 Feb 2015 17:54:37 -0500
-From: "J. Bruce Fields" <bfields@fieldses.org>
-Subject: Re: [PATCH 16/20] xfs: pass a 64-bit count argument to
-	xfs_iomap_write_unwritten
-Message-ID: <20150211225437.GC28796@fieldses.org>
-References: <1421925006-24231-1-git-send-email-hch@lst.de>
-	<1421925006-24231-17-git-send-email-hch@lst.de>
-	<20150129205232.GB11064@fieldses.org>
-	<20150202073024.GA9399@lst.de> <20150202192404.GI6282@dastard>
-	<20150202194300.GN6282@dastard>
-	<20150202194826.GG22301@fieldses.org>
-	<20150203183533.GA16929@lst.de>
-	<20150211223522.GB28796@fieldses.org>
+	by oss.sgi.com (Postfix) with ESMTP id 4E6857F59
+	for <xfs@oss.sgi.com>; Wed, 11 Feb 2015 19:40:22 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 1ECE78F8059
+	for <xfs@oss.sgi.com>; Wed, 11 Feb 2015 17:40:18 -0800 (PST)
+Received: from mail.kernel.org ([198.145.29.136]) by cuda.sgi.com with ESMTP
+	id 1kGKyMEzZlbVxcXw for <xfs@oss.sgi.com>;
+	Wed, 11 Feb 2015 17:40:17 -0800 (PST)
+Date: Wed, 11 Feb 2015 17:40:14 -0800
+From: Jaegeuk Kim <jaegeuk@kernel.org>
+Subject: Re: [PATCH 1/2 v2] xfs: introduce a generic shutdown ioctl
+Message-ID: <20150212014014.GA97308@jaegeuk-mac02>
+References: <1420796076-82847-1-git-send-email-jaegeuk@kernel.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20150211223522.GB28796@fieldses.org>
+In-Reply-To: <1420796076-82847-1-git-send-email-jaegeuk@kernel.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -36,69 +28,87 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-fsdevel@vger.kernel.org, linux-nfs@vger.kernel.org, Jeff Layton <jlayton@primarydata.com>, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>, Jeff Layton <jlayton@poochiereds.net>, "J. Bruce Fields" <bfields@fieldses.org>
+Cc: linux-fsdevel@vger.kernel.org, linux-api@vger.kernel.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-On Wed, Feb 11, 2015 at 05:35:22PM -0500, J. Bruce Fields wrote:
-> On Tue, Feb 03, 2015 at 07:35:33PM +0100, Christoph Hellwig wrote:
-> > On Mon, Feb 02, 2015 at 02:48:26PM -0500, J. Bruce Fields wrote:
-> > > Previously: http://lkml.kernel.org/r/20150106175611.GA16413@lst.de
-> > > 
-> > > 	>       - any advice on testing?  Is there was some simple
-> > > 	>       virtual setup that would allow any loser with no special
-> > > 	>       hardware (e.g., me) to check whether they've broken the
-> > > 	>       block server?
-> > > 
-> > > 	Run two kvm VMs that share the same disk.  Create an XFS
-> > > 	filesystem on the MDS, and export it.  If the client has blkmapd
-> > > 	running (on Debian it needs to be started manually) it will use
-> > > 	pNFS for accessing the filesystem.  Verify that using the
-> > > 	per-operation counters in /proc/self/mounstats.  Repeat with
-> > > 	additional clients as nessecary.
-> > > 
-> > > 	Alternatively set up a simple iSCSI target using tgt or lio and
-> > > 	connect to it from multiple clients.
-> > > 
-> > > Which sounds reasonable to me, but I haven't tried to incorporate this
-> > > into my regression testing yet.
-> > 
-> > Additionally I can offer the following script to generate recalls,
-> > which don't really happen during normal operation.  I don't
-> > really know how to write a proper testcase that coordinates access
-> > to the exported filesystem and nfs unless it runs locally on the same node,
-> > though.  It would need some higher level, network aware test harness:
-> 
-> Thanks.  I got as far as doing a quick manual test with vm's sharing a
-> "disk":
+Change log from v1:
+ o modify the xfs changes merged toward 3.20-rc1
 
-Oh, also I forgot, on fedora:
+-- >8 --
 
-	[root@f21-2]# systemctl enable nfs-blkmap.target
+This patch introduces a generic ioctl for fs shutdown, which was used by xfs.
 
-> 	[root@f21-2]# mount -overs=4.1 f21-1:/exports/xfs-pnfs /mnt/
-> 	[root@f21-2]# echo "hello world" >/mnt/testfile
-> 	[root@f21-2]# grep LAYOUTGET /proc/self/mountstats 
-> 		   LAYOUTGET: 1 1 0 236 196 0 4 4
-> 
-> I haven't tried to set up automated testing with recalls, but that
-> shouldn't be hard.
-> 
-> --b.
-> 
-> > 
-> > ----- snip -----
-> > #!/bin/sh
-> > 
-> > set +x
-> > 
-> > # wait for grace period
-> > touch /mnt/nfs1/foo
-> > 
-> > dd if=/dev/zero of=/mnt/nfs1/foo bs=128M count=32 conv=fdatasync oflag=direct &
-> > 
-> > sleep 2
-> > 
-> > echo "" > /mnt/test/foo && echo "recall done"
+If this shutdown is triggered, filesystem stops any further IOs according to the
+following options.
+
+1. FS_GOING_DOWN_FULLSYNC
+ : this will flush all the data and dentry blocks, and do checkpoint before
+   shutdown.
+
+2. FS_GOING_DOWN_METASYNC
+ : this will do checkpoint before shutdown.
+
+3. FS_GOING_DOWN_NOSYNC
+ : this will trigger shutdown as is.
+
+Signed-off-by: Jaegeuk Kim <jaegeuk@kernel.org>
+---
+ fs/xfs/libxfs/xfs_fs.h  | 8 ++++----
+ include/uapi/linux/fs.h | 8 ++++++++
+ 2 files changed, 12 insertions(+), 4 deletions(-)
+
+diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
+index 18dc721..fe0eeee 100644
+--- a/fs/xfs/libxfs/xfs_fs.h
++++ b/fs/xfs/libxfs/xfs_fs.h
+@@ -484,9 +484,9 @@ typedef struct xfs_swapext
+ /*
+  * Flags for going down operation
+  */
+-#define XFS_FSOP_GOING_FLAGS_DEFAULT		0x0	/* going down */
+-#define XFS_FSOP_GOING_FLAGS_LOGFLUSH		0x1	/* flush log but not data */
+-#define XFS_FSOP_GOING_FLAGS_NOLOGFLUSH		0x2	/* don't flush log nor data */
++#define XFS_FSOP_GOING_FLAGS_DEFAULT	FS_GOING_DOWN_FULLSYNC
++#define XFS_FSOP_GOING_FLAGS_LOGFLUSH	FS_GOING_DOWN_METASYNC
++#define XFS_FSOP_GOING_FLAGS_NOLOGFLUSH	FS_GOING_DOWN_NOSYNC
+ 
+ /*
+  * ioctl commands that are used by Linux filesystems
+@@ -555,7 +555,7 @@ typedef struct xfs_swapext
+ #define XFS_IOC_ATTRLIST_BY_HANDLE   _IOW ('X', 122, struct xfs_fsop_attrlist_handlereq)
+ #define XFS_IOC_ATTRMULTI_BY_HANDLE  _IOW ('X', 123, struct xfs_fsop_attrmulti_handlereq)
+ #define XFS_IOC_FSGEOMETRY	     _IOR ('X', 124, struct xfs_fsop_geom)
+-#define XFS_IOC_GOINGDOWN	     _IOR ('X', 125, __uint32_t)
++#define XFS_IOC_GOINGDOWN	     FS_IOC_SHUTDOWN
+ /*	XFS_IOC_GETFSUUID ---------- deprecated 140	 */
+ 
+ 
+diff --git a/include/uapi/linux/fs.h b/include/uapi/linux/fs.h
+index 3735fa0..a4e4be5 100644
+--- a/include/uapi/linux/fs.h
++++ b/include/uapi/linux/fs.h
+@@ -157,6 +157,7 @@ struct inodes_stat_t {
+ #define FIFREEZE	_IOWR('X', 119, int)	/* Freeze */
+ #define FITHAW		_IOWR('X', 120, int)	/* Thaw */
+ #define FITRIM		_IOWR('X', 121, struct fstrim_range)	/* Trim */
++#define FS_IOC_SHUTDOWN	_IOR('X', 125, __u32)	/* Shutdown */
+ 
+ #define	FS_IOC_GETFLAGS			_IOR('f', 1, long)
+ #define	FS_IOC_SETFLAGS			_IOW('f', 2, long)
+@@ -205,4 +206,11 @@ struct inodes_stat_t {
+ #define SYNC_FILE_RANGE_WRITE		2
+ #define SYNC_FILE_RANGE_WAIT_AFTER	4
+ 
++/*
++ * Flags for going down operation used by FS_IOC_GOINGDOWN
++ */
++#define FS_GOING_DOWN_FULLSYNC	0x0	/* going down with full sync */
++#define FS_GOING_DOWN_METASYNC	0x1	/* going down with metadata */
++#define FS_GOING_DOWN_NOSYNC	0x2	/* going down */
++
+ #endif /* _UAPI_LINUX_FS_H */
+-- 
+2.1.1
 
 _______________________________________________
 xfs mailing list
