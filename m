@@ -1,28 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 031BE7F51
-	for <xfs@oss.sgi.com>; Thu, 12 Feb 2015 12:17:32 -0600 (CST)
+	by oss.sgi.com (Postfix) with ESMTP id 2C0F07F55
+	for <xfs@oss.sgi.com>; Thu, 12 Feb 2015 12:17:33 -0600 (CST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id E4FA1304062
-	for <xfs@oss.sgi.com>; Thu, 12 Feb 2015 10:17:31 -0800 (PST)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 15499304062
+	for <xfs@oss.sgi.com>; Thu, 12 Feb 2015 10:17:33 -0800 (PST)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id BSlwGmcH5FEu07IB (version=TLSv1
+	cuda.sgi.com with ESMTP id iCTJjnKEKnBtuLwD (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
 	Thu, 12 Feb 2015 10:17:29 -0800 (PST)
-Received: from int-mx11.intmail.prod.int.phx2.redhat.com
-	(int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id t1CIHTTA015124
+Received: from int-mx09.intmail.prod.int.phx2.redhat.com
+	(int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id t1CIHSUg015113
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256
-	verify=FAIL) for <xfs@oss.sgi.com>; Thu, 12 Feb 2015 13:17:29 -0500
+	verify=FAIL) for <xfs@oss.sgi.com>; Thu, 12 Feb 2015 13:17:28 -0500
 Received: from bfoster.bfoster ([10.18.41.237])
-	by int-mx11.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id t1CIHSBD030670
+	by int-mx09.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id t1CIHS5n030634
 	for <xfs@oss.sgi.com>; Thu, 12 Feb 2015 13:17:28 -0500
 From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH v4 09/18] xfs: use actual inode count for sparse records in
-	bulkstat/inumbers
-Date: Thu, 12 Feb 2015 13:17:16 -0500
-Message-Id: <1423765045-15791-10-git-send-email-bfoster@redhat.com>
+Subject: [PATCH v4 01/18] xfs: create individual inode alloc. helper
+Date: Thu, 12 Feb 2015 13:17:08 -0500
+Message-Id: <1423765045-15791-2-git-send-email-bfoster@redhat.com>
 In-Reply-To: <1423765045-15791-1-git-send-email-bfoster@redhat.com>
 References: <1423765045-15791-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -40,80 +39,54 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-The bulkstat and inumbers mechanisms make the assumption that inode
-records consist of a full 64 inode chunk in several places. For example,
-this is used to track how many inodes have been processed overall as
-well as to determine whether a record has allocated inodes that must be
-handled.
-
-This assumption is invalid for sparse inode records. While sparse inodes
-will be marked as free in the ir_free mask, they are not accounted as
-free in ir_freecount because they cannot be allocated. Therefore,
-ir_freecount may be less than 64 inodes in an inode record for which all
-physically allocated inodes are free (and in turn ir_freecount < 64 does
-not signify that the record has allocated inodes).
-
-The new in-core inobt record format includes the ir_count field. This
-holds the number of true, physical inodes tracked by the record. The
-in-core ir_count field is always valid as it is hardcoded to
-XFS_INODES_PER_CHUNK when sparse inodes is not enabled. Use ir_count to
-handle inode records correctly in bulkstat in a generic manner.
+Inode allocation from sparse inode records must filter the ir_free mask
+against ir_holemask.  In preparation for this requirement, create a
+helper to allocate an individual inode from an inode record.
 
 Signed-off-by: Brian Foster <bfoster@redhat.com>
 ---
- fs/xfs/xfs_itable.c | 13 ++++++++-----
- 1 file changed, 8 insertions(+), 5 deletions(-)
+ fs/xfs/libxfs/xfs_ialloc.c | 14 ++++++++++++--
+ 1 file changed, 12 insertions(+), 2 deletions(-)
 
-diff --git a/fs/xfs/xfs_itable.c b/fs/xfs/xfs_itable.c
-index 82e3142..7c68058 100644
---- a/fs/xfs/xfs_itable.c
-+++ b/fs/xfs/xfs_itable.c
-@@ -252,7 +252,7 @@ xfs_bulkstat_grab_ichunk(
- 		}
+diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
+index 116ef1d..12b62a34 100644
+--- a/fs/xfs/libxfs/xfs_ialloc.c
++++ b/fs/xfs/libxfs/xfs_ialloc.c
+@@ -731,6 +731,16 @@ xfs_ialloc_get_rec(
+ }
  
- 		irec->ir_free |= xfs_inobt_maskn(0, idx);
--		*icount = XFS_INODES_PER_CHUNK - irec->ir_freecount;
-+		*icount = irec->ir_count - irec->ir_freecount;
+ /*
++ * Return the offset of the first free inode in the record.
++ */
++STATIC int
++xfs_inobt_first_free_inode(
++	struct xfs_inobt_rec_incore	*rec)
++{
++	return xfs_lowbit64(rec->ir_free);
++}
++
++/*
+  * Allocate an inode using the inobt-only algorithm.
+  */
+ STATIC int
+@@ -960,7 +970,7 @@ newino:
  	}
  
- 	return 0;
-@@ -415,6 +415,8 @@ xfs_bulkstat(
- 				goto del_cursor;
- 			if (icount) {
- 				irbp->ir_startino = r.ir_startino;
-+				irbp->ir_holemask = r.ir_holemask;
-+				irbp->ir_count = r.ir_count;
- 				irbp->ir_freecount = r.ir_freecount;
- 				irbp->ir_free = r.ir_free;
- 				irbp++;
-@@ -447,13 +449,15 @@ xfs_bulkstat(
- 			 * If this chunk has any allocated inodes, save it.
- 			 * Also start read-ahead now for this chunk.
- 			 */
--			if (r.ir_freecount < XFS_INODES_PER_CHUNK) {
-+			if (r.ir_freecount < r.ir_count) {
- 				xfs_bulkstat_ichunk_ra(mp, agno, &r);
- 				irbp->ir_startino = r.ir_startino;
-+				irbp->ir_holemask = r.ir_holemask;
-+				irbp->ir_count = r.ir_count;
- 				irbp->ir_freecount = r.ir_freecount;
- 				irbp->ir_free = r.ir_free;
- 				irbp++;
--				icount += XFS_INODES_PER_CHUNK - r.ir_freecount;
-+				icount += r.ir_count - r.ir_freecount;
- 			}
- 			error = xfs_btree_increment(cur, 0, &stat);
- 			if (error || stat == 0) {
-@@ -599,8 +603,7 @@ xfs_inumbers(
- 		agino = r.ir_startino + XFS_INODES_PER_CHUNK - 1;
- 		buffer[bufidx].xi_startino =
- 			XFS_AGINO_TO_INO(mp, agno, r.ir_startino);
--		buffer[bufidx].xi_alloccount =
--			XFS_INODES_PER_CHUNK - r.ir_freecount;
-+		buffer[bufidx].xi_alloccount = r.ir_count - r.ir_freecount;
- 		buffer[bufidx].xi_allocmask = ~r.ir_free;
- 		if (++bufidx == bcount) {
- 			long	written;
+ alloc_inode:
+-	offset = xfs_lowbit64(rec.ir_free);
++	offset = xfs_inobt_first_free_inode(&rec);
+ 	ASSERT(offset >= 0);
+ 	ASSERT(offset < XFS_INODES_PER_CHUNK);
+ 	ASSERT((XFS_AGINO_TO_OFFSET(mp, rec.ir_startino) %
+@@ -1209,7 +1219,7 @@ xfs_dialloc_ag(
+ 	if (error)
+ 		goto error_cur;
+ 
+-	offset = xfs_lowbit64(rec.ir_free);
++	offset = xfs_inobt_first_free_inode(&rec);
+ 	ASSERT(offset >= 0);
+ 	ASSERT(offset < XFS_INODES_PER_CHUNK);
+ 	ASSERT((XFS_AGINO_TO_OFFSET(mp, rec.ir_startino) %
 -- 
 1.8.3.1
 
