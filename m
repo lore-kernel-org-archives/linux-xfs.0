@@ -1,28 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 428457F56
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 70A107F5A
 	for <xfs@oss.sgi.com>; Thu, 12 Feb 2015 12:17:33 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 1FF2B8F8070
-	for <xfs@oss.sgi.com>; Thu, 12 Feb 2015 10:17:33 -0800 (PST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 46E86304062
+	for <xfs@oss.sgi.com>; Thu, 12 Feb 2015 10:17:30 -0800 (PST)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id Er0ONDXfdFjYvX6M (version=TLSv1
+	cuda.sgi.com with ESMTP id gHfh0tViitix7muR (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
 	Thu, 12 Feb 2015 10:17:29 -0800 (PST)
-Received: from int-mx13.intmail.prod.int.phx2.redhat.com
-	(int-mx13.intmail.prod.int.phx2.redhat.com [10.5.11.26])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id t1CIHS0n020182
+Received: from int-mx14.intmail.prod.int.phx2.redhat.com
+	(int-mx14.intmail.prod.int.phx2.redhat.com [10.5.11.27])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id t1CIHTqg020189
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256
-	verify=FAIL) for <xfs@oss.sgi.com>; Thu, 12 Feb 2015 13:17:28 -0500
+	verify=FAIL) for <xfs@oss.sgi.com>; Thu, 12 Feb 2015 13:17:29 -0500
 Received: from bfoster.bfoster ([10.18.41.237])
-	by int-mx13.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id t1CIHS7i026220
-	for <xfs@oss.sgi.com>; Thu, 12 Feb 2015 13:17:28 -0500
+	by int-mx14.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id t1CIHSHd025880
+	for <xfs@oss.sgi.com>; Thu, 12 Feb 2015 13:17:29 -0500
 From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH v4 02/18] xfs: update free inode record logic to support
-	sparse inode records
-Date: Thu, 12 Feb 2015 13:17:09 -0500
-Message-Id: <1423765045-15791-3-git-send-email-bfoster@redhat.com>
+Subject: [PATCH v4 11/18] xfs: handle sparse inode chunks in icreate log
+	recovery
+Date: Thu, 12 Feb 2015 13:17:18 -0500
+Message-Id: <1423765045-15791-12-git-send-email-bfoster@redhat.com>
 In-Reply-To: <1423765045-15791-1-git-send-email-bfoster@redhat.com>
 References: <1423765045-15791-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -40,54 +40,52 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-xfs_difree_inobt() uses logic in a couple places that assume inobt
-records refer to fully allocated chunks. Specifically, the use of
-mp->m_ialloc_inos can cause problems for inode chunks that are sparsely
-allocated. Sparse inode chunks can, by definition, define a smaller
-number of inodes than a full inode chunk.
+Recovery of icreate transactions assumes hardcoded values for the inode
+count and chunk length.
 
-Fix the logic that determines whether an inode record should be removed
-from the inobt to use the ir_free mask rather than ir_freecount.
-
-Fix the agi counters modification to use ir_freecount to add the actual
-number of inodes freed rather than assuming a full inode chunk.
+Sparse inode chunks are allocated in units of m_ialloc_min_blks. Update
+the icreate validity checks to allow for appropriately sized inode
+chunks and verify the inode count matches what is expected based on the
+extent length rather than assuming a hardcoded count.
 
 Signed-off-by: Brian Foster <bfoster@redhat.com>
 ---
- fs/xfs/libxfs/xfs_ialloc.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ fs/xfs/xfs_log_recover.c | 22 ++++++++++++++++------
+ 1 file changed, 16 insertions(+), 6 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
-index 12b62a34..ffac044 100644
---- a/fs/xfs/libxfs/xfs_ialloc.c
-+++ b/fs/xfs/libxfs/xfs_ialloc.c
-@@ -1509,7 +1509,7 @@ xfs_difree_inobt(
- 	 * When an inode cluster is free, it becomes eligible for removal
- 	 */
- 	if (!(mp->m_flags & XFS_MOUNT_IKEEP) &&
--	    (rec.ir_freecount == mp->m_ialloc_inos)) {
-+	    (rec.ir_free == XFS_INOBT_ALL_FREE)) {
+diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+index ecc73d5..74d504b 100644
+--- a/fs/xfs/xfs_log_recover.c
++++ b/fs/xfs/xfs_log_recover.c
+@@ -3068,12 +3068,22 @@ xlog_recover_do_icreate_pass2(
+ 		return -EINVAL;
+ 	}
  
- 		*deleted = 1;
- 		*first_ino = XFS_AGINO_TO_INO(mp, agno, rec.ir_startino);
-@@ -1519,7 +1519,7 @@ xfs_difree_inobt(
- 		 * AGI and Superblock inode counts, and mark the disk space
- 		 * to be freed when the transaction is committed.
- 		 */
--		ilen = mp->m_ialloc_inos;
-+		ilen = rec.ir_freecount;
- 		be32_add_cpu(&agi->agi_count, -ilen);
- 		be32_add_cpu(&agi->agi_freecount, -(ilen - 1));
- 		xfs_ialloc_log_agi(tp, agbp, XFS_AGI_COUNT | XFS_AGI_FREECOUNT);
-@@ -1640,7 +1640,7 @@ xfs_difree_finobt(
- 	 * keeping inode chunks permanently on disk, remove the record.
- 	 * Otherwise, update the record with the new information.
- 	 */
--	if (rec.ir_freecount == mp->m_ialloc_inos &&
-+	if (rec.ir_free == XFS_INOBT_ALL_FREE &&
- 	    !(mp->m_flags & XFS_MOUNT_IKEEP)) {
- 		error = xfs_btree_delete(cur, &i);
- 		if (error)
+-	/* existing allocation is fixed value */
+-	ASSERT(count == mp->m_ialloc_inos);
+-	ASSERT(length == mp->m_ialloc_blks);
+-	if (count != mp->m_ialloc_inos ||
+-	     length != mp->m_ialloc_blks) {
+-		xfs_warn(log->l_mp, "xlog_recover_do_icreate_trans: bad count 2");
++	/*
++	 * The inode chunk is either full or sparse and we only support
++	 * m_ialloc_min_blks sized sparse allocations at this time.
++	 */
++	if (length != mp->m_ialloc_blks &&
++	    length != mp->m_ialloc_min_blks) {
++		xfs_warn(log->l_mp,
++			 "%s: unsupported chunk length", __FUNCTION__);
++		return -EINVAL;
++	}
++
++	/* verify inode count is consistent with extent length */
++	if ((count >> mp->m_sb.sb_inopblog) != length) {
++		xfs_warn(log->l_mp,
++			 "%s: inconsistent inode count and chunk length",
++			 __FUNCTION__);
+ 		return -EINVAL;
+ 	}
+ 
 -- 
 1.8.3.1
 
