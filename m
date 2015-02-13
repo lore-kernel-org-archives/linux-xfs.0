@@ -1,25 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 4CD477F6C
-	for <xfs@oss.sgi.com>; Fri, 13 Feb 2015 16:35:20 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 3B954304032
-	for <xfs@oss.sgi.com>; Fri, 13 Feb 2015 14:35:16 -0800 (PST)
-Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
-	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	40YBWewMF172Se8a for <xfs@oss.sgi.com>;
-	Fri, 13 Feb 2015 14:35:10 -0800 (PST)
-Received: from dave by dastard with local (Exim 4.80)
-	(envelope-from <david@fromorbit.com>) id 1YMOpH-0006rP-L5
-	for xfs@oss.sgi.com; Sat, 14 Feb 2015 09:35:07 +1100
-Date: Sat, 14 Feb 2015 09:35:07 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [RFC] xfs shrink feature
-Message-ID: <20150213223507.GV4251@dastard>
-References: <20150213131446.GC1800@hades.maiolino.org>
+	by oss.sgi.com (Postfix) with ESMTP id BD7267F55
+	for <xfs@oss.sgi.com>; Fri, 13 Feb 2015 17:40:32 -0600 (CST)
+Message-ID: <54DE8B6D.8010401@sgi.com>
+Date: Fri, 13 Feb 2015 17:40:29 -0600
+From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20150213131446.GC1800@hades.maiolino.org>
+Subject: Re: [PATCH] xfs: xfs_alloc_fix_minleft can underflow near ENOSPC
+References: <1423782857-11800-1-git-send-email-david@fromorbit.com>
+In-Reply-To: <1423782857-11800-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,97 +17,90 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-On Fri, Feb 13, 2015 at 11:14:46AM -0200, Carlos Maiolino wrote:
-> Hi folks,
-> 
-> I've been seeing a lot of users requesting a shrink feature for XFS, and I
-> believe it's time to have it implemented in XFS.
+On 02/12/15 17:14, Dave Chinner wrote:
+> From: Dave Chinner<dchinner@redhat.com>
+>
+> Test generic/224 is failing with a corruption being detected on one
+> of Michael's test boxes.  Debug that Michael added is indicating
+> that the minleft trimming is resulting in an underflow:
+>
+> .....
+>   before fixup:              rlen          1  args->len          0
+>   after xfs_alloc_fix_len  : rlen          1  args->len          1
+>   before goto out_nominleft: rlen          1  args->len          0
+>   before fixup:              rlen          1  args->len          0
+>   after xfs_alloc_fix_len  : rlen          1  args->len          1
+>   after fixup:               rlen          1  args->len          1
+>   before fixup:              rlen          1  args->len          0
+>   after xfs_alloc_fix_len  : rlen          1  args->len          1
+>   after fixup:               rlen 4294967295  args->len 4294967295
+>   XFS: Assertion failed: fs_is_ok, file: fs/xfs/libxfs/xfs_alloc.c, line: 1424
+>
+> The "goto out_nominleft:" indicates that we are getting close to
+> ENOSPC in the AG, and a couple of allocations later we underflow
+> and the corruption check fires in xfs_alloc_ag_vextent_size().
+>
+> The issue is that the extent length fixups comaprisons are done
+> with variables of xfs_extlen_t types. These are unsigned so an
+> underflow looks like a really big value and hence is not detected
+> as being smaller than the minimum length allowed for the extent.
+> Hence the corruption check fires as it is noticing that the returned
+> length is longer than the original extent length passed in.
+>
+> This can be easily fixed by ensuring we do the underflow test on
+> signed values, the same way xfs_alloc_fix_len() prevents underflow.
+> So we realise in future that these casts prevent underflows from
+> going undetected, add comments to the code indicating this.
+>
+> Reported-by: Michael L. Semon<mlsemon35@gmail.com>
+> Tested-by: Michael L. Semon<mlsemon35@gmail.com>
+> Signed-off-by: Dave Chinner<dchinner@redhat.com>
+> ---
+>   fs/xfs/libxfs/xfs_alloc.c | 4 +++-
+>   1 file changed, 3 insertions(+), 1 deletion(-)
 
-I'm not so sure about that.
 
-> Is there anybody working on a shrink feature? If not, I'm going to
-> start to work on it, if nobody have any objections.
+int diff = be32_to_cpu(agf->agf_freeblks)
+              - args->len - args->minleft;
 
 
-I currently in design discussions with various other developers
-about a line of development that will make growing and shrinking XFS
-redundant operations. i.e. if we get this right, we'll never need to
-deal with capacity changes of XFS filesystems at the XFS level
-again. both grow and shrink will be instanteneous, and not require
-any modification to the layout of the filesystem at all.
+> @@ -286,7 +287,8 @@ xfs_alloc_fix_minleft(
+>   	if (diff >= 0)
+>   		return 1;
 
-Mind you, that's not the reason for that line of development - it's
-all about integrated snapshots in XFS. We essentially get
-grow/shrink for free with that infrastructure....
+If the diff math was done correctly, wouldn't it get caught here?
 
-I'm not quite ready to publish the docco yet - need to get all my
-ducks in a line first - but if it does work out as a feasible line
-of development, then the old "shrink" method is essentially a dead
-end.
+>   	args->len += diff;		/* shrink the allocated space */
+> -	if (args->len >= args->minlen)
+> +	/* casts to (int) catch length underflows */
+> +	if ((int)args->len >= (int)args->minlen)
+>   		return 1;
+>   	args->agbno = NULLAGBLOCK;
+>   	return 0;
 
-However, don't let that stop you working towards shrink, because
-there is infrastructure that it requires that we need for other
-things as well. Take you pick:
+We can and should fix the wrap in xfs_alloc_fix_minleft() but this also 
+points to the fact that xfs_alloc_fix_freelist() is incorrectly choosing 
+AGs that will later fail the allocation alignment, minlen, and minleft 
+requirements.
 
-	- parent pointers
-	- AG state control
-	- ranged bulkstat call (e.g. AG range)
-	- allocation location control from userspace
-	  (which may tie in to AG state control)
-	- Atomic inode location swaps
+You can connect the dots to see how this can lead to a deadlock with 
+extent frees. We have seen them. I hacked the XFS code to lead to this 
+situation.
 
-Parent pointers are needed to locate the owners of the inodes
-in AGs that need to be moved efficiently. i.e. bulkstat the inodes,
-use parent lookup to return parent or entire path to inode. It's
-also needed for more efficient and robust metadata checking and
-online repair of broken directory structures.
+Also bad is xfs_alloc_vextent() will temporally ignore the minleft for 
+the xfs_alloc_fix_freelist() but makes the ag allocator enforce the 
+minleft. I got this condition to ASSERT in xfs_alloc_ag_vextent_size(), 
+but I never got a deadlock. It would require just the right sequence 
+from xfs_alloc_vextent() and xfs_bmap_btalloc().
 
-AG state control is needed to tell the filesystem not to allocate
-in specific AGs, and then to take them completely off line prior
-to a shrink operation starting. It is also needed for online repair
-of AGs and other applications that need to manipulate the contents
-of an AG without interference from the rest of the filesystem.
-
-Efficient shrink also relies on reverse block mapping being
-available. I'm working on that right now for multiple reasons, none
-of which are for shrinking the filesystem. ;)
-
-I'd recommend that you work on the infrastructure problems one at a
-time, rather than "shrink" because the infrastructure has multiple
-uses and we need that infrastructure for various reasons much more
-urgently than we do shrink. However, once the infrastructure is in
-place, shrink should just be a case of tying it all together with a
-userspace utility. That is, of course, if we still need it.
-
-If you want something simple to start with then the ranged bulkstat
-calls and AG state control are the place to start.
-
-However, I'd recommend you start with finishing off the parent
-pointer infrastructure because that's more important in the longer
-term. We had converged to the point where we had a design that
-solved all known problems, but it wasn't ever implemented.  That's
-where we need to pick it up from. Design for EAs in here:
-
-http://oss.sgi.com/archives/xfs/2014-01/msg00263.html
-
-But it's worth reading the entire discussion starting here because
-it start with a summary of the different approaches taken and why
-they were rejected:
-
-http://oss.sgi.com/archives/xfs/2014-01/msg00224.html
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+--Mark.
 
 _______________________________________________
 xfs mailing list
