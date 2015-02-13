@@ -1,25 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 4F15B7F55
-	for <xfs@oss.sgi.com>; Thu, 12 Feb 2015 17:21:07 -0600 (CST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 64D727F54
+	for <xfs@oss.sgi.com>; Thu, 12 Feb 2015 19:11:38 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id DFBE7AC005
-	for <xfs@oss.sgi.com>; Thu, 12 Feb 2015 15:21:06 -0800 (PST)
-Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
-	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	HBO8lP3AVix0g3MR for <xfs@oss.sgi.com>;
-	Thu, 12 Feb 2015 15:21:04 -0800 (PST)
-Received: from disappointment.disaster.area ([192.168.1.110]
-	helo=disappointment) by dastard with esmtp (Exim 4.80)
-	(envelope-from <dave@fromorbit.com>) id 1YM2xd-0004qy-VV
-	for xfs@oss.sgi.com; Fri, 13 Feb 2015 10:14:18 +1100
-Received: from dave by disappointment with local (Exim 4.82_1-5b7a7c0-XX)
-	(envelope-from <dave@disappointment.disaster>) id 1YM2xd-00034v-UU
-	for xfs@oss.sgi.com; Fri, 13 Feb 2015 10:14:17 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH] xfs: xfs_alloc_fix_minleft can underflow near ENOSPC
-Date: Fri, 13 Feb 2015 10:14:17 +1100
-Message-Id: <1423782857-11800-1-git-send-email-david@fromorbit.com>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 34C0B304039
+	for <xfs@oss.sgi.com>; Thu, 12 Feb 2015 17:11:34 -0800 (PST)
+Received: from fieldses.org (fieldses.org [173.255.197.46]) by cuda.sgi.com
+	with ESMTP id 9HPQgJNp23KM3n0X for <xfs@oss.sgi.com>;
+	Thu, 12 Feb 2015 17:11:31 -0800 (PST)
+Date: Thu, 12 Feb 2015 20:11:30 -0500
+From: "J. Bruce Fields" <bfields@fieldses.org>
+Subject: Re: [PATCH 19/20] xfs: implement pNFS export operations
+Message-ID: <20150213011130.GA6808@fieldses.org>
+References: <1421925006-24231-20-git-send-email-hch@lst.de>
+	<20150205004758.GO4251@dastard> <20150205070858.GA593@lst.de>
+	<20150205135756.GA6386@lst.de> <20150206222047.GM12722@dastard>
+	<20150206224258.GJ29783@fieldses.org>
+	<20150208133435.GA27081@lst.de>
+	<20150208090942.51e99687@tlielax.poochiereds.net>
+	<20150209201154.GA27746@fieldses.org>
+	<20150210000423.GY12722@dastard>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20150210000423.GY12722@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,78 +31,62 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-nfs@vger.kernel.org, xfs@oss.sgi.com, Jeff Layton <jlayton@primarydata.com>, linux-fsdevel@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Jeff Layton <jeff.layton@primarydata.com>
 
-From: Dave Chinner <dchinner@redhat.com>
+On Tue, Feb 10, 2015 at 11:04:23AM +1100, Dave Chinner wrote:
+> On Mon, Feb 09, 2015 at 03:11:54PM -0500, J. Bruce Fields wrote:
+> > On Sun, Feb 08, 2015 at 09:09:42AM -0500, Jeff Layton wrote:
+> > > On Sun, 8 Feb 2015 14:34:35 +0100
+> > > Christoph Hellwig <hch@lst.de> wrote:
+> > > 
+> > > > On Fri, Feb 06, 2015 at 05:42:58PM -0500, J. Bruce Fields wrote:
+> > > > > You'd basically just be pulling my tree (Christoph's is just my nfsd
+> > > > > tree with his patches on top, and I've been testing with exactly that
+> > > > > locally, just putting off pushing it out till we decide this.)
+> > > > > 
+> > > > > So anyway, fine with me if you want to just pull that into the xfs tree.
+> > > > > Mine's ready whenever, so if I send my pull pretty soon after the merge
+> > > > > window and you send it a little later then we still keep the property
+> > > > > that Linus's merge still has a diffstat only in our respective areas.
+> > > > > 
+> > > > > (OK, it's a little more complicated because I've got the same
+> > > > > arrangement with jlayton, so the order is jlayton's lock pull, then my
+> > > > > nfsd pull, then your xfs pull.  Is this getting too complicated?
+> > > > > jlayton and I are both ready to so and I think it'd work.)
+> > > > > 
+> > > > > I'm also fine with duplicating those few patches, or whatever.
+> > > > 
+> > > > Maybe the better idea is to pull the xfs tree in the nfsd tree, but
+> > > > that would require Dave sending an early pull request so that the
+> > > > nfsd pull doesn't get delayed.
+> > > > 
+> > > > Or we just defer the pnfsd merge.  While I tried to get it in in time
+> > > > for 3.20 all the delays during review mean we're really late no and should
+> > > > punt it to 3.21.
+> > > 
+> > > FWIW, I plan to send a pull request for the locking changes as soon as
+> > > the merge window opens. Hopefully that won't be an issue for long...
+> > 
+> > This includes Christoph's branch (all but the final xfs commits):
+> > 
+> > 	git://linux-nfs.org/~bfields/linux.git for-3.20
+> > 
+> > That's what I intend to submit.  Hope that's OK.  Then it's up to Dave
+> > whether he wants to pull that in and include the xfs patches.
+> 
+> I'm about to send a pull request to Linus for the current XFS tree.
+> Once that is merged, I'll pull in the remaining xfs-pnfs patches
+> and send another pull request to Linus after the NFS tree is merged.
 
-Test generic/224 is failing with a corruption being detected on one
-of Michael's test boxes.  Debug that Michael added is indicating
-that the minleft trimming is resulting in an underflow:
+Sounds good, thanks.  The nfsd tree's merged now so it should be good to
+go if you haven't found any show-stoppers.
 
-.....
- before fixup:              rlen          1  args->len          0
- after xfs_alloc_fix_len  : rlen          1  args->len          1
- before goto out_nominleft: rlen          1  args->len          0
- before fixup:              rlen          1  args->len          0
- after xfs_alloc_fix_len  : rlen          1  args->len          1
- after fixup:               rlen          1  args->len          1
- before fixup:              rlen          1  args->len          0
- after xfs_alloc_fix_len  : rlen          1  args->len          1
- after fixup:               rlen 4294967295  args->len 4294967295
- XFS: Assertion failed: fs_is_ok, file: fs/xfs/libxfs/xfs_alloc.c, line: 1424
-
-The "goto out_nominleft:" indicates that we are getting close to
-ENOSPC in the AG, and a couple of allocations later we underflow
-and the corruption check fires in xfs_alloc_ag_vextent_size().
-
-The issue is that the extent length fixups comaprisons are done
-with variables of xfs_extlen_t types. These are unsigned so an
-underflow looks like a really big value and hence is not detected
-as being smaller than the minimum length allowed for the extent.
-Hence the corruption check fires as it is noticing that the returned
-length is longer than the original extent length passed in.
-
-This can be easily fixed by ensuring we do the underflow test on
-signed values, the same way xfs_alloc_fix_len() prevents underflow.
-So we realise in future that these casts prevent underflows from
-going undetected, add comments to the code indicating this.
-
-Reported-by: Michael L. Semon <mlsemon35@gmail.com>
-Tested-by: Michael L. Semon <mlsemon35@gmail.com>
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- fs/xfs/libxfs/xfs_alloc.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
-
-diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-index 710554c..41e3630 100644
---- a/fs/xfs/libxfs/xfs_alloc.c
-+++ b/fs/xfs/libxfs/xfs_alloc.c
-@@ -260,6 +260,7 @@ xfs_alloc_fix_len(
- 		rlen = rlen - (k - args->mod);
- 	else
- 		rlen = rlen - args->prod + (args->mod - k);
-+	/* casts to (int) catch length underflows */
- 	if ((int)rlen < (int)args->minlen)
- 		return;
- 	ASSERT(rlen >= args->minlen && rlen <= args->maxlen);
-@@ -286,7 +287,8 @@ xfs_alloc_fix_minleft(
- 	if (diff >= 0)
- 		return 1;
- 	args->len += diff;		/* shrink the allocated space */
--	if (args->len >= args->minlen)
-+	/* casts to (int) catch length underflows */
-+	if ((int)args->len >= (int)args->minlen)
- 		return 1;
- 	args->agbno = NULLAGBLOCK;
- 	return 0;
--- 
-2.0.0
+--b.
 
 _______________________________________________
 xfs mailing list
