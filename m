@@ -1,30 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id CD2BD7F58
-	for <xfs@oss.sgi.com>; Fri, 13 Feb 2015 07:14:54 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 9E6148F804B
-	for <xfs@oss.sgi.com>; Fri, 13 Feb 2015 05:14:51 -0800 (PST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id BABAF7F5A
+	for <xfs@oss.sgi.com>; Fri, 13 Feb 2015 07:47:10 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id A9563304059
+	for <xfs@oss.sgi.com>; Fri, 13 Feb 2015 05:47:10 -0800 (PST)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id sZ5ecKXDupHzt80S (version=TLSv1
+	cuda.sgi.com with ESMTP id IIXBXUGw9ZyVRKM4 (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 13 Feb 2015 05:14:50 -0800 (PST)
-Received: from int-mx10.intmail.prod.int.phx2.redhat.com
-	(int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id t1DDEnuG009820
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256
-	verify=FAIL) for <xfs@oss.sgi.com>; Fri, 13 Feb 2015 08:14:49 -0500
-Received: from hades.maiolino.org (dhcp-1-103.brq.redhat.com [10.34.1.103])
-	by int-mx10.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id t1DDEkon031086
-	(version=TLSv1/SSLv3 cipher=AES256-SHA bits=256 verify=NO)
-	for <xfs@oss.sgi.com>; Fri, 13 Feb 2015 08:14:49 -0500
-Date: Fri, 13 Feb 2015 11:14:46 -0200
+	Fri, 13 Feb 2015 05:47:06 -0800 (PST)
+Date: Fri, 13 Feb 2015 11:46:55 -0200
 From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: [RFC] xfs shrink feature
-Message-ID: <20150213131446.GC1800@hades.maiolino.org>
+Subject: Re: XFS buffer IO performance is very poor
+Message-ID: <20150213134655.GD1800@hades.maiolino.org>
+References: <tencent_CE304F969859276F366B2DA3@qq.com>
 MIME-Version: 1.0
 Content-Disposition: inline
+In-Reply-To: <tencent_CE304F969859276F366B2DA3@qq.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,26 +25,63 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: yy <yy@xspring.net>
+Cc: Eric Sandeen <sandeen@sandeen.net>, bfoster <bfoster@redhat.com>, xfs <xfs@oss.sgi.com>
 
-Hi folks,
-
-I've been seeing a lot of users requesting a shrink feature for XFS, and I
-believe it's time to have it implemented in XFS.
-
-Is there anybody working on a shrink feature? If not, I'm going to start to work
-on it, if nobody have any objections.
-
-Cheers
-
--- 
-Carlos
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+SGVsbG8sCgpPbiBGcmksIEZlYiAxMywgMjAxNSBhdCAxMDoyMDo0NEFNICswODAwLCB5eSB3cm90
+ZToKPiAgICBEYXZlLAo+IAo+ICAgIFRoYW5rIHlvdSB2ZXJ5IG11Y2ggZm9yIHlvdXIgZXhwbGFu
+YXRpb24uCj4gCj4gICAgSSBoaXQgdGhpcyBpc3N1ZSB3aGVuIHJ1biBNeVNRTCBvbiBYRlMuIERp
+cmVjdCBJTyBpcyB2ZXJ5IGltcG9ydCBmb3IKPiAgICBNeVNRTCBvbiBYRlMsYnV0IEkgY2Fu4oCZ
+dCBmb3VuZCBhbnkgZG9jdW1lbnQgZXhwbGFuYXRpb24gdGhpcwo+ICAgIHByb2JsZW0uTWF5YmUg
+dGhpcyB3aWxsIGNhdXNlIGdyZWF0IGNvbmZ1c2lvbiBmb3Igb3RoZXIgTXlTUUwgdXNlcnMKPiAg
+ICBhbHNvLCBzbyBtYXliZSAgdGhpcyBwcm9ibGVtIHNob3VsZCBiZSBleHBsYWluZWQgaW4gWEZT
+IGRvY3VtZW50LgoKSSBkb24ndCB0aGluayB0aGlzIGlzIHNvbWV0aGluZyB0aGF0IHNob3VsZCBi
+ZSBleHBsYWluZWQgaW4gWEZTIGRvY3VtZW50YXRpb24sCmJ1dCBhdCBmaWxlc3lzdGVtcyBkb2N1
+bWVudGF0aW9uIGluIGdlbmVyYWwuIE9uY2UgeGZzIGZvbGxvd3MgdGhlIFBPU0lYCnJlcXVpcmVt
+ZW50cywgaXQncyBub3QgYSAib3V0IG9mIHN0YW5kYXJkcyIgYmVoYXZpb3IsIGJ1dCBvdGhlcndp
+c2UsIHNvLCBJIGFncmVlCnRoYXQgdGhpcyBzaG91bGQgYmUgc29tZXRoaW5nIGRvY3VtZW50ZWQs
+IGJ1dCBub3QgZXhhY3RseSBpbiBYRlMgaXRzZWxmLgoKPiAgICBCZXN0IHJlZ2FyZHMsCj4gICAg
+eXkKPiAgICAg5Y6f5aeL6YKu5Lu2Cj4gICAg5Y+R5Lu25Lq6OiBEYXZlIENoaW5uZXI8ZGF2aWRA
+ZnJvbW9yYml0LmNvbT4KPiAgICDmlLbku7bkuro6IHl5PHl5QHhzcHJpbmcubmV0Pgo+ICAgIOaK
+hOmAgTogeGZzPHhmc0Bvc3Muc2dpLmNvbT47IEVyaWMgU2FuZGVlbjxzYW5kZWVuQHNhbmRlZW4u
+bmV0PjsKPiAgICBiZm9zdGVyPGJmb3N0ZXJAcmVkaGF0LmNvbT4KPiAgICDlj5HpgIHml7bpl7Q6
+IDIwMTXlubQy5pyIMTPml6Uo5ZGo5LqUKeKAhzA1OjA0Cj4gICAg5Li76aKYOiBSZTogWEZTIGJ1
+ZmZlciBJTyBwZXJmb3JtYW5jZSBpcyB2ZXJ5IHBvb3IKPiBPbiBUaHUsIEZlYiAxMiwgMjAxNSBh
+dCAwMjo1OTo1MlBNICswODAwLCB5eSB3cm90ZToKPiA+IEluIGZ1bmN0aW9ueGZzX2ZpbGVfYWlv
+X3JlYWQsIHdpbGwgcmVxdWVzdFhGU19JT0xPQ0tfU0hBUkVEIGxvY2sKPiA+IGZvciBib3RoIGRp
+cmVjdCBJTyBhbmQgYnVmZmVyZWQgSU86Cj4gCj4gPiBzbyB3cml0ZSB3aWxsIHByZXZlbnQgcmVh
+ZCBpbiBYRlMuCj4gPgo+ID4gSG93ZXZlciwgaW4gZnVuY3Rpb24gZ2VuZXJpY19maWxlX2Fpb19y
+ZWFkIGZvciBleHQzLCB3aWxsIG5vdAo+ID4gbG9ja2lub2RlLWlfbXV0ZXgsIHNvIHdyaXRlIHdp
+bGwgbm90IHByZXZlbnQgcmVhZCBpbiBleHQzLgo+ID4KPiA+IEkgdGhpbmsgdGhpcyBtYXliZSB0
+aGUgcmVhc29uIG9mIHBvb3IgcGVyZm9ybWFuY2UgZm9yIFhGUy4gSSBkbwo+ID4gbm90IGtub3cg
+aWYgdGhpcyBpcyBhIGJ1Zywgb3IgZGVzaWduIGZsYXdzIG9mIFhGUy4KPiAKPiBUaGlzIGlzIGEg
+YnVnIGFuZCBkZXNpZ24gZmxhdyBpbiBleHQzLCBhbmQgbW9zdCBvdGhlciBMaW51eAo+IGZpbGVz
+eXN0ZW1zLiBQb3NpeCBzdGF0ZXMgdGhhdCB3cml0ZSgpIG11c3QgZXhlY3V0ZSBhdG9taWNhbGx5
+IGFuZAo+IHNvIG5vIGNvbmN1cnJlbnQgb3BlcmF0aW9uIHRoYXQgcmVhZHMgb3IgbW9kaWZpZXMg
+ZGF0YSBzaG91bGQgc2hvdWxkCj4gc2VlIGEgcGFydGlhbCB3cml0ZS4gVGhlIGxpbnV4IHBhZ2Ug
+Y2FjaGUgZG9lc24ndCBlbmZvcmNlIHRoaXMgLSBhCj4gcmVhZCB0byB0aGUgc2FtZSByYW5nZSBh
+cyBhIHdyaXRlIGNhbiByZXR1cm4gcGFydGlhbGx5IHdyaXR0ZW4gZGF0YQo+IG9uIHBhZ2UgZ3Jh
+bnVsYXJpdHksIGFzIHJlYWQvd3JpdGUgb25seSBzZXJpYWxpc2Ugb24gcGFnZSBsb2NrcyBpbgo+
+IHRoZSBwYWdlIGNhY2hlLgo+IAo+IFhGUyBpcyB0aGUgb25seSBMaW51eCBmaWxlc3lzdGVtIHRo
+YXQgYWN0dWFsbHkgZm9sbG93cyBQT1NJWAo+IHJlcXVpcmVtZW50cyBoZXJlIC0gdGhlIHNoYXJl
+ZC9leGNsdXNpdmUgbG9ja2luZyBndWFyYW50ZWVzIHRoYXQgYQo+IGJ1ZmZlciB3cml0ZSBjb21w
+bGV0ZXMgd2hvbGx5IGJlZm9yZSBhIHJlYWQgaXMgYWxsb3dlZCB0byBhY2Nlc3MgdGhlCj4gZGF0
+YS4gVGhlcmUgaXMgYSBkb3duIHNpZGUgLSB5b3UgY2FuJ3QgcnVuIGNvbmN1cnJlbnQgYnVmZmVy
+ZWQgcmVhZHMKPiBhbmQgd3JpdGVzIHRvIHRoZSBzYW1lIGZpbGUgLSBpZiB5b3UgbmVlZCB0byBk
+byB0aGF0IHRoZW4gdGhhdCdzCj4gd2hhdCBkaXJlY3QgSU8gaXMgZm9yLCBhbmQgY29oZXJlbmN5
+IGJldHdlZW4gb3ZlcmxhcHBpbmcgcmVhZHMgYW5kCj4gd3JpdGVzIGlzIHRoZW4gdGhlIGFwcGxp
+Y2F0aW9uJ3MgcHJvYmxlbSwgbm90IHRoZSBmaWxlc3lzdGVtLi4uCj4gCj4gTWF5YmUgYXQgc29t
+ZSBwb2ludCBpbiB0aGUgZnV0dXJlIHdlIG1pZ2h0IGFkZHJlc3MgdGhpcyB3aXRoIHJhbmdlZAo+
+IElPIGxvY2tzLCBidXQgdGhlcmUgcmVhbGx5IGFyZW4ndCBtYW55IG11bHRpdGhyZWFkZWQgcHJv
+Z3JhbXMgdGhhdAo+IGhpdCB0aGlzIGlzc3VlLi4uCj4gCj4gQ2hlZXJzLAo+IAo+IERhdmUuCj4g
+LS0KPiBEYXZlIENoaW5uZXIKPiBbMV1kYXZpZEBmcm9tb3JiaXQuY29tCj4gCj4gUmVmZXJlbmNl
+cwo+IAo+ICAgIDEuIG1haWx0bzpkYXZpZEBmcm9tb3JiaXQuY29tCgo+IF9fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCj4geGZzIG1haWxpbmcgbGlzdAo+IHhm
+c0Bvc3Muc2dpLmNvbQo+IGh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwoK
+Ci0tIApDYXJsb3MKCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9t
+YWlsbWFuL2xpc3RpbmZvL3hmcwo=
