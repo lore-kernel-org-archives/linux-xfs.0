@@ -1,29 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 6D6067F55
-	for <xfs@oss.sgi.com>; Thu, 12 Feb 2015 19:54:32 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id E1E8AAC005
-	for <xfs@oss.sgi.com>; Thu, 12 Feb 2015 17:54:28 -0800 (PST)
-Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
-	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	e68pxzPDnN4ss0Yy for <xfs@oss.sgi.com>;
-	Thu, 12 Feb 2015 17:54:25 -0800 (PST)
-Date: Fri, 13 Feb 2015 12:54:22 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 19/20] xfs: implement pNFS export operations
-Message-ID: <20150213015422.GE12722@dastard>
-References: <20150205004758.GO4251@dastard> <20150205070858.GA593@lst.de>
-	<20150205135756.GA6386@lst.de> <20150206222047.GM12722@dastard>
-	<20150206224258.GJ29783@fieldses.org>
-	<20150208133435.GA27081@lst.de>
-	<20150208090942.51e99687@tlielax.poochiereds.net>
-	<20150209201154.GA27746@fieldses.org>
-	<20150210000423.GY12722@dastard>
-	<20150213011130.GA6808@fieldses.org>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20150213011130.GA6808@fieldses.org>
+	by oss.sgi.com (Postfix) with ESMTP id EF0817F55
+	for <xfs@oss.sgi.com>; Thu, 12 Feb 2015 20:21:02 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 8D0D9AC001
+	for <xfs@oss.sgi.com>; Thu, 12 Feb 2015 18:20:59 -0800 (PST)
+Received: from smtpbg303.qq.com (smtpbg303.qq.com [184.105.206.26]) by
+	cuda.sgi.com with ESMTP id S5NGHgKdh2yiRmpV (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 12 Feb 2015 18:20:57 -0800 (PST)
+From: "=?utf-8?B?eXk=?=" <yy@xspring.net>
+Subject: Re: XFS buffer IO performance is very poor
+Mime-Version: 1.0
+Date: Fri, 13 Feb 2015 10:20:44 +0800
+Message-ID: <tencent_CE304F969859276F366B2DA3@qq.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,77 +22,151 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============6502150698347641132=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "J. Bruce Fields" <bfields@fieldses.org>
-Cc: linux-nfs@vger.kernel.org, xfs@oss.sgi.com, Jeff Layton <jlayton@primarydata.com>, linux-fsdevel@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Jeff Layton <jeff.layton@primarydata.com>
+To: =?utf-8?B?RGF2ZSBDaGlubmVy?= <david@fromorbit.com>
+Cc: =?utf-8?B?YmZvc3Rlcg==?= <bfoster@redhat.com>, =?utf-8?B?RXJpYyBTYW5kZWVu?= <sandeen@sandeen.net>, =?utf-8?B?eGZz?= <xfs@oss.sgi.com>
 
-On Thu, Feb 12, 2015 at 08:11:30PM -0500, J. Bruce Fields wrote:
-> On Tue, Feb 10, 2015 at 11:04:23AM +1100, Dave Chinner wrote:
-> > On Mon, Feb 09, 2015 at 03:11:54PM -0500, J. Bruce Fields wrote:
-> > > On Sun, Feb 08, 2015 at 09:09:42AM -0500, Jeff Layton wrote:
-> > > > On Sun, 8 Feb 2015 14:34:35 +0100
-> > > > Christoph Hellwig <hch@lst.de> wrote:
-> > > > 
-> > > > > On Fri, Feb 06, 2015 at 05:42:58PM -0500, J. Bruce Fields wrote:
-> > > > > > You'd basically just be pulling my tree (Christoph's is just my nfsd
-> > > > > > tree with his patches on top, and I've been testing with exactly that
-> > > > > > locally, just putting off pushing it out till we decide this.)
-> > > > > > 
-> > > > > > So anyway, fine with me if you want to just pull that into the xfs tree.
-> > > > > > Mine's ready whenever, so if I send my pull pretty soon after the merge
-> > > > > > window and you send it a little later then we still keep the property
-> > > > > > that Linus's merge still has a diffstat only in our respective areas.
-> > > > > > 
-> > > > > > (OK, it's a little more complicated because I've got the same
-> > > > > > arrangement with jlayton, so the order is jlayton's lock pull, then my
-> > > > > > nfsd pull, then your xfs pull.  Is this getting too complicated?
-> > > > > > jlayton and I are both ready to so and I think it'd work.)
-> > > > > > 
-> > > > > > I'm also fine with duplicating those few patches, or whatever.
-> > > > > 
-> > > > > Maybe the better idea is to pull the xfs tree in the nfsd tree, but
-> > > > > that would require Dave sending an early pull request so that the
-> > > > > nfsd pull doesn't get delayed.
-> > > > > 
-> > > > > Or we just defer the pnfsd merge.  While I tried to get it in in time
-> > > > > for 3.20 all the delays during review mean we're really late no and should
-> > > > > punt it to 3.21.
-> > > > 
-> > > > FWIW, I plan to send a pull request for the locking changes as soon as
-> > > > the merge window opens. Hopefully that won't be an issue for long...
-> > > 
-> > > This includes Christoph's branch (all but the final xfs commits):
-> > > 
-> > > 	git://linux-nfs.org/~bfields/linux.git for-3.20
-> > > 
-> > > That's what I intend to submit.  Hope that's OK.  Then it's up to Dave
-> > > whether he wants to pull that in and include the xfs patches.
-> > 
-> > I'm about to send a pull request to Linus for the current XFS tree.
-> > Once that is merged, I'll pull in the remaining xfs-pnfs patches
-> > and send another pull request to Linus after the NFS tree is merged.
-> 
-> Sounds good, thanks.  The nfsd tree's merged now so it should be good to
-> go if you haven't found any show-stoppers.
+This is a multi-part message in MIME format.
 
-Thanks Bruce. I might have to build a merged tree because one of the
-changes from the review modified a header file introduced in the NFS
-tree.
+--===============6502150698347641132==
+Content-Type: multipart/alternative;
+	boundary="----=_NextPart_54DD5F7C_7DC6ECA0_11A7F16B"
+Content-Transfer-Encoding: 8Bit
 
-I'll see how it goes, and see if I can avoid doing something that
-will make Linus yell at me :P
+This is a multi-part message in MIME format.
 
-Cheers,
+------=_NextPart_54DD5F7C_7DC6ECA0_11A7F16B
+Content-Type: text/plain;
+	charset="utf-8"
+Content-Transfer-Encoding: base64
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+RGF2ZSwKVGhhbmsgeW91IHZlcnkgbXVjaCBmb3IgeW91ciBleHBsYW5hdGlvbi4KCgpJIGhp
+dCB0aGlzIGlzc3VlIHdoZW4gcnVuIE15U1FMIG9uIFhGUy4gRGlyZWN0IElPIGlzIHZlcnkg
+aW1wb3J0IGZvciBNeVNRTCBvbiBYRlMsYnV0IEkgY2Fu4oCZdCBmb3VuZCBhbnkgZG9jdW1l
+bnQgZXhwbGFuYXRpb24gdGhpcyBwcm9ibGVtLk1heWJlIHRoaXMgd2lsbCBjYXVzZSBncmVh
+dCBjb25mdXNpb24gZm9yIG90aGVyIE15U1FMIHVzZXJzIGFsc28sIHNvIG1heWJlIHRoaXMg
+cHJvYmxlbSBzaG91bGQgYmUgZXhwbGFpbmVkIGluIFhGUyBkb2N1bWVudC4KCgpCZXN0IHJl
+Z2FyZHMsCnl5CgoK5Y6f5aeL6YKu5Lu2CuWPkeS7tuS6ujpEYXZlIENoaW5uZXJkYXZpZEBm
+cm9tb3JiaXQuY29tCuaUtuS7tuS6ujp5eXl5QHhzcHJpbmcubmV0CuaKhOmAgTp4ZnN4ZnNA
+b3NzLnNnaS5jb207IEVyaWMgU2FuZGVlbnNhbmRlZW5Ac2FuZGVlbi5uZXQ7IGJmb3N0ZXJi
+Zm9zdGVyQHJlZGhhdC5jb20K5Y+R6YCB5pe26Ze0OjIwMTXlubQy5pyIMTPml6Uo5ZGo5LqU
+KeKAhzA1OjA0CuS4u+mimDpSZTogWEZTIGJ1ZmZlciBJTyBwZXJmb3JtYW5jZSBpcyB2ZXJ5
+IHBvb3IKCgpPbiBUaHUsIEZlYiAxMiwgMjAxNSBhdCAwMjo1OTo1MlBNICswODAwLCB5eSB3
+cm90ZTogIEluIGZ1bmN0aW9ueGZzX2ZpbGVfYWlvX3JlYWQsIHdpbGwgcmVxdWVzdFhGU19J
+T0xPQ0tfU0hBUkVEIGxvY2sgIGZvciBib3RoIGRpcmVjdCBJTyBhbmQgYnVmZmVyZWQgSU86
+ICBzbyB3cml0ZSB3aWxsIHByZXZlbnQgcmVhZCBpbiBYRlMuICAgSG93ZXZlciwgaW4gZnVu
+Y3Rpb24gZ2VuZXJpY19maWxlX2Fpb19yZWFkIGZvciBleHQzLCB3aWxsIG5vdCAgbG9ja2lu
+b2RlLWlfbXV0ZXgsIHNvIHdyaXRlIHdpbGwgbm90IHByZXZlbnQgcmVhZCBpbiBleHQzLiAg
+IEkgdGhpbmsgdGhpcyBtYXliZSB0aGUgcmVhc29uIG9mIHBvb3IgcGVyZm9ybWFuY2UgZm9y
+IFhGUy4gSSBkbyAgbm90IGtub3cgaWYgdGhpcyBpcyBhIGJ1Zywgb3IgZGVzaWduIGZsYXdz
+IG9mIFhGUy4gVGhpcyBpcyBhIGJ1ZyBhbmQgZGVzaWduIGZsYXcgaW4gZXh0MywgYW5kIG1v
+c3Qgb3RoZXIgTGludXggZmlsZXN5c3RlbXMuIFBvc2l4IHN0YXRlcyB0aGF0IHdyaXRlKCkg
+bXVzdCBleGVjdXRlIGF0b21pY2FsbHkgYW5kIHNvIG5vIGNvbmN1cnJlbnQgb3BlcmF0aW9u
+IHRoYXQgcmVhZHMgb3IgbW9kaWZpZXMgZGF0YSBzaG91bGQgc2hvdWxkIHNlZSBhIHBhcnRp
+YWwgd3JpdGUuIFRoZSBsaW51eCBwYWdlIGNhY2hlIGRvZXNuJ3QgZW5mb3JjZSB0aGlzIC0g
+YSByZWFkIHRvIHRoZSBzYW1lIHJhbmdlIGFzIGEgd3JpdGUgY2FuIHJldHVybiBwYXJ0aWFs
+bHkgd3JpdHRlbiBkYXRhIG9uIHBhZ2UgZ3JhbnVsYXJpdHksIGFzIHJlYWQvd3JpdGUgb25s
+eSBzZXJpYWxpc2Ugb24gcGFnZSBsb2NrcyBpbiB0aGUgcGFnZSBjYWNoZS4gWEZTIGlzIHRo
+ZSBvbmx5IExpbnV4IGZpbGVzeXN0ZW0gdGhhdCBhY3R1YWxseSBmb2xsb3dzIFBPU0lYIHJl
+cXVpcmVtZW50cyBoZXJlIC0gdGhlIHNoYXJlZC9leGNsdXNpdmUgbG9ja2luZyBndWFyYW50
+ZWVzIHRoYXQgYSBidWZmZXIgd3JpdGUgY29tcGxldGVzIHdob2xseSBiZWZvcmUgYSByZWFk
+IGlzIGFsbG93ZWQgdG8gYWNjZXNzIHRoZSBkYXRhLiBUaGVyZSBpcyBhIGRvd24gc2lkZSAt
+IHlvdSBjYW4ndCBydW4gY29uY3VycmVudCBidWZmZXJlZCByZWFkcyBhbmQgd3JpdGVzIHRv
+IHRoZSBzYW1lIGZpbGUgLSBpZiB5b3UgbmVlZCB0byBkbyB0aGF0IHRoZW4gdGhhdCdzIHdo
+YXQgZGlyZWN0IElPIGlzIGZvciwgYW5kIGNvaGVyZW5jeSBiZXR3ZWVuIG92ZXJsYXBwaW5n
+IHJlYWRzIGFuZCB3cml0ZXMgaXMgdGhlbiB0aGUgYXBwbGljYXRpb24ncyBwcm9ibGVtLCBu
+b3QgdGhlIGZpbGVzeXN0ZW0uLi4gTWF5YmUgYXQgc29tZSBwb2ludCBpbiB0aGUgZnV0dXJl
+IHdlIG1pZ2h0IGFkZHJlc3MgdGhpcyB3aXRoIHJhbmdlZCBJTyBsb2NrcywgYnV0IHRoZXJl
+IHJlYWxseSBhcmVuJ3QgbWFueSBtdWx0aXRocmVhZGVkIHByb2dyYW1zIHRoYXQgaGl0IHRo
+aXMgaXNzdWUuLi4gQ2hlZXJzLCBEYXZlLiAtLSBEYXZlIENoaW5uZXIgZGF2aWRAZnJvbW9y
+Yml0LmNvbQ==
+
+------=_NextPart_54DD5F7C_7DC6ECA0_11A7F16B
+Content-Type: text/html;
+	charset="utf-8"
+Content-Transfer-Encoding: base64
+
+PGRpdiBzdHlsZT0iZm9udDoxNHB4LzEuNSAnTHVjaWRhIEdyYW5kZScsICflvq7ova/pm4Xp
+u5EnO2NvbG9yOiMzMzM7Ij48cCBzdHlsZT0iZm9udDoxNHB4LzEuNSAnTHVjaWRhIEdyYW5k
+ZSc7bWFyZ2luOjA7Ij5EYXZlLDwvcD48cCBzdHlsZT0iZm9udDoxNHB4LzEuNSAnTHVjaWRh
+IEdyYW5kZSc7bWFyZ2luOjA7Ij5UaGFuayB5b3UgdmVyeSBtdWNoIGZvciB5b3VyIGV4cGxh
+bmF0aW9uLjwvcD48cCBzdHlsZT0iZm9udDoxNHB4LzEuNSAnTHVjaWRhIEdyYW5kZSc7bWFy
+Z2luOjA7Ij48YnI+PC9wPjxwIHN0eWxlPSJmb250OjE0cHgvMS41ICdMdWNpZGEgR3JhbmRl
+JzttYXJnaW46MDsiPkkgaGl0IHRoaXMgaXNzdWUgd2hlbiBydW4gTXlTUUwgb24gWEZTLiBE
+aXJlY3QgSU8gaXMgdmVyeSBpbXBvcnQgZm9yIE15U1FMIG9uIFhGUyxidXQgSSBjYW7igJl0
+IGZvdW5kIGFueSBkb2N1bWVudCBleHBsYW5hdGlvbiB0aGlzIHByb2JsZW0uTWF5YmUgdGhp
+cyB3aWxsIGNhdXNlIGdyZWF0IGNvbmZ1c2lvbiBmb3Igb3RoZXIgTXlTUUwgdXNlcnMgYWxz
+bywgc28gbWF5YmUgJm5ic3A7dGhpcyBwcm9ibGVtIHNob3VsZCBiZSBleHBsYWluZWQgaW4g
+WEZTIGRvY3VtZW50LjwvcD48YnI+PGRpdj48ZGl2IHN0eWxlPSJmb250OiAxNHB4LzEuNSAn
+THVjaWRhIEdyYW5kZSc7Ij5CZXN0IHJlZ2FyZHMsPGRpdj55eTwvZGl2PjwvZGl2PjwvZGl2
+PjxzcGFuIHN0eWxlPSJmb250OiAxNHB4LzEuNSAnTHVjaWRhIEdyYW5kZSc7Y29sb3I6IzMz
+MzsiPjxicj48L3NwYW4+PGRpdiBjbGFzcz0iZm94bWFpbF9ibG9ja3F1b3RlX2Zyb21oZXJl
+X2VsZW1lbnQiIHN0eWxlPSJmb250OiAxMnB4LzEuNSAnTHVjaWRhIEdyYW5kZSc7cGFkZGlu
+ZzoycHggMCAycHggMDsiPjxzcGFuIHN0eWxlPSJjb2xvcjojMzMzO3RleHQtZGVjb3JhdGlv
+bjpsaW5lLXRocm91Z2g7d2hpdGUtc3BhY2U6cHJlLXdyYXA7Ij4gICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgPC9zcGFuPiZuYnNwO+WOn+Wni+mCruS7tiZuYnNwOzxzcGFuIHN0eWxl
+PSJjb2xvcjojMzMzO3RleHQtZGVjb3JhdGlvbjpsaW5lLXRocm91Z2g7d2hpdGUtc3BhY2U6
+cHJlLXdyYXA7Ij4gICAgICAgICAgICAgICAgICAgICAgICAgICAgPC9zcGFuPjwvZGl2Pjxk
+aXYgc3R5bGU9ImZvbnQ6IDEycHgvMS41ICdMdWNpZGEgR3JhbmRlJztiYWNrZ3JvdW5kOiNl
+ZmVmZWY7Y29sb3I6IzY2NjY2NjtwYWRkaW5nOjhweDsiPjxkaXY+PGIgc3R5bGU9ImNvbG9y
+OiM5OTk7Ij7lj5Hku7bkuro6PC9iPiZuYnNwO0RhdmUgQ2hpbm5lciZsdDtkYXZpZEBmcm9t
+b3JiaXQuY29tJmd0OzwvZGl2PjxkaXY+PGIgc3R5bGU9ImNvbG9yOiM5OTk7Ij7mlLbku7bk
+uro6PC9iPiZuYnNwO3l5Jmx0O3l5QHhzcHJpbmcubmV0Jmd0OzwvZGl2PjxkaXY+PGIgc3R5
+bGU9ImNvbG9yOiM5OTk7Ij7mioTpgIE6PC9iPiZuYnNwO3hmcyZsdDt4ZnNAb3NzLnNnaS5j
+b20mZ3Q7OyBFcmljIFNhbmRlZW4mbHQ7c2FuZGVlbkBzYW5kZWVuLm5ldCZndDs7IGJmb3N0
+ZXImbHQ7YmZvc3RlckByZWRoYXQuY29tJmd0OzwvZGl2PjxkaXY+PGIgc3R5bGU9ImNvbG9y
+OiM5OTk7Ij7lj5HpgIHml7bpl7Q6PC9iPiZuYnNwOzIwMTXlubQy5pyIMTPml6Uo5ZGo5LqU
+KeKAhzA1OjA0PC9kaXY+PGRpdj48YiBzdHlsZT0iY29sb3I6Izk5OTsiPuS4u+mimDo8L2I+
+Jm5ic3A7UmU6IFhGUyBidWZmZXIgSU8gcGVyZm9ybWFuY2UgaXMgdmVyeSBwb29yPC9kaXY+
+PC9kaXY+PGJyPjxkaXYgY2xhc3M9Im1haWxfcXVvdGVfNDdCMDIyNDM3OTdGNDNEREI1QzND
+RERERjIyN0JENzciIHN0eWxlPSJmb250OiAxNHB4LzEuNSAnTHVjaWRhIEdyYW5kZSc7Y29s
+b3I6IzMzMzsiPjxwcmUgc3R5bGU9IndoaXRlLXNwYWNlOnByZS13cmFwOyI+T24gVGh1LCBG
+ZWIgMTIsIDIwMTUgYXQgMDI6NTk6NTJQTSArMDgwMCwgeXkgd3JvdGU6CiZndDsgSW4gZnVu
+Y3Rpb254ZnNfZmlsZV9haW9fcmVhZCwgd2lsbCByZXF1ZXN0WEZTX0lPTE9DS19TSEFSRUQg
+bG9jawomZ3Q7IGZvciBib3RoIGRpcmVjdCBJTyBhbmQgYnVmZmVyZWQgSU86CgomZ3Q7IHNv
+IHdyaXRlIHdpbGwgcHJldmVudCByZWFkIGluIFhGUy4KJmd0OyAKJmd0OyBIb3dldmVyLCBp
+biBmdW5jdGlvbiBnZW5lcmljX2ZpbGVfYWlvX3JlYWQgZm9yIGV4dDMsIHdpbGwgbm90CiZn
+dDsgbG9ja2lub2RlLWlfbXV0ZXgsIHNvIHdyaXRlIHdpbGwgbm90IHByZXZlbnQgcmVhZCBp
+biBleHQzLgomZ3Q7IAomZ3Q7IEkgdGhpbmsgdGhpcyBtYXliZSB0aGUgcmVhc29uIG9mIHBv
+b3IgcGVyZm9ybWFuY2UgZm9yIFhGUy4gSSBkbwomZ3Q7IG5vdCBrbm93IGlmIHRoaXMgaXMg
+YSBidWcsIG9yIGRlc2lnbiBmbGF3cyBvZiBYRlMuCgpUaGlzIGlzIGEgYnVnIGFuZCBkZXNp
+Z24gZmxhdyBpbiBleHQzLCBhbmQgbW9zdCBvdGhlciBMaW51eApmaWxlc3lzdGVtcy4gUG9z
+aXggc3RhdGVzIHRoYXQgd3JpdGUoKSBtdXN0IGV4ZWN1dGUgYXRvbWljYWxseSBhbmQKc28g
+bm8gY29uY3VycmVudCBvcGVyYXRpb24gdGhhdCByZWFkcyBvciBtb2RpZmllcyBkYXRhIHNo
+b3VsZCBzaG91bGQKc2VlIGEgcGFydGlhbCB3cml0ZS4gVGhlIGxpbnV4IHBhZ2UgY2FjaGUg
+ZG9lc24ndCBlbmZvcmNlIHRoaXMgLSBhCnJlYWQgdG8gdGhlIHNhbWUgcmFuZ2UgYXMgYSB3
+cml0ZSBjYW4gcmV0dXJuIHBhcnRpYWxseSB3cml0dGVuIGRhdGEKb24gcGFnZSBncmFudWxh
+cml0eSwgYXMgcmVhZC93cml0ZSBvbmx5IHNlcmlhbGlzZSBvbiBwYWdlIGxvY2tzIGluCnRo
+ZSBwYWdlIGNhY2hlLgoKWEZTIGlzIHRoZSBvbmx5IExpbnV4IGZpbGVzeXN0ZW0gdGhhdCBh
+Y3R1YWxseSBmb2xsb3dzIFBPU0lYCnJlcXVpcmVtZW50cyBoZXJlIC0gdGhlIHNoYXJlZC9l
+eGNsdXNpdmUgbG9ja2luZyBndWFyYW50ZWVzIHRoYXQgYQpidWZmZXIgd3JpdGUgY29tcGxl
+dGVzIHdob2xseSBiZWZvcmUgYSByZWFkIGlzIGFsbG93ZWQgdG8gYWNjZXNzIHRoZQpkYXRh
+LiBUaGVyZSBpcyBhIGRvd24gc2lkZSAtIHlvdSBjYW4ndCBydW4gY29uY3VycmVudCBidWZm
+ZXJlZCByZWFkcwphbmQgd3JpdGVzIHRvIHRoZSBzYW1lIGZpbGUgLSBpZiB5b3UgbmVlZCB0
+byBkbyB0aGF0IHRoZW4gdGhhdCdzCndoYXQgZGlyZWN0IElPIGlzIGZvciwgYW5kIGNvaGVy
+ZW5jeSBiZXR3ZWVuIG92ZXJsYXBwaW5nIHJlYWRzIGFuZAp3cml0ZXMgaXMgdGhlbiB0aGUg
+YXBwbGljYXRpb24ncyBwcm9ibGVtLCBub3QgdGhlIGZpbGVzeXN0ZW0uLi4KCk1heWJlIGF0
+IHNvbWUgcG9pbnQgaW4gdGhlIGZ1dHVyZSB3ZSBtaWdodCBhZGRyZXNzIHRoaXMgd2l0aCBy
+YW5nZWQKSU8gbG9ja3MsIGJ1dCB0aGVyZSByZWFsbHkgYXJlbid0IG1hbnkgbXVsdGl0aHJl
+YWRlZCBwcm9ncmFtcyB0aGF0CmhpdCB0aGlzIGlzc3VlLi4uCgpDaGVlcnMsCgpEYXZlLgot
+LSAKRGF2ZSBDaGlubmVyCjxhIGhyZWY9Im1haWx0bzpkYXZpZEBmcm9tb3JiaXQuY29tIiB0
+aXRsZT0ibWFpbHRvOmRhdmlkQGZyb21vcmJpdC5jb20iPmRhdmlkQGZyb21vcmJpdC5jb208
+L2E+CjwvcHJlPjwvZGl2PjwvZGl2Pg==
+
+------=_NextPart_54DD5F7C_7DC6ECA0_11A7F16B--
+
+
+--===============6502150698347641132==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============6502150698347641132==--
