@@ -1,19 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id EF0817F55
-	for <xfs@oss.sgi.com>; Thu, 12 Feb 2015 20:21:02 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 8D0D9AC001
-	for <xfs@oss.sgi.com>; Thu, 12 Feb 2015 18:20:59 -0800 (PST)
-Received: from smtpbg303.qq.com (smtpbg303.qq.com [184.105.206.26]) by
-	cuda.sgi.com with ESMTP id S5NGHgKdh2yiRmpV (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 12 Feb 2015 18:20:57 -0800 (PST)
-From: "=?utf-8?B?eXk=?=" <yy@xspring.net>
-Subject: Re: XFS buffer IO performance is very poor
-Mime-Version: 1.0
-Date: Fri, 13 Feb 2015 10:20:44 +0800
-Message-ID: <tencent_CE304F969859276F366B2DA3@qq.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id EED1B7F55
+	for <xfs@oss.sgi.com>; Thu, 12 Feb 2015 20:38:21 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id CCEC78F8054
+	for <xfs@oss.sgi.com>; Thu, 12 Feb 2015 18:38:21 -0800 (PST)
+Received: from ozlabs.org (ozlabs.org [103.22.144.67]) by cuda.sgi.com with
+	ESMTP id FJbGhGcozgGWWnCw (version=TLSv1 cipher=AES256-SHA
+	bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 12 Feb 2015 18:38:19 -0800 (PST)
+Date: Fri, 13 Feb 2015 13:38:11 +1100
+From: Stephen Rothwell <sfr@canb.auug.org.au>
+Subject: Re: [PATCH 19/20] xfs: implement pNFS export operations
+Message-ID: <20150213133811.5c3b9f49@canb.auug.org.au>
+In-Reply-To: <20150213015422.GE12722@dastard>
+References: <20150205004758.GO4251@dastard> <20150205070858.GA593@lst.de>
+	<20150205135756.GA6386@lst.de> <20150206222047.GM12722@dastard>
+	<20150206224258.GJ29783@fieldses.org>
+	<20150208133435.GA27081@lst.de>
+	<20150208090942.51e99687@tlielax.poochiereds.net>
+	<20150209201154.GA27746@fieldses.org>
+	<20150210000423.GY12722@dastard>
+	<20150213011130.GA6808@fieldses.org>
+	<20150213015422.GE12722@dastard>
+MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,143 +32,68 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============6502150698347641132=="
+Content-Type: multipart/mixed; boundary="===============5229908413125308783=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: =?utf-8?B?RGF2ZSBDaGlubmVy?= <david@fromorbit.com>
-Cc: =?utf-8?B?YmZvc3Rlcg==?= <bfoster@redhat.com>, =?utf-8?B?RXJpYyBTYW5kZWVu?= <sandeen@sandeen.net>, =?utf-8?B?eGZz?= <xfs@oss.sgi.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-nfs@vger.kernel.org, xfs@oss.sgi.com, "J. Bruce Fields" <bfields@fieldses.org>, Jeff Layton <jlayton@primarydata.com>, linux-fsdevel@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Jeff Layton <jeff.layton@primarydata.com>
 
-This is a multi-part message in MIME format.
+--===============5229908413125308783==
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ boundary="Sig_/72iLWnDTYf9Pc=xJPr1Q12+"; protocol="application/pgp-signature"
 
---===============6502150698347641132==
-Content-Type: multipart/alternative;
-	boundary="----=_NextPart_54DD5F7C_7DC6ECA0_11A7F16B"
-Content-Transfer-Encoding: 8Bit
+--Sig_/72iLWnDTYf9Pc=xJPr1Q12+
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-This is a multi-part message in MIME format.
+Hi Dave,
 
-------=_NextPart_54DD5F7C_7DC6ECA0_11A7F16B
-Content-Type: text/plain;
-	charset="utf-8"
-Content-Transfer-Encoding: base64
+On Fri, 13 Feb 2015 12:54:22 +1100 Dave Chinner <david@fromorbit.com> wrote:
+>
+> Thanks Bruce. I might have to build a merged tree because one of the
+> changes from the review modified a header file introduced in the NFS
+> tree.
+>=20
+> I'll see how it goes, and see if I can avoid doing something that
+> will make Linus yell at me :P
 
-RGF2ZSwKVGhhbmsgeW91IHZlcnkgbXVjaCBmb3IgeW91ciBleHBsYW5hdGlvbi4KCgpJIGhp
-dCB0aGlzIGlzc3VlIHdoZW4gcnVuIE15U1FMIG9uIFhGUy4gRGlyZWN0IElPIGlzIHZlcnkg
-aW1wb3J0IGZvciBNeVNRTCBvbiBYRlMsYnV0IEkgY2Fu4oCZdCBmb3VuZCBhbnkgZG9jdW1l
-bnQgZXhwbGFuYXRpb24gdGhpcyBwcm9ibGVtLk1heWJlIHRoaXMgd2lsbCBjYXVzZSBncmVh
-dCBjb25mdXNpb24gZm9yIG90aGVyIE15U1FMIHVzZXJzIGFsc28sIHNvIG1heWJlIHRoaXMg
-cHJvYmxlbSBzaG91bGQgYmUgZXhwbGFpbmVkIGluIFhGUyBkb2N1bWVudC4KCgpCZXN0IHJl
-Z2FyZHMsCnl5CgoK5Y6f5aeL6YKu5Lu2CuWPkeS7tuS6ujpEYXZlIENoaW5uZXJkYXZpZEBm
-cm9tb3JiaXQuY29tCuaUtuS7tuS6ujp5eXl5QHhzcHJpbmcubmV0CuaKhOmAgTp4ZnN4ZnNA
-b3NzLnNnaS5jb207IEVyaWMgU2FuZGVlbnNhbmRlZW5Ac2FuZGVlbi5uZXQ7IGJmb3N0ZXJi
-Zm9zdGVyQHJlZGhhdC5jb20K5Y+R6YCB5pe26Ze0OjIwMTXlubQy5pyIMTPml6Uo5ZGo5LqU
-KeKAhzA1OjA0CuS4u+mimDpSZTogWEZTIGJ1ZmZlciBJTyBwZXJmb3JtYW5jZSBpcyB2ZXJ5
-IHBvb3IKCgpPbiBUaHUsIEZlYiAxMiwgMjAxNSBhdCAwMjo1OTo1MlBNICswODAwLCB5eSB3
-cm90ZTogIEluIGZ1bmN0aW9ueGZzX2ZpbGVfYWlvX3JlYWQsIHdpbGwgcmVxdWVzdFhGU19J
-T0xPQ0tfU0hBUkVEIGxvY2sgIGZvciBib3RoIGRpcmVjdCBJTyBhbmQgYnVmZmVyZWQgSU86
-ICBzbyB3cml0ZSB3aWxsIHByZXZlbnQgcmVhZCBpbiBYRlMuICAgSG93ZXZlciwgaW4gZnVu
-Y3Rpb24gZ2VuZXJpY19maWxlX2Fpb19yZWFkIGZvciBleHQzLCB3aWxsIG5vdCAgbG9ja2lu
-b2RlLWlfbXV0ZXgsIHNvIHdyaXRlIHdpbGwgbm90IHByZXZlbnQgcmVhZCBpbiBleHQzLiAg
-IEkgdGhpbmsgdGhpcyBtYXliZSB0aGUgcmVhc29uIG9mIHBvb3IgcGVyZm9ybWFuY2UgZm9y
-IFhGUy4gSSBkbyAgbm90IGtub3cgaWYgdGhpcyBpcyBhIGJ1Zywgb3IgZGVzaWduIGZsYXdz
-IG9mIFhGUy4gVGhpcyBpcyBhIGJ1ZyBhbmQgZGVzaWduIGZsYXcgaW4gZXh0MywgYW5kIG1v
-c3Qgb3RoZXIgTGludXggZmlsZXN5c3RlbXMuIFBvc2l4IHN0YXRlcyB0aGF0IHdyaXRlKCkg
-bXVzdCBleGVjdXRlIGF0b21pY2FsbHkgYW5kIHNvIG5vIGNvbmN1cnJlbnQgb3BlcmF0aW9u
-IHRoYXQgcmVhZHMgb3IgbW9kaWZpZXMgZGF0YSBzaG91bGQgc2hvdWxkIHNlZSBhIHBhcnRp
-YWwgd3JpdGUuIFRoZSBsaW51eCBwYWdlIGNhY2hlIGRvZXNuJ3QgZW5mb3JjZSB0aGlzIC0g
-YSByZWFkIHRvIHRoZSBzYW1lIHJhbmdlIGFzIGEgd3JpdGUgY2FuIHJldHVybiBwYXJ0aWFs
-bHkgd3JpdHRlbiBkYXRhIG9uIHBhZ2UgZ3JhbnVsYXJpdHksIGFzIHJlYWQvd3JpdGUgb25s
-eSBzZXJpYWxpc2Ugb24gcGFnZSBsb2NrcyBpbiB0aGUgcGFnZSBjYWNoZS4gWEZTIGlzIHRo
-ZSBvbmx5IExpbnV4IGZpbGVzeXN0ZW0gdGhhdCBhY3R1YWxseSBmb2xsb3dzIFBPU0lYIHJl
-cXVpcmVtZW50cyBoZXJlIC0gdGhlIHNoYXJlZC9leGNsdXNpdmUgbG9ja2luZyBndWFyYW50
-ZWVzIHRoYXQgYSBidWZmZXIgd3JpdGUgY29tcGxldGVzIHdob2xseSBiZWZvcmUgYSByZWFk
-IGlzIGFsbG93ZWQgdG8gYWNjZXNzIHRoZSBkYXRhLiBUaGVyZSBpcyBhIGRvd24gc2lkZSAt
-IHlvdSBjYW4ndCBydW4gY29uY3VycmVudCBidWZmZXJlZCByZWFkcyBhbmQgd3JpdGVzIHRv
-IHRoZSBzYW1lIGZpbGUgLSBpZiB5b3UgbmVlZCB0byBkbyB0aGF0IHRoZW4gdGhhdCdzIHdo
-YXQgZGlyZWN0IElPIGlzIGZvciwgYW5kIGNvaGVyZW5jeSBiZXR3ZWVuIG92ZXJsYXBwaW5n
-IHJlYWRzIGFuZCB3cml0ZXMgaXMgdGhlbiB0aGUgYXBwbGljYXRpb24ncyBwcm9ibGVtLCBu
-b3QgdGhlIGZpbGVzeXN0ZW0uLi4gTWF5YmUgYXQgc29tZSBwb2ludCBpbiB0aGUgZnV0dXJl
-IHdlIG1pZ2h0IGFkZHJlc3MgdGhpcyB3aXRoIHJhbmdlZCBJTyBsb2NrcywgYnV0IHRoZXJl
-IHJlYWxseSBhcmVuJ3QgbWFueSBtdWx0aXRocmVhZGVkIHByb2dyYW1zIHRoYXQgaGl0IHRo
-aXMgaXNzdWUuLi4gQ2hlZXJzLCBEYXZlLiAtLSBEYXZlIENoaW5uZXIgZGF2aWRAZnJvbW9y
-Yml0LmNvbQ==
+If its a syntactic conflict with an obvious resolution, just leave it
+(or maybe mention it in the pull request).  It gives him something to
+do so he feels useful. :-)
 
-------=_NextPart_54DD5F7C_7DC6ECA0_11A7F16B
-Content-Type: text/html;
-	charset="utf-8"
-Content-Transfer-Encoding: base64
+/me notes that I did not see a conflict while merging the xfs tree in
+linux-next today ...
 
-PGRpdiBzdHlsZT0iZm9udDoxNHB4LzEuNSAnTHVjaWRhIEdyYW5kZScsICflvq7ova/pm4Xp
-u5EnO2NvbG9yOiMzMzM7Ij48cCBzdHlsZT0iZm9udDoxNHB4LzEuNSAnTHVjaWRhIEdyYW5k
-ZSc7bWFyZ2luOjA7Ij5EYXZlLDwvcD48cCBzdHlsZT0iZm9udDoxNHB4LzEuNSAnTHVjaWRh
-IEdyYW5kZSc7bWFyZ2luOjA7Ij5UaGFuayB5b3UgdmVyeSBtdWNoIGZvciB5b3VyIGV4cGxh
-bmF0aW9uLjwvcD48cCBzdHlsZT0iZm9udDoxNHB4LzEuNSAnTHVjaWRhIEdyYW5kZSc7bWFy
-Z2luOjA7Ij48YnI+PC9wPjxwIHN0eWxlPSJmb250OjE0cHgvMS41ICdMdWNpZGEgR3JhbmRl
-JzttYXJnaW46MDsiPkkgaGl0IHRoaXMgaXNzdWUgd2hlbiBydW4gTXlTUUwgb24gWEZTLiBE
-aXJlY3QgSU8gaXMgdmVyeSBpbXBvcnQgZm9yIE15U1FMIG9uIFhGUyxidXQgSSBjYW7igJl0
-IGZvdW5kIGFueSBkb2N1bWVudCBleHBsYW5hdGlvbiB0aGlzIHByb2JsZW0uTWF5YmUgdGhp
-cyB3aWxsIGNhdXNlIGdyZWF0IGNvbmZ1c2lvbiBmb3Igb3RoZXIgTXlTUUwgdXNlcnMgYWxz
-bywgc28gbWF5YmUgJm5ic3A7dGhpcyBwcm9ibGVtIHNob3VsZCBiZSBleHBsYWluZWQgaW4g
-WEZTIGRvY3VtZW50LjwvcD48YnI+PGRpdj48ZGl2IHN0eWxlPSJmb250OiAxNHB4LzEuNSAn
-THVjaWRhIEdyYW5kZSc7Ij5CZXN0IHJlZ2FyZHMsPGRpdj55eTwvZGl2PjwvZGl2PjwvZGl2
-PjxzcGFuIHN0eWxlPSJmb250OiAxNHB4LzEuNSAnTHVjaWRhIEdyYW5kZSc7Y29sb3I6IzMz
-MzsiPjxicj48L3NwYW4+PGRpdiBjbGFzcz0iZm94bWFpbF9ibG9ja3F1b3RlX2Zyb21oZXJl
-X2VsZW1lbnQiIHN0eWxlPSJmb250OiAxMnB4LzEuNSAnTHVjaWRhIEdyYW5kZSc7cGFkZGlu
-ZzoycHggMCAycHggMDsiPjxzcGFuIHN0eWxlPSJjb2xvcjojMzMzO3RleHQtZGVjb3JhdGlv
-bjpsaW5lLXRocm91Z2g7d2hpdGUtc3BhY2U6cHJlLXdyYXA7Ij4gICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgPC9zcGFuPiZuYnNwO+WOn+Wni+mCruS7tiZuYnNwOzxzcGFuIHN0eWxl
-PSJjb2xvcjojMzMzO3RleHQtZGVjb3JhdGlvbjpsaW5lLXRocm91Z2g7d2hpdGUtc3BhY2U6
-cHJlLXdyYXA7Ij4gICAgICAgICAgICAgICAgICAgICAgICAgICAgPC9zcGFuPjwvZGl2Pjxk
-aXYgc3R5bGU9ImZvbnQ6IDEycHgvMS41ICdMdWNpZGEgR3JhbmRlJztiYWNrZ3JvdW5kOiNl
-ZmVmZWY7Y29sb3I6IzY2NjY2NjtwYWRkaW5nOjhweDsiPjxkaXY+PGIgc3R5bGU9ImNvbG9y
-OiM5OTk7Ij7lj5Hku7bkuro6PC9iPiZuYnNwO0RhdmUgQ2hpbm5lciZsdDtkYXZpZEBmcm9t
-b3JiaXQuY29tJmd0OzwvZGl2PjxkaXY+PGIgc3R5bGU9ImNvbG9yOiM5OTk7Ij7mlLbku7bk
-uro6PC9iPiZuYnNwO3l5Jmx0O3l5QHhzcHJpbmcubmV0Jmd0OzwvZGl2PjxkaXY+PGIgc3R5
-bGU9ImNvbG9yOiM5OTk7Ij7mioTpgIE6PC9iPiZuYnNwO3hmcyZsdDt4ZnNAb3NzLnNnaS5j
-b20mZ3Q7OyBFcmljIFNhbmRlZW4mbHQ7c2FuZGVlbkBzYW5kZWVuLm5ldCZndDs7IGJmb3N0
-ZXImbHQ7YmZvc3RlckByZWRoYXQuY29tJmd0OzwvZGl2PjxkaXY+PGIgc3R5bGU9ImNvbG9y
-OiM5OTk7Ij7lj5HpgIHml7bpl7Q6PC9iPiZuYnNwOzIwMTXlubQy5pyIMTPml6Uo5ZGo5LqU
-KeKAhzA1OjA0PC9kaXY+PGRpdj48YiBzdHlsZT0iY29sb3I6Izk5OTsiPuS4u+mimDo8L2I+
-Jm5ic3A7UmU6IFhGUyBidWZmZXIgSU8gcGVyZm9ybWFuY2UgaXMgdmVyeSBwb29yPC9kaXY+
-PC9kaXY+PGJyPjxkaXYgY2xhc3M9Im1haWxfcXVvdGVfNDdCMDIyNDM3OTdGNDNEREI1QzND
-RERERjIyN0JENzciIHN0eWxlPSJmb250OiAxNHB4LzEuNSAnTHVjaWRhIEdyYW5kZSc7Y29s
-b3I6IzMzMzsiPjxwcmUgc3R5bGU9IndoaXRlLXNwYWNlOnByZS13cmFwOyI+T24gVGh1LCBG
-ZWIgMTIsIDIwMTUgYXQgMDI6NTk6NTJQTSArMDgwMCwgeXkgd3JvdGU6CiZndDsgSW4gZnVu
-Y3Rpb254ZnNfZmlsZV9haW9fcmVhZCwgd2lsbCByZXF1ZXN0WEZTX0lPTE9DS19TSEFSRUQg
-bG9jawomZ3Q7IGZvciBib3RoIGRpcmVjdCBJTyBhbmQgYnVmZmVyZWQgSU86CgomZ3Q7IHNv
-IHdyaXRlIHdpbGwgcHJldmVudCByZWFkIGluIFhGUy4KJmd0OyAKJmd0OyBIb3dldmVyLCBp
-biBmdW5jdGlvbiBnZW5lcmljX2ZpbGVfYWlvX3JlYWQgZm9yIGV4dDMsIHdpbGwgbm90CiZn
-dDsgbG9ja2lub2RlLWlfbXV0ZXgsIHNvIHdyaXRlIHdpbGwgbm90IHByZXZlbnQgcmVhZCBp
-biBleHQzLgomZ3Q7IAomZ3Q7IEkgdGhpbmsgdGhpcyBtYXliZSB0aGUgcmVhc29uIG9mIHBv
-b3IgcGVyZm9ybWFuY2UgZm9yIFhGUy4gSSBkbwomZ3Q7IG5vdCBrbm93IGlmIHRoaXMgaXMg
-YSBidWcsIG9yIGRlc2lnbiBmbGF3cyBvZiBYRlMuCgpUaGlzIGlzIGEgYnVnIGFuZCBkZXNp
-Z24gZmxhdyBpbiBleHQzLCBhbmQgbW9zdCBvdGhlciBMaW51eApmaWxlc3lzdGVtcy4gUG9z
-aXggc3RhdGVzIHRoYXQgd3JpdGUoKSBtdXN0IGV4ZWN1dGUgYXRvbWljYWxseSBhbmQKc28g
-bm8gY29uY3VycmVudCBvcGVyYXRpb24gdGhhdCByZWFkcyBvciBtb2RpZmllcyBkYXRhIHNo
-b3VsZCBzaG91bGQKc2VlIGEgcGFydGlhbCB3cml0ZS4gVGhlIGxpbnV4IHBhZ2UgY2FjaGUg
-ZG9lc24ndCBlbmZvcmNlIHRoaXMgLSBhCnJlYWQgdG8gdGhlIHNhbWUgcmFuZ2UgYXMgYSB3
-cml0ZSBjYW4gcmV0dXJuIHBhcnRpYWxseSB3cml0dGVuIGRhdGEKb24gcGFnZSBncmFudWxh
-cml0eSwgYXMgcmVhZC93cml0ZSBvbmx5IHNlcmlhbGlzZSBvbiBwYWdlIGxvY2tzIGluCnRo
-ZSBwYWdlIGNhY2hlLgoKWEZTIGlzIHRoZSBvbmx5IExpbnV4IGZpbGVzeXN0ZW0gdGhhdCBh
-Y3R1YWxseSBmb2xsb3dzIFBPU0lYCnJlcXVpcmVtZW50cyBoZXJlIC0gdGhlIHNoYXJlZC9l
-eGNsdXNpdmUgbG9ja2luZyBndWFyYW50ZWVzIHRoYXQgYQpidWZmZXIgd3JpdGUgY29tcGxl
-dGVzIHdob2xseSBiZWZvcmUgYSByZWFkIGlzIGFsbG93ZWQgdG8gYWNjZXNzIHRoZQpkYXRh
-LiBUaGVyZSBpcyBhIGRvd24gc2lkZSAtIHlvdSBjYW4ndCBydW4gY29uY3VycmVudCBidWZm
-ZXJlZCByZWFkcwphbmQgd3JpdGVzIHRvIHRoZSBzYW1lIGZpbGUgLSBpZiB5b3UgbmVlZCB0
-byBkbyB0aGF0IHRoZW4gdGhhdCdzCndoYXQgZGlyZWN0IElPIGlzIGZvciwgYW5kIGNvaGVy
-ZW5jeSBiZXR3ZWVuIG92ZXJsYXBwaW5nIHJlYWRzIGFuZAp3cml0ZXMgaXMgdGhlbiB0aGUg
-YXBwbGljYXRpb24ncyBwcm9ibGVtLCBub3QgdGhlIGZpbGVzeXN0ZW0uLi4KCk1heWJlIGF0
-IHNvbWUgcG9pbnQgaW4gdGhlIGZ1dHVyZSB3ZSBtaWdodCBhZGRyZXNzIHRoaXMgd2l0aCBy
-YW5nZWQKSU8gbG9ja3MsIGJ1dCB0aGVyZSByZWFsbHkgYXJlbid0IG1hbnkgbXVsdGl0aHJl
-YWRlZCBwcm9ncmFtcyB0aGF0CmhpdCB0aGlzIGlzc3VlLi4uCgpDaGVlcnMsCgpEYXZlLgot
-LSAKRGF2ZSBDaGlubmVyCjxhIGhyZWY9Im1haWx0bzpkYXZpZEBmcm9tb3JiaXQuY29tIiB0
-aXRsZT0ibWFpbHRvOmRhdmlkQGZyb21vcmJpdC5jb20iPmRhdmlkQGZyb21vcmJpdC5jb208
-L2E+CjwvcHJlPjwvZGl2PjwvZGl2Pg==
+--=20
+Cheers,
+Stephen Rothwell                    sfr@canb.auug.org.au
 
-------=_NextPart_54DD5F7C_7DC6ECA0_11A7F16B--
+--Sig_/72iLWnDTYf9Pc=xJPr1Q12+
+Content-Type: application/pgp-signature
+Content-Description: OpenPGP digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQIcBAEBCAAGBQJU3WOYAAoJEMDTa8Ir7ZwVNrMP/1MGyDeHamIa2ByYrBlsbCoS
+bq9BV7bEw5lXMK4pklOHwDtJmsPs/ozuCZ4Yc65UkEbE3f228ZyMXNVODcrJBtTc
+66xfJpFhx9P7Stk/ViDLv3GPPwS3iW93Ru/62dNhy81NGRXznY1YQ8quzX8H/nmD
+JxACRPsDtLnUCFIskpxc9WYBAgP9hbU2UfBD+ryfOf11GNcW8FC5IFfxaWK/D/or
+6nyRCJ0KeVmEy/zIQ6TT32I/RIe78VPKJ3fuY+wAOiWzv4fUI9uP7W0i1rfZYb6Z
++aQ+E4GTp5WUmI2vGf7hnbZTdEmaXzP+PFnz2bMSCUr/FLiOiJS1kiDqVZQaZjgQ
+ItHInE1emxenhVaHsqSCQ6LEl0auAgqKfw27A3Po4xYX0ZTIUQGaA1cZtwxv79bz
+CNVK2Puy3GIRiu4G2HQqjkvFu3FXdwSUEnm6y+6xpDEi7oUaJJJy9szLP9rTeBYq
+0odtBEn2m88EUME/hJskO3OwIrMPPCyP0/cOfaJIoEWvHMMxttmqbGnAF7Cq/mrr
+1X8xdh+3pwfMyqolqiU3ZiU4hM12dmj4jFoLdIfSCPSZxup795FEUcbb1KTam+/P
+irnAfzhr0+E5caWYfurlB8RHxF6+2w3CCwnB15nmW6GHb6m/Y3U4eIRV72GgOzg4
+ZMI7g9jls6pXGv7rvYge
+=uaiD
+-----END PGP SIGNATURE-----
+
+--Sig_/72iLWnDTYf9Pc=xJPr1Q12+--
 
 
---===============6502150698347641132==
+--===============5229908413125308783==
 Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
@@ -169,4 +104,4 @@ xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
 
---===============6502150698347641132==--
+--===============5229908413125308783==--
