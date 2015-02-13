@@ -1,32 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id E4A6D7F6A
-	for <xfs@oss.sgi.com>; Fri, 13 Feb 2015 14:07:25 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id D31F38F8073
-	for <xfs@oss.sgi.com>; Fri, 13 Feb 2015 12:07:22 -0800 (PST)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id QIOxHVCZmdYeJ8mv (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 13 Feb 2015 12:07:21 -0800 (PST)
-Received: from int-mx11.intmail.prod.int.phx2.redhat.com
-	(int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id t1DK7Kuc002514
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256
-	verify=FAIL) for <xfs@oss.sgi.com>; Fri, 13 Feb 2015 15:07:21 -0500
-Received: from laptop.bfoster (vpn-50-17.rdu2.redhat.com [10.10.50.17])
-	by int-mx11.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id t1DK7Hce003623
-	(version=TLSv1/SSLv3 cipher=AES128-GCM-SHA256 bits=128 verify=NO)
-	for <xfs@oss.sgi.com>; Fri, 13 Feb 2015 15:07:19 -0500
-Date: Fri, 13 Feb 2015 15:07:17 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH v4 00/18] xfs: sparse inode chunks
-Message-ID: <20150213200717.GA7498@laptop.bfoster>
-References: <1423765045-15791-1-git-send-email-bfoster@redhat.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 4CD477F6C
+	for <xfs@oss.sgi.com>; Fri, 13 Feb 2015 16:35:20 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 3B954304032
+	for <xfs@oss.sgi.com>; Fri, 13 Feb 2015 14:35:16 -0800 (PST)
+Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
+	[150.101.137.145]) by cuda.sgi.com with ESMTP id
+	40YBWewMF172Se8a for <xfs@oss.sgi.com>;
+	Fri, 13 Feb 2015 14:35:10 -0800 (PST)
+Received: from dave by dastard with local (Exim 4.80)
+	(envelope-from <david@fromorbit.com>) id 1YMOpH-0006rP-L5
+	for xfs@oss.sgi.com; Sat, 14 Feb 2015 09:35:07 +1100
+Date: Sat, 14 Feb 2015 09:35:07 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [RFC] xfs shrink feature
+Message-ID: <20150213223507.GV4251@dastard>
+References: <20150213131446.GC1800@hades.maiolino.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1423765045-15791-1-git-send-email-bfoster@redhat.com>
+In-Reply-To: <20150213131446.GC1800@hades.maiolino.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -41,136 +34,91 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-On Thu, Feb 12, 2015 at 01:17:07PM -0500, Brian Foster wrote:
-> Hi all,
+On Fri, Feb 13, 2015 at 11:14:46AM -0200, Carlos Maiolino wrote:
+> Hi folks,
 > 
-> Here's v4 of sparse inode support for XFS. The changes are primarily
-> based on Dave's review comments from v3. The highlights are a refactor
-> of the on-disk inobt record format and sparse inode chunk allocation and
-> record management code.
-> 
-> The inobt record refactor introduces a union to distinguish the original
-> on-disk format from the new format and an associated change in behavior
-> where the in-core record fields can be unconditionally considered valid.
-> For example, higher level code can refer to the in-core ir_count field
-> regardless of whether the sparse inodes feature is enabled or not. This
-> reduces the need for helpers and sb feature check clutter throughout the
-> code.
-> 
-> The sparse chunk allocation refactor cleans up the sparse record
-> management code such that record merge and inobt updates do not involve
-> multiple tree lookups. It also condenses the sparse record management
-> code into a single helper (a la xfs_inobt_insert() for full inode
-> chunks) that can be used for the inobt and finobt.
-> 
-> Patches 1-3 are generic preparation patches that do not depend on sparse
-> inode bits. Patches 4-7 introduce the sb alignment field, mount feature
-> helpers and associated bits. Patches 8-12 introduce the inobt record
-> data structure update and associated bits/helpers. Patches 13-17
-> implement the sparse chunk and individual inode allocation and free
-> mechanisms. Finally, patch 18 enables the ability to mount sparse inode
-> enabled filesystems.
-> 
-> Thoughts, reviews, flames appreciated...
-> 
+> I've been seeing a lot of users requesting a shrink feature for XFS, and I
+> believe it's time to have it implemented in XFS.
 
-FYI, having looked a bit into pulling some of this back into userspace,
-I think I'm going to try and go back to using some of the native bitmap
-routines as done in v1 rather than using the generic bitmap stuff. The
-only real benefit I see is the use of bitmap_weight(), and that's just
-for a debug mode check. I'm not sure it's worth the divergence the whole
-thing creates with userspace.
+I'm not so sure about that.
 
-I'll send a new version once I have something, but I'd appreciate any
-feedback on the refactoring in patches 8 and 13 in the meantime...
+> Is there anybody working on a shrink feature? If not, I'm going to
+> start to work on it, if nobody have any objections.
 
-Brian
 
-> Brian
-> 
-> v4:
-> - Rename sb_spinoalignmt to sb_spino_align.
-> - Clean up error/warning messages.
-> - Use a union to differentiate old/new xfs_inobt_rec on-disk format.
->   Refactor such that in-core record fields are always valid.
-> - Rename/move allocmap (bitmap) helper functions and provide extra
->   helper for endian conv.
-> - Refactor sparse chunk allocation record management code.
-> - Clean up #ifdef and label usage for DEBUG mode sparse allocs.
-> - Split up and moved some generic, preparatory hunks earlier in series.
-> v3: http://oss.sgi.com/archives/xfs/2015-02/msg00110.html
-> - Rebase to latest for-next (bulkstat rework, data structure shuffling,
->   etc.).
-> - Fix issparse helper logic.
-> - Update inode alignment model w/ spinodes enabled. All inode records
->   are chunk size aligned, sparse allocations cluster size aligned (both
->   enforced on mount).
-> - Reworked sparse inode record merge logic to coincide w/ new alignment
->   model.
-> - Mark feature as experimental (warn on mount).
-> - Include and use block allocation agbno range limit to prevent
->   allocation of invalid inode records.
-> - Add some DEBUG bits to improve sparse alloc. test coverage.
-> v2: http://oss.sgi.com/archives/xfs/2014-11/msg00007.html
-> - Use a manually set feature bit instead of dynamic based on the
->   existence of sparse inode chunks.
-> - Add sb/mp fields for sparse alloc. granularity (use instead of cluster
->   size).
-> - Undo xfs_inobt_insert() loop removal to avoid breakage of larger page
->   size arches.
-> - Rename sparse record overlap helper and do XFS_LOOKUP_LE search.
-> - Use byte of pad space in inobt record for inode count field.
-> - Convert bitmap mgmt to use generic bitmap code.
-> - Rename XFS_INODES_PER_SPCHUNK to XFS_INODES_PER_HOLEMASK_BIT.
-> - Add fs geometry bit for sparse inodes.
-> - Rebase to latest for-next (bulkstat refactor).
-> v1: http://oss.sgi.com/archives/xfs/2014-07/msg00355.html
-> 
-> Brian Foster (18):
->   xfs: create individual inode alloc. helper
->   xfs: update free inode record logic to support sparse inode records
->   xfs: support min/max agbno args in block allocator
->   xfs: add sparse inode chunk alignment superblock field
->   xfs: use sparse chunk alignment for min. inode allocation requirement
->   xfs: sparse inode chunks feature helpers and mount requirements
->   xfs: add fs geometry bit for sparse inode chunks
->   xfs: introduce inode record hole mask for sparse inode chunks
->   xfs: use actual inode count for sparse records in bulkstat/inumbers
->   xfs: pass inode count through ordered icreate log item
->   xfs: handle sparse inode chunks in icreate log recovery
->   xfs: helpers to convert holemask to/from generic bitmap
->   xfs: allocate sparse inode chunks on full chunk allocation failure
->   xfs: randomly do sparse inode allocations in DEBUG mode
->   xfs: filter out sparse regions from individual inode allocation
->   xfs: only free allocated regions of inode chunks
->   xfs: skip unallocated regions of inode chunks in xfs_ifree_cluster()
->   xfs: enable sparse inode chunks for v5 superblocks
-> 
->  fs/xfs/libxfs/xfs_alloc.c        |  42 ++-
->  fs/xfs/libxfs/xfs_alloc.h        |   2 +
->  fs/xfs/libxfs/xfs_format.h       |  50 +++-
->  fs/xfs/libxfs/xfs_fs.h           |   1 +
->  fs/xfs/libxfs/xfs_ialloc.c       | 533 +++++++++++++++++++++++++++++++++++----
->  fs/xfs/libxfs/xfs_ialloc.h       |  12 +-
->  fs/xfs/libxfs/xfs_ialloc_btree.c | 123 ++++++++-
->  fs/xfs/libxfs/xfs_ialloc_btree.h |  14 +
->  fs/xfs/libxfs/xfs_sb.c           |  30 ++-
->  fs/xfs/xfs_fsops.c               |   4 +-
->  fs/xfs/xfs_inode.c               |  28 +-
->  fs/xfs/xfs_itable.c              |  13 +-
->  fs/xfs/xfs_log_recover.c         |  26 +-
->  fs/xfs/xfs_mount.c               |  16 ++
->  fs/xfs/xfs_mount.h               |   2 +
->  fs/xfs/xfs_trace.h               |  47 ++++
->  16 files changed, 857 insertions(+), 86 deletions(-)
-> 
-> -- 
-> 1.8.3.1
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+I currently in design discussions with various other developers
+about a line of development that will make growing and shrinking XFS
+redundant operations. i.e. if we get this right, we'll never need to
+deal with capacity changes of XFS filesystems at the XFS level
+again. both grow and shrink will be instanteneous, and not require
+any modification to the layout of the filesystem at all.
+
+Mind you, that's not the reason for that line of development - it's
+all about integrated snapshots in XFS. We essentially get
+grow/shrink for free with that infrastructure....
+
+I'm not quite ready to publish the docco yet - need to get all my
+ducks in a line first - but if it does work out as a feasible line
+of development, then the old "shrink" method is essentially a dead
+end.
+
+However, don't let that stop you working towards shrink, because
+there is infrastructure that it requires that we need for other
+things as well. Take you pick:
+
+	- parent pointers
+	- AG state control
+	- ranged bulkstat call (e.g. AG range)
+	- allocation location control from userspace
+	  (which may tie in to AG state control)
+	- Atomic inode location swaps
+
+Parent pointers are needed to locate the owners of the inodes
+in AGs that need to be moved efficiently. i.e. bulkstat the inodes,
+use parent lookup to return parent or entire path to inode. It's
+also needed for more efficient and robust metadata checking and
+online repair of broken directory structures.
+
+AG state control is needed to tell the filesystem not to allocate
+in specific AGs, and then to take them completely off line prior
+to a shrink operation starting. It is also needed for online repair
+of AGs and other applications that need to manipulate the contents
+of an AG without interference from the rest of the filesystem.
+
+Efficient shrink also relies on reverse block mapping being
+available. I'm working on that right now for multiple reasons, none
+of which are for shrinking the filesystem. ;)
+
+I'd recommend that you work on the infrastructure problems one at a
+time, rather than "shrink" because the infrastructure has multiple
+uses and we need that infrastructure for various reasons much more
+urgently than we do shrink. However, once the infrastructure is in
+place, shrink should just be a case of tying it all together with a
+userspace utility. That is, of course, if we still need it.
+
+If you want something simple to start with then the ranged bulkstat
+calls and AG state control are the place to start.
+
+However, I'd recommend you start with finishing off the parent
+pointer infrastructure because that's more important in the longer
+term. We had converged to the point where we had a design that
+solved all known problems, but it wasn't ever implemented.  That's
+where we need to pick it up from. Design for EAs in here:
+
+http://oss.sgi.com/archives/xfs/2014-01/msg00263.html
+
+But it's worth reading the entire discussion starting here because
+it start with a summary of the different approaches taken and why
+they were rejected:
+
+http://oss.sgi.com/archives/xfs/2014-01/msg00224.html
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
