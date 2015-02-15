@@ -1,23 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 9BB517F6A
-	for <xfs@oss.sgi.com>; Sat, 14 Feb 2015 17:30:00 -0600 (CST)
+	by oss.sgi.com (Postfix) with ESMTP id 69A5C7F67
+	for <xfs@oss.sgi.com>; Sun, 15 Feb 2015 08:38:51 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 8A804304032
-	for <xfs@oss.sgi.com>; Sat, 14 Feb 2015 15:29:57 -0800 (PST)
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	yn09ZqRqfS7zTuFH for <xfs@oss.sgi.com>;
-	Sat, 14 Feb 2015 15:29:55 -0800 (PST)
-Date: Sun, 15 Feb 2015 10:29:51 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs: xfs_alloc_fix_minleft can underflow near ENOSPC
-Message-ID: <20150214232951.GW4251@dastard>
-References: <1423782857-11800-1-git-send-email-david@fromorbit.com>
-	<54DE8B6D.8010401@sgi.com>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 58528304039
+	for <xfs@oss.sgi.com>; Sun, 15 Feb 2015 06:38:48 -0800 (PST)
+Received: from mail-pa0-f43.google.com (mail-pa0-f43.google.com
+	[209.85.220.43]) by cuda.sgi.com with ESMTP id PA6Kvay7ltHRydDi
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Sun, 15 Feb 2015 06:38:47 -0800 (PST)
+Received: by mail-pa0-f43.google.com with SMTP id fa1so29504968pad.2
+	for <xfs@oss.sgi.com>; Sun, 15 Feb 2015 06:38:46 -0800 (PST)
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <54DE8B6D.8010401@sgi.com>
+Date: Sun, 15 Feb 2015 20:08:46 +0530
+Message-ID: <CALJmpHP+PwdV1n8VLusxqz0Wb=1PLL52frEMBn8+4h0v5+7Ssg@mail.gmail.com>
+Subject: [RFD] : Allowing xfs_fsr to defragment portions of a file
+From: Dhruvesh Rathore <adrscube@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,149 +28,82 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Mark Tinguely <tinguely@sgi.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Fri, Feb 13, 2015 at 05:40:29PM -0600, Mark Tinguely wrote:
-> On 02/12/15 17:14, Dave Chinner wrote:
-> >From: Dave Chinner<dchinner@redhat.com>
-> >
-> >Test generic/224 is failing with a corruption being detected on one
-> >of Michael's test boxes.  Debug that Michael added is indicating
-> >that the minleft trimming is resulting in an underflow:
-> >
-> >.....
-> >  before fixup:              rlen          1  args->len          0
-> >  after xfs_alloc_fix_len  : rlen          1  args->len          1
-> >  before goto out_nominleft: rlen          1  args->len          0
-> >  before fixup:              rlen          1  args->len          0
-> >  after xfs_alloc_fix_len  : rlen          1  args->len          1
-> >  after fixup:               rlen          1  args->len          1
-> >  before fixup:              rlen          1  args->len          0
-> >  after xfs_alloc_fix_len  : rlen          1  args->len          1
-> >  after fixup:               rlen 4294967295  args->len 4294967295
-> >  XFS: Assertion failed: fs_is_ok, file: fs/xfs/libxfs/xfs_alloc.c, line: 1424
-> >
-> >The "goto out_nominleft:" indicates that we are getting close to
-> >ENOSPC in the AG, and a couple of allocations later we underflow
-> >and the corruption check fires in xfs_alloc_ag_vextent_size().
-> >
-> >The issue is that the extent length fixups comaprisons are done
-> >with variables of xfs_extlen_t types. These are unsigned so an
-> >underflow looks like a really big value and hence is not detected
-> >as being smaller than the minimum length allowed for the extent.
-> >Hence the corruption check fires as it is noticing that the returned
-> >length is longer than the original extent length passed in.
-> >
-> >This can be easily fixed by ensuring we do the underflow test on
-> >signed values, the same way xfs_alloc_fix_len() prevents underflow.
-> >So we realise in future that these casts prevent underflows from
-> >going undetected, add comments to the code indicating this.
-> >
-> >Reported-by: Michael L. Semon<mlsemon35@gmail.com>
-> >Tested-by: Michael L. Semon<mlsemon35@gmail.com>
-> >Signed-off-by: Dave Chinner<dchinner@redhat.com>
-> >---
-> >  fs/xfs/libxfs/xfs_alloc.c | 4 +++-
-> >  1 file changed, 3 insertions(+), 1 deletion(-)
-> 
-> 
-> int diff = be32_to_cpu(agf->agf_freeblks)
->              - args->len - args->minleft;
-> 
+Hi,
 
-Preconditions:
+The xfs_fsr utility in its current state does not support defragmentation of
+parts of file. Either the entire file is defragmented, or if free space is not
+available then the operation is not performed.
+We would like to enhance the utility allowing it to defragment parts
+of the file, ins such a condition.
+---------------------------------------------------------------------------------------------------------------
 
-	agf->agf_freeblks = 1
-	args->len = 1
-	args->minleft = 2
+Our initial task was to understand how xfs_fsr currently defragments the file:
 
-Therefore, diff = -2
+1) In /fsr/xfs_fsr.c from main() the control is passed to fsrfile().
+In fsrfile(), we
+open the original file and collect bstat information. A call is then made to
+fsrfile_common()
 
-> >@@ -286,7 +287,8 @@ xfs_alloc_fix_minleft(
-> >  	if (diff >= 0)
-> >  		return 1;
-> 
-> If the diff math was done correctly, wouldn't it get caught here?
+2) In fsrfile_common() we check if sufficient free space is available to
+defragment the file, and if not then we exit. If free space is available, then a
+call is made to packfile()
 
-No, diff < 0.
+3) In packfile(), read_fd_bmap() function provides us with the current number of
+extents used by the file (cur_nextents) and the ideal number of extents needed
+to save the file (nextents). In function read_fd_bmap() the the
+outmap[ ] structure
+is also populated.
+
+4) packfile() will initially allocate new extents (nextents) to the
+temporary file and
+then copy(swap) extents form the existing file. We then fchown() the new temp
+file and space occupied by the prev fragmented copy is then freed.
+
+---------------------------------------------------------------------------------------------------------------
+
+Our understanding to the approach of defragmenting portions of a file
+is as follows:
+
+1) In fsrfile_common(), a new function will be called when the code
+determines that
+there is insufficient free space to defragment the entire file.
+
+2) The new function performs the following tasks:
+
+---> Call read_fd_bmap() to get cur_nextents and nextents(ideal). Using
+nextents we will
+then have to determine how many extents can be defragmented against
+the free space
+available.
+
+---> Creating a temp file will not be feasible as it will create a
+problem when we want to
+change owners.
+
+---> The function will have to hence focus on swapping the existing
+extents from the
+fragmented file. For this a swap_extent() function will be needed,
+which will take arguments
+as the current extent and the location(in free space) where it needs
+to be swapped to.
+
+For the above functionality Dave suggested that we have a look at
+EXT4_IOC_MOVE_EXT
+and its usage.
+
+We are however unsure of how to compress the extents which have been chosen for
+defragmentation and keep the other extents untouched. We are also in
+doubt about how to
+proceed without creating a temp file for defragmentation.
 
 
-> >  	args->len += diff;		/* shrink the allocated space */
+Any thoughts, comments, opinions etc, are welcome
+Thank you.
 
-1 += -2
-  = -1
-
-> >-	if (args->len >= args->minlen)
-
-	if (0xffffffff >= 1)
-
-broken.
-
-> >+	/* casts to (int) catch length underflows */
-> >+	if ((int)args->len >= (int)args->minlen)
-
-	if (-1 >= 1)
-
-correct.
-
-> >  		return 1;
-> >  	args->agbno = NULLAGBLOCK;
-> >  	return 0;
-> 
-> We can and should fix the wrap in xfs_alloc_fix_minleft() but this
-> also points to the fact that xfs_alloc_fix_freelist() is incorrectly
-> choosing AGs that will later fail the allocation alignment, minlen,
-> and minleft requirements.
-
-I don't think there's a problem there. At least, not the problem I
-think you trying to describe.
-
-> You can connect the dots to see how this can lead to a deadlock with
-> extent frees. We have seen them. I hacked the XFS code to lead to
-> this situation.
-
-You should post the test cases and the patch that exposes the issues
-you are concerned about. Otherwise we have no real idea of what
-problems you are talking about, and certainly can't reproduce them.
-
-> Also bad is xfs_alloc_vextent() will temporally ignore the minleft
-> for the xfs_alloc_fix_freelist() but makes the ag allocator enforce
-> the minleft.
-
-Hmmm - I suspect you haven't understood the underlying reason for
-setting minleft to zero for the call to xfs_alloc_fix_freelist().
-There's are two places we do this: single AG constrainted
-allocation, and the "any AG, but near ENOSPC" allocation.
-
-For single AG constrained allocation, minleft is something we can
-ignore because we must select that AG for allocation.  minleft is
-applied against the total allocation requirement, not the minimum
-length of allocation that can be done. Hence we might be able to do
-a minlen allocation, but we'd reject it because we can't do a maxlen
-allocation due to minleft requirements.
-
-Hence we switch off minleft in that case when doing freelist checks
-so that we don't reject allocations that could do a minlen
-allocation successfully. This requires the low level allocator to be
-able to trim back the selected extent from whatever length it finds
-to repesect minleft, and if it can't then fail the allocation.
-That is the function of xfs_alloc_fix_minleft() - constrain the
-allocated extent to the required minleft or fail the allocation.
-
-And for the lowspace algorithm, the reasoning is similar. After two
-attempts to allocate in AGs that have enough space for a maxlen
-allocation, we switch off minleft so that we only constrain the AG
-search to AGs that can definitely satisfy a minlen allocation, hence
-improving the chance we can do an allocation successfully near
-ENOSPC.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Regards
+A-DRS.
 
 _______________________________________________
 xfs mailing list
