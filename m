@@ -1,30 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id CF9B97F47
-	for <xfs@oss.sgi.com>; Sun, 15 Feb 2015 17:26:09 -0600 (CST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id CE3BC7F47
+	for <xfs@oss.sgi.com>; Sun, 15 Feb 2015 19:16:16 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id AD3F3304053
-	for <xfs@oss.sgi.com>; Sun, 15 Feb 2015 15:26:09 -0800 (PST)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 6C136AC001
+	for <xfs@oss.sgi.com>; Sun, 15 Feb 2015 17:16:13 -0800 (PST)
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	9Z1QYFdZRsphFten for <xfs@oss.sgi.com>;
-	Sun, 15 Feb 2015 15:26:03 -0800 (PST)
-Date: Mon, 16 Feb 2015 10:25:14 +1100
+	Ri6HYFpSdO0B3QZ5 for <xfs@oss.sgi.com>;
+	Sun, 15 Feb 2015 17:16:10 -0800 (PST)
+Date: Mon, 16 Feb 2015 12:16:08 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 19/20] xfs: implement pNFS export operations
-Message-ID: <20150215232514.GZ4251@dastard>
-References: <20150205135756.GA6386@lst.de> <20150206222047.GM12722@dastard>
-	<20150206224258.GJ29783@fieldses.org>
-	<20150208133435.GA27081@lst.de>
-	<20150208090942.51e99687@tlielax.poochiereds.net>
-	<20150209201154.GA27746@fieldses.org>
-	<20150210000423.GY12722@dastard>
-	<20150213011130.GA6808@fieldses.org>
-	<20150213015422.GE12722@dastard>
-	<20150213133811.5c3b9f49@canb.auug.org.au>
+Subject: [ANNOUNCE] xfs: for-next branch updated to 781355c (pnfs block
+	layout support)
+Message-ID: <20150216011608.GA4251@dastard>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20150213133811.5c3b9f49@canb.auug.org.au>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,50 +23,108 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============5070486664405287599=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Stephen Rothwell <sfr@canb.auug.org.au>
-Cc: linux-nfs@vger.kernel.org, xfs@oss.sgi.com, "J. Bruce Fields" <bfields@fieldses.org>, Jeff Layton <jlayton@primarydata.com>, linux-fsdevel@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Jeff Layton <jeff.layton@primarydata.com>
+To: xfs@oss.sgi.com
+Cc: bfields@fieldses.org, sfr@canb.auug.org.au, hch@lst.de
 
-On Fri, Feb 13, 2015 at 01:38:11PM +1100, Stephen Rothwell wrote:
-> Hi Dave,
-> 
-> On Fri, 13 Feb 2015 12:54:22 +1100 Dave Chinner <david@fromorbit.com> wrote:
-> >
-> > Thanks Bruce. I might have to build a merged tree because one of the
-> > changes from the review modified a header file introduced in the NFS
-> > tree.
-> > 
-> > I'll see how it goes, and see if I can avoid doing something that
-> > will make Linus yell at me :P
-> 
-> If its a syntactic conflict with an obvious resolution, just leave it
-> (or maybe mention it in the pull request).  It gives him something to
-> do so he feels useful. :-)
 
-Heh.
+--===============5070486664405287599==
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="/WwmFnJnmDyWGHa4"
+Content-Disposition: inline
 
-It's not actually a conflict, though. The issue is that some of the
-review comments on the XFS side resulted in changes files introduced
-from the NFS tree. So the XFS side can't be merged without the NFS
-changes being present....
 
-> /me notes that I did not see a conflict while merging the xfs tree in
-> linux-next today ...
+--/WwmFnJnmDyWGHa4
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Because I haven't pushed them yet ;)
+Hi folks,
 
-Cheers,
+The for-next branch of the xfs kernel repository at
 
-Dave.
+git://git.kernel.org/pub/scm/linux/kernel/git/dgc/linux-xfs.git
 
--- 
+has just been updated.
+
+This update contains the XFS support for the block layout PNFS
+server. It turns out that Bruce had included the changes that
+Christoph had sent for the NFS header files (thanks, Bruce!), so the
+XFS patches can stand alone without needing any other tree merges.
+
+I've tested that it merges cleanly with the current -linus tree and
+compiles, and I repeated bruce's basic "get layout" test to see if
+it did what it should on a merge tree. I'll leave this to cycle
+through a -next tree for a couple of days, and then ask Linus to
+pull it.
+
+The new head of the for-next branch is commit:
+
+781355c xfs: recall pNFS layouts on conflicting access
+
+New Commits:
+
+Christoph Hellwig (2):
+      [5278511] xfs: implement pNFS export operations
+      [781355c] xfs: recall pNFS layouts on conflicting access
+
+
+Code Diffstat:
+
+ fs/xfs/Makefile     |   1 +
+ fs/xfs/xfs_export.c |   6 +
+ fs/xfs/xfs_file.c   |  14 ++-
+ fs/xfs/xfs_fsops.c  |   6 +
+ fs/xfs/xfs_ioctl.c  |   9 +-
+ fs/xfs/xfs_iops.c   |  13 ++-
+ fs/xfs/xfs_iops.h   |   1 +
+ fs/xfs/xfs_mount.h  |  11 ++
+ fs/xfs/xfs_pnfs.c   | 322 ++++++++++++++++++++++++++++++++++++++++++++++++=
+++++
+ fs/xfs/xfs_pnfs.h   |  18 +++
+ 10 files changed, 393 insertions(+), 8 deletions(-)
+ create mode 100644 fs/xfs/xfs_pnfs.c
+ create mode 100644 fs/xfs/xfs_pnfs.h
+--=20
 Dave Chinner
 david@fromorbit.com
+
+--/WwmFnJnmDyWGHa4
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
+
+iQIcBAEBAgAGBQJU4UTYAAoJEK3oKUf0dfodf1cP/RqDtKvyEastFj9zHCuYgLDU
+bg7Q2EKwbY7zn/P6adusJwfJ25GKHO7sYxo68V/esMSRoWXCVeuRAbOk1apbQx9C
+X+DsHdHiA2M4nkVB9jekR5a05zjqHU2gVZwdyVZYE4psLCGOkuMluES9pgacH8Fl
+xPBgC3mPg8h9L1m29/YqMYUTDXut1nJSo47B4Bioih5iDIHbe910RggkuzRjyPTF
+nQY02ZJN0+f1CKBrASmn3WqRdj1+7Q2dZfPoLrsyOBviEnrf7AYK5p+clYw8j1lA
++IRFwxXatfnzHfxri8dTn6E6YwibDSySwoPLE2s7epkZkiOfmO3tTWYhRCWDj7HC
+FNJQ+CNjTXrcMgVzx9+bMpQluBWkkV2HpJkOXIaPTuzkKe8MjNWpm4OSl2mZ4Xpe
+R+b7lrWcjviejDybca1WzENABax9BbaRCojlK7V8fa7Hd9PZ46uqlbtCeKaV3Dvi
+KiddJk68Hx4rRZh6dgARxUNpTOiABz6VAxCfrdAc5t6zowiNMWsTqI7Msm04/G8R
+VmVaUVIet3ZEcqMlEhWPmCcAxJ5XxVqPnNy9WRRcsvaCV/vxl3wxahXRzq0YQbAp
+9Aux7p6UuWvLGQ3QmnAamXUoPIlGe/5ebKcjwdzfNSaELBj6SVYv7SyRUjzErRpc
+oo/oIvwJmknaGcv/TCWI
+=CIsQ
+-----END PGP SIGNATURE-----
+
+--/WwmFnJnmDyWGHa4--
+
+
+--===============5070486664405287599==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============5070486664405287599==--
