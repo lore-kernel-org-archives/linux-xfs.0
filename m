@@ -1,21 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 38D687F67
-	for <xfs@oss.sgi.com>; Mon, 16 Feb 2015 09:49:21 -0600 (CST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 35E637F6C
+	for <xfs@oss.sgi.com>; Mon, 16 Feb 2015 09:49:26 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id ADA1AAC001
-	for <xfs@oss.sgi.com>; Mon, 16 Feb 2015 07:49:20 -0800 (PST)
-Received: from mail-pd0-f178.google.com (mail-pd0-f178.google.com
-	[209.85.192.178]) by cuda.sgi.com with ESMTP id
-	8PrulzaXKZNFrOhu (version=TLSv1 cipher=RC4-SHA bits=128
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 1639C30405F
+	for <xfs@oss.sgi.com>; Mon, 16 Feb 2015 07:49:26 -0800 (PST)
+Received: from mail-pd0-f169.google.com (mail-pd0-f169.google.com
+	[209.85.192.169]) by cuda.sgi.com with ESMTP id
+	evwWPFODGHHIoOf6 (version=TLSv1 cipher=RC4-SHA bits=128
 	verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 16 Feb 2015 07:49:19 -0800 (PST)
-Received: by pdjz10 with SMTP id z10so36728513pdj.0
-	for <xfs@oss.sgi.com>; Mon, 16 Feb 2015 07:49:18 -0800 (PST)
+	Mon, 16 Feb 2015 07:49:24 -0800 (PST)
+Received: by pdev10 with SMTP id v10so36646057pde.10
+	for <xfs@oss.sgi.com>; Mon, 16 Feb 2015 07:49:23 -0800 (PST)
 From: Namjae Jeon <linkinjeon@gmail.com>
-Subject: [PATCH RESEND 7/12] xfstests: generic/044: Multi insert range tests
-Date: Tue, 17 Feb 2015 00:47:54 +0900
-Message-Id: <1424101680-3301-8-git-send-email-linkinjeon@gmail.com>
+Subject: [PATCH RESEND 8/12] xfstests: generic/045: Delayed allocation multi
+	insert
+Date: Tue, 17 Feb 2015 00:47:55 +0900
+Message-Id: <1424101680-3301-9-git-send-email-linkinjeon@gmail.com>
 In-Reply-To: <1424101680-3301-1-git-send-email-linkinjeon@gmail.com>
 References: <1424101680-3301-1-git-send-email-linkinjeon@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -36,29 +37,30 @@ Cc: linux-man@vger.kernel.org, Namjae Jeon <linkinjeon@gmail.com>, Namjae Jeon <
 
 From: Namjae Jeon <namjae.jeon@samsung.com>
 
-This testcase(044) tries to test various corner cases with pre-existing holes
-for finsert range functionality over different type of extents.
+This testcase(045) tries to test various corner cases with delayed extents and
+pre-existing holes for finsert range functionality over different type of
+extents.
 
 Signed-off-by: Namjae Jeon <namjae.jeon@samsung.com>
 Signed-off-by: Ashish Sangwan <a.sangwan@samsung.com>
 ---
- tests/generic/044     |   65 ++++++++++++++++++++++++++++++++++++++++
- tests/generic/044.out |   80 +++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/generic/045     |   65 ++++++++++++++++++++++++++++++++++++++++
+ tests/generic/045.out |   80 +++++++++++++++++++++++++++++++++++++++++++++++++
  tests/generic/group   |    1 +
  3 files changed, 146 insertions(+)
- create mode 100644 tests/generic/044
- create mode 100644 tests/generic/044.out
+ create mode 100644 tests/generic/045
+ create mode 100644 tests/generic/045.out
 
-diff --git a/tests/generic/044 b/tests/generic/044
+diff --git a/tests/generic/045 b/tests/generic/045
 new file mode 100644
-index 0000000..4d6be1b
+index 0000000..de4de02
 --- /dev/null
-+++ b/tests/generic/044
++++ b/tests/generic/045
 @@ -0,0 +1,65 @@
 +#! /bin/bash
-+# FS QA Test No. generic/044
++# FS QA Test No. generic/045
 +#
-+# Multi insert range tests
++# Delayed allocation multi insert range tests
 +# This testcase is one of the 4 testcases which tries to
 +# test various corner cases for finsert range functionality over different
 +# type of extents. These tests are based on generic/255 test case.
@@ -115,18 +117,18 @@ index 0000000..4d6be1b
 +
 +testfile=$TEST_DIR/$seq.$$
 +
-+_test_generic_punch -k falloc fpunch finsert fiemap _filter_hole_fiemap $testfile
++_test_generic_punch -d -k falloc fpunch finsert fiemap _filter_hole_fiemap $testfile
 +_check_test_fs
 +
 +status=0
 +exit
-diff --git a/tests/generic/044.out b/tests/generic/044.out
+diff --git a/tests/generic/045.out b/tests/generic/045.out
 new file mode 100644
-index 0000000..4ddfb65
+index 0000000..5bfd760
 --- /dev/null
-+++ b/tests/generic/044.out
++++ b/tests/generic/045.out
 @@ -0,0 +1,80 @@
-+QA output created by 044
++QA output created by 045
 +	1. into a hole
 +cf845a781c107ec1346e849c9dd1b7e8
 +	2. into allocated space
@@ -207,14 +209,14 @@ index 0000000..4ddfb65
 +1: [16..55]: extent
 +86c9d033be2761385c9cfa203c426bb2
 diff --git a/tests/generic/group b/tests/generic/group
-index c2156a1..70444a3 100644
+index 70444a3..772f910 100644
 --- a/tests/generic/group
 +++ b/tests/generic/group
-@@ -46,6 +46,7 @@
- 041 metadata auto quick
+@@ -47,6 +47,7 @@
  042 auto quick prealloc
  043 auto quick prealloc
-+044 auto quick prealloc
+ 044 auto quick prealloc
++045 auto quick prealloc
  053 acl repair auto quick
  062 attr udf auto quick
  068 other auto freeze dangerous stress
