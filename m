@@ -1,23 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 1E9837F4E
-	for <xfs@oss.sgi.com>; Mon, 16 Feb 2015 03:58:53 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 91B2DAC006
-	for <xfs@oss.sgi.com>; Mon, 16 Feb 2015 01:58:49 -0800 (PST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id ABF957F4E
+	for <xfs@oss.sgi.com>; Mon, 16 Feb 2015 07:41:32 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 7B97B8F804B
+	for <xfs@oss.sgi.com>; Mon, 16 Feb 2015 05:41:29 -0800 (PST)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id C2e7XLH5VM3DmP5J (version=TLSv1
+	cuda.sgi.com with ESMTP id ejbo7qVGlMoaFAnX (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 16 Feb 2015 01:58:48 -0800 (PST)
-Date: Mon, 16 Feb 2015 07:58:42 -0200
-From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: Re: [RFC] xfs shrink feature
-Message-ID: <20150216095842.GA1938@hades.maiolino.org>
-References: <20150213131446.GC1800@hades.maiolino.org>
-	<20150213223507.GV4251@dastard>
+	Mon, 16 Feb 2015 05:41:28 -0800 (PST)
+Date: Mon, 16 Feb 2015 08:41:21 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH] xfs: xfs_alloc_fix_minleft can underflow near ENOSPC
+Message-ID: <20150216134121.GC9234@laptop.bfoster>
+References: <1423782857-11800-1-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20150213223507.GV4251@dastard>
+In-Reply-To: <1423782857-11800-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,74 +32,82 @@ Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-Hi Dave,
+On Fri, Feb 13, 2015 at 10:14:17AM +1100, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> Test generic/224 is failing with a corruption being detected on one
+> of Michael's test boxes.  Debug that Michael added is indicating
+> that the minleft trimming is resulting in an underflow:
+> 
+> .....
+>  before fixup:              rlen          1  args->len          0
+>  after xfs_alloc_fix_len  : rlen          1  args->len          1
+>  before goto out_nominleft: rlen          1  args->len          0
+>  before fixup:              rlen          1  args->len          0
+>  after xfs_alloc_fix_len  : rlen          1  args->len          1
+>  after fixup:               rlen          1  args->len          1
+>  before fixup:              rlen          1  args->len          0
+>  after xfs_alloc_fix_len  : rlen          1  args->len          1
+>  after fixup:               rlen 4294967295  args->len 4294967295
+>  XFS: Assertion failed: fs_is_ok, file: fs/xfs/libxfs/xfs_alloc.c, line: 1424
+> 
+> The "goto out_nominleft:" indicates that we are getting close to
+> ENOSPC in the AG, and a couple of allocations later we underflow
+> and the corruption check fires in xfs_alloc_ag_vextent_size().
+> 
+> The issue is that the extent length fixups comaprisons are done
+> with variables of xfs_extlen_t types. These are unsigned so an
+> underflow looks like a really big value and hence is not detected
+> as being smaller than the minimum length allowed for the extent.
+> Hence the corruption check fires as it is noticing that the returned
+> length is longer than the original extent length passed in.
+> 
+> This can be easily fixed by ensuring we do the underflow test on
+> signed values, the same way xfs_alloc_fix_len() prevents underflow.
+> So we realise in future that these casts prevent underflows from
+> going undetected, add comments to the code indicating this.
+> 
+> Reported-by: Michael L. Semon <mlsemon35@gmail.com>
+> Tested-by: Michael L. Semon <mlsemon35@gmail.com>
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> ---
 
-On Sat, Feb 14, 2015 at 09:35:07AM +1100, Dave Chinner wrote:
-> On Fri, Feb 13, 2015 at 11:14:46AM -0200, Carlos Maiolino wrote:
-> > Hi folks,
-> > 
-> > I've been seeing a lot of users requesting a shrink feature for XFS, and I
-> > believe it's time to have it implemented in XFS.
-> 
-> I'm not so sure about that.
-> 
-> > Is there anybody working on a shrink feature? If not, I'm going to
-> > start to work on it, if nobody have any objections.
-> 
-> 
-> I currently in design discussions with various other developers
-> about a line of development that will make growing and shrinking XFS
-> redundant operations. i.e. if we get this right, we'll never need to
-> deal with capacity changes of XFS filesystems at the XFS level
-> again. both grow and shrink will be instanteneous, and not require
-> any modification to the layout of the filesystem at all.
-> 
-Oh, I had no idea about this discussion :)
+Looks fine to me:
 
-> Mind you, that's not the reason for that line of development - it's
-> all about integrated snapshots in XFS. We essentially get
-> grow/shrink for free with that infrastructure....
->
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 
-I suppose LSF will be the place for that design discussion.
- 
-> I'm not quite ready to publish the docco yet - need to get all my
-> ducks in a line first - but if it does work out as a feasible line
-> of development, then the old "shrink" method is essentially a dead
-> end.
+>  fs/xfs/libxfs/xfs_alloc.c | 4 +++-
+>  1 file changed, 3 insertions(+), 1 deletion(-)
 > 
-> However, don't let that stop you working towards shrink, because
-> there is infrastructure that it requires that we need for other
-> things as well. Take you pick:
+> diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+> index 710554c..41e3630 100644
+> --- a/fs/xfs/libxfs/xfs_alloc.c
+> +++ b/fs/xfs/libxfs/xfs_alloc.c
+> @@ -260,6 +260,7 @@ xfs_alloc_fix_len(
+>  		rlen = rlen - (k - args->mod);
+>  	else
+>  		rlen = rlen - args->prod + (args->mod - k);
+> +	/* casts to (int) catch length underflows */
+>  	if ((int)rlen < (int)args->minlen)
+>  		return;
+>  	ASSERT(rlen >= args->minlen && rlen <= args->maxlen);
+> @@ -286,7 +287,8 @@ xfs_alloc_fix_minleft(
+>  	if (diff >= 0)
+>  		return 1;
+>  	args->len += diff;		/* shrink the allocated space */
+> -	if (args->len >= args->minlen)
+> +	/* casts to (int) catch length underflows */
+> +	if ((int)args->len >= (int)args->minlen)
+>  		return 1;
+>  	args->agbno = NULLAGBLOCK;
+>  	return 0;
+> -- 
+> 2.0.0
 > 
-> 	- parent pointers
-> 	- AG state control
-> 	- ranged bulkstat call (e.g. AG range)
-> 	- allocation location control from userspace
-> 	  (which may tie in to AG state control)
-> 	- Atomic inode location swaps
-> 
-> 
-> http://oss.sgi.com/archives/xfs/2014-01/msg00263.html
-> 
-> But it's worth reading the entire discussion starting here because
-> it start with a summary of the different approaches taken and why
-> they were rejected:
-> 
-> http://oss.sgi.com/archives/xfs/2014-01/msg00224.html
-> 
-> Cheers,
-> 
-
-Yep, I can work on that stuff, thanks for pointing me up the parent inodes
-discussion.
-
-I'll try to show up with something soon.
-
-Cheers
-
--- 
-Carlos
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
