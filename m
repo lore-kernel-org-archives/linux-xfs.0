@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 81A757F62
-	for <xfs@oss.sgi.com>; Mon, 16 Feb 2015 09:49:36 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 44ADF304062
-	for <xfs@oss.sgi.com>; Mon, 16 Feb 2015 07:49:36 -0800 (PST)
-Received: from mail-pd0-f173.google.com (mail-pd0-f173.google.com
-	[209.85.192.173]) by cuda.sgi.com with ESMTP id
-	hpUbYWYinfFKGPD0 (version=TLSv1 cipher=RC4-SHA bits=128
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id D554C7F6C
+	for <xfs@oss.sgi.com>; Mon, 16 Feb 2015 09:49:38 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 64F70AC001
+	for <xfs@oss.sgi.com>; Mon, 16 Feb 2015 07:49:38 -0800 (PST)
+Received: from mail-pd0-f182.google.com (mail-pd0-f182.google.com
+	[209.85.192.182]) by cuda.sgi.com with ESMTP id
+	vVCuZXaRWBASi2UA (version=TLSv1 cipher=RC4-SHA bits=128
 	verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 16 Feb 2015 07:49:30 -0800 (PST)
-Received: by pdjg10 with SMTP id g10so36816470pdj.1
-	for <xfs@oss.sgi.com>; Mon, 16 Feb 2015 07:49:30 -0800 (PST)
+	Mon, 16 Feb 2015 07:49:36 -0800 (PST)
+Received: by pdbfl12 with SMTP id fl12so36683031pdb.4
+	for <xfs@oss.sgi.com>; Mon, 16 Feb 2015 07:49:36 -0800 (PST)
 From: Namjae Jeon <linkinjeon@gmail.com>
-Subject: [PATCH RESEND 9/12] xfstests: generic/046: Test multiple fallocate
-	insert/collapse range calls
-Date: Tue, 17 Feb 2015 00:47:56 +0900
-Message-Id: <1424101680-3301-10-git-send-email-linkinjeon@gmail.com>
+Subject: [PATCH RESEND 10/12] xfstests: fsstress: Add fallocate insert range
+	operation
+Date: Tue, 17 Feb 2015 00:47:57 +0900
+Message-Id: <1424101680-3301-11-git-send-email-linkinjeon@gmail.com>
 In-Reply-To: <1424101680-3301-1-git-send-email-linkinjeon@gmail.com>
 References: <1424101680-3301-1-git-send-email-linkinjeon@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -37,141 +37,98 @@ Cc: linux-man@vger.kernel.org, Namjae Jeon <linkinjeon@gmail.com>, Namjae Jeon <
 
 From: Namjae Jeon <namjae.jeon@samsung.com>
 
-This testcase(043) tries to test finsert range a single alternate block
-multiple times and test merge code of collase range.
+This commit adds insert operation support for fsstress, which is
+meant to exercise fallocate FALLOC_FL_INSERT_RANGE support.
 
 Signed-off-by: Namjae Jeon <namjae.jeon@samsung.com>
 Signed-off-by: Ashish Sangwan <a.sangwan@samsung.com>
 Reviewed-by: Brian Foster <bfoster@redhat.com>
 ---
- tests/generic/046     |   95 +++++++++++++++++++++++++++++++++++++++++++++++++
- tests/generic/046.out |    2 ++
- tests/generic/group   |    1 +
- 3 files changed, 98 insertions(+)
- create mode 100644 tests/generic/046
- create mode 100644 tests/generic/046.out
+ ltp/fsstress.c |   19 ++++++++++++++++---
+ src/global.h   |    4 ++++
+ 2 files changed, 20 insertions(+), 3 deletions(-)
 
-diff --git a/tests/generic/046 b/tests/generic/046
-new file mode 100644
-index 0000000..5d036e0
---- /dev/null
-+++ b/tests/generic/046
-@@ -0,0 +1,95 @@
-+#! /bin/bash
-+# FS QA Test No. generic/046
-+#
-+# Test multiple fallocate insert/collapse range calls on same file.
-+# Call insert range a single alternate block multiple times until the file
-+# is left with 100 extents and as much number of extents. And Call collapse
-+# range about the previously inserted ranges to test merge code of collapse
-+# range. Also check for data integrity and file system consistency.
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2015 Samsung Electronics.  All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#
-+#-----------------------------------------------------------------------
-+#
+diff --git a/ltp/fsstress.c b/ltp/fsstress.c
+index b56fe5c..aa3e0c3 100644
+--- a/ltp/fsstress.c
++++ b/ltp/fsstress.c
+@@ -72,6 +72,7 @@ typedef enum {
+ 	OP_PUNCH,
+ 	OP_ZERO,
+ 	OP_COLLAPSE,
++	OP_INSERT,
+ 	OP_READ,
+ 	OP_READLINK,
+ 	OP_RENAME,
+@@ -170,6 +171,7 @@ void	mknod_f(int, long);
+ void	punch_f(int, long);
+ void	zero_f(int, long);
+ void	collapse_f(int, long);
++void	insert_f(int, long);
+ void	read_f(int, long);
+ void	readlink_f(int, long);
+ void	rename_f(int, long);
+@@ -209,6 +211,7 @@ opdesc_t	ops[] = {
+ 	{ OP_PUNCH, "punch", punch_f, 1, 1 },
+ 	{ OP_ZERO, "zero", zero_f, 1, 1 },
+ 	{ OP_COLLAPSE, "collapse", collapse_f, 1, 1 },
++	{ OP_INSERT, "insert", insert_f, 1, 1 },
+ 	{ OP_READ, "read", read_f, 1, 0 },
+ 	{ OP_READLINK, "readlink", readlink_f, 1, 0 },
+ 	{ OP_RENAME, "rename", rename_f, 2, 1 },
+@@ -2176,6 +2179,7 @@ struct print_flags falloc_flags [] = {
+ 	{ FALLOC_FL_NO_HIDE_STALE, "NO_HIDE_STALE"},
+ 	{ FALLOC_FL_COLLAPSE_RANGE, "COLLAPSE_RANGE"},
+ 	{ FALLOC_FL_ZERO_RANGE, "ZERO_RANGE"},
++	{ FALLOC_FL_INSERT_RANGE, "INSERT_RANGE"},
+ 	{ -1, NULL}
+ };
+ 
+@@ -2227,10 +2231,11 @@ do_fallocate(int opno, long r, int mode)
+ 	off %= maxfsize;
+ 	len = (off64_t)(random() % (1024 * 1024));
+ 	/*
+-	 * Collapse range requires off and len to be block aligned, make it
+-	 * more likely to be the case.
++	 * Collapse/insert range requires off and len to be block aligned,
++	 * make it more likely to be the case.
+ 	 */
+-	if ((mode & FALLOC_FL_COLLAPSE_RANGE) && (opno % 2)) {
++	if ((mode & (FALLOC_FL_COLLAPSE_RANGE | FALLOC_FL_INSERT_RANGE)) &&
++		(opno % 2)) {
+ 		off = ((off + stb.st_blksize - 1) & ~(stb.st_blksize - 1));
+ 		len = ((len + stb.st_blksize - 1) & ~(stb.st_blksize - 1));
+ 	}
+@@ -2656,6 +2661,14 @@ collapse_f(int opno, long r)
+ }
+ 
+ void
++insert_f(int opno, long r)
++{
++#ifdef HAVE_LINUX_FALLOC_H
++	do_fallocate(opno, r, FALLOC_FL_INSERT_RANGE);
++#endif
++}
 +
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
++void
+ read_f(int opno, long r)
+ {
+ 	char		*buf;
+diff --git a/src/global.h b/src/global.h
+index 8180f66..f63246b 100644
+--- a/src/global.h
++++ b/src/global.h
+@@ -172,6 +172,10 @@
+ #define FALLOC_FL_ZERO_RANGE		0x10
+ #endif
+ 
++#ifndef FALLOC_FL_INSERT_RANGE
++#define FALLOC_FL_INSERT_RANGE		0x20
++#endif
 +
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1	# failure is the default!
-+trap "rm -f $tmp.*; exit \$status" 0 1 2 3 15
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+
-+# real QA test starts here
-+_supported_fs generic
-+_supported_os Linux
-+
-+_require_scratch
-+_require_xfs_io_command "fiemap"
-+_require_xfs_io_command "finsert"
-+_require_xfs_io_command "fcollapse"
-+src=$SCRATCH_MNT/testfile
-+dest=$SCRATCH_MNT/testfile.dest
-+BLOCKS=100
-+BSIZE=`get_block_size $SCRATCH_MNT`
-+rm -f $seqres.full
-+
-+_scratch_mkfs >> $seqres.full 2>&1 || _fail "mkfs failed"
-+_scratch_mount || _fail "mount failed"
-+length=$(($BLOCKS * $BSIZE))
-+
-+# Write file
-+_do "$XFS_IO_PROG -f -c \"pwrite 0 $length\" -c fsync $src"
-+cp $src $dest
-+extent_before=`$XFS_IO_PROG -c "fiemap -v" $dest | grep "^ *[0-9]*:" |wc -l`
-+
-+# Insert alternate blocks
-+for (( j=0; j < $(($BLOCKS/2)); j++ )); do
-+	offset=$((($j*$BSIZE)*2))
-+	_do "$XFS_IO_PROG -c \"finsert $offset $BSIZE\" $dest"
-+done
-+
-+# Check if 100 extents are present
-+$XFS_IO_PROG -c "fiemap -v" $dest | grep "^ *[0-9]*:" |wc -l
-+
-+_check_scratch_fs
-+if [ $? -ne 0 ]; then
-+	status=1
-+	exit
-+fi
-+
-+# Collapse alternate blocks
-+for (( j=0; j < $(($BLOCKS/2)); j++ )); do
-+	offset=$((($j*$BSIZE)))
-+	_do "$XFS_IO_PROG -c \"fcollapse $offset $BSIZE\" $dest"
-+done
-+
-+extent_after=`$XFS_IO_PROG -c "fiemap -v" $dest | grep "^ *[0-9]*:" |wc -l`
-+if [ $extent_before -ne $extent_after ]; then
-+	echo "extents mismatched before = $extent_before after = $extent_after"
-+fi
-+
-+# compare original file and test file.
-+cmp $src $dest || _fail "file bytes check failed"
-+
-+# success, all done
-+status=0
-+exit
-diff --git a/tests/generic/046.out b/tests/generic/046.out
-new file mode 100644
-index 0000000..2a6a862
---- /dev/null
-+++ b/tests/generic/046.out
-@@ -0,0 +1,2 @@
-+QA output created by 046
-+100
-diff --git a/tests/generic/group b/tests/generic/group
-index 772f910..75e567e 100644
---- a/tests/generic/group
-+++ b/tests/generic/group
-@@ -48,6 +48,7 @@
- 043 auto quick prealloc
- 044 auto quick prealloc
- 045 auto quick prealloc
-+046 auto quick prealloc
- 053 acl repair auto quick
- 062 attr udf auto quick
- 068 other auto freeze dangerous stress
+ #endif /* HAVE_LINUX_FALLOC_H */
+ 
+ #endif /* GLOBAL_H */
 -- 
 1.7.9.5
 
