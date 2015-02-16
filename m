@@ -1,22 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 61ECD7F4E
-	for <xfs@oss.sgi.com>; Mon, 16 Feb 2015 07:53:58 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 4AE71304039
-	for <xfs@oss.sgi.com>; Mon, 16 Feb 2015 05:53:58 -0800 (PST)
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id iIavDgQxraDYXYk4 (version=TLSv1
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id F2D2A7F4E
+	for <xfs@oss.sgi.com>; Mon, 16 Feb 2015 08:10:47 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id DA03E8F804C
+	for <xfs@oss.sgi.com>; Mon, 16 Feb 2015 06:10:44 -0800 (PST)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id 6c9ONBqwD5VyTSv0 (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 16 Feb 2015 05:53:56 -0800 (PST)
-Message-ID: <54E1F6C2.4060105@oracle.com>
-Date: Mon, 16 Feb 2015 16:55:14 +0300
-From: Alexander Tsvetkov <alexander.tsvetkov@oracle.com>
+	Mon, 16 Feb 2015 06:10:43 -0800 (PST)
+Date: Mon, 16 Feb 2015 09:10:40 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: XFS: Internal error XFS_WANT_CORRUPTED_GOTO at line 990 of file
+	fs/xfs/xfs_ialloc.c
+Message-ID: <20150216141039.GA48651@bfoster.bfoster>
+References: <CAF1in6QW=PS0qfBAtQZHC23r+WVAXv5TLxFAr0r6RfTNiOnXcQ@mail.gmail.com>
 MIME-Version: 1.0
-Subject: Re: xfs_logprint segfault with external log
-References: <54DB5E70.80607@oracle.com> <20150211205406.GT4251@dastard>
-	<54DC940D.4030009@oracle.com> <20150212230940.GD12722@dastard>
-In-Reply-To: <20150212230940.GD12722@dastard>
+Content-Disposition: inline
+In-Reply-To: <CAF1in6QW=PS0qfBAtQZHC23r+WVAXv5TLxFAr0r6RfTNiOnXcQ@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,69 +26,86 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Eric Sandee <sandeen@sandeen.net>, xfs@oss.sgi.com
+To: Pablo Silva <psilvao@gmail.com>
+Cc: xfs@oss.sgi.com
 
+On Fri, Feb 13, 2015 at 03:44:57PM -0300, Pablo Silva wrote:
+> Hi !
+> 
+>     We have a server with centos 6.6, kernel version:
+> 2.6.32-431.17.1.el6.x86_64, where we got the following message:
+> 
+> Feb 12 19:22:15 vtl kernel:
+> Feb 12 19:22:15 vtl kernel: Pid: 3502, comm: touch Not tainted
+> 2.6.32-431.17.1.el6.x86_64 #1
+> Feb 12 19:22:15 vtl kernel: Call Trace:
+> Feb 12 19:22:15 vtl kernel: [<ffffffffa041ae5f>] ?
+> xfs_error_report+0x3f/0x50 [xfs]
+> Feb 12 19:22:15 vtl kernel: [<ffffffffa0422980>] ? xfs_ialloc+0x60/0x6e0 [xfs]
+> Feb 12 19:22:15 vtl kernel: [<ffffffffa041ec2e>] ? xfs_dialloc+0x43e/0x850 [xfs]
+> Feb 12 19:22:15 vtl kernel: [<ffffffffa0422980>] ? xfs_ialloc+0x60/0x6e0 [xfs]
+> Feb 12 19:22:15 vtl kernel: [<ffffffffa044007a>] ?
+> kmem_zone_zalloc+0x3a/0x50 [xfs]
+> Feb 12 19:22:15 vtl kernel: [<ffffffffa043b814>] ?
+> xfs_dir_ialloc+0x74/0x2b0 [xfs]
+> Feb 12 19:22:15 vtl kernel: [<ffffffffa043d900>] ? xfs_create+0x440/0x640 [xfs]
+> Feb 12 19:22:15 vtl kernel: [<ffffffffa044aa5d>] ? xfs_vn_mknod+0xad/0x1c0 [xfs]
+> Feb 12 19:22:15 vtl kernel: [<ffffffffa044aba0>] ? xfs_vn_create+0x10/0x20 [xfs]
+> Feb 12 19:22:15 vtl kernel: [<ffffffff81198086>] ? vfs_create+0xe6/0x110
+> Feb 12 19:22:15 vtl kernel: [<ffffffff8119bb9e>] ? do_filp_open+0xa8e/0xd20
+> Feb 12 19:22:15 vtl kernel: [<ffffffff811a7ea2>] ? alloc_fd+0x92/0x160
+> Feb 12 19:22:15 vtl kernel: XFS: Internal error
+> XFS_WANT_CORRUPTED_GOTO at line 990 of file fs/xfs/xfs_ialloc.c.
+> Caller 0xffffffffa0422980
+> 
 
-On 02/13/2015 02:09 AM, Dave Chinner wrote:
-> On Thu, Feb 12, 2015 at 02:52:45PM +0300, Alexander Tsvetkov wrote:
->> On 02/11/2015 11:54 PM, Dave Chinner wrote:
->>> On Wed, Feb 11, 2015 at 04:51:44PM +0300, Alexander Tsvetkov wrote:
->>>> Hello,
->>>>
->>>> I've obtained corrupted xfs log after some sanity xfs testing:
->>>>
->>>> "log=logfile
->>>> log_size=855
->>>>
->>>> dd if=/dev/zero "of=$log" bs=4096 count=$log_size
->>>> loopdev=$(losetup -f)
->>>> losetup $loopdev $log
->>>>
->>>> mkfs.xfs -f -m crc=1 -llogdev=$loopdev,size=${log_size}b $SCRATCH_DEV
->>>> mount -t xfs -ologdev=$loopdev $SCRATCH_DEV $SCRATCH_MNT
->>>> ./fdtree.sh  -l 4 -d 4 -C -o $SCRATCH_MNT
->>>> sync
->>>> umount $SCRATCH_MNT
->>>>
->>>> xfs_logprint -l $loopdev $SCRATCH_DEV"
->>>>
->>>> Test makes crc enabled xfs filesystem with the external log of
->>>> minimal allowed size and then creates on this fs the small directory
->>>> tree
->>>> with sub directories and files of fixed depth and size with help of
->>>> fdtree utility:
->>>> https://computing.llnl.gov/?set=code&page=sio_downloads
->>> Just take metadump image and put it somewhere we can down load it.
->>>
->>>> After that xfs_logprint stably reports bad data in log:
-> Please try the patch below, it fixes the problem on the image you
-> provided.
+        /*
+         * None left in the last group, search the whole AG
+         */
+        error = xfs_inobt_lookup(cur, 0, XFS_LOOKUP_GE, &i);
+        if (error)
+                goto error0;
+        XFS_WANT_CORRUPTED_GOTO(i == 1, error0);
 
-I've restored provided image to filesystem with the same log file, 
-applied patch to latest xfsprogs and have stable pass runs
-of xfs_logprint on that filesystem and running with xfsprogs without 
-this patch results to xfs_logprint segfaults reported that means patch 
-is working.
-The problem that it is not working for repeated test runs where 
-xfs_logprint still continue to report bad log data. It seems it is 
-working for some
-cases including this image, because sometimes test can be passed but 
-most part of test runs have still this xfs_logprint log error. Here is 
-another fs image
-that is still failed for me with patch applied to xfsprogs: 
-https://drive.google.com/file/d/0B1Cg0_B_ui2gM1Bzdkc3TWVqbGM/view?usp=sharing
+        for (;;) {
+                error = xfs_inobt_get_rec(cur, &rec, &i);
+                if (error)
+                        goto error0;
+                XFS_WANT_CORRUPTED_GOTO(i == 1, error0);
+                if (rec.ir_freecount > 0)
+                        break;
+                error = xfs_btree_increment(cur, 0, &i);
+                if (error)
+                        goto error0;
+--->            XFS_WANT_CORRUPTED_GOTO(i == 1, error0);
+        }
 
+That corresponds to the check above. This code is part of the inode
+allocator where we expect an AG to have free inodes and we're doing a
+brute force search for a record. Apparently we go off the AG or some
+other problem occurs before we find a free inode record.
 
-> Cheers,
->
-> Dave.
-Thanks,
-Alexander Tsvetkov
+Does 'xfs_repair -n' report any problems with this fs? Have there been
+any other storage errors reported in the logs? Is the problem
+reproducible or was it a one off occurrence?
+
+Brian
+
+> I can't find more information for this..., perhaps a bug or other
+> thing ..., welcome any hint for to research..
+> 
+> Thanks in advance!
+> 
+> -Pablo
+
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
