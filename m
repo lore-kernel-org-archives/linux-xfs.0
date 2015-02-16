@@ -1,24 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 3E0167F59
-	for <xfs@oss.sgi.com>; Mon, 16 Feb 2015 09:49:58 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 0ABF1304043
-	for <xfs@oss.sgi.com>; Mon, 16 Feb 2015 07:49:57 -0800 (PST)
-Received: from mail-pd0-f178.google.com (mail-pd0-f178.google.com
-	[209.85.192.178]) by cuda.sgi.com with ESMTP id
-	qZDdPZUALKUTXS5t (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 16 Feb 2015 07:49:41 -0800 (PST)
-Received: by pdjp10 with SMTP id p10so36802156pdj.3
-	for <xfs@oss.sgi.com>; Mon, 16 Feb 2015 07:49:41 -0800 (PST)
-From: Namjae Jeon <linkinjeon@gmail.com>
-Subject: [PATCH RESEND 11/12] xfstests: fsx: Add fallocate insert range
-	operation
-Date: Tue, 17 Feb 2015 00:47:58 +0900
-Message-Id: <1424101680-3301-12-git-send-email-linkinjeon@gmail.com>
-In-Reply-To: <1424101680-3301-1-git-send-email-linkinjeon@gmail.com>
-References: <1424101680-3301-1-git-send-email-linkinjeon@gmail.com>
+	by oss.sgi.com (Postfix) with ESMTP id 1838A7F4E
+	for <xfs@oss.sgi.com>; Mon, 16 Feb 2015 11:35:53 -0600 (CST)
+Message-ID: <54E22A76.40106@sgi.com>
+Date: Mon, 16 Feb 2015 11:35:50 -0600
+From: Mark Tinguely <tinguely@sgi.com>
+MIME-Version: 1.0
+Subject: Re: [PATCH] xfs: xfs_alloc_fix_minleft can underflow near ENOSPC
+References: <1423782857-11800-1-git-send-email-david@fromorbit.com>	<54DE8B6D.8010401@sgi.com>
+	<20150214232951.GW4251@dastard> <54E16667.1050200@gmail.com>
+In-Reply-To: <54E16667.1050200@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,232 +18,187 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: david@fromorbit.com, tytso@mit.edu
-Cc: linux-man@vger.kernel.org, Namjae Jeon <linkinjeon@gmail.com>, Namjae Jeon <namjae.jeon@samsung.com>, linux-api@vger.kernel.org, bfoster@redhat.com, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, mtk.manpages@gmail.com, a.sangwan@samsung.com, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org
+To: "Michael L. Semon" <mlsemon35@gmail.com>
+Cc: xfs@oss.sgi.com
 
-From: Namjae Jeon <namjae.jeon@samsung.com>
+On 02/15/15 21:39, Michael L. Semon wrote:
+> On 02/14/15 18:29, Dave Chinner wrote:
+>> On Fri, Feb 13, 2015 at 05:40:29PM -0600, Mark Tinguely wrote:
+>>> On 02/12/15 17:14, Dave Chinner wrote:
+>>>> From: Dave Chinner<dchinner@redhat.com>
+>>>>
+>>>> Test generic/224 is failing with a corruption being detected on one
+>>>> of Michael's test boxes.  Debug that Michael added is indicating
+>>>> that the minleft trimming is resulting in an underflow:
+>>>>
+>>>> .....
+>>>>   before fixup:              rlen          1  args->len          0
+>>>>   after xfs_alloc_fix_len  : rlen          1  args->len          1
+>>>>   before goto out_nominleft: rlen          1  args->len          0
+>>>>   before fixup:              rlen          1  args->len          0
+>>>>   after xfs_alloc_fix_len  : rlen          1  args->len          1
+>>>>   after fixup:               rlen          1  args->len          1
+>>>>   before fixup:              rlen          1  args->len          0
+>>>>   after xfs_alloc_fix_len  : rlen          1  args->len          1
+>>>>   after fixup:               rlen 4294967295  args->len 4294967295
+>>>>   XFS: Assertion failed: fs_is_ok, file: fs/xfs/libxfs/xfs_alloc.c, line: 1424
+>>>>
+>>>> The "goto out_nominleft:" indicates that we are getting close to
+>>>> ENOSPC in the AG, and a couple of allocations later we underflow
+>>>> and the corruption check fires in xfs_alloc_ag_vextent_size().
+>>>>
+>>>> The issue is that the extent length fixups comaprisons are done
+>>>> with variables of xfs_extlen_t types. These are unsigned so an
+>>>> underflow looks like a really big value and hence is not detected
+>>>> as being smaller than the minimum length allowed for the extent.
+>>>> Hence the corruption check fires as it is noticing that the returned
+>>>> length is longer than the original extent length passed in.
+>>>>
+>>>> This can be easily fixed by ensuring we do the underflow test on
+>>>> signed values, the same way xfs_alloc_fix_len() prevents underflow.
+>>>> So we realise in future that these casts prevent underflows from
+>>>> going undetected, add comments to the code indicating this.
+>>>>
+>>>> Reported-by: Michael L. Semon<mlsemon35@gmail.com>
+>>>> Tested-by: Michael L. Semon<mlsemon35@gmail.com>
+>>>> Signed-off-by: Dave Chinner<dchinner@redhat.com>
+>>>> ---
+>>>>   fs/xfs/libxfs/xfs_alloc.c | 4 +++-
+>>>>   1 file changed, 3 insertions(+), 1 deletion(-)
+>>>
+>>>
+>>> int diff = be32_to_cpu(agf->agf_freeblks)
+>>>               - args->len - args->minleft;
+>>>
+>>
+>> Preconditions:
+>>
+>> 	agf->agf_freeblks = 1
+>> 	args->len = 1
+>> 	args->minleft = 2
+>>
+>> Therefore, diff = -2
+>>
+>>>> @@ -286,7 +287,8 @@ xfs_alloc_fix_minleft(
+>>>>   	if (diff>= 0)
+>>>>   		return 1;
+>>>
+>>> If the diff math was done correctly, wouldn't it get caught here?
+>>
+>> No, diff<  0.
 
-This commit adds fallocate FALLOC_FL_INSERT_RANGE support for fsx.
+Hee, what was I thinking? sdrawkcab ylsouivbO
+>>
+>>
+>>>>   	args->len += diff;		/* shrink the allocated space */
+>>
+>> 1 += -2
+>>    = -1
+>>
+>>>> -	if (args->len>= args->minlen)
+>>
+>> 	if (0xffffffff>= 1)
+>>
+>> broken.
+>>
+>>>> +	/* casts to (int) catch length underflows */
+>>>> +	if ((int)args->len >= (int)args->minlen)
+>>
+>> 	if (-1>= 1)
+>>
+>> correct.
+>>
+>>>>   		return 1;
+>>>>   	args->agbno = NULLAGBLOCK;
+>>>>   	return 0;
+>>>
+>>> We can and should fix the wrap in xfs_alloc_fix_minleft() but this
+>>> also points to the fact that xfs_alloc_fix_freelist() is incorrectly
+>>> choosing AGs that will later fail the allocation alignment, minlen,
+>>> and minleft requirements.
+>>
+>> I don't think there's a problem there. At least, not the problem I
+>> think you trying to describe.
+>>
+>>> You can connect the dots to see how this can lead to a deadlock with
+>>> extent frees. We have seen them. I hacked the XFS code to lead to
+>>> this situation.
+>>
+>> You should post the test cases and the patch that exposes the issues
+>> you are concerned about. Otherwise we have no real idea of what
+>> problems you are talking about, and certainly can't reproduce them.
+>>
+>>> Also bad is xfs_alloc_vextent() will temporally ignore the minleft
+>>> for the xfs_alloc_fix_freelist() but makes the ag allocator enforce
+>>> the minleft.
+>>
+>> Hmmm - I suspect you haven't understood the underlying reason for
+>> setting minleft to zero for the call to xfs_alloc_fix_freelist().
+>> There's are two places we do this: single AG constrainted
+>> allocation, and the "any AG, but near ENOSPC" allocation.
+>>
+>> For single AG constrained allocation, minleft is something we can
+>> ignore because we must select that AG for allocation.  minleft is
+>> applied against the total allocation requirement, not the minimum
+>> length of allocation that can be done. Hence we might be able to do
+>> a minlen allocation, but we'd reject it because we can't do a maxlen
+>> allocation due to minleft requirements.
+>>
+>> Hence we switch off minleft in that case when doing freelist checks
+>> so that we don't reject allocations that could do a minlen
+>> allocation successfully. This requires the low level allocator to be
+>> able to trim back the selected extent from whatever length it finds
+>> to repesect minleft, and if it can't then fail the allocation.
+>> That is the function of xfs_alloc_fix_minleft() - constrain the
+>> allocated extent to the required minleft or fail the allocation.
+>>
+>> And for the lowspace algorithm, the reasoning is similar. After two
+>> attempts to allocate in AGs that have enough space for a maxlen
+>> allocation, we switch off minleft so that we only constrain the AG
+>> search to AGs that can definitely satisfy a minlen allocation, hence
+>> improving the chance we can do an allocation successfully near
+>> ENOSPC.
+>>
+>> Cheers,
+>>
+>> Dave.
+>
+> I took something out of Mark's argument.  The original condition was
+> hit using fstests generic/224 on RAID-0, while sizing up an old Core
+> 2 PC for a new purpose.  With Mark mentioning AGs, I looked around a
+> little bit.  The case can be hit more easily with this test on 16-GB
+> $TEST_DEV and $SCRATCH_DEV:
+>
+> while true; do MKFS_OPTIONS='-d agcount=16' ./check generic/224; done
+>
+> That may not mean anything--a 50 MB/s Caviar SE on a SATA-1 controller
+> may just make the original test too slow for my patience--but the
+> extra AGs do make things seem rather repeatable.
+>
+> I'll be happy to leave both the Core 2 PC and the i686 Pentium 4 PC
+> in an unpatched state, should you or Mark want me to fetch more
+> values via printk debugging.  Everything else XFS is in pretty good
+> shape for the "small or few" purposes here.
+>
+> Thanks!
+>
+> Michael
 
-Signed-off-by: Namjae Jeon <namjae.jeon@samsung.com>
-Signed-off-by: Ashish Sangwan <a.sangwan@samsung.com>
-Reviewed-by: Brian Foster <bfoster@redhat.com>
----
- ltp/fsx.c |  124 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++-----
- 1 file changed, 114 insertions(+), 10 deletions(-)
 
-diff --git a/ltp/fsx.c b/ltp/fsx.c
-index 3709419..9fed5b2 100644
---- a/ltp/fsx.c
-+++ b/ltp/fsx.c
-@@ -95,7 +95,8 @@ int			logcount = 0;	/* total ops */
- #define OP_PUNCH_HOLE		6
- #define OP_ZERO_RANGE		7
- #define OP_COLLAPSE_RANGE	8
--#define OP_MAX_FULL		9
-+#define OP_INSERT_RANGE	9
-+#define OP_MAX_FULL		10
- 
- /* operation modifiers */
- #define OP_CLOSEOPEN	100
-@@ -145,6 +146,7 @@ int     fallocate_calls = 1;            /* -F flag disables */
- int     punch_hole_calls = 1;           /* -H flag disables */
- int     zero_range_calls = 1;           /* -z flag disables */
- int	collapse_range_calls = 1;	/* -C flag disables */
-+int	insert_range_calls = 1;		/* -i flag disables */
- int 	mapped_reads = 1;		/* -R flag disables it */
- int	fsxgoodfd = 0;
- int	o_direct;			/* -Z */
-@@ -339,6 +341,14 @@ logdump(void)
- 						     lp->args[0] + lp->args[1])
- 				prt("\t******CCCC");
- 			break;
-+		case OP_INSERT_RANGE:
-+			prt("INSERT 0x%x thru 0x%x\t(0x%x bytes)",
-+			    lp->args[0], lp->args[0] + lp->args[1] - 1,
-+			    lp->args[1]);
-+			if (badoff >= lp->args[0] && badoff <
-+						     lp->args[0] + lp->args[1])
-+				prt("\t******CCCC");
-+			break;
- 		case OP_SKIPPED:
- 			prt("SKIPPED (no operation)");
- 			break;
-@@ -1012,6 +1022,59 @@ do_collapse_range(unsigned offset, unsigned length)
- }
- #endif
- 
-+#ifdef FALLOC_FL_INSERT_RANGE
-+void
-+do_insert_range(unsigned offset, unsigned length)
-+{
-+	unsigned end_offset;
-+	int mode = FALLOC_FL_INSERT_RANGE;
-+
-+	if (length == 0) {
-+		if (!quiet && testcalls > simulatedopcount)
-+			prt("skipping zero length insert range\n");
-+		log4(OP_SKIPPED, OP_INSERT_RANGE, offset, length);
-+		return;
-+	}
-+
-+	if ((loff_t)offset >= file_size) {
-+		if (!quiet && testcalls > simulatedopcount)
-+			prt("skipping insert range behind EOF\n");
-+		log4(OP_SKIPPED, OP_INSERT_RANGE, offset, length);
-+		return;
-+	}
-+
-+	log4(OP_INSERT_RANGE, offset, length, 0);
-+
-+	if (testcalls <= simulatedopcount)
-+		return;
-+
-+	end_offset = offset + length;
-+	if ((progressinterval && testcalls % progressinterval == 0) ||
-+	    (debug && (monitorstart == -1 || monitorend == -1 ||
-+		      end_offset <= monitorend))) {
-+		prt("%lu insert\tfrom 0x%x to 0x%x, (0x%x bytes)\n", testcalls,
-+			offset, offset+length, length);
-+	}
-+	if (fallocate(fd, mode, (loff_t)offset, (loff_t)length) == -1) {
-+		prt("insert range: %x to %x\n", offset, length);
-+		prterr("do_insert_range: fallocate");
-+		report_failure(161);
-+	}
-+
-+	memmove(good_buf + end_offset, good_buf + offset,
-+		file_size - offset);
-+	memset(good_buf + offset, '\0', length);
-+	file_size += length;
-+}
-+
-+#else
-+void
-+do_insert_range(unsigned offset, unsigned length)
-+{
-+	return;
-+}
-+#endif
-+
- #ifdef HAVE_LINUX_FALLOC_H
- /* fallocate is basically a no-op unless extending, then a lot like a truncate */
- void
-@@ -1117,14 +1180,25 @@ docloseopen(void)
- 	}
- }
- 
--#define TRIM_OFF_LEN(off, len, size)	\
--do {					\
--	if (size)			\
--		(off) %= (size);	\
--	else				\
--		(off) = 0;		\
--	if ((off) + (len) > (size))	\
--		(len) = (size) - (off);	\
-+
-+#define TRIM_OFF(off, size)			\
-+do {						\
-+	if (size)				\
-+		(off) %= (size);		\
-+	else					\
-+		(off) = 0;			\
-+} while (0)
-+
-+#define TRIM_LEN(off, len, size)		\
-+do {						\
-+	if ((off) + (len) > (size))		\
-+		(len) = (size) - (off);		\
-+} while (0)
-+
-+#define TRIM_OFF_LEN(off, len, size)		\
-+do {						\
-+	TRIM_OFF(off, size);			\
-+	TRIM_LEN(off, len, size);		\
- } while (0)
- 
- void
-@@ -1192,6 +1266,12 @@ test(void)
- 			goto out;
- 		}
- 		break;
-+	case OP_INSERT_RANGE:
-+		if (!insert_range_calls) {
-+			log4(OP_SKIPPED, OP_INSERT_RANGE, offset, size);
-+			goto out;
-+		}
-+		break;
- 	}
- 
- 	switch (op) {
-@@ -1244,6 +1324,22 @@ test(void)
- 		}
- 		do_collapse_range(offset, size);
- 		break;
-+	case OP_INSERT_RANGE:
-+		TRIM_OFF(offset, file_size);
-+		TRIM_LEN(file_size, size, maxfilelen);
-+		offset = offset & ~(block_size - 1);
-+		size = size & ~(block_size - 1);
-+		if (size == 0) {
-+			log4(OP_SKIPPED, OP_INSERT_RANGE, offset, size);
-+			goto out;
-+		}
-+		if (file_size + size > maxfilelen) {
-+			log4(OP_SKIPPED, OP_INSERT_RANGE, offset, size);
-+			goto out;
-+		}
-+
-+		do_insert_range(offset, size);
-+		break;
- 	default:
- 		prterr("test: unknown operation");
- 		report_failure(42);
-@@ -1307,6 +1403,9 @@ usage(void)
- #ifdef FALLOC_FL_COLLAPSE_RANGE
- "	-C: Do not use collapse range calls\n"
- #endif
-+#ifdef FALLOC_FL_INSERT_RANGE
-+"	-i: Do not use insert range calls\n"
-+#endif
- "	-L: fsxLite - no file creations & no file size changes\n\
- 	-N numops: total # operations to do (default infinity)\n\
- 	-O: use oplen (see -o flag) for every op (default random)\n\
-@@ -1493,7 +1592,7 @@ main(int argc, char **argv)
- 
- 	setvbuf(stdout, (char *)0, _IOLBF, 0); /* line buffered stdout */
- 
--	while ((ch = getopt(argc, argv, "b:c:dfl:m:no:p:qr:s:t:w:xyAD:FHzCLN:OP:RS:WZ"))
-+	while ((ch = getopt(argc, argv, "b:c:dfl:m:no:p:qr:s:t:w:xyAD:FHzCiLN:OP:RS:WZ"))
- 	       != EOF)
- 		switch (ch) {
- 		case 'b':
-@@ -1599,6 +1698,9 @@ main(int argc, char **argv)
- 		case 'C':
- 			collapse_range_calls = 0;
- 			break;
-+		case 'i':
-+			insert_range_calls = 0;
-+			break;
- 		case 'L':
- 		        lite = 1;
- 			break;
-@@ -1758,6 +1860,8 @@ main(int argc, char **argv)
- 		zero_range_calls = test_fallocate(FALLOC_FL_ZERO_RANGE);
- 	if (collapse_range_calls)
- 		collapse_range_calls = test_fallocate(FALLOC_FL_COLLAPSE_RANGE);
-+	if (insert_range_calls)
-+		insert_range_calls = test_fallocate(FALLOC_FL_INSERT_RANGE);
- 
- 	while (numops == -1 || numops--)
- 		test();
--- 
-1.7.9.5
+Thanks Michael, you don't need to hold your test box for me. I do have a 
+way to recreate these ABBA AGF buffer allocation deadlocks and 
+understand the whys and hows very well. I don't have a community way to 
+make a xfstest for it but I think your test is getting close.
+
+I am certain that with Dave's patch alone, and pushed long enough you 
+will hit the ABBA AGF buffer deadlock. It needs to do that allocation to 
+the last AG while freeing an extent to that AG.
+
+--Mark.
 
 _______________________________________________
 xfs mailing list
