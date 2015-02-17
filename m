@@ -1,25 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 2B3317F3F
-	for <xfs@oss.sgi.com>; Tue, 17 Feb 2015 07:37:56 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 17CDD8F8039
-	for <xfs@oss.sgi.com>; Tue, 17 Feb 2015 05:37:52 -0800 (PST)
-Received: from mga14.intel.com ([192.55.52.115]) by cuda.sgi.com with ESMTP id
-	7Zgj9ToySBE0A2po for <xfs@oss.sgi.com>;
-	Tue, 17 Feb 2015 05:37:50 -0800 (PST)
-Date: Tue, 17 Feb 2015 08:37:45 -0500
-From: Matthew Wilcox <willy@linux.intel.com>
-Subject: Re: + ext4-add-dax-functionality.patch added to -mm tree
-Message-ID: <20150217133745.GG3364@wil.cx>
-References: <54b45495.+RptMlNQorYE9TTf%akpm@linux-foundation.org>
-	<20150115124106.GF12739@quack.suse.cz>
-	<100D68C7BA14664A8938383216E40DE040853440@FMSMSX114.amr.corp.intel.com>
-	<20150119141858.GF5662@quack.suse.cz>
-	<20150217085200.GA23192@quack.suse.cz>
+	by oss.sgi.com (Postfix) with ESMTP id EBCC17F4E
+	for <xfs@oss.sgi.com>; Tue, 17 Feb 2015 09:37:08 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id D7A3B8F8039
+	for <xfs@oss.sgi.com>; Tue, 17 Feb 2015 07:37:05 -0800 (PST)
+Received: from mail-qa0-f52.google.com (mail-qa0-f52.google.com
+	[209.85.216.52]) by cuda.sgi.com with ESMTP id eMRETFiFTYRkvhhC
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Tue, 17 Feb 2015 07:37:04 -0800 (PST)
+Received: by mail-qa0-f52.google.com with SMTP id v10so26739857qac.11
+	for <xfs@oss.sgi.com>; Tue, 17 Feb 2015 07:37:03 -0800 (PST)
+Message-ID: <54E36016.20908@gmail.com>
+Date: Tue, 17 Feb 2015 10:36:54 -0500
+From: "Michael L. Semon" <mlsemon35@gmail.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20150217085200.GA23192@quack.suse.cz>
+Subject: Re: [PATCH] xfs: xfs_alloc_fix_minleft can underflow near ENOSPC
+References: <1423782857-11800-1-git-send-email-david@fromorbit.com>
+	<54DE8B6D.8010401@sgi.com> <20150214232951.GW4251@dastard>
+	<54E16667.1050200@gmail.com> <54E22A76.40106@sgi.com>
+	<20150216231716.GB4251@dastard>
+In-Reply-To: <20150216231716.GB4251@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,87 +33,58 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Jan Kara <jack@suse.cz>
-Cc: "axboe@kernel.dk" <axboe@kernel.dk>, "boaz@plexistor.com" <boaz@plexistor.com>, xfs@oss.sgi.com, "Dilger, Andreas" <andreas.dilger@intel.com>, "rdunlap@infradead.org" <rdunlap@infradead.org>, "hch@lst.de" <hch@lst.de>, "mathieu.desnoyers@efficios.com" <mathieu.desnoyers@efficios.com>, "Wilcox, Matthew R" <matthew.r.wilcox@intel.com>, "mm-commits@vger.kernel.org" <mm-commits@vger.kernel.org>, Matthew Wilcox <willy@linux.intel.com>, "tytso@mit.edu" <tytso@mit.edu>, "ross.zwisler@linux.intel.com" <ross.zwisler@linux.intel.com>, "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>, "kirill.shutemov@linux.intel.com" <kirill.shutemov@linux.intel.com>
+To: Dave Chinner <david@fromorbit.com>, Mark Tinguely <tinguely@sgi.com>
+Cc: xfs@oss.sgi.com
 
-On Tue, Feb 17, 2015 at 09:52:00AM +0100, Jan Kara wrote:
->   Matthew, I think I still didn't see response to this. I think we can
-> fixup things after they are merged (since Andrew sent this patch to Linus)
-> but IMHO it needs some action...
+On 02/16/15 18:17, Dave Chinner wrote:
+> On Mon, Feb 16, 2015 at 11:35:50AM -0600, Mark Tinguely wrote:
+>> Thanks Michael, you don't need to hold your test box for me. I do
+>> have a way to recreate these ABBA AGF buffer allocation deadlocks
+>> and understand the whys and hows very well. I don't have a community
+>> way to make a xfstest for it but I think your test is getting close.
+> 
+> If you know what is causing them, then please explain how it occurs
+> and how you think it needs to be fixed. Just telling us that you know
+> something that we don't doesn't help us solve the problem. :(
+> 
+> In general, the use of the args->firstblock is supposed to avoid the
+> ABBA locking order issues with multiple allocations in the one
+> transaction by preventing AG selection loops from looping back into
+> AGs with a lower index than the first allocation that was made.
+> 
+> So if you are seeing deadlocks, then it may be that we aren't
+> following this constraint correctly in all locations....
+> 
+> Cheers,
+> 
+> Dave.
 
-Sorry, I thought I'd replied to this.
+Will this be a classic deadlock that will cause problems when trying to
+kill processes and unmount filesystems?  If so, then I was unable to use
+generic/224 to trigger a deadlock.  If not, then I'll need a better way
+of looking at the problem.
 
-> On Mon 19-01-15 15:18:58, Jan Kara wrote:
-> > On Fri 16-01-15 21:16:03, Wilcox, Matthew R wrote:
-> > > Are you sure it shouldn't be ext4_get_block_write, or _write_nolock?
-> > > According to the comments, ext4_get_block() doesn't allocate
-> > > uninitialized extents, which we do want it to do.
-> >   Hum, so if I understand the code right dax_fault() will allocate a block
-> > (== page in persistent memory) for a faulted address and will map this
-> > block directly into process' address space. Thus that block has to be
-> > zeroed out before the fault finishes no matter what (so that userspace
-> > doesn't see garbage) - unwritten block handling in the filesystem doesn't
-> > really matter (and would only cause unnecessary overhead) because of the
-> > direct mapping of the block to process' address space. So I would think
-> > that it would be easiest if dax_fault() simply zeroed out blocks which got
-> > allocated. You could rewrite part of dax_fault() to something like:
-> > 
-> > 	create = !vmf->cow_page && (vmf->flags & FAULT_FLAG_WRITE);
-> > 	error = get_block(inode, block, &bh, create);
-> > 	if (!error && (bh.b_size < PAGE_SIZE))
-> > 		error = -EIO;
-> > 	if (error)
-> > 		goto unlock_page;
-> > 
-> > 	if (buffer_new(&bh)) {
-> > 		count_vm_event(PGMAJFAULT);
-> > 		mem_cgroup_count_vm_event(vma->vm_mm, PGMAJFAULT);
-> > 		major = VM_FAULT_MAJOR;
-> > 		dax_clear_blocks(inode, bh->b_blocknr, PAGE_SIZE);
-> > 	} else if (!buffer_mapped(&bh))
-> > 		return dax_load_hole(mapping, page, vmf);
-> > 
-> > Note, that we also avoided calling get_block() callback twice on major fault
-> > as that's relatively expensive due to locking, extent tree lookups, etc.
-> > 
-> > Also note that ext2 then doesn't have to call dax_clear_blocks() at all if
-> > I understand the code right.
+The longest generic/224 loop lasted only 3-1/2 hours, though.  The
+fstests enospc group was given some consideration as well.
 
-I think you've missed the case where we lose power after ext2 has
-allocated the block and before dax_clear_blocks() is called.  After power
-returns, ext4 will show an unwritten extent in the tree, which will be
-zeroed before being handed to a user.  ext2 must have zeroed the block
-before linking it into the inode's data blocks.
+If this issue does not require a lot of files, I might see if fio can 
+be helpful here.
 
-I didn't realise that calling get_block() was an expensive operation;
-I'm open to reworking this piece of code to only call it once.
+Hints on whether to us a fast kernel or a miserably slow kernel would 
+be rather helpful.
 
-> > > This got added to fix a problem that Dave Chinner pointed out.  We need
-> > > the allocated extent to either be zeroed (as ext2 does), or marked as
-> > > unwritten (ext4, XFS) so that a racing read/page fault doesn't return
-> > > uninitialized data.  If it's marked as unwritten, we need to convert it
-> > > to a written extent after we've initialised the contents.  We use the
-> > > b_end_io() callback to do this, and it's called from the DAX code, not in
-> > > softirq context.
-> >   OK, I see. But I didn't find where ->b_end_io gets called from dax code
-> > (specifically I don't see it anywhere in dax_do_IO() or dax_io()). Can you
-> > point me please?
+My test setup is torn because most of the recent warning messages are
+coming from the CONFIG_XFS_WARN kernels.  The i686 Pentium 4 box will be
+left that way.  However, the Core 2 box was configured per
+Documentation/SubmitChecklist from the kernel source, adding debug XFS
+and locktorture.  The locktorture settings are in flux, exercising 
+spinlocks at present.  There was a mild halt in I/O for generic/017, but 
+that was XFS waiting on kmem-something waiting on a kmemleak function.  
+kmemleak was removed, and I'll continue from there.
 
-For faults, we call it in dax_insert_mapping(), the very last thing
-before returning in the fault path.  The normal I/O path gets to use
-the dio_iodone_t for the same purpose.
+Thanks!
 
-> > Also abusing b_end_io of a phony buffer for that looks ugly to me (we are
-> > trying to get away from passing phony bh around and this would entangle us
-> > even more into that mess). Normally I would think that end_io() callback
-> > passed into dax_do_io() should perform necessary conversions and for
-> > dax_fault() we could do necessary conversions inside foofs_page_mkwrite()...
-
-Dave sees to be the one trying the hardest to get rid of the phony BHs
-... and it was his idea to (ab)use b_end_io for this.  The problem with
-doing the conversion in ext4_page_mkwrite() is that we don't know at
-that point whether the BH is unwritten or not.
-
+Michael
 
 _______________________________________________
 xfs mailing list
