@@ -1,31 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 2F56A7F6B
-	for <xfs@oss.sgi.com>; Mon, 16 Feb 2015 19:49:42 -0600 (CST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 1AD277F3F
+	for <xfs@oss.sgi.com>; Tue, 17 Feb 2015 02:52:13 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 0E19F8F8039
-	for <xfs@oss.sgi.com>; Mon, 16 Feb 2015 17:49:41 -0800 (PST)
-Received: from mailout3.samsung.com (mailout3.samsung.com [203.254.224.33]) by
-	cuda.sgi.com with ESMTP id FfyrnHTBoxwdgxHM (version=TLSv1
-	cipher=RC4-MD5 bits=128 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 16 Feb 2015 17:49:40 -0800 (PST)
-Received: from epcpsbgr2.samsung.com
-	(u142.gpu120.samsung.co.kr [203.254.230.142])
-	by mailout3.samsung.com (Oracle Communications Messaging Server
-	7u4-24.01 (7.0.4.24.0) 64bit (built Nov 17 2011))
-	with ESMTP id <0NJW003VP7QQIB00@mailout3.samsung.com> for
-	xfs@oss.sgi.com; Tue, 17 Feb 2015 10:49:38 +0900 (KST)
-From: Namjae Jeon <namjae.jeon@samsung.com>
-References: <1424101680-3301-1-git-send-email-linkinjeon@gmail.com>
-	<1424101680-3301-2-git-send-email-linkinjeon@gmail.com>
-	<20150216235346.GD4251@dastard>
-In-reply-to: <20150216235346.GD4251@dastard>
-Subject: RE: [PATCH RESEND 1/12] fs: Add support FALLOC_FL_INSERT_RANGE for
-	fallocate
-Date: Tue, 17 Feb 2015 10:49:37 +0900
-Message-id: <001301d04a53$fcd91310$f68b3930$@samsung.com>
-MIME-version: 1.0
-Content-language: ko
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 8CF40AC002
+	for <xfs@oss.sgi.com>; Tue, 17 Feb 2015 00:52:09 -0800 (PST)
+Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
+	with ESMTP id v8IBYDXVNt4C2FfX (version=TLSv1 cipher=AES256-SHA
+	bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 17 Feb 2015 00:52:06 -0800 (PST)
+Date: Tue, 17 Feb 2015 09:52:00 +0100
+From: Jan Kara <jack@suse.cz>
+Subject: Re: + ext4-add-dax-functionality.patch added to -mm tree
+Message-ID: <20150217085200.GA23192@quack.suse.cz>
+References: <54b45495.+RptMlNQorYE9TTf%akpm@linux-foundation.org>
+	<20150115124106.GF12739@quack.suse.cz>
+	<100D68C7BA14664A8938383216E40DE040853440@FMSMSX114.amr.corp.intel.com>
+	<20150119141858.GF5662@quack.suse.cz>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20150119141858.GF5662@quack.suse.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -38,53 +32,105 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: 'Dave Chinner' <david@fromorbit.com>
-Cc: linux-man@vger.kernel.org, 'Namjae Jeon' <linkinjeon@gmail.com>, tytso@mit.edu, linux-api@vger.kernel.org, bfoster@redhat.com, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, mtk.manpages@gmail.com, a.sangwan@samsung.com, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org
+To: "Wilcox, Matthew R" <matthew.r.wilcox@intel.com>
+Cc: "axboe@kernel.dk" <axboe@kernel.dk>, "boaz@plexistor.com" <boaz@plexistor.com>, xfs@oss.sgi.com, "Dilger, Andreas" <andreas.dilger@intel.com>, "rdunlap@infradead.org" <rdunlap@infradead.org>, "hch@lst.de" <hch@lst.de>, "mathieu.desnoyers@efficios.com" <mathieu.desnoyers@efficios.com>, "tytso@mit.edu" <tytso@mit.edu>, "mm-commits@vger.kernel.org" <mm-commits@vger.kernel.org>, Matthew Wilcox <willy@linux.intel.com>, Jan Kara <jack@suse.cz>, "ross.zwisler@linux.intel.com" <ross.zwisler@linux.intel.com>, "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>, "kirill.shutemov@linux.intel.com" <kirill.shutemov@linux.intel.com>
 
-> On Tue, Feb 17, 2015 at 12:47:48AM +0900, Namjae Jeon wrote:
-> > From: Namjae Jeon <namjae.jeon@samsung.com>
-> >
-> > FALLOC_FL_INSERT_RANGE command is the opposite command of
-> > FALLOC_FL_COLLAPSE_RANGE that is needed for advertisers or someone who want to
-> > add some data in the middle of file. FALLOC_FL_INSERT_RANGE will create space
-> > for writing new data within a file after shifting extents to right as given
-> > length. and this command also has same limitation as FALLOC_FL_COLLAPSE_RANGE,
-> > that is block boundary and use ftruncate(2) for crosses EOF.
-> >
-> > Signed-off-by: Namjae Jeon <namjae.jeon@samsung.com>
-> > Signed-off-by: Ashish Sangwan <a.sangwan@samsung.com>
-> > Cc: Brian Foster<bfoster@redhat.com>
-> > ---
-> >  fs/open.c                   |    8 +++++++-
-> >  include/uapi/linux/falloc.h |   17 +++++++++++++++++
-> >  2 files changed, 24 insertions(+), 1 deletion(-)
-> >
-> > diff --git a/fs/open.c b/fs/open.c
-> > index 813be03..762fb45 100644
-> > --- a/fs/open.c
-> > +++ b/fs/open.c
-> > @@ -232,7 +232,8 @@ int vfs_fallocate(struct file *file, int mode, loff_t offset, loff_t len)
-> >
-> >  	/* Return error if mode is not supported */
-> >  	if (mode & ~(FALLOC_FL_KEEP_SIZE | FALLOC_FL_PUNCH_HOLE |
-> > -		     FALLOC_FL_COLLAPSE_RANGE | FALLOC_FL_ZERO_RANGE))
-> > +		     FALLOC_FL_COLLAPSE_RANGE | FALLOC_FL_ZERO_RANGE |
-> > +		     FALLOC_FL_INSERT_RANGE))
-> >  		return -EOPNOTSUPP;
-> 
-> Can we create a FALLOC_FL_SUPPORTED_MASK define in falloc.h
-> so that we only need to add new flags to the mask in rather than
-> change this code every time we add a new flag?
-Sure, I will do it. and share the patch with the others you gave me review points soon.
+  Matthew, I think I still didn't see response to this. I think we can
+fixup things after they are merged (since Andrew sent this patch to Linus)
+but IMHO it needs some action...
 
-Thanks for review!
+								Honza
+On Mon 19-01-15 15:18:58, Jan Kara wrote:
+> On Fri 16-01-15 21:16:03, Wilcox, Matthew R wrote:
+> > On Mon 12-01-15 15:11:17, Andrew Morton wrote:
+> > > > +#ifdef CONFIG_FS_DAX
+> > > > +static int ext4_dax_fault(struct vm_area_struct *vma, struct vm_fault *vmf)
+> > > > +{
+> > > > +	return dax_fault(vma, vmf, ext4_get_block);
+> > > > +					/* Is this the right get_block? */
+> > >   You can remove the comment. It is the right get_block function.
+> > 
+> > Are you sure it shouldn't be ext4_get_block_write, or _write_nolock?
+> > According to the comments, ext4_get_block() doesn't allocate
+> > uninitialized extents, which we do want it to do.
+>   Hum, so if I understand the code right dax_fault() will allocate a block
+> (== page in persistent memory) for a faulted address and will map this
+> block directly into process' address space. Thus that block has to be
+> zeroed out before the fault finishes no matter what (so that userspace
+> doesn't see garbage) - unwritten block handling in the filesystem doesn't
+> really matter (and would only cause unnecessary overhead) because of the
+> direct mapping of the block to process' address space. So I would think
+> that it would be easiest if dax_fault() simply zeroed out blocks which got
+> allocated. You could rewrite part of dax_fault() to something like:
 > 
-> Cheers,
+> 	create = !vmf->cow_page && (vmf->flags & FAULT_FLAG_WRITE);
+> 	error = get_block(inode, block, &bh, create);
+> 	if (!error && (bh.b_size < PAGE_SIZE))
+> 		error = -EIO;
+> 	if (error)
+> 		goto unlock_page;
 > 
-> Dave.
-> --
-> Dave Chinner
-> david@fromorbit.com
+> 	if (buffer_new(&bh)) {
+> 		count_vm_event(PGMAJFAULT);
+> 		mem_cgroup_count_vm_event(vma->vm_mm, PGMAJFAULT);
+> 		major = VM_FAULT_MAJOR;
+> 		dax_clear_blocks(inode, bh->b_blocknr, PAGE_SIZE);
+> 	} else if (!buffer_mapped(&bh))
+> 		return dax_load_hole(mapping, page, vmf);
+> 
+> Note, that we also avoided calling get_block() callback twice on major fault
+> as that's relatively expensive due to locking, extent tree lookups, etc.
+> 
+> Also note that ext2 then doesn't have to call dax_clear_blocks() at all if
+> I understand the code right.
+> 
+> And with this change to dax_fault() using ext4_get_block() is the right
+> function to call. It will just allocate a block if necessary and attach it
+> to an appropriate place in the extent tree which is all you need.
+> 
+> > > > @@ -694,6 +706,11 @@ static int _ext4_get_block(struct inode
+> > > >  
+> > > >  		map_bh(bh, inode->i_sb, map.m_pblk);
+> > > >  		bh->b_state = (bh->b_state & ~EXT4_MAP_FLAGS) | map.m_flags;
+> > > > +		if (IS_DAX(inode) && buffer_unwritten(bh) && !io_end) {
+> > > > +			bh->b_assoc_map = inode->i_mapping;
+> > > > +			bh->b_private = (void *)(unsigned long)iblock;
+> > > > +			bh->b_end_io = ext4_end_io_unwritten;
+> > > > +		}
+> > >   So why is this needed? It would deserve a comment. It confuses me in
+> > > particular because:
+> > > 1) This is a often a phony bh used just as a container for passed data and
+> > >    b_end_io is just ignored.
+> > > 2) Even if it was real bh attached to a page, for DAX we don't do any
+> > >    writeback and thus ->b_end_io will never get called?
+> > > 3) And if it does get called, you certainly cannot call
+> > >    ext4_convert_unwritten_extents() from softirq context where ->b_end_io
+> > >    gets called.
+> > 
+> > This got added to fix a problem that Dave Chinner pointed out.  We need
+> > the allocated extent to either be zeroed (as ext2 does), or marked as
+> > unwritten (ext4, XFS) so that a racing read/page fault doesn't return
+> > uninitialized data.  If it's marked as unwritten, we need to convert it
+> > to a written extent after we've initialised the contents.  We use the
+> > b_end_io() callback to do this, and it's called from the DAX code, not in
+> > softirq context.
+>   OK, I see. But I didn't find where ->b_end_io gets called from dax code
+> (specifically I don't see it anywhere in dax_do_IO() or dax_io()). Can you
+> point me please?
+> 
+> Also abusing b_end_io of a phony buffer for that looks ugly to me (we are
+> trying to get away from passing phony bh around and this would entangle us
+> even more into that mess). Normally I would think that end_io() callback
+> passed into dax_do_io() should perform necessary conversions and for
+> dax_fault() we could do necessary conversions inside foofs_page_mkwrite()...
+> 
+> 									Honza
+> -- 
+> Jan Kara <jack@suse.cz>
+> SUSE Labs, CR
+-- 
+Jan Kara <jack@suse.cz>
+SUSE Labs, CR
 
 _______________________________________________
 xfs mailing list
