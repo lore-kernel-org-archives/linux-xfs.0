@@ -1,26 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id EBCC17F4E
-	for <xfs@oss.sgi.com>; Tue, 17 Feb 2015 09:37:08 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id D7A3B8F8039
-	for <xfs@oss.sgi.com>; Tue, 17 Feb 2015 07:37:05 -0800 (PST)
-Received: from mail-qa0-f52.google.com (mail-qa0-f52.google.com
-	[209.85.216.52]) by cuda.sgi.com with ESMTP id eMRETFiFTYRkvhhC
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 17 Feb 2015 07:37:04 -0800 (PST)
-Received: by mail-qa0-f52.google.com with SMTP id v10so26739857qac.11
-	for <xfs@oss.sgi.com>; Tue, 17 Feb 2015 07:37:03 -0800 (PST)
-Message-ID: <54E36016.20908@gmail.com>
-Date: Tue, 17 Feb 2015 10:36:54 -0500
-From: "Michael L. Semon" <mlsemon35@gmail.com>
-MIME-Version: 1.0
-Subject: Re: [PATCH] xfs: xfs_alloc_fix_minleft can underflow near ENOSPC
-References: <1423782857-11800-1-git-send-email-david@fromorbit.com>
-	<54DE8B6D.8010401@sgi.com> <20150214232951.GW4251@dastard>
-	<54E16667.1050200@gmail.com> <54E22A76.40106@sgi.com>
-	<20150216231716.GB4251@dastard>
-In-Reply-To: <20150216231716.GB4251@dastard>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id ADF1A7F55
+	for <xfs@oss.sgi.com>; Tue, 17 Feb 2015 09:57:24 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 8D8D130405F
+	for <xfs@oss.sgi.com>; Tue, 17 Feb 2015 07:57:21 -0800 (PST)
+Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
+	with ESMTP id qUJQ2Gh4RK6T71bZ (version=TLSv1 cipher=AES256-SHA
+	bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 17 Feb 2015 07:57:19 -0800 (PST)
+From: Jan Kara <jack@suse.cz>
+Subject: [PATCH] xfs: Fix quota type in quota structures when reusing quota
+	file
+Date: Tue, 17 Feb 2015 16:57:10 +0100
+Message-Id: <1424188630-1111-1-git-send-email-jack@suse.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,62 +22,54 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>, Mark Tinguely <tinguely@sgi.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
+Cc: Jan Kara <jack@suse.cz>, Al Viro <viro@ZenIV.linux.org.uk>, stable@vger.kernel.org
 
-On 02/16/15 18:17, Dave Chinner wrote:
-> On Mon, Feb 16, 2015 at 11:35:50AM -0600, Mark Tinguely wrote:
->> Thanks Michael, you don't need to hold your test box for me. I do
->> have a way to recreate these ABBA AGF buffer allocation deadlocks
->> and understand the whys and hows very well. I don't have a community
->> way to make a xfstest for it but I think your test is getting close.
-> 
-> If you know what is causing them, then please explain how it occurs
-> and how you think it needs to be fixed. Just telling us that you know
-> something that we don't doesn't help us solve the problem. :(
-> 
-> In general, the use of the args->firstblock is supposed to avoid the
-> ABBA locking order issues with multiple allocations in the one
-> transaction by preventing AG selection loops from looping back into
-> AGs with a lower index than the first allocation that was made.
-> 
-> So if you are seeing deadlocks, then it may be that we aren't
-> following this constraint correctly in all locations....
-> 
-> Cheers,
-> 
-> Dave.
+For filesystems without separate project quota inode field in the
+superblock we just reuse project quota file for group quotas (and vice
+versa) if project quota file is allocated and we need group quota file.
+When we reuse the file, quota structures on disk suddenly have wrong
+type stored in d_flags though. Nobody really cares about this (although
+structure type reported to userspace was wrong as well) except
+that after commit 14bf61ffe6ac (quota: Switch ->get_dqblk() and
+->set_dqblk() to use bytes as space units) assertion in
+xfs_qm_scall_getquota() started to trigger on xfs/106 test (apparently I
+was testing without XFS_DEBUG so I didn't notice when submitting the
+above commit).
 
-Will this be a classic deadlock that will cause problems when trying to
-kill processes and unmount filesystems?  If so, then I was unable to use
-generic/224 to trigger a deadlock.  If not, then I'll need a better way
-of looking at the problem.
+Fix the problem by properly resetting ddq->d_flags when running quotacheck
+for a quota file.
 
-The longest generic/224 loop lasted only 3-1/2 hours, though.  The
-fstests enospc group was given some consideration as well.
+CC: stable@vger.kernel.org
+Reported-by: Al Viro <viro@ZenIV.linux.org.uk>
+Signed-off-by: Jan Kara <jack@suse.cz>
+---
+ fs/xfs/xfs_qm.c | 5 +++++
+ 1 file changed, 5 insertions(+)
 
-If this issue does not require a lot of files, I might see if fio can 
-be helpful here.
-
-Hints on whether to us a fast kernel or a miserably slow kernel would 
-be rather helpful.
-
-My test setup is torn because most of the recent warning messages are
-coming from the CONFIG_XFS_WARN kernels.  The i686 Pentium 4 box will be
-left that way.  However, the Core 2 box was configured per
-Documentation/SubmitChecklist from the kernel source, adding debug XFS
-and locktorture.  The locktorture settings are in flux, exercising 
-spinlocks at present.  There was a mild halt in I/O for generic/017, but 
-that was XFS waiting on kmem-something waiting on a kmemleak function.  
-kmemleak was removed, and I'll continue from there.
-
-Thanks!
-
-Michael
+diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
+index 3e8186279541..dd0dcc7b76cd 100644
+--- a/fs/xfs/xfs_qm.c
++++ b/fs/xfs/xfs_qm.c
+@@ -836,6 +836,11 @@ xfs_qm_reset_dqcounts(
+ 		 */
+ 		xfs_dqcheck(mp, ddq, id+j, type, XFS_QMOPT_DQREPAIR,
+ 			    "xfs_quotacheck");
++		/*
++		 * Reset type in case we are reusing group quota file for
++		 * project quotas or vice versa
++		 */
++		ddq->d_flags = type;
+ 		ddq->d_bcount = 0;
+ 		ddq->d_icount = 0;
+ 		ddq->d_rtbcount = 0;
+-- 
+2.1.4
 
 _______________________________________________
 xfs mailing list
