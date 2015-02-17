@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id BC8057F3F
-	for <xfs@oss.sgi.com>; Tue, 17 Feb 2015 03:22:10 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 33609AC003
-	for <xfs@oss.sgi.com>; Tue, 17 Feb 2015 01:22:06 -0800 (PST)
-Received: from mailout2.samsung.com (mailout2.samsung.com [203.254.224.25]) by
-	cuda.sgi.com with ESMTP id qwlt8JrDIxd8dewd (version=TLSv1
+	by oss.sgi.com (Postfix) with ESMTP id BA9D27F51
+	for <xfs@oss.sgi.com>; Tue, 17 Feb 2015 03:22:16 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 3AB32AC003
+	for <xfs@oss.sgi.com>; Tue, 17 Feb 2015 01:22:15 -0800 (PST)
+Received: from mailout1.samsung.com (mailout1.samsung.com [203.254.224.24]) by
+	cuda.sgi.com with ESMTP id IlQdWbeboZ9D5rVT (version=TLSv1
 	cipher=RC4-MD5 bits=128 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 17 Feb 2015 01:22:04 -0800 (PST)
-Received: from epcpsbgr3.samsung.com
-	(u143.gpu120.samsung.co.kr [203.254.230.143])
-	by mailout2.samsung.com (Oracle Communications Messaging Server
+	Tue, 17 Feb 2015 01:22:13 -0800 (PST)
+Received: from epcpsbgr1.samsung.com
+	(u141.gpu120.samsung.co.kr [203.254.230.141])
+	by mailout1.samsung.com (Oracle Communications Messaging Server
 	7u4-24.01 (7.0.4.24.0) 64bit (built Nov 17 2011))
-	with ESMTP id <0NJW00FTJSOQCS80@mailout2.samsung.com> for
-	xfs@oss.sgi.com; Tue, 17 Feb 2015 18:22:02 +0900 (KST)
+	with ESMTP id <0NJW00KFDSOZU150@mailout1.samsung.com> for
+	xfs@oss.sgi.com; Tue, 17 Feb 2015 18:22:11 +0900 (KST)
 From: Namjae Jeon <namjae.jeon@samsung.com>
-Subject: [PATCH v10 1/12] fs: Add support FALLOC_FL_INSERT_RANGE for fallocate
-Date: Tue, 17 Feb 2015 18:22:02 +0900
-Message-id: <003801d04a93$3026ee10$9074ca30$@samsung.com>
+Subject: [PATCH v10 11/12] xfstests: fsx: Add fallocate insert range operation
+Date: Tue, 17 Feb 2015 18:22:11 +0900
+Message-id: <003a01d04a93$357f0870$a07d1950$@samsung.com>
 MIME-version: 1.0
 Content-language: ko
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -36,90 +36,222 @@ Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: linux-fsdevel@vger.kernel.org, Brian Foster <bfoster@redhat.com>, linux-kernel@vger.kernel.org, Ashish Sangwan <a.sangwan@samsung.com>, xfs@oss.sgi.com
 
-FALLOC_FL_INSERT_RANGE command is the opposite command of
-FALLOC_FL_COLLAPSE_RANGE that is needed for advertisers or someone who want to
-add some data in the middle of file. FALLOC_FL_INSERT_RANGE will create space
-for writing new data within a file after shifting extents to right as given
-length. and this command also has same limitation as FALLOC_FL_COLLAPSE_RANGE,
-that is block boundary and use ftruncate(2) for crosses EOF.
+This commit adds fallocate FALLOC_FL_INSERT_RANGE support for fsx.
 
 Signed-off-by: Namjae Jeon <namjae.jeon@samsung.com>
 Signed-off-by: Ashish Sangwan <a.sangwan@samsung.com>
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 ---
- fs/open.c                   |  8 ++++++--
- include/linux/falloc.h      |  6 ++++++
- include/uapi/linux/falloc.h | 17 +++++++++++++++++
- 3 files changed, 29 insertions(+), 2 deletions(-)
+ ltp/fsx.c |  124 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++-----
+ 1 file changed, 114 insertions(+), 10 deletions(-)
 
-diff --git a/fs/open.c b/fs/open.c
-index 33f9cbf..b724cc0 100644
---- a/fs/open.c
-+++ b/fs/open.c
-@@ -231,8 +231,7 @@ int vfs_fallocate(struct file *file, int mode, loff_t offset, loff_t len)
- 		return -EINVAL;
+diff --git a/ltp/fsx.c b/ltp/fsx.c
+index 3709419..9fed5b2 100644
+--- a/ltp/fsx.c
++++ b/ltp/fsx.c
+@@ -95,7 +95,8 @@ int			logcount = 0;	/* total ops */
+ #define OP_PUNCH_HOLE		6
+ #define OP_ZERO_RANGE		7
+ #define OP_COLLAPSE_RANGE	8
+-#define OP_MAX_FULL		9
++#define OP_INSERT_RANGE	9
++#define OP_MAX_FULL		10
  
- 	/* Return error if mode is not supported */
--	if (mode & ~(FALLOC_FL_KEEP_SIZE | FALLOC_FL_PUNCH_HOLE |
--		     FALLOC_FL_COLLAPSE_RANGE | FALLOC_FL_ZERO_RANGE))
-+	if (mode & ~FALLOC_FL_SUPPORTED_MASK)
- 		return -EOPNOTSUPP;
+ /* operation modifiers */
+ #define OP_CLOSEOPEN	100
+@@ -145,6 +146,7 @@ int     fallocate_calls = 1;            /* -F flag disables */
+ int     punch_hole_calls = 1;           /* -H flag disables */
+ int     zero_range_calls = 1;           /* -z flag disables */
+ int	collapse_range_calls = 1;	/* -C flag disables */
++int	insert_range_calls = 1;		/* -I flag disables */
+ int 	mapped_reads = 1;		/* -R flag disables it */
+ int	fsxgoodfd = 0;
+ int	o_direct;			/* -Z */
+@@ -339,6 +341,14 @@ logdump(void)
+ 						     lp->args[0] + lp->args[1])
+ 				prt("\t******CCCC");
+ 			break;
++		case OP_INSERT_RANGE:
++			prt("INSERT 0x%x thru 0x%x\t(0x%x bytes)",
++			    lp->args[0], lp->args[0] + lp->args[1] - 1,
++			    lp->args[1]);
++			if (badoff >= lp->args[0] && badoff <
++						     lp->args[0] + lp->args[1])
++				prt("\t******IIII");
++			break;
+ 		case OP_SKIPPED:
+ 			prt("SKIPPED (no operation)");
+ 			break;
+@@ -1012,6 +1022,59 @@ do_collapse_range(unsigned offset, unsigned length)
+ }
+ #endif
  
- 	/* Punch hole and zero range are mutually exclusive */
-@@ -250,6 +249,11 @@ int vfs_fallocate(struct file *file, int mode, loff_t offset, loff_t len)
- 	    (mode & ~FALLOC_FL_COLLAPSE_RANGE))
- 		return -EINVAL;
- 
-+	/* Insert range should only be used exclusively. */
-+	if ((mode & FALLOC_FL_INSERT_RANGE) &&
-+	    (mode & ~FALLOC_FL_INSERT_RANGE))
-+		return -EINVAL;
++#ifdef FALLOC_FL_INSERT_RANGE
++void
++do_insert_range(unsigned offset, unsigned length)
++{
++	unsigned end_offset;
++	int mode = FALLOC_FL_INSERT_RANGE;
 +
- 	if (!(file->f_mode & FMODE_WRITE))
- 		return -EBADF;
- 
-diff --git a/include/linux/falloc.h b/include/linux/falloc.h
-index 3159168..9961110 100644
---- a/include/linux/falloc.h
-+++ b/include/linux/falloc.h
-@@ -21,4 +21,10 @@ struct space_resv {
- #define FS_IOC_RESVSP		_IOW('X', 40, struct space_resv)
- #define FS_IOC_RESVSP64		_IOW('X', 42, struct space_resv)
- 
-+#define	FALLOC_FL_SUPPORTED_MASK	(FALLOC_FL_KEEP_SIZE |		\
-+					 FALLOC_FL_PUNCH_HOLE |		\
-+					 FALLOC_FL_COLLAPSE_RANGE |	\
-+					 FALLOC_FL_ZERO_RANGE |		\
-+					 FALLOC_FL_INSERT_RANGE)
++	if (length == 0) {
++		if (!quiet && testcalls > simulatedopcount)
++			prt("skipping zero length insert range\n");
++		log4(OP_SKIPPED, OP_INSERT_RANGE, offset, length);
++		return;
++	}
 +
- #endif /* _FALLOC_H_ */
-diff --git a/include/uapi/linux/falloc.h b/include/uapi/linux/falloc.h
-index d1197ae..3e445a7 100644
---- a/include/uapi/linux/falloc.h
-+++ b/include/uapi/linux/falloc.h
-@@ -41,4 +41,21 @@
-  */
- #define FALLOC_FL_ZERO_RANGE		0x10
- 
-+/*
-+ * FALLOC_FL_INSERT_RANGE is use to insert space within the file size without
-+ * overwriting any existing data. The contents of the file beyond offset are
-+ * shifted towards right by len bytes to create a hole.  As such, this
-+ * operation will increase the size of the file by len bytes.
-+ *
-+ * Different filesystems may implement different limitations on the granularity
-+ * of the operation. Most will limit operations to filesystem block size
-+ * boundaries, but this boundary may be larger or smaller depending on
-+ * the filesystem and/or the configuration of the filesystem or file.
-+ *
-+ * Attempting to insert space using this flag at OR beyond the end of
-+ * the file is considered an illegal operation - just use ftruncate(2) or
-+ * fallocate(2) with mode 0 for such type of operations.
-+ */
-+#define FALLOC_FL_INSERT_RANGE		0x20
++	if ((loff_t)offset >= file_size) {
++		if (!quiet && testcalls > simulatedopcount)
++			prt("skipping insert range behind EOF\n");
++		log4(OP_SKIPPED, OP_INSERT_RANGE, offset, length);
++		return;
++	}
 +
- #endif /* _UAPI_FALLOC_H_ */
++	log4(OP_INSERT_RANGE, offset, length, 0);
++
++	if (testcalls <= simulatedopcount)
++		return;
++
++	end_offset = offset + length;
++	if ((progressinterval && testcalls % progressinterval == 0) ||
++	    (debug && (monitorstart == -1 || monitorend == -1 ||
++		      end_offset <= monitorend))) {
++		prt("%lu insert\tfrom 0x%x to 0x%x, (0x%x bytes)\n", testcalls,
++			offset, offset+length, length);
++	}
++	if (fallocate(fd, mode, (loff_t)offset, (loff_t)length) == -1) {
++		prt("insert range: %x to %x\n", offset, length);
++		prterr("do_insert_range: fallocate");
++		report_failure(161);
++	}
++
++	memmove(good_buf + end_offset, good_buf + offset,
++		file_size - offset);
++	memset(good_buf + offset, '\0', length);
++	file_size += length;
++}
++
++#else
++void
++do_insert_range(unsigned offset, unsigned length)
++{
++	return;
++}
++#endif
++
+ #ifdef HAVE_LINUX_FALLOC_H
+ /* fallocate is basically a no-op unless extending, then a lot like a truncate */
+ void
+@@ -1117,14 +1180,25 @@ docloseopen(void)
+ 	}
+ }
+ 
+-#define TRIM_OFF_LEN(off, len, size)	\
+-do {					\
+-	if (size)			\
+-		(off) %= (size);	\
+-	else				\
+-		(off) = 0;		\
+-	if ((off) + (len) > (size))	\
+-		(len) = (size) - (off);	\
++
++#define TRIM_OFF(off, size)			\
++do {						\
++	if (size)				\
++		(off) %= (size);		\
++	else					\
++		(off) = 0;			\
++} while (0)
++
++#define TRIM_LEN(off, len, size)		\
++do {						\
++	if ((off) + (len) > (size))		\
++		(len) = (size) - (off);		\
++} while (0)
++
++#define TRIM_OFF_LEN(off, len, size)		\
++do {						\
++	TRIM_OFF(off, size);			\
++	TRIM_LEN(off, len, size);		\
+ } while (0)
+ 
+ void
+@@ -1192,6 +1266,12 @@ test(void)
+ 			goto out;
+ 		}
+ 		break;
++	case OP_INSERT_RANGE:
++		if (!insert_range_calls) {
++			log4(OP_SKIPPED, OP_INSERT_RANGE, offset, size);
++			goto out;
++		}
++		break;
+ 	}
+ 
+ 	switch (op) {
+@@ -1244,6 +1324,22 @@ test(void)
+ 		}
+ 		do_collapse_range(offset, size);
+ 		break;
++	case OP_INSERT_RANGE:
++		TRIM_OFF(offset, file_size);
++		TRIM_LEN(file_size, size, maxfilelen);
++		offset = offset & ~(block_size - 1);
++		size = size & ~(block_size - 1);
++		if (size == 0) {
++			log4(OP_SKIPPED, OP_INSERT_RANGE, offset, size);
++			goto out;
++		}
++		if (file_size + size > maxfilelen) {
++			log4(OP_SKIPPED, OP_INSERT_RANGE, offset, size);
++			goto out;
++		}
++
++		do_insert_range(offset, size);
++		break;
+ 	default:
+ 		prterr("test: unknown operation");
+ 		report_failure(42);
+@@ -1307,6 +1403,9 @@ usage(void)
+ #ifdef FALLOC_FL_COLLAPSE_RANGE
+ "	-C: Do not use collapse range calls\n"
+ #endif
++#ifdef FALLOC_FL_INSERT_RANGE
++"	-I: Do not use insert range calls\n"
++#endif
+ "	-L: fsxLite - no file creations & no file size changes\n\
+ 	-N numops: total # operations to do (default infinity)\n\
+ 	-O: use oplen (see -o flag) for every op (default random)\n\
+@@ -1493,7 +1592,7 @@ main(int argc, char **argv)
+ 
+ 	setvbuf(stdout, (char *)0, _IOLBF, 0); /* line buffered stdout */
+ 
+-	while ((ch = getopt(argc, argv, "b:c:dfl:m:no:p:qr:s:t:w:xyAD:FHzCLN:OP:RS:WZ"))
++	while ((ch = getopt(argc, argv, "b:c:dfl:m:no:p:qr:s:t:w:xyAD:FHzCILN:OP:RS:WZ"))
+ 	       != EOF)
+ 		switch (ch) {
+ 		case 'b':
+@@ -1599,6 +1698,9 @@ main(int argc, char **argv)
+ 		case 'C':
+ 			collapse_range_calls = 0;
+ 			break;
++		case 'I':
++			insert_range_calls = 0;
++			break;
+ 		case 'L':
+ 		        lite = 1;
+ 			break;
+@@ -1758,6 +1860,8 @@ main(int argc, char **argv)
+ 		zero_range_calls = test_fallocate(FALLOC_FL_ZERO_RANGE);
+ 	if (collapse_range_calls)
+ 		collapse_range_calls = test_fallocate(FALLOC_FL_COLLAPSE_RANGE);
++	if (insert_range_calls)
++		insert_range_calls = test_fallocate(FALLOC_FL_INSERT_RANGE);
+ 
+ 	while (numops == -1 || numops--)
+ 		test();
 -- 
-1.8.5.5
+1.7.9.5
 
 _______________________________________________
 xfs mailing list
