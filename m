@@ -1,31 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 4A7B27F4E
-	for <xfs@oss.sgi.com>; Sat, 28 Feb 2015 16:16:16 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 395A2304032
-	for <xfs@oss.sgi.com>; Sat, 28 Feb 2015 14:16:12 -0800 (PST)
-Received: from gum.cmpxchg.org (gum.cmpxchg.org [85.214.110.215]) by
-	cuda.sgi.com with ESMTP id bdfCzsFBfMDc0P6t (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Sat, 28 Feb 2015 14:16:11 -0800 (PST)
-Date: Sat, 28 Feb 2015 17:15:58 -0500
-From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: Re: How to handle TIF_MEMDIE stalls?
-Message-ID: <20150228221558.GA23028@phnom.home.cmpxchg.org>
-References: <201502111123.ICD65197.FMLOHSQJFVOtFO@I-love.SAKURA.ne.jp>
-	<201502172123.JIE35470.QOLMVOFJSHOFFt@I-love.SAKURA.ne.jp>
-	<20150217125315.GA14287@phnom.home.cmpxchg.org>
-	<20150217225430.GJ4251@dastard>
-	<20150219102431.GA15569@phnom.home.cmpxchg.org>
-	<20150219225217.GY12722@dastard>
-	<20150221235227.GA25079@phnom.home.cmpxchg.org>
-	<20150223004521.GK12722@dastard>
-	<20150228162943.GA17989@phnom.home.cmpxchg.org>
-	<20150228164158.GE5404@thunk.org>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20150228164158.GE5404@thunk.org>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 2CA3E7F78
+	for <xfs@oss.sgi.com>; Wed, 18 Feb 2015 07:48:27 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id BBC05AC002
+	for <xfs@oss.sgi.com>; Wed, 18 Feb 2015 05:48:23 -0800 (PST)
+Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
+	with ESMTP id f3CYHePgA5qbVqqw (version=TLSv1 cipher=AES256-SHA
+	bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 18 Feb 2015 05:48:21 -0800 (PST)
+From: Jan Kara <jack@suse.cz>
+Subject: [PATCH 2/8] quota: Wire up Q_GETXSTATE and Q_GETXSTATV calls to work
+	with ->get_state
+Date: Wed, 18 Feb 2015 14:47:48 +0100
+Message-Id: <1424267274-11836-3-git-send-email-jack@suse.cz>
+In-Reply-To: <1424267274-11836-1-git-send-email-jack@suse.cz>
+References: <1424267274-11836-1-git-send-email-jack@suse.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,36 +24,198 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Theodore Ts'o <tytso@mit.edu>
-Cc: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, dchinner@redhat.com, oleg@redhat.com, xfs@oss.sgi.com, mhocko@suse.cz, linux-mm@kvack.org, mgorman@suse.de, rientjes@google.com, akpm@linux-foundation.org, torvalds@linux-foundation.org
+To: linux-fsdevel@vger.kernel.org
+Cc: cluster-devel@redhat.com, Jan Kara <jack@suse.cz>, Steven Whitehouse <swhiteho@redhat.com>, xfs@oss.sgi.com
 
-On Sat, Feb 28, 2015 at 11:41:58AM -0500, Theodore Ts'o wrote:
-> On Sat, Feb 28, 2015 at 11:29:43AM -0500, Johannes Weiner wrote:
-> > 
-> > I'm trying to figure out if the current nofail allocators can get
-> > their memory needs figured out beforehand.  And reliably so - what
-> > good are estimates that are right 90% of the time, when failing the
-> > allocation means corrupting user data?  What is the contingency plan?
-> 
-> In the ideal world, we can figure out the exact memory needs
-> beforehand.  But we live in an imperfect world, and given that block
-> devices *also* need memory, the answer is "of course not".  We can't
-> be perfect.  But we can least give some kind of hint, and we can offer
-> to wait before we get into a situation where we need to loop in
-> GFP_NOWAIT --- which is the contingency/fallback plan.
+Add appropriate conversion functions so that filesystems supporting
+->get_state() method can be queried using Q_GETXSTATE and Q_GETXSTATV
+calls.
 
-Overestimating should be fine, the result would a bit of false memory
-pressure.  But underestimating and looping can't be an option or the
-original lockups will still be there.  We need to guarantee forward
-progress or the problem is somewhat mitigated at best - only now with
-quite a bit more complexity in the allocator and the filesystems.
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Jan Kara <jack@suse.cz>
+---
+ fs/quota/quota.c | 138 +++++++++++++++++++++++++++++++++++++++++++++++++++++--
+ 1 file changed, 134 insertions(+), 4 deletions(-)
 
-The block code would have to be looked at separately, but doesn't it
-already use mempools etc. to guarantee progress?
+diff --git a/fs/quota/quota.c b/fs/quota/quota.c
+index 00d50fca1005..83939ff4c444 100644
+--- a/fs/quota/quota.c
++++ b/fs/quota/quota.c
+@@ -269,25 +269,152 @@ static int quota_disable(struct super_block *sb, void __user *addr)
+ 	return sb->s_qcop->quota_disable(sb, flags);
+ }
+ 
++static int quota_state_to_flags(struct qc_state *state)
++{
++	int flags = 0;
++
++	if (state->s_state[USRQUOTA].flags & QCI_ACCT_ENABLED)
++		flags |= FS_QUOTA_UDQ_ACCT;
++	if (state->s_state[USRQUOTA].flags & QCI_LIMITS_ENFORCED)
++		flags |= FS_QUOTA_UDQ_ENFD;
++	if (state->s_state[GRPQUOTA].flags & QCI_ACCT_ENABLED)
++		flags |= FS_QUOTA_GDQ_ACCT;
++	if (state->s_state[GRPQUOTA].flags & QCI_LIMITS_ENFORCED)
++		flags |= FS_QUOTA_GDQ_ENFD;
++	if (state->s_state[PRJQUOTA].flags & QCI_ACCT_ENABLED)
++		flags |= FS_QUOTA_PDQ_ACCT;
++	if (state->s_state[PRJQUOTA].flags & QCI_LIMITS_ENFORCED)
++		flags |= FS_QUOTA_PDQ_ENFD;
++	return flags;
++}
++
++static int quota_getstate(struct super_block *sb, struct fs_quota_stat *fqs)
++{
++	int type;
++	struct qc_state state;
++	int ret;
++
++	ret = sb->s_qcop->get_state(sb, &state);
++	if (ret < 0)
++		return ret;
++
++	memset(fqs, 0, sizeof(*fqs));
++	fqs->qs_version = FS_QSTAT_VERSION;
++	fqs->qs_flags = quota_state_to_flags(&state);
++	/* No quota enabled? */
++	if (!fqs->qs_flags)
++		return -ENOSYS;
++	fqs->qs_incoredqs = state.s_incoredqs;
++	/*
++	 * GETXSTATE quotactl has space for just one set of time limits so
++	 * report them for the first enabled quota type
++	 */
++	for (type = 0; type < XQM_MAXQUOTAS; type++)
++		if (state.s_state[type].flags & QCI_ACCT_ENABLED)
++			break;
++	BUG_ON(type == XQM_MAXQUOTAS);
++	fqs->qs_btimelimit = state.s_state[type].spc_timelimit;
++	fqs->qs_itimelimit = state.s_state[type].ino_timelimit;
++	fqs->qs_rtbtimelimit = state.s_state[type].rt_spc_timelimit;
++	fqs->qs_bwarnlimit = state.s_state[type].spc_warnlimit;
++	fqs->qs_iwarnlimit = state.s_state[type].ino_warnlimit;
++	if (state.s_state[USRQUOTA].flags & QCI_ACCT_ENABLED) {
++		fqs->qs_uquota.qfs_ino = state.s_state[USRQUOTA].ino;
++		fqs->qs_uquota.qfs_nblks = state.s_state[USRQUOTA].blocks;
++		fqs->qs_uquota.qfs_nextents = state.s_state[USRQUOTA].nextents;
++	}
++	if (state.s_state[GRPQUOTA].flags & QCI_ACCT_ENABLED) {
++		fqs->qs_gquota.qfs_ino = state.s_state[GRPQUOTA].ino;
++		fqs->qs_gquota.qfs_nblks = state.s_state[GRPQUOTA].blocks;
++		fqs->qs_gquota.qfs_nextents = state.s_state[GRPQUOTA].nextents;
++	}
++	if (state.s_state[PRJQUOTA].flags & QCI_ACCT_ENABLED) {
++		/*
++		 * Q_XGETQSTAT doesn't have room for both group and project
++		 * quotas.  So, allow the project quota values to be copied out
++		 * only if there is no group quota information available.
++		 */
++		if (!(state.s_state[GRPQUOTA].flags & QCI_ACCT_ENABLED)) {
++			fqs->qs_gquota.qfs_ino = state.s_state[PRJQUOTA].ino;
++			fqs->qs_gquota.qfs_nblks =
++					state.s_state[PRJQUOTA].blocks;
++			fqs->qs_gquota.qfs_nextents =
++					state.s_state[PRJQUOTA].nextents;
++		}
++	}
++	return 0;
++}
++
+ static int quota_getxstate(struct super_block *sb, void __user *addr)
+ {
+ 	struct fs_quota_stat fqs;
+ 	int ret;
+ 
+-	if (!sb->s_qcop->get_xstate)
++	if (!sb->s_qcop->get_xstate && !sb->s_qcop->get_state)
+ 		return -ENOSYS;
+-	ret = sb->s_qcop->get_xstate(sb, &fqs);
++	if (sb->s_qcop->get_state)
++		ret = quota_getstate(sb, &fqs);
++	else
++		ret = sb->s_qcop->get_xstate(sb, &fqs);
+ 	if (!ret && copy_to_user(addr, &fqs, sizeof(fqs)))
+ 		return -EFAULT;
+ 	return ret;
+ }
+ 
++static int quota_getstatev(struct super_block *sb, struct fs_quota_statv *fqs)
++{
++	int type;
++	struct qc_state state;
++	int ret;
++
++	ret = sb->s_qcop->get_state(sb, &state);
++	if (ret < 0)
++		return ret;
++
++	memset(fqs, 0, sizeof(*fqs));
++	fqs->qs_version = FS_QSTAT_VERSION;
++	fqs->qs_flags = quota_state_to_flags(&state);
++	/* No quota enabled? */
++	if (!fqs->qs_flags)
++		return -ENOSYS;
++	fqs->qs_incoredqs = state.s_incoredqs;
++	/*
++	 * GETXSTATV quotactl has space for just one set of time limits so
++	 * report them for the first enabled quota type
++	 */
++	for (type = 0; type < XQM_MAXQUOTAS; type++)
++		if (state.s_state[type].flags & QCI_ACCT_ENABLED)
++			break;
++	BUG_ON(type == XQM_MAXQUOTAS);
++	fqs->qs_btimelimit = state.s_state[type].spc_timelimit;
++	fqs->qs_itimelimit = state.s_state[type].ino_timelimit;
++	fqs->qs_rtbtimelimit = state.s_state[type].rt_spc_timelimit;
++	fqs->qs_bwarnlimit = state.s_state[type].spc_warnlimit;
++	fqs->qs_iwarnlimit = state.s_state[type].ino_warnlimit;
++	if (state.s_state[USRQUOTA].flags & QCI_ACCT_ENABLED) {
++		fqs->qs_uquota.qfs_ino = state.s_state[USRQUOTA].ino;
++		fqs->qs_uquota.qfs_nblks = state.s_state[USRQUOTA].blocks;
++		fqs->qs_uquota.qfs_nextents = state.s_state[USRQUOTA].nextents;
++	}
++	if (state.s_state[GRPQUOTA].flags & QCI_ACCT_ENABLED) {
++		fqs->qs_gquota.qfs_ino = state.s_state[GRPQUOTA].ino;
++		fqs->qs_gquota.qfs_nblks = state.s_state[GRPQUOTA].blocks;
++		fqs->qs_gquota.qfs_nextents = state.s_state[GRPQUOTA].nextents;
++	}
++	if (state.s_state[PRJQUOTA].flags & QCI_ACCT_ENABLED) {
++		fqs->qs_pquota.qfs_ino = state.s_state[PRJQUOTA].ino;
++		fqs->qs_pquota.qfs_nblks = state.s_state[PRJQUOTA].blocks;
++		fqs->qs_pquota.qfs_nextents = state.s_state[PRJQUOTA].nextents;
++	}
++	return 0;
++}
++
+ static int quota_getxstatev(struct super_block *sb, void __user *addr)
+ {
+ 	struct fs_quota_statv fqs;
+ 	int ret;
+ 
+-	if (!sb->s_qcop->get_xstatev)
++	if (!sb->s_qcop->get_xstatev && !sb->s_qcop->get_state)
+ 		return -ENOSYS;
+ 
+ 	memset(&fqs, 0, sizeof(fqs));
+@@ -301,7 +428,10 @@ static int quota_getxstatev(struct super_block *sb, void __user *addr)
+ 	default:
+ 		return -EINVAL;
+ 	}
+-	ret = sb->s_qcop->get_xstatev(sb, &fqs);
++	if (sb->s_qcop->get_state)
++		ret = quota_getstatev(sb, &fqs);
++	else
++		ret = sb->s_qcop->get_xstatev(sb, &fqs);
+ 	if (!ret && copy_to_user(addr, &fqs, sizeof(fqs)))
+ 		return -EFAULT;
+ 	return ret;
+-- 
+2.1.4
 
 _______________________________________________
 xfs mailing list
