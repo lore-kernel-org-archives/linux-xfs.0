@@ -1,29 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 437227F66
-	for <xfs@oss.sgi.com>; Tue, 17 Feb 2015 17:35:59 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id D3C65AC003
-	for <xfs@oss.sgi.com>; Tue, 17 Feb 2015 15:35:55 -0800 (PST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 1BF857F6B
+	for <xfs@oss.sgi.com>; Tue, 17 Feb 2015 18:48:47 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 0A9E9304032
+	for <xfs@oss.sgi.com>; Tue, 17 Feb 2015 16:48:43 -0800 (PST)
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	bkaaaZjStQIBBs9t for <xfs@oss.sgi.com>;
-	Tue, 17 Feb 2015 15:35:53 -0800 (PST)
-Date: Wed, 18 Feb 2015 10:32:43 +1100
+	VJ7h5ok0M8pqz3I1 for <xfs@oss.sgi.com>;
+	Tue, 17 Feb 2015 16:48:41 -0800 (PST)
+Date: Wed, 18 Feb 2015 11:48:38 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: How to handle TIF_MEMDIE stalls?
-Message-ID: <20150217233243.GL4251@dastard>
-References: <20141230112158.GA15546@dhcp22.suse.cz>
-	<201502092044.JDG39081.LVFOOtFHQFOMSJ@I-love.SAKURA.ne.jp>
-	<201502102258.IFE09888.OVQFJOMSFtOLFH@I-love.SAKURA.ne.jp>
-	<20150210151934.GA11212@phnom.home.cmpxchg.org>
-	<201502111123.ICD65197.FMLOHSQJFVOtFO@I-love.SAKURA.ne.jp>
-	<201502172123.JIE35470.QOLMVOFJSHOFFt@I-love.SAKURA.ne.jp>
-	<20150217125315.GA14287@phnom.home.cmpxchg.org>
-	<20150217225430.GJ4251@dastard>
+Subject: Re: [PATCH] xfs: xfs_alloc_fix_minleft can underflow near ENOSPC
+Message-ID: <20150218004838.GM4251@dastard>
+References: <1423782857-11800-1-git-send-email-david@fromorbit.com>
+	<54DE8B6D.8010401@sgi.com> <20150214232951.GW4251@dastard>
+	<54E16667.1050200@gmail.com> <54E22A76.40106@sgi.com>
+	<20150216231716.GB4251@dastard> <54E36016.20908@gmail.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20150217225430.GJ4251@dastard>
+In-Reply-To: <54E36016.20908@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -36,98 +32,35 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, rientjes@google.com, oleg@redhat.com, xfs@oss.sgi.com, mhocko@suse.cz, linux-mm@kvack.org, mgorman@suse.de, dchinner@redhat.com, akpm@linux-foundation.org, torvalds@linux-foundation.org
+To: "Michael L. Semon" <mlsemon35@gmail.com>
+Cc: Mark Tinguely <tinguely@sgi.com>, xfs@oss.sgi.com
 
-On Wed, Feb 18, 2015 at 09:54:30AM +1100, Dave Chinner wrote:
-> On Tue, Feb 17, 2015 at 07:53:15AM -0500, Johannes Weiner wrote:
-> > On Tue, Feb 17, 2015 at 09:23:26PM +0900, Tetsuo Handa wrote:
-> > > --- a/mm/page_alloc.c
-> > > +++ b/mm/page_alloc.c
-> > > @@ -2381,9 +2381,6 @@ __alloc_pages_may_oom(gfp_t gfp_mask, unsigned int order,
-> > >                 /* The OOM killer does not needlessly kill tasks for lowmem */
-> > >                 if (high_zoneidx < ZONE_NORMAL)
-> > >                         goto out;
-> > > -               /* The OOM killer does not compensate for light reclaim */
-> > > -               if (!(gfp_mask & __GFP_FS))
-> > > -                       goto out;
-> > >                 /*
-> > >                  * GFP_THISNODE contains __GFP_NORETRY and we never hit this.
-> > >                  * Sanity check for bare calls of __GFP_THISNODE, not real OOM.
+On Tue, Feb 17, 2015 at 10:36:54AM -0500, Michael L. Semon wrote:
+> On 02/16/15 18:17, Dave Chinner wrote:
+> > On Mon, Feb 16, 2015 at 11:35:50AM -0600, Mark Tinguely wrote:
+> >> Thanks Michael, you don't need to hold your test box for me. I do
+> >> have a way to recreate these ABBA AGF buffer allocation deadlocks
+> >> and understand the whys and hows very well. I don't have a community
+> >> way to make a xfstest for it but I think your test is getting close.
 > > 
-> > Again, we don't want to OOM kill on behalf of allocations that can't
-> > initiate IO, or even actively prevent others from doing it.  Not per
-> > default anyway, because most callers can deal with the failure without
-> > having to resort to killing tasks, and NOFS reclaim *can* easily fail.
-> > It's the exceptions that should be annotated instead:
+> > If you know what is causing them, then please explain how it occurs
+> > and how you think it needs to be fixed. Just telling us that you know
+> > something that we don't doesn't help us solve the problem. :(
 > > 
-> > void *
-> > kmem_alloc(size_t size, xfs_km_flags_t flags)
-> > {
-> > 	int	retries = 0;
-> > 	gfp_t	lflags = kmem_flags_convert(flags);
-> > 	void	*ptr;
+> > In general, the use of the args->firstblock is supposed to avoid the
+> > ABBA locking order issues with multiple allocations in the one
+> > transaction by preventing AG selection loops from looping back into
+> > AGs with a lower index than the first allocation that was made.
 > > 
-> > 	do {
-> > 		ptr = kmalloc(size, lflags);
-> > 		if (ptr || (flags & (KM_MAYFAIL|KM_NOSLEEP)))
-> > 			return ptr;
-> > 		if (!(++retries % 100))
-> > 			xfs_err(NULL,
-> > 		"possible memory allocation deadlock in %s (mode:0x%x)",
-> > 					__func__, lflags);
-> > 		congestion_wait(BLK_RW_ASYNC, HZ/50);
-> > 	} while (1);
-> > }
-> > 
-> > This should use __GFP_NOFAIL, which is not only designed to annotate
-> > broken code like this, but also recognizes that endless looping on a
-> > GFP_NOFS allocation needs the OOM killer after all to make progress.
-> > 
-> > diff --git a/fs/xfs/kmem.c b/fs/xfs/kmem.c
-> > index a7a3a63bb360..17ced1805d3a 100644
-> > --- a/fs/xfs/kmem.c
-> > +++ b/fs/xfs/kmem.c
-> > @@ -45,20 +45,12 @@ kmem_zalloc_greedy(size_t *size, size_t minsize, size_t maxsize)
-> >  void *
-> >  kmem_alloc(size_t size, xfs_km_flags_t flags)
-> >  {
-> > -	int	retries = 0;
-> >  	gfp_t	lflags = kmem_flags_convert(flags);
-> > -	void	*ptr;
-> >  
-> > -	do {
-> > -		ptr = kmalloc(size, lflags);
-> > -		if (ptr || (flags & (KM_MAYFAIL|KM_NOSLEEP)))
-> > -			return ptr;
-> > -		if (!(++retries % 100))
-> > -			xfs_err(NULL,
-> > -		"possible memory allocation deadlock in %s (mode:0x%x)",
-> > -					__func__, lflags);
-> > -		congestion_wait(BLK_RW_ASYNC, HZ/50);
-> > -	} while (1);
-> > +	if (!(flags & (KM_MAYFAIL | KM_NOSLEEP)))
-> > +		lflags |= __GFP_NOFAIL;
-> > +
-> > +	return kmalloc(size, lflags);
-> >  }
+> > So if you are seeing deadlocks, then it may be that we aren't
+> > following this constraint correctly in all locations....
 > 
-> Hmmm - the only reason there is a focus on this loop is that it
-> emits warnings about allocations failing. It's obvious that the
-> problem being dealt with here is a fundamental design issue w.r.t.
-> to locking and the OOM killer, but the proposed special casing
-> hack^H^H^H^Hband aid^W^Wsolution is not "working" because some code
-> in XFS started emitting warnings about allocations failing more
-> often.
->
-> So the answer is to remove the warning?  That's like killing the
-> canary to stop the methane leak in the coal mine. No canary? No
-> problems!
+> Will this be a classic deadlock that will cause problems when trying to
+> kill processes and unmount filesystems?  If so, then I was unable to use
+> generic/224 to trigger a deadlock.  If not, then I'll need a better way
+> of looking at the problem.
 
-I'll also point out that there are two other identical allocation
-loops in XFS, one of which is only 30 lines below this one. That's
-further indication that this is a "silence the warning" patch rather
-than something that actually fixes a problem....
+Yes, it will hang the filesystem.
 
 Cheers,
 
