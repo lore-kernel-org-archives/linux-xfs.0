@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 4693F29DF7
-	for <xfs@oss.sgi.com>; Wed, 18 Feb 2015 11:11:49 -0600 (CST)
+	by oss.sgi.com (Postfix) with ESMTP id EBFE729E01
+	for <xfs@oss.sgi.com>; Wed, 18 Feb 2015 11:18:05 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 26587304032
-	for <xfs@oss.sgi.com>; Wed, 18 Feb 2015 09:11:45 -0800 (PST)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id BB05330406B
+	for <xfs@oss.sgi.com>; Wed, 18 Feb 2015 09:18:05 -0800 (PST)
 Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id X5Y8eHv6DGCdHqOf (version=TLSv1 cipher=AES256-SHA
+	with ESMTP id 0O0t5xJDg2hjF2Zv (version=TLSv1 cipher=AES256-SHA
 	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 18 Feb 2015 09:11:44 -0800 (PST)
-Date: Wed, 18 Feb 2015 18:11:38 +0100
+	Wed, 18 Feb 2015 09:18:03 -0800 (PST)
+Date: Wed, 18 Feb 2015 18:17:58 +0100
 From: Jan Kara <jack@suse.cz>
-Subject: Re: [Cluster-devel] [PATCH 3/8] xfs: Convert to using ->get_state
-	callback
-Message-ID: <20150218171138.GA11951@quack.suse.cz>
+Subject: Re: [Cluster-devel] [PATCH 6/8] quota: Make ->set_info use structure
+	with neccesary info to VFS and XFS
+Message-ID: <20150218171758.GB11951@quack.suse.cz>
 References: <1424267274-11836-1-git-send-email-jack@suse.cz>
-	<1424267274-11836-4-git-send-email-jack@suse.cz>
-	<20150218165154.GA29465@infradead.org>
+	<1424267274-11836-7-git-send-email-jack@suse.cz>
+	<20150218165334.GB29465@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20150218165154.GA29465@infradead.org>
+In-Reply-To: <20150218165334.GB29465@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,30 +35,28 @@ Sender: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
 Cc: linux-fsdevel@vger.kernel.org, cluster-devel@redhat.com, Jan Kara <jack@suse.cz>, xfs@oss.sgi.com
 
-On Wed 18-02-15 08:51:54, Christoph Hellwig wrote:
-> > +static void
-> > +xfs_qm_fill_state(
-> > +	struct qc_type_state *tstate,
-> > +	struct xfs_mount *mp,
-> > +	struct xfs_inode *ip,
-> > +	xfs_ino_t ino)
+On Wed 18-02-15 08:53:34, Christoph Hellwig wrote:
+> On Wed, Feb 18, 2015 at 02:47:52PM +0100, Jan Kara wrote:
+> > Change ->set_info to take new qc_info structure which contains all the
+> > necessary information both for XFS and VFS. Convert Q_SETINFO handler
+> > to use this structure.
+...
+> > +/* Structure for communicating via ->set_info */
+> > +struct qc_info {
+> > +	int i_fieldmask;	/* mask of fields to change in ->set_info() */
+> > +	unsigned int i_flags;		/* Flags QCI_* */
+> > +	unsigned int i_spc_timelimit;	/* Time after which space softlimit is
+> > +					 * enforced */
+> > +	unsigned int i_ino_timelimit;	/* Ditto for inode softlimit */
+> > +	unsigned int i_rt_spc_timelimit;/* Ditto for real-time space */
+> > +	unsigned int i_spc_warnlimit;	/* Limit for number of space warnings */
+> > +	unsigned int i_ino_warnlimit;	/* Limit for number of inode warnings */
+> > +	unsigned int i_rt_spc_warnlimit;	/* Ditto for real-time space */
+> > +};
 > 
-> > +/*
-> > + * Return quota status information, such as enforcements, quota file inode
-> > + * numbers etc.
-> > + */
-> > +static int
-> > +xfs_fs_get_quota_state(
-> > +	struct super_block *sb,
-> > +	struct qc_state *state)
-> 
-> We usually tab-align the arguments in XFS prototypes.
-  OK, fixed.
-
-> Otherwise this patch looks good,
-> 
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
-  Thanks.
+> What does the i_ prefix stand for?
+  It stands for info. I can change it e.g. to qci_ for quotactl info if you
+think that would be better...
 
 								Honza
 -- 
