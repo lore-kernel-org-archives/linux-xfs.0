@@ -1,31 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 8C75A7F63
-	for <xfs@oss.sgi.com>; Wed, 18 Feb 2015 06:16:09 -0600 (CST)
+	by oss.sgi.com (Postfix) with ESMTP id 2D4BD7F6F
+	for <xfs@oss.sgi.com>; Wed, 18 Feb 2015 07:48:24 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 7B2788F8054
-	for <xfs@oss.sgi.com>; Wed, 18 Feb 2015 04:16:06 -0800 (PST)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 0BA688F8037
+	for <xfs@oss.sgi.com>; Wed, 18 Feb 2015 05:48:23 -0800 (PST)
 Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id NJEByq0H6rPH46io (version=TLSv1 cipher=AES256-SHA
+	with ESMTP id CBSPaxfLKmtTNFNB (version=TLSv1 cipher=AES256-SHA
 	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 18 Feb 2015 04:16:04 -0800 (PST)
-Date: Wed, 18 Feb 2015 13:16:02 +0100
-From: Michal Hocko <mhocko@suse.cz>
-Subject: Re: How to handle TIF_MEMDIE stalls?
-Message-ID: <20150218121602.GC4478@dhcp22.suse.cz>
-References: <20141230112158.GA15546@dhcp22.suse.cz>
-	<201502092044.JDG39081.LVFOOtFHQFOMSJ@I-love.SAKURA.ne.jp>
-	<201502102258.IFE09888.OVQFJOMSFtOLFH@I-love.SAKURA.ne.jp>
-	<20150210151934.GA11212@phnom.home.cmpxchg.org>
-	<201502111123.ICD65197.FMLOHSQJFVOtFO@I-love.SAKURA.ne.jp>
-	<201502172123.JIE35470.QOLMVOFJSHOFFt@I-love.SAKURA.ne.jp>
-	<20150217125315.GA14287@phnom.home.cmpxchg.org>
-	<20150217225430.GJ4251@dastard>
-	<20150218082502.GA4478@dhcp22.suse.cz>
-	<20150218104859.GM12722@dastard>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20150218104859.GM12722@dastard>
+	Wed, 18 Feb 2015 05:48:21 -0800 (PST)
+From: Jan Kara <jack@suse.cz>
+Subject: [PATCH 3/8] xfs: Convert to using ->get_state callback
+Date: Wed, 18 Feb 2015 14:47:49 +0100
+Message-Id: <1424267274-11836-4-git-send-email-jack@suse.cz>
+In-Reply-To: <1424267274-11836-1-git-send-email-jack@suse.cz>
+References: <1424267274-11836-1-git-send-email-jack@suse.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,109 +23,373 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, dchinner@redhat.com, oleg@redhat.com, xfs@oss.sgi.com, Johannes Weiner <hannes@cmpxchg.org>, linux-mm@kvack.org, mgorman@suse.de, rientjes@google.com, akpm@linux-foundation.org, torvalds@linux-foundation.org
+To: linux-fsdevel@vger.kernel.org
+Cc: cluster-devel@redhat.com, Jan Kara <jack@suse.cz>, Steven Whitehouse <swhiteho@redhat.com>, xfs@oss.sgi.com
 
-On Wed 18-02-15 21:48:59, Dave Chinner wrote:
-> On Wed, Feb 18, 2015 at 09:25:02AM +0100, Michal Hocko wrote:
-> > On Wed 18-02-15 09:54:30, Dave Chinner wrote:
-[...]
-> Also, this reads as an excuse for the OOM killer being broken and
-> not fixing it.  Keep in mind that we tell the memory alloc/reclaim
-> subsystem that *we hold locks* when we call into it. That's what
-> GFP_NOFS originally meant, and it's what it still means today in an
-> XFS context.
+Convert xfs to use ->get_state callback instead of ->get_xstate and
+->get_xstatev.
 
-Sure, and OOM killer will not be invoked in NOFS context. See
-__alloc_pages_may_oom and __GFP_FS check in there. So I do not see where
-is the OOM killer broken.
+Signed-off-by: Jan Kara <jack@suse.cz>
+---
+ fs/xfs/xfs_qm.h          |   4 --
+ fs/xfs/xfs_qm_syscalls.c | 176 -----------------------------------------------
+ fs/xfs/xfs_quotaops.c    |  98 +++++++++++++++++++-------
+ 3 files changed, 72 insertions(+), 206 deletions(-)
 
-The crucial problem we are dealing with is not GFP_NOFAIL triggering the
-OOM killer but a lock dependency introduced by the following sequence:
-
-	taskA			taskB			taskC
-lock(A)							alloc()
-alloc(gfp | __GFP_NOFAIL)	lock(A)			  out_of_memory
-# looping for ever if we				    select_bad_process
-# cannot make any progress				      victim = taskB
-
-There is no way OOM killer can tell taskB is blocked and that there is
-dependency between A and B (without lockdep). That is why I call NOFAIL
-under a lock as dangerous and a bug.
-
-> If the OOM killer is not obeying GFP_NOFS and deadlocking on locks
-> that the invoking context holds, then that is a OOM killer bug, not
-> a bug in the subsystem calling kmalloc(GFP_NOFS).
-
-I guess we are talking about different things here or what am I missing?
+diff --git a/fs/xfs/xfs_qm.h b/fs/xfs/xfs_qm.h
+index 0d4d3590cf85..996a04064894 100644
+--- a/fs/xfs/xfs_qm.h
++++ b/fs/xfs/xfs_qm.h
+@@ -168,10 +168,6 @@ extern int		xfs_qm_scall_getquota(struct xfs_mount *, xfs_dqid_t,
+ 					uint, struct qc_dqblk *);
+ extern int		xfs_qm_scall_setqlim(struct xfs_mount *, xfs_dqid_t, uint,
+ 					struct qc_dqblk *);
+-extern int		xfs_qm_scall_getqstat(struct xfs_mount *,
+-					struct fs_quota_stat *);
+-extern int		xfs_qm_scall_getqstatv(struct xfs_mount *,
+-					struct fs_quota_statv *);
+ extern int		xfs_qm_scall_quotaon(struct xfs_mount *, uint);
+ extern int		xfs_qm_scall_quotaoff(struct xfs_mount *, uint);
  
-[...]
-> > In the meantime page allocator
-> > should develop a proper diagnostic to help identify all the potential
-> > dependencies. Next we should start thinking whether all the existing
-> > GFP_NOFAIL paths are really necessary or the code can be
-> > refactored/reimplemented to accept allocation failures.
-> 
-> Last time the "just make filesystems handle memory allocation
-> failures" I pointed out what that meant for XFS: dirty transaction
-> rollback is required. That's freakin' complex, will double the
-> memory footprint of transactions, roughly double the CPU cost, and
-> greatly increase the complexity of the transaction subsystem. It's a
-> *major* rework of a significant amount of the XFS codebase and will
-> take at least a couple of years design, test and stabilise before
-> it could be rolled out to production.
-> 
-> I'm not about to spend a couple of years rewriting XFS just so the
-> VM can get rid of a GFP_NOFAIL user. Especially as the we already
-> tell the Hammer of Last Resort the context in which it can work.
-> 
-> Move the OOM killer to kswapd - get it out of the direct reclaim
-> path altogether.
-
-This doesn't change anything as explained in other email. The triggering
-path doesn't wait for the victim to die.
-
-> If the system is that backed up on locks that it
-> cannot free any memory and has no reserves to satisfy the allocation
-> that kicked the OOM killer, then the OOM killer was not invoked soon
-> enough.
-> 
-> Hell, if you want a better way to proceed, then how about you allow
-> us to tell the MM subsystem how much memory reserve a specific set
-> of operations is going to require to complete? That's something that
-> we can do rough calculations for, and it integrates straight into
-> the existing transaction reservation system we already use for log
-> space and disk space, and we can tell the mm subsystem when the
-> reserve is no longer needed (i.e. last thing in transaction commit).
-> 
-> That way we don't start a transaction until the mm subsystem has
-> reserved enough pages for us to work with, and the reserve only
-> needs to be used when normal allocation has already failed. i.e
-> rather than looping we get a page allocated from the reserve pool.
-
-I am not sure I understand the above but isn't the mempools a tool for
-this purpose?
+diff --git a/fs/xfs/xfs_qm_syscalls.c b/fs/xfs/xfs_qm_syscalls.c
+index 9b965db45800..9a25c9275fb3 100644
+--- a/fs/xfs/xfs_qm_syscalls.c
++++ b/fs/xfs/xfs_qm_syscalls.c
+@@ -38,7 +38,6 @@
+ STATIC int	xfs_qm_log_quotaoff(xfs_mount_t *, xfs_qoff_logitem_t **, uint);
+ STATIC int	xfs_qm_log_quotaoff_end(xfs_mount_t *, xfs_qoff_logitem_t *,
+ 					uint);
+-STATIC uint	xfs_qm_export_flags(uint);
  
-> The reservations wouldn't be perfect, but the majority of the time
-> we'd be able to make progress and not need the OOM killer. And best
-> of all, there's no responsibilty on the MM subsystem for preventing
-> OOM - getting the reservations right is the responsibiity of the
-> subsystem using them.
-> 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
-
+ /*
+  * Turn off quota accounting and/or enforcement for all udquots and/or
+@@ -389,159 +388,6 @@ xfs_qm_scall_quotaon(
+ 	return 0;
+ }
+ 
+-
+-/*
+- * Return quota status information, such as uquota-off, enforcements, etc.
+- * for Q_XGETQSTAT command.
+- */
+-int
+-xfs_qm_scall_getqstat(
+-	struct xfs_mount	*mp,
+-	struct fs_quota_stat	*out)
+-{
+-	struct xfs_quotainfo	*q = mp->m_quotainfo;
+-	struct xfs_inode	*uip = NULL;
+-	struct xfs_inode	*gip = NULL;
+-	struct xfs_inode	*pip = NULL;
+-	bool                    tempuqip = false;
+-	bool                    tempgqip = false;
+-	bool                    temppqip = false;
+-
+-	memset(out, 0, sizeof(fs_quota_stat_t));
+-
+-	out->qs_version = FS_QSTAT_VERSION;
+-	out->qs_flags = (__uint16_t) xfs_qm_export_flags(mp->m_qflags &
+-							(XFS_ALL_QUOTA_ACCT|
+-							 XFS_ALL_QUOTA_ENFD));
+-	uip = q->qi_uquotaip;
+-	gip = q->qi_gquotaip;
+-	pip = q->qi_pquotaip;
+-	if (!uip && mp->m_sb.sb_uquotino != NULLFSINO) {
+-		if (xfs_iget(mp, NULL, mp->m_sb.sb_uquotino,
+-					0, 0, &uip) == 0)
+-			tempuqip = true;
+-	}
+-	if (!gip && mp->m_sb.sb_gquotino != NULLFSINO) {
+-		if (xfs_iget(mp, NULL, mp->m_sb.sb_gquotino,
+-					0, 0, &gip) == 0)
+-			tempgqip = true;
+-	}
+-	/*
+-	 * Q_XGETQSTAT doesn't have room for both group and project quotas.
+-	 * So, allow the project quota values to be copied out only if
+-	 * there is no group quota information available.
+-	 */
+-	if (!gip) {
+-		if (!pip && mp->m_sb.sb_pquotino != NULLFSINO) {
+-			if (xfs_iget(mp, NULL, mp->m_sb.sb_pquotino,
+-						0, 0, &pip) == 0)
+-				temppqip = true;
+-		}
+-	} else
+-		pip = NULL;
+-	if (uip) {
+-		out->qs_uquota.qfs_ino = mp->m_sb.sb_uquotino;
+-		out->qs_uquota.qfs_nblks = uip->i_d.di_nblocks;
+-		out->qs_uquota.qfs_nextents = uip->i_d.di_nextents;
+-		if (tempuqip)
+-			IRELE(uip);
+-	}
+-
+-	if (gip) {
+-		out->qs_gquota.qfs_ino = mp->m_sb.sb_gquotino;
+-		out->qs_gquota.qfs_nblks = gip->i_d.di_nblocks;
+-		out->qs_gquota.qfs_nextents = gip->i_d.di_nextents;
+-		if (tempgqip)
+-			IRELE(gip);
+-	}
+-	if (pip) {
+-		out->qs_gquota.qfs_ino = mp->m_sb.sb_gquotino;
+-		out->qs_gquota.qfs_nblks = pip->i_d.di_nblocks;
+-		out->qs_gquota.qfs_nextents = pip->i_d.di_nextents;
+-		if (temppqip)
+-			IRELE(pip);
+-	}
+-	out->qs_incoredqs = q->qi_dquots;
+-	out->qs_btimelimit = q->qi_btimelimit;
+-	out->qs_itimelimit = q->qi_itimelimit;
+-	out->qs_rtbtimelimit = q->qi_rtbtimelimit;
+-	out->qs_bwarnlimit = q->qi_bwarnlimit;
+-	out->qs_iwarnlimit = q->qi_iwarnlimit;
+-
+-	return 0;
+-}
+-
+-/*
+- * Return quota status information, such as uquota-off, enforcements, etc.
+- * for Q_XGETQSTATV command, to support separate project quota field.
+- */
+-int
+-xfs_qm_scall_getqstatv(
+-	struct xfs_mount	*mp,
+-	struct fs_quota_statv	*out)
+-{
+-	struct xfs_quotainfo	*q = mp->m_quotainfo;
+-	struct xfs_inode	*uip = NULL;
+-	struct xfs_inode	*gip = NULL;
+-	struct xfs_inode	*pip = NULL;
+-	bool                    tempuqip = false;
+-	bool                    tempgqip = false;
+-	bool                    temppqip = false;
+-
+-	out->qs_flags = (__uint16_t) xfs_qm_export_flags(mp->m_qflags &
+-							(XFS_ALL_QUOTA_ACCT|
+-							 XFS_ALL_QUOTA_ENFD));
+-	out->qs_uquota.qfs_ino = mp->m_sb.sb_uquotino;
+-	out->qs_gquota.qfs_ino = mp->m_sb.sb_gquotino;
+-	out->qs_pquota.qfs_ino = mp->m_sb.sb_pquotino;
+-
+-	uip = q->qi_uquotaip;
+-	gip = q->qi_gquotaip;
+-	pip = q->qi_pquotaip;
+-	if (!uip && mp->m_sb.sb_uquotino != NULLFSINO) {
+-		if (xfs_iget(mp, NULL, mp->m_sb.sb_uquotino,
+-					0, 0, &uip) == 0)
+-			tempuqip = true;
+-	}
+-	if (!gip && mp->m_sb.sb_gquotino != NULLFSINO) {
+-		if (xfs_iget(mp, NULL, mp->m_sb.sb_gquotino,
+-					0, 0, &gip) == 0)
+-			tempgqip = true;
+-	}
+-	if (!pip && mp->m_sb.sb_pquotino != NULLFSINO) {
+-		if (xfs_iget(mp, NULL, mp->m_sb.sb_pquotino,
+-					0, 0, &pip) == 0)
+-			temppqip = true;
+-	}
+-	if (uip) {
+-		out->qs_uquota.qfs_nblks = uip->i_d.di_nblocks;
+-		out->qs_uquota.qfs_nextents = uip->i_d.di_nextents;
+-		if (tempuqip)
+-			IRELE(uip);
+-	}
+-
+-	if (gip) {
+-		out->qs_gquota.qfs_nblks = gip->i_d.di_nblocks;
+-		out->qs_gquota.qfs_nextents = gip->i_d.di_nextents;
+-		if (tempgqip)
+-			IRELE(gip);
+-	}
+-	if (pip) {
+-		out->qs_pquota.qfs_nblks = pip->i_d.di_nblocks;
+-		out->qs_pquota.qfs_nextents = pip->i_d.di_nextents;
+-		if (temppqip)
+-			IRELE(pip);
+-	}
+-	out->qs_incoredqs = q->qi_dquots;
+-	out->qs_btimelimit = q->qi_btimelimit;
+-	out->qs_itimelimit = q->qi_itimelimit;
+-	out->qs_rtbtimelimit = q->qi_rtbtimelimit;
+-	out->qs_bwarnlimit = q->qi_bwarnlimit;
+-	out->qs_iwarnlimit = q->qi_iwarnlimit;
+-
+-	return 0;
+-}
+-
+ #define XFS_QC_MASK \
+ 	(QC_LIMIT_MASK | QC_TIMER_MASK | QC_WARNS_MASK)
+ 
+@@ -873,28 +719,6 @@ out_put:
+ 	return error;
+ }
+ 
+-STATIC uint
+-xfs_qm_export_flags(
+-	uint flags)
+-{
+-	uint uflags;
+-
+-	uflags = 0;
+-	if (flags & XFS_UQUOTA_ACCT)
+-		uflags |= FS_QUOTA_UDQ_ACCT;
+-	if (flags & XFS_GQUOTA_ACCT)
+-		uflags |= FS_QUOTA_GDQ_ACCT;
+-	if (flags & XFS_PQUOTA_ACCT)
+-		uflags |= FS_QUOTA_PDQ_ACCT;
+-	if (flags & XFS_UQUOTA_ENFD)
+-		uflags |= FS_QUOTA_UDQ_ENFD;
+-	if (flags & XFS_GQUOTA_ENFD)
+-		uflags |= FS_QUOTA_GDQ_ENFD;
+-	if (flags & XFS_PQUOTA_ENFD)
+-		uflags |= FS_QUOTA_PDQ_ENFD;
+-	return uflags;
+-}
+-
+ 
+ STATIC int
+ xfs_dqrele_inode(
+diff --git a/fs/xfs/xfs_quotaops.c b/fs/xfs/xfs_quotaops.c
+index 6923905ab33d..df9835396c4f 100644
+--- a/fs/xfs/xfs_quotaops.c
++++ b/fs/xfs/xfs_quotaops.c
+@@ -23,45 +23,92 @@
+ #include "xfs_inode.h"
+ #include "xfs_quota.h"
+ #include "xfs_trans.h"
++#include "xfs_trace.h"
++#include "xfs_icache.h"
+ #include "xfs_qm.h"
+ #include <linux/quota.h>
+ 
+ 
+-STATIC int
+-xfs_quota_type(int type)
++static void
++xfs_qm_fill_state(
++	struct qc_type_state *tstate,
++	struct xfs_mount *mp,
++	struct xfs_inode *ip,
++	xfs_ino_t ino)
+ {
+-	switch (type) {
+-	case USRQUOTA:
+-		return XFS_DQ_USER;
+-	case GRPQUOTA:
+-		return XFS_DQ_GROUP;
+-	default:
+-		return XFS_DQ_PROJ;
++	struct xfs_quotainfo *q = mp->m_quotainfo;
++	bool tempqip = false;
++
++	tstate->ino = ino;
++	if (!ip && ino == NULLFSINO)
++		return;
++	if (!ip) {
++		if (xfs_iget(mp, NULL, ino, 0, 0, &ip))
++			return;
++		tempqip = true;
+ 	}
++	tstate->flags |= QCI_SYSFILE;
++	tstate->blocks = ip->i_d.di_nblocks;
++	tstate->nextents = ip->i_d.di_nextents;
++	tstate->spc_timelimit = q->qi_btimelimit;
++	tstate->ino_timelimit = q->qi_itimelimit;
++	tstate->rt_spc_timelimit = q->qi_rtbtimelimit;
++	tstate->spc_warnlimit = q->qi_bwarnlimit;
++	tstate->ino_warnlimit = q->qi_iwarnlimit;
++	tstate->rt_spc_warnlimit = q->qi_rtbwarnlimit;
++	if (tempqip)
++		IRELE(ip);
+ }
+ 
+-STATIC int
+-xfs_fs_get_xstate(
+-	struct super_block	*sb,
+-	struct fs_quota_stat	*fqs)
++/*
++ * Return quota status information, such as enforcements, quota file inode
++ * numbers etc.
++ */
++static int
++xfs_fs_get_quota_state(
++	struct super_block *sb,
++	struct qc_state *state)
+ {
+-	struct xfs_mount	*mp = XFS_M(sb);
++	struct xfs_mount *mp = XFS_M(sb);
++	struct xfs_quotainfo *q = mp->m_quotainfo;
+ 
++	memset(state, 0, sizeof(*state));
+ 	if (!XFS_IS_QUOTA_RUNNING(mp))
+-		return -ENOSYS;
+-	return xfs_qm_scall_getqstat(mp, fqs);
++		return 0;
++	state->s_incoredqs = q->qi_dquots;
++	if (XFS_IS_UQUOTA_RUNNING(mp))
++		state->s_state[USRQUOTA].flags |= QCI_ACCT_ENABLED;
++	if (XFS_IS_UQUOTA_ENFORCED(mp))
++		state->s_state[USRQUOTA].flags |= QCI_LIMITS_ENFORCED;
++	if (XFS_IS_GQUOTA_RUNNING(mp))
++		state->s_state[GRPQUOTA].flags |= QCI_ACCT_ENABLED;
++	if (XFS_IS_GQUOTA_ENFORCED(mp))
++		state->s_state[GRPQUOTA].flags |= QCI_LIMITS_ENFORCED;
++	if (XFS_IS_PQUOTA_RUNNING(mp))
++		state->s_state[PRJQUOTA].flags |= QCI_ACCT_ENABLED;
++	if (XFS_IS_PQUOTA_ENFORCED(mp))
++		state->s_state[PRJQUOTA].flags |= QCI_LIMITS_ENFORCED;
++
++	xfs_qm_fill_state(&state->s_state[USRQUOTA], mp, q->qi_uquotaip,
++			  mp->m_sb.sb_uquotino);
++	xfs_qm_fill_state(&state->s_state[GRPQUOTA], mp, q->qi_gquotaip,
++			  mp->m_sb.sb_gquotino);
++	xfs_qm_fill_state(&state->s_state[PRJQUOTA], mp, q->qi_pquotaip,
++			  mp->m_sb.sb_pquotino);
++	return 0;
+ }
+ 
+ STATIC int
+-xfs_fs_get_xstatev(
+-	struct super_block	*sb,
+-	struct fs_quota_statv	*fqs)
++xfs_quota_type(int type)
+ {
+-	struct xfs_mount	*mp = XFS_M(sb);
+-
+-	if (!XFS_IS_QUOTA_RUNNING(mp))
+-		return -ENOSYS;
+-	return xfs_qm_scall_getqstatv(mp, fqs);
++	switch (type) {
++	case USRQUOTA:
++		return XFS_DQ_USER;
++	case GRPQUOTA:
++		return XFS_DQ_GROUP;
++	default:
++		return XFS_DQ_PROJ;
++	}
+ }
+ 
+ static unsigned int
+@@ -178,8 +225,7 @@ xfs_fs_set_dqblk(
+ }
+ 
+ const struct quotactl_ops xfs_quotactl_operations = {
+-	.get_xstatev		= xfs_fs_get_xstatev,
+-	.get_xstate		= xfs_fs_get_xstate,
++	.get_state		= xfs_fs_get_quota_state,
+ 	.quota_enable		= xfs_quota_enable,
+ 	.quota_disable		= xfs_quota_disable,
+ 	.rm_xquota		= xfs_fs_rm_xquota,
 -- 
-Michal Hocko
-SUSE Labs
+2.1.4
 
 _______________________________________________
 xfs mailing list
