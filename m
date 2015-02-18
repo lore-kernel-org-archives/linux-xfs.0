@@ -1,29 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 449B97F72
-	for <xfs@oss.sgi.com>; Wed, 18 Feb 2015 02:25:13 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 163508F8049
-	for <xfs@oss.sgi.com>; Wed, 18 Feb 2015 00:25:09 -0800 (PST)
-Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id 6bXxjCjnWvEpW58q (version=TLSv1 cipher=AES256-SHA
-	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 18 Feb 2015 00:25:07 -0800 (PST)
-Date: Wed, 18 Feb 2015 09:25:02 +0100
-From: Michal Hocko <mhocko@suse.cz>
-Subject: Re: How to handle TIF_MEMDIE stalls?
-Message-ID: <20150218082502.GA4478@dhcp22.suse.cz>
-References: <20141230112158.GA15546@dhcp22.suse.cz>
-	<201502092044.JDG39081.LVFOOtFHQFOMSJ@I-love.SAKURA.ne.jp>
-	<201502102258.IFE09888.OVQFJOMSFtOLFH@I-love.SAKURA.ne.jp>
-	<20150210151934.GA11212@phnom.home.cmpxchg.org>
-	<201502111123.ICD65197.FMLOHSQJFVOtFO@I-love.SAKURA.ne.jp>
-	<201502172123.JIE35470.QOLMVOFJSHOFFt@I-love.SAKURA.ne.jp>
-	<20150217125315.GA14287@phnom.home.cmpxchg.org>
-	<20150217225430.GJ4251@dastard>
+	by oss.sgi.com (Postfix) with ESMTP id 6EE0A7F66
+	for <xfs@oss.sgi.com>; Wed, 18 Feb 2015 03:29:55 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 4F3E58F8037
+	for <xfs@oss.sgi.com>; Wed, 18 Feb 2015 01:29:52 -0800 (PST)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id 2VWdfgGwgY75EgBr (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 18 Feb 2015 01:29:51 -0800 (PST)
+Received: from int-mx13.intmail.prod.int.phx2.redhat.com
+	(int-mx13.intmail.prod.int.phx2.redhat.com [10.5.11.26])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id t1I9To1k006707
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256
+	verify=FAIL) for <xfs@oss.sgi.com>; Wed, 18 Feb 2015 04:29:50 -0500
+Date: Wed, 18 Feb 2015 07:29:46 -0200
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: Re: [PATCH] xfs: remove deprecated mount options
+Message-ID: <20150218092946.GA29058@hades.maiolino.org>
+References: <54E37F24.10300@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20150217225430.GJ4251@dastard>
+In-Reply-To: <54E37F24.10300@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -36,174 +34,36 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, dchinner@redhat.com, oleg@redhat.com, xfs@oss.sgi.com, Johannes Weiner <hannes@cmpxchg.org>, linux-mm@kvack.org, mgorman@suse.de, rientjes@google.com, akpm@linux-foundation.org, torvalds@linux-foundation.org
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-On Wed 18-02-15 09:54:30, Dave Chinner wrote:
-> [ cc xfs list - experienced kernel devs should not have to be
-> reminded to do this ]
+Looks good to me, also tested it, and there is no need anymore to keep warnings
+about these deprecated functions IMHO
+
+Consider it
+
+Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
+Tested-by: Carlos Maiolino <cmaiolino@redhat.com>
+
+On Tue, Feb 17, 2015 at 11:49:24AM -0600, Eric Sandeen wrote:
+> We recently removed deprecated sysctls; may as well
+> remove deprecated mount options as well, we've stated
+> that they'd be gone by now in the docs.
 > 
-> On Tue, Feb 17, 2015 at 07:53:15AM -0500, Johannes Weiner wrote:
-[...]
-> > void *
-> > kmem_alloc(size_t size, xfs_km_flags_t flags)
-> > {
-> > 	int	retries = 0;
-> > 	gfp_t	lflags = kmem_flags_convert(flags);
-> > 	void	*ptr;
-> > 
-> > 	do {
-> > 		ptr = kmalloc(size, lflags);
-> > 		if (ptr || (flags & (KM_MAYFAIL|KM_NOSLEEP)))
-> > 			return ptr;
-> > 		if (!(++retries % 100))
-> > 			xfs_err(NULL,
-> > 		"possible memory allocation deadlock in %s (mode:0x%x)",
-> > 					__func__, lflags);
-> > 		congestion_wait(BLK_RW_ASYNC, HZ/50);
-> > 	} while (1);
-> > }
-> > 
-> > This should use __GFP_NOFAIL, which is not only designed to annotate
-> > broken code like this, but also recognizes that endless looping on a
-> > GFP_NOFS allocation needs the OOM killer after all to make progress.
-> > 
-> > diff --git a/fs/xfs/kmem.c b/fs/xfs/kmem.c
-> > index a7a3a63bb360..17ced1805d3a 100644
-> > --- a/fs/xfs/kmem.c
-> > +++ b/fs/xfs/kmem.c
-> > @@ -45,20 +45,12 @@ kmem_zalloc_greedy(size_t *size, size_t minsize, size_t maxsize)
-> >  void *
-> >  kmem_alloc(size_t size, xfs_km_flags_t flags)
-> >  {
-> > -	int	retries = 0;
-> >  	gfp_t	lflags = kmem_flags_convert(flags);
-> > -	void	*ptr;
-> >  
-> > -	do {
-> > -		ptr = kmalloc(size, lflags);
-> > -		if (ptr || (flags & (KM_MAYFAIL|KM_NOSLEEP)))
-> > -			return ptr;
-> > -		if (!(++retries % 100))
-> > -			xfs_err(NULL,
-> > -		"possible memory allocation deadlock in %s (mode:0x%x)",
-> > -					__func__, lflags);
-> > -		congestion_wait(BLK_RW_ASYNC, HZ/50);
-> > -	} while (1);
-> > +	if (!(flags & (KM_MAYFAIL | KM_NOSLEEP)))
-> > +		lflags |= __GFP_NOFAIL;
-> > +
-> > +	return kmalloc(size, lflags);
-> >  }
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> ---
 > 
-> Hmmm - the only reason there is a focus on this loop is that it
-> emits warnings about allocations failing.
-
-Such a warning should be part of the allocator and the whole point why
-I like the patch is that we should really warn at a single place. I
-was thinking about a simple warning (e.g. like the above) and having
-something more sophisticated when lockdep is enabled.
-
-> It's obvious that the
-> problem being dealt with here is a fundamental design issue w.r.t.
-> to locking and the OOM killer, but the proposed special casing
-> hack^H^H^H^Hband aid^W^Wsolution is not "working" because some code
-> in XFS started emitting warnings about allocations failing more
-> often.
-> 
-> So the answer is to remove the warning?  That's like killing the
-> canary to stop the methane leak in the coal mine. No canary? No
-> problems!
-
-Not at all. I cannot speak for Johannes but I am pretty sure his
-motivation wasn't to simply silence the warning. The thing is that no
-kernel code paths except for the page allocator shouldn't emulate
-behavior for which we have a gfp flag.
-
-> Right now, the oom killer is a liability. Over the past 6 months
-> I've slowly had to exclude filesystem regression tests from running
-> on small memory machines because the OOM killer is now so unreliable
-> that it kills the test harness regularly rather than the process
-> generating memory pressure.
-
-It would be great to get bug reports.
-
-> That's a big red flag to me that all
-> this hacking around the edges is not solving the underlying problem,
-> but instead is breaking things that did once work.
-
-I am heavily trying to discourage people from adding random hacks to
-the already complicated and subtle OOM code.
-
-> And, well, then there's this (gfp.h):
-> 
->  * __GFP_NOFAIL: The VM implementation _must_ retry infinitely: the caller
->  * cannot handle allocation failures.  This modifier is deprecated and no new
->  * users should be added.
-> 
-> So, is this another policy relevation from the mm developers about
-> the kmalloc API? i.e. that __GFP_NOFAIL is no longer deprecated?
-
-It is deprecated and shouldn't be used. But that doesn't mean that users
-should workaround this by developing their own alternative. I agree the
-wording could be more clear and mention that if the allocation failure
-is absolutely unacceptable then the flags can be used rather than
-creating the loop around. What do you think about the following?
-
-diff --git a/include/linux/gfp.h b/include/linux/gfp.h
-index b840e3b2770d..ee6440ccb75d 100644
---- a/include/linux/gfp.h
-+++ b/include/linux/gfp.h
-@@ -57,8 +57,12 @@ struct vm_area_struct;
-  * _might_ fail.  This depends upon the particular VM implementation.
-  *
-  * __GFP_NOFAIL: The VM implementation _must_ retry infinitely: the caller
-- * cannot handle allocation failures.  This modifier is deprecated and no new
-- * users should be added.
-+ * cannot handle allocation failures.  This modifier is deprecated for allocation
-+ * with order > 1. Besides that this modifier is very dangerous when allocation
-+ * happens under a lock because it creates a lock dependency invisible for the
-+ * OOM killer so it can livelock. If the allocation failure is _absolutely_
-+ * unacceptable then the flags has to be used rather than looping around
-+ * allocator.
-  *
-  * __GFP_NORETRY: The VM implementation must not retry indefinitely.
-  *
-
-> Or just another symptom of frantic thrashing because nobody actually
-> understands the problem or those that do are unwilling to throw out
-> the broken crap and redesign it?
-> 
-> If you are changing allocator behaviour and constraints, then you
-> better damn well think through that changes fully, then document
-> those changes, change all the relevant code to use the new API (not
-> just those that throw warnings in your face) and make sure
-> *everyone* knows about it. e.g. a LWN article explaining the changes
-> and how memory allocation is going to work into the future would be
-> a good start.
-
-Well, I think the first step is to change the users of the allocator
-to not lie about gfp flags. So if the code is infinitely trying then
-it really should use GFP_NOFAIL flag.  In the meantime page allocator
-should develop a proper diagnostic to help identify all the potential
-dependencies. Next we should start thinking whether all the existing
-GFP_NOFAIL paths are really necessary or the code can be
-refactored/reimplemented to accept allocation failures.
-
-> Otherwise, this just looks like another knee-jerk band aid for an
-> architectural problem that needs more than special case hacks to
-> solve.
-> 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+> diff --git a/Documentation/filesystems/xfs.txt b/Documentation/filesystems/xfs.txt
+> index 7077103..03a3d03 100644
+> --- a/Documentation/filesystems/xfs.txt
+> +++ b/Documentation/filesystems/xfs.txt
+> @@ -228,30 +228,19 @@ default behaviour.
+>  Deprecated Mount Options
+>  ========================
+>  
 
 -- 
-Michal Hocko
-SUSE Labs
+Carlos
 
 _______________________________________________
 xfs mailing list
