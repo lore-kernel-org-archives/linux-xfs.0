@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 6038F7FA4
-	for <xfs@oss.sgi.com>; Wed, 18 Feb 2015 16:32:25 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 1AB368F804C
-	for <xfs@oss.sgi.com>; Wed, 18 Feb 2015 14:32:24 -0800 (PST)
+	by oss.sgi.com (Postfix) with ESMTP id B01A47FA7
+	for <xfs@oss.sgi.com>; Wed, 18 Feb 2015 16:48:50 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 7E2FD8F804C
+	for <xfs@oss.sgi.com>; Wed, 18 Feb 2015 14:48:50 -0800 (PST)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	j2LRCgosisb07am7 for <xfs@oss.sgi.com>;
-	Wed, 18 Feb 2015 14:32:22 -0800 (PST)
+	4nHlFVas8aAFAq8m for <xfs@oss.sgi.com>;
+	Wed, 18 Feb 2015 14:48:47 -0800 (PST)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.80)
-	(envelope-from <dave@fromorbit.com>) id 1YODAK-0000JV-BA
-	for xfs@oss.sgi.com; Thu, 19 Feb 2015 09:32:20 +1100
+	(envelope-from <dave@fromorbit.com>) id 1YODQD-0000Kq-Ny
+	for xfs@oss.sgi.com; Thu, 19 Feb 2015 09:48:45 +1100
 Received: from dave by disappointment with local (Exim 4.82_1-5b7a7c0-XX)
-	(envelope-from <dave@disappointment.disaster>) id 1YODAK-0006j5-7c
-	for xfs@oss.sgi.com; Thu, 19 Feb 2015 09:32:20 +1100
+	(envelope-from <dave@disappointment.disaster>) id 1YODQD-0006n2-Mf
+	for xfs@oss.sgi.com; Thu, 19 Feb 2015 09:48:45 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH] xfs: Introduce permanent async buffer write IO failures
-Date: Thu, 19 Feb 2015 09:32:20 +1100
-Message-Id: <1424298740-25821-1-git-send-email-david@fromorbit.com>
+Subject: [PATCH] xfs: ensure truncate forces zeroed blocks to disk
+Date: Thu, 19 Feb 2015 09:48:45 +1100
+Message-Id: <1424299725-26067-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -37,182 +37,189 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Currently we consider all async metadata buffer write failures as
-transient failures and retry the IO immediately and then again at a
-a later time. The issue with this is that we can hang forever is the
-error is not recoverable.
+A new fsync vs power fail test in xfstests indicated that XFS can
+have unreliable data consistency when doing extending truncates that
+require block zeroing. The blocks beyond EOF get zeroed in memory,
+but we never force those changes to disk before we run the
+transaction that extends the file size and exposes those blocks to
+userspace. This can result in the blocks not being correctly zeroed
+after a crash.
 
-An example of this is a device that has been pulled and so is
-returning ENODEV to all IO. Attempting to unmount the filesystem
-with the device in this state will result in a hang waiting for the
-async metadata IO to be flushed and written successfully. In this
-case, we need metadata writeback to error out and trigger a shutdown
-state so the unmount can complete.
+Because in-memory behaviour is correct, tools like fsx don't pick up
+any coherency problems - it's not until the filesystem is shutdown
+or the system crashes after writing the truncate transaction to the
+journal but before the zeroed data in the page cache is flushed that
+the issue is exposed.
 
-Put simply, we need to consider some errors as permanent and
-unrecoverable rather than transient.
+Fix this by also flushing the dirty data in memory region between
+the old size and new size when we've found blocks that need zeroing
+in the truncate process.
 
-Hence add infrastructure that allows us to classify the async write
-errors and hence apply different policies to the different failures.
-In this patch, classify ENODEV as a permanent error but leave
-all the other types of error handling unchanged.
-
+Reported-by: Liu Bo <bo.li.liu@oracle.com>
+cc: <stable@vger.kernel.org>
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_buf_item.c | 110 ++++++++++++++++++++++++++++++--------------------
- 1 file changed, 66 insertions(+), 44 deletions(-)
+ fs/xfs/xfs_file.c  | 14 ++++++++++----
+ fs/xfs/xfs_inode.h |  9 +++++----
+ fs/xfs/xfs_iops.c  | 36 ++++++++++++++----------------------
+ 3 files changed, 29 insertions(+), 30 deletions(-)
 
-diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
-index 507d96a..274678f 100644
---- a/fs/xfs/xfs_buf_item.c
-+++ b/fs/xfs/xfs_buf_item.c
-@@ -1041,14 +1041,13 @@ xfs_buf_do_callbacks(
+diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+index ce615d1..a2e1cb8 100644
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@ -397,7 +397,8 @@ STATIC int				/* error (positive) */
+ xfs_zero_last_block(
+ 	struct xfs_inode	*ip,
+ 	xfs_fsize_t		offset,
+-	xfs_fsize_t		isize)
++	xfs_fsize_t		isize,
++	bool			*did_zeroing)
+ {
+ 	struct xfs_mount	*mp = ip->i_mount;
+ 	xfs_fileoff_t		last_fsb = XFS_B_TO_FSBT(mp, isize);
+@@ -425,6 +426,7 @@ xfs_zero_last_block(
+ 	zero_len = mp->m_sb.sb_blocksize - zero_offset;
+ 	if (isize + zero_len > offset)
+ 		zero_len = offset - isize;
++	*did_zeroing = true;
+ 	return xfs_iozero(ip, isize, zero_len);
  }
  
- /*
-- * This is the iodone() function for buffers which have had callbacks
-- * attached to them by xfs_buf_attach_iodone().  It should remove each
-- * log item from the buffer's list and call the callback of each in turn.
-- * When done, the buffer's fsprivate field is set to NULL and the buffer
-- * is unlocked with a call to iodone().
-+ * Process a write IO error on a buffer with active log items.
-+ *
-+ * Returns true if the buffer has been completed and released, false if callback
-+ * processing still needs to be performed and the IO completed.
-  */
--void
--xfs_buf_iodone_callbacks(
-+static bool
-+xfs_buf_iodone_callback_error(
- 	struct xfs_buf		*bp)
+@@ -443,7 +445,8 @@ int					/* error (positive) */
+ xfs_zero_eof(
+ 	struct xfs_inode	*ip,
+ 	xfs_off_t		offset,		/* starting I/O offset */
+-	xfs_fsize_t		isize)		/* current inode size */
++	xfs_fsize_t		isize,		/* current inode size */
++	bool			*did_zeroing)
  {
- 	struct xfs_log_item	*lip = bp->b_fspriv;
-@@ -1056,19 +1055,12 @@ xfs_buf_iodone_callbacks(
- 	static ulong		lasttime;
- 	static xfs_buftarg_t	*lasttarg;
- 
--	if (likely(!bp->b_error))
--		goto do_callbacks;
--
- 	/*
- 	 * If we've already decided to shutdown the filesystem because of
- 	 * I/O errors, there's no point in giving this a retry.
+ 	struct xfs_mount	*mp = ip->i_mount;
+ 	xfs_fileoff_t		start_zero_fsb;
+@@ -465,7 +468,7 @@ xfs_zero_eof(
+ 	 * We only zero a part of that block so it is handled specially.
  	 */
--	if (XFS_FORCED_SHUTDOWN(mp)) {
--		xfs_buf_stale(bp);
--		XFS_BUF_DONE(bp);
--		trace_xfs_buf_item_iodone(bp, _RET_IP_);
--		goto do_callbacks;
--	}
-+	if (XFS_FORCED_SHUTDOWN(mp))
-+		goto out_stale;
- 
- 	if (bp->b_target != lasttarg ||
- 	    time_after(jiffies, (lasttime + 5*HZ))) {
-@@ -1077,45 +1069,75 @@ xfs_buf_iodone_callbacks(
+ 	if (XFS_B_FSB_OFFSET(mp, isize) != 0) {
+-		error = xfs_zero_last_block(ip, offset, isize);
++		error = xfs_zero_last_block(ip, offset, isize, did_zeroing);
+ 		if (error)
+ 			return error;
  	}
- 	lasttarg = bp->b_target;
+@@ -525,6 +528,7 @@ xfs_zero_eof(
+ 		if (error)
+ 			return error;
  
-+	/* synchronous writes will have callers process the error */
-+	if (!(bp->b_flags & XBF_ASYNC))
-+		goto out_stale;
-+
-+	trace_xfs_buf_item_iodone_async(bp, _RET_IP_);
-+	ASSERT(bp->b_iodone != NULL);
-+	xfs_buf_ioerror(bp, 0);
-+
- 	/*
- 	 * If the write was asynchronous then no one will be looking for the
--	 * error.  Clear the error state and write the buffer out again.
--	 *
--	 * XXX: This helps against transient write errors, but we need to find
--	 * a way to shut the filesystem down if the writes keep failing.
--	 *
--	 * In practice we'll shut the filesystem down soon as non-transient
--	 * errors tend to affect the whole device and a failing log write
--	 * will make us give up.  But we really ought to do better here.
-+	 * error.  If this is the first failure, clear the error state and write
-+	 * the buffer out again.
++		*did_zeroing = true;
+ 		start_zero_fsb = imap.br_startoff + imap.br_blockcount;
+ 		ASSERT(start_zero_fsb <= (end_zero_fsb + 1));
+ 	}
+@@ -567,13 +571,15 @@ restart:
+ 	 * having to redo all checks before.
  	 */
--	if (XFS_BUF_ISASYNC(bp)) {
--		ASSERT(bp->b_iodone != NULL);
--
--		trace_xfs_buf_item_iodone_async(bp, _RET_IP_);
--
--		xfs_buf_ioerror(bp, 0); /* errno of 0 unsets the flag */
--
--		if (!(bp->b_flags & (XBF_STALE|XBF_WRITE_FAIL))) {
--			bp->b_flags |= XBF_WRITE | XBF_ASYNC |
--				       XBF_DONE | XBF_WRITE_FAIL;
--			xfs_buf_submit(bp);
--		} else {
--			xfs_buf_relse(bp);
--		}
--
--		return;
-+	if (!(bp->b_flags & (XBF_STALE|XBF_WRITE_FAIL))) {
-+		bp->b_flags |= XBF_WRITE | XBF_ASYNC |
-+			       XBF_DONE | XBF_WRITE_FAIL;
-+		xfs_buf_submit(bp);
-+		return true;
+ 	if (*pos > i_size_read(inode)) {
++		bool	zero = false;
++
+ 		if (*iolock == XFS_IOLOCK_SHARED) {
+ 			xfs_rw_iunlock(ip, *iolock);
+ 			*iolock = XFS_IOLOCK_EXCL;
+ 			xfs_rw_ilock(ip, *iolock);
+ 			goto restart;
+ 		}
+-		error = xfs_zero_eof(ip, *pos, i_size_read(inode));
++		error = xfs_zero_eof(ip, *pos, i_size_read(inode), &zero);
+ 		if (error)
+ 			return error;
  	}
+diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
+index 8e82b41..c73b63d 100644
+--- a/fs/xfs/xfs_inode.h
++++ b/fs/xfs/xfs_inode.h
+@@ -384,10 +384,11 @@ enum xfs_prealloc_flags {
+ 	XFS_PREALLOC_INVISIBLE	= (1 << 4),
+ };
+ 
+-int		xfs_update_prealloc_flags(struct xfs_inode *,
+-			enum xfs_prealloc_flags);
+-int		xfs_zero_eof(struct xfs_inode *, xfs_off_t, xfs_fsize_t);
+-int		xfs_iozero(struct xfs_inode *, loff_t, size_t);
++int	xfs_update_prealloc_flags(struct xfs_inode *ip,
++				  enum xfs_prealloc_flags flags);
++int	xfs_zero_eof(struct xfs_inode *ip, xfs_off_t offset,
++		     xfs_fsize_t isize, bool *did_zeroing);
++int	xfs_iozero(struct xfs_inode *ip, loff_t pos, size_t count);
+ 
+ 
+ /* from xfs_iops.c */
+diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+index d7782ae..3ccc28e 100644
+--- a/fs/xfs/xfs_iops.c
++++ b/fs/xfs/xfs_iops.c
+@@ -756,6 +756,7 @@ xfs_setattr_size(
+ 	int			error;
+ 	uint			lock_flags = 0;
+ 	uint			commit_flags = 0;
++	bool			did_zeroing = false;
+ 
+ 	trace_xfs_setattr(ip);
+ 
+@@ -799,20 +800,16 @@ xfs_setattr_size(
+ 		return error;
  
  	/*
--	 * If the write of the buffer was synchronous, we want to make
--	 * sure to return the error to the caller of xfs_bwrite().
-+	 * Repeated failure on an async write.
+-	 * Now we can make the changes.  Before we join the inode to the
+-	 * transaction, take care of the part of the truncation that must be
+-	 * done without the inode lock.  This needs to be done before joining
+-	 * the inode to the transaction, because the inode cannot be unlocked
+-	 * once it is a part of the transaction.
++	 * File data changes must be complete before we start the transaction to
++	 * modify the inode.  This needs to be done before joining the inode to
++	 * the transaction because the inode cannot be unlocked once it is a
++	 * part of the transaction.
 +	 *
-+	 * Now we need to classify the error and determine the correct action to
-+	 * take. Different types of errors will require different processing,
-+	 * but make the default classification "transient" so that we keep
-+	 * retrying in these cases.  If this is the wrog thing to do, then we'll
-+	 * get reports that the filesystem hung in the presence of that type of
-+	 * error and we can take appropriate action to remedy the issue for that
-+	 * type of error.
++	 * Start with zeroing any data block beyond EOF that we may expose on
++	 * file extension.
  	 */
-+	switch (bp->b_error) {
-+	case ENODEV:
-+		/* permanent error, no recovery possible */
-+		xfs_force_shutdown(mp, SHUTDOWN_META_IO_ERROR);
-+		goto out_stale;
-+	default:
-+		/* do nothing, higher layers will retry */
-+		break;
-+	}
-+
-+	xfs_buf_relse(bp);
-+	return true;
-+
-+out_stale:
- 	xfs_buf_stale(bp);
- 	XFS_BUF_DONE(bp);
--
- 	trace_xfs_buf_error_relse(bp, _RET_IP_);
-+	return false;
-+}
-+
-+/*
-+ * This is the iodone() function for buffers which have had callbacks attached
-+ * to them by xfs_buf_attach_iodone(). We need to iterate the items on the
-+ * callback list, mark the buffer as having no more callbacks and then push the
-+ * buffer through IO completion processing.
-+ */
-+void
-+xfs_buf_iodone_callbacks(
-+	struct xfs_buf		*bp)
-+{
-+	/*
-+	 * If there is an error, process it. Some errors require us
-+	 * to run callbacks after failure processing is done so we
-+	 * detect that and take appropriate action.
-+	 */
-+	if (bp->b_error && xfs_buf_iodone_callback_error(bp))
-+		return;
+ 	if (newsize > oldsize) {
+-		/*
+-		 * Do the first part of growing a file: zero any data in the
+-		 * last block that is beyond the old EOF.  We need to do this
+-		 * before the inode is joined to the transaction to modify
+-		 * i_size.
+-		 */
+-		error = xfs_zero_eof(ip, newsize, oldsize);
++		error = xfs_zero_eof(ip, newsize, oldsize, &did_zeroing);
+ 		if (error)
+ 			return error;
+ 	}
+@@ -822,23 +819,18 @@ xfs_setattr_size(
+ 	 * any previous writes that are beyond the on disk EOF and the new
+ 	 * EOF that have not been written out need to be written here.  If we
+ 	 * do not write the data out, we expose ourselves to the null files
+-	 * problem.
+-	 *
+-	 * Only flush from the on disk size to the smaller of the in memory
+-	 * file size or the new size as that's the range we really care about
+-	 * here and prevents waiting for other data not within the range we
+-	 * care about here.
++	 * problem. Note that this includes any block zeroing we did above;
++	 * otherwise those blocks may not be zeroed after a crash.
+ 	 */
+-	if (oldsize != ip->i_d.di_size && newsize > ip->i_d.di_size) {
++	if (newsize > ip->i_d.di_size &&
++	    (oldsize != ip->i_d.di_size || did_zeroing)) {
+ 		error = filemap_write_and_wait_range(VFS_I(ip)->i_mapping,
+ 						      ip->i_d.di_size, newsize);
+ 		if (error)
+ 			return error;
+ 	}
  
--do_callbacks:
- 	xfs_buf_do_callbacks(bp);
- 	bp->b_fspriv = NULL;
- 	bp->b_iodone = NULL;
+-	/*
+-	 * Wait for all direct I/O to complete.
+-	 */
++	/* Now wait for all direct I/O to complete. */
+ 	inode_dio_wait(inode);
+ 
+ 	/*
 -- 
 2.0.0
 
