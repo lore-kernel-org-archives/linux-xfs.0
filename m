@@ -1,28 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 8361729DF7
-	for <xfs@oss.sgi.com>; Wed, 18 Feb 2015 09:32:38 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 3CCE48F8035
-	for <xfs@oss.sgi.com>; Wed, 18 Feb 2015 07:32:38 -0800 (PST)
-Received: from mail-qc0-f178.google.com (mail-qc0-f178.google.com
-	[209.85.216.178]) by cuda.sgi.com with ESMTP id
-	2XVPb8Cwxl7XabZu (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 18 Feb 2015 07:32:33 -0800 (PST)
-Received: by mail-qc0-f178.google.com with SMTP id p6so1367598qcv.9
-	for <xfs@oss.sgi.com>; Wed, 18 Feb 2015 07:32:33 -0800 (PST)
-Message-ID: <54E4B08B.5050801@gmail.com>
-Date: Wed, 18 Feb 2015 10:32:27 -0500
-From: "Michael L. Semon" <mlsemon35@gmail.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 9B55029DF7
+	for <xfs@oss.sgi.com>; Wed, 18 Feb 2015 09:40:34 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 89411304064
+	for <xfs@oss.sgi.com>; Wed, 18 Feb 2015 07:40:34 -0800 (PST)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id YMHiDFF1Uz2wUIEe (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 18 Feb 2015 07:40:33 -0800 (PST)
+Date: Wed, 18 Feb 2015 10:40:27 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: XFS: Internal error XFS_WANT_CORRUPTED_GOTO at line 990 of file
+	fs/xfs/xfs_ialloc.c
+Message-ID: <20150218154026.GB62927@bfoster.bfoster>
+References: <CAF1in6QW=PS0qfBAtQZHC23r+WVAXv5TLxFAr0r6RfTNiOnXcQ@mail.gmail.com>
+	<20150216141039.GA48651@bfoster.bfoster>
+	<CAF1in6RXO_=KkQ8VyzoyNGH_F4zk5J+cUeCdwic-muHL9V7ydw@mail.gmail.com>
+	<20150218145844.GA62927@bfoster.bfoster>
+	<CAF1in6TCiwHyt40sm4g0LxKcf5o-=o5cZxMM+x=coSsKJ2hXcQ@mail.gmail.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfs: xfs_alloc_fix_minleft can underflow near ENOSPC
-References: <1423782857-11800-1-git-send-email-david@fromorbit.com>
-	<54DE8B6D.8010401@sgi.com> <20150214232951.GW4251@dastard>
-	<54E16667.1050200@gmail.com> <54E22A76.40106@sgi.com>
-	<20150216231716.GB4251@dastard> <54E36016.20908@gmail.com>
-	<20150218004838.GM4251@dastard>
-In-Reply-To: <20150218004838.GM4251@dastard>
+Content-Disposition: inline
+In-Reply-To: <CAF1in6TCiwHyt40sm4g0LxKcf5o-=o5cZxMM+x=coSsKJ2hXcQ@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,52 +34,189 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Mark Tinguely <tinguely@sgi.com>, xfs@oss.sgi.com
+To: Pablo Silva <psilvao@gmail.com>
+Cc: xfs@oss.sgi.com
 
-On 02/17/15 19:48, Dave Chinner wrote:
-> On Tue, Feb 17, 2015 at 10:36:54AM -0500, Michael L. Semon wrote:
->> On 02/16/15 18:17, Dave Chinner wrote:
->>> On Mon, Feb 16, 2015 at 11:35:50AM -0600, Mark Tinguely wrote:
->>>> Thanks Michael, you don't need to hold your test box for me. I do
->>>> have a way to recreate these ABBA AGF buffer allocation deadlocks
->>>> and understand the whys and hows very well. I don't have a community
->>>> way to make a xfstest for it but I think your test is getting close.
->>>
->>> If you know what is causing them, then please explain how it occurs
->>> and how you think it needs to be fixed. Just telling us that you know
->>> something that we don't doesn't help us solve the problem. :(
->>>
->>> In general, the use of the args->firstblock is supposed to avoid the
->>> ABBA locking order issues with multiple allocations in the one
->>> transaction by preventing AG selection loops from looping back into
->>> AGs with a lower index than the first allocation that was made.
->>>
->>> So if you are seeing deadlocks, then it may be that we aren't
->>> following this constraint correctly in all locations....
->>
->> Will this be a classic deadlock that will cause problems when trying to
->> kill processes and unmount filesystems?  If so, then I was unable to use
->> generic/224 to trigger a deadlock.  If not, then I'll need a better way
->> of looking at the problem.
+On Wed, Feb 18, 2015 at 12:19:03PM -0300, Pablo Silva wrote:
+> The XFS filesystem is only access by kvm guest, the objetive is store the
+> backup's amanda that running in kvm host.
 > 
-> Yes, it will hang the filesystem.
+
+Ok, so you've got an lv on the CentOS 6 host that is mapped through to
+the CentOS 7 guest. It's not really clear to me whether you've
+formatted that again with lvm inside the guest, or the raw drive is
+mapped through, but anyways...
+
+If the fs is only accessed by the guest (CentOS 7), why does the error
+report occur on the CentOS 6 kernel?
+
+Feb 12 19:22:15 vtl kernel: Pid: 3502, comm: touch Not tainted 2.6.32-431.17.1.el6.x86_64
+
+Brian
+
+> Now, i answer your questions:
 > 
-> Cheers,
+> * Have there been any other storage errors reported in the logs?,
 > 
-> Dave.
-
-Thanks.  I'll try again tonight.
-
-Last night's attempt was a combination of fio, fsstress, and a shell loop 
-of xfs_io's fcollapse command, all at once on an SSD.  At the end of the 
-night, XFS was laughing at me.  Therefore, I added the same test on the 
-3-partition RAID-0 side.  This morning, XFS is still laughing at me, but 
-the RAID-0 test is still running.
-
-Thanks!
-
-Michael
+> ans: No, no information inside /var/log/messages , dmesg about xfs., can
+> you suggest other log file for to find any information?
+> 
+> * Is the problem reproducible or was it a one off occurrence?
+> 
+> ans: It is only the first occurrence, and the server has a little use,
+> because we are working yet for to complete the amanda backups, it isn't in
+> production yet.
+> 
+> -Pablo
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> On Wed, Feb 18, 2015 at 11:58 AM, Brian Foster <bfoster@redhat.com> wrote:
+> 
+> > On Wed, Feb 18, 2015 at 11:13:23AM -0300, Pablo Silva wrote:
+> > > Hi Brian!
+> > >
+> > >  Thanks for your time!, i've just to run xfs_repair -n the result you can
+> > > see --> http://pastebin.centos.org/16106/ and as you can see there was
+> > > problems, but why this problems occurs?, we have xfs partition used for
+> > one
+> > > KVM where running Amanda with Centos 7, perhaps it was a bad
+> > configuration
+> > > inside KVM or perhaps a bug?, the host server is running centos 6
+> > >
+> >
+> > Can you elaborate? You have an isolated XFS filesystem that is accessed
+> > by the host system, the kvm guest, or both? How is the fs used?
+> >
+> > Also, can you answer my other questions related to how this occurred?
+> > Are there any other errors in the logs that precede the one below?
+> >
+> > I assume the fs shut down at the point of the error below. Has it been
+> > mounted since? If not, that might be worth a try to replay the log. If
+> > the log is dirty and replayed, that should be indicated by the output in
+> > the log at mount time. You'll also want to re-run xfs_repair -n in that
+> > case.
+> >
+> > Brian
+> >
+> > > [root@vtl ~]# uname -a
+> > > Linux vtl.areaprod.b2b 2.6.32-504.8.1.el6.x86_64 #1 SMP Wed Jan 28
+> > 21:11:36
+> > > UTC 2015 x86_64 x86_64 x86_64 GNU/Linux
+> > >
+> > >
+> > > But the KVM running centos 7
+> > >
+> > > Linux amanda 3.10.0-123.8.1.el7.x86_64 #1 SMP Mon Sep 22 19:06:58 UTC
+> > 2014
+> > > x86_64 x86_64 x86_64 GNU/Linux
+> > >
+> > > The KVM config is this --> http://pastebin.centos.org/16111/
+> > >
+> > > And /etc/fstab is this---> http://pastebin.centos.org/16116/
+> > >
+> > >
+> > > Thanks in advance, for any hint.
+> > >
+> > > -Pablo
+> > >
+> > >
+> > > On Mon, Feb 16, 2015 at 11:10 AM, Brian Foster <bfoster@redhat.com>
+> > wrote:
+> > >
+> > > > On Fri, Feb 13, 2015 at 03:44:57PM -0300, Pablo Silva wrote:
+> > > > > Hi !
+> > > > >
+> > > > >     We have a server with centos 6.6, kernel version:
+> > > > > 2.6.32-431.17.1.el6.x86_64, where we got the following message:
+> > > > >
+> > > > > Feb 12 19:22:15 vtl kernel:
+> > > > > Feb 12 19:22:15 vtl kernel: Pid: 3502, comm: touch Not tainted
+> > > > > 2.6.32-431.17.1.el6.x86_64 #1
+> > > > > Feb 12 19:22:15 vtl kernel: Call Trace:
+> > > > > Feb 12 19:22:15 vtl kernel: [<ffffffffa041ae5f>] ?
+> > > > > xfs_error_report+0x3f/0x50 [xfs]
+> > > > > Feb 12 19:22:15 vtl kernel: [<ffffffffa0422980>] ?
+> > xfs_ialloc+0x60/0x6e0
+> > > > [xfs]
+> > > > > Feb 12 19:22:15 vtl kernel: [<ffffffffa041ec2e>] ?
+> > > > xfs_dialloc+0x43e/0x850 [xfs]
+> > > > > Feb 12 19:22:15 vtl kernel: [<ffffffffa0422980>] ?
+> > xfs_ialloc+0x60/0x6e0
+> > > > [xfs]
+> > > > > Feb 12 19:22:15 vtl kernel: [<ffffffffa044007a>] ?
+> > > > > kmem_zone_zalloc+0x3a/0x50 [xfs]
+> > > > > Feb 12 19:22:15 vtl kernel: [<ffffffffa043b814>] ?
+> > > > > xfs_dir_ialloc+0x74/0x2b0 [xfs]
+> > > > > Feb 12 19:22:15 vtl kernel: [<ffffffffa043d900>] ?
+> > > > xfs_create+0x440/0x640 [xfs]
+> > > > > Feb 12 19:22:15 vtl kernel: [<ffffffffa044aa5d>] ?
+> > > > xfs_vn_mknod+0xad/0x1c0 [xfs]
+> > > > > Feb 12 19:22:15 vtl kernel: [<ffffffffa044aba0>] ?
+> > > > xfs_vn_create+0x10/0x20 [xfs]
+> > > > > Feb 12 19:22:15 vtl kernel: [<ffffffff81198086>] ?
+> > vfs_create+0xe6/0x110
+> > > > > Feb 12 19:22:15 vtl kernel: [<ffffffff8119bb9e>] ?
+> > > > do_filp_open+0xa8e/0xd20
+> > > > > Feb 12 19:22:15 vtl kernel: [<ffffffff811a7ea2>] ?
+> > alloc_fd+0x92/0x160
+> > > > > Feb 12 19:22:15 vtl kernel: XFS: Internal error
+> > > > > XFS_WANT_CORRUPTED_GOTO at line 990 of file fs/xfs/xfs_ialloc.c.
+> > > > > Caller 0xffffffffa0422980
+> > > > >
+> > > >
+> > > >         /*
+> > > >          * None left in the last group, search the whole AG
+> > > >          */
+> > > >         error = xfs_inobt_lookup(cur, 0, XFS_LOOKUP_GE, &i);
+> > > >         if (error)
+> > > >                 goto error0;
+> > > >         XFS_WANT_CORRUPTED_GOTO(i == 1, error0);
+> > > >
+> > > >         for (;;) {
+> > > >                 error = xfs_inobt_get_rec(cur, &rec, &i);
+> > > >                 if (error)
+> > > >                         goto error0;
+> > > >                 XFS_WANT_CORRUPTED_GOTO(i == 1, error0);
+> > > >                 if (rec.ir_freecount > 0)
+> > > >                         break;
+> > > >                 error = xfs_btree_increment(cur, 0, &i);
+> > > >                 if (error)
+> > > >                         goto error0;
+> > > > --->            XFS_WANT_CORRUPTED_GOTO(i == 1, error0);
+> > > >         }
+> > > >
+> > > > That corresponds to the check above. This code is part of the inode
+> > > > allocator where we expect an AG to have free inodes and we're doing a
+> > > > brute force search for a record. Apparently we go off the AG or some
+> > > > other problem occurs before we find a free inode record.
+> > > >
+> > > > Does 'xfs_repair -n' report any problems with this fs? Have there been
+> > > > any other storage errors reported in the logs? Is the problem
+> > > > reproducible or was it a one off occurrence?
+> > > >
+> > > > Brian
+> > > >
+> > > > > I can't find more information for this..., perhaps a bug or other
+> > > > > thing ..., welcome any hint for to research..
+> > > > >
+> > > > > Thanks in advance!
+> > > > >
+> > > > > -Pablo
+> > > >
+> > > > > _______________________________________________
+> > > > > xfs mailing list
+> > > > > xfs@oss.sgi.com
+> > > > > http://oss.sgi.com/mailman/listinfo/xfs
+> > > >
+> > > >
+> >
 
 _______________________________________________
 xfs mailing list
