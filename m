@@ -1,31 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 66BF77F9C
-	for <xfs@oss.sgi.com>; Wed, 18 Feb 2015 15:32:20 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id EA799AC004
-	for <xfs@oss.sgi.com>; Wed, 18 Feb 2015 13:32:16 -0800 (PST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 7BF017F9E
+	for <xfs@oss.sgi.com>; Wed, 18 Feb 2015 15:55:48 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 671B38F8054
+	for <xfs@oss.sgi.com>; Wed, 18 Feb 2015 13:55:48 -0800 (PST)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	hgHaqlhZjYuFWfZe for <xfs@oss.sgi.com>;
-	Wed, 18 Feb 2015 13:32:09 -0800 (PST)
-Date: Thu, 19 Feb 2015 08:31:18 +1100
+	xwrctddVnNGnUvKK for <xfs@oss.sgi.com>;
+	Wed, 18 Feb 2015 13:55:45 -0800 (PST)
+Date: Thu, 19 Feb 2015 08:55:23 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: How to handle TIF_MEMDIE stalls?
-Message-ID: <20150218213118.GN12722@dastard>
-References: <201502092044.JDG39081.LVFOOtFHQFOMSJ@I-love.SAKURA.ne.jp>
-	<201502102258.IFE09888.OVQFJOMSFtOLFH@I-love.SAKURA.ne.jp>
-	<20150210151934.GA11212@phnom.home.cmpxchg.org>
-	<201502111123.ICD65197.FMLOHSQJFVOtFO@I-love.SAKURA.ne.jp>
-	<201502172123.JIE35470.QOLMVOFJSHOFFt@I-love.SAKURA.ne.jp>
-	<20150217125315.GA14287@phnom.home.cmpxchg.org>
-	<20150217225430.GJ4251@dastard>
-	<20150218082502.GA4478@dhcp22.suse.cz>
-	<20150218104859.GM12722@dastard>
-	<20150218121602.GC4478@dhcp22.suse.cz>
+Subject: Re: + ext4-add-dax-functionality.patch added to -mm tree
+Message-ID: <20150218215523.GO12722@dastard>
+References: <54b45495.+RptMlNQorYE9TTf%akpm@linux-foundation.org>
+	<20150115124106.GF12739@quack.suse.cz>
+	<100D68C7BA14664A8938383216E40DE040853440@FMSMSX114.amr.corp.intel.com>
+	<20150119141858.GF5662@quack.suse.cz>
+	<20150217085200.GA23192@quack.suse.cz>
+	<20150217133745.GG3364@wil.cx>
+	<20150218104009.GB4614@quack.suse.cz>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20150218121602.GC4478@dhcp22.suse.cz>
+In-Reply-To: <20150218104009.GB4614@quack.suse.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -38,182 +35,88 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Michal Hocko <mhocko@suse.cz>
-Cc: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, dchinner@redhat.com, oleg@redhat.com, xfs@oss.sgi.com, Johannes Weiner <hannes@cmpxchg.org>, linux-mm@kvack.org, mgorman@suse.de, rientjes@google.com, akpm@linux-foundation.org, torvalds@linux-foundation.org
+To: Jan Kara <jack@suse.cz>
+Cc: "axboe@kernel.dk" <axboe@kernel.dk>, "boaz@plexistor.com" <boaz@plexistor.com>, xfs@oss.sgi.com, "Dilger, Andreas" <andreas.dilger@intel.com>, "rdunlap@infradead.org" <rdunlap@infradead.org>, "tytso@mit.edu" <tytso@mit.edu>, "hch@lst.de" <hch@lst.de>, "mathieu.desnoyers@efficios.com" <mathieu.desnoyers@efficios.com>, "Wilcox, Matthew R" <matthew.r.wilcox@intel.com>, "mm-commits@vger.kernel.org" <mm-commits@vger.kernel.org>, Matthew Wilcox <willy@linux.intel.com>, "ross.zwisler@linux.intel.com" <ross.zwisler@linux.intel.com>, "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>, "kirill.shutemov@linux.intel.com" <kirill.shutemov@linux.intel.com>
 
-On Wed, Feb 18, 2015 at 01:16:02PM +0100, Michal Hocko wrote:
-> On Wed 18-02-15 21:48:59, Dave Chinner wrote:
-> > On Wed, Feb 18, 2015 at 09:25:02AM +0100, Michal Hocko wrote:
-> > > On Wed 18-02-15 09:54:30, Dave Chinner wrote:
-> [...]
-> > Also, this reads as an excuse for the OOM killer being broken and
-> > not fixing it.  Keep in mind that we tell the memory alloc/reclaim
-> > subsystem that *we hold locks* when we call into it. That's what
-> > GFP_NOFS originally meant, and it's what it still means today in an
-> > XFS context.
-> 
-> Sure, and OOM killer will not be invoked in NOFS context. See
-> __alloc_pages_may_oom and __GFP_FS check in there. So I do not see where
-> is the OOM killer broken.
-
-I suspect that the page cache missing the correct GFP_NOFS was one
-of the sources of the problems I've been seeing.
-
-However, the oom killer exceptions are not checked if __GFP_NOFAIL
-is present and so if we start using __GFP_NOFAIL then it will be
-called in GFP_NOFS contexts...
-
-> The crucial problem we are dealing with is not GFP_NOFAIL triggering the
-> OOM killer but a lock dependency introduced by the following sequence:
-> 
-> 	taskA			taskB			taskC
-> lock(A)							alloc()
-> alloc(gfp | __GFP_NOFAIL)	lock(A)			  out_of_memory
-> # looping for ever if we				    select_bad_process
-> # cannot make any progress				      victim = taskB
-> 
-> There is no way OOM killer can tell taskB is blocked and that there is
-> dependency between A and B (without lockdep). That is why I call NOFAIL
-> under a lock as dangerous and a bug.
-
-Sure. However, eventually the OOM killer with select task A to be
-killed because nothing else is working. That, at least, marks
-taskA with TIF_MEMDIE and gives us a potential way to break the
-deadlock.
-
-But the bigger problem is this:
-
-	taskA			taskB
-lock(A)
-alloc(GFP_NOFS|GFP_NOFAIL)		lock(A)
-  out_of_memory
-    select_bad_process
-      victim = taskB
-
-Because there is no way to *ever* resolve that dependency because
-taskA never leaves the allocator. Even if the oom killer selects
-taskA and set TIF_MEMDIE on it, the allocator ignores TIF_MEMDIE
-because GFP_NOFAIL is set and continues to loop.
-
-This is why GFP_NOFAIL is not a solution to the "never fail"
-alloation problem. The caller doing the "no fail" allocation _must
-be able to set failure policy_. i.e. the choice of aborting and
-shutting down because progress cannot be made, or continuing and
-hoping for forwards progress is owned by the allocating context, no
-the allocator.  The memory allocation subsystem cannot make that
-choice for us as it has no concept of the failure characteristics of
-the allocating context.
-
-The situations in which this actually matters are extremely *rare* -
-we've had these allocaiton loops in XFS for > 13 years, and we might
-get a one or two reports a year of these "possible allocation
-deadlock" messages occurring. Changing *everything* for such a rare,
-unusual event is not an efficient use of time or resources.
-
-> > If the OOM killer is not obeying GFP_NOFS and deadlocking on locks
-> > that the invoking context holds, then that is a OOM killer bug, not
-> > a bug in the subsystem calling kmalloc(GFP_NOFS).
-> 
-> I guess we are talking about different things here or what am I missing?
-
->From my perspective, you are tightly focussed on one aspect of the
-problem and hence are not seeing the bigger picture: this is a
-corner case of behaviour in a "last hope", brute force memory
-reclaim technique that no production machine relies on for correct
-or performant operation.
-
-> [...]
-> > > In the meantime page allocator
-> > > should develop a proper diagnostic to help identify all the potential
-> > > dependencies. Next we should start thinking whether all the existing
-> > > GFP_NOFAIL paths are really necessary or the code can be
-> > > refactored/reimplemented to accept allocation failures.
+On Wed, Feb 18, 2015 at 11:40:09AM +0100, Jan Kara wrote:
+> On Tue 17-02-15 08:37:45, Matthew Wilcox wrote:
+> > On Tue, Feb 17, 2015 at 09:52:00AM +0100, Jan Kara wrote:
+> > > > > This got added to fix a problem that Dave Chinner pointed out.  We need
+> > > > > the allocated extent to either be zeroed (as ext2 does), or marked as
+> > > > > unwritten (ext4, XFS) so that a racing read/page fault doesn't return
+> > > > > uninitialized data.  If it's marked as unwritten, we need to convert it
+> > > > > to a written extent after we've initialised the contents.  We use the
+> > > > > b_end_io() callback to do this, and it's called from the DAX code, not in
+> > > > > softirq context.
+> > > >   OK, I see. But I didn't find where ->b_end_io gets called from dax code
+> > > > (specifically I don't see it anywhere in dax_do_IO() or dax_io()). Can you
+> > > > point me please?
 > > 
-> > Last time the "just make filesystems handle memory allocation
-> > failures" I pointed out what that meant for XFS: dirty transaction
-> > rollback is required. That's freakin' complex, will double the
-> > memory footprint of transactions, roughly double the CPU cost, and
-> > greatly increase the complexity of the transaction subsystem. It's a
-> > *major* rework of a significant amount of the XFS codebase and will
-> > take at least a couple of years design, test and stabilise before
-> > it could be rolled out to production.
-> > 
-> > I'm not about to spend a couple of years rewriting XFS just so the
-> > VM can get rid of a GFP_NOFAIL user. Especially as the we already
-> > tell the Hammer of Last Resort the context in which it can work.
-> > 
-> > Move the OOM killer to kswapd - get it out of the direct reclaim
-> > path altogether.
+> > For faults, we call it in dax_insert_mapping(), the very last thing
+> > before returning in the fault path.  The normal I/O path gets to use
+> > the dio_iodone_t for the same purpose.
+>   I see. I didn't think of races with reads (hum, I actually wonder whether
+> we don't have this data exposure problem for ext4 for mmapped write into
+> a hole vs direct read as well). So I guess we do need those unwritten
+> extent dances after all (or we would need to have a page covering hole when
+> writing to it via mmap but I guess unwritten extent dances are somewhat
+> more standard).
+
+Right, that was the reason for doing it that way - it leveraged all
+the existing methods we have for avoiding data exposure races in
+XFS. but it's also not just for races - it's for ensuring that if we
+crash between the allocation and the write to the persistent store
+we don't expose the underlying contents when the system next comes
+up.
+
+These problems were found long ago on XFS and that's one of the
+reasons why all direct IO block allocation uses unwritten extents -
+until the data is on disk there is a window for stale data exposure
+and things like crashing systems running high throughput IO are
+very good at exposing such small windows of exposure. Hence I
+thought it best to have DAX close that hole for everyone.
+
+> So in that case you need ext4_get_block_write() in the above call to
+> do_dax_fault() (note that we still do need ext4 version of the fault
+> function like above due to lock ranking and retry on ENOSPC). And please
+> comment about the read races at that call site so that we have that
+> subtlety documented somewhere.
+
+Actually, I thought it was obvious that  ;)
+
 > 
-> This doesn't change anything as explained in other email. The triggering
-> path doesn't wait for the victim to die.
-
-But it does - we wouldn't be talking about deadlocks if there were
-no blocking dependencies. In this case, allocation keeps retrying
-until the memory freed by the killed tasks enables it to make
-forward progress. That's a side effect of the last relevation that
-was made in this thread that low order allocations never fail...
-
-> > If the system is that backed up on locks that it
-> > cannot free any memory and has no reserves to satisfy the allocation
-> > that kicked the OOM killer, then the OOM killer was not invoked soon
-> > enough.
+> > > > Also abusing b_end_io of a phony buffer for that looks ugly to me (we are
+> > > > trying to get away from passing phony bh around and this would entangle us
+> > > > even more into that mess). Normally I would think that end_io() callback
+> > > > passed into dax_do_io() should perform necessary conversions and for
+> > > > dax_fault() we could do necessary conversions inside foofs_page_mkwrite()...
 > > 
-> > Hell, if you want a better way to proceed, then how about you allow
-> > us to tell the MM subsystem how much memory reserve a specific set
-> > of operations is going to require to complete? That's something that
-> > we can do rough calculations for, and it integrates straight into
-> > the existing transaction reservation system we already use for log
-> > space and disk space, and we can tell the mm subsystem when the
-> > reserve is no longer needed (i.e. last thing in transaction commit).
-> > 
-> > That way we don't start a transaction until the mm subsystem has
-> > reserved enough pages for us to work with, and the reserve only
-> > needs to be used when normal allocation has already failed. i.e
-> > rather than looping we get a page allocated from the reserve pool.
-> 
-> I am not sure I understand the above but isn't the mempools a tool for
-> this purpose?
+> > Dave sees to be the one trying the hardest to get rid of the phony BHs
+> > ... and it was his idea to (ab)use b_end_io for this.  The problem with
+> > doing the conversion in ext4_page_mkwrite() is that we don't know at
+> > that point whether the BH is unwritten or not.
+>   I see, thanks for explanation. So it would be enough to pass a bit of
+> information (unwritten / written) to a caller of do_dax_fault() and that
+> can then call conversion function. IMO doing that (either in a return value
+> or in a separate argument of do_dax_fault()) would be cleaner and more
+> readable than playing with b_private and b_end_io... Thoughts?
 
-I knew this question would be the next one - I even deleted a one
-line comment from my last email that said "And no, mempools are not
-a solution" because that needs a more thorough explanation than a
-dismissive one-liner.
+I'm happy for a better mechanism to be thought up. The current one
+was expedient, but not pretty. The need for the end_io function was
+because unwritten conversion needed to happen after the page was
+zeroed. If we change dax_fault() to also take a "end_io" function
+callback (already takes a get_blocks callback), then we can avoid
+the need to use the phony bh for this purpose. i.e filesystems that
+allocate unwritten extents can pass a completion function
 
-As you know, mempools require a forward progress guarantee on a
-single type of object and the objects must be slab based.
+I've got to update the XFS DAX patches I have for the next merge
+cycle, so I'll take another at it when I page that information back
+into my brain.
 
-In transaction context we allocate from inode slabs, xfs_buf slabs,
-log item slabs (6 different ones, IIRC), btree cursor slabs, etc,
-but then we also have direct page allocations for buffers, vm_map_ram()
-for mapping multi-page buffers, uncounted heap allocations, etc.
-We cannot make all of these mempools, nor can me meet the forwards
-progress requirements of a mempool because other allocations can
-block and prevent progress.
-
-Further, the object have lifetimes that don't correspond to the
-transaction life cycles, and hence even if we complete the
-transaction there is no guarantee that the objects allocated within
-a transaction are going to be returned to the mempool at it's
-completion.
-
-IOWs, we have need for forward allocation progress guarantees on
-(potentially) several megabytes of allocations from slab caches, the
-heap and the page allocator, with all allocations all in
-unpredictable order, with objects of different life times and life
-cycles, and at which may, at any time, get stuck behind
-objects locked in other transactions and hence can randomly block
-until some other thread makes forward progress and completes a
-transaction and unlocks the object.
-
-The reservation would only need to cover the memory we need to
-allocate and hold in the transaction (i.e. dirtied objects). There
-is potentially unbound amounts of memory required through demand
-paging of buffers to find the metadata we need to modify, but demand
-paged metadata that is read and then released is recoverable. i.e
-the shrinkers will free it as other memory demand requires, so it's
-not included in reservation pools because it doesn't deplete the
-amount of free memory.
+And speaking of phony BHs, the pnfs block layout changes introduce
+an struct iomap and a "map_blocks" method to the export_ops in
+exportfs.h. This is the model what we should be using instead of
+phony BHs for block mapping/allocation operations...
 
 Cheers,
 
