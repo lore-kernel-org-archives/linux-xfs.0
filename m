@@ -1,24 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 2836829DFF
-	for <xfs@oss.sgi.com>; Wed, 18 Feb 2015 10:54:47 -0600 (CST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 4693F29DF7
+	for <xfs@oss.sgi.com>; Wed, 18 Feb 2015 11:11:49 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 086948F8039
-	for <xfs@oss.sgi.com>; Wed, 18 Feb 2015 08:54:43 -0800 (PST)
-Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id 630EDXqCfSTzwpZ5 (version=TLSv1 cipher=AES256-SHA
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 26587304032
+	for <xfs@oss.sgi.com>; Wed, 18 Feb 2015 09:11:45 -0800 (PST)
+Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
+	with ESMTP id X5Y8eHv6DGCdHqOf (version=TLSv1 cipher=AES256-SHA
 	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 18 Feb 2015 08:54:42 -0800 (PST)
-Date: Wed, 18 Feb 2015 08:54:40 -0800
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [Cluster-devel] [PATCH 8/8] quota: Hook up Q_XSETQLIM for id 0
-	to ->set_info
-Message-ID: <20150218165440.GD29465@infradead.org>
+	Wed, 18 Feb 2015 09:11:44 -0800 (PST)
+Date: Wed, 18 Feb 2015 18:11:38 +0100
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [Cluster-devel] [PATCH 3/8] xfs: Convert to using ->get_state
+	callback
+Message-ID: <20150218171138.GA11951@quack.suse.cz>
 References: <1424267274-11836-1-git-send-email-jack@suse.cz>
-	<1424267274-11836-9-git-send-email-jack@suse.cz>
+	<1424267274-11836-4-git-send-email-jack@suse.cz>
+	<20150218165154.GA29465@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1424267274-11836-9-git-send-email-jack@suse.cz>
+In-Reply-To: <20150218165154.GA29465@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,12 +32,38 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Jan Kara <jack@suse.cz>
-Cc: linux-fsdevel@vger.kernel.org, cluster-devel@redhat.com, xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-fsdevel@vger.kernel.org, cluster-devel@redhat.com, Jan Kara <jack@suse.cz>, xfs@oss.sgi.com
 
-Looks good,
+On Wed 18-02-15 08:51:54, Christoph Hellwig wrote:
+> > +static void
+> > +xfs_qm_fill_state(
+> > +	struct qc_type_state *tstate,
+> > +	struct xfs_mount *mp,
+> > +	struct xfs_inode *ip,
+> > +	xfs_ino_t ino)
+> 
+> > +/*
+> > + * Return quota status information, such as enforcements, quota file inode
+> > + * numbers etc.
+> > + */
+> > +static int
+> > +xfs_fs_get_quota_state(
+> > +	struct super_block *sb,
+> > +	struct qc_state *state)
+> 
+> We usually tab-align the arguments in XFS prototypes.
+  OK, fixed.
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+> Otherwise this patch looks good,
+> 
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
+  Thanks.
+
+								Honza
+-- 
+Jan Kara <jack@suse.cz>
+SUSE Labs, CR
 
 _______________________________________________
 xfs mailing list
