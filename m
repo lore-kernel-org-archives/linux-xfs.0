@@ -1,30 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 9B2AF7F4E
-	for <xfs@oss.sgi.com>; Thu, 19 Feb 2015 15:12:59 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 6804E8F8050
-	for <xfs@oss.sgi.com>; Thu, 19 Feb 2015 13:12:56 -0800 (PST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 497A27F56
+	for <xfs@oss.sgi.com>; Thu, 19 Feb 2015 15:19:15 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id CD0F9AC003
+	for <xfs@oss.sgi.com>; Thu, 19 Feb 2015 13:19:11 -0800 (PST)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	aHiJcrNmbEV6HBM1 for <xfs@oss.sgi.com>;
-	Thu, 19 Feb 2015 13:12:53 -0800 (PST)
-Date: Fri, 20 Feb 2015 08:12:10 +1100
+	iWqg0ggGGbEGJosX for <xfs@oss.sgi.com>;
+	Thu, 19 Feb 2015 13:19:05 -0800 (PST)
+Date: Fri, 20 Feb 2015 08:18:52 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: + ext4-add-dax-functionality.patch added to -mm tree
-Message-ID: <20150219211210.GS12722@dastard>
-References: <54b45495.+RptMlNQorYE9TTf%akpm@linux-foundation.org>
-	<20150115124106.GF12739@quack.suse.cz>
-	<100D68C7BA14664A8938383216E40DE040853440@FMSMSX114.amr.corp.intel.com>
-	<20150119141858.GF5662@quack.suse.cz>
-	<20150217085200.GA23192@quack.suse.cz>
-	<20150217133745.GG3364@wil.cx>
-	<20150218104009.GB4614@quack.suse.cz>
-	<20150218215523.GO12722@dastard>
-	<20150219154241.GC22712@quack.suse.cz>
+Subject: Re: [PATCH] xfs: Introduce permanent async buffer write IO failures
+Message-ID: <20150219211852.GT12722@dastard>
+References: <1424298740-25821-1-git-send-email-david@fromorbit.com>
+	<54E51CC7.8040709@sandeen.net> <20150218235220.GQ4251@dastard>
+	<20150219190419.GA8862@hades.maiolino.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20150219154241.GC22712@quack.suse.cz>
+In-Reply-To: <20150219190419.GA8862@hades.maiolino.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -37,51 +31,56 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Jan Kara <jack@suse.cz>
-Cc: "axboe@kernel.dk" <axboe@kernel.dk>, "boaz@plexistor.com" <boaz@plexistor.com>, xfs@oss.sgi.com, "Dilger, Andreas" <andreas.dilger@intel.com>, "rdunlap@infradead.org" <rdunlap@infradead.org>, "tytso@mit.edu" <tytso@mit.edu>, "hch@lst.de" <hch@lst.de>, "mathieu.desnoyers@efficios.com" <mathieu.desnoyers@efficios.com>, "Wilcox, Matthew R" <matthew.r.wilcox@intel.com>, "mm-commits@vger.kernel.org" <mm-commits@vger.kernel.org>, Matthew Wilcox <willy@linux.intel.com>, "ross.zwisler@linux.intel.com" <ross.zwisler@linux.intel.com>, "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>, "kirill.shutemov@linux.intel.com" <kirill.shutemov@linux.intel.com>
+To: Eric Sandeen <sandeen@sandeen.net>, xfs@oss.sgi.com
 
-On Thu, Feb 19, 2015 at 04:42:41PM +0100, Jan Kara wrote:
-> On Thu 19-02-15 08:55:23, Dave Chinner wrote:
-> > On Wed, Feb 18, 2015 at 11:40:09AM +0100, Jan Kara wrote:
-> > > On Tue 17-02-15 08:37:45, Matthew Wilcox wrote:
-> > > > On Tue, Feb 17, 2015 at 09:52:00AM +0100, Jan Kara wrote:
-> > > > > > > This got added to fix a problem that Dave Chinner pointed out.  We need
-> > > > > > > the allocated extent to either be zeroed (as ext2 does), or marked as
-> > > > > > > unwritten (ext4, XFS) so that a racing read/page fault doesn't return
-> > > > > > > uninitialized data.  If it's marked as unwritten, we need to convert it
-> > > > > > > to a written extent after we've initialised the contents.  We use the
-> > > > > > > b_end_io() callback to do this, and it's called from the DAX code, not in
-> > > > > > > softirq context.
-> > > > > >   OK, I see. But I didn't find where ->b_end_io gets called from dax code
-> > > > > > (specifically I don't see it anywhere in dax_do_IO() or dax_io()). Can you
-> > > > > > point me please?
-> > > > 
-> > > > For faults, we call it in dax_insert_mapping(), the very last thing
-> > > > before returning in the fault path.  The normal I/O path gets to use
-> > > > the dio_iodone_t for the same purpose.
-> > >   I see. I didn't think of races with reads (hum, I actually wonder whether
-> > > we don't have this data exposure problem for ext4 for mmapped write into
-> > > a hole vs direct read as well). So I guess we do need those unwritten
-> > > extent dances after all (or we would need to have a page covering hole when
-> > > writing to it via mmap but I guess unwritten extent dances are somewhat
-> > > more standard).
+On Thu, Feb 19, 2015 at 05:04:19PM -0200, Carlos Maiolino wrote:
 > > 
-> > Right, that was the reason for doing it that way - it leveraged all
-> > the existing methods we have for avoiding data exposure races in
-> > XFS. but it's also not just for races - it's for ensuring that if we
-> > crash between the allocation and the write to the persistent store
-> > we don't expose the underlying contents when the system next comes
-> > up.
->   Well, ext3/4 handles the crash situation differently - we make sure we
-> flush data to allocated blocks before committing a transaction that
-> allocates them. That works perfectly for crashes but doesn't avoid the
-> race with DIO.
+> > Well, the switch is simple characterisation. What we do with that
+> > error type can be much more complex, and that's why I haven't tried
+> > to address those issues here. When we've sorted out what we need
+> > and how we are going to configure the error handling, then we can
+> > add it.
+> > 
+> > e.g. if we need configurable error handling, it needs to be
+> > configurable for different error types, and it needs to be
+> > configurable on a per-mount basis. And it needs to be configurable
+> > at runtime, not just at mount time. That kind of leads to using
+> > sysfs for this. e.g. for each error type we ned to handle different
+> > behaviour for:
+> > 
+> > $ cat /sys/fs/xfs/vda/meta_write_errors/enospc/type
+> > [transient] permanent
+> > $ cat /sys/fs/xfs/vda/meta_write_errors/enospc/perm_timeout_seconds
+> > 300
+> > $ cat /sys/fs/xfs/vda/meta_write_errors/enospc/perm_max_retry_attempts
+> > 50
+> > $ cat /sys/fs/xfs/vda/meta_write_errors/enospc/transient_fail_at_umount
+> > 1
+> > 
+> > And then have generic infrastructure to set it up and handle the
+> > buffer errors according to the config?
+> > 
+> > > (I think that's accurately summing up irc-and-side-channel discussions) ;)
+> > 
+> > Pretty much.
+> > 
+> 
+> talking about possible configurable error handlers, what about leave this choice
+> of failure to the sysadmin? Instead a time or type based configuration what
+> about something that the administrator could just say "next IO to device X
+> should fail permanently"?
 
-I was talking about direct IO, not buffered IO. DAX is modeled on
-the direct IO stack, not buffered IO. I did go and look at the ext4
-IO completion path, and I can see where ext4_end_io_dio() triggers a
-commit outside of doing unwritten extent conversion. Can you clue me
-in - IO completion in ext4 is a maze of twisty passages...
+How is this different to just shutting down the filesystem
+immediately via 'xfs_io -x -c shutdown /path/to/mnt/pt' ?
+
+Regardless of this, leave failures as transient, then when an
+error condition occurs (say thinp device ENOSPC), this will error
+out on the next IO that is retried:
+
+# echo permanent > /sys/fs/xfs/vda/meta_write_errors/enospc/type
+# echo 0 > /sys/fs/xfs/vda/meta_write_errors/enospc/perm_max_retry_attempts
+
+Will make the next device ENOSPC IO error shut the filesystem down.
 
 Cheers,
 
