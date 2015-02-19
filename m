@@ -1,18 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 150DD7FBD
-	for <xfs@oss.sgi.com>; Thu, 19 Feb 2015 07:24:58 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id E90648F8033
-	for <xfs@oss.sgi.com>; Thu, 19 Feb 2015 05:24:54 -0800 (PST)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id Vvxqa7kFcpnLy7Ev (version=TLSv1
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 1291E7FBF
+	for <xfs@oss.sgi.com>; Thu, 19 Feb 2015 07:29:55 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id A42BEAC003
+	for <xfs@oss.sgi.com>; Thu, 19 Feb 2015 05:29:51 -0800 (PST)
+Received: from www262.sakura.ne.jp (www262.sakura.ne.jp [202.181.97.72]) by
+	cuda.sgi.com with ESMTP id 1JgHIjFlcFWGryNX (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 19 Feb 2015 05:24:53 -0800 (PST)
-From: Pratyush Anand <panand@redhat.com>
-Subject: [PATCH RFC] fs: xfs: Fix xfs_trans_read_buf event tracing
-Date: Thu, 19 Feb 2015 18:54:33 +0530
-Message-Id: <7fb3278485ca5d8b48cd1ba980be6cc11dafc11b.1424352124.git.panand@redhat.com>
+	Thu, 19 Feb 2015 05:29:49 -0800 (PST)
+Subject: Re: How to handle TIF_MEMDIE stalls?
+From: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
+References: <20150218082502.GA4478@dhcp22.suse.cz>
+	<20150218104859.GM12722@dastard>
+	<20150218121602.GC4478@dhcp22.suse.cz>
+	<20150219110124.GC15569@phnom.home.cmpxchg.org>
+	<20150219122914.GH28427@dhcp22.suse.cz>
+In-Reply-To: <20150219122914.GH28427@dhcp22.suse.cz>
+Message-Id: <201502192229.FCJ73987.MFQLOHSJFFtOOV@I-love.SAKURA.ne.jp>
+Date: Thu, 19 Feb 2015 22:29:37 +0900
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,47 +28,36 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: david@fromorbit.com, xfs@oss.sgi.com
-Cc: Pratyush Anand <panand@redhat.com>, jbastian@redhat.com, ddutile@redhat.com
+To: mhocko@suse.cz, hannes@cmpxchg.org
+Cc: dchinner@redhat.com, oleg@redhat.com, xfs@oss.sgi.com, linux-mm@kvack.org, mgorman@suse.de, rientjes@google.com, linux-fsdevel@vger.kernel.org, akpm@linux-foundation.org, fernando_b1@lab.ntt.co.jp, torvalds@linux-foundation.org
 
-My root file system is xfs. As soon as I enable event for
-xfs_trans_read_buf `echo xfs:xfs_trans_read_buf >>
-/sys/kernel/debug/tracing/set_event`, I see a kernel panic.
+Michal Hocko wrote:
+> On Thu 19-02-15 06:01:24, Johannes Weiner wrote:
+> [...]
+> > Preferrably, we'd get rid of all nofail allocations and replace them
+> > with preallocated reserves.  But this is not going to happen anytime
+> > soon, so what other option do we have than resolving this on the OOM
+> > killer side?
+> 
+> As I've mentioned in other email, we might give GFP_NOFAIL allocator
+> access to memory reserves (by giving it __GFP_HIGH). This is still not a
+> 100% solution because reserves could get depleted but this risk is there
+> even with multiple oom victims. I would still argue that this would be a
+> better approach because selecting more victims might hit pathological
+> case more easily (other victims might be blocked on the very same lock
+> e.g.).
+> 
+Does "multiple OOM victims" mean "select next if first does not die"?
+Then, I think my timeout patch http://marc.info/?l=linux-mm&m=142002495532320&w=2
+does not deplete memory reserves. ;-)
 
-A little bit of debugging shows that bp->b_fspriv is NULL many a time
-when trace_xfs_trans_read_buf(bp->b_fspriv) is called.
-
-I do not have any idea about xfs filesystem. So, I am not sure, if it
-is expected to have bp->b_fspriv = NULL at this location.
-
-This patch fixes the issue, until we have a better fix.
-
-Signed-off-by: Pratyush Anand <panand@redhat.com>
----
- fs/xfs/xfs_trans_buf.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
-
-diff --git a/fs/xfs/xfs_trans_buf.c b/fs/xfs/xfs_trans_buf.c
-index 0a4d4ab6d9a9..0b67a20643bf 100644
---- a/fs/xfs/xfs_trans_buf.c
-+++ b/fs/xfs/xfs_trans_buf.c
-@@ -329,7 +329,8 @@ xfs_trans_read_buf_map(
- 
- 	if (tp)
- 		_xfs_trans_bjoin(tp, bp, 1);
--	trace_xfs_trans_read_buf(bp->b_fspriv);
-+	if (bp->b_fspriv)
-+		trace_xfs_trans_read_buf(bp->b_fspriv);
- 	*bpp = bp;
- 	return 0;
- 
--- 
-2.1.0
+If we change to permit invocation of the OOM killer for GFP_NOFS / GFP_NOIO,
+those who do not want to fail (e.g. journal transaction) will start passing
+__GFP_NOFAIL?
 
 _______________________________________________
 xfs mailing list
