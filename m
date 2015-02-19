@@ -1,25 +1,31 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id A74447FB1
-	for <xfs@oss.sgi.com>; Wed, 18 Feb 2015 22:32:06 -0600 (CST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 18F817FB3
+	for <xfs@oss.sgi.com>; Thu, 19 Feb 2015 03:40:30 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 683D18F8037
-	for <xfs@oss.sgi.com>; Wed, 18 Feb 2015 20:32:03 -0800 (PST)
-Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
-	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	WTa2cQF1iyKdG0hl for <xfs@oss.sgi.com>;
-	Wed, 18 Feb 2015 20:32:00 -0800 (PST)
-Received: from dave by dastard with local (Exim 4.80)
-	(envelope-from <david@fromorbit.com>) id 1YOImK-0000v1-Pa
-	for xfs@oss.sgi.com; Thu, 19 Feb 2015 15:31:56 +1100
-Date: Thu, 19 Feb 2015 15:31:56 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] [RFC] xfs: add RENAME_WHITEOUT support
-Message-ID: <20150219043156.GQ12722@dastard>
-References: <1423653330-25297-1-git-send-email-david@fromorbit.com>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id B7D4DAC003
+	for <xfs@oss.sgi.com>; Thu, 19 Feb 2015 01:40:26 -0800 (PST)
+Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
+	with ESMTP id k43I2ZlBgxHaHBJ4 (version=TLSv1 cipher=AES256-SHA
+	bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 19 Feb 2015 01:40:24 -0800 (PST)
+Date: Thu, 19 Feb 2015 10:40:20 +0100
+From: Michal Hocko <mhocko@suse.cz>
+Subject: Re: How to handle TIF_MEMDIE stalls?
+Message-ID: <20150219094020.GE28427@dhcp22.suse.cz>
+References: <201502102258.IFE09888.OVQFJOMSFtOLFH@I-love.SAKURA.ne.jp>
+	<20150210151934.GA11212@phnom.home.cmpxchg.org>
+	<201502111123.ICD65197.FMLOHSQJFVOtFO@I-love.SAKURA.ne.jp>
+	<201502172123.JIE35470.QOLMVOFJSHOFFt@I-love.SAKURA.ne.jp>
+	<20150217125315.GA14287@phnom.home.cmpxchg.org>
+	<20150217225430.GJ4251@dastard>
+	<20150218082502.GA4478@dhcp22.suse.cz>
+	<20150218104859.GM12722@dastard>
+	<20150218121602.GC4478@dhcp22.suse.cz>
+	<20150218213118.GN12722@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1423653330-25297-1-git-send-email-david@fromorbit.com>
+In-Reply-To: <20150218213118.GN12722@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,495 +38,271 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, dchinner@redhat.com, oleg@redhat.com, xfs@oss.sgi.com, Johannes Weiner <hannes@cmpxchg.org>, linux-mm@kvack.org, mgorman@suse.de, rientjes@google.com, akpm@linux-foundation.org, torvalds@linux-foundation.org
 
-ping?
+On Thu 19-02-15 08:31:18, Dave Chinner wrote:
+> On Wed, Feb 18, 2015 at 01:16:02PM +0100, Michal Hocko wrote:
+> > On Wed 18-02-15 21:48:59, Dave Chinner wrote:
+> > > On Wed, Feb 18, 2015 at 09:25:02AM +0100, Michal Hocko wrote:
+> > > > On Wed 18-02-15 09:54:30, Dave Chinner wrote:
+> > [...]
+> > > Also, this reads as an excuse for the OOM killer being broken and
+> > > not fixing it.  Keep in mind that we tell the memory alloc/reclaim
+> > > subsystem that *we hold locks* when we call into it. That's what
+> > > GFP_NOFS originally meant, and it's what it still means today in an
+> > > XFS context.
+> > 
+> > Sure, and OOM killer will not be invoked in NOFS context. See
+> > __alloc_pages_may_oom and __GFP_FS check in there. So I do not see where
+> > is the OOM killer broken.
+> 
+> I suspect that the page cache missing the correct GFP_NOFS was one
+> of the sources of the problems I've been seeing.
+> 
+> However, the oom killer exceptions are not checked if __GFP_NOFAIL
 
-On Wed, Feb 11, 2015 at 10:15:30PM +1100, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
+Yes this is true. This is an effect of 9879de7373fc (mm: page_alloc:
+embed OOM killing naturally into allocation slowpath) and IMO a
+desirable one. Requiring infinite retrying with a seriously restricted
+reclaim context calls for troubles (e.g. livelock without no way out
+because regular reclaim cannot make any progress and OOM killer as the
+last resort will not happen).
+
+> is present and so if we start using __GFP_NOFAIL then it will be
+> called in GFP_NOFS contexts...
 > 
-> Add a basic implementation of RENAME_WHITEOUT to the XFS rename
-> code. The implementation options considered are documented in the
-> code comments; the method chose was "copy ext4" because we are then
-> bug-for-bug compatible with the implementation done by the
-> overlayfs developers.
+> > The crucial problem we are dealing with is not GFP_NOFAIL triggering the
+> > OOM killer but a lock dependency introduced by the following sequence:
+> > 
+> > 	taskA			taskB			taskC
+> > lock(A)							alloc()
+> > alloc(gfp | __GFP_NOFAIL)	lock(A)			  out_of_memory
+> > # looping for ever if we				    select_bad_process
+> > # cannot make any progress				      victim = taskB
+> > 
+> > There is no way OOM killer can tell taskB is blocked and that there is
+> > dependency between A and B (without lockdep). That is why I call NOFAIL
+> > under a lock as dangerous and a bug.
 > 
-> I have a hacky renameat2 test for whiteouts copied from the existing
-> renameat2 tests in xfstests, and this code behaves the same as ext4
-> in that rename test. I haven't done any testing with overlayfs, so
-> who knows whether that explodes or not.
+> Sure. However, eventually the OOM killer with select task A to be
+> killed because nothing else is working.
+
+That would require OOM killer to be able to select another victim while
+the current one is still alive. There were time based heuristics
+suggested to do this but I do not think they are the right way to handle
+the problem and should be considered only if all other options fail.
+
+One potential way would be giving access to give GFP_NOFAIL context
+access to memory reserves when the allocation domain
+(global/memcg/cpuset) is OOM. Andrea was suggesting something like that
+IIRC.
+
+> That, at least, marks
+> taskA with TIF_MEMDIE and gives us a potential way to break the
+> deadlock.
 > 
-> The rename code is getting pretty spaghetti now - I'll end up
-> spliting this patching whiteout support and cleanup, and I'll set
-> what possible cleanups I can make that will help make the code a
-> little more understandable....
+> But the bigger problem is this:
 > 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> ---
->  fs/xfs/xfs_inode.c | 261 +++++++++++++++++++++++++++++++++++++++++------------
->  fs/xfs/xfs_iops.c  |   2 +-
->  2 files changed, 205 insertions(+), 58 deletions(-)
+> 	taskA			taskB
+> lock(A)
+> alloc(GFP_NOFS|GFP_NOFAIL)		lock(A)
+>   out_of_memory
+>     select_bad_process
+>       victim = taskB
 > 
-> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-> index bf2d2c7..eef5db7 100644
-> --- a/fs/xfs/xfs_inode.c
-> +++ b/fs/xfs/xfs_inode.c
-> @@ -2683,17 +2683,20 @@ xfs_remove(
->   */
->  STATIC void
->  xfs_sort_for_rename(
-> -	xfs_inode_t	*dp1,	/* in: old (source) directory inode */
-> -	xfs_inode_t	*dp2,	/* in: new (target) directory inode */
-> -	xfs_inode_t	*ip1,	/* in: inode of old entry */
-> -	xfs_inode_t	*ip2,	/* in: inode of new entry, if it
-> -				   already exists, NULL otherwise. */
-> -	xfs_inode_t	**i_tab,/* out: array of inode returned, sorted */
-> -	int		*num_inodes)  /* out: number of inodes in array */
-> +	struct xfs_inode	*dp1,	/* in: old (source) directory inode */
-> +	struct xfs_inode	*dp2,	/* in: new (target) directory inode */
-> +	struct xfs_inode	*ip1,	/* in: inode of old entry */
-> +	struct xfs_inode	*ip2,	/* in: inode of new entry */
-> +	struct xfs_inode	*wino,	/* in: whiteout inode */
-> +	struct xfs_inode	**i_tab,/* out: sorted array of inodes */
-> +	int			*num_inodes)  /* out: inodes in array */
->  {
->  	xfs_inode_t		*temp;
->  	int			i, j;
->  
-> +	ASSERT(*num_inodes == 5);
-> +	memset(i_tab, 0, *num_inodes * sizeof(struct xfs_inode *));
-> +
->  	/*
->  	 * i_tab contains a list of pointers to inodes.  We initialize
->  	 * the table here & we'll sort it.  We will then use it to
-> @@ -2701,20 +2704,19 @@ xfs_sort_for_rename(
->  	 *
->  	 * Note that the table may contain duplicates.  e.g., dp1 == dp2.
->  	 */
-> -	i_tab[0] = dp1;
-> -	i_tab[1] = dp2;
-> -	i_tab[2] = ip1;
-> -	if (ip2) {
-> -		*num_inodes = 4;
-> -		i_tab[3] = ip2;
-> -	} else {
-> -		*num_inodes = 3;
-> -		i_tab[3] = NULL;
-> -	}
-> +	i = 0;
-> +	i_tab[i++] = dp1;
-> +	i_tab[i++] = dp2;
-> +	i_tab[i++] = ip1;
-> +	if (ip2)
-> +		i_tab[i++] = ip2;
-> +	if (wino)
-> +		i_tab[i++] = wino;
-> +	*num_inodes = i;
->  
->  	/*
->  	 * Sort the elements via bubble sort.  (Remember, there are at
-> -	 * most 4 elements to sort, so this is adequate.)
-> +	 * most 5 elements to sort, so this is adequate.)
->  	 */
->  	for (i = 0; i < *num_inodes; i++) {
->  		for (j = 1; j < *num_inodes; j++) {
-> @@ -2846,6 +2848,101 @@ out:
->  }
->  
->  /*
-> + * RENAME_WHITEOUT support.
-> + *
-> + * Whiteouts are used by overlayfs -  it has a convention that a whiteout is a
-> + * character device inode with a major:minor of 0:0. Somebody has to be in an
-> + * altered state of mind to think this up, so whiteout inodes from this point at
-> + * called "wino"s.
-> + *
-> + * Now, because it's not documented anywhere, here's what RENAME_WHITEOUT does
-> + * on ext4:
-> +
-> +# echo bar > /mnt/scratch/bar
-> +# ls -l /mnt/scratch
-> +total 24
-> +-rw-r--r-- 1 root root     4 Feb 11 20:22 bar
-> +-rw-r--r-- 1 root root     4 Feb 11 20:22 foo
-> +drwx------ 2 root root 16384 Feb 11 20:18 lost+found
-> +# src/renameat2 -w /mnt/scratch/foo /mnt/scratch/bar
-> +# ls -l /mnt/scratch
-> +total 20
-> +-rw-r--r-- 1 root root     4 Feb 11 20:22 bar
-> +c--------- 1 root root  0, 0 Feb 11 20:23 foo
-> +drwx------ 2 root root 16384 Feb 11 20:18 lost+found
-> +# cat /mnt/scratch/bar
-> +foo
-> +#
-> +
-> + * In XFS rename terms, the operation that has been done is that source (foo)
-> + * has been moved to the target (bar), which is like a nomal rename operation,
-> + * but rather than the source being removed, it have been replaced with a wino.
-> + *
-> + * We can't allocate winos within the rename transaction due to allocation
-> + * being a multi-commit transaction, and rename needs to be a single, atomic
-> + * commit. Hence we have several options here, form most efficient to least
-> + * efficient:
-> + *
-> + *	- use DT_WHT in the target dirent and do no wino allocation.
-> + *	  The main issue with this approach is that we need hooks in
-> + *	  lookup to create a virtual chardev inode to present to userspace
-> + *	  and in places where we might need to modify the dirent e.g. unlink.
-> + *	  Overlayfs also needs to be taught about DT_WHT. Most invasive change,
-> + *	  lowest overhead.
-> + *
-> + *	- create a special wino in the root directory (e.g. a ".wino" dirent and
-> + *	  then hardlink every new whiteout to it. This means we only need to
-> + *	  create a single wino, and rename simply creates a hardlink to it. We
-> + *	  can use DT_WHT for these, though using DT_CHR means we won't have to
-> + *	  modify overlayfs, nor anything in userspace. Downside is we have to
-> + *	  look up the wino up on every operation and create it if it doesn't
-> + *	  exist.
-> + *
-> + *	- copy ext4: create a special whiteout chardev inode for every whiteout.
-> + *	  This is more complex than the above options because of the lack of
-> + *	  atomicity between inode creation and the rename operation, requiring
-> + *	  us to create a tmpfile inode and then linking it into the directory
-> + *	  structure during the rename. At least with a tmpfile inode crashes
-> + *	  between the create and rename doesn't leave unreferenced inodes or
-> + *	  directory pollution around.
-> + *
-> + * By far the simplest thing to do is copy ext4. It's also the most
-> + * inefficient way of supporting whiteouts, but as an initial implementation we
-> + * can simply reuse existing functions and add a small amount of extra code the
-> + * the rename operation to handle the *fifth* inode in the transaction.
-> + *
-> + * Hence that is what is implemented first. When we have time or need we can
-> + * come back and implement one of the more efficient whiteout methods, but it's
-> + * not necessary for the first implementation.
-> + */
-> +
-> +/*
-> + * xfs_rename_get_wino()
-> + *
-> + * Return a referenced, unlinked, unlocked inode that that can be used as a
-> + * whiteout in a rename transaction.
-> + */
-> +static int
-> +xfs_rename_get_wino(
-> +	struct xfs_inode	*dp,
-> +	struct xfs_inode	**wino)
-> +{
-> +	struct xfs_inode	*tmpfile;
-> +	int			error;
-> +
-> +	error = xfs_create_tmpfile(dp, NULL, S_IFCHR | WHITEOUT_MODE, &tmpfile);
-> +	if (error)
-> +		return error;
-> +
-> +	/* Satisfy xfs_bumplink that this is a real tmpfile */
-> +	xfs_finish_inode_setup(tmpfile);
-> +	VFS_I(tmpfile)->i_state |= I_LINKABLE;
-> +
-> +	*wino = tmpfile;
-> +	return 0;
-> +}
-> +
-> +/*
->   * xfs_rename
->   */
->  int
-> @@ -2867,40 +2964,52 @@ xfs_rename(
->  	xfs_fsblock_t   first_block;
->  	int		cancel_flags;
->  	int		committed;
-> -	xfs_inode_t	*inodes[4];
-> +	xfs_inode_t	*inodes[5];
-> +	int		num_inodes = 5;
->  	int		spaceres;
-> -	int		num_inodes;
-> +	struct xfs_inode *wino = NULL;
->  
->  	trace_xfs_rename(src_dp, target_dp, src_name, target_name);
->  
-> +	/*
-> +	 * If we are doing a whiteout operation, get us the wino we will be
-> +	 * placing at the target.
-> +	 */
-> +	if (flags & RENAME_WHITEOUT) {
-> +		ASSERT(!(flags & (RENAME_NOREPLACE | RENAME_EXCHANGE)));
-> +		error = xfs_rename_get_wino(target_dp, &wino);
-> +		if (error)
-> +			return error;
-> +
-> +		/* setup target dirent info as whiteout */
-> +		src_name->type = XFS_DIR3_FT_CHRDEV;
-> +	}
-> +
->  	new_parent = (src_dp != target_dp);
->  	src_is_directory = S_ISDIR(src_ip->i_d.di_mode);
->  
-> -	xfs_sort_for_rename(src_dp, target_dp, src_ip, target_ip,
-> +	xfs_sort_for_rename(src_dp, target_dp, src_ip, target_ip, wino,
->  				inodes, &num_inodes);
->  
-> +	cancel_flags = 0;
->  	xfs_bmap_init(&free_list, &first_block);
->  	tp = xfs_trans_alloc(mp, XFS_TRANS_RENAME);
-> -	cancel_flags = XFS_TRANS_RELEASE_LOG_RES;
->  	spaceres = XFS_RENAME_SPACE_RES(mp, target_name->len);
->  	error = xfs_trans_reserve(tp, &M_RES(mp)->tr_rename, spaceres, 0);
->  	if (error == -ENOSPC) {
->  		spaceres = 0;
->  		error = xfs_trans_reserve(tp, &M_RES(mp)->tr_rename, 0, 0);
->  	}
-> -	if (error) {
-> -		xfs_trans_cancel(tp, 0);
-> -		goto std_return;
-> -	}
-> +	if (error)
-> +		goto error_trans_cancel;
-> +	cancel_flags = XFS_TRANS_RELEASE_LOG_RES;
->  
->  	/*
->  	 * Attach the dquots to the inodes
->  	 */
->  	error = xfs_qm_vop_rename_dqattach(inodes);
-> -	if (error) {
-> -		xfs_trans_cancel(tp, cancel_flags);
-> -		goto std_return;
-> -	}
-> +	if (error)
-> +		goto error_trans_cancel;
->  
->  	/*
->  	 * Lock all the participating inodes. Depending upon whether
-> @@ -2921,6 +3030,8 @@ xfs_rename(
->  	xfs_trans_ijoin(tp, src_ip, XFS_ILOCK_EXCL);
->  	if (target_ip)
->  		xfs_trans_ijoin(tp, target_ip, XFS_ILOCK_EXCL);
-> +	if (wino)
-> +		xfs_trans_ijoin(tp, wino, XFS_ILOCK_EXCL);
->  
->  	/*
->  	 * If we are using project inheritance, we only allow renames
-> @@ -2930,18 +3041,19 @@ xfs_rename(
->  	if (unlikely((target_dp->i_d.di_flags & XFS_DIFLAG_PROJINHERIT) &&
->  		     (xfs_get_projid(target_dp) != xfs_get_projid(src_ip)))) {
->  		error = -EXDEV;
-> -		goto error_return;
-> +		goto error_trans_cancel;
->  	}
->  
->  	/*
->  	 * Handle RENAME_EXCHANGE flags
->  	 */
->  	if (flags & RENAME_EXCHANGE) {
-> +		ASSERT(!wino);
->  		error = xfs_cross_rename(tp, src_dp, src_name, src_ip,
->  					 target_dp, target_name, target_ip,
->  					 &free_list, &first_block, spaceres);
->  		if (error)
-> -			goto abort_return;
-> +			goto error_trans_abort;
->  		goto finish_rename;
->  	}
->  
-> @@ -2956,7 +3068,7 @@ xfs_rename(
->  		if (!spaceres) {
->  			error = xfs_dir_canenter(tp, target_dp, target_name);
->  			if (error)
-> -				goto error_return;
-> +				goto error_trans_cancel;
->  		}
->  		/*
->  		 * If target does not exist and the rename crosses
-> @@ -2967,9 +3079,9 @@ xfs_rename(
->  						src_ip->i_ino, &first_block,
->  						&free_list, spaceres);
->  		if (error == -ENOSPC)
-> -			goto error_return;
-> +			goto error_trans_cancel;
->  		if (error)
-> -			goto abort_return;
-> +			goto error_trans_abort;
->  
->  		xfs_trans_ichgtime(tp, target_dp,
->  					XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
-> @@ -2977,7 +3089,7 @@ xfs_rename(
->  		if (new_parent && src_is_directory) {
->  			error = xfs_bumplink(tp, target_dp);
->  			if (error)
-> -				goto abort_return;
-> +				goto error_trans_abort;
->  		}
->  	} else { /* target_ip != NULL */
->  		/*
-> @@ -2992,7 +3104,7 @@ xfs_rename(
->  			if (!(xfs_dir_isempty(target_ip)) ||
->  			    (target_ip->i_d.di_nlink > 2)) {
->  				error = -EEXIST;
-> -				goto error_return;
-> +				goto error_trans_cancel;
->  			}
->  		}
->  
-> @@ -3009,7 +3121,7 @@ xfs_rename(
->  					src_ip->i_ino,
->  					&first_block, &free_list, spaceres);
->  		if (error)
-> -			goto abort_return;
-> +			goto error_trans_abort;
->  
->  		xfs_trans_ichgtime(tp, target_dp,
->  					XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
-> @@ -3020,7 +3132,7 @@ xfs_rename(
->  		 */
->  		error = xfs_droplink(tp, target_ip);
->  		if (error)
-> -			goto abort_return;
-> +			goto error_trans_abort;
->  
->  		if (src_is_directory) {
->  			/*
-> @@ -3028,9 +3140,9 @@ xfs_rename(
->  			 */
->  			error = xfs_droplink(tp, target_ip);
->  			if (error)
-> -				goto abort_return;
-> +				goto error_trans_abort;
->  		}
-> -	} /* target_ip != NULL */
-> +	}
->  
->  	/*
->  	 * Remove the source.
-> @@ -3045,7 +3157,7 @@ xfs_rename(
->  					&first_block, &free_list, spaceres);
->  		ASSERT(error != -EEXIST);
->  		if (error)
-> -			goto abort_return;
-> +			goto error_trans_abort;
->  	}
->  
->  	/*
-> @@ -3071,13 +3183,21 @@ xfs_rename(
->  		 */
->  		error = xfs_droplink(tp, src_dp);
->  		if (error)
-> -			goto abort_return;
-> +			goto error_trans_abort;
->  	}
->  
-> -	error = xfs_dir_removename(tp, src_dp, src_name, src_ip->i_ino,
-> +	/*
-> +	 * On a whiteout, we only update the source dirent with the wino,
-> +	 * otherwise we are removing it.
-> +	 */
-> +	if (wino) {
-> +		error = xfs_dir_replace(tp, src_dp, src_name, wino->i_ino,
-> +					&first_block, &free_list, spaceres);
-> +	} else
-> +		error = xfs_dir_removename(tp, src_dp, src_name, src_ip->i_ino,
->  					&first_block, &free_list, spaceres);
->  	if (error)
-> -		goto abort_return;
-> +		goto error_trans_abort;
->  
->  	xfs_trans_ichgtime(tp, src_dp, XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
->  	xfs_trans_log_inode(tp, src_dp, XFS_ILOG_CORE);
-> @@ -3090,31 +3210,58 @@ finish_rename:
->  	 * rename transaction goes to disk before returning to
->  	 * the user.
->  	 */
-> -	if (mp->m_flags & (XFS_MOUNT_WSYNC|XFS_MOUNT_DIRSYNC)) {
-> +	if (mp->m_flags & (XFS_MOUNT_WSYNC|XFS_MOUNT_DIRSYNC))
->  		xfs_trans_set_sync(tp);
-> -	}
->  
->  	error = xfs_bmap_finish(&tp, &free_list, &committed);
-> -	if (error) {
-> -		xfs_bmap_cancel(&free_list);
-> -		xfs_trans_cancel(tp, (XFS_TRANS_RELEASE_LOG_RES |
-> -				 XFS_TRANS_ABORT));
-> -		goto std_return;
-> +	if (error)
-> +		goto error_trans_abort;
-> +
-> +	/*
-> +	 * Last thing we do is bump the link count on the wino. This means that
-> +	 * failures all the way up to this point leave the wino on the unlinked
-> +	 * list and so cleanup is a simple matter of dropping the remaining
-> +	 * reference to it. If we fail here after bumping the link count, we're
-> +	 * shutting down the filesystem so we'll never see the intermediate
-> +	 * state on disk.
-> +	 */
-> +	if (wino) {
-> +		ASSERT(wino->i_d.di_nlink == 0);
-> +		error = xfs_bumplink(tp, wino);
-> +		if (error)
-> +			goto error_trans_abort;
-> +		error = xfs_iunlink_remove(tp, wino);
-> +		if (error)
-> +			goto error_trans_abort;
-> +		xfs_trans_log_inode(tp, wino, XFS_ILOG_CORE);
-> +
-> +		/*
-> +		 * now we have a real link, clear the "I'm a tmpfile" state
-> +		 * flag from the inode so it doesn't accidentally get misused in
-> +		 * future.
-> +		 */
-> +		VFS_I(wino)->i_state &= ~I_LINKABLE;
->  	}
->  
->  	/*
->  	 * trans_commit will unlock src_ip, target_ip & decrement
->  	 * the vnode references.
->  	 */
-> -	return xfs_trans_commit(tp, XFS_TRANS_RELEASE_LOG_RES);
-> +	error = xfs_trans_commit(tp, XFS_TRANS_RELEASE_LOG_RES);
-> +out_release_wino:
-> +	if (wino)
-> +		IRELE(wino);
-> +	return error;
->  
-> - abort_return:
-> +
-> +error_trans_abort:
->  	cancel_flags |= XFS_TRANS_ABORT;
-> - error_return:
->  	xfs_bmap_cancel(&free_list);
-> +error_trans_cancel:
->  	xfs_trans_cancel(tp, cancel_flags);
-> - std_return:
-> -	return error;
-> +
-> +	/* Dropping the last reference on a tmpfile does the cleanup for us! */
-> +	goto out_release_wino;
->  }
->  
->  STATIC int
-> diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-> index 6a77ea9..d4442d1 100644
-> --- a/fs/xfs/xfs_iops.c
-> +++ b/fs/xfs/xfs_iops.c
-> @@ -393,7 +393,7 @@ xfs_vn_rename(
->  	struct xfs_name	oname;
->  	struct xfs_name	nname;
->  
-> -	if (flags & ~(RENAME_NOREPLACE | RENAME_EXCHANGE))
-> +	if (flags & ~(RENAME_NOREPLACE | RENAME_EXCHANGE | RENAME_WHITEOUT))
->  		return -EINVAL;
->  
->  	/* if we are exchanging files, we need to set i_mode of both files */
+> Because there is no way to *ever* resolve that dependency because
+> taskA never leaves the allocator. Even if the oom killer selects
+> taskA and set TIF_MEMDIE on it, the allocator ignores TIF_MEMDIE
+> because GFP_NOFAIL is set and continues to loop.
+
+TIF_MEMDIE will at least give the task access to memory reserves. Anyway
+this is essentially the same category of livelock as above.
+
+> This is why GFP_NOFAIL is not a solution to the "never fail"
+> alloation problem. The caller doing the "no fail" allocation _must
+> be able to set failure policy_. i.e. the choice of aborting and
+> shutting down because progress cannot be made, or continuing and
+> hoping for forwards progress is owned by the allocating context, no
+> the allocator.
+
+I completely agree that the failure policy is the caller responsibility
+and I would have no objections to something like:
+
+	do {
+		ptr = kmalloc(size, GFP_NOFS);
+		if (ptr)
+			return ptr;
+		if (fatal_signal_pending(current))
+			break;
+		if (looping_too_long())
+			break;
+	} while (1);
+
+	fallback_solution();
+
+But this is not the case in kmem_alloc which is essentially GFP_NOFAIL
+allocation with a warning and congestion_wait. There is no failure
+policy defined there. The warning should be part of the allocator and
+the NOFAIL policy should be explicit. So why exactly do you oppose to
+changing kmem_alloc (and others which are doing essentially the same)?
+
+> The memory allocation subsystem cannot make that
+> choice for us as it has no concept of the failure characteristics of
+> the allocating context.
+
+Of course. I wasn't arguing we should change allocation loops which have
+a fallback policy as well. That is an entirely different thing. My point
+was we want to turn GFP_NOFAIL equivalents to use GFP_NOFAIL so that the
+allocator can prevent from livelocks if possible.
+
+> The situations in which this actually matters are extremely *rare* -
+> we've had these allocaiton loops in XFS for > 13 years, and we might
+> get a one or two reports a year of these "possible allocation
+> deadlock" messages occurring. Changing *everything* for such a rare,
+> unusual event is not an efficient use of time or resources.
+> 
+> > > If the OOM killer is not obeying GFP_NOFS and deadlocking on locks
+> > > that the invoking context holds, then that is a OOM killer bug, not
+> > > a bug in the subsystem calling kmalloc(GFP_NOFS).
+> > 
+> > I guess we are talking about different things here or what am I missing?
+> 
+> From my perspective, you are tightly focussed on one aspect of the
+> problem and hence are not seeing the bigger picture: this is a
+> corner case of behaviour in a "last hope", brute force memory
+> reclaim technique that no production machine relies on for correct
+> or performant operation.
+
+Of course this is a corner case. And I am trying to prevent heuristics
+which would optimize for such a corner case (there were multiple of
+them suggested in this thread).
+
+The reason I care about GFP_NOFAIL is that there are apparently code
+paths which do not tell allocator they are basically GFP_NOFAIL without
+any fallback. This leads to two main problems 1) we do not have a good
+overview how many code paths have such a strong requirements and so
+cannot estimate e.g. how big memory reserves should be and 2) allocator
+cannot help those paths (e.g. by giving them access to reserves to break
+out of the livelock).
+
+> > [...]
+> > > > In the meantime page allocator
+> > > > should develop a proper diagnostic to help identify all the potential
+> > > > dependencies. Next we should start thinking whether all the existing
+> > > > GFP_NOFAIL paths are really necessary or the code can be
+> > > > refactored/reimplemented to accept allocation failures.
+> > > 
+> > > Last time the "just make filesystems handle memory allocation
+> > > failures" I pointed out what that meant for XFS: dirty transaction
+> > > rollback is required. That's freakin' complex, will double the
+> > > memory footprint of transactions, roughly double the CPU cost, and
+> > > greatly increase the complexity of the transaction subsystem. It's a
+> > > *major* rework of a significant amount of the XFS codebase and will
+> > > take at least a couple of years design, test and stabilise before
+> > > it could be rolled out to production.
+> > > 
+> > > I'm not about to spend a couple of years rewriting XFS just so the
+> > > VM can get rid of a GFP_NOFAIL user. Especially as the we already
+> > > tell the Hammer of Last Resort the context in which it can work.
+> > > 
+> > > Move the OOM killer to kswapd - get it out of the direct reclaim
+> > > path altogether.
+> > 
+> > This doesn't change anything as explained in other email. The triggering
+> > path doesn't wait for the victim to die.
+> 
+> But it does - we wouldn't be talking about deadlocks if there were
+> no blocking dependencies. In this case, allocation keeps retrying
+> until the memory freed by the killed tasks enables it to make
+> forward progress. That's a side effect of the last relevation that
+> was made in this thread that low order allocations never fail...
+
+Sure, low order allocations being almost GFP_NOFAIL makes things much
+worse of course. And this should be changed. We just have to think about
+the way how to do it without breaking the universe. I hope we can
+discuss this at LSF.
+
+But even then I do not see how triggering the OOM killer from kswapd
+would help here. Victims would be looping in the allocator whether the
+actual killing happens from their or any other context.
+
+> > > If the system is that backed up on locks that it
+> > > cannot free any memory and has no reserves to satisfy the allocation
+> > > that kicked the OOM killer, then the OOM killer was not invoked soon
+> > > enough.
+> > > 
+> > > Hell, if you want a better way to proceed, then how about you allow
+> > > us to tell the MM subsystem how much memory reserve a specific set
+> > > of operations is going to require to complete? That's something that
+> > > we can do rough calculations for, and it integrates straight into
+> > > the existing transaction reservation system we already use for log
+> > > space and disk space, and we can tell the mm subsystem when the
+> > > reserve is no longer needed (i.e. last thing in transaction commit).
+> > > 
+> > > That way we don't start a transaction until the mm subsystem has
+> > > reserved enough pages for us to work with, and the reserve only
+> > > needs to be used when normal allocation has already failed. i.e
+> > > rather than looping we get a page allocated from the reserve pool.
+> > 
+> > I am not sure I understand the above but isn't the mempools a tool for
+> > this purpose?
+> 
+> I knew this question would be the next one - I even deleted a one
+> line comment from my last email that said "And no, mempools are not
+> a solution" because that needs a more thorough explanation than a
+> dismissive one-liner.
+> 
+> As you know, mempools require a forward progress guarantee on a
+> single type of object and the objects must be slab based.
+> 
+> In transaction context we allocate from inode slabs, xfs_buf slabs,
+> log item slabs (6 different ones, IIRC), btree cursor slabs, etc,
+> but then we also have direct page allocations for buffers, vm_map_ram()
+> for mapping multi-page buffers, uncounted heap allocations, etc.
+> We cannot make all of these mempools, nor can me meet the forwards
+> progress requirements of a mempool because other allocations can
+> block and prevent progress.
+> 
+> Further, the object have lifetimes that don't correspond to the
+> transaction life cycles, and hence even if we complete the
+> transaction there is no guarantee that the objects allocated within
+> a transaction are going to be returned to the mempool at it's
+> completion.
+> 
+> IOWs, we have need for forward allocation progress guarantees on
+> (potentially) several megabytes of allocations from slab caches, the
+> heap and the page allocator, with all allocations all in
+> unpredictable order, with objects of different life times and life
+> cycles, and at which may, at any time, get stuck behind
+> objects locked in other transactions and hence can randomly block
+> until some other thread makes forward progress and completes a
+> transaction and unlocks the object.
+
+Thanks for the clarification, I have to think about it some more,
+though. My thinking was that mempools could be used for an emergency
+pool with a pre-allocated memory which would be used in the non failing
+contexts.
+
+> The reservation would only need to cover the memory we need to
+> allocate and hold in the transaction (i.e. dirtied objects). There
+> is potentially unbound amounts of memory required through demand
+> paging of buffers to find the metadata we need to modify, but demand
+> paged metadata that is read and then released is recoverable. i.e
+> the shrinkers will free it as other memory demand requires, so it's
+> not included in reservation pools because it doesn't deplete the
+> amount of free memory.
+> 
+> Cheers,
+> 
+> Dave.
 > -- 
-> 2.0.0
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
-> 
+> Dave Chinner
+> david@fromorbit.com
 
 -- 
-Dave Chinner
-david@fromorbit.com
+Michal Hocko
+SUSE Labs
 
 _______________________________________________
 xfs mailing list
