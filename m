@@ -1,28 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 32A377F56
+	by oss.sgi.com (Postfix) with ESMTP id 6BF867F6D
 	for <xfs@oss.sgi.com>; Thu, 19 Feb 2015 12:13:51 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id D15C8AC003
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 0816BAC008
 	for <xfs@oss.sgi.com>; Thu, 19 Feb 2015 10:13:47 -0800 (PST)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id dqGL71sVF3mRs8YV (version=TLSv1
+	cuda.sgi.com with ESMTP id vogz6JMI4B4zYQu8 (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 19 Feb 2015 10:13:47 -0800 (PST)
+	Thu, 19 Feb 2015 10:13:46 -0800 (PST)
 Received: from int-mx09.intmail.prod.int.phx2.redhat.com
 	(int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id t1JIDkGR000300
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id t1JIDkj3021572
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256
 	verify=FAIL) for <xfs@oss.sgi.com>; Thu, 19 Feb 2015 13:13:46 -0500
 Received: from bfoster.bfoster ([10.18.41.237])
 	by int-mx09.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id t1JIDkAN018234
+	id t1JIDj6V018231
 	for <xfs@oss.sgi.com>; Thu, 19 Feb 2015 13:13:46 -0500
 From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH v5 11/18] xfs: handle sparse inode chunks in icreate log
-	recovery
-Date: Thu, 19 Feb 2015 13:13:36 -0500
-Message-Id: <1424369623-5656-12-git-send-email-bfoster@redhat.com>
+Subject: [PATCH v5 07/18] xfs: add fs geometry bit for sparse inode chunks
+Date: Thu, 19 Feb 2015 13:13:32 -0500
+Message-Id: <1424369623-5656-8-git-send-email-bfoster@redhat.com>
 In-Reply-To: <1424369623-5656-1-git-send-email-bfoster@redhat.com>
 References: <1424369623-5656-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -40,52 +39,42 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Recovery of icreate transactions assumes hardcoded values for the inode
-count and chunk length.
-
-Sparse inode chunks are allocated in units of m_ialloc_min_blks. Update
-the icreate validity checks to allow for appropriately sized inode
-chunks and verify the inode count matches what is expected based on the
-extent length rather than assuming a hardcoded count.
+Define an fs geometry bit for sparse inode chunks such that the
+characteristic of the fs can be identified by userspace.
 
 Signed-off-by: Brian Foster <bfoster@redhat.com>
 ---
- fs/xfs/xfs_log_recover.c | 22 ++++++++++++++++------
- 1 file changed, 16 insertions(+), 6 deletions(-)
+ fs/xfs/libxfs/xfs_fs.h | 1 +
+ fs/xfs/xfs_fsops.c     | 4 +++-
+ 2 files changed, 4 insertions(+), 1 deletion(-)
 
-diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index ecc73d5..74d504b 100644
---- a/fs/xfs/xfs_log_recover.c
-+++ b/fs/xfs/xfs_log_recover.c
-@@ -3068,12 +3068,22 @@ xlog_recover_do_icreate_pass2(
- 		return -EINVAL;
- 	}
+diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
+index 18dc721..89689c6 100644
+--- a/fs/xfs/libxfs/xfs_fs.h
++++ b/fs/xfs/libxfs/xfs_fs.h
+@@ -239,6 +239,7 @@ typedef struct xfs_fsop_resblks {
+ #define XFS_FSOP_GEOM_FLAGS_V5SB	0x8000	/* version 5 superblock */
+ #define XFS_FSOP_GEOM_FLAGS_FTYPE	0x10000	/* inode directory types */
+ #define XFS_FSOP_GEOM_FLAGS_FINOBT	0x20000	/* free inode btree */
++#define XFS_FSOP_GEOM_FLAGS_SPINODES	0x40000	/* sparse inode chunks	*/
  
--	/* existing allocation is fixed value */
--	ASSERT(count == mp->m_ialloc_inos);
--	ASSERT(length == mp->m_ialloc_blks);
--	if (count != mp->m_ialloc_inos ||
--	     length != mp->m_ialloc_blks) {
--		xfs_warn(log->l_mp, "xlog_recover_do_icreate_trans: bad count 2");
-+	/*
-+	 * The inode chunk is either full or sparse and we only support
-+	 * m_ialloc_min_blks sized sparse allocations at this time.
-+	 */
-+	if (length != mp->m_ialloc_blks &&
-+	    length != mp->m_ialloc_min_blks) {
-+		xfs_warn(log->l_mp,
-+			 "%s: unsupported chunk length", __FUNCTION__);
-+		return -EINVAL;
-+	}
-+
-+	/* verify inode count is consistent with extent length */
-+	if ((count >> mp->m_sb.sb_inopblog) != length) {
-+		xfs_warn(log->l_mp,
-+			 "%s: inconsistent inode count and chunk length",
-+			 __FUNCTION__);
- 		return -EINVAL;
- 	}
- 
+ /*
+  * Minimum and maximum sizes need for growth checks.
+diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
+index 74efe5b..8c18da9 100644
+--- a/fs/xfs/xfs_fsops.c
++++ b/fs/xfs/xfs_fsops.c
+@@ -101,7 +101,9 @@ xfs_fs_geometry(
+ 			(xfs_sb_version_hasftype(&mp->m_sb) ?
+ 				XFS_FSOP_GEOM_FLAGS_FTYPE : 0) |
+ 			(xfs_sb_version_hasfinobt(&mp->m_sb) ?
+-				XFS_FSOP_GEOM_FLAGS_FINOBT : 0);
++				XFS_FSOP_GEOM_FLAGS_FINOBT : 0) |
++			(xfs_sb_version_hassparseinodes(&mp->m_sb) ?
++				XFS_FSOP_GEOM_FLAGS_SPINODES : 0);
+ 		geo->logsectsize = xfs_sb_version_hassector(&mp->m_sb) ?
+ 				mp->m_sb.sb_logsectsize : BBSIZE;
+ 		geo->rtsectsize = mp->m_sb.sb_blocksize;
 -- 
 1.9.3
 
