@@ -1,20 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 903E57FB7
-	for <xfs@oss.sgi.com>; Thu, 19 Feb 2015 05:01:44 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 7E60C304053
-	for <xfs@oss.sgi.com>; Thu, 19 Feb 2015 03:01:41 -0800 (PST)
-Received: from gum.cmpxchg.org (gum.cmpxchg.org [85.214.110.215]) by
-	cuda.sgi.com with ESMTP id paVujbd2gwiM15eS (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 19 Feb 2015 03:01:39 -0800 (PST)
-Date: Thu, 19 Feb 2015 06:01:24 -0500
-From: Johannes Weiner <hannes@cmpxchg.org>
+	by oss.sgi.com (Postfix) with ESMTP id 4C49D7FB9
+	for <xfs@oss.sgi.com>; Thu, 19 Feb 2015 06:29:23 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 3A4A1304059
+	for <xfs@oss.sgi.com>; Thu, 19 Feb 2015 04:29:23 -0800 (PST)
+Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
+	with ESMTP id HzcGpL5GQYEeCK7h (version=TLSv1 cipher=AES256-SHA
+	bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 19 Feb 2015 04:29:18 -0800 (PST)
+Date: Thu, 19 Feb 2015 13:29:14 +0100
+From: Michal Hocko <mhocko@suse.cz>
 Subject: Re: How to handle TIF_MEMDIE stalls?
-Message-ID: <20150219110124.GC15569@phnom.home.cmpxchg.org>
-References: <201502092044.JDG39081.LVFOOtFHQFOMSJ@I-love.SAKURA.ne.jp>
-	<201502102258.IFE09888.OVQFJOMSFtOLFH@I-love.SAKURA.ne.jp>
+Message-ID: <20150219122914.GH28427@dhcp22.suse.cz>
+References: <201502102258.IFE09888.OVQFJOMSFtOLFH@I-love.SAKURA.ne.jp>
 	<20150210151934.GA11212@phnom.home.cmpxchg.org>
 	<201502111123.ICD65197.FMLOHSQJFVOtFO@I-love.SAKURA.ne.jp>
 	<201502172123.JIE35470.QOLMVOFJSHOFFt@I-love.SAKURA.ne.jp>
@@ -23,9 +22,10 @@ References: <201502092044.JDG39081.LVFOOtFHQFOMSJ@I-love.SAKURA.ne.jp>
 	<20150218082502.GA4478@dhcp22.suse.cz>
 	<20150218104859.GM12722@dastard>
 	<20150218121602.GC4478@dhcp22.suse.cz>
+	<20150219110124.GC15569@phnom.home.cmpxchg.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20150218121602.GC4478@dhcp22.suse.cz>
+In-Reply-To: <20150219110124.GC15569@phnom.home.cmpxchg.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -38,60 +38,65 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Michal Hocko <mhocko@suse.cz>
+To: Johannes Weiner <hannes@cmpxchg.org>
 Cc: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, dchinner@redhat.com, oleg@redhat.com, xfs@oss.sgi.com, linux-mm@kvack.org, mgorman@suse.de, rientjes@google.com, akpm@linux-foundation.org, torvalds@linux-foundation.org
 
-On Wed, Feb 18, 2015 at 01:16:02PM +0100, Michal Hocko wrote:
-> On Wed 18-02-15 21:48:59, Dave Chinner wrote:
-> > On Wed, Feb 18, 2015 at 09:25:02AM +0100, Michal Hocko wrote:
-> > > On Wed 18-02-15 09:54:30, Dave Chinner wrote:
-> [...]
-> > Also, this reads as an excuse for the OOM killer being broken and
-> > not fixing it.  Keep in mind that we tell the memory alloc/reclaim
-> > subsystem that *we hold locks* when we call into it. That's what
-> > GFP_NOFS originally meant, and it's what it still means today in an
-> > XFS context.
-> 
-> Sure, and OOM killer will not be invoked in NOFS context. See
-> __alloc_pages_may_oom and __GFP_FS check in there. So I do not see where
-> is the OOM killer broken.
-> 
-> The crucial problem we are dealing with is not GFP_NOFAIL triggering the
-> OOM killer but a lock dependency introduced by the following sequence:
-> 
-> 	taskA			taskB			taskC
-> lock(A)							alloc()
-> alloc(gfp | __GFP_NOFAIL)	lock(A)			  out_of_memory
-> # looping for ever if we				    select_bad_process
-> # cannot make any progress				      victim = taskB
+On Thu 19-02-15 06:01:24, Johannes Weiner wrote:
+[...]
+> Preferrably, we'd get rid of all nofail allocations and replace them
+> with preallocated reserves.  But this is not going to happen anytime
+> soon, so what other option do we have than resolving this on the OOM
+> killer side?
 
-You don't even need taskC here.  taskA could invoke the OOM killer
-with lock(A) held, and taskB getting selected as the victim while
-trying to acquire lock(A).  It'll get the signal and TIF_MEMDIE and
-then wait for lock(A) while taskA is waiting for it to exit.
+As I've mentioned in other email, we might give GFP_NOFAIL allocator
+access to memory reserves (by giving it __GFP_HIGH). This is still not a
+100% solution because reserves could get depleted but this risk is there
+even with multiple oom victims. I would still argue that this would be a
+better approach because selecting more victims might hit pathological
+case more easily (other victims might be blocked on the very same lock
+e.g.).
 
-But it doesn't matter who is doing the OOM killing - if the allocating
-task with the lock/state is waiting for the OOM victim to free memory,
-and the victim is waiting for same the lock/state, we have a deadlock.
-
-> There is no way OOM killer can tell taskB is blocked and that there is
-> dependency between A and B (without lockdep). That is why I call NOFAIL
-> under a lock as dangerous and a bug.
-
-You keep ignoring that it's also one of the main usecases of this
-flag.  The caller has state that it can't unwind and thus needs the
-allocation to succeed.  Chances are somebody else can get blocked up
-on that same state.  And when that somebody else is the first choice
-of the OOM killer, we're screwed.
-
-This is exactly why I'm proposing that the OOM killer should not wait
-indefinitely for its first choice to exit, but ultimately move on and
-try other tasks.  There is no other way to resolve this deadlock.
-
-Preferrably, we'd get rid of all nofail allocations and replace them
-with preallocated reserves.  But this is not going to happen anytime
-soon, so what other option do we have than resolving this on the OOM
-killer side?
+Something like the following:
+diff --git a/mm/page_alloc.c b/mm/page_alloc.c
+index 8d52ab18fe0d..4b5cf28a13f4 100644
+--- a/mm/page_alloc.c
++++ b/mm/page_alloc.c
+@@ -2599,6 +2599,7 @@ __alloc_pages_slowpath(gfp_t gfp_mask, unsigned int order,
+ 	enum migrate_mode migration_mode = MIGRATE_ASYNC;
+ 	bool deferred_compaction = false;
+ 	int contended_compaction = COMPACT_CONTENDED_NONE;
++	int oom = 0;
+ 
+ 	/*
+ 	 * In the slowpath, we sanity check order to avoid ever trying to
+@@ -2628,6 +2629,15 @@ retry:
+ 		wake_all_kswapds(order, ac);
+ 
+ 	/*
++	 * __GFP_NOFAIL allocations cannot fail but yet the current context
++	 * might be blocking resources needed by the OOM victim to terminate.
++	 * Allow the caller to dive into memory reserves to succeed the
++	 * allocation and break out from a potential deadlock.
++	 */
++	if (oom > 10 && (gfp_mask & __GFP_NOFAIL))
++		gfp_mask |= __GFP_HIGH;
++
++	/*
+ 	 * OK, we're below the kswapd watermark and have kicked background
+ 	 * reclaim. Now things get more complex, so set up alloc_flags according
+ 	 * to how we want to proceed.
+@@ -2759,6 +2769,8 @@ retry:
+ 				goto got_pg;
+ 			if (!did_some_progress)
+ 				goto nopage;
++
++			oom++;
+ 		}
+ 		/* Wait for some write requests to complete then retry */
+ 		wait_iff_congested(ac->preferred_zone, BLK_RW_ASYNC, HZ/50);
+-- 
+Michal Hocko
+SUSE Labs
 
 _______________________________________________
 xfs mailing list
