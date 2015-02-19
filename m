@@ -1,28 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id E29667F54
-	for <xfs@oss.sgi.com>; Thu, 19 Feb 2015 12:13:47 -0600 (CST)
+	by oss.sgi.com (Postfix) with ESMTP id 1930D7F50
+	for <xfs@oss.sgi.com>; Thu, 19 Feb 2015 12:13:48 -0600 (CST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id C8AC68F8040
-	for <xfs@oss.sgi.com>; Thu, 19 Feb 2015 10:13:47 -0800 (PST)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 07AD48F8074
+	for <xfs@oss.sgi.com>; Thu, 19 Feb 2015 10:13:48 -0800 (PST)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id 49X9v3nwy2AtlgH4 (version=TLSv1
+	cuda.sgi.com with ESMTP id KTNBUtBghsBaZw5C (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 19 Feb 2015 10:13:46 -0800 (PST)
+	Thu, 19 Feb 2015 10:13:47 -0800 (PST)
 Received: from int-mx11.intmail.prod.int.phx2.redhat.com
 	(int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id t1JIDkfm021571
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id t1JIDkKS021582
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256
 	verify=FAIL) for <xfs@oss.sgi.com>; Thu, 19 Feb 2015 13:13:46 -0500
 Received: from bfoster.bfoster ([10.18.41.237])
 	by int-mx11.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id t1JIDjTI029971
+	id t1JIDj8w029970
 	for <xfs@oss.sgi.com>; Thu, 19 Feb 2015 13:13:46 -0500
 From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH v5 09/18] xfs: use actual inode count for sparse records in
-	bulkstat/inumbers
-Date: Thu, 19 Feb 2015 13:13:34 -0500
-Message-Id: <1424369623-5656-10-git-send-email-bfoster@redhat.com>
+Subject: [PATCH v5 16/18] xfs: only free allocated regions of inode chunks
+Date: Thu, 19 Feb 2015 13:13:41 -0500
+Message-Id: <1424369623-5656-17-git-send-email-bfoster@redhat.com>
 In-Reply-To: <1424369623-5656-1-git-send-email-bfoster@redhat.com>
 References: <1424369623-5656-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -40,80 +39,122 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-The bulkstat and inumbers mechanisms make the assumption that inode
-records consist of a full 64 inode chunk in several places. For example,
-this is used to track how many inodes have been processed overall as
-well as to determine whether a record has allocated inodes that must be
-handled.
+An inode chunk is currently added to the transaction free list based on
+a simple fsb conversion and hardcoded chunk length. The nature of sparse
+chunks is such that the physical chunk of inodes on disk may consist of
+one or more discontiguous parts. Blocks that reside in the holes of the
+inode chunk are not inodes and could be allocated to any other use or
+not allocated at all.
 
-This assumption is invalid for sparse inode records. While sparse inodes
-will be marked as free in the ir_free mask, they are not accounted as
-free in ir_freecount because they cannot be allocated. Therefore,
-ir_freecount may be less than 64 inodes in an inode record for which all
-physically allocated inodes are free (and in turn ir_freecount < 64 does
-not signify that the record has allocated inodes).
-
-The new in-core inobt record format includes the ir_count field. This
-holds the number of true, physical inodes tracked by the record. The
-in-core ir_count field is always valid as it is hardcoded to
-XFS_INODES_PER_CHUNK when sparse inodes is not enabled. Use ir_count to
-handle inode records correctly in bulkstat in a generic manner.
+Refactor the existing xfs_bmap_add_free() call into the
+xfs_difree_inode_chunk() helper. The new helper uses the existing
+calculation if a chunk is not sparse. Otherwise, use the inobt record
+holemask to free the contiguous regions of the chunk.
 
 Signed-off-by: Brian Foster <bfoster@redhat.com>
 ---
- fs/xfs/xfs_itable.c | 13 ++++++++-----
- 1 file changed, 8 insertions(+), 5 deletions(-)
+ fs/xfs/libxfs/xfs_ialloc.c | 81 ++++++++++++++++++++++++++++++++++++++++++++--
+ 1 file changed, 78 insertions(+), 3 deletions(-)
 
-diff --git a/fs/xfs/xfs_itable.c b/fs/xfs/xfs_itable.c
-index 82e3142..7c68058 100644
---- a/fs/xfs/xfs_itable.c
-+++ b/fs/xfs/xfs_itable.c
-@@ -252,7 +252,7 @@ xfs_bulkstat_grab_ichunk(
+diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
+index a673da3..a29dd4e 100644
+--- a/fs/xfs/libxfs/xfs_ialloc.c
++++ b/fs/xfs/libxfs/xfs_ialloc.c
+@@ -1798,6 +1798,83 @@ out_error:
+ 	return error;
+ }
+ 
++/*
++ * Free the blocks of an inode chunk. We must consider that the inode chunk
++ * might be sparse and only free the regions that are allocated as part of the
++ * chunk.
++ */
++STATIC void
++xfs_difree_inode_chunk(
++	struct xfs_mount		*mp,
++	xfs_agnumber_t			agno,
++	struct xfs_inobt_rec_incore	*rec,
++	struct xfs_bmap_free		*flist)
++{
++	xfs_agblock_t	sagbno = XFS_AGINO_TO_AGBNO(mp, rec->ir_startino);
++	int		startidx, endidx;
++	int		nextbit;
++	xfs_agblock_t	agbno;
++	int		contigblk;
++	DECLARE_BITMAP(holemask, XFS_INOBT_HOLEMASK_BITS);
++
++	if (!xfs_inobt_issparse(rec->ir_holemask)) {
++		/* not sparse, calculate extent info directly */
++		xfs_bmap_add_free(XFS_AGB_TO_FSB(mp, agno,
++				  XFS_AGINO_TO_AGBNO(mp, rec->ir_startino)),
++				  mp->m_ialloc_blks, flist, mp);
++		return;
++	}
++
++	/* holemask is only 16-bits (fits in an unsigned long) */
++	ASSERT(sizeof(rec->ir_holemask) <= sizeof(holemask[0]));
++	holemask[0] = rec->ir_holemask;
++
++	/*
++	 * Find contiguous ranges of zeroes (i.e., allocated regions) in the
++	 * holemask and convert the start/end index of each range to an extent.
++	 * We start with the start and end index both pointing at the first 0 in
++	 * the mask.
++	 */
++	startidx = endidx = find_first_zero_bit(holemask,
++						XFS_INOBT_HOLEMASK_BITS);
++	nextbit = startidx + 1;
++	while (startidx < XFS_INOBT_HOLEMASK_BITS) {
++		nextbit = find_next_zero_bit(holemask, XFS_INOBT_HOLEMASK_BITS,
++					     nextbit);
++		/*
++		 * If the next zero bit is contiguous, update the end index of
++		 * the current range and continue.
++		 */
++		if (nextbit != XFS_INOBT_HOLEMASK_BITS &&
++		    nextbit == endidx + 1) {
++			endidx = nextbit;
++			goto next;
++		}
++
++		/*
++		 * nextbit is not contiguous with the current end index. Convert
++		 * the current start/end to an extent and add it to the free
++		 * list.
++		 */
++		agbno = sagbno + (startidx * XFS_INODES_PER_HOLEMASK_BIT) /
++				  mp->m_sb.sb_inopblock;
++		contigblk = ((endidx - startidx + 1) *
++			     XFS_INODES_PER_HOLEMASK_BIT) /
++			    mp->m_sb.sb_inopblock;
++
++		ASSERT(agbno % mp->m_sb.sb_spino_align == 0);
++		ASSERT(contigblk % mp->m_sb.sb_spino_align == 0);
++		xfs_bmap_add_free(XFS_AGB_TO_FSB(mp, agno, agbno), contigblk,
++				  flist, mp);
++
++		/* reset range to current bit and carry on... */
++		startidx = endidx = nextbit;
++
++next:
++		nextbit++;
++	}
++}
++
+ STATIC int
+ xfs_difree_inobt(
+ 	struct xfs_mount		*mp,
+@@ -1889,9 +1966,7 @@ xfs_difree_inobt(
+ 			goto error0;
  		}
  
- 		irec->ir_free |= xfs_inobt_maskn(0, idx);
--		*icount = XFS_INODES_PER_CHUNK - irec->ir_freecount;
-+		*icount = irec->ir_count - irec->ir_freecount;
- 	}
+-		xfs_bmap_add_free(XFS_AGB_TO_FSB(mp, agno,
+-				  XFS_AGINO_TO_AGBNO(mp, rec.ir_startino)),
+-				  mp->m_ialloc_blks, flist, mp);
++		xfs_difree_inode_chunk(mp, agno, &rec, flist);
+ 	} else {
+ 		*deleted = 0;
  
- 	return 0;
-@@ -415,6 +415,8 @@ xfs_bulkstat(
- 				goto del_cursor;
- 			if (icount) {
- 				irbp->ir_startino = r.ir_startino;
-+				irbp->ir_holemask = r.ir_holemask;
-+				irbp->ir_count = r.ir_count;
- 				irbp->ir_freecount = r.ir_freecount;
- 				irbp->ir_free = r.ir_free;
- 				irbp++;
-@@ -447,13 +449,15 @@ xfs_bulkstat(
- 			 * If this chunk has any allocated inodes, save it.
- 			 * Also start read-ahead now for this chunk.
- 			 */
--			if (r.ir_freecount < XFS_INODES_PER_CHUNK) {
-+			if (r.ir_freecount < r.ir_count) {
- 				xfs_bulkstat_ichunk_ra(mp, agno, &r);
- 				irbp->ir_startino = r.ir_startino;
-+				irbp->ir_holemask = r.ir_holemask;
-+				irbp->ir_count = r.ir_count;
- 				irbp->ir_freecount = r.ir_freecount;
- 				irbp->ir_free = r.ir_free;
- 				irbp++;
--				icount += XFS_INODES_PER_CHUNK - r.ir_freecount;
-+				icount += r.ir_count - r.ir_freecount;
- 			}
- 			error = xfs_btree_increment(cur, 0, &stat);
- 			if (error || stat == 0) {
-@@ -599,8 +603,7 @@ xfs_inumbers(
- 		agino = r.ir_startino + XFS_INODES_PER_CHUNK - 1;
- 		buffer[bufidx].xi_startino =
- 			XFS_AGINO_TO_INO(mp, agno, r.ir_startino);
--		buffer[bufidx].xi_alloccount =
--			XFS_INODES_PER_CHUNK - r.ir_freecount;
-+		buffer[bufidx].xi_alloccount = r.ir_count - r.ir_freecount;
- 		buffer[bufidx].xi_allocmask = ~r.ir_free;
- 		if (++bufidx == bcount) {
- 			long	written;
 -- 
 1.9.3
 
