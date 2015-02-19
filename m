@@ -1,24 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 497A27F56
-	for <xfs@oss.sgi.com>; Thu, 19 Feb 2015 15:19:15 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id CD0F9AC003
-	for <xfs@oss.sgi.com>; Thu, 19 Feb 2015 13:19:11 -0800 (PST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id CCA1C7F54
+	for <xfs@oss.sgi.com>; Thu, 19 Feb 2015 15:35:07 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id A9DB4304053
+	for <xfs@oss.sgi.com>; Thu, 19 Feb 2015 13:35:07 -0800 (PST)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	iWqg0ggGGbEGJosX for <xfs@oss.sgi.com>;
-	Thu, 19 Feb 2015 13:19:05 -0800 (PST)
-Date: Fri, 20 Feb 2015 08:18:52 +1100
+	9niDf4ZLW5QcBiJj for <xfs@oss.sgi.com>;
+	Thu, 19 Feb 2015 13:35:04 -0800 (PST)
+Date: Fri, 20 Feb 2015 08:34:50 +1100
 From: Dave Chinner <david@fromorbit.com>
 Subject: Re: [PATCH] xfs: Introduce permanent async buffer write IO failures
-Message-ID: <20150219211852.GT12722@dastard>
+Message-ID: <20150219213450.GU12722@dastard>
 References: <1424298740-25821-1-git-send-email-david@fromorbit.com>
-	<54E51CC7.8040709@sandeen.net> <20150218235220.GQ4251@dastard>
-	<20150219190419.GA8862@hades.maiolino.org>
+	<20150219142842.GA2291@laptop.bfoster>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20150219190419.GA8862@hades.maiolino.org>
+In-Reply-To: <20150219142842.GA2291@laptop.bfoster>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,56 +30,158 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>, xfs@oss.sgi.com
+To: Brian Foster <bfoster@redhat.com>
+Cc: xfs@oss.sgi.com
 
-On Thu, Feb 19, 2015 at 05:04:19PM -0200, Carlos Maiolino wrote:
+On Thu, Feb 19, 2015 at 09:28:42AM -0500, Brian Foster wrote:
+> On Thu, Feb 19, 2015 at 09:32:20AM +1100, Dave Chinner wrote:
+> > From: Dave Chinner <dchinner@redhat.com>
 > > 
-> > Well, the switch is simple characterisation. What we do with that
-> > error type can be much more complex, and that's why I haven't tried
-> > to address those issues here. When we've sorted out what we need
-> > and how we are going to configure the error handling, then we can
-> > add it.
+> > Currently we consider all async metadata buffer write failures as
+> > transient failures and retry the IO immediately and then again at a
+> > a later time. The issue with this is that we can hang forever is the
+> > error is not recoverable.
 > > 
-> > e.g. if we need configurable error handling, it needs to be
-> > configurable for different error types, and it needs to be
-> > configurable on a per-mount basis. And it needs to be configurable
-> > at runtime, not just at mount time. That kind of leads to using
-> > sysfs for this. e.g. for each error type we ned to handle different
-> > behaviour for:
+> > An example of this is a device that has been pulled and so is
+> > returning ENODEV to all IO. Attempting to unmount the filesystem
+> > with the device in this state will result in a hang waiting for the
+> > async metadata IO to be flushed and written successfully. In this
+> > case, we need metadata writeback to error out and trigger a shutdown
+> > state so the unmount can complete.
 > > 
-> > $ cat /sys/fs/xfs/vda/meta_write_errors/enospc/type
-> > [transient] permanent
-> > $ cat /sys/fs/xfs/vda/meta_write_errors/enospc/perm_timeout_seconds
-> > 300
-> > $ cat /sys/fs/xfs/vda/meta_write_errors/enospc/perm_max_retry_attempts
-> > 50
-> > $ cat /sys/fs/xfs/vda/meta_write_errors/enospc/transient_fail_at_umount
-> > 1
+> > Put simply, we need to consider some errors as permanent and
+> > unrecoverable rather than transient.
 > > 
-> > And then have generic infrastructure to set it up and handle the
-> > buffer errors according to the config?
+> > Hence add infrastructure that allows us to classify the async write
+> > errors and hence apply different policies to the different failures.
+> > In this patch, classify ENODEV as a permanent error but leave
+> > all the other types of error handling unchanged.
 > > 
-> > > (I think that's accurately summing up irc-and-side-channel discussions) ;)
-> > 
-> > Pretty much.
-> > 
+> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
+....
+> > +	trace_xfs_buf_item_iodone_async(bp, _RET_IP_);
+> > +	ASSERT(bp->b_iodone != NULL);
+> > +	xfs_buf_ioerror(bp, 0);
+> > +
 > 
-> talking about possible configurable error handlers, what about leave this choice
-> of failure to the sysadmin? Instead a time or type based configuration what
-> about something that the administrator could just say "next IO to device X
-> should fail permanently"?
+> Otherwise it's async... we clear the error here.
 
-How is this different to just shutting down the filesystem
-immediately via 'xfs_io -x -c shutdown /path/to/mnt/pt' ?
+Ah, well spotted, that shouldn't be there.
 
-Regardless of this, leave failures as transient, then when an
-error condition occurs (say thinp device ENOSPC), this will error
-out on the next IO that is retried:
+> 
+> >  	/*
+> >  	 * If the write was asynchronous then no one will be looking for the
+> > -	 * error.  Clear the error state and write the buffer out again.
+> > -	 *
+> > -	 * XXX: This helps against transient write errors, but we need to find
+> > -	 * a way to shut the filesystem down if the writes keep failing.
+> > -	 *
+> > -	 * In practice we'll shut the filesystem down soon as non-transient
+> > -	 * errors tend to affect the whole device and a failing log write
+> > -	 * will make us give up.  But we really ought to do better here.
+> > +	 * error.  If this is the first failure, clear the error state and write
+> > +	 * the buffer out again.
+> >  	 */
+> > -	if (XFS_BUF_ISASYNC(bp)) {
+> > -		ASSERT(bp->b_iodone != NULL);
+> > -
+> > -		trace_xfs_buf_item_iodone_async(bp, _RET_IP_);
+> > -
+> > -		xfs_buf_ioerror(bp, 0); /* errno of 0 unsets the flag */
+> > -
+> > -		if (!(bp->b_flags & (XBF_STALE|XBF_WRITE_FAIL))) {
+> > -			bp->b_flags |= XBF_WRITE | XBF_ASYNC |
+> > -				       XBF_DONE | XBF_WRITE_FAIL;
+> > -			xfs_buf_submit(bp);
+> > -		} else {
+> > -			xfs_buf_relse(bp);
+> > -		}
+> > -
+> > -		return;
+> > +	if (!(bp->b_flags & (XBF_STALE|XBF_WRITE_FAIL))) {
+> > +		bp->b_flags |= XBF_WRITE | XBF_ASYNC |
+> > +			       XBF_DONE | XBF_WRITE_FAIL;
+> > +		xfs_buf_submit(bp);
+> > +		return true;
+> 
+> ... and retry once via the XBF_WRITE_FAIL flag.
 
-# echo permanent > /sys/fs/xfs/vda/meta_write_errors/enospc/type
-# echo 0 > /sys/fs/xfs/vda/meta_write_errors/enospc/perm_max_retry_attempts
+It should be in this branch.
 
-Will make the next device ENOSPC IO error shut the filesystem down.
+> 
+> >  	}
+> >  
+> >  	/*
+> > -	 * If the write of the buffer was synchronous, we want to make
+> > -	 * sure to return the error to the caller of xfs_bwrite().
+> > +	 * Repeated failure on an async write.
+> > +	 *
+> > +	 * Now we need to classify the error and determine the correct action to
+> > +	 * take. Different types of errors will require different processing,
+> > +	 * but make the default classification "transient" so that we keep
+> > +	 * retrying in these cases.  If this is the wrog thing to do, then we'll
+> > +	 * get reports that the filesystem hung in the presence of that type of
+> > +	 * error and we can take appropriate action to remedy the issue for that
+> > +	 * type of error.
+> >  	 */
+> > +	switch (bp->b_error) {
+> 
+> When is this ever true if we clear the error above?
+> 
+> > +	case ENODEV:
+> > +		/* permanent error, no recovery possible */
+> > +		xfs_force_shutdown(mp, SHUTDOWN_META_IO_ERROR);
+> > +		goto out_stale;
+> 
+> If we can't retry, do the error-specific processing. Is doing this after
+> a retry really the intended behavior? E.g., if ENODEV is permanent, the
+> retry seems pointless.
+
+I'm leaving the "retry once" logic there on purpose - as a just in
+case we had some other transient problem. It doesn't hurt to retry
+the IO if there was an error, and if we get another error we can be
+pretty certain it wasn't a transient problem.
+
+> > +	default:
+> > +		/* do nothing, higher layers will retry */
+> > +		break;
+> > +	}
+> > +
+
+bp->b_error should be cleared here....
+
+> > +	xfs_buf_relse(bp);
+> > +	return true;
+> > +
+> > +out_stale:
+> >  	xfs_buf_stale(bp);
+> >  	XFS_BUF_DONE(bp);
+> > -
+> >  	trace_xfs_buf_error_relse(bp, _RET_IP_);
+> > +	return false;
+> > +}
+> > +
+> > +/*
+> > + * This is the iodone() function for buffers which have had callbacks attached
+> > + * to them by xfs_buf_attach_iodone(). We need to iterate the items on the
+> > + * callback list, mark the buffer as having no more callbacks and then push the
+> > + * buffer through IO completion processing.
+> > + */
+> > +void
+> > +xfs_buf_iodone_callbacks(
+> > +	struct xfs_buf		*bp)
+> > +{
+> > +	/*
+> > +	 * If there is an error, process it. Some errors require us
+> > +	 * to run callbacks after failure processing is done so we
+> > +	 * detect that and take appropriate action.
+> > +	 */
+> 
+> 80 columns?
+
+*nod*
+
+That's what I get for hand editing patches. :)
 
 Cheers,
 
