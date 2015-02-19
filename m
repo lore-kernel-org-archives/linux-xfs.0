@@ -1,27 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id B85EF7F51
-	for <xfs@oss.sgi.com>; Thu, 19 Feb 2015 12:13:47 -0600 (CST)
+	by oss.sgi.com (Postfix) with ESMTP id F18EC7F59
+	for <xfs@oss.sgi.com>; Thu, 19 Feb 2015 12:13:48 -0600 (CST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id A65EB30406A
-	for <xfs@oss.sgi.com>; Thu, 19 Feb 2015 10:13:47 -0800 (PST)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id E08EA304053
+	for <xfs@oss.sgi.com>; Thu, 19 Feb 2015 10:13:48 -0800 (PST)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id 0dhefqSSPlzzxjwR (version=TLSv1
+	cuda.sgi.com with ESMTP id UveqrxgXPSkIQ0Ov (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 19 Feb 2015 10:13:46 -0800 (PST)
+	Thu, 19 Feb 2015 10:13:48 -0800 (PST)
 Received: from int-mx13.intmail.prod.int.phx2.redhat.com
 	(int-mx13.intmail.prod.int.phx2.redhat.com [10.5.11.26])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id t1JIDjGm014607
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id t1JIDkMs017837
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256
-	verify=FAIL) for <xfs@oss.sgi.com>; Thu, 19 Feb 2015 13:13:45 -0500
+	verify=FAIL) for <xfs@oss.sgi.com>; Thu, 19 Feb 2015 13:13:47 -0500
 Received: from bfoster.bfoster ([10.18.41.237])
 	by int-mx13.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id t1JIDjiu015181
-	for <xfs@oss.sgi.com>; Thu, 19 Feb 2015 13:13:45 -0500
+	id t1JIDjQH015203
+	for <xfs@oss.sgi.com>; Thu, 19 Feb 2015 13:13:46 -0500
 From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH v5 00/18] xfs: sparse inode chunks
-Date: Thu, 19 Feb 2015 13:13:25 -0500
-Message-Id: <1424369623-5656-1-git-send-email-bfoster@redhat.com>
+Subject: [PATCH v5 08/18] xfs: introduce inode record hole mask for sparse
+	inode chunks
+Date: Thu, 19 Feb 2015 13:13:33 -0500
+Message-Id: <1424369623-5656-9-git-send-email-bfoster@redhat.com>
+In-Reply-To: <1424369623-5656-1-git-send-email-bfoster@redhat.com>
+References: <1424369623-5656-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -37,105 +40,231 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Hi all,
+The inode btrees track 64 inodes per record regardless of inode size.
+Thus, inode chunks on disk vary in size depending on the size of the
+inodes. This creates a contiguous allocation requirement for new inode
+chunks that can be difficult to satisfy on an aged and fragmented (free
+space) filesystems.
 
-Here's v5 of sparse inode chunks. The only real change here is to
-convert the allocmask helpers back to using the XFS bitmap helpers
-rather than the generic bitmap code. This eliminates the need for the
-endian-conversion hack and extra helper to export a generic bitmap to a
-native type. The former users of the generic bitmap itself have been
-converted to use the native 64-bit value appropriately.
+The inode record freecount currently uses 4 bytes on disk to track the
+free inode count. With a maximum freecount value of 64, only one byte is
+required. Convert the freecount field to a single byte and use two of
+the remaining 3 higher order bytes left for the hole mask field. Use the
+final leftover byte for the total count field.
 
-The XFS bitmap code is actually not in userspace either so neither of
-these implementations backport cleanly to userspace. As it is, I've not
-included the sparse alloc/free code in my xfsprogs branch as this code
-currently isn't needed. Nothing in userspace that I've seen requires the
-ability to do a sparse inode allocation or free. I suspect if it is
-needed in the future, we can more easily sync the XFS bitmap helpers to
-userspace than the generic Linux bitmap code.
+The hole mask field tracks holes in the chunks of physical space that
+the inode record refers to. This facilitates the sparse allocation of
+inode chunks when contiguous chunks are not available and allows the
+inode btrees to identify what portions of the chunk contain valid
+inodes. The total count field contains the total number of valid inodes
+referred to by the record. This can also be deduced from the hole mask.
+The count field provides clarity and redundancy for internal record
+verification.
 
-Thoughts, reviews, flames appreciated...
+Note that neither of the new fields can be written to disk on fs'
+without sparse inode support. Doing so writes to the high-order bytes of
+freecount and causes corruption from the perspective of older kernels.
+The on-disk inobt record data structure is updated with a union to
+distinguish between the original, "full" format and the new, "sparse"
+format. The conversion routines to get, insert and update records are
+updated to translate to and from the on-disk record accordingly such
+that freecount remains a 4-byte value on non-supported fs, yet the new
+fields of the in-core record are always valid with respect to the
+record. This means that higher level code can refer to the current
+in-core record format unconditionally and lower level code ensures that
+records are translated to/from disk according to the capabilities of the
+fs.
 
-Brian
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+---
+ fs/xfs/libxfs/xfs_format.h       | 34 +++++++++++++++++++++++++---
+ fs/xfs/libxfs/xfs_ialloc.c       | 48 +++++++++++++++++++++++++++++++++-------
+ fs/xfs/libxfs/xfs_ialloc_btree.c | 11 ++++++++-
+ 3 files changed, 81 insertions(+), 12 deletions(-)
 
-v5:
-- Use XFS helpers for allocmask code instead of generic bitmap helpers.
-v4: http://oss.sgi.com/archives/xfs/2015-02/msg00240.html
-- Rename sb_spinoalignmt to sb_spino_align.
-- Clean up error/warning messages.
-- Use a union to differentiate old/new xfs_inobt_rec on-disk format.
-  Refactor such that in-core record fields are always valid.
-- Rename/move allocmap (bitmap) helper functions and provide extra
-  helper for endian conv.
-- Refactor sparse chunk allocation record management code.
-- Clean up #ifdef and label usage for DEBUG mode sparse allocs.
-- Split up and moved some generic, preparatory hunks earlier in series.
-v3: http://oss.sgi.com/archives/xfs/2015-02/msg00110.html
-- Rebase to latest for-next (bulkstat rework, data structure shuffling,
-  etc.).
-- Fix issparse helper logic.
-- Update inode alignment model w/ spinodes enabled. All inode records
-  are chunk size aligned, sparse allocations cluster size aligned (both
-  enforced on mount).
-- Reworked sparse inode record merge logic to coincide w/ new alignment
-  model.
-- Mark feature as experimental (warn on mount).
-- Include and use block allocation agbno range limit to prevent
-  allocation of invalid inode records.
-- Add some DEBUG bits to improve sparse alloc. test coverage.
-v2: http://oss.sgi.com/archives/xfs/2014-11/msg00007.html
-- Use a manually set feature bit instead of dynamic based on the
-  existence of sparse inode chunks.
-- Add sb/mp fields for sparse alloc. granularity (use instead of cluster
-  size).
-- Undo xfs_inobt_insert() loop removal to avoid breakage of larger page
-  size arches.
-- Rename sparse record overlap helper and do XFS_LOOKUP_LE search.
-- Use byte of pad space in inobt record for inode count field.
-- Convert bitmap mgmt to use generic bitmap code.
-- Rename XFS_INODES_PER_SPCHUNK to XFS_INODES_PER_HOLEMASK_BIT.
-- Add fs geometry bit for sparse inodes.
-- Rebase to latest for-next (bulkstat refactor).
-v1: http://oss.sgi.com/archives/xfs/2014-07/msg00355.html
-
-Brian Foster (18):
-  xfs: create individual inode alloc. helper
-  xfs: update free inode record logic to support sparse inode records
-  xfs: support min/max agbno args in block allocator
-  xfs: add sparse inode chunk alignment superblock field
-  xfs: use sparse chunk alignment for min. inode allocation requirement
-  xfs: sparse inode chunks feature helpers and mount requirements
-  xfs: add fs geometry bit for sparse inode chunks
-  xfs: introduce inode record hole mask for sparse inode chunks
-  xfs: use actual inode count for sparse records in bulkstat/inumbers
-  xfs: pass inode count through ordered icreate log item
-  xfs: handle sparse inode chunks in icreate log recovery
-  xfs: helper to convert holemask to inode alloc. bitmap
-  xfs: allocate sparse inode chunks on full chunk allocation failure
-  xfs: randomly do sparse inode allocations in DEBUG mode
-  xfs: filter out sparse regions from individual inode allocation
-  xfs: only free allocated regions of inode chunks
-  xfs: skip unallocated regions of inode chunks in xfs_ifree_cluster()
-  xfs: enable sparse inode chunks for v5 superblocks
-
- fs/xfs/libxfs/xfs_alloc.c        |  42 +++-
- fs/xfs/libxfs/xfs_alloc.h        |   2 +
- fs/xfs/libxfs/xfs_format.h       |  50 +++-
- fs/xfs/libxfs/xfs_fs.h           |   1 +
- fs/xfs/libxfs/xfs_ialloc.c       | 530 +++++++++++++++++++++++++++++++++++----
- fs/xfs/libxfs/xfs_ialloc.h       |  12 +-
- fs/xfs/libxfs/xfs_ialloc_btree.c |  93 ++++++-
- fs/xfs/libxfs/xfs_ialloc_btree.h |  10 +
- fs/xfs/libxfs/xfs_sb.c           |  30 ++-
- fs/xfs/xfs_fsops.c               |   4 +-
- fs/xfs/xfs_inode.c               |  28 ++-
- fs/xfs/xfs_itable.c              |  13 +-
- fs/xfs/xfs_log_recover.c         |  26 +-
- fs/xfs/xfs_mount.c               |  16 ++
- fs/xfs/xfs_mount.h               |   2 +
- fs/xfs/xfs_trace.h               |  47 ++++
- 16 files changed, 820 insertions(+), 86 deletions(-)
-
+diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
+index 47005b1..4f2160d 100644
+--- a/fs/xfs/libxfs/xfs_format.h
++++ b/fs/xfs/libxfs/xfs_format.h
+@@ -1285,26 +1285,54 @@ typedef	__uint64_t	xfs_inofree_t;
+ #define	XFS_INOBT_ALL_FREE		((xfs_inofree_t)-1)
+ #define	XFS_INOBT_MASK(i)		((xfs_inofree_t)1 << (i))
+ 
++#define XFS_INOBT_HOLEMASK_FULL		0	/* holemask for full chunk */
++#define XFS_INOBT_HOLEMASK_BITS		(NBBY * sizeof(__uint16_t))
++#define XFS_INODES_PER_HOLEMASK_BIT	\
++	(XFS_INODES_PER_CHUNK / (NBBY * sizeof(__uint16_t)))
++
+ static inline xfs_inofree_t xfs_inobt_maskn(int i, int n)
+ {
+ 	return ((n >= XFS_INODES_PER_CHUNK ? 0 : XFS_INOBT_MASK(n)) - 1) << i;
+ }
+ 
+ /*
+- * Data record structure
++ * The on-disk inode record structure has two formats. The original "full"
++ * format uses a 4-byte freecount. The "sparse" format uses a 1-byte freecount
++ * and replaces the 3 high-order freecount bytes wth the holemask and inode
++ * count.
++ *
++ * The holemask of the sparse record format allows an inode chunk to have holes
++ * that refer to blocks not owned by the inode record. This facilitates inode
++ * allocation in the event of severe free space fragmentation.
+  */
+ typedef struct xfs_inobt_rec {
+ 	__be32		ir_startino;	/* starting inode number */
+-	__be32		ir_freecount;	/* count of free inodes (set bits) */
++	union {
++		struct {
++			__be32	ir_freecount;	/* count of free inodes */
++		} f;
++		struct {
++			__be16	ir_holemask;/* hole mask for sparse chunks */
++			__u8	ir_count;	/* total inode count */
++			__u8	ir_freecount;	/* count of free inodes */
++		} sp;
++	} ir_u;
+ 	__be64		ir_free;	/* free inode mask */
+ } xfs_inobt_rec_t;
+ 
+ typedef struct xfs_inobt_rec_incore {
+ 	xfs_agino_t	ir_startino;	/* starting inode number */
+-	__int32_t	ir_freecount;	/* count of free inodes (set bits) */
++	__uint16_t	ir_holemask;	/* hole mask for sparse chunks */
++	__uint8_t	ir_count;	/* total inode count */
++	__uint8_t	ir_freecount;	/* count of free inodes (set bits) */
+ 	xfs_inofree_t	ir_free;	/* free inode mask */
+ } xfs_inobt_rec_incore_t;
+ 
++static inline bool xfs_inobt_issparse(uint16_t holemask)
++{
++	/* non-zero holemask represents a sparse rec. */
++	return holemask;
++}
+ 
+ /*
+  * Key structure
+diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
+index 07cce35..008cb24 100644
+--- a/fs/xfs/libxfs/xfs_ialloc.c
++++ b/fs/xfs/libxfs/xfs_ialloc.c
+@@ -65,6 +65,8 @@ xfs_inobt_lookup(
+ 	int			*stat)	/* success/failure */
+ {
+ 	cur->bc_rec.i.ir_startino = ino;
++	cur->bc_rec.i.ir_holemask = 0;
++	cur->bc_rec.i.ir_count = 0;
+ 	cur->bc_rec.i.ir_freecount = 0;
+ 	cur->bc_rec.i.ir_free = 0;
+ 	return xfs_btree_lookup(cur, dir, stat);
+@@ -82,7 +84,14 @@ xfs_inobt_update(
+ 	union xfs_btree_rec	rec;
+ 
+ 	rec.inobt.ir_startino = cpu_to_be32(irec->ir_startino);
+-	rec.inobt.ir_freecount = cpu_to_be32(irec->ir_freecount);
++	if (xfs_sb_version_hassparseinodes(&cur->bc_mp->m_sb)) {
++		rec.inobt.ir_u.sp.ir_holemask = cpu_to_be16(irec->ir_holemask);
++		rec.inobt.ir_u.sp.ir_count = irec->ir_count;
++		rec.inobt.ir_u.sp.ir_freecount = irec->ir_freecount;
++	} else {
++		/* ir_holemask/ir_count not supported on-disk */
++		rec.inobt.ir_u.f.ir_freecount = cpu_to_be32(irec->ir_freecount);
++	}
+ 	rec.inobt.ir_free = cpu_to_be64(irec->ir_free);
+ 	return xfs_btree_update(cur, &rec);
+ }
+@@ -100,12 +109,27 @@ xfs_inobt_get_rec(
+ 	int			error;
+ 
+ 	error = xfs_btree_get_rec(cur, &rec, stat);
+-	if (!error && *stat == 1) {
+-		irec->ir_startino = be32_to_cpu(rec->inobt.ir_startino);
+-		irec->ir_freecount = be32_to_cpu(rec->inobt.ir_freecount);
+-		irec->ir_free = be64_to_cpu(rec->inobt.ir_free);
++	if (error || *stat == 0)
++		return error;
++
++	irec->ir_startino = be32_to_cpu(rec->inobt.ir_startino);
++	if (xfs_sb_version_hassparseinodes(&cur->bc_mp->m_sb)) {
++		irec->ir_holemask = be16_to_cpu(rec->inobt.ir_u.sp.ir_holemask);
++		irec->ir_count = rec->inobt.ir_u.sp.ir_count;
++		irec->ir_freecount = rec->inobt.ir_u.sp.ir_freecount;
++	} else {
++		/*
++		 * ir_holemask/ir_count not supported on-disk. Fill in hardcoded
++		 * values for full inode chunks.
++		 */
++		irec->ir_holemask = XFS_INOBT_HOLEMASK_FULL;
++		irec->ir_count = XFS_INODES_PER_CHUNK;
++		irec->ir_freecount =
++				be32_to_cpu(rec->inobt.ir_u.f.ir_freecount);
+ 	}
+-	return error;
++	irec->ir_free = be64_to_cpu(rec->inobt.ir_free);
++
++	return 0;
+ }
+ 
+ /*
+@@ -114,10 +138,14 @@ xfs_inobt_get_rec(
+ STATIC int
+ xfs_inobt_insert_rec(
+ 	struct xfs_btree_cur	*cur,
++	__uint16_t		holemask,
++	__uint8_t		count,
+ 	__int32_t		freecount,
+ 	xfs_inofree_t		free,
+ 	int			*stat)
+ {
++	cur->bc_rec.i.ir_holemask = holemask;
++	cur->bc_rec.i.ir_count = count;
+ 	cur->bc_rec.i.ir_freecount = freecount;
+ 	cur->bc_rec.i.ir_free = free;
+ 	return xfs_btree_insert(cur, stat);
+@@ -154,7 +182,9 @@ xfs_inobt_insert(
+ 		}
+ 		ASSERT(i == 0);
+ 
+-		error = xfs_inobt_insert_rec(cur, XFS_INODES_PER_CHUNK,
++		error = xfs_inobt_insert_rec(cur, XFS_INOBT_HOLEMASK_FULL,
++					     XFS_INODES_PER_CHUNK,
++					     XFS_INODES_PER_CHUNK,
+ 					     XFS_INOBT_ALL_FREE, &i);
+ 		if (error) {
+ 			xfs_btree_del_cursor(cur, XFS_BTREE_ERROR);
+@@ -1604,7 +1634,9 @@ xfs_difree_finobt(
+ 		 */
+ 		XFS_WANT_CORRUPTED_GOTO(ibtrec->ir_freecount == 1, error);
+ 
+-		error = xfs_inobt_insert_rec(cur, ibtrec->ir_freecount,
++		error = xfs_inobt_insert_rec(cur, ibtrec->ir_holemask,
++					     ibtrec->ir_count,
++					     ibtrec->ir_freecount,
+ 					     ibtrec->ir_free, &i);
+ 		if (error)
+ 			goto error;
+diff --git a/fs/xfs/libxfs/xfs_ialloc_btree.c b/fs/xfs/libxfs/xfs_ialloc_btree.c
+index 964c465..b95aac5 100644
+--- a/fs/xfs/libxfs/xfs_ialloc_btree.c
++++ b/fs/xfs/libxfs/xfs_ialloc_btree.c
+@@ -167,7 +167,16 @@ xfs_inobt_init_rec_from_cur(
+ 	union xfs_btree_rec	*rec)
+ {
+ 	rec->inobt.ir_startino = cpu_to_be32(cur->bc_rec.i.ir_startino);
+-	rec->inobt.ir_freecount = cpu_to_be32(cur->bc_rec.i.ir_freecount);
++	if (xfs_sb_version_hassparseinodes(&cur->bc_mp->m_sb)) {
++		rec->inobt.ir_u.sp.ir_holemask =
++					cpu_to_be16(cur->bc_rec.i.ir_holemask);
++		rec->inobt.ir_u.sp.ir_count = cur->bc_rec.i.ir_count;
++		rec->inobt.ir_u.sp.ir_freecount = cur->bc_rec.i.ir_freecount;
++	} else {
++		/* ir_holemask/ir_count not supported on-disk */
++		rec->inobt.ir_u.f.ir_freecount =
++					cpu_to_be32(cur->bc_rec.i.ir_freecount);
++	}
+ 	rec->inobt.ir_free = cpu_to_be64(cur->bc_rec.i.ir_free);
+ }
+ 
 -- 
 1.9.3
 
