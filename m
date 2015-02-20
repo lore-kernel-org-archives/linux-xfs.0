@@ -1,31 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 0761E7F61
-	for <xfs@oss.sgi.com>; Fri, 20 Feb 2015 06:06:00 -0600 (CST)
+	by oss.sgi.com (Postfix) with ESMTP id 5D10D7F5F
+	for <xfs@oss.sgi.com>; Fri, 20 Feb 2015 06:21:22 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id EA496304039
-	for <xfs@oss.sgi.com>; Fri, 20 Feb 2015 04:05:56 -0800 (PST)
-Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id qIxVvoahWfAVxdRT (version=TLSv1 cipher=AES256-SHA
-	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 20 Feb 2015 04:05:54 -0800 (PST)
-Date: Fri, 20 Feb 2015 13:05:47 +0100
-From: Jan Kara <jack@suse.cz>
-Subject: Re: + ext4-add-dax-functionality.patch added to -mm tree
-Message-ID: <20150220120547.GA6293@quack.suse.cz>
-References: <54b45495.+RptMlNQorYE9TTf%akpm@linux-foundation.org>
-	<20150115124106.GF12739@quack.suse.cz>
-	<100D68C7BA14664A8938383216E40DE040853440@FMSMSX114.amr.corp.intel.com>
-	<20150119141858.GF5662@quack.suse.cz>
-	<20150217085200.GA23192@quack.suse.cz>
-	<20150217133745.GG3364@wil.cx>
-	<20150218104009.GB4614@quack.suse.cz>
-	<20150218215523.GO12722@dastard>
-	<20150219154241.GC22712@quack.suse.cz>
-	<20150219211210.GS12722@dastard>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20150219211210.GS12722@dastard>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 4B4AF304032
+	for <xfs@oss.sgi.com>; Fri, 20 Feb 2015 04:21:21 -0800 (PST)
+Received: from www262.sakura.ne.jp (www262.sakura.ne.jp [202.181.97.72]) by
+	cuda.sgi.com with ESMTP id SZQVYlEzGaImr1nF (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Fri, 20 Feb 2015 04:21:17 -0800 (PST)
+Subject: Re: How to handle TIF_MEMDIE stalls?
+From: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
+References: <20150218121602.GC4478@dhcp22.suse.cz>
+	<20150219110124.GC15569@phnom.home.cmpxchg.org>
+	<20150219122914.GH28427@dhcp22.suse.cz>
+	<201502192229.FCJ73987.MFQLOHSJFFtOOV@I-love.SAKURA.ne.jp>
+	<20150220091001.GC21248@dhcp22.suse.cz>
+In-Reply-To: <20150220091001.GC21248@dhcp22.suse.cz>
+Message-Id: <201502202120.GHE87026.OFSHLFFOJMVtOQ@I-love.SAKURA.ne.jp>
+Date: Fri, 20 Feb 2015 21:20:58 +0900
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -38,62 +32,73 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: "axboe@kernel.dk" <axboe@kernel.dk>, "boaz@plexistor.com" <boaz@plexistor.com>, xfs@oss.sgi.com, Jan Kara <jack@suse.cz>, "rdunlap@infradead.org" <rdunlap@infradead.org>, "tytso@mit.edu" <tytso@mit.edu>, "hch@lst.de" <hch@lst.de>, "mathieu.desnoyers@efficios.com" <mathieu.desnoyers@efficios.com>, "Wilcox, Matthew R" <matthew.r.wilcox@intel.com>, "mm-commits@vger.kernel.org" <mm-commits@vger.kernel.org>, "Dilger, Andreas" <andreas.dilger@intel.com>, Matthew Wilcox <willy@linux.intel.com>, "ross.zwisler@linux.intel.com" <ross.zwisler@linux.intel.com>, "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>, "kirill.shutemov@linux.intel.com" <kirill.shutemov@linux.intel.com>
+To: mhocko@suse.cz
+Cc: dchinner@redhat.com, oleg@redhat.com, xfs@oss.sgi.com, hannes@cmpxchg.org, linux-mm@kvack.org, mgorman@suse.de, rientjes@google.com, linux-fsdevel@vger.kernel.org, akpm@linux-foundation.org, fernando_b1@lab.ntt.co.jp, torvalds@linux-foundation.org
 
-On Fri 20-02-15 08:12:10, Dave Chinner wrote:
-> On Thu, Feb 19, 2015 at 04:42:41PM +0100, Jan Kara wrote:
-> > On Thu 19-02-15 08:55:23, Dave Chinner wrote:
-> > > On Wed, Feb 18, 2015 at 11:40:09AM +0100, Jan Kara wrote:
-> > > > On Tue 17-02-15 08:37:45, Matthew Wilcox wrote:
-> > > > > On Tue, Feb 17, 2015 at 09:52:00AM +0100, Jan Kara wrote:
-> > > > > > > > This got added to fix a problem that Dave Chinner pointed out.  We need
-> > > > > > > > the allocated extent to either be zeroed (as ext2 does), or marked as
-> > > > > > > > unwritten (ext4, XFS) so that a racing read/page fault doesn't return
-> > > > > > > > uninitialized data.  If it's marked as unwritten, we need to convert it
-> > > > > > > > to a written extent after we've initialised the contents.  We use the
-> > > > > > > > b_end_io() callback to do this, and it's called from the DAX code, not in
-> > > > > > > > softirq context.
-> > > > > > >   OK, I see. But I didn't find where ->b_end_io gets called from dax code
-> > > > > > > (specifically I don't see it anywhere in dax_do_IO() or dax_io()). Can you
-> > > > > > > point me please?
-> > > > > 
-> > > > > For faults, we call it in dax_insert_mapping(), the very last thing
-> > > > > before returning in the fault path.  The normal I/O path gets to use
-> > > > > the dio_iodone_t for the same purpose.
-> > > >   I see. I didn't think of races with reads (hum, I actually wonder whether
-> > > > we don't have this data exposure problem for ext4 for mmapped write into
-> > > > a hole vs direct read as well). So I guess we do need those unwritten
-> > > > extent dances after all (or we would need to have a page covering hole when
-> > > > writing to it via mmap but I guess unwritten extent dances are somewhat
-> > > > more standard).
+Michal Hocko wrote:
+> On Thu 19-02-15 22:29:37, Tetsuo Handa wrote:
+> > Michal Hocko wrote:
+> > > On Thu 19-02-15 06:01:24, Johannes Weiner wrote:
+> > > [...]
+> > > > Preferrably, we'd get rid of all nofail allocations and replace them
+> > > > with preallocated reserves.  But this is not going to happen anytime
+> > > > soon, so what other option do we have than resolving this on the OOM
+> > > > killer side?
 > > > 
-> > > Right, that was the reason for doing it that way - it leveraged all
-> > > the existing methods we have for avoiding data exposure races in
-> > > XFS. but it's also not just for races - it's for ensuring that if we
-> > > crash between the allocation and the write to the persistent store
-> > > we don't expose the underlying contents when the system next comes
-> > > up.
-> >   Well, ext3/4 handles the crash situation differently - we make sure we
-> > flush data to allocated blocks before committing a transaction that
-> > allocates them. That works perfectly for crashes but doesn't avoid the
-> > race with DIO.
+> > > As I've mentioned in other email, we might give GFP_NOFAIL allocator
+> > > access to memory reserves (by giving it __GFP_HIGH). This is still not a
+> > > 100% solution because reserves could get depleted but this risk is there
+> > > even with multiple oom victims. I would still argue that this would be a
+> > > better approach because selecting more victims might hit pathological
+> > > case more easily (other victims might be blocked on the very same lock
+> > > e.g.).
+> > > 
+> > Does "multiple OOM victims" mean "select next if first does not die"?
+> > Then, I think my timeout patch http://marc.info/?l=linux-mm&m=142002495532320&w=2
+> > does not deplete memory reserves. ;-)
 > 
-> I was talking about direct IO, not buffered IO. DAX is modeled on
-  Ah, OK. For DIO writes ext4 uses unwritten extents as well. But the race
-I was talking about is between mmap allocating write (i.e. going through
-page cache) and DIO read of the same location.
+> It doesn't because
+> --- a/mm/page_alloc.c
+> +++ b/mm/page_alloc.c
+> @@ -2603,9 +2603,7 @@ gfp_to_alloc_flags(gfp_t gfp_mask)
+>  			alloc_flags |= ALLOC_NO_WATERMARKS;
+>  		else if (in_serving_softirq() && (current->flags & PF_MEMALLOC))
+>  			alloc_flags |= ALLOC_NO_WATERMARKS;
+> -		else if (!in_interrupt() &&
+> -				((current->flags & PF_MEMALLOC) ||
+> -				 unlikely(test_thread_flag(TIF_MEMDIE))))
+> +		else if (!in_interrupt() && (current->flags & PF_MEMALLOC))
+>  			alloc_flags |= ALLOC_NO_WATERMARKS;
+> 
+> you disabled the TIF_MEMDIE heuristic and use it only for OOM exclusion
+> and break out from the allocator. Exiting task might need a memory to do
+> so and you make all those allocations fail basically. How do you know
+> this is not going to blow up?
+> 
 
-> the direct IO stack, not buffered IO. I did go and look at the ext4
-> IO completion path, and I can see where ext4_end_io_dio() triggers a
-> commit outside of doing unwritten extent conversion. Can you clue me
-> in - IO completion in ext4 is a maze of twisty passages...
-  I don't quite follow you. Why should ext4_end_io_dio() trigger a commit?
+Well, treat exiting tasks to imply __GFP_NOFAIL for clean up?
 
-								Honza
--- 
-Jan Kara <jack@suse.cz>
-SUSE Labs, CR
+We cannot determine correct task to kill + allow access to memory reserves
+based on lock dependency. Therefore, this patch evenly allow no tasks to
+access to memory reserves.
+
+Exiting task might need some memory to exit, and not allowing access to
+memory reserves can retard exit of that task. But that task will eventually
+get memory released by other tasks killed by timeout-based kill-more
+mechanism. If no more killable tasks or expired panic-timeout, it is
+the same result with depletion of memory reserves.
+
+I think that this situation (automatically making forward progress as if
+the administrator is periodically doing SysRq-f until the OOM condition
+is solved, or is doing SysRq-c if no more killable tasks or stalled too
+long) is better than current situation (not making forward progress since
+the exiting task cannot exit due to lock dependency, caused by failing to
+determine correct task to kill + allow access to memory reserves).
+
+> > If we change to permit invocation of the OOM killer for GFP_NOFS / GFP_NOIO,
+> > those who do not want to fail (e.g. journal transaction) will start passing
+> > __GFP_NOFAIL?
+> > 
 
 _______________________________________________
 xfs mailing list
