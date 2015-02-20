@@ -1,30 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id D86577F76
-	for <xfs@oss.sgi.com>; Fri, 20 Feb 2015 07:37:03 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id B5CD0304039
-	for <xfs@oss.sgi.com>; Fri, 20 Feb 2015 05:37:03 -0800 (PST)
-Received: from mail-wi0-f180.google.com (mail-wi0-f180.google.com
-	[209.85.212.180]) by cuda.sgi.com with ESMTP id
-	o3pJzdaaXMZQ5K7o (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 20 Feb 2015 05:37:01 -0800 (PST)
-Received: by mail-wi0-f180.google.com with SMTP id h11so2967989wiw.1
-	for <xfs@oss.sgi.com>; Fri, 20 Feb 2015 05:37:00 -0800 (PST)
+	by oss.sgi.com (Postfix) with ESMTP id 483917F56
+	for <xfs@oss.sgi.com>; Fri, 20 Feb 2015 09:50:03 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 182B4304066
+	for <xfs@oss.sgi.com>; Fri, 20 Feb 2015 07:49:59 -0800 (PST)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id A4ceTtvrkd5MD3E3 (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Fri, 20 Feb 2015 07:49:43 -0800 (PST)
+Message-ID: <54E7578E.4090809@redhat.com>
+Date: Fri, 20 Feb 2015 09:49:34 -0600
+From: Eric Sandeen <sandeen@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <20150220091326.GD21248@dhcp22.suse.cz>
-References: <20150218104859.GM12722@dastard>
-	<20150218121602.GC4478@dhcp22.suse.cz>
-	<20150219110124.GC15569@phnom.home.cmpxchg.org>
-	<20150219122914.GH28427@dhcp22.suse.cz>
-	<20150219125844.GI28427@dhcp22.suse.cz>
-	<201502200029.DEG78137.QFVLHFFOJMtOOS@I-love.SAKURA.ne.jp>
-	<20150220091326.GD21248@dhcp22.suse.cz>
-Date: Fri, 20 Feb 2015 14:37:00 +0100
-Message-ID: <CAAxjCEzWJy4+VoJ51A46ioF7NJqumy+RtCRRHnSVN0_1=gi7yQ@mail.gmail.com>
-Subject: Re: How to handle TIF_MEMDIE stalls?
-From: Stefan Ring <stefanrin@gmail.com>
+Subject: Re: Documenting MS_LAZYTIME
+References: <CAHO5Pa0k7QkV_6BDjwTVxa7LV9tFyN9nGFFcSvOC6HYO08wfrw@mail.gmail.com>
+In-Reply-To: <CAHO5Pa0k7QkV_6BDjwTVxa7LV9tFyN9nGFFcSvOC6HYO08wfrw@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,43 +24,46 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Michal Hocko <mhocko@suse.cz>
-Cc: Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>, dchinner@redhat.com, oleg@redhat.com, Linux fs XFS <xfs@oss.sgi.com>, linux-mm@kvack.org, mgorman@suse.de, hannes@cmpxchg.org, linux-fsdevel@vger.kernel.org, rientjes@google.com, akpm@linux-foundation.org, fernando_b1@lab.ntt.co.jp, torvalds@linux-foundation.org
+To: Michael Kerrisk <mtk.manpages@gmail.com>, Theodore Ts'o <tytso@mit.edu>
+Cc: linux-man@vger.kernel.org, Linux API <linux-api@vger.kernel.org>, XFS Developers <xfs@oss.sgi.com>, Linux-Fsdevel <linux-fsdevel@vger.kernel.org>, Ext4 Developers List <linux-ext4@vger.kernel.org>, Linux btrfs Developers List <linux-btrfs@vger.kernel.org>
 
->> We don't know how many callers will pass __GFP_NOFAIL. But if 1000
->> threads are doing the same operation which requires __GFP_NOFAIL
->> allocation with a lock held, wouldn't memory reserves deplete?
->
-> We shouldn't have an unbounded number of GFP_NOFAIL allocations at the
-> same time. This would be even more broken. If a load is known to use
-> such allocations excessively then the administrator can enlarge the
-> memory reserves.
->
->> This heuristic can't continue if memory reserves depleted or
->> continuous pages of requested order cannot be found.
->
-> Once memory reserves are depleted we are screwed anyway and we might
-> panic.
-
-This discussion reminds me of a situation I've seen somewhat
-regularly, which I have described here:
-http://oss.sgi.com/pipermail/xfs/2014-April/035793.html
-
-I've actually seen it more often on another box with OpenVZ and
-VirtualBox installed, where it would almost always happen during
-startup of a VirtualBox guest machine. This other machine is also
-running XFS. I blamed it on OpenVZ or VirtualBox originally, but
-having seen the same thing happen on the other machine with neither of
-them, the next candidate for taking blame is XFS.
-
-Is this behavior something that can be attributed to these memory
-allocation retry loops?
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gMi8yMC8xNSAyOjUwIEFNLCBNaWNoYWVsIEtlcnJpc2sgd3JvdGU6Cj4gSGVsbG8gVGVkLAo+
+IAo+IEJhc2VkIG9uIHlvdXIgY29tbWl0IG1lc3NhZ2UgMGFlNDVmNjNkNGUsIEkgSSB3cm90ZSB0
+aGUgZG9jdW1lbnRhdGlvbgo+IGJlbG93IGZvciBNU19MQVpZVElNRSwgdG8gZ28gaW50byB0aGUg
+bW91bnQoMikgbWFuIHBhZ2UuIENvdWxkIHlvdQo+IHBsZWFzZSBjaGVjayBpdCBvdmVyIGFuZCBs
+ZXQgbWUga25vdyBpZiBpdCdzIGFjY3VyYXRlLiBJbiBwYXJ0aWN1bGFyLAo+IEkgYWRkZWQgcGll
+Y2VzIG1hcmtlZCB3aXRoICIqIiBiZWxvdyB0aGF0IHdlcmUgbm90IHBhcnQgb2YgdGhlIGNvbW1p
+dAo+IG1lc3NhZ2UgYW5kIEknZCBsaWtlIGNvbmZpcm1hdGlvbiB0aGF0IHRoZXkncmUgYWNjdXJh
+dGUuCj4gCj4gVGhhbmtzLAo+IAo+IE1pY2hhZWwKPiAKPiBbWwo+ICAgICAgICBNU19MQVpZVElN
+RSAoc2luY2UgTGludXggMy4yMCkKPiAgICAgICAgICAgICAgIE9ubHkgIHVwZGF0ZSAgZmlsZXRp
+bWVzIChhdGltZSwgbXRpbWUsIGN0aW1lKSBvbiB0aGUgaW4tCj4gICAgICAgICAgICAgICBtZW1v
+cnkgdmVyc2lvbiBvZiB0aGUgZmlsZSAgaW5vZGUuICAgVGhlICBvbi1kaXNrICB0aW1l4oCQCj4g
+ICAgICAgICAgICAgICBzdGFtcHMgYXJlIHVwZGF0ZWQgb25seSB3aGVuOgoKImZpbGV0aW1lcyIg
+YW5kICJmaWxlIGlub2RlIiBzZWVtcyBhIGJpdCBhd2t3YXJkLiAgSG93IGFib3V0OgoKPiAgICAg
+ICAgTVNfTEFaWVRJTUUgKHNpbmNlIExpbnV4IDMuMjApCj4JCVJlZHVjZSBvbi1kaXNrIHVwZGF0
+ZXMgb2YgaW5vZGUgdGltZXN0YW1wcyAoYXRpbWUsIG10aW1lLCBjdGltZSkKPiAJCWJ5IG1haW50
+YWluaW5nIHRoZXNlIGNoYW5nZXMgb25seSBpbiBtZW1vcnksIHVubGVzczoKCihtYXliZSBJJ20g
+YmlrZS1zaGVkZGluZyB0b28gbXVjaCwgaWYgc28sIHNvcnJ5KS4KCj4gICAgICAgICAgICAgICAo
+YSkgIHRoZSBpbm9kZSBuZWVkcyB0byBiZSB1cGRhdGVkIGZvciBzb21lIGNoYW5nZSB1bnJl4oCQ
+Cj4gICAgICAgICAgICAgICAgICAgIGxhdGVkIHRvIGZpbGUgdGltZXN0YW1wczsKPiAKPiAgICAg
+ICAgICAgICAgIChiKSAgdGhlIGFwcGxpY2F0aW9uICBlbXBsb3lzICBmc3luYygyKSwgIHN5bmNm
+cygyKSwgIG9yCj4gICAgICAgICAgICAgICAgICAgIHN5bmMoMik7Cj4gCj4gICAgICAgICAgICAg
+ICAoYykgIGFuIHVuZGVsZXRlZCBpbm9kZSBpcyBldmljdGVkIGZyb20gbWVtb3J5OyBvcgo+IAo+
+ICogICAgICAgICAgICAgKGQpICBtb3JlIHRoYW4gMjQgaG91cnMgaGF2ZSBwYXNzZWQgc2luY2Ug
+dGhlIGktbm9kZSB3YXMKPiAqICAgICAgICAgICAgICAgICAgd3JpdHRlbiB0byBkaXNrLgoKUGxl
+YXNlIGRvbid0IHVzZSAiaS1ub2RlIiAtIHNpbXBseSAiaW5vZGUiIGlzIG11Y2ggbW9yZSBjb21t
+b24gaW4gdGhlIG1hbnBhZ2VzCkFGQUlDVC4KCj4gICAgICAgICAgICAgICBUaGlzIG1vdW50IG9w
+dGlvbiBzaWduaWZpY2FudGx5IHJlZHVjZXMgIHdyaXRlcyAgdG8gIHRoZQo+ICAgICAgICAgICAg
+ICAgaW5vZGUgIHRhYmxlICBmb3Igd29ya2xvYWRzIHRoYXQgcGVyZm9ybSBmcmVxdWVudCByYW5k
+b20KPiAgICAgICAgICAgICAgIHdyaXRlcyB0byBwcmVhbGxvY2F0ZWQgZmlsZXMuCgpUaGlzIHNl
+ZW1zIGxpa2UgYW4gb3Zlcmx5IHNwZWNpZmljIGRlc2NyaXB0aW9uIG9mIGEgc2luZ2xlIHdvcmts
+b2FkIG91dApvZiBtYW55IHdoaWNoIG1heSBiZW5lZml0LCBidXQgd2hhdCBkbyBvdGhlcnMgdGhp
+bms/ICAiaW5vZGUgdGFibGUiIGlzIGFsc28KZmFpcmx5IGV4dE4tc3BlY2lmaWMuCgotRXJpYwog
+Cj4gKiAgICAgICAgICAgICBBcyBhdCBMaW51eCAzLjIwLCB0aGlzIG9wdGlvbiBpcyBzdXBwb3J0
+ZWQgb25seSBvbiBleHQ0Lgo+IF1dCj4gCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8v
+b3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
