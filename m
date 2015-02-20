@@ -1,27 +1,31 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 123BF7F56
-	for <xfs@oss.sgi.com>; Fri, 20 Feb 2015 16:16:02 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id D790F8F8064
-	for <xfs@oss.sgi.com>; Fri, 20 Feb 2015 14:15:58 -0800 (PST)
-Received: from mga09.intel.com (mga09.intel.com [134.134.136.24]) by
-	cuda.sgi.com with ESMTP id 4KQSKYaAa0DlrVA3 for
-	<xfs@oss.sgi.com>; Fri, 20 Feb 2015 14:15:57 -0800 (PST)
-Date: Fri, 20 Feb 2015 17:15:51 -0500
-From: Matthew Wilcox <willy@linux.intel.com>
-Subject: Re: + ext4-add-dax-functionality.patch added to -mm tree
-Message-ID: <20150220221551.GB2780@wil.cx>
-References: <54b45495.+RptMlNQorYE9TTf%akpm@linux-foundation.org>
-	<20150115124106.GF12739@quack.suse.cz>
-	<100D68C7BA14664A8938383216E40DE040853440@FMSMSX114.amr.corp.intel.com>
-	<20150119141858.GF5662@quack.suse.cz>
-	<20150217085200.GA23192@quack.suse.cz>
-	<20150217133745.GG3364@wil.cx>
-	<20150218104009.GB4614@quack.suse.cz>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 4B9387F56
+	for <xfs@oss.sgi.com>; Fri, 20 Feb 2015 17:09:26 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id BFE18AC002
+	for <xfs@oss.sgi.com>; Fri, 20 Feb 2015 15:09:22 -0800 (PST)
+Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
+	[150.101.137.129]) by cuda.sgi.com with ESMTP id
+	mzYTz7eDH4UyJho4 for <xfs@oss.sgi.com>;
+	Fri, 20 Feb 2015 15:09:20 -0800 (PST)
+Date: Sat, 21 Feb 2015 10:09:10 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: How to handle TIF_MEMDIE stalls?
+Message-ID: <20150220230910.GG12722@dastard>
+References: <201502172123.JIE35470.QOLMVOFJSHOFFt@I-love.SAKURA.ne.jp>
+	<20150217125315.GA14287@phnom.home.cmpxchg.org>
+	<20150217225430.GJ4251@dastard>
+	<20150218082502.GA4478@dhcp22.suse.cz>
+	<20150218104859.GM12722@dastard>
+	<20150218121602.GC4478@dhcp22.suse.cz>
+	<20150219110124.GC15569@phnom.home.cmpxchg.org>
+	<20150219122914.GH28427@dhcp22.suse.cz>
+	<20150219214356.GW12722@dastard>
+	<20150220124849.GH21248@dhcp22.suse.cz>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20150218104009.GB4614@quack.suse.cz>
+In-Reply-To: <20150220124849.GH21248@dhcp22.suse.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,233 +38,66 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Jan Kara <jack@suse.cz>
-Cc: "axboe@kernel.dk" <axboe@kernel.dk>, "boaz@plexistor.com" <boaz@plexistor.com>, xfs@oss.sgi.com, "Dilger, Andreas" <andreas.dilger@intel.com>, "rdunlap@infradead.org" <rdunlap@infradead.org>, "tytso@mit.edu" <tytso@mit.edu>, "hch@lst.de" <hch@lst.de>, "mathieu.desnoyers@efficios.com" <mathieu.desnoyers@efficios.com>, "Wilcox, Matthew R" <matthew.r.wilcox@intel.com>, "mm-commits@vger.kernel.org" <mm-commits@vger.kernel.org>, Matthew Wilcox <willy@linux.intel.com>, "ross.zwisler@linux.intel.com" <ross.zwisler@linux.intel.com>, "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>, "kirill.shutemov@linux.intel.com" <kirill.shutemov@linux.intel.com>
+To: Michal Hocko <mhocko@suse.cz>
+Cc: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, dchinner@redhat.com, oleg@redhat.com, xfs@oss.sgi.com, Johannes Weiner <hannes@cmpxchg.org>, linux-mm@kvack.org, mgorman@suse.de, rientjes@google.com, akpm@linux-foundation.org, torvalds@linux-foundation.org
 
-> So to handle this it can start transaction in ext4_dax_fault() /
-> ext4_dax_mkwrite() if write is requested and call ext4_jbd2_file_inode()
-> after dax_fault() / dax_mkwrite() returns. Complete function will look
-> something like follows:
+On Fri, Feb 20, 2015 at 01:48:49PM +0100, Michal Hocko wrote:
+> On Fri 20-02-15 08:43:56, Dave Chinner wrote:
+> > On Thu, Feb 19, 2015 at 01:29:14PM +0100, Michal Hocko wrote:
+> > > On Thu 19-02-15 06:01:24, Johannes Weiner wrote:
+> > > [...]
+> > > > Preferrably, we'd get rid of all nofail allocations and replace them
+> > > > with preallocated reserves.  But this is not going to happen anytime
+> > > > soon, so what other option do we have than resolving this on the OOM
+> > > > killer side?
+> > > 
+> > > As I've mentioned in other email, we might give GFP_NOFAIL allocator
+> > > access to memory reserves (by giving it __GFP_HIGH).
+> > 
+> > Won't work when you have thousands of concurrent transactions
+> > running in XFS and they are all doing GFP_NOFAIL allocations.
+> 
+> Is there any bound on how many transactions can run at the same time?
 
-How about this?  I tried to encompass both the unwritten extent conversion
-as well as starting the journal at the right point in the locking hierarchy.
+Yes. As many reservations that can fit in the available log space.
 
-If we're going to expose do_dax_fault(), I think it needs to be called
-__dax_fault().
+The log can be sized up to 2GB, and for filesystems larger than 4TB
+will default to 2GB. Log space reservations depend on the operation
+being done - an inode timestamp update requires about 5kB of
+reservation, and rename requires about 200kB. Hence we can easily
+have thousands of active transactions, even in the worst case
+log space reversation cases.
 
-I decided to return VM_FAULT_RETRY and a new flag VM_FAULT_UNWRITTEN from
-__dax_fault(), rather than convert it to return an errno.
+You're saying it would be insane to have hundreds or thousands of
+threads doing GFP_NOFAIL allocations concurrently. Reality check:
+XFS has been operating successfully under such workload conditions
+in production systems for many years.
 
-P.S. I love patches which touch *both* fs.h *and* mm.h.  In case there
-were any files that weren't already being rebuilt.
+> > That's why I suggested the per-transaction reserve pool - we can use
+> > that
+> 
+> I am still not sure what you mean by reserve pool (API wise). How
+> does it differ from pre-allocating memory before the "may not fail
+> context"? Could you elaborate on it, please?
 
-diff --git a/fs/dax.c b/fs/dax.c
-index 556238f..81dbdaa 100644
---- a/fs/dax.c
-+++ b/fs/dax.c
-@@ -316,7 +316,7 @@ static int dax_insert_mapping(struct inode *inode, struct buffer_head *bh,
- 	return error;
- }
- 
--static int do_dax_fault(struct vm_area_struct *vma, struct vm_fault *vmf,
-+int __dax_fault(struct vm_area_struct *vma, struct vm_fault *vmf,
- 			get_block_t get_block)
- {
- 	struct file *file = vma->vm_file;
-@@ -329,7 +329,7 @@ static int do_dax_fault(struct vm_area_struct *vma, struct vm_fault *vmf,
- 	sector_t block;
- 	pgoff_t size;
- 	int error;
--	int major = 0;
-+	int ret = 0;
- 
- 	size = (i_size_read(inode) + PAGE_SIZE - 1) >> PAGE_SHIFT;
- 	if (vmf->pgoff >= size)
-@@ -367,13 +367,15 @@ static int do_dax_fault(struct vm_area_struct *vma, struct vm_fault *vmf,
- 		error = -EIO;		/* fs corruption? */
- 	if (error)
- 		goto unlock_page;
-+	if (buffer_unwritten(&bh))
-+		ret |= VM_FAULT_UNWRITTEN;
- 
- 	if (!buffer_mapped(&bh) && !buffer_unwritten(&bh) && !vmf->cow_page) {
- 		if (vmf->flags & FAULT_FLAG_WRITE) {
- 			error = get_block(inode, block, &bh, 1);
- 			count_vm_event(PGMAJFAULT);
- 			mem_cgroup_count_vm_event(vma->vm_mm, PGMAJFAULT);
--			major = VM_FAULT_MAJOR;
-+			ret = VM_FAULT_MAJOR;
- 			if (!error && (bh.b_size < PAGE_SIZE))
- 				error = -EIO;
- 			if (error)
-@@ -407,7 +409,7 @@ static int do_dax_fault(struct vm_area_struct *vma, struct vm_fault *vmf,
- 	}
- 
- 	/* Check we didn't race with a read fault installing a new page */
--	if (!page && major)
-+	if (!page && (ret & VM_FAULT_MAJOR))
- 		page = find_lock_page(mapping, vmf->pgoff);
- 
- 	if (page) {
-@@ -421,12 +423,14 @@ static int do_dax_fault(struct vm_area_struct *vma, struct vm_fault *vmf,
- 	error = dax_insert_mapping(inode, &bh, vma, vmf);
- 
-  out:
-+	if (error == -ENOSPC)
-+		return VM_FAULT_RETRY | ret;
- 	if (error == -ENOMEM)
--		return VM_FAULT_OOM | major;
-+		return VM_FAULT_OOM | ret;
- 	/* -EBUSY is fine, somebody else faulted on the same PTE */
- 	if ((error < 0) && (error != -EBUSY))
--		return VM_FAULT_SIGBUS | major;
--	return VM_FAULT_NOPAGE | major;
-+		return VM_FAULT_SIGBUS | ret;
-+	return VM_FAULT_NOPAGE | ret;
- 
-  unlock_page:
- 	if (page) {
-@@ -435,6 +439,7 @@ static int do_dax_fault(struct vm_area_struct *vma, struct vm_fault *vmf,
- 	}
- 	goto out;
- }
-+EXPORT_SYMBOL_GPL(__dax_fault);
- 
- /**
-  * dax_fault - handle a page fault on a DAX file
-@@ -455,7 +460,7 @@ int dax_fault(struct vm_area_struct *vma, struct vm_fault *vmf,
- 		sb_start_pagefault(sb);
- 		file_update_time(vma->vm_file);
- 	}
--	result = do_dax_fault(vma, vmf, get_block);
-+	result = __dax_fault(vma, vmf, get_block);
- 	if (vmf->flags & FAULT_FLAG_WRITE)
- 		sb_end_pagefault(sb);
- 
-diff --git a/fs/ext4/file.c b/fs/ext4/file.c
-index 4340e38..84b4f1c 100644
---- a/fs/ext4/file.c
-+++ b/fs/ext4/file.c
-@@ -194,7 +194,58 @@ errout:
- #ifdef CONFIG_FS_DAX
- static int ext4_dax_fault(struct vm_area_struct *vma, struct vm_fault *vmf)
- {
--	return dax_fault(vma, vmf, ext4_get_block_write);
-+	handle_t *handle;
-+	int create = (vmf->flags & FAULT_FLAG_WRITE) && !vmf->cow_page;
-+	struct inode *inode = file_inode(vma->vm_file);
-+	int ret, err = 0;
-+	int retries = 0;
-+
-+	if (create) {
-+		sb_start_pagefault(inode->i_sb);
-+		file_update_time(vma->vm_file);
-+ retry_alloc:
-+		handle = ext4_journal_start(inode, EXT4_HT_WRITE_PAGE,
-+					ext4_writepage_trans_blocks(inode));
-+		if (IS_ERR(handle)) {
-+			err = PTR_ERR(handle);
-+			goto err;
-+		}
-+	}
-+
-+	ret = __dax_fault(vma, vmf, ext4_get_block);
-+
-+	if (create) {
-+		if (ret & VM_FAULT_UNWRITTEN) {
-+			loff_t offset = (loff_t)vmf->pgoff << PAGE_SHIFT;
-+			err = ext4_convert_unwritten_extents(NULL, inode,
-+							offset, PAGE_SIZE);
-+			ret &= ~VM_FAULT_UNWRITTEN;
-+		}
-+		if (!err &&
-+		    ext4_test_inode_state(inode, EXT4_STATE_ORDERED_MODE))
-+			err = ext4_jbd2_file_inode(handle, inode);
-+
-+		if (err == -ENOSPC) {
-+			ret |= VM_FAULT_RETRY;
-+			err = 0;
-+		}
-+
-+		ext4_journal_stop(handle);
-+		if (err < 0)
-+			goto err;
-+		if ((ret & VM_FAULT_RETRY) &&
-+		    ext4_should_retry_alloc(inode->i_sb, &retries))
-+			goto retry_alloc;
-+		ret &= ~VM_FAULT_RETRY;
-+	}
-+
-+ out:
-+	if (create)
-+		sb_end_pagefault(inode->i_sb);
-+	return ret;
-+ err:
-+	ret = block_page_mkwrite_return(err);
-+	goto out;
- }
- 
- static int ext4_dax_pmd_fault(struct vm_area_struct *vma, unsigned long addr,
-diff --git a/fs/ext4/inode.c b/fs/ext4/inode.c
-index 85404f1..8f1ea7d 100644
---- a/fs/ext4/inode.c
-+++ b/fs/ext4/inode.c
-@@ -657,18 +657,6 @@ has_zeroout:
- 	return retval;
- }
- 
--static void ext4_end_io_unwritten(struct buffer_head *bh, int uptodate)
--{
--	struct inode *inode = bh->b_assoc_map->host;
--	/* XXX: breaks on 32-bit > 16GB. Is that even supported? */
--	loff_t offset = (loff_t)(uintptr_t)bh->b_private << inode->i_blkbits;
--	int err;
--	if (!uptodate)
--		return;
--	WARN_ON(!buffer_unwritten(bh));
--	err = ext4_convert_unwritten_extents(NULL, inode, offset, bh->b_size);
--}
--
- /* Maximum number of blocks we map for direct IO at once. */
- #define DIO_MAX_BLOCKS 4096
- 
-@@ -706,11 +694,6 @@ static int _ext4_get_block(struct inode *inode, sector_t iblock,
- 
- 		map_bh(bh, inode->i_sb, map.m_pblk);
- 		bh->b_state = (bh->b_state & ~EXT4_MAP_FLAGS) | map.m_flags;
--		if (IS_DAX(inode) && buffer_unwritten(bh) && !io_end) {
--			bh->b_assoc_map = inode->i_mapping;
--			bh->b_private = (void *)(unsigned long)iblock;
--			bh->b_end_io = ext4_end_io_unwritten;
--		}
- 		if (io_end && io_end->flag & EXT4_IO_END_UNWRITTEN)
- 			set_buffer_defer_completion(bh);
- 		bh->b_size = inode->i_sb->s_blocksize * map.m_len;
-diff --git a/include/linux/fs.h b/include/linux/fs.h
-index 239c89c..2af5050 100644
---- a/include/linux/fs.h
-+++ b/include/linux/fs.h
-@@ -2597,6 +2597,7 @@ int dax_clear_blocks(struct inode *, sector_t block, long size);
- int dax_zero_page_range(struct inode *, loff_t from, unsigned len, get_block_t);
- int dax_truncate_page(struct inode *, loff_t from, get_block_t);
- int dax_fault(struct vm_area_struct *, struct vm_fault *, get_block_t);
-+int __dax_fault(struct vm_area_struct *, struct vm_fault *, get_block_t);
- int dax_pmd_fault(struct vm_area_struct *, unsigned long addr, pmd_t *,
- 					unsigned int flags, get_block_t);
- #define dax_mkwrite(vma, vmf, gb)	dax_fault(vma, vmf, gb)
-diff --git a/include/linux/mm.h b/include/linux/mm.h
-index ceb50ec..ffc9947 100644
---- a/include/linux/mm.h
-+++ b/include/linux/mm.h
-@@ -1100,7 +1100,7 @@ static inline int page_mapped(struct page *page)
- #define VM_FAULT_HWPOISON 0x0010	/* Hit poisoned small page */
- #define VM_FAULT_HWPOISON_LARGE 0x0020  /* Hit poisoned large page. Index encoded in upper bits */
- #define VM_FAULT_SIGSEGV 0x0040
--
-+#define VM_FAULT_UNWRITTEN 0x0080	/* Unwritten extent needs conversion */
- #define VM_FAULT_NOPAGE	0x0100	/* ->fault installed the pte, not return page */
- #define VM_FAULT_LOCKED	0x0200	/* ->fault locked the returned page */
- #define VM_FAULT_RETRY	0x0400	/* ->fault blocked, must retry */
+It is preallocating memory: into a reserve pool associated with the
+transaction, done as part of the transaction reservation mechanism
+we already have in XFS. The allocator then uses that reserve pool
+to allocate from if an allocation would otherwise fail.
+
+There is no way we can preallocate specific objects before the
+transaction - that's just insane, especially handling the unbound
+demand paged object requirement. Hence the need for a "preallocated
+reserve pool" that the allocator can dip into that covers the memory
+we need to *allocate and can't reclaim* during the course of the
+transaction.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
