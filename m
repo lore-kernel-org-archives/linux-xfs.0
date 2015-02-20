@@ -1,22 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id BB43F7F37
-	for <xfs@oss.sgi.com>; Fri, 20 Feb 2015 02:51:18 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 664E7AC002
-	for <xfs@oss.sgi.com>; Fri, 20 Feb 2015 00:51:15 -0800 (PST)
-Received: from mail-ob0-f179.google.com (mail-ob0-f179.google.com
-	[209.85.214.179]) by cuda.sgi.com with ESMTP id
-	u1dnxCokB6YsfZBa (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 20 Feb 2015 00:51:10 -0800 (PST)
-Received: by mail-ob0-f179.google.com with SMTP id wp4so22875899obc.10
-	for <xfs@oss.sgi.com>; Fri, 20 Feb 2015 00:51:10 -0800 (PST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 2AA837F54
+	for <xfs@oss.sgi.com>; Fri, 20 Feb 2015 03:10:08 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 0AEB08F8089
+	for <xfs@oss.sgi.com>; Fri, 20 Feb 2015 01:10:05 -0800 (PST)
+Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
+	with ESMTP id 4TVHfuzlKESOAXgf (version=TLSv1 cipher=AES256-SHA
+	bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Fri, 20 Feb 2015 01:10:03 -0800 (PST)
+Date: Fri, 20 Feb 2015 10:10:01 +0100
+From: Michal Hocko <mhocko@suse.cz>
+Subject: Re: How to handle TIF_MEMDIE stalls?
+Message-ID: <20150220091001.GC21248@dhcp22.suse.cz>
+References: <20150218082502.GA4478@dhcp22.suse.cz>
+	<20150218104859.GM12722@dastard>
+	<20150218121602.GC4478@dhcp22.suse.cz>
+	<20150219110124.GC15569@phnom.home.cmpxchg.org>
+	<20150219122914.GH28427@dhcp22.suse.cz>
+	<201502192229.FCJ73987.MFQLOHSJFFtOOV@I-love.SAKURA.ne.jp>
 MIME-Version: 1.0
-From: Michael Kerrisk <mtk.manpages@gmail.com>
-Date: Fri, 20 Feb 2015 09:50:50 +0100
-Message-ID: <CAHO5Pa0k7QkV_6BDjwTVxa7LV9tFyN9nGFFcSvOC6HYO08wfrw@mail.gmail.com>
-Subject: Documenting MS_LAZYTIME
+Content-Disposition: inline
+In-Reply-To: <201502192229.FCJ73987.MFQLOHSJFFtOOV@I-love.SAKURA.ne.jp>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,37 +30,67 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Theodore Ts'o <tytso@mit.edu>
-Cc: linux-man@vger.kernel.org, Linux API <linux-api@vger.kernel.org>, XFS Developers <xfs@oss.sgi.com>, Linux-Fsdevel <linux-fsdevel@vger.kernel.org>, Ext4 Developers List <linux-ext4@vger.kernel.org>, Linux btrfs Developers List <linux-btrfs@vger.kernel.org>
+To: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
+Cc: dchinner@redhat.com, oleg@redhat.com, xfs@oss.sgi.com, hannes@cmpxchg.org, linux-mm@kvack.org, mgorman@suse.de, rientjes@google.com, linux-fsdevel@vger.kernel.org, akpm@linux-foundation.org, fernando_b1@lab.ntt.co.jp, torvalds@linux-foundation.org
 
-SGVsbG8gVGVkLAoKQmFzZWQgb24geW91ciBjb21taXQgbWVzc2FnZSAwYWU0NWY2M2Q0ZSwgSSBJ
-IHdyb3RlIHRoZSBkb2N1bWVudGF0aW9uCmJlbG93IGZvciBNU19MQVpZVElNRSwgdG8gZ28gaW50
-byB0aGUgbW91bnQoMikgbWFuIHBhZ2UuIENvdWxkIHlvdQpwbGVhc2UgY2hlY2sgaXQgb3ZlciBh
-bmQgbGV0IG1lIGtub3cgaWYgaXQncyBhY2N1cmF0ZS4gSW4gcGFydGljdWxhciwKSSBhZGRlZCBw
-aWVjZXMgbWFya2VkIHdpdGggIioiIGJlbG93IHRoYXQgd2VyZSBub3QgcGFydCBvZiB0aGUgY29t
-bWl0Cm1lc3NhZ2UgYW5kIEknZCBsaWtlIGNvbmZpcm1hdGlvbiB0aGF0IHRoZXkncmUgYWNjdXJh
-dGUuCgpUaGFua3MsCgpNaWNoYWVsCgpbWwogICAgICAgTVNfTEFaWVRJTUUgKHNpbmNlIExpbnV4
-IDMuMjApCiAgICAgICAgICAgICAgT25seSAgdXBkYXRlICBmaWxldGltZXMgKGF0aW1lLCBtdGlt
-ZSwgY3RpbWUpIG9uIHRoZSBpbi0KICAgICAgICAgICAgICBtZW1vcnkgdmVyc2lvbiBvZiB0aGUg
-ZmlsZSAgaW5vZGUuICAgVGhlICBvbi1kaXNrICB0aW1l4oCQCiAgICAgICAgICAgICAgc3RhbXBz
-IGFyZSB1cGRhdGVkIG9ubHkgd2hlbjoKCiAgICAgICAgICAgICAgKGEpICB0aGUgaW5vZGUgbmVl
-ZHMgdG8gYmUgdXBkYXRlZCBmb3Igc29tZSBjaGFuZ2UgdW5yZeKAkAogICAgICAgICAgICAgICAg
-ICAgbGF0ZWQgdG8gZmlsZSB0aW1lc3RhbXBzOwoKICAgICAgICAgICAgICAoYikgIHRoZSBhcHBs
-aWNhdGlvbiAgZW1wbG95cyAgZnN5bmMoMiksICBzeW5jZnMoMiksICBvcgogICAgICAgICAgICAg
-ICAgICAgc3luYygyKTsKCiAgICAgICAgICAgICAgKGMpICBhbiB1bmRlbGV0ZWQgaW5vZGUgaXMg
-ZXZpY3RlZCBmcm9tIG1lbW9yeTsgb3IKCiogICAgICAgICAgICAgKGQpICBtb3JlIHRoYW4gMjQg
-aG91cnMgaGF2ZSBwYXNzZWQgc2luY2UgdGhlIGktbm9kZSB3YXMKKiAgICAgICAgICAgICAgICAg
-IHdyaXR0ZW4gdG8gZGlzay4KCiAgICAgICAgICAgICAgVGhpcyBtb3VudCBvcHRpb24gc2lnbmlm
-aWNhbnRseSByZWR1Y2VzICB3cml0ZXMgIHRvICB0aGUKICAgICAgICAgICAgICBpbm9kZSAgdGFi
-bGUgIGZvciB3b3JrbG9hZHMgdGhhdCBwZXJmb3JtIGZyZXF1ZW50IHJhbmRvbQogICAgICAgICAg
-ICAgIHdyaXRlcyB0byBwcmVhbGxvY2F0ZWQgZmlsZXMuCgoqICAgICAgICAgICAgIEFzIGF0IExp
-bnV4IDMuMjAsIHRoaXMgb3B0aW9uIGlzIHN1cHBvcnRlZCBvbmx5IG9uIGV4dDQuCl1dCgotLSAK
-TWljaGFlbCBLZXJyaXNrIExpbnV4IG1hbi1wYWdlcyBtYWludGFpbmVyOwpodHRwOi8vd3d3Lmtl
-cm5lbC5vcmcvZG9jL21hbi1wYWdlcy8KQXV0aG9yIG9mICJUaGUgTGludXggUHJvZ3JhbW1pbmcg
-SW50ZXJmYWNlIiwgaHR0cDovL2Jsb2cubWFuNy5vcmcvCgpfX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNv
-bQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
+On Thu 19-02-15 22:29:37, Tetsuo Handa wrote:
+> Michal Hocko wrote:
+> > On Thu 19-02-15 06:01:24, Johannes Weiner wrote:
+> > [...]
+> > > Preferrably, we'd get rid of all nofail allocations and replace them
+> > > with preallocated reserves.  But this is not going to happen anytime
+> > > soon, so what other option do we have than resolving this on the OOM
+> > > killer side?
+> > 
+> > As I've mentioned in other email, we might give GFP_NOFAIL allocator
+> > access to memory reserves (by giving it __GFP_HIGH). This is still not a
+> > 100% solution because reserves could get depleted but this risk is there
+> > even with multiple oom victims. I would still argue that this would be a
+> > better approach because selecting more victims might hit pathological
+> > case more easily (other victims might be blocked on the very same lock
+> > e.g.).
+> > 
+> Does "multiple OOM victims" mean "select next if first does not die"?
+> Then, I think my timeout patch http://marc.info/?l=linux-mm&m=142002495532320&w=2
+> does not deplete memory reserves. ;-)
+
+It doesn't because
+--- a/mm/page_alloc.c
++++ b/mm/page_alloc.c
+@@ -2603,9 +2603,7 @@ gfp_to_alloc_flags(gfp_t gfp_mask)
+ 			alloc_flags |= ALLOC_NO_WATERMARKS;
+ 		else if (in_serving_softirq() && (current->flags & PF_MEMALLOC))
+ 			alloc_flags |= ALLOC_NO_WATERMARKS;
+-		else if (!in_interrupt() &&
+-				((current->flags & PF_MEMALLOC) ||
+-				 unlikely(test_thread_flag(TIF_MEMDIE))))
++		else if (!in_interrupt() && (current->flags & PF_MEMALLOC))
+ 			alloc_flags |= ALLOC_NO_WATERMARKS;
+
+you disabled the TIF_MEMDIE heuristic and use it only for OOM exclusion
+and break out from the allocator. Exiting task might need a memory to do
+so and you make all those allocations fail basically. How do you know
+this is not going to blow up?
+
+> If we change to permit invocation of the OOM killer for GFP_NOFS / GFP_NOIO,
+> those who do not want to fail (e.g. journal transaction) will start passing
+> __GFP_NOFAIL?
+> 
+> --
+> To unsubscribe, send a message with 'unsubscribe linux-mm' in
+> the body to majordomo@kvack.org.  For more info on Linux MM,
+> see: http://www.linux-mm.org/ .
+> Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+
+-- 
+Michal Hocko
+SUSE Labs
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
