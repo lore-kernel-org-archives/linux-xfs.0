@@ -1,21 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 483917F56
-	for <xfs@oss.sgi.com>; Fri, 20 Feb 2015 09:50:03 -0600 (CST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 123BF7F56
+	for <xfs@oss.sgi.com>; Fri, 20 Feb 2015 16:16:02 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 182B4304066
-	for <xfs@oss.sgi.com>; Fri, 20 Feb 2015 07:49:59 -0800 (PST)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id A4ceTtvrkd5MD3E3 (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 20 Feb 2015 07:49:43 -0800 (PST)
-Message-ID: <54E7578E.4090809@redhat.com>
-Date: Fri, 20 Feb 2015 09:49:34 -0600
-From: Eric Sandeen <sandeen@redhat.com>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id D790F8F8064
+	for <xfs@oss.sgi.com>; Fri, 20 Feb 2015 14:15:58 -0800 (PST)
+Received: from mga09.intel.com (mga09.intel.com [134.134.136.24]) by
+	cuda.sgi.com with ESMTP id 4KQSKYaAa0DlrVA3 for
+	<xfs@oss.sgi.com>; Fri, 20 Feb 2015 14:15:57 -0800 (PST)
+Date: Fri, 20 Feb 2015 17:15:51 -0500
+From: Matthew Wilcox <willy@linux.intel.com>
+Subject: Re: + ext4-add-dax-functionality.patch added to -mm tree
+Message-ID: <20150220221551.GB2780@wil.cx>
+References: <54b45495.+RptMlNQorYE9TTf%akpm@linux-foundation.org>
+	<20150115124106.GF12739@quack.suse.cz>
+	<100D68C7BA14664A8938383216E40DE040853440@FMSMSX114.amr.corp.intel.com>
+	<20150119141858.GF5662@quack.suse.cz>
+	<20150217085200.GA23192@quack.suse.cz>
+	<20150217133745.GG3364@wil.cx>
+	<20150218104009.GB4614@quack.suse.cz>
 MIME-Version: 1.0
-Subject: Re: Documenting MS_LAZYTIME
-References: <CAHO5Pa0k7QkV_6BDjwTVxa7LV9tFyN9nGFFcSvOC6HYO08wfrw@mail.gmail.com>
-In-Reply-To: <CAHO5Pa0k7QkV_6BDjwTVxa7LV9tFyN9nGFFcSvOC6HYO08wfrw@mail.gmail.com>
+Content-Disposition: inline
+In-Reply-To: <20150218104009.GB4614@quack.suse.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,46 +30,239 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Michael Kerrisk <mtk.manpages@gmail.com>, Theodore Ts'o <tytso@mit.edu>
-Cc: linux-man@vger.kernel.org, Linux API <linux-api@vger.kernel.org>, XFS Developers <xfs@oss.sgi.com>, Linux-Fsdevel <linux-fsdevel@vger.kernel.org>, Ext4 Developers List <linux-ext4@vger.kernel.org>, Linux btrfs Developers List <linux-btrfs@vger.kernel.org>
+To: Jan Kara <jack@suse.cz>
+Cc: "axboe@kernel.dk" <axboe@kernel.dk>, "boaz@plexistor.com" <boaz@plexistor.com>, xfs@oss.sgi.com, "Dilger, Andreas" <andreas.dilger@intel.com>, "rdunlap@infradead.org" <rdunlap@infradead.org>, "tytso@mit.edu" <tytso@mit.edu>, "hch@lst.de" <hch@lst.de>, "mathieu.desnoyers@efficios.com" <mathieu.desnoyers@efficios.com>, "Wilcox, Matthew R" <matthew.r.wilcox@intel.com>, "mm-commits@vger.kernel.org" <mm-commits@vger.kernel.org>, Matthew Wilcox <willy@linux.intel.com>, "ross.zwisler@linux.intel.com" <ross.zwisler@linux.intel.com>, "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>, "kirill.shutemov@linux.intel.com" <kirill.shutemov@linux.intel.com>
 
-T24gMi8yMC8xNSAyOjUwIEFNLCBNaWNoYWVsIEtlcnJpc2sgd3JvdGU6Cj4gSGVsbG8gVGVkLAo+
-IAo+IEJhc2VkIG9uIHlvdXIgY29tbWl0IG1lc3NhZ2UgMGFlNDVmNjNkNGUsIEkgSSB3cm90ZSB0
-aGUgZG9jdW1lbnRhdGlvbgo+IGJlbG93IGZvciBNU19MQVpZVElNRSwgdG8gZ28gaW50byB0aGUg
-bW91bnQoMikgbWFuIHBhZ2UuIENvdWxkIHlvdQo+IHBsZWFzZSBjaGVjayBpdCBvdmVyIGFuZCBs
-ZXQgbWUga25vdyBpZiBpdCdzIGFjY3VyYXRlLiBJbiBwYXJ0aWN1bGFyLAo+IEkgYWRkZWQgcGll
-Y2VzIG1hcmtlZCB3aXRoICIqIiBiZWxvdyB0aGF0IHdlcmUgbm90IHBhcnQgb2YgdGhlIGNvbW1p
-dAo+IG1lc3NhZ2UgYW5kIEknZCBsaWtlIGNvbmZpcm1hdGlvbiB0aGF0IHRoZXkncmUgYWNjdXJh
-dGUuCj4gCj4gVGhhbmtzLAo+IAo+IE1pY2hhZWwKPiAKPiBbWwo+ICAgICAgICBNU19MQVpZVElN
-RSAoc2luY2UgTGludXggMy4yMCkKPiAgICAgICAgICAgICAgIE9ubHkgIHVwZGF0ZSAgZmlsZXRp
-bWVzIChhdGltZSwgbXRpbWUsIGN0aW1lKSBvbiB0aGUgaW4tCj4gICAgICAgICAgICAgICBtZW1v
-cnkgdmVyc2lvbiBvZiB0aGUgZmlsZSAgaW5vZGUuICAgVGhlICBvbi1kaXNrICB0aW1l4oCQCj4g
-ICAgICAgICAgICAgICBzdGFtcHMgYXJlIHVwZGF0ZWQgb25seSB3aGVuOgoKImZpbGV0aW1lcyIg
-YW5kICJmaWxlIGlub2RlIiBzZWVtcyBhIGJpdCBhd2t3YXJkLiAgSG93IGFib3V0OgoKPiAgICAg
-ICAgTVNfTEFaWVRJTUUgKHNpbmNlIExpbnV4IDMuMjApCj4JCVJlZHVjZSBvbi1kaXNrIHVwZGF0
-ZXMgb2YgaW5vZGUgdGltZXN0YW1wcyAoYXRpbWUsIG10aW1lLCBjdGltZSkKPiAJCWJ5IG1haW50
-YWluaW5nIHRoZXNlIGNoYW5nZXMgb25seSBpbiBtZW1vcnksIHVubGVzczoKCihtYXliZSBJJ20g
-YmlrZS1zaGVkZGluZyB0b28gbXVjaCwgaWYgc28sIHNvcnJ5KS4KCj4gICAgICAgICAgICAgICAo
-YSkgIHRoZSBpbm9kZSBuZWVkcyB0byBiZSB1cGRhdGVkIGZvciBzb21lIGNoYW5nZSB1bnJl4oCQ
-Cj4gICAgICAgICAgICAgICAgICAgIGxhdGVkIHRvIGZpbGUgdGltZXN0YW1wczsKPiAKPiAgICAg
-ICAgICAgICAgIChiKSAgdGhlIGFwcGxpY2F0aW9uICBlbXBsb3lzICBmc3luYygyKSwgIHN5bmNm
-cygyKSwgIG9yCj4gICAgICAgICAgICAgICAgICAgIHN5bmMoMik7Cj4gCj4gICAgICAgICAgICAg
-ICAoYykgIGFuIHVuZGVsZXRlZCBpbm9kZSBpcyBldmljdGVkIGZyb20gbWVtb3J5OyBvcgo+IAo+
-ICogICAgICAgICAgICAgKGQpICBtb3JlIHRoYW4gMjQgaG91cnMgaGF2ZSBwYXNzZWQgc2luY2Ug
-dGhlIGktbm9kZSB3YXMKPiAqICAgICAgICAgICAgICAgICAgd3JpdHRlbiB0byBkaXNrLgoKUGxl
-YXNlIGRvbid0IHVzZSAiaS1ub2RlIiAtIHNpbXBseSAiaW5vZGUiIGlzIG11Y2ggbW9yZSBjb21t
-b24gaW4gdGhlIG1hbnBhZ2VzCkFGQUlDVC4KCj4gICAgICAgICAgICAgICBUaGlzIG1vdW50IG9w
-dGlvbiBzaWduaWZpY2FudGx5IHJlZHVjZXMgIHdyaXRlcyAgdG8gIHRoZQo+ICAgICAgICAgICAg
-ICAgaW5vZGUgIHRhYmxlICBmb3Igd29ya2xvYWRzIHRoYXQgcGVyZm9ybSBmcmVxdWVudCByYW5k
-b20KPiAgICAgICAgICAgICAgIHdyaXRlcyB0byBwcmVhbGxvY2F0ZWQgZmlsZXMuCgpUaGlzIHNl
-ZW1zIGxpa2UgYW4gb3Zlcmx5IHNwZWNpZmljIGRlc2NyaXB0aW9uIG9mIGEgc2luZ2xlIHdvcmts
-b2FkIG91dApvZiBtYW55IHdoaWNoIG1heSBiZW5lZml0LCBidXQgd2hhdCBkbyBvdGhlcnMgdGhp
-bms/ICAiaW5vZGUgdGFibGUiIGlzIGFsc28KZmFpcmx5IGV4dE4tc3BlY2lmaWMuCgotRXJpYwog
-Cj4gKiAgICAgICAgICAgICBBcyBhdCBMaW51eCAzLjIwLCB0aGlzIG9wdGlvbiBpcyBzdXBwb3J0
-ZWQgb25seSBvbiBleHQ0Lgo+IF1dCj4gCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8v
-b3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
+> So to handle this it can start transaction in ext4_dax_fault() /
+> ext4_dax_mkwrite() if write is requested and call ext4_jbd2_file_inode()
+> after dax_fault() / dax_mkwrite() returns. Complete function will look
+> something like follows:
+
+How about this?  I tried to encompass both the unwritten extent conversion
+as well as starting the journal at the right point in the locking hierarchy.
+
+If we're going to expose do_dax_fault(), I think it needs to be called
+__dax_fault().
+
+I decided to return VM_FAULT_RETRY and a new flag VM_FAULT_UNWRITTEN from
+__dax_fault(), rather than convert it to return an errno.
+
+P.S. I love patches which touch *both* fs.h *and* mm.h.  In case there
+were any files that weren't already being rebuilt.
+
+diff --git a/fs/dax.c b/fs/dax.c
+index 556238f..81dbdaa 100644
+--- a/fs/dax.c
++++ b/fs/dax.c
+@@ -316,7 +316,7 @@ static int dax_insert_mapping(struct inode *inode, struct buffer_head *bh,
+ 	return error;
+ }
+ 
+-static int do_dax_fault(struct vm_area_struct *vma, struct vm_fault *vmf,
++int __dax_fault(struct vm_area_struct *vma, struct vm_fault *vmf,
+ 			get_block_t get_block)
+ {
+ 	struct file *file = vma->vm_file;
+@@ -329,7 +329,7 @@ static int do_dax_fault(struct vm_area_struct *vma, struct vm_fault *vmf,
+ 	sector_t block;
+ 	pgoff_t size;
+ 	int error;
+-	int major = 0;
++	int ret = 0;
+ 
+ 	size = (i_size_read(inode) + PAGE_SIZE - 1) >> PAGE_SHIFT;
+ 	if (vmf->pgoff >= size)
+@@ -367,13 +367,15 @@ static int do_dax_fault(struct vm_area_struct *vma, struct vm_fault *vmf,
+ 		error = -EIO;		/* fs corruption? */
+ 	if (error)
+ 		goto unlock_page;
++	if (buffer_unwritten(&bh))
++		ret |= VM_FAULT_UNWRITTEN;
+ 
+ 	if (!buffer_mapped(&bh) && !buffer_unwritten(&bh) && !vmf->cow_page) {
+ 		if (vmf->flags & FAULT_FLAG_WRITE) {
+ 			error = get_block(inode, block, &bh, 1);
+ 			count_vm_event(PGMAJFAULT);
+ 			mem_cgroup_count_vm_event(vma->vm_mm, PGMAJFAULT);
+-			major = VM_FAULT_MAJOR;
++			ret = VM_FAULT_MAJOR;
+ 			if (!error && (bh.b_size < PAGE_SIZE))
+ 				error = -EIO;
+ 			if (error)
+@@ -407,7 +409,7 @@ static int do_dax_fault(struct vm_area_struct *vma, struct vm_fault *vmf,
+ 	}
+ 
+ 	/* Check we didn't race with a read fault installing a new page */
+-	if (!page && major)
++	if (!page && (ret & VM_FAULT_MAJOR))
+ 		page = find_lock_page(mapping, vmf->pgoff);
+ 
+ 	if (page) {
+@@ -421,12 +423,14 @@ static int do_dax_fault(struct vm_area_struct *vma, struct vm_fault *vmf,
+ 	error = dax_insert_mapping(inode, &bh, vma, vmf);
+ 
+  out:
++	if (error == -ENOSPC)
++		return VM_FAULT_RETRY | ret;
+ 	if (error == -ENOMEM)
+-		return VM_FAULT_OOM | major;
++		return VM_FAULT_OOM | ret;
+ 	/* -EBUSY is fine, somebody else faulted on the same PTE */
+ 	if ((error < 0) && (error != -EBUSY))
+-		return VM_FAULT_SIGBUS | major;
+-	return VM_FAULT_NOPAGE | major;
++		return VM_FAULT_SIGBUS | ret;
++	return VM_FAULT_NOPAGE | ret;
+ 
+  unlock_page:
+ 	if (page) {
+@@ -435,6 +439,7 @@ static int do_dax_fault(struct vm_area_struct *vma, struct vm_fault *vmf,
+ 	}
+ 	goto out;
+ }
++EXPORT_SYMBOL_GPL(__dax_fault);
+ 
+ /**
+  * dax_fault - handle a page fault on a DAX file
+@@ -455,7 +460,7 @@ int dax_fault(struct vm_area_struct *vma, struct vm_fault *vmf,
+ 		sb_start_pagefault(sb);
+ 		file_update_time(vma->vm_file);
+ 	}
+-	result = do_dax_fault(vma, vmf, get_block);
++	result = __dax_fault(vma, vmf, get_block);
+ 	if (vmf->flags & FAULT_FLAG_WRITE)
+ 		sb_end_pagefault(sb);
+ 
+diff --git a/fs/ext4/file.c b/fs/ext4/file.c
+index 4340e38..84b4f1c 100644
+--- a/fs/ext4/file.c
++++ b/fs/ext4/file.c
+@@ -194,7 +194,58 @@ errout:
+ #ifdef CONFIG_FS_DAX
+ static int ext4_dax_fault(struct vm_area_struct *vma, struct vm_fault *vmf)
+ {
+-	return dax_fault(vma, vmf, ext4_get_block_write);
++	handle_t *handle;
++	int create = (vmf->flags & FAULT_FLAG_WRITE) && !vmf->cow_page;
++	struct inode *inode = file_inode(vma->vm_file);
++	int ret, err = 0;
++	int retries = 0;
++
++	if (create) {
++		sb_start_pagefault(inode->i_sb);
++		file_update_time(vma->vm_file);
++ retry_alloc:
++		handle = ext4_journal_start(inode, EXT4_HT_WRITE_PAGE,
++					ext4_writepage_trans_blocks(inode));
++		if (IS_ERR(handle)) {
++			err = PTR_ERR(handle);
++			goto err;
++		}
++	}
++
++	ret = __dax_fault(vma, vmf, ext4_get_block);
++
++	if (create) {
++		if (ret & VM_FAULT_UNWRITTEN) {
++			loff_t offset = (loff_t)vmf->pgoff << PAGE_SHIFT;
++			err = ext4_convert_unwritten_extents(NULL, inode,
++							offset, PAGE_SIZE);
++			ret &= ~VM_FAULT_UNWRITTEN;
++		}
++		if (!err &&
++		    ext4_test_inode_state(inode, EXT4_STATE_ORDERED_MODE))
++			err = ext4_jbd2_file_inode(handle, inode);
++
++		if (err == -ENOSPC) {
++			ret |= VM_FAULT_RETRY;
++			err = 0;
++		}
++
++		ext4_journal_stop(handle);
++		if (err < 0)
++			goto err;
++		if ((ret & VM_FAULT_RETRY) &&
++		    ext4_should_retry_alloc(inode->i_sb, &retries))
++			goto retry_alloc;
++		ret &= ~VM_FAULT_RETRY;
++	}
++
++ out:
++	if (create)
++		sb_end_pagefault(inode->i_sb);
++	return ret;
++ err:
++	ret = block_page_mkwrite_return(err);
++	goto out;
+ }
+ 
+ static int ext4_dax_pmd_fault(struct vm_area_struct *vma, unsigned long addr,
+diff --git a/fs/ext4/inode.c b/fs/ext4/inode.c
+index 85404f1..8f1ea7d 100644
+--- a/fs/ext4/inode.c
++++ b/fs/ext4/inode.c
+@@ -657,18 +657,6 @@ has_zeroout:
+ 	return retval;
+ }
+ 
+-static void ext4_end_io_unwritten(struct buffer_head *bh, int uptodate)
+-{
+-	struct inode *inode = bh->b_assoc_map->host;
+-	/* XXX: breaks on 32-bit > 16GB. Is that even supported? */
+-	loff_t offset = (loff_t)(uintptr_t)bh->b_private << inode->i_blkbits;
+-	int err;
+-	if (!uptodate)
+-		return;
+-	WARN_ON(!buffer_unwritten(bh));
+-	err = ext4_convert_unwritten_extents(NULL, inode, offset, bh->b_size);
+-}
+-
+ /* Maximum number of blocks we map for direct IO at once. */
+ #define DIO_MAX_BLOCKS 4096
+ 
+@@ -706,11 +694,6 @@ static int _ext4_get_block(struct inode *inode, sector_t iblock,
+ 
+ 		map_bh(bh, inode->i_sb, map.m_pblk);
+ 		bh->b_state = (bh->b_state & ~EXT4_MAP_FLAGS) | map.m_flags;
+-		if (IS_DAX(inode) && buffer_unwritten(bh) && !io_end) {
+-			bh->b_assoc_map = inode->i_mapping;
+-			bh->b_private = (void *)(unsigned long)iblock;
+-			bh->b_end_io = ext4_end_io_unwritten;
+-		}
+ 		if (io_end && io_end->flag & EXT4_IO_END_UNWRITTEN)
+ 			set_buffer_defer_completion(bh);
+ 		bh->b_size = inode->i_sb->s_blocksize * map.m_len;
+diff --git a/include/linux/fs.h b/include/linux/fs.h
+index 239c89c..2af5050 100644
+--- a/include/linux/fs.h
++++ b/include/linux/fs.h
+@@ -2597,6 +2597,7 @@ int dax_clear_blocks(struct inode *, sector_t block, long size);
+ int dax_zero_page_range(struct inode *, loff_t from, unsigned len, get_block_t);
+ int dax_truncate_page(struct inode *, loff_t from, get_block_t);
+ int dax_fault(struct vm_area_struct *, struct vm_fault *, get_block_t);
++int __dax_fault(struct vm_area_struct *, struct vm_fault *, get_block_t);
+ int dax_pmd_fault(struct vm_area_struct *, unsigned long addr, pmd_t *,
+ 					unsigned int flags, get_block_t);
+ #define dax_mkwrite(vma, vmf, gb)	dax_fault(vma, vmf, gb)
+diff --git a/include/linux/mm.h b/include/linux/mm.h
+index ceb50ec..ffc9947 100644
+--- a/include/linux/mm.h
++++ b/include/linux/mm.h
+@@ -1100,7 +1100,7 @@ static inline int page_mapped(struct page *page)
+ #define VM_FAULT_HWPOISON 0x0010	/* Hit poisoned small page */
+ #define VM_FAULT_HWPOISON_LARGE 0x0020  /* Hit poisoned large page. Index encoded in upper bits */
+ #define VM_FAULT_SIGSEGV 0x0040
+-
++#define VM_FAULT_UNWRITTEN 0x0080	/* Unwritten extent needs conversion */
+ #define VM_FAULT_NOPAGE	0x0100	/* ->fault installed the pte, not return page */
+ #define VM_FAULT_LOCKED	0x0200	/* ->fault locked the returned page */
+ #define VM_FAULT_RETRY	0x0400	/* ->fault blocked, must retry */
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
