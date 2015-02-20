@@ -1,24 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id A17BC7F63
-	for <xfs@oss.sgi.com>; Fri, 20 Feb 2015 06:33:07 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 8FE008F8050
-	for <xfs@oss.sgi.com>; Fri, 20 Feb 2015 04:33:04 -0800 (PST)
-Received: from mail-pd0-f178.google.com (mail-pd0-f178.google.com
-	[209.85.192.178]) by cuda.sgi.com with ESMTP id
-	zZqzmWH6BQjw2sum (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 20 Feb 2015 04:33:02 -0800 (PST)
-Received: by pdjg10 with SMTP id g10so7404734pdj.1
-	for <xfs@oss.sgi.com>; Fri, 20 Feb 2015 04:33:02 -0800 (PST)
-Mime-Version: 1.0 (Mac OS X Mail 8.2 \(2070.6\))
-Subject: Re: Documenting MS_LAZYTIME
-From: Andreas Dilger <adilger@dilger.ca>
-In-Reply-To: <CAHO5Pa0k7QkV_6BDjwTVxa7LV9tFyN9nGFFcSvOC6HYO08wfrw@mail.gmail.com>
-Date: Fri, 20 Feb 2015 05:32:58 -0700
-Message-Id: <44893EA7-B11A-469A-9911-6CE2E8B26EB4@dilger.ca>
-References: <CAHO5Pa0k7QkV_6BDjwTVxa7LV9tFyN9nGFFcSvOC6HYO08wfrw@mail.gmail.com>
+	by oss.sgi.com (Postfix) with ESMTP id 84F5C7F63
+	for <xfs@oss.sgi.com>; Fri, 20 Feb 2015 06:39:00 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 463FF8F8059
+	for <xfs@oss.sgi.com>; Fri, 20 Feb 2015 04:39:00 -0800 (PST)
+Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
+	with ESMTP id 782b8AK8bWFbhsTQ (version=TLSv1 cipher=AES256-SHA
+	bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Fri, 20 Feb 2015 04:38:58 -0800 (PST)
+Date: Fri, 20 Feb 2015 13:38:55 +0100
+From: Michal Hocko <mhocko@suse.cz>
+Subject: Re: How to handle TIF_MEMDIE stalls?
+Message-ID: <20150220123855.GG21248@dhcp22.suse.cz>
+References: <20150218121602.GC4478@dhcp22.suse.cz>
+	<20150219110124.GC15569@phnom.home.cmpxchg.org>
+	<20150219122914.GH28427@dhcp22.suse.cz>
+	<201502192229.FCJ73987.MFQLOHSJFFtOOV@I-love.SAKURA.ne.jp>
+	<20150220091001.GC21248@dhcp22.suse.cz>
+	<201502202120.GHE87026.OFSHLFFOJMVtOQ@I-love.SAKURA.ne.jp>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <201502202120.GHE87026.OFSHLFFOJMVtOQ@I-love.SAKURA.ne.jp>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,40 +30,82 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Michael Kerrisk <mtk.manpages@gmail.com>
-Cc: linux-man@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, Linux API <linux-api@vger.kernel.org>, XFS Developers <xfs@oss.sgi.com>, Linux-Fsdevel <linux-fsdevel@vger.kernel.org>, Ext4 Developers List <linux-ext4@vger.kernel.org>, Linux btrfs Developers List <linux-btrfs@vger.kernel.org>
+To: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
+Cc: dchinner@redhat.com, oleg@redhat.com, xfs@oss.sgi.com, hannes@cmpxchg.org, linux-mm@kvack.org, mgorman@suse.de, rientjes@google.com, linux-fsdevel@vger.kernel.org, akpm@linux-foundation.org, fernando_b1@lab.ntt.co.jp, torvalds@linux-foundation.org
 
-T24gRmViIDIwLCAyMDE1LCBhdCAxOjUwIEFNLCBNaWNoYWVsIEtlcnJpc2sgPG10ay5tYW5wYWdl
-c0BnbWFpbC5jb20+IHdyb3RlOgo+IAo+IEhlbGxvIFRlZCwKPiAKPiBCYXNlZCBvbiB5b3VyIGNv
-bW1pdCBtZXNzYWdlIDBhZTQ1ZjYzZDRlLCBJIEkgd3JvdGUgdGhlIGRvY3VtZW50YXRpb24KPiBi
-ZWxvdyBmb3IgTVNfTEFaWVRJTUUsIHRvIGdvIGludG8gdGhlIG1vdW50KDIpIG1hbiBwYWdlLiBD
-b3VsZCB5b3UKPiBwbGVhc2UgY2hlY2sgaXQgb3ZlciBhbmQgbGV0IG1lIGtub3cgaWYgaXQncyBh
-Y2N1cmF0ZS4gSW4gcGFydGljdWxhciwKPiBJIGFkZGVkIHBpZWNlcyBtYXJrZWQgd2l0aCAiKiIg
-YmVsb3cgdGhhdCB3ZXJlIG5vdCBwYXJ0IG9mIHRoZSBjb21taXQKPiBtZXNzYWdlIGFuZCBJJ2Qg
-bGlrZSBjb25maXJtYXRpb24gdGhhdCB0aGV5J3JlIGFjY3VyYXRlLgo+IAo+IFRoYW5rcywKPiAK
-PiBNaWNoYWVsCj4gCj4gW1sKPiAgICAgICBNU19MQVpZVElNRSAoc2luY2UgTGludXggMy4yMCkK
-PiAgICAgICAgICAgICAgT25seSAgdXBkYXRlICBmaWxldGltZXMgKGF0aW1lLCBtdGltZSwgY3Rp
-bWUpIG9uIHRoZSBpbi0KPiAgICAgICAgICAgICAgbWVtb3J5IHZlcnNpb24gb2YgdGhlIGZpbGUg
-IGlub2RlLiAgIFRoZSAgb24tZGlzayAgdGltZeKAkAo+ICAgICAgICAgICAgICBzdGFtcHMgYXJl
-IHVwZGF0ZWQgb25seSB3aGVuOgo+IAo+ICAgICAgICAgICAgICAoYSkgIHRoZSBpbm9kZSBuZWVk
-cyB0byBiZSB1cGRhdGVkIGZvciBzb21lIGNoYW5nZSB1bnJl4oCQCj4gICAgICAgICAgICAgICAg
-ICAgbGF0ZWQgdG8gZmlsZSB0aW1lc3RhbXBzOwo+IAo+ICAgICAgICAgICAgICAoYikgIHRoZSBh
-cHBsaWNhdGlvbiAgZW1wbG95cyAgZnN5bmMoMiksICBzeW5jZnMoMiksICBvcgo+ICAgICAgICAg
-ICAgICAgICAgIHN5bmMoMik7Cj4gCj4gICAgICAgICAgICAgIChjKSAgYW4gdW5kZWxldGVkIGlu
-b2RlIGlzIGV2aWN0ZWQgZnJvbSBtZW1vcnk7IG9yCj4gCj4gKiAgICAgICAgICAgICAoZCkgIG1v
-cmUgdGhhbiAyNCBob3VycyBoYXZlIHBhc3NlZCBzaW5jZSB0aGUgaS1ub2RlIHdhcwo+ICogICAg
-ICAgICAgICAgICAgICB3cml0dGVuIHRvIGRpc2suCj4gCj4gICAgICAgICAgICAgIFRoaXMgbW91
-bnQgb3B0aW9uIHNpZ25pZmljYW50bHkgcmVkdWNlcyAgd3JpdGVzICB0byAgdGhlCj4gICAgICAg
-ICAgICAgIGlub2RlICB0YWJsZSAgZm9yIHdvcmtsb2FkcyB0aGF0IHBlcmZvcm0gZnJlcXVlbnQg
-cmFuZG9tCj4gICAgICAgICAgICAgIHdyaXRlcyB0byBwcmVhbGxvY2F0ZWQgZmlsZXMuCj4gCj4g
-KiAgICAgICAgICAgICBBcyBhdCBMaW51eCAzLjIwLCB0aGlzIG9wdGlvbiBpcyBzdXBwb3J0ZWQg
-b25seSBvbiBleHQ0LgoKSSBfdGhpbmtfIHRoYXQgdGhlIGxhenl0aW1lIG1vdW50IG9wdGlvbiBp
-cyBnZW5lcmljIGZvciBhbGwgZmlsZXN5c3RlbXMuCkkgYmVsaWV2ZSBleHQ0IGhhcyBhbiBleHRy
-YSBvcHRpbWl6YXRpb24gZm9yIGl0LCBidXQgdGhhdCdzIGl0LgoKQ2hlZXJzLCBBbmRyZWFzCgoK
-CgoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KeGZzIG1h
-aWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlz
-dGluZm8veGZzCg==
+On Fri 20-02-15 21:20:58, Tetsuo Handa wrote:
+> Michal Hocko wrote:
+> > On Thu 19-02-15 22:29:37, Tetsuo Handa wrote:
+> > > Michal Hocko wrote:
+> > > > On Thu 19-02-15 06:01:24, Johannes Weiner wrote:
+> > > > [...]
+> > > > > Preferrably, we'd get rid of all nofail allocations and replace them
+> > > > > with preallocated reserves.  But this is not going to happen anytime
+> > > > > soon, so what other option do we have than resolving this on the OOM
+> > > > > killer side?
+> > > > 
+> > > > As I've mentioned in other email, we might give GFP_NOFAIL allocator
+> > > > access to memory reserves (by giving it __GFP_HIGH). This is still not a
+> > > > 100% solution because reserves could get depleted but this risk is there
+> > > > even with multiple oom victims. I would still argue that this would be a
+> > > > better approach because selecting more victims might hit pathological
+> > > > case more easily (other victims might be blocked on the very same lock
+> > > > e.g.).
+> > > > 
+> > > Does "multiple OOM victims" mean "select next if first does not die"?
+> > > Then, I think my timeout patch http://marc.info/?l=linux-mm&m=142002495532320&w=2
+> > > does not deplete memory reserves. ;-)
+> > 
+> > It doesn't because
+> > --- a/mm/page_alloc.c
+> > +++ b/mm/page_alloc.c
+> > @@ -2603,9 +2603,7 @@ gfp_to_alloc_flags(gfp_t gfp_mask)
+> >  			alloc_flags |= ALLOC_NO_WATERMARKS;
+> >  		else if (in_serving_softirq() && (current->flags & PF_MEMALLOC))
+> >  			alloc_flags |= ALLOC_NO_WATERMARKS;
+> > -		else if (!in_interrupt() &&
+> > -				((current->flags & PF_MEMALLOC) ||
+> > -				 unlikely(test_thread_flag(TIF_MEMDIE))))
+> > +		else if (!in_interrupt() && (current->flags & PF_MEMALLOC))
+> >  			alloc_flags |= ALLOC_NO_WATERMARKS;
+> > 
+> > you disabled the TIF_MEMDIE heuristic and use it only for OOM exclusion
+> > and break out from the allocator. Exiting task might need a memory to do
+> > so and you make all those allocations fail basically. How do you know
+> > this is not going to blow up?
+> > 
+> 
+> Well, treat exiting tasks to imply __GFP_NOFAIL for clean up?
+> 
+> We cannot determine correct task to kill + allow access to memory reserves
+> based on lock dependency. Therefore, this patch evenly allow no tasks to
+> access to memory reserves.
+> 
+> Exiting task might need some memory to exit, and not allowing access to
+> memory reserves can retard exit of that task. But that task will eventually
+> get memory released by other tasks killed by timeout-based kill-more
+> mechanism. If no more killable tasks or expired panic-timeout, it is
+> the same result with depletion of memory reserves.
+> 
+> I think that this situation (automatically making forward progress as if
+> the administrator is periodically doing SysRq-f until the OOM condition
+> is solved, or is doing SysRq-c if no more killable tasks or stalled too
+> long) is better than current situation (not making forward progress since
+> the exiting task cannot exit due to lock dependency, caused by failing to
+> determine correct task to kill + allow access to memory reserves).
+
+If you really believe this is an improvement then send a proper patch
+with justification. But I am _really_ skeptical about such a change to
+be honest.
+-- 
+Michal Hocko
+SUSE Labs
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
