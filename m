@@ -1,31 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 1DEE07F58
-	for <xfs@oss.sgi.com>; Fri, 20 Feb 2015 03:27:29 -0600 (CST)
+	by oss.sgi.com (Postfix) with ESMTP id E93CD7F5F
+	for <xfs@oss.sgi.com>; Fri, 20 Feb 2015 04:36:49 -0600 (CST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 9235FAC003
-	for <xfs@oss.sgi.com>; Fri, 20 Feb 2015 01:27:25 -0800 (PST)
-Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id 6HVZCZwn4A92CP2D (version=TLSv1 cipher=AES256-SHA
-	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 20 Feb 2015 01:27:23 -0800 (PST)
-Date: Fri, 20 Feb 2015 10:27:21 +0100
-From: Michal Hocko <mhocko@suse.cz>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 64733AC002
+	for <xfs@oss.sgi.com>; Fri, 20 Feb 2015 02:36:49 -0800 (PST)
+Received: from www262.sakura.ne.jp (www262.sakura.ne.jp [202.181.97.72]) by
+	cuda.sgi.com with ESMTP id bq4C9MVD74dzeeYg (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Fri, 20 Feb 2015 02:36:46 -0800 (PST)
 Subject: Re: How to handle TIF_MEMDIE stalls?
-Message-ID: <20150220092721.GE21248@dhcp22.suse.cz>
-References: <201502111123.ICD65197.FMLOHSQJFVOtFO@I-love.SAKURA.ne.jp>
-	<201502172123.JIE35470.QOLMVOFJSHOFFt@I-love.SAKURA.ne.jp>
+From: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
+References: <201502172123.JIE35470.QOLMVOFJSHOFFt@I-love.SAKURA.ne.jp>
 	<20150217125315.GA14287@phnom.home.cmpxchg.org>
 	<20150217225430.GJ4251@dastard>
-	<20150218082502.GA4478@dhcp22.suse.cz>
-	<20150218104859.GM12722@dastard>
-	<20150218121602.GC4478@dhcp22.suse.cz>
-	<20150218213118.GN12722@dastard>
-	<20150219094020.GE28427@dhcp22.suse.cz>
-	<20150219220355.GX12722@dastard>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20150219220355.GX12722@dastard>
+	<20150219102431.GA15569@phnom.home.cmpxchg.org>
+	<20150219225217.GY12722@dastard>
+In-Reply-To: <20150219225217.GY12722@dastard>
+Message-Id: <201502201936.HBH34799.SOLFFFQtHOMOJV@I-love.SAKURA.ne.jp>
+Date: Fri, 20 Feb 2015 19:36:33 +0900
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -38,54 +32,49 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, dchinner@redhat.com, oleg@redhat.com, xfs@oss.sgi.com, Johannes Weiner <hannes@cmpxchg.org>, linux-mm@kvack.org, mgorman@suse.de, rientjes@google.com, akpm@linux-foundation.org, torvalds@linux-foundation.org
+To: david@fromorbit.com, hannes@cmpxchg.org
+Cc: dchinner@redhat.com, oleg@redhat.com, xfs@oss.sgi.com, mhocko@suse.cz, linux-mm@kvack.org, mgorman@suse.de, rientjes@google.com, akpm@linux-foundation.org, torvalds@linux-foundation.org
 
-On Fri 20-02-15 09:03:55, Dave Chinner wrote:
-[...]
-> Converting the code to use GFP_NOFAIL takes us in exactly the
-> opposite direction to our current line of development w.r.t. to
-> filesystem error handling.
+Dave Chinner wrote:
+> I really don't care about the OOM Killer corner cases - it's
+> completely the wrong way line of development to be spending time on
+> and you aren't going to convince me otherwise. The OOM killer a
+> crutch used to justify having a memory allocation subsystem that
+> can't provide forward progress guarantee mechanisms to callers that
+> need it.
 
-Fair enough. If there are plans to have a failure policy rather than
-GFP_NOFAIL like behavior then I have, of course, no objections. Quite
-opposite. This is exactly what I would like to see. GFP_NOFAIL should be
-rarely used, really.
+I really care about the OOM Killer corner cases, for I'm
 
-The whole point of this discussion, and I am sorry if I didn't make it
-clear, is that _if_ there is really a GFP_NOFAIL requirement hidden
-from the allocator then it should be changed to use GFP_NOFAIL so that
-allocator knows about this requirement.
+  (1) seeing trouble cases which occurred in enterprise systems
+      under OOM conditions
 
-> > The reason I care about GFP_NOFAIL is that there are apparently code
-> > paths which do not tell allocator they are basically GFP_NOFAIL without
-> > any fallback. This leads to two main problems 1) we do not have a good
-> > overview how many code paths have such a strong requirements and so
-> > cannot estimate e.g. how big memory reserves should be and
-> 
-> Right, when GFP_NOFAIL got deprecated we lost the ability to document
-> such behaviour and find it easily. People just put retry loops in
-> instead of using GFP_NOFAIL. Good luck finding them all :/
+  (2) trying to downgrade OOM "Deadlock or Genocide" attacks (which
+      an unprivileged user with a login shell can trivially trigger
+      since Linux 2.0) to OOM "Genocide" attacks in order to allow
+      OOM-unkillable daemons to restart OOM-killed processes
 
-That will be PITA, all right, but I guess the deprecation was a mistake
-and we should stop this tendency.
+  (3) waiting for a bandaid for (2) in order to propose changes for
+      mitigating OOM "Genocide" attacks (as bad guys will find how to
+      trigger OOM "Deadlock or Genocide" attacks from changes for
+      mitigating OOM "Genocide" attacks)
 
-> > 2) allocator
-> > cannot help those paths (e.g. by giving them access to reserves to break
-> > out of the livelock).
-> 
-> Allocator should not help. Global reserves are unreliable - make the
-> allocation context reserve the amount it needs before it enters the
-> context where it can't back out....
+I started posting to linux-mm ML in order to make forward progress
+about (1) and (2). I don't want the memory allocation subsystem to
+lock up an entire system by indefinitely disabling memory releasing
+mechanism provided by the OOM killer.
 
-Sure pre-allocation is preferable. But once somebody asks for GFP_NOFAIL
-then it is too late and the allocator only has memory reclaim and
-potentially reserves.
+> I've proposed a method of providing this forward progress guarantee
+> for subsystems of arbitrary complexity, and this removes the
+> dependency on the OOM killer for fowards allocation progress in such
+> contexts (e.g. filesystems). We should be discussing how to
+> implement that, not what bandaids we need to apply to the OOM
+> killer. I want to fix the underlying problems, not push them under
+> the OOM-killer bus...
 
-[...]
--- 
-Michal Hocko
-SUSE Labs
+I'm fine with that direction for new kernels provided that a simple
+bandaid which can be backported to distributor kernels for making
+OOM "Deadlock" attacks impossible is implemented. Therefore, I'm
+discussing what bandaids we need to apply to the OOM killer.
 
 _______________________________________________
 xfs mailing list
