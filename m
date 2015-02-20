@@ -1,25 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 594037F83
-	for <xfs@oss.sgi.com>; Thu, 19 Feb 2015 17:49:54 -0600 (CST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id BB43F7F37
+	for <xfs@oss.sgi.com>; Fri, 20 Feb 2015 02:51:18 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 1A3E18F8059
-	for <xfs@oss.sgi.com>; Thu, 19 Feb 2015 15:49:54 -0800 (PST)
-Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
-	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	3huHdSI0C42lZ3nD for <xfs@oss.sgi.com>;
-	Thu, 19 Feb 2015 15:49:49 -0800 (PST)
-Date: Fri, 20 Feb 2015 10:49:35 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v5 00/18] xfs: sparse inode chunks
-Message-ID: <20150219234935.GC12722@dastard>
-References: <1424369623-5656-1-git-send-email-bfoster@redhat.com>
-	<20150219191034.GA5750@bfoster.bfoster>
-	<20150219230150.GZ12722@dastard>
-	<20150219232024.GA8498@laptop.bfoster>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 664E7AC002
+	for <xfs@oss.sgi.com>; Fri, 20 Feb 2015 00:51:15 -0800 (PST)
+Received: from mail-ob0-f179.google.com (mail-ob0-f179.google.com
+	[209.85.214.179]) by cuda.sgi.com with ESMTP id
+	u1dnxCokB6YsfZBa (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Fri, 20 Feb 2015 00:51:10 -0800 (PST)
+Received: by mail-ob0-f179.google.com with SMTP id wp4so22875899obc.10
+	for <xfs@oss.sgi.com>; Fri, 20 Feb 2015 00:51:10 -0800 (PST)
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20150219232024.GA8498@laptop.bfoster>
+From: Michael Kerrisk <mtk.manpages@gmail.com>
+Date: Fri, 20 Feb 2015 09:50:50 +0100
+Message-ID: <CAHO5Pa0k7QkV_6BDjwTVxa7LV9tFyN9nGFFcSvOC6HYO08wfrw@mail.gmail.com>
+Subject: Documenting MS_LAZYTIME
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,72 +25,37 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
-Cc: xfs@oss.sgi.com
+To: Theodore Ts'o <tytso@mit.edu>
+Cc: linux-man@vger.kernel.org, Linux API <linux-api@vger.kernel.org>, XFS Developers <xfs@oss.sgi.com>, Linux-Fsdevel <linux-fsdevel@vger.kernel.org>, Ext4 Developers List <linux-ext4@vger.kernel.org>, Linux btrfs Developers List <linux-btrfs@vger.kernel.org>
 
-On Thu, Feb 19, 2015 at 06:20:24PM -0500, Brian Foster wrote:
-> On Fri, Feb 20, 2015 at 10:01:50AM +1100, Dave Chinner wrote:
-> > On Thu, Feb 19, 2015 at 02:10:34PM -0500, Brian Foster wrote:
-> > > On Thu, Feb 19, 2015 at 01:13:25PM -0500, Brian Foster wrote:
-> > > > Hi all,
-> > > > 
-> > > > Here's v5 of sparse inode chunks. The only real change here is to
-> > > > convert the allocmask helpers back to using the XFS bitmap helpers
-> > > > rather than the generic bitmap code. This eliminates the need for the
-> > > > endian-conversion hack and extra helper to export a generic bitmap to a
-> > > > native type. The former users of the generic bitmap itself have been
-> > > > converted to use the native 64-bit value appropriately.
-> > > > 
-> > > > The XFS bitmap code is actually not in userspace either so neither of
-> > > > these implementations backport cleanly to userspace. As it is, I've not
-> > > > included the sparse alloc/free code in my xfsprogs branch as this code
-> > > > currently isn't needed. Nothing in userspace that I've seen requires the
-> > > > ability to do a sparse inode allocation or free. I suspect if it is
-> > > > needed in the future, we can more easily sync the XFS bitmap helpers to
-> > > > userspace than the generic Linux bitmap code.
-> > > > 
-> > > > Thoughts, reviews, flames appreciated...
-> > > > 
-> > > 
-> > > Attached is a tarball of a set of xfsprogs patches to aid in testing
-> > > this patchset. I'm posting as a tarball because the core patches (e.g.,
-> > > the kernel patches) are obviously still in flux. The tarball includes
-> > > the following:
-> > > 
-> > > - general dependency backports
-> > > - core infrastructure backports (i.e., applicable patches from this v5
-> > >   sparse inode set)
-> > > - xfsprogs work for sparse inode support
-> > 
-> > You should probably base it on the libxfs-3.19-update branch rather
-> > than backport random patches into the current branch. This is what
-> > I'm basing the current rmap-btree work I'm doing on, and having the
-> > same libxfs structure on both sides makes it way easier to keep both
-> > sides up to date....
-> > 
-> 
-> I wasn't aware we had such a branch... I don't see it in my xfsprogs
-> repo. Perhaps that's because my repo is still based on the oss.sgi.com
-> repo?
-
-Possibly, though I thought I pushed it there. I don't tend to look
-at the oss repositories these days, and only push to them at release
-time.
-
-https://git.kernel.org/cgit/fs/xfs/xfsprogs-dev.git/log/?h=libxfs-3.19-update
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+SGVsbG8gVGVkLAoKQmFzZWQgb24geW91ciBjb21taXQgbWVzc2FnZSAwYWU0NWY2M2Q0ZSwgSSBJ
+IHdyb3RlIHRoZSBkb2N1bWVudGF0aW9uCmJlbG93IGZvciBNU19MQVpZVElNRSwgdG8gZ28gaW50
+byB0aGUgbW91bnQoMikgbWFuIHBhZ2UuIENvdWxkIHlvdQpwbGVhc2UgY2hlY2sgaXQgb3ZlciBh
+bmQgbGV0IG1lIGtub3cgaWYgaXQncyBhY2N1cmF0ZS4gSW4gcGFydGljdWxhciwKSSBhZGRlZCBw
+aWVjZXMgbWFya2VkIHdpdGggIioiIGJlbG93IHRoYXQgd2VyZSBub3QgcGFydCBvZiB0aGUgY29t
+bWl0Cm1lc3NhZ2UgYW5kIEknZCBsaWtlIGNvbmZpcm1hdGlvbiB0aGF0IHRoZXkncmUgYWNjdXJh
+dGUuCgpUaGFua3MsCgpNaWNoYWVsCgpbWwogICAgICAgTVNfTEFaWVRJTUUgKHNpbmNlIExpbnV4
+IDMuMjApCiAgICAgICAgICAgICAgT25seSAgdXBkYXRlICBmaWxldGltZXMgKGF0aW1lLCBtdGlt
+ZSwgY3RpbWUpIG9uIHRoZSBpbi0KICAgICAgICAgICAgICBtZW1vcnkgdmVyc2lvbiBvZiB0aGUg
+ZmlsZSAgaW5vZGUuICAgVGhlICBvbi1kaXNrICB0aW1l4oCQCiAgICAgICAgICAgICAgc3RhbXBz
+IGFyZSB1cGRhdGVkIG9ubHkgd2hlbjoKCiAgICAgICAgICAgICAgKGEpICB0aGUgaW5vZGUgbmVl
+ZHMgdG8gYmUgdXBkYXRlZCBmb3Igc29tZSBjaGFuZ2UgdW5yZeKAkAogICAgICAgICAgICAgICAg
+ICAgbGF0ZWQgdG8gZmlsZSB0aW1lc3RhbXBzOwoKICAgICAgICAgICAgICAoYikgIHRoZSBhcHBs
+aWNhdGlvbiAgZW1wbG95cyAgZnN5bmMoMiksICBzeW5jZnMoMiksICBvcgogICAgICAgICAgICAg
+ICAgICAgc3luYygyKTsKCiAgICAgICAgICAgICAgKGMpICBhbiB1bmRlbGV0ZWQgaW5vZGUgaXMg
+ZXZpY3RlZCBmcm9tIG1lbW9yeTsgb3IKCiogICAgICAgICAgICAgKGQpICBtb3JlIHRoYW4gMjQg
+aG91cnMgaGF2ZSBwYXNzZWQgc2luY2UgdGhlIGktbm9kZSB3YXMKKiAgICAgICAgICAgICAgICAg
+IHdyaXR0ZW4gdG8gZGlzay4KCiAgICAgICAgICAgICAgVGhpcyBtb3VudCBvcHRpb24gc2lnbmlm
+aWNhbnRseSByZWR1Y2VzICB3cml0ZXMgIHRvICB0aGUKICAgICAgICAgICAgICBpbm9kZSAgdGFi
+bGUgIGZvciB3b3JrbG9hZHMgdGhhdCBwZXJmb3JtIGZyZXF1ZW50IHJhbmRvbQogICAgICAgICAg
+ICAgIHdyaXRlcyB0byBwcmVhbGxvY2F0ZWQgZmlsZXMuCgoqICAgICAgICAgICAgIEFzIGF0IExp
+bnV4IDMuMjAsIHRoaXMgb3B0aW9uIGlzIHN1cHBvcnRlZCBvbmx5IG9uIGV4dDQuCl1dCgotLSAK
+TWljaGFlbCBLZXJyaXNrIExpbnV4IG1hbi1wYWdlcyBtYWludGFpbmVyOwpodHRwOi8vd3d3Lmtl
+cm5lbC5vcmcvZG9jL21hbi1wYWdlcy8KQXV0aG9yIG9mICJUaGUgTGludXggUHJvZ3JhbW1pbmcg
+SW50ZXJmYWNlIiwgaHR0cDovL2Jsb2cubWFuNy5vcmcvCgpfX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNv
+bQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
