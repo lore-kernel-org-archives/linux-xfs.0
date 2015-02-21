@@ -1,21 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 4FE6529E01
-	for <xfs@oss.sgi.com>; Sat, 21 Feb 2015 09:49:19 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 303808F8033
-	for <xfs@oss.sgi.com>; Sat, 21 Feb 2015 07:49:19 -0800 (PST)
-Received: from mail-pd0-f171.google.com (mail-pd0-f171.google.com
-	[209.85.192.171]) by cuda.sgi.com with ESMTP id
-	KDjGjydOg7eLvftx (version=TLSv1 cipher=RC4-SHA bits=128
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 26D2829DF7
+	for <xfs@oss.sgi.com>; Sat, 21 Feb 2015 09:49:25 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id AAD6FAC003
+	for <xfs@oss.sgi.com>; Sat, 21 Feb 2015 07:49:24 -0800 (PST)
+Received: from mail-pd0-f175.google.com (mail-pd0-f175.google.com
+	[209.85.192.175]) by cuda.sgi.com with ESMTP id
+	YobpsVplH9EzC7do (version=TLSv1 cipher=RC4-SHA bits=128
 	verify=NO) for <xfs@oss.sgi.com>;
-	Sat, 21 Feb 2015 07:49:17 -0800 (PST)
-Received: by pdno5 with SMTP id o5so14643600pdn.8
-	for <xfs@oss.sgi.com>; Sat, 21 Feb 2015 07:49:17 -0800 (PST)
+	Sat, 21 Feb 2015 07:49:22 -0800 (PST)
+Received: by pdbfp1 with SMTP id fp1so14642039pdb.5
+	for <xfs@oss.sgi.com>; Sat, 21 Feb 2015 07:49:22 -0800 (PST)
 From: Namjae Jeon <linkinjeon@gmail.com>
-Subject: [PATCH v10 5/12] xfstests: generic/058: Standard insert range tests
-Date: Sun, 22 Feb 2015 00:45:47 +0900
-Message-Id: <1424533554-28024-6-git-send-email-linkinjeon@gmail.com>
+Subject: [PATCH v10 6/12] xfstests: generic/060: Delayed allocation insert
+	range
+Date: Sun, 22 Feb 2015 00:45:48 +0900
+Message-Id: <1424533554-28024-7-git-send-email-linkinjeon@gmail.com>
 In-Reply-To: <1424533554-28024-1-git-send-email-linkinjeon@gmail.com>
 References: <1424533554-28024-1-git-send-email-linkinjeon@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -36,60 +37,29 @@ Cc: linux-man@vger.kernel.org, Namjae Jeon <linkinjeon@gmail.com>, Namjae Jeon <
 
 From: Namjae Jeon <namjae.jeon@samsung.com>
 
-This testcase(058) tries to test various corner cases for finsert range
-functionality over different type of extents.
+This testcase(060) tries to test various corner cases with delayed extents
+for finsert range functionality over different type of extents.
 
 Signed-off-by: Namjae Jeon <namjae.jeon@samsung.com>
 Signed-off-by: Ashish Sangwan <a.sangwan@samsung.com>
 ---
- common/punch          |    5 ++++
- common/rc             |    2 +-
- tests/generic/058     |   65 +++++++++++++++++++++++++++++++++++++++++
- tests/generic/058.out |   78 +++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/generic/060     |   65 +++++++++++++++++++++++++++++++++++++++++
+ tests/generic/060.out |   78 +++++++++++++++++++++++++++++++++++++++++++++++++
  tests/generic/group   |    1 +
- 5 files changed, 150 insertions(+), 1 deletion(-)
- create mode 100644 tests/generic/058
- create mode 100644 tests/generic/058.out
+ 3 files changed, 144 insertions(+)
+ create mode 100644 tests/generic/060
+ create mode 100644 tests/generic/060.out
 
-diff --git a/common/punch b/common/punch
-index 237b4d8..a75f4cf 100644
---- a/common/punch
-+++ b/common/punch
-@@ -527,6 +527,11 @@ _test_generic_punch()
- 		return
- 	fi
- 
-+	# If zero_cmd is finsert, don't check unaligned offsets
-+	if [ "$zero_cmd" == "finsert" ]; then
-+		return
-+	fi
-+
- 	echo "	16. data -> cache cold ->hole"
- 	if [ "$remove_testfile" ]; then
- 		rm -f $testfile
-diff --git a/common/rc b/common/rc
-index 7449a1d..f173eab 100644
---- a/common/rc
-+++ b/common/rc
-@@ -1520,7 +1520,7 @@ _require_xfs_io_command()
- 	"falloc" )
- 		testio=`$XFS_IO_PROG -F -f -c "falloc 0 1m" $testfile 2>&1`
- 		;;
--	"fpunch" | "fcollapse" | "zero" | "fzero" )
-+	"fpunch" | "fcollapse" | "zero" | "fzero" | "finsert" )
- 		testio=`$XFS_IO_PROG -F -f -c "pwrite 0 20k" -c "fsync" \
- 			-c "$command 4k 8k" $testfile 2>&1`
- 		;;
-diff --git a/tests/generic/058 b/tests/generic/058
+diff --git a/tests/generic/060 b/tests/generic/060
 new file mode 100644
-index 0000000..4a39a05
+index 0000000..4493ba2
 --- /dev/null
-+++ b/tests/generic/058
++++ b/tests/generic/060
 @@ -0,0 +1,65 @@
 +#! /bin/bash
-+# FS QA Test No. generic/058
++# FS QA Test No. generic/060
 +#
-+# Standard insert range tests
++# Delayed allocation insert range tests
 +# This testcase is one of the 4 testcases which tries to
 +# test various corner cases for finsert range functionality over different
 +# type of extents. These tests are based on generic/255 test case.
@@ -146,18 +116,18 @@ index 0000000..4a39a05
 +
 +testfile=$TEST_DIR/$seq.$$
 +
-+_test_generic_punch falloc fpunch finsert fiemap _filter_hole_fiemap $testfile
++_test_generic_punch -d falloc fpunch finsert fiemap _filter_hole_fiemap $testfile
 +_check_test_fs
 +
 +status=0
 +exit
-diff --git a/tests/generic/058.out b/tests/generic/058.out
+diff --git a/tests/generic/060.out b/tests/generic/060.out
 new file mode 100644
-index 0000000..b15308d
+index 0000000..909b578
 --- /dev/null
-+++ b/tests/generic/058.out
++++ b/tests/generic/060.out
 @@ -0,0 +1,78 @@
-+QA output created by 058
++QA output created by 060
 +	1. into a hole
 +cf845a781c107ec1346e849c9dd1b7e8
 +	2. into allocated space
@@ -236,17 +206,17 @@ index 0000000..b15308d
 +1: [16..55]: extent
 +86c9d033be2761385c9cfa203c426bb2
 diff --git a/tests/generic/group b/tests/generic/group
-index f2eb87a..e0d8bc1 100644
+index e0d8bc1..4bf4e86 100644
 --- a/tests/generic/group
 +++ b/tests/generic/group
-@@ -60,6 +60,7 @@
- 055 log v2log auto quota stress
- 056 metadata auto quick
+@@ -62,6 +62,7 @@
  057 metadata auto quick
-+058 auto quick prealloc
+ 058 auto quick prealloc
  059 metadata auto quick
++060 auto quick prealloc
  062 attr udf auto quick
  068 other auto freeze dangerous stress
+ 069 rw udf auto quick
 -- 
 1.7.9.5
 
