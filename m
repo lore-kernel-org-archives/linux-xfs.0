@@ -1,24 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 7CF6A7F51
-	for <xfs@oss.sgi.com>; Sat, 21 Feb 2015 07:49:11 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 4F8D6304039
-	for <xfs@oss.sgi.com>; Sat, 21 Feb 2015 05:49:07 -0800 (PST)
-Received: from www262.sakura.ne.jp (www262.sakura.ne.jp [202.181.97.72]) by
-	cuda.sgi.com with ESMTP id qCuIMKfO65C2N12c (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Sat, 21 Feb 2015 05:49:05 -0800 (PST)
-Subject: Re: How to handle TIF_MEMDIE stalls?
-From: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
-References: <20150219225217.GY12722@dastard>
-	<201502201936.HBH34799.SOLFFFQtHOMOJV@I-love.SAKURA.ne.jp>
-	<20150220231511.GH12722@dastard> <20150221032000.GC7922@thunk.org>
-	<20150221011907.2d26c979.akpm@linux-foundation.org>
-In-Reply-To: <20150221011907.2d26c979.akpm@linux-foundation.org>
-Message-Id: <201502212248.DCJ69753.MOJFOtQLFSOVFH@I-love.SAKURA.ne.jp>
-Date: Sat, 21 Feb 2015 22:48:49 +0900
-Mime-Version: 1.0
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 08EBC7F56
+	for <xfs@oss.sgi.com>; Sat, 21 Feb 2015 09:48:43 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id D90378F8033
+	for <xfs@oss.sgi.com>; Sat, 21 Feb 2015 07:48:42 -0800 (PST)
+Received: from mail-pd0-f174.google.com (mail-pd0-f174.google.com
+	[209.85.192.174]) by cuda.sgi.com with ESMTP id
+	yiseOpgYWOy0A6zI (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Sat, 21 Feb 2015 07:48:41 -0800 (PST)
+Received: by pdbfl12 with SMTP id fl12so14658440pdb.4
+	for <xfs@oss.sgi.com>; Sat, 21 Feb 2015 07:48:40 -0800 (PST)
+From: Namjae Jeon <linkinjeon@gmail.com>
+Subject: [PATCH v10 0/12] fs: Introduce FALLOC_FL_INSERT_RANGE for fallocate
+Date: Sun, 22 Feb 2015 00:45:42 +0900
+Message-Id: <1424533554-28024-1-git-send-email-linkinjeon@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,46 +24,55 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: akpm@linux-foundation.org
-Cc: tytso@mit.edu, hannes@cmpxchg.org, oleg@redhat.com, xfs@oss.sgi.com, mhocko@suse.cz, linux-mm@kvack.org, mgorman@suse.de, dchinner@redhat.com, rientjes@google.com, linux-ext4@vger.kernel.org, torvalds@linux-foundation.org
+To: david@fromorbit.com, tytso@mit.edu
+Cc: linux-man@vger.kernel.org, Namjae Jeon <linkinjeon@gmail.com>, Namjae Jeon <namjae.jeon@samsung.com>, linux-api@vger.kernel.org, bfoster@redhat.com, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, mtk.manpages@gmail.com, a.sangwan@samsung.com, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org
 
-Andrew Morton wrote:
-> On Fri, 20 Feb 2015 22:20:00 -0500 "Theodore Ts'o" <tytso@mit.edu> wrote:
-> 
-> > +akpm
-> 
-> I was hoping not to have to read this thread ;)
+From: Namjae Jeon <namjae.jeon@samsung.com>
 
-Sorry for getting so complicated.
+In continuation of the work of making the process of non linear editing of
+media files faster, we introduce here the new flag FALLOC_FL_INSERT_RANGE
+for fallocate.
 
-> What I'm not really understanding is why the pre-3.19 implementation
-> actually worked.  We've exhausted the free pages, we're not succeeding
-> at reclaiming anything, we aren't able to oom-kill anyone.  Yet it
-> *does* work - we eventually find that memory and everything proceeds.
-> 
-> How come?  Where did that memory come from?
-> 
+This flag will work opposite to the FALLOC_FL_COLLAPSE_RANGE flag.
+As such, specifying FALLOC_FL_INSERT_RANGE flag will create new space inside file
+by inserting a hole within the range specified by offset and len. 
+User can write new data in this space. e.g. ads.
+Like collapse range, currently we have the limitation that offset and len should
+be block size aligned for both XFS and Ext4.
 
-Even without __GFP_NOFAIL, GFP_NOFS / GFP_NOIO allocations retried forever
-(without invoking the OOM killer) if order <= PAGE_ALLOC_COSTLY_ORDER and
-TIF_MEMDIE is not set. Somebody else volunteered that memory while retrying.
-This implies silent hang-up forever if nobody volunteers memory.
+The semantics of the flag are :
+1) It creates space within file by inserting a hole of  len bytes starting
+   at offset byte without overwriting any existing data. All the data blocks
+   from offset to EOF are shifted towards right to make hole space.
+2) It should be used exclusively. No other fallocate flag in combination.
+3) Offset and length supplied to fallocate should be fs block size aligned
+   in case of xfs and ext4.
+4) Insert range does not work for the case when offset is overlapping/beyond
+   i_size. If the user wants to insert space at the end of file they are
+   advised to use either ftruncate(2) or fallocate(2) with mode 0.
+5) It increses the size of file by len bytes.
 
-> And yes, I agree that sites such as xfs's kmem_alloc() should be
-> passing __GFP_NOFAIL to tell the page allocator what's going on.  I
-> don't think it matters a lot whether kmem_alloc() retains its retry
-> loop.  If __GFP_NOFAIL is working correctly then it will never loop
-> anyway...
 
-Commit 9879de7373fc ("mm: page_alloc: embed OOM killing naturally into
-allocation slowpath") inadvertently changed GFP_NOFS / GFP_NOIO allocations
-not to retry unless __GFP_NOFAIL is specified. Therefore, either applying
-Johannes's akpm-doesnt-know-why-it-works patch or passing __GFP_NOFAIL
-will restore the pre-3.19 behavior (with possibility of silent hang-up).
+Namjae Jeon (12):
+ fs: Add support FALLOC_FL_INSERT_RANGE for fallocate
+ xfs: Add support FALLOC_FL_INSERT_RANGE for fallocate
+ ext4: Add support FALLOC_FL_INSERT_RANGE for fallocate
+ xfsprog: xfsio: update xfs_io manpage for FALLOC_FL_INSERT_RANGE
+ xfstests: generic/042: Standard insert range tests
+ xfstests: generic/043: Delayed allocation insert range
+ xfstests: generic/044: Multi insert range tests
+ xfstests: generic/045: Delayed allocation multi insert
+ xfstests: generic/046: Test multiple fallocate insert/collapse range calls
+ xfstests: fsstress: Add fallocate insert range operation
+ xfstests: fsx: Add fallocate insert range operation
+ manpage: update FALLOC_FL_INSERT_RANGE flag in fallocate
+-- 
+1.7.9.5
 
 _______________________________________________
 xfs mailing list
