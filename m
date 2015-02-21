@@ -1,28 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 9A6FA7F62
-	for <xfs@oss.sgi.com>; Sat, 21 Feb 2015 01:57:34 -0600 (CST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 8F9077F51
+	for <xfs@oss.sgi.com>; Sat, 21 Feb 2015 03:19:53 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 8826E304066
-	for <xfs@oss.sgi.com>; Fri, 20 Feb 2015 23:57:31 -0800 (PST)
-Received: from imap.thunk.org (imap.thunk.org [74.207.234.97]) by cuda.sgi.com
-	with ESMTP id 5GeTgleK6k7KEe4m (version=TLSv1 cipher=AES128-SHA
-	bits=128 verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 20 Feb 2015 23:57:29 -0800 (PST)
-Date: Fri, 20 Feb 2015 22:20:00 -0500
-From: Theodore Ts'o <tytso@mit.edu>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 6F6868F8070
+	for <xfs@oss.sgi.com>; Sat, 21 Feb 2015 01:19:50 -0800 (PST)
+Received: from mail.linuxfoundation.org (mail.linuxfoundation.org
+	[140.211.169.12]) by cuda.sgi.com with ESMTP id
+	yyWefgbrdKfUdFah (version=TLSv1 cipher=AES256-SHA bits=256
+	verify=NO) for <xfs@oss.sgi.com>;
+	Sat, 21 Feb 2015 01:19:49 -0800 (PST)
+Date: Sat, 21 Feb 2015 01:19:07 -0800
+From: Andrew Morton <akpm@linux-foundation.org>
 Subject: Re: How to handle TIF_MEMDIE stalls?
-Message-ID: <20150221032000.GC7922@thunk.org>
+Message-Id: <20150221011907.2d26c979.akpm@linux-foundation.org>
+In-Reply-To: <20150221032000.GC7922@thunk.org>
 References: <201502172123.JIE35470.QOLMVOFJSHOFFt@I-love.SAKURA.ne.jp>
 	<20150217125315.GA14287@phnom.home.cmpxchg.org>
 	<20150217225430.GJ4251@dastard>
 	<20150219102431.GA15569@phnom.home.cmpxchg.org>
 	<20150219225217.GY12722@dastard>
 	<201502201936.HBH34799.SOLFFFQtHOMOJV@I-love.SAKURA.ne.jp>
-	<20150220231511.GH12722@dastard>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20150220231511.GH12722@dastard>
+	<20150220231511.GH12722@dastard> <20150221032000.GC7922@thunk.org>
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,43 +35,87 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: hannes@cmpxchg.org, Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, dchinner@redhat.com, oleg@redhat.com, xfs@oss.sgi.com, mhocko@suse.cz, linux-mm@kvack.org, mgorman@suse.de, rientjes@google.com, akpm@linux-foundation.org, linux-ext4@vger.kernel.org, torvalds@linux-foundation.org
+To: Theodore Ts'o <tytso@mit.edu>
+Cc: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, hannes@cmpxchg.org, oleg@redhat.com, xfs@oss.sgi.com, mhocko@suse.cz, linux-mm@kvack.org, mgorman@suse.de, dchinner@redhat.com, rientjes@google.com, linux-ext4@vger.kernel.org, torvalds@linux-foundation.org
 
-+akpm
+On Fri, 20 Feb 2015 22:20:00 -0500 "Theodore Ts'o" <tytso@mit.edu> wrote:
 
-So I'm arriving late to this discussion since I've been in conference
-mode for the past week, and I'm only now catching up on this thread.
+> +akpm
 
-I'll note that this whole question of whether or not file systems
-should use GFP_NOFAIL is one where the mm developers are not of one
-mind.
+I was hoping not to have to read this thread ;)
 
-In fact, search for the subject line "fs/reiserfs/journal.c: Remove
-obsolete __GFP_NOFAIL" where we recapitulated many of these arguments,
-Andrew Morton said that it was better to use GFP_NOFAIL over the
-alternatives of (a) panic'ing the kernel because the file system has
-no way to move forward other than leaving the file system corrupted,
-or (b) looping in the file system to retry the memory allocation to
-avoid the unfortunate effects of (a).
+afaict there are two (main) issues:
 
-So based on akpm's sage advise and wisdom, I added back GFP_NOFAIL to
-ext4/jbd2.
+a) whether to oom-kill when __GFP_FS is not set.  The kernel hasn't
+   been doing this for ages and nothing has changed recently.
 
-It sounds like 9879de7373fc is causing massive file system
-errors, and it seems **really** unfortunate it was added so late in
-the day (between -rc6 and rc7).
+b) whether to keep looping when __GFP_NOFAIL is not set and __GFP_FS
+   is not set and we can't oom-kill anything (which goes without
+   saying, because __GFP_FS isn't set!).
 
-So at this point, it seems we have two choices.  We can either revert
-9879de7373fc, or I can add a whole lot more GFP_FAIL flags to ext4's
-memory allocations and submit them as stable bug fixes.
+   And 9879de7373fc ("mm: page_alloc: embed OOM killing naturally
+   into allocation slowpath") somewhat inadvertently changed this policy
+   - the allocation attempt will now promptly return ENOMEM if
+   !__GFP_NOFAIL and !__GFP_FS.
 
-Linux MM developers, this is your call.  I will liberally be adding
-GFP_NOFAIL to ext4 if you won't revert the commit, because that's the
-only way I can fix things with minimal risk of adding additional,
-potentially more serious regressions.
+Correct enough?
 
-						- Ted
+Question a) seems a bit of red herring and we can park it for now.
+
+
+What I'm not really understanding is why the pre-3.19 implementation
+actually worked.  We've exhausted the free pages, we're not succeeding
+at reclaiming anything, we aren't able to oom-kill anyone.  Yet it
+*does* work - we eventually find that memory and everything proceeds.
+
+How come?  Where did that memory come from?
+
+
+Short term, we need to fix 3.19.x and 3.20 and that appears to be by
+applying Johannes's akpm-doesnt-know-why-it-works patch:
+
+--- a/mm/page_alloc.c
++++ b/mm/page_alloc.c
+@@ -2382,8 +2382,15 @@ __alloc_pages_may_oom(gfp_t gfp_mask, unsigned int order,
+ 		if (high_zoneidx < ZONE_NORMAL)
+ 			goto out;
+ 		/* The OOM killer does not compensate for light reclaim */
+-		if (!(gfp_mask & __GFP_FS))
++		if (!(gfp_mask & __GFP_FS)) {
++			/*
++			 * XXX: Page reclaim didn't yield anything,
++			 * and the OOM killer can't be invoked, but
++			 * keep looping as per should_alloc_retry().
++			 */
++			*did_some_progress = 1;
+ 			goto out;
++		}
+ 		/*
+ 		 * GFP_THISNODE contains __GFP_NORETRY and we never hit this.
+ 		 * Sanity check for bare calls of __GFP_THISNODE, not real OOM.
+
+Have people adequately confirmed that this gets us out of trouble?
+
+
+And yes, I agree that sites such as xfs's kmem_alloc() should be
+passing __GFP_NOFAIL to tell the page allocator what's going on.  I
+don't think it matters a lot whether kmem_alloc() retains its retry
+loop.  If __GFP_NOFAIL is working correctly then it will never loop
+anyway...
+
+
+Also, this:
+
+On Wed, 18 Feb 2015 09:54:30 +1100 Dave Chinner <david@fromorbit.com> wrote:
+
+> Right now, the oom killer is a liability. Over the past 6 months
+> I've slowly had to exclude filesystem regression tests from running
+> on small memory machines because the OOM killer is now so unreliable
+> that it kills the test harness regularly rather than the process
+> generating memory pressure.
+
+David, I did not know this!  If you've been telling us about this then
+perhaps it wasn't loud enough.
 
 _______________________________________________
 xfs mailing list
