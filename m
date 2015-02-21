@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 166DF29E0B
-	for <xfs@oss.sgi.com>; Sat, 21 Feb 2015 09:49:51 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 99A69AC002
-	for <xfs@oss.sgi.com>; Sat, 21 Feb 2015 07:49:50 -0800 (PST)
-Received: from mail-pd0-f170.google.com (mail-pd0-f170.google.com
-	[209.85.192.170]) by cuda.sgi.com with ESMTP id
-	j8FrGPf00ox7zH5w (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Sat, 21 Feb 2015 07:49:48 -0800 (PST)
-Received: by pdjp10 with SMTP id p10so14687779pdj.3
-	for <xfs@oss.sgi.com>; Sat, 21 Feb 2015 07:49:48 -0800 (PST)
+	by oss.sgi.com (Postfix) with ESMTP id 1B70129E13
+	for <xfs@oss.sgi.com>; Sat, 21 Feb 2015 09:49:55 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id BB796AC003
+	for <xfs@oss.sgi.com>; Sat, 21 Feb 2015 07:49:54 -0800 (PST)
+Received: from mail-pa0-f46.google.com (mail-pa0-f46.google.com
+	[209.85.220.46]) by cuda.sgi.com with ESMTP id HIEp9gaLaMscIf3M
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Sat, 21 Feb 2015 07:49:36 -0800 (PST)
+Received: by pabrd3 with SMTP id rd3so15769984pab.4
+	for <xfs@oss.sgi.com>; Sat, 21 Feb 2015 07:49:36 -0800 (PST)
 From: Namjae Jeon <linkinjeon@gmail.com>
-Subject: [PATCH v10 11/12] xfstests: fsx: Add fallocate insert range operation
-Date: Sun, 22 Feb 2015 00:45:53 +0900
-Message-Id: <1424533554-28024-12-git-send-email-linkinjeon@gmail.com>
+Subject: [PATCH v10 9/12] xfstests: generic/064: Test multiple fallocate
+	insert/collapse range calls
+Date: Sun, 22 Feb 2015 00:45:51 +0900
+Message-Id: <1424533554-28024-10-git-send-email-linkinjeon@gmail.com>
 In-Reply-To: <1424533554-28024-1-git-send-email-linkinjeon@gmail.com>
 References: <1424533554-28024-1-git-send-email-linkinjeon@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -36,220 +36,141 @@ Cc: linux-man@vger.kernel.org, Namjae Jeon <linkinjeon@gmail.com>, Namjae Jeon <
 
 From: Namjae Jeon <namjae.jeon@samsung.com>
 
-This commit adds fallocate FALLOC_FL_INSERT_RANGE support for fsx.
+This testcase(064) tries to test finsert range a single alternate block
+multiple times and test merge code of collase range.
 
 Signed-off-by: Namjae Jeon <namjae.jeon@samsung.com>
 Signed-off-by: Ashish Sangwan <a.sangwan@samsung.com>
 Reviewed-by: Brian Foster <bfoster@redhat.com>
 ---
- ltp/fsx.c |  124 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++-----
- 1 file changed, 114 insertions(+), 10 deletions(-)
+ tests/generic/064     |   95 +++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/generic/064.out |    2 ++
+ tests/generic/group   |    1 +
+ 3 files changed, 98 insertions(+)
+ create mode 100644 tests/generic/064
+ create mode 100644 tests/generic/064.out
 
-diff --git a/ltp/fsx.c b/ltp/fsx.c
-index 0bb8ae8..6da51e9 100644
---- a/ltp/fsx.c
-+++ b/ltp/fsx.c
-@@ -95,7 +95,8 @@ int			logcount = 0;	/* total ops */
- #define OP_PUNCH_HOLE		6
- #define OP_ZERO_RANGE		7
- #define OP_COLLAPSE_RANGE	8
--#define OP_MAX_FULL		9
-+#define OP_INSERT_RANGE	9
-+#define OP_MAX_FULL		10
- 
- /* operation modifiers */
- #define OP_CLOSEOPEN	100
-@@ -146,6 +147,7 @@ int     keep_size_calls = 1;            /* -K flag disables */
- int     punch_hole_calls = 1;           /* -H flag disables */
- int     zero_range_calls = 1;           /* -z flag disables */
- int	collapse_range_calls = 1;	/* -C flag disables */
-+int	insert_range_calls = 1;		/* -I flag disables */
- int 	mapped_reads = 1;		/* -R flag disables it */
- int	fsxgoodfd = 0;
- int	o_direct;			/* -Z */
-@@ -340,6 +342,14 @@ logdump(void)
- 						     lp->args[0] + lp->args[1])
- 				prt("\t******CCCC");
- 			break;
-+		case OP_INSERT_RANGE:
-+			prt("INSERT 0x%x thru 0x%x\t(0x%x bytes)",
-+			    lp->args[0], lp->args[0] + lp->args[1] - 1,
-+			    lp->args[1]);
-+			if (badoff >= lp->args[0] && badoff <
-+						     lp->args[0] + lp->args[1])
-+				prt("\t******IIII");
-+			break;
- 		case OP_SKIPPED:
- 			prt("SKIPPED (no operation)");
- 			break;
-@@ -1014,6 +1024,59 @@ do_collapse_range(unsigned offset, unsigned length)
- }
- #endif
- 
-+#ifdef FALLOC_FL_INSERT_RANGE
-+void
-+do_insert_range(unsigned offset, unsigned length)
-+{
-+	unsigned end_offset;
-+	int mode = FALLOC_FL_INSERT_RANGE;
+diff --git a/tests/generic/064 b/tests/generic/064
+new file mode 100644
+index 0000000..760539a
+--- /dev/null
++++ b/tests/generic/064
+@@ -0,0 +1,95 @@
++#! /bin/bash
++# FS QA Test No. generic/064
++#
++# Test multiple fallocate insert/collapse range calls on same file.
++# Call insert range a single alternate block multiple times until the file
++# is left with 100 extents and as much number of extents. And Call collapse
++# range about the previously inserted ranges to test merge code of collapse
++# range. Also check for data integrity and file system consistency.
++#-----------------------------------------------------------------------
++# Copyright (c) 2015 Samsung Electronics.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#
++#-----------------------------------------------------------------------
++#
 +
-+	if (length == 0) {
-+		if (!quiet && testcalls > simulatedopcount)
-+			prt("skipping zero length insert range\n");
-+		log4(OP_SKIPPED, OP_INSERT_RANGE, offset, length);
-+		return;
-+	}
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
 +
-+	if ((loff_t)offset >= file_size) {
-+		if (!quiet && testcalls > simulatedopcount)
-+			prt("skipping insert range behind EOF\n");
-+		log4(OP_SKIPPED, OP_INSERT_RANGE, offset, length);
-+		return;
-+	}
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++trap "rm -f $tmp.*; exit \$status" 0 1 2 3 15
 +
-+	log4(OP_INSERT_RANGE, offset, length, 0);
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
 +
-+	if (testcalls <= simulatedopcount)
-+		return;
++# real QA test starts here
++_supported_fs generic
++_supported_os Linux
 +
-+	end_offset = offset + length;
-+	if ((progressinterval && testcalls % progressinterval == 0) ||
-+	    (debug && (monitorstart == -1 || monitorend == -1 ||
-+		      end_offset <= monitorend))) {
-+		prt("%lu insert\tfrom 0x%x to 0x%x, (0x%x bytes)\n", testcalls,
-+			offset, offset+length, length);
-+	}
-+	if (fallocate(fd, mode, (loff_t)offset, (loff_t)length) == -1) {
-+		prt("insert range: %x to %x\n", offset, length);
-+		prterr("do_insert_range: fallocate");
-+		report_failure(161);
-+	}
++_require_scratch
++_require_xfs_io_command "fiemap"
++_require_xfs_io_command "finsert"
++_require_xfs_io_command "fcollapse"
++src=$SCRATCH_MNT/testfile
++dest=$SCRATCH_MNT/testfile.dest
++BLOCKS=100
++BSIZE=`get_block_size $SCRATCH_MNT`
++rm -f $seqres.full
 +
-+	memmove(good_buf + end_offset, good_buf + offset,
-+		file_size - offset);
-+	memset(good_buf + offset, '\0', length);
-+	file_size += length;
-+}
++_scratch_mkfs >> $seqres.full 2>&1 || _fail "mkfs failed"
++_scratch_mount || _fail "mount failed"
++length=$(($BLOCKS * $BSIZE))
 +
-+#else
-+void
-+do_insert_range(unsigned offset, unsigned length)
-+{
-+	return;
-+}
-+#endif
++# Write file
++_do "$XFS_IO_PROG -f -c \"pwrite 0 $length\" -c fsync $src"
++cp $src $dest
++extent_before=`$XFS_IO_PROG -c "fiemap -v" $dest | grep "^ *[0-9]*:" |wc -l`
 +
- #ifdef HAVE_LINUX_FALLOC_H
- /* fallocate is basically a no-op unless extending, then a lot like a truncate */
- void
-@@ -1120,14 +1183,25 @@ docloseopen(void)
- 	}
- }
- 
--#define TRIM_OFF_LEN(off, len, size)	\
--do {					\
--	if (size)			\
--		(off) %= (size);	\
--	else				\
--		(off) = 0;		\
--	if ((off) + (len) > (size))	\
--		(len) = (size) - (off);	\
++# Insert alternate blocks
++for (( j=0; j < $(($BLOCKS/2)); j++ )); do
++	offset=$((($j*$BSIZE)*2))
++	_do "$XFS_IO_PROG -c \"finsert $offset $BSIZE\" $dest"
++done
 +
-+#define TRIM_OFF(off, size)			\
-+do {						\
-+	if (size)				\
-+		(off) %= (size);		\
-+	else					\
-+		(off) = 0;			\
-+} while (0)
++# Check if 100 extents are present
++$XFS_IO_PROG -c "fiemap -v" $dest | grep "^ *[0-9]*:" |wc -l
 +
-+#define TRIM_LEN(off, len, size)		\
-+do {						\
-+	if ((off) + (len) > (size))		\
-+		(len) = (size) - (off);		\
-+} while (0)
++_check_scratch_fs
++if [ $? -ne 0 ]; then
++	status=1
++	exit
++fi
 +
-+#define TRIM_OFF_LEN(off, len, size)		\
-+do {						\
-+	TRIM_OFF(off, size);			\
-+	TRIM_LEN(off, len, size);		\
- } while (0)
- 
- void
-@@ -1195,6 +1269,12 @@ test(void)
- 			goto out;
- 		}
- 		break;
-+	case OP_INSERT_RANGE:
-+		if (!insert_range_calls) {
-+			log4(OP_SKIPPED, OP_INSERT_RANGE, offset, size);
-+			goto out;
-+		}
-+		break;
- 	}
- 
- 	switch (op) {
-@@ -1247,6 +1327,22 @@ test(void)
- 		}
- 		do_collapse_range(offset, size);
- 		break;
-+	case OP_INSERT_RANGE:
-+		TRIM_OFF(offset, file_size);
-+		TRIM_LEN(file_size, size, maxfilelen);
-+		offset = offset & ~(block_size - 1);
-+		size = size & ~(block_size - 1);
-+		if (size == 0) {
-+			log4(OP_SKIPPED, OP_INSERT_RANGE, offset, size);
-+			goto out;
-+		}
-+		if (file_size + size > maxfilelen) {
-+			log4(OP_SKIPPED, OP_INSERT_RANGE, offset, size);
-+			goto out;
-+		}
++# Collapse alternate blocks
++for (( j=0; j < $(($BLOCKS/2)); j++ )); do
++	offset=$((($j*$BSIZE)))
++	_do "$XFS_IO_PROG -c \"fcollapse $offset $BSIZE\" $dest"
++done
 +
-+		do_insert_range(offset, size);
-+		break;
- 	default:
- 		prterr("test: unknown operation");
- 		report_failure(42);
-@@ -1310,6 +1406,9 @@ usage(void)
- #ifdef FALLOC_FL_COLLAPSE_RANGE
- "	-C: Do not use collapse range calls\n"
- #endif
-+#ifdef FALLOC_FL_INSERT_RANGE
-+"	-I: Do not use insert range calls\n"
-+#endif
- "	-L: fsxLite - no file creations & no file size changes\n\
- 	-N numops: total # operations to do (default infinity)\n\
- 	-O: use oplen (see -o flag) for every op (default random)\n\
-@@ -1496,7 +1595,7 @@ main(int argc, char **argv)
- 
- 	setvbuf(stdout, (char *)0, _IOLBF, 0); /* line buffered stdout */
- 
--	while ((ch = getopt(argc, argv, "b:c:dfl:m:no:p:qr:s:t:w:xyAD:FKHzCLN:OP:RS:WZ"))
-+	while ((ch = getopt(argc, argv, "b:c:dfl:m:no:p:qr:s:t:w:xyAD:FKHzCILN:OP:RS:WZ"))
- 	       != EOF)
- 		switch (ch) {
- 		case 'b':
-@@ -1605,6 +1704,9 @@ main(int argc, char **argv)
- 		case 'C':
- 			collapse_range_calls = 0;
- 			break;
-+		case 'I':
-+			insert_range_calls = 0;
-+			break;
- 		case 'L':
- 		        lite = 1;
- 			break;
-@@ -1766,6 +1868,8 @@ main(int argc, char **argv)
- 		zero_range_calls = test_fallocate(FALLOC_FL_ZERO_RANGE);
- 	if (collapse_range_calls)
- 		collapse_range_calls = test_fallocate(FALLOC_FL_COLLAPSE_RANGE);
-+	if (insert_range_calls)
-+		insert_range_calls = test_fallocate(FALLOC_FL_INSERT_RANGE);
- 
- 	while (numops == -1 || numops--)
- 		test();
++extent_after=`$XFS_IO_PROG -c "fiemap -v" $dest | grep "^ *[0-9]*:" |wc -l`
++if [ $extent_before -ne $extent_after ]; then
++	echo "extents mismatched before = $extent_before after = $extent_after"
++fi
++
++# compare original file and test file.
++cmp $src $dest || _fail "file bytes check failed"
++
++# success, all done
++status=0
++exit
+diff --git a/tests/generic/064.out b/tests/generic/064.out
+new file mode 100644
+index 0000000..b217df5
+--- /dev/null
++++ b/tests/generic/064.out
+@@ -0,0 +1,2 @@
++QA output created by 064
++100
+diff --git a/tests/generic/group b/tests/generic/group
+index f7f7978..1bd4c33 100644
+--- a/tests/generic/group
++++ b/tests/generic/group
+@@ -66,6 +66,7 @@
+ 061 auto quick prealloc
+ 062 attr udf auto quick
+ 063 auto quick prealloc
++064 auto quick prealloc
+ 068 other auto freeze dangerous stress
+ 069 rw udf auto quick
+ 070 attr udf auto quick stress
 -- 
 1.7.9.5
 
