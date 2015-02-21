@@ -1,20 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 32F787F47
-	for <xfs@oss.sgi.com>; Fri, 20 Feb 2015 18:13:05 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 13358304032
-	for <xfs@oss.sgi.com>; Fri, 20 Feb 2015 16:13:01 -0800 (PST)
-Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
-	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	swlcFqfVYpLlHrXj for <xfs@oss.sgi.com>;
-	Fri, 20 Feb 2015 16:12:59 -0800 (PST)
-Date: Sat, 21 Feb 2015 11:12:28 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: [GIT PULL] xfs: PNFS block layout support for 3.20-rc1
-Message-ID: <20150221001228.GS4251@dastard>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 948BF7F58
+	for <xfs@oss.sgi.com>; Sat, 21 Feb 2015 01:57:13 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 827F68F8064
+	for <xfs@oss.sgi.com>; Fri, 20 Feb 2015 23:57:10 -0800 (PST)
+Received: from mail-wg0-f48.google.com (mail-wg0-f48.google.com
+	[74.125.82.48]) by cuda.sgi.com with ESMTP id Ofyl1rkkFSNyVTB5
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Fri, 20 Feb 2015 23:57:08 -0800 (PST)
+Received: by mail-wg0-f48.google.com with SMTP id l18so16931526wgh.7
+	for <xfs@oss.sgi.com>; Fri, 20 Feb 2015 23:57:06 -0800 (PST)
+Message-ID: <54E83A51.6000807@gmail.com>
+Date: Sat, 21 Feb 2015 08:57:05 +0100
+From: "Michael Kerrisk (man-pages)" <mtk.manpages@gmail.com>
 MIME-Version: 1.0
-Content-Disposition: inline
+Subject: Re: Documenting MS_LAZYTIME
+References: <CAHO5Pa0k7QkV_6BDjwTVxa7LV9tFyN9nGFFcSvOC6HYO08wfrw@mail.gmail.com>
+	<54E7578E.4090809@redhat.com>
+In-Reply-To: <54E7578E.4090809@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,69 +27,69 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: torvalds@linux-foundation.org
-Cc: akpm@linux-foundation.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@redhat.com>, Theodore Ts'o <tytso@mit.edu>
+Cc: linux-man@vger.kernel.org, Linux API <linux-api@vger.kernel.org>, XFS Developers <xfs@oss.sgi.com>, mtk.manpages@gmail.com, Linux-Fsdevel <linux-fsdevel@vger.kernel.org>, Ext4 Developers List <linux-ext4@vger.kernel.org>, Linux btrfs Developers List <linux-btrfs@vger.kernel.org>
 
-Hi Linus,
-
-Can you please pull the updates from the tree below? It contains the
-changes to XFS needed to support the PNFS block layout server that
-you pulled in through Bruce's NFS server tree merge. I originally
-thought that I'd need to merge changes into the NFS server side,
-but Bruce had already picked them up and so this is purely changes
-to the fs/xfs/ codebase.
-
-It should merge cleanly with your current tree - if it doesn't then
-I've probably done something wrong.
-
--Dave.
-
-The following changes since commit bad962662dbc60e76ec1baae34af56b1ba2dfa5f:
-
-  Merge branch 'xfs-misc-fixes-for-3.20-4' into for-next (2015-02-10 09:24:25 +1100)
-
-are available in the git repository at:
-
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/dgc/linux-xfs.git tags/xfs-pnfs-for-linus-3.20-rc1
-
-for you to fetch changes up to 781355c6e5ae87908de27dec3380a34918c33eee:
-
-  xfs: recall pNFS layouts on conflicting access (2015-02-16 11:59:50 +1100)
-
-----------------------------------------------------------------
-xfs: pnfs block layout support for 3.20-rc1
-
-This update contains the implementation of the PNFS server export
-methods that enable use of XFS filesystems as a block layout target.
-
-----------------------------------------------------------------
-Christoph Hellwig (2):
-      xfs: implement pNFS export operations
-      xfs: recall pNFS layouts on conflicting access
-
- fs/xfs/Makefile     |    1 +
- fs/xfs/xfs_export.c |    6 +
- fs/xfs/xfs_file.c   |   14 ++-
- fs/xfs/xfs_fsops.c  |    6 +
- fs/xfs/xfs_ioctl.c  |    9 +-
- fs/xfs/xfs_iops.c   |   13 ++-
- fs/xfs/xfs_iops.h   |    1 +
- fs/xfs/xfs_mount.h  |   11 ++
- fs/xfs/xfs_pnfs.c   |  322 +++++++++++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/xfs_pnfs.h   |   18 +++
- 10 files changed, 393 insertions(+), 8 deletions(-)
- create mode 100644 fs/xfs/xfs_pnfs.c
- create mode 100644 fs/xfs/xfs_pnfs.h
--- 
-Dave Chinner
-david@fromorbit.com
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gMDIvMjAvMjAxNSAwNDo0OSBQTSwgRXJpYyBTYW5kZWVuIHdyb3RlOgo+IE9uIDIvMjAvMTUg
+Mjo1MCBBTSwgTWljaGFlbCBLZXJyaXNrIHdyb3RlOgo+PiBIZWxsbyBUZWQsCj4+Cj4+IEJhc2Vk
+IG9uIHlvdXIgY29tbWl0IG1lc3NhZ2UgMGFlNDVmNjNkNGUsIEkgSSB3cm90ZSB0aGUgZG9jdW1l
+bnRhdGlvbgo+PiBiZWxvdyBmb3IgTVNfTEFaWVRJTUUsIHRvIGdvIGludG8gdGhlIG1vdW50KDIp
+IG1hbiBwYWdlLiBDb3VsZCB5b3UKPj4gcGxlYXNlIGNoZWNrIGl0IG92ZXIgYW5kIGxldCBtZSBr
+bm93IGlmIGl0J3MgYWNjdXJhdGUuIEluIHBhcnRpY3VsYXIsCj4+IEkgYWRkZWQgcGllY2VzIG1h
+cmtlZCB3aXRoICIqIiBiZWxvdyB0aGF0IHdlcmUgbm90IHBhcnQgb2YgdGhlIGNvbW1pdAo+PiBt
+ZXNzYWdlIGFuZCBJJ2QgbGlrZSBjb25maXJtYXRpb24gdGhhdCB0aGV5J3JlIGFjY3VyYXRlLgo+
+Pgo+PiBUaGFua3MsCj4+Cj4+IE1pY2hhZWwKPj4KPj4gW1sKPj4gICAgICAgIE1TX0xBWllUSU1F
+IChzaW5jZSBMaW51eCAzLjIwKQo+PiAgICAgICAgICAgICAgIE9ubHkgIHVwZGF0ZSAgZmlsZXRp
+bWVzIChhdGltZSwgbXRpbWUsIGN0aW1lKSBvbiB0aGUgaW4tCj4+ICAgICAgICAgICAgICAgbWVt
+b3J5IHZlcnNpb24gb2YgdGhlIGZpbGUgIGlub2RlLiAgIFRoZSAgb24tZGlzayAgdGltZeKAkAo+
+PiAgICAgICAgICAgICAgIHN0YW1wcyBhcmUgdXBkYXRlZCBvbmx5IHdoZW46Cj4gCj4gImZpbGV0
+aW1lcyIgYW5kICJmaWxlIGlub2RlIiBzZWVtcyBhIGJpdCBhd2t3YXJkLiAgSG93IGFib3V0Ogo+
+IAo+PiAgICAgICAgTVNfTEFaWVRJTUUgKHNpbmNlIExpbnV4IDMuMjApCj4+IAkJUmVkdWNlIG9u
+LWRpc2sgdXBkYXRlcyBvZiBpbm9kZSB0aW1lc3RhbXBzIChhdGltZSwgbXRpbWUsIGN0aW1lKQo+
+PiAJCWJ5IG1haW50YWluaW5nIHRoZXNlIGNoYW5nZXMgb25seSBpbiBtZW1vcnksIHVubGVzczoK
+PiAKPiAobWF5YmUgSSdtIGJpa2Utc2hlZGRpbmcgdG9vIG11Y2gsIGlmIHNvLCBzb3JyeSkuCgpO
+YWggaXQnJ3MgdGhlIGdvb2Qgc29ydCBvZiBiaWtlc2hlZGRpbmcgOy0pLiAiZmlsZXRpbWVzIiB3
+YXMgYSB3b3Jkby0tSSAKbWVhbnQgInRpbWVzdGFtcHMiLiBJJ3ZlIHRha2VuIHlvdXIgd29yZGlu
+ZyBtb3N0bHkuCgo+IAo+PiAgICAgICAgICAgICAgIChhKSAgdGhlIGlub2RlIG5lZWRzIHRvIGJl
+IHVwZGF0ZWQgZm9yIHNvbWUgY2hhbmdlIHVucmXigJAKPj4gICAgICAgICAgICAgICAgICAgIGxh
+dGVkIHRvIGZpbGUgdGltZXN0YW1wczsKPj4KPj4gICAgICAgICAgICAgICAoYikgIHRoZSBhcHBs
+aWNhdGlvbiAgZW1wbG95cyAgZnN5bmMoMiksICBzeW5jZnMoMiksICBvcgo+PiAgICAgICAgICAg
+ICAgICAgICAgc3luYygyKTsKPj4KPj4gICAgICAgICAgICAgICAoYykgIGFuIHVuZGVsZXRlZCBp
+bm9kZSBpcyBldmljdGVkIGZyb20gbWVtb3J5OyBvcgo+Pgo+PiAqICAgICAgICAgICAgIChkKSAg
+bW9yZSB0aGFuIDI0IGhvdXJzIGhhdmUgcGFzc2VkIHNpbmNlIHRoZSBpLW5vZGUgd2FzCj4+ICog
+ICAgICAgICAgICAgICAgICB3cml0dGVuIHRvIGRpc2suCj4gCj4gUGxlYXNlIGRvbid0IHVzZSAi
+aS1ub2RlIiAtIHNpbXBseSAiaW5vZGUiIGlzIG11Y2ggbW9yZSBjb21tb24gaW4gdGhlIG1hbnBh
+Z2VzCj4gQUZBSUNULgoKWXVwLCB0aGF0IHdhcyBhIHR5cG8uIEZpeGVkLgoKPj4gICAgICAgICAg
+ICAgICBUaGlzIG1vdW50IG9wdGlvbiBzaWduaWZpY2FudGx5IHJlZHVjZXMgIHdyaXRlcyAgdG8g
+IHRoZQo+PiAgICAgICAgICAgICAgIGlub2RlICB0YWJsZSAgZm9yIHdvcmtsb2FkcyB0aGF0IHBl
+cmZvcm0gZnJlcXVlbnQgcmFuZG9tCj4+ICAgICAgICAgICAgICAgd3JpdGVzIHRvIHByZWFsbG9j
+YXRlZCBmaWxlcy4KPiAKPiBUaGlzIHNlZW1zIGxpa2UgYW4gb3Zlcmx5IHNwZWNpZmljIGRlc2Ny
+aXB0aW9uIG9mIGEgc2luZ2xlIHdvcmtsb2FkIG91dAo+IG9mIG1hbnkgd2hpY2ggbWF5IGJlbmVm
+aXQsIGJ1dCB3aGF0IGRvIG90aGVycyB0aGluaz8gIAoKRmFpciBlbm91Z2guIEkgcmV3b3JkZWQg
+dGhhdCB0byBub3RlIGl0IGFzIGFuIGV4YW1wbGUuCgo+ICJpbm9kZSB0YWJsZSIgaXMgYWxzbyBm
+YWlybHkgZXh0Ti1zcGVjaWZpYy4KCkknbGwgYXdhaXQgZnVydGhlciBpbnB1dCBvbiB0aGF0IHBv
+aW50LgoKTm93IHdlIGhhdmU6CgogICAgICAgTVNfTEFaWVRJTUUgKHNpbmNlIExpbnV4IDMuMjAp
+CiAgICAgICAgICAgICAgUmVkdWNlICBvbi1kaXNrICB1cGRhdGVzICBvZiAgaW5vZGUgIHRpbWVz
+dGFtcHMgIChhdGltZSwKICAgICAgICAgICAgICBtdGltZSwgY3RpbWUpIGJ5IG1haW50YWluaW5n
+IHRoZXNlIGNoYW5nZXMgb25seSBpbiAgbWVt4oCQCiAgICAgICAgICAgICAgb3J5LiAgVGhlIG9u
+LWRpc2sgdGltZXN0YW1wcyBhcmUgdXBkYXRlZCBvbmx5IHdoZW46CgogICAgICAgICAgICAgIChh
+KSAgdGhlIGlub2RlIG5lZWRzIHRvIGJlIHVwZGF0ZWQgZm9yIHNvbWUgY2hhbmdlIHVucmXigJAK
+ICAgICAgICAgICAgICAgICAgIGxhdGVkIHRvIGZpbGUgdGltZXN0YW1wczsKCiAgICAgICAgICAg
+ICAgKGIpICB0aGUgYXBwbGljYXRpb24gIGVtcGxveXMgIGZzeW5jKDIpLCAgc3luY2ZzKDIpLCAg
+b3IKICAgICAgICAgICAgICAgICAgIHN5bmMoMik7CgogICAgICAgICAgICAgIChjKSAgYW4gdW5k
+ZWxldGVkIGlub2RlIGlzIGV2aWN0ZWQgZnJvbSBtZW1vcnk7IG9yCgogICAgICAgICAgICAgIChk
+KSAgbW9yZSAgdGhhbiAyNCBob3VycyBoYXZlIHBhc3NlZCBzaW5jZSB0aGUgaW5vZGUgd2FzCiAg
+ICAgICAgICAgICAgICAgICB3cml0dGVuIHRvIGRpc2suCgogICAgICAgICAgICAgIFRoaXMgbW91
+bnQgb3B0aW9uIHNpZ25pZmljYW50bHkgcmVkdWNlcyAgd3JpdGVzICB0byAgdGhlCiAgICAgICAg
+ICAgICAgaW5vZGUgIHRhYmxlICBmb3IgIHNvbWUgd29ya2xvYWRzIChlLmcuLCB3aGVuIHBlcmZv
+cm1pbmcKICAgICAgICAgICAgICBmcmVxdWVudCByYW5kb20gd3JpdGVzIHRvIHByZWFsbG9jYXRl
+ZCBmaWxlcykuCgpDaGVlcnMsCgpNaWNoYWVsCgotLSAKTWljaGFlbCBLZXJyaXNrCkxpbnV4IG1h
+bi1wYWdlcyBtYWludGFpbmVyOyBodHRwOi8vd3d3Lmtlcm5lbC5vcmcvZG9jL21hbi1wYWdlcy8K
+TGludXgvVU5JWCBTeXN0ZW0gUHJvZ3JhbW1pbmcgVHJhaW5pbmc6IGh0dHA6Ly9tYW43Lm9yZy90
+cmFpbmluZy8KCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+CnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWls
+bWFuL2xpc3RpbmZvL3hmcwo=
