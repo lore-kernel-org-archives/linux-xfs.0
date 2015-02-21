@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 1B70129E13
-	for <xfs@oss.sgi.com>; Sat, 21 Feb 2015 09:49:55 -0600 (CST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 7249529E13
+	for <xfs@oss.sgi.com>; Sat, 21 Feb 2015 09:49:56 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id BB796AC003
-	for <xfs@oss.sgi.com>; Sat, 21 Feb 2015 07:49:54 -0800 (PST)
-Received: from mail-pa0-f46.google.com (mail-pa0-f46.google.com
-	[209.85.220.46]) by cuda.sgi.com with ESMTP id HIEp9gaLaMscIf3M
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 35E3A304043
+	for <xfs@oss.sgi.com>; Sat, 21 Feb 2015 07:49:56 -0800 (PST)
+Received: from mail-pa0-f51.google.com (mail-pa0-f51.google.com
+	[209.85.220.51]) by cuda.sgi.com with ESMTP id 19lVExagBTDeCxgF
 	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Sat, 21 Feb 2015 07:49:36 -0800 (PST)
-Received: by pabrd3 with SMTP id rd3so15769984pab.4
-	for <xfs@oss.sgi.com>; Sat, 21 Feb 2015 07:49:36 -0800 (PST)
+	<xfs@oss.sgi.com>; Sat, 21 Feb 2015 07:49:54 -0800 (PST)
+Received: by pablf10 with SMTP id lf10so15759558pab.6
+	for <xfs@oss.sgi.com>; Sat, 21 Feb 2015 07:49:54 -0800 (PST)
 From: Namjae Jeon <linkinjeon@gmail.com>
-Subject: [PATCH v10 9/12] xfstests: generic/064: Test multiple fallocate
-	insert/collapse range calls
-Date: Sun, 22 Feb 2015 00:45:51 +0900
-Message-Id: <1424533554-28024-10-git-send-email-linkinjeon@gmail.com>
+Subject: [PATCH v10 12/12] manpage: update FALLOC_FL_INSERT_RANGE flag in
+	fallocate
+Date: Sun, 22 Feb 2015 00:45:54 +0900
+Message-Id: <1424533554-28024-13-git-send-email-linkinjeon@gmail.com>
 In-Reply-To: <1424533554-28024-1-git-send-email-linkinjeon@gmail.com>
 References: <1424533554-28024-1-git-send-email-linkinjeon@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -36,141 +36,164 @@ Cc: linux-man@vger.kernel.org, Namjae Jeon <linkinjeon@gmail.com>, Namjae Jeon <
 
 From: Namjae Jeon <namjae.jeon@samsung.com>
 
-This testcase(064) tries to test finsert range a single alternate block
-multiple times and test merge code of collase range.
+Update FALLOC_FL_INSERT_RANGE flag in fallocate.
 
 Signed-off-by: Namjae Jeon <namjae.jeon@samsung.com>
 Signed-off-by: Ashish Sangwan <a.sangwan@samsung.com>
-Reviewed-by: Brian Foster <bfoster@redhat.com>
 ---
- tests/generic/064     |   95 +++++++++++++++++++++++++++++++++++++++++++++++++
- tests/generic/064.out |    2 ++
- tests/generic/group   |    1 +
- 3 files changed, 98 insertions(+)
- create mode 100644 tests/generic/064
- create mode 100644 tests/generic/064.out
+ man2/fallocate.2 |   88 ++++++++++++++++++++++++++++++++++++++++++++++++++----
+ 1 file changed, 82 insertions(+), 6 deletions(-)
 
-diff --git a/tests/generic/064 b/tests/generic/064
-new file mode 100644
-index 0000000..760539a
---- /dev/null
-+++ b/tests/generic/064
-@@ -0,0 +1,95 @@
-+#! /bin/bash
-+# FS QA Test No. generic/064
-+#
-+# Test multiple fallocate insert/collapse range calls on same file.
-+# Call insert range a single alternate block multiple times until the file
-+# is left with 100 extents and as much number of extents. And Call collapse
-+# range about the previously inserted ranges to test merge code of collapse
-+# range. Also check for data integrity and file system consistency.
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2015 Samsung Electronics.  All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#
-+#-----------------------------------------------------------------------
-+#
+diff --git a/man2/fallocate.2 b/man2/fallocate.2
+index adf42db..9b3c460 100644
+--- a/man2/fallocate.2
++++ b/man2/fallocate.2
+@@ -8,7 +8,7 @@
+ .\" 2011-09-19: Added FALLOC_FL_PUNCH_HOLE
+ .\" 2011-09-19: Substantial restructuring of the page
+ .\"
+-.TH FALLOCATE 2 2015-01-22 "Linux" "Linux Programmer's Manual"
++.TH FALLOCATE 2 2015-02-14 "Linux" "Linux Programmer's Manual"
+ .SH NAME
+ fallocate \- manipulate file space
+ .SH SYNOPSIS
+@@ -225,6 +225,56 @@ XFS (since Linux 3.14)
+ .IP *
+ ext4, for extent-based files (since Linux 3.14)
+ .\" commit b8a8684502a0fc852afa0056c6bb2a9273f6fcc0
++.SS Increasing file space
++.\" TODO: Mention commit id and supporting Linux version
++Specifying the
++.BR FALLOC_FL_INSERT_RANGE
++flag in
++.I mode
++will increase the file space by inserting a hole within the file size without
++overwriting any existing data. The hole will start at
++.I offset
++and continue for
++.I len
++bytes. For inserting hole inside file, the contents of the file starting at
++.I offset
++will be shifted towards right by
++.I len
++bytes. Inserting a hole inside the file will increase the file size by
++.I len
++bytes.
 +
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
++This mode has the same limitation as
++.BR FALLOC_FL_COLLAPSE_RANGE
++regarding the
++granularity of the operation.
++If the granulrity requirements are not met,
++.BR fallocate ()
++will fail with the error
++.BR EINVAL.
++If the
++.I offset
++overlaps with end of file OR if it is greater than end of file, an error is
++returned. For such type of operations, i.e. inserting a hole at the end of
++file,
++.BR ftruncate(2)
++should be used.
++In case
++.IR offset + len
++exceeds the maximum file size, errno will be set to
++.B EFBIG.
 +
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1	# failure is the default!
-+trap "rm -f $tmp.*; exit \$status" 0 1 2 3 15
++No other flags may be specified in
++.IR mode
++in conjunction with
++.BR FALLOC_FL_INSERT_RANGE .
 +
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
++As of Linux XXXX,
++.\" TODO: Mention commit id and supporting Linux version
++.B FALLOC_FL_INSERT_RANGE
++is supported by
++ext4 (only for extent-based files) and XFS.
 +
-+# real QA test starts here
-+_supported_fs generic
-+_supported_os Linux
-+
-+_require_scratch
-+_require_xfs_io_command "fiemap"
-+_require_xfs_io_command "finsert"
-+_require_xfs_io_command "fcollapse"
-+src=$SCRATCH_MNT/testfile
-+dest=$SCRATCH_MNT/testfile.dest
-+BLOCKS=100
-+BSIZE=`get_block_size $SCRATCH_MNT`
-+rm -f $seqres.full
-+
-+_scratch_mkfs >> $seqres.full 2>&1 || _fail "mkfs failed"
-+_scratch_mount || _fail "mount failed"
-+length=$(($BLOCKS * $BSIZE))
-+
-+# Write file
-+_do "$XFS_IO_PROG -f -c \"pwrite 0 $length\" -c fsync $src"
-+cp $src $dest
-+extent_before=`$XFS_IO_PROG -c "fiemap -v" $dest | grep "^ *[0-9]*:" |wc -l`
-+
-+# Insert alternate blocks
-+for (( j=0; j < $(($BLOCKS/2)); j++ )); do
-+	offset=$((($j*$BSIZE)*2))
-+	_do "$XFS_IO_PROG -c \"finsert $offset $BSIZE\" $dest"
-+done
-+
-+# Check if 100 extents are present
-+$XFS_IO_PROG -c "fiemap -v" $dest | grep "^ *[0-9]*:" |wc -l
-+
-+_check_scratch_fs
-+if [ $? -ne 0 ]; then
-+	status=1
-+	exit
-+fi
-+
-+# Collapse alternate blocks
-+for (( j=0; j < $(($BLOCKS/2)); j++ )); do
-+	offset=$((($j*$BSIZE)))
-+	_do "$XFS_IO_PROG -c \"fcollapse $offset $BSIZE\" $dest"
-+done
-+
-+extent_after=`$XFS_IO_PROG -c "fiemap -v" $dest | grep "^ *[0-9]*:" |wc -l`
-+if [ $extent_before -ne $extent_after ]; then
-+	echo "extents mismatched before = $extent_before after = $extent_after"
-+fi
-+
-+# compare original file and test file.
-+cmp $src $dest || _fail "file bytes check failed"
-+
-+# success, all done
-+status=0
-+exit
-diff --git a/tests/generic/064.out b/tests/generic/064.out
-new file mode 100644
-index 0000000..b217df5
---- /dev/null
-+++ b/tests/generic/064.out
-@@ -0,0 +1,2 @@
-+QA output created by 064
-+100
-diff --git a/tests/generic/group b/tests/generic/group
-index f7f7978..1bd4c33 100644
---- a/tests/generic/group
-+++ b/tests/generic/group
-@@ -66,6 +66,7 @@
- 061 auto quick prealloc
- 062 attr udf auto quick
- 063 auto quick prealloc
-+064 auto quick prealloc
- 068 other auto freeze dangerous stress
- 069 rw udf auto quick
- 070 attr udf auto quick stress
+ .SH RETURN VALUE
+ On success,
+ .BR fallocate ()
+@@ -242,6 +292,12 @@ is not a valid file descriptor, or is not opened for writing.
+ .IR offset + len
+ exceeds the maximum file size.
+ .TP
++.B EFBIG
++.I mode
++is
++.BR FALLOC_FL_INSERT_RANGE ,
++the current file size+len excceds the maximum file size.
++.TP
+ .B EINTR
+ A signal was caught during execution.
+ .TP
+@@ -270,7 +326,17 @@ reaches or passes the end of the file.
+ .B EINVAL
+ .I mode
+ is
+-.BR FALLOC_FL_COLLAPSE_RANGE ,
++.BR FALLOC_FL_INSERT_RANGE
++and the range specified by
++.I offset
++reaches or passes the end of the file.
++.TP
++.B EINVAL
++.I mode
++is
++.BR FALLOC_FL_COLLAPSE_RANGE
++or
++.BR FALLOC_FL_INSERT_RANGE ,
+ but either
+ .I offset
+ or
+@@ -279,18 +345,24 @@ is not a multiple of the filesystem block size.
+ .TP
+ .B EINVAL
+ .I mode
+-contains both
++contains either of
+ .B FALLOC_FL_COLLAPSE_RANGE
++or
++.B FALLOC_FL_INSERT_RANGE
+ and other flags;
+ no other flags are permitted with
+-.BR FALLOC_FL_COLLAPSE_RANGE .
++.BR FALLOC_FL_COLLAPSE_RANGE
++or
++.BR FALLOC_FL_INSERT_RANGE .
+ .TP
+ .B EINVAL
+ .I mode
+ is
+ .BR FALLOC_FL_COLLAPSE_RANGE
+ or
+-.BR FALLOC_FL_ZERO_RANGE ,
++.BR FALLOC_FL_ZERO_RANGE
++or
++.BR FALLOC_FL_INSERT_RANGE ,
+ but the file referred to by
+ .I fd
+ is not a regular file.
+@@ -342,6 +414,8 @@ specifies
+ .BR FALLOC_FL_PUNCH_HOLE
+ or
+ .BR FALLOC_FL_COLLAPSE_RANGE
++or
++.BR FALLOC_FL_INSERT_RANGE
+ and
+ the file referred to by
+ .I fd
+@@ -360,7 +434,9 @@ refers to a pipe or FIFO.
+ .B ETXTBSY
+ .I mode
+ specifies
+-.BR FALLOC_FL_COLLAPSE_RANGE ,
++.BR FALLOC_FL_COLLAPSE_RANGE
++or
++.BR FALLOC_FL_INSERT_RANGE ,
+ but the file referred to by
+ .IR fd
+ is currently being executed.
 -- 
 1.7.9.5
 
