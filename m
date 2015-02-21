@@ -1,23 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 9AD0B7F58
-	for <xfs@oss.sgi.com>; Sat, 21 Feb 2015 01:57:28 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 5C9CB8F8070
-	for <xfs@oss.sgi.com>; Fri, 20 Feb 2015 23:57:28 -0800 (PST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 9A6FA7F62
+	for <xfs@oss.sgi.com>; Sat, 21 Feb 2015 01:57:34 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 8826E304066
+	for <xfs@oss.sgi.com>; Fri, 20 Feb 2015 23:57:31 -0800 (PST)
 Received: from imap.thunk.org (imap.thunk.org [74.207.234.97]) by cuda.sgi.com
-	with ESMTP id zfhsVNCHAzozVcxm (version=TLSv1 cipher=AES128-SHA
+	with ESMTP id 5GeTgleK6k7KEe4m (version=TLSv1 cipher=AES128-SHA
 	bits=128 verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 20 Feb 2015 23:57:25 -0800 (PST)
-Date: Fri, 20 Feb 2015 21:56:36 -0500
+	Fri, 20 Feb 2015 23:57:29 -0800 (PST)
+Date: Fri, 20 Feb 2015 22:20:00 -0500
 From: Theodore Ts'o <tytso@mit.edu>
-Subject: Re: Documenting MS_LAZYTIME
-Message-ID: <20150221025636.GB7922@thunk.org>
-References: <CAHO5Pa0k7QkV_6BDjwTVxa7LV9tFyN9nGFFcSvOC6HYO08wfrw@mail.gmail.com>
-	<54E7578E.4090809@redhat.com>
+Subject: Re: How to handle TIF_MEMDIE stalls?
+Message-ID: <20150221032000.GC7922@thunk.org>
+References: <201502172123.JIE35470.QOLMVOFJSHOFFt@I-love.SAKURA.ne.jp>
+	<20150217125315.GA14287@phnom.home.cmpxchg.org>
+	<20150217225430.GJ4251@dastard>
+	<20150219102431.GA15569@phnom.home.cmpxchg.org>
+	<20150219225217.GY12722@dastard>
+	<201502201936.HBH34799.SOLFFFQtHOMOJV@I-love.SAKURA.ne.jp>
+	<20150220231511.GH12722@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <54E7578E.4090809@redhat.com>
+In-Reply-To: <20150220231511.GH12722@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,30 +35,41 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: linux-man@vger.kernel.org, Linux API <linux-api@vger.kernel.org>, XFS Developers <xfs@oss.sgi.com>, Michael Kerrisk <mtk.manpages@gmail.com>, Linux-Fsdevel <linux-fsdevel@vger.kernel.org>, Ext4 Developers List <linux-ext4@vger.kernel.org>, Linux btrfs Developers List <linux-btrfs@vger.kernel.org>
+To: Dave Chinner <david@fromorbit.com>
+Cc: hannes@cmpxchg.org, Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, dchinner@redhat.com, oleg@redhat.com, xfs@oss.sgi.com, mhocko@suse.cz, linux-mm@kvack.org, mgorman@suse.de, rientjes@google.com, akpm@linux-foundation.org, linux-ext4@vger.kernel.org, torvalds@linux-foundation.org
 
-On Fri, Feb 20, 2015 at 09:49:34AM -0600, Eric Sandeen wrote:
-> 
-> >               This mount option significantly reduces  writes  to  the
-> >               inode  table  for workloads that perform frequent random
-> >               writes to preallocated files.
-> 
-> This seems like an overly specific description of a single workload out
-> of many which may benefit, but what do others think?  "inode table" is also
-> fairly extN-specific.
++akpm
 
-How about somethign like "This mount significantly reduces writes
-needed to update the inode's timestamps, especially mtime and actime.
-Examples of workloads where this could be a large win include frequent
-random writes to preallocated files, as well as cases where the
-MS_STRICTATIME mount option is enabled."?
+So I'm arriving late to this discussion since I've been in conference
+mode for the past week, and I'm only now catching up on this thread.
 
-(The advantage of MS_STRICTATIME | MS_LAZYTIME is that stat system
-calls will return the correctly updated atime, but those atime updates
-won't get flushed to disk unless the inode needs to be updated for
-file system / data consistency reasons, or when the inode is pushed
-out of memory, or when the file system is unmounted.)
+I'll note that this whole question of whether or not file systems
+should use GFP_NOFAIL is one where the mm developers are not of one
+mind.
+
+In fact, search for the subject line "fs/reiserfs/journal.c: Remove
+obsolete __GFP_NOFAIL" where we recapitulated many of these arguments,
+Andrew Morton said that it was better to use GFP_NOFAIL over the
+alternatives of (a) panic'ing the kernel because the file system has
+no way to move forward other than leaving the file system corrupted,
+or (b) looping in the file system to retry the memory allocation to
+avoid the unfortunate effects of (a).
+
+So based on akpm's sage advise and wisdom, I added back GFP_NOFAIL to
+ext4/jbd2.
+
+It sounds like 9879de7373fc is causing massive file system
+errors, and it seems **really** unfortunate it was added so late in
+the day (between -rc6 and rc7).
+
+So at this point, it seems we have two choices.  We can either revert
+9879de7373fc, or I can add a whole lot more GFP_FAIL flags to ext4's
+memory allocations and submit them as stable bug fixes.
+
+Linux MM developers, this is your call.  I will liberally be adding
+GFP_NOFAIL to ext4 if you won't revert the commit, because that's the
+only way I can fix things with minimal risk of adding additional,
+potentially more serious regressions.
 
 						- Ted
 
