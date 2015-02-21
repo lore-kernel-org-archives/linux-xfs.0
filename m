@@ -1,27 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 180A07F56
-	for <xfs@oss.sgi.com>; Fri, 20 Feb 2015 17:15:19 -0600 (CST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 32F787F47
+	for <xfs@oss.sgi.com>; Fri, 20 Feb 2015 18:13:05 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id DEA158F8073
-	for <xfs@oss.sgi.com>; Fri, 20 Feb 2015 15:15:15 -0800 (PST)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 13358304032
+	for <xfs@oss.sgi.com>; Fri, 20 Feb 2015 16:13:01 -0800 (PST)
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	hDTiAuEdpTiBTxfq for <xfs@oss.sgi.com>;
-	Fri, 20 Feb 2015 15:15:13 -0800 (PST)
-Date: Sat, 21 Feb 2015 10:15:11 +1100
+	swlcFqfVYpLlHrXj for <xfs@oss.sgi.com>;
+	Fri, 20 Feb 2015 16:12:59 -0800 (PST)
+Date: Sat, 21 Feb 2015 11:12:28 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: How to handle TIF_MEMDIE stalls?
-Message-ID: <20150220231511.GH12722@dastard>
-References: <201502172123.JIE35470.QOLMVOFJSHOFFt@I-love.SAKURA.ne.jp>
-	<20150217125315.GA14287@phnom.home.cmpxchg.org>
-	<20150217225430.GJ4251@dastard>
-	<20150219102431.GA15569@phnom.home.cmpxchg.org>
-	<20150219225217.GY12722@dastard>
-	<201502201936.HBH34799.SOLFFFQtHOMOJV@I-love.SAKURA.ne.jp>
+Subject: [GIT PULL] xfs: PNFS block layout support for 3.20-rc1
+Message-ID: <20150221001228.GS4251@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <201502201936.HBH34799.SOLFFFQtHOMOJV@I-love.SAKURA.ne.jp>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,68 +27,60 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
-Cc: hannes@cmpxchg.org, dchinner@redhat.com, oleg@redhat.com, xfs@oss.sgi.com, mhocko@suse.cz, linux-mm@kvack.org, mgorman@suse.de, rientjes@google.com, akpm@linux-foundation.org, torvalds@linux-foundation.org
+To: torvalds@linux-foundation.org
+Cc: akpm@linux-foundation.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-On Fri, Feb 20, 2015 at 07:36:33PM +0900, Tetsuo Handa wrote:
-> Dave Chinner wrote:
-> > I really don't care about the OOM Killer corner cases - it's
-> > completely the wrong way line of development to be spending time on
-> > and you aren't going to convince me otherwise. The OOM killer a
-> > crutch used to justify having a memory allocation subsystem that
-> > can't provide forward progress guarantee mechanisms to callers that
-> > need it.
-> 
-> I really care about the OOM Killer corner cases, for I'm
-> 
->   (1) seeing trouble cases which occurred in enterprise systems
->       under OOM conditions
+Hi Linus,
 
-You reach OOM, then your SLAs are dead and buried. Reboot the
-box - its a much more reliable way of returning to a working system
-than playing Russian Roulette with the OOM killer.
+Can you please pull the updates from the tree below? It contains the
+changes to XFS needed to support the PNFS block layout server that
+you pulled in through Bruce's NFS server tree merge. I originally
+thought that I'd need to merge changes into the NFS server side,
+but Bruce had already picked them up and so this is purely changes
+to the fs/xfs/ codebase.
 
->   (2) trying to downgrade OOM "Deadlock or Genocide" attacks (which
->       an unprivileged user with a login shell can trivially trigger
->       since Linux 2.0) to OOM "Genocide" attacks in order to allow
->       OOM-unkillable daemons to restart OOM-killed processes
-> 
->   (3) waiting for a bandaid for (2) in order to propose changes for
->       mitigating OOM "Genocide" attacks (as bad guys will find how to
->       trigger OOM "Deadlock or Genocide" attacks from changes for
->       mitigating OOM "Genocide" attacks)
+It should merge cleanly with your current tree - if it doesn't then
+I've probably done something wrong.
 
-Which is yet another indication that the OOM killer is the wrong
-solution to the "lack of forward progress" problem. Any one can
-generate enough memory pressure to trigger the OOM killer; we can't
-prevent that from occurring when the OOM killer can be invoked by
-user processes.
+-Dave.
 
-> I started posting to linux-mm ML in order to make forward progress
-> about (1) and (2). I don't want the memory allocation subsystem to
-> lock up an entire system by indefinitely disabling memory releasing
-> mechanism provided by the OOM killer.
-> 
-> > I've proposed a method of providing this forward progress guarantee
-> > for subsystems of arbitrary complexity, and this removes the
-> > dependency on the OOM killer for fowards allocation progress in such
-> > contexts (e.g. filesystems). We should be discussing how to
-> > implement that, not what bandaids we need to apply to the OOM
-> > killer. I want to fix the underlying problems, not push them under
-> > the OOM-killer bus...
-> 
-> I'm fine with that direction for new kernels provided that a simple
-> bandaid which can be backported to distributor kernels for making
-> OOM "Deadlock" attacks impossible is implemented. Therefore, I'm
-> discussing what bandaids we need to apply to the OOM killer.
+The following changes since commit bad962662dbc60e76ec1baae34af56b1ba2dfa5f:
 
-The band-aids being proposed are worse than the problem they are
-intended to cover up. In which case, the band-aids should not be
-applied.
+  Merge branch 'xfs-misc-fixes-for-3.20-4' into for-next (2015-02-10 09:24:25 +1100)
 
-Cheers,
+are available in the git repository at:
 
-Dave.
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/dgc/linux-xfs.git tags/xfs-pnfs-for-linus-3.20-rc1
+
+for you to fetch changes up to 781355c6e5ae87908de27dec3380a34918c33eee:
+
+  xfs: recall pNFS layouts on conflicting access (2015-02-16 11:59:50 +1100)
+
+----------------------------------------------------------------
+xfs: pnfs block layout support for 3.20-rc1
+
+This update contains the implementation of the PNFS server export
+methods that enable use of XFS filesystems as a block layout target.
+
+----------------------------------------------------------------
+Christoph Hellwig (2):
+      xfs: implement pNFS export operations
+      xfs: recall pNFS layouts on conflicting access
+
+ fs/xfs/Makefile     |    1 +
+ fs/xfs/xfs_export.c |    6 +
+ fs/xfs/xfs_file.c   |   14 ++-
+ fs/xfs/xfs_fsops.c  |    6 +
+ fs/xfs/xfs_ioctl.c  |    9 +-
+ fs/xfs/xfs_iops.c   |   13 ++-
+ fs/xfs/xfs_iops.h   |    1 +
+ fs/xfs/xfs_mount.h  |   11 ++
+ fs/xfs/xfs_pnfs.c   |  322 +++++++++++++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/xfs_pnfs.h   |   18 +++
+ 10 files changed, 393 insertions(+), 8 deletions(-)
+ create mode 100644 fs/xfs/xfs_pnfs.c
+ create mode 100644 fs/xfs/xfs_pnfs.h
 -- 
 Dave Chinner
 david@fromorbit.com
