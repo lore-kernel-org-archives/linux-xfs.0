@@ -1,24 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id E32567F51
-	for <xfs@oss.sgi.com>; Sat, 21 Feb 2015 05:12:32 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id B45CF304062
-	for <xfs@oss.sgi.com>; Sat, 21 Feb 2015 03:12:29 -0800 (PST)
+	by oss.sgi.com (Postfix) with ESMTP id BB38C7F47
+	for <xfs@oss.sgi.com>; Sat, 21 Feb 2015 06:00:25 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id A759D304062
+	for <xfs@oss.sgi.com>; Sat, 21 Feb 2015 04:00:25 -0800 (PST)
 Received: from www262.sakura.ne.jp (www262.sakura.ne.jp [202.181.97.72]) by
-	cuda.sgi.com with ESMTP id 3GWSipQXrmeOOGZ0 (version=TLSv1
+	cuda.sgi.com with ESMTP id ix7uyPeMZD5E5Dkg (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Sat, 21 Feb 2015 03:12:26 -0800 (PST)
+	Sat, 21 Feb 2015 04:00:23 -0800 (PST)
 Subject: Re: How to handle TIF_MEMDIE stalls?
 From: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
-References: <20150217225430.GJ4251@dastard>
-	<20150219102431.GA15569@phnom.home.cmpxchg.org>
+References: <20150219102431.GA15569@phnom.home.cmpxchg.org>
 	<20150219225217.GY12722@dastard>
 	<201502201936.HBH34799.SOLFFFQtHOMOJV@I-love.SAKURA.ne.jp>
-	<20150220231511.GH12722@dastard>
-In-Reply-To: <20150220231511.GH12722@dastard>
-Message-Id: <201502212012.BJJ39083.LQFOtJFSHMVOFO@I-love.SAKURA.ne.jp>
-Date: Sat, 21 Feb 2015 20:12:08 +0900
+	<20150220231511.GH12722@dastard> <20150221032000.GC7922@thunk.org>
+In-Reply-To: <20150221032000.GC7922@thunk.org>
+Message-Id: <201502212100.IBG78151.QLHSOMJFVOtFFO@I-love.SAKURA.ne.jp>
+Date: Sat, 21 Feb 2015 21:00:05 +0900
 Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -32,156 +31,98 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: david@fromorbit.com
-Cc: hannes@cmpxchg.org, dchinner@redhat.com, oleg@redhat.com, xfs@oss.sgi.com, mhocko@suse.cz, linux-mm@kvack.org, mgorman@suse.de, rientjes@google.com, akpm@linux-foundation.org, torvalds@linux-foundation.org
+To: tytso@mit.edu
+Cc: hannes@cmpxchg.org, dchinner@redhat.com, oleg@redhat.com, xfs@oss.sgi.com, mhocko@suse.cz, linux-mm@kvack.org, mgorman@suse.de, rientjes@google.com, akpm@linux-foundation.org, linux-ext4@vger.kernel.org, torvalds@linux-foundation.org
 
-My main issue is
+Theodore Ts'o wrote:
+> So at this point, it seems we have two choices.  We can either revert
+> 9879de7373fc, or I can add a whole lot more GFP_FAIL flags to ext4's
+> memory allocations and submit them as stable bug fixes.
 
-  c) whether to oom-kill more processes when the OOM victim cannot be
-     terminated presumably due to the OOM killer deadlock.
+Can you absorb this side effect by simply adding GFP_NOFAIL to only
+ext4's memory allocations? Don't you also depend on lower layers which
+use GFP_NOIO?
 
-Dave Chinner wrote:
-> On Fri, Feb 20, 2015 at 07:36:33PM +0900, Tetsuo Handa wrote:
-> > Dave Chinner wrote:
-> > > I really don't care about the OOM Killer corner cases - it's
-> > > completely the wrong way line of development to be spending time on
-> > > and you aren't going to convince me otherwise. The OOM killer a
-> > > crutch used to justify having a memory allocation subsystem that
-> > > can't provide forward progress guarantee mechanisms to callers that
-> > > need it.
-> > 
-> > I really care about the OOM Killer corner cases, for I'm
-> > 
-> >   (1) seeing trouble cases which occurred in enterprise systems
-> >       under OOM conditions
-> 
-> You reach OOM, then your SLAs are dead and buried. Reboot the
-> box - its a much more reliable way of returning to a working system
-> than playing Russian Roulette with the OOM killer.
+BTW, while you are using open-coded GFP_NOFAIL retry loop for GFP_NOFS
+allocation in jbd2, you are already using GFP_NOFAIL for GFP_NOFS
+allocation in jbd. Failure check being there for GFP_NOFAIL seems
+redundant.
 
-What Service Level Agreements? Such troubles are occurring on RHEL systems
-where users are not sitting in front of the console. Unless somebody is
-sitting in front of the console in order to do SysRq-b when troubles
-occur, the down time of system will become significantly longer.
+---------- linux-3.19/fs/jbd2/transaction.c ----------
+257 static int start_this_handle(journal_t *journal, handle_t *handle,
+258                              gfp_t gfp_mask)
+259 {
+260         transaction_t   *transaction, *new_transaction = NULL;
+261         int             blocks = handle->h_buffer_credits;
+262         int             rsv_blocks = 0;
+263         unsigned long ts = jiffies;
+264 
+265         /*
+266          * 1/2 of transaction can be reserved so we can practically handle
+267          * only 1/2 of maximum transaction size per operation
+268          */
+269         if (WARN_ON(blocks > journal->j_max_transaction_buffers / 2)) {
+270                 printk(KERN_ERR "JBD2: %s wants too many credits (%d > %d)\n",
+271                        current->comm, blocks,
+272                        journal->j_max_transaction_buffers / 2);
+273                 return -ENOSPC;
+274         }
+275 
+276         if (handle->h_rsv_handle)
+277                 rsv_blocks = handle->h_rsv_handle->h_buffer_credits;
+278 
+279 alloc_transaction:
+280         if (!journal->j_running_transaction) {
+281                 new_transaction = kmem_cache_zalloc(transaction_cache,
+282                                                     gfp_mask);
+283                 if (!new_transaction) {
+284                         /*
+285                          * If __GFP_FS is not present, then we may be
+286                          * being called from inside the fs writeback
+287                          * layer, so we MUST NOT fail.  Since
+288                          * __GFP_NOFAIL is going away, we will arrange
+289                          * to retry the allocation ourselves.
+290                          */
+291                         if ((gfp_mask & __GFP_FS) == 0) {
+292                                 congestion_wait(BLK_RW_ASYNC, HZ/50);
+293                                 goto alloc_transaction;
+294                         }
+295                         return -ENOMEM;
+296                 }
+297         }
+298 
+299         jbd_debug(3, "New handle %p going live.\n", handle);
+---------- linux-3.19/fs/jbd2/transaction.c ----------
 
-What mechanisms are available for minimizing the down time of system
-when troubles under OOM condition occur? Software/hardware watchdog?
-Indeed they may help, but they may be triggered prematurely when the
-system has not entered into the OOM condition. Only the OOM killer knows.
-
-> 
-> >   (2) trying to downgrade OOM "Deadlock or Genocide" attacks (which
-> >       an unprivileged user with a login shell can trivially trigger
-> >       since Linux 2.0) to OOM "Genocide" attacks in order to allow
-> >       OOM-unkillable daemons to restart OOM-killed processes
-> > 
-> >   (3) waiting for a bandaid for (2) in order to propose changes for
-> >       mitigating OOM "Genocide" attacks (as bad guys will find how to
-> >       trigger OOM "Deadlock or Genocide" attacks from changes for
-> >       mitigating OOM "Genocide" attacks)
-> 
-> Which is yet another indication that the OOM killer is the wrong
-> solution to the "lack of forward progress" problem. Any one can
-> generate enough memory pressure to trigger the OOM killer; we can't
-> prevent that from occurring when the OOM killer can be invoked by
-> user processes.
-> 
-
-We have memory cgroups to reduce the possibility of triggering the OOM
-killer, though there will be several bugs remaining in RHEL kernels
-which make administrators hesitate to use memory cgroups.
-
-> > I started posting to linux-mm ML in order to make forward progress
-> > about (1) and (2). I don't want the memory allocation subsystem to
-> > lock up an entire system by indefinitely disabling memory releasing
-> > mechanism provided by the OOM killer.
-> > 
-> > > I've proposed a method of providing this forward progress guarantee
-> > > for subsystems of arbitrary complexity, and this removes the
-> > > dependency on the OOM killer for fowards allocation progress in such
-> > > contexts (e.g. filesystems). We should be discussing how to
-> > > implement that, not what bandaids we need to apply to the OOM
-> > > killer. I want to fix the underlying problems, not push them under
-> > > the OOM-killer bus...
-> > 
-> > I'm fine with that direction for new kernels provided that a simple
-> > bandaid which can be backported to distributor kernels for making
-> > OOM "Deadlock" attacks impossible is implemented. Therefore, I'm
-> > discussing what bandaids we need to apply to the OOM killer.
-> 
-> The band-aids being proposed are worse than the problem they are
-> intended to cover up. In which case, the band-aids should not be
-> applied.
-> 
-
-The problem is simple. /proc/sys/vm/panic_on_oom == 0 setting does not
-help if the OOM killer failed to determine correct task to kill + allow
-access to memory reserves. The OOM killer is waiting forever under
-the OOM deadlock condition than triggering kernel panic.
-
-https://access.redhat.com/documentation/en-US/Red_Hat_Enterprise_MRG/2/html/Realtime_Tuning_Guide/sect-Realtime_Tuning_Guide-General_System_Tuning-Swapping_and_Out_Of_Memory_Tips.html
-says that "Usually, oom_killer can kill rogue processes and the system
-will survive." but says nothing about what to do when we hit the OOM
-killer deadlock condition.
-
-My band-aids allows the OOM killer to trigger kernel panic (followed
-by optionally kdump and automatic reboot) for people who want to reboot
-the box when default /proc/sys/vm/panic_on_oom == 0 setting failed to
-kill rogue processes, and allows people who want the system to survive
-when the OOM killer failed to determine correct task to kill + allow
-access to memory reserves.
-
-Not only we cannot expect that the OOM killer messages being saved to
-/var/log/messages under the OOM killer deadlock condition, but also
-we do not emit the OOM killer messages if we hit
-
-    void oom_kill_process(struct task_struct *p, gfp_t gfp_mask, int order,
-                          unsigned int points, unsigned long totalpages,
-                          struct mem_cgroup *memcg, nodemask_t *nodemask,
-                          const char *message)
-    {
-            struct task_struct *victim = p;
-            struct task_struct *child;
-            struct task_struct *t;
-            struct mm_struct *mm;
-            unsigned int victim_points = 0;
-            static DEFINE_RATELIMIT_STATE(oom_rs, DEFAULT_RATELIMIT_INTERVAL,
-                                                  DEFAULT_RATELIMIT_BURST);
-    
-            /*
-             * If the task is already exiting, don't alarm the sysadmin or kill
-             * its children or threads, just set TIF_MEMDIE so it can die quickly
-             */
-            if (task_will_free_mem(p)) { /***** _THIS_ _CONDITION_ *****/
-                    set_tsk_thread_flag(p, TIF_MEMDIE);
-                    put_task_struct(p);
-                    return;
-            }
-    
-            if (__ratelimit(&oom_rs))
-                    dump_header(p, gfp_mask, order, memcg, nodemask);
-    
-            task_lock(p);
-            pr_err("%s: Kill process %d (%s) score %d or sacrifice child\n",
-                    message, task_pid_nr(p), p->comm, points);
-            task_unlock(p);
-
-followed by entering into the OOM killer deadlock condition. This is
-annoying for me because neither serial console nor netconsole helps
-finding out that the system entered into the OOM condition.
-
-If you want to stop people from playing Russian Roulette with the OOM
-killer, please remove the OOM killer code entirely from RHEL kernels so that
-people must use their systems with hardcoded /proc/sys/vm/panic_on_oom == 1
-setting. Can you do it?
-
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
-> 
+---------- linux-3.19/fs/jbd/transaction.c ----------
+ 84 static int start_this_handle(journal_t *journal, handle_t *handle)
+ 85 {
+ 86         transaction_t *transaction;
+ 87         int needed;
+ 88         int nblocks = handle->h_buffer_credits;
+ 89         transaction_t *new_transaction = NULL;
+ 90         int ret = 0;
+ 91 
+ 92         if (nblocks > journal->j_max_transaction_buffers) {
+ 93                 printk(KERN_ERR "JBD: %s wants too many credits (%d > %d)\n",
+ 94                        current->comm, nblocks,
+ 95                        journal->j_max_transaction_buffers);
+ 96                 ret = -ENOSPC;
+ 97                 goto out;
+ 98         }
+ 99 
+100 alloc_transaction:
+101         if (!journal->j_running_transaction) {
+102                 new_transaction = kzalloc(sizeof(*new_transaction),
+103                                                 GFP_NOFS|__GFP_NOFAIL);
+104                 if (!new_transaction) {
+105                         ret = -ENOMEM;
+106                         goto out;
+107                 }
+108         }
+109 
+110         jbd_debug(3, "New handle %p going live.\n", handle);
+---------- linux-3.19/fs/jbd/transaction.c ----------
 
 _______________________________________________
 xfs mailing list
