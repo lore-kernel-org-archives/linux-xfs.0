@@ -1,23 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 7249529E13
-	for <xfs@oss.sgi.com>; Sat, 21 Feb 2015 09:49:56 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 35E3A304043
-	for <xfs@oss.sgi.com>; Sat, 21 Feb 2015 07:49:56 -0800 (PST)
-Received: from mail-pa0-f51.google.com (mail-pa0-f51.google.com
-	[209.85.220.51]) by cuda.sgi.com with ESMTP id 19lVExagBTDeCxgF
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Sat, 21 Feb 2015 07:49:54 -0800 (PST)
-Received: by pablf10 with SMTP id lf10so15759558pab.6
-	for <xfs@oss.sgi.com>; Sat, 21 Feb 2015 07:49:54 -0800 (PST)
-From: Namjae Jeon <linkinjeon@gmail.com>
-Subject: [PATCH v10 12/12] manpage: update FALLOC_FL_INSERT_RANGE flag in
-	fallocate
-Date: Sun, 22 Feb 2015 00:45:54 +0900
-Message-Id: <1424533554-28024-13-git-send-email-linkinjeon@gmail.com>
-In-Reply-To: <1424533554-28024-1-git-send-email-linkinjeon@gmail.com>
-References: <1424533554-28024-1-git-send-email-linkinjeon@gmail.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 1561F7F50
+	for <xfs@oss.sgi.com>; Sat, 21 Feb 2015 15:38:21 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 8B5E2AC004
+	for <xfs@oss.sgi.com>; Sat, 21 Feb 2015 13:38:17 -0800 (PST)
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	PDgtMjBuhL7sdu3k for <xfs@oss.sgi.com>;
+	Sat, 21 Feb 2015 13:38:11 -0800 (PST)
+Date: Sun, 22 Feb 2015 08:38:07 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: How to handle TIF_MEMDIE stalls?
+Message-ID: <20150221213807.GI12722@dastard>
+References: <201502172123.JIE35470.QOLMVOFJSHOFFt@I-love.SAKURA.ne.jp>
+	<20150217125315.GA14287@phnom.home.cmpxchg.org>
+	<20150217225430.GJ4251@dastard>
+	<20150219102431.GA15569@phnom.home.cmpxchg.org>
+	<20150219225217.GY12722@dastard>
+	<201502201936.HBH34799.SOLFFFQtHOMOJV@I-love.SAKURA.ne.jp>
+	<20150220231511.GH12722@dastard> <20150221032000.GC7922@thunk.org>
+	<20150221011907.2d26c979.akpm@linux-foundation.org>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20150221011907.2d26c979.akpm@linux-foundation.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,176 +32,78 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: david@fromorbit.com, tytso@mit.edu
-Cc: linux-man@vger.kernel.org, Namjae Jeon <linkinjeon@gmail.com>, Namjae Jeon <namjae.jeon@samsung.com>, linux-api@vger.kernel.org, bfoster@redhat.com, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, mtk.manpages@gmail.com, a.sangwan@samsung.com, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Theodore Ts'o <tytso@mit.edu>, Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, hannes@cmpxchg.org, oleg@redhat.com, xfs@oss.sgi.com, mhocko@suse.cz, linux-mm@kvack.org, mgorman@suse.de, dchinner@redhat.com, rientjes@google.com, linux-ext4@vger.kernel.org, torvalds@linux-foundation.org
 
-From: Namjae Jeon <namjae.jeon@samsung.com>
+On Sat, Feb 21, 2015 at 01:19:07AM -0800, Andrew Morton wrote:
+> On Fri, 20 Feb 2015 22:20:00 -0500 "Theodore Ts'o" <tytso@mit.edu> wrote:
+> 
+> > +akpm
+> 
+> I was hoping not to have to read this thread ;)
 
-Update FALLOC_FL_INSERT_RANGE flag in fallocate.
+ditto....
 
-Signed-off-by: Namjae Jeon <namjae.jeon@samsung.com>
-Signed-off-by: Ashish Sangwan <a.sangwan@samsung.com>
----
- man2/fallocate.2 |   88 ++++++++++++++++++++++++++++++++++++++++++++++++++----
- 1 file changed, 82 insertions(+), 6 deletions(-)
+> And yes, I agree that sites such as xfs's kmem_alloc() should be
+> passing __GFP_NOFAIL to tell the page allocator what's going on.  I
+> don't think it matters a lot whether kmem_alloc() retains its retry
+> loop.  If __GFP_NOFAIL is working correctly then it will never loop
+> anyway...
 
-diff --git a/man2/fallocate.2 b/man2/fallocate.2
-index adf42db..9b3c460 100644
---- a/man2/fallocate.2
-+++ b/man2/fallocate.2
-@@ -8,7 +8,7 @@
- .\" 2011-09-19: Added FALLOC_FL_PUNCH_HOLE
- .\" 2011-09-19: Substantial restructuring of the page
- .\"
--.TH FALLOCATE 2 2015-01-22 "Linux" "Linux Programmer's Manual"
-+.TH FALLOCATE 2 2015-02-14 "Linux" "Linux Programmer's Manual"
- .SH NAME
- fallocate \- manipulate file space
- .SH SYNOPSIS
-@@ -225,6 +225,56 @@ XFS (since Linux 3.14)
- .IP *
- ext4, for extent-based files (since Linux 3.14)
- .\" commit b8a8684502a0fc852afa0056c6bb2a9273f6fcc0
-+.SS Increasing file space
-+.\" TODO: Mention commit id and supporting Linux version
-+Specifying the
-+.BR FALLOC_FL_INSERT_RANGE
-+flag in
-+.I mode
-+will increase the file space by inserting a hole within the file size without
-+overwriting any existing data. The hole will start at
-+.I offset
-+and continue for
-+.I len
-+bytes. For inserting hole inside file, the contents of the file starting at
-+.I offset
-+will be shifted towards right by
-+.I len
-+bytes. Inserting a hole inside the file will increase the file size by
-+.I len
-+bytes.
-+
-+This mode has the same limitation as
-+.BR FALLOC_FL_COLLAPSE_RANGE
-+regarding the
-+granularity of the operation.
-+If the granulrity requirements are not met,
-+.BR fallocate ()
-+will fail with the error
-+.BR EINVAL.
-+If the
-+.I offset
-+overlaps with end of file OR if it is greater than end of file, an error is
-+returned. For such type of operations, i.e. inserting a hole at the end of
-+file,
-+.BR ftruncate(2)
-+should be used.
-+In case
-+.IR offset + len
-+exceeds the maximum file size, errno will be set to
-+.B EFBIG.
-+
-+No other flags may be specified in
-+.IR mode
-+in conjunction with
-+.BR FALLOC_FL_INSERT_RANGE .
-+
-+As of Linux XXXX,
-+.\" TODO: Mention commit id and supporting Linux version
-+.B FALLOC_FL_INSERT_RANGE
-+is supported by
-+ext4 (only for extent-based files) and XFS.
-+
- .SH RETURN VALUE
- On success,
- .BR fallocate ()
-@@ -242,6 +292,12 @@ is not a valid file descriptor, or is not opened for writing.
- .IR offset + len
- exceeds the maximum file size.
- .TP
-+.B EFBIG
-+.I mode
-+is
-+.BR FALLOC_FL_INSERT_RANGE ,
-+the current file size+len excceds the maximum file size.
-+.TP
- .B EINTR
- A signal was caught during execution.
- .TP
-@@ -270,7 +326,17 @@ reaches or passes the end of the file.
- .B EINVAL
- .I mode
- is
--.BR FALLOC_FL_COLLAPSE_RANGE ,
-+.BR FALLOC_FL_INSERT_RANGE
-+and the range specified by
-+.I offset
-+reaches or passes the end of the file.
-+.TP
-+.B EINVAL
-+.I mode
-+is
-+.BR FALLOC_FL_COLLAPSE_RANGE
-+or
-+.BR FALLOC_FL_INSERT_RANGE ,
- but either
- .I offset
- or
-@@ -279,18 +345,24 @@ is not a multiple of the filesystem block size.
- .TP
- .B EINVAL
- .I mode
--contains both
-+contains either of
- .B FALLOC_FL_COLLAPSE_RANGE
-+or
-+.B FALLOC_FL_INSERT_RANGE
- and other flags;
- no other flags are permitted with
--.BR FALLOC_FL_COLLAPSE_RANGE .
-+.BR FALLOC_FL_COLLAPSE_RANGE
-+or
-+.BR FALLOC_FL_INSERT_RANGE .
- .TP
- .B EINVAL
- .I mode
- is
- .BR FALLOC_FL_COLLAPSE_RANGE
- or
--.BR FALLOC_FL_ZERO_RANGE ,
-+.BR FALLOC_FL_ZERO_RANGE
-+or
-+.BR FALLOC_FL_INSERT_RANGE ,
- but the file referred to by
- .I fd
- is not a regular file.
-@@ -342,6 +414,8 @@ specifies
- .BR FALLOC_FL_PUNCH_HOLE
- or
- .BR FALLOC_FL_COLLAPSE_RANGE
-+or
-+.BR FALLOC_FL_INSERT_RANGE
- and
- the file referred to by
- .I fd
-@@ -360,7 +434,9 @@ refers to a pipe or FIFO.
- .B ETXTBSY
- .I mode
- specifies
--.BR FALLOC_FL_COLLAPSE_RANGE ,
-+.BR FALLOC_FL_COLLAPSE_RANGE
-+or
-+.BR FALLOC_FL_INSERT_RANGE ,
- but the file referred to by
- .IR fd
- is currently being executed.
+I'm not about to change behaviour "just because". Any sort of change
+like this requires a *lot* of low memory regression testing because
+we'd be replacing long standing known behaviour with behaviour that
+changes without warning. e.g the ext4 low memory failures starting because of
+changes made in 3.19-rc6 due to changes in oom-killer behaviour.
+Those changes *did not affect XFS* and that's the way I'd like
+things to remain.
+
+Put simply: right now I don't trust the mm subsystem to get low memory
+behaviour right, and this thread has done nothing to convince me
+that it's going to improve any time soon.
+
+> Also, this:
+> 
+> On Wed, 18 Feb 2015 09:54:30 +1100 Dave Chinner <david@fromorbit.com> wrote:
+> 
+> > Right now, the oom killer is a liability. Over the past 6 months
+> > I've slowly had to exclude filesystem regression tests from running
+> > on small memory machines because the OOM killer is now so unreliable
+> > that it kills the test harness regularly rather than the process
+> > generating memory pressure.
+> 
+> David, I did not know this!  If you've been telling us about this then
+> perhaps it wasn't loud enough.
+
+IME, such bug reports get ignored.
+
+Instead, over the past few months I have been pointing out bugs and
+problems in the oom-killer in threads like this because it seems to
+be the only way to get any attention to the issues I'm seeing. Bug
+reports simply get ignored.  From this process, I've managed to
+learn that low order memory allocation now never fails (contrary to
+documentation and long standing behavioural expectations) and
+pointed out bugs that cause the oom killer to get invoked when the
+filesystem is saying "I can handle ENOMEM!" (commit 45f87de ("mm:
+get rid of radix tree gfp mask for pagecache_get_page").
+
+And yes, I've definitely mentioned in these discussions that, for
+example, xfstests::generic/224 is triggering the oom killer far more
+often than it used to on my 1GB RAM vm. The only fix that has been
+made recently that's made any difference is 45f87de, so it's a slow
+process of raising awareness and trying to ensure things don't get
+worse before they get better....
+
+Cheers,
+
+Dave.
 -- 
-1.7.9.5
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
