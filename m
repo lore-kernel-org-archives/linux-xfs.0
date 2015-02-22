@@ -1,22 +1,31 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 7DE6A7F4E
-	for <xfs@oss.sgi.com>; Sun, 22 Feb 2015 12:30:20 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 6CC57304039
-	for <xfs@oss.sgi.com>; Sun, 22 Feb 2015 10:30:17 -0800 (PST)
-Received: from resqmta-po-11v.sys.comcast.net (resqmta-po-11v.sys.comcast.net
-	[96.114.154.170]) by cuda.sgi.com with ESMTP id
-	h4qbsSswLfFUeANh (version=TLSv1 cipher=AES128-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Sun, 22 Feb 2015 10:30:16 -0800 (PST)
-Message-ID: <54EA2037.8000602@pobox.com>
-Date: Sun, 22 Feb 2015 10:30:15 -0800
-From: Robert White <rwhite@pobox.com>
+	by oss.sgi.com (Postfix) with ESMTP id AD9467F47
+	for <xfs@oss.sgi.com>; Sun, 22 Feb 2015 17:35:27 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 9C55C304043
+	for <xfs@oss.sgi.com>; Sun, 22 Feb 2015 15:35:24 -0800 (PST)
+Received: from mail-qg0-f46.google.com (mail-qg0-f46.google.com
+	[209.85.192.46]) by cuda.sgi.com with ESMTP id 8xh9jaU38TiBLy0q
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Sun, 22 Feb 2015 15:35:22 -0800 (PST)
+Received: by mail-qg0-f46.google.com with SMTP id z107so22000727qgd.5
+	for <xfs@oss.sgi.com>; Sun, 22 Feb 2015 15:35:22 -0800 (PST)
+Message-ID: <54EA67B7.30805@binghamton.edu>
+Date: Sun, 22 Feb 2015 18:35:19 -0500
+From: Dave Hall <kdhall@binghamton.edu>
 MIME-Version: 1.0
-Subject: Re: Documenting MS_LAZYTIME
-References: <CAHO5Pa0k7QkV_6BDjwTVxa7LV9tFyN9nGFFcSvOC6HYO08wfrw@mail.gmail.com>
-In-Reply-To: <CAHO5Pa0k7QkV_6BDjwTVxa7LV9tFyN9nGFFcSvOC6HYO08wfrw@mail.gmail.com>
+Subject: XFS/LVM/Multipath on a single RAID volume
+References: <5143F94C.1020708@hardwarefreak.com>
+	<20130316072126.GG6369@dastard> <515082C3.2000006@binghamton.edu>
+	<515361B5.8050603@hardwarefreak.com>
+	<5155F2B2.1010308@binghamton.edu>
+	<20130331012231.GJ6369@dastard> <515C3BF3.60601@binghamton.edu>
+	<51684382.50008@binghamton.edu>
+	<5168AC0B.5010100@hardwarefreak.com>
+	<516C649A.8010003@binghamton.edu>
+	<20130416161841.GB13938@destitution>
+In-Reply-To: <20130416161841.GB13938@destitution>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,13 +38,44 @@ Content-Transfer-Encoding: 7bit
 Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Michael Kerrisk <mtk.manpages@gmail.com>, Theodore Ts'o <tytso@mit.edu>
-Cc: linux-man@vger.kernel.org, Linux API <linux-api@vger.kernel.org>, XFS Developers <xfs@oss.sgi.com>, Linux-Fsdevel <linux-fsdevel@vger.kernel.org>, Ext4 Developers List <linux-ext4@vger.kernel.org>, Linux btrfs Developers List <linux-btrfs@vger.kernel.org>
+To: Dave Chinner <david@fromorbit.com>
+Cc: stan@hardwarefreak.com, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-On 02/20/2015 12:50 AM, Michael Kerrisk wrote:
-> *             As at Linux 3.20, this option is supported only on ext4.
+Dave, Stan,
 
-"As of Linux 3.20" is more correct.
+Not sure if you remember, but we corresponded for a while a couple years 
+ago about some performance problems I was having with XFS on a 26TB 
+SAS-attached RAID box.  If either of you is still working on XFS, I've 
+got some new questions.  Actually, what I've got is a new array to set 
+up.  Same size, but faster disks and a faster controller.  It will 
+replace the existing array as the primary backup volume.
+
+So since I have a fresh array that's not in production yet I was hoping 
+to get some pointers on how to configure it to maximize XFS 
+performance.  In particular, I've seen a suggestion that a multipathed 
+array should be sliced up into logical drives and pasted back together 
+with LVM.  Wondering also about putting the journal in a separate 
+logical drive on the same array.
+
+I am able to set up a 2-way multipath right now, and I might be able to 
+justify adding a second controller to the array to get a 4-way multipath 
+going.
+
+Even if the LVM approach is the wrong one, I clearly have a rare chance 
+to set this array up the right way.  Please let me know if you have any 
+suggestions.
+
+Thanks.
+
+-Dave
+
+Dave Hall
+Binghamton University
+kdhall@binghamton.edu
+607-760-2328 (Cell)
+607-777-4641 (Office)
+
+
 
 _______________________________________________
 xfs mailing list
