@@ -1,30 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 9101D7F47
-	for <xfs@oss.sgi.com>; Mon, 23 Feb 2015 12:57:54 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 4152B8F8059
-	for <xfs@oss.sgi.com>; Mon, 23 Feb 2015 10:57:54 -0800 (PST)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id EKxGPNZxu5mPwazN (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 23 Feb 2015 10:57:53 -0800 (PST)
-Received: from int-mx13.intmail.prod.int.phx2.redhat.com
-	(int-mx13.intmail.prod.int.phx2.redhat.com [10.5.11.26])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id t1NIvqbh001928
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256
-	verify=FAIL) for <xfs@oss.sgi.com>; Mon, 23 Feb 2015 13:57:53 -0500
-Received: from liberator.sandeen.net (ovpn01.gateway.prod.ext.phx2.redhat.com
-	[10.5.9.1])
-	by int-mx13.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id t1NIvpEZ003917
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES128-SHA bits=128 verify=NO)
-	for <xfs@oss.sgi.com>; Mon, 23 Feb 2015 13:57:52 -0500
-Message-ID: <54EB782F.8020201@redhat.com>
-Date: Mon, 23 Feb 2015 12:57:51 -0600
-From: Eric Sandeen <sandeen@redhat.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 55EEA7F50
+	for <xfs@oss.sgi.com>; Mon, 23 Feb 2015 12:59:17 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 44A94304043
+	for <xfs@oss.sgi.com>; Mon, 23 Feb 2015 10:59:13 -0800 (PST)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id Hkz2z1EkoKox72Jm for <xfs@oss.sgi.com>;
+	Mon, 23 Feb 2015 10:59:12 -0800 (PST)
+Message-ID: <54EB787F.5090600@sandeen.net>
+Date: Mon, 23 Feb 2015 12:59:11 -0600
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: [PATCH 0/2] Fix a couple coverity-spotted issues
+Subject: [PATCH 1/2] xfs: Ensure we have target_ip for RENAME_EXCHANGE
+References: <54EB782F.8020201@redhat.com>
+In-Reply-To: <54EB782F.8020201@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -38,8 +28,32 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs-oss <xfs@oss.sgi.com>
+Cc: Carlos Maiolino <cmaiolin@redhat.com>
 
-<EOM>
+We shouldn't get here with RENAME_EXCHANGE set and no
+target_ip, but let's be defensive, because xfs_cross_rename()
+will dereference it.
+
+Spotted by Coverity.
+
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
+
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index daafa1f..6163767 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -2867,6 +2867,10 @@ xfs_rename(
+ 	 * Handle RENAME_EXCHANGE flags
+ 	 */
+ 	if (flags & RENAME_EXCHANGE) {
++		if (target_ip == NULL) {
++			error = -EINVAL;
++			goto error_return;
++		}
+ 		error = xfs_cross_rename(tp, src_dp, src_name, src_ip,
+ 					 target_dp, target_name, target_ip,
+ 					 &free_list, &first_block, spaceres);
 
 _______________________________________________
 xfs mailing list
