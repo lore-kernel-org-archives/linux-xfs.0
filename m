@@ -1,20 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 23B1F7F54
-	for <xfs@oss.sgi.com>; Mon, 23 Feb 2015 13:00:46 -0600 (CST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 074AC7F47
+	for <xfs@oss.sgi.com>; Mon, 23 Feb 2015 13:13:38 -0600 (CST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 9885AAC007
-	for <xfs@oss.sgi.com>; Mon, 23 Feb 2015 11:00:45 -0800 (PST)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id 4KwFAx4HAuw2WRPq for <xfs@oss.sgi.com>;
-	Mon, 23 Feb 2015 11:00:28 -0800 (PST)
-Message-ID: <54EB78CB.6050709@sandeen.net>
-Date: Mon, 23 Feb 2015 13:00:27 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id DB4E1304043
+	for <xfs@oss.sgi.com>; Mon, 23 Feb 2015 11:13:34 -0800 (PST)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id 5ENBqp7gxv8hfiPW (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Mon, 23 Feb 2015 11:13:33 -0800 (PST)
+Received: from int-mx10.intmail.prod.int.phx2.redhat.com
+	(int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id t1NJDWvw022080
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256
+	verify=FAIL) for <xfs@oss.sgi.com>; Mon, 23 Feb 2015 14:13:33 -0500
+Received: from liberator.sandeen.net (ovpn01.gateway.prod.ext.phx2.redhat.com
+	[10.5.9.1])
+	by int-mx10.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id t1NJDVB1027312
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES128-SHA bits=128 verify=NO)
+	for <xfs@oss.sgi.com>; Mon, 23 Feb 2015 14:13:32 -0500
+Message-ID: <54EB7BDB.7080202@redhat.com>
+Date: Mon, 23 Feb 2015 13:13:31 -0600
+From: Eric Sandeen <sandeen@redhat.com>
 MIME-Version: 1.0
-Subject: [PATCH 2/2] xfs: cancel failed transaction in xfs_fs_commit_blocks()
-References: <54EB782F.8020201@redhat.com>
-In-Reply-To: <54EB782F.8020201@redhat.com>
+Subject: [PATCH 0/2] xfs: minor kernel logging updates
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,32 +38,11 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs-oss <xfs@oss.sgi.com>
-Cc: Christoph Hellwig <hch@lst.de>
 
-If xfs_trans_reserve fails we don't cancel the transaction,
-and we'll leak the allocated transaction pointer.
+Two very minor changes to error logging that I wished for when
+doing some debugging ... (not xfs logging ... dmesg "logging" ...)
 
-Spotted by Coverity.
-
-Signed-off-by: Eric Sandeen <ssandeen@redhat.com>
----
-
-diff --git a/fs/xfs/xfs_pnfs.c b/fs/xfs/xfs_pnfs.c
-index 4b33ef1..365dd57 100644
---- a/fs/xfs/xfs_pnfs.c
-+++ b/fs/xfs/xfs_pnfs.c
-@@ -300,8 +300,10 @@ xfs_fs_commit_blocks(
- 
- 	tp = xfs_trans_alloc(mp, XFS_TRANS_SETATTR_NOT_SIZE);
- 	error = xfs_trans_reserve(tp, &M_RES(mp)->tr_ichange, 0, 0);
--	if (error)
-+	if (error) {
-+		xfs_trans_cancel(tp, 0);
- 		goto out_drop_iolock;
-+	}
- 
- 	xfs_ilock(ip, XFS_ILOCK_EXCL);
- 	xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL);
+-Eric
 
 _______________________________________________
 xfs mailing list
