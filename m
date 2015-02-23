@@ -1,23 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 7A98A7F47
-	for <xfs@oss.sgi.com>; Sun, 22 Feb 2015 19:30:15 -0600 (CST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 771DA7F47
+	for <xfs@oss.sgi.com>; Mon, 23 Feb 2015 01:32:46 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 65E5B8F8033
-	for <xfs@oss.sgi.com>; Sun, 22 Feb 2015 17:30:15 -0800 (PST)
-Received: from mail.linuxfoundation.org (mail.linuxfoundation.org
-	[140.211.169.12]) by cuda.sgi.com with ESMTP id
-	9y0unD6AXaHJa7V4 (version=TLSv1 cipher=AES256-SHA bits=256
-	verify=NO) for <xfs@oss.sgi.com>;
-	Sun, 22 Feb 2015 17:30:13 -0800 (PST)
-Date: Sun, 22 Feb 2015 17:29:30 -0800
-From: Andrew Morton <akpm@linux-foundation.org>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id EA6BEAC001
+	for <xfs@oss.sgi.com>; Sun, 22 Feb 2015 23:32:42 -0800 (PST)
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	hEpy1CgPRrzaSoG8 for <xfs@oss.sgi.com>;
+	Sun, 22 Feb 2015 23:32:39 -0800 (PST)
+Date: Mon, 23 Feb 2015 18:32:35 +1100
+From: Dave Chinner <david@fromorbit.com>
 Subject: Re: How to handle TIF_MEMDIE stalls?
-Message-Id: <20150222172930.6586516d.akpm@linux-foundation.org>
-In-Reply-To: <20150223004521.GK12722@dastard>
-References: <201502092044.JDG39081.LVFOOtFHQFOMSJ@I-love.SAKURA.ne.jp>
-	<201502102258.IFE09888.OVQFJOMSFtOLFH@I-love.SAKURA.ne.jp>
-	<20150210151934.GA11212@phnom.home.cmpxchg.org>
+Message-ID: <20150223073235.GT4251@dastard>
+References: <20150210151934.GA11212@phnom.home.cmpxchg.org>
 	<201502111123.ICD65197.FMLOHSQJFVOtFO@I-love.SAKURA.ne.jp>
 	<201502172123.JIE35470.QOLMVOFJSHOFFt@I-love.SAKURA.ne.jp>
 	<20150217125315.GA14287@phnom.home.cmpxchg.org>
@@ -26,7 +22,10 @@ References: <201502092044.JDG39081.LVFOOtFHQFOMSJ@I-love.SAKURA.ne.jp>
 	<20150219225217.GY12722@dastard>
 	<20150221235227.GA25079@phnom.home.cmpxchg.org>
 	<20150223004521.GK12722@dastard>
-Mime-Version: 1.0
+	<20150222172930.6586516d.akpm@linux-foundation.org>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20150222172930.6586516d.akpm@linux-foundation.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -39,77 +38,172 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
+To: Andrew Morton <akpm@linux-foundation.org>
 Cc: Johannes Weiner <hannes@cmpxchg.org>, Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, dchinner@redhat.com, oleg@redhat.com, xfs@oss.sgi.com, mhocko@suse.cz, linux-mm@kvack.org, mgorman@suse.de, rientjes@google.com, torvalds@linux-foundation.org
 
-On Mon, 23 Feb 2015 11:45:21 +1100 Dave Chinner <david@fromorbit.com> wrote:
-
-> > > I really don't care about the OOM Killer corner cases - it's
-> > > completely the wrong way line of development to be spending time on
-> > > and you aren't going to convince me otherwise. The OOM killer a
-> > > crutch used to justify having a memory allocation subsystem that
-> > > can't provide forward progress guarantee mechanisms to callers that
-> > > need it.
-> > 
-> > We can provide this.  Are all these callers able to preallocate?
+On Sun, Feb 22, 2015 at 05:29:30PM -0800, Andrew Morton wrote:
+> On Mon, 23 Feb 2015 11:45:21 +1100 Dave Chinner <david@fromorbit.com> wrote:
 > 
-> Anything that allocates in transaction context (and therefor is
-> GFP_NOFS by definition) can preallocate at transaction reservation
-> time. However, preallocation is dumb, complex, CPU and memory
-> intensive and will have a *massive* impact on performance.
-> Allocating 10-100 pages to a reserve which we will almost *never
-> use* and then free them again *on every single transaction* is a lot
-> of unnecessary additional fast path overhead.  Hence a "preallocate
-> for every context" reserve pool is not a viable solution.
+> > > > I really don't care about the OOM Killer corner cases - it's
+> > > > completely the wrong way line of development to be spending time on
+> > > > and you aren't going to convince me otherwise. The OOM killer a
+> > > > crutch used to justify having a memory allocation subsystem that
+> > > > can't provide forward progress guarantee mechanisms to callers that
+> > > > need it.
+> > > 
+> > > We can provide this.  Are all these callers able to preallocate?
+> > 
+> > Anything that allocates in transaction context (and therefor is
+> > GFP_NOFS by definition) can preallocate at transaction reservation
+> > time. However, preallocation is dumb, complex, CPU and memory
+> > intensive and will have a *massive* impact on performance.
+> > Allocating 10-100 pages to a reserve which we will almost *never
+> > use* and then free them again *on every single transaction* is a lot
+> > of unnecessary additional fast path overhead.  Hence a "preallocate
+> > for every context" reserve pool is not a viable solution.
+> 
+> Yup.
+> 
+> > Reservations are simply an *accounting* of the maximum amount of a
+> > reserve required by an operation to guarantee forwards progress. In
+> > filesystems, we do this for log space (transactions) and some do it
+> > for filesystem space (e.g. delayed allocation needs correct ENOSPC
+> > detection so we don't overcommit disk space).  The VM already has
+> > such concepts (e.g. watermarks and things like min_free_kbytes) that
+> > it uses to ensure that there are sufficient reserves for certain
+> > types of allocations to succeed.
+> 
+> Yes, as we do for __GFP_HIGH and PF_MEMALLOC etc.  Add a dynamic
+> reserve.  So to reserve N pages we increase the page allocator dynamic
+> reserve by N, do some reclaim if necessary then deposit N tokens into
+> the caller's task_struct (it'll be a set of zone/nr-pages tuples I
+> suppose).
+> 
+> When allocating pages the caller should drain its reserves in
+> preference to dipping into the regular freelist.  This guy has already
+> done his reclaim and shouldn't be penalised a second time.  I guess
+> Johannes's preallocation code should switch to doing this for the same
+> reason, plus the fact that snipping a page off
+> task_struct.prealloc_pages is super-fast and needs to be done sometime
+> anyway so why not do it by default.
 
-Yup.
+That is at odds with the requirements of demand paging, which
+allocate for objects that are reclaimable within the course of the
+transaction. The reserve is there to ensure forward progress for
+allocations for objects that aren't freed until after the
+transaction completes, but if we drain it for reclaimable objects we
+then have nothing left in the reserve pool when we actually need it.
 
-> Reservations are simply an *accounting* of the maximum amount of a
-> reserve required by an operation to guarantee forwards progress. In
-> filesystems, we do this for log space (transactions) and some do it
-> for filesystem space (e.g. delayed allocation needs correct ENOSPC
-> detection so we don't overcommit disk space).  The VM already has
-> such concepts (e.g. watermarks and things like min_free_kbytes) that
-> it uses to ensure that there are sufficient reserves for certain
-> types of allocations to succeed.
+We do not know ahead of time if the object we are allocating is
+going to modified and hence locked into the transaction. Hence we
+can't say "use the reserve for this *specific* allocation", and so
+the only guidance we can really give is "we will to allocate and
+*permanently consume* this much memory", and the reserve pool needs
+to cover that consumption to guarantee forwards progress.
 
-Yes, as we do for __GFP_HIGH and PF_MEMALLOC etc.  Add a dynamic
-reserve.  So to reserve N pages we increase the page allocator dynamic
-reserve by N, do some reclaim if necessary then deposit N tokens into
-the caller's task_struct (it'll be a set of zone/nr-pages tuples I
-suppose).
+Forwards progress for all other allocations is guaranteed because
+they are reclaimable objects - they either freed directly back to
+their source (slab, heap, page lists) or they are freed by shrinkers
+once they have been released from the transaction.
 
-When allocating pages the caller should drain its reserves in
-preference to dipping into the regular freelist.  This guy has already
-done his reclaim and shouldn't be penalised a second time.  I guess
-Johannes's preallocation code should switch to doing this for the same
-reason, plus the fact that snipping a page off
-task_struct.prealloc_pages is super-fast and needs to be done sometime
-anyway so why not do it by default.
+Hence we need allocations to come from the free list and trigger
+reclaim, regardless of the fact there is a reserve pool there. The
+reserve pool needs to be a last resort once there are no other
+avenues to allocate memory. i.e. it would be used to replace the OOM
+killer for GFP_NOFAIL allocations.
 
-Both reservation and preallocation are vulnerable to deadlocks - 10,000
-tasks all trying to reserve/prealloc 100 pages, they all have 50 pages
-and we ran out of memory.  Whoops.  We can undeadlock by returning
-ENOMEM but I suspect there will still be problematic situations where
-massive numbers of pages are temporarily AWOL.  Perhaps some form of
-queuing and throttling will be needed, to limit the peak number of
-reserved pages.  Per zone, I guess.
+> Both reservation and preallocation are vulnerable to deadlocks - 10,000
+> tasks all trying to reserve/prealloc 100 pages, they all have 50 pages
+> and we ran out of memory.  Whoops.
 
-And it'll be a huge pain handling order>0 pages.  I'd be inclined to
-make it order-0 only, and tell the lamer callers that
-vmap-is-thattaway.  Alas, one lame caller is slub.
+Yes, that's the big problem with preallocation, as well as your
+proposed "depelete the reserved memory first" approach. They
+*require* up front "preallocation" of free memory, either directly
+by the application, or internally by the mm subsystem.
 
+Hence my comments about appropriate classification of "reserved
+memory". Reserved memory does not necessarily need to be on the free
+list. It could be "immediately reclaimable" memory, so that
+reserving memory doesn't need to immediately reclaim memory, but can
+it can be pulled from the reclaimable memory reserves when
+memory pressure occurs. If there is no memory pressure, we do
+nothing beause we have no need to do anything....
 
-But the biggest issue is how the heck does a caller work out how many
-pages to reserve/prealloc?  Even a single sb_bread() - it's sitting on
-loop on a sparse NTFS file on loop on a five-deep DM stack on a
-six-deep MD stack on loop on NFS on an eleventy-deep networking stack. 
-And then there will be an unknown number of slab allocations of unknown
-size with unknown slabs-per-page rules - how many pages needed for
-them?  And to make it much worse, how many pages of which orders? 
-Bless its heart, slub will go and use a 1-order page for allocations
-which should have been in 0-order pages..
+> We can undeadlock by returning ENOMEM but I suspect there will
+> still be problematic situations where massive numbers of pages are
+> temporarily AWOL.  Perhaps some form of queuing and throttling
+> will be needed,
 
+Yes, think that is necessary, but I don't see it as necessary in the
+MM subsystem. XFS already has a ticket-based queue mechanisms for
+throttling concurrent access to ensure we don't overcommit log space
+and I'd want to tie the two together...
+
+> to limit the peak number of reserved pages.  Per
+> zone, I guess.
+
+Internal implementation issue that I don't really care about.
+When it comes to guaranteeing memory allocation, global context
+is all I care about. Locality of allocation simple doesn't matter;
+we want that page we reserved, no matter wher eit is located.
+
+> And it'll be a huge pain handling order>0 pages.  I'd be inclined
+> to make it order-0 only, and tell the lamer callers that
+> vmap-is-thattaway.  Alas, one lame caller is slub.
+
+Sure, but vmap requires GFP_KERNEL memory allocation and we're
+talking about allocation in transactions, which are GFP_NOFS.
+
+I've lost count of the number of times we've asked for that problem
+to be fixed. Refusing to fix it has simply lead to the growing use
+of ugly hacks around that problem (i.e. memalloc_noio_save() and
+friends).
+
+> But the biggest issue is how the heck does a caller work out how
+> many pages to reserve/prealloc?  Even a single sb_bread() - it's
+> sitting on loop on a sparse NTFS file on loop on a five-deep DM
+> stack on a six-deep MD stack on loop on NFS on an eleventy-deep
+> networking stack. 
+
+Each subsystem needs to take care of itself first, then we can worry
+about esoteric stacking requirements.
+
+Besides, stacking requirements through the IO layer is still pretty
+trivial - we only need to guarantee single IO progress from the
+highest layer as it can be recycled again and again for every IO
+that needs to be done.
+
+And, because mempools already give that guarantee to most block
+devices and drivers, we won't need to reserve memory for most block
+devices to make forwards progress. It's only crazy "recurse through
+filesystem" configurations where this will be an issue.
+
+> And then there will be an unknown number of
+> slab allocations of unknown size with unknown slabs-per-page rules
+> - how many pages needed for them?
+
+However many pages needed to allocate the number of objects we'll
+consume from the slab.
+
+> And to make it much worse, how
+> many pages of which orders?  Bless its heart, slub will go and use
+> a 1-order page for allocations which should have been in 0-order
+> pages..
+
+The majority of allocations will be order-0, though if we know that
+they are going to be significant numbers of high order allocations,
+then it should be simple enough to tell the mm subsystem "need a
+reserve of 32 order-0, 4 order-1 and 1 order-3 allocations" and have
+memory compaction just do it's stuff. But, IMO, we should cross that
+bridge when somebody actually needs reservations to be that
+specific....
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
