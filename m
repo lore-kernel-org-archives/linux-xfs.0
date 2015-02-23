@@ -1,22 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 422307F50
-	for <xfs@oss.sgi.com>; Mon, 23 Feb 2015 14:51:11 -0600 (CST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 144177F50
+	for <xfs@oss.sgi.com>; Mon, 23 Feb 2015 14:53:06 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id D380DAC001
-	for <xfs@oss.sgi.com>; Mon, 23 Feb 2015 12:51:10 -0800 (PST)
-Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id BQ6ND96O3xvw0YnZ (version=TLSv1 cipher=AES256-SHA
-	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 23 Feb 2015 12:51:09 -0800 (PST)
-Date: Mon, 23 Feb 2015 12:51:09 -0800
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] xfs: ensure truncate forces zeroed blocks to disk
-Message-ID: <20150223205109.GE13522@infradead.org>
-References: <1424299725-26067-1-git-send-email-david@fromorbit.com>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id E6028304032
+	for <xfs@oss.sgi.com>; Mon, 23 Feb 2015 12:53:05 -0800 (PST)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id tWJPLf1EM0uBPACc for <xfs@oss.sgi.com>;
+	Mon, 23 Feb 2015 12:53:04 -0800 (PST)
+Message-ID: <54EB9330.4080604@sandeen.net>
+Date: Mon, 23 Feb 2015 14:53:04 -0600
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1424299725-26067-1-git-send-email-david@fromorbit.com>
+Subject: Re: [PATCH 1/2] xfs: log unmount events on console
+References: <54EB7BDB.7080202@redhat.com> <54EB7C65.3000307@sandeen.net>
+	<20150223204904.GC13522@infradead.org>
+In-Reply-To: <20150223204904.GC13522@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,11 +28,19 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Eric Sandeen <sandeen@redhat.com>, xfs-oss <xfs@oss.sgi.com>
 
-This looks correct, but is there a good (performance) reason against
-simply unconditionally flushing and waiting?
+On 2/23/15 2:49 PM, Christoph Hellwig wrote:
+> Oh well, even more spam during xfstest runs :)
+
+Heh, but no review...?
+
+I could be talked out of it, if people think it's not useful
+enough.
+
+-Eric
+
 
 _______________________________________________
 xfs mailing list
