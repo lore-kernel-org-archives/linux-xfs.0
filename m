@@ -1,22 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 484AE7F3F
-	for <xfs@oss.sgi.com>; Tue, 24 Feb 2015 15:59:18 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 3624A304032
-	for <xfs@oss.sgi.com>; Tue, 24 Feb 2015 13:59:15 -0800 (PST)
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	AV84xW3N4M3lApCB for <xfs@oss.sgi.com>;
-	Tue, 24 Feb 2015 13:59:09 -0800 (PST)
-Date: Wed, 25 Feb 2015 08:59:07 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: trying to avoid a lengthy quotacheck by deleting all quota data
-Message-ID: <20150224215907.GA18360@dastard>
-References: <54EC958E.2000001@pythonanywhere.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 2BD6B7F3F
+	for <xfs@oss.sgi.com>; Tue, 24 Feb 2015 16:04:40 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id EDC438F80CE
+	for <xfs@oss.sgi.com>; Tue, 24 Feb 2015 14:04:39 -0800 (PST)
+Received: from mail-qg0-f54.google.com (mail-qg0-f54.google.com
+	[209.85.192.54]) by cuda.sgi.com with ESMTP id LKSlYsiXW1jBWofZ
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Tue, 24 Feb 2015 14:04:37 -0800 (PST)
+Received: by mail-qg0-f54.google.com with SMTP id z60so32571210qgd.13
+	for <xfs@oss.sgi.com>; Tue, 24 Feb 2015 14:04:37 -0800 (PST)
+Message-ID: <54ECF573.9050106@binghamton.edu>
+Date: Tue, 24 Feb 2015 17:04:35 -0500
+From: Dave Hall <kdhall@binghamton.edu>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <54EC958E.2000001@pythonanywhere.com>
+Subject: Re: XFS/LVM/Multipath on a single RAID volume
+References: <5143F94C.1020708@hardwarefreak.com>	<20130316072126.GG6369@dastard>	<515082C3.2000006@binghamton.edu>	<515361B5.8050603@hardwarefreak.com>	<5155F2B2.1010308@binghamton.edu>	<20130331012231.GJ6369@dastard>	<515C3BF3.60601@binghamton.edu>	<51684382.50008@binghamton.edu>	<5168AC0B.5010100@hardwarefreak.com>	<516C649A.8010003@binghamton.edu>	<20130416161841.GB13938@destitution>	<54EA67B7.30805@binghamton.edu>
+	<20150223121812.5077ff07@harpe.intellique.com>
+In-Reply-To: <20150223121812.5077ff07@harpe.intellique.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,73 +27,73 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="utf-8"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Harry <harry@pythonanywhere.com>
-Cc: xfs@oss.sgi.com
+To: Emmanuel Florac <eflorac@intellique.com>
+Cc: stan@hardwarefreak.com, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-On Tue, Feb 24, 2015 at 03:15:26PM +0000, Harry wrote:
-> Hi there,
-> 
-> We've got a moderately large disk (~2TB) into an inconsistent state,
-> such that it's going to want a quotacheck the next time we mount it
-> (it's currently mounted with quota accounting inactive).  Our tests
-> suggest this is going to take several hours, and cause an outage we
-> can't afford.
-
-What tests are you performing to suggest a quotacheck of a small
-filesystem will take hours? (yes, 2TB is a *small* filesystem).
-
-(xfs_info, df -i, df -h, storage hardware, etc are all relevant
-here).
-
-> We're wondering whether there's a 'nuke the site from orbit' option
-> that will let us avoid it.  The plan would be to:
-> - switch off quotas and delete them completely, using the commands:
->   -- disable
->   -- off
->   -- remove
-> - remount the drive with -o prjquota, hoping that there will not be
-> a quotacheck, because we've deleted all the old quota data
-
-Mounting with a quota enabled *forces* a quota check if quotas
-aren't currently enabled. You cannot avoid it; it's the way quota
-consistency is created.
-
-> - run a script gradually restore all the quotas, one by one and in
-> good time, from our own external backups (we've got the quotas in a
-> database basically).
-
-Can't be done - quotas need to be consistent with what is currently
-on disk, not what you have in a backup somewhere.
-
-> So the questions are:
-> - is there a way to remove all quota information from a mounted drive?
-> (the current mount status seems to be that it tried to mount it with
-
-mount with quotas on and turn them off via xfs_quota,i or mount
-without quota options at all. Then run the remove command in
-xfs_quota.
-
-> -o prjquota but that quota accounting is *not* active)
-
-Not possible.
-
-> - will it work and let us remount the drive with -o prjquota without
-> causing a quotacheck?
-
-No.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+CkRhdmUgSGFsbApCaW5naGFtdG9uIFVuaXZlcnNpdHkKa2RoYWxsQGJpbmdoYW10b24uZWR1CjYw
+Ny03NjAtMjMyOCAoQ2VsbCkKNjA3LTc3Ny00NjQxIChPZmZpY2UpCgoKT24gMDIvMjMvMjAxNSAw
+NjoxOCBBTSwgRW1tYW51ZWwgRmxvcmFjIHdyb3RlOgo+IExlIFN1biwgMjIgRmViIDIwMTUgMTg6
+MzU6MTkgLTA1MDAKPiBEYXZlIEhhbGw8a2RoYWxsQGJpbmdoYW10b24uZWR1PiAgw6ljcml2YWl0
+Ogo+Cj4gICAgCj4+IFNvIHNpbmNlIEkgaGF2ZSBhIGZyZXNoIGFycmF5IHRoYXQncyBub3QgaW4g
+cHJvZHVjdGlvbiB5ZXQgSSB3YXMKPj4gaG9waW5nIHRvIGdldCBzb21lIHBvaW50ZXJzIG9uIGhv
+dyB0byBjb25maWd1cmUgaXQgdG8gbWF4aW1pemUgWEZTCj4+IHBlcmZvcm1hbmNlLiAgSW4gcGFy
+dGljdWxhciwgSSd2ZSBzZWVuIGEgc3VnZ2VzdGlvbiB0aGF0IGEKPj4gbXVsdGlwYXRoZWQgYXJy
+YXkgc2hvdWxkIGJlIHNsaWNlZCB1cCBpbnRvIGxvZ2ljYWwgZHJpdmVzIGFuZCBwYXN0ZWQKPj4g
+YmFjayB0b2dldGhlciB3aXRoIExWTS4gIFdvbmRlcmluZyBhbHNvIGFib3V0IHB1dHRpbmcgdGhl
+IGpvdXJuYWwgaW4KPj4gYSBzZXBhcmF0ZSBsb2dpY2FsIGRyaXZlIG9uIHRoZSBzYW1lIGFycmF5
+Lgo+PiAgICAgIAo+IFdoYXQncyB0aGUgaGFyZHdhcmUgY29uZmlndXJhdGlvbiBsaWtlPyBiZWZv
+cmUgbXVsdGlwYXRoaW5nLCB5b3UgbmVlZAo+IHRvIGtub3cgaWYgeW91ciBSQUlEIGNvbnRyb2xs
+ZXIgYW5kIGRpc2tzIGNhbiBhY3R1YWxseSBzYXR1cmF0ZSB5b3VyCj4gbGluay4gR2VuZXJhbGx5
+IFNBUy1hdHRhY2hlZCBlbmNsb3N1cmVzIGFyZSBkcml2ZW4gdGhyb3VnaCBhIDQgd2F5Cj4gU0ZG
+LTgwODggY2FibGUsIHdpdGggYSBiYW5kd2lkdGggb2YgNHggNkdicHMgKG1heGltdW0gdGhyb3Vn
+aHB1dCBwZXIKPiBsaW5rOiAzIEdCL3MpIG9yIDQgeCAxMiBHYnBzIChtYXggdGhydXB1dDogNiBH
+Qi9zKS4KPgo+ICAgIApUaGUgbmV3IGhhcmR3YXJlIGlzIGFuIEluZm9ydHJlbmQgd2l0aCAxNiB4
+IDJUQiA2R2JwcyBTQVMgZHJpdmVzLiAgSXQgCmhhcyBvbmUgY29udHJvbGxlciB3aXRoIGR1YWwg
+NkdicHMgU0FTIHBvcnRzLiAgVGhlIHNlcnZlciBjdXJyZW50bHkgaGFzIAp0d28gM0dicHMgU0FT
+IEhCQXMuCgpPbiBhbiBleGlzdGluZyBhcnJheSBiYXNlZCBvbiBzaW1pbGFyIGJ1dCBzbGlnaHRs
+eSBzbG93ZXIgaGFyZHdhcmUsIEknbSAKZ2V0dGluZyBtaXNlcmFibGUgcGVyZm9ybWFuY2UuICBU
+aGUgYm90dGxlbmVjayBzZWVtcyB0byBiZSBvbiB0aGUgc2VydmVyIApzaWRlLiAgRm9yIHNwZWNp
+ZmljcywgdGhlIGFycmF5IGlzIGxhaWQgb3V0IGFzIGEgc2luZ2xlIDI2VEIgdm9sdW1lIGFuZCAK
+YXR0YWNoZWQgYnkgYSBzaW5nbGUgM0dicHMgU0FTLiAgVGhlIHNlcnZlciBpcyBxdWFkIDgtY29y
+ZSBYZW9uIHdpdGggCjEyOEdCIFJBTS4gIFRoZSBuZXR3b3JraW5nIGlzIGFsbCAxMEdCLiAgVGhl
+IGFwcGxpY2F0aW9uIGlzIHJzbmFwc2hvdCAKd2hpY2ggaXMgZXNzZW50aWFsbHkgYSBzZXJpZXMg
+b2YgcnN5bmMgY29waWVzIHdoZXJlIHRoZSB1bmNoYW5nZWQgZmlsZXMgCmFyZSBoYXJkLWxpbmtl
+ZCBmcm9tIG9uZSBzbmFwc2hvdCB0byB0aGUgbmV4dC4gIENQVSB1dGlsaXphdGlvbiBpcyB2ZXJ5
+IApsb3cgYW5kIG9ubHkgYSBmZXcgY29yZXMgc2VlbSB0byBiZSBhY3RpdmUuICBZZXQgdGhlIG9w
+ZXJhdGlvbiBpcyB0YWtpbmcgCmhvdXJzIHRvIGNvbXBsZXRlLgoKVGhlIHByZW1pc2UgdGhhdCB3
+YXMgcHJlc2VudGVkIHRvIG1lIGJ5IHNvbWVvbmUgaW4gdGhlIHN0b3JhZ2UgYnVzaW5lc3MgCmlz
+IHRoYXQgd2l0aCAnbWFueScgcHJvY2Nlc3NvciBjb3JlcyBvbmUgc2hvdWxkIHNsaWNlIGEgbGFy
+Z2UgYXJyYXkgdXAgCmludG8gc2VnbWVudHMsIG11bHRpcGF0aCB0aGUgd2hvbGUgZGVhbCwgYW5k
+IHRoZW4gbWFzaCB0aGUgc2VnbWVudHMgYmFjayAKdG9nZXRoZXIgd2l0aCBMVk0gKG9yIE1EKS4g
+IFNpbmNlIHRoZSBrZXJuZWwgd291bGQgdWx0aW1hdGVseSBzZWUgYSAKYnVuY2ggb2Ygc21hbGxl
+ciBzdG9yYWdlIHNlZ21lbnRzIHRoYXQgd2VyZSBhbGwgZ2V0dGluZyBhY3Rpdml0eSwgaXQgCnNo
+b3VsZCBkaXNwYXRjaCBhIHNldCBvZiBjb3JlcyBmb3IgZWFjaCBzdG9yYWdlIHNlZ21lbnQgYW5k
+IGdldCB0aGUgam9iIApkb25lIGZhc3Rlci4gIEkgdGhpbmsgaW4gdGhlb3J5IHRoaXMgd291bGQg
+ZXZlbiB3b3JrIHRvIHNvbWUgZXh0ZW50IG9uIGEgCnNpbmdsZS1wYXRoIFNBUyBjb25uZWN0aW9u
+Lgo+PiBJIGFtIGFibGUgdG8gc2V0IHVwIGEgMi13YXkgbXVsdGlwYXRoIHJpZ2h0IG5vdywgYW5k
+IEkgbWlnaHQgYmUgYWJsZQo+PiB0byBqdXN0aWZ5IGFkZGluZyBhIHNlY29uZCBjb250cm9sbGVy
+IHRvIHRoZSBhcnJheSB0byBnZXQgYSA0LXdheQo+PiBtdWx0aXBhdGggZ29pbmcuCj4+ICAgICAg
+Cj4gQSBtdWx0aXBhdGggY2FuIGRvdWJsZSB0aGUgdGhyb3VnaHB1dCwgcHJvdmlkZWQgdGhhdCB5
+b3UgaGF2ZSBlbm91Z2gKPiBkcml2ZXM6IHlvdSdsbCBuZWVkIGFib3V0IDI0IDdrIFJQTSBkcml2
+ZXMgdG8gc2F0dXJhdGUgX29uZV8gNHg2R2Jwcwo+IFNBUyBsaW5rLiBJZiB5b3UgaGF2ZSBvbmx5
+IDEyIGRyaXZlcywgZHVhbCBhdHRhY2htZW50IHByb2JhYmx5IHdvbid0Cj4geWllbGQgbXVjaC4K
+Pgo+ICAgIAo+PiBFdmVuIGlmIHRoZSBMVk0gYXBwcm9hY2ggaXMgdGhlIHdyb25nIG9uZSwgSSBj
+bGVhcmx5IGhhdmUgYSByYXJlCj4+IGNoYW5jZSB0byBzZXQgdGhpcyBhcnJheSB1cCB0aGUgcmln
+aHQgd2F5LiAgUGxlYXNlIGxldCBtZSBrbm93IGlmIHlvdQo+PiBoYXZlIGFueSBzdWdnZXN0aW9u
+cy4KPj4gICAgICAKPiBJbiBteSBleHBlcmllbmNlLCBzb2Z0d2FyZSBSQUlELTAgd2l0aCBtZCBn
+aXZlcyBzbGlnaHRseSBiZXR0ZXIKPiBwZXJmb3JtYW5jZSB0aGFuIExWTSwgdGhvdWdoIG5vdCBt
+dWNoLgo+Cj4KPiAgICAKTUQgUkFJRC0wIHNlZW1zIGFzIGxpa2VseSBhcyBMVk0sIHNvIEknZCBw
+cm9iYWJseSB0cnkgdGhhdCBmaXJzdC4gIFRoZSAKYmlnIHF1ZXN0aW9uIGlzIGhvdyB0byBzaXpl
+IHRoZSBzbGljZXMgb2YgdGhlIGFycmF5IHRvIG1ha2UgWEZTIGhhcHB5IAphbmQgdGhlbiBob3cg
+dG8gbWFrZSBzdXJlIFhGUyBrbm93cyBhYm91dCBpdC4gIFNlY29uZGx5LCB0aGVyZSBpcyB0aGUg
+CnF1ZXN0aW9uIG9mIHRoZSBsb2cgdm9sdW1lLiAgU2VlbXMgdGhhdCB3aXRoIG11bHRpcGF0aCB0
+aGVyZSBtaWdodCBiZSAKc29tZSBwb3NzaWJsZSBhZHZhbnRhZ2UgdG8gcHV0dGluZyB0aGlzIGlu
+IGl0J3Mgb24gc2xpY2Ugb24gdGhlIGFycmF5IHNvIAp0aGF0IGxvZyB3cml0ZXMgY291bGQgYmUg
+aW4gYW4gSS9PIHN0cmVhbSB0aGF0IGlzIG1hbmFnZWQgc2VwYXJhdGVseSAKZnJvbSB0aGUgcmVz
+dC4KCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBt
+YWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xp
+c3RpbmZvL3hmcwo=
