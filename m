@@ -1,24 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 2BD6B7F3F
-	for <xfs@oss.sgi.com>; Tue, 24 Feb 2015 16:04:40 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id EDC438F80CE
-	for <xfs@oss.sgi.com>; Tue, 24 Feb 2015 14:04:39 -0800 (PST)
-Received: from mail-qg0-f54.google.com (mail-qg0-f54.google.com
-	[209.85.192.54]) by cuda.sgi.com with ESMTP id LKSlYsiXW1jBWofZ
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 24 Feb 2015 14:04:37 -0800 (PST)
-Received: by mail-qg0-f54.google.com with SMTP id z60so32571210qgd.13
-	for <xfs@oss.sgi.com>; Tue, 24 Feb 2015 14:04:37 -0800 (PST)
-Message-ID: <54ECF573.9050106@binghamton.edu>
-Date: Tue, 24 Feb 2015 17:04:35 -0500
-From: Dave Hall <kdhall@binghamton.edu>
-MIME-Version: 1.0
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 4FB6B7F3F
+	for <xfs@oss.sgi.com>; Tue, 24 Feb 2015 16:33:52 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 3D8C4304039
+	for <xfs@oss.sgi.com>; Tue, 24 Feb 2015 14:33:49 -0800 (PST)
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	NdfmrPtyfVJRYDJx for <xfs@oss.sgi.com>;
+	Tue, 24 Feb 2015 14:33:46 -0800 (PST)
+Date: Wed, 25 Feb 2015 09:33:44 +1100
+From: Dave Chinner <david@fromorbit.com>
 Subject: Re: XFS/LVM/Multipath on a single RAID volume
-References: <5143F94C.1020708@hardwarefreak.com>	<20130316072126.GG6369@dastard>	<515082C3.2000006@binghamton.edu>	<515361B5.8050603@hardwarefreak.com>	<5155F2B2.1010308@binghamton.edu>	<20130331012231.GJ6369@dastard>	<515C3BF3.60601@binghamton.edu>	<51684382.50008@binghamton.edu>	<5168AC0B.5010100@hardwarefreak.com>	<516C649A.8010003@binghamton.edu>	<20130416161841.GB13938@destitution>	<54EA67B7.30805@binghamton.edu>
+Message-ID: <20150224223344.GE4251@dastard>
+References: <5155F2B2.1010308@binghamton.edu> <20130331012231.GJ6369@dastard>
+	<515C3BF3.60601@binghamton.edu> <51684382.50008@binghamton.edu>
+	<5168AC0B.5010100@hardwarefreak.com>
+	<516C649A.8010003@binghamton.edu>
+	<20130416161841.GB13938@destitution>
+	<54EA67B7.30805@binghamton.edu>
 	<20150223121812.5077ff07@harpe.intellique.com>
-In-Reply-To: <20150223121812.5077ff07@harpe.intellique.com>
+	<54ECF573.9050106@binghamton.edu>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <54ECF573.9050106@binghamton.edu>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,73 +32,133 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Transfer-Encoding: base64
-Content-Type: text/plain; charset="utf-8"; Format="flowed"
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Emmanuel Florac <eflorac@intellique.com>
+To: Dave Hall <kdhall@binghamton.edu>
 Cc: stan@hardwarefreak.com, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-CkRhdmUgSGFsbApCaW5naGFtdG9uIFVuaXZlcnNpdHkKa2RoYWxsQGJpbmdoYW10b24uZWR1CjYw
-Ny03NjAtMjMyOCAoQ2VsbCkKNjA3LTc3Ny00NjQxIChPZmZpY2UpCgoKT24gMDIvMjMvMjAxNSAw
-NjoxOCBBTSwgRW1tYW51ZWwgRmxvcmFjIHdyb3RlOgo+IExlIFN1biwgMjIgRmViIDIwMTUgMTg6
-MzU6MTkgLTA1MDAKPiBEYXZlIEhhbGw8a2RoYWxsQGJpbmdoYW10b24uZWR1PiAgw6ljcml2YWl0
-Ogo+Cj4gICAgCj4+IFNvIHNpbmNlIEkgaGF2ZSBhIGZyZXNoIGFycmF5IHRoYXQncyBub3QgaW4g
-cHJvZHVjdGlvbiB5ZXQgSSB3YXMKPj4gaG9waW5nIHRvIGdldCBzb21lIHBvaW50ZXJzIG9uIGhv
-dyB0byBjb25maWd1cmUgaXQgdG8gbWF4aW1pemUgWEZTCj4+IHBlcmZvcm1hbmNlLiAgSW4gcGFy
-dGljdWxhciwgSSd2ZSBzZWVuIGEgc3VnZ2VzdGlvbiB0aGF0IGEKPj4gbXVsdGlwYXRoZWQgYXJy
-YXkgc2hvdWxkIGJlIHNsaWNlZCB1cCBpbnRvIGxvZ2ljYWwgZHJpdmVzIGFuZCBwYXN0ZWQKPj4g
-YmFjayB0b2dldGhlciB3aXRoIExWTS4gIFdvbmRlcmluZyBhbHNvIGFib3V0IHB1dHRpbmcgdGhl
-IGpvdXJuYWwgaW4KPj4gYSBzZXBhcmF0ZSBsb2dpY2FsIGRyaXZlIG9uIHRoZSBzYW1lIGFycmF5
-Lgo+PiAgICAgIAo+IFdoYXQncyB0aGUgaGFyZHdhcmUgY29uZmlndXJhdGlvbiBsaWtlPyBiZWZv
-cmUgbXVsdGlwYXRoaW5nLCB5b3UgbmVlZAo+IHRvIGtub3cgaWYgeW91ciBSQUlEIGNvbnRyb2xs
-ZXIgYW5kIGRpc2tzIGNhbiBhY3R1YWxseSBzYXR1cmF0ZSB5b3VyCj4gbGluay4gR2VuZXJhbGx5
-IFNBUy1hdHRhY2hlZCBlbmNsb3N1cmVzIGFyZSBkcml2ZW4gdGhyb3VnaCBhIDQgd2F5Cj4gU0ZG
-LTgwODggY2FibGUsIHdpdGggYSBiYW5kd2lkdGggb2YgNHggNkdicHMgKG1heGltdW0gdGhyb3Vn
-aHB1dCBwZXIKPiBsaW5rOiAzIEdCL3MpIG9yIDQgeCAxMiBHYnBzIChtYXggdGhydXB1dDogNiBH
-Qi9zKS4KPgo+ICAgIApUaGUgbmV3IGhhcmR3YXJlIGlzIGFuIEluZm9ydHJlbmQgd2l0aCAxNiB4
-IDJUQiA2R2JwcyBTQVMgZHJpdmVzLiAgSXQgCmhhcyBvbmUgY29udHJvbGxlciB3aXRoIGR1YWwg
-NkdicHMgU0FTIHBvcnRzLiAgVGhlIHNlcnZlciBjdXJyZW50bHkgaGFzIAp0d28gM0dicHMgU0FT
-IEhCQXMuCgpPbiBhbiBleGlzdGluZyBhcnJheSBiYXNlZCBvbiBzaW1pbGFyIGJ1dCBzbGlnaHRs
-eSBzbG93ZXIgaGFyZHdhcmUsIEknbSAKZ2V0dGluZyBtaXNlcmFibGUgcGVyZm9ybWFuY2UuICBU
-aGUgYm90dGxlbmVjayBzZWVtcyB0byBiZSBvbiB0aGUgc2VydmVyIApzaWRlLiAgRm9yIHNwZWNp
-ZmljcywgdGhlIGFycmF5IGlzIGxhaWQgb3V0IGFzIGEgc2luZ2xlIDI2VEIgdm9sdW1lIGFuZCAK
-YXR0YWNoZWQgYnkgYSBzaW5nbGUgM0dicHMgU0FTLiAgVGhlIHNlcnZlciBpcyBxdWFkIDgtY29y
-ZSBYZW9uIHdpdGggCjEyOEdCIFJBTS4gIFRoZSBuZXR3b3JraW5nIGlzIGFsbCAxMEdCLiAgVGhl
-IGFwcGxpY2F0aW9uIGlzIHJzbmFwc2hvdCAKd2hpY2ggaXMgZXNzZW50aWFsbHkgYSBzZXJpZXMg
-b2YgcnN5bmMgY29waWVzIHdoZXJlIHRoZSB1bmNoYW5nZWQgZmlsZXMgCmFyZSBoYXJkLWxpbmtl
-ZCBmcm9tIG9uZSBzbmFwc2hvdCB0byB0aGUgbmV4dC4gIENQVSB1dGlsaXphdGlvbiBpcyB2ZXJ5
-IApsb3cgYW5kIG9ubHkgYSBmZXcgY29yZXMgc2VlbSB0byBiZSBhY3RpdmUuICBZZXQgdGhlIG9w
-ZXJhdGlvbiBpcyB0YWtpbmcgCmhvdXJzIHRvIGNvbXBsZXRlLgoKVGhlIHByZW1pc2UgdGhhdCB3
-YXMgcHJlc2VudGVkIHRvIG1lIGJ5IHNvbWVvbmUgaW4gdGhlIHN0b3JhZ2UgYnVzaW5lc3MgCmlz
-IHRoYXQgd2l0aCAnbWFueScgcHJvY2Nlc3NvciBjb3JlcyBvbmUgc2hvdWxkIHNsaWNlIGEgbGFy
-Z2UgYXJyYXkgdXAgCmludG8gc2VnbWVudHMsIG11bHRpcGF0aCB0aGUgd2hvbGUgZGVhbCwgYW5k
-IHRoZW4gbWFzaCB0aGUgc2VnbWVudHMgYmFjayAKdG9nZXRoZXIgd2l0aCBMVk0gKG9yIE1EKS4g
-IFNpbmNlIHRoZSBrZXJuZWwgd291bGQgdWx0aW1hdGVseSBzZWUgYSAKYnVuY2ggb2Ygc21hbGxl
-ciBzdG9yYWdlIHNlZ21lbnRzIHRoYXQgd2VyZSBhbGwgZ2V0dGluZyBhY3Rpdml0eSwgaXQgCnNo
-b3VsZCBkaXNwYXRjaCBhIHNldCBvZiBjb3JlcyBmb3IgZWFjaCBzdG9yYWdlIHNlZ21lbnQgYW5k
-IGdldCB0aGUgam9iIApkb25lIGZhc3Rlci4gIEkgdGhpbmsgaW4gdGhlb3J5IHRoaXMgd291bGQg
-ZXZlbiB3b3JrIHRvIHNvbWUgZXh0ZW50IG9uIGEgCnNpbmdsZS1wYXRoIFNBUyBjb25uZWN0aW9u
-Lgo+PiBJIGFtIGFibGUgdG8gc2V0IHVwIGEgMi13YXkgbXVsdGlwYXRoIHJpZ2h0IG5vdywgYW5k
-IEkgbWlnaHQgYmUgYWJsZQo+PiB0byBqdXN0aWZ5IGFkZGluZyBhIHNlY29uZCBjb250cm9sbGVy
-IHRvIHRoZSBhcnJheSB0byBnZXQgYSA0LXdheQo+PiBtdWx0aXBhdGggZ29pbmcuCj4+ICAgICAg
-Cj4gQSBtdWx0aXBhdGggY2FuIGRvdWJsZSB0aGUgdGhyb3VnaHB1dCwgcHJvdmlkZWQgdGhhdCB5
-b3UgaGF2ZSBlbm91Z2gKPiBkcml2ZXM6IHlvdSdsbCBuZWVkIGFib3V0IDI0IDdrIFJQTSBkcml2
-ZXMgdG8gc2F0dXJhdGUgX29uZV8gNHg2R2Jwcwo+IFNBUyBsaW5rLiBJZiB5b3UgaGF2ZSBvbmx5
-IDEyIGRyaXZlcywgZHVhbCBhdHRhY2htZW50IHByb2JhYmx5IHdvbid0Cj4geWllbGQgbXVjaC4K
-Pgo+ICAgIAo+PiBFdmVuIGlmIHRoZSBMVk0gYXBwcm9hY2ggaXMgdGhlIHdyb25nIG9uZSwgSSBj
-bGVhcmx5IGhhdmUgYSByYXJlCj4+IGNoYW5jZSB0byBzZXQgdGhpcyBhcnJheSB1cCB0aGUgcmln
-aHQgd2F5LiAgUGxlYXNlIGxldCBtZSBrbm93IGlmIHlvdQo+PiBoYXZlIGFueSBzdWdnZXN0aW9u
-cy4KPj4gICAgICAKPiBJbiBteSBleHBlcmllbmNlLCBzb2Z0d2FyZSBSQUlELTAgd2l0aCBtZCBn
-aXZlcyBzbGlnaHRseSBiZXR0ZXIKPiBwZXJmb3JtYW5jZSB0aGFuIExWTSwgdGhvdWdoIG5vdCBt
-dWNoLgo+Cj4KPiAgICAKTUQgUkFJRC0wIHNlZW1zIGFzIGxpa2VseSBhcyBMVk0sIHNvIEknZCBw
-cm9iYWJseSB0cnkgdGhhdCBmaXJzdC4gIFRoZSAKYmlnIHF1ZXN0aW9uIGlzIGhvdyB0byBzaXpl
-IHRoZSBzbGljZXMgb2YgdGhlIGFycmF5IHRvIG1ha2UgWEZTIGhhcHB5IAphbmQgdGhlbiBob3cg
-dG8gbWFrZSBzdXJlIFhGUyBrbm93cyBhYm91dCBpdC4gIFNlY29uZGx5LCB0aGVyZSBpcyB0aGUg
-CnF1ZXN0aW9uIG9mIHRoZSBsb2cgdm9sdW1lLiAgU2VlbXMgdGhhdCB3aXRoIG11bHRpcGF0aCB0
-aGVyZSBtaWdodCBiZSAKc29tZSBwb3NzaWJsZSBhZHZhbnRhZ2UgdG8gcHV0dGluZyB0aGlzIGlu
-IGl0J3Mgb24gc2xpY2Ugb24gdGhlIGFycmF5IHNvIAp0aGF0IGxvZyB3cml0ZXMgY291bGQgYmUg
-aW4gYW4gSS9PIHN0cmVhbSB0aGF0IGlzIG1hbmFnZWQgc2VwYXJhdGVseSAKZnJvbSB0aGUgcmVz
-dC4KCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBt
-YWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xp
-c3RpbmZvL3hmcwo=
+On Tue, Feb 24, 2015 at 05:04:35PM -0500, Dave Hall wrote:
+> =
+
+> Dave Hall
+> Binghamton University
+> kdhall@binghamton.edu
+> 607-760-2328 (Cell)
+> 607-777-4641 (Office)
+> =
+
+> =
+
+> On 02/23/2015 06:18 AM, Emmanuel Florac wrote:
+> >Le Sun, 22 Feb 2015 18:35:19 -0500
+> >Dave Hall<kdhall@binghamton.edu>  =E9crivait:
+> >
+> >>So since I have a fresh array that's not in production yet I was
+> >>hoping to get some pointers on how to configure it to maximize XFS
+> >>performance.  In particular, I've seen a suggestion that a
+> >>multipathed array should be sliced up into logical drives and pasted
+> >>back together with LVM.  Wondering also about putting the journal in
+> >>a separate logical drive on the same array.
+> >What's the hardware configuration like? before multipathing, you need
+> >to know if your RAID controller and disks can actually saturate your
+> >link. Generally SAS-attached enclosures are driven through a 4 way
+> >SFF-8088 cable, with a bandwidth of 4x 6Gbps (maximum throughput per
+> >link: 3 GB/s) or 4 x 12 Gbps (max thruput: 6 GB/s).
+> >
+> The new hardware is an Infortrend with 16 x 2TB 6Gbps SAS drives.
+> It has one controller with dual 6Gbps SAS ports.  The server
+> currently has two 3Gbps SAS HBAs.
+> =
+
+> On an existing array based on similar but slightly slower hardware,
+> I'm getting miserable performance.  The bottleneck seems to be on
+> the server side.  For specifics, the array is laid out as a single
+> 26TB volume and attached by a single 3Gbps SAS. =
+
+
+So, 300MB/s max throughput.
+
+> The server is quad
+> 8-core Xeon with 128GB RAM.  The networking is all 10GB.  The
+> application is rsnapshot which is essentially a series of rsync
+> copies where the unchanged files are hard-linked from one snapshot
+> to the next.  CPU utilization is very low and only a few cores seem
+> to be active.  Yet the operation is taking hours to complete.
+
+rsync is likely limited by network throughput and round trip
+latency. Test your storage performance locally first, see it if
+performs as expected.
+
+> The premise that was presented to me by someone in the storage
+> business is that with 'many' proccessor cores one should slice a
+> large array up into segments, multipath the whole deal, and then
+> mash the segments back together with LVM (or MD).
+
+No, that's just a bad idea. CPU and memory locality is the least of
+your worries, and wont have any influence on performance at such low
+speeds. When you start getting up into the multiple-GB/s of
+throughput (note, GB/s not Gbps) locality matters more, but not for
+what you are doing. And multipathing should be ignored until you've
+characterised and understood single port lun performance.
+
+> Since the kernel
+> would ultimately see a bunch of smaller storage segments that were
+> all getting activity, it should dispatch a set of cores for each
+> storage segment and get the job done faster.  I think in theory this
+> would even work to some extent on a single-path SAS connection.
+
+The kernel already does most of the necessary locality stuff for
+optimal performance for you.
+
+> >>I am able to set up a 2-way multipath right now, and I might be able
+> >>to justify adding a second controller to the array to get a 4-way
+> >>multipath going.
+> >A multipath can double the throughput, provided that you have enough
+> >drives: you'll need about 24 7k RPM drives to saturate _one_ 4x6Gbps
+> >SAS link. If you have only 12 drives, dual attachment probably won't
+> >yield much.
+> >
+> >>Even if the LVM approach is the wrong one, I clearly have a rare
+> >>chance to set this array up the right way.  Please let me know if you
+> >>have any suggestions.
+> >In my experience, software RAID-0 with md gives slightly better
+> >performance than LVM, though not much.
+> >
+> >
+> MD RAID-0 seems as likely as LVM, so I'd probably try that first.
+> The big question is how to size the slices of the array
+
+Doesn't really matter for RAID 0.
+
+> to make XFS
+> happy and then how to make sure XFS knows about it.
+
+IF you are using MD, then mkfs.xfs will pick up the config
+automatically from the MD device.
+
+> Secondly, there
+> is the question of the log volume.  Seems that with multipath there
+> might be some possible advantage to putting this in it's on slice on
+> the array so that log writes could be in an I/O stream that is
+> managed separately from the rest.
+
+There are very few workloads where an external log makes any sense
+these days. Log bandwidth is generally a minor part of any workload,
+and non-volatile write caches aggregrate the sequential writes to
+the point where they impose very little physical IO overhead on teh
+array...
+
+Cheers,
+
+Dave.
+-- =
+
+Dave Chinner
+david@fromorbit.com
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
