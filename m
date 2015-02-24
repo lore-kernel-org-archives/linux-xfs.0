@@ -1,24 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 0D1337F3F
-	for <xfs@oss.sgi.com>; Tue, 24 Feb 2015 07:28:30 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id EF1AF304032
-	for <xfs@oss.sgi.com>; Tue, 24 Feb 2015 05:28:26 -0800 (PST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id D69C47F3F
+	for <xfs@oss.sgi.com>; Tue, 24 Feb 2015 07:36:59 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 58B518F80BE
+	for <xfs@oss.sgi.com>; Tue, 24 Feb 2015 05:36:56 -0800 (PST)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id jm7Wld9dggJe1z7F (version=TLSv1
+	cuda.sgi.com with ESMTP id 536TaK9kh8kwLboW (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 24 Feb 2015 05:28:25 -0800 (PST)
-Date: Tue, 24 Feb 2015 08:28:23 -0500
+	Tue, 24 Feb 2015 05:36:55 -0800 (PST)
+Date: Tue, 24 Feb 2015 08:36:52 -0500
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH] xfs: avoid firstused overflow in attr3 leaf header with
-	64k blocks
-Message-ID: <20150224132822.GA45528@bfoster.bfoster>
-References: <1424722050-24149-1-git-send-email-bfoster@redhat.com>
-	<54EB8E5D.8080905@sandeen.net>
+Subject: Re: [PATCH] xfs: superblock buffers need to be sector sized
+Message-ID: <20150224133652.GB45528@bfoster.bfoster>
+References: <1424761944-2034-1-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <54EB8E5D.8080905@sandeen.net>
+In-Reply-To: <1424761944-2034-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,123 +29,67 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
+To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On Mon, Feb 23, 2015 at 02:32:29PM -0600, Eric Sandeen wrote:
-> On 2/23/15 2:07 PM, Brian Foster wrote:
-> > The attr3 leaf header has a 16-bit firstused field that tracks the first
-> > used entry offset. This field is initialized to the block size in
-> > xfs_attr3_leaf_create() and updated accordingly in
-> > xfs_attr3_leaf_add_work() when new attributes are added.
-> > 
-> > The initialization of firstused overflows if the block size exceeds
-> > 16-bits. E.g., xfstests test generic/117 causes assert failures on a
-> > -bsize=64k fs on ppc64 because ichdr.firstused evaluates to 0.
+On Tue, Feb 24, 2015 at 06:12:24PM +1100, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
 > 
-> cool :)
+> In secondary_sb_wack() we zero the unused portion of both the
+> on-disk superblock and the in-memory copy that we have. When
+> the device sector size is 4k, this causes xfs_repair to crash like
+> so:
 > 
-> > Update the firstused initialization to not exceed the maximum value of
-> > an unsigned short. This avoids the overflow to 0 and allows firstused to
-> > be updated appropriately on subsequent xattr addition. Also update the
-> > freemap size calculation to use the actual block size rather than the
-> > potentially minimized version stored in firstused.
+> # xfs_repair /dev/ram1
+> Phase 1 - find and verify superblock...
+> Phase 2 - using internal log
+>         - zero log...
+>         - scan filesystem freespace and inode maps...
+> bad magic number
+> bad on-disk superblock 3 - bad magic number
+> primary/secondary superblock 3 conflict - AG superblock geometry info conflicts with filesystem geometry
+> zeroing unused portion of secondary superblock (AG #3)
+> #
 > 
-> I'm a little scared by this; does this truncated value risk going to disk?
-> (Yes, I think so.)  Is that ok?	 Does that ... mean we lose a byte of space
-> we'd otherwise have?  Maybe that's ok ...
+> The stack trace is indicative:
 > 
-
-I don't think it goes to disk in this situation, but even if it does I'm
-not sure it matters. Either it's a sane value for the field or it isn't.
-:)
-
-We've lost a byte according to the technical meaning of the field but I
-don't think that is the practical result. If you follow
-xfs_attr_shortform_to_leaf() down to xfs_attr3_leaf_add(), we use the
-freemap size and compare firstused against the base, so this is
-insignificant there. Continue further to xfs_attr3_leaf_add_work() where
-we do this:
-
-        ichdr->freemap[mapindex].size -= xfs_attr_leaf_newentsize(args, &tmp);
-
-        entry->nameidx = cpu_to_be16(ichdr->freemap[mapindex].base +
-                                     ichdr->freemap[mapindex].size);
-
-	...
-
-        if (be16_to_cpu(entry->nameidx) < ichdr->firstused)
-                ichdr->firstused = be16_to_cpu(entry->nameidx);
-	...
-
-... and it looks to me that firstused will be updated appropriately on
-first insertion just the same since the data structure to track the
-entry itself is larger than a single byte (I think there's also 4-byte
-alignment rules in play here).
-
-All that said, that's just the insert after sf->leaf conversion case and
-I'm still working on grokking this code. I haven't considered the other
-compaction cases and whatnot yet. TBH, even if we do lose a byte in some
-circumstances, I think that's just a limitation of the on-disk format.
-We just have to make sure it's documented and handled correctly. Another
-question is what happens if one one of these blocks is emptied some time
-later (e.g., is conversion/removal guaranteed? maybe it's more
-appropriate to reduce the size as well, pretend the blocks are a few
-bytes shorter and avoid a landmine altogether).
-
-> FWIW, I think the same problem exists in xfs_attr3_leaf_compact():
+> #0  memset ()
+> #1  0x000000000040404b in secondary_sb_wack
+> #2  verify_set_agheader
+> #3  0x0000000000427b4b in scan_ag
+> #4  0x000000000042a2ca in worker_thread
+> #5  0x00007ffff77ba0a4 in start_thread
+> #6  0x00007ffff74efc2d in clone
 > 
->         /* Initialise the incore headers */
->         ichdr_src = *ichdr_dst; /* struct copy */
->         ichdr_dst->firstused = args->geo->blksize;
+> Which points at memset overrunning the in memory buffer, as it is
+> only 512 bytes in length.
 > 
-> and xfs_attr3_leaf_unbalance():
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> ---
+
+The patch subject line should probably say 'xfsprogs:' or 'repair:,'
+otherwise this looks good to me:
+
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+
+>  repair/scan.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 > 
->                 tmphdr.firstused = state->args->geo->blksize;
-> 
-
-Indeed, thanks for catching these. I'll look through them and the one
-Dave pointed out.
-
-> > Signed-off-by: Brian Foster <bfoster@redhat.com>
-> > ---
-> >  fs/xfs/libxfs/xfs_attr_leaf.c | 5 +++--
-> >  1 file changed, 3 insertions(+), 2 deletions(-)
-> > 
-> > diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
-> > index 15105db..dc7bda3 100644
-> > --- a/fs/xfs/libxfs/xfs_attr_leaf.c
-> > +++ b/fs/xfs/libxfs/xfs_attr_leaf.c
-> > @@ -970,7 +970,8 @@ xfs_attr3_leaf_create(
-> >  	memset(leaf, 0, args->geo->blksize);
-> >  
-> >  	memset(&ichdr, 0, sizeof(ichdr));
-> > -	ichdr.firstused = args->geo->blksize;
-> > +	/* firstused is 16-bit */
-> > +	ichdr.firstused = min_t(int, USHRT_MAX, args->geo->blksize);
-> >  
-> >  	if (xfs_sb_version_hascrc(&mp->m_sb)) {
-> >  		struct xfs_da3_blkinfo *hdr3 = bp->b_addr;
-> > @@ -986,7 +987,7 @@ xfs_attr3_leaf_create(
-> >  		ichdr.magic = XFS_ATTR_LEAF_MAGIC;
-> >  		ichdr.freemap[0].base = sizeof(struct xfs_attr_leaf_hdr);
-> >  	}
-> > -	ichdr.freemap[0].size = ichdr.firstused - ichdr.freemap[0].base;
-> > +	ichdr.freemap[0].size = args->geo->blksize - ichdr.freemap[0].base;
-> 
-> But now freemap.size is out of sync with firstused; is that ok?
-> 
-
-I think so, according to the above logic. I'll have to see about those
-other cases...
-
-Brian
-
-> -Eric
+> diff --git a/repair/scan.c b/repair/scan.c
+> index ce8d7f5..12aa782 100644
+> --- a/repair/scan.c
+> +++ b/repair/scan.c
+> @@ -1485,7 +1485,7 @@ scan_ag(
+>  	int		status;
+>  	char		*objname = NULL;
 >  
-> >  	xfs_attr3_leaf_hdr_to_disk(leaf, &ichdr);
-> >  	xfs_trans_log_buf(args->trans, bp, 0, args->geo->blksize - 1);
-> > 
+> -	sb = (struct xfs_sb *)calloc(BBSIZE, 1);
+> +	sb = (struct xfs_sb *)calloc(BBTOB(XFS_FSS_TO_BB(mp, 1)), 1);
+>  	if (!sb) {
+>  		do_error(_("can't allocate memory for superblock\n"));
+>  		return;
+> -- 
+> 2.0.0
 > 
 > _______________________________________________
 > xfs mailing list
