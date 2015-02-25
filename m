@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 6F82B7F51
-	for <xfs@oss.sgi.com>; Wed, 25 Feb 2015 06:45:37 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id ECEFCAC003
-	for <xfs@oss.sgi.com>; Wed, 25 Feb 2015 04:45:36 -0800 (PST)
+	by oss.sgi.com (Postfix) with ESMTP id E82527F5E
+	for <xfs@oss.sgi.com>; Wed, 25 Feb 2015 06:57:58 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 92A30AC003
+	for <xfs@oss.sgi.com>; Wed, 25 Feb 2015 04:57:58 -0800 (PST)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id ABqHtzdA6HtrNO3G (version=TLSv1
+	cuda.sgi.com with ESMTP id Ce3FZYgaOYlIedf6 (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 25 Feb 2015 04:45:35 -0800 (PST)
-Date: Wed, 25 Feb 2015 07:45:30 -0500
-From: Brian Foster <bfoster@redhat.com>
+	Wed, 25 Feb 2015 04:57:57 -0800 (PST)
+Date: Wed, 25 Feb 2015 09:57:46 -0300
+From: Carlos Maiolino <cmaiolino@redhat.com>
 Subject: Re: [PATCH] xfs: remove xfs_bmap_sanity_check()
-Message-ID: <20150225124530.GB28053@bfoster.bfoster>
+Message-ID: <20150225125746.GB3653@hades.maiolino.org>
 References: <1424846470-7623-1-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
@@ -32,6 +32,11 @@ Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
+Looks good to me, consider adding:
+
+Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
+
+
 On Wed, Feb 25, 2015 at 05:41:10PM +1100, Dave Chinner wrote:
 > From: Dave Chinner <dchinner@redhat.com>
 > 
@@ -40,9 +45,6 @@ On Wed, Feb 25, 2015 at 05:41:10PM +1100, Dave Chinner wrote:
 > 
 > Signed-off-by: Dave Chinner <dchinner@redhat.com>
 > ---
-
-Reviewed-by: Brian Foster <bfoster@redhat.com>
-
 >  fs/xfs/libxfs/xfs_bmap.c | 32 --------------------------------
 >  1 file changed, 32 deletions(-)
 > 
@@ -117,6 +119,9 @@ Reviewed-by: Brian Foster <bfoster@redhat.com>
 > xfs mailing list
 > xfs@oss.sgi.com
 > http://oss.sgi.com/mailman/listinfo/xfs
+
+-- 
+Carlos
 
 _______________________________________________
 xfs mailing list
