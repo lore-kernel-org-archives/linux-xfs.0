@@ -1,23 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id EC6ED7F3F
-	for <xfs@oss.sgi.com>; Wed, 25 Feb 2015 00:40:44 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id DAE0B304032
-	for <xfs@oss.sgi.com>; Tue, 24 Feb 2015 22:40:41 -0800 (PST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id E525D7F3F
+	for <xfs@oss.sgi.com>; Wed, 25 Feb 2015 00:41:13 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id C45D68F80D9
+	for <xfs@oss.sgi.com>; Tue, 24 Feb 2015 22:41:13 -0800 (PST)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	jIYkQOHIXIlK9EFt for <xfs@oss.sgi.com>;
-	Tue, 24 Feb 2015 22:40:40 -0800 (PST)
-Date: Wed, 25 Feb 2015 17:40:38 +1100
+	amAvDfMFUTwOtxhA for <xfs@oss.sgi.com>;
+	Tue, 24 Feb 2015 22:41:11 -0800 (PST)
+Received: from disappointment.disaster.area ([192.168.1.110]
+	helo=disappointment) by dastard with esmtp (Exim 4.80)
+	(envelope-from <dave@fromorbit.com>) id 1YQVeg-0005jO-Fr
+	for xfs@oss.sgi.com; Wed, 25 Feb 2015 17:41:10 +1100
+Received: from dave by disappointment with local (Exim 4.82_1-5b7a7c0-XX)
+	(envelope-from <dave@disappointment.disaster>) id 1YQVeg-0001zY-Eb
+	for xfs@oss.sgi.com; Wed, 25 Feb 2015 17:41:10 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs: superblock buffers need to be sector sized
-Message-ID: <20150225064038.GE18360@dastard>
-References: <1424761944-2034-1-git-send-email-david@fromorbit.com>
-	<20150224133652.GB45528@bfoster.bfoster>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20150224133652.GB45528@bfoster.bfoster>
+Subject: [PATCH] xfs: remove xfs_bmap_sanity_check()
+Date: Wed, 25 Feb 2015 17:41:10 +1100
+Message-Id: <1424846470-7623-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,62 +28,89 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Tue, Feb 24, 2015 at 08:36:52AM -0500, Brian Foster wrote:
-> On Tue, Feb 24, 2015 at 06:12:24PM +1100, Dave Chinner wrote:
-> > From: Dave Chinner <dchinner@redhat.com>
-> > 
-> > In secondary_sb_wack() we zero the unused portion of both the
-> > on-disk superblock and the in-memory copy that we have. When
-> > the device sector size is 4k, this causes xfs_repair to crash like
-> > so:
-> > 
-> > # xfs_repair /dev/ram1
-> > Phase 1 - find and verify superblock...
-> > Phase 2 - using internal log
-> >         - zero log...
-> >         - scan filesystem freespace and inode maps...
-> > bad magic number
-> > bad on-disk superblock 3 - bad magic number
-> > primary/secondary superblock 3 conflict - AG superblock geometry info conflicts with filesystem geometry
-> > zeroing unused portion of secondary superblock (AG #3)
-> > #
-> > 
-> > The stack trace is indicative:
-> > 
-> > #0  memset ()
-> > #1  0x000000000040404b in secondary_sb_wack
-> > #2  verify_set_agheader
-> > #3  0x0000000000427b4b in scan_ag
-> > #4  0x000000000042a2ca in worker_thread
-> > #5  0x00007ffff77ba0a4 in start_thread
-> > #6  0x00007ffff74efc2d in clone
-> > 
-> > Which points at memset overrunning the in memory buffer, as it is
-> > only 512 bytes in length.
-> > 
-> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> > ---
-> 
-> The patch subject line should probably say 'xfsprogs:' or 'repair:,'
-> otherwise this looks good to me:
+From: Dave Chinner <dchinner@redhat.com>
 
-Right, my mistake.
+This code is redundant now that we have verifiers that sanity check
+the buffers as they are read from disk.
 
-> Reviewed-by: Brian Foster <bfoster@redhat.com>
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/libxfs/xfs_bmap.c | 32 --------------------------------
+ 1 file changed, 32 deletions(-)
 
-Thanks,
-
-Dave.
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index 8ae3775..b872e9c 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -244,30 +244,6 @@ xfs_bmap_forkoff_reset(
+ 	}
+ }
+ 
+-/*
+- * Debug/sanity checking code
+- */
+-
+-STATIC int
+-xfs_bmap_sanity_check(
+-	struct xfs_mount	*mp,
+-	struct xfs_buf		*bp,
+-	int			level)
+-{
+-	struct xfs_btree_block  *block = XFS_BUF_TO_BLOCK(bp);
+-
+-	if (block->bb_magic != cpu_to_be32(XFS_BMAP_CRC_MAGIC) &&
+-	    block->bb_magic != cpu_to_be32(XFS_BMAP_MAGIC))
+-		return 0;
+-
+-	if (be16_to_cpu(block->bb_level) != level ||
+-	    be16_to_cpu(block->bb_numrecs) == 0 ||
+-	    be16_to_cpu(block->bb_numrecs) > mp->m_bmap_dmxr[level != 0])
+-		return 0;
+-
+-	return 1;
+-}
+-
+ #ifdef DEBUG
+ STATIC struct xfs_buf *
+ xfs_bmap_get_bp(
+@@ -410,9 +386,6 @@ xfs_bmap_check_leaf_extents(
+ 				goto error_norelse;
+ 		}
+ 		block = XFS_BUF_TO_BLOCK(bp);
+-		XFS_WANT_CORRUPTED_GOTO(mp,
+-			xfs_bmap_sanity_check(mp, bp, level),
+-			error0);
+ 		if (level == 0)
+ 			break;
+ 
+@@ -1312,8 +1285,6 @@ xfs_bmap_read_extents(
+ 		if (error)
+ 			return error;
+ 		block = XFS_BUF_TO_BLOCK(bp);
+-		XFS_WANT_CORRUPTED_GOTO(mp,
+-			xfs_bmap_sanity_check(mp, bp, level), error0);
+ 		if (level == 0)
+ 			break;
+ 		pp = XFS_BMBT_PTR_ADDR(mp, block, 1, mp->m_bmap_dmxr[1]);
+@@ -1346,9 +1317,6 @@ xfs_bmap_read_extents(
+ 				XFS_ERRLEVEL_LOW, ip->i_mount, block);
+ 			goto error0;
+ 		}
+-		XFS_WANT_CORRUPTED_GOTO(mp,
+-			xfs_bmap_sanity_check(mp, bp, 0),
+-			error0);
+ 		/*
+ 		 * Read-ahead the next leaf block, if any.
+ 		 */
 -- 
-Dave Chinner
-david@fromorbit.com
+2.0.0
 
 _______________________________________________
 xfs mailing list
