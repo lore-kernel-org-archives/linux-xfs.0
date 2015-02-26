@@ -1,24 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id E3BCB7F55
-	for <xfs@oss.sgi.com>; Wed, 25 Feb 2015 09:23:41 -0600 (CST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 02BDB7F47
+	for <xfs@oss.sgi.com>; Thu, 26 Feb 2015 02:50:14 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id A4D228F80CE
-	for <xfs@oss.sgi.com>; Wed, 25 Feb 2015 07:23:41 -0800 (PST)
-Received: from mail-pa0-f54.google.com (mail-pa0-f54.google.com
-	[209.85.220.54]) by cuda.sgi.com with ESMTP id BFGLWnnImYCyvuFJ
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 25 Feb 2015 07:23:39 -0800 (PST)
-Received: by paceu11 with SMTP id eu11so5912606pac.10
-	for <xfs@oss.sgi.com>; Wed, 25 Feb 2015 07:23:39 -0800 (PST)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 8B7B1AC009
+	for <xfs@oss.sgi.com>; Thu, 26 Feb 2015 00:50:13 -0800 (PST)
+Received: from mail-wi0-f174.google.com (mail-wi0-f174.google.com
+	[209.85.212.174]) by cuda.sgi.com with ESMTP id
+	RMBYRNLCjt59e2ar (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 26 Feb 2015 00:49:42 -0800 (PST)
+Received: by mail-wi0-f174.google.com with SMTP id em10so39197657wid.1
+	for <xfs@oss.sgi.com>; Thu, 26 Feb 2015 00:49:41 -0800 (PST)
+Message-ID: <54EEDE23.6080009@gmail.com>
+Date: Thu, 26 Feb 2015 09:49:39 +0100
+From: "Michael Kerrisk (man-pages)" <mtk.manpages@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20150216234838.GC4251@dastard>
-References: <CALJmpHP+PwdV1n8VLusxqz0Wb=1PLL52frEMBn8+4h0v5+7Ssg@mail.gmail.com>
-	<20150216234838.GC4251@dastard>
-Date: Wed, 25 Feb 2015 20:53:39 +0530
-Message-ID: <CALJmpHOZe44t5Mimv213vrQV60Jp6FGpAYpT36bmawKZina56g@mail.gmail.com>
-Subject: Re: [RFD] : Allowing xfs_fsr to defragment portions of a file
-From: Dhruvesh Rathore <adrscube@gmail.com>
+Subject: Re: Documenting MS_LAZYTIME
+References: <CAHO5Pa0k7QkV_6BDjwTVxa7LV9tFyN9nGFFcSvOC6HYO08wfrw@mail.gmail.com>
+	<54E7578E.4090809@redhat.com> <20150221025636.GB7922@thunk.org>
+In-Reply-To: <20150221025636.GB7922@thunk.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,138 +32,61 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com, Dave Chinner <david@fromorbit.com>
+To: Theodore Ts'o <tytso@mit.edu>, Eric Sandeen <sandeen@redhat.com>
+Cc: linux-man@vger.kernel.org, Linux API <linux-api@vger.kernel.org>, XFS Developers <xfs@oss.sgi.com>, mtk.manpages@gmail.com, Linux-Fsdevel <linux-fsdevel@vger.kernel.org>, Ext4 Developers List <linux-ext4@vger.kernel.org>, Linux btrfs Developers List <linux-btrfs@vger.kernel.org>
 
-On Tue, Feb 17, 2015 at 5:18 AM, Dave Chinner <david@fromorbit.com> wrote:
-> On Sun, Feb 15, 2015 at 08:08:46PM +0530, Dhruvesh Rathore wrote:
+Ted,
 
->> A new function will have to hence focus on swapping the existing
->> extents from the
->> fragmented file. For this a new_swap_extent() function will be needed,
->> which will take arguments
->> as the current extent and the location(in free space) where it needs
->> to be swapped to.
->
-> You can't swap an in use extent with a free space location. You need
-> to preallocate space in a temporary file, copy the data across to
-> it, and then swap the extent ranges between the two files.
->
->> For the above functionality Dave suggested that we have a look at
->> EXT4_IOC_MOVE_EXT
->> and its usage.
->
-> The extent swap between two files is exactly what that ioctl does.
-> Look at the API, especially the struct move_extent that defines the
-> information passed to the kernel to perform the extent swap
-> operation. The XFS APi will be similar.
->
+On 02/21/2015 03:56 AM, Theodore Ts'o wrote:
+> On Fri, Feb 20, 2015 at 09:49:34AM -0600, Eric Sandeen wrote:
+>>
+>>>               This mount option significantly reduces  writes  to  the
+>>>               inode  table  for workloads that perform frequent random
+>>>               writes to preallocated files.
+>>
+>> This seems like an overly specific description of a single workload out
+>> of many which may benefit, but what do others think?  "inode table" is also
+>> fairly extN-specific.
+> 
+> How about somethign like "This mount significantly reduces writes
+> needed to update the inode's timestamps, especially mtime and actime.
 
-Over the past few days we have been going over the XFS API for
-EXT4_IOC_MOVE_EXT available in misc/e4defrag.c, to lay down the
-groundwork of the required XFS API.
+What is "actime" in the preceding line? Should it be "ctime"?
 
------
+> Examples of workloads where this could be a large win include frequent
+> random writes to preallocated files, as well as cases where the
+> MS_STRICTATIME mount option is enabled."?
 
-These are a few things that we felt do not be changed in the new API:
+I think some version of the following text could also usefully go 
+into the page, but...
 
-1) The original file will be opened in fsrfile() in xfs_fsr.c, similar to the
-original file being opened in file_defrag() in e4defrag.c
+> (The advantage of MS_STRICTATIME | MS_LAZYTIME is that stat system
+> calls will return the correctly updated atime, but those atime updates
+> won't get flushed to disk unless the inode needs to be updated for
+> file system / data consistency reasons, or when the inode is pushed
+> out of memory, or when the file system is unmounted.)
 
-2) The check for sufficient freespace done in fsrfile_common() in
-xfs_fsr.c achieves the same objective as the check_freesize() in
-e4defrag.c
+I find the wording of there a little confusing. Is the following 
+a correct rewrite:
 
------
+    The advantage of MS_STRICTATIME | MS_LAZYTIME is that stat(2)
+    will return the correctly updated atime, but the atime updates
+    will be flushed to disk only when (1) the inode needs to be 
+    updated for filesystem / data consistency reasons or (2) the 
+    inode is pushed out of memory, or (3) the filesystem is 
+    unmounted.)
 
-On the same lines, we have identified the following additions
-that will be needed in the XFS API for fsr/xfs_fsr.c
+?
 
-1) The read_fd_bmap() function in xfs_fsr.c which gets the block map
-of range of original file (map) and the defragmented file (outmap), will
-need to be added to when we are performing partial defragmentation.
+Thanks,
 
-A function get_file_extents() is called in e4defrag.c twice, which populates
-a struct fiemap, struct fiemap_extent and struct fiemap_extent_list
-for both original file and donor file (temp file).
-
-The operation of this function will need to be added in xfs_fsr.c as the
-EXT4_IOC_MOVE_EXT ioctl primarily uses these fiemap structures.
-We will need both the fiemap structures and the existing part of read_fd_bmap( )
-in this new XFS API.
+Michael
 
 
-2) The temp file getting created in xfs_fsr.c, will be made similar to
-the donor file
-of e4defrag.c.
-We were a bit unsure about the function of join_extents() in
-e4defrag.c, which finds a
-continuous region (extents group), and how it will fit in the XFS API.
-Is it similar to the process of preallocating extents[toff, tlen] in temp file ?
-
-
-3) Now instead of copying data from [orig, off, len] to [temp, toff,
-tlen] and then calling
-XFS_IOC_SWPEXT, we will need to simulate the ioctl EXT4_IOC_MOVE_EXT.
-
-In call_defrag( ) in e4defrag.c, the struct fiemap_extent_list
-structure, which is basically
-a link list of extent information is used.
-In our XFS API we will similarly use this structure in a loop and call
-the IOCTL for
-each of the extents (off donor file) which need to be filled by
-swapping data blocks.
-
-In this loop the fields orig_start, donor_start, len and moved_len of
-struct move_extent
-will be populated from the fiemap_extent_list structure before each ioctl call.
-
------
-
-Before all of the above we will need to select the extents that can be
-defragmented
-i.e the best possible choice, and then mark them.
-For this we decided to create another data structure - an array
-(user_array[ ]), which
-will store extent size information (blocks).
-For instance say a file has 5 extents then
-user_array[0] : save size of extent 1
-user_array[1] : save size of extents 1, 2
-user_array[2] : save size of extents 1, 2, 3
-user_array[3] : save size of extents 1, 2, 3, 4
-user_array[4] : save size of extents 1, 2 3, 4, 5
-This way we could perform the selection efficiently, by necessary
-comparison with
-available space.
-
-----
-
-We would love to hear your comments or directions on the above points. After
-confirmation from you, we will finish creating the XFS API on the above lines.
-
-> The process in fsr is this:
->
->         1. bulkstat original file inode [bstat] for change
->            detection whilst doing copying operation.
->         2. get block map of range [off, len] of orignal file
->            that needs to be swapped
->         3. create temp file
->         4. preallocate extent [toff, tlen] in temp file
->         5. check the number of extents in [toff, tlen] is less than
->            the number of extents in [off, len] in the original file.
->            If it's not an improvement, abort.
->         6. copy data from [orig, off, len] to [temp, toff, tlen]
->         7. ioctl(orig_fd, XFS_IOC_SWAPEXT_RANGE, [bstat, off, len, temp, toff])
->
-> The kernel side of the ioctl is somewhat more complex, and we'll get
-> to that once the fsr infrastructure is ready to use it.
->
-> Cheers,
->
-> Dave.
-
-
-Regards,
-A-DRS
+-- 
+Michael Kerrisk
+Linux man-pages maintainer; http://www.kernel.org/doc/man-pages/
+Linux/UNIX System Programming Training: http://man7.org/training/
 
 _______________________________________________
 xfs mailing list
