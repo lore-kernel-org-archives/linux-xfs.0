@@ -1,30 +1,31 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 9233D7F54
-	for <xfs@oss.sgi.com>; Sat, 28 Feb 2015 09:18:05 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 8069A8F8039
-	for <xfs@oss.sgi.com>; Sat, 28 Feb 2015 07:18:02 -0800 (PST)
-Received: from imap.thunk.org (imap.thunk.org [74.207.234.97]) by cuda.sgi.com
-	with ESMTP id HMBGvrR2aRoGAlJm (version=TLSv1 cipher=AES128-SHA
-	bits=128 verify=NO) for <xfs@oss.sgi.com>;
-	Sat, 28 Feb 2015 07:17:56 -0800 (PST)
-Date: Sat, 28 Feb 2015 10:17:48 -0500
-From: Theodore Ts'o <tytso@mit.edu>
+	by oss.sgi.com (Postfix) with ESMTP id 478F37F3F
+	for <xfs@oss.sgi.com>; Sat, 28 Feb 2015 10:30:10 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 32C418F8039
+	for <xfs@oss.sgi.com>; Sat, 28 Feb 2015 08:30:09 -0800 (PST)
+Received: from gum.cmpxchg.org (gum.cmpxchg.org [85.214.110.215]) by
+	cuda.sgi.com with ESMTP id MKMlzo6FiAetk289 (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Sat, 28 Feb 2015 08:30:08 -0800 (PST)
+Date: Sat, 28 Feb 2015 11:29:43 -0500
+From: Johannes Weiner <hannes@cmpxchg.org>
 Subject: Re: How to handle TIF_MEMDIE stalls?
-Message-ID: <20150228151748.GD5404@thunk.org>
-References: <20150217125315.GA14287@phnom.home.cmpxchg.org>
+Message-ID: <20150228162943.GA17989@phnom.home.cmpxchg.org>
+References: <201502102258.IFE09888.OVQFJOMSFtOLFH@I-love.SAKURA.ne.jp>
+	<20150210151934.GA11212@phnom.home.cmpxchg.org>
+	<201502111123.ICD65197.FMLOHSQJFVOtFO@I-love.SAKURA.ne.jp>
+	<201502172123.JIE35470.QOLMVOFJSHOFFt@I-love.SAKURA.ne.jp>
+	<20150217125315.GA14287@phnom.home.cmpxchg.org>
 	<20150217225430.GJ4251@dastard>
 	<20150219102431.GA15569@phnom.home.cmpxchg.org>
 	<20150219225217.GY12722@dastard>
 	<20150221235227.GA25079@phnom.home.cmpxchg.org>
 	<20150223004521.GK12722@dastard>
-	<20150222172930.6586516d.akpm@linux-foundation.org>
-	<20150223073235.GT4251@dastard> <54F0B662.8020508@suse.cz>
-	<20150228000359.GL4251@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20150228000359.GL4251@dastard>
+In-Reply-To: <20150223004521.GK12722@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -38,59 +39,71 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
-Cc: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, Johannes Weiner <hannes@cmpxchg.org>, oleg@redhat.com, xfs@oss.sgi.com, mhocko@suse.cz, linux-mm@kvack.org, mgorman@suse.de, dchinner@redhat.com, rientjes@google.com, Andrew Morton <akpm@linux-foundation.org>, torvalds@linux-foundation.org, Vlastimil Babka <vbabka@suse.cz>
+Cc: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, dchinner@redhat.com, oleg@redhat.com, xfs@oss.sgi.com, mhocko@suse.cz, linux-mm@kvack.org, mgorman@suse.de, rientjes@google.com, akpm@linux-foundation.org, torvalds@linux-foundation.org
 
-On Sat, Feb 28, 2015 at 11:03:59AM +1100, Dave Chinner wrote:
-> > I think the best way is if slab could also learn to provide reserves for
-> > individual objects. Either just mark internally how many of them are reserved,
-> > if sufficient number is free, or translate this to the page allocator reserves,
-> > as slab knows which order it uses for the given objects.
+On Mon, Feb 23, 2015 at 11:45:21AM +1100, Dave Chinner wrote:
+> On Sat, Feb 21, 2015 at 06:52:27PM -0500, Johannes Weiner wrote:
+> > On Fri, Feb 20, 2015 at 09:52:17AM +1100, Dave Chinner wrote:
+> > > I will actively work around aanything that causes filesystem memory
+> > > pressure to increase the chance of oom killer invocations. The OOM
+> > > killer is not a solution - it is, by definition, a loose cannon and
+> > > so we should be reducing dependencies on it.
+> > 
+> > Once we have a better-working alternative, sure.
 > 
-> Which is effectively what a slab based mempool is. Mempools don't
-> guarantee a reserve is available once it's been resized, however,
-> and we'd have to have mempools configured for every type of
-> allocation we are going to do. So from that perspective it's not
-> really a solution.
+> Great, but first a simple request: please stop writing code and
+> instead start architecting a solution to the problem. i.e. we need a
+> design and have that documented before code gets written. If you
+> watched my recent LCA talk, then you'll understand what I mean
+> when I say: stop programming and start engineering.
 
-The bigger problem is it means that the upper layer which is making
-the reservation before it starts taking lock won't necessarily know
-exactly which slab objects it and all of the lower layers might need.
+This code was for the sake of argument, see below.
 
-So it's much more flexible, and requires less accuracy, if we can just
-request that (a) the mm subsystems reserves at least N pages, and (b)
-tell it that at this point in time, it's safe for the requesting
-subsystem to block until N pages is available.
+> > > I really don't care about the OOM Killer corner cases - it's
+> > > completely the wrong way line of development to be spending time on
+> > > and you aren't going to convince me otherwise. The OOM killer a
+> > > crutch used to justify having a memory allocation subsystem that
+> > > can't provide forward progress guarantee mechanisms to callers that
+> > > need it.
+> > 
+> > We can provide this.  Are all these callers able to preallocate?
+> 
+> Anything that allocates in transaction context (and therefor is
+> GFP_NOFS by definition) can preallocate at transaction reservation
+> time. However, preallocation is dumb, complex, CPU and memory
+> intensive and will have a *massive* impact on performance.
+> Allocating 10-100 pages to a reserve which we will almost *never
+> use* and then free them again *on every single transaction* is a lot
+> of unnecessary additional fast path overhead.  Hence a "preallocate
+> for every context" reserve pool is not a viable solution.
 
-Can this be guaranteed to be accurate?  No, of course not.  And in
-some cases, it may be possible since it might depend on whether the
-iSCSI device needs to reconnect to the target, or some sort of
-exception handling, before it can complete its I/O request.
+You are missing the point of my question.  Whether we allocate right
+away or make sure the memory is allocatable later on is a matter of
+cost, but the logical outcome is the same.  That is not my concern
+right now.
 
-But it's better than what we have now, which is that once we've taken
-certain locks, and/or started a complex transaction, we can't really
-back out, so we end up looping either using GFP_NOFAIL, or around the
-memory allocation request if there are still mm developers who are
-delusional enough to believe, ala like King Canute, to say, "You must
-always be able to handle memory allocation at any point in the kernel
-and GFP_NOFAIL is an indicatoin of a subsystem bug!"
+An OOM killer allows transactional allocation sites to get away
+without planning ahead.  You are arguing that the OOM killer is a
+cop-out on the MM site but I see it as the opposite: it puts a lot of
+complexity in the allocator so that callsites can maneuver themselves
+into situations where they absolutely need to get memory - or corrupt
+user data - without actually making sure their needs will be covered.
 
-I can imagine using some adjustment factors, where a particular
-voratious device might require hint to the file system to boost its
-memory allocation estimate by 30%, or 50%.  So yes, it's a very,
-*very* rough estimate.  And if we guess wrong, we might end up having
-to loop ala GFP_NOFAIL anyway.  But it's better than not having such
-an estimate.
+If we replace __GFP_NOFAIL + OOM killer with a reserve system, we are
+putting the full responsibility on the user.  Are you sure this is
+going to reduce our kernel-wide error rate?
 
-I also grant that this doesn't work very well for emergency writeback,
-or background writeback, where we can't and shouldn't block waiting
-for enough memory to become free, since page cleaning is one of the
-ways that we might be able to make memory available.  But if that's
-the only problem we have, we're in good shape, since that can be
-solved by either (a) doing a better job throttling memory allocations
-or memory reservation requests in the first place, and/or (b) starting
-the background writeback much more aggressively and earlier.
+> And, really, "reservation" != "preallocation".
 
-    	       		      	   		- Ted
+That's an implementation detail.  Yes, the example implementation was
+dumb and heavy-handed, but a reservation system that works based on
+watermarks, and considers clean cache readily allocatable, is not much
+more complex than that.
+
+I'm trying to figure out if the current nofail allocators can get
+their memory needs figured out beforehand.  And reliably so - what
+good are estimates that are right 90% of the time, when failing the
+allocation means corrupting user data?  What is the contingency plan?
 
 _______________________________________________
 xfs mailing list
