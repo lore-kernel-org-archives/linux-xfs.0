@@ -1,23 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 502807F4E
-	for <xfs@oss.sgi.com>; Sat, 28 Feb 2015 12:36:12 -0600 (CST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 4A7B27F4E
+	for <xfs@oss.sgi.com>; Sat, 28 Feb 2015 16:16:16 -0600 (CST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 3EE0E8F8040
-	for <xfs@oss.sgi.com>; Sat, 28 Feb 2015 10:36:12 -0800 (PST)
-Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id UvGpXfMHp0jNjspj (version=TLSv1 cipher=AES256-SHA
-	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Sat, 28 Feb 2015 10:36:07 -0800 (PST)
-Message-ID: <54F20A93.6080704@suse.cz>
-Date: Sat, 28 Feb 2015 19:36:03 +0100
-From: Vlastimil Babka <vbabka@suse.cz>
-MIME-Version: 1.0
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 395A2304032
+	for <xfs@oss.sgi.com>; Sat, 28 Feb 2015 14:16:12 -0800 (PST)
+Received: from gum.cmpxchg.org (gum.cmpxchg.org [85.214.110.215]) by
+	cuda.sgi.com with ESMTP id bdfCzsFBfMDc0P6t (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Sat, 28 Feb 2015 14:16:11 -0800 (PST)
+Date: Sat, 28 Feb 2015 17:15:58 -0500
+From: Johannes Weiner <hannes@cmpxchg.org>
 Subject: Re: How to handle TIF_MEMDIE stalls?
-References: <201502092044.JDG39081.LVFOOtFHQFOMSJ@I-love.SAKURA.ne.jp>
-	<201502102258.IFE09888.OVQFJOMSFtOLFH@I-love.SAKURA.ne.jp>
-	<20150210151934.GA11212@phnom.home.cmpxchg.org>
-	<201502111123.ICD65197.FMLOHSQJFVOtFO@I-love.SAKURA.ne.jp>
+Message-ID: <20150228221558.GA23028@phnom.home.cmpxchg.org>
+References: <201502111123.ICD65197.FMLOHSQJFVOtFO@I-love.SAKURA.ne.jp>
 	<201502172123.JIE35470.QOLMVOFJSHOFFt@I-love.SAKURA.ne.jp>
 	<20150217125315.GA14287@phnom.home.cmpxchg.org>
 	<20150217225430.GJ4251@dastard>
@@ -25,7 +21,11 @@ References: <201502092044.JDG39081.LVFOOtFHQFOMSJ@I-love.SAKURA.ne.jp>
 	<20150219225217.GY12722@dastard>
 	<20150221235227.GA25079@phnom.home.cmpxchg.org>
 	<20150223004521.GK12722@dastard>
-In-Reply-To: <20150223004521.GK12722@dastard>
+	<20150228162943.GA17989@phnom.home.cmpxchg.org>
+	<20150228164158.GE5404@thunk.org>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20150228164158.GE5404@thunk.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -38,120 +38,32 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>, Johannes Weiner <hannes@cmpxchg.org>
+To: Theodore Ts'o <tytso@mit.edu>
 Cc: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, dchinner@redhat.com, oleg@redhat.com, xfs@oss.sgi.com, mhocko@suse.cz, linux-mm@kvack.org, mgorman@suse.de, rientjes@google.com, akpm@linux-foundation.org, torvalds@linux-foundation.org
 
-On 23.2.2015 1:45, Dave Chinner wrote:
-> On Sat, Feb 21, 2015 at 06:52:27PM -0500, Johannes Weiner wrote:
->> On Fri, Feb 20, 2015 at 09:52:17AM +1100, Dave Chinner wrote:
->>> I will actively work around aanything that causes filesystem memory
->>> pressure to increase the chance of oom killer invocations. The OOM
->>> killer is not a solution - it is, by definition, a loose cannon and
->>> so we should be reducing dependencies on it.
->>
->> Once we have a better-working alternative, sure.
+On Sat, Feb 28, 2015 at 11:41:58AM -0500, Theodore Ts'o wrote:
+> On Sat, Feb 28, 2015 at 11:29:43AM -0500, Johannes Weiner wrote:
+> > 
+> > I'm trying to figure out if the current nofail allocators can get
+> > their memory needs figured out beforehand.  And reliably so - what
+> > good are estimates that are right 90% of the time, when failing the
+> > allocation means corrupting user data?  What is the contingency plan?
 > 
-> Great, but first a simple request: please stop writing code and
-> instead start architecting a solution to the problem. i.e. we need a
-> design and have that documented before code gets written. If you
-> watched my recent LCA talk, then you'll understand what I mean
-> when I say: stop programming and start engineering.
+> In the ideal world, we can figure out the exact memory needs
+> beforehand.  But we live in an imperfect world, and given that block
+> devices *also* need memory, the answer is "of course not".  We can't
+> be perfect.  But we can least give some kind of hint, and we can offer
+> to wait before we get into a situation where we need to loop in
+> GFP_NOWAIT --- which is the contingency/fallback plan.
 
-About that... I guess good engineering also means looking at past solutions to
-the same problem. I expect there would be a lot of academic work on this, which
-might tell us what's (not) possible. And maybe even actual implementations with
-real-life experience to learn from?
+Overestimating should be fine, the result would a bit of false memory
+pressure.  But underestimating and looping can't be an option or the
+original lockups will still be there.  We need to guarantee forward
+progress or the problem is somewhat mitigated at best - only now with
+quite a bit more complexity in the allocator and the filesystems.
 
->>> I really don't care about the OOM Killer corner cases - it's
->>> completely the wrong way line of development to be spending time on
->>> and you aren't going to convince me otherwise. The OOM killer a
->>> crutch used to justify having a memory allocation subsystem that
->>> can't provide forward progress guarantee mechanisms to callers that
->>> need it.
->>
->> We can provide this.  Are all these callers able to preallocate?
-> 
-> Anything that allocates in transaction context (and therefor is
-> GFP_NOFS by definition) can preallocate at transaction reservation
-> time. However, preallocation is dumb, complex, CPU and memory
-> intensive and will have a *massive* impact on performance.
-> Allocating 10-100 pages to a reserve which we will almost *never
-> use* and then free them again *on every single transaction* is a lot
-> of unnecessary additional fast path overhead.  Hence a "preallocate
-> for every context" reserve pool is not a viable solution.
-
-But won't even the reservation have potentially large impact on performance, if
-as you later suggest (IIUC), we don't actually dip into our reserves until
-regular reclaim starts failing? Doesn't that mean potentially lot of wasted
-memory? Right, it doesn't have to be if we allow clean reclaimable pages to be
-part of reserve, but still...
-
-> And, really, "reservation" != "preallocation".
-> 
-> Maybe it's my filesystem background, but those to things are vastly
-> different things.
-> 
-> Reservations are simply an *accounting* of the maximum amount of a
-> reserve required by an operation to guarantee forwards progress. In
-> filesystems, we do this for log space (transactions) and some do it
-> for filesystem space (e.g. delayed allocation needs correct ENOSPC
-> detection so we don't overcommit disk space).  The VM already has
-> such concepts (e.g. watermarks and things like min_free_kbytes) that
-> it uses to ensure that there are sufficient reserves for certain
-> types of allocations to succeed.
-> 
-> A reserve memory pool is no different - every time a memory reserve
-> occurs, a watermark is lifted to accommodate it, and the transaction
-> is not allowed to proceed until the amount of free memory exceeds
-> that watermark. The memory allocation subsystem then only allows
-> *allocations* marked correctly to allocate pages from that the
-> reserve that watermark protects. e.g. only allocations using
-> __GFP_RESERVE are allowed to dip into the reserve pool.
-> 
-> By using watermarks, freeing of memory will automatically top
-> up the reserve pool which means that we guarantee that reclaimable
-> memory allocated for demand paging during transacitons doesn't
-> deplete the reserve pool permanently.  As a result, when there is
-> plenty of free and/or reclaimable memory, the reserve pool
-> watermarks will have almost zero impact on performance and
-> behaviour.
-> 
-> Further, because it's just accounting and behavioural thresholds,
-> this allows the mm subsystem to control how the reserve pool is
-> accounted internally. e.g. clean, reclaimable pages in the page
-> cache could serve as reserve pool pages as they can be immediately
-> reclaimed for allocation. This could be acheived by setting reclaim
-> targets first to the reserve pool watermark, then the second target
-> is enough pages to satisfy the current allocation.
-
-Hmm but what if the clean pages need us to take some locks to unmap and some
-proces holding them is blocked... Also we would need to potentally block a
-process that wants to dirty a page, is that being done now?
-
-> And, FWIW, there's nothing stopping this mechanism from have order
-> based reserve thresholds. e.g. IB could really do with a 64k reserve
-> pool threshold and hence help solve the long standing problems they
-> have with filling the receive ring in GFP_ATOMIC context...
-
-I don't know the details here, but if the allocation is done for incoming
-packets i.e. something you can't predict then how would you set the reserve for
-that? If they could predict, they would be able to preallocate necessary buffers
-already.
-
-> Sure, that's looking further down the track, but my point still
-> remains: we need a viable long term solution to this problem. Maybe
-> reservations are not the solution, but I don't see anyone else who
-> is thinking of how to address this architectural problem at a system
-> level right now.  We need to design and document the model first,
-> then review it, then we can start working at the code level to
-> implement the solution we've designed.
-
-Right. A conference to discuss this on could come handy :)
-
-> Cheers,
-> 
-> Dave.
-> 
+The block code would have to be looked at separately, but doesn't it
+already use mempools etc. to guarantee progress?
 
 _______________________________________________
 xfs mailing list
