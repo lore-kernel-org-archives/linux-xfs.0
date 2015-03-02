@@ -1,25 +1,31 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 9178A7F60
-	for <xfs@oss.sgi.com>; Mon,  2 Mar 2015 13:47:57 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 6269E304053
-	for <xfs@oss.sgi.com>; Mon,  2 Mar 2015 11:47:54 -0800 (PST)
-Received: from mail-ie0-f172.google.com (mail-ie0-f172.google.com
-	[209.85.223.172]) by cuda.sgi.com with ESMTP id
-	bepAl3DBp3iOmse8 (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 02 Mar 2015 11:47:52 -0800 (PST)
-Received: by iecar1 with SMTP id ar1so51015073iec.0
-	for <xfs@oss.sgi.com>; Mon, 02 Mar 2015 11:47:52 -0800 (PST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id B5B627F60
+	for <xfs@oss.sgi.com>; Mon,  2 Mar 2015 14:22:53 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 43CD0AC002
+	for <xfs@oss.sgi.com>; Mon,  2 Mar 2015 12:22:49 -0800 (PST)
+Received: from gum.cmpxchg.org (gum.cmpxchg.org [85.214.110.215]) by
+	cuda.sgi.com with ESMTP id t5XuaEQCIH7jgHDG (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Mon, 02 Mar 2015 12:22:44 -0800 (PST)
+Date: Mon, 2 Mar 2015 15:22:28 -0500
+From: Johannes Weiner <hannes@cmpxchg.org>
+Subject: Re: How to handle TIF_MEMDIE stalls?
+Message-ID: <20150302202228.GA15089@phnom.home.cmpxchg.org>
+References: <201502111123.ICD65197.FMLOHSQJFVOtFO@I-love.SAKURA.ne.jp>
+	<201502172123.JIE35470.QOLMVOFJSHOFFt@I-love.SAKURA.ne.jp>
+	<20150217125315.GA14287@phnom.home.cmpxchg.org>
+	<20150217225430.GJ4251@dastard>
+	<20150219102431.GA15569@phnom.home.cmpxchg.org>
+	<20150219225217.GY12722@dastard>
+	<20150221235227.GA25079@phnom.home.cmpxchg.org>
+	<20150223004521.GK12722@dastard>
+	<20150222172930.6586516d.akpm@linux-foundation.org>
+	<20150223073235.GT4251@dastard>
 MIME-Version: 1.0
-In-Reply-To: <20150302010413.GP4251@dastard>
-References: <20150302010413.GP4251@dastard>
-Date: Mon, 2 Mar 2015 11:47:52 -0800
-Message-ID: <CA+55aFzGFvVGD_8Y=jTkYwgmYgZnW0p0Fjf7OHFPRcL6Mz4HOw@mail.gmail.com>
-Subject: Re: [regression v4.0-rc1] mm: IPIs from TLB flushes causing
-	significant performance degradation.
-From: Linus Torvalds <torvalds@linux-foundation.org>
+Content-Disposition: inline
+In-Reply-To: <20150223073235.GT4251@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,58 +38,78 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>, Andrew Morton <akpm@linux-foundation.org>, Ingo Molnar <mingo@kernel.org>, Matt B <jackdachef@gmail.com>
-Cc: linux-mm <linux-mm@kvack.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, dchinner@redhat.com, oleg@redhat.com, xfs@oss.sgi.com, mhocko@suse.cz, linux-mm@kvack.org, mgorman@suse.de, rientjes@google.com, Andrew Morton <akpm@linux-foundation.org>, torvalds@linux-foundation.org
 
-On Sun, Mar 1, 2015 at 5:04 PM, Dave Chinner <david@fromorbit.com> wrote:
+On Mon, Feb 23, 2015 at 06:32:35PM +1100, Dave Chinner wrote:
+> On Sun, Feb 22, 2015 at 05:29:30PM -0800, Andrew Morton wrote:
+> > When allocating pages the caller should drain its reserves in
+> > preference to dipping into the regular freelist.  This guy has already
+> > done his reclaim and shouldn't be penalised a second time.  I guess
+> > Johannes's preallocation code should switch to doing this for the same
+> > reason, plus the fact that snipping a page off
+> > task_struct.prealloc_pages is super-fast and needs to be done sometime
+> > anyway so why not do it by default.
+> 
+> That is at odds with the requirements of demand paging, which
+> allocate for objects that are reclaimable within the course of the
+> transaction. The reserve is there to ensure forward progress for
+> allocations for objects that aren't freed until after the
+> transaction completes, but if we drain it for reclaimable objects we
+> then have nothing left in the reserve pool when we actually need it.
 >
-> Across the board the 4.0-rc1 numbers are much slower, and the
-> degradation is far worse when using the large memory footprint
-> configs. Perf points straight at the cause - this is from 4.0-rc1
-> on the "-o bhash=101073" config:
->
-> -   56.07%    56.07%  [kernel]            [k] default_send_IPI_mask_sequence_phys
->       - 99.99% physflat_send_IPI_mask
->          - 99.37% native_send_call_func_ipi
-..
->
-> And the same profile output from 3.19 shows:
->
-> -    9.61%     9.61%  [kernel]            [k] default_send_IPI_mask_sequence_phys
->      - 99.98% physflat_send_IPI_mask
->          - 96.26% native_send_call_func_ipi
-...
->
-> So either there's been a massive increase in the number of IPIs
-> being sent, or the cost per IPI have greatly increased. Either way,
-> the result is a pretty significant performance degradatation.
+> We do not know ahead of time if the object we are allocating is
+> going to modified and hence locked into the transaction. Hence we
+> can't say "use the reserve for this *specific* allocation", and so
+> the only guidance we can really give is "we will to allocate and
+> *permanently consume* this much memory", and the reserve pool needs
+> to cover that consumption to guarantee forwards progress.
+> 
+> Forwards progress for all other allocations is guaranteed because
+> they are reclaimable objects - they either freed directly back to
+> their source (slab, heap, page lists) or they are freed by shrinkers
+> once they have been released from the transaction.
+> 
+> Hence we need allocations to come from the free list and trigger
+> reclaim, regardless of the fact there is a reserve pool there. The
+> reserve pool needs to be a last resort once there are no other
+> avenues to allocate memory. i.e. it would be used to replace the OOM
+> killer for GFP_NOFAIL allocations.
 
-And on Mon, Mar 2, 2015 at 11:17 AM, Matt <jackdachef@gmail.com> wrote:
->
-> Linus already posted a fix to the problem, however I can't seem to
-> find the matching commit in his tree (searching for "TLC regression"
-> or "TLB cache").
+That won't work.  Clean cache can be temporarily unavailable and
+off-LRU for several reasons - compaction, migration, pending page
+promotion, other reclaimers.  How often are we trying before we dip
+into the reserve pool?  As you have noticed, the OOM killer goes off
+seemingly prematurely at times, and the reason for that is that we
+simply don't KNOW the exact point when we ran out of reclaimable
+memory.  We cannot take an atomic snapshot of all zones, of all nodes,
+of all tasks running in order to determine this reliably, we have to
+approximate it.  That's why OOM is defined as "we have scanned a great
+many pages and couldn't free any of them."
 
-That was commit f045bbb9fa1b, which was then refined by commit
-721c21c17ab9, because it turned out that ARM64 had a very subtle
-relationship with tlb->end and fullmm.
+So unless you tell us which allocations should come from previously
+declared reserves, and which ones should rely on reclaim and may fail,
+the reserves can deplete prematurely and we're back to square one.
 
-But both of those hit 3.19, so none of this should affect 4.0-rc1.
-There's something else going on.
+> > And to make it much worse, how
+> > many pages of which orders?  Bless its heart, slub will go and use
+> > a 1-order page for allocations which should have been in 0-order
+> > pages..
 
-I assume it's the mm queue from Andrew, so adding him to the cc. There
-are changes to the page migration etc, which could explain it.
+It can always fall back to the minimum order.
 
-There are also a fair amount of APIC changes in 4.0-rc1, so I guess it
-really could be just that the IPI sending itself has gotten much
-slower. Adding Ingo for that, although I don't think
-default_send_IPI_mask_sequence_phys() itself hasn't actually changed,
-only other things around the apic. So I'd be inclined to blame the mm
-changes.
+> The majority of allocations will be order-0, though if we know that
+> they are going to be significant numbers of high order allocations,
+> then it should be simple enough to tell the mm subsystem "need a
+> reserve of 32 order-0, 4 order-1 and 1 order-3 allocations" and have
+> memory compaction just do it's stuff. But, IMO, we should cross that
+> bridge when somebody actually needs reservations to be that
+> specific....
 
-Obviously bisection would find it..
-
-                          Linus
+Compaction can be at an impasse for the same reasons mentioned above.
+It can not just stop_machine() to guarantee it can assemble a higher
+order page from a bunch of in-use order-0 cache pages.  If you need
+higher-order allocations in a transaction, you have to pre-allocate.
 
 _______________________________________________
 xfs mailing list
