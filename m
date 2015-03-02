@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id CE0DF7F6A
-	for <xfs@oss.sgi.com>; Mon,  2 Mar 2015 10:05:55 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id AD1968F804C
-	for <xfs@oss.sgi.com>; Mon,  2 Mar 2015 08:05:55 -0800 (PST)
-Received: from gum.cmpxchg.org (gum.cmpxchg.org [85.214.110.215]) by
-	cuda.sgi.com with ESMTP id kijeZL8P0IP3PkBw (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 02 Mar 2015 08:05:50 -0800 (PST)
-Date: Mon, 2 Mar 2015 11:05:37 -0500
-From: Johannes Weiner <hannes@cmpxchg.org>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 148CE7F62
+	for <xfs@oss.sgi.com>; Mon,  2 Mar 2015 10:39:28 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 87E50AC002
+	for <xfs@oss.sgi.com>; Mon,  2 Mar 2015 08:39:24 -0800 (PST)
+Received: from imap.thunk.org (imap.thunk.org [74.207.234.97]) by cuda.sgi.com
+	with ESMTP id 4EZCtpJmWAtiDwbC (version=TLSv1 cipher=AES128-SHA
+	bits=128 verify=NO) for <xfs@oss.sgi.com>;
+	Mon, 02 Mar 2015 08:39:21 -0800 (PST)
+Date: Mon, 2 Mar 2015 11:39:13 -0500
+From: Theodore Ts'o <tytso@mit.edu>
 Subject: Re: How to handle TIF_MEMDIE stalls?
-Message-ID: <20150302160537.GA23072@phnom.home.cmpxchg.org>
+Message-ID: <20150302163913.GL3287@thunk.org>
 References: <20150210151934.GA11212@phnom.home.cmpxchg.org>
 	<201502111123.ICD65197.FMLOHSQJFVOtFO@I-love.SAKURA.ne.jp>
 	<201502172123.JIE35470.QOLMVOFJSHOFFt@I-love.SAKURA.ne.jp>
@@ -39,73 +39,51 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Michal Hocko <mhocko@suse.cz>
-Cc: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, dchinner@redhat.com, oleg@redhat.com, xfs@oss.sgi.com, linux-mm@kvack.org, mgorman@suse.de, rientjes@google.com, akpm@linux-foundation.org, torvalds@linux-foundation.org
+Cc: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, dchinner@redhat.com, oleg@redhat.com, xfs@oss.sgi.com, Johannes Weiner <hannes@cmpxchg.org>, linux-mm@kvack.org, mgorman@suse.de, rientjes@google.com, akpm@linux-foundation.org, torvalds@linux-foundation.org
 
 On Mon, Mar 02, 2015 at 04:18:32PM +0100, Michal Hocko wrote:
-> On Mon 23-02-15 11:45:21, Dave Chinner wrote:
-> [...]
-> > A reserve memory pool is no different - every time a memory reserve
-> > occurs, a watermark is lifted to accommodate it, and the transaction
-> > is not allowed to proceed until the amount of free memory exceeds
-> > that watermark. The memory allocation subsystem then only allows
-> > *allocations* marked correctly to allocate pages from that the
-> > reserve that watermark protects. e.g. only allocations using
-> > __GFP_RESERVE are allowed to dip into the reserve pool.
-> 
 > The idea is sound. But I am pretty sure we will find many corner
 > cases. E.g. what if the mere reservation attempt causes the system
-> to go OOM and trigger the OOM killer? Sure that wouldn't be too much
-> different from the OOM triggered during the allocation but there is one
-> major difference. Reservations need to be estimated and I expect the
-> estimation would be on the more conservative side and so the OOM might
-> not happen without them.
+> to go OOM and trigger the OOM killer?
 
-The whole idea is that filesystems request the reserves while they can
-still sleep for progress or fail the macro-operation with -ENOMEM.
+Doctor, doctor, it hurts when I do that....
 
-And the estimate wouldn't just be on the conservative side, it would
-have to be the worst-case scenario.  If we run out of reserves in an
-allocation that can not fail that would be a bug that can lock up the
-machine.  We can then fall back to the OOM killer in a last-ditch
-effort to make forward progress, but as the victim tasks can get stuck
-behind state/locks held by the allocation side, the machine might lock
-up after all.
+So don't trigger the OOM killer.  We can let the caller decide
+whether the reservation request should block or return ENOMEM, but the
+whole point of the reservation request idea is that this happens
+*before* we've taken any mutexes, so blocking won't prevent forward
+progress.
 
-> > By using watermarks, freeing of memory will automatically top
-> > up the reserve pool which means that we guarantee that reclaimable
-> > memory allocated for demand paging during transacitons doesn't
-> > deplete the reserve pool permanently.  As a result, when there is
-> > plenty of free and/or reclaimable memory, the reserve pool
-> > watermarks will have almost zero impact on performance and
-> > behaviour.
-> 
-> Typical busy system won't be very far away from the high watermark
-> so there would be a reclaim performed during increased watermaks
-> (aka reservation) and that might lead to visible performance
-> degradation. This might be acceptable but it also adds a certain level
-> of unpredictability when performance characteristics might change
-> suddenly.
+The file system could send down a different flag if we are doing
+writebacks for page cleaning purposes, in which case the reservation
+request would be a "just a heads up, we *will* be needing this much
+memory, but this is not something where we can block or return ENOMEM,
+so please give us the highest priority for using the free reserves".
 
-There is usually a good deal of clean cache.  As Dave pointed out
-before, clean cache can be considered re-allocatable from NOFS
-contexts, and so we'd only have to maintain this invariant:
+> I think the idea is good! It will just be quite tricky to get there
+> without causing more problems than those being solved. The biggest
+> question mark so far seems to be the reservation size estimation. If
+> it is hard for any caller to know the size beforehand (which would
+> be really close to the actually used size) then the whole complexity
+> in the code sounds like an overkill and asking administrator to tune
+> min_free_kbytes seems a better fit (we would still have to teach the
+> allocator to access reserves when really necessary) because the system
+> would behave more predictably (although some memory would be wasted).
 
-	min_wmark + private_reserves < free_pages + clean_cache
+If we do need to teach the allocator to access reserves when really
+necessary, don't we have that already via GFP_NOIO/GFP_NOFS and
+GFP_NOFAIL?  If the goal is do something more fine-grained,
+unfortunately at least for the short-term we'll need to preserve the
+existing behaviour and issue warnings until the file system starts
+adding GFP_NOFAIL to those memory allocations where previously,
+GFP_NOFS was effectively guaranteeing that failures would almostt
+never happen.
 
-> > Further, because it's just accounting and behavioural thresholds,
-> > this allows the mm subsystem to control how the reserve pool is
-> > accounted internally. e.g. clean, reclaimable pages in the page
-> > cache could serve as reserve pool pages as they can be immediately
-> > reclaimed for allocation.
-> 
-> But they also can turn into hard/impossible to reclaim as well. Clean
-> pages might get dirty and e.g. swap backed pages run out of their
-> backing storage. So I guess we cannot count with those pages without
-> reclaiming them first and hiding them into the reserve. Which is what
-> you suggest below probably but I wasn't really sure...
+I know at least one place discovered with recent change (and revert)
+where I'll be fixing ext4, but I suspect it won't be the only one,
+especially in the block device drivers.
 
-Pages reserved for use by the page cleaning path can't be considered
-dirtyable.  They have to be included in the dirty_balance_reserve.
+						- Ted
 
 _______________________________________________
 xfs mailing list
