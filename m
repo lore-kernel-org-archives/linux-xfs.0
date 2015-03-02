@@ -1,28 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 795B17F67
-	for <xfs@oss.sgi.com>; Mon,  2 Mar 2015 07:28:14 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 66B5C8F8068
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 47C287F84
+	for <xfs@oss.sgi.com>; Mon,  2 Mar 2015 07:28:15 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id D6795AC001
 	for <xfs@oss.sgi.com>; Mon,  2 Mar 2015 05:28:11 -0800 (PST)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id E6SHAe7ZPgnNOgy5 (version=TLSv1
+	cuda.sgi.com with ESMTP id tFrxFmm8m8El44Gc (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 02 Mar 2015 05:28:10 -0800 (PST)
-Received: from int-mx13.intmail.prod.int.phx2.redhat.com
-	(int-mx13.intmail.prod.int.phx2.redhat.com [10.5.11.26])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id t22DS9f4008922
+	Mon, 02 Mar 2015 05:28:11 -0800 (PST)
+Received: from int-mx09.intmail.prod.int.phx2.redhat.com
+	(int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id t22DS9u7010023
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256
-	verify=FAIL) for <xfs@oss.sgi.com>; Mon, 2 Mar 2015 08:28:09 -0500
+	verify=FAIL) for <xfs@oss.sgi.com>; Mon, 2 Mar 2015 08:28:10 -0500
 Received: from bfoster.bfoster (dhcp-41-237.bos.redhat.com [10.18.41.237])
-	by int-mx13.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id t22DS90N012630
+	by int-mx09.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id t22DS9Tb000994
 	for <xfs@oss.sgi.com>; Mon, 2 Mar 2015 08:28:09 -0500
 From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH v6 14/18] xfs: randomly do sparse inode allocations in DEBUG
-	mode
-Date: Mon,  2 Mar 2015 08:28:04 -0500
-Message-Id: <1425302888-4962-15-git-send-email-bfoster@redhat.com>
+Subject: [PATCH v6 10/18] xfs: pass inode count through ordered icreate log
+	item
+Date: Mon,  2 Mar 2015 08:28:00 -0500
+Message-Id: <1425302888-4962-11-git-send-email-bfoster@redhat.com>
 In-Reply-To: <1425302888-4962-1-git-send-email-bfoster@redhat.com>
 References: <1425302888-4962-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -40,69 +40,83 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Sparse inode allocations generally only occur when full inode chunk
-allocation fails. This requires some level of filesystem space usage and
-fragmentation.
+v5 superblocks use an ordered log item for logging the initialization of
+inode chunks. The icreate log item is currently hardcoded to an inode
+count of 64 inodes.
 
-For filesystems formatted with sparse inode chunks enabled, do random
-sparse inode chunk allocs when compiled in DEBUG mode to increase test
-coverage.
+The agbno and extent length are used to initialize the inode chunk from
+log recovery. While an incorrect inode count does not lead to bad inode
+chunk initialization, we should pass the correct inode count such that log
+recovery has enough data to perform meaningful validity checks on the
+chunk.
 
 Signed-off-by: Brian Foster <bfoster@redhat.com>
 ---
- fs/xfs/libxfs/xfs_ialloc.c | 15 +++++++++++++--
- 1 file changed, 13 insertions(+), 2 deletions(-)
+ fs/xfs/libxfs/xfs_ialloc.c | 7 ++++---
+ fs/xfs/libxfs/xfs_ialloc.h | 2 +-
+ fs/xfs/xfs_log_recover.c   | 4 ++--
+ 3 files changed, 7 insertions(+), 6 deletions(-)
 
 diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
-index 90594b8..9a18c0b 100644
+index 85a477a..d79e41c 100644
 --- a/fs/xfs/libxfs/xfs_ialloc.c
 +++ b/fs/xfs/libxfs/xfs_ialloc.c
-@@ -607,9 +607,18 @@ xfs_ialloc_ag_alloc(
- 	struct xfs_inobt_rec_incore rec;
- 	struct xfs_perag *pag;
- 
-+	int		do_sparse = 0;
-+
-+#ifdef DEBUG
-+	/* randomly do sparse inode allocations */
-+	if (xfs_sb_version_hassparseinodes(&tp->t_mountp->m_sb))
-+		do_sparse = prandom_u32() & 1;
-+#endif
-+
- 	memset(&args, 0, sizeof(args));
- 	args.tp = tp;
- 	args.mp = tp->t_mountp;
-+	args.fsbno = NULLFSBLOCK;
- 
- 	/*
- 	 * Locking will ensure that we don't have two callers in here
-@@ -631,6 +640,8 @@ xfs_ialloc_ag_alloc(
- 	agno = be32_to_cpu(agi->agi_seqno);
- 	args.agbno = XFS_AGINO_TO_AGBNO(args.mp, newino) +
- 		     args.mp->m_ialloc_blks;
-+	if (do_sparse)
-+		goto sparse_alloc;
- 	if (likely(newino != NULLAGINO &&
- 		  (args.agbno < be32_to_cpu(agi->agi_length)))) {
- 		args.fsbno = XFS_AGB_TO_FSB(args.mp, agno, args.agbno);
-@@ -669,8 +680,7 @@ xfs_ialloc_ag_alloc(
- 		 * subsequent requests.
+@@ -250,6 +250,7 @@ xfs_ialloc_inode_init(
+ 	struct xfs_mount	*mp,
+ 	struct xfs_trans	*tp,
+ 	struct list_head	*buffer_list,
++	int			icount,
+ 	xfs_agnumber_t		agno,
+ 	xfs_agblock_t		agbno,
+ 	xfs_agblock_t		length,
+@@ -305,7 +306,7 @@ xfs_ialloc_inode_init(
+ 		 * they track in the AIL as if they were physically logged.
  		 */
- 		args.minalignslop = 0;
--	} else
--		args.fsbno = NULLFSBLOCK;
-+	}
+ 		if (tp)
+-			xfs_icreate_log(tp, agno, agbno, mp->m_ialloc_inos,
++			xfs_icreate_log(tp, agno, agbno, icount,
+ 					mp->m_sb.sb_inodesize, length, gen);
+ 	} else
+ 		version = 2;
+@@ -525,8 +526,8 @@ xfs_ialloc_ag_alloc(
+ 	 * rather than a linear progression to prevent the next generation
+ 	 * number from being easily guessable.
+ 	 */
+-	error = xfs_ialloc_inode_init(args.mp, tp, NULL, agno, args.agbno,
+-			args.len, prandom_u32());
++	error = xfs_ialloc_inode_init(args.mp, tp, NULL, newlen, agno,
++			args.agbno, args.len, prandom_u32());
  
- 	if (unlikely(args.fsbno == NULLFSBLOCK)) {
- 		/*
-@@ -728,6 +738,7 @@ xfs_ialloc_ag_alloc(
- 	if (xfs_sb_version_hassparseinodes(&args.mp->m_sb) &&
- 	    args.mp->m_ialloc_min_blks < args.mp->m_ialloc_blks &&
- 	    args.fsbno == NULLFSBLOCK) {
-+sparse_alloc:
- 		args.type = XFS_ALLOCTYPE_NEAR_BNO;
- 		args.agbno = be32_to_cpu(agi->agi_root);
- 		args.fsbno = XFS_AGB_TO_FSB(args.mp, agno, args.agbno);
+ 	if (error)
+ 		return error;
+diff --git a/fs/xfs/libxfs/xfs_ialloc.h b/fs/xfs/libxfs/xfs_ialloc.h
+index 100007d..4d4b702 100644
+--- a/fs/xfs/libxfs/xfs_ialloc.h
++++ b/fs/xfs/libxfs/xfs_ialloc.h
+@@ -156,7 +156,7 @@ int xfs_inobt_get_rec(struct xfs_btree_cur *cur,
+  * Inode chunk initialisation routine
+  */
+ int xfs_ialloc_inode_init(struct xfs_mount *mp, struct xfs_trans *tp,
+-			  struct list_head *buffer_list,
++			  struct list_head *buffer_list, int icount,
+ 			  xfs_agnumber_t agno, xfs_agblock_t agbno,
+ 			  xfs_agblock_t length, unsigned int gen);
+ 
+diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+index 4f5784f..8abfd78 100644
+--- a/fs/xfs/xfs_log_recover.c
++++ b/fs/xfs/xfs_log_recover.c
+@@ -3091,8 +3091,8 @@ xlog_recover_do_icreate_pass2(
+ 			XFS_AGB_TO_DADDR(mp, agno, agbno), length, 0))
+ 		return 0;
+ 
+-	xfs_ialloc_inode_init(mp, NULL, buffer_list, agno, agbno, length,
+-					be32_to_cpu(icl->icl_gen));
++	xfs_ialloc_inode_init(mp, NULL, buffer_list, count, agno, agbno, length,
++			      be32_to_cpu(icl->icl_gen));
+ 	return 0;
+ }
+ 
 -- 
 1.9.3
 
