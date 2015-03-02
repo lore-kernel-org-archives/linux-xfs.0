@@ -1,28 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 17A7B7F66
-	for <xfs@oss.sgi.com>; Mon,  2 Mar 2015 07:28:12 -0600 (CST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 8F4F77F61
+	for <xfs@oss.sgi.com>; Mon,  2 Mar 2015 07:28:11 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id DA3AE8F8068
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 60B91304048
 	for <xfs@oss.sgi.com>; Mon,  2 Mar 2015 05:28:11 -0800 (PST)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id zRqCCy0VqMmzDBS5 (version=TLSv1
+	cuda.sgi.com with ESMTP id VgzK9CgQpWeLHbkb (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
 	Mon, 02 Mar 2015 05:28:10 -0800 (PST)
-Received: from int-mx11.intmail.prod.int.phx2.redhat.com
-	(int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id t22DS97n010010
+Received: from int-mx14.intmail.prod.int.phx2.redhat.com
+	(int-mx14.intmail.prod.int.phx2.redhat.com [10.5.11.27])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id t22DS9L2029663
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256
-	verify=FAIL) for <xfs@oss.sgi.com>; Mon, 2 Mar 2015 08:28:10 -0500
+	verify=FAIL) for <xfs@oss.sgi.com>; Mon, 2 Mar 2015 08:28:09 -0500
 Received: from bfoster.bfoster (dhcp-41-237.bos.redhat.com [10.18.41.237])
-	by int-mx11.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id t22DS8BI021856
+	by int-mx14.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id t22DS9Be031502
 	for <xfs@oss.sgi.com>; Mon, 2 Mar 2015 08:28:09 -0500
 From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH v6 02/18] xfs: update free inode record logic to support
-	sparse inode records
-Date: Mon,  2 Mar 2015 08:27:52 -0500
-Message-Id: <1425302888-4962-3-git-send-email-bfoster@redhat.com>
+Subject: [PATCH v6 12/18] xfs: helper to convert holemask to inode alloc.
+	bitmap
+Date: Mon,  2 Mar 2015 08:28:02 -0500
+Message-Id: <1425302888-4962-13-git-send-email-bfoster@redhat.com>
 In-Reply-To: <1425302888-4962-1-git-send-email-bfoster@redhat.com>
 References: <1425302888-4962-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -40,72 +40,97 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-xfs_difree_inobt() uses logic in a couple places that assume inobt
-records refer to fully allocated chunks. Specifically, the use of
-mp->m_ialloc_inos can cause problems for inode chunks that are sparsely
-allocated. Sparse inode chunks can, by definition, define a smaller
-number of inodes than a full inode chunk.
+The inobt record holemask field is a condensed data type designed to fit
+into the existing on-disk record and is zero based (allocated regions
+are set to 0, sparse regions are set to 1) to provide backwards
+compatibility. This makes the type somewhat complex for use in higher
+level inode manipulations such as individual inode allocation, etc.
 
-Fix the logic that determines whether an inode record should be removed
-from the inobt to use the ir_free mask rather than ir_freecount. Fix the
-agi counters modification to use ir_freecount to add the actual number
-of inodes freed rather than assuming a full inode chunk.
-
-Also make sure that we preserve the behavior to not remove inode chunks
-if the block size is large enough for multiple inode chunks (e.g.,
-bsize=64k, isize=512). This behavior was previously implicit in that in
-such configurations, ir.freecount of a single record never matches
-m_ialloc_inos. Hence, add some comments as well.
+Rather than foist the complexity of dealing with this field to every bit
+of logic that requires inode granular information, create a helper to
+convert the holemask to an inode allocation bitmap. The inode allocation
+bitmap is inode granularity similar to the inobt record free mask and
+indicates which inodes of the chunk are physically allocated on disk,
+irrespective of whether the inode is considered allocated or free by the
+filesystem.
 
 Signed-off-by: Brian Foster <bfoster@redhat.com>
 ---
- fs/xfs/libxfs/xfs_ialloc.c | 16 ++++++++++++----
- 1 file changed, 12 insertions(+), 4 deletions(-)
+ fs/xfs/libxfs/xfs_ialloc_btree.c | 51 ++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/libxfs/xfs_ialloc_btree.h |  3 +++
+ 2 files changed, 54 insertions(+)
 
-diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
-index a186831..3033099 100644
---- a/fs/xfs/libxfs/xfs_ialloc.c
-+++ b/fs/xfs/libxfs/xfs_ialloc.c
-@@ -1508,10 +1508,13 @@ xfs_difree_inobt(
- 	rec.ir_freecount++;
+diff --git a/fs/xfs/libxfs/xfs_ialloc_btree.c b/fs/xfs/libxfs/xfs_ialloc_btree.c
+index b95aac5..aa13b46 100644
+--- a/fs/xfs/libxfs/xfs_ialloc_btree.c
++++ b/fs/xfs/libxfs/xfs_ialloc_btree.c
+@@ -427,3 +427,54 @@ xfs_inobt_maxrecs(
+ 		return blocklen / sizeof(xfs_inobt_rec_t);
+ 	return blocklen / (sizeof(xfs_inobt_key_t) + sizeof(xfs_inobt_ptr_t));
+ }
++
++/*
++ * Convert the inode record holemask to an inode allocation bitmap. The inode
++ * allocation bitmap is inode granularity and specifies whether an inode is
++ * physically allocated on disk (not whether the inode is considered allocated
++ * or free by the fs).
++ *
++ * A bit value of 1 means the inode is allocated, a value of 0 means it is free.
++ */
++uint64_t
++xfs_inobt_irec_to_allocmask(
++	struct xfs_inobt_rec_incore	*rec)
++{
++	uint64_t			bitmap = 0;
++	uint64_t			inodespbit;
++	int				nextbit;
++	uint				allocbitmap;
++
++	/*
++	 * The holemask has 16-bits for a 64 inode record. Therefore each
++	 * holemask bit represents multiple inodes. Create a mask of bits to set
++	 * in the allocmask for each holemask bit.
++	 */
++	inodespbit = (1 << XFS_INODES_PER_HOLEMASK_BIT) - 1;
++
++	/*
++	 * Allocated inodes are represented by 0 bits in holemask. Invert the 0
++	 * bits to 1 and convert to a uint so we can use xfs_next_bit(). Mask
++	 * anything beyond the 16 holemask bits since this casts to a larger
++	 * type.
++	 */
++	allocbitmap = ~rec->ir_holemask & ((1 << XFS_INOBT_HOLEMASK_BITS) - 1);
++
++	/*
++	 * allocbitmap is the inverted holemask so every set bit represents
++	 * allocated inodes. To expand from 16-bit holemask granularity to
++	 * 64-bit (e.g., bit-per-inode), set inodespbit bits in the target
++	 * bitmap for every holemask bit.
++	 */
++	nextbit = xfs_next_bit(&allocbitmap, 1, 0);
++	while (nextbit != -1) {
++		ASSERT(nextbit < (sizeof(rec->ir_holemask) * NBBY));
++
++		bitmap |= (inodespbit <<
++			   (nextbit * XFS_INODES_PER_HOLEMASK_BIT));
++
++		nextbit = xfs_next_bit(&allocbitmap, 1, nextbit + 1);
++	}
++
++	return bitmap;
++}
+diff --git a/fs/xfs/libxfs/xfs_ialloc_btree.h b/fs/xfs/libxfs/xfs_ialloc_btree.h
+index d7ebea7..2c581ba 100644
+--- a/fs/xfs/libxfs/xfs_ialloc_btree.h
++++ b/fs/xfs/libxfs/xfs_ialloc_btree.h
+@@ -62,4 +62,7 @@ extern struct xfs_btree_cur *xfs_inobt_init_cursor(struct xfs_mount *,
+ 		xfs_btnum_t);
+ extern int xfs_inobt_maxrecs(struct xfs_mount *, int, int);
  
- 	/*
--	 * When an inode cluster is free, it becomes eligible for removal
-+	 * When an inode chunk is free, it becomes eligible for removal. Don't
-+	 * remove the chunk if the block size is large enough for multiple inode
-+	 * chunks (that might not be free).
- 	 */
- 	if (!(mp->m_flags & XFS_MOUNT_IKEEP) &&
--	    (rec.ir_freecount == mp->m_ialloc_inos)) {
-+	    rec.ir_free == XFS_INOBT_ALL_FREE &&
-+	    mp->m_sb.sb_inopblock <= XFS_INODES_PER_CHUNK) {
- 
- 		*deleted = 1;
- 		*first_ino = XFS_AGINO_TO_INO(mp, agno, rec.ir_startino);
-@@ -1521,7 +1524,7 @@ xfs_difree_inobt(
- 		 * AGI and Superblock inode counts, and mark the disk space
- 		 * to be freed when the transaction is committed.
- 		 */
--		ilen = mp->m_ialloc_inos;
-+		ilen = rec.ir_freecount;
- 		be32_add_cpu(&agi->agi_count, -ilen);
- 		be32_add_cpu(&agi->agi_freecount, -(ilen - 1));
- 		xfs_ialloc_log_agi(tp, agbp, XFS_AGI_COUNT | XFS_AGI_FREECOUNT);
-@@ -1641,8 +1644,13 @@ xfs_difree_finobt(
- 	 * free inode. Hence, if all of the inodes are free and we aren't
- 	 * keeping inode chunks permanently on disk, remove the record.
- 	 * Otherwise, update the record with the new information.
-+	 *
-+	 * Note that we currently can't free chunks when the block size is large
-+	 * enough for multiple chunks. Leave the finobt record to remain in sync
-+	 * with the inobt.
- 	 */
--	if (rec.ir_freecount == mp->m_ialloc_inos &&
-+	if (rec.ir_free == XFS_INOBT_ALL_FREE &&
-+	    mp->m_sb.sb_inopblock <= XFS_INODES_PER_CHUNK &&
- 	    !(mp->m_flags & XFS_MOUNT_IKEEP)) {
- 		error = xfs_btree_delete(cur, &i);
- 		if (error)
++/* ir_holemask to inode allocation bitmap conversion */
++uint64_t xfs_inobt_irec_to_allocmask(struct xfs_inobt_rec_incore *);
++
+ #endif	/* __XFS_IALLOC_BTREE_H__ */
 -- 
 1.9.3
 
