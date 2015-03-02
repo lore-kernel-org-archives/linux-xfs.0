@@ -1,21 +1,31 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 3EFC57F74
-	for <xfs@oss.sgi.com>; Sun,  1 Mar 2015 19:04:42 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 0F74430404E
-	for <xfs@oss.sgi.com>; Sun,  1 Mar 2015 17:04:39 -0800 (PST)
-Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
-	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	gHFw4JokpwJppiIg for <xfs@oss.sgi.com>;
-	Sun, 01 Mar 2015 17:04:36 -0800 (PST)
-Date: Mon, 2 Mar 2015 12:04:13 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: [regression v4.0-rc1] mm: IPIs from TLB flushes causing significant
-	performance degradation.
-Message-ID: <20150302010413.GP4251@dastard>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 6DA277F78
+	for <xfs@oss.sgi.com>; Mon,  2 Mar 2015 03:40:03 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 4D22C8F8037
+	for <xfs@oss.sgi.com>; Mon,  2 Mar 2015 01:40:00 -0800 (PST)
+Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
+	with ESMTP id t8YO0s75QerMfjAq (version=TLSv1 cipher=AES256-SHA
+	bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Mon, 02 Mar 2015 01:39:58 -0800 (PST)
+Message-ID: <54F42FEA.1020404@suse.cz>
+Date: Mon, 02 Mar 2015 10:39:54 +0100
+From: Vlastimil Babka <vbabka@suse.cz>
 MIME-Version: 1.0
-Content-Disposition: inline
+Subject: Re: How to handle TIF_MEMDIE stalls?
+References: <20150210151934.GA11212@phnom.home.cmpxchg.org>
+	<201502111123.ICD65197.FMLOHSQJFVOtFO@I-love.SAKURA.ne.jp>
+	<201502172123.JIE35470.QOLMVOFJSHOFFt@I-love.SAKURA.ne.jp>
+	<20150217125315.GA14287@phnom.home.cmpxchg.org>
+	<20150217225430.GJ4251@dastard>
+	<20150219102431.GA15569@phnom.home.cmpxchg.org>
+	<20150219225217.GY12722@dastard>
+	<20150221235227.GA25079@phnom.home.cmpxchg.org>
+	<20150223004521.GK12722@dastard>
+	<20150222172930.6586516d.akpm@linux-foundation.org>
+	<20150223073235.GT4251@dastard>
+In-Reply-To: <20150223073235.GT4251@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,101 +34,87 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: linux-kernel@vger.kernel.org
-Cc: linux-mm@kvack.org, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>, Andrew Morton <akpm@linux-foundation.org>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, dchinner@redhat.com, oleg@redhat.com, xfs@oss.sgi.com, mhocko@suse.cz, linux-mm@kvack.org, mgorman@suse.de, rientjes@google.com, torvalds@linux-foundation.org
 
-Hi folks,
+On 02/23/2015 08:32 AM, Dave Chinner wrote:
+> On Sun, Feb 22, 2015 at 05:29:30PM -0800, Andrew Morton wrote:
+>> On Mon, 23 Feb 2015 11:45:21 +1100 Dave Chinner <david@fromorbit.com> wrote:
+>>
+>> Yes, as we do for __GFP_HIGH and PF_MEMALLOC etc.  Add a dynamic
+>> reserve.  So to reserve N pages we increase the page allocator dynamic
+>> reserve by N, do some reclaim if necessary then deposit N tokens into
+>> the caller's task_struct (it'll be a set of zone/nr-pages tuples I
+>> suppose).
+>>
+>> When allocating pages the caller should drain its reserves in
+>> preference to dipping into the regular freelist.  This guy has already
+>> done his reclaim and shouldn't be penalised a second time.  I guess
+>> Johannes's preallocation code should switch to doing this for the same
+>> reason, plus the fact that snipping a page off
+>> task_struct.prealloc_pages is super-fast and needs to be done sometime
+>> anyway so why not do it by default.
+>
+> That is at odds with the requirements of demand paging, which
+> allocate for objects that are reclaimable within the course of the
+> transaction. The reserve is there to ensure forward progress for
+> allocations for objects that aren't freed until after the
+> transaction completes, but if we drain it for reclaimable objects we
+> then have nothing left in the reserve pool when we actually need it.
+>
+> We do not know ahead of time if the object we are allocating is
+> going to modified and hence locked into the transaction. Hence we
+> can't say "use the reserve for this *specific* allocation", and so
+> the only guidance we can really give is "we will to allocate and
+> *permanently consume* this much memory", and the reserve pool needs
+> to cover that consumption to guarantee forwards progress.
 
-Running one of my usual benchmarks (fsmark to create 50 million zero
-length files in a 500TB filesystem, then running xfs_repair on it)
-has indicated a significant regression in xfs_repair performance.
+I'm not sure I understand properly. You don't know if a specific 
+allocation is permanent or reclaimable, but you can tell in advance how 
+much in total will be permanent? Is it because you are conservative and 
+assume everything will be permanent, or how?
 
-config				  3.19		4.0-rc1
-defaults			 8m08s		  9m34s
--o ag_stride=-1			 4m04s		  4m38s
--o bhash=101073			 6m04s		 17m43s
--o ag_stride=-1,bhash=101073	 4m54s		  9m58s
+Can you at least at some later point in transaction recognize that "OK, 
+this object was not permanent after all" and tell mm that it can lower 
+your reserve?
 
-The default is for create a number of concurrent threads to progress
-AGs in parallel (https://lkml.org/lkml/2014/7/3/15), and this is
-running on a 500AG filesystem so lots of parallelism. "-o
-ag_stride=-1" turns this off, and just leaves a single prefetch
-group working on AGs sequentially. As you can see, turning off the
-concurrency halves the runtime.
+> Forwards progress for all other allocations is guaranteed because
+> they are reclaimable objects - they either freed directly back to
+> their source (slab, heap, page lists) or they are freed by shrinkers
+> once they have been released from the transaction.
 
-The concurrency is really there for large spinning disk arrays,
-where IO wait time dominates performance. I'm running on SSDs, so
-ther eis almost no IO wait time.
+Which are the "all other allocations?" Above you wrote that all 
+allocations are treated as potentially permanent. Also how does the fact 
+that an object is later reclaimable, affect forward progress during its 
+allocation? Or all you talking about allocations from contexts that 
+don't use reserves?
 
-The "-o bhash=X" controls the size of the buffer cache. The default
-value is 4096, which means xfs_repair is oeprating with a memory
-footprint of about 1GB and is small enough to suffer from readahead
-thrashing on large filesystems. Setting it to 101073 gives increases that
-to around 7-10GB and prevents readahead thrashing, so should run
-much faster than the default concurrent config. It does run faster
-for 3.19, but for 4.0-rc1 it runs almost twice as slow, and burns a
-huge amount of system CPU time doing so.
+> Hence we need allocations to come from the free list and trigger
+> reclaim, regardless of the fact there is a reserve pool there. The
+> reserve pool needs to be a last resort once there are no other
+> avenues to allocate memory. i.e. it would be used to replace the OOM
+> killer for GFP_NOFAIL allocations.
 
-Across the board the 4.0-rc1 numbers are much slower, and the
-degradation is far worse when using the large memory footprint
-configs. Perf points straight at the cause - this is from 4.0-rc1
-on the "-o bhash=101073" config:
+That's probably going to result in lot of wasted memory and I still 
+don't understand why it's needed, if your reserve estimate is guaranteed 
+to cover the worst-case.
 
--   56.07%    56.07%  [kernel]            [k] default_send_IPI_mask_sequence_phys
-   - default_send_IPI_mask_sequence_phys
-      - 99.99% physflat_send_IPI_mask
-         - 99.37% native_send_call_func_ipi
-              smp_call_function_many
-            - native_flush_tlb_others
-               - 99.85% flush_tlb_page
-                    ptep_clear_flush
-                    try_to_unmap_one
-                    rmap_walk
-                    try_to_unmap
-                    migrate_pages
-                    migrate_misplaced_page
-                  - handle_mm_fault
-                     - 99.73% __do_page_fault
-                          trace_do_page_fault
-                          do_async_page_fault
-                        + async_page_fault
-           0.63% native_send_call_func_single_ipi
-              generic_exec_single
-              smp_call_function_single
+>> Both reservation and preallocation are vulnerable to deadlocks - 10,000
+>> tasks all trying to reserve/prealloc 100 pages, they all have 50 pages
+>> and we ran out of memory.  Whoops.
+>
+> Yes, that's the big problem with preallocation, as well as your
+> proposed "depelete the reserved memory first" approach. They
+> *require* up front "preallocation" of free memory, either directly
+> by the application, or internally by the mm subsystem.
 
-And the same profile output from 3.19 shows:
+I don't see why it would deadlock, if during reserve time the mm can 
+return ENOMEM as the reserver should be able to back out at that point.
 
--    9.61%     9.61%  [kernel]            [k] default_send_IPI_mask_sequence_phys
-   - default_send_IPI_mask_sequence_phys
-      - 99.98% physflat_send_IPI_mask
-         - 96.26% native_send_call_func_ipi
-              smp_call_function_many
-            - native_flush_tlb_others
-               - 98.44% flush_tlb_page
-                    ptep_clear_flush
-                    try_to_unmap_one
-                    rmap_walk
-                    try_to_unmap
-                    migrate_pages
-                    migrate_misplaced_page
-                    handle_mm_fault
-               + 1.56% flush_tlb_mm_range
-         + 3.74% native_send_call_func_single_ipi
-
-So either there's been a massive increase in the number of IPIs
-being sent, or the cost per IPI have greatly increased. Either way,
-the result is a pretty significant performance degradatation.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
