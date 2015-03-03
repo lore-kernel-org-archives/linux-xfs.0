@@ -1,18 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 4A5807F67
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 70E717F6A
 	for <xfs@oss.sgi.com>; Tue,  3 Mar 2015 04:38:53 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 37E738F8081
-	for <xfs@oss.sgi.com>; Tue,  3 Mar 2015 02:38:53 -0800 (PST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 4FBA1304048
+	for <xfs@oss.sgi.com>; Tue,  3 Mar 2015 02:38:50 -0800 (PST)
 Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id zTkx0TQ8GkTmzs4P (version=TLSv1 cipher=AES256-SHA
+	with ESMTP id 9PVE5OkvUYCSTXGf (version=TLSv1 cipher=AES256-SHA
 	bits=256 verify=NO) for <xfs@oss.sgi.com>;
 	Tue, 03 Mar 2015 02:38:47 -0800 (PST)
 From: Jan Kara <jack@suse.cz>
-Subject: [PATCH 4/5] fs: Call security_ops->inode_killpriv on truncate
-Date: Tue,  3 Mar 2015 11:38:38 +0100
-Message-Id: <1425379119-3773-5-git-send-email-jack@suse.cz>
+Subject: [PATCH 3/5] fs: Provide function telling whether file_remove_privs()
+	will do anything
+Date: Tue,  3 Mar 2015 11:38:37 +0100
+Message-Id: <1425379119-3773-4-git-send-email-jack@suse.cz>
 In-Reply-To: <1425379119-3773-1-git-send-email-jack@suse.cz>
 References: <1425379119-3773-1-git-send-email-jack@suse.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -31,81 +32,93 @@ Sender: xfs-bounces@oss.sgi.com
 To: Al Viro <viro@ZenIV.linux.org.uk>
 Cc: linux-fsdevel@vger.kernel.org, Jan Kara <jack@suse.cz>, xfs@oss.sgi.com
 
-Comment in include/linux/security.h says that ->inode_killpriv() should
-be called when setuid bit is being removed and that similar security
-labels should be removed at this time as well. However we don't call
-->inode_killpriv() when we remove suid bit on truncate.
-
-We fix the problem by calling ->inode_need_killpriv() and subsequently
-->inode_killpriv() on truncate the same way as we do it on file write.
-
-After this patch there's only one user of should_remove_suid() - ocfs2 -
-and indeed it's buggy because it doesn't clear security attributes on
-write. However fixing it is difficult because of special locking
-constraints.
+Provide function telling whether file_remove_privs() will do anything.
+Currently we only have should_remove_suid() and that does something
+slightly different.
 
 Signed-off-by: Jan Kara <jack@suse.cz>
 ---
- fs/inode.c         | 5 ++---
- fs/open.c          | 6 ++++--
- include/linux/fs.h | 6 +++++-
- 3 files changed, 11 insertions(+), 6 deletions(-)
+ fs/inode.c         | 44 ++++++++++++++++++++++++++++++++------------
+ include/linux/fs.h |  1 +
+ 2 files changed, 33 insertions(+), 12 deletions(-)
 
 diff --git a/fs/inode.c b/fs/inode.c
-index 3407bedc1c7b..7f4eabd72bd6 100644
+index bc5fe06b8784..3407bedc1c7b 100644
 --- a/fs/inode.c
 +++ b/fs/inode.c
-@@ -1665,9 +1665,8 @@ EXPORT_SYMBOL(should_remove_suid);
-  * response to write or truncate. Return 0 if nothing has to be changed.
-  * Negative value on error (change should be denied).
-  */
--int file_needs_remove_privs(struct file *file)
-+int dentry_needs_remove_privs(struct dentry *dentry)
- {
--	struct dentry *dentry = file->f_path.dentry;
- 	struct inode *inode = dentry->d_inode;
- 	int mask = 0;
- 	int ret;
-@@ -1683,7 +1682,7 @@ int file_needs_remove_privs(struct file *file)
- 		mask |= ATTR_KILL_PRIV;
- 	return mask;
+@@ -1660,7 +1660,32 @@ int should_remove_suid(struct dentry *dentry)
  }
--EXPORT_SYMBOL(file_needs_remove_privs);
-+EXPORT_SYMBOL(dentry_needs_remove_privs);
+ EXPORT_SYMBOL(should_remove_suid);
  
- static int __remove_privs(struct dentry *dentry, int kill)
- {
-diff --git a/fs/open.c b/fs/open.c
-index 33f9cbf2610b..14e2aeea4cee 100644
---- a/fs/open.c
-+++ b/fs/open.c
-@@ -51,8 +51,10 @@ int do_truncate(struct dentry *dentry, loff_t length, unsigned int time_attrs,
- 		newattrs.ia_valid |= ATTR_FILE;
- 	}
- 
--	/* Remove suid/sgid on truncate too */
--	ret = should_remove_suid(dentry);
-+	/* Remove suid/sgid and security markings on truncate too */
-+	ret = dentry_needs_remove_privs(dentry);
+-static int __remove_suid(struct dentry *dentry, int kill)
++/*
++ * Return mask of changes for notify_change() that need to be done as a
++ * response to write or truncate. Return 0 if nothing has to be changed.
++ * Negative value on error (change should be denied).
++ */
++int file_needs_remove_privs(struct file *file)
++{
++	struct dentry *dentry = file->f_path.dentry;
++	struct inode *inode = dentry->d_inode;
++	int mask = 0;
++	int ret;
++
++	if (IS_NOSEC(inode))
++		return 0;
++
++	mask = should_remove_suid(dentry);
++	ret = security_inode_need_killpriv(dentry);
 +	if (ret < 0)
 +		return ret;
- 	if (ret)
- 		newattrs.ia_valid |= ret | ATTR_FORCE;
++	if (ret)
++		mask |= ATTR_KILL_PRIV;
++	return mask;
++}
++EXPORT_SYMBOL(file_needs_remove_privs);
++
++static int __remove_privs(struct dentry *dentry, int kill)
+ {
+ 	struct iattr newattrs;
  
+@@ -1680,23 +1705,18 @@ int file_remove_privs(struct file *file)
+ {
+ 	struct dentry *dentry = file->f_path.dentry;
+ 	struct inode *inode = dentry->d_inode;
+-	int killsuid;
+-	int killpriv;
++	int kill;
+ 	int error = 0;
+ 
+ 	/* Fast path for nothing security related */
+ 	if (IS_NOSEC(inode))
+ 		return 0;
+ 
+-	killsuid = should_remove_suid(dentry);
+-	killpriv = security_inode_need_killpriv(dentry);
+-
+-	if (killpriv < 0)
+-		return killpriv;
+-	if (killpriv)
+-		error = security_inode_killpriv(dentry);
+-	if (!error && killsuid)
+-		error = __remove_suid(dentry, killsuid);
++	kill = file_needs_remove_privs(file);
++	if (kill < 0)
++		return kill;
++	if (kill)
++		error = __remove_privs(dentry, kill);
+ 	if (!error && (inode->i_sb->s_flags & MS_NOSEC) &&
+ 	    !is_sxid(inode->i_mode))
+ 		inode->i_flags |= S_NOSEC;
 diff --git a/include/linux/fs.h b/include/linux/fs.h
-index 78ff19f0c323..ddaceede20ad 100644
+index 676e431247bd..78ff19f0c323 100644
 --- a/include/linux/fs.h
 +++ b/include/linux/fs.h
-@@ -2518,7 +2518,11 @@ extern struct inode *new_inode(struct super_block *sb);
+@@ -2518,6 +2518,7 @@ extern struct inode *new_inode(struct super_block *sb);
  extern void free_inode_nonrcu(struct inode *inode);
  extern int should_remove_suid(struct dentry *);
  extern int file_remove_privs(struct file *);
--extern int file_needs_remove_privs(struct file *file);
-+extern int dentry_needs_remove_privs(struct dentry *dentry);
-+static inline int file_needs_remove_privs(struct file *file)
-+{
-+	return dentry_needs_remove_privs(file->f_path.dentry);
-+}
++extern int file_needs_remove_privs(struct file *file);
  
  extern void __insert_inode_hash(struct inode *, unsigned long hashval);
  static inline void insert_inode_hash(struct inode *inode)
