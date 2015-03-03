@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 9A54A7F56
-	for <xfs@oss.sgi.com>; Tue,  3 Mar 2015 17:31:21 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 8716A30404E
-	for <xfs@oss.sgi.com>; Tue,  3 Mar 2015 15:31:21 -0800 (PST)
+	by oss.sgi.com (Postfix) with ESMTP id 139CD7F7D
+	for <xfs@oss.sgi.com>; Tue,  3 Mar 2015 17:31:24 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id E867730404E
+	for <xfs@oss.sgi.com>; Tue,  3 Mar 2015 15:31:20 -0800 (PST)
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	3ucj1jrNry1o18Z7 for <xfs@oss.sgi.com>;
-	Tue, 03 Mar 2015 15:31:19 -0800 (PST)
+	G1PJYjcJcxXhVaQf for <xfs@oss.sgi.com>;
+	Tue, 03 Mar 2015 15:31:18 -0800 (PST)
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 3/6] xfs: add DAX file operations support
-Date: Wed,  4 Mar 2015 10:30:24 +1100
-Message-Id: <1425425427-16283-4-git-send-email-david@fromorbit.com>
+Subject: [PATCH 1/6] dax: don't abuse get_block mapping for endio callbacks
+Date: Wed,  4 Mar 2015 10:30:22 +1100
+Message-Id: <1425425427-16283-2-git-send-email-david@fromorbit.com>
 In-Reply-To: <1425425427-16283-1-git-send-email-david@fromorbit.com>
 References: <1425425427-16283-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -33,344 +33,212 @@ Cc: linux-fsdevel@vger.kernel.org, willy@linux.intel.com, jack@suse.cz
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Add the initial support for DAX file operations to XFS. This
-includes the necessary block allocation and mmap page fault hooks
-for DAX to function.
+dax_fault() currently relies on the get_block callback to attach an
+io completion callback to the mapping buffer head so that it can
+run unwritten extent conversion after zeroing allocated blocks.
 
-Note that the current block allocation code abuses the mapping
-buffer head to provide a completion callback for unwritten extent
-allocation when DAX is clearing blocks. The DAX interface needs to
-be changed to provide a callback similar to get_blocks for this
-callback.
+Instead of this hack, pass the conversion callback directly into
+dax_fault() similar to the get_block callback. When the filesystem
+allocates unwritten extents, it will set the buffer_unwritten()
+flag, and hence the dax_fault code can call the completion function
+in the contexts where it is necessary without overloading the
+mapping buffer head.
+
+Note: The changes to ext4 to use this interface are suspect at best.
+In fact, the way ext4 did this end_io assignment in the first place
+looks suspect because it only set a completion callback when there
+wasn't already some other write() call taking place on the same
+inode. The ext4 end_io code looks rather intricate and fragile with
+all it's reference counting and passing to different contexts for
+modification via inode private pointers that aren't protected by
+locks...
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_aops.c |  72 ++++++++++++++++++++++++++++++++++--
- fs/xfs/xfs_aops.h |   7 +++-
- fs/xfs/xfs_file.c | 108 ++++++++++++++++++++++++++++++++++++++++++++----------
- fs/xfs/xfs_iops.c |   4 ++
- fs/xfs/xfs_iops.h |   6 +++
- 5 files changed, 173 insertions(+), 24 deletions(-)
+ fs/dax.c           | 15 ++++++++-------
+ fs/ext2/file.c     |  4 ++--
+ fs/ext4/file.c     | 16 ++++++++++++++--
+ fs/ext4/inode.c    | 21 +++++++--------------
+ include/linux/fs.h |  6 ++++--
+ 5 files changed, 35 insertions(+), 27 deletions(-)
 
-diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index 3a9b7a1..22cb03a 100644
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -1233,13 +1233,63 @@ xfs_vm_releasepage(
- 	return try_to_free_buffers(page);
+diff --git a/fs/dax.c b/fs/dax.c
+index ed1619e..d7b4dba 100644
+--- a/fs/dax.c
++++ b/fs/dax.c
+@@ -269,7 +269,8 @@ static int copy_user_bh(struct page *to, struct buffer_head *bh,
  }
  
-+/*
-+ * For DAX we need a mapping buffer callback for unwritten extent conversion
-+ * when page faults allocation blocks and then zero them.
-+ */
-+#ifdef CONFIG_FS_DAX
-+static struct xfs_ioend *
-+xfs_dax_alloc_ioend(
-+	struct inode	*inode,
-+	xfs_off_t	offset,
-+	ssize_t		size)
-+{
-+	struct xfs_ioend *ioend;
-+
-+	ASSERT(IS_DAX(inode));
-+	ioend = xfs_alloc_ioend(inode, XFS_IO_UNWRITTEN);
-+	ioend->io_offset = offset;
-+	ioend->io_size = size;
-+	return ioend;
-+}
-+
-+void
-+xfs_get_blocks_dax_complete(
-+	struct buffer_head	*bh,
-+	int			uptodate)
-+{
-+	struct xfs_ioend	*ioend = bh->b_private;
-+	struct xfs_inode	*ip = XFS_I(ioend->io_inode);
-+	int			error;
-+
-+	ASSERT(IS_DAX(ioend->io_inode));
-+
-+	/* if there was an error zeroing, then don't convert it */
-+	if (!uptodate)
-+		goto out_free;
-+
-+	error = xfs_iomap_write_unwritten(ip, ioend->io_offset, ioend->io_size);
-+	if (error)
-+		xfs_warn(ip->i_mount,
-+"%s: conversion failed, ino 0x%llx, offset 0x%llx, len 0x%lx, error %d\n",
-+			__func__, ip->i_ino, ioend->io_offset,
-+			ioend->io_size, error);
-+out_free:
-+	mempool_free(ioend, xfs_ioend_pool);
-+
-+}
-+#else
-+#define xfs_dax_alloc_ioend(i,o,s)	NULL
-+#endif
-+
- STATIC int
- __xfs_get_blocks(
- 	struct inode		*inode,
- 	sector_t		iblock,
- 	struct buffer_head	*bh_result,
- 	int			create,
--	int			direct)
-+	bool			direct,
-+	bool			clear)
+ static int dax_insert_mapping(struct inode *inode, struct buffer_head *bh,
+-			struct vm_area_struct *vma, struct vm_fault *vmf)
++			struct vm_area_struct *vma, struct vm_fault *vmf,
++			dax_iodone_t complete_unwritten)
  {
- 	struct xfs_inode	*ip = XFS_I(inode);
- 	struct xfs_mount	*mp = ip->i_mount;
-@@ -1304,6 +1354,7 @@ __xfs_get_blocks(
- 			if (error)
- 				return error;
- 			new = 1;
-+
- 		} else {
- 			/*
- 			 * Delalloc reservations do not require a transaction,
-@@ -1340,7 +1391,10 @@ __xfs_get_blocks(
- 		if (create || !ISUNWRITTEN(&imap))
- 			xfs_map_buffer(inode, bh_result, &imap, offset);
- 		if (create && ISUNWRITTEN(&imap)) {
--			if (direct) {
-+			if (clear) {
-+				bh_result->b_private = xfs_dax_alloc_ioend(
-+							inode, offset, size);
-+			} else if (direct) {
- 				bh_result->b_private = inode;
- 				set_buffer_defer_completion(bh_result);
- 			}
-@@ -1425,7 +1479,7 @@ xfs_get_blocks(
- 	struct buffer_head	*bh_result,
- 	int			create)
- {
--	return __xfs_get_blocks(inode, iblock, bh_result, create, 0);
-+	return __xfs_get_blocks(inode, iblock, bh_result, create, false, false);
- }
+ 	struct address_space *mapping = inode->i_mapping;
+ 	sector_t sector = bh->b_blocknr << (inode->i_blkbits - 9);
+@@ -310,14 +311,14 @@ static int dax_insert_mapping(struct inode *inode, struct buffer_head *bh,
+  out:
+ 	i_mmap_unlock_read(mapping);
  
- STATIC int
-@@ -1435,7 +1489,17 @@ xfs_get_blocks_direct(
- 	struct buffer_head	*bh_result,
- 	int			create)
- {
--	return __xfs_get_blocks(inode, iblock, bh_result, create, 1);
-+	return __xfs_get_blocks(inode, iblock, bh_result, create, true, false);
-+}
-+
-+int
-+xfs_get_blocks_dax(
-+	struct inode		*inode,
-+	sector_t		iblock,
-+	struct buffer_head	*bh_result,
-+	int			create)
-+{
-+	return __xfs_get_blocks(inode, iblock, bh_result, create, true, true);
- }
+-	if (bh->b_end_io)
+-		bh->b_end_io(bh, 1);
++	if (buffer_unwritten(bh))
++		complete_unwritten(bh, 1);
  
- /*
-diff --git a/fs/xfs/xfs_aops.h b/fs/xfs/xfs_aops.h
-index ac644e0..7c6fb3f 100644
---- a/fs/xfs/xfs_aops.h
-+++ b/fs/xfs/xfs_aops.h
-@@ -53,7 +53,12 @@ typedef struct xfs_ioend {
- } xfs_ioend_t;
- 
- extern const struct address_space_operations xfs_address_space_operations;
--extern int xfs_get_blocks(struct inode *, sector_t, struct buffer_head *, int);
-+
-+int	xfs_get_blocks(struct inode *inode, sector_t offset,
-+		       struct buffer_head *map_bh, int create);
-+int	xfs_get_blocks_dax(struct inode *inode, sector_t offset,
-+			   struct buffer_head *map_bh, int create);
-+void	xfs_get_blocks_dax_complete(struct buffer_head *bh, int uptodate);
- 
- extern void xfs_count_page_state(struct page *, int *, int *);
- 
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index bc0008f..4bfcba0 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -654,7 +654,7 @@ xfs_file_dio_aio_write(
- 					mp->m_rtdev_targp : mp->m_ddev_targp;
- 
- 	/* DIO must be aligned to device logical sector size */
--	if ((pos | count) & target->bt_logical_sectormask)
-+	if (!IS_DAX(inode) && (pos | count) & target->bt_logical_sectormask)
- 		return -EINVAL;
- 
- 	/* "unaligned" here means not aligned to a filesystem block */
-@@ -724,8 +724,11 @@ xfs_file_dio_aio_write(
- out:
- 	xfs_rw_iunlock(ip, iolock);
- 
--	/* No fallback to buffered IO on errors for XFS. */
--	ASSERT(ret < 0 || ret == count);
-+	/*
-+	 * No fallback to buffered IO on errors for XFS. DAX can result in
-+	 * partial writes, but direct IO will either complete fully or fail.
-+	 */
-+	ASSERT(ret < 0 || ret == count || IS_DAX(VFS_I(ip)));
- 	return ret;
- }
- 
-@@ -810,7 +813,7 @@ xfs_file_write_iter(
- 	if (XFS_FORCED_SHUTDOWN(ip->i_mount))
- 		return -EIO;
- 
--	if (unlikely(file->f_flags & O_DIRECT))
-+	if ((file->f_flags & O_DIRECT) || IS_DAX(inode))
- 		ret = xfs_file_dio_aio_write(iocb, from);
- 	else
- 		ret = xfs_file_buffered_aio_write(iocb, from);
-@@ -1031,17 +1034,6 @@ xfs_file_readdir(
- 	return xfs_readdir(ip, ctx, bufsize);
- }
- 
--STATIC int
--xfs_file_mmap(
--	struct file	*filp,
--	struct vm_area_struct *vma)
--{
--	vma->vm_ops = &xfs_file_vm_ops;
--
--	file_accessed(filp);
--	return 0;
--}
--
- /*
-  * This type is designed to indicate the type of offset we would like
-  * to search from page cache for xfs_seek_hole_data().
-@@ -1466,6 +1458,71 @@ xfs_filemap_page_mkwrite(
  	return error;
  }
  
-+static const struct vm_operations_struct xfs_file_vm_ops = {
-+	.fault		= xfs_filemap_fault,
-+	.map_pages	= filemap_map_pages,
-+	.page_mkwrite	= xfs_filemap_page_mkwrite,
-+};
-+
-+#ifdef CONFIG_FS_DAX
-+static int
-+xfs_filemap_dax_fault(
-+	struct vm_area_struct	*vma,
-+	struct vm_fault		*vmf)
+ static int do_dax_fault(struct vm_area_struct *vma, struct vm_fault *vmf,
+-			get_block_t get_block)
++			get_block_t get_block, dax_iodone_t complete_unwritten)
+ {
+ 	struct file *file = vma->vm_file;
+ 	struct address_space *mapping = file->f_mapping;
+@@ -418,7 +419,7 @@ static int do_dax_fault(struct vm_area_struct *vma, struct vm_fault *vmf,
+ 		page_cache_release(page);
+ 	}
+ 
+-	error = dax_insert_mapping(inode, &bh, vma, vmf);
++	error = dax_insert_mapping(inode, &bh, vma, vmf, complete_unwritten);
+ 
+  out:
+ 	if (error == -ENOMEM)
+@@ -446,7 +447,7 @@ static int do_dax_fault(struct vm_area_struct *vma, struct vm_fault *vmf,
+  * fault handler for DAX files.
+  */
+ int dax_fault(struct vm_area_struct *vma, struct vm_fault *vmf,
+-			get_block_t get_block)
++	      get_block_t get_block, dax_iodone_t complete_unwritten)
+ {
+ 	int result;
+ 	struct super_block *sb = file_inode(vma->vm_file)->i_sb;
+@@ -455,7 +456,7 @@ int dax_fault(struct vm_area_struct *vma, struct vm_fault *vmf,
+ 		sb_start_pagefault(sb);
+ 		file_update_time(vma->vm_file);
+ 	}
+-	result = do_dax_fault(vma, vmf, get_block);
++	result = do_dax_fault(vma, vmf, get_block, complete_unwritten);
+ 	if (vmf->flags & FAULT_FLAG_WRITE)
+ 		sb_end_pagefault(sb);
+ 
+diff --git a/fs/ext2/file.c b/fs/ext2/file.c
+index e317017..8da747a 100644
+--- a/fs/ext2/file.c
++++ b/fs/ext2/file.c
+@@ -28,12 +28,12 @@
+ #ifdef CONFIG_FS_DAX
+ static int ext2_dax_fault(struct vm_area_struct *vma, struct vm_fault *vmf)
+ {
+-	return dax_fault(vma, vmf, ext2_get_block);
++	return dax_fault(vma, vmf, ext2_get_block, NULL);
+ }
+ 
+ static int ext2_dax_mkwrite(struct vm_area_struct *vma, struct vm_fault *vmf)
+ {
+-	return dax_mkwrite(vma, vmf, ext2_get_block);
++	return dax_mkwrite(vma, vmf, ext2_get_block, NULL);
+ }
+ 
+ static const struct vm_operations_struct ext2_dax_vm_ops = {
+diff --git a/fs/ext4/file.c b/fs/ext4/file.c
+index 33a09da..f7dabb1 100644
+--- a/fs/ext4/file.c
++++ b/fs/ext4/file.c
+@@ -192,15 +192,27 @@ errout:
+ }
+ 
+ #ifdef CONFIG_FS_DAX
++static void ext4_end_io_unwritten(struct buffer_head *bh, int uptodate)
 +{
-+	struct xfs_inode	*ip = XFS_I(vma->vm_file->f_mapping->host);
-+	int			error;
-+
-+	trace_xfs_filemap_fault(ip);
-+
-+	xfs_ilock(ip, XFS_MMAPLOCK_SHARED);
-+	error = dax_fault(vma, vmf, xfs_get_blocks_dax,
-+			  xfs_get_blocks_dax_complete);
-+	xfs_iunlock(ip, XFS_MMAPLOCK_SHARED);
-+
-+	return error;
++	struct inode *inode = bh->b_assoc_map->host;
++	/* XXX: breaks on 32-bit > 16GB. Is that even supported? */
++	loff_t offset = (loff_t)(uintptr_t)bh->b_private << inode->i_blkbits;
++	int err;
++	if (!uptodate)
++		return;
++	WARN_ON(!buffer_unwritten(bh));
++	err = ext4_convert_unwritten_extents(NULL, inode, offset, bh->b_size);
 +}
 +
-+static int
-+xfs_filemap_dax_page_mkwrite(
-+	struct vm_area_struct	*vma,
-+	struct vm_fault		*vmf)
-+{
-+	struct xfs_inode	*ip = XFS_I(vma->vm_file->f_mapping->host);
-+	int			error;
-+
-+	trace_xfs_filemap_page_mkwrite(ip);
-+
-+	xfs_ilock(ip, XFS_MMAPLOCK_SHARED);
-+	error = dax_mkwrite(vma, vmf, xfs_get_blocks_dax,
-+			    xfs_get_blocks_dax_complete);
-+	xfs_iunlock(ip, XFS_MMAPLOCK_SHARED);
-+
-+	return error;
-+}
-+
-+static const struct vm_operations_struct xfs_file_dax_vm_ops = {
-+	.fault		= xfs_filemap_dax_fault,
-+	.page_mkwrite	= xfs_filemap_dax_page_mkwrite,
-+};
-+#else
-+#define xfs_file_dax_vm_ops	xfs_file_vm_ops
-+#endif /* CONFIG_FS_DAX */
-+
-+STATIC int
-+xfs_file_mmap(
-+	struct file	*filp,
-+	struct vm_area_struct *vma)
-+{
-+	file_accessed(filp);
-+	if (IS_DAX(file_inode(filp))) {
-+		vma->vm_ops = &xfs_file_dax_vm_ops;
-+		vma->vm_flags |= VM_MIXEDMAP;
-+	} else
-+		vma->vm_ops = &xfs_file_vm_ops;
-+	return 0;
-+}
-+
- const struct file_operations xfs_file_operations = {
- 	.llseek		= xfs_file_llseek,
- 	.read		= new_sync_read,
-@@ -1497,8 +1554,21 @@ const struct file_operations xfs_dir_file_operations = {
- 	.fsync		= xfs_dir_fsync,
- };
+ static int ext4_dax_fault(struct vm_area_struct *vma, struct vm_fault *vmf)
+ {
+-	return dax_fault(vma, vmf, ext4_get_block);
++	return dax_fault(vma, vmf, ext4_get_block, ext4_end_io_unwritten);
+ 					/* Is this the right get_block? */
+ }
  
--static const struct vm_operations_struct xfs_file_vm_ops = {
--	.fault		= xfs_filemap_fault,
--	.map_pages	= filemap_map_pages,
--	.page_mkwrite	= xfs_filemap_page_mkwrite,
-+#ifdef CONFIG_FS_DAX
-+const struct file_operations xfs_file_dax_operations = {
-+	.llseek		= xfs_file_llseek,
-+	.read		= new_sync_read,
-+	.write		= new_sync_write,
-+	.read_iter	= xfs_file_read_iter,
-+	.write_iter	= xfs_file_write_iter,
-+	.unlocked_ioctl	= xfs_file_ioctl,
-+#ifdef CONFIG_COMPAT
-+	.compat_ioctl	= xfs_file_compat_ioctl,
-+#endif
-+	.mmap		= xfs_file_mmap,
-+	.open		= xfs_file_open,
-+	.release	= xfs_file_release,
-+	.fsync		= xfs_file_fsync,
-+	.fallocate	= xfs_file_fallocate,
- };
-+#endif /* CONFIG_FS_DAX */
-diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-index 8b9e688..9f38142 100644
---- a/fs/xfs/xfs_iops.c
-+++ b/fs/xfs/xfs_iops.c
-@@ -1264,6 +1264,10 @@ xfs_setup_inode(
- 	case S_IFREG:
- 		inode->i_op = &xfs_inode_operations;
- 		inode->i_fop = &xfs_file_operations;
-+		if (IS_DAX(inode))
-+			inode->i_fop = &xfs_file_dax_operations;
-+		else
-+			inode->i_fop = &xfs_file_operations;
- 		inode->i_mapping->a_ops = &xfs_address_space_operations;
- 		break;
- 	case S_IFDIR:
-diff --git a/fs/xfs/xfs_iops.h b/fs/xfs/xfs_iops.h
-index a0f84ab..c08983e 100644
---- a/fs/xfs/xfs_iops.h
-+++ b/fs/xfs/xfs_iops.h
-@@ -23,6 +23,12 @@ struct xfs_inode;
- extern const struct file_operations xfs_file_operations;
- extern const struct file_operations xfs_dir_file_operations;
+ static int ext4_dax_mkwrite(struct vm_area_struct *vma, struct vm_fault *vmf)
+ {
+-	return dax_mkwrite(vma, vmf, ext4_get_block);
++	return dax_mkwrite(vma, vmf, ext4_get_block, ext4_end_io_unwritten);
+ }
  
-+#ifdef CONFIG_FS_DAX
-+extern const struct file_operations xfs_file_dax_operations;
-+#else
-+#define xfs_file_dax_operations xfs_file_operations
-+#endif
-+
- extern ssize_t xfs_vn_listxattr(struct dentry *, char *data, size_t size);
+ static const struct vm_operations_struct ext4_dax_vm_ops = {
+diff --git a/fs/ext4/inode.c b/fs/ext4/inode.c
+index 5cb9a21..43433de 100644
+--- a/fs/ext4/inode.c
++++ b/fs/ext4/inode.c
+@@ -657,18 +657,6 @@ has_zeroout:
+ 	return retval;
+ }
  
- /*
+-static void ext4_end_io_unwritten(struct buffer_head *bh, int uptodate)
+-{
+-	struct inode *inode = bh->b_assoc_map->host;
+-	/* XXX: breaks on 32-bit > 16GB. Is that even supported? */
+-	loff_t offset = (loff_t)(uintptr_t)bh->b_private << inode->i_blkbits;
+-	int err;
+-	if (!uptodate)
+-		return;
+-	WARN_ON(!buffer_unwritten(bh));
+-	err = ext4_convert_unwritten_extents(NULL, inode, offset, bh->b_size);
+-}
+-
+ /* Maximum number of blocks we map for direct IO at once. */
+ #define DIO_MAX_BLOCKS 4096
+ 
+@@ -706,10 +694,15 @@ static int _ext4_get_block(struct inode *inode, sector_t iblock,
+ 
+ 		map_bh(bh, inode->i_sb, map.m_pblk);
+ 		bh->b_state = (bh->b_state & ~EXT4_MAP_FLAGS) | map.m_flags;
+-		if (IS_DAX(inode) && buffer_unwritten(bh) && !io_end) {
++		if (IS_DAX(inode) && buffer_unwritten(bh)) {
++			/*
++			 * dgc: I suspect unwritten conversion on ext4+DAX is
++			 * fundamentally broken here when there are concurrent
++			 * read/write in progress on this inode.
++			 */
++			WARN_ON_ONCE(io_end);
+ 			bh->b_assoc_map = inode->i_mapping;
+ 			bh->b_private = (void *)(unsigned long)iblock;
+-			bh->b_end_io = ext4_end_io_unwritten;
+ 		}
+ 		if (io_end && io_end->flag & EXT4_IO_END_UNWRITTEN)
+ 			set_buffer_defer_completion(bh);
+diff --git a/include/linux/fs.h b/include/linux/fs.h
+index 937e280..82100ae 100644
+--- a/include/linux/fs.h
++++ b/include/linux/fs.h
+@@ -70,6 +70,7 @@ typedef int (get_block_t)(struct inode *inode, sector_t iblock,
+ 			struct buffer_head *bh_result, int create);
+ typedef void (dio_iodone_t)(struct kiocb *iocb, loff_t offset,
+ 			ssize_t bytes, void *private);
++typedef void (dax_iodone_t)(struct buffer_head *bh_map, int uptodate);
+ 
+ #define MAY_EXEC		0x00000001
+ #define MAY_WRITE		0x00000002
+@@ -2603,8 +2604,9 @@ ssize_t dax_do_io(int rw, struct kiocb *, struct inode *, struct iov_iter *,
+ int dax_clear_blocks(struct inode *, sector_t block, long size);
+ int dax_zero_page_range(struct inode *, loff_t from, unsigned len, get_block_t);
+ int dax_truncate_page(struct inode *, loff_t from, get_block_t);
+-int dax_fault(struct vm_area_struct *, struct vm_fault *, get_block_t);
+-#define dax_mkwrite(vma, vmf, gb)	dax_fault(vma, vmf, gb)
++int dax_fault(struct vm_area_struct *, struct vm_fault *, get_block_t,
++		dax_iodone_t);
++#define dax_mkwrite(vma, vmf, gb, iod)	dax_fault(vma, vmf, gb, iod)
+ 
+ #ifdef CONFIG_BLOCK
+ typedef void (dio_submit_t)(int rw, struct bio *bio, struct inode *inode,
 -- 
 2.0.0
 
