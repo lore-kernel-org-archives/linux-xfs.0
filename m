@@ -1,23 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 9202B7F47
-	for <xfs@oss.sgi.com>; Tue,  3 Mar 2015 08:48:51 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 80FEB8F8065
-	for <xfs@oss.sgi.com>; Tue,  3 Mar 2015 06:48:48 -0800 (PST)
-Received: from mail-pa0-f51.google.com (mail-pa0-f51.google.com
-	[209.85.220.51]) by cuda.sgi.com with ESMTP id qHVTfIYZJBjCYS6T
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 03 Mar 2015 06:48:46 -0800 (PST)
-Received: by pabli10 with SMTP id li10so24582482pab.13
-	for <xfs@oss.sgi.com>; Tue, 03 Mar 2015 06:48:45 -0800 (PST)
+	by oss.sgi.com (Postfix) with ESMTP id A59117F47
+	for <xfs@oss.sgi.com>; Tue,  3 Mar 2015 08:51:47 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 6F08B8F8068
+	for <xfs@oss.sgi.com>; Tue,  3 Mar 2015 06:51:47 -0800 (PST)
+Received: from mail-pd0-f170.google.com (mail-pd0-f170.google.com
+	[209.85.192.170]) by cuda.sgi.com with ESMTP id
+	POGMAkaAPZiGlAyI (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 03 Mar 2015 06:51:45 -0800 (PST)
+Received: by pdbfp1 with SMTP id fp1so11784915pdb.7
+	for <xfs@oss.sgi.com>; Tue, 03 Mar 2015 06:51:44 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <CALJmpHOZe44t5Mimv213vrQV60Jp6FGpAYpT36bmawKZina56g@mail.gmail.com>
+In-Reply-To: <CALJmpHOyHucj+Uk=dP2FqvGtQkAboeO86VK3Yr=y9f6o7o-n=Q@mail.gmail.com>
 References: <CALJmpHP+PwdV1n8VLusxqz0Wb=1PLL52frEMBn8+4h0v5+7Ssg@mail.gmail.com>
 	<20150216234838.GC4251@dastard>
 	<CALJmpHOZe44t5Mimv213vrQV60Jp6FGpAYpT36bmawKZina56g@mail.gmail.com>
-Date: Tue, 3 Mar 2015 20:18:45 +0530
-Message-ID: <CALJmpHOyHucj+Uk=dP2FqvGtQkAboeO86VK3Yr=y9f6o7o-n=Q@mail.gmail.com>
+	<CALJmpHOyHucj+Uk=dP2FqvGtQkAboeO86VK3Yr=y9f6o7o-n=Q@mail.gmail.com>
+Date: Tue, 3 Mar 2015 20:21:44 +0530
+Message-ID: <CALJmpHMt6+0qOZnhCBnm1eD0UAOmttoMAJYPx8+GE0+fiMpPfA@mail.gmail.com>
 Subject: Re: [RFD] : Allowing xfs_fsr to defragment portions of a file
 From: Dhruvesh Rathore <adrscube@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -140,6 +142,8 @@ available space.
 
 As said, we have already added to the XFS API, and have got extent info
 in fiemap structures.
+
+
 We would love to hear your comments or directions on the above points. After
 confirmation from you, we will finish creating the XFS API on the above lines.
 
@@ -163,7 +167,6 @@ confirmation from you, we will finish creating the XFS API on the above lines.
 > Cheers,
 >
 > Dave.
-
 
 Regards,
 A-DRS
