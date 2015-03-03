@@ -1,22 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 27FFD7F47
-	for <xfs@oss.sgi.com>; Tue,  3 Mar 2015 16:45:05 -0600 (CST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id CD7987F47
+	for <xfs@oss.sgi.com>; Tue,  3 Mar 2015 17:31:18 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 078528F8035
-	for <xfs@oss.sgi.com>; Tue,  3 Mar 2015 14:45:01 -0800 (PST)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 6A059AC001
+	for <xfs@oss.sgi.com>; Tue,  3 Mar 2015 15:31:18 -0800 (PST)
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	vOCyJj5X5vyMYADg for <xfs@oss.sgi.com>;
-	Tue, 03 Mar 2015 14:44:59 -0800 (PST)
-Date: Wed, 4 Mar 2015 09:44:56 +1100
+	raL16jt4Qg7MCGjg for <xfs@oss.sgi.com>;
+	Tue, 03 Mar 2015 15:31:13 -0800 (PST)
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: panic on 4.20 server exporting xfs filesystem
-Message-ID: <20150303224456.GV4251@dastard>
-References: <20150303221033.GB19439@fieldses.org>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20150303221033.GB19439@fieldses.org>
+Subject: [RFC PATCH 0/6] xfs: DAX support
+Date: Wed,  4 Mar 2015 10:30:21 +1100
+Message-Id: <1425425427-16283-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,57 +21,48 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "J. Bruce Fields" <bfields@fieldses.org>
-Cc: linux-nfs@vger.kernel.org, Christoph Hellwig <hch@lst.de>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
+Cc: linux-fsdevel@vger.kernel.org, willy@linux.intel.com, jack@suse.cz
 
-On Tue, Mar 03, 2015 at 05:10:33PM -0500, J. Bruce Fields wrote:
-> I'm getting mysterious crashes on a server exporting an xfs filesystem.
-> 
-> Strangely, I've reproduced this on
-> 
-> 	93aaa830fc17 "Merge tag 'xfs-pnfs-for-linus-3.20-rc1' of git://git.kernel.org/pub/scm/linux/kernel/git/dgc/linux-xfs
-> 
-> but haven't yet managed to reproduce on either of its parents
-> (24a52e412ef2 or 781355c6e5ae).  That might just be chance, I'll try
-> again.
+Hi folks,
 
-I think you'll find that the bug is only triggered after that XFS
-merge because it's what enabled block layout support in the server,
-i.e.  nfsd4_setup_layout_type() is now setting the export type to
-LAYOUT_BLOCK_VOLUME because XFS has added the necessary functions to
-it's export ops.
+This is the first pass I've made for supporting DAX in XFS. Most
+of the XFS changes are straight forward and fairly self contained,
+and mostly seem to work.
 
-> I can also try a serial console or something, but for now I'm not
-> getting a lot of information about the crashes.
+The first patch, however, is changing the DAX infrastructure to take
+a "block zeroing completion" function for dax_fault() so that we
+don't need to abuse the mapping bufferhead to pass the completion
+function. This is straight forward for XFS, but the ext4 code is,
+well, it's already broken so I don't think I've made anything worse.
 
-Really need a stack trace - even a photo of the screen with the
-stack trace on it will do for starters. ;)
+I note that Jan Kara is aware of the problems related to the
+unwritten extent conversion in ext4, as mentioned here earlier
+today on the ext4 list (items 1 and 2):
 
-> The filesystem in question isn't on a block device available to the
-> client, but I'm still seeing occasional GETLAYOUT and GETDEVICEINFO
-> calls; I suppose the client's getting that far, finding no devices it
-> can use, and giving up?
+http://permalink.gmane.org/gmane.comp.file-systems.ext4/47943
 
-I can't see anything in the XFS code that would obviously cause a
-problem - its completely unaware to the state of the visibility
-of the underlying block device to the pnfs clients or the error
-handling paths that PNFS server/clients might take when the block
-device is not visible at the client side....
+So really my only concern here is cleaning up the interface to
+remove the mapping bh hack, not whether ext4 works reliably or not.
+The XFS implementation does not have any of the problems the ext4
+code does.
 
-> Sorry for the incomplete report, I'll pass along more when I have it.
+The rest of the series adds all the DAX hooks into the required code
+paths for block zeroing, page fault, io, truncate and finally the
+mount path for the dax mount option.
 
-No worries, good to have an early heads up. :)
+The series passes xfstests without and serious problems - there are
+a couple of tests where the extent layout isn't as the tests expect,
+but these are minor issues that don't affect correctness.
 
-Cheers,
+Comments welcome, especially on the this dax_fault callback patch.
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+-Dave.
 
 _______________________________________________
 xfs mailing list
