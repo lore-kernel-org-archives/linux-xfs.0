@@ -1,19 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 4B4A97F47
-	for <xfs@oss.sgi.com>; Tue,  3 Mar 2015 14:15:12 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id D9538AC004
-	for <xfs@oss.sgi.com>; Tue,  3 Mar 2015 12:15:08 -0800 (PST)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id BD6alBtu7RFEAzJG (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 03 Mar 2015 12:15:05 -0800 (PST)
-Message-ID: <54F61641.1010708@redhat.com>
-Date: Tue, 03 Mar 2015 14:14:57 -0600
-From: Eric Sandeen <sandeen@redhat.com>
-MIME-Version: 1.0
-Subject: [PATCH] xfs: don't release NULL pip in xfs_filestream_lookup_ag()
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 0BC487F47
+	for <xfs@oss.sgi.com>; Tue,  3 Mar 2015 14:39:51 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id EED0C8F804C
+	for <xfs@oss.sgi.com>; Tue,  3 Mar 2015 12:39:47 -0800 (PST)
+Received: from smtprelay.hostedemail.com (smtprelay0214.hostedemail.com
+	[216.40.44.214]) by cuda.sgi.com with ESMTP id gVXG3sqsEqtkSy0i
+	for <xfs@oss.sgi.com>; Tue, 03 Mar 2015 12:39:46 -0800 (PST)
+Message-ID: <1425415182.17273.59.camel@perches.com>
+Subject: Re: [PATCH 1/1 linux-next] xfs: use bool instead of int for new_parent
+From: Joe Perches <joe@perches.com>
+Date: Tue, 03 Mar 2015 12:39:42 -0800
+In-Reply-To: <1425410469-26098-1-git-send-email-fabf@skynet.be>
+References: <1425410469-26098-1-git-send-email-fabf@skynet.be>
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,33 +27,24 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs-oss <xfs@oss.sgi.com>
-Cc: Adrien Nader <adrien@notk.org>
+To: Fabian Frederick <fabf@skynet.be>
+Cc: linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-If xfs_filestream_get_parent() fails, we have a null pip,
-goto out, and attempt to IRELE(NULL).  This causes a null
-pointer dereference and BUG().
+On Tue, 2015-03-03 at 20:21 +0100, Fabian Frederick wrote:
+> new_parent is only used in 0/1 context.
+[]
+> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+[]
+> @@ -2860,7 +2860,7 @@ xfs_rename(
+>  {
+>  	xfs_trans_t	*tp = NULL;
+>  	xfs_mount_t	*mp = src_dp->i_mount;
+> -	int		new_parent;		/* moving to a new dir */
+> +	bool		new_parent;		/* moving to a new dir */
+>  	int		src_is_directory;	/* src_name is a directory */
 
-Fix this by testing for pip before trying to release it.
+Could convert src_is_directory to bool too.
 
-Reported-by: Adrien Nader <adrien@notk.org>
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
-
-diff --git a/fs/xfs/xfs_filestream.c b/fs/xfs/xfs_filestream.c
-index a2e86e8..fb09a63 100644
---- a/fs/xfs/xfs_filestream.c
-+++ b/fs/xfs/xfs_filestream.c
-@@ -348,7 +348,8 @@ xfs_filestream_lookup_ag(
- 	if (xfs_filestream_pick_ag(pip, startag, &ag, 0, 0))
- 		ag = NULLAGNUMBER;
- out:
--	IRELE(pip);
-+	if (pip)
-+		IRELE(pip);
- 	return ag;
- }
- 
 
 _______________________________________________
 xfs mailing list
