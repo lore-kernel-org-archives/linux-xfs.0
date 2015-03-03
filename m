@@ -1,30 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id DE4557F5F
-	for <xfs@oss.sgi.com>; Tue,  3 Mar 2015 00:56:19 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id C96D98F8068
-	for <xfs@oss.sgi.com>; Mon,  2 Mar 2015 22:56:16 -0800 (PST)
-Received: from mail-ie0-f177.google.com (mail-ie0-f177.google.com
-	[209.85.223.177]) by cuda.sgi.com with ESMTP id
-	jMGKaE0or3NRgeBm (version=TLSv1 cipher=RC4-SHA bits=128
+	by oss.sgi.com (Postfix) with ESMTP id 097117F5F
+	for <xfs@oss.sgi.com>; Tue,  3 Mar 2015 01:14:17 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id CD8268F804B
+	for <xfs@oss.sgi.com>; Mon,  2 Mar 2015 23:14:13 -0800 (PST)
+Received: from mail-wi0-f169.google.com (mail-wi0-f169.google.com
+	[209.85.212.169]) by cuda.sgi.com with ESMTP id
+	IaFsZ0TdBCRwDpEA (version=TLSv1 cipher=RC4-SHA bits=128
 	verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 02 Mar 2015 22:56:15 -0800 (PST)
-Received: by iebtr6 with SMTP id tr6so54611275ieb.7
-	for <xfs@oss.sgi.com>; Mon, 02 Mar 2015 22:56:14 -0800 (PST)
+	Mon, 02 Mar 2015 23:14:12 -0800 (PST)
+Received: by widem10 with SMTP id em10so19293866wid.0
+	for <xfs@oss.sgi.com>; Mon, 02 Mar 2015 23:14:10 -0800 (PST)
+Message-ID: <54F55F40.6010508@gmail.com>
+Date: Tue, 03 Mar 2015 08:14:08 +0100
+From: "Michael Kerrisk (man-pages)" <mtk.manpages@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20150303052004.GM18360@dastard>
-References: <20150302010413.GP4251@dastard>
-	<CA+55aFzGFvVGD_8Y=jTkYwgmYgZnW0p0Fjf7OHFPRcL6Mz4HOw@mail.gmail.com>
-	<20150303014733.GL18360@dastard>
-	<CA+55aFw+7V9DfxBA2_DhMNrEQOkvdwjFFga5Y67-a6yVeAz+NQ@mail.gmail.com>
-	<CA+55aFw+fb=Fh4M2wA4dVskgqN7PhZRGZS6JTMx4Rb1Qn++oaA@mail.gmail.com>
-	<20150303052004.GM18360@dastard>
-Date: Mon, 2 Mar 2015 22:56:14 -0800
-Message-ID: <CA+55aFyczb5asoTwhzaJr1JdRi1epg1A6cFJgnzMMZj6U0gFWA@mail.gmail.com>
-Subject: Re: [regression v4.0-rc1] mm: IPIs from TLB flushes causing
-	significant performance degradation.
-From: Linus Torvalds <torvalds@linux-foundation.org>
+Subject: Re: Documenting MS_LAZYTIME
+References: <CAHO5Pa0k7QkV_6BDjwTVxa7LV9tFyN9nGFFcSvOC6HYO08wfrw@mail.gmail.com>
+	<54E7578E.4090809@redhat.com> <20150221025636.GB7922@thunk.org>
+	<54EEDE23.6080009@gmail.com> <20150226133113.GD11217@thunk.org>
+	<54EF2161.90607@gmail.com> <20150227000409.GC17174@thunk.org>
+	<54F02446.2050008@gmail.com>
+	<20150227175159.GC11031@birch.djwong.org>
+In-Reply-To: <20150227175159.GC11031@birch.djwong.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -37,30 +36,41 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Matt B <jackdachef@gmail.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, linux-mm <linux-mm@kvack.org>, Mel Gorman <mgorman@suse.de>, Andrew Morton <akpm@linux-foundation.org>, Ingo Molnar <mingo@kernel.org>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Eric Sandeen <sandeen@redhat.com>, Theodore Ts'o <tytso@mit.edu>, linux-man@vger.kernel.org, Linux API <linux-api@vger.kernel.org>, XFS Developers <xfs@oss.sgi.com>, mtk.manpages@gmail.com, Linux-Fsdevel <linux-fsdevel@vger.kernel.org>, Ext4 Developers List <linux-ext4@vger.kernel.org>, Linux btrfs Developers List <linux-btrfs@vger.kernel.org>
 
-On Mon, Mar 2, 2015 at 9:20 PM, Dave Chinner <david@fromorbit.com> wrote:
+On 02/27/2015 06:51 PM, Darrick J. Wong wrote:
+> On Fri, Feb 27, 2015 at 09:01:10AM +0100, Michael Kerrisk (man-pages) wrote:
+>> On 02/27/2015 01:04 AM, Theodore Ts'o wrote:
+>>> On Thu, Feb 26, 2015 at 02:36:33PM +0100, Michael Kerrisk (man-pages) wrote:
+>>>>
+>>>>     The disadvantage of MS_STRICTATIME | MS_LAZYTIME is that
+>>>>     in the case of a system crash, the atime and mtime fields
+>>>>     on disk might be out of date by at most 24 hours.
+>>>
+>>> I'd change to "The disadvantage of MS_LAZYTIME is that..."  and
+>>> perhaps move that so it's clear it applies to any use of MS_LAZYTIME
+>>> has this as a downside.
+>>>
+>>> Does that make sense?
 >>
->> But are those migrate-page calls really common enough to make these
->> things happen often enough on the same pages for this all to matter?
->
-> It's looking like that's a possibility.
+>> Thanks, Ted. Got it. So, now we have:
+>>
+>>        MS_LAZYTIME (since Linux 3.20)
+> 
+> "since Linux 4.0".
 
-Hmm. Looking closer, commit 10c1045f28e8 already should have
-re-introduced the "pte was already NUMA" case.
+D'oh! Yes, thanks. Fixed.
 
-So that's not it either, afaik. Plus your numbers seem to say that
-it's really "migrate_pages()" that is done more. So it feels like the
-numa balancing isn't working right.
+Cheers,
 
-But I'm not seeing what would cause that in that commit. It really all
-looks the same to me. The few special-cases it drops get re-introduced
-later (although in a different form).
+Michael
 
-Mel, do you see what I'm missing?
 
-                     Linus
+-- 
+Michael Kerrisk
+Linux man-pages maintainer; http://www.kernel.org/doc/man-pages/
+Linux/UNIX System Programming Training: http://man7.org/training/
 
 _______________________________________________
 xfs mailing list
