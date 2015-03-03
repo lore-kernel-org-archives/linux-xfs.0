@@ -1,19 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 70E717F6A
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id D49A77F67
 	for <xfs@oss.sgi.com>; Tue,  3 Mar 2015 04:38:53 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 4FBA1304048
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id A6D038F8078
 	for <xfs@oss.sgi.com>; Tue,  3 Mar 2015 02:38:50 -0800 (PST)
 Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id 9PVE5OkvUYCSTXGf (version=TLSv1 cipher=AES256-SHA
+	with ESMTP id JsPAnV7fnsiW9DsK (version=TLSv1 cipher=AES256-SHA
 	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 03 Mar 2015 02:38:47 -0800 (PST)
+	Tue, 03 Mar 2015 02:38:48 -0800 (PST)
 From: Jan Kara <jack@suse.cz>
-Subject: [PATCH 3/5] fs: Provide function telling whether file_remove_privs()
-	will do anything
-Date: Tue,  3 Mar 2015 11:38:37 +0100
-Message-Id: <1425379119-3773-4-git-send-email-jack@suse.cz>
+Subject: [PATCH 2/5] fs: Rename file_remove_suid() to file_remove_privs()
+Date: Tue,  3 Mar 2015 11:38:36 +0100
+Message-Id: <1425379119-3773-3-git-send-email-jack@suse.cz>
 In-Reply-To: <1425379119-3773-1-git-send-email-jack@suse.cz>
 References: <1425379119-3773-1-git-send-email-jack@suse.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -32,96 +31,152 @@ Sender: xfs-bounces@oss.sgi.com
 To: Al Viro <viro@ZenIV.linux.org.uk>
 Cc: linux-fsdevel@vger.kernel.org, Jan Kara <jack@suse.cz>, xfs@oss.sgi.com
 
-Provide function telling whether file_remove_privs() will do anything.
-Currently we only have should_remove_suid() and that does something
-slightly different.
+file_remove_suid() is a misnomer since it removes also security related
+xattrs and sets S_NOSEC flag. Also should_remove_suid() tells something
+else than whether file_remove_suid() call is necessary which leads to
+bugs.
 
 Signed-off-by: Jan Kara <jack@suse.cz>
 ---
- fs/inode.c         | 44 ++++++++++++++++++++++++++++++++------------
- include/linux/fs.h |  1 +
- 2 files changed, 33 insertions(+), 12 deletions(-)
+ fs/btrfs/file.c    |  2 +-
+ fs/ceph/file.c     |  2 +-
+ fs/fuse/file.c     |  2 +-
+ fs/inode.c         | 13 ++++++++-----
+ fs/ntfs/file.c     |  2 +-
+ fs/xfs/xfs_file.c  |  2 +-
+ include/linux/fs.h |  2 +-
+ mm/filemap.c       |  2 +-
+ 8 files changed, 15 insertions(+), 12 deletions(-)
 
+diff --git a/fs/btrfs/file.c b/fs/btrfs/file.c
+index b78bbbac900d..c693dc2136e1 100644
+--- a/fs/btrfs/file.c
++++ b/fs/btrfs/file.c
+@@ -1760,7 +1760,7 @@ static ssize_t btrfs_file_write_iter(struct kiocb *iocb,
+ 
+ 	iov_iter_truncate(from, count);
+ 
+-	err = file_remove_suid(file);
++	err = file_remove_privs(file);
+ 	if (err) {
+ 		mutex_unlock(&inode->i_mutex);
+ 		goto out;
+diff --git a/fs/ceph/file.c b/fs/ceph/file.c
+index d533075a823d..493f293d433e 100644
+--- a/fs/ceph/file.c
++++ b/fs/ceph/file.c
+@@ -962,7 +962,7 @@ static ssize_t ceph_write_iter(struct kiocb *iocb, struct iov_iter *from)
+ 		goto out;
+ 	iov_iter_truncate(from, count);
+ 
+-	err = file_remove_suid(file);
++	err = file_remove_privs(file);
+ 	if (err)
+ 		goto out;
+ 
+diff --git a/fs/fuse/file.c b/fs/fuse/file.c
+index c01ec3bdcfd8..3e2ede73a3e3 100644
+--- a/fs/fuse/file.c
++++ b/fs/fuse/file.c
+@@ -1169,7 +1169,7 @@ static ssize_t fuse_file_write_iter(struct kiocb *iocb, struct iov_iter *from)
+ 		goto out;
+ 
+ 	iov_iter_truncate(from, count);
+-	err = file_remove_suid(file);
++	err = file_remove_privs(file);
+ 	if (err)
+ 		goto out;
+ 
 diff --git a/fs/inode.c b/fs/inode.c
-index bc5fe06b8784..3407bedc1c7b 100644
+index be326ae7f880..bc5fe06b8784 100644
 --- a/fs/inode.c
 +++ b/fs/inode.c
-@@ -1660,7 +1660,32 @@ int should_remove_suid(struct dentry *dentry)
+@@ -1672,7 +1672,11 @@ static int __remove_suid(struct dentry *dentry, int kill)
+ 	return notify_change(dentry, &newattrs, NULL);
  }
- EXPORT_SYMBOL(should_remove_suid);
  
--static int __remove_suid(struct dentry *dentry, int kill)
+-int file_remove_suid(struct file *file)
 +/*
-+ * Return mask of changes for notify_change() that need to be done as a
-+ * response to write or truncate. Return 0 if nothing has to be changed.
-+ * Negative value on error (change should be denied).
++ * Remove special file priviledges (suid, security tags) when file is written
++ * to or truncated.
 + */
-+int file_needs_remove_privs(struct file *file)
-+{
-+	struct dentry *dentry = file->f_path.dentry;
-+	struct inode *inode = dentry->d_inode;
-+	int mask = 0;
-+	int ret;
-+
-+	if (IS_NOSEC(inode))
-+		return 0;
-+
-+	mask = should_remove_suid(dentry);
-+	ret = security_inode_need_killpriv(dentry);
-+	if (ret < 0)
-+		return ret;
-+	if (ret)
-+		mask |= ATTR_KILL_PRIV;
-+	return mask;
-+}
-+EXPORT_SYMBOL(file_needs_remove_privs);
-+
-+static int __remove_privs(struct dentry *dentry, int kill)
- {
- 	struct iattr newattrs;
- 
-@@ -1680,23 +1705,18 @@ int file_remove_privs(struct file *file)
++int file_remove_privs(struct file *file)
  {
  	struct dentry *dentry = file->f_path.dentry;
  	struct inode *inode = dentry->d_inode;
--	int killsuid;
--	int killpriv;
-+	int kill;
- 	int error = 0;
+@@ -1699,7 +1703,7 @@ int file_remove_suid(struct file *file)
  
- 	/* Fast path for nothing security related */
- 	if (IS_NOSEC(inode))
- 		return 0;
+ 	return error;
+ }
+-EXPORT_SYMBOL(file_remove_suid);
++EXPORT_SYMBOL(file_remove_privs);
  
--	killsuid = should_remove_suid(dentry);
--	killpriv = security_inode_need_killpriv(dentry);
--
--	if (killpriv < 0)
--		return killpriv;
--	if (killpriv)
--		error = security_inode_killpriv(dentry);
--	if (!error && killsuid)
--		error = __remove_suid(dentry, killsuid);
-+	kill = file_needs_remove_privs(file);
-+	if (kill < 0)
-+		return kill;
-+	if (kill)
-+		error = __remove_privs(dentry, kill);
- 	if (!error && (inode->i_sb->s_flags & MS_NOSEC) &&
- 	    !is_sxid(inode->i_mode))
- 		inode->i_flags |= S_NOSEC;
+ /**
+  *	file_update_time	-	update mtime and ctime time
+@@ -1968,9 +1972,8 @@ EXPORT_SYMBOL(inode_dio_done);
+  * inode is being instantiated).  The reason for the cmpxchg() loop
+  * --- which wouldn't be necessary if all code paths which modify
+  * i_flags actually followed this rule, is that there is at least one
+- * code path which doesn't today --- for example,
+- * __generic_file_aio_write() calls file_remove_suid() without holding
+- * i_mutex --- so we use cmpxchg() out of an abundance of caution.
++ * code path which doesn't today so we use cmpxchg() out of an abundance
++ * of caution.
+  *
+  * In the long run, i_mutex is overkill, and we should probably look
+  * at using the i_lock spinlock to protect i_flags, and then make sure
+diff --git a/fs/ntfs/file.c b/fs/ntfs/file.c
+index 1da9b2d184dc..008a476558d3 100644
+--- a/fs/ntfs/file.c
++++ b/fs/ntfs/file.c
+@@ -2099,7 +2099,7 @@ static ssize_t ntfs_file_aio_write_nolock(struct kiocb *iocb,
+ 		goto out;
+ 	if (!count)
+ 		goto out;
+-	err = file_remove_suid(file);
++	err = file_remove_privs(file);
+ 	if (err)
+ 		goto out;
+ 	err = file_update_time(file);
+diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+index a2e1cb8a568b..fa81a43702ee 100644
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@ -601,7 +601,7 @@ restart:
+ 	 * setgid bits if the process is not being run by root.  This keeps
+ 	 * people from modifying setuid and setgid binaries.
+ 	 */
+-	return file_remove_suid(file);
++	return file_remove_privs(file);
+ }
+ 
+ /*
 diff --git a/include/linux/fs.h b/include/linux/fs.h
-index 676e431247bd..78ff19f0c323 100644
+index b4d71b5e1ff2..676e431247bd 100644
 --- a/include/linux/fs.h
 +++ b/include/linux/fs.h
-@@ -2518,6 +2518,7 @@ extern struct inode *new_inode(struct super_block *sb);
+@@ -2517,7 +2517,7 @@ extern struct inode *new_inode_pseudo(struct super_block *sb);
+ extern struct inode *new_inode(struct super_block *sb);
  extern void free_inode_nonrcu(struct inode *inode);
  extern int should_remove_suid(struct dentry *);
- extern int file_remove_privs(struct file *);
-+extern int file_needs_remove_privs(struct file *file);
+-extern int file_remove_suid(struct file *);
++extern int file_remove_privs(struct file *);
  
  extern void __insert_inode_hash(struct inode *, unsigned long hashval);
  static inline void insert_inode_hash(struct inode *inode)
+diff --git a/mm/filemap.c b/mm/filemap.c
+index ad7242043bdb..ac021d604b1e 100644
+--- a/mm/filemap.c
++++ b/mm/filemap.c
+@@ -2575,7 +2575,7 @@ ssize_t __generic_file_write_iter(struct kiocb *iocb, struct iov_iter *from)
+ 
+ 	iov_iter_truncate(from, count);
+ 
+-	err = file_remove_suid(file);
++	err = file_remove_privs(file);
+ 	if (err)
+ 		goto out;
+ 
 -- 
 2.1.4
 
