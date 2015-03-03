@@ -1,24 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 247E77F61
-	for <xfs@oss.sgi.com>; Mon,  2 Mar 2015 19:47:42 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 124D5304048
-	for <xfs@oss.sgi.com>; Mon,  2 Mar 2015 17:47:38 -0800 (PST)
-Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
-	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	wdU08n3jcOuXRgAg for <xfs@oss.sgi.com>;
-	Mon, 02 Mar 2015 17:47:36 -0800 (PST)
-Date: Tue, 3 Mar 2015 12:47:33 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [regression v4.0-rc1] mm: IPIs from TLB flushes causing
-	significant performance degradation.
-Message-ID: <20150303014733.GL18360@dastard>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 76D1C7F61
+	for <xfs@oss.sgi.com>; Mon,  2 Mar 2015 20:22:35 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id E2808AC002
+	for <xfs@oss.sgi.com>; Mon,  2 Mar 2015 18:22:31 -0800 (PST)
+Received: from mail-ie0-f180.google.com (mail-ie0-f180.google.com
+	[209.85.223.180]) by cuda.sgi.com with ESMTP id
+	YIpvkc6qCryk5WOJ (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Mon, 02 Mar 2015 18:22:30 -0800 (PST)
+Received: by iecvy18 with SMTP id vy18so53378574iec.6
+	for <xfs@oss.sgi.com>; Mon, 02 Mar 2015 18:22:29 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <20150303014733.GL18360@dastard>
 References: <20150302010413.GP4251@dastard>
 	<CA+55aFzGFvVGD_8Y=jTkYwgmYgZnW0p0Fjf7OHFPRcL6Mz4HOw@mail.gmail.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <CA+55aFzGFvVGD_8Y=jTkYwgmYgZnW0p0Fjf7OHFPRcL6Mz4HOw@mail.gmail.com>
+	<20150303014733.GL18360@dastard>
+Date: Mon, 2 Mar 2015 18:22:29 -0800
+Message-ID: <CA+55aFw+7V9DfxBA2_DhMNrEQOkvdwjFFga5Y67-a6yVeAz+NQ@mail.gmail.com>
+Subject: Re: [regression v4.0-rc1] mm: IPIs from TLB flushes causing
+	significant performance degradation.
+From: Linus Torvalds <torvalds@linux-foundation.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,87 +34,33 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Linus Torvalds <torvalds@linux-foundation.org>
+To: Dave Chinner <david@fromorbit.com>
 Cc: Matt B <jackdachef@gmail.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, linux-mm <linux-mm@kvack.org>, Andrew Morton <akpm@linux-foundation.org>, Ingo Molnar <mingo@kernel.org>
 
-On Mon, Mar 02, 2015 at 11:47:52AM -0800, Linus Torvalds wrote:
-> On Sun, Mar 1, 2015 at 5:04 PM, Dave Chinner <david@fromorbit.com> wrote:
-> >
-> > Across the board the 4.0-rc1 numbers are much slower, and the
-> > degradation is far worse when using the large memory footprint
-> > configs. Perf points straight at the cause - this is from 4.0-rc1
-> > on the "-o bhash=101073" config:
-> >
-> > -   56.07%    56.07%  [kernel]            [k] default_send_IPI_mask_sequence_phys
-> >       - 99.99% physflat_send_IPI_mask
-> >          - 99.37% native_send_call_func_ipi
-> ..
-> >
-> > And the same profile output from 3.19 shows:
-> >
-> > -    9.61%     9.61%  [kernel]            [k] default_send_IPI_mask_sequence_phys
-> >      - 99.98% physflat_send_IPI_mask
-> >          - 96.26% native_send_call_func_ipi
-> ...
-> >
-> > So either there's been a massive increase in the number of IPIs
-> > being sent, or the cost per IPI have greatly increased. Either way,
-> > the result is a pretty significant performance degradatation.
-....
-> I assume it's the mm queue from Andrew, so adding him to the cc. There
-> are changes to the page migration etc, which could explain it.
-> 
-> There are also a fair amount of APIC changes in 4.0-rc1, so I guess it
-> really could be just that the IPI sending itself has gotten much
-> slower. Adding Ingo for that, although I don't think
-> default_send_IPI_mask_sequence_phys() itself hasn't actually changed,
-> only other things around the apic. So I'd be inclined to blame the mm
-> changes.
-> 
-> Obviously bisection would find it..
+On Mon, Mar 2, 2015 at 5:47 PM, Dave Chinner <david@fromorbit.com> wrote:
+>
+> Anyway, the difference between good and bad is pretty clear, so
+> I'm pretty confident the bisect is solid:
+>
+> 4d9424669946532be754a6e116618dcb58430cb4 is the first bad commit
 
-Yes, though the time it takes to do a 13 step bisection means it's
-something I don't do just for an initial bug report. ;)
+Well, it's the mm queue from Andrew, so I'm not surprised. That said,
+I don't see why that particular one should matter.
 
-Anyway, the difference between good and bad is pretty clear, so
-I'm pretty confident the bisect is solid:
+Hmm. In your profiles, can you tell which caller of "flush_tlb_page()"
+ changed the most? The change from "mknnuma" to "prot_none" *should*
+be 100% equivalent (both just change the page to be not-present, just
+set different bits elsewhere in the pte), but clearly something
+wasn't.
 
-4d9424669946532be754a6e116618dcb58430cb4 is the first bad commit
-commit 4d9424669946532be754a6e116618dcb58430cb4
-Author: Mel Gorman <mgorman@suse.de>
-Date:   Thu Feb 12 14:58:28 2015 -0800
+Oh. Except for that special "huge-zero-page" special case that got
+dropped, but that got re-introduced in commit e944fd67b625.
 
-    mm: convert p[te|md]_mknonnuma and remaining page table manipulations
-    
-    With PROT_NONE, the traditional page table manipulation functions are
-    sufficient.
-    
-    [andre.przywara@arm.com: fix compiler warning in pmdp_invalidate()]
-    [akpm@linux-foundation.org: fix build with STRICT_MM_TYPECHECKS]
-    Signed-off-by: Mel Gorman <mgorman@suse.de>
-    Acked-by: Linus Torvalds <torvalds@linux-foundation.org>
-    Acked-by: Aneesh Kumar <aneesh.kumar@linux.vnet.ibm.com>
-    Tested-by: Sasha Levin <sasha.levin@oracle.com>
-    Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-    Cc: Dave Jones <davej@redhat.com>
-    Cc: Hugh Dickins <hughd@google.com>
-    Cc: Ingo Molnar <mingo@redhat.com>
-    Cc: Kirill Shutemov <kirill.shutemov@linux.intel.com>
-    Cc: Paul Mackerras <paulus@samba.org>
-    Cc: Rik van Riel <riel@redhat.com>
-    Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
-    Signed-off-by: Linus Torvalds <torvalds@linux-foundation.org>
+There might be some other case where the new "just change the
+protection" doesn't do the "oh, but it the protection didn't change,
+don't bother flushing". I don't see it.
 
-:040000 040000 50985a3f84e80bb2bdd049d4f34739d99436f988 1bc79bfac2c138844373b603f9bc5914f0d010f3 M        arch
-:040000 040000 ea69bcd1c59f832a4b012a57b4eb1d0c7516947d 0822692fa6c356952e723b56038585716fa51723 M        include
-:040000 040000 c11960b9f1ee72edb08dc3fdc46f590fb1d545f7 f5d17ff5b639adcb7363a196a9efe70f2a7312b5 M        mm
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+                          Linus
 
 _______________________________________________
 xfs mailing list
