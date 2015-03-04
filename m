@@ -1,24 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 1C41E7F3F
-	for <xfs@oss.sgi.com>; Wed,  4 Mar 2015 16:00:41 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 9AD6EAC003
-	for <xfs@oss.sgi.com>; Wed,  4 Mar 2015 14:00:40 -0800 (PST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 632C17F3F
+	for <xfs@oss.sgi.com>; Wed,  4 Mar 2015 16:03:58 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 43A2D8F8049
+	for <xfs@oss.sgi.com>; Wed,  4 Mar 2015 14:03:55 -0800 (PST)
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	JAXkDMGnXXGlxXS8 for <xfs@oss.sgi.com>;
-	Wed, 04 Mar 2015 14:00:37 -0800 (PST)
-Date: Thu, 5 Mar 2015 09:00:05 +1100
+	CK3WSDi1n4XbCo3k for <xfs@oss.sgi.com>;
+	Wed, 04 Mar 2015 14:03:50 -0800 (PST)
+Date: Thu, 5 Mar 2015 09:03:48 +1100
 From: Dave Chinner <david@fromorbit.com>
 Subject: Re: [PATCH 3/6] xfs: add DAX file operations support
-Message-ID: <20150304220005.GV18360@dastard>
+Message-ID: <20150304220348.GW18360@dastard>
 References: <1425425427-16283-1-git-send-email-david@fromorbit.com>
 	<1425425427-16283-4-git-send-email-david@fromorbit.com>
-	<20150304161848.GB2799@quack.suse.cz>
+	<54F6D9E4.9050803@gmail.com> <20150304130100.GU18360@dastard>
+	<54F71CBA.2@gmail.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20150304161848.GB2799@quack.suse.cz>
+In-Reply-To: <54F71CBA.2@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,71 +32,25 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Jan Kara <jack@suse.cz>
-Cc: linux-fsdevel@vger.kernel.org, willy@linux.intel.com, xfs@oss.sgi.com
+To: Boaz Harrosh <openosd@gmail.com>
+Cc: linux-fsdevel@vger.kernel.org, willy@linux.intel.com, jack@suse.cz, xfs@oss.sgi.com
 
-On Wed, Mar 04, 2015 at 05:18:48PM +0100, Jan Kara wrote:
-> On Wed 04-03-15 10:30:24, Dave Chinner wrote:
-> > From: Dave Chinner <dchinner@redhat.com>
+On Wed, Mar 04, 2015 at 04:54:50PM +0200, Boaz Harrosh wrote:
+> On 03/04/2015 03:01 PM, Dave Chinner wrote:
+> > On Wed, Mar 04, 2015 at 12:09:40PM +0200, Boaz Harrosh wrote:
+> <>
 > > 
-> > Add the initial support for DAX file operations to XFS. This
-> > includes the necessary block allocation and mmap page fault hooks
-> > for DAX to function.
+> > So, we definitely need splice to/from DAX enabled inodes to be
+> > rejected. I'll have a look at that...
 > > 
-> > Note that the current block allocation code abuses the mapping
-> > buffer head to provide a completion callback for unwritten extent
-> > allocation when DAX is clearing blocks. The DAX interface needs to
-> > be changed to provide a callback similar to get_blocks for this
-> > callback.
-> > 
-> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
-.....
-> > +static int
-> > +xfs_filemap_dax_page_mkwrite(
-> > +	struct vm_area_struct	*vma,
-> > +	struct vm_fault		*vmf)
-> > +{
-> > +	struct xfs_inode	*ip = XFS_I(vma->vm_file->f_mapping->host);
-> > +	int			error;
-> > +
-> > +	trace_xfs_filemap_page_mkwrite(ip);
-> > +
-> > +	xfs_ilock(ip, XFS_MMAPLOCK_SHARED);
->   So I think the lock ordering of XFS_MMAPLOCK and freezing protection is
-> suspicious (and actually so is for normal write faults as I'm looking -
-> didn't realize that when I was first reading your MMAPLOCK patches).
-> Because you take XFS_MMAPLOCK outside of freeze protection however usually
-> we want freeze protection to be the outermost lock - in particular in
-> xfs_file_fallocate() you take XFS_MMAPLOCK inside freeze protection I
-> think.
+> 
+> default_file_splice_read uses kernel_readv which I think might actually
+> work. Do you know what xfstest(s) exercise splice?
 
-OK, so why isn't lockdep triggering on that? lockdep is aware of
-inode locks and the freeze states, supposedly to pick up these exact
-issues...
-
-Oh, probably because the sb freeze order is write, pagefault,
-transaction.
-
-i.e. In the fallocate case, we do sb_start_write, MMAP_LOCK. If we are in
-a freeze case, we aren't going to freeze page faults until we've
-frozen all the writes have drained, so there isn't a lock order
-dependency there. Same for any other mnt_want_write/sb-start_write
-based modification. 
-
-Hence the fallocate path and anything that runs through setattr will
-complete and release the mmap lock and then be prevented from taking
-it again by the time sb_start_pagefault() can block with the mmap
-lock held.  So there isn't actually a deadlock there because of the
-way freeze works, and that's why lockdep is staying silent.
-
-Still, I probably need to fix it so I'm not leaving a potential
-landmine around.
-
-> So you'll need to do what ext4 needs to do - take freeze protection, take
-> fs specific locks, and then call do_dax_fault(). Matthew has a patch to
-> actually export do_dax_fault (as __dax_fault()) for filesystems.
-
-pointer to it? if none, I'll just write my own....
+We have a rudimentary one only because I discovered a while back
+none existed at all. i.e. splice is effectively untested by
+xfstests. If you want to write some tests to execise it, that'd be
+great....
 
 Cheers,
 
