@@ -1,21 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 60DEB7F3F
-	for <xfs@oss.sgi.com>; Wed,  4 Mar 2015 09:15:27 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 48DB38F8054
-	for <xfs@oss.sgi.com>; Wed,  4 Mar 2015 07:15:27 -0800 (PST)
+	by oss.sgi.com (Postfix) with ESMTP id 6F7BF7F55
+	for <xfs@oss.sgi.com>; Wed,  4 Mar 2015 09:54:16 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 30C318F804C
+	for <xfs@oss.sgi.com>; Wed,  4 Mar 2015 07:54:16 -0800 (PST)
 Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id 4DY5YCpsRp8jhsRg (version=TLSv1 cipher=AES256-SHA
+	with ESMTP id WuKS0ZvjmJEHAhWn (version=TLSv1 cipher=AES256-SHA
 	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 04 Mar 2015 07:15:25 -0800 (PST)
+	Wed, 04 Mar 2015 07:54:13 -0800 (PST)
+Date: Wed, 4 Mar 2015 16:54:08 +0100
 From: Jan Kara <jack@suse.cz>
-Subject: [PATCH 6/8] quota: Make ->set_info use structure with neccesary info
-	to VFS and XFS
-Date: Wed,  4 Mar 2015 16:15:11 +0100
-Message-Id: <1425482113-1977-7-git-send-email-jack@suse.cz>
-In-Reply-To: <1425482113-1977-1-git-send-email-jack@suse.cz>
-References: <1425482113-1977-1-git-send-email-jack@suse.cz>
+Subject: Re: [PATCH 1/6] dax: don't abuse get_block mapping for endio callbacks
+Message-ID: <20150304155408.GA2799@quack.suse.cz>
+References: <1425425427-16283-1-git-send-email-david@fromorbit.com>
+	<1425425427-16283-2-git-send-email-david@fromorbit.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <1425425427-16283-2-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,185 +26,241 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: linux-fsdevel@vger.kernel.org
-Cc: cluster-devel@redhat.com, Jan Kara <jack@suse.cz>, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-fsdevel@vger.kernel.org, willy@linux.intel.com, jack@suse.cz, xfs@oss.sgi.com
 
-Change ->set_info to take new qc_info structure which contains all the
-necessary information both for XFS and VFS. Convert Q_SETINFO handler
-to use this structure.
+On Wed 04-03-15 10:30:22, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> dax_fault() currently relies on the get_block callback to attach an
+> io completion callback to the mapping buffer head so that it can
+> run unwritten extent conversion after zeroing allocated blocks.
+> 
+> Instead of this hack, pass the conversion callback directly into
+> dax_fault() similar to the get_block callback. When the filesystem
+> allocates unwritten extents, it will set the buffer_unwritten()
+> flag, and hence the dax_fault code can call the completion function
+> in the contexts where it is necessary without overloading the
+> mapping buffer head.
+> 
+> Note: The changes to ext4 to use this interface are suspect at best.
+> In fact, the way ext4 did this end_io assignment in the first place
+> looks suspect because it only set a completion callback when there
+> wasn't already some other write() call taking place on the same
+> inode. The ext4 end_io code looks rather intricate and fragile with
+> all it's reference counting and passing to different contexts for
+> modification via inode private pointers that aren't protected by
+> locks...
+  Yeah, ext4 is currently broken in that regard so if we won't make things
+worse, I'm OK.
 
-Signed-off-by: Jan Kara <jack@suse.cz>
----
- fs/quota/dquot.c         | 27 ++++++++++++++++-----------
- fs/quota/quota.c         | 21 ++++++++++++++++++++-
- include/linux/quota.h    | 21 +++++++++++++++++++--
- include/linux/quotaops.h |  2 +-
- 4 files changed, 56 insertions(+), 15 deletions(-)
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> ---
+>  fs/dax.c           | 15 ++++++++-------
+>  fs/ext2/file.c     |  4 ++--
+>  fs/ext4/file.c     | 16 ++++++++++++++--
+>  fs/ext4/inode.c    | 21 +++++++--------------
+>  include/linux/fs.h |  6 ++++--
+>  5 files changed, 35 insertions(+), 27 deletions(-)
+> 
+> diff --git a/fs/dax.c b/fs/dax.c
+> index ed1619e..d7b4dba 100644
+> --- a/fs/dax.c
+> +++ b/fs/dax.c
+> @@ -269,7 +269,8 @@ static int copy_user_bh(struct page *to, struct buffer_head *bh,
+>  }
+>  
+>  static int dax_insert_mapping(struct inode *inode, struct buffer_head *bh,
+> -			struct vm_area_struct *vma, struct vm_fault *vmf)
+> +			struct vm_area_struct *vma, struct vm_fault *vmf,
+> +			dax_iodone_t complete_unwritten)
+>  {
+>  	struct address_space *mapping = inode->i_mapping;
+>  	sector_t sector = bh->b_blocknr << (inode->i_blkbits - 9);
+> @@ -310,14 +311,14 @@ static int dax_insert_mapping(struct inode *inode, struct buffer_head *bh,
+>   out:
+>  	i_mmap_unlock_read(mapping);
+>  
+> -	if (bh->b_end_io)
+> -		bh->b_end_io(bh, 1);
+> +	if (buffer_unwritten(bh))
+> +		complete_unwritten(bh, 1);
+>  
+>  	return error;
+>  }
+  So frankly I don't see a big point in passing completion callback into
+dax_insert_mapping() only to call the function at the end of it. We could
+as well call the completion function from do_dax_fault() where it would
+seem more natural to me. But I don't feel too strongly about this.
 
-diff --git a/fs/quota/dquot.c b/fs/quota/dquot.c
-index cf4edd87e854..f37b74eab807 100644
---- a/fs/quota/dquot.c
-+++ b/fs/quota/dquot.c
-@@ -2649,33 +2649,38 @@ int dquot_get_state(struct super_block *sb, struct qc_state *state)
- EXPORT_SYMBOL(dquot_get_state);
- 
- /* Generic routine for setting common part of quota file information */
--int dquot_set_dqinfo(struct super_block *sb, int type, struct if_dqinfo *ii)
-+int dquot_set_dqinfo(struct super_block *sb, int type, struct qc_info *ii)
- {
- 	struct mem_dqinfo *mi;
- 	int err = 0;
- 
-+	if ((ii->i_fieldmask & QC_WARNS_MASK) ||
-+	    (ii->i_fieldmask & QC_RT_SPC_TIMER))
-+		return -EINVAL;
- 	mutex_lock(&sb_dqopt(sb)->dqonoff_mutex);
- 	if (!sb_has_quota_active(sb, type)) {
- 		err = -ESRCH;
- 		goto out;
- 	}
- 	mi = sb_dqopt(sb)->info + type;
--	if (ii->dqi_valid & IIF_FLAGS) {
--		if (ii->dqi_flags & ~DQF_SETINFO_MASK ||
--		    (ii->dqi_flags & DQF_ROOT_SQUASH &&
-+	if (ii->i_fieldmask & QC_FLAGS) {
-+		if ((ii->i_flags & QCI_ROOT_SQUASH &&
- 		     mi->dqi_format->qf_fmt_id != QFMT_VFS_OLD)) {
- 			err = -EINVAL;
- 			goto out;
- 		}
- 	}
- 	spin_lock(&dq_data_lock);
--	if (ii->dqi_valid & IIF_BGRACE)
--		mi->dqi_bgrace = ii->dqi_bgrace;
--	if (ii->dqi_valid & IIF_IGRACE)
--		mi->dqi_igrace = ii->dqi_igrace;
--	if (ii->dqi_valid & IIF_FLAGS)
--		mi->dqi_flags = (mi->dqi_flags & ~DQF_SETINFO_MASK) |
--				(ii->dqi_flags & DQF_SETINFO_MASK);
-+	if (ii->i_fieldmask & QC_SPC_TIMER)
-+		mi->dqi_bgrace = ii->i_spc_timelimit;
-+	if (ii->i_fieldmask & QC_INO_TIMER)
-+		mi->dqi_igrace = ii->i_ino_timelimit;
-+	if (ii->i_fieldmask & QC_FLAGS) {
-+		if (ii->i_flags & QCI_ROOT_SQUASH)
-+			mi->dqi_flags |= DQF_ROOT_SQUASH;
-+		else
-+			mi->dqi_flags &= ~DQF_ROOT_SQUASH;
-+	}
- 	spin_unlock(&dq_data_lock);
- 	mark_info_dirty(sb, type);
- 	/* Force write to disk */
-diff --git a/fs/quota/quota.c b/fs/quota/quota.c
-index 20d11cd21247..741d5a178268 100644
---- a/fs/quota/quota.c
-+++ b/fs/quota/quota.c
-@@ -149,12 +149,31 @@ static int quota_getinfo(struct super_block *sb, int type, void __user *addr)
- static int quota_setinfo(struct super_block *sb, int type, void __user *addr)
- {
- 	struct if_dqinfo info;
-+	struct qc_info qinfo;
- 
- 	if (copy_from_user(&info, addr, sizeof(info)))
- 		return -EFAULT;
- 	if (!sb->s_qcop->set_info)
- 		return -ENOSYS;
--	return sb->s_qcop->set_info(sb, type, &info);
-+	if (info.dqi_valid & ~(IIF_FLAGS | IIF_BGRACE | IIF_IGRACE))
-+		return -EINVAL;
-+	memset(&qinfo, 0, sizeof(qinfo));
-+	if (info.dqi_valid & IIF_FLAGS) {
-+		if (info.dqi_flags & ~DQF_SETINFO_MASK)
-+			return -EINVAL;
-+		if (info.dqi_flags & DQF_ROOT_SQUASH)
-+			qinfo.i_flags |= QCI_ROOT_SQUASH;
-+		qinfo.i_fieldmask |= QC_FLAGS;
-+	}
-+	if (info.dqi_valid & IIF_BGRACE) {
-+		qinfo.i_spc_timelimit = info.dqi_bgrace;
-+		qinfo.i_fieldmask |= QC_SPC_TIMER;
-+	}
-+	if (info.dqi_valid & IIF_IGRACE) {
-+		qinfo.i_ino_timelimit = info.dqi_igrace;
-+		qinfo.i_fieldmask |= QC_INO_TIMER;
-+	}
-+	return sb->s_qcop->set_info(sb, type, &qinfo);
- }
- 
- static inline qsize_t qbtos(qsize_t blocks)
-diff --git a/include/linux/quota.h b/include/linux/quota.h
-index a07f2ed25284..3d521199a0bd 100644
---- a/include/linux/quota.h
-+++ b/include/linux/quota.h
-@@ -344,7 +344,10 @@ struct qc_dqblk {
- 	int d_rt_spc_warns;	/* # warnings issued wrt RT space */
- };
- 
--/* Field specifiers for ->set_dqblk() in struct qc_dqblk */
-+/*
-+ * Field specifiers for ->set_dqblk() in struct qc_dqblk and also for
-+ * ->set_info() in struct qc_info
-+ */
- #define	QC_INO_SOFT	(1<<0)
- #define	QC_INO_HARD	(1<<1)
- #define	QC_SPC_SOFT	(1<<2)
-@@ -365,6 +368,7 @@ struct qc_dqblk {
- #define	QC_INO_COUNT	(1<<13)
- #define	QC_RT_SPACE	(1<<14)
- #define QC_ACCT_MASK (QC_SPACE | QC_INO_COUNT | QC_RT_SPACE)
-+#define QC_FLAGS	(1<<15)
- 
- #define QCI_SYSFILE		(1 << 0)	/* Quota file is hidden from userspace */
- #define QCI_ROOT_SQUASH		(1 << 1)	/* Root squash turned on */
-@@ -397,6 +401,19 @@ struct qc_state {
- 	struct qc_type_state s_state[XQM_MAXQUOTAS];
- };
- 
-+/* Structure for communicating via ->set_info */
-+struct qc_info {
-+	int i_fieldmask;	/* mask of fields to change in ->set_info() */
-+	unsigned int i_flags;		/* Flags QCI_* */
-+	unsigned int i_spc_timelimit;	/* Time after which space softlimit is
-+					 * enforced */
-+	unsigned int i_ino_timelimit;	/* Ditto for inode softlimit */
-+	unsigned int i_rt_spc_timelimit;/* Ditto for real-time space */
-+	unsigned int i_spc_warnlimit;	/* Limit for number of space warnings */
-+	unsigned int i_ino_warnlimit;	/* Limit for number of inode warnings */
-+	unsigned int i_rt_spc_warnlimit;	/* Ditto for real-time space */
-+};
-+
- /* Operations handling requests from userspace */
- struct quotactl_ops {
- 	int (*quota_on)(struct super_block *, int, int, struct path *);
-@@ -404,7 +421,7 @@ struct quotactl_ops {
- 	int (*quota_enable)(struct super_block *, unsigned int);
- 	int (*quota_disable)(struct super_block *, unsigned int);
- 	int (*quota_sync)(struct super_block *, int);
--	int (*set_info)(struct super_block *, int, struct if_dqinfo *);
-+	int (*set_info)(struct super_block *, int, struct qc_info *);
- 	int (*get_dqblk)(struct super_block *, struct kqid, struct qc_dqblk *);
- 	int (*set_dqblk)(struct super_block *, struct kqid, struct qc_dqblk *);
- 	int (*get_state)(struct super_block *, struct qc_state *);
-diff --git a/include/linux/quotaops.h b/include/linux/quotaops.h
-index 6509a29523e2..9f4b07ba9e8c 100644
---- a/include/linux/quotaops.h
-+++ b/include/linux/quotaops.h
-@@ -96,7 +96,7 @@ int dquot_quota_off(struct super_block *sb, int type);
- int dquot_writeback_dquots(struct super_block *sb, int type);
- int dquot_quota_sync(struct super_block *sb, int type);
- int dquot_get_state(struct super_block *sb, struct qc_state *state);
--int dquot_set_dqinfo(struct super_block *sb, int type, struct if_dqinfo *ii);
-+int dquot_set_dqinfo(struct super_block *sb, int type, struct qc_info *ii);
- int dquot_get_dqblk(struct super_block *sb, struct kqid id,
- 		struct qc_dqblk *di);
- int dquot_set_dqblk(struct super_block *sb, struct kqid id,
+Instead of the above I was also thinking about some way to pass information
+out of do_dax_fault() into filesystem so that it could just call completion
+handler itself but the completion callback is more standard interface I
+guess.
+
+								Honza
+
+>  static int do_dax_fault(struct vm_area_struct *vma, struct vm_fault *vmf,
+> -			get_block_t get_block)
+> +			get_block_t get_block, dax_iodone_t complete_unwritten)
+>  {
+>  	struct file *file = vma->vm_file;
+>  	struct address_space *mapping = file->f_mapping;
+> @@ -418,7 +419,7 @@ static int do_dax_fault(struct vm_area_struct *vma, struct vm_fault *vmf,
+>  		page_cache_release(page);
+>  	}
+>  
+> -	error = dax_insert_mapping(inode, &bh, vma, vmf);
+> +	error = dax_insert_mapping(inode, &bh, vma, vmf, complete_unwritten);
+>  
+>   out:
+>  	if (error == -ENOMEM)
+> @@ -446,7 +447,7 @@ static int do_dax_fault(struct vm_area_struct *vma, struct vm_fault *vmf,
+>   * fault handler for DAX files.
+>   */
+>  int dax_fault(struct vm_area_struct *vma, struct vm_fault *vmf,
+> -			get_block_t get_block)
+> +	      get_block_t get_block, dax_iodone_t complete_unwritten)
+>  {
+>  	int result;
+>  	struct super_block *sb = file_inode(vma->vm_file)->i_sb;
+> @@ -455,7 +456,7 @@ int dax_fault(struct vm_area_struct *vma, struct vm_fault *vmf,
+>  		sb_start_pagefault(sb);
+>  		file_update_time(vma->vm_file);
+>  	}
+> -	result = do_dax_fault(vma, vmf, get_block);
+> +	result = do_dax_fault(vma, vmf, get_block, complete_unwritten);
+>  	if (vmf->flags & FAULT_FLAG_WRITE)
+>  		sb_end_pagefault(sb);
+>  
+> diff --git a/fs/ext2/file.c b/fs/ext2/file.c
+> index e317017..8da747a 100644
+> --- a/fs/ext2/file.c
+> +++ b/fs/ext2/file.c
+> @@ -28,12 +28,12 @@
+>  #ifdef CONFIG_FS_DAX
+>  static int ext2_dax_fault(struct vm_area_struct *vma, struct vm_fault *vmf)
+>  {
+> -	return dax_fault(vma, vmf, ext2_get_block);
+> +	return dax_fault(vma, vmf, ext2_get_block, NULL);
+>  }
+>  
+>  static int ext2_dax_mkwrite(struct vm_area_struct *vma, struct vm_fault *vmf)
+>  {
+> -	return dax_mkwrite(vma, vmf, ext2_get_block);
+> +	return dax_mkwrite(vma, vmf, ext2_get_block, NULL);
+>  }
+>  
+>  static const struct vm_operations_struct ext2_dax_vm_ops = {
+> diff --git a/fs/ext4/file.c b/fs/ext4/file.c
+> index 33a09da..f7dabb1 100644
+> --- a/fs/ext4/file.c
+> +++ b/fs/ext4/file.c
+> @@ -192,15 +192,27 @@ errout:
+>  }
+>  
+>  #ifdef CONFIG_FS_DAX
+> +static void ext4_end_io_unwritten(struct buffer_head *bh, int uptodate)
+> +{
+> +	struct inode *inode = bh->b_assoc_map->host;
+> +	/* XXX: breaks on 32-bit > 16GB. Is that even supported? */
+> +	loff_t offset = (loff_t)(uintptr_t)bh->b_private << inode->i_blkbits;
+> +	int err;
+> +	if (!uptodate)
+> +		return;
+> +	WARN_ON(!buffer_unwritten(bh));
+> +	err = ext4_convert_unwritten_extents(NULL, inode, offset, bh->b_size);
+> +}
+> +
+>  static int ext4_dax_fault(struct vm_area_struct *vma, struct vm_fault *vmf)
+>  {
+> -	return dax_fault(vma, vmf, ext4_get_block);
+> +	return dax_fault(vma, vmf, ext4_get_block, ext4_end_io_unwritten);
+>  					/* Is this the right get_block? */
+>  }
+>  
+>  static int ext4_dax_mkwrite(struct vm_area_struct *vma, struct vm_fault *vmf)
+>  {
+> -	return dax_mkwrite(vma, vmf, ext4_get_block);
+> +	return dax_mkwrite(vma, vmf, ext4_get_block, ext4_end_io_unwritten);
+>  }
+>  
+>  static const struct vm_operations_struct ext4_dax_vm_ops = {
+> diff --git a/fs/ext4/inode.c b/fs/ext4/inode.c
+> index 5cb9a21..43433de 100644
+> --- a/fs/ext4/inode.c
+> +++ b/fs/ext4/inode.c
+> @@ -657,18 +657,6 @@ has_zeroout:
+>  	return retval;
+>  }
+>  
+> -static void ext4_end_io_unwritten(struct buffer_head *bh, int uptodate)
+> -{
+> -	struct inode *inode = bh->b_assoc_map->host;
+> -	/* XXX: breaks on 32-bit > 16GB. Is that even supported? */
+> -	loff_t offset = (loff_t)(uintptr_t)bh->b_private << inode->i_blkbits;
+> -	int err;
+> -	if (!uptodate)
+> -		return;
+> -	WARN_ON(!buffer_unwritten(bh));
+> -	err = ext4_convert_unwritten_extents(NULL, inode, offset, bh->b_size);
+> -}
+> -
+>  /* Maximum number of blocks we map for direct IO at once. */
+>  #define DIO_MAX_BLOCKS 4096
+>  
+> @@ -706,10 +694,15 @@ static int _ext4_get_block(struct inode *inode, sector_t iblock,
+>  
+>  		map_bh(bh, inode->i_sb, map.m_pblk);
+>  		bh->b_state = (bh->b_state & ~EXT4_MAP_FLAGS) | map.m_flags;
+> -		if (IS_DAX(inode) && buffer_unwritten(bh) && !io_end) {
+> +		if (IS_DAX(inode) && buffer_unwritten(bh)) {
+> +			/*
+> +			 * dgc: I suspect unwritten conversion on ext4+DAX is
+> +			 * fundamentally broken here when there are concurrent
+> +			 * read/write in progress on this inode.
+> +			 */
+> +			WARN_ON_ONCE(io_end);
+>  			bh->b_assoc_map = inode->i_mapping;
+>  			bh->b_private = (void *)(unsigned long)iblock;
+> -			bh->b_end_io = ext4_end_io_unwritten;
+>  		}
+>  		if (io_end && io_end->flag & EXT4_IO_END_UNWRITTEN)
+>  			set_buffer_defer_completion(bh);
+> diff --git a/include/linux/fs.h b/include/linux/fs.h
+> index 937e280..82100ae 100644
+> --- a/include/linux/fs.h
+> +++ b/include/linux/fs.h
+> @@ -70,6 +70,7 @@ typedef int (get_block_t)(struct inode *inode, sector_t iblock,
+>  			struct buffer_head *bh_result, int create);
+>  typedef void (dio_iodone_t)(struct kiocb *iocb, loff_t offset,
+>  			ssize_t bytes, void *private);
+> +typedef void (dax_iodone_t)(struct buffer_head *bh_map, int uptodate);
+>  
+>  #define MAY_EXEC		0x00000001
+>  #define MAY_WRITE		0x00000002
+> @@ -2603,8 +2604,9 @@ ssize_t dax_do_io(int rw, struct kiocb *, struct inode *, struct iov_iter *,
+>  int dax_clear_blocks(struct inode *, sector_t block, long size);
+>  int dax_zero_page_range(struct inode *, loff_t from, unsigned len, get_block_t);
+>  int dax_truncate_page(struct inode *, loff_t from, get_block_t);
+> -int dax_fault(struct vm_area_struct *, struct vm_fault *, get_block_t);
+> -#define dax_mkwrite(vma, vmf, gb)	dax_fault(vma, vmf, gb)
+> +int dax_fault(struct vm_area_struct *, struct vm_fault *, get_block_t,
+> +		dax_iodone_t);
+> +#define dax_mkwrite(vma, vmf, gb, iod)	dax_fault(vma, vmf, gb, iod)
+>  
+>  #ifdef CONFIG_BLOCK
+>  typedef void (dio_submit_t)(int rw, struct bio *bio, struct inode *inode,
+> -- 
+> 2.0.0
+> 
 -- 
-2.1.4
+Jan Kara <jack@suse.cz>
+SUSE Labs, CR
 
 _______________________________________________
 xfs mailing list
