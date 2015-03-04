@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 5950E7F5E
-	for <xfs@oss.sgi.com>; Wed,  4 Mar 2015 09:54:25 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id BF97AAC007
-	for <xfs@oss.sgi.com>; Wed,  4 Mar 2015 07:54:24 -0800 (PST)
-Received: from fieldses.org (fieldses.org [173.255.197.46]) by cuda.sgi.com
-	with ESMTP id S7wEixCbHhiNGQo2 for <xfs@oss.sgi.com>;
-	Wed, 04 Mar 2015 07:54:22 -0800 (PST)
-Date: Wed, 4 Mar 2015 10:54:21 -0500
-From: "J. Bruce Fields" <bfields@fieldses.org>
-Subject: Re: panic on 4.20 server exporting xfs filesystem
-Message-ID: <20150304155421.GE1627@fieldses.org>
-References: <20150303221033.GB19439@fieldses.org>
-	<20150303224456.GV4251@dastard>
-	<20150304020826.GD19439@fieldses.org>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 77CE17F3F
+	for <xfs@oss.sgi.com>; Wed,  4 Mar 2015 10:18:59 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 3A42C8F8066
+	for <xfs@oss.sgi.com>; Wed,  4 Mar 2015 08:18:56 -0800 (PST)
+Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
+	with ESMTP id ND2ac1BN8hKg27gE (version=TLSv1 cipher=AES256-SHA
+	bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 04 Mar 2015 08:18:53 -0800 (PST)
+Date: Wed, 4 Mar 2015 17:18:48 +0100
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [PATCH 3/6] xfs: add DAX file operations support
+Message-ID: <20150304161848.GB2799@quack.suse.cz>
+References: <1425425427-16283-1-git-send-email-david@fromorbit.com>
+	<1425425427-16283-4-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20150304020826.GD19439@fieldses.org>
+In-Reply-To: <1425425427-16283-4-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,91 +31,373 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
-Cc: linux-nfs@vger.kernel.org, Christoph Hellwig <hch@lst.de>, xfs@oss.sgi.com
+Cc: linux-fsdevel@vger.kernel.org, willy@linux.intel.com, jack@suse.cz, xfs@oss.sgi.com
 
-On Tue, Mar 03, 2015 at 09:08:26PM -0500, J. Bruce Fields wrote:
-> On Wed, Mar 04, 2015 at 09:44:56AM +1100, Dave Chinner wrote:
-> > On Tue, Mar 03, 2015 at 05:10:33PM -0500, J. Bruce Fields wrote:
-> > > I'm getting mysterious crashes on a server exporting an xfs filesystem.
-> > > 
-> > > Strangely, I've reproduced this on
-> > > 
-> > > 	93aaa830fc17 "Merge tag 'xfs-pnfs-for-linus-3.20-rc1' of git://git.kernel.org/pub/scm/linux/kernel/git/dgc/linux-xfs
-> > > 
-> > > but haven't yet managed to reproduce on either of its parents
-> > > (24a52e412ef2 or 781355c6e5ae).  That might just be chance, I'll try
-> > > again.
-> > 
-> > I think you'll find that the bug is only triggered after that XFS
-> > merge because it's what enabled block layout support in the server,
-> > i.e.  nfsd4_setup_layout_type() is now setting the export type to
-> > LAYOUT_BLOCK_VOLUME because XFS has added the necessary functions to
-> > it's export ops.
+On Wed 04-03-15 10:30:24, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
 > 
-> Doh--after all the discussion I didn't actually pay attention to what
-> happened in the end.  OK, I see, you're right, it's all more-or-less
-> dead code till that merge.
+> Add the initial support for DAX file operations to XFS. This
+> includes the necessary block allocation and mmap page fault hooks
+> for DAX to function.
 > 
-> Christoph's code was passing all my tests before that, so maybe we
-> broke something in the merge process.
+> Note that the current block allocation code abuses the mapping
+> buffer head to provide a completion callback for unwritten extent
+> allocation when DAX is clearing blocks. The DAX interface needs to
+> be changed to provide a callback similar to get_blocks for this
+> callback.
 > 
-> Alternatively, it could be because I've added more tests--I'll rerun my
-> current tests on his original branch....
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> ---
+>  fs/xfs/xfs_aops.c |  72 ++++++++++++++++++++++++++++++++++--
+>  fs/xfs/xfs_aops.h |   7 +++-
+>  fs/xfs/xfs_file.c | 108 ++++++++++++++++++++++++++++++++++++++++++++----------
+>  fs/xfs/xfs_iops.c |   4 ++
+>  fs/xfs/xfs_iops.h |   6 +++
+>  5 files changed, 173 insertions(+), 24 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+> index 3a9b7a1..22cb03a 100644
+> --- a/fs/xfs/xfs_aops.c
+> +++ b/fs/xfs/xfs_aops.c
+> @@ -1233,13 +1233,63 @@ xfs_vm_releasepage(
+>  	return try_to_free_buffers(page);
+>  }
+>  
+> +/*
+> + * For DAX we need a mapping buffer callback for unwritten extent conversion
+> + * when page faults allocation blocks and then zero them.
+> + */
+> +#ifdef CONFIG_FS_DAX
+> +static struct xfs_ioend *
+> +xfs_dax_alloc_ioend(
+> +	struct inode	*inode,
+> +	xfs_off_t	offset,
+> +	ssize_t		size)
+> +{
+> +	struct xfs_ioend *ioend;
+> +
+> +	ASSERT(IS_DAX(inode));
+> +	ioend = xfs_alloc_ioend(inode, XFS_IO_UNWRITTEN);
+> +	ioend->io_offset = offset;
+> +	ioend->io_size = size;
+> +	return ioend;
+> +}
+> +
+> +void
+> +xfs_get_blocks_dax_complete(
+> +	struct buffer_head	*bh,
+> +	int			uptodate)
+> +{
+> +	struct xfs_ioend	*ioend = bh->b_private;
+> +	struct xfs_inode	*ip = XFS_I(ioend->io_inode);
+> +	int			error;
+> +
+> +	ASSERT(IS_DAX(ioend->io_inode));
+> +
+> +	/* if there was an error zeroing, then don't convert it */
+> +	if (!uptodate)
+> +		goto out_free;
+> +
+> +	error = xfs_iomap_write_unwritten(ip, ioend->io_offset, ioend->io_size);
+> +	if (error)
+> +		xfs_warn(ip->i_mount,
+> +"%s: conversion failed, ino 0x%llx, offset 0x%llx, len 0x%lx, error %d\n",
+> +			__func__, ip->i_ino, ioend->io_offset,
+> +			ioend->io_size, error);
+> +out_free:
+> +	mempool_free(ioend, xfs_ioend_pool);
+> +
+> +}
+> +#else
+> +#define xfs_dax_alloc_ioend(i,o,s)	NULL
+> +#endif
+> +
+>  STATIC int
+>  __xfs_get_blocks(
+>  	struct inode		*inode,
+>  	sector_t		iblock,
+>  	struct buffer_head	*bh_result,
+>  	int			create,
+> -	int			direct)
+> +	bool			direct,
+> +	bool			clear)
+>  {
+>  	struct xfs_inode	*ip = XFS_I(inode);
+>  	struct xfs_mount	*mp = ip->i_mount;
+> @@ -1304,6 +1354,7 @@ __xfs_get_blocks(
+>  			if (error)
+>  				return error;
+>  			new = 1;
+> +
+>  		} else {
+>  			/*
+>  			 * Delalloc reservations do not require a transaction,
+> @@ -1340,7 +1391,10 @@ __xfs_get_blocks(
+>  		if (create || !ISUNWRITTEN(&imap))
+>  			xfs_map_buffer(inode, bh_result, &imap, offset);
+>  		if (create && ISUNWRITTEN(&imap)) {
+> -			if (direct) {
+> +			if (clear) {
+> +				bh_result->b_private = xfs_dax_alloc_ioend(
+> +							inode, offset, size);
+> +			} else if (direct) {
+>  				bh_result->b_private = inode;
+>  				set_buffer_defer_completion(bh_result);
+>  			}
+> @@ -1425,7 +1479,7 @@ xfs_get_blocks(
+>  	struct buffer_head	*bh_result,
+>  	int			create)
+>  {
+> -	return __xfs_get_blocks(inode, iblock, bh_result, create, 0);
+> +	return __xfs_get_blocks(inode, iblock, bh_result, create, false, false);
+>  }
+>  
+>  STATIC int
+> @@ -1435,7 +1489,17 @@ xfs_get_blocks_direct(
+>  	struct buffer_head	*bh_result,
+>  	int			create)
+>  {
+> -	return __xfs_get_blocks(inode, iblock, bh_result, create, 1);
+> +	return __xfs_get_blocks(inode, iblock, bh_result, create, true, false);
+> +}
+> +
+> +int
+> +xfs_get_blocks_dax(
+> +	struct inode		*inode,
+> +	sector_t		iblock,
+> +	struct buffer_head	*bh_result,
+> +	int			create)
+> +{
+> +	return __xfs_get_blocks(inode, iblock, bh_result, create, true, true);
+>  }
+>  
+>  /*
+> diff --git a/fs/xfs/xfs_aops.h b/fs/xfs/xfs_aops.h
+> index ac644e0..7c6fb3f 100644
+> --- a/fs/xfs/xfs_aops.h
+> +++ b/fs/xfs/xfs_aops.h
+> @@ -53,7 +53,12 @@ typedef struct xfs_ioend {
+>  } xfs_ioend_t;
+>  
+>  extern const struct address_space_operations xfs_address_space_operations;
+> -extern int xfs_get_blocks(struct inode *, sector_t, struct buffer_head *, int);
+> +
+> +int	xfs_get_blocks(struct inode *inode, sector_t offset,
+> +		       struct buffer_head *map_bh, int create);
+> +int	xfs_get_blocks_dax(struct inode *inode, sector_t offset,
+> +			   struct buffer_head *map_bh, int create);
+> +void	xfs_get_blocks_dax_complete(struct buffer_head *bh, int uptodate);
+>  
+>  extern void xfs_count_page_state(struct page *, int *, int *);
+>  
+> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+> index bc0008f..4bfcba0 100644
+> --- a/fs/xfs/xfs_file.c
+> +++ b/fs/xfs/xfs_file.c
+> @@ -654,7 +654,7 @@ xfs_file_dio_aio_write(
+>  					mp->m_rtdev_targp : mp->m_ddev_targp;
+>  
+>  	/* DIO must be aligned to device logical sector size */
+> -	if ((pos | count) & target->bt_logical_sectormask)
+> +	if (!IS_DAX(inode) && (pos | count) & target->bt_logical_sectormask)
+>  		return -EINVAL;
+>  
+>  	/* "unaligned" here means not aligned to a filesystem block */
+> @@ -724,8 +724,11 @@ xfs_file_dio_aio_write(
+>  out:
+>  	xfs_rw_iunlock(ip, iolock);
+>  
+> -	/* No fallback to buffered IO on errors for XFS. */
+> -	ASSERT(ret < 0 || ret == count);
+> +	/*
+> +	 * No fallback to buffered IO on errors for XFS. DAX can result in
+> +	 * partial writes, but direct IO will either complete fully or fail.
+> +	 */
+> +	ASSERT(ret < 0 || ret == count || IS_DAX(VFS_I(ip)));
+>  	return ret;
+>  }
+>  
+> @@ -810,7 +813,7 @@ xfs_file_write_iter(
+>  	if (XFS_FORCED_SHUTDOWN(ip->i_mount))
+>  		return -EIO;
+>  
+> -	if (unlikely(file->f_flags & O_DIRECT))
+> +	if ((file->f_flags & O_DIRECT) || IS_DAX(inode))
+>  		ret = xfs_file_dio_aio_write(iocb, from);
+>  	else
+>  		ret = xfs_file_buffered_aio_write(iocb, from);
+> @@ -1031,17 +1034,6 @@ xfs_file_readdir(
+>  	return xfs_readdir(ip, ctx, bufsize);
+>  }
+>  
+> -STATIC int
+> -xfs_file_mmap(
+> -	struct file	*filp,
+> -	struct vm_area_struct *vma)
+> -{
+> -	vma->vm_ops = &xfs_file_vm_ops;
+> -
+> -	file_accessed(filp);
+> -	return 0;
+> -}
+> -
+>  /*
+>   * This type is designed to indicate the type of offset we would like
+>   * to search from page cache for xfs_seek_hole_data().
+> @@ -1466,6 +1458,71 @@ xfs_filemap_page_mkwrite(
+>  	return error;
+>  }
+>  
+> +static const struct vm_operations_struct xfs_file_vm_ops = {
+> +	.fault		= xfs_filemap_fault,
+> +	.map_pages	= filemap_map_pages,
+> +	.page_mkwrite	= xfs_filemap_page_mkwrite,
+> +};
+> +
+> +#ifdef CONFIG_FS_DAX
+> +static int
+> +xfs_filemap_dax_fault(
+> +	struct vm_area_struct	*vma,
+> +	struct vm_fault		*vmf)
+> +{
+> +	struct xfs_inode	*ip = XFS_I(vma->vm_file->f_mapping->host);
+> +	int			error;
+> +
+> +	trace_xfs_filemap_fault(ip);
+> +
+> +	xfs_ilock(ip, XFS_MMAPLOCK_SHARED);
+> +	error = dax_fault(vma, vmf, xfs_get_blocks_dax,
+> +			  xfs_get_blocks_dax_complete);
+> +	xfs_iunlock(ip, XFS_MMAPLOCK_SHARED);
+> +
+> +	return error;
+> +}
+> +
+> +static int
+> +xfs_filemap_dax_page_mkwrite(
+> +	struct vm_area_struct	*vma,
+> +	struct vm_fault		*vmf)
+> +{
+> +	struct xfs_inode	*ip = XFS_I(vma->vm_file->f_mapping->host);
+> +	int			error;
+> +
+> +	trace_xfs_filemap_page_mkwrite(ip);
+> +
+> +	xfs_ilock(ip, XFS_MMAPLOCK_SHARED);
+  So I think the lock ordering of XFS_MMAPLOCK and freezing protection is
+suspicious (and actually so is for normal write faults as I'm looking -
+didn't realize that when I was first reading your MMAPLOCK patches).
+Because you take XFS_MMAPLOCK outside of freeze protection however usually
+we want freeze protection to be the outermost lock - in particular in
+xfs_file_fallocate() you take XFS_MMAPLOCK inside freeze protection I
+think.
 
-The below is on Christoph's pnfsd-for-3.20-4 (at cd4b02e).  Doesn't look
-very informative.  I'm running xfstests over NFSv4.1 with client and
-server running the same kernel, the filesystem in question is xfs, but
-isn't otherwise available to the client (so the client shouldn't be
-doing pnfs).
+So you'll need to do what ext4 needs to do - take freeze protection, take
+fs specific locks, and then call do_dax_fault(). Matthew has a patch to
+actually export do_dax_fault (as __dax_fault()) for filesystems.
 
---b.
+Similarly for xfs_filemap_page_mkwrite() you need to use
+__block_page_mkwrite() as a callback (similarly as ext4 does) and do freeze
+protection early by hand.
 
-BUG: unable to handle kernel paging request at 00000000757d4900
-IP: [<ffffffff810b59af>] cpuacct_charge+0x5f/0xa0
-PGD 0 
-Thread overran stack, or stack corrupted
-Oops: 0000 [#1] PREEMPT SMP DEBUG_PAGEALLOC
-Modules linked in: rpcsec_gss_krb5 nfsd auth_rpcgss oid_registry nfs_acl lockd grace sunrpc
-CPU: 1 PID: 18130 Comm: kworker/1:0 Not tainted 3.19.0-rc4-00205-gcd4b02e #79
-Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.7.5-20140709_153950- 04/01/2014
-Workqueue: rpciod rpc_async_schedule [sunrpc]
-task: ffff880030639710 ti: ffff88001e698000 task.ti: ffff88001e698000
-RIP: 0010:[<ffffffff810b59af>]  [<ffffffff810b59af>] cpuacct_charge+0x5f/0xa0
-RSP: 0018:ffff88007f903e08  EFLAGS: 00010092
-RAX: 000000000000d4e8 RBX: 000000001e698038 RCX: 000000001e698038
-RDX: ffffffff822377c0 RSI: 0000000000000003 RDI: ffff880030639f78
-RBP: ffff88007f903e38 R08: 0000000000000000 R09: 0000000000000001
-R10: 000000000000001b R11: ffffffff82238fc0 R12: 00000000003b4c1b
-R13: ffff880030639710 R14: ffff880030639710 R15: 0000001536dbb554
-FS:  0000000000000000(0000) GS:ffff88007f900000(0000) knlGS:0000000000000000
-CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-CR2: 00000000757d4900 CR3: 000000006d8e2000 CR4: 00000000000406e0
-Stack:
- ffffffff810b5955 0000000000000000 ffff88007f903e98 ffff880030639778
- ffff88007f913698 00000000003b4c1b ffff88007f903e78 ffffffff810a47d0
- ffff88007f903e78 ffff880030639778 ffff88007f913698 ffff88007f913600
-Call Trace:
- <IRQ> 
- [<ffffffff810b5955>] ? cpuacct_charge+0x5/0xa0
- [<ffffffff810a47d0>] update_curr+0xd0/0x190
- [<ffffffff810a767f>] task_tick_fair+0x1df/0x4f0
- [<ffffffff8109e147>] scheduler_tick+0x57/0xd0
- [<ffffffff810d7e11>] update_process_times+0x51/0x60
- [<ffffffff810e43df>] tick_periodic+0x2f/0xc0
- [<ffffffff8165b517>] ? debug_smp_processor_id+0x17/0x20
- [<ffffffff810e4599>] tick_handle_periodic+0x29/0x70
- [<ffffffff81033e6a>] local_apic_timer_interrupt+0x3a/0x70
- [<ffffffff81a8fb81>] smp_apic_timer_interrupt+0x41/0x60
- [<ffffffff81a8df1f>] apic_timer_interrupt+0x6f/0x80
- <EOI> 
-Code: 31 c9 45 31 c0 31 f6 48 c7 c7 c0 8f 23 82 e8 a9 71 00 00 49 8b 85 c0 0f 00 00 48 63 cb 48 8b 50 58 0f 1f 00 48 8b 82 d0 00 00 00 <48> 03 04 cd 40 47 31 82 4c 01 20 48 8b 52 48 48 85 d2 75 e5 48 
-RIP  [<ffffffff810b59af>] cpuacct_charge+0x5f/0xa0
- RSP <ffff88007f903e08>
-CR2: 00000000757d4900
----[ end trace fa7901843d14b3ab ]---
-Kernel panic - not syncing: Fatal exception in interrupt
-Kernel Offset: 0x0 from 0xffffffff81000000 (relocation range: 0xffffffff80000000-0xffffffff9fffffff)
----[ end Kernel panic - not syncing: Fatal exception in interrupt
+								Honza
+
+> +	error = dax_mkwrite(vma, vmf, xfs_get_blocks_dax,
+> +			    xfs_get_blocks_dax_complete);
+> +	xfs_iunlock(ip, XFS_MMAPLOCK_SHARED);
+> +
+> +	return error;
+> +}
+> +
+> +static const struct vm_operations_struct xfs_file_dax_vm_ops = {
+> +	.fault		= xfs_filemap_dax_fault,
+> +	.page_mkwrite	= xfs_filemap_dax_page_mkwrite,
+> +};
+> +#else
+> +#define xfs_file_dax_vm_ops	xfs_file_vm_ops
+> +#endif /* CONFIG_FS_DAX */
+> +
+> +STATIC int
+> +xfs_file_mmap(
+> +	struct file	*filp,
+> +	struct vm_area_struct *vma)
+> +{
+> +	file_accessed(filp);
+> +	if (IS_DAX(file_inode(filp))) {
+> +		vma->vm_ops = &xfs_file_dax_vm_ops;
+> +		vma->vm_flags |= VM_MIXEDMAP;
+> +	} else
+> +		vma->vm_ops = &xfs_file_vm_ops;
+> +	return 0;
+> +}
+> +
+>  const struct file_operations xfs_file_operations = {
+>  	.llseek		= xfs_file_llseek,
+>  	.read		= new_sync_read,
+> @@ -1497,8 +1554,21 @@ const struct file_operations xfs_dir_file_operations = {
+>  	.fsync		= xfs_dir_fsync,
+>  };
+>  
+> -static const struct vm_operations_struct xfs_file_vm_ops = {
+> -	.fault		= xfs_filemap_fault,
+> -	.map_pages	= filemap_map_pages,
+> -	.page_mkwrite	= xfs_filemap_page_mkwrite,
+> +#ifdef CONFIG_FS_DAX
+> +const struct file_operations xfs_file_dax_operations = {
+> +	.llseek		= xfs_file_llseek,
+> +	.read		= new_sync_read,
+> +	.write		= new_sync_write,
+> +	.read_iter	= xfs_file_read_iter,
+> +	.write_iter	= xfs_file_write_iter,
+> +	.unlocked_ioctl	= xfs_file_ioctl,
+> +#ifdef CONFIG_COMPAT
+> +	.compat_ioctl	= xfs_file_compat_ioctl,
+> +#endif
+> +	.mmap		= xfs_file_mmap,
+> +	.open		= xfs_file_open,
+> +	.release	= xfs_file_release,
+> +	.fsync		= xfs_file_fsync,
+> +	.fallocate	= xfs_file_fallocate,
+>  };
+> +#endif /* CONFIG_FS_DAX */
+> diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+> index 8b9e688..9f38142 100644
+> --- a/fs/xfs/xfs_iops.c
+> +++ b/fs/xfs/xfs_iops.c
+> @@ -1264,6 +1264,10 @@ xfs_setup_inode(
+>  	case S_IFREG:
+>  		inode->i_op = &xfs_inode_operations;
+>  		inode->i_fop = &xfs_file_operations;
+> +		if (IS_DAX(inode))
+> +			inode->i_fop = &xfs_file_dax_operations;
+> +		else
+> +			inode->i_fop = &xfs_file_operations;
+>  		inode->i_mapping->a_ops = &xfs_address_space_operations;
+>  		break;
+>  	case S_IFDIR:
+> diff --git a/fs/xfs/xfs_iops.h b/fs/xfs/xfs_iops.h
+> index a0f84ab..c08983e 100644
+> --- a/fs/xfs/xfs_iops.h
+> +++ b/fs/xfs/xfs_iops.h
+> @@ -23,6 +23,12 @@ struct xfs_inode;
+>  extern const struct file_operations xfs_file_operations;
+>  extern const struct file_operations xfs_dir_file_operations;
+>  
+> +#ifdef CONFIG_FS_DAX
+> +extern const struct file_operations xfs_file_dax_operations;
+> +#else
+> +#define xfs_file_dax_operations xfs_file_operations
+> +#endif
+> +
+>  extern ssize_t xfs_vn_listxattr(struct dentry *, char *data, size_t size);
+>  
+>  /*
+> -- 
+> 2.0.0
+> 
+-- 
+Jan Kara <jack@suse.cz>
+SUSE Labs, CR
 
 _______________________________________________
 xfs mailing list
