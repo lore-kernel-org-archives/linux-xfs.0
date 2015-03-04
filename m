@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 0089B7F3F
-	for <xfs@oss.sgi.com>; Wed,  4 Mar 2015 15:02:17 -0600 (CST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 889E87F3F
+	for <xfs@oss.sgi.com>; Wed,  4 Mar 2015 15:08:26 -0600 (CST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 7C461AC007
-	for <xfs@oss.sgi.com>; Wed,  4 Mar 2015 13:02:13 -0800 (PST)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 7712230405F
+	for <xfs@oss.sgi.com>; Wed,  4 Mar 2015 13:08:23 -0800 (PST)
 Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id zJ1Jc2HtQwY8Y7fn for <xfs@oss.sgi.com>;
-	Wed, 04 Mar 2015 13:02:11 -0800 (PST)
-Message-ID: <54F772D2.2030602@sandeen.net>
-Date: Wed, 04 Mar 2015 15:02:10 -0600
+	ESMTP id WqkAuOqEys6JQbcf for <xfs@oss.sgi.com>;
+	Wed, 04 Mar 2015 13:08:22 -0800 (PST)
+Message-ID: <54F77445.3010809@sandeen.net>
+Date: Wed, 04 Mar 2015 15:08:21 -0600
 From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: [PATCH 4/4] xfs_repair: set *parent if process_dir2_data() fixes
-	root inode's parent
-References: <54F77199.8030708@redhat.com>
-In-Reply-To: <54F77199.8030708@redhat.com>
+Subject: [PATCH V2] xfs: fix NULL pointer dereference in
+	xfs_filestream_lookup_ag()
+References: <54F61641.1010708@redhat.com>
+In-Reply-To: <54F61641.1010708@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,37 +29,34 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Eric Sandeen <sandeen@redhat.com>, xfs-oss <xfs@oss.sgi.com>
+Cc: Adrien Nader <adrien@notk.org>
 
-process_dir2_data() may fix the root dir's parent inode:
+If xfs_filestream_get_parent() fails, we have a null pip,
+goto out, and attempt to IRELE(NULL).  This causes a null
+pointer dereference and BUG().
 
-"bad .. entry in root directory inode 6912, was 7159: correcting"
+Fix this by directly returning NULLAGNUMBER in this case.
 
-But we don't update the *parent passed in in that case; this then leads to
-an assert later in process_dir2, because *parent is still the wrong value:
-
-xfs_repair: dir2.c:2039: process_dir2:
-  Assertion `(ino != mp->m_sb.sb_rootino && ino != *parent) ||
-  (ino == mp->m_sb.sb_rootino && (ino == *parent || need_root_dotdot == 1))'
-  failed.
-
-Updating the value of *parent when we fix the parent value resolves this
-problem.  Do it whether or not we're in no_modify mode.
-
+Reported-by: Adrien Nader <adrien@notk.org>
 Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 ---
 
-diff --git a/repair/dir2.c b/repair/dir2.c
-index 6b8964d..67cd9d1 100644
---- a/repair/dir2.c
-+++ b/repair/dir2.c
-@@ -1468,6 +1468,7 @@ _("bad .. entry in root directory inode %" PRIu64 ", was %" PRIu64 ": "),
- 					} else {
- 						do_warn(_("would correct\n"));
- 					}
-+					*parent = ino;
- 				}
- 			}
- 			/*
+V2: skip the goto, because Dave doesn't like it.  ;)
+
+diff --git a/fs/xfs/xfs_filestream.c b/fs/xfs/xfs_filestream.c
+index a2e86e8..8f9f854 100644
+--- a/fs/xfs/xfs_filestream.c
++++ b/fs/xfs/xfs_filestream.c
+@@ -322,7 +322,7 @@ xfs_filestream_lookup_ag(
+ 
+ 	pip = xfs_filestream_get_parent(ip);
+ 	if (!pip)
+-		goto out;
++		return NULLAGNUMBER;
+ 
+ 	mru = xfs_mru_cache_lookup(mp->m_filestream, pip->i_ino);
+ 	if (mru) {
+
 
 _______________________________________________
 xfs mailing list
