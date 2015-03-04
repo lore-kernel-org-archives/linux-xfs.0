@@ -1,18 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id A55457F56
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 60DEB7F3F
 	for <xfs@oss.sgi.com>; Wed,  4 Mar 2015 09:15:27 -0600 (CST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 8381A30405F
-	for <xfs@oss.sgi.com>; Wed,  4 Mar 2015 07:15:24 -0800 (PST)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 48DB38F8054
+	for <xfs@oss.sgi.com>; Wed,  4 Mar 2015 07:15:27 -0800 (PST)
 Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id Txb9FWLSdO4VDZlW (version=TLSv1 cipher=AES256-SHA
+	with ESMTP id 4DY5YCpsRp8jhsRg (version=TLSv1 cipher=AES256-SHA
 	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 04 Mar 2015 07:15:22 -0800 (PST)
+	Wed, 04 Mar 2015 07:15:25 -0800 (PST)
 From: Jan Kara <jack@suse.cz>
-Subject: [PATCH 3/8] xfs: Convert to using ->get_state callback
-Date: Wed,  4 Mar 2015 16:15:08 +0100
-Message-Id: <1425482113-1977-4-git-send-email-jack@suse.cz>
+Subject: [PATCH 6/8] quota: Make ->set_info use structure with neccesary info
+	to VFS and XFS
+Date: Wed,  4 Mar 2015 16:15:11 +0100
+Message-Id: <1425482113-1977-7-git-send-email-jack@suse.cz>
 In-Reply-To: <1425482113-1977-1-git-send-email-jack@suse.cz>
 References: <1425482113-1977-1-git-send-email-jack@suse.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -31,363 +32,175 @@ Sender: xfs-bounces@oss.sgi.com
 To: linux-fsdevel@vger.kernel.org
 Cc: cluster-devel@redhat.com, Jan Kara <jack@suse.cz>, xfs@oss.sgi.com
 
-Convert xfs to use ->get_state callback instead of ->get_xstate and
-->get_xstatev.
+Change ->set_info to take new qc_info structure which contains all the
+necessary information both for XFS and VFS. Convert Q_SETINFO handler
+to use this structure.
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Jan Kara <jack@suse.cz>
 ---
- fs/xfs/xfs_qm.h          |   4 --
- fs/xfs/xfs_qm_syscalls.c | 176 -----------------------------------------------
- fs/xfs/xfs_quotaops.c    |  96 +++++++++++++++++++-------
- 3 files changed, 71 insertions(+), 205 deletions(-)
+ fs/quota/dquot.c         | 27 ++++++++++++++++-----------
+ fs/quota/quota.c         | 21 ++++++++++++++++++++-
+ include/linux/quota.h    | 21 +++++++++++++++++++--
+ include/linux/quotaops.h |  2 +-
+ 4 files changed, 56 insertions(+), 15 deletions(-)
 
-diff --git a/fs/xfs/xfs_qm.h b/fs/xfs/xfs_qm.h
-index 0d4d3590cf85..996a04064894 100644
---- a/fs/xfs/xfs_qm.h
-+++ b/fs/xfs/xfs_qm.h
-@@ -168,10 +168,6 @@ extern int		xfs_qm_scall_getquota(struct xfs_mount *, xfs_dqid_t,
- 					uint, struct qc_dqblk *);
- extern int		xfs_qm_scall_setqlim(struct xfs_mount *, xfs_dqid_t, uint,
- 					struct qc_dqblk *);
--extern int		xfs_qm_scall_getqstat(struct xfs_mount *,
--					struct fs_quota_stat *);
--extern int		xfs_qm_scall_getqstatv(struct xfs_mount *,
--					struct fs_quota_statv *);
- extern int		xfs_qm_scall_quotaon(struct xfs_mount *, uint);
- extern int		xfs_qm_scall_quotaoff(struct xfs_mount *, uint);
+diff --git a/fs/quota/dquot.c b/fs/quota/dquot.c
+index cf4edd87e854..f37b74eab807 100644
+--- a/fs/quota/dquot.c
++++ b/fs/quota/dquot.c
+@@ -2649,33 +2649,38 @@ int dquot_get_state(struct super_block *sb, struct qc_state *state)
+ EXPORT_SYMBOL(dquot_get_state);
  
-diff --git a/fs/xfs/xfs_qm_syscalls.c b/fs/xfs/xfs_qm_syscalls.c
-index 9b965db45800..9a25c9275fb3 100644
---- a/fs/xfs/xfs_qm_syscalls.c
-+++ b/fs/xfs/xfs_qm_syscalls.c
-@@ -38,7 +38,6 @@
- STATIC int	xfs_qm_log_quotaoff(xfs_mount_t *, xfs_qoff_logitem_t **, uint);
- STATIC int	xfs_qm_log_quotaoff_end(xfs_mount_t *, xfs_qoff_logitem_t *,
- 					uint);
--STATIC uint	xfs_qm_export_flags(uint);
- 
- /*
-  * Turn off quota accounting and/or enforcement for all udquots and/or
-@@ -389,159 +388,6 @@ xfs_qm_scall_quotaon(
- 	return 0;
- }
- 
--
--/*
-- * Return quota status information, such as uquota-off, enforcements, etc.
-- * for Q_XGETQSTAT command.
-- */
--int
--xfs_qm_scall_getqstat(
--	struct xfs_mount	*mp,
--	struct fs_quota_stat	*out)
--{
--	struct xfs_quotainfo	*q = mp->m_quotainfo;
--	struct xfs_inode	*uip = NULL;
--	struct xfs_inode	*gip = NULL;
--	struct xfs_inode	*pip = NULL;
--	bool                    tempuqip = false;
--	bool                    tempgqip = false;
--	bool                    temppqip = false;
--
--	memset(out, 0, sizeof(fs_quota_stat_t));
--
--	out->qs_version = FS_QSTAT_VERSION;
--	out->qs_flags = (__uint16_t) xfs_qm_export_flags(mp->m_qflags &
--							(XFS_ALL_QUOTA_ACCT|
--							 XFS_ALL_QUOTA_ENFD));
--	uip = q->qi_uquotaip;
--	gip = q->qi_gquotaip;
--	pip = q->qi_pquotaip;
--	if (!uip && mp->m_sb.sb_uquotino != NULLFSINO) {
--		if (xfs_iget(mp, NULL, mp->m_sb.sb_uquotino,
--					0, 0, &uip) == 0)
--			tempuqip = true;
--	}
--	if (!gip && mp->m_sb.sb_gquotino != NULLFSINO) {
--		if (xfs_iget(mp, NULL, mp->m_sb.sb_gquotino,
--					0, 0, &gip) == 0)
--			tempgqip = true;
--	}
--	/*
--	 * Q_XGETQSTAT doesn't have room for both group and project quotas.
--	 * So, allow the project quota values to be copied out only if
--	 * there is no group quota information available.
--	 */
--	if (!gip) {
--		if (!pip && mp->m_sb.sb_pquotino != NULLFSINO) {
--			if (xfs_iget(mp, NULL, mp->m_sb.sb_pquotino,
--						0, 0, &pip) == 0)
--				temppqip = true;
--		}
--	} else
--		pip = NULL;
--	if (uip) {
--		out->qs_uquota.qfs_ino = mp->m_sb.sb_uquotino;
--		out->qs_uquota.qfs_nblks = uip->i_d.di_nblocks;
--		out->qs_uquota.qfs_nextents = uip->i_d.di_nextents;
--		if (tempuqip)
--			IRELE(uip);
--	}
--
--	if (gip) {
--		out->qs_gquota.qfs_ino = mp->m_sb.sb_gquotino;
--		out->qs_gquota.qfs_nblks = gip->i_d.di_nblocks;
--		out->qs_gquota.qfs_nextents = gip->i_d.di_nextents;
--		if (tempgqip)
--			IRELE(gip);
--	}
--	if (pip) {
--		out->qs_gquota.qfs_ino = mp->m_sb.sb_gquotino;
--		out->qs_gquota.qfs_nblks = pip->i_d.di_nblocks;
--		out->qs_gquota.qfs_nextents = pip->i_d.di_nextents;
--		if (temppqip)
--			IRELE(pip);
--	}
--	out->qs_incoredqs = q->qi_dquots;
--	out->qs_btimelimit = q->qi_btimelimit;
--	out->qs_itimelimit = q->qi_itimelimit;
--	out->qs_rtbtimelimit = q->qi_rtbtimelimit;
--	out->qs_bwarnlimit = q->qi_bwarnlimit;
--	out->qs_iwarnlimit = q->qi_iwarnlimit;
--
--	return 0;
--}
--
--/*
-- * Return quota status information, such as uquota-off, enforcements, etc.
-- * for Q_XGETQSTATV command, to support separate project quota field.
-- */
--int
--xfs_qm_scall_getqstatv(
--	struct xfs_mount	*mp,
--	struct fs_quota_statv	*out)
--{
--	struct xfs_quotainfo	*q = mp->m_quotainfo;
--	struct xfs_inode	*uip = NULL;
--	struct xfs_inode	*gip = NULL;
--	struct xfs_inode	*pip = NULL;
--	bool                    tempuqip = false;
--	bool                    tempgqip = false;
--	bool                    temppqip = false;
--
--	out->qs_flags = (__uint16_t) xfs_qm_export_flags(mp->m_qflags &
--							(XFS_ALL_QUOTA_ACCT|
--							 XFS_ALL_QUOTA_ENFD));
--	out->qs_uquota.qfs_ino = mp->m_sb.sb_uquotino;
--	out->qs_gquota.qfs_ino = mp->m_sb.sb_gquotino;
--	out->qs_pquota.qfs_ino = mp->m_sb.sb_pquotino;
--
--	uip = q->qi_uquotaip;
--	gip = q->qi_gquotaip;
--	pip = q->qi_pquotaip;
--	if (!uip && mp->m_sb.sb_uquotino != NULLFSINO) {
--		if (xfs_iget(mp, NULL, mp->m_sb.sb_uquotino,
--					0, 0, &uip) == 0)
--			tempuqip = true;
--	}
--	if (!gip && mp->m_sb.sb_gquotino != NULLFSINO) {
--		if (xfs_iget(mp, NULL, mp->m_sb.sb_gquotino,
--					0, 0, &gip) == 0)
--			tempgqip = true;
--	}
--	if (!pip && mp->m_sb.sb_pquotino != NULLFSINO) {
--		if (xfs_iget(mp, NULL, mp->m_sb.sb_pquotino,
--					0, 0, &pip) == 0)
--			temppqip = true;
--	}
--	if (uip) {
--		out->qs_uquota.qfs_nblks = uip->i_d.di_nblocks;
--		out->qs_uquota.qfs_nextents = uip->i_d.di_nextents;
--		if (tempuqip)
--			IRELE(uip);
--	}
--
--	if (gip) {
--		out->qs_gquota.qfs_nblks = gip->i_d.di_nblocks;
--		out->qs_gquota.qfs_nextents = gip->i_d.di_nextents;
--		if (tempgqip)
--			IRELE(gip);
--	}
--	if (pip) {
--		out->qs_pquota.qfs_nblks = pip->i_d.di_nblocks;
--		out->qs_pquota.qfs_nextents = pip->i_d.di_nextents;
--		if (temppqip)
--			IRELE(pip);
--	}
--	out->qs_incoredqs = q->qi_dquots;
--	out->qs_btimelimit = q->qi_btimelimit;
--	out->qs_itimelimit = q->qi_itimelimit;
--	out->qs_rtbtimelimit = q->qi_rtbtimelimit;
--	out->qs_bwarnlimit = q->qi_bwarnlimit;
--	out->qs_iwarnlimit = q->qi_iwarnlimit;
--
--	return 0;
--}
--
- #define XFS_QC_MASK \
- 	(QC_LIMIT_MASK | QC_TIMER_MASK | QC_WARNS_MASK)
- 
-@@ -873,28 +719,6 @@ out_put:
- 	return error;
- }
- 
--STATIC uint
--xfs_qm_export_flags(
--	uint flags)
--{
--	uint uflags;
--
--	uflags = 0;
--	if (flags & XFS_UQUOTA_ACCT)
--		uflags |= FS_QUOTA_UDQ_ACCT;
--	if (flags & XFS_GQUOTA_ACCT)
--		uflags |= FS_QUOTA_GDQ_ACCT;
--	if (flags & XFS_PQUOTA_ACCT)
--		uflags |= FS_QUOTA_PDQ_ACCT;
--	if (flags & XFS_UQUOTA_ENFD)
--		uflags |= FS_QUOTA_UDQ_ENFD;
--	if (flags & XFS_GQUOTA_ENFD)
--		uflags |= FS_QUOTA_GDQ_ENFD;
--	if (flags & XFS_PQUOTA_ENFD)
--		uflags |= FS_QUOTA_PDQ_ENFD;
--	return uflags;
--}
--
- 
- STATIC int
- xfs_dqrele_inode(
-diff --git a/fs/xfs/xfs_quotaops.c b/fs/xfs/xfs_quotaops.c
-index 6923905ab33d..5775acb0589b 100644
---- a/fs/xfs/xfs_quotaops.c
-+++ b/fs/xfs/xfs_quotaops.c
-@@ -23,45 +23,92 @@
- #include "xfs_inode.h"
- #include "xfs_quota.h"
- #include "xfs_trans.h"
-+#include "xfs_trace.h"
-+#include "xfs_icache.h"
- #include "xfs_qm.h"
- #include <linux/quota.h>
- 
- 
--STATIC int
--xfs_quota_type(int type)
-+static void
-+xfs_qm_fill_state(
-+	struct qc_type_state	*tstate,
-+	struct xfs_mount	*mp,
-+	struct xfs_inode	*ip,
-+	xfs_ino_t		ino)
+ /* Generic routine for setting common part of quota file information */
+-int dquot_set_dqinfo(struct super_block *sb, int type, struct if_dqinfo *ii)
++int dquot_set_dqinfo(struct super_block *sb, int type, struct qc_info *ii)
  {
--	switch (type) {
--	case USRQUOTA:
--		return XFS_DQ_USER;
--	case GRPQUOTA:
--		return XFS_DQ_GROUP;
--	default:
--		return XFS_DQ_PROJ;
-+	struct xfs_quotainfo *q = mp->m_quotainfo;
-+	bool tempqip = false;
-+
-+	tstate->ino = ino;
-+	if (!ip && ino == NULLFSINO)
-+		return;
-+	if (!ip) {
-+		if (xfs_iget(mp, NULL, ino, 0, 0, &ip))
-+			return;
-+		tempqip = true;
+ 	struct mem_dqinfo *mi;
+ 	int err = 0;
+ 
++	if ((ii->i_fieldmask & QC_WARNS_MASK) ||
++	    (ii->i_fieldmask & QC_RT_SPC_TIMER))
++		return -EINVAL;
+ 	mutex_lock(&sb_dqopt(sb)->dqonoff_mutex);
+ 	if (!sb_has_quota_active(sb, type)) {
+ 		err = -ESRCH;
+ 		goto out;
  	}
-+	tstate->flags |= QCI_SYSFILE;
-+	tstate->blocks = ip->i_d.di_nblocks;
-+	tstate->nextents = ip->i_d.di_nextents;
-+	tstate->spc_timelimit = q->qi_btimelimit;
-+	tstate->ino_timelimit = q->qi_itimelimit;
-+	tstate->rt_spc_timelimit = q->qi_rtbtimelimit;
-+	tstate->spc_warnlimit = q->qi_bwarnlimit;
-+	tstate->ino_warnlimit = q->qi_iwarnlimit;
-+	tstate->rt_spc_warnlimit = q->qi_rtbwarnlimit;
-+	if (tempqip)
-+		IRELE(ip);
- }
- 
--STATIC int
--xfs_fs_get_xstate(
-+/*
-+ * Return quota status information, such as enforcements, quota file inode
-+ * numbers etc.
-+ */
-+static int
-+xfs_fs_get_quota_state(
- 	struct super_block	*sb,
--	struct fs_quota_stat	*fqs)
-+	struct qc_state		*state)
- {
--	struct xfs_mount	*mp = XFS_M(sb);
-+	struct xfs_mount *mp = XFS_M(sb);
-+	struct xfs_quotainfo *q = mp->m_quotainfo;
- 
-+	memset(state, 0, sizeof(*state));
- 	if (!XFS_IS_QUOTA_RUNNING(mp))
--		return -ENOSYS;
--	return xfs_qm_scall_getqstat(mp, fqs);
-+		return 0;
-+	state->s_incoredqs = q->qi_dquots;
-+	if (XFS_IS_UQUOTA_RUNNING(mp))
-+		state->s_state[USRQUOTA].flags |= QCI_ACCT_ENABLED;
-+	if (XFS_IS_UQUOTA_ENFORCED(mp))
-+		state->s_state[USRQUOTA].flags |= QCI_LIMITS_ENFORCED;
-+	if (XFS_IS_GQUOTA_RUNNING(mp))
-+		state->s_state[GRPQUOTA].flags |= QCI_ACCT_ENABLED;
-+	if (XFS_IS_GQUOTA_ENFORCED(mp))
-+		state->s_state[GRPQUOTA].flags |= QCI_LIMITS_ENFORCED;
-+	if (XFS_IS_PQUOTA_RUNNING(mp))
-+		state->s_state[PRJQUOTA].flags |= QCI_ACCT_ENABLED;
-+	if (XFS_IS_PQUOTA_ENFORCED(mp))
-+		state->s_state[PRJQUOTA].flags |= QCI_LIMITS_ENFORCED;
-+
-+	xfs_qm_fill_state(&state->s_state[USRQUOTA], mp, q->qi_uquotaip,
-+			  mp->m_sb.sb_uquotino);
-+	xfs_qm_fill_state(&state->s_state[GRPQUOTA], mp, q->qi_gquotaip,
-+			  mp->m_sb.sb_gquotino);
-+	xfs_qm_fill_state(&state->s_state[PRJQUOTA], mp, q->qi_pquotaip,
-+			  mp->m_sb.sb_pquotino);
-+	return 0;
- }
- 
- STATIC int
--xfs_fs_get_xstatev(
--	struct super_block	*sb,
--	struct fs_quota_statv	*fqs)
-+xfs_quota_type(int type)
- {
--	struct xfs_mount	*mp = XFS_M(sb);
--
--	if (!XFS_IS_QUOTA_RUNNING(mp))
--		return -ENOSYS;
--	return xfs_qm_scall_getqstatv(mp, fqs);
-+	switch (type) {
-+	case USRQUOTA:
-+		return XFS_DQ_USER;
-+	case GRPQUOTA:
-+		return XFS_DQ_GROUP;
-+	default:
-+		return XFS_DQ_PROJ;
+ 	mi = sb_dqopt(sb)->info + type;
+-	if (ii->dqi_valid & IIF_FLAGS) {
+-		if (ii->dqi_flags & ~DQF_SETINFO_MASK ||
+-		    (ii->dqi_flags & DQF_ROOT_SQUASH &&
++	if (ii->i_fieldmask & QC_FLAGS) {
++		if ((ii->i_flags & QCI_ROOT_SQUASH &&
+ 		     mi->dqi_format->qf_fmt_id != QFMT_VFS_OLD)) {
+ 			err = -EINVAL;
+ 			goto out;
+ 		}
+ 	}
+ 	spin_lock(&dq_data_lock);
+-	if (ii->dqi_valid & IIF_BGRACE)
+-		mi->dqi_bgrace = ii->dqi_bgrace;
+-	if (ii->dqi_valid & IIF_IGRACE)
+-		mi->dqi_igrace = ii->dqi_igrace;
+-	if (ii->dqi_valid & IIF_FLAGS)
+-		mi->dqi_flags = (mi->dqi_flags & ~DQF_SETINFO_MASK) |
+-				(ii->dqi_flags & DQF_SETINFO_MASK);
++	if (ii->i_fieldmask & QC_SPC_TIMER)
++		mi->dqi_bgrace = ii->i_spc_timelimit;
++	if (ii->i_fieldmask & QC_INO_TIMER)
++		mi->dqi_igrace = ii->i_ino_timelimit;
++	if (ii->i_fieldmask & QC_FLAGS) {
++		if (ii->i_flags & QCI_ROOT_SQUASH)
++			mi->dqi_flags |= DQF_ROOT_SQUASH;
++		else
++			mi->dqi_flags &= ~DQF_ROOT_SQUASH;
 +	}
+ 	spin_unlock(&dq_data_lock);
+ 	mark_info_dirty(sb, type);
+ 	/* Force write to disk */
+diff --git a/fs/quota/quota.c b/fs/quota/quota.c
+index 20d11cd21247..741d5a178268 100644
+--- a/fs/quota/quota.c
++++ b/fs/quota/quota.c
+@@ -149,12 +149,31 @@ static int quota_getinfo(struct super_block *sb, int type, void __user *addr)
+ static int quota_setinfo(struct super_block *sb, int type, void __user *addr)
+ {
+ 	struct if_dqinfo info;
++	struct qc_info qinfo;
+ 
+ 	if (copy_from_user(&info, addr, sizeof(info)))
+ 		return -EFAULT;
+ 	if (!sb->s_qcop->set_info)
+ 		return -ENOSYS;
+-	return sb->s_qcop->set_info(sb, type, &info);
++	if (info.dqi_valid & ~(IIF_FLAGS | IIF_BGRACE | IIF_IGRACE))
++		return -EINVAL;
++	memset(&qinfo, 0, sizeof(qinfo));
++	if (info.dqi_valid & IIF_FLAGS) {
++		if (info.dqi_flags & ~DQF_SETINFO_MASK)
++			return -EINVAL;
++		if (info.dqi_flags & DQF_ROOT_SQUASH)
++			qinfo.i_flags |= QCI_ROOT_SQUASH;
++		qinfo.i_fieldmask |= QC_FLAGS;
++	}
++	if (info.dqi_valid & IIF_BGRACE) {
++		qinfo.i_spc_timelimit = info.dqi_bgrace;
++		qinfo.i_fieldmask |= QC_SPC_TIMER;
++	}
++	if (info.dqi_valid & IIF_IGRACE) {
++		qinfo.i_ino_timelimit = info.dqi_igrace;
++		qinfo.i_fieldmask |= QC_INO_TIMER;
++	}
++	return sb->s_qcop->set_info(sb, type, &qinfo);
  }
  
- static unsigned int
-@@ -178,8 +225,7 @@ xfs_fs_set_dqblk(
- }
+ static inline qsize_t qbtos(qsize_t blocks)
+diff --git a/include/linux/quota.h b/include/linux/quota.h
+index a07f2ed25284..3d521199a0bd 100644
+--- a/include/linux/quota.h
++++ b/include/linux/quota.h
+@@ -344,7 +344,10 @@ struct qc_dqblk {
+ 	int d_rt_spc_warns;	/* # warnings issued wrt RT space */
+ };
  
- const struct quotactl_ops xfs_quotactl_operations = {
--	.get_xstatev		= xfs_fs_get_xstatev,
--	.get_xstate		= xfs_fs_get_xstate,
-+	.get_state		= xfs_fs_get_quota_state,
- 	.quota_enable		= xfs_quota_enable,
- 	.quota_disable		= xfs_quota_disable,
- 	.rm_xquota		= xfs_fs_rm_xquota,
+-/* Field specifiers for ->set_dqblk() in struct qc_dqblk */
++/*
++ * Field specifiers for ->set_dqblk() in struct qc_dqblk and also for
++ * ->set_info() in struct qc_info
++ */
+ #define	QC_INO_SOFT	(1<<0)
+ #define	QC_INO_HARD	(1<<1)
+ #define	QC_SPC_SOFT	(1<<2)
+@@ -365,6 +368,7 @@ struct qc_dqblk {
+ #define	QC_INO_COUNT	(1<<13)
+ #define	QC_RT_SPACE	(1<<14)
+ #define QC_ACCT_MASK (QC_SPACE | QC_INO_COUNT | QC_RT_SPACE)
++#define QC_FLAGS	(1<<15)
+ 
+ #define QCI_SYSFILE		(1 << 0)	/* Quota file is hidden from userspace */
+ #define QCI_ROOT_SQUASH		(1 << 1)	/* Root squash turned on */
+@@ -397,6 +401,19 @@ struct qc_state {
+ 	struct qc_type_state s_state[XQM_MAXQUOTAS];
+ };
+ 
++/* Structure for communicating via ->set_info */
++struct qc_info {
++	int i_fieldmask;	/* mask of fields to change in ->set_info() */
++	unsigned int i_flags;		/* Flags QCI_* */
++	unsigned int i_spc_timelimit;	/* Time after which space softlimit is
++					 * enforced */
++	unsigned int i_ino_timelimit;	/* Ditto for inode softlimit */
++	unsigned int i_rt_spc_timelimit;/* Ditto for real-time space */
++	unsigned int i_spc_warnlimit;	/* Limit for number of space warnings */
++	unsigned int i_ino_warnlimit;	/* Limit for number of inode warnings */
++	unsigned int i_rt_spc_warnlimit;	/* Ditto for real-time space */
++};
++
+ /* Operations handling requests from userspace */
+ struct quotactl_ops {
+ 	int (*quota_on)(struct super_block *, int, int, struct path *);
+@@ -404,7 +421,7 @@ struct quotactl_ops {
+ 	int (*quota_enable)(struct super_block *, unsigned int);
+ 	int (*quota_disable)(struct super_block *, unsigned int);
+ 	int (*quota_sync)(struct super_block *, int);
+-	int (*set_info)(struct super_block *, int, struct if_dqinfo *);
++	int (*set_info)(struct super_block *, int, struct qc_info *);
+ 	int (*get_dqblk)(struct super_block *, struct kqid, struct qc_dqblk *);
+ 	int (*set_dqblk)(struct super_block *, struct kqid, struct qc_dqblk *);
+ 	int (*get_state)(struct super_block *, struct qc_state *);
+diff --git a/include/linux/quotaops.h b/include/linux/quotaops.h
+index 6509a29523e2..9f4b07ba9e8c 100644
+--- a/include/linux/quotaops.h
++++ b/include/linux/quotaops.h
+@@ -96,7 +96,7 @@ int dquot_quota_off(struct super_block *sb, int type);
+ int dquot_writeback_dquots(struct super_block *sb, int type);
+ int dquot_quota_sync(struct super_block *sb, int type);
+ int dquot_get_state(struct super_block *sb, struct qc_state *state);
+-int dquot_set_dqinfo(struct super_block *sb, int type, struct if_dqinfo *ii);
++int dquot_set_dqinfo(struct super_block *sb, int type, struct qc_info *ii);
+ int dquot_get_dqblk(struct super_block *sb, struct kqid id,
+ 		struct qc_dqblk *di);
+ int dquot_set_dqblk(struct super_block *sb, struct kqid id,
 -- 
 2.1.4
 
