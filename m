@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 632C17F3F
-	for <xfs@oss.sgi.com>; Wed,  4 Mar 2015 16:03:58 -0600 (CST)
+	by oss.sgi.com (Postfix) with ESMTP id 451CF7F3F
+	for <xfs@oss.sgi.com>; Wed,  4 Mar 2015 16:09:04 -0600 (CST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 43A2D8F8049
-	for <xfs@oss.sgi.com>; Wed,  4 Mar 2015 14:03:55 -0800 (PST)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 27CC58F8066
+	for <xfs@oss.sgi.com>; Wed,  4 Mar 2015 14:09:04 -0800 (PST)
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	CK3WSDi1n4XbCo3k for <xfs@oss.sgi.com>;
-	Wed, 04 Mar 2015 14:03:50 -0800 (PST)
-Date: Thu, 5 Mar 2015 09:03:48 +1100
+	FBFZHGJQFwLU1E3Z for <xfs@oss.sgi.com>;
+	Wed, 04 Mar 2015 14:09:02 -0800 (PST)
+Date: Thu, 5 Mar 2015 09:09:00 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 3/6] xfs: add DAX file operations support
-Message-ID: <20150304220348.GW18360@dastard>
-References: <1425425427-16283-1-git-send-email-david@fromorbit.com>
-	<1425425427-16283-4-git-send-email-david@fromorbit.com>
-	<54F6D9E4.9050803@gmail.com> <20150304130100.GU18360@dastard>
-	<54F71CBA.2@gmail.com>
+Subject: Re: panic on 4.20 server exporting xfs filesystem
+Message-ID: <20150304220900.GX18360@dastard>
+References: <20150303221033.GB19439@fieldses.org>
+	<20150303224456.GV4251@dastard>
+	<20150304020826.GD19439@fieldses.org>
+	<20150304155421.GE1627@fieldses.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <54F71CBA.2@gmail.com>
+In-Reply-To: <20150304155421.GE1627@fieldses.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,25 +32,59 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Boaz Harrosh <openosd@gmail.com>
-Cc: linux-fsdevel@vger.kernel.org, willy@linux.intel.com, jack@suse.cz, xfs@oss.sgi.com
+To: "J. Bruce Fields" <bfields@fieldses.org>
+Cc: linux-nfs@vger.kernel.org, Christoph Hellwig <hch@lst.de>, xfs@oss.sgi.com
 
-On Wed, Mar 04, 2015 at 04:54:50PM +0200, Boaz Harrosh wrote:
-> On 03/04/2015 03:01 PM, Dave Chinner wrote:
-> > On Wed, Mar 04, 2015 at 12:09:40PM +0200, Boaz Harrosh wrote:
-> <>
+On Wed, Mar 04, 2015 at 10:54:21AM -0500, J. Bruce Fields wrote:
+> On Tue, Mar 03, 2015 at 09:08:26PM -0500, J. Bruce Fields wrote:
+> > On Wed, Mar 04, 2015 at 09:44:56AM +1100, Dave Chinner wrote:
+> > > On Tue, Mar 03, 2015 at 05:10:33PM -0500, J. Bruce Fields wrote:
+> > > > I'm getting mysterious crashes on a server exporting an xfs filesystem.
+> > > > 
+> > > > Strangely, I've reproduced this on
+> > > > 
+> > > > 	93aaa830fc17 "Merge tag 'xfs-pnfs-for-linus-3.20-rc1' of git://git.kernel.org/pub/scm/linux/kernel/git/dgc/linux-xfs
+> > > > 
+> > > > but haven't yet managed to reproduce on either of its parents
+> > > > (24a52e412ef2 or 781355c6e5ae).  That might just be chance, I'll try
+> > > > again.
+> > > 
+> > > I think you'll find that the bug is only triggered after that XFS
+> > > merge because it's what enabled block layout support in the server,
+> > > i.e.  nfsd4_setup_layout_type() is now setting the export type to
+> > > LAYOUT_BLOCK_VOLUME because XFS has added the necessary functions to
+> > > it's export ops.
 > > 
-> > So, we definitely need splice to/from DAX enabled inodes to be
-> > rejected. I'll have a look at that...
+> > Doh--after all the discussion I didn't actually pay attention to what
+> > happened in the end.  OK, I see, you're right, it's all more-or-less
+> > dead code till that merge.
 > > 
+> > Christoph's code was passing all my tests before that, so maybe we
+> > broke something in the merge process.
+> > 
+> > Alternatively, it could be because I've added more tests--I'll rerun my
+> > current tests on his original branch....
 > 
-> default_file_splice_read uses kernel_readv which I think might actually
-> work. Do you know what xfstest(s) exercise splice?
+> The below is on Christoph's pnfsd-for-3.20-4 (at cd4b02e).  Doesn't look
+> very informative.  I'm running xfstests over NFSv4.1 with client and
+> server running the same kernel, the filesystem in question is xfs, but
+> isn't otherwise available to the client (so the client shouldn't be
+> doing pnfs).
+> 
+> --b.
+> 
+> BUG: unable to handle kernel paging request at 00000000757d4900
+> IP: [<ffffffff810b59af>] cpuacct_charge+0x5f/0xa0
+> PGD 0 
+> Thread overran stack, or stack corrupted
 
-We have a rudimentary one only because I discovered a while back
-none existed at all. i.e. splice is effectively untested by
-xfstests. If you want to write some tests to execise it, that'd be
-great....
+Hmmmm. That is not at all informative, especially as it's only
+dumped the interrupt stack and not the stack or the task that it
+has detected as overrun or corrupted.
+
+Can you turn on all the stack overrun debug options? Maybe even
+turn on the stack tracer to get an idea of whether we are recursing
+deeply somewhere we shouldn't be?
 
 Cheers,
 
