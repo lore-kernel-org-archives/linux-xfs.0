@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id B0C057F3F
-	for <xfs@oss.sgi.com>; Wed,  4 Mar 2015 09:15:26 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 9DBCB304062
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 0180D7F3F
+	for <xfs@oss.sgi.com>; Wed,  4 Mar 2015 09:15:27 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id E35B58F8050
 	for <xfs@oss.sgi.com>; Wed,  4 Mar 2015 07:15:26 -0800 (PST)
 Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id Mcj2bNPPy3VaUVdY (version=TLSv1 cipher=AES256-SHA
+	with ESMTP id KRfSJ4cy2wzYOQFC (version=TLSv1 cipher=AES256-SHA
 	bits=256 verify=NO) for <xfs@oss.sgi.com>;
 	Wed, 04 Mar 2015 07:15:25 -0800 (PST)
 From: Jan Kara <jack@suse.cz>
-Subject: [PATCH 5/8] quota: Remove ->get_xstate and ->get_xstatev callbacks
-Date: Wed,  4 Mar 2015 16:15:10 +0100
-Message-Id: <1425482113-1977-6-git-send-email-jack@suse.cz>
+Subject: [PATCH 7/8] xfs: Add support for Q_SETINFO
+Date: Wed,  4 Mar 2015 16:15:12 +0100
+Message-Id: <1425482113-1977-8-git-send-email-jack@suse.cz>
 In-Reply-To: <1425482113-1977-1-git-send-email-jack@suse.cz>
 References: <1425482113-1977-1-git-send-email-jack@suse.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -31,68 +31,70 @@ Sender: xfs-bounces@oss.sgi.com
 To: linux-fsdevel@vger.kernel.org
 Cc: cluster-devel@redhat.com, Jan Kara <jack@suse.cz>, xfs@oss.sgi.com
 
-These callbacks are now unused. Remove them.
+Add support to XFS so that time limits can be set through Q_SETINFO
+quotactl.
 
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Jan Kara <jack@suse.cz>
 ---
- fs/quota/quota.c      | 14 ++++----------
- include/linux/quota.h |  2 --
- 2 files changed, 4 insertions(+), 12 deletions(-)
+ fs/xfs/xfs_quotaops.c | 37 +++++++++++++++++++++++++++++++++++++
+ 1 file changed, 37 insertions(+)
 
-diff --git a/fs/quota/quota.c b/fs/quota/quota.c
-index 83939ff4c444..20d11cd21247 100644
---- a/fs/quota/quota.c
-+++ b/fs/quota/quota.c
-@@ -350,12 +350,9 @@ static int quota_getxstate(struct super_block *sb, void __user *addr)
- 	struct fs_quota_stat fqs;
- 	int ret;
- 
--	if (!sb->s_qcop->get_xstate && !sb->s_qcop->get_state)
-+	if (!sb->s_qcop->get_state)
- 		return -ENOSYS;
--	if (sb->s_qcop->get_state)
--		ret = quota_getstate(sb, &fqs);
--	else
--		ret = sb->s_qcop->get_xstate(sb, &fqs);
-+	ret = quota_getstate(sb, &fqs);
- 	if (!ret && copy_to_user(addr, &fqs, sizeof(fqs)))
- 		return -EFAULT;
- 	return ret;
-@@ -414,7 +411,7 @@ static int quota_getxstatev(struct super_block *sb, void __user *addr)
- 	struct fs_quota_statv fqs;
- 	int ret;
- 
--	if (!sb->s_qcop->get_xstatev && !sb->s_qcop->get_state)
-+	if (!sb->s_qcop->get_state)
- 		return -ENOSYS;
- 
- 	memset(&fqs, 0, sizeof(fqs));
-@@ -428,10 +425,7 @@ static int quota_getxstatev(struct super_block *sb, void __user *addr)
- 	default:
- 		return -EINVAL;
+diff --git a/fs/xfs/xfs_quotaops.c b/fs/xfs/xfs_quotaops.c
+index 5775acb0589b..7795e0d01382 100644
+--- a/fs/xfs/xfs_quotaops.c
++++ b/fs/xfs/xfs_quotaops.c
+@@ -111,6 +111,42 @@ xfs_quota_type(int type)
  	}
--	if (sb->s_qcop->get_state)
--		ret = quota_getstatev(sb, &fqs);
--	else
--		ret = sb->s_qcop->get_xstatev(sb, &fqs);
-+	ret = quota_getstatev(sb, &fqs);
- 	if (!ret && copy_to_user(addr, &fqs, sizeof(fqs)))
- 		return -EFAULT;
- 	return ret;
-diff --git a/include/linux/quota.h b/include/linux/quota.h
-index 6ecac0f3b2ca..a07f2ed25284 100644
---- a/include/linux/quota.h
-+++ b/include/linux/quota.h
-@@ -408,8 +408,6 @@ struct quotactl_ops {
- 	int (*get_dqblk)(struct super_block *, struct kqid, struct qc_dqblk *);
- 	int (*set_dqblk)(struct super_block *, struct kqid, struct qc_dqblk *);
- 	int (*get_state)(struct super_block *, struct qc_state *);
--	int (*get_xstate)(struct super_block *, struct fs_quota_stat *);
--	int (*get_xstatev)(struct super_block *, struct fs_quota_statv *);
- 	int (*rm_xquota)(struct super_block *, unsigned int);
- };
+ }
  
++#define XFS_QC_SETINFO_MASK (QC_TIMER_MASK | QC_WARNS_MASK)
++
++/*
++ * Adjust quota timers & warnings
++ */
++static int
++xfs_fs_set_info(
++	struct super_block	*sb,
++	int			type,
++	struct qc_info		*info)
++{
++	struct xfs_mount *mp = XFS_M(sb);
++	struct qc_dqblk newlim;
++
++	if (sb->s_flags & MS_RDONLY)
++		return -EROFS;
++	if (!XFS_IS_QUOTA_RUNNING(mp))
++		return -ENOSYS;
++	if (!XFS_IS_QUOTA_ON(mp))
++		return -ESRCH;
++	if (info->i_fieldmask & ~XFS_QC_SETINFO_MASK)
++		return -EINVAL;
++	if ((info->i_fieldmask & XFS_QC_SETINFO_MASK) == 0)
++		return 0;
++
++	newlim.d_fieldmask = info->i_fieldmask;
++	newlim.d_spc_timer = info->i_spc_timelimit;
++	newlim.d_ino_timer = info->i_ino_timelimit;
++	newlim.d_rt_spc_timer = info->i_rt_spc_timelimit;
++	newlim.d_ino_warns = info->i_ino_warnlimit;
++	newlim.d_spc_warns = info->i_spc_warnlimit;
++	newlim.d_rt_spc_warns = info->i_rt_spc_warnlimit;
++
++	return xfs_qm_scall_setqlim(mp, 0, xfs_quota_type(type), &newlim);
++}
++
+ static unsigned int
+ xfs_quota_flags(unsigned int uflags)
+ {
+@@ -226,6 +262,7 @@ xfs_fs_set_dqblk(
+ 
+ const struct quotactl_ops xfs_quotactl_operations = {
+ 	.get_state		= xfs_fs_get_quota_state,
++	.set_info		= xfs_fs_set_info,
+ 	.quota_enable		= xfs_quota_enable,
+ 	.quota_disable		= xfs_quota_disable,
+ 	.rm_xquota		= xfs_fs_rm_xquota,
 -- 
 2.1.4
 
