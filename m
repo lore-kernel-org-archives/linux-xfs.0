@@ -1,28 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id A45F27F3F
-	for <xfs@oss.sgi.com>; Wed,  4 Mar 2015 16:56:38 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 68CC0304048
-	for <xfs@oss.sgi.com>; Wed,  4 Mar 2015 14:56:38 -0800 (PST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 7B7597F3F
+	for <xfs@oss.sgi.com>; Wed,  4 Mar 2015 17:02:16 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id ED318AC008
+	for <xfs@oss.sgi.com>; Wed,  4 Mar 2015 15:02:12 -0800 (PST)
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	Lz3ofsCLFjVHHClf for <xfs@oss.sgi.com>;
-	Wed, 04 Mar 2015 14:56:36 -0800 (PST)
-Date: Thu, 5 Mar 2015 09:56:23 +1100
+	GVPJy23vk2EcBbfC for <xfs@oss.sgi.com>;
+	Wed, 04 Mar 2015 15:02:08 -0800 (PST)
+Date: Thu, 5 Mar 2015 10:00:45 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: panic on 4.20 server exporting xfs filesystem
-Message-ID: <20150304225623.GZ4251@dastard>
-References: <20150303221033.GB19439@fieldses.org>
-	<20150303224456.GV4251@dastard>
-	<20150304020826.GD19439@fieldses.org>
-	<20150304155421.GE1627@fieldses.org>
-	<20150304220900.GX18360@dastard>
-	<20150304222709.GI1627@fieldses.org>
-	<20150304224557.GY4251@dastard> <54F78BE5.1020608@sandeen.net>
+Subject: Re: [regression v4.0-rc1] mm: IPIs from TLB flushes causing
+	significant performance degradation.
+Message-ID: <20150304230045.GZ18360@dastard>
+References: <CA+55aFzGFvVGD_8Y=jTkYwgmYgZnW0p0Fjf7OHFPRcL6Mz4HOw@mail.gmail.com>
+	<20150303014733.GL18360@dastard>
+	<CA+55aFw+7V9DfxBA2_DhMNrEQOkvdwjFFga5Y67-a6yVeAz+NQ@mail.gmail.com>
+	<CA+55aFw+fb=Fh4M2wA4dVskgqN7PhZRGZS6JTMx4Rb1Qn++oaA@mail.gmail.com>
+	<20150303052004.GM18360@dastard>
+	<CA+55aFyczb5asoTwhzaJr1JdRi1epg1A6cFJgnzMMZj6U0gFWA@mail.gmail.com>
+	<20150303113437.GR4251@dastard> <20150303134346.GO3087@suse.de>
+	<20150303213353.GS4251@dastard> <20150304200046.GP3087@suse.de>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <54F78BE5.1020608@sandeen.net>
+In-Reply-To: <20150304200046.GP3087@suse.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,77 +37,147 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: "J. Bruce Fields" <bfields@fieldses.org>, linux-nfs@vger.kernel.org, Christoph Hellwig <hch@lst.de>, xfs@oss.sgi.com
+To: Mel Gorman <mgorman@suse.de>
+Cc: Matt B <jackdachef@gmail.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, linux-mm <linux-mm@kvack.org>, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, Ingo Molnar <mingo@kernel.org>
 
-On Wed, Mar 04, 2015 at 04:49:09PM -0600, Eric Sandeen wrote:
-> On 3/4/15 4:45 PM, Dave Chinner wrote:
-> > On Wed, Mar 04, 2015 at 05:27:09PM -0500, J. Bruce Fields wrote:
-> >> On Thu, Mar 05, 2015 at 09:09:00AM +1100, Dave Chinner wrote:
-> >>> On Wed, Mar 04, 2015 at 10:54:21AM -0500, J. Bruce Fields wrote:
-> >>>> On Tue, Mar 03, 2015 at 09:08:26PM -0500, J. Bruce Fields wrote:
-> >>>>> On Wed, Mar 04, 2015 at 09:44:56AM +1100, Dave Chinner wrote:
-> >>>>>> On Tue, Mar 03, 2015 at 05:10:33PM -0500, J. Bruce Fields wrote:
-> >>>>>>> I'm getting mysterious crashes on a server exporting an xfs filesystem.
-> >>>>>>>
-> >>>>>>> Strangely, I've reproduced this on
-> >>>>>>>
-> >>>>>>> 	93aaa830fc17 "Merge tag 'xfs-pnfs-for-linus-3.20-rc1' of git://git.kernel.org/pub/scm/linux/kernel/git/dgc/linux-xfs
-> >>>>>>>
-> >>>>>>> but haven't yet managed to reproduce on either of its parents
-> >>>>>>> (24a52e412ef2 or 781355c6e5ae).  That might just be chance, I'll try
-> >>>>>>> again.
-> >>>>>>
-> >>>>>> I think you'll find that the bug is only triggered after that XFS
-> >>>>>> merge because it's what enabled block layout support in the server,
-> >>>>>> i.e.  nfsd4_setup_layout_type() is now setting the export type to
-> >>>>>> LAYOUT_BLOCK_VOLUME because XFS has added the necessary functions to
-> >>>>>> it's export ops.
-> >>>>>
-> >>>>> Doh--after all the discussion I didn't actually pay attention to what
-> >>>>> happened in the end.  OK, I see, you're right, it's all more-or-less
-> >>>>> dead code till that merge.
-> >>>>>
-> >>>>> Christoph's code was passing all my tests before that, so maybe we
-> >>>>> broke something in the merge process.
-> >>>>>
-> >>>>> Alternatively, it could be because I've added more tests--I'll rerun my
-> >>>>> current tests on his original branch....
-> >>>>
-> >>>> The below is on Christoph's pnfsd-for-3.20-4 (at cd4b02e).  Doesn't look
-> >>>> very informative.  I'm running xfstests over NFSv4.1 with client and
-> >>>> server running the same kernel, the filesystem in question is xfs, but
-> >>>> isn't otherwise available to the client (so the client shouldn't be
-> >>>> doing pnfs).
-> >>>>
-> >>>> --b.
-> >>>>
-> >>>> BUG: unable to handle kernel paging request at 00000000757d4900
-> >>>> IP: [<ffffffff810b59af>] cpuacct_charge+0x5f/0xa0
-> >>>> PGD 0 
-> >>>> Thread overran stack, or stack corrupted
-> >>>
-> >>> Hmmmm. That is not at all informative, especially as it's only
-> >>> dumped the interrupt stack and not the stack or the task that it
-> >>> has detected as overrun or corrupted.
-> >>>
-> >>> Can you turn on all the stack overrun debug options? Maybe even
-> >>> turn on the stack tracer to get an idea of whether we are recursing
-> >>> deeply somewhere we shouldn't be?
-> >>
-> >> Digging around under "Kernel hacking".... I already have
-> >> DEBUG_STACK_USAGE, DEBUG_STACKOVERFLOW, and STACK_TRACER, and I can try
-> >> turning on the latter.  (Will I be able to get information out of it
-> >> before the panic?)
+On Wed, Mar 04, 2015 at 08:00:46PM +0000, Mel Gorman wrote:
+> On Wed, Mar 04, 2015 at 08:33:53AM +1100, Dave Chinner wrote:
+> > On Tue, Mar 03, 2015 at 01:43:46PM +0000, Mel Gorman wrote:
+> > > On Tue, Mar 03, 2015 at 10:34:37PM +1100, Dave Chinner wrote:
+> > > > On Mon, Mar 02, 2015 at 10:56:14PM -0800, Linus Torvalds wrote:
+> > > > > On Mon, Mar 2, 2015 at 9:20 PM, Dave Chinner <david@fromorbit.com> wrote:
+> > > > > >>
+> > > > > >> But are those migrate-page calls really common enough to make these
+> > > > > >> things happen often enough on the same pages for this all to matter?
+> > > > > >
+> > > > > > It's looking like that's a possibility.
+> > > > > 
+> > > > > Hmm. Looking closer, commit 10c1045f28e8 already should have
+> > > > > re-introduced the "pte was already NUMA" case.
+> > > > > 
+> > > > > So that's not it either, afaik. Plus your numbers seem to say that
+> > > > > it's really "migrate_pages()" that is done more. So it feels like the
+> > > > > numa balancing isn't working right.
+> > > > 
+> > > > So that should show up in the vmstats, right? Oh, and there's a
+> > > > tracepoint in migrate_pages, too. Same 6x10s samples in phase 3:
+> > > > 
+> > > 
+> > > The stats indicate both more updates and more faults. Can you try this
+> > > please? It's against 4.0-rc1.
+> > > 
+> > > ---8<---
+> > > mm: numa: Reduce amount of IPI traffic due to automatic NUMA balancing
 > > 
-> > just keep taking samples of the worst case stack usage as the test
-> > runs. If there's anything unusual before the failure then it will
-> > show up, otherwise I'm not sure how to track this down...
+> > Makes no noticable difference to behaviour or performance. Stats:
+> > 
 > 
-> I think it should print "maximum stack depth" messages whenever a stack
-> reaches a new max excursion...
+> After going through the series again, I did not spot why there is a
+> difference. It's functionally similar and I would hate the theory that
+> this is somehow hardware related due to the use of bits it takes action
+> on.
 
-That gets printed only when the process exits, IIRC.
+I doubt it's hardware related - I'm testing inside a VM, and the
+host is a year old Dell r820 server, so it's a pretty common
+hardware I'd think.
+
+Guest:
+
+processor       : 15
+vendor_id       : GenuineIntel
+cpu family      : 6
+model           : 6
+model name      : QEMU Virtual CPU version 2.0.0
+stepping        : 3
+microcode       : 0x1
+cpu MHz         : 2199.998
+cache size      : 4096 KB
+physical id     : 15
+siblings        : 1
+core id         : 0
+cpu cores       : 1
+apicid          : 15
+initial apicid  : 15
+fpu             : yes
+fpu_exception   : yes
+cpuid level     : 4
+wp              : yes
+flags           : fpu de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pse36 clflush mmx fxsr sse sse2 syscall nx lm rep_good nopl pni cx16 x2apic popcnt hypervisor lahf_lm
+bugs            :
+bogomips        : 4399.99
+clflush size    : 64
+cache_alignment : 64
+address sizes   : 40 bits physical, 48 bits virtual
+power management:
+
+Host:
+
+processor       : 31
+vendor_id       : GenuineIntel
+cpu family      : 6
+model           : 45
+model name      : Intel(R) Xeon(R) CPU E5-4620 0 @ 2.20GHz
+stepping        : 7
+microcode       : 0x70d
+cpu MHz         : 1190.750
+cache size      : 16384 KB
+physical id     : 1
+siblings        : 16
+core id         : 7
+cpu cores       : 8
+apicid          : 47
+initial apicid  : 47
+fpu             : yes
+fpu_exception   : yes
+cpuid level     : 13
+wp              : yes
+flags           : fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc aperfmperf eagerfpu pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 cx16 xtpr pdcm pcid dca sse4_1 sse4_2 x2apic popcnt tsc_deadline_timer aes xsave avx lahf_lm ida arat epb xsaveopt pln pts dtherm tpr_shadow vnmi flexpriority ept vpid
+bogomips        : 4400.75
+clflush size    : 64
+cache_alignment : 64
+address sizes   : 46 bits physical, 48 bits virtual
+power management:
+
+> There is nothing in the manual that indicates that it would. Try this
+> as I don't want to leave this hanging before LSF/MM because it'll mask other
+> reports. It alters the maximum rate automatic NUMA balancing scans ptes.
+> 
+> ---
+>  kernel/sched/fair.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/kernel/sched/fair.c b/kernel/sched/fair.c
+> index 7ce18f3c097a..40ae5d84d4ba 100644
+> --- a/kernel/sched/fair.c
+> +++ b/kernel/sched/fair.c
+> @@ -799,7 +799,7 @@ update_stats_curr_start(struct cfs_rq *cfs_rq, struct sched_entity *se)
+>   * calculated based on the tasks virtual memory size and
+>   * numa_balancing_scan_size.
+>   */
+> -unsigned int sysctl_numa_balancing_scan_period_min = 1000;
+> +unsigned int sysctl_numa_balancing_scan_period_min = 2000;
+>  unsigned int sysctl_numa_balancing_scan_period_max = 60000;
+
+Made absolutely no difference:
+
+	357,635      migrate:mm_migrate_pages      ( +-  4.11% )
+
+numa_hit 36724642
+numa_miss 92477
+numa_foreign 92477
+numa_interleave 11835
+numa_local 36709671
+numa_other 107448
+numa_pte_updates 83924860
+numa_huge_pte_updates 0
+numa_hint_faults 81856035
+numa_hint_faults_local 22104529
+numa_pages_migrated 32766735
+pgmigrate_success 32766735
+pgmigrate_fail 0
+
+Runtime was actually a minute worse (18m35s vs 17m39s) than without
+this patch.
 
 Cheers,
 
