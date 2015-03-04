@@ -1,31 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id B3E977F3F
-	for <xfs@oss.sgi.com>; Wed,  4 Mar 2015 09:04:55 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 9146B8F8071
-	for <xfs@oss.sgi.com>; Wed,  4 Mar 2015 07:04:52 -0800 (PST)
-Received: from gum.cmpxchg.org (gum.cmpxchg.org [85.214.110.215]) by
-	cuda.sgi.com with ESMTP id d4yw5NYgW0DQRsnt (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 04 Mar 2015 07:04:50 -0800 (PST)
-Date: Wed, 4 Mar 2015 10:04:36 -0500
-From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: Re: How to handle TIF_MEMDIE stalls?
-Message-ID: <20150304150436.GA16442@phnom.home.cmpxchg.org>
-References: <20150219102431.GA15569@phnom.home.cmpxchg.org>
-	<20150219225217.GY12722@dastard>
-	<20150221235227.GA25079@phnom.home.cmpxchg.org>
-	<20150223004521.GK12722@dastard>
-	<20150222172930.6586516d.akpm@linux-foundation.org>
-	<20150223073235.GT4251@dastard>
-	<20150302202228.GA15089@phnom.home.cmpxchg.org>
-	<20150302231206.GK18360@dastard>
-	<20150303025023.GA22453@phnom.home.cmpxchg.org>
-	<20150304065242.GR18360@dastard>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20150304065242.GR18360@dastard>
+	by oss.sgi.com (Postfix) with ESMTP id 142567F3F
+	for <xfs@oss.sgi.com>; Wed,  4 Mar 2015 09:15:24 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 001958F8050
+	for <xfs@oss.sgi.com>; Wed,  4 Mar 2015 07:15:23 -0800 (PST)
+Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
+	with ESMTP id WdsDl5RAWSAI7X6Q (version=TLSv1 cipher=AES256-SHA
+	bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 04 Mar 2015 07:15:22 -0800 (PST)
+From: Jan Kara <jack@suse.cz>
+Subject: [PATCH 4/8] gfs2: Convert to using ->get_state callback
+Date: Wed,  4 Mar 2015 16:15:09 +0100
+Message-Id: <1425482113-1977-5-git-send-email-jack@suse.cz>
+In-Reply-To: <1425482113-1977-1-git-send-email-jack@suse.cz>
+References: <1425482113-1977-1-git-send-email-jack@suse.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,43 +23,84 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, dchinner@redhat.com, oleg@redhat.com, xfs@oss.sgi.com, mhocko@suse.cz, linux-mm@kvack.org, mgorman@suse.de, rientjes@google.com, Andrew Morton <akpm@linux-foundation.org>, torvalds@linux-foundation.org
+To: linux-fsdevel@vger.kernel.org
+Cc: cluster-devel@redhat.com, Jan Kara <jack@suse.cz>, xfs@oss.sgi.com
 
-On Wed, Mar 04, 2015 at 05:52:42PM +1100, Dave Chinner wrote:
-> I suspect you've completely misunderstood what I've been suggesting.
-> 
-> By definition, we have the pages we reserved in the reserve pool,
-> and unless we've exhausted that reservation with permanent
-> allocations we should always be able to allocate from it. If the
-> pool got emptied by demand page allocations, then we back off and
-> retry reclaim until the reclaimable objects are released back into
-> the reserve pool. i.e. reclaim fills reserve pools first, then when
-> they are full pages can go back on free lists for normal
-> allocations.  This provides the mechanism for forwards progress, and
-> it's essentially the same mechanism that mempools use to guarantee
-> forwards progess. the only difference is that reserve pool refilling
-> comes through reclaim via shrinker invocation...
+Convert gfs2 to use ->get_state callback instead of ->get_xstate.
 
-Yes, I had something else in mind.
+Acked-by: Bob Peterson <rpeterso@redhat.com>
+Signed-off-by: Jan Kara <jack@suse.cz>
+---
+ fs/gfs2/quota.c | 28 +++++++++++++++-------------
+ 1 file changed, 15 insertions(+), 13 deletions(-)
 
-In order to rely on replenishing through reclaim, you have to make
-sure that all allocations taken out of the pool are guaranteed to come
-back in a reasonable time frame.  So once Ted said that the filesystem
-will not be able to declare which allocations of a task are allowed to
-dip into its reserves, and thus allocations of indefinite lifetime can
-enter the picture, my mind went to a one-off reserve pool that doesn't
-rely on replenishing in order to make forward progress.  You declare
-the worst-case, finish the transaction, and return what is left of the
-reserves.  This obviously conflicts with the estimation model that you
-are proposing, I hope it's now clear where our misunderstanding lies.
-
-Yes, we can make this work if you can tell us which allocations have
-limited/controllable lifetime.
+diff --git a/fs/gfs2/quota.c b/fs/gfs2/quota.c
+index 3aa17d4d1cfc..fa54cbf4c866 100644
+--- a/fs/gfs2/quota.c
++++ b/fs/gfs2/quota.c
+@@ -1468,32 +1468,34 @@ int gfs2_quotad(void *data)
+ 	return 0;
+ }
+ 
+-static int gfs2_quota_get_xstate(struct super_block *sb,
+-				 struct fs_quota_stat *fqs)
++static int gfs2_quota_get_state(struct super_block *sb, struct qc_state *state)
+ {
+ 	struct gfs2_sbd *sdp = sb->s_fs_info;
+ 
+-	memset(fqs, 0, sizeof(struct fs_quota_stat));
+-	fqs->qs_version = FS_QSTAT_VERSION;
++	memset(state, 0, sizeof(*state));
+ 
+ 	switch (sdp->sd_args.ar_quota) {
+ 	case GFS2_QUOTA_ON:
+-		fqs->qs_flags |= (FS_QUOTA_UDQ_ENFD | FS_QUOTA_GDQ_ENFD);
++		state->s_state[USRQUOTA].flags |= QCI_LIMITS_ENFORCED;
++		state->s_state[GRPQUOTA].flags |= QCI_LIMITS_ENFORCED;
+ 		/*FALLTHRU*/
+ 	case GFS2_QUOTA_ACCOUNT:
+-		fqs->qs_flags |= (FS_QUOTA_UDQ_ACCT | FS_QUOTA_GDQ_ACCT);
++		state->s_state[USRQUOTA].flags |= QCI_ACCT_ENABLED |
++						  QCI_SYSFILE;
++		state->s_state[GRPQUOTA].flags |= QCI_ACCT_ENABLED |
++						  QCI_SYSFILE;
+ 		break;
+ 	case GFS2_QUOTA_OFF:
+ 		break;
+ 	}
+-
+ 	if (sdp->sd_quota_inode) {
+-		fqs->qs_uquota.qfs_ino = GFS2_I(sdp->sd_quota_inode)->i_no_addr;
+-		fqs->qs_uquota.qfs_nblks = sdp->sd_quota_inode->i_blocks;
++		state->s_state[USRQUOTA].ino =
++					GFS2_I(sdp->sd_quota_inode)->i_no_addr;
++		state->s_state[USRQUOTA].blocks = sdp->sd_quota_inode->i_blocks;
+ 	}
+-	fqs->qs_uquota.qfs_nextents = 1; /* unsupported */
+-	fqs->qs_gquota = fqs->qs_uquota; /* its the same inode in both cases */
+-	fqs->qs_incoredqs = list_lru_count(&gfs2_qd_lru);
++	state->s_state[USRQUOTA].nextents = 1;	/* unsupported */
++	state->s_state[GRPQUOTA] = state->s_state[USRQUOTA];
++	state->s_incoredqs = list_lru_count(&gfs2_qd_lru);
+ 	return 0;
+ }
+ 
+@@ -1638,7 +1640,7 @@ out_put:
+ 
+ const struct quotactl_ops gfs2_quotactl_ops = {
+ 	.quota_sync     = gfs2_quota_sync,
+-	.get_xstate     = gfs2_quota_get_xstate,
++	.get_state	= gfs2_quota_get_state,
+ 	.get_dqblk	= gfs2_get_dqblk,
+ 	.set_dqblk	= gfs2_set_dqblk,
+ };
+-- 
+2.1.4
 
 _______________________________________________
 xfs mailing list
