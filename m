@@ -1,31 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 41A2C7F3F
-	for <xfs@oss.sgi.com>; Wed,  4 Mar 2015 14:00:58 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id F4057304048
-	for <xfs@oss.sgi.com>; Wed,  4 Mar 2015 12:00:57 -0800 (PST)
-Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id whZcagOzkzcU4R8X (version=TLSv1 cipher=AES256-SHA
-	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 04 Mar 2015 12:00:52 -0800 (PST)
-Date: Wed, 4 Mar 2015 20:00:46 +0000
-From: Mel Gorman <mgorman@suse.de>
-Subject: Re: [regression v4.0-rc1] mm: IPIs from TLB flushes causing
-	significant performance degradation.
-Message-ID: <20150304200046.GP3087@suse.de>
-References: <20150302010413.GP4251@dastard>
-	<CA+55aFzGFvVGD_8Y=jTkYwgmYgZnW0p0Fjf7OHFPRcL6Mz4HOw@mail.gmail.com>
-	<20150303014733.GL18360@dastard>
-	<CA+55aFw+7V9DfxBA2_DhMNrEQOkvdwjFFga5Y67-a6yVeAz+NQ@mail.gmail.com>
-	<CA+55aFw+fb=Fh4M2wA4dVskgqN7PhZRGZS6JTMx4Rb1Qn++oaA@mail.gmail.com>
-	<20150303052004.GM18360@dastard>
-	<CA+55aFyczb5asoTwhzaJr1JdRi1epg1A6cFJgnzMMZj6U0gFWA@mail.gmail.com>
-	<20150303113437.GR4251@dastard> <20150303134346.GO3087@suse.de>
-	<20150303213353.GS4251@dastard>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id CA3007F3F
+	for <xfs@oss.sgi.com>; Wed,  4 Mar 2015 14:57:03 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 56FAAAC003
+	for <xfs@oss.sgi.com>; Wed,  4 Mar 2015 12:57:00 -0800 (PST)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id GKt44DhDTTupBvSF (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 04 Mar 2015 12:56:59 -0800 (PST)
+Received: from int-mx13.intmail.prod.int.phx2.redhat.com
+	(int-mx13.intmail.prod.int.phx2.redhat.com [10.5.11.26])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id t24KuwOl028904
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256
+	verify=FAIL) for <xfs@oss.sgi.com>; Wed, 4 Mar 2015 15:56:58 -0500
+Received: from liberator.sandeen.net (ovpn01.gateway.prod.ext.phx2.redhat.com
+	[10.5.9.1])
+	by int-mx13.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id t24KuvVn008675
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES128-SHA bits=128 verify=NO)
+	for <xfs@oss.sgi.com>; Wed, 4 Mar 2015 15:56:58 -0500
+Message-ID: <54F77199.8030708@redhat.com>
+Date: Wed, 04 Mar 2015 14:56:57 -0600
+From: Eric Sandeen <sandeen@redhat.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20150303213353.GS4251@dastard>
+Subject: [PATCH 0/4] xfsprogs: a handful of fixes
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -38,64 +37,9 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Matt B <jackdachef@gmail.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, linux-mm <linux-mm@kvack.org>, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, Ingo Molnar <mingo@kernel.org>
+To: xfs-oss <xfs@oss.sgi.com>
 
-On Wed, Mar 04, 2015 at 08:33:53AM +1100, Dave Chinner wrote:
-> On Tue, Mar 03, 2015 at 01:43:46PM +0000, Mel Gorman wrote:
-> > On Tue, Mar 03, 2015 at 10:34:37PM +1100, Dave Chinner wrote:
-> > > On Mon, Mar 02, 2015 at 10:56:14PM -0800, Linus Torvalds wrote:
-> > > > On Mon, Mar 2, 2015 at 9:20 PM, Dave Chinner <david@fromorbit.com> wrote:
-> > > > >>
-> > > > >> But are those migrate-page calls really common enough to make these
-> > > > >> things happen often enough on the same pages for this all to matter?
-> > > > >
-> > > > > It's looking like that's a possibility.
-> > > > 
-> > > > Hmm. Looking closer, commit 10c1045f28e8 already should have
-> > > > re-introduced the "pte was already NUMA" case.
-> > > > 
-> > > > So that's not it either, afaik. Plus your numbers seem to say that
-> > > > it's really "migrate_pages()" that is done more. So it feels like the
-> > > > numa balancing isn't working right.
-> > > 
-> > > So that should show up in the vmstats, right? Oh, and there's a
-> > > tracepoint in migrate_pages, too. Same 6x10s samples in phase 3:
-> > > 
-> > 
-> > The stats indicate both more updates and more faults. Can you try this
-> > please? It's against 4.0-rc1.
-> > 
-> > ---8<---
-> > mm: numa: Reduce amount of IPI traffic due to automatic NUMA balancing
-> 
-> Makes no noticable difference to behaviour or performance. Stats:
-> 
-
-After going through the series again, I did not spot why there is a
-difference. It's functionally similar and I would hate the theory that
-this is somehow hardware related due to the use of bits it takes action
-on. There is nothing in the manual that indicates that it would. Try this
-as I don't want to leave this hanging before LSF/MM because it'll mask other
-reports. It alters the maximum rate automatic NUMA balancing scans ptes.
-
----
- kernel/sched/fair.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/kernel/sched/fair.c b/kernel/sched/fair.c
-index 7ce18f3c097a..40ae5d84d4ba 100644
---- a/kernel/sched/fair.c
-+++ b/kernel/sched/fair.c
-@@ -799,7 +799,7 @@ update_stats_curr_start(struct cfs_rq *cfs_rq, struct sched_entity *se)
-  * calculated based on the tasks virtual memory size and
-  * numa_balancing_scan_size.
-  */
--unsigned int sysctl_numa_balancing_scan_period_min = 1000;
-+unsigned int sysctl_numa_balancing_scan_period_min = 2000;
- unsigned int sysctl_numa_balancing_scan_period_max = 60000;
- 
- /* Portion of address space to scan in MB */
+4 fixes found while running xfs_repair & xfs_db over fuzzed images...
 
 _______________________________________________
 xfs mailing list
