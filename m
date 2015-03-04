@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 6F7BF7F55
-	for <xfs@oss.sgi.com>; Wed,  4 Mar 2015 09:54:16 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 30C318F804C
-	for <xfs@oss.sgi.com>; Wed,  4 Mar 2015 07:54:16 -0800 (PST)
-Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id WuKS0ZvjmJEHAhWn (version=TLSv1 cipher=AES256-SHA
-	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 04 Mar 2015 07:54:13 -0800 (PST)
-Date: Wed, 4 Mar 2015 16:54:08 +0100
-From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH 1/6] dax: don't abuse get_block mapping for endio callbacks
-Message-ID: <20150304155408.GA2799@quack.suse.cz>
-References: <1425425427-16283-1-git-send-email-david@fromorbit.com>
-	<1425425427-16283-2-git-send-email-david@fromorbit.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 5950E7F5E
+	for <xfs@oss.sgi.com>; Wed,  4 Mar 2015 09:54:25 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id BF97AAC007
+	for <xfs@oss.sgi.com>; Wed,  4 Mar 2015 07:54:24 -0800 (PST)
+Received: from fieldses.org (fieldses.org [173.255.197.46]) by cuda.sgi.com
+	with ESMTP id S7wEixCbHhiNGQo2 for <xfs@oss.sgi.com>;
+	Wed, 04 Mar 2015 07:54:22 -0800 (PST)
+Date: Wed, 4 Mar 2015 10:54:21 -0500
+From: "J. Bruce Fields" <bfields@fieldses.org>
+Subject: Re: panic on 4.20 server exporting xfs filesystem
+Message-ID: <20150304155421.GE1627@fieldses.org>
+References: <20150303221033.GB19439@fieldses.org>
+	<20150303224456.GV4251@dastard>
+	<20150304020826.GD19439@fieldses.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1425425427-16283-2-git-send-email-david@fromorbit.com>
+In-Reply-To: <20150304020826.GD19439@fieldses.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,236 +31,91 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
-Cc: linux-fsdevel@vger.kernel.org, willy@linux.intel.com, jack@suse.cz, xfs@oss.sgi.com
+Cc: linux-nfs@vger.kernel.org, Christoph Hellwig <hch@lst.de>, xfs@oss.sgi.com
 
-On Wed 04-03-15 10:30:22, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
+On Tue, Mar 03, 2015 at 09:08:26PM -0500, J. Bruce Fields wrote:
+> On Wed, Mar 04, 2015 at 09:44:56AM +1100, Dave Chinner wrote:
+> > On Tue, Mar 03, 2015 at 05:10:33PM -0500, J. Bruce Fields wrote:
+> > > I'm getting mysterious crashes on a server exporting an xfs filesystem.
+> > > 
+> > > Strangely, I've reproduced this on
+> > > 
+> > > 	93aaa830fc17 "Merge tag 'xfs-pnfs-for-linus-3.20-rc1' of git://git.kernel.org/pub/scm/linux/kernel/git/dgc/linux-xfs
+> > > 
+> > > but haven't yet managed to reproduce on either of its parents
+> > > (24a52e412ef2 or 781355c6e5ae).  That might just be chance, I'll try
+> > > again.
+> > 
+> > I think you'll find that the bug is only triggered after that XFS
+> > merge because it's what enabled block layout support in the server,
+> > i.e.  nfsd4_setup_layout_type() is now setting the export type to
+> > LAYOUT_BLOCK_VOLUME because XFS has added the necessary functions to
+> > it's export ops.
 > 
-> dax_fault() currently relies on the get_block callback to attach an
-> io completion callback to the mapping buffer head so that it can
-> run unwritten extent conversion after zeroing allocated blocks.
+> Doh--after all the discussion I didn't actually pay attention to what
+> happened in the end.  OK, I see, you're right, it's all more-or-less
+> dead code till that merge.
 > 
-> Instead of this hack, pass the conversion callback directly into
-> dax_fault() similar to the get_block callback. When the filesystem
-> allocates unwritten extents, it will set the buffer_unwritten()
-> flag, and hence the dax_fault code can call the completion function
-> in the contexts where it is necessary without overloading the
-> mapping buffer head.
+> Christoph's code was passing all my tests before that, so maybe we
+> broke something in the merge process.
 > 
-> Note: The changes to ext4 to use this interface are suspect at best.
-> In fact, the way ext4 did this end_io assignment in the first place
-> looks suspect because it only set a completion callback when there
-> wasn't already some other write() call taking place on the same
-> inode. The ext4 end_io code looks rather intricate and fragile with
-> all it's reference counting and passing to different contexts for
-> modification via inode private pointers that aren't protected by
-> locks...
-  Yeah, ext4 is currently broken in that regard so if we won't make things
-worse, I'm OK.
+> Alternatively, it could be because I've added more tests--I'll rerun my
+> current tests on his original branch....
 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> ---
->  fs/dax.c           | 15 ++++++++-------
->  fs/ext2/file.c     |  4 ++--
->  fs/ext4/file.c     | 16 ++++++++++++++--
->  fs/ext4/inode.c    | 21 +++++++--------------
->  include/linux/fs.h |  6 ++++--
->  5 files changed, 35 insertions(+), 27 deletions(-)
-> 
-> diff --git a/fs/dax.c b/fs/dax.c
-> index ed1619e..d7b4dba 100644
-> --- a/fs/dax.c
-> +++ b/fs/dax.c
-> @@ -269,7 +269,8 @@ static int copy_user_bh(struct page *to, struct buffer_head *bh,
->  }
->  
->  static int dax_insert_mapping(struct inode *inode, struct buffer_head *bh,
-> -			struct vm_area_struct *vma, struct vm_fault *vmf)
-> +			struct vm_area_struct *vma, struct vm_fault *vmf,
-> +			dax_iodone_t complete_unwritten)
->  {
->  	struct address_space *mapping = inode->i_mapping;
->  	sector_t sector = bh->b_blocknr << (inode->i_blkbits - 9);
-> @@ -310,14 +311,14 @@ static int dax_insert_mapping(struct inode *inode, struct buffer_head *bh,
->   out:
->  	i_mmap_unlock_read(mapping);
->  
-> -	if (bh->b_end_io)
-> -		bh->b_end_io(bh, 1);
-> +	if (buffer_unwritten(bh))
-> +		complete_unwritten(bh, 1);
->  
->  	return error;
->  }
-  So frankly I don't see a big point in passing completion callback into
-dax_insert_mapping() only to call the function at the end of it. We could
-as well call the completion function from do_dax_fault() where it would
-seem more natural to me. But I don't feel too strongly about this.
+The below is on Christoph's pnfsd-for-3.20-4 (at cd4b02e).  Doesn't look
+very informative.  I'm running xfstests over NFSv4.1 with client and
+server running the same kernel, the filesystem in question is xfs, but
+isn't otherwise available to the client (so the client shouldn't be
+doing pnfs).
 
-Instead of the above I was also thinking about some way to pass information
-out of do_dax_fault() into filesystem so that it could just call completion
-handler itself but the completion callback is more standard interface I
-guess.
+--b.
 
-								Honza
-
->  static int do_dax_fault(struct vm_area_struct *vma, struct vm_fault *vmf,
-> -			get_block_t get_block)
-> +			get_block_t get_block, dax_iodone_t complete_unwritten)
->  {
->  	struct file *file = vma->vm_file;
->  	struct address_space *mapping = file->f_mapping;
-> @@ -418,7 +419,7 @@ static int do_dax_fault(struct vm_area_struct *vma, struct vm_fault *vmf,
->  		page_cache_release(page);
->  	}
->  
-> -	error = dax_insert_mapping(inode, &bh, vma, vmf);
-> +	error = dax_insert_mapping(inode, &bh, vma, vmf, complete_unwritten);
->  
->   out:
->  	if (error == -ENOMEM)
-> @@ -446,7 +447,7 @@ static int do_dax_fault(struct vm_area_struct *vma, struct vm_fault *vmf,
->   * fault handler for DAX files.
->   */
->  int dax_fault(struct vm_area_struct *vma, struct vm_fault *vmf,
-> -			get_block_t get_block)
-> +	      get_block_t get_block, dax_iodone_t complete_unwritten)
->  {
->  	int result;
->  	struct super_block *sb = file_inode(vma->vm_file)->i_sb;
-> @@ -455,7 +456,7 @@ int dax_fault(struct vm_area_struct *vma, struct vm_fault *vmf,
->  		sb_start_pagefault(sb);
->  		file_update_time(vma->vm_file);
->  	}
-> -	result = do_dax_fault(vma, vmf, get_block);
-> +	result = do_dax_fault(vma, vmf, get_block, complete_unwritten);
->  	if (vmf->flags & FAULT_FLAG_WRITE)
->  		sb_end_pagefault(sb);
->  
-> diff --git a/fs/ext2/file.c b/fs/ext2/file.c
-> index e317017..8da747a 100644
-> --- a/fs/ext2/file.c
-> +++ b/fs/ext2/file.c
-> @@ -28,12 +28,12 @@
->  #ifdef CONFIG_FS_DAX
->  static int ext2_dax_fault(struct vm_area_struct *vma, struct vm_fault *vmf)
->  {
-> -	return dax_fault(vma, vmf, ext2_get_block);
-> +	return dax_fault(vma, vmf, ext2_get_block, NULL);
->  }
->  
->  static int ext2_dax_mkwrite(struct vm_area_struct *vma, struct vm_fault *vmf)
->  {
-> -	return dax_mkwrite(vma, vmf, ext2_get_block);
-> +	return dax_mkwrite(vma, vmf, ext2_get_block, NULL);
->  }
->  
->  static const struct vm_operations_struct ext2_dax_vm_ops = {
-> diff --git a/fs/ext4/file.c b/fs/ext4/file.c
-> index 33a09da..f7dabb1 100644
-> --- a/fs/ext4/file.c
-> +++ b/fs/ext4/file.c
-> @@ -192,15 +192,27 @@ errout:
->  }
->  
->  #ifdef CONFIG_FS_DAX
-> +static void ext4_end_io_unwritten(struct buffer_head *bh, int uptodate)
-> +{
-> +	struct inode *inode = bh->b_assoc_map->host;
-> +	/* XXX: breaks on 32-bit > 16GB. Is that even supported? */
-> +	loff_t offset = (loff_t)(uintptr_t)bh->b_private << inode->i_blkbits;
-> +	int err;
-> +	if (!uptodate)
-> +		return;
-> +	WARN_ON(!buffer_unwritten(bh));
-> +	err = ext4_convert_unwritten_extents(NULL, inode, offset, bh->b_size);
-> +}
-> +
->  static int ext4_dax_fault(struct vm_area_struct *vma, struct vm_fault *vmf)
->  {
-> -	return dax_fault(vma, vmf, ext4_get_block);
-> +	return dax_fault(vma, vmf, ext4_get_block, ext4_end_io_unwritten);
->  					/* Is this the right get_block? */
->  }
->  
->  static int ext4_dax_mkwrite(struct vm_area_struct *vma, struct vm_fault *vmf)
->  {
-> -	return dax_mkwrite(vma, vmf, ext4_get_block);
-> +	return dax_mkwrite(vma, vmf, ext4_get_block, ext4_end_io_unwritten);
->  }
->  
->  static const struct vm_operations_struct ext4_dax_vm_ops = {
-> diff --git a/fs/ext4/inode.c b/fs/ext4/inode.c
-> index 5cb9a21..43433de 100644
-> --- a/fs/ext4/inode.c
-> +++ b/fs/ext4/inode.c
-> @@ -657,18 +657,6 @@ has_zeroout:
->  	return retval;
->  }
->  
-> -static void ext4_end_io_unwritten(struct buffer_head *bh, int uptodate)
-> -{
-> -	struct inode *inode = bh->b_assoc_map->host;
-> -	/* XXX: breaks on 32-bit > 16GB. Is that even supported? */
-> -	loff_t offset = (loff_t)(uintptr_t)bh->b_private << inode->i_blkbits;
-> -	int err;
-> -	if (!uptodate)
-> -		return;
-> -	WARN_ON(!buffer_unwritten(bh));
-> -	err = ext4_convert_unwritten_extents(NULL, inode, offset, bh->b_size);
-> -}
-> -
->  /* Maximum number of blocks we map for direct IO at once. */
->  #define DIO_MAX_BLOCKS 4096
->  
-> @@ -706,10 +694,15 @@ static int _ext4_get_block(struct inode *inode, sector_t iblock,
->  
->  		map_bh(bh, inode->i_sb, map.m_pblk);
->  		bh->b_state = (bh->b_state & ~EXT4_MAP_FLAGS) | map.m_flags;
-> -		if (IS_DAX(inode) && buffer_unwritten(bh) && !io_end) {
-> +		if (IS_DAX(inode) && buffer_unwritten(bh)) {
-> +			/*
-> +			 * dgc: I suspect unwritten conversion on ext4+DAX is
-> +			 * fundamentally broken here when there are concurrent
-> +			 * read/write in progress on this inode.
-> +			 */
-> +			WARN_ON_ONCE(io_end);
->  			bh->b_assoc_map = inode->i_mapping;
->  			bh->b_private = (void *)(unsigned long)iblock;
-> -			bh->b_end_io = ext4_end_io_unwritten;
->  		}
->  		if (io_end && io_end->flag & EXT4_IO_END_UNWRITTEN)
->  			set_buffer_defer_completion(bh);
-> diff --git a/include/linux/fs.h b/include/linux/fs.h
-> index 937e280..82100ae 100644
-> --- a/include/linux/fs.h
-> +++ b/include/linux/fs.h
-> @@ -70,6 +70,7 @@ typedef int (get_block_t)(struct inode *inode, sector_t iblock,
->  			struct buffer_head *bh_result, int create);
->  typedef void (dio_iodone_t)(struct kiocb *iocb, loff_t offset,
->  			ssize_t bytes, void *private);
-> +typedef void (dax_iodone_t)(struct buffer_head *bh_map, int uptodate);
->  
->  #define MAY_EXEC		0x00000001
->  #define MAY_WRITE		0x00000002
-> @@ -2603,8 +2604,9 @@ ssize_t dax_do_io(int rw, struct kiocb *, struct inode *, struct iov_iter *,
->  int dax_clear_blocks(struct inode *, sector_t block, long size);
->  int dax_zero_page_range(struct inode *, loff_t from, unsigned len, get_block_t);
->  int dax_truncate_page(struct inode *, loff_t from, get_block_t);
-> -int dax_fault(struct vm_area_struct *, struct vm_fault *, get_block_t);
-> -#define dax_mkwrite(vma, vmf, gb)	dax_fault(vma, vmf, gb)
-> +int dax_fault(struct vm_area_struct *, struct vm_fault *, get_block_t,
-> +		dax_iodone_t);
-> +#define dax_mkwrite(vma, vmf, gb, iod)	dax_fault(vma, vmf, gb, iod)
->  
->  #ifdef CONFIG_BLOCK
->  typedef void (dio_submit_t)(int rw, struct bio *bio, struct inode *inode,
-> -- 
-> 2.0.0
-> 
--- 
-Jan Kara <jack@suse.cz>
-SUSE Labs, CR
+BUG: unable to handle kernel paging request at 00000000757d4900
+IP: [<ffffffff810b59af>] cpuacct_charge+0x5f/0xa0
+PGD 0 
+Thread overran stack, or stack corrupted
+Oops: 0000 [#1] PREEMPT SMP DEBUG_PAGEALLOC
+Modules linked in: rpcsec_gss_krb5 nfsd auth_rpcgss oid_registry nfs_acl lockd grace sunrpc
+CPU: 1 PID: 18130 Comm: kworker/1:0 Not tainted 3.19.0-rc4-00205-gcd4b02e #79
+Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.7.5-20140709_153950- 04/01/2014
+Workqueue: rpciod rpc_async_schedule [sunrpc]
+task: ffff880030639710 ti: ffff88001e698000 task.ti: ffff88001e698000
+RIP: 0010:[<ffffffff810b59af>]  [<ffffffff810b59af>] cpuacct_charge+0x5f/0xa0
+RSP: 0018:ffff88007f903e08  EFLAGS: 00010092
+RAX: 000000000000d4e8 RBX: 000000001e698038 RCX: 000000001e698038
+RDX: ffffffff822377c0 RSI: 0000000000000003 RDI: ffff880030639f78
+RBP: ffff88007f903e38 R08: 0000000000000000 R09: 0000000000000001
+R10: 000000000000001b R11: ffffffff82238fc0 R12: 00000000003b4c1b
+R13: ffff880030639710 R14: ffff880030639710 R15: 0000001536dbb554
+FS:  0000000000000000(0000) GS:ffff88007f900000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 00000000757d4900 CR3: 000000006d8e2000 CR4: 00000000000406e0
+Stack:
+ ffffffff810b5955 0000000000000000 ffff88007f903e98 ffff880030639778
+ ffff88007f913698 00000000003b4c1b ffff88007f903e78 ffffffff810a47d0
+ ffff88007f903e78 ffff880030639778 ffff88007f913698 ffff88007f913600
+Call Trace:
+ <IRQ> 
+ [<ffffffff810b5955>] ? cpuacct_charge+0x5/0xa0
+ [<ffffffff810a47d0>] update_curr+0xd0/0x190
+ [<ffffffff810a767f>] task_tick_fair+0x1df/0x4f0
+ [<ffffffff8109e147>] scheduler_tick+0x57/0xd0
+ [<ffffffff810d7e11>] update_process_times+0x51/0x60
+ [<ffffffff810e43df>] tick_periodic+0x2f/0xc0
+ [<ffffffff8165b517>] ? debug_smp_processor_id+0x17/0x20
+ [<ffffffff810e4599>] tick_handle_periodic+0x29/0x70
+ [<ffffffff81033e6a>] local_apic_timer_interrupt+0x3a/0x70
+ [<ffffffff81a8fb81>] smp_apic_timer_interrupt+0x41/0x60
+ [<ffffffff81a8df1f>] apic_timer_interrupt+0x6f/0x80
+ <EOI> 
+Code: 31 c9 45 31 c0 31 f6 48 c7 c7 c0 8f 23 82 e8 a9 71 00 00 49 8b 85 c0 0f 00 00 48 63 cb 48 8b 50 58 0f 1f 00 48 8b 82 d0 00 00 00 <48> 03 04 cd 40 47 31 82 4c 01 20 48 8b 52 48 48 85 d2 75 e5 48 
+RIP  [<ffffffff810b59af>] cpuacct_charge+0x5f/0xa0
+ RSP <ffff88007f903e08>
+CR2: 00000000757d4900
+---[ end trace fa7901843d14b3ab ]---
+Kernel panic - not syncing: Fatal exception in interrupt
+Kernel Offset: 0x0 from 0xffffffff81000000 (relocation range: 0xffffffff80000000-0xffffffff9fffffff)
+---[ end Kernel panic - not syncing: Fatal exception in interrupt
 
 _______________________________________________
 xfs mailing list
