@@ -1,25 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 37C2E7F3F
-	for <xfs@oss.sgi.com>; Thu,  5 Mar 2015 05:05:16 -0600 (CST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 242397F3F
+	for <xfs@oss.sgi.com>; Thu,  5 Mar 2015 07:15:35 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id C7238AC01A
-	for <xfs@oss.sgi.com>; Thu,  5 Mar 2015 03:05:12 -0800 (PST)
-Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id YrbXtWt3YHfkY3jP (version=TLSv1 cipher=AES256-SHA
-	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 05 Mar 2015 03:05:09 -0800 (PST)
-Date: Thu, 5 Mar 2015 12:05:04 +0100
-From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH 3/6] xfs: add DAX file operations support
-Message-ID: <20150305110504.GC2836@quack.suse.cz>
-References: <1425425427-16283-1-git-send-email-david@fromorbit.com>
-	<1425425427-16283-4-git-send-email-david@fromorbit.com>
-	<20150304161848.GB2799@quack.suse.cz>
-	<20150304220005.GV18360@dastard>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id D9730304039
+	for <xfs@oss.sgi.com>; Thu,  5 Mar 2015 05:15:31 -0800 (PST)
+Received: from darcachon.resolversystems.com (darcachon.resolversystems.com
+	[80.68.93.186]) by cuda.sgi.com with ESMTP id NVmXAl1F0IIjQFID
+	(version=TLSv1 cipher=AES128-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Thu, 05 Mar 2015 05:15:28 -0800 (PST)
+Message-ID: <54F856E7.10006@pythonanywhere.com>
+Date: Thu, 05 Mar 2015 13:15:19 +0000
+From: Harry <harry@pythonanywhere.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20150304220005.GV18360@dastard>
+References: <54EC958E.2000001@pythonanywhere.com>
+	<20150224215907.GA18360@dastard>
+	<54EF1A8F.7030505@pythonanywhere.com>
+In-Reply-To: <54EF1A8F.7030505@pythonanywhere.com>
+Subject: Re: trying to avoid a lengthy quotacheck by deleting all quota data
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,89 +26,441 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============1270174675149218432=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-fsdevel@vger.kernel.org, willy@linux.intel.com, Jan Kara <jack@suse.cz>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
+Cc: "developers@pythonanywhere.com" <developers@pythonanywhere.com>
 
-On Thu 05-03-15 09:00:05, Dave Chinner wrote:
-> On Wed, Mar 04, 2015 at 05:18:48PM +0100, Jan Kara wrote:
-> > On Wed 04-03-15 10:30:24, Dave Chinner wrote:
-> > > From: Dave Chinner <dchinner@redhat.com>
-> > > 
-> > > Add the initial support for DAX file operations to XFS. This
-> > > includes the necessary block allocation and mmap page fault hooks
-> > > for DAX to function.
-> > > 
-> > > Note that the current block allocation code abuses the mapping
-> > > buffer head to provide a completion callback for unwritten extent
-> > > allocation when DAX is clearing blocks. The DAX interface needs to
-> > > be changed to provide a callback similar to get_blocks for this
-> > > callback.
-> > > 
-> > > Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> .....
-> > > +static int
-> > > +xfs_filemap_dax_page_mkwrite(
-> > > +	struct vm_area_struct	*vma,
-> > > +	struct vm_fault		*vmf)
-> > > +{
-> > > +	struct xfs_inode	*ip = XFS_I(vma->vm_file->f_mapping->host);
-> > > +	int			error;
-> > > +
-> > > +	trace_xfs_filemap_page_mkwrite(ip);
-> > > +
-> > > +	xfs_ilock(ip, XFS_MMAPLOCK_SHARED);
-> >   So I think the lock ordering of XFS_MMAPLOCK and freezing protection is
-> > suspicious (and actually so is for normal write faults as I'm looking -
-> > didn't realize that when I was first reading your MMAPLOCK patches).
-> > Because you take XFS_MMAPLOCK outside of freeze protection however usually
-> > we want freeze protection to be the outermost lock - in particular in
-> > xfs_file_fallocate() you take XFS_MMAPLOCK inside freeze protection I
-> > think.
-> 
-> OK, so why isn't lockdep triggering on that? lockdep is aware of
-> inode locks and the freeze states, supposedly to pick up these exact
-> issues...
-> 
-> Oh, probably because the sb freeze order is write, pagefault,
-> transaction.
-> 
-> i.e. In the fallocate case, we do sb_start_write, MMAP_LOCK. If we are in
-> a freeze case, we aren't going to freeze page faults until we've
-> frozen all the writes have drained, so there isn't a lock order
-> dependency there. Same for any other mnt_want_write/sb-start_write
-> based modification. 
-> 
-> Hence the fallocate path and anything that runs through setattr will
-> complete and release the mmap lock and then be prevented from taking
-> it again by the time sb_start_pagefault() can block with the mmap
-> lock held.  So there isn't actually a deadlock there because of the
-> way freeze works, and that's why lockdep is staying silent.
-  Yeah, you're right there isn't a deadlock possibility. After all the lock
-ranking of your MMAP_LOCk is currently the same as of mmap_sem (and the
-difficult lock ordering of that semaphore has been the reason why we have
-special type of freeze protection for page faults).
+This is a multi-part message in MIME format.
+--===============1270174675149218432==
+Content-Type: multipart/alternative;
+ boundary="------------000700080709050705010805"
 
-> Still, I probably need to fix it so I'm not leaving a potential
-> landmine around.
-  I would find it easier to grasp. Yes.
+This is a multi-part message in MIME format.
+--------------000700080709050705010805
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
 
-> > So you'll need to do what ext4 needs to do - take freeze protection, take
-> > fs specific locks, and then call do_dax_fault(). Matthew has a patch to
-> > actually export do_dax_fault (as __dax_fault()) for filesystems.
-> 
-> pointer to it? if none, I'll just write my own....
-  http://permalink.gmane.org/gmane.comp.file-systems.ext4/47866
+Update -- so far, we've not managed to gain any confidence that we'll 
+ever be able to re-mount that disk. The general consensus seems to be to 
+fish all the data off the disk using rsync, and then move off XFS to ext4.
 
-								Honza
+Not a very helpful message for y'all to hear, I know.  But if it's any 
+help in prioritising your future work, i think the dealbreaker for us 
+was the inescapable quotacheck on mount, which means that any time a 
+fileserver goes down unexpectedly, we have an unavoidable, 
+indeterminate-but-long period of downtime...
+
+hp
+
+On 26/02/15 13:07, Harry wrote:
+> Thanks Dave,
+>
+> * The main filesystem is currently online and seems ok, but quotas are 
+> not active.
+> * We want to estimate how long the quotacheck will take when we 
+> reboot/remount
+> * We're even a bit worried the disk might be in a broken state, such 
+> that the quotacheck won't actually complete successfully at all.
+>
+> A brief description of our setup:
+> - we're on AWS
+> - using mdadm to make a raid array out of 8x 200GB SSD EBS drives (and 
+> lvm)
+> - we're using DRBD to make a live backup of all writes to another 
+> instance with a similar raid array
+>
+> We're not doing our experiments on our live system.  Instead, we're 
+> using the drives from the DRBD target system.  We take DRBD offline, 
+> so it's no longer writing, then we take snapshots of the drives, then 
+> remount those elsewhere so we can experiment without disturbing the 
+> live system.
+>
+> We've managed to mount the backup drives ok, with the 'noquota' 
+> option.  Files look ok.  But, so far, we haven't been able to get a 
+> quotacheck to complete.  We've waited 12 hours+. Do you think it's 
+> possible DRBD is giving us copies of the live disks that are 
+> inconsistent somehow?
+>
+> How can we reassure ourselves that this live disk *will* mount 
+> successfully if we reboot the machine, and can we estimate how long it 
+> will take?
+>
+>     /mount | grep log_storage/
+>     /dev/drbd0 on /mnt/log_storage type xfs
+>     (rw,prjquota,allocsize=64k,_netdev)
+>
+>     /df -i /mnt/log_storage//
+>     Filesystem        Inodes    IUsed     IFree IUse% Mounted on
+>     /dev/drbd0     938210704 72929413 865281291    8% /mnt/log_storage
+>
+>     /df -h /mnt/log_storage//
+>     Filesystem      Size  Used Avail Use% Mounted on
+>     /dev/drbd0      1.6T  1.4T  207G  88% /mnt/log_storage
+>
+>     /xfs_info ///mnt/log_storage////
+>     /<lots of errors re: cannot find mount point path `xyz`>/
+>     meta-data=/dev/drbd0             isize=256    agcount=64,
+>     agsize=6553600 blks
+>              =                       sectsz=512   attr=2
+>     data     =                       bsize=4096 blocks=418906112,
+>     imaxpct=25
+>              =                       sunit=0      swidth=0 blks
+>     naming   =version 2              bsize=4096   ascii-ci=0
+>     log      =internal               bsize=4096   blocks=12800, version=2
+>              =                       sectsz=512   sunit=0 blks,
+>     lazy-count=1
+>     realtime =none                   extsz=4096   blocks=0, rtextents=0
+>
+> The missing paths errors are, I think, from folders we've deleted but 
+> not yet removed from the projid/projects folders. I *think* they're a 
+> red herring here.
+>
+> We've also tried running xfs_repair on the backup drives.  It takes 
+> about 3 hours, and shows a lot of errors about incorrect directory 
+> flags on inodes.  here's one from the bottom of the log of a recent 
+> attempt:
+>
+>     directory flags set on non-directory inode 268702898
+>
+>
+> rgds,
+> Confused in London.
+>
+>
+>
+> On 24/02/15 21:59, Dave Chinner wrote:
+>> On Tue, Feb 24, 2015 at 03:15:26PM +0000, Harry wrote:
+>>> Hi there,
+>>>
+>>> We've got a moderately large disk (~2TB) into an inconsistent state,
+>>> such that it's going to want a quotacheck the next time we mount it
+>>> (it's currently mounted with quota accounting inactive).  Our tests
+>>> suggest this is going to take several hours, and cause an outage we
+>>> can't afford.
+>> What tests are you performing to suggest a quotacheck of a small
+>> filesystem will take hours? (yes, 2TB is a *small* filesystem).
+>>
+>> (xfs_info, df -i, df -h, storage hardware, etc are all relevant
+>> here).
+>>
+>>> We're wondering whether there's a 'nuke the site from orbit' option
+>>> that will let us avoid it.  The plan would be to:
+>>> - switch off quotas and delete them completely, using the commands:
+>>>    -- disable
+>>>    -- off
+>>>    -- remove
+>>> - remount the drive with -o prjquota, hoping that there will not be
+>>> a quotacheck, because we've deleted all the old quota data
+>> Mounting with a quota enabled *forces* a quota check if quotas
+>> aren't currently enabled. You cannot avoid it; it's the way quota
+>> consistency is created.
+>>
+>>> - run a script gradually restore all the quotas, one by one and in
+>>> good time, from our own external backups (we've got the quotas in a
+>>> database basically).
+>> Can't be done - quotas need to be consistent with what is currently
+>> on disk, not what you have in a backup somewhere.
+>>
+>>> So the questions are:
+>>> - is there a way to remove all quota information from a mounted drive?
+>>> (the current mount status seems to be that it tried to mount it with
+>> mount with quotas on and turn them off via xfs_quota,i or mount
+>> without quota options at all. Then run the remove command in
+>> xfs_quota.
+>>
+>>> -o prjquota but that quota accounting is *not* active)
+>> Not possible.
+>>
+>>> - will it work and let us remount the drive with -o prjquota without
+>>> causing a quotacheck?
+>> No.
+>>
+>> Cheers,
+>>
+>> Dave.
+>
+> Rgds,
+> Harry + the PythonAnywhere team.
+>
+> -- 
+> Harry Percival
+> Developer
+> harry@pythonanywhere.com
+>
+> PythonAnywhere - a fully browser-based Python development and hosting environment
+> <http://www.pythonanywhere.com/>
+>
+> PythonAnywhere LLP
+> 17a Clerkenwell Road, London EC1M 5RD, UK
+> VAT No.: GB 893 5643 79
+> Registered in England and Wales as company number OC378414.
+> Registered address: 28 Ely Place, 3rd Floor, London EC1N 6TD, UK
+
+Rgds,
+Harry + the PythonAnywhere team.
+
 -- 
-Jan Kara <jack@suse.cz>
-SUSE Labs, CR
+Harry Percival
+Developer
+harry@pythonanywhere.com
+
+PythonAnywhere - a fully browser-based Python development and hosting environment
+<http://www.pythonanywhere.com/>
+
+PythonAnywhere LLP
+17a Clerkenwell Road, London EC1M 5RD, UK
+VAT No.: GB 893 5643 79
+Registered in England and Wales as company number OC378414.
+Registered address: 28 Ely Place, 3rd Floor, London EC1N 6TD, UK
+
+
+--------------000700080709050705010805
+Content-Type: text/html; charset=windows-1252
+Content-Transfer-Encoding: 8bit
+
+<html>
+  <head>
+    <meta content="text/html; charset=windows-1252"
+      http-equiv="Content-Type">
+  </head>
+  <body text="#000000" bgcolor="#FFFFFF">
+    Update -- so far, we've not managed to gain any confidence that
+    we'll ever be able to re-mount that disk. The general consensus
+    seems to be to fish all the data off the disk using rsync, and then
+    move off XFS to ext4.<br>
+    <br>
+    Not a very helpful message for y'all to hear, I know.  But if it's
+    any help in prioritising your future work, i think the dealbreaker
+    for us was the inescapable quotacheck on mount, which means that any
+    time a fileserver goes down unexpectedly, we have an unavoidable,
+    indeterminate-but-long period of downtime...<br>
+    <br>
+    hp<br>
+    <br>
+    <div class="moz-cite-prefix">On 26/02/15 13:07, Harry wrote:<br>
+    </div>
+    <blockquote cite="mid:54EF1A8F.7030505@pythonanywhere.com"
+      type="cite">
+      <meta content="text/html; charset=windows-1252"
+        http-equiv="Content-Type">
+      Thanks Dave, <br>
+      <br>
+      * The main filesystem is currently online and seems ok, but quotas
+      are not active.<br>
+      * We want to estimate how long the quotacheck will take when we
+      reboot/remount<br>
+      * We're even a bit worried the disk might be in a broken state,
+      such that the quotacheck won't actually complete successfully at
+      all.<br>
+      <br>
+      A brief description of our setup:<br>
+      - we're on AWS<br>
+      - using mdadm to make a raid array out of 8x 200GB SSD EBS drives
+      (and lvm)<br>
+      - we're using DRBD to make a live backup of all writes to another
+      instance with a similar raid array<br>
+      <br>
+      We're not doing our experiments on our live system.  Instead,
+      we're using the drives from the DRBD target system.  We take DRBD
+      offline, so it's no longer writing, then we take snapshots of the
+      drives, then remount those elsewhere so we can experiment without
+      disturbing the live system.<br>
+      <br>
+      We've managed to mount the backup drives ok, with the 'noquota'
+      option.  Files look ok.  But, so far, we haven't been able to get
+      a quotacheck to complete.  We've waited 12 hours+. Do you think
+      it's possible DRBD is giving us copies of the live disks that are
+      inconsistent somehow?<br>
+      <br>
+      How can we reassure ourselves that this live disk *will* mount
+      successfully if we reboot the machine, and can we estimate how
+      long it will take?<br>
+      <meta http-equiv="content-type" content="text/html;
+        charset=windows-1252">
+      <blockquote><tt><i>mount | grep log_storage</i></tt><br>
+        <tt>/dev/drbd0 on /mnt/log_storage type xfs
+          (rw,prjquota,allocsize=64k,_netdev)</tt><br
+          class="Apple-interchange-newline">
+        <br>
+        <i><tt>df -i /mnt/log_storage/</tt></i><br>
+        <tt>Filesystem        Inodes    IUsed     IFree IUse% Mounted on</tt><br>
+        <tt>/dev/drbd0     938210704 72929413 865281291    8%
+          /mnt/log_storage</tt><br>
+        <br>
+        <i><tt>df -h /mnt/log_storage/</tt></i><br>
+        <tt>Filesystem      Size  Used Avail Use% Mounted on</tt><br>
+        <tt>/dev/drbd0      1.6T  1.4T  207G  88% /mnt/log_storage</tt><br>
+        <br>
+        <i><tt>xfs_info </tt></i><i><tt><span class="moz-txt-slash"><span
+                class="moz-txt-tag">/</span>mnt/log_storage<span
+                class="moz-txt-tag">/</span></span></tt></i><i><tt> </tt></i><br>
+        <i><tt>&lt;lots of errors re: cannot find mount point path
+            `xyz`&gt;</tt></i><br>
+        <tt>meta-data=/dev/drbd0             isize=256    agcount=64,
+          agsize=6553600 blks</tt><br>
+        <tt>         =                       sectsz=512   attr=2</tt><br>
+        <tt>data     =                       bsize=4096  
+          blocks=418906112, imaxpct=25</tt><br>
+        <tt>         =                       sunit=0      swidth=0 blks</tt><br>
+        <tt>naming   =version 2              bsize=4096   ascii-ci=0</tt><br>
+        <tt>log      =internal               bsize=4096   blocks=12800,
+          version=2</tt><br>
+        <tt>         =                       sectsz=512   sunit=0 blks,
+          lazy-count=1</tt><br>
+        <tt>realtime =none                   extsz=4096   blocks=0,
+          rtextents=0</tt><br>
+        <br>
+      </blockquote>
+      The missing paths errors are, I think, from folders we've deleted
+      but not yet removed from the projid/projects folders. I *think*
+      they're a red herring here.<br>
+      <br>
+      We've also tried running xfs_repair on the backup drives.  It
+      takes about 3 hours, and shows a lot of errors about incorrect
+      directory flags on inodes.  here's one from the bottom of the log
+      of a recent attempt:<br>
+      <br>
+      <blockquote><tt>directory flags set on non-directory inode
+          268702898 </tt><br>
+      </blockquote>
+      <br>
+      rgds,<br>
+      Confused in London.<br>
+      <br>
+      <div class="moz-cite-prefix"><br>
+        <br>
+        On 24/02/15 21:59, Dave Chinner wrote:<br>
+      </div>
+      <blockquote cite="mid:20150224215907.GA18360@dastard" type="cite">
+        <pre wrap="">On Tue, Feb 24, 2015 at 03:15:26PM +0000, Harry wrote:
+</pre>
+        <blockquote type="cite">
+          <pre wrap="">Hi there,
+
+We've got a moderately large disk (~2TB) into an inconsistent state,
+such that it's going to want a quotacheck the next time we mount it
+(it's currently mounted with quota accounting inactive).  Our tests
+suggest this is going to take several hours, and cause an outage we
+can't afford.
+</pre>
+        </blockquote>
+        <pre wrap="">What tests are you performing to suggest a quotacheck of a small
+filesystem will take hours? (yes, 2TB is a *small* filesystem).
+
+(xfs_info, df -i, df -h, storage hardware, etc are all relevant
+here).
+
+</pre>
+        <blockquote type="cite">
+          <pre wrap="">We're wondering whether there's a 'nuke the site from orbit' option
+that will let us avoid it.  The plan would be to:
+- switch off quotas and delete them completely, using the commands:
+  -- disable
+  -- off
+  -- remove
+- remount the drive with -o prjquota, hoping that there will not be
+a quotacheck, because we've deleted all the old quota data
+</pre>
+        </blockquote>
+        <pre wrap="">Mounting with a quota enabled *forces* a quota check if quotas
+aren't currently enabled. You cannot avoid it; it's the way quota
+consistency is created.
+
+</pre>
+        <blockquote type="cite">
+          <pre wrap="">- run a script gradually restore all the quotas, one by one and in
+good time, from our own external backups (we've got the quotas in a
+database basically).
+</pre>
+        </blockquote>
+        <pre wrap="">Can't be done - quotas need to be consistent with what is currently
+on disk, not what you have in a backup somewhere.
+
+</pre>
+        <blockquote type="cite">
+          <pre wrap="">So the questions are:
+- is there a way to remove all quota information from a mounted drive?
+(the current mount status seems to be that it tried to mount it with
+</pre>
+        </blockquote>
+        <pre wrap="">mount with quotas on and turn them off via xfs_quota,i or mount
+without quota options at all. Then run the remove command in
+xfs_quota.
+
+</pre>
+        <blockquote type="cite">
+          <pre wrap="">-o prjquota but that quota accounting is *not* active)
+</pre>
+        </blockquote>
+        <pre wrap="">Not possible.
+
+</pre>
+        <blockquote type="cite">
+          <pre wrap="">- will it work and let us remount the drive with -o prjquota without
+causing a quotacheck?
+</pre>
+        </blockquote>
+        <pre wrap="">No.
+
+Cheers,
+
+Dave.
+</pre>
+      </blockquote>
+      <br>
+      <pre class="moz-signature" cols="72">Rgds,
+Harry + the PythonAnywhere team.
+
+-- 
+Harry Percival
+Developer
+<a moz-do-not-send="true" class="moz-txt-link-abbreviated" href="mailto:harry@pythonanywhere.com">harry@pythonanywhere.com</a>
+
+PythonAnywhere - a fully browser-based Python development and hosting environment
+<a moz-do-not-send="true" class="moz-txt-link-rfc2396E" href="http://www.pythonanywhere.com/">&lt;http://www.pythonanywhere.com/&gt;</a>
+
+PythonAnywhere LLP
+17a Clerkenwell Road, London EC1M 5RD, UK
+VAT No.: GB 893 5643 79
+Registered in England and Wales as company number OC378414.
+Registered address: 28 Ely Place, 3rd Floor, London EC1N 6TD, UK
+</pre>
+    </blockquote>
+    <br>
+    <pre class="moz-signature" cols="72">Rgds,
+Harry + the PythonAnywhere team.
+
+-- 
+Harry Percival
+Developer
+<a class="moz-txt-link-abbreviated" href="mailto:harry@pythonanywhere.com">harry@pythonanywhere.com</a>
+
+PythonAnywhere - a fully browser-based Python development and hosting environment
+<a class="moz-txt-link-rfc2396E" href="http://www.pythonanywhere.com/">&lt;http://www.pythonanywhere.com/&gt;</a>
+
+PythonAnywhere LLP
+17a Clerkenwell Road, London EC1M 5RD, UK
+VAT No.: GB 893 5643 79
+Registered in England and Wales as company number OC378414.
+Registered address: 28 Ely Place, 3rd Floor, London EC1N 6TD, UK
+</pre>
+  </body>
+</html>
+
+--------------000700080709050705010805--
+
+
+--===============1270174675149218432==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============1270174675149218432==--
