@@ -1,29 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 9C6857F3F
-	for <xfs@oss.sgi.com>; Wed,  4 Mar 2015 17:51:57 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 8A766304053
-	for <xfs@oss.sgi.com>; Wed,  4 Mar 2015 15:51:54 -0800 (PST)
-Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
-	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	vZFJGBPn0jFVuz7L for <xfs@oss.sgi.com>;
-	Wed, 04 Mar 2015 15:51:52 -0800 (PST)
-Date: Thu, 5 Mar 2015 10:51:26 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [regression v4.0-rc1] mm: IPIs from TLB flushes causing
-	significant performance degradation.
-Message-ID: <20150304235126.GB18360@dastard>
-References: <CA+55aFw+7V9DfxBA2_DhMNrEQOkvdwjFFga5Y67-a6yVeAz+NQ@mail.gmail.com>
-	<CA+55aFw+fb=Fh4M2wA4dVskgqN7PhZRGZS6JTMx4Rb1Qn++oaA@mail.gmail.com>
-	<20150303052004.GM18360@dastard>
-	<CA+55aFyczb5asoTwhzaJr1JdRi1epg1A6cFJgnzMMZj6U0gFWA@mail.gmail.com>
-	<20150303113437.GR4251@dastard> <20150303134346.GO3087@suse.de>
-	<20150303213353.GS4251@dastard> <20150304200046.GP3087@suse.de>
-	<20150304230045.GZ18360@dastard> <20150304233544.GA24733@gmail.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id EF7A87F37
+	for <xfs@oss.sgi.com>; Wed,  4 Mar 2015 22:08:55 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 6B934AC001
+	for <xfs@oss.sgi.com>; Wed,  4 Mar 2015 20:08:52 -0800 (PST)
+Received: from fieldses.org (fieldses.org [173.255.197.46]) by cuda.sgi.com
+	with ESMTP id M95DjAZUjW0YHQ4s for <xfs@oss.sgi.com>;
+	Wed, 04 Mar 2015 20:08:50 -0800 (PST)
+Date: Wed, 4 Mar 2015 23:08:49 -0500
+From: "J. Bruce Fields" <bfields@fieldses.org>
+Subject: Re: panic on 4.20 server exporting xfs filesystem
+Message-ID: <20150305040849.GJ1627@fieldses.org>
+References: <20150303221033.GB19439@fieldses.org>
+	<20150303224456.GV4251@dastard>
+	<20150304020826.GD19439@fieldses.org>
+	<20150304155421.GE1627@fieldses.org>
+	<20150304220900.GX18360@dastard>
+	<20150304222709.GI1627@fieldses.org>
+	<20150304224557.GY4251@dastard> <54F78BE5.1020608@sandeen.net>
+	<20150304225623.GZ4251@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20150304233544.GA24733@gmail.com>
+In-Reply-To: <20150304225623.GZ4251@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -36,41 +35,95 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Ingo Molnar <mingo@kernel.org>
-Cc: Matt B <jackdachef@gmail.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, linux-mm <linux-mm@kvack.org>, Mel Gorman <mgorman@suse.de>, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-nfs@vger.kernel.org, Eric Sandeen <sandeen@sandeen.net>, Christoph Hellwig <hch@lst.de>, xfs@oss.sgi.com
 
-On Thu, Mar 05, 2015 at 12:35:45AM +0100, Ingo Molnar wrote:
-> 
-> * Dave Chinner <david@fromorbit.com> wrote:
-> 
-> > > After going through the series again, I did not spot why there is 
-> > > a difference. It's functionally similar and I would hate the 
-> > > theory that this is somehow hardware related due to the use of 
-> > > bits it takes action on.
+On Thu, Mar 05, 2015 at 09:56:23AM +1100, Dave Chinner wrote:
+> On Wed, Mar 04, 2015 at 04:49:09PM -0600, Eric Sandeen wrote:
+> > On 3/4/15 4:45 PM, Dave Chinner wrote:
+> > > On Wed, Mar 04, 2015 at 05:27:09PM -0500, J. Bruce Fields wrote:
+> > >> On Thu, Mar 05, 2015 at 09:09:00AM +1100, Dave Chinner wrote:
+> > >>> On Wed, Mar 04, 2015 at 10:54:21AM -0500, J. Bruce Fields wrote:
+> > >>>> On Tue, Mar 03, 2015 at 09:08:26PM -0500, J. Bruce Fields wrote:
+> > >>>>> On Wed, Mar 04, 2015 at 09:44:56AM +1100, Dave Chinner wrote:
+> > >>>>>> On Tue, Mar 03, 2015 at 05:10:33PM -0500, J. Bruce Fields wrote:
+> > >>>>>>> I'm getting mysterious crashes on a server exporting an xfs filesystem.
+> > >>>>>>>
+> > >>>>>>> Strangely, I've reproduced this on
+> > >>>>>>>
+> > >>>>>>> 	93aaa830fc17 "Merge tag 'xfs-pnfs-for-linus-3.20-rc1' of git://git.kernel.org/pub/scm/linux/kernel/git/dgc/linux-xfs
+> > >>>>>>>
+> > >>>>>>> but haven't yet managed to reproduce on either of its parents
+> > >>>>>>> (24a52e412ef2 or 781355c6e5ae).  That might just be chance, I'll try
+> > >>>>>>> again.
+> > >>>>>>
+> > >>>>>> I think you'll find that the bug is only triggered after that XFS
+> > >>>>>> merge because it's what enabled block layout support in the server,
+> > >>>>>> i.e.  nfsd4_setup_layout_type() is now setting the export type to
+> > >>>>>> LAYOUT_BLOCK_VOLUME because XFS has added the necessary functions to
+> > >>>>>> it's export ops.
+> > >>>>>
+> > >>>>> Doh--after all the discussion I didn't actually pay attention to what
+> > >>>>> happened in the end.  OK, I see, you're right, it's all more-or-less
+> > >>>>> dead code till that merge.
+> > >>>>>
+> > >>>>> Christoph's code was passing all my tests before that, so maybe we
+> > >>>>> broke something in the merge process.
+> > >>>>>
+> > >>>>> Alternatively, it could be because I've added more tests--I'll rerun my
+> > >>>>> current tests on his original branch....
+> > >>>>
+> > >>>> The below is on Christoph's pnfsd-for-3.20-4 (at cd4b02e).  Doesn't look
+> > >>>> very informative.  I'm running xfstests over NFSv4.1 with client and
+> > >>>> server running the same kernel, the filesystem in question is xfs, but
+> > >>>> isn't otherwise available to the client (so the client shouldn't be
+> > >>>> doing pnfs).
+> > >>>>
+> > >>>> --b.
+> > >>>>
+> > >>>> BUG: unable to handle kernel paging request at 00000000757d4900
+> > >>>> IP: [<ffffffff810b59af>] cpuacct_charge+0x5f/0xa0
+> > >>>> PGD 0 
+> > >>>> Thread overran stack, or stack corrupted
+> > >>>
+> > >>> Hmmmm. That is not at all informative, especially as it's only
+> > >>> dumped the interrupt stack and not the stack or the task that it
+> > >>> has detected as overrun or corrupted.
+> > >>>
+> > >>> Can you turn on all the stack overrun debug options? Maybe even
+> > >>> turn on the stack tracer to get an idea of whether we are recursing
+> > >>> deeply somewhere we shouldn't be?
+> > >>
+> > >> Digging around under "Kernel hacking".... I already have
+> > >> DEBUG_STACK_USAGE, DEBUG_STACKOVERFLOW, and STACK_TRACER, and I can try
+> > >> turning on the latter.  (Will I be able to get information out of it
+> > >> before the panic?)
+> > > 
+> > > just keep taking samples of the worst case stack usage as the test
+> > > runs. If there's anything unusual before the failure then it will
+> > > show up, otherwise I'm not sure how to track this down...
 > > 
-> > I doubt it's hardware related - I'm testing inside a VM, [...]
+> > I think it should print "maximum stack depth" messages whenever a stack
+> > reaches a new max excursion...
 > 
-> That might be significant, I doubt Mel considered KVM's interpretation 
-> of pte details?
+> That gets printed only when the process exits, IIRC.
 
-I did actaully mention that before:
+Ah-hah:
 
-| I am running a fake-numa=4 config on this test VM so it's got 4
-| nodes of 4p/4GB RAM each.
+	static void
+	nfsd4_cb_layout_fail(struct nfs4_layout_stateid *ls)
+	{
+		...
+		nfsd4_cb_layout_fail(ls);
 
-but I think it got snipped before Mel was cc'd.
+That'd do it!
 
-Perhaps size of the nodes is relevant, too, because the steady state
-phase 3 memory usage is 5-6GB when this problem first shows up, and
-then continues into phase 4 where memory usage grows again and peaks
-at ~10GB....
+Haven't tried to figure out why exactly that's getting called, and why
+only rarely.  Some intermittent problem with the callback path, I guess.
 
-Cheers,
+Anyway, I think that solves most of the mystery....
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+--b.
 
 _______________________________________________
 xfs mailing list
