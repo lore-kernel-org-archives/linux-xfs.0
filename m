@@ -1,28 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id EF7A87F37
-	for <xfs@oss.sgi.com>; Wed,  4 Mar 2015 22:08:55 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 6B934AC001
-	for <xfs@oss.sgi.com>; Wed,  4 Mar 2015 20:08:52 -0800 (PST)
-Received: from fieldses.org (fieldses.org [173.255.197.46]) by cuda.sgi.com
-	with ESMTP id M95DjAZUjW0YHQ4s for <xfs@oss.sgi.com>;
-	Wed, 04 Mar 2015 20:08:50 -0800 (PST)
-Date: Wed, 4 Mar 2015 23:08:49 -0500
-From: "J. Bruce Fields" <bfields@fieldses.org>
-Subject: Re: panic on 4.20 server exporting xfs filesystem
-Message-ID: <20150305040849.GJ1627@fieldses.org>
-References: <20150303221033.GB19439@fieldses.org>
-	<20150303224456.GV4251@dastard>
-	<20150304020826.GD19439@fieldses.org>
-	<20150304155421.GE1627@fieldses.org>
-	<20150304220900.GX18360@dastard>
-	<20150304222709.GI1627@fieldses.org>
-	<20150304224557.GY4251@dastard> <54F78BE5.1020608@sandeen.net>
-	<20150304225623.GZ4251@dastard>
+	by oss.sgi.com (Postfix) with ESMTP id 37C2E7F3F
+	for <xfs@oss.sgi.com>; Thu,  5 Mar 2015 05:05:16 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id C7238AC01A
+	for <xfs@oss.sgi.com>; Thu,  5 Mar 2015 03:05:12 -0800 (PST)
+Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
+	with ESMTP id YrbXtWt3YHfkY3jP (version=TLSv1 cipher=AES256-SHA
+	bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 05 Mar 2015 03:05:09 -0800 (PST)
+Date: Thu, 5 Mar 2015 12:05:04 +0100
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [PATCH 3/6] xfs: add DAX file operations support
+Message-ID: <20150305110504.GC2836@quack.suse.cz>
+References: <1425425427-16283-1-git-send-email-david@fromorbit.com>
+	<1425425427-16283-4-git-send-email-david@fromorbit.com>
+	<20150304161848.GB2799@quack.suse.cz>
+	<20150304220005.GV18360@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20150304225623.GZ4251@dastard>
+In-Reply-To: <20150304220005.GV18360@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -36,94 +33,82 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
-Cc: linux-nfs@vger.kernel.org, Eric Sandeen <sandeen@sandeen.net>, Christoph Hellwig <hch@lst.de>, xfs@oss.sgi.com
+Cc: linux-fsdevel@vger.kernel.org, willy@linux.intel.com, Jan Kara <jack@suse.cz>, xfs@oss.sgi.com
 
-On Thu, Mar 05, 2015 at 09:56:23AM +1100, Dave Chinner wrote:
-> On Wed, Mar 04, 2015 at 04:49:09PM -0600, Eric Sandeen wrote:
-> > On 3/4/15 4:45 PM, Dave Chinner wrote:
-> > > On Wed, Mar 04, 2015 at 05:27:09PM -0500, J. Bruce Fields wrote:
-> > >> On Thu, Mar 05, 2015 at 09:09:00AM +1100, Dave Chinner wrote:
-> > >>> On Wed, Mar 04, 2015 at 10:54:21AM -0500, J. Bruce Fields wrote:
-> > >>>> On Tue, Mar 03, 2015 at 09:08:26PM -0500, J. Bruce Fields wrote:
-> > >>>>> On Wed, Mar 04, 2015 at 09:44:56AM +1100, Dave Chinner wrote:
-> > >>>>>> On Tue, Mar 03, 2015 at 05:10:33PM -0500, J. Bruce Fields wrote:
-> > >>>>>>> I'm getting mysterious crashes on a server exporting an xfs filesystem.
-> > >>>>>>>
-> > >>>>>>> Strangely, I've reproduced this on
-> > >>>>>>>
-> > >>>>>>> 	93aaa830fc17 "Merge tag 'xfs-pnfs-for-linus-3.20-rc1' of git://git.kernel.org/pub/scm/linux/kernel/git/dgc/linux-xfs
-> > >>>>>>>
-> > >>>>>>> but haven't yet managed to reproduce on either of its parents
-> > >>>>>>> (24a52e412ef2 or 781355c6e5ae).  That might just be chance, I'll try
-> > >>>>>>> again.
-> > >>>>>>
-> > >>>>>> I think you'll find that the bug is only triggered after that XFS
-> > >>>>>> merge because it's what enabled block layout support in the server,
-> > >>>>>> i.e.  nfsd4_setup_layout_type() is now setting the export type to
-> > >>>>>> LAYOUT_BLOCK_VOLUME because XFS has added the necessary functions to
-> > >>>>>> it's export ops.
-> > >>>>>
-> > >>>>> Doh--after all the discussion I didn't actually pay attention to what
-> > >>>>> happened in the end.  OK, I see, you're right, it's all more-or-less
-> > >>>>> dead code till that merge.
-> > >>>>>
-> > >>>>> Christoph's code was passing all my tests before that, so maybe we
-> > >>>>> broke something in the merge process.
-> > >>>>>
-> > >>>>> Alternatively, it could be because I've added more tests--I'll rerun my
-> > >>>>> current tests on his original branch....
-> > >>>>
-> > >>>> The below is on Christoph's pnfsd-for-3.20-4 (at cd4b02e).  Doesn't look
-> > >>>> very informative.  I'm running xfstests over NFSv4.1 with client and
-> > >>>> server running the same kernel, the filesystem in question is xfs, but
-> > >>>> isn't otherwise available to the client (so the client shouldn't be
-> > >>>> doing pnfs).
-> > >>>>
-> > >>>> --b.
-> > >>>>
-> > >>>> BUG: unable to handle kernel paging request at 00000000757d4900
-> > >>>> IP: [<ffffffff810b59af>] cpuacct_charge+0x5f/0xa0
-> > >>>> PGD 0 
-> > >>>> Thread overran stack, or stack corrupted
-> > >>>
-> > >>> Hmmmm. That is not at all informative, especially as it's only
-> > >>> dumped the interrupt stack and not the stack or the task that it
-> > >>> has detected as overrun or corrupted.
-> > >>>
-> > >>> Can you turn on all the stack overrun debug options? Maybe even
-> > >>> turn on the stack tracer to get an idea of whether we are recursing
-> > >>> deeply somewhere we shouldn't be?
-> > >>
-> > >> Digging around under "Kernel hacking".... I already have
-> > >> DEBUG_STACK_USAGE, DEBUG_STACKOVERFLOW, and STACK_TRACER, and I can try
-> > >> turning on the latter.  (Will I be able to get information out of it
-> > >> before the panic?)
+On Thu 05-03-15 09:00:05, Dave Chinner wrote:
+> On Wed, Mar 04, 2015 at 05:18:48PM +0100, Jan Kara wrote:
+> > On Wed 04-03-15 10:30:24, Dave Chinner wrote:
+> > > From: Dave Chinner <dchinner@redhat.com>
 > > > 
-> > > just keep taking samples of the worst case stack usage as the test
-> > > runs. If there's anything unusual before the failure then it will
-> > > show up, otherwise I'm not sure how to track this down...
-> > 
-> > I think it should print "maximum stack depth" messages whenever a stack
-> > reaches a new max excursion...
+> > > Add the initial support for DAX file operations to XFS. This
+> > > includes the necessary block allocation and mmap page fault hooks
+> > > for DAX to function.
+> > > 
+> > > Note that the current block allocation code abuses the mapping
+> > > buffer head to provide a completion callback for unwritten extent
+> > > allocation when DAX is clearing blocks. The DAX interface needs to
+> > > be changed to provide a callback similar to get_blocks for this
+> > > callback.
+> > > 
+> > > Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> .....
+> > > +static int
+> > > +xfs_filemap_dax_page_mkwrite(
+> > > +	struct vm_area_struct	*vma,
+> > > +	struct vm_fault		*vmf)
+> > > +{
+> > > +	struct xfs_inode	*ip = XFS_I(vma->vm_file->f_mapping->host);
+> > > +	int			error;
+> > > +
+> > > +	trace_xfs_filemap_page_mkwrite(ip);
+> > > +
+> > > +	xfs_ilock(ip, XFS_MMAPLOCK_SHARED);
+> >   So I think the lock ordering of XFS_MMAPLOCK and freezing protection is
+> > suspicious (and actually so is for normal write faults as I'm looking -
+> > didn't realize that when I was first reading your MMAPLOCK patches).
+> > Because you take XFS_MMAPLOCK outside of freeze protection however usually
+> > we want freeze protection to be the outermost lock - in particular in
+> > xfs_file_fallocate() you take XFS_MMAPLOCK inside freeze protection I
+> > think.
 > 
-> That gets printed only when the process exits, IIRC.
+> OK, so why isn't lockdep triggering on that? lockdep is aware of
+> inode locks and the freeze states, supposedly to pick up these exact
+> issues...
+> 
+> Oh, probably because the sb freeze order is write, pagefault,
+> transaction.
+> 
+> i.e. In the fallocate case, we do sb_start_write, MMAP_LOCK. If we are in
+> a freeze case, we aren't going to freeze page faults until we've
+> frozen all the writes have drained, so there isn't a lock order
+> dependency there. Same for any other mnt_want_write/sb-start_write
+> based modification. 
+> 
+> Hence the fallocate path and anything that runs through setattr will
+> complete and release the mmap lock and then be prevented from taking
+> it again by the time sb_start_pagefault() can block with the mmap
+> lock held.  So there isn't actually a deadlock there because of the
+> way freeze works, and that's why lockdep is staying silent.
+  Yeah, you're right there isn't a deadlock possibility. After all the lock
+ranking of your MMAP_LOCk is currently the same as of mmap_sem (and the
+difficult lock ordering of that semaphore has been the reason why we have
+special type of freeze protection for page faults).
 
-Ah-hah:
+> Still, I probably need to fix it so I'm not leaving a potential
+> landmine around.
+  I would find it easier to grasp. Yes.
 
-	static void
-	nfsd4_cb_layout_fail(struct nfs4_layout_stateid *ls)
-	{
-		...
-		nfsd4_cb_layout_fail(ls);
+> > So you'll need to do what ext4 needs to do - take freeze protection, take
+> > fs specific locks, and then call do_dax_fault(). Matthew has a patch to
+> > actually export do_dax_fault (as __dax_fault()) for filesystems.
+> 
+> pointer to it? if none, I'll just write my own....
+  http://permalink.gmane.org/gmane.comp.file-systems.ext4/47866
 
-That'd do it!
-
-Haven't tried to figure out why exactly that's getting called, and why
-only rarely.  Some intermittent problem with the callback path, I guess.
-
-Anyway, I think that solves most of the mystery....
-
---b.
+								Honza
+-- 
+Jan Kara <jack@suse.cz>
+SUSE Labs, CR
 
 _______________________________________________
 xfs mailing list
