@@ -1,26 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 2225D7F3F
-	for <xfs@oss.sgi.com>; Thu,  5 Mar 2015 18:53:15 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id B2C6AAC006
-	for <xfs@oss.sgi.com>; Thu,  5 Mar 2015 16:53:11 -0800 (PST)
-Received: from mail-ie0-f171.google.com (mail-ie0-f171.google.com
-	[209.85.223.171]) by cuda.sgi.com with ESMTP id
-	4qv0hDI35QgERcPM (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 05 Mar 2015 16:53:10 -0800 (PST)
-Received: by iecrp18 with SMTP id rp18so13802222iec.7
-	for <xfs@oss.sgi.com>; Thu, 05 Mar 2015 16:53:09 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1425599692-32445-3-git-send-email-mgorman@suse.de>
-References: <1425599692-32445-1-git-send-email-mgorman@suse.de>
-	<1425599692-32445-3-git-send-email-mgorman@suse.de>
-Date: Thu, 5 Mar 2015 16:53:09 -0800
-Message-ID: <CA+55aFzdWE3dO8z6jUScft7=cLmE3x7G8Ak5dizfL=_z7puzaA@mail.gmail.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id A12937F4E
+	for <xfs@oss.sgi.com>; Thu,  5 Mar 2015 21:59:22 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 8C7B18F8064
+	for <xfs@oss.sgi.com>; Thu,  5 Mar 2015 19:59:22 -0800 (PST)
+Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
+	[150.101.137.145]) by cuda.sgi.com with ESMTP id
+	WEo4RD9pF8AaDazl for <xfs@oss.sgi.com>;
+	Thu, 05 Mar 2015 19:59:20 -0800 (PST)
+Date: Fri, 6 Mar 2015 14:59:16 +1100
+From: Dave Chinner <david@fromorbit.com>
 Subject: Re: [PATCH 2/2] mm: numa: Do not clear PTEs or PMDs for NUMA hinting
 	faults
-From: Linus Torvalds <torvalds@linux-foundation.org>
+Message-ID: <20150306035916.GD4251@dastard>
+References: <1425599692-32445-1-git-send-email-mgorman@suse.de>
+	<1425599692-32445-3-git-send-email-mgorman@suse.de>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <1425599692-32445-3-git-send-email-mgorman@suse.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,47 +32,93 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Mel Gorman <mgorman@suse.de>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, Linux-MM <linux-mm@kvack.org>, Aneesh Kumar <aneesh.kumar@linux.vnet.ibm.com>, Andrew Morton <akpm@linux-foundation.org>, ppc-dev <linuxppc-dev@lists.ozlabs.org>, Ingo Molnar <mingo@kernel.org>
+Cc: linuxppc-dev@lists.ozlabs.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, Linux-MM <linux-mm@kvack.org>, Aneesh Kumar <aneesh.kumar@linux.vnet.ibm.com>, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, Ingo Molnar <mingo@kernel.org>
 
-On Thu, Mar 5, 2015 at 3:54 PM, Mel Gorman <mgorman@suse.de> wrote:
->                 if (!prot_numa || !pmd_protnone(*pmd)) {
-> -                       entry = pmdp_get_and_clear_notify(mm, addr, pmd);
-> -                       entry = pmd_modify(entry, newprot);
-> +                       /*
-> +                        * NUMA hinting update can avoid a clear and defer the
-> +                        * flush as it is not a functional correctness issue if
-> +                        * access occurs after the update and this avoids
-> +                        * spurious faults.
-> +                        */
-> +                       if (prot_numa) {
-> +                               entry = *pmd;
-> +                               entry = pmd_mkprotnone(entry);
-> +                       } else {
-> +                               entry = pmdp_get_and_clear_notify(mm, addr,
-> +                                                                 pmd);
-> +                               entry = pmd_modify(entry, newprot);
-> +                               BUG_ON(pmd_write(entry));
-> +                       }
-> +
->                         ret = HPAGE_PMD_NR;
->                         set_pmd_at(mm, addr, pmd, entry);
-> -                       BUG_ON(pmd_write(entry));
+On Thu, Mar 05, 2015 at 11:54:52PM +0000, Mel Gorman wrote:
+> Dave Chinner reported the following on https://lkml.org/lkml/2015/3/1/226
+> 
+>    Across the board the 4.0-rc1 numbers are much slower, and the
+>    degradation is far worse when using the large memory footprint
+>    configs. Perf points straight at the cause - this is from 4.0-rc1
+>    on the "-o bhash=101073" config:
+> 
+>    -   56.07%    56.07%  [kernel]            [k] default_send_IPI_mask_sequence_phys
+>       - default_send_IPI_mask_sequence_phys
+>          - 99.99% physflat_send_IPI_mask
+>             - 99.37% native_send_call_func_ipi
+>                  smp_call_function_many
+>                - native_flush_tlb_others
+>                   - 99.85% flush_tlb_page
+>                        ptep_clear_flush
+>                        try_to_unmap_one
+>                        rmap_walk
+>                        try_to_unmap
+>                        migrate_pages
+>                        migrate_misplaced_page
+>                      - handle_mm_fault
+>                         - 99.73% __do_page_fault
+>                              trace_do_page_fault
+>                              do_async_page_fault
+>                            + async_page_fault
+>               0.63% native_send_call_func_single_ipi
+>                  generic_exec_single
+>                  smp_call_function_single
+> 
+> This was bisected to commit 4d9424669946 ("mm: convert p[te|md]_mknonnuma
+> and remaining page table manipulations") which clears PTEs and PMDs to make
+> them PROT_NONE. This is tidy but tests on some benchmarks indicate that
+> there are many more hinting faults trapped resulting in excessive migration.
+> This is the result for the old autonuma benchmark for example.
 
-So I don't think this is right, nor is the new pte code.
+[snip]
 
-You cannot just read the old pte entry, change it, and write it back.
-That's fundamentally racy, and can drop any concurrent dirty or
-accessed bit setting. And there are no locks you can use to protect
-against that, since the accessed and dirty bit are set by hardware.
+Doesn't fix the problem. Runtime is slightly improved (16m45s vs 17m35)
+but it's still much slower that 3.19 (6m5s).
 
-Now, losing the accessed bit doesn't matter - it's a small race, and
-not a correctness issue. But potentially losing dirty bits is a data
-loss problem.
+Stats and profiles still roughly the same:
 
-Did the old prot_numa code do this too? Because if it did, it sounds
-like it was just buggy.
+	360,228      migrate:mm_migrate_pages     ( +-  4.28% )
 
-                                            Linus
+-   52.69%    52.69%  [kernel]            [k] default_send_IPI_mask_sequence_phys
+     default_send_IPI_mask_sequence_phys
+   - physflat_send_IPI_mask
+      - 97.28% native_send_call_func_ipi
+           smp_call_function_many
+           native_flush_tlb_others
+           flush_tlb_page
+           ptep_clear_flush
+           try_to_unmap_one
+           rmap_walk
+           try_to_unmap
+           migrate_pages
+           migrate_misplaced_page
+         - handle_mm_fault
+            - 99.59% __do_page_fault
+                 trace_do_page_fault
+                 do_async_page_fault
+               + async_page_fault
+      + 2.72% native_send_call_func_single_ipi
+
+numa_hit 36678767
+numa_miss 905234
+numa_foreign 905234
+numa_interleave 14802
+numa_local 36656791
+numa_other 927210
+numa_pte_updates 92168450
+numa_huge_pte_updates 0
+numa_hint_faults 87573926
+numa_hint_faults_local 29730293
+numa_pages_migrated 30195890
+pgmigrate_success 30195890
+pgmigrate_fail 0
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
