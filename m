@@ -1,25 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 198BF7F4E
-	for <xfs@oss.sgi.com>; Fri,  6 Mar 2015 05:54:22 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id EB8368F8035
-	for <xfs@oss.sgi.com>; Fri,  6 Mar 2015 03:54:18 -0800 (PST)
-Received: from www262.sakura.ne.jp (www262.sakura.ne.jp [202.181.97.72]) by
-	cuda.sgi.com with ESMTP id 9YPcQYLMhF1RgRl3 (version=TLSv1
+	by oss.sgi.com (Postfix) with ESMTP id 94F657F4E
+	for <xfs@oss.sgi.com>; Fri,  6 Mar 2015 10:54:16 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 7150C8F8050
+	for <xfs@oss.sgi.com>; Fri,  6 Mar 2015 08:54:13 -0800 (PST)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id QsADAhEuBzlg2HiU (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 06 Mar 2015 03:54:16 -0800 (PST)
-Subject: Re: How to handle TIF_MEMDIE stalls?
-From: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
-References: <20150223004521.GK12722@dastard>
-	<20150228162943.GA17989@phnom.home.cmpxchg.org>
-	<20150228164158.GE5404@thunk.org>
-	<20150228221558.GA23028@phnom.home.cmpxchg.org>
-	<201503012017.EAD00571.HOOJVOStMFLFQF@I-love.SAKURA.ne.jp>
-In-Reply-To: <201503012017.EAD00571.HOOJVOStMFLFQF@I-love.SAKURA.ne.jp>
-Message-Id: <201503062053.GIC34848.FOMFtOSOLFJHVQ@I-love.SAKURA.ne.jp>
-Date: Fri, 6 Mar 2015 20:53:53 +0900
-Mime-Version: 1.0
+	Fri, 06 Mar 2015 08:54:09 -0800 (PST)
+Received: from int-mx10.intmail.prod.int.phx2.redhat.com
+	(int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id t26Gs89D011334
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256
+	verify=FAIL) for <xfs@oss.sgi.com>; Fri, 6 Mar 2015 11:54:08 -0500
+Received: from liberator.sandeen.net (ovpn01.gateway.prod.ext.phx2.redhat.com
+	[10.5.9.1])
+	by int-mx10.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id t26Gs7vc004553
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES128-SHA bits=128 verify=NO)
+	for <xfs@oss.sgi.com>; Fri, 6 Mar 2015 11:54:08 -0500
+Message-ID: <54F9DBAE.2070002@redhat.com>
+Date: Fri, 06 Mar 2015 10:54:06 -0600
+From: Eric Sandeen <sandeen@redhat.com>
+MIME-Version: 1.0
+Subject: [PATCH] xfs: take XFS_IOLOCK_EXCL if suid removal is required
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,113 +37,84 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: david@fromorbit.com
-Cc: tytso@mit.edu, hannes@cmpxchg.org, dchinner@redhat.com, oleg@redhat.com, xfs@oss.sgi.com, mhocko@suse.cz, linux-mm@kvack.org, mgorman@suse.de, rientjes@google.com, akpm@linux-foundation.org, fernando_b1@lab.ntt.co.jp, torvalds@linux-foundation.org
+To: xfs-oss <xfs@oss.sgi.com>
 
-Tetsuo Handa wrote:
-> If underestimating is tolerable, can we simply set different watermark
-> levels for GFP_ATOMIC / GFP_NOIO / GFP_NOFS / GFP_KERNEL allocations?
-> For example,
-> 
->    GFP_KERNEL (or above) can fail if memory usage exceeds 95%
->    GFP_NOFS can fail if memory usage exceeds 97%
->    GFP_NOIO can fail if memory usage exceeds 98%
->    GFP_ATOMIC can fail if memory usage exceeds 99%
-> 
-> I think that below order-0 GFP_NOIO allocation enters into retry-forever loop
-> when GFP_KERNEL (or above) allocation starts waiting for reclaim sounds
-> strange. Use of same watermark is preventing kernel worker threads from
-> processing workqueue. While it is legal to do blocking operation from
-> workqueue, being blocked forever is an exclusive occupation for workqueue;
-> other jobs in the workqueue get stuck.
-> 
+This sequence:
 
-Below experimental patch which raises zone watermark works for me.
+# rm -f sparsefile
+# truncate --size=1m sparsefile
+# chmod ugo+rws sparsefile
+# ls -l sparsefile
+-rwSrwSrw-. 1 root root 1048576 Mar  6 10:29 sparsefile
+# su tester
 
-----------
-diff --git a/include/linux/sched.h b/include/linux/sched.h
-index 6d77432..92233e1 100644
---- a/include/linux/sched.h
-+++ b/include/linux/sched.h
-@@ -1710,6 +1710,7 @@ struct task_struct {
- #ifdef CONFIG_DEBUG_ATOMIC_SLEEP
- 	unsigned long	task_state_change;
- #endif
-+	gfp_t gfp_mask;
- };
+$ xfs_io -d -c "pwrite 0 4096" sparsefile
+wrote 4096/4096 bytes at offset 0
+4 KiB, 1 ops; 0.0000 sec (21.505 KiB/sec and 5.3763 ops/sec)
+$ exit
+
+will lead to a WARN_ON() in notify change, because i_mutex is
+not held, and we get to notify_change via suid removal with
+only XFS_IOLOCK_SHARED held, i.e. no i_mutex.
+
+Upgrade the lock to XFS_IOLOCK_EXCL in this case.
+
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
+
+diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+index a2e1cb8..e64d5b1 100644
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@ -541,7 +541,7 @@ xfs_zero_eof(
+  *
+  * Called with the iolocked held either shared and exclusive according to
+  * @iolock, and returns with it held.  Might upgrade the iolock to exclusive
+- * if called for a direct write beyond i_size.
++ * if called for a direct write beyond i_size or if suid removal is required.
+  */
+ STATIC ssize_t
+ xfs_file_aio_write_checks(
+@@ -551,6 +551,7 @@ xfs_file_aio_write_checks(
+ 	int			*iolock)
+ {
+ 	struct inode		*inode = file->f_mapping->host;
++	struct dentry		*dentry = file->f_path.dentry;
+ 	struct xfs_inode	*ip = XFS_I(inode);
+ 	int			error = 0;
  
- /* Future-safe accessor for struct task_struct's cpus_allowed. */
-diff --git a/mm/page_alloc.c b/mm/page_alloc.c
-index 7abfa70..1a6b830 100644
---- a/mm/page_alloc.c
-+++ b/mm/page_alloc.c
-@@ -1810,6 +1810,12 @@ static bool __zone_watermark_ok(struct zone *z, unsigned int order,
- 		min -= min / 2;
- 	if (alloc_flags & ALLOC_HARDER)
- 		min -= min / 4;
-+	if (min == mark) {
-+		if (current->gfp_mask & __GFP_FS)
-+			min <<= 1;
-+		if (current->gfp_mask & __GFP_IO)
-+			min <<= 1;
-+	}
- #ifdef CONFIG_CMA
- 	/* If allocation can't use CMA areas don't use free CMA pages */
- 	if (!(alloc_flags & ALLOC_CMA))
-@@ -2810,6 +2816,7 @@ __alloc_pages_nodemask(gfp_t gfp_mask, unsigned int order,
- 		.nodemask = nodemask,
- 		.migratetype = gfpflags_to_migratetype(gfp_mask),
- 	};
-+	gfp_t orig_gfp_mask;
+@@ -569,9 +570,12 @@ restart:
+ 	 * write.  If zeroing is needed and we are currently holding the
+ 	 * iolock shared, we need to update it to exclusive which implies
+ 	 * having to redo all checks before.
++	 *
++	 * We also must be locked exclusively if this write will require
++	 * suid removal; notify_change expects i_mutex to be locked.
+ 	 */
+-	if (*pos > i_size_read(inode)) {
+-		bool	zero = false;
++	if (*pos > i_size_read(inode) || should_remove_suid(dentry)) {
++		bool	z = false;
  
- 	gfp_mask &= gfp_allowed_mask;
+ 		if (*iolock == XFS_IOLOCK_SHARED) {
+ 			xfs_rw_iunlock(ip, *iolock);
+@@ -579,9 +583,12 @@ restart:
+ 			xfs_rw_ilock(ip, *iolock);
+ 			goto restart;
+ 		}
+-		error = xfs_zero_eof(ip, *pos, i_size_read(inode), &zero);
+-		if (error)
+-			return error;
++
++		if (*pos > i_size_read(inode) ) {
++			error = xfs_zero_eof(ip, *pos, i_size_read(inode), &z);
++			if (error)
++				return error;
++		}
+ 	}
  
-@@ -2831,6 +2838,8 @@ __alloc_pages_nodemask(gfp_t gfp_mask, unsigned int order,
- 	if (IS_ENABLED(CONFIG_CMA) && ac.migratetype == MIGRATE_MOVABLE)
- 		alloc_flags |= ALLOC_CMA;
- 
-+	orig_gfp_mask = current->gfp_mask;
-+	current->gfp_mask = gfp_mask;
- retry_cpuset:
- 	cpuset_mems_cookie = read_mems_allowed_begin();
- 
-@@ -2873,6 +2882,7 @@ out:
- 	if (unlikely(!page && read_mems_allowed_retry(cpuset_mems_cookie)))
- 		goto retry_cpuset;
- 
-+	current->gfp_mask = orig_gfp_mask;
- 	return page;
- }
- EXPORT_SYMBOL(__alloc_pages_nodemask);
-----------
+ 	/*
 
-Thanks again to Jonathan Corbet for writing https://lwn.net/Articles/635354/ .
-Is Dave Chinner's "reservations" suggestion conceptually doing the patch above?
-
-Dave's suggestion is to ask each GFP_NOFS and GFP_NOIO users to estimate
-how much amount of pages they need for their transaction like
-
-	if (min == mark) {
-		if (current->gfp_mask & __GFP_FS)
-			min += atomic_read(&reservation_for_gfp_fs);
-		if (current->gfp_mask & __GFP_IO)
-			min += atomic_read(&reservation_for_gfp_io);
-	}
-
-than ask the administrator to specify a static amount like
-
-	if (min == mark) {
-		if (current->gfp_mask & __GFP_FS)
-			min += sysctl_reservation_for_gfp_fs;
-		if (current->gfp_mask & __GFP_IO)
-			min += sysctl_reservation_for_gfp_io;
-	}
-
-?
-
-The retry-forever loop will happen if underestimated, won't it?
-Then, how to handle it when the OOM killer missed the target (due to
-__GFP_FS) or the OOM killer cannot be invoked (due to !__GFP_FS)?
 
 _______________________________________________
 xfs mailing list
