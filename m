@@ -1,22 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 588DE7F4E
-	for <xfs@oss.sgi.com>; Fri,  6 Mar 2015 15:09:36 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 439D78F8052
-	for <xfs@oss.sgi.com>; Fri,  6 Mar 2015 13:09:32 -0800 (PST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 2C5167F4E
+	for <xfs@oss.sgi.com>; Fri,  6 Mar 2015 15:12:01 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id B7690AC001
+	for <xfs@oss.sgi.com>; Fri,  6 Mar 2015 13:11:57 -0800 (PST)
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	GvZ3Tvqk63qUUVm9 for <xfs@oss.sgi.com>;
-	Fri, 06 Mar 2015 13:09:29 -0800 (PST)
-Date: Sat, 7 Mar 2015 08:09:27 +1100
+	9vn22mskb0OzEM1z for <xfs@oss.sgi.com>;
+	Fri, 06 Mar 2015 13:11:55 -0800 (PST)
+Date: Sat, 7 Mar 2015 08:11:36 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs: take XFS_IOLOCK_EXCL if suid removal is required
-Message-ID: <20150306210927.GA13958@dastard>
-References: <54F9DBAE.2070002@redhat.com>
+Subject: Re: trying to avoid a lengthy quotacheck by deleting all quota data
+Message-ID: <20150306211136.GB13958@dastard>
+References: <54EF1A8F.7030505@pythonanywhere.com>
+	<54F856E7.10006@pythonanywhere.com> <54F87BF3.3000405@sandeen.net>
+	<54F88CEC.4030009@pythonanywhere.com> <54F89201.60805@sandeen.net>
+	<54F893AF.2070406@pythonanywhere.com>
+	<54F895FA.4050205@sandeen.net>
+	<54F89B47.4010702@pythonanywhere.com>
+	<54F8B7D6.2000501@sandeen.net>
+	<54F98F20.9000208@pythonanywhere.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <54F9DBAE.2070002@redhat.com>
+In-Reply-To: <54F98F20.9000208@pythonanywhere.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,36 +36,26 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: Harry Percival <harry@pythonanywhere.com>
+Cc: xfs@oss.sgi.com
 
-On Fri, Mar 06, 2015 at 10:54:06AM -0600, Eric Sandeen wrote:
-> This sequence:
+On Fri, Mar 06, 2015 at 11:27:28AM +0000, Harry Percival wrote:
+> Glad we managed to nail down a probable culprit!   Here's hoping
+> Debian and Ubuntu pull in a new kernel :)
 > 
-> # rm -f sparsefile
-> # truncate --size=1m sparsefile
-> # chmod ugo+rws sparsefile
-> # ls -l sparsefile
-> -rwSrwSrw-. 1 root root 1048576 Mar  6 10:29 sparsefile
-> # su tester
+> In other news, any advice on running this
 > 
-> $ xfs_io -d -c "pwrite 0 4096" sparsefile
-> wrote 4096/4096 bytes at offset 0
-> 4 KiB, 1 ops; 0.0000 sec (21.505 KiB/sec and 5.3763 ops/sec)
-> $ exit
+>     xfstests:src/bstat
 > 
-> will lead to a WARN_ON() in notify change, because i_mutex is
-> not held, and we get to notify_change via suid removal with
-> only XFS_IOLOCK_SHARED held, i.e. no i_mutex.
-> 
-> Upgrade the lock to XFS_IOLOCK_EXCL in this case.
-> 
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> command as a way of estimating how long a quotacheck will take?
 
-I believe Jan Kara has already addressed this problem in
-this patchset:
+It will give you an idea - quotacheck uses bulkstat, too.
 
-http://oss.sgi.com/archives/xfs/2015-03/msg00051.html
+> Would it still be a useful estimator?  Do you think it would
+> significantly affect the performance of a disk that's under fairly
+> heavy use?
+
+Of course. Bulkstat drives the disks as hard as they will go.
 
 Cheers,
 
