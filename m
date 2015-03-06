@@ -1,28 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id ECB5E7F4E
-	for <xfs@oss.sgi.com>; Fri,  6 Mar 2015 05:27:39 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 63C02AC001
-	for <xfs@oss.sgi.com>; Fri,  6 Mar 2015 03:27:39 -0800 (PST)
-Received: from darcachon.resolversystems.com (darcachon.resolversystems.com
-	[80.68.93.186]) by cuda.sgi.com with ESMTP id 5xPY6DGnhZyFpw2r
-	(version=TLSv1 cipher=AES128-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Fri, 06 Mar 2015 03:27:36 -0800 (PST)
-Received: from host81-136-198-183.in-addr.btopenworld.com ([81.136.198.183]
-	helo=[192.168.0.105]) by darcachon.resolversystems.com with esmtpsa
-	(TLS1.2:DHE_RSA_AES_128_CBC_SHA1:128) (Exim 4.80)
-	(envelope-from <harry@pythonanywhere.com>) id 1YTqPm-0001Qo-Bn
-	for xfs@oss.sgi.com; Fri, 06 Mar 2015 11:27:34 +0000
-Message-ID: <54F98F20.9000208@pythonanywhere.com>
-Date: Fri, 06 Mar 2015 11:27:28 +0000
-From: Harry Percival <harry@pythonanywhere.com>
-MIME-Version: 1.0
-References: <54EC958E.2000001@pythonanywhere.com>	<20150224215907.GA18360@dastard>	<54EF1A8F.7030505@pythonanywhere.com>	<54F856E7.10006@pythonanywhere.com>	<54F87BF3.3000405@sandeen.net>	<54F88CEC.4030009@pythonanywhere.com>	<54F89201.60805@sandeen.net>	<54F893AF.2070406@pythonanywhere.com>	<54F895FA.4050205@sandeen.net>
-	<54F89B47.4010702@pythonanywhere.com>
-	<54F8B7D6.2000501@sandeen.net>
-In-Reply-To: <54F8B7D6.2000501@sandeen.net>
-Subject: Re: trying to avoid a lengthy quotacheck by deleting all quota data
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 198BF7F4E
+	for <xfs@oss.sgi.com>; Fri,  6 Mar 2015 05:54:22 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id EB8368F8035
+	for <xfs@oss.sgi.com>; Fri,  6 Mar 2015 03:54:18 -0800 (PST)
+Received: from www262.sakura.ne.jp (www262.sakura.ne.jp [202.181.97.72]) by
+	cuda.sgi.com with ESMTP id 9YPcQYLMhF1RgRl3 (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Fri, 06 Mar 2015 03:54:16 -0800 (PST)
+Subject: Re: How to handle TIF_MEMDIE stalls?
+From: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
+References: <20150223004521.GK12722@dastard>
+	<20150228162943.GA17989@phnom.home.cmpxchg.org>
+	<20150228164158.GE5404@thunk.org>
+	<20150228221558.GA23028@phnom.home.cmpxchg.org>
+	<201503012017.EAD00571.HOOJVOStMFLFQF@I-love.SAKURA.ne.jp>
+In-Reply-To: <201503012017.EAD00571.HOOJVOStMFLFQF@I-love.SAKURA.ne.jp>
+Message-Id: <201503062053.GIC34848.FOMFtOSOLFJHVQ@I-love.SAKURA.ne.jp>
+Date: Fri, 6 Mar 2015 20:53:53 +0900
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,97 +28,117 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: david@fromorbit.com
+Cc: tytso@mit.edu, hannes@cmpxchg.org, dchinner@redhat.com, oleg@redhat.com, xfs@oss.sgi.com, mhocko@suse.cz, linux-mm@kvack.org, mgorman@suse.de, rientjes@google.com, akpm@linux-foundation.org, fernando_b1@lab.ntt.co.jp, torvalds@linux-foundation.org
 
-Glad we managed to nail down a probable culprit!   Here's hoping Debian 
-and Ubuntu pull in a new kernel :)
+Tetsuo Handa wrote:
+> If underestimating is tolerable, can we simply set different watermark
+> levels for GFP_ATOMIC / GFP_NOIO / GFP_NOFS / GFP_KERNEL allocations?
+> For example,
+> 
+>    GFP_KERNEL (or above) can fail if memory usage exceeds 95%
+>    GFP_NOFS can fail if memory usage exceeds 97%
+>    GFP_NOIO can fail if memory usage exceeds 98%
+>    GFP_ATOMIC can fail if memory usage exceeds 99%
+> 
+> I think that below order-0 GFP_NOIO allocation enters into retry-forever loop
+> when GFP_KERNEL (or above) allocation starts waiting for reclaim sounds
+> strange. Use of same watermark is preventing kernel worker threads from
+> processing workqueue. While it is legal to do blocking operation from
+> workqueue, being blocked forever is an exclusive occupation for workqueue;
+> other jobs in the workqueue get stuck.
+> 
 
-In other news, any advice on running this
+Below experimental patch which raises zone watermark works for me.
 
-     xfstests:src/bstat
+----------
+diff --git a/include/linux/sched.h b/include/linux/sched.h
+index 6d77432..92233e1 100644
+--- a/include/linux/sched.h
++++ b/include/linux/sched.h
+@@ -1710,6 +1710,7 @@ struct task_struct {
+ #ifdef CONFIG_DEBUG_ATOMIC_SLEEP
+ 	unsigned long	task_state_change;
+ #endif
++	gfp_t gfp_mask;
+ };
+ 
+ /* Future-safe accessor for struct task_struct's cpus_allowed. */
+diff --git a/mm/page_alloc.c b/mm/page_alloc.c
+index 7abfa70..1a6b830 100644
+--- a/mm/page_alloc.c
++++ b/mm/page_alloc.c
+@@ -1810,6 +1810,12 @@ static bool __zone_watermark_ok(struct zone *z, unsigned int order,
+ 		min -= min / 2;
+ 	if (alloc_flags & ALLOC_HARDER)
+ 		min -= min / 4;
++	if (min == mark) {
++		if (current->gfp_mask & __GFP_FS)
++			min <<= 1;
++		if (current->gfp_mask & __GFP_IO)
++			min <<= 1;
++	}
+ #ifdef CONFIG_CMA
+ 	/* If allocation can't use CMA areas don't use free CMA pages */
+ 	if (!(alloc_flags & ALLOC_CMA))
+@@ -2810,6 +2816,7 @@ __alloc_pages_nodemask(gfp_t gfp_mask, unsigned int order,
+ 		.nodemask = nodemask,
+ 		.migratetype = gfpflags_to_migratetype(gfp_mask),
+ 	};
++	gfp_t orig_gfp_mask;
+ 
+ 	gfp_mask &= gfp_allowed_mask;
+ 
+@@ -2831,6 +2838,8 @@ __alloc_pages_nodemask(gfp_t gfp_mask, unsigned int order,
+ 	if (IS_ENABLED(CONFIG_CMA) && ac.migratetype == MIGRATE_MOVABLE)
+ 		alloc_flags |= ALLOC_CMA;
+ 
++	orig_gfp_mask = current->gfp_mask;
++	current->gfp_mask = gfp_mask;
+ retry_cpuset:
+ 	cpuset_mems_cookie = read_mems_allowed_begin();
+ 
+@@ -2873,6 +2882,7 @@ out:
+ 	if (unlikely(!page && read_mems_allowed_retry(cpuset_mems_cookie)))
+ 		goto retry_cpuset;
+ 
++	current->gfp_mask = orig_gfp_mask;
+ 	return page;
+ }
+ EXPORT_SYMBOL(__alloc_pages_nodemask);
+----------
 
-command as a way of estimating how long a quotacheck will take? Would it 
-still be a useful estimator?  Do you think it would significantly affect 
-the performance of a disk that's under fairly heavy use?
+Thanks again to Jonathan Corbet for writing https://lwn.net/Articles/635354/ .
+Is Dave Chinner's "reservations" suggestion conceptually doing the patch above?
 
-hp
+Dave's suggestion is to ask each GFP_NOFS and GFP_NOIO users to estimate
+how much amount of pages they need for their transaction like
 
-On 05/03/15 20:08, Eric Sandeen wrote:
-> On 3/5/15 12:07 PM, Harry wrote:
->> Here's the syslog, if you're curious.
->>
->> http://pastebin.com/raw.php?i=kKvWJcze
->>
->> Search for "Failed to initialize"
-> Ok, there is no other message offering more info, sadly.
->
->> So your best guess is that it's the drbd layer that's causing the
->> quotacheck?  Out of curiosity, i may try mounting a non-drbd drive
->> with xfs, and seeing if we can still repro the
->> hard-reboot-causes-quotacheck thing...  Unless you think it's just an
->> old behaviour that's more to do with the version of the kernel we're
->> using?
-> I really don't have a good guess at this point..... oh, wait, finally,
-> a bell goes off:
->
-> commit 5ef828c4152726f56751c78ea844f08d2b2a4fa3
-> Author: Eric Sandeen <sandeen@sandeen.net>
-> Date:   Mon Aug 4 11:35:44 2014 +1000
->
->      xfs: avoid false quotacheck after unclean shutdown
->      
->      The commit
->      
->      83e782e xfs: Remove incore use of XFS_OQUOTA_ENFD and XFS_OQUOTA_CHKD
->      
->      added a new function xfs_sb_quota_from_disk() which swaps
->      on-disk XFS_OQUOTA_* flags for in-core XFS_GQUOTA_* and XFS_PQUOTA_*
->      flags after the superblock is read.
->      
->      However, if log recovery is required, the superblock is read again,
->      and the modified in-core flags are re-read from disk, so we have
->      XFS_OQUOTA_* flags in memory again.  This causes the
->      XFS_QM_NEED_QUOTACHECK() test to be true, because the XFS_OQUOTA_CHKD
->      is still set, and not XFS_GQUOTA_CHKD or XFS_PQUOTA_CHKD.
->      
->      Change xfs_sb_from_disk to call xfs_sb_quota_from disk and always
->      convert the disk flags to in-memory flags.
->      
->      Add a lower-level function which can be called with "false" to
->      not convert the flags, so that the sb verifier can verify
->      exactly what was on disk, per Brian Foster's suggestion.
->      
->      Reported-by: Cyril B. <cbay@excellency.fr>
->      Signed-off-by: Eric Sandeen <sandeen@redhat.com>
->
->
-> 83e782e went in at v3.11; the above commit hit v3.17, so it was broken
-> for a while.
->
-> I still can't explain the "quota init failed" bit, but the above
-> probably explains the unexpected quotacheck problem.
->
-> -Eric
->
->> HP
+	if (min == mark) {
+		if (current->gfp_mask & __GFP_FS)
+			min += atomic_read(&reservation_for_gfp_fs);
+		if (current->gfp_mask & __GFP_IO)
+			min += atomic_read(&reservation_for_gfp_io);
+	}
 
--- 
-Harry Percival
-Developer
-harry@pythonanywhere.com
+than ask the administrator to specify a static amount like
 
-PythonAnywhere - a fully browser-based Python development and hosting environment
-<http://www.pythonanywhere.com/>
+	if (min == mark) {
+		if (current->gfp_mask & __GFP_FS)
+			min += sysctl_reservation_for_gfp_fs;
+		if (current->gfp_mask & __GFP_IO)
+			min += sysctl_reservation_for_gfp_io;
+	}
 
-PythonAnywhere LLP
-17a Clerkenwell Road, London EC1M 5RD, UK
-VAT No.: GB 893 5643 79
-Registered in England and Wales as company number OC378414.
-Registered address: 28 Ely Place, 3rd Floor, London EC1N 6TD, UK
+?
+
+The retry-forever loop will happen if underestimated, won't it?
+Then, how to handle it when the OOM killer missed the target (due to
+__GFP_FS) or the OOM killer cannot be invoked (due to !__GFP_FS)?
 
 _______________________________________________
 xfs mailing list
