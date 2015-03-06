@@ -1,23 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 3907F7F4E
-	for <xfs@oss.sgi.com>; Fri,  6 Mar 2015 11:34:38 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 232CF304032
-	for <xfs@oss.sgi.com>; Fri,  6 Mar 2015 09:34:35 -0800 (PST)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id 57cybsejwlGSFxst (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 06 Mar 2015 09:34:31 -0800 (PST)
-Date: Fri, 6 Mar 2015 14:34:20 -0300
-From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: Re: [PATCH] [RFC] Implement XFS_IOC_FSBULKSTAT_RANGE ioctl
-Message-ID: <20150306173420.GA17894@hades.maiolino.org>
-References: <1425393678-4550-1-git-send-email-cmaiolino@redhat.com>
-	<20150303215557.GU4251@dastard>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id A6F3F7F4E
+	for <xfs@oss.sgi.com>; Fri,  6 Mar 2015 14:47:22 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 1F8D9AC001
+	for <xfs@oss.sgi.com>; Fri,  6 Mar 2015 12:47:18 -0800 (PST)
+Received: from fieldses.org (fieldses.org [173.255.197.46]) by cuda.sgi.com
+	with ESMTP id 8nwi2GjLOIIebbKV for <xfs@oss.sgi.com>;
+	Fri, 06 Mar 2015 12:47:16 -0800 (PST)
+Date: Fri, 6 Mar 2015 15:47:15 -0500
+From: "J. Bruce Fields" <bfields@fieldses.org>
+Subject: Re: panic on 4.20 server exporting xfs filesystem
+Message-ID: <20150306204715.GA27257@fieldses.org>
+References: <20150304222709.GI1627@fieldses.org>
+	<20150304224557.GY4251@dastard> <54F78BE5.1020608@sandeen.net>
+	<20150304225623.GZ4251@dastard>
+	<20150305040849.GJ1627@fieldses.org>
+	<20150305131731.GA16235@lst.de>
+	<20150305150138.GA15674@fieldses.org>
+	<20150305170217.GC15674@fieldses.org>
+	<20150305204749.GA17934@fieldses.org>
+	<20150305205922.GF18360@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20150303215557.GU4251@dastard>
+In-Reply-To: <20150305205922.GF18360@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,371 +37,133 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+Cc: linux-nfs@vger.kernel.org, Eric Sandeen <sandeen@sandeen.net>, Christoph Hellwig <hch@lst.de>, xfs@oss.sgi.com
 
-Hi Eric and Dave,
-
-thank you for the reply, I completely forgot about our talk regarding refactor
-xfs_bulkstat(), the idea to send the patch here was to get more comments into
-it, so, looks like I got what I wanted :-)
-
-I'll work on it and refactor xfs_bulkstat() and also implement the ideas you
-gave.
-
-Thanks
-
-
-On Wed, Mar 04, 2015 at 08:55:57AM +1100, Dave Chinner wrote:
-> On Tue, Mar 03, 2015 at 11:41:18AM -0300, Carlos Maiolino wrote:
-> > This patch aims to implement a ranged bulkstat ioctl, which will make users able
-> > to bulkstat inodes in a filesystem based on range instead on rely only in a
-> > whole filesystem bulkstat.
+On Fri, Mar 06, 2015 at 07:59:22AM +1100, Dave Chinner wrote:
+> On Thu, Mar 05, 2015 at 03:47:49PM -0500, J. Bruce Fields wrote:
+> > On Thu, Mar 05, 2015 at 12:02:17PM -0500, J. Bruce Fields wrote:
+> > > On Thu, Mar 05, 2015 at 10:01:38AM -0500, J. Bruce Fields wrote:
+> > > > On Thu, Mar 05, 2015 at 02:17:31PM +0100, Christoph Hellwig wrote:
+> > > > > On Wed, Mar 04, 2015 at 11:08:49PM -0500, J. Bruce Fields wrote:
+> > > > > > Ah-hah:
+> > > > > > 
+> > > > > > 	static void
+> > > > > > 	nfsd4_cb_layout_fail(struct nfs4_layout_stateid *ls)
+> > > > > > 	{
+> > > > > > 		...
+> > > > > > 		nfsd4_cb_layout_fail(ls);
+> > > > > > 
+> > > > > > That'd do it!
+> > > > > > 
+> > > > > > Haven't tried to figure out why exactly that's getting called, and why
+> > > > > > only rarely.  Some intermittent problem with the callback path, I guess.
+> > > > > > 
+> > > > > > Anyway, I think that solves most of the mystery....
+> > > > > 
+> > > > > Ooops, that was a nasty git merge error in the last rebase, see the fix
+> > > > > below.
+> > > > 
+> > > > Thanks!
+> > > 
+> > > And with that fix things look good.
+> > > 
+> > > I'm still curious why the callbacks are failling.  It's also logging
+> > > "nfsd: client 192.168.122.32 failed to respond to layout recall".
 > > 
-> > This first implementation add a per AG bulkstat possibility, but it also adds
-> > the necessary infrastructure to implement different kinds of ranged bulkstat,
-> > like per block.
+> > I spoke too soon, I'm still not getting through my usual test run--the most
+> > recent run is hanging in generic/247 with the following in the server logs.
 > > 
-> > The patch is already working and I've been testing it for a while, so, I think
-> > it's time to send this patch out and ask for comments on it.
+> > But I probably still won't get a chance to look at this any closer till after
+> > vault.
 > > 
-> > The core of the implementation is very similar with what xfs_bulsktat() does by
-> > now, which, instead bulkstat the whole filesystem, it start/stop on the
-> > specified range.
+> > --b.
 > > 
-> > As per Dave's suggesting, I added to  rgbulkreq structure (used to pass data
-> > to/from userland), a padding, so we can use the same structure for another kind
-> > of ranged bulkstats without the need to actually change the structure size.
-> > 
-> > Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
-> > ---
-> >  fs/xfs/libxfs/xfs_fs.h |  12 +++
-> >  fs/xfs/xfs_ioctl.c     |  56 +++++++++++++
-> >  fs/xfs/xfs_itable.c    | 210 +++++++++++++++++++++++++++++++++++++++++++++++++
-> >  fs/xfs/xfs_itable.h    |  16 ++++
-> >  4 files changed, 294 insertions(+)
-> > 
-> > diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
-> > index 18dc721..88665aa 100644
-> > --- a/fs/xfs/libxfs/xfs_fs.h
-> > +++ b/fs/xfs/libxfs/xfs_fs.h
-> > @@ -334,6 +334,17 @@ typedef struct xfs_fsop_bulkreq {
-> >  	__s32		__user *ocount;	/* output count pointer		*/
-> >  } xfs_fsop_bulkreq_t;
-> >  
-> > +typedef struct xfs_fsop_rgbulkreq {
-> > +	__u64		__user *lastip; /* last inode # pointer		*/
-> > +	__s32		icount;		/* count of entries in buffer	*/
-> > +	void		__user *ubuffer;/* user buffer for inode desc.	*/
-> > +	__s32		__user *ocount;	/* output count pointer		*/
-> > +	__u64		start;		/* start point of rgbulkstat	*/
-> > +	__u64		end;		/* end point of rgbulkstat	*/
-> > +	__u32		flags;		/* multipurpose flag field	*/
-> > +	__u32		pad[5];		/* reserved space		*/
-> > +} xfs_fsop_rgbulkreq_t;
+> > nfsd: client 192.168.122.32 failed to respond to layout recall.   Fencing..
+> > nfsd: fence failed for client 192.168.122.32: -2!
+> > nfsd: client 192.168.122.32 failed to respond to layout recall.   Fencing..
+> > nfsd: fence failed for client 192.168.122.32: -2!
+> > receive_cb_reply: Got unrecognized reply: calldir 0x1 xpt_bc_xprt ffff88005639a000 xid c21abd62
+> > kswapd0: page allocation failure: order:0, mode:0x120
 > 
-> No new typedefs. Also, call it struct xfs_fsop_bulkstat_range, so
-> it's clear what ioctl it belongs with.
+> [snip network driver memory allocation failure]
 > 
-> And, as eric mentioned, the flag:
+> > active_anon:7053 inactive_anon:2435 isolated_anon:0
+> >  active_file:88743 inactive_file:89505 isolated_file:32
+> >  unevictable:0 dirty:9786 writeback:0 unstable:0
+> >  free:3571 slab_reclaimable:227807 slab_unreclaimable:75772
+> >  mapped:21010 shmem:380 pagetables:1567 bounce:0
+> >  free_cma:0
 > 
-> #define XFS_FSOP_BSRANGE_AGNUMBER	1
+> Looks like there should be heaps of reclaimable memory...
 > 
-> also needs to be defined to tell the kernel that start/end are ag
-> numbers.
+> > nfsd: client 192.168.122.32 failed to respond to layout recall.   Fencing..
 > 
-> > diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-> > index f7afb86..34a4de5 100644
-> > --- a/fs/xfs/xfs_ioctl.c
-> > +++ b/fs/xfs/xfs_ioctl.c
-> > @@ -790,6 +790,59 @@ xfs_ioc_bulkstat(
-> >  }
-> >  
-> >  STATIC int
-> > +xfs_ioc_bulkstat_range(
-> > +	xfs_mount_t		*mp,
-> > +	unsigned int		cmd,
-> > +	void			__user *arg)
-> > +{
-> > +
-> > +	xfs_fsop_rgbulkreq_t	rgbulkreq;
+> So there's a layout recall pending...
 > 
-> Again, better name needed. Even just "bsreq" would be fine, because
-> it's just a bulkstat request structure....
+> > nfsd: fence failed for client 192.168.122.32: -2!
+> > receive_cb_reply: Got unrecognized reply: calldir 0x1 xpt_bc_xprt ffff880051dfc000 xid 8ff02aaf
+> > INFO: task nfsd:17653 blocked for more than 120 seconds.
+> >       Not tainted 4.0.0-rc2-09922-g26cbcc7 #89
+> > "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+> > nfsd            D ffff8800753a7848 11720 17653      2 0x00000000
+> >  ffff8800753a7848 0000000000000001 0000000000000001 ffffffff82210580
+> >  ffff88004e9bcb50 0000000000000006 ffffffff8119d9f0 ffff8800753a7848
+> >  ffff8800753a7fd8 ffff88002e5e3d70 0000000000000246 ffff88004e9bcb50
+> > Call Trace:
+> >  [<ffffffff8119d9f0>] ? new_sync_read+0xb0/0xb0
+> >  [<ffffffff8119d9f0>] ? new_sync_read+0xb0/0xb0
+> >  [<ffffffff81a95737>] schedule+0x37/0x90
+> >  [<ffffffff81a95ac8>] schedule_preempt_disabled+0x18/0x30
+> >  [<ffffffff81a97756>] mutex_lock_nested+0x156/0x400
+> >  [<ffffffff813a0d5a>] ? xfs_file_buffered_aio_write.isra.9+0x6a/0x2a0
+> >  [<ffffffff8119d9f0>] ? new_sync_read+0xb0/0xb0
+> >  [<ffffffff813a0d5a>] xfs_file_buffered_aio_write.isra.9+0x6a/0x2a0
+> >  [<ffffffff8119d9f0>] ? new_sync_read+0xb0/0xb0
+> >  [<ffffffff813a1016>] xfs_file_write_iter+0x86/0x130
+> >  [<ffffffff8119db05>] do_iter_readv_writev+0x65/0xa0
 > 
-> > +	int			count;	/* # of records returned */
-> > +	xfs_ino_t		inlast; /* last inode number */
-> > +	int			done;
-> > +	int			error;
-> > +
-> > +	if (!capable(CAP_SYS_ADMIN))
-> > +		return -EPERM;
-> > +
-> > +	if (XFS_FORCED_SHUTDOWN(mp))
-> > +		return -EIO;
-> > +
-> > +	/* We do not support another ranged calls yet */
-> > +	if (cmd != XFS_IOC_FSBULKSTAT_RANGE)
-> > +		return -EINVAL;
+> and the nfsd got hung up on the inode mutex during  a write.
 > 
-> Not necessary.
+> Which means there's some other process blocked holding the i_mutex.
+> sysrq-w and sysrq-t is probably going to tell us more here.
 > 
-> > +
-> > +	if (copy_from_user(&rgbulkreq, arg, sizeof(xfs_fsop_rgbulkreq_t)))
-> > +		return -EFAULT;
-> > +
-> > +	if (copy_from_user(&inlast, rgbulkreq.lastip, sizeof(__s64)))
-> > +		return -EFAULT;
-> > +
-> > +	if ((count = rgbulkreq.icount) <= 0)
-> > +		return -EINVAL;
-> 
-> Assignments need to be on their own line.
-> 
-> > +
-> > +	if (rgbulkreq.ubuffer == NULL)
-> > +		return -EINVAL;
-> 
-> Missing is validation of the start, end and flags fields.
-> 
-> > +
-> > +	error = xfs_bulkstat_range(mp, &inlast, &count, xfs_bulkstat_one,
-> > +				   sizeof(xfs_bstat_t), rgbulkreq.ubuffer,
-> > +				   rgbulkreq.start, rgbulkreq.end, &done);
-> 
-> Why do you need a "done" parameter?  Also, just pass the bsreq
-> structure, not the individual elements. I don't see any point in
-> passing the formatter or size parameters at this point, either,
-> because xfs_bulkstat_range() can easily define them.
-> 
-> > diff --git a/fs/xfs/xfs_itable.c b/fs/xfs/xfs_itable.c
-> > index 82e3142..d6b27ee 100644
-> > --- a/fs/xfs/xfs_itable.c
-> > +++ b/fs/xfs/xfs_itable.c
-> > @@ -530,6 +530,216 @@ del_cursor:
-> >  	return error;
-> >  }
-> >  
-> > +/*
-> > + * Return stat information in bulk (by-inode) for specified
-> > + * filesystem range.
-> > + */
-> > +int
-> > +xfs_bulkstat_range(
-> > +	xfs_mount_t		*mp,	/* mount point for filesystem */
-> > +	xfs_ino_t		*lastinop, /* last inode returned */
-> > +	int			*ubcountp, /* size of buffer/count returned */
-> > +	bulkstat_one_pf		formatter, /* func that'd fill a single buf */
-> > +	size_t			statstruct_size, /* sizeof struct filling */
-> > +	char			__user *ubuffer, /* buffer with inode stats */
-> > +	__u64			start,	/* start bulkstat here */
-> > +	__u64			end,	/* end bulkstat here */
-> > +	int			*done) /* 1 if there are more stats to get */
-> > +{
-> > +	xfs_buf_t		*agbp;	/* agi header buffer */
-> > +	xfs_agino_t		agino;	/* inode # in allocation group */
-> > +	xfs_agnumber_t		agno;	/* allocation group number */
-> > +	xfs_btree_cur_t		*cur;	/* btree cursor for ialloc btree */
-> > +	size_t			irbsize; /* size of irec buffer in bytes */
-> > +	xfs_inobt_rec_incore_t	*irbuf;	/* start of irec buffer */
-> > +	int			nirbuf;	/* size of irbuf */
-> > +	int			ubcount; /* size of user's buffer */
-> > +	struct xfs_bulkstat_agichunk ac;
-> > +	int			error = 0;
-> > +
-> > +	/*
-> > +	 * Get the last inode value, see if there is nothing to do.
-> > +	 */
-> > +	if (*lastinop != 0)
-> > +		agno = XFS_INO_TO_AGNO(mp, *lastinop);
-> > +	else
-> > +		agno = start;
-> > +
-> > +	agino = XFS_INO_TO_AGINO(mp, *lastinop);
-> > +
-> > +	/*
-> > +	 * If specified end is bigger than mp->m_sb.sb_agount, should we
-> > +	 * gracefully interpret as if there is nothing to do, or trigger
-> > +	 * an error?
-> > +	 */
-> 
-> We should have already errored out before we get here in this case.
-> 
-> > +	if (agno >= mp->m_sb.sb_agcount) {
-> > +		*done = 1;
-> > +		*ubcountp = 0;
-> > +		return 0;
-> > +	}
-> 
-> From this point onwards, you've pretty much copy-n-pasted the
-> xfs_bulkstat() implementation. What should happen here is:
-> 
-> 	for (agno = start; agno < end; agno++) {
-> 		error = xfs_bulkstat_range_ag(agno, ... );
-> 		if (error)
-> 			break;
-> 	}
-> 
-> and all this:
-> 
-> > +	ubcount = *ubcountp;
-> > +	ac.ac_ubuffer = &ubuffer;
-> > +	ac.ac_ubleft = ubcount * statstruct_size; /* bytes */
-> > +	ac.ac_ubelem = 0;
-> > +
-> > +	*ubcountp = 0;
-> > +	*done = 0;
-> > +
-> > +	irbuf = kmem_zalloc_greedy(&irbsize, PAGE_SIZE, PAGE_SIZE * 4);
-> > +	if (!irbuf)
-> > +		return -ENOMEM;
-> > +
-> > +	nirbuf = irbsize / sizeof(*irbuf);
-> > +
-> > +	/*
-> > +	 * Loop over the allocation groups, starting from the last inode
-> > +	 * returned; - means start of the allocation group.
-> > +	 */
-> > +	while (agno <= end) {
-> > +		struct xfs_inobt_rec_incore	*irbp = irbuf;
-> > +		struct xfs_inobt_rec_incore	*irbufend = irbuf + nirbuf;
-> > +		bool				end_of_ag = false;
-> > +		int				icount = 0;
-> > +		int				stat;
-> > +
-> > +		error = xfs_ialloc_read_agi(mp, NULL, agno, &agbp);
-> > +		if (error)
-> > +			break;
-> > +
-> > +		/*
-> > +		 * Allocate and initialize a btree cursor for ialloc btree.
-> > +		 */
-> > +		cur = xfs_inobt_init_cursor(mp, NULL, agbp, agno,
-> > +					    XFS_BTNUM_INO);
-> > +
-> > +		if (agino > 0) {
-> > +			/*
-> > +			 * In the middle of an allocation group, we need to get
-> > +			 * the remainder of the chunk we are in.
-> > +			 */
-> > +			struct xfs_inobt_rec_incore	r;
-> > +
-> > +			error = xfs_bulkstat_grab_ichunk(cur, agino, &icount, &r);
-> > +			if (error)
-> > +				goto del_cursor;
-> > +			if (icount) {
-> > +				irbp->ir_startino = r.ir_startino;
-> > +				irbp->ir_freecount = r.ir_freecount;
-> > +				irbp->ir_free = r.ir_free;
-> > +				irbp++;
-> > +			}
-> > +			/* Increment to the next record */
-> > +			error = xfs_btree_increment(cur, 0, &stat);
-> > +		} else {
-> > +			/* Start of ag. Lookup the first inode chunk */
-> > +			error = xfs_inobt_lookup(cur, 0, XFS_LOOKUP_GE, &stat);
-> > +		}
-> > +		if (error || stat == 0) {
-> > +			end_of_ag = true;
-> > +			goto del_cursor;
-> > +		}
-> > +
-> > +		/*
-> > +		 * Loop through inode btree records in this ag,
-> > +		 * until we run out of inodes or space in the buffer.
-> > +		 */
-> > +		while (irbp < irbufend && icount < ubcount) {
-> > +			struct xfs_inobt_rec_incore	r;
-> > +
-> > +			error = xfs_inobt_get_rec(cur, &r, &stat);
-> > +			if (error || stat == 0) {
-> > +				end_of_ag = true;
-> > +				goto del_cursor;
-> > +			}
-> > +
-> > +			/*
-> > +			 * If this chunk has any allocated inodes, save it.
-> > +			 * Also start read-ahead now for this chunk.
-> > +			 */
-> > +			if (r.ir_freecount < XFS_INODES_PER_CHUNK) {
-> > +				xfs_bulkstat_ichunk_ra(mp, agno, &r);
-> > +				irbp->ir_startino = r.ir_startino;
-> > +				irbp->ir_freecount = r.ir_freecount;
-> > +				irbp->ir_free = r.ir_free;
-> > +				irbp++;
-> > +				icount += XFS_INODES_PER_CHUNK - r.ir_freecount;
-> > +			}
-> > +			error = xfs_btree_increment(cur, 0, &stat);
-> > +			if (error || stat == 0) {
-> > +				end_of_ag = true;
-> > +				goto del_cursor;
-> > +			}
-> > +			cond_resched();
-> > +		}
-> > +
-> > +	/*
-> > +	 * Drop the btree buffers and the agi buffer as we can't hold any of the
-> > +	 * locks these represent when calling iget. If there is a pending error,
-> > +	 * then we are done.
-> > +	 */
-> > +del_cursor:
-> > +		xfs_btree_del_cursor(cur, XFS_BTREE_NOERROR);
-> > +		xfs_buf_relse(agbp);
-> > +		if (error)
-> > +			break;
-> > +		/*
-> > +		 * Now format all the good inodes into the user's buffer. The
-> > +		 * call to xfs_bulkstat_ag_ichunk() sets up the agino pointer
-> > +		 * for the next loop iteration.
-> > +		 */
-> > +		irbufend = irbp;
-> > +		for (irbp = irbuf;
-> > +		     irbp < irbufend && ac.ac_ubleft >= statstruct_size;
-> > +		     irbp++) {
-> > +			error = xfs_bulkstat_ag_ichunk(mp, agno, irbp, formatter,
-> > +						statstruct_size, &ac, &agino);
-> > +			if (error)
-> > +				break;
-> > +
-> > +			cond_resched();
-> > +		}
-> > +
-> > +		/*
-> > +		 * If we have run out of space or had a formatting error, we
-> > +		 * are now done
-> > +		 */
-> > +		if (ac.ac_ubleft < statstruct_size || error)
-> > +			break;
-> > +
-> > +		if (end_of_ag) {
-> > +			agno++;
-> > +			agino = 0;
-> > +		}
-> > +	}
-> > +	/*
-> > +	 * Done, we are either out of specified inode range or space to
-> > +	 * put the data.
-> > +	 */
-> > +	kmem_free(irbuf);
-> > +	*ubcountp = ac.ac_ubelem;
-> 
-> Up to here is done by xfs_bulkstat_range_ag(). This factoring should
-> be done to xfs_bulkstat() as the first patch in the series, then you
-> can add the xfs_bulkstat_range() function that uses it, then finally
-> introduce the ioctl that wraps around xfs_bulkstat_range().
-> 
-> This avoids all of the copy/paste, and ensures that the bulkstat
-> APIs all use the same implementation which makes testing and
-> maintenance of the code in future much simpler.
-> 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+> I suspect we'll have another write stuck in break_layout().....
 
--- 
-Carlos
+Yup!  There's a bunch of threads similarly stuck in write, and then:
+
+# cat /proc/17765/stack 
+[<ffffffff811edb18>] __break_lease+0x278/0x510
+[<ffffffff813cd4d4>] xfs_break_layouts+0x94/0xf0
+[<ffffffff813a0903>] xfs_file_aio_write_checks+0x53/0x100
+[<ffffffff813a0d7b>] xfs_file_buffered_aio_write.isra.9+0x8b/0x2a0
+[<ffffffff813a1016>] xfs_file_write_iter+0x86/0x130
+[<ffffffff8119db05>] do_iter_readv_writev+0x65/0xa0
+[<ffffffff8119f0b2>] do_readv_writev+0xe2/0x280
+[<ffffffff8119f2d9>] vfs_writev+0x39/0x50
+[<ffffffffa00ab861>] nfsd_vfs_write.isra.11+0xa1/0x350 [nfsd]
+[<ffffffffa00aecee>] nfsd_write+0x8e/0x100 [nfsd]
+[<ffffffffa00b97f5>] nfsd4_write+0x185/0x1e0 [nfsd]
+[<ffffffffa00bbe37>] nfsd4_proc_compound+0x3c7/0x6f0 [nfsd]
+[<ffffffffa00a7463>] nfsd_dispatch+0xc3/0x220 [nfsd]
+[<ffffffffa001314f>] svc_process_common+0x43f/0x650 [sunrpc]
+[<ffffffffa00134a3>] svc_process+0x143/0x260 [sunrpc]
+[<ffffffffa00a6cc7>] nfsd+0x167/0x1e0 [nfsd]
+[<ffffffff81093a2f>] kthread+0xef/0x110
+[<ffffffff81a9b5ac>] ret_from_fork+0x7c/0xb0
+[<ffffffffffffffff>] 0xffffffffffffffff
+
+I'm worried by the blocking break_lease in xfs_break_layouts.  There's a
+circular dependency: blocking in break_lease ties up an nfsd thread, but
+we'll need an nfsd thread to process the client's layout return.
+
+But in the worst case I'd still expect that to be cleaned up if the
+client doesn't return the layout within a lease period (20 seconds on my
+server).
+
+In addition to fencing the client, surely we should be forcibly revoking
+the layout at that point?
+
+-b.
 
 _______________________________________________
 xfs mailing list
