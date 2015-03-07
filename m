@@ -1,23 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 4D8387F5A
-	for <xfs@oss.sgi.com>; Sat,  7 Mar 2015 08:07:39 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 3C40F8F8040
-	for <xfs@oss.sgi.com>; Sat,  7 Mar 2015 06:07:35 -0800 (PST)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id bx77QxmjODCyC0ul (version=TLSv1
+	by oss.sgi.com (Postfix) with ESMTP id 1862C7F62
+	for <xfs@oss.sgi.com>; Sat,  7 Mar 2015 09:08:44 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id C9CD58F8033
+	for <xfs@oss.sgi.com>; Sat,  7 Mar 2015 07:08:40 -0800 (PST)
+Received: from gum.cmpxchg.org (gum.cmpxchg.org [85.214.110.215]) by
+	cuda.sgi.com with ESMTP id Y231kLnsHL7qD0FG (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Sat, 07 Mar 2015 06:07:35 -0800 (PST)
-Date: Sat, 7 Mar 2015 09:07:21 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: XFS hangs with XFS: possible memory allocation deadlock in
-	kmem_alloc
-Message-ID: <20150307140721.GA9098@bfoster.bfoster>
-References: <54FAAE16.6090505@fau.de>
+	Sat, 07 Mar 2015 07:08:37 -0800 (PST)
+Date: Sat, 7 Mar 2015 10:08:21 -0500
+From: Johannes Weiner <hannes@cmpxchg.org>
+Subject: Re: How to handle TIF_MEMDIE stalls?
+Message-ID: <20150307150821.GA9914@phnom.home.cmpxchg.org>
+References: <20150219102431.GA15569@phnom.home.cmpxchg.org>
+	<20150219225217.GY12722@dastard>
+	<20150221235227.GA25079@phnom.home.cmpxchg.org>
+	<20150223004521.GK12722@dastard>
+	<20150222172930.6586516d.akpm@linux-foundation.org>
+	<20150223073235.GT4251@dastard> <54F42FEA.1020404@suse.cz>
+	<20150302223154.GJ18360@dastard>
+	<20150307002055.GA29679@phnom.home.cmpxchg.org>
+	<20150307034347.GG13958@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <54FAAE16.6090505@fau.de>
+In-Reply-To: <20150307034347.GG13958@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,122 +37,234 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Michael Meier <michael.meier@fau.de>
-Cc: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, rientjes@google.com, oleg@redhat.com, xfs@oss.sgi.com, mhocko@suse.cz, linux-mm@kvack.org, mgorman@suse.de, dchinner@redhat.com, Andrew Morton <akpm@linux-foundation.org>, torvalds@linux-foundation.org, Vlastimil Babka <vbabka@suse.cz>
 
-On Sat, Mar 07, 2015 at 08:51:50AM +0100, Michael Meier wrote:
-> We've recently upgraded the OS on one of our servers, and since then
-> have been experiencing frequent stalls of the XFS filesystem on it.
-> Other filesystems on the machine seem to still respond fine while XFS
-> hangs. The stalls sometimes last for around 30 minutes, during which all
-> attempts to access that filesystem hang completely - after that, the
-> filesystem suddenly responds instantly again, as if there had never been
-> any problem. The dmesg is full of these messages while it stalls:
->  XFS: possible memory allocation deadlock in kmem_alloc (mode:0x8250)
-> These also occour from time to time without the filesystem stalling (or
-> at least it's not noticeable) - the messages appear about once in two
-> hours, the stalls about once a day.
+On Sat, Mar 07, 2015 at 02:43:47PM +1100, Dave Chinner wrote:
+> On Fri, Mar 06, 2015 at 07:20:55PM -0500, Johannes Weiner wrote:
+> > On Tue, Mar 03, 2015 at 09:31:54AM +1100, Dave Chinner wrote:
+> > > What we don't know is how many objects we might need to scan to find
+> > > the objects we will eventually modify.  Here's an (admittedly
+> > > extreme) example to demonstrate a worst case scenario: allocate a
+> > > 64k data extent. Because it is an exact size allocation, we look it
+> > > up in the by-size free space btree. Free space is fragmented, so
+> > > there are about a million 64k free space extents in the tree.
+> > > 
+> > > Once we find the first 64k extent, we search them to find the best
+> > > locality target match.  The btree records are 16 bytes each, so we
+> > > fit roughly 500 to a 4k block. Say we search half the extents to
+> > > find the best match - i.e. we walk a thousand leaf blocks before
+> > > finding the match we want, and modify that leaf block.
+> > > 
+> > > Now, the modification removed an entry from the leaf and tht
+> > > triggers leaf merge thresholds, so a merge with the 1002nd block
+> > > occurs. That block now demand pages in and we then modify and join
+> > > it to the transaction. Now we walk back up the btree to update
+> > > indexes, merging blocks all the way back up to the root.  We have a
+> > > worst case size btree (5 levels) and we merge at every level meaning
+> > > we demand page another 8 btree blocks and modify them.
+> > > 
+> > > In this case, we've demand paged ~1010 btree blocks, but only
+> > > modified 10 of them. i.e. the memory we consumed permanently was
+> > > only 10 4k buffers (approx. 10 slab and 10 page allocations), but
+> > > the allocation demand was 2 orders of magnitude more than the
+> > > unreclaimable memory consumption of the btree modification.
+> > > 
+> > > I hope you start to see the scope of the problem now...
+> > 
+> > Isn't this bounded one way or another?
 > 
-> Google did point me to some reports of these messages occouring at the
-> end of 2013, but the kernels in question should all have had the fixes
-> proposed back then - although one message back then suggested there were
-> more places where this problem could occour that were not fixed yet.
+> Fo a single transaction? No.
+
+So you can have an infinite number of allocations in the context of a
+transaction, and only the objects that are going to be locked in are
+bounded?
+
+> > Sure, the inaccuracy itself is
+> > high, but when you put the absolute numbers in perspective it really
+> > doesn't seem to matter: with your extreme case of 3MB per transaction,
+> > you can still run 5k+ of them in parallel on a small 16G machine.
 > 
-> Kernels used were:
-> - Ubuntu 3.13.0-44  - shows stalls, according to
-> https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1382333 has the fix
-> - Ubuntu 3.16.0-31  - shows stalls
-> - Ubuntu 3.2.0-various - no stalls in more than 1 year
-> We can actually still boot the machine with the 3.2.0 kernel, and it
-> will run absolutely fine, but as that kernel will not be supported
-> forever, I do not consider that a permanent solution.
+> No you can't. The number of concurrent transactions is bounded by
+> the size of the log and the amount of unused space available for
+> reservation in the log. Under heavy modification loads, that's
+> usually somewhere between 15-25% of the log, so worst case is a few
+> hundred megabytes. The memory reservation demand is in the same
+> order of magnitude as the log space reservation demand.....
 > 
-> The machine should not be low on memory, the disk array far from its
-> limits, and the I/O-load is mostly reads with very little writes, as
-> this is a public FTP server.
+> > Occupy a generous 75% of RAM with anonymous pages, and you can STILL
+> > run over a thousand transactions concurrently.  That would seem like a
+> > decent pipeline to keep the storage device occupied.
 > 
-> I have tried to collect some information, available at
-> https://grid.rrze.uni-erlangen.de/~unrz191/syslog-with-xfs-hangs.log
+> Typical systems won't ever get to that - they don't do more than a
+> handful of current transactions at a time - the "thousands of
+> transactions" occur on dedicated storage servers like petabyte scale
+> NFS servers that have hundreds of gigabytes of RAM and
+> hundreds-to-thousands of processing threads to keep the request
+> pipeline full. The memory in those machines is entirely dedicated to
+> the filesystem, so keeping a usuable pool of a few gigabytes for
+> transaction reservations isn't a big deal.
 > 
+> The point here is that you're taking what I'm describing as the
+> requirements of a reservation pool and then applying the worst case
+> to situations where completely inappropriate. That's what I mean
+> when I told Michal to stop building silly strawman situations; large
+> amounts of concurrency are required for huge machines, not your
+> desktop workstation.
 
-Thanks for the data. Some notes from the backtraces in the first
-instance:
+Why do you have to take everything I say in bad faith and choose to be
+smug instead of constructive?  This is unneccessary.  OF COURSE you
+know your constraints better than we do.  Now explain how they matter
+in practice, because that's what dictates the design in engineering.
 
-- xfsaild is down in xlog_cil_force_lsn()->flush_work(). So it's trying
-  to push the log, but the workqueue worker is already running.
-- The workqueue worker is here:
+I'm trying to figure out your requirements to find the simplest model,
+and yes I'm obviously going to follow up when you give me incomplete
+information.  I'm responding to this:
 
-	[298163.482697] Workqueue: xfs-cil/dm-0 xlog_cil_push_work [xfs]
+: What we don't know is how many objects we might need to scan to find
+: the objects we will eventually modify.  Here's an (admittedly
+: extreme) example to demonstrate a worst case scenario:
 
-... and it appears to be blocked on the ctx lock. This means either a
-transaction is completing or somebody else is pushing the cil.
-- Writeback and one or two other transactions are backed up waiting on
-  the ctx lock.
-- rsync is running a transaction completion (e.g., holding ctx lock) and
-  blocked on memory allocation:
+You gave us numbers that you called "worst case", so I took them and
+put them in a scenario where it looks like memory wouldn't be the
+bottle neck in real life, even if we just had simple pre-allocation
+semantics.  If it was a silly example, why not provide a better one?
 
-rsync           D ffff88103f893440     0 44446  43197 0x00000000
- ffff8809e4f7b9f0 0000000000000086 ffff880801a15bb0 ffff8809e4f7bfd8
- 0000000000013440 0000000000013440 ffff8810146428c0 ffff881013dd8000
- ffff8809e4f7ba20 00000001046f17ea ffff881013dd8000 000000000000d158
-Call Trace:
- [<ffffffff817675c9>] schedule+0x29/0x70
- [<ffffffff817668e5>] schedule_timeout+0x165/0x2a0
- [<ffffffff8107a420>] ? ftrace_raw_event_tick_stop+0xc0/0xc0
- [<ffffffff81767c9b>] io_schedule_timeout+0x9b/0xf0
- [<ffffffff81180403>] congestion_wait+0x73/0x100
- [<ffffffff810b4d10>] ? prepare_to_wait_event+0x100/0x100
- [<ffffffffc01deaac>] kmem_alloc+0x6c/0xf0 [xfs]
- [<ffffffffc022399f>] xfs_log_commit_cil+0x34f/0x470 [xfs]
- [<ffffffffc01de37c>] xfs_trans_commit+0x11c/0x230 [xfs]
- [<ffffffffc0212c81>] xfs_rename+0x601/0x670 [xfs]
- [<ffffffffc01d41c2>] xfs_vn_rename+0x82/0x90 [xfs]
- [<ffffffff811e34de>] vfs_rename+0x56e/0x740
- [<ffffffff811e4383>] SYSC_renameat2+0x483/0x530
- [<ffffffff811d6451>] ? __sb_end_write+0x31/0x60
- [<ffffffff811f208f>] ? mnt_drop_write+0x1f/0x30
- [<ffffffff811f34b4>] ? mntput+0x24/0x40
- [<ffffffff811ea6ac>] ? dput+0x4c/0x180
- [<ffffffff811f34b4>] ? mntput+0x24/0x40
- [<ffffffff811dd39e>] ? path_put+0x1e/0x30
- [<ffffffff811e561e>] SyS_rename+0x1e/0x20
- [<ffffffff8176b66d>] system_call_fastpath+0x1a/0x1f
+I'm fine with reservations and I'm fine with adding more complexity
+when you demonstrate that it's needed.  Your argument seems to have
+been that worst-case estimates are way off, but can you please just
+demonstrate why it matters in practice?  Instead of having me do it
+and calling my attempts strawman arguments?  I can just guess your
+constraints, it's up to you to make a case for your requirements.
 
-... so that appears to hold everything else up. 
+Here is another example where you responded to akpm:
 
-This looks potentially related to the ongoing transaction context memory
-allocation discussion, as this code implements a tight retry loop with
-time-based task waits and "no fail" allocations. This is also the source
-of the "possible memory allocation deadlock" warning.
+---
+> When allocating pages the caller should drain its reserves in
+> preference to dipping into the regular freelist.  This guy has already
+> done his reclaim and shouldn't be penalised a second time.  I guess
+> Johannes's preallocation code should switch to doing this for the same
+> reason, plus the fact that snipping a page off
+> task_struct.prealloc_pages is super-fast and needs to be done sometime
+> anyway so why not do it by default.
 
-Dave might be able to comment a bit further on that. I'm not totally
-clear on the mm interaction here and if/what a workaround might be. It
-might be a good idea to grab the meminfo data when the stall is actually
-in effect.
+That is at odds with the requirements of demand paging, which
+allocate for objects that are reclaimable within the course of the
+transaction. The reserve is there to ensure forward progress for
+allocations for objects that aren't freed until after the
+transaction completes, but if we drain it for reclaimable objects we
+then have nothing left in the reserve pool when we actually need it.
 
-Considering this is a large memory box (64g), I wonder if some vm tuning
-might help mitigate this behavior..? For example, increase
-/proc/sys/vm/min_free_kbytes in hopes of allowing more memory for these
-allocations when under pressure, or tune down the
-dirty_ratio/dirty_background_ratio thresholds to more aggressively get
-data onto disk..?
+We do not know ahead of time if the object we are allocating is
+going to modified and hence locked into the transaction. Hence we
+can't say "use the reserve for this *specific* allocation", and so
+the only guidance we can really give is "we will to allocate and
+*permanently consume* this much memory", and the reserve pool needs
+to cover that consumption to guarantee forwards progress.
 
-Brian
+Forwards progress for all other allocations is guaranteed because
+they are reclaimable objects - they either freed directly back to
+their source (slab, heap, page lists) or they are freed by shrinkers
+once they have been released from the transaction.
 
-> Regards,
-> -- 
-> Michael Meier, Zentrale Systeme
-> Friedrich-Alexander-Universitaet Erlangen-Nuernberg
-> Regionales Rechenzentrum Erlangen
-> Martensstrasse 1, 91058 Erlangen, Germany
-> Tel.: +49 9131 85-28973, Fax: +49 9131 302941
-> michael.meier@fau.de
-> www.rrze.fau.de
+Hence we need allocations to come from the free list and trigger
+reclaim, regardless of the fact there is a reserve pool there. The
+reserve pool needs to be a last resort once there are no other
+avenues to allocate memory. i.e. it would be used to replace the OOM
+killer for GFP_NOFAIL allocations.
+---
+
+Andrew makes a proposal and backs it up with real life benefits:
+simpler, faster.  You on the other hand follow up with a list of
+unfounded claims and your only counter-argument really seems to be
+that Andrew's proposal differs from what you've had in mind.  What you
+had in mind was obviously driven by constraints known to you, but it's
+not an argument until you actually include them.  We're not taking
+your claims at face value, that's not how this ever works.
+
+Just explain why and how your requirements, demand paging reserves in
+this case, matter in real life.  Then we can take them seriously.
+
+> And, realistically, sizing that reservation pool appropriately is my
+> problem to solve - it will depend on many factors, one of which is
+> the actual geometry of the filesystem itself. You need to stop
+> thinking like you can control how application use the memory
+> allocation and reclaim subsystem and start to trust we will our
+> memory usage appropriately to maintain maximum system throughput.
+
+You've been working on the kernel long enough to know that this is not
+how it goes.  I don't care about getting a list of things you claim
+you need and implementing them blindly, trusting that you know what
+you're doing when it comes to memory.  If you want us to expose an
+interface, which puts constraints on our implementation, then you
+better provide justification for every single requirement.
+
+> After all, we already do that for all the filesystem caches the mm
+> subsystem doesn't control - why do you think I have had such an
+> interest in shrinker scalability? For XFS, the only cache we
+> actually don't control reclaim from is user data in the page cache -
+> we control everything else directly from custom shrinkers.....
+
+You mean those global object pools that are aged through unrelated and
+independent per-zone pressure values?
+
+Look, we are specialized in different subsystems, which means we know
+the details in front of us better than the details in the surrounding
+areas.  You are quick to dismiss constraints and scalability concerns
+in the memory subsystem, and I do the same for memory users.  We are
+having this discussion in order to explore where our problem spaces
+intersect, and we could be making more progress if you stopped
+assuming that everybody else is an idiot and you already found the
+perfect solution.
+
+We need data on your parameters in order to make a basic cost-benefit
+analysis of any proposed solutions.  Don't just propose something and
+talk down to us when we ask for clarifications on your constraints.
+It's not getting us anywhere.  Explore the problem space with us,
+explain your constraints and exact requirements based on real life
+data, and then we can look for potential solutions.  That is how we
+evaluate every single proposal for the kernel, and it's how it's going
+to work in this case.  It's not that complicated.
+
+> > The level of precision that you are asking for comes with complexity
+> > and fragility that I'm not convinced is necessary, or justified.
 > 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+> Look, if you dont think reservations will work, then how about you
+> suggest something that will. I don't really care what you implement,
+> as long as it meets the needs of demand paging, I have direct
+> control over memory usage and concurrency policy and the allocation
+> mechanism guarantees forward progress without needing the OOM
+> killer.
+
+Reservations are fine and I also want them to replace the OOM killer,
+we agree on that.
+
+The only thing my email was about was that, in light of the worst-case
+numbers you quoted, it didn't look like the demand paging requirement
+is strictly necessary to make the system work in practice, which is
+why I'm questioning that particular requirement and prompting you to
+clarify your position.  You have yet to address this.
+
+Until then, the simplest semantics are preallocation semantics, where
+you in advance establish private reserve pools (which can be backed by
+clean cache) from which you allocate directly using __GFP_RESERVE.  If
+the pool is empty it's immediately detectable and attributable to the
+culprit, and the other reserves are not impacted by it.
+
+A globally shared demand-paged pool is much more fragile because you
+trust other participants in the system to keep their promise and not
+pin more objects than they reserved for.  Otherwise, they deadlock
+your transaction and corrupt your userdata.  How does "XFS filesystem
+corrupted because it shares its emergency memory pool to ensure data
+integrity with some buggy driver" sound to you?
+
+It's also harder to verify.  If one of the participants misbehaves and
+pins more objects than they initially reserved for, how do we identify
+the culprit when the system locks up?
+
+Make an actual case why preallocation semantics are unworkable on real
+systems with real memory and real filesystems and real data on them,
+then we can consider making the model more complex and fragile.
 
 _______________________________________________
 xfs mailing list
