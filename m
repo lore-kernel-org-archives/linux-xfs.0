@@ -1,29 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 79F1D7F62
-	for <xfs@oss.sgi.com>; Sun,  8 Mar 2015 10:31:05 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 122F6AC001
-	for <xfs@oss.sgi.com>; Sun,  8 Mar 2015 08:31:01 -0700 (PDT)
-Received: from newverein.lst.de (verein.lst.de [213.95.11.211]) by
-	cuda.sgi.com with ESMTP id 7LOrGs4dTYcfH7tp for
-	<xfs@oss.sgi.com>; Sun, 08 Mar 2015 08:31:00 -0700 (PDT)
-Date: Sun, 8 Mar 2015 16:30:56 +0100
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: panic on 4.20 server exporting xfs filesystem
-Message-ID: <20150308153056.GA24037@lst.de>
-References: <20150304220900.GX18360@dastard>
-	<20150304222709.GI1627@fieldses.org>
-	<20150304224557.GY4251@dastard> <54F78BE5.1020608@sandeen.net>
-	<20150304225623.GZ4251@dastard>
-	<20150305040849.GJ1627@fieldses.org>
-	<20150305131731.GA16235@lst.de>
-	<20150305150138.GA15674@fieldses.org>
-	<20150305170217.GC15674@fieldses.org>
-	<20150305204749.GA17934@fieldses.org>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id AFF9E7F5F
+	for <xfs@oss.sgi.com>; Sun,  8 Mar 2015 13:36:05 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 9ABA7304032
+	for <xfs@oss.sgi.com>; Sun,  8 Mar 2015 11:36:02 -0700 (PDT)
+Received: from mail-ie0-f172.google.com (mail-ie0-f172.google.com
+	[209.85.223.172]) by cuda.sgi.com with ESMTP id
+	ia4tjqDNnxCf0jrm (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Sun, 08 Mar 2015 11:36:00 -0700 (PDT)
+Received: by iebtr6 with SMTP id tr6so24436714ieb.2
+	for <xfs@oss.sgi.com>; Sun, 08 Mar 2015 11:36:00 -0700 (PDT)
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20150305204749.GA17934@fieldses.org>
+In-Reply-To: <20150308100223.GC15487@gmail.com>
+References: <1425741651-29152-1-git-send-email-mgorman@suse.de>
+	<1425741651-29152-5-git-send-email-mgorman@suse.de>
+	<20150307163657.GA9702@gmail.com>
+	<CA+55aFwDuzpL-k8LsV3touhNLh+TFSLKP8+-nPwMXkWXDYPhrg@mail.gmail.com>
+	<20150308100223.GC15487@gmail.com>
+Date: Sun, 8 Mar 2015 11:35:59 -0700
+Message-ID: <CA+55aFyQyZXu2fi7X9bWdSX0utk8=sccfBwFaSoToROXoE_PLA@mail.gmail.com>
+Subject: Re: [PATCH 4/4] mm: numa: Slow PTE scan rate if migration failures
+	occur
+From: Linus Torvalds <torvalds@linux-foundation.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -36,26 +36,70 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "J. Bruce Fields" <bfields@fieldses.org>
-Cc: Eric Sandeen <sandeen@sandeen.net>, linux-nfs@vger.kernel.org, Christoph Hellwig <hch@lst.de>, xfs@oss.sgi.com
+To: Ingo Molnar <mingo@kernel.org>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, Linux-MM <linux-mm@kvack.org>, Mel Gorman <mgorman@suse.de>, Andrew Morton <akpm@linux-foundation.org>, ppc-dev <linuxppc-dev@lists.ozlabs.org>, Aneesh Kumar <aneesh.kumar@linux.vnet.ibm.com>
 
-On Thu, Mar 05, 2015 at 03:47:49PM -0500, J. Bruce Fields wrote:
-> nfsd: client 192.168.122.32 failed to respond to layout recall.   Fencing..
-> nfsd: fence failed for client 192.168.122.32: -2!
-> nfsd: client 192.168.122.32 failed to respond to layout recall.   Fencing..
-> nfsd: fence failed for client 192.168.122.32: -2!
+On Sun, Mar 8, 2015 at 3:02 AM, Ingo Molnar <mingo@kernel.org> wrote:
+>
+> Well, there's a difference in what we write to the pte:
+>
+>  #define _PAGE_BIT_NUMA          (_PAGE_BIT_GLOBAL+1)
+>  #define _PAGE_BIT_PROTNONE      _PAGE_BIT_GLOBAL
+>
+> and our expectation was that the two should be equivalent methods from
+> the POV of the NUMA balancing code, right?
 
-There is no userspace elper to do the fencing, so unfortunately this
-is expecvted.
+Right.
 
-> receive_cb_reply: Got unrecognized reply: calldir 0x1 xpt_bc_xprt ffff88005639a000 xid c21abd62
+But yes, we might have screwed something up. In particular, there
+might be something that thinks it cares about the global bit, but
+doesn't notice that the present bit isn't set, so it considers the
+protnone mappings to be global and causes lots more tlb flushes etc.
 
-Now this looks like some issue with the low-level callback path.  I've never
-seen tis before, but from looking at receive_cb_reply this happens if
-xprt_lookup_rqst can't find a rpc_rqst structured for the xid.  Looks like
-we might be corrupting the request list / xid allocation somewhere?
+>> I don't like the old pmdp_set_numa() because it can drop dirty bits,
+>> so I think the old code was actively buggy.
+>
+> Could we, as a silly testing hack not to be applied, write a
+> hack-patch that re-introduces the racy way of setting the NUMA bit, to
+> confirm that it is indeed this difference that changes pte visibility
+> across CPUs enough to create so many more faults?
 
-I can prepare a patch for you to aid with xid tracing if you want.
+So one of Mel's patches did that, but I don't know if Dave tested it.
+
+And thinking about it, it *may* be safe for huge-pages, if they always
+already have the dirty bit set to begin with. And I don't see how we
+could have a clean hugepage (apart from the special case of the
+zeropage, which is read-only, so races on teh dirty bit aren't an
+issue).
+
+So it might actually be that the non-atomic version is safe for
+hpages. And we could possibly get rid of the "atomic read-and-clear"
+even for the non-numa case.
+
+I'd rather do it for both cases than for just one of them.
+
+But:
+
+> As a second hack (not to be applied), could we change:
+>
+>  #define _PAGE_BIT_PROTNONE      _PAGE_BIT_GLOBAL
+>
+> to:
+>
+>  #define _PAGE_BIT_PROTNONE      (_PAGE_BIT_GLOBAL+1)
+>
+> to double check that the position of the bit does not matter?
+
+Agreed. We should definitely try that.
+
+Dave?
+
+Also, is there some sane way for me to actually see this behavior on a
+regular machine with just a single socket? Dave is apparently running
+in some fake-numa setup, I'm wondering if this is easy enough to
+reproduce that I could see it myself.
+
+                          Linus
 
 _______________________________________________
 xfs mailing list
