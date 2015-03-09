@@ -1,23 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 237CF7F4E
-	for <xfs@oss.sgi.com>; Mon,  9 Mar 2015 13:42:05 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id A650BAC005
-	for <xfs@oss.sgi.com>; Mon,  9 Mar 2015 11:42:04 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id B2BA97F4E
+	for <xfs@oss.sgi.com>; Mon,  9 Mar 2015 13:43:40 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 4CF09AC001
+	for <xfs@oss.sgi.com>; Mon,  9 Mar 2015 11:43:40 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id hnQjglnID82XwXeD (version=TLSv1
+	cuda.sgi.com with ESMTP id fWwpCdZSNA0RqdXI (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 09 Mar 2015 11:42:03 -0700 (PDT)
-Date: Mon, 9 Mar 2015 15:41:51 -0300
+	Mon, 09 Mar 2015 11:43:39 -0700 (PDT)
+Date: Mon, 9 Mar 2015 15:43:26 -0300
 From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: Re: [PATCH 1/4] xfs_repair: validate & fix inode CRCs
-Message-ID: <20150309184151.GB18016@hades.maiolino.org>
+Subject: Re: [PATCH 2/4] xfs_repair: clear need_root_dotdot if we rebuild the
+	root dir
+Message-ID: <20150309184326.GC18016@hades.maiolino.org>
 References: <54F77199.8030708@redhat.com>
- <54F771DE.40107@sandeen.net>
+ <54F77216.5030106@sandeen.net>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <54F771DE.40107@sandeen.net>
+In-Reply-To: <54F77216.5030106@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,58 +34,34 @@ Sender: xfs-bounces@oss.sgi.com
 To: Eric Sandeen <sandeen@sandeen.net>
 Cc: Eric Sandeen <sandeen@redhat.com>, xfs-oss <xfs@oss.sgi.com>
 
-Looks good to me.
+Looks good
 
 Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
 
-On Wed, Mar 04, 2015 at 02:58:06PM -0600, Eric Sandeen wrote:
-> xfs_repair doesn't ever check an inode's CRC, so it never repairs
-> them.  If the root inode or realtime inodes have bad crcs, the
-> fs won't even mount and can't be fixed (without using xfs_db).
-> 
-> It's fairly straightforward to just test the inode CRC before
-> we do any other checking or modification of the inode, once we
-> get past the "verify only" phase of process_dinode_int();
-> just mark it dirty if it's wrong and needs to be re-written.
+On Wed, Mar 04, 2015 at 02:59:02PM -0600, Eric Sandeen wrote:
+> It's possible to enter longform_dir2_rebuild with need_root_dotdot
+> set; rebuilding it will add "..", and if need_root_dotdot stays set,
+> we'll add another ".." entry, causing a second repair to find and
+> fix that newly-introduced problem.
 > 
 > Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 > ---
 > 
-> Resend of patch from a while ago, but with CRC verification
-> now earlier in the function, prior to any changes are made.
-> 
-> diff --git a/repair/dinode.c b/repair/dinode.c
-> index 5d9094b..384e2dd 100644
-> --- a/repair/dinode.c
-> +++ b/repair/dinode.c
-> @@ -2291,6 +2291,27 @@ process_dinode_int(xfs_mount_t *mp,
->  	 */
->  	ASSERT(uncertain == 0 || verify_mode != 0);
+> diff --git a/repair/phase6.c b/repair/phase6.c
+> index 0ec4f07..1728609 100644
+> --- a/repair/phase6.c
+> +++ b/repair/phase6.c
+> @@ -1354,6 +1354,9 @@ longform_dir2_rebuild(
 >  
-> +	/*
-> +	 * We'd really like to know if the CRC is bad before we
-> +	 * go fixing anything; that way we have some hint about
-> +	 * bit-rot vs bugs.  Also, any changes will invalidate the
-> +	 * existing CRC, so this is the only valid point to test it.
-> +	 *
-> +	 * Of course if we make any modifications after this, the
-> +	 * inode gets rewritten, and CRC is updated automagically.
-> +	 */
-> +	if (!verify_mode && xfs_sb_version_hascrc(&mp->m_sb)) {
-> +		if(!xfs_verify_cksum((char *)dino, mp->m_sb.sb_inodesize,
-> +                		XFS_DINODE_CRC_OFF)) {
-> +			do_warn(_("bad CRC for inode %" PRIu64), lino);
-> +			if (!no_modify) {
-> +				do_warn(_(", will rewrite\n"));
-> +				*dirty = 1;
-> +			} else
-> +				do_warn(_(", would rewrite\n"));
-> +		}
-> +	}
+>  	libxfs_trans_commit(tp, XFS_TRANS_RELEASE_LOG_RES|XFS_TRANS_SYNC);
+>  
+> +	if (ino == mp->m_sb.sb_rootino)
+> +		need_root_dotdot = 0;
 > +
->  	if (be16_to_cpu(dino->di_magic) != XFS_DINODE_MAGIC)  {
->  		retval = 1;
->  		if (!uncertain)
+>  	/* go through the hash list and re-add the inodes */
+>  
+>  	for (p = hashtab->first; p; p = p->nextbyorder) {
+> 
 > 
 > _______________________________________________
 > xfs mailing list
