@@ -1,29 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 10A637F4E
-	for <xfs@oss.sgi.com>; Mon,  9 Mar 2015 14:46:08 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 8B96FAC001
-	for <xfs@oss.sgi.com>; Mon,  9 Mar 2015 12:46:04 -0700 (PDT)
-Received: from fieldses.org (fieldses.org [173.255.197.46]) by cuda.sgi.com
-	with ESMTP id jrdHVbGF13QvyGHM for <xfs@oss.sgi.com>;
-	Mon, 09 Mar 2015 12:45:59 -0700 (PDT)
-Date: Mon, 9 Mar 2015 15:45:59 -0400
-From: "J. Bruce Fields" <bfields@fieldses.org>
-Subject: Re: panic on 4.20 server exporting xfs filesystem
-Message-ID: <20150309194559.GC2627@fieldses.org>
-References: <20150304222709.GI1627@fieldses.org>
-	<20150304224557.GY4251@dastard> <54F78BE5.1020608@sandeen.net>
-	<20150304225623.GZ4251@dastard>
-	<20150305040849.GJ1627@fieldses.org>
-	<20150305131731.GA16235@lst.de>
-	<20150305150138.GA15674@fieldses.org>
-	<20150305170217.GC15674@fieldses.org>
-	<20150305204749.GA17934@fieldses.org>
-	<20150308153056.GA24037@lst.de>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 607807F4E
+	for <xfs@oss.sgi.com>; Mon,  9 Mar 2015 15:13:23 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 3A2B28F8066
+	for <xfs@oss.sgi.com>; Mon,  9 Mar 2015 13:13:20 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id M3uuEOHjmSrevSNp for <xfs@oss.sgi.com>;
+	Mon, 09 Mar 2015 13:13:18 -0700 (PDT)
+Message-ID: <54FDFEDC.5090106@sandeen.net>
+Date: Mon, 09 Mar 2015 16:13:16 -0400
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20150308153056.GA24037@lst.de>
+Subject: [PATCH] xfs_repair: junk last entry in sf dir if name starts beyond
+	dir size
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -36,34 +26,58 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@lst.de>
-Cc: Eric Sandeen <sandeen@sandeen.net>, linux-nfs@vger.kernel.org, xfs@oss.sgi.com
+To: Rui Gomes <rgomes@rvx.is>, xfs-oss <xfs@oss.sgi.com>
 
-On Sun, Mar 08, 2015 at 04:30:56PM +0100, Christoph Hellwig wrote:
-> On Thu, Mar 05, 2015 at 03:47:49PM -0500, J. Bruce Fields wrote:
-> > nfsd: client 192.168.122.32 failed to respond to layout recall.   Fencing..
-> > nfsd: fence failed for client 192.168.122.32: -2!
-> > nfsd: client 192.168.122.32 failed to respond to layout recall.   Fencing..
-> > nfsd: fence failed for client 192.168.122.32: -2!
-> 
-> There is no userspace elper to do the fencing, so unfortunately this
-> is expecvted.
-> 
-> > receive_cb_reply: Got unrecognized reply: calldir 0x1 xpt_bc_xprt ffff88005639a000 xid c21abd62
-> 
-> Now this looks like some issue with the low-level callback path.  I've never
-> seen tis before, but from looking at receive_cb_reply this happens if
-> xprt_lookup_rqst can't find a rpc_rqst structured for the xid.  Looks like
-> we might be corrupting the request list / xid allocation somewhere?
-> 
-> I can prepare a patch for you to aid with xid tracing if you want.
+When process_sf_dir2() is trying to salvage entries in a corrupted
+short form directory, it may attempt to shorten the last entry in
+the dir if it extends beyond the directory size.
 
-I'll take a look when I get back.  But before that I'd like to
-understand why the layout seems to be left here blocking writes forever,
-instead of getting cleaned up after a lease period with no layout
-return.
+However, if the name already starts past the dir size, no amount
+of name-shortening will make it fit, but the code doesn't realize
+this.  The namelen variable comes out to be negative, and things
+go downhill from there, resulting in a segfault when we try to
+memmove a negative number of bytes.
 
---b.
+If no amount of name-shortening can make the last dir entry fit
+in the dir size, simply junk the entry.
+
+Reported by: Rui Gomes <rgomes@rvx.is>
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
+
+This adds a bit more spaghetti to an existing pot, but I think
+it clearly fixes the problem; I might try to rework these cases
+to coalesce some of the code.
+
+(I also wonder about the tradeoff between shortening entries and
+increasing the dir size, but for now I'm just following the
+direction the repair code already takes).
+
+diff --git a/repair/dir2.c b/repair/dir2.c
+index 6b8964d..308808d 100644
+--- a/repair/dir2.c
++++ b/repair/dir2.c
+@@ -911,6 +911,20 @@ _("zero length entry in shortform dir %" PRIu64 ""),
+ 				namelen = ino_dir_size -
+ 					((__psint_t) &sfep->name[0] -
+ 					 (__psint_t) sfp);
++				/* Entry name starts past size of dir; junk it */
++				if (namelen <= 0) {
++					do_warn(
++_("start of last entry name overflows space left in in shortform dir %" PRIu64 ", "),
++						ino);
++					if (!no_modify)
++						do_warn(
++						_("junking entry #%d\n"), i);
++					else
++						do_warn(
++						_("would junk entry #%d\n"), i);
++					break;
++				}
++				/* Ok, truncate this entry to end of dir */
+ 				do_warn(
+ _("size of last entry overflows space left in in shortform dir %" PRIu64 ", "),
+ 					ino);
 
 _______________________________________________
 xfs mailing list
