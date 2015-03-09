@@ -1,28 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 97F857F51
-	for <xfs@oss.sgi.com>; Mon,  9 Mar 2015 06:29:48 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 751DD30404E
-	for <xfs@oss.sgi.com>; Mon,  9 Mar 2015 04:29:45 -0700 (PDT)
-Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
-	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	puKaLiMD5pzcqyLv for <xfs@oss.sgi.com>;
-	Mon, 09 Mar 2015 04:29:43 -0700 (PDT)
-Date: Mon, 9 Mar 2015 22:29:36 +1100
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id A68807F51
+	for <xfs@oss.sgi.com>; Mon,  9 Mar 2015 06:52:37 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 771FE8F8033
+	for <xfs@oss.sgi.com>; Mon,  9 Mar 2015 04:52:34 -0700 (PDT)
+Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
+	[150.101.137.143]) by cuda.sgi.com with ESMTP id
+	oDhQICQIFbTkfISI for <xfs@oss.sgi.com>;
+	Mon, 09 Mar 2015 04:52:30 -0700 (PDT)
+Date: Mon, 9 Mar 2015 22:52:24 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 4/4] mm: numa: Slow PTE scan rate if migration failures
-	occur
-Message-ID: <20150309112936.GD26657@destitution>
-References: <1425741651-29152-1-git-send-email-mgorman@suse.de>
-	<1425741651-29152-5-git-send-email-mgorman@suse.de>
-	<20150307163657.GA9702@gmail.com>
-	<CA+55aFwDuzpL-k8LsV3touhNLh+TFSLKP8+-nPwMXkWXDYPhrg@mail.gmail.com>
-	<20150308100223.GC15487@gmail.com>
-	<CA+55aFyQyZXu2fi7X9bWdSX0utk8=sccfBwFaSoToROXoE_PLA@mail.gmail.com>
+Subject: Re: XFS hangs with XFS: possible memory allocation deadlock in
+	kmem_alloc
+Message-ID: <20150309115224.GE26657@destitution>
+References: <54FAAE16.6090505@fau.de> <20150307140721.GA9098@bfoster.bfoster>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <CA+55aFyQyZXu2fi7X9bWdSX0utk8=sccfBwFaSoToROXoE_PLA@mail.gmail.com>
+In-Reply-To: <20150307140721.GA9098@bfoster.bfoster>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,55 +30,66 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, Linux-MM <linux-mm@kvack.org>, Aneesh Kumar <aneesh.kumar@linux.vnet.ibm.com>, Andrew Morton <akpm@linux-foundation.org>, ppc-dev <linuxppc-dev@lists.ozlabs.org>, Ingo Molnar <mingo@kernel.org>, Mel Gorman <mgorman@suse.de>
+To: Brian Foster <bfoster@redhat.com>
+Cc: Michael Meier <michael.meier@fau.de>, xfs@oss.sgi.com
 
-On Sun, Mar 08, 2015 at 11:35:59AM -0700, Linus Torvalds wrote:
-> On Sun, Mar 8, 2015 at 3:02 AM, Ingo Molnar <mingo@kernel.org> wrote:
-> But:
+On Sat, Mar 07, 2015 at 09:07:21AM -0500, Brian Foster wrote:
+> On Sat, Mar 07, 2015 at 08:51:50AM +0100, Michael Meier wrote:
+> > We've recently upgraded the OS on one of our servers, and since then
+> > have been experiencing frequent stalls of the XFS filesystem on it.
+> > Other filesystems on the machine seem to still respond fine while XFS
+> > hangs. The stalls sometimes last for around 30 minutes, during which all
+> > attempts to access that filesystem hang completely - after that, the
+> > filesystem suddenly responds instantly again, as if there had never been
+> > any problem. The dmesg is full of these messages while it stalls:
+> >  XFS: possible memory allocation deadlock in kmem_alloc (mode:0x8250)
+> > These also occour from time to time without the filesystem stalling (or
+> > at least it's not noticeable) - the messages appear about once in two
+> > hours, the stalls about once a day.
+> > 
+> > Google did point me to some reports of these messages occouring at the
+> > end of 2013, but the kernels in question should all have had the fixes
+> > proposed back then - although one message back then suggested there were
+> > more places where this problem could occour that were not fixed yet.
+> > 
+> > Kernels used were:
+> > - Ubuntu 3.13.0-44  - shows stalls, according to
+> > https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1382333 has the fix
+> > - Ubuntu 3.16.0-31  - shows stalls
+> > - Ubuntu 3.2.0-various - no stalls in more than 1 year
+> > We can actually still boot the machine with the 3.2.0 kernel, and it
+> > will run absolutely fine, but as that kernel will not be supported
+> > forever, I do not consider that a permanent solution.
+> > 
+> > The machine should not be low on memory, the disk array far from its
+> > limits, and the I/O-load is mostly reads with very little writes, as
+> > this is a public FTP server.
+> > 
+> > I have tried to collect some information, available at
+> > https://grid.rrze.uni-erlangen.de/~unrz191/syslog-with-xfs-hangs.log
+> > 
 > 
-> > As a second hack (not to be applied), could we change:
-> >
-> >  #define _PAGE_BIT_PROTNONE      _PAGE_BIT_GLOBAL
-> >
-> > to:
-> >
-> >  #define _PAGE_BIT_PROTNONE      (_PAGE_BIT_GLOBAL+1)
-> >
-> > to double check that the position of the bit does not matter?
+> Thanks for the data. Some notes from the backtraces in the first
+> instance:
 > 
-> Agreed. We should definitely try that.
+> - xfsaild is down in xlog_cil_force_lsn()->flush_work(). So it's trying
+>   to push the log, but the workqueue worker is already running.
+> - The workqueue worker is here:
 > 
-> Dave?
+> 	[298163.482697] Workqueue: xfs-cil/dm-0 xlog_cil_push_work [xfs]
+> 
+> ... and it appears to be blocked on the ctx lock. This means either a
+> transaction is completing or somebody else is pushing the cil.
+> - Writeback and one or two other transactions are backed up waiting on
+>   the ctx lock.
+> - rsync is running a transaction completion (e.g., holding ctx lock) and
+>   blocked on memory allocation:
 
-As Mel has already mentioned, I'm in Boston for LSFMM and don't have
-access to the test rig I've used to generate this.
-
-> Also, is there some sane way for me to actually see this behavior on a
-> regular machine with just a single socket? Dave is apparently running
-> in some fake-numa setup, I'm wondering if this is easy enough to
-> reproduce that I could see it myself.
-
-Should be - I don't actually use 500TB of storage to generate this -
-50GB on an SSD is all you need from the storage side. I just use a
-sparse backing file to make it look like a 500TB device. :P
-
-i.e. create an XFS filesystem on a 500TB sparse file with "mkfs.xfs
--d size=500t,file=1 /path/to/file.img", mount it on loopback or as a
-virtio,cache=none device for the guest vm and then use fsmark to
-generate several million files spread across many, many directories
-such as:
-
-$  fs_mark -D 10000 -S0 -n 100000 -s 1 -L 32 -d \
-/mnt/scratch/0 -d /mnt/scratch/1 -d /mnt/scratch/2 -d \
-/mnt/scratch/3 -d /mnt/scratch/4 -d /mnt/scratch/5 -d \
-/mnt/scratch/6 -d /mnt/scratch/7
-
-That should only take a few minutes to run - if you throw 8p at it
-then it should run at >100k files/s being created.
-
-Then unmount and run "xfs_repair -o bhash=101703 /path/to/file.img"
-on the resultant image file.
+Yup, that's prety much it. I suspect that we can do better here; I
+think we might be ale to hoist the item formatting and memory
+allocation outside the ctx lock - I'll need to do a little more than
+have a quick browse of the code to determine if it's safe as we are
+replacing log vectors in the when we are doing the allocation.
 
 Cheers,
 
