@@ -1,21 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id A758A7F4E
-	for <xfs@oss.sgi.com>; Mon,  9 Mar 2015 13:18:28 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 3C66DAC001
-	for <xfs@oss.sgi.com>; Mon,  9 Mar 2015 11:18:24 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id sBuYAYhnwc3mTuvV for <xfs@oss.sgi.com>;
-	Mon, 09 Mar 2015 11:18:22 -0700 (PDT)
-Message-ID: <54FDE3EB.6050904@sandeen.net>
-Date: Mon, 09 Mar 2015 14:18:19 -0400
-From: Eric Sandeen <sandeen@sandeen.net>
-MIME-Version: 1.0
-Subject: Re: xfs_repair segfault
-References: <1145328183.409860.1425916240318.JavaMail.zimbra@rvx.is>	<54FDC6FC.1070303@sandeen.net>	<572429630.410924.1425918276266.JavaMail.zimbra@rvx.is>	<54FDD995.5080307@sandeen.net>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 881ED7F4E
+	for <xfs@oss.sgi.com>; Mon,  9 Mar 2015 13:24:27 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 700F48F8073
+	for <xfs@oss.sgi.com>; Mon,  9 Mar 2015 11:24:27 -0700 (PDT)
+Received: from mail.rvx.is (mail.rvx.is [178.19.51.189]) by cuda.sgi.com with
+	ESMTP id WLSEb22TJ1cKp5aj (version=TLSv1 cipher=AES256-SHA
+	bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Mon, 09 Mar 2015 11:24:25 -0700 (PDT)
+Date: Mon, 9 Mar 2015 18:24:24 +0000 (GMT)
+From: Rui Gomes <rgomes@rvx.is>
+Message-ID: <755575062.413014.1425925464217.JavaMail.zimbra@rvx.is>
+In-Reply-To: <54FDE3EB.6050904@sandeen.net>
+References: <1145328183.409860.1425916240318.JavaMail.zimbra@rvx.is>
+	<54FDC6FC.1070303@sandeen.net>
+	<572429630.410924.1425918276266.JavaMail.zimbra@rvx.is>
+	<54FDD995.5080307@sandeen.net>
 	<514254492.412601.1425923432820.JavaMail.zimbra@rvx.is>
-In-Reply-To: <514254492.412601.1425923432820.JavaMail.zimbra@rvx.is>
+	<54FDE3EB.6050904@sandeen.net>
+Subject: Re: xfs_repair segfault
+MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,8 +33,40 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Rui Gomes <rgomes@rvx.is>
+To: Eric Sandeen <sandeen@sandeen.net>
 Cc: omar <omar@rvx.is>, xfs <xfs@oss.sgi.com>
+
+Hello Eric, 
+
+Thank you very much for looking in to this.
+Just as a curiosity, I can mount the filesystem and access a lot of the files, but some files/folders will just hang the kernel, so I need to be careful almost file by file tries.
+
+If I could get the xfs_repair to at least clean the filesystem and allow me to browse the remain files without hanging the kernel it will be a bonus!
+
+Once again thank for looking in to this.
+
+Regards 
+
+------------------------------- 
+Rui Gomes 
+CTO 
+
+
+RVX - Reykjavik Visual Effects 
+Seljavegur 2, 
+101 Reykjavik 
+Iceland 
+
+
+Tel: + 354 527 3330 
+Mob: + 354 663 3360
+
+----- Original Message -----
+From: "Eric Sandeen" <sandeen@sandeen.net>
+To: "Rui Gomes" <rgomes@rvx.is>
+Cc: "omar" <omar@rvx.is>, "xfs" <xfs@oss.sgi.com>
+Sent: Monday, 9 March, 2015 18:18:19
+Subject: Re: xfs_repair segfault
 
 On 3/9/15 1:50 PM, Rui Gomes wrote:
 > Hi,
