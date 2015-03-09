@@ -1,26 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 881ED7F4E
-	for <xfs@oss.sgi.com>; Mon,  9 Mar 2015 13:24:27 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 700F48F8073
-	for <xfs@oss.sgi.com>; Mon,  9 Mar 2015 11:24:27 -0700 (PDT)
-Received: from mail.rvx.is (mail.rvx.is [178.19.51.189]) by cuda.sgi.com with
-	ESMTP id WLSEb22TJ1cKp5aj (version=TLSv1 cipher=AES256-SHA
-	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 09 Mar 2015 11:24:25 -0700 (PDT)
-Date: Mon, 9 Mar 2015 18:24:24 +0000 (GMT)
-From: Rui Gomes <rgomes@rvx.is>
-Message-ID: <755575062.413014.1425925464217.JavaMail.zimbra@rvx.is>
-In-Reply-To: <54FDE3EB.6050904@sandeen.net>
-References: <1145328183.409860.1425916240318.JavaMail.zimbra@rvx.is>
-	<54FDC6FC.1070303@sandeen.net>
-	<572429630.410924.1425918276266.JavaMail.zimbra@rvx.is>
-	<54FDD995.5080307@sandeen.net>
-	<514254492.412601.1425923432820.JavaMail.zimbra@rvx.is>
-	<54FDE3EB.6050904@sandeen.net>
-Subject: Re: xfs_repair segfault
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 237CF7F4E
+	for <xfs@oss.sgi.com>; Mon,  9 Mar 2015 13:42:05 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id A650BAC005
+	for <xfs@oss.sgi.com>; Mon,  9 Mar 2015 11:42:04 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id hnQjglnID82XwXeD (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Mon, 09 Mar 2015 11:42:03 -0700 (PDT)
+Date: Mon, 9 Mar 2015 15:41:51 -0300
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: Re: [PATCH 1/4] xfs_repair: validate & fix inode CRCs
+Message-ID: <20150309184151.GB18016@hades.maiolino.org>
+References: <54F77199.8030708@redhat.com>
+ <54F771DE.40107@sandeen.net>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <54F771DE.40107@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,82 +31,68 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Eric Sandeen <sandeen@sandeen.net>
-Cc: omar <omar@rvx.is>, xfs <xfs@oss.sgi.com>
+Cc: Eric Sandeen <sandeen@redhat.com>, xfs-oss <xfs@oss.sgi.com>
 
-Hello Eric, 
+Looks good to me.
 
-Thank you very much for looking in to this.
-Just as a curiosity, I can mount the filesystem and access a lot of the files, but some files/folders will just hang the kernel, so I need to be careful almost file by file tries.
+Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
 
-If I could get the xfs_repair to at least clean the filesystem and allow me to browse the remain files without hanging the kernel it will be a bonus!
-
-Once again thank for looking in to this.
-
-Regards 
-
-------------------------------- 
-Rui Gomes 
-CTO 
-
-
-RVX - Reykjavik Visual Effects 
-Seljavegur 2, 
-101 Reykjavik 
-Iceland 
-
-
-Tel: + 354 527 3330 
-Mob: + 354 663 3360
-
------ Original Message -----
-From: "Eric Sandeen" <sandeen@sandeen.net>
-To: "Rui Gomes" <rgomes@rvx.is>
-Cc: "omar" <omar@rvx.is>, "xfs" <xfs@oss.sgi.com>
-Sent: Monday, 9 March, 2015 18:18:19
-Subject: Re: xfs_repair segfault
-
-On 3/9/15 1:50 PM, Rui Gomes wrote:
-> Hi,
+On Wed, Mar 04, 2015 at 02:58:06PM -0600, Eric Sandeen wrote:
+> xfs_repair doesn't ever check an inode's CRC, so it never repairs
+> them.  If the root inode or realtime inodes have bad crcs, the
+> fs won't even mount and can't be fixed (without using xfs_db).
 > 
-> Yeah I feel the same way what could possible happen here, since no "funky" business happen in this server.
+> It's fairly straightforward to just test the inode CRC before
+> we do any other checking or modification of the inode, once we
+> get past the "verify only" phase of process_dinode_int();
+> just mark it dirty if it's wrong and needs to be re-written.
 > 
-> In case this help the underline hardware is:
-> Raid Controller: MegaRAID SAS 2108 [Liberator] (rev 05)
-> With 16 7.2k SAS 2TB harddrives in raid6
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> ---
 > 
-> The output from the command:
-> [root@icess8a ~]# xfs_db -c "inode 260256256" -c "p" /dev/sdb1 
+> Resend of patch from a while ago, but with CRC verification
+> now earlier in the function, prior to any changes are made.
+> 
+> diff --git a/repair/dinode.c b/repair/dinode.c
+> index 5d9094b..384e2dd 100644
+> --- a/repair/dinode.c
+> +++ b/repair/dinode.c
+> @@ -2291,6 +2291,27 @@ process_dinode_int(xfs_mount_t *mp,
+>  	 */
+>  	ASSERT(uncertain == 0 || verify_mode != 0);
+>  
+> +	/*
+> +	 * We'd really like to know if the CRC is bad before we
+> +	 * go fixing anything; that way we have some hint about
+> +	 * bit-rot vs bugs.  Also, any changes will invalidate the
+> +	 * existing CRC, so this is the only valid point to test it.
+> +	 *
+> +	 * Of course if we make any modifications after this, the
+> +	 * inode gets rewritten, and CRC is updated automagically.
+> +	 */
+> +	if (!verify_mode && xfs_sb_version_hascrc(&mp->m_sb)) {
+> +		if(!xfs_verify_cksum((char *)dino, mp->m_sb.sb_inodesize,
+> +                		XFS_DINODE_CRC_OFF)) {
+> +			do_warn(_("bad CRC for inode %" PRIu64), lino);
+> +			if (!no_modify) {
+> +				do_warn(_(", will rewrite\n"));
+> +				*dirty = 1;
+> +			} else
+> +				do_warn(_(", would rewrite\n"));
+> +		}
+> +	}
+> +
+>  	if (be16_to_cpu(dino->di_magic) != XFS_DINODE_MAGIC)  {
+>  		retval = 1;
+>  		if (!uncertain)
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
-<snip>
-
-Ok, that's enough to create an image which sees the same failure:
-
-# repair/xfs_repair -n namelen.img 
-Phase 1 - find and verify superblock...
-Phase 2 - using internal log
-        - scan filesystem freespace and inode maps...
-        - found root inode chunk
-Phase 3 - for each AG...
-        - scan (but don't clear) agi unlinked lists...
-        - process known inodes and perform inode discovery...
-        - agno = 0
-local inode 131 attr too small (size = 0, min size = 4)
-bad attribute fork in inode 131, would clear attr fork
-bad nblocks 7 for inode 131, would reset to 0
-bad nextents 1 for inode 131, would reset to 0
-entry "aaaaaaaaaaaaaaaaaaaaaaaa" in shortform directory 131 references invalid inode 28428972647780227
-would have junked entry "aaaaaaaaaaaaaaaaaaaaaaaa" in directory inode 131
-entry "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb" in shortform directory 131 references invalid inode 0
-size of last entry overflows space left in in shortform dir 131, would reset to -1
-entry contains offset out of order in shortform dir 131
-Segmentation fault
-
-I'll see what we need to do in repair to handle this type of corruption.
-
-(However, I don't think that it will suffice to get much of your filesystem
-back ...)
-
--Eric
+-- 
+Carlos
 
 _______________________________________________
 xfs mailing list
