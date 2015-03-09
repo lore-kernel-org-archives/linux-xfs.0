@@ -1,19 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 607807F4E
-	for <xfs@oss.sgi.com>; Mon,  9 Mar 2015 15:13:23 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id B787E7F4E
+	for <xfs@oss.sgi.com>; Mon,  9 Mar 2015 15:14:05 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 3A2B28F8066
-	for <xfs@oss.sgi.com>; Mon,  9 Mar 2015 13:13:20 -0700 (PDT)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 45E01AC001
+	for <xfs@oss.sgi.com>; Mon,  9 Mar 2015 13:14:01 -0700 (PDT)
 Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id M3uuEOHjmSrevSNp for <xfs@oss.sgi.com>;
-	Mon, 09 Mar 2015 13:13:18 -0700 (PDT)
-Message-ID: <54FDFEDC.5090106@sandeen.net>
-Date: Mon, 09 Mar 2015 16:13:16 -0400
+	ESMTP id 6v15UxDC5ee4gtLm for <xfs@oss.sgi.com>;
+	Mon, 09 Mar 2015 13:14:00 -0700 (PDT)
+Message-ID: <54FDFF07.1010905@sandeen.net>
+Date: Mon, 09 Mar 2015 16:13:59 -0400
 From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: [PATCH] xfs_repair: junk last entry in sf dir if name starts beyond
-	dir size
+Subject: Re: xfs_repair segfault
+References: <1145328183.409860.1425916240318.JavaMail.zimbra@rvx.is>	<54FDC6FC.1070303@sandeen.net>	<572429630.410924.1425918276266.JavaMail.zimbra@rvx.is>	<54FDD995.5080307@sandeen.net>	<514254492.412601.1425923432820.JavaMail.zimbra@rvx.is>	<54FDE3EB.6050904@sandeen.net>
+	<755575062.413014.1425925464217.JavaMail.zimbra@rvx.is>
+In-Reply-To: <755575062.413014.1425925464217.JavaMail.zimbra@rvx.is>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,58 +28,27 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Rui Gomes <rgomes@rvx.is>, xfs-oss <xfs@oss.sgi.com>
+To: Rui Gomes <rgomes@rvx.is>
+Cc: omar <omar@rvx.is>, xfs <xfs@oss.sgi.com>
 
-When process_sf_dir2() is trying to salvage entries in a corrupted
-short form directory, it may attempt to shorten the last entry in
-the dir if it extends beyond the directory size.
+On 3/9/15 2:24 PM, Rui Gomes wrote:
+> Hello Eric, 
+> 
+> Thank you very much for looking in to this. Just as a curiosity, I
+> can mount the filesystem and access a lot of the files, but some
+> files/folders will just hang the kernel, so I need to be careful
+> almost file by file tries.
+> 
+> If I could get the xfs_repair to at least clean the filesystem and
+> allow me to browse the remain files without hanging the kernel it
+> will be a bonus!
+> 
+> Once again thank for looking in to this.
 
-However, if the name already starts past the dir size, no amount
-of name-shortening will make it fit, but the code doesn't realize
-this.  The namelen variable comes out to be negative, and things
-go downhill from there, resulting in a segfault when we try to
-memmove a negative number of bytes.
+Ok, I've sent a patch; you may wish to wait until it's reviewed
+before you try it with your filesystem.
 
-If no amount of name-shortening can make the last dir entry fit
-in the dir size, simply junk the entry.
-
-Reported by: Rui Gomes <rgomes@rvx.is>
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
-
-This adds a bit more spaghetti to an existing pot, but I think
-it clearly fixes the problem; I might try to rework these cases
-to coalesce some of the code.
-
-(I also wonder about the tradeoff between shortening entries and
-increasing the dir size, but for now I'm just following the
-direction the repair code already takes).
-
-diff --git a/repair/dir2.c b/repair/dir2.c
-index 6b8964d..308808d 100644
---- a/repair/dir2.c
-+++ b/repair/dir2.c
-@@ -911,6 +911,20 @@ _("zero length entry in shortform dir %" PRIu64 ""),
- 				namelen = ino_dir_size -
- 					((__psint_t) &sfep->name[0] -
- 					 (__psint_t) sfp);
-+				/* Entry name starts past size of dir; junk it */
-+				if (namelen <= 0) {
-+					do_warn(
-+_("start of last entry name overflows space left in in shortform dir %" PRIu64 ", "),
-+						ino);
-+					if (!no_modify)
-+						do_warn(
-+						_("junking entry #%d\n"), i);
-+					else
-+						do_warn(
-+						_("would junk entry #%d\n"), i);
-+					break;
-+				}
-+				/* Ok, truncate this entry to end of dir */
- 				do_warn(
- _("size of last entry overflows space left in in shortform dir %" PRIu64 ", "),
- 					ino);
+-Eric
 
 _______________________________________________
 xfs mailing list
