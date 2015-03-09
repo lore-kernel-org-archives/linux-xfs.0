@@ -1,20 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 0166A7F51
-	for <xfs@oss.sgi.com>; Mon,  9 Mar 2015 09:28:55 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id D4969304032
-	for <xfs@oss.sgi.com>; Mon,  9 Mar 2015 07:28:51 -0700 (PDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 3982C7F3F
+	for <xfs@oss.sgi.com>; Mon,  9 Mar 2015 10:47:52 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id B7EA4AC001
+	for <xfs@oss.sgi.com>; Mon,  9 Mar 2015 08:47:48 -0700 (PDT)
 Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id N3qT1BIvUsF9FjHg for <xfs@oss.sgi.com>;
-	Mon, 09 Mar 2015 07:28:49 -0700 (PDT)
-Message-ID: <54FDAE25.6080907@sandeen.net>
-Date: Mon, 09 Mar 2015 10:28:53 -0400
+	ESMTP id IRg5GkeiMilXPEQo for <xfs@oss.sgi.com>;
+	Mon, 09 Mar 2015 08:47:46 -0700 (PDT)
+Received: from Liberator.local (unknown [40.139.179.11])
+	(using TLSv1.2 with cipher DHE-RSA-AES128-SHA (128/128 bits))
+	(No client certificate requested)
+	by sandeen.net (Postfix) with ESMTPSA id F231F620CF34
+	for <xfs@oss.sgi.com>; Mon,  9 Mar 2015 10:47:45 -0500 (CDT)
+Message-ID: <54FDC0A0.10907@sandeen.net>
+Date: Mon, 09 Mar 2015 11:47:44 -0400
 From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfs: take XFS_IOLOCK_EXCL if suid removal is required
-References: <54F9DBAE.2070002@redhat.com> <20150306210927.GA13958@dastard>
-In-Reply-To: <20150306210927.GA13958@dastard>
+Subject: Re: [PATCH 2/2] xfsprogs: xfs_db: add crc manipulation commands
+References: <540B4399.4020804@sandeen.net> <540B49DF.8000404@sandeen.net>
+In-Reply-To: <540B49DF.8000404@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,25 +32,13 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>, Eric Sandeen <sandeen@redhat.com>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: xfs-oss <xfs@oss.sgi.com>
 
-On 3/6/15 4:09 PM, Dave Chinner wrote:
+On 9/6/14 1:52 PM, Eric Sandeen wrote:
+> This adds a new "crc" command to xfs_db for CRC-enabled filesystems.
 
-...
-
->> Upgrade the lock to XFS_IOLOCK_EXCL in this case.
->>
->> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-> 
-> I believe Jan Kara has already addressed this problem in
-> this patchset:
-> 
-> http://oss.sgi.com/archives/xfs/2015-03/msg00051.html
-
-Ah, yes, that should fix it.  Thanks Jan.
-
-Sorry for missing it.
+Actually, with my other patch to allow "corrupt" writes from xfs_db,
+maybe a dedicated "crc" command isn't needed.  What do folks think?
 
 -Eric
 
