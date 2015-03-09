@@ -1,31 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id B54D17F4E
-	for <xfs@oss.sgi.com>; Mon,  9 Mar 2015 11:52:20 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 760608F8070
-	for <xfs@oss.sgi.com>; Mon,  9 Mar 2015 09:52:20 -0700 (PDT)
-Received: from mail-ig0-f172.google.com (mail-ig0-f172.google.com
-	[209.85.213.172]) by cuda.sgi.com with ESMTP id
-	D42CycZgyNH7hjKW (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 09 Mar 2015 09:52:19 -0700 (PDT)
-Received: by igdh15 with SMTP id h15so22651544igd.4
-	for <xfs@oss.sgi.com>; Mon, 09 Mar 2015 09:52:19 -0700 (PDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 039D07F4E
+	for <xfs@oss.sgi.com>; Mon,  9 Mar 2015 12:34:23 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 722ADAC005
+	for <xfs@oss.sgi.com>; Mon,  9 Mar 2015 10:34:19 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id zBxantbkTguv7ung for <xfs@oss.sgi.com>;
+	Mon, 09 Mar 2015 10:34:16 -0700 (PDT)
+Message-ID: <54FDD995.5080307@sandeen.net>
+Date: Mon, 09 Mar 2015 13:34:13 -0400
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-In-Reply-To: <20150309112936.GD26657@destitution>
-References: <1425741651-29152-1-git-send-email-mgorman@suse.de>
-	<1425741651-29152-5-git-send-email-mgorman@suse.de>
-	<20150307163657.GA9702@gmail.com>
-	<CA+55aFwDuzpL-k8LsV3touhNLh+TFSLKP8+-nPwMXkWXDYPhrg@mail.gmail.com>
-	<20150308100223.GC15487@gmail.com>
-	<CA+55aFyQyZXu2fi7X9bWdSX0utk8=sccfBwFaSoToROXoE_PLA@mail.gmail.com>
-	<20150309112936.GD26657@destitution>
-Date: Mon, 9 Mar 2015 09:52:18 -0700
-Message-ID: <CA+55aFywW5JLq=BU_qb2OG5+pJ-b1v9tiS5Ygi-vtEKbEZ_T5Q@mail.gmail.com>
-Subject: Re: [PATCH 4/4] mm: numa: Slow PTE scan rate if migration failures
-	occur
-From: Linus Torvalds <torvalds@linux-foundation.org>
+Subject: Re: xfs_repair segfault
+References: <1145328183.409860.1425916240318.JavaMail.zimbra@rvx.is>
+	<54FDC6FC.1070303@sandeen.net>
+	<572429630.410924.1425918276266.JavaMail.zimbra@rvx.is>
+In-Reply-To: <572429630.410924.1425918276266.JavaMail.zimbra@rvx.is>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -38,25 +29,77 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, Linux-MM <linux-mm@kvack.org>, Aneesh Kumar <aneesh.kumar@linux.vnet.ibm.com>, Andrew Morton <akpm@linux-foundation.org>, ppc-dev <linuxppc-dev@lists.ozlabs.org>, Ingo Molnar <mingo@kernel.org>, Mel Gorman <mgorman@suse.de>
+To: Rui Gomes <rgomes@rvx.is>
+Cc: omar <omar@rvx.is>, xfs <xfs@oss.sgi.com>
 
-On Mon, Mar 9, 2015 at 4:29 AM, Dave Chinner <david@fromorbit.com> wrote:
->
->> Also, is there some sane way for me to actually see this behavior on a
->> regular machine with just a single socket? Dave is apparently running
->> in some fake-numa setup, I'm wondering if this is easy enough to
->> reproduce that I could see it myself.
->
-> Should be - I don't actually use 500TB of storage to generate this -
-> 50GB on an SSD is all you need from the storage side. I just use a
-> sparse backing file to make it look like a 500TB device. :P
+On 3/9/15 12:24 PM, Rui Gomes wrote:
+> Hello Eric, 
+> 
+> I would love to send you the xfs metadump but it segfaults as well.
 
-What's your virtual environment setup? Kernel config, and
-virtualization environment to actually get that odd fake NUMA thing
-happening?
+woohoo!  \o/
 
-                          Linus
+> This is the output of xfs_repair truncated:
+> 
+...
+
+> no . entry for directory 260215042
+> no .. entry for directory 260215042
+> problem with directory contents in inode 260215042
+> would have cleared inode 260215042
+> bad nblocks 7 for inode 260256256, would reset to 0
+> bad nextents 1 for inode 260256256, would reset to 0
+> entry "                 kchnfig" in shortform directory 260256256 references invalid inode 28428972647780227
+> entry contains illegal character in shortform dir 260256256
+> would have junked entry "kchnfig" in directory inode 260256256
+> entry "                                                  " in shortform directory 260256256 references invalid inode 0
+> size of last entry overflows space left in in shortform dir 260256256, would reset to -1
+> *** buffer overflow detected ***: /usr/sbin/xfs_repair terminated
+
+Ok, looking at the sheer number of errors, I really wonder what happened to the fs.
+
+You''d do well to be 100% sure that storage is OK, and that you're not trying to
+repair a filesytem on scrambled disks but in any case, xfs should not segfault.
+
+But anyway, this:
+
+> size of last entry overflows space left in in shortform dir 260256256, would reset to -1
+
+is a good clue; it must be in here:
+
+                        if (i == num_entries - 1)  {
+                                namelen = ino_dir_size -
+                                        ((__psint_t) &sfep->name[0] -
+                                         (__psint_t) sfp);
+                                do_warn(
+_("size of last entry overflows space left in in shortform dir %" PRIu64 ", "),
+                                        ino);
+                                if (!no_modify)  {
+                                        do_warn(_("resetting to %d\n"),
+                                                namelen);
+                                        sfep->namelen = namelen;
+                                        *dino_dirty = 1;
+
+which means the -1 namelen memmove choked on came from:
+
+ino_dir_size - ((__psint_t) &sfep->name[0] - (__psint_t) sfp);
+
+and those come from:
+
+sfp = (struct xfs_dir2_sf_hdr *)XFS_DFORK_DPTR(dip) = ((char *)dip + xfs_dinode_size(dip->di_version))
+ino_dir_size = be64_to_cpu(dip->di_size);
+sfep = ... xfs_dir2_sf_firstentry(sfp);
+
+We could just be defensive against a negative namelen, but maybe we should
+understand a bit more clearly how we got here.
+
+Might start by trying:
+
+# xfs_db -c "inode 260256256" -c "p" /dev/whatever
+
+and show us what you get.
+
+-Eric
 
 _______________________________________________
 xfs mailing list
