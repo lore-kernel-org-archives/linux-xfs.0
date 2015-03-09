@@ -1,24 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 29BDD7F4E
-	for <xfs@oss.sgi.com>; Mon,  9 Mar 2015 11:12:06 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 737FEAC001
-	for <xfs@oss.sgi.com>; Mon,  9 Mar 2015 09:12:02 -0700 (PDT)
-Received: from mail.rvx.is (mail.rvx.is [178.19.51.189]) by cuda.sgi.com with
-	ESMTP id P1U5K49HYkZZYBTl (version=TLSv1 cipher=AES256-SHA
-	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 09 Mar 2015 09:12:00 -0700 (PDT)
-Date: Mon, 9 Mar 2015 16:11:58 +0000 (GMT)
-From: Rui Gomes <rgomes@rvx.is>
-Message-ID: <1234057802.410042.1425917518595.JavaMail.zimbra@rvx.is>
-In-Reply-To: <54FDC254.6010105@aei.mpg.de>
-References: <1145328183.409860.1425916240318.JavaMail.zimbra@rvx.is>
-	<54FDC254.6010105@aei.mpg.de>
-Subject: Re: xfs_repair segfault
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 884307F4E
+	for <xfs@oss.sgi.com>; Mon,  9 Mar 2015 11:14:58 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 617DC8F8033
+	for <xfs@oss.sgi.com>; Mon,  9 Mar 2015 09:14:55 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id hadwWzp5grKTASyx for <xfs@oss.sgi.com>;
+	Mon, 09 Mar 2015 09:14:54 -0700 (PDT)
+Message-ID: <54FDC6FC.1070303@sandeen.net>
+Date: Mon, 09 Mar 2015 12:14:52 -0400
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="----=_Part_410040_1002674286.1425917518593"
+Subject: Re: xfs_repair segfault
+References: <1145328183.409860.1425916240318.JavaMail.zimbra@rvx.is>
+In-Reply-To: <1145328183.409860.1425916240318.JavaMail.zimbra@rvx.is>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,203 +23,44 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Carsten Aulbert <Carsten.Aulbert@aei.mpg.de>
-Cc: omar <omar@rvx.is>, xfs <xfs@oss.sgi.com>
+To: Rui Gomes <rgomes@rvx.is>, xfs@oss.sgi.com
+Cc: =?windows-1252?Q?=D3mar_Hermannsson?= <omar@rvx.is>
 
-------=_Part_410040_1002674286.1425917518593
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+On 3/9/15 11:50 AM, Rui Gomes wrote:
+> Program received signal SIGABRT, Aborted.
+> 0x00007ffff74275c9 in __GI_raise (sig=sig@entry=6) at ../nptl/sysdeps/unix/sysv/linux/raise.c:56
+> 56	  return INLINE_SYSCALL (tgkill, 3, pid, selftid, sig);
+> #0  0x00007ffff74275c9 in __GI_raise (sig=sig@entry=6) at ../nptl/sysdeps/unix/sysv/linux/raise.c:56
+> #1  0x00007ffff7428cd8 in __GI_abort () at abort.c:90
+> #2  0x00007ffff7467db7 in __libc_message (do_abort=do_abort@entry=2, fmt=fmt@entry=0x7ffff756f561 "*** %s ***: %s terminated\n") at ../sysdeps/unix/sysv/linux/libc_fatal.c:196
+> #3  0x00007ffff74ff9c7 in __GI___fortify_fail (msg=msg@entry=0x7ffff756f507 "buffer overflow detected") at fortify_fail.c:31
+> #4  0x00007ffff74fdb90 in __GI___chk_fail () at chk_fail.c:28
+> #5  0x0000000000414ea8 in memmove (__len=18446744073709551615, __src=0x1e562094, __dest=0x7fffffffd8f0) at /usr/include/bits/string3.h:57
+> #6  process_sf_dir2 (dirname=0x46b0e2 "", repair=<synthetic pointer>, parent=0x7fffffffdc20, dino_dirty=0x7fffffffdc18, ino_discovery=1, dip=0x1e562000, ino=260256256, mp=0x1e562091) at dir2.c:992
 
-Hello Carsten,
+That's here:
 
-Thank you for the quick reply, we tried many different combinations, without the -m flag the result is the same.
-New gdb dump in the attachment replacing the -m with -v
+                if (junkit)  {
+                        memmove(name, sfep->name, namelen); <<<<
+                        name[namelen] = '\0';
 
-Regards 
+and the len passed to memmove, 18446744073709551615, is 0xFFFFFFFFFFFFFFFF
+or -1 according to gdb.
 
-------------------------------- 
-Rui Gomes 
-CTO 
+What are the few lines of xfs_repair output prior to this, i.e. messages
+containing "shortform dir"?
 
+If you'd like to create & compress an xfs_metadump & provide it to me offline,
+I'll see if that recreates the segfault & look into it further.
 
-RVX - Reykjavik Visual Effects 
-Seljavegur 2, 
-101 Reykjavik 
-Iceland 
-
-
-Tel: + 354 527 3330 
-Mob: + 354 663 3360
-
------ Original Message -----
-From: "Carsten Aulbert" <Carsten.Aulbert@aei.mpg.de>
-To: "Rui Gomes" <rgomes@rvx.is>, "xfs" <xfs@oss.sgi.com>
-Cc: "omar" <omar@rvx.is>
-Sent: Monday, 9 March, 2015 15:55:00
-Subject: xfs_repair segfault
-
-Hi Rui
-
-On 03/09/2015 04:50 PM, Rui Gomes wrote:
-> Full output and GDB Backtrace in the attachment, do you guys have any
-> advice how can we get xfs_repair to do a clean run?
-> 
-
-At the very least (though I'm not sure if that will already fix it) I
-think you need to change the -m flag:
-
-
-/usr/sbin/xfs_repair -n -P -m 500000000000000 /dev/sdb1
-
-according to man page:
-
- -m maxmem
-              Specifies the approximate maximum amount of memory, in
-megabytes, to use for xfs_repair.  xfs_repair has its own internal block
-cache  which  will  scale
-              out up to the lesser of the process's virtual address
-limit or about 75% of the system's physical RAM.  This option overrides
-these limits.
-
-              NOTE: These memory limits are only approximate and may use
-more than the specified limit.
-
-and I doubt your machine has that much memory, possibly just drop it for
-now.
-
-Cheers
-
-Carsten
-------=_Part_410040_1002674286.1425917518593
-Content-Type: text/plain; name=gdb2.txt
-Content-Disposition: attachment; filename=gdb2.txt
-Content-Transfer-Encoding: base64
-
-U3RhcnRpbmcgcHJvZ3JhbTogL3Vzci9zYmluL3hmc19yZXBhaXIgLW4gLVAgLXYgL2Rldi9zZGIx
-CltUaHJlYWQgZGVidWdnaW5nIHVzaW5nIGxpYnRocmVhZF9kYiBlbmFibGVkXQpVc2luZyBob3N0
-IGxpYnRocmVhZF9kYiBsaWJyYXJ5ICIvbGliNjQvbGlidGhyZWFkX2RiLnNvLjEiLgpbTmV3IFRo
-cmVhZCAweDdmZmZlZjk1MDcwMCAoTFdQIDE2NTIwKV0KW05ldyBUaHJlYWQgMHg3ZmZmZWYxNGY3
-MDAgKExXUCAxNjUyMSldCltOZXcgVGhyZWFkIDB4N2ZmZmVlOTRlNzAwIChMV1AgMTY1MjIpXQpb
-TmV3IFRocmVhZCAweDdmZmZlZTE0ZDcwMCAoTFdQIDE2NTIzKV0KW05ldyBUaHJlYWQgMHg3ZmZm
-ZWQ5NGM3MDAgKExXUCAxNjUyNCldCltOZXcgVGhyZWFkIDB4N2ZmZmVkMTRiNzAwIChMV1AgMTY1
-MjUpXQpbTmV3IFRocmVhZCAweDdmZmZlYzk0YTcwMCAoTFdQIDE2NTI2KV0KW05ldyBUaHJlYWQg
-MHg3ZmZmZWMxNDk3MDAgKExXUCAxNjUyNyldCltOZXcgVGhyZWFkIDB4N2ZmZmViOTQ4NzAwIChM
-V1AgMTY1MjgpXQpbTmV3IFRocmVhZCAweDdmZmZlYjE0NzcwMCAoTFdQIDE2NTI5KV0KW05ldyBU
-aHJlYWQgMHg3ZmZmZWE5NDY3MDAgKExXUCAxNjUzMCldCltOZXcgVGhyZWFkIDB4N2ZmZmVhMTQ1
-NzAwIChMV1AgMTY1MzEpXQpbTmV3IFRocmVhZCAweDdmZmZlOTk0NDcwMCAoTFdQIDE2NTMyKV0K
-W05ldyBUaHJlYWQgMHg3ZmZmZTkxNDM3MDAgKExXUCAxNjUzMyldCltOZXcgVGhyZWFkIDB4N2Zm
-ZmU4OTQyNzAwIChMV1AgMTY1MzQpXQpbTmV3IFRocmVhZCAweDdmZmZlODE0MTcwMCAoTFdQIDE2
-NTM1KV0KW05ldyBUaHJlYWQgMHg3ZmZmZTc5NDA3MDAgKExXUCAxNjUzNildCltOZXcgVGhyZWFk
-IDB4N2ZmZmU3MTNmNzAwIChMV1AgMTY1MzcpXQpbTmV3IFRocmVhZCAweDdmZmZlNjkzZTcwMCAo
-TFdQIDE2NTM4KV0KW05ldyBUaHJlYWQgMHg3ZmZmZTYxM2Q3MDAgKExXUCAxNjUzOSldCltOZXcg
-VGhyZWFkIDB4N2ZmZmU1OTNjNzAwIChMV1AgMTY1NDApXQpbTmV3IFRocmVhZCAweDdmZmZlNTEz
-YjcwMCAoTFdQIDE2NTQxKV0KW05ldyBUaHJlYWQgMHg3ZmZmZTQ5M2E3MDAgKExXUCAxNjU0Mild
-CltOZXcgVGhyZWFkIDB4N2ZmZmU0MTM5NzAwIChMV1AgMTY1NDMpXQpbTmV3IFRocmVhZCAweDdm
-ZmZlMzkzODcwMCAoTFdQIDE2NTQ0KV0KW05ldyBUaHJlYWQgMHg3ZmZmZTMxMzc3MDAgKExXUCAx
-NjU0NSldCltOZXcgVGhyZWFkIDB4N2ZmZmUyOTM2NzAwIChMV1AgMTY1NDYpXQpbTmV3IFRocmVh
-ZCAweDdmZmZlMjEzNTcwMCAoTFdQIDE2NTQ3KV0KW05ldyBUaHJlYWQgMHg3ZmZmZTE5MzQ3MDAg
-KExXUCAxNjU0OCldCltOZXcgVGhyZWFkIDB4N2ZmZmUxMTMzNzAwIChMV1AgMTY1NDkpXQpbTmV3
-IFRocmVhZCAweDdmZmZlMDkzMjcwMCAoTFdQIDE2NTUwKV0KW05ldyBUaHJlYWQgMHg3ZmZmZTAx
-MzE3MDAgKExXUCAxNjU1MSldCltUaHJlYWQgMHg3ZmZmZWMxNDk3MDAgKExXUCAxNjUyNykgZXhp
-dGVkXQpbVGhyZWFkIDB4N2ZmZmU2MTNkNzAwIChMV1AgMTY1MzkpIGV4aXRlZF0KW1RocmVhZCAw
-eDdmZmZlODk0MjcwMCAoTFdQIDE2NTM0KSBleGl0ZWRdCltUaHJlYWQgMHg3ZmZmZTM5Mzg3MDAg
-KExXUCAxNjU0NCkgZXhpdGVkXQpbVGhyZWFkIDB4N2ZmZmU4MTQxNzAwIChMV1AgMTY1MzUpIGV4
-aXRlZF0KW1RocmVhZCAweDdmZmZlOTk0NDcwMCAoTFdQIDE2NTMyKSBleGl0ZWRdCltUaHJlYWQg
-MHg3ZmZmZTA5MzI3MDAgKExXUCAxNjU1MCkgZXhpdGVkXQpbVGhyZWFkIDB4N2ZmZmU1OTNjNzAw
-IChMV1AgMTY1NDApIGV4aXRlZF0KW1RocmVhZCAweDdmZmZlYTk0NjcwMCAoTFdQIDE2NTMwKSBl
-eGl0ZWRdCltUaHJlYWQgMHg3ZmZmZTMxMzc3MDAgKExXUCAxNjU0NSkgZXhpdGVkXQpbVGhyZWFk
-IDB4N2ZmZmU2OTNlNzAwIChMV1AgMTY1MzgpIGV4aXRlZF0KW1RocmVhZCAweDdmZmZlYTE0NTcw
-MCAoTFdQIDE2NTMxKSBleGl0ZWRdCltUaHJlYWQgMHg3ZmZmZTc5NDA3MDAgKExXUCAxNjUzNikg
-ZXhpdGVkXQpbVGhyZWFkIDB4N2ZmZmViMTQ3NzAwIChMV1AgMTY1MjkpIGV4aXRlZF0KW1RocmVh
-ZCAweDdmZmZlNDkzYTcwMCAoTFdQIDE2NTQyKSBleGl0ZWRdCltUaHJlYWQgMHg3ZmZmZWI5NDg3
-MDAgKExXUCAxNjUyOCkgZXhpdGVkXQpbVGhyZWFkIDB4N2ZmZmVkOTRjNzAwIChMV1AgMTY1MjQp
-IGV4aXRlZF0KW1RocmVhZCAweDdmZmZlMTkzNDcwMCAoTFdQIDE2NTQ4KSBleGl0ZWRdCltUaHJl
-YWQgMHg3ZmZmZWM5NGE3MDAgKExXUCAxNjUyNikgZXhpdGVkXQpbVGhyZWFkIDB4N2ZmZmVkMTRi
-NzAwIChMV1AgMTY1MjUpIGV4aXRlZF0KW1RocmVhZCAweDdmZmZlMDEzMTcwMCAoTFdQIDE2NTUx
-KSBleGl0ZWRdCltUaHJlYWQgMHg3ZmZmZTcxM2Y3MDAgKExXUCAxNjUzNykgZXhpdGVkXQpbVGhy
-ZWFkIDB4N2ZmZmVmOTUwNzAwIChMV1AgMTY1MjApIGV4aXRlZF0KW1RocmVhZCAweDdmZmZlZTk0
-ZTcwMCAoTFdQIDE2NTIyKSBleGl0ZWRdCltUaHJlYWQgMHg3ZmZmZTExMzM3MDAgKExXUCAxNjU0
-OSkgZXhpdGVkXQpbVGhyZWFkIDB4N2ZmZmUyMTM1NzAwIChMV1AgMTY1NDcpIGV4aXRlZF0KW1Ro
-cmVhZCAweDdmZmZlOTE0MzcwMCAoTFdQIDE2NTMzKSBleGl0ZWRdCltUaHJlYWQgMHg3ZmZmZTUx
-M2I3MDAgKExXUCAxNjU0MSkgZXhpdGVkXQpbVGhyZWFkIDB4N2ZmZmVmMTRmNzAwIChMV1AgMTY1
-MjEpIGV4aXRlZF0KW1RocmVhZCAweDdmZmZlZTE0ZDcwMCAoTFdQIDE2NTIzKSBleGl0ZWRdCltU
-aHJlYWQgMHg3ZmZmZTI5MzY3MDAgKExXUCAxNjU0NikgZXhpdGVkXQpbVGhyZWFkIDB4N2ZmZmU0
-MTM5NzAwIChMV1AgMTY1NDMpIGV4aXRlZF0KClByb2dyYW0gcmVjZWl2ZWQgc2lnbmFsIFNJR0FC
-UlQsIEFib3J0ZWQuCjB4MDAwMDdmZmZmNzQyNzVjOSBpbiBfX0dJX3JhaXNlIChzaWc9c2lnQGVu
-dHJ5PTYpIGF0IC4uL25wdGwvc3lzZGVwcy91bml4L3N5c3YvbGludXgvcmFpc2UuYzo1Ngo1Ngkg
-IHJldHVybiBJTkxJTkVfU1lTQ0FMTCAodGdraWxsLCAzLCBwaWQsIHNlbGZ0aWQsIHNpZyk7CiMw
-ICAweDAwMDA3ZmZmZjc0Mjc1YzkgaW4gX19HSV9yYWlzZSAoc2lnPXNpZ0BlbnRyeT02KSBhdCAu
-Li9ucHRsL3N5c2RlcHMvdW5peC9zeXN2L2xpbnV4L3JhaXNlLmM6NTYKIzEgIDB4MDAwMDdmZmZm
-NzQyOGNkOCBpbiBfX0dJX2Fib3J0ICgpIGF0IGFib3J0LmM6OTAKIzIgIDB4MDAwMDdmZmZmNzQ2
-N2RiNyBpbiBfX2xpYmNfbWVzc2FnZSAoZG9fYWJvcnQ9ZG9fYWJvcnRAZW50cnk9MiwgZm10PWZt
-dEBlbnRyeT0weDdmZmZmNzU2ZjU2MSAiKioqICVzICoqKjogJXMgdGVybWluYXRlZFxuIikgYXQg
-Li4vc3lzZGVwcy91bml4L3N5c3YvbGludXgvbGliY19mYXRhbC5jOjE5NgojMyAgMHgwMDAwN2Zm
-ZmY3NGZmOWM3IGluIF9fR0lfX19mb3J0aWZ5X2ZhaWwgKG1zZz1tc2dAZW50cnk9MHg3ZmZmZjc1
-NmY1MDcgImJ1ZmZlciBvdmVyZmxvdyBkZXRlY3RlZCIpIGF0IGZvcnRpZnlfZmFpbC5jOjMxCiM0
-ICAweDAwMDA3ZmZmZjc0ZmRiOTAgaW4gX19HSV9fX2Noa19mYWlsICgpIGF0IGNoa19mYWlsLmM6
-MjgKIzUgIDB4MDAwMDAwMDAwMDQxNGVhOCBpbiBtZW1tb3ZlIChfX2xlbj0xODQ0Njc0NDA3Mzcw
-OTU1MTYxNSwgX19zcmM9MHgxZTU2MGU5NCwgX19kZXN0PTB4N2ZmZmZmZmZkOTAwKSBhdCAvdXNy
-L2luY2x1ZGUvYml0cy9zdHJpbmczLmg6NTcKIzYgIHByb2Nlc3Nfc2ZfZGlyMiAoZGlybmFtZT0w
-eDQ2YjBlMiAiIiwgcmVwYWlyPTxzeW50aGV0aWMgcG9pbnRlcj4sIHBhcmVudD0weDdmZmZmZmZm
-ZGMzMCwgZGlub19kaXJ0eT0weDdmZmZmZmZmZGMyOCwgaW5vX2Rpc2NvdmVyeT0xLCBkaXA9MHgx
-ZTU2MGUwMCwgaW5vPTI2MDI1NjI1NiwgbXA9MHgxZTU2MGU5MSkgYXQgZGlyMi5jOjk5MgojNyAg
-cHJvY2Vzc19kaXIyIChtcD1tcEBlbnRyeT0weDdmZmZmZmZmZTAzMCwgaW5vPWlub0BlbnRyeT0y
-NjAyNTYyNTYsIGRpcD1kaXBAZW50cnk9MHgxZTU2MGUwMCwgaW5vX2Rpc2NvdmVyeT1pbm9fZGlz
-Y292ZXJ5QGVudHJ5PTEsIGRpbm9fZGlydHk9ZGlub19kaXJ0eUBlbnRyeT0weDdmZmZmZmZmZGMy
-OCwgZGlybmFtZT1kaXJuYW1lQGVudHJ5PTB4NDZiMGUyICIiLCAKICAgIHBhcmVudD1wYXJlbnRA
-ZW50cnk9MHg3ZmZmZmZmZmRjMzAsIGJsa21hcD0weDApIGF0IGRpcjIuYzoxOTg4CiM4ICAweDAw
-MDAwMDAwMDA0MTE4OWYgaW4gcHJvY2Vzc19kaW5vZGVfaW50IChtcD1tcEBlbnRyeT0weDdmZmZm
-ZmZmZTAzMCwgZGlubz1kaW5vQGVudHJ5PTB4MWU1NjBlMDAsIGFnbm89YWdub0BlbnRyeT0wLCBp
-bm89aW5vQGVudHJ5PTI2MDI1NjI1Niwgd2FzX2ZyZWU9PG9wdGltaXplZCBvdXQ+LCBkaXJ0eT1k
-aXJ0eUBlbnRyeT0weDdmZmZmZmZmZGMyOCwgCiAgICB1c2VkPXVzZWRAZW50cnk9MHg3ZmZmZmZm
-ZmRjMjQsIHZlcmlmeV9tb2RlPXZlcmlmeV9tb2RlQGVudHJ5PTAsIHVuY2VydGFpbj11bmNlcnRh
-aW5AZW50cnk9MCwgaW5vX2Rpc2NvdmVyeT1pbm9fZGlzY292ZXJ5QGVudHJ5PTEsIGNoZWNrX2R1
-cHM9Y2hlY2tfZHVwc0BlbnRyeT0wLCBleHRyYV9hdHRyX2NoZWNrPWV4dHJhX2F0dHJfY2hlY2tA
-ZW50cnk9MSwgCiAgICBpc2FfZGlyPWlzYV9kaXJAZW50cnk9MHg3ZmZmZmZmZmRjMmMsIHBhcmVu
-dD1wYXJlbnRAZW50cnk9MHg3ZmZmZmZmZmRjMzApIGF0IGRpbm9kZS5jOjI4ODEKIzkgIDB4MDAw
-MDAwMDAwMDQxMjRjZSBpbiBwcm9jZXNzX2Rpbm9kZSAobXA9bXBAZW50cnk9MHg3ZmZmZmZmZmUw
-MzAsIGRpbm89ZGlub0BlbnRyeT0weDFlNTYwZTAwLCBhZ25vPWFnbm9AZW50cnk9MCwgaW5vPWlu
-b0BlbnRyeT0yNjAyNTYyNTYsIHdhc19mcmVlPTxvcHRpbWl6ZWQgb3V0PiwgZGlydHk9ZGlydHlA
-ZW50cnk9MHg3ZmZmZmZmZmRjMjgsIHVzZWQ9dXNlZEBlbnRyeT0weDdmZmZmZmZmZGMyNCwgCiAg
-ICBpbm9fZGlzY292ZXJ5PWlub19kaXNjb3ZlcnlAZW50cnk9MSwgY2hlY2tfZHVwcz1jaGVja19k
-dXBzQGVudHJ5PTAsIGV4dHJhX2F0dHJfY2hlY2s9ZXh0cmFfYXR0cl9jaGVja0BlbnRyeT0xLCBp
-c2FfZGlyPWlzYV9kaXJAZW50cnk9MHg3ZmZmZmZmZmRjMmMsIHBhcmVudD1wYXJlbnRAZW50cnk9
-MHg3ZmZmZmZmZmRjMzApIGF0IGRpbm9kZS5jOjI5ODkKIzEwIDB4MDAwMDAwMDAwMDQwYjk2ZiBp
-biBwcm9jZXNzX2lub2RlX2NodW5rIChtcD1tcEBlbnRyeT0weDdmZmZmZmZmZTAzMCwgYWdubz1h
-Z25vQGVudHJ5PTAsIGZpcnN0X2lyZWM9Zmlyc3RfaXJlY0BlbnRyeT0weDdmZmZjMDU1YTNmMCwg
-aW5vX2Rpc2NvdmVyeT1pbm9fZGlzY292ZXJ5QGVudHJ5PTEsIGNoZWNrX2R1cHM9Y2hlY2tfZHVw
-c0BlbnRyeT0wLCAKICAgIGV4dHJhX2F0dHJfY2hlY2s9ZXh0cmFfYXR0cl9jaGVja0BlbnRyeT0x
-LCBib2d1cz1ib2d1c0BlbnRyeT0weDdmZmZmZmZmZGNiNCwgbnVtX2lub3M9PG9wdGltaXplZCBv
-dXQ+KSBhdCBkaW5vX2NodW5rcy5jOjc3MgojMTEgMHgwMDAwMDAwMDAwNDBjZGRkIGluIHByb2Nl
-c3NfYWdpbm9kZXMgKG1wPTB4N2ZmZmZmZmZlMDMwLCBwZl9hcmdzPXBmX2FyZ3NAZW50cnk9MHgw
-LCBhZ25vPWFnbm9AZW50cnk9MCwgaW5vX2Rpc2NvdmVyeT1pbm9fZGlzY292ZXJ5QGVudHJ5PTEs
-IGNoZWNrX2R1cHM9Y2hlY2tfZHVwc0BlbnRyeT0wLCBleHRyYV9hdHRyX2NoZWNrPWV4dHJhX2F0
-dHJfY2hlY2tAZW50cnk9MSkKICAgIGF0IGRpbm9fY2h1bmtzLmM6MTAyNQojMTIgMHgwMDAwMDAw
-MDAwNDE5NjRlIGluIHByb2Nlc3NfYWdfZnVuYyAod3E9MHg3ZmZmZmZmZmRkYTAsIGFnbm89MCwg
-YXJnPTB4MCkgYXQgcGhhc2UzLmM6NzcKIzEzIDB4MDAwMDAwMDAwMDQyNjVkYSBpbiBwcmVmZXRj
-aF9hZ19yYW5nZSAod29yaz0weDdmZmZmZmZmZGRhMCwgc3RhcnRfYWc9PG9wdGltaXplZCBvdXQ+
-LCBlbmRfYWc9MzIsIGRpcnNfb25seT1mYWxzZSwgZnVuYz0weDQxOTYwMCA8cHJvY2Vzc19hZ19m
-dW5jPikgYXQgcHJlZmV0Y2guYzo5MDcKIzE0IDB4MDAwMDAwMDAwMDQyNjY2YyBpbiBkb19pbm9k
-ZV9wcmVmZXRjaCAobXA9bXBAZW50cnk9MHg3ZmZmZmZmZmUwMzAsIHN0cmlkZT0wLCBmdW5jPWZ1
-bmNAZW50cnk9MHg0MTk2MDAgPHByb2Nlc3NfYWdfZnVuYz4sIGNoZWNrX2NhY2hlPWNoZWNrX2Nh
-Y2hlQGVudHJ5PWZhbHNlLCBkaXJzX29ubHk9ZGlyc19vbmx5QGVudHJ5PWZhbHNlKSBhdCBwcmVm
-ZXRjaC5jOjk3MAojMTUgMHgwMDAwMDAwMDAwNDE5NzVkIGluIHByb2Nlc3NfYWdzIChtcD0weDdm
-ZmZmZmZmZTAzMCkgYXQgcGhhc2UzLmM6ODUKIzE2IHBoYXNlMyAobXA9bXBAZW50cnk9MHg3ZmZm
-ZmZmZmUwMzApIGF0IHBoYXNlMy5jOjEyMQojMTcgMHgwMDAwMDAwMDAwNDAzODhlIGluIG1haW4g
-KGFyZ2M9PG9wdGltaXplZCBvdXQ+LCBhcmd2PTxvcHRpbWl6ZWQgb3V0PikgYXQgeGZzX3JlcGFp
-ci5jOjc4NQpBIGRlYnVnZ2luZyBzZXNzaW9uIGlzIGFjdGl2ZS4KCglJbmZlcmlvciAxIFtwcm9j
-ZXNzIDE2NTE2XSB3aWxsIGJlIGtpbGxlZC4KClF1aXQgYW55d2F5PyAoeSBvciBuKSA=
-------=_Part_410040_1002674286.1425917518593
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+Thanks,
+-Eric
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
-------=_Part_410040_1002674286.1425917518593--
