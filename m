@@ -1,22 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 617837F3F
-	for <xfs@oss.sgi.com>; Tue, 10 Mar 2015 12:37:07 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 6E1217F3F
+	for <xfs@oss.sgi.com>; Tue, 10 Mar 2015 15:53:53 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 2F0D48F8092
-	for <xfs@oss.sgi.com>; Tue, 10 Mar 2015 10:37:06 -0700 (PDT)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 4E3E18F8089
+	for <xfs@oss.sgi.com>; Tue, 10 Mar 2015 13:53:49 -0700 (PDT)
 Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id pyyjYixbpMpznrzD for <xfs@oss.sgi.com>;
-	Tue, 10 Mar 2015 10:37:04 -0700 (PDT)
-Message-ID: <54FF2BBF.7060404@sandeen.net>
-Date: Tue, 10 Mar 2015 13:37:03 -0400
+	ESMTP id Kk2SWTC98gAqDNfj for <xfs@oss.sgi.com>;
+	Tue, 10 Mar 2015 13:53:48 -0700 (PDT)
+Received: from Liberator.local (unknown [40.139.179.11])
+	(using TLSv1.2 with cipher DHE-RSA-AES128-SHA (128/128 bits))
+	(No client certificate requested)
+	by sandeen.net (Postfix) with ESMTPSA id 5530163C3A20
+	for <xfs@oss.sgi.com>; Tue, 10 Mar 2015 15:53:47 -0500 (CDT)
+Message-ID: <54FF59DA.60700@sandeen.net>
+Date: Tue, 10 Mar 2015 16:53:46 -0400
 From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfs_repair: junk last entry in sf dir if name starts
-	beyond dir size
-References: <54FDFEDC.5090106@sandeen.net>
-	<1061986380.422955.1426008424991.JavaMail.zimbra@rvx.is>
-In-Reply-To: <1061986380.422955.1426008424991.JavaMail.zimbra@rvx.is>
+Subject: [PATCH 0/4] xfs_repair: clean up process_sf_dir2
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,22 +30,17 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Rui Gomes <rgomes@rvx.is>
-Cc: xfs <xfs@oss.sgi.com>
+To: xfs-oss <xfs@oss.sgi.com>
 
-On 3/10/15 1:27 PM, Rui Gomes wrote:
-> Hello Eric, 
-> 
-> I clone the xfs git "git://oss.sgi.com/xfs/cmds/xfsprogs" and I couldn't find the code in any of the branch's
-> Is the code in a public available git?
+4 patches, which in the end collapse & remove a bit of code.
 
-The latest userspae code is currently at git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git
+First patch adds a missing dino_dirty flag in a cut&paste codepath
+Second patch removes impossible tests (if (A) tests under a
+(!A) codepath).
+Third patch collapses two different "bad namelen" casess into one.
+Fourth removes special handling of the last entry, which doesn't work anyway.
 
-The patch I sent applies on top of that, it's not yet been committed to the repo.
-The patch as sent should get you through your segfault, but we'll probably end
-up merging something a bit different.
-
--Eric
+More details in the individual patches.
 
 _______________________________________________
 xfs mailing list
