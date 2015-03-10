@@ -1,27 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 0DDCD7F4E
-	for <xfs@oss.sgi.com>; Mon,  9 Mar 2015 16:02:35 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 7CBF17F4E
+	for <xfs@oss.sgi.com>; Mon,  9 Mar 2015 20:17:55 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 9B002AC002
-	for <xfs@oss.sgi.com>; Mon,  9 Mar 2015 14:02:31 -0700 (PDT)
-Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id pFDeuV73gb8vPffF (version=TLSv1 cipher=AES256-SHA
-	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 09 Mar 2015 14:02:29 -0700 (PDT)
-Date: Mon, 9 Mar 2015 21:02:20 +0000
-From: Mel Gorman <mgorman@suse.de>
-Subject: Re: [PATCH 4/4] mm: numa: Slow PTE scan rate if migration failures
-	occur
-Message-ID: <20150309210147.GA3406@suse.de>
-References: <1425741651-29152-1-git-send-email-mgorman@suse.de>
-	<1425741651-29152-5-git-send-email-mgorman@suse.de>
-	<20150307163657.GA9702@gmail.com>
-	<CA+55aFwDuzpL-k8LsV3touhNLh+TFSLKP8+-nPwMXkWXDYPhrg@mail.gmail.com>
-	<20150308100223.GC15487@gmail.com> <20150308203145.GA4038@suse.de>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 1667FAC002
+	for <xfs@oss.sgi.com>; Mon,  9 Mar 2015 18:17:51 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id 0vY2e05nsihZ2d8H (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Mon, 09 Mar 2015 18:17:51 -0700 (PDT)
+Date: Mon, 9 Mar 2015 21:17:45 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH] xfs_repair: junk last entry in sf dir if name starts
+	beyond dir size
+Message-ID: <20150310011745.GA2722@laptop.bfoster>
+References: <54FDFEDC.5090106@sandeen.net>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20150308203145.GA4038@suse.de>
+In-Reply-To: <54FDFEDC.5090106@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,118 +30,73 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Ingo Molnar <mingo@kernel.org>
-Cc: ppc-dev <linuxppc-dev@lists.ozlabs.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, Linux-MM <linux-mm@kvack.org>, Aneesh Kumar <aneesh.kumar@linux.vnet.ibm.com>, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Rui Gomes <rgomes@rvx.is>, xfs-oss <xfs@oss.sgi.com>
 
-On Sun, Mar 08, 2015 at 08:40:25PM +0000, Mel Gorman wrote:
-> > Because if the answer is 'yes', then we can safely say: 'we regressed 
-> > performance because correctness [not dropping dirty bits] comes before 
-> > performance'.
-> > 
-> > If the answer is 'no', then we still have a mystery (and a regression) 
-> > to track down.
-> > 
-> > As a second hack (not to be applied), could we change:
-> > 
-> >  #define _PAGE_BIT_PROTNONE      _PAGE_BIT_GLOBAL
-> > 
-> > to:
-> > 
-> >  #define _PAGE_BIT_PROTNONE      (_PAGE_BIT_GLOBAL+1)
-> > 
+On Mon, Mar 09, 2015 at 04:13:16PM -0400, Eric Sandeen wrote:
+> When process_sf_dir2() is trying to salvage entries in a corrupted
+> short form directory, it may attempt to shorten the last entry in
+> the dir if it extends beyond the directory size.
 > 
-> In itself, that's not enough. The SWP_OFFSET_SHIFT would also need updating
-> as a partial revert of 21d9ee3eda7792c45880b2f11bff8e95c9a061fb but it
-> can be done.
+> However, if the name already starts past the dir size, no amount
+> of name-shortening will make it fit, but the code doesn't realize
+> this.  The namelen variable comes out to be negative, and things
+> go downhill from there, resulting in a segfault when we try to
+> memmove a negative number of bytes.
+> 
+> If no amount of name-shortening can make the last dir entry fit
+> in the dir size, simply junk the entry.
+> 
+> Reported by: Rui Gomes <rgomes@rvx.is>
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> ---
+> 
+> This adds a bit more spaghetti to an existing pot, but I think
+> it clearly fixes the problem; I might try to rework these cases
+> to coalesce some of the code.
+> 
+> (I also wonder about the tradeoff between shortening entries and
+> increasing the dir size, but for now I'm just following the
+> direction the repair code already takes).
 > 
 
-More importantily, _PAGE_BIT_GLOBAL+1 == the special PTE bit so just
-updating the value should crash. For the purposes of testing the idea, I
-thought the straight-forward option was to break soft dirty page tracking
-and steal their bit for testing (patch below). Took most of the day to
-get access to the test machine so tests are not long running and only
-the autonuma one has completed;
+Seems Ok on a first glance. The fix is associated with the specific
+namelen calculation. Are we susceptible to a similar problem in the
+previous branch where we also calculate namelen from the dir size (the
+namelen == 0 case)? It looks like we could set a bad value there.
 
-autonumabench
-                                              3.19.0             4.0.0-rc1             4.0.0-rc1             4.0.0-rc1
-                                             vanilla               vanilla         slowscan-v2r7        protnone-v3
-Time User-NUMA01                  25695.96 (  0.00%)    32883.59 (-27.97%)    35288.00 (-37.33%)    35236.21 (-37.13%)
-Time User-NUMA01_THEADLOCAL       17404.36 (  0.00%)    17453.20 ( -0.28%)    17765.79 ( -2.08%)    17590.10 ( -1.07%)
-Time User-NUMA02                   2037.65 (  0.00%)     2063.70 ( -1.28%)     2063.22 ( -1.25%)     2072.95 ( -1.73%)
-Time User-NUMA02_SMT                981.02 (  0.00%)      983.70 ( -0.27%)      976.01 (  0.51%)      983.42 ( -0.24%)
-Time System-NUMA01                  194.70 (  0.00%)      602.44 (-209.42%)      209.42 ( -7.56%)      737.36 (-278.72%)
-Time System-NUMA01_THEADLOCAL        98.52 (  0.00%)       78.10 ( 20.73%)       92.70 (  5.91%)       80.69 ( 18.10%)
-Time System-NUMA02                    9.28 (  0.00%)        6.47 ( 30.28%)        6.06 ( 34.70%)        6.63 ( 28.56%)
-Time System-NUMA02_SMT                3.79 (  0.00%)        5.06 (-33.51%)        3.39 ( 10.55%)        3.60 (  5.01%)
-Time Elapsed-NUMA01                 558.84 (  0.00%)      755.96 (-35.27%)      833.63 (-49.17%)      804.50 (-43.96%)
-Time Elapsed-NUMA01_THEADLOCAL      382.54 (  0.00%)      382.22 (  0.08%)      395.45 ( -3.37%)      388.12 ( -1.46%)
-Time Elapsed-NUMA02                  49.83 (  0.00%)       49.38 (  0.90%)       50.21 ( -0.76%)       48.99 (  1.69%)
-Time Elapsed-NUMA02_SMT              46.59 (  0.00%)       47.70 ( -2.38%)       48.55 ( -4.21%)       49.50 ( -6.25%)
-Time CPU-NUMA01                    4632.00 (  0.00%)     4429.00 (  4.38%)     4258.00 (  8.07%)     4471.00 (  3.48%)
-Time CPU-NUMA01_THEADLOCAL         4575.00 (  0.00%)     4586.00 ( -0.24%)     4515.00 (  1.31%)     4552.00 (  0.50%)
-Time CPU-NUMA02                    4107.00 (  0.00%)     4191.00 ( -2.05%)     4120.00 ( -0.32%)     4244.00 ( -3.34%)
-Time CPU-NUMA02_SMT                2113.00 (  0.00%)     2072.00 (  1.94%)     2017.00 (  4.54%)     1993.00 (  5.68%)
+Brian
 
-              3.19.0   4.0.0-rc1   4.0.0-rc1   4.0.0-rc1
-             vanilla     vanillaslowscan-v2r7protnone-v3
-User        46119.12    53384.29    56093.11    55882.82
-System        306.41      692.14      311.64      828.36
-Elapsed      1039.88     1236.87     1328.61     1292.92
-
-So just using a different bit doesn't seem to be it either
-
-                                3.19.0   4.0.0-rc1   4.0.0-rc1   4.0.0-rc1
-                               vanilla     vanillaslowscan-v2r7protnone-v3
-NUMA alloc hit                 1202922     1437560     1472578     1499274
-NUMA alloc miss                      0           0           0           0
-NUMA interleave hit                  0           0           0           0
-NUMA alloc local               1200683     1436781     1472226     1498680
-NUMA base PTE updates        222840103   304513172   121532313   337431414
-NUMA huge PMD updates           434894      594467      237170      658715
-NUMA page range updates      445505831   608880276   242963353   674693494
-NUMA hint faults                601358      733491      334334      820793
-NUMA hint local faults          371571      511530      227171      565003
-NUMA hint local percent             61          69          67          68
-NUMA pages migrated            7073177    26366701     8607082    31288355
-
-Patch to use a bit other than the global bit for prot none is below.
-
-diff --git a/arch/x86/include/asm/pgtable_types.h b/arch/x86/include/asm/pgtable_types.h
-index 8c7c10802e9c..1f243323693c 100644
---- a/arch/x86/include/asm/pgtable_types.h
-+++ b/arch/x86/include/asm/pgtable_types.h
-@@ -20,16 +20,16 @@
- #define _PAGE_BIT_SOFTW2	10	/* " */
- #define _PAGE_BIT_SOFTW3	11	/* " */
- #define _PAGE_BIT_PAT_LARGE	12	/* On 2MB or 1GB pages */
--#define _PAGE_BIT_SPECIAL	_PAGE_BIT_SOFTW1
--#define _PAGE_BIT_CPA_TEST	_PAGE_BIT_SOFTW1
-+#define _PAGE_BIT_SPECIAL	_PAGE_BIT_SOFTW3
-+#define _PAGE_BIT_CPA_TEST	_PAGE_BIT_SOFTW3
- #define _PAGE_BIT_SPLITTING	_PAGE_BIT_SOFTW2 /* only valid on a PSE pmd */
--#define _PAGE_BIT_HIDDEN	_PAGE_BIT_SOFTW3 /* hidden by kmemcheck */
--#define _PAGE_BIT_SOFT_DIRTY	_PAGE_BIT_SOFTW3 /* software dirty tracking */
-+#define _PAGE_BIT_HIDDEN	_PAGE_BIT_SOFTW1 /* hidden by kmemcheck */
-+#define _PAGE_BIT_SOFT_DIRTY	_PAGE_BIT_SOFTW1 /* software dirty tracking */
- #define _PAGE_BIT_NX           63       /* No execute: only valid after cpuid check */
- 
- /* If _PAGE_BIT_PRESENT is clear, we use these: */
- /* - if the user mapped it with PROT_NONE; pte_present gives true */
--#define _PAGE_BIT_PROTNONE	_PAGE_BIT_GLOBAL
-+#define _PAGE_BIT_PROTNONE	_PAGE_BIT_SOFTW1
- 
- #define _PAGE_PRESENT	(_AT(pteval_t, 1) << _PAGE_BIT_PRESENT)
- #define _PAGE_RW	(_AT(pteval_t, 1) << _PAGE_BIT_RW)
-@@ -98,8 +98,7 @@
- 
- /* Set of bits not changed in pte_modify */
- #define _PAGE_CHG_MASK	(PTE_PFN_MASK | _PAGE_PCD | _PAGE_PWT |		\
--			 _PAGE_SPECIAL | _PAGE_ACCESSED | _PAGE_DIRTY |	\
--			 _PAGE_SOFT_DIRTY)
-+			 _PAGE_SPECIAL | _PAGE_ACCESSED | _PAGE_DIRTY)
- #define _HPAGE_CHG_MASK (_PAGE_CHG_MASK | _PAGE_PSE)
- 
- /*
+> diff --git a/repair/dir2.c b/repair/dir2.c
+> index 6b8964d..308808d 100644
+> --- a/repair/dir2.c
+> +++ b/repair/dir2.c
+> @@ -911,6 +911,20 @@ _("zero length entry in shortform dir %" PRIu64 ""),
+>  				namelen = ino_dir_size -
+>  					((__psint_t) &sfep->name[0] -
+>  					 (__psint_t) sfp);
+> +				/* Entry name starts past size of dir; junk it */
+> +				if (namelen <= 0) {
+> +					do_warn(
+> +_("start of last entry name overflows space left in in shortform dir %" PRIu64 ", "),
+> +						ino);
+> +					if (!no_modify)
+> +						do_warn(
+> +						_("junking entry #%d\n"), i);
+> +					else
+> +						do_warn(
+> +						_("would junk entry #%d\n"), i);
+> +					break;
+> +				}
+> +				/* Ok, truncate this entry to end of dir */
+>  				do_warn(
+>  _("size of last entry overflows space left in in shortform dir %" PRIu64 ", "),
+>  					ino);
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
