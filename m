@@ -1,25 +1,33 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id A2FA47F3F
-	for <xfs@oss.sgi.com>; Tue, 10 Mar 2015 16:11:42 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 63C18304051
-	for <xfs@oss.sgi.com>; Tue, 10 Mar 2015 14:11:42 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id wqarZGq7Hey98Hr3 for <xfs@oss.sgi.com>;
-	Tue, 10 Mar 2015 14:11:40 -0700 (PDT)
-Received: from Liberator.local (unknown [40.139.179.11])
-	(using TLSv1.2 with cipher DHE-RSA-AES128-SHA (128/128 bits))
-	(No client certificate requested)
-	by sandeen.net (Postfix) with ESMTPSA id 28E6063C3A20
-	for <xfs@oss.sgi.com>; Tue, 10 Mar 2015 16:11:40 -0500 (CDT)
-Message-ID: <54FF5E0A.5040800@sandeen.net>
-Date: Tue, 10 Mar 2015 17:11:38 -0400
-From: Eric Sandeen <sandeen@sandeen.net>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id B76207F4E
+	for <xfs@oss.sgi.com>; Tue, 10 Mar 2015 19:24:24 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 3754FAC001
+	for <xfs@oss.sgi.com>; Tue, 10 Mar 2015 17:24:21 -0700 (PDT)
+Received: from mail-ie0-f173.google.com (mail-ie0-f173.google.com
+	[209.85.223.173]) by cuda.sgi.com with ESMTP id
+	k4LIb9G27eZkKw1O (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 10 Mar 2015 17:24:19 -0700 (PDT)
+Received: by iecvj10 with SMTP id vj10so2243849iec.0
+	for <xfs@oss.sgi.com>; Tue, 10 Mar 2015 17:24:19 -0700 (PDT)
 MIME-Version: 1.0
-Subject: [PATCH 4/4] xfs_repair: remove last-entry hack in process_sf_dir2
-References: <54FF59DA.60700@sandeen.net>
-In-Reply-To: <54FF59DA.60700@sandeen.net>
+In-Reply-To: <20150309191943.GF26657@destitution>
+References: <1425741651-29152-1-git-send-email-mgorman@suse.de>
+	<1425741651-29152-5-git-send-email-mgorman@suse.de>
+	<20150307163657.GA9702@gmail.com>
+	<CA+55aFwDuzpL-k8LsV3touhNLh+TFSLKP8+-nPwMXkWXDYPhrg@mail.gmail.com>
+	<20150308100223.GC15487@gmail.com>
+	<CA+55aFyQyZXu2fi7X9bWdSX0utk8=sccfBwFaSoToROXoE_PLA@mail.gmail.com>
+	<20150309112936.GD26657@destitution>
+	<CA+55aFywW5JLq=BU_qb2OG5+pJ-b1v9tiS5Ygi-vtEKbEZ_T5Q@mail.gmail.com>
+	<20150309191943.GF26657@destitution>
+Date: Tue, 10 Mar 2015 16:55:52 -0700
+Message-ID: <CA+55aFzFt-vX5Jerci0Ty4Uf7K4_nQ7wyCp8hhU_dB0X4cBpVQ@mail.gmail.com>
+Subject: Re: [PATCH 4/4] mm: numa: Slow PTE scan rate if migration failures
+	occur
+From: Linus Torvalds <torvalds@linux-foundation.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,101 +40,88 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs-oss <xfs@oss.sgi.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, Linux-MM <linux-mm@kvack.org>, Aneesh Kumar <aneesh.kumar@linux.vnet.ibm.com>, Andrew Morton <akpm@linux-foundation.org>, ppc-dev <linuxppc-dev@lists.ozlabs.org>, Ingo Molnar <mingo@kernel.org>, Mel Gorman <mgorman@suse.de>
 
-process_sf_dir2() tries to special-case the last entry in
-a short form dir, and salvage it if the name length is wrong
-by using the dir size as a clue to what the length should be.
+On Mon, Mar 9, 2015 at 12:19 PM, Dave Chinner <david@fromorbit.com> wrote:
+> On Mon, Mar 09, 2015 at 09:52:18AM -0700, Linus Torvalds wrote:
+>>
+>> What's your virtual environment setup? Kernel config, and
+>> virtualization environment to actually get that odd fake NUMA thing
+>> happening?
+>
+> I don't have the exact .config with me (test machines at home
+> are shut down because I'm half a world away), but it's pretty much
+> this (copied and munged from a similar test vm on my laptop):
 
-However, this doesn't actually work; there is either a 32-bit
-or 64-bit inode after the name, and with dirv3 there's a file
-type in there as well.  Extending the name length to the dir
-size means it overlaps these fields, which often have a 0 in
-the top bits, and then namecheck() fails the result and junks
-it anyway:
+[ snip snip ]
 
-> entry #1 is zero length in shortform dir 67, resetting to 29
-> entry contains illegal character in shortform dir 67
-> junking entry "bbbbbbbbbbbbbbbbbbbbbbbb" in directory inode 67
+Ok, I hate debugging by symptoms anyway, so I didn't do any of this,
+and went back to actually *thinking* about the code instead of trying
+to reproduce this and figure things out by trial and error.
 
-And depending on the corruption, the current code will set
-a new negative namelen if it turns out that the name itself
-starts beyond dir size; it can't be shortened enough.
+And I think I figured it out. Of course, since I didn't actually test
+anything, what do I know, but I feel good about it, because I think I
+can explain why that patch that on the face of it shouldn't change
+anything actually did.
 
-So, we could fix this up, and choose a new namelen such that
-the xfs_dir2_ino8_t and/or xfs_dir2_ino8_t and/or file type
-still fits at the end, but we really seem to be reaching the
-point of diminishing returns.  The chances that nothing but
-the name length is wrong, and that the remaining few
-bytes at the end of the dir size are actually correct, seems
-awfully small.
+So, the old code just did all those manual page table changes,
+clearing the present bit and setting the NUMA bit instead.
 
-Therefore just remove this special case, which I think is
-of questionable value.
+The new code _ostensibly_ does the same, except it clears the present
+bit and sets the PROTNONE bit instead.
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
+However, rather than playing special games with just those two bits,
+it uses the normal pte accessor functions, and in particular uses
+vma->vm_page_prot to reset the protections back. Which is a nice
+cleanup and really makes the code look saner, and does the same thing.
 
-diff --git a/repair/dir2.c b/repair/dir2.c
-index 5512e41..b1816f4 100644
---- a/repair/dir2.c
-+++ b/repair/dir2.c
-@@ -874,43 +874,20 @@ _("entry \"%*.*s\" in shortform directory %" PRIu64 " references %s inode %" PRI
- 		}
- 
- 		if (bad_sfnamelen) {
-+			do_warn(
-+_("entry #%d %s in shortform dir %" PRIu64),
-+				i, junkreason, ino);
-+			if (!no_modify)
-+				do_warn(_(", junking %d entries\n"),
-+					num_entries - i);
-+			else
-+				do_warn(_(", would junk %d entries\n"),
-+					num_entries - i);
- 			/*
--			 * if we're really lucky, this is the last entry in
--			 * case we can use the dir size to set the namelen
--			 * value.  otherwise, forget it because we're not going
--			 * to be able to find the next entry.
-+			 * don't process the rest of the directory,
-+			 * break out of processing loop
- 			 */
--			if (i == num_entries - 1)  {
--				namelen = ino_dir_size -
--					((__psint_t) &sfep->name[0] -
--					 (__psint_t) sfp);
--				if (!no_modify)  {
--					do_warn(
--_("entry #%d %s in shortform dir %" PRIu64 ", resetting to %d\n"),
--						i, junkreason, ino, namelen);
--					sfep->namelen = namelen;
--					*dino_dirty = 1;
--				} else  {
--					do_warn(
--_("entry #%d %s in shortform dir %" PRIu64 ", would set to %d\n"),
--						i, junkreason, ino, namelen);
--				}
--			} else  {
--				do_warn(
--_("entry #%d %s in shortform dir %" PRIu64),
--					i, junkreason, ino);
--				if (!no_modify)
--					do_warn(_(", junking %d entries\n"),
--						num_entries - i);
--				else
--					do_warn(_(", would junk %d entries\n"),
--						num_entries - i);
--				/*
--				 * don't process the rest of the directory,
--				 * break out of processing looop
--				 */
--				break;
--			}
-+			break;
- 		}
- 
- 		/*
+Except it really isn't the same thing at all.
+
+Why?
+
+The protection bits in the page tables are *not* the same as
+vma->vm_page_prot. Yes, they start out that way, but they don't stay
+that way. And no, I'm not talking about dirty and accessed bits.
+
+The difference? COW. Any private mapping is marked read-only in
+vma->vm_page_prot, and then the COW (or the initial write) makes it
+read-write.
+
+And so, when we did
+
+-       pte = pte_mknonnuma(pte);
++       /* Make it present again */
++       pte = pte_modify(pte, vma->vm_page_prot);
++       pte = pte_mkyoung(pte);
+
+that isn't equivalent at all - it makes the page read-only, because it
+restores it to its original state.
+
+Now, that isn't actually what hurts most, I suspect. Judging by the
+profiles, we don't suddenly take a lot of new COW faults. No, what
+hurts most is that the NUMA balancing code does this:
+
+        /*
+         * Avoid grouping on DSO/COW pages in specific and RO pages
+         * in general, RO pages shouldn't hurt as much anyway since
+         * they can be in shared cache state.
+         */
+        if (!pte_write(pte))
+                flags |= TNF_NO_GROUP;
+
+and that "!pte_write(pte)" is basically now *always* true for private
+mappings (which is 99% of all mappings).
+
+In other words, I think the patch unintentionally made the NUMA code
+basically always do the TNF_NO_GROUP case.
+
+I think that a quick hack for testing might be to just replace that
+"!pte_write()" with "!pte_dirty()", and seeing how that acts.
+
+Comments?
+
+                      Linus
 
 _______________________________________________
 xfs mailing list
