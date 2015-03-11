@@ -1,22 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 3A81D7F47
-	for <xfs@oss.sgi.com>; Wed, 11 Mar 2015 10:46:54 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 685F17F47
+	for <xfs@oss.sgi.com>; Wed, 11 Mar 2015 11:01:19 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 27E348F8071
-	for <xfs@oss.sgi.com>; Wed, 11 Mar 2015 08:46:54 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id khdbVYlYf4JAbTtc for <xfs@oss.sgi.com>;
-	Wed, 11 Mar 2015 08:46:52 -0700 (PDT)
-Message-ID: <5500636A.3020309@sandeen.net>
-Date: Wed, 11 Mar 2015 11:46:50 -0400
-From: Eric Sandeen <sandeen@sandeen.net>
-MIME-Version: 1.0
+	by relay3.corp.sgi.com (Postfix) with ESMTP id DA8F7AC00A
+	for <xfs@oss.sgi.com>; Wed, 11 Mar 2015 09:01:15 -0700 (PDT)
+Received: from mail.rvx.is (mail.rvx.is [178.19.51.189]) by cuda.sgi.com with
+	ESMTP id gL6QpexQObSVU51N (version=TLSv1 cipher=AES256-SHA
+	bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 11 Mar 2015 09:01:12 -0700 (PDT)
+Date: Wed, 11 Mar 2015 16:01:10 +0000 (GMT)
+From: Rui Gomes <rgomes@rvx.is>
+Message-ID: <1369906732.430278.1426089670705.JavaMail.zimbra@rvx.is>
+In-Reply-To: <5500636A.3020309@sandeen.net>
+References: <54FDFEDC.5090106@sandeen.net>
+	<1061986380.422955.1426008424991.JavaMail.zimbra@rvx.is>
+	<54FF2BBF.7060404@sandeen.net>
+	<410959445.428221.1426083973347.JavaMail.zimbra@rvx.is>
+	<550054D9.3010602@sandeen.net>
+	<1908077521.428877.1426086242030.JavaMail.zimbra@rvx.is>
+	<5500636A.3020309@sandeen.net>
 Subject: Re: [PATCH] xfs_repair: junk last entry in sf dir if name starts
 	beyond dir size
-References: <54FDFEDC.5090106@sandeen.net>	<1061986380.422955.1426008424991.JavaMail.zimbra@rvx.is>	<54FF2BBF.7060404@sandeen.net>	<410959445.428221.1426083973347.JavaMail.zimbra@rvx.is>	<550054D9.3010602@sandeen.net>
-	<1908077521.428877.1426086242030.JavaMail.zimbra@rvx.is>
-In-Reply-To: <1908077521.428877.1426086242030.JavaMail.zimbra@rvx.is>
+MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,8 +35,35 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Rui Gomes <rgomes@rvx.is>
+To: Eric Sandeen <sandeen@sandeen.net>
 Cc: omar <omar@rvx.is>, xfs <xfs@oss.sgi.com>
+
+Hi,
+
+Thank you for pointing out where to look, I will try to dissect this a bit further and report back to you. 
+
+Regards 
+
+------------------------------- 
+Rui Gomes 
+CTO 
+
+
+RVX - Reykjavik Visual Effects 
+Seljavegur 2, 
+101 Reykjavik 
+Iceland 
+
+
+Tel: + 354 527 3330 
+Mob: + 354 663 3360
+
+----- Original Message -----
+From: "Eric Sandeen" <sandeen@sandeen.net>
+To: "Rui Gomes" <rgomes@rvx.is>
+Cc: "omar" <omar@rvx.is>, "xfs" <xfs@oss.sgi.com>
+Sent: Wednesday, 11 March, 2015 15:46:50
+Subject: Re: [PATCH] xfs_repair: junk last entry in sf dir if name starts beyond dir size
 
 On 3/11/15 11:04 AM, Rui Gomes wrote:
 > Program received signal SIGSEGV, Segmentation fault.
