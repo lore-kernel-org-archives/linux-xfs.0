@@ -1,33 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id B76207F4E
-	for <xfs@oss.sgi.com>; Tue, 10 Mar 2015 19:24:24 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 6DB8F7F47
+	for <xfs@oss.sgi.com>; Wed, 11 Mar 2015 08:25:40 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 3754FAC001
-	for <xfs@oss.sgi.com>; Tue, 10 Mar 2015 17:24:21 -0700 (PDT)
-Received: from mail-ie0-f173.google.com (mail-ie0-f173.google.com
-	[209.85.223.173]) by cuda.sgi.com with ESMTP id
-	k4LIb9G27eZkKw1O (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 10 Mar 2015 17:24:19 -0700 (PDT)
-Received: by iecvj10 with SMTP id vj10so2243849iec.0
-	for <xfs@oss.sgi.com>; Tue, 10 Mar 2015 17:24:19 -0700 (PDT)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id EE3D2AC003
+	for <xfs@oss.sgi.com>; Wed, 11 Mar 2015 06:25:36 -0700 (PDT)
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	E4HWHFiYQzAAJCat for <xfs@oss.sgi.com>;
+	Wed, 11 Mar 2015 06:25:31 -0700 (PDT)
+Received: from dave by destitution with local (Exim 4.84)
+	(envelope-from <david@fromorbit.com>) id 1YVgdY-0004Bu-OT
+	for xfs@oss.sgi.com; Wed, 11 Mar 2015 09:25:24 -0400
+Date: Wed, 11 Mar 2015 09:25:24 -0400
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] [RFC] xfs: add RENAME_WHITEOUT support
+Message-ID: <20150311132524.GH26657@destitution>
+References: <1423653330-25297-1-git-send-email-david@fromorbit.com>
+	<20150309181309.GA18016@hades.maiolino.org>
 MIME-Version: 1.0
-In-Reply-To: <20150309191943.GF26657@destitution>
-References: <1425741651-29152-1-git-send-email-mgorman@suse.de>
-	<1425741651-29152-5-git-send-email-mgorman@suse.de>
-	<20150307163657.GA9702@gmail.com>
-	<CA+55aFwDuzpL-k8LsV3touhNLh+TFSLKP8+-nPwMXkWXDYPhrg@mail.gmail.com>
-	<20150308100223.GC15487@gmail.com>
-	<CA+55aFyQyZXu2fi7X9bWdSX0utk8=sccfBwFaSoToROXoE_PLA@mail.gmail.com>
-	<20150309112936.GD26657@destitution>
-	<CA+55aFywW5JLq=BU_qb2OG5+pJ-b1v9tiS5Ygi-vtEKbEZ_T5Q@mail.gmail.com>
-	<20150309191943.GF26657@destitution>
-Date: Tue, 10 Mar 2015 16:55:52 -0700
-Message-ID: <CA+55aFzFt-vX5Jerci0Ty4Uf7K4_nQ7wyCp8hhU_dB0X4cBpVQ@mail.gmail.com>
-Subject: Re: [PATCH 4/4] mm: numa: Slow PTE scan rate if migration failures
-	occur
-From: Linus Torvalds <torvalds@linux-foundation.org>
+Content-Disposition: inline
+In-Reply-To: <20150309181309.GA18016@hades.maiolino.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -40,88 +33,29 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, Linux-MM <linux-mm@kvack.org>, Aneesh Kumar <aneesh.kumar@linux.vnet.ibm.com>, Andrew Morton <akpm@linux-foundation.org>, ppc-dev <linuxppc-dev@lists.ozlabs.org>, Ingo Molnar <mingo@kernel.org>, Mel Gorman <mgorman@suse.de>
+To: xfs@oss.sgi.com
 
-On Mon, Mar 9, 2015 at 12:19 PM, Dave Chinner <david@fromorbit.com> wrote:
-> On Mon, Mar 09, 2015 at 09:52:18AM -0700, Linus Torvalds wrote:
->>
->> What's your virtual environment setup? Kernel config, and
->> virtualization environment to actually get that odd fake NUMA thing
->> happening?
->
-> I don't have the exact .config with me (test machines at home
-> are shut down because I'm half a world away), but it's pretty much
-> this (copied and munged from a similar test vm on my laptop):
+On Mon, Mar 09, 2015 at 03:13:09PM -0300, Carlos Maiolino wrote:
+> Hi Dave,
+> 
+> sorry my delay in take a look into it.
+> 
+> The code doesn't build, due the missing declaration of function
+> xfs_finish_inode_setup() inside xfs_rename_get_wino().
+> 
+> I couldn't find any reference to this function either. Is there something I'm
+> missing here?
 
-[ snip snip ]
+IIRC, the patch is against the for-next branch, not the master
+branch (i.e. dependent on commit 58c90473 ("xfs: inodes are new
+until the dentry cache is set up").
 
-Ok, I hate debugging by symptoms anyway, so I didn't do any of this,
-and went back to actually *thinking* about the code instead of trying
-to reproduce this and figure things out by trial and error.
+Cheers,
 
-And I think I figured it out. Of course, since I didn't actually test
-anything, what do I know, but I feel good about it, because I think I
-can explain why that patch that on the face of it shouldn't change
-anything actually did.
-
-So, the old code just did all those manual page table changes,
-clearing the present bit and setting the NUMA bit instead.
-
-The new code _ostensibly_ does the same, except it clears the present
-bit and sets the PROTNONE bit instead.
-
-However, rather than playing special games with just those two bits,
-it uses the normal pte accessor functions, and in particular uses
-vma->vm_page_prot to reset the protections back. Which is a nice
-cleanup and really makes the code look saner, and does the same thing.
-
-Except it really isn't the same thing at all.
-
-Why?
-
-The protection bits in the page tables are *not* the same as
-vma->vm_page_prot. Yes, they start out that way, but they don't stay
-that way. And no, I'm not talking about dirty and accessed bits.
-
-The difference? COW. Any private mapping is marked read-only in
-vma->vm_page_prot, and then the COW (or the initial write) makes it
-read-write.
-
-And so, when we did
-
--       pte = pte_mknonnuma(pte);
-+       /* Make it present again */
-+       pte = pte_modify(pte, vma->vm_page_prot);
-+       pte = pte_mkyoung(pte);
-
-that isn't equivalent at all - it makes the page read-only, because it
-restores it to its original state.
-
-Now, that isn't actually what hurts most, I suspect. Judging by the
-profiles, we don't suddenly take a lot of new COW faults. No, what
-hurts most is that the NUMA balancing code does this:
-
-        /*
-         * Avoid grouping on DSO/COW pages in specific and RO pages
-         * in general, RO pages shouldn't hurt as much anyway since
-         * they can be in shared cache state.
-         */
-        if (!pte_write(pte))
-                flags |= TNF_NO_GROUP;
-
-and that "!pte_write(pte)" is basically now *always* true for private
-mappings (which is 99% of all mappings).
-
-In other words, I think the patch unintentionally made the NUMA code
-basically always do the TNF_NO_GROUP case.
-
-I think that a quick hack for testing might be to just replace that
-"!pte_write()" with "!pte_dirty()", and seeing how that acts.
-
-Comments?
-
-                      Linus
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
