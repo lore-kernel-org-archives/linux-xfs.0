@@ -1,27 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 685F17F47
-	for <xfs@oss.sgi.com>; Wed, 11 Mar 2015 11:01:19 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id DA8F7AC00A
-	for <xfs@oss.sgi.com>; Wed, 11 Mar 2015 09:01:15 -0700 (PDT)
-Received: from mail.rvx.is (mail.rvx.is [178.19.51.189]) by cuda.sgi.com with
-	ESMTP id gL6QpexQObSVU51N (version=TLSv1 cipher=AES256-SHA
-	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 11 Mar 2015 09:01:12 -0700 (PDT)
-Date: Wed, 11 Mar 2015 16:01:10 +0000 (GMT)
-From: Rui Gomes <rgomes@rvx.is>
-Message-ID: <1369906732.430278.1426089670705.JavaMail.zimbra@rvx.is>
-In-Reply-To: <5500636A.3020309@sandeen.net>
-References: <54FDFEDC.5090106@sandeen.net>
-	<1061986380.422955.1426008424991.JavaMail.zimbra@rvx.is>
-	<54FF2BBF.7060404@sandeen.net>
-	<410959445.428221.1426083973347.JavaMail.zimbra@rvx.is>
-	<550054D9.3010602@sandeen.net>
-	<1908077521.428877.1426086242030.JavaMail.zimbra@rvx.is>
-	<5500636A.3020309@sandeen.net>
-Subject: Re: [PATCH] xfs_repair: junk last entry in sf dir if name starts
-	beyond dir size
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id ABF3E7F50
+	for <xfs@oss.sgi.com>; Wed, 11 Mar 2015 22:15:03 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 998A8304039
+	for <xfs@oss.sgi.com>; Wed, 11 Mar 2015 20:15:00 -0700 (PDT)
+Received: from na01-by2-obe.outbound.protection.outlook.com
+	(mail-by2on0124.outbound.protection.outlook.com
+	[207.46.100.124]) by cuda.sgi.com with ESMTP id
+	rrDtwXUvJw1SpLia (version=TLSv1 cipher=AES256-SHA bits=256
+	verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 11 Mar 2015 20:14:59 -0700 (PDT)
+From: Scott Wood <scottwood@freescale.com>
+Subject: [PATCH 21/22] xfs: %pF is only for function pointers
+Date: Wed, 11 Mar 2015 22:13:56 -0500
+Message-ID: <1426130037-17956-21-git-send-email-scottwood@freescale.com>
+In-Reply-To: <1426130037-17956-1-git-send-email-scottwood@freescale.com>
+References: <1426130037-17956-1-git-send-email-scottwood@freescale.com>
 MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -35,70 +30,128 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: omar <omar@rvx.is>, xfs <xfs@oss.sgi.com>
+To: trivial@kernel.org, linux-kernel@vger.kernel.org
+Cc: Scott Wood <scottwood@freescale.com>, xfs@oss.sgi.com
 
-Hi,
+Use %pS for actual addresses, otherwise you'll get bad output
+on arches like ppc64 where %pF expects a function descriptor.
 
-Thank you for pointing out where to look, I will try to dissect this a bit further and report back to you. 
+Signed-off-by: Scott Wood <scottwood@freescale.com>
+Cc: xfs@oss.sgi.com
+---
+ fs/xfs/xfs_error.c |  2 +-
+ fs/xfs/xfs_trace.h | 20 ++++++++++----------
+ 2 files changed, 11 insertions(+), 11 deletions(-)
 
-Regards 
-
-------------------------------- 
-Rui Gomes 
-CTO 
-
-
-RVX - Reykjavik Visual Effects 
-Seljavegur 2, 
-101 Reykjavik 
-Iceland 
-
-
-Tel: + 354 527 3330 
-Mob: + 354 663 3360
-
------ Original Message -----
-From: "Eric Sandeen" <sandeen@sandeen.net>
-To: "Rui Gomes" <rgomes@rvx.is>
-Cc: "omar" <omar@rvx.is>, "xfs" <xfs@oss.sgi.com>
-Sent: Wednesday, 11 March, 2015 15:46:50
-Subject: Re: [PATCH] xfs_repair: junk last entry in sf dir if name starts beyond dir size
-
-On 3/11/15 11:04 AM, Rui Gomes wrote:
-> Program received signal SIGSEGV, Segmentation fault.
-> 0x000000000044dbcd in __xfs_dir3_data_check (dp=dp@entry=0x0, bp=bp@entry=0x1538e810) at xfs_dir2_data.c:148
-> 148                             for (i = 0; i < be32_to_cpu(btp->count); i++) {
-> (gdb) bt
-> #0  0x000000000044dbcd in __xfs_dir3_data_check (dp=dp@entry=0x0, bp=bp@entry=0x1538e810) at xfs_dir2_data.c:148
-> #1  0x000000000044b9ea in xfs_dir3_block_verify (bp=bp@entry=0x1538e810) at xfs_dir2_block.c:62
-
-Can you do a little digging around in gdb to sort out more
-about why it segfaulted?
-
-We got a xfs_dir2_data_hdr_t from the passed-in bp w/ valid magic:
-
-hdr = bp->b_addr;
-
-and from that got btp:
-
-        switch (hdr->magic) {
-        case cpu_to_be32(XFS_DIR2_BLOCK_MAGIC):
-                btp = xfs_dir2_block_tail_p(mp, hdr);
-
-and this just finds an offset from hdr:
-
-                ((char *)hdr + mp->m_dirblksize)) - 1;
-
-but then apparently blew up when we tried to use btp:
-
-for (i = 0; i < be32_to_cpu(btp->count); i++) {
-
-I don't see offhand how the hdr is ok, with good magic, but an
-offset from the hdr (btp) is causing a segfault.  Can you dig around
-a bit more in gdb?
-
--Eric
+diff --git a/fs/xfs/xfs_error.c b/fs/xfs/xfs_error.c
+index 3ee186a..338e50b 100644
+--- a/fs/xfs/xfs_error.c
++++ b/fs/xfs/xfs_error.c
+@@ -131,7 +131,7 @@ xfs_error_report(
+ {
+ 	if (level <= xfs_error_level) {
+ 		xfs_alert_tag(mp, XFS_PTAG_ERROR_REPORT,
+-		"Internal error %s at line %d of file %s.  Caller %pF",
++		"Internal error %s at line %d of file %s.  Caller %pS",
+ 			    tag, linenum, filename, ra);
+ 
+ 		xfs_stack_trace();
+diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+index 51372e3..b5ac81e 100644
+--- a/fs/xfs/xfs_trace.h
++++ b/fs/xfs/xfs_trace.h
+@@ -115,7 +115,7 @@ DECLARE_EVENT_CLASS(xfs_perag_class,
+ 		__entry->refcount = refcount;
+ 		__entry->caller_ip = caller_ip;
+ 	),
+-	TP_printk("dev %d:%d agno %u refcount %d caller %pf",
++	TP_printk("dev %d:%d agno %u refcount %d caller %ps",
+ 		  MAJOR(__entry->dev), MINOR(__entry->dev),
+ 		  __entry->agno,
+ 		  __entry->refcount,
+@@ -239,7 +239,7 @@ TRACE_EVENT(xfs_iext_insert,
+ 		__entry->caller_ip = caller_ip;
+ 	),
+ 	TP_printk("dev %d:%d ino 0x%llx state %s idx %ld "
+-		  "offset %lld block %lld count %lld flag %d caller %pf",
++		  "offset %lld block %lld count %lld flag %d caller %ps",
+ 		  MAJOR(__entry->dev), MINOR(__entry->dev),
+ 		  __entry->ino,
+ 		  __print_flags(__entry->bmap_state, "|", XFS_BMAP_EXT_FLAGS),
+@@ -283,7 +283,7 @@ DECLARE_EVENT_CLASS(xfs_bmap_class,
+ 		__entry->caller_ip = caller_ip;
+ 	),
+ 	TP_printk("dev %d:%d ino 0x%llx state %s idx %ld "
+-		  "offset %lld block %lld count %lld flag %d caller %pf",
++		  "offset %lld block %lld count %lld flag %d caller %ps",
+ 		  MAJOR(__entry->dev), MINOR(__entry->dev),
+ 		  __entry->ino,
+ 		  __print_flags(__entry->bmap_state, "|", XFS_BMAP_EXT_FLAGS),
+@@ -329,7 +329,7 @@ DECLARE_EVENT_CLASS(xfs_buf_class,
+ 		__entry->caller_ip = caller_ip;
+ 	),
+ 	TP_printk("dev %d:%d bno 0x%llx nblks 0x%x hold %d pincount %d "
+-		  "lock %d flags %s caller %pf",
++		  "lock %d flags %s caller %ps",
+ 		  MAJOR(__entry->dev), MINOR(__entry->dev),
+ 		  (unsigned long long)__entry->bno,
+ 		  __entry->nblks,
+@@ -402,7 +402,7 @@ DECLARE_EVENT_CLASS(xfs_buf_flags_class,
+ 		__entry->caller_ip = caller_ip;
+ 	),
+ 	TP_printk("dev %d:%d bno 0x%llx len 0x%zx hold %d pincount %d "
+-		  "lock %d flags %s caller %pf",
++		  "lock %d flags %s caller %ps",
+ 		  MAJOR(__entry->dev), MINOR(__entry->dev),
+ 		  (unsigned long long)__entry->bno,
+ 		  __entry->buffer_length,
+@@ -447,7 +447,7 @@ TRACE_EVENT(xfs_buf_ioerror,
+ 		__entry->caller_ip = caller_ip;
+ 	),
+ 	TP_printk("dev %d:%d bno 0x%llx len 0x%zx hold %d pincount %d "
+-		  "lock %d error %d flags %s caller %pf",
++		  "lock %d error %d flags %s caller %ps",
+ 		  MAJOR(__entry->dev), MINOR(__entry->dev),
+ 		  (unsigned long long)__entry->bno,
+ 		  __entry->buffer_length,
+@@ -613,7 +613,7 @@ DECLARE_EVENT_CLASS(xfs_lock_class,
+ 		__entry->lock_flags = lock_flags;
+ 		__entry->caller_ip = caller_ip;
+ 	),
+-	TP_printk("dev %d:%d ino 0x%llx flags %s caller %pf",
++	TP_printk("dev %d:%d ino 0x%llx flags %s caller %ps",
+ 		  MAJOR(__entry->dev), MINOR(__entry->dev),
+ 		  __entry->ino,
+ 		  __print_flags(__entry->lock_flags, "|", XFS_LOCK_FLAGS),
+@@ -702,7 +702,7 @@ DECLARE_EVENT_CLASS(xfs_iref_class,
+ 		__entry->pincount = atomic_read(&ip->i_pincount);
+ 		__entry->caller_ip = caller_ip;
+ 	),
+-	TP_printk("dev %d:%d ino 0x%llx count %d pincount %d caller %pf",
++	TP_printk("dev %d:%d ino 0x%llx count %d pincount %d caller %ps",
+ 		  MAJOR(__entry->dev), MINOR(__entry->dev),
+ 		  __entry->ino,
+ 		  __entry->count,
+@@ -1333,7 +1333,7 @@ TRACE_EVENT(xfs_bunmap,
+ 		__entry->flags = flags;
+ 	),
+ 	TP_printk("dev %d:%d ino 0x%llx size 0x%llx bno 0x%llx len 0x%llx"
+-		  "flags %s caller %pf",
++		  "flags %s caller %ps",
+ 		  MAJOR(__entry->dev), MINOR(__entry->dev),
+ 		  __entry->ino,
+ 		  __entry->size,
+@@ -1466,7 +1466,7 @@ TRACE_EVENT(xfs_agf,
+ 	),
+ 	TP_printk("dev %d:%d agno %u flags %s length %u roots b %u c %u "
+ 		  "levels b %u c %u flfirst %u fllast %u flcount %u "
+-		  "freeblks %u longest %u caller %pf",
++		  "freeblks %u longest %u caller %ps",
+ 		  MAJOR(__entry->dev), MINOR(__entry->dev),
+ 		  __entry->agno,
+ 		  __print_flags(__entry->flags, "|", XFS_AGF_FLAGS),
+-- 
+2.1.0
 
 _______________________________________________
 xfs mailing list
