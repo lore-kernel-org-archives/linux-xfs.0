@@ -1,22 +1,32 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 171667F4E
-	for <xfs@oss.sgi.com>; Thu, 12 Mar 2015 07:05:07 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 9A0817F4E
+	for <xfs@oss.sgi.com>; Thu, 12 Mar 2015 08:11:00 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 059A1304043
-	for <xfs@oss.sgi.com>; Thu, 12 Mar 2015 05:05:03 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id 1BjeCi1MDnCNXKLJ (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 12 Mar 2015 05:05:03 -0700 (PDT)
-Date: Thu, 12 Mar 2015 08:04:53 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: Doubt about allocation of extents
-Message-ID: <20150312120453.GB2463@laptop.bfoster>
-References: <BLU169-W94914B167C788ACAB92562E1060@phx.gbl>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 1BBB2AC002
+	for <xfs@oss.sgi.com>; Thu, 12 Mar 2015 06:10:56 -0700 (PDT)
+Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
+	with ESMTP id YEePJbKEBRArqJM1 (version=TLSv1 cipher=AES256-SHA
+	bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 12 Mar 2015 06:10:53 -0700 (PDT)
+Date: Thu, 12 Mar 2015 13:10:46 +0000
+From: Mel Gorman <mgorman@suse.de>
+Subject: Re: [PATCH 4/4] mm: numa: Slow PTE scan rate if migration failures
+	occur
+Message-ID: <20150312131045.GE3406@suse.de>
+References: <1425741651-29152-1-git-send-email-mgorman@suse.de>
+	<1425741651-29152-5-git-send-email-mgorman@suse.de>
+	<20150307163657.GA9702@gmail.com>
+	<CA+55aFwDuzpL-k8LsV3touhNLh+TFSLKP8+-nPwMXkWXDYPhrg@mail.gmail.com>
+	<20150308100223.GC15487@gmail.com>
+	<CA+55aFyQyZXu2fi7X9bWdSX0utk8=sccfBwFaSoToROXoE_PLA@mail.gmail.com>
+	<20150309112936.GD26657@destitution>
+	<CA+55aFywW5JLq=BU_qb2OG5+pJ-b1v9tiS5Ygi-vtEKbEZ_T5Q@mail.gmail.com>
+	<20150309191943.GF26657@destitution>
+	<CA+55aFzFt-vX5Jerci0Ty4Uf7K4_nQ7wyCp8hhU_dB0X4cBpVQ@mail.gmail.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <BLU169-W94914B167C788ACAB92562E1060@phx.gbl>
+In-Reply-To: <CA+55aFzFt-vX5Jerci0Ty4Uf7K4_nQ7wyCp8hhU_dB0X4cBpVQ@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,33 +39,80 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dhruvesh Rathore <dhruvesh_r@hotmail.com>
-Cc: "sandeen@sandeen.net" <sandeen@sandeen.net>, "hch@lst.de" <hch@lst.de>, xfs@oss.sgi.com
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, Linux-MM <linux-mm@kvack.org>, Aneesh Kumar <aneesh.kumar@linux.vnet.ibm.com>, Andrew Morton <akpm@linux-foundation.org>, ppc-dev <linuxppc-dev@lists.ozlabs.org>, Ingo Molnar <mingo@kernel.org>
 
-(cc xfs)
+On Tue, Mar 10, 2015 at 04:55:52PM -0700, Linus Torvalds wrote:
+> On Mon, Mar 9, 2015 at 12:19 PM, Dave Chinner <david@fromorbit.com> wrote:
+> > On Mon, Mar 09, 2015 at 09:52:18AM -0700, Linus Torvalds wrote:
+> >>
+> >> What's your virtual environment setup? Kernel config, and
+> >> virtualization environment to actually get that odd fake NUMA thing
+> >> happening?
+> >
+> > I don't have the exact .config with me (test machines at home
+> > are shut down because I'm half a world away), but it's pretty much
+> > this (copied and munged from a similar test vm on my laptop):
+> 
+> [ snip snip ]
+> 
+> Ok, I hate debugging by symptoms anyway, so I didn't do any of this,
+> and went back to actually *thinking* about the code instead of trying
+> to reproduce this and figure things out by trial and error.
+> 
+> And I think I figured it out.
+> <SNIP>
 
-On Thu, Mar 12, 2015 at 02:03:25AM +0000, Dhruvesh Rathore wrote:
-> Hi,
-> I have a question about allocation of existing extents to another file, and whetherit is possible ?
-> A recently created file (temp) can have new extents created using lseek64()and the XFS_IOC_RESVP64.These empty extents can be populated by copying the data blocks from another file.(The above is mostly done in xfs_fsr, the online defragmenter of XFS).
-> My question is that can i assign an existing populated extent held by another file, to thisnewly created temp file ?
-> Any suggestions for the same will be appreciated :)
+I believe you're correct and it matches what was observed. I'm still
+travelling and wireless is dirt but managed to queue a test using pmd_dirty
 
-I think what you're describing is a clone or reflink type operation that
-allows extents to be referenced by multiple files at once (e.g., writes
-break the references via cow, etc.). Either that, or an extent move
-operation that IIUC is something that extN supports. I suspect the
-latter is more what you want if the target is defrag. XFS does not
-support either at this time, though I think Dave is designing something
-that might facilitate reflink down the road.
+                                              3.19.0             4.0.0-rc1             4.0.0-rc1
+                                             vanilla               vanilla        ptewrite-v1r20
+Time User-NUMA01                  25695.96 (  0.00%)    32883.59 (-27.97%)    24012.80 (  6.55%)
+Time User-NUMA01_THEADLOCAL       17404.36 (  0.00%)    17453.20 ( -0.28%)    17950.54 ( -3.14%)
+Time User-NUMA02                   2037.65 (  0.00%)     2063.70 ( -1.28%)     2046.88 ( -0.45%)
+Time User-NUMA02_SMT                981.02 (  0.00%)      983.70 ( -0.27%)      983.68 ( -0.27%)
+Time System-NUMA01                  194.70 (  0.00%)      602.44 (-209.42%)      158.90 ( 18.39%)
+Time System-NUMA01_THEADLOCAL        98.52 (  0.00%)       78.10 ( 20.73%)      107.66 ( -9.28%)
+Time System-NUMA02                    9.28 (  0.00%)        6.47 ( 30.28%)        9.25 (  0.32%)
+Time System-NUMA02_SMT                3.79 (  0.00%)        5.06 (-33.51%)        3.92 ( -3.43%)
+Time Elapsed-NUMA01                 558.84 (  0.00%)      755.96 (-35.27%)      532.41 (  4.73%)
+Time Elapsed-NUMA01_THEADLOCAL      382.54 (  0.00%)      382.22 (  0.08%)      390.48 ( -2.08%)
+Time Elapsed-NUMA02                  49.83 (  0.00%)       49.38 (  0.90%)       49.79 (  0.08%)
+Time Elapsed-NUMA02_SMT              46.59 (  0.00%)       47.70 ( -2.38%)       47.77 ( -2.53%)
+Time CPU-NUMA01                    4632.00 (  0.00%)     4429.00 (  4.38%)     4539.00 (  2.01%)
+Time CPU-NUMA01_THEADLOCAL         4575.00 (  0.00%)     4586.00 ( -0.24%)     4624.00 ( -1.07%)
+Time CPU-NUMA02                    4107.00 (  0.00%)     4191.00 ( -2.05%)     4129.00 ( -0.54%)
+Time CPU-NUMA02_SMT                2113.00 (  0.00%)     2072.00 (  1.94%)     2067.00 (  2.18%)
 
-The only related operation I'm aware of for XFS right now is the swap
-extents operation, which swaps the extents between two inodes. xfs_fsr
-uses this along with a data copy to defragment files.
+              3.19.0   4.0.0-rc1   4.0.0-rc1
+             vanilla     vanillaptewrite-v1r20
+User        46119.12    53384.29    44994.10
+System        306.41      692.14      279.78
+Elapsed      1039.88     1236.87     1022.92
 
-Brian
+There are still some difference but it's much closer to what it was.
+The balancing stats are almost looking similar to 3.19
 
-> Regards,Dhruvesh  		 	   		  
+NUMA base PTE updates        222840103   304513172   230724075
+NUMA huge PMD updates           434894      594467      450274
+NUMA page range updates      445505831   608880276   461264363
+NUMA hint faults                601358      733491      626176
+NUMA hint local faults          371571      511530      359215
+NUMA hint local percent             61          69          57
+NUMA pages migrated            7073177    26366701     6829196
+
+XFS repair on the same machine is not fully restore either but a big
+enough move in the right direction to indicate this was the relevant
+change.
+
+xfsrepair
+                                       3.19.0             4.0.0-rc1             4.0.0-rc1
+                                      vanilla               vanilla        ptewrite-v1r20
+Amean    real-fsmark        1166.28 (  0.00%)     1166.63 ( -0.03%)     1184.97 ( -1.60%)
+Amean    syst-fsmark        4025.87 (  0.00%)     4020.94 (  0.12%)     4071.10 ( -1.12%)
+Amean    real-xfsrepair      447.66 (  0.00%)      507.85 (-13.45%)      460.94 ( -2.97%)
+Amean    syst-xfsrepair      202.93 (  0.00%)      519.88 (-156.19%)      282.45 (-39.19%)
 
 _______________________________________________
 xfs mailing list
