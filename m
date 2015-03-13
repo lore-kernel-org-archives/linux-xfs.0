@@ -1,32 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id BB4E07F47
-	for <xfs@oss.sgi.com>; Thu, 12 Mar 2015 13:49:55 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id CCDB57F3F
+	for <xfs@oss.sgi.com>; Fri, 13 Mar 2015 08:20:15 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 9A66B8F8035
-	for <xfs@oss.sgi.com>; Thu, 12 Mar 2015 11:49:55 -0700 (PDT)
-Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id mWhonFzGAp6t44wP (version=TLSv1 cipher=AES256-SHA
-	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 12 Mar 2015 11:49:34 -0700 (PDT)
-Date: Thu, 12 Mar 2015 18:49:26 +0000
-From: Mel Gorman <mgorman@suse.de>
-Subject: Re: [PATCH 4/4] mm: numa: Slow PTE scan rate if migration failures
-	occur
-Message-ID: <20150312184925.GH3406@suse.de>
-References: <20150307163657.GA9702@gmail.com>
-	<CA+55aFwDuzpL-k8LsV3touhNLh+TFSLKP8+-nPwMXkWXDYPhrg@mail.gmail.com>
-	<20150308100223.GC15487@gmail.com>
-	<CA+55aFyQyZXu2fi7X9bWdSX0utk8=sccfBwFaSoToROXoE_PLA@mail.gmail.com>
-	<20150309112936.GD26657@destitution>
-	<CA+55aFywW5JLq=BU_qb2OG5+pJ-b1v9tiS5Ygi-vtEKbEZ_T5Q@mail.gmail.com>
-	<20150309191943.GF26657@destitution>
-	<CA+55aFzFt-vX5Jerci0Ty4Uf7K4_nQ7wyCp8hhU_dB0X4cBpVQ@mail.gmail.com>
-	<20150312131045.GE3406@suse.de>
-	<CA+55aFx=81BGnQFNhnAGu6CetL7yifPsnD-+v7Y6QRqwgH47gQ@mail.gmail.com>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 6ADC2AC002
+	for <xfs@oss.sgi.com>; Fri, 13 Mar 2015 06:20:12 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id sPUH8XBOgg1qVDk2 (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Fri, 13 Mar 2015 06:20:11 -0700 (PDT)
+Date: Fri, 13 Mar 2015 09:20:06 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 1/4] xfs_repair: validate & fix inode CRCs
+Message-ID: <20150313132006.GA2678@laptop.bfoster>
+References: <54F77199.8030708@redhat.com>
+ <54F771DE.40107@sandeen.net>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <CA+55aFx=81BGnQFNhnAGu6CetL7yifPsnD-+v7Y6QRqwgH47gQ@mail.gmail.com>
+In-Reply-To: <54F771DE.40107@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -39,27 +30,76 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, Linux-MM <linux-mm@kvack.org>, Aneesh Kumar <aneesh.kumar@linux.vnet.ibm.com>, Andrew Morton <akpm@linux-foundation.org>, ppc-dev <linuxppc-dev@lists.ozlabs.org>, Ingo Molnar <mingo@kernel.org>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Eric Sandeen <sandeen@redhat.com>, xfs-oss <xfs@oss.sgi.com>
 
-On Thu, Mar 12, 2015 at 09:20:36AM -0700, Linus Torvalds wrote:
-> On Thu, Mar 12, 2015 at 6:10 AM, Mel Gorman <mgorman@suse.de> wrote:
-> >
-> > I believe you're correct and it matches what was observed. I'm still
-> > travelling and wireless is dirt but managed to queue a test using pmd_dirty
+On Wed, Mar 04, 2015 at 02:58:06PM -0600, Eric Sandeen wrote:
+> xfs_repair doesn't ever check an inode's CRC, so it never repairs
+> them.  If the root inode or realtime inodes have bad crcs, the
+> fs won't even mount and can't be fixed (without using xfs_db).
 > 
-> Ok, thanks.
+> It's fairly straightforward to just test the inode CRC before
+> we do any other checking or modification of the inode, once we
+> get past the "verify only" phase of process_dinode_int();
+> just mark it dirty if it's wrong and needs to be re-written.
 > 
-> I'm not entirely happy with that change, and I suspect the whole
-> heuristic should be looked at much more (maybe it should also look at
-> whether it's executable, for example), but it's a step in the right
-> direction.
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> ---
 > 
+> Resend of patch from a while ago, but with CRC verification
+> now earlier in the function, prior to any changes are made.
+> 
+> diff --git a/repair/dinode.c b/repair/dinode.c
+> index 5d9094b..384e2dd 100644
+> --- a/repair/dinode.c
+> +++ b/repair/dinode.c
+> @@ -2291,6 +2291,27 @@ process_dinode_int(xfs_mount_t *mp,
+>  	 */
+>  	ASSERT(uncertain == 0 || verify_mode != 0);
+>  
+> +	/*
+> +	 * We'd really like to know if the CRC is bad before we
+> +	 * go fixing anything; that way we have some hint about
+> +	 * bit-rot vs bugs.  Also, any changes will invalidate the
+> +	 * existing CRC, so this is the only valid point to test it.
+> +	 *
+> +	 * Of course if we make any modifications after this, the
+> +	 * inode gets rewritten, and CRC is updated automagically.
+> +	 */
+> +	if (!verify_mode && xfs_sb_version_hascrc(&mp->m_sb)) {
 
-I can follow up when I'm back in work properly. As you have already pulled
-this in directly, can you also consider pulling in "mm: thp: return the
-correct value for change_huge_pmd" please? The other two patches were very
-minor can be resent through the normal paths later.
+What about verify_mode? It should probably report the inode as bunk if
+the crc is bad. Some of the subsequent checks handle this with some
+logic to just return 1 if something is bogus and we're in verify mode.
+
+> +		if(!xfs_verify_cksum((char *)dino, mp->m_sb.sb_inodesize,
+> +                		XFS_DINODE_CRC_OFF)) {
+
+I got a whitespace damage warning here:
+
+/.../xfsprogs-dev/.git/rebase-apply/patch:25: space before tab in indent.
+                		XFS_DINODE_CRC_OFF)) {
+warning: 1 line adds whitespace errors.
+
+Brian
+
+> +			do_warn(_("bad CRC for inode %" PRIu64), lino);
+> +			if (!no_modify) {
+> +				do_warn(_(", will rewrite\n"));
+> +				*dirty = 1;
+> +			} else
+> +				do_warn(_(", would rewrite\n"));
+> +		}
+> +	}
+> +
+>  	if (be16_to_cpu(dino->di_magic) != XFS_DINODE_MAGIC)  {
+>  		retval = 1;
+>  		if (!uncertain)
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
