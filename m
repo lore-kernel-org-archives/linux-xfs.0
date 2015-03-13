@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id CCDB57F3F
-	for <xfs@oss.sgi.com>; Fri, 13 Mar 2015 08:20:15 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 6ADC2AC002
-	for <xfs@oss.sgi.com>; Fri, 13 Mar 2015 06:20:12 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id 6258C7F54
+	for <xfs@oss.sgi.com>; Fri, 13 Mar 2015 08:20:23 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id E4107AC004
+	for <xfs@oss.sgi.com>; Fri, 13 Mar 2015 06:20:22 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id sPUH8XBOgg1qVDk2 (version=TLSv1
+	cuda.sgi.com with ESMTP id 9RdRQNsSIm0ouLGW (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 13 Mar 2015 06:20:11 -0700 (PDT)
-Date: Fri, 13 Mar 2015 09:20:06 -0400
+	Fri, 13 Mar 2015 06:20:21 -0700 (PDT)
+Date: Fri, 13 Mar 2015 09:20:18 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 1/4] xfs_repair: validate & fix inode CRCs
-Message-ID: <20150313132006.GA2678@laptop.bfoster>
+Subject: Re: [PATCH 3/4] xfs_db: show nlink fields for di_version == 3, too
+Message-ID: <20150313132018.GB2678@laptop.bfoster>
 References: <54F77199.8030708@redhat.com>
- <54F771DE.40107@sandeen.net>
+ <54F7727F.8090808@sandeen.net>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <54F771DE.40107@sandeen.net>
+In-Reply-To: <54F7727F.8090808@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,68 +33,58 @@ Sender: xfs-bounces@oss.sgi.com
 To: Eric Sandeen <sandeen@sandeen.net>
 Cc: Eric Sandeen <sandeen@redhat.com>, xfs-oss <xfs@oss.sgi.com>
 
-On Wed, Mar 04, 2015 at 02:58:06PM -0600, Eric Sandeen wrote:
-> xfs_repair doesn't ever check an inode's CRC, so it never repairs
-> them.  If the root inode or realtime inodes have bad crcs, the
-> fs won't even mount and can't be fixed (without using xfs_db).
-> 
-> It's fairly straightforward to just test the inode CRC before
-> we do any other checking or modification of the inode, once we
-> get past the "verify only" phase of process_dinode_int();
-> just mark it dirty if it's wrong and needs to be re-written.
+On Wed, Mar 04, 2015 at 03:00:47PM -0600, Eric Sandeen wrote:
+> Printing inodes with di_version == 3 skips the nlink
+> fields, because they are only printed if di_version == 2.
+> This was intended to separate them from di_version == 1,
+> but it mistakenly excluded di_version == 3, which also contains
+> these fields.
 > 
 > Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 > ---
 > 
-> Resend of patch from a while ago, but with CRC verification
-> now earlier in the function, prior to any changes are made.
+> Not sure; is >= 2 ok, or should it be == 2 || == 3?
+> Choose your poison, I guess.
 > 
-> diff --git a/repair/dinode.c b/repair/dinode.c
-> index 5d9094b..384e2dd 100644
-> --- a/repair/dinode.c
-> +++ b/repair/dinode.c
-> @@ -2291,6 +2291,27 @@ process_dinode_int(xfs_mount_t *mp,
->  	 */
->  	ASSERT(uncertain == 0 || verify_mode != 0);
+
+Seems fine to me. I think it's better to only have to worry about this
+code if something related to these fields changes rather than every time
+a version update occurs.
+
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+
+> diff --git a/db/inode.c b/db/inode.c
+> index 982acb7..c26e1a0 100644
+> --- a/db/inode.c
+> +++ b/db/inode.c
+> @@ -369,7 +369,7 @@ inode_core_nlinkv2_count(
+>  	ASSERT(startoff == 0);
+>  	ASSERT(obj == iocur_top->data);
+>  	dic = obj;
+> -	return dic->di_version == 2;
+> +	return dic->di_version >= 2;
+>  }
 >  
-> +	/*
-> +	 * We'd really like to know if the CRC is bad before we
-> +	 * go fixing anything; that way we have some hint about
-> +	 * bit-rot vs bugs.  Also, any changes will invalidate the
-> +	 * existing CRC, so this is the only valid point to test it.
-> +	 *
-> +	 * Of course if we make any modifications after this, the
-> +	 * inode gets rewritten, and CRC is updated automagically.
-> +	 */
-> +	if (!verify_mode && xfs_sb_version_hascrc(&mp->m_sb)) {
-
-What about verify_mode? It should probably report the inode as bunk if
-the crc is bad. Some of the subsequent checks handle this with some
-logic to just return 1 if something is bogus and we're in verify mode.
-
-> +		if(!xfs_verify_cksum((char *)dino, mp->m_sb.sb_inodesize,
-> +                		XFS_DINODE_CRC_OFF)) {
-
-I got a whitespace damage warning here:
-
-/.../xfsprogs-dev/.git/rebase-apply/patch:25: space before tab in indent.
-                		XFS_DINODE_CRC_OFF)) {
-warning: 1 line adds whitespace errors.
-
-Brian
-
-> +			do_warn(_("bad CRC for inode %" PRIu64), lino);
-> +			if (!no_modify) {
-> +				do_warn(_(", will rewrite\n"));
-> +				*dirty = 1;
-> +			} else
-> +				do_warn(_(", would rewrite\n"));
-> +		}
-> +	}
-> +
->  	if (be16_to_cpu(dino->di_magic) != XFS_DINODE_MAGIC)  {
->  		retval = 1;
->  		if (!uncertain)
+>  static int
+> @@ -382,7 +382,7 @@ inode_core_onlink_count(
+>  	ASSERT(startoff == 0);
+>  	ASSERT(obj == iocur_top->data);
+>  	dic = obj;
+> -	return dic->di_version == 2;
+> +	return dic->di_version >= 2;
+>  }
+>  
+>  static int
+> @@ -395,7 +395,7 @@ inode_core_projid_count(
+>  	ASSERT(startoff == 0);
+>  	ASSERT(obj == iocur_top->data);
+>  	dic = obj;
+> -	return dic->di_version == 2;
+> +	return dic->di_version >= 2;
+>  }
+>  
+>  static int
+> 
 > 
 > _______________________________________________
 > xfs mailing list
