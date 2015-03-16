@@ -1,21 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id A057B7F59
-	for <xfs@oss.sgi.com>; Sun, 15 Mar 2015 07:58:31 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 86FA17CBF
+	for <xfs@oss.sgi.com>; Mon, 16 Mar 2015 01:00:27 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 8F5F78F8049
-	for <xfs@oss.sgi.com>; Sun, 15 Mar 2015 05:58:28 -0700 (PDT)
-Received: from newverein.lst.de (verein.lst.de [213.95.11.211]) by
-	cuda.sgi.com with ESMTP id ilF3RrSw8FVb6Gut for
-	<xfs@oss.sgi.com>; Sun, 15 Mar 2015 05:58:25 -0700 (PDT)
-Date: Sun, 15 Mar 2015 13:58:21 +0100
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: panic on 4.20 server exporting xfs filesystem
-Message-ID: <20150315125821.GA10655@lst.de>
-References: <20150303221033.GB19439@fieldses.org>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 61E198F804C
+	for <xfs@oss.sgi.com>; Sun, 15 Mar 2015 23:00:27 -0700 (PDT)
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	MTw4x2ebXcXQ0N2W for <xfs@oss.sgi.com>;
+	Sun, 15 Mar 2015 23:00:23 -0700 (PDT)
+Date: Mon, 16 Mar 2015 17:00:20 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: [ANNOUNCE] xfs: Supporting Host Aware SMR Drives
+Message-ID: <20150316060020.GB28557@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20150303221033.GB19439@fieldses.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,16 +27,42 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "J. Bruce Fields" <bfields@fieldses.org>
-Cc: linux-nfs@vger.kernel.org, Christoph Hellwig <hch@lst.de>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
+Cc: linux-fsdevel@vger.kernel.org
 
-On Tue, Mar 03, 2015 at 05:10:33PM -0500, J. Bruce Fields wrote:
-> I'm getting mysterious crashes on a server exporting an xfs filesystem.
+Hi Folks,
 
-Can you shared the setup used to reproduce the various issues in this thread?
-I've been trying ot get a baseline, but even withotu CONFIG_NFSD_PNFS set
-I start to run into other prolems early on, so I suspect the reproducer might
-be something else?
+As I told many people at Vault last week, I wrote a document
+outlining how we should modify the on-disk structures of XFS to
+support host aware SMR drives on the (long) plane flights to Boston.
+
+TL;DR: not a lot of change to the XFS kernel code is required, no
+specific SMR awareness is needed by the kernel code.  Only
+relatively minor tweaks to the on-disk format will be needed and
+most of the userspace changes are relatively straight forward, too.
+
+The source for that document can be found in this git tree here:
+
+git://git.kernel.org/pub/scm/fs/xfs/xfs-documentation
+
+in the file design/xfs-smr-structure.asciidoc. Alternatively,
+pull it straight from cgit:
+
+https://git.kernel.org/cgit/fs/xfs/xfs-documentation.git/tree/design/xfs-smr-structure.asciidoc
+
+Or there is a pdf version built from the current TOT on the xfs.org
+wiki here:
+
+http://xfs.org/index.php/Host_Aware_SMR_architecture
+
+Happy reading!
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
