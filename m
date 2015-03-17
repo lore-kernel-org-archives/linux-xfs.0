@@ -1,16 +1,16 @@
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id A81D87F47
-	for <xfs@oss.sgi.com>; Tue, 17 Mar 2015 20:02:15 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 1AF887F47
+	for <xfs@oss.sgi.com>; Tue, 17 Mar 2015 08:57:04 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 858568F8066
-	for <xfs@oss.sgi.com>; Tue, 17 Mar 2015 18:02:12 -0700 (PDT)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id EB59E8F8068
+	for <xfs@oss.sgi.com>; Tue, 17 Mar 2015 06:57:03 -0700 (PDT)
 Received: from USER-PON3HRNFRK ([111.10.246.4]) by cuda.sgi.com with ESMTP id
-	N7GmCKlGBQ5NrnHb for <xfs@oss.sgi.com>;
-	Tue, 17 Mar 2015 18:02:07 -0700 (PDT)
+	XmU5PWPthw3Nxfil for <xfs@oss.sgi.com>;
+	Tue, 17 Mar 2015 06:56:59 -0700 (PDT)
 From: "Victor" <Victor@Lathe.net>
 Subject: =?GB2312?B?baiicXVpbmE=?= de torno
-Date: Wed, 18 Mar 2015 09:00:37 +0800
-Message-Id: <20150318010212.158A8A42183@cuda.sgi.com>
+Date: Tue, 17 Mar 2015 21:55:30 +0800
+Message-Id: <20150317135703.522F6A42183@cuda.sgi.com>
 Reply-To: victor@kakumachinery.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
