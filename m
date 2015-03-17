@@ -1,20 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 7116A7F56
-	for <xfs@oss.sgi.com>; Tue, 17 Mar 2015 05:18:43 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id A3A857F47
+	for <xfs@oss.sgi.com>; Tue, 17 Mar 2015 13:22:01 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 0B822AC003
-	for <xfs@oss.sgi.com>; Tue, 17 Mar 2015 03:18:39 -0700 (PDT)
-Received: from mail-pa0-f41.google.com (mail-pa0-f41.google.com
-	[209.85.220.41]) by cuda.sgi.com with ESMTP id SaVDSu9LK7hRhZM4
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 17 Mar 2015 03:18:38 -0700 (PDT)
-Received: by pacwe9 with SMTP id we9so5823354pac.1
-	for <xfs@oss.sgi.com>; Tue, 17 Mar 2015 03:18:37 -0700 (PDT)
-Date: Tue, 17 Mar 2015 03:18:35 -0700
-From: Omar Sandoval <osandov@osandov.com>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 3F4EBAC001
+	for <xfs@oss.sgi.com>; Tue, 17 Mar 2015 11:21:58 -0700 (PDT)
+Received: from ZenIV.linux.org.uk (zeniv.linux.org.uk [195.92.253.2]) by
+	cuda.sgi.com with ESMTP id lmE0Fkv1nKI3rnQF (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 17 Mar 2015 11:21:56 -0700 (PDT)
+Date: Tue, 17 Mar 2015 18:19:15 +0000
+From: Al Viro <viro@ZenIV.linux.org.uk>
 Subject: Re: [RFC PATCH 1/5] new helper: iov_iter_rw()
-Message-ID: <20150317101835.GA31649@mew>
+Message-ID: <20150317181910.GK29656@ZenIV.linux.org.uk>
 References: <cover.1426502566.git.osandov@osandov.com>
 	<34dc78b262546e9343e0ed872232a97f5eaa5f15.1426502566.git.osandov@osandov.com>
 	<20150316173605.GX29656@ZenIV.linux.org.uk>
@@ -34,26 +32,10 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: David Sterba <dsterba@suse.cz>
-Cc: linux-cifs@vger.kernel.org, jfs-discussion@lists.sourceforge.net, linux-nilfs@vger.kernel.org, reiserfs-devel@vger.kernel.org, fuse-devel@lists.sourceforge.net, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, linux-nfs@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, cluster-devel@redhat.com, HPDD-discuss@ml01.01.org, ocfs2-devel@oss.oracle.com, Al Viro <viro@ZenIV.linux.org.uk>, linux-fsdevel@vger.kernel.org, v9fs-developer@lists.sourceforge.net, ceph-devel@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, osd-dev@open-osd.org
+To: dsterba@suse.cz, Omar Sandoval <osandov@osandov.com>, linux-fsdevel@vger.kernel.org, linux-btrfs@vger.kernel.org, ceph-devel@vger.kernel.org, linux-cifs@vger.kernel.org, osd-dev@open-osd.org, linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, fuse-devel@lists.sourceforge.net, cluster-devel@redhat.com, jfs-discussion@lists.sourceforge.net, HPDD-discuss@ml01.01.org, linux-nfs@vger.kernel.org, linux-nilfs@vger.kernel.org, ocfs2-devel@oss.oracle.com, reiserfs-devel@vger.kernel.org, v9fs-developer@lists.sourceforge.net, xfs@oss.sgi.com, linux-kernel@vger.kernel.org, Chris Mason <clm@fb.com>, Josef Bacik <jbacik@fb.com>, Yan Zheng <zyan@redhat.com>, Sage Weil <sage@redhat.com>, Steve French <sfrench@samba.org>, Boaz Harrosh <ooo@electrozaur.com>, Benny Halevy <bhalevy@primarydata.com>, Jan Kara <jack@suse.cz>, Theodore Ts'o <tytso@mit.edu>, Andreas Dilger <adilger.kernel@dilger.ca>, Jaegeuk Kim <jaegeuk@kernel.org>, Changman Lee <cm224.lee@samsung.com>, Miklos Szeredi <miklos@szeredi.hu>, Steven Whitehouse <swhiteho@redhat.com>, Dave Kleikamp <shaggy@kernel.org>, Oleg Drokin <oleg.drokin@intel.com>, Trond Myklebust <trond.myklebust@primarydata.com>, Anna Schumaker <anna.schumaker@netapp.com>, Ryusuke Konishi <konishi.ryusuke@lab.ntt.co.jp>, Mark Fasheh <mfasheh@suse.com>, Joel Becker <jlbec@evilplan.org>, Eric Van Hensbergen <ericvh@gmail.com>, Ron Minnich <rminnich@sandia.gov>, Latchesar Ionkov <lucho@ionkov.net>, Dave Chinner <david@fromorbit.com>
 
 On Tue, Mar 17, 2015 at 10:31:51AM +0100, David Sterba wrote:
-> On Mon, Mar 16, 2015 at 05:36:05PM +0000, Al Viro wrote:
-> > On Mon, Mar 16, 2015 at 04:33:49AM -0700, Omar Sandoval wrote:
-> > > Get either READ or WRITE out of iter->type.
-> > 
-> > Umm...  
-> > 
-> > > + * Get one of READ or WRITE out of iter->type without any other flags OR'd in
-> > > + * with it.
-> > > + */
-> > > +static inline int iov_iter_rw(const struct iov_iter *i)
-> > > +{
-> > > +	return i->type & RW_MASK;
-> > > +}
-> > 
-> > TBH, I would turn that into a macro.  Reason: indirect includes.
-> 
+
 > Agreed, but the proposed define is rather cryptic and I was not able to
 > understand the meaning on the first glance.
 > 
@@ -69,18 +51,15 @@ On Tue, Mar 17, 2015 at 10:31:51AM +0100, David Sterba wrote:
 > 
 > The assignment is optimized out.
 
-[-cc individual fs maintainers to avoid all of these email bounces,
-should've looked a bit closer at that get_maintainer.pl output...]
+... and you are getting
+	a) use of rather lousy gccism when plain C would do
+	b) double evaluation since you've got it wrong (should've been
+__iter.type & RW_MASK, if you do it that way).  As it is, if argument has
+any side effects, your variant will trigger those twice - even if the
+destination of the assignment is never used, the side effects remain.
 
-I agree that this is a bit more readable, but it evaluates i twice.
-That's an easy fix, just do __iter.type instead of (i)->type, but
-there's still the possibility of someone passing in something called
-__iter as i, and the fix for that tends to be "add more underscores". At
-the very least, Al's macro could probably use a comment explaining
-what's going on there, though.
-
--- 
-Omar
+I agree that it could use /* use ?: for typechecking */, but let's not go into
+({...}) land unless we absolutely have to.
 
 _______________________________________________
 xfs mailing list
