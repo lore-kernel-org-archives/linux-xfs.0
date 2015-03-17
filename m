@@ -1,20 +1,31 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 4BC377F6D
-	for <xfs@oss.sgi.com>; Tue, 17 Mar 2015 15:33:23 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 39FEC304039
-	for <xfs@oss.sgi.com>; Tue, 17 Mar 2015 13:33:20 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id 4FCFfAyL0uMGYgCQ for <xfs@oss.sgi.com>;
-	Tue, 17 Mar 2015 13:33:18 -0700 (PDT)
-From: Eric Sandeen <sandeen@redhat.com>
-Subject: [PATCH 01/13] xfs_db: Allow writes of corrupted data by optionally
-	skipping write verifiers
-Date: Tue, 17 Mar 2015 15:33:03 -0500
-Message-Id: <1426624395-8258-2-git-send-email-sandeen@redhat.com>
-In-Reply-To: <1426624395-8258-1-git-send-email-sandeen@redhat.com>
-References: <1426624395-8258-1-git-send-email-sandeen@redhat.com>
+	by oss.sgi.com (Postfix) with ESMTP id 7BA2C7F50
+	for <xfs@oss.sgi.com>; Tue, 17 Mar 2015 15:51:21 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 3D097304032
+	for <xfs@oss.sgi.com>; Tue, 17 Mar 2015 13:51:21 -0700 (PDT)
+Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
+	[150.101.137.143]) by cuda.sgi.com with ESMTP id
+	AOffroqBufZwAavZ for <xfs@oss.sgi.com>;
+	Tue, 17 Mar 2015 13:51:18 -0700 (PDT)
+Date: Wed, 18 Mar 2015 07:51:05 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 4/4] mm: numa: Slow PTE scan rate if migration failures
+	occur
+Message-ID: <20150317205104.GA28621@dastard>
+References: <CA+55aFyQyZXu2fi7X9bWdSX0utk8=sccfBwFaSoToROXoE_PLA@mail.gmail.com>
+	<20150309112936.GD26657@destitution>
+	<CA+55aFywW5JLq=BU_qb2OG5+pJ-b1v9tiS5Ygi-vtEKbEZ_T5Q@mail.gmail.com>
+	<20150309191943.GF26657@destitution>
+	<CA+55aFzFt-vX5Jerci0Ty4Uf7K4_nQ7wyCp8hhU_dB0X4cBpVQ@mail.gmail.com>
+	<20150312131045.GE3406@suse.de>
+	<CA+55aFx=81BGnQFNhnAGu6CetL7yifPsnD-+v7Y6QRqwgH47gQ@mail.gmail.com>
+	<20150312184925.GH3406@suse.de> <20150317070655.GB10105@dastard>
+	<CA+55aFzdLnFdku-gnm3mGbeS=QauYBNkFQKYXJAGkrMd2jKXhw@mail.gmail.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <CA+55aFzdLnFdku-gnm3mGbeS=QauYBNkFQKYXJAGkrMd2jKXhw@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,158 +34,198 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, Linux-MM <linux-mm@kvack.org>, Aneesh Kumar <aneesh.kumar@linux.vnet.ibm.com>, Andrew Morton <akpm@linux-foundation.org>, ppc-dev <linuxppc-dev@lists.ozlabs.org>, Ingo Molnar <mingo@kernel.org>, Mel Gorman <mgorman@suse.de>
 
-Being able to write corrupt data is handy if we wish to test
-repair against specific types of corruptions.
+On Tue, Mar 17, 2015 at 09:53:57AM -0700, Linus Torvalds wrote:
+> On Tue, Mar 17, 2015 at 12:06 AM, Dave Chinner <david@fromorbit.com> wrote:
+> >
+> > TO close the loop here, now I'm back home and can run tests:
+> >
+> > config                            3.19      4.0-rc1     4.0-rc4
+> > defaults                         8m08s        9m34s       9m14s
+> > -o ag_stride=-1                  4m04s        4m38s       4m11s
+> > -o bhash=101073                  6m04s       17m43s       7m35s
+> > -o ag_stride=-1,bhash=101073     4m54s        9m58s       7m50s
+> >
+> > It's better but there are still significant regressions, especially
+> > for the large memory footprint cases. I haven't had a chance to look
+> > at any stats or profiles yet, so I don't know yet whether this is
+> > still page fault related or some other problem....
+> 
+> Ok. I'd love to see some data on what changed between 3.19 and rc4 in
+> the profiles, just to see whether it's "more page faults due to extra
+> COW", or whether it's due to "more TLB flushes because of the
+> pte_write() vs pte_dirty()" differences. I'm *guessing*  lot of the
+> remaining issues are due to extra page fault overhead because I'd
+> expect write/dirty to be fairly 1:1, but there could be differences
+> due to shared memory use and/or just writebacks of dirty pages that
+> become clean.
+> 
+> I guess you can also see in vmstat.mm_migrate_pages whether it's
+> because of excessive migration (because of bad grouping) or not. So
+> not just profiles data.
 
-Add a "-c" option to the write command which allows this.
+On the -o ag_stride=-1 -o bhash=101073 config, the 60s perf stat I
+was using during steady state shows:
 
-Note that this also skips CRC updates; it's not currently possible
-to write invalid data with a valid CRC; CRC recalculation is
-intertwined with validation.
+     471,752      migrate:mm_migrate_pages ( +-  7.38% )
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
- db/io.c           |    7 +++++++
- db/io.h           |    1 +
- db/write.c        |   35 +++++++++++++++++++++++++++++++----
- man/man8/xfs_db.8 |    8 +++++++-
- 4 files changed, 46 insertions(+), 5 deletions(-)
+The migrate pages rate is even higher than in 4.0-rc1 (~360,000)
+and 3.19 (~55,000), so that looks like even more of a problem than
+before.
 
-diff --git a/db/io.c b/db/io.c
-index 7f1b76a..c5898f1 100644
---- a/db/io.c
-+++ b/db/io.c
-@@ -457,6 +457,13 @@ write_cur_bbs(void)
- }
- 
- void
-+xfs_dummy_verify(
-+	struct xfs_buf *bp)
-+{
-+	return;
-+}
-+
-+void
- write_cur(void)
- {
- 	if (iocur_sp < 0) {
-diff --git a/db/io.h b/db/io.h
-index 71082e6..31d96b4 100644
---- a/db/io.h
-+++ b/db/io.h
-@@ -63,6 +63,7 @@ extern void	set_cur(const struct typ *t, __int64_t d, int c, int ring_add,
- 			bbmap_t *bbmap);
- extern void     ring_add(void);
- extern void	set_iocur_type(const struct typ *t);
-+extern void	xfs_dummy_verify(struct xfs_buf *bp);
- 
- /*
-  * returns -1 for unchecked, 0 for bad and 1 for good
-diff --git a/db/write.c b/db/write.c
-index a0f14f4..4511859 100644
---- a/db/write.c
-+++ b/db/write.c
-@@ -38,7 +38,7 @@ static int	write_f(int argc, char **argv);
- static void     write_help(void);
- 
- static const cmdinfo_t	write_cmd =
--	{ "write", NULL, write_f, 0, -1, 0, N_("[field or value]..."),
-+	{ "write", NULL, write_f, 0, -1, 0, N_("[-c] [field or value]..."),
- 	  N_("write value to disk"), write_help };
- 
- void
-@@ -79,6 +79,7 @@ write_help(void)
- "  String mode: 'write \"This_is_a_filename\" - write null terminated string.\n"
- "\n"
- " In data mode type 'write' by itself for a list of specific commands.\n\n"
-+" Specifying the -c option will allow writes of invalid (corrupt) data.\n\n"
- ));
- 
- }
-@@ -90,6 +91,10 @@ write_f(
- {
- 	pfunc_t	pf;
- 	extern char *progname;
-+	int c;
-+	int corrupt = 0;		/* Allow write of corrupt data; skip verification */
-+	struct xfs_buf_ops nowrite_ops;
-+	const struct xfs_buf_ops *stashed_ops = NULL; 
- 
- 	if (x.isreadonly & LIBXFS_ISREADONLY) {
- 		dbprintf(_("%s started in read only mode, writing disabled\n"),
-@@ -109,12 +114,34 @@ write_f(
- 		return 0;
- 	}
- 
--	/* move past the "write" command */
--	argc--;
--	argv++;
-+	if (argc) while ((c = getopt(argc, argv, "c")) != EOF) {
-+		switch (c) {
-+		case 'c':
-+			corrupt = 1;
-+			break;
-+		default:
-+			dbprintf(_("bad option for write command\n"));
-+			return 0;
-+		}
-+	}
-+
-+	argc -= optind;
-+	argv += optind;
-+
-+	if (corrupt) {
-+		/* Temporarily remove write verifier to write bad data */
-+		stashed_ops = iocur_top->bp->b_ops;
-+		nowrite_ops.verify_read = stashed_ops->verify_read;
-+		nowrite_ops.verify_write = xfs_dummy_verify;
-+		iocur_top->bp->b_ops = &nowrite_ops;
-+		dbprintf(_("Allowing write of corrupted data\n"));
-+	}
- 
- 	(*pf)(DB_WRITE, cur_typ->fields, argc, argv);
- 
-+	if (stashed_ops)
-+		iocur_top->bp->b_ops = stashed_ops;
-+
- 	return 0;
- }
- 
-diff --git a/man/man8/xfs_db.8 b/man/man8/xfs_db.8
-index 4d8d4ff..d527230 100644
---- a/man/man8/xfs_db.8
-+++ b/man/man8/xfs_db.8
-@@ -711,7 +711,7 @@ and
- bits respectively, and their string equivalent reported
- (but no modifications are made).
- .TP
--.BI "write [" "field value" "] ..."
-+.BI "write [\-c] [" "field value" "] ..."
- Write a value to disk.
- Specific fields can be set in structures (struct mode),
- or a block can be set to data values (data mode),
-@@ -729,6 +729,12 @@ contents of the block can be shifted or rotated left or right, or filled
- with a sequence, a constant value, or a random value. In this mode
- .B write
- with no arguments gives more information on the allowed commands.
-+.RS 1.0i
-+.TP 0.4i
-+.B \-c
-+Skip write verifiers and CRC recalculation; allows invalid data to be written
-+to disk.
-+.RE
- .SH TYPES
- This section gives the fields in each structure type and their meanings.
- Note that some types of block cover multiple actual structures,
+And the profile looks like:
+
+-   43.73%     0.05%  [kernel]            [k] native_flush_tlb_others
+   - native_flush_tlb_others
+      - 99.87% flush_tlb_page
+           ptep_clear_flush
+           try_to_unmap_one
+           rmap_walk
+           try_to_unmap
+           migrate_pages
+           migrate_misplaced_page
+         - handle_mm_fault
+            - 99.84% __do_page_fault
+                 trace_do_page_fault
+                 do_async_page_fault
+               + async_page_fault
+
+(grrrr - running perf with call stack profiling for long enough
+oom-kills xfs_repair)
+
+And the vmstats are:
+
+3.19:
+
+numa_hit 5163221
+numa_miss 121274
+numa_foreign 121274
+numa_interleave 12116
+numa_local 5153127
+numa_other 131368
+numa_pte_updates 36482466
+numa_huge_pte_updates 0
+numa_hint_faults 34816515
+numa_hint_faults_local 9197961
+numa_pages_migrated 1228114
+pgmigrate_success 1228114
+pgmigrate_fail 0
+
+4.0-rc1:
+
+numa_hit 36952043
+numa_miss 92471
+numa_foreign 92471
+numa_interleave 10964
+numa_local 36927384
+numa_other 117130
+numa_pte_updates 84010995
+numa_huge_pte_updates 0
+numa_hint_faults 81697505
+numa_hint_faults_local 21765799
+numa_pages_migrated 32916316
+pgmigrate_success 32916316
+pgmigrate_fail 0
+
+4.0-rc4:
+
+numa_hit 23447345
+numa_miss 47471
+numa_foreign 47471
+numa_interleave 10877
+numa_local 23438564
+numa_other 56252
+numa_pte_updates 60901329
+numa_huge_pte_updates 0
+numa_hint_faults 58777092
+numa_hint_faults_local 16478674
+numa_pages_migrated 20075156
+pgmigrate_success 20075156
+pgmigrate_fail 0
+
+Page migrations are still up by a factor of ~20 on 3.19.
+
+
+> At the same time, I feel fairly happy about the situation - we at
+> least understand what is going on, and the "3x worse performance" case
+> is at least gone.  Even if that last case still looks horrible.
+> 
+> So it's still a bad performance regression, but at the same time I
+> think your test setup (big 500 TB filesystem, but then a fake-numa
+> thing with just 4GB per node) is specialized and unrealistic enough
+> that I don't feel it's all that relevant from a *real-world*
+> standpoint,
+
+I don't buy it.
+
+The regression is triggered by the search algorithm that
+xfs_repair uses, and it's fairly common. It just uses a large hash
+table which has at least a 50% miss rate (every I/O misses on the
+initial lookup). The page faults are triggered by searching all
+these pointer chasing misses.
+
+IOWs the filesystem size under test is irrelevant - the amount of
+metadata in the FS determines the xfs_repair memory footprint. The
+fs size only determines concurrency, but this particular test case
+(ag_stride=-1) turns off the concurrency.  Hence we'll see the same
+problem with a 1TB filesystem with 50 million inodes in it, and
+there's *lots* of those around.
+
+Also, to address the "fake-numa" setup - the problem is node-local
+allocation policy, not the size of the nodes.  The repair threads
+wander all over the machine, even when there are only 8 threads
+running (ag_stride=-1):
+
+$ ps wauxH |grep  xfs_repair |wc -l
+8
+$
+
+top - 07:31:08 up 24 min,  2 users,  load average: 1.75, 0.62, 0.69
+Tasks: 240 total,   1 running, 239 sleeping,   0 stopped,   0 zombie
+%Cpu0  :  3.2 us, 13.4 sy,  0.0 ni, 63.6 id, 19.8 wa,  0.0 hi,  0.0 si,  0.0 st
+%Cpu1  :  0.0 us,  0.0 sy,  0.0 ni, 99.7 id,  0.3 wa,  0.0 hi,  0.0 si,  0.0 st
+%Cpu2  :  1.4 us,  8.5 sy,  0.0 ni, 74.7 id, 15.4 wa,  0.0 hi,  0.0 si,  0.0 st
+%Cpu3  :  1.0 us,  1.7 sy,  0.0 ni, 83.2 id, 14.1 wa,  0.0 hi,  0.0 si,  0.0 st
+%Cpu4  :  0.0 us,  0.7 sy,  0.0 ni, 98.7 id,  0.7 wa,  0.0 hi,  0.0 si,  0.0 st
+%Cpu5  :  4.0 us, 21.7 sy,  0.0 ni, 56.5 id, 17.8 wa,  0.0 hi,  0.0 si,  0.0 st
+%Cpu6  :  1.0 us,  2.3 sy,  0.0 ni, 92.4 id,  4.3 wa,  0.0 hi,  0.0 si,  0.0 st
+%Cpu7  :  2.0 us, 13.5 sy,  0.0 ni, 80.7 id,  3.7 wa,  0.0 hi,  0.0 si,  0.0 st
+%Cpu8  : 18.8 us,  2.7 sy,  0.0 ni, 78.5 id,  0.0 wa,  0.0 hi,  0.0 si,  0.0 st
+%Cpu9  :  1.4 us, 10.2 sy,  0.0 ni, 87.4 id,  1.0 wa,  0.0 hi,  0.0 si,  0.0 st
+%Cpu10 :  2.4 us, 13.2 sy,  0.0 ni, 84.5 id,  0.0 wa,  0.0 hi,  0.0 si,  0.0 st
+%Cpu11 :  1.0 us,  6.1 sy,  0.0 ni, 88.6 id,  4.4 wa,  0.0 hi,  0.0 si,  0.0 st
+%Cpu12 :  0.0 us,  0.0 sy,  0.0 ni,100.0 id,  0.0 wa,  0.0 hi,  0.0 si,  0.0 st
+%Cpu13 :  0.7 us,  5.4 sy,  0.0 ni, 79.3 id, 14.6 wa,  0.0 hi,  0.0 si,  0.0 st
+%Cpu14 :  0.3 us,  0.7 sy,  0.0 ni, 93.3 id,  5.7 wa,  0.0 hi,  0.0 si,  0.0 st
+%Cpu15 :  2.7 us,  9.3 sy,  0.0 ni, 87.7 id,  0.3 wa,  0.0 hi,  0.0 si,  0.0 st
+
+So, 8 threads doing work, 16 cpu cores, and only one fully idle
+processor core in the machine over a 5s sample period.  Hence it
+seems to me that process memory is getting sprayed over all nodes
+because of the way the scheduler processes move around, not because
+of the small memory size of the numa nodes.
+
+> and so I wouldn't be uncomfortable saying "ok, the page
+> table handling cleanup caused some issues, but we know about them and
+> how to fix them longer-term".  So I don't consider this a 4.0
+> showstopper or a "we need to revert for now" issue.
+
+I don't consider it necessary of a revert, either, but I don't want
+it swept under the table because of "workload not relevant"
+arguments.
+
+Cheers,
+
+Dave.
 -- 
-1.7.1
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
