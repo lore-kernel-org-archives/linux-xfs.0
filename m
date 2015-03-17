@@ -1,31 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 7BA2C7F50
-	for <xfs@oss.sgi.com>; Tue, 17 Mar 2015 15:51:21 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 3D097304032
-	for <xfs@oss.sgi.com>; Tue, 17 Mar 2015 13:51:21 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id 7FA157F54
+	for <xfs@oss.sgi.com>; Tue, 17 Mar 2015 16:28:45 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 6C95F304039
+	for <xfs@oss.sgi.com>; Tue, 17 Mar 2015 14:28:45 -0700 (PDT)
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	AOffroqBufZwAavZ for <xfs@oss.sgi.com>;
-	Tue, 17 Mar 2015 13:51:18 -0700 (PDT)
-Date: Wed, 18 Mar 2015 07:51:05 +1100
+	aLFpUrukQwd5473Q for <xfs@oss.sgi.com>;
+	Tue, 17 Mar 2015 14:28:38 -0700 (PDT)
+Date: Wed, 18 Mar 2015 08:28:35 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 4/4] mm: numa: Slow PTE scan rate if migration failures
-	occur
-Message-ID: <20150317205104.GA28621@dastard>
-References: <CA+55aFyQyZXu2fi7X9bWdSX0utk8=sccfBwFaSoToROXoE_PLA@mail.gmail.com>
-	<20150309112936.GD26657@destitution>
-	<CA+55aFywW5JLq=BU_qb2OG5+pJ-b1v9tiS5Ygi-vtEKbEZ_T5Q@mail.gmail.com>
-	<20150309191943.GF26657@destitution>
-	<CA+55aFzFt-vX5Jerci0Ty4Uf7K4_nQ7wyCp8hhU_dB0X4cBpVQ@mail.gmail.com>
-	<20150312131045.GE3406@suse.de>
-	<CA+55aFx=81BGnQFNhnAGu6CetL7yifPsnD-+v7Y6QRqwgH47gQ@mail.gmail.com>
-	<20150312184925.GH3406@suse.de> <20150317070655.GB10105@dastard>
-	<CA+55aFzdLnFdku-gnm3mGbeS=QauYBNkFQKYXJAGkrMd2jKXhw@mail.gmail.com>
+Subject: Re: [ANNOUNCE] xfs: Supporting Host Aware SMR Drives
+Message-ID: <20150317212835.GB28621@dastard>
+References: <20150316060020.GB28557@dastard>
+	<20150317132514.GA52950@bfoster.bfoster>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <CA+55aFzdLnFdku-gnm3mGbeS=QauYBNkFQKYXJAGkrMd2jKXhw@mail.gmail.com>
+In-Reply-To: <20150317132514.GA52950@bfoster.bfoster>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -38,187 +30,241 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, Linux-MM <linux-mm@kvack.org>, Aneesh Kumar <aneesh.kumar@linux.vnet.ibm.com>, Andrew Morton <akpm@linux-foundation.org>, ppc-dev <linuxppc-dev@lists.ozlabs.org>, Ingo Molnar <mingo@kernel.org>, Mel Gorman <mgorman@suse.de>
+To: Brian Foster <bfoster@redhat.com>
+Cc: linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com
 
-On Tue, Mar 17, 2015 at 09:53:57AM -0700, Linus Torvalds wrote:
-> On Tue, Mar 17, 2015 at 12:06 AM, Dave Chinner <david@fromorbit.com> wrote:
-> >
-> > TO close the loop here, now I'm back home and can run tests:
-> >
-> > config                            3.19      4.0-rc1     4.0-rc4
-> > defaults                         8m08s        9m34s       9m14s
-> > -o ag_stride=-1                  4m04s        4m38s       4m11s
-> > -o bhash=101073                  6m04s       17m43s       7m35s
-> > -o ag_stride=-1,bhash=101073     4m54s        9m58s       7m50s
-> >
-> > It's better but there are still significant regressions, especially
-> > for the large memory footprint cases. I haven't had a chance to look
-> > at any stats or profiles yet, so I don't know yet whether this is
-> > still page fault related or some other problem....
+On Tue, Mar 17, 2015 at 09:25:15AM -0400, Brian Foster wrote:
+> On Mon, Mar 16, 2015 at 05:00:20PM +1100, Dave Chinner wrote:
+> > Hi Folks,
+> > 
+> > As I told many people at Vault last week, I wrote a document
+> > outlining how we should modify the on-disk structures of XFS to
+> > support host aware SMR drives on the (long) plane flights to Boston.
+> > 
+> > TL;DR: not a lot of change to the XFS kernel code is required, no
+> > specific SMR awareness is needed by the kernel code.  Only
+> > relatively minor tweaks to the on-disk format will be needed and
+> > most of the userspace changes are relatively straight forward, too.
+> > 
+> > The source for that document can be found in this git tree here:
+> > 
+> > git://git.kernel.org/pub/scm/fs/xfs/xfs-documentation
+> > 
+> > in the file design/xfs-smr-structure.asciidoc. Alternatively,
+> > pull it straight from cgit:
+> > 
+> > https://git.kernel.org/cgit/fs/xfs/xfs-documentation.git/tree/design/xfs-smr-structure.asciidoc
+> > 
+> > Or there is a pdf version built from the current TOT on the xfs.org
+> > wiki here:
+> > 
+> > http://xfs.org/index.php/Host_Aware_SMR_architecture
+> > 
+> > Happy reading!
+> > 
 > 
-> Ok. I'd love to see some data on what changed between 3.19 and rc4 in
-> the profiles, just to see whether it's "more page faults due to extra
-> COW", or whether it's due to "more TLB flushes because of the
-> pte_write() vs pte_dirty()" differences. I'm *guessing*  lot of the
-> remaining issues are due to extra page fault overhead because I'd
-> expect write/dirty to be fairly 1:1, but there could be differences
-> due to shared memory use and/or just writebacks of dirty pages that
-> become clean.
+> Hi Dave,
 > 
-> I guess you can also see in vmstat.mm_migrate_pages whether it's
-> because of excessive migration (because of bad grouping) or not. So
-> not just profiles data.
-
-On the -o ag_stride=-1 -o bhash=101073 config, the 60s perf stat I
-was using during steady state shows:
-
-     471,752      migrate:mm_migrate_pages ( +-  7.38% )
-
-The migrate pages rate is even higher than in 4.0-rc1 (~360,000)
-and 3.19 (~55,000), so that looks like even more of a problem than
-before.
-
-And the profile looks like:
-
--   43.73%     0.05%  [kernel]            [k] native_flush_tlb_others
-   - native_flush_tlb_others
-      - 99.87% flush_tlb_page
-           ptep_clear_flush
-           try_to_unmap_one
-           rmap_walk
-           try_to_unmap
-           migrate_pages
-           migrate_misplaced_page
-         - handle_mm_fault
-            - 99.84% __do_page_fault
-                 trace_do_page_fault
-                 do_async_page_fault
-               + async_page_fault
-
-(grrrr - running perf with call stack profiling for long enough
-oom-kills xfs_repair)
-
-And the vmstats are:
-
-3.19:
-
-numa_hit 5163221
-numa_miss 121274
-numa_foreign 121274
-numa_interleave 12116
-numa_local 5153127
-numa_other 131368
-numa_pte_updates 36482466
-numa_huge_pte_updates 0
-numa_hint_faults 34816515
-numa_hint_faults_local 9197961
-numa_pages_migrated 1228114
-pgmigrate_success 1228114
-pgmigrate_fail 0
-
-4.0-rc1:
-
-numa_hit 36952043
-numa_miss 92471
-numa_foreign 92471
-numa_interleave 10964
-numa_local 36927384
-numa_other 117130
-numa_pte_updates 84010995
-numa_huge_pte_updates 0
-numa_hint_faults 81697505
-numa_hint_faults_local 21765799
-numa_pages_migrated 32916316
-pgmigrate_success 32916316
-pgmigrate_fail 0
-
-4.0-rc4:
-
-numa_hit 23447345
-numa_miss 47471
-numa_foreign 47471
-numa_interleave 10877
-numa_local 23438564
-numa_other 56252
-numa_pte_updates 60901329
-numa_huge_pte_updates 0
-numa_hint_faults 58777092
-numa_hint_faults_local 16478674
-numa_pages_migrated 20075156
-pgmigrate_success 20075156
-pgmigrate_fail 0
-
-Page migrations are still up by a factor of ~20 on 3.19.
-
-
-> At the same time, I feel fairly happy about the situation - we at
-> least understand what is going on, and the "3x worse performance" case
-> is at least gone.  Even if that last case still looks horrible.
+> Thanks for sharing this. Here are some thoughts/notes/questions/etc.
+> from a first pass. This is mostly XFS oriented and I'll try to break it
+> down by section.
 > 
-> So it's still a bad performance regression, but at the same time I
-> think your test setup (big 500 TB filesystem, but then a fake-numa
-> thing with just 4GB per node) is specialized and unrealistic enough
-> that I don't feel it's all that relevant from a *real-world*
-> standpoint,
+> I've also attached a diff to the original doc with some typo fixes and
+> whatnot. Feel free to just fold it into the original doc if you like.
+> 
+> == Concepts
+> 
+> - With regard to the assumption that the CMR region is not spread around
+> the drive, I saw at least one presentation at Vault that suggested
+> otherwise (the skylight one iirc). That said, it was theoretical and
+> based on a drive-managed drive. It is in no way clear to me whether that
+> is something to expect for host-managed drives.
 
-I don't buy it.
+AFAIK, the CMR region is contiguous. The skylight paper spells it
+out pretty clearly that it is a contiguous 20-25GB region on the
+outer edge of the seagate drives. Other vendors I've spoken to
+indicate that the region in host managed drives is also contiguous
+and at the outer edge, and some vendors have indicated they have
+much more of it that the seagate drives analysed in the skylight
+paper.
 
-The regression is triggered by the search algorithm that
-xfs_repair uses, and it's fairly common. It just uses a large hash
-table which has at least a 50% miss rate (every I/O misses on the
-initial lookup). The page faults are triggered by searching all
-these pointer chasing misses.
+If it is not contiguous, then we can use DM to make that problem go
+away. i.e. use DM to stitch the CMR zones back together into a
+contiguous LBA region. Then we can size AGs in the data device to
+map to the size of the individual disjoint CMR regions, and we
+have a neat, well aligned, isolated solution to the problem without
+having to modify the XFS code at all.
 
-IOWs the filesystem size under test is irrelevant - the amount of
-metadata in the FS determines the xfs_repair memory footprint. The
-fs size only determines concurrency, but this particular test case
-(ag_stride=-1) turns off the concurrency.  Hence we'll see the same
-problem with a 1TB filesystem with 50 million inodes in it, and
-there's *lots* of those around.
+> - It isn't clear to me here and in other places whether you propose to
+> use the CMR regions as a "metadata device" or require some other
+> randomly writeable storage to serve that purpose.
 
-Also, to address the "fake-numa" setup - the problem is node-local
-allocation policy, not the size of the nodes.  The repair threads
-wander all over the machine, even when there are only 8 threads
-running (ag_stride=-1):
+CMR as the "metadata device" if there is nothing else we can use.
+I'd really like to see hybrid drives with the "CMR" zone being the
+flash region in the drive....
 
-$ ps wauxH |grep  xfs_repair |wc -l
-8
-$
+> == Journal modifications
+> 
+> - The tail->head log zeroing behavior on mount comes to mind here. Maybe
+> the writes are still sequential and it's not a problem, but we should
+> consider that with the proposition.  It's probably not critical as we do
+> have the out of using the cmr region here (as noted). I assume we can
+> also cleanly relocate the log without breaking anything else (e.g., the
+> current location is performance oriented rather than architectural,
+> yes?).
 
-top - 07:31:08 up 24 min,  2 users,  load average: 1.75, 0.62, 0.69
-Tasks: 240 total,   1 running, 239 sleeping,   0 stopped,   0 zombie
-%Cpu0  :  3.2 us, 13.4 sy,  0.0 ni, 63.6 id, 19.8 wa,  0.0 hi,  0.0 si,  0.0 st
-%Cpu1  :  0.0 us,  0.0 sy,  0.0 ni, 99.7 id,  0.3 wa,  0.0 hi,  0.0 si,  0.0 st
-%Cpu2  :  1.4 us,  8.5 sy,  0.0 ni, 74.7 id, 15.4 wa,  0.0 hi,  0.0 si,  0.0 st
-%Cpu3  :  1.0 us,  1.7 sy,  0.0 ni, 83.2 id, 14.1 wa,  0.0 hi,  0.0 si,  0.0 st
-%Cpu4  :  0.0 us,  0.7 sy,  0.0 ni, 98.7 id,  0.7 wa,  0.0 hi,  0.0 si,  0.0 st
-%Cpu5  :  4.0 us, 21.7 sy,  0.0 ni, 56.5 id, 17.8 wa,  0.0 hi,  0.0 si,  0.0 st
-%Cpu6  :  1.0 us,  2.3 sy,  0.0 ni, 92.4 id,  4.3 wa,  0.0 hi,  0.0 si,  0.0 st
-%Cpu7  :  2.0 us, 13.5 sy,  0.0 ni, 80.7 id,  3.7 wa,  0.0 hi,  0.0 si,  0.0 st
-%Cpu8  : 18.8 us,  2.7 sy,  0.0 ni, 78.5 id,  0.0 wa,  0.0 hi,  0.0 si,  0.0 st
-%Cpu9  :  1.4 us, 10.2 sy,  0.0 ni, 87.4 id,  1.0 wa,  0.0 hi,  0.0 si,  0.0 st
-%Cpu10 :  2.4 us, 13.2 sy,  0.0 ni, 84.5 id,  0.0 wa,  0.0 hi,  0.0 si,  0.0 st
-%Cpu11 :  1.0 us,  6.1 sy,  0.0 ni, 88.6 id,  4.4 wa,  0.0 hi,  0.0 si,  0.0 st
-%Cpu12 :  0.0 us,  0.0 sy,  0.0 ni,100.0 id,  0.0 wa,  0.0 hi,  0.0 si,  0.0 st
-%Cpu13 :  0.7 us,  5.4 sy,  0.0 ni, 79.3 id, 14.6 wa,  0.0 hi,  0.0 si,  0.0 st
-%Cpu14 :  0.3 us,  0.7 sy,  0.0 ni, 93.3 id,  5.7 wa,  0.0 hi,  0.0 si,  0.0 st
-%Cpu15 :  2.7 us,  9.3 sy,  0.0 ni, 87.7 id,  0.3 wa,  0.0 hi,  0.0 si,  0.0 st
+We place the log anywhere in the data device LBA space. You might
+want to go look up what L_AGNUM does in mkfs. :)
 
-So, 8 threads doing work, 16 cpu cores, and only one fully idle
-processor core in the machine over a 5s sample period.  Hence it
-seems to me that process memory is getting sprayed over all nodes
-because of the way the scheduler processes move around, not because
-of the small memory size of the numa nodes.
+And if we can use the CMR region for the log, then that's what we'll
+do - "no modifications required" is always the best solution.
 
-> and so I wouldn't be uncomfortable saying "ok, the page
-> table handling cleanup caused some issues, but we know about them and
-> how to fix them longer-term".  So I don't consider this a 4.0
-> showstopper or a "we need to revert for now" issue.
+> == Data zones
+> 
+> - Will this actually support data overwrite or will that return error?
 
-I don't consider it necessary of a revert, either, but I don't want
-it swept under the table because of "workload not relevant"
-arguments.
+We'll support data overwrite. xfs_get_blocks() will need to detect
+overwrite....
+
+> - TBH, I've never looked at realtime functionality so I don't grok the
+> high level approach yet. I'm wondering... have you considered a design
+> based on reflink and copy-on-write?
+
+Yes, I have. Complex, invasive and we don't even have basic reflink
+infrastructure yet. Such a solution pushes us a couple of years
+out, as opposed to having something before the end of the year...
+
+> I know the current plan is to
+> disentangle the reflink tree from the rmap tree, but my understanding is
+> the reflink tree is still in the pipeline. Assuming we have that
+> functionality, it seems like there's potential to use it to overcome
+> some of the overwrite complexity.
+
+There isn't much overwrite complexity - it's simply clearing bits
+in a zone bitmap to indicate free space, allocating new blocks and
+then rewriting bmbt extent records. It's fairly simple, really ;)
+
+> Just as a handwaving example, use the
+> per-zone inode to hold an additional reference to each allocated extent
+> in the zone, thus all writes are handled as if the file had a clone. If
+> the only reference drops to the zoneino, the extent is freed and thus
+> stale wrt to the zone cleaner logic.
+> 
+> I suspect we would still need an allocation strategy, but I expect we're
+> going to have zone metadata regardless that will help deal with that.
+> Note that the current sparse inode proposal includes an allocation range
+> limit mechanism (for the inode record overlaps an ag boundary case),
+> which could potentially be used/extended to build something on top of
+> the existing allocator for zone allocation (e.g., if we had some kind of
+> zone record with the write pointer that indicated where it's safe to
+> allocate from). Again, just thinking out loud here.
+
+Yup, but the bitmap allocator doesn't have support for many of the
+btree allocator controls.  It's a simple, fast, deterministic
+allocator, and we only need it is to track freed space in the zones
+as all allocation from the zones is going to be sequential...
+
+> == Zone cleaner
+> 
+> - Paragraph 3 - "fixpel?" I would have just fixed this, but I can't
+> figure out what it's supposed to say. ;)
+> 
+> - The idea sounds sane, but the dependency on userspace for a critical
+> fs mechanism sounds a bit scary to be honest. Is in kernel allocation
+> going to throttle/depend on background work in the userspace cleaner in
+> the event of low writeable free space?
+
+Of course. ENOSPC always throttles ;)
+
+I expect the cleaner will work zone group at a time; locking new,
+non-cleaner based allocations out of the zone group while it cleans
+zones. This means the cleaner should always be able to make progress
+w.r.t. ENOSPC - it gets triggered on a zone group before it runs out
+of clean zones for freespace defrag purposes....
+
+I also expect that the cleaner won't be used in many bulk storage
+applications as data is never deleted. I also expect tht XFS-SMR
+won't be used for general purpose storage applications - that's what
+solid state storage will be used for - and so the cleaner is not
+something we need to focus a lot of time and effort on.
+
+And the thing that distributed storage guys should love: if we put
+the cleaner in userspace, then they can *write their own cleaners*
+that are customised to their own storage algorithms.
+
+> What if that userspace thing
+> dies, etc.? I suppose an implementation with as much mechanism in libxfs
+> as possible allows us greatest flexibility to go in either direction
+> here.
+
+If the cleaner dies of can't make progress, we ENOSPC. Whether the
+cleaner is in kernel or userspace is irrelevant to how we handle
+such cases.
+
+> - I'm also wondering how much real overlap there is in xfs_fsr (another
+> thing I haven't really looked at :) beyond that it calls swapext.
+> E.g., cleaning a zone sounds like it must map back to N files that could
+> have allocated extents in the zone vs. considering individual files for
+> defragmentation, fragmentation of the parent file may not be as much of
+> a consideration as resetting zones, etc. It sounds like a separate tool
+> might be warranted, even if there is code to steal from fsr. :)
+
+As I implied above, zone cleaning is addressing exactly the same
+problem as we are currently working on in xfs_fsr: defragmenting
+free space.
+
+> == Reverse mapping btrees
+> 
+> - This is something I still need to grok, perhaps just because the rmap
+> code isn't available yet. But I'll note that this does seem like
+> another bit that could be unnecessary if we could get away with using
+> the traditional allocator.
+> 
+> == Mkfs
+> 
+> - We have references to the "metadata device" as well as random write
+> regions. Similar to my question above, is there an expectation of a
+> separate physical metadata device or is that terminology for the random
+> write regions?
+
+"metadata device" == "data device" == "CMR" == "random write region"
+
+> Finally, some general/summary notes:
+> 
+> - Some kind of data structure outline would eventually make a nice
+> addition to this document. I understand it's probably too early yet,
+> but we are talking about new per-zone inodes, new and interesting
+> relationships between AGs and zones (?), etc. Fine grained detail is not
+> required, but an outline or visual that describes the high-level
+> mappings goes a long way to facilitate reasoning about the design.
+
+Sure, a plane flight is not long enough to do this. Future
+revisions, as the structure is clarified.
+
+> - A big question I had (and something that is touched on down thread wrt
+> to embedded flash) is whether the random write zones are runtime
+> configurable. If so, couldn't this facilitate use of existing AG
+> metadata (now that I think of it, it's not clear to me whether the
+> realtime mechanism excludes or coexists with AGs)?
+
+the "realtime device" contains only user data. It contains no
+filesystem metadata at all. That separation of user data and
+filesystem metadata is what makes it so appealing for supporting SMR
+devices....
+
+> IOW, we obviously
+> need this kind of space for inodes, dirs, xattrs, btrees, etc.
+> regardless. It would be interesting if we had the added flexibility to
+> align it with AGs.
+
+I'm trying to keep the solution as simple as possible. No alignment,
+single whole disk only, metadata in the "data device" on CMR and
+user data in "real time" zones on SMR.
+
+> diff --git a/design/xfs-smr-structure.asciidoc b/design/xfs-smr-structure.asciidoc
+> index dd959ab..2fea88f 100644
+
+Oh, there's a patch. Thanks! ;)
 
 Cheers,
 
