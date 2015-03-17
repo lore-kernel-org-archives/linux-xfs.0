@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 85A557F5D
+	by oss.sgi.com (Postfix) with ESMTP id 89C287F5E
 	for <xfs@oss.sgi.com>; Tue, 17 Mar 2015 15:33:21 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 65D5F304048
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 69166304051
 	for <xfs@oss.sgi.com>; Tue, 17 Mar 2015 13:33:21 -0700 (PDT)
 Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id M0KipvzTMQ17USpS for <xfs@oss.sgi.com>;
-	Tue, 17 Mar 2015 13:33:20 -0700 (PDT)
+	ESMTP id kFlQYYcLa2QeqkxU for <xfs@oss.sgi.com>;
+	Tue, 17 Mar 2015 13:33:19 -0700 (PDT)
 From: Eric Sandeen <sandeen@redhat.com>
-Subject: [PATCH 11/13] xfs_repair: set *parent if process_dir2_data() fixes
-	root inode
-Date: Tue, 17 Mar 2015 15:33:13 -0500
-Message-Id: <1426624395-8258-12-git-send-email-sandeen@redhat.com>
+Subject: [PATCH 10/13] xfs_repair: clear need_root_dotdot if we rebuild the
+	root dir
+Date: Tue, 17 Mar 2015 15:33:12 -0500
+Message-Id: <1426624395-8258-11-git-send-email-sandeen@redhat.com>
 In-Reply-To: <1426624395-8258-1-git-send-email-sandeen@redhat.com>
 References: <1426624395-8258-1-git-send-email-sandeen@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -30,39 +30,31 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-process_dir2_data() may fix the root dir's parent inode:
-
-"bad .. entry in root directory inode 6912, was 7159: correcting"
-
-But we don't update the *parent passed in in that case; this then leads to
-an assert later in process_dir2:
-
-xfs_repair: dir2.c:2039: process_dir2:
-  Assertion `(ino != mp->m_sb.sb_rootino && ino != *parent) ||
-  (ino == mp->m_sb.sb_rootino && (ino == *parent || need_root_dotdot == 1))'
-  failed.
-
-Updating the value of *parent when we fix the parent value resolves this
-problem.
+It's possible to enter longform_dir2_rebuild with need_root_dotdot
+set; rebuilding it will add "..", and if need_root_dotdot stays set,
+we'll add another ".." entry, causing a second repair to find and
+fix that problem.
 
 Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
 ---
- repair/dir2.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+ repair/phase6.c |    3 +++
+ 1 files changed, 3 insertions(+), 0 deletions(-)
 
-diff --git a/repair/dir2.c b/repair/dir2.c
-index b1816f4..9e6c67d 100644
---- a/repair/dir2.c
-+++ b/repair/dir2.c
-@@ -1407,6 +1407,7 @@ _("bad .. entry in root directory inode %" PRIu64 ", was %" PRIu64 ": "),
- 					} else {
- 						do_warn(_("would correct\n"));
- 					}
-+					*parent = ino;
- 				}
- 			}
- 			/*
+diff --git a/repair/phase6.c b/repair/phase6.c
+index 0ec4f07..1728609 100644
+--- a/repair/phase6.c
++++ b/repair/phase6.c
+@@ -1354,6 +1354,9 @@ longform_dir2_rebuild(
+ 
+ 	libxfs_trans_commit(tp, XFS_TRANS_RELEASE_LOG_RES|XFS_TRANS_SYNC);
+ 
++	if (ino == mp->m_sb.sb_rootino)
++		need_root_dotdot = 0;
++
+ 	/* go through the hash list and re-add the inodes */
+ 
+ 	for (p = hashtab->first; p; p = p->nextbyorder) {
 -- 
 1.7.1
 
