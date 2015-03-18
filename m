@@ -1,19 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 679347F47
-	for <xfs@oss.sgi.com>; Wed, 18 Mar 2015 11:08:53 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 37DAF304053
-	for <xfs@oss.sgi.com>; Wed, 18 Mar 2015 09:08:50 -0700 (PDT)
-Received: from mail-ig0-f182.google.com (mail-ig0-f182.google.com
-	[209.85.213.182]) by cuda.sgi.com with ESMTP id
-	ynZBkPfTtF6G5JSV (version=TLSv1 cipher=RC4-SHA bits=128
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 28EAC7F37
+	for <xfs@oss.sgi.com>; Wed, 18 Mar 2015 12:31:34 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 074BF8F8049
+	for <xfs@oss.sgi.com>; Wed, 18 Mar 2015 10:31:30 -0700 (PDT)
+Received: from mail-ie0-f169.google.com (mail-ie0-f169.google.com
+	[209.85.223.169]) by cuda.sgi.com with ESMTP id
+	9wO9353dVGAZyx7G (version=TLSv1 cipher=RC4-SHA bits=128
 	verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 18 Mar 2015 09:08:45 -0700 (PDT)
-Received: by igcau2 with SMTP id au2so67043089igc.0
-	for <xfs@oss.sgi.com>; Wed, 18 Mar 2015 09:08:44 -0700 (PDT)
+	Wed, 18 Mar 2015 10:31:29 -0700 (PDT)
+Received: by iegc3 with SMTP id c3so45001074ieg.3
+	for <xfs@oss.sgi.com>; Wed, 18 Mar 2015 10:31:28 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20150317220840.GC28621@dastard>
+In-Reply-To: <CA+55aFwne-fe_Gg-_GTUo+iOAbbNpLBa264JqSFkH79EULyAqw@mail.gmail.com>
 References: <CA+55aFywW5JLq=BU_qb2OG5+pJ-b1v9tiS5Ygi-vtEKbEZ_T5Q@mail.gmail.com>
 	<20150309191943.GF26657@destitution>
 	<CA+55aFzFt-vX5Jerci0Ty4Uf7K4_nQ7wyCp8hhU_dB0X4cBpVQ@mail.gmail.com>
@@ -24,8 +24,9 @@ References: <CA+55aFywW5JLq=BU_qb2OG5+pJ-b1v9tiS5Ygi-vtEKbEZ_T5Q@mail.gmail.com>
 	<20150317205104.GA28621@dastard>
 	<CA+55aFzSPcNgxw4GC7aAV1r0P5LniyVVC66COz=3cgMcx73Nag@mail.gmail.com>
 	<20150317220840.GC28621@dastard>
-Date: Wed, 18 Mar 2015 09:08:44 -0700
-Message-ID: <CA+55aFwne-fe_Gg-_GTUo+iOAbbNpLBa264JqSFkH79EULyAqw@mail.gmail.com>
+	<CA+55aFwne-fe_Gg-_GTUo+iOAbbNpLBa264JqSFkH79EULyAqw@mail.gmail.com>
+Date: Wed, 18 Mar 2015 10:31:28 -0700
+Message-ID: <CA+55aFy-Mw74rAdLMMMUgnsG3ZttMWVNGz7CXZJY7q9fqyRYfg@mail.gmail.com>
 Subject: Re: [PATCH 4/4] mm: numa: Slow PTE scan rate if migration failures
 	occur
 From: Linus Torvalds <torvalds@linux-foundation.org>
@@ -44,56 +45,29 @@ Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, Linux-MM <linux-mm@kvack.org>, Aneesh Kumar <aneesh.kumar@linux.vnet.ibm.com>, Andrew Morton <akpm@linux-foundation.org>, ppc-dev <linuxppc-dev@lists.ozlabs.org>, Ingo Molnar <mingo@kernel.org>, Mel Gorman <mgorman@suse.de>
 
-On Tue, Mar 17, 2015 at 3:08 PM, Dave Chinner <david@fromorbit.com> wrote:
->>
->> Damn. From a performance number standpoint, it looked like we zoomed
->> in on the right thing. But now it's migrating even more pages than
->> before. Odd.
+On Wed, Mar 18, 2015 at 9:08 AM, Linus Torvalds
+<torvalds@linux-foundation.org> wrote:
 >
-> Throttling problem, like Mel originally suspected?
-
-That doesn't much make sense for the original bisect you did, though.
-
-Although if there are two different issues, maybe that bisect was
-wrong. Or rather, incomplete.
-
->> Can you do a simple stupid test? Apply that commit 53da3bc2ba9e ("mm:
->> fix up numa read-only thread grouping logic") to 3.19, so that it uses
->> the same "pte_dirty()" logic as 4.0-rc4. That *should* make the 3.19
->> and 4.0-rc4 numbers comparable.
+> So why am I wrong? Why is testing for dirty not the same as testing
+> for writable?
 >
-> patched 3.19 numbers on this test are slightly worse than stock
-> 3.19, but nowhere near as bad as 4.0-rc4:
+> I can see a few cases:
 >
->         241,718      migrate:mm_migrate_pages           ( +-  5.17% )
+>  - your load has lots of writable (but not written-to) shared memory
 
-Ok, that's still much worse than plain 3.19, which was ~55,000.
-Assuming your memory/measurements were the same.
+Hmm. I tried to look at the xfsprog sources, and I don't see any
+MAP_SHARED activity.  It looks like it's just using pread64/pwrite64,
+and the only MAP_SHARED is for the xfsio mmap test thing, not for
+xfsrepair.
 
-So apparently the pte_write() -> pte_dirty() check isn't equivalent at
-all. My thinking that for the common case (ie private mappings) it
-would be *exactly* the same, because all normal COW pages turn dirty
-at the same time they turn writable (and, in page_mkclean_one(), turn
-clean and read-only again at the same time). But if the numbers change
-that much, then clearly my simplistic "they are the same in practice"
-is just complete BS.
+So I don't see any shared mappings, but I don't know the code-base.
 
-So why am I wrong? Why is testing for dirty not the same as testing
-for writable?
+>  - something completely different that I am entirely missing
 
-I can see a few cases:
-
- - your load has lots of writable (but not written-to) shared memory,
-and maybe the test should be something like
-
-      pte_dirty(pte) || (vma->vm_flags & (VM_WRITE|VM_SHARED) ==
-(VM_WRITE|VM_SHARED))
-
-   and we really should have some helper function for this logic.
-
- - something completely different that I am entirely missing
-
-What am I missing?
+So I think there's something I'm missing. For non-shared mappings, I
+still have the idea that pte_dirty should be the same as pte_write.
+And yet, your testing of 3.19 shows that it's a big difference.
+There's clearly something I'm completely missing.
 
                           Linus
 
