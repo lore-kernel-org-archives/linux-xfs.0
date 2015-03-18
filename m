@@ -1,32 +1,31 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 4DDB57F37
-	for <xfs@oss.sgi.com>; Wed, 18 Mar 2015 18:22:16 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 112BA8F8054
-	for <xfs@oss.sgi.com>; Wed, 18 Mar 2015 16:22:13 -0700 (PDT)
-Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id btiGBnimONo4VAIk (version=TLSv1
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 10ABB7F37
+	for <xfs@oss.sgi.com>; Wed, 18 Mar 2015 18:22:47 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id F3C7F304043
+	for <xfs@oss.sgi.com>; Wed, 18 Mar 2015 16:22:43 -0700 (PDT)
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
+	cuda.sgi.com with ESMTP id P2WFqFddLdl8aJy1 (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 18 Mar 2015 16:22:11 -0700 (PDT)
-Received: from acsinet21.oracle.com (acsinet21.oracle.com [141.146.126.237])
-	by aserp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with
-	ESMTP id t2INMAL1032647
+	Wed, 18 Mar 2015 16:22:42 -0700 (PDT)
+Received: from userv0022.oracle.com (userv0022.oracle.com [156.151.31.74])
+	by userp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with
+	ESMTP id t2INMfL9030960
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Wed, 18 Mar 2015 23:22:10 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-	by acsinet21.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
-	t2INM9ZT019143
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Wed, 18 Mar 2015 23:22:09 GMT
-Received: from abhmp0014.oracle.com (abhmp0014.oracle.com [141.146.116.20])
-	by aserv0121.oracle.com (8.13.8/8.13.8) with ESMTP id t2INM94A020239
-	for <xfs@oss.sgi.com>; Wed, 18 Mar 2015 23:22:09 GMT
-Date: Wed, 18 Mar 2015 16:21:59 -0700
+	for <xfs@oss.sgi.com>; Wed, 18 Mar 2015 23:22:42 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+	by userv0022.oracle.com (8.13.8/8.13.8) with ESMTP id t2INMfWX022819
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=FAIL)
+	for <xfs@oss.sgi.com>; Wed, 18 Mar 2015 23:22:41 GMT
+Received: from abhmp0003.oracle.com (abhmp0003.oracle.com [141.146.116.9])
+	by userv0122.oracle.com (8.13.8/8.13.8) with ESMTP id t2INMfU3023238
+	for <xfs@oss.sgi.com>; Wed, 18 Mar 2015 23:22:41 GMT
+Date: Wed, 18 Mar 2015 16:22:39 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH] libxfs: don't write uninitialized heap contents into new
-	directory blocks
-Message-ID: <20150318232159.GA24608@birch.djwong.org>
+Subject: [PATCH] xfs_repair: don't abort on bad directory leaf crc during
+	leaf check
+Message-ID: <20150318232239.GB24608@birch.djwong.org>
 MIME-Version: 1.0
 Content-Disposition: inline
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -43,67 +42,34 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-When we're initializing a new directory block, zero the buffer
-contents to avoid writing random heap contents (and crc thereof)
-to disk.  This eliminates a few valgrind complaints in xfs_repair.
+longform_dir2_check_leaf() checks a directory leaf block to help
+decide if we need to rebuild the directory.  If the verifier fails
+with a CRC or corrupt structure error, rebuild the directory instead
+of aborting.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- libxfs/xfs_da_btree.c  |    1 +
- libxfs/xfs_dir2_data.c |    1 +
- libxfs/xfs_dir2_leaf.c |    1 +
- libxfs/xfs_dir2_node.c |    2 +-
- 4 files changed, 4 insertions(+), 1 deletion(-)
+ repair/phase6.c |    7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
 
-diff --git a/libxfs/xfs_da_btree.c b/libxfs/xfs_da_btree.c
-index b731b54..bc73cbc 100644
---- a/libxfs/xfs_da_btree.c
-+++ b/libxfs/xfs_da_btree.c
-@@ -562,6 +562,7 @@ xfs_da3_root_split(
- 	if (error)
- 		return error;
- 	node = bp->b_addr;
-+	memset(bp->b_addr, 0, bp->b_bcount);
- 	oldroot = blk1->bp->b_addr;
- 	if (oldroot->hdr.info.magic == cpu_to_be16(XFS_DA_NODE_MAGIC) ||
- 	    oldroot->hdr.info.magic == cpu_to_be16(XFS_DA3_NODE_MAGIC)) {
-diff --git a/libxfs/xfs_dir2_data.c b/libxfs/xfs_dir2_data.c
-index dc9df4d..79c2fc2 100644
---- a/libxfs/xfs_dir2_data.c
-+++ b/libxfs/xfs_dir2_data.c
-@@ -559,6 +559,7 @@ xfs_dir3_data_init(
- 		XFS_DATA_FORK);
- 	if (error)
- 		return error;
-+	memset(bp->b_addr, 0, bp->b_bcount);
- 	bp->b_ops = &xfs_dir3_data_buf_ops;
- 	xfs_trans_buf_set_type(tp, bp, XFS_BLFT_DIR_DATA_BUF);
- 
-diff --git a/libxfs/xfs_dir2_leaf.c b/libxfs/xfs_dir2_leaf.c
-index 8e0cbc9..6eb03fc 100644
---- a/libxfs/xfs_dir2_leaf.c
-+++ b/libxfs/xfs_dir2_leaf.c
-@@ -382,6 +382,7 @@ xfs_dir3_leaf_get_buf(
- 	if (error)
- 		return error;
- 
-+	memset(bp->b_addr, 0, bp->b_bcount);
- 	xfs_dir3_leaf_init(mp, tp, bp, dp->i_ino, magic);
- 	xfs_dir3_leaf_log_header(tp, bp);
- 	if (magic == XFS_DIR2_LEAF1_MAGIC)
-diff --git a/libxfs/xfs_dir2_node.c b/libxfs/xfs_dir2_node.c
-index 3737e4e..3e2f04d 100644
---- a/libxfs/xfs_dir2_node.c
-+++ b/libxfs/xfs_dir2_node.c
-@@ -247,7 +247,7 @@ xfs_dir3_free_get_buf(
- 	 * Initialize the new block to be empty, and remember
- 	 * its first slot as our empty slot.
- 	 */
--	memset(bp->b_addr, 0, sizeof(struct xfs_dir3_free_hdr));
-+	memset(bp->b_addr, 0, bp->b_bcount);
- 	memset(&hdr, 0, sizeof(hdr));
- 
- 	if (xfs_sb_version_hascrc(&mp->m_sb)) {
+diff --git a/repair/phase6.c b/repair/phase6.c
+index 1728609..c09b394 100644
+--- a/repair/phase6.c
++++ b/repair/phase6.c
+@@ -1951,7 +1951,12 @@ longform_dir2_check_leaf(
+ 	da_bno = mp->m_dirleafblk;
+ 	error = dir_read_buf(ip, da_bno, -1, &bp, &xfs_dir3_leaf1_buf_ops,
+ 			     &fixit);
+-	if (error) {
++	if (error == EFSBADCRC || error == EFSCORRUPTED || fixit) {
++		do_warn(
++	_("leaf block %u for directory inode %" PRIu64 " bad CRC\n"),
++			da_bno, ip->i_ino);
++		return 1;
++	} else if (error) {
+ 		do_error(
+ 	_("can't read block %u for directory inode %" PRIu64 ", error %d\n"),
+ 			da_bno, ip->i_ino, error);
 
 _______________________________________________
 xfs mailing list
