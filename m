@@ -1,31 +1,31 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 014EE7F37
-	for <xfs@oss.sgi.com>; Wed, 18 Mar 2015 18:24:02 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id C4B6E304043
-	for <xfs@oss.sgi.com>; Wed, 18 Mar 2015 16:24:01 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id E72857F37
+	for <xfs@oss.sgi.com>; Wed, 18 Mar 2015 18:25:11 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id D3FD9304043
+	for <xfs@oss.sgi.com>; Wed, 18 Mar 2015 16:25:11 -0700 (PDT)
 Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id KqWFXYFGBacj1qlv (version=TLSv1
+	cuda.sgi.com with ESMTP id wj5SzM13IKPyBzYj (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 18 Mar 2015 16:24:00 -0700 (PDT)
-Received: from acsinet21.oracle.com (acsinet21.oracle.com [141.146.126.237])
+	Wed, 18 Mar 2015 16:25:09 -0700 (PDT)
+Received: from acsinet22.oracle.com (acsinet22.oracle.com [141.146.126.238])
 	by aserp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with
-	ESMTP id t2INNxlO001653
+	ESMTP id t2INP8dd002778
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Wed, 18 Mar 2015 23:23:59 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-	by acsinet21.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
-	t2INNwfI020770
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Wed, 18 Mar 2015 23:23:59 GMT
-Received: from abhmp0015.oracle.com (abhmp0015.oracle.com [141.146.116.21])
-	by userv0122.oracle.com (8.13.8/8.13.8) with ESMTP id t2INNwJB023446
-	for <xfs@oss.sgi.com>; Wed, 18 Mar 2015 23:23:58 GMT
-Date: Wed, 18 Mar 2015 16:23:56 -0700
+	for <xfs@oss.sgi.com>; Wed, 18 Mar 2015 23:25:08 GMT
+Received: from userz7021.oracle.com (userz7021.oracle.com [156.151.31.85])
+	by acsinet22.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
+	t2INP7bP002588
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=FAIL)
+	for <xfs@oss.sgi.com>; Wed, 18 Mar 2015 23:25:08 GMT
+Received: from abhmp0014.oracle.com (abhmp0014.oracle.com [141.146.116.20])
+	by userz7021.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
+	t2INP7OS025878 for <xfs@oss.sgi.com>; Wed, 18 Mar 2015 23:25:07 GMT
+Date: Wed, 18 Mar 2015 16:25:05 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [RFC 1/2] xfs_db: enable blockget for v5 filesystems
-Message-ID: <20150318232356.GC24608@birch.djwong.org>
+Subject: [RFC 2/2] xfs_db: enable blocktrash for checksummed filesystems
+Message-ID: <20150318232505.GD24608@birch.djwong.org>
 MIME-Version: 1.0
 Content-Disposition: inline
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -42,180 +42,353 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Plumb in the necessary magic number checks and other fixups required
-to handle v5 filesystems.  This requires Eric Sandeen's earlier patch
-rollup.
+Disable the write verifiers when we're trashing a block.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- db/check.c |   52 +++++++++++++++++++++++++++++++++++++++-------------
- 1 file changed, 39 insertions(+), 13 deletions(-)
+ db/check.c    |    4 +
+ db/xfsfuzz.sh |  303 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 307 insertions(+)
+ create mode 100755 db/xfsfuzz.sh
 
 diff --git a/db/check.c b/db/check.c
-index 4fd9fd0..767022f 100644
+index 767022f..aa8750a 100644
 --- a/db/check.c
 +++ b/db/check.c
-@@ -799,8 +799,6 @@ blockget_f(
- 	 * filters out, or we need to actually do the work to make check support
- 	 * crc enabled filesystems.
- 	 */
--	if (xfs_sb_version_hascrc(&mp->m_sb))
--		return 0;
- 
- 	if (!init(argc, argv)) {
- 		if (serious_error)
-@@ -2217,7 +2215,9 @@ process_data_dir_v2(
- 	data = iocur_top->data;
- 	block = iocur_top->data;
- 	if (be32_to_cpu(block->magic) != XFS_DIR2_BLOCK_MAGIC &&
--			be32_to_cpu(data->magic) != XFS_DIR2_DATA_MAGIC) {
-+			be32_to_cpu(data->magic) != XFS_DIR2_DATA_MAGIC &&
-+			be32_to_cpu(block->magic) != XFS_DIR3_BLOCK_MAGIC &&
-+			be32_to_cpu(data->magic) != XFS_DIR3_DATA_MAGIC) {
- 		if (!sflag || v)
- 			dbprintf(_("bad directory data magic # %#x for dir ino "
- 				 "%lld block %d\n"),
-@@ -2228,7 +2228,8 @@ process_data_dir_v2(
- 	db = xfs_dir2_da_to_db(mp, dabno);
- 	bf = xfs_dir3_data_bestfree_p(data);
- 	ptr = (char *)xfs_dir3_data_unused_p(data);
--	if (be32_to_cpu(block->magic) == XFS_DIR2_BLOCK_MAGIC) {
-+	if (be32_to_cpu(block->magic) == XFS_DIR2_BLOCK_MAGIC ||
-+	    be32_to_cpu(block->magic) == XFS_DIR3_BLOCK_MAGIC) {
- 		btp = xfs_dir2_block_tail_p(mp, block);
- 		lep = xfs_dir2_block_leaf_p(btp);
- 		endptr = (char *)lep;
-@@ -2374,7 +2375,8 @@ process_data_dir_v2(
- 			(*dot)++;
- 		}
+@@ -949,6 +949,7 @@ blocktrash_b(
+ 	int		mask;
+ 	int		newbit;
+ 	int		offset;
++	const struct xfs_buf_ops *stashed_ops;
+ 	static char	*modestr[] = {
+ 		N_("zeroed"), N_("set"), N_("flipped"), N_("randomized")
+ 	};
+@@ -959,6 +960,8 @@ blocktrash_b(
+ 	push_cur();
+ 	set_cur(&typtab[DBM_UNKNOWN],
+ 		XFS_AGB_TO_DADDR(mp, agno, agbno), blkbb, DB_RING_IGN, NULL);
++	stashed_ops = iocur_top->bp->b_ops;
++	iocur_top->bp->b_ops = NULL;
+ 	if ((buf = iocur_top->data) == NULL) {
+ 		dbprintf(_("can't read block %u/%u for trashing\n"), agno, agbno);
+ 		pop_cur();
+@@ -989,6 +992,7 @@ blocktrash_b(
+ 			buf[byte] &= ~mask;
  	}
--	if (be32_to_cpu(data->magic) == XFS_DIR2_BLOCK_MAGIC) {
-+	if (be32_to_cpu(data->magic) == XFS_DIR2_BLOCK_MAGIC ||
-+	    be32_to_cpu(data->magic) == XFS_DIR3_BLOCK_MAGIC) {
- 		endptr = (char *)data + mp->m_dirblksize;
- 		for (i = stale = 0; lep && i < be32_to_cpu(btp->count); i++) {
- 			if ((char *)&lep[i] >= endptr) {
-@@ -2406,7 +2408,8 @@ process_data_dir_v2(
- 				id->ino, dabno);
- 		error++;
- 	}
--	if (be32_to_cpu(data->magic) == XFS_DIR2_BLOCK_MAGIC &&
-+	if ((be32_to_cpu(data->magic) == XFS_DIR2_BLOCK_MAGIC ||
-+	     be32_to_cpu(data->magic) == XFS_DIR3_BLOCK_MAGIC) &&
- 	    count != be32_to_cpu(btp->count) - be32_to_cpu(btp->stale)) {
- 		if (!sflag || v)
- 			dbprintf(_("dir %lld block %d bad block tail count %d "
-@@ -2415,7 +2418,8 @@ process_data_dir_v2(
- 				be32_to_cpu(btp->stale));
- 		error++;
- 	}
--	if (be32_to_cpu(data->magic) == XFS_DIR2_BLOCK_MAGIC && 
-+	if ((be32_to_cpu(data->magic) == XFS_DIR2_BLOCK_MAGIC ||
-+	     be32_to_cpu(data->magic) == XFS_DIR2_BLOCK_MAGIC) &&
- 					stale != be32_to_cpu(btp->stale)) {
- 		if (!sflag || v)
- 			dbprintf(_("dir %lld block %d bad stale tail count %d\n"),
-@@ -3014,7 +3018,8 @@ process_leaf_node_dir_v2_free(
- 	int			used;
- 
- 	free = iocur_top->data;
--	if (be32_to_cpu(free->hdr.magic) != XFS_DIR2_FREE_MAGIC) {
-+	if (be32_to_cpu(free->hdr.magic) != XFS_DIR2_FREE_MAGIC &&
-+	    be32_to_cpu(free->hdr.magic) != XFS_DIR3_FREE_MAGIC) {
- 		if (!sflag || v)
- 			dbprintf(_("bad free block magic # %#x for dir ino %lld "
- 				 "block %d\n"),
-@@ -3075,6 +3080,20 @@ process_leaf_node_dir_v2_free(
- 	}
- }
- 
-+/*
-+ * Get address of the bestcount field in the single-leaf block.
-+ */
-+static inline int
-+xfs_dir3_leaf_ents_count(struct xfs_dir2_leaf *lp)
-+{
-+	if (lp->hdr.info.magic == cpu_to_be16(XFS_DIR3_LEAF1_MAGIC) ||
-+	    lp->hdr.info.magic == cpu_to_be16(XFS_DIR3_LEAFN_MAGIC)) {
-+		struct xfs_dir3_leaf *lp3 = (struct xfs_dir3_leaf *)lp;
-+		return be16_to_cpu(lp3->hdr.count);
-+	}
-+	return be16_to_cpu(lp->hdr.count);
+ 	write_cur();
++	iocur_top->bp->b_ops = stashed_ops;
+ 	pop_cur();
+ 	printf(_("blocktrash: %u/%u %s block %d bit%s starting %d:%d %s\n"),
+ 		agno, agbno, typename[type], len, len == 1 ? "" : "s",
+diff --git a/db/xfsfuzz.sh b/db/xfsfuzz.sh
+new file mode 100755
+index 0000000..fe9573c
+--- /dev/null
++++ b/db/xfsfuzz.sh
+@@ -0,0 +1,303 @@
++#!/bin/bash
++
++# Test harness to fuzz a filesystem over and over...
++# Copyright (C) 2014 Oracle.
++
++DIR=/tmp
++PASSES=10000
++SZ=32m
++SCRIPT_DIR="$(dirname "$0")"
++FEATURES="-m crc=1,finobt=1"
++xEATURES="-m crc=0"
++BLK_SZ=4096
++INODE_SZ=512
++RUN_FSCK=1
++OVERRIDE_PATH=1
++MAX_FSCK=10
++SRCDIR=/etc
++FUZZ_ARGS="-3 -n 32"
++XFS_REPAIR_OPTS="-P"
++
++print_help() {
++	echo "Usage: $0 OPTIONS"
++	echo "-b:	FS block size is this. (${BLK_SZ})"
++	echo "-B:	Corrupt this many bytes per run."
++	echo "-d:	Create test files in this directory. (${DIR})"
++	echo "-f:	Do not run xfs_repair after each pass."
++	echo "-I:	Create inodes of this size. (${INODE_SZ})"
++	echo "-n:	Run this many passes. (${PASSES})"
++	echo "-O:	Pass this to mkfs.xfs."
++	echo "-p:	Use system's xfsprogs tools."
++	echo "-s:	Create FS images of this size. (${SZ})"
++	echo "-S:	Copy files from this dir. (${SRCDIR})"
++	echo "-x:	Run xfs_repair at most this many times. (${MAX_FSCK})"
++	exit 0
 +}
 +
- static void
- process_leaf_node_dir_v2_int(
- 	inodata_t		*id,
-@@ -3094,6 +3113,7 @@ process_leaf_node_dir_v2_int(
- 	leaf = iocur_top->data;
- 	switch (be16_to_cpu(leaf->hdr.info.magic)) {
- 	case XFS_DIR2_LEAF1_MAGIC:
-+	case XFS_DIR3_LEAF1_MAGIC:
- 		if (be32_to_cpu(leaf->hdr.info.forw) || 
- 					be32_to_cpu(leaf->hdr.info.back)) {
- 			if (!sflag || v)
-@@ -3133,10 +3153,12 @@ process_leaf_node_dir_v2_int(
- 		}
- 		break;
- 	case XFS_DIR2_LEAFN_MAGIC:
-+	case XFS_DIR3_LEAFN_MAGIC:
- 		/* if it's at the root location then we can check the
- 		 * pointers are null XXX */
- 		break;
- 	case XFS_DA_NODE_MAGIC:
-+	case XFS_DA3_NODE_MAGIC:
- 		node = iocur_top->data;
- 		xfs_da3_node_hdr_from_disk(&nodehdr, node);
- 		if (nodehdr.level < 1 || nodehdr.level > XFS_DA_NODE_MAXDEPTH) {
-@@ -3158,7 +3180,7 @@ process_leaf_node_dir_v2_int(
- 		return;
- 	}
- 	lep = xfs_dir3_leaf_ents_p(leaf);
--	for (i = stale = 0; i < be16_to_cpu(leaf->hdr.count); i++) {
-+	for (i = stale = 0; i < xfs_dir3_leaf_ents_count(leaf); i++) {
- 		if (be32_to_cpu(lep[i].address) == XFS_DIR2_NULL_DATAPTR)
- 			stale++;
- 		else if (dir_hash_see(be32_to_cpu(lep[i].hashval), 
-@@ -3957,7 +3979,8 @@ scanfunc_bmap(
- 
- 	agno = XFS_FSB_TO_AGNO(mp, bno);
- 	agbno = XFS_FSB_TO_AGBNO(mp, bno);
--	if (be32_to_cpu(block->bb_magic) != XFS_BMAP_MAGIC) {
-+	if (be32_to_cpu(block->bb_magic) != XFS_BMAP_MAGIC ||
-+	    be32_to_cpu(block->bb_magic) != XFS_BMAP_CRC_MAGIC) {
- 		if (!sflag || id->ilist || CHECK_BLIST(bno))
- 			dbprintf(_("bad magic # %#x in inode %lld bmbt block "
- 				 "%u/%u\n"),
-@@ -4022,7 +4045,8 @@ scanfunc_bno(
- 	xfs_agnumber_t		seqno = be32_to_cpu(agf->agf_seqno);
- 	xfs_agblock_t		lastblock;
- 
--	if (be32_to_cpu(block->bb_magic) != XFS_ABTB_MAGIC) {
-+	if (be32_to_cpu(block->bb_magic) != XFS_ABTB_MAGIC &&
-+	    be32_to_cpu(block->bb_magic) != XFS_ABTB_CRC_MAGIC) {
- 		dbprintf(_("bad magic # %#x in btbno block %u/%u\n"),
- 			be32_to_cpu(block->bb_magic), seqno, bno);
- 		serious_error++;
-@@ -4095,7 +4119,8 @@ scanfunc_cnt(
- 	xfs_alloc_rec_t		*rp;
- 	xfs_extlen_t		lastcount;
- 
--	if (be32_to_cpu(block->bb_magic) != XFS_ABTC_MAGIC) {
-+	if (be32_to_cpu(block->bb_magic) != XFS_ABTC_MAGIC &&
-+	    be32_to_cpu(block->bb_magic) != XFS_ABTC_CRC_MAGIC) {
- 		dbprintf(_("bad magic # %#x in btcnt block %u/%u\n"),
- 			be32_to_cpu(block->bb_magic), seqno, bno);
- 		serious_error++;
-@@ -4175,7 +4200,8 @@ scanfunc_ino(
- 	xfs_inobt_ptr_t		*pp;
- 	xfs_inobt_rec_t		*rp;
- 
--	if (be32_to_cpu(block->bb_magic) != XFS_IBT_MAGIC) {
-+	if (be32_to_cpu(block->bb_magic) != XFS_IBT_MAGIC &&
-+	    be32_to_cpu(block->bb_magic) != XFS_IBT_CRC_MAGIC) {
- 		dbprintf(_("bad magic # %#x in inobt block %u/%u\n"),
- 			be32_to_cpu(block->bb_magic), seqno, bno);
- 		serious_error++;
++GETOPT="d:n:s:O:I:b:B:fpx:S:"
++
++while getopts "${GETOPT}" opt; do
++	case "${opt}" in
++	"B")
++		FUZZ_ARGS="-3 -n ${OPTARG}"
++		;;
++	"d")
++		DIR="${OPTARG}"
++		;;
++	"n")
++		PASSES="${OPTARG}"
++		;;
++	"s")
++		SZ="${OPTARG}"
++		;;
++	"O")
++		FEATURES="${OPTARG}"
++		;;
++	"I")
++		INODE_SZ="${OPTARG}"
++		;;
++	"b")
++		BLK_SZ="${OPTARG}"
++		;;
++	"f")
++		RUN_FSCK=0
++		;;
++	"p")
++		OVERRIDE_PATH=0
++		;;
++	"x")
++		MAX_FSCK="${OPTARG}"
++		;;
++	"S")
++		SRCDIR="${OPTARG}"
++		;;
++	*)
++		print_help
++		;;
++	esac
++done
++
++if [ "${OVERRIDE_PATH}" -gt 0 ]; then
++	PATH="${SCRIPT_DIR}:${SCRIPT_DIR}/../repair/:${SCRIPT_DIR}/../db/:${SCRIPT_DIR}/../mkfs/:${PATH}"
++	export PATH
++fi
++
++TESTDIR="${DIR}/tests/"
++TESTMNT="${DIR}/mnt/"
++BASE_IMG="${DIR}/xfsfuzz.img"
++
++# Set up FS image
++echo "+ create fs image"
++umount "${TESTDIR}"
++umount "${TESTMNT}"
++rm -rf "${TESTDIR}"
++rm -rf "${TESTMNT}"
++mkdir -p "${TESTDIR}"
++mkdir -p "${TESTMNT}"
++rm -rf "${BASE_IMG}"
++truncate -s "${SZ}" "${BASE_IMG}"
++mkfs.xfs -f ${FEATURES} -b "size=${BLK_SZ}" -i "size=${INODE_SZ}" "${BASE_IMG}"
++if [ $? -ne 0 ]; then
++	exit $?
++fi
++
++# Populate FS image
++echo "+ populate fs image"
++modprobe loop
++mount "${BASE_IMG}" "${TESTMNT}" -o loop
++if [ $? -ne 0 ]; then
++	exit $?
++fi
++SRC_SZ="$(du -ks "${SRCDIR}" | awk '{print $1}')"
++FS_SZ="$(( $(stat -f "${TESTMNT}" -c '%a * %S') / 1024 ))"
++NR="$(( (FS_SZ * 6 / 10) / SRC_SZ ))"
++if [ "${NR}" -lt 1 ]; then
++	NR=1
++fi
++echo "+ make ${NR} copies"
++seq 1 "${NR}" | while read nr; do
++	cp -pRdu "${SRCDIR}" "${TESTMNT}/test.${nr}" 2> /dev/null
++done
++umount "${TESTMNT}"
++xfs_repair ${XFS_REPAIR_OPTS} -vn "${BASE_IMG}"
++if [ $? -ne 0 ]; then
++	echo "fsck failed??"
++	exit 1
++fi
++
++# Run tests
++echo "+ run test"
++ret=0
++seq 1 "${PASSES}" | while read pass; do
++	echo "+ pass ${pass}"
++	PASS_IMG="${TESTDIR}/xfsfuzz-${pass}.img"
++	FSCK_IMG="${TESTDIR}/xfsfuzz-${pass}.fsck"
++	FUZZ_LOG="${TESTDIR}/xfsfuzz-${pass}.fuzz.log"
++	OPS_LOG="${TESTDIR}/xfsfuzz-${pass}.ops.log"
++
++	echo "++ corrupt image"
++	cp "${BASE_IMG}" "${PASS_IMG}"
++	if [ $? -ne 0 ]; then
++		exit $?
++	fi
++	xfs_db -x -c "label xfsfuzz-${pass}" "${PASS_IMG}"
++	xfs_db -x -c blockget -c "blocktrash ${FUZZ_ARGS}" "${PASS_IMG}" > "${FUZZ_LOG}"
++#	res=$?
++#	if [ "${res}" -ne 0 ]; then
++#		echo "blocktrash returns ${res}"
++#		exit "${res}"
++#	fi
++
++	echo "++ mount image"
++	mount "${PASS_IMG}" "${TESTMNT}" -o loop
++	res=$?
++
++	if [ "${res}" -eq 0 ]; then
++		echo "+++ ls -laR"
++		ls -laR "${TESTMNT}/test.1/" > /dev/null 2> "${OPS_LOG}"
++
++		echo "+++ cat files"
++		find "${TESTMNT}/test.1/" -type f -size -1048576k -print0 | xargs -0 cat > /dev/null 2>> "${OPS_LOG}"
++
++		echo "+++ expand"
++		find "${TESTMNT}/" -type f 2> /dev/null | head -n 50000 | while read f; do
++			attr -l "$f" > /dev/null 2>> "${OPS_LOG}"
++			if [ -f "$f" -a -w "$f" ]; then
++				dd if=/dev/zero bs="${BLK_SZ}" count=1 >> "$f" 2>> "${OPS_LOG}"
++			fi
++			mv "$f" "$f.longer" > /dev/null 2>> "${OPS_LOG}"
++		done
++		sync
++
++		echo "+++ create files"
++		cp -pRdu "${SRCDIR}" "${TESTMNT}/test.moo" 2>> "${OPS_LOG}"
++		sync
++
++		echo "+++ remove files"
++		rm -rf "${TESTMNT}/test.moo" 2>> "${OPS_LOG}"
++
++		umount "${TESTMNT}"
++		res=$?
++		if [ "${res}" -ne 0 ]; then
++			ret=1
++			break
++		fi
++		sync
++	fi
++	if [ "${RUN_FSCK}" -gt 0 ]; then
++		cp "${PASS_IMG}" "${FSCK_IMG}"
++		pass_img_sz="$(stat -c '%s' "${PASS_IMG}")"
++
++		seq 1 "${MAX_FSCK}" | while read fsck_pass; do
++			echo "++ fsck pass ${fsck_pass}: $(which xfs_repair) -v ${FSCK_IMG}"
++			FSCK_LOG="${TESTDIR}/xfsfuzz-${pass}-${fsck_pass}.log"
++			echo "repairing" > "${FSCK_LOG}"
++			xfs_repair ${XFS_REPAIR_OPTS} -v "${FSCK_IMG}" >> "${FSCK_LOG}" 2>&1
++			res=$?
++			if [ "${res}" -eq 0 ]; then
++				echo "reverify" >> "${FSCK_LOG}"
++				xfs_repair ${XFS_REPAIR_OPTS} -v -n "${FSCK_IMG}" >> "${FSCK_LOG}" 2>&1
++				res=$?
++			fi
++			echo "++ fsck returns ${res}"
++			if [ "${res}" -eq 0 ]; then
++				exit 0
++			elif [ "${res}" -eq 2 ]; then
++				# replay log?
++				echo "replaying log" >> "${FSCK_LOG}"
++				dmesg > /tmp/a
++				mount "${FSCK_IMG}" "${TESTMNT}" -o loop
++				res=$?
++				if [ "${res}" -gt 0 ]; then
++					echo "+++ zeroing log"
++					echo "zeroing log" >> "${FSCK_LOG}"
++					xfs_repair ${XFS_REPAIR_OPTS} -L -v "${FSCK_IMG}" >> "${FSCK_LOG}" 2>&1
++				else
++					umount "${TESTMNT}"
++				fi
++				dmesg > /tmp/b
++				diff -u /tmp/a /tmp/b >> "${FSCK_LOG}"
++			elif [ "${fsck_pass}" -eq "${MAX_FSCK}" ]; then
++				echo "++ fsck did not fix in ${MAX_FSCK} passes."
++				exit 1
++			fi
++			if [ "${fsck_pass}" -gt 1 ]; then
++				diff -u "${TESTDIR}/xfsfuzz-${pass}-$((fsck_pass - 1)).log" "${FSCK_LOG}"
++				if [ $? -eq 0 ]; then
++					echo "++ fsck makes no progress"
++					exit 2
++				fi
++			fi
++
++			fsck_img_sz="$(stat -c '%s' "${FSCK_IMG}")"
++			if [ "${fsck_img_sz}" -ne "${pass_img_sz}" ]; then
++				echo "++ fsck image size changed"
++				exit 3
++			fi
++		done
++		fsck_loop_ret=$?
++		if [ "${fsck_loop_ret}" -gt 0 ]; then
++			break;
++		fi
++	fi
++
++	echo "+++ check fs for round 2"
++	FSCK_LOG="${TESTDIR}/xfsfuzz-${pass}-round2.log"
++	xfs_repair ${XFS_REPAIR_OPTS} -v -n "${FSCK_IMG}" > "${FSCK_LOG}" 2>&1
++	res=$?
++	if [ "${res}" -ne 0 ]; then
++		echo "++++ fsck failed."
++		exit 1
++	fi
++
++	echo "++ mount image (2)"
++	mount "${FSCK_IMG}" "${TESTMNT}" -o loop
++	res=$?
++
++	if [ "${res}" -eq 0 ]; then
++		echo "+++ ls -laR (2)"
++		ls -laR "${TESTMNT}/test.1/" > /dev/null 2> "${OPS_LOG}"
++
++		echo "+++ cat files (2)"
++		find "${TESTMNT}/test.1/" -type f -size -1048576k -print0 | xargs -0 cat > /dev/null 2>> "${OPS_LOG}"
++
++		echo "+++ expand (2)"
++		find "${TESTMNT}/" -type f 2> /dev/null | head -n 50000 | while read f; do
++			attr -l "$f" > /dev/null 2>> "${OPS_LOG}"
++			if [ -f "$f" -a -w "$f" ]; then
++				dd if=/dev/zero bs="${BLK_SZ}" count=1 >> "$f" 2>> "${OPS_LOG}"
++			fi
++			mv "$f" "$f.longer" > /dev/null 2>> "${OPS_LOG}"
++		done
++		sync
++
++		echo "+++ create files (2)"
++		cp -pRdu "${SRCDIR}" "${TESTMNT}/test.moo" 2>> "${OPS_LOG}"
++		sync
++
++		echo "+++ remove files (2)"
++		rm -rf "${TESTMNT}/test.moo" 2>> "${OPS_LOG}"
++
++		umount "${TESTMNT}"
++		res=$?
++		if [ "${res}" -ne 0 ]; then
++			ret=1
++			break
++		fi
++		sync
++
++		echo "+++ check fs (2)"
++		xfs_repair ${XFS_REPAIR_OPTS} -v -n "${FSCK_IMG}" >> "${FSCK_LOG}" 2>&1
++		res=$?
++		if [ "${res}" -ne 0 ]; then
++			echo "++++ fsck failed."
++			exit 1
++		fi
++	else
++		echo "++ mount(2) failed with ${res}"
++		exit 1
++	fi
++	rm -rf "${FSCK_IMG}" "${PASS_IMG}" "${FUZZ_LOG}" "${TESTDIR}"/xfsfuzz*.log
++done
++
++exit $ret
 
 _______________________________________________
 xfs mailing list
