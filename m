@@ -1,29 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 7C0FF7F37
-	for <xfs@oss.sgi.com>; Thu, 19 Mar 2015 12:27:39 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 4BD787F37
+	for <xfs@oss.sgi.com>; Thu, 19 Mar 2015 12:29:30 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 12A5EAC003
-	for <xfs@oss.sgi.com>; Thu, 19 Mar 2015 10:27:35 -0700 (PDT)
-Received: from newverein.lst.de (verein.lst.de [213.95.11.211]) by
-	cuda.sgi.com with ESMTP id e3D3QzXRjzb8oXdQ for
-	<xfs@oss.sgi.com>; Thu, 19 Mar 2015 10:27:34 -0700 (PDT)
-Date: Thu, 19 Mar 2015 18:27:31 +0100
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: panic on 4.20 server exporting xfs filesystem
-Message-ID: <20150319172731.GA16329@lst.de>
-References: <20150304224557.GY4251@dastard> <54F78BE5.1020608@sandeen.net>
-	<20150304225623.GZ4251@dastard>
-	<20150305040849.GJ1627@fieldses.org>
-	<20150305131731.GA16235@lst.de>
-	<20150305150138.GA15674@fieldses.org>
-	<20150305170217.GC15674@fieldses.org>
-	<20150305204749.GA17934@fieldses.org>
-	<20150305205922.GF18360@dastard>
-	<20150306204715.GA27257@fieldses.org>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 38BE18F804C
+	for <xfs@oss.sgi.com>; Thu, 19 Mar 2015 10:29:29 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id 3Xk5ECS9YGpAuC0x for <xfs@oss.sgi.com>;
+	Thu, 19 Mar 2015 10:29:28 -0700 (PDT)
+Message-ID: <550B0777.10108@sandeen.net>
+Date: Thu, 19 Mar 2015 12:29:27 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20150306204715.GA27257@fieldses.org>
+Subject: Re: [PATCH 12/13] xfs_repair: don't clear . or .. in process_dir2_data
+References: <1426624395-8258-1-git-send-email-sandeen@redhat.com>	<1426624395-8258-13-git-send-email-sandeen@redhat.com>
+	<20150319164716.GE11669@laptop.bfoster>
+In-Reply-To: <20150319164716.GE11669@laptop.bfoster>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -36,16 +28,52 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "J. Bruce Fields" <bfields@fieldses.org>
-Cc: Eric Sandeen <sandeen@sandeen.net>, linux-nfs@vger.kernel.org, xfs@oss.sgi.com
+To: Brian Foster <bfoster@redhat.com>, Eric Sandeen <sandeen@redhat.com>
+Cc: xfs@oss.sgi.com
 
-FYI, I've now managed to reproduce the issue.  I haven't had time
-to dig deeper, but it smells a lot like a callback path issue.
+On 3/19/15 11:47 AM, Brian Foster wrote:
+> On Tue, Mar 17, 2015 at 03:33:14PM -0500, Eric Sandeen wrote:
+>> process_dir2_data() has special . and .. processing; it is able
+>> to correct these inodes, so there is no reason to clear them.
+>>
+>> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+>> ---
+>>  repair/dir2.c |   12 ++++++++++++
+>>  1 files changed, 12 insertions(+), 0 deletions(-)
+>>
+>> diff --git a/repair/dir2.c b/repair/dir2.c
+>> index 9e6c67d..3acf71c 100644
+>> --- a/repair/dir2.c
+>> +++ b/repair/dir2.c
+>> @@ -1331,6 +1331,18 @@ _("entry at block %u offset %" PRIdPTR " in directory inode %" PRIu64
+>>  				dep->namelen = 1;
+>>  			clearino = 1;
+>>  		}
+>> +
+>> +		/*
+>> +		 * We have a special dot & dotdot fixer-upper below which can
+>> +		 * sort out the proper inode number, so don't clear it.
+>> +		 */
+>> +		if ((dep->namelen == 1 && dep->name[0] == '.') ||
+>> +		    (dep->namelen == 2 &&
+>> +		     dep->name[0] == '.' && dep->name[1] == '.')) {
+>> +			clearino = 0;
+>> +			clearreason = NULL;
+>> +		}
+>> +		    
+> 
+> Whitespace damage on the blank line above.
+> 
+> Seems Ok, but the question I have is what happens if the dot or dotdot
+> namelen was bogus? 
 
-Can you send the recursion fix to Linus ASAP and I'll send you a patch
-to turn the nopnfs option into a pnfs one, so we're at least doing
-fine for 4.0 in any case.  I hope to debug this and may even have
-a real fix soon, but so far I don't know how long it will take.
+If namelen is 1 and name[0] is '.', or
+if namelen is 2 and name[0] is '.' and name[1] is '..'
+
+then how can that the len be bogus?  The test is for the name being
+either precisely '.' or '..' and nothing else, right?
+
+-Eric
 
 _______________________________________________
 xfs mailing list
