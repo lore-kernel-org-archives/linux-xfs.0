@@ -1,23 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 7238F7F37
-	for <xfs@oss.sgi.com>; Thu, 19 Mar 2015 13:28:58 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 60E298F8070
-	for <xfs@oss.sgi.com>; Thu, 19 Mar 2015 11:28:58 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id b5P95HNKGn4BbUzx (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 19 Mar 2015 11:28:57 -0700 (PDT)
-Date: Thu, 19 Mar 2015 14:28:54 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH] xfs_repair: don't abort on bad directory leaf crc during
-	leaf check
-Message-ID: <20150319182854.GJ11669@laptop.bfoster>
-References: <20150318232239.GB24608@birch.djwong.org>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 089457F37
+	for <xfs@oss.sgi.com>; Thu, 19 Mar 2015 13:47:17 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id D94FE304053
+	for <xfs@oss.sgi.com>; Thu, 19 Mar 2015 11:47:16 -0700 (PDT)
+Received: from fieldses.org (fieldses.org [173.255.197.46]) by cuda.sgi.com
+	with ESMTP id TqVeKoP2YzEnplTL for <xfs@oss.sgi.com>;
+	Thu, 19 Mar 2015 11:47:15 -0700 (PDT)
+Date: Thu, 19 Mar 2015 14:47:14 -0400
+From: "J. Bruce Fields" <bfields@fieldses.org>
+Subject: Re: panic on 4.20 server exporting xfs filesystem
+Message-ID: <20150319184714.GB20852@fieldses.org>
+References: <54F78BE5.1020608@sandeen.net> <20150304225623.GZ4251@dastard>
+	<20150305040849.GJ1627@fieldses.org>
+	<20150305131731.GA16235@lst.de>
+	<20150305150138.GA15674@fieldses.org>
+	<20150305170217.GC15674@fieldses.org>
+	<20150305204749.GA17934@fieldses.org>
+	<20150305205922.GF18360@dastard>
+	<20150306204715.GA27257@fieldses.org>
+	<20150319172731.GA16329@lst.de>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20150318232239.GB24608@birch.djwong.org>
+In-Reply-To: <20150319172731.GA16329@lst.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,51 +36,43 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: xfs@oss.sgi.com
+To: Christoph Hellwig <hch@lst.de>
+Cc: Eric Sandeen <sandeen@sandeen.net>, linux-nfs@vger.kernel.org, xfs@oss.sgi.com
 
-On Wed, Mar 18, 2015 at 04:22:39PM -0700, Darrick J. Wong wrote:
-> longform_dir2_check_leaf() checks a directory leaf block to help
-> decide if we need to rebuild the directory.  If the verifier fails
-> with a CRC or corrupt structure error, rebuild the directory instead
-> of aborting.
+On Thu, Mar 19, 2015 at 06:27:31PM +0100, Christoph Hellwig wrote:
+> FYI, I've now managed to reproduce the issue.  I haven't had time
+> to dig deeper, but it smells a lot like a callback path issue.
 > 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  repair/phase6.c |    7 ++++++-
->  1 file changed, 6 insertions(+), 1 deletion(-)
-> 
-> diff --git a/repair/phase6.c b/repair/phase6.c
-> index 1728609..c09b394 100644
-> --- a/repair/phase6.c
-> +++ b/repair/phase6.c
-> @@ -1951,7 +1951,12 @@ longform_dir2_check_leaf(
->  	da_bno = mp->m_dirleafblk;
->  	error = dir_read_buf(ip, da_bno, -1, &bp, &xfs_dir3_leaf1_buf_ops,
->  			     &fixit);
-> -	if (error) {
-> +	if (error == EFSBADCRC || error == EFSCORRUPTED || fixit) {
-> +		do_warn(
-> +	_("leaf block %u for directory inode %" PRIu64 " bad CRC\n"),
-> +			da_bno, ip->i_ino);
-> +		return 1;
-> +	} else if (error) {
+> Can you send the recursion fix to Linus ASAP and I'll send you a patch
+> to turn the nopnfs option into a pnfs one, so we're at least doing
+> fine for 4.0 in any case.
 
-I don't think we'll ever see EFSBADCRC from this codepath (that appears
-to be the purpose of 'fixit'). Looking at it further, it's self
-documenting and robust against changes in the read codepath, so seems
-pretty good to me:
+Sure, sounds good.
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+Also, there's the problem that when this is turned on a client can end
+up doing unnecessary LAYOUTGET.  Do we have a plan for that?
 
->  		do_error(
->  	_("can't read block %u for directory inode %" PRIu64 ", error %d\n"),
->  			da_bno, ip->i_ino, error);
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+Possibilities:
+
+	- Just depend on export flags: but some clients may have direct
+	  access and some not.  If the clients with direct access or all
+	  easily identifiable by IP subnet, maybe it's not a big deal.
+	  Still, seems like an administrative hassle.
+
+	- Do nothing, assume the client can deal with this with some
+	  kind of heuristics, and/or that the GETLAYOUT calls can be
+	  made very cheap.  Not sure if that's true.
+
+	- Use something like GETDEVLICELIST so the client can figure out
+	  in one go whether any layouts on a given filesystem will work.
+	  I forget what the problems with GETDEVICELIST were.
+
+> I hope to debug this and may even have
+> a real fix soon, but so far I don't know how long it will take.
+
+OK, thanks.
+
+--b.
 
 _______________________________________________
 xfs mailing list
