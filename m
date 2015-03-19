@@ -1,28 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 239CC7F37
-	for <xfs@oss.sgi.com>; Thu, 19 Mar 2015 10:07:14 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id A8B25AC001
-	for <xfs@oss.sgi.com>; Thu, 19 Mar 2015 08:07:10 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 77F397F37
+	for <xfs@oss.sgi.com>; Thu, 19 Mar 2015 10:07:28 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 576108F8064
+	for <xfs@oss.sgi.com>; Thu, 19 Mar 2015 08:07:25 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id Y8Unxjf9XvGFiyl1 (version=TLSv1
+	cuda.sgi.com with ESMTP id PK9TiJHeHxIascR0 (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 19 Mar 2015 08:07:09 -0700 (PDT)
-Received: from int-mx10.intmail.prod.int.phx2.redhat.com
-	(int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
-	by mx1.redhat.com (Postfix) with ESMTPS id 3C51BCC086
-	for <xfs@oss.sgi.com>; Thu, 19 Mar 2015 15:07:09 +0000 (UTC)
-Date: Thu, 19 Mar 2015 11:07:06 -0400
+	Thu, 19 Mar 2015 08:07:24 -0700 (PDT)
+Received: from int-mx09.intmail.prod.int.phx2.redhat.com
+	(int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id t2JF7Nn3012930
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256
+	verify=FAIL) for <xfs@oss.sgi.com>; Thu, 19 Mar 2015 11:07:23 -0400
+Date: Thu, 19 Mar 2015 11:07:21 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 01/13] xfs_db: Allow writes of corrupted data by
-	optionally skipping write verifiers
-Message-ID: <20150319150706.GA11669@laptop.bfoster>
+Subject: Re: [PATCH 02/13] xfs_db: fix inode CRC validity state, and warn on
+	read if invalid
+Message-ID: <20150319150721.GB11669@laptop.bfoster>
 References: <1426624395-8258-1-git-send-email-sandeen@redhat.com>
-	<1426624395-8258-2-git-send-email-sandeen@redhat.com>
+	<1426624395-8258-3-git-send-email-sandeen@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1426624395-8258-2-git-send-email-sandeen@redhat.com>
+In-Reply-To: <1426624395-8258-3-git-send-email-sandeen@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -38,156 +39,110 @@ Sender: xfs-bounces@oss.sgi.com
 To: Eric Sandeen <sandeen@redhat.com>
 Cc: xfs@oss.sgi.com
 
-On Tue, Mar 17, 2015 at 03:33:03PM -0500, Eric Sandeen wrote:
-> Being able to write corrupt data is handy if we wish to test
-> repair against specific types of corruptions.
+On Tue, Mar 17, 2015 at 03:33:04PM -0500, Eric Sandeen wrote:
+> Currently, the "ino_crc_ok" field on the io cursor reflects
+> overall inode validity, not CRC correctness.  Because it is
+> only used when printing CRC validity, change it to reflect
+> only that state - and update it whenever we re-write the
+> inode (thus updating the CRC).
 > 
-> Add a "-c" option to the write command which allows this.
+> In addition, when reading an inode, warn if the CRC is bad.
 > 
-> Note that this also skips CRC updates; it's not currently possible
-> to write invalid data with a valid CRC; CRC recalculation is
-> intertwined with validation.
+> Note, when specifying an inode which doesn't actually exist,
+> this will claim corruption; I'm not sure if that's good or
+> bad. Today, it already issues corruption errors on the way;
+> this adds a new message as well:
+> 
+> xfs_db> inode 129
+> Metadata corruption detected at block 0x80/0x2000
+> Metadata corruption detected at block 0x80/0x2000
+> ...
+> Metadata CRC error detected for ino 129
 > 
 > Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 > ---
->  db/io.c           |    7 +++++++
->  db/io.h           |    1 +
->  db/write.c        |   35 +++++++++++++++++++++++++++++++----
->  man/man8/xfs_db.8 |    8 +++++++-
->  4 files changed, 46 insertions(+), 5 deletions(-)
+
+So is the objective here to simply give the field an explicit meaning?
+E.g., indicate whether the crc is valid, irrespective of whether
+something else might be wrong with the inode?
+
+>  db/inode.c       |    7 ++++++-
+>  db/io.c          |    4 +++-
+>  include/libxfs.h |    2 ++
+>  3 files changed, 11 insertions(+), 2 deletions(-)
 > 
+> diff --git a/db/inode.c b/db/inode.c
+> index 24170ba..982acb7 100644
+> --- a/db/inode.c
+> +++ b/db/inode.c
+> @@ -684,13 +684,18 @@ set_cur_inode(
+>  		numblks, DB_RING_IGN, NULL);
+>  	off_cur(offset << mp->m_sb.sb_inodelog, mp->m_sb.sb_inodesize);
+>  	dip = iocur_top->data;
+> -	iocur_top->ino_crc_ok = libxfs_dinode_verify(mp, ino, dip);
+> +	iocur_top->ino_crc_ok = libxfs_verify_cksum((char *)dip,
+> +						    mp->m_sb.sb_inodesize,
+> +						    XFS_DINODE_CRC_OFF);
+
+With this replaced, it doesn't look like anybody else will call
+libxfs_dinode_verify (analogous to xfs_iread() in kernel). Is that
+intentional? I guess the magic and version should be checked in the read
+verifier, but there are a couple other checks in that helper as well.
+
+>  	iocur_top->ino_buf = 1;
+>  	iocur_top->ino = ino;
+>  	iocur_top->mode = be16_to_cpu(dip->di_mode);
+>  	if ((iocur_top->mode & S_IFMT) == S_IFDIR)
+>  		iocur_top->dirino = ino;
+>  
+> +	if (xfs_sb_version_hascrc(&mp->m_sb) && !iocur_top->ino_crc_ok)
+> +		dbprintf(_("Metadata CRC error detected for ino %lld\n"), ino);
+> +
+
+Hmm.. if we keep this, could we combine with the hunk above? I ask
+simply because I'd rather see the _hascrc() check around the verify_cksum()
+check as well, rather than verifying a cksum and ignoring it.
+
+It's also a little confusing how this field is handled without crc
+enabled. write_cur() looks like it sets it and calls
+libxfs_dinode_calc_crc() blindly, which asserts that crc is enabled. I
+guess we just don't print anything if crc=0, but it would be nice if the
+flag was consistent.
+
+Brian
+
+>  	/* track updated info in ring */
+>  	ring_add();
+>  }
 > diff --git a/db/io.c b/db/io.c
-> index 7f1b76a..c5898f1 100644
+> index c5898f1..91858e2 100644
 > --- a/db/io.c
 > +++ b/db/io.c
-> @@ -457,6 +457,13 @@ write_cur_bbs(void)
->  }
->  
->  void
-> +xfs_dummy_verify(
-> +	struct xfs_buf *bp)
-> +{
-> +	return;
-> +}
-> +
-> +void
->  write_cur(void)
->  {
->  	if (iocur_sp < 0) {
-> diff --git a/db/io.h b/db/io.h
-> index 71082e6..31d96b4 100644
-> --- a/db/io.h
-> +++ b/db/io.h
-> @@ -63,6 +63,7 @@ extern void	set_cur(const struct typ *t, __int64_t d, int c, int ring_add,
->  			bbmap_t *bbmap);
->  extern void     ring_add(void);
->  extern void	set_iocur_type(const struct typ *t);
-> +extern void	xfs_dummy_verify(struct xfs_buf *bp);
->  
->  /*
->   * returns -1 for unchecked, 0 for bad and 1 for good
-> diff --git a/db/write.c b/db/write.c
-> index a0f14f4..4511859 100644
-> --- a/db/write.c
-> +++ b/db/write.c
-> @@ -38,7 +38,7 @@ static int	write_f(int argc, char **argv);
->  static void     write_help(void);
->  
->  static const cmdinfo_t	write_cmd =
-> -	{ "write", NULL, write_f, 0, -1, 0, N_("[field or value]..."),
-> +	{ "write", NULL, write_f, 0, -1, 0, N_("[-c] [field or value]..."),
->  	  N_("write value to disk"), write_help };
->  
->  void
-> @@ -79,6 +79,7 @@ write_help(void)
->  "  String mode: 'write \"This_is_a_filename\" - write null terminated string.\n"
->  "\n"
->  " In data mode type 'write' by itself for a list of specific commands.\n\n"
-> +" Specifying the -c option will allow writes of invalid (corrupt) data.\n\n"
->  ));
->  
->  }
-> @@ -90,6 +91,10 @@ write_f(
->  {
->  	pfunc_t	pf;
->  	extern char *progname;
-> +	int c;
-> +	int corrupt = 0;		/* Allow write of corrupt data; skip verification */
-> +	struct xfs_buf_ops nowrite_ops;
-> +	const struct xfs_buf_ops *stashed_ops = NULL; 
-
-Still has whitespace damage on the line above and the if (argc) thing in
-the hunk below. Can we kill those? This looks fine to me otherwise:
-
-Reviewed-by: Brian Foster <bfoster@redhat.com>
-
->  
->  	if (x.isreadonly & LIBXFS_ISREADONLY) {
->  		dbprintf(_("%s started in read only mode, writing disabled\n"),
-> @@ -109,12 +114,34 @@ write_f(
->  		return 0;
+> @@ -471,8 +471,10 @@ write_cur(void)
+>  		return;
 >  	}
 >  
-> -	/* move past the "write" command */
-> -	argc--;
-> -	argv++;
-> +	if (argc) while ((c = getopt(argc, argv, "c")) != EOF) {
-> +		switch (c) {
-> +		case 'c':
-> +			corrupt = 1;
-> +			break;
-> +		default:
-> +			dbprintf(_("bad option for write command\n"));
-> +			return 0;
-> +		}
+> -	if (iocur_top->ino_buf)
+> +	if (iocur_top->ino_buf) {
+>  		libxfs_dinode_calc_crc(mp, iocur_top->data);
+> +		iocur_top->ino_crc_ok = 1;
 > +	}
-> +
-> +	argc -= optind;
-> +	argv += optind;
-> +
-> +	if (corrupt) {
-> +		/* Temporarily remove write verifier to write bad data */
-> +		stashed_ops = iocur_top->bp->b_ops;
-> +		nowrite_ops.verify_read = stashed_ops->verify_read;
-> +		nowrite_ops.verify_write = xfs_dummy_verify;
-> +		iocur_top->bp->b_ops = &nowrite_ops;
-> +		dbprintf(_("Allowing write of corrupted data\n"));
-> +	}
+>  	if (iocur_top->dquot_buf)
+>  		xfs_update_cksum(iocur_top->data, sizeof(struct xfs_dqblk),
+>  				 XFS_DQUOT_CRC_OFF);
+> diff --git a/include/libxfs.h b/include/libxfs.h
+> index 45a924f..962e319 100644
+> --- a/include/libxfs.h
+> +++ b/include/libxfs.h
+> @@ -782,6 +782,8 @@ extern uint32_t crc32c_le(uint32_t crc, unsigned char const *p, size_t len);
 >  
->  	(*pf)(DB_WRITE, cur_typ->fields, argc, argv);
+>  #include <xfs/xfs_cksum.h>
 >  
-> +	if (stashed_ops)
-> +		iocur_top->bp->b_ops = stashed_ops;
+> +#define libxfs_verify_cksum	xfs_verify_cksum
 > +
->  	return 0;
->  }
->  
-> diff --git a/man/man8/xfs_db.8 b/man/man8/xfs_db.8
-> index 4d8d4ff..d527230 100644
-> --- a/man/man8/xfs_db.8
-> +++ b/man/man8/xfs_db.8
-> @@ -711,7 +711,7 @@ and
->  bits respectively, and their string equivalent reported
->  (but no modifications are made).
->  .TP
-> -.BI "write [" "field value" "] ..."
-> +.BI "write [\-c] [" "field value" "] ..."
->  Write a value to disk.
->  Specific fields can be set in structures (struct mode),
->  or a block can be set to data values (data mode),
-> @@ -729,6 +729,12 @@ contents of the block can be shifted or rotated left or right, or filled
->  with a sequence, a constant value, or a random value. In this mode
->  .B write
->  with no arguments gives more information on the allowed commands.
-> +.RS 1.0i
-> +.TP 0.4i
-> +.B \-c
-> +Skip write verifiers and CRC recalculation; allows invalid data to be written
-> +to disk.
-> +.RE
->  .SH TYPES
->  This section gives the fields in each structure type and their meanings.
->  Note that some types of block cover multiple actual structures,
+>  static inline int
+>  xfs_buf_verify_cksum(struct xfs_buf *bp, unsigned long cksum_offset)
+>  {
 > -- 
 > 1.7.1
 > 
