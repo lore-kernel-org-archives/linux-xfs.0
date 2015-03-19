@@ -1,25 +1,34 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 5FB247F37
-	for <xfs@oss.sgi.com>; Thu, 19 Mar 2015 17:59:43 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id C3225AC003
-	for <xfs@oss.sgi.com>; Thu, 19 Mar 2015 15:59:42 -0700 (PDT)
-Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
-	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	HVPbfrp4rdiXC5BA for <xfs@oss.sgi.com>;
-	Thu, 19 Mar 2015 15:59:39 -0700 (PDT)
-Date: Fri, 20 Mar 2015 09:59:17 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] libxfs: don't write uninitialized heap contents into new
-	directory blocks
-Message-ID: <20150319225917.GJ10105@dastard>
-References: <20150318232159.GA24608@birch.djwong.org>
-	<20150319182834.GI11669@laptop.bfoster>
-	<20150319210250.GF24608@birch.djwong.org>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 0184B7F37
+	for <xfs@oss.sgi.com>; Thu, 19 Mar 2015 18:05:55 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id BC2A330408D
+	for <xfs@oss.sgi.com>; Thu, 19 Mar 2015 16:05:51 -0700 (PDT)
+Received: from mail-ig0-f173.google.com (mail-ig0-f173.google.com
+	[209.85.213.173]) by cuda.sgi.com with ESMTP id
+	qFDF5cj7RJ687qFh (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 19 Mar 2015 16:05:47 -0700 (PDT)
+Received: by igcqo1 with SMTP id qo1so3781991igc.0
+	for <xfs@oss.sgi.com>; Thu, 19 Mar 2015 16:05:46 -0700 (PDT)
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20150319210250.GF24608@birch.djwong.org>
+In-Reply-To: <20150319224143.GI10105@dastard>
+References: <CA+55aFx=81BGnQFNhnAGu6CetL7yifPsnD-+v7Y6QRqwgH47gQ@mail.gmail.com>
+	<20150312184925.GH3406@suse.de> <20150317070655.GB10105@dastard>
+	<CA+55aFzdLnFdku-gnm3mGbeS=QauYBNkFQKYXJAGkrMd2jKXhw@mail.gmail.com>
+	<20150317205104.GA28621@dastard>
+	<CA+55aFzSPcNgxw4GC7aAV1r0P5LniyVVC66COz=3cgMcx73Nag@mail.gmail.com>
+	<20150317220840.GC28621@dastard>
+	<CA+55aFwne-fe_Gg-_GTUo+iOAbbNpLBa264JqSFkH79EULyAqw@mail.gmail.com>
+	<CA+55aFy-Mw74rAdLMMMUgnsG3ZttMWVNGz7CXZJY7q9fqyRYfg@mail.gmail.com>
+	<CA+55aFyxA9u2cVzV+S7TSY9ZvRXCX=z22YAbi9mdPVBKmqgR5g@mail.gmail.com>
+	<20150319224143.GI10105@dastard>
+Date: Thu, 19 Mar 2015 16:05:46 -0700
+Message-ID: <CA+55aFy5UeNnFUTi619cs3b9Up2NQ1wbuyvcCS614+o3=z=wBQ@mail.gmail.com>
+Subject: Re: [PATCH 4/4] mm: numa: Slow PTE scan rate if migration failures
+	occur
+From: Linus Torvalds <torvalds@linux-foundation.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,74 +41,42 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Brian Foster <bfoster@redhat.com>, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, Linux-MM <linux-mm@kvack.org>, Aneesh Kumar <aneesh.kumar@linux.vnet.ibm.com>, Andrew Morton <akpm@linux-foundation.org>, ppc-dev <linuxppc-dev@lists.ozlabs.org>, Ingo Molnar <mingo@kernel.org>, Mel Gorman <mgorman@suse.de>
 
-On Thu, Mar 19, 2015 at 02:02:50PM -0700, Darrick J. Wong wrote:
-> On Thu, Mar 19, 2015 at 02:28:34PM -0400, Brian Foster wrote:
-> > On Wed, Mar 18, 2015 at 04:21:59PM -0700, Darrick J. Wong wrote:
-> > > When we're initializing a new directory block, zero the buffer
-> > > contents to avoid writing random heap contents (and crc thereof)
-> > > to disk.  This eliminates a few valgrind complaints in xfs_repair.
-> > > 
-> > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > > ---
-> > 
-> > Well it seems Ok to me:
-> > 
-> > Reviewed-by: Brian Foster <bfoster@redhat.com>
-> > 
-> > ... but I do notice that we start ending up with multiple memset() calls
-> > throughout these codepaths. E.g., xfs_dir3_data_init() memsets the
-> > target bytes for the header if crc is enabled, xfs_dir3_leaf_get_buf()
-> > calls xfs_dir3_leaf_init() which does something similar, etc.
-> > 
-> > I wonder if we should just zero the buffer content unconditionally on
-> > allocation?
-> 
-> I thought about that too -- certainly we could zero b_addr as soon as it's
-> allocated in __initbuf, which would shut up Valgrind.  I think this is what
-> Dave was getting at when he suggested __libxfs_getbufr(), even though that
-> function only frees b_addr if it touches it at all.
+On Thu, Mar 19, 2015 at 3:41 PM, Dave Chinner <david@fromorbit.com> wrote:
+>
+> My recollection wasn't faulty - I pulled it from an earlier email.
+> That said, the original measurement might have been faulty. I ran
+> the numbers again on the 3.19 kernel I saved away from the original
+> testing. That came up at 235k, which is pretty much the same as
+> yesterday's test. The runtime,however, is unchanged from my original
+> measurements of 4m54s (pte_hack came in at 5m20s).
 
-It frees b_addr only if the buffer found on the free list does not
-match the length of the new buffer. Otherwise it just reuses it
-directly. It probably doesn't matter if zeroing is done in
-__initbuf, it is always called after __libxfs_getbufr() returns a
-buffer handle, anyway.
+Ok. Good. So the "more than an order of magnitude difference" was
+really about measurement differences, not quite as real. Looks like
+more a "factor of two" than a factor of 20.
 
-> On the other hand, the
-> next thing could happen is that the buffer is read in from disk, which makes
-> the zeroing unnecessary.  The readbuf functions call the getbuf functions,
-> which makes it difficult to tell from the getbuf functions what's going to
-> happen next.
-> 
-> However, I think there's a second problem: what if the xfsbuf is reused without
-> freeing the b_addr?
+Did you do the profiles the same way? Because that would explain the
+differences in the TLB flush percentages too (the "1.4% from
+tlb_invalidate_range()" vs "pretty much everything from migration").
 
-Yup, that's what __libxfs_getbufr() does ;)
+The runtime variation does show that there's some *big* subtle
+difference for the numa balancing in the exact TNF_NO_GROUP details.
+It must be *very* unstable for it to make that big of a difference.
+But I feel at least a *bit* better about "unstable algorithm changes a
+small varioation into a factor-of-two" vs that crazy factor-of-20.
 
-> This seems possible if we read in the block, detach it
-> from whatever points to it, and then we want to allocate it to a directory.
-> The buffer's still in memory and it's still the right size, so we don't free
-> b_addr; the init function doesn't overwrite the whole buffer, and now we've
-> just leaked old disk contents.  Adding a memset to getbuf would fix this, but
-> again at a cost of unnecessary zeroing.
+Can you try Mel's change to make it use
 
-Leaked the contents to whom?
+        if (!(vma->vm_flags & VM_WRITE))
 
-In the kernel we don't care about stale contents in metadata buffers
-as the contents cannot be directly read from userspace. i.e. there
-is no vector for information leakage (other than through the root
-user reading the bdev directly), so we don't need to zero buffers to
-prevent information leakage either in userspace or the kernel...
+instead of the pte details? Again, on otherwise plain 3.19, just so
+that we have a baseline. I'd be *so* much happer with checking the vma
+details over per-pte details, especially ones that change over the
+lifetime of the pte entry, and the NUMA code explicitly mucks with.
 
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+                           Linus
 
 _______________________________________________
 xfs mailing list
