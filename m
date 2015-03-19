@@ -1,34 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 0184B7F37
-	for <xfs@oss.sgi.com>; Thu, 19 Mar 2015 18:05:55 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 73CC17F37
+	for <xfs@oss.sgi.com>; Thu, 19 Mar 2015 18:23:02 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id BC2A330408D
-	for <xfs@oss.sgi.com>; Thu, 19 Mar 2015 16:05:51 -0700 (PDT)
-Received: from mail-ig0-f173.google.com (mail-ig0-f173.google.com
-	[209.85.213.173]) by cuda.sgi.com with ESMTP id
-	qFDF5cj7RJ687qFh (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 19 Mar 2015 16:05:47 -0700 (PDT)
-Received: by igcqo1 with SMTP id qo1so3781991igc.0
-	for <xfs@oss.sgi.com>; Thu, 19 Mar 2015 16:05:46 -0700 (PDT)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 28FB48F809B
+	for <xfs@oss.sgi.com>; Thu, 19 Mar 2015 16:22:58 -0700 (PDT)
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	BqsAXOufzfGoJgC1 for <xfs@oss.sgi.com>;
+	Thu, 19 Mar 2015 16:22:56 -0700 (PDT)
+Date: Fri, 20 Mar 2015 10:13:23 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] mkfs: default to CRC enabled filesystems
+Message-ID: <20150319231323.GK10105@dastard>
+References: <1426720967-8215-1-git-send-email-david@fromorbit.com>
+	<550AE35D.40006@sandeen.net>
 MIME-Version: 1.0
-In-Reply-To: <20150319224143.GI10105@dastard>
-References: <CA+55aFx=81BGnQFNhnAGu6CetL7yifPsnD-+v7Y6QRqwgH47gQ@mail.gmail.com>
-	<20150312184925.GH3406@suse.de> <20150317070655.GB10105@dastard>
-	<CA+55aFzdLnFdku-gnm3mGbeS=QauYBNkFQKYXJAGkrMd2jKXhw@mail.gmail.com>
-	<20150317205104.GA28621@dastard>
-	<CA+55aFzSPcNgxw4GC7aAV1r0P5LniyVVC66COz=3cgMcx73Nag@mail.gmail.com>
-	<20150317220840.GC28621@dastard>
-	<CA+55aFwne-fe_Gg-_GTUo+iOAbbNpLBa264JqSFkH79EULyAqw@mail.gmail.com>
-	<CA+55aFy-Mw74rAdLMMMUgnsG3ZttMWVNGz7CXZJY7q9fqyRYfg@mail.gmail.com>
-	<CA+55aFyxA9u2cVzV+S7TSY9ZvRXCX=z22YAbi9mdPVBKmqgR5g@mail.gmail.com>
-	<20150319224143.GI10105@dastard>
-Date: Thu, 19 Mar 2015 16:05:46 -0700
-Message-ID: <CA+55aFy5UeNnFUTi619cs3b9Up2NQ1wbuyvcCS614+o3=z=wBQ@mail.gmail.com>
-Subject: Re: [PATCH 4/4] mm: numa: Slow PTE scan rate if migration failures
-	occur
-From: Linus Torvalds <torvalds@linux-foundation.org>
+Content-Disposition: inline
+In-Reply-To: <550AE35D.40006@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -41,42 +30,100 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, Linux-MM <linux-mm@kvack.org>, Aneesh Kumar <aneesh.kumar@linux.vnet.ibm.com>, Andrew Morton <akpm@linux-foundation.org>, ppc-dev <linuxppc-dev@lists.ozlabs.org>, Ingo Molnar <mingo@kernel.org>, Mel Gorman <mgorman@suse.de>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: xfs@oss.sgi.com
 
-On Thu, Mar 19, 2015 at 3:41 PM, Dave Chinner <david@fromorbit.com> wrote:
->
-> My recollection wasn't faulty - I pulled it from an earlier email.
-> That said, the original measurement might have been faulty. I ran
-> the numbers again on the 3.19 kernel I saved away from the original
-> testing. That came up at 235k, which is pretty much the same as
-> yesterday's test. The runtime,however, is unchanged from my original
-> measurements of 4m54s (pte_hack came in at 5m20s).
+On Thu, Mar 19, 2015 at 09:55:25AM -0500, Eric Sandeen wrote:
+> On 3/18/15 6:22 PM, Dave Chinner wrote:
+> > From: Dave Chinner <dchinner@redhat.com>
+> > 
+> > It's time to change the mkfs defaults to enable CRCs for all new
+> > filesystems. While there, also enable the free inode btree by
+> > default, too, as that functioanlity has also had long enough to make
+> 
+> "functionality" ;)
+> 
+> > it into distro kernels, too.
+> 
+> > 
+> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> 
+> > ---
+> >  mkfs/xfs_mkfs.c | 21 ++++++++++-----------
+> >  1 file changed, 10 insertions(+), 11 deletions(-)
+> > 
+> > diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+> > index 484e7a8..d7e70fa 100644
+> > --- a/mkfs/xfs_mkfs.c
+> > +++ b/mkfs/xfs_mkfs.c
+> > @@ -1024,8 +1024,8 @@ main(
+> >  	force_overwrite = 0;
+> >  	worst_freelist = 0;
+> >  	lazy_sb_counters = 1;
+> > -	crcs_enabled = 0;
+> > -	finobt = 0;
+> > +	crcs_enabled = 1;
+> > +	finobt = 1;
+> >  	memset(&fsx, 0, sizeof(fsx));
+> >  
+> >  	memset(&xi, 0, sizeof(xi));
+> > @@ -1866,15 +1866,14 @@ _("V2 attribute format always enabled on CRC enabled filesytems\n"));
+> >  _("32 bit Project IDs always enabled on CRC enabled filesytems\n"));
+> >  			usage();
+> >  		}
+> > -	}
+> > -
+> > -	/*
+> > -	 * The kernel doesn't currently support crc=0,finobt=1 filesystems.
+> > -	 * Catch it here, disable finobt and warn the user.
+> > -	 */
+> > -	if (finobt && !crcs_enabled) {
+> > -		fprintf(stderr,
+> > -_("warning: finobt not supported without CRC support, disabled.\n"));
+> > +	} else {
+> > +		/*
+> > +		 * The kernel doesn't currently support crc=0,finobt=1
+> > +		 * filesystems. If crcs are not enabled, the user has
+> > +		 * explicitly turned them off, so just silently turn off finobt
+> > +		 * so that we don't issue unnecessary warnings when non-default
+> > +		 * options are selected.
+> > +		 */
+> >  		finobt = 0;
+> >  	}
+> 
+> Problem here is that if both are explicitly specified, one is ignored, rather
+> than letting the user know they've selected an invalid set of options:
 
-Ok. Good. So the "more than an order of magnitude difference" was
-really about measurement differences, not quite as real. Looks like
-more a "factor of two" than a factor of 20.
+Yup, I explicitly made that choice: turning off CRCs immediately
+turns off all functionality dependent on it. Especially as the
+number of errors being thrown by xfstests when run with
+MKFS_OPTIONS="-m crc=0".
 
-Did you do the profiles the same way? Because that would explain the
-differences in the TLB flush percentages too (the "1.4% from
-tlb_invalidate_range()" vs "pretty much everything from migration").
+> # mkfs/mkfs.xfs -dfile,name=fsfile,size=1g -m crc=0,finobt=1
+> meta-data=fsfile                 isize=256    agcount=4, agsize=65536 blks
+>          =                       sectsz=512   attr=2, projid32bit=1
+>          =                       crc=0        finobt=0
+> ...
 
-The runtime variation does show that there's some *big* subtle
-difference for the numa balancing in the exact TNF_NO_GROUP details.
-It must be *very* unstable for it to make that big of a difference.
-But I feel at least a *bit* better about "unstable algorithm changes a
-small varioation into a factor-of-two" vs that crazy factor-of-20.
+> This might require a "finobtflag" to keep track of whether it's user-specified,
+> as we do with other options?
 
-Can you try Mel's change to make it use
+I *hate* the profusion of flags in mkfs just to detect this sort of
+thing. This is a clear case where "do what I mean" rather than "do
+what I say" is the prefered behaviour - the current code is a
+horrible mess because it tries handle every weird combination of "do
+what I say" with some error message.
 
-        if (!(vma->vm_flags & VM_WRITE))
+I'll change it to add the stupid error message back in and go and
+write all the patches for xfstests not to fail because we changed
+mkfs defaults...
 
-instead of the pte details? Again, on otherwise plain 3.19, just so
-that we have a baseline. I'd be *so* much happer with checking the vma
-details over per-pte details, especially ones that change over the
-lifetime of the pte entry, and the NUMA code explicitly mucks with.
+Cheers,
 
-                           Linus
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
