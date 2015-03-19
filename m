@@ -1,21 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id D79197F37
-	for <xfs@oss.sgi.com>; Thu, 19 Mar 2015 12:27:28 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id B5AE78F804C
-	for <xfs@oss.sgi.com>; Thu, 19 Mar 2015 10:27:28 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id iKMi98DkYop2VlJl for <xfs@oss.sgi.com>;
-	Thu, 19 Mar 2015 10:27:26 -0700 (PDT)
-Message-ID: <550B06FE.4010603@sandeen.net>
-Date: Thu, 19 Mar 2015 12:27:26 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 7C0FF7F37
+	for <xfs@oss.sgi.com>; Thu, 19 Mar 2015 12:27:39 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 12A5EAC003
+	for <xfs@oss.sgi.com>; Thu, 19 Mar 2015 10:27:35 -0700 (PDT)
+Received: from newverein.lst.de (verein.lst.de [213.95.11.211]) by
+	cuda.sgi.com with ESMTP id e3D3QzXRjzb8oXdQ for
+	<xfs@oss.sgi.com>; Thu, 19 Mar 2015 10:27:34 -0700 (PDT)
+Date: Thu, 19 Mar 2015 18:27:31 +0100
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: panic on 4.20 server exporting xfs filesystem
+Message-ID: <20150319172731.GA16329@lst.de>
+References: <20150304224557.GY4251@dastard> <54F78BE5.1020608@sandeen.net>
+	<20150304225623.GZ4251@dastard>
+	<20150305040849.GJ1627@fieldses.org>
+	<20150305131731.GA16235@lst.de>
+	<20150305150138.GA15674@fieldses.org>
+	<20150305170217.GC15674@fieldses.org>
+	<20150305204749.GA17934@fieldses.org>
+	<20150305205922.GF18360@dastard>
+	<20150306204715.GA27257@fieldses.org>
 MIME-Version: 1.0
-Subject: Re: [PATCH 09/13] libxfs: remove ASSERT on ftype read from disk
-References: <1426624395-8258-1-git-send-email-sandeen@redhat.com>	<1426624395-8258-10-git-send-email-sandeen@redhat.com>
-	<20150319164643.GD11669@laptop.bfoster>
-In-Reply-To: <20150319164643.GD11669@laptop.bfoster>
+Content-Disposition: inline
+In-Reply-To: <20150306204715.GA27257@fieldses.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,28 +36,16 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>, Eric Sandeen <sandeen@redhat.com>
-Cc: xfs@oss.sgi.com
+To: "J. Bruce Fields" <bfields@fieldses.org>
+Cc: Eric Sandeen <sandeen@sandeen.net>, linux-nfs@vger.kernel.org, xfs@oss.sgi.com
 
-On 3/19/15 11:46 AM, Brian Foster wrote:
+FYI, I've now managed to reproduce the issue.  I haven't had time
+to dig deeper, but it smells a lot like a callback path issue.
 
->> diff --git a/include/xfs_da_format.h b/include/xfs_da_format.h
->> index 89a1a21..695e698 100644
->> --- a/include/xfs_da_format.h
->> +++ b/include/xfs_da_format.h
->> @@ -561,7 +561,7 @@ xfs_dir3_dirent_get_ftype(
->>  	if (xfs_sb_version_hasftype(&mp->m_sb)) {
->>  		__uint8_t	type = dep->name[dep->namelen];
->>  
->> -		ASSERT(type < XFS_DIR3_FT_MAX);
->> +		//ASSERT(type < XFS_DIR3_FT_MAX);
-> 
-> Just delete it..?
-
-Urgh.  yes.  I thought I had done so.
-
-Thanks,
--Eric
+Can you send the recursion fix to Linus ASAP and I'll send you a patch
+to turn the nopnfs option into a pnfs one, so we're at least doing
+fine for 4.0 in any case.  I hope to debug this and may even have
+a real fix soon, but so far I don't know how long it will take.
 
 _______________________________________________
 xfs mailing list
