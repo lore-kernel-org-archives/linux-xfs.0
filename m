@@ -1,17 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id A4D457F37
-	for <xfs@oss.sgi.com>; Fri, 20 Mar 2015 01:50:14 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 7FB3D8F8070
-	for <xfs@oss.sgi.com>; Thu, 19 Mar 2015 23:50:14 -0700 (PDT)
-Received: from newverein.lst.de (verein.lst.de [213.95.11.211]) by
-	cuda.sgi.com with ESMTP id gTmCLXmZvJBwmb32 for
-	<xfs@oss.sgi.com>; Thu, 19 Mar 2015 23:50:12 -0700 (PDT)
-Date: Fri, 20 Mar 2015 07:50:10 +0100
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: panic on 4.20 server exporting xfs filesystem
-Message-ID: <20150320065010.GC626@lst.de>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id BE4777F37
+	for <xfs@oss.sgi.com>; Fri, 20 Mar 2015 02:56:59 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 4B04DAC002
+	for <xfs@oss.sgi.com>; Fri, 20 Mar 2015 00:56:56 -0700 (PDT)
+Received: from mail-pd0-f172.google.com (mail-pd0-f172.google.com
+	[209.85.192.172]) by cuda.sgi.com with ESMTP id
+	USYH1DeCU2E1tNl5 (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Fri, 20 Mar 2015 00:56:54 -0700 (PDT)
+Received: by pdbcz9 with SMTP id cz9so101473482pdb.3
+	for <xfs@oss.sgi.com>; Fri, 20 Mar 2015 00:56:54 -0700 (PDT)
+Message-ID: <550BD2B8.6070900@gmail.com>
+Date: Fri, 20 Mar 2015 15:56:40 +0800
+From: Kinglong Mee <kinglongmee@gmail.com>
+MIME-Version: 1.0
+Subject: [PATCH] NFSD: Fix infinite loop in nfsd4_cb_layout_fail()
 References: <20150304020826.GD19439@fieldses.org>
 	<20150304155421.GE1627@fieldses.org>
 	<20150304220900.GX18360@dastard>
@@ -21,9 +26,8 @@ References: <20150304020826.GD19439@fieldses.org>
 	<20150305040849.GJ1627@fieldses.org>
 	<20150305131731.GA16235@lst.de>
 	<CAB6yy341fvF8Bsg0_hViQm+zRLVdJ2WOE9duDwdU+S0CkOEpbg@mail.gmail.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <CAB6yy341fvF8Bsg0_hViQm+zRLVdJ2WOE9duDwdU+S0CkOEpbg@mail.gmail.com>
+	<20150320065010.GC626@lst.de>
+In-Reply-To: <20150320065010.GC626@lst.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -36,18 +40,33 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Kinglong Mee <kinglongmee@gmail.com>
-Cc: Linux NFS Mailing List <linux-nfs@vger.kernel.org>, Eric Sandeen <sandeen@sandeen.net>, xfs@oss.sgi.com, "J. Bruce Fields" <bfields@fieldses.org>, Christoph Hellwig <hch@lst.de>
+To: Christoph Hellwig <hch@lst.de>, "J. Bruce Fields" <bfields@fieldses.org>
+Cc: Eric Sandeen <sandeen@sandeen.net>, Linux NFS Mailing List <linux-nfs@vger.kernel.org>, xfs@oss.sgi.com
 
-On Fri, Mar 20, 2015 at 12:06:18PM +0800, Kinglong Mee wrote:
-> Maybe you want adding "trace_layout_recall_fail(&ls->ls_stid.sc_stateid);" here?
-> I think the following is better,
+Fix commit 31ef83dc05 (nfsd: add trace events)'s typo 
+causing a infinite loop when callback layout fail.
 
-It is!  That's indeed what I had in my old trees before the big rebase.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Kinglong Mee <kinglongmee@gmail.com>
+---
+ fs/nfsd/nfs4layouts.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Can you write up a small changelog and add a signoff?
-
-Thanks a lot!
+diff --git a/fs/nfsd/nfs4layouts.c b/fs/nfsd/nfs4layouts.c
+index 3c1bfa1..0a616b5 100644
+--- a/fs/nfsd/nfs4layouts.c
++++ b/fs/nfsd/nfs4layouts.c
+@@ -587,7 +587,7 @@ nfsd4_cb_layout_fail(struct nfs4_layout_stateid *ls)
+ 
+ 	rpc_ntop((struct sockaddr *)&clp->cl_addr, addr_str, sizeof(addr_str));
+ 
+-	nfsd4_cb_layout_fail(ls);
++	trace_layout_recall_fail(&ls->ls_stid.sc_stateid);
+ 
+ 	printk(KERN_WARNING
+ 		"nfsd: client %s failed to respond to layout recall. "
+-- 
+2.3.3
 
 _______________________________________________
 xfs mailing list
