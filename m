@@ -1,25 +1,33 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 041387F3F
-	for <xfs@oss.sgi.com>; Thu, 19 Mar 2015 21:45:04 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id D5754304043
-	for <xfs@oss.sgi.com>; Thu, 19 Mar 2015 19:45:00 -0700 (PDT)
-Received: from mail-wi0-f180.google.com (mail-wi0-f180.google.com
-	[209.85.212.180]) by cuda.sgi.com with ESMTP id
-	iAbty5JHcZywknt0 (version=TLSv1 cipher=RC4-SHA bits=128
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id D64387F37
+	for <xfs@oss.sgi.com>; Thu, 19 Mar 2015 23:06:25 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 69CB7AC003
+	for <xfs@oss.sgi.com>; Thu, 19 Mar 2015 21:06:22 -0700 (PDT)
+Received: from mail-wi0-f172.google.com (mail-wi0-f172.google.com
+	[209.85.212.172]) by cuda.sgi.com with ESMTP id
+	InNfuAIJXXd7Qnc1 (version=TLSv1 cipher=RC4-SHA bits=128
 	verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 19 Mar 2015 19:44:59 -0700 (PDT)
-Received: by wibdy8 with SMTP id dy8so6095192wib.0
-	for <xfs@oss.sgi.com>; Thu, 19 Mar 2015 19:44:58 -0700 (PDT)
+	Thu, 19 Mar 2015 21:06:20 -0700 (PDT)
+Received: by wibg7 with SMTP id g7so20145145wib.1
+	for <xfs@oss.sgi.com>; Thu, 19 Mar 2015 21:06:19 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <550B858D.4030003@tlinx.org>
-References: <1426720967-8215-1-git-send-email-david@fromorbit.com>
-	<550B858D.4030003@tlinx.org>
-From: Greg Freemyer <greg.freemyer@gmail.com>
-Date: Thu, 19 Mar 2015 22:44:18 -0400
-Message-ID: <CAGpXXZL+6gdRM+fo1SMLVfCOErWQUiOGn0wH2iFhdkPY2-eqQA@mail.gmail.com>
-Subject: Re: [PATCH] mkfs: default to CRC enabled filesystems
+In-Reply-To: <20150305131731.GA16235@lst.de>
+References: <20150303221033.GB19439@fieldses.org>
+	<20150303224456.GV4251@dastard>
+	<20150304020826.GD19439@fieldses.org>
+	<20150304155421.GE1627@fieldses.org>
+	<20150304220900.GX18360@dastard>
+	<20150304222709.GI1627@fieldses.org>
+	<20150304224557.GY4251@dastard> <54F78BE5.1020608@sandeen.net>
+	<20150304225623.GZ4251@dastard>
+	<20150305040849.GJ1627@fieldses.org>
+	<20150305131731.GA16235@lst.de>
+Date: Fri, 20 Mar 2015 12:06:18 +0800
+Message-ID: <CAB6yy341fvF8Bsg0_hViQm+zRLVdJ2WOE9duDwdU+S0CkOEpbg@mail.gmail.com>
+Subject: Re: panic on 4.20 server exporting xfs filesystem
+From: Kinglong Mee <kinglongmee@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,59 +40,72 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Linda Walsh <xfs@tlinx.org>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: "J. Bruce Fields" <bfields@fieldses.org>, Eric Sandeen <sandeen@sandeen.net>, Linux NFS Mailing List <linux-nfs@vger.kernel.org>, xfs@oss.sgi.com
 
-On Thu, Mar 19, 2015 at 10:27 PM, Linda Walsh <xfs@tlinx.org> wrote:
-> Dave Chinner wrote:
+On Thu, Mar 5, 2015 at 9:17 PM, Christoph Hellwig <hch@lst.de> wrote:
+> On Wed, Mar 04, 2015 at 11:08:49PM -0500, J. Bruce Fields wrote:
+>> Ah-hah:
 >>
->> From: Dave Chinner <dchinner@redhat.com>
+>>       static void
+>>       nfsd4_cb_layout_fail(struct nfs4_layout_stateid *ls)
+>>       {
+>>               ...
+>>               nfsd4_cb_layout_fail(ls);
 >>
->> It's time to change the mkfs defaults to enable CRCs for all new
->> filesystems.
+>> That'd do it!
+>>
+>> Haven't tried to figure out why exactly that's getting called, and why
+>> only rarely.  Some intermittent problem with the callback path, I guess.
+>>
+>> Anyway, I think that solves most of the mystery....
+>
+> Ooops, that was a nasty git merge error in the last rebase, see the fix
+> below.  But I really wonder if we need to make the usage of pnfs explicit
+> after all, othterwise we'll always hand out layouts on any XFS-exported
+> filesystems, which can't be used and will eventually need to be recalled.
 >
 > ---
->         "Sounds good", but what exactly is CRC'ed?
+> From ad592590cce9f7441c3cd21d030f3a986d8759d7 Mon Sep 17 00:00:00 2001
+> From: Christoph Hellwig <hch@lst.de>
+> Date: Thu, 5 Mar 2015 06:12:29 -0700
+> Subject: nfsd: don't recursively call nfsd4_cb_layout_fail
 >
-> I.e. all data? Or how much data/second would I expect
-> to 'need' CRC'ing?
+> Due to a merge error when creating c5c707f9 ("nfsd: implement pNFS
+> layout recalls"), we recursivelt call nfsd4_cb_layout_fail from itself,
+> leading to stack overflows.
+>
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  fs/nfsd/nfs4layouts.c | 2 --
+>  1 file changed, 2 deletions(-)
+>
+> diff --git a/fs/nfsd/nfs4layouts.c b/fs/nfsd/nfs4layouts.c
+> index 3c1bfa1..1028a06 100644
+> --- a/fs/nfsd/nfs4layouts.c
+> +++ b/fs/nfsd/nfs4layouts.c
+> @@ -587,8 +587,6 @@ nfsd4_cb_layout_fail(struct nfs4_layout_stateid *ls)
+>
+>         rpc_ntop((struct sockaddr *)&clp->cl_addr, addr_str, sizeof(addr_str));
+>
+> -       nfsd4_cb_layout_fail(ls);
+> -
 
-metadata only.
+Maybe you want adding "trace_layout_recall_fail(&ls->ls_stid.sc_stateid);" here?
+I think the following is better,
 
-====
->From the man page:
+@@ -587,7 +587,7 @@ nfsd4_cb_layout_fail(struct nfs4_layout_stateid *ls)
 
-       -m global_metadata_options
-              These options specify metadata format options that either
-              apply to the entire filesystem or aren't easily characterised
-              by a specific functionality group. The valid
-              global_metadata_options are:
+        rpc_ntop((struct sockaddr *)&clp->cl_addr, addr_str, sizeof(addr_str));
 
-                   crc=value
-                          This is used to create a filesystem which
-                          maintains and checks CRC information in all
-                          metadata objects on disk. The value is either 0 to
-                          disable the feature, or 1 to enable the use of
-                          CRCs.
+-       nfsd4_cb_layout_fail(ls);
++       trace_layout_recall_fail(&ls->ls_stid.sc_stateid);
 
-                          CRCs enable enhanced error detection due to
-                          hardware issues, whilst the format changes also
-                          improves crash recovery algorithms and the ability
-                          of various tools to validate and repair metadata
-                          corruptions when they are found.  The CRC
-                          algorithm used is CRC32c, so the overhead is
-                          dependent on CPU architecture as some CPUs have
-                          hardware acceleration of this algorithm.
-                          Typically the overhead of calculating and checking
-                          the CRCs is not noticable in normal operation.
+        printk(KERN_WARNING
+                "nfsd: client %s failed to respond to layout recall. "
 
-                          By default, mkfs.xfs will not enable metadata
-                          CRCs.
-====
-
-The purpose of the patch is to drop "not" from the last sentence.
-
-Greg
+thanks,
+Kinglong Mee
 
 _______________________________________________
 xfs mailing list
