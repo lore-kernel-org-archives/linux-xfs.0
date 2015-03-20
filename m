@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 515FE7F47
-	for <xfs@oss.sgi.com>; Fri, 20 Mar 2015 13:38:54 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id E9EA87F37
+	for <xfs@oss.sgi.com>; Fri, 20 Mar 2015 15:23:42 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 3E5B2304048
-	for <xfs@oss.sgi.com>; Fri, 20 Mar 2015 11:38:54 -0700 (PDT)
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id K6acRPvMTsG4gM6a (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 20 Mar 2015 11:38:51 -0700 (PDT)
-Date: Fri, 20 Mar 2015 11:38:46 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] mkfs: default to CRC enabled filesystems
-Message-ID: <20150320183846.GH24608@birch.djwong.org>
-References: <1426720967-8215-1-git-send-email-david@fromorbit.com>
-	<550B858D.4030003@tlinx.org>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id D54188F8071
+	for <xfs@oss.sgi.com>; Fri, 20 Mar 2015 13:23:42 -0700 (PDT)
+Received: from mail-qg0-f53.google.com (mail-qg0-f53.google.com
+	[209.85.192.53]) by cuda.sgi.com with ESMTP id HF4YzuMotYLpJGAL
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Fri, 20 Mar 2015 13:23:41 -0700 (PDT)
+Received: by qgew92 with SMTP id w92so27534750qge.2
+	for <xfs@oss.sgi.com>; Fri, 20 Mar 2015 13:23:40 -0700 (PDT)
+Date: Fri, 20 Mar 2015 16:23:39 -0400
+From: Taesoo Kim <taesoo@gatech.edu>
+Subject: inconsistent timestamp update in rename() of
+	xfs/fat/gfs2/ramfs/jffs2...
+Message-ID: <20150320202339.GK25797@taesoo.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <550B858D.4030003@tlinx.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,54 +30,48 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Linda Walsh <xfs@tlinx.org>
-Cc: xfs@oss.sgi.com
+To: lczerner@redhat.com, cmaiolino@redhat.com, xfs@oss.sgi.com, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: blee@gatech.edu, taesoo@gatech.edu, csong84@gatech.edu, changwoo@gatech.edu, sanidhya@gatech.edu
 
-On Thu, Mar 19, 2015 at 07:27:25PM -0700, Linda Walsh wrote:
-> Dave Chinner wrote:
-> >From: Dave Chinner <dchinner@redhat.com>
-> >
-> >It's time to change the mkfs defaults to enable CRCs for all new
-> >filesystems.
-> ---
-> 	"Sounds good", but what exactly is CRC'ed?
-> 
-> I.e. all data? Or how much data/second would I expect
-> to 'need' CRC'ing?
-> 
-> Some quick timing stuff:
-> 
-> >time  dd if=/dev/zero of=1G bs=1M count=1024 oflag=direct
-> 1024+0 records in
-> 1024+0 records out
-> 1073741824 bytes (1.1 GB) copied, 1.76947 s, 607 MB/s
-> 1.77sec 0.00usr 0.50sys (28.38% cpu)
-> 
-> >dropcaches
-> 76.34sec 0.00usr 69.22sys (90.69% cpu)
-> 
-> Ishtar:law/bin> time crc32 1G		## no cache
-> 5B64C2B0
-> 6.67sec 3.85usr 0.94sys (71.82% cpu)
-> 
-> >time crc32 1G				## in cache
-> 5B64C2B0
-> 4.00sec 3.57usr 0.42sys (100.00% cpu)
-> (using Xeon X5660 @ 2.80GHz)
+Hi all,
 
-Usually the kernel will load one of the CRC32c accelerators to reduce the
-impact of the metadata checksumming.  Not sure if 'crc32' knows how to use
-the new instructions Intel built into that X5660, though I'm guessing not.
-Also, XFS uses crc32c, not crc32.
+We've cross-checking patches from ext3/ext4, and found out
+inconsistent implementations of other fs. We want to ask whether this
+is intended or unexpected behavior. We will be able to send patches as
+soon as confirmed/acknowledged.
 
---D
+Ref.
 
-> 
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+(ext4) 53b7e9f6807c1274eee19201396b4c2b5f721553
+(ext3) 0b23076988b44b2c165e060248345de6f2337387
+
+ | ext3/4: fix update of mtime and ctime on rename
+
+---------------------------------------------------------------------
+We summarized our finding:
+  (* means what we believe is correct beahvoir)
+
+<Linux 4.0-rc2>
+                                        ramfs   affs    fsplus
+                        vfs xfs fat gfs2    jffs2   hfsh
+operation          | * |   |   |   |   |   |   |   |   |
+===========================================================
+new_inode->i_ctime | V | - | - | V | V | - | - | V | - | -
+old_inode->i_ctime | V | V | V | - | V | V | - | - | - | -
+old_dir->i_ctime   | V | V | V | V | V | V | V | - | V | V
+old_dir->i_mtime   | V | V | V | V | V | V | V | - | V | V
+new_dir->i_ctime   | V | V | V | V | - | V | V | - | V | V
+new_dir->i_mtime   | V | V | V | V | - | V | V | - | V | V
+new_dir->i_atime   | - | - | - | V | - | - | - | - | - | -
+
+* Correct behavior in
+
+   ext2, ext3, ext4, btrfs, f2fs, nilfs, reiserfs, cifs, exofs, jfs,
+   ubifs, ocfs and minix
+---------------------------------------------------------------------
+
+Thanks,
+Taesoo
 
 _______________________________________________
 xfs mailing list
