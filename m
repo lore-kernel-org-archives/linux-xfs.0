@@ -1,33 +1,32 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id D64387F37
-	for <xfs@oss.sgi.com>; Thu, 19 Mar 2015 23:06:25 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 69CB7AC003
-	for <xfs@oss.sgi.com>; Thu, 19 Mar 2015 21:06:22 -0700 (PDT)
-Received: from mail-wi0-f172.google.com (mail-wi0-f172.google.com
-	[209.85.212.172]) by cuda.sgi.com with ESMTP id
-	InNfuAIJXXd7Qnc1 (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 19 Mar 2015 21:06:20 -0700 (PDT)
-Received: by wibg7 with SMTP id g7so20145145wib.1
-	for <xfs@oss.sgi.com>; Thu, 19 Mar 2015 21:06:19 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id 1D3317F37
+	for <xfs@oss.sgi.com>; Thu, 19 Mar 2015 23:14:15 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 75D2DAC005
+	for <xfs@oss.sgi.com>; Thu, 19 Mar 2015 21:14:14 -0700 (PDT)
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	Ls7gNC6G3DpHn9c2 for <xfs@oss.sgi.com>;
+	Thu, 19 Mar 2015 21:14:10 -0700 (PDT)
+Date: Fri, 20 Mar 2015 15:13:57 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 4/4] mm: numa: Slow PTE scan rate if migration failures
+	occur
+Message-ID: <20150320041357.GO10105@dastard>
+References: <20150317205104.GA28621@dastard>
+	<CA+55aFzSPcNgxw4GC7aAV1r0P5LniyVVC66COz=3cgMcx73Nag@mail.gmail.com>
+	<20150317220840.GC28621@dastard>
+	<CA+55aFwne-fe_Gg-_GTUo+iOAbbNpLBa264JqSFkH79EULyAqw@mail.gmail.com>
+	<CA+55aFy-Mw74rAdLMMMUgnsG3ZttMWVNGz7CXZJY7q9fqyRYfg@mail.gmail.com>
+	<CA+55aFyxA9u2cVzV+S7TSY9ZvRXCX=z22YAbi9mdPVBKmqgR5g@mail.gmail.com>
+	<20150319224143.GI10105@dastard>
+	<CA+55aFy5UeNnFUTi619cs3b9Up2NQ1wbuyvcCS614+o3=z=wBQ@mail.gmail.com>
+	<20150320002311.GG28621@dastard>
+	<CA+55aFyqXDVv9JkkhvM26x6PC5V82corR7HQNxmkeGZjOCxD=A@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20150305131731.GA16235@lst.de>
-References: <20150303221033.GB19439@fieldses.org>
-	<20150303224456.GV4251@dastard>
-	<20150304020826.GD19439@fieldses.org>
-	<20150304155421.GE1627@fieldses.org>
-	<20150304220900.GX18360@dastard>
-	<20150304222709.GI1627@fieldses.org>
-	<20150304224557.GY4251@dastard> <54F78BE5.1020608@sandeen.net>
-	<20150304225623.GZ4251@dastard>
-	<20150305040849.GJ1627@fieldses.org>
-	<20150305131731.GA16235@lst.de>
-Date: Fri, 20 Mar 2015 12:06:18 +0800
-Message-ID: <CAB6yy341fvF8Bsg0_hViQm+zRLVdJ2WOE9duDwdU+S0CkOEpbg@mail.gmail.com>
-Subject: Re: panic on 4.20 server exporting xfs filesystem
-From: Kinglong Mee <kinglongmee@gmail.com>
+Content-Disposition: inline
+In-Reply-To: <CA+55aFyqXDVv9JkkhvM26x6PC5V82corR7HQNxmkeGZjOCxD=A@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -40,72 +39,55 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@lst.de>
-Cc: "J. Bruce Fields" <bfields@fieldses.org>, Eric Sandeen <sandeen@sandeen.net>, Linux NFS Mailing List <linux-nfs@vger.kernel.org>, xfs@oss.sgi.com
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, Linux-MM <linux-mm@kvack.org>, Aneesh Kumar <aneesh.kumar@linux.vnet.ibm.com>, Andrew Morton <akpm@linux-foundation.org>, ppc-dev <linuxppc-dev@lists.ozlabs.org>, Ingo Molnar <mingo@kernel.org>, Mel Gorman <mgorman@suse.de>
 
-On Thu, Mar 5, 2015 at 9:17 PM, Christoph Hellwig <hch@lst.de> wrote:
-> On Wed, Mar 04, 2015 at 11:08:49PM -0500, J. Bruce Fields wrote:
->> Ah-hah:
->>
->>       static void
->>       nfsd4_cb_layout_fail(struct nfs4_layout_stateid *ls)
->>       {
->>               ...
->>               nfsd4_cb_layout_fail(ls);
->>
->> That'd do it!
->>
->> Haven't tried to figure out why exactly that's getting called, and why
->> only rarely.  Some intermittent problem with the callback path, I guess.
->>
->> Anyway, I think that solves most of the mystery....
->
-> Ooops, that was a nasty git merge error in the last rebase, see the fix
-> below.  But I really wonder if we need to make the usage of pnfs explicit
-> after all, othterwise we'll always hand out layouts on any XFS-exported
-> filesystems, which can't be used and will eventually need to be recalled.
->
-> ---
-> From ad592590cce9f7441c3cd21d030f3a986d8759d7 Mon Sep 17 00:00:00 2001
-> From: Christoph Hellwig <hch@lst.de>
-> Date: Thu, 5 Mar 2015 06:12:29 -0700
-> Subject: nfsd: don't recursively call nfsd4_cb_layout_fail
->
-> Due to a merge error when creating c5c707f9 ("nfsd: implement pNFS
-> layout recalls"), we recursivelt call nfsd4_cb_layout_fail from itself,
-> leading to stack overflows.
->
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  fs/nfsd/nfs4layouts.c | 2 --
->  1 file changed, 2 deletions(-)
->
-> diff --git a/fs/nfsd/nfs4layouts.c b/fs/nfsd/nfs4layouts.c
-> index 3c1bfa1..1028a06 100644
-> --- a/fs/nfsd/nfs4layouts.c
-> +++ b/fs/nfsd/nfs4layouts.c
-> @@ -587,8 +587,6 @@ nfsd4_cb_layout_fail(struct nfs4_layout_stateid *ls)
->
->         rpc_ntop((struct sockaddr *)&clp->cl_addr, addr_str, sizeof(addr_str));
->
-> -       nfsd4_cb_layout_fail(ls);
-> -
+On Thu, Mar 19, 2015 at 06:29:47PM -0700, Linus Torvalds wrote:
+> On Thu, Mar 19, 2015 at 5:23 PM, Dave Chinner <david@fromorbit.com> wrote:
+> >
+> > Bit more variance there than the pte checking, but runtime
+> > difference is in the noise - 5m4s vs 4m54s - and profiles are
+> > identical to the pte checking version.
+> 
+> Ahh, so that "!(vma->vm_flags & VM_WRITE)" test works _almost_ as well
+> as the original !pte_write() test.
+> 
+> Now, can you check that on top of rc4? If I've gotten everything
+> right, we now have:
+> 
+>  - plain 3.19 (pte_write): 4m54s
+>  - 3.19 with vm_flags & VM_WRITE: 5m4s
+>  - 3.19 with pte_dirty: 5m20s
 
-Maybe you want adding "trace_layout_recall_fail(&ls->ls_stid.sc_stateid);" here?
-I think the following is better,
+*nod*
 
-@@ -587,7 +587,7 @@ nfsd4_cb_layout_fail(struct nfs4_layout_stateid *ls)
+> so the pte_dirty version seems to have been a bad choice indeed.
+> 
+> For 4.0-rc4, (which uses pte_dirty) you had 7m50s, so it's still
+> _much_ worse, but I'm wondering whether that VM_WRITE test will at
+> least shrink the difference like it does for 3.19.
 
-        rpc_ntop((struct sockaddr *)&clp->cl_addr, addr_str, sizeof(addr_str));
+Testing now. It's a bit faster - three runs gave 7m35s, 7m20s and
+7m36s. IOWs's a bit better, but not significantly. page migrations
+are pretty much unchanged, too:
 
--       nfsd4_cb_layout_fail(ls);
-+       trace_layout_recall_fail(&ls->ls_stid.sc_stateid);
+	   558,632      migrate:mm_migrate_pages ( +-  6.38% )
 
-        printk(KERN_WARNING
-                "nfsd: client %s failed to respond to layout recall. "
+> And the VM_WRITE test should be stable and not have any subtle
+> interaction with the other changes that the numa pte things
+> introduced. It would be good to see if the profiles then pop something
+> *else* up as the performance difference (which I'm sure will remain,
+> since the 7m50s was so far off).
 
-thanks,
-Kinglong Mee
+No, nothing new pops up in the kernel profiles. All the system CPU
+time is still being spent sending IPIs on the tlb flush path.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
