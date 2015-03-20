@@ -1,22 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id F25647F37
-	for <xfs@oss.sgi.com>; Fri, 20 Mar 2015 16:56:57 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id BE46D8F8089
-	for <xfs@oss.sgi.com>; Fri, 20 Mar 2015 14:56:57 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id WogLfYsyBiQUDoz8 for <xfs@oss.sgi.com>;
-	Fri, 20 Mar 2015 14:56:55 -0700 (PDT)
-Message-ID: <550C97A5.1040807@sandeen.net>
-Date: Fri, 20 Mar 2015 16:56:53 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id D36AB7F37
+	for <xfs@oss.sgi.com>; Fri, 20 Mar 2015 17:28:56 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id A36E830404E
+	for <xfs@oss.sgi.com>; Fri, 20 Mar 2015 15:28:53 -0700 (PDT)
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	V3z4mPoDPHMPA7Dg for <xfs@oss.sgi.com>;
+	Fri, 20 Mar 2015 15:28:49 -0700 (PDT)
+Date: Sat, 21 Mar 2015 09:28:43 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: inconsistent timestamp update in rename() of
+	xfs/fat/gfs2/ramfs/jffs2...
+Message-ID: <20150320222843.GK28621@dastard>
+References: <20150320202339.GK25797@taesoo.org>
 MIME-Version: 1.0
-Subject: Re: [PATCH] mkfs: default to CRC enabled filesystems
-References: <1426720967-8215-1-git-send-email-david@fromorbit.com>
-	<550AE35D.40006@sandeen.net> <20150319231323.GK10105@dastard>
-	<550C3C39.8050400@sandeen.net> <20150320214719.GJ28621@dastard>
-In-Reply-To: <20150320214719.GJ28621@dastard>
+Content-Disposition: inline
+In-Reply-To: <20150320202339.GK25797@taesoo.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,33 +30,61 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: Taesoo Kim <taesoo@gatech.edu>
+Cc: cmaiolino@redhat.com, sanidhya@gatech.edu, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, blee@gatech.edu, linux-fsdevel@vger.kernel.org, lczerner@redhat.com, csong84@gatech.edu, changwoo@gatech.edu
 
-On 3/20/15 4:47 PM, Dave Chinner wrote:
-> On Fri, Mar 20, 2015 at 10:26:49AM -0500, Eric Sandeen wrote:
-
-...
-
->> I don't see how this requires xfstests rework, though?
+On Fri, Mar 20, 2015 at 04:23:39PM -0400, Taesoo Kim wrote:
+> Hi all,
 > 
-> About 50 tests fail with:
-
->     +warning: finobt not supported without CRC support, disabled.
-
-> When run with MKFS_OPTIONS="-m crc=0".
-
-Ok, I didn't mean it shouldn't be automatically disabled, I just meant
-it should probably reject invalid option combinations on the cmdline.
- 
-> i.e. finobt is not specified, but mkfs issues warnings about it.
+> We've cross-checking patches from ext3/ext4, and found out
+> inconsistent implementations of other fs. We want to ask whether this
+> is intended or unexpected behavior. We will be able to send patches as
+> soon as confirmed/acknowledged.
 > 
-> I've reworked the patch, anyway, so there's no need to continue the
-> discussion on this...
+> Ref.
+> 
+> (ext4) 53b7e9f6807c1274eee19201396b4c2b5f721553
+> (ext3) 0b23076988b44b2c165e060248345de6f2337387
+> 
+>  | ext3/4: fix update of mtime and ctime on rename
+> 
+> ---------------------------------------------------------------------
+> We summarized our finding:
+>   (* means what we believe is correct beahvoir)
+> 
+> <Linux 4.0-rc2>
+>                                         ramfs   affs    fsplus
+>                         vfs xfs fat gfs2    jffs2   hfsh
+> operation          | * |   |   |   |   |   |   |   |   |
+> ===========================================================
+> new_inode->i_ctime | V | - | - | V | V | - | - | V | - | -
 
-Heh, ok.  <EOM>
+This timestamp behaviour is undefined by posix, therefore all
+filesystems are behaving "correctly" according to the POSIX
+specification regardless of whether this timestamp is updated or
+not.
 
--Eric
+http://pubs.opengroup.org/onlinepubs/9699919799/functions/rename.html
+
+....
+Upon successful completion, rename() shall mark for update the last data
+modification and last file status change timestamps of the parent directory of
+each file.
+....
+APPLICATION USAGE
+
+Some implementations mark for update the last file status change timestamp of
+renamed files and some do not. Applications which make use of the last file
+status change timestamp may behave differently with respect to renamed files
+unless they are designed to allow for either behavior.
+....
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
