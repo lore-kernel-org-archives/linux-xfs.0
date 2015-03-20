@@ -1,35 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 989CD7F3F
-	for <xfs@oss.sgi.com>; Thu, 19 Mar 2015 20:29:49 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 83CBF304053
-	for <xfs@oss.sgi.com>; Thu, 19 Mar 2015 18:29:49 -0700 (PDT)
-Received: from mail-ig0-f178.google.com (mail-ig0-f178.google.com
-	[209.85.213.178]) by cuda.sgi.com with ESMTP id
-	zr560SKmwfR67KfH (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 19 Mar 2015 18:29:47 -0700 (PDT)
-Received: by igcau2 with SMTP id au2so6029160igc.0
-	for <xfs@oss.sgi.com>; Thu, 19 Mar 2015 18:29:47 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 808697F3F
+	for <xfs@oss.sgi.com>; Thu, 19 Mar 2015 21:27:42 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 5FFA08F8066
+	for <xfs@oss.sgi.com>; Thu, 19 Mar 2015 19:27:39 -0700 (PDT)
+Received: from Ishtar.hs.tlinx.org (ishtar.tlinx.org [173.164.175.65]) by
+	cuda.sgi.com with ESMTP id xyWA4HWtqcK60uPo (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 19 Mar 2015 19:27:34 -0700 (PDT)
+Message-ID: <550B858D.4030003@tlinx.org>
+Date: Thu, 19 Mar 2015 19:27:25 -0700
+From: Linda Walsh <xfs@tlinx.org>
 MIME-Version: 1.0
-In-Reply-To: <20150320002311.GG28621@dastard>
-References: <20150317070655.GB10105@dastard>
-	<CA+55aFzdLnFdku-gnm3mGbeS=QauYBNkFQKYXJAGkrMd2jKXhw@mail.gmail.com>
-	<20150317205104.GA28621@dastard>
-	<CA+55aFzSPcNgxw4GC7aAV1r0P5LniyVVC66COz=3cgMcx73Nag@mail.gmail.com>
-	<20150317220840.GC28621@dastard>
-	<CA+55aFwne-fe_Gg-_GTUo+iOAbbNpLBa264JqSFkH79EULyAqw@mail.gmail.com>
-	<CA+55aFy-Mw74rAdLMMMUgnsG3ZttMWVNGz7CXZJY7q9fqyRYfg@mail.gmail.com>
-	<CA+55aFyxA9u2cVzV+S7TSY9ZvRXCX=z22YAbi9mdPVBKmqgR5g@mail.gmail.com>
-	<20150319224143.GI10105@dastard>
-	<CA+55aFy5UeNnFUTi619cs3b9Up2NQ1wbuyvcCS614+o3=z=wBQ@mail.gmail.com>
-	<20150320002311.GG28621@dastard>
-Date: Thu, 19 Mar 2015 18:29:47 -0700
-Message-ID: <CA+55aFyqXDVv9JkkhvM26x6PC5V82corR7HQNxmkeGZjOCxD=A@mail.gmail.com>
-Subject: Re: [PATCH 4/4] mm: numa: Slow PTE scan rate if migration failures
-	occur
-From: Linus Torvalds <torvalds@linux-foundation.org>
+Subject: Re: [PATCH] mkfs: default to CRC enabled filesystems
+References: <1426720967-8215-1-git-send-email-david@fromorbit.com>
+In-Reply-To: <1426720967-8215-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -38,42 +24,44 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, Linux-MM <linux-mm@kvack.org>, Aneesh Kumar <aneesh.kumar@linux.vnet.ibm.com>, Andrew Morton <akpm@linux-foundation.org>, ppc-dev <linuxppc-dev@lists.ozlabs.org>, Ingo Molnar <mingo@kernel.org>, Mel Gorman <mgorman@suse.de>
+Cc: xfs@oss.sgi.com
 
-On Thu, Mar 19, 2015 at 5:23 PM, Dave Chinner <david@fromorbit.com> wrote:
->
-> Bit more variance there than the pte checking, but runtime
-> difference is in the noise - 5m4s vs 4m54s - and profiles are
-> identical to the pte checking version.
+Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> It's time to change the mkfs defaults to enable CRCs for all new
+> filesystems. 
+---
+	"Sounds good", but what exactly is CRC'ed?
 
-Ahh, so that "!(vma->vm_flags & VM_WRITE)" test works _almost_ as well
-as the original !pte_write() test.
+I.e. all data? Or how much data/second would I expect
+to 'need' CRC'ing?
 
-Now, can you check that on top of rc4? If I've gotten everything
-right, we now have:
+Some quick timing stuff:
 
- - plain 3.19 (pte_write): 4m54s
- - 3.19 with vm_flags & VM_WRITE: 5m4s
- - 3.19 with pte_dirty: 5m20s
+> time  dd if=/dev/zero of=1G bs=1M count=1024 oflag=direct    
+1024+0 records in
+1024+0 records out
+1073741824 bytes (1.1 GB) copied, 1.76947 s, 607 MB/s
+1.77sec 0.00usr 0.50sys (28.38% cpu)
 
-so the pte_dirty version seems to have been a bad choice indeed.
+> dropcaches
+76.34sec 0.00usr 69.22sys (90.69% cpu)
 
-For 4.0-rc4, (which uses pte_dirty) you had 7m50s, so it's still
-_much_ worse, but I'm wondering whether that VM_WRITE test will at
-least shrink the difference like it does for 3.19.
+Ishtar:law/bin> time crc32 1G		## no cache
+5B64C2B0
+6.67sec 3.85usr 0.94sys (71.82% cpu)
 
-And the VM_WRITE test should be stable and not have any subtle
-interaction with the other changes that the numa pte things
-introduced. It would be good to see if the profiles then pop something
-*else* up as the performance difference (which I'm sure will remain,
-since the 7m50s was so far off).
+> time crc32 1G				## in cache
+5B64C2B0
+4.00sec 3.57usr 0.42sys (100.00% cpu)
+(using Xeon X5660 @ 2.80GHz)
 
-                        Linus
 
 _______________________________________________
 xfs mailing list
