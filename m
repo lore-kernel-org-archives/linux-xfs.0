@@ -1,32 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 1D3317F37
-	for <xfs@oss.sgi.com>; Thu, 19 Mar 2015 23:14:15 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 75D2DAC005
-	for <xfs@oss.sgi.com>; Thu, 19 Mar 2015 21:14:14 -0700 (PDT)
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	Ls7gNC6G3DpHn9c2 for <xfs@oss.sgi.com>;
-	Thu, 19 Mar 2015 21:14:10 -0700 (PDT)
-Date: Fri, 20 Mar 2015 15:13:57 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 4/4] mm: numa: Slow PTE scan rate if migration failures
-	occur
-Message-ID: <20150320041357.GO10105@dastard>
-References: <20150317205104.GA28621@dastard>
-	<CA+55aFzSPcNgxw4GC7aAV1r0P5LniyVVC66COz=3cgMcx73Nag@mail.gmail.com>
-	<20150317220840.GC28621@dastard>
-	<CA+55aFwne-fe_Gg-_GTUo+iOAbbNpLBa264JqSFkH79EULyAqw@mail.gmail.com>
-	<CA+55aFy-Mw74rAdLMMMUgnsG3ZttMWVNGz7CXZJY7q9fqyRYfg@mail.gmail.com>
-	<CA+55aFyxA9u2cVzV+S7TSY9ZvRXCX=z22YAbi9mdPVBKmqgR5g@mail.gmail.com>
-	<20150319224143.GI10105@dastard>
-	<CA+55aFy5UeNnFUTi619cs3b9Up2NQ1wbuyvcCS614+o3=z=wBQ@mail.gmail.com>
-	<20150320002311.GG28621@dastard>
-	<CA+55aFyqXDVv9JkkhvM26x6PC5V82corR7HQNxmkeGZjOCxD=A@mail.gmail.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id EAD867F37
+	for <xfs@oss.sgi.com>; Fri, 20 Mar 2015 01:49:34 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id AB0288F8070
+	for <xfs@oss.sgi.com>; Thu, 19 Mar 2015 23:49:34 -0700 (PDT)
+Received: from newverein.lst.de (verein.lst.de [213.95.11.211]) by
+	cuda.sgi.com with ESMTP id R9EKKNKLyjGanfyt for
+	<xfs@oss.sgi.com>; Thu, 19 Mar 2015 23:49:29 -0700 (PDT)
+Date: Fri, 20 Mar 2015 07:49:25 +0100
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: panic on 4.20 server exporting xfs filesystem
+Message-ID: <20150320064925.GB626@lst.de>
+References: <20150304225623.GZ4251@dastard>
+	<20150305040849.GJ1627@fieldses.org>
+	<20150305131731.GA16235@lst.de>
+	<20150305150138.GA15674@fieldses.org>
+	<20150305170217.GC15674@fieldses.org>
+	<20150305204749.GA17934@fieldses.org>
+	<20150305205922.GF18360@dastard>
+	<20150306204715.GA27257@fieldses.org>
+	<20150319172731.GA16329@lst.de>
+	<20150319184714.GB20852@fieldses.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <CA+55aFyqXDVv9JkkhvM26x6PC5V82corR7HQNxmkeGZjOCxD=A@mail.gmail.com>
+In-Reply-To: <20150319184714.GB20852@fieldses.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -39,55 +37,40 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, Linux-MM <linux-mm@kvack.org>, Aneesh Kumar <aneesh.kumar@linux.vnet.ibm.com>, Andrew Morton <akpm@linux-foundation.org>, ppc-dev <linuxppc-dev@lists.ozlabs.org>, Ingo Molnar <mingo@kernel.org>, Mel Gorman <mgorman@suse.de>
+To: "J. Bruce Fields" <bfields@fieldses.org>
+Cc: Eric Sandeen <sandeen@sandeen.net>, linux-nfs@vger.kernel.org, Christoph Hellwig <hch@lst.de>, xfs@oss.sgi.com
 
-On Thu, Mar 19, 2015 at 06:29:47PM -0700, Linus Torvalds wrote:
-> On Thu, Mar 19, 2015 at 5:23 PM, Dave Chinner <david@fromorbit.com> wrote:
-> >
-> > Bit more variance there than the pte checking, but runtime
-> > difference is in the noise - 5m4s vs 4m54s - and profiles are
-> > identical to the pte checking version.
+On Thu, Mar 19, 2015 at 02:47:14PM -0400, J. Bruce Fields wrote:
+> Also, there's the problem that when this is turned on a client can end
+> up doing unnecessary LAYOUTGET.  Do we have a plan for that?
 > 
-> Ahh, so that "!(vma->vm_flags & VM_WRITE)" test works _almost_ as well
-> as the original !pte_write() test.
+> Possibilities:
 > 
-> Now, can you check that on top of rc4? If I've gotten everything
-> right, we now have:
+> 	- Just depend on export flags: but some clients may have direct
+> 	  access and some not.  If the clients with direct access or all
+> 	  easily identifiable by IP subnet, maybe it's not a big deal.
+> 	  Still, seems like an administrative hassle.
+
+We defintively want this to avoid getting into problems.
+
 > 
->  - plain 3.19 (pte_write): 4m54s
->  - 3.19 with vm_flags & VM_WRITE: 5m4s
->  - 3.19 with pte_dirty: 5m20s
+> 	- Do nothing, assume the client can deal with this with some
+> 	  kind of heuristics, and/or that the GETLAYOUT calls can be
+> 	  made very cheap.  Not sure if that's true.
 
-*nod*
+The calls itself are cheap, the cliet processing of them isn't.  I think we
+should just stop issueing GETLAYOUT calls on the client side if we keep
+errors again and again.  One option might be to add negative device id
+cache entries, similar to how negative dentries work in the dcache.
 
-> so the pte_dirty version seems to have been a bad choice indeed.
-> 
-> For 4.0-rc4, (which uses pte_dirty) you had 7m50s, so it's still
-> _much_ worse, but I'm wondering whether that VM_WRITE test will at
-> least shrink the difference like it does for 3.19.
+> 	- Use something like GETDEVLICELIST so the client can figure out
+> 	  in one go whether any layouts on a given filesystem will work.
+> 	  I forget what the problems with GETDEVICELIST were.
 
-Testing now. It's a bit faster - three runs gave 7m35s, 7m20s and
-7m36s. IOWs's a bit better, but not significantly. page migrations
-are pretty much unchanged, too:
+The way the device IDs rules are written in NFS it is inherently racy.
 
-	   558,632      migrate:mm_migrate_pages ( +-  6.38% )
-
-> And the VM_WRITE test should be stable and not have any subtle
-> interaction with the other changes that the numa pte things
-> introduced. It would be good to see if the profiles then pop something
-> *else* up as the performance difference (which I'm sure will remain,
-> since the 7m50s was so far off).
-
-No, nothing new pops up in the kernel profiles. All the system CPU
-time is still being spent sending IPIs on the tlb flush path.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+If I could go back 10 years in time I'd rewrite device ids to be stateids
+bound to a fsid, and a lot of things could be fixed up neatly that way..
 
 _______________________________________________
 xfs mailing list
