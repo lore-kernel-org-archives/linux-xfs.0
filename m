@@ -1,28 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id A69977F37
-	for <xfs@oss.sgi.com>; Fri, 20 Mar 2015 13:26:24 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 515FE7F47
+	for <xfs@oss.sgi.com>; Fri, 20 Mar 2015 13:38:54 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 2EAFDAC001
-	for <xfs@oss.sgi.com>; Fri, 20 Mar 2015 11:26:24 -0700 (PDT)
-Received: from fieldses.org (fieldses.org [173.255.197.46]) by cuda.sgi.com
-	with ESMTP id BxiYHu5bAhITntVz for <xfs@oss.sgi.com>;
-	Fri, 20 Mar 2015 11:26:22 -0700 (PDT)
-Date: Fri, 20 Mar 2015 14:26:21 -0400
-From: "J. Bruce Fields" <bfields@fieldses.org>
-Subject: Re: [PATCH v3 3/3] NFSD: Add support for encoding multiple segments
-Message-ID: <20150320182621.GH2036@fieldses.org>
-References: <20150318185545.GF8818@fieldses.org> <5509E27C.3080004@Netapp.com>
-	<20150318205554.GA10716@fieldses.org> <5509E824.6070006@Netapp.com>
-	<20150318211144.GB10716@fieldses.org>
-	<OFB111A6D8.016B8BD5-ON88257E0D.001D174D-88257E0D.005268D6@us.ibm.com>
-	<20150319153627.GA20852@fieldses.org>
-	<OF38D4D18B.19055EC2-ON88257E0D.0059BA03-88257E0D.005A781F@us.ibm.com>
-	<20150320151718.GD2036@fieldses.org>
-	<20150320162303.GA18786@infradead.org>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 3E5B2304048
+	for <xfs@oss.sgi.com>; Fri, 20 Mar 2015 11:38:54 -0700 (PDT)
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
+	cuda.sgi.com with ESMTP id K6acRPvMTsG4gM6a (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Fri, 20 Mar 2015 11:38:51 -0700 (PDT)
+Date: Fri, 20 Mar 2015 11:38:46 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH] mkfs: default to CRC enabled filesystems
+Message-ID: <20150320183846.GH24608@birch.djwong.org>
+References: <1426720967-8215-1-git-send-email-david@fromorbit.com>
+	<550B858D.4030003@tlinx.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20150320162303.GA18786@infradead.org>
+In-Reply-To: <550B858D.4030003@tlinx.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,53 +30,54 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-nfs@vger.kernel.org, xfs@oss.sgi.com, Marc Eshel <eshel@us.ibm.com>, Anna Schumaker <Anna.Schumaker@netapp.com>, linux-nfs-owner@vger.kernel.org
+To: Linda Walsh <xfs@tlinx.org>
+Cc: xfs@oss.sgi.com
 
-On Fri, Mar 20, 2015 at 09:23:03AM -0700, Christoph Hellwig wrote:
-> On Fri, Mar 20, 2015 at 11:17:18AM -0400, J. Bruce Fields wrote:
-> > Maybe this is a question for xfs developers.
-> > 
-> > So, we have a new READ_PLUS call that's basically just a version of READ
-> > optimized for sparse files:
-> > 
-> > 	http://tools.ietf.org/html/draft-ietf-nfsv4-minorversion2-33#section-15.10
-> > 
-> > It allows an NFS server to return either file data (like a normal READ
-> > call) or, at the server's discretion, records saying "this range of the
-> > data is all zeroes".
-> > 
-> > Anna tried implementing READ_PLUS for knfsd using
-> > vfs_llseek(.,.,SEEK_HOLE) followed by an ordinary read if that
-> > determines we're not at a hole.
-> > 
-> > (Very) preliminary results suggest that's slower than a plain READ for
-> > an xfs file with no holes.  (And *much* slower in the ext4 case for some
-> > reason.)
+On Thu, Mar 19, 2015 at 07:27:25PM -0700, Linda Walsh wrote:
+> Dave Chinner wrote:
+> >From: Dave Chinner <dchinner@redhat.com>
+> >
+> >It's time to change the mkfs defaults to enable CRCs for all new
+> >filesystems.
+> ---
+> 	"Sounds good", but what exactly is CRC'ed?
 > 
-> It should be a fairly cheap operastion, and does extent tree operations
-> that are pretty similar to an (uncached) read.  Do you have profiles?
+> I.e. all data? Or how much data/second would I expect
+> to 'need' CRC'ing?
 > 
-> > Is that expected, and should we be doing this some other way instead?
+> Some quick timing stuff:
 > 
-> Are the read cached or uncached?
+> >time  dd if=/dev/zero of=1G bs=1M count=1024 oflag=direct
+> 1024+0 records in
+> 1024+0 records out
+> 1073741824 bytes (1.1 GB) copied, 1.76947 s, 607 MB/s
+> 1.77sec 0.00usr 0.50sys (28.38% cpu)
+> 
+> >dropcaches
+> 76.34sec 0.00usr 69.22sys (90.69% cpu)
+> 
+> Ishtar:law/bin> time crc32 1G		## no cache
+> 5B64C2B0
+> 6.67sec 3.85usr 0.94sys (71.82% cpu)
+> 
+> >time crc32 1G				## in cache
+> 5B64C2B0
+> 4.00sec 3.57usr 0.42sys (100.00% cpu)
+> (using Xeon X5660 @ 2.80GHz)
 
-I don't know, and don't have profiles.  I'll either try to reproduce or
-wait till Anna's back from vacation.
+Usually the kernel will load one of the CRC32c accelerators to reduce the
+impact of the metadata checksumming.  Not sure if 'crc32' knows how to use
+the new instructions Intel built into that X5660, though I'm guessing not.
+Also, XFS uses crc32c, not crc32.
 
-> If they are from pagecache just copying the zeroes is pretty much
-> unbeatable compared to extent tree lookups, so we'd need a new page
-> flag (difficult..) to see that a page is a hole (and then it would
-> only work for the whole page), but for uncached reads an optimization
-> would be to tell a read that it's an NFS READ_PLUS so that it could
-> just read until it reach a hole, and then we'd need some way to
-> communicate the hole size (or just fall back to SEEK_HOLE for that
-> case).
+--D
 
-Ugh, OK.  We'll do some more tests before coming back to ask about
-that....
-
---b.
+> 
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
