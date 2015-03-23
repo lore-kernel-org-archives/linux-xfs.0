@@ -1,32 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 525977F4E
-	for <xfs@oss.sgi.com>; Mon, 23 Mar 2015 07:01:42 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id BB8937F4E
+	for <xfs@oss.sgi.com>; Mon, 23 Mar 2015 07:24:08 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id E2300AC003
-	for <xfs@oss.sgi.com>; Mon, 23 Mar 2015 05:01:38 -0700 (PDT)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 8B20D8F8035
+	for <xfs@oss.sgi.com>; Mon, 23 Mar 2015 05:24:08 -0700 (PDT)
 Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id 4nVwWW0RyPuHSQ3Y (version=TLSv1 cipher=AES256-SHA
+	with ESMTP id S7mWfPwPBibGW6Oi (version=TLSv1 cipher=AES256-SHA
 	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 23 Mar 2015 05:01:36 -0700 (PDT)
-Date: Mon, 23 Mar 2015 12:01:31 +0000
+	Mon, 23 Mar 2015 05:24:06 -0700 (PDT)
 From: Mel Gorman <mgorman@suse.de>
-Subject: Re: [PATCH 4/4] mm: numa: Slow PTE scan rate if migration failures
-	occur
-Message-ID: <20150323120131.GB4701@suse.de>
-References: <20150317220840.GC28621@dastard>
-	<CA+55aFwne-fe_Gg-_GTUo+iOAbbNpLBa264JqSFkH79EULyAqw@mail.gmail.com>
-	<CA+55aFy-Mw74rAdLMMMUgnsG3ZttMWVNGz7CXZJY7q9fqyRYfg@mail.gmail.com>
-	<CA+55aFyxA9u2cVzV+S7TSY9ZvRXCX=z22YAbi9mdPVBKmqgR5g@mail.gmail.com>
-	<20150319224143.GI10105@dastard>
-	<CA+55aFy5UeNnFUTi619cs3b9Up2NQ1wbuyvcCS614+o3=z=wBQ@mail.gmail.com>
-	<20150320002311.GG28621@dastard>
-	<CA+55aFyqXDVv9JkkhvM26x6PC5V82corR7HQNxmkeGZjOCxD=A@mail.gmail.com>
-	<20150320041357.GO10105@dastard>
-	<CA+55aFx1pywykWa0ThcHgE7wzdVuyOBSx27iyx_FtZpYSJbKGQ@mail.gmail.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <CA+55aFx1pywykWa0ThcHgE7wzdVuyOBSx27iyx_FtZpYSJbKGQ@mail.gmail.com>
+Subject: [PATCH 0/3] Reduce system overhead of automatic NUMA balancing
+Date: Mon, 23 Mar 2015 12:24:00 +0000
+Message-Id: <1427113443-20973-1-git-send-email-mgorman@suse.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,49 +21,155 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, Linux-MM <linux-mm@kvack.org>, Aneesh Kumar <aneesh.kumar@linux.vnet.ibm.com>, Andrew Morton <akpm@linux-foundation.org>, ppc-dev <linuxppc-dev@lists.ozlabs.org>, Ingo Molnar <mingo@kernel.org>
+To: Dave Chinner <david@fromorbit.com>
+Cc: linuxppc-dev@lists.ozlabs.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, Linux-MM <linux-mm@kvack.org>, Aneesh Kumar <aneesh.kumar@linux.vnet.ibm.com>, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, Ingo Molnar <mingo@kernel.org>, Mel Gorman <mgorman@suse.de>
 
-On Fri, Mar 20, 2015 at 10:02:23AM -0700, Linus Torvalds wrote:
-> On Thu, Mar 19, 2015 at 9:13 PM, Dave Chinner <david@fromorbit.com> wrote:
-> >
-> > Testing now. It's a bit faster - three runs gave 7m35s, 7m20s and
-> > 7m36s. IOWs's a bit better, but not significantly. page migrations
-> > are pretty much unchanged, too:
-> >
-> >            558,632      migrate:mm_migrate_pages ( +-  6.38% )
-> 
-> Ok. That was kind of the expected thing.
-> 
-> I don't really know the NUMA fault rate limiting code, but one thing
-> that strikes me is that if it tries to balance the NUMA faults against
-> the *regular* faults, then maybe just the fact that we end up taking
-> more COW faults after a NUMA fault then means that the NUMA rate
-> limiting code now gets over-eager (because it sees all those extra
-> non-numa faults).
-> 
-> Mel, does that sound at all possible? I really have never looked at
-> the magic automatic rate handling..
-> 
+These are three follow-on patches based on the xfsrepair workload Dave
+Chinner reported was problematic in 4.0-rc1 due to changes in page table
+management -- https://lkml.org/lkml/2015/3/1/226.
 
-It should not be trying to balance against regular faults as it has no
-information on it. The trapping of additional faults to mark the PTE
-writable will alter timing so it indirectly affects how many migration
-faults there but this is only a side-effect IMO.
+Much of the problem was reduced by commit 53da3bc2ba9e ("mm: fix up numa
+read-only thread grouping logic") and commit ba68bc0115eb ("mm: thp:
+Return the correct value for change_huge_pmd"). It was known that the performance
+in 3.19 was still better even if is far less safe. This series aims to
+restore the performance without compromising on safety.
 
-There is more overhead now due to losing the writable information and
-that should be reduced so I tried a few approaches.  Ultimately, the one
-that performed the best and was easiest to understand simply preserved
-the writable bit across the protection update and page fault. I'll post
-it later when I stick a changelog on it.
+Dave, you already tested patch 1 on its own but it would be nice to test
+patches 1+2 and 1+2+3 separately just to be certain.
+
+For the test of this mail, I'm comparing 3.19 against 4.0-rc4 and the
+three patches applied on top
+
+autonumabench
+                                              3.19.0             4.0.0-rc4             4.0.0-rc4             4.0.0-rc4             4.0.0-rc4
+                                             vanilla               vanilla          vmwrite-v5r8         preserve-v5r8         slowscan-v5r8
+Time System-NUMA01                  124.00 (  0.00%)      161.86 (-30.53%)      107.13 ( 13.60%)      103.13 ( 16.83%)      145.01 (-16.94%)
+Time System-NUMA01_THEADLOCAL       115.54 (  0.00%)      107.64 (  6.84%)      131.87 (-14.13%)       83.30 ( 27.90%)       92.35 ( 20.07%)
+Time System-NUMA02                    9.35 (  0.00%)       10.44 (-11.66%)        8.95 (  4.28%)       10.72 (-14.65%)        8.16 ( 12.73%)
+Time System-NUMA02_SMT                3.87 (  0.00%)        4.63 (-19.64%)        4.57 (-18.09%)        3.99 ( -3.10%)        3.36 ( 13.18%)
+Time Elapsed-NUMA01                 570.06 (  0.00%)      567.82 (  0.39%)      515.78 (  9.52%)      517.26 (  9.26%)      543.80 (  4.61%)
+Time Elapsed-NUMA01_THEADLOCAL      393.69 (  0.00%)      384.83 (  2.25%)      384.10 (  2.44%)      384.31 (  2.38%)      380.73 (  3.29%)
+Time Elapsed-NUMA02                  49.09 (  0.00%)       49.33 ( -0.49%)       48.86 (  0.47%)       48.78 (  0.63%)       50.94 ( -3.77%)
+Time Elapsed-NUMA02_SMT              47.51 (  0.00%)       47.15 (  0.76%)       47.98 ( -0.99%)       48.12 ( -1.28%)       49.56 ( -4.31%)
+
+              3.19.0   4.0.0-rc4   4.0.0-rc4   4.0.0-rc4   4.0.0-rc4
+             vanilla     vanillavmwrite-v5r8preserve-v5r8slowscan-v5r8
+User        46334.60    46391.94    44383.95    43971.89    44372.12
+System        252.84      284.66      252.61      201.24      249.00
+Elapsed      1062.14     1050.96      998.68     1000.94     1026.78
+
+Overall the system CPU usage is comparable and the test is naturally a bit variable. The
+slowing of the scanner hurts numa01 but on this machine it is an adverse workload and
+patches that dramatically help it often hurt absolutely everything else.
+
+Due to patch 2, the fault activity is interesting
+
+                                3.19.0   4.0.0-rc4   4.0.0-rc4   4.0.0-rc4   4.0.0-rc4
+                               vanilla     vanillavmwrite-v5r8preserve-v5r8slowscan-v5r8
+Minor Faults                   2097811     2656646     2597249     1981230     1636841
+Major Faults                       362         450         365         364         365
+
+Note the impact preserving the write bit across protection updates and fault reduces
+faults.
+
+NUMA alloc hit                 1229008     1217015     1191660     1178322     1199681
+NUMA alloc miss                      0           0           0           0           0
+NUMA interleave hit                  0           0           0           0           0
+NUMA alloc local               1228514     1216317     1190871     1177448     1199021
+NUMA base PTE updates        245706197   240041607   238195516   244704842   115012800
+NUMA huge PMD updates           479530      468448      464868      477573      224487
+NUMA page range updates      491225557   479886983   476207932   489222218   229950144
+NUMA hint faults                659753      656503      641678      656926      294842
+NUMA hint local faults          381604      373963      360478      337585      186249
+NUMA hint local percent             57          56          56          51          63
+NUMA pages migrated            5412140     6374899     6266530     5277468     5755096
+AutoNUMA cost                    5121%       5083%       4994%       5097%       2388%
+
+Here the impact of slowing the PTE scanner on migratrion failures is obvious as "NUMA base PTE updates" and
+"NUMA huge PMD updates" are massively reduced even though the headline performance
+is very similar.
+
+As xfsrepair was the reported workload here is the impact of the series on it.
+
+xfsrepair
+                                       3.19.0             4.0.0-rc4             4.0.0-rc4             4.0.0-rc4             4.0.0-rc4
+                                      vanilla               vanilla          vmwrite-v5r8         preserve-v5r8         slowscan-v5r8
+Min      real-fsmark        1183.29 (  0.00%)     1165.73 (  1.48%)     1152.78 (  2.58%)     1153.64 (  2.51%)     1177.62 (  0.48%)
+Min      syst-fsmark        4107.85 (  0.00%)     4027.75 (  1.95%)     3986.74 (  2.95%)     3979.16 (  3.13%)     4048.76 (  1.44%)
+Min      real-xfsrepair      441.51 (  0.00%)      463.96 ( -5.08%)      449.50 ( -1.81%)      440.08 (  0.32%)      439.87 (  0.37%)
+Min      syst-xfsrepair      195.76 (  0.00%)      278.47 (-42.25%)      262.34 (-34.01%)      203.70 ( -4.06%)      143.64 ( 26.62%)
+Amean    real-fsmark        1188.30 (  0.00%)     1177.34 (  0.92%)     1157.97 (  2.55%)     1158.21 (  2.53%)     1182.22 (  0.51%)
+Amean    syst-fsmark        4111.37 (  0.00%)     4055.70 (  1.35%)     3987.19 (  3.02%)     3998.72 (  2.74%)     4061.69 (  1.21%)
+Amean    real-xfsrepair      450.88 (  0.00%)      468.32 ( -3.87%)      454.14 ( -0.72%)      442.36 (  1.89%)      440.59 (  2.28%)
+Amean    syst-xfsrepair      199.66 (  0.00%)      290.60 (-45.55%)      277.20 (-38.84%)      204.68 ( -2.51%)      150.55 ( 24.60%)
+Stddev   real-fsmark           4.12 (  0.00%)       10.82 (-162.29%)        4.14 ( -0.28%)        5.98 (-45.05%)        4.60 (-11.53%)
+Stddev   syst-fsmark           2.63 (  0.00%)       20.32 (-671.82%)        0.37 ( 85.89%)       16.47 (-525.59%)       15.05 (-471.79%)
+Stddev   real-xfsrepair        6.87 (  0.00%)        4.55 ( 33.75%)        3.46 ( 49.58%)        1.78 ( 74.12%)        0.52 ( 92.50%)
+Stddev   syst-xfsrepair        3.02 (  0.00%)       10.30 (-241.37%)       13.17 (-336.37%)        0.71 ( 76.63%)        5.00 (-65.61%)
+CoeffVar real-fsmark           0.35 (  0.00%)        0.92 (-164.73%)        0.36 ( -2.91%)        0.52 (-48.82%)        0.39 (-12.10%)
+CoeffVar syst-fsmark           0.06 (  0.00%)        0.50 (-682.41%)        0.01 ( 85.45%)        0.41 (-543.22%)        0.37 (-478.78%)
+CoeffVar real-xfsrepair        1.52 (  0.00%)        0.97 ( 36.21%)        0.76 ( 49.94%)        0.40 ( 73.62%)        0.12 ( 92.33%)
+CoeffVar syst-xfsrepair        1.51 (  0.00%)        3.54 (-134.54%)        4.75 (-214.31%)        0.34 ( 77.20%)        3.32 (-119.63%)
+Max      real-fsmark        1193.39 (  0.00%)     1191.77 (  0.14%)     1162.90 (  2.55%)     1166.66 (  2.24%)     1188.50 (  0.41%)
+Max      syst-fsmark        4114.18 (  0.00%)     4075.45 (  0.94%)     3987.65 (  3.08%)     4019.45 (  2.30%)     4082.80 (  0.76%)
+Max      real-xfsrepair      457.80 (  0.00%)      474.60 ( -3.67%)      457.82 ( -0.00%)      444.42 (  2.92%)      441.03 (  3.66%)
+Max      syst-xfsrepair      203.11 (  0.00%)      303.65 (-49.50%)      294.35 (-44.92%)      205.33 ( -1.09%)      155.28 ( 23.55%)
+
+The really relevant lines as syst-xfsrepair which is the system CPU usage
+when running xfsrepair. Note that on my machine the overhead was 45% higher
+on 4.0-rc4 which may be part of what Dave is seeing. Once we preserve the
+write bit across faults, it's only 2.51% higher on average. With the full
+series applied, system CPU usage is 24.6% lower on average.
+
+Again, the impact of preserving the write bit on minor faults is obvious
+and the impact of slowing scanning after migration failures is obvious
+on the PTE updates.  Note also that the number of pages migrated is much
+reduced even though the headline performance is comparable.
+
+                                3.19.0   4.0.0-rc4   4.0.0-rc4   4.0.0-rc4   4.0.0-rc4
+                               vanilla     vanillavmwrite-v5r8preserve-v5r8slowscan-v5r8
+Minor Faults                 153466827   254507978   249163829   153501373   105737890
+Major Faults                       610         702         690         649         724
+NUMA base PTE updates        217735049   210756527   217729596   216937111   144344993
+NUMA huge PMD updates           129294       85044      106921      127246       79887
+NUMA pages migrated           21938995    29705270    28594162    22687324    16258075
+
+                      3.19.0   4.0.0-rc4   4.0.0-rc4   4.0.0-rc4   4.0.0-rc4
+                     vanilla     vanillavmwrite-v5r8preserve-v5r8slowscan-v5r8
+Mean sdb-avgqusz       13.47        2.54        2.55        2.47        2.49
+Mean sdb-avgrqsz      202.32      140.22      139.50      139.02      138.12
+Mean sdb-await         25.92        5.09        5.33        5.02        5.22
+Mean sdb-r_await        4.71        0.19        0.83        0.51        0.11
+Mean sdb-w_await      104.13        5.21        5.38        5.05        5.32
+Mean sdb-svctm          0.59        0.13        0.14        0.13        0.14
+Mean sdb-rrqm           0.16        0.00        0.00        0.00        0.00
+Mean sdb-wrqm           3.59     1799.43     1826.84     1812.21     1785.67
+Max  sdb-avgqusz      111.06       12.13       14.05       11.66       15.60
+Max  sdb-avgrqsz      255.60      190.34      190.01      187.33      191.78
+Max  sdb-await        168.24       39.28       49.22       44.64       65.62
+Max  sdb-r_await      660.00       52.00      280.00       76.00       12.00
+Max  sdb-w_await     7804.00       39.28       49.22       44.64       65.62
+Max  sdb-svctm          4.00        2.82        2.86        1.98        2.84
+Max  sdb-rrqm           8.30        0.00        0.00        0.00        0.00
+Max  sdb-wrqm          34.20     5372.80     5278.60     5386.60     5546.15
+
+FWIW, I also checked SPECjbb in different configurations but it's similar observations -- minor faults lower,
+PTE update activity lower and performance is roughly comparable against 3.19.
+
+ include/linux/sched.h |  9 +++++----
+ kernel/sched/fair.c   |  8 ++++++--
+ mm/huge_memory.c      | 25 ++++++++++++-------------
+ mm/memory.c           | 22 ++++++++++++----------
+ mm/mprotect.c         |  3 +++
+ 5 files changed, 38 insertions(+), 29 deletions(-)
 
 -- 
-Mel Gorman
-SUSE Labs
+2.1.2
 
 _______________________________________________
 xfs mailing list
