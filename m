@@ -1,21 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 1A6AF7F50
-	for <xfs@oss.sgi.com>; Mon, 23 Mar 2015 07:24:09 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id BD9757F4E
+	for <xfs@oss.sgi.com>; Mon, 23 Mar 2015 15:00:15 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 8F2FBAC002
-	for <xfs@oss.sgi.com>; Mon, 23 Mar 2015 05:24:08 -0700 (PDT)
-Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id NsfjN5Ez6Ful2IUz (version=TLSv1 cipher=AES256-SHA
-	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 23 Mar 2015 05:24:06 -0700 (PDT)
-From: Mel Gorman <mgorman@suse.de>
-Subject: [PATCH 1/3] mm: numa: Group related processes based on VMA flags
-	instead of page table flags
-Date: Mon, 23 Mar 2015 12:24:01 +0000
-Message-Id: <1427113443-20973-2-git-send-email-mgorman@suse.de>
-In-Reply-To: <1427113443-20973-1-git-send-email-mgorman@suse.de>
-References: <1427113443-20973-1-git-send-email-mgorman@suse.de>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 898278F8068
+	for <xfs@oss.sgi.com>; Mon, 23 Mar 2015 13:00:15 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id SfDBcDnwvZDTgOaa for <xfs@oss.sgi.com>;
+	Mon, 23 Mar 2015 13:00:13 -0700 (PDT)
+Message-ID: <551070CC.9040309@sandeen.net>
+Date: Mon, 23 Mar 2015 15:00:12 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
+MIME-Version: 1.0
+Subject: [PATCH 01/13 V2] xfs_db: Allow writes of corrupted data by optionally
+	skipping write verifiers
+References: <1426624395-8258-1-git-send-email-sandeen@redhat.com>
+	<1426624395-8258-2-git-send-email-sandeen@redhat.com>
+In-Reply-To: <1426624395-8258-2-git-send-email-sandeen@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,86 +25,154 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: linuxppc-dev@lists.ozlabs.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, Linux-MM <linux-mm@kvack.org>, Aneesh Kumar <aneesh.kumar@linux.vnet.ibm.com>, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, Ingo Molnar <mingo@kernel.org>, Mel Gorman <mgorman@suse.de>
+To: Eric Sandeen <sandeen@redhat.com>, xfs@oss.sgi.com
 
-Threads that share writable data within pages are grouped together as
-related tasks. This decision is based on whether the PTE is marked dirty
-which is subject to timing races between the PTE scanner update and when the
-application writes the page. If the page is file-backed, then background
-flushes and sync also affect placement. This is unpredictable behaviour
-which is impossible to reason about so this patch makes grouping decisions
-based on the VMA flags.
+Being able to write corrupt data is handy if we wish to test
+repair against specific types of corruptions.
 
-Signed-off-by: Mel Gorman <mgorman@suse.de>
+Add a "-c" option to the write command which allows this by removing
+the write verifier.
+
+Note that this also skips CRC updates; it's not currently possible
+to write invalid data with a valid CRC; CRC recalculation is
+intertwined with validation.
+
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 ---
- mm/huge_memory.c | 13 ++-----------
- mm/memory.c      | 19 +++++++++++--------
- 2 files changed, 13 insertions(+), 19 deletions(-)
 
-diff --git a/mm/huge_memory.c b/mm/huge_memory.c
-index 626e93db28ba..2f12e9fcf1a2 100644
---- a/mm/huge_memory.c
-+++ b/mm/huge_memory.c
-@@ -1291,17 +1291,8 @@ int do_huge_pmd_numa_page(struct mm_struct *mm, struct vm_area_struct *vma,
- 		flags |= TNF_FAULT_LOCAL;
+V2: Fix whitespace, remove "if (argc)", and test for
+iocur_top->bp->b_ops before attempting to deref it.
+
+diff --git a/db/io.c b/db/io.c
+index 7f1b76a..c5898f1 100644
+--- a/db/io.c
++++ b/db/io.c
+@@ -457,6 +457,13 @@ write_cur_bbs(void)
+ }
+ 
+ void
++xfs_dummy_verify(
++	struct xfs_buf *bp)
++{
++	return;
++}
++
++void
+ write_cur(void)
+ {
+ 	if (iocur_sp < 0) {
+diff --git a/db/io.h b/db/io.h
+index 71082e6..31d96b4 100644
+--- a/db/io.h
++++ b/db/io.h
+@@ -63,6 +63,7 @@ extern void	set_cur(const struct typ *t, __int64_t d, int c, int ring_add,
+ 			bbmap_t *bbmap);
+ extern void     ring_add(void);
+ extern void	set_iocur_type(const struct typ *t);
++extern void	xfs_dummy_verify(struct xfs_buf *bp);
+ 
+ /*
+  * returns -1 for unchecked, 0 for bad and 1 for good
+diff --git a/db/write.c b/db/write.c
+index a0f14f4..655b618 100644
+--- a/db/write.c
++++ b/db/write.c
+@@ -38,7 +38,7 @@ static int	write_f(int argc, char **argv);
+ static void     write_help(void);
+ 
+ static const cmdinfo_t	write_cmd =
+-	{ "write", NULL, write_f, 0, -1, 0, N_("[field or value]..."),
++	{ "write", NULL, write_f, 0, -1, 0, N_("[-c] [field or value]..."),
+ 	  N_("write value to disk"), write_help };
+ 
+ void
+@@ -79,6 +79,7 @@ write_help(void)
+ "  String mode: 'write \"This_is_a_filename\" - write null terminated string.\n"
+ "\n"
+ " In data mode type 'write' by itself for a list of specific commands.\n\n"
++" Specifying the -c option will allow writes of invalid (corrupt) data.\n\n"
+ ));
+ 
+ }
+@@ -90,6 +91,10 @@ write_f(
+ {
+ 	pfunc_t	pf;
+ 	extern char *progname;
++	int c;
++	int corrupt = 0;		/* Allow write of corrupt data; skip verification */
++	struct xfs_buf_ops nowrite_ops;
++	const struct xfs_buf_ops *stashed_ops = NULL;
+ 
+ 	if (x.isreadonly & LIBXFS_ISREADONLY) {
+ 		dbprintf(_("%s started in read only mode, writing disabled\n"),
+@@ -109,12 +114,34 @@ write_f(
+ 		return 0;
  	}
  
--	/*
--	 * Avoid grouping on DSO/COW pages in specific and RO pages
--	 * in general, RO pages shouldn't hurt as much anyway since
--	 * they can be in shared cache state.
--	 *
--	 * FIXME! This checks "pmd_dirty()" as an approximation of
--	 * "is this a read-only page", since checking "pmd_write()"
--	 * is even more broken. We haven't actually turned this into
--	 * a writable page, so pmd_write() will always be false.
--	 */
--	if (!pmd_dirty(pmd))
-+	/* See similar comment in do_numa_page for explanation */
-+	if (!(vma->vm_flags & VM_WRITE))
- 		flags |= TNF_NO_GROUP;
+-	/* move past the "write" command */
+-	argc--;
+-	argv++;
++	while ((c = getopt(argc, argv, "c")) != EOF) {
++		switch (c) {
++		case 'c':
++			corrupt = 1;
++			break;
++		default:
++			dbprintf(_("bad option for write command\n"));
++			return 0;
++		}
++	}
++
++	argc -= optind;
++	argv += optind;
++
++	if (iocur_top->bp->b_ops && corrupt) {
++		/* Temporarily remove write verifier to write bad data */
++		stashed_ops = iocur_top->bp->b_ops;
++		nowrite_ops.verify_read = stashed_ops->verify_read;
++		nowrite_ops.verify_write = xfs_dummy_verify;
++		iocur_top->bp->b_ops = &nowrite_ops;
++		dbprintf(_("Allowing write of corrupted data\n"));
++	}
  
- 	/*
-diff --git a/mm/memory.c b/mm/memory.c
-index 411144f977b1..20beb6647dba 100644
---- a/mm/memory.c
-+++ b/mm/memory.c
-@@ -3069,16 +3069,19 @@ static int do_numa_page(struct mm_struct *mm, struct vm_area_struct *vma,
- 	}
+ 	(*pf)(DB_WRITE, cur_typ->fields, argc, argv);
  
- 	/*
--	 * Avoid grouping on DSO/COW pages in specific and RO pages
--	 * in general, RO pages shouldn't hurt as much anyway since
--	 * they can be in shared cache state.
-+	 * Avoid grouping on RO pages in general. RO pages shouldn't hurt as
-+	 * much anyway since they can be in shared cache state. This misses
-+	 * the case where a mapping is writable but the process never writes
-+	 * to it but pte_write gets cleared during protection updates and
-+	 * pte_dirty has unpredictable behaviour between PTE scan updates,
-+	 * background writeback, dirty balancing and application behaviour.
- 	 *
--	 * FIXME! This checks "pmd_dirty()" as an approximation of
--	 * "is this a read-only page", since checking "pmd_write()"
--	 * is even more broken. We haven't actually turned this into
--	 * a writable page, so pmd_write() will always be false.
-+	 * TODO: Note that the ideal here would be to avoid a situation where a
-+	 * NUMA fault is taken immediately followed by a write fault in
-+	 * some cases which would have lower overhead overall but would be
-+	 * invasive as the fault paths would need to be unified.
- 	 */
--	if (!pte_dirty(pte))
-+	if (!(vma->vm_flags & VM_WRITE))
- 		flags |= TNF_NO_GROUP;
++	if (stashed_ops)
++		iocur_top->bp->b_ops = stashed_ops;
++
+ 	return 0;
+ }
  
- 	/*
--- 
-2.1.2
+diff --git a/man/man8/xfs_db.8 b/man/man8/xfs_db.8
+index 4d8d4ff..d527230 100644
+--- a/man/man8/xfs_db.8
++++ b/man/man8/xfs_db.8
+@@ -711,7 +711,7 @@ and
+ bits respectively, and their string equivalent reported
+ (but no modifications are made).
+ .TP
+-.BI "write [" "field value" "] ..."
++.BI "write [\-c] [" "field value" "] ..."
+ Write a value to disk.
+ Specific fields can be set in structures (struct mode),
+ or a block can be set to data values (data mode),
+@@ -729,6 +729,12 @@ contents of the block can be shifted or rotated left or right, or filled
+ with a sequence, a constant value, or a random value. In this mode
+ .B write
+ with no arguments gives more information on the allowed commands.
++.RS 1.0i
++.TP 0.4i
++.B \-c
++Skip write verifiers and CRC recalculation; allows invalid data to be written
++to disk.
++.RE
+ .SH TYPES
+ This section gives the fields in each structure type and their meanings.
+ Note that some types of block cover multiple actual structures,
 
 _______________________________________________
 xfs mailing list
