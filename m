@@ -1,26 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 6220729DFB
-	for <xfs@oss.sgi.com>; Sun, 22 Mar 2015 18:03:30 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 1523029DFB
+	for <xfs@oss.sgi.com>; Sun, 22 Mar 2015 22:49:39 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id C3BC7AC001
-	for <xfs@oss.sgi.com>; Sun, 22 Mar 2015 16:03:26 -0700 (PDT)
-Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
-	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	DaWW7paEwCMCpbhr for <xfs@oss.sgi.com>;
-	Sun, 22 Mar 2015 16:03:21 -0700 (PDT)
-Date: Mon, 23 Mar 2015 10:02:10 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 3/6] xfs: add DAX file operations support
-Message-ID: <20150322230210.GQ10105@dastard>
-References: <1425425427-16283-1-git-send-email-david@fromorbit.com>
-	<1425425427-16283-4-git-send-email-david@fromorbit.com>
-	<20150304161848.GB2799@quack.suse.cz>
-	<20150304220005.GV18360@dastard>
-	<20150305110504.GC2836@quack.suse.cz>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 00A9E304039
+	for <xfs@oss.sgi.com>; Sun, 22 Mar 2015 20:49:35 -0700 (PDT)
+Received: from mail-qg0-f43.google.com (mail-qg0-f43.google.com
+	[209.85.192.43]) by cuda.sgi.com with ESMTP id jCB9sRiiAuTEpUmb
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Sun, 22 Mar 2015 20:49:34 -0700 (PDT)
+Received: by qgf74 with SMTP id 74so10761069qgf.2
+	for <xfs@oss.sgi.com>; Sun, 22 Mar 2015 20:49:34 -0700 (PDT)
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20150305110504.GC2836@quack.suse.cz>
+Date: Sun, 22 Mar 2015 23:49:34 -0400
+Message-ID: <CADa969g-jGyYc1ts+JamuD0Ze-Mcp+X8am7rAfDeY0wXC4A6gg@mail.gmail.com>
+Subject: Question about GFP_KERNEL argument in radix_tree_preload
+From: Sanidhya Kashyap <sanidhya.gatech@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,98 +28,24 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Jan Kara <jack@suse.cz>
-Cc: linux-fsdevel@vger.kernel.org, willy@linux.intel.com, xfs@oss.sgi.com
+To: david@fromorbit.com
+Cc: taesoo@gatech.edu, "Kashyap, Sanidhya" <sanidhya@gatech.edu>, xfs@oss.sgi.com, csong@gatech.edu, blee@gatech.edu, changwoo@gatech.edu
 
-On Thu, Mar 05, 2015 at 12:05:04PM +0100, Jan Kara wrote:
-> On Thu 05-03-15 09:00:05, Dave Chinner wrote:
-> > On Wed, Mar 04, 2015 at 05:18:48PM +0100, Jan Kara wrote:
-> > > On Wed 04-03-15 10:30:24, Dave Chinner wrote:
-> > > > From: Dave Chinner <dchinner@redhat.com>
-> > > > 
-> > > > Add the initial support for DAX file operations to XFS. This
-> > > > includes the necessary block allocation and mmap page fault hooks
-> > > > for DAX to function.
-> > > > 
-> > > > Note that the current block allocation code abuses the mapping
-> > > > buffer head to provide a completion callback for unwritten extent
-> > > > allocation when DAX is clearing blocks. The DAX interface needs to
-> > > > be changed to provide a callback similar to get_blocks for this
-> > > > callback.
-> > > > 
-> > > > Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> > .....
-> > > > +static int
-> > > > +xfs_filemap_dax_page_mkwrite(
-> > > > +	struct vm_area_struct	*vma,
-> > > > +	struct vm_fault		*vmf)
-> > > > +{
-> > > > +	struct xfs_inode	*ip = XFS_I(vma->vm_file->f_mapping->host);
-> > > > +	int			error;
-> > > > +
-> > > > +	trace_xfs_filemap_page_mkwrite(ip);
-> > > > +
-> > > > +	xfs_ilock(ip, XFS_MMAPLOCK_SHARED);
-> > >   So I think the lock ordering of XFS_MMAPLOCK and freezing protection is
-> > > suspicious (and actually so is for normal write faults as I'm looking -
-> > > didn't realize that when I was first reading your MMAPLOCK patches).
-> > > Because you take XFS_MMAPLOCK outside of freeze protection however usually
-> > > we want freeze protection to be the outermost lock - in particular in
-> > > xfs_file_fallocate() you take XFS_MMAPLOCK inside freeze protection I
-> > > think.
-> > 
-> > OK, so why isn't lockdep triggering on that? lockdep is aware of
-> > inode locks and the freeze states, supposedly to pick up these exact
-> > issues...
-> > 
-> > Oh, probably because the sb freeze order is write, pagefault,
-> > transaction.
-> > 
-> > i.e. In the fallocate case, we do sb_start_write, MMAP_LOCK. If we are in
-> > a freeze case, we aren't going to freeze page faults until we've
-> > frozen all the writes have drained, so there isn't a lock order
-> > dependency there. Same for any other mnt_want_write/sb-start_write
-> > based modification. 
-> > 
-> > Hence the fallocate path and anything that runs through setattr will
-> > complete and release the mmap lock and then be prevented from taking
-> > it again by the time sb_start_pagefault() can block with the mmap
-> > lock held.  So there isn't actually a deadlock there because of the
-> > way freeze works, and that's why lockdep is staying silent.
->   Yeah, you're right there isn't a deadlock possibility. After all the lock
-> ranking of your MMAP_LOCk is currently the same as of mmap_sem (and the
-> difficult lock ordering of that semaphore has been the reason why we have
-> special type of freeze protection for page faults).
-> 
-> > Still, I probably need to fix it so I'm not leaving a potential
-> > landmine around.
->   I would find it easier to grasp. Yes.
+Hello David,
 
-Finally getting back to this. Fixed this, but...
-> 
-> > > So you'll need to do what ext4 needs to do - take freeze protection, take
-> > > fs specific locks, and then call do_dax_fault(). Matthew has a patch to
-> > > actually export do_dax_fault (as __dax_fault()) for filesystems.
-> > 
-> > pointer to it? if none, I'll just write my own....
->   http://permalink.gmane.org/gmane.comp.file-systems.ext4/47866
+We have been doing some analysis on file systems and have a question
+regarding the GFP_KERNEL flag used in radix_tree_preload in
+xfs_mru_cache_insert.
 
-I can't find any followup to this patch. Is it in any tree anywhere?
+We think that this should be GFP_NOFS as it is related to the block
+allocation and other file systems(eg btrfs,ext2) are also using
+GFP_NOFS for the same.
 
-Right now, I've just pulled the dax instructure part of the patch
-into my series and modified it to suit because I've fixed the
-unwritten extent conversion problem differently (i.e. the extra
-callback) and ext4 needs a lot more help to fix the problems than
-in that patch.
+It would be great if you can let us know your reason for using that
+flag and which one is the correct option?
 
-I'll post the patches when I've at least smoke tested them....
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Thanks,
+Sanidhya
 
 _______________________________________________
 xfs mailing list
