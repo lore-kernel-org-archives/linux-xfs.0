@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id D63247F4E
-	for <xfs@oss.sgi.com>; Mon, 23 Mar 2015 15:13:47 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 4D4AC7F4E
+	for <xfs@oss.sgi.com>; Mon, 23 Mar 2015 15:20:12 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 6DC26AC001
-	for <xfs@oss.sgi.com>; Mon, 23 Mar 2015 13:13:47 -0700 (PDT)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id D5D42AC009
+	for <xfs@oss.sgi.com>; Mon, 23 Mar 2015 13:20:11 -0700 (PDT)
 Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id FsbNn8wfsWupVDyl for <xfs@oss.sgi.com>;
-	Mon, 23 Mar 2015 13:13:46 -0700 (PDT)
-Message-ID: <551073F9.6060908@sandeen.net>
-Date: Mon, 23 Mar 2015 15:13:45 -0500
+	ESMTP id zOQRGy1cBL867Pmy for <xfs@oss.sgi.com>;
+	Mon, 23 Mar 2015 13:19:45 -0700 (PDT)
+Message-ID: <55107560.90907@sandeen.net>
+Date: Mon, 23 Mar 2015 15:19:44 -0500
 From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: PATCH 09/13 V2] libxfs: remove ASSERT on ftype read from disk
+Subject: [PATCH 13/13 V2] xfs_repair: validate & fix inode CRCs
 References: <1426624395-8258-1-git-send-email-sandeen@redhat.com>
-	<1426624395-8258-10-git-send-email-sandeen@redhat.com>
-In-Reply-To: <1426624395-8258-10-git-send-email-sandeen@redhat.com>
+	<1426624395-8258-14-git-send-email-sandeen@redhat.com>
+In-Reply-To: <1426624395-8258-14-git-send-email-sandeen@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,31 +30,56 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Eric Sandeen <sandeen@redhat.com>, xfs@oss.sgi.com
 
-This one is already fixed in the kernel, with
-	fb04013 xfs: don't ASSERT on corrupt ftype
-but that kernel<->userspace merge is still pending.
+xfs_repair doesn't ever check an inode's CRC, so it never repairs
+them.  If the root inode or realtime inodes have bad crcs, the
+fs won't even mount and can't be fixed (without using xfs_db).
 
-In the meantime, just fix it as a one-off here, because ASSERTing
-on bad on-disk values when running xfs_repair is a very unfriendly
-thing to do.
+It's fairly straightforward to just test the inode CRC before
+we do any other checking or modification of the inode, and
+just mark it dirty if it's wrong and needs to be re-written.
 
 Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 ---
 
-Remove it, don't cplusplus-comment it out!  o_O
+V2: fix whitespace, urgh!
 
-diff --git a/include/xfs_da_format.h b/include/xfs_da_format.h
-index 89a1a21..11f1420 100644
---- a/include/xfs_da_format.h
-+++ b/include/xfs_da_format.h
-@@ -561,7 +561,6 @@ xfs_dir3_dirent_get_ftype(
- 	if (xfs_sb_version_hasftype(&mp->m_sb)) {
- 		__uint8_t	type = dep->name[dep->namelen];
+diff --git a/repair/dinode.c b/repair/dinode.c
+index 5d9094b..035212c 100644
+--- a/repair/dinode.c
++++ b/repair/dinode.c
+@@ -2291,6 +2291,30 @@ process_dinode_int(xfs_mount_t *mp,
+ 	 */
+ 	ASSERT(uncertain == 0 || verify_mode != 0);
  
--		ASSERT(type < XFS_DIR3_FT_MAX);
- 		if (type < XFS_DIR3_FT_MAX)
- 			return type;
- 
++	/*
++	 * This is the only valid point to check the CRC; after this we may have
++	 * made changes which invalidate it, and the CRC is only updated again
++	 * when it gets written out.
++	 *
++	 * Of course if we make any modifications after this, the inode gets
++	 * rewritten, and the CRC is updated automagically.
++	 */
++	if (xfs_sb_version_hascrc(&mp->m_sb) &&
++	    !xfs_verify_cksum((char *)dino, mp->m_sb.sb_inodesize,
++				XFS_DINODE_CRC_OFF)) {
++		retval = 1;
++		if (!uncertain)
++			do_warn(_("bad CRC for inode %" PRIu64 "%c"),
++				lino, verify_mode ? '\n' : ',');
++		if (!verify_mode) {
++			if (!no_modify) {
++				do_warn(_(" will rewrite\n"));
++				*dirty = 1;
++			} else
++				do_warn(_(" would rewrite\n"));
++		}
++	}
++
+ 	if (be16_to_cpu(dino->di_magic) != XFS_DINODE_MAGIC)  {
+ 		retval = 1;
+ 		if (!uncertain)
+
 
 _______________________________________________
 xfs mailing list
