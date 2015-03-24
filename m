@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 3A06A7F63
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 859D47F6D
 	for <xfs@oss.sgi.com>; Tue, 24 Mar 2015 05:59:42 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 148438F8071
-	for <xfs@oss.sgi.com>; Tue, 24 Mar 2015 03:59:42 -0700 (PDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id F422BAC003
+	for <xfs@oss.sgi.com>; Tue, 24 Mar 2015 03:59:41 -0700 (PDT)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	jFFHgAW8S0ttk6yd for <xfs@oss.sgi.com>;
+	dFQEhDRFb1jnf9Lm for <xfs@oss.sgi.com>;
 	Tue, 24 Mar 2015 03:59:39 -0700 (PDT)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.80)
-	(envelope-from <dave@fromorbit.com>) id 1YaMYY-0002sc-4c
+	(envelope-from <dave@fromorbit.com>) id 1YaMYY-0002sY-1n
 	for xfs@oss.sgi.com; Tue, 24 Mar 2015 21:59:34 +1100
 Received: from dave by disappointment with local (Exim 4.82_1-5b7a7c0-XX)
-	(envelope-from <dave@disappointment.disaster>) id 1YaMYY-00013M-3o
+	(envelope-from <dave@disappointment.disaster>) id 1YaMYY-000132-15
 	for xfs@oss.sgi.com; Tue, 24 Mar 2015 21:59:34 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 5/5] xfs: add RENAME_WHITEOUT support
-Date: Tue, 24 Mar 2015 21:59:31 +1100
-Message-Id: <1427194771-3105-6-git-send-email-david@fromorbit.com>
+Subject: [PATCH 1/5] xfs: clean up inode locking for RENAME_WHITEOUT
+Date: Tue, 24 Mar 2015 21:59:27 +1100
+Message-Id: <1427194771-3105-2-git-send-email-david@fromorbit.com>
 In-Reply-To: <1427194771-3105-1-git-send-email-david@fromorbit.com>
 References: <1427194771-3105-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,274 +39,256 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Whiteouts are used by overlayfs -  it has a crazy convention that a
-whiteout is a character device inode with a major:minor of 0:0.
-Because it's not documented anywhere, here's an example of what
-RENAME_WHITEOUT does on ext4:
+When doing RENAME_WHITEOUT, we now have to lock 5 inodes into the
+rename transaction. This means we need to update
+xfs_sort_for_rename() and xfs_lock_inodes() to handle up to 5
+inodes. Because of the vagaries of rename, this means we could have
+anywhere between 3 and 5 inodes locked into the transaction....
 
-# echo foo > /mnt/scratch/foo
-# echo bar > /mnt/scratch/bar
-# ls -l /mnt/scratch
-total 24
--rw-r--r-- 1 root root     4 Feb 11 20:22 bar
--rw-r--r-- 1 root root     4 Feb 11 20:22 foo
-drwx------ 2 root root 16384 Feb 11 20:18 lost+found
-# src/renameat2 -w /mnt/scratch/foo /mnt/scratch/bar
-# ls -l /mnt/scratch
-total 20
--rw-r--r-- 1 root root     4 Feb 11 20:22 bar
-c--------- 1 root root  0, 0 Feb 11 20:23 foo
-drwx------ 2 root root 16384 Feb 11 20:18 lost+found
-# cat /mnt/scratch/bar
-foo
-#
-
-In XFS rename terms, the operation that has been done is that source
-(foo) has been moved to the target (bar), which is like a nomal
-rename operation, but rather than the source being removed, it have
-been replaced with a whiteout.
-
-We can't allocate whiteout inodes within the rename transaction due
-to allocation being a multi-commit transaction: rename needs to
-be a single, atomic commit. Hence we have several options here, form
-most efficient to least efficient:
-
-    - use DT_WHT in the target dirent and do no whiteout inode
-      allocation.  The main issue with this approach is that we need
-      hooks in lookup to create a virtual chardev inode to present
-      to userspace and in places where we might need to modify the
-      dirent e.g. unlink.  Overlayfs also needs to be taught about
-      DT_WHT. Most invasive change, lowest overhead.
-
-    - create a special whiteout inode in the root directory (e.g. a
-      ".wino" dirent) and then hardlink every new whiteout to it.
-      This means we only need to create a single whiteout inode, and
-      rename simply creates a hardlink to it. We can use DT_WHT for
-      these, though using DT_CHR means we won't have to modify
-      overlayfs, nor anything in userspace. Downside is we have to
-      look up the whiteout inode on every operation and create it if
-      it doesn't exist.
-
-    - copy ext4: create a special whiteout chardev inode for every
-      whiteout.  This is more complex than the above options because
-      of the lack of atomicity between inode creation and the rename
-      operation, requiring us to create a tmpfile inode and then
-      linking it into the directory structure during the rename. At
-      least with a tmpfile inode crashes between the create and
-      rename doesn't leave unreferenced inodes or directory
-      pollution around.
-
-By far the simplest thing to do in the short term is to copy ext4.
-While it is the most inefficient way of supporting whiteouts, but as
-an initial implementation we can simply reuse existing functions and
-add a small amount of extra code the the rename operation.
-
-When we get full whiteout support in the VFS (via the dentry cache)
-we can then look to supporting DT_WHT method outlined as the first
-method of supporting whiteouts. But until then, we'll stick with
-what overlayfs expects us to be: dumb and stupid.
+While xfs_lock_inodes() does not need anything other than an assert
+telling us we are passing more inodes that we ever thought we should
+see, it could do with a logic rework to remove all the indenting.
+This is not a functional change - it just makes the code a lot
+easier to read.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_inode.c | 129 +++++++++++++++++++++++++++++++++++++++++++----------
- fs/xfs/xfs_iops.c  |   2 +-
- 2 files changed, 107 insertions(+), 24 deletions(-)
+ fs/xfs/xfs_inode.c | 145 +++++++++++++++++++++++++----------------------------
+ 1 file changed, 67 insertions(+), 78 deletions(-)
 
 diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 1ea05be..7915f68 100644
+index 5a44f1c..e38bc40 100644
 --- a/fs/xfs/xfs_inode.c
 +++ b/fs/xfs/xfs_inode.c
-@@ -2864,39 +2864,80 @@ out_trans_abort:
+@@ -391,15 +391,14 @@ xfs_lock_inumorder(int lock_mode, int subclass)
  }
  
  /*
-+ * xfs_rename_alloc_whiteout()
-+ *
-+ * Return a referenced, unlinked, unlocked inode that that can be used as a
-+ * whiteout in a rename transaction. We use a tmpfile inode here so that if we
-+ * crash between allocating the inode and linking it into the rename transaction
-+ * recovery will free the inode and we won't leak it.
-+ */
-+static int
-+xfs_rename_alloc_whiteout(
-+	struct xfs_inode	*dp,
-+	struct xfs_inode	**wip)
-+{
-+	struct xfs_inode	*tmpfile;
-+	int			error;
-+
-+	error = xfs_create_tmpfile(dp, NULL, S_IFCHR | WHITEOUT_MODE, &tmpfile);
-+	if (error)
-+		return error;
-+
-+	/* Satisfy xfs_bumplink that this is a real tmpfile */
-+	xfs_finish_inode_setup(tmpfile);
-+	VFS_I(tmpfile)->i_state |= I_LINKABLE;
-+
-+	*wip = tmpfile;
-+	return 0;
-+}
-+
-+/*
-  * xfs_rename
+- * The following routine will lock n inodes in exclusive mode.
+- * We assume the caller calls us with the inodes in i_ino order.
++ * The following routine will lock n inodes in exclusive mode.  We assume the
++ * caller calls us with the inodes in i_ino order.
+  *
+- * We need to detect deadlock where an inode that we lock
+- * is in the AIL and we start waiting for another inode that is locked
+- * by a thread in a long running transaction (such as truncate). This can
+- * result in deadlock since the long running trans might need to wait
+- * for the inode we just locked in order to push the tail and free space
+- * in the log.
++ * We need to detect deadlock where an inode that we lock is in the AIL and we
++ * start waiting for another inode that is locked by a thread in a long running
++ * transaction (such as truncate). This can result in deadlock since the long
++ * running trans might need to wait for the inode we just locked in order to
++ * push the tail and free space in the log.
   */
- int
- xfs_rename(
--	xfs_inode_t	*src_dp,
--	struct xfs_name	*src_name,
--	xfs_inode_t	*src_ip,
--	xfs_inode_t	*target_dp,
--	struct xfs_name	*target_name,
--	xfs_inode_t	*target_ip,
--	unsigned int	flags)
-+	struct xfs_inode	*src_dp,
-+	struct xfs_name		*src_name,
-+	struct xfs_inode	*src_ip,
-+	struct xfs_inode	*target_dp,
-+	struct xfs_name		*target_name,
-+	struct xfs_inode	*target_ip,
-+	unsigned int		flags)
+ void
+ xfs_lock_inodes(
+@@ -410,30 +409,27 @@ xfs_lock_inodes(
+ 	int		attempts = 0, i, j, try_lock;
+ 	xfs_log_item_t	*lp;
+ 
+-	ASSERT(ips && (inodes >= 2)); /* we need at least two */
++	/* currently supports between 2 and 5 inodes */
++	ASSERT(ips && inodes >= 2 && inodes <= 5);
+ 
+ 	try_lock = 0;
+ 	i = 0;
+-
+ again:
+ 	for (; i < inodes; i++) {
+ 		ASSERT(ips[i]);
+ 
+-		if (i && (ips[i] == ips[i-1]))	/* Already locked */
++		if (i && (ips[i] == ips[i - 1]))	/* Already locked */
+ 			continue;
+ 
+ 		/*
+-		 * If try_lock is not set yet, make sure all locked inodes
+-		 * are not in the AIL.
+-		 * If any are, set try_lock to be used later.
++		 * If try_lock is not set yet, make sure all locked inodes are
++		 * not in the AIL.  If any are, set try_lock to be used later.
+ 		 */
+-
+ 		if (!try_lock) {
+ 			for (j = (i - 1); j >= 0 && !try_lock; j--) {
+ 				lp = (xfs_log_item_t *)ips[j]->i_itemp;
+-				if (lp && (lp->li_flags & XFS_LI_IN_AIL)) {
++				if (lp && (lp->li_flags & XFS_LI_IN_AIL))
+ 					try_lock++;
+-				}
+ 			}
+ 		}
+ 
+@@ -443,51 +439,42 @@ again:
+ 		 * we can't get any, we must release all we have
+ 		 * and try again.
+ 		 */
++		if (!try_lock) {
++			xfs_ilock(ips[i], xfs_lock_inumorder(lock_mode, i));
++			continue;
++		}
++
++		/* try_lock means we have an inode locked that is in the AIL. */
++		ASSERT(i != 0);
++		if (xfs_ilock_nowait(ips[i], xfs_lock_inumorder(lock_mode, i)))
++			continue;
+ 
+-		if (try_lock) {
+-			/* try_lock must be 0 if i is 0. */
++		/*
++		 * Unlock all previous guys and try again.  xfs_iunlock will try
++		 * to push the tail if the inode is in the AIL.
++		 */
++		attempts++;
++		for (j = i - 1; j >= 0; j--) {
+ 			/*
+-			 * try_lock means we have an inode locked
+-			 * that is in the AIL.
++			 * Check to see if we've already unlocked this one.  Not
++			 * the first one going back, and the inode ptr is the
++			 * same.
+ 			 */
+-			ASSERT(i != 0);
+-			if (!xfs_ilock_nowait(ips[i], xfs_lock_inumorder(lock_mode, i))) {
+-				attempts++;
+-
+-				/*
+-				 * Unlock all previous guys and try again.
+-				 * xfs_iunlock will try to push the tail
+-				 * if the inode is in the AIL.
+-				 */
+-
+-				for(j = i - 1; j >= 0; j--) {
+-
+-					/*
+-					 * Check to see if we've already
+-					 * unlocked this one.
+-					 * Not the first one going back,
+-					 * and the inode ptr is the same.
+-					 */
+-					if ((j != (i - 1)) && ips[j] ==
+-								ips[j+1])
+-						continue;
+-
+-					xfs_iunlock(ips[j], lock_mode);
+-				}
++			if (j != (i - 1) && ips[j] == ips[j + 1])
++				continue;
++
++			xfs_iunlock(ips[j], lock_mode);
++		}
+ 
+-				if ((attempts % 5) == 0) {
+-					delay(1); /* Don't just spin the CPU */
++		if ((attempts % 5) == 0) {
++			delay(1); /* Don't just spin the CPU */
+ #ifdef DEBUG
+-					xfs_lock_delays++;
++			xfs_lock_delays++;
+ #endif
+-				}
+-				i = 0;
+-				try_lock = 0;
+-				goto again;
+-			}
+-		} else {
+-			xfs_ilock(ips[i], xfs_lock_inumorder(lock_mode, i));
+ 		}
++		i = 0;
++		try_lock = 0;
++		goto again;
+ 	}
+ 
+ #ifdef DEBUG
+@@ -2681,19 +2668,22 @@ xfs_remove(
+ /*
+  * Enter all inodes for a rename transaction into a sorted array.
+  */
++#define __XFS_SORT_INODES	5
+ STATIC void
+ xfs_sort_for_rename(
+-	xfs_inode_t	*dp1,	/* in: old (source) directory inode */
+-	xfs_inode_t	*dp2,	/* in: new (target) directory inode */
+-	xfs_inode_t	*ip1,	/* in: inode of old entry */
+-	xfs_inode_t	*ip2,	/* in: inode of new entry, if it
+-				   already exists, NULL otherwise. */
+-	xfs_inode_t	**i_tab,/* out: array of inode returned, sorted */
+-	int		*num_inodes)  /* out: number of inodes in array */
++	struct xfs_inode	*dp1,	/* in: old (source) directory inode */
++	struct xfs_inode	*dp2,	/* in: new (target) directory inode */
++	struct xfs_inode	*ip1,	/* in: inode of old entry */
++	struct xfs_inode	*ip2,	/* in: inode of new entry */
++	struct xfs_inode	*wino,	/* in: whiteout inode */
++	struct xfs_inode	**i_tab,/* out: sorted array of inodes */
++	int			*num_inodes)  /* in/out: inodes in array */
  {
--	xfs_trans_t	*tp = NULL;
--	xfs_mount_t	*mp = src_dp->i_mount;
--	int		new_parent;		/* moving to a new dir */
--	int		src_is_directory;	/* src_name is a directory */
--	int		error;
--	xfs_bmap_free_t free_list;
--	xfs_fsblock_t   first_block;
--	int		cancel_flags = 0;
--	xfs_inode_t	*inodes[__XFS_SORT_INODES];
--	int		num_inodes = __XFS_SORT_INODES;
--	int		spaceres;
-+	struct xfs_mount	*mp = src_dp->i_mount;
-+	struct xfs_trans	*tp;
-+	struct xfs_bmap_free	free_list;
-+	xfs_fsblock_t		first_block;
-+	struct xfs_inode	*wip = NULL;		/* whiteout inode */
-+	struct xfs_inode	*inodes[__XFS_SORT_INODES];
-+	int			num_inodes = __XFS_SORT_INODES;
-+	int			new_parent = (src_dp != target_dp);
-+	int			src_is_directory = S_ISDIR(src_ip->i_d.di_mode);
-+	int			cancel_flags = 0;
-+	int			spaceres;
-+	int			error;
+-	xfs_inode_t		*temp;
+ 	int			i, j;
+ 
++	ASSERT(*num_inodes == __XFS_SORT_INODES);
++	memset(i_tab, 0, *num_inodes * sizeof(struct xfs_inode *));
++
+ 	/*
+ 	 * i_tab contains a list of pointers to inodes.  We initialize
+ 	 * the table here & we'll sort it.  We will then use it to
+@@ -2701,25 +2691,24 @@ xfs_sort_for_rename(
+ 	 *
+ 	 * Note that the table may contain duplicates.  e.g., dp1 == dp2.
+ 	 */
+-	i_tab[0] = dp1;
+-	i_tab[1] = dp2;
+-	i_tab[2] = ip1;
+-	if (ip2) {
+-		*num_inodes = 4;
+-		i_tab[3] = ip2;
+-	} else {
+-		*num_inodes = 3;
+-		i_tab[3] = NULL;
+-	}
++	i = 0;
++	i_tab[i++] = dp1;
++	i_tab[i++] = dp2;
++	i_tab[i++] = ip1;
++	if (ip2)
++		i_tab[i++] = ip2;
++	if (wino)
++		i_tab[i++] = wino;
++	*num_inodes = i;
+ 
+ 	/*
+ 	 * Sort the elements via bubble sort.  (Remember, there are at
+-	 * most 4 elements to sort, so this is adequate.)
++	 * most 5 elements to sort, so this is adequate.)
+ 	 */
+ 	for (i = 0; i < *num_inodes; i++) {
+ 		for (j = 1; j < *num_inodes; j++) {
+ 			if (i_tab[j]->i_ino < i_tab[j-1]->i_ino) {
+-				temp = i_tab[j];
++				struct xfs_inode *temp = i_tab[j];
+ 				i_tab[j] = i_tab[j-1];
+ 				i_tab[j-1] = temp;
+ 			}
+@@ -2867,16 +2856,16 @@ xfs_rename(
+ 	xfs_fsblock_t   first_block;
+ 	int		cancel_flags;
+ 	int		committed;
+-	xfs_inode_t	*inodes[4];
++	xfs_inode_t	*inodes[__XFS_SORT_INODES];
++	int		num_inodes = __XFS_SORT_INODES;
+ 	int		spaceres;
+-	int		num_inodes;
  
  	trace_xfs_rename(src_dp, target_dp, src_name, target_name);
  
- 	if ((flags & RENAME_EXCHANGE) && !target_ip)
- 		return -EINVAL;
+ 	new_parent = (src_dp != target_dp);
+ 	src_is_directory = S_ISDIR(src_ip->i_d.di_mode);
  
--	new_parent = (src_dp != target_dp);
--	src_is_directory = S_ISDIR(src_ip->i_d.di_mode);
-+	/*
-+	 * If we are doing a whiteout operation, allocate the whiteout inode
-+	 * we will be placing at the target and ensure the type is set
-+	 * appropriately.
-+	 */
-+	if (flags & RENAME_WHITEOUT) {
-+		ASSERT(!(flags & (RENAME_NOREPLACE | RENAME_EXCHANGE)));
-+		error = xfs_rename_alloc_whiteout(target_dp, &wip);
-+		if (error)
-+			return error;
-+
-+		/* setup target dirent info as whiteout */
-+		src_name->type = XFS_DIR3_FT_CHRDEV;
-+	}
- 
--	xfs_sort_for_rename(src_dp, target_dp, src_ip, target_ip, NULL,
-+	xfs_sort_for_rename(src_dp, target_dp, src_ip, target_ip, wip,
+-	xfs_sort_for_rename(src_dp, target_dp, src_ip, target_ip,
++	xfs_sort_for_rename(src_dp, target_dp, src_ip, target_ip, NULL,
  				inodes, &num_inodes);
  
- 	tp = xfs_trans_alloc(mp, XFS_TRANS_RENAME);
-@@ -2936,6 +2977,8 @@ xfs_rename(
- 	xfs_trans_ijoin(tp, src_ip, XFS_ILOCK_EXCL);
- 	if (target_ip)
- 		xfs_trans_ijoin(tp, target_ip, XFS_ILOCK_EXCL);
-+	if (wip)
-+		xfs_trans_ijoin(tp, wip, XFS_ILOCK_EXCL);
- 
- 	/*
- 	 * If we are using project inheritance, we only allow renames
-@@ -3085,17 +3128,55 @@ xfs_rename(
- 			goto out_trans_abort;
- 	}
- 
--	error = xfs_dir_removename(tp, src_dp, src_name, src_ip->i_ino,
-+	/*
-+	 * For whiteouts, we only need to update the source dirent with the
-+	 * inode number of the whiteout inode rather than removing it
-+	 * altogether.
-+	 */
-+	if (wip) {
-+		error = xfs_dir_replace(tp, src_dp, src_name, wip->i_ino,
- 					&first_block, &free_list, spaceres);
-+	} else
-+		error = xfs_dir_removename(tp, src_dp, src_name, src_ip->i_ino,
-+					   &first_block, &free_list, spaceres);
- 	if (error)
- 		goto out_trans_abort;
- 
-+	/*
-+	 * For whiteouts, we need to bump the link count on the whiteout inode.
-+	 * This means that failures all the way up to this point leave the inode
-+	 * on the unlinked list and so cleanup is a simple matter of dropping
-+	 * the remaining reference to it. If we fail here after bumping the link
-+	 * count, we're shutting down the filesystem so we'll never see the
-+	 * intermediate state on disk.
-+	 */
-+	if (wip) {
-+		ASSERT(wip->i_d.di_nlink == 0);
-+		error = xfs_bumplink(tp, wip);
-+		if (error)
-+			goto out_trans_abort;
-+		error = xfs_iunlink_remove(tp, wip);
-+		if (error)
-+			goto out_trans_abort;
-+		xfs_trans_log_inode(tp, wip, XFS_ILOG_CORE);
-+
-+		/*
-+		 * Now we have a real link, clear the "I'm a tmpfile" state
-+		 * flag from the inode so it doesn't accidentally get misused in
-+		 * future.
-+		 */
-+		VFS_I(wip)->i_state &= ~I_LINKABLE;
-+	}
-+
- 	xfs_trans_ichgtime(tp, src_dp, XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
- 	xfs_trans_log_inode(tp, src_dp, XFS_ILOG_CORE);
- 	if (new_parent)
- 		xfs_trans_log_inode(tp, target_dp, XFS_ILOG_CORE);
- 
--	return xfs_finish_rename(tp, &free_list);
-+	error = xfs_finish_rename(tp, &free_list);
-+	if (wip)
-+		IRELE(wip);
-+	return error;
- 
- out_trans_abort:
- 	cancel_flags |= XFS_TRANS_ABORT;
-@@ -3103,6 +3184,8 @@ out_bmap_cancel:
- 	xfs_bmap_cancel(&free_list);
- out_trans_cancel:
- 	xfs_trans_cancel(tp, cancel_flags);
-+	if (wip)
-+		IRELE(wip);
- 	return error;
- }
- 
-diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-index 695d857..8db469b 100644
---- a/fs/xfs/xfs_iops.c
-+++ b/fs/xfs/xfs_iops.c
-@@ -394,7 +394,7 @@ xfs_vn_rename(
- 	struct xfs_name	oname;
- 	struct xfs_name	nname;
- 
--	if (flags & ~(RENAME_NOREPLACE | RENAME_EXCHANGE))
-+	if (flags & ~(RENAME_NOREPLACE | RENAME_EXCHANGE | RENAME_WHITEOUT))
- 		return -EINVAL;
- 
- 	/* if we are exchanging files, we need to set i_mode of both files */
+ 	xfs_bmap_init(&free_list, &first_block);
 -- 
 2.0.0
 
