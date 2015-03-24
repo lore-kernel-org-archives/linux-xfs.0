@@ -1,24 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 4DEF27F5E
-	for <xfs@oss.sgi.com>; Tue, 24 Mar 2015 16:25:58 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 544607F37
+	for <xfs@oss.sgi.com>; Tue, 24 Mar 2015 10:33:18 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 1C01A8F8070
-	for <xfs@oss.sgi.com>; Tue, 24 Mar 2015 14:25:54 -0700 (PDT)
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	gSBHICH99AxUmtcy for <xfs@oss.sgi.com>;
-	Tue, 24 Mar 2015 14:25:52 -0700 (PDT)
-Date: Wed, 25 Mar 2015 08:25:50 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 8/8] xfs: add initial DAX support
-Message-ID: <20150324212550.GU28621@dastard>
-References: <1427194266-2885-1-git-send-email-david@fromorbit.com>
-	<1427194266-2885-9-git-send-email-david@fromorbit.com>
-	<55115E20.7090105@plexistor.com>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 2216D8F8087
+	for <xfs@oss.sgi.com>; Tue, 24 Mar 2015 08:33:17 -0700 (PDT)
+Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
+	with ESMTP id 5TXbdiwBUKgau20m (version=TLSv1 cipher=AES256-SHA
+	bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 24 Mar 2015 08:33:12 -0700 (PDT)
+Date: Tue, 24 Mar 2015 15:33:06 +0000
+From: Mel Gorman <mgorman@suse.de>
+Subject: Re: [PATCH 0/3] Reduce system overhead of automatic NUMA balancing
+Message-ID: <20150324153306.GG4701@suse.de>
+References: <1427113443-20973-1-git-send-email-mgorman@suse.de>
+	<20150324115141.GS28621@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <55115E20.7090105@plexistor.com>
+In-Reply-To: <20150324115141.GS28621@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,65 +30,72 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Boaz Harrosh <boaz@plexistor.com>
-Cc: linux-fsdevel@vger.kernel.org, willy@linux.intel.com, jack@suse.cz, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: linuxppc-dev@lists.ozlabs.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, Linux-MM <linux-mm@kvack.org>, Aneesh Kumar <aneesh.kumar@linux.vnet.ibm.com>, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, Ingo Molnar <mingo@kernel.org>
 
-On Tue, Mar 24, 2015 at 02:52:48PM +0200, Boaz Harrosh wrote:
-> On 03/24/2015 12:51 PM, Dave Chinner wrote:
-> > From: Dave Chinner <dchinner@redhat.com>
-> > @@ -363,6 +365,10 @@ xfs_parseargs(
-> >  			mp->m_flags |= XFS_MOUNT_DISCARD;
-> >  		} else if (!strcmp(this_char, MNTOPT_NODISCARD)) {
-> >  			mp->m_flags &= ~XFS_MOUNT_DISCARD;
-> > +#ifdef CONFIG_FS_DAX
-> > +		} else if (!strcmp(this_char, MNTOPT_DAX)) {
-> > +			mp->m_flags |= XFS_MOUNT_DAX;
+On Tue, Mar 24, 2015 at 10:51:41PM +1100, Dave Chinner wrote:
+> On Mon, Mar 23, 2015 at 12:24:00PM +0000, Mel Gorman wrote:
+> > These are three follow-on patches based on the xfsrepair workload Dave
+> > Chinner reported was problematic in 4.0-rc1 due to changes in page table
+> > management -- https://lkml.org/lkml/2015/3/1/226.
+> > 
+> > Much of the problem was reduced by commit 53da3bc2ba9e ("mm: fix up numa
+> > read-only thread grouping logic") and commit ba68bc0115eb ("mm: thp:
+> > Return the correct value for change_huge_pmd"). It was known that the performance
+> > in 3.19 was still better even if is far less safe. This series aims to
+> > restore the performance without compromising on safety.
+> > 
+> > Dave, you already tested patch 1 on its own but it would be nice to test
+> > patches 1+2 and 1+2+3 separately just to be certain.
 > 
-> Hi
+> 			   3.19  4.0-rc4    +p1      +p2      +p3
+> mm_migrate_pages	266,750  572,839  558,632  223,706  201,429
+> run time		  4m54s    7m50s    7m20s    5m07s    4m31s
 > 
-> So what I see, (I might be wrong), is that once this flag is set here the
-> fs (At above xfs_diflags_to_iflags() ) will start serving DAX inodes.
 
-No, it won't, because...
+Excellent, this is in line with predictions and roughly matches what I
+was seeing on bare metal + real NUMA + spinning disk instead of KVM +
+fake NUMA + SSD.
 
-> > @@ -1501,6 +1508,20 @@ xfs_fs_fill_super(
-> >  	if (XFS_SB_VERSION_NUM(&mp->m_sb) == XFS_SB_VERSION_5)
-> >  		sb->s_flags |= MS_I_VERSION;
-> >  
-> > +	if (mp->m_flags & XFS_MOUNT_DAX) {
-> > +		xfs_warn(mp,
-> > +	"DAX enabled. Warning: EXPERIMENTAL, use at your own risk");
-> > +		if (sb->s_blocksize != PAGE_SIZE) {
-> > +			xfs_alert(mp,
-> > +		"Filesystem block size invalid for DAX Turning DAX off.");
-> > +			mp->m_flags &= ~XFS_MOUNT_DAX;
-> > +		} else if (!sb->s_bdev->bd_disk->fops->direct_access) {
-> > +			xfs_alert(mp,
-> > +		"Block device does not support DAX Turning DAX off.");
-> > +			mp->m_flags &= ~XFS_MOUNT_DAX;
-> > +		}
-> > +	}
+Editting slightly;
 
-We run these tests and then clear the XFS_MOUNT_DAX flag later.
+> numa stats form p1+p2:    numa_pte_updates 46109698
+> numa stats form p1+p2+p3: numa_pte_updates 24460492
 
-> If we agree about the s_flags MS_MOUNT_DAX  then we can define a
-> 	if (MNTOPT_DAX)
-> 		dax_enable_if_supported(sb);
+The big drop in PTE updates matches what I expected -- migration
+failures should not lead to increased scan rates which is what patch 3
+fixes. I'm also pleased that there was not a drop in performance.
 
-No, I don't see any reason for a mount flag for this, because we
-do not want to be stuck relying on a mount option forever. Once
-This code has been shaken out, I fully intend DAX to be turned on
-automatically for any device that supports, and for it to be turned
-on and off on a per-inode basis through on-disk inode flags. i.e.
-the mount option is really a temporary solution and I don't want to
-code in any dependencies on DAX being mount wide existing.
+> 
+> OK, the summary with all patches applied:
+> 
+> config                          3.19   4.0-rc1  4.0-rc4  4.0-rc5+
+> defaults                       8m08s     9m34s    9m14s    6m57s
+> -o ag_stride=-1                4m04s     4m38s    4m11s    4m06s
+> -o bhash=101073                6m04s    17m43s    7m35s    6m13s
+> -o ag_stride=-1,bhash=101073   4m54s     9m58s    7m50s    4m31s
+> 
+> So it looks like the patch set fixes the remaining regression and in
+> 2 of the four cases actually improves performance....
+> 
 
-Cheers,
+\o/
 
-Dave.
+Linus, these three patches plus the small fixlet for pmd_mkyoung (to match
+pte_mkyoung) is already in Andrew's tree. I'm expecting it'll arrive to
+you before 4.0 assuming nothing else goes pear shaped.
+
+> Thanks, Linus and Mel, for tracking this tricky problem down! 
+> 
+
+Thanks Dave for persisting with this and collecting the necessary data.
+FWIW, I've marked the xfsrepair test case as a "large memory test".
+It'll take time before the test machines have historical data for it but
+in theory if this regresses again then I should spot it eventually.
+
 -- 
-Dave Chinner
-david@fromorbit.com
+Mel Gorman
+SUSE Labs
 
 _______________________________________________
 xfs mailing list
