@@ -1,30 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id F30B67F37
-	for <xfs@oss.sgi.com>; Tue, 24 Mar 2015 12:49:24 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 8AAD0AC003
-	for <xfs@oss.sgi.com>; Tue, 24 Mar 2015 10:49:24 -0700 (PDT)
-Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id wriDWIg3IpwcvTrk (version=TLSv1 cipher=AES256-SHA
-	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 24 Mar 2015 10:49:23 -0700 (PDT)
-Date: Tue, 24 Mar 2015 10:49:16 -0700
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH v3 3/3] NFSD: Add support for encoding multiple segments
-Message-ID: <20150324174916.GA28906@infradead.org>
-References: <20150318205554.GA10716@fieldses.org> <5509E824.6070006@Netapp.com>
-	<20150318211144.GB10716@fieldses.org>
-	<OFB111A6D8.016B8BD5-ON88257E0D.001D174D-88257E0D.005268D6@us.ibm.com>
-	<20150319153627.GA20852@fieldses.org>
-	<OF38D4D18B.19055EC2-ON88257E0D.0059BA03-88257E0D.005A781F@us.ibm.com>
-	<20150320151718.GD2036@fieldses.org>
-	<20150320162303.GA18786@infradead.org>
-	<20150320182621.GH2036@fieldses.org>
-	<CAFX2JfkybBPcqD6A8r-jOkPnkL26=NEuK3zhA6TLn-DVam+kfQ@mail.gmail.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 155057F47
+	for <xfs@oss.sgi.com>; Tue, 24 Mar 2015 14:41:22 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id EFFC48F8033
+	for <xfs@oss.sgi.com>; Tue, 24 Mar 2015 12:41:21 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id ZDAPA7suha9BtoK0 (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 24 Mar 2015 12:41:21 -0700 (PDT)
+Date: Tue, 24 Mar 2015 15:41:18 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 0/5 V2] xfs: RENAME_WHITEOUT support
+Message-ID: <20150324194117.GA15973@bfoster.bfoster>
+References: <1427194771-3105-1-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <CAFX2JfkybBPcqD6A8r-jOkPnkL26=NEuK3zhA6TLn-DVam+kfQ@mail.gmail.com>
+In-Reply-To: <1427194771-3105-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -37,21 +29,55 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Anna Schumaker <anna.schumaker@netapp.com>
-Cc: Christoph Hellwig <hch@infradead.org>, "linux-nfs@vger.kernel.org" <linux-nfs@vger.kernel.org>, Marc Eshel <eshel@us.ibm.com>, xfs@oss.sgi.com, "J. Bruce Fields" <bfields@fieldses.org>, linux-nfs-owner@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-On Tue, Mar 24, 2015 at 08:43:31AM -0400, Anna Schumaker wrote:
-> > I don't know, and don't have profiles.  I'll either try to reproduce or
-> > wait till Anna's back from vacation.
+On Tue, Mar 24, 2015 at 09:59:26PM +1100, Dave Chinner wrote:
+> Hi folks,
 > 
-> I'm using whatever functions NFSD already uses for reading files,
-> which I expect go through the VFS.  Is there a flag that controls
-> cache behavior?
+> This is the second version of the RENAME_WHITEOUT patchset that I
+> originally posted here:
+> 
+> http://oss.sgi.com/pipermail/xfs/2015-February/040378.html
+> 
+> This is mainly the breakup and restructuring of the patchset I
+> mention that needed to be done, as well as addressing the comments
+> that were made at the time (e.g. wino -> wip).
+> 
+> The patchset has been split into 5 patches, the first four are
+> really cleanup and factoring patches to make the rename and inode
+> locking code a bit simpler and easier to understand. The last patch
+> then introduces the RENAME_WHITEOUT functionality, which ends up
+> being surprisingly little code....
+> 
+> The changes pass xfstests, but I have not run them on overlayfs at
+> all yet, so I don't know if that's going to result in smoke and
+> tears yet. Still, getting the patch set out for review now is more
+> important that waiting for testing because there is relatively
+> little time left before the 4.1 merge window opens up....
+> 
+> So, comments, thoughts and flames are more than welcome.
+> 
 
-There's the O_DIRECT flag, but that's not what I mean.  If you just
-wrote to it it's a cached read, if you did unmount the filesystem after
-writing, or did an echo to /proc/sys/vm/drop_caches you get uncached
-read behavior.
+These all look pretty good to me. I ran a quick rename test on top of
+overlayfs as well and it seems to do what it's supposed to (e.g., rename
+of a file on the lower dir is hidden via whiteout on the upper). For the
+set...
+
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+
+> -Dave.
+> 
+> Diffstat:
+> 
+> fs/xfs/xfs_inode.c | 408 ++++++++++++++++++++++++++++++++-----------------------
+> fs/xfs/xfs_iops.c  |   2 +-
+> 2 files changed, 239 insertions(+), 171 deletions(-)
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
