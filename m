@@ -1,22 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 155057F47
-	for <xfs@oss.sgi.com>; Tue, 24 Mar 2015 14:41:22 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 078197F50
+	for <xfs@oss.sgi.com>; Tue, 24 Mar 2015 15:23:36 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id EFFC48F8033
-	for <xfs@oss.sgi.com>; Tue, 24 Mar 2015 12:41:21 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id ZDAPA7suha9BtoK0 (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 24 Mar 2015 12:41:21 -0700 (PDT)
-Date: Tue, 24 Mar 2015 15:41:18 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 0/5 V2] xfs: RENAME_WHITEOUT support
-Message-ID: <20150324194117.GA15973@bfoster.bfoster>
-References: <1427194771-3105-1-git-send-email-david@fromorbit.com>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id E86378F8094
+	for <xfs@oss.sgi.com>; Tue, 24 Mar 2015 13:23:32 -0700 (PDT)
+Received: from mail-ig0-f180.google.com (mail-ig0-f180.google.com
+	[209.85.213.180]) by cuda.sgi.com with ESMTP id
+	38ipWEdveWDPFkX3 (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 24 Mar 2015 13:23:30 -0700 (PDT)
+Received: by igbqf9 with SMTP id qf9so8069170igb.1
+	for <xfs@oss.sgi.com>; Tue, 24 Mar 2015 13:23:30 -0700 (PDT)
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1427194771-3105-1-git-send-email-david@fromorbit.com>
+In-Reply-To: <20150324153306.GG4701@suse.de>
+References: <1427113443-20973-1-git-send-email-mgorman@suse.de>
+	<20150324115141.GS28621@dastard> <20150324153306.GG4701@suse.de>
+Date: Tue, 24 Mar 2015 13:23:30 -0700
+Message-ID: <CA+55aFzPCbfMKPEpxntCvEK_SqjbBTppyZMW7W2C+ppnA4W4fw@mail.gmail.com>
+Subject: Re: [PATCH 0/3] Reduce system overhead of automatic NUMA balancing
+From: Linus Torvalds <torvalds@linux-foundation.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,55 +32,26 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: Mel Gorman <mgorman@suse.de>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, Linux-MM <linux-mm@kvack.org>, Aneesh Kumar <aneesh.kumar@linux.vnet.ibm.com>, Andrew Morton <akpm@linux-foundation.org>, ppc-dev <linuxppc-dev@lists.ozlabs.org>, Ingo Molnar <mingo@kernel.org>
 
-On Tue, Mar 24, 2015 at 09:59:26PM +1100, Dave Chinner wrote:
-> Hi folks,
-> 
-> This is the second version of the RENAME_WHITEOUT patchset that I
-> originally posted here:
-> 
-> http://oss.sgi.com/pipermail/xfs/2015-February/040378.html
-> 
-> This is mainly the breakup and restructuring of the patchset I
-> mention that needed to be done, as well as addressing the comments
-> that were made at the time (e.g. wino -> wip).
-> 
-> The patchset has been split into 5 patches, the first four are
-> really cleanup and factoring patches to make the rename and inode
-> locking code a bit simpler and easier to understand. The last patch
-> then introduces the RENAME_WHITEOUT functionality, which ends up
-> being surprisingly little code....
-> 
-> The changes pass xfstests, but I have not run them on overlayfs at
-> all yet, so I don't know if that's going to result in smoke and
-> tears yet. Still, getting the patch set out for review now is more
-> important that waiting for testing because there is relatively
-> little time left before the 4.1 merge window opens up....
-> 
-> So, comments, thoughts and flames are more than welcome.
-> 
+On Tue, Mar 24, 2015 at 8:33 AM, Mel Gorman <mgorman@suse.de> wrote:
+> On Tue, Mar 24, 2015 at 10:51:41PM +1100, Dave Chinner wrote:
+>>
+>> So it looks like the patch set fixes the remaining regression and in
+>> 2 of the four cases actually improves performance....
+>
+> \o/
 
-These all look pretty good to me. I ran a quick rename test on top of
-overlayfs as well and it seems to do what it's supposed to (e.g., rename
-of a file on the lower dir is hidden via whiteout on the upper). For the
-set...
+W00t.
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+> Linus, these three patches plus the small fixlet for pmd_mkyoung (to match
+> pte_mkyoung) is already in Andrew's tree. I'm expecting it'll arrive to
+> you before 4.0 assuming nothing else goes pear shaped.
 
-> -Dave.
-> 
-> Diffstat:
-> 
-> fs/xfs/xfs_inode.c | 408 ++++++++++++++++++++++++++++++++-----------------------
-> fs/xfs/xfs_iops.c  |   2 +-
-> 2 files changed, 239 insertions(+), 171 deletions(-)
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+Yup. Thanks Mel,
+
+                          Linus
 
 _______________________________________________
 xfs mailing list
