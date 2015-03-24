@@ -1,18 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 444117F50
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 7B3637F54
 	for <xfs@oss.sgi.com>; Tue, 24 Mar 2015 05:51:23 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 2F04E304032
-	for <xfs@oss.sgi.com>; Tue, 24 Mar 2015 03:51:19 -0700 (PDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 58CB88F8050
+	for <xfs@oss.sgi.com>; Tue, 24 Mar 2015 03:51:23 -0700 (PDT)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	7WasVupsolokMhZw for <xfs@oss.sgi.com>;
-	Tue, 24 Mar 2015 03:51:16 -0700 (PDT)
+	q2BgAnJtQHuceX3j for <xfs@oss.sgi.com>;
+	Tue, 24 Mar 2015 03:51:21 -0700 (PDT)
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 4/8] xfs: add DAX block zeroing support
-Date: Tue, 24 Mar 2015 21:51:02 +1100
-Message-Id: <1427194266-2885-5-git-send-email-david@fromorbit.com>
+Subject: [PATCH 3/8] dax: expose __dax_fault for filesystems with locking
+	constraints
+Date: Tue, 24 Mar 2015 21:51:01 +1100
+Message-Id: <1427194266-2885-4-git-send-email-david@fromorbit.com>
 In-Reply-To: <1427194266-2885-1-git-send-email-david@fromorbit.com>
 References: <1427194266-2885-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -33,105 +34,81 @@ Cc: linux-fsdevel@vger.kernel.org, willy@linux.intel.com, jack@suse.cz
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Add initial support for DAX block zeroing operations to XFS. DAX
-cannot use buffered IO through the page cache for zeroing, nor do we
-need to issue IO for uncached block zeroing. In both cases, we can
-simply call out to the dax block zeroing function.
+Some filesystems cannot call dax_fault() directly because they have
+different locking and/or allocation constraints in the page fault IO
+path. To handle this, we need to follow the same model as the
+generic block_page_mkwrite code, where the internals are exposed via
+__block_page_mkwrite() so that filesystems can wrap the correct
+locking and operations around the outside.
+
+This is loosely based on a patch originally from Matthew Willcox.
+Unlike the original patch, it does not change ext4 code, error
+returns or unwritten extent conversion handling.  It also adds a
+__dax_mkwrite() wrapper for .page_mkwrite implementations to do the
+right thing, too.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_bmap_util.c | 23 +++++++++++++++++++----
- fs/xfs/xfs_file.c      | 28 +++++++++++++++++-----------
- 2 files changed, 36 insertions(+), 15 deletions(-)
+ fs/dax.c           | 15 +++++++++++++--
+ include/linux/fs.h |  5 ++++-
+ 2 files changed, 17 insertions(+), 3 deletions(-)
 
-diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-index 1bd5393..d1fe432 100644
---- a/fs/xfs/xfs_bmap_util.c
-+++ b/fs/xfs/xfs_bmap_util.c
-@@ -1133,14 +1133,29 @@ xfs_zero_remaining_bytes(
- 			break;
- 		ASSERT(imap.br_blockcount >= 1);
- 		ASSERT(imap.br_startoff == offset_fsb);
-+		ASSERT(imap.br_startblock != DELAYSTARTBLOCK);
-+
-+		if (imap.br_startblock == HOLESTARTBLOCK ||
-+		    imap.br_state == XFS_EXT_UNWRITTEN) {
-+			/* skip the entire extent */
-+			lastoffset = XFS_FSB_TO_B(mp, imap.br_startoff +
-+						      imap.br_blockcount) - 1;
-+			continue;
-+		}
-+
- 		lastoffset = XFS_FSB_TO_B(mp, imap.br_startoff + 1) - 1;
- 		if (lastoffset > endoff)
- 			lastoffset = endoff;
--		if (imap.br_startblock == HOLESTARTBLOCK)
--			continue;
--		ASSERT(imap.br_startblock != DELAYSTARTBLOCK);
--		if (imap.br_state == XFS_EXT_UNWRITTEN)
-+
-+		/* DAX can just zero the backing device directly */
-+		if (IS_DAX(VFS_I(ip))) {
-+			error = dax_zero_page_range(VFS_I(ip), offset,
-+						    lastoffset - offset + 1,
-+						    xfs_get_blocks_dax);
-+			if (error)
-+				return error;
- 			continue;
-+		}
+diff --git a/fs/dax.c b/fs/dax.c
+index 431ec2b..0121f7d 100644
+--- a/fs/dax.c
++++ b/fs/dax.c
+@@ -313,7 +313,17 @@ static int dax_insert_mapping(struct inode *inode, struct buffer_head *bh,
+ 	return error;
+ }
  
- 		error = xfs_buf_read_uncached(XFS_IS_REALTIME_INODE(ip) ?
- 				mp->m_rtdev_targp : mp->m_ddev_targp,
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index a4c882e..94713c2 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -97,7 +97,8 @@ xfs_iozero(
+-static int do_dax_fault(struct vm_area_struct *vma, struct vm_fault *vmf,
++/**
++ * __dax_fault - handle a page fault on a DAX file
++ * @vma: The virtual memory area where the fault occurred
++ * @vmf: The description of the fault
++ * @get_block: The filesystem method used to translate file offsets to blocks
++ *
++ * When a page fault occurs, filesystems may call this helper in their
++ * fault handler for DAX files. __dax_fault() assumes the caller has done all
++ * the necessary locking for the page fault to proceed successfully.
++ */
++int __dax_fault(struct vm_area_struct *vma, struct vm_fault *vmf,
+ 			get_block_t get_block, dax_iodone_t complete_unwritten)
  {
- 	struct page		*page;
- 	struct address_space	*mapping;
--	int			status;
-+	int			status = 0;
-+
+ 	struct file *file = vma->vm_file;
+@@ -440,6 +450,7 @@ static int do_dax_fault(struct vm_area_struct *vma, struct vm_fault *vmf,
+ 	}
+ 	goto out;
+ }
++EXPORT_SYMBOL(__dax_fault);
  
- 	mapping = VFS_I(ip)->i_mapping;
- 	do {
-@@ -109,20 +110,25 @@ xfs_iozero(
- 		if (bytes > count)
- 			bytes = count;
+ /**
+  * dax_fault - handle a page fault on a DAX file
+@@ -460,7 +471,7 @@ int dax_fault(struct vm_area_struct *vma, struct vm_fault *vmf,
+ 		sb_start_pagefault(sb);
+ 		file_update_time(vma->vm_file);
+ 	}
+-	result = do_dax_fault(vma, vmf, get_block, complete_unwritten);
++	result = __dax_fault(vma, vmf, get_block, complete_unwritten);
+ 	if (vmf->flags & FAULT_FLAG_WRITE)
+ 		sb_end_pagefault(sb);
  
--		status = pagecache_write_begin(NULL, mapping, pos, bytes,
--					AOP_FLAG_UNINTERRUPTIBLE,
--					&page, &fsdata);
--		if (status)
--			break;
-+		if (IS_DAX(VFS_I(ip)))
-+			dax_zero_page_range(VFS_I(ip), pos, bytes,
-+						   xfs_get_blocks_dax);
-+		else {
-+			status = pagecache_write_begin(NULL, mapping, pos, bytes,
-+						AOP_FLAG_UNINTERRUPTIBLE,
-+						&page, &fsdata);
-+			if (status)
-+				break;
+diff --git a/include/linux/fs.h b/include/linux/fs.h
+index 82100ae..7e5a2d6 100644
+--- a/include/linux/fs.h
++++ b/include/linux/fs.h
+@@ -2606,7 +2606,10 @@ int dax_zero_page_range(struct inode *, loff_t from, unsigned len, get_block_t);
+ int dax_truncate_page(struct inode *, loff_t from, get_block_t);
+ int dax_fault(struct vm_area_struct *, struct vm_fault *, get_block_t,
+ 		dax_iodone_t);
+-#define dax_mkwrite(vma, vmf, gb, iod)	dax_fault(vma, vmf, gb, iod)
++int __dax_fault(struct vm_area_struct *, struct vm_fault *, get_block_t,
++		dax_iodone_t);
++#define dax_mkwrite(vma, vmf, gb, iod)		dax_fault(vma, vmf, gb, iod)
++#define __dax_mkwrite(vma, vmf, gb, iod)	__dax_fault(vma, vmf, gb, iod)
  
--		zero_user(page, offset, bytes);
-+			zero_user(page, offset, bytes);
- 
--		status = pagecache_write_end(NULL, mapping, pos, bytes, bytes,
--					page, fsdata);
--		WARN_ON(status <= 0); /* can't return less than zero! */
-+			status = pagecache_write_end(NULL, mapping, pos, bytes,
-+						bytes, page, fsdata);
-+			WARN_ON(status <= 0); /* can't return less than zero! */
-+			status = 0;
-+		}
- 		pos += bytes;
- 		count -= bytes;
--		status = 0;
- 	} while (count);
- 
- 	return (-status);
+ #ifdef CONFIG_BLOCK
+ typedef void (dio_submit_t)(int rw, struct bio *bio, struct inode *inode,
 -- 
 2.0.0
 
