@@ -1,21 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 3D8417F55
-	for <xfs@oss.sgi.com>; Wed,  4 Mar 2015 09:15:28 -0600 (CST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 2B4907F37
+	for <xfs@oss.sgi.com>; Tue, 24 Mar 2015 07:52:53 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id ADD2AAC005
-	for <xfs@oss.sgi.com>; Wed,  4 Mar 2015 07:15:24 -0800 (PST)
-Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id cSBIhibZCQo0PXDV (version=TLSv1 cipher=AES256-SHA
-	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 04 Mar 2015 07:15:22 -0800 (PST)
-From: Jan Kara <jack@suse.cz>
-Subject: [PATCH 2/8] quota: Wire up Q_GETXSTATE and Q_GETXSTATV calls to work
-	with ->get_state
-Date: Wed,  4 Mar 2015 16:15:07 +0100
-Message-Id: <1425482113-1977-3-git-send-email-jack@suse.cz>
-In-Reply-To: <1425482113-1977-1-git-send-email-jack@suse.cz>
-References: <1425482113-1977-1-git-send-email-jack@suse.cz>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 0696E8F8074
+	for <xfs@oss.sgi.com>; Tue, 24 Mar 2015 05:52:52 -0700 (PDT)
+Received: from mail-wg0-f49.google.com (mail-wg0-f49.google.com
+	[74.125.82.49]) by cuda.sgi.com with ESMTP id opdmrD75Ws5RMHQI
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Tue, 24 Mar 2015 05:52:51 -0700 (PDT)
+Received: by wgs2 with SMTP id 2so63425282wgs.1
+	for <xfs@oss.sgi.com>; Tue, 24 Mar 2015 05:52:50 -0700 (PDT)
+Message-ID: <55115E20.7090105@plexistor.com>
+Date: Tue, 24 Mar 2015 14:52:48 +0200
+From: Boaz Harrosh <boaz@plexistor.com>
+MIME-Version: 1.0
+Subject: Re: [PATCH 8/8] xfs: add initial DAX support
+References: <1427194266-2885-1-git-send-email-david@fromorbit.com>
+	<1427194266-2885-9-git-send-email-david@fromorbit.com>
+In-Reply-To: <1427194266-2885-9-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,198 +27,181 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: linux-fsdevel@vger.kernel.org
-Cc: cluster-devel@redhat.com, Jan Kara <jack@suse.cz>, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>, xfs@oss.sgi.com
+Cc: linux-fsdevel@vger.kernel.org, willy@linux.intel.com, jack@suse.cz
 
-Add appropriate conversion functions so that filesystems supporting
-->get_state() method can be queried using Q_GETXSTATE and Q_GETXSTATV
-calls.
+On 03/24/2015 12:51 PM, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> Add initial DAX support to XFS. To do this we need a new mount
+> option to turn DAX on filesystem, and we need to propagate thi into
+> the inode flags whenever an inode is instantiated so that the
+> per-inode checks throughout the code Do The Right Thing.
+> 
+> There are still some things remaining to be done:
+> 
+> 	- needs per-inode flags to mark inodes as DAX enabled, and
+> 	  an inheritance flag to enable automatic filesystem
+> 	  propagation of the property
+> 	- fails occasionally with zero length writes instead of
+> 	  ENOSPC errors, so error propagation inside/from the DAX
+> 	  code need work
+> 	- occasionally creates two extents rather than a single
+> 	  larger extent like non-dax filesystems.
+> 	- much more testing
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> ---
+>  fs/xfs/xfs_iops.c  | 24 ++++++++++++------------
+>  fs/xfs/xfs_mount.h |  2 ++
+>  fs/xfs/xfs_super.c | 25 +++++++++++++++++++++++--
+>  3 files changed, 37 insertions(+), 14 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+> index 9ca5352..695d857 100644
+> --- a/fs/xfs/xfs_iops.c
+> +++ b/fs/xfs/xfs_iops.c
+> @@ -1195,22 +1195,22 @@ xfs_diflags_to_iflags(
+>  	struct inode		*inode,
+>  	struct xfs_inode	*ip)
+>  {
+> -	if (ip->i_d.di_flags & XFS_DIFLAG_IMMUTABLE)
+> +	uint16_t		flags = ip->i_d.di_flags;
+> +
+> +	inode->i_flags &= ~(S_IMMUTABLE | S_APPEND | S_SYNC |
+> +			    S_NOATIME | S_DAX);
+> +
+> +	if (flags & XFS_DIFLAG_IMMUTABLE)
+>  		inode->i_flags |= S_IMMUTABLE;
+> -	else
+> -		inode->i_flags &= ~S_IMMUTABLE;
+> -	if (ip->i_d.di_flags & XFS_DIFLAG_APPEND)
+> +	if (flags & XFS_DIFLAG_APPEND)
+>  		inode->i_flags |= S_APPEND;
+> -	else
+> -		inode->i_flags &= ~S_APPEND;
+> -	if (ip->i_d.di_flags & XFS_DIFLAG_SYNC)
+> +	if (flags & XFS_DIFLAG_SYNC)
+>  		inode->i_flags |= S_SYNC;
+> -	else
+> -		inode->i_flags &= ~S_SYNC;
+> -	if (ip->i_d.di_flags & XFS_DIFLAG_NOATIME)
+> +	if (flags & XFS_DIFLAG_NOATIME)
+>  		inode->i_flags |= S_NOATIME;
+> -	else
+> -		inode->i_flags &= ~S_NOATIME;
+> +	/* XXX: Also needs an on-disk per inode flag! */
+> +	if (ip->i_mount->m_flags & XFS_MOUNT_DAX)
+> +		inode->i_flags |= S_DAX;
+>  }
+>  
+>  /*
+> diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+> index 8c995a2..cd44e88 100644
+> --- a/fs/xfs/xfs_mount.h
+> +++ b/fs/xfs/xfs_mount.h
+> @@ -179,6 +179,8 @@ typedef struct xfs_mount {
+>  						   allocator */
+>  #define XFS_MOUNT_NOATTR2	(1ULL << 25)	/* disable use of attr2 format */
+>  
+> +#define XFS_MOUNT_DAX		(1ULL << 62)	/* TEST ONLY! */
+> +
+>  
+>  /*
+>   * Default minimum read and write sizes.
+> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+> index 3ad0b17..0f26d7a 100644
+> --- a/fs/xfs/xfs_super.c
+> +++ b/fs/xfs/xfs_super.c
+> @@ -112,6 +112,8 @@ static struct xfs_kobj xfs_dbg_kobj;	/* global debug sysfs attrs */
+>  #define MNTOPT_DISCARD	   "discard"	/* Discard unused blocks */
+>  #define MNTOPT_NODISCARD   "nodiscard"	/* Do not discard unused blocks */
+>  
+> +#define MNTOPT_DAX	"dax"		/* Enable direct access to bdev pages */
+> +
+>  /*
+>   * Table driven mount option parser.
+>   *
+> @@ -363,6 +365,10 @@ xfs_parseargs(
+>  			mp->m_flags |= XFS_MOUNT_DISCARD;
+>  		} else if (!strcmp(this_char, MNTOPT_NODISCARD)) {
+>  			mp->m_flags &= ~XFS_MOUNT_DISCARD;
+> +#ifdef CONFIG_FS_DAX
+> +		} else if (!strcmp(this_char, MNTOPT_DAX)) {
+> +			mp->m_flags |= XFS_MOUNT_DAX;
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Signed-off-by: Jan Kara <jack@suse.cz>
----
- fs/quota/quota.c | 138 +++++++++++++++++++++++++++++++++++++++++++++++++++++--
- 1 file changed, 134 insertions(+), 4 deletions(-)
+Hi
 
-diff --git a/fs/quota/quota.c b/fs/quota/quota.c
-index 00d50fca1005..83939ff4c444 100644
---- a/fs/quota/quota.c
-+++ b/fs/quota/quota.c
-@@ -269,25 +269,152 @@ static int quota_disable(struct super_block *sb, void __user *addr)
- 	return sb->s_qcop->quota_disable(sb, flags);
- }
- 
-+static int quota_state_to_flags(struct qc_state *state)
-+{
-+	int flags = 0;
-+
-+	if (state->s_state[USRQUOTA].flags & QCI_ACCT_ENABLED)
-+		flags |= FS_QUOTA_UDQ_ACCT;
-+	if (state->s_state[USRQUOTA].flags & QCI_LIMITS_ENFORCED)
-+		flags |= FS_QUOTA_UDQ_ENFD;
-+	if (state->s_state[GRPQUOTA].flags & QCI_ACCT_ENABLED)
-+		flags |= FS_QUOTA_GDQ_ACCT;
-+	if (state->s_state[GRPQUOTA].flags & QCI_LIMITS_ENFORCED)
-+		flags |= FS_QUOTA_GDQ_ENFD;
-+	if (state->s_state[PRJQUOTA].flags & QCI_ACCT_ENABLED)
-+		flags |= FS_QUOTA_PDQ_ACCT;
-+	if (state->s_state[PRJQUOTA].flags & QCI_LIMITS_ENFORCED)
-+		flags |= FS_QUOTA_PDQ_ENFD;
-+	return flags;
-+}
-+
-+static int quota_getstate(struct super_block *sb, struct fs_quota_stat *fqs)
-+{
-+	int type;
-+	struct qc_state state;
-+	int ret;
-+
-+	ret = sb->s_qcop->get_state(sb, &state);
-+	if (ret < 0)
-+		return ret;
-+
-+	memset(fqs, 0, sizeof(*fqs));
-+	fqs->qs_version = FS_QSTAT_VERSION;
-+	fqs->qs_flags = quota_state_to_flags(&state);
-+	/* No quota enabled? */
-+	if (!fqs->qs_flags)
-+		return -ENOSYS;
-+	fqs->qs_incoredqs = state.s_incoredqs;
-+	/*
-+	 * GETXSTATE quotactl has space for just one set of time limits so
-+	 * report them for the first enabled quota type
-+	 */
-+	for (type = 0; type < XQM_MAXQUOTAS; type++)
-+		if (state.s_state[type].flags & QCI_ACCT_ENABLED)
-+			break;
-+	BUG_ON(type == XQM_MAXQUOTAS);
-+	fqs->qs_btimelimit = state.s_state[type].spc_timelimit;
-+	fqs->qs_itimelimit = state.s_state[type].ino_timelimit;
-+	fqs->qs_rtbtimelimit = state.s_state[type].rt_spc_timelimit;
-+	fqs->qs_bwarnlimit = state.s_state[type].spc_warnlimit;
-+	fqs->qs_iwarnlimit = state.s_state[type].ino_warnlimit;
-+	if (state.s_state[USRQUOTA].flags & QCI_ACCT_ENABLED) {
-+		fqs->qs_uquota.qfs_ino = state.s_state[USRQUOTA].ino;
-+		fqs->qs_uquota.qfs_nblks = state.s_state[USRQUOTA].blocks;
-+		fqs->qs_uquota.qfs_nextents = state.s_state[USRQUOTA].nextents;
-+	}
-+	if (state.s_state[GRPQUOTA].flags & QCI_ACCT_ENABLED) {
-+		fqs->qs_gquota.qfs_ino = state.s_state[GRPQUOTA].ino;
-+		fqs->qs_gquota.qfs_nblks = state.s_state[GRPQUOTA].blocks;
-+		fqs->qs_gquota.qfs_nextents = state.s_state[GRPQUOTA].nextents;
-+	}
-+	if (state.s_state[PRJQUOTA].flags & QCI_ACCT_ENABLED) {
-+		/*
-+		 * Q_XGETQSTAT doesn't have room for both group and project
-+		 * quotas.  So, allow the project quota values to be copied out
-+		 * only if there is no group quota information available.
-+		 */
-+		if (!(state.s_state[GRPQUOTA].flags & QCI_ACCT_ENABLED)) {
-+			fqs->qs_gquota.qfs_ino = state.s_state[PRJQUOTA].ino;
-+			fqs->qs_gquota.qfs_nblks =
-+					state.s_state[PRJQUOTA].blocks;
-+			fqs->qs_gquota.qfs_nextents =
-+					state.s_state[PRJQUOTA].nextents;
-+		}
-+	}
-+	return 0;
-+}
-+
- static int quota_getxstate(struct super_block *sb, void __user *addr)
- {
- 	struct fs_quota_stat fqs;
- 	int ret;
- 
--	if (!sb->s_qcop->get_xstate)
-+	if (!sb->s_qcop->get_xstate && !sb->s_qcop->get_state)
- 		return -ENOSYS;
--	ret = sb->s_qcop->get_xstate(sb, &fqs);
-+	if (sb->s_qcop->get_state)
-+		ret = quota_getstate(sb, &fqs);
-+	else
-+		ret = sb->s_qcop->get_xstate(sb, &fqs);
- 	if (!ret && copy_to_user(addr, &fqs, sizeof(fqs)))
- 		return -EFAULT;
- 	return ret;
- }
- 
-+static int quota_getstatev(struct super_block *sb, struct fs_quota_statv *fqs)
-+{
-+	int type;
-+	struct qc_state state;
-+	int ret;
-+
-+	ret = sb->s_qcop->get_state(sb, &state);
-+	if (ret < 0)
-+		return ret;
-+
-+	memset(fqs, 0, sizeof(*fqs));
-+	fqs->qs_version = FS_QSTAT_VERSION;
-+	fqs->qs_flags = quota_state_to_flags(&state);
-+	/* No quota enabled? */
-+	if (!fqs->qs_flags)
-+		return -ENOSYS;
-+	fqs->qs_incoredqs = state.s_incoredqs;
-+	/*
-+	 * GETXSTATV quotactl has space for just one set of time limits so
-+	 * report them for the first enabled quota type
-+	 */
-+	for (type = 0; type < XQM_MAXQUOTAS; type++)
-+		if (state.s_state[type].flags & QCI_ACCT_ENABLED)
-+			break;
-+	BUG_ON(type == XQM_MAXQUOTAS);
-+	fqs->qs_btimelimit = state.s_state[type].spc_timelimit;
-+	fqs->qs_itimelimit = state.s_state[type].ino_timelimit;
-+	fqs->qs_rtbtimelimit = state.s_state[type].rt_spc_timelimit;
-+	fqs->qs_bwarnlimit = state.s_state[type].spc_warnlimit;
-+	fqs->qs_iwarnlimit = state.s_state[type].ino_warnlimit;
-+	if (state.s_state[USRQUOTA].flags & QCI_ACCT_ENABLED) {
-+		fqs->qs_uquota.qfs_ino = state.s_state[USRQUOTA].ino;
-+		fqs->qs_uquota.qfs_nblks = state.s_state[USRQUOTA].blocks;
-+		fqs->qs_uquota.qfs_nextents = state.s_state[USRQUOTA].nextents;
-+	}
-+	if (state.s_state[GRPQUOTA].flags & QCI_ACCT_ENABLED) {
-+		fqs->qs_gquota.qfs_ino = state.s_state[GRPQUOTA].ino;
-+		fqs->qs_gquota.qfs_nblks = state.s_state[GRPQUOTA].blocks;
-+		fqs->qs_gquota.qfs_nextents = state.s_state[GRPQUOTA].nextents;
-+	}
-+	if (state.s_state[PRJQUOTA].flags & QCI_ACCT_ENABLED) {
-+		fqs->qs_pquota.qfs_ino = state.s_state[PRJQUOTA].ino;
-+		fqs->qs_pquota.qfs_nblks = state.s_state[PRJQUOTA].blocks;
-+		fqs->qs_pquota.qfs_nextents = state.s_state[PRJQUOTA].nextents;
-+	}
-+	return 0;
-+}
-+
- static int quota_getxstatev(struct super_block *sb, void __user *addr)
- {
- 	struct fs_quota_statv fqs;
- 	int ret;
- 
--	if (!sb->s_qcop->get_xstatev)
-+	if (!sb->s_qcop->get_xstatev && !sb->s_qcop->get_state)
- 		return -ENOSYS;
- 
- 	memset(&fqs, 0, sizeof(fqs));
-@@ -301,7 +428,10 @@ static int quota_getxstatev(struct super_block *sb, void __user *addr)
- 	default:
- 		return -EINVAL;
- 	}
--	ret = sb->s_qcop->get_xstatev(sb, &fqs);
-+	if (sb->s_qcop->get_state)
-+		ret = quota_getstatev(sb, &fqs);
-+	else
-+		ret = sb->s_qcop->get_xstatev(sb, &fqs);
- 	if (!ret && copy_to_user(addr, &fqs, sizeof(fqs)))
- 		return -EFAULT;
- 	return ret;
--- 
-2.1.4
+So what I see, (I might be wrong), is that once this flag is set here the
+fs (At above xfs_diflags_to_iflags() ) will start serving DAX inodes.
+
+This is a problem because the bdev passed in might not support direct_access
+at all.
+
+I think we might want a dax_supported(sb) and call somewhere at mount time.
+
+> +#endif
+>  		} else {
+>  			xfs_warn(mp, "unknown mount option [%s].", this_char);
+>  			return -EINVAL;
+> @@ -452,8 +458,8 @@ done:
+>  }
+>  
+>  struct proc_xfs_info {
+> -	int	flag;
+> -	char	*str;
+> +	uint64_t	flag;
+> +	char		*str;
+>  };
+>  
+>  STATIC int
+> @@ -474,6 +480,7 @@ xfs_showargs(
+>  		{ XFS_MOUNT_GRPID,		"," MNTOPT_GRPID },
+>  		{ XFS_MOUNT_DISCARD,		"," MNTOPT_DISCARD },
+>  		{ XFS_MOUNT_SMALL_INUMS,	"," MNTOPT_32BITINODE },
+> +		{ XFS_MOUNT_DAX,		"," MNTOPT_DAX },
+>  		{ 0, NULL }
+>  	};
+>  	static struct proc_xfs_info xfs_info_unset[] = {
+> @@ -1501,6 +1508,20 @@ xfs_fs_fill_super(
+>  	if (XFS_SB_VERSION_NUM(&mp->m_sb) == XFS_SB_VERSION_5)
+>  		sb->s_flags |= MS_I_VERSION;
+>  
+> +	if (mp->m_flags & XFS_MOUNT_DAX) {
+> +		xfs_warn(mp,
+> +	"DAX enabled. Warning: EXPERIMENTAL, use at your own risk");
+> +		if (sb->s_blocksize != PAGE_SIZE) {
+> +			xfs_alert(mp,
+> +		"Filesystem block size invalid for DAX Turning DAX off.");
+> +			mp->m_flags &= ~XFS_MOUNT_DAX;
+> +		} else if (!sb->s_bdev->bd_disk->fops->direct_access) {
+> +			xfs_alert(mp,
+> +		"Block device does not support DAX Turning DAX off.");
+> +			mp->m_flags &= ~XFS_MOUNT_DAX;
+> +		}
+> +	}
+> 
+
+If we agree about the s_flags MS_MOUNT_DAX  then we can define a
+	if (MNTOPT_DAX)
+		dax_enable_if_supported(sb);
+
+This will try a call to bdev_direct_access(sb->s_bdev, ...) and set the
+flag if everything is OK, else will leave it off.
+
+(I can do this patch if you want)
+
+>  	error = xfs_mountfs(mp);
+>  	if (error)
+>  		goto out_filestream_unmount;
+> 
+
+Thanks
+Boaz
 
 _______________________________________________
 xfs mailing list
