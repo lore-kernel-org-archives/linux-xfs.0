@@ -1,27 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 859D47F6D
-	for <xfs@oss.sgi.com>; Tue, 24 Mar 2015 05:59:42 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id AEC697F3F
+	for <xfs@oss.sgi.com>; Tue, 24 Mar 2015 06:51:49 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id F422BAC003
-	for <xfs@oss.sgi.com>; Tue, 24 Mar 2015 03:59:41 -0700 (PDT)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 8CB448F8084
+	for <xfs@oss.sgi.com>; Tue, 24 Mar 2015 04:51:49 -0700 (PDT)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	dFQEhDRFb1jnf9Lm for <xfs@oss.sgi.com>;
-	Tue, 24 Mar 2015 03:59:39 -0700 (PDT)
-Received: from disappointment.disaster.area ([192.168.1.110]
-	helo=disappointment) by dastard with esmtp (Exim 4.80)
-	(envelope-from <dave@fromorbit.com>) id 1YaMYY-0002sY-1n
-	for xfs@oss.sgi.com; Tue, 24 Mar 2015 21:59:34 +1100
-Received: from dave by disappointment with local (Exim 4.82_1-5b7a7c0-XX)
-	(envelope-from <dave@disappointment.disaster>) id 1YaMYY-000132-15
-	for xfs@oss.sgi.com; Tue, 24 Mar 2015 21:59:34 +1100
+	QGLWgOf1NFwZ1ecZ for <xfs@oss.sgi.com>;
+	Tue, 24 Mar 2015 04:51:43 -0700 (PDT)
+Date: Tue, 24 Mar 2015 22:51:41 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 1/5] xfs: clean up inode locking for RENAME_WHITEOUT
-Date: Tue, 24 Mar 2015 21:59:27 +1100
-Message-Id: <1427194771-3105-2-git-send-email-david@fromorbit.com>
-In-Reply-To: <1427194771-3105-1-git-send-email-david@fromorbit.com>
-References: <1427194771-3105-1-git-send-email-david@fromorbit.com>
+Subject: Re: [PATCH 0/3] Reduce system overhead of automatic NUMA balancing
+Message-ID: <20150324115141.GS28621@dastard>
+References: <1427113443-20973-1-git-send-email-mgorman@suse.de>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <1427113443-20973-1-git-send-email-mgorman@suse.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,267 +25,83 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Mel Gorman <mgorman@suse.de>
+Cc: linuxppc-dev@lists.ozlabs.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, Linux-MM <linux-mm@kvack.org>, Aneesh Kumar <aneesh.kumar@linux.vnet.ibm.com>, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, Ingo Molnar <mingo@kernel.org>
 
-From: Dave Chinner <dchinner@redhat.com>
+On Mon, Mar 23, 2015 at 12:24:00PM +0000, Mel Gorman wrote:
+> These are three follow-on patches based on the xfsrepair workload Dave
+> Chinner reported was problematic in 4.0-rc1 due to changes in page table
+> management -- https://lkml.org/lkml/2015/3/1/226.
+> 
+> Much of the problem was reduced by commit 53da3bc2ba9e ("mm: fix up numa
+> read-only thread grouping logic") and commit ba68bc0115eb ("mm: thp:
+> Return the correct value for change_huge_pmd"). It was known that the performance
+> in 3.19 was still better even if is far less safe. This series aims to
+> restore the performance without compromising on safety.
+> 
+> Dave, you already tested patch 1 on its own but it would be nice to test
+> patches 1+2 and 1+2+3 separately just to be certain.
 
-When doing RENAME_WHITEOUT, we now have to lock 5 inodes into the
-rename transaction. This means we need to update
-xfs_sort_for_rename() and xfs_lock_inodes() to handle up to 5
-inodes. Because of the vagaries of rename, this means we could have
-anywhere between 3 and 5 inodes locked into the transaction....
+			   3.19  4.0-rc4    +p1      +p2      +p3
+mm_migrate_pages	266,750  572,839  558,632  223,706  201,429
+run time		  4m54s    7m50s    7m20s    5m07s    4m31s
 
-While xfs_lock_inodes() does not need anything other than an assert
-telling us we are passing more inodes that we ever thought we should
-see, it could do with a logic rework to remove all the indenting.
-This is not a functional change - it just makes the code a lot
-easier to read.
+numa stats form p1+p2:
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- fs/xfs/xfs_inode.c | 145 +++++++++++++++++++++++++----------------------------
- 1 file changed, 67 insertions(+), 78 deletions(-)
+numa_hit 8436537
+numa_miss 0
+numa_foreign 0
+numa_interleave 30765
+numa_local 8409240
+numa_other 27297
+numa_pte_updates 46109698
+numa_huge_pte_updates 0
+numa_hint_faults 44756389
+numa_hint_faults_local 11841095
+numa_pages_migrated 4868674
+pgmigrate_success 4868674
+pgmigrate_fail 0
 
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 5a44f1c..e38bc40 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -391,15 +391,14 @@ xfs_lock_inumorder(int lock_mode, int subclass)
- }
- 
- /*
-- * The following routine will lock n inodes in exclusive mode.
-- * We assume the caller calls us with the inodes in i_ino order.
-+ * The following routine will lock n inodes in exclusive mode.  We assume the
-+ * caller calls us with the inodes in i_ino order.
-  *
-- * We need to detect deadlock where an inode that we lock
-- * is in the AIL and we start waiting for another inode that is locked
-- * by a thread in a long running transaction (such as truncate). This can
-- * result in deadlock since the long running trans might need to wait
-- * for the inode we just locked in order to push the tail and free space
-- * in the log.
-+ * We need to detect deadlock where an inode that we lock is in the AIL and we
-+ * start waiting for another inode that is locked by a thread in a long running
-+ * transaction (such as truncate). This can result in deadlock since the long
-+ * running trans might need to wait for the inode we just locked in order to
-+ * push the tail and free space in the log.
-  */
- void
- xfs_lock_inodes(
-@@ -410,30 +409,27 @@ xfs_lock_inodes(
- 	int		attempts = 0, i, j, try_lock;
- 	xfs_log_item_t	*lp;
- 
--	ASSERT(ips && (inodes >= 2)); /* we need at least two */
-+	/* currently supports between 2 and 5 inodes */
-+	ASSERT(ips && inodes >= 2 && inodes <= 5);
- 
- 	try_lock = 0;
- 	i = 0;
--
- again:
- 	for (; i < inodes; i++) {
- 		ASSERT(ips[i]);
- 
--		if (i && (ips[i] == ips[i-1]))	/* Already locked */
-+		if (i && (ips[i] == ips[i - 1]))	/* Already locked */
- 			continue;
- 
- 		/*
--		 * If try_lock is not set yet, make sure all locked inodes
--		 * are not in the AIL.
--		 * If any are, set try_lock to be used later.
-+		 * If try_lock is not set yet, make sure all locked inodes are
-+		 * not in the AIL.  If any are, set try_lock to be used later.
- 		 */
--
- 		if (!try_lock) {
- 			for (j = (i - 1); j >= 0 && !try_lock; j--) {
- 				lp = (xfs_log_item_t *)ips[j]->i_itemp;
--				if (lp && (lp->li_flags & XFS_LI_IN_AIL)) {
-+				if (lp && (lp->li_flags & XFS_LI_IN_AIL))
- 					try_lock++;
--				}
- 			}
- 		}
- 
-@@ -443,51 +439,42 @@ again:
- 		 * we can't get any, we must release all we have
- 		 * and try again.
- 		 */
-+		if (!try_lock) {
-+			xfs_ilock(ips[i], xfs_lock_inumorder(lock_mode, i));
-+			continue;
-+		}
-+
-+		/* try_lock means we have an inode locked that is in the AIL. */
-+		ASSERT(i != 0);
-+		if (xfs_ilock_nowait(ips[i], xfs_lock_inumorder(lock_mode, i)))
-+			continue;
- 
--		if (try_lock) {
--			/* try_lock must be 0 if i is 0. */
-+		/*
-+		 * Unlock all previous guys and try again.  xfs_iunlock will try
-+		 * to push the tail if the inode is in the AIL.
-+		 */
-+		attempts++;
-+		for (j = i - 1; j >= 0; j--) {
- 			/*
--			 * try_lock means we have an inode locked
--			 * that is in the AIL.
-+			 * Check to see if we've already unlocked this one.  Not
-+			 * the first one going back, and the inode ptr is the
-+			 * same.
- 			 */
--			ASSERT(i != 0);
--			if (!xfs_ilock_nowait(ips[i], xfs_lock_inumorder(lock_mode, i))) {
--				attempts++;
--
--				/*
--				 * Unlock all previous guys and try again.
--				 * xfs_iunlock will try to push the tail
--				 * if the inode is in the AIL.
--				 */
--
--				for(j = i - 1; j >= 0; j--) {
--
--					/*
--					 * Check to see if we've already
--					 * unlocked this one.
--					 * Not the first one going back,
--					 * and the inode ptr is the same.
--					 */
--					if ((j != (i - 1)) && ips[j] ==
--								ips[j+1])
--						continue;
--
--					xfs_iunlock(ips[j], lock_mode);
--				}
-+			if (j != (i - 1) && ips[j] == ips[j + 1])
-+				continue;
-+
-+			xfs_iunlock(ips[j], lock_mode);
-+		}
- 
--				if ((attempts % 5) == 0) {
--					delay(1); /* Don't just spin the CPU */
-+		if ((attempts % 5) == 0) {
-+			delay(1); /* Don't just spin the CPU */
- #ifdef DEBUG
--					xfs_lock_delays++;
-+			xfs_lock_delays++;
- #endif
--				}
--				i = 0;
--				try_lock = 0;
--				goto again;
--			}
--		} else {
--			xfs_ilock(ips[i], xfs_lock_inumorder(lock_mode, i));
- 		}
-+		i = 0;
-+		try_lock = 0;
-+		goto again;
- 	}
- 
- #ifdef DEBUG
-@@ -2681,19 +2668,22 @@ xfs_remove(
- /*
-  * Enter all inodes for a rename transaction into a sorted array.
-  */
-+#define __XFS_SORT_INODES	5
- STATIC void
- xfs_sort_for_rename(
--	xfs_inode_t	*dp1,	/* in: old (source) directory inode */
--	xfs_inode_t	*dp2,	/* in: new (target) directory inode */
--	xfs_inode_t	*ip1,	/* in: inode of old entry */
--	xfs_inode_t	*ip2,	/* in: inode of new entry, if it
--				   already exists, NULL otherwise. */
--	xfs_inode_t	**i_tab,/* out: array of inode returned, sorted */
--	int		*num_inodes)  /* out: number of inodes in array */
-+	struct xfs_inode	*dp1,	/* in: old (source) directory inode */
-+	struct xfs_inode	*dp2,	/* in: new (target) directory inode */
-+	struct xfs_inode	*ip1,	/* in: inode of old entry */
-+	struct xfs_inode	*ip2,	/* in: inode of new entry */
-+	struct xfs_inode	*wino,	/* in: whiteout inode */
-+	struct xfs_inode	**i_tab,/* out: sorted array of inodes */
-+	int			*num_inodes)  /* in/out: inodes in array */
- {
--	xfs_inode_t		*temp;
- 	int			i, j;
- 
-+	ASSERT(*num_inodes == __XFS_SORT_INODES);
-+	memset(i_tab, 0, *num_inodes * sizeof(struct xfs_inode *));
-+
- 	/*
- 	 * i_tab contains a list of pointers to inodes.  We initialize
- 	 * the table here & we'll sort it.  We will then use it to
-@@ -2701,25 +2691,24 @@ xfs_sort_for_rename(
- 	 *
- 	 * Note that the table may contain duplicates.  e.g., dp1 == dp2.
- 	 */
--	i_tab[0] = dp1;
--	i_tab[1] = dp2;
--	i_tab[2] = ip1;
--	if (ip2) {
--		*num_inodes = 4;
--		i_tab[3] = ip2;
--	} else {
--		*num_inodes = 3;
--		i_tab[3] = NULL;
--	}
-+	i = 0;
-+	i_tab[i++] = dp1;
-+	i_tab[i++] = dp2;
-+	i_tab[i++] = ip1;
-+	if (ip2)
-+		i_tab[i++] = ip2;
-+	if (wino)
-+		i_tab[i++] = wino;
-+	*num_inodes = i;
- 
- 	/*
- 	 * Sort the elements via bubble sort.  (Remember, there are at
--	 * most 4 elements to sort, so this is adequate.)
-+	 * most 5 elements to sort, so this is adequate.)
- 	 */
- 	for (i = 0; i < *num_inodes; i++) {
- 		for (j = 1; j < *num_inodes; j++) {
- 			if (i_tab[j]->i_ino < i_tab[j-1]->i_ino) {
--				temp = i_tab[j];
-+				struct xfs_inode *temp = i_tab[j];
- 				i_tab[j] = i_tab[j-1];
- 				i_tab[j-1] = temp;
- 			}
-@@ -2867,16 +2856,16 @@ xfs_rename(
- 	xfs_fsblock_t   first_block;
- 	int		cancel_flags;
- 	int		committed;
--	xfs_inode_t	*inodes[4];
-+	xfs_inode_t	*inodes[__XFS_SORT_INODES];
-+	int		num_inodes = __XFS_SORT_INODES;
- 	int		spaceres;
--	int		num_inodes;
- 
- 	trace_xfs_rename(src_dp, target_dp, src_name, target_name);
- 
- 	new_parent = (src_dp != target_dp);
- 	src_is_directory = S_ISDIR(src_ip->i_d.di_mode);
- 
--	xfs_sort_for_rename(src_dp, target_dp, src_ip, target_ip,
-+	xfs_sort_for_rename(src_dp, target_dp, src_ip, target_ip, NULL,
- 				inodes, &num_inodes);
- 
- 	xfs_bmap_init(&free_list, &first_block);
+
+numa stats form p1+p2+p3:
+
+numa_hit 6991596
+numa_miss 0
+numa_foreign 0
+numa_interleave 10336
+numa_local 6983144
+numa_other 8452
+numa_pte_updates 24460492
+numa_huge_pte_updates 0
+numa_hint_faults 23677262
+numa_hint_faults_local 5952273
+numa_pages_migrated 3557928
+pgmigrate_success 3557928
+pgmigrate_fail 0
+
+OK, the summary with all patches applied:
+
+config                          3.19   4.0-rc1  4.0-rc4  4.0-rc5+
+defaults                       8m08s     9m34s    9m14s    6m57s
+-o ag_stride=-1                4m04s     4m38s    4m11s    4m06s
+-o bhash=101073                6m04s    17m43s    7m35s    6m13s
+-o ag_stride=-1,bhash=101073   4m54s     9m58s    7m50s    4m31s
+
+So it looks like the patch set fixes the remaining regression and in
+2 of the four cases actually improves performance....
+
+Thanks, Linus and Mel, for tracking this tricky problem down! 
+
+Cheers,
+
+Dave.
 -- 
-2.0.0
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
