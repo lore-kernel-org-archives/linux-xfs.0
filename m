@@ -1,22 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id AEC697F3F
-	for <xfs@oss.sgi.com>; Tue, 24 Mar 2015 06:51:49 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 8CB448F8084
-	for <xfs@oss.sgi.com>; Tue, 24 Mar 2015 04:51:49 -0700 (PDT)
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	QGLWgOf1NFwZ1ecZ for <xfs@oss.sgi.com>;
-	Tue, 24 Mar 2015 04:51:43 -0700 (PDT)
-Date: Tue, 24 Mar 2015 22:51:41 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 0/3] Reduce system overhead of automatic NUMA balancing
-Message-ID: <20150324115141.GS28621@dastard>
-References: <1427113443-20973-1-git-send-email-mgorman@suse.de>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id A9EF77F3F
+	for <xfs@oss.sgi.com>; Tue, 24 Mar 2015 07:07:29 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 465ABAC003
+	for <xfs@oss.sgi.com>; Tue, 24 Mar 2015 05:07:26 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id mZTzJfcBN1LIDocF (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 24 Mar 2015 05:07:25 -0700 (PDT)
+Date: Tue, 24 Mar 2015 08:07:23 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 01/13 V2] xfs_db: Allow writes of corrupted data by
+	optionally skipping write verifiers
+Message-ID: <20150324120722.GA21657@bfoster.bfoster>
+References: <1426624395-8258-1-git-send-email-sandeen@redhat.com>
+	<1426624395-8258-2-git-send-email-sandeen@redhat.com>
+	<551070CC.9040309@sandeen.net>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1427113443-20973-1-git-send-email-mgorman@suse.de>
+In-Reply-To: <551070CC.9040309@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,79 +32,160 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Mel Gorman <mgorman@suse.de>
-Cc: linuxppc-dev@lists.ozlabs.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, Linux-MM <linux-mm@kvack.org>, Aneesh Kumar <aneesh.kumar@linux.vnet.ibm.com>, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, Ingo Molnar <mingo@kernel.org>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Eric Sandeen <sandeen@redhat.com>, xfs@oss.sgi.com
 
-On Mon, Mar 23, 2015 at 12:24:00PM +0000, Mel Gorman wrote:
-> These are three follow-on patches based on the xfsrepair workload Dave
-> Chinner reported was problematic in 4.0-rc1 due to changes in page table
-> management -- https://lkml.org/lkml/2015/3/1/226.
+On Mon, Mar 23, 2015 at 03:00:12PM -0500, Eric Sandeen wrote:
+> Being able to write corrupt data is handy if we wish to test
+> repair against specific types of corruptions.
 > 
-> Much of the problem was reduced by commit 53da3bc2ba9e ("mm: fix up numa
-> read-only thread grouping logic") and commit ba68bc0115eb ("mm: thp:
-> Return the correct value for change_huge_pmd"). It was known that the performance
-> in 3.19 was still better even if is far less safe. This series aims to
-> restore the performance without compromising on safety.
+> Add a "-c" option to the write command which allows this by removing
+> the write verifier.
 > 
-> Dave, you already tested patch 1 on its own but it would be nice to test
-> patches 1+2 and 1+2+3 separately just to be certain.
+> Note that this also skips CRC updates; it's not currently possible
+> to write invalid data with a valid CRC; CRC recalculation is
+> intertwined with validation.
+> 
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> ---
 
-			   3.19  4.0-rc4    +p1      +p2      +p3
-mm_migrate_pages	266,750  572,839  558,632  223,706  201,429
-run time		  4m54s    7m50s    7m20s    5m07s    4m31s
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 
-numa stats form p1+p2:
-
-numa_hit 8436537
-numa_miss 0
-numa_foreign 0
-numa_interleave 30765
-numa_local 8409240
-numa_other 27297
-numa_pte_updates 46109698
-numa_huge_pte_updates 0
-numa_hint_faults 44756389
-numa_hint_faults_local 11841095
-numa_pages_migrated 4868674
-pgmigrate_success 4868674
-pgmigrate_fail 0
-
-
-numa stats form p1+p2+p3:
-
-numa_hit 6991596
-numa_miss 0
-numa_foreign 0
-numa_interleave 10336
-numa_local 6983144
-numa_other 8452
-numa_pte_updates 24460492
-numa_huge_pte_updates 0
-numa_hint_faults 23677262
-numa_hint_faults_local 5952273
-numa_pages_migrated 3557928
-pgmigrate_success 3557928
-pgmigrate_fail 0
-
-OK, the summary with all patches applied:
-
-config                          3.19   4.0-rc1  4.0-rc4  4.0-rc5+
-defaults                       8m08s     9m34s    9m14s    6m57s
--o ag_stride=-1                4m04s     4m38s    4m11s    4m06s
--o bhash=101073                6m04s    17m43s    7m35s    6m13s
--o ag_stride=-1,bhash=101073   4m54s     9m58s    7m50s    4m31s
-
-So it looks like the patch set fixes the remaining regression and in
-2 of the four cases actually improves performance....
-
-Thanks, Linus and Mel, for tracking this tricky problem down! 
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> 
+> V2: Fix whitespace, remove "if (argc)", and test for
+> iocur_top->bp->b_ops before attempting to deref it.
+> 
+> diff --git a/db/io.c b/db/io.c
+> index 7f1b76a..c5898f1 100644
+> --- a/db/io.c
+> +++ b/db/io.c
+> @@ -457,6 +457,13 @@ write_cur_bbs(void)
+>  }
+>  
+>  void
+> +xfs_dummy_verify(
+> +	struct xfs_buf *bp)
+> +{
+> +	return;
+> +}
+> +
+> +void
+>  write_cur(void)
+>  {
+>  	if (iocur_sp < 0) {
+> diff --git a/db/io.h b/db/io.h
+> index 71082e6..31d96b4 100644
+> --- a/db/io.h
+> +++ b/db/io.h
+> @@ -63,6 +63,7 @@ extern void	set_cur(const struct typ *t, __int64_t d, int c, int ring_add,
+>  			bbmap_t *bbmap);
+>  extern void     ring_add(void);
+>  extern void	set_iocur_type(const struct typ *t);
+> +extern void	xfs_dummy_verify(struct xfs_buf *bp);
+>  
+>  /*
+>   * returns -1 for unchecked, 0 for bad and 1 for good
+> diff --git a/db/write.c b/db/write.c
+> index a0f14f4..655b618 100644
+> --- a/db/write.c
+> +++ b/db/write.c
+> @@ -38,7 +38,7 @@ static int	write_f(int argc, char **argv);
+>  static void     write_help(void);
+>  
+>  static const cmdinfo_t	write_cmd =
+> -	{ "write", NULL, write_f, 0, -1, 0, N_("[field or value]..."),
+> +	{ "write", NULL, write_f, 0, -1, 0, N_("[-c] [field or value]..."),
+>  	  N_("write value to disk"), write_help };
+>  
+>  void
+> @@ -79,6 +79,7 @@ write_help(void)
+>  "  String mode: 'write \"This_is_a_filename\" - write null terminated string.\n"
+>  "\n"
+>  " In data mode type 'write' by itself for a list of specific commands.\n\n"
+> +" Specifying the -c option will allow writes of invalid (corrupt) data.\n\n"
+>  ));
+>  
+>  }
+> @@ -90,6 +91,10 @@ write_f(
+>  {
+>  	pfunc_t	pf;
+>  	extern char *progname;
+> +	int c;
+> +	int corrupt = 0;		/* Allow write of corrupt data; skip verification */
+> +	struct xfs_buf_ops nowrite_ops;
+> +	const struct xfs_buf_ops *stashed_ops = NULL;
+>  
+>  	if (x.isreadonly & LIBXFS_ISREADONLY) {
+>  		dbprintf(_("%s started in read only mode, writing disabled\n"),
+> @@ -109,12 +114,34 @@ write_f(
+>  		return 0;
+>  	}
+>  
+> -	/* move past the "write" command */
+> -	argc--;
+> -	argv++;
+> +	while ((c = getopt(argc, argv, "c")) != EOF) {
+> +		switch (c) {
+> +		case 'c':
+> +			corrupt = 1;
+> +			break;
+> +		default:
+> +			dbprintf(_("bad option for write command\n"));
+> +			return 0;
+> +		}
+> +	}
+> +
+> +	argc -= optind;
+> +	argv += optind;
+> +
+> +	if (iocur_top->bp->b_ops && corrupt) {
+> +		/* Temporarily remove write verifier to write bad data */
+> +		stashed_ops = iocur_top->bp->b_ops;
+> +		nowrite_ops.verify_read = stashed_ops->verify_read;
+> +		nowrite_ops.verify_write = xfs_dummy_verify;
+> +		iocur_top->bp->b_ops = &nowrite_ops;
+> +		dbprintf(_("Allowing write of corrupted data\n"));
+> +	}
+>  
+>  	(*pf)(DB_WRITE, cur_typ->fields, argc, argv);
+>  
+> +	if (stashed_ops)
+> +		iocur_top->bp->b_ops = stashed_ops;
+> +
+>  	return 0;
+>  }
+>  
+> diff --git a/man/man8/xfs_db.8 b/man/man8/xfs_db.8
+> index 4d8d4ff..d527230 100644
+> --- a/man/man8/xfs_db.8
+> +++ b/man/man8/xfs_db.8
+> @@ -711,7 +711,7 @@ and
+>  bits respectively, and their string equivalent reported
+>  (but no modifications are made).
+>  .TP
+> -.BI "write [" "field value" "] ..."
+> +.BI "write [\-c] [" "field value" "] ..."
+>  Write a value to disk.
+>  Specific fields can be set in structures (struct mode),
+>  or a block can be set to data values (data mode),
+> @@ -729,6 +729,12 @@ contents of the block can be shifted or rotated left or right, or filled
+>  with a sequence, a constant value, or a random value. In this mode
+>  .B write
+>  with no arguments gives more information on the allowed commands.
+> +.RS 1.0i
+> +.TP 0.4i
+> +.B \-c
+> +Skip write verifiers and CRC recalculation; allows invalid data to be written
+> +to disk.
+> +.RE
+>  .SH TYPES
+>  This section gives the fields in each structure type and their meanings.
+>  Note that some types of block cover multiple actual structures,
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
