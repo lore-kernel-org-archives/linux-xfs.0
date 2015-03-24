@@ -1,25 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 078197F50
-	for <xfs@oss.sgi.com>; Tue, 24 Mar 2015 15:23:36 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id E86378F8094
-	for <xfs@oss.sgi.com>; Tue, 24 Mar 2015 13:23:32 -0700 (PDT)
-Received: from mail-ig0-f180.google.com (mail-ig0-f180.google.com
-	[209.85.213.180]) by cuda.sgi.com with ESMTP id
-	38ipWEdveWDPFkX3 (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 24 Mar 2015 13:23:30 -0700 (PDT)
-Received: by igbqf9 with SMTP id qf9so8069170igb.1
-	for <xfs@oss.sgi.com>; Tue, 24 Mar 2015 13:23:30 -0700 (PDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 5F4C07F54
+	for <xfs@oss.sgi.com>; Tue, 24 Mar 2015 16:04:44 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 4CBBB30404E
+	for <xfs@oss.sgi.com>; Tue, 24 Mar 2015 14:04:41 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id KFgX1nMsTBzA3MD8 for <xfs@oss.sgi.com>;
+	Tue, 24 Mar 2015 14:04:39 -0700 (PDT)
+Message-ID: <5511D166.7050201@sandeen.net>
+Date: Tue, 24 Mar 2015 16:04:38 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-In-Reply-To: <20150324153306.GG4701@suse.de>
-References: <1427113443-20973-1-git-send-email-mgorman@suse.de>
-	<20150324115141.GS28621@dastard> <20150324153306.GG4701@suse.de>
-Date: Tue, 24 Mar 2015 13:23:30 -0700
-Message-ID: <CA+55aFzPCbfMKPEpxntCvEK_SqjbBTppyZMW7W2C+ppnA4W4fw@mail.gmail.com>
-Subject: Re: [PATCH 0/3] Reduce system overhead of automatic NUMA balancing
-From: Linus Torvalds <torvalds@linux-foundation.org>
+Subject: Re: [PATCH 3/5] xfs: factor out xfs_rename_finish()
+References: <1427194771-3105-1-git-send-email-david@fromorbit.com>
+	<1427194771-3105-4-git-send-email-david@fromorbit.com>
+In-Reply-To: <1427194771-3105-4-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,26 +28,106 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Mel Gorman <mgorman@suse.de>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, Linux-MM <linux-mm@kvack.org>, Aneesh Kumar <aneesh.kumar@linux.vnet.ibm.com>, Andrew Morton <akpm@linux-foundation.org>, ppc-dev <linuxppc-dev@lists.ozlabs.org>, Ingo Molnar <mingo@kernel.org>
+To: Dave Chinner <david@fromorbit.com>, xfs@oss.sgi.com
 
-On Tue, Mar 24, 2015 at 8:33 AM, Mel Gorman <mgorman@suse.de> wrote:
-> On Tue, Mar 24, 2015 at 10:51:41PM +1100, Dave Chinner wrote:
->>
->> So it looks like the patch set fixes the remaining regression and in
->> 2 of the four cases actually improves performance....
->
-> \o/
+On 3/24/15 5:59 AM, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> Rather than use a jump label for the final transaction commit in
+> the rename, factor it into a simple helper function and call it
+> appropriately. This slightly reduces the spaghetti nature of
+> xfs_rename.
 
-W00t.
+Nit, subject should be "xfs_finish_rename" not "xfs_rename_finish"
 
-> Linus, these three patches plus the small fixlet for pmd_mkyoung (to match
-> pte_mkyoung) is already in Andrew's tree. I'm expecting it'll arrive to
-> you before 4.0 assuming nothing else goes pear shaped.
+-Eric
 
-Yup. Thanks Mel,
-
-                          Linus
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> ---
+>  fs/xfs/xfs_inode.c | 48 +++++++++++++++++++++++++++---------------------
+>  1 file changed, 27 insertions(+), 21 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+> index 981e036..4a13a48 100644
+> --- a/fs/xfs/xfs_inode.c
+> +++ b/fs/xfs/xfs_inode.c
+> @@ -2716,6 +2716,31 @@ xfs_sort_for_rename(
+>  	}
+>  }
+>  
+> +static int
+> +xfs_finish_rename(
+> +	struct xfs_trans	*tp,
+> +	struct xfs_bmap_free	*free_list)
+> +{
+> +	int			committed = 0;
+> +	int			error;
+> +
+> +	/*
+> +	 * If this is a synchronous mount, make sure that the rename transaction
+> +	 * goes to disk before returning to the user.
+> +	 */
+> +	if (tp->t_mountp->m_flags & (XFS_MOUNT_WSYNC|XFS_MOUNT_DIRSYNC))
+> +		xfs_trans_set_sync(tp);
+> +
+> +	error = xfs_bmap_finish(&tp, free_list, &committed);
+> +	if (error) {
+> +		xfs_bmap_cancel(free_list);
+> +		xfs_trans_cancel(tp, XFS_TRANS_RELEASE_LOG_RES|XFS_TRANS_ABORT);
+> +		return error;
+> +	}
+> +
+> +	return xfs_trans_commit(tp, XFS_TRANS_RELEASE_LOG_RES);
+> +}
+> +
+>  /*
+>   * xfs_cross_rename()
+>   *
+> @@ -2855,7 +2880,6 @@ xfs_rename(
+>  	xfs_bmap_free_t free_list;
+>  	xfs_fsblock_t   first_block;
+>  	int		cancel_flags = 0;
+> -	int		committed;
+>  	xfs_inode_t	*inodes[__XFS_SORT_INODES];
+>  	int		num_inodes = __XFS_SORT_INODES;
+>  	int		spaceres;
+> @@ -2932,7 +2956,7 @@ xfs_rename(
+>  					 &free_list, &first_block, spaceres);
+>  		if (error)
+>  			goto out_trans_abort;
+> -		goto finish_rename;
+> +		return xfs_finish_rename(tp, &free_list);
+>  	}
+>  
+>  	/*
+> @@ -3074,25 +3098,7 @@ xfs_rename(
+>  	if (new_parent)
+>  		xfs_trans_log_inode(tp, target_dp, XFS_ILOG_CORE);
+>  
+> -finish_rename:
+> -	/*
+> -	 * If this is a synchronous mount, make sure that the
+> -	 * rename transaction goes to disk before returning to
+> -	 * the user.
+> -	 */
+> -	if (mp->m_flags & (XFS_MOUNT_WSYNC|XFS_MOUNT_DIRSYNC)) {
+> -		xfs_trans_set_sync(tp);
+> -	}
+> -
+> -	error = xfs_bmap_finish(&tp, &free_list, &committed);
+> -	if (error)
+> -		goto out_trans_abort;
+> -
+> -	/*
+> -	 * trans_commit will unlock src_ip, target_ip & decrement
+> -	 * the vnode references.
+> -	 */
+> -	return xfs_trans_commit(tp, XFS_TRANS_RELEASE_LOG_RES);
+> +	return xfs_finish_rename(tp, &free_list);
+>  
+>  out_trans_abort:
+>  	cancel_flags |= XFS_TRANS_ABORT;
+> 
 
 _______________________________________________
 xfs mailing list
