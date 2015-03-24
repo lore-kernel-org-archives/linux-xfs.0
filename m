@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 3FA877F5E
-	for <xfs@oss.sgi.com>; Tue, 24 Mar 2015 16:26:52 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 0E6777F5E
+	for <xfs@oss.sgi.com>; Tue, 24 Mar 2015 16:27:22 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id A97D6AC005
-	for <xfs@oss.sgi.com>; Tue, 24 Mar 2015 14:26:51 -0700 (PDT)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id EE300304032
+	for <xfs@oss.sgi.com>; Tue, 24 Mar 2015 14:27:21 -0700 (PDT)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	8svs4LuFjV6F84wE for <xfs@oss.sgi.com>;
-	Tue, 24 Mar 2015 14:26:49 -0700 (PDT)
-Date: Wed, 25 Mar 2015 08:26:47 +1100
+	LagW9bZC7fyzqf7D for <xfs@oss.sgi.com>;
+	Tue, 24 Mar 2015 14:27:20 -0700 (PDT)
+Date: Wed, 25 Mar 2015 08:27:18 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 1/5] xfs: clean up inode locking for RENAME_WHITEOUT
-Message-ID: <20150324212647.GV28621@dastard>
+Subject: Re: [PATCH 3/5] xfs: factor out xfs_rename_finish()
+Message-ID: <20150324212718.GW28621@dastard>
 References: <1427194771-3105-1-git-send-email-david@fromorbit.com>
-	<1427194771-3105-2-git-send-email-david@fromorbit.com>
-	<5511D2FC.8080907@sandeen.net>
+	<1427194771-3105-4-git-send-email-david@fromorbit.com>
+	<5511D166.7050201@sandeen.net>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <5511D2FC.8080907@sandeen.net>
+In-Reply-To: <5511D166.7050201@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,51 +34,20 @@ Sender: xfs-bounces@oss.sgi.com
 To: Eric Sandeen <sandeen@sandeen.net>
 Cc: xfs@oss.sgi.com
 
-On Tue, Mar 24, 2015 at 04:11:24PM -0500, Eric Sandeen wrote:
+On Tue, Mar 24, 2015 at 04:04:38PM -0500, Eric Sandeen wrote:
 > On 3/24/15 5:59 AM, Dave Chinner wrote:
 > > From: Dave Chinner <dchinner@redhat.com>
 > > 
-> > When doing RENAME_WHITEOUT, we now have to lock 5 inodes into the
-> > rename transaction. This means we need to update
-> > xfs_sort_for_rename() and xfs_lock_inodes() to handle up to 5
-> > inodes. Because of the vagaries of rename, this means we could have
-> > anywhere between 3 and 5 inodes locked into the transaction....
-> > 
-> > While xfs_lock_inodes() does not need anything other than an assert
-> > telling us we are passing more inodes that we ever thought we should
-> > see, it could do with a logic rework to remove all the indenting.
-> > This is not a functional change - it just makes the code a lot
-> > easier to read.
-> > 
-> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> > Rather than use a jump label for the final transaction commit in
+> > the rename, factor it into a simple helper function and call it
+> > appropriately. This slightly reduces the spaghetti nature of
+> > xfs_rename.
 > 
-> ...
-> 
-> > @@ -2681,19 +2668,22 @@ xfs_remove(
-> >  /*
-> >   * Enter all inodes for a rename transaction into a sorted array.
-> >   */
-> > +#define __XFS_SORT_INODES	5
-> >  STATIC void
-> >  xfs_sort_for_rename(
-> > -	xfs_inode_t	*dp1,	/* in: old (source) directory inode */
-> > -	xfs_inode_t	*dp2,	/* in: new (target) directory inode */
-> > -	xfs_inode_t	*ip1,	/* in: inode of old entry */
-> > -	xfs_inode_t	*ip2,	/* in: inode of new entry, if it
-> > -				   already exists, NULL otherwise. */
-> > -	xfs_inode_t	**i_tab,/* out: array of inode returned, sorted */
-> > -	int		*num_inodes)  /* out: number of inodes in array */
-> > +	struct xfs_inode	*dp1,	/* in: old (source) directory inode */
-> > +	struct xfs_inode	*dp2,	/* in: new (target) directory inode */
-> > +	struct xfs_inode	*ip1,	/* in: inode of old entry */
-> > +	struct xfs_inode	*ip2,	/* in: inode of new entry */
-> > +	struct xfs_inode	*wino,	/* in: whiteout inode */
-> 
-> I'm not 100% morally opposed, but you still have a wino lurking around here ;)
+> Nit, subject should be "xfs_finish_rename" not "xfs_rename_finish"
 
-Ah, I missed that one when splitting the patch. Will fix.
+Will fix.
 
--Dave.
+-Dave
 -- 
 Dave Chinner
 david@fromorbit.com
