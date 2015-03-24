@@ -1,23 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 544607F37
-	for <xfs@oss.sgi.com>; Tue, 24 Mar 2015 10:33:18 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id F30B67F37
+	for <xfs@oss.sgi.com>; Tue, 24 Mar 2015 12:49:24 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 2216D8F8087
-	for <xfs@oss.sgi.com>; Tue, 24 Mar 2015 08:33:17 -0700 (PDT)
-Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id 5TXbdiwBUKgau20m (version=TLSv1 cipher=AES256-SHA
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 8AAD0AC003
+	for <xfs@oss.sgi.com>; Tue, 24 Mar 2015 10:49:24 -0700 (PDT)
+Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
+	ESMTP id wriDWIg3IpwcvTrk (version=TLSv1 cipher=AES256-SHA
 	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 24 Mar 2015 08:33:12 -0700 (PDT)
-Date: Tue, 24 Mar 2015 15:33:06 +0000
-From: Mel Gorman <mgorman@suse.de>
-Subject: Re: [PATCH 0/3] Reduce system overhead of automatic NUMA balancing
-Message-ID: <20150324153306.GG4701@suse.de>
-References: <1427113443-20973-1-git-send-email-mgorman@suse.de>
-	<20150324115141.GS28621@dastard>
+	Tue, 24 Mar 2015 10:49:23 -0700 (PDT)
+Date: Tue, 24 Mar 2015 10:49:16 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH v3 3/3] NFSD: Add support for encoding multiple segments
+Message-ID: <20150324174916.GA28906@infradead.org>
+References: <20150318205554.GA10716@fieldses.org> <5509E824.6070006@Netapp.com>
+	<20150318211144.GB10716@fieldses.org>
+	<OFB111A6D8.016B8BD5-ON88257E0D.001D174D-88257E0D.005268D6@us.ibm.com>
+	<20150319153627.GA20852@fieldses.org>
+	<OF38D4D18B.19055EC2-ON88257E0D.0059BA03-88257E0D.005A781F@us.ibm.com>
+	<20150320151718.GD2036@fieldses.org>
+	<20150320162303.GA18786@infradead.org>
+	<20150320182621.GH2036@fieldses.org>
+	<CAFX2JfkybBPcqD6A8r-jOkPnkL26=NEuK3zhA6TLn-DVam+kfQ@mail.gmail.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20150324115141.GS28621@dastard>
+In-Reply-To: <CAFX2JfkybBPcqD6A8r-jOkPnkL26=NEuK3zhA6TLn-DVam+kfQ@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,72 +37,21 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: linuxppc-dev@lists.ozlabs.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, Linux-MM <linux-mm@kvack.org>, Aneesh Kumar <aneesh.kumar@linux.vnet.ibm.com>, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, Ingo Molnar <mingo@kernel.org>
+To: Anna Schumaker <anna.schumaker@netapp.com>
+Cc: Christoph Hellwig <hch@infradead.org>, "linux-nfs@vger.kernel.org" <linux-nfs@vger.kernel.org>, Marc Eshel <eshel@us.ibm.com>, xfs@oss.sgi.com, "J. Bruce Fields" <bfields@fieldses.org>, linux-nfs-owner@vger.kernel.org
 
-On Tue, Mar 24, 2015 at 10:51:41PM +1100, Dave Chinner wrote:
-> On Mon, Mar 23, 2015 at 12:24:00PM +0000, Mel Gorman wrote:
-> > These are three follow-on patches based on the xfsrepair workload Dave
-> > Chinner reported was problematic in 4.0-rc1 due to changes in page table
-> > management -- https://lkml.org/lkml/2015/3/1/226.
-> > 
-> > Much of the problem was reduced by commit 53da3bc2ba9e ("mm: fix up numa
-> > read-only thread grouping logic") and commit ba68bc0115eb ("mm: thp:
-> > Return the correct value for change_huge_pmd"). It was known that the performance
-> > in 3.19 was still better even if is far less safe. This series aims to
-> > restore the performance without compromising on safety.
-> > 
-> > Dave, you already tested patch 1 on its own but it would be nice to test
-> > patches 1+2 and 1+2+3 separately just to be certain.
+On Tue, Mar 24, 2015 at 08:43:31AM -0400, Anna Schumaker wrote:
+> > I don't know, and don't have profiles.  I'll either try to reproduce or
+> > wait till Anna's back from vacation.
 > 
-> 			   3.19  4.0-rc4    +p1      +p2      +p3
-> mm_migrate_pages	266,750  572,839  558,632  223,706  201,429
-> run time		  4m54s    7m50s    7m20s    5m07s    4m31s
-> 
+> I'm using whatever functions NFSD already uses for reading files,
+> which I expect go through the VFS.  Is there a flag that controls
+> cache behavior?
 
-Excellent, this is in line with predictions and roughly matches what I
-was seeing on bare metal + real NUMA + spinning disk instead of KVM +
-fake NUMA + SSD.
-
-Editting slightly;
-
-> numa stats form p1+p2:    numa_pte_updates 46109698
-> numa stats form p1+p2+p3: numa_pte_updates 24460492
-
-The big drop in PTE updates matches what I expected -- migration
-failures should not lead to increased scan rates which is what patch 3
-fixes. I'm also pleased that there was not a drop in performance.
-
-> 
-> OK, the summary with all patches applied:
-> 
-> config                          3.19   4.0-rc1  4.0-rc4  4.0-rc5+
-> defaults                       8m08s     9m34s    9m14s    6m57s
-> -o ag_stride=-1                4m04s     4m38s    4m11s    4m06s
-> -o bhash=101073                6m04s    17m43s    7m35s    6m13s
-> -o ag_stride=-1,bhash=101073   4m54s     9m58s    7m50s    4m31s
-> 
-> So it looks like the patch set fixes the remaining regression and in
-> 2 of the four cases actually improves performance....
-> 
-
-\o/
-
-Linus, these three patches plus the small fixlet for pmd_mkyoung (to match
-pte_mkyoung) is already in Andrew's tree. I'm expecting it'll arrive to
-you before 4.0 assuming nothing else goes pear shaped.
-
-> Thanks, Linus and Mel, for tracking this tricky problem down! 
-> 
-
-Thanks Dave for persisting with this and collecting the necessary data.
-FWIW, I've marked the xfsrepair test case as a "large memory test".
-It'll take time before the test machines have historical data for it but
-in theory if this regresses again then I should spot it eventually.
-
--- 
-Mel Gorman
-SUSE Labs
+There's the O_DIRECT flag, but that's not what I mean.  If you just
+wrote to it it's a cached read, if you did unmount the filesystem after
+writing, or did an echo to /proc/sys/vm/drop_caches you get uncached
+read behavior.
 
 _______________________________________________
 xfs mailing list
