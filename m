@@ -1,31 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 97BD87F37
-	for <xfs@oss.sgi.com>; Tue, 24 Mar 2015 07:43:55 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 4DEF27F5E
+	for <xfs@oss.sgi.com>; Tue, 24 Mar 2015 16:25:58 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 329CFAC003
-	for <xfs@oss.sgi.com>; Tue, 24 Mar 2015 05:43:55 -0700 (PDT)
-Received: from mail-qg0-f53.google.com (mail-qg0-f53.google.com
-	[209.85.192.53]) by cuda.sgi.com with ESMTP id Oef9ElKw4KBSfKQo
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 24 Mar 2015 05:43:53 -0700 (PDT)
-Received: by qgez102 with SMTP id z102so104598436qge.3
-	for <xfs@oss.sgi.com>; Tue, 24 Mar 2015 05:43:52 -0700 (PDT)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 1C01A8F8070
+	for <xfs@oss.sgi.com>; Tue, 24 Mar 2015 14:25:54 -0700 (PDT)
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	gSBHICH99AxUmtcy for <xfs@oss.sgi.com>;
+	Tue, 24 Mar 2015 14:25:52 -0700 (PDT)
+Date: Wed, 25 Mar 2015 08:25:50 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 8/8] xfs: add initial DAX support
+Message-ID: <20150324212550.GU28621@dastard>
+References: <1427194266-2885-1-git-send-email-david@fromorbit.com>
+	<1427194266-2885-9-git-send-email-david@fromorbit.com>
+	<55115E20.7090105@plexistor.com>
 MIME-Version: 1.0
-In-Reply-To: <20150320182621.GH2036@fieldses.org>
-References: <20150318185545.GF8818@fieldses.org> <5509E27C.3080004@Netapp.com>
-	<20150318205554.GA10716@fieldses.org> <5509E824.6070006@Netapp.com>
-	<20150318211144.GB10716@fieldses.org>
-	<OFB111A6D8.016B8BD5-ON88257E0D.001D174D-88257E0D.005268D6@us.ibm.com>
-	<20150319153627.GA20852@fieldses.org>
-	<OF38D4D18B.19055EC2-ON88257E0D.0059BA03-88257E0D.005A781F@us.ibm.com>
-	<20150320151718.GD2036@fieldses.org>
-	<20150320162303.GA18786@infradead.org>
-	<20150320182621.GH2036@fieldses.org>
-From: Anna Schumaker <anna.schumaker@netapp.com>
-Date: Tue, 24 Mar 2015 08:43:31 -0400
-Message-ID: <CAFX2JfkybBPcqD6A8r-jOkPnkL26=NEuK3zhA6TLn-DVam+kfQ@mail.gmail.com>
-Subject: Re: [PATCH v3 3/3] NFSD: Add support for encoding multiple segments
+Content-Disposition: inline
+In-Reply-To: <55115E20.7090105@plexistor.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -38,70 +31,65 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "J. Bruce Fields" <bfields@fieldses.org>
-Cc: Christoph Hellwig <hch@infradead.org>, "linux-nfs@vger.kernel.org" <linux-nfs@vger.kernel.org>, Marc Eshel <eshel@us.ibm.com>, linux-nfs-owner@vger.kernel.org, xfs@oss.sgi.com
+To: Boaz Harrosh <boaz@plexistor.com>
+Cc: linux-fsdevel@vger.kernel.org, willy@linux.intel.com, jack@suse.cz, xfs@oss.sgi.com
 
-On Fri, Mar 20, 2015 at 2:26 PM, J. Bruce Fields <bfields@fieldses.org> wrote:
-> On Fri, Mar 20, 2015 at 09:23:03AM -0700, Christoph Hellwig wrote:
->> On Fri, Mar 20, 2015 at 11:17:18AM -0400, J. Bruce Fields wrote:
->> > Maybe this is a question for xfs developers.
->> >
->> > So, we have a new READ_PLUS call that's basically just a version of READ
->> > optimized for sparse files:
->> >
->> >     http://tools.ietf.org/html/draft-ietf-nfsv4-minorversion2-33#section-15.10
->> >
->> > It allows an NFS server to return either file data (like a normal READ
->> > call) or, at the server's discretion, records saying "this range of the
->> > data is all zeroes".
->> >
->> > Anna tried implementing READ_PLUS for knfsd using
->> > vfs_llseek(.,.,SEEK_HOLE) followed by an ordinary read if that
->> > determines we're not at a hole.
->> >
->> > (Very) preliminary results suggest that's slower than a plain READ for
->> > an xfs file with no holes.  (And *much* slower in the ext4 case for some
->> > reason.)
->>
->> It should be a fairly cheap operastion, and does extent tree operations
->> that are pretty similar to an (uncached) read.  Do you have profiles?
->>
->> > Is that expected, and should we be doing this some other way instead?
->>
->> Are the read cached or uncached?
->
-> I don't know, and don't have profiles.  I'll either try to reproduce or
-> wait till Anna's back from vacation.
+On Tue, Mar 24, 2015 at 02:52:48PM +0200, Boaz Harrosh wrote:
+> On 03/24/2015 12:51 PM, Dave Chinner wrote:
+> > From: Dave Chinner <dchinner@redhat.com>
+> > @@ -363,6 +365,10 @@ xfs_parseargs(
+> >  			mp->m_flags |= XFS_MOUNT_DISCARD;
+> >  		} else if (!strcmp(this_char, MNTOPT_NODISCARD)) {
+> >  			mp->m_flags &= ~XFS_MOUNT_DISCARD;
+> > +#ifdef CONFIG_FS_DAX
+> > +		} else if (!strcmp(this_char, MNTOPT_DAX)) {
+> > +			mp->m_flags |= XFS_MOUNT_DAX;
+> 
+> Hi
+> 
+> So what I see, (I might be wrong), is that once this flag is set here the
+> fs (At above xfs_diflags_to_iflags() ) will start serving DAX inodes.
 
-I'm using whatever functions NFSD already uses for reading files,
-which I expect go through the VFS.  Is there a flag that controls
-cache behavior?
+No, it won't, because...
 
->
->> If they are from pagecache just copying the zeroes is pretty much
->> unbeatable compared to extent tree lookups, so we'd need a new page
->> flag (difficult..) to see that a page is a hole (and then it would
->> only work for the whole page), but for uncached reads an optimization
->> would be to tell a read that it's an NFS READ_PLUS so that it could
->> just read until it reach a hole, and then we'd need some way to
->> communicate the hole size (or just fall back to SEEK_HOLE for that
->> case).
->
-> Ugh, OK.  We'll do some more tests before coming back to ask about
-> that....
+> > @@ -1501,6 +1508,20 @@ xfs_fs_fill_super(
+> >  	if (XFS_SB_VERSION_NUM(&mp->m_sb) == XFS_SB_VERSION_5)
+> >  		sb->s_flags |= MS_I_VERSION;
+> >  
+> > +	if (mp->m_flags & XFS_MOUNT_DAX) {
+> > +		xfs_warn(mp,
+> > +	"DAX enabled. Warning: EXPERIMENTAL, use at your own risk");
+> > +		if (sb->s_blocksize != PAGE_SIZE) {
+> > +			xfs_alert(mp,
+> > +		"Filesystem block size invalid for DAX Turning DAX off.");
+> > +			mp->m_flags &= ~XFS_MOUNT_DAX;
+> > +		} else if (!sb->s_bdev->bd_disk->fops->direct_access) {
+> > +			xfs_alert(mp,
+> > +		"Block device does not support DAX Turning DAX off.");
+> > +			mp->m_flags &= ~XFS_MOUNT_DAX;
+> > +		}
+> > +	}
 
-I only had time for the one run, so I'll do more trials and see if
-that one read is always so long.  I'm still hoping it was something in
-the way my VM was scheduling its tasks!
+We run these tests and then clear the XFS_MOUNT_DAX flag later.
 
-Anna
+> If we agree about the s_flags MS_MOUNT_DAX  then we can define a
+> 	if (MNTOPT_DAX)
+> 		dax_enable_if_supported(sb);
 
->
-> --b.
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-nfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+No, I don't see any reason for a mount flag for this, because we
+do not want to be stuck relying on a mount option forever. Once
+This code has been shaken out, I fully intend DAX to be turned on
+automatically for any device that supports, and for it to be turned
+on and off on a per-inode basis through on-disk inode flags. i.e.
+the mount option is really a temporary solution and I don't want to
+code in any dependencies on DAX being mount wide existing.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
