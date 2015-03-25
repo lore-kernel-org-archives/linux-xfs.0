@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 765187F50
-	for <xfs@oss.sgi.com>; Wed, 25 Mar 2015 12:59:18 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id DA8A6AC003
-	for <xfs@oss.sgi.com>; Wed, 25 Mar 2015 10:59:17 -0700 (PDT)
-Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id zQbuX4ueP0H5IlBq (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 25 Mar 2015 10:59:15 -0700 (PDT)
-Date: Wed, 25 Mar 2015 10:59:12 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 0/2] xfs: avoid overflow of attr3 leaf block headers with
-	64k blocks
-Message-ID: <20150325175912.GI24608@birch.djwong.org>
+	by oss.sgi.com (Postfix) with ESMTP id B9BD97F50
+	for <xfs@oss.sgi.com>; Wed, 25 Mar 2015 15:52:04 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 41829AC002
+	for <xfs@oss.sgi.com>; Wed, 25 Mar 2015 13:52:00 -0700 (PDT)
+Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
+	[150.101.137.143]) by cuda.sgi.com with ESMTP id
+	JXXGG9Zldfn4WjaA for <xfs@oss.sgi.com>;
+	Wed, 25 Mar 2015 13:51:55 -0700 (PDT)
+Date: Thu, 26 Mar 2015 07:51:52 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 1/2] xfs: pass attr geometry to attr leaf header
+	conversion functions
+Message-ID: <20150325205152.GZ28621@dastard>
 References: <1424811024-24839-1-git-send-email-bfoster@redhat.com>
-	<20150325165636.GA3436@laptop.bfoster>
+	<1424811024-24839-2-git-send-email-bfoster@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20150325165636.GA3436@laptop.bfoster>
+In-Reply-To: <1424811024-24839-2-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,57 +34,23 @@ Sender: xfs-bounces@oss.sgi.com
 To: Brian Foster <bfoster@redhat.com>
 Cc: xfs@oss.sgi.com
 
-On Wed, Mar 25, 2015 at 12:56:36PM -0400, Brian Foster wrote:
-> On Tue, Feb 24, 2015 at 03:50:22PM -0500, Brian Foster wrote:
-> > Hi all,
-> > 
-> > As it turns out, some of the leaf block codepaths other than xattr
-> > addition look like they wouldn't work properly with an unaligned
-> > firstused value as demonstrated in my previous patch:
-> > 
-> > http://oss.sgi.com/archives/xfs/2015-02/msg00479.html
-> > 
-> > Here's an alternate approach that handles the overflow in the header
-> > conversion functions. It passes the basic tests so far, but more testing
-> > is needed to make sure I've made valid assumptions. Thoughts?
-> > 
-> > FWIW, another approach could be to leak the last few bytes of the blocks
-> > (e.g., max firstused at the last valid aligned offset and update freemap
-> > size accordingly)...
-> > 
+On Tue, Feb 24, 2015 at 03:50:23PM -0500, Brian Foster wrote:
+> The firstused field of the xfs_attr3_leaf_hdr structure is subject to an
+> overflow when fs blocksize is 64k. In preparation to handle this
+> overflow in the header conversion functions, pass the attribute geometry
+> to the functions that convert the in-core structure to and from the
+> on-disk structure.
 > 
-> ping?
+> Signed-off-by: Brian Foster <bfoster@redhat.com>
 
-Looks reasonable enough to me...
+Hmmm. not sure I'm a great fan of this, but let's see.
 
---D
+Ok, this just a conversion patch, moving on to the second patch...
 
-> 
-> > Brian
-> > 
-> > Brian Foster (2):
-> >   xfs: pass attr geometry to attr leaf header conversion functions
-> >   xfs: use larger in-core attr firstused field and detect overflow
-> > 
-> >  fs/xfs/libxfs/xfs_attr_leaf.c | 99 +++++++++++++++++++++++++++++--------------
-> >  fs/xfs/libxfs/xfs_attr_leaf.h |  6 ++-
-> >  fs/xfs/libxfs/xfs_da_format.h |  8 +++-
-> >  fs/xfs/xfs_attr_inactive.c    |  3 +-
-> >  fs/xfs/xfs_attr_list.c        |  9 ++--
-> >  5 files changed, 86 insertions(+), 39 deletions(-)
-> > 
-> > -- 
-> > 1.9.3
-> > 
-> > _______________________________________________
-> > xfs mailing list
-> > xfs@oss.sgi.com
-> > http://oss.sgi.com/mailman/listinfo/xfs
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+-Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
