@@ -1,23 +1,17 @@
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 849CE7F50
-	for <xfs@oss.sgi.com>; Thu, 26 Mar 2015 21:22:05 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id C02467F50
+	for <xfs@oss.sgi.com>; Wed, 25 Mar 2015 07:57:31 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 54D39304039
-	for <xfs@oss.sgi.com>; Thu, 26 Mar 2015 19:22:05 -0700 (PDT)
-Received: from mail-qc0-f197.google.com (mail-qc0-f197.google.com
-	[209.85.216.197]) by cuda.sgi.com with ESMTP id
-	NRcefRXSND3RbU23 (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 26 Mar 2015 19:22:00 -0700 (PDT)
-Received: by qcbjx9 with SMTP id jx9so7298191qcb.1
-	for <xfs@oss.sgi.com>; Thu, 26 Mar 2015 19:21:59 -0700 (PDT)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 3BA41AC001
+	for <xfs@oss.sgi.com>; Wed, 25 Mar 2015 05:57:30 -0700 (PDT)
+Received: from smtp2.ymlpsv.net (smtp2.ymlpsv.net [62.213.215.8]) by
+	cuda.sgi.com with SMTP id E68FuhcIBCGD9aYY for
+	<xfs@oss.sgi.com>; Wed, 25 Mar 2015 05:57:22 -0700 (PDT)
+Date: Wed, 25 Mar 2015 13:57:21 +0100
+From: Chaim Desser <career@poelgroup.com>
+Subject: Fw: The Opportunity
+Message-ID: <e7d0e1d56ed43b88ad83d31c3c3f1ab8@smtp2.ymlpsv.net>
 MIME-Version: 1.0
-Message-ID: <001a1135a9980f8bf005123bccc6@google.com>
-Date: Fri, 27 Mar 2015 02:21:59 +0000
-Subject: =?GB2312?B?zeLDs836vL6joaOh1ve2r8q906rP+qOszfjC3sirx/K/zQ==?=
-	=?GB2312?B?u6fXytS0o6zSu8zswarPtcnPzfK49sS/seq/zbuno6zIw8T60a/FzA==?=
-	=?GB2312?B?tqm1pbK7ts+jodf2zeLDs7K71NnE0aOho6HR3cq+UVGjujE0OTQ2NzY4MjA=?=
-From: diameterewkab@gmail.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,130 +20,407 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============7074459916984029049=="
+Content-Type: multipart/mixed; boundary="===============7843134357834563713=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
---===============7074459916984029049==
-Content-Type: multipart/alternative; boundary=001a1135a99811b83805123bcc57
 
---001a1135a99811b83805123bcc57
-Content-Type: text/plain; charset=GB2312; format=flowed; delsp=yes
-Content-Transfer-Encoding: base64
-
-xPq6w6O6DQq5+sTaxL/HsNf2zeLDs8bVsemz9s/W0tTPwry4tPPOyszio7oNCjGhos3iw7O/zbun
-v6q3orG7tq+jrL/Nu6e/qreixNGhow0KMqGizeLDs7/Nu6e/qrei1vfSqs2ouf3GvcyovNu48dW9
-o6ywurnz1bm74bXIsbu2r9f4tci1xLe9yr2how0KM6Giu6i30bTzwb+/qreiv827p83GueO30dPD
-o6zN+NW+yei8xqOszfjVvsXFw/ujrNCnufvSwL7Jsru80aGjDQrQp7n7sru6w6O/0rvWsbG7tq+1
-yLT9o6y6zrK71ve2r7P2u/ejvw0Kzqq0y87Sw8e5q8u+zai5/dLUyc/X3L3hwcvSu8zXzeLDs8bz
-0rW/zbunv6q3or3ivva3vbC40tS8sLf+zvGjrM6qxPrW97avDQrL0cv3v6q3osirx/LEv7Hq1tW2
-y7/Nu6csyMPE+rL6xrex6bK8yKvH8qOss9DFtcT6sNm31rDZs/bQp7n7o6zIw8T608Cyuw0Kta28
-vqOstqm1pdS01LSyu7bPoaMNCs7Sw8fE3M6qxPrX9rW9o7oNCtK7oaLW97avyr2w78T6v6q3orn6
-zeK/zbunyLrM5aOsy9Gz9rTzwb/HsdTawvK80qGjDQq2/qGiyMPE+rXE0a/FzLK7ts+jrM6qxPq/
-qreis/bSu8X6v827p6OszazKsbj8tPO3ts6ntcTNxrnjxPq1xLL6xrejrLei1bkNCrj8tuC1xL/N
-u6fIuszloaMNCsj9oaK439CnyrXP1sirx/LEv7Hqv827p7+qt6KjrLK7sdjX+LXIv827p6Ossru/
-4LTyvNu48dW9o6y/qrei08XWyr/Nu6ejoQ0Ky8Shos3GuePE+rXEsvrGt6OsyMPE+rXEv827p9b3
-tq/V0sT6x6LMuLaptaWjrLaptaWyu7bPo6ENCs7loaLIw8T607XT0NK7xfrOyLaov827p8i6us26
-z9f3u++w6aOszay3otW5uPy24Mex1Nq/zbuno6ENCsH5oaLOqsT6zOG5qbbAzNi/zbunv6q3ore9
-sLijrM3qyKvC+tfj1tC089DNzeLDs7mry77NxrnjyrnTw6OsyMPIq8fyv827pw0Kv7S1vcT6tcSy
-+sa3o6GjoQ0KyOe5+8T6ttTO0sPHtcTI7bz+0tS8sLf+zvG40NDLyKSjrLu2063E+rzTztJRUc/q
-zLihow0KwarPtcjLo7rT4M/IyfoNCg0K0d3KvlFRo7oxNDk0Njc2ODIwDQrK1iC7+qO6MTUwMTM1
-ODI1MTMNCg0KDQoNCsG0vdPTyc+1zbPX1LavyfqzySzH687wteO796OhDQoNCg0KDQoNCg0KDQoN
-Cg0KDQoNCg0KztLS0dH7x+vE+szu0LSx7bWlIM3iw7PN+ry+o6Gjodb3tq/KvdOqz/qjrM34wt7I
-q8fyv827p9fK1LSjrNK7zOzBqs+1yc8NCs3yuPbEv7Hqv827p6OsyMPE+tGvxcy2qbWlsru2z6Oh
-1/bN4sOzsrvU2cTRo6GjodHdyr5RUaO6MTQ5NDY3NjgyMKGjINKqDQrM7tC0tMux7bWlo6zH67fD
-zsqjug0KaHR0cHM6Ly9kb2NzLmdvb2dsZS5jb20vZm9ybXMvZC8xaGluUTRScjZSSThjVDB1bHVf
-WnVXOURpR0ZMdXQxZ0pfNFpmNDZXejFYOC92aWV3Zm9ybT9jPTAmdz0xJnVzcD1tYWlsX2Zvcm1f
-bGluaw0K
---001a1135a99811b83805123bcc57
-Content-Type: text/html; charset=GB2312
-Content-Transfer-Encoding: base64
-
-PGh0bWw+PGJvZHkgaXRlbXNjb3BlIGl0ZW10eXBlPSJodHRwOi8vc2NoZW1hLm9yZy9FbWFpbE1l
-c3NhZ2UiIHN0eWxlPSIiPjxkaXYgY2xhc3M9InNzLWVtYWlsLWJvZHkiIHN0eWxlPSJkaXNwbGF5
-OmlubGluZTt3aWR0aDo1NzZweDsiPjxkaXYgaXRlbXByb3A9ImFjdGlvbiIgaXRlbXNjb3BlIGl0
-ZW10eXBlPSJodHRwOi8vc2NoZW1hLm9yZy9WaWV3QWN0aW9uIiBzdHlsZT0iIj48bWV0YSBpdGVt
-cHJvcD0ibmFtZSIgY29udGVudD0izO7QtLHttaUiIHN0eWxlPSIiPgo8bWV0YSBpdGVtcHJvcD0i
-dXJsIiBjb250ZW50PSJodHRwczovL2RvY3MuZ29vZ2xlLmNvbS9mb3Jtcy9kLzFoaW5RNFJyNlJJ
-OGNUMHVsdV9adVc5RGlHRkx1dDFnSl80WmY0Nld6MVg4L3ZpZXdmb3JtP2M9MCZhbXA7dz0xJmFt
-cDt1c3A9bWFpbF9nb3RvX2Zvcm0iIHN0eWxlPSIiPjwvZGl2Pgo8cCBpdGVtcHJvcD0iZGVzY3Jp
-cHRpb24iIHN0eWxlPSIiPsT6usOjujxwPrn6xNrEv8ew1/bN4sOzxtWx6bP2z9bS1M/CvLi0887K
-zOKjujxicj4xoaLN4sOzv827p7+qt6Kxu7avo6y/zbunv6q3osTRoaM8YnI+MqGizeLDs7/Nu6e/
-qrei1vfSqs2ouf3GvcyovNu48dW9o6ywurnz1bm74bXIsbu2r9f4tci1xLe9yr2hozxicj4zoaK7
-qLfRtPPBv7+qt6K/zbunzca547fR08OjrM341b7J6LzGo6zN+NW+xcXD+6Os0Ke5+9LAvsmyu7zR
-oaM8cD7Qp7n7sru6w6O/0rvWsbG7tq+1yLT9o6y6zrK71ve2r7P2u/ejvzxicj7OqrTLztLDx7mr
-y77NqLn90tTJz9fcveHBy9K7zNfN4sOzxvPStb/Nu6e/qreiveK+9re9sLjS1Lywt/7O8aOszqrE
-+tb3tq/L0cv3v6q3osirx/LEv7Hq1tW2y7/Nu6csyMPE+rL6xrex6bK8yKvH8qOss9DFtcT6sNm3
-1rDZs/bQp7n7o6zIw8T608Cyu7WtvL6jrLaptaXUtNS0sru2z6GjIDxwPs7Sw8fE3M6qxPrX9rW9
-o7o8YnI+0ruhotb3tq/KvbDvxPq/qreiufrN4r/Nu6fIuszlo6zL0bP2tPPBv8ex1NrC8rzSoaM8
-YnI+tv6hosjDxPq1xNGvxcyyu7bPo6zOqsT6v6q3orP20rvF+r/Nu6ejrM2syrG4/LTzt7bOp7XE
-zca548T6tcSy+sa3o6y3otW5uPy24LXEv827p8i6zOWhozxicj7I/aGiuN/Qp8q1z9bIq8fyxL+x
-6r/Nu6e/qreio6yyu7HY1/i1yL/Nu6ejrLK7v+C08rzbuPHVvaOsv6q3otPF1sq/zbuno6E8YnI+
-y8Shos3GuePE+rXEsvrGt6OsyMPE+rXEv827p9b3tq/V0sT6x6LMuLaptaWjrLaptaWyu7bPo6E8
-YnI+zuWhosjDxPrTtdPQ0rvF+s7Itqi/zbunyLq6zbrP1/e777Dpo6zNrLei1bm4/Lbgx7HU2r/N
-u6ejoTxicj7B+aGizqrE+szhuam2wMzYv827p7+qt6K3vbC4o6zN6sirwvrX49bQtPPQzc3iw7O5
-q8u+zca548q508OjrMjDyKvH8r/Nu6e/tLW9xPq1xLL6xrejoaOhPHA+yOe5+8T6ttTO0sPHtcTI
-7bz+0tS8sLf+zvG40NDLyKSjrLu2063E+rzTztJRUc/qzLihozxwPsGqz7XIy6O60+DPyMn6PHA+
-PGJyPtHdyr5RUaO6MTQ5NDY3NjgyMDxwPsrWICC7+qO6MTUwMTM1ODI1MTM8cD48cD48cD48cD7B
-tL3T08nPtc2z19S2r8n6s8ksx+vO8LXju/ejoTwvcD48L3A+PC9wPjwvcD48L3A+PC9wPjwvcD48
-L3A+PC9wPjwvcD48L3A+PC9wPgrI57n7xPrO3reosum/tLvyzOG9u7TLse21paOsv8nS1DxhIGhy
-ZWY9Imh0dHBzOi8vZG9jcy5nb29nbGUuY29tL2Zvcm1zL2QvMWhpblE0UnI2Ukk4Y1QwdWx1X1p1
-VzlEaUdGTHV0MWdKXzRaZjQ2V3oxWDgvdmlld2Zvcm0/Yz0wJmFtcDt3PTEmYW1wO3VzcD1tYWls
-X2Zvcm1fbGluayIgc3R5bGU9IiI+1NogR29vZ2xlILHttaXW0Mzu0LQ8L2E+oaMKPHA+PC9wPgo8
-ZGl2IGRpcj0ibHRyIiBzdHlsZT0iIj48ZGl2IGNsYXNzPSJmb3JtLWJvZHkiIHN0eWxlPSIiPjxo
-MSBjbGFzcz0ic3MtZm9ybS10aXRsZSIgZGlyPSJsdHIiIHN0eWxlPSJtYXJnaW46LjY3ZW0gMDsi
-Ps3iw7PN+ry+o6Gjodb3tq/KvdOqz/qjrM34wt7Iq8fyv827p9fK1LSjrNK7zOzBqs+1yc/N8rj2
-xL+x6r/Nu6ejrMjDxPrRr8XMtqm1pbK7ts+jodf2zeLDs7K71NnE0aOho6HR3cq+UVGjujE0OTQ2
-NzY4MjA8L2gxPjwvZGl2Pgo8ZGl2IHN0eWxlPSJ3aGl0ZS1zcGFjZTogcHJlLXdyYXA7IGRpc3Bs
-YXk6IGlubGluZSI+Cgo8L2Rpdj4KPGRpdiBjbGFzcz0iZm9ybS1ib2R5IiBzdHlsZT0iIj48ZGl2
-IGNsYXNzPSJzcy1mb3JtIiBzdHlsZT0iIj48Zm9ybSBhY3Rpb249Imh0dHBzOi8vZG9jcy5nb29n
-bGUuY29tL2Zvcm1zL2QvMWhpblE0UnI2Ukk4Y1QwdWx1X1p1VzlEaUdGTHV0MWdKXzRaZjQ2V3ox
-WDgvZm9ybVJlc3BvbnNlIiBtZXRob2Q9IlBPU1QiIGlkPSJzcy1mb3JtIiB0YXJnZXQ9Il9zZWxm
-IiBvbnN1Ym1pdD0iIiBzdHlsZT0iIj48b2wgcm9sZT0ibGlzdCIgY2xhc3M9InNzLXF1ZXN0aW9u
-LWxpc3QiIHN0eWxlPSJwYWRkaW5nLWxlZnQ6IDBsaXN0LXN0eWxlLXR5cGU6bm9uZTsiPgoKPGlu
-cHV0IHR5cGU9ImhpZGRlbiIgbmFtZT0iZHJhZnRSZXNwb25zZSIgdmFsdWU9IlssLCZxdW90OzY2
-MTA4NjQ0ODUzNjAzNjk4OTMmcXVvdDtdCiIgc3R5bGU9IiI+CjxpbnB1dCB0eXBlPSJoaWRkZW4i
-IG5hbWU9InBhZ2VIaXN0b3J5IiB2YWx1ZT0iMCIgc3R5bGU9IiI+CjxpbnB1dCB0eXBlPSJoaWRk
-ZW4iIG5hbWU9InVzcCIgdmFsdWU9Im1haWxfZm9ybV9zdWJtaXQiIHN0eWxlPSIiPgoKPGlucHV0
-IHR5cGU9ImhpZGRlbiIgbmFtZT0iZmJ6eCIgdmFsdWU9IjY2MTA4NjQ0ODUzNjAzNjk4OTMiIHN0
-eWxlPSIiPgoKPGRpdiBjbGFzcz0ic3MtaXRlbSBzcy1uYXZpZ2F0ZSIgc3R5bGU9Im1hcmdpbjox
-MnB4IDA7Ij48dGFibGUgaWQ9Im5hdmlnYXRpb24tdGFibGUiIHN0eWxlPSIiPjx0Ym9keT48dHI+
-PHRkIGNsYXNzPSJzcy1mb3JtLWVudHJ5IGdvb2ctaW5saW5lLWJsb2NrIiBpZD0ibmF2aWdhdGlv
-bi1idXR0b25zIiBkaXI9Imx0ciIgc3R5bGU9Im1hcmdpbi1ib3R0b206MS41ZW07dmVydGljYWwt
-YWxpZ246bWlkZGxlO21hcmdpbi1sZWZ0OjA7bWFyZ2luLXRvcDowO21heC13aWR0aDoxMDAlO3Bv
-c2l0aW9uOnJlbGF0aXZlO2Rpc3BsYXk6aW5saW5lLWJsb2NrOyI+CjxpbnB1dCB0eXBlPSJzdWJt
-aXQiIG5hbWU9InN1Ym1pdCIgdmFsdWU9IszhvbsiIGlkPSJzcy1zdWJtaXQiIGNsYXNzPSJqZmst
-YnV0dG9uIGpmay1idXR0b24tYWN0aW9uICIgc3R5bGU9IiI+CjwvdGQ+CjwvdHI+PC90Ym9keT48
-L3RhYmxlPjwvZGl2Pjwvb2w+PC9mb3JtPjwvZGl2Pgo8ZGl2IGNsYXNzPSJzcy1mb290ZXIiIHN0
-eWxlPSIiPjxkaXYgY2xhc3M9InNzLWF0dHJpYnV0aW9uIiBzdHlsZT0iIj48L2Rpdj4KPGRpdiBj
-bGFzcz0ic3MtbGVnYWwiIHN0eWxlPSIiPjxkaXYgY2xhc3M9ImRpc2NsYWltZXItc2VwYXJhdG9y
-IiBzdHlsZT0iIj48L2Rpdj4KPGRpdiBjbGFzcz0iZGlzY2xhaW1lciIgZGlyPSJsdHIiIHN0eWxl
-PSIiPjxkaXYgY2xhc3M9InBvd2VyZWQtYnktbG9nbyIgc3R5bGU9Im1hcmdpbi10b3A6MmVtOyI+
-PHNwYW4gY2xhc3M9InBvd2VyZWQtYnktdGV4dCIgc3R5bGU9IiI+vLzK9czhuamjujwvc3Bhbj4K
-PGEgaHJlZj0iaHR0cHM6Ly93d3cuZ29vZ2xlLmNvbS9mb3Jtcy9hYm91dC8/dXRtX3NvdXJjZT1w
-cm9kdWN0JmFtcDt1dG1fbWVkaXVtPWZvcm1zX2xvZ28mYW1wO3V0bV9jYW1wYWlnbj1mb3JtcyIg
-c3R5bGU9IiI+PGRpdiBjbGFzcz0ic3MtbG9nby1jb250YWluZXIiIHN0eWxlPSIiPjxpbWcgc3Jj
-PSJodHRwczovL3NzbC5nc3RhdGljLmNvbS9kb2NzL2Zvcm1zL2Zvcm1zX2xvZ29fc21hbGxfZGFy
-ay5wbmciIGFsdD0iR29vZ2xlILHttaUiIHN0eWxlPSIiPjwvZGl2PjwvYT48L2Rpdj4KPGRpdiBj
-bGFzcz0ic3MtdGVybXMiIHN0eWxlPSJjb2xvcjojNzc3O2ZvbnQtc2l6ZToxMXB4O21hcmdpbi10
-b3A6MS41ZW07Ij48c3BhbiBjbGFzcz0iZGlzY2xhaW1lci1tc2ciIHN0eWxlPSIiPrTLxNrI3bK7
-ysfTySBHb29nbGUgy/m0tL2oo6xHb29nbGUgsru21Mbk1/fIzrrOtaOxo6GjPC9zcGFuPgo8YnI+
-CjxhIGhyZWY9Imh0dHBzOi8vZG9jcy5nb29nbGUuY29tL2Zvcm1zL2QvMWhpblE0UnI2Ukk4Y1Qw
-dWx1X1p1VzlEaUdGTHV0MWdKXzRaZjQ2V3oxWDgvcmVwb3J0YWJ1c2U/c291cmNlPWh0dHBzOi8v
-ZG9jcy5nb29nbGUuY29tL2Zvcm1zL2QvMWhpblE0UnI2Ukk4Y1QwdWx1X1p1VzlEaUdGTHV0MWdK
-XzRaZjQ2V3oxWDgvdmlld2Zvcm0/c2lkJTNENjM1YzUxNTIzY2ZjMjAzYSUyNmMlM0QwJTI2dyUz
-RDElMjZ0b2tlbiUzRHF1WV9XVXdCQUFBLktlbjZXa0VYczRtcjBOMzQwb2xHR1EuMmtLZms4RWZi
-ZGd2ZFBSUFJMTUh1dyIgc3R5bGU9IiI+vtmxqMDE08PQ0M6qPC9hPgotCjxhIGhyZWY9Imh0dHA6
-Ly93d3cuZ29vZ2xlLmNvbS9hY2NvdW50cy9UT1MiIHN0eWxlPSIiPrf+zvHM9b/uPC9hPgotCjxh
-IGhyZWY9Imh0dHA6Ly93d3cuZ29vZ2xlLmNvbS9nb29nbGUtZC1zL3Rlcm1zLmh0bWwiIHN0eWxl
-PSIiPsbky/vM9b/uPC9hPjwvZGl2PjwvZGl2PjwvZGl2PjwvZGl2Pgo8L2Rpdj48L2Rpdj4KPGJy
-Pgo8c3R5bGUgdHlwZT0idGV4dC9jc3MiIG1lZGlhPSJzY3JlZW4iIHN0eWxlPSIiPjwvc3R5bGU+
-PC9kaXY+PC9ib2R5PjwvaHRtbD4=
---001a1135a99811b83805123bcc57--
+--===============7843134357834563713==
+Content-Type: multipart/alternative;
+	boundary="b1_e7d0e1d56ed43b88ad83d31c3c3f1ab8"
 
 
---===============7074459916984029049==
+--b1_e7d0e1d56ed43b88ad83d31c3c3f1ab8
+Content-Type: text/plain; charset = "utf-8"
+Content-Transfer-Encoding: quoted-printable
+
+--------------------------------------------------------------------------=
+------
+This email newsletter was sent to you in graphical HTML format.
+If you're seeing this version, your email program prefers plain text =
+emails.
+You can read the original version online:
+http://ymlp261.net/zvGhLb
+--------------------------------------------------------------------------=
+------
+
+
+=C2=A0Here is a revised list of
+New Jobs & Business opportunities
+As of July 15, 2014
+By the=C2=A0Poel Group ( http://www.poelgroup.com )Executive Staffing Firm
+
+_____________________________
+Unsubscribe / Change Profile: =
+http://ymlp261.net/ugjwjeuegsgmmjehguywsggbheyee
+Powered by YourMailingListProvider
+
+
+--b1_e7d0e1d56ed43b88ad83d31c3c3f1ab8
+Content-Type: text/html; charset = "utf-8"
+Content-Transfer-Encoding: quoted-printable
+
+<html>
+<head>
+<meta http-equiv=3D"Content-Type" content=3D"text/html;charset=3Dutf-8">
+</head>
+<body leftmargin=3D0 topmargin=3D0><table border=3D"0" cellpadding=3D"0" =
+cellspacing=3D"0" width=3D"100%">
+<tr>
+<td align=3D"center" style=3D"padding:0px;font-weight:normal;font-size:10p=
+t;color:#000000;font-family:verdana,geneva,arial,helvetica,sans-serif;">
+<table border=3D"0" cellpadding=3D"0" cellspacing=3D"0" width=3D"600">
+<tr>
+<td align=3D"left" style=3D"padding:0px;font-weight:normal;font-size:10pt;=
+color:#000000;font-family:verdana,geneva,arial,helvetica,sans-serif;">
+<table cellpadding=3D"0" cellspacing=3D"0" width=3D"100%" =
+style=3D"margin-top: 0px; margin-bottom: 0px;">
+<tr>
+<td
+align=3D"left" style=3D"padding:0px;font-weight:normal;font-size:12pt;colo=
+r:#000000;font-family:verdana,geneva,arial,helvetica,sans-serif;"><div =
+class=3D"1" align=3D"center"><span style=3D"color: #800000;"><b>New Job =
+Openings</b></span></div>
+<div><span style=3D"color: #800000;"> </span></div>
+<div><span style=3D"color: #800000;"> </span></div>
+<div><span style=3D"color: #800000;"> </span></div>
+<div class=3D"1" align=3D"center"><span style=3D"color: #800000;"><b>As of =
+March 25, 2015</b></span></div>
+<div><span style=3D"color: #800000;"> </span></div>
+<div><span style=3D"color: #800000;"> </span></div>
+<div><span style=3D"color: #800000;"> </span></div>
+<div class=3D"1" align=3D"center"><span style=3D"color: =
+#800000;"><b>By=C2=A0</b><a =
+href=3D"http://t.ymlp261.net/juqhapauybbyafausjaiammjeh/click.php"><b>Poel =
+Group</b></a> <b>Executive Staffing Firm</b></span></div>
+<div style=3D"text-align: left;" class=3D"1">
+<div style=3D"text-align: left;">=C2=A0</div>
+<div style=3D"text-align: left;"><span style=3D"font-size: 12pt;"><span =
+style=3D"color: #0000ff;"><b>Executive Level</b></span></span></div>
+<span style=3D"font-size: 8pt;"><b>=C2=A0=C2=A0 </b></span><span =
+style=3D"color: #ff6600;">=C2=A0</span></div>
+<div style=3D"text-align: left;">
+<div><a href=3D"http://t.ymlp261.net/juqwagauybbyaoausjalammjeh/click.php"=
+><b><span style=3D"color: #800000;">=C2=A0300K</span> - Chief Financial =
+Officer (CFO) <span style=3D"color: #800000;">#859</span></b></a></div>
+<div><a href=3D"http://t.ymlp261.net/juqqaoauybbyafausjaaammjeh/click.php"=
+><b><span style=3D"color: #800000;">=C2=A0140K</span> - Chief Operations =
+Officer (COO) <span style=3D"color: #800000;">#834</span></b></a></div>
+<div><a href=3D"http://t.ymlp261.net/juqyafauybbyadausjaoammjeh/click.php"=
+><b><span style=3D"color: #800000;">=C2=A0140K</span> - Chief Operations =
+Officer (COO) <span style=3D"color: #800000;">#891</span></b></a></div>
+<div style=3D"line-height: 130%;" class=3D"MsoNoSpacing"><span =
+style=3D"font-size: 8pt;">=C2=A0</span></div>
+<div style=3D"line-height: 130%;" class=3D"MsoNoSpacing"><span =
+style=3D"font-size: 12pt;"><span style=3D"color: #0000ff;"><b><span =
+style=3D"line-height: 130%;">Senior =
+Level=C2=A0</span></b></span></span><span style=3D"font-size: =
+8pt;">=C2=A0</span></div>
+<div style=3D"line-height: 130%;" class=3D"MsoNoSpacing"><span =
+style=3D"font-size: 8pt;"><br></span></div>
+<b><b>
+<div style=3D"line-height: 130%;" class=3D"MsoNoSpacing">
+<div><a href=3D"http://t.ymlp261.net/juysaiauybbyakausjacammjeh/click.php"=
+><b><span style=3D"color: #800000;">=C2=A0125K</span> - Front End Web =
+Designer <span style=3D"color: #800000;">#877</span></b></a></div>
+<div><a href=3D"http://t.ymlp261.net/juyuakauybbyagausjalammjeh/click.php"=
+><b><span style=3D"color: #800000;">=C2=A0100K</span> - Merchandiser =
+&ndash; Buyer and Seller <span style=3D"color: =
+#800000;">#833</span></b></a></div>
+<div><a href=3D"http://t.ymlp261.net/juyealauybbyatausjatammjeh/click.php"=
+><b><span style=3D"color: #800000;">=C2=A0100K</span> - Expeditor <span =
+style=3D"color: #800000;">#857</span></b></a><b> </b></div>
+<div><a href=3D"http://t.ymlp261.net/juymavauybbyanausjanammjeh/click.php"=
+><b><span style=3D"color: #800000;">=C2=A0100K</span> - Interior Designer =
+<span style=3D"color: #800000;">#856</span></b></a></div>
+<div><a href=3D"http://t.ymlp261.net/juyjacauybbyarausjakammjeh/click.php"=
+><b><span style=3D"color: #800000;">=C2=A0100K</span> - Senior Licensed =
+Architect <span style=3D"color: #800000;">#854</span></b></a></div>
+<div><a href=3D"http://t.ymlp261.net/juybagauybbyacausjakammjeh/click.php"=
+><b><span style=3D"color: #800000;">=C2=A0100K+</span> - Construction Site =
+Manager <span style=3D"color: #800000;">#886</span></b></a></div>
+<div><a href=3D"http://t.ymlp261.net/juyharauybbyanausjalammjeh/click.php"=
+><b><span style=3D"color: #800000;">=C2=A095K</span> - Google AdWords & =
+Google PLA <span style=3D"color: #800000;">#<span style=3D"color: =
+#800000;">61</span></span><span style=3D"color: =
+#800000;">2</span></b></a></div>
+<div><a href=3D"http://t.ymlp261.net/juywapauybbyacausjanammjeh/click.php"=
+><b><span style=3D"color: #800000;">=C2=A085K</span> - Warehouse Manager =
+<span style=3D"color: #800000;">#841</span></b></a></div>
+<div><a href=3D"http://t.ymlp261.net/juyqapauybbyaxausjavammjeh/click.php"=
+><b><span style=3D"color: #800000;">=C2=A080K</span> - Customer Service =
+Manager <span style=3D"color: #800000;">#826</span></b></a></div>
+<div><a href=3D"http://t.ymlp261.net/juyyacauybbyapausjarammjeh/click.php"=
+><b><span style=3D"color: #800000;">=C2=A080K</span> - Home Healthcare =
+Marketer <span style=3D"color: #800000;">#853</span></b></a></div>
+<div><b><a =
+href=3D"http://t.ymlp261.net/jessadauybbyaaausjatammjeh/click.php"><span =
+style=3D"color: #800000;">=C2=A080K</span> - eCommerce Marketing =
+Specialist <span style=3D"color: #800000;">#889</span></a></b></div>
+<div><a href=3D"http://t.ymlp261.net/jesuavauybbyagausjavammjeh/click.php"=
+><b><span style=3D"color: #800000;">=C2=A075K+</span> - Operations =
+Director <span style=3D"color: #800000;">#876</span></b></a></div>
+<div><a href=3D"http://t.ymlp261.net/jeseakauybbyadausjanammjeh/click.php"=
+><b><span style=3D"color: #800000;">=C2=A075K</span> - Office =
+Administrator <span style=3D"color: #800000;">#866</span></b></a></div>
+</div>
+</b></b></div>
+<div><b><b>
+<div style=3D"line-height: 130%;" class=3D"MsoNoSpacing"><span =
+style=3D"font-size: 8pt;">=C2=A0 </span></div>
+<div style=3D"line-height: 130%;" class=3D"MsoNoSpacing"><span =
+style=3D"font-size: 12pt;"><span style=3D"color: #0000ff;"><b><span =
+style=3D"line-height: 130%;"><b>Junior =
+Level</b></span></b></span></span></div>
+<span style=3D"font-size: 8pt;"> </span>
+<div style=3D"line-height: 130%; text-align: left;" =
+class=3D"MsoNoSpacing"><span style=3D"font-size: =
+8pt;">=C2=A0</span><b><b><b><span style=3D"font-size: 16.0pt; line-height: =
+130%;"><span style=3D"color: #000000;"><span style=3D"background-color: =
+#3366ff;"><span style=3D"color: #ffff99;"><b><b><span style=3D"font-size: =
+12pt;"><b><b><b><span style=3D"font-size: 16.0pt; line-height: =
+130%;"><span style=3D"color: #000000;"><span style=3D"background-color: =
+#3366ff;"><span style=3D"color: #ffff99;"><b><b><span style=3D"font-size: =
+12pt;"><b><span style=3D"line-height: 130%;"><span style=3D"color: =
+#000000;"><span style=3D"background-color: #3366ff;"><span style=3D"color: =
+#ffff99;"><b><b><b><b><b><span style=3D"font-size: 16.0pt; line-height: =
+130%;"><span style=3D"color: #000000;"><span style=3D"background-color: =
+#3366ff;"><span style=3D"color: #ffff99;"><b><b><span style=3D"font-size: =
+12pt;"><b><b><b><span style=3D"font-size: 16.0pt; line-height: =
+130%;"><span style=3D"color: #000000;"><span style=3D"background-color: =
+#3366ff;"><span style=3D"color: #ffff99;"><b><b><span style=3D"font-size: =
+12pt;"><b><span style=3D"line-height: 130%;"><span style=3D"color: =
+#000000;"><span style=3D"background-color: #3366ff;"><span style=3D"color: =
+#ffff99;"><b><b><b><b><b><span style=3D"line-height: 130%;"><span =
+style=3D"color: #000000;"><span style=3D"background-color: #3366ff;"><span =
+style=3D"color: #ffff99;"><b><b><span style=3D"font-size: 12pt;"><b><span =
+style=3D"line-height: 130%;"><span style=3D"color: #000000;"><span =
+style=3D"background-color: #3366ff;"><span style=3D"color: =
+#ffff99;"><b><b><b><b><b><span style=3D"line-height: 130%;"><span =
+style=3D"color: #000000;"><span style=3D"background-color: #3366ff;"><span =
+style=3D"color: #ffff99;"><b><b><span style=3D"font-size: 12pt;"><b><span =
+style=3D"line-height: 130%;"><span style=3D"color: #000000;"><span =
+style=3D"background-color: #3366ff;"><span style=3D"color: =
+#ffff99;"><b><b><b><b><b><span style=3D"line-height: 130%;"><span =
+style=3D"color: #000000;"><span style=3D"background-color: #3366ff;"><span =
+style=3D"color: #ffff99;"><b><b><span style=3D"font-size: 12pt;"><b><span =
+style=3D"line-height: 130%;"><span style=3D"color: #000000;"><span =
+style=3D"background-color: #3366ff;"><span style=3D"color: =
+#ffff99;"><b><b><b><b><b><span style=3D"line-height: 130%;"><span =
+style=3D"color: #000000;"><span style=3D"background-color: #3366ff;"><span =
+style=3D"color: #ffff99;"><b><b><span style=3D"font-size: 12pt;"><b><span =
+style=3D"line-height: 130%;"><span style=3D"color: #000000;"><span =
+style=3D"background-color: #3366ff;"><span style=3D"color: =
+#ffff99;"><b><b><b><b><b><span style=3D"line-height: 130%;"><span =
+style=3D"color: #000000;"><span style=3D"background-color: #3366ff;"><span =
+style=3D"color: #ffff99;"><b><b><span style=3D"font-size: 12pt;"><b><span =
+style=3D"line-height: 130%;"><span style=3D"color: #000000;"><span =
+style=3D"background-color: #3366ff;"><span style=3D"color: =
+#ffff99;"><b><b><b><b><b><span style=3D"line-height: 130%;"><span =
+style=3D"color: #000000;"><span style=3D"background-color: #3366ff;"><span =
+style=3D"color: #ffff99;"><b><b><span style=3D"font-size: 12pt;"><b><span =
+style=3D"line-height: 130%;"><span style=3D"color: #000000;"><span =
+style=3D"background-color: #3366ff;"><span style=3D"color: #ffff99;"><span =
+style=3D"font-size: 8pt;"><br></span></span></span></span></span></b></spa=
+n></b></b></span></span></span></span></b></b></b></b></b></span></span></=
+span></span></b></span></b></b></span></span></span></span></b></b></b></b=
+></b></span></span></span></span></b></span></b></b></span></span></span><=
+/span></b></b></b></b></b></span></span></span></span></b></span></b></b><=
+/span></span></span></span></b></b></b></b></b></span></span></span></span=
+></b></span></b></b></span></span></span></span></b></b></b></b></b></span=
+></span></span></span></b></span></b></b></span></span></span></span></b><=
+/b></b></b></b></span></span></span></span></b></span></b></b></span></spa=
+n></span></span></b></b></b></span></b></b></span></span></span></span></b=
+></b></b></b></b></span></span></span></span></b></span></b></b></span></s=
+pan></span></span></b></b></b></span></b></b></span></span></span></span><=
+/b></b></b>
+<div><a href=3D"http://t.ymlp261.net/jesmarauybbyakausjagammjeh/click.php"=
+><b><span style=3D"color: #800000;">=C2=A065K</span> - Senior HTML =
+Programmer <span style=3D"color: #800000;">#881</span></b></a><b> =
+</b></div>
+<div><a href=3D"http://t.ymlp261.net/jesjacauybbyaxausjalammjeh/click.php"=
+><b><span style=3D"color: #800000;">=C2=A060K</span> - Full Charge =
+Bookkeeper <span style=3D"color: #800000;">#883</span></b></a></div>
+<div><a href=3D"http://t.ymlp261.net/jesbaoauybbyaiausjacammjeh/click.php"=
+><b><span style=3D"color: #800000;">=C2=A060K</span> - Administrator =
+Assistant <span style=3D"color: #800000;">#830</span></b></a></div>
+<div><a href=3D"http://t.ymlp261.net/jeshadauybbyaiausjavammjeh/click.php"=
+><b><span style=3D"color: #800000;">=C2=A060K</span> &ndash; B2B Outside =
+Sales <span style=3D"color: #800000;">#672</span></b></a></div>
+<div><a href=3D"http://t.ymlp261.net/jeswagauybbyatausjaxammjeh/click.php"=
+><b><span style=3D"color: #800000;">=C2=A050K</span> - Executive =
+Assistant=C2=A0<span style=3D"color: #800000;">#867</span></b></a></div>
+<div><a href=3D"http://t.ymlp261.net/jesqalauybbyaiausjalammjeh/click.php"=
+><b><span style=3D"color: #800000;">=C2=A050K</span> - In-House Sales =
+<span style=3D"color: #800000;">#839</span></b></a></div>
+<div><a href=3D"http://t.ymlp261.net/jesyaoauybbyadausjaiammjeh/click.php"=
+><b><span style=3D"color: #800000;">=C2=A050K</span> - Account Receivable =
+<span style=3D"color: #800000;">#836</span></b></a></div>
+<div><a href=3D"http://t.ymlp261.net/jeusaxauybbyafausjagammjeh/click.php"=
+><b><span style=3D"color: #800000;">=C2=A040K+</span> - Outside Sales =
+<span style=3D"color: #800000;">#860</span></b></a></div>
+<b><b><b><span style=3D"font-size: 16.0pt; line-height: 130%;"><span =
+style=3D"color: #000000;"><span style=3D"background-color: #3366ff;"><span =
+style=3D"color: #ffff99;"><b><b><span style=3D"font-size: =
+12pt;"><b><b><b><span style=3D"font-size: 16.0pt; line-height: =
+130%;"><span style=3D"color: #000000;"><span style=3D"background-color: =
+#3366ff;"><span style=3D"color: #ffff99;"><b><b><span style=3D"font-size: =
+12pt;"><b><span style=3D"line-height: 130%;"><span style=3D"color: =
+#000000;"><span style=3D"background-color: #3366ff;"><span style=3D"color: =
+#ffff99;"><b><b><b><b><b><span style=3D"font-size: 16.0pt; line-height: =
+130%;"><span style=3D"color: #000000;"><span style=3D"background-color: =
+#3366ff;"><span style=3D"color: #ffff99;"><b><b><span style=3D"font-size: =
+12pt;"><b><b><b><span style=3D"font-size: 16.0pt; line-height: =
+130%;"><span style=3D"color: #000000;"><span style=3D"background-color: =
+#3366ff;"><span style=3D"color: #ffff99;"><b><b><span style=3D"font-size: =
+12pt;"><b><span style=3D"line-height: 130%;"><span style=3D"color: =
+#000000;"><span style=3D"background-color: #3366ff;"><span style=3D"color: =
+#ffff99;"><b><b><b><b><b><span style=3D"line-height: 130%;"><span =
+style=3D"color: #000000;"><span style=3D"background-color: #3366ff;"><span =
+style=3D"color: #ffff99;"><b><b><span style=3D"font-size: 12pt;"><b><span =
+style=3D"line-height: 130%;"><span style=3D"color: #000000;"><span =
+style=3D"background-color: #3366ff;"><span style=3D"color: =
+#ffff99;"><b><b><b><b><b><span style=3D"line-height: 130%;"><span =
+style=3D"color: #000000;"><span style=3D"background-color: #3366ff;"><span =
+style=3D"color: #ffff99;"><b><b><span style=3D"font-size: 12pt;"><b><span =
+style=3D"line-height: 130%;"><span style=3D"color: #000000;"><span =
+style=3D"background-color: #3366ff;"><span style=3D"color: =
+#ffff99;"><b><b><b><b><b><span style=3D"line-height: 130%;"><span =
+style=3D"color: #000000;"><span style=3D"background-color: #3366ff;"><span =
+style=3D"color: #ffff99;"><b><b><span style=3D"font-size: 12pt;"><b><span =
+style=3D"line-height: 130%;"><span style=3D"color: #000000;"><span =
+style=3D"background-color: #3366ff;"><span style=3D"color: =
+#ffff99;"><b><b><b><b><b><span style=3D"line-height: 130%;"><span =
+style=3D"color: #000000;"><span style=3D"background-color: #3366ff;"><span =
+style=3D"color: #ffff99;"><b><b><span style=3D"font-size: 12pt;"><b><span =
+style=3D"line-height: 130%;"><span style=3D"color: #000000;"><span =
+style=3D"background-color: #3366ff;"><span style=3D"color: =
+#ffff99;"><b><b><b><b><b><span style=3D"line-height: 130%;"><span =
+style=3D"color: #000000;"><span style=3D"background-color: #3366ff;"><span =
+style=3D"color: #ffff99;"><b><b><span style=3D"font-size: 12pt;"><b><span =
+style=3D"line-height: 130%;"><span style=3D"color: #000000;"><span =
+style=3D"background-color: #3366ff;"><span style=3D"color: =
+#ffff99;"><b><b><b><b><b><span style=3D"line-height: 130%;"><span =
+style=3D"color: #000000;"><span style=3D"background-color: #3366ff;"><span =
+style=3D"color: #ffff99;"><b><b><span style=3D"font-size: 12pt;"><b><span =
+style=3D"line-height: 130%;"><span style=3D"color: #000000;"><span =
+style=3D"background-color: #3366ff;"><span style=3D"color: #ffff99;"> =
+</span></span></span></span></b></span></b></b></span></span></span></span=
+></b></b></b></b></b></span></span></span></span></b></span></b></b></span=
+></span></span></span></b></b></b></b></b></span></span></span></span></b>=
+</span></b></b></span></span></span></span></b></b></b></b></b></span></sp=
+an></span></span></b></span></b></b></span></span></span></span></b></b></=
+b></b></b></span></span></span></span></b></span></b></b></span></span></s=
+pan></span></b></b></b></b></b></span></span></span></span></b></span></b>=
+</b></span></span></span></span></b></b></b></b></b></span></span></span><=
+/span></b></span></b></b></span></span></span></span></b></b></b></span></=
+b></b></span></span></span></span></b></b></b></b></b></span></span></span=
+></span></b></span></b></b></span></span></span></span></b></b></b></span>=
+</b></b></span></span></span></span></b></b></b><span style=3D"font-size: =
+14pt;">=C2=A0</span><span style=3D"font-size: 14pt;">=C2=A0</span><span =
+style=3D"color: #800000;">=C2=A0</span></div>
+</b></b></div>
+<div><span style=3D"color: #800000;">Upon responding to this email, please =
+make sure to indicate the position number and title you would like to =
+apply for in the subject line. This will enable us to better assist you =
+and process your resume efficiently.</span></div>
+<div><span style=3D"color: #000080;"> </span></div>
+<div class=3D"1"><span style=3D"color: #000080;"><br></span></div>
+<div><span style=3D"color: #000080;"> </span></div>
+<div class=3D"1"><span style=3D"color: #ff6600;"><b><span style=3D"color: =
+#800000;">Email your resume to</span>=C2=A0</b><a target=3D"_blank" =
+href=3D"mailto:career@poelgroup.com"><b>career@poelgroup.com</b></a></span=
+></div>
+<div><span style=3D"color: #000080;"> </span></div>
+<div class=3D"1"><span style=3D"color: #000080;"><br></span></div>
+<div><span style=3D"color: #000080;"> </span></div>
+<div class=3D"1"><span style=3D"color: #000080;"><b>Help your friends by =
+forwarding this email</b> <b>to them.</b></span></div>
+<div><span style=3D"color: #000080;"> </span></div>
+<div class=3D"1"><span style=3D"color: =
+#000080;">__________________________________</span></div>
+<div><span style=3D"color: #000080;"> </span></div>
+<div class=3D"1"><span style=3D"color: #000080;"><br></span></div>
+<div><span style=3D"color: #000080;"> </span></div>
+<div class=3D"1"><span style=3D"color: #000080;">Thank you,</span></div>
+<div><span style=3D"color: #000080;"> </span></div>
+<div class=3D"1"><span style=3D"color: #000080;"><br></span></div>
+<div><span style=3D"color: #000080;"> </span></div>
+<div class=3D"1"><span style=3D"color: #800000;"><b>Chaim =
+Desser</b></span></div>
+<div><span style=3D"color: #800000;"> </span></div>
+<div><span style=3D"color: #800000;"> </span></div>
+<div><span style=3D"color: #800000;"> </span></div>
+<div class=3D"1"><span style=3D"color: #800000;"><b>And the Staff at Poel =
+Group=C2=A0Executive Staffing</b></span></div>
+<div><span style=3D"color: #000080;"> </span></div>
+<div class=3D"1"><span style=3D"color: #000080;"><br></span></div>
+<div><span style=3D"color: #000080;"> </span></div>
+<div class=3D"1"><span style=3D"color: #800000;"><b>Check out additional =
+available jobs at</b></span></div>
+<div><span style=3D"color: #800000;"> </span></div>
+<div><span style=3D"color: #800000;"> </span></div>
+<div><span style=3D"color: #800000;"> </span></div>
+<div><span style=3D"color: #800000;"><a target=3D"_blank" =
+href=3D"http://t.ymlp261.net/jeuuaiauybbyaoausjacammjeh/click.php"><b>www.=
+poelgroup.com</b></a></span></div></td>
+</tr>
+</table><table cellpadding=3D"0" cellspacing=3D"0" width=3D"100%" =
+style=3D"margin-top: 5px; margin-bottom: 5px;">
+<tr>
+<td align=3D"left" style=3D"padding:0px;font-weight:normal;font-size:14pt;=
+color:#000000;font-family:verdana,geneva,arial,helvetica,sans-serif;"></td=
+>
+</tr>
+</table>
+</td>
+</tr>
+</table>
+<table border=3D"0" cellpadding=3D"0" cellspacing=3D"0" width=3D"600" =
+style=3D"border: 0px solid #c2cfb8; margin-top: 10px;">
+<tr>
+<td align=3D"left" style=3D"padding:0px;font-weight:normal;font-size:10pt;=
+color:#000000;font-family:verdana,geneva,arial,helvetica,sans-serif;backgr=
+ound-color:#ffffff;">
+<table cellpadding=3D"0" cellspacing=3D"0" width=3D"100%">
+<tr>
+<td align=3D"left" valign=3D"top" width=3D"70%" style=3D"padding:0px;font-=
+weight:normal;font-size:10pt;color:#000000;font-family:verdana,geneva,aria=
+l,helvetica,sans-serif;background-color:#ffffff;">
+</td>
+<td align=3D"left" valign=3D"top" width=3D"30%" style=3D"padding:0px;font-=
+weight:normal;font-size:10pt;color:#000000;font-family:verdana,geneva,aria=
+l,helvetica,sans-serif;background-color:#ffffff;">
+</td>
+</tr>
+</table>
+</td>
+</tr>
+</table>
+</td>
+</tr>
+</table>
+<!--YMLPUF--><div align=3Dcenter style=3D"padding-top:10px;padding-bottom:=
+10px;font-family:Verdana;font-size:8pt;color:#000000;"><hr noshade =
+color=3D#000000 width=3D50% size=3D1>
+<a href=3D"http://ymlp261.net/ugjwjeuegsgmmjehguywsggbheyee" =
+style=3D"color:#000000;">Unsubscribe / Change Profile</a>
+<br>
+<a href=3Dhttp://ymlp261.net/m/ style=3D"color:#000000;">Powered by =
+YMLP</a>
+</div><!--YMLPUFE-->
+<img alt=3D" " height=3D"1" =
+src=3D"http://t.ymlp261.net/dmmjehacjqmbetwst/footer.gif" width=3D"1" =
+border=3D"0">
+</body></html>
+
+
+
+--b1_e7d0e1d56ed43b88ad83d31c3c3f1ab8--
+
+
+--===============7843134357834563713==
 Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
@@ -160,4 +431,4 @@ xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
 
---===============7074459916984029049==--
+--===============7843134357834563713==--
