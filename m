@@ -1,34 +1,33 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id DA7407F50
-	for <xfs@oss.sgi.com>; Wed, 25 Mar 2015 07:34:13 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 8A8917F50
+	for <xfs@oss.sgi.com>; Wed, 25 Mar 2015 11:56:43 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 6828DAC001
-	for <xfs@oss.sgi.com>; Wed, 25 Mar 2015 05:34:10 -0700 (PDT)
-Received: from darcachon.resolversystems.com (darcachon.resolversystems.com
-	[80.68.93.186]) by cuda.sgi.com with ESMTP id 3OGOJfDqEPedgKP1
-	(version=TLSv1 cipher=AES128-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 25 Mar 2015 05:34:08 -0700 (PDT)
-Received: from host81-136-198-183.in-addr.btopenworld.com ([81.136.198.183]
-	helo=[192.168.0.105]) by darcachon.resolversystems.com with esmtpsa
-	(TLS1.2:DHE_RSA_AES_128_CBC_SHA1:128) (Exim 4.80)
-	(envelope-from <harry@pythonanywhere.com>) id 1YakVZ-0007vg-N0
-	for xfs@oss.sgi.com; Wed, 25 Mar 2015 12:34:06 +0000
-Message-ID: <5512AB38.7060009@pythonanywhere.com>
-Date: Wed, 25 Mar 2015 12:34:00 +0000
-From: Harry Percival <harry@pythonanywhere.com>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 76B88304043
+	for <xfs@oss.sgi.com>; Wed, 25 Mar 2015 09:56:40 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id ivyabv6iuOUm05fu (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 25 Mar 2015 09:56:39 -0700 (PDT)
+Received: from int-mx14.intmail.prod.int.phx2.redhat.com
+	(int-mx14.intmail.prod.int.phx2.redhat.com [10.5.11.27])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id t2PGuctM007568
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256
+	verify=FAIL) for <xfs@oss.sgi.com>; Wed, 25 Mar 2015 12:56:38 -0400
+Received: from laptop.bfoster (vpn-49-154.rdu2.redhat.com [10.10.49.154])
+	by int-mx14.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id t2PGuavP029005
+	(version=TLSv1/SSLv3 cipher=AES128-GCM-SHA256 bits=128 verify=NO)
+	for <xfs@oss.sgi.com>; Wed, 25 Mar 2015 12:56:38 -0400
+Date: Wed, 25 Mar 2015 12:56:36 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 0/2] xfs: avoid overflow of attr3 leaf block headers with
+	64k blocks
+Message-ID: <20150325165636.GA3436@laptop.bfoster>
+References: <1424811024-24839-1-git-send-email-bfoster@redhat.com>
 MIME-Version: 1.0
-References: <54EF1A8F.7030505@pythonanywhere.com>
-	<54F856E7.10006@pythonanywhere.com> <54F87BF3.3000405@sandeen.net>
-	<54F88CEC.4030009@pythonanywhere.com> <54F89201.60805@sandeen.net>
-	<54F893AF.2070406@pythonanywhere.com>
-	<54F895FA.4050205@sandeen.net>
-	<54F89B47.4010702@pythonanywhere.com>
-	<54F8B7D6.2000501@sandeen.net>
-	<54F98F20.9000208@pythonanywhere.com>
-	<20150306211136.GB13958@dastard>
-In-Reply-To: <20150306211136.GB13958@dastard>
-Subject: Re: trying to avoid a lengthy quotacheck by deleting all quota data
+Content-Disposition: inline
+In-Reply-To: <1424811024-24839-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -37,62 +36,52 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-We've written up a sort of post-mortem blog post describing the whole saga:
+On Tue, Feb 24, 2015 at 03:50:22PM -0500, Brian Foster wrote:
+> Hi all,
+> 
+> As it turns out, some of the leaf block codepaths other than xattr
+> addition look like they wouldn't work properly with an unaligned
+> firstused value as demonstrated in my previous patch:
+> 
+> http://oss.sgi.com/archives/xfs/2015-02/msg00479.html
+> 
+> Here's an alternate approach that handles the overflow in the header
+> conversion functions. It passes the basic tests so far, but more testing
+> is needed to make sure I've made valid assumptions. Thoughts?
+> 
+> FWIW, another approach could be to leak the last few bytes of the blocks
+> (e.g., max firstused at the last valid aligned offset and update freemap
+> size accordingly)...
+> 
 
-http://blog.pythonanywhere.com/110/
+ping?
 
-We've tried hard to avoid kicking off some kind of filesystem flamewar 
-while describing the whys and wherefores of our move from xfs to ext4, 
-but if you feel we've misrepresented anything, do let us know, I'm sure 
-we can adjust the post.
-
-Thanks again to everyone for your help debugging this stuff, and for a 
-filesystem which served us excellently for many years.
-
-rgds,
-Harry + the team.
-
-
-On 06/03/15 21:11, Dave Chinner wrote:
-> On Fri, Mar 06, 2015 at 11:27:28AM +0000, Harry Percival wrote:
->> Glad we managed to nail down a probable culprit!   Here's hoping
->> Debian and Ubuntu pull in a new kernel :)
->>
->> In other news, any advice on running this
->>
->>      xfstests:src/bstat
->>
->> command as a way of estimating how long a quotacheck will take?
-> It will give you an idea - quotacheck uses bulkstat, too.
->
->> Would it still be a useful estimator?  Do you think it would
->> significantly affect the performance of a disk that's under fairly
->> heavy use?
-> Of course. Bulkstat drives the disks as hard as they will go.
->
-> Cheers,
->
-> Dave.
-
--- 
-Harry Percival
-Developer
-harry@pythonanywhere.com
-
-PythonAnywhere - a fully browser-based Python development and hosting environment
-<http://www.pythonanywhere.com/>
-
-PythonAnywhere LLP
-17a Clerkenwell Road, London EC1M 5RD, UK
-VAT No.: GB 893 5643 79
-Registered in England and Wales as company number OC378414.
-Registered address: 28 Ely Place, 3rd Floor, London EC1N 6TD, UK
+> Brian
+> 
+> Brian Foster (2):
+>   xfs: pass attr geometry to attr leaf header conversion functions
+>   xfs: use larger in-core attr firstused field and detect overflow
+> 
+>  fs/xfs/libxfs/xfs_attr_leaf.c | 99 +++++++++++++++++++++++++++++--------------
+>  fs/xfs/libxfs/xfs_attr_leaf.h |  6 ++-
+>  fs/xfs/libxfs/xfs_da_format.h |  8 +++-
+>  fs/xfs/xfs_attr_inactive.c    |  3 +-
+>  fs/xfs/xfs_attr_list.c        |  9 ++--
+>  5 files changed, 86 insertions(+), 39 deletions(-)
+> 
+> -- 
+> 1.9.3
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
