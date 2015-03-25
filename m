@@ -1,30 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 6184E7F50
-	for <xfs@oss.sgi.com>; Wed, 25 Mar 2015 12:15:14 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id D2A35AC001
-	for <xfs@oss.sgi.com>; Wed, 25 Mar 2015 10:15:10 -0700 (PDT)
-Received: from mx141.netapp.com (mx141.netapp.com [216.240.21.12]) by
-	cuda.sgi.com with ESMTP id Na9qHeOLuweJKS12 (version=TLSv1
-	cipher=RC4-SHA bits=128 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 25 Mar 2015 10:15:08 -0700 (PDT)
-Message-ID: <5512ED19.4060902@Netapp.com>
-Date: Wed, 25 Mar 2015 13:15:05 -0400
-From: Anna Schumaker <Anna.Schumaker@netapp.com>
+	by oss.sgi.com (Postfix) with ESMTP id 765187F50
+	for <xfs@oss.sgi.com>; Wed, 25 Mar 2015 12:59:18 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id DA8A6AC003
+	for <xfs@oss.sgi.com>; Wed, 25 Mar 2015 10:59:17 -0700 (PDT)
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
+	cuda.sgi.com with ESMTP id zQbuX4ueP0H5IlBq (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 25 Mar 2015 10:59:15 -0700 (PDT)
+Date: Wed, 25 Mar 2015 10:59:12 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 0/2] xfs: avoid overflow of attr3 leaf block headers with
+	64k blocks
+Message-ID: <20150325175912.GI24608@birch.djwong.org>
+References: <1424811024-24839-1-git-send-email-bfoster@redhat.com>
+	<20150325165636.GA3436@laptop.bfoster>
 MIME-Version: 1.0
-Subject: Re: [PATCH v3 3/3] NFSD: Add support for encoding multiple segments
-References: <20150318205554.GA10716@fieldses.org> <5509E824.6070006@Netapp.com>
-	<20150318211144.GB10716@fieldses.org>
-	<OFB111A6D8.016B8BD5-ON88257E0D.001D174D-88257E0D.005268D6@us.ibm.com>
-	<20150319153627.GA20852@fieldses.org>
-	<OF38D4D18B.19055EC2-ON88257E0D.0059BA03-88257E0D.005A781F@us.ibm.com>
-	<20150320151718.GD2036@fieldses.org>
-	<20150320162303.GA18786@infradead.org>
-	<20150320182621.GH2036@fieldses.org>
-	<CAFX2JfkybBPcqD6A8r-jOkPnkL26=NEuK3zhA6TLn-DVam+kfQ@mail.gmail.com>
-	<20150324174916.GA28906@infradead.org>
-In-Reply-To: <20150324174916.GA28906@infradead.org>
+Content-Disposition: inline
+In-Reply-To: <20150325165636.GA3436@laptop.bfoster>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -37,27 +31,60 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: "J. Bruce Fields" <bfields@fieldses.org>, "linux-nfs@vger.kernel.org" <linux-nfs@vger.kernel.org>, Marc Eshel <eshel@us.ibm.com>, linux-nfs-owner@vger.kernel.org, xfs@oss.sgi.com
+To: Brian Foster <bfoster@redhat.com>
+Cc: xfs@oss.sgi.com
 
-On 03/24/2015 01:49 PM, Christoph Hellwig wrote:
-> On Tue, Mar 24, 2015 at 08:43:31AM -0400, Anna Schumaker wrote:
->>> I don't know, and don't have profiles.  I'll either try to reproduce or
->>> wait till Anna's back from vacation.
->>
->> I'm using whatever functions NFSD already uses for reading files,
->> which I expect go through the VFS.  Is there a flag that controls
->> cache behavior?
+On Wed, Mar 25, 2015 at 12:56:36PM -0400, Brian Foster wrote:
+> On Tue, Feb 24, 2015 at 03:50:22PM -0500, Brian Foster wrote:
+> > Hi all,
+> > 
+> > As it turns out, some of the leaf block codepaths other than xattr
+> > addition look like they wouldn't work properly with an unaligned
+> > firstused value as demonstrated in my previous patch:
+> > 
+> > http://oss.sgi.com/archives/xfs/2015-02/msg00479.html
+> > 
+> > Here's an alternate approach that handles the overflow in the header
+> > conversion functions. It passes the basic tests so far, but more testing
+> > is needed to make sure I've made valid assumptions. Thoughts?
+> > 
+> > FWIW, another approach could be to leak the last few bytes of the blocks
+> > (e.g., max firstused at the last valid aligned offset and update freemap
+> > size accordingly)...
+> > 
 > 
-> There's the O_DIRECT flag, but that's not what I mean.  If you just
-> wrote to it it's a cached read, if you did unmount the filesystem after
-> writing, or did an echo to /proc/sys/vm/drop_caches you get uncached
-> read behavior.
+> ping?
 
-Oh, I'm doing uncached reads for my tests.  I'm collecting updated numbers now!
+Looks reasonable enough to me...
 
-Anna
+--D
+
 > 
+> > Brian
+> > 
+> > Brian Foster (2):
+> >   xfs: pass attr geometry to attr leaf header conversion functions
+> >   xfs: use larger in-core attr firstused field and detect overflow
+> > 
+> >  fs/xfs/libxfs/xfs_attr_leaf.c | 99 +++++++++++++++++++++++++++++--------------
+> >  fs/xfs/libxfs/xfs_attr_leaf.h |  6 ++-
+> >  fs/xfs/libxfs/xfs_da_format.h |  8 +++-
+> >  fs/xfs/xfs_attr_inactive.c    |  3 +-
+> >  fs/xfs/xfs_attr_list.c        |  9 ++--
+> >  5 files changed, 86 insertions(+), 39 deletions(-)
+> > 
+> > -- 
+> > 1.9.3
+> > 
+> > _______________________________________________
+> > xfs mailing list
+> > xfs@oss.sgi.com
+> > http://oss.sgi.com/mailman/listinfo/xfs
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
