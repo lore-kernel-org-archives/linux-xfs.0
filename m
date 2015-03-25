@@ -1,21 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 835317F51
-	for <xfs@oss.sgi.com>; Wed, 25 Mar 2015 02:42:19 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 0BA33AC003
-	for <xfs@oss.sgi.com>; Wed, 25 Mar 2015 00:42:15 -0700 (PDT)
-Received: from mga01.intel.com ([192.55.52.88]) by cuda.sgi.com with ESMTP id
-	knBGY6yQN7CaFo6D for <xfs@oss.sgi.com>;
-	Wed, 25 Mar 2015 00:42:14 -0700 (PDT)
-Date: Wed, 25 Mar 2015 15:42:08 +0800
-From: kbuild test robot <fengguang.wu@intel.com>
-Subject: [dgc-xfs:fallocate-insert-range 10/10]
-	fs/xfs/xfs_bmap_util.c:1387:1: sparse: symbol 'xfs_shift_file_space'
-	was not declared. Should it be static?
-Message-ID: <201503251558.Dje24s0l%fengguang.wu@intel.com>
+	by oss.sgi.com (Postfix) with ESMTP id B0C2F7F50
+	for <xfs@oss.sgi.com>; Wed, 25 Mar 2015 03:47:44 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 3B4E0AC001
+	for <xfs@oss.sgi.com>; Wed, 25 Mar 2015 01:47:43 -0700 (PDT)
+Received: from mail-wi0-f179.google.com (mail-wi0-f179.google.com
+	[209.85.212.179]) by cuda.sgi.com with ESMTP id
+	XwmOKIt3WG4YYI6A (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 25 Mar 2015 01:47:42 -0700 (PDT)
+Received: by wixw10 with SMTP id w10so28040506wix.0
+	for <xfs@oss.sgi.com>; Wed, 25 Mar 2015 01:47:41 -0700 (PDT)
+Message-ID: <5512762A.2040604@plexistor.com>
+Date: Wed, 25 Mar 2015 10:47:38 +0200
+From: Boaz Harrosh <boaz@plexistor.com>
 MIME-Version: 1.0
-Content-Disposition: inline
+Subject: Re: [PATCH 5/8] xfs: add DAX file operations support
+References: <1427194266-2885-1-git-send-email-david@fromorbit.com>
+	<1427194266-2885-6-git-send-email-david@fromorbit.com>
+	<551153C4.6000808@plexistor.com> <20150324211740.GT28621@dastard>
+In-Reply-To: <20150324211740.GT28621@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,28 +33,23 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Namjae Jeon <namjae.jeon@samsung.com>
-Cc: linux-kernel@vger.kernel.org, kbuild-all@01.org, Ashish Sangwan <a.sangwan@samsung.com>, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>, Boaz Harrosh <boaz@plexistor.com>
+Cc: linux-fsdevel@vger.kernel.org, willy@linux.intel.com, jack@suse.cz, xfs@oss.sgi.com
 
-tree:   git://git.kernel.org/pub/scm/linux/kernel/git/dgc/linux-xfs fallocate-insert-range
-head:   a904b1ca5751faf5ece8600e18cd3b674afcca1b
-commit: a904b1ca5751faf5ece8600e18cd3b674afcca1b [10/10] xfs: Add support FALLOC_FL_INSERT_RANGE for fallocate
-reproduce:
-  # apt-get install sparse
-  git checkout a904b1ca5751faf5ece8600e18cd3b674afcca1b
-  make ARCH=x86_64 allmodconfig
-  make C=1 CF=-D__CHECK_ENDIAN__
+On 03/24/2015 11:17 PM, Dave Chinner wrote:
+> On Tue, Mar 24, 2015 at 02:08:36PM +0200, Boaz Harrosh wrote:
+<>
+> 
+> iter_file_splice_write() uses vfs_iter_write, which goes through
+> ->write_iter, which we punt to the direct IO path for DAX.
+> 
 
+Cool real cool. What I thought too. Will send a patch to fix
+and simplify ext2/4 ASAP. Its ready only still testing ...
 
-sparse warnings: (new ones prefixed by >>)
-
->> fs/xfs/xfs_bmap_util.c:1387:1: sparse: symbol 'xfs_shift_file_space' was not declared. Should it be static?
-
-Please review and possibly fold the followup patch.
-
----
-0-DAY kernel test infrastructure                Open Source Technology Center
-http://lists.01.org/mailman/listinfo/kbuild                 Intel Corporation
+> Cheers,
+> Dave.
+> 
 
 _______________________________________________
 xfs mailing list
