@@ -1,22 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id AE66D7F50
-	for <xfs@oss.sgi.com>; Wed, 25 Mar 2015 01:03:54 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 6DB5E8F8096
-	for <xfs@oss.sgi.com>; Tue, 24 Mar 2015 23:03:51 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id 1A9D57F51
+	for <xfs@oss.sgi.com>; Wed, 25 Mar 2015 01:05:57 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 07A578F8092
+	for <xfs@oss.sgi.com>; Tue, 24 Mar 2015 23:05:56 -0700 (PDT)
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	IahJ3QUuybWkstS4 for <xfs@oss.sgi.com>;
-	Tue, 24 Mar 2015 23:03:48 -0700 (PDT)
-Received: from dave by dastard with local (Exim 4.80)
-	(envelope-from <david@fromorbit.com>) id 1YaeKp-0005QE-0e
-	for xfs@oss.sgi.com; Wed, 25 Mar 2015 16:58:35 +1100
-Date: Wed, 25 Mar 2015 16:58:34 +1100
+	hFFCUX62pg0SdE7T for <xfs@oss.sgi.com>;
+	Tue, 24 Mar 2015 23:05:55 -0700 (PDT)
+Date: Wed, 25 Mar 2015 17:05:52 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [ANNOUNCE] xfs: for-next branch updated to a448f8f
-Message-ID: <20150325055834.GX28621@dastard>
+Subject: Re: [PATCH v10 1/12] fs: Add support FALLOC_FL_INSERT_RANGE for
+	fallocate
+Message-ID: <20150325060552.GY28621@dastard>
+References: <1424533554-28024-1-git-send-email-linkinjeon@gmail.com>
+	<1424533554-28024-2-git-send-email-linkinjeon@gmail.com>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <1424533554-28024-2-git-send-email-linkinjeon@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,128 +27,50 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============6876013429942042092=="
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Namjae Jeon <linkinjeon@gmail.com>
+Cc: linux-man@vger.kernel.org, tytso@mit.edu, Namjae Jeon <namjae.jeon@samsung.com>, linux-api@vger.kernel.org, bfoster@redhat.com, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, mtk.manpages@gmail.com, a.sangwan@samsung.com, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org
 
+On Sun, Feb 22, 2015 at 12:45:43AM +0900, Namjae Jeon wrote:
+> From: Namjae Jeon <namjae.jeon@samsung.com>
+> 
+> FALLOC_FL_INSERT_RANGE command is the opposite command of
+> FALLOC_FL_COLLAPSE_RANGE that is needed for advertisers or someone who want to
+> add some data in the middle of file. FALLOC_FL_INSERT_RANGE will create space
+> for writing new data within a file after shifting extents to right as given
+> length. and this command also has same limitation as FALLOC_FL_COLLAPSE_RANGE,
+> that is block boundary and use ftruncate(2) for crosses EOF.
+> 
+> Signed-off-by: Namjae Jeon <namjae.jeon@samsung.com>
+> Signed-off-by: Ashish Sangwan <a.sangwan@samsung.com>
 
---===============6876013429942042092==
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="envbJBWh7q8WU6mo"
-Content-Disposition: inline
-
-
---envbJBWh7q8WU6mo
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-
-Hi folks,
-
-The for-next branch of the xfs kernel repository at
+Folks, I have merged this into the xfs tree for the 4.1 merge
+window. It is under the stable branch "fallocate-insert-range"
+in the tree here:
 
 git://git.kernel.org/pub/scm/linux/kernel/git/dgc/linux-xfs.git
 
-has just been updated.
+an dis currently included in the for-next branch that is included in
+the linux-next tree. I have not included the ext4 kernel support
+patch in this branch (patch 3) because I have not seen any reviews
+from ext4 developers for it.
 
-The new head of the for-next branch is commit:
+Ted, if you want to include that patch in you ext4 tree, feel free
+to base it on the above branch, or if you give your  sob or
+reviewed-by ok I can pull it into my tree. I'll leave it up to you
+to determine how you want to deal with this.
 
-a448f8f Merge branch 'fallocate-insert-range' into for-next
+Cheers,
 
-New Commits:
-
-Byoungyoung Lee (1):
-      [20dafee] xfs: xfs_mru_cache_insert() should use GFP_NOFS
-
-Dave Chinner (9):
-      [95afcf5] xfs: clean up inode locking for RENAME_WHITEOUT
-      [445883e] xfs: cleanup xfs_rename error handling
-      [310606b] xfs: factor out xfs_finish_rename()
-      [eeacd32] xfs: make xfs_cross_rename() complete fully
-      [7dcf5c3] xfs: add RENAME_WHITEOUT support
-      [d41bb03] Merge branch 'xfs-rename-whiteout' into for-next
-      [d64588c] xfs: remove xfs_bmap_sanity_check()
-      [2b93681] Merge branch 'xfs-misc-fixes-for-4.1-2' into for-next
-      [a448f8f] Merge branch 'fallocate-insert-range' into for-next
-
-Eric Sandeen (1):
-      [b26384d] xfs: fix NULL pointer dereference in xfs_filestream_lookup_=
-ag()
-
-Fabian Frederick (2):
-      [86aaf02] xfs: use bool instead of int in xfs_rename()
-      [29916df] xfs: fix shadow warning in xfs_da3_root_split()
-
-Joe Perches (1):
-      [5e9383f] xfs: Fix incorrect positive ENOMEM return
-
-Namjae Jeon (2):
-      [dd46c78] fs: Add support FALLOC_FL_INSERT_RANGE for fallocate
-      [a904b1c] xfs: Add support FALLOC_FL_INSERT_RANGE for fallocate
-
-Scott Wood (1):
-      [65dd297] xfs: %pF is only for function pointers
-
-
-Code Diffstat:
-
- fs/open.c                    |   8 +-
- fs/xfs/libxfs/xfs_bmap.c     | 388 ++++++++++++++++++++++++++++++++--------
- fs/xfs/libxfs/xfs_bmap.h     |  13 +-
- fs/xfs/libxfs/xfs_da_btree.c |   8 +-
- fs/xfs/xfs_bmap_util.c       | 131 ++++++++++----
- fs/xfs/xfs_bmap_util.h       |   2 +
- fs/xfs/xfs_error.c           |   2 +-
- fs/xfs/xfs_file.c            |  41 ++++-
- fs/xfs/xfs_filestream.c      |   2 +-
- fs/xfs/xfs_inode.c           | 408 +++++++++++++++++++++++++--------------=
-----
- fs/xfs/xfs_iops.c            |   2 +-
- fs/xfs/xfs_mru_cache.c       |   2 +-
- fs/xfs/xfs_super.c           |   2 +-
- fs/xfs/xfs_trace.h           |  21 +--
- include/linux/falloc.h       |   6 +
- include/uapi/linux/falloc.h  |  17 ++
- 16 files changed, 747 insertions(+), 306 deletions(-)
---=20
+Dave.
+-- 
 Dave Chinner
 david@fromorbit.com
-
---envbJBWh7q8WU6mo
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
-
-iQIcBAEBAgAGBQJVEk6KAAoJEK3oKUf0dfod/nMP/2Q4A9viBM4t1wk/EDLKVorA
-CAQWwWm7fU6Bzf75WremdzYeYFfS15K4abatzrAnxgdS1fWIlym2IZNRBGR/SHli
-8PW2aLKOBTN7kgn9b4B02zrWF8NSr2H/pwAvH9ja80n9rdgx9ZWgZqBPzMKpmkM2
-cgG0HLaeGOVuqvfNaMjWuzU5rbKkGHQIhYs2KBNECwCWQfhw998hESKt8DLbHODt
-k0uC/YNva6jIoMT1qu0pB4cXYIG3p1P4XjqM+lCtjsUMtJ4JMxZYjJj42yvqY8sX
-s1tuw+EtccgGd/Q4yIo8ey/lQB/I3HVsCc1AmQXsln6cXdhfCxP9b2tdBdd0Zhv1
-DhfVi6Lb/A2lMl7PJW7T+t4zz7TUWyBMc4c3lnjJmgk7EBkzC7K9tCbgehNrWuc8
-pnP12FLaE20Ur8kS9AWxK4omt56EEmDUSwBntS1HF8oJ3mG+ou6HC/sHMVvoaL/3
-chXmWurGCsp4cANO/sTb37ssNSMq8ObuhbcDJaRw05ATMNIW/gwrnMMYNtQbjKCa
-FUiIOmzd2FmDScYhrjOjG9vz8QxAqSIMfZcmdNgjU27VUqgW8xhK7u9emdiW1Tx5
-Loqfb+4O1yeWts0gq8hlaw08p9TNknx5Z7P179ZUE+TuJQBDHaWG3u73ADmb0zkl
-TVp4d2XOGb7irYcZZqPc
-=VjfA
------END PGP SIGNATURE-----
-
---envbJBWh7q8WU6mo--
-
-
---===============6876013429942042092==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============6876013429942042092==--
