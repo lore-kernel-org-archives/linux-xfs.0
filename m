@@ -1,24 +1,32 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 4B6457F50
-	for <xfs@oss.sgi.com>; Wed, 25 Mar 2015 16:05:31 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 1C4268F8066
-	for <xfs@oss.sgi.com>; Wed, 25 Mar 2015 14:05:28 -0700 (PDT)
-Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
-	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	G4jHPHSPBpf6EiE0 for <xfs@oss.sgi.com>;
-	Wed, 25 Mar 2015 14:05:25 -0700 (PDT)
-Date: Thu, 26 Mar 2015 08:04:49 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 2/2] xfs: use larger in-core attr firstused field and
-	detect overflow
-Message-ID: <20150325210448.GA28621@dastard>
-References: <1424811024-24839-1-git-send-email-bfoster@redhat.com>
-	<1424811024-24839-3-git-send-email-bfoster@redhat.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id D61467F50
+	for <xfs@oss.sgi.com>; Thu, 26 Mar 2015 08:25:32 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 5FB20AC002
+	for <xfs@oss.sgi.com>; Thu, 26 Mar 2015 06:25:32 -0700 (PDT)
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
+	cuda.sgi.com with ESMTP id 7Wu1bI82zzgUCQKH (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 26 Mar 2015 06:25:30 -0700 (PDT)
+Received: from aserv0021.oracle.com (aserv0021.oracle.com [141.146.126.233])
+	by userp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with
+	ESMTP id t2QDPTKa008626
+	(version=TLSv1 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <xfs@oss.sgi.com>; Thu, 26 Mar 2015 13:25:30 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+	by aserv0021.oracle.com (8.13.8/8.13.8) with ESMTP id t2QDPTm1031171
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=FAIL)
+	for <xfs@oss.sgi.com>; Thu, 26 Mar 2015 13:25:29 GMT
+Received: from abhmp0014.oracle.com (abhmp0014.oracle.com [141.146.116.20])
+	by aserv0121.oracle.com (8.13.8/8.13.8) with ESMTP id t2QDPSDC016554
+	for <xfs@oss.sgi.com>; Thu, 26 Mar 2015 13:25:29 GMT
+Message-ID: <55140956.1050108@oracle.com>
+Date: Thu, 26 Mar 2015 16:27:50 +0300
+From: Alexander Tsvetkov <alexander.tsvetkov@oracle.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1424811024-24839-3-git-send-email-bfoster@redhat.com>
+Subject: mkfs error: "existing superblock read failed: Inappropriate ioctl
+	for device"
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,142 +35,38 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Tue, Feb 24, 2015 at 03:50:24PM -0500, Brian Foster wrote:
-> The on-disk xfs_attr3_leaf_hdr structure firstused field is 16-bit and
-> subject to overflow when fs block size is 64k. The field is typically
-> initialized to block size when an attr leaf block is initialized. This
-> problem is demonstrated by assert failures when running xfstests
-> generic/117 on an fs with 64k blocks.
-> 
-> To support the existing attr leaf block algorithms for insertion,
-> rebalance and entry movement, increase the size of the in-core firstused
-> field to 32-bit and handle the potential overflow on conversion to/from
-> the on-disk structure. If the overflow condition occurs, set a special
-> value in the firstused field that is translated back on header read. The
-> special value is only required in the case of an empty 64k attr block. A
-> value of zero is used because firstused is initialized to the block size
-> and grows backwards from there. Furthermore, the attribute block header
-> occupies the first bytes of the block. Thus, a value of zero has no
-> other legitimate meaning for this structure.
-> 
-> Signed-off-by: Brian Foster <bfoster@redhat.com>
-> ---
->  fs/xfs/libxfs/xfs_attr_leaf.c | 36 +++++++++++++++++++++++++++++++++---
->  fs/xfs/libxfs/xfs_da_format.h |  8 +++++++-
->  2 files changed, 40 insertions(+), 4 deletions(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
-> index 3337516..3277b40 100644
-> --- a/fs/xfs/libxfs/xfs_attr_leaf.c
-> +++ b/fs/xfs/libxfs/xfs_attr_leaf.c
-> @@ -106,6 +106,12 @@ xfs_attr3_leaf_hdr_from_disk(
->  		to->count = be16_to_cpu(hdr3->count);
->  		to->usedbytes = be16_to_cpu(hdr3->usedbytes);
->  		to->firstused = be16_to_cpu(hdr3->firstused);
-> +		if (to->firstused == XFS_ATTR3_LEAF_NULLOFF) {
-> +			/* only empty blocks when size overflows firstused! */
-> +			ASSERT(!to->count && !to->usedbytes &&
-> +			       geo->blksize > USHRT_MAX);
-> +			to->firstused = geo->blksize;
-> +		}
->  		to->holes = hdr3->holes;
+Hello,
 
-So if it's already zero on disk, we set it to the block size....
+I have the following error message: "existing superblock read failed: 
+Inappropriate ioctl for device"
+after attempt to make xfs image with "mkfs.xfs -f -m crc=1 -d 
+file=1,name=xfs.fs,size=32m":
 
->  		for (i = 0; i < XFS_ATTR_LEAF_MAPSIZE; i++) {
-> @@ -120,6 +126,12 @@ xfs_attr3_leaf_hdr_from_disk(
->  	to->count = be16_to_cpu(from->hdr.count);
->  	to->usedbytes = be16_to_cpu(from->hdr.usedbytes);
->  	to->firstused = be16_to_cpu(from->hdr.firstused);
-> +	if (to->firstused == XFS_ATTR3_LEAF_NULLOFF) {
-> +		/* only empty blocks when size overflows firstused! */
-> +		ASSERT(!to->count && !to->usedbytes &&
-> +		       geo->blksize > USHRT_MAX);
-> +		to->firstused = geo->blksize;
-> +	}
->  	to->holes = from->hdr.holes;
+"meta-data=xfs.fs                 isize=256    agcount=2, agsize=4096 blks
+          =                       sectsz=512   attr=2, projid32bit=1
+          =                       crc=0        finobt=0
+data     =                       bsize=4096   blocks=8192, imaxpct=25
+          =                       sunit=0      swidth=0 blks
+naming   =version 2              bsize=4096   ascii-ci=0 ftype=0
+log      =internal log           bsize=4096   blocks=853, version=2
+          =                       sectsz=512   sunit=0 blks, lazy-count=1
+realtime =none                   extsz=4096   blocks=0, rtextents=0
+existing superblock read failed: Inappropriate ioctl for device"
 
-And duplicate the code here as well.
+Filesystem is created and mounted as usually, xfs_repair passes, no 
+messages in the system log.
+Configuration: Fedora 20 x86_64 on vbox, kernel 4.0.0-rc5, xfsprogs 
+version 3.2.2.
 
->  	for (i = 0; i < XFS_ATTR_LEAF_MAPSIZE; i++) {
-> @@ -134,11 +146,29 @@ xfs_attr3_leaf_hdr_to_disk(
->  	struct xfs_attr_leafblock	*to,
->  	struct xfs_attr3_icleaf_hdr	*from)
->  {
-> -	int	i;
-> +	int				i;
-> +	uint16_t			firstused;
->  
->  	ASSERT(from->magic == XFS_ATTR_LEAF_MAGIC ||
->  	       from->magic == XFS_ATTR3_LEAF_MAGIC);
->  
-> +	/*
-> +	 * Handle overflow of the on-disk firstused field. firstused is
-> +	 * typically initialized to block size, but we only have 2-bytes in the
-> +	 * on-disk structure. This means a 64k block size overflows the field.
-> +	 *
-> +	 * firstused should only match block size for an empty attr block so set
-> +	 * a special value that the from_disk() variant can convert back to
-> +	 * blocksize in the in-core structure.
-> +	 */
-> +	if (from->firstused > USHRT_MAX) {
-> +		ASSERT(from->firstused == geo->blksize);
-> +		firstused = XFS_ATTR3_LEAF_NULLOFF;
-> +	} else {
-> +		ASSERT(from->firstused != 0);
-> +		firstused = from->firstused;
-> +	}
+Thanks,
+Alexander Tsvetkov
 
-Ok, that makes this a non-trivial sized function now :P
-
-I think helpers might be appropriate...
-
-> diff --git a/fs/xfs/libxfs/xfs_da_format.h b/fs/xfs/libxfs/xfs_da_format.h
-> index 0a49b02..d2d0498 100644
-> --- a/fs/xfs/libxfs/xfs_da_format.h
-> +++ b/fs/xfs/libxfs/xfs_da_format.h
-> @@ -725,7 +725,7 @@ struct xfs_attr3_icleaf_hdr {
->  	__uint16_t	magic;
->  	__uint16_t	count;
->  	__uint16_t	usedbytes;
-> -	__uint16_t	firstused;
-> +	__uint32_t	firstused;
-
-Needs a comment explaining why it's different to the on-disk
-structure.
-
->  	__u8		holes;
->  	struct {
->  		__uint16_t	base;
-> @@ -734,6 +734,12 @@ struct xfs_attr3_icleaf_hdr {
->  };
->  
->  /*
-> + * Special value to represent fs block size in the leaf header firstused field.
-> + * Only used when block size overflows the 2-bytes available on disk.
-> + */
-> +#define XFS_ATTR3_LEAF_NULLOFF	0
-> +
-
-I think declaring a pair of helper functions (e.g.
-xfs_attr3_leaf_firstused_to/from_disk) here would be a good idea.
-That way all the coversions, magic numbers and comments documenting
-the behaviour are in the one place in the on-disk format
-specification....
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
