@@ -1,30 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 847257F50
-	for <xfs@oss.sgi.com>; Thu, 26 Mar 2015 11:18:53 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id EE63FAC008
-	for <xfs@oss.sgi.com>; Thu, 26 Mar 2015 09:18:52 -0700 (PDT)
-Received: from mx142.netapp.com (mx142.netapp.com [216.240.21.19]) by
-	cuda.sgi.com with ESMTP id ZemrR211nr01o6Ea (version=TLSv1
-	cipher=RC4-SHA bits=128 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 26 Mar 2015 09:18:50 -0700 (PDT)
-Message-ID: <55143167.5030605@Netapp.com>
-Date: Thu, 26 Mar 2015 12:18:47 -0400
-From: Anna Schumaker <Anna.Schumaker@netapp.com>
-MIME-Version: 1.0
-Subject: Re: [PATCH v3 3/3] NFSD: Add support for encoding multiple segments
-References: <OF38D4D18B.19055EC2-ON88257E0D.0059BA03-88257E0D.005A781F@us.ibm.com>
-	<20150320151718.GD2036@fieldses.org>
-	<20150320162303.GA18786@infradead.org>
-	<20150320182621.GH2036@fieldses.org>
-	<CAFX2JfkybBPcqD6A8r-jOkPnkL26=NEuK3zhA6TLn-DVam+kfQ@mail.gmail.com>
-	<20150324174916.GA28906@infradead.org>
-	<55142405.3090000@Netapp.com>
-	<CAHQdGtTavsJ5k0taRCBi7CgP1NYjqQmgbQcE-yUkXQOKdQsGpA@mail.gmail.com>
-	<20150326153848.GB30482@fieldses.org> <551429F7.5050305@Netapp.com>
-	<20150326161154.GC30482@fieldses.org>
-In-Reply-To: <20150326161154.GC30482@fieldses.org>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 925F47F50
+	for <xfs@oss.sgi.com>; Thu, 26 Mar 2015 11:48:51 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 6D5B4304043
+	for <xfs@oss.sgi.com>; Thu, 26 Mar 2015 09:48:51 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id vQv8GFH1CHjGp8c2 (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 26 Mar 2015 09:48:50 -0700 (PDT)
+Received: from int-mx11.intmail.prod.int.phx2.redhat.com
+	(int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
+	by mx1.redhat.com (Postfix) with ESMTPS id 02EF1B6F2F
+	for <xfs@oss.sgi.com>; Thu, 26 Mar 2015 16:48:50 +0000 (UTC)
+Received: from bfoster.bfoster (dhcp-41-237.bos.redhat.com [10.18.41.237])
+	by int-mx11.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id t2QGmn16017249
+	for <xfs@oss.sgi.com>; Thu, 26 Mar 2015 12:48:49 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: [PATCH] mkfs: don't zero old superblocks if file was truncated
+Date: Thu, 26 Mar 2015 12:48:48 -0400
+Message-Id: <1427388528-62906-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,115 +29,76 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "J. Bruce Fields" <bfields@fieldses.org>
-Cc: "linux-nfs@vger.kernel.org" <linux-nfs@vger.kernel.org>, Trond Myklebust <trond.myklebust@primarydata.com>, Marc Eshel <eshel@us.ibm.com>, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, linux-nfs-owner@vger.kernel.org
+To: xfs@oss.sgi.com
 
-On 03/26/2015 12:11 PM, J. Bruce Fields wrote:
-> On Thu, Mar 26, 2015 at 11:47:03AM -0400, Anna Schumaker wrote:
->> On 03/26/2015 11:38 AM, J. Bruce Fields wrote:
->>> On Thu, Mar 26, 2015 at 11:32:25AM -0400, Trond Myklebust wrote:
->>>> On Thu, Mar 26, 2015 at 11:21 AM, Anna Schumaker
->>>> <Anna.Schumaker@netapp.com> wrote:
->>>>> Here are my updated numbers!  I tested with files 5G in size: one 100% data, one 100% hole, and one alternating between hole and data every 4K.  I collected data for both v4.1 and v4.2 with and without the READ_PLUS patches:
->>>>>
->>>>> ##########################
->>>>> #                        #
->>>>> #   Without READ_PLUS    #
->>>>> #                        #
->>>>> ##########################
->>>>>
->>>>>
->>>>> NFS v4.1:
->>>>>                             Trial
->>>>> |---------|---------|---------|---------|---------|---------|---------|
->>>>> |         |    1    |    2    |    3    |    4    |    5    | Average |
->>>>> |---------|---------|---------|---------|---------|---------|---------|
->>>>> |    Data |  8.723s |  7.243s |  8.252s |  6.997s |  6.980s |  7.639s |
->>>>> |    Hole |  5.271s |  5.224s |  5.060s |  4.897s |  5.321s |  5.155s |
->>>>> |   Mixed |  8.050s | 10.057s |  7.919s |  8.060s |  9.557s |  8.729s |
->>>>> |---------|---------|---------|---------|---------|---------|---------|
->>>>>
->>>>>
->>>>>
->>>>>
->>>>> NFS v4.2:
->>>>>                             Trial
->>>>> |---------|---------|---------|---------|---------|---------|---------|
->>>>> |         |    1    |    2    |    3    |    4    |    5    | Average |
->>>>> |---------|---------|---------|---------|---------|---------|---------|
->>>>> |    Data |  6.707s |  7.070s |  6.722s |  6.761s |  6.810s |  6.814s |
->>>>> |    Hole |  5.152s |  5.149s |  5.213s |  5.206s |  5.312s |  5.206s |
->>>>> |   Mixed |  7.979s |  7.985s |  8.177s |  7.772s |  8.280s |  8.039s |
->>>>> |---------|---------|---------|---------|---------|---------|---------|
->>>>>
->>>>>
->>>>>
->>>>>
->>>>>
->>>>> #######################
->>>>> #                     #
->>>>> #   With READ_PLUS    #
->>>>> #                     #
->>>>> #######################
->>>>>
->>>>>
->>>>> NFS v4.1:
->>>>>                             Trial
->>>>> |---------|---------|---------|---------|---------|---------|---------|
->>>>> |         |    1    |    2    |    3    |    4    |    5    | Average |
->>>>> |---------|---------|---------|---------|---------|---------|---------|
->>>>> |    Data |  9.082s |  7.008s |  7.116s |  6.771s |  7.902s |  7.576s |
->>>>> |    Hole |  5.333s |  5.358s |  5.380s |  5.161s |  5.282s |  5.303s |
->>>>> |   Mixed |  8.189s |  8.308s |  9.540s |  7.937s |  8.420s |  8.479s |
->>>>> |---------|---------|---------|---------|---------|---------|---------|
->>>>>
->>>>>
->>>>>
->>>>>
->>>>> NFS v4.2:
->>>>>                             Trial
->>>>> |---------|---------|---------|---------|---------|---------|---------|
->>>>> |         |    1    |    2    |    3    |    4    |    5    | Average |
->>>>> |---------|---------|---------|---------|---------|---------|---------|
->>>>> |    Data |  7.033s |  6.829s |  7.025s |  6.873s |  7.134s |  6.979s |
->>>>> |    Hole |  1.794s |  1.800s |  1.905s |  1.811s |  1.725s |  1.807s |
->>>>> |   Mixed |  7.590s |  8.777s |  9.423s | 10.366s |  8.024s |  8.836s |
->>>>> |---------|---------|---------|---------|---------|---------|---------|
->>>>>
->>>>
->>>> So there is a clear win in the 100% hole case here, but otherwise the
->>>> statistical fluctuations are dominating the numbers. Can you get us a
->>>> little more stats and then perhaps run the results through nfsometer?
->>>
->>> Also, could you describe the setup (are these still kvm's), and how
->>> you're clearing the cache between runs?
->>
->> These are still KVMs and my server is exporting an xfs filesystem.  I clear caches by running "echo 3 > /proc/sys/vm/drop_caches" on the server before every read, and I remount my client after reading each set of three files once.
-> 
-> What sort of device is the exported xfs filesystem on?  (Can't there
-> be a second level of caching on the guest, depending on how it's set
-> up?)
+If the force overwrite option is passed to mkfs, we attempt to zero old
+superblock metadata on the mkfs target. We attempt to read the primary
+superblock to identify the secondary superblocks.
 
-My host is a macbook pro running Archlinux, and I have all my virtio disks set to "cache mode = none".  Let me know if you were asking something different!
+If the mkfs target is a regular file, it is truncated on open and the
+secondary superblock zeroing operation returns a spurious and incorrect
+error message due to a 0-byte read:
 
+$ mkfs.xfs -f -d file=1,name=xfs.fs,size=32m
+...
+existing superblock read failed: Inappropriate ioctl for device
 
-> 
-> Can we get results on bare metal?  (The kvm test might be a good
-> worst-case for read_plus, as I'd expect bandwidth to be relatively high
-> compared to the cost of the extra memcpy's or seek calls.  But it also
-> seems more complicated.)
+Fix the error reporting in zero_old_xfs_structures() to only print an
+error string if the pread() call returns an error. Warn the user if the
+read doesn't match the sector size. Finally, detect the case where we
+know we've already truncated a regular file and skip the sb zeroing.
 
-I do all of my testing on kvm these days!  I'll see how difficult it is to setup refind with a custom kernel to test between my laptop and my desktop (or I could run the test between my raspberry pis!)
+Reported-by: Alexander Tsvetkov <alexander.tsvetkov@oracle.com>
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+---
+ mkfs/xfs_mkfs.c | 18 +++++++++++++++---
+ 1 file changed, 15 insertions(+), 3 deletions(-)
 
-Anna
-
-> 
-> --b.
-> 
+diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+index 484e7a8..5084d75 100644
+--- a/mkfs/xfs_mkfs.c
++++ b/mkfs/xfs_mkfs.c
+@@ -817,6 +817,13 @@ zero_old_xfs_structures(
+ 	__uint32_t		bsize;
+ 	int			i;
+ 	xfs_off_t		off;
++	int			tmp;
++
++	/*
++	 * We open regular files with O_TRUNC|O_CREAT. Nothing to do here...
++	 */
++	if (xi->disfile && xi->dcreat)
++		return;
+ 
+ 	/*
+ 	 * read in existing filesystem superblock, use its geometry
+@@ -830,11 +837,16 @@ zero_old_xfs_structures(
+ 	}
+ 	memset(buf, 0, new_sb->sb_sectsize);
+ 
+-	if (pread(xi->dfd, buf, new_sb->sb_sectsize, 0) != new_sb->sb_sectsize) {
++	tmp = pread(xi->dfd, buf, new_sb->sb_sectsize, 0);
++	if (tmp < 0) {
+ 		fprintf(stderr, _("existing superblock read failed: %s\n"),
+ 			strerror(errno));
+-		free(buf);
+-		return;
++		goto done;
++	}
++	if (tmp != new_sb->sb_sectsize) {
++		fprintf(stderr,
++	_("warning: could not read existing superblock, skip zeroing\n"));
++		goto done;
+ 	}
+ 	libxfs_sb_from_disk(&sb, buf);
+ 
+-- 
+1.9.3
 
 _______________________________________________
 xfs mailing list
