@@ -1,30 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id D14C37F50
-	for <xfs@oss.sgi.com>; Thu, 26 Mar 2015 15:03:37 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 5D6C6AC001
-	for <xfs@oss.sgi.com>; Thu, 26 Mar 2015 13:03:34 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id iIj9OPaV5KaBEOjH (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 26 Mar 2015 13:03:32 -0700 (PDT)
-Received: from int-mx10.intmail.prod.int.phx2.redhat.com
-	(int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id t2QK3VQP006184
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256
-	verify=FAIL) for <xfs@oss.sgi.com>; Thu, 26 Mar 2015 16:03:31 -0400
-Received: from liberator.sandeen.net (ovpn01.gateway.prod.ext.phx2.redhat.com
-	[10.5.9.1])
-	by int-mx10.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id t2QK3Uxq028936
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <xfs@oss.sgi.com>; Thu, 26 Mar 2015 16:03:31 -0400
-Message-ID: <55146612.1070306@redhat.com>
-Date: Thu, 26 Mar 2015 15:03:30 -0500
-From: Eric Sandeen <sandeen@redhat.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 0AFAC7F50
+	for <xfs@oss.sgi.com>; Thu, 26 Mar 2015 16:00:18 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id DE0D58F8037
+	for <xfs@oss.sgi.com>; Thu, 26 Mar 2015 14:00:14 -0700 (PDT)
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	0wbBxXV8ASdnFXKc for <xfs@oss.sgi.com>;
+	Thu, 26 Mar 2015 14:00:12 -0700 (PDT)
+Date: Fri, 27 Mar 2015 07:59:58 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] xfs: disallow ro->rw remount on norecovery mount
+Message-ID: <20150326205958.GD28129@dastard>
+References: <55146612.1070306@redhat.com>
 MIME-Version: 1.0
-Subject: [PATCH] xfs: disallow ro->rw remount on norecovery mount
+Content-Disposition: inline
+In-Reply-To: <55146612.1070306@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -37,37 +29,32 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs-oss <xfs@oss.sgi.com>
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-There's a bit of a loophole in norecovery mount handling right
-now: an initial mount must be readonly, but nothing prevents
-a mount -o remount,rw from producing a writable, unrecovered
-xfs filesystem.
+On Thu, Mar 26, 2015 at 03:03:30PM -0500, Eric Sandeen wrote:
+> There's a bit of a loophole in norecovery mount handling right
+> now: an initial mount must be readonly, but nothing prevents
+> a mount -o remount,rw from producing a writable, unrecovered
+> xfs filesystem.
+> 
+> It might be possible to try to perform a log recovery when this
+> is requested, but I'm not sure it's worth the effort.  For now,
+> simply disallow this sort of transition.
+> 
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 
-It might be possible to try to perform a log recovery when this
-is requested, but I'm not sure it's worth the effort.  For now,
-simply disallow this sort of transition.
+Good catch.
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
+Shouldn't this also check for a ro block device, and disallow the
+rw remount if the block dev is ro?
 
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index 8fcc4cc..a6cc7a9 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -1256,6 +1256,12 @@ xfs_fs_remount(
- 
- 	/* ro -> rw */
- 	if ((mp->m_flags & XFS_MOUNT_RDONLY) && !(*flags & MS_RDONLY)) {
-+		if (mp->m_flags & XFS_MOUNT_NORECOVERY) {
-+			xfs_warn(mp,
-+		"ro->rw transition prohibited on norecovery mount");
-+			return -EINVAL;
-+		}
-+
- 		mp->m_flags &= ~XFS_MOUNT_RDONLY;
- 
- 		/*
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
