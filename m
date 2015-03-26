@@ -1,32 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id D61467F50
-	for <xfs@oss.sgi.com>; Thu, 26 Mar 2015 08:25:32 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 5FB20AC002
-	for <xfs@oss.sgi.com>; Thu, 26 Mar 2015 06:25:32 -0700 (PDT)
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id 7Wu1bI82zzgUCQKH (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 26 Mar 2015 06:25:30 -0700 (PDT)
-Received: from aserv0021.oracle.com (aserv0021.oracle.com [141.146.126.233])
-	by userp1040.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with
-	ESMTP id t2QDPTKa008626
-	(version=TLSv1 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Thu, 26 Mar 2015 13:25:30 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-	by aserv0021.oracle.com (8.13.8/8.13.8) with ESMTP id t2QDPTm1031171
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=FAIL)
-	for <xfs@oss.sgi.com>; Thu, 26 Mar 2015 13:25:29 GMT
-Received: from abhmp0014.oracle.com (abhmp0014.oracle.com [141.146.116.20])
-	by aserv0121.oracle.com (8.13.8/8.13.8) with ESMTP id t2QDPSDC016554
-	for <xfs@oss.sgi.com>; Thu, 26 Mar 2015 13:25:29 GMT
-Message-ID: <55140956.1050108@oracle.com>
-Date: Thu, 26 Mar 2015 16:27:50 +0300
-From: Alexander Tsvetkov <alexander.tsvetkov@oracle.com>
+	by oss.sgi.com (Postfix) with ESMTP id E728A7F50
+	for <xfs@oss.sgi.com>; Thu, 26 Mar 2015 10:21:52 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 665E6AC001
+	for <xfs@oss.sgi.com>; Thu, 26 Mar 2015 08:21:49 -0700 (PDT)
+Received: from mx143.netapp.com (mx143.netapp.com [216.240.21.24]) by
+	cuda.sgi.com with ESMTP id DCqQFPXV0zLDiuru (version=TLSv1
+	cipher=RC4-SHA bits=128 verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 26 Mar 2015 08:21:44 -0700 (PDT)
+Message-ID: <55142405.3090000@Netapp.com>
+Date: Thu, 26 Mar 2015 11:21:41 -0400
+From: Anna Schumaker <Anna.Schumaker@netapp.com>
 MIME-Version: 1.0
-Subject: mkfs error: "existing superblock read failed: Inappropriate ioctl
-	for device"
+Subject: Re: [PATCH v3 3/3] NFSD: Add support for encoding multiple segments
+References: <20150318205554.GA10716@fieldses.org> <5509E824.6070006@Netapp.com>
+	<20150318211144.GB10716@fieldses.org>
+	<OFB111A6D8.016B8BD5-ON88257E0D.001D174D-88257E0D.005268D6@us.ibm.com>
+	<20150319153627.GA20852@fieldses.org>
+	<OF38D4D18B.19055EC2-ON88257E0D.0059BA03-88257E0D.005A781F@us.ibm.com>
+	<20150320151718.GD2036@fieldses.org>
+	<20150320162303.GA18786@infradead.org>
+	<20150320182621.GH2036@fieldses.org>
+	<CAFX2JfkybBPcqD6A8r-jOkPnkL26=NEuK3zhA6TLn-DVam+kfQ@mail.gmail.com>
+	<20150324174916.GA28906@infradead.org>
+In-Reply-To: <20150324174916.GA28906@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,38 +33,95 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: "J. Bruce Fields" <bfields@fieldses.org>, "linux-nfs@vger.kernel.org" <linux-nfs@vger.kernel.org>, Marc Eshel <eshel@us.ibm.com>, linux-nfs-owner@vger.kernel.org, xfs@oss.sgi.com
 
-Hello,
+Here are my updated numbers!  I tested with files 5G in size: one 100% data, one 100% hole, and one alternating between hole and data every 4K.  I collected data for both v4.1 and v4.2 with and without the READ_PLUS patches:
 
-I have the following error message: "existing superblock read failed: 
-Inappropriate ioctl for device"
-after attempt to make xfs image with "mkfs.xfs -f -m crc=1 -d 
-file=1,name=xfs.fs,size=32m":
+##########################
+#                        #
+#   Without READ_PLUS    #
+#                        #
+##########################
 
-"meta-data=xfs.fs                 isize=256    agcount=2, agsize=4096 blks
-          =                       sectsz=512   attr=2, projid32bit=1
-          =                       crc=0        finobt=0
-data     =                       bsize=4096   blocks=8192, imaxpct=25
-          =                       sunit=0      swidth=0 blks
-naming   =version 2              bsize=4096   ascii-ci=0 ftype=0
-log      =internal log           bsize=4096   blocks=853, version=2
-          =                       sectsz=512   sunit=0 blks, lazy-count=1
-realtime =none                   extsz=4096   blocks=0, rtextents=0
-existing superblock read failed: Inappropriate ioctl for device"
 
-Filesystem is created and mounted as usually, xfs_repair passes, no 
-messages in the system log.
-Configuration: Fedora 20 x86_64 on vbox, kernel 4.0.0-rc5, xfsprogs 
-version 3.2.2.
+NFS v4.1:
+                            Trial
+|---------|---------|---------|---------|---------|---------|---------|
+|         |    1    |    2    |    3    |    4    |    5    | Average |
+|---------|---------|---------|---------|---------|---------|---------|
+|    Data |  8.723s |  7.243s |  8.252s |  6.997s |  6.980s |  7.639s |
+|    Hole |  5.271s |  5.224s |  5.060s |  4.897s |  5.321s |  5.155s |
+|   Mixed |  8.050s | 10.057s |  7.919s |  8.060s |  9.557s |  8.729s |
+|---------|---------|---------|---------|---------|---------|---------|
 
-Thanks,
-Alexander Tsvetkov
 
+
+
+NFS v4.2:
+                            Trial
+|---------|---------|---------|---------|---------|---------|---------|
+|         |    1    |    2    |    3    |    4    |    5    | Average |
+|---------|---------|---------|---------|---------|---------|---------|
+|    Data |  6.707s |  7.070s |  6.722s |  6.761s |  6.810s |  6.814s |
+|    Hole |  5.152s |  5.149s |  5.213s |  5.206s |  5.312s |  5.206s |
+|   Mixed |  7.979s |  7.985s |  8.177s |  7.772s |  8.280s |  8.039s |
+|---------|---------|---------|---------|---------|---------|---------|
+
+
+
+
+
+#######################
+#                     #
+#   With READ_PLUS    #
+#                     #
+#######################
+
+
+NFS v4.1:
+                            Trial
+|---------|---------|---------|---------|---------|---------|---------|
+|         |    1    |    2    |    3    |    4    |    5    | Average |
+|---------|---------|---------|---------|---------|---------|---------|
+|    Data |  9.082s |  7.008s |  7.116s |  6.771s |  7.902s |  7.576s |
+|    Hole |  5.333s |  5.358s |  5.380s |  5.161s |  5.282s |  5.303s |
+|   Mixed |  8.189s |  8.308s |  9.540s |  7.937s |  8.420s |  8.479s |
+|---------|---------|---------|---------|---------|---------|---------|
+
+
+
+
+NFS v4.2:
+                            Trial
+|---------|---------|---------|---------|---------|---------|---------|
+|         |    1    |    2    |    3    |    4    |    5    | Average |
+|---------|---------|---------|---------|---------|---------|---------|
+|    Data |  7.033s |  6.829s |  7.025s |  6.873s |  7.134s |  6.979s |
+|    Hole |  1.794s |  1.800s |  1.905s |  1.811s |  1.725s |  1.807s |
+|   Mixed |  7.590s |  8.777s |  9.423s | 10.366s |  8.024s |  8.836s |
+|---------|---------|---------|---------|---------|---------|---------|
+
+
+
+On 03/24/2015 01:49 PM, Christoph Hellwig wrote:
+> On Tue, Mar 24, 2015 at 08:43:31AM -0400, Anna Schumaker wrote:
+>>> I don't know, and don't have profiles.  I'll either try to reproduce or
+>>> wait till Anna's back from vacation.
+>>
+>> I'm using whatever functions NFSD already uses for reading files,
+>> which I expect go through the VFS.  Is there a flag that controls
+>> cache behavior?
+> 
+> There's the O_DIRECT flag, but that's not what I mean.  If you just
+> wrote to it it's a cached read, if you did unmount the filesystem after
+> writing, or did an echo to /proc/sys/vm/drop_caches you get uncached
+> read behavior.
+> 
 
 _______________________________________________
 xfs mailing list
