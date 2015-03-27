@@ -1,28 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 7948E7F37
-	for <xfs@oss.sgi.com>; Fri, 27 Mar 2015 10:06:45 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 608728F8033
-	for <xfs@oss.sgi.com>; Fri, 27 Mar 2015 08:06:42 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id EKrOlNd3aZF46E44 (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 27 Mar 2015 08:06:37 -0700 (PDT)
-Received: from int-mx13.intmail.prod.int.phx2.redhat.com
-	(int-mx13.intmail.prod.int.phx2.redhat.com [10.5.11.26])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id t2RF6bHg019447
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256
-	verify=FAIL) for <xfs@oss.sgi.com>; Fri, 27 Mar 2015 11:06:37 -0400
-Received: from bfoster.bfoster (dhcp-41-237.bos.redhat.com [10.18.41.237])
-	by int-mx13.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id t2RF6a83028543
-	for <xfs@oss.sgi.com>; Fri, 27 Mar 2015 11:06:36 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH] db/check: handle zero inoalignmt correctly for large block
-	sizes
-Date: Fri, 27 Mar 2015 11:06:35 -0400
-Message-Id: <1427468795-49219-1-git-send-email-bfoster@redhat.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 645547F47
+	for <xfs@oss.sgi.com>; Fri, 27 Mar 2015 14:04:50 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 45F3B304039
+	for <xfs@oss.sgi.com>; Fri, 27 Mar 2015 12:04:47 -0700 (PDT)
+Received: from mx144.netapp.com (mx144.netapp.com [216.240.21.25]) by
+	cuda.sgi.com with ESMTP id mJrZcfsivc8tI4BM (version=TLSv1
+	cipher=RC4-SHA bits=128 verify=NO) for <xfs@oss.sgi.com>;
+	Fri, 27 Mar 2015 12:04:44 -0700 (PDT)
+Message-ID: <5515A9C8.6090400@Netapp.com>
+Date: Fri, 27 Mar 2015 15:04:40 -0400
+From: Anna Schumaker <Anna.Schumaker@netapp.com>
+MIME-Version: 1.0
+Subject: Re: [PATCH v3 3/3] NFSD: Add support for encoding multiple segments
+References: <OFB111A6D8.016B8BD5-ON88257E0D.001D174D-88257E0D.005268D6@us.ibm.com>	<20150319153627.GA20852@fieldses.org>	<OF38D4D18B.19055EC2-ON88257E0D.0059BA03-88257E0D.005A781F@us.ibm.com>	<20150320151718.GD2036@fieldses.org>	<20150320162303.GA18786@infradead.org>	<20150320182621.GH2036@fieldses.org>	<CAFX2JfkybBPcqD6A8r-jOkPnkL26=NEuK3zhA6TLn-DVam+kfQ@mail.gmail.com>	<20150324174916.GA28906@infradead.org>	<55142405.3090000@Netapp.com>	<CAHQdGtTavsJ5k0taRCBi7CgP1NYjqQmgbQcE-yUkXQOKdQsGpA@mail.gmail.com>	<20150326153848.GB30482@fieldses.org>	<551429F7.5050305@Netapp.com>	<CAHQdGtRCrrhdS8F4FjZFT-CnRRGm8eZR07v8WnK7bwagKgmPcw@mail.gmail.com>	<55142FB4.2070408@Netapp.com>
+	<CAHQdGtS_VuBOzRZjsiYdjZS8qMj2Sw65BYdFmWWf-LJhQL6yOg@mail.gmail.com>
+In-Reply-To: <CAHQdGtS_VuBOzRZjsiYdjZS8qMj2Sw65BYdFmWWf-LJhQL6yOg@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,57 +25,226 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Trond Myklebust <trond.myklebust@primarydata.com>
+Cc: Christoph Hellwig <hch@infradead.org>, "linux-nfs@vger.kernel.org" <linux-nfs@vger.kernel.org>, Marc Eshel <eshel@us.ibm.com>, xfs@oss.sgi.com, "J. Bruce Fields" <bfields@fieldses.org>, linux-nfs-owner@vger.kernel.org
 
-The check command prints a spurious error when sb_inoalignmt is zero but
-the sb align feature bit is set:
+I did two separate dd tests with the same 5G file from yesterday, and still using the same virtual machines.  First, I ran dd using direct IO for reads:
+	dd if=/nfs/file iflag=direct of=/dev/null bs=128K
 
-$ mkfs.xfs -f -bsize=16k <dev>
-$ xfs_db -c "check" <dev>
-sb versionnum extra align bit 80
+Mixed file performance was awful, so I reran without direct IO enabled for comparison:
+	dd if=/nfs/file iflag=nocache of=/dev/null oflag=nocache bs=128K
 
-This occurs because check determines whether to expect the alignment
-feature bit based on a non-zero inoalignmt (in init()). sb_inoalignmt of
-0 is expected for block sizes that are large enough for at least one
-full inode record (64 inodes), however. For example, when bsize >= 16k
-on v4 filesystems or >=32k on v5 filesystems.
+bs=128K sets the block size used by dd to the NFS rsize, without this dd will only read 512 bytes at a time and take forever to complete.
 
-Update the init() logic in the check command to detect this particular
-scenario. Set the in-memory feature bit if inoalignmt is zero and the
-block size is large enough for full inode records such that blockget_f()
-does not complain.
 
-Signed-off-by: Brian Foster <bfoster@redhat.com>
----
- db/check.c | 8 +++++++-
- 1 file changed, 7 insertions(+), 1 deletion(-)
+##########################
+#                        #
+#   Without READ_PLUS    #
+#                        #
+##########################
 
-diff --git a/db/check.c b/db/check.c
-index 4fd9fd0..c4c972f 100644
---- a/db/check.c
-+++ b/db/check.c
-@@ -1832,7 +1832,13 @@ init(
- 	error = sbver_err = serious_error = 0;
- 	fdblocks = frextents = icount = ifree = 0;
- 	sbversion = XFS_SB_VERSION_4;
--	if (mp->m_sb.sb_inoalignmt)
-+	/*
-+	 * Note that inoalignmt == 0 is valid when fsb size is large enough for
-+	 * at least one full inode record per block. Check this case explicitly.
-+	 */
-+	if (mp->m_sb.sb_inoalignmt ||
-+	    (xfs_sb_version_hasalign(&mp->m_sb) &&
-+	     mp->m_sb.sb_inopblock >= XFS_INODES_PER_CHUNK))
- 		sbversion |= XFS_SB_VERSION_ALIGNBIT;
- 	if ((mp->m_sb.sb_uquotino && mp->m_sb.sb_uquotino != NULLFSINO) ||
- 	    (mp->m_sb.sb_gquotino && mp->m_sb.sb_gquotino != NULLFSINO) ||
--- 
-1.9.3
+
+NFS v4.1, iflag=direct:
+                            Trial
+|---------|---------|---------|---------|---------|---------|---------|
+|         |    1    |    2    |    3    |    4    |    5    | Average |
+|---------|---------|---------|---------|---------|---------|---------|
+|    Data | 11.704s | 11.055s | 11.329s | 11.453s | 10.741s | 11.256s |
+|    Hole |  9.839s |  9.326s |  9.381s |  9.430s |  8.875s |  9.370s |
+|   Mixed | 19.150s | 19.468s | 18.650s | 18.537s | 19.312s | 19.023s |
+|---------|---------|---------|---------|---------|---------|---------|
+
+
+NFS v4.2, iflag=direct:
+                            Trial
+|---------|---------|---------|---------|---------|---------|---------|
+|         |    1    |    2    |    3    |    4    |    5    | Average |
+|---------|---------|---------|---------|---------|---------|---------|
+|    Data | 10.927s | 10.885s | 11.114s | 11.283s | 10.371s | 10.916s |
+|    Hole |  9.515s |  9.039s |  9.116s |  8.867s |  8.905s |  9.088s |
+|   Mixed | 19.149s | 18.656s | 19.400s | 18.834s | 20.041s | 19.216s |
+|---------|---------|---------|---------|---------|---------|---------|
+
+
+
+
+NFS v4.1, iflag=nocache oflag=nocache:
+                            Trial
+|---------|---------|---------|---------|---------|---------|---------|
+|         |    1    |    2    |    3    |    4    |    5    | Average |
+|---------|---------|---------|---------|---------|---------|---------|
+|    Data |  6.808s |  6.698s |  7.482s |  6.761s |  7.235s |  6.995s |
+|    Hole |  5.350s |  5.148s |  5.161s |  5.070s |  5.089s |  5.164s |
+|   Mixed |  9.316s |  8.731s |  9.072s |  9.145s |  8.627s |  8.978s |
+|---------|---------|---------|---------|---------|---------|---------|
+
+
+NFS v4.2, iflag=nocache oflag=nocache:
+                            Trial
+|---------|---------|---------|---------|---------|---------|---------|
+|         |    1    |    2    |    3    |    4    |    5    | Average |
+|---------|---------|---------|---------|---------|---------|---------|
+|    Data |  6.686s |  6.848s |  6.876s |  6.799s |  7.815s |  7.004s |
+|    Hole |  5.092s |  5.330s |  5.050s |  5.280s |  5.030s |  5.156s |
+|   Mixed |  8.142s |  7.897s |  8.040s |  7.960s |  8.050s |  8.018s |
+|---------|---------|---------|---------|---------|---------|---------|
+
+
+
+
+
+
+#######################
+#                     #
+#   With READ_PLUS    #
+#                     #
+#######################
+
+
+NFS v4.1, iflag=direct:
+                            Trial
+|---------|---------|---------|---------|---------|---------|---------|
+|         |    1    |    2    |    3    |    4    |    5    | Average |
+|---------|---------|---------|---------|---------|---------|---------|
+|    Data |  9.464s | 10.181s | 10.048s |  9.452s | 10.795s |  9.988s |
+|    Hole |  7.954s |  8.486s |  7.762s |  7.969s |  8.299s |  8.094s |
+|   Mixed | 19.037s | 18.323s | 18.965s | 18.156s | 19.185s | 18.733s |
+|---------|---------|---------|---------|---------|---------|---------|
+
+
+NFS v4.2, iflag=direct:
+                            Trial
+|---------|---------|---------|---------|---------|---------|---------|
+|         |    1    |    2    |    3    |    4    |    5    | Average |
+|---------|---------|---------|---------|---------|---------|---------|
+|    Data | 11.923s | 10.026s | 10.222s | 12.387s | 11.431s | 11.198s |
+|    Hole |  3.247s |  3.155s |  3.191s |  3.243s |  3.202s |  3.208s |
+|   Mixed | 54.677s | 54.697s | 52.978s | 53.704s | 54.054s | 54.022s |
+|---------|---------|---------|---------|---------|---------|---------|
+
+
+
+
+NFS v4.1, iflag=nocache oflag=nocache:
+                            Trial
+|---------|---------|---------|---------|---------|---------|---------|
+|         |    1    |    2    |    3    |    4    |    5    | Average |
+|---------|---------|---------|---------|---------|---------|---------|
+|    Data |  6.788s |  6.802s |  6.750s |  6.756s |  6.852s |  6.790s |
+|    Hole |  5.143s |  5.165s |  5.104s |  5.154s |  5.116s |  5.136s |
+|   Mixed |  7.902s |  7.693s |  9.169s |  8.186s |  9.157s |  8.421s |
+|---------|---------|---------|---------|---------|---------|---------|
+
+
+NFS v4.2, iflag=nocache oflag=nocache:
+                            Trial
+|---------|---------|---------|---------|---------|---------|---------|
+|         |    1    |    2    |    3    |    4    |    5    | Average |
+|---------|---------|---------|---------|---------|---------|---------|
+|    Data |  6.897s |  6.862s |  7.054s |  6.961s |  7.081s |  6.971s |
+|    Hole |  1.690s |  1.673s |  1.553s |  1.554s |  1.490s |  1.592s |
+|   Mixed |  9.009s |  7.840s |  7.661s |  8.945s |  7.649s |  8.221s |
+|---------|---------|---------|---------|---------|---------|---------|
+
+
+On 03/26/2015 12:13 PM, Trond Myklebust wrote:
+> On Thu, Mar 26, 2015 at 12:11 PM, Anna Schumaker
+> <Anna.Schumaker@netapp.com> wrote:
+>> On 03/26/2015 12:06 PM, Trond Myklebust wrote:
+>>> On Thu, Mar 26, 2015 at 11:47 AM, Anna Schumaker
+>>> <Anna.Schumaker@netapp.com> wrote:
+>>>> On 03/26/2015 11:38 AM, J. Bruce Fields wrote:
+>>>>> On Thu, Mar 26, 2015 at 11:32:25AM -0400, Trond Myklebust wrote:
+>>>>>> On Thu, Mar 26, 2015 at 11:21 AM, Anna Schumaker
+>>>>>> <Anna.Schumaker@netapp.com> wrote:
+>>>>>>> Here are my updated numbers!  I tested with files 5G in size: one 100% data, one 100% hole, and one alternating between hole and data every 4K.  I collected data for both v4.1 and v4.2 with and without the READ_PLUS patches:
+>>>>>>>
+>>>>>>> ##########################
+>>>>>>> #                        #
+>>>>>>> #   Without READ_PLUS    #
+>>>>>>> #                        #
+>>>>>>> ##########################
+>>>>>>>
+>>>>>>>
+>>>>>>> NFS v4.1:
+>>>>>>>                             Trial
+>>>>>>> |---------|---------|---------|---------|---------|---------|---------|
+>>>>>>> |         |    1    |    2    |    3    |    4    |    5    | Average |
+>>>>>>> |---------|---------|---------|---------|---------|---------|---------|
+>>>>>>> |    Data |  8.723s |  7.243s |  8.252s |  6.997s |  6.980s |  7.639s |
+>>>>>>> |    Hole |  5.271s |  5.224s |  5.060s |  4.897s |  5.321s |  5.155s |
+>>>>>>> |   Mixed |  8.050s | 10.057s |  7.919s |  8.060s |  9.557s |  8.729s |
+>>>>>>> |---------|---------|---------|---------|---------|---------|---------|
+>>>>>>>
+>>>>>>>
+>>>>>>>
+>>>>>>>
+>>>>>>> NFS v4.2:
+>>>>>>>                             Trial
+>>>>>>> |---------|---------|---------|---------|---------|---------|---------|
+>>>>>>> |         |    1    |    2    |    3    |    4    |    5    | Average |
+>>>>>>> |---------|---------|---------|---------|---------|---------|---------|
+>>>>>>> |    Data |  6.707s |  7.070s |  6.722s |  6.761s |  6.810s |  6.814s |
+>>>>>>> |    Hole |  5.152s |  5.149s |  5.213s |  5.206s |  5.312s |  5.206s |
+>>>>>>> |   Mixed |  7.979s |  7.985s |  8.177s |  7.772s |  8.280s |  8.039s |
+>>>>>>> |---------|---------|---------|---------|---------|---------|---------|
+>>>>>>>
+>>>>>>>
+>>>>>>>
+>>>>>>>
+>>>>>>>
+>>>>>>> #######################
+>>>>>>> #                     #
+>>>>>>> #   With READ_PLUS    #
+>>>>>>> #                     #
+>>>>>>> #######################
+>>>>>>>
+>>>>>>>
+>>>>>>> NFS v4.1:
+>>>>>>>                             Trial
+>>>>>>> |---------|---------|---------|---------|---------|---------|---------|
+>>>>>>> |         |    1    |    2    |    3    |    4    |    5    | Average |
+>>>>>>> |---------|---------|---------|---------|---------|---------|---------|
+>>>>>>> |    Data |  9.082s |  7.008s |  7.116s |  6.771s |  7.902s |  7.576s |
+>>>>>>> |    Hole |  5.333s |  5.358s |  5.380s |  5.161s |  5.282s |  5.303s |
+>>>>>>> |   Mixed |  8.189s |  8.308s |  9.540s |  7.937s |  8.420s |  8.479s |
+>>>>>>> |---------|---------|---------|---------|---------|---------|---------|
+>>>>>>>
+>>>>>>>
+>>>>>>>
+>>>>>>>
+>>>>>>> NFS v4.2:
+>>>>>>>                             Trial
+>>>>>>> |---------|---------|---------|---------|---------|---------|---------|
+>>>>>>> |         |    1    |    2    |    3    |    4    |    5    | Average |
+>>>>>>> |---------|---------|---------|---------|---------|---------|---------|
+>>>>>>> |    Data |  7.033s |  6.829s |  7.025s |  6.873s |  7.134s |  6.979s |
+>>>>>>> |    Hole |  1.794s |  1.800s |  1.905s |  1.811s |  1.725s |  1.807s |
+>>>>>>> |   Mixed |  7.590s |  8.777s |  9.423s | 10.366s |  8.024s |  8.836s |
+>>>>>>> |---------|---------|---------|---------|---------|---------|---------|
+>>>>>>>
+>>>>>>
+>>>>>> So there is a clear win in the 100% hole case here, but otherwise the
+>>>>>> statistical fluctuations are dominating the numbers. Can you get us a
+>>>>>> little more stats and then perhaps run the results through nfsometer?
+>>>>>
+>>>>> Also, could you describe the setup (are these still kvm's), and how
+>>>>> you're clearing the cache between runs?
+>>>>
+>>>> These are still KVMs and my server is exporting an xfs filesystem.  I clear caches by running "echo 3 > /proc/sys/vm/drop_caches" on the server before every read, and I remount my client after reading each set of three files once.
+>>>
+>>> I agree that you have to use the 'drop_caches' interface on the
+>>> server, but why not just use O_DIRECT on the clients?
+>>
+>> I've been reading by using cat from my test shell script: `time cat /nfs/file > /dev/null`.  I can write something to read files with O_DIRECT if that would be more useful!
+>>
+> 
+> 'dd' can do that for you if the appropriate incantations are performed.
+> 
 
 _______________________________________________
 xfs mailing list
