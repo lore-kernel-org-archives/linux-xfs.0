@@ -1,19 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 018AE7F3F
-	for <xfs@oss.sgi.com>; Mon, 30 Mar 2015 09:53:30 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id CB98E7F4E
+	for <xfs@oss.sgi.com>; Mon, 30 Mar 2015 10:12:48 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id D295E8F8037
-	for <xfs@oss.sgi.com>; Mon, 30 Mar 2015 07:53:29 -0700 (PDT)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id BC07A304032
+	for <xfs@oss.sgi.com>; Mon, 30 Mar 2015 08:12:48 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id vjj0rJjpc1DCkJdB (version=TLSv1
+	cuda.sgi.com with ESMTP id z2LY6gHEJy3q3o3G (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 30 Mar 2015 07:53:28 -0700 (PDT)
+	Mon, 30 Mar 2015 08:12:47 -0700 (PDT)
+Received: from int-mx11.intmail.prod.int.phx2.redhat.com
+	(int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id t2UFCkCK010825
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256
+	verify=FAIL) for <xfs@oss.sgi.com>; Mon, 30 Mar 2015 11:12:46 -0400
+Received: from bfoster.bfoster (dhcp-41-237.bos.redhat.com [10.18.41.237])
+	by int-mx11.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id t2UFCkLB025477
+	for <xfs@oss.sgi.com>; Mon, 30 Mar 2015 11:12:46 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH] xfsprogs/repair: only check secondary sb->sb_pquotino for v5
-	superblocks
-Date: Mon, 30 Mar 2015 10:53:26 -0400
-Message-Id: <1427727206-14280-1-git-send-email-bfoster@redhat.com>
+Subject: [PATCH v2 3/3] xfs: kill unnecessary firstused overflow check on
+	attr3 leaf removal
+Date: Mon, 30 Mar 2015 11:12:45 -0400
+Message-Id: <1427728365-15842-4-git-send-email-bfoster@redhat.com>
+In-Reply-To: <1427728365-15842-1-git-send-email-bfoster@redhat.com>
+References: <1427728365-15842-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,61 +39,38 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
-Cc: gux.fnst@cn.fujitsu.com
 
-xfs_repair scans for garbage data beyond the last valid superblock field
-for the particular sb version in secondary_sb_wack(). If any non-zero
-data is detected, the entire range is reset to zero. Subsequently,
-various valid superblock fields are checked for valid/expected data.
+xfs_attr3_leaf_remove() removes an attribute from an attr leaf block. If
+the attribute nameval data happens to be at the start of the nameval
+region, a new start offset (firstused) for the region is calculated
+(since the region grows from the tail of the block to the start). Once
+the new firstused is calculated, it is checked for zero in an apparent
+overflow check.
 
-The sb_pquotino field is checked unconditionally as part of this
-sequence even though it is a v5 only field. As a result, repair
-complains about a non-null project quota field if any garbage data
-exists for a v4 secondary sb. This is reproduced by xfs/070 against a v4
-superblock and is also easily reproduced manually as follows:
+Now that the in-core firstused is 32-bit, overflow is not possible and
+this check can be removed. Since the purpose for this check is not
+documented and appears to exist since the port to Linux, be conservative
+and replace it with an assert.
 
-$ mkfs.xfs -f -m crc=0 <dev>
-$ xfs_db -x -c "sb 3" -c "write lsn 1" <dev>
-$ xfs_repair <dev>
-...
-zeroing unused portion of secondary superblock (AG #3)
-non-null project quota inode field in superblock 3
-...
-
-This occurs because the garbage data detection mechanism has reset
-sb->sb_pquotino to 0 while the validity check expects a value of
-NULLFSINO.
-
-Update secondary_sb_wack() to only check sb->sb_pquotino for validity on
-supers where it is a valid field. If it is anything other than 0 on
-pre-v5 superblocks, it is explicitly reset to 0 by the garbage data
-checks earlier in the function.
-
-Reported-by: Xing Gu <gux.fnst@cn.fujitsu.com>
 Signed-off-by: Brian Foster <bfoster@redhat.com>
 ---
- repair/agheader.c | 8 +++++++-
- 1 file changed, 7 insertions(+), 1 deletion(-)
+ fs/xfs/libxfs/xfs_attr_leaf.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-diff --git a/repair/agheader.c b/repair/agheader.c
-index 416dbd8..5dbf992 100644
---- a/repair/agheader.c
-+++ b/repair/agheader.c
-@@ -377,7 +377,13 @@ secondary_sb_wack(
- 			rval |= XR_AG_SB_SEC;
+diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
+index 149ef3f..04e79d5 100644
+--- a/fs/xfs/libxfs/xfs_attr_leaf.c
++++ b/fs/xfs/libxfs/xfs_attr_leaf.c
+@@ -1996,8 +1996,7 @@ xfs_attr3_leaf_remove(
+ 				tmp = be16_to_cpu(entry->nameidx);
+ 		}
+ 		ichdr.firstused = tmp;
+-		if (!ichdr.firstused)
+-			ichdr.firstused = tmp - XFS_ATTR_LEAF_NAME_ALIGN;
++		ASSERT(ichdr.firstused != 0);
+ 	} else {
+ 		ichdr.holes = 1;	/* mark as needing compaction */
  	}
- 
--	if (sb->sb_inprogress == 1 && sb->sb_pquotino != NULLFSINO)  {
-+	/*
-+	 * Note that sb_pquotino is not considered a valid sb field for pre-v5
-+	 * superblocks. If it is anything other than 0 it is considered garbage
-+	 * data beyond the valid sb and explicitly zeroed above.
-+	 */
-+	if (xfs_sb_version_has_pquotino(&mp->m_sb) &&
-+	    sb->sb_inprogress == 1 && sb->sb_pquotino != NULLFSINO)  {
- 		if (!no_modify) {
- 			sb->sb_pquotino = 0;
- 			dsb->sb_pquotino = 0;
 -- 
 1.9.3
 
