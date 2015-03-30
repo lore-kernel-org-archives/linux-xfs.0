@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 4A2F87F58
-	for <xfs@oss.sgi.com>; Mon, 30 Mar 2015 14:40:25 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id C9C6C7F5A
+	for <xfs@oss.sgi.com>; Mon, 30 Mar 2015 14:45:13 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 4455D8F8050
-	for <xfs@oss.sgi.com>; Mon, 30 Mar 2015 12:40:22 -0700 (PDT)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id B1B8C304032
+	for <xfs@oss.sgi.com>; Mon, 30 Mar 2015 12:45:13 -0700 (PDT)
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	QayyMQMixmDkHU0J for <xfs@oss.sgi.com>;
-	Mon, 30 Mar 2015 12:40:19 -0700 (PDT)
-Date: Tue, 31 Mar 2015 06:40:16 +1100
+	jj5ffespHNowqm8E for <xfs@oss.sgi.com>;
+	Mon, 30 Mar 2015 12:45:11 -0700 (PDT)
+Date: Tue, 31 Mar 2015 06:45:10 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: deadlock between &type->i_mutex_dir_key#4 and &xfs_dir_ilock_class
-Message-ID: <20150330194016.GC28621@dastard>
-References: <5518FB4A.4070200@monom.org>
+Subject: Re: Slightly Urgent:  XFS No Space Left On Device
+Message-ID: <20150330194510.GD28621@dastard>
+References: <551993CF.4060908@binghamton.edu>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <5518FB4A.4070200@monom.org>
+In-Reply-To: <551993CF.4060908@binghamton.edu>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,56 +29,49 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Daniel Wagner <wagi@monom.org>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com
+To: Dave Hall <kdhall@binghamton.edu>
+Cc: xfs@oss.sgi.com
 
-On Mon, Mar 30, 2015 at 09:29:14AM +0200, Daniel Wagner wrote:
-> Hi,
+On Mon, Mar 30, 2015 at 02:19:59PM -0400, Dave Hall wrote:
+> Hello,
 > 
-> Just my test box booted 4.0.0-rc6 and I was greeted by:
+> I have an XFS file system that's getting 'No space left on device'
+> errors.  xfs_fsr also complains of 'No space left'.  The XFS Info
+> is:
+> 
+>    # xfs_info /data
+>    meta-data=/dev/sdb1              isize=256    agcount=19,
+>    agsize=268435440 blks
+>              =                       sectsz=512   attr=2
+>    data     =                       bsize=4096 blocks=4882431488, imaxpct=5
+>              =                       sunit=16     swidth=160 blks
+>    naming   =version 2              bsize=4096   ascii-ci=0
+>    log      =internal               bsize=4096   blocks=521728, version=2
+>              =                       sectsz=512   sunit=16 blks,
+>    lazy-count=1
+>    realtime =none                   extsz=4096   blocks=0, rtextents=0
+> 
+>    # df -h .
+>    Filesystem            Size  Used Avail Use% Mounted on
+>    /dev/sdb1              19T   12T  7.0T  62% /data
+>    # df -ih .
+>    Filesystem            Inodes   IUsed   IFree IUse% Mounted on
+>    /dev/sdb1               3.7G    4.7M    3.7G    1% /data
 > 
 > 
-> [Mar30 10:10] ======================================================
-> [  +0.000043] [ INFO: possible circular locking dependency detected ]
-> [  +0.000045] 4.0.0-rc6 #32 Not tainted
-> [  +0.000027] -------------------------------------------------------
-> [  +0.000042] ls/1709 is trying to acquire lock:
-> [  +0.000034]  (&mm->mmap_sem){++++++}, at: [<ffffffff811e62cf>] might_fault+0x5f/0xb0
-> [  +0.000083] 
-> but task is already holding lock:
-> [  +0.000043]  (&xfs_dir_ilock_class){.+.+..}, at: [<ffffffffa0424902>] xfs_ilock+0xc2/0x130 [xfs]
-> [  +0.000110] 
-> which lock already depends on the new lock.
+> xfs_db freesp shows that AG 0 seems to be full.  I've included the
+> freesp for the first few AGs, but the rest seem pretty consistent
+> with AGs 1 - 4 that I've included below.
+> 
+>    xfs_db> freesp -s -e 1000000000 -a 0
 
-No deadlock. Problem is the shmem code, which is doing inode
-instantiation under the mmap_sem, thereby inverting the entire vfs
-locking order w.r.t. to the mmap_sem....
+Can you please drop the "-e 1000000" from these commands and post it
+again?  The histogram of differing free space sizes is information
+we actually need to diagnose the problem...
 
-i.e. this one:
-
-> -> #1 (&isec->lock){+.+.+.}:
-> [  +0.000045]        [<ffffffff810ef987>] lock_acquire+0xc7/0x160
-> [  +0.000045]        [<ffffffff817e273d>] mutex_lock_nested+0x7d/0x450
-> [  +0.000045]        [<ffffffff8135a755>] inode_doinit_with_dentry+0xc5/0x6a0
-> [  +0.000050]        [<ffffffff8135b91c>] selinux_d_instantiate+0x1c/0x20
-> [  +0.001072]        [<ffffffff8134ef9b>] security_d_instantiate+0x1b/0x30
-> [  +0.001056]        [<ffffffff81255454>] d_instantiate+0x54/0x80
-> [  +0.001052]        [<ffffffff811d24bc>] __shmem_file_setup+0xdc/0x250
-> [  +0.001059]        [<ffffffff811d5fd8>] shmem_zero_setup+0x28/0x70
-> [  +0.001074]        [<ffffffff811f2168>] mmap_region+0x5d8/0x5f0
-> [  +0.001045]        [<ffffffff811f249b>] do_mmap_pgoff+0x31b/0x400
-> [  +0.001040]        [<ffffffff811d6540>] vm_mmap_pgoff+0xb0/0xf0
-> [  +0.001015]        [<ffffffff811f07e6>] SyS_mmap_pgoff+0x116/0x2b0
-> [  +0.001009]        [<ffffffff8101bc12>] SyS_mmap+0x22/0x30
-> [  +0.001000]        [<ffffffff817e7589>] system_call_fastpath+0x12/0x17
-
-vm_mmap_pgoff() takes the mmap_sem.
-
-> I tried to find out if this was reported before but I
-> haven't found anything. If I missed it I am sorry for the noise.
-
-It's been reported so many times I need a FAQ entry for it. problem
-is, i can't fix it easily because it's a shmem bug...
+Also, kernel version, mount options and machine details are
+necessary to determine why AG0 might be full (e.g. allocation policy
+in use).
 
 Cheers,
 
