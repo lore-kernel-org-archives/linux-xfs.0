@@ -1,21 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 6AA917F58
-	for <xfs@oss.sgi.com>; Mon, 30 Mar 2015 13:20:06 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 479218F804C
-	for <xfs@oss.sgi.com>; Mon, 30 Mar 2015 11:20:03 -0700 (PDT)
-Received: from mail-qg0-f45.google.com (mail-qg0-f45.google.com
-	[209.85.192.45]) by cuda.sgi.com with ESMTP id kX7oLldLUP4IjtEq
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 30 Mar 2015 11:20:00 -0700 (PDT)
-Received: by qgh3 with SMTP id 3so180795766qgh.2
-	for <xfs@oss.sgi.com>; Mon, 30 Mar 2015 11:20:00 -0700 (PDT)
-Message-ID: <551993CF.4060908@binghamton.edu>
-Date: Mon, 30 Mar 2015 14:19:59 -0400
-From: Dave Hall <kdhall@binghamton.edu>
+	by oss.sgi.com (Postfix) with ESMTP id 4A2F87F58
+	for <xfs@oss.sgi.com>; Mon, 30 Mar 2015 14:40:25 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 4455D8F8050
+	for <xfs@oss.sgi.com>; Mon, 30 Mar 2015 12:40:22 -0700 (PDT)
+Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
+	[150.101.137.145]) by cuda.sgi.com with ESMTP id
+	QayyMQMixmDkHU0J for <xfs@oss.sgi.com>;
+	Mon, 30 Mar 2015 12:40:19 -0700 (PDT)
+Date: Tue, 31 Mar 2015 06:40:16 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: deadlock between &type->i_mutex_dir_key#4 and &xfs_dir_ilock_class
+Message-ID: <20150330194016.GC28621@dastard>
+References: <5518FB4A.4070200@monom.org>
 MIME-Version: 1.0
-Subject: Slightly Urgent:  XFS No Space Left On Device
+Content-Disposition: inline
+In-Reply-To: <5518FB4A.4070200@monom.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,186 +25,69 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============8063043820410585139=="
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Daniel Wagner <wagi@monom.org>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com
 
-This is a multi-part message in MIME format.
---===============8063043820410585139==
-Content-Type: multipart/alternative;
- boundary="------------070403070501000802050607"
+On Mon, Mar 30, 2015 at 09:29:14AM +0200, Daniel Wagner wrote:
+> Hi,
+> 
+> Just my test box booted 4.0.0-rc6 and I was greeted by:
+> 
+> 
+> [Mar30 10:10] ======================================================
+> [  +0.000043] [ INFO: possible circular locking dependency detected ]
+> [  +0.000045] 4.0.0-rc6 #32 Not tainted
+> [  +0.000027] -------------------------------------------------------
+> [  +0.000042] ls/1709 is trying to acquire lock:
+> [  +0.000034]  (&mm->mmap_sem){++++++}, at: [<ffffffff811e62cf>] might_fault+0x5f/0xb0
+> [  +0.000083] 
+> but task is already holding lock:
+> [  +0.000043]  (&xfs_dir_ilock_class){.+.+..}, at: [<ffffffffa0424902>] xfs_ilock+0xc2/0x130 [xfs]
+> [  +0.000110] 
+> which lock already depends on the new lock.
 
-This is a multi-part message in MIME format.
---------------070403070501000802050607
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+No deadlock. Problem is the shmem code, which is doing inode
+instantiation under the mmap_sem, thereby inverting the entire vfs
+locking order w.r.t. to the mmap_sem....
 
-Hello,
+i.e. this one:
 
-I have an XFS file system that's getting 'No space left on device' 
-errors.  xfs_fsr also complains of 'No space left'.  The XFS Info is:
+> -> #1 (&isec->lock){+.+.+.}:
+> [  +0.000045]        [<ffffffff810ef987>] lock_acquire+0xc7/0x160
+> [  +0.000045]        [<ffffffff817e273d>] mutex_lock_nested+0x7d/0x450
+> [  +0.000045]        [<ffffffff8135a755>] inode_doinit_with_dentry+0xc5/0x6a0
+> [  +0.000050]        [<ffffffff8135b91c>] selinux_d_instantiate+0x1c/0x20
+> [  +0.001072]        [<ffffffff8134ef9b>] security_d_instantiate+0x1b/0x30
+> [  +0.001056]        [<ffffffff81255454>] d_instantiate+0x54/0x80
+> [  +0.001052]        [<ffffffff811d24bc>] __shmem_file_setup+0xdc/0x250
+> [  +0.001059]        [<ffffffff811d5fd8>] shmem_zero_setup+0x28/0x70
+> [  +0.001074]        [<ffffffff811f2168>] mmap_region+0x5d8/0x5f0
+> [  +0.001045]        [<ffffffff811f249b>] do_mmap_pgoff+0x31b/0x400
+> [  +0.001040]        [<ffffffff811d6540>] vm_mmap_pgoff+0xb0/0xf0
+> [  +0.001015]        [<ffffffff811f07e6>] SyS_mmap_pgoff+0x116/0x2b0
+> [  +0.001009]        [<ffffffff8101bc12>] SyS_mmap+0x22/0x30
+> [  +0.001000]        [<ffffffff817e7589>] system_call_fastpath+0x12/0x17
 
-    # xfs_info /data
-    meta-data=/dev/sdb1              isize=256    agcount=19,
-    agsize=268435440 blks
-              =                       sectsz=512   attr=2
-    data     =                       bsize=4096 blocks=4882431488, imaxpct=5
-              =                       sunit=16     swidth=160 blks
-    naming   =version 2              bsize=4096   ascii-ci=0
-    log      =internal               bsize=4096   blocks=521728, version=2
-              =                       sectsz=512   sunit=16 blks,
-    lazy-count=1
-    realtime =none                   extsz=4096   blocks=0, rtextents=0
+vm_mmap_pgoff() takes the mmap_sem.
 
-    # df -h .
-    Filesystem            Size  Used Avail Use% Mounted on
-    /dev/sdb1              19T   12T  7.0T  62% /data
-    # df -ih .
-    Filesystem            Inodes   IUsed   IFree IUse% Mounted on
-    /dev/sdb1               3.7G    4.7M    3.7G    1% /data
+> I tried to find out if this was reported before but I
+> haven't found anything. If I missed it I am sorry for the noise.
 
+It's been reported so many times I need a FAQ entry for it. problem
+is, i can't fix it easily because it's a shmem bug...
 
-xfs_db freesp shows that AG 0 seems to be full.  I've included the 
-freesp for the first few AGs, but the rest seem pretty consistent with 
-AGs 1 - 4 that I've included below.
+Cheers,
 
-    xfs_db> freesp -s -e 1000000000 -a 0
-        from      to extents  blocks    pct
-           1 268435440    1930    3795 100.00
-    total free extents 1930
-    total free blocks 3795
-    average free extent size 1.96632
-    xfs_db> freesp -s -e 1000000000 -a 1
-        from      to extents  blocks    pct
-           1 268435440  287006 173832255 100.00
-    total free extents 287006
-    total free blocks 173832255
-    average free extent size 605.675
-    xfs_db> freesp -s -e 1000000000 -a 2
-        from      to extents  blocks    pct
-           1 268435440  272425 94291252 100.00
-    total free extents 272425
-    total free blocks 94291252
-    average free extent size 346.118
-    xfs_db> freesp -s -e 1000000000 -a 3
-        from      to extents  blocks    pct
-           1 268435440  286421 110208404 100.00
-    total free extents 286421
-    total free blocks 110208404
-    average free extent size 384.778
-    xfs_db> freesp -s -e 1000000000 -a 4
-        from      to extents  blocks    pct
-           1 268435440  277220 107118347 100.00
-    total free extents 277220
-    total free blocks 107118347
-    average free extent size 386.402
-    xfs_db>
-
-Is there any way to figure out which files/directories are clogging up 
-AG 0?  Any other ways to abate this issue?  Any way to assure 
-proportional usage of AGs?
-
-Thanks.
-
--Dave
-
---------------070403070501000802050607
-Content-Type: text/html; charset=utf-8
-Content-Transfer-Encoding: 8bit
-
-<html>
-  <head>
-
-    <meta http-equiv="content-type" content="text/html; charset=utf-8">
-  </head>
-  <body bgcolor="#FFFFFF" text="#000000">
-    Hello,<br>
-    <br>
-    I have an XFS file system that's getting 'No space left on device'
-    errors.  xfs_fsr also complains of 'No space left'.  The XFS Info
-    is:<br>
-    <br>
-    <blockquote><tt># xfs_info /data</tt><br>
-      <tt>meta-data=/dev/sdb1              isize=256    agcount=19,
-        agsize=268435440 blks</tt><br>
-      <tt>         =                       sectsz=512   attr=2</tt><br>
-      <tt>data     =                       bsize=4096  
-        blocks=4882431488, imaxpct=5</tt><br>
-      <tt>         =                       sunit=16     swidth=160 blks</tt><br>
-      <tt>naming   =version 2              bsize=4096   ascii-ci=0</tt><br>
-      <tt>log      =internal               bsize=4096   blocks=521728,
-        version=2</tt><br>
-      <tt>         =                       sectsz=512   sunit=16 blks,
-        lazy-count=1</tt><br>
-      <tt>realtime =none                   extsz=4096   blocks=0,
-        rtextents=0</tt><br>
-      <br>
-      # df -h .<br>
-      Filesystem            Size  Used Avail Use% Mounted on<br>
-      /dev/sdb1              19T   12T  7.0T  62% /data<br>
-      # df -ih .<br>
-      Filesystem            Inodes   IUsed   IFree IUse% Mounted on<br>
-      /dev/sdb1               3.7G    4.7M    3.7G    1% /data<br>
-    </blockquote>
-    <br>
-    xfs_db freesp shows that AG 0 seems to be full.  I've included the
-    freesp for the first few AGs, but the rest seem pretty consistent
-    with AGs 1 - 4 that I've included below.  <br>
-    <blockquote><tt>xfs_db&gt; freesp -s -e 1000000000 -a 0</tt><br>
-      <tt>   from      to extents  blocks    pct</tt><br>
-      <tt>      1 268435440    1930    3795 100.00</tt><br>
-      <tt>total free extents 1930</tt><br>
-      <tt>total free blocks 3795</tt><br>
-      <tt>average free extent size 1.96632</tt><br>
-      <tt>xfs_db&gt; freesp -s -e 1000000000 -a 1</tt><br>
-      <tt>   from      to extents  blocks    pct</tt><br>
-      <tt>      1 268435440  287006 173832255 100.00</tt><br>
-      <tt>total free extents 287006</tt><br>
-      <tt>total free blocks 173832255</tt><br>
-      <tt>average free extent size 605.675</tt><br>
-      <tt>xfs_db&gt; freesp -s -e 1000000000 -a 2</tt><br>
-      <tt>   from      to extents  blocks    pct</tt><br>
-      <tt>      1 268435440  272425 94291252 100.00</tt><br>
-      <tt>total free extents 272425</tt><br>
-      <tt>total free blocks 94291252</tt><br>
-      <tt>average free extent size 346.118</tt><br>
-      <tt>xfs_db&gt; freesp -s -e 1000000000 -a 3</tt><br>
-      <tt>   from      to extents  blocks    pct</tt><br>
-      <tt>      1 268435440  286421 110208404 100.00</tt><br>
-      <tt>total free extents 286421</tt><br>
-      <tt>total free blocks 110208404</tt><br>
-      <tt>average free extent size 384.778</tt><br>
-      <tt>xfs_db&gt; freesp -s -e 1000000000 -a 4</tt><br>
-      <tt>   from      to extents  blocks    pct</tt><br>
-      <tt>      1 268435440  277220 107118347 100.00</tt><br>
-      <tt>total free extents 277220</tt><br>
-      <tt>total free blocks 107118347</tt><br>
-      <tt>average free extent size 386.402</tt><br>
-      <tt>xfs_db&gt;</tt><br>
-    </blockquote>
-    Is there any way to figure out which files/directories are clogging
-    up AG 0?  Any other ways to abate this issue?  Any way to assure
-    proportional usage of AGs?<br>
-    <br>
-    Thanks.<br>
-    <br>
-    -Dave<br>
-  </body>
-</html>
-
---------------070403070501000802050607--
-
-
---===============8063043820410585139==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============8063043820410585139==--
