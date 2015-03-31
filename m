@@ -1,22 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id C9C6C7F5A
-	for <xfs@oss.sgi.com>; Mon, 30 Mar 2015 14:45:13 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id B1B8C304032
-	for <xfs@oss.sgi.com>; Mon, 30 Mar 2015 12:45:13 -0700 (PDT)
-Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
-	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	jj5ffespHNowqm8E for <xfs@oss.sgi.com>;
-	Mon, 30 Mar 2015 12:45:11 -0700 (PDT)
-Date: Tue, 31 Mar 2015 06:45:10 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Slightly Urgent:  XFS No Space Left On Device
-Message-ID: <20150330194510.GD28621@dastard>
-References: <551993CF.4060908@binghamton.edu>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id A47C57F37
+	for <xfs@oss.sgi.com>; Tue, 31 Mar 2015 11:33:01 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 771E88F8071
+	for <xfs@oss.sgi.com>; Tue, 31 Mar 2015 09:32:58 -0700 (PDT)
+Received: from secmailbal101.susq.com (mail2.sig.com [141.162.101.32]) by
+	cuda.sgi.com with ESMTP id wx9xDMI7Iy1Uu8aO (version=TLSv1
+	cipher=RC4-SHA bits=128 verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 31 Mar 2015 09:32:52 -0700 (PDT)
+Received: from msgbal834.susq.com (msgbal834.balmail.susq.com [10.11.247.15])
+	by secdlpbal101.ds.susq.com (8.13.8/8.13.8) with ESMTP id
+	t2VGWpjI010407 for <xfs@oss.sgi.com>; Tue, 31 Mar 2015 12:32:51 -0400
+Received: from xchhtbal500.ds.susq.com (xchhtbal500.ds.susq.com
+	[10.10.129.150])
+	by msgbal834.susq.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
+	t2VGWp9a032554 for <xfs@oss.sgi.com>; Tue, 31 Mar 2015 12:32:51 -0400
+From: "Narcise, Nick" <Nick.Narcise@sig.com>
+Subject: is there a limit to the number of directories on XFS: A
+	high-performance journaling filesystem
+Date: Tue, 31 Mar 2015 16:32:50 +0000
+Message-ID: <2A8AD3CE7E6B314DAC46434BD6285000EBAFA4@xchmbbal504.ds.susq.com>
+Content-Language: en-US
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <551993CF.4060908@binghamton.edu>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,62 +31,132 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============7763044721107339731=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Hall <kdhall@binghamton.edu>
-Cc: xfs@oss.sgi.com
+To: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-On Mon, Mar 30, 2015 at 02:19:59PM -0400, Dave Hall wrote:
-> Hello,
-> 
-> I have an XFS file system that's getting 'No space left on device'
-> errors.  xfs_fsr also complains of 'No space left'.  The XFS Info
-> is:
-> 
->    # xfs_info /data
->    meta-data=/dev/sdb1              isize=256    agcount=19,
->    agsize=268435440 blks
->              =                       sectsz=512   attr=2
->    data     =                       bsize=4096 blocks=4882431488, imaxpct=5
->              =                       sunit=16     swidth=160 blks
->    naming   =version 2              bsize=4096   ascii-ci=0
->    log      =internal               bsize=4096   blocks=521728, version=2
->              =                       sectsz=512   sunit=16 blks,
->    lazy-count=1
->    realtime =none                   extsz=4096   blocks=0, rtextents=0
-> 
->    # df -h .
->    Filesystem            Size  Used Avail Use% Mounted on
->    /dev/sdb1              19T   12T  7.0T  62% /data
->    # df -ih .
->    Filesystem            Inodes   IUsed   IFree IUse% Mounted on
->    /dev/sdb1               3.7G    4.7M    3.7G    1% /data
-> 
-> 
-> xfs_db freesp shows that AG 0 seems to be full.  I've included the
-> freesp for the first few AGs, but the rest seem pretty consistent
-> with AGs 1 - 4 that I've included below.
-> 
->    xfs_db> freesp -s -e 1000000000 -a 0
+--===============7763044721107339731==
+Content-Language: en-US
+Content-Type: multipart/alternative;
+	boundary="_000_2A8AD3CE7E6B314DAC46434BD6285000EBAFA4xchmbbal504dssusq_"
 
-Can you please drop the "-e 1000000" from these commands and post it
-again?  The histogram of differing free space sizes is information
-we actually need to diagnose the problem...
+--_000_2A8AD3CE7E6B314DAC46434BD6285000EBAFA4xchmbbal504dssusq_
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 
-Also, kernel version, mount options and machine details are
-necessary to determine why AG0 might be full (e.g. allocation policy
-in use).
+is there a limit to the number of directories on XFS( A high-performance jo=
+urnaling filesystem)?
 
-Cheers,
+Thanks
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Nick
+
+________________________________
+
+IMPORTANT: The information contained in this email and/or its attachments i=
+s confidential. If you are not the intended recipient, please notify the se=
+nder immediately by reply and immediately delete this message and all its a=
+ttachments. Any review, use, reproduction, disclosure or dissemination of t=
+his message or any attachment by an unintended recipient is strictly prohib=
+ited. Neither this message nor any attachment is intended as or should be c=
+onstrued as an offer, solicitation or recommendation to buy or sell any sec=
+urity or other financial instrument. Neither the sender, his or her employe=
+r nor any of their respective affiliates makes any warranties as to the com=
+pleteness or accuracy of any of the information contained herein or that th=
+is message or any of its attachments is free of viruses.
+
+--_000_2A8AD3CE7E6B314DAC46434BD6285000EBAFA4xchmbbal504dssusq_
+Content-Type: text/html; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+
+<html xmlns:v=3D"urn:schemas-microsoft-com:vml" xmlns:o=3D"urn:schemas-micr=
+osoft-com:office:office" xmlns:w=3D"urn:schemas-microsoft-com:office:word" =
+xmlns:m=3D"http://schemas.microsoft.com/office/2004/12/omml" xmlns=3D"http:=
+//www.w3.org/TR/REC-html40">
+<head>
+<meta http-equiv=3D"Content-Type" content=3D"text/html; charset=3Dus-ascii"=
+>
+<meta name=3D"Generator" content=3D"Microsoft Word 14 (filtered medium)">
+<style><!--
+/* Font Definitions */
+@font-face
+	{font-family:Calibri;
+	panose-1:2 15 5 2 2 2 4 3 2 4;}
+/* Style Definitions */
+p.MsoNormal, li.MsoNormal, div.MsoNormal
+	{margin:0in;
+	margin-bottom:.0001pt;
+	font-size:11.0pt;
+	font-family:"Calibri","sans-serif";}
+a:link, span.MsoHyperlink
+	{mso-style-priority:99;
+	color:blue;
+	text-decoration:underline;}
+a:visited, span.MsoHyperlinkFollowed
+	{mso-style-priority:99;
+	color:purple;
+	text-decoration:underline;}
+span.EmailStyle17
+	{mso-style-type:personal-compose;
+	font-family:"Calibri","sans-serif";
+	color:windowtext;}
+.MsoChpDefault
+	{mso-style-type:export-only;
+	font-family:"Calibri","sans-serif";}
+@page WordSection1
+	{size:8.5in 11.0in;
+	margin:1.0in 1.0in 1.0in 1.0in;}
+div.WordSection1
+	{page:WordSection1;}
+--></style><!--[if gte mso 9]><xml>
+<o:shapedefaults v:ext=3D"edit" spidmax=3D"1026" />
+</xml><![endif]--><!--[if gte mso 9]><xml>
+<o:shapelayout v:ext=3D"edit">
+<o:idmap v:ext=3D"edit" data=3D"1" />
+</o:shapelayout></xml><![endif]-->
+</head>
+<body lang=3D"EN-US" link=3D"blue" vlink=3D"purple">
+<div class=3D"WordSection1">
+<p class=3D"MsoNormal">is there a limit to the number of directories on XFS=
+( A high-performance journaling filesystem)?<o:p></o:p></p>
+<p class=3D"MsoNormal"><o:p>&nbsp;</o:p></p>
+<p class=3D"MsoNormal">Thanks<o:p></o:p></p>
+<p class=3D"MsoNormal"><o:p>&nbsp;</o:p></p>
+<p class=3D"MsoNormal">Nick<o:p></o:p></p>
+</div>
+<br>
+<hr>
+<font face=3D"Arial" color=3D"Gray" size=3D"1"><br>
+IMPORTANT: The information contained in this email and/or its attachments i=
+s confidential. If you are not the intended recipient, please notify the se=
+nder immediately by reply and immediately delete this message and all its a=
+ttachments. Any review, use, reproduction,
+ disclosure or dissemination of this message or any attachment by an uninte=
+nded recipient is strictly prohibited. Neither this message nor any attachm=
+ent is intended as or should be construed as an offer, solicitation or reco=
+mmendation to buy or sell any security
+ or other financial instrument. Neither the sender, his or her employer nor=
+ any of their respective affiliates makes any warranties as to the complete=
+ness or accuracy of any of the information contained herein or that this me=
+ssage or any of its attachments
+ is free of viruses.<br>
+</font>
+</body>
+</html>
+
+--_000_2A8AD3CE7E6B314DAC46434BD6285000EBAFA4xchmbbal504dssusq_--
+
+
+--===============7763044721107339731==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============7763044721107339731==--
