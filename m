@@ -1,24 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 2FF2C7F59
-	for <xfs@oss.sgi.com>; Thu,  2 Apr 2015 17:36:29 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 1DF548F8054
-	for <xfs@oss.sgi.com>; Thu,  2 Apr 2015 15:36:28 -0700 (PDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 578A37F59
+	for <xfs@oss.sgi.com>; Thu,  2 Apr 2015 17:43:30 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 47449304032
+	for <xfs@oss.sgi.com>; Thu,  2 Apr 2015 15:43:27 -0700 (PDT)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	Oyiw7mDBMqlXDFiV for <xfs@oss.sgi.com>;
-	Thu, 02 Apr 2015 15:36:23 -0700 (PDT)
-Date: Fri, 3 Apr 2015 09:36:08 +1100
+	fWgg2nWfT0kOkqFx for <xfs@oss.sgi.com>;
+	Thu, 02 Apr 2015 15:43:24 -0700 (PDT)
+Date: Fri, 3 Apr 2015 09:43:10 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Slightly Urgent:  XFS No Space Left On Device
-Message-ID: <20150402223608.GF8465@dastard>
-References: <551993CF.4060908@binghamton.edu> <20150330194510.GD28621@dastard>
-	<551C4CB8.7@binghamton.edu> <20150402001235.GI28621@dastard>
-	<551D5316.8050201@binghamton.edu>
+Subject: Re: FYI: xfstests generic/019 result panic. 4.0.0-rc5
+Message-ID: <20150402224310.GG8465@dastard>
+References: <87r3s2g3md.fsf@openvz.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <551D5316.8050201@binghamton.edu>
+In-Reply-To: <87r3s2g3md.fsf@openvz.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,30 +29,49 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Hall <kdhall@binghamton.edu>
+To: Dmitry Monakhov <dmonakhov@openvz.org>
 Cc: xfs@oss.sgi.com
 
-On Thu, Apr 02, 2015 at 10:32:54AM -0400, Dave Hall wrote:
-> Thanks for the help.  Rookie error.  I didn't set these mount
-> options, but I see that this option is set for all of the other XFS
-> volumes I have.
+On Thu, Apr 02, 2015 at 02:40:26PM +0300, Dmitry Monakhov wrote:
 > 
-> I am wondering why XFS would default this way though.  Seems like
-> heuristically you could assume that a large volume on a 64-bit OS
-> would need 64-bit inodes.
+> Hi I've played with recent kernel 4.0.0-rc5 (AlViro's tree vfs.git/for-next)
+> 
+> And have found two issues (I do not know whenever it was fixed in
+> xfs.git already, so I just want to let you know)
+> First one is Panic caused by xfstest generic/019 (disk failure
+> simulation test) see attachment
+.....
+> 
+> generic/019		[13:30:32][   17.619593] XFS (vdc): xlog_verify_grant_tail: space > BBTOB(tail_blocks)
+> [   41.914283] XFS (vdc): metadata I/O error: block 0x503d1f ("xlog_iodone") error 5 numblks 64
 
-The historical argument against inode64 on 64 bit machines was NFS
-export and 32 bit clients, which could then break if we used 64 bit
-inodes. The Linux NFS client handles this just fine on 32bit
-machines (has for a few years), so there's no reason for us to care
-very much about this anymore....
+So the test has shut down the filesystem via device pull...
 
-> At least perhaps put out a message from
-> mkfs.xfs suggesting the use of inode64 on the mount command?
+> [   41.917326] XFS (vdc): xfs_bmap_check_leaf_extents: BAD after btree leaves for 6623 extents
 
-inode64 is now the default for upstream kernels (has been for a
-couple of years), but older distros are not going to get those
-kernel updates, or anything we might have put in xfsprogs...
+in the middle of a bmbt update operation, which aborted in an
+inconsistent state in memory due to shutdown...
+
+> [   41.917376] XFS (vdc): Log I/O Error Detected.  Shutting down filesystem
+> [   41.917378] XFS (vdc): Please umount the filesystem and rectify the problem(s)
+> [   41.918098] fsstress (3180) used greatest stack depth: 11392 bytes left
+> [   41.918876] XFS (vdc): metadata I/O error: block 0x503d5f ("xlog_iodone") error 5 numblks 64
+> [   41.918966] XFS (vdc): xfs_log_force: error -5 returned.
+> [   41.930237] Kernel panic - not syncing: xfs_bmap_check_leaf_extents: CORRUPTED BTREE OR SOMETHING
+
+And debug code detected that inconsistent in-memory state, and threw
+out the panic. Production machines won't run this code (it's
+CONFIG_XFS_DEBUG=y specific) so they'll just shut down normally.
+
+> Second one is lockdep's complain from splice, It looks like a false-positive one, but still.
+
+No, that's a real one. splice has inverted locks and we've been able
+to deadlock it since, well, forever. The recent rework that Al Viro
+did removed the old lock inversion problem, and created a new one
+w.r.t. to the pipe_lock and filesystem locks. I've reported this to
+him previously, but I've never got any response about it...
+
+Thanks for the reports, though, Dmitry.
 
 Cheers,
 
