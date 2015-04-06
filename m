@@ -1,19 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id B16797F50
-	for <xfs@oss.sgi.com>; Mon,  6 Apr 2015 10:06:10 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 4DC06AC002
-	for <xfs@oss.sgi.com>; Mon,  6 Apr 2015 08:06:07 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id B5D0D29DFB
+	for <xfs@oss.sgi.com>; Mon,  6 Apr 2015 12:28:20 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id A500B8F8037
+	for <xfs@oss.sgi.com>; Mon,  6 Apr 2015 10:28:17 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id s0KYm3qkggBeERAr (version=TLSv1
+	cuda.sgi.com with ESMTP id y8speHYcKUfqAfZa (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 06 Apr 2015 08:06:06 -0700 (PDT)
-Message-ID: <5522A0DB.2010309@redhat.com>
-Date: Mon, 06 Apr 2015 10:06:03 -0500
+	Mon, 06 Apr 2015 10:28:16 -0700 (PDT)
+Received: from int-mx13.intmail.prod.int.phx2.redhat.com
+	(int-mx13.intmail.prod.int.phx2.redhat.com [10.5.11.26])
+	by mx1.redhat.com (Postfix) with ESMTPS id BB0DBBBF5A
+	for <xfs@oss.sgi.com>; Mon,  6 Apr 2015 17:28:15 +0000 (UTC)
+Received: from liberator.sandeen.net (ovpn01.gateway.prod.ext.phx2.redhat.com
+	[10.5.9.1])
+	by int-mx13.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id t36HSE8r014337
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <xfs@oss.sgi.com>; Mon, 6 Apr 2015 13:28:15 -0400
+Message-ID: <5522C22E.4000107@redhat.com>
+Date: Mon, 06 Apr 2015 12:28:14 -0500
 From: Eric Sandeen <sandeen@redhat.com>
 MIME-Version: 1.0
-Subject: [PATCH] xfs_db: disallow sb UUID write on v5 filesystems
+Subject: [PATCH] xfsprogs: remove unreachable code in libxfs_inode_alloc
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,42 +36,46 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs-oss <xfs@oss.sgi.com>, "F. Stoyan" <fstoyan@swapon.de>, 782012@bugs.debian.org
+To: xfs-oss <xfs@oss.sgi.com>
 
-Do not allow xfs_db (or the xfs_admin frontend) to change the UUID
-of a V5 filesystem; this will cause UUID mismatches across the
-filesystem, and we currently have no mechanism to update them all.
-Changing only the superblock UUID makes all other metadata look
-invalid, and xfs_repair reacts by junking everything.
+This code does:
 
-Addresses-Debian-Bug: 782012
-Reported-by: F. Stoyan <fstoyan@swapon.de>
+        if (!ialloc_context && !ip)
+                return;
+
+        // if !ip here, ialloc_context must be true
+
+        if (ialloc_context) {
+                ...
+                if (!ip)
+                        error = ENOSPC;
+                if (error)
+                        return error;
+                // if !ip in this block we've returned
+        }
+
+        // so (!ip) cannot be true here
+        if (!ip)
+                error = ENOSPC;
+
+(cherry picked this one out of Coverity reports)
+
 Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 ---
 
-diff --git a/db/sb.c b/db/sb.c
-index 6cb665d..f31f4a2 100644
---- a/db/sb.c
-+++ b/db/sb.c
-@@ -363,6 +363,18 @@ uuid_f(
- 			return 0;
- 		}
+diff --git a/libxfs/util.c b/libxfs/util.c
+index 6464a1b..49eb76d 100644
+--- a/libxfs/util.c
++++ b/libxfs/util.c
+@@ -700,8 +700,6 @@ libxfs_inode_alloc(
+ 		if (error)
+ 			return error;
+ 	}
+-	if (!ip)
+-		error = ENOSPC;
  
-+		/*
-+		* For now, changing the UUID of V5 superblock filesystems is
-+		* not supported; we do not have the infrastructure to fix all
-+		* other metadata when a new superblock UUID is generated.
-+		*/
-+		if (xfs_sb_version_hascrc(&mp->m_sb) &&
-+		    strcasecmp(argv[1], "rewrite")) {
-+			dbprintf(_("%s: only 'rewrite' supported on V5 fs\n"),
-+				progname);
-+			return 0;
-+		}
-+
- 		if (!strcasecmp(argv[1], "generate")) {
- 			platform_uuid_generate(&uu);
- 		} else if (!strcasecmp(argv[1], "nil")) {
+ 	*ipp = ip;
+ 	return error;
 
 _______________________________________________
 xfs mailing list
