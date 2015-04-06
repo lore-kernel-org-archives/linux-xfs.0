@@ -1,17 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 5F18B29E01
-	for <xfs@oss.sgi.com>; Mon,  6 Apr 2015 17:43:56 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id E02A1AC003
-	for <xfs@oss.sgi.com>; Mon,  6 Apr 2015 15:43:52 -0700 (PDT)
-Received: from cobra.newdream.net (cobra.newdream.net [66.33.216.30]) by
-	cuda.sgi.com with ESMTP id aXFCobA2st8GdFp8 for
-	<xfs@oss.sgi.com>; Mon, 06 Apr 2015 15:43:51 -0700 (PDT)
-From: Sage Weil <sage@redhat.com>
-Subject: [PATCH] libhandle: add fd_to_handle to handle.h
-Date: Mon,  6 Apr 2015 15:43:01 -0700
-Message-Id: <1428360181-10401-1-git-send-email-sage@redhat.com>
+	by oss.sgi.com (Postfix) with ESMTP id CF9D429E01
+	for <xfs@oss.sgi.com>; Mon,  6 Apr 2015 18:43:00 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 6B172AC002
+	for <xfs@oss.sgi.com>; Mon,  6 Apr 2015 16:43:00 -0700 (PDT)
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	QDHpHmZVOIYtQz2y for <xfs@oss.sgi.com>;
+	Mon, 06 Apr 2015 16:42:58 -0700 (PDT)
+Date: Tue, 7 Apr 2015 09:42:43 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] libhandle: add fd_to_handle to handle.h
+Message-ID: <20150406234243.GA15810@dastard>
+References: <1428360181-10401-1-git-send-email-sage@redhat.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <1428360181-10401-1-git-send-email-sage@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -20,35 +25,27 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: Sage Weil <sage@redhat.com>
+To: Sage Weil <sage@redhat.com>
+Cc: xfs@oss.sgi.com
 
-It's on the man page but strangely missing from the header.
+On Mon, Apr 06, 2015 at 03:43:01PM -0700, Sage Weil wrote:
+> It's on the man page but strangely missing from the header.
+> 
+> Signed-off-by: Sage Weil <sage@redhat.com>
 
-Signed-off-by: Sage Weil <sage@redhat.com>
----
- include/handle.h |    1 +
- 1 file changed, 1 insertion(+)
+It was missed when the function was merged from the Irix userspace
+xfs-cmds code base back in 2005. Nobody has noticed since then, so
+clearly it is a well used function. ;)
 
-diff --git a/include/handle.h b/include/handle.h
-index b211a2f..ee69a11 100644
---- a/include/handle.h
-+++ b/include/handle.h
-@@ -28,6 +28,7 @@ struct parent;
- 
- extern int  path_to_handle (char *__path, void **__hanp, size_t *__hlen);
- extern int  path_to_fshandle (char *__path, void **__fshanp, size_t *__fshlen);
-+extern int  fd_to_handle (int fd, void **hanp, size_t *hlen);
- extern int  handle_to_fshandle (void *__hanp, size_t __hlen, void **__fshanp,
- 				size_t *__fshlen);
- extern void free_handle (void *__hanp, size_t __hlen);
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
+
 -- 
-1.7.9.5
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
