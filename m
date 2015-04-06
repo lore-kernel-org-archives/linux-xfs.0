@@ -1,29 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id B5D0D29DFB
-	for <xfs@oss.sgi.com>; Mon,  6 Apr 2015 12:28:20 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id A500B8F8037
-	for <xfs@oss.sgi.com>; Mon,  6 Apr 2015 10:28:17 -0700 (PDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 1CA7A29DFB
+	for <xfs@oss.sgi.com>; Mon,  6 Apr 2015 12:48:51 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id F143A304032
+	for <xfs@oss.sgi.com>; Mon,  6 Apr 2015 10:48:47 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id y8speHYcKUfqAfZa (version=TLSv1
+	cuda.sgi.com with ESMTP id SyN5UJOzKxBlSnT7 (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 06 Apr 2015 10:28:16 -0700 (PDT)
-Received: from int-mx13.intmail.prod.int.phx2.redhat.com
-	(int-mx13.intmail.prod.int.phx2.redhat.com [10.5.11.26])
-	by mx1.redhat.com (Postfix) with ESMTPS id BB0DBBBF5A
-	for <xfs@oss.sgi.com>; Mon,  6 Apr 2015 17:28:15 +0000 (UTC)
-Received: from liberator.sandeen.net (ovpn01.gateway.prod.ext.phx2.redhat.com
-	[10.5.9.1])
-	by int-mx13.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id t36HSE8r014337
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <xfs@oss.sgi.com>; Mon, 6 Apr 2015 13:28:15 -0400
-Message-ID: <5522C22E.4000107@redhat.com>
-Date: Mon, 06 Apr 2015 12:28:14 -0500
-From: Eric Sandeen <sandeen@redhat.com>
+	Mon, 06 Apr 2015 10:48:47 -0700 (PDT)
+Date: Mon, 6 Apr 2015 13:48:43 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 1/8] xfs: mmap lock needs to be inside freeze protection
+Message-ID: <20150406174843.GA58965@bfoster.bfoster>
+References: <1427194266-2885-1-git-send-email-david@fromorbit.com>
+	<1427194266-2885-2-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
-Subject: [PATCH] xfsprogs: remove unreachable code in libxfs_inode_alloc
+Content-Disposition: inline
+In-Reply-To: <1427194266-2885-2-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -36,46 +30,68 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs-oss <xfs@oss.sgi.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-fsdevel@vger.kernel.org, willy@linux.intel.com, jack@suse.cz, xfs@oss.sgi.com
 
-This code does:
+On Tue, Mar 24, 2015 at 09:50:59PM +1100, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> Lock ordering for the new mmap lock needs to be:
+> 
+> mmap_sem
+>   sb_start_pagefault
+>     i_mmap_lock
+>       page lock
+>         <fault processsing>
+> 
+> Right now xfs_vm_page_mkwrite gets this the wrong way around,
+> While technically it cannot deadlock due to the current freeze
+> ordering, it's still a landmine that might explode if we change
+> anything in future. Hence we need to nest the locks correctly.
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> ---
 
-        if (!ialloc_context && !ip)
-                return;
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 
-        // if !ip here, ialloc_context must be true
-
-        if (ialloc_context) {
-                ...
-                if (!ip)
-                        error = ENOSPC;
-                if (error)
-                        return error;
-                // if !ip in this block we've returned
-        }
-
-        // so (!ip) cannot be true here
-        if (!ip)
-                error = ENOSPC;
-
-(cherry picked this one out of Coverity reports)
-
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
-
-diff --git a/libxfs/util.c b/libxfs/util.c
-index 6464a1b..49eb76d 100644
---- a/libxfs/util.c
-+++ b/libxfs/util.c
-@@ -700,8 +700,6 @@ libxfs_inode_alloc(
- 		if (error)
- 			return error;
- 	}
--	if (!ip)
--		error = ENOSPC;
- 
- 	*ipp = ip;
- 	return error;
+>  fs/xfs/xfs_file.c | 11 ++++++++---
+>  1 file changed, 8 insertions(+), 3 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+> index dc5f609..a4c882e 100644
+> --- a/fs/xfs/xfs_file.c
+> +++ b/fs/xfs/xfs_file.c
+> @@ -1449,15 +1449,20 @@ xfs_filemap_page_mkwrite(
+>  	struct vm_fault		*vmf)
+>  {
+>  	struct xfs_inode	*ip = XFS_I(vma->vm_file->f_mapping->host);
+> -	int			error;
+> +	int			ret;
+>  
+>  	trace_xfs_filemap_page_mkwrite(ip);
+>  
+> +	sb_start_pagefault(VFS_I(ip)->i_sb);
+> +	file_update_time(vma->vm_file);
+>  	xfs_ilock(ip, XFS_MMAPLOCK_SHARED);
+> -	error = block_page_mkwrite(vma, vmf, xfs_get_blocks);
+> +
+> +	ret = __block_page_mkwrite(vma, vmf, xfs_get_blocks);
+> +
+>  	xfs_iunlock(ip, XFS_MMAPLOCK_SHARED);
+> +	sb_end_pagefault(VFS_I(ip)->i_sb);
+>  
+> -	return error;
+> +	return block_page_mkwrite_return(ret);
+>  }
+>  
+>  const struct file_operations xfs_file_operations = {
+> -- 
+> 2.0.0
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
