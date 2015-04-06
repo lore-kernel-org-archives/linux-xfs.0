@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id E9F9629DFB
-	for <xfs@oss.sgi.com>; Mon,  6 Apr 2015 12:49:22 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 86A2DAC001
-	for <xfs@oss.sgi.com>; Mon,  6 Apr 2015 10:49:19 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id 423DF29E01
+	for <xfs@oss.sgi.com>; Mon,  6 Apr 2015 14:00:37 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id AC475AC001
+	for <xfs@oss.sgi.com>; Mon,  6 Apr 2015 12:00:36 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id jqjFiu1pSCjTK7xC (version=TLSv1
+	cuda.sgi.com with ESMTP id OEnQNLRjCmIqPfSi (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 06 Apr 2015 10:49:18 -0700 (PDT)
-Date: Mon, 6 Apr 2015 13:49:14 -0400
+	Mon, 06 Apr 2015 12:00:35 -0700 (PDT)
+Date: Mon, 6 Apr 2015 15:00:31 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 7/8] xfs: add DAX IO path support
-Message-ID: <20150406174913.GE58965@bfoster.bfoster>
+Subject: Re: [PATCH 8/8] xfs: add initial DAX support
+Message-ID: <20150406190031.GF58965@bfoster.bfoster>
 References: <1427194266-2885-1-git-send-email-david@fromorbit.com>
-	<1427194266-2885-8-git-send-email-david@fromorbit.com>
+	<1427194266-2885-9-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1427194266-2885-8-git-send-email-david@fromorbit.com>
+In-Reply-To: <1427194266-2885-9-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,90 +33,163 @@ Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: linux-fsdevel@vger.kernel.org, willy@linux.intel.com, jack@suse.cz, xfs@oss.sgi.com
 
-On Tue, Mar 24, 2015 at 09:51:05PM +1100, Dave Chinner wrote:
+On Tue, Mar 24, 2015 at 09:51:06PM +1100, Dave Chinner wrote:
 > From: Dave Chinner <dchinner@redhat.com>
 > 
-> DAX does not do buffered IO (can't buffer direct access!) and hence
-> all read/write IO is vectored through the direct IO path.  Hence we
-> need to add the DAX IO path callouts to the direct IO
-> infrastructure.
+> Add initial DAX support to XFS. To do this we need a new mount
+> option to turn DAX on filesystem, and we need to propagate thi into
+> the inode flags whenever an inode is instantiated so that the
+> per-inode checks throughout the code Do The Right Thing.
+> 
+> There are still some things remaining to be done:
+> 
+> 	- needs per-inode flags to mark inodes as DAX enabled, and
+> 	  an inheritance flag to enable automatic filesystem
+> 	  propagation of the property
+> 	- fails occasionally with zero length writes instead of
+> 	  ENOSPC errors, so error propagation inside/from the DAX
+> 	  code need work
+> 	- occasionally creates two extents rather than a single
+> 	  larger extent like non-dax filesystems.
+> 	- much more testing
 > 
 > Signed-off-by: Dave Chinner <dchinner@redhat.com>
 > ---
->  fs/xfs/xfs_aops.c | 35 +++++++++++++++++++++++++++--------
->  1 file changed, 27 insertions(+), 8 deletions(-)
+>  fs/xfs/xfs_iops.c  | 24 ++++++++++++------------
+>  fs/xfs/xfs_mount.h |  2 ++
+>  fs/xfs/xfs_super.c | 25 +++++++++++++++++++++++--
+>  3 files changed, 37 insertions(+), 14 deletions(-)
 > 
-> diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-> index 3fc5052..97979e9 100644
-> --- a/fs/xfs/xfs_aops.c
-> +++ b/fs/xfs/xfs_aops.c
-> @@ -1559,6 +1559,30 @@ xfs_end_io_direct_write(
->  	}
->  }
->  
-> +static inline ssize_t
-> +xfs_vm_do_dio(
-> +	struct inode		*inode,
-> +	int			rw,
-> +	struct kiocb		*iocb,
-> +	struct iov_iter		*iter,
-> +	loff_t			offset,
-> +	void			(*endio)(struct kiocb	*iocb,
-> +					 loff_t		offset,
-> +					 ssize_t	size,
-> +					 void		*private),
-> +	int			flags)
-> +{
-> +	struct block_device	*bdev;
-> +
-> +	if (IS_DAX(inode))
-> +		return dax_do_io(rw, iocb, inode, iter, offset,
-> +				 xfs_get_blocks_direct, endio, 0);
-> +
-
-I assume this is supposed to be get_blocks_direct and not
-get_blocks_dax, based on the I/O codepath. The naming is starting to get
-a little confusing though. xfs_get_blocks_dax() implies to me that it's
-for any DAX I/O, but we only appear to use it internally for
-truncate/zeroing/mmap and such. Alas, I can't think of a better name atm
-and the code seems Ok to me:
-
-Reviewed-by: Brian Foster <bfoster@redhat.com>
-
-... but a comment somewhere around here and/or at the
-xfs_get_blocks_dax() function would be helpful.
-
-Brian
-
-> +	bdev = xfs_find_bdev_for_inode(inode);
-> +	return  __blockdev_direct_IO(rw, iocb, inode, bdev, iter, offset,
-> +				     xfs_get_blocks_direct, endio, NULL, flags);
-> +}
-> +
->  STATIC ssize_t
->  xfs_vm_direct_IO(
->  	int			rw,
-> @@ -1567,17 +1591,12 @@ xfs_vm_direct_IO(
->  	loff_t			offset)
+> diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+> index 9ca5352..695d857 100644
+> --- a/fs/xfs/xfs_iops.c
+> +++ b/fs/xfs/xfs_iops.c
+> @@ -1195,22 +1195,22 @@ xfs_diflags_to_iflags(
+>  	struct inode		*inode,
+>  	struct xfs_inode	*ip)
 >  {
->  	struct inode		*inode = iocb->ki_filp->f_mapping->host;
-> -	struct block_device	*bdev = xfs_find_bdev_for_inode(inode);
->  
->  	if (rw & WRITE) {
-> -		return __blockdev_direct_IO(rw, iocb, inode, bdev, iter,
-> -					    offset, xfs_get_blocks_direct,
-> -					    xfs_end_io_direct_write, NULL,
-> -					    DIO_ASYNC_EXTEND);
-> +		return xfs_vm_do_dio(inode, rw, iocb, iter, offset,
-> +				     xfs_end_io_direct_write, DIO_ASYNC_EXTEND);
->  	}
-> -	return __blockdev_direct_IO(rw, iocb, inode, bdev, iter,
-> -				    offset, xfs_get_blocks_direct,
-> -				    NULL, NULL, 0);
-> +	return xfs_vm_do_dio(inode, rw, iocb, iter, offset, NULL, 0);
+> -	if (ip->i_d.di_flags & XFS_DIFLAG_IMMUTABLE)
+> +	uint16_t		flags = ip->i_d.di_flags;
+> +
+> +	inode->i_flags &= ~(S_IMMUTABLE | S_APPEND | S_SYNC |
+> +			    S_NOATIME | S_DAX);
+> +
+> +	if (flags & XFS_DIFLAG_IMMUTABLE)
+>  		inode->i_flags |= S_IMMUTABLE;
+> -	else
+> -		inode->i_flags &= ~S_IMMUTABLE;
+> -	if (ip->i_d.di_flags & XFS_DIFLAG_APPEND)
+> +	if (flags & XFS_DIFLAG_APPEND)
+>  		inode->i_flags |= S_APPEND;
+> -	else
+> -		inode->i_flags &= ~S_APPEND;
+> -	if (ip->i_d.di_flags & XFS_DIFLAG_SYNC)
+> +	if (flags & XFS_DIFLAG_SYNC)
+>  		inode->i_flags |= S_SYNC;
+> -	else
+> -		inode->i_flags &= ~S_SYNC;
+> -	if (ip->i_d.di_flags & XFS_DIFLAG_NOATIME)
+> +	if (flags & XFS_DIFLAG_NOATIME)
+>  		inode->i_flags |= S_NOATIME;
+> -	else
+> -		inode->i_flags &= ~S_NOATIME;
+> +	/* XXX: Also needs an on-disk per inode flag! */
+> +	if (ip->i_mount->m_flags & XFS_MOUNT_DAX)
+> +		inode->i_flags |= S_DAX;
+
+This is a temporary hack until we have some kind of inode flag
+inheritance mechanism as mentioned in the commit log, correct?
+
 >  }
 >  
 >  /*
+> diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+> index 8c995a2..cd44e88 100644
+> --- a/fs/xfs/xfs_mount.h
+> +++ b/fs/xfs/xfs_mount.h
+> @@ -179,6 +179,8 @@ typedef struct xfs_mount {
+>  						   allocator */
+>  #define XFS_MOUNT_NOATTR2	(1ULL << 25)	/* disable use of attr2 format */
+>  
+> +#define XFS_MOUNT_DAX		(1ULL << 62)	/* TEST ONLY! */
+> +
+>  
+>  /*
+>   * Default minimum read and write sizes.
+> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+> index 3ad0b17..0f26d7a 100644
+> --- a/fs/xfs/xfs_super.c
+> +++ b/fs/xfs/xfs_super.c
+> @@ -112,6 +112,8 @@ static struct xfs_kobj xfs_dbg_kobj;	/* global debug sysfs attrs */
+>  #define MNTOPT_DISCARD	   "discard"	/* Discard unused blocks */
+>  #define MNTOPT_NODISCARD   "nodiscard"	/* Do not discard unused blocks */
+>  
+> +#define MNTOPT_DAX	"dax"		/* Enable direct access to bdev pages */
+> +
+>  /*
+>   * Table driven mount option parser.
+>   *
+> @@ -363,6 +365,10 @@ xfs_parseargs(
+>  			mp->m_flags |= XFS_MOUNT_DISCARD;
+>  		} else if (!strcmp(this_char, MNTOPT_NODISCARD)) {
+>  			mp->m_flags &= ~XFS_MOUNT_DISCARD;
+> +#ifdef CONFIG_FS_DAX
+> +		} else if (!strcmp(this_char, MNTOPT_DAX)) {
+> +			mp->m_flags |= XFS_MOUNT_DAX;
+> +#endif
+
+Something like what we do for !CONFIG_XFS_QUOTA just a few lines below
+might be a bit nicer. Then we can have a slightly more useful error
+message.
+
+>  		} else {
+>  			xfs_warn(mp, "unknown mount option [%s].", this_char);
+>  			return -EINVAL;
+> @@ -452,8 +458,8 @@ done:
+>  }
+>  
+>  struct proc_xfs_info {
+> -	int	flag;
+> -	char	*str;
+> +	uint64_t	flag;
+> +	char		*str;
+>  };
+>  
+>  STATIC int
+> @@ -474,6 +480,7 @@ xfs_showargs(
+>  		{ XFS_MOUNT_GRPID,		"," MNTOPT_GRPID },
+>  		{ XFS_MOUNT_DISCARD,		"," MNTOPT_DISCARD },
+>  		{ XFS_MOUNT_SMALL_INUMS,	"," MNTOPT_32BITINODE },
+> +		{ XFS_MOUNT_DAX,		"," MNTOPT_DAX },
+>  		{ 0, NULL }
+>  	};
+>  	static struct proc_xfs_info xfs_info_unset[] = {
+> @@ -1501,6 +1508,20 @@ xfs_fs_fill_super(
+>  	if (XFS_SB_VERSION_NUM(&mp->m_sb) == XFS_SB_VERSION_5)
+>  		sb->s_flags |= MS_I_VERSION;
+>  
+> +	if (mp->m_flags & XFS_MOUNT_DAX) {
+> +		xfs_warn(mp,
+> +	"DAX enabled. Warning: EXPERIMENTAL, use at your own risk");
+> +		if (sb->s_blocksize != PAGE_SIZE) {
+> +			xfs_alert(mp,
+> +		"Filesystem block size invalid for DAX Turning DAX off.");
+> +			mp->m_flags &= ~XFS_MOUNT_DAX;
+> +		} else if (!sb->s_bdev->bd_disk->fops->direct_access) {
+> +			xfs_alert(mp,
+> +		"Block device does not support DAX Turning DAX off.");
+> +			mp->m_flags &= ~XFS_MOUNT_DAX;
+> +		}
+
+Missing period in both error messages above. ;)
+
+Brian
+
+> +	}
+> +
+>  	error = xfs_mountfs(mp);
+>  	if (error)
+>  		goto out_filestream_unmount;
 > -- 
 > 2.0.0
 > 
