@@ -1,20 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 5B6F87F6D
-	for <xfs@oss.sgi.com>; Tue,  7 Apr 2015 10:34:11 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id D51727F72
+	for <xfs@oss.sgi.com>; Tue,  7 Apr 2015 10:36:29 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id DDDD6AC003
-	for <xfs@oss.sgi.com>; Tue,  7 Apr 2015 08:34:07 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id Zaw40kRNNwZxGuQU for <xfs@oss.sgi.com>;
-	Tue, 07 Apr 2015 08:34:06 -0700 (PDT)
-Message-ID: <5523F8ED.1060105@sandeen.net>
-Date: Tue, 07 Apr 2015 10:34:05 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
-MIME-Version: 1.0
-Subject: Re: finest and rhel/centos 7.1
-References: <014A8EAA-D469-49D9-9A80-5C4CC455C74E@gmail.com>
-In-Reply-To: <014A8EAA-D469-49D9-9A80-5C4CC455C74E@gmail.com>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id C540B304032
+	for <xfs@oss.sgi.com>; Tue,  7 Apr 2015 08:36:26 -0700 (PDT)
+Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
+	ESMTP id GEMVlul8MJlAit3I (version=TLSv1 cipher=AES256-SHA
+	bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 07 Apr 2015 08:36:24 -0700 (PDT)
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH] xfs: unlock i_mutex in xfs_break_layouts
+Date: Tue,  7 Apr 2015 17:35:44 +0200
+Message-Id: <1428420944-20965-1-git-send-email-hch@lst.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,63 +21,117 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="windows-1252"
-Content-Transfer-Encoding: quoted-printable
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Charles Weber <chaweber@gmail.com>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
+Cc: linux-nfs@vger.kernel.org, viro@zeniv.linux.org.uk
 
-On 4/7/15 10:30 AM, Charles Weber wrote:
-> Hi everyone, I am building a large storage server and noticed to my
-> delight that mkfs.xfs in 7.1 now supports finobts=3D1. But I get mount
-> errors saying below. Since the FS in question mount fine so long as I
-> don=92t specify finobts=3D1 while formatting, should I assume the rest of
-> 7.1 is not yet ready for it? Or is there some option I missed?
+We want to drop all I/O path locks when recalling layouts, and that includes
+i_mutex for the write path.  Without this we get stuck processe when recalls
+take too long.
 
-That was a bit of an oversight.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/xfs/xfs_file.c  | 4 ++--
+ fs/xfs/xfs_ioctl.c | 2 +-
+ fs/xfs/xfs_iops.c  | 2 +-
+ fs/xfs/xfs_pnfs.c  | 7 ++++++-
+ fs/xfs/xfs_pnfs.h  | 2 +-
+ 5 files changed, 11 insertions(+), 6 deletions(-)
 
-finobt will be available kernelside eventually, but userspace
-jumped the gun.
-
--Eric
- =
-
-> thanks, Chuck *xfs*progs-3.2.1-6.el7.x86_64 =
-
-> kernel-3.10.0-229.1.2.el7.x86_64 [75881.037768] SELinux: initialized
-> (dev dm-7, type xfs), uses xattr [75908.498994] XFS (dm-7):
-> Superblock has unknown read-only compatible features (0x1) enabled. =
-
-> [75908.499035] XFS (dm-7): Attempted to mount read-only compatible
-> filesystem read-write. Filesystem can only be safely mounted read
-> only. [75908.499058] XFS (dm-7): SB validate failed with error 22.
-> =
-
-> =
-
-> [root@NIAIRPGL1 share]# modinfo xfs filename:
-> /lib/modules/3.10.0-229.1.2.el7.x86_64/kernel/fs/xfs/xfs.ko license:
-> GPL description:    SGI XFS with ACLs, security attributes, large
-> block/inode numbers, no debug enabled author:         Silicon
-> Graphics, Inc. alias:          fs-xfs rhelversion:    7.1 srcversion:
-> 3E3940432E169BEE955EDE9 depends:        libcrc32c intree:         Y =
-
-> vermagic:       3.10.0-229.1.2.el7.x86_64 SMP mod_unload modversions
->  signer:         CentOS Linux kernel signing key sig_key:
-> 34:B5:BC:A2:B7:06:D8:2E:72:A5:BE:3E:E4:09:BE:C7:19:5E:A5:08 =
-
-> sig_hashalgo:   sha256
-> =
-
-> =
-
-> =
-
-> _______________________________________________ xfs mailing list =
-
-> xfs@oss.sgi.com http://oss.sgi.com/mailman/listinfo/xfs
-> =
-
+diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+index a2e1cb8..963dfb2 100644
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@ -559,7 +559,7 @@ restart:
+ 	if (error)
+ 		return error;
+ 
+-	error = xfs_break_layouts(inode, iolock);
++	error = xfs_break_layouts(inode, iolock, true);
+ 	if (error)
+ 		return error;
+ 
+@@ -843,7 +843,7 @@ xfs_file_fallocate(
+ 		return -EOPNOTSUPP;
+ 
+ 	xfs_ilock(ip, iolock);
+-	error = xfs_break_layouts(inode, &iolock);
++	error = xfs_break_layouts(inode, &iolock, false);
+ 	if (error)
+ 		goto out_unlock;
+ 
+diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+index ac4feae..3a21cc7 100644
+--- a/fs/xfs/xfs_ioctl.c
++++ b/fs/xfs/xfs_ioctl.c
+@@ -639,7 +639,7 @@ xfs_ioc_space(
+ 		return error;
+ 
+ 	xfs_ilock(ip, iolock);
+-	error = xfs_break_layouts(inode, &iolock);
++	error = xfs_break_layouts(inode, &iolock, false);
+ 	if (error)
+ 		goto out_unlock;
+ 
+diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+index e53a903..79520c7 100644
+--- a/fs/xfs/xfs_iops.c
++++ b/fs/xfs/xfs_iops.c
+@@ -975,7 +975,7 @@ xfs_vn_setattr(
+ 		uint		iolock = XFS_IOLOCK_EXCL;
+ 
+ 		xfs_ilock(ip, iolock);
+-		error = xfs_break_layouts(dentry->d_inode, &iolock);
++		error = xfs_break_layouts(dentry->d_inode, &iolock, true);
+ 		if (!error)
+ 			error = xfs_setattr_size(ip, iattr);
+ 		xfs_iunlock(ip, iolock);
+diff --git a/fs/xfs/xfs_pnfs.c b/fs/xfs/xfs_pnfs.c
+index 365dd57..981a657 100644
+--- a/fs/xfs/xfs_pnfs.c
++++ b/fs/xfs/xfs_pnfs.c
+@@ -31,7 +31,8 @@
+ int
+ xfs_break_layouts(
+ 	struct inode		*inode,
+-	uint			*iolock)
++	uint			*iolock,
++	bool			with_imutex)
+ {
+ 	struct xfs_inode	*ip = XFS_I(inode);
+ 	int			error;
+@@ -40,8 +41,12 @@ xfs_break_layouts(
+ 
+ 	while ((error = break_layout(inode, false) == -EWOULDBLOCK)) {
+ 		xfs_iunlock(ip, *iolock);
++		if (with_imutex && (*iolock & XFS_IOLOCK_EXCL))
++			mutex_unlock(&inode->i_mutex);
+ 		error = break_layout(inode, true);
+ 		*iolock = XFS_IOLOCK_EXCL;
++		if (with_imutex)
++			mutex_lock(&inode->i_mutex);
+ 		xfs_ilock(ip, *iolock);
+ 	}
+ 
+diff --git a/fs/xfs/xfs_pnfs.h b/fs/xfs/xfs_pnfs.h
+index b7fbfce..f749475 100644
+--- a/fs/xfs/xfs_pnfs.h
++++ b/fs/xfs/xfs_pnfs.h
+@@ -8,7 +8,7 @@ int xfs_fs_map_blocks(struct inode *inode, loff_t offset, u64 length,
+ int xfs_fs_commit_blocks(struct inode *inode, struct iomap *maps, int nr_maps,
+ 		struct iattr *iattr);
+ 
+-int xfs_break_layouts(struct inode *inode, uint *iolock);
++int xfs_break_layouts(struct inode *inode, uint *iolock, bool with_imutex);
+ #else
+ static inline int xfs_break_layouts(struct inode *inode, uint *iolock)
+ {
+-- 
+1.9.1
 
 _______________________________________________
 xfs mailing list
