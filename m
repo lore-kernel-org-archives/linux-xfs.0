@@ -1,26 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 1E0217F63
+	by oss.sgi.com (Postfix) with ESMTP id 283557F66
 	for <xfs@oss.sgi.com>; Tue,  7 Apr 2015 08:37:25 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 0D93E3041EC
-	for <xfs@oss.sgi.com>; Tue,  7 Apr 2015 06:37:24 -0700 (PDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 1793F3041F0
+	for <xfs@oss.sgi.com>; Tue,  7 Apr 2015 06:37:22 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id n7sN3gNIBlseoR3Y (version=TLSv1
+	cuda.sgi.com with ESMTP id aYk3pIL2NHCUd0ox (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
 	Tue, 07 Apr 2015 06:37:21 -0700 (PDT)
-Received: from int-mx14.intmail.prod.int.phx2.redhat.com
-	(int-mx14.intmail.prod.int.phx2.redhat.com [10.5.11.27])
-	by mx1.redhat.com (Postfix) with ESMTPS id 5580838590E
-	for <xfs@oss.sgi.com>; Tue,  7 Apr 2015 13:37:20 +0000 (UTC)
-Date: Tue, 7 Apr 2015 09:37:19 -0400
+Date: Tue, 7 Apr 2015 09:37:14 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH] xfsprogs: remove unreachable code in libxfs_inode_alloc
-Message-ID: <20150407133718.GF23208@bfoster.bfoster>
-References: <5522C22E.4000107@redhat.com>
+Subject: Re: [PATCH] xfs_db: disallow sb UUID write on v5 filesystems
+Message-ID: <20150407133714.GE23208@bfoster.bfoster>
+References: <5522A0DB.2010309@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <5522C22E.4000107@redhat.com>
+In-Reply-To: <5522A0DB.2010309@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,50 +30,48 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Eric Sandeen <sandeen@redhat.com>
-Cc: xfs-oss <xfs@oss.sgi.com>
+Cc: 782012@bugs.debian.org, xfs-oss <xfs@oss.sgi.com>
 
-On Mon, Apr 06, 2015 at 12:28:14PM -0500, Eric Sandeen wrote:
-> This code does:
+On Mon, Apr 06, 2015 at 10:06:03AM -0500, Eric Sandeen wrote:
+> Do not allow xfs_db (or the xfs_admin frontend) to change the UUID
+> of a V5 filesystem; this will cause UUID mismatches across the
+> filesystem, and we currently have no mechanism to update them all.
+> Changing only the superblock UUID makes all other metadata look
+> invalid, and xfs_repair reacts by junking everything.
 > 
->         if (!ialloc_context && !ip)
->                 return;
-> 
->         // if !ip here, ialloc_context must be true
-> 
->         if (ialloc_context) {
->                 ...
->                 if (!ip)
->                         error = ENOSPC;
->                 if (error)
->                         return error;
->                 // if !ip in this block we've returned
->         }
-> 
->         // so (!ip) cannot be true here
->         if (!ip)
->                 error = ENOSPC;
-> 
-> (cherry picked this one out of Coverity reports)
-> 
+> Addresses-Debian-Bug: 782012
+> Reported-by: F. Stoyan <fstoyan@swapon.de>
 > Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 > ---
+> 
+> diff --git a/db/sb.c b/db/sb.c
+> index 6cb665d..f31f4a2 100644
+> --- a/db/sb.c
+> +++ b/db/sb.c
+> @@ -363,6 +363,18 @@ uuid_f(
+>  			return 0;
+>  		}
+>  
+> +		/*
+> +		* For now, changing the UUID of V5 superblock filesystems is
+> +		* not supported; we do not have the infrastructure to fix all
+> +		* other metadata when a new superblock UUID is generated.
+> +		*/
+
+Unaligned start of comment above. :) Otherwise looks fine to me:
 
 Reviewed-by: Brian Foster <bfoster@redhat.com>
 
-> 
-> diff --git a/libxfs/util.c b/libxfs/util.c
-> index 6464a1b..49eb76d 100644
-> --- a/libxfs/util.c
-> +++ b/libxfs/util.c
-> @@ -700,8 +700,6 @@ libxfs_inode_alloc(
->  		if (error)
->  			return error;
->  	}
-> -	if (!ip)
-> -		error = ENOSPC;
->  
->  	*ipp = ip;
->  	return error;
+> +		if (xfs_sb_version_hascrc(&mp->m_sb) &&
+> +		    strcasecmp(argv[1], "rewrite")) {
+> +			dbprintf(_("%s: only 'rewrite' supported on V5 fs\n"),
+> +				progname);
+> +			return 0;
+> +		}
+> +
+>  		if (!strcasecmp(argv[1], "generate")) {
+>  			platform_uuid_generate(&uu);
+>  		} else if (!strcasecmp(argv[1], "nil")) {
 > 
 > _______________________________________________
 > xfs mailing list
