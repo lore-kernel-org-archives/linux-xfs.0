@@ -1,21 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 2F5BB7F78
-	for <xfs@oss.sgi.com>; Tue,  7 Apr 2015 16:07:57 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 339C27F7C
+	for <xfs@oss.sgi.com>; Tue,  7 Apr 2015 17:20:13 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 0F783304048
-	for <xfs@oss.sgi.com>; Tue,  7 Apr 2015 14:07:53 -0700 (PDT)
-Received: from fieldses.org (fieldses.org [173.255.197.46]) by cuda.sgi.com
-	with ESMTP id s49FTIhC8DTV33EQ for <xfs@oss.sgi.com>;
-	Tue, 07 Apr 2015 14:07:52 -0700 (PDT)
-Date: Tue, 7 Apr 2015 17:07:47 -0400
+	by relay3.corp.sgi.com (Postfix) with ESMTP id B4798AC002
+	for <xfs@oss.sgi.com>; Tue,  7 Apr 2015 15:20:09 -0700 (PDT)
+Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
+	[150.101.137.143]) by cuda.sgi.com with ESMTP id
+	gGyJsQheu7BoQBv0 for <xfs@oss.sgi.com>;
+	Tue, 07 Apr 2015 15:20:07 -0700 (PDT)
+Date: Wed, 8 Apr 2015 08:19:27 +1000
+From: Dave Chinner <david@fromorbit.com>
 Subject: Re: [PATCH] xfs: unlock i_mutex in xfs_break_layouts
-Message-ID: <20150407210747.GD3363@fieldses.org>
+Message-ID: <20150407221927.GD15810@dastard>
 References: <1428420944-20965-1-git-send-email-hch@lst.de>
 MIME-Version: 1.0
 Content-Disposition: inline
 In-Reply-To: <1428420944-20965-1-git-send-email-hch@lst.de>
-From: bfields@fieldses.org (J. Bruce Fields)
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,69 +36,9 @@ On Tue, Apr 07, 2015 at 05:35:44PM +0200, Christoph Hellwig wrote:
 > We want to drop all I/O path locks when recalling layouts, and that includes
 > i_mutex for the write path.  Without this we get stuck processe when recalls
 > take too long.
-
-Also if the writer is an nfsd thread than we'd rather just error out
-than wait.
-
---b.
-
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  fs/xfs/xfs_file.c  | 4 ++--
->  fs/xfs/xfs_ioctl.c | 2 +-
->  fs/xfs/xfs_iops.c  | 2 +-
->  fs/xfs/xfs_pnfs.c  | 7 ++++++-
->  fs/xfs/xfs_pnfs.h  | 2 +-
->  5 files changed, 11 insertions(+), 6 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-> index a2e1cb8..963dfb2 100644
-> --- a/fs/xfs/xfs_file.c
-> +++ b/fs/xfs/xfs_file.c
-> @@ -559,7 +559,7 @@ restart:
->  	if (error)
->  		return error;
->  
-> -	error = xfs_break_layouts(inode, iolock);
-> +	error = xfs_break_layouts(inode, iolock, true);
->  	if (error)
->  		return error;
->  
-> @@ -843,7 +843,7 @@ xfs_file_fallocate(
->  		return -EOPNOTSUPP;
->  
->  	xfs_ilock(ip, iolock);
-> -	error = xfs_break_layouts(inode, &iolock);
-> +	error = xfs_break_layouts(inode, &iolock, false);
->  	if (error)
->  		goto out_unlock;
->  
-> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-> index ac4feae..3a21cc7 100644
-> --- a/fs/xfs/xfs_ioctl.c
-> +++ b/fs/xfs/xfs_ioctl.c
-> @@ -639,7 +639,7 @@ xfs_ioc_space(
->  		return error;
->  
->  	xfs_ilock(ip, iolock);
-> -	error = xfs_break_layouts(inode, &iolock);
-> +	error = xfs_break_layouts(inode, &iolock, false);
->  	if (error)
->  		goto out_unlock;
->  
-> diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-> index e53a903..79520c7 100644
-> --- a/fs/xfs/xfs_iops.c
-> +++ b/fs/xfs/xfs_iops.c
-> @@ -975,7 +975,7 @@ xfs_vn_setattr(
->  		uint		iolock = XFS_IOLOCK_EXCL;
->  
->  		xfs_ilock(ip, iolock);
-> -		error = xfs_break_layouts(dentry->d_inode, &iolock);
-> +		error = xfs_break_layouts(dentry->d_inode, &iolock, true);
->  		if (!error)
->  			error = xfs_setattr_size(ip, iattr);
+.....
 >  		xfs_iunlock(ip, iolock);
 > diff --git a/fs/xfs/xfs_pnfs.c b/fs/xfs/xfs_pnfs.c
 > index 365dd57..981a657 100644
@@ -125,27 +66,22 @@ than wait.
 > +			mutex_lock(&inode->i_mutex);
 >  		xfs_ilock(ip, *iolock);
 >  	}
->  
-> diff --git a/fs/xfs/xfs_pnfs.h b/fs/xfs/xfs_pnfs.h
-> index b7fbfce..f749475 100644
-> --- a/fs/xfs/xfs_pnfs.h
-> +++ b/fs/xfs/xfs_pnfs.h
-> @@ -8,7 +8,7 @@ int xfs_fs_map_blocks(struct inode *inode, loff_t offset, u64 length,
->  int xfs_fs_commit_blocks(struct inode *inode, struct iomap *maps, int nr_maps,
->  		struct iattr *iattr);
->  
-> -int xfs_break_layouts(struct inode *inode, uint *iolock);
-> +int xfs_break_layouts(struct inode *inode, uint *iolock, bool with_imutex);
->  #else
->  static inline int xfs_break_layouts(struct inode *inode, uint *iolock)
->  {
-> -- 
-> 1.9.1
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-nfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+That's kinda nasty, and it has no documentation explaining when or
+why we'd need to drop the i_mutex. How are we supposed to know if we
+need to drop the i_mutex or not? What happens if the upper VFS
+layers change or we have a multiple call paths that have different
+i_mutex contexts (i.e. one holds, another doesn't)?
+
+Which makes me wonder - is this layout breaking stuff at the right
+layer?
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
