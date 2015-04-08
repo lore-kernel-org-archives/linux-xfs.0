@@ -1,23 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 07DA47F5A
-	for <xfs@oss.sgi.com>; Wed,  8 Apr 2015 13:16:58 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id A30357F67
+	for <xfs@oss.sgi.com>; Wed,  8 Apr 2015 16:14:58 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 88972AC009
-	for <xfs@oss.sgi.com>; Wed,  8 Apr 2015 11:16:54 -0700 (PDT)
-Received: from fieldses.org (fieldses.org [173.255.197.46]) by cuda.sgi.com
-	with ESMTP id hfEfZIMmKpAYCN5Z for <xfs@oss.sgi.com>;
-	Wed, 08 Apr 2015 11:16:52 -0700 (PDT)
-Date: Wed, 8 Apr 2015 14:16:51 -0400
-From: "J. Bruce Fields" <bfields@fieldses.org>
-Subject: Re: [PATCH] xfs: unlock i_mutex in xfs_break_layouts
-Message-ID: <20150408181651.GA3916@fieldses.org>
-References: <1428420944-20965-1-git-send-email-hch@lst.de>
-	<20150407210747.GD3363@fieldses.org>
-	<20150408162104.GC16052@lst.de>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 1FB4AAC001
+	for <xfs@oss.sgi.com>; Wed,  8 Apr 2015 14:14:57 -0700 (PDT)
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	90uYtT8WhnqXidgL for <xfs@oss.sgi.com>;
+	Wed, 08 Apr 2015 14:14:52 -0700 (PDT)
+Date: Thu, 9 Apr 2015 07:14:36 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: =?utf-8?B?5Zue5aSN?= =?utf-8?B?77ya?= XFS direct IO problem
+Message-ID: <20150408211436.GF15810@dastard>
+References: <tencent_316A3DE769544D99766FE3F1@qq.com>
+	<20150408044955.GE15810@dastard>
+	<tencent_60C0CC90244648E22E374DF9@qq.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20150408162104.GC16052@lst.de>
+In-Reply-To: <tencent_60C0CC90244648E22E374DF9@qq.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,42 +27,49 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-nfs@vger.kernel.org, viro@zeniv.linux.org.uk, xfs@oss.sgi.com
+To: YeYin <eyniy@qq.com>
+Cc: xfs <xfs@oss.sgi.com>
 
-On Wed, Apr 08, 2015 at 06:21:04PM +0200, Christoph Hellwig wrote:
-> On Tue, Apr 07, 2015 at 05:07:47PM -0400, J. Bruce Fields wrote:
-> > On Tue, Apr 07, 2015 at 05:35:44PM +0200, Christoph Hellwig wrote:
-> > > We want to drop all I/O path locks when recalling layouts, and that includes
-> > > i_mutex for the write path.  Without this we get stuck processe when recalls
-> > > take too long.
-> > 
-> > Also if the writer is an nfsd thread than we'd rather just error out
-> > than wait.
-
-(To be clear: ACK to this patch as far as I'm concerned, I've got
-another concern but we need this fix regardless.)
-
-> We have no way to know we are called by nfsd here unfortunately.
-
-I was imagining the possible deadlock here as mostly theoretical, but
-now that I think of it it doesn't sound unlikely at all:
-
-	- file is under heavy write load
-	- conflicting operation breaks layout
-	- nfsd threads all block in writes to that file
-	- no nfsd threads available to service layout return
-	- recall times out, client fenced.
-
-Ugh.
-
---b.
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gV2VkLCBBcHIgMDgsIDIwMTUgYXQgMDM6MDU6NTdQTSArMDgwMCwgWWVZaW4gd3JvdGU6Cj4g
+RGF2ZSwKPiBUaGFuayB5b3UgZm9yIHlvdXIgZXhwbGFuYXRpb24uIEkgZ290IHRoZSByZWFzb24s
+IGFuZCBJIHdyaXRlIHNvbWUgY29kZSB0byAgc2ltdWxhdGUgdGhlIE15U1FMLkl0IHdpbGwgcmVw
+cm9kdWNlIHRoZSBwcm9ncmVzczrigI0KPiAKPiAKPiBvcGVuIGZpbGUgd2l0aG91dCBkaXJlY3Qg
+ZmxhZwo+IHJlYWQgZmlsZSAgIC8vY2F1c2Uga2VybmVsIHJlYWRhaGVhZCA0IHBhZ2VzLCBhbmQg
+aW5vZGUtPmlfbWFwcGluZy0+bnJwYWdlcyA+IDAKPiBjbG9zZSBmaWxlCj4gCj4gCj4gb3BlbiBm
+aWxlIHdpdGggZGlyZWN0IGZsYWcKPiBsc2VlayA0KjQwOTYgLy8gc2tpcCA0IHJlYWRhaGVhZCBw
+YWdlcwo+IHJlYWQgIGZpbGUgLy9jYXVzZSB4ZnNfZmx1c2hpbnZhbF9wYWdlcyB0byBkbyBub3Ro
+aW5nCj4gLi4uCj4gCgpZZXMsIHlvdSBjYW4gY2F1c2UgaXQgdGhhdCB3YXksIGJ1dCBhbnkgYXBw
+bGljYXRpb24gbWl4aW5nIGJ1ZmZlcmVkCklPIGFuZCBkaXJlY3QgSU8gbGlrZSB0aGF0IGlzIGJy
+b2tlbi4gIEknbGwgcG9pbnQgeW91IGF0IHRoZSBvcGVuKDIpCm1hbiBwYWdlLCBpbiB0aGUgc2Vj
+dGlvbiBhYm91dCBPX0RJUkVDVDoKCgkiQXBwbGljYXRpb25zIHNob3VsZCBhdm9pZCBtaXhpbmcg
+T19ESVJFQ1QgYW5kIG5vcm1hbCBJL08gdG8KCXRoZSBzYW1lIGZpbGUsIGFuZCBlc3BlY2lhbGx5
+IHRvIG92ZXJsYXBwaW5nIGJ5dGUgcmVnaW9ucyBpbgoJdGhlICBzYW1lIGZpbGUuICAgRXZlbiAg
+d2hlbiAgdGhlIGZpbGVzeXN0ZW0gY29ycmVjdGx5CgloYW5kbGVzIHRoZSBjb2hlcmVuY3kgaXNz
+dWVzIGluIHRoaXMgc2l0dWF0aW9uLCBvdmVyYWxsIEkvTwoJdGhyb3VnaHB1dCBpcyBsaWtlbHkg
+dG8gYmUgc2xvd2VyIHRoYW4gdXNpbmcgZWl0aGVyIG1vZGUKCWFsb25lLiAgTGlrZXdpc2UsIGFw
+cGxpY2F0aW9ucyBzaG91bGQgYXZvaWQgbWl4aW5nIG1tYXAoMikKCW9mIGZpbGVzIHdpdGggZGly
+ZWN0IEkvTyB0byB0aGUgc2FtZSBmaWxlcy4iCgpJT1dzLCB5b3VyIHRlc3QgcHJvZ3JhbSBpcyBi
+ZWhhdmluZyBhcyBkb2N1bWVudGVkIGZvciBhIHByb2dyYW0KdGhhdCBtaXhlcyBidWZmZXJlZCBh
+bmQgZGlyZWN0IElPLi4uLgoKQUZBSUssIE15U1FMIGRvZXMgbm90IGRvICBtaXhlZCBidWZmZXIv
+ZGlyZWN0IElPIGxpa2UgdGhpcyBhbmQgc28KdGhpcyBpcyBleHRyZW1lbHkgdW5saWtlbHkgdG8g
+YmUgdGhlIHNvdXJjZSBvZiB0aGUgcHJvYmxlbS4gIEkgbmVlZAp0byB1bmRlcnN0YW5kIGhvdyBN
+eVNRTCBpcyBnZW5lcmF0aW5nIGNhY2hlZCBwYWdlcyBvbiBpdCdzIGRhdGFiYXNlCmZpbGVzIHdo
+ZW4gaXQgaXMgc3VwcG9zZWQgdG8gYmUgdXNpbmcgZGlyZWN0IElPLCBhbmQgdGhlIHJlcHJvZHVj
+ZXIKcHJvZ3JhbSBuZWVkcyB0byBkbyB3aGF0IE15U1FMIGRvZXMgdG8gZ2VuZXJhdGUgY2FjaGVk
+IHBhZ2VzLgoKQ2FuIHlvdSBwbGVhc2UgZmluZCB0aGUgbG9jYXRpb24gb2YgdGhlIGNhY2hlZCBw
+YWdlcyAoYXMgSQpzdWdnZ2VzdGVkIHZpYSB0cmFjaW5nIGluIG15IGxhc3QgZW1haWwpIGluIHRo
+ZSBNeVNRTCBmaWxlcyB0aGF0IGFyZQpjYXVzaW5nIHRoZSBwcm9ibGVtPwoKPiBJJ2QgbGlrZSB0
+byBhc2sgWEZTIGhvdyB0byByZXNvdmxlIHRoaXMgcHJvYmxlbT8KCkFwcGxpY2F0aW9ucyB0aGF0
+IG5lZWQgdG8gbWl4IGJ1ZmZlcmVkIGFuZCBkaXJlY3QgSU8gY2FuIGludmFsaWRhdGUKdGhlIGNh
+Y2hlZCBwYWdlcyBieSB1c2luZyBQT1NJWF9GQURWX0RPTlRORUVEIGJlZm9yZSBkb2luZyBkaXJl
+Y3QKSU8uCgpGV0lXLCBZb3UgbXVzdCBiZSBsb29raW5nIGF0IHF1aXRlIG9sZCBrZXJuZWwgY29k
+ZSBpZgp4ZnNfZmx1c2hpbnZhbF9wYWdlcygpIGV4aXN0cyBpbiB5b3VyIGtlcm5lbC4gRG9lcyBN
+eVNRTCBvbiBhCmN1cnJlbnQgdXBzdHJlYW0ga2VybmVsIGhhdmUgdGhlIHNhbWUgcHJvYmxlbT8K
+CkNoZWVycywKCkRhdmUuCi0tIApEYXZlIENoaW5uZXIKZGF2aWRAZnJvbW9yYml0LmNvbQoKX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KeGZzIG1haWxpbmcg
+bGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8v
+eGZzCg==
