@@ -1,22 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 8D6C07F37
-	for <xfs@oss.sgi.com>; Sun,  5 Apr 2015 11:29:21 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 690DE8F8033
-	for <xfs@oss.sgi.com>; Sun,  5 Apr 2015 09:29:18 -0700 (PDT)
-Received: from ZenIV.linux.org.uk (zeniv.linux.org.uk [195.92.253.2]) by
-	cuda.sgi.com with ESMTP id 8U9hiykHvxPpYRS0 (version=TLSv1
+	by oss.sgi.com (Postfix) with ESMTP id B1CB77F7C
+	for <xfs@oss.sgi.com>; Wed,  8 Apr 2015 11:14:02 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id A10FC8F8068
+	for <xfs@oss.sgi.com>; Wed,  8 Apr 2015 09:13:59 -0700 (PDT)
+Received: from newverein.lst.de (verein.lst.de [213.95.11.211]) by
+	cuda.sgi.com with ESMTP id E8cJkRi91pvcA291 (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Sun, 05 Apr 2015 09:29:15 -0700 (PDT)
-Date: Sun, 5 Apr 2015 17:27:59 +0100
-From: Al Viro <viro@ZenIV.linux.org.uk>
-Subject: Re: [RFC PATCH 0/5] Remove rw parameter from direct_IO()
-Message-ID: <20150405162758.GI889@ZenIV.linux.org.uk>
-References: <cover.1426502566.git.osandov@osandov.com>
+	Wed, 08 Apr 2015 09:13:57 -0700 (PDT)
+Date: Wed, 8 Apr 2015 18:13:55 +0200
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH 2/2][v2] blk-plug: don't flush nested plug lists
+Message-ID: <20150408161355.GA16052@lst.de>
+References: <1428347694-17704-1-git-send-email-jmoyer@redhat.com>
+	<1428347694-17704-2-git-send-email-jmoyer@redhat.com>
+	<x49wq1nrcoe.fsf_-_@segfault.boston.devel.redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <cover.1426502566.git.osandov@osandov.com>
+In-Reply-To: <x49wq1nrcoe.fsf_-_@segfault.boston.devel.redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,16 +31,13 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Omar Sandoval <osandov@osandov.com>
-Cc: Latchesar Ionkov <lucho@ionkov.net>, Dave Kleikamp <shaggy@kernel.org>, jfs-discussion@lists.sourceforge.net, Jan Kara <jack@suse.cz>, Trond Myklebust <trond.myklebust@primarydata.com>, David Sterba <dsterba@suse.cz>, Chris Mason <clm@fb.com>, Andreas Dilger <adilger.kernel@dilger.ca>, Ryusuke Konishi <konishi.ryusuke@lab.ntt.co.jp>, linux-cifs@vger.kernel.org, linux-nilfs@vger.kernel.org, Sage Weil <sage@redhat.com>, Miklos Szeredi <miklos@szeredi.hu>, cluster-devel@redhat.com, Steve French <sfrench@samba.org>, v9fs-developer@lists.sourceforge.net, linux-ext4@vger.kernel.org, Changman Lee <cm224.lee@samsung.com>, Boaz Harrosh <ooo@electrozaur.com>, fuse-devel@lists.sourceforge.net, Mark Fasheh <mfasheh@suse.com>, reiserfs-devel@vger.kernel.org, xfs@oss.sgi.com, Oleg Drokin <oleg.drokin@intel.com>, osd-dev@open-osd.org, HPDD-discuss@ml01.01.org, Jaegeuk Kim <jaegeuk@kernel.org>, ceph-devel@vger.kernel.org, Steven Whitehouse <swhiteho@redhat.com>, linux-nfs@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, Benny Halevy <bhalevy@primarydata.com>, Josef Bacik <jbacik@fb.com>, linux-kernel@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, Yan Zheng <zyan@redhat.com>, Eric Van Hensbergen <ericvh@gmail.com>, linux-btrfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, Ron Minnich <rminnich@sandia.gov>, Anna Schumaker <anna.schumaker@netapp.com>, ocfs2-devel@oss.oracle.com, Joel Becker <jlbec@evilplan.org>
+To: Jeff Moyer <jmoyer@redhat.com>
+Cc: Vladimir Davydov <vdavydov@parallels.com>, linux-aio@kvack.org, Miklos Szeredi <mszeredi@suse.cz>, Mike Snitzer <snitzer@redhat.com>, Neil Brown <neilb@suse.de>, Ming Lei <tom.leiming@gmail.com>, Ming Lei <ming.lei@canonical.com>, Trond Myklebust <trond.myklebust@primarydata.com>, Jianyu Zhan <nasa4836@gmail.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, linux-kernel@vger.kernel.org, Sagi Grimberg <sagig@mellanox.com>, Chris Mason <clm@fb.com>, dm-devel@redhat.com, target-devel@vger.kernel.org, Andreas Dilger <adilger.kernel@dilger.ca>, Mikulas Patocka <mikulas@artax.karlin.mff.cuni.cz>, Mark Rustad <mark.d.rustad@intel.com>, Christoph Hellwig <hch@lst.de>, Alasdair Kergon <agk@redhat.com>, Matthew Wilcox <matthew.r.wilcox@intel.com>, linux-scsi@vger.kernel.org, Namjae Jeon <namjae.jeon@samsung.com>, linux-raid@vger.kernel.org, cluster-devel@redhat.com, Mel Gorman <mgorman@suse.de>, Suleiman Souhlal <suleiman@google.com>, linux-ext4@vger.kernel.org, linux-mm@kvack.org, Changman Lee <cm224.lee@samsung.com>, Rik van Riel <riel@redhat.com>, Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>, xfs@oss.sgi.com, Fabian Frederick <fabf@skynet.be>, Joe Perches <joe@perches.com>, Alexander Viro <viro@zeniv.linux.org.uk>, xen-devel@lists.xenproject.org, Jaegeuk Kim <jaegeuk@kernel.org>, Steven Whitehouse <swhiteho@redhat.com>, Vlastimil Babka <vbabka@suse.cz>, Jens Axboe <axboe@kernel.dk>, Michal Hocko <mhocko@suse.cz>, linux-nfs@vger.kernel.org, Fengguang Wu <fengguang.wu@intel.com>, Theodore Ts'o <tytso@mit.edu>, "Martin K. Petersen" <martin.petersen@oracle.com>, Wang Sheng-Hui <shhuiw@gmail.com>, Josef Bacik <jbacik@fb.com>, David Sterba <dsterba@suse.cz>, linux-f2fs-devel@lists.sourceforge.net, linux-btrfs@vger.kernel.org, Johannes Weiner <hannes@cmpxchg.org>, Tejun Heo <tj@kernel.org>, linux-fsdevel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Weston Andros Adamson <dros@primarydata.com>, Anna Schumaker <anna.schumaker@netapp.com>, "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>, Roger Pau Monn?? <roger.pau@citrix.com>
 
-On Mon, Mar 16, 2015 at 04:33:48AM -0700, Omar Sandoval wrote:
-> Hi,
-> 
-> Al, here's some cleanup that you mentioned back in December that I got
-> around to (https://lkml.org/lkml/2014/12/15/28).
-
-Applied.  See #for-next
+This looks good, but without the blk_finish_plug argument we're bound
+to grow programming mistakes where people forget it.  Any chance we
+could have annotations similar to say rcu_read_lock/rcu_read_unlock
+or the spinlocks so that sparse warns about it?
 
 _______________________________________________
 xfs mailing list
