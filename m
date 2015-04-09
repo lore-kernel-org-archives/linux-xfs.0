@@ -1,24 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 3B12C7F67
-	for <xfs@oss.sgi.com>; Thu,  9 Apr 2015 08:37:03 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id BB52B7F9A
+	for <xfs@oss.sgi.com>; Thu,  9 Apr 2015 09:09:24 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 212168F8049
-	for <xfs@oss.sgi.com>; Thu,  9 Apr 2015 06:37:02 -0700 (PDT)
-Received: from mail-wg0-f45.google.com (mail-wg0-f45.google.com
-	[74.125.82.45]) by cuda.sgi.com with ESMTP id 5XDEEHfVFyozKkl7
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 09 Apr 2015 06:37:00 -0700 (PDT)
-Received: by wgsk9 with SMTP id k9so97958244wgs.3
-	for <xfs@oss.sgi.com>; Thu, 09 Apr 2015 06:36:59 -0700 (PDT)
-Date: Thu, 9 Apr 2015 14:36:58 +0100 (BST)
-From: Mark Hills <mark.hills@framestore.com>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id B1E13304043
+	for <xfs@oss.sgi.com>; Thu,  9 Apr 2015 07:09:21 -0700 (PDT)
+Received: from c.mx.filmlight.ltd.uk (c.mx.filmlight.ltd.uk [54.76.112.217])
+	by cuda.sgi.com with ESMTP id ygpYqYfndskx1Bw7 for
+	<xfs@oss.sgi.com>; Thu, 09 Apr 2015 07:09:19 -0700 (PDT)
 Subject: Re: Errors from basic open_by_handle operations
-In-Reply-To: <1428584963.5198.478.camel@montana.filmlight.ltd.uk>
-Message-ID: <1504091422580.18609@sys953.ldn.framestore.com>
+From: Roger Willcocks <roger@filmlight.ltd.uk>
+In-Reply-To: <1504091316590.18609@sys953.ldn.framestore.com>
 References: <1504091316590.18609@sys953.ldn.framestore.com>
-	<1428584963.5198.478.camel@montana.filmlight.ltd.uk>
-MIME-Version: 1.0
+Date: Thu, 09 Apr 2015 15:09:18 +0100
+Message-Id: <1428588558.5198.483.camel@montana.filmlight.ltd.uk>
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,68 +27,72 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Roger Willcocks <roger@filmlight.ltd.uk>
+To: Mark Hills <mark.hills@framestore.com>
 Cc: xfs@oss.sgi.com
 
-On Thu, 9 Apr 2015, Roger Willcocks wrote:
+The code below works here on a CentOS 6.4 box ('test' is a file at the
+root of the volume):
 
-> There's a small gotcha - the filesystem itself has to have been opened:
+$ ./a.out
+hlen = 24
+fd = -1
+$ sudo ./a.out
+hlen = 24
+fd = 4
+
+
+/* g++ handle_test.cpp -lhandle */
+
+#include <stdlib.h>
+#include <stdio.h>
+#include <fcntl.h>
+#include <sys/types.h>
+#include <xfs/handle.h>
+
+int main(int argc, char *argv[])
+{
+  void *xfs_handle = 0;
+  size_t hlen = 0;
+
+  if (path_to_fshandle("/mnt/disk1", &xfs_handle, &hlen) < 0)
+    exit(4);
+
+  if (path_to_handle("/mnt/disk1/test", &xfs_handle, &hlen) < 0)
+    exit(5);
+
+  printf("hlen = %d\n", (int)hlen);
+
+  int fd = open_by_handle(xfs_handle, hlen, O_RDWR);
+
+  printf("fd = %d\n", fd);
+  return 0;
+}
+
+
+On Thu, 2015-04-09 at 13:53 +0100, Mark Hills wrote:
+> I am having troubles with elementary file handle functions in libhandle.
 > 
->         void *xfs_handle = 0;
->         size_t hlen  = 0;
+> A basic open_by_handle is giving "Bad file descriptor".
 > 
->         /* xfs library needs the filesystem to have been opened */
+> But I am suspicious of a side effect; using path_to_fshandle earlier in 
+> the program changes these errors to "Operation not permitted".
 > 
->         if (path_to_fshandle(mountpoint, &xfs_handle, &hlen) < 0) {
->                 /* error */
->                 exit(4);
->         }
+> Is there a basic mistake in my use of these calls, or a bug/unmaintained 
+> code?
 > 
->         free(xfs_handle);
-
-Thank you Roger, that moves me one step but not to success
-
-Now I know "Operation not permitted" is the correct message I assume that 
-use of XFS file handles requires root.
-
-But even as root, I cannot open a file with O_RDONLY:
-
-  $ sudo ./test-xfs ~/scratch/tmp/xfs/file.c ; echo $?
-  Handle 8 bytes: bd2c94ba959858
-  Handle 24 bytes: bd2c94ba959858e0000000870000000
-  readlink_by_handle: Not a directory
-  open_by_handle: Not a directory
-  0
-
-I am able to do open_by_handle(O_RDONLY) on a directory though:
-
-  $ sudo ./test-xfs ~/scratch/tmp/xfs/directory ; echo $?
-  Handle 8 bytes: bd2c94ba959858
-  Handle 24 bytes: bd2c94ba959858e0000000880000000
-  readlink_by_handle: Invalid argument
-  0
-
-and a readlink_by_handle on a symlink works:
-
-  $ sudo ./test-xfs ~/scratch/tmp/xfs/link.c ; echo $?
-  Handle 8 bytes: bd2c94ba959858
-  Handle 24 bytes: bd2c94ba959858e0000000860000000
-  Link: fortress.c
-  open_by_handle: Operation not permitted
-  0
-
-Switching to O_RDWR does not succeed in opening a file either, and also 
-stops the directory case.
-
-It seems possible flags are getting mangled and are not what I think they 
-mean. The docs state the call as analogous to open(); is the 'oflags' 
-argument actually ready to accept O_RDONLY etc. or some other set of 
-flags? Because it seems like I can't actually open a file here.
-
-Many thanks
-
+> I am on an XFS filesystem (otherwise the first call fails with 
+> 'inappropriate ioctl'). The only documentation I can find is the man page; 
+> no mention about initialising the library, and I wasn't able to find any 
+> examples.
+> 
+> I'm on Scientific Linux 6.6 (like RedHat 6, kernel 2.6.32-504.1.3), and 
+> also tried updating to the latest xfsprogs from Git, with the same 
+> results.
+> 
+> Many thanks
+> 
 -- 
-Mark
+Roger Willcocks <roger@filmlight.ltd.uk>
 
 _______________________________________________
 xfs mailing list
