@@ -1,26 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 569AE7F9E
-	for <xfs@oss.sgi.com>; Fri, 10 Apr 2015 08:12:54 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 3445E8F8065
-	for <xfs@oss.sgi.com>; Fri, 10 Apr 2015 06:12:50 -0700 (PDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 321E17FA3
+	for <xfs@oss.sgi.com>; Fri, 10 Apr 2015 08:38:08 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 1FB4C304048
+	for <xfs@oss.sgi.com>; Fri, 10 Apr 2015 06:38:08 -0700 (PDT)
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	fAl6u5w8CiEIhFuW for <xfs@oss.sgi.com>;
-	Fri, 10 Apr 2015 06:12:48 -0700 (PDT)
-Date: Fri, 10 Apr 2015 23:12:45 +1000
+	4nix6nIulYhU1QbT for <xfs@oss.sgi.com>;
+	Fri, 10 Apr 2015 06:38:06 -0700 (PDT)
+Received: from disappointment.disaster.area ([192.168.1.110]
+	helo=disappointment) by dastard with esmtp (Exim 4.80)
+	(envelope-from <dave@fromorbit.com>) id 1YgZ8E-0001Pi-6C
+	for xfs@oss.sgi.com; Fri, 10 Apr 2015 23:38:02 +1000
+Received: from dave by disappointment with local (Exim 4.82_1-5b7a7c0-XX)
+	(envelope-from <dave@disappointment.disaster>) id 1YgZ8E-00068r-5N
+	for xfs@oss.sgi.com; Fri, 10 Apr 2015 23:38:02 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: XFS Syncd
-Message-ID: <20150410131245.GK15810@dastard>
-References: <CABppvi6pC4qEFZUTesbT0v5agbd67MP4dEoUbaVFwEyCv4h21g@mail.gmail.com>
-	<20150410063210.GJ15810@dastard>
-	<CABppvi4e_xEMY7tDHtEo6miZcN2AZ-mFMHXKaUS0hfpx6AMt0w@mail.gmail.com>
-	<20150410072100.GL13731@dastard>
-	<CABppvi437S9e+DEFOi6ECPu8=AnEK0V=5rRmU5Of1_XtWiQbfA@mail.gmail.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <CABppvi437S9e+DEFOi6ECPu8=AnEK0V=5rRmU5Of1_XtWiQbfA@mail.gmail.com>
+Subject: [PATCH 4/5] xfs: direct IO EOF zeroing needs to drain AIO
+Date: Fri, 10 Apr 2015 23:37:59 +1000
+Message-Id: <1428673080-23052-5-git-send-email-david@fromorbit.com>
+In-Reply-To: <1428673080-23052-1-git-send-email-david@fromorbit.com>
+References: <1428673080-23052-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,95 +30,57 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Shrinand Javadekar <shrinand@maginatics.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Fri, Apr 10, 2015 at 12:29:34AM -0700, Shrinand Javadekar wrote:
-> On Fri, Apr 10, 2015 at 12:21 AM, Dave Chinner <david@fromorbit.com> wrote:
-> > On Thu, Apr 09, 2015 at 11:51:17PM -0700, Shrinand Javadekar wrote:
-> >> Thanks for the reply Dave!
-> >>
-> >> >
-> >> > Oh, right, it's that workqueue we removed in late 2012 (in the 3.7
-> >> > cycle) because it was redundant. The only remaining fragment of it
-> >> > is the xfslogd. What kernel are you running?
-> >>
-> >> I am running 3.13.0-39-generic on Ubuntu 14.04.
-> >
-> > You can't be running that kernel if you are seeing a process called
-> > xfssyncd in your traces.
-> 
-> I don't see a process called xfssyncd. I started investigating the 30
-> second pauses but looking for xfs config options in sysctl. We found
-> the option "fs.xfs.xfssyncd_centisecs" whose documentation[1] says it
-> is the interval in which the "filesystem flushes metadata out to disk
-> and runs internal cache cleanup routines".
+From: Dave Chinner <dchinner@redhat.com>
 
-Right, that's what it does, but even though xfssynd has been
-removed, we can't remove or rename the sysctl because it's part
-of the userspace ABI.
+When we are doing AIO DIO writes, the IOLOCK only provides an IO
+submission barrier. When we need to do EOF zeroing, we need to ensure
+that no other IO is in progress and all pending in-core EOF updates
+have been completed. This requires us to wait for all outstanding
+AIO DIO writes to the inode to complete and, if necessary, run their
+EOF updates.
 
-> I tweaked this setting and saw the corresponding changes in the
-> performance. Bumping this value up saw pauses at longer interval,
-> decreasing this interval saw pauses more frequently.
+Once all the EOF updates are complete, we can then restart
+xfs_file_aio_write_checks() while holding the IOLOCK_EXCL, knowing
+that EOF is up to date and we have exclusive IO access to the file
+so we can run EOF block zeroing if we need to without interference.
+This gives EOF zeroing the same exclusivity against other IO as we
+provide truncate operations.
 
-Ok, so it's not speculative preallocation that is the problem,
-it's metadata writeback that is causing the stalls. I forgot the log
-worker is also triggered of that sysctl, and so...
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/xfs_file.c | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
 
-> >> >> I am seeing a behavior where the system pretty much stalls for ~5
-> >> >> seconds after every 30 seconds. I see that the # of ios goes up but
-> >> >> the actual write bandwidth during this 5 second period is very low
-> >> >> (see attached images). After a fair bit of investigation, we've
-> >> >> narrowed down the problem to XFS's syncd (fs.xfs.xfssyncd_centisecs).
-> >> >> This runs at a default interval of 30 seconds.
-> >> >
-> >> > It's doing background inode reclaim which, under some circumstances,
-> >> > involves truncating specualtive allocation beyond EOF before reclaim
-> >> > occurs, which results in transactions and inode writeback. It was
-> >> > highly inefficient, which is why we replaced it.
-> >>
-> >> Oh.. I see. So, this isn't even actual filesystem metadata. And there
-> >> is no option to turn the speculative allocation on/off?
-> >
-> > You can turn it off, but now you're jumping to conclusions that this
-> > is the cause of your problems. Perhaps you should do some
-> > tracing/profiling whenthe system goes through these stalls to see
-> > what is actually happening? "perf top" and trace-cmd are very useful
-> > for this sort of investigation...
-> 
-> Let me dig deeper here using "perf top" and see what's running during
-> these stalls.
-
-... it's much more likely that filesystem metadata writeback is
-being run every 30s, and that's what is causing the issue. i.e. you
-should see the xfsaild issuing lots of IO very quickly.
-
-See, fsync() doesn't cause metadata writeback; only data writeback.
-The metadata is written to the log, not it's final place on disk
-during fsync. So some time later it's got to me written back because
-it is still dirty in memory, and that's most likely what is
-happening.
-
-My guess is you have RAID5 or RAID6 and the partial stripe writes
-are causing it to do RMW cycles and hence it's really, really slow
-when metadata gets written...
-
-Probably too late now as I've now basically asked for all this info,
-but:
-
-http://xfs.org/index.php/XFS_FAQ#Q:_What_information_should_I_include_when_reporting_a_problem.3F
-
-Cheers,
-
-Dave.
+diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+index 38ff356..7b872f4 100644
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@ -587,6 +587,16 @@ restart:
+ 			xfs_rw_iunlock(ip, *iolock);
+ 			*iolock = XFS_IOLOCK_EXCL;
+ 			xfs_rw_ilock(ip, *iolock);
++
++			/*
++			 * We now have an IO submission barrier in place, but
++			 * AIO can do EOF updates during IO completion and hence
++			 * we now need to wait for all of them to drain. Non-AIO
++			 * DIO will have drained before we are given the
++			 * XFS_IOLOCK_EXCL, and so for most cases this wait is a
++			 * no-op.
++			 */
++			inode_dio_wait(inode);
+ 			goto restart;
+ 		}
+ 		error = xfs_zero_eof(ip, *pos, i_size_read(inode), &zero);
 -- 
-Dave Chinner
-david@fromorbit.com
+2.0.0
 
 _______________________________________________
 xfs mailing list
