@@ -1,24 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 293977F51
-	for <xfs@oss.sgi.com>; Sun, 12 Apr 2015 18:31:21 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 0BCDA304039
-	for <xfs@oss.sgi.com>; Sun, 12 Apr 2015 16:31:18 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id BC1167F47
+	for <xfs@oss.sgi.com>; Sun, 12 Apr 2015 19:25:47 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id B9C3A304043
+	for <xfs@oss.sgi.com>; Sun, 12 Apr 2015 17:25:47 -0700 (PDT)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	W1AdFSOfzItaPiho for <xfs@oss.sgi.com>;
-	Sun, 12 Apr 2015 16:31:15 -0700 (PDT)
-Date: Mon, 13 Apr 2015 09:31:02 +1000
+	04DD0QiQGDSgE4wF for <xfs@oss.sgi.com>;
+	Sun, 12 Apr 2015 17:25:45 -0700 (PDT)
+Date: Mon, 13 Apr 2015 10:25:31 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 2/5] xfs: direct IO needs to use append ioends
-Message-ID: <20150412233102.GM15810@dastard>
-References: <1428673080-23052-1-git-send-email-david@fromorbit.com>
-	<1428673080-23052-3-git-send-email-david@fromorbit.com>
-	<20150411211517.GB4039@bfoster.bfoster>
+Subject: Re: [PATCH] libhandle: document the need for path_to_handle
+Message-ID: <20150413002531.GN15810@dastard>
+References: <1504091316590.18609@sys953.ldn.framestore.com>
+	<20150409133213.214186014@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20150411211517.GB4039@bfoster.bfoster>
+In-Reply-To: <20150409133213.214186014@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,93 +30,141 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
+To: tinguely@sgi.com
 Cc: xfs@oss.sgi.com
 
-On Sat, Apr 11, 2015 at 05:15:18PM -0400, Brian Foster wrote:
-> On Fri, Apr 10, 2015 at 11:37:57PM +1000, Dave Chinner wrote:
-> > From: Dave Chinner <dchinner@redhat.com>
-> > 
-> > Now we have an ioend being passed unconditionally to the direct IO
-> > write completion context, we can pass a preallocated transaction
-> > handle for on-disk inode size updates that are run in completion.
-.....
-> > --- a/fs/xfs/xfs_aops.c
-> > +++ b/fs/xfs/xfs_aops.c
-> > @@ -178,6 +178,25 @@ xfs_setfilesize_ioend(
-> >  	return xfs_setfilesize(ip, tp, ioend->io_offset, ioend->io_size);
-> >  }
-> >  
-> > +STATIC void
-> > +xfs_setfilesize_ioend_cancel(
-> > +	struct xfs_ioend	*ioend)
-> > +{
-> > +	struct xfs_trans	*tp = ioend->io_append_trans;
-> > +
-> > +	/*
-> > +	 * The transaction may have been allocated in the I/O submission thread,
-> > +	 * thus we need to mark ourselves as being in a transaction manually.
-> > +	 * Similarly for freeze protection.
-> > +	 */
+On Thu, Apr 09, 2015 at 08:31:04AM -0500, tinguely@sgi.com wrote:
+> The handle ioctls require an open file descriptor to
+> the XFS mount directory. This file descriptor is found
+> and supplied in the libhandle code by matching the
+> entry added with a path_to_handle() call. Document
+> the requirement and supply a simple example.
 > 
-> This threw me off at first because we can call this from either the
-> submission or the completion context, unlike the commit case where this
-> comment is copied from. Could we move the comment above the function and
-> clarify a bit? E.g., something like the following is a bit more clear to
-> me:
+> Signed-off-by: Mark Tinguely <tinguely@sgi.com>
 > 
-> /*
->  * The process transaction and freeze protection state is cleared immediately
->  * after setfilesize transaction allocation to support transfer of the tp from
->  * submission to completion context. Restore the context appropriately to cancel
->  * the transaction.
->  */
-
-OK, I can do that, but given your next comments, it might just go
-away.
-
-> > +	} else {
-> > +		ioend = xfs_alloc_ioend(inode, type);
-> > +		ioend->io_offset = offset;
-> > +		ioend->io_size = size;
-> > +		bh_result->b_private = ioend;
-> > +		trace_xfs_gbmap_direct_new(XFS_I(inode), offset, size, type,
-> > +					   imap);
-> > +	}
-> > +
-> > +	/* check if we need an append transaction allocated. */
-> > +	if (ioend->io_type == XFS_IO_OVERWRITE &&
-> > +	    xfs_ioend_is_append(ioend) && !ioend->io_append_trans) {
-> > +		int	error;
-> > +
-> > +		error = xfs_setfilesize_trans_alloc(ioend);
+> ---
+>  man/man3/handle.3 |   70 +++++++++++++++++++++++++++++++++++++++++++++++++++++-
+>  1 file changed, 69 insertions(+), 1 deletion(-)
 > 
-> I'm not totally convinced this is safe. We previously moved this tp
-> allocation from before a potential xfs_iomap_direct_write() call to the
-> completion side to avoid nesting this allocation with unwritten extent
-> allocation transactions. See the following for reference:
-> 
-> 	437a255a xfs: fix direct IO nested transaction deadlock
-> 
-> Now we move it after that point of the codepath, and even then we know
-> that this is an overwrite if we do the allocation here. If we continue
-> on and hit a hole, it looks like there's still a sequence to allocate
-> this transaction and call xfs_iomap_write_direct(), nesting the
-> associated transaction reservations. Am I missing something?
+> Index: b/man/man3/handle.3
+> ===================================================================
+> --- a/man/man3/handle.3
+> +++ b/man/man3/handle.3
+> @@ -74,6 +74,12 @@ The
+>  function returns the handle for the filesystem in which the object given by the
+>  .I path
+>  argument resides.
+> +.I path
+> +must be the path to the mount point or
+> +.BR open_by_handle ()
+> +will return the
+> +.B ENOTDIR
+> +error.
 
-No, I didn't really think this part through fully. I knew that we'd
-get multiple calls, and we'd get multiple allocations, but for some
-reason the penny didn't drop.
+This is wrong. ENOTDIR is only returned by open_by_handle if the
+cached fsfd is not a directory - it does not check if it's the root
+of a mount point at all. i.e, filesystem root is /mnt/scratch:
 
-What it comes down to is that either we jump through lots of hoops
-in __xfs_get_blocks() to handle this case (i.e.
-cancel/allocate/reserve on repeat calls) or we just allocate it in
-IO completion context as we currently are doing.
+$ ls -l /mnt/scratch
+total 4
+-rw-r--r--.   1 root root    0 Apr 13 09:57 foo
+drwxr-xr-x. 102 root root 4096 Apr 11 01:49 quota_dir
+$
+$ sudo ./fhtest /mnt/scratch /mnt/scratch/foo
+open_by_handle: Success
+$ sudo ./fhtest /mnt/scratch/foo /mnt/scratch/foo
+open_by_handle: Not a directory
+$ sudo ./fhtest /mnt/scratch/quota_dir/ /mnt/scratch/foo
+open_by_handle: Success
 
-I'll have a look at what cancel/allocate/reserve looks like - it
-might actually simplify the logic - and go from there.
+So, as long as the fs path points to a directory on the filesystem
+in question, open_by_handle (and all the other handle functions)
+works just fine.
 
-Thanks for catching my silly thinko, Brain!
+>  .PP
+>  The
+>  .BR fd_to_handle ()
+> @@ -95,7 +101,16 @@ The
+>  function opens a file descriptor for the object referenced by a handle.
+>  It is analogous and identical to
+>  .BR open (2)
+> -with the exception of accepting handles instead of path names.
+> +with the exception of accepting handles instead of path names. The returned
+> +file descriptor is opened to do invisible IO. Internally,
+
+Invisible IO is not defined anywhere in the man page, and most
+people will have no idea what it means. Either don't mention it, or
+define it properly first. For simplicity, I'd just omit it.
+
+> +.BR open_by_handle ()
+> +uses the mount point file descriptor that was saved by
+> +.BR path_to_fshandle ().
+> +Therefore,
+> +.BR path_to_fshandle ().
+> +must be called before calling
+
+I don't think you need to mention anything about internal
+implemenation of libhandle, just that a call to path_to_fshandle()
+is required first.
+
+> +.BR open_by_handle ().
+> +See below for an example.
+>  .PP
+>  The
+>  .BR readlink_by_handle ()
+> @@ -192,6 +207,59 @@ does not exist.
+>  .TP
+>  .B EPERM
+>  The caller does not have sufficient privileges.
+> +.SH EXAMPLE
+> +Example of
+> +.BR open_by_handle ().
+> +.PP
+> +.Vb 1
+> +\& main()
+> +.br
+> +\& {
+> +.br
+> +\&	int fd;
+> +.br
+> +\&	size_t hlen;
+> +.br
+> +\&	void *han;
+> +.br
+> +\&	size_t sz_int_used;
+> +.br
+> +\&	void *hdl_int_used;
+> +.br
+> +\&	char *mount_path = "/mnt/";
+> +.br
+> +\&	char *file = "file_to_open";
+> +.br
+> +\&	if (path_to_handle(file, &han, &hlen) < 0) {
+> +.br
+> +\&		perror("path-to-handle");
+> +.br
+> +\&		exit(1);
+> +.br
+> +\&	}
+> +.br
+> +\&	/*
+> +.br
+> +\&	 * path_to_fshandle saves an internal copy of the mount point's
+> +.br
+> +\&	 * (/mnt in this example) file descriptor. The open_by_handle call
+> +.br
+> +\&	 * looks up this internal file descriptor and uses it in the
+> +.br
+> +\&	 * xfsctl call to the kernel. Once path_to_fshandle is called,
+> +.br
+> +\&	 * this internal file descriptor remains open for the remaining
+> +.br
+> +\&	 * life of the application.
+> +.br
+> +\&	 */
+
+Again, this is internal implementation details, so isn't appropriate
+for a man page documenting an API.
 
 Cheers,
 
