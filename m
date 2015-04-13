@@ -1,22 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 06F8F7F63
-	for <xfs@oss.sgi.com>; Sun, 12 Apr 2015 23:33:29 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 06099304039
-	for <xfs@oss.sgi.com>; Sun, 12 Apr 2015 21:33:28 -0700 (PDT)
-Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
-	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	QiWI7oz6BN7WH4rU for <xfs@oss.sgi.com>;
-	Sun, 12 Apr 2015 21:33:23 -0700 (PDT)
-Received: from dave by dastard with local (Exim 4.80)
-	(envelope-from <david@fromorbit.com>) id 1YhW3Y-0006Qt-Sf
-	for xfs@oss.sgi.com; Mon, 13 Apr 2015 14:33:08 +1000
-Date: Mon, 13 Apr 2015 14:33:08 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: [ANNOUNCE] xfs: master branch updated to 21c3ea1
-Message-ID: <20150413043308.GQ15810@dastard>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 58A4F7F50
+	for <xfs@oss.sgi.com>; Mon, 13 Apr 2015 06:21:07 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id E89A3AC001
+	for <xfs@oss.sgi.com>; Mon, 13 Apr 2015 04:21:03 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id C5fpAGoEZhQ7H4Bg (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Mon, 13 Apr 2015 04:20:59 -0700 (PDT)
+Date: Mon, 13 Apr 2015 07:20:57 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 2/5] xfs: direct IO needs to use append ioends
+Message-ID: <20150413112055.GA40035@bfoster.bfoster>
+References: <1428673080-23052-1-git-send-email-david@fromorbit.com>
+	<1428673080-23052-3-git-send-email-david@fromorbit.com>
+	<20150411211517.GB4039@bfoster.bfoster>
+	<20150412233102.GM15810@dastard>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20150412233102.GM15810@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,109 +28,126 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============2284289304617785616=="
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
+On Mon, Apr 13, 2015 at 09:31:02AM +1000, Dave Chinner wrote:
+> On Sat, Apr 11, 2015 at 05:15:18PM -0400, Brian Foster wrote:
+> > On Fri, Apr 10, 2015 at 11:37:57PM +1000, Dave Chinner wrote:
+> > > From: Dave Chinner <dchinner@redhat.com>
+> > > 
+> > > Now we have an ioend being passed unconditionally to the direct IO
+> > > write completion context, we can pass a preallocated transaction
+> > > handle for on-disk inode size updates that are run in completion.
+> .....
+> > > --- a/fs/xfs/xfs_aops.c
+> > > +++ b/fs/xfs/xfs_aops.c
+> > > @@ -178,6 +178,25 @@ xfs_setfilesize_ioend(
+> > >  	return xfs_setfilesize(ip, tp, ioend->io_offset, ioend->io_size);
+> > >  }
+> > >  
+> > > +STATIC void
+> > > +xfs_setfilesize_ioend_cancel(
+> > > +	struct xfs_ioend	*ioend)
+> > > +{
+> > > +	struct xfs_trans	*tp = ioend->io_append_trans;
+> > > +
+> > > +	/*
+> > > +	 * The transaction may have been allocated in the I/O submission thread,
+> > > +	 * thus we need to mark ourselves as being in a transaction manually.
+> > > +	 * Similarly for freeze protection.
+> > > +	 */
+> > 
+> > This threw me off at first because we can call this from either the
+> > submission or the completion context, unlike the commit case where this
+> > comment is copied from. Could we move the comment above the function and
+> > clarify a bit? E.g., something like the following is a bit more clear to
+> > me:
+> > 
+> > /*
+> >  * The process transaction and freeze protection state is cleared immediately
+> >  * after setfilesize transaction allocation to support transfer of the tp from
+> >  * submission to completion context. Restore the context appropriately to cancel
+> >  * the transaction.
+> >  */
+> 
+> OK, I can do that, but given your next comments, it might just go
+> away.
+> 
+> > > +	} else {
+> > > +		ioend = xfs_alloc_ioend(inode, type);
+> > > +		ioend->io_offset = offset;
+> > > +		ioend->io_size = size;
+> > > +		bh_result->b_private = ioend;
+> > > +		trace_xfs_gbmap_direct_new(XFS_I(inode), offset, size, type,
+> > > +					   imap);
+> > > +	}
+> > > +
+> > > +	/* check if we need an append transaction allocated. */
+> > > +	if (ioend->io_type == XFS_IO_OVERWRITE &&
+> > > +	    xfs_ioend_is_append(ioend) && !ioend->io_append_trans) {
+> > > +		int	error;
+> > > +
+> > > +		error = xfs_setfilesize_trans_alloc(ioend);
+> > 
+> > I'm not totally convinced this is safe. We previously moved this tp
+> > allocation from before a potential xfs_iomap_direct_write() call to the
+> > completion side to avoid nesting this allocation with unwritten extent
+> > allocation transactions. See the following for reference:
+> > 
+> > 	437a255a xfs: fix direct IO nested transaction deadlock
+> > 
+> > Now we move it after that point of the codepath, and even then we know
+> > that this is an overwrite if we do the allocation here. If we continue
+> > on and hit a hole, it looks like there's still a sequence to allocate
+> > this transaction and call xfs_iomap_write_direct(), nesting the
+> > associated transaction reservations. Am I missing something?
+> 
+> No, I didn't really think this part through fully. I knew that we'd
+> get multiple calls, and we'd get multiple allocations, but for some
+> reason the penny didn't drop.
+> 
+> What it comes down to is that either we jump through lots of hoops
+> in __xfs_get_blocks() to handle this case (i.e.
+> cancel/allocate/reserve on repeat calls) or we just allocate it in
+> IO completion context as we currently are doing.
+> 
 
---===============2284289304617785616==
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="XF85m9dhOBO43t/C"
-Content-Disposition: inline
+Ok, I figured it would be one of those two approaches. The latter seems
+more clean to me in just thinking about it since it's another spot we
+have to consider the direct write case (as opposed to having it factored
+cleanly into the new helper). Maybe it can be better organized than
+that, splitting up the helper perhaps, so I'll reserve judgement. :)
 
+Could we get a v2 of the race fix posted with the proper locking and
+reviewed-by tags and whatnot? A reply to the patch in this thread is
+fine if the broader rework is still in flux. I'd just like to have an
+upstream reference for a backport of that one...
 
---XF85m9dhOBO43t/C
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Brian
 
-Hi folks,
-
-The for-next branch of the xfs kernel repository at
-
-git://git.kernel.org/pub/scm/linux/kernel/git/dgc/linux-xfs.git
-
-has just been updated.
-
-The new head of the for-next branch is commit:
-
-21c3ea1 xfs: unlock i_mutex in xfs_break_layouts
-
-New Commits:
-
-Brian Foster (3):
-      [2f66124] xfs: pass attr geometry to attr leaf header conversion func=
-tions
-      [e87021a] xfs: use larger in-core attr firstused field and detect ove=
-rflow
-      [66db810] xfs: kill unnecessary firstused overflow check on attr3 lea=
-f removal
-
-Christoph Hellwig (1):
-      [21c3ea1] xfs: unlock i_mutex in xfs_break_layouts
-
-Eric Sandeen (1):
-      [bbe051c] xfs: disallow ro->rw remount on norecovery mount
-
-kbuild test robot (1):
-      [72c1a73] xfs: xfs_shift_file_space can be static
-
-
-Code Diffstat:
-
- fs/xfs/libxfs/xfs_attr_leaf.c | 150 ++++++++++++++++++++++++++++++++------=
-----
- fs/xfs/libxfs/xfs_attr_leaf.h |   6 +-
- fs/xfs/libxfs/xfs_da_format.h |  14 +++-
- fs/xfs/xfs_attr_inactive.c    |   3 +-
- fs/xfs/xfs_attr_list.c        |   9 ++-
- fs/xfs/xfs_bmap_util.c        |   2 +-
- fs/xfs/xfs_file.c             |   4 +-
- fs/xfs/xfs_ioctl.c            |   2 +-
- fs/xfs/xfs_iops.c             |   2 +-
- fs/xfs/xfs_pnfs.c             |   7 +-
- fs/xfs/xfs_pnfs.h             |   5 +-
- fs/xfs/xfs_super.c            |   6 ++
- 12 files changed, 159 insertions(+), 51 deletions(-)
---=20
-Dave Chinner
-david@fromorbit.com
-
---XF85m9dhOBO43t/C
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
-
-iQIcBAEBAgAGBQJVK0cEAAoJEK3oKUf0dfodmI4QALF+z0DEH5QUk95gfbqvOgQT
-G4V37TKVm5te0YHwLUPujUdMJNSh3wIMRX6jQYopJ2Uo/3viKeE5uP952N8e9jvU
-ib5uANXGA8Y3epvYfev2HBxuOwFkFaKNYCcqHhLi3lcPFua/b8TdMpQFJFrRJQl8
-B/W3bp7sW1Fe98B0RVuBxUFDILw7J+xBxQoJk0cDZAZK6V8NScDSaZ/xiD52FoAq
-qJHNdV291EYNbkWbjRo2mcBFCnbUHz2bqboHe6Iz1/SYx1EwPucYebR0kZ0NtCf/
-a1hYJr0BAgBHECkpbg50CXDb0tFiFgTdYwsOSi9XpG6wYFzLTgocRoljVyvqAl8j
-BU6BS8GSXRRjZcdW6Ql68bwSFQx6ylRKN5riEppAsL/GvZa+lsWtBemLMrEWGY4V
-nSf/x4vp1jPEG1hdl0CgRvlPnF4NmJPxHUKhlwkMWN69NaJrNn1Hcc7WqtftfifY
-ZTrQ5gaE5I1qqhkWMaC4NbQrpFDpBMw3JCdaG2+PGaz0SihGJlTGOgv++7BmZUck
-T/QCqh4f5tQi51WPUogUZYv3R7KqJEFWIVDkv9RlssOGAjxcbkLrDgabylrTKC+V
-9pBRD1u9wx/cFSG3Gx5chbNxJtKQjis5gQ3r1XM1xfxxZ/93l7Y8xuJk4+Z915Op
-mSvvW8YqaopdFT6tVebq
-=X+d0
------END PGP SIGNATURE-----
-
---XF85m9dhOBO43t/C--
-
-
---===============2284289304617785616==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+> I'll have a look at what cancel/allocate/reserve looks like - it
+> might actually simplify the logic - and go from there.
+> 
+> Thanks for catching my silly thinko, Brain!
+> 
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============2284289304617785616==--
