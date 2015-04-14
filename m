@@ -1,22 +1,18 @@
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id CFE3F7F3F
-	for <xfs@oss.sgi.com>; Thu, 16 Apr 2015 03:03:34 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id A312F8F8078
-	for <xfs@oss.sgi.com>; Thu, 16 Apr 2015 01:03:31 -0700 (PDT)
-Received: from mail-oi0-f70.google.com (mail-oi0-f70.google.com
-	[209.85.218.70]) by cuda.sgi.com with ESMTP id QH8SK25k4RDAboqP
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 16 Apr 2015 01:03:29 -0700 (PDT)
-Received: by oihf133 with SMTP id f133so91391131oih.3
-	for <xfs@oss.sgi.com>; Thu, 16 Apr 2015 01:03:29 -0700 (PDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 461527F56
+	for <xfs@oss.sgi.com>; Tue, 14 Apr 2015 05:17:41 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 452EA304032
+	for <xfs@oss.sgi.com>; Tue, 14 Apr 2015 03:17:38 -0700 (PDT)
+Received: from gul.chuanchuancai.com (gul.chuanchuancai.com [45.63.84.63]) by
+	cuda.sgi.com with ESMTP id qtxBa0ZwXbD7pYUl for
+	<xfs@oss.sgi.com>; Tue, 14 Apr 2015 03:17:36 -0700 (PDT)
+Subject: need SEO?
+Message-ID: <9a047070dddd3e5d22aa78351207940b@superyachts.com>
+Date: Tue, 14 Apr 2015 12:20:03 +0200
+From: "Zach" <jentener@mail.com>
 MIME-Version: 1.0
-Message-ID: <001a11c2e6c02871200513d2e6ec@google.com>
-Date: Thu, 16 Apr 2015 08:03:29 +0000
-Subject: =?GB2312?B?zeLDs9DCzOy12KOhzfjC3sirx/K/zbun18rUtKOs0rvM7A==?=
-	=?GB2312?B?warPtcnPzfK49sS/seq/zbuno6zIw8T60a/FzLaptaWyu7bPo6HX9g==?=
-	=?GB2312?B?zeLDs7K71NnE0aOho6HR3cq+UVGjujE0OTQ2NzY4MjA=?=
-From: leisureyhhyj@gmail.com
+Reply-To: voveer@sina.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,138 +21,48 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============0238676099332436050=="
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
---===============0238676099332436050==
-Content-Type: multipart/alternative; boundary=001a11c2e6c03045e60513d2e6cf
+Hey,
 
---001a11c2e6c03045e60513d2e6cf
-Content-Type: text/plain; charset=GB2312; format=flowed; delsp=yes
-Content-Transfer-Encoding: base64
+I was wondering if you generate any business from your website? I can help
+you accomplish that if you're not already.
+I specialize in the following:
 
-xPq6w6O6DQrE+srHt/HOqsHLobDRsNXSzeLDs7aptaWhsbb4t6Kz7g0Kyse38dTav7zCx6GwyOe6
-zs3Y1bm6o83i06rP+sf+tcChsQ0Kyse38dX9w+bB2aGw1bm74dCnufvT0M/euMPU9cO0sOyhsQ0K
-yse38dTay7y/vKGwQjJC0Ke5+7K7usO4w8jnus694b7WobENCsT609DDu9PQytS5/c2ouf3L0cv3
-0v3H5tb3tq/Kvb+qt6K5+s3iv827p8TYo78NCsS/x7A5MCW1xL/Nu6e/ydLUzai5/cvRy/fS/cfm
-vdO0pbW9o6zIxr+qu+7UvtTa1tC5+rXEufrN4tbQvOTJzKOs1ve2r7P2DQq799Gw1dK5+s3i1tW2
-y7/Nu6eyxcrHxL/HsNfuusO1xL/Nu6e/qreit723qKGjDQoNCs7Sw8e/ydLUsO+1vcT6o7oNCiog
-w7/M7MvRy/e5/c3yufrN4tDQ0rXEv7Hqv827p9DFz6KjrM+1zbPSu8zstcS5pNf3wb+11tK7uPbS
-tc7x1LHSu7j21MK1xA0Ky9HL98G/oaMNCiogw7/M7LaoyrGhoraowb/X1Lav0ru21NK7zba13b+q
-t6LQxc3GuePWwcT6tcTEv7Hqv827p6Osw7/M7Mfhy8nU9rzTM7j2DQrRr8XMo6zJ9dbBuPy24NGv
-xcyhow0KKiCx3MPiQjJCtcS827jx1b26zbOkyrG85LXEtci0/aGi1bm74bjfsLq30dPDtcTNtsjr
-o6zU9rzTwM/Usbmku/28qw0K0NSjrMjD0MLK1r/sy9nI68PFoaO9tbXNzeLDs7/Nu6e/qreis8mx
-vqGjDQoqIM7Sy77Oqsbz0rXM4bmp16jStb3ivva3vbC4zNeyzbf+zvGjrNK7zNfN6tX7z7XNs7uv
-v827p7+qt6K3vbC4o6y4/LzTyqENCsqxyqHBpqOswvrX49bQtPPQzcbz0rXDv8zstcTNxrnjwb+j
-rLPQxbWxo9XP0Ke5+6GjDQoqILv6u+HB9Lj4xPqho82ouf3O0sPHuavLvsjtvP7Ptc2z0ru49tDH
-xtqz9tH5xre1paOss/a2qbWltcS/zbuntPPT0MjLDQrU2qGjxL/HsMirufrB+centuC80sbz0rXV
-/dTaytXS5qGjDQoNCsjnufvE+rbUztLDx7XEyO28/tLUvLC3/s7xuNDQy8iko6y7ttOtxPq8087S
-UVHP6sy4oaMNCg0KwarPtcjLo7rT4M/IyfoNCg0K0d3KvlFRo7oxNDk0Njc2ODIwDQrK1iC7+qO6
-MTUwMTM1ODI1MTMNCg0KDQoNCsG0vdPTyc+1zbPX1LavyfqzySzH687wteO796OhDQoNCg0KDQoN
-Cg0KDQoNCg0KDQoNCg0KDQrO0tLR0fvH68T6zO7QtLHttaUgzeLDs9DCzOy12KOhzfjC3sirx/K/
-zbun18rUtKOs0rvM7MGqz7XJz83yuPbEv7Hqv80NCruno6zIw8T60a/FzLaptaWyu7bPo6HX9s3i
-w7Oyu9TZxNGjoaOh0d3KvlFRo7oxNDk0Njc2ODIwoaMg0qrM7tC0tMux7Q0KtaWjrMfrt8POyqO6
-DQpodHRwczovL2RvY3MuZ29vZ2xlLmNvbS9mb3Jtcy9kLzFGc1ppU1dvOGVJNWZGWXZNUGlYWWg3
-VzJSNERPcEtQR2xSSFpvUERmNlBvL3ZpZXdmb3JtP2M9MCZ3PTEmdXNwPW1haWxfZm9ybV9saW5r
-DQo=
---001a11c2e6c03045e60513d2e6cf
-Content-Type: text/html; charset=GB2312
-Content-Transfer-Encoding: base64
+-SEO (search engine optimization)
+-Website Development
+-Reputation management and online reviews
+-Organic and Local SEO
 
-PGh0bWw+PGJvZHkgaXRlbXNjb3BlIGl0ZW10eXBlPSJodHRwOi8vc2NoZW1hLm9yZy9FbWFpbE1l
-c3NhZ2UiIHN0eWxlPSIiPjxkaXYgY2xhc3M9InNzLWVtYWlsLWJvZHkiIHN0eWxlPSJkaXNwbGF5
-OmlubGluZTt3aWR0aDo1NzZweDsiPjxkaXYgaXRlbXByb3A9ImFjdGlvbiIgaXRlbXNjb3BlIGl0
-ZW10eXBlPSJodHRwOi8vc2NoZW1hLm9yZy9WaWV3QWN0aW9uIiBzdHlsZT0iIj48bWV0YSBpdGVt
-cHJvcD0ibmFtZSIgY29udGVudD0izO7QtLHttaUiIHN0eWxlPSIiPgo8bWV0YSBpdGVtcHJvcD0i
-dXJsIiBjb250ZW50PSJodHRwczovL2RvY3MuZ29vZ2xlLmNvbS9mb3Jtcy9kLzFGc1ppU1dvOGVJ
-NWZGWXZNUGlYWWg3VzJSNERPcEtQR2xSSFpvUERmNlBvL3ZpZXdmb3JtP2M9MCZhbXA7dz0xJmFt
-cDt1c3A9bWFpbF9nb3RvX2Zvcm0iIHN0eWxlPSIiPjwvZGl2Pgo8cCBpdGVtcHJvcD0iZGVzY3Jp
-cHRpb24iIHN0eWxlPSIiPsT6usOjujxwPsT6yse38c6qwcuhsNGw1dLN4sOztqm1paGxtvi3orPu
-IDxicj7Kx7fx1Nq/vMLHobDI57rOzdjVubqjzeLTqs/6x/61wKGxIDxicj7Kx7fx1f3D5sHZobDV
-ubvh0Ke5+9PQz964w9T1w7Sw7KGxIDxicj7Kx7fx1NrLvL+8obBCMkLQp7n7sru6w7jDyOe6zr3h
-vtahsSA8cD7E+tPQw7vT0MrUuf3NqLn9y9HL99L9x+bW97avyr2/qreiufrN4r/Nu6fE2KO/PGJy
-PsS/x7A5MCW1xL/Nu6e/ydLUzai5/cvRy/fS/cfmvdO0pbW9o6zIxr+qu+7UvtTa1tC5+rXEufrN
-4tbQvOTJzKOs1ve2r7P2u/fRsNXSufrN4tbVtsu/zbunssXKx8S/x7DX7rrDtcS/zbunv6q3ore9
-t6ihozxwPjxicj7O0sPHv8nS1LDvtb3E+qO6PHA+KiDDv8zsy9HL97n9zfK5+s3i0NDStcS/seq/
-zbun0MXPoqOsz7XNs9K7zOy1xLmk1/fBv7XW0ru49tK1zvHUsdK7uPbUwrXEy9HL98G/oaM8YnI+
-KiDDv8zstqjKsaGitqjBv9fUtq/Su7bU0rvNtrXdv6q3otDFzca549bBxPq1xMS/seq/zbuno6zD
-v8zsx+HLydT2vNMzuPbRr8XMo6zJ9dbBuPy24NGvxcyhozxicj4qILHcw+JCMkK1xLzbuPHVvbrN
-s6TKsbzktcS1yLT9oaLVubvhuN+wurfR08O1xM22yOujrNT2vNPAz9SxuaS7/byr0NSjrMjD0MLK
-1r/sy9nI68PFoaO9tbXNzeLDs7/Nu6e/qreis8mxvqGjPGJyPiogztLLvs6qxvPStczhuanXqNK1
-veK+9re9sLjM17LNt/7O8aOs0rvM183q1fvPtc2zu6+/zbunv6q3ore9sLijrLj8vNPKocqxyqHB
-pqOswvrX49bQtPPQzcbz0rXDv8zstcTNxrnjwb+jrLPQxbWxo9XP0Ke5+6GjPGJyPiogu/q74cH0
-uPjE+qGjzai5/c7Sw8e5q8u+yO28/s+1zbPSu7j20MfG2rP20fnGt7Wlo6yz9raptaW1xL/Nu6e0
-89PQyMvU2qGjxL/HsMirufrB+centuC80sbz0rXV/dTaytXS5qGjPHA+PGJyPsjnufvE+rbUztLD
-x7XEyO28/tLUvLC3/s7xuNDQy8iko6y7ttOtxPq8087SUVHP6sy4oaM8cD48YnI+warPtcjLo7rT
-4M/Iyfo8cD48YnI+0d3KvlFRo7oxNDk0Njc2ODIwPHA+ytYgILv6o7oxNTAxMzU4MjUxMzxwPjxw
-PjxwPjxwPsG0vdPTyc+1zbPX1LavyfqzySzH687wteO796OhPC9wPjwvcD48L3A+PC9wPjwvcD48
-L3A+PC9wPjwvcD48L3A+PC9wPjwvcD48L3A+PC9wPgrI57n7xPrO3reosum/tLvyzOG9u7TLse21
-paOsv8nS1DxhIGhyZWY9Imh0dHBzOi8vZG9jcy5nb29nbGUuY29tL2Zvcm1zL2QvMUZzWmlTV284
-ZUk1ZkZZdk1QaVhZaDdXMlI0RE9wS1BHbFJIWm9QRGY2UG8vdmlld2Zvcm0/Yz0wJmFtcDt3PTEm
-YW1wO3VzcD1tYWlsX2Zvcm1fbGluayIgc3R5bGU9IiI+1NogR29vZ2xlILHttaXW0Mzu0LQ8L2E+
-oaMKPHA+PC9wPgo8ZGl2IGRpcj0ibHRyIiBzdHlsZT0iIj48ZGl2IGNsYXNzPSJmb3JtLWJvZHki
-IHN0eWxlPSIiPjxoMSBjbGFzcz0ic3MtZm9ybS10aXRsZSIgZGlyPSJsdHIiIHN0eWxlPSJtYXJn
-aW46LjY3ZW0gMDsiPs3iw7PQwszstdijoc34wt7Iq8fyv827p9fK1LSjrNK7zOzBqs+1yc/N8rj2
-xL+x6r/Nu6ejrMjDxPrRr8XMtqm1pbK7ts+jodf2zeLDs7K71NnE0aOho6HR3cq+UVGjujE0OTQ2
-NzY4MjA8L2gxPjwvZGl2Pgo8ZGl2IHN0eWxlPSJ3aGl0ZS1zcGFjZTogcHJlLXdyYXA7IGRpc3Bs
-YXk6IGlubGluZSI+Cgo8L2Rpdj4KPGRpdiBjbGFzcz0iZm9ybS1ib2R5IiBzdHlsZT0iIj48ZGl2
-IGNsYXNzPSJzcy1mb3JtIiBzdHlsZT0iIj48Zm9ybSBhY3Rpb249Imh0dHBzOi8vZG9jcy5nb29n
-bGUuY29tL2Zvcm1zL2QvMUZzWmlTV284ZUk1ZkZZdk1QaVhZaDdXMlI0RE9wS1BHbFJIWm9QRGY2
-UG8vZm9ybVJlc3BvbnNlIiBtZXRob2Q9IlBPU1QiIGlkPSJzcy1mb3JtIiB0YXJnZXQ9Il9zZWxm
-IiBvbnN1Ym1pdD0iIiBzdHlsZT0iIj48b2wgcm9sZT0ibGlzdCIgY2xhc3M9InNzLXF1ZXN0aW9u
-LWxpc3QiIHN0eWxlPSJwYWRkaW5nLWxlZnQ6IDBsaXN0LXN0eWxlLXR5cGU6bm9uZTsiPgoKPGlu
-cHV0IHR5cGU9ImhpZGRlbiIgbmFtZT0iZHJhZnRSZXNwb25zZSIgdmFsdWU9IlssLCZxdW90Oy0y
-NjEwMjg0MTQxOTI0Nzk4NjkxJnF1b3Q7XQoiIHN0eWxlPSIiPgo8aW5wdXQgdHlwZT0iaGlkZGVu
-IiBuYW1lPSJwYWdlSGlzdG9yeSIgdmFsdWU9IjAiIHN0eWxlPSIiPgo8aW5wdXQgdHlwZT0iaGlk
-ZGVuIiBuYW1lPSJ1c3AiIHZhbHVlPSJtYWlsX2Zvcm1fc3VibWl0IiBzdHlsZT0iIj4KCjxpbnB1
-dCB0eXBlPSJoaWRkZW4iIG5hbWU9ImZiengiIHZhbHVlPSItMjYxMDI4NDE0MTkyNDc5ODY5MSIg
-c3R5bGU9IiI+Cgo8ZGl2IGNsYXNzPSJzcy1pdGVtIHNzLW5hdmlnYXRlIiBzdHlsZT0ibWFyZ2lu
-OjEycHggMDsiPjx0YWJsZSBpZD0ibmF2aWdhdGlvbi10YWJsZSIgc3R5bGU9IiI+PHRib2R5Pjx0
-cj48dGQgY2xhc3M9InNzLWZvcm0tZW50cnkgZ29vZy1pbmxpbmUtYmxvY2siIGlkPSJuYXZpZ2F0
-aW9uLWJ1dHRvbnMiIGRpcj0ibHRyIiBzdHlsZT0ibWFyZ2luLWJvdHRvbToxLjVlbTt2ZXJ0aWNh
-bC1hbGlnbjptaWRkbGU7bWFyZ2luLWxlZnQ6MDttYXJnaW4tdG9wOjA7bWF4LXdpZHRoOjEwMCU7
-cG9zaXRpb246cmVsYXRpdmU7ZGlzcGxheTppbmxpbmUtYmxvY2s7Ij4KPGlucHV0IHR5cGU9InN1
-Ym1pdCIgbmFtZT0ic3VibWl0IiB2YWx1ZT0izOG9uyIgaWQ9InNzLXN1Ym1pdCIgY2xhc3M9Impm
-ay1idXR0b24gamZrLWJ1dHRvbi1hY3Rpb24gIiBzdHlsZT0iIj4KPC90ZD4KPC90cj48L3Rib2R5
-PjwvdGFibGU+PC9kaXY+PC9vbD48L2Zvcm0+PC9kaXY+CjxkaXYgY2xhc3M9InNzLWZvb3RlciIg
-c3R5bGU9IiI+PGRpdiBjbGFzcz0ic3MtYXR0cmlidXRpb24iIHN0eWxlPSIiPjwvZGl2Pgo8ZGl2
-IGNsYXNzPSJzcy1sZWdhbCIgc3R5bGU9IiI+PGRpdiBjbGFzcz0iZGlzY2xhaW1lci1zZXBhcmF0
-b3IiIHN0eWxlPSIiPjwvZGl2Pgo8ZGl2IGNsYXNzPSJkaXNjbGFpbWVyIiBkaXI9Imx0ciIgc3R5
-bGU9IiI+PGRpdiBjbGFzcz0icG93ZXJlZC1ieS1sb2dvIiBzdHlsZT0ibWFyZ2luLXRvcDoyZW07
-Ij48c3BhbiBjbGFzcz0icG93ZXJlZC1ieS10ZXh0IiBzdHlsZT0iIj68vMr1zOG5qaO6PC9zcGFu
-Pgo8YSBocmVmPSJodHRwczovL3d3dy5nb29nbGUuY29tL2Zvcm1zL2Fib3V0Lz91dG1fc291cmNl
-PXByb2R1Y3QmYW1wO3V0bV9tZWRpdW09Zm9ybXNfbG9nbyZhbXA7dXRtX2NhbXBhaWduPWZvcm1z
-IiBzdHlsZT0iIj48ZGl2IGNsYXNzPSJzcy1sb2dvLWNvbnRhaW5lciIgc3R5bGU9IiI+PGltZyBz
-cmM9Imh0dHBzOi8vc3NsLmdzdGF0aWMuY29tL2RvY3MvZm9ybXMvZm9ybXNfbG9nb19zbWFsbF9k
-YXJrLnBuZyIgYWx0PSJHb29nbGUgse21pSIgc3R5bGU9IiI+PC9kaXY+PC9hPjwvZGl2Pgo8ZGl2
-IGNsYXNzPSJzcy10ZXJtcyIgc3R5bGU9ImNvbG9yOiM3Nzc7Zm9udC1zaXplOjExcHg7bWFyZ2lu
-LXRvcDoxLjVlbTsiPjxzcGFuIGNsYXNzPSJkaXNjbGFpbWVyLW1zZyIgc3R5bGU9IiI+tMvE2sjd
-srvKx9PJIEdvb2dsZSDL+bS0vaijrEdvb2dsZSCyu7bUxuTX98jOus61o7GjoaM8L3NwYW4+Cjxi
-cj4KPGEgaHJlZj0iaHR0cHM6Ly9kb2NzLmdvb2dsZS5jb20vZm9ybXMvZC8xRnNaaVNXbzhlSTVm
-Rll2TVBpWFloN1cyUjRET3BLUEdsUkhab1BEZjZQby9yZXBvcnRhYnVzZT9zb3VyY2U9aHR0cHM6
-Ly9kb2NzLmdvb2dsZS5jb20vZm9ybXMvZC8xRnNaaVNXbzhlSTVmRll2TVBpWFloN1cyUjRET3BL
-UEdsUkhab1BEZjZQby92aWV3Zm9ybT9zaWQlM0Q1YjVjMTNkZGZkMDExMGVmJTI2YyUzRDAlMjZ3
-JTNEMSUyNnRva2VuJTNENDZGM3dVd0JBQUEuYWQxNHJIY1pCU2ljeUFiT211NFVMdy43eVhOQVd6
-YWdpOGFUSVVRaHZySGNnIiBzdHlsZT0iIj6+2bGowMTTw9DQzqo8L2E+Ci0KPGEgaHJlZj0iaHR0
-cDovL3d3dy5nb29nbGUuY29tL2FjY291bnRzL1RPUyIgc3R5bGU9IiI+t/7O8cz1v+48L2E+Ci0K
-PGEgaHJlZj0iaHR0cDovL3d3dy5nb29nbGUuY29tL2dvb2dsZS1kLXMvdGVybXMuaHRtbCIgc3R5
-bGU9IiI+xuTL+8z1v+48L2E+PC9kaXY+PC9kaXY+PC9kaXY+PC9kaXY+CjwvZGl2PjwvZGl2Pgo8
-YnI+CjxzdHlsZSB0eXBlPSJ0ZXh0L2NzcyIgbWVkaWE9InNjcmVlbiIgc3R5bGU9IiI+PC9zdHls
-ZT48L2Rpdj48L2JvZHk+PC9odG1sPg==
---001a11c2e6c03045e60513d2e6cf--
+Just reply back and I can go over options for you.
+
+Thanks,
+Zach
+SEO Specialist
+Contact: storrey@tom.com
+
+-------------------------------------------------
+
+This e-mail message and its attachments (if any) are intended solely for
+the use of the addressee(s) hereof. In addition, this message and the
+attachments (if any) may contain information that is confidential,
+privileged and exempt from disclosure under applicable law. If you are not
+the intended recipient of this message, you are prohibited from reading,
+disclosing, reproducing, distributing, disseminating or otherwise using
+this transmission. Delivery of this message to any person other than the
+intended recipient is not intended to waive any right or privilege. If you
+have received this message in error, please promptly notify the sender and
+immediately delete this message from your system.
 
 
---===============0238676099332436050==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+If you don't wish our future news letter, pls send address to
+destinyu@aliyun.com for removal.
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============0238676099332436050==--
