@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 185C27F60
-	for <xfs@oss.sgi.com>; Tue, 14 Apr 2015 09:35:32 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id EC26E8F8052
-	for <xfs@oss.sgi.com>; Tue, 14 Apr 2015 07:35:31 -0700 (PDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 2B7BC7F47
+	for <xfs@oss.sgi.com>; Tue, 14 Apr 2015 09:35:37 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 4B6E8AC001
+	for <xfs@oss.sgi.com>; Tue, 14 Apr 2015 07:35:36 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id RCQwADOScOCkwZOl (version=TLSv1
+	cuda.sgi.com with ESMTP id 4eWP39eoO5SW8FDl (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 14 Apr 2015 07:35:31 -0700 (PDT)
-Date: Tue, 14 Apr 2015 10:35:28 -0400
+	Tue, 14 Apr 2015 07:35:35 -0700 (PDT)
+Date: Tue, 14 Apr 2015 10:35:33 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 7/8] xfs: direct IO EOF zeroing needs to drain AIO
-Message-ID: <20150414143527.GH36198@bfoster.bfoster>
+Subject: Re: [PATCH 8/8] xfs: using generic_file_direct_write() is unnecessary
+Message-ID: <20150414143533.GI36198@bfoster.bfoster>
 References: <1428996411-1507-1-git-send-email-david@fromorbit.com>
-	<1428996411-1507-8-git-send-email-david@fromorbit.com>
+	<1428996411-1507-9-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1428996411-1507-8-git-send-email-david@fromorbit.com>
+In-Reply-To: <1428996411-1507-9-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,52 +33,97 @@ Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On Tue, Apr 14, 2015 at 05:26:50PM +1000, Dave Chinner wrote:
+On Tue, Apr 14, 2015 at 05:26:51PM +1000, Dave Chinner wrote:
 > From: Dave Chinner <dchinner@redhat.com>
 > 
-> When we are doing AIO DIO writes, the IOLOCK only provides an IO
-> submission barrier. When we need to do EOF zeroing, we need to ensure
-> that no other IO is in progress and all pending in-core EOF updates
-> have been completed. This requires us to wait for all outstanding
-> AIO DIO writes to the inode to complete and, if necessary, run their
-> EOF updates.
+> generic_file_direct_write() does all sorts of things to make DIO
+> work "sorta ok" with mixed buffered IO workloads. We already do
+> most of this work in xfs_file_aio_dio_write() because of the locking
+> requirements, so there's only a couple of things it does for us.
 > 
-> Once all the EOF updates are complete, we can then restart
-> xfs_file_aio_write_checks() while holding the IOLOCK_EXCL, knowing
-> that EOF is up to date and we have exclusive IO access to the file
-> so we can run EOF block zeroing if we need to without interference.
-> This gives EOF zeroing the same exclusivity against other IO as we
-> provide truncate operations.
+> The first thing is that it does a page cache invalidation after the
+> ->direct_IO callout. This can easily be added to the XFS code.
+> 
+> The second thing it does is that if data was written, it updates the
+> iov_iter structure to reflect the data written, and then does EOF
+> size updates if necessary. For XFS, these EOF size updates are now
+> not necessary, as we do them safely and race-free in IO completion
+> context. That leaves just the iov_iter update, and that's also moved
+> to the XFS code.
+> 
+> Therefore we don't need to call generic_file_direct_write() and in
+> doing so remove redundant buffered writeback and page cache
+> invalidation calls from the DIO submission path. We also remove a
+> racy EOF size update, and make the DIO submission code in XFS much
+> easier to follow. Wins all round, really.
 > 
 > Signed-off-by: Dave Chinner <dchinner@redhat.com>
 > ---
 
 Reviewed-by: Brian Foster <bfoster@redhat.com>
 
->  fs/xfs/xfs_file.c | 10 ++++++++++
->  1 file changed, 10 insertions(+)
+>  fs/xfs/xfs_file.c | 23 ++++++++++++++++++++---
+>  1 file changed, 20 insertions(+), 3 deletions(-)
 > 
 > diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-> index 5d5b4ba..c398ec7 100644
+> index c398ec7..3a5d305 100644
 > --- a/fs/xfs/xfs_file.c
 > +++ b/fs/xfs/xfs_file.c
-> @@ -587,6 +587,16 @@ restart:
->  			xfs_rw_iunlock(ip, *iolock);
->  			*iolock = XFS_IOLOCK_EXCL;
->  			xfs_rw_ilock(ip, *iolock);
+> @@ -665,6 +665,8 @@ xfs_file_dio_aio_write(
+>  	int			iolock;
+>  	size_t			count = iov_iter_count(from);
+>  	loff_t			pos = iocb->ki_pos;
+> +	loff_t			end;
+> +	struct iov_iter		data;
+>  	struct xfs_buftarg	*target = XFS_IS_REALTIME_INODE(ip) ?
+>  					mp->m_rtdev_targp : mp->m_ddev_targp;
+>  
+> @@ -704,10 +706,11 @@ xfs_file_dio_aio_write(
+>  	if (ret)
+>  		goto out;
+>  	iov_iter_truncate(from, count);
+> +	end = pos + count - 1;
+>  
+>  	if (mapping->nrpages) {
+>  		ret = filemap_write_and_wait_range(VFS_I(ip)->i_mapping,
+> -						    pos, pos + count - 1);
+> +						   pos, end);
+>  		if (ret)
+>  			goto out;
+>  		/*
+> @@ -717,7 +720,7 @@ xfs_file_dio_aio_write(
+>  		 */
+>  		ret = invalidate_inode_pages2_range(VFS_I(ip)->i_mapping,
+>  					pos >> PAGE_CACHE_SHIFT,
+> -					(pos + count - 1) >> PAGE_CACHE_SHIFT);
+> +					end >> PAGE_CACHE_SHIFT);
+>  		WARN_ON_ONCE(ret);
+>  		ret = 0;
+>  	}
+> @@ -734,8 +737,22 @@ xfs_file_dio_aio_write(
+>  	}
+>  
+>  	trace_xfs_file_direct_write(ip, count, iocb->ki_pos, 0);
+> -	ret = generic_file_direct_write(iocb, from, pos);
+>  
+> +	data = *from;
+> +	ret = mapping->a_ops->direct_IO(WRITE, iocb, &data, pos);
 > +
-> +			/*
-> +			 * We now have an IO submission barrier in place, but
-> +			 * AIO can do EOF updates during IO completion and hence
-> +			 * we now need to wait for all of them to drain. Non-AIO
-> +			 * DIO will have drained before we are given the
-> +			 * XFS_IOLOCK_EXCL, and so for most cases this wait is a
-> +			 * no-op.
-> +			 */
-> +			inode_dio_wait(inode);
->  			goto restart;
->  		}
->  		error = xfs_zero_eof(ip, *pos, i_size_read(inode), &zero);
+> +	/* see generic_file_direct_write() for why this is necessary */
+> +	if (mapping->nrpages) {
+> +		invalidate_inode_pages2_range(mapping,
+> +					      pos >> PAGE_CACHE_SHIFT,
+> +					      end >> PAGE_CACHE_SHIFT);
+> +	}
+> +
+> +	if (ret > 0) {
+> +		pos += ret;
+> +		iov_iter_advance(from, ret);
+> +		iocb->ki_pos = pos;
+> +	}
+>  out:
+>  	xfs_rw_iunlock(ip, iolock);
+>  
 > -- 
 > 2.0.0
 > 
