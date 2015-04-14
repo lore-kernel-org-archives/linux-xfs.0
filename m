@@ -1,25 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 9D3887F51
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id E2ACE7F55
 	for <xfs@oss.sgi.com>; Tue, 14 Apr 2015 02:27:02 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 38D19AC003
-	for <xfs@oss.sgi.com>; Tue, 14 Apr 2015 00:26:58 -0700 (PDT)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id D2A408F804B
+	for <xfs@oss.sgi.com>; Tue, 14 Apr 2015 00:26:59 -0700 (PDT)
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	KmIASRdMdWt5IGHU for <xfs@oss.sgi.com>;
-	Tue, 14 Apr 2015 00:26:55 -0700 (PDT)
+	3yckzXhiClItYbYa for <xfs@oss.sgi.com>;
+	Tue, 14 Apr 2015 00:26:57 -0700 (PDT)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.80)
-	(envelope-from <dave@fromorbit.com>) id 1YhvFE-0000qY-S2
-	for xfs@oss.sgi.com; Tue, 14 Apr 2015 17:26:52 +1000
+	(envelope-from <dave@fromorbit.com>) id 1YhvFF-0000qg-0F
+	for xfs@oss.sgi.com; Tue, 14 Apr 2015 17:26:53 +1000
 Received: from dave by disappointment with local (Exim 4.82_1-5b7a7c0-XX)
-	(envelope-from <dave@disappointment.disaster>) id 1YhvFE-0000VR-R4
+	(envelope-from <dave@disappointment.disaster>) id 1YhvFE-0000W3-Vk
 	for xfs@oss.sgi.com; Tue, 14 Apr 2015 17:26:52 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 0/8 v2] xfs: fix direct IO completion issues
-Date: Tue, 14 Apr 2015 17:26:43 +1000
-Message-Id: <1428996411-1507-1-git-send-email-david@fromorbit.com>
+Subject: [PATCH 8/8] xfs: using generic_file_direct_write() is unnecessary
+Date: Tue, 14 Apr 2015 17:26:51 +1000
+Message-Id: <1428996411-1507-9-git-send-email-david@fromorbit.com>
+In-Reply-To: <1428996411-1507-1-git-send-email-david@fromorbit.com>
+References: <1428996411-1507-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,28 +37,95 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Hi folks,
+From: Dave Chinner <dchinner@redhat.com>
 
-This is the second version of the series I first posted here:
+generic_file_direct_write() does all sorts of things to make DIO
+work "sorta ok" with mixed buffered IO workloads. We already do
+most of this work in xfs_file_aio_dio_write() because of the locking
+requirements, so there's only a couple of things it does for us.
 
-http://oss.sgi.com/archives/xfs/2015-04/msg00097.html
+The first thing is that it does a page cache invalidation after the
+->direct_IO callout. This can easily be added to the XFS code.
 
-I've reworked and refactored the first two patches in the series,
-breaking them out into simpler, more self contained patches.
+The second thing it does is that if data was written, it updates the
+iov_iter structure to reflect the data written, and then does EOF
+size updates if necessary. For XFS, these EOF size updates are now
+not necessary, as we do them safely and race-free in IO completion
+context. That leaves just the iov_iter update, and that's also moved
+to the XFS code.
 
-The main change from the previous version is that I dropped the
-pre-allocation of the append transaction to avoid the nesting
-problems it could cause.
+Therefore we don't need to call generic_file_direct_write() and in
+doing so remove redundant buffered writeback and page cache
+invalidation calls from the DIO submission path. We also remove a
+racy EOF size update, and make the DIO submission code in XFS much
+easier to follow. Wins all round, really.
 
-The only other major change is that the ioend is only allocated when
-a mapping is either for an unwritten region or spans EOF. hence if the
-mapping is an overwrite within EOF we do not allocate an ioend, we
-do not defer completion to the DIO workqueue and we do nothing in
-the completion function as there is nothing to do.
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/xfs_file.c | 23 ++++++++++++++++++++---
+ 1 file changed, 20 insertions(+), 3 deletions(-)
 
-Comments, thoughts?
-
--Dave.
+diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+index c398ec7..3a5d305 100644
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@ -665,6 +665,8 @@ xfs_file_dio_aio_write(
+ 	int			iolock;
+ 	size_t			count = iov_iter_count(from);
+ 	loff_t			pos = iocb->ki_pos;
++	loff_t			end;
++	struct iov_iter		data;
+ 	struct xfs_buftarg	*target = XFS_IS_REALTIME_INODE(ip) ?
+ 					mp->m_rtdev_targp : mp->m_ddev_targp;
+ 
+@@ -704,10 +706,11 @@ xfs_file_dio_aio_write(
+ 	if (ret)
+ 		goto out;
+ 	iov_iter_truncate(from, count);
++	end = pos + count - 1;
+ 
+ 	if (mapping->nrpages) {
+ 		ret = filemap_write_and_wait_range(VFS_I(ip)->i_mapping,
+-						    pos, pos + count - 1);
++						   pos, end);
+ 		if (ret)
+ 			goto out;
+ 		/*
+@@ -717,7 +720,7 @@ xfs_file_dio_aio_write(
+ 		 */
+ 		ret = invalidate_inode_pages2_range(VFS_I(ip)->i_mapping,
+ 					pos >> PAGE_CACHE_SHIFT,
+-					(pos + count - 1) >> PAGE_CACHE_SHIFT);
++					end >> PAGE_CACHE_SHIFT);
+ 		WARN_ON_ONCE(ret);
+ 		ret = 0;
+ 	}
+@@ -734,8 +737,22 @@ xfs_file_dio_aio_write(
+ 	}
+ 
+ 	trace_xfs_file_direct_write(ip, count, iocb->ki_pos, 0);
+-	ret = generic_file_direct_write(iocb, from, pos);
+ 
++	data = *from;
++	ret = mapping->a_ops->direct_IO(WRITE, iocb, &data, pos);
++
++	/* see generic_file_direct_write() for why this is necessary */
++	if (mapping->nrpages) {
++		invalidate_inode_pages2_range(mapping,
++					      pos >> PAGE_CACHE_SHIFT,
++					      end >> PAGE_CACHE_SHIFT);
++	}
++
++	if (ret > 0) {
++		pos += ret;
++		iov_iter_advance(from, ret);
++		iocb->ki_pos = pos;
++	}
+ out:
+ 	xfs_rw_iunlock(ip, iolock);
+ 
+-- 
+2.0.0
 
 _______________________________________________
 xfs mailing list
