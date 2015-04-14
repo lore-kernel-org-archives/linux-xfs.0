@@ -1,19 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id E373A7F37
-	for <xfs@oss.sgi.com>; Mon, 13 Apr 2015 20:34:55 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id B7FDB30404E
-	for <xfs@oss.sgi.com>; Mon, 13 Apr 2015 18:34:55 -0700 (PDT)
-Received: from ozlabs.org (ozlabs.org [103.22.144.67]) by cuda.sgi.com with
-	ESMTP id mYFmNAe6tmXbNEVo (version=TLSv1 cipher=AES256-SHA
-	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 13 Apr 2015 18:34:49 -0700 (PDT)
-Date: Tue, 14 Apr 2015 11:34:42 +1000
-From: Stephen Rothwell <sfr@canb.auug.org.au>
-Subject: linux-next: manual merge of the vfs tree with the xfs tree
-Message-ID: <20150414113442.62751cdc@canb.auug.org.au>
-MIME-Version: 1.0
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 544507F3F
+	for <xfs@oss.sgi.com>; Tue, 14 Apr 2015 02:27:00 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id D3F4DAC001
+	for <xfs@oss.sgi.com>; Tue, 14 Apr 2015 00:26:59 -0700 (PDT)
+Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
+	[150.101.137.145]) by cuda.sgi.com with ESMTP id
+	dDnQjPlNQ0oH4qTW for <xfs@oss.sgi.com>;
+	Tue, 14 Apr 2015 00:26:57 -0700 (PDT)
+Received: from disappointment.disaster.area ([192.168.1.110]
+	helo=disappointment) by dastard with esmtp (Exim 4.80)
+	(envelope-from <dave@fromorbit.com>) id 1YhvFE-0000qa-Sy
+	for xfs@oss.sgi.com; Tue, 14 Apr 2015 17:26:52 +1000
+Received: from dave by disappointment with local (Exim 4.82_1-5b7a7c0-XX)
+	(envelope-from <dave@disappointment.disaster>) id 1YhvFE-0000VZ-SE
+	for xfs@oss.sgi.com; Tue, 14 Apr 2015 17:26:52 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: [PATCH 2/8] xfs: move DIO mapping size calculation
+Date: Tue, 14 Apr 2015 17:26:45 +1000
+Message-Id: <1428996411-1507-3-git-send-email-david@fromorbit.com>
+In-Reply-To: <1428996411-1507-1-git-send-email-david@fromorbit.com>
+References: <1428996411-1507-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,91 +30,134 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============3211935967495183758=="
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Al Viro <viro@ZenIV.linux.org.uk>, Ben Myers <bpm@sgi.com>, David Chinner <david@fromorbit.com>, xfs@oss.sgi.com
-Cc: David Howells <dhowells@redhat.com>, linux-next@vger.kernel.org, linux-kernel@vger.kernel.org, Christoph Hellwig <hch@lst.de>
+To: xfs@oss.sgi.com
 
---===============3211935967495183758==
-Content-Type: multipart/signed; micalg=pgp-sha256;
- boundary="Sig_/5O+aYlm=1mAzyMbqBYGBoKU"; protocol="application/pgp-signature"
+From: Dave Chinner <dchinner@redhat.com>
 
---Sig_/5O+aYlm=1mAzyMbqBYGBoKU
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+The mapping size calculation is done last in __xfs_get_blocks(), but
+we are going to need the actual mapping size we will use to map the
+direct IO correctly in xfs_map_direct(). Factor out the calculation
+for code clarity, and move the call to be the first operation in
+mapping the extent to the returned buffer.
 
-Hi Al,
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/xfs_aops.c | 79 ++++++++++++++++++++++++++++++++-----------------------
+ 1 file changed, 46 insertions(+), 33 deletions(-)
 
-Today's linux-next merge of the vfs tree got a conflict in
-fs/xfs/xfs_iops.c between commit 21c3ea18819b ("xfs: unlock i_mutex in
-xfs_break_layouts") from the xfs tree and commit 5dd3dc06371a ("VFS:
-normal filesystems (and lustre): d_inode() annotations") from the vfs
-tree.
-
-I fixed it up (see below) and can carry the fix as necessary (no action
-is required).
-
---=20
-Cheers,
-Stephen Rothwell                    sfr@canb.auug.org.au
-
-diff --cc fs/xfs/xfs_iops.c
-index 2f1839e4dd1b,54b95232d946..000000000000
---- a/fs/xfs/xfs_iops.c
-+++ b/fs/xfs/xfs_iops.c
-@@@ -953,13 -975,9 +953,13 @@@ xfs_vn_setattr
-  		uint		iolock =3D XFS_IOLOCK_EXCL;
- =20
-  		xfs_ilock(ip, iolock);
-- 		error =3D xfs_break_layouts(dentry->d_inode, &iolock, true);
- -		error =3D xfs_break_layouts(d_inode(dentry), &iolock);
- -		if (!error)
-++		error =3D xfs_break_layouts(d_inode(dentry), &iolock, true);
- +		if (!error) {
- +			xfs_ilock(ip, XFS_MMAPLOCK_EXCL);
- +			iolock |=3D XFS_MMAPLOCK_EXCL;
- +
-  			error =3D xfs_setattr_size(ip, iattr);
- +		}
-  		xfs_iunlock(ip, iolock);
-  	} else {
-  		error =3D xfs_setattr_nonsize(ip, iattr, 0);
-
---Sig_/5O+aYlm=1mAzyMbqBYGBoKU
-Content-Type: application/pgp-signature
-Content-Description: OpenPGP digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQIcBAEBCAAGBQJVLG63AAoJEMDTa8Ir7ZwVpLYP/3Sag0Zfim2NG4Ls84f8xR7b
-uv4FNLtmXMXAW3ioV8H2d4qvT80esCti3mTmdioUzvt6WuXPO9DN/QRoWb3olXfb
-sQ4NXn0PJt7cxH+GT98+DhUuwy3VJrm87jUECYoMXGu3nl6t42W9F1UxShW9a36l
-vv5HDqyNrR6MdJVy/b6h5mO6qY4t3cmnS5PQvklVz7/4/S9TiC/jdK63PwPzZ5Wt
-n4R9LDXiWbtmG9YGaNcDb9mpn5XzJsa5NYQWTz8LofUik50T6+nEqIPxrj9Mv7ae
-S9hZN/JZkXtTIEJ4IENej4Qh9akQI19Fxtq251MUOXyIp4J7V8JM8p3zzi99fbIL
-MCDpzAbC4S6H+enPp3yKtxwYdjpUZkvVkU6eLCTdQSVNlvvuMCyMZYSpthsmByWn
-IfnsnEa7Y1Lb5yBOaqgpKuVBrRx69Ov564asTGG2TiarwhrLusZ/0ky/8sshyTy0
-NdrUCCzbEJl955oDqbinbVfPZj6zns0lKFeZiEtNVfQ9NBRDhWkcqcr7EkCQ0Wnm
-xucyzesO6XY5ViB5jy5f8TNdmZ/ziO5oBJOiXE9yHKi9X/ixo2bq3xJAqBaNt3+g
-yaWDeLuWu4wSnIES4W7dqQmdubqFIGrOOn6NVHqBXe+Vv1imaL7h4PumcO1lHIxA
-4ZwIx4wasd/O2LglavGf
-=amIj
------END PGP SIGNATURE-----
-
---Sig_/5O+aYlm=1mAzyMbqBYGBoKU--
-
-
---===============3211935967495183758==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index 5f7ddd5..8f63520 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -1249,6 +1249,47 @@ xfs_map_direct(
+ 	}
+ }
+ 
++
++/*
++ * If this is O_DIRECT or the mpage code calling tell them how large the mapping
++ * is, so that we can avoid repeated get_blocks calls.
++ *
++ * If the mapping spans EOF, then we have to break the mapping up as the mapping
++ * for blocks beyond EOF must be marked new so that sub block regions can be
++ * correctly zeroed. We can't do this for mappings within EOF unless the mapping
++ * was just allocated or is unwritten, otherwise the callers would overwrite
++ * existing data with zeros. Hence we have to split the mapping into a range up
++ * to and including EOF, and a second mapping for beyond EOF.
++ */
++static void
++xfs_map_trim_size(
++	struct inode		*inode,
++	sector_t		iblock,
++	struct buffer_head	*bh_result,
++	struct xfs_bmbt_irec	*imap,
++	xfs_off_t		offset,
++	ssize_t			size)
++{
++	xfs_off_t		mapping_size;
++
++	mapping_size = imap->br_startoff + imap->br_blockcount - iblock;
++	mapping_size <<= inode->i_blkbits;
++
++	ASSERT(mapping_size > 0);
++	if (mapping_size > size)
++		mapping_size = size;
++	if (offset < i_size_read(inode) &&
++	    offset + mapping_size >= i_size_read(inode)) {
++		/* limit mapping to block that spans EOF */
++		mapping_size = roundup_64(i_size_read(inode) - offset,
++					  1 << inode->i_blkbits);
++	}
++	if (mapping_size > LONG_MAX)
++		mapping_size = LONG_MAX;
++
++	bh_result->b_size = mapping_size;
++}
++
+ STATIC int
+ __xfs_get_blocks(
+ 	struct inode		*inode,
+@@ -1347,6 +1388,11 @@ __xfs_get_blocks(
+ 		goto out_unlock;
+ 	}
+ 
++	/* trim mapping down to size requested */
++	if (direct || size > (1 << inode->i_blkbits))
++		xfs_map_trim_size(inode, iblock, bh_result,
++				  &imap, offset, size);
++
+ 	if (imap.br_startblock != HOLESTARTBLOCK &&
+ 	    imap.br_startblock != DELAYSTARTBLOCK &&
+ 	    (create || !ISUNWRITTEN(&imap))) {
+@@ -1388,39 +1434,6 @@ __xfs_get_blocks(
+ 		}
+ 	}
+ 
+-	/*
+-	 * If this is O_DIRECT or the mpage code calling tell them how large
+-	 * the mapping is, so that we can avoid repeated get_blocks calls.
+-	 *
+-	 * If the mapping spans EOF, then we have to break the mapping up as the
+-	 * mapping for blocks beyond EOF must be marked new so that sub block
+-	 * regions can be correctly zeroed. We can't do this for mappings within
+-	 * EOF unless the mapping was just allocated or is unwritten, otherwise
+-	 * the callers would overwrite existing data with zeros. Hence we have
+-	 * to split the mapping into a range up to and including EOF, and a
+-	 * second mapping for beyond EOF.
+-	 */
+-	if (direct || size > (1 << inode->i_blkbits)) {
+-		xfs_off_t		mapping_size;
+-
+-		mapping_size = imap.br_startoff + imap.br_blockcount - iblock;
+-		mapping_size <<= inode->i_blkbits;
+-
+-		ASSERT(mapping_size > 0);
+-		if (mapping_size > size)
+-			mapping_size = size;
+-		if (offset < i_size_read(inode) &&
+-		    offset + mapping_size >= i_size_read(inode)) {
+-			/* limit mapping to block that spans EOF */
+-			mapping_size = roundup_64(i_size_read(inode) - offset,
+-						  1 << inode->i_blkbits);
+-		}
+-		if (mapping_size > LONG_MAX)
+-			mapping_size = LONG_MAX;
+-
+-		bh_result->b_size = mapping_size;
+-	}
+-
+ 	return 0;
+ 
+ out_unlock:
+-- 
+2.0.0
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============3211935967495183758==--
