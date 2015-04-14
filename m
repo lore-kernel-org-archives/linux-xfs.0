@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 4157F7F5A
-	for <xfs@oss.sgi.com>; Tue, 14 Apr 2015 09:35:29 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 2FC7B8F8052
-	for <xfs@oss.sgi.com>; Tue, 14 Apr 2015 07:35:29 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id 185C27F60
+	for <xfs@oss.sgi.com>; Tue, 14 Apr 2015 09:35:32 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id EC26E8F8052
+	for <xfs@oss.sgi.com>; Tue, 14 Apr 2015 07:35:31 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id fzyOHoVKaXgGjNEJ (version=TLSv1
+	cuda.sgi.com with ESMTP id RCQwADOScOCkwZOl (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 14 Apr 2015 07:35:28 -0700 (PDT)
-Date: Tue, 14 Apr 2015 10:35:23 -0400
+	Tue, 14 Apr 2015 07:35:31 -0700 (PDT)
+Date: Tue, 14 Apr 2015 10:35:28 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 6/8] xfs: DIO write completion size updates race
-Message-ID: <20150414143523.GG36198@bfoster.bfoster>
+Subject: Re: [PATCH 7/8] xfs: direct IO EOF zeroing needs to drain AIO
+Message-ID: <20150414143527.GH36198@bfoster.bfoster>
 References: <1428996411-1507-1-git-send-email-david@fromorbit.com>
-	<1428996411-1507-7-git-send-email-david@fromorbit.com>
+	<1428996411-1507-8-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1428996411-1507-7-git-send-email-david@fromorbit.com>
+In-Reply-To: <1428996411-1507-8-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,103 +33,52 @@ Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On Tue, Apr 14, 2015 at 05:26:49PM +1000, Dave Chinner wrote:
+On Tue, Apr 14, 2015 at 05:26:50PM +1000, Dave Chinner wrote:
 > From: Dave Chinner <dchinner@redhat.com>
 > 
-> xfs_end_io_direct_write() can race with other IO completions when
-> updating the in-core inode size. The IO completion processing is not
-> serialised for direct IO - they are done either under the
-> IOLOCK_SHARED for non-AIO DIO, and without any IOLOCK held at all
-> during AIO DIO completion. Hence the non-atomic test-and-set update
-> of the in-core inode size is racy and can result in the in-core
-> inode size going backwards if the race if hit just right.
+> When we are doing AIO DIO writes, the IOLOCK only provides an IO
+> submission barrier. When we need to do EOF zeroing, we need to ensure
+> that no other IO is in progress and all pending in-core EOF updates
+> have been completed. This requires us to wait for all outstanding
+> AIO DIO writes to the inode to complete and, if necessary, run their
+> EOF updates.
 > 
-> If the inode size goes backwards, this can trigger the EOF zeroing
-> code to run incorrectly on the next IO, which then will zero data
-> that has successfully been written to disk by a previous DIO.
-> 
-> To fix this bug, we need to serialise the test/set updates of the
-> in-core inode size. This first patch introduces locking around the
-> relevant updates and checks in the DIO path. Because we now have an
-> ioend in xfs_end_io_direct_write(), we know exactly then we are
-> doing an IO that requires an in-core EOF update, and we know that
-> they are not running in interrupt context. As such, we do not need to
-> use irqsave() spinlock variants to protect against interrupts while
-> the lock is held.
-> 
-> Hence we can use an existing spinlock in the inode to do this
-> serialisation and so not need to grow the struct xfs_inode just to
-> work around this problem.
-> 
-> This patch does not address the test/set EOF update in
-> generic_file_write_direct() for various reasons - that will be done
-> as a followup with separate explanation.
+> Once all the EOF updates are complete, we can then restart
+> xfs_file_aio_write_checks() while holding the IOLOCK_EXCL, knowing
+> that EOF is up to date and we have exclusive IO access to the file
+> so we can run EOF block zeroing if we need to without interference.
+> This gives EOF zeroing the same exclusivity against other IO as we
+> provide truncate operations.
 > 
 > Signed-off-by: Dave Chinner <dchinner@redhat.com>
 > ---
 
 Reviewed-by: Brian Foster <bfoster@redhat.com>
 
->  fs/xfs/xfs_aops.c |  7 +++++++
->  fs/xfs/xfs_file.c | 13 ++++++++++++-
->  2 files changed, 19 insertions(+), 1 deletion(-)
+>  fs/xfs/xfs_file.c | 10 ++++++++++
+>  1 file changed, 10 insertions(+)
 > 
-> diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-> index 55356f6..cd6b2e0 100644
-> --- a/fs/xfs/xfs_aops.c
-> +++ b/fs/xfs/xfs_aops.c
-> @@ -1577,9 +1577,16 @@ xfs_end_io_direct_write(
->  	 * with the on-disk inode size being outside the in-core inode size. We
->  	 * have no other method of updating EOF for AIO, so always do it here
->  	 * if necessary.
-> +	 *
-> +	 * We need to lock the test/set EOF update as we can be racing with
-> +	 * other IO completions here to update the EOF. Failing to serialise
-> +	 * here can result in EOF moving backwards and Bad Things Happen when
-> +	 * that occurs.
->  	 */
-> +	spin_lock(&ip->i_flags_lock);
->  	if (offset + size > i_size_read(inode))
->  		i_size_write(inode, offset + size);
-> +	spin_unlock(&ip->i_flags_lock);
->  
->  	/*
->  	 * If we are doing an append IO that needs to update the EOF on disk,
 > diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-> index c203839..5d5b4ba 100644
+> index 5d5b4ba..c398ec7 100644
 > --- a/fs/xfs/xfs_file.c
 > +++ b/fs/xfs/xfs_file.c
-> @@ -569,10 +569,20 @@ restart:
->  	 * write.  If zeroing is needed and we are currently holding the
->  	 * iolock shared, we need to update it to exclusive which implies
->  	 * having to redo all checks before.
-> +	 *
-> +	 * We need to serialise against EOF updates that occur in IO
-> +	 * completions here. We want to make sure that nobody is changing the
-> +	 * size while we do this check until we have placed an IO barrier (i.e.
-> +	 * hold the XFS_IOLOCK_EXCL) that prevents new IO from being dispatched.
-> +	 * The spinlock effectively forms a memory barrier once we have the
-> +	 * XFS_IOLOCK_EXCL so we are guaranteed to see the latest EOF value
-> +	 * and hence be able to correctly determine if we need to run zeroing.
->  	 */
-> +	spin_lock(&ip->i_flags_lock);
->  	if (*pos > i_size_read(inode)) {
->  		bool	zero = false;
->  
-> +		spin_unlock(&ip->i_flags_lock);
->  		if (*iolock == XFS_IOLOCK_SHARED) {
+> @@ -587,6 +587,16 @@ restart:
 >  			xfs_rw_iunlock(ip, *iolock);
 >  			*iolock = XFS_IOLOCK_EXCL;
-> @@ -582,7 +592,8 @@ restart:
+>  			xfs_rw_ilock(ip, *iolock);
+> +
+> +			/*
+> +			 * We now have an IO submission barrier in place, but
+> +			 * AIO can do EOF updates during IO completion and hence
+> +			 * we now need to wait for all of them to drain. Non-AIO
+> +			 * DIO will have drained before we are given the
+> +			 * XFS_IOLOCK_EXCL, and so for most cases this wait is a
+> +			 * no-op.
+> +			 */
+> +			inode_dio_wait(inode);
+>  			goto restart;
+>  		}
 >  		error = xfs_zero_eof(ip, *pos, i_size_read(inode), &zero);
->  		if (error)
->  			return error;
-> -	}
-> +	} else
-> +		spin_unlock(&ip->i_flags_lock);
->  
->  	/*
->  	 * Updating the timestamps will grab the ilock again from
 > -- 
 > 2.0.0
 > 
