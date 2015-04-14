@@ -1,22 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 67BAA7F47
-	for <xfs@oss.sgi.com>; Tue, 14 Apr 2015 11:54:59 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 5345E304032
-	for <xfs@oss.sgi.com>; Tue, 14 Apr 2015 09:54:58 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id bp918V7XxBZ9NqnB for <xfs@oss.sgi.com>;
-	Tue, 14 Apr 2015 09:54:56 -0700 (PDT)
-Message-ID: <552D465F.4010700@sandeen.net>
-Date: Tue, 14 Apr 2015 11:54:55 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id A9EF47F47
+	for <xfs@oss.sgi.com>; Tue, 14 Apr 2015 15:06:17 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 2F435AC001
+	for <xfs@oss.sgi.com>; Tue, 14 Apr 2015 13:06:14 -0700 (PDT)
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	2vELhUyPE4KL5q40 for <xfs@oss.sgi.com>;
+	Tue, 14 Apr 2015 13:06:11 -0700 (PDT)
+Date: Wed, 15 Apr 2015 06:06:08 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 1/8] xfs: factor DIO write mapping from get_blocks
+Message-ID: <20150414200608.GT15810@dastard>
+References: <1428996411-1507-1-git-send-email-david@fromorbit.com>
+	<1428996411-1507-2-git-send-email-david@fromorbit.com>
+	<20150414142345.GB36198@bfoster.bfoster>
 MIME-Version: 1.0
-Subject: Re: [PATCH 5/5] xfs: Correctly lock inode when removing suid and
-	security marks
-References: <1425379119-3773-1-git-send-email-jack@suse.cz>
-	<1425379119-3773-6-git-send-email-jack@suse.cz>
-In-Reply-To: <1425379119-3773-6-git-send-email-jack@suse.cz>
+Content-Disposition: inline
+In-Reply-To: <20150414142345.GB36198@bfoster.bfoster>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,61 +31,69 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Jan Kara <jack@suse.cz>, Al Viro <viro@ZenIV.linux.org.uk>
-Cc: linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com
+To: Brian Foster <bfoster@redhat.com>
+Cc: xfs@oss.sgi.com
 
-On 3/3/15 4:38 AM, Jan Kara wrote:
-> Currently XFS calls file_remove_privs() without holding i_mutex. This is
-> wrong because that function can end up messing with file permissions and
-> security xattrs for which we need i_mutex held.
+On Tue, Apr 14, 2015 at 10:23:46AM -0400, Brian Foster wrote:
+> On Tue, Apr 14, 2015 at 05:26:44PM +1000, Dave Chinner wrote:
+> > From: Dave Chinner <dchinner@redhat.com>
+> > 
+> > Clarify and separate the buffer mapping logic so that the direct IO mapping is
+> > not tangled up in propagating the extent status to teh mapping buffer. This
+> > makes it easier to extend the direct IO mapping to use an ioend in future.
+> > 
+> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> > ---
+> >  fs/xfs/xfs_aops.c | 36 +++++++++++++++++++++++-------------
+> >  1 file changed, 23 insertions(+), 13 deletions(-)
+> > 
+> > diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+> > index 3a9b7a1..5f7ddd5 100644
+> > --- a/fs/xfs/xfs_aops.c
+> > +++ b/fs/xfs/xfs_aops.c
+> > @@ -1233,6 +1233,22 @@ xfs_vm_releasepage(
+> >  	return try_to_free_buffers(page);
+> >  }
+> >  
+> > +/*
+> > + * do all the direct IO specific mapping buffer manipulation here.
+> > + */
+> > +static void
+> > +xfs_map_direct(
+> > +	struct inode		*inode,
+> > +	struct buffer_head	*bh_result,
+> > +	struct xfs_bmbt_irec	*imap,
+> > +	xfs_off_t		offset)
+> > +{
+> > +	if (ISUNWRITTEN(imap)) {
+> > +		bh_result->b_private = inode;
+> > +		set_buffer_defer_completion(bh_result);
+> > +	}
+> > +}
+> > +
+> >  STATIC int
+> >  __xfs_get_blocks(
+> >  	struct inode		*inode,
+> > @@ -1332,20 +1348,14 @@ __xfs_get_blocks(
+> >  	}
+> >  
+> >  	if (imap.br_startblock != HOLESTARTBLOCK &&
+> > -	    imap.br_startblock != DELAYSTARTBLOCK) {
+> > -		/*
+> > -		 * For unwritten extents do not report a disk address on
+> > -		 * the read case (treat as if we're reading into a hole).
+> > -		 */
 > 
-> Fix the problem by grabbing iolock exclusively when we will need to
-> change anything in permissions / xattrs.
-> 
-> Signed-off-by: Jan Kara <jack@suse.cz>
+> Can we keep this comment and move it before this block?
 
-This seems like it stands alone, modulo the file_remove_privs function
-renaming... should it just be pulled into XFS by Dave?  I guess that would
-require the renaming patch to be rebased...
+*nod*.
 
-Thanks,
--Eric
+Cheers,
 
-
-> ---
->  fs/xfs/xfs_file.c | 11 ++++++++++-
->  1 file changed, 10 insertions(+), 1 deletion(-)
-> 
-> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-> index fa81a43702ee..3d601e92bd44 100644
-> --- a/fs/xfs/xfs_file.c
-> +++ b/fs/xfs/xfs_file.c
-> @@ -563,6 +563,13 @@ restart:
->  	if (error)
->  		return error;
->  
-> +	/* For changing security info in file_remove_privs() we need i_mutex */
-> +	if (*iolock == XFS_IOLOCK_SHARED && !IS_NOSEC(inode)) {
-> +		xfs_rw_iunlock(ip, *iolock);
-> +		*iolock = XFS_IOLOCK_EXCL;
-> +		xfs_rw_ilock(ip, *iolock);
-> +		goto restart;
-> +	}
->  	/*
->  	 * If the offset is beyond the size of the file, we need to zero any
->  	 * blocks that fall between the existing EOF and the start of this
-> @@ -601,7 +608,9 @@ restart:
->  	 * setgid bits if the process is not being run by root.  This keeps
->  	 * people from modifying setuid and setgid binaries.
->  	 */
-> -	return file_remove_privs(file);
-> +	if (!IS_NOSEC(inode))
-> +		return file_remove_privs(file);
-> +	return 0;
->  }
->  
->  /*
-> 
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
