@@ -1,29 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id E3FA87F50
-	for <xfs@oss.sgi.com>; Wed, 15 Apr 2015 17:57:55 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id D48AC30404E
-	for <xfs@oss.sgi.com>; Wed, 15 Apr 2015 15:57:55 -0700 (PDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 7517B7F47
+	for <xfs@oss.sgi.com>; Wed, 15 Apr 2015 18:09:03 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 121F6AC004
+	for <xfs@oss.sgi.com>; Wed, 15 Apr 2015 16:08:59 -0700 (PDT)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	38PsjWqMLwGk75To for <xfs@oss.sgi.com>;
-	Wed, 15 Apr 2015 15:57:53 -0700 (PDT)
-Date: Thu, 16 Apr 2015 08:57:45 +1000
+	T6xG8JclbFIbtUmI for <xfs@oss.sgi.com>;
+	Wed, 15 Apr 2015 16:08:57 -0700 (PDT)
+Date: Thu, 16 Apr 2015 09:00:14 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v3 3/3] NFSD: Add support for encoding multiple segments
-Message-ID: <20150415225745.GW13731@dastard>
-References: <CAHQdGtRCrrhdS8F4FjZFT-CnRRGm8eZR07v8WnK7bwagKgmPcw@mail.gmail.com>
-	<55142FB4.2070408@Netapp.com>
-	<CAHQdGtS_VuBOzRZjsiYdjZS8qMj2Sw65BYdFmWWf-LJhQL6yOg@mail.gmail.com>
-	<5515A9C8.6090400@Netapp.com>
-	<CAHQdGtRaUYxU2JAAWErH7FT=Gy5JLzAKi-RtqqBSkNFZrhaB9Q@mail.gmail.com>
-	<5515C1BF.8000907@Netapp.com> <20150327205414.GD27889@fieldses.org>
-	<5515C3BE.3040807@Netapp.com> <20150327210839.GE27889@fieldses.org>
-	<552EBCB2.1040609@Netapp.com>
+Subject: Re: [PATCH] xfs: extent size hints can round up extents past MAXEXTLEN
+Message-ID: <20150415230014.GX13731@dastard>
+References: <1429057331-11202-1-git-send-email-david@fromorbit.com>
+	<552ED5A4.70104@sandeen.net>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <552EBCB2.1040609@Netapp.com>
+In-Reply-To: <552ED5A4.70104@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -36,53 +30,115 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Anna Schumaker <Anna.Schumaker@netapp.com>
-Cc: Christoph Hellwig <hch@infradead.org>, "linux-nfs@vger.kernel.org" <linux-nfs@vger.kernel.org>, Trond Myklebust <trond.myklebust@primarydata.com>, Marc Eshel <eshel@us.ibm.com>, xfs@oss.sgi.com, "J. Bruce Fields" <bfields@fieldses.org>, linux-nfs-owner@vger.kernel.org
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: xfs@oss.sgi.com
 
-On Wed, Apr 15, 2015 at 03:32:02PM -0400, Anna Schumaker wrote:
-> I just ran some more tests comparing the directio case across
-> different filesystem types.  These tests used three 1G files:
-> 100% data, 100% hole, and mixed file with alternating 4k data and
-> hole segments.  The mixed case seems to be consistently slower
-> compared to NFS v4.1, and I'm at a loss for anything I could do to
-> make it faster.  Here are my numbers:
+On Wed, Apr 15, 2015 at 04:18:28PM -0500, Eric Sandeen wrote:
+> On 4/14/15 7:22 PM, Dave Chinner wrote:
+> > From: Dave Chinner <dchinner@redhat.com>
+> > 
+> > This results in BMBT corruption, as seen by this test:
+> > 
+> > # mkfs.xfs -f -d size=40051712b,agcount=4 /dev/vdc
+> > ....
+> > # mount /dev/vdc /mnt/scratch
+> > # xfs_io -ft -c "extsize 16m" -c "falloc 0 30g" -c "bmap -vp" /mnt/scratch/foo
+> > 
+> > which results in this failure on a debug kernel:
+> > 
+> > XFS: Assertion failed: (blockcount & xfs_mask64hi(64-BMBT_BLOCKCOUNT_BITLEN)) == 0, file: fs/xfs/libxfs/xfs_bmap_btree.c, line: 211
+> > ....
+> > Call Trace:
+> >  [<ffffffff814cf0ff>] xfs_bmbt_set_allf+0x8f/0x100
+> >  [<ffffffff814cf18d>] xfs_bmbt_set_all+0x1d/0x20
+> >  [<ffffffff814f2efe>] xfs_iext_insert+0x9e/0x120
+> >  [<ffffffff814c7956>] ? xfs_bmap_add_extent_hole_real+0x1c6/0xc70
+> >  [<ffffffff814c7956>] xfs_bmap_add_extent_hole_real+0x1c6/0xc70
+> >  [<ffffffff814caaab>] xfs_bmapi_write+0x72b/0xed0
+> >  [<ffffffff811c72ac>] ? kmem_cache_alloc+0x15c/0x170
+> >  [<ffffffff814fe070>] xfs_alloc_file_space+0x160/0x400
+> >  [<ffffffff81ddcc29>] ? down_write+0x29/0x60
+> >  [<ffffffff815063eb>] xfs_file_fallocate+0x29b/0x310
+> >  [<ffffffff811d2bc8>] ? __sb_start_write+0x58/0x120
+> >  [<ffffffff811e3e18>] ? do_vfs_ioctl+0x318/0x570
+> >  [<ffffffff811cd680>] vfs_fallocate+0x140/0x260
+> >  [<ffffffff811ce6f8>] SyS_fallocate+0x48/0x80
+> >  [<ffffffff81ddec09>] system_call_fastpath+0x12/0x17
+> > 
+> > The tracepoint that indicates the extent that triggered the assert
+> > failure is:
+> > 
+> > xfs_iext_insert:   idx 0 offset 0 block 16777224 count 2097152 flag 1
+> > 
+> > Clearly indicating that the extent length is greater than MAXEXTLEN,
+> > which is 2097151. A prior trace point shows the allocation was an
+> > exact size match and that a length greater than MAXEXTLEN was asked
+> > for:
+> > 
+> > xfs_alloc_size_done:  agno 1 agbno 8 minlen 2097152 maxlen 2097152
+> > 					    ^^^^^^^        ^^^^^^^
+> > 
+> > The issue is that the extent size hint alignment is rounding up the
+> > extent size past MAXEXTLEN, because xfs_bmapi_write() is not taking
+> > into account extent size hints when calculating the maximum extent
+> > length to allocate. xfs_bmapi_reserve_delalloc() is already doing
+> > this, but direct extent allocation is not.
+> > 
+> > We don't see this problem with extent size hints through the IO path
+> > because we can't do single IOs large enough to trigger MAXEXTLEN
+> > allocation. fallocate(), OTOH, is not limited in it's allocation
+> > sizes and so needs help here. The fix is simply to copy the logic
+> > from xfs_bmapi_reserve_delalloc() and apply it apropriately to
+> > xfs_bmapi_write().
 > 
-> ###########
-> #         #
-> #   XFS   #
-> #         #
-> ###########
+> Cool, thanks for sorting that out!
+....
+> > @@ -4287,7 +4296,19 @@ xfs_bmapi_allocate(
+> >  					 &bma->prev);
+> >  		}
+> >  	} else {
+> > -		bma->length = XFS_FILBLKS_MIN(bma->length, MAXEXTLEN);
+> > +		/* Figure out the extent size, adjust alen */
+> > +		xfs_extlen_t	maxlen = MAXEXTLEN;
+> > +		xfs_extlen_t	extsz = xfs_get_extsz_hint(bma->ip);
+> > +
+> > +		/*
+> > +		 * Make sure we don't exceed a single extent length when we
+> > +		 * align the extent by reducing length we are going to allocate
+> > +		 * by the maximum amount extent size aligment may require.
+> 
+> "alignment"  (maybe fix the other comment too?)
+> 
+> Or better yet, would this be possible to factor into a helper?
+> 
+> /*              
+>  * Make sure we don't exceed a single extent length when we
+>  * align the extent by reducing length we are going to
+>  * allocate by the maximum amount extent size aligment may
+>  * require.
+> */
+> STATIC xfs_extlen_t
+> xfs_max_extent_len(
+>         struct xfs_inode        *ip)
+> {
+>         xfs_extlen_t    maxlen = MAXEXTLEN;
+>         xfs_extlen_t    extsz = xfs_get_extsz_hint(ip);
+> 
+> 	/* Insert comment about math here ;) */
+>         if (extsz)
+>                 maxlen -= (2 * extsz - 1);
+> 
+>         return maxlen;
+> }
 > 
 > 
-> NFS v4.1:
->                             Trial
-> |---------|---------|---------|---------|---------|---------|---------|
-> |         |    1    |    2    |    3    |    4    |    5    | Average |
-> |---------|---------|---------|---------|---------|---------|---------|
-> |    Data |  1.883s |  1.808s |  1.781s |  1.685s |  1.591s |  1.746s |
-> |    Hole |  1.815s |  1.635s |  1.682s |  1.698s |  1.653s |  1.697s |
-> |   Mixed |  2.089s |  2.024s |  1.970s |  1.925s |  2.049s |  2.011s |
-> |---------|---------|---------|---------|---------|---------|---------|
+> ...
 > 
-> 
-> NFS v4.2:
->                             Trial
-> |---------|---------|---------|---------|---------|---------|---------|
-> |         |    1    |    2    |    3    |    4    |    5    | Average |
-> |---------|---------|---------|---------|---------|---------|---------|
-> |    Data |  1.849s |  1.879s |  1.852s |  1.799s |  1.781s |  1.832s |
-> |    Hole |  0.668s |  0.600s |  0.611s |  0.619s |  0.617s |  0.623s |
-> |   Mixed |  5.913s |  5.811s |  5.952s |  5.962s |  5.806s |  5.889s |
-> |---------|---------|---------|---------|---------|---------|---------|
+> 	bma->length = XFS_FILBLKS_MIN(bma->length, xfs_max_extent_len(ip));
 
-What that says to me is that the READ_PLUS when there are (worst
-case) mixed holes is either burning a lot more CPU than we expected
-or it is serialising somewhere (not sure where, everything in XFS
-should be shared locks on read/seek).
+I thought about that, then just sent the working patch ;)
 
-Can you run a perf profile (even just a snapshot from perf top) on
-the server so we can see a bit about what is happening on the CPU
-for the different workloads?
+I'll refactor and send again.
 
 Cheers,
 
