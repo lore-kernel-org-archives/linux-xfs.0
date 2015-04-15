@@ -1,27 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 340127F51
-	for <xfs@oss.sgi.com>; Tue, 14 Apr 2015 23:52:05 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id A4E71AC003
-	for <xfs@oss.sgi.com>; Tue, 14 Apr 2015 21:52:04 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 576817F50
+	for <xfs@oss.sgi.com>; Wed, 15 Apr 2015 00:08:00 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 2F5238F8054
+	for <xfs@oss.sgi.com>; Tue, 14 Apr 2015 22:07:57 -0700 (PDT)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	Fzr8NNNjDMxaC9Og for <xfs@oss.sgi.com>;
-	Tue, 14 Apr 2015 21:52:02 -0700 (PDT)
-Received: from disappointment.disaster.area ([192.168.1.110]
-	helo=disappointment) by dastard with esmtp (Exim 4.80)
-	(envelope-from <dave@fromorbit.com>) id 1YiFIo-00032W-9A
-	for xfs@oss.sgi.com; Wed, 15 Apr 2015 14:51:54 +1000
-Received: from dave by disappointment with local (Exim 4.82_1-5b7a7c0-XX)
-	(envelope-from <dave@disappointment.disaster>) id 1YiFIo-0005EX-8P
-	for xfs@oss.sgi.com; Wed, 15 Apr 2015 14:51:54 +1000
+	eWcJOJVdGWYQS4kK for <xfs@oss.sgi.com>;
+	Tue, 14 Apr 2015 22:07:54 -0700 (PDT)
+Received: from dave by dastard with local (Exim 4.80)
+	(envelope-from <david@fromorbit.com>) id 1YiFYF-00035o-Sp
+	for xfs@oss.sgi.com; Wed, 15 Apr 2015 15:07:51 +1000
+Date: Wed, 15 Apr 2015 15:07:51 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 5/9] xfs: DIO writes within EOF don't need an ioend
-Date: Wed, 15 Apr 2015 14:51:48 +1000
-Message-Id: <1429073512-20035-6-git-send-email-david@fromorbit.com>
-In-Reply-To: <1429073512-20035-1-git-send-email-david@fromorbit.com>
+Subject: Re: [PATCH 9/9] xfs: extent size hints can round up extents past
+	MAXEXTLEN
+Message-ID: <20150415050751.GY15810@dastard>
 References: <1429073512-20035-1-git-send-email-david@fromorbit.com>
+	<1429073512-20035-10-git-send-email-david@fromorbit.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <1429073512-20035-10-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,186 +30,144 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-From: Dave Chinner <dchinner@redhat.com>
+Ooops, one commit too many on the command line when. This patch
+isn't part of the series....
 
-DIO writes that lie entirely within EOF have nothing to do in IO
-completion. In this case, we don't need no steekin' ioend, and so we
-can avoid allocating an ioend until we have a mapping that spans
-EOF.
+On Wed, Apr 15, 2015 at 02:51:52PM +1000, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> This results in BMBT corruption, as seen by this test:
+> 
+> # mkfs.xfs -f -d size=40051712b,agcount=4 /dev/vdc
+> ....
+> # mount /dev/vdc /mnt/scratch
+> # xfs_io -ft -c "extsize 16m" -c "falloc 0 30g" -c "bmap -vp" /mnt/scratch/foo
+> 
+> which results in this failure on a debug kernel:
+> 
+> XFS: Assertion failed: (blockcount & xfs_mask64hi(64-BMBT_BLOCKCOUNT_BITLEN)) == 0, file: fs/xfs/libxfs/xfs_bmap_btree.c, line: 211
+> ....
+> Call Trace:
+>  [<ffffffff814cf0ff>] xfs_bmbt_set_allf+0x8f/0x100
+>  [<ffffffff814cf18d>] xfs_bmbt_set_all+0x1d/0x20
+>  [<ffffffff814f2efe>] xfs_iext_insert+0x9e/0x120
+>  [<ffffffff814c7956>] ? xfs_bmap_add_extent_hole_real+0x1c6/0xc70
+>  [<ffffffff814c7956>] xfs_bmap_add_extent_hole_real+0x1c6/0xc70
+>  [<ffffffff814caaab>] xfs_bmapi_write+0x72b/0xed0
+>  [<ffffffff811c72ac>] ? kmem_cache_alloc+0x15c/0x170
+>  [<ffffffff814fe070>] xfs_alloc_file_space+0x160/0x400
+>  [<ffffffff81ddcc29>] ? down_write+0x29/0x60
+>  [<ffffffff815063eb>] xfs_file_fallocate+0x29b/0x310
+>  [<ffffffff811d2bc8>] ? __sb_start_write+0x58/0x120
+>  [<ffffffff811e3e18>] ? do_vfs_ioctl+0x318/0x570
+>  [<ffffffff811cd680>] vfs_fallocate+0x140/0x260
+>  [<ffffffff811ce6f8>] SyS_fallocate+0x48/0x80
+>  [<ffffffff81ddec09>] system_call_fastpath+0x12/0x17
+> 
+> The tracepoint that indicates the extent that triggered the assert
+> failure is:
+> 
+> xfs_iext_insert:   idx 0 offset 0 block 16777224 count 2097152 flag 1
+> 
+> Clearly indicating that the extent length is greater than MAXEXTLEN,
+> which is 2097151. A prior trace point shows the allocation was an
+> exact size match and that a length greater than MAXEXTLEN was asked
+> for:
+> 
+> xfs_alloc_size_done:  agno 1 agbno 8 minlen 2097152 maxlen 2097152
+> 					    ^^^^^^^        ^^^^^^^
+> 
+> The issue is that the extent size hint alignment is rounding up the
+> extent size past MAXEXTLEN, because xfs_bmapi_write() is not taking
+> into account extent size hints when calculating the maximum extent
+> length to allocate. xfs_bmapi_reserve_delalloc() is already doing
+> this, but direct extent allocation is not.
+> 
+> We don't see this problem with extent size hints through the IO path
+> because we can't do single IOs large enough to trigger MAXEXTLEN
+> allocation. fallocate(), OTOH, is not limited in it's allocation
+> sizes and so needs help here. The fix is simply to copy the logic
+> from xfs_bmapi_reserve_delalloc() and apply it apropriately to
+> xfs_bmapi_write().
+> 
+> I also add an ASSERT() to xfs_bmap_extsize_align() so we'll catch
+> cases of alignment exceeding MAXEXTLEN on debug kernel machines in
+> future.
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> ---
+>  fs/xfs/libxfs/xfs_bmap.c | 31 ++++++++++++++++++++++++++-----
+>  1 file changed, 26 insertions(+), 5 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+> index aeffeaa..e5aa8a6 100644
+> --- a/fs/xfs/libxfs/xfs_bmap.c
+> +++ b/fs/xfs/libxfs/xfs_bmap.c
+> @@ -3224,12 +3224,21 @@ xfs_bmap_extsize_align(
+>  		align_alen += temp;
+>  		align_off -= temp;
+>  	}
+> +
+> +	/* Same adjustment for the end of the requested area. */
+> +	temp = (align_alen % extsz);
+> +	if (temp)
+> +		align_alen += extsz - temp;
+> +
+>  	/*
+> -	 * Same adjustment for the end of the requested area.
+> +	 * we are in trouble if the caller requested an extent that will align
+> +	 * to something larger than the supported on disk extent size.  Assert
+> +	 * fail here to catch callers that make this mistake; they should always
+> +	 * be setting the maximum allocation length to be (MAXEXTLEN - extsz) so
+> +	 * we can round outwards here for alignment.
+>  	 */
+> -	if ((temp = (align_alen % extsz))) {
+> -		align_alen += extsz - temp;
+> -	}
+> +	ASSERT(align_alen <= MAXEXTLEN);
+> +
+>  	/*
+>  	 * If the previous block overlaps with this proposed allocation
+>  	 * then move the start forward without adjusting the length.
+> @@ -4287,7 +4296,19 @@ xfs_bmapi_allocate(
+>  					 &bma->prev);
+>  		}
+>  	} else {
+> -		bma->length = XFS_FILBLKS_MIN(bma->length, MAXEXTLEN);
+> +		/* Figure out the extent size, adjust alen */
+> +		xfs_extlen_t	maxlen = MAXEXTLEN;
+> +		xfs_extlen_t	extsz = xfs_get_extsz_hint(bma->ip);
+> +
+> +		/*
+> +		 * Make sure we don't exceed a single extent length when we
+> +		 * align the extent by reducing length we are going to allocate
+> +		 * by the maximum amount extent size aligment may require.
+> +		 */
+> +		if (extsz)
+> +			maxlen -= (2 * extsz - 1);
+> +
+> +		bma->length = XFS_FILBLKS_MIN(bma->length, maxlen);
+>  		if (!bma->eof)
+>  			bma->length = XFS_FILBLKS_MIN(bma->length,
+>  					bma->got.br_startoff - bma->offset);
+> -- 
+> 2.0.0
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+> 
 
-This means that IO completion has two contexts - deferred completion
-to the dio workqueue that uses an ioend, and interrupt completion
-that does nothing because there is nothing that can be done in this
-context.
-
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- fs/xfs/xfs_aops.c  | 69 ++++++++++++++++++++++++++++++------------------------
- fs/xfs/xfs_trace.h |  1 +
- 2 files changed, 40 insertions(+), 30 deletions(-)
-
-diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index a59443d..c02a474 100644
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -1234,15 +1234,19 @@ xfs_vm_releasepage(
- }
- 
- /*
-- * When we map a DIO buffer, we need to attach an ioend that describes the type
-- * of write IO we are doing. This passes to the completion function the
-- * operations it needs to perform.
-+ * When we map a DIO buffer, we may need to attach an ioend that describes the
-+ * type of write IO we are doing. This passes to the completion function the
-+ * operations it needs to perform. If the mapping is for an overwrite wholly
-+ * within the EOF then we don't need an ioend and so we don't allocate one.
-+ * This avoids the unnecessary overhead of allocating and freeing ioends for
-+ * workloads that don't require transactions on IO completion.
-  *
-  * If we get multiple mappings in a single IO, we might be mapping different
-  * types. But because the direct IO can only have a single private pointer, we
-  * need to ensure that:
-  *
-- * a) the ioend spans the entire region of the IO; and
-+ * a) i) the ioend spans the entire region of unwritten mappings; or
-+ *    ii) the ioend spans all the mappings that cross or are beyond EOF; and
-  * b) if it contains unwritten extents, it is *permanently* marked as such
-  *
-  * We could do this by chaining ioends like buffered IO does, but we only
-@@ -1283,21 +1287,23 @@ xfs_map_direct(
- 		trace_xfs_gbmap_direct_update(XFS_I(inode), ioend->io_offset,
- 					      ioend->io_size, ioend->io_type,
- 					      imap);
--	} else {
-+	} else if (type == XFS_IO_UNWRITTEN ||
-+		   offset + size > i_size_read(inode)) {
- 		ioend = xfs_alloc_ioend(inode, type);
- 		ioend->io_offset = offset;
- 		ioend->io_size = size;
-+
- 		bh_result->b_private = ioend;
-+		set_buffer_defer_completion(bh_result);
- 
- 		trace_xfs_gbmap_direct_new(XFS_I(inode), offset, size, type,
- 					   imap);
-+	} else {
-+		trace_xfs_gbmap_direct_none(XFS_I(inode), offset, size, type,
-+					    imap);
- 	}
--
--	if (ioend->io_type == XFS_IO_UNWRITTEN || xfs_ioend_is_append(ioend))
--		set_buffer_defer_completion(bh_result);
- }
- 
--
- /*
-  * If this is O_DIRECT or the mpage code calling tell them how large the mapping
-  * is, so that we can avoid repeated get_blocks calls.
-@@ -1519,9 +1525,11 @@ xfs_get_blocks_direct(
- /*
-  * Complete a direct I/O write request.
-  *
-- * If the private argument is non-NULL __xfs_get_blocks signals us that we
-- * need to issue a transaction to convert the range from unwritten to written
-- * extents.
-+ * The ioend structure is passed from __xfs_get_blocks() to tell us what to do.
-+ * If no ioend exists (i.e. @private == NULL) then the write IO is an overwrite
-+ * wholly within the EOF and so there is nothing for us to do. Note that in this
-+ * case the completion can be called in interrupt context, whereas if we have an
-+ * ioend we will always be called in task context (i.e. from a workqueue).
-  */
- STATIC void
- xfs_end_io_direct_write(
-@@ -1535,7 +1543,13 @@ xfs_end_io_direct_write(
- 	struct xfs_mount	*mp = ip->i_mount;
- 	struct xfs_ioend	*ioend = private;
- 
--	trace_xfs_gbmap_direct_endio(ip, offset, size, ioend->io_type, NULL);
-+	trace_xfs_gbmap_direct_endio(ip, offset, size,
-+				     ioend ? ioend->io_type : 0, NULL);
-+
-+	if (!ioend) {
-+		ASSERT(offset + size <= i_size_read(inode));
-+		return;
-+	}
- 
- 	if (XFS_FORCED_SHUTDOWN(mp))
- 		goto out_end_io;
-@@ -1548,12 +1562,12 @@ xfs_end_io_direct_write(
- 
- 	/*
- 	 * The ioend only maps whole blocks, while the IO may be sector aligned.
--	 * Hence the ioend offset/size may not match the IO offset/size exactly,
--	 * but should span it completely. Write the IO sizes into the ioend so
--	 * that completion processing does the right thing.
-+	 * Hence the ioend offset/size may not match the IO offset/size exactly.
-+	 * Because we don't map overwrites within EOF into the ioend, the offset
-+	 * may not match, but only if the endio spans EOF.  Either way, write
-+	 * the IO sizes into the ioend so that completion processing does the
-+	 * right thing.
- 	 */
--	ASSERT(size <= ioend->io_size);
--	ASSERT(offset >= ioend->io_offset);
- 	ASSERT(offset + size <= ioend->io_offset + ioend->io_size);
- 	ioend->io_size = size;
- 	ioend->io_offset = offset;
-@@ -1562,20 +1576,15 @@ xfs_end_io_direct_write(
- 	 * The ioend tells us whether we are doing unwritten extent conversion
- 	 * or an append transaction that updates the on-disk file size. These
- 	 * cases are the only cases where we should *potentially* be needing
--	 * to update the VFS inode size. When the ioend indicates this, we
--	 * are *guaranteed* to be running in non-interrupt context.
-+	 * to update the VFS inode size.
- 	 *
- 	 * We need to update the in-core inode size here so that we don't end up
--	 * with the on-disk inode size being outside the in-core inode size.
--	 * While we can do this in the process context after the IO has
--	 * completed, this does not work for AIO and hence we always update
--	 * the in-core inode size here if necessary.
-+	 * with the on-disk inode size being outside the in-core inode size. We
-+	 * have no other method of updating EOF for AIO, so always do it here
-+	 * if necessary.
- 	 */
--	if (ioend->io_type == XFS_IO_UNWRITTEN || xfs_ioend_is_append(ioend)) {
--		if (offset + size > i_size_read(inode))
--			i_size_write(inode, offset + size);
--	} else
--		ASSERT(offset + size <= i_size_read(inode));
-+	if (offset + size > i_size_read(inode))
-+		i_size_write(inode, offset + size);
- 
- 	/*
- 	 * If we are doing an append IO that needs to update the EOF on disk,
-@@ -1584,7 +1593,7 @@ xfs_end_io_direct_write(
- 	 * result in the ioend processing passing on the error if it is
- 	 * possible as we can't return it from here.
- 	 */
--	if (ioend->io_type == XFS_IO_OVERWRITE && xfs_ioend_is_append(ioend))
-+	if (ioend->io_type == XFS_IO_OVERWRITE)
- 		ioend->io_error = xfs_setfilesize_trans_alloc(ioend);
- 
- out_end_io:
-diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-index 967993b..615781b 100644
---- a/fs/xfs/xfs_trace.h
-+++ b/fs/xfs/xfs_trace.h
-@@ -1224,6 +1224,7 @@ DEFINE_IOMAP_EVENT(xfs_get_blocks_alloc);
- DEFINE_IOMAP_EVENT(xfs_gbmap_direct);
- DEFINE_IOMAP_EVENT(xfs_gbmap_direct_new);
- DEFINE_IOMAP_EVENT(xfs_gbmap_direct_update);
-+DEFINE_IOMAP_EVENT(xfs_gbmap_direct_none);
- DEFINE_IOMAP_EVENT(xfs_gbmap_direct_endio);
- 
- DECLARE_EVENT_CLASS(xfs_simple_io_class,
 -- 
-2.0.0
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
