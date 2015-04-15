@@ -1,28 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 2B6227F3F
-	for <xfs@oss.sgi.com>; Wed, 15 Apr 2015 13:47:44 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id C799E7F3F
+	for <xfs@oss.sgi.com>; Wed, 15 Apr 2015 14:32:13 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 0EE3E8F8065
-	for <xfs@oss.sgi.com>; Wed, 15 Apr 2015 11:47:40 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id mSAATDvCPPgY1xk1 (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 15 Apr 2015 11:47:39 -0700 (PDT)
-Received: from int-mx14.intmail.prod.int.phx2.redhat.com
-	(int-mx14.intmail.prod.int.phx2.redhat.com [10.5.11.27])
-	by mx1.redhat.com (Postfix) with ESMTPS id 1F7C2B5C1C
-	for <xfs@oss.sgi.com>; Wed, 15 Apr 2015 18:47:39 +0000 (UTC)
-Received: from vpn-48-111.rdu2.redhat.com (vpn-48-111.rdu2.redhat.com
-	[10.10.48.111])
-	by int-mx14.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id t3FIlbpO012033
-	for <xfs@oss.sgi.com>; Wed, 15 Apr 2015 14:47:38 -0400
-Message-ID: <1429123657.16553.250.camel@redhat.com>
-Subject: 4.1 lockdep problem
-From: Eric Paris <eparis@redhat.com>
-Date: Wed, 15 Apr 2015 13:47:37 -0500
-Mime-Version: 1.0
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 2480DAC004
+	for <xfs@oss.sgi.com>; Wed, 15 Apr 2015 12:32:09 -0700 (PDT)
+Received: from mx142.netapp.com (mx142.netapp.com [216.240.21.19]) by
+	cuda.sgi.com with ESMTP id PJRkU60wgtcDw10H (version=TLSv1
+	cipher=RC4-SHA bits=128 verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 15 Apr 2015 12:32:07 -0700 (PDT)
+Message-ID: <552EBCB2.1040609@Netapp.com>
+Date: Wed, 15 Apr 2015 15:32:02 -0400
+From: Anna Schumaker <Anna.Schumaker@netapp.com>
+MIME-Version: 1.0
+Subject: Re: [PATCH v3 3/3] NFSD: Add support for encoding multiple segments
+References: <20150326153848.GB30482@fieldses.org> <551429F7.5050305@Netapp.com>
+	<CAHQdGtRCrrhdS8F4FjZFT-CnRRGm8eZR07v8WnK7bwagKgmPcw@mail.gmail.com>
+	<55142FB4.2070408@Netapp.com>
+	<CAHQdGtS_VuBOzRZjsiYdjZS8qMj2Sw65BYdFmWWf-LJhQL6yOg@mail.gmail.com>
+	<5515A9C8.6090400@Netapp.com>
+	<CAHQdGtRaUYxU2JAAWErH7FT=Gy5JLzAKi-RtqqBSkNFZrhaB9Q@mail.gmail.com>
+	<5515C1BF.8000907@Netapp.com> <20150327205414.GD27889@fieldses.org>
+	<5515C3BE.3040807@Netapp.com> <20150327210839.GE27889@fieldses.org>
+In-Reply-To: <20150327210839.GE27889@fieldses.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,137 +35,357 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: "J. Bruce Fields" <bfields@fieldses.org>
+Cc: "linux-nfs@vger.kernel.org" <linux-nfs@vger.kernel.org>, Trond Myklebust <trond.myklebust@primarydata.com>, Marc Eshel <eshel@us.ibm.com>, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, linux-nfs-owner@vger.kernel.org
 
-Booting 4.0 my system is totally fine. Although my 4.0 (probably)
-doesn't have any debug/lockdep code turned on.  Booting Fedora's 4.1
-this morning does cause some problems.
+I just ran some more tests comparing the directio case across different filesystem types.  These tests used three 1G files:  100% data, 100% hole, and mixed file with alternating 4k data and hole segments.  The mixed case seems to be consistently slower compared to NFS v4.1, and I'm at a loss for anything I could do to make it faster.  Here are my numbers:
 
-The first time I booted, I ran dracut -f, a lockdep popped out, and
-dracut never returned...
-
-On successive boots I see that my system boots without error, but then
-the lockdep pops out when I ssh in. When I reboot, sshd actually
-segfaults instead of closing properly. 4.0 kernel has no such problem.
-Maybe this is yet another xfs false positive, but the segfaulting sshd
-is quite strange...
+###########
+#         #
+#   XFS   #
+#         #
+###########
 
 
-[  225.300470] ======================================================
-[  225.300507] [ INFO: possible circular locking dependency detected ]
-[  225.300543] 4.1.0-0.rc0.git1.1.fc23.x86_64 #1 Not tainted
-[  225.300579] -------------------------------------------------------
-[  225.300615] sshd/11261 is trying to acquire lock:
-[  225.300650]  (&isec->lock){+.+.+.}, at: [<ffffffff813a7b35>] inode_doinit_with_dentry+0xc5/0x6a0
-[  225.300700]
-               but task is already holding lock:
-[  225.300771]  (&mm->mmap_sem){++++++}, at: [<ffffffff8120ae7f>] vm_mmap_pgoff+0x8f/0xf0
-[  225.300817]
-               which lock already depends on the new lock.
- 
-[  225.300934]
-               the existing dependency chain (in reverse order) is:
-[  225.301012]
-               -> #2 (&mm->mmap_sem){++++++}:
-[  225.301012]        [<ffffffff8110d647>] lock_acquire+0xc7/0x2a0
-[  225.301012]        [<ffffffff8121c57c>] might_fault+0x8c/0xb0
-[  225.301012]        [<ffffffff8128f49a>] filldir+0x9a/0x130
-[  225.301012]        [<ffffffffa0176606>] xfs_dir2_block_getdents.isra.12+0x1a6/0x1d0 [xfs]
-[  225.301012]        [<ffffffffa0177064>] xfs_readdir+0x1a4/0x330 [xfs]
-[  225.301012]        [<ffffffffa0179f7b>] xfs_file_readdir+0x2b/0x30 [xfs]
-[  225.301012]        [<ffffffff8128f26a>] iterate_dir+0x9a/0x140
-[  225.301012]        [<ffffffff8128f7a1>] SyS_getdents+0x91/0x120
-[  225.301012]        [<ffffffff8188c8ee>] system_call_fastpath+0x12/0x76
-[  225.301012]
-               -> #1 (&xfs_dir_ilock_class){++++.+}:
-[  225.301012]        [<ffffffff8110d647>] lock_acquire+0xc7/0x2a0
-[  225.301012]        [<ffffffff81105337>] down_read_nested+0x57/0xa0
-[  225.301012]        [<ffffffffa018ae12>] xfs_ilock+0xe2/0x2a0 [xfs]
-[  225.301012]        [<ffffffffa018b048>] xfs_ilock_attr_map_shared+0x38/0x50 [xfs]
-[  225.301012]        [<ffffffffa01289dd>] xfs_attr_get+0xbd/0x1b0 [xfs]
-[  225.301012]        [<ffffffffa019b01d>] xfs_xattr_get+0x3d/0x80 [xfs]
-[  225.301012]        [<ffffffff812a47df>] generic_getxattr+0x4f/0x70
-[  225.301012]        [<ffffffff813a7be2>] inode_doinit_with_dentry+0x172/0x6a0
-[  225.301012]        [<ffffffff813a914b>] sb_finish_set_opts+0xdb/0x260
-[  225.301012]        [<ffffffff813a9861>] selinux_set_mnt_opts+0x331/0x670
-[  225.301012]        [<ffffffff813ac3a7>] superblock_doinit+0x77/0xf0
-[  225.301012]        [<ffffffff813ac430>] delayed_superblock_init+0x10/0x20
-[  225.301012]        [<ffffffff8127af4a>] iterate_supers+0xba/0x120
-[  225.301012]        [<ffffffff813b1783>] selinux_complete_init+0x33/0x40
-[  225.301012]        [<ffffffff813c1a43>] security_load_policy+0x103/0x640
-[  225.301012]        [<ffffffff813b32d6>] sel_write_load+0xb6/0x790
-[  225.301012]        [<ffffffff81276f87>] vfs_write+0xb7/0x210
-[  225.301012]        [<ffffffff81277c9c>] SyS_write+0x5c/0xd0
-[  225.301012]        [<ffffffff8188c8ee>] system_call_fastpath+0x12/0x76
-[  225.301012]
-               -> #0 (&isec->lock){+.+.+.}:
-[  225.301012]        [<ffffffff8110ca82>] __lock_acquire+0x1cb2/0x1e50
-[  225.301012]        [<ffffffff8110d647>] lock_acquire+0xc7/0x2a0
-[  225.301012]        [<ffffffff81888c0d>] mutex_lock_nested+0x7d/0x460
-[  225.301012]        [<ffffffff813a7b35>] inode_doinit_with_dentry+0xc5/0x6a0
-[  225.301012]        [<ffffffff813a812c>] selinux_d_instantiate+0x1c/0x20
-[  225.301012]        [<ffffffff813a2efb>] security_d_instantiate+0x1b/0x30
-[  225.301012]        [<ffffffff81292e04>] d_instantiate+0x54/0x80
-[  225.301012]        [<ffffffff8120631c>] __shmem_file_setup+0xdc/0x250
-[  225.301012]        [<ffffffff8120a8e8>] shmem_zero_setup+0x28/0x70
-[  225.301012]        [<ffffffff812286ac>] mmap_region+0x66c/0x680
-[  225.301012]        [<ffffffff812289e3>] do_mmap_pgoff+0x323/0x410
-[  225.301012]        [<ffffffff8120aea0>] vm_mmap_pgoff+0xb0/0xf0
-[  225.301012]        [<ffffffff81226b86>] SyS_mmap_pgoff+0x116/0x2b0
-[  225.301012]        [<ffffffff810232db>] SyS_mmap+0x1b/0x30
-[  225.301012]        [<ffffffff8188c8ee>] system_call_fastpath+0x12/0x76
-[  225.301012]
-               other info that might help us debug this:
- 
-[  225.301012] Chain exists of:
-                 &isec->lock --> &xfs_dir_ilock_class --> &mm->mmap_sem
- 
-[  225.301012]  Possible unsafe locking scenario:
- 
-[  225.301012]        CPU0                    CPU1
-[  225.301012]        ----                    ----
-[  225.301012]   lock(&mm->mmap_sem);
-[  225.301012]                                lock(&xfs_dir_ilock_class);
-[  225.301012]                                lock(&mm->mmap_sem);
-[  225.301012]   lock(&isec->lock);
-[  225.301012]
-                *** DEADLOCK ***
- 
-[  225.301012] 1 lock held by sshd/11261:
-[  225.301012]  #0:  (&mm->mmap_sem){++++++}, at: [<ffffffff8120ae7f>] vm_mmap_pgoff+0x8f/0xf0
-[  225.301012]
-               stack backtrace:
-[  225.301012] CPU: 2 PID: 11261 Comm: sshd Not tainted 4.1.0-0.rc0.git1.1.fc23.x86_64 #1
-[  225.301012] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.7.5-20140709_153950- 04/01/2014
-[  225.301012]  0000000000000000 00000000445fcd3f ffff88005bd539c8 ffffffff81883265
-[  225.301012]  0000000000000000 ffffffff82b876e0 ffff88005bd53a18 ffffffff811091a6
-[  225.301012]  00000000001d8f80 ffff88005bd53a78 0000000000000001 ffff88005a882690
-[  225.301012] Call Trace:
-[  225.301012]  [<ffffffff81883265>] dump_stack+0x4c/0x65
-[  225.301012]  [<ffffffff811091a6>] print_circular_bug+0x206/0x280
-[  225.301012]  [<ffffffff8110ca82>] __lock_acquire+0x1cb2/0x1e50
-[  225.301012]  [<ffffffff810ea1d5>] ? sched_clock_local+0x25/0x90
-[  225.301012]  [<ffffffff8110d647>] lock_acquire+0xc7/0x2a0
-[  225.301012]  [<ffffffff813a7b35>] ? inode_doinit_with_dentry+0xc5/0x6a0
-[  225.301012]  [<ffffffff81888c0d>] mutex_lock_nested+0x7d/0x460
-[  225.301012]  [<ffffffff813a7b35>] ? inode_doinit_with_dentry+0xc5/0x6a0
-[  225.301012]  [<ffffffff8106aca5>] ? kvm_clock_read+0x25/0x30
-[  225.301012]  [<ffffffff813a7b35>] ? inode_doinit_with_dentry+0xc5/0x6a0
-[  225.301012]  [<ffffffff810ea1d5>] ? sched_clock_local+0x25/0x90
-[  225.301012]  [<ffffffff813a7b35>] inode_doinit_with_dentry+0xc5/0x6a0
-[  225.301012]  [<ffffffff813a812c>] selinux_d_instantiate+0x1c/0x20
-[  225.301012]  [<ffffffff813a2efb>] security_d_instantiate+0x1b/0x30
-[  225.301012]  [<ffffffff81292e04>] d_instantiate+0x54/0x80
-[  225.301012]  [<ffffffff8120631c>] __shmem_file_setup+0xdc/0x250
-[  225.301012]  [<ffffffff8120a8e8>] shmem_zero_setup+0x28/0x70
-[  225.301012]  [<ffffffff812286ac>] mmap_region+0x66c/0x680
-[  225.301012]  [<ffffffff812289e3>] do_mmap_pgoff+0x323/0x410
-[  225.301012]  [<ffffffff8120ae7f>] ? vm_mmap_pgoff+0x8f/0xf0
-[  225.301012]  [<ffffffff8120aea0>] vm_mmap_pgoff+0xb0/0xf0
-[  225.301012]  [<ffffffff81226b86>] SyS_mmap_pgoff+0x116/0x2b0
-[  225.301012]  [<ffffffff8128db9e>] ? SyS_fcntl+0x5de/0x760
-[  225.301012]  [<ffffffff810232db>] SyS_mmap+0x1b/0x30
-[  225.301012]  [<ffffffff8188c8ee>] system_call_fastpath+0x12/0x76
+NFS v4.1:
+                            Trial
+|---------|---------|---------|---------|---------|---------|---------|
+|         |    1    |    2    |    3    |    4    |    5    | Average |
+|---------|---------|---------|---------|---------|---------|---------|
+|    Data |  1.883s |  1.808s |  1.781s |  1.685s |  1.591s |  1.746s |
+|    Hole |  1.815s |  1.635s |  1.682s |  1.698s |  1.653s |  1.697s |
+|   Mixed |  2.089s |  2.024s |  1.970s |  1.925s |  2.049s |  2.011s |
+|---------|---------|---------|---------|---------|---------|---------|
+
+
+NFS v4.2:
+                            Trial
+|---------|---------|---------|---------|---------|---------|---------|
+|         |    1    |    2    |    3    |    4    |    5    | Average |
+|---------|---------|---------|---------|---------|---------|---------|
+|    Data |  1.849s |  1.879s |  1.852s |  1.799s |  1.781s |  1.832s |
+|    Hole |  0.668s |  0.600s |  0.611s |  0.619s |  0.617s |  0.623s |
+|   Mixed |  5.913s |  5.811s |  5.952s |  5.962s |  5.806s |  5.889s |
+|---------|---------|---------|---------|---------|---------|---------|
+
+
+
+
+
+############
+#          #
+#   EXT4   #
+#          #
+############
+
+
+NFS v4.1:
+                            Trial
+|---------|---------|---------|---------|---------|---------|---------|
+|         |    1    |    2    |    3    |    4    |    5    | Average |
+|---------|---------|---------|---------|---------|---------|---------|
+|    Data |  2.637s |  1.823s |  1.792s |  1.816s |  2.000s |  2.014s |
+|    Hole |  1.734s |  1.743s |  1.709s |  1.761s |  1.871s |  1.764s |
+|   Mixed |  5.465s |  2.158s |  2.254s |  2.676s |  2.422s |  2.995s |
+|---------|---------|---------|---------|---------|---------|---------|
+
+
+NFS v4.2:
+                            Trial
+|---------|---------|---------|---------|---------|---------|---------|
+|         |    1    |    2    |    3    |    4    |    5    | Average |
+|---------|---------|---------|---------|---------|---------|---------|
+|    Data |  1.934s |  1.783s |  1.800s |  2.010s |  1.982s |  1.902s |
+|    Hole | 63.568s | 63.423s | 64.671s | 66.190s | 65.985s | 64.767s |
+|   Mixed |  6.010s |  5.798s |  6.146s |  6.460s |  6.720s |  6.225s |
+|---------|---------|---------|---------|---------|---------|---------|
+
+
+
+
+
+#############
+#           #
+#   BTRFS   #
+#           #
+#############
+
+
+NFS v4.1:
+                            Trial
+|---------|---------|---------|---------|---------|---------|---------|
+|         |    1    |    2    |    3    |    4    |    5    | Average |
+|---------|---------|---------|---------|---------|---------|---------|
+|    Data |  2.386s |  1.952s |  1.832s |  1.818s |  1.826s |  1.963s |
+|    Hole |  1.759s |  1.717s |  1.754s |  1.621s |  1.708s |  1.712s |
+|   Mixed |  2.889s |  2.272s |  2.778s |  2.277s |  2.255s |  2.494s |
+|---------|---------|---------|---------|---------|---------|---------|
+
+
+NFS v4.2:
+                            Trial
+|---------|---------|---------|---------|---------|---------|---------|
+|         |    1    |    2    |    3    |    4    |    5    | Average |
+|---------|---------|---------|---------|---------|---------|---------|
+|    Data |  2.586s |  1.816s |  2.022s |  1.862s |  1.975s |  2.052s |
+|    Hole |  0.646s |  0.659s |  0.669s |  0.628s |  0.605s |  0.641s |
+|   Mixed |  8.555s |  8.553s |  7.904s |  8.567s |  8.286s |  8.373s |
+|---------|---------|---------|---------|---------|---------|---------|
+
+
+On 03/27/2015 05:08 PM, J. Bruce Fields wrote:
+> On Fri, Mar 27, 2015 at 04:55:26PM -0400, Anna Schumaker wrote:
+>> On 03/27/2015 04:54 PM, J. Bruce Fields wrote:
+>>> On Fri, Mar 27, 2015 at 04:46:55PM -0400, Anna Schumaker wrote:
+>>>> On 03/27/2015 04:22 PM, Trond Myklebust wrote:
+>>>>> On Fri, Mar 27, 2015 at 3:04 PM, Anna Schumaker
+>>>>> <Anna.Schumaker@netapp.com> wrote:
+>>>>>> I did two separate dd tests with the same 5G file from yesterday, and still using the same virtual machines.  First, I ran dd using direct IO for reads:
+>>>>>>         dd if=/nfs/file iflag=direct of=/dev/null bs=128K
+>>>>>>
+>>>>>> Mixed file performance was awful, so I reran without direct IO enabled for comparison:
+>>>>>>         dd if=/nfs/file iflag=nocache of=/dev/null oflag=nocache bs=128K
+>>>>>>
+>>>>>> bs=128K sets the block size used by dd to the NFS rsize, without this dd will only read 512 bytes at a time and take forever to complete.
+>>>>>>
+>>>>>>
+>>>>>> ##########################
+>>>>>> #                        #
+>>>>>> #   Without READ_PLUS    #
+>>>>>> #                        #
+>>>>>> ##########################
+>>>>>>
+>>>>>>
+>>>>>> NFS v4.1, iflag=direct:
+>>>>>>                             Trial
+>>>>>> |---------|---------|---------|---------|---------|---------|---------|
+>>>>>> |         |    1    |    2    |    3    |    4    |    5    | Average |
+>>>>>> |---------|---------|---------|---------|---------|---------|---------|
+>>>>>> |    Data | 11.704s | 11.055s | 11.329s | 11.453s | 10.741s | 11.256s |
+>>>>>> |    Hole |  9.839s |  9.326s |  9.381s |  9.430s |  8.875s |  9.370s |
+>>>>>> |   Mixed | 19.150s | 19.468s | 18.650s | 18.537s | 19.312s | 19.023s |
+>>>>>> |---------|---------|---------|---------|---------|---------|---------|
+>>>>>>
+>>>>>>
+>>>>>> NFS v4.2, iflag=direct:
+>>>>>>                             Trial
+>>>>>> |---------|---------|---------|---------|---------|---------|---------|
+>>>>>> |         |    1    |    2    |    3    |    4    |    5    | Average |
+>>>>>> |---------|---------|---------|---------|---------|---------|---------|
+>>>>>> |    Data | 10.927s | 10.885s | 11.114s | 11.283s | 10.371s | 10.916s |
+>>>>>> |    Hole |  9.515s |  9.039s |  9.116s |  8.867s |  8.905s |  9.088s |
+>>>>>> |   Mixed | 19.149s | 18.656s | 19.400s | 18.834s | 20.041s | 19.216s |
+>>>>>> |---------|---------|---------|---------|---------|---------|---------|
+>>>>>>
+>>>>>>
+>>>>>>
+>>>>>>
+>>>>>> NFS v4.1, iflag=nocache oflag=nocache:
+>>>>>>                             Trial
+>>>>>> |---------|---------|---------|---------|---------|---------|---------|
+>>>>>> |         |    1    |    2    |    3    |    4    |    5    | Average |
+>>>>>> |---------|---------|---------|---------|---------|---------|---------|
+>>>>>> |    Data |  6.808s |  6.698s |  7.482s |  6.761s |  7.235s |  6.995s |
+>>>>>> |    Hole |  5.350s |  5.148s |  5.161s |  5.070s |  5.089s |  5.164s |
+>>>>>> |   Mixed |  9.316s |  8.731s |  9.072s |  9.145s |  8.627s |  8.978s |
+>>>>>> |---------|---------|---------|---------|---------|---------|---------|
+>>>>>>
+>>>>>>
+>>>>>> NFS v4.2, iflag=nocache oflag=nocache:
+>>>>>>                             Trial
+>>>>>> |---------|---------|---------|---------|---------|---------|---------|
+>>>>>> |         |    1    |    2    |    3    |    4    |    5    | Average |
+>>>>>> |---------|---------|---------|---------|---------|---------|---------|
+>>>>>> |    Data |  6.686s |  6.848s |  6.876s |  6.799s |  7.815s |  7.004s |
+>>>>>> |    Hole |  5.092s |  5.330s |  5.050s |  5.280s |  5.030s |  5.156s |
+>>>>>> |   Mixed |  8.142s |  7.897s |  8.040s |  7.960s |  8.050s |  8.018s |
+>>>>>> |---------|---------|---------|---------|---------|---------|---------|
+>>>>>>
+>>>>>>
+>>>>>>
+>>>>>>
+>>>>>>
+>>>>>>
+>>>>>> #######################
+>>>>>> #                     #
+>>>>>> #   With READ_PLUS    #
+>>>>>> #                     #
+>>>>>> #######################
+>>>>>>
+>>>>>>
+>>>>>> NFS v4.1, iflag=direct:
+>>>>>>                             Trial
+>>>>>> |---------|---------|---------|---------|---------|---------|---------|
+>>>>>> |         |    1    |    2    |    3    |    4    |    5    | Average |
+>>>>>> |---------|---------|---------|---------|---------|---------|---------|
+>>>>>> |    Data |  9.464s | 10.181s | 10.048s |  9.452s | 10.795s |  9.988s |
+>>>>>> |    Hole |  7.954s |  8.486s |  7.762s |  7.969s |  8.299s |  8.094s |
+>>>>>> |   Mixed | 19.037s | 18.323s | 18.965s | 18.156s | 19.185s | 18.733s |
+>>>>>> |---------|---------|---------|---------|---------|---------|---------|
+>>>>>>
+>>>>>>
+>>>>>> NFS v4.2, iflag=direct:
+>>>>>>                             Trial
+>>>>>> |---------|---------|---------|---------|---------|---------|---------|
+>>>>>> |         |    1    |    2    |    3    |    4    |    5    | Average |
+>>>>>> |---------|---------|---------|---------|---------|---------|---------|
+>>>>>> |    Data | 11.923s | 10.026s | 10.222s | 12.387s | 11.431s | 11.198s |
+>>>>>> |    Hole |  3.247s |  3.155s |  3.191s |  3.243s |  3.202s |  3.208s |
+>>>>>> |   Mixed | 54.677s | 54.697s | 52.978s | 53.704s | 54.054s | 54.022s |
+>>>>>
+>>>>> That's a bit nasty. Any idea what is going on with the Mixed case here?
+>>>>
+>>>> Not offhand, but my first guess would be something to do with extra seeks to find how long each hole and data segment is.
+>>>
+>>> Remind us what "mixed" means?  (I think you were alternating, but how
+>>> large is each segment?)
+>>
+>> "Mixed" is alternating 4K segments.
+> 
+> So it's probably doing 128/4 = 32 reads where previously one was
+> necessary.  You could confirm that by looking at the READ counts in
+> /proc/self/mountstats.  With odirect turned off maybe that's hidden by
+> readahead?
+> 
+> --b.
+> 
+>>
+>>>
+>>> --b.
+>>>
+>>>>
+>>>> Anna
+>>>>
+>>>>>
+>>>>>> |---------|---------|---------|---------|---------|---------|---------|
+>>>>>>
+>>>>>>
+>>>>>>
+>>>>>>
+>>>>>> NFS v4.1, iflag=nocache oflag=nocache:
+>>>>>>                             Trial
+>>>>>> |---------|---------|---------|---------|---------|---------|---------|
+>>>>>> |         |    1    |    2    |    3    |    4    |    5    | Average |
+>>>>>> |---------|---------|---------|---------|---------|---------|---------|
+>>>>>> |    Data |  6.788s |  6.802s |  6.750s |  6.756s |  6.852s |  6.790s |
+>>>>>> |    Hole |  5.143s |  5.165s |  5.104s |  5.154s |  5.116s |  5.136s |
+>>>>>> |   Mixed |  7.902s |  7.693s |  9.169s |  8.186s |  9.157s |  8.421s |
+>>>>>> |---------|---------|---------|---------|---------|---------|---------|
+>>>>>>
+>>>>>>
+>>>>>> NFS v4.2, iflag=nocache oflag=nocache:
+>>>>>>                             Trial
+>>>>>> |---------|---------|---------|---------|---------|---------|---------|
+>>>>>> |         |    1    |    2    |    3    |    4    |    5    | Average |
+>>>>>> |---------|---------|---------|---------|---------|---------|---------|
+>>>>>> |    Data |  6.897s |  6.862s |  7.054s |  6.961s |  7.081s |  6.971s |
+>>>>>> |    Hole |  1.690s |  1.673s |  1.553s |  1.554s |  1.490s |  1.592s |
+>>>>>> |   Mixed |  9.009s |  7.840s |  7.661s |  8.945s |  7.649s |  8.221s |
+>>>>>> |---------|---------|---------|---------|---------|---------|---------|
+>>>>>>
+>>>>>>
+>>>>>> On 03/26/2015 12:13 PM, Trond Myklebust wrote:
+>>>>>>> On Thu, Mar 26, 2015 at 12:11 PM, Anna Schumaker
+>>>>>>> <Anna.Schumaker@netapp.com> wrote:
+>>>>>>>> On 03/26/2015 12:06 PM, Trond Myklebust wrote:
+>>>>>>>>> On Thu, Mar 26, 2015 at 11:47 AM, Anna Schumaker
+>>>>>>>>> <Anna.Schumaker@netapp.com> wrote:
+>>>>>>>>>> On 03/26/2015 11:38 AM, J. Bruce Fields wrote:
+>>>>>>>>>>> On Thu, Mar 26, 2015 at 11:32:25AM -0400, Trond Myklebust wrote:
+>>>>>>>>>>>> On Thu, Mar 26, 2015 at 11:21 AM, Anna Schumaker
+>>>>>>>>>>>> <Anna.Schumaker@netapp.com> wrote:
+>>>>>>>>>>>>> Here are my updated numbers!  I tested with files 5G in size: one 100% data, one 100% hole, and one alternating between hole and data every 4K.  I collected data for both v4.1 and v4.2 with and without the READ_PLUS patches:
+>>>>>>>>>>>>>
+>>>>>>>>>>>>> ##########################
+>>>>>>>>>>>>> #                        #
+>>>>>>>>>>>>> #   Without READ_PLUS    #
+>>>>>>>>>>>>> #                        #
+>>>>>>>>>>>>> ##########################
+>>>>>>>>>>>>>
+>>>>>>>>>>>>>
+>>>>>>>>>>>>> NFS v4.1:
+>>>>>>>>>>>>>                             Trial
+>>>>>>>>>>>>> |---------|---------|---------|---------|---------|---------|---------|
+>>>>>>>>>>>>> |         |    1    |    2    |    3    |    4    |    5    | Average |
+>>>>>>>>>>>>> |---------|---------|---------|---------|---------|---------|---------|
+>>>>>>>>>>>>> |    Data |  8.723s |  7.243s |  8.252s |  6.997s |  6.980s |  7.639s |
+>>>>>>>>>>>>> |    Hole |  5.271s |  5.224s |  5.060s |  4.897s |  5.321s |  5.155s |
+>>>>>>>>>>>>> |   Mixed |  8.050s | 10.057s |  7.919s |  8.060s |  9.557s |  8.729s |
+>>>>>>>>>>>>> |---------|---------|---------|---------|---------|---------|---------|
+>>>>>>>>>>>>>
+>>>>>>>>>>>>>
+>>>>>>>>>>>>>
+>>>>>>>>>>>>>
+>>>>>>>>>>>>> NFS v4.2:
+>>>>>>>>>>>>>                             Trial
+>>>>>>>>>>>>> |---------|---------|---------|---------|---------|---------|---------|
+>>>>>>>>>>>>> |         |    1    |    2    |    3    |    4    |    5    | Average |
+>>>>>>>>>>>>> |---------|---------|---------|---------|---------|---------|---------|
+>>>>>>>>>>>>> |    Data |  6.707s |  7.070s |  6.722s |  6.761s |  6.810s |  6.814s |
+>>>>>>>>>>>>> |    Hole |  5.152s |  5.149s |  5.213s |  5.206s |  5.312s |  5.206s |
+>>>>>>>>>>>>> |   Mixed |  7.979s |  7.985s |  8.177s |  7.772s |  8.280s |  8.039s |
+>>>>>>>>>>>>> |---------|---------|---------|---------|---------|---------|---------|
+>>>>>>>>>>>>>
+>>>>>>>>>>>>>
+>>>>>>>>>>>>>
+>>>>>>>>>>>>>
+>>>>>>>>>>>>>
+>>>>>>>>>>>>> #######################
+>>>>>>>>>>>>> #                     #
+>>>>>>>>>>>>> #   With READ_PLUS    #
+>>>>>>>>>>>>> #                     #
+>>>>>>>>>>>>> #######################
+>>>>>>>>>>>>>
+>>>>>>>>>>>>>
+>>>>>>>>>>>>> NFS v4.1:
+>>>>>>>>>>>>>                             Trial
+>>>>>>>>>>>>> |---------|---------|---------|---------|---------|---------|---------|
+>>>>>>>>>>>>> |         |    1    |    2    |    3    |    4    |    5    | Average |
+>>>>>>>>>>>>> |---------|---------|---------|---------|---------|---------|---------|
+>>>>>>>>>>>>> |    Data |  9.082s |  7.008s |  7.116s |  6.771s |  7.902s |  7.576s |
+>>>>>>>>>>>>> |    Hole |  5.333s |  5.358s |  5.380s |  5.161s |  5.282s |  5.303s |
+>>>>>>>>>>>>> |   Mixed |  8.189s |  8.308s |  9.540s |  7.937s |  8.420s |  8.479s |
+>>>>>>>>>>>>> |---------|---------|---------|---------|---------|---------|---------|
+>>>>>>>>>>>>>
+>>>>>>>>>>>>>
+>>>>>>>>>>>>>
+>>>>>>>>>>>>>
+>>>>>>>>>>>>> NFS v4.2:
+>>>>>>>>>>>>>                             Trial
+>>>>>>>>>>>>> |---------|---------|---------|---------|---------|---------|---------|
+>>>>>>>>>>>>> |         |    1    |    2    |    3    |    4    |    5    | Average |
+>>>>>>>>>>>>> |---------|---------|---------|---------|---------|---------|---------|
+>>>>>>>>>>>>> |    Data |  7.033s |  6.829s |  7.025s |  6.873s |  7.134s |  6.979s |
+>>>>>>>>>>>>> |    Hole |  1.794s |  1.800s |  1.905s |  1.811s |  1.725s |  1.807s |
+>>>>>>>>>>>>> |   Mixed |  7.590s |  8.777s |  9.423s | 10.366s |  8.024s |  8.836s |
+>>>>>>>>>>>>> |---------|---------|---------|---------|---------|---------|---------|
+>>>>>>>>>>>>>
+>>>>>>>>>>>>
+>>>>>>>>>>>> So there is a clear win in the 100% hole case here, but otherwise the
+>>>>>>>>>>>> statistical fluctuations are dominating the numbers. Can you get us a
+>>>>>>>>>>>> little more stats and then perhaps run the results through nfsometer?
+>>>>>>>>>>>
+>>>>>>>>>>> Also, could you describe the setup (are these still kvm's), and how
+>>>>>>>>>>> you're clearing the cache between runs?
+>>>>>>>>>>
+>>>>>>>>>> These are still KVMs and my server is exporting an xfs filesystem.  I clear caches by running "echo 3 > /proc/sys/vm/drop_caches" on the server before every read, and I remount my client after reading each set of three files once.
+>>>>>>>>>
+>>>>>>>>> I agree that you have to use the 'drop_caches' interface on the
+>>>>>>>>> server, but why not just use O_DIRECT on the clients?
+>>>>>>>>
+>>>>>>>> I've been reading by using cat from my test shell script: `time cat /nfs/file > /dev/null`.  I can write something to read files with O_DIRECT if that would be more useful!
+>>>>>>>>
+>>>>>>>
+>>>>>>> 'dd' can do that for you if the appropriate incantations are performed.
+>>>>>>>
+>>>>>>
+>>>>>> --
+>>>>>> To unsubscribe from this list: send the line "unsubscribe linux-nfs" in
+>>>>>> the body of a message to majordomo@vger.kernel.org
+>>>>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>>>>
+>>>>>
+>>>>>
 
 _______________________________________________
 xfs mailing list
