@@ -1,27 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 9E0057F51
-	for <xfs@oss.sgi.com>; Tue, 14 Apr 2015 23:52:03 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 8ADC47F62
+	for <xfs@oss.sgi.com>; Tue, 14 Apr 2015 23:52:04 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 3976BAC004
-	for <xfs@oss.sgi.com>; Tue, 14 Apr 2015 21:52:00 -0700 (PDT)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 701BE8F8078
+	for <xfs@oss.sgi.com>; Tue, 14 Apr 2015 21:52:04 -0700 (PDT)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	loHYfpnGFJr9LgeC for <xfs@oss.sgi.com>;
-	Tue, 14 Apr 2015 21:51:58 -0700 (PDT)
+	jMz9mKSCz1chQ3pc for <xfs@oss.sgi.com>;
+	Tue, 14 Apr 2015 21:51:56 -0700 (PDT)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.80)
-	(envelope-from <dave@fromorbit.com>) id 1YiFIo-00032a-Af
+	(envelope-from <dave@fromorbit.com>) id 1YiFIo-00032R-5S
 	for xfs@oss.sgi.com; Wed, 15 Apr 2015 14:51:54 +1000
 Received: from dave by disappointment with local (Exim 4.82_1-5b7a7c0-XX)
-	(envelope-from <dave@disappointment.disaster>) id 1YiFIo-0005Eh-9b
+	(envelope-from <dave@disappointment.disaster>) id 1YiFIo-0005EA-4Y
 	for xfs@oss.sgi.com; Wed, 15 Apr 2015 14:51:54 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 7/9] xfs: direct IO EOF zeroing needs to drain AIO
-Date: Wed, 15 Apr 2015 14:51:50 +1000
-Message-Id: <1429073512-20035-8-git-send-email-david@fromorbit.com>
-In-Reply-To: <1429073512-20035-1-git-send-email-david@fromorbit.com>
-References: <1429073512-20035-1-git-send-email-david@fromorbit.com>
+Subject: [PATCH 0/8 v3] xfs: fix direct IO completion issues
+Date: Wed, 15 Apr 2015 14:51:43 +1000
+Message-Id: <1429073512-20035-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -37,51 +35,21 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-From: Dave Chinner <dchinner@redhat.com>
+Hi folks,
 
-When we are doing AIO DIO writes, the IOLOCK only provides an IO
-submission barrier. When we need to do EOF zeroing, we need to ensure
-that no other IO is in progress and all pending in-core EOF updates
-have been completed. This requires us to wait for all outstanding
-AIO DIO writes to the inode to complete and, if necessary, run their
-EOF updates.
+Versions 3 of the DIO write completion fixes, v2 was here:
 
-Once all the EOF updates are complete, we can then restart
-xfs_file_aio_write_checks() while holding the IOLOCK_EXCL, knowing
-that EOF is up to date and we have exclusive IO access to the file
-so we can run EOF block zeroing if we need to without interference.
-This gives EOF zeroing the same exclusivity against other IO as we
-provide truncate operations.
+http://oss.sgi.com/archives/xfs/2015-04/msg00129.html
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Brian Foster <bfoster@redhat.com>
----
- fs/xfs/xfs_file.c | 10 ++++++++++
- 1 file changed, 10 insertions(+)
+This version fixes the spelling mistakes Brian noticed, re-adds a
+couple of comments that were incorrectly removed, re-adds an assert
+in the !ioend path inside xfs_end_io_direct_write() and cleans up
+the setting of the buffer_defer_completion flag so that it's set
+when we allocate the ioend for defered completion.
 
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index 5d5b4ba..c398ec7 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -587,6 +587,16 @@ restart:
- 			xfs_rw_iunlock(ip, *iolock);
- 			*iolock = XFS_IOLOCK_EXCL;
- 			xfs_rw_ilock(ip, *iolock);
-+
-+			/*
-+			 * We now have an IO submission barrier in place, but
-+			 * AIO can do EOF updates during IO completion and hence
-+			 * we now need to wait for all of them to drain. Non-AIO
-+			 * DIO will have drained before we are given the
-+			 * XFS_IOLOCK_EXCL, and so for most cases this wait is a
-+			 * no-op.
-+			 */
-+			inode_dio_wait(inode);
- 			goto restart;
- 		}
- 		error = xfs_zero_eof(ip, *pos, i_size_read(inode), &zero);
--- 
-2.0.0
+Comments, thoughts and testing all wlecome.
+
+-Dave.
 
 _______________________________________________
 xfs mailing list
