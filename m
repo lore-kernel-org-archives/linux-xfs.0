@@ -1,27 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 5DC6B7F3F
-	for <xfs@oss.sgi.com>; Wed, 15 Apr 2015 15:00:26 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id C50B7AC008
-	for <xfs@oss.sgi.com>; Wed, 15 Apr 2015 13:00:24 -0700 (PDT)
-Received: from fieldses.org (fieldses.org [173.255.197.46]) by cuda.sgi.com
-	with ESMTP id ZyJWH3CJGqHhF1xB for <xfs@oss.sgi.com>;
-	Wed, 15 Apr 2015 13:00:18 -0700 (PDT)
-Date: Wed, 15 Apr 2015 16:00:16 -0400
-From: "J. Bruce Fields" <bfields@fieldses.org>
-Subject: Re: [PATCH v3 3/3] NFSD: Add support for encoding multiple segments
-Message-ID: <20150415200016.GB31407@fieldses.org>
-References: <55142FB4.2070408@Netapp.com>
-	<CAHQdGtS_VuBOzRZjsiYdjZS8qMj2Sw65BYdFmWWf-LJhQL6yOg@mail.gmail.com>
-	<5515A9C8.6090400@Netapp.com>
-	<CAHQdGtRaUYxU2JAAWErH7FT=Gy5JLzAKi-RtqqBSkNFZrhaB9Q@mail.gmail.com>
-	<5515C1BF.8000907@Netapp.com> <20150327205414.GD27889@fieldses.org>
-	<5515C3BE.3040807@Netapp.com> <20150327210839.GE27889@fieldses.org>
-	<552EBCB2.1040609@Netapp.com> <20150415195614.GA31407@fieldses.org>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id C909A7F3F
+	for <xfs@oss.sgi.com>; Wed, 15 Apr 2015 16:18:34 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 8E284304048
+	for <xfs@oss.sgi.com>; Wed, 15 Apr 2015 14:18:30 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id aH3j4xwLiQRgn3oO for <xfs@oss.sgi.com>;
+	Wed, 15 Apr 2015 14:18:29 -0700 (PDT)
+Message-ID: <552ED5A4.70104@sandeen.net>
+Date: Wed, 15 Apr 2015 16:18:28 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20150415195614.GA31407@fieldses.org>
+Subject: Re: [PATCH] xfs: extent size hints can round up extents past MAXEXTLEN
+References: <1429057331-11202-1-git-send-email-david@fromorbit.com>
+In-Reply-To: <1429057331-11202-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,120 +27,174 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Anna Schumaker <Anna.Schumaker@netapp.com>
-Cc: "linux-nfs@vger.kernel.org" <linux-nfs@vger.kernel.org>, Trond Myklebust <trond.myklebust@primarydata.com>, Marc Eshel <eshel@us.ibm.com>, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, linux-nfs-owner@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>, xfs@oss.sgi.com
 
-On Wed, Apr 15, 2015 at 03:56:14PM -0400, J. Bruce Fields wrote:
-> On Wed, Apr 15, 2015 at 03:32:02PM -0400, Anna Schumaker wrote:
-> > I just ran some more tests comparing the directio case across
-> > different filesystem types.  These tests used three 1G files:  100%
-> > data, 100% hole, and mixed file with alternating 4k data and hole
-> > segments.  The mixed case seems to be consistently slower compared to
-> > NFS v4.1, and I'm at a loss for anything I could do to make it faster.
-> > Here are my numbers:
+On 4/14/15 7:22 PM, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
 > 
-> Have you tried the implementation we discussed that always returns a
-> single segment covering the whole requested range, by treating holes as
-> data if necessary when they don't cover the whole range?
+> This results in BMBT corruption, as seen by this test:
 > 
-> (Also: I assume it's the same as before, but: when you post test
-> results, could you repost if necessary:
+> # mkfs.xfs -f -d size=40051712b,agcount=4 /dev/vdc
+> ....
+> # mount /dev/vdc /mnt/scratch
+> # xfs_io -ft -c "extsize 16m" -c "falloc 0 30g" -c "bmap -vp" /mnt/scratch/foo
 > 
-> 	- what the actual test is
-> 	- what the hardware/software setup is on client and server
+> which results in this failure on a debug kernel:
 > 
-> so that we have reproduceable results for posterity's sake.)
+> XFS: Assertion failed: (blockcount & xfs_mask64hi(64-BMBT_BLOCKCOUNT_BITLEN)) == 0, file: fs/xfs/libxfs/xfs_bmap_btree.c, line: 211
+> ....
+> Call Trace:
+>  [<ffffffff814cf0ff>] xfs_bmbt_set_allf+0x8f/0x100
+>  [<ffffffff814cf18d>] xfs_bmbt_set_all+0x1d/0x20
+>  [<ffffffff814f2efe>] xfs_iext_insert+0x9e/0x120
+>  [<ffffffff814c7956>] ? xfs_bmap_add_extent_hole_real+0x1c6/0xc70
+>  [<ffffffff814c7956>] xfs_bmap_add_extent_hole_real+0x1c6/0xc70
+>  [<ffffffff814caaab>] xfs_bmapi_write+0x72b/0xed0
+>  [<ffffffff811c72ac>] ? kmem_cache_alloc+0x15c/0x170
+>  [<ffffffff814fe070>] xfs_alloc_file_space+0x160/0x400
+>  [<ffffffff81ddcc29>] ? down_write+0x29/0x60
+>  [<ffffffff815063eb>] xfs_file_fallocate+0x29b/0x310
+>  [<ffffffff811d2bc8>] ? __sb_start_write+0x58/0x120
+>  [<ffffffff811e3e18>] ? do_vfs_ioctl+0x318/0x570
+>  [<ffffffff811cd680>] vfs_fallocate+0x140/0x260
+>  [<ffffffff811ce6f8>] SyS_fallocate+0x48/0x80
+>  [<ffffffff81ddec09>] system_call_fastpath+0x12/0x17
 > 
-> Interesting that "Mixed" is a little slower even before READ_PLUS.
+> The tracepoint that indicates the extent that triggered the assert
+> failure is:
 > 
-> And I guess we should really report this to ext4 people, looks like they
-> may have a bug.
+> xfs_iext_insert:   idx 0 offset 0 block 16777224 count 2097152 flag 1
+> 
+> Clearly indicating that the extent length is greater than MAXEXTLEN,
+> which is 2097151. A prior trace point shows the allocation was an
+> exact size match and that a length greater than MAXEXTLEN was asked
+> for:
+> 
+> xfs_alloc_size_done:  agno 1 agbno 8 minlen 2097152 maxlen 2097152
+> 					    ^^^^^^^        ^^^^^^^
+> 
+> The issue is that the extent size hint alignment is rounding up the
+> extent size past MAXEXTLEN, because xfs_bmapi_write() is not taking
+> into account extent size hints when calculating the maximum extent
+> length to allocate. xfs_bmapi_reserve_delalloc() is already doing
+> this, but direct extent allocation is not.
+> 
+> We don't see this problem with extent size hints through the IO path
+> because we can't do single IOs large enough to trigger MAXEXTLEN
+> allocation. fallocate(), OTOH, is not limited in it's allocation
+> sizes and so needs help here. The fix is simply to copy the logic
+> from xfs_bmapi_reserve_delalloc() and apply it apropriately to
+> xfs_bmapi_write().
 
-FWIW, this is what I was using to test SEEK_HOLE/SEEK_DATA and map out
-holes on files on my local disk.  Might be worth checking whether the
-ext4 slowdowns are reproduceable just with something like this, to rule
-out protocol problems.
+Cool, thanks for sorting that out!
 
---b.
+> I also add an ASSERT() to xfs_bmap_extsize_align() so we'll catch
+> cases of alignment exceeding MAXEXTLEN on debug kernel machines in
+> future.
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> ---
+>  fs/xfs/libxfs/xfs_bmap.c | 31 ++++++++++++++++++++++++++-----
+>  1 file changed, 26 insertions(+), 5 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+> index aeffeaa..e5aa8a6 100644
+> --- a/fs/xfs/libxfs/xfs_bmap.c
+> +++ b/fs/xfs/libxfs/xfs_bmap.c
+> @@ -3224,12 +3224,21 @@ xfs_bmap_extsize_align(
+>  		align_alen += temp;
+>  		align_off -= temp;
+>  	}
+> +
+> +	/* Same adjustment for the end of the requested area. */
+> +	temp = (align_alen % extsz);
+> +	if (temp)
+> +		align_alen += extsz - temp;
+> +
+>  	/*
+> -	 * Same adjustment for the end of the requested area.
+> +	 * we are in trouble if the caller requested an extent that will align
+> +	 * to something larger than the supported on disk extent size.  Assert
+> +	 * fail here to catch callers that make this mistake; they should always
+> +	 * be setting the maximum allocation length to be (MAXEXTLEN - extsz) so
+> +	 * we can round outwards here for alignment.
+>  	 */
+> -	if ((temp = (align_alen % extsz))) {
+> -		align_alen += extsz - temp;
+> -	}
+> +	ASSERT(align_alen <= MAXEXTLEN);
 
-#define _GNU_SOURCE
-#include <stdio.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <unistd.h> 
-#include <errno.h>
-#include <err.h>
+Hm, I was going to ask if we could return EINVAL w/ a warning printk, so that
+this doesn't silently corrupt on non-dbug kernels, but I see callers do things
+like:
 
-long round_up(long n, long b)
+                error = xfs_bmap_extsize_align(mp, &ap->got, &ap->prev,
+                                                align, 0, ap->eof, 0, ap->conv,
+                                                &ap->offset, &ap->length);
+                ASSERT(!error);
+
+and nothing else with the error return, so... hohum.  I think those callchains
+could be cleaned up to handle errors but ... outside the scope of this patch.
+
+> +
+>  	/*
+>  	 * If the previous block overlaps with this proposed allocation
+>  	 * then move the start forward without adjusting the length.
+> @@ -4287,7 +4296,19 @@ xfs_bmapi_allocate(
+>  					 &bma->prev);
+>  		}
+>  	} else {
+> -		bma->length = XFS_FILBLKS_MIN(bma->length, MAXEXTLEN);
+> +		/* Figure out the extent size, adjust alen */
+> +		xfs_extlen_t	maxlen = MAXEXTLEN;
+> +		xfs_extlen_t	extsz = xfs_get_extsz_hint(bma->ip);
+> +
+> +		/*
+> +		 * Make sure we don't exceed a single extent length when we
+> +		 * align the extent by reducing length we are going to allocate
+> +		 * by the maximum amount extent size aligment may require.
+
+"alignment"  (maybe fix the other comment too?)
+
+Or better yet, would this be possible to factor into a helper?
+
+/*              
+ * Make sure we don't exceed a single extent length when we
+ * align the extent by reducing length we are going to
+ * allocate by the maximum amount extent size aligment may
+ * require.
+*/
+STATIC xfs_extlen_t
+xfs_max_extent_len(
+        struct xfs_inode        *ip)
 {
-	return ((n + b - 1)/b) * b;
+        xfs_extlen_t    maxlen = MAXEXTLEN;
+        xfs_extlen_t    extsz = xfs_get_extsz_hint(ip);
+
+	/* Insert comment about math here ;) */
+        if (extsz)
+                maxlen -= (2 * extsz - 1);
+
+        return maxlen;
 }
 
-long round_down(long n, long b)
-{
-	return (n/b) * b;
-}
 
-long hbytes = 0;
-long rplusbytes = 0;
-long num_holes = 0;
+...
 
-do_stats(off_t hole_start, off_t hole_end)
-{
-	off_t hole_start_up, hole_end_down;
+	bma->length = XFS_FILBLKS_MIN(bma->length, xfs_max_extent_len(ip));
 
-	hole_start_up = round_up(hole_start, 1024*1024);
-	hole_end_down = round_down(hole_end, 1024*1024);
+?
 
-	hbytes += hole_end - hole_start;
-	if (hole_start < hole_end)
-		num_holes++;
-	if (hole_start_up < hole_end_down)
-		rplusbytes += hole_end_down - hole_start_up;
-}
 
-int main(int argc, char *argv[])
-{
-	off_t hole_start, hole_end;
-	int fd;
-	char *name;
-
-	/* Map out holes with SEEK_HOLE, SEEK_DATA */
-	/* Useful statistics:
-	 * 	- what percentage of file is in holes?
-	 * 	- what percentage of file would be skipped if we read it
-	 * 	  sequentially in 1MB chunks?
-	 */
-
-	if (argc != 2)
-		errx(1, "usage: %s <filename>\n", argv[0]);
-	name = argv[1];
-	fd = open(name, O_RDONLY);
-	if (fd == -1)
-		err(1, "open");
-
-	hole_end = 0;
-	while (1) {
-		hole_start = lseek(fd, hole_end, SEEK_HOLE);
-		if (hole_start == -1)
-			err(1, "lseek");
-		hole_end = lseek(fd, hole_start, SEEK_DATA);
-		if (hole_end == -1) {
-			if (errno == ENXIO)
-				break;
-			err(1, "lseek");
-		}
-		do_stats(hole_start, hole_end);
-	}
-	hole_end = lseek(fd, 0, SEEK_END);
-	do_stats(hole_start, hole_end);
-	printf("%ld holes\n", num_holes);
-	printf("total hole bytes:      %ld (%.0f%)\n", hbytes,
-				100 * (float)hbytes/hole_end);
-	printf("in aligned 1MB chunks: %ld (%.0f%)\n", rplusbytes,
-				100 * (float)rplusbytes/hole_end);
-}
+> +		 */
+> +		if (extsz)
+> +			maxlen -= (2 * extsz - 1);
+> +
+> +		bma->length = XFS_FILBLKS_MIN(bma->length, maxlen);
+>  		if (!bma->eof)
+>  			bma->length = XFS_FILBLKS_MIN(bma->length,
+>  					bma->got.br_startoff - bma->offset);
+> 
 
 _______________________________________________
 xfs mailing list
