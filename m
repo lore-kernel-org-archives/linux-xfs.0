@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 2F8877F47
+	by oss.sgi.com (Postfix) with ESMTP id 235B27F3F
 	for <xfs@oss.sgi.com>; Tue, 14 Apr 2015 23:52:03 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id CBA18AC003
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 95723AC005
 	for <xfs@oss.sgi.com>; Tue, 14 Apr 2015 21:52:02 -0700 (PDT)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	fLz0YvmucFLkhKAg for <xfs@oss.sgi.com>;
-	Tue, 14 Apr 2015 21:52:01 -0700 (PDT)
+	vt63EApoVRg2yPEn for <xfs@oss.sgi.com>;
+	Tue, 14 Apr 2015 21:52:00 -0700 (PDT)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.80)
-	(envelope-from <dave@fromorbit.com>) id 1YiFIo-00032U-7y
+	(envelope-from <dave@fromorbit.com>) id 1YiFIo-00032V-8a
 	for xfs@oss.sgi.com; Wed, 15 Apr 2015 14:51:54 +1000
 Received: from dave by disappointment with local (Exim 4.82_1-5b7a7c0-XX)
-	(envelope-from <dave@disappointment.disaster>) id 1YiFIo-0005EN-7F
+	(envelope-from <dave@disappointment.disaster>) id 1YiFIo-0005ES-7o
 	for xfs@oss.sgi.com; Wed, 15 Apr 2015 14:51:54 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 3/9] xfs: DIO needs an ioend for writes
-Date: Wed, 15 Apr 2015 14:51:46 +1000
-Message-Id: <1429073512-20035-4-git-send-email-david@fromorbit.com>
+Subject: [PATCH 4/9] xfs: handle DIO overwrite EOF update completion correctly
+Date: Wed, 15 Apr 2015 14:51:47 +1000
+Message-Id: <1429073512-20035-5-git-send-email-david@fromorbit.com>
 In-Reply-To: <1429073512-20035-1-git-send-email-david@fromorbit.com>
 References: <1429073512-20035-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,186 +39,128 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Currently we can only tell DIO completion that an IO requires
-unwritten extent completion. This is done by a hacky non-null
-private pointer passed to Io completion, but the private pointer
-does not actually contain any information that is used.
+Currently a DIO overwrite that extends the EOF (e.g sub-block IO or
+write into allocated blocks beyond EOF) requires a transaction for
+the EOF update. Thi is done in IO completion context, but we aren't
+explicitly handling this situation properly and so it can run in
+interrupt context. Ensure that we defer IO that spans EOF correctly
+to the DIO completion workqueue, and now that we have an ioend in IO
+completion we can use the common ioend completion path to do all the
+work.
 
-We also need to pass to IO completion the fact that the IO may be
-beyond EOF and so a size update transaction needs to be done. This
-is currently determined by checks in the io completion, but we need
-to determine if this is necessary at block mapping time as we need
-to defer the size update transactions to a completion workqueue,
-just like unwritten extent conversion.
-
-To do this, first we need to allocate and pass an ioend to to IO
-completion. Add this for unwritten extent conversion; we'll do the
-EOF updates in the next commit.
+Note: we do not preallocate the append transaction as we can have
+multiple mapping and allocation calls per direct IO. hence
+preallocating can still leave us with nested transactions by
+attempting to map and allocate more blocks after we've preallocated
+an append transaction.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Brian Foster <bfoster@redhat.com>
 ---
- fs/xfs/xfs_aops.c  | 92 ++++++++++++++++++++++++++++++++++++++++++++++++------
- fs/xfs/xfs_trace.h |  3 ++
- 2 files changed, 85 insertions(+), 10 deletions(-)
+ fs/xfs/xfs_aops.c  | 61 +++++++++++++++++++++++++++---------------------------
+ fs/xfs/xfs_trace.h |  1 +
+ 2 files changed, 31 insertions(+), 31 deletions(-)
 
 diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index 4a29399..60d6466 100644
+index 60d6466..a59443d 100644
 --- a/fs/xfs/xfs_aops.c
 +++ b/fs/xfs/xfs_aops.c
-@@ -1234,7 +1234,23 @@ xfs_vm_releasepage(
- }
- 
- /*
-- * do all the direct IO specific mapping buffer manipulation here.
-+ * When we map a DIO buffer, we need to attach an ioend that describes the type
-+ * of write IO we are doing. This passes to the completion function the
-+ * operations it needs to perform.
-+ *
-+ * If we get multiple mappings in a single IO, we might be mapping different
-+ * types. But because the direct IO can only have a single private pointer, we
-+ * need to ensure that:
-+ *
-+ * a) the ioend spans the entire region of the IO; and
-+ * b) if it contains unwritten extents, it is *permanently* marked as such
-+ *
-+ * We could do this by chaining ioends like buffered IO does, but we only
-+ * actually get one IO completion callback from the direct IO, and that spans
-+ * the entire IO regardless of how many mappings and IOs are needed to complete
-+ * the DIO. There is only going to be one reference to the ioend and its life
-+ * cycle is constrained by the DIO completion code. hence we don't need
-+ * reference counting here.
-  */
- static void
- xfs_map_direct(
-@@ -1243,10 +1259,42 @@ xfs_map_direct(
- 	struct xfs_bmbt_irec	*imap,
- 	xfs_off_t		offset)
- {
--	if (ISUNWRITTEN(imap)) {
--		bh_result->b_private = inode;
--		set_buffer_defer_completion(bh_result);
-+	struct xfs_ioend	*ioend;
-+	xfs_off_t		size = bh_result->b_size;
-+	int			type;
-+
-+	if (ISUNWRITTEN(imap))
-+		type = XFS_IO_UNWRITTEN;
-+	else
-+		type = XFS_IO_OVERWRITE;
-+
-+	trace_xfs_gbmap_direct(XFS_I(inode), offset, size, type, imap);
-+
-+	if (bh_result->b_private) {
-+		ioend = bh_result->b_private;
-+		ASSERT(ioend->io_size > 0);
-+		ASSERT(offset >= ioend->io_offset);
-+		if (offset + size > ioend->io_offset + ioend->io_size)
-+			ioend->io_size = offset - ioend->io_offset + size;
-+
-+		if (type == XFS_IO_UNWRITTEN && type != ioend->io_type)
-+			ioend->io_type = XFS_IO_UNWRITTEN;
-+
-+		trace_xfs_gbmap_direct_update(XFS_I(inode), ioend->io_offset,
-+					      ioend->io_size, ioend->io_type,
-+					      imap);
-+	} else {
-+		ioend = xfs_alloc_ioend(inode, type);
-+		ioend->io_offset = offset;
-+		ioend->io_size = size;
-+		bh_result->b_private = ioend;
-+
-+		trace_xfs_gbmap_direct_new(XFS_I(inode), offset, size, type,
-+					   imap);
+@@ -1293,7 +1293,7 @@ xfs_map_direct(
+ 					   imap);
  	}
-+
-+	if (ioend->io_type == XFS_IO_UNWRITTEN)
-+		set_buffer_defer_completion(bh_result);
+ 
+-	if (ioend->io_type == XFS_IO_UNWRITTEN)
++	if (ioend->io_type == XFS_IO_UNWRITTEN || xfs_ioend_is_append(ioend))
+ 		set_buffer_defer_completion(bh_result);
  }
  
- 
-@@ -1378,10 +1426,13 @@ __xfs_get_blocks(
- 
- 			xfs_iunlock(ip, lockmode);
- 		}
--
--		trace_xfs_get_blocks_alloc(ip, offset, size, 0, &imap);
-+		trace_xfs_get_blocks_alloc(ip, offset, size,
-+				ISUNWRITTEN(&imap) ? XFS_IO_UNWRITTEN
-+						   : XFS_IO_DELALLOC, &imap);
- 	} else if (nimaps) {
--		trace_xfs_get_blocks_found(ip, offset, size, 0, &imap);
-+		trace_xfs_get_blocks_found(ip, offset, size,
-+				ISUNWRITTEN(&imap) ? XFS_IO_UNWRITTEN
-+						   : XFS_IO_OVERWRITE, &imap);
- 		xfs_iunlock(ip, lockmode);
- 	} else {
- 		trace_xfs_get_blocks_notfound(ip, offset, size);
-@@ -1482,9 +1533,28 @@ xfs_end_io_direct_write(
- 	struct inode		*inode = file_inode(iocb->ki_filp);
- 	struct xfs_inode	*ip = XFS_I(inode);
+@@ -1535,8 +1535,10 @@ xfs_end_io_direct_write(
  	struct xfs_mount	*mp = ip->i_mount;
-+	struct xfs_ioend	*ioend = private;
+ 	struct xfs_ioend	*ioend = private;
  
++	trace_xfs_gbmap_direct_endio(ip, offset, size, ioend->io_type, NULL);
++
  	if (XFS_FORCED_SHUTDOWN(mp))
--		return;
-+		goto out_destroy_ioend;
-+
-+	/*
-+	 * dio completion end_io functions are only called on writes if more
-+	 * than 0 bytes was written.
-+	 */
-+	ASSERT(size > 0);
-+
-+	/*
-+	 * The ioend only maps whole blocks, while the IO may be sector aligned.
-+	 * Hence the ioend offset/size may not match the IO offset/size exactly,
-+	 * but should span it completely. Write the IO sizes into the ioend so
-+	 * that completion processing does the right thing.
-+	 */
-+	ASSERT(size <= ioend->io_size);
-+	ASSERT(offset >= ioend->io_offset);
-+	ASSERT(offset + size <= ioend->io_offset + ioend->io_size);
-+	ioend->io_size = size;
-+	ioend->io_offset = offset;
+-		goto out_destroy_ioend;
++		goto out_end_io;
  
  	/*
- 	 * While the generic direct I/O code updates the inode size, it does
-@@ -1504,7 +1574,7 @@ xfs_end_io_direct_write(
- 	 * we can pass the ioend to the direct IO allocation callbacks and
- 	 * avoid nesting that way.
- 	 */
--	if (private && size > 0) {
-+	if (ioend->io_type == XFS_IO_UNWRITTEN) {
- 		xfs_iomap_write_unwritten(ip, offset, size);
- 	} else if (offset + size > ip->i_d.di_size) {
- 		struct xfs_trans	*tp;
-@@ -1514,11 +1584,13 @@ xfs_end_io_direct_write(
- 		error = xfs_trans_reserve(tp, &M_RES(mp)->tr_fsyncts, 0, 0);
- 		if (error) {
- 			xfs_trans_cancel(tp, 0);
--			return;
-+			goto out_destroy_ioend;
- 		}
+ 	 * dio completion end_io functions are only called on writes if more
+@@ -1557,40 +1559,37 @@ xfs_end_io_direct_write(
+ 	ioend->io_offset = offset;
  
- 		xfs_setfilesize(ip, tp, offset, size);
- 	}
-+out_destroy_ioend:
-+	xfs_destroy_ioend(ioend);
+ 	/*
+-	 * While the generic direct I/O code updates the inode size, it does
+-	 * so only after the end_io handler is called, which means our
+-	 * end_io handler thinks the on-disk size is outside the in-core
+-	 * size.  To prevent this just update it a little bit earlier here.
++	 * The ioend tells us whether we are doing unwritten extent conversion
++	 * or an append transaction that updates the on-disk file size. These
++	 * cases are the only cases where we should *potentially* be needing
++	 * to update the VFS inode size. When the ioend indicates this, we
++	 * are *guaranteed* to be running in non-interrupt context.
++	 *
++	 * We need to update the in-core inode size here so that we don't end up
++	 * with the on-disk inode size being outside the in-core inode size.
++	 * While we can do this in the process context after the IO has
++	 * completed, this does not work for AIO and hence we always update
++	 * the in-core inode size here if necessary.
+ 	 */
+-	if (offset + size > i_size_read(inode))
+-		i_size_write(inode, offset + size);
++	if (ioend->io_type == XFS_IO_UNWRITTEN || xfs_ioend_is_append(ioend)) {
++		if (offset + size > i_size_read(inode))
++			i_size_write(inode, offset + size);
++	} else
++		ASSERT(offset + size <= i_size_read(inode));
+ 
+ 	/*
+-	 * For direct I/O we do not know if we need to allocate blocks or not,
+-	 * so we can't preallocate an append transaction, as that results in
+-	 * nested reservations and log space deadlocks. Hence allocate the
+-	 * transaction here. While this is sub-optimal and can block IO
+-	 * completion for some time, we're stuck with doing it this way until
+-	 * we can pass the ioend to the direct IO allocation callbacks and
+-	 * avoid nesting that way.
++	 * If we are doing an append IO that needs to update the EOF on disk,
++	 * do the transaction reserve now so we can use common end io
++	 * processing. Stashing the error (if there is one) in the ioend will
++	 * result in the ioend processing passing on the error if it is
++	 * possible as we can't return it from here.
+ 	 */
+-	if (ioend->io_type == XFS_IO_UNWRITTEN) {
+-		xfs_iomap_write_unwritten(ip, offset, size);
+-	} else if (offset + size > ip->i_d.di_size) {
+-		struct xfs_trans	*tp;
+-		int			error;
+-
+-		tp = xfs_trans_alloc(mp, XFS_TRANS_FSYNC_TS);
+-		error = xfs_trans_reserve(tp, &M_RES(mp)->tr_fsyncts, 0, 0);
+-		if (error) {
+-			xfs_trans_cancel(tp, 0);
+-			goto out_destroy_ioend;
+-		}
++	if (ioend->io_type == XFS_IO_OVERWRITE && xfs_ioend_is_append(ioend))
++		ioend->io_error = xfs_setfilesize_trans_alloc(ioend);
+ 
+-		xfs_setfilesize(ip, tp, offset, size);
+-	}
+-out_destroy_ioend:
+-	xfs_destroy_ioend(ioend);
++out_end_io:
++	xfs_end_io(&ioend->io_work);
++	return;
  }
  
  STATIC ssize_t
 diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-index b2a45cc..e78b64e 100644
+index e78b64e..967993b 100644
 --- a/fs/xfs/xfs_trace.h
 +++ b/fs/xfs/xfs_trace.h
-@@ -1221,6 +1221,9 @@ DEFINE_IOMAP_EVENT(xfs_map_blocks_found);
- DEFINE_IOMAP_EVENT(xfs_map_blocks_alloc);
- DEFINE_IOMAP_EVENT(xfs_get_blocks_found);
- DEFINE_IOMAP_EVENT(xfs_get_blocks_alloc);
-+DEFINE_IOMAP_EVENT(xfs_gbmap_direct);
-+DEFINE_IOMAP_EVENT(xfs_gbmap_direct_new);
-+DEFINE_IOMAP_EVENT(xfs_gbmap_direct_update);
+@@ -1224,6 +1224,7 @@ DEFINE_IOMAP_EVENT(xfs_get_blocks_alloc);
+ DEFINE_IOMAP_EVENT(xfs_gbmap_direct);
+ DEFINE_IOMAP_EVENT(xfs_gbmap_direct_new);
+ DEFINE_IOMAP_EVENT(xfs_gbmap_direct_update);
++DEFINE_IOMAP_EVENT(xfs_gbmap_direct_endio);
  
  DECLARE_EVENT_CLASS(xfs_simple_io_class,
  	TP_PROTO(struct xfs_inode *ip, xfs_off_t offset, ssize_t count),
