@@ -1,25 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 9171A29DFC
-	for <xfs@oss.sgi.com>; Thu, 16 Apr 2015 07:38:58 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 4B76629DFC
+	for <xfs@oss.sgi.com>; Thu, 16 Apr 2015 07:55:53 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 3A081AC005
-	for <xfs@oss.sgi.com>; Thu, 16 Apr 2015 05:38:58 -0700 (PDT)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 0F63E304039
+	for <xfs@oss.sgi.com>; Thu, 16 Apr 2015 05:55:49 -0700 (PDT)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	smdo6mRNKIdg0lfY for <xfs@oss.sgi.com>;
-	Thu, 16 Apr 2015 05:38:56 -0700 (PDT)
-Received: from disappointment.disaster.area ([192.168.1.110]
-	helo=disappointment) by dastard with esmtp (Exim 4.80)
-	(envelope-from <dave@fromorbit.com>) id 1Yij45-0006B3-Qt
-	for xfs@oss.sgi.com; Thu, 16 Apr 2015 22:38:41 +1000
-Received: from dave by disappointment with local (Exim 4.82_1-5b7a7c0-XX)
-	(envelope-from <dave@disappointment.disaster>) id 1Yij45-0003cr-Q3
-	for xfs@oss.sgi.com; Thu, 16 Apr 2015 22:38:41 +1000
+	FuaaZUkd4UZ0gCXe for <xfs@oss.sgi.com>;
+	Thu, 16 Apr 2015 05:55:47 -0700 (PDT)
+Received: from dave by dastard with local (Exim 4.80)
+	(envelope-from <david@fromorbit.com>) id 1YijKP-0006Di-UH
+	for xfs@oss.sgi.com; Thu, 16 Apr 2015 22:55:33 +1000
+Date: Thu, 16 Apr 2015 22:55:33 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH] xfs: xfs_iozero can return positive errno
-Date: Thu, 16 Apr 2015 22:38:41 +1000
-Message-Id: <1429187921-13903-1-git-send-email-david@fromorbit.com>
+Subject: [ANNOUNCE] xfs: for-next branch updated to 542c311
+Message-ID: <20150416125533.GD21261@dastard>
+MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,44 +25,94 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============4067482440117467704=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-From: Dave Chinner <dchinner@redhat.com>
 
-It was missed when we converted everything in XFs to use negative error
-numbers, so fix it now. Bug introduced in 3.17 by commit 2451337 ("xfs: global
-error sign conversion"), and should go back to stable kernels.
+--===============4067482440117467704==
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="X1bOJ3K7DJ5YkBrT"
+Content-Disposition: inline
 
-Thanks to Brian Foster for noticing it.
 
-cc: <stable@vger.kernel.org> # 3.17, 3.18, 3.19, 4.0
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- fs/xfs/xfs_file.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+--X1bOJ3K7DJ5YkBrT
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index ec0c9c2..8383df0 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -125,7 +125,7 @@ xfs_iozero(
- 		status = 0;
- 	} while (count);
- 
--	return (-status);
-+	return status;
- }
- 
- int
--- 
-2.0.0
+Hi folks,
+
+The for-next branch of the xfs kernel repository at
+
+git://git.kernel.org/pub/scm/linux/kernel/git/dgc/linux-xfs.git
+
+has just been updated.
+
+The new head of the for-next branch is commit:
+
+542c311 Merge branch 'xfs-dio-extend-fix' into for-next
+
+New Commits:
+
+Dave Chinner (9):
+      [a719370] xfs: factor DIO write mapping from get_blocks
+      [1fdca9c] xfs: move DIO mapping size calculation
+      [d5cc2e3] xfs: DIO needs an ioend for writes
+      [6dfa1b6] xfs: handle DIO overwrite EOF update completion correctly
+      [a06c277] xfs: DIO writes within EOF don't need an ioend
+      [b9d5984] xfs: DIO write completion size updates race
+      [40c63fb] xfs: direct IO EOF zeroing needs to drain AIO
+      [0cefb29] xfs: using generic_file_direct_write() is unnecessary
+      [542c311] Merge branch 'xfs-dio-extend-fix' into for-next
+
+
+Code Diffstat:
+
+ fs/xfs/xfs_aops.c  | 270 +++++++++++++++++++++++++++++++++++++------------=
+----
+ fs/xfs/xfs_file.c  |  46 ++++++++-
+ fs/xfs/xfs_trace.h |   5 +
+ 3 files changed, 239 insertions(+), 82 deletions(-)
+--=20
+Dave Chinner
+david@fromorbit.com
+
+--X1bOJ3K7DJ5YkBrT
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
+
+iQIcBAEBAgAGBQJVL7FFAAoJEK3oKUf0dfod9xoP/j89hOpYybbv2yccHfWd75H2
+wc3lRjki2O/NO7Oa4xf9V6ZUahcp7Zif6m1+1D12kETSvfsMIfzNmj9Ouc748eqp
+cHE8A/zDVcESO+JZTaFNLXnwdPT2LQVlj8C2JplbCu+Mjldsl+bhUBPw0JoUEBMG
+8ptV2UTYGh0Y3cEvUbXix0vfFbvK0nSJfM6GuJarrWT+49JgNd90Un1PS0UMbs/B
+uvKCBXvdRXRximzmMEIOKcZHRJBs8Hr34l4XZ4DRhwmv/S2816YQVrnXNNNEWIlp
+JIh4HFh7r+5173VjsSWwYyTjC2AjMubGBSmoqwTDiO4swSMugu+vjwxKJ3IsLFCn
+eH7JsGMjFtwdUZGgkJXUjE7JY+LInB2gy43AQJNYkcVfRcWI9vlGKuZBcroU5UJk
+6C60e8WXGMFJJIYX5NkSg7fyeBoxW5cjaDhGWlVBgG9xSgkzRq0KX8UWsMaI7Gzr
+fM5vEHHfupa/i7E4tnF3PwlqimdVc4LNBmXo0CHm+agM/LbIaB/nV4aDRNvUe5nJ
+/VPACzNJ2yChfa5snLUElsfM9ai485klmlNPsjgn0qBQ6kA/q/HZYMu3Zqbez+Hg
+sHiwS98KxiuaPZ2ME9sbOB/KDSD4aPNOlFpz4Wl11XOhyUlR3TKLv9HO5ub2kNst
+VYqjjyKaaSuUwYhM4quu
+=cYLX
+-----END PGP SIGNATURE-----
+
+--X1bOJ3K7DJ5YkBrT--
+
+
+--===============4067482440117467704==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============4067482440117467704==--
