@@ -1,18 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 9CC747F3F
-	for <xfs@oss.sgi.com>; Fri, 17 Apr 2015 02:40:39 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 4F2867F3F
+	for <xfs@oss.sgi.com>; Fri, 17 Apr 2015 03:15:57 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 36598AC003
-	for <xfs@oss.sgi.com>; Fri, 17 Apr 2015 00:40:39 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id LITQERBFNq7t0EHV (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 17 Apr 2015 00:40:35 -0700 (PDT)
-From: xuw2015@gmail.com
-Subject: [PATCH v2] xfs: use percpu_counter_read_positive for mp->m_icount
-Date: Fri, 17 Apr 2015 15:40:23 +0800
-Message-Id: <1429256423-9809-1-git-send-email-xuw2015@gmail.com>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 44B44304032
+	for <xfs@oss.sgi.com>; Fri, 17 Apr 2015 01:15:54 -0700 (PDT)
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	jWucwfVVjb8FftSf for <xfs@oss.sgi.com>;
+	Fri, 17 Apr 2015 01:15:51 -0700 (PDT)
+Date: Fri, 17 Apr 2015 18:15:49 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] xfs: use percpu_counter_compare instead of naive comparing
+Message-ID: <20150417081549.GG15810@dastard>
+References: <1429237344-5668-1-git-send-email-xuw2015@gmail.com>
+	<20150417040605.GE15810@dastard>
+	<CAPBX1xK85i8x3h1XmGsYi=0YvRiWqvKhFTOY-QJ3-XDtmm7BVg@mail.gmail.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <CAPBX1xK85i8x3h1XmGsYi=0YvRiWqvKhFTOY-QJ3-XDtmm7BVg@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,60 +27,46 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: George Wang <xuw2015@gmail.com>
+To: =?utf-8?B?546L5pet?= <xuw2015@gmail.com>
+Cc: xfs@oss.sgi.com
 
-From: George Wang <xuw2015@gmail.com>
-
-Function percpu_counter_read just return the current counter, which can be
-negative. This will cause the checking of "allocated inode
-counts <= m_maxicount" false positive. Use percpu_counter_read_positive can
-solve this problem, and be consistent with the purpose to introduce percpu
-mechanism to xfs.
-
-Signed-off-by: George Wang <xuw2015@gmail.com>
----
- fs/xfs/libxfs/xfs_ialloc.c | 9 ++++++---
- 1 file changed, 6 insertions(+), 3 deletions(-)
-
-diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
-index 07349a1..1c9e755 100644
---- a/fs/xfs/libxfs/xfs_ialloc.c
-+++ b/fs/xfs/libxfs/xfs_ialloc.c
-@@ -376,7 +376,7 @@ xfs_ialloc_ag_alloc(
- 	 */
- 	newlen = args.mp->m_ialloc_inos;
- 	if (args.mp->m_maxicount &&
--	    percpu_counter_read(&args.mp->m_icount) + newlen >
-+	    percpu_counter_read_positive(&args.mp->m_icount) + newlen >
- 							args.mp->m_maxicount)
- 		return -ENOSPC;
- 	args.minlen = args.maxlen = args.mp->m_ialloc_blks;
-@@ -1339,10 +1339,13 @@ xfs_dialloc(
- 	 * If we have already hit the ceiling of inode blocks then clear
- 	 * okalloc so we scan all available agi structures for a free
- 	 * inode.
-+	 *
-+	 * Read rough value of mp->m_icount by percpu_counter_read_positive,
-+	 * which will sacrifice the preciseness but improve the performance.
- 	 */
- 	if (mp->m_maxicount &&
--	    percpu_counter_read(&mp->m_icount) + mp->m_ialloc_inos >
--							mp->m_maxicount) {
-+	    percpu_counter_read_positive(&mp->m_icount) + mp->m_ialloc_inos
-+							> mp->m_maxicount) {
- 		noroom = 1;
- 		okalloc = 0;
- 	}
--- 
-1.9.3
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gRnJpLCBBcHIgMTcsIDIwMTUgYXQgMDM6MTU6MjFQTSArMDgwMCwg546L5petIHdyb3RlOgo+
+IE9uIEZyaSwgQXByIDE3LCAyMDE1IGF0IDEyOjA2IFBNLCBEYXZlIENoaW5uZXIgPGRhdmlkQGZy
+b21vcmJpdC5jb20+IHdyb3RlOgo+ID4gT24gRnJpLCBBcHIgMTcsIDIwMTUgYXQgMTA6MjI6MjRB
+TSArMDgwMCwgeHV3MjAxNUBnbWFpbC5jb20gd3JvdGU6Cj4gPj4gRnJvbTogR2VvcmdlIFdhbmcg
+PHh1dzIwMTVAZ21haWwuY29tPgo+ID4+Cj4gPj4gRnVuY3Rpb24gcGVyY3B1X2NvdW50ZXJfcmVh
+ZCBqdXN0IHJldHVybiB0aGUgY3VycmVudCBjb3VudGVyLCByZWdhcmRsZXNzIG9mCj4gPj4gZXZl
+cnkgY3B1J3MgY291bnQuIFRoaXMgY291bnRlciBjYW4gYmUgbmVnYXRpdmUgdmFsdWUsIHdoaWNo
+IHdpbGwgY2F1c2UgdGhlCj4gPj4gY2hlY2tpbmcgb2YgImFsbG9jYXRlZCBpbm9kZSBjb3VudHMg
+PD0gbV9tYXhpY291bnQiIGZhbHNlIHBvc2l0aXZlLgo+ID4KPiA+IEhhdmUgeW91IGFjdHVhbGx5
+IHNlZW4gdGhpcywgb3IgaXMgaXQganVzdCB0aGVvcmV0aWNhbD8KPiAKPiBJIHByb2R1Y2VkIGl0
+IGJ5IHJ1bm5pbmcgdW5pb25tb3VudC10ZXN0c3VpdGVzIGZvciBvdmVybGF5LCBiYXNlZCB4ZnMg
+YXMgdXBwZXIKPiBhbmQgbG93ZXJkaXIuIEkgdGhpbmsgSSBjYW4gZXh0cmFjdCB0aGUgcHJvY2Vk
+dXJlIHRvIHJlcHJvZHVjZSBpdC4KCkludGVlc3RpbmcuIEkndmUgbmV2ZXIgYmVlbiBhYmxlIHRv
+IGdldCB0aGUgdW5pb25tb3VudC10ZXN0c3VpdCB0bwphY3R1YWxseSBiZSBhYmxlIHRvIHJ1biwg
+bGV0IGFsb25lIGhhZCBpdCBmaW5kIHByb2JsZW1zLgoKPiA+PiBDb21taXQgNTAxYWIzMjM4NzUz
+ICJ4ZnM6IHVzZSBnZW5lcmljIHBlcmNwdSBjb3VudGVycyBmb3IgaW5vZGUgY291bnRlcgo+IDxz
+bmlwPgo+ID4gVGhlIGNvcnJlY3QgZml4IGlzIHRvIHVzZSBwZXJjcHVfY291bnRlcl9yZWFkX3Bv
+c2l0aXZlKCksIGJlY2F1c2UgaW4KPiA+IHRoZSBtYWpvcml0eSBvZiBjYXNlcyBhcmdzLm1wLT5t
+X21heGljb3VudCBpcyBvcmRlcnMgb2YgbWFnbml0dWRlCj4gPiBsYXJnZXIgKDIwIG1pbGxpb24g
+aW5vZGVzIHBlciAxMDBHQiBvZiBmcyBzcGFjZSBmb3Igc21hbGwgZmlsZXN5c3RlbXMpCj4gPiB0
+aGFuIHRoZSB1bmFnZ3JlZ2F0ZWQgcGVyLWNwdSBjb3VudHMgY2FuIGNhdXNlIHRoZSBzdW0gdG8g
+Z28KPiA+IG5lZ2F0aXZlLiBIZW5jZSBpZiBpdCBpcyBuZWdhdGl2ZSwgaXQgbWF5IGFzIHdlbGwg
+YmUgemVybyBiZWNhdXNlIGl0Cj4gPiBtYWtlcyBubyBkaWZmZXJlbmNlIHRvIHRoZSBkZWZhdWx0
+IHRocmVzaG9sZCBjb25maWd1cmF0aW9ucy4KPiAKPiBUaGFua3MgZm9yIHRoZSBleHBsYW5hdGlv
+biwgYW5kIEkgYWdyZWUgdGhhdCB0b3RhbGx5Lgo+IEJlc2lkZXMsIHNoYWxsIHdlIHVzZSB0aGUg
+ZXhhY3QgY291bnQgaW4geGZzX2ZzX2NvdW50cz8gQmVjYXVzZSBpdCdzIGEgaW9jdGwKPiBmdW5j
+dGlvbiwgbm90IHNvIG11Y2ggc2Vuc2l0aXZlIHBlcmZvcm1hbmNlLgoKUmlnaHQsIGJ1dCB0aGF0
+IG1ha2VzIHBlcmNwdV9jb3VudGVyX3JlYWRfcG9zaXRpdmUgaXMgcGVyZmVjdCBmb3IKaW9jdGxz
+IGxpa2UgdGhpczogd2hhdCBpcyByZXBvcnRlZCB0byB1c2Vyc3BhY2UgaXMgbmV2ZXIKcGVyZmVj
+dGx5IGFjY3VyYXRlIG9uIGEgYnVzeSBmaWxlc3lzdGVtLiBBbHNvLCB3ZSBkb24ndCB3aGF0IHNv
+bWVvbmUKcmVwZWF0ZWRseSBydW5uaW5nIHRoYXQgaW9jdGwgdG8gYWR2ZXJzZWx5IGFmZmVjdCB0
+aGUgcGVyZm9ybWFuY2Ugb2YKdGhlIGZpbGVzeXN0ZW0sIHdoaWNoIGlzIHdoYXQgd291bGQgaGFw
+cGVuIGlmIGl0IHdhcyBhbiBhY2N1cmF0ZQpzdW0uLi4uLgoKQ2hlZXJzLAoKRGF2ZS4KLS0gCkRh
+dmUgQ2hpbm5lcgpkYXZpZEBmcm9tb3JiaXQuY29tCgpfX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpo
+dHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
