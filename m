@@ -1,22 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id A41B77F3F
-	for <xfs@oss.sgi.com>; Fri, 17 Apr 2015 18:45:53 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id E4A707F47
+	for <xfs@oss.sgi.com>; Sat, 18 Apr 2015 18:17:57 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 92D708F8059
-	for <xfs@oss.sgi.com>; Fri, 17 Apr 2015 16:45:50 -0700 (PDT)
-Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
-	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	148BzcRKz4A52Rcy for <xfs@oss.sgi.com>;
-	Fri, 17 Apr 2015 16:45:44 -0700 (PDT)
-Date: Sat, 18 Apr 2015 09:45:41 +1000
+	by relay1.corp.sgi.com (Postfix) with ESMTP id CD7E58F8033
+	for <xfs@oss.sgi.com>; Sat, 18 Apr 2015 16:17:54 -0700 (PDT)
+Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
+	[150.101.137.143]) by cuda.sgi.com with ESMTP id
+	T7H4IJouBK9vd5iG for <xfs@oss.sgi.com>;
+	Sat, 18 Apr 2015 16:17:48 -0700 (PDT)
+Date: Sun, 19 Apr 2015 09:17:45 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: 4.0 kernel XFS filesystem crash when running AIM7's disk workload
-Message-ID: <20150417234541.GG21261@dastard>
-References: <55314529.7060202@hp.com>
+Subject: Re: [PATCH v2] xfs: extent size hints can round up extents past
+	MAXEXTLEN
+Message-ID: <20150418231745.GH21261@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <55314529.7060202@hp.com>
+In-Reply-To: <20150417125843.GA63169@bfoster.bfoster>
+	<20150417130120.GB63169@bfoster.bfoster>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,130 +30,231 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Waiman Long <waiman.long@hp.com>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com
+To: Brian Foster <bfoster@redhat.com>
+Cc: xfs@oss.sgi.com
 
-On Fri, Apr 17, 2015 at 01:38:49PM -0400, Waiman Long wrote:
-> Hi Dave,
+[compund reply]
+
+On Fri, Apr 17, 2015 at 08:58:44AM -0400, Brian Foster wrote:
+> On Fri, Apr 17, 2015 at 08:28:29AM +1000, Dave Chinner wrote:
+> > On Thu, Apr 16, 2015 at 01:32:38PM -0400, Brian Foster wrote:
+> > > On Thu, Apr 16, 2015 at 03:00:50PM +1000, Dave Chinner wrote:
+> > > > From: Dave Chinner <dchinner@redhat.com>
+> > > > 
+> > > > This results in BMBT corruption, as seen by this test:
+> > > > 
+> > > > # mkfs.xfs -f -d size=40051712b,agcount=4 /dev/vdc
+> > > > ....
+> > > > # mount /dev/vdc /mnt/scratch
+> > > > # xfs_io -ft -c "extsize 16m" -c "falloc 0 30g" -c "bmap -vp" /mnt/scratch/foo
+> > > > 
+> > > > which results in this failure on a debug kernel:
+> > > > 
+> > > > XFS: Assertion failed: (blockcount & xfs_mask64hi(64-BMBT_BLOCKCOUNT_BITLEN)) == 0, file: fs/xfs/libxfs/xfs_bmap_btree.c, line: 211
+> > > > ....
+> > ....
+....
+> I think it puts max_length at 0, which basically kills the allocation.
+> Increasing the hint further underflows the max and makes it ineffective.
+> Regardless, broken either way...
 > 
-> When I was running the AIM7's disk workload on a 8-socket
-> Westmere-EX server with 4.0 kernel, the kernel crash. A set of small
-> ramdisks were created (ramdisk_size=271072). Those ramdisks were
-> formatted with XFS filesystem before the test began. The kernel log
-> was:
+> > Ok. So, the problem is that it is overestimating the amount of space
+> > that alignment will need, and that alignment cannot be guaranteed
+> > for extsz hints of over (MAXEXTLEN / 2) in size.
+> > 
+> > i.e. given an alignment (A[0-2]) and an extent (E[01]):
+> > 
+> >    A0                  A1                  A2
+> >    +-------------------+-------------------+
+> > 		     +ooo+
+> > 		     E0  E1
+> > 
+> > The problem is that the alignment done by xfs_bmap_extsize_align()
+> > only extends outwards (i.e. increases extent size). Hence E0 gets
+> > rounded down to A0-A2, and E1 gets extended to A2, which means we
+> > are adding almost 2 entire extent size hints to the allocation.
+> > That's where the reduction in length by two extsz values came from.
+> > 
 > 
-> XFS (ram12): Mounting V4 Filesystem
-> XFS (ram12): Log size 1424 blocks too small, minimum size is 1596 blocks
-> XFS (ram12): Log size out of supported range. Continuing onwards,
-> but if log hangs are
-> experienced then please report this message in the bug report.
+> Makes sense... From reading through xfs_bmap_extsize_align(), it looks
+> like the intent of the function is to basically look at the current bmap
+> of the file and apply the extent size hint to the original allocation
+> request. E.g., expand the range of the file being allocated while
+> dealing with potential overlap of previous or subsequent extents, eof,
+> etc.
 
-First thing you need to do is upgrade xfsprogs so that this message
-goes away. or use "mkfs.xfs -l size=10m" so that the log is larger
-than the minimum.
+Yes, that is what it is supposed to be doing.
 
-> XFS (ram15): Ending clean mount
-> BUG: unable to handle kernel NULL pointer dereference at           (null)
-> IP: [<ffffffff812abd6d>] __memcpy+0xd/0x110
-> PGD 29f7655f067 PUD 29f75a80067 PMD 0
-> Oops: 0000 [#1] SMP
-> Modules linked in: xfs exportfs libcrc32c ebtable_nat ebtables
-> xt_CHECKSUM iptable_mangle bridge stp llc autofs4 ipt_REJECT
-> nf_reject_ipv4 nf_conntrack_ipv4 nf_defrag_ipv4 iptable_filter
-> ip_tables ip6t_REJECT nf_reject_ipv6 nf_conntrack_ipv6
-> nf_defrag_ipv6 xt_state nf_conntrack ip6table_filter ip6_tables ipv6
-> vhost_net macvtap macvlan vhost tun kvm_intel kvm ipmi_si
-> ipmi_msghandler tpm_infineon iTCO_wdt iTCO_vendor_support wmi
-> acpi_cpufreq microcode pcspkr serio_raw qlcnic be2net vxlan
-> udp_tunnel ip6_udp_tunnel ses enclosure igb dca ptp pps_core lpc_ich
-> mfd_core hpilo hpwdt sg i7core_edac edac_core netxen_nic ext4(E)
-> jbd2(E) mbcache(E) sr_mod(E) cdrom(E) sd_mod(E) lpfc(E) qla2xxx(E)
-> scsi_transport_fc(E) pata_acpi(E) ata_generic(E) ata_piix(E) hpsa(E)
-> radeon(E) ttm(E) drm_kms_helper(E) drm(E) i2c_algo_bit(E)
-> i2c_core(E) dm_mirror(E) dm_region_hash(E) dm_log(E) dm_mod(E)
-
-Why do you have a mix of signed and unsigned modules loaded?
-
-> CPU: 69 PID: 116603 Comm: xfsaild/ram5 Tainted: G            E   4.0.0 #2
-> Hardware name: HP ProLiant DL980 G7, BIOS P66 07/30/2012
-> task: ffff8b9f7eeb4f80 ti: ffff8b9f7f1ac000 task.ti: ffff8b9f7f1ac000
-> RIP: 0010:[<ffffffff812abd6d>]  [<ffffffff812abd6d>] __memcpy+0xd/0x110
-> RSP: 0018:ffff8b9f7f1afc10  EFLAGS: 00010206
-> RAX: ffff88102476a3cc RBX: ffff889ff2ab5000 RCX: 0000000000000005
-> RDX: 0000000000000006 RSI: 0000000000000000 RDI: ffff88102476a3cc
-
-edx = 6 bytes.
-
-> RBP: ffff8b9f7f1afc18 R08: 0000000000000001 R09: ffff88102476a3cc
-> R10: ffff8a1f6c03ea80 R11: 0000000000000000 R12: ffff8b1ff1269400
-> R13: ffff8b1f64837c98 R14: ffff881038701200 R15: ffff88102476a300
-> FS:  0000000000000000(0000) GS:ffff8b1fffa40000(0000) knlGS:0000000000000000
-> CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
-> CR2: 0000000000000000 CR3: 0000029f7655e000 CR4: 00000000000006e0
-> Stack:
->  ffffffffa0ca8c41 ffff8b9f7f1afc68 ffffffffa0cc4803 ffff8b9f7f1afc68
->  ffffffffa0cd2777 ffff8b9f7f1afc68 ffff8b1ff1269400 ffff8a9f59022800
->  ffff8b1f7c932718 0000000000000003 ffff8a9f590228e4 ffff8b9f7f1afce8
-> Call Trace:
->  [<ffffffffa0ca8c41>] ? xfs_iflush_fork+0x181/0x240 [xfs]
->  [<ffffffffa0cc4803>] xfs_iflush_int+0x1f3/0x320 [xfs]
->  [<ffffffffa0cd2777>] ? kmem_alloc+0x87/0x100 [xfs]
->  [<ffffffffa0cc60a5>] xfs_iflush_cluster+0x295/0x380 [xfs]
->  [<ffffffffa0cc8ff4>] xfs_iflush+0xf4/0x1f0 [xfs]
->  [<ffffffffa0cda22a>] xfs_inode_item_push+0xea/0x130 [xfs]
->  [<ffffffffa0ce140d>] xfsaild_push+0x10d/0x500 [xfs]
->  [<ffffffff810b7c20>] ? lock_timer_base+0x70/0x70
->  [<ffffffffa0ce1898>] xfsaild+0x98/0x130 [xfs]
->  [<ffffffffa0ce1800>] ? xfsaild_push+0x500/0x500 [xfs]
->  [<ffffffffa0ce1800>] ? xfsaild_push+0x500/0x500 [xfs]
->  [<ffffffffa0ce1800>] ? xfsaild_push+0x500/0x500 [xfs]
->  [<ffffffff81074b50>] ? kthread_freezable_should_stop+0x70/0x70
->  [<ffffffff815c5748>] ret_from_fork+0x58/0x90
->  [<ffffffff81074b50>] ? kthread_freezable_should_stop+0x70/0x70
-> Code: 0f b6 c0 5b c9 c3 0f 1f 84 00 00 00 00 00 e8 2b f9 ff ff 80 7b
-> 25 00 74 c8 eb d3 90 90 90 48 89 f8 48 89 d1 48 c1 e9 03 83 e2 07
-> <f3> 48 a5 89 d1 f3 a4 c3 20 4c 8b 06 4c 8b 4e 08 4c 8b 56 10 4c
-> RIP  [<ffffffff812abd6d>] __memcpy+0xd/0x110
->  RSP <ffff8b9f7f1afc10>
-> CR2: 0000000000000000
-> ---[ end trace fb8a4add69562a76 ]---
+> > Now, for delayed allocation, this is just fine, because real
+> > allocation will break this delalloc extent up into two separate
+> > extents, and underflow wouldn't be noticed as delalloc extents are
+> > not physically limited to MAXEXTLEN and so nothing would have
+> > broken. Still, it's not the intended behaviour.
+> > 
 > 
-> The xfs_iflush_fork+0x181/0x240 (385) IP address is at:
+> The delalloc behavior wasn't clear to me at first. I was expecting
+> something along the lines of the behavior above, only done as a delalloc
+> extent (only inserted in the in-core extent list). Observing that not
+> happening, however, lead me to this:
 > 
-
-(rearrange slightly to make more sense)
-
-> 823        case XFS_DINODE_FMT_LOCAL:
-> 824            if ((iip->ili_fields & dataflag[whichfork]) &&
->    0x00000000000023c0 <+336>:    movslq %ecx,%rcx
->    0x00000000000023c3 <+339>:    movswl 0x0(%rcx,%rcx,1),%eax
->    0x00000000000023cb <+347>:    test   %eax,0x90(%rdx)
->    0x00000000000023d1 <+353>:    je     0x2350 <xfs_iflush_fork+224>
+> aff3a9ed xfs: Use preallocation for inodes with extsz hints
 > 
-> 825                (ifp->if_bytes > 0)) {
->    0x00000000000023d7 <+359>:    mov    (%r10),%edx
->    0x00000000000023da <+362>:    test   %edx,%edx
->    0x00000000000023dc <+364>:    jle    0x2350 <xfs_iflush_fork+224>
+> ... which leads me to believe all of the extent size hint handling code
+> in the bmapi delalloc codepath is historical from when we did have this
+> behavior. We simply turned it off without cleaning out the lower layers,
+> yes?
 
-So the contents of rdx says that the inode fork size is 6 bytes in
-local format. The call location also indicates that it is the
-attribute fork that is in being flushed. The minimum size of the
-attr fork is 3 bytes - an empty header. However, then ext valid size
-has a second header that adds 4 bytes to the size, plus the bytes
-inteh attr name and value.
+Yes. It had crossed my mind that the delalloc code probably wasn't
+being called, but I did the analysis assuming that it was called.
 
-Hence a size of 6 bytes is invalid, and probably indicates that
-there is some form of memory corruption going on here.
+> In any case, that explains the behavior. It's a bit confusing having
+> that code around. On one hand, I could understand the view that the
+> allocator is an independent layer that should account for the hints
+> regardless of how the higher layers choose to call it. The downside is
+> we can't really test that allocator codepath any longer. I think I'd be
+> in favor of ripping that stuff out if it's not called. We could always
+> add it back down the road if the extent alignment stuff is well factored
+> into helper functions.
 
-IIRC, we haven't touched this code for a while - can you test 3.19
-and see if it has the same problem? If it doesn't have the problem,
-and given you can reliably reproduce the crash, can you run a
-bisect to find the cause?
+Yup.
 
-FWIW, there's been a few dentry cache related crashes reported late
-in the 4.0-rc series that point to memory corruption as the cause of
-the panics, so I'm wondering if this is another symptom of the same
-problem....
+[.... to other reply ....]
+
+> > Ok, so the callers of xfs_bmap_extsize_align() are:
+> > 
+> > 	xfs_bmapi_reserve_delalloc()
+> > 	xfs_bmap_btalloc()
+> > 	xfs_bmap_rtalloc().
+> > 
+> > For xfs_bmapi_reserve_delalloc(), the alignment does not need grow
+> > outwards; it can be truncated mid-range, and the code should still
+> > work. i.e.
+> > 
+> >    A0                  A1                  A2
+> >    +-------------------+-------------------+
+> > 		     +ooo+
+> > 		     E0  E1
+> >    +-------------------+
+> >    R0                  R1
+> > 
+> > R[01] is a valid alignment and will result in a second allocation
+> > occurring for this:
+> > 
+> >    A0                  A1                  A2
+> >    +-------------------+-------------------+
+> > 		       +o+
+> > 		      E2  E1
+> >                        +-------------------+
+> >                        R1                  R2
+> > 
+> > And so the range we need allocation for (E[01]) will be allocated
+> > and correctly extent size aligned.
+> > 
+> 
+> See my previous comments about delalloc extent size hints...
+> 
+> That aside, seems reasonable at a glance. The delayed allocation is
+> effectively aggregated into what we expect to be an allocation that
+> covers the entire aligned range.
+
+Right.
+
+> 
+> > For xfs_bmap_btalloc() - the problem case here - the code is a
+> > little more complex. We do:
+> > 
+> > xfs_bmapi_write
+> >   loop until all allocated {
+> >     xfs_bmapi_allocate(bma)
+> >       calc off/len
+> >         xfs_bmap_btalloc(bma)
+> > 	  xfs_bmap_extsize_align(bma)
+> > 	  xfs_alloc_vextent
+> > 	  update bma->length
+> >       BMBT insert
+> >     trim returned map
+> >   }
+> > 
+> > So we are doing alignment two steps removed from the off/len
+> > calculation (xfs_bmap_rtalloc() is in the same boat). Hence the
+> > question is whether xfs_bmap_extsize_align() can trim the range
+> > being allocated and still have everything work....
+> > 
+> > Ok, upon further reading, the xfs_bmalloc structure (bma) that is
+> > passed between these functions to track the allocation being done is
+> > updated after allocation with the length of the extent allocated.
+> > IOWs:
+> > 
+> > 	bma->length = E(len)
+> > 	xfs_bmap_btalloc(bma)
+> > 	  A(len) = xfs_bmap_extsize_align(bma->length)
+> > 	  R(len) = xfs_alloc_vextent(A(len))
+> > 	  bma->length = R(len)
+> > 
+> > Hence this:
+> > 
+> >    A0                  A1                  A2
+> >    +-------------------+-------------------+
+> > 		     +ooo+
+> > 		     E0  E1
+> >    +-------------------+
+> >    R0                  R1
+> > 
+> > Is a valid result from xfs_bmap_btalloc() and the loop in
+> > xfs_bmapi_write() will do a second allocation and alignment as per
+> > the above delalloc case. xfs_bmap_rtalloc() appears to mirror this
+> > same structure, so should also have the same behaviour.
+> > 
+> > What this means is that we can actually reduce the requested
+> > allocation to be only a partial overlap when aligning it, and
+> > everything should still work. Let's now see how complex that makes
+> > the code...
+> 
+> Ok, so xfs_bmapi_write() walks over the file block range to be mapped
+> and is thus prepared to handle the potential for multiple allocations.
+> As long as the extent size alignment covers the high level range in
+> incremental order, the higher layers should keep moving along until the
+> originally requested range is allocated.
+
+Yes.
+
+> What I'm not so sure about is that the xfs_bmapi_write() loop also
+> accounts for nimap, and that is passed as 1 from at least the couple of
+> codepaths I looked at.
+
+Yes. This "shorter allocation" is the same case as not having a
+single contiguous region of free space large enough to allocate the
+entire space being asked for - the allocated extent comes back
+shorter than maxlen but larger than minlen, so another allocation is
+needed...
+
+> I'm guessing this is because those paths have a
+> transaction reservation good enough for one allocation at a time. Some
+> paths (e.g., xfs_iomap_write_allocate()) seems to handle this with an
+> even higher level loop, but others such as xfs_iomap_write_direct() do
+> not appear to. That said, it might still be the case that everything
+> technically works, as then the higher level DIO becomes the next guy up
+> the chain responsible for the alloc via requesting the next mapping...
+
+Right, all the higher layers have loops to complete the
+allocation/mapping calls because they always have to assume that a
+single allocation/mapping call will not span the entire range they
+are asking for. If they didn't loop, we'd see broken bits all over
+the place ;)
+
+> Even if that is the case, it seems at some level this alters the
+> semantics of the extent size hint. Maybe that's fine and we just
+> document it such that rather than extent size hints potentially
+> resulting in 2x allocations, unaligned I/Os simply result in multiple
+> aligned allocations. IIUC, that shouldn't really have much user visible
+> impact, if at all..?
+
+I don't think it has any visible user impact at all, just a slight
+difference in CPU usage. We'll still end up with the same allocation
+being done because we hold the AGF locked over both the allocations,
+and the "contiguous allocation block target" should result in the
+same free space extents being chosen as if it was a single
+allocation...
 
 Cheers,
 
