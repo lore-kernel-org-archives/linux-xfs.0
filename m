@@ -1,19 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 7562529DFE
-	for <xfs@oss.sgi.com>; Sun, 19 Apr 2015 21:35:32 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 1005BAC001
-	for <xfs@oss.sgi.com>; Sun, 19 Apr 2015 19:35:32 -0700 (PDT)
-Received: from ozlabs.org (ozlabs.org [103.22.144.67]) by cuda.sgi.com with
-	ESMTP id JIfQhtCQXYCFnDBj (version=TLSv1 cipher=AES256-SHA
-	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Sun, 19 Apr 2015 19:35:30 -0700 (PDT)
-Date: Mon, 20 Apr 2015 12:35:24 +1000
-From: Stephen Rothwell <sfr@canb.auug.org.au>
-Subject: linux-next: build failure after merge of the xfs tree
-Message-ID: <20150420123524.4d1da1fa@canb.auug.org.au>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 3FB467F3F
+	for <xfs@oss.sgi.com>; Mon, 20 Apr 2015 20:06:51 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 2E039304048
+	for <xfs@oss.sgi.com>; Mon, 20 Apr 2015 18:06:51 -0700 (PDT)
+Received: from shells.gnugeneration.com (shells.gnugeneration.com
+	[66.240.222.126]) by cuda.sgi.com with SMTP id jgTC9RsIMM5IDAbr
+	for <xfs@oss.sgi.com>; Mon, 20 Apr 2015 18:06:46 -0700 (PDT)
+Date: Mon, 20 Apr 2015 20:06:46 -0500
+From: xfs@pengaru.com
+Subject: question re: xfs inode to inode copy implementation
+Message-ID: <20150421010646.GX8110@shells.gnugeneration.com>
 MIME-Version: 1.0
+Content-Disposition: inline
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,112 +22,44 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============1995524090203163625=="
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Ben Myers <bpm@sgi.com>, David Chinner <david@fromorbit.com>, xfs@oss.sgi.com
-Cc: Omar Sandoval <osandov@osandov.com>, linux-next@vger.kernel.org, linux-kernel@vger.kernel.org, Al Viro <viro@zeniv.linux.org.uk>
+To: xfs@oss.sgi.com
+Cc: vito.caputo@coreos.com
 
---===============1995524090203163625==
-Content-Type: multipart/signed; micalg=pgp-sha256;
- boundary="Sig_/LgYsPegD/wKnMa0G71o+dtW"; protocol="application/pgp-signature"
+Hello list,
 
---Sig_/LgYsPegD/wKnMa0G71o+dtW
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+I'm prototyping something like reflinks in xfs and was wondering if
+anyone could give me some pointers on the best way to duplicate the
+blocks of the shared inode at the reflink inode, the copy which must
+occur when breaking the link.
 
-Hi all,
+It would be nice to do the transfer via the page cache after allocating
+the space at the desintation inode, but it doesn't seem like I can use
+any of the kernel helpers for copying the data via the address_space
+structs since I don't have a struct file on hand for the copy source.
+I'm doing this in xfs_file_open() so the only struct file I have is the
+file being opened for writing - the destination of the copy.
 
-After merging the xfs tree, today's linux-next build (powerpc
-ppc64_defconfig) failed like this:
+What I do have on hand is the shared inode and the destination inode
+opened and ready to go, and the struct file for the destination.
 
-fs/xfs/xfs_file.c: In function 'xfs_file_dio_aio_write':
-fs/xfs/xfs_file.c:744:8: warning: passing argument 1 of 'mapping->a_ops->di=
-rect_IO' makes pointer from integer without a cast
-  ret =3D mapping->a_ops->direct_IO(WRITE, iocb, &data, pos);
-        ^
-fs/xfs/xfs_file.c:744:8: note: expected 'struct kiocb *' but argument is of=
- type 'long long unsigned int'
-fs/xfs/xfs_file.c:744:8: warning: passing argument 2 of 'mapping->a_ops->di=
-rect_IO' from incompatible pointer type
-fs/xfs/xfs_file.c:744:8: note: expected 'struct iov_iter *' but argument is=
- of type 'struct kiocb *'
-fs/xfs/xfs_file.c:744:8: warning: passing argument 3 of 'mapping->a_ops->di=
-rect_IO' makes integer from pointer without a cast
-fs/xfs/xfs_file.c:744:8: note: expected 'loff_t' but argument is of type 's=
-truct iov_iter *'
-fs/xfs/xfs_file.c:744:8: error: too many arguments to function 'mapping->a_=
-ops->direct_IO'
+My prototype already mostly works just using xfs_alloc_file_space() to
+allocate the appropriate space in the destination inode, but I need to
+get that allocated space populated from the shared inode's extents.
 
-So, my merge resolution was not sufficient :-(
+Any pointers appreciated, thanks!
 
-Commit 22c6186ecea0 ("direct_IO: remove rw from a_ops->direct_IO()")
-removed the first argument from ->direct_IO(), so I added the following
-merge fix patch.
-
-From: Stephen Rothwell <sfr@canb.auug.org.au>
-Date: Mon, 20 Apr 2015 12:32:00 +1000
-Subject: [PATCH] xfs: fix up for direct_IO API change
-
-Signed-off-by: Stephen Rothwell <sfr@canb.auug.org.au>
----
- fs/xfs/xfs_file.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index 0d5053fcd8c5..8121e75352ee 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -741,7 +741,7 @@ xfs_file_dio_aio_write(
- 	trace_xfs_file_direct_write(ip, count, iocb->ki_pos, 0);
-=20
- 	data =3D *from;
--	ret =3D mapping->a_ops->direct_IO(WRITE, iocb, &data, pos);
-+	ret =3D mapping->a_ops->direct_IO(iocb, &data, pos);
-=20
- 	/* see generic_file_direct_write() for why this is necessary */
- 	if (mapping->nrpages) {
---=20
-2.1.4
-
---=20
-Cheers,
-Stephen Rothwell                    sfr@canb.auug.org.au
-
---Sig_/LgYsPegD/wKnMa0G71o+dtW
-Content-Type: application/pgp-signature
-Content-Description: OpenPGP digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQIcBAEBCAAGBQJVNGXwAAoJEMDTa8Ir7ZwVSoIP/iOHktGpYCZXZeXxVEIjB9WN
-O0Ga/h8T4itTCvOIp+9v/OgaiSbB75ohtVPhEJBoxnVtNsFhfAid3DjR5/txlHiK
-hjDwlfdCQ3G/QVLRLGKaO1/1hjnWgoBgqC3zAesuezu8cfJrR0wDlwf7RVjJvt6/
-gD5GXqfB6Tla8b1EpMJP4ui3y78sOWvzLA28iVbMOMYZlr4MHf5I2b01mLRSRROF
-Fh0baXh0643y5MUGihu+Lf2a3qpdXxKhClaNh2CWfMc2G5k5IDzwKi3uy5g24siY
-s50HN4NvWeWtxHldImuy2puKwL0hK4Sp7hc8vvp6m2qDvApUsOgQmxb4ZpeSU6+/
-rc81xpI/K0LXjhGE6OEHhGyyxrmiHcMVOfvrw3b9wK8LNOOfva9LZ+VuTLq2chvu
-kdt8yvkvxv37DA6H4m+MVjarDJ+Z/dg7rSdAlK+fKnfg/K6xe/BNGu80CC6o21LX
-s7HpqLUpA9fVGjr2BaXrZgXLHd3e/m7S5E0ktnlUBEWE8P69aMdy0Ese6Da5GVXl
-ffYqSeCwJ/IeVaQKPNQ7IRD0T6RS03yEF8+mGV2SWaRys1rdyxp82kG/QFPtqNij
-lFu7EksjG34pWP2tc2c3DsXrLrWGR8mnaMOVRSSfFnwLy3J9oX70AwbhTc34Y1Lh
-RjZXdBdMia3vUCbwSW1D
-=BOwo
------END PGP SIGNATURE-----
-
---Sig_/LgYsPegD/wKnMa0G71o+dtW--
+Regards,
+Vito Caputo
 
 
---===============1995524090203163625==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+P.S. I've seen Dave Chinner's mention of reflink prototypes in XFS on
+lwn but haven't been able to find any code, what's the status of that?
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============1995524090203163625==--
