@@ -1,24 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 71AA97F37
-	for <xfs@oss.sgi.com>; Wed, 22 Apr 2015 12:13:53 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 5C06F7F3F
+	for <xfs@oss.sgi.com>; Wed, 22 Apr 2015 12:34:36 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 606C9304048
-	for <xfs@oss.sgi.com>; Wed, 22 Apr 2015 10:13:49 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id ygGdtErBbgGK5QrV (version=TLSv1
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 38545304062
+	for <xfs@oss.sgi.com>; Wed, 22 Apr 2015 10:34:36 -0700 (PDT)
+Received: from g4t3425.houston.hp.com (g4t3425.houston.hp.com [15.201.208.53])
+	by cuda.sgi.com with ESMTP id ZOiDfFZm7E4AUwEp (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 22 Apr 2015 10:13:49 -0700 (PDT)
-Date: Wed, 22 Apr 2015 13:13:23 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH] xfs: don't trigger fsync log force based on inode pin
-	count
-Message-ID: <20150422171322.GB6688@bfoster.bfoster>
-References: <1429713466-22137-1-git-send-email-bfoster@redhat.com>
-	<20150422161509.GA27237@infradead.org>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20150422161509.GA27237@infradead.org>
+	Wed, 22 Apr 2015 10:34:34 -0700 (PDT)
+From: Waiman Long <Waiman.Long@hp.com>
+Subject: [PATCH] xfs: call xfs_idestroy_fork() in xfs_ilock() critical section
+Date: Wed, 22 Apr 2015 13:33:41 -0400
+Message-Id: <1429724021-7675-1-git-send-email-Waiman.Long@hp.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,44 +21,48 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>, xfs@oss.sgi.com
+Cc: Waiman Long <Waiman.Long@hp.com>, linux-kernel@vger.kernel.org
 
-On Wed, Apr 22, 2015 at 09:15:09AM -0700, Christoph Hellwig wrote:
-> On Wed, Apr 22, 2015 at 10:37:46AM -0400, Brian Foster wrote:
-> > There are probably a couple different ways to handle this. We could log
-> > the inode in the bmap cases in order to preserve the pincount check.
-> 
-> I'd favor that.  For one performance should be better, second we really
-> need to dirty the inode anyway for v5 file systems as that's the
-> mechanism used to increment di_changecount.
-> 
+The commit f7be2d7f594cbc ("xfs: push down inactive transaction
+mgmt for truncate") refactored the xfs_inactive() function
+in fs/xfs/xfs_inode.c.  However, it also moved the call to
+xfs_idestroy_fork() from inside the xfs_ilock() critical section to
+outside. That was causing memory corruption and strange failures like
+deferencing NULL pointers in some circumstances.
 
-Yeah, that's a good point. I noticed that in xfs_trans_log_inode() when
-debugging but didn't think much about it since I reproduced on v4. I can
-get performance back with the aforementioned cil push fix, but if the
-path forward is behavior where the inode is going to be logged anyways,
-that is decent reason to emulate such behavior in the pre-v5 case.
+This patch moves the xfs_idestroy_fork() call back into an xfs_ilock()
+critical section to avoid memory corruption problem.
 
-Note that we have the following in xfs_bmapi_write():
+Signed-off-by: Waiman Long <Waiman.Long@hp.com>
+---
+ fs/xfs/xfs_inode.c |    5 ++++-
+ 1 files changed, 4 insertions(+), 1 deletions(-)
 
-        if (bma.logflags)
-                xfs_trans_log_inode(tp, ip, bma.logflags);
-
-... and some other places. I don't reproduce this particular problem on
-v5, so something else might be logging the inode here. That strikes me
-as not what we want with regard to the change count, however..
-
-Brian
-
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index 6163767..31850fb 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -1900,8 +1900,11 @@ xfs_inactive(
+ 			return;
+ 	}
+ 
+-	if (ip->i_afp)
++	if (ip->i_afp) {
++		xfs_ilock(ip, XFS_ILOCK_EXCL);
+ 		xfs_idestroy_fork(ip, XFS_ATTR_FORK);
++		xfs_iunlock(ip, XFS_ILOCK_EXCL);
++	}
+ 
+ 	ASSERT(ip->i_d.di_anextents == 0);
+ 
+-- 
+1.7.1
 
 _______________________________________________
 xfs mailing list
