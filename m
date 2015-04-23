@@ -1,24 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 2C6B97F37
-	for <xfs@oss.sgi.com>; Thu, 23 Apr 2015 07:21:58 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 9FE22AC004
-	for <xfs@oss.sgi.com>; Thu, 23 Apr 2015 05:21:54 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id EAE3D7F37
+	for <xfs@oss.sgi.com>; Thu, 23 Apr 2015 11:42:51 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 7A59BAC004
+	for <xfs@oss.sgi.com>; Thu, 23 Apr 2015 09:42:48 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id VjNPOziBCmR14olp (version=TLSv1
+	cuda.sgi.com with ESMTP id 7BaUgCkY420B4lUS (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 23 Apr 2015 05:21:53 -0700 (PDT)
-Date: Thu, 23 Apr 2015 08:21:50 -0400
+	Thu, 23 Apr 2015 09:42:47 -0700 (PDT)
+Received: from int-mx09.intmail.prod.int.phx2.redhat.com
+	(int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id t3NGgkxd024449
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256
+	verify=FAIL) for <xfs@oss.sgi.com>; Thu, 23 Apr 2015 12:42:46 -0400
+Received: from bfoster.bfoster (dhcp-41-237.bos.redhat.com [10.18.41.237])
+	by int-mx09.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id t3NGgkf6014419
+	for <xfs@oss.sgi.com>; Thu, 23 Apr 2015 12:42:46 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH] xfs: call xfs_idestroy_fork() in xfs_ilock() critical
-	section
-Message-ID: <20150423122149.GA13131@bfoster.bfoster>
-References: <1429724021-7675-1-git-send-email-Waiman.Long@hp.com>
-	<20150422231758.GQ21261@dastard>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20150422231758.GQ21261@dastard>
+Subject: [PATCH v2] xfs: always log the inode on unwritten extent conversion
+Date: Thu, 23 Apr 2015 12:42:44 -0400
+Message-Id: <1429807364-33943-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,375 +30,104 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Waiman Long <Waiman.Long@hp.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Thu, Apr 23, 2015 at 09:17:58AM +1000, Dave Chinner wrote:
-> On Wed, Apr 22, 2015 at 01:33:41PM -0400, Waiman Long wrote:
-> > The commit f7be2d7f594cbc ("xfs: push down inactive transaction
-> > mgmt for truncate") refactored the xfs_inactive() function
-> > in fs/xfs/xfs_inode.c.  However, it also moved the call to
-> > xfs_idestroy_fork() from inside the xfs_ilock() critical section to
-> > outside. That was causing memory corruption and strange failures like
-> > deferencing NULL pointers in some circumstances.
-> 
-> Interesting.
-> 
-> However, while locking may fix the problem, it is not sufficient
-> just to add locking without first understanding what problem the
-> locking is fixing.
-> 
-> > This patch moves the xfs_idestroy_fork() call back into an xfs_ilock()
-> > critical section to avoid memory corruption problem.
-> > 
-> > Signed-off-by: Waiman Long <Waiman.Long@hp.com>
-> > ---
-> >  fs/xfs/xfs_inode.c |    5 ++++-
-> >  1 files changed, 4 insertions(+), 1 deletions(-)
-> > 
-> > diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-> > index 6163767..31850fb 100644
-> > --- a/fs/xfs/xfs_inode.c
-> > +++ b/fs/xfs/xfs_inode.c
-> > @@ -1900,8 +1900,11 @@ xfs_inactive(
-> >  			return;
-> >  	}
-> >  
-> > -	if (ip->i_afp)
-> > +	if (ip->i_afp) {
-> > +		xfs_ilock(ip, XFS_ILOCK_EXCL);
-> >  		xfs_idestroy_fork(ip, XFS_ATTR_FORK);
-> > +		xfs_iunlock(ip, XFS_ILOCK_EXCL);
-> > +	}
-> 
-> The inode, at this point, is not referencable by the VFS because it
-> is in the ->evict path, and it's not reclaimable by XFS because we
-> don't set the XFS_IRECLAIMABLE flag until the VFS eviction path
-> calls ->destroy_inode.  Hence the inode cannot be _actively_
-> referenced by anything else at this point in it's life cycle - if
-> there is a race it's with a passive reference somewhere unexpected.
-> It may be that the locking is just altering the timing of whatever
-> the underlying bug triggers.
-> 
-> /me digs deeper
-> 
-> By this stage we will have called xfs_attr_inactive() which means
-> there shouldn't be an attribute fork on the inode anymore.  Hence it
-> /should/ be safe to remove the in-core structures referencing it.
-> Going back to the original problem report, it indicated that
-> ip->i_d.di_forkoff was not zero and so we were trying to flush on
-> attribute fork.
-> 
-> If we assume that it raced with the above code in xfs_inactive(),
-> that tells me that perhaps xfs_attr_inactive() is not doing
-> everything it should:
-> 
->         /*
->          * Decide on what work routines to call based on the inode size.
->          */
->         if (!xfs_inode_hasattr(dp) ||
->             dp->i_d.di_aformat == XFS_DINODE_FMT_LOCAL) {
->                 error = 0;
->                 goto out;
->         }
-> 
-> Ok, it leaves the attribute fork present in the inode if it is in
-> local format, of if it is in extent format and has no extents. IOWs,
-> it leaves ip->i_d.di_forkoff > 0 and in the crash case:
-> 
-> 3409        if (XFS_IFORK_Q(ip))
->    0x0000000000000345 <+261>:    cmpb   $0x0,0x14a(%r12)
->    0x000000000000034e <+270>:    jne    0x420 <xfs_iflush_int+480>
-> 
-> 3410            xfs_iflush_fork(ip, dip, iip, XFS_ATTR_FORK);
-> 
-> And:
-> 
-> #define XFS_IFORK_Q(ip)                 ((ip)->i_d.di_forkoff != 0)
-> 
-> We use the di_forkoff to determine if we need to flush the attribute
-> fork. However, we should end up triggering this code in
-> xfs_iflush_fork() on the attribute fork:
-> 
->         ifp = XFS_IFORK_PTR(ip, whichfork);
->         /*
->          * This can happen if we gave up in iformat in an error path,
->          * for the attribute fork.
->          */
->         if (!ifp) {
->                 ASSERT(whichfork == XFS_ATTR_FORK);
->                 return;
->         }
-> 
-> i.e. the !ifp case, and so not accessing anything in the attribute
-> fork that is being freed by xfs_inactive().
-> 
-> To make matters more complex, this inode should not be being written
-> back right now - we've just issued transactions on it that pin the
-> inode in memory until the CIL is forced and the journal IO has
-> completed and unpinned the inode. There must be some significant
-> pre-emption delay occurring on your test for this to occur between
-> committing the inode in xfs_inactive() and the attribute fork being
-> removed.
-> 
-> However, writeback is holding the XFS_ILOCK_SHARED when it calls
-> xfs_iflush_fork(), so this would appear to be the race condition the
-> locking is avoiding, however unlikely the timing of it is.
-> 
-> IOWs, the issue here is that we are removing the in-core attribute
-> fork but leaving attributes in the on-disk inode and hoping that
-> other code doesn't step on the landmine of inconsistent
-> on-disk/in-memory state. Which it clearly did in this case here.
-> 
-> The patch below removes the landmine from xfs_inactive and
-> xfs_attr_inactive. It's a lot more than adding locking, but solves
-> the underlying problem rather than working around it. It smoke tests
-> fine, and I'm now running it through xfstests.
-> 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
-> 
-> xfs: xfs_attr_inactive leaves inconsistent attr fork state behind
-> 
-> From: Dave Chinner <dchinner@redhat.com>
-> 
-> xfs_attr_inactive() is supposed to clean up the attribute fork when
-> the inode is being freed. While it removes attribute fork extents,
-> it completely ignores attributes in local format, which means that
-> there can still be active attributes on the inode after
-> xfs_attr_inactive() has run.
-> 
-> This leads to problems with concurrent inode writeback - the in-core
-> inode attribute fork is removed without locking on the assumption
-> that nothing will be attempting to access the attribute fork after a
-> call to xfs_attr_inactive() because it isn't supposed to exist on
-> disk any more.
-> 
-> To fix this, make xfs_attr_inactive() completely remove all traces
-> of the attribute fork from the inode, regardless of it's state.
-> Further, also remove the in-core attribute fork structure safely so
-> that there is nothing further that needs to be done by callers to
-> clean up the attribute fork. This means we can remove the in-core
-> and on-disk attribute forks atomically.
-> 
-> Also, on error simply remove the in-memory attribute fork. There's
-> nothing that can be done with it once we have failed to remove the
-> on-disk attribute fork, so we may as well just blow it away here
-> anyway.
-> 
-> cc: <stable@vger.kernel.org> # 3.12 to 4.0
-> Reported-by: Waiman Long <waiman.long@hp.com>
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> ---
->  fs/xfs/libxfs/xfs_attr_leaf.c |  2 +-
->  fs/xfs/libxfs/xfs_attr_leaf.h |  2 +-
->  fs/xfs/xfs_attr_inactive.c    | 81 ++++++++++++++++++++++++++-----------------
->  fs/xfs/xfs_inode.c            | 12 +++----
->  4 files changed, 55 insertions(+), 42 deletions(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
-> index 04e79d5..36b354e 100644
-> --- a/fs/xfs/libxfs/xfs_attr_leaf.c
-> +++ b/fs/xfs/libxfs/xfs_attr_leaf.c
-> @@ -574,7 +574,7 @@ xfs_attr_shortform_add(xfs_da_args_t *args, int forkoff)
->   * After the last attribute is removed revert to original inode format,
->   * making all literal area available to the data fork once more.
->   */
-> -STATIC void
-> +void
->  xfs_attr_fork_reset(
->  	struct xfs_inode	*ip,
->  	struct xfs_trans	*tp)
-> diff --git a/fs/xfs/libxfs/xfs_attr_leaf.h b/fs/xfs/libxfs/xfs_attr_leaf.h
-> index 025c4b8..6478627 100644
-> --- a/fs/xfs/libxfs/xfs_attr_leaf.h
-> +++ b/fs/xfs/libxfs/xfs_attr_leaf.h
-> @@ -53,7 +53,7 @@ int	xfs_attr_shortform_remove(struct xfs_da_args *args);
->  int	xfs_attr_shortform_list(struct xfs_attr_list_context *context);
->  int	xfs_attr_shortform_allfit(struct xfs_buf *bp, struct xfs_inode *dp);
->  int	xfs_attr_shortform_bytesfit(xfs_inode_t *dp, int bytes);
-> -
-> +void	xfs_attr_fork_reset(struct xfs_inode *ip, struct xfs_trans *tp);
->  
->  /*
->   * Internal routines when attribute fork size == XFS_LBSIZE(mp).
-> diff --git a/fs/xfs/xfs_attr_inactive.c b/fs/xfs/xfs_attr_inactive.c
-> index f9c1c64..6b1bc9a 100644
-> --- a/fs/xfs/xfs_attr_inactive.c
-> +++ b/fs/xfs/xfs_attr_inactive.c
-> @@ -380,23 +380,31 @@ xfs_attr3_root_inactive(
->  	return error;
->  }
->  
-> +/*
-> + * xfs_attr_inactive kills all traces of an attribute fork on an inode. It
-> + * removes both the on-disk and in-memory inode fork. Note that this also has to
-> + * handle the condition of inodes without attributes but with an attribute fork
-> + * configured, so we can't use xfs_inode_hasattr() here.
-> + *
-> + * The in-memory attribute fork is removed even on error.
-> + */
->  int
-> -xfs_attr_inactive(xfs_inode_t *dp)
-> +xfs_attr_inactive(
-> +	struct xfs_inode	*dp)
->  {
-> -	xfs_trans_t *trans;
-> -	xfs_mount_t *mp;
-> -	int error;
-> +	struct xfs_trans	*trans;
-> +	struct xfs_mount	*mp;
-> +	int			cancel_flags = 0;
-> +	int			lock_mode = XFS_ILOCK_SHARED;
-> +	int			error = 0;
->  
->  	mp = dp->i_mount;
->  	ASSERT(! XFS_NOT_DQATTACHED(mp, dp));
->  
-> -	xfs_ilock(dp, XFS_ILOCK_SHARED);
-> -	if (!xfs_inode_hasattr(dp) ||
-> -	    dp->i_d.di_aformat == XFS_DINODE_FMT_LOCAL) {
-> -		xfs_iunlock(dp, XFS_ILOCK_SHARED);
-> -		return 0;
-> -	}
-> -	xfs_iunlock(dp, XFS_ILOCK_SHARED);
-> +	xfs_ilock(dp, lock_mode);
-> +	if (!XFS_IFORK_Q(dp))
-> +		goto out_destroy_fork;
-> +	xfs_iunlock(dp, lock_mode);
->  
->  	/*
->  	 * Start our first transaction of the day.
-> @@ -410,11 +418,12 @@ xfs_attr_inactive(xfs_inode_t *dp)
->  	 */
->  	trans = xfs_trans_alloc(mp, XFS_TRANS_ATTRINVAL);
->  	error = xfs_trans_reserve(trans, &M_RES(mp)->tr_attrinval, 0, 0);
-> -	if (error) {
-> -		xfs_trans_cancel(trans, 0);
-> -		return error;
-> -	}
-> -	xfs_ilock(dp, XFS_ILOCK_EXCL);
-> +	if (error)
-> +		goto out_cancel;
-> +
+The fsync() requirements for crash consistency on XFS are to flush file
+data and force any in-core inode updates to the log. We currently check
+whether the inode is pinned to identify whether the log needs to be
+forced, since a non-zero pin count generally represents an inode that
+has transactions awaiting a flush to the on-disk log.
 
-The error path expects a locked inode, but it isn't here.
+This is not sufficient in all cases, however. Reports of xfstests test
+generic/311 failures on ppc64/s390x hosts have identified failures to
+fsync outstanding inode modifications due to the inode not being pinned
+at the time of the fsync. This occurs because certain bmap updates can
+complete by logging bmapbt buffers but without ever dirtying (and thus
+pinning) the core inode. The following is a specific incarnation of this
+problem:
 
-> +	lock_mode = XFS_ILOCK_EXCL;
-> +	cancel_flags = XFS_TRANS_RELEASE_LOG_RES | XFS_TRANS_ABORT;
-> +	xfs_ilock(dp, lock_mode);
->  
->  	/*
->  	 * No need to make quota reservations here. We expect to release some
-> @@ -423,28 +432,36 @@ xfs_attr_inactive(xfs_inode_t *dp)
->  	xfs_trans_ijoin(trans, dp, 0);
->  
->  	/*
-> -	 * Decide on what work routines to call based on the inode size.
-> +	 * It's unlikely we've raced with an attribute fork creation, but check
-> +	 * anyway just in case.
->  	 */
-> -	if (!xfs_inode_hasattr(dp) ||
-> -	    dp->i_d.di_aformat == XFS_DINODE_FMT_LOCAL) {
-> -		error = 0;
-> -		goto out;
-> +	if (!XFS_IFORK_Q(dp))
-> +		goto out_cancel;
+$ mount $dev /mnt -o noatime,nobarrier
+$ for i in $(seq 0 2 31); do \
+        xfs_io -f -c "falloc $((i * 32768)) 32k" -c fsync /mnt/file; \
+	done
+$ xfs_io -c "pwrite -S 0 80k 16k" -c fsync -c "pwrite 76k 4k" -c fsync /mnt/file; \
+	hexdump /mnt/file; \
+	./xfstests-dev/src/godown /mnt
+...
+0000000 0000 0000 0000 0000 0000 0000 0000 0000
+*
+0013000 cdcd cdcd cdcd cdcd cdcd cdcd cdcd cdcd
+*
+0014000 0000 0000 0000 0000 0000 0000 0000 0000
+*
+00f8000
+$ umount /mnt; mount ...
+$ hexdump /mnt/file
+0000000 0000 0000 0000 0000 0000 0000 0000 0000
+*
+00f8000
 
-What about attribute fork creation would cause di_forkoff == 0 if that
-wasn't the case above? Do you mean to say a potential race with
-attribute fork destruction?
+In short, the unwritten extent conversion for the last write is lost
+despite the fact that an fsync executed before the filesystem was
+shutdown. Note that this is impossible to reproduce on v5 supers due to
+unconditional time callbacks for di_changecount and highly difficult to
+reproduce on CONFIG_HZ=1000 kernels due to those same callbacks
+frequently updating cmtime prior to the bmap update. CONFIG_HZ=100
+reduces timer granularity enough to increase the odds that time updates
+are skipped and allows this to reproduce within a handful of attempts.
 
-> +
-> +	/* invalidate and truncate the attribute fork extents */
-> +	if (dp->i_d.di_aformat != XFS_DINODE_FMT_LOCAL) {
-> +		error = xfs_attr3_root_inactive(&trans, dp);
-> +		if (error)
-> +			goto out_cancel;
-> +
-> +		error = xfs_itruncate_extents(&trans, dp, XFS_ATTR_FORK, 0);
-> +		if (error)
-> +			goto out_cancel;
->  	}
-> -	error = xfs_attr3_root_inactive(&trans, dp);
-> -	if (error)
-> -		goto out;
->  
-> -	error = xfs_itruncate_extents(&trans, dp, XFS_ATTR_FORK, 0);
-> -	if (error)
-> -		goto out;
-> +	/* Reset the attribute fork - this also destroys the in-core fork */
-> +	xfs_attr_fork_reset(dp, trans);
->  
->  	error = xfs_trans_commit(trans, XFS_TRANS_RELEASE_LOG_RES);
-> -	xfs_iunlock(dp, XFS_ILOCK_EXCL);
-> -
-> +	xfs_iunlock(dp, lock_mode);
->  	return error;
->  
-> -out:
-> -	xfs_trans_cancel(trans, XFS_TRANS_RELEASE_LOG_RES|XFS_TRANS_ABORT);
-> -	xfs_iunlock(dp, XFS_ILOCK_EXCL);
-> +out_cancel:
-> +	xfs_trans_cancel(trans, cancel_flags);
-> +out_destroy_fork:
-> +	/* kill the in-core attr fork before we drop the inode lock */
-> +	if (dp->i_afp)
-> +		xfs_idestroy_fork(dp, XFS_ATTR_FORK);
-> +	xfs_iunlock(dp, lock_mode);
+To deal with this problem, make sure that the inode is logged in the
+unwritten extent conversion path. Fix up the logflags, if necessary,
+after the extent conversion to keep the extent update code consistent
+with the other extent update helpers. This fixup is not necessary for
+the other (hole, delay) extent helpers because they execute in the block
+allocation codepath, which already logs the inode for other reasons
+(e.g., for di_nblocks).
 
-I wonder if a warning or some kind of notification is appropriate here.
-If we get to this point, we're removing an inode potentially without
-having freed attr fork blocks and thus leaving them permanently
-unreferenced, yes?
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+---
 
-Brian
+v2:
+- Log inode unconditionally on unwritten extent conversion and retain
+  the fsync pincount check.
+v1: http://oss.sgi.com/pipermail/xfs/2015-April/041468.html
 
->  	return error;
->  }
-> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-> index d6ebc85..1117dd3 100644
-> --- a/fs/xfs/xfs_inode.c
-> +++ b/fs/xfs/xfs_inode.c
-> @@ -1946,21 +1946,17 @@ xfs_inactive(
->  	/*
->  	 * If there are attributes associated with the file then blow them away
->  	 * now.  The code calls a routine that recursively deconstructs the
-> -	 * attribute fork.  We need to just commit the current transaction
-> -	 * because we can't use it for xfs_attr_inactive().
-> +	 * attribute fork. If also blows away the in-core attribute fork.
->  	 */
-> -	if (ip->i_d.di_anextents > 0) {
-> -		ASSERT(ip->i_d.di_forkoff != 0);
-> -
-> +	if (XFS_IFORK_Q(ip)) {
->  		error = xfs_attr_inactive(ip);
->  		if (error)
->  			return;
->  	}
->  
-> -	if (ip->i_afp)
-> -		xfs_idestroy_fork(ip, XFS_ATTR_FORK);
-> -
-> +	ASSERT(!ip->i_afp);
->  	ASSERT(ip->i_d.di_anextents == 0);
-> +	ASSERT(ip->i_d.di_forkoff == 0);
->  
->  	/*
->  	 * Free the inode.
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+ fs/xfs/libxfs/xfs_bmap.c | 15 +++++++++++++++
+ 1 file changed, 15 insertions(+)
+
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index aeffeaa..e74e42bf 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -4417,6 +4417,21 @@ xfs_bmapi_convert_unwritten(
+ 	error = xfs_bmap_add_extent_unwritten_real(bma->tp, bma->ip, &bma->idx,
+ 			&bma->cur, mval, bma->firstblock, bma->flist,
+ 			&tmp_logflags);
++	/*
++	 * Unwritten extent conversion might not have dirtied the inode
++	 * depending on the extent state. Unlike block allocation (e.g.,
++	 * di_nblocks), there may be no other reason to log the inode in the
++	 * unwritten extent conversion path.
++	 *
++	 * We need to make sure the inode is dirty in the transaction for the
++	 * sake of fsync(), which will not force the log for this transaction
++	 * unless it sees the inode pinned. This can only happen for btree
++	 * format inodes so use XFS_ILOG_CORE.
++	 */
++	if (!error && !tmp_logflags) {
++		ASSERT(bma->cur);
++		tmp_logflags |= XFS_ILOG_CORE;
++	}
+ 	bma->logflags |= tmp_logflags;
+ 	if (error)
+ 		return error;
+-- 
+1.9.3
 
 _______________________________________________
 xfs mailing list
