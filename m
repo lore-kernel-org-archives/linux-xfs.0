@@ -1,19 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 6D17A7F59
+	by oss.sgi.com (Postfix) with ESMTP id 8408D7F5A
 	for <xfs@oss.sgi.com>; Thu, 23 Apr 2015 14:09:00 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 06ED7AC001
-	for <xfs@oss.sgi.com>; Thu, 23 Apr 2015 12:08:56 -0700 (PDT)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 1F92EAC004
+	for <xfs@oss.sgi.com>; Thu, 23 Apr 2015 12:08:57 -0700 (PDT)
 Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id 6SEZ38scXXUnrMrp (version=TLSv1 cipher=AES256-SHA
+	ESMTP id 2QLZxKWnK9wINRRV (version=TLSv1 cipher=AES256-SHA
 	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 23 Apr 2015 12:08:55 -0700 (PDT)
+	Thu, 23 Apr 2015 12:08:52 -0700 (PDT)
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 4/6] xfs: use ->readlink to implement the readlink_by_handle
-	ioctl
-Date: Thu, 23 Apr 2015 21:07:42 +0200
-Message-Id: <1429816064-10033-5-git-send-email-hch@lst.de>
+Subject: [PATCH 3/6] xfs: set up inode operation vectors later
+Date: Thu, 23 Apr 2015 21:07:41 +0200
+Message-Id: <1429816064-10033-4-git-send-email-hch@lst.de>
 In-Reply-To: <1429816064-10033-1-git-send-email-hch@lst.de>
 References: <1429816064-10033-1-git-send-email-hch@lst.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -32,70 +31,154 @@ Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 Cc: viro@zeniv.linux.org.uk
 
-Also drop the now unused readlink_copy export.
+In the next patch we'll set up different inode operations for inline vs
+out of line symlinks, for that we need to make sure the flags are already
+set up properly.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/namei.c         |  1 -
- fs/xfs/xfs_ioctl.c | 19 ++-----------------
- 2 files changed, 2 insertions(+), 18 deletions(-)
+ fs/xfs/xfs_inode.h |  5 ++++-
+ fs/xfs/xfs_iops.c  | 59 ++++++++++++++++++++++++++++++++++--------------------
+ 2 files changed, 41 insertions(+), 23 deletions(-)
 
-diff --git a/fs/namei.c b/fs/namei.c
-index c83145a..482c6a9 100644
---- a/fs/namei.c
-+++ b/fs/namei.c
-@@ -4420,7 +4420,6 @@ int readlink_copy(char __user *buffer, int buflen, const char *link)
- out:
- 	return len;
+diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
+index 8f22d20..d49e293 100644
+--- a/fs/xfs/xfs_inode.h
++++ b/fs/xfs/xfs_inode.h
+@@ -407,6 +407,9 @@ int	xfs_iozero(struct xfs_inode *ip, loff_t pos, size_t count);
+ 
+ 
+ /* from xfs_iops.c */
++extern void xfs_setup_inode(struct xfs_inode *ip);
++extern void xfs_setup_iops(struct xfs_inode *ip);
++
+ /*
+  * When setting up a newly allocated inode, we need to call
+  * xfs_finish_inode_setup() once the inode is fully instantiated at
+@@ -414,7 +417,6 @@ int	xfs_iozero(struct xfs_inode *ip, loff_t pos, size_t count);
+  * before we've completed instantiation. Otherwise we can do it
+  * the moment the inode lookup is complete.
+  */
+-extern void xfs_setup_inode(struct xfs_inode *ip);
+ static inline void xfs_finish_inode_setup(struct xfs_inode *ip)
+ {
+ 	xfs_iflags_clear(ip, XFS_INEW);
+@@ -425,6 +427,7 @@ static inline void xfs_finish_inode_setup(struct xfs_inode *ip)
+ static inline void xfs_setup_existing_inode(struct xfs_inode *ip)
+ {
+ 	xfs_setup_inode(ip);
++	xfs_setup_iops(ip);
+ 	xfs_finish_inode_setup(ip);
  }
--EXPORT_SYMBOL(readlink_copy);
+ 
+diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+index 2f1839e..d3505ff 100644
+--- a/fs/xfs/xfs_iops.c
++++ b/fs/xfs/xfs_iops.c
+@@ -182,6 +182,8 @@ xfs_generic_create(
+ 	}
+ #endif
+ 
++	xfs_setup_iops(ip);
++
+ 	if (tmpfile)
+ 		d_tmpfile(dentry, inode);
+ 	else
+@@ -369,6 +371,8 @@ xfs_vn_symlink(
+ 	if (unlikely(error))
+ 		goto out_cleanup_inode;
+ 
++	xfs_setup_iops(cip);
++
+ 	d_instantiate(dentry, inode);
+ 	xfs_finish_inode_setup(cip);
+ 	return 0;
+@@ -1210,7 +1214,7 @@ xfs_diflags_to_iflags(
+ }
  
  /*
-  * A helper for ->readlink().  This should be used *ONLY* for symlinks that
-diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-index 5f4a396..597609e 100644
---- a/fs/xfs/xfs_ioctl.c
-+++ b/fs/xfs/xfs_ioctl.c
-@@ -276,7 +276,6 @@ xfs_readlink_by_handle(
- {
- 	struct dentry		*dentry;
- 	__u32			olen;
--	void			*link;
- 	int			error;
+- * Initialize the Linux inode and set up the operation vectors.
++ * Initialize the Linux inode.
+  *
+  * When reading existing inodes from disk this is called directly from xfs_iget,
+  * when creating a new inode it is called from xfs_ialloc after setting up the
+@@ -1258,8 +1262,38 @@ xfs_setup_inode(
+ 	inode->i_ctime.tv_nsec	= ip->i_d.di_ctime.t_nsec;
+ 	xfs_diflags_to_iflags(inode, ip);
  
- 	if (!capable(CAP_SYS_ADMIN))
-@@ -287,7 +286,7 @@ xfs_readlink_by_handle(
- 		return PTR_ERR(dentry);
- 
- 	/* Restrict this handle operation to symlinks only. */
--	if (!d_is_symlink(dentry)) {
-+	if (!dentry->d_inode->i_op->readlink) {
- 		error = -EINVAL;
- 		goto out_dput;
+-	ip->d_ops = ip->i_mount->m_nondir_inode_ops;
+-	lockdep_set_class(&ip->i_lock.mr_lock, &xfs_nondir_ilock_class);
++	if (S_ISDIR(inode->i_mode)) {
++		lockdep_set_class(&ip->i_lock.mr_lock, &xfs_dir_ilock_class);
++		ip->d_ops = ip->i_mount->m_dir_inode_ops;
++	} else {
++		ip->d_ops = ip->i_mount->m_nondir_inode_ops;
++		lockdep_set_class(&ip->i_lock.mr_lock, &xfs_nondir_ilock_class);
++	}
++
++	/*
++	 * Ensure all page cache allocations are done from GFP_NOFS context to
++	 * prevent direct reclaim recursion back into the filesystem and blowing
++	 * stacks or deadlocking.
++	 */
++	gfp_mask = mapping_gfp_mask(inode->i_mapping);
++	mapping_set_gfp_mask(inode->i_mapping, (gfp_mask & ~(__GFP_FS)));
++
++	/*
++	 * If there is no attribute fork no ACL can exist on this inode,
++	 * and it can't have any file capabilities attached to it either.
++	 */
++	if (!XFS_IFORK_Q(ip)) {
++		inode_has_no_xattr(inode);
++		cache_no_acl(inode);
++	}
++}
++
++void
++xfs_setup_iops(
++	struct xfs_inode	*ip)
++{
++	struct inode		*inode = &ip->i_vnode;
++
+ 	switch (inode->i_mode & S_IFMT) {
+ 	case S_IFREG:
+ 		inode->i_op = &xfs_inode_operations;
+@@ -1267,13 +1301,11 @@ xfs_setup_inode(
+ 		inode->i_mapping->a_ops = &xfs_address_space_operations;
+ 		break;
+ 	case S_IFDIR:
+-		lockdep_set_class(&ip->i_lock.mr_lock, &xfs_dir_ilock_class);
+ 		if (xfs_sb_version_hasasciici(&XFS_M(inode->i_sb)->m_sb))
+ 			inode->i_op = &xfs_dir_ci_inode_operations;
+ 		else
+ 			inode->i_op = &xfs_dir_inode_operations;
+ 		inode->i_fop = &xfs_dir_file_operations;
+-		ip->d_ops = ip->i_mount->m_dir_inode_ops;
+ 		break;
+ 	case S_IFLNK:
+ 		inode->i_op = &xfs_symlink_inode_operations;
+@@ -1285,21 +1317,4 @@ xfs_setup_inode(
+ 		init_special_inode(inode, inode->i_mode, inode->i_rdev);
+ 		break;
  	}
-@@ -297,21 +296,7 @@ xfs_readlink_by_handle(
- 		goto out_dput;
- 	}
- 
--	link = kmalloc(MAXPATHLEN+1, GFP_KERNEL);
--	if (!link) {
--		error = -ENOMEM;
--		goto out_dput;
+-
+-	/*
+-	 * Ensure all page cache allocations are done from GFP_NOFS context to
+-	 * prevent direct reclaim recursion back into the filesystem and blowing
+-	 * stacks or deadlocking.
+-	 */
+-	gfp_mask = mapping_gfp_mask(inode->i_mapping);
+-	mapping_set_gfp_mask(inode->i_mapping, (gfp_mask & ~(__GFP_FS)));
+-
+-	/*
+-	 * If there is no attribute fork no ACL can exist on this inode,
+-	 * and it can't have any file capabilities attached to it either.
+-	 */
+-	if (!XFS_IFORK_Q(ip)) {
+-		inode_has_no_xattr(inode);
+-		cache_no_acl(inode);
 -	}
--
--	error = xfs_readlink(XFS_I(dentry->d_inode), link);
--	if (error)
--		goto out_kfree;
--	error = readlink_copy(hreq->ohandle, olen, link);
--	if (error)
--		goto out_kfree;
--
-- out_kfree:
--	kfree(link);
-+	error = dentry->d_inode->i_op->readlink(dentry, hreq->ohandle, olen);
-  out_dput:
- 	dput(dentry);
- 	return error;
+ }
 -- 
 1.9.1
 
