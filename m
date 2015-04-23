@@ -1,20 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 748957F37
-	for <xfs@oss.sgi.com>; Wed, 22 Apr 2015 21:12:23 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 44D3B8F8040
-	for <xfs@oss.sgi.com>; Wed, 22 Apr 2015 19:12:20 -0700 (PDT)
-Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
-	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	ATrl2QOEebxQNr0s for <xfs@oss.sgi.com>;
-	Wed, 22 Apr 2015 19:12:14 -0700 (PDT)
-Date: Thu, 23 Apr 2015 12:12:11 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: [GIT PULL] xfs: updates for 4.1-rc1
-Message-ID: <20150423021211.GI15810@dastard>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 687D17F37
+	for <xfs@oss.sgi.com>; Thu, 23 Apr 2015 01:40:32 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id D6353AC002
+	for <xfs@oss.sgi.com>; Wed, 22 Apr 2015 23:40:28 -0700 (PDT)
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
+	cuda.sgi.com with ESMTP id WzGmJS5QpAD33BvD (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 22 Apr 2015 23:40:26 -0700 (PDT)
+Date: Wed, 22 Apr 2015 23:40:16 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: question re: xfs inode to inode copy implementation
+Message-ID: <20150423064016.GB11601@birch.djwong.org>
+References: <20150421010646.GX8110@shells.gnugeneration.com>
+	<20150421042820.GA11601@birch.djwong.org>
+	<20150421222738.GL21261@dastard>
+	<20150423004426.GC29335@birch.djwong.org>
+	<20150423011345.GR21261@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
+In-Reply-To: <20150423011345.GR21261@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,213 +33,145 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: torvalds@linux-foundation.org
-Cc: akpm@linux-foundation.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: vito.caputo@coreos.com, xfs@pengaru.com, xfs <xfs@oss.sgi.com>
 
-Hi Linus,
+On Thu, Apr 23, 2015 at 11:13:45AM +1000, Dave Chinner wrote:
+> On Wed, Apr 22, 2015 at 05:44:26PM -0700, Darrick J. Wong wrote:
+> > On Wed, Apr 22, 2015 at 08:27:38AM +1000, Dave Chinner wrote:
+> > > On Mon, Apr 20, 2015 at 09:28:20PM -0700, Darrick J. Wong wrote:
+> > > > On Mon, Apr 20, 2015 at 08:06:46PM -0500, xfs@pengaru.com wrote:
+> > > > > Hello list,
+> > > > > 
+> > > > > I'm prototyping something like reflinks in xfs and was wondering if
+> > > > > anyone could give me some pointers on the best way to duplicate the
+> > > > 
+> > > > Heh, funny, I'm working on that too...
+> > > > 
+> > > > > blocks of the shared inode at the reflink inode, the copy which must
+> > > > > occur when breaking the link.
+> > > > 
+> > > > ...though I'm not sure what "the shared inode at the reflink inode" means.
+> > > > Are there somehow three inodes involved with reflinking one file to another?
+> > > > 
+> > > > > It would be nice to do the transfer via the page cache after allocating
+> > > > > the space at the desintation inode, but it doesn't seem like I can use
+> > > > > any of the kernel helpers for copying the data via the address_space
+> > > > > structs since I don't have a struct file on hand for the copy source.
+> > > > > I'm doing this in xfs_file_open() so the only struct file I have is the
+> > > > > file being opened for writing - the destination of the copy.
+> > > > 
+> > > > So you're cloning the entire file's contents (i.e. breaking the reflink) as
+> > > > soon as the file is opened rw?
+> > > > 
+> > > > > What I do have on hand is the shared inode and the destination inode
+> > > > > opened and ready to go, and the struct file for the destination.
+> > > > 
+> > > > The design I'm pursuing is different from yours, I think -- two files can use
+> > > > the regular bmbt to point to the same physical blocks, and there's a per-ag
+> > > > btree that tracks reference counts for physical extents.  What I'd like to do
+> > > > for the CoW operation is to clone the page (somehow), change the bmbt mapping
+> > > > to "delayed allocation", and let the dirty pages flush out like normal.
+> > > > 
+> > > > I haven't figured out /how/ to do this, mind you.  The rest of the bookkeeping
+> > > > parts are already written, though.
+> > > 
+> > > My first thought on COW was to try to use the write path get_blocks
+> > > callback to do all this.  i.e. in __xfs_get_blocks() detect that it
+> > > is an overwrite of a shared extent, remove the shared extent
+> > > reference and then convert it to delayed alloc extent. (i.e.
+> > > xfs_iomap_overwrite_shared()). Then writeback will allocate new
+> > > blocks for the data.
+> > 
+> > <nod> That was my first thought, too.  I was rather hoping that I could just
+> > update the incore BMBT to kick off delayed allocation and hope that it flushes
+> > everything to disk before anything can blow up. (Ha...)  But alas, I hit the
+> > same conclusion that you'd have to allocate the new block, write it, and only
+> > then ought you update the BMBT.
+> > 
+> > > The question, however, is how to do this in a manner such that
+> > > crashing between the breaking of the shared reference and data
+> > > writeback doesn't leave us with a hole instead of data. To deal with
+> > > that, I think that we're going to have to break shared extents
+> > > during writeback, not during the write. However, we are going to
+> > > need a delalloc reservation to do that.
+> > > 
+> > > So I suspect we need a new type of extent in the in-core extent tree
+> > > - a "delalloc overwrite" extent - so that when we map it in writeback
+> > > we can allocate the new extent, do the write to it, and then on IO
+> > > completion do the BMBT manipulation to break the shared reference
+> > > and insert the new extent. That solves the atomicity problem, and it
+> > > allows us to track COW data on a per-inode basis without having
+> > > to care about all the other reflink contexts to that same data.
+> > 
+> > I think that'll work... in xfs_vm_writepage (more probably xfs_map_blocks) if
+> > the refcount > 2, allocate a new block, insert a new delalloc-overwrite in-core
 
-Can you please pull the XFS updates from the tag below? The changes
-are detailed in the tag message, so I won't go over them again here.
-The only thing of note is the direct IO fixes that we merged last
-week after the window opened. Even though a little late, they fix a
-user reported data corruption and have been pretty well tested. I
-figured there was not much point waiting another 2 weeks for -rc1 to
-be released just so I could send them to you....
+Speaking of which, should I add a XFS_DIFLAG_ to indicate that a file has
+(or has had) reflinked blocks?  In theory this would save us a trip through
+the reflinkbt for "normal" files when the reflink feature is set, but
+we'd then have to maintain it (and repair would have to check it).
 
-Note that there will be merge conflicts when you merge this tag. The
-resolution is pretty straight forward but there's also a direct IO
-API change that will throw build errors if not fixed during the
-merge.  From Stephen Rothwell's linux-next merge/build process, the
-DIO API fix that needs to be made is here:
+> > extent with the new block number and set a flag in the ioend to remind
+> > ourselves to update the bookkeeping later.  During xfs_end_io if that flag is
+> > set, commit the new in-core extent to disk, decrement the refcounts, and
+> > free the block if the refcount is 1.
+> 
+> If we are going to track the overwrite in-core, then we are probably
+> going to need some form of intent/done transaction structure so that
+> we don't leak the allocated block if we crash before the completion
+> runs and commits the extent swap. I'd prefer to do that than require
+> on-disk state to prevent free space leakage in this case.
+>
+> We could, potentially, abuse the EFI for this. i.e. record an EFI
+> for the extent in the allocation transaction, then in the completion
+> record a matching EFD. That way recovery will free the allocated
+> extent if we don't complete it....
 
-http://oss.sgi.com/archives/xfs/2015-04/msg00206.html
+Clever!  I was looking around to see if XFS had something that could
+take care of cleaning up orphans like that.
 
-And the merge resolution is here:
+Rather nice that the usual outcome to "I think I want ____ data structure" is
+that someone already thought of it. :)
 
-http://oss.sgi.com/archives/xfs/2015-04/msg00207.html
+> > For O_DIRECT I suppose we could use a similar mechanism -- you'd
+> > have to set up the delalloc-overwrite extent in
+> > xfs_iomap_write_direct() and use xfs_end_io_direct_write() to
+> > update the bmbt and decrement the refcounts in the same way as
+> > above.
+> 
+> Effectively.
+> 
+> > Hm.  Not sure what'll happen if the write buffer or the block size aren't a
+> > page size.  Will have to go figure out what XFS does to fill in the rest of a
+> > block if you try to directio-write to less than a block.  Hoping it's less
+> > weird than other things I've seen.
+> 
+> Oh, it's weird enough. We allow sector size alignment, but we
+> serialise all unaligned DIO writes because the sub-block zeroing is
+> a nightmare to co-ordinate properly. But, really, DIO to a reflink
+> file is not a performant operation, so maybe we should just punt all
+> writes to shared extent files to the buffered IO path and not have
+> to care about COW during DIO writes?
 
-I would have simple attached a merge commit patch if I could have
-worked out how to get just the above changes from the merge commit.
-I can get a combined diff that has lots of noise in it via git show,
-but I couldn't find a way just to output a simple unified diff. Is
-there any trick to this, or any specific way you'd prefer that I
-communicate such issues in future?
+Sure, I'll punt to buffered mode for now, just to get something working.
+I can always come back to this later if I dare.
 
--Dave.
+--D
 
-The following changes since commit c517d838eb7d07bbe9507871fab3931deccff539:
-
-  Linux 4.0-rc1 (2015-02-22 18:21:14 -0800)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/dgc/linux-xfs.git tags/xfs-for-linus-4.1-rc1
-
-for you to fetch changes up to 542c311813d5cb2e6f0dfa9557f41c829b8fb6a0:
-
-  Merge branch 'xfs-dio-extend-fix' into for-next (2015-04-16 22:13:18 +1000)
-
-----------------------------------------------------------------
-
-xfs: update for 4.1-rc1
-
-This update contains:
-o RENAME_WHITEOUT support
-o conversion of per-cpu superblock accounting to use generic counters
-o new inode mmap lock so that we can lock page faults out of truncate, hole
-  punch and other direct extent manipulation functions to avoid racing mmap
-  writes from causing data corruption
-o rework of direct IO submission and completion to solve data corruption issue
-  when running concurrent extending DIO writes. Also solves problem of running
-  IO completion transactions in interrupt context during size extending AIO
-  writes.
-o FALLOC_FL_INSERT_RANGE support for inserting holes into a file via direct
-  extent manipulation to avoid needing to copy data within the file
-o attribute block header field overflow fix for 64k block size filesystems
-o Lots of changes to log messaging to be more informative and concise when
-  errors occur. Also prevent a lot of unnecessary log spamming due to cascading
-  failures in error conditions.
-o lots of cleanups and bug fixes
-
-----------------------------------------------------------------
-Brian Foster (3):
-      xfs: pass attr geometry to attr leaf header conversion functions
-      xfs: use larger in-core attr firstused field and detect overflow
-      xfs: kill unnecessary firstused overflow check on attr3 leaf removal
-
-Byoungyoung Lee (1):
-      xfs: xfs_mru_cache_insert() should use GFP_NOFS
-
-Christoph Hellwig (1):
-      xfs: unlock i_mutex in xfs_break_layouts
-
-Dave Chinner (38):
-      xfs: use generic percpu counters for inode counter
-      xfs: use generic percpu counters for free inode counter
-      xfs: use generic percpu counters for free block counter
-      xfs: Remove icsb infrastructure
-      xfs: introduce xfs_mod_frextents
-      xfs: replace xfs_mod_incore_sb_batched
-      xfs: remove xfs_mod_incore_sb API
-      xfs: introduce mmap/truncate lock
-      xfs: use i_mmaplock on read faults
-      xfs: use i_mmaplock on write faults
-      xfs: take i_mmap_lock on extent manipulation operations
-      xfs: xfs_setattr_size no longer races with page faults
-      xfs: lock out page faults from extent swap operations
-      xfs: ensure truncate forces zeroed blocks to disk
-      xfs: inodes are new until the dentry cache is set up
-      xfs: xfs_alloc_fix_minleft can underflow near ENOSPC
-      Merge branch 'xfs-misc-fixes-for-4.1' into for-next
-      Merge branch 'xfs-generic-sb-counters' into for-next
-      Merge branch 'xfs-mmap-lock' into for-next
-      xfs: clean up inode locking for RENAME_WHITEOUT
-      xfs: cleanup xfs_rename error handling
-      xfs: factor out xfs_finish_rename()
-      xfs: make xfs_cross_rename() complete fully
-      xfs: add RENAME_WHITEOUT support
-      Merge branch 'xfs-rename-whiteout' into for-next
-      xfs: remove xfs_bmap_sanity_check()
-      Merge branch 'xfs-misc-fixes-for-4.1-2' into for-next
-      Merge branch 'fallocate-insert-range' into for-next
-      Merge branch 'xfs-misc-fixes-for-4.1-3' into for-next
-      xfs: factor DIO write mapping from get_blocks
-      xfs: move DIO mapping size calculation
-      xfs: DIO needs an ioend for writes
-      xfs: handle DIO overwrite EOF update completion correctly
-      xfs: DIO writes within EOF don't need an ioend
-      xfs: DIO write completion size updates race
-      xfs: direct IO EOF zeroing needs to drain AIO
-      xfs: using generic_file_direct_write() is unnecessary
-      Merge branch 'xfs-dio-extend-fix' into for-next
-
-Eric Sandeen (9):
-      xfs: pass mp to XFS_WANT_CORRUPTED_GOTO
-      xfs: pass mp to XFS_WANT_CORRUPTED_RETURN
-      xfs: Ensure we have target_ip for RENAME_EXCHANGE
-      xfs: log unmount events on console
-      xfs: clarify async write failure ratelimit message
-      xfs: cancel failed transaction in xfs_fs_commit_blocks()
-      xfs: remove deprecated mount options
-      xfs: fix NULL pointer dereference in xfs_filestream_lookup_ag()
-      xfs: disallow ro->rw remount on norecovery mount
-
-Fabian Frederick (2):
-      xfs: use bool instead of int in xfs_rename()
-      xfs: fix shadow warning in xfs_da3_root_split()
-
-Jan Kara (1):
-      xfs: Fix quota type in quota structures when reusing quota file
-
-Joe Perches (1):
-      xfs: Fix incorrect positive ENOMEM return
-
-Namjae Jeon (2):
-      fs: Add support FALLOC_FL_INSERT_RANGE for fallocate
-      xfs: Add support FALLOC_FL_INSERT_RANGE for fallocate
-
-Scott Wood (1):
-      xfs: %pF is only for function pointers
-
-Wang Sheng-Hui (1):
-      xfs: remove old and redundant comment in xfs_mount_validate_sb
-
-kbuild test robot (1):
-      xfs: xfs_shift_file_space can be static
-
- Documentation/filesystems/xfs.txt |   29 +-
- fs/open.c                         |    8 +-
- fs/xfs/libxfs/xfs_alloc.c         |  104 +++--
- fs/xfs/libxfs/xfs_attr_leaf.c     |  150 ++++--
- fs/xfs/libxfs/xfs_attr_leaf.h     |    6 +-
- fs/xfs/libxfs/xfs_bmap.c          |  554 +++++++++++++++-------
- fs/xfs/libxfs/xfs_bmap.h          |   13 +-
- fs/xfs/libxfs/xfs_btree.c         |   24 +-
- fs/xfs/libxfs/xfs_da_btree.c      |    8 +-
- fs/xfs/libxfs/xfs_da_format.h     |   14 +-
- fs/xfs/libxfs/xfs_dir2_data.c     |   39 +-
- fs/xfs/libxfs/xfs_format.h        |   62 ---
- fs/xfs/libxfs/xfs_ialloc.c        |   48 +-
- fs/xfs/libxfs/xfs_sb.c            |   20 +-
- fs/xfs/xfs_aops.c                 |  270 +++++++----
- fs/xfs/xfs_attr_inactive.c        |    3 +-
- fs/xfs/xfs_attr_list.c            |    9 +-
- fs/xfs/xfs_bmap_util.c            |  164 ++++---
- fs/xfs/xfs_bmap_util.h            |    2 +
- fs/xfs/xfs_buf_item.c             |    4 +-
- fs/xfs/xfs_discard.c              |    2 +-
- fs/xfs/xfs_error.c                |    2 +-
- fs/xfs/xfs_error.h                |    8 +-
- fs/xfs/xfs_file.c                 |  175 +++++--
- fs/xfs/xfs_filestream.c           |    2 +-
- fs/xfs/xfs_fsops.c                |   20 +-
- fs/xfs/xfs_icache.c               |    4 +-
- fs/xfs/xfs_inode.c                |  554 +++++++++++++---------
- fs/xfs/xfs_inode.h                |   58 ++-
- fs/xfs/xfs_ioctl.c                |    7 +-
- fs/xfs/xfs_iomap.c                |    3 +-
- fs/xfs/xfs_iops.c                 |  127 ++---
- fs/xfs/xfs_iops.h                 |    2 -
- fs/xfs/xfs_itable.c               |    2 +-
- fs/xfs/xfs_linux.h                |    9 -
- fs/xfs/xfs_log_recover.c          |    4 +-
- fs/xfs/xfs_mount.c                |  918 +++++--------------------------------
- fs/xfs/xfs_mount.h                |   95 +---
- fs/xfs/xfs_mru_cache.c            |    2 +-
- fs/xfs/xfs_pnfs.c                 |   11 +-
- fs/xfs/xfs_pnfs.h                 |    5 +-
- fs/xfs/xfs_qm.c                   |   18 +-
- fs/xfs/xfs_super.c                |  132 ++++--
- fs/xfs/xfs_super.h                |    2 +
- fs/xfs/xfs_symlink.c              |   58 ++-
- fs/xfs/xfs_trace.h                |   29 +-
- fs/xfs/xfs_trans.c                |  234 ++++++----
- include/linux/falloc.h            |    6 +
- include/uapi/linux/falloc.h       |   17 +
- 49 files changed, 2061 insertions(+), 1976 deletions(-)
--- 
-Dave Chinner
-david@fromorbit.com
+> 
+> 
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
