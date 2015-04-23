@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id AF4807F5D
-	for <xfs@oss.sgi.com>; Thu, 23 Apr 2015 14:09:00 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id ABABC7F62
+	for <xfs@oss.sgi.com>; Thu, 23 Apr 2015 14:09:03 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 4B054AC006
-	for <xfs@oss.sgi.com>; Thu, 23 Apr 2015 12:09:00 -0700 (PDT)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 7E1BE8F806F
+	for <xfs@oss.sgi.com>; Thu, 23 Apr 2015 12:09:03 -0700 (PDT)
 Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id 2F7AYKbHDAJnKgkL (version=TLSv1 cipher=AES256-SHA
+	ESMTP id ZoAk4h5Dj1PNFB0s (version=TLSv1 cipher=AES256-SHA
 	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 23 Apr 2015 12:08:58 -0700 (PDT)
+	Thu, 23 Apr 2015 12:09:01 -0700 (PDT)
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 5/6] xfs: move non-inline symlinks to the pagecache
-Date: Thu, 23 Apr 2015 21:07:43 +0200
-Message-Id: <1429816064-10033-6-git-send-email-hch@lst.de>
+Subject: [PATCH 6/6] xfs: optimize inline symlinks
+Date: Thu, 23 Apr 2015 21:07:44 +0200
+Message-Id: <1429816064-10033-7-git-send-email-hch@lst.de>
 In-Reply-To: <1429816064-10033-1-git-send-email-hch@lst.de>
 References: <1429816064-10033-1-git-send-email-hch@lst.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -31,258 +31,214 @@ Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 Cc: viro@zeniv.linux.org.uk
 
-We can use the generic symlink in pagecache code for XFS non-inline
-symlinks.  Because links are always shorter than a page we will
-get the zero termination for the link for free.
+By overallocating the in-core inode fork data buffer and zero
+terminating the link target in xfs_init_local_fork we can avoid
+the memory allocation in ->follow_link.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/xfs_iops.c    |  40 ++++++++++++++---
- fs/xfs/xfs_symlink.c | 120 ---------------------------------------------------
- fs/xfs/xfs_symlink.h |   1 -
- fs/xfs/xfs_trace.h   |   1 -
- 4 files changed, 34 insertions(+), 128 deletions(-)
+ fs/xfs/libxfs/xfs_dir2_sf.c    |  2 +-
+ fs/xfs/libxfs/xfs_inode_fork.c | 29 +++++++++++++++++++----------
+ fs/xfs/libxfs/xfs_inode_fork.h |  3 ++-
+ fs/xfs/xfs_inode_item.c        |  4 ++--
+ fs/xfs/xfs_iops.c              | 36 +-----------------------------------
+ fs/xfs/xfs_symlink.c           |  5 +++--
+ 6 files changed, 28 insertions(+), 51 deletions(-)
 
+diff --git a/fs/xfs/libxfs/xfs_dir2_sf.c b/fs/xfs/libxfs/xfs_dir2_sf.c
+index bf83116..a438058 100644
+--- a/fs/xfs/libxfs/xfs_dir2_sf.c
++++ b/fs/xfs/libxfs/xfs_dir2_sf.c
+@@ -258,7 +258,7 @@ xfs_dir2_block_to_sf(
+ 	 * Convert the inode to local format and copy the data in.
+ 	 */
+ 	ASSERT(dp->i_df.if_bytes == 0);
+-	xfs_init_local_fork(dp, XFS_DATA_FORK, dst, size);
++	xfs_init_local_fork(dp, XFS_DATA_FORK, dst, size, false);
+ 	dp->i_d.di_format = XFS_DINODE_FMT_LOCAL;
+ 	dp->i_d.di_size = size;
+ 
+diff --git a/fs/xfs/libxfs/xfs_inode_fork.c b/fs/xfs/libxfs/xfs_inode_fork.c
+index 86a3e11..dcadd07 100644
+--- a/fs/xfs/libxfs/xfs_inode_fork.c
++++ b/fs/xfs/libxfs/xfs_inode_fork.c
+@@ -235,22 +235,29 @@ xfs_init_local_fork(
+ 	struct xfs_inode	*ip,
+ 	int			whichfork,
+ 	const void		*data,
+-	int			size)
++	int			size,
++	bool			zero_terminate)
+ {
+ 	struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, whichfork);
+-	int			real_size = 0;
++	int			mem_size = size, real_size = 0;
++
++	if (zero_terminate)
++		mem_size = size + 1;
+ 
+ 	if (size == 0)
+ 		ifp->if_u1.if_data = NULL;
+-	else if (size <= sizeof(ifp->if_u2.if_inline_data))
++	else if (mem_size <= sizeof(ifp->if_u2.if_inline_data))
+ 		ifp->if_u1.if_data = ifp->if_u2.if_inline_data;
+ 	else {
+-		real_size = roundup(size, 4);
++		real_size = roundup(mem_size, 4);
+ 		ifp->if_u1.if_data = kmem_alloc(real_size, KM_SLEEP | KM_NOFS);
+ 	}
+ 
+-	if (size)
++	if (size) {
+ 		memcpy(ifp->if_u1.if_data, data, size);
++		if (zero_terminate)
++			ifp->if_u1.if_data[size] = '\0';
++	}
+ 
+ 	ifp->if_bytes = size;
+ 	ifp->if_real_bytes = real_size;
+@@ -270,11 +277,12 @@ xfs_init_local_fork(
+  */
+ STATIC int
+ xfs_iformat_local(
+-	xfs_inode_t	*ip,
+-	xfs_dinode_t	*dip,
+-	int		whichfork,
+-	int		size)
++	struct xfs_inode	*ip,
++	struct xfs_dinode	*dip,
++	int			whichfork,
++	int			size)
+ {
++	bool			zero_terminate = S_ISDIR(dip->di_mode);
+ 
+ 	/*
+ 	 * If the size is unreasonable, then something
+@@ -291,7 +299,8 @@ xfs_iformat_local(
+ 		return -EFSCORRUPTED;
+ 	}
+ 
+-	xfs_init_local_fork(ip, whichfork, XFS_DFORK_PTR(dip, whichfork), size);
++	xfs_init_local_fork(ip, whichfork, XFS_DFORK_PTR(dip, whichfork), size,
++			zero_terminate);
+ 	return 0;
+ }
+ 
+diff --git a/fs/xfs/libxfs/xfs_inode_fork.h b/fs/xfs/libxfs/xfs_inode_fork.h
+index dfb2966..f5f640f 100644
+--- a/fs/xfs/libxfs/xfs_inode_fork.h
++++ b/fs/xfs/libxfs/xfs_inode_fork.h
+@@ -135,7 +135,8 @@ void		xfs_iroot_realloc(struct xfs_inode *, int, int);
+ int		xfs_iread_extents(struct xfs_trans *, struct xfs_inode *, int);
+ int		xfs_iextents_copy(struct xfs_inode *, struct xfs_bmbt_rec *,
+ 				  int);
+-void		xfs_init_local_fork(struct xfs_inode *, int, const void *, int);
++void		xfs_init_local_fork(struct xfs_inode *, int, const void *, int,
++			bool);
+ 
+ struct xfs_bmbt_rec_host *
+ 		xfs_iext_get_ext(struct xfs_ifork *, xfs_extnum_t);
+diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
+index bf13a5a..786d91a 100644
+--- a/fs/xfs/xfs_inode_item.c
++++ b/fs/xfs/xfs_inode_item.c
+@@ -210,7 +210,7 @@ xfs_inode_item_format_data_fork(
+ 			 */
+ 			data_bytes = roundup(ip->i_df.if_bytes, 4);
+ 			ASSERT(ip->i_df.if_real_bytes == 0 ||
+-			       ip->i_df.if_real_bytes == data_bytes);
++			       ip->i_df.if_real_bytes >= data_bytes);
+ 			ASSERT(ip->i_df.if_u1.if_data != NULL);
+ 			ASSERT(ip->i_d.di_size > 0);
+ 			xlog_copy_iovec(lv, vecp, XLOG_REG_TYPE_ILOCAL,
+@@ -305,7 +305,7 @@ xfs_inode_item_format_attr_fork(
+ 			 */
+ 			data_bytes = roundup(ip->i_afp->if_bytes, 4);
+ 			ASSERT(ip->i_afp->if_real_bytes == 0 ||
+-			       ip->i_afp->if_real_bytes == data_bytes);
++			       ip->i_afp->if_real_bytes >= data_bytes);
+ 			ASSERT(ip->i_afp->if_u1.if_data != NULL);
+ 			xlog_copy_iovec(lv, vecp, XLOG_REG_TYPE_IATTR_LOCAL,
+ 					ip->i_afp->if_u1.if_data,
 diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-index d3505ff..57c0998 100644
+index 57c0998..89e0cc9 100644
 --- a/fs/xfs/xfs_iops.c
 +++ b/fs/xfs/xfs_iops.c
-@@ -419,21 +419,32 @@ xfs_vn_rename(
-  * uio is kmalloced for this reason...
-  */
+@@ -413,45 +413,12 @@ xfs_vn_rename(
+ 			  new_inode ? XFS_I(new_inode) : NULL, flags);
+ }
+ 
+-/*
+- * careful here - this function can get called recursively, so
+- * we need to be very careful about how much stack we use.
+- * uio is kmalloced for this reason...
+- */
  STATIC void *
--xfs_vn_follow_link(
-+xfs_vn_follow_link_inline(
+ xfs_vn_follow_link_inline(
  	struct dentry		*dentry,
  	struct nameidata	*nd)
  {
-+	struct xfs_inode	*ip = XFS_I(dentry->d_inode);
-+	xfs_fsize_t		pathlen;
- 	char			*link;
- 	int			error = -ENOMEM;
- 
-+	error = -ENOMEM;
- 	link = kmalloc(MAXPATHLEN+1, GFP_KERNEL);
- 	if (!link)
- 		goto out_err;
- 
--	error = xfs_readlink(XFS_I(dentry->d_inode), link);
--	if (unlikely(error))
-+	error = -EIO;
-+	if (XFS_FORCED_SHUTDOWN(ip->i_mount)) 
- 		goto out_kfree;
- 
-+	xfs_ilock(ip, XFS_ILOCK_SHARED);
-+	pathlen = ip->i_d.di_size;
-+	if (pathlen) {
-+		memcpy(link, ip->i_df.if_u1.if_data, pathlen);
-+		link[pathlen] = '\0';
-+	}
-+	xfs_iunlock(ip, XFS_ILOCK_SHARED);
-+
- 	nd_set_link(nd, link);
- 	return NULL;
- 
-@@ -1179,7 +1190,20 @@ static const struct inode_operations xfs_dir_ci_inode_operations = {
- 
- static const struct inode_operations xfs_symlink_inode_operations = {
- 	.readlink		= generic_readlink,
--	.follow_link		= xfs_vn_follow_link,
-+	.follow_link		= page_follow_link_light,
-+	.put_link		= page_put_link,
-+	.getattr		= xfs_vn_getattr,
-+	.setattr		= xfs_vn_setattr,
-+	.setxattr		= generic_setxattr,
-+	.getxattr		= generic_getxattr,
-+	.removexattr		= generic_removexattr,
-+	.listxattr		= xfs_vn_listxattr,
-+	.update_time		= xfs_vn_update_time,
-+};
-+
-+static const struct inode_operations xfs_inline_symlink_inode_operations = {
-+	.readlink		= generic_readlink,
-+	.follow_link		= xfs_vn_follow_link_inline,
- 	.put_link		= kfree_put_link,
- 	.getattr		= xfs_vn_getattr,
- 	.setattr		= xfs_vn_setattr,
-@@ -1190,6 +1214,7 @@ static const struct inode_operations xfs_symlink_inode_operations = {
- 	.update_time		= xfs_vn_update_time,
- };
- 
-+
- STATIC void
- xfs_diflags_to_iflags(
- 	struct inode		*inode,
-@@ -1308,9 +1333,12 @@ xfs_setup_iops(
- 		inode->i_fop = &xfs_dir_file_operations;
- 		break;
- 	case S_IFLNK:
--		inode->i_op = &xfs_symlink_inode_operations;
--		if (!(ip->i_df.if_flags & XFS_IFINLINE))
-+		if (ip->i_df.if_flags & XFS_IFINLINE) {
-+			inode->i_op = &xfs_inline_symlink_inode_operations;
-+		} else {
- 			inode->i_mapping->a_ops = &xfs_address_space_operations;
-+			inode->i_op = &xfs_symlink_inode_operations;
-+		}
- 		break;
- 	default:
- 		inode->i_op = &xfs_inode_operations;
-diff --git a/fs/xfs/xfs_symlink.c b/fs/xfs/xfs_symlink.c
-index 7fa94dc..c1d7775 100644
---- a/fs/xfs/xfs_symlink.c
-+++ b/fs/xfs/xfs_symlink.c
-@@ -42,126 +42,6 @@
- #include "xfs_log.h"
- 
- /* ----- Kernel only functions below ----- */
--STATIC int
--xfs_readlink_bmap(
--	struct xfs_inode	*ip,
--	char			*link)
--{
--	struct xfs_mount	*mp = ip->i_mount;
--	struct xfs_bmbt_irec	mval[XFS_SYMLINK_MAPS];
--	struct xfs_buf		*bp;
--	xfs_daddr_t		d;
--	char			*cur_chunk;
--	int			pathlen = ip->i_d.di_size;
--	int			nmaps = XFS_SYMLINK_MAPS;
--	int			byte_cnt;
--	int			n;
--	int			error = 0;
--	int			fsblocks = 0;
--	int			offset;
+-	struct xfs_inode	*ip = XFS_I(dentry->d_inode);
+-	xfs_fsize_t		pathlen;
+-	char			*link;
+-	int			error = -ENOMEM;
 -
--	fsblocks = xfs_symlink_blocks(mp, pathlen);
--	error = xfs_bmapi_read(ip, 0, fsblocks, mval, &nmaps, 0);
--	if (error)
--		goto out;
+-	error = -ENOMEM;
+-	link = kmalloc(MAXPATHLEN+1, GFP_KERNEL);
+-	if (!link)
+-		goto out_err;
 -
--	offset = 0;
--	for (n = 0; n < nmaps; n++) {
--		d = XFS_FSB_TO_DADDR(mp, mval[n].br_startblock);
--		byte_cnt = XFS_FSB_TO_B(mp, mval[n].br_blockcount);
--
--		bp = xfs_buf_read(mp->m_ddev_targp, d, BTOBB(byte_cnt), 0,
--				  &xfs_symlink_buf_ops);
--		if (!bp)
--			return -ENOMEM;
--		error = bp->b_error;
--		if (error) {
--			xfs_buf_ioerror_alert(bp, __func__);
--			xfs_buf_relse(bp);
--
--			/* bad CRC means corrupted metadata */
--			if (error == -EFSBADCRC)
--				error = -EFSCORRUPTED;
--			goto out;
--		}
--		byte_cnt = XFS_SYMLINK_BUF_SPACE(mp, byte_cnt);
--		if (pathlen < byte_cnt)
--			byte_cnt = pathlen;
--
--		cur_chunk = bp->b_addr;
--		if (xfs_sb_version_hascrc(&mp->m_sb)) {
--			if (!xfs_symlink_hdr_ok(ip->i_ino, offset,
--							byte_cnt, bp)) {
--				error = -EFSCORRUPTED;
--				xfs_alert(mp,
--"symlink header does not match required off/len/owner (0x%x/Ox%x,0x%llx)",
--					offset, byte_cnt, ip->i_ino);
--				xfs_buf_relse(bp);
--				goto out;
--
--			}
--
--			cur_chunk += sizeof(struct xfs_dsymlink_hdr);
--		}
--
--		memcpy(link + offset, bp->b_addr, byte_cnt);
--
--		pathlen -= byte_cnt;
--		offset += byte_cnt;
--
--		xfs_buf_relse(bp);
--	}
--	ASSERT(pathlen == 0);
--
--	link[ip->i_d.di_size] = '\0';
--	error = 0;
--
-- out:
--	return error;
--}
--
--int
--xfs_readlink(
--	struct xfs_inode *ip,
--	char		*link)
--{
--	struct xfs_mount *mp = ip->i_mount;
--	xfs_fsize_t	pathlen;
--	int		error = 0;
--
--	trace_xfs_readlink(ip);
--
--	if (XFS_FORCED_SHUTDOWN(mp))
--		return -EIO;
+-	error = -EIO;
+-	if (XFS_FORCED_SHUTDOWN(ip->i_mount)) 
+-		goto out_kfree;
 -
 -	xfs_ilock(ip, XFS_ILOCK_SHARED);
--
 -	pathlen = ip->i_d.di_size;
--	if (!pathlen)
--		goto out;
--
--	if (pathlen < 0 || pathlen > MAXPATHLEN) {
--		xfs_alert(mp, "%s: inode (%llu) bad symlink length (%lld)",
--			 __func__, (unsigned long long) ip->i_ino,
--			 (long long) pathlen);
--		ASSERT(0);
--		error = -EFSCORRUPTED;
--		goto out;
--	}
--
--
--	if (ip->i_df.if_flags & XFS_IFINLINE) {
+-	if (pathlen) {
 -		memcpy(link, ip->i_df.if_u1.if_data, pathlen);
 -		link[pathlen] = '\0';
--	} else {
--		error = xfs_readlink_bmap(ip, link);
 -	}
--
-- out:
 -	xfs_iunlock(ip, XFS_ILOCK_SHARED);
--	return error;
--}
 -
- int
- xfs_symlink(
- 	struct xfs_inode	*dp,
-diff --git a/fs/xfs/xfs_symlink.h b/fs/xfs/xfs_symlink.h
-index e75245d..d6816af 100644
---- a/fs/xfs/xfs_symlink.h
-+++ b/fs/xfs/xfs_symlink.h
-@@ -21,7 +21,6 @@
+-	nd_set_link(nd, link);
+-	return NULL;
+-
+- out_kfree:
+-	kfree(link);
+- out_err:
+-	nd_set_link(nd, ERR_PTR(error));
++	nd_set_link(nd, XFS_I(dentry->d_inode)->i_df.if_u1.if_data);
+ 	return NULL;
+ }
  
- int xfs_symlink(struct xfs_inode *dp, struct xfs_name *link_name,
- 		const char *target_path, umode_t mode, struct xfs_inode **ipp);
--int xfs_readlink(struct xfs_inode *ip, char *link);
- int xfs_inactive_symlink(struct xfs_inode *ip);
+@@ -1204,7 +1171,6 @@ static const struct inode_operations xfs_symlink_inode_operations = {
+ static const struct inode_operations xfs_inline_symlink_inode_operations = {
+ 	.readlink		= generic_readlink,
+ 	.follow_link		= xfs_vn_follow_link_inline,
+-	.put_link		= kfree_put_link,
+ 	.getattr		= xfs_vn_getattr,
+ 	.setattr		= xfs_vn_setattr,
+ 	.setxattr		= generic_setxattr,
+diff --git a/fs/xfs/xfs_symlink.c b/fs/xfs/xfs_symlink.c
+index c1d7775..d6b59f6 100644
+--- a/fs/xfs/xfs_symlink.c
++++ b/fs/xfs/xfs_symlink.c
+@@ -182,12 +182,13 @@ xfs_symlink(
  
- #endif /* __XFS_SYMLINK_H */
-diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-index 615781b..6aaff5c 100644
---- a/fs/xfs/xfs_trace.h
-+++ b/fs/xfs/xfs_trace.h
-@@ -658,7 +658,6 @@ DEFINE_INODE_EVENT(xfs_iget_miss);
- 
- DEFINE_INODE_EVENT(xfs_getattr);
- DEFINE_INODE_EVENT(xfs_setattr);
--DEFINE_INODE_EVENT(xfs_readlink);
- DEFINE_INODE_EVENT(xfs_inactive_symlink);
- DEFINE_INODE_EVENT(xfs_alloc_file_space);
- DEFINE_INODE_EVENT(xfs_free_file_space);
+ 	if (resblks)
+ 		resblks -= XFS_IALLOC_SPACE_RES(mp);
++
+ 	/*
+ 	 * If the symlink will fit into the inode, write it inline.
+ 	 */
+ 	if (pathlen <= XFS_IFORK_DSIZE(ip)) {
+-		xfs_init_local_fork(ip, XFS_DATA_FORK, target_path, pathlen);
+-
++		xfs_init_local_fork(ip, XFS_DATA_FORK, target_path, pathlen,
++				true);
+ 		ip->i_d.di_size = pathlen;
+ 		ip->i_d.di_format = XFS_DINODE_FMT_LOCAL;
+ 		xfs_trans_log_inode(tp, ip, XFS_ILOG_DDATA | XFS_ILOG_CORE);
 -- 
 1.9.1
 
