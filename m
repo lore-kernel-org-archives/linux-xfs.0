@@ -1,26 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 814187F50
-	for <xfs@oss.sgi.com>; Fri, 24 Apr 2015 06:57:53 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 00BEEAC004
-	for <xfs@oss.sgi.com>; Fri, 24 Apr 2015 04:57:49 -0700 (PDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id F32F97F50
+	for <xfs@oss.sgi.com>; Fri, 24 Apr 2015 09:15:03 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id B6F2C304053
+	for <xfs@oss.sgi.com>; Fri, 24 Apr 2015 07:15:03 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id PchSD7n7ZLQvhKHL (version=TLSv1
+	cuda.sgi.com with ESMTP id pDByi1yVozNxoJBQ (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 24 Apr 2015 04:57:48 -0700 (PDT)
-Date: Fri, 24 Apr 2015 07:57:33 -0400
+	Fri, 24 Apr 2015 07:14:59 -0700 (PDT)
+Received: from int-mx11.intmail.prod.int.phx2.redhat.com
+	(int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
+	by mx1.redhat.com (Postfix) with ESMTPS id D02118EAF3
+	for <xfs@oss.sgi.com>; Fri, 24 Apr 2015 14:14:58 +0000 (UTC)
+Received: from bfoster.bfoster (dhcp-41-237.bos.redhat.com [10.18.41.237])
+	by int-mx11.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id t3OEEwFb026292
+	for <xfs@oss.sgi.com>; Fri, 24 Apr 2015 10:14:58 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH] xfs: call xfs_idestroy_fork() in xfs_ilock() critical
-	section
-Message-ID: <20150424115733.GA4177@laptop.bfoster>
-References: <1429724021-7675-1-git-send-email-Waiman.Long@hp.com>
-	<20150422231758.GQ21261@dastard>
-	<20150423122149.GA13131@bfoster.bfoster>
-	<20150423220823.GJ15810@dastard>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20150423220823.GJ15810@dastard>
+Subject: [PATCH v3] xfs: always log the inode on unwritten extent conversion
+Date: Fri, 24 Apr 2015 10:14:57 -0400
+Message-Id: <1429884897-28015-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,143 +29,101 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Waiman Long <Waiman.Long@hp.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Fri, Apr 24, 2015 at 08:08:23AM +1000, Dave Chinner wrote:
-> On Thu, Apr 23, 2015 at 08:21:50AM -0400, Brian Foster wrote:
-> > On Thu, Apr 23, 2015 at 09:17:58AM +1000, Dave Chinner wrote:
-> > > @@ -410,11 +418,12 @@ xfs_attr_inactive(xfs_inode_t *dp)
-> > >  	 */
-> > >  	trans = xfs_trans_alloc(mp, XFS_TRANS_ATTRINVAL);
-> > >  	error = xfs_trans_reserve(trans, &M_RES(mp)->tr_attrinval, 0, 0);
-> > > -	if (error) {
-> > > -		xfs_trans_cancel(trans, 0);
-> > > -		return error;
-> > > -	}
-> > > -	xfs_ilock(dp, XFS_ILOCK_EXCL);
-> > > +	if (error)
-> > > +		goto out_cancel;
-> > > +
-> > 
-> > The error path expects a locked inode, but it isn't here.
-> 
-> Right, xfs/181 tripped that. I've fixed it in my current version ;)
-> 
-> > 
-> > > +	lock_mode = XFS_ILOCK_EXCL;
-> > > +	cancel_flags = XFS_TRANS_RELEASE_LOG_RES | XFS_TRANS_ABORT;
-> > > +	xfs_ilock(dp, lock_mode);
-> > >  
-> > >  	/*
-> > >  	 * No need to make quota reservations here. We expect to release some
-> > > @@ -423,28 +432,36 @@ xfs_attr_inactive(xfs_inode_t *dp)
-> > >  	xfs_trans_ijoin(trans, dp, 0);
-> > >  
-> > >  	/*
-> > > -	 * Decide on what work routines to call based on the inode size.
-> > > +	 * It's unlikely we've raced with an attribute fork creation, but check
-> > > +	 * anyway just in case.
-> > >  	 */
-> > > -	if (!xfs_inode_hasattr(dp) ||
-> > > -	    dp->i_d.di_aformat == XFS_DINODE_FMT_LOCAL) {
-> > > -		error = 0;
-> > > -		goto out;
-> > > +	if (!XFS_IFORK_Q(dp))
-> > > +		goto out_cancel;
-> > 
-> > What about attribute fork creation would cause di_forkoff == 0 if that
-> > wasn't the case above? Do you mean to say a potential race with
-> > attribute fork destruction?
-> 
-> atrtibute fork creation will never leave di_forkoff == 0. See
-> xfs_attr_shortform_bytesfit() as a guideline for the min/max fork
-> offset at attribute fork creation time.
-> 
-> The race I'm talking about is the fact we check for an attr fork,
-> then drop the lock, do the trans reserve and then grab the lock
-> again. The inode could have changed in that time, so we need to
-> check again. It's extremely unlikely that the inode has changed due
-> to the fact it is in the ->evict path and can't be referenced by the
-> VFS again until it's in a reclaimable state. Hence it is only
-> internal filesystem stuff that could modify it, which I don't think
-> can happen. So, leave the check, mark the race as unlikely to occur.
-> 
+The fsync() requirements for crash consistency on XFS are to flush file
+data and force any in-core inode updates to the log. We currently check
+whether the inode is pinned to identify whether the log needs to be
+forced, since a non-zero pin count generally represents an inode that
+has transactions awaiting a flush to the on-disk log.
 
-The check seems fine to me. I'm referring to the comment above: "It's
-unlikely we've raced with an attribute fork creation, ..." 
+This is not sufficient in all cases, however. Reports of xfstests test
+generic/311 failures on ppc64/s390x hosts have identified failures to
+fsync outstanding inode modifications due to the inode not being pinned
+at the time of the fsync. This occurs because certain bmap updates can
+complete by logging bmapbt buffers but without ever dirtying (and thus
+pinning) the core inode. The following is a specific incarnation of this
+problem:
 
-> > > +	/* invalidate and truncate the attribute fork extents */
-> > > +	if (dp->i_d.di_aformat != XFS_DINODE_FMT_LOCAL) {
-> > > +		error = xfs_attr3_root_inactive(&trans, dp);
-> > > +		if (error)
-> > > +			goto out_cancel;
-> > > +
-> > > +		error = xfs_itruncate_extents(&trans, dp, XFS_ATTR_FORK, 0);
-> > > +		if (error)
-> > > +			goto out_cancel;
-> > >  	}
-> > > -	error = xfs_attr3_root_inactive(&trans, dp);
-> > > -	if (error)
-> > > -		goto out;
-> > >  
-> > > -	error = xfs_itruncate_extents(&trans, dp, XFS_ATTR_FORK, 0);
-> > > -	if (error)
-> > > -		goto out;
-> > > +	/* Reset the attribute fork - this also destroys the in-core fork */
-> > > +	xfs_attr_fork_reset(dp, trans);
-> > >  
-> > >  	error = xfs_trans_commit(trans, XFS_TRANS_RELEASE_LOG_RES);
-> > > -	xfs_iunlock(dp, XFS_ILOCK_EXCL);
-> > > -
-> > > +	xfs_iunlock(dp, lock_mode);
-> > >  	return error;
-> > >  
-> > > -out:
-> > > -	xfs_trans_cancel(trans, XFS_TRANS_RELEASE_LOG_RES|XFS_TRANS_ABORT);
-> > > -	xfs_iunlock(dp, XFS_ILOCK_EXCL);
-> > > +out_cancel:
-> > > +	xfs_trans_cancel(trans, cancel_flags);
-> > > +out_destroy_fork:
-> > > +	/* kill the in-core attr fork before we drop the inode lock */
-> > > +	if (dp->i_afp)
-> > > +		xfs_idestroy_fork(dp, XFS_ATTR_FORK);
-> > > +	xfs_iunlock(dp, lock_mode);
-> > 
-> > I wonder if a warning or some kind of notification is appropriate here.
-> > If we get to this point, we're removing an inode potentially without
-> > having freed attr fork blocks and thus leaving them permanently
-> > unreferenced, yes?
-> 
-> We end up leaving the inode on the unlinked list because we abort
-> the inactivation on error. The in-core inode still gets reclaimed
-> properly, but it's now up to log recovery to re-run inactivation to
-> try to free the inode or xfs_repair to cleanit up.  Either way, it's
-> safe just to leave the inode where it is on the unlinked list - it's
-> free and not getting in the way, so IMO warnings at this point don't
-> serve any useful purpose...
-> 
+$ mount $dev /mnt -o noatime,nobarrier
+$ for i in $(seq 0 2 31); do \
+        xfs_io -f -c "falloc $((i * 32768)) 32k" -c fsync /mnt/file; \
+	done
+$ xfs_io -c "pwrite -S 0 80k 16k" -c fsync -c "pwrite 76k 4k" -c fsync /mnt/file; \
+	hexdump /mnt/file; \
+	./xfstests-dev/src/godown /mnt
+...
+0000000 0000 0000 0000 0000 0000 0000 0000 0000
+*
+0013000 cdcd cdcd cdcd cdcd cdcd cdcd cdcd cdcd
+*
+0014000 0000 0000 0000 0000 0000 0000 0000 0000
+*
+00f8000
+$ umount /mnt; mount ...
+$ hexdump /mnt/file
+0000000 0000 0000 0000 0000 0000 0000 0000 0000
+*
+00f8000
 
-Ok, so the inode is actually not yet freed on-disk in that scenario.
-Sounds reasonable.
+In short, the unwritten extent conversion for the last write is lost
+despite the fact that an fsync executed before the filesystem was
+shutdown. Note that this is impossible to reproduce on v5 supers due to
+unconditional time callbacks for di_changecount and highly difficult to
+reproduce on CONFIG_HZ=1000 kernels due to those same callbacks
+frequently updating cmtime prior to the bmap update. CONFIG_HZ=100
+reduces timer granularity enough to increase the odds that time updates
+are skipped and allows this to reproduce within a handful of attempts.
 
-Brian
+To deal with this problem, unconditionally log the core in the unwritten
+extent conversion path. Fix up logflags after the extent conversion to
+keep the extent update code consistent with the other extent update
+helpers. This fixup is not necessary for the other (hole, delay) extent
+helpers because they execute in the block allocation codepath, which
+already logs the inode for other reasons (e.g., for di_nblocks).
 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+---
+
+v3:
+- Apply XFS_ILOG_CORE unconditionally rather than only in the unchanged
+  case.
+v2: http://oss.sgi.com/pipermail/xfs/2015-April/041486.html
+- Log inode unconditionally on unwritten extent conversion and retain
+  the fsync pincount check.
+v1: http://oss.sgi.com/pipermail/xfs/2015-April/041468.html
+
+ fs/xfs/libxfs/xfs_bmap.c | 10 +++++++++-
+ 1 file changed, 9 insertions(+), 1 deletion(-)
+
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index aeffeaa..68e9e23 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -4417,7 +4417,15 @@ xfs_bmapi_convert_unwritten(
+ 	error = xfs_bmap_add_extent_unwritten_real(bma->tp, bma->ip, &bma->idx,
+ 			&bma->cur, mval, bma->firstblock, bma->flist,
+ 			&tmp_logflags);
+-	bma->logflags |= tmp_logflags;
++	/*
++	 * Log the inode core unconditionally in the unwritten extent conversion
++	 * path because the conversion might not have done so (e.g., if the
++	 * extent count hasn't changed). We need to make sure the inode is dirty
++	 * in the transaction for the sake of fsync(), even if nothing has
++	 * changed, because fsync() will not force the log for this transaction
++	 * unless it sees the inode pinned.
++	 */
++	bma->logflags |= tmp_logflags | XFS_ILOG_CORE;
+ 	if (error)
+ 		return error;
+ 
+-- 
+1.9.3
 
 _______________________________________________
 xfs mailing list
