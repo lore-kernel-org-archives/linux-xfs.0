@@ -1,21 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id A8DBA7F37
-	for <xfs@oss.sgi.com>; Tue, 28 Apr 2015 11:56:41 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 44B3DAC001
-	for <xfs@oss.sgi.com>; Tue, 28 Apr 2015 09:56:38 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id aPIU1c200OBIQZ9s (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 28 Apr 2015 09:56:37 -0700 (PDT)
-Date: Wed, 29 Apr 2015 00:56:34 +0800
-From: Eryu Guan <eguan@redhat.com>
-Subject: generic/204 failure due to e88b64e xfs: use generic percpu counters
-	for free inode counter
-Message-ID: <20150428165633.GI17534@dhcp-13-216.nay.redhat.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 1E8A37F37
+	for <xfs@oss.sgi.com>; Tue, 28 Apr 2015 14:30:48 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 0D1488F8065
+	for <xfs@oss.sgi.com>; Tue, 28 Apr 2015 12:30:44 -0700 (PDT)
+Received: from mail-ie0-f170.google.com (mail-ie0-f170.google.com
+	[209.85.223.170]) by cuda.sgi.com with ESMTP id
+	FM4makYhbiA072TT (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 28 Apr 2015 12:30:43 -0700 (PDT)
+Received: by iebrs15 with SMTP id rs15so26595113ieb.3
+	for <xfs@oss.sgi.com>; Tue, 28 Apr 2015 12:30:42 -0700 (PDT)
+Received: from [192.168.1.171] (108-224-191-17.lightspeed.livnmi.sbcglobal.net.
+	[108.224.191.17])
+	by mx.google.com with ESMTPSA id o2sm7785228igr.9.2015.04.28.12.30.41
+	for <xfs@oss.sgi.com>
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+	Tue, 28 Apr 2015 12:30:41 -0700 (PDT)
+Message-ID: <553FDFE0.7050800@gmail.com>
+Date: Tue, 28 Apr 2015 15:30:40 -0400
+From: Joe Landman <joe.landman@gmail.com>
 MIME-Version: 1.0
-Content-Disposition: inline
+Subject: question: are the metadata crc elements ready for general use?
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,49 +31,33 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
-Cc: xuw2015@gmail.com
 
-Hi,
+I ask as I see this in the 3.2.2 mkfs.xfs command.  The default is to 
+leave them off from what I can see on an mkfs.xfs.
 
-I was testing v4.1-rc1 kernel and hit generic/204 failure on 512b block
-size v4 xfs and 1k block size v5 xfs. And this seems to be a regression
-since v4.0
+root@unison:~/xfsprogs# mkfs.xfs /dev/sda
+meta-data=/dev/sda               isize=256    agcount=55, 
+agsize=268435455 blks
+          =                       sectsz=512   attr=2, projid32bit=1
+          =                       crc=0        finobt=0
+data     =                       bsize=4096   blocks=14627632640, imaxpct=1
+          =                       sunit=0      swidth=0 blks
+naming   =version 2              bsize=4096   ascii-ci=0 ftype=0
+log      =internal log           bsize=4096   blocks=521728, version=2
+          =                       sectsz=512   sunit=0 blks, lazy-count=1
+realtime =none                   extsz=4096   blocks=0, rtextents=0
 
-[root@dhcp-66-86-11 xfstests]# MKFS_OPTIONS="-b size=512" ./check generic/204
-FSTYP         -- xfs (non-debug)
-PLATFORM      -- Linux/x86_64 dhcp-66-86-11 4.0.0-rc1+
-MKFS_OPTIONS  -- -f -b size=512 /dev/sda6
-MOUNT_OPTIONS -- -o context=system_u:object_r:nfs_t:s0 /dev/sda6 /mnt/testarea/scratch
+But they are there, and I am curious as to the developers/users 
+thoughts.  Will they break things (nfs, CIFS/samba)?
 
-generic/204 8s ... - output mismatch (see /root/xfstests/results//generic/204.out.bad)
-    --- tests/generic/204.out   2014-12-11 00:28:13.409000000 +0800
-    +++ /root/xfstests/results//generic/204.out.bad     2015-04-29 00:36:43.232000000 +0800
-    @@ -1,2 +1,37664 @@
-     QA output created by 204
-    +./tests/generic/204: line 83: /mnt/testarea/scratch/108670: No space left on device
-    +./tests/generic/204: line 84: /mnt/testarea/scratch/108670: No space left on device
-    ...
+Thanks!
 
-I bisected to this commit
-
-e88b64e xfs: use generic percpu counters for free inode counter
-
-Seems like the same issue this patch tries to fix, but test still fails
-after applying this patch.
-
-[PATCH v2] xfs: use percpu_counter_read_positive for mp->m_icount
-http://oss.sgi.com/archives/xfs/2015-04/msg00195.html
-
-Not sure if it's the expected behavior/a known issue, report it to the
-list anyway.
-
-Thanks,
-Eryu
+Joe
 
 _______________________________________________
 xfs mailing list
