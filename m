@@ -1,22 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 54D6A7F59
-	for <xfs@oss.sgi.com>; Mon, 27 Apr 2015 18:48:46 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 465DC304043
-	for <xfs@oss.sgi.com>; Mon, 27 Apr 2015 16:48:46 -0700 (PDT)
-Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
-	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	gfU8AazsgOeOMUqY for <xfs@oss.sgi.com>;
-	Mon, 27 Apr 2015 16:48:41 -0700 (PDT)
-Date: Tue, 28 Apr 2015 09:48:39 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs: log record crc mismatch test
-Message-ID: <20150427234839.GU21261@dastard>
-References: <553E5505.4070804@oracle.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id CF18D7F5D
+	for <xfs@oss.sgi.com>; Mon, 27 Apr 2015 19:52:49 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 944608F8035
+	for <xfs@oss.sgi.com>; Mon, 27 Apr 2015 17:52:45 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id UcHqZIgWZPfYdy9r for <xfs@oss.sgi.com>;
+	Mon, 27 Apr 2015 17:52:40 -0700 (PDT)
+Message-ID: <553ED9D8.4050106@sandeen.net>
+Date: Mon, 27 Apr 2015 19:52:40 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <553E5505.4070804@oracle.com>
+Subject: Re: Proposal/RFC: new metadata-specific UUID for V5 supers
+References: <553EB3D1.10602@sandeen.net> <20150427233754.GT21261@dastard>
+In-Reply-To: <20150427233754.GT21261@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,94 +27,87 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Alexander Tsvetkov <alexander.tsvetkov@oracle.com>
-Cc: fstests@vger.kernel.org, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-On Mon, Apr 27, 2015 at 06:25:57PM +0300, Alexander Tsvetkov wrote:
-> Added new test case for simulation of V5 filesystem
-> log crc record corruption using of external log.
+On 4/27/15 6:37 PM, Dave Chinner wrote:
+> On Mon, Apr 27, 2015 at 05:10:25PM -0500, Eric Sandeen wrote:
+>> Wanted to float this & see what people think...
+>>
+>> Today, it's impossible (FSVO impossible) to change a V5 filesystem's
+>> UUID, because that UUID is stamped into every bit of metadata.  If
+>> not impossible, it's unimplemented and any implementation would be
+>> terribly inefficient.
+>>
+>> With 20/20 hindsight, an sb_meta_uuid field, separate from the sb_uuid
+>> field that is userspace-visible, would have avoided this problem.
 > 
-> Signed-off-by: Alexander Tsvetkov <alexander.tsvetkov@oracle.com>
-
-Hi Alexander,
-
-In future, can you please post xfstests patches to
-fstests@vger.kernel.org? I've cc'd that list on my reply.
-
-> ---
->  tests/xfs/005     | 28 ++++++++++++++++++++++++++--
->  tests/xfs/005.out |  3 +++
->  2 files changed, 29 insertions(+), 2 deletions(-)
+> Actually, it was done like this intentionally.
 > 
-> diff --git a/tests/xfs/005 b/tests/xfs/005
-> index fade4bb..ba0dcbb 100755
-> --- a/tests/xfs/005
-> +++ b/tests/xfs/005
-> @@ -1,7 +1,7 @@
->  #! /bin/bash
->  # FS QA Test No. 005
->  #
-> -# Test that a bad crc on a primary V5 superblock will fail the mount
-> +# Test that a bad crc on a V5 filesystem will fail the mount
->  #
->  # 10e6e65 xfs: be more forgiving of a v4 secondary sb w/ junk in v5 fields
->  # inadvertently caused primary SB CRC failures to not error out, this
-> @@ -55,10 +55,12 @@ _supported_os Linux
+> AFAIA, the only time you need to change the UUID is if you are doing
+> clones or snapshots of the filesystem. If you are doing a clone,
+> then we are reading and writing every piece of metadata anyway, so
+> we /could/ add support for modifying the UUIDs to the cloning
+> program during the write. e.g. xfs_copy already does this UUID
+> modification for non-crc filesystems, so we could modify it to reuse
+> the db/metadump metadata walk to rewrite the UUIDs and recalculate
+> the CRCs once the copy has been done. That's the clone problem
+> solved.
+
+Fair enough.
+
+> If we have a snapshot, then changing the UUID means a COW of every
+> single metadata block as we change them, which will cause all sorts
+> of fragmentation and duplication problems in the underlying snapshot
+> device due to the random 4k distribution of the metadata throughout
+> the filesystem. So we take even more of a penalty there, as it also
+> affects runtime performance and space usage of the underlying
+> device. Hence I'm not sure we actually want to change behaviour
+> here.
+
+This I'm not following.  Changing UUID by rewriting every piece
+would be painful in this case, yes.  I guess we're in violent agreement
+on this part?  (that changing the UUID of a RW snapshot would be nuts).
+
+>> We can certainly add it, but it'd need to be an incompat change, because
+>> old kernels would see this as catastrophic mismatching of every bit
+>> of metadata on a V5 superblock filesystem.
+>>
+>> Other than that little problem (o_O) it'd be trivial to implement.
 > 
->  _require_scratch_nocheck
->  _require_xfs_mkfs_crc
-> +_require_logdev
-> +logsize=2560
+> So what you are proposing is a fixed UUID for metadata, and a
+> variable UUID for userspace presentation (i.e. blkid) and mount
+> checking? Doesn't that defeat the purpose of the UUID which is to
+> identify the filesystem the metadata originated from? i.e. don't we
+> still need to change the internal metadata UUID if we want to retain
+> the original purpose of the UUID stamping in the metadata?
 
-As eric pointed out, this fundamentally changes the context of the
-test, and so should be written as a new test rather than a change to
-an existing test.
+No, I don't think so.  sb_uuid could be changed just like it always ever
+could, for any reason one might wish to change it; it'd be relatively
+trivial. sb_meta_uuid would be set at mkfs time, and would never change;
+it's the matching, immutable metadata consistency number.
 
-Also, you don't need an external log device to do this - you can use
-xfs_db to zero parts of the internal log just fine.
+sb_uuid is for external filesystem identification; sb_meta_uuid is for
+internal consistency.
 
-$ sudo mkfs.xfs -f -m crc=1,finobt=1 /dev/ram0
-meta-data=/dev/ram0              isize=512    agcount=4, agsize=250000 blks
-         =                       sectsz=4096  attr=2, projid32bit=1
-         =                       crc=1        finobt=1
-data     =                       bsize=4096   blocks=1000000, imaxpct=25
-         =                       sunit=0      swidth=0 blks
-naming   =version 2              bsize=4096   ascii-ci=0 ftype=1
-log      =internal log           bsize=4096   blocks=2560, version=2
-         =                       sectsz=4096  sunit=1 blks, lazy-count=1
-realtime =none                   extsz=4096   blocks=0, rtextents=0
-$ sudo xfs_db -x /dev/ram0
-xfs_db> sb 0
-xfs_db> p logstart
-logstart = 524296
-xfs_db> a logstart
-xfs_db> type data
-xfs_db> write fill 0xa5a5a5a5 0 4096
-xfs_db> p
-000: a5a5a5a5 a5a5a5a5 a5a5a5a5 a5a5a5a5 a5a5a5a5 a5a5a5a5 a5a5a5a5 a5a5a5a5
-020: a5a5a5a5 a5a5a5a5 a5a5a5a5 a5a5a5a5 a5a5a5a5 a5a5a5a5 a5a5a5a5 a5a5a5a5
-.....
-fe0: a5a5a5a5 a5a5a5a5 a5a5a5a5 a5a5a5a5 a5a5a5a5 a5a5a5a5 a5a5a5a5 a5a5a5a5
-xfs_db> q
-$ sudo mount /dev/ram0 /mnt/test
-[346491.179086] XFS (ram0): Mounting V5 Filesystem
-[346491.180844] XFS (ram0): Log inconsistent or not a log (last==0, first!=1)
-[346491.182946] XFS (ram0): empty log check failed
-[346491.184403] XFS (ram0): log mount/recovery failed: error -22
-[346491.186276] XFS (ram0): log mount failed
-.....
+If we got a metadata uuid mismatch from xfs_repair, xfs_db (or xfs_admin)
+could easily tell us what the sb_meta_uuid of any given filesystem might
+be, and we wouldn't care about the external identifier UUID for this purpose.
 
-Note that if you have an external log device, logstart will be zero,
-and you'll need to use xfs_io to overwrite it so you'll need to
-explicitly test for that case before calling xfs_db to modify the
-log.
+>> Thoughts?
+> 
+> Can you describe the motivation for needing to change UUIDs? i.e.
+> what's the use case that has brought this up? I'd like to know if
+> there is a problem other than writable snapshots being required to
+> be mounted "-o nouuid", which we already require for read-only
+> snapshots (i.e "-o ro,norecovery,nouuid")?
 
-Cheers,
+Well, it's just the loss of ability to change UUID, which is something
+People Used To Do(tm), and now can't.  It does come up.  Honestly if it
+had been done from day 0, it'd be a no-brainer I think.  Doing it now,
+with an incompat flag, might not be a reasonable tradeoff.
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+-Eric
 
 _______________________________________________
 xfs mailing list
