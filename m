@@ -1,18 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 8D69A29DFE
-	for <xfs@oss.sgi.com>; Sun, 19 Apr 2015 21:24:24 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 507398F8035
-	for <xfs@oss.sgi.com>; Sun, 19 Apr 2015 19:24:24 -0700 (PDT)
-Received: from ozlabs.org (ozlabs.org [103.22.144.67]) by cuda.sgi.com with
-	ESMTP id af0CB0LSJEVIYTFL (version=TLSv1 cipher=AES256-SHA
-	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Sun, 19 Apr 2015 19:24:20 -0700 (PDT)
-Date: Mon, 20 Apr 2015 12:24:12 +1000
-From: Stephen Rothwell <sfr@canb.auug.org.au>
-Subject: linux-next: manual merge of the xfs tree with Linus' tree
-Message-ID: <20150420122412.440d6e66@canb.auug.org.au>
+	by oss.sgi.com (Postfix) with ESMTP id C69307F50
+	for <xfs@oss.sgi.com>; Tue, 28 Apr 2015 06:09:13 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id A78228F80BA
+	for <xfs@oss.sgi.com>; Tue, 28 Apr 2015 04:09:10 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id Fd0gHlWYxBhrn78Q (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 28 Apr 2015 04:09:06 -0700 (PDT)
+Received: from int-mx13.intmail.prod.int.phx2.redhat.com
+	(int-mx13.intmail.prod.int.phx2.redhat.com [10.5.11.26])
+	by mx1.redhat.com (Postfix) with ESMTPS id 5648A8E778
+	for <xfs@oss.sgi.com>; Tue, 28 Apr 2015 11:09:06 +0000 (UTC)
+Received: from jtulak.brq.redhat.com ([10.34.27.15])
+	by int-mx13.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id t3SB95KV018403
+	for <xfs@oss.sgi.com>; Tue, 28 Apr 2015 07:09:05 -0400
+From: =?UTF-8?q?Jan=20=C5=A4ul=C3=A1k?= <jtulak@redhat.com>
+Subject: xfsprogs compile warnings: _BSD_SOURCE is deprecated in glibc 2.20.
+Date: Tue, 28 Apr 2015 13:09:04 +0200
+Message-Id: <1430219344-11662-1-git-send-email-jtulak@redhat.com>
 MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -22,231 +30,45 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============1127211615381003357=="
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Ben Myers <bpm@sgi.com>, David Chinner <david@fromorbit.com>, xfs@oss.sgi.com
-Cc: linux-next@vger.kernel.org, linux-kernel@vger.kernel.org, Al Viro <viro@zeniv.linux.org.uk>
+To: xfs@oss.sgi.com
 
---===============1127211615381003357==
-Content-Type: multipart/signed; micalg=pgp-sha256;
- boundary="Sig_/VhqFfrbFWi2G9aU7BNhXc_4"; protocol="application/pgp-signature"
-
---Sig_/VhqFfrbFWi2G9aU7BNhXc_4
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
-
-Hi all,
-
-Today's linux-next merge of the xfs tree got a conflict in
-fs/xfs/xfs_file.c between commits 99733fa372ea
-("xfs_file_aio_write_checks: switch to iocb/iov_iter") and 3309dd04cbcd
-("switch generic_write_checks() to iocb and iter") from Linus' tree and
-commits b9d59846f737 ("xfs: DIO write completion size updates race"),
-40c63fbc55a9 ("xfs: direct IO EOF zeroing needs to drain AIO") and
-0cefb29e6a63 ("xfs: using generic_file_direct_write() is unnecessary")
-from the xfs tree.
-
-I fixed it up (I have no idea if this is right - see below) and can
-carry the fix as necessary (no action is required).
-
---=20
-Cheers,
-Stephen Rothwell                    sfr@canb.auug.org.au
-
-diff --cc fs/xfs/xfs_file.c
-index 1f12ad0a8585,3a5d305e60c9..000000000000
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@@ -544,22 -545,21 +544,22 @@@ xfs_zero_eof
-   */
-  STATIC ssize_t
-  xfs_file_aio_write_checks(
- -	struct file		*file,
- -	loff_t			*pos,
- -	size_t			*count,
- +	struct kiocb		*iocb,
- +	struct iov_iter		*from,
-  	int			*iolock)
-  {
- +	struct file		*file =3D iocb->ki_filp;
-  	struct inode		*inode =3D file->f_mapping->host;
-  	struct xfs_inode	*ip =3D XFS_I(inode);
- -	int			error =3D 0;
- +	ssize_t			error =3D 0;
- +	size_t			count =3D iov_iter_count(from);
- =20
-  restart:
- -	error =3D generic_write_checks(file, pos, count, S_ISBLK(inode->i_mode));
- -	if (error)
- +	error =3D generic_write_checks(iocb, from);
- +	if (error <=3D 0)
-  		return error;
- =20
-- 	error =3D xfs_break_layouts(inode, iolock);
-+ 	error =3D xfs_break_layouts(inode, iolock, true);
-  	if (error)
-  		return error;
- =20
-@@@ -569,21 -569,41 +569,42 @@@
-  	 * write.  If zeroing is needed and we are currently holding the
-  	 * iolock shared, we need to update it to exclusive which implies
-  	 * having to redo all checks before.
-+ 	 *
-+ 	 * We need to serialise against EOF updates that occur in IO
-+ 	 * completions here. We want to make sure that nobody is changing the
-+ 	 * size while we do this check until we have placed an IO barrier (i.e.
-+ 	 * hold the XFS_IOLOCK_EXCL) that prevents new IO from being dispatched.
-+ 	 * The spinlock effectively forms a memory barrier once we have the
-+ 	 * XFS_IOLOCK_EXCL so we are guaranteed to see the latest EOF value
-+ 	 * and hence be able to correctly determine if we need to run zeroing.
-  	 */
-+ 	spin_lock(&ip->i_flags_lock);
- -	if (*pos > i_size_read(inode)) {
- +	if (iocb->ki_pos > i_size_read(inode)) {
-  		bool	zero =3D false;
- =20
-+ 		spin_unlock(&ip->i_flags_lock);
-  		if (*iolock =3D=3D XFS_IOLOCK_SHARED) {
-  			xfs_rw_iunlock(ip, *iolock);
-  			*iolock =3D XFS_IOLOCK_EXCL;
-  			xfs_rw_ilock(ip, *iolock);
- +			iov_iter_reexpand(from, count);
-+=20
-+ 			/*
-+ 			 * We now have an IO submission barrier in place, but
-+ 			 * AIO can do EOF updates during IO completion and hence
-+ 			 * we now need to wait for all of them to drain. Non-AIO
-+ 			 * DIO will have drained before we are given the
-+ 			 * XFS_IOLOCK_EXCL, and so for most cases this wait is a
-+ 			 * no-op.
-+ 			 */
-+ 			inode_dio_wait(inode);
-  			goto restart;
-  		}
- -		error =3D xfs_zero_eof(ip, *pos, i_size_read(inode), &zero);
- +		error =3D xfs_zero_eof(ip, iocb->ki_pos, i_size_read(inode), &zero);
-  		if (error)
-  			return error;
-- 	}
-+ 	} else
-+ 		spin_unlock(&ip->i_flags_lock);
- =20
-  	/*
-  	 * Updating the timestamps will grab the ilock again from
-@@@ -680,11 -702,11 +703,12 @@@ xfs_file_dio_aio_write
-  		xfs_rw_ilock(ip, iolock);
-  	}
- =20
- -	ret =3D xfs_file_aio_write_checks(file, &pos, &count, &iolock);
- +	ret =3D xfs_file_aio_write_checks(iocb, from, &iolock);
-  	if (ret)
-  		goto out;
- -	iov_iter_truncate(from, count);
- +	count =3D iov_iter_count(from);
- +	pos =3D iocb->ki_pos;
-+ 	end =3D pos + count - 1;
- =20
-  	if (mapping->nrpages) {
-  		ret =3D filemap_write_and_wait_range(VFS_I(ip)->i_mapping,
-@@@ -1385,8 -1449,59 +1449,57 @@@ xfs_file_llseek
-  	}
-  }
- =20
-+ /*
-+  * Locking for serialisation of IO during page faults. This results in a =
-lock
-+  * ordering of:
-+  *
-+  * mmap_sem (MM)
-+  *   i_mmap_lock (XFS - truncate serialisation)
-+  *     page_lock (MM)
-+  *       i_lock (XFS - extent map serialisation)
-+  */
-+ STATIC int
-+ xfs_filemap_fault(
-+ 	struct vm_area_struct	*vma,
-+ 	struct vm_fault		*vmf)
-+ {
-+ 	struct xfs_inode	*ip =3D XFS_I(vma->vm_file->f_mapping->host);
-+ 	int			error;
-+=20
-+ 	trace_xfs_filemap_fault(ip);
-+=20
-+ 	xfs_ilock(ip, XFS_MMAPLOCK_SHARED);
-+ 	error =3D filemap_fault(vma, vmf);
-+ 	xfs_iunlock(ip, XFS_MMAPLOCK_SHARED);
-+=20
-+ 	return error;
-+ }
-+=20
-+ /*
-+  * mmap()d file has taken write protection fault and is being made writab=
-le. We
-+  * can set the page state up correctly for a writable page, which means w=
-e can
-+  * do correct delalloc accounting (ENOSPC checking!) and unwritten extent
-+  * mapping.
-+  */
-+ STATIC int
-+ xfs_filemap_page_mkwrite(
-+ 	struct vm_area_struct	*vma,
-+ 	struct vm_fault		*vmf)
-+ {
-+ 	struct xfs_inode	*ip =3D XFS_I(vma->vm_file->f_mapping->host);
-+ 	int			error;
-+=20
-+ 	trace_xfs_filemap_page_mkwrite(ip);
-+=20
-+ 	xfs_ilock(ip, XFS_MMAPLOCK_SHARED);
-+ 	error =3D block_page_mkwrite(vma, vmf, xfs_get_blocks);
-+ 	xfs_iunlock(ip, XFS_MMAPLOCK_SHARED);
-+=20
-+ 	return error;
-+ }
-+=20
-  const struct file_operations xfs_file_operations =3D {
-  	.llseek		=3D xfs_file_llseek,
- -	.read		=3D new_sync_read,
- -	.write		=3D new_sync_write,
-  	.read_iter	=3D xfs_file_read_iter,
-  	.write_iter	=3D xfs_file_write_iter,
-  	.splice_read	=3D xfs_file_splice_read,
-
---Sig_/VhqFfrbFWi2G9aU7BNhXc_4
-Content-Type: application/pgp-signature
-Content-Description: OpenPGP digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQIcBAEBCAAGBQJVNGNQAAoJEMDTa8Ir7ZwV35oP/AreQVucITBQMJzLwAeFKrwA
-2CFGinFu6YA+O9sAJ0EegoNhjPfoyKVw3SKTCDstxDqRWNkk2YAaivqhErVuTc8r
-hyD4WKqSAWyqARODvsJCCX+lqpI8+/Midb80OYWHCyglIen93wRBAY8+L12jFNiW
-WSs+0VUp0aNWVTF7pgkBb+Snfp7LIOCdJktUifT16fLrOA0G57Sis8M0M0+Jcb7w
-acFG7e/AmSVH4jhcxppW4qz/te7kNIoZ2ihH+RNkU6PGeyhwHhsrZX9Xp6z4vMQm
-A4E447ro4mNNyrQziS3gc9E0AYmUqf/ZCqBCzA/mk2oO0+Np85E25MP8RTcuoFN0
-ow4ZXoYPEkAqXLc/naB1r0njWinC+oYmBus41uaz2hzTIGHOcu19UKA5y7gF7Lms
-LR1mk1MoW+B/3i5zVfdxfmpxbnQZaFoNTBezqedek1HJHb/nxGjGZe+7SJU4zgXy
-1keJDViIU35fceeuYwlAZYriYItSaSN3/B94uPz5JqKi6rqyh/F/U6YpSdNwo5+N
-IMrs16WYwREOFCdiYv8qrAANjUQTXx7Y8Y7hC4WSLTBa6EwoX3rkaLrihSipX545
-pS8jhb52od2hIRt0I9XWtJNXTo5ZmmHoZhQLfPPXZaxtPMRXdcswr6XkOMT4v5Lo
-aNI4sVHYuriCiAM2dkEK
-=4BXy
------END PGP SIGNATURE-----
-
---Sig_/VhqFfrbFWi2G9aU7BNhXc_4--
-
-
---===============1127211615381003357==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
-
---===============1127211615381003357==--
+SW4gZ2xpYmMgMi4yMCwgX0JTRF9TT1VSQ0UgYW5kIF9TVklEX1NPVVJDRSB3ZXJlIGRlcHJlY2F0
+ZWQgYW5kIHNob3VsZCBiZQpyZXBsYWNlZCB3aXRoIF9ERUZBVUxUX1NPVVJDRS4gQ3VycmVudGx5
+LCBjb21waWxpbmcgeGZzcHJvZ3Mgb24gYSBzeXN0ZW0gd2l0aApnbGliYyBpbiBzYWlkIG9yIG5l
+d2VyIHZlcnNpb24gKGxpa2UgY3VycmVudCBGZWRvcmEpIHByb2R1Y2VzIHRvbnMgb2Ygd2Fybmlu
+Z3MKbGlrZSB0aGlzIG9uZToKCkluIGZpbGUgaW5jbHVkZWQgZnJvbSAvdXNyL2luY2x1ZGUvc3Rk
+aW8uaDoyNzowLAogICAgICAgICAgICAgICAgICBmcm9tIC4uL2luY2x1ZGUveGZzL3BsYXRmb3Jt
+X2RlZnMuaDoyNCwKICAgICAgICAgICAgICAgICBmcm9tIC4uL2luY2x1ZGUveGZzL2xpYnhmcy5o
+OjI1LAogICAgICAgICAgICAgICAgIGZyb20geGZzX21rZnMuYzoxOToKL3Vzci9pbmNsdWRlL2Zl
+YXR1cmVzLmg6MTQ4OjM6IHdhcm5pbmc6ICN3YXJuaW5nICJfQlNEX1NPVVJDRSBhbmQgX1NWSURf
+U09VUkNFIGFyZSBkZXByZWNhdGVkLCB1c2UgX0RFRkFVTFRfU09VUkNFIiBbLVdjcHBdCiAjIHdh
+cm5pbmcgIl9CU0RfU09VUkNFIGFuZCBfU1ZJRF9TT1VSQ0UgYXJlIGRlcHJlY2F0ZWQsIHVzZSBf
+REVGQVVMVF9TT1VSQ0UiCgpJdCBjYW4gYmUgZml4ZWQgd2l0aCB0aGUgc2luZ2xlIGxpbmUgcGF0
+Y2ggYmVsbG93LCBidXQgSSdtIG5vdCBzdXJlIGlmIHdlIGNhbgpyZW1vdmUgdGhlIGRlcHJlY2F0
+ZWQgdmVyc2lvbiBiZWNhdXNlIG9mIGNvbXBhdGlibGl0eS4gR2xpYmMgMi4xOSwgd2hpY2ggYWRk
+ZWQKX0RFRkFVTFRfU09VUkNFLCB3YXMgcmVsZWFzZWQgaW4gMjAxNCwgYW5kIEknbSBub3Qgc3Vy
+ZSBob3cgbXVjaCBpdCBpcwpiYWNrcG9ydGVkIGFuZCBob3cgbXVjaCB4ZnNwcm9ncyBhcmUgYmFj
+a3BvcnRlZCB0b28uIFNvLCBkbyB3ZSBuZWVkIGEgYmV0dGVyCnBhdGNoIHRvIHRha2UgY2FyZSBv
+ZiB0aGlzIGFuZCBwcm92aWRlIGRpZmZlcmVuZCBfU09VUkNFIGJhc2VkIG9uIGdsaWJjCnZlcnNp
+b24sIG9yIHRoaXMgcGF0Y2ggaXMgZW5vdWdoPwoKU291cmNlOiBtYW4gNyBmZWF0dXJlX3Rlc3Rf
+bWFjcm9zCkhlcmUgaXMgYSBsaW5rIGluIGNhc2UgeW91IG9sZGVyIHZlcnNpb246Cmh0dHA6Ly9t
+YW43Lm9yZy9saW51eC9tYW4tcGFnZXMvbWFuNy9mZWF0dXJlX3Rlc3RfbWFjcm9zLjcuaHRtbAoK
+ClNpZ25lZC1vZmYtYnk6IEphbiDFpHVsw6FrIDxqdHVsYWtAcmVkaGF0LmNvbT4KLS0tCiBpbmNs
+dWRlL2J1aWxkZGVmcy5pbiB8IDIgKy0KIDEgZmlsZSBjaGFuZ2VkLCAxIGluc2VydGlvbigrKSwg
+MSBkZWxldGlvbigtKQoKZGlmZiAtLWdpdCBhL2luY2x1ZGUvYnVpbGRkZWZzLmluIGIvaW5jbHVk
+ZS9idWlsZGRlZnMuaW4KaW5kZXggOTQ0YmNmNi4uNmU2MDk3YSAxMDA2NDQKLS0tIGEvaW5jbHVk
+ZS9idWlsZGRlZnMuaW4KKysrIGIvaW5jbHVkZS9idWlsZGRlZnMuaW4KQEAgLTEwOSw3ICsxMDks
+NyBAQCBHQ0NGTEFHUyA9IC1mdW5zaWduZWQtY2hhciAtZm5vLXN0cmljdC1hbGlhc2luZyAtV2Fs
+bAogIwkgICAtV2JpdHdpc2UgLVduby10cmFuc3BhcmVudC11bmlvbiAtV25vLW9sZC1pbml0aWFs
+aXplciAtV25vLWRlY2wKIAogaWZlcSAoJChQS0dfUExBVEZPUk0pLGxpbnV4KQotUENGTEFHUyA9
+IC1EX0dOVV9TT1VSQ0UgLURfQlNEX1NPVVJDRSAtRF9YT1BFTl9TT1VSQ0U9NTAwIC1EX0ZJTEVf
+T0ZGU0VUX0JJVFM9NjQgJChHQ0NGTEFHUykKK1BDRkxBR1MgPSAtRF9HTlVfU09VUkNFIC1EX0RF
+RkFVTFRfU09VUkNFIC1EX1hPUEVOX1NPVVJDRT01MDAgLURfRklMRV9PRkZTRVRfQklUUz02NCAk
+KEdDQ0ZMQUdTKQogaWZlcSAoJChIQVZFX1VNT0RFX1QpLHllcykKIFBDRkxBR1MgKz0gLURIQVZF
+X1VNT0RFX1QKIGVuZGlmCi0tIAoyLjEuMAoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDov
+L29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCg==
