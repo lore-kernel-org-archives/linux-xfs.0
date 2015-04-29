@@ -1,23 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id E3D247F37
-	for <xfs@oss.sgi.com>; Tue, 28 Apr 2015 16:13:07 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 5C2FBAC001
-	for <xfs@oss.sgi.com>; Tue, 28 Apr 2015 14:13:04 -0700 (PDT)
-Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
-	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	v3qzrsr06T8RtU4f for <xfs@oss.sgi.com>;
-	Tue, 28 Apr 2015 14:13:01 -0700 (PDT)
-Date: Wed, 29 Apr 2015 07:12:59 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: xfsprogs compile warnings: _BSD_SOURCE is deprecated in glibc
-	2.20.
-Message-ID: <20150428211259.GZ21261@dastard>
-References: <1430219344-11662-1-git-send-email-jtulak@redhat.com>
+	by oss.sgi.com (Postfix) with ESMTP id A2CC07F37
+	for <xfs@oss.sgi.com>; Tue, 28 Apr 2015 19:17:21 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 218D0AC001
+	for <xfs@oss.sgi.com>; Tue, 28 Apr 2015 17:17:18 -0700 (PDT)
+Received: from mail-wi0-f173.google.com (mail-wi0-f173.google.com
+	[209.85.212.173]) by cuda.sgi.com with ESMTP id
+	Z7wBU69hXNxULxop (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 28 Apr 2015 17:17:16 -0700 (PDT)
+Received: by wiun10 with SMTP id n10so47749239wiu.1
+	for <xfs@oss.sgi.com>; Tue, 28 Apr 2015 17:17:15 -0700 (PDT)
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1430219344-11662-1-git-send-email-jtulak@redhat.com>
+In-Reply-To: <20150424061554.GN15810@dastard>
+References: <CABppvi55C+vE7Ei8u=_ntC_heDQb4HwUcKom-_9hGkunk84Sfw@mail.gmail.com>
+	<20150423224324.GM15810@dastard>
+	<CABppvi7+Mu78FAM75YvJvekX2CHtKk4yeMrU7j35fvvWRb923Q@mail.gmail.com>
+	<20150424061554.GN15810@dastard>
+Date: Tue, 28 Apr 2015 17:17:14 -0700
+Message-ID: <CABppvi6N6McmfLgAPcP9cxXxPrBMaD81UyeiVHWOaxrJisSN=g@mail.gmail.com>
+Subject: Re: Inode and dentry cache behavior
+From: Shrinand Javadekar <shrinand@maginatics.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,59 +30,88 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Jan =?utf-8?B?xaR1bMOhaw==?= <jtulak@redhat.com>
+To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-T24gVHVlLCBBcHIgMjgsIDIwMTUgYXQgMDE6MDk6MDRQTSArMDIwMCwgSmFuIMWkdWzDoWsgd3Jv
-dGU6Cj4gSW4gZ2xpYmMgMi4yMCwgX0JTRF9TT1VSQ0UgYW5kIF9TVklEX1NPVVJDRSB3ZXJlIGRl
-cHJlY2F0ZWQgYW5kIHNob3VsZCBiZQo+IHJlcGxhY2VkIHdpdGggX0RFRkFVTFRfU09VUkNFLiBD
-dXJyZW50bHksIGNvbXBpbGluZyB4ZnNwcm9ncyBvbiBhIHN5c3RlbSB3aXRoCj4gZ2xpYmMgaW4g
-c2FpZCBvciBuZXdlciB2ZXJzaW9uIChsaWtlIGN1cnJlbnQgRmVkb3JhKSBwcm9kdWNlcyB0b25z
-IG9mIHdhcm5pbmdzCj4gbGlrZSB0aGlzIG9uZToKPiAKPiBJbiBmaWxlIGluY2x1ZGVkIGZyb20g
-L3Vzci9pbmNsdWRlL3N0ZGlvLmg6Mjc6MCwKPiAgICAgICAgICAgICAgICAgICBmcm9tIC4uL2lu
-Y2x1ZGUveGZzL3BsYXRmb3JtX2RlZnMuaDoyNCwKPiAgICAgICAgICAgICAgICAgIGZyb20gLi4v
-aW5jbHVkZS94ZnMvbGlieGZzLmg6MjUsCj4gICAgICAgICAgICAgICAgICBmcm9tIHhmc19ta2Zz
-LmM6MTk6Cj4gL3Vzci9pbmNsdWRlL2ZlYXR1cmVzLmg6MTQ4OjM6IHdhcm5pbmc6ICN3YXJuaW5n
-ICJfQlNEX1NPVVJDRSBhbmQgX1NWSURfU09VUkNFIGFyZSBkZXByZWNhdGVkLCB1c2UgX0RFRkFV
-TFRfU09VUkNFIiBbLVdjcHBdCj4gICMgd2FybmluZyAiX0JTRF9TT1VSQ0UgYW5kIF9TVklEX1NP
-VVJDRSBhcmUgZGVwcmVjYXRlZCwgdXNlIF9ERUZBVUxUX1NPVVJDRSIKPiAKPiBJdCBjYW4gYmUg
-Zml4ZWQgd2l0aCB0aGUgc2luZ2xlIGxpbmUgcGF0Y2ggYmVsbG93LCBidXQgSSdtIG5vdCBzdXJl
-IGlmIHdlIGNhbgo+IHJlbW92ZSB0aGUgZGVwcmVjYXRlZCB2ZXJzaW9uIGJlY2F1c2Ugb2YgY29t
-cGF0aWJsaXR5LiBHbGliYyAyLjE5LCB3aGljaCBhZGRlZAo+IF9ERUZBVUxUX1NPVVJDRSwgd2Fz
-IHJlbGVhc2VkIGluIDIwMTQsIGFuZCBJJ20gbm90IHN1cmUgaG93IG11Y2ggaXQgaXMKPiBiYWNr
-cG9ydGVkIGFuZCBob3cgbXVjaCB4ZnNwcm9ncyBhcmUgYmFja3BvcnRlZCB0b28uIFNvLCBkbyB3
-ZSBuZWVkIGEgYmV0dGVyCj4gcGF0Y2ggdG8gdGFrZSBjYXJlIG9mIHRoaXMgYW5kIHByb3ZpZGUg
-ZGlmZmVyZW5kIF9TT1VSQ0UgYmFzZWQgb24gZ2xpYmMKPiB2ZXJzaW9uLCBvciB0aGlzIHBhdGNo
-IGlzIGVub3VnaD8KPiAKPiBTb3VyY2U6IG1hbiA3IGZlYXR1cmVfdGVzdF9tYWNyb3MKPiBIZXJl
-IGlzIGEgbGluayBpbiBjYXNlIHlvdSBvbGRlciB2ZXJzaW9uOgo+IGh0dHA6Ly9tYW43Lm9yZy9s
-aW51eC9tYW4tcGFnZXMvbWFuNy9mZWF0dXJlX3Rlc3RfbWFjcm9zLjcuaHRtbAoKL21lIHNtYWNr
-cyBoZWFkIGFnYWluc3Qgd2FsbAoKUmVhbGx5PyBnbGliYyBoYXMgZGVjaWRlZCB0byBicmVhayB0
-aGUgYnVpbGQgb2YgaGFsZiB0aGUgd29ybGQ/Cgo+IFNpZ25lZC1vZmYtYnk6IEphbiDFpHVsw6Fr
-IDxqdHVsYWtAcmVkaGF0LmNvbT4KPiAtLS0KPiAgaW5jbHVkZS9idWlsZGRlZnMuaW4gfCAyICst
-Cj4gIDEgZmlsZSBjaGFuZ2VkLCAxIGluc2VydGlvbigrKSwgMSBkZWxldGlvbigtKQo+IAo+IGRp
-ZmYgLS1naXQgYS9pbmNsdWRlL2J1aWxkZGVmcy5pbiBiL2luY2x1ZGUvYnVpbGRkZWZzLmluCj4g
-aW5kZXggOTQ0YmNmNi4uNmU2MDk3YSAxMDA2NDQKPiAtLS0gYS9pbmNsdWRlL2J1aWxkZGVmcy5p
-bgo+ICsrKyBiL2luY2x1ZGUvYnVpbGRkZWZzLmluCj4gQEAgLTEwOSw3ICsxMDksNyBAQCBHQ0NG
-TEFHUyA9IC1mdW5zaWduZWQtY2hhciAtZm5vLXN0cmljdC1hbGlhc2luZyAtV2FsbAo+ICAjCSAg
-IC1XYml0d2lzZSAtV25vLXRyYW5zcGFyZW50LXVuaW9uIC1Xbm8tb2xkLWluaXRpYWxpemVyIC1X
-bm8tZGVjbAo+ICAKPiAgaWZlcSAoJChQS0dfUExBVEZPUk0pLGxpbnV4KQo+IC1QQ0ZMQUdTID0g
-LURfR05VX1NPVVJDRSAtRF9CU0RfU09VUkNFIC1EX1hPUEVOX1NPVVJDRT01MDAgLURfRklMRV9P
-RkZTRVRfQklUUz02NCAkKEdDQ0ZMQUdTKQo+ICtQQ0ZMQUdTID0gLURfR05VX1NPVVJDRSAtRF9E
-RUZBVUxUX1NPVVJDRSAtRF9YT1BFTl9TT1VSQ0U9NTAwIC1EX0ZJTEVfT0ZGU0VUX0JJVFM9NjQg
-JChHQ0NGTEFHUykKClF1b3RpbmcgdGhhdCBtYW4gcGFnZToKCiIKX0dOVV9TT1VSQ0UKWy4uLl0K
-CVNpbmNlIGdsaWJjIDIuMTksIGRlZmluaW5nIF9HTlVfU09VUkNFIGFsc28gaGFzIHRoZSBlZmZl
-Y3QKCW9mIGltcGxpY2l0bHkgZGVmaW5pbmcgX0RFRkFVTFRfU09VUkNFLiAgSW4gZ2xpYmMgdmVy
-c2lvbnMKCWJlZm9yZSAyLjIwLCBkZWZpbmluZyBfR05VX1NPVVJDRSBhbHNvIGhhZCB0aGUgZWZm
-ZWN0IG9mCglpbXBsaWNpdGx5IGRlZmluaW5nIF9CU0RfU09VUkNFIGFuZCBfU1ZJRF9TT1VSQ0Uu
-CiIKCklPV3MsIGdsaWJjIGlzIGp1c3QgYmVpbmcgYW4gb2Jub3hpb3VzLiBJJ2QganVzdCBkcm9w
-IHRoZQotRF9CU0RfU09VUkNFIGFsdG9nZXRoZXIsIGFzIF9HTlVfU09VUkNFIHNob3VsZCBwdWxs
-IGluIGV2ZXJ5dGhpbmcKd2UgbmVlZC4gQW5kIGxvb2tpbmcgYXQgaXQgZnVydGhlciwgaXQgYWxz
-byBkZWZpbmVzIF9YT1BFTl9TT1VSQ0UgdG8KPj0gNTAwLCBzbyB0aGF0IGNvdWxkIHByb2JhYmx5
-IGJlIGRyb3BwZWQsIHRvby4KCkNoZWVycywKCkRhdmUuCi0tIApEYXZlIENoaW5uZXIKZGF2aWRA
-ZnJvbW9yYml0LmNvbQoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2kuY29t
-L21haWxtYW4vbGlzdGluZm8veGZzCg==
+I will look at the hardware. But, I think, there's also a possible
+software problem here.
+
+If you look at the sequence of events, first a tmp file is created in
+<mount-point>/tmp/tmp_blah. After a few writes, this file is renamed
+to a different path in the filesystem.
+
+rename(<mount-point>/tmp/tmp_blah,
+<mount-point>/objects/1004/eef/deadbeef/foo.data).
+
+The "tmp" directory above is created only once. Temp files get created
+inside it and then get renamed. We wondered if this causes disk layout
+issues resulting in slower performance. And then, we stumbled upon
+this[1]. Someone complaining about the exact same problem.
+
+One quick way to validate this was to delete the "tmp" directory
+periodically and see what numbers we get. And they do. With 15 runs of
+writing 80K objects in each run, our performance was dropping from
+~100MB/s to 30MB/s. With deleting the tmp directory after each run, we
+saw the performance only drop from ~100MB/s to 80MB/s.
+
+ The explanation in the link below says that when xfs does not find
+free extents in an existing allocation group, it frees up the extents
+by copying data from existing extents to their target allocation group
+(which happens because of renames). Is that explanation still valid?
+
+Thanks in advance.
+-Shri
+
+[1] http://xfs.9218.n7.nabble.com/Performance-degradation-over-time-td28514.html
+
+On Thu, Apr 23, 2015 at 11:15 PM, Dave Chinner <david@fromorbit.com> wrote:
+> On Thu, Apr 23, 2015 at 04:48:51PM -0700, Shrinand Javadekar wrote:
+>> > from the iostat log:
+>> >
+>> > Device:         rrqm/s   wrqm/s     r/s     w/s    rMB/s    wMB/s avgrq-sz avgqu-sz   await r_await w_await  svctm  %util
+>> > .....
+>> > dm-6              0.00     0.00    0.20   22.40     0.00     0.09    8.00    22.28  839.01 1224.00  835.57  44.25 100.00
+>> > dm-7              0.00     0.00    0.00    1.20     0.00     0.00    8.00     2.82 1517.33    0.00 1517.33 833.33 100.00
+>> > dm-8              0.00     0.00    0.00  195.20     0.00     0.76    8.00  1727.51 4178.89    0.00 4178.89   5.12 100.00
+>> > ...
+>> > dm-7              0.00     0.00    0.00    0.00     0.00     0.00     0.00     1.00    0.00    0.00    0.00   0.00 100.00
+>> > dm-8              0.00     0.00    0.00    0.00     0.00     0.00     0.00  1178.85    0.00    0.00    0.00   0.00 100.00
+>> >
+>> > dm-7 is showing almost a second for single IO wait times, when it is
+>> > actually completing IO. dm-8 has a massive queue depth - I can only
+>> > assume you've tuned  sys/block/*/queue/nr_requests to something
+>> > really large? But like dm-7, it's showing very long IO times, and
+>> > that's likely the source of your latency problems.
+>>
+>> I see that /sys/block/*/queue/nr_requests is set to 128 which is way
+>> less than the queue depth shown in the iostat numbers. What gives?
+>
+> No idea, but it's indicative of a problem below XFS. Work out what
+> is happening with your storage hardware first, then work your way up
+> the stack...
+>
+>> One other observation we had was that xfs shows a large amount of
+>> directory fragmentation. Directory fragmentation was shown at ~40%
+>> whereas file fragmentation was very low at 0.1%.
+>
+> Pretty common. Directories are only accessed a single block at a
+> time, and sequential offset reads are pretty rare, so fragmentation
+> makes little difference to performance. You're seeing almost zero
+> read IO load, so the directory layout is not a concern for this
+> workload.
+>
+> Cheers,
+>
+> Dave.
+> --
+> Dave Chinner
+> david@fromorbit.com
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
