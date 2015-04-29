@@ -1,23 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 1A4707F37
-	for <xfs@oss.sgi.com>; Wed, 29 Apr 2015 03:23:27 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 8D368AC001
-	for <xfs@oss.sgi.com>; Wed, 29 Apr 2015 01:23:23 -0700 (PDT)
-Received: from mx3-phx2.redhat.com (mx3-phx2.redhat.com [209.132.183.24]) by
-	cuda.sgi.com with ESMTP id Ivf2hJ03qA9Gxe12 (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 29 Apr 2015 01:23:21 -0700 (PDT)
-Date: Wed, 29 Apr 2015 04:23:18 -0400 (EDT)
-From: Jan Tulak <jtulak@redhat.com>
-Message-ID: <1645779399.7099194.1430295798650.JavaMail.zimbra@redhat.com>
-In-Reply-To: <20150428211259.GZ21261@dastard>
-References: <1430219344-11662-1-git-send-email-jtulak@redhat.com>
-	<20150428211259.GZ21261@dastard>
-Subject: Re: xfsprogs compile warnings: _BSD_SOURCE is deprecated in glibc
-	2.20.
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 6C7777F37
+	for <xfs@oss.sgi.com>; Wed, 29 Apr 2015 12:46:51 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 2ED08304043
+	for <xfs@oss.sgi.com>; Wed, 29 Apr 2015 10:46:47 -0700 (PDT)
+Received: from mail-wi0-f173.google.com (mail-wi0-f173.google.com
+	[209.85.212.173]) by cuda.sgi.com with ESMTP id
+	Rjakwmy5QwSw3P7l (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 29 Apr 2015 10:46:45 -0700 (PDT)
+Received: by widdi4 with SMTP id di4so189210919wid.0
+	for <xfs@oss.sgi.com>; Wed, 29 Apr 2015 10:46:44 -0700 (PDT)
 MIME-Version: 1.0
+In-Reply-To: <20150429013024.GU15810@dastard>
+References: <CABppvi55C+vE7Ei8u=_ntC_heDQb4HwUcKom-_9hGkunk84Sfw@mail.gmail.com>
+	<20150423224324.GM15810@dastard>
+	<CABppvi7+Mu78FAM75YvJvekX2CHtKk4yeMrU7j35fvvWRb923Q@mail.gmail.com>
+	<20150424061554.GN15810@dastard>
+	<CABppvi6N6McmfLgAPcP9cxXxPrBMaD81UyeiVHWOaxrJisSN=g@mail.gmail.com>
+	<20150429013024.GU15810@dastard>
+Date: Wed, 29 Apr 2015 10:46:43 -0700
+Message-ID: <CABppvi63mY=-UFEyupF2-TQux+arOaCy+B-rtckvZziuachCbA@mail.gmail.com>
+Subject: Re: Inode and dentry cache behavior
+From: Shrinand Javadekar <shrinand@maginatics.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,68 +32,79 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-LS0tLS0gT3JpZ2luYWwgTWVzc2FnZSAtLS0tLQo+IEZyb206ICJEYXZlIENoaW5uZXIiIDxkYXZp
-ZEBmcm9tb3JiaXQuY29tPgo+IFRvOiAiSmFuIMWkdWzDoWsiIDxqdHVsYWtAcmVkaGF0LmNvbT4K
-PiBDYzogeGZzQG9zcy5zZ2kuY29tCj4gU2VudDogVHVlc2RheSwgMjggQXByaWwsIDIwMTUgMTE6
-MTI6NTkgUE0KPiBTdWJqZWN0OiBSZTogeGZzcHJvZ3MgY29tcGlsZSB3YXJuaW5nczogX0JTRF9T
-T1VSQ0UgaXMgZGVwcmVjYXRlZCBpbiBnbGliYwkyLjIwLgo+IAo+IE9uIFR1ZSwgQXByIDI4LCAy
-MDE1IGF0IDAxOjA5OjA0UE0gKzAyMDAsIEphbiDFpHVsw6FrIHdyb3RlOgo+ID4gSW4gZ2xpYmMg
-Mi4yMCwgX0JTRF9TT1VSQ0UgYW5kIF9TVklEX1NPVVJDRSB3ZXJlIGRlcHJlY2F0ZWQgYW5kIHNo
-b3VsZCBiZQo+ID4gcmVwbGFjZWQgd2l0aCBfREVGQVVMVF9TT1VSQ0UuIEN1cnJlbnRseSwgY29t
-cGlsaW5nIHhmc3Byb2dzIG9uIGEgc3lzdGVtCj4gPiB3aXRoCj4gPiBnbGliYyBpbiBzYWlkIG9y
-IG5ld2VyIHZlcnNpb24gKGxpa2UgY3VycmVudCBGZWRvcmEpIHByb2R1Y2VzIHRvbnMgb2YKPiA+
-IHdhcm5pbmdzCj4gPiBsaWtlIHRoaXMgb25lOgo+ID4gCj4gPiBJbiBmaWxlIGluY2x1ZGVkIGZy
-b20gL3Vzci9pbmNsdWRlL3N0ZGlvLmg6Mjc6MCwKPiA+ICAgICAgICAgICAgICAgICAgIGZyb20g
-Li4vaW5jbHVkZS94ZnMvcGxhdGZvcm1fZGVmcy5oOjI0LAo+ID4gICAgICAgICAgICAgICAgICBm
-cm9tIC4uL2luY2x1ZGUveGZzL2xpYnhmcy5oOjI1LAo+ID4gICAgICAgICAgICAgICAgICBmcm9t
-IHhmc19ta2ZzLmM6MTk6Cj4gPiAvdXNyL2luY2x1ZGUvZmVhdHVyZXMuaDoxNDg6Mzogd2Fybmlu
-ZzogI3dhcm5pbmcgIl9CU0RfU09VUkNFIGFuZAo+ID4gX1NWSURfU09VUkNFIGFyZSBkZXByZWNh
-dGVkLCB1c2UgX0RFRkFVTFRfU09VUkNFIiBbLVdjcHBdCj4gPiAgIyB3YXJuaW5nICJfQlNEX1NP
-VVJDRSBhbmQgX1NWSURfU09VUkNFIGFyZSBkZXByZWNhdGVkLCB1c2UKPiA+ICBfREVGQVVMVF9T
-T1VSQ0UiCj4gPiAKPiA+IEl0IGNhbiBiZSBmaXhlZCB3aXRoIHRoZSBzaW5nbGUgbGluZSBwYXRj
-aCBiZWxsb3csIGJ1dCBJJ20gbm90IHN1cmUgaWYgd2UKPiA+IGNhbgo+ID4gcmVtb3ZlIHRoZSBk
-ZXByZWNhdGVkIHZlcnNpb24gYmVjYXVzZSBvZiBjb21wYXRpYmxpdHkuIEdsaWJjIDIuMTksIHdo
-aWNoCj4gPiBhZGRlZAo+ID4gX0RFRkFVTFRfU09VUkNFLCB3YXMgcmVsZWFzZWQgaW4gMjAxNCwg
-YW5kIEknbSBub3Qgc3VyZSBob3cgbXVjaCBpdCBpcwo+ID4gYmFja3BvcnRlZCBhbmQgaG93IG11
-Y2ggeGZzcHJvZ3MgYXJlIGJhY2twb3J0ZWQgdG9vLiBTbywgZG8gd2UgbmVlZCBhCj4gPiBiZXR0
-ZXIKPiA+IHBhdGNoIHRvIHRha2UgY2FyZSBvZiB0aGlzIGFuZCBwcm92aWRlIGRpZmZlcmVuZCBf
-U09VUkNFIGJhc2VkIG9uIGdsaWJjCj4gPiB2ZXJzaW9uLCBvciB0aGlzIHBhdGNoIGlzIGVub3Vn
-aD8KPiA+IAo+ID4gU291cmNlOiBtYW4gNyBmZWF0dXJlX3Rlc3RfbWFjcm9zCj4gPiBIZXJlIGlz
-IGEgbGluayBpbiBjYXNlIHlvdSBvbGRlciB2ZXJzaW9uOgo+ID4gaHR0cDovL21hbjcub3JnL2xp
-bnV4L21hbi1wYWdlcy9tYW43L2ZlYXR1cmVfdGVzdF9tYWNyb3MuNy5odG1sCj4gCj4gL21lIHNt
-YWNrcyBoZWFkIGFnYWluc3Qgd2FsbAo+IAo+IFJlYWxseT8gZ2xpYmMgaGFzIGRlY2lkZWQgdG8g
-YnJlYWsgdGhlIGJ1aWxkIG9mIGhhbGYgdGhlIHdvcmxkPwo+IAo+ID4gU2lnbmVkLW9mZi1ieTog
-SmFuIMWkdWzDoWsgPGp0dWxha0ByZWRoYXQuY29tPgo+ID4gLS0tCj4gPiAgaW5jbHVkZS9idWls
-ZGRlZnMuaW4gfCAyICstCj4gPiAgMSBmaWxlIGNoYW5nZWQsIDEgaW5zZXJ0aW9uKCspLCAxIGRl
-bGV0aW9uKC0pCj4gPiAKPiA+IGRpZmYgLS1naXQgYS9pbmNsdWRlL2J1aWxkZGVmcy5pbiBiL2lu
-Y2x1ZGUvYnVpbGRkZWZzLmluCj4gPiBpbmRleCA5NDRiY2Y2Li42ZTYwOTdhIDEwMDY0NAo+ID4g
-LS0tIGEvaW5jbHVkZS9idWlsZGRlZnMuaW4KPiA+ICsrKyBiL2luY2x1ZGUvYnVpbGRkZWZzLmlu
-Cj4gPiBAQCAtMTA5LDcgKzEwOSw3IEBAIEdDQ0ZMQUdTID0gLWZ1bnNpZ25lZC1jaGFyIC1mbm8t
-c3RyaWN0LWFsaWFzaW5nIC1XYWxsCj4gPiAgIwkgICAtV2JpdHdpc2UgLVduby10cmFuc3BhcmVu
-dC11bmlvbiAtV25vLW9sZC1pbml0aWFsaXplciAtV25vLWRlY2wKPiA+ICAKPiA+ICBpZmVxICgk
-KFBLR19QTEFURk9STSksbGludXgpCj4gPiAtUENGTEFHUyA9IC1EX0dOVV9TT1VSQ0UgLURfQlNE
-X1NPVVJDRSAtRF9YT1BFTl9TT1VSQ0U9NTAwCj4gPiAtRF9GSUxFX09GRlNFVF9CSVRTPTY0ICQo
-R0NDRkxBR1MpCj4gPiArUENGTEFHUyA9IC1EX0dOVV9TT1VSQ0UgLURfREVGQVVMVF9TT1VSQ0Ug
-LURfWE9QRU5fU09VUkNFPTUwMAo+ID4gLURfRklMRV9PRkZTRVRfQklUUz02NCAkKEdDQ0ZMQUdT
-KQo+IAo+IFF1b3RpbmcgdGhhdCBtYW4gcGFnZToKPiAKPiAiCj4gX0dOVV9TT1VSQ0UKPiBbLi4u
-XQo+IAlTaW5jZSBnbGliYyAyLjE5LCBkZWZpbmluZyBfR05VX1NPVVJDRSBhbHNvIGhhcyB0aGUg
-ZWZmZWN0Cj4gCW9mIGltcGxpY2l0bHkgZGVmaW5pbmcgX0RFRkFVTFRfU09VUkNFLiAgSW4gZ2xp
-YmMgdmVyc2lvbnMKPiAJYmVmb3JlIDIuMjAsIGRlZmluaW5nIF9HTlVfU09VUkNFIGFsc28gaGFk
-IHRoZSBlZmZlY3Qgb2YKPiAJaW1wbGljaXRseSBkZWZpbmluZyBfQlNEX1NPVVJDRSBhbmQgX1NW
-SURfU09VUkNFLgo+ICIKPiAKPiBJT1dzLCBnbGliYyBpcyBqdXN0IGJlaW5nIGFuIG9ibm94aW91
-cy4gSSdkIGp1c3QgZHJvcCB0aGUKPiAtRF9CU0RfU09VUkNFIGFsdG9nZXRoZXIsIGFzIF9HTlVf
-U09VUkNFIHNob3VsZCBwdWxsIGluIGV2ZXJ5dGhpbmcKPiB3ZSBuZWVkLiBBbmQgbG9va2luZyBh
-dCBpdCBmdXJ0aGVyLCBpdCBhbHNvIGRlZmluZXMgX1hPUEVOX1NPVVJDRSB0bwo+ID49IDUwMCwg
-c28gdGhhdCBjb3VsZCBwcm9iYWJseSBiZSBkcm9wcGVkLCB0b28uCj4gCgpBbGwgcmlnaHQsIHNv
-IEkgZHJvcHBlZCBpdCB0b28uIFdlIGNvdWxkIG1ha2UgYSBnbGliYyBmb3JrIGluc3RlYWQsIGJ1
-dCB0aGlzIHNlZW1zIHRvIGJlLi4uIGEgYml0IGVhc2llci4gOlAKCkNoZWVycy4KLS0gCkphbiBU
-dWxhawpqdHVsYWtAcmVkaGF0LmNvbQoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29z
-cy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCg==
+Awesome!! Thanks Dave!
+
+On Tue, Apr 28, 2015 at 6:30 PM, Dave Chinner <david@fromorbit.com> wrote:
+> On Tue, Apr 28, 2015 at 05:17:14PM -0700, Shrinand Javadekar wrote:
+>> I will look at the hardware. But, I think, there's also a possible
+>> software problem here.
+>>
+>> If you look at the sequence of events, first a tmp file is created in
+>> <mount-point>/tmp/tmp_blah. After a few writes, this file is renamed
+>> to a different path in the filesystem.
+>>
+>> rename(<mount-point>/tmp/tmp_blah,
+>> <mount-point>/objects/1004/eef/deadbeef/foo.data).
+>>
+>> The "tmp" directory above is created only once. Temp files get created
+>> inside it and then get renamed. We wondered if this causes disk layout
+>> issues resulting in slower performance. And then, we stumbled upon
+>> this[1]. Someone complaining about the exact same problem.
+>
+> That's pretty braindead behaviour. That will screw performance and
+> locality on any filesystem you do that on, not to mention age it
+> extremely quickly.
+>
+> In the case of XFS, it forces allocation of all the inodes in one
+> AG, rather than allowing XFs to distribute and balance inode
+> allocation around the filesystem and keeping good
+> directory/inode/data locality for all your data.
+>
+> Best way to do this is to create your tmp files using O_TMPFILE,
+> with the source directory being the destination directory and then
+> use linkat() rather than rename to make them visible in the
+> directory.
+>
+>> One quick way to validate this was to delete the "tmp" directory
+>> periodically and see what numbers we get. And they do. With 15 runs of
+>> writing 80K objects in each run, our performance was dropping from
+>> ~100MB/s to 30MB/s. With deleting the tmp directory after each run, we
+>> saw the performance only drop from ~100MB/s to 80MB/s.
+>>
+>>  The explanation in the link below says that when xfs does not find
+>> free extents in an existing allocation group, it frees up the extents
+>> by copying data from existing extents to their target allocation group
+>> (which happens because of renames). Is that explanation still valid?
+>
+> No, it wasn't correct even back then.  XFS does not move data around
+> once it has been allocated and is on disk. Indeed, rename() does not
+> move data, it only modifies directory entries.
+>
+> The problem is that the locality of a new inode is determined by the
+> parent inode, and so if all new inodes are created in the same
+> directory, then they are all created in the same AG. If you have
+> millions of inodes, then you have a btree will millions on inodes in
+> it in one AG, and pretty much none in any other AG. Hence inode
+> allocation, which has to search for free inodes in a btree
+> containing millions of records, can be extremely IO and CPU
+> intensive and therefore slow. And the larger the number of inodes,
+> the slower it will go....
+>
+> Cheers,
+>
+> Dave.
+> --
+> Dave Chinner
+> david@fromorbit.com
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
