@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id DC9907F37
-	for <xfs@oss.sgi.com>; Thu, 30 Apr 2015 01:26:45 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id B5E057F37
+	for <xfs@oss.sgi.com>; Thu, 30 Apr 2015 01:57:44 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id CA136304039
-	for <xfs@oss.sgi.com>; Wed, 29 Apr 2015 23:26:42 -0700 (PDT)
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	nwkddydb3uaVTSFo for <xfs@oss.sgi.com>;
-	Wed, 29 Apr 2015 23:26:39 -0700 (PDT)
-Date: Thu, 30 Apr 2015 16:26:14 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: question re: xfs inode to inode copy implementation
-Message-ID: <20150430062614.GA15810@dastard>
-References: <20150421010646.GX8110@shells.gnugeneration.com>
-	<20150421042820.GA11601@birch.djwong.org>
-	<20150430005330.GM8110@shells.gnugeneration.com>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 9113F304039
+	for <xfs@oss.sgi.com>; Wed, 29 Apr 2015 23:57:44 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id mEPgPcoVGyJSrJSg (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 29 Apr 2015 23:57:43 -0700 (PDT)
+Date: Thu, 30 Apr 2015 14:57:39 +0800
+From: Eryu Guan <eguan@redhat.com>
+Subject: Re: generic/204 failure due to e88b64e xfs: use generic percpu
+	counters for free inode counter
+Message-ID: <20150430065739.GP17534@dhcp-13-216.nay.redhat.com>
+References: <20150428165633.GI17534@dhcp-13-216.nay.redhat.com>
+	<20150428204925.GX21261@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20150430005330.GM8110@shells.gnugeneration.com>
+In-Reply-To: <20150428204925.GX21261@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,203 +31,195 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@pengaru.com
-Cc: vito.caputo@coreos.com, xfs <xfs@oss.sgi.com>, "Darrick J. Wong" <darrick.wong@oracle.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: xuw2015@gmail.com, xfs@oss.sgi.com
 
-On Wed, Apr 29, 2015 at 07:53:30PM -0500, xfs@pengaru.com wrote:
-> On Mon, Apr 20, 2015 at 09:28:20PM -0700, Darrick J. Wong wrote:
-> > On Mon, Apr 20, 2015 at 08:06:46PM -0500, xfs@pengaru.com wrote:
-> > > My prototype already mostly works just using xfs_alloc_file_space() to
-> > > allocate the appropriate space in the destination inode, but I need to
-> > > get that allocated space populated from the shared inode's extents.
-> > 
-> > I think you're asking how to copy extent map entries from one file to another?
-> 
-> What I really wanted was something analogous to do_splice_direct() but for
-> operating on the inodes/address_space structs.  I ended up just hacking
-> something together which does the copy ad-hoc directly via the address_space
-> structs and calling xfs_get_blocks() on buffer heads of the destination pages,
-> without any readahead or other optimizations, at least it reads from and
-> populates the page caches.
-> 
-> It looks like what you guys are working on is a more granular/block-level COW
-> reflink implementation, which I assumed would be significantly more challenging
-> and well beyond my ability to hack up quickly for experimentation.
-> 
-> Below I'll summarize what I've hacked together.  It's probably inappropriate to
-> refer to this as a reflink, I've been referring to it as a COW-file in the
-> code.
+On Wed, Apr 29, 2015 at 06:49:25AM +1000, Dave Chinner wrote:
+> On Wed, Apr 29, 2015 at 12:56:34AM +0800, Eryu Guan wrote:
+> > Hi,
+> >
+> > I was testing v4.1-rc1 kernel and hit generic/204 failure on 512b block
+> > size v4 xfs and 1k block size v5 xfs. And this seems to be a regression
+> > since v4.0
+>
+> Firstly, knowing your exact test machine and xfstests configuration
+> is important here, so:
+>
+> http://xfs.org/index.php/XFS_FAQ#Q:_What_information_should_I_include_when_reporting_a_problem.3F
 
-It's the same thing, just using a different COW mechanism to break
-the reflink.
+Thanks, I'll follow it next time. (I know about this link, but I hit the
+issue on different hosts, both vm and baremetal, so I thought it's not
+relevant to hardware, but I still missed the test configs..)
 
-> A COW-file is a new inode which refers to another (shared) inode for its data
-> until the COW-file is opened for writing.  At that point it clones the shared
-> inode's data as its own.
-> 
-> Here's the mid-level details of the hack:
-> 
-> 1. Add two members to the inode in the available padding:
->  be32  nlink_cow:	Number of COW-file links to the inode
->  be64  inumber_cow:	Number of backing inode if inode is a COW-file
+>
+> > [root@dhcp-66-86-11 xfstests]# MKFS_OPTIONS="-b size=512" ./check generic/204
+> > FSTYP         -- xfs (non-debug)
+> > PLATFORM      -- Linux/x86_64 dhcp-66-86-11 4.0.0-rc1+
+> > MKFS_OPTIONS  -- -f -b size=512 /dev/sda6
+> > MOUNT_OPTIONS -- -o context=system_u:object_r:nfs_t:s0 /dev/sda6 /mnt/testarea/scratch
+> >
+> > generic/204 8s ... - output mismatch (see /root/xfstests/results//generic/204.out.bad)
+> >     --- tests/generic/204.out   2014-12-11 00:28:13.409000000 +0800
+> >     +++ /root/xfstests/results//generic/204.out.bad     2015-04-29 00:36:43.232000000 +0800
+> >     @@ -1,2 +1,37664 @@
+> >      QA output created by 204
+> >     +./tests/generic/204: line 83: /mnt/testarea/scratch/108670: No space left on device
+> >     +./tests/generic/204: line 84: /mnt/testarea/scratch/108670: No space left on device
+> >     ...
+> > I bisected to this commit
+> >
+> > e88b64e xfs: use generic percpu counters for free inode counter
 
-FYI, inode number alone is not enough to uniquely identify an inode.
-Needs the ino/gen pair as inode numbers can be reused.
+Sorry, I pasted the wrong commit (again..), it should be
 
-> 2. Introduc a new ioctl for creating a COW-file: 
->  #define XFS_IOC_CREATE_COWFILE_AT     _IOW ('X', 126, struct xfs_create_cowfile_at)
-> 
->  typedef struct xfs_create_cowfile_at
->  {
->  	int	dfd;			/* parent directory	*/
->  	char	name[MAXNAMELEN];	/* name to create	*/
->  	umode_t	mode;			/* mode			*/
->  } xfs_create_cowfile_at_t;
+501ab32 xfs: use generic percpu counters for inode counter
 
-Let's not create yet another incompatible reflink API. Please use
-OCFS2_IOC_REFLINK as the API and pull the ioctl and infrastructure
-within fs/ocfs2/refcounttree.c up to the VFS, add a ->reflink method
-to the operations structure and then hook ocfs2 and the new XFS code
-up to that interface.  We don't want to duplicate all that code
-unnecessarily in an incompatible fashion.
+>
+> I don't think that this is the actual cause of the issue, because I
+> have records of generic/204 failing on 1k v5 filesystems every so
+> often going back to the start of the log file I have for my v5/1k
+> test config:
+>
+> $ grep "Failures\|EST" results/check.log |grep -B 1 generic/204
+> Wed Jun 19 11:26:35 EST 2013
+> Failures: generic/204 generic/225 generic/231 generic/263 generic/306
+> Wed Jun 19 12:49:08 EST 2013
+> Failures: generic/204 generic/225 generic/231 generic/263 generic/270
+> --
+> Mon Jul  8 17:23:44 EST 2013
+> Failures: generic/204
+> Mon Jul  8 20:37:50 EST 2013
+> Failures: generic/204 generic/225 generic/231 generic/263 generic/306
+> --
+> Thu Jul 18 16:55:26 EST 2013
+> Failures: generic/015 generic/077 generic/193 generic/204
+> --
+> Mon Jul 29 19:42:49 EST 2013
+> Failures: generic/193 generic/204 generic/225 generic/230 generic/231
+> Mon Aug 12 19:40:53 EST 2013
+> Failures: generic/193 generic/204 generic/225 generic/230 generic/23
+> ....
 
-> 3. Derive a xfs_create_cowfile() from xfs_create() and xfs_link():
->  xfs_create_cowfile(
-> 	xfs_inode_t	*dp,		/* parent directory */
-> 	xfs_inode_t	*sip,		/* shared inode (ioctl callee) */
-> 	struct xfs_name	*name,		/* name of cowfile to create in dp */
-> 	umode_t		mode,		/* mode */
-> 	xfs_dev_t	rdev,
-> 	xfs_inode_t	**ipp)		/* new inode */
-> 
->  - ipp = allocate inode
->  - ipp->i_mapping->host = sip
->  - bump sip->nlink_cow
->  - ipp->inumber_cow = sip->di_ino
->  - create name in dp referencing ipp
-> 
->  ipp starts out with the shared inode hosting i_mapping
+I noticed that the failures are quite old, generic/204 got updated
+several times to make it pass in 2014, especially this commit
 
-That's kinda messy. I'd like to leave sharing page cache completely
-out of the picture first, and get all the inode and extent
-manipulations correct first. most important is all the inode life
-cycle and unlink/unshare operations sorted, especially w.r.t.
-locking and transactions.
+31a50c7 generic/204: tweak reserve pool size (Mon Apr 28 10:54:27 2014)
 
-Once we have that sanely under control, page cache sharing is a
-matter of reflecting the shared extents in the page cache via
-multiple page references (i.e. one for each mapping tree the page is
-inserted into) rather than playing games trying to share mappings.
+The commit log says
 
-> 4. Modify xfs_setup_inode() to be inumber_cow-aware, opening the shared inode
->    when set, and assigning to i_mapping->host.
+'This makes the test pass on a filesystem made with MKFS_OPTIONS="-b
+size=1024 -m crc=1".'
 
-So you've added an xfs_iget() call to xfs_setup_inode() if the inode
-is a reflink inode? How does the locking work?
+So I think it's a new failure since v4.0
 
-> 5. Modify xfs_file_open() S_ISREG && inumber_cow && FMODE_WRITE:
->  - clear inumber_cow
->  - restore i_mapping->host to the inode being opened
->  - invalidate_inode_pages2(i_mapping)
->  - allocate all needed space in this inode
->  - copy size from shared inode to this inode
->  - copy all pages from the previously shared inode to this one
+>
+> > Seems like the same issue this patch tries to fix, but test still fails
+> > after applying this patch.
+> >
+> > [PATCH v2] xfs: use percpu_counter_read_positive for mp->m_icount
+> > http://oss.sgi.com/archives/xfs/2015-04/msg00195.html
+> >
+> > Not sure if it's the expected behavior/a known issue, report it to the
+> > list anyway.
+>
+> Repeating the test on v4/512b, I get the same result as you.
+>
+> $ cat results/generic/204.full
+> files 127500, resvblks 1024
+> reserved blocks = 1024
+> available reserved blocks = 1024
+> $
+>
+> Ok, those numbers add up to exactly 97,920,000 bytes, as per the
+> test config.
+>
+> $ sudo mount /dev/vdb /mnt/scratch
+> $ df -h /mnt/scratch
+> Filesystem      Size  Used Avail Use% Mounted on
+> /dev/vdb         99M   87M   13M  88% /mnt/scratch
+> $ df -i /mnt/scratch
+> Filesystem     Inodes  IUsed  IFree IUse% Mounted on
+> /dev/vdb       108608 108608      0  100% /mnt/scratch
+> $
+>
+> And for v5/1k:
+>
+> $ sudo mkfs.xfs -f -m crc=1,finobt=1 -b size=1k -d size=$((106 * 1024 * 1024)) -l size=7m /dev/vdb
+> meta-data=/dev/vdb               isize=512    agcount=4, agsize=27136 blks
+>          =                       sectsz=512   attr=2, projid32bit=1
+>          =                       crc=1        finobt=1
+> data     =                       bsize=1024   blocks=108544, imaxpct=25
+>          =                       sunit=0      swidth=0 blks
+> naming   =version 2              bsize=4096   ascii-ci=0 ftype=1
+> log      =internal log           bsize=1024   blocks=7168, version=2
+>          =                       sectsz=512   sunit=0 blks, lazy-count=1
+> realtime =none                   extsz=4096   blocks=0, rtextents=0
+> $ sudo mount /dev/vdb /mnt/scratch
+> $ df -i /mnt/scratch
+> Filesystem     Inodes IUsed IFree IUse% Mounted on
+> /dev/vdb        54272     3 54269    1% /mnt/scratch
+> $
+>
+> Yup, it's clear *why* it is failing, too. There aren't enough free
+> inodes configured by mkfs.  That means it's the mkfs imaxpct config
+> that is the issue here, not the commit that made the max inode
+> threshold more accurate...
 
-So the copy is done on open(O_WR) of the file. files get opened in
-write mode for more than just writing date to them. e.g. fchmod,
-writing new attributes, etc. We don't want a data cow if this is the
-first operation that is done to the inode after the reflink is
-made...
+I did some comparison on "good" kernel and "bad" kernel(output of
+xfs_info, df -i, df -h and 204.full after test), here is the diff
 
-> 6. Modify xfs_vn_getattr() to copy stat->size from the shared inode if
->    inumer_cow is set.
+[root@dhcp-66-86-11 xfstests]# diff -Nu 204.good 204.bad
+--- 204.good    2015-04-29 22:00:13.274000000 +0800
++++ 204.bad     2015-04-29 19:51:15.195000000 +0800
+@@ -10,10 +10,10 @@
+ realtime =none                   extsz=4096   blocks=0, rtextents=0
+ [root@dhcp-66-86-11 xfstests]# df -i /mnt/scratch
+ Filesystem     Inodes IUsed IFree IUse% Mounted on
+-/dev/sda6       63808 63753    55  100% /mnt/scratch
++/dev/sda6       54528 54528     0  100% /mnt/scratch
+ [root@dhcp-66-86-11 xfstests]# df -h /mnt/scratch
+ Filesystem      Size  Used Avail Use% Mounted on
+-/dev/sda6        99M   99M     0 100% /mnt/scratch
++/dev/sda6        99M   88M   12M  89% /mnt/scratch
+ [root@dhcp-66-86-11 xfstests]# cat results/generic/204.full
+ files 63750, resvblks 1024
+ reserved blocks = 1024
 
-Why wouldn't you just put the size in the COW inode?
+So the only difference is the max inode count, "bad" kernel has a lower
+up limit of max inode count.
 
-> 7. Modify unlink paths to be nlink_cow-aware
+More experiments show that the icount is more accurate on "bad" kernel.
 
-What happens when parent is unlinked? It stays on the unlinked list?
-Or do we know have the possibility that unlink can have two inodes
-to free in xfs-inactive()?  What's the implication for transaction
-reservations? What's the locking order?
+fs/xfs/libxfs/xfs_ialloc.c:1343
+        if (mp->m_maxicount &&
+            percpu_counter_read(&mp->m_icount) + mp->m_ialloc_inos >
+                                                        mp->m_maxicount) {
+                noroom = 1;
+                okalloc = 0;
+        }
 
-reflink doesn't have this "readonly parent" wart. If the parent is
-modified, it breaks it's side of the reflink via COW. Simple,
-symmetric handling of the problem - it doesn't matter who writes to
-what, the unmodified inodes do not see any change.
+"Good" kernel uses mp->m_sb.sb_icount, which is not accurate during the
+test(256), and it never hits the "noroom" condition. "Bad" kernel uses
+percpu counter and the &mp->m_icount is a more accurate number(54000+),
+so it hits "noroom" in the test.
 
-> 8. To simplify things, inodes that have nlink_cow no longer can be opened for
->    writing, they've become immutable backing stores of sorts for other inodes.
+>
+> Adding "-i maxpct=50" to the mkfs command allows the test to pass on
+> both v4/512 and v5/1k filesystems.  IOWs, it does not appear to be
+> code problem but is a test config problem...
 
-So, someone marks a file as COW, and that makes it read only? What
-happens if there is already an open fd with write permissions when
-the COW ioctl is called? So, where does the immutable state of the
-inode get enforced? What's preventing it from being unlinked?
+I agree it's not a code problem, I think it's kind of expected behavior.
+And confirmed that adding "-i maxpct=50" makes test pass again.
 
-> The one major question mark I see in this achieving correctness is the live
-> manipulation of i_mapping->host.  It seems to work in my casual testing on
-> x86_64, this actually all works surprisingly well considering it's a fast and
-> nasty hack.  I abuse invalidate_inode_pages2() as if a truncate has occurred,
-> forcing subsequent page accesses to fault and revisit i_mapping->host.
+>
+> Can you send a patch to fstests@vger.kernel.org that fixes the test
+> for these configs?
 
-I don't think you can't change mapping->host, as there is no one
-lock that protects access to it.
+Sure, will do.
 
-> The goal here was to achieve something overlayfs-like but with inodes capable
-> of being chowned/chmodded without triggering the copy_up, operations likely
-> necessary for supporting user namespaces in containers.
+Thanks for the explanation!
 
-Yup, reflink gives us this.
-
-> Additionally,
-> overlayfs has some serious correctness issues WRT multiply-opened files
-> spanning the lower and upper layers due to one of the subsequent opens being a
-> writer.  Since my hack creates distinct inodes from the start, no such issue
-> exists.
-
-Right, but it's not something that overlayfs can use unconditionally
-(reflink or your COW file) because overlayfs can have upper and
-lower directories on different filesystems.  And, as has also been
-pointed out, it doesn't work on lower filesystems that are
-read-only.
-
-As such, I'm not sure that overlayfs will ever support this change
-of behaviour as it restricts overlayfs to a single writeable
-filesystem. I know, most people only need overlayfs on a single
-writeable filesystem, but....
-
-> However, one of the attractive things about overlayfs is the page cache sharing
-> which my XFS hack doesn't enable due to the distinct struct addres_space's and
-> i_mapping->host host exchanging.  I had hoped to explore something KSM-like
-> with maybe some hints from XFS for these shared inode pagess saying "hey these
-> are read-only pages in a shared inode, try deduplicate them!" but KSM is purely
-> in vma land so that seems like a lot of work to make happen.
-
-As I mentioned before, page cache sharing needs to reflect shared
-blocks on disk. Playing games with KSM or mappings isn't a viable
-solution.
-
-> In any case, thanks for the responses and any further input you guys have.
-> Obviously a more granular btrfs-like reflink is preferable, and I'd welcome it.
-> It just seemed like doing something overlayfs-like would be a whole lot easier
-> to get working in a relatively short time.
-
-Overlayfs is creating more problems than it is solving. Hacking
-random one-off functionality into filesystems is not the way to fix
-overlayfs problems. Let's do reflink properly, then we can modify
-overlayfs to be able to use reflink when all it's working
-directories are on the same filesystem.  The we can add page cache
-sharing to reflink files, and all of a sudden, the overlayfs page
-cache sharing problem is solved. Not to mention it is solved for all
-the other people that want reflink files for their applications,
-too.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Eryu
 
 _______________________________________________
 xfs mailing list
