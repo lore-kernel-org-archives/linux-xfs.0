@@ -1,19 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 198ED7F60
-	for <xfs@oss.sgi.com>; Sun,  3 May 2015 04:15:11 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 5E51D7F66
+	for <xfs@oss.sgi.com>; Sun,  3 May 2015 04:15:13 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 0FADE304043
-	for <xfs@oss.sgi.com>; Sun,  3 May 2015 02:15:08 -0700 (PDT)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 466508F804B
+	for <xfs@oss.sgi.com>; Sun,  3 May 2015 02:15:10 -0700 (PDT)
 Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id CwT7593mzwoSAu1a (version=TLSv1 cipher=AES256-SHA
+	ESMTP id eIXuRNNAoqZGLyMP (version=TLSv1 cipher=AES256-SHA
 	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Sun, 03 May 2015 02:15:06 -0700 (PDT)
+	Sun, 03 May 2015 02:15:09 -0700 (PDT)
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 2/5] xfs: factor out a helper to initialize a local format
-	inode fork
-Date: Sun,  3 May 2015 11:13:50 +0200
-Message-Id: <1430644433-26658-3-git-send-email-hch@lst.de>
+Subject: [PATCH 3/5] xfs: set up inode operation vectors later
+Date: Sun,  3 May 2015 11:13:51 +0200
+Message-Id: <1430644433-26658-4-git-send-email-hch@lst.de>
 In-Reply-To: <1430644433-26658-1-git-send-email-hch@lst.de>
 References: <1430644433-26658-1-git-send-email-hch@lst.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -32,148 +31,154 @@ Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 Cc: viro@zeniv.linux.org.uk
 
+In the next patch we'll set up different inode operations for inline vs
+out of line symlinks, for that we need to make sure the flags are already
+set up properly.
+
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/libxfs/xfs_dir2_sf.c    |  9 +++-----
- fs/xfs/libxfs/xfs_inode_fork.c | 48 ++++++++++++++++++++++++++----------------
- fs/xfs/libxfs/xfs_inode_fork.h |  1 +
- fs/xfs/xfs_symlink.c           | 12 ++---------
- 4 files changed, 36 insertions(+), 34 deletions(-)
+ fs/xfs/xfs_inode.h |  5 ++++-
+ fs/xfs/xfs_iops.c  | 59 ++++++++++++++++++++++++++++++++++--------------------
+ 2 files changed, 41 insertions(+), 23 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_dir2_sf.c b/fs/xfs/libxfs/xfs_dir2_sf.c
-index 4af3c23..bf83116 100644
---- a/fs/xfs/libxfs/xfs_dir2_sf.c
-+++ b/fs/xfs/libxfs/xfs_dir2_sf.c
-@@ -257,15 +257,12 @@ xfs_dir2_block_to_sf(
- 	 *
- 	 * Convert the inode to local format and copy the data in.
- 	 */
--	dp->i_df.if_flags &= ~XFS_IFEXTENTS;
--	dp->i_df.if_flags |= XFS_IFINLINE;
--	dp->i_d.di_format = XFS_DINODE_FMT_LOCAL;
- 	ASSERT(dp->i_df.if_bytes == 0);
--	xfs_idata_realloc(dp, size, XFS_DATA_FORK);
-+	xfs_init_local_fork(dp, XFS_DATA_FORK, dst, size);
-+	dp->i_d.di_format = XFS_DINODE_FMT_LOCAL;
-+	dp->i_d.di_size = size;
+diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
+index 8f22d20..d49e293 100644
+--- a/fs/xfs/xfs_inode.h
++++ b/fs/xfs/xfs_inode.h
+@@ -407,6 +407,9 @@ int	xfs_iozero(struct xfs_inode *ip, loff_t pos, size_t count);
  
- 	logflags |= XFS_ILOG_DDATA;
--	memcpy(dp->i_df.if_u1.if_data, dst, size);
--	dp->i_d.di_size = size;
- 	xfs_dir2_sf_check(args);
- out:
- 	xfs_trans_log_inode(args->trans, dp, logflags);
-diff --git a/fs/xfs/libxfs/xfs_inode_fork.c b/fs/xfs/libxfs/xfs_inode_fork.c
-index 9d2b716..86a3e11 100644
---- a/fs/xfs/libxfs/xfs_inode_fork.c
-+++ b/fs/xfs/libxfs/xfs_inode_fork.c
-@@ -230,6 +230,34 @@ xfs_iformat_fork(
- 	return error;
- }
  
-+void
-+xfs_init_local_fork(
-+	struct xfs_inode	*ip,
-+	int			whichfork,
-+	const void		*data,
-+	int			size)
-+{
-+	struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, whichfork);
-+	int			real_size = 0;
-+
-+	if (size == 0)
-+		ifp->if_u1.if_data = NULL;
-+	else if (size <= sizeof(ifp->if_u2.if_inline_data))
-+		ifp->if_u1.if_data = ifp->if_u2.if_inline_data;
-+	else {
-+		real_size = roundup(size, 4);
-+		ifp->if_u1.if_data = kmem_alloc(real_size, KM_SLEEP | KM_NOFS);
-+	}
-+
-+	if (size)
-+		memcpy(ifp->if_u1.if_data, data, size);
-+
-+	ifp->if_bytes = size;
-+	ifp->if_real_bytes = real_size;
-+	ifp->if_flags &= ~(XFS_IFEXTENTS | XFS_IFBROOT);
-+	ifp->if_flags |= XFS_IFINLINE;
-+}
+ /* from xfs_iops.c */
++extern void xfs_setup_inode(struct xfs_inode *ip);
++extern void xfs_setup_iops(struct xfs_inode *ip);
 +
  /*
-  * The file is in-lined in the on-disk inode.
-  * If it fits into if_inline_data, then copy
-@@ -247,8 +275,6 @@ xfs_iformat_local(
- 	int		whichfork,
- 	int		size)
+  * When setting up a newly allocated inode, we need to call
+  * xfs_finish_inode_setup() once the inode is fully instantiated at
+@@ -414,7 +417,6 @@ int	xfs_iozero(struct xfs_inode *ip, loff_t pos, size_t count);
+  * before we've completed instantiation. Otherwise we can do it
+  * the moment the inode lookup is complete.
+  */
+-extern void xfs_setup_inode(struct xfs_inode *ip);
+ static inline void xfs_finish_inode_setup(struct xfs_inode *ip)
  {
--	xfs_ifork_t	*ifp;
--	int		real_size;
- 
- 	/*
- 	 * If the size is unreasonable, then something
-@@ -264,22 +290,8 @@ xfs_iformat_local(
- 				     ip->i_mount, dip);
- 		return -EFSCORRUPTED;
- 	}
--	ifp = XFS_IFORK_PTR(ip, whichfork);
--	real_size = 0;
--	if (size == 0)
--		ifp->if_u1.if_data = NULL;
--	else if (size <= sizeof(ifp->if_u2.if_inline_data))
--		ifp->if_u1.if_data = ifp->if_u2.if_inline_data;
--	else {
--		real_size = roundup(size, 4);
--		ifp->if_u1.if_data = kmem_alloc(real_size, KM_SLEEP | KM_NOFS);
--	}
--	ifp->if_bytes = size;
--	ifp->if_real_bytes = real_size;
--	if (size)
--		memcpy(ifp->if_u1.if_data, XFS_DFORK_PTR(dip, whichfork), size);
--	ifp->if_flags &= ~XFS_IFEXTENTS;
--	ifp->if_flags |= XFS_IFINLINE;
-+
-+	xfs_init_local_fork(ip, whichfork, XFS_DFORK_PTR(dip, whichfork), size);
- 	return 0;
+ 	xfs_iflags_clear(ip, XFS_INEW);
+@@ -425,6 +427,7 @@ static inline void xfs_finish_inode_setup(struct xfs_inode *ip)
+ static inline void xfs_setup_existing_inode(struct xfs_inode *ip)
+ {
+ 	xfs_setup_inode(ip);
++	xfs_setup_iops(ip);
+ 	xfs_finish_inode_setup(ip);
  }
  
-diff --git a/fs/xfs/libxfs/xfs_inode_fork.h b/fs/xfs/libxfs/xfs_inode_fork.h
-index 749fd5a..dfb2966 100644
---- a/fs/xfs/libxfs/xfs_inode_fork.h
-+++ b/fs/xfs/libxfs/xfs_inode_fork.h
-@@ -135,6 +135,7 @@ void		xfs_iroot_realloc(struct xfs_inode *, int, int);
- int		xfs_iread_extents(struct xfs_trans *, struct xfs_inode *, int);
- int		xfs_iextents_copy(struct xfs_inode *, struct xfs_bmbt_rec *,
- 				  int);
-+void		xfs_init_local_fork(struct xfs_inode *, int, const void *, int);
+diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+index 2f1839e..d3505ff 100644
+--- a/fs/xfs/xfs_iops.c
++++ b/fs/xfs/xfs_iops.c
+@@ -182,6 +182,8 @@ xfs_generic_create(
+ 	}
+ #endif
  
- struct xfs_bmbt_rec_host *
- 		xfs_iext_get_ext(struct xfs_ifork *, xfs_extnum_t);
-diff --git a/fs/xfs/xfs_symlink.c b/fs/xfs/xfs_symlink.c
-index f9ee5fe..7fa94dc 100644
---- a/fs/xfs/xfs_symlink.c
-+++ b/fs/xfs/xfs_symlink.c
-@@ -306,19 +306,11 @@ xfs_symlink(
- 	 * If the symlink will fit into the inode, write it inline.
- 	 */
- 	if (pathlen <= XFS_IFORK_DSIZE(ip)) {
--		xfs_idata_realloc(ip, pathlen, XFS_DATA_FORK);
--		memcpy(ip->i_df.if_u1.if_data, target_path, pathlen);
--		ip->i_d.di_size = pathlen;
++	xfs_setup_iops(ip);
++
+ 	if (tmpfile)
+ 		d_tmpfile(dentry, inode);
+ 	else
+@@ -369,6 +371,8 @@ xfs_vn_symlink(
+ 	if (unlikely(error))
+ 		goto out_cleanup_inode;
+ 
++	xfs_setup_iops(cip);
++
+ 	d_instantiate(dentry, inode);
+ 	xfs_finish_inode_setup(cip);
+ 	return 0;
+@@ -1210,7 +1214,7 @@ xfs_diflags_to_iflags(
+ }
+ 
+ /*
+- * Initialize the Linux inode and set up the operation vectors.
++ * Initialize the Linux inode.
+  *
+  * When reading existing inodes from disk this is called directly from xfs_iget,
+  * when creating a new inode it is called from xfs_ialloc after setting up the
+@@ -1258,8 +1262,38 @@ xfs_setup_inode(
+ 	inode->i_ctime.tv_nsec	= ip->i_d.di_ctime.t_nsec;
+ 	xfs_diflags_to_iflags(inode, ip);
+ 
+-	ip->d_ops = ip->i_mount->m_nondir_inode_ops;
+-	lockdep_set_class(&ip->i_lock.mr_lock, &xfs_nondir_ilock_class);
++	if (S_ISDIR(inode->i_mode)) {
++		lockdep_set_class(&ip->i_lock.mr_lock, &xfs_dir_ilock_class);
++		ip->d_ops = ip->i_mount->m_dir_inode_ops;
++	} else {
++		ip->d_ops = ip->i_mount->m_nondir_inode_ops;
++		lockdep_set_class(&ip->i_lock.mr_lock, &xfs_nondir_ilock_class);
++	}
++
++	/*
++	 * Ensure all page cache allocations are done from GFP_NOFS context to
++	 * prevent direct reclaim recursion back into the filesystem and blowing
++	 * stacks or deadlocking.
++	 */
++	gfp_mask = mapping_gfp_mask(inode->i_mapping);
++	mapping_set_gfp_mask(inode->i_mapping, (gfp_mask & ~(__GFP_FS)));
++
++	/*
++	 * If there is no attribute fork no ACL can exist on this inode,
++	 * and it can't have any file capabilities attached to it either.
++	 */
++	if (!XFS_IFORK_Q(ip)) {
++		inode_has_no_xattr(inode);
++		cache_no_acl(inode);
++	}
++}
++
++void
++xfs_setup_iops(
++	struct xfs_inode	*ip)
++{
++	struct inode		*inode = &ip->i_vnode;
++
+ 	switch (inode->i_mode & S_IFMT) {
+ 	case S_IFREG:
+ 		inode->i_op = &xfs_inode_operations;
+@@ -1267,13 +1301,11 @@ xfs_setup_inode(
+ 		inode->i_mapping->a_ops = &xfs_address_space_operations;
+ 		break;
+ 	case S_IFDIR:
+-		lockdep_set_class(&ip->i_lock.mr_lock, &xfs_dir_ilock_class);
+ 		if (xfs_sb_version_hasasciici(&XFS_M(inode->i_sb)->m_sb))
+ 			inode->i_op = &xfs_dir_ci_inode_operations;
+ 		else
+ 			inode->i_op = &xfs_dir_inode_operations;
+ 		inode->i_fop = &xfs_dir_file_operations;
+-		ip->d_ops = ip->i_mount->m_dir_inode_ops;
+ 		break;
+ 	case S_IFLNK:
+ 		inode->i_op = &xfs_symlink_inode_operations;
+@@ -1285,21 +1317,4 @@ xfs_setup_inode(
+ 		init_special_inode(inode, inode->i_mode, inode->i_rdev);
+ 		break;
+ 	}
 -
--		/*
--		 * The inode was initially created in extent format.
--		 */
--		ip->i_df.if_flags &= ~(XFS_IFEXTENTS | XFS_IFBROOT);
--		ip->i_df.if_flags |= XFS_IFINLINE;
-+		xfs_init_local_fork(ip, XFS_DATA_FORK, target_path, pathlen);
- 
-+		ip->i_d.di_size = pathlen;
- 		ip->i_d.di_format = XFS_DINODE_FMT_LOCAL;
- 		xfs_trans_log_inode(tp, ip, XFS_ILOG_DDATA | XFS_ILOG_CORE);
+-	/*
+-	 * Ensure all page cache allocations are done from GFP_NOFS context to
+-	 * prevent direct reclaim recursion back into the filesystem and blowing
+-	 * stacks or deadlocking.
+-	 */
+-	gfp_mask = mapping_gfp_mask(inode->i_mapping);
+-	mapping_set_gfp_mask(inode->i_mapping, (gfp_mask & ~(__GFP_FS)));
 -
- 	} else {
- 		int	offset;
- 
+-	/*
+-	 * If there is no attribute fork no ACL can exist on this inode,
+-	 * and it can't have any file capabilities attached to it either.
+-	 */
+-	if (!XFS_IFORK_Q(ip)) {
+-		inode_has_no_xattr(inode);
+-		cache_no_acl(inode);
+-	}
+ }
 -- 
 1.9.1
 
