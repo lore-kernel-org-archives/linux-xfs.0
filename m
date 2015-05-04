@@ -1,25 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id D8E9C7F51
-	for <xfs@oss.sgi.com>; Mon,  4 May 2015 18:00:29 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id CE4CF8F8050
-	for <xfs@oss.sgi.com>; Mon,  4 May 2015 16:00:29 -0700 (PDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 6C3327F51
+	for <xfs@oss.sgi.com>; Mon,  4 May 2015 18:00:30 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 15BE4AC005
+	for <xfs@oss.sgi.com>; Mon,  4 May 2015 16:00:30 -0700 (PDT)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	Fuw5nFYZFB6G7Cgz for <xfs@oss.sgi.com>;
+	PE5Co4PJMFc3BlZI for <xfs@oss.sgi.com>;
 	Mon, 04 May 2015 16:00:27 -0700 (PDT)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.80)
-	(envelope-from <dave@fromorbit.com>) id 1YpPLP-0005iK-KS
+	(envelope-from <dave@fromorbit.com>) id 1YpPLP-0005iM-Kt
 	for xfs@oss.sgi.com; Tue, 05 May 2015 09:00:11 +1000
 Received: from dave by disappointment with local (Exim 4.82_1-5b7a7c0-XX)
-	(envelope-from <dave@disappointment.disaster>) id 1YpPLP-0003Oh-Ji
+	(envelope-from <dave@disappointment.disaster>) id 1YpPLP-0003Om-KA
 	for xfs@oss.sgi.com; Tue, 05 May 2015 09:00:11 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 1/2] xfs: extent size hints can round up extents past MAXEXTLEN
-Date: Tue,  5 May 2015 09:00:07 +1000
-Message-Id: <1430780408-12539-2-git-send-email-david@fromorbit.com>
+Subject: [PATCH 2/2] xfs: xfs_attr_inactive leaves inconsistent attr fork
+	state behind
+Date: Tue,  5 May 2015 09:00:08 +1000
+Message-Id: <1430780408-12539-3-git-send-email-david@fromorbit.com>
 In-Reply-To: <1430780408-12539-1-git-send-email-david@fromorbit.com>
 References: <1430780408-12539-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -41,142 +42,218 @@ From: Dave Chinner <dchinner@redhat.com>
 
 From: Dave Chinner <dchinner@redhat.com>
 
-This results in BMBT corruption, as seen by this test:
+xfs_attr_inactive() is supposed to clean up the attribute fork when
+the inode is being freed. While it removes attribute fork extents,
+it completely ignores attributes in local format, which means that
+there can still be active attributes on the inode after
+xfs_attr_inactive() has run.
 
-# mkfs.xfs -f -d size=40051712b,agcount=4 /dev/vdc
-....
-# mount /dev/vdc /mnt/scratch
-# xfs_io -ft -c "extsize 16m" -c "falloc 0 30g" -c "bmap -vp" /mnt/scratch/foo
+This leads to problems with concurrent inode writeback - the in-core
+inode attribute fork is removed without locking on the assumption
+that nothing will be attempting to access the attribute fork after a
+call to xfs_attr_inactive() because it isn't supposed to exist on
+disk any more.
 
-which results in this failure on a debug kernel:
+To fix this, make xfs_attr_inactive() completely remove all traces
+of the attribute fork from the inode, regardless of it's state.
+Further, also remove the in-core attribute fork structure safely so
+that there is nothing further that needs to be done by callers to
+clean up the attribute fork. This means we can remove the in-core
+and on-disk attribute forks atomically.
 
-XFS: Assertion failed: (blockcount & xfs_mask64hi(64-BMBT_BLOCKCOUNT_BITLEN)) == 0, file: fs/xfs/libxfs/xfs_bmap_btree.c, line: 211
-....
-Call Trace:
- [<ffffffff814cf0ff>] xfs_bmbt_set_allf+0x8f/0x100
- [<ffffffff814cf18d>] xfs_bmbt_set_all+0x1d/0x20
- [<ffffffff814f2efe>] xfs_iext_insert+0x9e/0x120
- [<ffffffff814c7956>] ? xfs_bmap_add_extent_hole_real+0x1c6/0xc70
- [<ffffffff814c7956>] xfs_bmap_add_extent_hole_real+0x1c6/0xc70
- [<ffffffff814caaab>] xfs_bmapi_write+0x72b/0xed0
- [<ffffffff811c72ac>] ? kmem_cache_alloc+0x15c/0x170
- [<ffffffff814fe070>] xfs_alloc_file_space+0x160/0x400
- [<ffffffff81ddcc29>] ? down_write+0x29/0x60
- [<ffffffff815063eb>] xfs_file_fallocate+0x29b/0x310
- [<ffffffff811d2bc8>] ? __sb_start_write+0x58/0x120
- [<ffffffff811e3e18>] ? do_vfs_ioctl+0x318/0x570
- [<ffffffff811cd680>] vfs_fallocate+0x140/0x260
- [<ffffffff811ce6f8>] SyS_fallocate+0x48/0x80
- [<ffffffff81ddec09>] system_call_fastpath+0x12/0x17
+Also, on error simply remove the in-memory attribute fork. There's
+nothing that can be done with it once we have failed to remove the
+on-disk attribute fork, so we may as well just blow it away here
+anyway.
 
-The tracepoint that indicates the extent that triggered the assert
-failure is:
-
-xfs_iext_insert:   idx 0 offset 0 block 16777224 count 2097152 flag 1
-
-Clearly indicating that the extent length is greater than MAXEXTLEN,
-which is 2097151. A prior trace point shows the allocation was an
-exact size match and that a length greater than MAXEXTLEN was asked
-for:
-
-xfs_alloc_size_done:  agno 1 agbno 8 minlen 2097152 maxlen 2097152
-					    ^^^^^^^        ^^^^^^^
-
-We don't see this problem with extent size hints through the IO path
-because we can't do single IOs large enough to trigger MAXEXTLEN
-allocation. fallocate(), OTOH, is not limited in it's allocation
-sizes and so needs help here.
-
-The issue is that the extent size hint alignment is rounding up the
-extent size past MAXEXTLEN, because xfs_bmapi_write() is not taking
-into account extent size hints when calculating the maximum extent
-length to allocate. xfs_bmapi_reserve_delalloc() is already doing
-this, but direct extent allocation is not.
-
-Unfortunately, the calculation in xfs_bmapi_reserve_delalloc() is
-wrong, and it works only because delayed allocation extents are not
-limited in size to MAXEXTLEN in the in-core extent tree. hence this
-calculation does not work for direct allocation, and the delalloc
-code needs fixing. This may, in fact be the underlying bug that
-occassionally causes transaction overruns in delayed allocation
-extent conversion, so now we know it's wrong we should fix it, too.
-Many thanks to Brian Foster for finding this problem during review
-of this patch.
-
-Hence the fix, after much code reading, is to allow
-xfs_bmap_extsize_align() to align partial extents when full
-alignment would extend the alignment past MAXEXTLEN. We can safely
-do this because all callers have higher layer allocation loops that
-already handle short allocations, and so will simply run another
-allocation to cover the remainder of the requested allocation range
-that we ignored during alignment. The advantage of this approach is
-that it also removes the need for callers to do anything other than
-limit their requests to MAXEXTLEN - they don't really need to be
-aware of extent size hints at all.
-
+cc: <stable@vger.kernel.org> # 3.12 to 4.0
+Reported-by: Waiman Long <waiman.long@hp.com>
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/libxfs/xfs_bmap.c | 30 +++++++++++++++++++-----------
- 1 file changed, 19 insertions(+), 11 deletions(-)
+ fs/xfs/libxfs/xfs_attr_leaf.c |  2 +-
+ fs/xfs/libxfs/xfs_attr_leaf.h |  2 +-
+ fs/xfs/xfs_attr_inactive.c    | 83 ++++++++++++++++++++++++++-----------------
+ fs/xfs/xfs_inode.c            | 12 +++----
+ 4 files changed, 57 insertions(+), 42 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index aeffeaa..79f7433 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -3224,12 +3224,25 @@ xfs_bmap_extsize_align(
- 		align_alen += temp;
- 		align_off -= temp;
- 	}
-+
-+	/* Same adjustment for the end of the requested area. */
-+	temp = (align_alen % extsz);
-+	if (temp)
-+		align_alen += extsz - temp;
-+
+diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
+index 04e79d5..36b354e 100644
+--- a/fs/xfs/libxfs/xfs_attr_leaf.c
++++ b/fs/xfs/libxfs/xfs_attr_leaf.c
+@@ -574,7 +574,7 @@ xfs_attr_shortform_add(xfs_da_args_t *args, int forkoff)
+  * After the last attribute is removed revert to original inode format,
+  * making all literal area available to the data fork once more.
+  */
+-STATIC void
++void
+ xfs_attr_fork_reset(
+ 	struct xfs_inode	*ip,
+ 	struct xfs_trans	*tp)
+diff --git a/fs/xfs/libxfs/xfs_attr_leaf.h b/fs/xfs/libxfs/xfs_attr_leaf.h
+index 025c4b8..6478627 100644
+--- a/fs/xfs/libxfs/xfs_attr_leaf.h
++++ b/fs/xfs/libxfs/xfs_attr_leaf.h
+@@ -53,7 +53,7 @@ int	xfs_attr_shortform_remove(struct xfs_da_args *args);
+ int	xfs_attr_shortform_list(struct xfs_attr_list_context *context);
+ int	xfs_attr_shortform_allfit(struct xfs_buf *bp, struct xfs_inode *dp);
+ int	xfs_attr_shortform_bytesfit(xfs_inode_t *dp, int bytes);
+-
++void	xfs_attr_fork_reset(struct xfs_inode *ip, struct xfs_trans *tp);
+ 
+ /*
+  * Internal routines when attribute fork size == XFS_LBSIZE(mp).
+diff --git a/fs/xfs/xfs_attr_inactive.c b/fs/xfs/xfs_attr_inactive.c
+index f9c1c64..d811a0f 100644
+--- a/fs/xfs/xfs_attr_inactive.c
++++ b/fs/xfs/xfs_attr_inactive.c
+@@ -380,23 +380,31 @@ xfs_attr3_root_inactive(
+ 	return error;
+ }
+ 
++/*
++ * xfs_attr_inactive kills all traces of an attribute fork on an inode. It
++ * removes both the on-disk and in-memory inode fork. Note that this also has to
++ * handle the condition of inodes without attributes but with an attribute fork
++ * configured, so we can't use xfs_inode_hasattr() here.
++ *
++ * The in-memory attribute fork is removed even on error.
++ */
+ int
+-xfs_attr_inactive(xfs_inode_t *dp)
++xfs_attr_inactive(
++	struct xfs_inode	*dp)
+ {
+-	xfs_trans_t *trans;
+-	xfs_mount_t *mp;
+-	int error;
++	struct xfs_trans	*trans;
++	struct xfs_mount	*mp;
++	int			cancel_flags = 0;
++	int			lock_mode = XFS_ILOCK_SHARED;
++	int			error = 0;
+ 
+ 	mp = dp->i_mount;
+ 	ASSERT(! XFS_NOT_DQATTACHED(mp, dp));
+ 
+-	xfs_ilock(dp, XFS_ILOCK_SHARED);
+-	if (!xfs_inode_hasattr(dp) ||
+-	    dp->i_d.di_aformat == XFS_DINODE_FMT_LOCAL) {
+-		xfs_iunlock(dp, XFS_ILOCK_SHARED);
+-		return 0;
+-	}
+-	xfs_iunlock(dp, XFS_ILOCK_SHARED);
++	xfs_ilock(dp, lock_mode);
++	if (!XFS_IFORK_Q(dp))
++		goto out_destroy_fork;
++	xfs_iunlock(dp, lock_mode);
+ 
  	/*
--	 * Same adjustment for the end of the requested area.
-+	 * For large extent hint sizes, the aligned extent might be larger than
-+	 * MAXEXTLEN. In that case, reduce the size by an extsz so that it pulls
-+	 * the length back under MAXEXTLEN. The outer allocation loops handle
-+	 * short allocation just fine, so it is safe to do this. We only want to
-+	 * do it when we are forced to, though, because it means more allocation
-+	 * operations are required.
+ 	 * Start our first transaction of the day.
+@@ -408,13 +416,15 @@ xfs_attr_inactive(xfs_inode_t *dp)
+ 	 * the inode in every transaction to let it float upward through
+ 	 * the log.
  	 */
--	if ((temp = (align_alen % extsz))) {
--		align_alen += extsz - temp;
-+	if (align_alen > MAXEXTLEN) {
-+		align_alen -= extsz;
-+		ASSERT(align_alen <= MAXEXTLEN);
- 	}
++	lock_mode = 0;
+ 	trans = xfs_trans_alloc(mp, XFS_TRANS_ATTRINVAL);
+ 	error = xfs_trans_reserve(trans, &M_RES(mp)->tr_attrinval, 0, 0);
+-	if (error) {
+-		xfs_trans_cancel(trans, 0);
+-		return error;
+-	}
+-	xfs_ilock(dp, XFS_ILOCK_EXCL);
++	if (error)
++		goto out_cancel;
 +
++	lock_mode = XFS_ILOCK_EXCL;
++	cancel_flags = XFS_TRANS_RELEASE_LOG_RES | XFS_TRANS_ABORT;
++	xfs_ilock(dp, lock_mode);
+ 
  	/*
- 	 * If the previous block overlaps with this proposed allocation
- 	 * then move the start forward without adjusting the length.
-@@ -3318,7 +3331,9 @@ xfs_bmap_extsize_align(
- 			return -EINVAL;
- 	} else {
- 		ASSERT(orig_off >= align_off);
--		ASSERT(orig_end <= align_off + align_alen);
-+		/* see MAXEXTLEN handling above */
-+		ASSERT(orig_end <= align_off + align_alen ||
-+		       align_alen + extsz > MAXEXTLEN);
+ 	 * No need to make quota reservations here. We expect to release some
+@@ -423,28 +433,37 @@ xfs_attr_inactive(xfs_inode_t *dp)
+ 	xfs_trans_ijoin(trans, dp, 0);
+ 
+ 	/*
+-	 * Decide on what work routines to call based on the inode size.
++	 * It's unlikely we've raced with an attribute fork creation, but check
++	 * anyway just in case.
+ 	 */
+-	if (!xfs_inode_hasattr(dp) ||
+-	    dp->i_d.di_aformat == XFS_DINODE_FMT_LOCAL) {
+-		error = 0;
+-		goto out;
++	if (!XFS_IFORK_Q(dp))
++		goto out_cancel;
++
++	/* invalidate and truncate the attribute fork extents */
++	if (dp->i_d.di_aformat != XFS_DINODE_FMT_LOCAL) {
++		error = xfs_attr3_root_inactive(&trans, dp);
++		if (error)
++			goto out_cancel;
++
++		error = xfs_itruncate_extents(&trans, dp, XFS_ATTR_FORK, 0);
++		if (error)
++			goto out_cancel;
+ 	}
+-	error = xfs_attr3_root_inactive(&trans, dp);
+-	if (error)
+-		goto out;
+ 
+-	error = xfs_itruncate_extents(&trans, dp, XFS_ATTR_FORK, 0);
+-	if (error)
+-		goto out;
++	/* Reset the attribute fork - this also destroys the in-core fork */
++	xfs_attr_fork_reset(dp, trans);
+ 
+ 	error = xfs_trans_commit(trans, XFS_TRANS_RELEASE_LOG_RES);
+-	xfs_iunlock(dp, XFS_ILOCK_EXCL);
+-
++	xfs_iunlock(dp, lock_mode);
+ 	return error;
+ 
+-out:
+-	xfs_trans_cancel(trans, XFS_TRANS_RELEASE_LOG_RES|XFS_TRANS_ABORT);
+-	xfs_iunlock(dp, XFS_ILOCK_EXCL);
++out_cancel:
++	xfs_trans_cancel(trans, cancel_flags);
++out_destroy_fork:
++	/* kill the in-core attr fork before we drop the inode lock */
++	if (dp->i_afp)
++		xfs_idestroy_fork(dp, XFS_ATTR_FORK);
++	if (lock_mode)
++		xfs_iunlock(dp, lock_mode);
+ 	return error;
+ }
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index d6ebc85..1117dd3 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -1946,21 +1946,17 @@ xfs_inactive(
+ 	/*
+ 	 * If there are attributes associated with the file then blow them away
+ 	 * now.  The code calls a routine that recursively deconstructs the
+-	 * attribute fork.  We need to just commit the current transaction
+-	 * because we can't use it for xfs_attr_inactive().
++	 * attribute fork. If also blows away the in-core attribute fork.
+ 	 */
+-	if (ip->i_d.di_anextents > 0) {
+-		ASSERT(ip->i_d.di_forkoff != 0);
+-
++	if (XFS_IFORK_Q(ip)) {
+ 		error = xfs_attr_inactive(ip);
+ 		if (error)
+ 			return;
  	}
  
- #ifdef DEBUG
-@@ -4099,13 +4114,6 @@ xfs_bmapi_reserve_delalloc(
- 	/* Figure out the extent size, adjust alen */
- 	extsz = xfs_get_extsz_hint(ip);
- 	if (extsz) {
--		/*
--		 * Make sure we don't exceed a single extent length when we
--		 * align the extent by reducing length we are going to
--		 * allocate by the maximum amount extent size aligment may
--		 * require.
--		 */
--		alen = XFS_FILBLKS_MIN(len, MAXEXTLEN - (2 * extsz - 1));
- 		error = xfs_bmap_extsize_align(mp, got, prev, extsz, rt, eof,
- 					       1, 0, &aoff, &alen);
- 		ASSERT(!error);
+-	if (ip->i_afp)
+-		xfs_idestroy_fork(ip, XFS_ATTR_FORK);
+-
++	ASSERT(!ip->i_afp);
+ 	ASSERT(ip->i_d.di_anextents == 0);
++	ASSERT(ip->i_d.di_forkoff == 0);
+ 
+ 	/*
+ 	 * Free the inode.
 -- 
 2.0.0
 
