@@ -1,25 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id E5DAC7F55
-	for <xfs@oss.sgi.com>; Mon,  4 May 2015 18:00:30 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id DC00E8F8050
-	for <xfs@oss.sgi.com>; Mon,  4 May 2015 16:00:27 -0700 (PDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id AAB307F55
+	for <xfs@oss.sgi.com>; Mon,  4 May 2015 18:13:28 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 472B0AC001
+	for <xfs@oss.sgi.com>; Mon,  4 May 2015 16:13:25 -0700 (PDT)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	Oc6k4FaFBXdCWzhe for <xfs@oss.sgi.com>;
-	Mon, 04 May 2015 16:00:25 -0700 (PDT)
-Received: from disappointment.disaster.area ([192.168.1.110]
-	helo=disappointment) by dastard with esmtp (Exim 4.80)
-	(envelope-from <dave@fromorbit.com>) id 1YpPLP-0005iI-Jy
-	for xfs@oss.sgi.com; Tue, 05 May 2015 09:00:11 +1000
-Received: from dave by disappointment with local (Exim 4.82_1-5b7a7c0-XX)
-	(envelope-from <dave@disappointment.disaster>) id 1YpPLP-0003Oe-Iy
-	for xfs@oss.sgi.com; Tue, 05 May 2015 09:00:11 +1000
+	epTWNCM5BmBp4ZOA for <xfs@oss.sgi.com>;
+	Mon, 04 May 2015 16:13:23 -0700 (PDT)
+Date: Tue, 5 May 2015 09:13:10 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 0/2] xfs: couple of corruption fixes...
-Date: Tue,  5 May 2015 09:00:06 +1000
-Message-Id: <1430780408-12539-1-git-send-email-david@fromorbit.com>
+Subject: Re: [PATCH 0/5 v2 RESEND] fs: Fixes for removing xid bits and
+	security labels
+Message-ID: <20150504231310.GF21261@dastard>
+References: <1425379119-3773-1-git-send-email-jack@suse.cz>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <1425379119-3773-1-git-send-email-jack@suse.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,21 +26,50 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Jan Kara <jack@suse.cz>
+Cc: linux-fsdevel@vger.kernel.org, Al Viro <viro@ZenIV.linux.org.uk>, xfs@oss.sgi.com
 
-Hi folks,
+On Tue, Mar 03, 2015 at 11:38:34AM +0100, Jan Kara wrote:
+>   Hello,
+> 
+>   warning in XFS made me look into detail into how clearing of suid / sgid
+> bits and security labels is done. And I've spotted a few issues:
+> 1) MS_NOSEC handling is broken - we set it after each file_remove_suid() call.
+>    However we needn't have removed suid bit simply because we have
+>    CAP_SYS_FSID and further writes to the file from processes without this
+>    capability still need to clear the suid bit.
+> 2) file_remove_suid() is a misnomer since it also handles removing of
+>    security labels. It is even more confusing because should_remove_suid()
+>    doesn't return whether file_remove_suid() is needed or not.
+> 3) On truncate we do clear suid bits but not security labels. According to
+>    documentation in include/linux/security.h that's a bug but please correct
+>    me if I'm wrong.
+> 4) ocfs2 doesn't clear security labels - hard to fix, I left it alone for now.
+> 5) XFS didn't provide proper exclusion for clearing mode bits.
+> 
+>   This series aims at fixing above issues.
+> 
+>   Since v1 I have removed bogus patch changing inode_set_flags(), I have
+> updated changelog of patch 4/5 to better explain why ->inode_killpriv should
+> be called and I have included a fix for MS_NOSEC handling in this series.
+> Al, can you please merge the patches? Thanks!
 
-This are two patches following up on review discussions that were
-had a while back. Both fix problems that cause on-disk corruption.
+Hi Al + Jan,
 
-Comments, testing, thoughts welcome.
+What's happening with this patchset? If it's not going to be pulled
+into the VFS, I'll just pull in a version of the XFS patch that
+corrects the locking at this point...
 
--Dave.
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
