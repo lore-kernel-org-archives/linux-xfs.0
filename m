@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 85BF37F5A
-	for <xfs@oss.sgi.com>; Sun,  3 May 2015 21:02:53 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 9A51F7F5D
+	for <xfs@oss.sgi.com>; Sun,  3 May 2015 21:25:46 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 7D2858F8035
-	for <xfs@oss.sgi.com>; Sun,  3 May 2015 19:02:50 -0700 (PDT)
-Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
-	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	DhW2F0sySCbWrqUb for <xfs@oss.sgi.com>;
-	Sun, 03 May 2015 19:02:45 -0700 (PDT)
-Date: Mon, 4 May 2015 12:02:42 +1000
-From: Dave Chinner <david@fromorbit.com>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 922B7304032
+	for <xfs@oss.sgi.com>; Sun,  3 May 2015 19:25:43 -0700 (PDT)
+Received: from smtpbgau1.qq.com (smtpbgau1.qq.com [54.206.16.166]) by
+	cuda.sgi.com with ESMTP id 8kjjWMg4rf0Q4BK8 (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Sun, 03 May 2015 19:25:40 -0700 (PDT)
+Message-ID: <5546D89A.1070504@foxmail.com>
+Date: Mon, 04 May 2015 10:25:30 +0800
+From: Wang Sheng-Hui <shhuiw@foxmail.com>
+MIME-Version: 1.0
 Subject: Re: xfstests: what's the difference between generic/043 and
 	generic/044
-Message-ID: <20150504020242.GB21261@dastard>
 References: <tencent_5AC82BAD44B2E3AE054828D2@qq.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <tencent_5AC82BAD44B2E3AE054828D2@qq.com>
+	<20150504020242.GB21261@dastard>
+In-Reply-To: <20150504020242.GB21261@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,69 +26,46 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Wang Sheng-Hui <shhuiw@foxmail.com>
+To: Dave Chinner <david@fromorbit.com>
 Cc: xfs <xfs@oss.sgi.com>
 
-[cc fstests@vger.kernel.org. Please send xfstests questions there. ]
-
-On Mon, May 04, 2015 at 09:49:20AM +0800, Wang Sheng-Hui wrote:
-> Hi,
-> 
-> I'm reading the source code of generic/044 in xfstests, and I cannot figure out the
-> difference compared with 043 testcase:
-> -------------------------------------------------------------------------------
-> $ diff -Nu 043 044
-> --- 043 2015-03-09 10:03:48.013887582 +0800
-> +++ 044 2015-03-09 10:03:48.013887582 +0800
-> @@ -1,5 +1,5 @@
->  #! /bin/bash
-> -# FSQA Test No. 043
-> +# FSQA Test No. 044
->  #
->  # Test for NULL files problem
->  #
-> @@ -56,6 +56,12 @@
->                 echo error creating/writing file $file
->                 exit
->         fi
-> +       xfs_io -c "truncate 64k" $file &gt; /dev/null
-> +       if [ $? -ne 0 ]
-> +       then
-> +               echo error truncating file $file
-> +               exit
-> +       fi
->         let i=$i+1
->  done
-> 
-> 
-> But before the 'truncate 64K', only 64K sized files are created:
->                  xfs_io -f -c "pwrite -b 64k -S 0xff 0 64k" $file &gt; /dev/null
-> So I think it's useless here, or some typo e.g smaller truncate needed?
-
-It's testing a corner case in the truncate code, where new_size ==
-old_size. Go back years ago (i.e. before ~2007) when the "NULL
-files" problem existed, this would result in XFS writing a size of
-64k to the inode, but none of the data written into the kernel would
-exist on disk.  Hence you'd get a "NULL file" after crash recovery
-if you did this.
-
-generic/043 is simply testing write without truncate - the result
-there was dependent on timing of writeback, so not guaranteed to
-fail. The truncate case pretty much guaranteed NULL files would
-exist and so the test always failed....
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+CgpPbiAyMDE15bm0MDXmnIgwNOaXpSAxMDowMiwgRGF2ZSBDaGlubmVyIHdyb3RlOgo+IFtjYyBm
+c3Rlc3RzQHZnZXIua2VybmVsLm9yZy4gUGxlYXNlIHNlbmQgeGZzdGVzdHMgcXVlc3Rpb25zIHRo
+ZXJlLiBdCj4gCj4gT24gTW9uLCBNYXkgMDQsIDIwMTUgYXQgMDk6NDk6MjBBTSArMDgwMCwgV2Fu
+ZyBTaGVuZy1IdWkgd3JvdGU6Cj4+IEhpLAo+Pgo+PiBJJ20gcmVhZGluZyB0aGUgc291cmNlIGNv
+ZGUgb2YgZ2VuZXJpYy8wNDQgaW4geGZzdGVzdHMsIGFuZCBJIGNhbm5vdCBmaWd1cmUgb3V0IHRo
+ZQo+PiBkaWZmZXJlbmNlIGNvbXBhcmVkIHdpdGggMDQzIHRlc3RjYXNlOgo+PiAtLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tCj4+ICQgZGlmZiAtTnUgMDQzIDA0NAo+PiAtLS0gMDQzIDIwMTUtMDMtMDkg
+MTA6MDM6NDguMDEzODg3NTgyICswODAwCj4+ICsrKyAwNDQgMjAxNS0wMy0wOSAxMDowMzo0OC4w
+MTM4ODc1ODIgKzA4MDAKPj4gQEAgLTEsNSArMSw1IEBACj4+ICAjISAvYmluL2Jhc2gKPj4gLSMg
+RlNRQSBUZXN0IE5vLiAwNDMKPj4gKyMgRlNRQSBUZXN0IE5vLiAwNDQKPj4gICMKPj4gICMgVGVz
+dCBmb3IgTlVMTCBmaWxlcyBwcm9ibGVtCj4+ICAjCj4+IEBAIC01Niw2ICs1NiwxMiBAQAo+PiAg
+ICAgICAgICAgICAgICAgZWNobyBlcnJvciBjcmVhdGluZy93cml0aW5nIGZpbGUgJGZpbGUKPj4g
+ICAgICAgICAgICAgICAgIGV4aXQKPj4gICAgICAgICBmaQo+PiArICAgICAgIHhmc19pbyAtYyAi
+dHJ1bmNhdGUgNjRrIiAkZmlsZSAmZ3Q7IC9kZXYvbnVsbAo+PiArICAgICAgIGlmIFsgJD8gLW5l
+IDAgXQo+PiArICAgICAgIHRoZW4KPj4gKyAgICAgICAgICAgICAgIGVjaG8gZXJyb3IgdHJ1bmNh
+dGluZyBmaWxlICRmaWxlCj4+ICsgICAgICAgICAgICAgICBleGl0Cj4+ICsgICAgICAgZmkKPj4g
+ICAgICAgICBsZXQgaT0kaSsxCj4+ICBkb25lCj4+Cj4+Cj4+IEJ1dCBiZWZvcmUgdGhlICd0cnVu
+Y2F0ZSA2NEsnLCBvbmx5IDY0SyBzaXplZCBmaWxlcyBhcmUgY3JlYXRlZDoKPj4gICAgICAgICAg
+ICAgICAgICB4ZnNfaW8gLWYgLWMgInB3cml0ZSAtYiA2NGsgLVMgMHhmZiAwIDY0ayIgJGZpbGUg
+Jmd0OyAvZGV2L251bGwKPj4gU28gSSB0aGluayBpdCdzIHVzZWxlc3MgaGVyZSwgb3Igc29tZSB0
+eXBvIGUuZyBzbWFsbGVyIHRydW5jYXRlIG5lZWRlZD8KPiAKPiBJdCdzIHRlc3RpbmcgYSBjb3Ju
+ZXIgY2FzZSBpbiB0aGUgdHJ1bmNhdGUgY29kZSwgd2hlcmUgbmV3X3NpemUgPT0KPiBvbGRfc2l6
+ZS4gR28gYmFjayB5ZWFycyBhZ28gKGkuZS4gYmVmb3JlIH4yMDA3KSB3aGVuIHRoZSAiTlVMTAo+
+IGZpbGVzIiBwcm9ibGVtIGV4aXN0ZWQsIHRoaXMgd291bGQgcmVzdWx0IGluIFhGUyB3cml0aW5n
+IGEgc2l6ZSBvZgo+IDY0ayB0byB0aGUgaW5vZGUsIGJ1dCBub25lIG9mIHRoZSBkYXRhIHdyaXR0
+ZW4gaW50byB0aGUga2VybmVsIHdvdWxkCj4gZXhpc3Qgb24gZGlzay4gIEhlbmNlIHlvdSdkIGdl
+dCBhICJOVUxMIGZpbGUiIGFmdGVyIGNyYXNoIHJlY292ZXJ5Cj4gaWYgeW91IGRpZCB0aGlzLgo+
+IAo+IGdlbmVyaWMvMDQzIGlzIHNpbXBseSB0ZXN0aW5nIHdyaXRlIHdpdGhvdXQgdHJ1bmNhdGUg
+LSB0aGUgcmVzdWx0Cj4gdGhlcmUgd2FzIGRlcGVuZGVudCBvbiB0aW1pbmcgb2Ygd3JpdGViYWNr
+LCBzbyBub3QgZ3VhcmFudGVlZCB0bwo+IGZhaWwuIFRoZSB0cnVuY2F0ZSBjYXNlIHByZXR0eSBt
+dWNoIGd1YXJhbnRlZWQgTlVMTCBmaWxlcyB3b3VsZAo+IGV4aXN0IGFuZCBzbyB0aGUgdGVzdCBh
+bHdheXMgZmFpbGVkLi4uLgoKVGhhbmtzIGZvciB5b3VyIGV4cGxhbmF0aW9uLCBEYXZlLgoKUmVn
+YXJkcywKU2hlbmctSHVpCgo+IAo+IENoZWVycywKPiAKPiBEYXZlLgo+IAoKCl9fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZz
+QG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
