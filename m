@@ -1,18 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 3E9A57F54
-	for <xfs@oss.sgi.com>; Tue,  5 May 2015 17:02:25 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 968807F5F
+	for <xfs@oss.sgi.com>; Tue,  5 May 2015 17:02:26 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id B12A4AC002
-	for <xfs@oss.sgi.com>; Tue,  5 May 2015 15:02:24 -0700 (PDT)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 119C8AC002
+	for <xfs@oss.sgi.com>; Tue,  5 May 2015 15:02:22 -0700 (PDT)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	4DOOY4E2uPnYD84f for <xfs@oss.sgi.com>;
-	Tue, 05 May 2015 15:02:22 -0700 (PDT)
+	ecyApaqEDaOpBKJW for <xfs@oss.sgi.com>;
+	Tue, 05 May 2015 15:02:20 -0700 (PDT)
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 2/2] xfs: inode counter needs to use __percpu_counter_compare
-Date: Wed,  6 May 2015 08:01:39 +1000
-Message-Id: <1430863299-9341-3-git-send-email-david@fromorbit.com>
+Subject: [PATCH 1/2] percpu_counter: batch size aware
+	__percpu_counter_compare()
+Date: Wed,  6 May 2015 08:01:38 +1000
+Message-Id: <1430863299-9341-2-git-send-email-david@fromorbit.com>
 In-Reply-To: <1430863299-9341-1-git-send-email-david@fromorbit.com>
 References: <1430863299-9341-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -35,54 +36,88 @@ From: Dave Chinner <dchinner@redhat.com>
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Because the counter uses a custom batch size, the comparison
-function needs to be aware of that batch size otherwise the
-comparison does not work correctly. This leads to ASSERT failures
-on generic/027 like this:
+XFS uses non-stanard batch sizes for avoiding frequent global
+counter updates on it's allocated inode counters, as they increment
+or decrement in batches of 64 inodes. Hence the standard percpu
+counter batch of 32 means that the counter is effectively a global
+counter. Currently Xfs uses a batch size of 128 so that it doesn't
+take the global lock on every single modification.
 
- XFS: Assertion failed: 0, file: fs/xfs/xfs_mount.c, line: 1099
- ------------[ cut here ]------------
-....
- Call Trace:
-  [<ffffffff81522a39>] xfs_mod_icount+0x99/0xc0
-  [<ffffffff815285cb>] xfs_trans_unreserve_and_mod_sb+0x28b/0x5b0
-  [<ffffffff8152f941>] xfs_log_commit_cil+0x321/0x580
-  [<ffffffff81528e17>] xfs_trans_commit+0xb7/0x260
-  [<ffffffff81503d4d>] xfs_bmap_finish+0xcd/0x1b0
-  [<ffffffff8151da41>] xfs_inactive_ifree+0x1e1/0x250
-  [<ffffffff8151dbe0>] xfs_inactive+0x130/0x200
-  [<ffffffff81523a21>] xfs_fs_evict_inode+0x91/0xf0
-  [<ffffffff811f3958>] evict+0xb8/0x190
-  [<ffffffff811f433b>] iput+0x18b/0x1f0
-  [<ffffffff811e8853>] do_unlinkat+0x1f3/0x320
-  [<ffffffff811d548a>] ? filp_close+0x5a/0x80
-  [<ffffffff811e999b>] SyS_unlinkat+0x1b/0x40
-  [<ffffffff81e0892e>] system_call_fastpath+0x12/0x71
+However, Xfs also needs to compare accurately against zero, which
+means we need to use percpu_counter_compare(), and that has a
+hard-coded batch size of 32, and hence will spuriously fail to
+detect when it is supposed to use precise comparisons and hence
+the accounting goes wrong.
 
-This is a regression introduced by commit 501ab32 ("xfs: use generic
-percpu counters for inode counter").
+Add __percpu_counter_compare() to take a custom batch size so we can
+use it sanely in XFS and factor percpu_counter_compare() to use it.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_mount.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+ include/linux/percpu_counter.h | 13 ++++++++++++-
+ lib/percpu_counter.c           |  6 +++---
+ 2 files changed, 15 insertions(+), 4 deletions(-)
 
-diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-index 02f827f..900f8ce 100644
---- a/fs/xfs/xfs_mount.c
-+++ b/fs/xfs/xfs_mount.c
-@@ -1106,8 +1106,9 @@ xfs_mod_icount(
- 	int64_t			delta)
+diff --git a/include/linux/percpu_counter.h b/include/linux/percpu_counter.h
+index 50e5009..4c82e60 100644
+--- a/include/linux/percpu_counter.h
++++ b/include/linux/percpu_counter.h
+@@ -41,7 +41,12 @@ void percpu_counter_destroy(struct percpu_counter *fbc);
+ void percpu_counter_set(struct percpu_counter *fbc, s64 amount);
+ void __percpu_counter_add(struct percpu_counter *fbc, s64 amount, s32 batch);
+ s64 __percpu_counter_sum(struct percpu_counter *fbc);
+-int percpu_counter_compare(struct percpu_counter *fbc, s64 rhs);
++int __percpu_counter_compare(struct percpu_counter *fbc, s64 rhs, s32 batch);
++
++static inline int percpu_counter_compare(struct percpu_counter *fbc, s64 rhs)
++{
++	return __percpu_counter_compare(fbc, rhs, percpu_counter_batch);
++}
+ 
+ static inline void percpu_counter_add(struct percpu_counter *fbc, s64 amount)
  {
- 	/* deltas are +/-64, hence the large batch size of 128. */
--	__percpu_counter_add(&mp->m_icount, delta, 128);
--	if (percpu_counter_compare(&mp->m_icount, 0) < 0) {
-+#define _ICOUNT_BATCH	128
-+	__percpu_counter_add(&mp->m_icount, delta, _ICOUNT_BATCH);
-+	if (__percpu_counter_compare(&mp->m_icount, 0, _ICOUNT_BATCH) < 0) {
- 		ASSERT(0);
- 		percpu_counter_add(&mp->m_icount, -delta);
- 		return -EINVAL;
+@@ -116,6 +121,12 @@ static inline int percpu_counter_compare(struct percpu_counter *fbc, s64 rhs)
+ 		return 0;
+ }
+ 
++static inline int
++percpu_counter_compare(struct percpu_counter *fbc, s64 rhs, s32 batch)
++{
++	return percpu_counter_compare(fbc, rhs);
++}
++
+ static inline void
+ percpu_counter_add(struct percpu_counter *fbc, s64 amount)
+ {
+diff --git a/lib/percpu_counter.c b/lib/percpu_counter.c
+index 48144cd..f051d69 100644
+--- a/lib/percpu_counter.c
++++ b/lib/percpu_counter.c
+@@ -197,13 +197,13 @@ static int percpu_counter_hotcpu_callback(struct notifier_block *nb,
+  * Compare counter against given value.
+  * Return 1 if greater, 0 if equal and -1 if less
+  */
+-int percpu_counter_compare(struct percpu_counter *fbc, s64 rhs)
++int __percpu_counter_compare(struct percpu_counter *fbc, s64 rhs, s32 batch)
+ {
+ 	s64	count;
+ 
+ 	count = percpu_counter_read(fbc);
+ 	/* Check to see if rough count will be sufficient for comparison */
+-	if (abs(count - rhs) > (percpu_counter_batch*num_online_cpus())) {
++	if (abs(count - rhs) > (batch * num_online_cpus())) {
+ 		if (count > rhs)
+ 			return 1;
+ 		else
+@@ -218,7 +218,7 @@ int percpu_counter_compare(struct percpu_counter *fbc, s64 rhs)
+ 	else
+ 		return 0;
+ }
+-EXPORT_SYMBOL(percpu_counter_compare);
++EXPORT_SYMBOL(__percpu_counter_compare);
+ 
+ static int __init percpu_counter_startup(void)
+ {
 -- 
 2.0.0
 
