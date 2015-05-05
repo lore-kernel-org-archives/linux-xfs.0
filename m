@@ -1,24 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 8F70D7F4E
-	for <xfs@oss.sgi.com>; Tue,  5 May 2015 02:56:36 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 13380AC003
-	for <xfs@oss.sgi.com>; Tue,  5 May 2015 00:56:35 -0700 (PDT)
-Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id UPKUc3BIe39XgnZG (version=TLSv1 cipher=AES256-SHA
-	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 05 May 2015 00:56:33 -0700 (PDT)
-Date: Tue, 5 May 2015 09:56:31 +0200
-From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH 0/5 v2 RESEND] fs: Fixes for removing xid bits and
-	security labels
-Message-ID: <20150505075631.GB11943@quack.suse.cz>
-References: <1425379119-3773-1-git-send-email-jack@suse.cz>
-	<20150504231310.GF21261@dastard>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 0DD0C7F51
+	for <xfs@oss.sgi.com>; Tue,  5 May 2015 09:26:00 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id E993A30404E
+	for <xfs@oss.sgi.com>; Tue,  5 May 2015 07:25:56 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id tkmQmN0KDyl343Ql (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 05 May 2015 07:25:56 -0700 (PDT)
+Received: from int-mx14.intmail.prod.int.phx2.redhat.com
+	(int-mx14.intmail.prod.int.phx2.redhat.com [10.5.11.27])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id t45EPsOx014748
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256
+	verify=FAIL) for <xfs@oss.sgi.com>; Tue, 5 May 2015 10:25:55 -0400
+Date: Tue, 5 May 2015 10:25:52 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH] xfs_db: report FINOBT in version output
+Message-ID: <20150505142552.GB43235@bfoster.bfoster>
+References: <5541A20B.2080607@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20150504231310.GF21261@dastard>
+In-Reply-To: <5541A20B.2080607@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,47 +34,34 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-fsdevel@vger.kernel.org, Jan Kara <jack@suse.cz>, Al Viro <viro@ZenIV.linux.org.uk>, xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-On Tue 05-05-15 09:13:10, Dave Chinner wrote:
-> On Tue, Mar 03, 2015 at 11:38:34AM +0100, Jan Kara wrote:
-> >   Hello,
-> > 
-> >   warning in XFS made me look into detail into how clearing of suid / sgid
-> > bits and security labels is done. And I've spotted a few issues:
-> > 1) MS_NOSEC handling is broken - we set it after each file_remove_suid() call.
-> >    However we needn't have removed suid bit simply because we have
-> >    CAP_SYS_FSID and further writes to the file from processes without this
-> >    capability still need to clear the suid bit.
-> > 2) file_remove_suid() is a misnomer since it also handles removing of
-> >    security labels. It is even more confusing because should_remove_suid()
-> >    doesn't return whether file_remove_suid() is needed or not.
-> > 3) On truncate we do clear suid bits but not security labels. According to
-> >    documentation in include/linux/security.h that's a bug but please correct
-> >    me if I'm wrong.
-> > 4) ocfs2 doesn't clear security labels - hard to fix, I left it alone for now.
-> > 5) XFS didn't provide proper exclusion for clearing mode bits.
-> > 
-> >   This series aims at fixing above issues.
-> > 
-> >   Since v1 I have removed bogus patch changing inode_set_flags(), I have
-> > updated changelog of patch 4/5 to better explain why ->inode_killpriv should
-> > be called and I have included a fix for MS_NOSEC handling in this series.
-> > Al, can you please merge the patches? Thanks!
+On Wed, Apr 29, 2015 at 10:31:23PM -0500, Eric Sandeen wrote:
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> ---
+
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+
 > 
-> Hi Al + Jan,
+> diff --git a/db/sb.c b/db/sb.c
+> index 23ec87c..974abd2 100644
+> --- a/db/sb.c
+> +++ b/db/sb.c
+> @@ -658,6 +658,8 @@ version_string(
+>  		strcat(s, ",CRC");
+>  	if (xfs_sb_version_hasftype(sbp))
+>  		strcat(s, ",FTYPE");
+> +	if (xfs_sb_version_hasfinobt(sbp))
+> +		strcat(s, ",FINOBT");
+>  	return s;
+>  }
+>  
 > 
-> What's happening with this patchset? If it's not going to be pulled
-> into the VFS, I'll just pull in a version of the XFS patch that
-> corrects the locking at this point...
-  I've sent the patches several times but so far they were ignored. Al?
-
-								Honza
-
--- 
-Jan Kara <jack@suse.cz>
-SUSE Labs, CR
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
