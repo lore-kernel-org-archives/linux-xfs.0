@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 6424329E15
-	for <xfs@oss.sgi.com>; Tue,  5 May 2015 15:17:01 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id E62ABAC006
-	for <xfs@oss.sgi.com>; Tue,  5 May 2015 13:16:57 -0700 (PDT)
-Received: from mail-ig0-f175.google.com (mail-ig0-f175.google.com
-	[209.85.213.175]) by cuda.sgi.com with ESMTP id
-	HGkSmkrCeDLBA1Dy (version=TLSv1 cipher=RC4-SHA bits=128
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id C2BB129E1A
+	for <xfs@oss.sgi.com>; Tue,  5 May 2015 15:17:03 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 9B00B304032
+	for <xfs@oss.sgi.com>; Tue,  5 May 2015 13:17:03 -0700 (PDT)
+Received: from mail-ie0-f174.google.com (mail-ie0-f174.google.com
+	[209.85.223.174]) by cuda.sgi.com with ESMTP id
+	VdX7x8bOjWiSYVCb (version=TLSv1 cipher=RC4-SHA bits=128
 	verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 05 May 2015 13:16:56 -0700 (PDT)
-Received: by igblo3 with SMTP id lo3so109207312igb.0
-	for <xfs@oss.sgi.com>; Tue, 05 May 2015 13:16:56 -0700 (PDT)
+	Tue, 05 May 2015 13:17:02 -0700 (PDT)
+Received: by iecnq11 with SMTP id nq11so1095455iec.3
+	for <xfs@oss.sgi.com>; Tue, 05 May 2015 13:17:01 -0700 (PDT)
 From: Nicholas Krause <xerofoify@gmail.com>
-Subject: [PATCH 06/12] xfs:Make the function,xfs_alloc_fixup_trees static
-Date: Tue,  5 May 2015 16:16:33 -0400
-Message-Id: <1430856999-31952-6-git-send-email-xerofoify@gmail.com>
+Subject: [PATCH 09/12] xfs:Make the function,xfs_alloc_ag_vextent static
+Date: Tue,  5 May 2015 16:16:36 -0400
+Message-Id: <1430856999-31952-9-git-send-email-xerofoify@gmail.com>
 In-Reply-To: <1430856999-31952-1-git-send-email-xerofoify@gmail.com>
 References: <1430856999-31952-1-git-send-email-xerofoify@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -34,8 +34,9 @@ Sender: xfs-bounces@oss.sgi.com
 To: david@fromorbit.com
 Cc: jack@suse.cz, bfoster@redhat.com, sandeen@sandeen.net, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, hch@lst.de
 
-This makes the function,xfs_alloc_fixup_trees static now due to
-it having no external callers outside of the file,xfs_alloc.c.
+This makes the function,xfs_alloc_ag_vextent static
+now due to its only callers being in the same file
+as this function's declaration and definition.
 
 Signed-off-by: Nicholas Krause <xerofoify@gmail.com>
 ---
@@ -43,18 +44,18 @@ Signed-off-by: Nicholas Krause <xerofoify@gmail.com>
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-index fdf2877..4492311 100644
+index 2f94b53..3c9a58f 100644
 --- a/fs/xfs/libxfs/xfs_alloc.c
 +++ b/fs/xfs/libxfs/xfs_alloc.c
-@@ -301,7 +301,7 @@ xfs_alloc_fix_minleft(
-  * Flags are passed in indicating whether the cursors are set to the
-  * relevant records.
+@@ -581,7 +581,7 @@ xfs_alloc_update_counters(
+  * and of the form k * prod + mod unless there's nothing that large.
+  * Return the starting a.g. block, or NULLAGBLOCK if we can't do it.
   */
--STATIC int				/* error code */
-+static int				/* error code */
- xfs_alloc_fixup_trees(
- 	xfs_btree_cur_t	*cnt_cur,	/* cursor for by-size btree */
- 	xfs_btree_cur_t	*bno_cur,	/* cursor for by-block btree */
+-STATIC int			/* error */
++static int			/* error */
+ xfs_alloc_ag_vextent(
+ 	xfs_alloc_arg_t	*args)	/* argument structure for allocation */
+ {
 -- 
 2.1.4
 
