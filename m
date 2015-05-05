@@ -1,22 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 8A4477F47
-	for <xfs@oss.sgi.com>; Tue,  5 May 2015 17:14:39 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 14D85AC004
-	for <xfs@oss.sgi.com>; Tue,  5 May 2015 15:14:39 -0700 (PDT)
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	uzjUJA9EdImH9EeJ for <xfs@oss.sgi.com>;
-	Tue, 05 May 2015 15:14:36 -0700 (PDT)
-Date: Wed, 6 May 2015 08:14:34 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs: enforce imax_pct when we have per-cpu SB accounting
-Message-ID: <20150505221434.GH21261@dastard>
-References: <20150505220208.GC11601@birch.djwong.org>
+	by oss.sgi.com (Postfix) with ESMTP id D7D047F47
+	for <xfs@oss.sgi.com>; Tue,  5 May 2015 17:16:28 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 442F1AC003
+	for <xfs@oss.sgi.com>; Tue,  5 May 2015 15:16:28 -0700 (PDT)
+Received: from mail-ie0-f179.google.com (mail-ie0-f179.google.com
+	[209.85.223.179]) by cuda.sgi.com with ESMTP id
+	G074kK36ZRX9zdlr (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 05 May 2015 15:16:26 -0700 (PDT)
+Received: by iedfl3 with SMTP id fl3so1104485ied.1
+	for <xfs@oss.sgi.com>; Tue, 05 May 2015 15:16:25 -0700 (PDT)
+Message-ID: <55494136.6010405@gmail.com>
+Date: Tue, 05 May 2015 18:16:22 -0400
+From: nick <xerofoify@gmail.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20150505220208.GC11601@birch.djwong.org>
+Subject: Re: [PATCH 01/12] xfs:Make the function,xfs_alloc_lookup_eq static
+References: <1430856999-31952-1-git-send-email-xerofoify@gmail.com>
+	<20150505221209.GG21261@dastard>
+In-Reply-To: <20150505221209.GG21261@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,56 +32,51 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: xfs <xfs@oss.sgi.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: jack@suse.cz, bfoster@redhat.com, sandeen@sandeen.net, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, hch@lst.de
 
-On Tue, May 05, 2015 at 03:02:08PM -0700, Darrick J. Wong wrote:
-> When per-CPU superblock counters are enabled (i.e. SMP=y), we don't
-> update the in-core superblock's sb_icount value prior to checking if
-> we're already at maximum inodes.  Therefore, it's possible for a tight
-> file creation loop (e.g. "for i in {0..100000}; do touch /mnt/$i;
-> done") to allocate far more inodes than the administrator specified at
-> mkfs time.  Fix this by synchronizing the counters every time we think
-> we need to allocate another chunk of inodes.
+
+
+On 2015-05-05 06:12 PM, Dave Chinner wrote:
+> On Tue, May 05, 2015 at 04:16:28PM -0400, Nicholas Krause wrote:
+>> This makes the function,xfs_alloc_lookup_eq static as there are no
+>> calls to this function outside the definition file for this function,
+>> xfs_alloc.c.
+>>
+>> Signed-off-by: Nicholas Krause <xerofoify@gmail.com>
+>> ---
+>>  fs/xfs/libxfs/xfs_alloc.c | 2 +-
+>>  1 file changed, 1 insertion(+), 1 deletion(-)
+>>
+>> diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+>> index 516162b..48de3f0 100644
+>> --- a/fs/xfs/libxfs/xfs_alloc.c
+>> +++ b/fs/xfs/libxfs/xfs_alloc.c
+>> @@ -52,7 +52,7 @@ STATIC int xfs_alloc_ag_vextent_small(xfs_alloc_arg_t *,
+>>  /*
+>>   * Lookup the record equal to [bno, len] in the btree given by cur.
+>>   */
+>> -STATIC int				/* error */
+>> +static int				/* error */
+>>  xfs_alloc_lookup_eq(
+>>  	struct xfs_btree_cur	*cur,	/* btree cursor */
+>>  	xfs_agblock_t		bno,	/* starting block of extent */
 > 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  fs/xfs/libxfs/xfs_ialloc.c |    4 ++++
->  1 file changed, 4 insertions(+)
+> Please have a look at what STATIC actually means, and then use the
+> sparse checker to confirm that these functions are already static
+> for a CONFIG_XFS_DEBUG=n build.
 > 
-> diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
-> index 116ef1d..a8aaab6 100644
-> --- a/fs/xfs/libxfs/xfs_ialloc.c
-> +++ b/fs/xfs/libxfs/xfs_ialloc.c
-> @@ -375,6 +375,8 @@ xfs_ialloc_ag_alloc(
->  	 * at one time.
->  	 */
->  	newlen = args.mp->m_ialloc_inos;
-> +	if (args.mp->m_maxicount)
-> +		xfs_icsb_sync_counters(args.mp, 0);
->  	if (args.mp->m_maxicount &&
->  	    args.mp->m_sb.sb_icount + newlen > args.mp->m_maxicount)
->  		return -ENOSPC;
-> @@ -1339,6 +1341,8 @@ xfs_dialloc(
->  	 * okalloc so we scan all available agi structures for a free
->  	 * inode.
->  	 */
-> +	if (mp->m_maxicount)
-> +		xfs_icsb_sync_counters(mp, 0);
->  	if (mp->m_maxicount &&
->  	    mp->m_sb.sb_icount + mp->m_ialloc_inos > mp->m_maxicount) {
->  		noroom = 1;
-
-As i mentioned on IRC, sb_icount is now using the generic percpu
-counter infrastrcture, so shouldn't have this problem - overshoot
-should be, at maximum, (Ncpus * 32).
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> i.e. STATIC is a stack usage minimisation and debugging aid, not
+> something that is broken and needs fixing.
+> 
+> Cheers,
+> 
+> Dave.
+> 
+That's Ok I wasn't sure if that was there for those reasons.Next time 
+I will be more careful and check out the macros I don't known. :(
+Sorry,
+Nick 
 
 _______________________________________________
 xfs mailing list
