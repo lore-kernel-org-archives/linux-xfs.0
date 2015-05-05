@@ -1,25 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id D7D047F47
-	for <xfs@oss.sgi.com>; Tue,  5 May 2015 17:16:28 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 442F1AC003
-	for <xfs@oss.sgi.com>; Tue,  5 May 2015 15:16:28 -0700 (PDT)
-Received: from mail-ie0-f179.google.com (mail-ie0-f179.google.com
-	[209.85.223.179]) by cuda.sgi.com with ESMTP id
-	G074kK36ZRX9zdlr (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 05 May 2015 15:16:26 -0700 (PDT)
-Received: by iedfl3 with SMTP id fl3so1104485ied.1
-	for <xfs@oss.sgi.com>; Tue, 05 May 2015 15:16:25 -0700 (PDT)
-Message-ID: <55494136.6010405@gmail.com>
-Date: Tue, 05 May 2015 18:16:22 -0400
-From: nick <xerofoify@gmail.com>
+	by oss.sgi.com (Postfix) with ESMTP id 5434F7F47
+	for <xfs@oss.sgi.com>; Tue,  5 May 2015 17:48:50 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id EF5F5AC003
+	for <xfs@oss.sgi.com>; Tue,  5 May 2015 15:48:49 -0700 (PDT)
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	2XOPGlQTP1XLPxd3 for <xfs@oss.sgi.com>;
+	Tue, 05 May 2015 15:48:48 -0700 (PDT)
+Date: Wed, 6 May 2015 08:48:46 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: [PATCH] mkfs: inode/block size error messages confusing
+Message-ID: <20150505224846.GI21261@dastard>
+References: <1430711548-26441-1-git-send-email-david@fromorbit.com>
+	<20150505142816.GC43235@bfoster.bfoster>
 MIME-Version: 1.0
-Subject: Re: [PATCH 01/12] xfs:Make the function,xfs_alloc_lookup_eq static
-References: <1430856999-31952-1-git-send-email-xerofoify@gmail.com>
-	<20150505221209.GG21261@dastard>
-In-Reply-To: <20150505221209.GG21261@dastard>
+Content-Disposition: inline
+In-Reply-To: <20150505142816.GC43235@bfoster.bfoster>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,51 +30,67 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: jack@suse.cz, bfoster@redhat.com, sandeen@sandeen.net, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, hch@lst.de
+To: Brian Foster <bfoster@redhat.com>
+Cc: xfs@oss.sgi.com
 
 
+From: Dave Chinner <dchinner@redhat.com>
 
-On 2015-05-05 06:12 PM, Dave Chinner wrote:
-> On Tue, May 05, 2015 at 04:16:28PM -0400, Nicholas Krause wrote:
->> This makes the function,xfs_alloc_lookup_eq static as there are no
->> calls to this function outside the definition file for this function,
->> xfs_alloc.c.
->>
->> Signed-off-by: Nicholas Krause <xerofoify@gmail.com>
->> ---
->>  fs/xfs/libxfs/xfs_alloc.c | 2 +-
->>  1 file changed, 1 insertion(+), 1 deletion(-)
->>
->> diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
->> index 516162b..48de3f0 100644
->> --- a/fs/xfs/libxfs/xfs_alloc.c
->> +++ b/fs/xfs/libxfs/xfs_alloc.c
->> @@ -52,7 +52,7 @@ STATIC int xfs_alloc_ag_vextent_small(xfs_alloc_arg_t *,
->>  /*
->>   * Lookup the record equal to [bno, len] in the btree given by cur.
->>   */
->> -STATIC int				/* error */
->> +static int				/* error */
->>  xfs_alloc_lookup_eq(
->>  	struct xfs_btree_cur	*cur,	/* btree cursor */
->>  	xfs_agblock_t		bno,	/* starting block of extent */
-> 
-> Please have a look at what STATIC actually means, and then use the
-> sparse checker to confirm that these functions are already static
-> for a CONFIG_XFS_DEBUG=n build.
-> 
-> i.e. STATIC is a stack usage minimisation and debugging aid, not
-> something that is broken and needs fixing.
-> 
-> Cheers,
-> 
-> Dave.
-> 
-That's Ok I wasn't sure if that was there for those reasons.Next time 
-I will be more careful and check out the macros I don't known. :(
-Sorry,
-Nick 
+As reported by Brain:
+
+# ./mkfs/mkfs.xfs -f /dev/test/scratch -b size=512
+illegal inode size 512
+allowable inode size with 512 byte blocks is 256
+# ./mkfs/mkfs.xfs -f /dev/test/scratch -b size=512 -i size=256
+Minimum inode size for CRCs is 512 bytes
+Usage: mkfs.xfs
+...
+
+Fix mkfs to catch the block size as being too small, rather than
+leaving it for inode size detection to enforce.
+
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ include/xfs_types.h | 3 +++
+ mkfs/xfs_mkfs.c     | 6 ++++++
+ 2 files changed, 9 insertions(+)
+
+diff --git a/include/xfs_types.h b/include/xfs_types.h
+index 65c6e66..accb95d 100644
+--- a/include/xfs_types.h
++++ b/include/xfs_types.h
+@@ -100,11 +100,14 @@ typedef __uint64_t	xfs_filblks_t;	/* number of blocks in a file */
+  * Minimum and maximum blocksize and sectorsize.
+  * The blocksize upper limit is pretty much arbitrary.
+  * The sectorsize upper limit is due to sizeof(sb_sectsize).
++ * CRC enable filesystems use 512 byte inodes, meaning 512 byte block sizes
++ * cannot be used.
+  */
+ #define XFS_MIN_BLOCKSIZE_LOG	9	/* i.e. 512 bytes */
+ #define XFS_MAX_BLOCKSIZE_LOG	16	/* i.e. 65536 bytes */
+ #define XFS_MIN_BLOCKSIZE	(1 << XFS_MIN_BLOCKSIZE_LOG)
+ #define XFS_MAX_BLOCKSIZE	(1 << XFS_MAX_BLOCKSIZE_LOG)
++#define XFS_MIN_CRC_BLOCKSIZE	(1 << (XFS_MIN_BLOCKSIZE_LOG + 1))
+ #define XFS_MIN_SECTORSIZE_LOG	9	/* i.e. 512 bytes */
+ #define XFS_MAX_SECTORSIZE_LOG	15	/* i.e. 32768 bytes */
+ #define XFS_MIN_SECTORSIZE	(1 << XFS_MIN_SECTORSIZE_LOG)
+diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+index 0218491..e2a052d 100644
+--- a/mkfs/xfs_mkfs.c
++++ b/mkfs/xfs_mkfs.c
+@@ -1758,6 +1758,12 @@ _("cannot specify both crc and ftype\n"));
+ 		fprintf(stderr, _("illegal block size %d\n"), blocksize);
+ 		usage();
+ 	}
++	if (crcs_enabled && blocksize < XFS_MIN_CRC_BLOCKSIZE) {
++		fprintf(stderr,
++_("Minimum block size for CRC enabled filesystems is %d bytes.\n"),
++			XFS_MIN_CRC_BLOCKSIZE);
++		usage();
++	}
+ 
+ 	memset(&ft, 0, sizeof(ft));
+ 	get_topology(&xi, &ft, force_overwrite);
 
 _______________________________________________
 xfs mailing list
