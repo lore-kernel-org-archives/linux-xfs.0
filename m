@@ -1,21 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 968807F5F
-	for <xfs@oss.sgi.com>; Tue,  5 May 2015 17:02:26 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 119C8AC002
-	for <xfs@oss.sgi.com>; Tue,  5 May 2015 15:02:22 -0700 (PDT)
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	ecyApaqEDaOpBKJW for <xfs@oss.sgi.com>;
-	Tue, 05 May 2015 15:02:20 -0700 (PDT)
-From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 1/2] percpu_counter: batch size aware
-	__percpu_counter_compare()
-Date: Wed,  6 May 2015 08:01:38 +1000
-Message-Id: <1430863299-9341-2-git-send-email-david@fromorbit.com>
-In-Reply-To: <1430863299-9341-1-git-send-email-david@fromorbit.com>
-References: <1430863299-9341-1-git-send-email-david@fromorbit.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 9F15D7F4E
+	for <xfs@oss.sgi.com>; Tue,  5 May 2015 15:16:54 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 74BF0304032
+	for <xfs@oss.sgi.com>; Tue,  5 May 2015 13:16:51 -0700 (PDT)
+Received: from mail-ig0-f169.google.com (mail-ig0-f169.google.com
+	[209.85.213.169]) by cuda.sgi.com with ESMTP id
+	n1jeUsxefKQBava2 (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 05 May 2015 13:16:49 -0700 (PDT)
+Received: by igblo3 with SMTP id lo3so111676204igb.1
+	for <xfs@oss.sgi.com>; Tue, 05 May 2015 13:16:49 -0700 (PDT)
+From: Nicholas Krause <xerofoify@gmail.com>
+Subject: [PATCH 02/12] xfs:Make the function,xfs_alloc_update static
+Date: Tue,  5 May 2015 16:16:29 -0400
+Message-Id: <1430856999-31952-2-git-send-email-xerofoify@gmail.com>
+In-Reply-To: <1430856999-31952-1-git-send-email-xerofoify@gmail.com>
+References: <1430856999-31952-1-git-send-email-xerofoify@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,97 +31,33 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: linux-kernel@vger.kernel.org
+To: david@fromorbit.com
+Cc: jack@suse.cz, bfoster@redhat.com, sandeen@sandeen.net, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, hch@lst.de
 
-From: Dave Chinner <dchinner@redhat.com>
+This makes the function xfs_alloc_update now to be
+a statically defined function due to no callers
+outside of the declarition file,xfs_alloc.c.
 
-From: Dave Chinner <dchinner@redhat.com>
-
-XFS uses non-stanard batch sizes for avoiding frequent global
-counter updates on it's allocated inode counters, as they increment
-or decrement in batches of 64 inodes. Hence the standard percpu
-counter batch of 32 means that the counter is effectively a global
-counter. Currently Xfs uses a batch size of 128 so that it doesn't
-take the global lock on every single modification.
-
-However, Xfs also needs to compare accurately against zero, which
-means we need to use percpu_counter_compare(), and that has a
-hard-coded batch size of 32, and hence will spuriously fail to
-detect when it is supposed to use precise comparisons and hence
-the accounting goes wrong.
-
-Add __percpu_counter_compare() to take a custom batch size so we can
-use it sanely in XFS and factor percpu_counter_compare() to use it.
-
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Signed-off-by: Nicholas Krause <xerofoify@gmail.com>
 ---
- include/linux/percpu_counter.h | 13 ++++++++++++-
- lib/percpu_counter.c           |  6 +++---
- 2 files changed, 15 insertions(+), 4 deletions(-)
+ fs/xfs/libxfs/xfs_alloc.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/include/linux/percpu_counter.h b/include/linux/percpu_counter.h
-index 50e5009..4c82e60 100644
---- a/include/linux/percpu_counter.h
-+++ b/include/linux/percpu_counter.h
-@@ -41,7 +41,12 @@ void percpu_counter_destroy(struct percpu_counter *fbc);
- void percpu_counter_set(struct percpu_counter *fbc, s64 amount);
- void __percpu_counter_add(struct percpu_counter *fbc, s64 amount, s32 batch);
- s64 __percpu_counter_sum(struct percpu_counter *fbc);
--int percpu_counter_compare(struct percpu_counter *fbc, s64 rhs);
-+int __percpu_counter_compare(struct percpu_counter *fbc, s64 rhs, s32 batch);
-+
-+static inline int percpu_counter_compare(struct percpu_counter *fbc, s64 rhs)
-+{
-+	return __percpu_counter_compare(fbc, rhs, percpu_counter_batch);
-+}
- 
- static inline void percpu_counter_add(struct percpu_counter *fbc, s64 amount)
- {
-@@ -116,6 +121,12 @@ static inline int percpu_counter_compare(struct percpu_counter *fbc, s64 rhs)
- 		return 0;
- }
- 
-+static inline int
-+percpu_counter_compare(struct percpu_counter *fbc, s64 rhs, s32 batch)
-+{
-+	return percpu_counter_compare(fbc, rhs);
-+}
-+
- static inline void
- percpu_counter_add(struct percpu_counter *fbc, s64 amount)
- {
-diff --git a/lib/percpu_counter.c b/lib/percpu_counter.c
-index 48144cd..f051d69 100644
---- a/lib/percpu_counter.c
-+++ b/lib/percpu_counter.c
-@@ -197,13 +197,13 @@ static int percpu_counter_hotcpu_callback(struct notifier_block *nb,
-  * Compare counter against given value.
-  * Return 1 if greater, 0 if equal and -1 if less
+diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+index 48de3f0..096c6c8 100644
+--- a/fs/xfs/libxfs/xfs_alloc.c
++++ b/fs/xfs/libxfs/xfs_alloc.c
+@@ -101,7 +101,7 @@ xfs_alloc_lookup_le(
+  * by [bno, len].
+  * This either works (return 0) or gets an EFSCORRUPTED error.
   */
--int percpu_counter_compare(struct percpu_counter *fbc, s64 rhs)
-+int __percpu_counter_compare(struct percpu_counter *fbc, s64 rhs, s32 batch)
- {
- 	s64	count;
- 
- 	count = percpu_counter_read(fbc);
- 	/* Check to see if rough count will be sufficient for comparison */
--	if (abs(count - rhs) > (percpu_counter_batch*num_online_cpus())) {
-+	if (abs(count - rhs) > (batch * num_online_cpus())) {
- 		if (count > rhs)
- 			return 1;
- 		else
-@@ -218,7 +218,7 @@ int percpu_counter_compare(struct percpu_counter *fbc, s64 rhs)
- 	else
- 		return 0;
- }
--EXPORT_SYMBOL(percpu_counter_compare);
-+EXPORT_SYMBOL(__percpu_counter_compare);
- 
- static int __init percpu_counter_startup(void)
- {
+-STATIC int				/* error */
++static int				/* error */
+ xfs_alloc_update(
+ 	struct xfs_btree_cur	*cur,	/* btree cursor */
+ 	xfs_agblock_t		bno,	/* starting block of extent */
 -- 
-2.0.0
+2.1.4
 
 _______________________________________________
 xfs mailing list
