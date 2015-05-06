@@ -1,23 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 5434F7F47
-	for <xfs@oss.sgi.com>; Tue,  5 May 2015 17:48:50 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id EF5F5AC003
-	for <xfs@oss.sgi.com>; Tue,  5 May 2015 15:48:49 -0700 (PDT)
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	2XOPGlQTP1XLPxd3 for <xfs@oss.sgi.com>;
-	Tue, 05 May 2015 15:48:48 -0700 (PDT)
-Date: Wed, 6 May 2015 08:48:46 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH] mkfs: inode/block size error messages confusing
-Message-ID: <20150505224846.GI21261@dastard>
-References: <1430711548-26441-1-git-send-email-david@fromorbit.com>
-	<20150505142816.GC43235@bfoster.bfoster>
+	by oss.sgi.com (Postfix) with ESMTP id CDF4B7F37
+	for <xfs@oss.sgi.com>; Tue,  5 May 2015 23:36:41 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 5AA8FAC002
+	for <xfs@oss.sgi.com>; Tue,  5 May 2015 21:36:38 -0700 (PDT)
+Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
+	ESMTP id dw0EycHU0X09FZha (version=TLSv1 cipher=AES256-SHA
+	bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 05 May 2015 21:36:36 -0700 (PDT)
+Date: Tue, 5 May 2015 21:36:36 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 1/2] percpu_counter: batch size aware
+	__percpu_counter_compare()
+Message-ID: <20150506043636.GA10940@infradead.org>
+References: <1430863299-9341-1-git-send-email-david@fromorbit.com>
+	<1430863299-9341-2-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20150505142816.GC43235@bfoster.bfoster>
+In-Reply-To: <1430863299-9341-2-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,67 +31,18 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
-Cc: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
+This looks reasonable, but I miss Ccs to the authors of the
+percpu_counter code and linux-kernel.
 
-From: Dave Chinner <dchinner@redhat.com>
+On Wed, May 06, 2015 at 08:01:38AM +1000, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> From: Dave Chinner <dchinner@redhat.com>
 
-As reported by Brain:
-
-# ./mkfs/mkfs.xfs -f /dev/test/scratch -b size=512
-illegal inode size 512
-allowable inode size with 512 byte blocks is 256
-# ./mkfs/mkfs.xfs -f /dev/test/scratch -b size=512 -i size=256
-Minimum inode size for CRCs is 512 bytes
-Usage: mkfs.xfs
-...
-
-Fix mkfs to catch the block size as being too small, rather than
-leaving it for inode size detection to enforce.
-
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- include/xfs_types.h | 3 +++
- mkfs/xfs_mkfs.c     | 6 ++++++
- 2 files changed, 9 insertions(+)
-
-diff --git a/include/xfs_types.h b/include/xfs_types.h
-index 65c6e66..accb95d 100644
---- a/include/xfs_types.h
-+++ b/include/xfs_types.h
-@@ -100,11 +100,14 @@ typedef __uint64_t	xfs_filblks_t;	/* number of blocks in a file */
-  * Minimum and maximum blocksize and sectorsize.
-  * The blocksize upper limit is pretty much arbitrary.
-  * The sectorsize upper limit is due to sizeof(sb_sectsize).
-+ * CRC enable filesystems use 512 byte inodes, meaning 512 byte block sizes
-+ * cannot be used.
-  */
- #define XFS_MIN_BLOCKSIZE_LOG	9	/* i.e. 512 bytes */
- #define XFS_MAX_BLOCKSIZE_LOG	16	/* i.e. 65536 bytes */
- #define XFS_MIN_BLOCKSIZE	(1 << XFS_MIN_BLOCKSIZE_LOG)
- #define XFS_MAX_BLOCKSIZE	(1 << XFS_MAX_BLOCKSIZE_LOG)
-+#define XFS_MIN_CRC_BLOCKSIZE	(1 << (XFS_MIN_BLOCKSIZE_LOG + 1))
- #define XFS_MIN_SECTORSIZE_LOG	9	/* i.e. 512 bytes */
- #define XFS_MAX_SECTORSIZE_LOG	15	/* i.e. 32768 bytes */
- #define XFS_MIN_SECTORSIZE	(1 << XFS_MIN_SECTORSIZE_LOG)
-diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index 0218491..e2a052d 100644
---- a/mkfs/xfs_mkfs.c
-+++ b/mkfs/xfs_mkfs.c
-@@ -1758,6 +1758,12 @@ _("cannot specify both crc and ftype\n"));
- 		fprintf(stderr, _("illegal block size %d\n"), blocksize);
- 		usage();
- 	}
-+	if (crcs_enabled && blocksize < XFS_MIN_CRC_BLOCKSIZE) {
-+		fprintf(stderr,
-+_("Minimum block size for CRC enabled filesystems is %d bytes.\n"),
-+			XFS_MIN_CRC_BLOCKSIZE);
-+		usage();
-+	}
- 
- 	memset(&ft, 0, sizeof(ft));
- 	get_topology(&xi, &ft, force_overwrite);
+And this looks wrong, too :)
 
 _______________________________________________
 xfs mailing list
