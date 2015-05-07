@@ -1,24 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id B1B247F37
-	for <xfs@oss.sgi.com>; Thu,  7 May 2015 05:24:44 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id A48B3304043
-	for <xfs@oss.sgi.com>; Thu,  7 May 2015 03:24:41 -0700 (PDT)
-Received: from smtp5-g21.free.fr (smtp5-g21.free.fr [212.27.42.5]) by
-	cuda.sgi.com with ESMTP id hyNcnXLY2BHi6YMp (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 07 May 2015 03:24:39 -0700 (PDT)
-Received: from harpe.intellique.com (unknown [82.225.196.72])
-	by smtp5-g21.free.fr (Postfix) with ESMTP id 45704D4804B
-	for <xfs@oss.sgi.com>; Thu,  7 May 2015 12:21:10 +0200 (CEST)
-Date: Thu, 7 May 2015 12:24:41 +0200
-From: Emmanuel Florac <eflorac@intellique.com>
-Subject: Re: SGI Version 1 XFS on Linux
-Message-ID: <20150507122441.118ebcd2@harpe.intellique.com>
-In-Reply-To: <2994A55DE0FBBE41B8FE47F9885D74221BC0569C@ARLEXCHMBX02.lst.link.l-3com.com>
-References: <2994A55DE0FBBE41B8FE47F9885D74221BC0569C@ARLEXCHMBX02.lst.link.l-3com.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 9C4377F37
+	for <xfs@oss.sgi.com>; Thu,  7 May 2015 06:24:09 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 6C5968F8089
+	for <xfs@oss.sgi.com>; Thu,  7 May 2015 04:24:06 -0700 (PDT)
+Received: from mail-pd0-f176.google.com (mail-pd0-f176.google.com
+	[209.85.192.176]) by cuda.sgi.com with ESMTP id
+	72yaSz1rrJ8SeBBJ (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 07 May 2015 04:24:04 -0700 (PDT)
+Received: by pdbqd1 with SMTP id qd1so38803815pdb.2
+	for <xfs@oss.sgi.com>; Thu, 07 May 2015 04:24:04 -0700 (PDT)
+Received: from [192.168.0.250] (static-ip-103.52.2.2.merahciptamedia.com.
+	[103.52.2.2])
+	by mx.google.com with ESMTPSA id o4sm1895859pdh.22.2015.05.07.04.24.02
+	for <xfs@oss.sgi.com>
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+	Thu, 07 May 2015 04:24:03 -0700 (PDT)
+Message-ID: <554B4B59.6000706@xtremenitro.org>
+Date: Thu, 07 May 2015 18:24:09 +0700
+From: Dewangga <dewanggaba@xtremenitro.org>
 MIME-Version: 1.0
+Subject: Valid Benchmark Value & Methods
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,38 +31,39 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-TGUgV2VkLCA2IE1heSAyMDE1IDE1OjEyOjU5ICswMDAwCiJTY290dCwgRWRtdW5kIEogQCBTU0cg
-LSBMaW5rIiA8ZWRtdW5kLnNjb3R0QGwtM2NvbS5jb20+IMOpY3JpdmFpdDoKCj4gSGksCj4gCj4g
-V2UgaGF2ZSBzZXZlcmFsIG9sZGVyIFNHSSBoYXJkIGRyaXZlcyB3ZSBhcmUgdHJ5aW5nIHRvIHJl
-Y292ZXIgZGF0YQo+IGZyb20uIEhvd2V2ZXIsIHNpbmNlIHRoZXNlIGRyaXZlcyBjYW1lIGZyb20g
-YW4gU0dJIE9ueXggcnVubmluZyBJUklYCj4gNi4yLCBpdCB1c2VzIHRoZSBvbGRlciB2ZXJzaW9u
-IDEgWEZTIGZpbGUgc3lzdGVtLiBJIGNhbiBzZWUgdGhlIFNDU0kKPiBkcml2ZSBvbiBteSBMaW51
-eCBib3ggKENlbnRPUyA1LjExKSBhbmQgSSBrbm93IGRhdGEgaXMgb24gdGhlIGRyaXZlLAo+IEkg
-Y2FuIGxpc3Qgb3V0IHNvbWUgb2YgdGhlIGluZm8gdXNpbmcgZGQsIGNwaW8gb3Igc3RyaW5ncywg
-YnV0IGNhbm5vdAo+IGNvcHkgdGhlIGRhdGEgb2ZmIG9mIGl0LiBJIGhhdmUgdHJpZWQgdXNpbmcg
-eGZzX2NvcHkgdG8gYSB2ZXJzaW9uIDIKPiBYRlMgcGFydGl0aW9uLCBidXQgaXQganVzdCBjb252
-ZXJ0cyB0aGUgdGFyZ2V0IHBhcnRpdGlvbiB0byB2ZXJzaW9uCj4gMSwgd2hpY2ggSSBjYW5ub3Qg
-bW91bnQuIEkgaGF2ZSBhbHNvIGxvb2tlZCBhdCB4ZnNfZHVtcC9yZXN0b3JlLCBidXQKPiB0aG9z
-ZSByZXF1aXJlIG1vdW50ZWQgZmlsZXN5c3RlbXMuCj4gCj4gSXMgdGhlcmUgYW55IHNjcmlwdCBv
-ciBwcm9ncmFtIG9yIG9wdGlvbiBJIGNhbiB1c2UgdG8gY29weSB0aGUgZGF0YQo+IG9mZiBvZiB0
-aGUgdW4tbW91bnRlZCBTR0kgWEZTIHBhcnRpdGlvbi4gSSdtIGd1ZXNzaW5nIHNvbWUKPiBjb21i
-aW5hdGlvbiBvZiB0aGUgY3BpbyBhbmQgZGQsIGJ1dCBJIGhhdmUgbm90IGZpZ3VyZWQgb3V0IHRo
-ZSByaWdodAo+IGNvbWJpbmF0aW9uIHlldC4KCkFsdGVybmF0aXZlbHkgaWYgeW91IGNhbid0IGZp
-bmQgYSBzb2x1dGlvbiBhbmQgdGhlIGRhdGEgaXNuJ3QKcGFydGljdWxhcmx5IGNvbmZpZGVudGlh
-bCwgSSBoYXZlIGFuIE9jdGFuZSBhbmQgYW4gSW5keSBseWluZyBhcm91bmQgYW5kCmEgY291cGxl
-IG9mIDlHQiBkcml2ZXMgdGhhdCBmaXQgaW5zaWRlLCBzbyBJIGNvdWxkIHJlc3RvcmUgYSBkaXNr
-IGltYWdlCm9yIHhmc19kdW1wIGlmIHlvdSBjYW4gcHVibGlzaCBpdCBzb21ld2hlcmUuCgotLSAK
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tCkVtbWFudWVsIEZsb3JhYyAgICAgfCAgIERpcmVjdGlvbiB0ZWNobmlx
-dWUKICAgICAgICAgICAgICAgICAgICB8ICAgSW50ZWxsaXF1ZQogICAgICAgICAgICAgICAgICAg
-IHwJPGVmbG9yYWNAaW50ZWxsaXF1ZS5jb20+CiAgICAgICAgICAgICAgICAgICAgfCAgICszMyAx
-IDc4IDk0IDg0IDAyCi0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQoKX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0
-cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCg==
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
+
+Hello!
+
+I'm new on XFS and curious about any tune/tweak regarding XFS
+filesystem on any raid array, non-raid, ssd or non-ssd. But, is there
+any valid value to determine about the performance? At least valid
+benchmark result (eg. using fio with some parameters, or any method).
+
+Then, about bsize, sectsz, etc, is there any wiki/guidelines how to
+set them on a right way?
+
+Regards,
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.17 (MingW32)
+
+iQEcBAEBAgAGBQJVS0tWAAoJEF1+odKB6YIxjcUIAJeTF8Bg810/lwqo8RCiuyLI
+UyAJJIkzSIdWk6JdGiPfYqWptCXJs7jPc66yKTJNVVdPQ0z0H5mBWDHb2qCe0/lO
+lSsGhBinyVaGzssVWYJjSlpee0h1nievBdCOGiqMU/W5uz/ZGR1WkK9gnu344BKb
+3Xpt30oG3l+qTrswfqGDbyeU9X4ruUfi4bKYp+pzjELpxpVggDud+hjTsF44z422
++cpoeiHP6SsI/Nj2RUcXY+lP9VwemjbeG6a3rWRvQU4uwJOioy/QgnAnajDmjFaV
+GmmGYL5n35xy2IxE2b2MqWDcA+vvTYMf8P9CEEHoC2Rg+Iv9zx1HghBvjGiCGRM=
+=1mdR
+-----END PGP SIGNATURE-----
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
