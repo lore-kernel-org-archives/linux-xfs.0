@@ -1,21 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id BFCD07F37
-	for <xfs@oss.sgi.com>; Wed,  6 May 2015 22:05:54 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id B6147304059
-	for <xfs@oss.sgi.com>; Wed,  6 May 2015 20:05:54 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id UwT9DuVooACOaSak for <xfs@oss.sgi.com>;
-	Wed, 06 May 2015 20:05:50 -0700 (PDT)
-Message-ID: <554AD68D.7040901@sandeen.net>
-Date: Wed, 06 May 2015 22:05:49 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
-MIME-Version: 1.0
+	by oss.sgi.com (Postfix) with ESMTP id B1B247F37
+	for <xfs@oss.sgi.com>; Thu,  7 May 2015 05:24:44 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id A48B3304043
+	for <xfs@oss.sgi.com>; Thu,  7 May 2015 03:24:41 -0700 (PDT)
+Received: from smtp5-g21.free.fr (smtp5-g21.free.fr [212.27.42.5]) by
+	cuda.sgi.com with ESMTP id hyNcnXLY2BHi6YMp (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 07 May 2015 03:24:39 -0700 (PDT)
+Received: from harpe.intellique.com (unknown [82.225.196.72])
+	by smtp5-g21.free.fr (Postfix) with ESMTP id 45704D4804B
+	for <xfs@oss.sgi.com>; Thu,  7 May 2015 12:21:10 +0200 (CEST)
+Date: Thu, 7 May 2015 12:24:41 +0200
+From: Emmanuel Florac <eflorac@intellique.com>
 Subject: Re: SGI Version 1 XFS on Linux
-References: <2994A55DE0FBBE41B8FE47F9885D74221BC0569C@ARLEXCHMBX02.lst.link.l-3com.com>	<20150506171222.GA22744@sgi.com>	<2994A55DE0FBBE41B8FE47F9885D74221BC056F3@ARLEXCHMBX02.lst.link.l-3com.com>
-	<20150506215816.GE4327@dastard>
-In-Reply-To: <20150506215816.GE4327@dastard>
+Message-ID: <20150507122441.118ebcd2@harpe.intellique.com>
+In-Reply-To: <2994A55DE0FBBE41B8FE47F9885D74221BC0569C@ARLEXCHMBX02.lst.link.l-3com.com>
+References: <2994A55DE0FBBE41B8FE47F9885D74221BC0569C@ARLEXCHMBX02.lst.link.l-3com.com>
+MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,48 +27,38 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>, "Scott, Edmund J @ SSG - Link" <edmund.scott@l-3com.com>
-Cc: Ben Myers <bpm@sgi.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
-On 5/6/15 4:58 PM, Dave Chinner wrote:
-> On Wed, May 06, 2015 at 07:47:51PM +0000, Scott, Edmund J @ SSG -
-> Link wrote:
->> Hi,
->>
->> We are in a thunderstorm right now so we had to shut down, be a
->> while until we get things back up. We're in Utah with a rolling
->> t-storm coming through. 
->>
->> We did find documentation that XFS version 1 was pulled out of the
->> linux kernel around or after kernel 2.4. and the messages kind of
->> support that. I'm looking into digging up an old Red Hat OS to see
->> if it is old enough to have the version 1 XFS in it.
-> 
-> You'd be talking about the directory version, then, not the version
-> of the filesystem? Irix 6.2 introduced Version 4 filesystems, but
-> version 2 directories didn't come along until a couple of years
-> later. See Slides 6-7 here:
-> 
-> http://events.linuxfoundation.org/sites/events/files/slides/dchinner-xfs-there-and-back.pdf
-> 
-> As it is, the dirv1 removal commit says "Never functioned on Linux,
-> just pure bloat".
-> 
-> http://oss.sgi.com/cgi-bin/gitweb.cgi?p=archive/xfs-import.git;a=commitdiff;h=b84149405b9c2ecbc445d2684053e4acc03342ee
-> 
-> So I suspect that the only way you are going to be able to read
-> those filesystems is with an Irix machine....
-
-IIRC it worked, FSVO "worked" - I forget the issues, but you will
-at least be able to mount it and get some data, I think.
-
--Eric
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+TGUgV2VkLCA2IE1heSAyMDE1IDE1OjEyOjU5ICswMDAwCiJTY290dCwgRWRtdW5kIEogQCBTU0cg
+LSBMaW5rIiA8ZWRtdW5kLnNjb3R0QGwtM2NvbS5jb20+IMOpY3JpdmFpdDoKCj4gSGksCj4gCj4g
+V2UgaGF2ZSBzZXZlcmFsIG9sZGVyIFNHSSBoYXJkIGRyaXZlcyB3ZSBhcmUgdHJ5aW5nIHRvIHJl
+Y292ZXIgZGF0YQo+IGZyb20uIEhvd2V2ZXIsIHNpbmNlIHRoZXNlIGRyaXZlcyBjYW1lIGZyb20g
+YW4gU0dJIE9ueXggcnVubmluZyBJUklYCj4gNi4yLCBpdCB1c2VzIHRoZSBvbGRlciB2ZXJzaW9u
+IDEgWEZTIGZpbGUgc3lzdGVtLiBJIGNhbiBzZWUgdGhlIFNDU0kKPiBkcml2ZSBvbiBteSBMaW51
+eCBib3ggKENlbnRPUyA1LjExKSBhbmQgSSBrbm93IGRhdGEgaXMgb24gdGhlIGRyaXZlLAo+IEkg
+Y2FuIGxpc3Qgb3V0IHNvbWUgb2YgdGhlIGluZm8gdXNpbmcgZGQsIGNwaW8gb3Igc3RyaW5ncywg
+YnV0IGNhbm5vdAo+IGNvcHkgdGhlIGRhdGEgb2ZmIG9mIGl0LiBJIGhhdmUgdHJpZWQgdXNpbmcg
+eGZzX2NvcHkgdG8gYSB2ZXJzaW9uIDIKPiBYRlMgcGFydGl0aW9uLCBidXQgaXQganVzdCBjb252
+ZXJ0cyB0aGUgdGFyZ2V0IHBhcnRpdGlvbiB0byB2ZXJzaW9uCj4gMSwgd2hpY2ggSSBjYW5ub3Qg
+bW91bnQuIEkgaGF2ZSBhbHNvIGxvb2tlZCBhdCB4ZnNfZHVtcC9yZXN0b3JlLCBidXQKPiB0aG9z
+ZSByZXF1aXJlIG1vdW50ZWQgZmlsZXN5c3RlbXMuCj4gCj4gSXMgdGhlcmUgYW55IHNjcmlwdCBv
+ciBwcm9ncmFtIG9yIG9wdGlvbiBJIGNhbiB1c2UgdG8gY29weSB0aGUgZGF0YQo+IG9mZiBvZiB0
+aGUgdW4tbW91bnRlZCBTR0kgWEZTIHBhcnRpdGlvbi4gSSdtIGd1ZXNzaW5nIHNvbWUKPiBjb21i
+aW5hdGlvbiBvZiB0aGUgY3BpbyBhbmQgZGQsIGJ1dCBJIGhhdmUgbm90IGZpZ3VyZWQgb3V0IHRo
+ZSByaWdodAo+IGNvbWJpbmF0aW9uIHlldC4KCkFsdGVybmF0aXZlbHkgaWYgeW91IGNhbid0IGZp
+bmQgYSBzb2x1dGlvbiBhbmQgdGhlIGRhdGEgaXNuJ3QKcGFydGljdWxhcmx5IGNvbmZpZGVudGlh
+bCwgSSBoYXZlIGFuIE9jdGFuZSBhbmQgYW4gSW5keSBseWluZyBhcm91bmQgYW5kCmEgY291cGxl
+IG9mIDlHQiBkcml2ZXMgdGhhdCBmaXQgaW5zaWRlLCBzbyBJIGNvdWxkIHJlc3RvcmUgYSBkaXNr
+IGltYWdlCm9yIHhmc19kdW1wIGlmIHlvdSBjYW4gcHVibGlzaCBpdCBzb21ld2hlcmUuCgotLSAK
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tCkVtbWFudWVsIEZsb3JhYyAgICAgfCAgIERpcmVjdGlvbiB0ZWNobmlx
+dWUKICAgICAgICAgICAgICAgICAgICB8ICAgSW50ZWxsaXF1ZQogICAgICAgICAgICAgICAgICAg
+IHwJPGVmbG9yYWNAaW50ZWxsaXF1ZS5jb20+CiAgICAgICAgICAgICAgICAgICAgfCAgICszMyAx
+IDc4IDk0IDg0IDAyCi0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQoKX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0
+cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCg==
