@@ -1,25 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 1FEDC7F37
-	for <xfs@oss.sgi.com>; Fri,  8 May 2015 00:53:56 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 161B1304053
-	for <xfs@oss.sgi.com>; Thu,  7 May 2015 22:53:55 -0700 (PDT)
-Received: from mail-pd0-f178.google.com (mail-pd0-f178.google.com
-	[209.85.192.178]) by cuda.sgi.com with ESMTP id
-	U0tyx9u99HIE1z84 (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 07 May 2015 22:53:51 -0700 (PDT)
-Received: by pdbqd1 with SMTP id qd1so65562402pdb.2
-	for <xfs@oss.sgi.com>; Thu, 07 May 2015 22:53:50 -0700 (PDT)
-Message-ID: <554C4F6A.5060501@xtremenitro.org>
-Date: Fri, 08 May 2015 12:53:46 +0700
-From: Dewangga Bachrul Alam <dewanggaba@xtremenitro.org>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 91CAD7F54
+	for <xfs@oss.sgi.com>; Fri,  8 May 2015 15:41:00 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 1D8F9AC004
+	for <xfs@oss.sgi.com>; Fri,  8 May 2015 13:40:59 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id EokGjDDKBegss183 (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Fri, 08 May 2015 13:40:58 -0700 (PDT)
+Received: from int-mx13.intmail.prod.int.phx2.redhat.com
+	(int-mx13.intmail.prod.int.phx2.redhat.com [10.5.11.26])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id t48Kev61029568
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256
+	verify=FAIL) for <xfs@oss.sgi.com>; Fri, 8 May 2015 16:40:57 -0400
+Received: from liberator.sandeen.net (ovpn01.gateway.prod.ext.phx2.redhat.com
+	[10.5.9.1])
+	by int-mx13.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id t48KesW7026301
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <xfs@oss.sgi.com>; Fri, 8 May 2015 16:40:55 -0400
+Message-ID: <554D1F56.7030209@redhat.com>
+Date: Fri, 08 May 2015 15:40:54 -0500
+From: Eric Sandeen <sandeen@redhat.com>
 MIME-Version: 1.0
-Subject: Re: Valid Benchmark Value & Methods
-References: <554B4B59.6000706@xtremenitro.org> <2204700.QypQcg3ER3@merkaba>
-	<554B5782.4040303@xtremenitro.org> <20150507225521.GB16689@dastard>
-In-Reply-To: <20150507225521.GB16689@dastard>
+Subject: [PATCH 0/2] allow UUID changes on V5/CRC filesystems
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,73 +37,17 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: xfs-oss <xfs@oss.sgi.com>
 
-Hello Dave!
+Ok, here's the next round.  This has been through some degree of testing,
+though I still probably owe some xfstests testcases.
 
+Dave, in the end I went ahead and kept the sb_uuid name and meaning
+in the same superblock location; this does mean we touch all verifiers
+etc, but it makes for more consistency, IMHO.
 
-
-On 05/08/2015 05:55 AM, Dave Chinner wrote:
-> On Thu, May 07, 2015 at 07:16:02PM +0700, Dewangga wrote:
->> -----BEGIN PGP SIGNED MESSAGE-----
->> Hash: SHA1
->>
->> Hello Martin,
->> Thanks for your reply, yes I've read that link, but another question,
->> is noatime,nodiratime,etc still valid for performance tuning guidance?
-> 
-> You may have read it, but I don't think it sunk in....
-> 
->> Even the default mount options only "rw,inode64,seclabel,attr2".
-> 
-> Where's relatime(*)? That's been a default for a lot longer than
-> inode64...
-> 
-> $ grep "root " /proc/mounts
-> /dev/root / xfs rw,relatime,attr2,inode64,noquota 0 0
-> $
-> 
-
-I forgot write it, but relatime still exists on default mount options.
-
->> Is it still increase the performance if the additional mount options
->> added?
-> 
-> Depends on your workload, which is more critical to understand than
-> anything else. Why? because it's your workload that is going to
-> determine if twiddling a knob is going to have any effect on
-> performance. Once you understand the workload and what the
-> bottlenecks are, then you can look at what knobs the filesystem
-> provides to alleviate those bottlenecks.
-> 
-> IOWs, asking the question "how do I tune my filesystem for best
-> performance" is, fundamentally, the wrong way to go about obtaining
-> best filesystem performance.  The questions that need to be answered
-> are "what bottlenecks does my application have?" followed by "what
-> does the filesystem provide to alleviate those bottlenecks".
-> 
-> i.e. understand the problem you need to solve *before* you try to
-> solve it, otherwise you "solve" the wrong problem...
-> 
-> Cheers,
-> 
-> Dave.
-> 
-> (*) An example of exactly what I'm talking abou there. The default
-> option of relatime gets >95% of the benefit of noatime onmost
-> workloads compared to the old strictatime behaviour, but unlike
-> noatime it still retains atime updates. IOWs there's a pretty good
-> chance that noatime has little measurable impact on your
-> application's performance, but understanding and benchmarking
-> anything other than your application won't tell you this.
-> 
-
-Okay dave, got it. Standard optimize performance is add mount options
-like noatime and nodiratime, any additional performance tune is depends
-on the apps and the workloads.
-
-Thanks anyway :)
+Thanks,
+-Eric
 
 _______________________________________________
 xfs mailing list
