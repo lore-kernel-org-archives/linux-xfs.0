@@ -1,24 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 06DCC29E09
-	for <xfs@oss.sgi.com>; Sun, 10 May 2015 14:20:12 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id B33477F47
+	for <xfs@oss.sgi.com>; Sun, 10 May 2015 19:08:07 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 8A363AC002
-	for <xfs@oss.sgi.com>; Sun, 10 May 2015 12:20:08 -0700 (PDT)
-Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id nfeDDLVtjZf3i8nX (version=TLSv1 cipher=AES256-SHA
-	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Sun, 10 May 2015 12:20:06 -0700 (PDT)
-Received: from [83.175.99.196] (helo=localhost)
-	by bombadil.infradead.org with esmtpsa (Exim 4.80.1 #2 (Red Hat Linux))
-	id 1YrWlh-0006qR-M3
-	for xfs@oss.sgi.com; Sun, 10 May 2015 19:20:06 +0000
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 5/5] xfs: fix xfs_log_done interface
-Date: Sun, 10 May 2015 21:18:39 +0200
-Message-Id: <1431285519-7768-5-git-send-email-hch@lst.de>
-In-Reply-To: <1431285519-7768-1-git-send-email-hch@lst.de>
-References: <1431285519-7768-1-git-send-email-hch@lst.de>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id A33888F8035
+	for <xfs@oss.sgi.com>; Sun, 10 May 2015 17:08:04 -0700 (PDT)
+Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
+	[150.101.137.145]) by cuda.sgi.com with ESMTP id
+	CzAGoo1vtxgku3D9 for <xfs@oss.sgi.com>;
+	Sun, 10 May 2015 17:08:02 -0700 (PDT)
+Received: from dave by dastard with local (Exim 4.80)
+	(envelope-from <david@fromorbit.com>) id 1YrbDY-00040Y-OB
+	for xfs@oss.sgi.com; Mon, 11 May 2015 10:05:08 +1000
+Date: Mon, 11 May 2015 10:05:08 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: [ANNOUNCE, DISCUSS] xfsprogs: libxfs-4.1-update branch created
+Message-ID: <20150511000508.GD16689@dastard>
+MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,205 +25,129 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============4663999898344544433=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Instead of the confusing flags argument pass a boolean flag to indicate if
-we want to release or regrant a log reservation.
 
-Also ensure that xfs_log_done always drop the reference on the log ticket,
-to both simplify the code and make the logic in xfs_trans_roll easier
-to understand.
+--===============4663999898344544433==
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="h31gzZEtNLTqOjlF"
+Content-Disposition: inline
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/xfs_log.c     | 11 ++++-------
- fs/xfs/xfs_log.h     | 11 +----------
- fs/xfs/xfs_log_cil.c |  8 ++------
- fs/xfs/xfs_trans.c   | 33 ++++-----------------------------
- 4 files changed, 11 insertions(+), 52 deletions(-)
 
-diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-index bcc7cfa..c8d09ef 100644
---- a/fs/xfs/xfs_log.c
-+++ b/fs/xfs/xfs_log.c
-@@ -513,7 +513,7 @@ xfs_log_done(
- 	struct xfs_mount	*mp,
- 	struct xlog_ticket	*ticket,
- 	struct xlog_in_core	**iclog,
--	uint			flags)
-+	bool			regrant)
- {
- 	struct xlog		*log = mp->m_log;
- 	xfs_lsn_t		lsn = 0;
-@@ -526,14 +526,11 @@ xfs_log_done(
- 	    (((ticket->t_flags & XLOG_TIC_INITED) == 0) &&
- 	     (xlog_commit_record(log, ticket, iclog, &lsn)))) {
- 		lsn = (xfs_lsn_t) -1;
--		if (ticket->t_flags & XLOG_TIC_PERM_RESERV) {
--			flags |= XFS_LOG_REL_PERM_RESERV;
--		}
-+		regrant = false;
- 	}
- 
- 
--	if ((ticket->t_flags & XLOG_TIC_PERM_RESERV) == 0 ||
--	    (flags & XFS_LOG_REL_PERM_RESERV)) {
-+	if (!regrant) {
- 		trace_xfs_log_done_nonperm(log, ticket);
- 
- 		/*
-@@ -541,7 +538,6 @@ xfs_log_done(
- 		 * request has been made to release a permanent reservation.
- 		 */
- 		xlog_ungrant_log_space(log, ticket);
--		xfs_log_ticket_put(ticket);
- 	} else {
- 		trace_xfs_log_done_perm(log, ticket);
- 
-@@ -553,6 +549,7 @@ xfs_log_done(
- 		ticket->t_flags |= XLOG_TIC_INITED;
- 	}
- 
-+	xfs_log_ticket_put(ticket);
- 	return lsn;
- }
- 
-diff --git a/fs/xfs/xfs_log.h b/fs/xfs/xfs_log.h
-index 4040c47..fa27aae 100644
---- a/fs/xfs/xfs_log.h
-+++ b/fs/xfs/xfs_log.h
-@@ -111,15 +111,6 @@ static inline xfs_lsn_t	_lsn_cmp(xfs_lsn_t lsn1, xfs_lsn_t lsn2)
- #define	XFS_LSN_CMP(x,y) _lsn_cmp(x,y)
- 
- /*
-- * Macros, structures, prototypes for interface to the log manager.
-- */
--
--/*
-- * Flags to xfs_log_done()
-- */
--#define XFS_LOG_REL_PERM_RESERV	0x1
--
--/*
-  * Flags to xfs_log_force()
-  *
-  *	XFS_LOG_SYNC:	Synchronous force in-core log to disk
-@@ -138,7 +129,7 @@ struct xfs_log_callback;
- xfs_lsn_t xfs_log_done(struct xfs_mount *mp,
- 		       struct xlog_ticket *ticket,
- 		       struct xlog_in_core **iclog,
--		       uint		flags);
-+		       bool regrant);
- int	  _xfs_log_force(struct xfs_mount *mp,
- 			 uint		flags,
- 			 int		*log_forced);
-diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
-index 05d8223..abc2ccb 100644
---- a/fs/xfs/xfs_log_cil.c
-+++ b/fs/xfs/xfs_log_cil.c
-@@ -624,7 +624,7 @@ restart:
- 	spin_unlock(&cil->xc_push_lock);
- 
- 	/* xfs_log_done always frees the ticket on error. */
--	commit_lsn = xfs_log_done(log->l_mp, tic, &commit_iclog, 0);
-+	commit_lsn = xfs_log_done(log->l_mp, tic, &commit_iclog, false);
- 	if (commit_lsn == -1)
- 		goto out_abort;
- 
-@@ -777,10 +777,6 @@ xfs_log_commit_cil(
- {
- 	struct xlog		*log = mp->m_log;
- 	struct xfs_cil		*cil = log->l_cilp;
--	int			log_flags = 0;
--
--	if (regrant)
--		log_flags = XFS_LOG_REL_PERM_RESERV;
- 
- 	/* lock out background commit */
- 	down_read(&cil->xc_ctx_lock);
-@@ -795,7 +791,7 @@ xfs_log_commit_cil(
- 	if (commit_lsn)
- 		*commit_lsn = tp->t_commit_lsn;
- 
--	xfs_log_done(mp, tp->t_ticket, NULL, log_flags);
-+	xfs_log_done(mp, tp->t_ticket, NULL, regrant);
- 	xfs_trans_unreserve_and_mod_sb(tp);
- 
- 	/*
-diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
-index 6504c75..0582a27 100644
---- a/fs/xfs/xfs_trans.c
-+++ b/fs/xfs/xfs_trans.c
-@@ -251,14 +251,7 @@ xfs_trans_reserve(
- 	 */
- undo_log:
- 	if (resp->tr_logres > 0) {
--		int		log_flags;
--
--		if (resp->tr_logflags & XFS_TRANS_PERM_LOG_RES) {
--			log_flags = XFS_LOG_REL_PERM_RESERV;
--		} else {
--			log_flags = 0;
--		}
--		xfs_log_done(tp->t_mountp, tp->t_ticket, NULL, log_flags);
-+		xfs_log_done(tp->t_mountp, tp->t_ticket, NULL, false);
- 		tp->t_ticket = NULL;
- 		tp->t_log_res = 0;
- 		tp->t_flags &= ~XFS_TRANS_PERM_LOG_RES;
-@@ -954,13 +947,7 @@ out_unreserve:
- 	 */
- 	xfs_trans_unreserve_and_mod_dquots(tp);
- 	if (tp->t_ticket) {
--		int			log_flags = 0;
--
--		if (regrant) {
--			ASSERT(tp->t_flags & XFS_TRANS_PERM_LOG_RES);
--			log_flags = XFS_LOG_REL_PERM_RESERV;
--		}
--		commit_lsn = xfs_log_done(mp, tp->t_ticket, NULL, log_flags);
-+		commit_lsn = xfs_log_done(mp, tp->t_ticket, NULL, regrant);
- 		if (commit_lsn == -1 && !error)
- 			error = -EIO;
- 	}
-@@ -1014,13 +1001,8 @@ xfs_trans_cancel(
- 	xfs_trans_unreserve_and_mod_sb(tp);
- 	xfs_trans_unreserve_and_mod_dquots(tp);
- 
--	if (tp->t_ticket) {
--		uint		log_flags = 0;
--
--		if (tp->t_flags & XFS_TRANS_PERM_LOG_RES)
--			log_flags = XFS_LOG_REL_PERM_RESERV;
--		xfs_log_done(mp, tp->t_ticket, NULL, log_flags);
--	}
-+	if (tp->t_ticket)
-+		xfs_log_done(mp, tp->t_ticket, NULL, false);
- 
- 	/* mark this thread as no longer being in a transaction */
- 	current_restore_flags_nested(&tp->t_pflags, PF_FSTRANS);
-@@ -1073,13 +1055,6 @@ xfs_trans_roll(
- 	trans = *tpp;
- 
- 	/*
--	 * transaction commit worked ok so we can drop the extra ticket
--	 * reference that we gained in xfs_trans_dup()
--	 */
--	xfs_log_ticket_put(trans->t_ticket);
--
--
--	/*
- 	 * Reserve space in the log for th next transaction.
- 	 * This also pushes items in the "AIL", the list of logged items,
- 	 * out to disk if they are taking up space at the tail of the log
--- 
-1.9.1
+--h31gzZEtNLTqOjlF
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+
+Hi folks,
+
+I' ve just added a branch to the xfsprogs repository on kernel.org
+that is up to date with the current 4.1-rc2 kernel code. It's smoke
+tested, so I don't think there's any major problems with it. Can
+everyone with development patches (i.e. things that change on disk
+formats) for xfsprogs please rebase their work against this branch,
+retest and repost? This branch will end up being the 3.3 release
+tree...
+
+FWIW, now that I've done this update, I'm considered how we keep
+this up to date in future. Keeping the userspace code up to date and
+working with all the internal kernel API changes takes quite a bit
+of effort and that currently is all being done by the Maintainer.
+i.e. me. This is the reason that userspace is not updated
+frequently.
+
+With this update, libxfs in the kernel and userspace are mostly
+identical, so I'm thinking that a new rule for XFS developers needs
+to be put in place: if you modify a libxfs kernel API, then you need
+to make the same change to userspace. This means all the changes
+needed for xfs_repair, xfs_db, etc, need to be done as well, because
+sometimes these things are non-trivial.
+
+A good example of this is Christoph's xfs_trans_commit() patchset.
+There's 42 xfs_trans_commit() calls in userspace and it has a
+completely different implementation in userspace. To put that in
+context, there are 61 xfs_trans_commit() in the kernel code. If I
+merge that changeset into the kernel code, then Christoph walks away
+and it has become the Maintainer's problem to make userspace work
+with the API change.
+
+This *sucks* from a maintainer's POV - - it simply does not scale.
+This is one of the reasons why my productivity as an XFS developer
+has cratered over the last year. This userspace update work needs to
+be distributed over the developers making the API and functionality
+changes, so I'm throwing this out there to see what people think
+about solving this problem.
+
+I'm thinking that we need a userspace dev branch similar to the
+for-next branch for the kernel code, where we aggregate topic
+branches that contain each set of userspace patches that add/change
+functionality that is shared with the kernel. If the developer
+hasn't done the work to update userspace and test the changes there,
+then the change is incomplete.
+
+Note that I'm only suggesting this for the main XFS developers
+making internal API or on-disk format changes to XFS - the typical
+drive-by patches and bug fixes from random people we commit to the
+kernel code will still need the maintainer to push them across to
+userspace.
+
+This will make my life easier from both an update and maintenance
+point of view, and will make it easier for us as developers to get
+the latest dev code faster. It will also make porting kernel changes
+over to userspace faster, as the patches will mostly apply cleanly
+to the userspace libxfs code base. And if it gets merged quicker,
+tehn we'll get better test coverage of the dev tree because we'll be
+testing it sooner. And as developers, we won't have to be working
+out what changed and needs forward porting from the kernel to
+userspace to make stuff work....
+
+So, what do the people I'm asking to do more work so I don't have
+to spend so much time on time consuming maintenance tasks think?
+
+Cheers,
+
+Dave.
+--=20
+Dave Chinner
+david@fromorbit.com
+
+--h31gzZEtNLTqOjlF
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
+
+iQIcBAEBAgAGBQJVT/I0AAoJEK3oKUf0dfodaBAP/2i0AcvxWt/z+HEAPV5Kflyc
+Bvn2oYOgImNb/PM3MhHcdVGWtGmAlutcVe9For+j/geMbSMGZ/2swF4F2ACT9106
+hWYYL1thvXSjeeSlwPQMlziM6bx0sYXIUAAeQT/4pvNd8uVt1DFdADq6TeGTUdlL
+344KtGn8h3D0bXyTw1rzRbIBzmDZsPFcb5aks5k31MbJ+VYU3cweeaGM6b6vlNWW
+5HQitgJtLczVytQGZqk84CnaQgdOaEEGgPfzkg0UBWW6Ga4ju4Jt82kwkHkhjsy2
+IC2HE3UL3SPvKItIiDjZzXCzVSAbR8oWVtGG9LL4cZaqKY44T4G+ubS3zOaXQTD+
+rLKalrGiyEmn2hmfsSNcEnpa1BYy0eTzvwtNHBfP3Hx5pTImWd4ZP5vKtmdW4Eo1
+SojN5rTR/3j0Zv2SMyR3XS19rjh92q74xflgwps/UMtAM5f8w146L3K8FVNFl7Lt
+jMoWYaY4s5Z2sGaOlOGTyr1bS0QaanCIJnIlP2f4EK6pdxW5riqjqVZEdA21Ga++
+6pAGG9Wi784TMUvERiCAmVOhBrHKrefbAC+fpOvAC1qhp962w2/EO+oEXcJDnOKM
+kh8MxKHBJtmZ3/eH/P+XEQkoBaV40GSIuJDfN2GqLs7aXpogADbaWE79WybGTYR7
+Kx18XEWmABGlNscUgpla
+=/ncK
+-----END PGP SIGNATURE-----
+
+--h31gzZEtNLTqOjlF--
+
+
+--===============4663999898344544433==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============4663999898344544433==--
