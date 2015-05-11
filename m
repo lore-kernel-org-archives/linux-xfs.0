@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 20DD929DFB
-	for <xfs@oss.sgi.com>; Mon, 11 May 2015 09:50:12 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 12E24304048
-	for <xfs@oss.sgi.com>; Mon, 11 May 2015 07:50:11 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id 0F92229DFB
+	for <xfs@oss.sgi.com>; Mon, 11 May 2015 09:54:21 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id C65A5304053
+	for <xfs@oss.sgi.com>; Mon, 11 May 2015 07:54:20 -0700 (PDT)
 Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id SADh6UmDcCiffPVL for <xfs@oss.sgi.com>;
-	Mon, 11 May 2015 07:50:10 -0700 (PDT)
-Message-ID: <5550C1A1.20000@sandeen.net>
-Date: Mon, 11 May 2015 09:50:09 -0500
+	ESMTP id di1Jd5oVWUaIXXgr for <xfs@oss.sgi.com>;
+	Mon, 11 May 2015 07:54:17 -0700 (PDT)
+Message-ID: <5550C29A.2070206@sandeen.net>
+Date: Mon, 11 May 2015 09:54:18 -0500
 From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: Re: [ANNOUNCE, DISCUSS] xfsprogs: libxfs-4.1-update branch created
-References: <20150511000508.GD16689@dastard>
-	<20150511123917.GA43723@bfoster.bfoster>
-In-Reply-To: <20150511123917.GA43723@bfoster.bfoster>
+Subject: Re: [ceph-users] xfs corruption, data disaster!
+References: <loom.20150504T085721-88@post.gmane.org>	<20150504161912.6ff8621b@harpe.intellique.com>	<loom.20150505T030824-422@post.gmane.org>
+	<5550C11F.9090807@redhat.com>
+In-Reply-To: <5550C11F.9090807@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,38 +24,68 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>, Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: Ric Wheeler <rwheeler@redhat.com>, ceph-users@lists.ceph.com, Linux fs XFS <xfs@oss.sgi.com>
 
-On 5/11/15 7:39 AM, Brian Foster wrote:
-
-...
-
-> What's the proposition with regard to submission/review process? I don't
-> think we necessarily need the userspace bits until there is some review
-> feedback on the kernel bits because that just increases development and
-> review overhead (though nothing precludes posting both, of course). Also
-> (and I think we discussed this briefly at LSF), I assume it is
-> reasonable to condense a kernel patch series to a single userspace "sync
-> XYZ feature to xfsprogs" patch for the bits that port directly over,
-> since we have the kernel git log for finer grained history..? Case in
-> point: I could squash the sparse inode kernel patches into a single
-> xfsprogs patch. The functional xfsprogs bits on top of that (e.g., mkfs,
-> repair, etc.) would of course remain as independent patches that require
-> indepenent review.
-
-I'd prefer fine-grained, myself; that way, going forward, we can have a
-more or less 1:1 commit history.  With libxfs in userspace up to date,
-it should be pretty easy, if not even scriptable, and I think the minimal
-extra time needed to keep the fine-grained history around would be useful.
-
--Eric
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gNS8xMS8xNSA5OjQ3IEFNLCBSaWMgV2hlZWxlciB3cm90ZToKPiBPbiAwNS8wNS8yMDE1IDA0
+OjEzIEFNLCBZdWppYW4gUGVuZyB3cm90ZToKPj4gRW1tYW51ZWwgRmxvcmFjIDxlZmxvcmFjQC4u
+Lj4gd3JpdGVzOgo+Pgo+Pj4gTGUgTW9uLCA0IE1heSAyMDE1IDA3OjAwOjMyICswMDAwIChVVEMp
+Cj4+PiBZdWppYW4gUGVuZyA8cGVuZ3l1amlhbjUyMDEzMTQgPGF0PiAxMjYuY29tPiDDqWNyaXZh
+aXQ6Cj4+Pgo+Pj4+IEknbSBlbmNvdW50ZXJpbmcgYSBkYXRhIGRpc2FzdGVyLiBJIGhhdmUgYSBj
+ZXBoIGNsdXN0ZXIgd2l0aCAxNDUgb3NkLgo+Pj4+IFRoZSBkYXRhIGNlbnRlciBoYWQgYSBwb3dl
+ciBwcm9ibGVtIHllc3RlcmRheSwgYW5kIGFsbCBvZiB0aGUgY2VwaAo+Pj4+IG5vZGVzIHdlcmUg
+ZG93bi4gQnV0IG5vdyBJIGZpbmQgdGhhdCA2IGRpc2tzKHhmcykgaW4gNCBub2RlcyBoYXZlCj4+
+Pj4gZGF0YSBjb3JydXB0aW9uLiBTb21lIGRpc2tzIGFyZSB1bmFibGUgdG8gbW91bnQsIGFuZCBz
+b21lIGRpc2tzIGhhdmUKPj4+PiBJTyBlcnJvcnMgaW4gc3lzbG9nLiBtb3VudDogU3RydWN0dXJl
+IG5lZWRzIGNsZWFuaW5nCj4+Pj4gICAgIHhmc19sb2dfZm9yZWNlOiBlcnJvciA1IHJldHVybmVk
+Cj4+Pj4gSSB0cmllZCB0byByZXBhaXIgb25lIHdpdGggeGZzX3JlcGFpciAtTCAvZGV2L3NkeDEs
+IGJ1dCB0aGUgY2VwaC1vc2QKPj4+PiByZXBvcnRlZCBhIGxldmVsZGIgZXJyb3I6Cj4+Pj4gICAg
+IEVycm9yIGluaXRpYWxpemluZyBsZXZlbGRiOiBDb3JydXB0aW9uOiBjaGVja3N1bSBtaXNtYXRj
+aAo+Pj4+IEkgY2Fubm90IHN0YXJ0IHRoZSA2IG9zZHMgYW5kIDIyIHBncyBpcyBkb3duLgo+Pj4+
+IFRoaXMgaXMgcmVhbGx5IGEgdHJhZ2VkeSBmb3IgbWUuIENhbiB5b3UgZ2l2ZSBtZSBzb21lIGlk
+ZWEgdG8KPj4+PiByZWNvdmVyeSB0aGUgeGZzPyBUaGFua3MgdmVyeSBtdWNoIQo+Pj4gRm9yIFhG
+UyBwcm9ibGVtcywgYXNrIHRoZSBYRlMgTUw6IHhmcyA8YXQ+IG9zcy5zZ2kuY29tCj4+Pgo+Pj4g
+WW91IGRpZG4ndCBnaXZlIGVub3VnaCBkZXRhaWxzLCBieSBmYXIuIFdoYXQgdmVyc2lvbiBvZiBr
+ZXJuZWwgYW5kCj4+PiBkaXN0cm8gYXJlIHlvdSBydW5uaW5nPyBJZiB0aGVyZSB3ZXJlIGVycm9y
+cywgcGxlYXNlIHBvc3QgZXh0ZW5zaXZlCj4+PiBsb2dzLiBJZiB5b3UgaGF2ZSBJTyBlcnJvcnMg
+b24gc29tZSBkaXNrcywgeW91IHByb2JhYmx5IE1VU1QgcmVwbGFjZQo+Pj4gdGhlbSBiZWZvcmUg
+Z29pbmcgYW55IGZ1cnRoZXIuCj4+Pgo+Pj4gV2h5IGRpZCB5b3UgcnVuIHhmc19yZXBhaXIgLUwg
+PyBEaWQgeW91IHRyeSB4ZnNfcmVwYWlyIHdpdGhvdXQgb3B0aW9ucwo+Pj4gZmlyc3Q/IFdlcmUg
+eW91IHJ1bm5pbmcgdGhlIHZlcnkgdmVyeSBsYXRlc3QgdmVyc2lvbiBvZiB4ZnNfcmVwYWlyCj4+
+PiAoMy4yLjIpID8KPj4+Cj4+IFRoZSBPUyBpcyB1YnVudHUgMTIuMDQuNSB3aXRoIGtlcm5lbCAz
+LjEzLjAKPj4gdW5hbWUgLWEKPj4gTGludXggY2VwaDE5IDMuMTMuMC0zMi1nZW5lcmljICM1N35w
+cmVjaXNlMS1VYnVudHUgU01QIFR1ZSBKdWwgMTUgMDM6NTE6MjAKPj4gVVRDIDIwMTQgeDg2XzY0
+IHg4Nl82NCB4ODZfNjQgR05VL0xpbnV4Cj4+IGNhdCAvZXRjL2lzc3VlCj4+IFVidW50dSAxMi4w
+NC41IExUUyBcbiBcbAo+PiB4ZnNfcmVwYWlyIC1WCj4+IHhmc19yZXBhaXIgdmVyc2lvbiAzLjEu
+Nwo+PiBJJ3ZlIHRyaWVkIHhmc19yZXBhaXIgd2l0aG91dCBvcHRpb25zLCBidXQgaXQgc2hvd2Vk
+IG1lIHNvbWUgZXJyb3JzLCBzbyBJCj4+IHVzZWQgdGhlIC1MIG9wdGlvbi4KPj4gVGhhbmtzIGZv
+ciB5b3VyIHJlcGx5IQo+Pgo+IAo+IFJlc3BvbmRpbmcgcXVpY2tseSB0byBhIGNvdXBsZSBvZiB0
+aGluZ3M6Cj4gCj4gKiB4ZnNfcmVwYWlyIC1MIHdpcGVzIG91dCB0aGUgWEZTIGxvZywgbm90IG5v
+cm1hbGx5IGEgZ29vZCB0aGluZyB0byBkbwoKQW5kIGlmIHJlcXVpcmVkIGR1ZSB0byBhbiB1bnJl
+cGxheWFibGUgbG9nLCBvZnRlbiBpbmRpY2F0ZXMgc29tZSBwcm9ibGVtCndpdGggdGhlIHN0b3Jh
+Z2Ugc3lzdGVtLiAgRm9yIGV4YW1wbGUgYSB2b2xhdGlsZSB3cml0ZSBjYWNoZSBub3Qgc3luY2Vk
+IGFzCm5lZWRlZCwgYW5kIGxvc3QgYWxvbmcgd2l0aCBhIHBvd2VyIGxvc3MsIGxlYWRpbmcgdG8g
+YSBjb3JydXB0ZWQgYW5kCnVucmVwbGF5YWJsZSBYRlMgbG9nLgoKPiAqIHJlcGxhY2luZyBkaXNr
+cyB3aXRoIElPIGVycm9ycyBpcyBub3QgYSBncmVhdCBpZGVhIGlmIHlvdSBzdGlsbAo+IG5lZWQg
+dGhhdCBkYXRhLiBZb3UgbWlnaHQgd2FudCB0byBjb3B5IHRoZSBkYXRhIGZyb20gdGhhdCBkaXNr
+IHRvIGEKPiBuZXcgZGlzayAoc2FtZSBvciBncmVhdGVyIHNpemUpIGFuZCB0aGVuIHRyeSB0byBy
+ZXBhaXIgdGhhdCBuZXcgZGlzay4KPiBBIGxvdCBkZXBlbmRzIG9uIHRoZSB0eXBlIG9mIElPIGVy
+cm9yIHlvdSBzZWUgLSB5b3UgbWlnaHQgaGF2ZSBjYWJsZQo+IGlzc3VlcywgSEJBIGlzc3Vlcywg
+b3IgZmFpcmx5IG5vcm1hbCByZWFkIGlzc3VlcyAod2hpY2ggYXJlIG5vdCB3b3J0aAo+IHJlcGxh
+Y2luZyBhIGRpc2sgZm9yKS4KCkp1c3QgYSBub3RlIHRoYXQgWEZTIHNvbWV0aW1lcyBzdGFydHMg
+c2F5aW5nICJJTyBlcnJvciIgd2hlbiB0aGUgZmlsZXN5c3RlbQpoYXMgc2h1dCBkb3duOyB0aGlz
+IGlzbid0IHRoZSBzYW1lIGFzIGEgYmxvY2stZGV2aWNlLWxldmVsIElPIGVycm9yLCBidXQgeW91
+CmhhdmVuJ3QgcG9zdGVkIGxvZ3Mgb3IgYW55dGhpbmcsIHNvIEknbSBqdXN0IGd1ZXNzaW5nIGhl
+cmUuCgpodHRwOi8veGZzLm9yZy9pbmRleC5waHAvWEZTX0ZBUSNROl9XaGF0X2luZm9ybWF0aW9u
+X3Nob3VsZF9JX2luY2x1ZGVfd2hlbl9yZXBvcnRpbmdfYV9wcm9ibGVtLjNGCgotRXJpYwoKPiBZ
+b3Ugc2hvdWxkIHdvcmsgd2l0aCB5b3VyIHZlbmRvcidzIHN1cHBvcnQgdGVhbSBpZiB5b3UgaGF2
+ZSBhIHN1cHBvcnQKPiBjb250cmFjdCBvciBwb3N0IHRoZSB0aGUgWEZTIGRldmVsIGxpc3QgKGNv
+cGllZCBhYm92ZSkgZm9yIGhlbHAuCj4gCj4gR29vZCBsdWNrIQo+IAo+IFJpYwo+IAo+IAo+IAo+
+IF9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCj4geGZzIG1h
+aWxpbmcgbGlzdAo+IHhmc0Bvc3Muc2dpLmNvbQo+IGh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFu
+L2xpc3RpbmZvL3hmcwoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2kuY29t
+L21haWxtYW4vbGlzdGluZm8veGZzCg==
