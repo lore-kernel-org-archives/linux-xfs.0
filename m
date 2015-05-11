@@ -1,23 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 0E33129DFB
-	for <xfs@oss.sgi.com>; Mon, 11 May 2015 16:28:45 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 0347C304059
-	for <xfs@oss.sgi.com>; Mon, 11 May 2015 14:28:41 -0700 (PDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 244D529DFB
+	for <xfs@oss.sgi.com>; Mon, 11 May 2015 16:45:03 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id A41CAAC001
+	for <xfs@oss.sgi.com>; Mon, 11 May 2015 14:44:59 -0700 (PDT)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	OaA6q6CRFb0ZwxP6 for <xfs@oss.sgi.com>;
-	Mon, 11 May 2015 14:28:39 -0700 (PDT)
-Date: Tue, 12 May 2015 07:28:05 +1000
+	vq6GhKnDV2N775GQ for <xfs@oss.sgi.com>;
+	Mon, 11 May 2015 14:44:56 -0700 (PDT)
+Date: Tue, 12 May 2015 07:44:42 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [ANNOUNCE, DISCUSS] xfsprogs: libxfs-4.1-update branch created
-Message-ID: <20150511212805.GE15721@dastard>
-References: <20150511000508.GD16689@dastard>
- <5550C123.8060806@sandeen.net>
+Subject: Re: Inode and dentry cache behavior
+Message-ID: <20150511214442.GF15721@dastard>
+References: <CABppvi55C+vE7Ei8u=_ntC_heDQb4HwUcKom-_9hGkunk84Sfw@mail.gmail.com>
+	<20150423224324.GM15810@dastard>
+	<CABppvi7+Mu78FAM75YvJvekX2CHtKk4yeMrU7j35fvvWRb923Q@mail.gmail.com>
+	<20150424061554.GN15810@dastard>
+	<CABppvi6N6McmfLgAPcP9cxXxPrBMaD81UyeiVHWOaxrJisSN=g@mail.gmail.com>
+	<20150429013024.GU15810@dastard>
+	<CABppvi63mY=-UFEyupF2-TQux+arOaCy+B-rtckvZziuachCbA@mail.gmail.com>
+	<CABppvi4CA_FOuJz8zrr=gNguzKKrQqG5Q30gfP9YMf1KSCM8jQ@mail.gmail.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <5550C123.8060806@sandeen.net>
+In-Reply-To: <CABppvi4CA_FOuJz8zrr=gNguzKKrQqG5Q30gfP9YMf1KSCM8jQ@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,45 +36,30 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
+To: Shrinand Javadekar <shrinand@maginatics.com>
 Cc: xfs@oss.sgi.com
 
-On Mon, May 11, 2015 at 09:48:03AM -0500, Eric Sandeen wrote:
-> -----BEGIN PGP SIGNED MESSAGE-----
-> Hash: SHA1
+On Mon, May 11, 2015 at 02:07:39PM -0700, Shrinand Javadekar wrote:
+> In case you're curious, the solutions to this problem are being
+> discussed at [1] on the Swift side.
 > 
-> On 5/10/15 7:05 PM, Dave Chinner wrote:
-> > Hi folks,
-> 
-> ...
-> 
-> > This userspace update work needs to
-> > be distributed over the developers making the API and functionality
-> > changes, so I'm throwing this out there to see what people think
-> > about solving this problem.
-> 
-> ...
-> 
-> > So, what do the people I'm asking to do more work so I don't have
-> > to spend so much time on time consuming maintenance tasks think?
-> 
-> I think it makes perfect sense, and I'm happy to do it.  The giant
-> sync-ups after the fact have never been ideal from any perspective.
-> 
-> I'm glad you brought this up; I don't think anyone ever meant to simply
-> leave this to the maintainer - it just ended up that way, because the
-> rules or best practices weren't necessarily clear.
+> O_TMPFILE and linkat() aren't available in all kernels (and python)
+> and therefore not a viable option right away. Among few others, one of
+> the proposals is to shard the tmp directory into say 256 dirs and
+> create these files inside those dirs. That way files won't get created
+> in a single AG. Are there any other problems if this is done?
 
-*nod*
+Yes, you don't get any locality between files in the same directory
+once you move them to their final location in the hash tree. You'll
+end up with the same problems you are trying to solve now as the
+object count goes up - you'll simply have taken a different path to
+the same destination....
 
-> So; do you envision a 0/8 patch series, 4 of which touch libxfs, to
-> now be a 0/12 patch series, with the userspace bits i.e. at the end?
-> I'd be perfectly happy with this; once libxfs stays up to date in
-> userspace, it should be trivial.
-
-I'd expect separate patch series, because it's kinda hard to do a
-git send-email or guilt patchbomb that spans mutltiple
-repositories.... :P
+Create your temp files in their eventual destination directory -
+doing anything else is pretty much guaranteed to compromise all the
+locality algorithms the filesystem uses. Without good locality
+within the data set, performance of lookups and writeback will
+degrade to large seek time random IO pretty quickly.
 
 Cheers,
 
