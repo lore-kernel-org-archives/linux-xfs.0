@@ -1,22 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 69CED7F3F
-	for <xfs@oss.sgi.com>; Mon, 11 May 2015 00:37:13 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id EB890AC002
-	for <xfs@oss.sgi.com>; Sun, 10 May 2015 22:37:09 -0700 (PDT)
-Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id DpSc6hwb9MNhYEBu (version=TLSv1 cipher=AES256-SHA
-	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Sun, 10 May 2015 22:37:08 -0700 (PDT)
-Date: Sun, 10 May 2015 22:37:08 -0700
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [ANNOUNCE, DISCUSS] xfsprogs: libxfs-4.1-update branch created
-Message-ID: <20150511053708.GB29703@infradead.org>
-References: <20150511000508.GD16689@dastard>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 7502E7F3F
+	for <xfs@oss.sgi.com>; Mon, 11 May 2015 02:23:43 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 6C80B304048
+	for <xfs@oss.sgi.com>; Mon, 11 May 2015 00:23:43 -0700 (PDT)
+Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
+	[150.101.137.143]) by cuda.sgi.com with ESMTP id
+	7LfWFjRktW6u1PCB for <xfs@oss.sgi.com>;
+	Mon, 11 May 2015 00:23:38 -0700 (PDT)
+Date: Mon, 11 May 2015 17:23:35 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [ANNOUNCE] xfsprogs: master branch updated to v3.2.3-rc1
+Message-ID: <20150511072335.GC15721@dastard>
+References: <20150511005524.GE16689@dastard>
+	<20150511053523.GA29703@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20150511000508.GD16689@dastard>
+In-Reply-To: <20150511053523.GA29703@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,19 +30,38 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
+To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
-On Mon, May 11, 2015 at 10:05:08AM +1000, Dave Chinner wrote:
-> A good example of this is Christoph's xfs_trans_commit() patchset.
-> There's 42 xfs_trans_commit() calls in userspace and it has a
-> completely different implementation in userspace. To put that in
-> context, there are 61 xfs_trans_commit() in the kernel code. If I
-> merge that changeset into the kernel code, then Christoph walks away
-> and it has become the Maintainer's problem to make userspace work
-> with the API change.
+On Sun, May 10, 2015 at 10:35:23PM -0700, Christoph Hellwig wrote:
+> On Mon, May 11, 2015 at 10:55:25AM +1000, Dave Chinner wrote:
+> > Hi folks,
+> > 
+> > The xfsprogs repository at git://oss.sgi.com/xfs/cmds/xfsprogs has
+> > just been updated. This update is the first candidate for a
+> > v3.2.3 release, so please test and report any problems you find.
+> > 
+> > The new head of the master branch is commit:
+> > 
+> > c8c0837 xfsprogs: update for 3.2.3-rc1 release
+> 
+> FYI, I don't think enabling v5 file system without at least a minor
+> version bump makes sense.  While I'm not fan of release number inflation
+> this might even be a case for a major number bump to 4.x.
 
-I'm perfectly happy to do this work for userspace as well. 
+I don't really think it is necessary. SLES 12 is already using CRCs
+as the default XFS configuration for filesystems created by YaST, so
+the cat is already out of the bag. And, historically speaking,
+changing mkfs defaults has never been considered a compelling reason
+to do a major/minor version bump so I haven't even bothered trying
+to argue for that as I've never been successful in the past...
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
