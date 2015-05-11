@@ -1,22 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id CFF5F29DFB
-	for <xfs@oss.sgi.com>; Mon, 11 May 2015 09:48:07 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id A73588F8049
-	for <xfs@oss.sgi.com>; Mon, 11 May 2015 07:48:04 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id pDkXe3TdrjW2KVHF (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 11 May 2015 07:48:03 -0700 (PDT)
-Message-ID: <5550C11F.9090807@redhat.com>
-Date: Mon, 11 May 2015 17:47:59 +0300
-From: Ric Wheeler <rwheeler@redhat.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 20DD929DFB
+	for <xfs@oss.sgi.com>; Mon, 11 May 2015 09:50:12 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 12E24304048
+	for <xfs@oss.sgi.com>; Mon, 11 May 2015 07:50:11 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id SADh6UmDcCiffPVL for <xfs@oss.sgi.com>;
+	Mon, 11 May 2015 07:50:10 -0700 (PDT)
+Message-ID: <5550C1A1.20000@sandeen.net>
+Date: Mon, 11 May 2015 09:50:09 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: Re: [ceph-users] xfs corruption, data disaster!
-References: <loom.20150504T085721-88@post.gmane.org>	<20150504161912.6ff8621b@harpe.intellique.com>
-	<loom.20150505T030824-422@post.gmane.org>
-In-Reply-To: <loom.20150505T030824-422@post.gmane.org>
+Subject: Re: [ANNOUNCE, DISCUSS] xfsprogs: libxfs-4.1-update branch created
+References: <20150511000508.GD16689@dastard>
+	<20150511123917.GA43723@bfoster.bfoster>
+In-Reply-To: <20150511123917.GA43723@bfoster.bfoster>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,54 +24,38 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Transfer-Encoding: base64
-Content-Type: text/plain; charset="utf-8"; Format="flowed"
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: ceph-users@lists.ceph.com, Linux fs XFS <xfs@oss.sgi.com>
+To: Brian Foster <bfoster@redhat.com>, Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-T24gMDUvMDUvMjAxNSAwNDoxMyBBTSwgWXVqaWFuIFBlbmcgd3JvdGU6Cj4gRW1tYW51ZWwgRmxv
-cmFjIDxlZmxvcmFjQC4uLj4gd3JpdGVzOgo+Cj4+IExlIE1vbiwgNCBNYXkgMjAxNSAwNzowMDoz
-MiArMDAwMCAoVVRDKQo+PiBZdWppYW4gUGVuZyA8cGVuZ3l1amlhbjUyMDEzMTQgPGF0PiAxMjYu
-Y29tPiDDqWNyaXZhaXQ6Cj4+Cj4+PiBJJ20gZW5jb3VudGVyaW5nIGEgZGF0YSBkaXNhc3Rlci4g
-SSBoYXZlIGEgY2VwaCBjbHVzdGVyIHdpdGggMTQ1IG9zZC4KPj4+IFRoZSBkYXRhIGNlbnRlciBo
-YWQgYSBwb3dlciBwcm9ibGVtIHllc3RlcmRheSwgYW5kIGFsbCBvZiB0aGUgY2VwaAo+Pj4gbm9k
-ZXMgd2VyZSBkb3duLiBCdXQgbm93IEkgZmluZCB0aGF0IDYgZGlza3MoeGZzKSBpbiA0IG5vZGVz
-IGhhdmUKPj4+IGRhdGEgY29ycnVwdGlvbi4gU29tZSBkaXNrcyBhcmUgdW5hYmxlIHRvIG1vdW50
-LCBhbmQgc29tZSBkaXNrcyBoYXZlCj4+PiBJTyBlcnJvcnMgaW4gc3lzbG9nLiBtb3VudDogU3Ry
-dWN0dXJlIG5lZWRzIGNsZWFuaW5nCj4+PiAJeGZzX2xvZ19mb3JlY2U6IGVycm9yIDUgcmV0dXJu
-ZWQKPj4+IEkgdHJpZWQgdG8gcmVwYWlyIG9uZSB3aXRoIHhmc19yZXBhaXIgLUwgL2Rldi9zZHgx
-LCBidXQgdGhlIGNlcGgtb3NkCj4+PiByZXBvcnRlZCBhIGxldmVsZGIgZXJyb3I6Cj4+PiAJRXJy
-b3IgaW5pdGlhbGl6aW5nIGxldmVsZGI6IENvcnJ1cHRpb246IGNoZWNrc3VtIG1pc21hdGNoCj4+
-PiBJIGNhbm5vdCBzdGFydCB0aGUgNiBvc2RzIGFuZCAyMiBwZ3MgaXMgZG93bi4KPj4+IFRoaXMg
-aXMgcmVhbGx5IGEgdHJhZ2VkeSBmb3IgbWUuIENhbiB5b3UgZ2l2ZSBtZSBzb21lIGlkZWEgdG8K
-Pj4+IHJlY292ZXJ5IHRoZSB4ZnM/IFRoYW5rcyB2ZXJ5IG11Y2ghCj4+IEZvciBYRlMgcHJvYmxl
-bXMsIGFzayB0aGUgWEZTIE1MOiB4ZnMgPGF0PiBvc3Muc2dpLmNvbQo+Pgo+PiBZb3UgZGlkbid0
-IGdpdmUgZW5vdWdoIGRldGFpbHMsIGJ5IGZhci4gV2hhdCB2ZXJzaW9uIG9mIGtlcm5lbCBhbmQK
-Pj4gZGlzdHJvIGFyZSB5b3UgcnVubmluZz8gSWYgdGhlcmUgd2VyZSBlcnJvcnMsIHBsZWFzZSBw
-b3N0IGV4dGVuc2l2ZQo+PiBsb2dzLiBJZiB5b3UgaGF2ZSBJTyBlcnJvcnMgb24gc29tZSBkaXNr
-cywgeW91IHByb2JhYmx5IE1VU1QgcmVwbGFjZQo+PiB0aGVtIGJlZm9yZSBnb2luZyBhbnkgZnVy
-dGhlci4KPj4KPj4gV2h5IGRpZCB5b3UgcnVuIHhmc19yZXBhaXIgLUwgPyBEaWQgeW91IHRyeSB4
-ZnNfcmVwYWlyIHdpdGhvdXQgb3B0aW9ucwo+PiBmaXJzdD8gV2VyZSB5b3UgcnVubmluZyB0aGUg
-dmVyeSB2ZXJ5IGxhdGVzdCB2ZXJzaW9uIG9mIHhmc19yZXBhaXIKPj4gKDMuMi4yKSA/Cj4+Cj4g
-VGhlIE9TIGlzIHVidW50dSAxMi4wNC41IHdpdGgga2VybmVsIDMuMTMuMAo+IHVuYW1lIC1hCj4g
-TGludXggY2VwaDE5IDMuMTMuMC0zMi1nZW5lcmljICM1N35wcmVjaXNlMS1VYnVudHUgU01QIFR1
-ZSBKdWwgMTUgMDM6NTE6MjAKPiBVVEMgMjAxNCB4ODZfNjQgeDg2XzY0IHg4Nl82NCBHTlUvTGlu
-dXgKPiBjYXQgL2V0Yy9pc3N1ZQo+IFVidW50dSAxMi4wNC41IExUUyBcbiBcbAo+IHhmc19yZXBh
-aXIgLVYKPiB4ZnNfcmVwYWlyIHZlcnNpb24gMy4xLjcKPiBJJ3ZlIHRyaWVkIHhmc19yZXBhaXIg
-d2l0aG91dCBvcHRpb25zLCBidXQgaXQgc2hvd2VkIG1lIHNvbWUgZXJyb3JzLCBzbyBJCj4gdXNl
-ZCB0aGUgLUwgb3B0aW9uLgo+IFRoYW5rcyBmb3IgeW91ciByZXBseSEKPgoKUmVzcG9uZGluZyBx
-dWlja2x5IHRvIGEgY291cGxlIG9mIHRoaW5nczoKCiogeGZzX3JlcGFpciAtTCB3aXBlcyBvdXQg
-dGhlIFhGUyBsb2csIG5vdCBub3JtYWxseSBhIGdvb2QgdGhpbmcgdG8gZG8KCiogcmVwbGFjaW5n
-IGRpc2tzIHdpdGggSU8gZXJyb3JzIGlzIG5vdCBhIGdyZWF0IGlkZWEgaWYgeW91IHN0aWxsIG5l
-ZWQgdGhhdCAKZGF0YS4gWW91IG1pZ2h0IHdhbnQgdG8gY29weSB0aGUgZGF0YSBmcm9tIHRoYXQg
-ZGlzayB0byBhIG5ldyBkaXNrIChzYW1lIG9yIApncmVhdGVyIHNpemUpIGFuZCB0aGVuIHRyeSB0
-byByZXBhaXIgdGhhdCBuZXcgZGlzay4gIEEgbG90IGRlcGVuZHMgb24gdGhlIHR5cGUgCm9mIElP
-IGVycm9yIHlvdSBzZWUgLSB5b3UgbWlnaHQgaGF2ZSBjYWJsZSBpc3N1ZXMsIEhCQSBpc3N1ZXMs
-IG9yIGZhaXJseSBub3JtYWwgCnJlYWQgaXNzdWVzICh3aGljaCBhcmUgbm90IHdvcnRoIHJlcGxh
-Y2luZyBhIGRpc2sgZm9yKS4KCllvdSBzaG91bGQgd29yayB3aXRoIHlvdXIgdmVuZG9yJ3Mgc3Vw
-cG9ydCB0ZWFtIGlmIHlvdSBoYXZlIGEgc3VwcG9ydCBjb250cmFjdCAKb3IgcG9zdCB0aGUgdGhl
-IFhGUyBkZXZlbCBsaXN0IChjb3BpZWQgYWJvdmUpIGZvciBoZWxwLgoKR29vZCBsdWNrIQoKUmlj
-CgoKCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBt
-YWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xp
-c3RpbmZvL3hmcwo=
+On 5/11/15 7:39 AM, Brian Foster wrote:
+
+...
+
+> What's the proposition with regard to submission/review process? I don't
+> think we necessarily need the userspace bits until there is some review
+> feedback on the kernel bits because that just increases development and
+> review overhead (though nothing precludes posting both, of course). Also
+> (and I think we discussed this briefly at LSF), I assume it is
+> reasonable to condense a kernel patch series to a single userspace "sync
+> XYZ feature to xfsprogs" patch for the bits that port directly over,
+> since we have the kernel git log for finer grained history..? Case in
+> point: I could squash the sparse inode kernel patches into a single
+> xfsprogs patch. The functional xfsprogs bits on top of that (e.g., mkfs,
+> repair, etc.) would of course remain as independent patches that require
+> indepenent review.
+
+I'd prefer fine-grained, myself; that way, going forward, we can have a
+more or less 1:1 commit history.  With libxfs in userspace up to date,
+it should be pretty easy, if not even scriptable, and I think the minimal
+extra time needed to keep the fine-grained history around would be useful.
+
+-Eric
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
