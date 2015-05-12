@@ -1,25 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id B4D0029DFB
-	for <xfs@oss.sgi.com>; Mon, 11 May 2015 20:58:33 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 77E438F804C
-	for <xfs@oss.sgi.com>; Mon, 11 May 2015 18:58:33 -0700 (PDT)
-Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
-	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	NOw4geOXSFXqibEp for <xfs@oss.sgi.com>;
-	Mon, 11 May 2015 18:58:30 -0700 (PDT)
-Date: Tue, 12 May 2015 11:58:27 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 1/2] xfs: create new metadata UUID field and incompat flag
-Message-ID: <20150512015827.GS4327@dastard>
-References: <554D1F56.7030209@redhat.com> <554D2110.8030405@sandeen.net>
-	<20150511161404.GA54361@bfoster.bfoster>
-	<5550DE64.2030907@sandeen.net> <20150511214902.GG15721@dastard>
-	<55514028.6010606@sandeen.net>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id EB22A7F3F
+	for <xfs@oss.sgi.com>; Tue, 12 May 2015 01:36:39 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id E0C21304032
+	for <xfs@oss.sgi.com>; Mon, 11 May 2015 23:36:36 -0700 (PDT)
+Received: from newverein.lst.de (verein.lst.de [213.95.11.211]) by
+	cuda.sgi.com with ESMTP id SfgbZpz2wETvVPKS (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Mon, 11 May 2015 23:36:34 -0700 (PDT)
+Date: Tue, 12 May 2015 08:36:32 +0200
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH 4/5] xfs: saner xfs_trans_commit interface
+Message-ID: <20150512063632.GA25562@lst.de>
+References: <1431285519-7768-1-git-send-email-hch@lst.de>
+	<1431285519-7768-4-git-send-email-hch@lst.de>
+	<20150511203237.GA59885@bfoster.bfoster>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <55514028.6010606@sandeen.net>
+In-Reply-To: <20150511203237.GA59885@bfoster.bfoster>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,47 +31,28 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Eric Sandeen <sandeen@redhat.com>, Brian Foster <bfoster@redhat.com>, xfs-oss <xfs@oss.sgi.com>
+To: Brian Foster <bfoster@redhat.com>
+Cc: Christoph Hellwig <hch@lst.de>, xfs@oss.sgi.com
 
-On Mon, May 11, 2015 at 06:50:00PM -0500, Eric Sandeen wrote:
-> On 5/11/15 4:49 PM, Dave Chinner wrote:
-> > On Mon, May 11, 2015 at 11:52:52AM -0500, Eric Sandeen wrote:
-> >> On 5/11/15 11:14 AM, Brian Foster wrote:
-> >>> On Fri, May 08, 2015 at 03:48:16PM -0500, Eric Sandeen wrote:
-> >>> I suppose I could be convinced otherwise if there's context I'm missing,
-> >>> but otherwise this seems a bit confusing to me...
-> >>>
-> >>> Brian
-> >>
-> >> Yeah, I'm sympathetic to that argument.  I can look into using sb_meta_uuid
-> >> for the log too, if the incompat flag is set.
-> > 
-> > The log uuid is user facing, like the superblock uuid. i.e. there
-> > are tools that identify external log devices by checking that the
-> > uuid in the log matches the user facing uuid in the superblock.
-> > Hence the log uuid needs to use the uuid that is reported to
-> > userspace.
+On Mon, May 11, 2015 at 04:32:37PM -0400, Brian Foster wrote:
+> >  	xfs_trans_unreserve_and_mod_dquots(tp);
+> >  	if (tp->t_ticket) {
+> > +		int			log_flags = 0;
+> > +
+> > +		if (regrant) {
+> > +			ASSERT(tp->t_flags & XFS_TRANS_PERM_LOG_RES);
+> > +			log_flags = XFS_LOG_REL_PERM_RESERV;
+> > +		}
 > 
-> 
-> None that are external to xfsprogs, I think, are there? (1) - but still.
-> I'm happy to leave it as it is ... I don't think it really matters either way.
-> 
-> -Eric
-> 
-> (1) at one point I wanted to teach blkid to find an external log by UUID,
-> but there is no "log superblock" so I gave up on that idea.
+> Is the regrant logic here and in xfs_log_commit_cil() backwards or am I
+> misreading?
 
-Well, we don't know, really, do we? It's best to play it safe and
-keep it the same as the user visible filesytem uuid, as that is
-what is currently expected by anything poking at block dev UUIDs...
+Yes, it's actually wrong, but fixed up by the next patch.
 
-Cheers,
+I'll wait for more review feedback and will resend a fixed version.
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+p.s. can you please properly quote when replying?  I had to trim over 600 lines
+to get to your two line comment..
 
 _______________________________________________
 xfs mailing list
