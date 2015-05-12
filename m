@@ -1,21 +1,18 @@
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 74C307F66
-	for <xfs@oss.sgi.com>; Wed, 13 May 2015 01:27:43 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 5C68E304039
-	for <xfs@oss.sgi.com>; Tue, 12 May 2015 23:27:39 -0700 (PDT)
-Received: from a.37790.net ([103.228.130.241]) by cuda.sgi.com with ESMTP id
-	BANFWGb9vDBW1AMQ for <xfs@oss.sgi.com>;
-	Tue, 12 May 2015 23:27:35 -0700 (PDT)
-Received: from ikmopr (unknown [58.61.178.119])
-	by a.37790.net (Postfix) with ESMTPA id B44443FCE
-	for <xfs@oss.sgi.com>; Wed, 13 May 2015 14:27:39 +0800 (CST)
-Date: Wed, 13 May 2015 14:30:18 +0800
-From: "Michelle Tang" <mtanginfo1026@gmail.com>
-Subject: Cutting precision parts in China
-Message-ID: <201505131430184836789@a.37790.net>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 641F27F3F
+	for <xfs@oss.sgi.com>; Tue, 12 May 2015 08:43:02 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 4B2348F8065
+	for <xfs@oss.sgi.com>; Tue, 12 May 2015 06:42:59 -0700 (PDT)
+Received: from lijiang.056666.net (lijiang.056666.net [209.250.17.109]) by
+	cuda.sgi.com with ESMTP id 60kECaoYZuJm2wDN for
+	<xfs@oss.sgi.com>; Tue, 12 May 2015 06:42:57 -0700 (PDT)
+Subject: image solutions
+Message-ID: <e05cabbb3a76a352f9b201c82201db7e@thepodhotel.com>
+Date: Tue, 12 May 2015 11:34:24 +0200
+From: "Joe" <neiga@mail.com>
 MIME-Version: 1.0
-Reply-To: mtanginfo@163.com
+Reply-To: kansouedit@sina.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,26 +21,29 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
-Dear Sir;
+How are you?
 
-We do CNC machining parts in shenzhen China factory, our website is www.sz-tecom.com.
+We offer photo editing:
+Like ecommerce photos editing, jewelry photo retouching, beauty retouching,
+Wedding photos editing, image cut out and clipping path.
 
-Thanks for your any enquiry.
+Quality is good
+Turnaround time fast
 
-Tecom Precision Machining(shenzhen)Co.,LTD
-Add: 3th Floor,A2 Block,ZhongPengCheng Industrial Park, 
-        ChuangChun South Road,GongMing Town,ShenZhen,China
-Tel : 0086-755-2715 5130
-Fax: 0086-755-2715 5130
-Cell: 0086-134 1053 5880
-Email: sales@sz-tecom.com michelle@sz-tecom.com 
-Web: www.sz-tecom.com
+You may send us a test photo to judge our quality.
+
+Have a good day!
+
+Best regards,
+Joe
+Email: songedit@tom.com
+
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
