@@ -1,22 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 816697F59
-	for <xfs@oss.sgi.com>; Tue, 12 May 2015 17:16:20 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 723B38F804C
-	for <xfs@oss.sgi.com>; Tue, 12 May 2015 15:16:17 -0700 (PDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 7E8E67F5D
+	for <xfs@oss.sgi.com>; Tue, 12 May 2015 18:52:44 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 6E853304032
+	for <xfs@oss.sgi.com>; Tue, 12 May 2015 16:52:44 -0700 (PDT)
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	etXn7i07WFJr7GEE for <xfs@oss.sgi.com>;
-	Tue, 12 May 2015 15:16:14 -0700 (PDT)
-Date: Wed, 13 May 2015 08:15:34 +1000
+	gOae1LHGHhx4zsA5 for <xfs@oss.sgi.com>;
+	Tue, 12 May 2015 16:52:39 -0700 (PDT)
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: any chance for xfs shrinking?
-Message-ID: <20150512221534.GI15721@dastard>
-References: <5551EBB2.9010508@profihost.ag>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <5551EBB2.9010508@profihost.ag>
+Subject: [PATCH 0/2 v2] percpu_counter: xfs requires custom compare batch size
+Date: Wed, 13 May 2015 09:52:32 +1000
+Message-Id: <1431474754-15764-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,53 +21,29 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Stefan Priebe - Profihost AG <s.priebe@profihost.ag>
-Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
+Cc: peterz@infradead.org, tj@kernel.org, linux-kernel@vger.kernel.org
 
-On Tue, May 12, 2015 at 02:01:54PM +0200, Stefan Priebe - Profihost AG wrote:
-> Hi,
-> 
-> while cloud / vms usage become more and more popular and qemu now also
-> offers memory hot add and unplug, cpu hot add and unplug, we still
-> suffer from a missing xfs shrink.
+Hi folks,
 
-Over the years lots of people have come along and said "we want to
-implement shrink" and we've pointed them at the pieces that need to
-be put together to make it work. However, shrink is a terribly complex
-operation which, as Eric has pointed out, scrambles the filesystem
-up badly, and so for the most part it isn't a desired operation
-to perform on a filesystem.
+This is v2 of the regression fix for the new generic per-cpu
+superblock counter code in XFS. The problems fixed arise from using
+custom batch sizes for addition and decrement exceeding the
+"accurate compare" bounds in percpu_counter_compare() and hence
+resulting in incorrect comparisons being made.
 
-The reality is that nobody has needed shrink badly enough to push
-such a complex set of operations through to completion, or fund a
-developer to push it through to completion. Note that it's not just
-code that needs to be written, the verification of shrink behaviour
-and correctness is also difficult and time consuming.
+This regression was introduced in 4.1-rc1 and it requires a small
+tweak to the percpu counter infrastructure to fix, hence the two
+patches.
 
-> I would like to continue to use XFS as it is a rock solid base since
-> around 10 years for us.
-> 
-> But one missing piece in variable ressource usage for us is disk
-> shrinking. Is there any chance to get an xfs online shrinking?
+Comments welcome!
 
-In a world of infinite resources at my disposal, I'd say yes. But
-when I already have a backlog of development work longer than my
-arm, finding 3-6 months to implement shrink is not easy to
-accomplish. And, really, reverse mapping btrees and parent pointers
-come first so that shrink can be implemented efficiently (shrink
-needs reverse block-to-path mapping), and that's another 6 months
-worth of work before shrink....
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+-Dave.
 
 _______________________________________________
 xfs mailing list
