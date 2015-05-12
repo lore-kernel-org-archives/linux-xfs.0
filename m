@@ -1,26 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id C82437F3F
-	for <xfs@oss.sgi.com>; Tue, 12 May 2015 07:27:32 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id AC3348F804C
-	for <xfs@oss.sgi.com>; Tue, 12 May 2015 05:27:32 -0700 (PDT)
-Received: from mail-pd0-f181.google.com (mail-pd0-f181.google.com
-	[209.85.192.181]) by cuda.sgi.com with ESMTP id
-	uiEHdhBBl6Y2nlzH (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 12 May 2015 05:27:30 -0700 (PDT)
-Received: by pdbqa5 with SMTP id qa5so9498846pdb.1
-	for <xfs@oss.sgi.com>; Tue, 12 May 2015 05:27:30 -0700 (PDT)
-Received: from galea.xtremenitro.org
-	(static-ip-103.52.2.2.merahciptamedia.com. [103.52.2.2])
-	by mx.google.com with ESMTPSA id
-	zf1sm16115046pbc.43.2015.05.12.05.27.27 for <xfs@oss.sgi.com>
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-	Tue, 12 May 2015 05:27:29 -0700 (PDT)
-Message-ID: <5551F1AD.9080804@xtremenitro.org>
-Date: Tue, 12 May 2015 19:27:25 +0700
-From: Dewangga Bachrul Alam <dewanggaba@xtremenitro.org>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 11EA57F3F
+	for <xfs@oss.sgi.com>; Tue, 12 May 2015 07:35:31 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id EBF43304048
+	for <xfs@oss.sgi.com>; Tue, 12 May 2015 05:35:24 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id IAcDvAK9qW4XuDcL for <xfs@oss.sgi.com>;
+	Tue, 12 May 2015 05:35:22 -0700 (PDT)
+Message-ID: <5551F38A.2050102@sandeen.net>
+Date: Tue, 12 May 2015 07:35:22 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
 Subject: Re: any chance for xfs shrinking?
 References: <5551EBB2.9010508@profihost.ag>
@@ -37,36 +27,39 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Stefan Priebe - Profihost AG <s.priebe@profihost.ag>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-Hello!
-
-It's been discussed couple months ago,
-Please check it here http://oss.sgi.com/archives/xfs/2015-02/msg00252.html
-
-On 05/12/2015 07:01 PM, Stefan Priebe - Profihost AG wrote:
+On 5/12/15 7:01 AM, Stefan Priebe - Profihost AG wrote:
 > Hi,
 > 
 > while cloud / vms usage become more and more popular and qemu now also
 > offers memory hot add and unplug, cpu hot add and unplug, we still
 > suffer from a missing xfs shrink.
-> 
+
+Filesystem shrink is a very different scenario than "cloud / vms" needs
+for hot memory & cpu plugging, IMHO.
+
 > I would like to continue to use XFS as it is a rock solid base since
 > around 10 years for us.
 > 
 > But one missing piece in variable ressource usage for us is disk
 > shrinking. Is there any chance to get an xfs online shrinking?
-> 
-> Thanks!
-> 
-> Greets,
-> Stefan
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
-> 
+
+Under what circumstance does your workflow require a filesystem shrink?
+
+Honest question, I'm not challenging you, but I would like to understand
+what it is about shrink that is so critical it may cause you to stop using
+XFS.
+
+One thing about shrink - while i.e. ext4 supports it, the end result of
+a shrunk filesystem is a scrambled filesystem.  All those heuristics that
+made the filesystem reasonably performant as it aged get thrown out the 
+window as the fs scavenges for space into which to shrink the filesystem...
+
+That said, another option is to use the dm-thinp target, and allocate /
+de-allocate storage resources to the underlying block device as needed.
+
+-Eric
 
 _______________________________________________
 xfs mailing list
