@@ -1,21 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id E3B707F61
-	for <xfs@oss.sgi.com>; Tue, 12 May 2015 18:52:46 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id C51108F8087
-	for <xfs@oss.sgi.com>; Tue, 12 May 2015 16:52:46 -0700 (PDT)
-Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
-	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	i7fcrHyxCnu4HiRV for <xfs@oss.sgi.com>;
-	Tue, 12 May 2015 16:52:44 -0700 (PDT)
-From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 2/2] xfs: inode and free block counters need to use
-	__percpu_counter_compare
-Date: Wed, 13 May 2015 09:52:34 +1000
-Message-Id: <1431474754-15764-3-git-send-email-david@fromorbit.com>
-In-Reply-To: <1431474754-15764-1-git-send-email-david@fromorbit.com>
-References: <1431474754-15764-1-git-send-email-david@fromorbit.com>
+	by oss.sgi.com (Postfix) with ESMTP id 1988D7F61
+	for <xfs@oss.sgi.com>; Tue, 12 May 2015 20:27:22 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 0CC908F8087
+	for <xfs@oss.sgi.com>; Tue, 12 May 2015 18:27:18 -0700 (PDT)
+Received: from mail-qg0-f52.google.com (mail-qg0-f52.google.com
+	[209.85.192.52]) by cuda.sgi.com with ESMTP id W3LdGyEAz85FtNMI
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Tue, 12 May 2015 18:27:17 -0700 (PDT)
+Received: by qgeb100 with SMTP id b100so14203100qge.3
+	for <xfs@oss.sgi.com>; Tue, 12 May 2015 18:27:16 -0700 (PDT)
+In-Reply-To: <CABYiri-9HN3UEThEHJ6_cboyvWgjz1h+E7qaX8kbADh+idQOiQ@mail.gmail.com>
+References: <5551EBB2.9010508@profihost.ag> <5551F38A.2050102@sandeen.net>
+	<5551F508.2000508@profihost.ag>
+	<CABYiri-9HN3UEThEHJ6_cboyvWgjz1h+E7qaX8kbADh+idQOiQ@mail.gmail.com>
+MIME-Version: 1.0
+Subject: Re: any chance for xfs shrinking?
+From: greg.freemyer@gmail.com
+Date: Tue, 12 May 2015 21:27:09 -0400
+Message-ID: <A19374A8-5C7E-48AD-A1AD-7F74235CE205@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,125 +28,99 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: peterz@infradead.org, tj@kernel.org, linux-kernel@vger.kernel.org
+To: Andrey Korolyov <andrey@xdel.ru>, Stefan Priebe - Profihost AG <s.priebe@profihost.ag>
+Cc: Eric Sandeen <sandeen@sandeen.net>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-From: Dave Chinner <dchinner@redhat.com>
 
-Because the counters use a custom batch size, the comparison
-functions need to be aware of that batch size otherwise the
-comparison does not work correctly. This leads to ASSERT failures
-on generic/027 like this:
 
- XFS: Assertion failed: 0, file: fs/xfs/xfs_mount.c, line: 1099
- ------------[ cut here ]------------
-....
- Call Trace:
-  [<ffffffff81522a39>] xfs_mod_icount+0x99/0xc0
-  [<ffffffff815285cb>] xfs_trans_unreserve_and_mod_sb+0x28b/0x5b0
-  [<ffffffff8152f941>] xfs_log_commit_cil+0x321/0x580
-  [<ffffffff81528e17>] xfs_trans_commit+0xb7/0x260
-  [<ffffffff81503d4d>] xfs_bmap_finish+0xcd/0x1b0
-  [<ffffffff8151da41>] xfs_inactive_ifree+0x1e1/0x250
-  [<ffffffff8151dbe0>] xfs_inactive+0x130/0x200
-  [<ffffffff81523a21>] xfs_fs_evict_inode+0x91/0xf0
-  [<ffffffff811f3958>] evict+0xb8/0x190
-  [<ffffffff811f433b>] iput+0x18b/0x1f0
-  [<ffffffff811e8853>] do_unlinkat+0x1f3/0x320
-  [<ffffffff811d548a>] ? filp_close+0x5a/0x80
-  [<ffffffff811e999b>] SyS_unlinkat+0x1b/0x40
-  [<ffffffff81e0892e>] system_call_fastpath+0x12/0x71
+On May 12, 2015 2:22:16 PM EDT, Andrey Korolyov <andrey@xdel.ru> wrote:
+>On Tue, May 12, 2015 at 3:41 PM, Stefan Priebe - Profihost AG
+><s.priebe@profihost.ag> wrote:
+>>
+>> Am 12.05.2015 um 14:35 schrieb Eric Sandeen:
+>>> On 5/12/15 7:01 AM, Stefan Priebe - Profihost AG wrote:
+>>>> Hi,
+>>>>
+>>>> while cloud / vms usage become more and more popular and qemu now
+>also
+>>>> offers memory hot add and unplug, cpu hot add and unplug, we still
+>>>> suffer from a missing xfs shrink.
+>>>
+>>> Filesystem shrink is a very different scenario than "cloud / vms"
+>needs
+>>> for hot memory & cpu plugging, IMHO.
+>>>
+>>>> I would like to continue to use XFS as it is a rock solid base
+>since
+>>>> around 10 years for us.
+>>>>
+>>>> But one missing piece in variable ressource usage for us is disk
+>>>> shrinking. Is there any chance to get an xfs online shrinking?
+>>>
+>>> Under what circumstance does your workflow require a filesystem
+>shrink?
+>>
+>> May be special but there are a lot of customers out there who do not
+>> manager their ressources. So they've partners and partners of
+>partners.
+>> It happens quite often that the disk runs out of space and the
+>customer
+>> does not know what he can do as third parties control the waste of
+>> space. So we are in the situation where we need to extent the
+>partition
+>> so the customer can continue his business. Later when the partner has
+>> solved the issue (real world shows mostly 2 days - 3 weeks) the
+>customer
+>> wants to shrink again as he does not want to pay the space.
+>>
+>>> Honest question, I'm not challenging you, but I would like to
+>understand
+>>> what it is about shrink that is so critical it may cause you to stop
+>using
+>>> XFS.
+>>>
+>>> One thing about shrink - while i.e. ext4 supports it, the end result
+>of
+>>> a shrunk filesystem is a scrambled filesystem.  All those heuristics
+>that
+>>> made the filesystem reasonably performant as it aged get thrown out
+>the
+>>> window as the fs scavenges for space into which to shrink the
+>filesystem...
+>>>
+>>> That said, another option is to use the dm-thinp target, and
+>allocate /
+>>> de-allocate storage resources to the underlying block device as
+>needed.
+>>
+>> We do so while using ceph and trim but the customer pays what he can
+>> theoretically use and not what he uses in real. Ceph also does not
+>> provide a way to show us the real usage of a rbd disk.
+>>
+>> Greets,
+>> Stefan
+>>
+>
+>
+>Am I right in a guess that this indirect management issue is a primary
+>reason for having online shrinking as a feature? You can use BTRFS at
+>it is supporting in-place shrink and achieved enough stability with
+>plain use-cases, with enough necessity. Of course having simular thing
+>in an XFS would be quite awesome for a general purpose or for a
+>visionary case, but the real-world need in such a feature is a bit
+>limited, from at least cloud provider` point of view.
+>
+>_______________________________________________
+>xfs mailing list
+>xfs@oss.sgi.com
+>http://oss.sgi.com/mailman/listinfo/xfs
 
-This is a regression introduced by commit 501ab32 ("xfs: use generic
-percpu counters for inode counter").
-
-This patch fixes the same problem for both the inode counter and the
-free block counter in the superblocks.
-
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- fs/xfs/xfs_mount.c | 34 ++++++++++++++++++++--------------
- 1 file changed, 20 insertions(+), 14 deletions(-)
-
-diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-index 02f827f..461e791 100644
---- a/fs/xfs/xfs_mount.c
-+++ b/fs/xfs/xfs_mount.c
-@@ -1100,14 +1100,18 @@ xfs_log_sbcount(xfs_mount_t *mp)
- 	return xfs_sync_sb(mp, true);
- }
- 
-+/*
-+ * Deltas for the inode count are +/-64, hence we use a large batch size
-+ * of 128 so we don't need to take the counter lock on every update.
-+ */
-+#define XFS_ICOUNT_BATCH	128
- int
- xfs_mod_icount(
- 	struct xfs_mount	*mp,
- 	int64_t			delta)
- {
--	/* deltas are +/-64, hence the large batch size of 128. */
--	__percpu_counter_add(&mp->m_icount, delta, 128);
--	if (percpu_counter_compare(&mp->m_icount, 0) < 0) {
-+	__percpu_counter_add(&mp->m_icount, delta, XFS_ICOUNT_BATCH);
-+	if (__percpu_counter_compare(&mp->m_icount, 0, XFS_ICOUNT_BATCH) < 0) {
- 		ASSERT(0);
- 		percpu_counter_add(&mp->m_icount, -delta);
- 		return -EINVAL;
-@@ -1129,6 +1133,14 @@ xfs_mod_ifree(
- 	return 0;
- }
- 
-+/*
-+ * Deltas for the block count can vary from 1 to very large, but lock contention
-+ * only occurs on frequent small block count updates such as in the delayed
-+ * allocation path for buffered writes (page a time updates). Hence we set
-+ * a large batch count (1024) to minimise global counter updates except when
-+ * we get near to ENOSPC and we have to be very accurate with our updates.
-+ */
-+#define XFS_FDBLOCKS_BATCH	1024
- int
- xfs_mod_fdblocks(
- 	struct xfs_mount	*mp,
-@@ -1167,25 +1179,19 @@ xfs_mod_fdblocks(
- 	 * Taking blocks away, need to be more accurate the closer we
- 	 * are to zero.
- 	 *
--	 * batch size is set to a maximum of 1024 blocks - if we are
--	 * allocating of freeing extents larger than this then we aren't
--	 * going to be hammering the counter lock so a lock per update
--	 * is not a problem.
--	 *
- 	 * If the counter has a value of less than 2 * max batch size,
- 	 * then make everything serialise as we are real close to
- 	 * ENOSPC.
- 	 */
--#define __BATCH	1024
--	if (percpu_counter_compare(&mp->m_fdblocks, 2 * __BATCH) < 0)
-+	if (__percpu_counter_compare(&mp->m_fdblocks, 2 * XFS_FDBLOCKS_BATCH,
-+				     XFS_FDBLOCKS_BATCH) < 0)
- 		batch = 1;
- 	else
--		batch = __BATCH;
--#undef __BATCH
-+		batch = XFS_FDBLOCKS_BATCH;
- 
- 	__percpu_counter_add(&mp->m_fdblocks, delta, batch);
--	if (percpu_counter_compare(&mp->m_fdblocks,
--				   XFS_ALLOC_SET_ASIDE(mp)) >= 0) {
-+	if (__percpu_counter_compare(&mp->m_fdblocks, XFS_ALLOC_SET_ASIDE(mp),
-+				     XFS_FDBLOCKS_BATCH) >= 0) {
- 		/* we had space! */
- 		return 0;
- 	}
 -- 
-2.0.0
+Sent from my Android device with K-9 Mail. Please excuse my brevity.
 
 _______________________________________________
 xfs mailing list
