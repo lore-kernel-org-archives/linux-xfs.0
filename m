@@ -1,30 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 7BB2A7F47
-	for <xfs@oss.sgi.com>; Thu, 14 May 2015 17:18:04 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 24AA6AC001
-	for <xfs@oss.sgi.com>; Thu, 14 May 2015 15:18:00 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id HrRXQfl9HbMWPSLR (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 14 May 2015 15:17:57 -0700 (PDT)
-Received: from int-mx14.intmail.prod.int.phx2.redhat.com
-	(int-mx14.intmail.prod.int.phx2.redhat.com [10.5.11.27])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id t4EMHt0M001889
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256
-	verify=FAIL) for <xfs@oss.sgi.com>; Thu, 14 May 2015 18:17:56 -0400
-Received: from liberator.sandeen.net (ovpn01.gateway.prod.ext.phx2.redhat.com
-	[10.5.9.1])
-	by int-mx14.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id t4EMHsWi020190
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <xfs@oss.sgi.com>; Thu, 14 May 2015 18:17:55 -0400
-Message-ID: <55551F12.1070308@redhat.com>
-Date: Thu, 14 May 2015 17:17:54 -0500
-From: Eric Sandeen <sandeen@redhat.com>
+	by oss.sgi.com (Postfix) with ESMTP id 7C7C87CBF
+	for <xfs@oss.sgi.com>; Thu, 14 May 2015 17:37:32 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id C3A40AC003
+	for <xfs@oss.sgi.com>; Thu, 14 May 2015 15:37:31 -0700 (PDT)
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	mrEshaXDW3P4CKmS for <xfs@oss.sgi.com>;
+	Thu, 14 May 2015 15:37:27 -0700 (PDT)
+Date: Fri, 15 May 2015 08:36:10 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 1/2] xfs: create new metadata UUID field and incompat flag
+Message-ID: <20150514223610.GU15721@dastard>
+References: <55525356.1020807@sandeen.net>
+ <55525437.9070501@sandeen.net>
 MIME-Version: 1.0
-Subject: [PATCH] xfsprogs: silence unused var warnings
+Content-Disposition: inline
+In-Reply-To: <55525437.9070501@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -37,46 +30,78 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs-oss <xfs@oss.sgi.com>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-This takes 2 different approaches, just following similar code
-that already exists.  It'll probably make Coverity flag
-the pointless assignments, unfortunately.
+On Tue, May 12, 2015 at 02:27:51PM -0500, Eric Sandeen wrote:
+> This adds a new superblock field, sb_meta_uuid.  If set, along with
+> a new incompat flag, the code will use that field on a V5 filesystem
+> to compare to metadata UUIDs, which allows us to change the user-
+> visible UUID at will.  Userspace handles the setting and clearing
+> of the incompat flag as appropriate, as the UUID gets changed; i.e.
+> setting the user-visible UUID back to the original UUID (as stored in
+> the new field) will remove the incompatible feature flag.
+> 
+> If the incompat flag is not set, this copies the user-visible UUID into
+> into the meta_uuid slot in memory when the superblock is read from disk;
+> the meta_uuid field is not written back to disk in this case.
+> 
+> The remainder of this patch simply switches verifiers, initializers,
+> etc to use the new sb_meta_uuid field.
+> 
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
+Couple of minor things:
+>  
+>  /*
+> + * XFS_SB_FEAT_INCOMPAT_META_UUID indicates that the metadata UUID
+> + * is stored separately from the user-visible UUID; this allows the
+> + * user-visible UUID to be changed on V5 filesystems which have a
+> + * filesystem UUID stamped into every piece of metadata.
+> + */
+> +static inline int xfs_sb_version_hasmetauuid(xfs_sb_t *sbp)
 
-Note, this is for the libxfs-4 branch
+bool, struct xfs_sb.
 
-diff --git a/libxfs/libxfs_priv.h b/libxfs/libxfs_priv.h
-index 1b4ac64..c871d53 100644
---- a/libxfs/libxfs_priv.h
-+++ b/libxfs/libxfs_priv.h
-@@ -150,9 +150,9 @@ enum ce { CE_DEBUG, CE_CONT, CE_NOTE, CE_WARN, CE_ALERT, CE_PANIC };
- #define XFS_TRANS_UNRESERVE_QUOTA_NBLKS(mp,tp,ip,nblks,ninos,fl)	0
- #define XFS_TEST_ERROR(expr,a,b,c)	( expr )
- #define XFS_WANT_CORRUPTED_GOTO(mp, expr, l)	\
--		{ if (!(expr)) { error = EFSCORRUPTED; goto l; } }
-+		{ (mp) = (mp); if (!(expr)) { error = EFSCORRUPTED; goto l; } }
- #define XFS_WANT_CORRUPTED_RETURN(mp, expr)	\
--		{ if (!(expr)) { return EFSCORRUPTED; } }
-+		{ (mp) = (mp); if (!(expr)) { return EFSCORRUPTED; } }
- 
- #ifdef __GNUC__
- #define __return_address	__builtin_return_address(0)
-@@ -344,7 +344,11 @@ roundup_64(__uint64_t x, __uint32_t y)
- 
- /* space allocation */
- #define xfs_extent_busy_reuse(mp,ag,bno,len,user)	((void) 0)
--#define xfs_extent_busy_insert(tp,ag,bno,len,flags)	((void) 0)
-+/* avoid unused variable warning */
-+#define xfs_extent_busy_insert(tp,ag,bno,len,flags)({ 	\
-+	xfs_agnumber_t __foo = ag; 			\
-+	__foo = 0;					\
-+})
- #define xfs_extent_busy_trim(args,fbno,flen,bno,len) \
- do { \
- 	*(bno) = (fbno); \
+> +++ b/fs/xfs/libxfs/xfs_sb.c
+> @@ -377,6 +377,17 @@ __xfs_sb_from_disk(
+>  	to->sb_pad = 0;
+>  	to->sb_pquotino = be64_to_cpu(from->sb_pquotino);
+>  	to->sb_lsn = be64_to_cpu(from->sb_lsn);
+> +	/*
+> +	 * sb_meta_uuid is only on disk if it differs from sb_uuid and the
+> +	 * feature flag is set; if not set we keep it only in memory.
+> +	 */
+> +	if (xfs_sb_version_hasmetauuid(to)) {
+> +		memcpy(&to->sb_meta_uuid, &from->sb_meta_uuid,
+> +					sizeof(to->sb_meta_uuid));
+> +	} else {
+> +		memcpy(&to->sb_meta_uuid, &from->sb_uuid,
+> +					sizeof(to->sb_meta_uuid));
+> +	}
+
+uuid_copy()
+
+>  	/* Convert on-disk flags to in-memory flags? */
+>  	if (convert_xquota)
+>  		xfs_sb_quota_from_disk(to);
+> @@ -518,6 +529,10 @@ xfs_sb_to_disk(
+>  				cpu_to_be32(from->sb_features_log_incompat);
+>  		to->sb_pad = 0;
+>  		to->sb_lsn = cpu_to_be64(from->sb_lsn);
+> +		if (xfs_sb_version_hasmetauuid(from)) {
+> +			memcpy(&to->sb_meta_uuid, &from->sb_meta_uuid,
+> +						sizeof(to->sb_meta_uuid));
+> +		}
+
+uuid_copy() here, too.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
