@@ -1,24 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 860127F54
-	for <xfs@oss.sgi.com>; Thu, 14 May 2015 09:21:53 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 78D7E8F804C
-	for <xfs@oss.sgi.com>; Thu, 14 May 2015 07:21:50 -0700 (PDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 3E9CB7F5E
+	for <xfs@oss.sgi.com>; Thu, 14 May 2015 09:22:03 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id AE2DEAC001
+	for <xfs@oss.sgi.com>; Thu, 14 May 2015 07:22:02 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id xDcpaHr5I1tz4tDv (version=TLSv1
+	cuda.sgi.com with ESMTP id AHew8x8pU4dVM6B9 (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 14 May 2015 07:21:49 -0700 (PDT)
-Date: Thu, 14 May 2015 10:21:47 -0400
+	Thu, 14 May 2015 07:21:58 -0700 (PDT)
+Received: from int-mx09.intmail.prod.int.phx2.redhat.com
+	(int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id t4EELvVP003208
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256
+	verify=FAIL) for <xfs@oss.sgi.com>; Thu, 14 May 2015 10:21:57 -0400
+Date: Thu, 14 May 2015 10:21:55 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 2/2] xfs: inode and free block counters need to use
-	__percpu_counter_compare
-Message-ID: <20150514142146.GA23683@bfoster.bfoster>
-References: <1431474754-15764-1-git-send-email-david@fromorbit.com>
-	<1431474754-15764-3-git-send-email-david@fromorbit.com>
+Subject: Re: [PATCH] xfs: don't cast string literals
+Message-ID: <20150514142155.GB23683@bfoster.bfoster>
+References: <5553DB60.6060907@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1431474754-15764-3-git-send-email-david@fromorbit.com>
+In-Reply-To: <5553DB60.6060907@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,124 +34,54 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: peterz@infradead.org, tj@kernel.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-On Wed, May 13, 2015 at 09:52:34AM +1000, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
+On Wed, May 13, 2015 at 06:16:48PM -0500, Eric Sandeen wrote:
+> The commit:
 > 
-> Because the counters use a custom batch size, the comparison
-> functions need to be aware of that batch size otherwise the
-> comparison does not work correctly. This leads to ASSERT failures
-> on generic/027 like this:
+> a9273ca5 xfs: convert attr to use unsigned names
 > 
->  XFS: Assertion failed: 0, file: fs/xfs/xfs_mount.c, line: 1099
->  ------------[ cut here ]------------
-> ....
->  Call Trace:
->   [<ffffffff81522a39>] xfs_mod_icount+0x99/0xc0
->   [<ffffffff815285cb>] xfs_trans_unreserve_and_mod_sb+0x28b/0x5b0
->   [<ffffffff8152f941>] xfs_log_commit_cil+0x321/0x580
->   [<ffffffff81528e17>] xfs_trans_commit+0xb7/0x260
->   [<ffffffff81503d4d>] xfs_bmap_finish+0xcd/0x1b0
->   [<ffffffff8151da41>] xfs_inactive_ifree+0x1e1/0x250
->   [<ffffffff8151dbe0>] xfs_inactive+0x130/0x200
->   [<ffffffff81523a21>] xfs_fs_evict_inode+0x91/0xf0
->   [<ffffffff811f3958>] evict+0xb8/0x190
->   [<ffffffff811f433b>] iput+0x18b/0x1f0
->   [<ffffffff811e8853>] do_unlinkat+0x1f3/0x320
->   [<ffffffff811d548a>] ? filp_close+0x5a/0x80
->   [<ffffffff811e999b>] SyS_unlinkat+0x1b/0x40
->   [<ffffffff81e0892e>] system_call_fastpath+0x12/0x71
+> added these (unsigned char *) casts, but then the _SIZE macros
+> return "7" - size of a pointer minus one - not the length of
+> the string.  This is harmless in the kernel, because the _SIZE
+> macros are not used, but as we sync up with userspace, this will
+> matter.
 > 
-> This is a regression introduced by commit 501ab32 ("xfs: use generic
-> percpu counters for inode counter").
+> I don't think the cast is necessary; i.e. assigning the string
+> literal to an unsigned char *, or passing it to a function
+> expecting an unsigned char *, should be ok, right?
 > 
-> This patch fixes the same problem for both the inode counter and the
-> free block counter in the superblocks.
-> 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 > ---
+> 
+> I can send the xfsprogs version if you like, if this passes
+> muster ;)
+> 
+> (the other option is to cast it back to a (char *) in the sizeof
+> but then things are just getting weird IMHO...)
+> 
+
+Heh, the cast inside the directive looks weird enough to me in the first
+place. In this case it seems spurious, so I'm fine with it:
 
 Reviewed-by: Brian Foster <bfoster@redhat.com>
 
->  fs/xfs/xfs_mount.c | 34 ++++++++++++++++++++--------------
->  1 file changed, 20 insertions(+), 14 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-> index 02f827f..461e791 100644
-> --- a/fs/xfs/xfs_mount.c
-> +++ b/fs/xfs/xfs_mount.c
-> @@ -1100,14 +1100,18 @@ xfs_log_sbcount(xfs_mount_t *mp)
->  	return xfs_sync_sb(mp, true);
->  }
+> diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
+> index 4daaa66..ff22a4d 100644
+> --- a/fs/xfs/libxfs/xfs_format.h
+> +++ b/fs/xfs/libxfs/xfs_format.h
+> @@ -1453,8 +1453,8 @@ struct xfs_acl {
+>  		sizeof(struct xfs_acl_entry) * XFS_ACL_MAX_ENTRIES((mp)))
 >  
-> +/*
-> + * Deltas for the inode count are +/-64, hence we use a large batch size
-> + * of 128 so we don't need to take the counter lock on every update.
-> + */
-> +#define XFS_ICOUNT_BATCH	128
->  int
->  xfs_mod_icount(
->  	struct xfs_mount	*mp,
->  	int64_t			delta)
->  {
-> -	/* deltas are +/-64, hence the large batch size of 128. */
-> -	__percpu_counter_add(&mp->m_icount, delta, 128);
-> -	if (percpu_counter_compare(&mp->m_icount, 0) < 0) {
-> +	__percpu_counter_add(&mp->m_icount, delta, XFS_ICOUNT_BATCH);
-> +	if (__percpu_counter_compare(&mp->m_icount, 0, XFS_ICOUNT_BATCH) < 0) {
->  		ASSERT(0);
->  		percpu_counter_add(&mp->m_icount, -delta);
->  		return -EINVAL;
-> @@ -1129,6 +1133,14 @@ xfs_mod_ifree(
->  	return 0;
->  }
+>  /* On-disk XFS extended attribute names */
+> -#define SGI_ACL_FILE		(unsigned char *)"SGI_ACL_FILE"
+> -#define SGI_ACL_DEFAULT		(unsigned char *)"SGI_ACL_DEFAULT"
+> +#define SGI_ACL_FILE		"SGI_ACL_FILE"
+> +#define SGI_ACL_DEFAULT		"SGI_ACL_DEFAULT"
+>  #define SGI_ACL_FILE_SIZE	(sizeof(SGI_ACL_FILE)-1)
+>  #define SGI_ACL_DEFAULT_SIZE	(sizeof(SGI_ACL_DEFAULT)-1)
 >  
-> +/*
-> + * Deltas for the block count can vary from 1 to very large, but lock contention
-> + * only occurs on frequent small block count updates such as in the delayed
-> + * allocation path for buffered writes (page a time updates). Hence we set
-> + * a large batch count (1024) to minimise global counter updates except when
-> + * we get near to ENOSPC and we have to be very accurate with our updates.
-> + */
-> +#define XFS_FDBLOCKS_BATCH	1024
->  int
->  xfs_mod_fdblocks(
->  	struct xfs_mount	*mp,
-> @@ -1167,25 +1179,19 @@ xfs_mod_fdblocks(
->  	 * Taking blocks away, need to be more accurate the closer we
->  	 * are to zero.
->  	 *
-> -	 * batch size is set to a maximum of 1024 blocks - if we are
-> -	 * allocating of freeing extents larger than this then we aren't
-> -	 * going to be hammering the counter lock so a lock per update
-> -	 * is not a problem.
-> -	 *
->  	 * If the counter has a value of less than 2 * max batch size,
->  	 * then make everything serialise as we are real close to
->  	 * ENOSPC.
->  	 */
-> -#define __BATCH	1024
-> -	if (percpu_counter_compare(&mp->m_fdblocks, 2 * __BATCH) < 0)
-> +	if (__percpu_counter_compare(&mp->m_fdblocks, 2 * XFS_FDBLOCKS_BATCH,
-> +				     XFS_FDBLOCKS_BATCH) < 0)
->  		batch = 1;
->  	else
-> -		batch = __BATCH;
-> -#undef __BATCH
-> +		batch = XFS_FDBLOCKS_BATCH;
->  
->  	__percpu_counter_add(&mp->m_fdblocks, delta, batch);
-> -	if (percpu_counter_compare(&mp->m_fdblocks,
-> -				   XFS_ALLOC_SET_ASIDE(mp)) >= 0) {
-> +	if (__percpu_counter_compare(&mp->m_fdblocks, XFS_ALLOC_SET_ASIDE(mp),
-> +				     XFS_FDBLOCKS_BATCH) >= 0) {
->  		/* we had space! */
->  		return 0;
->  	}
-> -- 
-> 2.0.0
 > 
 > _______________________________________________
 > xfs mailing list
