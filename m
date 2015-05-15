@@ -1,24 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id E721A7F37
-	for <xfs@oss.sgi.com>; Fri, 15 May 2015 02:21:07 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id D74FA304039
-	for <xfs@oss.sgi.com>; Fri, 15 May 2015 00:21:07 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id UtzEAzE29L1JCyeX (version=TLSv1
+	by oss.sgi.com (Postfix) with ESMTP id 5A8987F37
+	for <xfs@oss.sgi.com>; Fri, 15 May 2015 05:16:59 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 4021B304032
+	for <xfs@oss.sgi.com>; Fri, 15 May 2015 03:16:56 -0700 (PDT)
+Received: from smtp5-g21.free.fr (smtp5-g21.free.fr [212.27.42.5]) by
+	cuda.sgi.com with ESMTP id 4DZsuDAbsuqkCM0A (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 15 May 2015 00:21:07 -0700 (PDT)
-Date: Fri, 15 May 2015 15:21:00 +0800
-From: Eryu Guan <eguan@redhat.com>
-Subject: Re: [PATCH] xfstests/common/renameat2: pass the renameat2 flags from
-	_rename_tests to _rename_tests_source_dest
-Message-ID: <20150515072100.GI1140@dhcp-13-216.nay.redhat.com>
-References: <1430467867-5565-1-git-send-email-shhuiw@foxmail.com>
-	<55554311.2070904@foxmail.com>
+	Fri, 15 May 2015 03:16:53 -0700 (PDT)
+Date: Fri, 15 May 2015 12:16:54 +0200
+From: Emmanuel Florac <eflorac@intellique.com>
+Subject: Re: xfs_repair fails
+Message-ID: <20150515121654.602d74af@harpe.intellique.com>
+In-Reply-To: <D42CEF46A796364580AFE375880EF73F01AD63D1ED@SRVMSXMBDEN2.ad.twtelecom.com>
+References: <D42CEF46A796364580AFE375880EF73F01AD63BE36@SRVMSXMBDEN2.ad.twtelecom.com>
+	<20150514104341.GA15457@bfoster.bfoster>
+	<D42CEF46A796364580AFE375880EF73F01AD63D1ED@SRVMSXMBDEN2.ad.twtelecom.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <55554311.2070904@foxmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,34 +30,33 @@ Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Wang Sheng-Hui <shhuiw@foxmail.com>
-Cc: xfs@oss.sgi.com
+To: "Rhorer, Leslie" <Leslie.Rhorer@Level3.com>
+Cc: Brian Foster <bfoster@redhat.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-T24gRnJpLCBNYXkgMTUsIDIwMTUgYXQgMDg6NTE6MjlBTSArMDgwMCwgV2FuZyBTaGVuZy1IdWkg
-d3JvdGU6Cj4gCj4gCj4gT24gMjAxNeW5tDA15pyIMDHml6UgMTY6MTEsIFdhbmcgU2hlbmctSHVp
-IHdyb3RlOgo+ID4gX3JlbmFtZV90ZXN0cygpIHJlY29yZHMgdGhlICdmbGFncycgYXJnIGJ1dCBk
-b2Vzbid0IHBhc3MgaXQgdG8KPiA+IF9yZW5hbWVfdGVzdHNfc291cmNlX2Rlc3QoKSBpbiBvbGQg
-Y29kZSwgdGh1cyBhbnkgJ2ZsYWdzJyB0bwo+ID4gcmVuYW1lYXQyIGlzIG1pc3NlZC4gRml4IHRo
-ZSBtaXNzaW5nLgo+ID4gCj4gPiBTaWduZWQtb2ZmLWJ5OiBXYW5nIFNoZW5nLUh1aSA8c2hodWl3
-QGZveG1haWwuY29tPgo+ID4gLS0tCj4gPiAgY29tbW9uL3JlbmFtZWF0MiB8IDUgKysrLS0KPiA+
-ICAxIGZpbGUgY2hhbmdlZCwgMyBpbnNlcnRpb25zKCspLCAyIGRlbGV0aW9ucygtKQo+ID4gCj4g
-PiBkaWZmIC0tZ2l0IGEvY29tbW9uL3JlbmFtZWF0MiBiL2NvbW1vbi9yZW5hbWVhdDIKPiA+IGlu
-ZGV4IGEzMzUxNjkuLmRmMmRmMmUgMTAwNjQ0Cj4gPiAtLS0gYS9jb21tb24vcmVuYW1lYXQyCj4g
-PiArKysgYi9jb21tb24vcmVuYW1lYXQyCj4gPiBAQCAtNzgsNiArNzgsNyBAQCBfcmVuYW1lX3Rl
-c3RzX3NvdXJjZV9kZXN0KCkKPiA+ICAJbG9jYWwgc291cmNlPSQxCj4gPiAgCWxvY2FsIGRlc3Q9
-JDIKPiA+ICAJbG9jYWwgb3B0aW9ucz0kMwo+ID4gKwlsb2NhbCBmbGFncz0kNAo+ID4gIAo+ID4g
-IAlmb3Igc3R5cGUgaW4gbm9uZSByZWd1IHN5bWIgZGlyZSB0cmVlOyBkbwo+ID4gIAkJZm9yIGR0
-eXBlIGluIG5vbmUgcmVndSBzeW1iIGRpcmUgdHJlZTsgZG8KPiA+IEBAIC0xMDcsMTEgKzEwOCwx
-MSBAQCBfcmVuYW1lX3Rlc3RzKCkKPiA+ICAJbG9jYWwgZmxhZ3M9JDIKPiA+ICAKPiA+ICAJI3Nh
-bWUgZGlyZWN0b3J5IHJlbmFtZXMKPiA+IC0JX3JlbmFtZV90ZXN0c19zb3VyY2VfZGVzdCAkdGVz
-dGRpci9zcmMgJHRlc3RkaXIvZHN0ICAgICAic2FtZWRpciAiCj4gPiArCV9yZW5hbWVfdGVzdHNf
-c291cmNlX2Rlc3QgJHRlc3RkaXIvc3JjICR0ZXN0ZGlyL2RzdCAgICAgInNhbWVkaXIgIiAkZmxh
-Z3MKPiA+ICAKPiA+ICAJI2Nyb3NzIGRpcmVjdG9yeSByZW5hbWVzCj4gPiAgCW1rZGlyICR0ZXN0
-ZGlyL3ggJHRlc3RkaXIveQo+ID4gLQlfcmVuYW1lX3Rlc3RzX3NvdXJjZV9kZXN0ICR0ZXN0ZGly
-L3gvc3JjICR0ZXN0ZGlyL3kvZHN0ICJjcm9zc2RpciIKPiA+ICsJX3JlbmFtZV90ZXN0c19zb3Vy
-Y2VfZGVzdCAkdGVzdGRpci94L3NyYyAkdGVzdGRpci95L2RzdCAiY3Jvc3NkaXIiICRmbGFncwo+
-ID4gIAlybWRpciAkdGVzdGRpci94ICR0ZXN0ZGlyL3kKPiA+ICB9Cj4gPiAgCj4gPiAKPiAKPiBB
-bnkgY29tbWVudHM/CgpZb3UgY2FuIHNlbmQgeGZzdGVzdHMgcGF0Y2ggdG8gZnN0ZXN0c0B2Z2Vy
-Lmtlcm5lbC5vcmcgbmV4dCB0aW1lLgoKVGhhbmtzLApFcnl1CgpfX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dp
-LmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
+TGUgRnJpLCAxNSBNYXkgMjAxNSAwMzowODowNSArMDAwMAoiUmhvcmVyLCBMZXNsaWUiIDxMZXNs
+aWUuUmhvcmVyQExldmVsMy5jb20+IMOpY3JpdmFpdDoKCj4gUkFJRC1TZXJ2ZXI6L3Zhci9sb2cj
+IHhmc19yZXBhaXIgLXYgL2Rldi9tZDAKPiBQaGFzZSAxIC0gZmluZCBhbmQgdmVyaWZ5IHN1cGVy
+YmxvY2suLi4KPiAgICAgICAgIC0gcmVwb3J0aW5nIHByb2dyZXNzIGluIGludGVydmFscyBvZiAx
+NSBtaW51dGVzCj4gICAgICAgICAtIGJsb2NrIGNhY2hlIHNpemUgc2V0IHRvIDM5NTAzMiBlbnRy
+aWVzCj4gUGhhc2UgMiAtIHVzaW5nIGludGVybmFsIGxvZwo+ICAgICAgICAgLSB6ZXJvIGxvZy4u
+Lgo+IHplcm9fbG9nOiBoZWFkIGJsb2NrIDggdGFpbCBibG9jayA4Cj4gLi4uIDxhZnRlciBhIGZl
+dyBtaW51dGVzPgo+ICAgICAgICAgLSBzY2FuIGZpbGVzeXN0ZW0gZnJlZXNwYWNlIGFuZCBpbm9k
+ZSBtYXBzLi4uCj4gYWdpIHVubGlua2VkIGJ1Y2tldCAzOCBpcyAxNjMwMDAzNTggaW4gYWcgMzEg
+KGlub2RlPTEzMzMwNjk4NjUzNCkKPiB6ZXJvaW5nIHVudXNlZCBwb3J0aW9uIG9mIHNlY29uZGFy
+eSBzdXBlcmJsb2NrIChBRyAjNSkKPiBTZWdtZW50YXRpb24gZmF1bHQKPiAKClRyeSB3aXRoIHRo
+ZSBsYXRlc3QgdmVyc2lvbiBvZiB4ZnNfcmVwYWlyIChhdCBsZWFzdCAzLjIuMiBpZiBwb3NzaWJs
+ZSkuCkhlcmUncyBhIDMuMi4yIHZlcnNpb24ganVzdCBpbiBjYXNlOgoKaHR0cDovL3VwZGF0ZS5p
+bnRlbGxpcXVlLmNvbS9wdWIveGZzX3JlcGFpci0zLjIuMi5negoKbWQ1IGNoZWNrc3VtIDoKOGQy
+ZjljNjZlNmVhMDE1Y2Y3ZDFiOTVlZjgwNDY4YzQgIHhmc19yZXBhaXItMy4yLjIuZ3oKCldoYXQn
+cyB0aGUgb3V0cHV0IGZyb20gZG1lc2cgb3IgL3Zhci9sb2cvbWVzc2FnZXMgZnJvbSB0aGUgbW91
+bnQKYXR0ZW1wdD8gSWYgdGhlIGZpbGVzeXN0ZW0gaXMgImhhbGYtbW91bnRlZCIgaXQgbWF5IGJl
+IGJldHRlciB0byBib290CndpdGggdGhlIGZpbGVzeXN0ZW0gZGlzYWJsZWQgaW4gL2V0Yy9mc3Rh
+YiBiZWZvcmUgYXR0ZW1wdGluZyByZXBhaXIuCgotLSAKLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tCkVtbWFudWVs
+IEZsb3JhYyAgICAgfCAgIERpcmVjdGlvbiB0ZWNobmlxdWUKICAgICAgICAgICAgICAgICAgICB8
+ICAgSW50ZWxsaXF1ZQogICAgICAgICAgICAgICAgICAgIHwJPGVmbG9yYWNAaW50ZWxsaXF1ZS5j
+b20+CiAgICAgICAgICAgICAgICAgICAgfCAgICszMyAxIDc4IDk0IDg0IDAyCi0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLQoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KeGZz
+IG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4v
+bGlzdGluZm8veGZzCg==
