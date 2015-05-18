@@ -1,25 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 6A3447F56
-	for <xfs@oss.sgi.com>; Mon, 18 May 2015 16:37:23 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 3E3BE304053
-	for <xfs@oss.sgi.com>; Mon, 18 May 2015 14:37:23 -0700 (PDT)
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	QEDmIYHxFOIf4Ljw for <xfs@oss.sgi.com>;
-	Mon, 18 May 2015 14:37:17 -0700 (PDT)
-Date: Tue, 19 May 2015 07:37:14 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 1/4 linux-next] xfs: use swap() in
-	xfs_dir2_leafn_rebalance()
-Message-ID: <20150518213714.GV15721@dastard>
-References: <1431969231-12834-1-git-send-email-fabf@skynet.be>
-	<20150518171946.GY7232@ZenIV.linux.org.uk>
-	<1618479490.17551.1431972373169.open-xchange@webmail.nmp.proximus.be>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id B0F797F50
+	for <xfs@oss.sgi.com>; Mon, 18 May 2015 18:28:24 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 946278F804C
+	for <xfs@oss.sgi.com>; Mon, 18 May 2015 16:28:21 -0700 (PDT)
+Received: from smtpbgau1.qq.com (smtpbgau1.qq.com [54.206.16.166]) by
+	cuda.sgi.com with ESMTP id P1BIgoPMA5qo0QOy (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Mon, 18 May 2015 16:28:18 -0700 (PDT)
+Message-ID: <555A7585.6000003@foxmail.com>
+Date: Tue, 19 May 2015 07:28:05 +0800
+From: Wang Sheng-Hui <shhuiw@foxmail.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1618479490.17551.1431972373169.open-xchange@webmail.nmp.proximus.be>
+Subject: Re: xfsprogs/mkfs: what's the relationship between max trans res
+	and min log size
+References: <555987A2.3050604@foxmail.com>
+	<20150518133439.GA43596@bfoster.bfoster>
+In-Reply-To: <20150518133439.GA43596@bfoster.bfoster>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,66 +26,46 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Fabian Frederick <fabf@skynet.be>
-Cc: xfs@oss.sgi.com, Al Viro <viro@ZenIV.linux.org.uk>, linux-kernel@vger.kernel.org
+To: Brian Foster <bfoster@redhat.com>
+Cc: Dave Chinner <dchinner@redhat.com>, xfs <xfs@oss.sgi.com>
 
-On Mon, May 18, 2015 at 08:06:13PM +0200, Fabian Frederick wrote:
-> =
-
-> =
-
-> > On 18 May 2015 at 19:19 Al Viro <viro@ZenIV.linux.org.uk> wrote:
-> >
-> >
-> > On Mon, May 18, 2015 at 07:13:48PM +0200, Fabian Frederick wrote:
-> > >=A0 =A0 =A0 * If the block order is wrong, swap the arguments.
-> > >=A0 =A0 =A0 */
-> > > -=A0 =A0if ((swap =3D xfs_dir2_leafn_order(dp, blk1->bp, blk2->bp))) {
-> > > -=A0 =A0 =A0 =A0 =A0 =A0xfs_da_state_blk_t=A0 =A0 =A0 *tmp;=A0 =A0/* =
-temp for block swap */
-> > > +=A0 =A0swap =3D xfs_dir2_leafn_order(dp, blk1->bp, blk2->bp);
-> > > +=A0 =A0if (swap)
-> > > +=A0 =A0 =A0 =A0 =A0 =A0swap(blk1, blk2);
-> >
-> > Egads...=A0 Have you even read what you'd written?=A0 Yes, sure, prepro=
-cessor
-> > will do the right thing, but it's a very noticable annoyance for somebo=
-dy
-> > reading that.=A0 Rename the bleeding flag, please.
-> =
-
-> I wanted to focus on the swap() update in this small patchset (some other=
- things
-> should be done in there like have xfs_dir2_leafn_order() return bool) but=
- I can
-> rename it in something like need_swap. Do I need to resend the 4 patches =
-Dave ?
-
-4 patches is 3 patches too many for noise like this.  Anyway, two of
-the patches have the same local "swap" variable problem; the context
-is "swap order" not "need swap".
-
-FWIW, I am not a fan of changing the code for no actual gain - the
-compiled code is identical, there are no stack savings, and now I
-have to look at an extra file to work out what the code does. If
-you're changing the code and this is prep work for a large series,
-then by all means clean the code up. But otherwise, changes like
-this just mean work that other developers have in progress need
-rebasing....
-
-Cheers,
-
-Dave.
--- =
-
-Dave Chinner
-david@fromorbit.com
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+CgpPbiAyMDE15bm0MDXmnIgxOOaXpSAyMTozNCwgQnJpYW4gRm9zdGVyIHdyb3RlOgo+IE9uIE1v
+biwgTWF5IDE4LCAyMDE1IGF0IDAyOjMzOjA2UE0gKzA4MDAsIFdhbmcgU2hlbmctSHVpIHdyb3Rl
+Ogo+PiBIaSBndXlzLAo+Pgo+Pgo+PiBJbiBtYXh0cnJlcy5jL21heF90cmFuc19yZXMsIGl0IGNh
+bGxzIHhmc19sb2dfY2FsY19taW5pbXVtX3NpemUgdG8gY29tcHV0ZSB0aGUKPj4gICAgICAgICAg
+ICAgICBtYXhpbXVtIHRyYW5zYWN0aW9uIHJlc2VydmF0aW9uCj4+Cj4+IEJ1dCBmb3IgeGZzX2xv
+Z19jYWxjX21pbmltdW1fc2l6ZSwgaXQncyB1c2VkIHRvIGNhbGN1bGF0ZSB0aGUKPj4gICAgICAg
+ICAgICAgICBtaW5pbXVtIHZhbGlkIGxvZyBzaXplCj4+Cj4+Cj4+IFRoZSBuYW1pbmcgbWF4L21p
+bmltdW0gc2VlbXMgY29uZnVzaW5nLgo+Pgo+PiBXaHkgYXJlIHRoZXkgbmFtZWQgaW4gc3VjaCB3
+YXk/IFdoYXQncyB0aGUgcmVsYXRpb25zaGlwIGJldHdlZW4gbWF4IHRyYW5zIHJlcwo+PiBhbmQg
+bWluaW11biBsb2cgc2l6ZSwgKG1heCB0cmFucyByZXMpIDw9IChtaW5pbXVuIGxvZyBzaXplKT8K
+Pj4KPj4KPj4gQW55IGV4cGxhbmF0aW9ucyBhcmUgd2VsY29tZWQhCj4+Cj4gCj4+RnJvbSB0aGUg
+Y29tbWVudCBpbiB4ZnNfbG9nX2NhbGNfbWluaW11bV9zaXplKCk6Cj4gCj4gICAgICAgICAvKgo+
+ICAgICAgICAgICogVHdvIGZhY3RvcnMgc2hvdWxkIGJlIHRha2VuIGludG8gYWNjb3VudCBmb3Ig
+Y2FsY3VsYXRpbmcgdGhlIG1pbmltdW0KPiAgICAgICAgICAqIGxvZyBzcGFjZS4KPiAgICAgICAg
+ICAqIDEpIFRoZSBmdW5kYW1lbnRhbCBsaW1pdGF0aW9uIGlzIHRoYXQgbm8gc2luZ2xlIHRyYW5z
+YWN0aW9uIGNhbiBiZQo+ICAgICAgICAgICogICAgbGFyZ2VyIHRoYW4gaGFsZiBzaXplIG9mIHRo
+ZSBsb2cuCj4gICAgICAgICAgKgo+ICAgICAgICAgICogICAgRnJvbSBta2ZzLnhmcywgdGhpcyBp
+cyBjb25zaWRlcmVkIGJ5IHRoZSBYRlNfTUlOX0xPR19GQUNUT1IKPiAgICAgICAgICAqICAgIGRl
+ZmluZSwgd2hpY2ggaXMgc2V0IHRvIDMuIFRoYXQgbWVhbnMgd2UgY2FuIGRlZmluaXRlbHkgZml0
+Cj4gICAgICAgICAgKiAgICBtYXhpbWFsbHkgc2l6ZWQgMiB0cmFuc2FjdGlvbnMgaW4gdGhlIGxv
+Zy4gV2UnbGwgdXNlIHRoaXMgc2FtZQo+ICAgICAgICAgICogICAgdmFsdWUgaGVyZS4KPiAJIC4u
+Lgo+IAkgKi8KPiAKPiBTbyB0aGUgbG9nIG11c3QgYmUgYXQgbGVhc3QgdGhlIHNpemUgb2YgdHdv
+IHNpbmdsZSB0cmFuc2FjdGlvbnMgKGl0Cj4gbG9va3MgbGlrZSB0aGUgY29kZSBpcyBjb25zZXJ2
+YXRpdmUgYW5kIHVzZXMgYSBmYWN0b3Igb2YgMykuIFRoaXMgaXMgYQo+IGxpbWl0YXRpb24gb24g
+dGhlIG1pbmltdW0gYWxsb3dhYmxlIGxvZyBzaXplIGZvciB0aGUgZnMuIFRyYW5zYWN0aW9ucwo+
+IGFyZSBvZiB2YXJpYWJsZSBzaXplLCBzbyB0byBkZXRlcm1pbmUgd2hhdCB0aGF0IG1lYW5zIGlu
+IHRlcm1zIG9mIGFjdHVhbAo+IHNpemUgd2UgbXVzdCBjYWxjdWxhdGUgdGhlIG1heGltdW0gcG9z
+c2libGUgKGkuZS4sIHdvcnN0IGNhc2UpCj4gdHJhbnNhY3Rpb24gc2l6ZSBmb3IgdGhlIHBhcnRp
+Y3VsYXIgZnMgZ2VvbWV0cnkgYW5kIHRoZW4gdXNlIHRoYXQgdG8KPiBjYWxjdWxhdGUgdGhlIG1p
+bmltdW0gdG90YWwgbG9nIHNpemUuCgpUaGFua3MsIEJyaWFuLgoKUmVnYXJkcywKU2hlbmctSHVp
+Cj4gCj4gQnJpYW4KPiAKPj4KPj4gVGhhbmtzLAo+PiBTaGVuZy1IdWkKPj4KPj4KPj4gX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KPj4geGZzIG1haWxpbmcg
+bGlzdAo+PiB4ZnNAb3NzLnNnaS5jb20KPj4gaHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlz
+dGluZm8veGZzCj4gCj4gCgoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2ku
+Y29tL21haWxtYW4vbGlzdGluZm8veGZzCg==
