@@ -1,21 +1,21 @@
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 827C17F37
-	for <xfs@oss.sgi.com>; Mon, 25 May 2015 20:48:45 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 5F876304032
-	for <xfs@oss.sgi.com>; Mon, 25 May 2015 18:48:45 -0700 (PDT)
-Received: from coro3.isol-servers.net
-	(static-ip-85-25-159-24.inaddr.ip-pool.com [85.25.159.24]) by
-	cuda.sgi.com with ESMTP id QLR8u4onEja1V3Rg (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 25 May 2015 18:48:42 -0700 (PDT)
-Subject: =?UTF-8?B?zpzOsc64zq7OvM6xz4TOsSDOoM65zqzOvc6/z4Ugz4PPhM6/IM+Dz4DOr8+E?=
-	=?UTF-8?B?zrk=?=
-Date: Tue, 26 May 2015 04:48:11 +0300
-From: "good-news.ml" <newsletter@good-news.ml>
-Message-ID: <68a77f7ed4215c9c899a28e32a508836@good-news.ml>
-List-Owner: <mailto:admin@good-news.ml>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 864877F37
+	for <xfs@oss.sgi.com>; Fri, 22 May 2015 20:44:08 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 582148F8050
+	for <xfs@oss.sgi.com>; Fri, 22 May 2015 18:44:05 -0700 (PDT)
+Received: from mail-yh0-f71.google.com (mail-yh0-f71.google.com
+	[209.85.213.71]) by cuda.sgi.com with ESMTP id cCBT3cWmohlFoJd7
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Fri, 22 May 2015 18:44:03 -0700 (PDT)
+Received: by yhik52 with SMTP id k52so30411654yhi.1
+	for <xfs@oss.sgi.com>; Fri, 22 May 2015 18:44:02 -0700 (PDT)
 MIME-Version: 1.0
+Message-ID: <001a11c1fd0239f0a20516b5e90d@google.com>
+Date: Sat, 23 May 2015 01:44:01 +0000
+Subject: =?GB2312?B?zeLDs8jL1LG1xMD7xvejrMO/zOyw79b6xPrL0cv3xPqy+g==?=
+	=?GB2312?B?xrfQ0NK1tcTJz83yyc/TzsS/seq/zbun18rUtKOh?=
+From: stephenoppositi605524@gmail.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,304 +24,151 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============1542106948844766730=="
+Content-Type: multipart/mixed; boundary="===============0745156368388522891=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
---===============1542106948844766730==
-Content-Type: multipart/alternative;
-	boundary="b1_68a77f7ed4215c9c899a28e32a508836"
+--===============0745156368388522891==
+Content-Type: multipart/alternative; boundary=001a11c1fd023a9a9a0516b5e940
 
---b1_68a77f7ed4215c9c899a28e32a508836
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
-
-**=CE=9C=CE=B1=CE=B8=CE=AE=CE=BC=CE=B1=CF=84=CE=B1 =CE=BC=CE=BF=CF=85=CF=83=
-=CE=B9=CE=BA=CE=AE=CF=82 =CF=83=CF=84=CE=BF =CF=83=CF=80=CE=AF=CF=84=CE=B9*=
-*
-
-=CE=93=CE=B5=CE=B9=CE=B1 =CF=83=CE=B1=CF=82
-
-=CE=95=CE=AF=CE=BC=CE=B1=CE=B9 =CE=BF =CE=92=CE=B1=CF=83=CE=AF=CE=BB=CE=B7=
-=CF=82 =CE=9A=CF=89=CF=83=CF=84=CF=8C=CF=80=CE=BF=CF=85=CE=BB=CE=BF=CF=82 =
-=CE=BA=CE=B1=CE=B9 =CF=80=CE=B1=CF=81=CE=B1=CE=B4=CE=AF=CE=B4=CF=89
-=CE=BA=CE=B1=CF=84' =CE=BF=CE=AF=CE=BA=CE=BF=CE=BD =CE=BC=CE=B1=CE=B8=CE=AE=
-=CE=BC=CE=B1=CF=84=CE=B1 =CE=A0=CE=B9=CE=AC=CE=BD=CE=BF=CF=85, =CE=91=CF=81=
-=CE=BC=CE=BF=CE=BD=CE=AF=CE=BF=CF=85 &
-=CE=98=CE=B5=CF=89=CF=81=CE=B7=CF=84=CE=B9=CE=BA=CF=8E=CE=BD.
-
-=CE=A4=CE=B1 =CE=BC=CE=B1=CE=B8=CE=AE=CE=BC=CE=B1=CF=84=CE=B1 =CE=B5=CE=AF=
-=CE=BD=CE=B1=CE=B9 =CE=B3=CE=B9=CE=B1 =CE=B7=CE=BB=CE=B9=CE=BA=CE=AF=CE=B5=
-=CF=82 =CE=B1=CF=80=CF=8C 6 =CF=89=CF=82 =CE=BA=CE=B1=CE=B9
-=CE=AC=CE=BD=CF=89 =CF=84=CF=89=CE=BD 60 =CE=B5=CF=84=CF=8E=CE=BD. =CE=91=
-=CF=80=CE=B5=CF=85=CE=B8=CF=8D=CE=BD=CE=BF=CE=BD=CF=84=CE=B1=CE=B9 =CF=83=
-=CE=B5
-=CE=B5=CF=81=CE=B1=CF=83=CE=B9=CF=84=CE=AD=CF=87=CE=BD=CE=B5=CF=82 =CE=AE =
-=CE=BA=CE=B1=CE=B9 =CE=B5=CF=80=CE=B1=CE=B3=CE=B3=CE=B5=CE=BB=CE=BC=CE=B1=
-=CF=84=CE=AF=CE=B5=CF=82.
-
-=CE=9C=CF=80=CE=BF=CF=81=CF=8E =CE=BD=CE=B1 =CE=B5=CE=BE=CF=85=CF=80=CE=B7=
-=CF=81=CE=B5=CF=84=CE=AE=CF=83=CF=89 =CF=84=CE=B9=CF=82 =CF=80=CE=B5=CF=81=
-=CE=B9=CE=BF=CF=87=CE=AD=CF=82:
-=CE=A0=CE=B1=CF=80=CE=AC=CE=B3=CE=BF=CF=85, =CE=A7=CE=BF=CE=BB=CE=B1=CF=81=
-=CE=B3=CE=BF=CF=8D, =CE=A7=CE=B1=CE=BB=CE=B1=CE=BD=CE=B4=CF=81=CE=AF=CE=BF=
-=CF=85, =CE=91=CE=B3=CE=AF=CE=B1=CF=82
-=CE=A0=CE=B1=CF=81=CE=B1=CF=83=CE=BA=CE=B5=CF=85=CE=AE=CF=82 =CE=BA=CE=B1=
-=CE=B9 =CE=93=CE=AD=CF=81=CE=B1=CE=BA=CE=B1.
-
-=CE=93=CE=B9=CE=B1 =CF=80=CE=B5=CF=81=CE=B9=CF=83=CF=83=CF=8C=CF=84=CE=B5=
-=CF=81=CE=B5=CF=82 =CF=80=CE=BB=CE=B7=CF=81=CE=BF=CF=86=CE=BF=CF=81=CE=AF=
-=CE=B5=CF=82 =CF=80=CE=B1=CF=81=CE=B1=CE=BA=CE=B1=CE=BB=CF=8E
-=CE=B5=CF=80=CE=B9=CF=83=CE=BA=CE=B5=CF=85=CE=B8=CE=B5=CE=AF=CF=84=CE=B5 =
-=CF=84=CE=BF site =CE=BC=CE=BF=CF=85 =CF=80=CE=B1=CF=84=CF=8E=CE=BD=CF=84=
-=CE=B1=CF=82 =CE=B5=CE=B4=CF=8E
-<http://good-news.ml/lists/lt.php?id=3DMRkBHQdMVQ8BAgdT>
-.
-
-=CE=92=CE=B1=CF=83=CE=AF=CE=BB=CE=B7=CF=82 =CE=9A=CF=89=CF=83=CF=84=CF=8C=
-=CF=80=CE=BF=CF=85=CE=BB=CE=BF=CF=82
-
-"=CE=9F=CE=B9 =CE=BC=CE=B1=CE=B8=CE=B7=CF=84=CE=AD=CF=82 =CE=BC=CE=BF=CF=85=
-...=CE=BF=CE=B9 =CE=BC=CE=B5=CE=B3=CE=AC=CE=BB=CE=BF=CE=B9 =CE=BC=CE=BF=CF=
-=85 =CE=B4=CE=AC=CF=83=CE=BA=CE=B1=CE=BB=CE=BF=CE=B9"
-
-
-
---
-
- =CE=91=CF=85=CF=84=CF=8C =CF=84=CE=BF =CE=BC=CE=AE=CE=BD=CF=85=CE=BC=CE=B1=
- =CF=83=CF=84=CE=AC=CE=BB=CE=B8=CE=B7=CE=BA=CE=B5 =CF=83=CF=84=CE=BF xfs@os=
-s.sgi.com =CE=B1=CF=80=CF=8C
-newsletter@good-news.ml
-
- =CE=91=CE=BD =CE=B8=CE=AD=CE=BB=CE=B5=CF=84=CE=B5 =CE=BD=CE=B1 =CF=80=CF=
-=81=CE=BF=CF=89=CE=B8=CE=AE=CF=83=CE=B5=CF=84=CE=B5 =CE=B1=CF=85=CF=84=CF=
-=8C =CF=84=CE=BF =CE=BC=CE=AE=CE=BD=CF=85=CE=BC=CE=B1,
-=CF=80=CE=B1=CF=84=CE=AE=CF=83=CF=84=CE=B5: =CE=B5=CE=B4=CF=8E.=0A<http://g=
-ood-news.ml/lists/lt.php?id=3DMRkCHQdMVQ8BAgdT>
-
- =CE=91=CE=BD =CE=B8=CE=AD=CE=BB=CE=B5=CF=84=CE=B5 =CE=BD=CE=B1 =CE=B1=CE=
-=BB=CE=BB=CE=AC=CE=BE=CE=B5=CF=84=CE=B5 =CF=84=CE=B9=CF=82 =CF=80=CF=81=CE=
-=BF=CF=84=CE=B9=CE=BC=CE=AE=CF=83=CE=B5=CE=B9=CF=82
-=CF=83=CE=B1=CF=82 =CF=80=CE=B1=CF=81=CE=B1=CE=BA=CE=B1=CE=BB=CF=8E =CF=80=
-=CE=B1=CF=84=CE=AE=CF=83=CF=84=CE=B5: =CE=B5=CE=B4=CF=8E=0A<http://good-new=
-s.ml/lists/lt.php?id=3DMRkDHQdMVQ8BAgdT>
-
- =CE=91=CE=BD =CF=84=CE=BF email =CF=83=CE=B1=CF=82 =CE=B2=CF=81=CE=AD=CE=
-=B8=CE=B7=CE=BA=CE=B5 =CE=BA=CE=B1=CF=84=CE=AC =CE=BB=CE=AC=CE=B8=CE=BF=CF=
-=82 =CF=83=CE=B5 =CE=B1=CF=85=CF=84=CE=AE=CE=BD
-=CF=84=CE=B7 =CE=BB=CE=AF=CF=83=CF=84=CE=B1 =CE=AE =CE=B4=CE=B5=CE=BD =CE=
-=B8=CE=AD=CE=BB=CE=B5=CF=84=CE=B5 =CE=BD=CE=B1 =CE=BB=CE=B1=CE=BC=CE=B2=CE=
-=AC=CE=BD=CE=B5=CF=84=CE=B5 =CE=AC=CE=BB=CE=BB=CE=B1
-email, =CF=83=CE=B1=CF=82 =CE=B6=CE=B7=CF=84=CF=8E =CF=83=CF=85=CE=B3=CE=B3=
-=CE=BD=CF=8E=CE=BC=CE=B7. =CE=9A=CE=AC=CE=BD=CF=84=CE=B5 =CE=BA=CE=BB=CE=B9=
-=CE=BA =CF=83=CF=84=CE=BF link
-=CF=84=CE=B7=CF=82 =CE=B4=CE=B9=CE=B1=CE=B3=CF=81=CE=B1=CF=86=CE=AE=CF=82 =
-=CE=A0=CE=BB=CE=AE=CF=81=CE=B7=CF=82 =CE=B4=CE=B9=CE=B1=CE=B3=CF=81=CE=B1=
-=CF=86=CE=AE=0A<http://good-news.ml/lists/lt.php?id=3DMRkEHQdMVQ8BAgdT>
-=CE=B1=CF=80=CF=8C =CE=BC=CE=B5=CE=BB=CE=BF=CE=BD=CF=84=CE=B9=CE=BA=CE=AC e=
-mails.
-
-=20
-
-
--- powered by phpList, www.phplist.com --
-
-
-
---b1_68a77f7ed4215c9c899a28e32a508836
-Content-Type: multipart/related;
-	boundary="b2_68a77f7ed4215c9c899a28e32a508836"
-
---b2_68a77f7ed4215c9c899a28e32a508836
-Content-Type: text/html; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
-
-<html><head>=0A        <meta content=3D"text/html;charset=3DUTF-8" http-equ=
-iv=3D"Content-Type">=0A        <title></title></head><body><h3><img alt=3D"=
-" src=3D"http://good-news.ml/images/image/Vas.Kostopoulos1.jpg" style=3D"wi=
-dth: 200px; height: 199px; float: left; margin-left: 5px; margin-right: 5px=
-;" />&Mu;&alpha;&theta;=CE=AE&mu;&alpha;&tau;&alpha; &mu;&omicron;&upsilon;=
-&sigma;&iota;&kappa;=CE=AE&sigmaf; &sigma;&tau;&omicron; &sigma;&pi;=CE=AF&=
-tau;&iota;</h3>
-
-<p style=3D"line-height: 20.7999992370605px;">&Gamma;&epsilon;&iota;&alpha;=
- &sigma;&alpha;&sigmaf;</p>
-
-<p style=3D"line-height: 20.7999992370605px;">&Epsilon;=CE=AF&mu;&alpha;&io=
-ta; &omicron; &Beta;&alpha;&sigma;=CE=AF&lambda;&eta;&sigmaf; &Kappa;&omega=
-;&sigma;&tau;=CF=8C&pi;&omicron;&upsilon;&lambda;&omicron;&sigmaf; &kappa;&=
-alpha;&iota; &pi;&alpha;&rho;&alpha;&delta;=CE=AF&delta;&omega; &kappa;&alp=
-ha;&tau;&#39; &omicron;=CE=AF&kappa;&omicron;&nu; &mu;&alpha;&theta;=CE=AE&=
-mu;&alpha;&tau;&alpha; &Pi;&iota;=CE=AC&nu;&omicron;&upsilon;, &Alpha;&rho;=
-&mu;&omicron;&nu;=CE=AF&omicron;&upsilon; &amp; &Theta;&epsilon;&omega;&rho=
-;&eta;&tau;&iota;&kappa;=CF=8E&nu;.</p>
-
-<p style=3D"line-height: 20.7999992370605px;">&Tau;&alpha; &mu;&alpha;&thet=
-a;=CE=AE&mu;&alpha;&tau;&alpha; &epsilon;=CE=AF&nu;&alpha;&iota; &gamma;&io=
-ta;&alpha; &eta;&lambda;&iota;&kappa;=CE=AF&epsilon;&sigmaf; &alpha;&pi;=CF=
-=8C 6 &omega;&sigmaf; &kappa;&alpha;&iota; =CE=AC&nu;&omega; &tau;&omega;&n=
-u; 60 &epsilon;&tau;=CF=8E&nu;. &Alpha;&pi;&epsilon;&upsilon;&theta;=CF=8D&=
-nu;&omicron;&nu;&tau;&alpha;&iota; &sigma;&epsilon; &epsilon;&rho;&alpha;&s=
-igma;&iota;&tau;=CE=AD&chi;&nu;&epsilon;&sigmaf; =CE=AE &kappa;&alpha;&iota=
-; &epsilon;&pi;&alpha;&gamma;&gamma;&epsilon;&lambda;&mu;&alpha;&tau;=CE=AF=
-&epsilon;&sigmaf;.</p>
-
-<p style=3D"line-height: 20.7999992370605px;">&Mu;&pi;&omicron;&rho;=CF=8E =
-&nu;&alpha; &epsilon;&xi;&upsilon;&pi;&eta;&rho;&epsilon;&tau;=CE=AE&sigma;=
-&omega; &tau;&iota;&sigmaf; &pi;&epsilon;&rho;&iota;&omicron;&chi;=CE=AD&si=
-gmaf;: &Pi;&alpha;&pi;=CE=AC&gamma;&omicron;&upsilon;, &Chi;&omicron;&lambd=
-a;&alpha;&rho;&gamma;&omicron;=CF=8D, &Chi;&alpha;&lambda;&alpha;&nu;&delta=
-;&rho;=CE=AF&omicron;&upsilon;, &Alpha;&gamma;=CE=AF&alpha;&sigmaf; &Pi;&al=
-pha;&rho;&alpha;&sigma;&kappa;&epsilon;&upsilon;=CE=AE&sigmaf; &kappa;&alph=
-a;&iota; &Gamma;=CE=AD&rho;&alpha;&kappa;&alpha;.</p>
-
-<p style=3D"line-height: 20.7999992370605px;">&Gamma;&iota;&alpha; &pi;&eps=
-ilon;&rho;&iota;&sigma;&sigma;=CF=8C&tau;&epsilon;&rho;&epsilon;&sigmaf; &p=
-i;&lambda;&eta;&rho;&omicron;&phi;&omicron;&rho;=CE=AF&epsilon;&sigmaf; &pi=
-;&alpha;&rho;&alpha;&kappa;&alpha;&lambda;=CF=8E &epsilon;&pi;&iota;&sigma;=
-&kappa;&epsilon;&upsilon;&theta;&epsilon;=CE=AF&tau;&epsilon; &tau;&omicron=
-; site &mu;&omicron;&upsilon; &pi;&alpha;&tau;=CF=8E&nu;&tau;&alpha;&sigmaf=
-; <a href=3D"http://good-news.ml/lists/lt.php?id=3DLRkBHQdMVQ8BAgdT"  targe=
-t=3D"_blank">&epsilon;&delta;=CF=8E</a>.</p>
-
-<p style=3D"line-height: 20.7999992370605px;">&nbsp;</p>
-
-<p style=3D"line-height: 20.7999992370605px; text-align: right;">&Beta;&alp=
-ha;&sigma;=CE=AF&lambda;&eta;&sigmaf; &Kappa;&omega;&sigma;&tau;=CF=8C&pi;&=
-omicron;&upsilon;&lambda;&omicron;&sigmaf;</p>
-
-<p style=3D"line-height: 20.7999992370605px; text-align: right;">&quot;<em>=
-&Omicron;&iota; &mu;&alpha;&theta;&eta;&tau;=CE=AD&sigmaf; &mu;&omicron;&up=
-silon;...&omicron;&iota; &mu;&epsilon;&gamma;=CE=AC&lambda;&omicron;&iota; =
-&mu;&omicron;&upsilon; &delta;=CE=AC&sigma;&kappa;&alpha;&lambda;&omicron;&=
-iota;</em>&quot;</p>
-<br />--
- =20
-    <div class=3D"footer" style=3D"text-align:left; font-size: 75%;">
-      <p>=CE=91=CF=85=CF=84=CF=8C =CF=84=CE=BF =CE=BC=CE=AE=CE=BD=CF=85=CE=
-=BC=CE=B1 =CF=83=CF=84=CE=AC=CE=BB=CE=B8=CE=B7=CE=BA=CE=B5 =CF=83=CF=84=CE=
-=BF xfs@oss.sgi.com =CE=B1=CF=80=CF=8C newsletter@good-news.ml</p>
-      <p>=CE=91=CE=BD =CE=B8=CE=AD=CE=BB=CE=B5=CF=84=CE=B5 =CE=BD=CE=B1 =CF=
-=80=CF=81=CE=BF=CF=89=CE=B8=CE=AE=CF=83=CE=B5=CF=84=CE=B5 =CE=B1=CF=85=CF=
-=84=CF=8C =CF=84=CE=BF =CE=BC=CE=AE=CE=BD=CF=85=CE=BC=CE=B1, =CF=80=CE=B1=
-=CF=84=CE=AE=CF=83=CF=84=CE=B5: <a href=3D"http://good-news.ml/lists/lt.php=
-?id=3DLRkCHQdMVQ8BAgdT" >=CE=B5=CE=B4=CF=8E.</a> <br/>
-      =CE=91=CE=BD =CE=B8=CE=AD=CE=BB=CE=B5=CF=84=CE=B5 =CE=BD=CE=B1 =CE=B1=
-=CE=BB=CE=BB=CE=AC=CE=BE=CE=B5=CF=84=CE=B5 =CF=84=CE=B9=CF=82 =CF=80=CF=81=
-=CE=BF=CF=84=CE=B9=CE=BC=CE=AE=CF=83=CE=B5=CE=B9=CF=82 =CF=83=CE=B1=CF=82 =
-=CF=80=CE=B1=CF=81=CE=B1=CE=BA=CE=B1=CE=BB=CF=8E =CF=80=CE=B1=CF=84=CE=AE=
-=CF=83=CF=84=CE=B5: <a href=3D"http://good-news.ml/lists/lt.php?id=3DLRkDHQ=
-dMVQ8BAgdT" >=CE=B5=CE=B4=CF=8E</a><br/>
-      =CE=91=CE=BD =CF=84=CE=BF email =CF=83=CE=B1=CF=82 =CE=B2=CF=81=CE=AD=
-=CE=B8=CE=B7=CE=BA=CE=B5 =CE=BA=CE=B1=CF=84=CE=AC =CE=BB=CE=AC=CE=B8=CE=BF=
-=CF=82 =CF=83=CE=B5 =CE=B1=CF=85=CF=84=CE=AE=CE=BD =CF=84=CE=B7 =CE=BB=CE=
-=AF=CF=83=CF=84=CE=B1 =CE=AE =CE=B4=CE=B5=CE=BD =CE=B8=CE=AD=CE=BB=CE=B5=CF=
-=84=CE=B5 =CE=BD=CE=B1 =CE=BB=CE=B1=CE=BC=CE=B2=CE=AC=CE=BD=CE=B5=CF=84=CE=
-=B5 =CE=AC=CE=BB=CE=BB=CE=B1 email, =CF=83=CE=B1=CF=82 =CE=B6=CE=B7=CF=84=
-=CF=8E =CF=83=CF=85=CE=B3=CE=B3=CE=BD=CF=8E=CE=BC=CE=B7. =CE=9A=CE=AC=CE=BD=
-=CF=84=CE=B5 =CE=BA=CE=BB=CE=B9=CE=BA =CF=83=CF=84=CE=BF link =CF=84=CE=B7=
-=CF=82 =CE=B4=CE=B9=CE=B1=CE=B3=CF=81=CE=B1=CF=86=CE=AE=CF=82 <a href=3D"ht=
-tp://good-news.ml/lists/lt.php?id=3DLRkEHQdMVQ8BAgdT" >=CE=A0=CE=BB=CE=AE=
-=CF=81=CE=B7=CF=82 =CE=B4=CE=B9=CE=B1=CE=B3=CF=81=CE=B1=CF=86=CE=AE </a>=CE=
-=B1=CF=80=CF=8C =CE=BC=CE=B5=CE=BB=CE=BF=CE=BD=CF=84=CE=B9=CE=BA=CE=AC emai=
-ls.</p>
-    </div>
-
-
-  =0A<p class=3D"poweredby"><a href=3D"http://www.phplist.com/poweredby?utm=
-_source=3Dpl3.0.12&amp;utm_medium=3Dpoweredhostedimg&amp;utm_campaign=3Dphp=
-List" title=3D"visit the phpList website" ><img src=3D"cid:02c930e6b8914006=
-ca2a73b4a814c2d7" width=3D"70" height=3D"30" title=3D"powered by phpList ve=
-rsion 3.0.12, &copy; phpList ltd" alt=3D"powered by phpList 3.0.12, &copy; =
-phpList ltd" border=3D"0" /></a></p><img src=3D"http://good-news.ml/lists/u=
-t.php?u=3Dff8cc1a26bec077b5dda3eafe9de671a&amp;m=3D2" width=3D"1" height=3D=
-"1" border=3D"0" alt=3D"" /></body></html>
-
---b2_68a77f7ed4215c9c899a28e32a508836
-Content-Type: image/png; name="powerphplist.png"
+--001a11c1fd023a9a9a0516b5e940
+Content-Type: text/plain; charset=GB2312; format=flowed; delsp=yes
 Content-Transfer-Encoding: base64
-Content-ID: <02c930e6b8914006ca2a73b4a814c2d7>
-Content-Disposition: inline; filename=powerphplist.png
 
-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
-RK5CYII=
+y6vPss3iw7O/qreiv827p9Pry9HL98+1zbMNCg0KxPq21NPaytbJz7/Nu6fXytS0wvrS4sLwo78N
+Ctb3tq/Kvb+qt6KjrMjGv6q77tS+09q5+sTatcTW0LzkycyjrNaxvdO/qreiufrN4tbVtsu/zbun
+oaMNCsurz7LI7bz+ILnYvPy0ysvRy/cgw7/I1cvRy/fJz83ytcS/zbun0MXPoqOssqLX1LavyKXB
+qs+1y/vDx6OsDQrIq8fyytCzodXiw7S088urz7LOqsT6x8DPyNOutcO/zbunoaMNCtbHxNzIurei
+yseyydPDtuDEo7/poaK24Nb3zOKhorbg1cq6xcSjxOLK1rmk0ru21NK7t7TGwbHOvOTQqtDUwta7
+u9fUtq+3og0Ky82jrA0K1eLR+bHcw+LTys/ksbvGwbHOoaMNCrzbuPGjurHq17yw5iAxODgwL7y+
+tsggMjg4MC/E6rbIDQq4/Lbgz+rPuNfJ0a8gNjE3Mzc0NDEgKFFRKSDD4rfR1NrP39Hdyr7I7bz+
+tcS5psTcus3Qp7n7DQoNCg0KDQoNCs7S0tHR+8frxPrM7tC0se21pSDOtMP8w/u1xLHttaWhoyDS
+qszu0LS0y7HttaWjrMfrt8POyqO6DQpodHRwczovL2RvY3MuZ29vZ2xlLmNvbS9mb3Jtcy9kLzFn
+NUd2eTNvTmxub2tGRWc0ZWR5cVU2MHhSelY0amotQllkWnpFRVNJeEFJL3ZpZXdmb3JtP2M9MCZ3
+PTEmdXNwPW1haWxfZm9ybV9saW5rDQo=
+--001a11c1fd023a9a9a0516b5e940
+Content-Type: text/html; charset=GB2312
+Content-Transfer-Encoding: quoted-printable
+
+<html><body itemscope itemtype=3D"http://schema.org/EmailMessage" style=3D"=
+"><div class=3D"ss-email-body" style=3D"display:inline;width:576px;"><div i=
+temprop=3D"action" itemscope itemtype=3D"http://schema.org/ViewAction" styl=
+e=3D""><meta itemprop=3D"name" content=3D"=CC=EE=D0=B4=B1=ED=B5=A5" style=
+=3D"">
+<meta itemprop=3D"url" content=3D"https://docs.google.com/forms/d/1g5Gvy3oN=
+lnokFEg4edyqU60xRzV4jj-BYdZzEESIxAI/viewform?c=3D0&amp;w=3D1&amp;usp=3Dmail=
+_goto_form" style=3D""></div>
+<p itemprop=3D"description" style=3D""><br>=CB=AB=CF=B2=CD=E2=C3=B3=BF=AA=
+=B7=A2=BF=CD=BB=A7=D3=EB=CB=D1=CB=F7=CF=B5=CD=B3<p><br>=C4=FA=B6=D4=D3=DA=
+=CA=D6=C9=CF=BF=CD=BB=A7=D7=CA=D4=B4=C2=FA=D2=E2=C2=F0=A3=BF<br>=D6=F7=B6=
+=AF=CA=BD=BF=AA=B7=A2=A3=AC=C8=C6=BF=AA=BB=EE=D4=BE=D3=DA=B9=FA=C4=DA=B5=C4=
+=D6=D0=BC=E4=C9=CC=A3=AC=D6=B1=BD=D3=BF=AA=B7=A2=B9=FA=CD=E2=D6=D5=B6=CB=BF=
+=CD=BB=A7=A1=A3<p>=CB=AB=CF=B2=C8=ED=BC=FE =B9=D8=BC=FC=B4=CA=CB=D1=CB=F7  =
+=C3=BF=C8=D5=CB=D1=CB=F7=C9=CF=CD=F2=B5=C4=BF=CD=BB=A7=D0=C5=CF=A2=A3=AC=B2=
+=A2=D7=D4=B6=AF=C8=A5=C1=AA=CF=B5=CB=FB=C3=C7=A3=AC<br>=C8=AB=C7=F2=CA=D0=
+=B3=A1=D5=E2=C3=B4=B4=F3=CB=AB=CF=B2=CE=AA=C4=FA=C7=C0=CF=C8=D3=AE=B5=C3=BF=
+=CD=BB=A7=A1=A3<p>=D6=C7=C4=DC=C8=BA=B7=A2=CA=C7=B2=C9=D3=C3=B6=E0=C4=A3=BF=
+=E9=A1=A2=B6=E0=D6=F7=CC=E2=A1=A2=B6=E0=D5=CA=BA=C5=C4=A3=C4=E2=CA=D6=B9=A4=
+=D2=BB=B6=D4=D2=BB=B7=B4=C6=C1=B1=CE=BC=E4=D0=AA=D0=D4=C2=D6=BB=BB=D7=D4=B6=
+=AF=B7=A2=CB=CD=A3=AC<br>=D5=E2=D1=F9=B1=DC=C3=E2=D3=CA=CF=E4=B1=BB=C6=C1=
+=B1=CE=A1=A3<p>=BC=DB=B8=F1=A3=BA=B1=EA=D7=BC=B0=E6 1880/=BC=BE=B6=C8 2880/=
+=C4=EA=B6=C8<br>=B8=FC=B6=E0=CF=EA=CF=B8=D7=C9=D1=AF 61737441 (QQ) =C3=E2=
+=B7=D1=D4=DA=CF=DF=D1=DD=CA=BE=C8=ED=BC=FE=B5=C4=B9=A6=C4=DC=BA=CD=D0=A7=B9=
+=FB</p></p></p></p></p>
+=C8=E7=B9=FB=C4=FA=CE=DE=B7=A8=B2=E9=BF=B4=BB=F2=CC=E1=BD=BB=B4=CB=B1=ED=B5=
+=A5=A3=AC=BF=C9=D2=D4<a href=3D"https://docs.google.com/forms/d/1g5Gvy3oNln=
+okFEg4edyqU60xRzV4jj-BYdZzEESIxAI/viewform?c=3D0&amp;w=3D1&amp;usp=3Dmail_f=
+orm_link" style=3D"">=D4=DA Google =B1=ED=B5=A5=D6=D0=CC=EE=D0=B4</a>=A1=A3
+<p></p>
+<div dir=3D"ltr" style=3D""><div class=3D"form-body" style=3D""><h1 class=
+=3D"ss-form-title" dir=3D"ltr" style=3D"margin:.67em 0;">=CE=B4=C3=FC=C3=FB=
+=B5=C4=B1=ED=B5=A5</h1></div>
+<div style=3D"white-space: pre-wrap; display: inline">
+
+</div>
+<div class=3D"form-body" style=3D""><div class=3D"ss-form" style=3D""><form=
+ action=3D"https://docs.google.com/forms/d/1g5Gvy3oNlnokFEg4edyqU60xRzV4jj-=
+BYdZzEESIxAI/formResponse" method=3D"POST" id=3D"ss-form" target=3D"_self" =
+onsubmit=3D"" style=3D""><ol role=3D"list" class=3D"ss-question-list" style=
+=3D"padding-left: 0list-style-type:none;">
+<div class=3D"ss-form-question errorbox-good" role=3D"listitem" style=3D"">
+<div dir=3D"ltr" class=3D"ss-item  ss-radio" style=3D"margin:12px 0;"><div =
+class=3D"ss-form-entry" style=3D"margin-bottom:1.5em;vertical-align:middle;=
+margin-left:0;margin-top:0;max-width:100%;">
+<label class=3D"ss-q-item-label" for=3D"entry_1818330153" style=3D""><div c=
+lass=3D"ss-q-title" style=3D"display:block;font-weight:bold;margin-top:.83e=
+m;margin-bottom:.83em;">=CE=B4=C3=FC=C3=FB=B5=C4=CE=CA=CC=E2
+</div>
+<div class=3D"ss-q-help ss-secondary-text" dir=3D"ltr" style=3D"display:blo=
+ck;margin:.1em 0 .25em 0;color:#666;"></div></label>
+
+<ul class=3D"ss-choices" role=3D"radiogroup" aria-label=3D"=CE=B4=C3=FC=C3=
+=FB=B5=C4=CE=CA=CC=E2  " style=3D"list-style:none;padding:0;margin:.5em 0 0=
+;"><li class=3D"ss-choice-item" style=3D"margin:0;line-height:1.3em;padding=
+-bottom:.5em;"><label><span class=3D"ss-choice-item-control goog-inline-blo=
+ck" style=3D"position:relative;display:inline-block;"><input type=3D"radio"=
+ name=3D"entry.1264721991" value=3D"=D1=A1=CF=EE 1" id=3D"group_1264721991_=
+1" role=3D"radio" class=3D"ss-q-radio" aria-label=3D"=D1=A1=CF=EE 1" style=
+=3D""></span>
+<span class=3D"ss-choice-label" style=3D"">=D1=A1=CF=EE 1</span>
+</label></li></ul>
+
+</div></div></div>
+<input type=3D"hidden" name=3D"draftResponse" value=3D"[,,&quot;-7326543634=
+010331549&quot;]
+" style=3D"">
+<input type=3D"hidden" name=3D"pageHistory" value=3D"0" style=3D"">
+<input type=3D"hidden" name=3D"usp" value=3D"mail_form_submit" style=3D"">
+
+<input type=3D"hidden" name=3D"fbzx" value=3D"-7326543634010331549" style=
+=3D"">
+
+<div class=3D"ss-item ss-navigate" style=3D"margin:12px 0;"><table id=3D"na=
+vigation-table" style=3D""><tbody><tr><td class=3D"ss-form-entry goog-inlin=
+e-block" id=3D"navigation-buttons" dir=3D"ltr" style=3D"margin-bottom:1.5em=
+;vertical-align:middle;margin-left:0;margin-top:0;max-width:100%;position:r=
+elative;display:inline-block;">
+<input type=3D"submit" name=3D"submit" value=3D"=CC=E1=BD=BB" id=3D"ss-subm=
+it" class=3D"jfk-button jfk-button-action " style=3D"">
+</td>
+</tr></tbody></table></div></ol></form></div>
+<div class=3D"ss-footer" style=3D""><div class=3D"ss-attribution" style=3D"=
+"></div>
+<div class=3D"ss-legal" style=3D""><div class=3D"disclaimer-separator" styl=
+e=3D""></div>
+<div class=3D"disclaimer" dir=3D"ltr" style=3D""><div class=3D"powered-by-l=
+ogo" style=3D"margin-top:2em;"><span class=3D"powered-by-text" style=3D"">=
+=BC=BC=CA=F5=CC=E1=B9=A9=A3=BA</span>
+<a href=3D"https://www.google.com/forms/about/?utm_source=3Dproduct&amp;utm=
+_medium=3Dforms_logo&amp;utm_campaign=3Dforms" style=3D""><div class=3D"ss-=
+logo-container" style=3D""><img src=3D"https://ssl.gstatic.com/docs/forms/f=
+orms_logo_small_dark.png" alt=3D"Google =B1=ED=B5=A5" style=3D""></div></a>=
+</div>
+<div class=3D"ss-terms" style=3D"color:#777;font-size:11px;margin-top:1.5em=
+;"><span class=3D"disclaimer-msg" style=3D"">=B4=CB=C4=DA=C8=DD=B2=BB=CA=C7=
+=D3=C9 Google =CB=F9=B4=B4=BD=A8=A3=ACGoogle =B2=BB=B6=D4=C6=E4=D7=F7=C8=CE=
+=BA=CE=B5=A3=B1=A3=A1=A3</span>
+<br>
+<a href=3D"https://docs.google.com/forms/d/1g5Gvy3oNlnokFEg4edyqU60xRzV4jj-=
+BYdZzEESIxAI/reportabuse?source=3Dhttps://docs.google.com/forms/d/1g5Gvy3oN=
+lnokFEg4edyqU60xRzV4jj-BYdZzEESIxAI/viewform?sid%3De7d4498d98f25f%26c%3D0%2=
+6w%3D1%26token%3DUCCnfk0BAAA.G0cautwrSqb42sWDri46yg.4-EjvhiF1ttl8CKVEDaYlg"=
+ style=3D"">=BE=D9=B1=A8=C0=C4=D3=C3=D0=D0=CE=AA</a>
+-
+<a href=3D"http://www.google.com/accounts/TOS" style=3D"">=B7=FE=CE=F1=CC=
+=F5=BF=EE</a>
+-
+<a href=3D"http://www.google.com/google-d-s/terms.html" style=3D"">=C6=E4=
+=CB=FB=CC=F5=BF=EE</a></div></div></div></div>
+</div></div>
+<br>
+<style type=3D"text/css" media=3D"screen" style=3D""></style></div></body><=
+/html>
+--001a11c1fd023a9a9a0516b5e940--
 
 
---b2_68a77f7ed4215c9c899a28e32a508836--
-
-
---b1_68a77f7ed4215c9c899a28e32a508836--
-
-
---===============1542106948844766730==
+--===============0745156368388522891==
 Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
@@ -332,4 +179,4 @@ xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
 
---===============1542106948844766730==--
+--===============0745156368388522891==--
