@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 832FB29DFF
-	for <xfs@oss.sgi.com>; Tue, 26 May 2015 17:52:01 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id E7AC3AC001
-	for <xfs@oss.sgi.com>; Tue, 26 May 2015 15:52:00 -0700 (PDT)
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id GNW18Gm4icIUo5rA (version=TLSv1
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id E613929E0E
+	for <xfs@oss.sgi.com>; Tue, 26 May 2015 17:52:04 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id CBA358F807A
+	for <xfs@oss.sgi.com>; Tue, 26 May 2015 15:52:04 -0700 (PDT)
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
+	cuda.sgi.com with ESMTP id FpDTS6XHDmJYLwDG (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 26 May 2015 15:51:58 -0700 (PDT)
-Subject: [PATCH 4/5] xfs_db: enable blockget for v5 filesystems
+	Tue, 26 May 2015 15:52:03 -0700 (PDT)
+Subject: [PATCH 5/5] xfs_db: enable blocktrash for checksummed filesystems
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Tue, 26 May 2015 15:51:53 -0700
-Message-ID: <20150526225153.26434.96347.stgit@birch.djwong.org>
+Date: Tue, 26 May 2015 15:51:59 -0700
+Message-ID: <20150526225159.26434.92261.stgit@birch.djwong.org>
 In-Reply-To: <20150526225126.26434.69010.stgit@birch.djwong.org>
 References: <20150526225126.26434.69010.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -31,453 +31,372 @@ Sender: xfs-bounces@oss.sgi.com
 To: david@fromorbit.com, darrick.wong@oracle.com
 Cc: xfs@oss.sgi.com
 
-Plumb in the necessary magic number checks and other fixups required
-to handle v5 filesystems.
+Disable the write verifiers when we're trashing a block.  With this
+in place, create a xfs fuzzer script that formats, populates, corrupts,
+tries to use, repairs, and tries again to use a crash test xfs image.
+Hopefully this will shake out some v5 filesystem bugs.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- db/check.c |  225 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++----
- db/type.c  |    3 +
- db/type.h  |    2 -
- 3 files changed, 214 insertions(+), 16 deletions(-)
+ db/check.c    |    7 +
+ db/xfsfuzz.sh |  305 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 312 insertions(+)
+ create mode 100755 db/xfsfuzz.sh
 
 
 diff --git a/db/check.c b/db/check.c
-index c4c972f..8f8096d 100644
+index 8f8096d..2c2a02e 100644
 --- a/db/check.c
 +++ b/db/check.c
-@@ -44,7 +44,7 @@ typedef enum {
- 	DBM_FREE1,	DBM_FREE2,	DBM_FREELIST,	DBM_INODE,
- 	DBM_LOG,	DBM_MISSING,	DBM_QUOTA,	DBM_RTBITMAP,
- 	DBM_RTDATA,	DBM_RTFREE,	DBM_RTSUM,	DBM_SB,
--	DBM_SYMLINK,
-+	DBM_SYMLINK,	DBM_BTFINO,
- 	DBM_NDBM
- } dbm_t;
- 
-@@ -170,6 +170,7 @@ static const char	*typename[] = {
- 	"rtsum",
- 	"sb",
- 	"symlink",
-+	"btfino",
- 	NULL
- };
- static int		verbose;
-@@ -345,6 +346,9 @@ static void		scanfunc_cnt(struct xfs_btree_block *block, int level,
- static void		scanfunc_ino(struct xfs_btree_block *block, int level,
- 				     xfs_agf_t *agf, xfs_agblock_t bno,
- 				     int isroot);
-+static void		scanfunc_fino(struct xfs_btree_block *block, int level,
-+				     xfs_agf_t *agf, xfs_agblock_t bno,
-+				     int isroot);
- static void		set_dbmap(xfs_agnumber_t agno, xfs_agblock_t agbno,
- 				  xfs_extlen_t len, dbm_t type,
- 				  xfs_agnumber_t c_agno, xfs_agblock_t c_agbno);
-@@ -799,8 +803,6 @@ blockget_f(
- 	 * filters out, or we need to actually do the work to make check support
- 	 * crc enabled filesystems.
- 	 */
--	if (xfs_sb_version_hascrc(&mp->m_sb))
--		return 0;
- 
- 	if (!init(argc, argv)) {
- 		if (serious_error)
-@@ -2223,7 +2225,9 @@ process_data_dir_v2(
- 	data = iocur_top->data;
- 	block = iocur_top->data;
- 	if (be32_to_cpu(block->magic) != XFS_DIR2_BLOCK_MAGIC &&
--			be32_to_cpu(data->magic) != XFS_DIR2_DATA_MAGIC) {
-+			be32_to_cpu(data->magic) != XFS_DIR2_DATA_MAGIC &&
-+			be32_to_cpu(block->magic) != XFS_DIR3_BLOCK_MAGIC &&
-+			be32_to_cpu(data->magic) != XFS_DIR3_DATA_MAGIC) {
- 		if (!sflag || v)
- 			dbprintf(_("bad directory data magic # %#x for dir ino "
- 				 "%lld block %d\n"),
-@@ -2234,7 +2238,8 @@ process_data_dir_v2(
- 	db = xfs_dir2_da_to_db(mp, dabno);
- 	bf = xfs_dir3_data_bestfree_p(data);
- 	ptr = (char *)xfs_dir3_data_unused_p(data);
--	if (be32_to_cpu(block->magic) == XFS_DIR2_BLOCK_MAGIC) {
-+	if (be32_to_cpu(block->magic) == XFS_DIR2_BLOCK_MAGIC ||
-+	    be32_to_cpu(block->magic) == XFS_DIR3_BLOCK_MAGIC) {
- 		btp = xfs_dir2_block_tail_p(mp, block);
- 		lep = xfs_dir2_block_leaf_p(btp);
- 		endptr = (char *)lep;
-@@ -2380,7 +2385,8 @@ process_data_dir_v2(
- 			(*dot)++;
- 		}
+@@ -953,6 +953,7 @@ blocktrash_b(
+ 	int		mask;
+ 	int		newbit;
+ 	int		offset;
++	const struct xfs_buf_ops *stashed_ops;
+ 	static char	*modestr[] = {
+ 		N_("zeroed"), N_("set"), N_("flipped"), N_("randomized")
+ 	};
+@@ -963,6 +964,8 @@ blocktrash_b(
+ 	push_cur();
+ 	set_cur(&typtab[DBM_UNKNOWN],
+ 		XFS_AGB_TO_DADDR(mp, agno, agbno), blkbb, DB_RING_IGN, NULL);
++	stashed_ops = iocur_top->bp->b_ops;
++	iocur_top->bp->b_ops = NULL;
+ 	if ((buf = iocur_top->data) == NULL) {
+ 		dbprintf(_("can't read block %u/%u for trashing\n"), agno, agbno);
+ 		pop_cur();
+@@ -993,6 +996,7 @@ blocktrash_b(
+ 			buf[byte] &= ~mask;
  	}
--	if (be32_to_cpu(data->magic) == XFS_DIR2_BLOCK_MAGIC) {
-+	if (be32_to_cpu(data->magic) == XFS_DIR2_BLOCK_MAGIC ||
-+	    be32_to_cpu(data->magic) == XFS_DIR3_BLOCK_MAGIC) {
- 		endptr = (char *)data + mp->m_dirblksize;
- 		for (i = stale = 0; lep && i < be32_to_cpu(btp->count); i++) {
- 			if ((char *)&lep[i] >= endptr) {
-@@ -2412,7 +2418,8 @@ process_data_dir_v2(
- 				id->ino, dabno);
- 		error++;
- 	}
--	if (be32_to_cpu(data->magic) == XFS_DIR2_BLOCK_MAGIC &&
-+	if ((be32_to_cpu(data->magic) == XFS_DIR2_BLOCK_MAGIC ||
-+	     be32_to_cpu(data->magic) == XFS_DIR3_BLOCK_MAGIC) &&
- 	    count != be32_to_cpu(btp->count) - be32_to_cpu(btp->stale)) {
- 		if (!sflag || v)
- 			dbprintf(_("dir %lld block %d bad block tail count %d "
-@@ -2421,7 +2428,8 @@ process_data_dir_v2(
- 				be32_to_cpu(btp->stale));
- 		error++;
- 	}
--	if (be32_to_cpu(data->magic) == XFS_DIR2_BLOCK_MAGIC && 
-+	if ((be32_to_cpu(data->magic) == XFS_DIR2_BLOCK_MAGIC ||
-+	     be32_to_cpu(data->magic) == XFS_DIR2_BLOCK_MAGIC) &&
- 					stale != be32_to_cpu(btp->stale)) {
- 		if (!sflag || v)
- 			dbprintf(_("dir %lld block %d bad stale tail count %d\n"),
-@@ -3007,6 +3015,73 @@ process_leaf_node_dir_v2(
- }
- 
- static void
-+process_leaf_node_dir_v3_free(
-+	inodata_t		*id,
-+	int			v,
-+	xfs_dablk_t		dabno,
-+	freetab_t		*freetab)
-+{
-+	xfs_dir2_data_off_t	ent;
-+	struct xfs_dir3_free	*free;
-+	int			i;
-+	int			maxent;
-+	int			used;
+ 	write_cur();
++	iocur_top->bp->b_ops = stashed_ops;
+ 	pop_cur();
+ 	printf(_("blocktrash: %u/%u %s block %d bit%s starting %d:%d %s\n"),
+ 		agno, agbno, typename[type], len, len == 1 ? "" : "s",
+@@ -1049,9 +1053,12 @@ blocktrash_f(
+ 		   (1 << DBM_BTINO) |
+ 		   (1 << DBM_DIR) |
+ 		   (1 << DBM_INODE) |
++		   (1 << DBM_LOG) |
+ 		   (1 << DBM_QUOTA) |
+ 		   (1 << DBM_RTBITMAP) |
+ 		   (1 << DBM_RTSUM) |
++		   (1 << DBM_SYMLINK) |
++		   (1 << DBM_BTFINO) |
+ 		   (1 << DBM_SB);
+ 	while ((c = getopt(argc, argv, "0123n:s:t:x:y:")) != EOF) {
+ 		switch (c) {
+diff --git a/db/xfsfuzz.sh b/db/xfsfuzz.sh
+new file mode 100755
+index 0000000..fc40e97
+--- /dev/null
++++ b/db/xfsfuzz.sh
+@@ -0,0 +1,305 @@
++#!/bin/bash
 +
-+	free = iocur_top->data;
-+	maxent = xfs_dir3_free_max_bests(mp);
-+	if (be32_to_cpu(free->hdr.firstdb) != xfs_dir2_da_to_db(mp,
-+					dabno - mp->m_dirfreeblk) * maxent) {
-+		if (!sflag || v)
-+			dbprintf(_("bad free block firstdb %d for dir ino %lld "
-+				 "block %d\n"),
-+				be32_to_cpu(free->hdr.firstdb), id->ino, dabno);
-+		error++;
-+		return;
-+	}
-+	if (be32_to_cpu(free->hdr.nvalid) > maxent ||
-+				be32_to_cpu(free->hdr.nvalid) < 0 ||
-+				be32_to_cpu(free->hdr.nused) > maxent ||
-+				be32_to_cpu(free->hdr.nused) < 0 ||
-+				be32_to_cpu(free->hdr.nused) >
-+					be32_to_cpu(free->hdr.nvalid)) {
-+		if (!sflag || v)
-+			dbprintf(_("bad free block nvalid/nused %d/%d for dir "
-+				 "ino %lld block %d\n"),
-+				be32_to_cpu(free->hdr.nvalid),
-+				be32_to_cpu(free->hdr.nused), id->ino, dabno);
-+		error++;
-+		return;
-+	}
-+	for (used = i = 0; i < be32_to_cpu(free->hdr.nvalid); i++) {
-+		if (freetab->nents <= be32_to_cpu(free->hdr.firstdb) + i)
-+			ent = NULLDATAOFF;
-+		else
-+			ent = freetab->ents[be32_to_cpu(free->hdr.firstdb) + i];
-+		if (ent != be16_to_cpu(free->bests[i])) {
-+			if (!sflag || v)
-+				dbprintf(_("bad free block ent %d is %d should "
-+					 "be %d for dir ino %lld block %d\n"),
-+					i, be16_to_cpu(free->bests[i]), ent,
-+					id->ino, dabno);
-+			error++;
-+		}
-+		if (be16_to_cpu(free->bests[i]) != NULLDATAOFF)
-+			used++;
-+		if (ent != NULLDATAOFF)
-+			freetab->ents[be32_to_cpu(free->hdr.firstdb) + i] =
-+								NULLDATAOFF;
-+	}
-+	if (used != be32_to_cpu(free->hdr.nused)) {
-+		if (!sflag || v)
-+			dbprintf(_("bad free block nused %d should be %d for dir "
-+				 "ino %lld block %d\n"),
-+				be32_to_cpu(free->hdr.nused), used, id->ino,
-+				dabno);
-+		error++;
-+	}
++# Test harness to fuzz a filesystem over and over...
++# Copyright (C) 2014 Oracle.
++
++DIR=/tmp
++PASSES=10000
++SZ=32m
++SCRIPT_DIR="$(dirname "$0")"
++FEATURES="-m crc=1,finobt=1"
++xEATURES="-m crc=0"
++BLK_SZ=4096
++INODE_SZ=512
++RUN_FSCK=1
++OVERRIDE_PATH=1
++MAX_FSCK=10
++SRCDIR=/etc
++FUZZ_ARGS="-3 -n 32"
++XFS_REPAIR_OPTS="-P"
++
++print_help() {
++	echo "Usage: $0 OPTIONS"
++	echo "-b:	FS block size is this. (${BLK_SZ})"
++	echo "-B:	Corrupt this many bytes per run."
++	echo "-d:	Create test files in this directory. (${DIR})"
++	echo "-f:	Do not run xfs_repair after each pass."
++	echo "-I:	Create inodes of this size. (${INODE_SZ})"
++	echo "-n:	Run this many passes. (${PASSES})"
++	echo "-O:	Pass this to mkfs.xfs."
++	echo "-p:	Use system's xfsprogs tools."
++	echo "-s:	Create FS images of this size. (${SZ})"
++	echo "-S:	Copy files from this dir. (${SRCDIR})"
++	echo "-x:	Run xfs_repair at most this many times. (${MAX_FSCK})"
++	exit 0
 +}
 +
-+static void
- process_leaf_node_dir_v2_free(
- 	inodata_t		*id,
- 	int			v,
-@@ -3020,7 +3095,8 @@ process_leaf_node_dir_v2_free(
- 	int			used;
- 
- 	free = iocur_top->data;
--	if (be32_to_cpu(free->hdr.magic) != XFS_DIR2_FREE_MAGIC) {
-+	if (be32_to_cpu(free->hdr.magic) != XFS_DIR2_FREE_MAGIC &&
-+	    be32_to_cpu(free->hdr.magic) != XFS_DIR3_FREE_MAGIC) {
- 		if (!sflag || v)
- 			dbprintf(_("bad free block magic # %#x for dir ino %lld "
- 				 "block %d\n"),
-@@ -3028,6 +3104,10 @@ process_leaf_node_dir_v2_free(
- 		error++;
- 		return;
- 	}
-+	if (be32_to_cpu(free->hdr.magic) == XFS_DIR3_FREE_MAGIC) {
-+		process_leaf_node_dir_v3_free(id, v, dabno, freetab);
-+		return;
-+	}
- 	maxent = xfs_dir3_free_max_bests(mp);
- 	if (be32_to_cpu(free->hdr.firstdb) != xfs_dir2_da_to_db(mp, 
- 					dabno - mp->m_dirfreeblk) * maxent) {
-@@ -3081,6 +3161,20 @@ process_leaf_node_dir_v2_free(
- 	}
- }
- 
-+/*
-+ * Get address of the bestcount field in the single-leaf block.
-+ */
-+static inline int
-+xfs_dir3_leaf_ents_count(struct xfs_dir2_leaf *lp)
-+{
-+	if (lp->hdr.info.magic == cpu_to_be16(XFS_DIR3_LEAF1_MAGIC) ||
-+	    lp->hdr.info.magic == cpu_to_be16(XFS_DIR3_LEAFN_MAGIC)) {
-+		struct xfs_dir3_leaf *lp3 = (struct xfs_dir3_leaf *)lp;
-+		return be16_to_cpu(lp3->hdr.count);
-+	}
-+	return be16_to_cpu(lp->hdr.count);
-+}
++GETOPT="d:n:s:O:I:b:B:fpx:S:"
 +
- static void
- process_leaf_node_dir_v2_int(
- 	inodata_t		*id,
-@@ -3091,6 +3185,7 @@ process_leaf_node_dir_v2_int(
- 	int			i;
- 	__be16			*lbp;
- 	xfs_dir2_leaf_t		*leaf;
-+	struct xfs_dir3_leaf	*leaf3 = NULL;
- 	xfs_dir2_leaf_entry_t	*lep;
- 	xfs_dir2_leaf_tail_t	*ltp;
- 	xfs_da_intnode_t	*node;
-@@ -3099,7 +3194,15 @@ process_leaf_node_dir_v2_int(
- 
- 	leaf = iocur_top->data;
- 	switch (be16_to_cpu(leaf->hdr.info.magic)) {
-+	case XFS_DIR3_LEAF1_MAGIC:
-+	case XFS_DIR3_LEAFN_MAGIC:
-+	case XFS_DA3_NODE_MAGIC:
-+		leaf3 = iocur_top->data;
-+		break;
-+	}
-+	switch (be16_to_cpu(leaf->hdr.info.magic)) {
- 	case XFS_DIR2_LEAF1_MAGIC:
-+	case XFS_DIR3_LEAF1_MAGIC:
- 		if (be32_to_cpu(leaf->hdr.info.forw) || 
- 					be32_to_cpu(leaf->hdr.info.back)) {
- 			if (!sflag || v)
-@@ -3139,10 +3242,12 @@ process_leaf_node_dir_v2_int(
- 		}
- 		break;
- 	case XFS_DIR2_LEAFN_MAGIC:
-+	case XFS_DIR3_LEAFN_MAGIC:
- 		/* if it's at the root location then we can check the
- 		 * pointers are null XXX */
- 		break;
- 	case XFS_DA_NODE_MAGIC:
-+	case XFS_DA3_NODE_MAGIC:
- 		node = iocur_top->data;
- 		xfs_da3_node_hdr_from_disk(&nodehdr, node);
- 		if (nodehdr.level < 1 || nodehdr.level > XFS_DA_NODE_MAXDEPTH) {
-@@ -3164,7 +3269,7 @@ process_leaf_node_dir_v2_int(
- 		return;
- 	}
- 	lep = xfs_dir3_leaf_ents_p(leaf);
--	for (i = stale = 0; i < be16_to_cpu(leaf->hdr.count); i++) {
-+	for (i = stale = 0; i < xfs_dir3_leaf_ents_count(leaf); i++) {
- 		if (be32_to_cpu(lep[i].address) == XFS_DIR2_NULL_DATAPTR)
- 			stale++;
- 		else if (dir_hash_see(be32_to_cpu(lep[i].hashval), 
-@@ -3177,7 +3282,14 @@ process_leaf_node_dir_v2_int(
- 			error++;
- 		}
- 	}
--	if (stale != be16_to_cpu(leaf->hdr.stale)) {
-+	if (leaf3 && stale != be16_to_cpu(leaf3->hdr.stale)) {
-+		if (!sflag || v)
-+			dbprintf(_("dir3 %lld block %d stale mismatch "
-+				 "%d/%d\n"),
-+				 id->ino, dabno, stale,
-+				 be16_to_cpu(leaf3->hdr.stale));
-+		error++;
-+	} else if (!leaf && stale != be16_to_cpu(leaf->hdr.stale)) {
- 		if (!sflag || v)
- 			dbprintf(_("dir %lld block %d stale mismatch "
- 				 "%d/%d\n"),
-@@ -3764,6 +3876,12 @@ scan_ag(
- 		be32_to_cpu(agi->agi_root),
- 		be32_to_cpu(agi->agi_level),
- 		1, scanfunc_ino, TYP_INOBT);
-+	if (agi->agi_free_root) {
-+		scan_sbtree(agf,
-+			be32_to_cpu(agi->agi_free_root),
-+			be32_to_cpu(agi->agi_free_level),
-+			1, scanfunc_fino, TYP_FINOBT);
-+	}
- 	if (be32_to_cpu(agf->agf_freeblks) != agffreeblks) {
- 		if (!sflag)
- 			dbprintf(_("agf_freeblks %u, counted %u in ag %u\n"),
-@@ -3963,7 +4081,8 @@ scanfunc_bmap(
- 
- 	agno = XFS_FSB_TO_AGNO(mp, bno);
- 	agbno = XFS_FSB_TO_AGBNO(mp, bno);
--	if (be32_to_cpu(block->bb_magic) != XFS_BMAP_MAGIC) {
-+	if (be32_to_cpu(block->bb_magic) != XFS_BMAP_MAGIC &&
-+	    be32_to_cpu(block->bb_magic) != XFS_BMAP_CRC_MAGIC) {
- 		if (!sflag || id->ilist || CHECK_BLIST(bno))
- 			dbprintf(_("bad magic # %#x in inode %lld bmbt block "
- 				 "%u/%u\n"),
-@@ -4028,7 +4147,8 @@ scanfunc_bno(
- 	xfs_agnumber_t		seqno = be32_to_cpu(agf->agf_seqno);
- 	xfs_agblock_t		lastblock;
- 
--	if (be32_to_cpu(block->bb_magic) != XFS_ABTB_MAGIC) {
-+	if (be32_to_cpu(block->bb_magic) != XFS_ABTB_MAGIC &&
-+	    be32_to_cpu(block->bb_magic) != XFS_ABTB_CRC_MAGIC) {
- 		dbprintf(_("bad magic # %#x in btbno block %u/%u\n"),
- 			be32_to_cpu(block->bb_magic), seqno, bno);
- 		serious_error++;
-@@ -4101,7 +4221,8 @@ scanfunc_cnt(
- 	xfs_alloc_rec_t		*rp;
- 	xfs_extlen_t		lastcount;
- 
--	if (be32_to_cpu(block->bb_magic) != XFS_ABTC_MAGIC) {
-+	if (be32_to_cpu(block->bb_magic) != XFS_ABTC_MAGIC &&
-+	    be32_to_cpu(block->bb_magic) != XFS_ABTC_CRC_MAGIC) {
- 		dbprintf(_("bad magic # %#x in btcnt block %u/%u\n"),
- 			be32_to_cpu(block->bb_magic), seqno, bno);
- 		serious_error++;
-@@ -4181,7 +4302,8 @@ scanfunc_ino(
- 	xfs_inobt_ptr_t		*pp;
- 	xfs_inobt_rec_t		*rp;
- 
--	if (be32_to_cpu(block->bb_magic) != XFS_IBT_MAGIC) {
-+	if (be32_to_cpu(block->bb_magic) != XFS_IBT_MAGIC &&
-+	    be32_to_cpu(block->bb_magic) != XFS_IBT_CRC_MAGIC) {
- 		dbprintf(_("bad magic # %#x in inobt block %u/%u\n"),
- 			be32_to_cpu(block->bb_magic), seqno, bno);
- 		serious_error++;
-@@ -4277,6 +4399,79 @@ scanfunc_ino(
- }
- 
- static void
-+scanfunc_fino(
-+	struct xfs_btree_block	*block,
-+	int			level,
-+	xfs_agf_t		*agf,
-+	xfs_agblock_t		bno,
-+	int			isroot)
-+{
-+	xfs_agino_t		agino;
-+	xfs_agnumber_t		seqno = be32_to_cpu(agf->agf_seqno);
-+	int			i;
-+	int			off;
-+	xfs_inobt_ptr_t		*pp;
-+	xfs_inobt_rec_t		*rp;
++while getopts "${GETOPT}" opt; do
++	case "${opt}" in
++	"B")
++		FUZZ_ARGS="-3 -n ${OPTARG}"
++		;;
++	"d")
++		DIR="${OPTARG}"
++		;;
++	"n")
++		PASSES="${OPTARG}"
++		;;
++	"s")
++		SZ="${OPTARG}"
++		;;
++	"O")
++		FEATURES="${OPTARG}"
++		;;
++	"I")
++		INODE_SZ="${OPTARG}"
++		;;
++	"b")
++		BLK_SZ="${OPTARG}"
++		;;
++	"f")
++		RUN_FSCK=0
++		;;
++	"p")
++		OVERRIDE_PATH=0
++		;;
++	"x")
++		MAX_FSCK="${OPTARG}"
++		;;
++	"S")
++		SRCDIR="${OPTARG}"
++		;;
++	*)
++		print_help
++		;;
++	esac
++done
 +
-+	if (be32_to_cpu(block->bb_magic) != XFS_FIBT_MAGIC &&
-+	    be32_to_cpu(block->bb_magic) != XFS_FIBT_CRC_MAGIC) {
-+		dbprintf(_("bad magic # %#x in finobt block %u/%u\n"),
-+			be32_to_cpu(block->bb_magic), seqno, bno);
-+		serious_error++;
-+		return;
-+	}
-+	if (be16_to_cpu(block->bb_level) != level) {
-+		if (!sflag)
-+			dbprintf(_("expected level %d got %d in finobt block "
-+				 "%u/%u\n"),
-+				level, be16_to_cpu(block->bb_level), seqno, bno);
-+		error++;
-+	}
-+	set_dbmap(seqno, bno, 1, DBM_BTFINO, seqno, bno);
-+	if (level == 0) {
-+		if (be16_to_cpu(block->bb_numrecs) > mp->m_inobt_mxr[0] ||
-+		    (isroot == 0 && be16_to_cpu(block->bb_numrecs) < mp->m_inobt_mnr[0])) {
-+			dbprintf(_("bad btree nrecs (%u, min=%u, max=%u) in "
-+				 "finobt block %u/%u\n"),
-+				be16_to_cpu(block->bb_numrecs), mp->m_inobt_mnr[0],
-+				mp->m_inobt_mxr[0], seqno, bno);
-+			serious_error++;
-+			return;
-+		}
-+		rp = XFS_INOBT_REC_ADDR(mp, block, 1);
-+		for (i = 0; i < be16_to_cpu(block->bb_numrecs); i++) {
-+			agino = be32_to_cpu(rp[i].ir_startino);
-+			off = XFS_INO_TO_OFFSET(mp, agino);
-+			if (off == 0) {
-+				if ((sbversion & XFS_SB_VERSION_ALIGNBIT) &&
-+				    mp->m_sb.sb_inoalignmt &&
-+				    (XFS_INO_TO_AGBNO(mp, agino) %
-+				     mp->m_sb.sb_inoalignmt))
-+					sbversion &= ~XFS_SB_VERSION_ALIGNBIT;
-+				check_set_dbmap(seqno, XFS_AGINO_TO_AGBNO(mp, agino),
-+					(xfs_extlen_t)MAX(1,
-+						XFS_INODES_PER_CHUNK >>
-+						mp->m_sb.sb_inopblog),
-+					DBM_INODE, DBM_INODE, seqno, bno);
-+			}
-+		}
-+		return;
-+	}
-+	if (be16_to_cpu(block->bb_numrecs) > mp->m_inobt_mxr[1] ||
-+	    (isroot == 0 && be16_to_cpu(block->bb_numrecs) < mp->m_inobt_mnr[1])) {
-+		dbprintf(_("bad btree nrecs (%u, min=%u, max=%u) in finobt block "
-+			 "%u/%u\n"),
-+			be16_to_cpu(block->bb_numrecs), mp->m_inobt_mnr[1],
-+			mp->m_inobt_mxr[1], seqno, bno);
-+		serious_error++;
-+		return;
-+	}
-+	pp = XFS_INOBT_PTR_ADDR(mp, block, 1, mp->m_inobt_mxr[1]);
-+	for (i = 0; i < be16_to_cpu(block->bb_numrecs); i++)
-+		scan_sbtree(agf, be32_to_cpu(pp[i]), level, 0, scanfunc_ino, TYP_FINOBT);
-+}
++if [ "${OVERRIDE_PATH}" -gt 0 ]; then
++	PATH="${SCRIPT_DIR}:${SCRIPT_DIR}/../repair/:${SCRIPT_DIR}/../db/:${SCRIPT_DIR}/../mkfs/:${PATH}"
++	export PATH
++fi
 +
-+static void
- set_dbmap(
- 	xfs_agnumber_t	agno,
- 	xfs_agblock_t	agbno,
-diff --git a/db/type.c b/db/type.c
-index b29f2a4..0aa3137 100644
---- a/db/type.c
-+++ b/db/type.c
-@@ -70,6 +70,7 @@ static const typ_t	__typtab[] = {
- 	{ TYP_SB, "sb", handle_struct, sb_hfld, NULL },
- 	{ TYP_SYMLINK, "symlink", handle_string, NULL, NULL },
- 	{ TYP_TEXT, "text", handle_text, NULL, NULL },
-+	{ TYP_FINOBT, "finobt", handle_struct, inobt_hfld, NULL },
- 	{ TYP_NONE, NULL }
- };
- 
-@@ -104,6 +105,8 @@ static const typ_t	__typtab_crc[] = {
- 	{ TYP_SYMLINK, "symlink", handle_struct, symlink_crc_hfld,
- 		&xfs_symlink_buf_ops },
- 	{ TYP_TEXT, "text", handle_text, NULL, NULL },
-+	{ TYP_FINOBT, "finobt", handle_struct, inobt_crc_hfld,
-+		&xfs_inobt_buf_ops },
- 	{ TYP_NONE, NULL }
- };
- 
-diff --git a/db/type.h b/db/type.h
-index 3bb26f1..e8d8df7 100644
---- a/db/type.h
-+++ b/db/type.h
-@@ -27,7 +27,7 @@ typedef enum typnm
- 	TYP_BMAPBTD, TYP_BNOBT, TYP_CNTBT, TYP_DATA,
- 	TYP_DIR2, TYP_DQBLK, TYP_INOBT, TYP_INODATA, TYP_INODE,
- 	TYP_LOG, TYP_RTBITMAP, TYP_RTSUMMARY, TYP_SB, TYP_SYMLINK,
--	TYP_TEXT, TYP_NONE
-+	TYP_TEXT, TYP_FINOBT, TYP_NONE
- } typnm_t;
- 
- #define DB_WRITE 1
++TESTDIR="${DIR}/tests/"
++TESTMNT="${DIR}/mnt/"
++BASE_IMG="${DIR}/xfsfuzz.img"
++
++# Set up FS image
++echo "+ create fs image"
++umount "${TESTDIR}"
++umount "${TESTMNT}"
++rm -rf "${TESTDIR}"
++rm -rf "${TESTMNT}"
++mkdir -p "${TESTDIR}"
++mkdir -p "${TESTMNT}"
++rm -rf "${BASE_IMG}"
++truncate -s "${SZ}" "${BASE_IMG}"
++mkfs.xfs -f ${FEATURES} -b "size=${BLK_SZ}" -i "size=${INODE_SZ}" "${BASE_IMG}"
++if [ $? -ne 0 ]; then
++	exit $?
++fi
++
++# Populate FS image
++echo "+ populate fs image"
++modprobe loop
++mount "${BASE_IMG}" "${TESTMNT}" -o loop
++if [ $? -ne 0 ]; then
++	exit $?
++fi
++SRC_SZ="$(du -ks "${SRCDIR}" | awk '{print $1}')"
++FS_SZ="$(( $(stat -f "${TESTMNT}" -c '%a * %S') / 1024 ))"
++NR="$(( (FS_SZ * 6 / 10) / SRC_SZ ))"
++if [ "${NR}" -lt 1 ]; then
++	NR=1
++fi
++echo "+ make ${NR} copies"
++seq 1 "${NR}" | while read nr; do
++	cp -pRdu "${SRCDIR}" "${TESTMNT}/test.${nr}" 2> /dev/null
++done
++umount "${TESTMNT}"
++xfs_repair ${XFS_REPAIR_OPTS} -vn "${BASE_IMG}"
++if [ $? -ne 0 ]; then
++	echo "fsck failed??"
++	exit 1
++fi
++
++# Run tests
++echo "+ run test"
++ret=0
++seq 1 "${PASSES}" | while read pass; do
++	echo "+ pass ${pass}"
++	PASS_IMG="${TESTDIR}/xfsfuzz-${pass}.img"
++	FSCK_IMG="${TESTDIR}/xfsfuzz-${pass}.fsck"
++	FUZZ_LOG="${TESTDIR}/xfsfuzz-${pass}.fuzz.log"
++	OPS_LOG="${TESTDIR}/xfsfuzz-${pass}.ops.log"
++
++	echo "++ copy image"
++	cp "${BASE_IMG}" "${PASS_IMG}"
++	if [ $? -ne 0 ]; then
++		exit $?
++	fi
++	xfs_db -x -c "label xfsfuzz-${pass}" "${PASS_IMG}"
++
++	echo "++ corrupt image"
++	xfs_db -x -c blockget -c "blocktrash ${FUZZ_ARGS}" "${PASS_IMG}" > "${FUZZ_LOG}"
++#	res=$?
++#	if [ "${res}" -ne 0 ]; then
++#		echo "blocktrash returns ${res}"
++#		exit "${res}"
++#	fi
++
++	echo "++ mount image"
++	mount "${PASS_IMG}" "${TESTMNT}" -o loop
++	res=$?
++
++	if [ "${res}" -eq 0 ]; then
++		echo "+++ ls -laR"
++		ls -laR "${TESTMNT}/test.1/" > /dev/null 2> "${OPS_LOG}"
++
++		echo "+++ cat files"
++		find "${TESTMNT}/test.1/" -type f -size -1048576k -print0 | xargs -0 cat > /dev/null 2>> "${OPS_LOG}"
++
++		echo "+++ expand"
++		find "${TESTMNT}/" -type f 2> /dev/null | head -n 50000 | while read f; do
++			attr -l "$f" > /dev/null 2>> "${OPS_LOG}"
++			if [ -f "$f" -a -w "$f" ]; then
++				dd if=/dev/zero bs="${BLK_SZ}" count=1 >> "$f" 2>> "${OPS_LOG}"
++			fi
++			mv "$f" "$f.longer" > /dev/null 2>> "${OPS_LOG}"
++		done
++		sync
++
++		echo "+++ create files"
++		cp -pRdu "${SRCDIR}" "${TESTMNT}/test.moo" 2>> "${OPS_LOG}"
++		sync
++
++		echo "+++ remove files"
++		rm -rf "${TESTMNT}/test.moo" 2>> "${OPS_LOG}"
++
++		umount "${TESTMNT}"
++		res=$?
++		if [ "${res}" -ne 0 ]; then
++			ret=1
++			break
++		fi
++		sync
++	fi
++	if [ "${RUN_FSCK}" -gt 0 ]; then
++		cp "${PASS_IMG}" "${FSCK_IMG}"
++		pass_img_sz="$(stat -c '%s' "${PASS_IMG}")"
++
++		seq 1 "${MAX_FSCK}" | while read fsck_pass; do
++			echo "++ fsck pass ${fsck_pass}: $(which xfs_repair) -v ${FSCK_IMG}"
++			FSCK_LOG="${TESTDIR}/xfsfuzz-${pass}-${fsck_pass}.log"
++			echo "repairing" > "${FSCK_LOG}"
++			xfs_repair ${XFS_REPAIR_OPTS} -v "${FSCK_IMG}" >> "${FSCK_LOG}" 2>&1
++			res=$?
++			if [ "${res}" -eq 0 ]; then
++				echo "reverify" >> "${FSCK_LOG}"
++				xfs_repair ${XFS_REPAIR_OPTS} -v -n "${FSCK_IMG}" >> "${FSCK_LOG}" 2>&1
++				res=$?
++			fi
++			echo "++ fsck returns ${res}"
++			if [ "${res}" -eq 0 ]; then
++				exit 0
++			elif [ "${res}" -eq 2 ]; then
++				# replay log?
++				echo "replaying log" >> "${FSCK_LOG}"
++				dmesg > /tmp/a
++				mount "${FSCK_IMG}" "${TESTMNT}" -o loop
++				res=$?
++				if [ "${res}" -gt 0 ]; then
++					echo "+++ zeroing log"
++					echo "zeroing log" >> "${FSCK_LOG}"
++					xfs_repair ${XFS_REPAIR_OPTS} -L -v "${FSCK_IMG}" >> "${FSCK_LOG}" 2>&1
++				else
++					umount "${TESTMNT}"
++				fi
++				dmesg > /tmp/b
++				diff -u /tmp/a /tmp/b >> "${FSCK_LOG}"
++			elif [ "${fsck_pass}" -eq "${MAX_FSCK}" ]; then
++				echo "++ fsck did not fix in ${MAX_FSCK} passes."
++				exit 1
++			fi
++			if [ "${fsck_pass}" -gt 1 ]; then
++				diff -u "${TESTDIR}/xfsfuzz-${pass}-$((fsck_pass - 1)).log" "${FSCK_LOG}"
++				if [ $? -eq 0 ]; then
++					echo "++ fsck makes no progress"
++					exit 2
++				fi
++			fi
++
++			fsck_img_sz="$(stat -c '%s' "${FSCK_IMG}")"
++			if [ "${fsck_img_sz}" -ne "${pass_img_sz}" ]; then
++				echo "++ fsck image size changed"
++				exit 3
++			fi
++		done
++		fsck_loop_ret=$?
++		if [ "${fsck_loop_ret}" -gt 0 ]; then
++			break;
++		fi
++	fi
++
++	echo "+++ check fs for round 2"
++	FSCK_LOG="${TESTDIR}/xfsfuzz-${pass}-round2.log"
++	xfs_repair ${XFS_REPAIR_OPTS} -v -n "${FSCK_IMG}" > "${FSCK_LOG}" 2>&1
++	res=$?
++	if [ "${res}" -ne 0 ]; then
++		echo "++++ fsck failed."
++		exit 1
++	fi
++
++	echo "++ mount image (2)"
++	mount "${FSCK_IMG}" "${TESTMNT}" -o loop
++	res=$?
++
++	if [ "${res}" -eq 0 ]; then
++		echo "+++ ls -laR (2)"
++		ls -laR "${TESTMNT}/test.1/" > /dev/null 2> "${OPS_LOG}"
++
++		echo "+++ cat files (2)"
++		find "${TESTMNT}/test.1/" -type f -size -1048576k -print0 | xargs -0 cat > /dev/null 2>> "${OPS_LOG}"
++
++		echo "+++ expand (2)"
++		find "${TESTMNT}/" -type f 2> /dev/null | head -n 50000 | while read f; do
++			attr -l "$f" > /dev/null 2>> "${OPS_LOG}"
++			if [ -f "$f" -a -w "$f" ]; then
++				dd if=/dev/zero bs="${BLK_SZ}" count=1 >> "$f" 2>> "${OPS_LOG}"
++			fi
++			mv "$f" "$f.longer" > /dev/null 2>> "${OPS_LOG}"
++		done
++		sync
++
++		echo "+++ create files (2)"
++		cp -pRdu "${SRCDIR}" "${TESTMNT}/test.moo" 2>> "${OPS_LOG}"
++		sync
++
++		echo "+++ remove files (2)"
++		rm -rf "${TESTMNT}/test.moo" 2>> "${OPS_LOG}"
++
++		umount "${TESTMNT}"
++		res=$?
++		if [ "${res}" -ne 0 ]; then
++			ret=1
++			break
++		fi
++		sync
++
++		echo "+++ check fs (2)"
++		xfs_repair ${XFS_REPAIR_OPTS} -v -n "${FSCK_IMG}" >> "${FSCK_LOG}" 2>&1
++		res=$?
++		if [ "${res}" -ne 0 ]; then
++			echo "++++ fsck failed."
++			exit 1
++		fi
++	else
++		echo "++ mount(2) failed with ${res}"
++		exit 1
++	fi
++	rm -rf "${FSCK_IMG}" "${PASS_IMG}" "${FUZZ_LOG}" "${TESTDIR}"/xfsfuzz*.log
++done
++
++exit $ret
 
 _______________________________________________
 xfs mailing list
