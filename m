@@ -1,19 +1,22 @@
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id B04067F50
-	for <xfs@oss.sgi.com>; Wed, 27 May 2015 03:23:21 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 288037F47
+	for <xfs@oss.sgi.com>; Tue, 26 May 2015 05:46:18 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id A1613304032
-	for <xfs@oss.sgi.com>; Wed, 27 May 2015 01:23:18 -0700 (PDT)
-Received: from coro3.isol-servers.net
-	(static-ip-85-25-159-24.inaddr.ip-pool.com [85.25.159.24]) by
-	cuda.sgi.com with ESMTP id 5HM1RGPkaD7LrkLC (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 27 May 2015 01:23:14 -0700 (PDT)
-Subject: Goodbye from our Newsletter
-Date: Wed, 27 May 2015 11:18:07 +0300
-From: "good-news.ml" <admin@good-news.ml>
-Message-ID: <494623350fd77ecb7098e8207c2637cf@good-news.ml>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 09688304077
+	for <xfs@oss.sgi.com>; Tue, 26 May 2015 03:46:14 -0700 (PDT)
+Received: from mail-ig0-f200.google.com (mail-ig0-f200.google.com
+	[209.85.213.200]) by cuda.sgi.com with ESMTP id
+	ROC82I0Ivay6YdJh (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 26 May 2015 02:09:15 -0700 (PDT)
+Received: by igbgg1 with SMTP id gg1so73858766igb.1
+	for <xfs@oss.sgi.com>; Tue, 26 May 2015 02:09:14 -0700 (PDT)
 MIME-Version: 1.0
+Message-ID: <047d7b2e4066fd06680516f87a7e@google.com>
+Date: Tue, 26 May 2015 09:09:14 +0000
+Subject: =?GB2312?B?zeLDs7Tzu7e+s8/Co6zE+ru5xNzWu7XIzeLDs7/Nu6fJzw==?=
+	=?GB2312?B?w8WjrLK7v6rN2NDCzb6+tsLwo78=?=
+From: sugjtos994682@gmail.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,31 +25,117 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============0476512431013422832=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
+--===============0476512431013422832==
+Content-Type: multipart/alternative; boundary=047d7b2e4066ff8f690516f87a32
 
-  
-  Goodbye from our Newsletter, sorry to see you go.
+--047d7b2e4066ff8f690516f87a32
+Content-Type: text/plain; charset=GB2312; format=flowed; delsp=yes
+Content-Transfer-Encoding: base64
 
-  You have been unsubscribed from our newsletters.
+yta5pGdvb2dsZcrVvK+jrMvZtsjC/aOswM+2z8/fo6y63LbgufrE2tDFz6Kju0IyQs7KwcuxqLzb
+yLu689K7yKWyu7i0DQq3taO/DQrI7bz+zai5/cT6tcSy+sa3udi8/LTK1rG90734yOvEv7Hqufq8
+0svRy/fS/cfmt/7O8cb3DQrWsb3Ty9HL98zhyKG1sbXYuavLvs341b66zdPKz+S12Na3o6zN6sir
+xKPE4sT6yta5pLLZ1/ejrM27xsa+q8i3tsihosG/tcQNCsa/vrGjrLDZsbbM4bjfuaTX99CnwsoN
+CrKix9K/ydLU0ru21NK7uPi/zbunt6LLzdPKvP6jrNK7zOyy2df3yrG85LK7s6y5/bDr0KHKsQ0K
+1rvQ6NKqudjXor/Nu6e72Li0vLS/yaOsx+HLydf4z+3Su7bU0ru439bKwb+/zbunoaMNCg0KyOe5
++8T6ttTO0sPHtcSy+sa30tS8sLf+zvG40NDLyKSjrLu2063E+rvYuLTTyrz+u/K8087SUVHP6sy4
+oaMNCg0Kz+rPuMjtvP7Qxc+ix+vXydGvDQoNCtfJ0a9RUTogNTYyNjI0OTIzDQoNCrzTUVG687/J
+1NrP38D708O588u+svrGt7nYvPy0yqOs1rG909Hdyr7L0cv30Ke5+w0KDQoNCg0KDQoNCg0KDQrO
+0tLR0fvH68T6zO7QtLHttaUgzeLDs7Tzu7e+s8/Co6zE+ru5xNzWu7XIzeLDs7/Nu6fJz8PFo6yy
+u7+qzdjQws2+vrYNCsLwo7+hoyDSqszu0LS0y7HttaWjrMfrt8POyqO6DQpodHRwczovL2RvY3Mu
+Z29vZ2xlLmNvbS9mb3Jtcy9kLzE4YjFkWWc5RjFCRkRoQ0VGdFpxUUJOWXU5QkxnZHV2LXRtODVX
+ZDJHQXdnL3ZpZXdmb3JtP2M9MCZ3PTEmdXNwPW1haWxfZm9ybV9saW5rDQo=
+--047d7b2e4066ff8f690516f87a32
+Content-Type: text/html; charset=GB2312
+Content-Transfer-Encoding: base64
 
-  This is the last email you will receive from us. Our newsletter system,
-phpList,
-  will refuse to send you any further messages, without manual intervention
-by our administrator.
+PGh0bWw+PGJvZHkgaXRlbXNjb3BlIGl0ZW10eXBlPSJodHRwOi8vc2NoZW1hLm9yZy9FbWFpbE1l
+c3NhZ2UiIHN0eWxlPSIiPjxkaXYgY2xhc3M9InNzLWVtYWlsLWJvZHkiIHN0eWxlPSJkaXNwbGF5
+OmlubGluZTt3aWR0aDo1NzZweDsiPjxkaXYgaXRlbXByb3A9ImFjdGlvbiIgaXRlbXNjb3BlIGl0
+ZW10eXBlPSJodHRwOi8vc2NoZW1hLm9yZy9WaWV3QWN0aW9uIiBzdHlsZT0iIj48bWV0YSBpdGVt
+cHJvcD0ibmFtZSIgY29udGVudD0izO7QtLHttaUiIHN0eWxlPSIiPgo8bWV0YSBpdGVtcHJvcD0i
+dXJsIiBjb250ZW50PSJodHRwczovL2RvY3MuZ29vZ2xlLmNvbS9mb3Jtcy9kLzE4YjFkWWc5RjFC
+RkRoQ0VGdFpxUUJOWXU5QkxnZHV2LXRtODVXZDJHQXdnL3ZpZXdmb3JtP2M9MCZhbXA7dz0xJmFt
+cDt1c3A9bWFpbF9nb3RvX2Zvcm0iIHN0eWxlPSIiPjwvZGl2Pgo8cCBpdGVtcHJvcD0iZGVzY3Jp
+cHRpb24iIHN0eWxlPSIiPsrWuaRnb29nbGXK1byvo6zL2bbIwv2jrMDPts/P36Osuty24Ln6xNrQ
+xc+io7tCMkLOysHLsai828i7uvPSu8ilsru4tLe1o78gPHA+yO28/s2ouf3E+rXEsvrGt7nYvPy0
+ytaxvdO9+MjrxL+x6rn6vNLL0cv30v3H5rf+zvHG9zxwPtaxvdPL0cv3zOHIobWxtdi5q8u+zfjV
+vrrN08rP5LXY1rejrM3qyKvEo8TixPrK1rmkstnX96OszbvGxr6ryLe2yKGiwb+1xMa/vrGjrLDZ
+sbbM4bjfuaTX99Cnwso8cD6yosfSv8nS1NK7ttTSu7j4v827p7eiy83Tyrz+o6zSu8zsstnX98qx
+vOSyu7Osuf2w69ChyrE8cD7Wu9Do0qq52Neiv827p7vYuLS8tL/Jo6zH4cvJ1/jP7dK7ttTSu7jf
+1srBv7/Nu6ehozxwPjxicj7I57n7xPq21M7Sw8e1xLL6xrfS1Lywt/7O8bjQ0MvIpKOsu7bTrcT6
+u9i4tNPKvP678rzTztJRUc/qzLihozxwPjxicj7P6s+4yO28/tDFz6LH69fJ0a8gICA8YnI+ICA8
+YnI+ICDXydGvUVE6IDU2MjYyNDkyMzxwPiAgICAgICAgICAgICAgICAgICA8YnI+vNNRUbrzv8nU
+2s/fwPvTw7nzy76y+sa3udi8/LTKo6zWsb3T0d3KvsvRy/fQp7n7PC9wPjwvcD48L3A+PC9wPjwv
+cD48L3A+PC9wPjwvcD4KyOe5+8T6zt63qLLpv7S78szhvbu0y7HttaWjrL/J0tQ8YSBocmVmPSJo
+dHRwczovL2RvY3MuZ29vZ2xlLmNvbS9mb3Jtcy9kLzE4YjFkWWc5RjFCRkRoQ0VGdFpxUUJOWXU5
+QkxnZHV2LXRtODVXZDJHQXdnL3ZpZXdmb3JtP2M9MCZhbXA7dz0xJmFtcDt1c3A9bWFpbF9mb3Jt
+X2xpbmsiIHN0eWxlPSIiPtTaIEdvb2dsZSCx7bWl1tDM7tC0PC9hPqGjCjxwPjwvcD4KPGRpdiBk
+aXI9Imx0ciIgc3R5bGU9IiI+PGRpdiBjbGFzcz0iZm9ybS1ib2R5IiBzdHlsZT0iIj48aDEgY2xh
+c3M9InNzLWZvcm0tdGl0bGUiIGRpcj0ibHRyIiBzdHlsZT0ibWFyZ2luOi42N2VtIDA7Ij7N4sOz
+tPO7t76zz8KjrMT6u7nE3Na7tcjN4sOzv827p8nPw8WjrLK7v6rN2NDCzb6+tsLwo788L2gxPjwv
+ZGl2Pgo8ZGl2IHN0eWxlPSJ3aGl0ZS1zcGFjZTogcHJlLXdyYXA7IGRpc3BsYXk6IGlubGluZSI+
+Cgo8L2Rpdj4KPGRpdiBjbGFzcz0iZm9ybS1ib2R5IiBzdHlsZT0iIj48ZGl2IGNsYXNzPSJzcy1m
+b3JtIiBzdHlsZT0iIj48Zm9ybSBhY3Rpb249Imh0dHBzOi8vZG9jcy5nb29nbGUuY29tL2Zvcm1z
+L2QvMThiMWRZZzlGMUJGRGhDRUZ0WnFRQk5ZdTlCTGdkdXYtdG04NVdkMkdBd2cvZm9ybVJlc3Bv
+bnNlIiBtZXRob2Q9IlBPU1QiIGlkPSJzcy1mb3JtIiB0YXJnZXQ9Il9zZWxmIiBvbnN1Ym1pdD0i
+IiBzdHlsZT0iIj48b2wgcm9sZT0ibGlzdCIgY2xhc3M9InNzLXF1ZXN0aW9uLWxpc3QiIHN0eWxl
+PSJwYWRkaW5nLWxlZnQ6IDBsaXN0LXN0eWxlLXR5cGU6bm9uZTsiPgoKPGlucHV0IHR5cGU9Imhp
+ZGRlbiIgbmFtZT0iZHJhZnRSZXNwb25zZSIgdmFsdWU9IlssLCZxdW90Oy04MTg0MTE2OTQ0MTI3
+NjMzNjM4JnF1b3Q7XQoiIHN0eWxlPSIiPgo8aW5wdXQgdHlwZT0iaGlkZGVuIiBuYW1lPSJwYWdl
+SGlzdG9yeSIgdmFsdWU9IjAiIHN0eWxlPSIiPgo8aW5wdXQgdHlwZT0iaGlkZGVuIiBuYW1lPSJ1
+c3AiIHZhbHVlPSJtYWlsX2Zvcm1fc3VibWl0IiBzdHlsZT0iIj4KCjxpbnB1dCB0eXBlPSJoaWRk
+ZW4iIG5hbWU9ImZiengiIHZhbHVlPSItODE4NDExNjk0NDEyNzYzMzYzOCIgc3R5bGU9IiI+Cgo8
+ZGl2IGNsYXNzPSJzcy1pdGVtIHNzLW5hdmlnYXRlIiBzdHlsZT0ibWFyZ2luOjEycHggMDsiPjx0
+YWJsZSBpZD0ibmF2aWdhdGlvbi10YWJsZSIgc3R5bGU9IiI+PHRib2R5Pjx0cj48dGQgY2xhc3M9
+InNzLWZvcm0tZW50cnkgZ29vZy1pbmxpbmUtYmxvY2siIGlkPSJuYXZpZ2F0aW9uLWJ1dHRvbnMi
+IGRpcj0ibHRyIiBzdHlsZT0ibWFyZ2luLWJvdHRvbToxLjVlbTt2ZXJ0aWNhbC1hbGlnbjptaWRk
+bGU7bWFyZ2luLWxlZnQ6MDttYXJnaW4tdG9wOjA7bWF4LXdpZHRoOjEwMCU7cG9zaXRpb246cmVs
+YXRpdmU7ZGlzcGxheTppbmxpbmUtYmxvY2s7Ij4KPGlucHV0IHR5cGU9InN1Ym1pdCIgbmFtZT0i
+c3VibWl0IiB2YWx1ZT0izOG9uyIgaWQ9InNzLXN1Ym1pdCIgY2xhc3M9Impmay1idXR0b24gamZr
+LWJ1dHRvbi1hY3Rpb24gIiBzdHlsZT0iIj4KPC90ZD4KPC90cj48L3Rib2R5PjwvdGFibGU+PC9k
+aXY+PC9vbD48L2Zvcm0+PC9kaXY+CjxkaXYgY2xhc3M9InNzLWZvb3RlciIgc3R5bGU9IiI+PGRp
+diBjbGFzcz0ic3MtYXR0cmlidXRpb24iIHN0eWxlPSIiPjwvZGl2Pgo8ZGl2IGNsYXNzPSJzcy1s
+ZWdhbCIgc3R5bGU9IiI+PGRpdiBjbGFzcz0iZGlzY2xhaW1lci1zZXBhcmF0b3IiIHN0eWxlPSIi
+PjwvZGl2Pgo8ZGl2IGNsYXNzPSJkaXNjbGFpbWVyIiBkaXI9Imx0ciIgc3R5bGU9IiI+PGRpdiBj
+bGFzcz0icG93ZXJlZC1ieS1sb2dvIiBzdHlsZT0ibWFyZ2luLXRvcDoyZW07Ij48c3BhbiBjbGFz
+cz0icG93ZXJlZC1ieS10ZXh0IiBzdHlsZT0iIj68vMr1zOG5qaO6PC9zcGFuPgo8YSBocmVmPSJo
+dHRwczovL3d3dy5nb29nbGUuY29tL2Zvcm1zL2Fib3V0Lz91dG1fc291cmNlPXByb2R1Y3QmYW1w
+O3V0bV9tZWRpdW09Zm9ybXNfbG9nbyZhbXA7dXRtX2NhbXBhaWduPWZvcm1zIiBzdHlsZT0iIj48
+ZGl2IGNsYXNzPSJzcy1sb2dvLWNvbnRhaW5lciIgc3R5bGU9IiI+PGltZyBzcmM9Imh0dHBzOi8v
+c3NsLmdzdGF0aWMuY29tL2RvY3MvZm9ybXMvZm9ybXNfbG9nb19zbWFsbF9kYXJrLnBuZyIgYWx0
+PSJHb29nbGUgse21pSIgc3R5bGU9IiI+PC9kaXY+PC9hPjwvZGl2Pgo8ZGl2IGNsYXNzPSJzcy10
+ZXJtcyIgc3R5bGU9ImNvbG9yOiM3Nzc7Zm9udC1zaXplOjExcHg7bWFyZ2luLXRvcDoxLjVlbTsi
+PjxzcGFuIGNsYXNzPSJkaXNjbGFpbWVyLW1zZyIgc3R5bGU9IiI+tMvE2sjdsrvKx9PJIEdvb2ds
+ZSDL+bS0vaijrEdvb2dsZSCyu7bUxuTX98jOus61o7GjoaM8L3NwYW4+Cjxicj4KPGEgaHJlZj0i
+aHR0cHM6Ly9kb2NzLmdvb2dsZS5jb20vZm9ybXMvZC8xOGIxZFlnOUYxQkZEaENFRnRacVFCTll1
+OUJMZ2R1di10bTg1V2QyR0F3Zy9yZXBvcnRhYnVzZT9zb3VyY2U9aHR0cHM6Ly9kb2NzLmdvb2ds
+ZS5jb20vZm9ybXMvZC8xOGIxZFlnOUYxQkZEaENFRnRacVFCTll1OUJMZ2R1di10bTg1V2QyR0F3
+Zy92aWV3Zm9ybT9zaWQlM0QxNDdlYWRmOTcwOTE1M2M4JTI2YyUzRDAlMjZ3JTNEMSUyNnRva2Vu
+JTNEcHRLeGowMEJBQUEuMFJuUHA5U29oelk4MjUtc0dVRXZBQS5oYVhON0NuNE5MblpyZ1ROdEV6
+dXZnIiBzdHlsZT0iIj6+2bGowMTTw9DQzqo8L2E+Ci0KPGEgaHJlZj0iaHR0cDovL3d3dy5nb29n
+bGUuY29tL2FjY291bnRzL1RPUyIgc3R5bGU9IiI+t/7O8cz1v+48L2E+Ci0KPGEgaHJlZj0iaHR0
+cDovL3d3dy5nb29nbGUuY29tL2dvb2dsZS1kLXMvdGVybXMuaHRtbCIgc3R5bGU9IiI+xuTL+8z1
+v+48L2E+PC9kaXY+PC9kaXY+PC9kaXY+PC9kaXY+CjwvZGl2PjwvZGl2Pgo8YnI+CjxzdHlsZSB0
+eXBlPSJ0ZXh0L2NzcyIgbWVkaWE9InNjcmVlbiIgc3R5bGU9IiI+PC9zdHlsZT48L2Rpdj48L2Jv
+ZHk+PC9odG1sPg==
+--047d7b2e4066ff8f690516f87a32--
 
-  If there is an error in this information, you can re-subscribe:
-  please go to http://good-news.ml/lists/?p=subscribe and follow the steps.
 
-  Thank you
-  
-  
+--===============0476512431013422832==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============0476512431013422832==--
