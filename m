@@ -1,22 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id DBD637F37
-	for <xfs@oss.sgi.com>; Sun, 24 May 2015 07:23:14 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id CC3398F8040
-	for <xfs@oss.sgi.com>; Sun, 24 May 2015 05:23:14 -0700 (PDT)
-Received: from mail-ob0-f178.google.com (mail-ob0-f178.google.com
-	[209.85.214.178]) by cuda.sgi.com with ESMTP id
-	6cXnB4XYwMUc1BVA (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Sun, 24 May 2015 05:23:13 -0700 (PDT)
-Received: by obbea2 with SMTP id ea2so39377262obb.3
-	for <xfs@oss.sgi.com>; Sun, 24 May 2015 05:23:12 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id 7373E7F47
+	for <xfs@oss.sgi.com>; Tue, 26 May 2015 17:51:35 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 4514E8F8084
+	for <xfs@oss.sgi.com>; Tue, 26 May 2015 15:51:35 -0700 (PDT)
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
+	cuda.sgi.com with ESMTP id UBtBEEGG5JhEQesr (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 26 May 2015 15:51:30 -0700 (PDT)
+Subject: [PATCH 0/5] xfsprogs May 2015 patchbomb
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Tue, 26 May 2015 15:51:26 -0700
+Message-ID: <20150526225126.26434.69010.stgit@birch.djwong.org>
 MIME-Version: 1.0
-Date: Sun, 24 May 2015 14:23:12 +0200
-Message-ID: <CA+o=1OXujV+DhfX3fMr9Yyq39JxsoRZo4NNxQpLFjxrc3dcHdQ@mail.gmail.com>
-Subject: [PATCH] xfs: fix kernel version in docs
-From: Fanael Linithien <fanael4@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,45 +26,40 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: david@fromorbit.com, darrick.wong@oracle.com
+Cc: xfs@oss.sgi.com
 
-Linux v3.20 was released as v4.0.
+Hi all,
 
-Signed-off-by: Fanael Linithien <fanael4@gmail.com>
----
- Documentation/filesystems/xfs.txt | 12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
+This is a rollup of various fixes for xfsprogs 3.2.3-rc1.
 
-diff --git a/Documentation/filesystems/xfs.txt
-b/Documentation/filesystems/xfs.txt
-index 5a5a055..8146e9f 100644
---- a/Documentation/filesystems/xfs.txt
-+++ b/Documentation/filesystems/xfs.txt
-@@ -236,10 +236,10 @@ Removed Mount Options
+The first patch makes repair stop when it encounters v5 feature bits
+which it doesn't understand.  Without it, an old xfs_repair will
+trash a filesystem it doesn't know how to fix.
 
-   Name                Removed
-   ----                -------
--  delaylog/nodelaylog        v3.20
--  ihashsize            v3.20
--  irixsgid            v3.20
--  osyncisdsync/osyncisosync    v3.20
-+  delaylog/nodelaylog        v4.0
-+  ihashsize            v4.0
-+  irixsgid            v4.0
-+  osyncisdsync/osyncisosync    v4.0
+The second patch adds to repair some missing metadata back pointer
+checks.
 
+Patch 3 ensures that the .. link in a dir being rebuilt points
+to a sane inode number.
 
- sysctls
-@@ -346,5 +346,5 @@ Removed Sysctls
+Patch 4 implements blockget for v5 filesystems.  This is a second try
+at a previous patch which didn't quite catch all the new magic numbers
+and had some problems iterating directory index data.
 
-   Name                Removed
-   ----                -------
--  fs.xfs.xfsbufd_centisec    v3.20
--  fs.xfs.age_buffer_centisecs    v3.20
-+  fs.xfs.xfsbufd_centisec    v4.0
-+  fs.xfs.age_buffer_centisecs    v4.0
--- 
-2.4.1
+Patch 5 fixes up blocktrash to avoid verifier errors when writing
+deliberately corrupted blocks to disk.  It also adds the xfsfuzz.sh
+script which will create and populate an XFS image, corrupts it,
+then tries to modify/repair/re-modify the image.  I'm not sure this
+is appropriate for xfstests, since runs until the kernel crashes or
+repair fails to repair or the user ^Cs it.
+
+I've tested these xfsprogs changes against the -next branch as of
+5/11.
+
+Comments and questions are, as always, welcome.
+
+--D
 
 _______________________________________________
 xfs mailing list
