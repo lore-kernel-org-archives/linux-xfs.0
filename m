@@ -1,18 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 8A7237F47
-	for <xfs@oss.sgi.com>; Tue, 26 May 2015 17:51:46 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 5C5348F8087
-	for <xfs@oss.sgi.com>; Tue, 26 May 2015 15:51:46 -0700 (PDT)
-Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id H0ZmIqPELwC45e2S (version=TLSv1
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 7464F29E04
+	for <xfs@oss.sgi.com>; Tue, 26 May 2015 17:51:52 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 49CD6304043
+	for <xfs@oss.sgi.com>; Tue, 26 May 2015 15:51:52 -0700 (PDT)
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
+	cuda.sgi.com with ESMTP id 6jNp9H8iWb9b42tz (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 26 May 2015 15:51:44 -0700 (PDT)
-Subject: [PATCH 2/5] xfs_repair: better checking of v5 metadata fields
+	Tue, 26 May 2015 15:51:50 -0700 (PDT)
+Subject: [PATCH 3/5] xfs_repair: ensure .. is set to a sane ino value when
+	rebuilding dir
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Tue, 26 May 2015 15:51:39 -0700
-Message-ID: <20150526225139.26434.37575.stgit@birch.djwong.org>
+Date: Tue, 26 May 2015 15:51:46 -0700
+Message-ID: <20150526225146.26434.98106.stgit@birch.djwong.org>
 In-Reply-To: <20150526225126.26434.69010.stgit@birch.djwong.org>
 References: <20150526225126.26434.69010.stgit@birch.djwong.org>
 MIME-Version: 1.0
@@ -31,270 +32,74 @@ Sender: xfs-bounces@oss.sgi.com
 To: david@fromorbit.com, darrick.wong@oracle.com
 Cc: xfs@oss.sgi.com
 
-Check the UUID, owner, and block number fields during repair, looking for
-blocks that fail either the checksum or the data structure verifiers.  For
-directories we can simply rebuild corrupt/broken index data, though for
-anything else we have to toss out the broken object.
+When we're rebuilding a directory, ensure that we reinitialize the
+directory with a sane parent ('..') inode value.  If we don't, the
+error return from xfs_dir_init() is ignored, and the rebuild process
+becomes confused and leaves the directory corrupt.  If repair later
+discovers that the rebuilt directory is an orphan, it'll try to attach
+it to lost+found and abort on the corrupted directory.  Also fix
+ignoring the return value of xfs_dir_init().
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- repair/dir2.c   |    7 ++
- repair/phase6.c |  159 +++++++++++++++++++++++++++++++++++++++++++++++++++++--
- repair/scan.c   |   17 ++++++
- 3 files changed, 177 insertions(+), 6 deletions(-)
+ include/xfs_dir2.h     |    2 ++
+ libxfs/xfs_dir2_priv.h |    1 -
+ repair/phase6.c        |    9 +++++++--
+ 3 files changed, 9 insertions(+), 3 deletions(-)
 
 
-diff --git a/repair/dir2.c b/repair/dir2.c
-index c6d618d..644c214 100644
---- a/repair/dir2.c
-+++ b/repair/dir2.c
-@@ -198,6 +198,13 @@ _("bad dir magic number 0x%x in inode %" PRIu64 " bno = %u\n"),
- 					da_cursor->ino, bno);
- 			goto error_out;
- 		}
-+		/* corrupt node; rebuild the dir. */
-+		if (bp->b_error == EFSBADCRC || bp->b_error == EFSCORRUPTED) {
-+			do_warn(
-+_("corrupt tree block %u for directory inode %" PRIu64 "\n"),
-+				bno, da_cursor->ino);
-+			goto error_out;
-+		}
- 		btree = xfs_da3_node_tree_p(node);
- 		if (nodehdr.count > mp->m_dir_node_ents)  {
- 			libxfs_putbuf(bp);
+diff --git a/include/xfs_dir2.h b/include/xfs_dir2.h
+index 3900130..2d41c5f 100644
+--- a/include/xfs_dir2.h
++++ b/include/xfs_dir2.h
+@@ -100,6 +100,8 @@ extern void xfs_dir2_data_use_free(struct xfs_trans *tp, struct xfs_buf *bp,
+ extern struct xfs_dir2_data_free *xfs_dir2_data_freefind(
+ 		struct xfs_dir2_data_hdr *hdr, struct xfs_dir2_data_unused *dup);
+ 
++extern int xfs_dir_ino_validate(struct xfs_mount *mp, xfs_ino_t ino);
++
+ extern const struct xfs_buf_ops xfs_dir3_block_buf_ops;
+ extern const struct xfs_buf_ops xfs_dir3_leafn_buf_ops;
+ extern const struct xfs_buf_ops xfs_dir3_leaf1_buf_ops;
+diff --git a/libxfs/xfs_dir2_priv.h b/libxfs/xfs_dir2_priv.h
+index 1bad84c..926715f 100644
+--- a/libxfs/xfs_dir2_priv.h
++++ b/libxfs/xfs_dir2_priv.h
+@@ -21,7 +21,6 @@
+ struct dir_context;
+ 
+ /* xfs_dir2.c */
+-extern int xfs_dir_ino_validate(struct xfs_mount *mp, xfs_ino_t ino);
+ extern int xfs_dir2_grow_inode(struct xfs_da_args *args, int space,
+ 				xfs_dir2_db_t *dbp);
+ extern int xfs_dir_cilookup_result(struct xfs_da_args *args,
 diff --git a/repair/phase6.c b/repair/phase6.c
-index c09b394..efefb2b 100644
+index efefb2b..145e497 100644
 --- a/repair/phase6.c
 +++ b/repair/phase6.c
-@@ -1981,6 +1981,41 @@ longform_dir2_check_leaf(
- 		libxfs_putbuf(bp);
- 		return 1;
- 	}
-+
-+	/* check v5 metadata */
-+	if (leafhdr.magic == XFS_DIR3_LEAF1_MAGIC) {
-+		struct xfs_dir3_leaf_hdr *block3 = bp->b_addr;
-+
-+		/* verify owner */
-+		if (be64_to_cpu(block3->info.owner) != ip->i_ino) {
-+			do_warn(
-+	_("expected owner inode %" PRIu64 ", got %llu, directory block %" PRIu64 "\n"),
-+				ip->i_ino, be64_to_cpu(block3->info.owner),
-+				bp->b_bn);
-+			libxfs_putbuf(bp);
-+			return 1;
-+		}
-+		/* verify block number */
-+		if (be64_to_cpu(block3->info.blkno) != bp->b_bn) {
-+			do_warn(
-+	_("expected block %" PRIu64 ", got %llu, directory inode %" PRIu64 "\n"),
-+				bp->b_bn,
-+				be64_to_cpu(block3->info.blkno),
-+				ip->i_ino);
-+			libxfs_putbuf(bp);
-+			return 1;
-+		}
-+		/* verify uuid */
-+		if (platform_uuid_compare(&block3->info.uuid,
-+					  &mp->m_sb.sb_uuid) != 0) {
-+			do_warn(
-+	_("wrong FS UUID, directory inode %" PRIu64 " block %" PRIu64 "\n"),
-+				ip->i_ino, bp->b_bn);
-+			libxfs_putbuf(bp);
-+			return 1;
-+		}
+@@ -1321,7 +1321,8 @@ longform_dir2_rebuild(
+ 	 * for the libxfs_dir_init() call).
+ 	 */
+ 	pip.i_ino = get_inode_parent(irec, ino_offset);
+-	if (pip.i_ino == NULLFSINO)
++	if (pip.i_ino == NULLFSINO ||
++	    xfs_dir_ino_validate(mp, pip.i_ino))
+ 		pip.i_ino = mp->m_sb.sb_rootino;
+ 
+ 	xfs_bmap_init(&flist, &firstblock);
+@@ -1348,7 +1349,11 @@ longform_dir2_rebuild(
+ 
+ 	ASSERT(done);
+ 
+-	libxfs_dir_init(tp, ip, &pip);
++	error = libxfs_dir_init(tp, ip, &pip);
++	if (error) {
++		do_warn(_("xfs_dir_init failed -- error - %d\n"), error);
++		goto out_bmap_cancel;
 +	}
-+
- 	seeval = dir_hash_see_all(hashtab, ents, leafhdr.count, leafhdr.stale);
- 	if (dir_hash_check(hashtab, ip, seeval)) {
- 		libxfs_putbuf(bp);
-@@ -2055,12 +2090,9 @@ longform_dir2_check_node(
- 		xfs_dir3_leaf_hdr_from_disk(&leafhdr, leaf);
- 		ents = xfs_dir3_leaf_ents_p(leaf);
- 		if (!(leafhdr.magic == XFS_DIR2_LEAFN_MAGIC ||
--		      leafhdr.magic == XFS_DIR3_LEAFN_MAGIC)) {
--			if (leafhdr.magic == XFS_DA_NODE_MAGIC ||
--			    leafhdr.magic == XFS_DA3_NODE_MAGIC) {
--				libxfs_putbuf(bp);
--				continue;
--			}
-+		      leafhdr.magic == XFS_DIR3_LEAFN_MAGIC ||
-+		      leafhdr.magic == XFS_DA_NODE_MAGIC ||
-+		      leafhdr.magic == XFS_DA3_NODE_MAGIC)) {
- 			do_warn(
- 	_("unknown magic number %#x for block %u in directory inode %" PRIu64 "\n"),
- 				leafhdr.magic, da_bno, ip->i_ino);
-@@ -2068,6 +2100,48 @@ longform_dir2_check_node(
- 			return 1;
- 		}
  
-+		/* check v5 metadata */
-+		if (leafhdr.magic == XFS_DIR3_LEAFN_MAGIC ||
-+		    leafhdr.magic == XFS_DA3_NODE_MAGIC) {
-+			struct xfs_da3_blkinfo	*info = bp->b_addr;
-+
-+			/* verify owner */
-+			if (be64_to_cpu(info->owner) != ip->i_ino) {
-+				do_warn(
-+	_("expected owner inode %" PRIu64 ", got %llu, directory block %" PRIu64 "\n"),
-+					ip->i_ino, be64_to_cpu(info->owner),
-+					bp->b_bn);
-+				libxfs_putbuf(bp);
-+				return 1;
-+			}
-+			/* verify block number */
-+			if (be64_to_cpu(info->blkno) != bp->b_bn) {
-+				do_warn(
-+	_("expected block %" PRIu64 ", got %llu, directory inode %" PRIu64 "\n"),
-+					bp->b_bn,
-+					be64_to_cpu(info->blkno),
-+					ip->i_ino);
-+				libxfs_putbuf(bp);
-+				return 1;
-+			}
-+			/* verify uuid */
-+			if (platform_uuid_compare(&info->uuid,
-+						  &mp->m_sb.sb_uuid) != 0) {
-+				do_warn(
-+	_("wrong FS UUID, directory inode %" PRIu64 " block %" PRIu64 "\n"),
-+					ip->i_ino, bp->b_bn);
-+				libxfs_putbuf(bp);
-+				return 1;
-+			}
-+		}
-+
-+		/* ignore nodes */
-+		if (leafhdr.magic == XFS_DA_NODE_MAGIC ||
-+		    leafhdr.magic == XFS_DA3_NODE_MAGIC) {
-+			libxfs_putbuf(bp);
-+			continue;
-+		}
-+
- 		/*
- 		 * If there's a validator error, we need to ensure that we got
- 		 * the right ops on the buffer for when we write it back out.
-@@ -2121,6 +2195,40 @@ longform_dir2_check_node(
- 			libxfs_putbuf(bp);
- 			return 1;
- 		}
-+
-+		/* check v5 metadata */
-+		if (freehdr.magic == XFS_DIR3_FREE_MAGIC) {
-+			struct xfs_dir3_free_hdr *h = bp->b_addr;
-+
-+			/* verify owner */
-+			if (be64_to_cpu(h->hdr.owner) != ip->i_ino) {
-+				do_warn(
-+	_("expected owner inode %" PRIu64 ", got %llu, directory block %" PRIu64 "\n"),
-+					ip->i_ino, be64_to_cpu(h->hdr.owner),
-+					bp->b_bn);
-+				libxfs_putbuf(bp);
-+				return 1;
-+			}
-+			/* verify block number */
-+			if (be64_to_cpu(h->hdr.blkno) != bp->b_bn) {
-+				do_warn(
-+	_("expected block %" PRIu64 ", got %llu, directory inode %" PRIu64 "\n"),
-+					bp->b_bn,
-+					be64_to_cpu(h->hdr.blkno),
-+					ip->i_ino);
-+				libxfs_putbuf(bp);
-+				return 1;
-+			}
-+			/* verify uuid */
-+			if (platform_uuid_compare(&h->hdr.uuid,
-+						  &mp->m_sb.sb_uuid) != 0) {
-+				do_warn(
-+	_("wrong FS UUID, directory inode %" PRIu64 " block %" PRIu64 "\n"),
-+					ip->i_ino, bp->b_bn);
-+				libxfs_putbuf(bp);
-+				return 1;
-+			}
-+		}
- 		for (i = used = 0; i < freehdr.nvalid; i++) {
- 			if (i + freehdr.firstdb >= freetab->nents ||
- 					freetab->ents[i + freehdr.firstdb].v !=
-@@ -2212,6 +2320,7 @@ longform_dir2_entry_check(xfs_mount_t	*mp,
- 	     da_bno = (xfs_dablk_t)next_da_bno) {
- 		const struct xfs_buf_ops *ops;
- 		int			 error;
-+		struct xfs_dir2_data_hdr *d;
+ 	error = libxfs_bmap_finish(&tp, &flist, &committed);
  
- 		next_da_bno = da_bno + mp->m_dirblkfsbs - 1;
- 		if (bmap_next_offset(NULL, ip, &next_da_bno, XFS_DATA_FORK)) {
-@@ -2260,6 +2369,44 @@ longform_dir2_entry_check(xfs_mount_t	*mp,
- 			}
- 			continue;
- 		}
-+
-+		/* check v5 metadata */
-+		d = bplist[db]->b_addr;
-+		if (be32_to_cpu(d->magic) == XFS_DIR3_BLOCK_MAGIC ||
-+		    be32_to_cpu(d->magic) == XFS_DIR3_DATA_MAGIC) {
-+			struct xfs_buf		 *bp = bplist[db];
-+			struct xfs_dir3_data_hdr *block3 = bp->b_addr;
-+
-+			/* verify owner */
-+			if (be64_to_cpu(block3->hdr.owner) != ino) {
-+				do_warn(
-+	_("expected owner inode %" PRIu64 ", got %llu, directory block %" PRIu64 "\n"),
-+					ino, be64_to_cpu(block3->hdr.owner),
-+					bp->b_bn);
-+				fixit++;
-+				continue;
-+			}
-+			/* verify block number */
-+			if (be64_to_cpu(block3->hdr.blkno) != bp->b_bn) {
-+				do_warn(
-+	_("expected block %" PRIu64 ", got %llu, directory inode %" PRIu64 "\n"),
-+					bp->b_bn,
-+					be64_to_cpu(block3->hdr.blkno),
-+					ino);
-+				fixit++;
-+				continue;
-+			}
-+			/* verify uuid */
-+			if (platform_uuid_compare(&block3->hdr.uuid,
-+						  &mp->m_sb.sb_uuid) != 0) {
-+				do_warn(
-+	_("wrong FS UUID, directory inode %" PRIu64 " block %" PRIu64 "\n"),
-+					ino, bp->b_bn);
-+				fixit++;
-+				continue;
-+			}
-+		}
-+
- 		longform_dir2_entry_check_data(mp, ip, num_illegal, need_dot,
- 				irec, ino_offset, &bplist[db], hashtab,
- 				&freetab, da_bno, isblock);
-diff --git a/repair/scan.c b/repair/scan.c
-index 12aa782..79fbf83 100644
---- a/repair/scan.c
-+++ b/repair/scan.c
-@@ -227,6 +227,23 @@ _("expected owner inode %" PRIu64 ", got %llu, bmbt block %" PRIu64 "\n"),
- 				ino, be64_to_cpu(block->bb_u.l.bb_owner), bno);
- 			return(1);
- 		}
-+		/* verify block number */
-+		if (be64_to_cpu(block->bb_u.l.bb_blkno) !=
-+		    XFS_FSB_TO_DADDR(mp, bno)) {
-+			do_warn(
-+_("expected block %" PRIu64 ", got %llu, bmbt block %" PRIu64 "\n"),
-+				XFS_FSB_TO_DADDR(mp, bno),
-+				be64_to_cpu(block->bb_u.l.bb_blkno), bno);
-+			return(1);
-+		}
-+		/* verify uuid */
-+		if (platform_uuid_compare(&block->bb_u.l.bb_uuid,
-+					  &mp->m_sb.sb_uuid) != 0) {
-+			do_warn(
-+_("wrong FS UUID, bmbt block %" PRIu64 "\n"),
-+				bno);
-+			return(1);
-+		}
- 	}
- 
- 	if (check_dups == 0)  {
 
 _______________________________________________
 xfs mailing list
