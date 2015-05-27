@@ -1,25 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id D192A7F47
-	for <xfs@oss.sgi.com>; Tue, 26 May 2015 19:46:13 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id B76107F47
+	for <xfs@oss.sgi.com>; Tue, 26 May 2015 20:56:10 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id BDCB18F8070
-	for <xfs@oss.sgi.com>; Tue, 26 May 2015 17:46:13 -0700 (PDT)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 8B7848F8033
+	for <xfs@oss.sgi.com>; Tue, 26 May 2015 18:56:10 -0700 (PDT)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	eocyNJDsp5a9SCXK for <xfs@oss.sgi.com>;
-	Tue, 26 May 2015 17:46:10 -0700 (PDT)
-Date: Wed, 27 May 2015 10:46:08 +1000
+	0HpJRMB4fOCWV4WH for <xfs@oss.sgi.com>;
+	Tue, 26 May 2015 18:56:08 -0700 (PDT)
+Received: from dave by dastard with local (Exim 4.80)
+	(envelope-from <david@fromorbit.com>) id 1YxQZh-0001XP-OZ
+	for xfs@oss.sgi.com; Wed, 27 May 2015 11:56:05 +1000
+Date: Wed, 27 May 2015 11:56:05 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 4/5] xfs: saner xfs_trans_commit interface
-Message-ID: <20150527004608.GY15721@dastard>
-References: <1431285519-7768-1-git-send-email-hch@lst.de>
-	<1431285519-7768-4-git-send-email-hch@lst.de>
-	<20150511203237.GA59885@bfoster.bfoster>
-	<20150512063632.GA25562@lst.de>
+Subject: Re: [PATCH v3] xfs: extent size hints can round up extents past
+	MAXEXTLEN
+Message-ID: <20150527015605.GZ15721@dastard>
+References: <1432686984-15195-1-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20150512063632.GA25562@lst.de>
+In-Reply-To: <1432686984-15195-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,30 +33,22 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@lst.de>
-Cc: Brian Foster <bfoster@redhat.com>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Tue, May 12, 2015 at 08:36:32AM +0200, Christoph Hellwig wrote:
-> On Mon, May 11, 2015 at 04:32:37PM -0400, Brian Foster wrote:
-> > >  	xfs_trans_unreserve_and_mod_dquots(tp);
-> > >  	if (tp->t_ticket) {
-> > > +		int			log_flags = 0;
-> > > +
-> > > +		if (regrant) {
-> > > +			ASSERT(tp->t_flags & XFS_TRANS_PERM_LOG_RES);
-> > > +			log_flags = XFS_LOG_REL_PERM_RESERV;
-> > > +		}
-> > 
-> > Is the regrant logic here and in xfs_log_commit_cil() backwards or am I
-> > misreading?
+On Wed, May 27, 2015 at 10:36:24AM +1000, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
 > 
-> Yes, it's actually wrong, but fixed up by the next patch.
-> 
-> I'll wait for more review feedback and will resend a fixed version.
+> This results in BMBT corruption, as seen by this test:
+....
+> -	if ((temp = (align_alen % extsz))) {
+> -		align_alen += extsz - temp;
+> -	}
+> +	while (align_alen > MAXEXTLEN)
+> +		align_alen -= extsz;
+> +	ASSERT(align_alen <= MAXEXTLEN);
 
-Apart from this I can't see anything obviously wrong with this
-cleanup, so if you coul dpost a fixed up version that would be
-great!
+FYI, this bit is the only difference in this version - it fixes the
+test case that Brian pointed out that still didn't work properly.
 
 Cheers,
 
