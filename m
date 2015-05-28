@@ -1,28 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 7904B7F4E
-	for <xfs@oss.sgi.com>; Thu, 28 May 2015 13:09:07 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 02FA17F4E
+	for <xfs@oss.sgi.com>; Thu, 28 May 2015 15:17:00 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id B938EAC002
-	for <xfs@oss.sgi.com>; Thu, 28 May 2015 11:09:03 -0700 (PDT)
-Received: from mail-wi0-f173.google.com (mail-wi0-f173.google.com
-	[209.85.212.173]) by cuda.sgi.com with ESMTP id
-	vaZwzezczWZPTUvw (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 28 May 2015 11:09:00 -0700 (PDT)
-Received: by wifw1 with SMTP id w1so72547079wif.0
-	for <xfs@oss.sgi.com>; Thu, 28 May 2015 11:09:00 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <54A83597-7AE8-4846-944F-EEE7E2AD8B3C@sandeen.net>
-References: <CABppvi4FZKTsu22uk6nOSaShJOUyWg7cO6h-i4YekF4MLKH8RQ@mail.gmail.com>
-	<8BF495B8-F444-415A-B7BF-5E1961C75817@sandeen.net>
-	<CABppvi5ODWyjMw0pouAQ__SQ-aGb48PEyTCPU7Dt65Z1DhKmVA@mail.gmail.com>
-	<556666B2.8060301@sandeen.net>
-	<54A83597-7AE8-4846-944F-EEE7E2AD8B3C@sandeen.net>
-Date: Thu, 28 May 2015 11:08:59 -0700
-Message-ID: <CABppvi58MHbtmhx226yM+e1ntR+bPvLqk6h80guW=2cimCzSxg@mail.gmail.com>
-Subject: Re: XFS crashes on VMs
-From: Shrinand Javadekar <shrinand@maginatics.com>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id D77B28F807A
+	for <xfs@oss.sgi.com>; Thu, 28 May 2015 13:16:59 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id cO0KLn9hKGPA3vut (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 28 May 2015 13:16:59 -0700 (PDT)
+Received: from int-mx10.intmail.prod.int.phx2.redhat.com
+	(int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
+	by mx1.redhat.com (Postfix) with ESMTPS id 4B2C9365078
+	for <xfs@oss.sgi.com>; Thu, 28 May 2015 20:16:58 +0000 (UTC)
+Received: from bfoster.bfoster (dhcp-41-237.bos.redhat.com [10.18.41.237])
+	by int-mx10.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id t4SKGvlj007060
+	for <xfs@oss.sgi.com>; Thu, 28 May 2015 16:16:58 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: [PATCH 0/3] xfs: support removal of multi-record inode chunks
+Date: Thu, 28 May 2015 16:16:53 -0400
+Message-Id: <1432844216-5820-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,73 +29,58 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
-V2UnbGwgdHJ5IGFuZCByZXByb2R1Y2UgdGhpcyBhbmQgY2FwdHVyZSB0aGUgb3V0cHV0IG9mIHhm
-c19yZXBhaXIgd2hlbgppdCBoYXBwZW5zIG5leHQuIFdpbGwga2VlcCBhbiBleWUgb24gd2hhdCBl
-bHNlIHdhcyBoYXBwZW5pbmcgaW4gdGhlCmluZnJhc3RydWN0dXJlIHdoZW4gaXQgaGFwcGVucy4K
-CkZXSVcsIHdlJ3ZlIHNlZW4gdGhpcyBpbiBsb2NhbCBWTXdhcmUgZW52aXJvbm1lbnQgYXMgd2Vs
-bCBhcyB3aGVuIHdlCndlcmUgcnVubmluZyBvbiBBbWF6b24gRUMyIGluc3RhbmNlcy4gU28gaXQg
-ZG9lc24ndCBzZWVtIGh5cGVydmlzb3IKc3BlY2lmaWMuCgpPbiBXZWQsIE1heSAyNywgMjAxNSBh
-dCA1OjUzIFBNLCBFcmljIFNhbmRlZW4gPHNhbmRlZW5Ac2FuZGVlbi5uZXQ+IHdyb3RlOgo+IEFu
-ZCBkaWQgYW55dGhpbmcgZWxzZSAiaW50ZXJlc3RpbmciIGhhcHBlbiBwcmlvciB0byB0aGUgZGV0
-ZWN0aW9uPwo+Cj4+IE9uIE1heSAyNywgMjAxNSwgYXQgNzo1MiBQTSwgRXJpYyBTYW5kZWVuIDxz
-YW5kZWVuQHNhbmRlZW4ubmV0PiB3cm90ZToKPj4KPj4gWW91J2xsIG5lZWQgdG8gdHJ5IHRvIG5h
-cnJvdyBkb3duIGhvdyBpdCBoYXBwZW5lZC4KPj4KPj4gVGhlIGhleGR1bXBzIGluIHRoZSBsb2dz
-IHNob3cgd2hhdCBkYXRhIHdhcyBpbiB0aGUgYnVmZmVyOyBpbiBvbmUgY2FzZSBpdCB3YXMgYXNj
-aWksIGFuZCB3YXMgZGVmaW5pdGVseSBub3QgeGZzIG1ldGFkYXRhLgo+Pgo+PiBFaXRoZXI6Cj4+
-Cj4+IGEpIHhmcyB3cm90ZSB0aGUgd3JvbmcgbWV0YWRhdGEgLSBhbG1vc3QgaW1wb3NzaWJsZSwg
-YmVjYXVzZSB3ZSB2ZXJpZnkgdGhlIGRhdGEgb24gd3JpdGUgaW4gdGhlIHNhbWUgd2F5IGFzIHdl
-IGRvIG9uIHJlYWQKPj4KPj4gYikgeGZzIHJlYWQgdGhlIHdyb25nIGJsb2NrIGR1ZSB0byBvdGhl
-ciBtZXRhZGF0YSBjb3JydXB0aW9uLgo+Pgo+PiBjKSBzb21ldGhpbmcgY29ycnVwdGVkIHRoZSBz
-dG9yYWdlIGFmdGVyIGl0IHdhcyB3cml0dGVuCj4+Cj4+IGQpIHRoZSBzdG9yYWdlIHJldHVybmVk
-IHRoZSB3cm9uZyBkYXRhIG9uIGEgcmVhZCByZXF1ZXN0IC4uLgo+Pgo+PiBlKSA/Pz8KPj4KPj4g
-RGlkIHlvdSBzYXZlIHRoZSB4ZnNfcmVwYWlyIG91dHB1dD8gIFRoYXQgbWlnaHQgb2ZmZXIgbW9y
-ZSBjbHVlcy4KPj4KPj4gVW5sZXNzIHlvdSBjYW4gcmVwcm9kdWNlIGl0LCBpdCdsbCBiZSBoYXJk
-IHRvIGNvbWUgdXAgd2l0aCBhIGRlZmluaXRpdmUgcm9vdCBjYXVzZS4uLiBjYW4geW91IHRyeT8K
-Pj4KPj4gLUVyaWMKPj4KPj4KPj4+IE9uIDUvMjcvMTUgNzowMyBQTSwgU2hyaW5hbmQgSmF2YWRl
-a2FyIHdyb3RlOgo+Pj4gVGhhbmtzIEVyaWMsCj4+Pgo+Pj4gV2UgcmFuIHhmc19yZXBhaXIgYW5k
-IHdlcmUgYWJsZSB0byBnZXQgaXQgYmFjayBpbnRvIGEgcnVubmluZyBzdGF0ZS4KPj4+IFRoaXMg
-aXMgZmluZSBmb3IgYSB0ZXN0ICYgZGV2IGJ1dCBpbiBwcm9kdWN0aW9uIGl0IHdvbid0IGJlCj4+
-PiBhY2NlcHRhYmxlLiBXaGF0IG90aGVyIGRhdGEgZG8gd2UgbmVlZCB0byBnZXQgdG8gdGhlIGJv
-dHRvbSBvZiB0aGlzPwo+Pj4KPj4+PiBPbiBXZWQsIE1heSAyNywgMjAxNSBhdCA0OjI3IFBNLCBF
-cmljIFNhbmRlZW4gPHNhbmRlZW5Ac2FuZGVlbi5uZXQ+IHdyb3RlOgo+Pj4+IFRoYXQncyBub3Qg
-YSBjcmFzaC4gVGhhdCBpcyB4ZnMgZGV0ZWN0aW5nIG9uIGRpc2sgY29ycnVwdGlvbiB3aGljaCBs
-aWtlbHkgaGFwcGVuZWQgYXQgc29tZSB0aW1lIHByaW9yLiBZb3Ugc2hvdWxkIHVubW91bnQgYW5k
-IHJ1biB4ZnNfcmVwYWlyLCBwb3NzaWJseSB3aXRoIOKAk24gZmlyc3QgaWYgeW91IHdvdWxkIGxp
-a2UgdG8gZG8gYSBkcnkgcnVuIHRvIHNlZSB3aGF0IGl0IG1pZ2h0IGRvLiAgSWYgeW91IGdldCBm
-cmVzaCBjb3JydXB0aW9uIGFmdGVyIGEgZnVsbCByZXBhaXIsIHRoZW4gdGhhdCBiZWNvbWVzIG1v
-cmUgaW50ZXJlc3RpbmcuIEl0J3MgcG9zc2libGUgdGhhdCB5b3UgaGF2ZSBhIHByb2JsZW0gd2l0
-aCB0aGUgdW5kZXJseWluZyBibG9jayBsYXllciBvciBpdCdzIHBvc3NpYmxlIHRoYXQgaXQgaXMg
-YW4geGZzIGJ1ZyAtICBidXQgSSB0aGluayB0aGlzIGlzIG5vdCBzb21ldGhpbmcgdGhhdCB3ZSBo
-YXZlIHNlZW4gYmVmb3JlLgo+Pj4+Cj4+Pj4gRXJpYwo+Pj4+Cj4+Pj4+IE9uIE1heSAyNywgMjAx
-NSwgYXQgNjowNiBQTSwgU2hyaW5hbmQgSmF2YWRla2FyIDxzaHJpbmFuZEBtYWdpbmF0aWNzLmNv
-bT4gd3JvdGU6Cj4+Pj4+Cj4+Pj4+IEhpLAo+Pj4+Pgo+Pj4+PiBJIGFtIHJ1bm5pbmcgT3BlbnN0
-YWNrIFN3aWZ0IGluIGEgVk0gd2l0aCBYRlMgYXMgdGhlIHVuZGVybHlpbmcKPj4+Pj4gZmlsZXN5
-c3RlbS4gVGhpcyBpcyBnZW5lcmF0aW5nIGEgbWV0YWRhdGEgaGVhdnkgd29ya2xvYWQgb24gWEZT
-Lgo+Pj4+PiBFc3NlbnRpYWxseSwgaXQgaXMgY3JlYXRpbmcgYSBuZXcgZGlyZWN0b3J5IGFuZCBh
-IG5ldyBmaWxlICgyNTZLQikgaW4KPj4+Pj4gdGhhdCBkaXJlY3RvcnkuIFRoaXMgZmlsZSBoYXMg
-ZXh0ZW5kZWQgYXR0cmlidXRlcyBvZiBzaXplIDI0MyBieXRlcy4KPj4+Pj4KPj4+Pj4gSSBhbSBz
-ZWVpbmcgdGhlIGZvbGxvd2luZyB0d28gY3Jhc2hlcyBvZiB0aGUgbWFjaGluZToKPj4+Pj4KPj4+
-Pj4gaHR0cDovL3Bhc3RpZS5vcmcvcGFzdGVzLzEwMjEwOTc0L3RleHQ/a2V5PXhkbWZ2YW9jdmF3
-bnlmbWtiMDZ6Zwo+Pj4+Pgo+Pj4+PiBBTkQKPj4+Pj4KPj4+Pj4gaHR0cDovL3Bhc3RpZS5vcmcv
-cGFzdGVzLzEwMjEwOTc1L3RleHQ/a2V5PXJraWxqc2RhdWNyazdmcnByemdxcQo+Pj4+Pgo+Pj4+
-PiBJIGhhdmUgb25seSBzZWVuIHRoZXNlIHdoZW4gcnVubmluZyBpbiBhIFZNLiBXZSBoYXZlIHJ1
-biBzZXZlcmFsIHRlc3RzCj4+Pj4+IG9uIHBoeXNpY2FsIHNlcnZlciBidXQgaGF2ZSBuZXZlciBz
-ZWVuIHRoZXNlIHByb2JsZW1zLgo+Pj4+Pgo+Pj4+PiBBcmUgdGhlcmUgYW55IGtub3duIGlzc3Vl
-cyB3aXRoIFhGUyBydW5uaW5nIG9uIFZNcz8KPj4+Pj4KPj4+Pj4gVGhhbmtzIGluIGFkdmFuY2Uu
-Cj4+Pj4+IC1TaHJpCj4+Pj4+Cj4+Pj4+IF9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fCj4+Pj4+IHhmcyBtYWlsaW5nIGxpc3QKPj4+Pj4geGZzQG9zcy5zZ2ku
-Y29tCj4+Pj4+IGh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo+Pj4KPj4+
-IF9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCj4+PiB4ZnMg
-bWFpbGluZyBsaXN0Cj4+PiB4ZnNAb3NzLnNnaS5jb20KPj4+IGh0dHA6Ly9vc3Muc2dpLmNvbS9t
-YWlsbWFuL2xpc3RpbmZvL3hmcwo+Pgo+PiBfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fXwo+PiB4ZnMgbWFpbGluZyBsaXN0Cj4+IHhmc0Bvc3Muc2dpLmNvbQo+
-PiBodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMKCl9fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9z
-cy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
+Hi all,
+
+I had recently started prototyping a mechanism to do inode preallocation
+and deferred removal and one of my goals for that work was to also
+handle the existing problem where inode chunks are never removed on
+filesystems with large block sizes. While hashing the prealloc work out,
+it became apparent that the large block size problem could stand on its
+own. 
+
+The problem is that for fs' where the number of inodes per block is
+larger than 64 (e.g., -bsize=64k -isize=512b), a single inode chunk
+requires more than one inobt record. For such fs', we don't currently
+have enough context on inode removal to determine whether records other
+than those for the particular inode can be removed. As such, inode
+chunks are never freed. This series aims to provide enough context so
+that inode records can be removed once the entire chunk is free.
+
+Patch 1 introduces a new multi-record deletion helper but does not
+change existing behavior. Patch 2 is the bulk of the enhancement. In a
+nutshell, it provides a mechanism to determine whether an inode chunk
+that spans one or more inobt records is completely free and to remove
+the entire chunk if so. Patch 3 introduces some inobt record management
+tracepoints.
+
+So far this has seen medium testing on ppc64 with various block sizes up
+to 64k (single and multiple inobt record per chunk configurations).
+Thoughts, reviews, flames appreciated.
+
+Brian
+
+P.S., Note that this series applies on top of the sparse inode series.
+
+Brian Foster (3):
+  xfs: create helper to delete multiple inobt records
+  xfs: remove entire inode chunks when all inodes are free
+  xfs: inobt record insert/delete tracepoints
+
+ fs/xfs/libxfs/xfs_ialloc.c | 270 +++++++++++++++++++++++++++++++++++++++++----
+ fs/xfs/xfs_trace.h         |  32 ++++++
+ 2 files changed, 281 insertions(+), 21 deletions(-)
+
+-- 
+1.9.3
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
