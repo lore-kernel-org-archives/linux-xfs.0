@@ -1,21 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 8F84E7F4E
-	for <xfs@oss.sgi.com>; Thu, 28 May 2015 09:55:14 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 7904B7F4E
+	for <xfs@oss.sgi.com>; Thu, 28 May 2015 13:09:07 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 0BD10AC002
-	for <xfs@oss.sgi.com>; Thu, 28 May 2015 07:55:10 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id AnhNAz5FHXOXVVCZ for <xfs@oss.sgi.com>;
-	Thu, 28 May 2015 07:55:06 -0700 (PDT)
-Message-ID: <55672C4C.2010805@sandeen.net>
-Date: Thu, 28 May 2015 09:55:08 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id B938EAC002
+	for <xfs@oss.sgi.com>; Thu, 28 May 2015 11:09:03 -0700 (PDT)
+Received: from mail-wi0-f173.google.com (mail-wi0-f173.google.com
+	[209.85.212.173]) by cuda.sgi.com with ESMTP id
+	vaZwzezczWZPTUvw (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 28 May 2015 11:09:00 -0700 (PDT)
+Received: by wifw1 with SMTP id w1so72547079wif.0
+	for <xfs@oss.sgi.com>; Thu, 28 May 2015 11:09:00 -0700 (PDT)
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfsprogs: merge the duplicated condition in
-	xfs_mkfs.c/validate_ag_geometry
-References: <1432796808-862-1-git-send-email-shhuiw@foxmail.com>
-In-Reply-To: <1432796808-862-1-git-send-email-shhuiw@foxmail.com>
+In-Reply-To: <54A83597-7AE8-4846-944F-EEE7E2AD8B3C@sandeen.net>
+References: <CABppvi4FZKTsu22uk6nOSaShJOUyWg7cO6h-i4YekF4MLKH8RQ@mail.gmail.com>
+	<8BF495B8-F444-415A-B7BF-5E1961C75817@sandeen.net>
+	<CABppvi5ODWyjMw0pouAQ__SQ-aGb48PEyTCPU7Dt65Z1DhKmVA@mail.gmail.com>
+	<556666B2.8060301@sandeen.net>
+	<54A83597-7AE8-4846-944F-EEE7E2AD8B3C@sandeen.net>
+Date: Thu, 28 May 2015 11:08:59 -0700
+Message-ID: <CABppvi58MHbtmhx226yM+e1ntR+bPvLqk6h80guW=2cimCzSxg@mail.gmail.com>
+Subject: Re: XFS crashes on VMs
+From: Shrinand Javadekar <shrinand@maginatics.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,138 +31,73 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Wang Sheng-Hui <shhuiw@foxmail.com>, xfs@oss.sgi.com, dchinner@redhat.com, david@fromorbit.com, bfoster@redhat.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-On 5/28/15 2:06 AM, Wang Sheng-Hui wrote:
-> Some conditions are duplicated. Merge them.
-
-While you are correct that they are duplicated, simply combining
-them doesn't mkae a lot of sense; now we'll get this sort of
-error message:
-
-> agsize (%lld blocks) too small, need at least %lld blocks
-> too many allocation groups for size = %lld
-> need at most %lld allocation groups
-
-and what should a user do with that information?  It's somewhat
-nonsensical.
-
-The code as it is today, and as it has been since commit
-1f1b8be7926480046ead7b98c9850ace7bcd82a3, doesn't make much sense,
-because we can never hit the second conditional.  But simply
-combining them doesn't look like the right answer to me.
-
-If you look at the above commit, what it used to do was something
-like:
-
--               /*
--                * If the specified agsize is too small, or too large,
--                * complain.
--                */
--               if (agsize < XFS_AG_MIN_BLOCKS(blocklog)) {
--                       fprintf(stderr,
--               _("agsize (%lldb) too small, need at least %lld blocks\n"),
--                               (long long)agsize,
--                               (long long)XFS_AG_MIN_BLOCKS(blocklog));
--                       usage();
--               }
-
-<snip>
-
--       /*
--        * If the ag size is too small, complain if agcount/agsize was
--        * specified, and fix it otherwise.
--        */
--       if (agsize < XFS_AG_MIN_BLOCKS(blocklog)) {
--               if (daflag || dasize) {
--                       fprintf(stderr,
--                       _("too many allocation groups for size = %lld\n"),
--                               (long long)agsize);
--                       fprintf(stderr,
--                               _("need at most %lld allocation groups\n"),
--                               (long long)
--                               (dblocks / XFS_AG_MIN_BLOCKS(blocklog) +
--                               (dblocks % XFS_AG_MIN_BLOCKS(blocklog) != 0)));
-
-...
-
-I *think* the intent was to use different messages based on what
-was specified by the user; i.e. if agsize was specified, and is too
-small, then say:
-
-> agsize (%lld blocks) too small, need at least %lld blocks
-
-but if agcount was specified, and was too large, then say:
-
-> too many allocation groups for size = %lld
-> need at most %lld allocation groups
-
-but combining those two messages doesn't make sense to me.
-
--Eric
-
-
-> Signed-off-by: Wang Sheng-Hui <shhuiw@foxmail.com>
-> ---
->  mkfs/xfs_mkfs.c | 24 ++++++++----------------
->  1 file changed, 8 insertions(+), 16 deletions(-)
-> 
-> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-> index e2a052d..7ec2556 100644
-> --- a/mkfs/xfs_mkfs.c
-> +++ b/mkfs/xfs_mkfs.c
-> @@ -740,22 +740,6 @@ validate_ag_geometry(
->  	__uint64_t	agsize,
->  	__uint64_t	agcount)
->  {
-> -	if (agsize < XFS_AG_MIN_BLOCKS(blocklog)) {
-> -		fprintf(stderr,
-> -	_("agsize (%lld blocks) too small, need at least %lld blocks\n"),
-> -			(long long)agsize,
-> -			(long long)XFS_AG_MIN_BLOCKS(blocklog));
-> -		usage();
-> -	}
-> -
-> -	if (agsize > XFS_AG_MAX_BLOCKS(blocklog)) {
-> -		fprintf(stderr,
-> -	_("agsize (%lld blocks) too big, maximum is %lld blocks\n"),
-> -			(long long)agsize,
-> -			(long long)XFS_AG_MAX_BLOCKS(blocklog));
-> -		usage();
-> -	}
-> -
->  	if (agsize > dblocks) {
->  		fprintf(stderr,
->  	_("agsize (%lld blocks) too big, data area is %lld blocks\n"),
-> @@ -765,6 +749,10 @@ validate_ag_geometry(
->  
->  	if (agsize < XFS_AG_MIN_BLOCKS(blocklog)) {
->  		fprintf(stderr,
-> +	_("agsize (%lld blocks) too small, need at least %lld blocks\n"),
-> +			(long long)agsize,
-> +			(long long)XFS_AG_MIN_BLOCKS(blocklog));
-> +		fprintf(stderr,
->  	_("too many allocation groups for size = %lld\n"),
->  				(long long)agsize);
->  		fprintf(stderr, _("need at most %lld allocation groups\n"),
-> @@ -775,6 +763,10 @@ validate_ag_geometry(
->  
->  	if (agsize > XFS_AG_MAX_BLOCKS(blocklog)) {
->  		fprintf(stderr,
-> +	_("agsize (%lld blocks) too big, maximum is %lld blocks\n"),
-> +			(long long)agsize,
-> +			(long long)XFS_AG_MAX_BLOCKS(blocklog));
-> +		fprintf(stderr,
->  	_("too few allocation groups for size = %lld\n"), (long long)agsize);
->  		fprintf(stderr,
->  	_("need at least %lld allocation groups\n"),
-> 
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+V2UnbGwgdHJ5IGFuZCByZXByb2R1Y2UgdGhpcyBhbmQgY2FwdHVyZSB0aGUgb3V0cHV0IG9mIHhm
+c19yZXBhaXIgd2hlbgppdCBoYXBwZW5zIG5leHQuIFdpbGwga2VlcCBhbiBleWUgb24gd2hhdCBl
+bHNlIHdhcyBoYXBwZW5pbmcgaW4gdGhlCmluZnJhc3RydWN0dXJlIHdoZW4gaXQgaGFwcGVucy4K
+CkZXSVcsIHdlJ3ZlIHNlZW4gdGhpcyBpbiBsb2NhbCBWTXdhcmUgZW52aXJvbm1lbnQgYXMgd2Vs
+bCBhcyB3aGVuIHdlCndlcmUgcnVubmluZyBvbiBBbWF6b24gRUMyIGluc3RhbmNlcy4gU28gaXQg
+ZG9lc24ndCBzZWVtIGh5cGVydmlzb3IKc3BlY2lmaWMuCgpPbiBXZWQsIE1heSAyNywgMjAxNSBh
+dCA1OjUzIFBNLCBFcmljIFNhbmRlZW4gPHNhbmRlZW5Ac2FuZGVlbi5uZXQ+IHdyb3RlOgo+IEFu
+ZCBkaWQgYW55dGhpbmcgZWxzZSAiaW50ZXJlc3RpbmciIGhhcHBlbiBwcmlvciB0byB0aGUgZGV0
+ZWN0aW9uPwo+Cj4+IE9uIE1heSAyNywgMjAxNSwgYXQgNzo1MiBQTSwgRXJpYyBTYW5kZWVuIDxz
+YW5kZWVuQHNhbmRlZW4ubmV0PiB3cm90ZToKPj4KPj4gWW91J2xsIG5lZWQgdG8gdHJ5IHRvIG5h
+cnJvdyBkb3duIGhvdyBpdCBoYXBwZW5lZC4KPj4KPj4gVGhlIGhleGR1bXBzIGluIHRoZSBsb2dz
+IHNob3cgd2hhdCBkYXRhIHdhcyBpbiB0aGUgYnVmZmVyOyBpbiBvbmUgY2FzZSBpdCB3YXMgYXNj
+aWksIGFuZCB3YXMgZGVmaW5pdGVseSBub3QgeGZzIG1ldGFkYXRhLgo+Pgo+PiBFaXRoZXI6Cj4+
+Cj4+IGEpIHhmcyB3cm90ZSB0aGUgd3JvbmcgbWV0YWRhdGEgLSBhbG1vc3QgaW1wb3NzaWJsZSwg
+YmVjYXVzZSB3ZSB2ZXJpZnkgdGhlIGRhdGEgb24gd3JpdGUgaW4gdGhlIHNhbWUgd2F5IGFzIHdl
+IGRvIG9uIHJlYWQKPj4KPj4gYikgeGZzIHJlYWQgdGhlIHdyb25nIGJsb2NrIGR1ZSB0byBvdGhl
+ciBtZXRhZGF0YSBjb3JydXB0aW9uLgo+Pgo+PiBjKSBzb21ldGhpbmcgY29ycnVwdGVkIHRoZSBz
+dG9yYWdlIGFmdGVyIGl0IHdhcyB3cml0dGVuCj4+Cj4+IGQpIHRoZSBzdG9yYWdlIHJldHVybmVk
+IHRoZSB3cm9uZyBkYXRhIG9uIGEgcmVhZCByZXF1ZXN0IC4uLgo+Pgo+PiBlKSA/Pz8KPj4KPj4g
+RGlkIHlvdSBzYXZlIHRoZSB4ZnNfcmVwYWlyIG91dHB1dD8gIFRoYXQgbWlnaHQgb2ZmZXIgbW9y
+ZSBjbHVlcy4KPj4KPj4gVW5sZXNzIHlvdSBjYW4gcmVwcm9kdWNlIGl0LCBpdCdsbCBiZSBoYXJk
+IHRvIGNvbWUgdXAgd2l0aCBhIGRlZmluaXRpdmUgcm9vdCBjYXVzZS4uLiBjYW4geW91IHRyeT8K
+Pj4KPj4gLUVyaWMKPj4KPj4KPj4+IE9uIDUvMjcvMTUgNzowMyBQTSwgU2hyaW5hbmQgSmF2YWRl
+a2FyIHdyb3RlOgo+Pj4gVGhhbmtzIEVyaWMsCj4+Pgo+Pj4gV2UgcmFuIHhmc19yZXBhaXIgYW5k
+IHdlcmUgYWJsZSB0byBnZXQgaXQgYmFjayBpbnRvIGEgcnVubmluZyBzdGF0ZS4KPj4+IFRoaXMg
+aXMgZmluZSBmb3IgYSB0ZXN0ICYgZGV2IGJ1dCBpbiBwcm9kdWN0aW9uIGl0IHdvbid0IGJlCj4+
+PiBhY2NlcHRhYmxlLiBXaGF0IG90aGVyIGRhdGEgZG8gd2UgbmVlZCB0byBnZXQgdG8gdGhlIGJv
+dHRvbSBvZiB0aGlzPwo+Pj4KPj4+PiBPbiBXZWQsIE1heSAyNywgMjAxNSBhdCA0OjI3IFBNLCBF
+cmljIFNhbmRlZW4gPHNhbmRlZW5Ac2FuZGVlbi5uZXQ+IHdyb3RlOgo+Pj4+IFRoYXQncyBub3Qg
+YSBjcmFzaC4gVGhhdCBpcyB4ZnMgZGV0ZWN0aW5nIG9uIGRpc2sgY29ycnVwdGlvbiB3aGljaCBs
+aWtlbHkgaGFwcGVuZWQgYXQgc29tZSB0aW1lIHByaW9yLiBZb3Ugc2hvdWxkIHVubW91bnQgYW5k
+IHJ1biB4ZnNfcmVwYWlyLCBwb3NzaWJseSB3aXRoIOKAk24gZmlyc3QgaWYgeW91IHdvdWxkIGxp
+a2UgdG8gZG8gYSBkcnkgcnVuIHRvIHNlZSB3aGF0IGl0IG1pZ2h0IGRvLiAgSWYgeW91IGdldCBm
+cmVzaCBjb3JydXB0aW9uIGFmdGVyIGEgZnVsbCByZXBhaXIsIHRoZW4gdGhhdCBiZWNvbWVzIG1v
+cmUgaW50ZXJlc3RpbmcuIEl0J3MgcG9zc2libGUgdGhhdCB5b3UgaGF2ZSBhIHByb2JsZW0gd2l0
+aCB0aGUgdW5kZXJseWluZyBibG9jayBsYXllciBvciBpdCdzIHBvc3NpYmxlIHRoYXQgaXQgaXMg
+YW4geGZzIGJ1ZyAtICBidXQgSSB0aGluayB0aGlzIGlzIG5vdCBzb21ldGhpbmcgdGhhdCB3ZSBo
+YXZlIHNlZW4gYmVmb3JlLgo+Pj4+Cj4+Pj4gRXJpYwo+Pj4+Cj4+Pj4+IE9uIE1heSAyNywgMjAx
+NSwgYXQgNjowNiBQTSwgU2hyaW5hbmQgSmF2YWRla2FyIDxzaHJpbmFuZEBtYWdpbmF0aWNzLmNv
+bT4gd3JvdGU6Cj4+Pj4+Cj4+Pj4+IEhpLAo+Pj4+Pgo+Pj4+PiBJIGFtIHJ1bm5pbmcgT3BlbnN0
+YWNrIFN3aWZ0IGluIGEgVk0gd2l0aCBYRlMgYXMgdGhlIHVuZGVybHlpbmcKPj4+Pj4gZmlsZXN5
+c3RlbS4gVGhpcyBpcyBnZW5lcmF0aW5nIGEgbWV0YWRhdGEgaGVhdnkgd29ya2xvYWQgb24gWEZT
+Lgo+Pj4+PiBFc3NlbnRpYWxseSwgaXQgaXMgY3JlYXRpbmcgYSBuZXcgZGlyZWN0b3J5IGFuZCBh
+IG5ldyBmaWxlICgyNTZLQikgaW4KPj4+Pj4gdGhhdCBkaXJlY3RvcnkuIFRoaXMgZmlsZSBoYXMg
+ZXh0ZW5kZWQgYXR0cmlidXRlcyBvZiBzaXplIDI0MyBieXRlcy4KPj4+Pj4KPj4+Pj4gSSBhbSBz
+ZWVpbmcgdGhlIGZvbGxvd2luZyB0d28gY3Jhc2hlcyBvZiB0aGUgbWFjaGluZToKPj4+Pj4KPj4+
+Pj4gaHR0cDovL3Bhc3RpZS5vcmcvcGFzdGVzLzEwMjEwOTc0L3RleHQ/a2V5PXhkbWZ2YW9jdmF3
+bnlmbWtiMDZ6Zwo+Pj4+Pgo+Pj4+PiBBTkQKPj4+Pj4KPj4+Pj4gaHR0cDovL3Bhc3RpZS5vcmcv
+cGFzdGVzLzEwMjEwOTc1L3RleHQ/a2V5PXJraWxqc2RhdWNyazdmcnByemdxcQo+Pj4+Pgo+Pj4+
+PiBJIGhhdmUgb25seSBzZWVuIHRoZXNlIHdoZW4gcnVubmluZyBpbiBhIFZNLiBXZSBoYXZlIHJ1
+biBzZXZlcmFsIHRlc3RzCj4+Pj4+IG9uIHBoeXNpY2FsIHNlcnZlciBidXQgaGF2ZSBuZXZlciBz
+ZWVuIHRoZXNlIHByb2JsZW1zLgo+Pj4+Pgo+Pj4+PiBBcmUgdGhlcmUgYW55IGtub3duIGlzc3Vl
+cyB3aXRoIFhGUyBydW5uaW5nIG9uIFZNcz8KPj4+Pj4KPj4+Pj4gVGhhbmtzIGluIGFkdmFuY2Uu
+Cj4+Pj4+IC1TaHJpCj4+Pj4+Cj4+Pj4+IF9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fCj4+Pj4+IHhmcyBtYWlsaW5nIGxpc3QKPj4+Pj4geGZzQG9zcy5zZ2ku
+Y29tCj4+Pj4+IGh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo+Pj4KPj4+
+IF9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCj4+PiB4ZnMg
+bWFpbGluZyBsaXN0Cj4+PiB4ZnNAb3NzLnNnaS5jb20KPj4+IGh0dHA6Ly9vc3Muc2dpLmNvbS9t
+YWlsbWFuL2xpc3RpbmZvL3hmcwo+Pgo+PiBfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fXwo+PiB4ZnMgbWFpbGluZyBsaXN0Cj4+IHhmc0Bvc3Muc2dpLmNvbQo+
+PiBodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMKCl9fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9z
+cy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
