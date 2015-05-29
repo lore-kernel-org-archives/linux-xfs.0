@@ -1,23 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 2C5357F47
-	for <xfs@oss.sgi.com>; Fri, 29 May 2015 17:37:48 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 7281D7F56
+	for <xfs@oss.sgi.com>; Fri, 29 May 2015 17:56:09 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 037EE304053
-	for <xfs@oss.sgi.com>; Fri, 29 May 2015 15:37:48 -0700 (PDT)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 5F526304053
+	for <xfs@oss.sgi.com>; Fri, 29 May 2015 15:56:09 -0700 (PDT)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	HRiUFukQ4rDCL9JK for <xfs@oss.sgi.com>;
-	Fri, 29 May 2015 15:37:43 -0700 (PDT)
-Date: Sat, 30 May 2015 08:37:41 +1000
+	UiW1DgnWcZHIH1u1 for <xfs@oss.sgi.com>;
+	Fri, 29 May 2015 15:56:06 -0700 (PDT)
+Date: Sat, 30 May 2015 08:55:46 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: generic/247 triggers warnings occasionally
-Message-ID: <20150529223741.GD24666@dastard>
-References: <20150529063214.GP3672@dhcp-13-216.nay.redhat.com>
-	<20150529151307.GB36053@bfoster.bfoster>
+Subject: [GIT PULL] xfs: update for v4.1-rc6
+Message-ID: <20150529225546.GF4316@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20150529151307.GB36053@bfoster.bfoster>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,63 +27,68 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
-Cc: Eryu Guan <eguan@redhat.com>, xfs@oss.sgi.com
+To: torvalds@linux-foundation.org
+Cc: akpm@linux-foundation.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-On Fri, May 29, 2015 at 11:13:07AM -0400, Brian Foster wrote:
-> On Fri, May 29, 2015 at 02:32:14PM +0800, Eryu Guan wrote:
-> > Hi all,
-> > 
-> > I've seen generic/247 trigger the following warning occasionally, on
-> > 4.1.0-rc5 kernel. And I can reproduce it back on 4.0.0 kernel.
-> > 
-> > [60397.806729] run fstests generic/247 at 2015-05-29 13:19:55
-> > [60400.197970] ------------[ cut here ]------------
-> > [60400.199285] WARNING: CPU: 1 PID: 13161 at fs/xfs/xfs_file.c:726 xfs_file_dio_aio_write+0x176/0x2a8 [xfs]()
-....
-> > fs/xfs/xfs_file.c:723
-> >    723			ret = invalidate_inode_pages2_range(VFS_I(ip)->i_mapping,
-> >    724						pos >> PAGE_CACHE_SHIFT,
-> >    725						end >> PAGE_CACHE_SHIFT);
-> >    726			WARN_ON_ONCE(ret);
-> >    727			ret = 0;
-> > 
-> > It can be reproduced by running generic/247 in loop(usually within 100
-> > loops), without any special parameters/options.
-> > 
-> > 	while ./check generic/247; do : ; done
-> > 
-> > Attachments are my xfstests config file and host info requested by
-> > http://xfs.org/index.php/XFS_FAQ#Q:_What_information_should_I_include_when_reporting_a_problem.3F
-> > 
-> 
-> I reproduce this fairly regularly as well. The test initializes a file
-> with buffered writes and then runs a forward direct I/O writer and a
-> reverse mmap writer on the file in parallel. IIRC, the issue here is
-> basically the mmap writes racing with the flush/invalidate that occurs
-> as part of the dio write sequence. (Indeed, a quick test to acquire
-> mmaplock around the flush/invalidate in xfs_file_dio_aio_write() seems
-> to confirm).
-> 
-> I also vaguely recall some discussion with Dave around why we don't do
-> this (perhaps during review of the mmaplock bits). If I recall the
-> reasoning there, direct I/O in XFS is designed to allow parallel writes
-> to the file and thus the exclusive locks are demoted prior to the write.
-> This means the mapped write could still race with the DIO and lead to
-> whatever resulting inconsistency is possible now. So assuming my
-> understanding is correct there, taking the mmap lock across the
-> flush/invalidate just ends up hiding a symptom of a problem that isn't
-> really solved.
+Hi Linus,
 
-Pretty much - the page fault just needs to happen at a slightly
-different time, and we have the same problem just now it's silent
-and we don't know about it. It's a data corruption vector, so I'd
-much prefer to be noisy and hear about false positives than be
-silent and miss it as the cause of a real corruption..
+Can you please pull the fixes from the tag below? It's a little
+larger than I'd like late in the release cycle, but all the fixes
+are for regressions introduced in the 4.1-rc1 merge, or are needed
+back in -stable kernels fairly quickly as they are filesystem
+corruption or userspace visible correctness issues.
 
-Cheers,
+Thanks!
 
-Dave.
+-Dave.
+
+The following changes since commit 5ebe6afaf0057ac3eaeb98defd5456894b446d22:
+
+  Linux 4.1-rc2 (2015-05-03 19:22:23 -0700)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/dgc/linux-xfs.git tags/xfs-for-linus-4.1-rc6
+
+for you to fetch changes up to 22419ac9fe5e79483596cebdbd1d1209c18bac1a:
+
+  xfs: fix broken i_nlink accounting for whiteout tmpfile inode (2015-05-29 08:14:55 +1000)
+
+----------------------------------------------------------------
+xfs: update for 4.1-rc6
+
+Changes in this update:
+o regression fix for new rename whiteout code
+o regression fixes for new superblock generic per-cpu counter code
+o fix for incorrect error return sign introduced in 3.17
+o metadata corruption fixes that need to go back to -stable kernels
+
+----------------------------------------------------------------
+Brian Foster (1):
+      xfs: fix broken i_nlink accounting for whiteout tmpfile inode
+
+Dave Chinner (5):
+      percpu_counter: batch size aware __percpu_counter_compare()
+      xfs: inode and free block counters need to use __percpu_counter_compare
+      xfs: extent size hints can round up extents past MAXEXTLEN
+      xfs: xfs_attr_inactive leaves inconsistent attr fork state behind
+      xfs: xfs_iozero can return positive errno
+
+George Wang (1):
+      xfs: use percpu_counter_read_positive for mp->m_icount
+
+ fs/xfs/libxfs/xfs_attr_leaf.c  |    8 ++--
+ fs/xfs/libxfs/xfs_attr_leaf.h  |    2 +-
+ fs/xfs/libxfs/xfs_bmap.c       |   31 +++++++++------
+ fs/xfs/libxfs/xfs_ialloc.c     |    9 +++--
+ fs/xfs/xfs_attr_inactive.c     |   83 ++++++++++++++++++++++++----------------
+ fs/xfs/xfs_file.c              |    2 +-
+ fs/xfs/xfs_inode.c             |   22 ++++++-----
+ fs/xfs/xfs_mount.c             |   34 +++++++++-------
+ include/linux/percpu_counter.h |   13 ++++++-
+ lib/percpu_counter.c           |    6 +--
+ 10 files changed, 127 insertions(+), 83 deletions(-)
+
 -- 
 Dave Chinner
 david@fromorbit.com
