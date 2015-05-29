@@ -1,23 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id A2C147F4E
-	for <xfs@oss.sgi.com>; Thu, 28 May 2015 19:05:39 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id ADFED7F4E
+	for <xfs@oss.sgi.com>; Thu, 28 May 2015 21:16:27 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 1D713AC001
-	for <xfs@oss.sgi.com>; Thu, 28 May 2015 17:05:35 -0700 (PDT)
-Received: from smtpbgbr1.qq.com (smtpbgbr1.qq.com [54.207.19.206]) by
-	cuda.sgi.com with ESMTP id DR5oDLT8oYBSKqZR (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 28 May 2015 17:05:31 -0700 (PDT)
-Message-ID: <5567AD2F.4000103@foxmail.com>
-Date: Fri, 29 May 2015 08:05:03 +0800
-From: Wang Sheng-Hui <shhuiw@foxmail.com>
-MIME-Version: 1.0
-Subject: Re: [PATCH] xfsprogs: merge the duplicated condition in
-	xfs_mkfs.c/validate_ag_geometry
-References: <1432796808-862-1-git-send-email-shhuiw@foxmail.com>
-	<55672C4C.2010805@sandeen.net>
-In-Reply-To: <55672C4C.2010805@sandeen.net>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 8E217304051
+	for <xfs@oss.sgi.com>; Thu, 28 May 2015 19:16:24 -0700 (PDT)
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	u60CKEgSuc4xbCQo for <xfs@oss.sgi.com>;
+	Thu, 28 May 2015 19:16:20 -0700 (PDT)
+Received: from disappointment.disaster.area ([192.168.1.110]
+	helo=disappointment) by dastard with esmtp (Exim 4.80)
+	(envelope-from <dave@fromorbit.com>) id 1Yy9qL-0006vF-Rn
+	for xfs@oss.sgi.com; Fri, 29 May 2015 12:16:17 +1000
+Received: from dave by disappointment with local (Exim 4.82_1-5b7a7c0-XX)
+	(envelope-from <dave@disappointment.disaster>) id 1Yy9qL-0003oM-Qs
+	for xfs@oss.sgi.com; Fri, 29 May 2015 12:16:17 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: [PATCH] [RFC v2] xfs: byte range buffer dirty region tracking
+Date: Fri, 29 May 2015 12:16:17 +1000
+Message-Id: <1432865777-14616-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,91 +28,564 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>, xfs@oss.sgi.com, dchinner@redhat.com, david@fromorbit.com, bfoster@redhat.com
+To: xfs@oss.sgi.com
 
-CgpPbiAyMDE15bm0MDXmnIgyOOaXpSAyMjo1NSwgRXJpYyBTYW5kZWVuIHdyb3RlOgo+IE9uIDUv
-MjgvMTUgMjowNiBBTSwgV2FuZyBTaGVuZy1IdWkgd3JvdGU6Cj4+IFNvbWUgY29uZGl0aW9ucyBh
-cmUgZHVwbGljYXRlZC4gTWVyZ2UgdGhlbS4KPiAKPiBXaGlsZSB5b3UgYXJlIGNvcnJlY3QgdGhh
-dCB0aGV5IGFyZSBkdXBsaWNhdGVkLCBzaW1wbHkgY29tYmluaW5nCj4gdGhlbSBkb2Vzbid0IG1r
-YWUgYSBsb3Qgb2Ygc2Vuc2U7IG5vdyB3ZSdsbCBnZXQgdGhpcyBzb3J0IG9mCj4gZXJyb3IgbWVz
-c2FnZToKPiAKPj4gYWdzaXplICglbGxkIGJsb2NrcykgdG9vIHNtYWxsLCBuZWVkIGF0IGxlYXN0
-ICVsbGQgYmxvY2tzCj4+IHRvbyBtYW55IGFsbG9jYXRpb24gZ3JvdXBzIGZvciBzaXplID0gJWxs
-ZAo+PiBuZWVkIGF0IG1vc3QgJWxsZCBhbGxvY2F0aW9uIGdyb3Vwcwo+IAo+IGFuZCB3aGF0IHNo
-b3VsZCBhIHVzZXIgZG8gd2l0aCB0aGF0IGluZm9ybWF0aW9uPyAgSXQncyBzb21ld2hhdAo+IG5v
-bnNlbnNpY2FsLgo+IAo+IFRoZSBjb2RlIGFzIGl0IGlzIHRvZGF5LCBhbmQgYXMgaXQgaGFzIGJl
-ZW4gc2luY2UgY29tbWl0Cj4gMWYxYjhiZTc5MjY0ODAwNDZlYWQ3Yjk4Yzk4NTBhY2U3YmNkODJh
-MywgZG9lc24ndCBtYWtlIG11Y2ggc2Vuc2UsCj4gYmVjYXVzZSB3ZSBjYW4gbmV2ZXIgaGl0IHRo
-ZSBzZWNvbmQgY29uZGl0aW9uYWwuICBCdXQgc2ltcGx5Cj4gY29tYmluaW5nIHRoZW0gZG9lc24n
-dCBsb29rIGxpa2UgdGhlIHJpZ2h0IGFuc3dlciB0byBtZS4KPiAKPiBJZiB5b3UgbG9vayBhdCB0
-aGUgYWJvdmUgY29tbWl0LCB3aGF0IGl0IHVzZWQgdG8gZG8gd2FzIHNvbWV0aGluZwo+IGxpa2U6
-Cj4gCj4gLSAgICAgICAgICAgICAgIC8qCj4gLSAgICAgICAgICAgICAgICAqIElmIHRoZSBzcGVj
-aWZpZWQgYWdzaXplIGlzIHRvbyBzbWFsbCwgb3IgdG9vIGxhcmdlLAo+IC0gICAgICAgICAgICAg
-ICAgKiBjb21wbGFpbi4KPiAtICAgICAgICAgICAgICAgICovCj4gLSAgICAgICAgICAgICAgIGlm
-IChhZ3NpemUgPCBYRlNfQUdfTUlOX0JMT0NLUyhibG9ja2xvZykpIHsKPiAtICAgICAgICAgICAg
-ICAgICAgICAgICBmcHJpbnRmKHN0ZGVyciwKPiAtICAgICAgICAgICAgICAgXygiYWdzaXplICgl
-bGxkYikgdG9vIHNtYWxsLCBuZWVkIGF0IGxlYXN0ICVsbGQgYmxvY2tzXG4iKSwKPiAtICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgIChsb25nIGxvbmcpYWdzaXplLAo+IC0gICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgKGxvbmcgbG9uZylYRlNfQUdfTUlOX0JMT0NLUyhibG9ja2xv
-ZykpOwo+IC0gICAgICAgICAgICAgICAgICAgICAgIHVzYWdlKCk7Cj4gLSAgICAgICAgICAgICAg
-IH0KPiAKPiA8c25pcD4KPiAKPiAtICAgICAgIC8qCj4gLSAgICAgICAgKiBJZiB0aGUgYWcgc2l6
-ZSBpcyB0b28gc21hbGwsIGNvbXBsYWluIGlmIGFnY291bnQvYWdzaXplIHdhcwo+IC0gICAgICAg
-ICogc3BlY2lmaWVkLCBhbmQgZml4IGl0IG90aGVyd2lzZS4KPiAtICAgICAgICAqLwo+IC0gICAg
-ICAgaWYgKGFnc2l6ZSA8IFhGU19BR19NSU5fQkxPQ0tTKGJsb2NrbG9nKSkgewo+IC0gICAgICAg
-ICAgICAgICBpZiAoZGFmbGFnIHx8IGRhc2l6ZSkgewo+IC0gICAgICAgICAgICAgICAgICAgICAg
-IGZwcmludGYoc3RkZXJyLAo+IC0gICAgICAgICAgICAgICAgICAgICAgIF8oInRvbyBtYW55IGFs
-bG9jYXRpb24gZ3JvdXBzIGZvciBzaXplID0gJWxsZFxuIiksCj4gLSAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAobG9uZyBsb25nKWFnc2l6ZSk7Cj4gLSAgICAgICAgICAgICAgICAgICAg
-ICAgZnByaW50ZihzdGRlcnIsCj4gLSAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBfKCJu
-ZWVkIGF0IG1vc3QgJWxsZCBhbGxvY2F0aW9uIGdyb3Vwc1xuIiksCj4gLSAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAobG9uZyBsb25nKQo+IC0gICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgKGRibG9ja3MgLyBYRlNfQUdfTUlOX0JMT0NLUyhibG9ja2xvZykgKwo+IC0gICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgKGRibG9ja3MgJSBYRlNfQUdfTUlOX0JMT0NLUyhibG9j
-a2xvZykgIT0gMCkpKTsKPiAKPiAuLi4KPiAKPiBJICp0aGluayogdGhlIGludGVudCB3YXMgdG8g
-dXNlIGRpZmZlcmVudCBtZXNzYWdlcyBiYXNlZCBvbiB3aGF0Cj4gd2FzIHNwZWNpZmllZCBieSB0
-aGUgdXNlcjsgaS5lLiBpZiBhZ3NpemUgd2FzIHNwZWNpZmllZCwgYW5kIGlzIHRvbwo+IHNtYWxs
-LCB0aGVuIHNheToKPiAKPj4gYWdzaXplICglbGxkIGJsb2NrcykgdG9vIHNtYWxsLCBuZWVkIGF0
-IGxlYXN0ICVsbGQgYmxvY2tzCj4gCj4gYnV0IGlmIGFnY291bnQgd2FzIHNwZWNpZmllZCwgYW5k
-IHdhcyB0b28gbGFyZ2UsIHRoZW4gc2F5Ogo+IAo+PiB0b28gbWFueSBhbGxvY2F0aW9uIGdyb3Vw
-cyBmb3Igc2l6ZSA9ICVsbGQKPj4gbmVlZCBhdCBtb3N0ICVsbGQgYWxsb2NhdGlvbiBncm91cHMK
-PiAKPiBidXQgY29tYmluaW5nIHRob3NlIHR3byBtZXNzYWdlcyBkb2Vzbid0IG1ha2Ugc2Vuc2Ug
-dG8gbWUuCj4gCgpHb3QgaXQsIEVyaWMuCgpSZWdhcmRzLApTaGVuZy1IdWkKCj4gLUVyaWMKPiAK
-PiAKPj4gU2lnbmVkLW9mZi1ieTogV2FuZyBTaGVuZy1IdWkgPHNoaHVpd0Bmb3htYWlsLmNvbT4K
-Pj4gLS0tCj4+ICBta2ZzL3hmc19ta2ZzLmMgfCAyNCArKysrKysrKy0tLS0tLS0tLS0tLS0tLS0K
-Pj4gIDEgZmlsZSBjaGFuZ2VkLCA4IGluc2VydGlvbnMoKyksIDE2IGRlbGV0aW9ucygtKQo+Pgo+
-PiBkaWZmIC0tZ2l0IGEvbWtmcy94ZnNfbWtmcy5jIGIvbWtmcy94ZnNfbWtmcy5jCj4+IGluZGV4
-IGUyYTA1MmQuLjdlYzI1NTYgMTAwNjQ0Cj4+IC0tLSBhL21rZnMveGZzX21rZnMuYwo+PiArKysg
-Yi9ta2ZzL3hmc19ta2ZzLmMKPj4gQEAgLTc0MCwyMiArNzQwLDYgQEAgdmFsaWRhdGVfYWdfZ2Vv
-bWV0cnkoCj4+ICAJX191aW50NjRfdAlhZ3NpemUsCj4+ICAJX191aW50NjRfdAlhZ2NvdW50KQo+
-PiAgewo+PiAtCWlmIChhZ3NpemUgPCBYRlNfQUdfTUlOX0JMT0NLUyhibG9ja2xvZykpIHsKPj4g
-LQkJZnByaW50ZihzdGRlcnIsCj4+IC0JXygiYWdzaXplICglbGxkIGJsb2NrcykgdG9vIHNtYWxs
-LCBuZWVkIGF0IGxlYXN0ICVsbGQgYmxvY2tzXG4iKSwKPj4gLQkJCShsb25nIGxvbmcpYWdzaXpl
-LAo+PiAtCQkJKGxvbmcgbG9uZylYRlNfQUdfTUlOX0JMT0NLUyhibG9ja2xvZykpOwo+PiAtCQl1
-c2FnZSgpOwo+PiAtCX0KPj4gLQo+PiAtCWlmIChhZ3NpemUgPiBYRlNfQUdfTUFYX0JMT0NLUyhi
-bG9ja2xvZykpIHsKPj4gLQkJZnByaW50ZihzdGRlcnIsCj4+IC0JXygiYWdzaXplICglbGxkIGJs
-b2NrcykgdG9vIGJpZywgbWF4aW11bSBpcyAlbGxkIGJsb2Nrc1xuIiksCj4+IC0JCQkobG9uZyBs
-b25nKWFnc2l6ZSwKPj4gLQkJCShsb25nIGxvbmcpWEZTX0FHX01BWF9CTE9DS1MoYmxvY2tsb2cp
-KTsKPj4gLQkJdXNhZ2UoKTsKPj4gLQl9Cj4+IC0KPj4gIAlpZiAoYWdzaXplID4gZGJsb2Nrcykg
-ewo+PiAgCQlmcHJpbnRmKHN0ZGVyciwKPj4gIAlfKCJhZ3NpemUgKCVsbGQgYmxvY2tzKSB0b28g
-YmlnLCBkYXRhIGFyZWEgaXMgJWxsZCBibG9ja3NcbiIpLAo+PiBAQCAtNzY1LDYgKzc0OSwxMCBA
-QCB2YWxpZGF0ZV9hZ19nZW9tZXRyeSgKPj4gIAo+PiAgCWlmIChhZ3NpemUgPCBYRlNfQUdfTUlO
-X0JMT0NLUyhibG9ja2xvZykpIHsKPj4gIAkJZnByaW50ZihzdGRlcnIsCj4+ICsJXygiYWdzaXpl
-ICglbGxkIGJsb2NrcykgdG9vIHNtYWxsLCBuZWVkIGF0IGxlYXN0ICVsbGQgYmxvY2tzXG4iKSwK
-Pj4gKwkJCShsb25nIGxvbmcpYWdzaXplLAo+PiArCQkJKGxvbmcgbG9uZylYRlNfQUdfTUlOX0JM
-T0NLUyhibG9ja2xvZykpOwo+PiArCQlmcHJpbnRmKHN0ZGVyciwKPj4gIAlfKCJ0b28gbWFueSBh
-bGxvY2F0aW9uIGdyb3VwcyBmb3Igc2l6ZSA9ICVsbGRcbiIpLAo+PiAgCQkJCShsb25nIGxvbmcp
-YWdzaXplKTsKPj4gIAkJZnByaW50ZihzdGRlcnIsIF8oIm5lZWQgYXQgbW9zdCAlbGxkIGFsbG9j
-YXRpb24gZ3JvdXBzXG4iKSwKPj4gQEAgLTc3NSw2ICs3NjMsMTAgQEAgdmFsaWRhdGVfYWdfZ2Vv
-bWV0cnkoCj4+ICAKPj4gIAlpZiAoYWdzaXplID4gWEZTX0FHX01BWF9CTE9DS1MoYmxvY2tsb2cp
-KSB7Cj4+ICAJCWZwcmludGYoc3RkZXJyLAo+PiArCV8oImFnc2l6ZSAoJWxsZCBibG9ja3MpIHRv
-byBiaWcsIG1heGltdW0gaXMgJWxsZCBibG9ja3NcbiIpLAo+PiArCQkJKGxvbmcgbG9uZylhZ3Np
-emUsCj4+ICsJCQkobG9uZyBsb25nKVhGU19BR19NQVhfQkxPQ0tTKGJsb2NrbG9nKSk7Cj4+ICsJ
-CWZwcmludGYoc3RkZXJyLAo+PiAgCV8oInRvbyBmZXcgYWxsb2NhdGlvbiBncm91cHMgZm9yIHNp
-emUgPSAlbGxkXG4iKSwgKGxvbmcgbG9uZylhZ3NpemUpOwo+PiAgCQlmcHJpbnRmKHN0ZGVyciwK
-Pj4gIAlfKCJuZWVkIGF0IGxlYXN0ICVsbGQgYWxsb2NhdGlvbiBncm91cHNcbiIpLAo+Pgo+IAo+
-IAo+IAoKCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhm
-cyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFu
-L2xpc3RpbmZvL3hmcwo=
+From: Dave Chinner <dchinner@redhat.com>
+
+The biggest problem with large directory block sizes is the CPU
+overhead in maintaining the buffer log item direty region bitmap.
+The bit manipulations and buffer region mapping calls are right at
+the top of the profiles when running tests on 64k directory buffers:
+
++  16.65%  [kernel]  [k] memcpy
++  11.99%  [kernel]  [k] xfs_next_bit
++   5.87%  [kernel]  [k] xfs_buf_item_format
++   5.85%  [kernel]  [k] xfs_buf_item_size_segment.isra.4
++   5.72%  [kernel]  [k] xfs_buf_offset
+
+The memcpy is the copying of the dirty regions into the log vec
+array, but almost twice as much CPU time is spent working out what
+needs to be copied and where it needs to be copied from. As a
+result, on a production kernel creating 100,000 entries in a 64k
+directory runs at about 9,000 files/s while on a 4k directory block
+size it runs at 19,000 files/s - about half the speed.
+
+Switching this to just track the first and last modified bytes in
+the block and only converting that to a dirty bitmap in the buffer
+log item at format time, however, gets rid of most of this dirty
+bitmap overhead without increasing memcpy time  at all. the result
+is that peformance on a 64k directory block size increases to
+roughly 16,000 files/s with memcpy() overhead only slightly
+increasing.
+
+This code works - it passes all my xfstests, stress and benchmark
+workloads, and has for a couple of months now. Hence it's time to
+ask the questions of how best to approach the region count vs log
+bandwidth tradeoff....
+
+Discussion:
+
+I think that we will eventually need to track multiple regions - 3
+is probably sufficient - because the nature of directory operations
+are that just about every operation modifies a header in the buffer,
+a tail section in the buffer and then some number of bytes/regions
+in the middle of the buffer.
+
+Hence if we just track a single region, it will almost always cover
+the entire directory buffer - if we only modify a single entry in
+the buffer, then that's a fairly large cost in terms of log space
+and CPU overhead for random individual operations. If we decide that
+we are going to use a single range, then for directories we might be
+better to just use the dirty flag and log the entire buffer every
+time.
+
+We also have to consider non-directory buffer modification patterns.
+freespace, inode and extent btrees are the other major types of
+buffers that get logged, but they also have modification patterns
+that lend themselves well to a small number of ranges for dirty
+tracking. That is, each btree block is kept compact, so when we
+insert or remove a record or pointer we shift then higher
+records/ptrs up or down as a block, and then log the lot of them.
+And they also often have a header that is dirtied with each
+insert/delete, so typically there are usually only one or two dirty
+ranges in a btree block.
+
+The only metadata type that really seems to benefit from fine
+grained dirty range logging is the inode buffers. Specifically, for
+v4 superblocks the create transaction only dirties the regions of
+the inode core, so for 256 byte inodes only dirties every alternate
+bitmap segement.  Dirty range tracking will double the required log
+bandwidth of inode buffers during create (roughly 25% increase on a
+4k directory block size filesystem). There isn't any performance
+differential noticable on typical systems because the log is far
+from being bandwidth bound.
+
+For v5 filesystems, this isn't an issue because the initialised
+inode buffers are XFS_BLI_ORDERED buffers and so their contents
+aren't logged.
+
+The same problem happens with unlinks due to the unlinked list being
+logged via the inode buffer. Again this results in an increase
+in log bandwidth on both v4 and v5 filesystems, but there isn't any
+performance differential that occurs because, again, the log isn't
+bandwidth bound. As it is, there is an existing plan of improvement
+to the unlinked list logging (moving the unlinked list logging into
+the inode core transaction) and hence that will avoid any extra
+overhead here as well.
+
+Overall, I think this is a no-brainer given the performance
+improvements we get on large directory block size filesystems. There
+are some downsides, but looking at the medium-term development plans
+we will mitigate the impact of most of those downsides.
+
+Comments?
+
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/xfs_buf.c      |   2 +
+ fs/xfs/xfs_buf_item.c | 294 +++++++++++++++-----------------------------------
+ fs/xfs/xfs_buf_item.h |  19 ++++
+ 3 files changed, 110 insertions(+), 205 deletions(-)
+
+diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+index 1790b00..bbe4e9e 100644
+--- a/fs/xfs/xfs_buf.c
++++ b/fs/xfs/xfs_buf.c
+@@ -1457,6 +1457,8 @@ xfs_buf_iomove(
+ 		page = bp->b_pages[page_index];
+ 		csize = min_t(size_t, PAGE_SIZE - page_offset,
+ 				      BBTOB(bp->b_io_length) - boff);
++		if (boff + csize > bend)
++			csize = bend - boff;
+ 
+ 		ASSERT((csize + page_offset) <= PAGE_SIZE);
+ 
+diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
+index 092d652..1816334 100644
+--- a/fs/xfs/xfs_buf_item.c
++++ b/fs/xfs/xfs_buf_item.c
+@@ -65,50 +65,12 @@ xfs_buf_item_size_segment(
+ 	int			*nvecs,
+ 	int			*nbytes)
+ {
+-	struct xfs_buf		*bp = bip->bli_buf;
+-	int			next_bit;
+-	int			last_bit;
+-
+-	last_bit = xfs_next_bit(blfp->blf_data_map, blfp->blf_map_size, 0);
+-	if (last_bit == -1)
+-		return;
+-
+ 	/*
+ 	 * initial count for a dirty buffer is 2 vectors - the format structure
+-	 * and the first dirty region.
++	 * and the dirty region. Dirty region is accounted for separately.
+ 	 */
+ 	*nvecs += 2;
+-	*nbytes += xfs_buf_log_format_size(blfp) + XFS_BLF_CHUNK;
+-
+-	while (last_bit != -1) {
+-		/*
+-		 * This takes the bit number to start looking from and
+-		 * returns the next set bit from there.  It returns -1
+-		 * if there are no more bits set or the start bit is
+-		 * beyond the end of the bitmap.
+-		 */
+-		next_bit = xfs_next_bit(blfp->blf_data_map, blfp->blf_map_size,
+-					last_bit + 1);
+-		/*
+-		 * If we run out of bits, leave the loop,
+-		 * else if we find a new set of bits bump the number of vecs,
+-		 * else keep scanning the current set of bits.
+-		 */
+-		if (next_bit == -1) {
+-			break;
+-		} else if (next_bit != last_bit + 1) {
+-			last_bit = next_bit;
+-			(*nvecs)++;
+-		} else if (xfs_buf_offset(bp, next_bit * XFS_BLF_CHUNK) !=
+-			   (xfs_buf_offset(bp, last_bit * XFS_BLF_CHUNK) +
+-			    XFS_BLF_CHUNK)) {
+-			last_bit = next_bit;
+-			(*nvecs)++;
+-		} else {
+-			last_bit++;
+-		}
+-		*nbytes += XFS_BLF_CHUNK;
+-	}
++	*nbytes += xfs_buf_log_format_size(blfp);
+ }
+ 
+ /*
+@@ -135,6 +97,8 @@ xfs_buf_item_size(
+ 	int			*nbytes)
+ {
+ 	struct xfs_buf_log_item	*bip = BUF_ITEM(lip);
++	struct xfs_buf	*bp = bip->bli_buf;
++	uint			offset = 0;
+ 	int			i;
+ 
+ 	ASSERT(atomic_read(&bip->bli_refcount) > 0);
+@@ -154,6 +118,7 @@ xfs_buf_item_size(
+ 	}
+ 
+ 	ASSERT(bip->bli_flags & XFS_BLI_LOGGED);
++	ASSERT(bip->bli_flags & XFS_BLI_DIRTY);
+ 
+ 	if (bip->bli_flags & XFS_BLI_ORDERED) {
+ 		/*
+@@ -175,10 +140,28 @@ xfs_buf_item_size(
+ 	 * count for the extra buf log format structure that will need to be
+ 	 * written.
+ 	 */
++	ASSERT(bip->bli_range[0].last != 0);
++	if (bip->bli_range[0].last == 0) {
++		/* clean! */
++		ASSERT(bip->bli_range[0].first == 0);
++		return;
++	}
++
+ 	for (i = 0; i < bip->bli_format_count; i++) {
+-		xfs_buf_item_size_segment(bip, &bip->bli_formats[i],
+-					  nvecs, nbytes);
++		/*
++		 * Only format dirty regions or stale buffers
++		 */
++		struct xfs_bli_range *rp = &bip->bli_range[0];
++
++		if ((rp->first <= offset + BBTOB(bp->b_maps[i].bm_len) &&
++		     rp->last >= offset))
++			xfs_buf_item_size_segment(bip, &bip->bli_formats[i],
++						  nvecs, nbytes);
++		offset += BBTOB(bp->b_maps[i].bm_len);
+ 	}
++	*nbytes += bip->bli_range[0].last - bip->bli_range[0].first;
++
++
+ 	trace_xfs_buf_item_size(bip);
+ }
+ 
+@@ -191,7 +174,6 @@ xfs_buf_item_copy_iovec(
+ 	int			first_bit,
+ 	uint			nbits)
+ {
+-	offset += first_bit * XFS_BLF_CHUNK;
+ 	xlog_copy_iovec(lv, vecp, XLOG_REG_TYPE_BCHUNK,
+ 			xfs_buf_offset(bp, offset),
+ 			nbits * XFS_BLF_CHUNK);
+@@ -214,14 +196,18 @@ xfs_buf_item_format_segment(
+ 	struct xfs_buf_log_item	*bip,
+ 	struct xfs_log_vec	*lv,
+ 	struct xfs_log_iovec	**vecp,
++	struct xfs_bli_range	*rp,
+ 	uint			offset,
++	uint			length,
+ 	struct xfs_buf_log_format *blfp)
+ {
+ 	struct xfs_buf	*bp = bip->bli_buf;
++	char		*buf;
+ 	uint		base_size;
++	uint		start;
++	uint		end;
+ 	int		first_bit;
+ 	int		last_bit;
+-	int		next_bit;
+ 	uint		nbits;
+ 
+ 	/* copy the flags across from the base format item */
+@@ -233,16 +219,6 @@ xfs_buf_item_format_segment(
+ 	 * memory structure.
+ 	 */
+ 	base_size = xfs_buf_log_format_size(blfp);
+-
+-	first_bit = xfs_next_bit(blfp->blf_data_map, blfp->blf_map_size, 0);
+-	if (!(bip->bli_flags & XFS_BLI_STALE) && first_bit == -1) {
+-		/*
+-		 * If the map is not be dirty in the transaction, mark
+-		 * the size as zero and do not advance the vector pointer.
+-		 */
+-		return;
+-	}
+-
+ 	blfp = xlog_copy_iovec(lv, vecp, XLOG_REG_TYPE_BFORMAT, blfp, base_size);
+ 	blfp->blf_size = 1;
+ 
+@@ -257,46 +233,40 @@ xfs_buf_item_format_segment(
+ 		return;
+ 	}
+ 
++	blfp->blf_size++;
+ 
+ 	/*
+-	 * Fill in an iovec for each set of contiguous chunks.
++	 * Now we need to set the bits in the bitmap and set up the iovecs
++	 * appropriately. We know there is a contiguous range in this buffer
++	 * than needs to be set, so find the first bit, the last bit, and
++	 * go from there.
+ 	 */
+-	last_bit = first_bit;
+-	nbits = 1;
+-	for (;;) {
+-		/*
+-		 * This takes the bit number to start looking from and
+-		 * returns the next set bit from there.  It returns -1
+-		 * if there are no more bits set or the start bit is
+-		 * beyond the end of the bitmap.
+-		 */
+-		next_bit = xfs_next_bit(blfp->blf_data_map, blfp->blf_map_size,
+-					(uint)last_bit + 1);
+-		/*
+-		 * If we run out of bits fill in the last iovec and get out of
+-		 * the loop.  Else if we start a new set of bits then fill in
+-		 * the iovec for the series we were looking at and start
+-		 * counting the bits in the new one.  Else we're still in the
+-		 * same set of bits so just keep counting and scanning.
+-		 */
+-		if (next_bit == -1) {
+-			xfs_buf_item_copy_iovec(lv, vecp, bp, offset,
+-						first_bit, nbits);
+-			blfp->blf_size++;
+-			break;
+-		} else if (next_bit != last_bit + 1 ||
+-		           xfs_buf_item_straddle(bp, offset, next_bit, last_bit)) {
+-			xfs_buf_item_copy_iovec(lv, vecp, bp, offset,
+-						first_bit, nbits);
+-			blfp->blf_size++;
+-			first_bit = next_bit;
+-			last_bit = next_bit;
+-			nbits = 1;
+-		} else {
+-			last_bit++;
+-			nbits++;
+-		}
+-	}
++	start = 0;
++	if (offset < rp->first)
++		start = rp->first - offset;
++	end = length - 1;
++	if (offset + length > rp->last)
++		end = rp->last - offset - 1;
++
++	start &= ~((1 << XFS_BLF_SHIFT) - 1);
++	first_bit = start >> XFS_BLF_SHIFT;
++	last_bit = end >> XFS_BLF_SHIFT;
++	nbits = last_bit - first_bit + 1;
++	bitmap_set((unsigned long *)blfp->blf_data_map, first_bit, nbits);
++
++	ASSERT(end <= length);
++	ASSERT(start <= length);
++	ASSERT(length >= nbits * XFS_BLF_CHUNK);
++	/*
++	 * Copy needs to be done a buffer page at a time as we can be logging
++	 * unmapped buffers. hence we have to use xfs_buf_iomove() rather than a
++	 * straight memcpy here.
++	 */
++	offset += first_bit * XFS_BLF_CHUNK;
++	length = nbits * XFS_BLF_CHUNK;
++	buf = xlog_prepare_iovec(lv, vecp, XLOG_REG_TYPE_BCHUNK);
++	xfs_buf_iomove(bp, offset, length, buf, XBRW_READ);
++	xlog_finish_iovec(lv, *vecp, length);
+ }
+ 
+ /*
+@@ -323,7 +293,6 @@ xfs_buf_item_format(
+ 	       (xfs_blft_from_flags(&bip->__bli_format) > XFS_BLFT_UNKNOWN_BUF
+ 	        && xfs_blft_from_flags(&bip->__bli_format) < XFS_BLFT_MAX_BUF));
+ 
+-
+ 	/*
+ 	 * If it is an inode buffer, transfer the in-memory state to the
+ 	 * format flags and clear the in-memory state.
+@@ -357,9 +326,17 @@ xfs_buf_item_format(
+ 	}
+ 
+ 	for (i = 0; i < bip->bli_format_count; i++) {
+-		xfs_buf_item_format_segment(bip, lv, &vecp, offset,
+-					    &bip->bli_formats[i]);
+-		offset += bp->b_maps[i].bm_len;
++		/*
++		 * Only format dirty regions or stale buffers
++		 */
++		struct xfs_bli_range *rp = &bip->bli_range[0];
++		if ((bip->bli_flags & XFS_BLI_STALE) ||
++		    (rp->first <= offset + BBTOB(bp->b_maps[i].bm_len) &&
++		     rp->last > offset))
++			xfs_buf_item_format_segment(bip, lv, &vecp, rp, offset,
++						    BBTOB(bp->b_maps[i].bm_len),
++						    &bip->bli_formats[i]);
++		offset += BBTOB(bp->b_maps[i].bm_len);
+ 	}
+ 
+ 	/*
+@@ -800,6 +777,9 @@ xfs_buf_item_init(
+ 		bip->bli_formats[i].blf_map_size = map_size;
+ 	}
+ 
++	BUILD_BUG_ON(XFS_BLI_RANGES != 1);
++	bip->bli_range[0].first = UINT_MAX;
++
+ 	/*
+ 	 * Put the buf item into the list of items attached to the
+ 	 * buffer at the front.
+@@ -809,91 +789,9 @@ xfs_buf_item_init(
+ 	bp->b_fspriv = bip;
+ }
+ 
+-
+ /*
+  * Mark bytes first through last inclusive as dirty in the buf
+- * item's bitmap.
+- */
+-static void
+-xfs_buf_item_log_segment(
+-	uint			first,
+-	uint			last,
+-	uint			*map)
+-{
+-	uint		first_bit;
+-	uint		last_bit;
+-	uint		bits_to_set;
+-	uint		bits_set;
+-	uint		word_num;
+-	uint		*wordp;
+-	uint		bit;
+-	uint		end_bit;
+-	uint		mask;
+-
+-	/*
+-	 * Convert byte offsets to bit numbers.
+-	 */
+-	first_bit = first >> XFS_BLF_SHIFT;
+-	last_bit = last >> XFS_BLF_SHIFT;
+-
+-	/*
+-	 * Calculate the total number of bits to be set.
+-	 */
+-	bits_to_set = last_bit - first_bit + 1;
+-
+-	/*
+-	 * Get a pointer to the first word in the bitmap
+-	 * to set a bit in.
+-	 */
+-	word_num = first_bit >> BIT_TO_WORD_SHIFT;
+-	wordp = &map[word_num];
+-
+-	/*
+-	 * Calculate the starting bit in the first word.
+-	 */
+-	bit = first_bit & (uint)(NBWORD - 1);
+-
+-	/*
+-	 * First set any bits in the first word of our range.
+-	 * If it starts at bit 0 of the word, it will be
+-	 * set below rather than here.  That is what the variable
+-	 * bit tells us. The variable bits_set tracks the number
+-	 * of bits that have been set so far.  End_bit is the number
+-	 * of the last bit to be set in this word plus one.
+-	 */
+-	if (bit) {
+-		end_bit = MIN(bit + bits_to_set, (uint)NBWORD);
+-		mask = ((1 << (end_bit - bit)) - 1) << bit;
+-		*wordp |= mask;
+-		wordp++;
+-		bits_set = end_bit - bit;
+-	} else {
+-		bits_set = 0;
+-	}
+-
+-	/*
+-	 * Now set bits a whole word at a time that are between
+-	 * first_bit and last_bit.
+-	 */
+-	while ((bits_to_set - bits_set) >= NBWORD) {
+-		*wordp |= 0xffffffff;
+-		bits_set += NBWORD;
+-		wordp++;
+-	}
+-
+-	/*
+-	 * Finally, set any bits left to be set in one last partial word.
+-	 */
+-	end_bit = bits_to_set - bits_set;
+-	if (end_bit) {
+-		mask = (1 << end_bit) - 1;
+-		*wordp |= mask;
+-	}
+-}
+-
+-/*
+- * Mark bytes first through last inclusive as dirty in the buf
+- * item's bitmap.
++ * record dirty regions on the buffer.
+  */
+ void
+ xfs_buf_item_log(
+@@ -901,33 +799,19 @@ xfs_buf_item_log(
+ 	uint			first,
+ 	uint			last)
+ {
+-	int			i;
+-	uint			start;
+-	uint			end;
+-	struct xfs_buf		*bp = bip->bli_buf;
+-
+-	/*
+-	 * walk each buffer segment and mark them dirty appropriately.
+-	 */
+-	start = 0;
+-	for (i = 0; i < bip->bli_format_count; i++) {
+-		if (start > last)
+-			break;
+-		end = start + BBTOB(bp->b_maps[i].bm_len);
+-		if (first > end) {
+-			start += BBTOB(bp->b_maps[i].bm_len);
+-			continue;
+-		}
+-		if (first < start)
+-			first = start;
+-		if (end > last)
+-			end = last;
+-
+-		xfs_buf_item_log_segment(first, end,
+-					 &bip->bli_formats[i].blf_data_map[0]);
+-
+-		start += bp->b_maps[i].bm_len;
+-	}
++	ASSERT(last != 0);
++	ASSERT(first <= last);
++	ASSERT(last < BBTOB(bip->bli_buf->b_length));
++
++	/* initial implementation - single range */
++	BUILD_BUG_ON(XFS_BLI_RANGES != 1);
++	if (first < bip->bli_range[0].first)
++		bip->bli_range[0].first = rounddown(first, XFS_BLF_CHUNK);
++	if (last > bip->bli_range[0].last)
++		bip->bli_range[0].last = roundup(last, XFS_BLF_CHUNK);
++
++	ASSERT(bip->bli_range[0].last != 0);
++	ASSERT(bip->bli_range[0].first <= bip->bli_range[0].last);
+ }
+ 
+ 
+diff --git a/fs/xfs/xfs_buf_item.h b/fs/xfs/xfs_buf_item.h
+index 3f3455a..3594eb6 100644
+--- a/fs/xfs/xfs_buf_item.h
++++ b/fs/xfs/xfs_buf_item.h
+@@ -57,6 +57,25 @@ typedef struct xfs_buf_log_item {
+ 	unsigned int		bli_recur;	/* lock recursion count */
+ 	atomic_t		bli_refcount;	/* cnt of tp refs */
+ 	int			bli_format_count;	/* count of headers */
++
++	/*
++	 * logging ranges. Keep a small number of distinct ranges rather than a
++	 * bitmap which is expensive to maintain. Initial implementation is just
++	 * a single range, but it is like that 3 or 4 will be optimal so that we
++	 * can log separate header, tail and content changes (e.g. for dir
++	 * structures) without capturing the entire buffer unnecessarily for
++	 * isolated changes.
++	 *
++	 * Note: ranges are 32 bit values because we have to support an end
++	 * range value of 0x10000....
++	 */
++#define XFS_BLI_RANGES	1
++	struct xfs_bli_range {
++		uint32_t	first;
++		uint32_t	last;
++	}			bli_range[XFS_BLI_RANGES];
++	int			bli_ranges;
++
+ 	struct xfs_buf_log_format *bli_formats;	/* array of in-log header ptrs */
+ 	struct xfs_buf_log_format __bli_format;	/* embedded in-log header */
+ } xfs_buf_log_item_t;
+-- 
+2.0.0
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
