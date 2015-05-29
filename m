@@ -1,25 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id ADFED7F4E
-	for <xfs@oss.sgi.com>; Thu, 28 May 2015 21:16:27 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id BD16F7F50
+	for <xfs@oss.sgi.com>; Fri, 29 May 2015 01:32:22 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 8E217304051
-	for <xfs@oss.sgi.com>; Thu, 28 May 2015 19:16:24 -0700 (PDT)
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	u60CKEgSuc4xbCQo for <xfs@oss.sgi.com>;
-	Thu, 28 May 2015 19:16:20 -0700 (PDT)
-Received: from disappointment.disaster.area ([192.168.1.110]
-	helo=disappointment) by dastard with esmtp (Exim 4.80)
-	(envelope-from <dave@fromorbit.com>) id 1Yy9qL-0006vF-Rn
-	for xfs@oss.sgi.com; Fri, 29 May 2015 12:16:17 +1000
-Received: from dave by disappointment with local (Exim 4.82_1-5b7a7c0-XX)
-	(envelope-from <dave@disappointment.disaster>) id 1Yy9qL-0003oM-Qs
-	for xfs@oss.sgi.com; Fri, 29 May 2015 12:16:17 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH] [RFC v2] xfs: byte range buffer dirty region tracking
-Date: Fri, 29 May 2015 12:16:17 +1000
-Message-Id: <1432865777-14616-1-git-send-email-david@fromorbit.com>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 9D576304051
+	for <xfs@oss.sgi.com>; Thu, 28 May 2015 23:32:19 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id 0QgwbKAaoFPTxevN (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 28 May 2015 23:32:18 -0700 (PDT)
+Received: from int-mx11.intmail.prod.int.phx2.redhat.com
+	(int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
+	by mx1.redhat.com (Postfix) with ESMTPS id 6D7AE2C72EA
+	for <xfs@oss.sgi.com>; Fri, 29 May 2015 06:32:17 +0000 (UTC)
+Received: from localhost (dhcp12-136.nay.redhat.com [10.66.12.136] (may be
+	forged))
+	by int-mx11.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id t4T6WFa8007255
+	for <xfs@oss.sgi.com>; Fri, 29 May 2015 02:32:16 -0400
+Date: Fri, 29 May 2015 14:32:14 +0800
+From: Eryu Guan <eguan@redhat.com>
+Subject: generic/247 triggers warnings occasionally
+Message-ID: <20150529063214.GP3672@dhcp-13-216.nay.redhat.com>
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="DrWhICOqskFTAXiy"
+Content-Disposition: inline
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,564 +33,187 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-From: Dave Chinner <dchinner@redhat.com>
 
-The biggest problem with large directory block sizes is the CPU
-overhead in maintaining the buffer log item direty region bitmap.
-The bit manipulations and buffer region mapping calls are right at
-the top of the profiles when running tests on 64k directory buffers:
+--DrWhICOqskFTAXiy
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-+  16.65%  [kernel]  [k] memcpy
-+  11.99%  [kernel]  [k] xfs_next_bit
-+   5.87%  [kernel]  [k] xfs_buf_item_format
-+   5.85%  [kernel]  [k] xfs_buf_item_size_segment.isra.4
-+   5.72%  [kernel]  [k] xfs_buf_offset
+Hi all,
 
-The memcpy is the copying of the dirty regions into the log vec
-array, but almost twice as much CPU time is spent working out what
-needs to be copied and where it needs to be copied from. As a
-result, on a production kernel creating 100,000 entries in a 64k
-directory runs at about 9,000 files/s while on a 4k directory block
-size it runs at 19,000 files/s - about half the speed.
+I've seen generic/247 trigger the following warning occasionally, on
+4.1.0-rc5 kernel. And I can reproduce it back on 4.0.0 kernel.
 
-Switching this to just track the first and last modified bytes in
-the block and only converting that to a dirty bitmap in the buffer
-log item at format time, however, gets rid of most of this dirty
-bitmap overhead without increasing memcpy time  at all. the result
-is that peformance on a 64k directory block size increases to
-roughly 16,000 files/s with memcpy() overhead only slightly
-increasing.
+[60397.806729] run fstests generic/247 at 2015-05-29 13:19:55
+[60400.197970] ------------[ cut here ]------------
+[60400.199285] WARNING: CPU: 1 PID: 13161 at fs/xfs/xfs_file.c:726 xfs_file_dio_aio_write+0x176/0x2a8 [xfs]()
+[60400.201783] Modules linked in: loop btrfs xor raid6_pq ppdev parport_pc i2c_piix4 parport i2c_core pcspkr serio_raw acpi_cpufreq xfs sd_mod ata_generic pata_acpi 8139too ata_piix 8139cp libata mii virtio_pci floppy virtio virtio_ring
+[60400.207266] CPU: 1 PID: 13161 Comm: dd Not tainted 4.1.0-rc5 #61
+[60400.208067] Hardware name: Red Hat KVM, BIOS 0.5.1 01/01/2007
+[60400.208734]  0000000000000000 00000000726fc8c5 ffff880213f83cf8 ffffffff816d825d
+[60400.209515]  0000000000000000 0000000000000000 ffff880213f83d38 ffffffff8107deaa
+[60400.210260]  ffffea0007f56140 ffff880213f83e40 ffff8800d661f400 ffff8800d661f728
+[60400.211207] Call Trace:
+[60400.211423]  [<ffffffff816d825d>] dump_stack+0x45/0x57
+[60400.211860]  [<ffffffff8107deaa>] warn_slowpath_common+0x8a/0xc0
+[60400.212385]  [<ffffffff8107dfda>] warn_slowpath_null+0x1a/0x20
+[60400.212909]  [<ffffffffa0145f01>] xfs_file_dio_aio_write+0x176/0x2a8 [xfs]
+[60400.213507]  [<ffffffff81342978>] ? __clear_user+0x28/0x50
+[60400.213981]  [<ffffffffa011291e>] xfs_file_write_iter+0x10e/0x120 [xfs]
+[60400.214554]  [<ffffffff811fd721>] __vfs_write+0xd1/0x110
+[60400.215004]  [<ffffffff811fddb9>] vfs_write+0xa9/0x1b0
+[60400.215454]  [<ffffffff8102472c>] ? do_audit_syscall_entry+0x6c/0x70
+[60400.215984]  [<ffffffff811fec65>] SyS_write+0x55/0xd0
+[60400.216431]  [<ffffffff816df96e>] system_call_fastpath+0x12/0x71
+[60400.216946] ---[ end trace c403c17f7a0c57a7 ]---
+[60404.341600] XFS (sda5): Unmounting Filesystem
+[60404.512757] XFS (sda5): Mounting V4 Filesystem
+[60404.540546] XFS (sda5): Ending clean mount
+[60404.609414] XFS (sda5): Unmounting Filesystem
 
-This code works - it passes all my xfstests, stress and benchmark
-workloads, and has for a couple of months now. Hence it's time to
-ask the questions of how best to approach the region count vs log
-bandwidth tradeoff....
+fs/xfs/xfs_file.c:723
+   723			ret = invalidate_inode_pages2_range(VFS_I(ip)->i_mapping,
+   724						pos >> PAGE_CACHE_SHIFT,
+   725						end >> PAGE_CACHE_SHIFT);
+   726			WARN_ON_ONCE(ret);
+   727			ret = 0;
 
-Discussion:
+It can be reproduced by running generic/247 in loop(usually within 100
+loops), without any special parameters/options.
 
-I think that we will eventually need to track multiple regions - 3
-is probably sufficient - because the nature of directory operations
-are that just about every operation modifies a header in the buffer,
-a tail section in the buffer and then some number of bytes/regions
-in the middle of the buffer.
+	while ./check generic/247; do : ; done
 
-Hence if we just track a single region, it will almost always cover
-the entire directory buffer - if we only modify a single entry in
-the buffer, then that's a fairly large cost in terms of log space
-and CPU overhead for random individual operations. If we decide that
-we are going to use a single range, then for directories we might be
-better to just use the dirty flag and log the entire buffer every
-time.
+Attachments are my xfstests config file and host info requested by
+http://xfs.org/index.php/XFS_FAQ#Q:_What_information_should_I_include_when_reporting_a_problem.3F
 
-We also have to consider non-directory buffer modification patterns.
-freespace, inode and extent btrees are the other major types of
-buffers that get logged, but they also have modification patterns
-that lend themselves well to a small number of ranges for dirty
-tracking. That is, each btree block is kept compact, so when we
-insert or remove a record or pointer we shift then higher
-records/ptrs up or down as a block, and then log the lot of them.
-And they also often have a header that is dirtied with each
-insert/delete, so typically there are usually only one or two dirty
-ranges in a btree block.
+Thanks,
+Eryu
 
-The only metadata type that really seems to benefit from fine
-grained dirty range logging is the inode buffers. Specifically, for
-v4 superblocks the create transaction only dirties the regions of
-the inode core, so for 256 byte inodes only dirties every alternate
-bitmap segement.  Dirty range tracking will double the required log
-bandwidth of inode buffers during create (roughly 25% increase on a
-4k directory block size filesystem). There isn't any performance
-differential noticable on typical systems because the log is far
-from being bandwidth bound.
+--DrWhICOqskFTAXiy
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: attachment; filename=hostinfo
 
-For v5 filesystems, this isn't an issue because the initialised
-inode buffers are XFS_BLI_ORDERED buffers and so their contents
-aren't logged.
+[root@dhcp-66-86-11 ~]# uname -a
+Linux dhcp-66-86-11.rhts.eng.nay.redhat.com 4.1.0-rc5 #61 SMP Thu May 28 12:28:22 CST 2015 x86_64 x86_64 x86_64 GNU/Linux
+[root@dhcp-66-86-11 ~]# rpm -q xfsprogs
+xfsprogs-3.2.1-6.el7.x86_64
+[root@dhcp-66-86-11 ~]# grep -c proc /proc/cpuinfo
+4
+[root@dhcp-66-86-11 ~]# cat /proc/meminfo
+MemTotal:        7912932 kB
+MemFree:         7547480 kB
+MemAvailable:    7599440 kB
+Buffers:             944 kB
+Cached:           219292 kB
+SwapCached:            0 kB
+Active:           170072 kB
+Inactive:         106352 kB
+Active(anon):      56476 kB
+Inactive(anon):     8384 kB
+Active(file):     113596 kB
+Inactive(file):    97968 kB
+Unevictable:           0 kB
+Mlocked:               0 kB
+SwapTotal:       8257532 kB
+SwapFree:        8257532 kB
+Dirty:             42556 kB
+Writeback:             0 kB
+AnonPages:         56020 kB
+Mapped:            33008 kB
+Shmem:              8552 kB
+Slab:              42520 kB
+SReclaimable:      18648 kB
+SUnreclaim:        23872 kB
+KernelStack:        2336 kB
+PageTables:         3280 kB
+NFS_Unstable:          0 kB
+Bounce:                0 kB
+WritebackTmp:          0 kB
+CommitLimit:    12213996 kB
+Committed_AS:     260636 kB
+VmallocTotal:   34359738367 kB
+VmallocUsed:       26336 kB
+VmallocChunk:   34359623680 kB
+HardwareCorrupted:     0 kB
+AnonHugePages:     12288 kB
+HugePages_Total:       0
+HugePages_Free:        0
+HugePages_Rsvd:        0
+HugePages_Surp:        0
+Hugepagesize:       2048 kB
+DirectMap4k:       69620 kB
+DirectMap2M:     8318976 kB
+[root@dhcp-66-86-11 ~]# cat /proc/mounts
+proc /proc proc rw,nosuid,nodev,noexec,relatime 0 0
+sysfs /sys sysfs rw,seclabel,nosuid,nodev,noexec,relatime 0 0
+devtmpfs /dev devtmpfs rw,seclabel,nosuid,size=3943408k,nr_inodes=985852,mode=755 0 0
+securityfs /sys/kernel/security securityfs rw,nosuid,nodev,noexec,relatime 0 0
+tmpfs /dev/shm tmpfs rw,seclabel,nosuid,nodev 0 0
+devpts /dev/pts devpts rw,seclabel,nosuid,noexec,relatime,gid=5,mode=620,ptmxmode=000 0 0
+tmpfs /run tmpfs rw,seclabel,nosuid,nodev,mode=755 0 0
+tmpfs /sys/fs/cgroup tmpfs rw,seclabel,nosuid,nodev,noexec,mode=755 0 0
+cgroup /sys/fs/cgroup/systemd cgroup rw,nosuid,nodev,noexec,relatime,xattr,release_agent=/usr/lib/systemd/systemd-cgroups-agent,name=systemd 0 0
+pstore /sys/fs/pstore pstore rw,seclabel,nosuid,nodev,noexec,relatime 0 0
+cgroup /sys/fs/cgroup/cpuset cgroup rw,nosuid,nodev,noexec,relatime,cpuset 0 0
+cgroup /sys/fs/cgroup/cpu,cpuacct cgroup rw,nosuid,nodev,noexec,relatime,cpu,cpuacct 0 0
+cgroup /sys/fs/cgroup/blkio cgroup rw,nosuid,nodev,noexec,relatime,blkio 0 0
+cgroup /sys/fs/cgroup/memory cgroup rw,nosuid,nodev,noexec,relatime,memory 0 0
+cgroup /sys/fs/cgroup/devices cgroup rw,nosuid,nodev,noexec,relatime,devices 0 0
+cgroup /sys/fs/cgroup/freezer cgroup rw,nosuid,nodev,noexec,relatime,freezer 0 0
+cgroup /sys/fs/cgroup/net_cls cgroup rw,nosuid,nodev,noexec,relatime,net_cls 0 0
+cgroup /sys/fs/cgroup/perf_event cgroup rw,nosuid,nodev,noexec,relatime,perf_event 0 0
+cgroup /sys/fs/cgroup/hugetlb cgroup rw,nosuid,nodev,noexec,relatime,hugetlb 0 0
+configfs /sys/kernel/config configfs rw,relatime 0 0
+/dev/sda3 / xfs rw,seclabel,relatime,attr2,inode64,noquota 0 0
+selinuxfs /sys/fs/selinux selinuxfs rw,relatime 0 0
+systemd-1 /proc/sys/fs/binfmt_misc autofs rw,relatime,fd=34,pgrp=1,timeout=300,minproto=5,maxproto=5,direct 0 0
+debugfs /sys/kernel/debug debugfs rw,seclabel,relatime 0 0
+hugetlbfs /dev/hugepages hugetlbfs rw,seclabel,relatime 0 0
+mqueue /dev/mqueue mqueue rw,seclabel,relatime 0 0
+/dev/sda1 /boot xfs rw,seclabel,relatime,attr2,inode64,noquota 0 0
+/dev/sda6 /mnt/testarea/scratch xfs rw,context=system_u:object_r:nfs_t:s0,relatime,attr2,inode64,noquota 0 0
+/dev/sda5 /mnt/testarea/test xfs rw,seclabel,relatime,attr2,inode64,noquota 0 0
+[root@dhcp-66-86-11 ~]# cat /proc/partitions
+major minor  #blocks  name
 
-The same problem happens with unlinks due to the unlinked list being
-logged via the inode buffer. Again this results in an increase
-in log bandwidth on both v4 and v5 filesystems, but there isn't any
-performance differential that occurs because, again, the log isn't
-bandwidth bound. As it is, there is an existing plan of improvement
-to the unlinked list logging (moving the unlinked list logging into
-the inode core transaction) and hence that will avoid any extra
-overhead here as well.
+   8        0  314572800 sda
+   8        1     512000 sda1
+   8        2    8257536 sda2
+   8        3   52428800 sda3
+   8        4          1 sda4
+   8        5   15728640 sda5
+   8        6   15728640 sda6
+   8        7   15728640 sda7
+   8        8   15728640 sda8
+   8        9   15728640 sda9
+   8       10   15728640 sda10
+   8       11   15728640 sda11
+   8       16  104857600 sdb
+   8       17  104856576 sdb1
+[root@dhcp-66-86-11 ~]# lvs
+[root@dhcp-66-86-11 ~]#
 
-Overall, I think this is a no-brainer given the performance
-improvements we get on large directory block size filesystems. There
-are some downsides, but looking at the medium-term development plans
-we will mitigate the impact of most of those downsides.
+--DrWhICOqskFTAXiy
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: attachment; filename="local.config"
 
-Comments?
+TEST_DEV=/dev/sda5
+TEST_DIR=/mnt/testarea/test				# mount point of TEST PARTITION
+SCRATCH_MNT=/mnt/testarea/scratch			# mount point for SCRATCH PARTITION
+SCRATCH_DEV=/dev/sda6
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- fs/xfs/xfs_buf.c      |   2 +
- fs/xfs/xfs_buf_item.c | 294 +++++++++++++++-----------------------------------
- fs/xfs/xfs_buf_item.h |  19 ++++
- 3 files changed, 110 insertions(+), 205 deletions(-)
-
-diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-index 1790b00..bbe4e9e 100644
---- a/fs/xfs/xfs_buf.c
-+++ b/fs/xfs/xfs_buf.c
-@@ -1457,6 +1457,8 @@ xfs_buf_iomove(
- 		page = bp->b_pages[page_index];
- 		csize = min_t(size_t, PAGE_SIZE - page_offset,
- 				      BBTOB(bp->b_io_length) - boff);
-+		if (boff + csize > bend)
-+			csize = bend - boff;
- 
- 		ASSERT((csize + page_offset) <= PAGE_SIZE);
- 
-diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
-index 092d652..1816334 100644
---- a/fs/xfs/xfs_buf_item.c
-+++ b/fs/xfs/xfs_buf_item.c
-@@ -65,50 +65,12 @@ xfs_buf_item_size_segment(
- 	int			*nvecs,
- 	int			*nbytes)
- {
--	struct xfs_buf		*bp = bip->bli_buf;
--	int			next_bit;
--	int			last_bit;
--
--	last_bit = xfs_next_bit(blfp->blf_data_map, blfp->blf_map_size, 0);
--	if (last_bit == -1)
--		return;
--
- 	/*
- 	 * initial count for a dirty buffer is 2 vectors - the format structure
--	 * and the first dirty region.
-+	 * and the dirty region. Dirty region is accounted for separately.
- 	 */
- 	*nvecs += 2;
--	*nbytes += xfs_buf_log_format_size(blfp) + XFS_BLF_CHUNK;
--
--	while (last_bit != -1) {
--		/*
--		 * This takes the bit number to start looking from and
--		 * returns the next set bit from there.  It returns -1
--		 * if there are no more bits set or the start bit is
--		 * beyond the end of the bitmap.
--		 */
--		next_bit = xfs_next_bit(blfp->blf_data_map, blfp->blf_map_size,
--					last_bit + 1);
--		/*
--		 * If we run out of bits, leave the loop,
--		 * else if we find a new set of bits bump the number of vecs,
--		 * else keep scanning the current set of bits.
--		 */
--		if (next_bit == -1) {
--			break;
--		} else if (next_bit != last_bit + 1) {
--			last_bit = next_bit;
--			(*nvecs)++;
--		} else if (xfs_buf_offset(bp, next_bit * XFS_BLF_CHUNK) !=
--			   (xfs_buf_offset(bp, last_bit * XFS_BLF_CHUNK) +
--			    XFS_BLF_CHUNK)) {
--			last_bit = next_bit;
--			(*nvecs)++;
--		} else {
--			last_bit++;
--		}
--		*nbytes += XFS_BLF_CHUNK;
--	}
-+	*nbytes += xfs_buf_log_format_size(blfp);
- }
- 
- /*
-@@ -135,6 +97,8 @@ xfs_buf_item_size(
- 	int			*nbytes)
- {
- 	struct xfs_buf_log_item	*bip = BUF_ITEM(lip);
-+	struct xfs_buf	*bp = bip->bli_buf;
-+	uint			offset = 0;
- 	int			i;
- 
- 	ASSERT(atomic_read(&bip->bli_refcount) > 0);
-@@ -154,6 +118,7 @@ xfs_buf_item_size(
- 	}
- 
- 	ASSERT(bip->bli_flags & XFS_BLI_LOGGED);
-+	ASSERT(bip->bli_flags & XFS_BLI_DIRTY);
- 
- 	if (bip->bli_flags & XFS_BLI_ORDERED) {
- 		/*
-@@ -175,10 +140,28 @@ xfs_buf_item_size(
- 	 * count for the extra buf log format structure that will need to be
- 	 * written.
- 	 */
-+	ASSERT(bip->bli_range[0].last != 0);
-+	if (bip->bli_range[0].last == 0) {
-+		/* clean! */
-+		ASSERT(bip->bli_range[0].first == 0);
-+		return;
-+	}
-+
- 	for (i = 0; i < bip->bli_format_count; i++) {
--		xfs_buf_item_size_segment(bip, &bip->bli_formats[i],
--					  nvecs, nbytes);
-+		/*
-+		 * Only format dirty regions or stale buffers
-+		 */
-+		struct xfs_bli_range *rp = &bip->bli_range[0];
-+
-+		if ((rp->first <= offset + BBTOB(bp->b_maps[i].bm_len) &&
-+		     rp->last >= offset))
-+			xfs_buf_item_size_segment(bip, &bip->bli_formats[i],
-+						  nvecs, nbytes);
-+		offset += BBTOB(bp->b_maps[i].bm_len);
- 	}
-+	*nbytes += bip->bli_range[0].last - bip->bli_range[0].first;
-+
-+
- 	trace_xfs_buf_item_size(bip);
- }
- 
-@@ -191,7 +174,6 @@ xfs_buf_item_copy_iovec(
- 	int			first_bit,
- 	uint			nbits)
- {
--	offset += first_bit * XFS_BLF_CHUNK;
- 	xlog_copy_iovec(lv, vecp, XLOG_REG_TYPE_BCHUNK,
- 			xfs_buf_offset(bp, offset),
- 			nbits * XFS_BLF_CHUNK);
-@@ -214,14 +196,18 @@ xfs_buf_item_format_segment(
- 	struct xfs_buf_log_item	*bip,
- 	struct xfs_log_vec	*lv,
- 	struct xfs_log_iovec	**vecp,
-+	struct xfs_bli_range	*rp,
- 	uint			offset,
-+	uint			length,
- 	struct xfs_buf_log_format *blfp)
- {
- 	struct xfs_buf	*bp = bip->bli_buf;
-+	char		*buf;
- 	uint		base_size;
-+	uint		start;
-+	uint		end;
- 	int		first_bit;
- 	int		last_bit;
--	int		next_bit;
- 	uint		nbits;
- 
- 	/* copy the flags across from the base format item */
-@@ -233,16 +219,6 @@ xfs_buf_item_format_segment(
- 	 * memory structure.
- 	 */
- 	base_size = xfs_buf_log_format_size(blfp);
--
--	first_bit = xfs_next_bit(blfp->blf_data_map, blfp->blf_map_size, 0);
--	if (!(bip->bli_flags & XFS_BLI_STALE) && first_bit == -1) {
--		/*
--		 * If the map is not be dirty in the transaction, mark
--		 * the size as zero and do not advance the vector pointer.
--		 */
--		return;
--	}
--
- 	blfp = xlog_copy_iovec(lv, vecp, XLOG_REG_TYPE_BFORMAT, blfp, base_size);
- 	blfp->blf_size = 1;
- 
-@@ -257,46 +233,40 @@ xfs_buf_item_format_segment(
- 		return;
- 	}
- 
-+	blfp->blf_size++;
- 
- 	/*
--	 * Fill in an iovec for each set of contiguous chunks.
-+	 * Now we need to set the bits in the bitmap and set up the iovecs
-+	 * appropriately. We know there is a contiguous range in this buffer
-+	 * than needs to be set, so find the first bit, the last bit, and
-+	 * go from there.
- 	 */
--	last_bit = first_bit;
--	nbits = 1;
--	for (;;) {
--		/*
--		 * This takes the bit number to start looking from and
--		 * returns the next set bit from there.  It returns -1
--		 * if there are no more bits set or the start bit is
--		 * beyond the end of the bitmap.
--		 */
--		next_bit = xfs_next_bit(blfp->blf_data_map, blfp->blf_map_size,
--					(uint)last_bit + 1);
--		/*
--		 * If we run out of bits fill in the last iovec and get out of
--		 * the loop.  Else if we start a new set of bits then fill in
--		 * the iovec for the series we were looking at and start
--		 * counting the bits in the new one.  Else we're still in the
--		 * same set of bits so just keep counting and scanning.
--		 */
--		if (next_bit == -1) {
--			xfs_buf_item_copy_iovec(lv, vecp, bp, offset,
--						first_bit, nbits);
--			blfp->blf_size++;
--			break;
--		} else if (next_bit != last_bit + 1 ||
--		           xfs_buf_item_straddle(bp, offset, next_bit, last_bit)) {
--			xfs_buf_item_copy_iovec(lv, vecp, bp, offset,
--						first_bit, nbits);
--			blfp->blf_size++;
--			first_bit = next_bit;
--			last_bit = next_bit;
--			nbits = 1;
--		} else {
--			last_bit++;
--			nbits++;
--		}
--	}
-+	start = 0;
-+	if (offset < rp->first)
-+		start = rp->first - offset;
-+	end = length - 1;
-+	if (offset + length > rp->last)
-+		end = rp->last - offset - 1;
-+
-+	start &= ~((1 << XFS_BLF_SHIFT) - 1);
-+	first_bit = start >> XFS_BLF_SHIFT;
-+	last_bit = end >> XFS_BLF_SHIFT;
-+	nbits = last_bit - first_bit + 1;
-+	bitmap_set((unsigned long *)blfp->blf_data_map, first_bit, nbits);
-+
-+	ASSERT(end <= length);
-+	ASSERT(start <= length);
-+	ASSERT(length >= nbits * XFS_BLF_CHUNK);
-+	/*
-+	 * Copy needs to be done a buffer page at a time as we can be logging
-+	 * unmapped buffers. hence we have to use xfs_buf_iomove() rather than a
-+	 * straight memcpy here.
-+	 */
-+	offset += first_bit * XFS_BLF_CHUNK;
-+	length = nbits * XFS_BLF_CHUNK;
-+	buf = xlog_prepare_iovec(lv, vecp, XLOG_REG_TYPE_BCHUNK);
-+	xfs_buf_iomove(bp, offset, length, buf, XBRW_READ);
-+	xlog_finish_iovec(lv, *vecp, length);
- }
- 
- /*
-@@ -323,7 +293,6 @@ xfs_buf_item_format(
- 	       (xfs_blft_from_flags(&bip->__bli_format) > XFS_BLFT_UNKNOWN_BUF
- 	        && xfs_blft_from_flags(&bip->__bli_format) < XFS_BLFT_MAX_BUF));
- 
--
- 	/*
- 	 * If it is an inode buffer, transfer the in-memory state to the
- 	 * format flags and clear the in-memory state.
-@@ -357,9 +326,17 @@ xfs_buf_item_format(
- 	}
- 
- 	for (i = 0; i < bip->bli_format_count; i++) {
--		xfs_buf_item_format_segment(bip, lv, &vecp, offset,
--					    &bip->bli_formats[i]);
--		offset += bp->b_maps[i].bm_len;
-+		/*
-+		 * Only format dirty regions or stale buffers
-+		 */
-+		struct xfs_bli_range *rp = &bip->bli_range[0];
-+		if ((bip->bli_flags & XFS_BLI_STALE) ||
-+		    (rp->first <= offset + BBTOB(bp->b_maps[i].bm_len) &&
-+		     rp->last > offset))
-+			xfs_buf_item_format_segment(bip, lv, &vecp, rp, offset,
-+						    BBTOB(bp->b_maps[i].bm_len),
-+						    &bip->bli_formats[i]);
-+		offset += BBTOB(bp->b_maps[i].bm_len);
- 	}
- 
- 	/*
-@@ -800,6 +777,9 @@ xfs_buf_item_init(
- 		bip->bli_formats[i].blf_map_size = map_size;
- 	}
- 
-+	BUILD_BUG_ON(XFS_BLI_RANGES != 1);
-+	bip->bli_range[0].first = UINT_MAX;
-+
- 	/*
- 	 * Put the buf item into the list of items attached to the
- 	 * buffer at the front.
-@@ -809,91 +789,9 @@ xfs_buf_item_init(
- 	bp->b_fspriv = bip;
- }
- 
--
- /*
-  * Mark bytes first through last inclusive as dirty in the buf
-- * item's bitmap.
-- */
--static void
--xfs_buf_item_log_segment(
--	uint			first,
--	uint			last,
--	uint			*map)
--{
--	uint		first_bit;
--	uint		last_bit;
--	uint		bits_to_set;
--	uint		bits_set;
--	uint		word_num;
--	uint		*wordp;
--	uint		bit;
--	uint		end_bit;
--	uint		mask;
--
--	/*
--	 * Convert byte offsets to bit numbers.
--	 */
--	first_bit = first >> XFS_BLF_SHIFT;
--	last_bit = last >> XFS_BLF_SHIFT;
--
--	/*
--	 * Calculate the total number of bits to be set.
--	 */
--	bits_to_set = last_bit - first_bit + 1;
--
--	/*
--	 * Get a pointer to the first word in the bitmap
--	 * to set a bit in.
--	 */
--	word_num = first_bit >> BIT_TO_WORD_SHIFT;
--	wordp = &map[word_num];
--
--	/*
--	 * Calculate the starting bit in the first word.
--	 */
--	bit = first_bit & (uint)(NBWORD - 1);
--
--	/*
--	 * First set any bits in the first word of our range.
--	 * If it starts at bit 0 of the word, it will be
--	 * set below rather than here.  That is what the variable
--	 * bit tells us. The variable bits_set tracks the number
--	 * of bits that have been set so far.  End_bit is the number
--	 * of the last bit to be set in this word plus one.
--	 */
--	if (bit) {
--		end_bit = MIN(bit + bits_to_set, (uint)NBWORD);
--		mask = ((1 << (end_bit - bit)) - 1) << bit;
--		*wordp |= mask;
--		wordp++;
--		bits_set = end_bit - bit;
--	} else {
--		bits_set = 0;
--	}
--
--	/*
--	 * Now set bits a whole word at a time that are between
--	 * first_bit and last_bit.
--	 */
--	while ((bits_to_set - bits_set) >= NBWORD) {
--		*wordp |= 0xffffffff;
--		bits_set += NBWORD;
--		wordp++;
--	}
--
--	/*
--	 * Finally, set any bits left to be set in one last partial word.
--	 */
--	end_bit = bits_to_set - bits_set;
--	if (end_bit) {
--		mask = (1 << end_bit) - 1;
--		*wordp |= mask;
--	}
--}
--
--/*
-- * Mark bytes first through last inclusive as dirty in the buf
-- * item's bitmap.
-+ * record dirty regions on the buffer.
-  */
- void
- xfs_buf_item_log(
-@@ -901,33 +799,19 @@ xfs_buf_item_log(
- 	uint			first,
- 	uint			last)
- {
--	int			i;
--	uint			start;
--	uint			end;
--	struct xfs_buf		*bp = bip->bli_buf;
--
--	/*
--	 * walk each buffer segment and mark them dirty appropriately.
--	 */
--	start = 0;
--	for (i = 0; i < bip->bli_format_count; i++) {
--		if (start > last)
--			break;
--		end = start + BBTOB(bp->b_maps[i].bm_len);
--		if (first > end) {
--			start += BBTOB(bp->b_maps[i].bm_len);
--			continue;
--		}
--		if (first < start)
--			first = start;
--		if (end > last)
--			end = last;
--
--		xfs_buf_item_log_segment(first, end,
--					 &bip->bli_formats[i].blf_data_map[0]);
--
--		start += bp->b_maps[i].bm_len;
--	}
-+	ASSERT(last != 0);
-+	ASSERT(first <= last);
-+	ASSERT(last < BBTOB(bip->bli_buf->b_length));
-+
-+	/* initial implementation - single range */
-+	BUILD_BUG_ON(XFS_BLI_RANGES != 1);
-+	if (first < bip->bli_range[0].first)
-+		bip->bli_range[0].first = rounddown(first, XFS_BLF_CHUNK);
-+	if (last > bip->bli_range[0].last)
-+		bip->bli_range[0].last = roundup(last, XFS_BLF_CHUNK);
-+
-+	ASSERT(bip->bli_range[0].last != 0);
-+	ASSERT(bip->bli_range[0].first <= bip->bli_range[0].last);
- }
- 
- 
-diff --git a/fs/xfs/xfs_buf_item.h b/fs/xfs/xfs_buf_item.h
-index 3f3455a..3594eb6 100644
---- a/fs/xfs/xfs_buf_item.h
-+++ b/fs/xfs/xfs_buf_item.h
-@@ -57,6 +57,25 @@ typedef struct xfs_buf_log_item {
- 	unsigned int		bli_recur;	/* lock recursion count */
- 	atomic_t		bli_refcount;	/* cnt of tp refs */
- 	int			bli_format_count;	/* count of headers */
-+
-+	/*
-+	 * logging ranges. Keep a small number of distinct ranges rather than a
-+	 * bitmap which is expensive to maintain. Initial implementation is just
-+	 * a single range, but it is like that 3 or 4 will be optimal so that we
-+	 * can log separate header, tail and content changes (e.g. for dir
-+	 * structures) without capturing the entire buffer unnecessarily for
-+	 * isolated changes.
-+	 *
-+	 * Note: ranges are 32 bit values because we have to support an end
-+	 * range value of 0x10000....
-+	 */
-+#define XFS_BLI_RANGES	1
-+	struct xfs_bli_range {
-+		uint32_t	first;
-+		uint32_t	last;
-+	}			bli_range[XFS_BLI_RANGES];
-+	int			bli_ranges;
-+
- 	struct xfs_buf_log_format *bli_formats;	/* array of in-log header ptrs */
- 	struct xfs_buf_log_format __bli_format;	/* embedded in-log header */
- } xfs_buf_log_item_t;
--- 
-2.0.0
+--DrWhICOqskFTAXiy
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--DrWhICOqskFTAXiy--
