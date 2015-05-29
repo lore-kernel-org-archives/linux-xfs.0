@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 2E75E7F3F
-	for <xfs@oss.sgi.com>; Fri, 29 May 2015 14:06:37 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 822627F54
+	for <xfs@oss.sgi.com>; Fri, 29 May 2015 14:13:27 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id EA0878F804C
-	for <xfs@oss.sgi.com>; Fri, 29 May 2015 12:06:33 -0700 (PDT)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 60354304039
+	for <xfs@oss.sgi.com>; Fri, 29 May 2015 12:13:27 -0700 (PDT)
 Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id aB5OSCC1U6HbaspE for <xfs@oss.sgi.com>;
-	Fri, 29 May 2015 12:06:31 -0700 (PDT)
-Message-ID: <5568B8B6.2050706@sandeen.net>
-Date: Fri, 29 May 2015 14:06:30 -0500
+	ESMTP id 4vkaSnt7MFk6DqkP for <xfs@oss.sgi.com>;
+	Fri, 29 May 2015 12:13:25 -0700 (PDT)
+Message-ID: <5568BA54.3060302@sandeen.net>
+Date: Fri, 29 May 2015 14:13:24 -0500
 From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: [PATCH 2/4] xfsprogs: add xlog_is_empty() helper
+Subject: [PATCH 3/4] xfsprogs: rename dont_obfuscate in xfs_metadump
 References: <5568B7CE.9030709@redhat.com>
 In-Reply-To: <5568B7CE.9030709@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -29,239 +29,81 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Eric Sandeen <sandeen@redhat.com>, xfs@oss.sgi.com
 
-xfs_repair and xfs_db both check for a dirty log, using roughly
-the same cut and pasted code.
-
-Add a new helper to do this, xlog_is_dirty(), and use it instead.
-
-Note, the helper (and the code before it) is a little odd in that
-it (re-)initializes some libxfs_init_t members before proceeding,
-I haven't yet worked out if that's necessary or correct, so I've
-just kept the same behavior for now.  Still, it seems like this
-should be done in libxfs_init, or not at all.
+Seeing "if (!dont_obfuscate)" hurts my brain; rename it to
+"obfuscate" and invert the logic.
 
 Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 ---
- db/sb.c           |   21 ++++---------------
- include/libxlog.h |    2 +
- libxlog/util.c    |   56 +++++++++++++++++++++++++++++++++++++++++++++++++++++
- repair/phase2.c   |   55 +++++++++++----------------------------------------
- 4 files changed, 75 insertions(+), 59 deletions(-)
+ db/metadump.c |   14 +++++++-------
+ 1 files changed, 7 insertions(+), 7 deletions(-)
 
-diff --git a/db/sb.c b/db/sb.c
-index 991478d..f9d39e6 100644
---- a/db/sb.c
-+++ b/db/sb.c
-@@ -225,8 +225,7 @@ int xlog_recover_do_trans(struct xlog *log, xlog_recover_t *t, int p)
- int
- sb_logcheck(void)
- {
--	struct xlog	log;
--	xfs_daddr_t	head_blk, tail_blk;
-+	int		dirty;
+diff --git a/db/metadump.c b/db/metadump.c
+index b227a6d..57b53d9 100644
+--- a/db/metadump.c
++++ b/db/metadump.c
+@@ -74,7 +74,7 @@ static xfs_ino_t	cur_ino;
+ static int		show_progress = 0;
+ static int		stop_on_read_error = 0;
+ static int		max_extent_size = DEFAULT_MAX_EXT_SIZE;
+-static int		dont_obfuscate = 0;
++static int		obfuscate = 1;
+ static int		show_warnings = 0;
+ static int		progress_since_warning = 0;
  
- 	if (mp->m_sb.sb_logstart) {
- 		if (x.logdev && x.logdev != x.ddev) {
-@@ -242,25 +241,14 @@ sb_logcheck(void)
+@@ -1368,7 +1368,7 @@ process_single_fsb_objects(
+ 
  		}
- 	}
  
--	memset(&log, 0, sizeof(log));
- 	libxfs_buftarg_init(mp, x.ddev, x.logdev, x.rtdev);
--	x.logBBsize = XFS_FSB_TO_BB(mp, mp->m_sb.sb_logblocks);
--	x.logBBstart = XFS_FSB_TO_DADDR(mp, mp->m_sb.sb_logstart);
--	x.lbsize = BBSIZE;
--	if (xfs_sb_version_hassector(&mp->m_sb))
--		x.lbsize <<= (mp->m_sb.sb_logsectlog - BBSHIFT);
--
--	log.l_dev = mp->m_logdev_targp;
--	log.l_logBBsize = x.logBBsize;
--	log.l_logBBstart = x.logBBstart;
--	log.l_sectBBsize  = BTOBB(x.lbsize);
--	log.l_mp = mp;
--
--	if (xlog_find_tail(&log, &head_blk, &tail_blk)) {
-+
-+	dirty = xlog_is_dirty(mp, &x, 0);
-+
-+	if (dirty == -1) {
- 		dbprintf(_("ERROR: cannot find log head/tail, run xfs_repair\n"));
- 		return 0;
--	}
--	if (head_blk != tail_blk) {
-+	} else if (dirty == 1) {
- 		dbprintf(_(
- "ERROR: The filesystem has valuable metadata changes in a log which needs to\n"
- "be replayed.  Mount the filesystem to replay the log, and unmount it before\n"
-@@ -270,6 +258,7 @@ sb_logcheck(void)
- "of the filesystem before doing this.\n"), progname);
- 		return 0;
- 	}
-+	/* Log is clean */
- 	return 1;
- }
+-		if (dont_obfuscate)
++		if (!obfuscate)
+ 			goto write;
  
-diff --git a/include/libxlog.h b/include/libxlog.h
-index e6d915c..c6640a8 100644
---- a/include/libxlog.h
-+++ b/include/libxlog.h
-@@ -83,6 +83,8 @@ extern int	print_record_header;
- /* libxfs parameters */
- extern libxfs_init_t	x;
+ 		dp = iocur_top->data;
+@@ -1460,7 +1460,7 @@ process_multi_fsb_objects(
  
-+
-+extern int xlog_is_dirty(xfs_mount_t *mp, libxfs_init_t *x, int verbose);
- extern struct xfs_buf *xlog_get_bp(struct xlog *, int);
- extern void	xlog_put_bp(struct xfs_buf *);
- extern int	xlog_bread(struct xlog *log, xfs_daddr_t blk_no, int nbblks,
-diff --git a/libxlog/util.c b/libxlog/util.c
-index 053cf04..498c06c 100644
---- a/libxlog/util.c
-+++ b/libxlog/util.c
-@@ -24,6 +24,62 @@ int print_skip_uuid;
- int print_record_header;
- libxfs_init_t x;
+ 			}
  
-+/*
-+ * Return 1 for dirty, 0 for clean, -1 for errors
-+ */
-+int
-+xlog_is_dirty(
-+	xfs_mount_t *mp,
-+	libxfs_init_t *x,
-+	int verbose)
-+{
-+	int error;
-+	struct xlog	log;
-+	xfs_daddr_t head_blk, tail_blk;
-+
-+	memset(&log, 0, sizeof(log));
-+
-+	/* We (re-)init members of libxfs_init_t here?  really? */
-+	x->logBBsize = XFS_FSB_TO_BB(mp, mp->m_sb.sb_logblocks);
-+	x->logBBstart = XFS_FSB_TO_DADDR(mp, mp->m_sb.sb_logstart);
-+	x->lbsize = BBSIZE;
-+	if (xfs_sb_version_hassector(&mp->m_sb))
-+		x->lbsize <<= (mp->m_sb.sb_logsectlog - BBSHIFT);
-+
-+	log.l_dev = mp->m_logdev_targp;
-+	log.l_logBBsize = x->logBBsize;
-+	log.l_logBBstart = x->logBBstart;
-+	log.l_sectBBsize = BTOBB(x->lbsize);
-+	log.l_mp = mp;
-+	if (xfs_sb_version_hassector(&mp->m_sb)) {
-+		log.l_sectbb_log = mp->m_sb.sb_logsectlog - BBSHIFT;
-+		ASSERT(log.l_sectbb_log <= mp->m_sectbb_log);
-+		/* for larger sector sizes, must have v2 or external log */
-+		ASSERT(log.l_sectbb_log == 0 ||
-+			log.l_logBBstart == 0 ||
-+			xfs_sb_version_haslogv2(&mp->m_sb));
-+		ASSERT(mp->m_sb.sb_logsectlog >= BBSHIFT);
-+	}
-+	log.l_sectbb_mask = (1 << log.l_sectbb_log) - 1;
-+
-+	if ((error = xlog_find_tail(&log, &head_blk, &tail_blk))) {
-+		xlog_warn(_("%s: cannot find log head/tail "
-+			  "(xlog_find_tail=%d)\n"),
-+			__func__, error);
-+		return -1;
-+	}
-+
-+	if (verbose)
-+		xlog_warn(
-+	_("%s: head block %" PRId64 " tail block %" PRId64 "\n"),
-+			__func__, head_blk, tail_blk);
-+
-+	if (head_blk != tail_blk)
-+		return 1;
-+
-+	return 0;
-+}
-+
- static int
- header_check_uuid(xfs_mount_t *mp, xlog_rec_header_t *head)
+-			if (dont_obfuscate || o >= mp->m_dir_geo->leafblk) {
++			if (!obfuscate || o >= mp->m_dir_geo->leafblk) {
+ 				ret = write_buf(iocur_top);
+ 				goto out_pop;
+ 			}
+@@ -1725,7 +1725,7 @@ process_inode_data(
  {
-diff --git a/repair/phase2.c b/repair/phase2.c
-index 983aaa7..a23f472 100644
---- a/repair/phase2.c
-+++ b/repair/phase2.c
-@@ -38,62 +38,31 @@ int xlog_recover_do_trans(struct xlog *log, xlog_recover_t *t, int p)
- static void
- zero_log(xfs_mount_t *mp)
- {
--	int error;
--	struct xlog	log;
--	xfs_daddr_t head_blk, tail_blk;
--
--	memset(&log, 0, sizeof(log));
--	x.logBBsize = XFS_FSB_TO_BB(mp, mp->m_sb.sb_logblocks);
--	x.logBBstart = XFS_FSB_TO_DADDR(mp, mp->m_sb.sb_logstart);
--	x.lbsize = BBSIZE;
--	if (xfs_sb_version_hassector(&mp->m_sb))
--		x.lbsize <<= (mp->m_sb.sb_logsectlog - BBSHIFT);
--
--	log.l_dev = mp->m_logdev_targp;
--	log.l_logBBsize = x.logBBsize;
--	log.l_logBBstart = x.logBBstart;
--	log.l_sectBBsize  = BTOBB(x.lbsize);
--	log.l_mp = mp;
--	if (xfs_sb_version_hassector(&mp->m_sb)) {
--		log.l_sectbb_log = mp->m_sb.sb_logsectlog - BBSHIFT;
--		ASSERT(log.l_sectbb_log <= mp->m_sectbb_log);
--		/* for larger sector sizes, must have v2 or external log */
--		ASSERT(log.l_sectbb_log == 0 ||
--			log.l_logBBstart == 0 ||
--			xfs_sb_version_haslogv2(&mp->m_sb));
--		ASSERT(mp->m_sb.sb_logsectlog >= BBSHIFT);
--	}
--	log.l_sectbb_mask = (1 << log.l_sectbb_log) - 1;
--
--	if ((error = xlog_find_tail(&log, &head_blk, &tail_blk))) {
--		do_warn(_("zero_log: cannot find log head/tail "
--			  "(xlog_find_tail=%d), zeroing it anyway\n"),
--			error);
--	} else {
--		if (verbose) {
--			do_warn(
--	_("zero_log: head block %" PRId64 " tail block %" PRId64 "\n"),
--				head_blk, tail_blk);
--		}
--		if (head_blk != tail_blk) {
--			if (zap_log) {
--				do_warn(_(
-+	int		dirty;
-+
-+	dirty = xlog_is_dirty(mp, &x, verbose);
-+
-+	if (dirty == -1)
-+		do_warn(_("zero_log: cannot find log head/tail, "
-+			  "zeroing it anyway\n"));
-+	else if (dirty == 1) {
-+		if (zap_log) {
-+			do_warn(_(
- "ALERT: The filesystem has valuable metadata changes in a log which is being\n"
- "destroyed because the -L option was used.\n"));
--			} else {
--				do_warn(_(
-+		} else {
-+			do_warn(_(
- "ERROR: The filesystem has valuable metadata changes in a log which needs to\n"
- "be replayed.  Mount the filesystem to replay the log, and unmount it before\n"
- "re-running xfs_repair.  If you are unable to mount the filesystem, then use\n"
- "the -L option to destroy the log and attempt a repair.\n"
- "Note that destroying the log may cause corruption -- please attempt a mount\n"
- "of the filesystem before doing this.\n"));
--				exit(2);
--			}
-+			exit(2);
- 		}
- 	}
+ 	switch (dip->di_format) {
+ 		case XFS_DINODE_FMT_LOCAL:
+-			if (!dont_obfuscate)
++			if (obfuscate)
+ 				switch (itype) {
+ 					case TYP_DIR2:
+ 						obfuscate_sf_dir(dip);
+@@ -1769,7 +1769,7 @@ process_inode(
+ 	cur_ino = XFS_AGINO_TO_INO(mp, agno, agino);
  
--	libxfs_log_clear(log.l_dev,
-+	libxfs_log_clear(mp->m_logdev_targp,
- 		XFS_FSB_TO_DADDR(mp, mp->m_sb.sb_logstart),
- 		(xfs_extlen_t)XFS_FSB_TO_BB(mp, mp->m_sb.sb_logblocks),
- 		&mp->m_sb.sb_uuid,
+ 	/* we only care about crc recalculation if we are obfuscating names. */
+-	if (!dont_obfuscate) {
++	if (obfuscate) {
+ 		crc_was_ok = xfs_verify_cksum((char *)dip,
+ 					mp->m_sb.sb_inodesize,
+ 					offsetof(struct xfs_dinode, di_crc));
+@@ -1801,7 +1801,7 @@ process_inode(
+ 		switch (dip->di_aformat) {
+ 			case XFS_DINODE_FMT_LOCAL:
+ 				need_new_crc = 1;
+-				if (!dont_obfuscate)
++				if (obfuscate)
+ 					obfuscate_sf_attr(dip);
+ 				break;
+ 
+@@ -2247,7 +2247,7 @@ metadump_f(
+ 				}
+ 				break;
+ 			case 'o':
+-				dont_obfuscate = 1;
++				obfuscate = 0;
+ 				break;
+ 			case 'w':
+ 				show_warnings = 1;
 -- 1.7.1
 
 _______________________________________________
