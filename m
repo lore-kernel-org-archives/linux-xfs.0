@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 99B007F37
-	for <xfs@oss.sgi.com>; Sun, 31 May 2015 06:35:37 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 373747F37
+	for <xfs@oss.sgi.com>; Sun, 31 May 2015 06:54:48 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 8CC308F8037
-	for <xfs@oss.sgi.com>; Sun, 31 May 2015 04:35:34 -0700 (PDT)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 2AB20304032
+	for <xfs@oss.sgi.com>; Sun, 31 May 2015 04:54:45 -0700 (PDT)
 Received: from zenon.ap.intdata.com (zenon.ap.interactivedata.com
-	[203.21.67.34]) by cuda.sgi.com with ESMTP id fyhCYZqLtoaFCWxX
-	for <xfs@oss.sgi.com>; Sun, 31 May 2015 04:35:32 -0700 (PDT)
+	[203.21.67.34]) by cuda.sgi.com with ESMTP id LnYV9iK6dzr9pewr
+	for <xfs@oss.sgi.com>; Sun, 31 May 2015 04:54:43 -0700 (PDT)
 From: Nan Jia <jiananmail@gmail.com>
 Subject: [PATCH 2/2] fs: xfs: xfs_trans_dquot: Add missing space according to
 	coding style
-Date: Sun, 31 May 2015 21:35:28 +1000
-Message-Id: <1433072128-2274-1-git-send-email-jiananmail@gmail.com>
+Date: Sun, 31 May 2015 21:54:38 +1000
+Message-Id: <1433073278-2622-1-git-send-email-jiananmail@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,9 +29,9 @@ Sender: xfs-bounces@oss.sgi.com
 To: david@fromorbit.com
 Cc: jiananmail@gmail.com, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-Fixed two missing space
+Fixed two missing space.
 
-Signed-off-by Nan Jia <jiananmail@gmail.com>
+Signed-off-by: Nan Jia <jiananmail@gmail.com>
 ---
  fs/xfs/xfs_trans_dquot.c | 4 ++--
  1 file changed, 2 insertions(+), 2 deletions(-)
