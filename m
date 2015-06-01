@@ -1,28 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id E1F307F59
-	for <xfs@oss.sgi.com>; Mon,  1 Jun 2015 16:16:57 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id C33338F8033
-	for <xfs@oss.sgi.com>; Mon,  1 Jun 2015 14:16:54 -0700 (PDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id CEB817F5A
+	for <xfs@oss.sgi.com>; Mon,  1 Jun 2015 16:21:24 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 5A841AC002
+	for <xfs@oss.sgi.com>; Mon,  1 Jun 2015 14:21:24 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id w90KMAzFB3YMCv2z (version=TLSv1
+	cuda.sgi.com with ESMTP id 8Qb3ET8LqgVWV8yU (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 01 Jun 2015 14:16:53 -0700 (PDT)
-Received: from int-mx14.intmail.prod.int.phx2.redhat.com
-	(int-mx14.intmail.prod.int.phx2.redhat.com [10.5.11.27])
-	by mx1.redhat.com (Postfix) with ESMTPS id 049B8300AD4
-	for <xfs@oss.sgi.com>; Mon,  1 Jun 2015 21:16:53 +0000 (UTC)
-Received: from bfoster.bfoster (dhcp-41-237.bos.redhat.com [10.18.41.237])
-	by int-mx14.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id t51LGqgR002226
-	for <xfs@oss.sgi.com>; Mon, 1 Jun 2015 17:16:52 -0400
+	Mon, 01 Jun 2015 14:21:23 -0700 (PDT)
+Date: Mon, 1 Jun 2015 17:21:20 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH v2] xfs: fix sparse inodes 32-bit compile failure
-Date: Mon,  1 Jun 2015 17:16:50 -0400
-Message-Id: <1433193410-46636-1-git-send-email-bfoster@redhat.com>
-In-Reply-To: <1433169194-41808-2-git-send-email-bfoster@redhat.com>
-References: <1433169194-41808-2-git-send-email-bfoster@redhat.com>
+Subject: Re: [PATCH v5 00/18] xfs: sparse inode chunks
+Message-ID: <20150601212120.GA17384@bfoster.bfoster>
+References: <1424369623-5656-1-git-send-email-bfoster@redhat.com>
+	<20150219191034.GA5750@bfoster.bfoster>
+	<20150601001230.GG24666@dastard>
+	<20150601125638.GB62578@bfoster.bfoster>
+	<20150601204703.GI24666@dastard>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20150601204703.GI24666@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,70 +29,68 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-The kbuild test robot reports the following compilation failure with a
-32-bit kernel configuration:
+On Tue, Jun 02, 2015 at 06:47:03AM +1000, Dave Chinner wrote:
+> On Mon, Jun 01, 2015 at 08:56:39AM -0400, Brian Foster wrote:
+> > On Mon, Jun 01, 2015 at 10:12:30AM +1000, Dave Chinner wrote:
+> > > On Thu, Feb 19, 2015 at 02:10:34PM -0500, Brian Foster wrote:
+> > > - kernel code seems to be regression from when not using sparse
+> > >   inodes
+> > 
+> > What regression are you referring to?
+> 
+> Doh! typo there. s/from/free/
+> 
 
-	fs/built-in.o: In function `xfs_ifree_cluster':
-	>> xfs_inode.c:(.text+0x17ac84): undefined reference to `__umoddi3'
+Ah, that sounds better. ;)
 
-This is due to the use of the modulus operator on a 64-bit variable in
-the ASSERT() added as part of the following commit:
+> > > - inode allocation speed does not seem to be impacted by sparse
+> > >   inode allocation - running my fsmark tests on a debug kernel show
+> > >   no performance differential, even though sparse inode chunks
+> > >   should be created in that case.
+> > > - it smoke tests through xfstests ok
+> > 
+> > I haven't really run into much for issues so far save for a problem
+> > discovered with the DEBUG mode code from my recent large block size
+> > testing. I have a patch for that lying around I need to post...
+> > 
+> > > I haven't really looked through the userspace code in any detail,
+> > > so I can't really comment on that side of things yet. The kernel
+> > > code looks good, there doesn't appear to be any regressions and the
+> > > new functionailty works so far. Hence I think I'm going to merge
+> > > the kernel code in the 4.2 cycle, and we can work on getting
+> > > userspace into the current dev tree for people to test and use the
+> > > new code....
+> > > 
+> > 
+> > Sounds good, thanks. The userspace bits have only been posted for
+> > testing purposes to this point to avoid the churn from active review of
+> > the core code. Since that is now merged, I'll get the latest mechanism
+> > ported over to userspace, incorporate some of the fixes noted above and
+> > get something posted hopefully soon.
+> 
+> Can you port it to the current dev branch (libxfs-4.1-update)? That
+> way will be much easier for you, and me when it comes to merging..
+> 
 
-	xfs: skip unallocated regions of inode chunks in xfs_ifree_cluster()
-
-This ASSERT() simply checks that the offset of the inode in a sparse
-cluster is appropriately aligned. Since the maximum inode record offset
-is 63 (for a 64 inode record) and the calculated offset here should be
-something less than that, just use a 32-bit variable to store the offset
-and call the do_mod() helper.
-
-Reported-by: kbuild test robot <fengguang.wu@intel.com>
-Signed-off-by: Brian Foster <bfoster@redhat.com>
----
-
-The do_mod() helper requires use of a variable for the first parameter,
-so that alone probably resolves the issue. This uses do_mod()
-nonetheless...
+Yeah, it's been based on the 4.1 update branch for the last tarball or
+two that have been posted, which eliminated the need for the
+dependencies I was carrying along with it beforehand.
 
 Brian
 
- fs/xfs/xfs_inode.c | 7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
-
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 4c054f6..17cd90c 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -2244,6 +2244,7 @@ xfs_ifree_cluster(
- 	int			inodes_per_cluster;
- 	int			nbufs;
- 	int			i, j;
-+	int			ioffset;
- 	xfs_daddr_t		blkno;
- 	xfs_buf_t		*bp;
- 	xfs_inode_t		*ip;
-@@ -2264,9 +2265,9 @@ xfs_ifree_cluster(
- 		 * physically allocated. Skip the cluster if an inode falls into
- 		 * a sparse region.
- 		 */
--		if ((xic->alloc & XFS_INOBT_MASK(inum - xic->first_ino)) == 0) {
--			ASSERT(((inum - xic->first_ino) %
--				inodes_per_cluster) == 0);
-+		ioffset = inum - xic->first_ino;
-+		if ((xic->alloc & XFS_INOBT_MASK(ioffset)) == 0) {
-+			ASSERT(do_mod(ioffset, inodes_per_cluster) == 0);
- 			continue;
- 		}
- 
--- 
-1.9.3
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
