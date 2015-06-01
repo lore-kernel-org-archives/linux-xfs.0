@@ -1,22 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 3A4C27F5D
-	for <xfs@oss.sgi.com>; Mon,  1 Jun 2015 15:50:08 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id C7C00AC005
-	for <xfs@oss.sgi.com>; Mon,  1 Jun 2015 13:50:07 -0700 (PDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 4C8F07F56
+	for <xfs@oss.sgi.com>; Mon,  1 Jun 2015 15:52:47 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 2D12D304032
+	for <xfs@oss.sgi.com>; Mon,  1 Jun 2015 13:52:44 -0700 (PDT)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	EhJ1ln2vFoGXxb9t for <xfs@oss.sgi.com>;
-	Mon, 01 Jun 2015 13:50:05 -0700 (PDT)
-Date: Tue, 2 Jun 2015 06:50:03 +1000
+	JqB5KBufrxpzgT36 for <xfs@oss.sgi.com>;
+	Mon, 01 Jun 2015 13:52:41 -0700 (PDT)
+Date: Tue, 2 Jun 2015 06:52:39 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Overwritten partition
-Message-ID: <20150601205003.GJ24666@dastard>
-References: <556A3E25.6010706@gmail.com>
+Subject: Re: [PATCH 1/2] xfs: fix sparse inodes 32-bit compile failure
+Message-ID: <20150601205239.GK24666@dastard>
+References: <1433169194-41808-1-git-send-email-bfoster@redhat.com>
+	<1433169194-41808-2-git-send-email-bfoster@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <556A3E25.6010706@gmail.com>
+In-Reply-To: <1433169194-41808-2-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,29 +30,46 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: hallexh@gmail.com
+To: Brian Foster <bfoster@redhat.com>
 Cc: xfs@oss.sgi.com
 
-On Sun, May 31, 2015 at 12:48:05AM +0200, hallexh@gmail.com wrote:
-> Hello,
+On Mon, Jun 01, 2015 at 10:33:13AM -0400, Brian Foster wrote:
+> The kbuild test robot reports the following compilation failure with a
+> 32-bit kernel configuration:
 > 
-> I accidentally overwritten first 40GB of 36TB XFS partition. I ran
-> xfs_repair then, which resets the superblocks (I'm sorry i didn't copied
-> the output of it) and after I mounted the partition, there was no files.
-> Empty file system, but It should be almost 90% full.
+> 	fs/built-in.o: In function `xfs_ifree_cluster':
+> 	>> xfs_inode.c:(.text+0x17ac84): undefined reference to `__umoddi3'
+> 
+> This is due to the use of the modulus operator on a 64-bit variable in
+> the ASSERT() added as part of the following commit:
+> 
+> 	xfs: skip unallocated regions of inode chunks in xfs_ifree_cluster()
+> 
+> This ASSERT() simply checks that the offset of the inode in a sparse
+> cluster is appropriately aligned. Since the maximum inode record offset
+> is 63 (for a 64 inode record) and the calculated offset here should be
+> something less than that, cast the offset value to a 32-bit type before
+> the mod to prevent the error.
+> 
+> Reported-by: kbuild test robot <fengguang.wu@intel.com>
+> Signed-off-by: Brian Foster <bfoster@redhat.com>
+> ---
+>  fs/xfs/xfs_inode.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+> index 4c054f6..16bd01b 100644
+> --- a/fs/xfs/xfs_inode.c
+> +++ b/fs/xfs/xfs_inode.c
+> @@ -2265,7 +2265,7 @@ xfs_ifree_cluster(
+>  		 * a sparse region.
+>  		 */
+>  		if ((xic->alloc & XFS_INOBT_MASK(inum - xic->first_ino)) == 0) {
+> -			ASSERT(((inum - xic->first_ino) %
+> +			ASSERT(((int)(inum - xic->first_ino) %
+>  				inodes_per_cluster) == 0);
 
-SOunds like a case of using inode32 allocator, and losing the entire
-inode btree (i.e. the index that tracks allocated inodes) as well as
-the root inode, hence there being no way to easily discover and
-reconstruct the directory tree at all.
-
-> Am I really screwed or there's a chance to recover the data
-> somehow?
-
-disaster recovery tools are your only real hope at this point. go
-searching for xfs_irecover as a good starting point for scraping
-inodes out of the corpse and hence hopefully being able to
-reconstruct some of the directory structure...
+do_mod()
 
 Cheers,
 
