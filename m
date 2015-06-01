@@ -1,27 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id E3CA17F5A
-	for <xfs@oss.sgi.com>; Mon,  1 Jun 2015 09:33:16 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id C40288F8040
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id E513A7F69
+	for <xfs@oss.sgi.com>; Mon,  1 Jun 2015 09:33:19 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id C571F304048
 	for <xfs@oss.sgi.com>; Mon,  1 Jun 2015 07:33:16 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id mgZf4Lbo9bJt5TJz (version=TLSv1
+	cuda.sgi.com with ESMTP id AOzPg8pa3Ubn9jYH (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
 	Mon, 01 Jun 2015 07:33:16 -0700 (PDT)
-Received: from int-mx09.intmail.prod.int.phx2.redhat.com
-	(int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
-	by mx1.redhat.com (Postfix) with ESMTPS id 94A6BC9455
+Received: from int-mx11.intmail.prod.int.phx2.redhat.com
+	(int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
+	by mx1.redhat.com (Postfix) with ESMTPS id 8834D2931EC
 	for <xfs@oss.sgi.com>; Mon,  1 Jun 2015 14:33:15 +0000 (UTC)
 Received: from bfoster.bfoster (dhcp-41-237.bos.redhat.com [10.18.41.237])
-	by int-mx09.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id t51EXFMw026741
+	by int-mx11.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id t51EXFFN026121
 	for <xfs@oss.sgi.com>; Mon, 1 Jun 2015 10:33:15 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH 2/2] xfs: check min blks for random debug mode sparse
-	allocations
-Date: Mon,  1 Jun 2015 10:33:14 -0400
-Message-Id: <1433169194-41808-3-git-send-email-bfoster@redhat.com>
+Subject: [PATCH 1/2] xfs: fix sparse inodes 32-bit compile failure
+Date: Mon,  1 Jun 2015 10:33:13 -0400
+Message-Id: <1433169194-41808-2-git-send-email-bfoster@redhat.com>
 In-Reply-To: <1433169194-41808-1-git-send-email-bfoster@redhat.com>
 References: <1433169194-41808-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,61 +38,42 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-The inode allocator enables random sparse inode chunk allocations in
-DEBUG mode to facilitate testing. Sparse inode allocations are not
-always possible, however, depending on the fs geometry. For example,
-there is no possibility for a sparse inode allocation on filesystems
-where the block size is large enough to fit one or more inode chunks
-within a single block.
+The kbuild test robot reports the following compilation failure with a
+32-bit kernel configuration:
 
-Fix up the DEBUG mode sparse inode allocation logic to trigger random
-sparse allocations only when the geometry of the fs allows it.
+	fs/built-in.o: In function `xfs_ifree_cluster':
+	>> xfs_inode.c:(.text+0x17ac84): undefined reference to `__umoddi3'
 
+This is due to the use of the modulus operator on a 64-bit variable in
+the ASSERT() added as part of the following commit:
+
+	xfs: skip unallocated regions of inode chunks in xfs_ifree_cluster()
+
+This ASSERT() simply checks that the offset of the inode in a sparse
+cluster is appropriately aligned. Since the maximum inode record offset
+is 63 (for a 64 inode record) and the calculated offset here should be
+something less than that, cast the offset value to a 32-bit type before
+the mod to prevent the error.
+
+Reported-by: kbuild test robot <fengguang.wu@intel.com>
 Signed-off-by: Brian Foster <bfoster@redhat.com>
 ---
- fs/xfs/libxfs/xfs_ialloc.c | 15 ++++++++-------
- 1 file changed, 8 insertions(+), 7 deletions(-)
+ fs/xfs/xfs_inode.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
-index a18bc75..66efc70 100644
---- a/fs/xfs/libxfs/xfs_ialloc.c
-+++ b/fs/xfs/libxfs/xfs_ialloc.c
-@@ -606,20 +606,20 @@ xfs_ialloc_ag_alloc(
- 	uint16_t	allocmask = (uint16_t) -1; /* init. to full chunk */
- 	struct xfs_inobt_rec_incore rec;
- 	struct xfs_perag *pag;
--
- 	int		do_sparse = 0;
- 
--#ifdef DEBUG
--	/* randomly do sparse inode allocations */
--	if (xfs_sb_version_hassparseinodes(&tp->t_mountp->m_sb))
--		do_sparse = prandom_u32() & 1;
--#endif
--
- 	memset(&args, 0, sizeof(args));
- 	args.tp = tp;
- 	args.mp = tp->t_mountp;
- 	args.fsbno = NULLFSBLOCK;
- 
-+#ifdef DEBUG
-+	/* randomly do sparse inode allocations */
-+	if (xfs_sb_version_hassparseinodes(&tp->t_mountp->m_sb) &&
-+	    args.mp->m_ialloc_min_blks < args.mp->m_ialloc_blks)
-+		do_sparse = prandom_u32() & 1;
-+#endif
-+
- 	/*
- 	 * Locking will ensure that we don't have two callers in here
- 	 * at one time.
-@@ -768,6 +768,7 @@ sparse_alloc:
- 			return error;
- 
- 		newlen = args.len << args.mp->m_sb.sb_inopblog;
-+		ASSERT(newlen <= XFS_INODES_PER_CHUNK);
- 		allocmask = (1 << (newlen / XFS_INODES_PER_HOLEMASK_BIT)) - 1;
- 	}
- 
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index 4c054f6..16bd01b 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -2265,7 +2265,7 @@ xfs_ifree_cluster(
+ 		 * a sparse region.
+ 		 */
+ 		if ((xic->alloc & XFS_INOBT_MASK(inum - xic->first_ino)) == 0) {
+-			ASSERT(((inum - xic->first_ino) %
++			ASSERT(((int)(inum - xic->first_ino) %
+ 				inodes_per_cluster) == 0);
+ 			continue;
+ 		}
 -- 
 1.9.3
 
