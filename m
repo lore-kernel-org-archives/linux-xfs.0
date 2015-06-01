@@ -1,24 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 22ACB7F37
-	for <xfs@oss.sgi.com>; Sun, 31 May 2015 16:32:26 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id DB20F8F8033
-	for <xfs@oss.sgi.com>; Sun, 31 May 2015 14:32:25 -0700 (PDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id E87777F37
+	for <xfs@oss.sgi.com>; Sun, 31 May 2015 19:12:38 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 8647BAC001
+	for <xfs@oss.sgi.com>; Sun, 31 May 2015 17:12:35 -0700 (PDT)
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	gnJIhABlw5dRBJye for <xfs@oss.sgi.com>;
-	Sun, 31 May 2015 14:32:23 -0700 (PDT)
-Date: Mon, 1 Jun 2015 07:32:19 +1000
+	AucoxMLpf0pl27ei for <xfs@oss.sgi.com>;
+	Sun, 31 May 2015 17:12:33 -0700 (PDT)
+Date: Mon, 1 Jun 2015 10:12:30 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v2 2/5] xfs_repair: better checking of v5 metadata fields
-Message-ID: <20150531213219.GF24666@dastard>
-References: <20150526225126.26434.69010.stgit@birch.djwong.org>
-	<20150526225139.26434.37575.stgit@birch.djwong.org>
-	<20150527054450.GA10175@birch.djwong.org>
+Subject: Re: [PATCH v5 00/18] xfs: sparse inode chunks
+Message-ID: <20150601001230.GG24666@dastard>
+References: <1424369623-5656-1-git-send-email-bfoster@redhat.com>
+	<20150219191034.GA5750@bfoster.bfoster>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20150527054450.GA10175@birch.djwong.org>
+In-Reply-To: <20150219191034.GA5750@bfoster.bfoster>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,61 +30,73 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
+To: Brian Foster <bfoster@redhat.com>
 Cc: xfs@oss.sgi.com
 
-On Tue, May 26, 2015 at 10:44:50PM -0700, Darrick J. Wong wrote:
-> Check the UUID, owner, and block number fields during repair, looking for
-> blocks that fail either the checksum or the data structure verifiers.  For
-> directories we can simply rebuild corrupt/broken index data, though for
-> anything else we have to toss out the broken object.
+On Thu, Feb 19, 2015 at 02:10:34PM -0500, Brian Foster wrote:
+> On Thu, Feb 19, 2015 at 01:13:25PM -0500, Brian Foster wrote:
+> > Hi all,
+> > 
+> > Here's v5 of sparse inode chunks. The only real change here is to
+> > convert the allocmask helpers back to using the XFS bitmap helpers
+> > rather than the generic bitmap code. This eliminates the need for the
+> > endian-conversion hack and extra helper to export a generic bitmap to a
+> > native type. The former users of the generic bitmap itself have been
+> > converted to use the native 64-bit value appropriately.
+> > 
+> > The XFS bitmap code is actually not in userspace either so neither of
+> > these implementations backport cleanly to userspace. As it is, I've not
+> > included the sparse alloc/free code in my xfsprogs branch as this code
+> > currently isn't needed. Nothing in userspace that I've seen requires the
+> > ability to do a sparse inode allocation or free. I suspect if it is
+> > needed in the future, we can more easily sync the XFS bitmap helpers to
+> > userspace than the generic Linux bitmap code.
+> > 
+> > Thoughts, reviews, flames appreciated...
+> > 
 > 
-> v2: Refactor the directory block header checks into a single function.
+> Attached is a tarball of a set of xfsprogs patches to aid in testing
+> this patchset. I'm posting as a tarball because the core patches (e.g.,
+> the kernel patches) are obviously still in flux. The tarball includes
+> the following:
 > 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> - general dependency backports
+> - core infrastructure backports (i.e., applicable patches from this v5
+>   sparse inode set)
+> - xfsprogs work for sparse inode support
+> 
+> The latter bits include support for mkfs, xfs_info, xfs_db and
+> xfs_repair, the fundamentals of all of which should work. Use the '-i
+> spalign' mkfs option to format a sparse inode enabled fs. E.g.:
+> 
+> 	mkfs.xfs -m crc=1,finobt=1 -i spalign <dev>
+> 
+> Note that metadump is not yet supported. Failures from the associated
+> xfstests, etc. are expected. I'm not aware of anything else that is
+> missing support or otherwise broken, so any feedback along those lines
+> is appreciated.
 
-FYI, just a couple of quick whitespacy things, which I've fixed on
-commit.
+Notes:
 
-> diff --git a/repair/phase6.c b/repair/phase6.c
-> index c09b394..7dd868c 100644
-> --- a/repair/phase6.c
-> +++ b/repair/phase6.c
-> @@ -1925,6 +1925,69 @@ _("entry \"%s\" in dir inode %" PRIu64 " inconsistent with .. value (%" PRIu64 "
->  	freetab->ents[db].s = 0;
->  }
->  
-> +/* check v5 metadata */
-> +static int
-> +__check_dir3_header(
-> +	xfs_mount_t			*mp,
-> +	xfs_buf_t			*bp,
+- mkfs output doesn't indicate that sparse inodes are configured.
+- mkfs cli option of "-i sparse=[0|1]" makes more sense than
+  "spalign"
+- "SPARSE_INODES" missing from xfs_db version output
+- kernel code seems to be regression from when not using sparse
+  inodes
+- inode allocation speed does not seem to be impacted by sparse
+  inode allocation - running my fsmark tests on a debug kernel show
+  no performance differential, even though sparse inode chunks
+  should be created in that case.
+- it smoke tests through xfstests ok
 
-Don't use the typedef versions - struct xfs_mount. No need for quite
-so much whitespace, either - this sort of thing is fine if there's
-no need for larger alignment steps:
-
-	struct xfs_mount *mp,
-	struct xfs_buf	*bp,
-	....
-
-> +	/* verify uuid */
-> +	if (platform_uuid_compare(uuid,
-> +				  &mp->m_sb.sb_uuid) != 0) {
-
-No need to split that line.
-
-> +static int
-> +check_da3_header(
-> +	xfs_mount_t			*mp,
-> +	xfs_buf_t			*bp,
-> +	xfs_ino_t			ino)
-> +{
-> +	struct xfs_da3_blkinfo		*info;
-> +
-> +	info = bp->b_addr;
-
-	struct xfs_da3_blkinfo	*info = bp->b_addr;
+I haven't really looked through the userspace code in any detail,
+so I can't really comment on that side of things yet. The kernel
+code looks good, there doesn't appear to be any regressions and the
+new functionailty works so far. Hence I think I'm going to merge
+the kernel code in the 4.2 cycle, and we can work on getting
+userspace into the current dev tree for people to test and use the
+new code....
 
 Cheers,
 
