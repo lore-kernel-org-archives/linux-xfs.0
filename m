@@ -1,26 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 760717F6A
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 8E34B7F66
 	for <xfs@oss.sgi.com>; Tue,  2 Jun 2015 13:42:06 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 576FC304051
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 6DA998F808F
 	for <xfs@oss.sgi.com>; Tue,  2 Jun 2015 11:42:06 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id VZNLlGSeT1yz93QJ (version=TLSv1
+	cuda.sgi.com with ESMTP id O5OVp3zO9CiEiCED (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
 	Tue, 02 Jun 2015 11:42:05 -0700 (PDT)
-Received: from int-mx11.intmail.prod.int.phx2.redhat.com
-	(int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
-	by mx1.redhat.com (Postfix) with ESMTPS id A321B2B9DF2
-	for <xfs@oss.sgi.com>; Tue,  2 Jun 2015 18:42:04 +0000 (UTC)
+Received: from int-mx09.intmail.prod.int.phx2.redhat.com
+	(int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+	by mx1.redhat.com (Postfix) with ESMTPS id 5582A19F99B
+	for <xfs@oss.sgi.com>; Tue,  2 Jun 2015 18:42:05 +0000 (UTC)
 Received: from bfoster.bfoster (dhcp-41-237.bos.redhat.com [10.18.41.237])
-	by int-mx11.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id t52Ig46X019605
-	for <xfs@oss.sgi.com>; Tue, 2 Jun 2015 14:42:04 -0400
+	by int-mx09.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id t52Ig4Ss019888
+	for <xfs@oss.sgi.com>; Tue, 2 Jun 2015 14:42:05 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH 09/28] xfs: pass inode count through ordered icreate log item
-Date: Tue,  2 Jun 2015 14:41:42 -0400
-Message-Id: <1433270521-62026-10-git-send-email-bfoster@redhat.com>
+Subject: [PATCH 23/28] repair: do not account sparse inodes in phase 5 cursor
+	init.
+Date: Tue,  2 Jun 2015 14:41:56 -0400
+Message-Id: <1433270521-62026-24-git-send-email-bfoster@redhat.com>
 In-Reply-To: <1433270521-62026-1-git-send-email-bfoster@redhat.com>
 References: <1433270521-62026-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -38,66 +39,62 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-v5 superblocks use an ordered log item for logging the initialization of
-inode chunks. The icreate log item is currently hardcoded to an inode
-count of 64 inodes.
+The inode btrees are reconstructed in phase 5 of xfs_repair. The btree
+cursor initialization counts the allocated and free inodes in the
+in-core records and calculates the expected geometry of the resulting
+btree. The free and total inode counts for each AG are also ultimately
+aggregated to update the associated superblock counts.
 
-The agbno and extent length are used to initialize the inode chunk from
-log recovery. While an incorrect inode count does not lead to bad inode
-chunk initialization, we should pass the correct inode count such that log
-recovery has enough data to perform meaningful validity checks on the
-chunk.
+Update init_ino_cursor() to not assume 64 inode records and not account
+sparse inodes into the total or free inode count for each AG.
 
 Signed-off-by: Brian Foster <bfoster@redhat.com>
 ---
- libxfs/xfs_ialloc.c | 7 ++++---
- libxfs/xfs_ialloc.h | 2 +-
- 2 files changed, 5 insertions(+), 4 deletions(-)
+ repair/phase5.c | 13 +++++++++++--
+ 1 file changed, 11 insertions(+), 2 deletions(-)
 
-diff --git a/libxfs/xfs_ialloc.c b/libxfs/xfs_ialloc.c
-index 00de739..34f0290 100644
---- a/libxfs/xfs_ialloc.c
-+++ b/libxfs/xfs_ialloc.c
-@@ -245,6 +245,7 @@ xfs_ialloc_inode_init(
- 	struct xfs_mount	*mp,
- 	struct xfs_trans	*tp,
- 	struct list_head	*buffer_list,
-+	int			icount,
- 	xfs_agnumber_t		agno,
- 	xfs_agblock_t		agbno,
- 	xfs_agblock_t		length,
-@@ -300,7 +301,7 @@ xfs_ialloc_inode_init(
- 		 * they track in the AIL as if they were physically logged.
- 		 */
- 		if (tp)
--			xfs_icreate_log(tp, agno, agbno, mp->m_ialloc_inos,
-+			xfs_icreate_log(tp, agno, agbno, icount,
- 					mp->m_sb.sb_inodesize, length, gen);
- 	} else
- 		version = 2;
-@@ -520,8 +521,8 @@ xfs_ialloc_ag_alloc(
- 	 * rather than a linear progression to prevent the next generation
- 	 * number from being easily guessable.
+diff --git a/repair/phase5.c b/repair/phase5.c
+index 04bf049..30f2d05 100644
+--- a/repair/phase5.c
++++ b/repair/phase5.c
+@@ -899,7 +899,8 @@ init_ino_cursor(xfs_mount_t *mp, xfs_agnumber_t agno, bt_status_t *btree_curs,
+ {
+ 	__uint64_t		ninos;
+ 	__uint64_t		nfinos;
+-	__uint64_t		rec_nfinos;
++	int			rec_nfinos;
++	int			rec_ninos;
+ 	ino_tree_node_t		*ino_rec;
+ 	int			num_recs;
+ 	int			level;
+@@ -919,11 +920,19 @@ init_ino_cursor(xfs_mount_t *mp, xfs_agnumber_t agno, bt_status_t *btree_curs,
  	 */
--	error = xfs_ialloc_inode_init(args.mp, tp, NULL, agno, args.agbno,
--			args.len, prandom_u32());
-+	error = xfs_ialloc_inode_init(args.mp, tp, NULL, newlen, agno,
-+			args.agbno, args.len, prandom_u32());
+ 	ino_rec = findfirst_inode_rec(agno);
+ 	for (num_recs = 0; ino_rec != NULL; ino_rec = next_ino_rec(ino_rec))  {
++		rec_ninos = 0;
+ 		rec_nfinos = 0;
+ 		for (i = 0; i < XFS_INODES_PER_CHUNK; i++)  {
+ 			ASSERT(is_inode_confirmed(ino_rec, i));
++			/*
++			 * sparse inodes are not factored into superblock (free)
++			 * inode counts
++			 */
++			if (is_inode_sparse(ino_rec, i))
++				continue;
+ 			if (is_inode_free(ino_rec, i))
+ 				rec_nfinos++;
++			rec_ninos++;
+ 		}
  
- 	if (error)
- 		return error;
-diff --git a/libxfs/xfs_ialloc.h b/libxfs/xfs_ialloc.h
-index 100007d..4d4b702 100644
---- a/libxfs/xfs_ialloc.h
-+++ b/libxfs/xfs_ialloc.h
-@@ -156,7 +156,7 @@ int xfs_inobt_get_rec(struct xfs_btree_cur *cur,
-  * Inode chunk initialisation routine
-  */
- int xfs_ialloc_inode_init(struct xfs_mount *mp, struct xfs_trans *tp,
--			  struct list_head *buffer_list,
-+			  struct list_head *buffer_list, int icount,
- 			  xfs_agnumber_t agno, xfs_agblock_t agbno,
- 			  xfs_agblock_t length, unsigned int gen);
+ 		/*
+@@ -933,7 +942,7 @@ init_ino_cursor(xfs_mount_t *mp, xfs_agnumber_t agno, bt_status_t *btree_curs,
+ 			continue;
+ 
+ 		nfinos += rec_nfinos;
+-		ninos += XFS_INODES_PER_CHUNK;
++		ninos += rec_ninos;
+ 		num_recs++;
+ 	}
  
 -- 
 1.9.3
