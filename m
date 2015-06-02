@@ -1,26 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 9CF157F66
-	for <xfs@oss.sgi.com>; Tue,  2 Jun 2015 13:42:05 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 6EEF48F808E
-	for <xfs@oss.sgi.com>; Tue,  2 Jun 2015 11:42:05 -0700 (PDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 34F427F66
+	for <xfs@oss.sgi.com>; Tue,  2 Jun 2015 13:42:06 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 240FE304051
+	for <xfs@oss.sgi.com>; Tue,  2 Jun 2015 11:42:06 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id EUXXZtDnC4p6DCr8 (version=TLSv1
+	cuda.sgi.com with ESMTP id erBgB0UA8Bpk9FSE (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 02 Jun 2015 11:42:04 -0700 (PDT)
-Received: from int-mx13.intmail.prod.int.phx2.redhat.com
-	(int-mx13.intmail.prod.int.phx2.redhat.com [10.5.11.26])
-	by mx1.redhat.com (Postfix) with ESMTPS id C879A8E4ED
-	for <xfs@oss.sgi.com>; Tue,  2 Jun 2015 18:42:03 +0000 (UTC)
+	Tue, 02 Jun 2015 11:42:05 -0700 (PDT)
+Received: from int-mx09.intmail.prod.int.phx2.redhat.com
+	(int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+	by mx1.redhat.com (Postfix) with ESMTPS id 9643DB7CD9
+	for <xfs@oss.sgi.com>; Tue,  2 Jun 2015 18:42:04 +0000 (UTC)
 Received: from bfoster.bfoster (dhcp-41-237.bos.redhat.com [10.18.41.237])
-	by int-mx13.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id t52Ig3dF016920
-	for <xfs@oss.sgi.com>; Tue, 2 Jun 2015 14:42:03 -0400
+	by int-mx09.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id t52Ig4JJ019884
+	for <xfs@oss.sgi.com>; Tue, 2 Jun 2015 14:42:04 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH 01/28] xfs: create individual inode alloc. helper
-Date: Tue,  2 Jun 2015 14:41:34 -0400
-Message-Id: <1433270521-62026-2-git-send-email-bfoster@redhat.com>
+Subject: [PATCH 07/28] xfs: add fs geometry bit for sparse inode chunks
+Date: Tue,  2 Jun 2015 14:41:40 -0400
+Message-Id: <1433270521-62026-8-git-send-email-bfoster@redhat.com>
 In-Reply-To: <1433270521-62026-1-git-send-email-bfoster@redhat.com>
 References: <1433270521-62026-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -38,54 +38,26 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Inode allocation from sparse inode records must filter the ir_free mask
-against ir_holemask.  In preparation for this requirement, create a
-helper to allocate an individual inode from an inode record.
+Define an fs geometry bit for sparse inode chunks such that the
+characteristic of the fs can be identified by userspace.
 
 Signed-off-by: Brian Foster <bfoster@redhat.com>
 ---
- libxfs/xfs_ialloc.c | 14 ++++++++++++--
- 1 file changed, 12 insertions(+), 2 deletions(-)
+ libxfs/xfs_fs.h | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/libxfs/xfs_ialloc.c b/libxfs/xfs_ialloc.c
-index 2b4e4e0..a1cf1dd 100644
---- a/libxfs/xfs_ialloc.c
-+++ b/libxfs/xfs_ialloc.c
-@@ -727,6 +727,16 @@ xfs_ialloc_get_rec(
- }
+diff --git a/libxfs/xfs_fs.h b/libxfs/xfs_fs.h
+index 18dc721..89689c6 100644
+--- a/libxfs/xfs_fs.h
++++ b/libxfs/xfs_fs.h
+@@ -239,6 +239,7 @@ typedef struct xfs_fsop_resblks {
+ #define XFS_FSOP_GEOM_FLAGS_V5SB	0x8000	/* version 5 superblock */
+ #define XFS_FSOP_GEOM_FLAGS_FTYPE	0x10000	/* inode directory types */
+ #define XFS_FSOP_GEOM_FLAGS_FINOBT	0x20000	/* free inode btree */
++#define XFS_FSOP_GEOM_FLAGS_SPINODES	0x40000	/* sparse inode chunks	*/
  
  /*
-+ * Return the offset of the first free inode in the record.
-+ */
-+STATIC int
-+xfs_inobt_first_free_inode(
-+	struct xfs_inobt_rec_incore	*rec)
-+{
-+	return xfs_lowbit64(rec->ir_free);
-+}
-+
-+/*
-  * Allocate an inode using the inobt-only algorithm.
-  */
- STATIC int
-@@ -956,7 +966,7 @@ newino:
- 	}
- 
- alloc_inode:
--	offset = xfs_lowbit64(rec.ir_free);
-+	offset = xfs_inobt_first_free_inode(&rec);
- 	ASSERT(offset >= 0);
- 	ASSERT(offset < XFS_INODES_PER_CHUNK);
- 	ASSERT((XFS_AGINO_TO_OFFSET(mp, rec.ir_startino) %
-@@ -1205,7 +1215,7 @@ xfs_dialloc_ag(
- 	if (error)
- 		goto error_cur;
- 
--	offset = xfs_lowbit64(rec.ir_free);
-+	offset = xfs_inobt_first_free_inode(&rec);
- 	ASSERT(offset >= 0);
- 	ASSERT(offset < XFS_INODES_PER_CHUNK);
- 	ASSERT((XFS_AGINO_TO_OFFSET(mp, rec.ir_startino) %
+  * Minimum and maximum sizes need for growth checks.
 -- 
 1.9.3
 
