@@ -1,27 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id E01867F6D
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 5C19A7F6F
 	for <xfs@oss.sgi.com>; Tue,  2 Jun 2015 13:42:08 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 754ECAC001
-	for <xfs@oss.sgi.com>; Tue,  2 Jun 2015 11:42:05 -0700 (PDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 3B5E28F808E
+	for <xfs@oss.sgi.com>; Tue,  2 Jun 2015 11:42:08 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id at3eXCd1GyhwlObW (version=TLSv1
+	cuda.sgi.com with ESMTP id Gh1kZNLvyuEtkzmP (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
 	Tue, 02 Jun 2015 11:42:04 -0700 (PDT)
-Received: from int-mx09.intmail.prod.int.phx2.redhat.com
-	(int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
-	by mx1.redhat.com (Postfix) with ESMTPS id 8AF5BB7CC7
-	for <xfs@oss.sgi.com>; Tue,  2 Jun 2015 18:42:04 +0000 (UTC)
+Received: from int-mx13.intmail.prod.int.phx2.redhat.com
+	(int-mx13.intmail.prod.int.phx2.redhat.com [10.5.11.26])
+	by mx1.redhat.com (Postfix) with ESMTPS id AF195B7CF4
+	for <xfs@oss.sgi.com>; Tue,  2 Jun 2015 18:42:03 +0000 (UTC)
 Received: from bfoster.bfoster (dhcp-41-237.bos.redhat.com [10.18.41.237])
-	by int-mx09.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id t52Ig4YZ019881
-	for <xfs@oss.sgi.com>; Tue, 2 Jun 2015 14:42:04 -0400
+	by int-mx13.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id t52Ig3Z6016922
+	for <xfs@oss.sgi.com>; Tue, 2 Jun 2015 14:42:03 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH 05/28] xfs: use sparse chunk alignment for min. inode
-	allocation requirement
-Date: Tue,  2 Jun 2015 14:41:38 -0400
-Message-Id: <1433270521-62026-6-git-send-email-bfoster@redhat.com>
+Subject: [PATCH 02/28] xfs: update free inode record logic to support sparse
+	inode records
+Date: Tue,  2 Jun 2015 14:41:35 -0400
+Message-Id: <1433270521-62026-3-git-send-email-bfoster@redhat.com>
 In-Reply-To: <1433270521-62026-1-git-send-email-bfoster@redhat.com>
 References: <1433270521-62026-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,68 +39,72 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-xfs_ialloc_ag_select() iterates through the allocation groups looking
-for free inodes or free space to determine whether to allow an inode
-allocation to proceed. If no free inodes are available, it assumes that
-an AG must have an extent longer than mp->m_ialloc_blks.
+xfs_difree_inobt() uses logic in a couple places that assume inobt
+records refer to fully allocated chunks. Specifically, the use of
+mp->m_ialloc_inos can cause problems for inode chunks that are sparsely
+allocated. Sparse inode chunks can, by definition, define a smaller
+number of inodes than a full inode chunk.
 
-Sparse inode chunk support currently allows for allocations smaller than
-the traditional inode chunk size specified in m_ialloc_blks. The current
-minimum sparse allocation is set in the superblock sb_spino_align field
-at mkfs time. Create a new m_ialloc_min_blks field in xfs_mount and use
-this to represent the minimum supported allocation size for inode
-chunks. Initialize m_ialloc_min_blks at mount time based on whether
-sparse inodes are supported.
+Fix the logic that determines whether an inode record should be removed
+from the inobt to use the ir_free mask rather than ir_freecount. Fix the
+agi counters modification to use ir_freecount to add the actual number
+of inodes freed rather than assuming a full inode chunk.
+
+Also make sure that we preserve the behavior to not remove inode chunks
+if the block size is large enough for multiple inode chunks (e.g.,
+bsize=64k, isize=512). This behavior was previously implicit in that in
+such configurations, ir.freecount of a single record never matches
+m_ialloc_inos. Hence, add some comments as well.
 
 Signed-off-by: Brian Foster <bfoster@redhat.com>
 ---
- include/xfs_mount.h | 2 ++
- libxfs/xfs_ialloc.c | 2 +-
- libxfs/xfs_sb.c     | 5 +++++
- 3 files changed, 8 insertions(+), 1 deletion(-)
+ libxfs/xfs_ialloc.c | 16 ++++++++++++----
+ 1 file changed, 12 insertions(+), 4 deletions(-)
 
-diff --git a/include/xfs_mount.h b/include/xfs_mount.h
-index 70bdea0..998439e 100644
---- a/include/xfs_mount.h
-+++ b/include/xfs_mount.h
-@@ -73,6 +73,8 @@ typedef struct xfs_mount {
- 	uint			m_attroffset;	/* inode attribute offset */
- 	int			m_ialloc_inos;	/* inodes in inode allocation */
- 	int			m_ialloc_blks;	/* blocks in inode allocation */
-+	int			m_ialloc_min_blks;/* min blocks in sparse inode
-+						   * allocation */
- 	int			m_litino;	/* size of inode union area */
- 	int			m_inoalign_mask;/* mask sb_inoalignmt if used */
- 	struct xfs_trans_resv	m_resv;		/* precomputed res values */
 diff --git a/libxfs/xfs_ialloc.c b/libxfs/xfs_ialloc.c
-index 673c0a7..1be6d27 100644
+index a1cf1dd..673c0a7 100644
 --- a/libxfs/xfs_ialloc.c
 +++ b/libxfs/xfs_ialloc.c
-@@ -640,7 +640,7 @@ xfs_ialloc_ag_select(
- 		 * if we fail allocation due to alignment issues then it is most
- 		 * likely a real ENOSPC condition.
- 		 */
--		ineed = mp->m_ialloc_blks;
-+		ineed = mp->m_ialloc_min_blks;
- 		if (flags && ineed > 1)
- 			ineed += xfs_ialloc_cluster_alignment(mp);
- 		longest = pag->pagf_longest;
-diff --git a/libxfs/xfs_sb.c b/libxfs/xfs_sb.c
-index f34c676..fe16e8f 100644
---- a/libxfs/xfs_sb.c
-+++ b/libxfs/xfs_sb.c
-@@ -672,6 +672,11 @@ xfs_sb_mount_common(
- 	mp->m_ialloc_inos = (int)MAX((__uint16_t)XFS_INODES_PER_CHUNK,
- 					sbp->sb_inopblock);
- 	mp->m_ialloc_blks = mp->m_ialloc_inos >> sbp->sb_inopblog;
-+
-+	if (sbp->sb_spino_align)
-+		mp->m_ialloc_min_blks = sbp->sb_spino_align;
-+	else
-+		mp->m_ialloc_min_blks = mp->m_ialloc_blks;
- }
+@@ -1503,10 +1503,13 @@ xfs_difree_inobt(
+ 	rec.ir_freecount++;
  
- /*
+ 	/*
+-	 * When an inode cluster is free, it becomes eligible for removal
++	 * When an inode chunk is free, it becomes eligible for removal. Don't
++	 * remove the chunk if the block size is large enough for multiple inode
++	 * chunks (that might not be free).
+ 	 */
+ 	if (!(mp->m_flags & XFS_MOUNT_IKEEP) &&
+-	    (rec.ir_freecount == mp->m_ialloc_inos)) {
++	    rec.ir_free == XFS_INOBT_ALL_FREE &&
++	    mp->m_sb.sb_inopblock <= XFS_INODES_PER_CHUNK) {
+ 
+ 		*deleted = 1;
+ 		*first_ino = XFS_AGINO_TO_INO(mp, agno, rec.ir_startino);
+@@ -1516,7 +1519,7 @@ xfs_difree_inobt(
+ 		 * AGI and Superblock inode counts, and mark the disk space
+ 		 * to be freed when the transaction is committed.
+ 		 */
+-		ilen = mp->m_ialloc_inos;
++		ilen = rec.ir_freecount;
+ 		be32_add_cpu(&agi->agi_count, -ilen);
+ 		be32_add_cpu(&agi->agi_freecount, -(ilen - 1));
+ 		xfs_ialloc_log_agi(tp, agbp, XFS_AGI_COUNT | XFS_AGI_FREECOUNT);
+@@ -1636,8 +1639,13 @@ xfs_difree_finobt(
+ 	 * free inode. Hence, if all of the inodes are free and we aren't
+ 	 * keeping inode chunks permanently on disk, remove the record.
+ 	 * Otherwise, update the record with the new information.
++	 *
++	 * Note that we currently can't free chunks when the block size is large
++	 * enough for multiple chunks. Leave the finobt record to remain in sync
++	 * with the inobt.
+ 	 */
+-	if (rec.ir_freecount == mp->m_ialloc_inos &&
++	if (rec.ir_free == XFS_INOBT_ALL_FREE &&
++	    mp->m_sb.sb_inopblock <= XFS_INODES_PER_CHUNK &&
+ 	    !(mp->m_flags & XFS_MOUNT_IKEEP)) {
+ 		error = xfs_btree_delete(cur, &i);
+ 		if (error)
 -- 
 1.9.3
 
