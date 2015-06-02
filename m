@@ -1,27 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 2AEAD7F73
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 44DF27F77
 	for <xfs@oss.sgi.com>; Tue,  2 Jun 2015 13:42:07 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 08ACE304051
-	for <xfs@oss.sgi.com>; Tue,  2 Jun 2015 11:42:07 -0700 (PDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id C1E73AC009
+	for <xfs@oss.sgi.com>; Tue,  2 Jun 2015 11:42:06 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id y8wFQwA4ENccGqnU (version=TLSv1
+	cuda.sgi.com with ESMTP id UJmOflgwmOSsyhoT (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 02 Jun 2015 11:42:06 -0700 (PDT)
-Received: from int-mx13.intmail.prod.int.phx2.redhat.com
-	(int-mx13.intmail.prod.int.phx2.redhat.com [10.5.11.26])
-	by mx1.redhat.com (Postfix) with ESMTPS id 4004F31ED2A
-	for <xfs@oss.sgi.com>; Tue,  2 Jun 2015 18:42:05 +0000 (UTC)
+	Tue, 02 Jun 2015 11:42:05 -0700 (PDT)
+Received: from int-mx09.intmail.prod.int.phx2.redhat.com
+	(int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+	by mx1.redhat.com (Postfix) with ESMTPS id B9284B1F88
+	for <xfs@oss.sgi.com>; Tue,  2 Jun 2015 18:42:04 +0000 (UTC)
 Received: from bfoster.bfoster (dhcp-41-237.bos.redhat.com [10.18.41.237])
-	by int-mx13.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id t52Ig4XY016939
-	for <xfs@oss.sgi.com>; Tue, 2 Jun 2015 14:42:05 -0400
+	by int-mx09.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id t52Ig49I019886
+	for <xfs@oss.sgi.com>; Tue, 2 Jun 2015 14:42:04 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH 15/28] repair: handle sparse format inobt record freecount
-	correctly
-Date: Tue,  2 Jun 2015 14:41:48 -0400
-Message-Id: <1433270521-62026-16-git-send-email-bfoster@redhat.com>
+Subject: [PATCH 11/28] mkfs: sparse inode chunk support
+Date: Tue,  2 Jun 2015 14:41:44 -0400
+Message-Id: <1433270521-62026-12-git-send-email-bfoster@redhat.com>
 In-Reply-To: <1433270521-62026-1-git-send-email-bfoster@redhat.com>
 References: <1433270521-62026-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,143 +38,148 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-The sparse inode chunk feature introduces a new inobt record format that
-converts ir_freecount from 4 bytes to 1 byte. ir_freecount references
-throughout repair currently assume the 'full' format and endian-convert
-from the 32-bit value.
-
-Update the xfs_repair inobt scan and tree rebuild codepaths to use the
-correct record format for ir_freecount when sparse inodes is enabled.
+Allow format of sparse inode chunk enabled filesystems via the '-i
+sparse' flag. Note that sparse inode chunk support requires a v5
+superblock (-m crc=1).
 
 Signed-off-by: Brian Foster <bfoster@redhat.com>
 ---
- repair/phase5.c |  6 +++++-
- repair/scan.c   | 37 +++++++++++++++++++++++++------------
- 2 files changed, 30 insertions(+), 13 deletions(-)
+ man/man8/mkfs.xfs.8 | 17 +++++++++++++++++
+ mkfs/xfs_mkfs.c     | 37 ++++++++++++++++++++++++++++++++++---
+ 2 files changed, 51 insertions(+), 3 deletions(-)
 
-diff --git a/repair/phase5.c b/repair/phase5.c
-index d01e72b..04bf049 100644
---- a/repair/phase5.c
-+++ b/repair/phase5.c
-@@ -1240,7 +1240,11 @@ build_ino_tree(xfs_mount_t *mp, xfs_agnumber_t agno,
- 				inocnt += is_inode_free(ino_rec, k);
- 			}
+diff --git a/man/man8/mkfs.xfs.8 b/man/man8/mkfs.xfs.8
+index ad9ff3d..542dea9 100644
+--- a/man/man8/mkfs.xfs.8
++++ b/man/man8/mkfs.xfs.8
+@@ -409,6 +409,23 @@ This is used to enable 32bit quota project identifiers. The
+ is either 0 or 1, with 1 signifying that 32bit projid are to be enabled.
+ If the value is omitted, 1 is assumed.  (This default changed
+ in release version 3.2.0.)
++.TP
++.BI sparse[= value ]
++Enable sparse inode chunk allocation. The
++.I value
++is either 0 or 1, with 1 signifying that sparse allocation is enabled.
++If the value is omitted, 1 is assumed. Sparse inode allocation is
++disabled by default. This feature is only available for filesystems
++formatted with
++.B \-m crc=1.
++.IP
++When enabled, sparse inode allocation allows the filesystem to allocate
++smaller than the standard 64-inode chunk when free space is severely
++limited. This feature is useful for filesystems that might fragment free
++space over time such that no free extents are large enough to
++accommodate a chunk of 64 inodes. Without this feature enabled, inode
++allocations can fail with out of space errors under severe fragmented
++free space conditions.
+ .RE
+ .TP
+ .BI \-l " log_section_options"
+diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+index 1770666..a3f29e0 100644
+--- a/mkfs/xfs_mkfs.c
++++ b/mkfs/xfs_mkfs.c
+@@ -109,6 +109,8 @@ char	*iopts[] = {
+ 	"attr",
+ #define	I_PROJID32BIT	6
+ 	"projid32bit",
++#define I_SPINODES	7
++	"sparse",
+ 	NULL
+ };
  
--			bt_rec[j].ir_u.f.ir_freecount = cpu_to_be32(inocnt);
-+			if (xfs_sb_version_hassparseinodes(&mp->m_sb))
-+				bt_rec[j].ir_u.sp.ir_freecount = inocnt;
-+			else
-+				bt_rec[j].ir_u.f.ir_freecount =
-+							cpu_to_be32(inocnt);
- 			freecount += inocnt;
- 			count += XFS_INODES_PER_CHUNK;
+@@ -1004,6 +1006,7 @@ main(
+ 	int			lazy_sb_counters;
+ 	int			crcs_enabled;
+ 	int			finobt;
++	int			spinodes;
  
-diff --git a/repair/scan.c b/repair/scan.c
-index e64d0e5..f42459c 100644
---- a/repair/scan.c
-+++ b/repair/scan.c
-@@ -751,11 +751,16 @@ scan_single_ino_chunk(
- 	int			off;
- 	int			state;
- 	ino_tree_node_t		*ino_rec, *first_rec, *last_rec;
-+	int			freecount;
+ 	progname = basename(argv[0]);
+ 	setlocale(LC_ALL, "");
+@@ -1038,6 +1041,7 @@ main(
+ 	lazy_sb_counters = 1;
+ 	crcs_enabled = 0;
+ 	finobt = 0;
++	spinodes = 0;
+ 	memset(&fsx, 0, sizeof(fsx));
  
- 	ino = be32_to_cpu(rp->ir_startino);
- 	off = XFS_AGINO_TO_OFFSET(mp, ino);
- 	agbno = XFS_AGINO_TO_AGBNO(mp, ino);
- 	lino = XFS_AGINO_TO_INO(mp, agno, ino);
-+	if (xfs_sb_version_hassparseinodes(&mp->m_sb))
-+		freecount = rp->ir_u.sp.ir_freecount;
-+	else
-+		freecount = be32_to_cpu(rp->ir_u.f.ir_freecount);
- 
- 	/*
- 	 * on multi-block block chunks, all chunks start
-@@ -890,10 +895,10 @@ _("inode rec for ino %" PRIu64 " (%d/%d) overlaps existing rec (start %d/%d)\n")
- 		}
+ 	memset(&xi, 0, sizeof(xi));
+@@ -1359,6 +1363,13 @@ main(
+ 						illegal(value, "i projid32bit");
+ 					projid16bit = c ? 0 : 1;
+ 					break;
++				case I_SPINODES:
++					if (!value || *value == '\0')
++						value = "1";
++					spinodes = atoi(value);
++					if (spinodes < 0 || spinodes > 1)
++						illegal(value, "i spinodes");
++					break;
+ 				default:
+ 					unknown('i', value);
+ 				}
+@@ -1890,6 +1901,12 @@ _("warning: finobt not supported without CRC support, disabled.\n"));
+ 		finobt = 0;
  	}
  
--	if (nfree != be32_to_cpu(rp->ir_u.f.ir_freecount)) {
--		do_warn(_("ir_freecount/free mismatch, inode "
--			"chunk %d/%u, freecount %d nfree %d\n"),
--			agno, ino, be32_to_cpu(rp->ir_u.f.ir_freecount), nfree);
-+	if (nfree != freecount) {
-+		do_warn(
-+_("ir_freecount/free mismatch, inode chunk %d/%u, freecount %d nfree %d\n"),
-+			agno, ino, freecount, nfree);
- 	}
- 
- 	return suspect;
-@@ -913,11 +918,16 @@ scan_single_finobt_chunk(
- 	int			off;
- 	int			state;
- 	ino_tree_node_t		*first_rec, *last_rec, *ino_rec;
-+	int			freecount;
- 
- 	ino = be32_to_cpu(rp->ir_startino);
- 	off = XFS_AGINO_TO_OFFSET(mp, ino);
- 	agbno = XFS_AGINO_TO_AGBNO(mp, ino);
- 	lino = XFS_AGINO_TO_INO(mp, agno, ino);
-+	if (xfs_sb_version_hassparseinodes(&mp->m_sb))
-+		freecount = rp->ir_u.sp.ir_freecount;
-+	else
-+		freecount = be32_to_cpu(rp->ir_u.f.ir_freecount);
- 
- 	/*
- 	 * on multi-block block chunks, all chunks start at the beginning of the
-@@ -1089,10 +1099,10 @@ check_freecount:
- 	 * corruption). Issue a warning and continue the scan. The final btree
- 	 * reconstruction will correct this naturally.
- 	 */
--	if (nfree != be32_to_cpu(rp->ir_u.f.ir_freecount)) {
-+	if (nfree != freecount) {
- 		do_warn(
- _("finobt ir_freecount/free mismatch, inode chunk %d/%u, freecount %d nfree %d\n"),
--			agno, ino, be32_to_cpu(rp->ir_u.f.ir_freecount), nfree);
-+			agno, ino, freecount, nfree);
- 	}
- 
- 	if (!nfree) {
-@@ -1137,6 +1147,7 @@ scan_inobt(
- 	xfs_inobt_ptr_t		*pp;
- 	xfs_inobt_rec_t		*rp;
- 	int			hdr_errors;
-+	int			freecount;
- 
- 	hdr_errors = 0;
- 
-@@ -1210,14 +1221,17 @@ _("inode btree block claimed (state %d), agno %d, bno %d, suspect %d\n"),
- 		 * the block.  skip processing of bogus records.
- 		 */
- 		for (i = 0; i < numrecs; i++) {
-+			if (xfs_sb_version_hassparseinodes(&mp->m_sb))
-+				freecount = rp[i].ir_u.sp.ir_freecount;
-+			else
-+				freecount = be32_to_cpu(rp[i].ir_u.f.ir_freecount);
++	if (spinodes && !crcs_enabled) {
++		fprintf(stderr,
++_("warning: sparse inodes not supported without CRC support, disabled.\n"));
++		spinodes = 0;
++	}
 +
- 			if (magic == XFS_IBT_MAGIC ||
- 			    magic == XFS_IBT_CRC_MAGIC) {
- 				agcnts->agicount += XFS_INODES_PER_CHUNK;
- 				agcnts->icount += XFS_INODES_PER_CHUNK;
--				agcnts->agifreecount +=
--					be32_to_cpu(rp[i].ir_u.f.ir_freecount);
--				agcnts->ifreecount +=
--					be32_to_cpu(rp[i].ir_u.f.ir_freecount);
-+				agcnts->agifreecount += freecount;
-+				agcnts->ifreecount += freecount;
+ 	if (nsflag || nlflag) {
+ 		if (dirblocksize < blocksize ||
+ 					dirblocksize > XFS_MAX_BLOCKSIZE) {
+@@ -2568,7 +2585,7 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
+ 		printf(_(
+ 		   "meta-data=%-22s isize=%-6d agcount=%lld, agsize=%lld blks\n"
+ 		   "         =%-22s sectsz=%-5u attr=%u, projid32bit=%u\n"
+-		   "         =%-22s crc=%-8u finobt=%u\n"
++		   "         =%-22s crc=%-8u finobt=%u, sparse=%u\n"
+ 		   "data     =%-22s bsize=%-6u blocks=%llu, imaxpct=%u\n"
+ 		   "         =%-22s sunit=%-6u swidth=%u blks\n"
+ 		   "naming   =version %-14u bsize=%-6u ascii-ci=%d ftype=%d\n"
+@@ -2577,7 +2594,7 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
+ 		   "realtime =%-22s extsz=%-6d blocks=%lld, rtextents=%lld\n"),
+ 			dfile, isize, (long long)agcount, (long long)agsize,
+ 			"", sectorsize, attrversion, !projid16bit,
+-			"", crcs_enabled, finobt,
++			"", crcs_enabled, finobt, spinodes,
+ 			"", blocksize, (long long)dblocks, imaxpct,
+ 			"", dsunit, dswidth,
+ 			dirversion, dirblocksize, nci, dirftype,
+@@ -2646,6 +2663,20 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
+ 		sbp->sb_logsectsize = 0;
+ 	}
  
- 				suspect = scan_single_ino_chunk(agno, &rp[i],
- 						suspect);
-@@ -1227,8 +1241,7 @@ _("inode btree block claimed (state %d), agno %d, bno %d, suspect %d\n"),
- 				 * so only the free inode count is expected to be
- 				 * consistent with the agi
- 				 */
--				agcnts->fibtfreecount +=
--					be32_to_cpu(rp[i].ir_u.f.ir_freecount);
-+				agcnts->fibtfreecount += freecount;
++	/*
++	 * Sparse inode chunk support has two main inode alignment requirements.
++	 * First, sparse chunk alignment must match the cluster size. Second,
++	 * full chunk alignment must match the inode chunk size.
++	 *
++	 * Copy the already calculated/scaled inoalignmt to spino_align and
++	 * update the former to the full inode chunk size.
++	 */
++	if (spinodes) {
++		sbp->sb_spino_align = sbp->sb_inoalignmt;
++		sbp->sb_inoalignmt = XFS_INODES_PER_CHUNK * isize >> blocklog;
++		sbp->sb_features_incompat |= XFS_SB_FEAT_INCOMPAT_SPINODES;
++	}
++
+ 	if (force_overwrite)
+ 		zero_old_xfs_structures(&xi, sbp);
  
- 				suspect = scan_single_finobt_chunk(agno, &rp[i],
- 						suspect);
+@@ -3193,7 +3224,7 @@ usage( void )
+ 			    sectlog=n|sectsize=num\n\
+ /* force overwrite */	[-f]\n\
+ /* inode size */	[-i log=n|perblock=n|size=num,maxpct=n,attr=0|1|2,\n\
+-			    projid32bit=0|1]\n\
++			    projid32bit=0|1,sparse=0|1]\n\
+ /* no discard */	[-K]\n\
+ /* log subvol */	[-l agnum=n,internal,size=num,logdev=xxx,version=n\n\
+ 			    sunit=value|su=num,sectlog=n|sectsize=num,\n\
 -- 
 1.9.3
 
