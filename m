@@ -1,27 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 79BF07F6B
+	by oss.sgi.com (Postfix) with ESMTP id 760717F6A
 	for <xfs@oss.sgi.com>; Tue,  2 Jun 2015 13:42:06 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 57779304053
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 576FC304051
 	for <xfs@oss.sgi.com>; Tue,  2 Jun 2015 11:42:06 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id 5tUgodAVs49LYAmz (version=TLSv1
+	cuda.sgi.com with ESMTP id VZNLlGSeT1yz93QJ (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
 	Tue, 02 Jun 2015 11:42:05 -0700 (PDT)
-Received: from int-mx09.intmail.prod.int.phx2.redhat.com
-	(int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
-	by mx1.redhat.com (Postfix) with ESMTPS id 3D381359997
-	for <xfs@oss.sgi.com>; Tue,  2 Jun 2015 18:42:05 +0000 (UTC)
+Received: from int-mx11.intmail.prod.int.phx2.redhat.com
+	(int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
+	by mx1.redhat.com (Postfix) with ESMTPS id A321B2B9DF2
+	for <xfs@oss.sgi.com>; Tue,  2 Jun 2015 18:42:04 +0000 (UTC)
 Received: from bfoster.bfoster (dhcp-41-237.bos.redhat.com [10.18.41.237])
-	by int-mx09.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id t52Ig4JL019884
-	for <xfs@oss.sgi.com>; Tue, 2 Jun 2015 14:42:05 -0400
+	by int-mx11.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id t52Ig46X019605
+	for <xfs@oss.sgi.com>; Tue, 2 Jun 2015 14:42:04 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH 17/28] repair: use ir_count for filesystems with sparse inode
-	support
-Date: Tue,  2 Jun 2015 14:41:50 -0400
-Message-Id: <1433270521-62026-18-git-send-email-bfoster@redhat.com>
+Subject: [PATCH 09/28] xfs: pass inode count through ordered icreate log item
+Date: Tue,  2 Jun 2015 14:41:42 -0400
+Message-Id: <1433270521-62026-10-git-send-email-bfoster@redhat.com>
 In-Reply-To: <1433270521-62026-1-git-send-email-bfoster@redhat.com>
 References: <1433270521-62026-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,40 +38,66 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Repair currently assumes each inobt record covers 64 inodes and uses
-this value to validate inode counts in the AGI headers and superblock.
-This is not always the case with sparse inode support.
+v5 superblocks use an ordered log item for logging the initialization of
+inode chunks. The icreate log item is currently hardcoded to an inode
+count of 64 inodes.
 
-Update scan_inobt() to check for sparse inode support and use the new
-ir_count field for inode accounting. ir_count contains the total number
-of inodes tracked by the record.
+The agbno and extent length are used to initialize the inode chunk from
+log recovery. While an incorrect inode count does not lead to bad inode
+chunk initialization, we should pass the correct inode count such that log
+recovery has enough data to perform meaningful validity checks on the
+chunk.
 
 Signed-off-by: Brian Foster <bfoster@redhat.com>
 ---
- repair/scan.c | 11 ++++++++++-
- 1 file changed, 10 insertions(+), 1 deletion(-)
+ libxfs/xfs_ialloc.c | 7 ++++---
+ libxfs/xfs_ialloc.h | 2 +-
+ 2 files changed, 5 insertions(+), 4 deletions(-)
 
-diff --git a/repair/scan.c b/repair/scan.c
-index 9daa488..8677e41 100644
---- a/repair/scan.c
-+++ b/repair/scan.c
-@@ -1227,7 +1227,16 @@ _("inode btree block claimed (state %d), agno %d, bno %d, suspect %d\n"),
+diff --git a/libxfs/xfs_ialloc.c b/libxfs/xfs_ialloc.c
+index 00de739..34f0290 100644
+--- a/libxfs/xfs_ialloc.c
++++ b/libxfs/xfs_ialloc.c
+@@ -245,6 +245,7 @@ xfs_ialloc_inode_init(
+ 	struct xfs_mount	*mp,
+ 	struct xfs_trans	*tp,
+ 	struct list_head	*buffer_list,
++	int			icount,
+ 	xfs_agnumber_t		agno,
+ 	xfs_agblock_t		agbno,
+ 	xfs_agblock_t		length,
+@@ -300,7 +301,7 @@ xfs_ialloc_inode_init(
+ 		 * they track in the AIL as if they were physically logged.
+ 		 */
+ 		if (tp)
+-			xfs_icreate_log(tp, agno, agbno, mp->m_ialloc_inos,
++			xfs_icreate_log(tp, agno, agbno, icount,
+ 					mp->m_sb.sb_inodesize, length, gen);
+ 	} else
+ 		version = 2;
+@@ -520,8 +521,8 @@ xfs_ialloc_ag_alloc(
+ 	 * rather than a linear progression to prevent the next generation
+ 	 * number from being easily guessable.
+ 	 */
+-	error = xfs_ialloc_inode_init(args.mp, tp, NULL, agno, args.agbno,
+-			args.len, prandom_u32());
++	error = xfs_ialloc_inode_init(args.mp, tp, NULL, newlen, agno,
++			args.agbno, args.len, prandom_u32());
  
- 			if (magic == XFS_IBT_MAGIC ||
- 			    magic == XFS_IBT_CRC_MAGIC) {
--				agcnts->agicount += XFS_INODES_PER_CHUNK;
-+				int icount = XFS_INODES_PER_CHUNK;
-+
-+				/*
-+				 * ir_count holds the inode count for all
-+				 * records on fs' with sparse inode support
-+				 */
-+				if (xfs_sb_version_hassparseinodes(&mp->m_sb))
-+					icount = rp[i].ir_u.sp.ir_count;
-+
-+				agcnts->agicount += icount;
- 				agcnts->agifreecount += freecount;
- 				agcnts->ifreecount += freecount;
+ 	if (error)
+ 		return error;
+diff --git a/libxfs/xfs_ialloc.h b/libxfs/xfs_ialloc.h
+index 100007d..4d4b702 100644
+--- a/libxfs/xfs_ialloc.h
++++ b/libxfs/xfs_ialloc.h
+@@ -156,7 +156,7 @@ int xfs_inobt_get_rec(struct xfs_btree_cur *cur,
+  * Inode chunk initialisation routine
+  */
+ int xfs_ialloc_inode_init(struct xfs_mount *mp, struct xfs_trans *tp,
+-			  struct list_head *buffer_list,
++			  struct list_head *buffer_list, int icount,
+ 			  xfs_agnumber_t agno, xfs_agblock_t agbno,
+ 			  xfs_agblock_t length, unsigned int gen);
  
 -- 
 1.9.3
