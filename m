@@ -1,27 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id DFDE07F6F
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id E93517F6A
 	for <xfs@oss.sgi.com>; Tue,  2 Jun 2015 13:42:06 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id BFD8E8F808F
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id A3057304053
 	for <xfs@oss.sgi.com>; Tue,  2 Jun 2015 11:42:06 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id IGdUtj7jalqHz9sh (version=TLSv1
+	cuda.sgi.com with ESMTP id ZKBdGIpb0A8Dcqxc (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
 	Tue, 02 Jun 2015 11:42:05 -0700 (PDT)
-Received: from int-mx14.intmail.prod.int.phx2.redhat.com
-	(int-mx14.intmail.prod.int.phx2.redhat.com [10.5.11.27])
-	by mx1.redhat.com (Postfix) with ESMTPS id 5D20F134BB
+Received: from int-mx11.intmail.prod.int.phx2.redhat.com
+	(int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
+	by mx1.redhat.com (Postfix) with ESMTPS id 4D84CBBF5E
 	for <xfs@oss.sgi.com>; Tue,  2 Jun 2015 18:42:05 +0000 (UTC)
 Received: from bfoster.bfoster (dhcp-41-237.bos.redhat.com [10.18.41.237])
-	by int-mx14.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id t52Ig4Dk010507
+	by int-mx11.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id t52Ig46Z019605
 	for <xfs@oss.sgi.com>; Tue, 2 Jun 2015 14:42:05 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH 24/28] repair: reconstruct sparse inode records correctly on
-	disk
-Date: Tue,  2 Jun 2015 14:41:57 -0400
-Message-Id: <1433270521-62026-25-git-send-email-bfoster@redhat.com>
+Subject: [PATCH 19/28] repair: scan sparse finobt records correctly
+Date: Tue,  2 Jun 2015 14:41:52 -0400
+Message-Id: <1433270521-62026-20-git-send-email-bfoster@redhat.com>
 In-Reply-To: <1433270521-62026-1-git-send-email-bfoster@redhat.com>
 References: <1433270521-62026-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,101 +38,139 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Phase 5 traverses all of the in-core inode records and regenerates the
-inode btrees a record at a time. The record insertion code doesn't
-account for sparse inodes which means the ir_holemask and ir_count
-fields are not set on-disk and ir_freecount is set with an invalid value
-for sparse inode records.
+The finobt scan performs similar checks as to the inobt scan, including
+internal record consistency checks, consistency with inobt records,
+inode block state, etc. Various parts of this mechanism also assume
+fully allocated inode records and thus lead to false errors with sparse
+records.
 
-Update build_ino_tree() to handle sparse inode records correctly. We
-must account real, allocated inodes only into the ir_freecount field.
-The 64-bit in-core sparse inode bitmask must be converted to compressed
-16-bit ir_holemask format. Finally, the ir_count field must set to the
-total (non-sparse) inode count of the record.
-
-If the fs does not support sparse inodes, both the ir_holemask and
-ir_count field are initialized to zero to preserve backwards
-compatibility. These bytes historically landed in the high order bytes
-of ir_freecount and must be 0 to be interpreted correctly by older XFS
-implementations without sparse inode support.
+Update the finobt scan to detect and handle sparse inode records
+correctly. As for the inobt, do not assume that blocks associated with
+sparse regions are allocated for inodes and do not account sparse inodes
+against the freecount. Additionally, verify that sparse state is
+consistent with the in-core record and set up any new in-core records
+that might have been missing from the inobt correctly.
 
 Signed-off-by: Brian Foster <bfoster@redhat.com>
 ---
- repair/phase5.c | 47 +++++++++++++++++++++++++++++++++++++++--------
- 1 file changed, 39 insertions(+), 8 deletions(-)
+ repair/scan.c | 51 +++++++++++++++++++++++++++++++++++++++++++--------
+ 1 file changed, 43 insertions(+), 8 deletions(-)
 
-diff --git a/repair/phase5.c b/repair/phase5.c
-index 30f2d05..0601810 100644
---- a/repair/phase5.c
-+++ b/repair/phase5.c
-@@ -1158,8 +1158,12 @@ build_ino_tree(xfs_mount_t *mp, xfs_agnumber_t agno,
- 	xfs_agino_t		count = 0;
- 	xfs_agino_t		freecount = 0;
- 	int			inocnt;
-+	uint8_t			finocnt;
- 	int			k;
- 	int			level = btree_curs->num_levels;
-+	int			spmask;
-+	uint64_t		sparse;
-+	uint16_t		holemask;
+diff --git a/repair/scan.c b/repair/scan.c
+index 5b67e15..52c05e2 100644
+--- a/repair/scan.c
++++ b/repair/scan.c
+@@ -950,7 +950,8 @@ scan_single_finobt_chunk(
+ 	int			nfree;
+ 	int			off;
+ 	int			state;
+-	ino_tree_node_t		*first_rec, *last_rec, *ino_rec;
++	ino_tree_node_t		*ino_rec = NULL;
++	ino_tree_node_t		*first_rec, *last_rec;
+ 	int			freecount;
  
- 	for (i = 0; i < level; i++)  {
- 		lptr = &btree_curs->level[i];
-@@ -1243,19 +1247,46 @@ build_ino_tree(xfs_mount_t *mp, xfs_agnumber_t agno,
- 					cpu_to_be32(ino_rec->ino_startnum);
- 			bt_rec[j].ir_free = cpu_to_be64(ino_rec->ir_free);
- 
--			inocnt = 0;
-+			inocnt = finocnt = 0;
- 			for (k = 0; k < sizeof(xfs_inofree_t)*NBBY; k++)  {
- 				ASSERT(is_inode_confirmed(ino_rec, k));
--				inocnt += is_inode_free(ino_rec, k);
+ 	ino = be32_to_cpu(rp->ir_startino);
+@@ -1014,8 +1015,19 @@ _("bad ending inode # (%" PRIu64 " (0x%x 0x%zx)) in finobt rec, skipping rec\n")
+ 		     j < XFS_INODES_PER_CHUNK;
+ 		     j += mp->m_sb.sb_inopblock) {
+ 			agbno = XFS_AGINO_TO_AGBNO(mp, ino + j);
+-
+ 			state = get_bmap(agno, agbno);
 +
-+				if (is_inode_sparse(ino_rec, k))
-+					continue;
-+				if (is_inode_free(ino_rec, k))
-+					finocnt++;
-+				inocnt++;
++			/* sparse inodes should not refer to inode blocks */
++			if (ino_issparse(rp, j)) {
++				if (state == XR_E_INO) {
++					do_warn(
++_("sparse inode chunk claims inode block, finobt block - agno %d, bno %d, inopb %d\n"),
++						agno, agbno, mp->m_sb.sb_inopblock);
++					suspect++;
++				}
++				continue;
++			}
++
+ 			if (state == XR_E_INO) {
+ 				continue;
+ 			} else if ((state == XR_E_UNKNOWN) ||
+@@ -1060,8 +1072,9 @@ _("finobt rec for ino %" PRIu64 " (%d/%u) does not match existing rec (%d/%d)\n"
+ 		nfree = 0;
+ 		for (j = 0; j < XFS_INODES_PER_CHUNK; j++) {
+ 			int isfree = XFS_INOBT_IS_FREE_DISK(rp, j);
++			int issparse = ino_issparse(rp, j);
+ 
+-			if (isfree)
++			if (isfree && !issparse)
+ 				nfree++;
+ 
+ 			/*
+@@ -1071,6 +1084,10 @@ _("finobt rec for ino %" PRIu64 " (%d/%u) does not match existing rec (%d/%d)\n"
+ 			if (!suspect &&
+ 			    isfree != is_inode_free(first_rec, j))
+ 				suspect++;
++
++			if (!suspect &&
++			    issparse != is_inode_sparse(first_rec, j))
++				suspect++;
+ 		}
+ 
+ 		goto check_freecount;
+@@ -1088,16 +1105,13 @@ _("finobt rec for ino %" PRIu64 " (%d/%u) does not match existing rec (%d/%d)\n"
+ 		 * inodes previously inserted into the uncertain tree should be
+ 		 * superceded by these when the uncertain tree is processed
+ 		 */
+-		nfree = 0;
+ 		if (XFS_INOBT_IS_FREE_DISK(rp, 0)) {
+-			nfree++;
+ 			ino_rec = set_inode_free_alloc(mp, agno, ino);
+ 		} else  {
+ 			ino_rec = set_inode_used_alloc(mp, agno, ino);
+ 		}
+ 		for (j = 1; j < XFS_INODES_PER_CHUNK; j++) {
+ 			if (XFS_INOBT_IS_FREE_DISK(rp, j)) {
+-				nfree++;
+ 				set_inode_free(ino_rec, j);
+ 			} else  {
+ 				set_inode_used(ino_rec, j);
+@@ -1108,17 +1122,38 @@ _("finobt rec for ino %" PRIu64 " (%d/%u) does not match existing rec (%d/%d)\n"
+ 		 * this should handle the case where the inobt scan may have
+ 		 * already added uncertain inodes
+ 		 */
+-		nfree = 0;
+ 		for (j = 0; j < XFS_INODES_PER_CHUNK; j++) {
+ 			if (XFS_INOBT_IS_FREE_DISK(rp, j)) {
+ 				add_aginode_uncertain(mp, agno, ino + j, 1);
+-				nfree++;
+ 			} else {
+ 				add_aginode_uncertain(mp, agno, ino + j, 0);
  			}
+ 		}
+ 	}
  
--			if (xfs_sb_version_hassparseinodes(&mp->m_sb))
--				bt_rec[j].ir_u.sp.ir_freecount = inocnt;
--			else
-+			if (!xfs_sb_version_hassparseinodes(&mp->m_sb)) {
- 				bt_rec[j].ir_u.f.ir_freecount =
--							cpu_to_be32(inocnt);
--			freecount += inocnt;
--			count += XFS_INODES_PER_CHUNK;
-+							cpu_to_be32(finocnt);
-+				goto nextrec;
++	/*
++	 * Mark sparse inodes as such in the in-core tree. Verify that sparse
++	 * inodes are free and that freecount is consistent with the free mask.
++	 */
++	nfree = 0;
++	for (j = 0; j < XFS_INODES_PER_CHUNK; j++) {
++		if (ino_issparse(rp, j)) {
++			if (!suspect && !XFS_INOBT_IS_FREE_DISK(rp, j)) {
++				do_warn(
++_("finobt ir_holemask/ir_free mismatch, inode chunk %d/%u, holemask 0x%x free 0x%llx\n"),
++					agno, ino,
++					be16_to_cpu(rp->ir_u.sp.ir_holemask),
++					be64_to_cpu(rp->ir_free));
++				suspect++;
 +			}
++			if (!suspect && ino_rec)
++				set_inode_sparse(ino_rec, j);
++		} else if (XFS_INOBT_IS_FREE_DISK(rp, j)) {
++			/* freecount only tracks non-sparse inos */
++			nfree++;
++		}
++	}
 +
-+			/*
-+			 * Convert the 64-bit in-core sparse inode state to the
-+			 * 16-bit on-disk holemask.
-+			 */
-+			holemask = 0;
-+			spmask = (1 << XFS_INODES_PER_HOLEMASK_BIT) - 1;
-+			sparse = ino_rec->ir_sparse;
-+			for (k = 0; k < XFS_INOBT_HOLEMASK_BITS; k++) {
-+				if (sparse & spmask) {
-+					ASSERT((sparse & spmask) == spmask);
-+					holemask |= (1 << k);
-+				} else
-+					ASSERT((sparse & spmask) == 0);
-+				sparse >>= XFS_INODES_PER_HOLEMASK_BIT;
-+			}
-+
-+			bt_rec[j].ir_u.sp.ir_freecount = finocnt;
-+			bt_rec[j].ir_u.sp.ir_count = inocnt;
-+			bt_rec[j].ir_u.sp.ir_holemask = cpu_to_be16(holemask);
-+
-+nextrec:
-+			freecount += finocnt;
-+			count += inocnt;
+ check_freecount:
  
- 			if (finobt)
- 				ino_rec = next_free_ino_rec(ino_rec);
+ 	/*
 -- 
 1.9.3
 
