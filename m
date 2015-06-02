@@ -1,26 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 510817F67
+	by oss.sgi.com (Postfix) with ESMTP id E0F187F72
 	for <xfs@oss.sgi.com>; Tue,  2 Jun 2015 13:42:06 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 319A88F808E
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id D077B8F8049
 	for <xfs@oss.sgi.com>; Tue,  2 Jun 2015 11:42:06 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id 4PV6Svy128WJ1d4a (version=TLSv1
+	cuda.sgi.com with ESMTP id A43yXmf3gS81Q73v (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 02 Jun 2015 11:42:05 -0700 (PDT)
-Received: from int-mx11.intmail.prod.int.phx2.redhat.com
-	(int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
-	by mx1.redhat.com (Postfix) with ESMTPS id B76C8359996
-	for <xfs@oss.sgi.com>; Tue,  2 Jun 2015 18:42:04 +0000 (UTC)
+	Tue, 02 Jun 2015 11:42:06 -0700 (PDT)
+Received: from int-mx14.intmail.prod.int.phx2.redhat.com
+	(int-mx14.intmail.prod.int.phx2.redhat.com [10.5.11.27])
+	by mx1.redhat.com (Postfix) with ESMTPS id 930A3B6E63
+	for <xfs@oss.sgi.com>; Tue,  2 Jun 2015 18:42:05 +0000 (UTC)
 Received: from bfoster.bfoster (dhcp-41-237.bos.redhat.com [10.18.41.237])
-	by int-mx11.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id t52Ig4Kk019608
-	for <xfs@oss.sgi.com>; Tue, 2 Jun 2015 14:42:04 -0400
+	by int-mx14.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id t52Ig5f2010524
+	for <xfs@oss.sgi.com>; Tue, 2 Jun 2015 14:42:05 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH 14/28] growfs: display sparse inode status from xfs_info
-Date: Tue,  2 Jun 2015 14:41:47 -0400
-Message-Id: <1433270521-62026-15-git-send-email-bfoster@redhat.com>
+Subject: [PATCH 27/28] metadump: reorder inode record sanity checks and inode
+	buffer read
+Date: Tue,  2 Jun 2015 14:42:00 -0400
+Message-Id: <1433270521-62026-28-git-send-email-bfoster@redhat.com>
 In-Reply-To: <1433270521-62026-1-git-send-email-bfoster@redhat.com>
 References: <1433270521-62026-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -38,74 +39,69 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Check the sparse inode feature bit of the geometry flags and display
-whether sparse inode chunks are supported by the fs.
+In preparation to support sparse inode records, refactor
+copy_inode_chunk() to perform all record sanity checks before the cursor
+is set to the inode chunk and the inode buffer is read.
 
 Signed-off-by: Brian Foster <bfoster@redhat.com>
 ---
- growfs/xfs_growfs.c | 13 ++++++++-----
- 1 file changed, 8 insertions(+), 5 deletions(-)
+ db/metadump.c | 25 ++++++++++++-------------
+ 1 file changed, 12 insertions(+), 13 deletions(-)
 
-diff --git a/growfs/xfs_growfs.c b/growfs/xfs_growfs.c
-index 8e611b6..4a344fe 100644
---- a/growfs/xfs_growfs.c
-+++ b/growfs/xfs_growfs.c
-@@ -57,12 +57,13 @@ report_info(
- 	int		crcs_enabled,
- 	int		cimode,
- 	int		ftype_enabled,
--	int		finobt_enabled)
-+	int		finobt_enabled,
-+	int		spinodes)
- {
- 	printf(_(
- 	    "meta-data=%-22s isize=%-6u agcount=%u, agsize=%u blks\n"
- 	    "         =%-22s sectsz=%-5u attr=%u, projid32bit=%u\n"
--	    "         =%-22s crc=%-8u finobt=%u\n"
-+	    "         =%-22s crc=%-8u finobt=%u spinodes=%u\n"
- 	    "data     =%-22s bsize=%-6u blocks=%llu, imaxpct=%u\n"
- 	    "         =%-22s sunit=%-6u swidth=%u blks\n"
- 	    "naming   =version %-14u bsize=%-6u ascii-ci=%d ftype=%d\n"
-@@ -72,7 +73,7 @@ report_info(
- 
- 		mntpoint, geo.inodesize, geo.agcount, geo.agblocks,
- 		"", geo.sectsize, attrversion, projid32bit,
--		"", crcs_enabled, finobt_enabled,
-+		"", crcs_enabled, finobt_enabled, spinodes,
- 		"", geo.blocksize, (unsigned long long)geo.datablocks,
- 			geo.imaxpct,
- 		"", geo.sunit, geo.swidth,
-@@ -125,6 +126,7 @@ main(int argc, char **argv)
- 	int			crcs_enabled;
- 	int			ftype_enabled = 0;
- 	int			finobt_enabled;	/* free inode btree */
-+	int			spinodes;
- 
- 	progname = basename(argv[0]);
- 	setlocale(LC_ALL, "");
-@@ -247,11 +249,12 @@ main(int argc, char **argv)
- 	crcs_enabled = geo.flags & XFS_FSOP_GEOM_FLAGS_V5SB ? 1 : 0;
- 	ftype_enabled = geo.flags & XFS_FSOP_GEOM_FLAGS_FTYPE ? 1 : 0;
- 	finobt_enabled = geo.flags & XFS_FSOP_GEOM_FLAGS_FINOBT ? 1 : 0;
-+	spinodes = geo.flags & XFS_FSOP_GEOM_FLAGS_SPINODES ? 1 : 0;
- 	if (nflag) {
- 		report_info(geo, datadev, isint, logdev, rtdev,
- 				lazycount, dirversion, logversion,
- 				attrversion, projid32bit, crcs_enabled, ci,
--				ftype_enabled, finobt_enabled);
-+				ftype_enabled, finobt_enabled, spinodes);
- 		exit(0);
+diff --git a/db/metadump.c b/db/metadump.c
+index 94f92bc..e101501 100644
+--- a/db/metadump.c
++++ b/db/metadump.c
+@@ -1846,21 +1846,10 @@ copy_inode_chunk(
+ 		return 1;
  	}
  
-@@ -289,7 +292,7 @@ main(int argc, char **argv)
- 	report_info(geo, datadev, isint, logdev, rtdev,
- 			lazycount, dirversion, logversion,
- 			attrversion, projid32bit, crcs_enabled, ci, ftype_enabled,
--			finobt_enabled);
-+			finobt_enabled, spinodes);
+-	push_cur();
+-	set_cur(&typtab[TYP_INODE], XFS_AGB_TO_DADDR(mp, agno, agbno),
+-			XFS_FSB_TO_BB(mp, mp->m_ialloc_blks),
+-			DB_RING_IGN, NULL);
+-	if (iocur_top->data == NULL) {
+-		print_warning("cannot read inode block %u/%u", agno, agbno);
+-		rval = !stop_on_read_error;
+-		goto pop_out;
+-	}
+-
+ 	/*
+ 	 * check for basic assumptions about inode chunks, and if any
+ 	 * assumptions fail, don't process the inode chunk.
+ 	 */
+-
+ 	if ((mp->m_sb.sb_inopblock <= XFS_INODES_PER_CHUNK && off != 0) ||
+ 			(mp->m_sb.sb_inopblock > XFS_INODES_PER_CHUNK &&
+ 					off % XFS_INODES_PER_CHUNK != 0) ||
+@@ -1870,7 +1859,17 @@ copy_inode_chunk(
+ 		if (show_warnings)
+ 			print_warning("badly aligned inode (start = %llu)",
+ 					XFS_AGINO_TO_INO(mp, agno, agino));
+-		goto skip_processing;
++		return 1;
++	}
++
++	push_cur();
++	set_cur(&typtab[TYP_INODE], XFS_AGB_TO_DADDR(mp, agno, agbno),
++			XFS_FSB_TO_BB(mp, mp->m_ialloc_blks),
++			DB_RING_IGN, NULL);
++	if (iocur_top->data == NULL) {
++		print_warning("cannot read inode block %u/%u", agno, agbno);
++		rval = !stop_on_read_error;
++		goto pop_out;
+ 	}
  
- 	ddsize = xi.dsize;
- 	dlsize = ( xi.logBBsize? xi.logBBsize :
+ 	/*
+@@ -1889,7 +1888,7 @@ copy_inode_chunk(
+ 		if (!process_inode(agno, agino + i, dip))
+ 			goto pop_out;
+ 	}
+-skip_processing:
++
+ 	if (write_buf(iocur_top))
+ 		goto pop_out;
+ 
 -- 
 1.9.3
 
