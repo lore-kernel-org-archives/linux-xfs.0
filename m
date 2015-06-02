@@ -1,26 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id CEB817F5A
-	for <xfs@oss.sgi.com>; Mon,  1 Jun 2015 16:21:24 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 5A841AC002
-	for <xfs@oss.sgi.com>; Mon,  1 Jun 2015 14:21:24 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id 8Qb3ET8LqgVWV8yU (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 01 Jun 2015 14:21:23 -0700 (PDT)
-Date: Mon, 1 Jun 2015 17:21:20 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH v5 00/18] xfs: sparse inode chunks
-Message-ID: <20150601212120.GA17384@bfoster.bfoster>
-References: <1424369623-5656-1-git-send-email-bfoster@redhat.com>
-	<20150219191034.GA5750@bfoster.bfoster>
-	<20150601001230.GG24666@dastard>
-	<20150601125638.GB62578@bfoster.bfoster>
-	<20150601204703.GI24666@dastard>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 03CE67F5F
+	for <xfs@oss.sgi.com>; Tue,  2 Jun 2015 07:07:01 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id E8312304051
+	for <xfs@oss.sgi.com>; Tue,  2 Jun 2015 05:06:57 -0700 (PDT)
+Received: from emea01-db3-obe.outbound.protection.outlook.com
+	(mail-db3on0128.outbound.protection.outlook.com
+	[157.55.234.128]) by cuda.sgi.com with ESMTP id
+	vE0QRQBN64OPCERM (version=TLSv1 cipher=AES256-SHA bits=256
+	verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 02 Jun 2015 05:06:51 -0700 (PDT)
+Date: Tue, 2 Jun 2015 14:06:48 +0200
+From: Anders Ossowicki <aowi@novozymes.com>
+Subject: Re: "XFS: possible memory allocation deadlock in kmem_alloc" on high
+	memory machine
+Message-ID: <20150602120648.GA22111@otto>
+References: <20150601145741.GA16608@otto> <20150601210113.GL24666@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20150601204703.GI24666@dastard>
+In-Reply-To: <20150601210113.GL24666@dastard>
+Reply-To: aowi@novozymes.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,63 +34,114 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-On Tue, Jun 02, 2015 at 06:47:03AM +1000, Dave Chinner wrote:
-> On Mon, Jun 01, 2015 at 08:56:39AM -0400, Brian Foster wrote:
-> > On Mon, Jun 01, 2015 at 10:12:30AM +1000, Dave Chinner wrote:
-> > > On Thu, Feb 19, 2015 at 02:10:34PM -0500, Brian Foster wrote:
-> > > - kernel code seems to be regression from when not using sparse
-> > >   inodes
-> > 
-> > What regression are you referring to?
+On Mon, Jun 01, 2015 at 11:01:13PM +0200, Dave Chinner wrote:
+> Nothing should go wrong - XFS will essentially block until it gets
+> the memory it requires.
+
+Good to know, thanks!
+
+> > We're running on 3.18.13, built from kernel.org git.
 > 
-> Doh! typo there. s/from/free/
-> 
+> Right around the time that I was seeing all sorts of regressions
+> relating to low memory behaviour and the OOM killer....
 
-Ah, that sounds better. ;)
+We fought with some high cpu load issues back in march, related to
+memory management, and we ended up on a recent longterm kernel.
+http://thread.gmane.org/gmane.linux.kernel.mm/129858
 
-> > > - inode allocation speed does not seem to be impacted by sparse
-> > >   inode allocation - running my fsmark tests on a debug kernel show
-> > >   no performance differential, even though sparse inode chunks
-> > >   should be created in that case.
-> > > - it smoke tests through xfstests ok
-> > 
-> > I haven't really run into much for issues so far save for a problem
-> > discovered with the DEBUG mode code from my recent large block size
-> > testing. I have a patch for that lying around I need to post...
-> > 
-> > > I haven't really looked through the userspace code in any detail,
-> > > so I can't really comment on that side of things yet. The kernel
-> > > code looks good, there doesn't appear to be any regressions and the
-> > > new functionailty works so far. Hence I think I'm going to merge
-> > > the kernel code in the 4.2 cycle, and we can work on getting
-> > > userspace into the current dev tree for people to test and use the
-> > > new code....
-> > > 
-> > 
-> > Sounds good, thanks. The userspace bits have only been posted for
-> > testing purposes to this point to avoid the churn from active review of
-> > the core code. Since that is now merged, I'll get the latest mechanism
-> > ported over to userspace, incorporate some of the fixes noted above and
-> > get something posted hopefully soon.
-> 
-> Can you port it to the current dev branch (libxfs-4.1-update)? That
-> way will be much easier for you, and me when it comes to merging..
-> 
+> Ouch. 3TB of memory, and no higher order pages left? Do you have
+> memory compaction turned on? That should be reforming large pages in
+> this situation. What type of machine is it?
 
-Yeah, it's been based on the 4.1 update branch for the last tarball or
-two that have been posted, which eliminated the need for the
-dependencies I was carrying along with it beforehand.
+Memory compaction is turned on. It's an off-the-shelf dell server with 4
+12c Xeon processors.
 
-Brian
+> Yes, memory fragmentation tends to be a MM problem; nothing XFS can
+> do about it.
 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+Ya, knowing we're not in immediate danger of a filesystem meltdown, I
+think we'll tackle the fragmentation issue next.
+
+> Especially as it appears that 2.8TB of your memory is in the page
+> cache and should be reclaimable.
+
+Indeed. I haven't been able to catch the issue while it was ongoing,
+since upgrading to 3.13.18, but my guess is that we're not reclaiming
+the cache fast enough for some reason, possibly because it takes too
+long to find the best reclaimable regions with so many fragment to sift
+through.
+
+As for the pertinent system info:
+
+Linux 3.18.13 (we also saw the issue with 3.18.9)
+xfs_repair version 3.1.7
+
+4x Intel Xeon E7-8857 v2
+
+$ cat /proc/meminfo
+MemTotal:       3170749444 kB
+MemFree:        18947564 kB
+MemAvailable:   2968870324 kB
+Buffers:          270704 kB
+Cached:         3008702200 kB
+SwapCached:            0 kB
+Active:         1617534420 kB
+Inactive:       1415684856 kB
+Active(anon):   156973416 kB
+Inactive(anon):  4856264 kB
+Active(file):   1460561004 kB
+Inactive(file): 1410828592 kB
+Unevictable:           0 kB
+Mlocked:               0 kB
+SwapTotal:      25353212 kB
+SwapFree:       25353212 kB
+Dirty:           1228056 kB
+Writeback:        348024 kB
+AnonPages:      24244728 kB
+Mapped:         137738148 kB
+Shmem:          137578880 kB
+Slab:           79729144 kB
+SReclaimable:   79040008 kB
+SUnreclaim:       689136 kB
+KernelStack:       22976 kB
+PageTables:     19203180 kB
+NFS_Unstable:          0 kB
+Bounce:                0 kB
+WritebackTmp:          0 kB
+CommitLimit:    1610727932 kB
+Committed_AS:   178507488 kB
+VmallocTotal:   34359738367 kB
+VmallocUsed:     6628972 kB
+VmallocChunk:   31937036032 kB
+HardwareCorrupted:     0 kB
+AnonHugePages:         0 kB
+HugePages_Total:       0
+HugePages_Free:        0
+HugePages_Rsvd:        0
+HugePages_Surp:        0
+Hugepagesize:       2048 kB
+DirectMap4k:      172736 kB
+DirectMap2M:    13412352 kB
+DirectMap1G:    3207593984 kB
+
+We have three hardware raid'ed disks with XFS on them, one of which receives
+the bulk of the load. This is a raid 50 volume on SSDs with the raid controller
+running in writethrough mode.
+
+$ xfs_info /dev/sdb
+meta-data=/dev/sdb               isize=256    agcount=32, agsize=97640448 blks
+         =                       sectsz=512   attr=2
+data     =                       bsize=4096   blocks=3124494336, imaxpct=5
+         =                       sunit=0      swidth=0 blks
+naming   =version 2              bsize=4096   ascii-ci=0
+log      =internal               bsize=4096   blocks=521728, version=2
+         =                       sectsz=512   sunit=0 blks, lazy-count=1
+realtime =none                   extsz=4096   blocks=0, rtextents=0
+
+-- 
+Anders Ossowicki
 
 _______________________________________________
 xfs mailing list
