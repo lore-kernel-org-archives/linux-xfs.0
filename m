@@ -1,27 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 8E34B7F66
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id BDF637F6B
 	for <xfs@oss.sgi.com>; Tue,  2 Jun 2015 13:42:06 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 6DA998F808F
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 9EF04304051
 	for <xfs@oss.sgi.com>; Tue,  2 Jun 2015 11:42:06 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id O5OVp3zO9CiEiCED (version=TLSv1
+	cuda.sgi.com with ESMTP id XCdG35ezr7It4aHV (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
 	Tue, 02 Jun 2015 11:42:05 -0700 (PDT)
-Received: from int-mx09.intmail.prod.int.phx2.redhat.com
-	(int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
-	by mx1.redhat.com (Postfix) with ESMTPS id 5582A19F99B
+Received: from int-mx11.intmail.prod.int.phx2.redhat.com
+	(int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
+	by mx1.redhat.com (Postfix) with ESMTPS id 926B13672A3
 	for <xfs@oss.sgi.com>; Tue,  2 Jun 2015 18:42:05 +0000 (UTC)
 Received: from bfoster.bfoster (dhcp-41-237.bos.redhat.com [10.18.41.237])
-	by int-mx09.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id t52Ig4Ss019888
+	by int-mx11.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id t52Ig572019624
 	for <xfs@oss.sgi.com>; Tue, 2 Jun 2015 14:42:05 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH 23/28] repair: do not account sparse inodes in phase 5 cursor
-	init.
-Date: Tue,  2 Jun 2015 14:41:56 -0400
-Message-Id: <1433270521-62026-24-git-send-email-bfoster@redhat.com>
+Subject: [PATCH 26/28] repair: handle sparse inode alignment
+Date: Tue,  2 Jun 2015 14:41:59 -0400
+Message-Id: <1433270521-62026-27-git-send-email-bfoster@redhat.com>
 In-Reply-To: <1433270521-62026-1-git-send-email-bfoster@redhat.com>
 References: <1433270521-62026-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,62 +38,61 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-The inode btrees are reconstructed in phase 5 of xfs_repair. The btree
-cursor initialization counts the allocated and free inodes in the
-in-core records and calculates the expected geometry of the resulting
-btree. The free and total inode counts for each AG are also ultimately
-aggregated to update the associated superblock counts.
+Sparse inode support requires inode alignment to match inode chunk size.
+xfs_repair currently expects inode alignment to match the default
+cluster size or a scaled factor thereof.
 
-Update init_ino_cursor() to not assume 64 inode records and not account
-sparse inodes into the total or free inode count for each AG.
+Update sb_validate_ino_align() to consider the superblock valid if
+sparse inode support is enabled and alignment matches the chunk size.
 
 Signed-off-by: Brian Foster <bfoster@redhat.com>
 ---
- repair/phase5.c | 13 +++++++++++--
- 1 file changed, 11 insertions(+), 2 deletions(-)
+ repair/sb.c | 25 ++++++++++++++++++++-----
+ 1 file changed, 20 insertions(+), 5 deletions(-)
 
-diff --git a/repair/phase5.c b/repair/phase5.c
-index 04bf049..30f2d05 100644
---- a/repair/phase5.c
-+++ b/repair/phase5.c
-@@ -899,7 +899,8 @@ init_ino_cursor(xfs_mount_t *mp, xfs_agnumber_t agno, bt_status_t *btree_curs,
- {
- 	__uint64_t		ninos;
- 	__uint64_t		nfinos;
--	__uint64_t		rec_nfinos;
-+	int			rec_nfinos;
-+	int			rec_ninos;
- 	ino_tree_node_t		*ino_rec;
- 	int			num_recs;
- 	int			level;
-@@ -919,11 +920,19 @@ init_ino_cursor(xfs_mount_t *mp, xfs_agnumber_t agno, bt_status_t *btree_curs,
- 	 */
- 	ino_rec = findfirst_inode_rec(agno);
- 	for (num_recs = 0; ino_rec != NULL; ino_rec = next_ino_rec(ino_rec))  {
-+		rec_ninos = 0;
- 		rec_nfinos = 0;
- 		for (i = 0; i < XFS_INODES_PER_CHUNK; i++)  {
- 			ASSERT(is_inode_confirmed(ino_rec, i));
-+			/*
-+			 * sparse inodes are not factored into superblock (free)
-+			 * inode counts
-+			 */
-+			if (is_inode_sparse(ino_rec, i))
-+				continue;
- 			if (is_inode_free(ino_rec, i))
- 				rec_nfinos++;
-+			rec_ninos++;
- 		}
+diff --git a/repair/sb.c b/repair/sb.c
+index 03be5e8..a291b3e 100644
+--- a/repair/sb.c
++++ b/repair/sb.c
+@@ -170,12 +170,13 @@ find_secondary_sb(xfs_sb_t *rsb)
+ }
  
- 		/*
-@@ -933,7 +942,7 @@ init_ino_cursor(xfs_mount_t *mp, xfs_agnumber_t agno, bt_status_t *btree_curs,
- 			continue;
+ /*
+- * Calculate what inode alignment field ought to be
+- * based on internal superblock info and determine if it is valid.
++ * Calculate what the inode alignment field ought to be based on internal
++ * superblock info and determine if it is valid.
+  *
+- * For v5 superblocks, the inode alignment will either match that of the
+- * standard XFS_INODE_BIG_CLUSTER_SIZE, or it will be scaled based on the inode
+- * size. Either value is valid in this case.
++ * For standard v5 superblocks, the inode alignment must either match
++ * XFS_INODE_BIG_CLUSTER_SIZE or a multiple based on the inode size. For v5
++ * superblocks with sparse inode chunks enabled, inode alignment must match the
++ * inode chunk size.
+  *
+  * Return true if the alignment is valid, false otherwise.
+  */
+@@ -201,6 +202,20 @@ sb_validate_ino_align(struct xfs_sb *sb)
+ 	if (align == sb->sb_inoalignmt)
+ 		return true;
  
- 		nfinos += rec_nfinos;
--		ninos += XFS_INODES_PER_CHUNK;
-+		ninos += rec_ninos;
- 		num_recs++;
- 	}
++	/*
++	 * Sparse inodes requires inoalignmt to match full inode chunk size and
++	 * spino_align to match the scaled alignment (as calculated above).
++	 */
++	if (xfs_sb_version_hassparseinodes(sb)) {
++		if (align != sb->sb_spino_align)
++			return false;
++
++		align = (sb->sb_inodesize * XFS_INODES_PER_CHUNK)
++			>> sb->sb_blocklog;
++		if (align == sb->sb_inoalignmt)
++			return true;
++	}
++
+ 	return false;
+ }
  
 -- 
 1.9.3
