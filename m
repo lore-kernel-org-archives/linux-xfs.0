@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 628207FDF
-	for <xfs@oss.sgi.com>; Wed,  3 Jun 2015 17:45:21 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id F2E31AC002
-	for <xfs@oss.sgi.com>; Wed,  3 Jun 2015 15:45:17 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id ED3A67FE2
+	for <xfs@oss.sgi.com>; Wed,  3 Jun 2015 17:48:36 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 66F5CAC002
+	for <xfs@oss.sgi.com>; Wed,  3 Jun 2015 15:48:36 -0700 (PDT)
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	V1FDY5TnE0JXvyYC for <xfs@oss.sgi.com>;
-	Wed, 03 Jun 2015 15:45:16 -0700 (PDT)
-Date: Thu, 4 Jun 2015 08:40:50 +1000
+	f2CyDbcdnoqkA81c for <xfs@oss.sgi.com>;
+	Wed, 03 Jun 2015 15:48:16 -0700 (PDT)
+Date: Thu, 4 Jun 2015 08:44:49 +1000
 From: Dave Chinner <david@fromorbit.com>
 Subject: Re: [PATCH] [RFC v2] xfs: byte range buffer dirty region tracking
-Message-ID: <20150603224050.GP24666@dastard>
+Message-ID: <20150603224449.GQ24666@dastard>
 References: <1432865777-14616-1-git-send-email-david@fromorbit.com>
-	<20150603140121.GA32420@bfoster.bfoster>
+	<556F0CE0.8080402@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20150603140121.GA32420@bfoster.bfoster>
+In-Reply-To: <556F0CE0.8080402@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,68 +30,31 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
+To: Mark Tinguely <tinguely@sgi.com>
 Cc: xfs@oss.sgi.com
 
-On Wed, Jun 03, 2015 at 10:01:21AM -0400, Brian Foster wrote:
-> On Fri, May 29, 2015 at 12:16:17PM +1000, Dave Chinner wrote:
-> > From: Dave Chinner <dchinner@redhat.com>
-> > 
-> > The biggest problem with large directory block sizes is the CPU
-> > overhead in maintaining the buffer log item direty region bitmap.
-> > The bit manipulations and buffer region mapping calls are right at
-> > the top of the profiles when running tests on 64k directory buffers:
-.....
-> > +	start = 0;
-> > +	if (offset < rp->first)
-> > +		start = rp->first - offset;
-> > +	end = length - 1;
-> > +	if (offset + length > rp->last)
-> > +		end = rp->last - offset - 1;
-> > +
-> > +	start &= ~((1 << XFS_BLF_SHIFT) - 1);
-> > +	first_bit = start >> XFS_BLF_SHIFT;
-> > +	last_bit = end >> XFS_BLF_SHIFT;
-> > +	nbits = last_bit - first_bit + 1;
-> > +	bitmap_set((unsigned long *)blfp->blf_data_map, first_bit, nbits);
-> > +
-> > +	ASSERT(end <= length);
-> > +	ASSERT(start <= length);
-> > +	ASSERT(length >= nbits * XFS_BLF_CHUNK);
-> > +	/*
-> > +	 * Copy needs to be done a buffer page at a time as we can be logging
-> > +	 * unmapped buffers. hence we have to use xfs_buf_iomove() rather than a
-> > +	 * straight memcpy here.
-> > +	 */
-> > +	offset += first_bit * XFS_BLF_CHUNK;
-> > +	length = nbits * XFS_BLF_CHUNK;
-> > +	buf = xlog_prepare_iovec(lv, vecp, XLOG_REG_TYPE_BCHUNK);
-> > +	xfs_buf_iomove(bp, offset, length, buf, XBRW_READ);
-> > +	xlog_finish_iovec(lv, *vecp, length);
+On Wed, Jun 03, 2015 at 09:19:12AM -0500, Mark Tinguely wrote:
+> On 05/28/15 21:16, Dave Chinner wrote:
+> >Discussion:
+> >
+> >I think that we will eventually need to track multiple regions - 3
+> >is probably sufficient - because the nature of directory operations
+> >are that just about every operation modifies a header in the buffer,
+> >a tail section in the buffer and then some number of bytes/regions
+> >in the middle of the buffer.
 > 
-> Am I following this correctly in that the bitmap lives on because it's
-> part of the on-disk log structure?
+> Nod to the idea.
+> 
+> What made you change from your original idea of using 4 regions to 3
+> regions?
 
-Yes.
-
-> In other words, we previously updated
-> the per-segment bitmaps during the action of logging the buffer and this
-> would simply copy the format to the log vector. With this change, we
-> have the separate item-wide logging range that is effectively an in-core
-> value and used to track the log action. The segment bitmaps must still
-> be written to the log to preserve on-disk format, so we defer that to
-> when the log buffer is formatted and do so against the copy of the
-> format that's actually already copied to the log vector (e.g., via the
-> blfp = xlog_copy_iovec(...) above).
-
-Yes.
-
-> Just a minor nit if I am following that correctly... it would be nice if
-> the comment above were a bit more explicit to point out we're working on
-> the copied format since the bitmap updates are deferred (and the bitmaps
-> in the source memory buffer are essentially never valid).
-
-Yep, I can add that.
+3 or 4 regions make little difference. header, body and tail is most
+common for random directory modifications, so whether we have 1 or 2
+body regions won't make much difference once more than a couple of
+modifications are made to the same directory block. Indeed, I'm not
+sure that we even need multiple regions - the log bandwidth and log
+item memcpy overhead hasn't changed very much even on large
+directory buffers with a single region...
 
 Cheers,
 
