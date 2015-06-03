@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 445877F92
-	for <xfs@oss.sgi.com>; Wed,  3 Jun 2015 01:05:09 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 3448D8F8087
-	for <xfs@oss.sgi.com>; Tue,  2 Jun 2015 23:05:06 -0700 (PDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 889787F95
+	for <xfs@oss.sgi.com>; Wed,  3 Jun 2015 01:05:10 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 5A5A3304032
+	for <xfs@oss.sgi.com>; Tue,  2 Jun 2015 23:05:10 -0700 (PDT)
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	SbL49xBtTjLw0hDs for <xfs@oss.sgi.com>;
-	Tue, 02 Jun 2015 23:05:03 -0700 (PDT)
+	HSyz5mo3xhiVDfBY for <xfs@oss.sgi.com>;
+	Tue, 02 Jun 2015 23:05:08 -0700 (PDT)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.80)
-	(envelope-from <dave@fromorbit.com>) id 1Z01nQ-0001Dv-SE
+	(envelope-from <dave@fromorbit.com>) id 1Z01nQ-0001DR-Ns
 	for xfs@oss.sgi.com; Wed, 03 Jun 2015 16:05:00 +1000
 Received: from dave by disappointment with local (Exim 4.82_1-5b7a7c0-XX)
-	(envelope-from <dave@disappointment.disaster>) id 1Z01nQ-0002wE-Qm
+	(envelope-from <dave@disappointment.disaster>) id 1Z01nQ-0002va-NC
 	for xfs@oss.sgi.com; Wed, 03 Jun 2015 16:05:00 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 20/20] xfs: enable the rmap btree functionality
-Date: Wed,  3 Jun 2015 16:04:57 +1000
-Message-Id: <1433311497-10245-21-git-send-email-david@fromorbit.com>
+Subject: [PATCH 12/20] xfs: rmap btree transaction reservations
+Date: Wed,  3 Jun 2015 16:04:49 +1000
+Message-Id: <1433311497-10245-13-git-send-email-david@fromorbit.com>
 In-Reply-To: <1433311497-10245-1-git-send-email-david@fromorbit.com>
 References: <1433311497-10245-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,46 +39,220 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Add the feature flag to the supported matrix so that the kernel can
-mount and use rmap btree enabled filesystems
+The rmap btrees will use the AGFL as the block allocation source, so
+we need to ensure that the transaction reservations reflect the fact
+this tree is modified by allocation and freeing. Hence we need to
+extend all the extent allocation/free reservations used in
+transactions to handle this.
+
+Note that this also gets rid of the unused XFS_ALLOCFREE_LOG_RES
+macro, as we now do buffer reservations based on the number of
+buffers logged via xfs_calc_buf_res(). Hence we only need the buffer
+count calculation now.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/libxfs/xfs_format.h | 3 ++-
- fs/xfs/libxfs/xfs_sb.c     | 6 ++++++
- 2 files changed, 8 insertions(+), 1 deletion(-)
+ fs/xfs/libxfs/xfs_trans_resv.c | 56 +++++++++++++++++++++++++++++-------------
+ fs/xfs/libxfs/xfs_trans_resv.h | 10 --------
+ 2 files changed, 39 insertions(+), 27 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
-index cd61ce9..9cff517 100644
---- a/fs/xfs/libxfs/xfs_format.h
-+++ b/fs/xfs/libxfs/xfs_format.h
-@@ -447,7 +447,8 @@ xfs_sb_has_compat_feature(
- #define XFS_SB_FEAT_RO_COMPAT_FINOBT   (1 << 0)		/* free inode btree */
- #define XFS_SB_FEAT_RO_COMPAT_RMAPBT   (1 << 1)		/* reverse map btree */
- #define XFS_SB_FEAT_RO_COMPAT_ALL \
--		(XFS_SB_FEAT_RO_COMPAT_FINOBT)
-+		(XFS_SB_FEAT_RO_COMPAT_FINOBT | \
-+		 XFS_SB_FEAT_RO_COMPAT_RMAPBT)
- #define XFS_SB_FEAT_RO_COMPAT_UNKNOWN	~XFS_SB_FEAT_RO_COMPAT_ALL
- static inline bool
- xfs_sb_has_ro_compat_feature(
-diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
-index c136abd..5fb5410 100644
---- a/fs/xfs/libxfs/xfs_sb.c
-+++ b/fs/xfs/libxfs/xfs_sb.c
-@@ -196,6 +196,12 @@ xfs_mount_validate_sb(
- 		}
- 	}
+diff --git a/fs/xfs/libxfs/xfs_trans_resv.c b/fs/xfs/libxfs/xfs_trans_resv.c
+index 68cb1e7..d495f82 100644
+--- a/fs/xfs/libxfs/xfs_trans_resv.c
++++ b/fs/xfs/libxfs/xfs_trans_resv.c
+@@ -64,6 +64,28 @@ xfs_calc_buf_res(
+ }
  
-+	if (xfs_sb_version_hasrmapbt(sbp)) {
-+		xfs_alert(mp,
-+"EXPERIMENTAL reverse mapping btree feature enabled. Use at your own risk!");
-+	}
+ /*
++ * Per-extent log reservation for the allocation btree changes
++ * involved in freeing or allocating an extent. When rmap is not enabled,
++ * there are only two trees that will be modified (free space trees), and when
++ * rmap is enabled there will be three (freespace + rmap trees). The number of
++ * blocks reserved is based on the formula:
++ *
++ * num trees * ((2 blocks/level * max depth) - 1)
++ */
++static uint
++xfs_allocfree_log_count(
++	struct xfs_mount *mp,
++	uint		num_ops)
++{
++	uint		num_trees = 2;
 +
++	if (xfs_sb_version_hasrmapbt(&mp->m_sb))
++		num_trees++;
 +
- 	if (unlikely(
- 	    sbp->sb_logstart == 0 && mp->m_logdev_targp == mp->m_ddev_targp)) {
- 		xfs_warn(mp,
++	return num_ops * num_trees * (2 * mp->m_ag_maxlevels - 1);
++}
++
++/*
+  * Logging inodes is really tricksy. They are logged in memory format,
+  * which means that what we write into the log doesn't directly translate into
+  * the amount of space they use on disk.
+@@ -126,7 +148,7 @@ xfs_calc_inode_res(
+  */
+ STATIC uint
+ xfs_calc_finobt_res(
+-	struct xfs_mount 	*mp,
++	struct xfs_mount	*mp,
+ 	int			alloc,
+ 	int			modify)
+ {
+@@ -137,7 +159,7 @@ xfs_calc_finobt_res(
+ 
+ 	res = xfs_calc_buf_res(mp->m_in_maxlevels, XFS_FSB_TO_B(mp, 1));
+ 	if (alloc)
+-		res += xfs_calc_buf_res(XFS_ALLOCFREE_LOG_COUNT(mp, 1), 
++		res += xfs_calc_buf_res(xfs_allocfree_log_count(mp, 1),
+ 					XFS_FSB_TO_B(mp, 1));
+ 	if (modify)
+ 		res += (uint)XFS_FSB_TO_B(mp, 1);
+@@ -188,10 +210,10 @@ xfs_calc_write_reservation(
+ 		     xfs_calc_buf_res(XFS_BM_MAXLEVELS(mp, XFS_DATA_FORK),
+ 				      XFS_FSB_TO_B(mp, 1)) +
+ 		     xfs_calc_buf_res(3, mp->m_sb.sb_sectsize) +
+-		     xfs_calc_buf_res(XFS_ALLOCFREE_LOG_COUNT(mp, 2),
++		     xfs_calc_buf_res(xfs_allocfree_log_count(mp, 2),
+ 				      XFS_FSB_TO_B(mp, 1))),
+ 		    (xfs_calc_buf_res(5, mp->m_sb.sb_sectsize) +
+-		     xfs_calc_buf_res(XFS_ALLOCFREE_LOG_COUNT(mp, 2),
++		     xfs_calc_buf_res(xfs_allocfree_log_count(mp, 2),
+ 				      XFS_FSB_TO_B(mp, 1))));
+ }
+ 
+@@ -217,10 +239,10 @@ xfs_calc_itruncate_reservation(
+ 		     xfs_calc_buf_res(XFS_BM_MAXLEVELS(mp, XFS_DATA_FORK) + 1,
+ 				      XFS_FSB_TO_B(mp, 1))),
+ 		    (xfs_calc_buf_res(9, mp->m_sb.sb_sectsize) +
+-		     xfs_calc_buf_res(XFS_ALLOCFREE_LOG_COUNT(mp, 4),
++		     xfs_calc_buf_res(xfs_allocfree_log_count(mp, 4),
+ 				      XFS_FSB_TO_B(mp, 1)) +
+ 		    xfs_calc_buf_res(5, 0) +
+-		    xfs_calc_buf_res(XFS_ALLOCFREE_LOG_COUNT(mp, 1),
++		    xfs_calc_buf_res(xfs_allocfree_log_count(mp, 1),
+ 				     XFS_FSB_TO_B(mp, 1)) +
+ 		    xfs_calc_buf_res(2 + mp->m_ialloc_blks +
+ 				     mp->m_in_maxlevels, 0)));
+@@ -247,7 +269,7 @@ xfs_calc_rename_reservation(
+ 		     xfs_calc_buf_res(2 * XFS_DIROP_LOG_COUNT(mp),
+ 				      XFS_FSB_TO_B(mp, 1))),
+ 		    (xfs_calc_buf_res(7, mp->m_sb.sb_sectsize) +
+-		     xfs_calc_buf_res(XFS_ALLOCFREE_LOG_COUNT(mp, 3),
++		     xfs_calc_buf_res(xfs_allocfree_log_count(mp, 3),
+ 				      XFS_FSB_TO_B(mp, 1))));
+ }
+ 
+@@ -286,7 +308,7 @@ xfs_calc_link_reservation(
+ 		     xfs_calc_buf_res(XFS_DIROP_LOG_COUNT(mp),
+ 				      XFS_FSB_TO_B(mp, 1))),
+ 		    (xfs_calc_buf_res(3, mp->m_sb.sb_sectsize) +
+-		     xfs_calc_buf_res(XFS_ALLOCFREE_LOG_COUNT(mp, 1),
++		     xfs_calc_buf_res(xfs_allocfree_log_count(mp, 1),
+ 				      XFS_FSB_TO_B(mp, 1))));
+ }
+ 
+@@ -324,7 +346,7 @@ xfs_calc_remove_reservation(
+ 		     xfs_calc_buf_res(XFS_DIROP_LOG_COUNT(mp),
+ 				      XFS_FSB_TO_B(mp, 1))),
+ 		    (xfs_calc_buf_res(4, mp->m_sb.sb_sectsize) +
+-		     xfs_calc_buf_res(XFS_ALLOCFREE_LOG_COUNT(mp, 2),
++		     xfs_calc_buf_res(xfs_allocfree_log_count(mp, 2),
+ 				      XFS_FSB_TO_B(mp, 1))));
+ }
+ 
+@@ -371,7 +393,7 @@ xfs_calc_create_resv_alloc(
+ 		mp->m_sb.sb_sectsize +
+ 		xfs_calc_buf_res(mp->m_ialloc_blks, XFS_FSB_TO_B(mp, 1)) +
+ 		xfs_calc_buf_res(mp->m_in_maxlevels, XFS_FSB_TO_B(mp, 1)) +
+-		xfs_calc_buf_res(XFS_ALLOCFREE_LOG_COUNT(mp, 1),
++		xfs_calc_buf_res(xfs_allocfree_log_count(mp, 1),
+ 				 XFS_FSB_TO_B(mp, 1));
+ }
+ 
+@@ -399,7 +421,7 @@ xfs_calc_icreate_resv_alloc(
+ 	return xfs_calc_buf_res(2, mp->m_sb.sb_sectsize) +
+ 		mp->m_sb.sb_sectsize +
+ 		xfs_calc_buf_res(mp->m_in_maxlevels, XFS_FSB_TO_B(mp, 1)) +
+-		xfs_calc_buf_res(XFS_ALLOCFREE_LOG_COUNT(mp, 1),
++		xfs_calc_buf_res(xfs_allocfree_log_count(mp, 1),
+ 				 XFS_FSB_TO_B(mp, 1)) +
+ 		xfs_calc_finobt_res(mp, 0, 0);
+ }
+@@ -483,7 +505,7 @@ xfs_calc_ifree_reservation(
+ 		xfs_calc_buf_res(1, 0) +
+ 		xfs_calc_buf_res(2 + mp->m_ialloc_blks +
+ 				 mp->m_in_maxlevels, 0) +
+-		xfs_calc_buf_res(XFS_ALLOCFREE_LOG_COUNT(mp, 1),
++		xfs_calc_buf_res(xfs_allocfree_log_count(mp, 1),
+ 				 XFS_FSB_TO_B(mp, 1)) +
+ 		xfs_calc_finobt_res(mp, 0, 1);
+ }
+@@ -513,7 +535,7 @@ xfs_calc_growdata_reservation(
+ 	struct xfs_mount	*mp)
+ {
+ 	return xfs_calc_buf_res(3, mp->m_sb.sb_sectsize) +
+-		xfs_calc_buf_res(XFS_ALLOCFREE_LOG_COUNT(mp, 1),
++		xfs_calc_buf_res(xfs_allocfree_log_count(mp, 1),
+ 				 XFS_FSB_TO_B(mp, 1));
+ }
+ 
+@@ -535,7 +557,7 @@ xfs_calc_growrtalloc_reservation(
+ 		xfs_calc_buf_res(XFS_BM_MAXLEVELS(mp, XFS_DATA_FORK),
+ 				 XFS_FSB_TO_B(mp, 1)) +
+ 		xfs_calc_inode_res(mp, 1) +
+-		xfs_calc_buf_res(XFS_ALLOCFREE_LOG_COUNT(mp, 1),
++		xfs_calc_buf_res(xfs_allocfree_log_count(mp, 1),
+ 				 XFS_FSB_TO_B(mp, 1));
+ }
+ 
+@@ -611,7 +633,7 @@ xfs_calc_addafork_reservation(
+ 		xfs_calc_buf_res(1, mp->m_dir_geo->blksize) +
+ 		xfs_calc_buf_res(XFS_DAENTER_BMAP1B(mp, XFS_DATA_FORK) + 1,
+ 				 XFS_FSB_TO_B(mp, 1)) +
+-		xfs_calc_buf_res(XFS_ALLOCFREE_LOG_COUNT(mp, 1),
++		xfs_calc_buf_res(xfs_allocfree_log_count(mp, 1),
+ 				 XFS_FSB_TO_B(mp, 1));
+ }
+ 
+@@ -634,7 +656,7 @@ xfs_calc_attrinval_reservation(
+ 		    xfs_calc_buf_res(XFS_BM_MAXLEVELS(mp, XFS_ATTR_FORK),
+ 				     XFS_FSB_TO_B(mp, 1))),
+ 		   (xfs_calc_buf_res(9, mp->m_sb.sb_sectsize) +
+-		    xfs_calc_buf_res(XFS_ALLOCFREE_LOG_COUNT(mp, 4),
++		    xfs_calc_buf_res(xfs_allocfree_log_count(mp, 4),
+ 				     XFS_FSB_TO_B(mp, 1))));
+ }
+ 
+@@ -701,7 +723,7 @@ xfs_calc_attrrm_reservation(
+ 					XFS_BM_MAXLEVELS(mp, XFS_ATTR_FORK)) +
+ 		     xfs_calc_buf_res(XFS_BM_MAXLEVELS(mp, XFS_DATA_FORK), 0)),
+ 		    (xfs_calc_buf_res(5, mp->m_sb.sb_sectsize) +
+-		     xfs_calc_buf_res(XFS_ALLOCFREE_LOG_COUNT(mp, 2),
++		     xfs_calc_buf_res(xfs_allocfree_log_count(mp, 2),
+ 				      XFS_FSB_TO_B(mp, 1))));
+ }
+ 
+diff --git a/fs/xfs/libxfs/xfs_trans_resv.h b/fs/xfs/libxfs/xfs_trans_resv.h
+index 7978150..0eb46ed 100644
+--- a/fs/xfs/libxfs/xfs_trans_resv.h
++++ b/fs/xfs/libxfs/xfs_trans_resv.h
+@@ -68,16 +68,6 @@ struct xfs_trans_resv {
+ #define M_RES(mp)	(&(mp)->m_resv)
+ 
+ /*
+- * Per-extent log reservation for the allocation btree changes
+- * involved in freeing or allocating an extent.
+- * 2 trees * (2 blocks/level * max depth - 1) * block size
+- */
+-#define	XFS_ALLOCFREE_LOG_RES(mp,nx) \
+-	((nx) * (2 * XFS_FSB_TO_B((mp), 2 * (mp)->m_ag_maxlevels - 1)))
+-#define	XFS_ALLOCFREE_LOG_COUNT(mp,nx) \
+-	((nx) * (2 * (2 * (mp)->m_ag_maxlevels - 1)))
+-
+-/*
+  * Per-directory log reservation for any directory change.
+  * dir blocks: (1 btree block per level + data block + free block) * dblock size
+  * bmap btree: (levels + 2) * max depth * block size
 -- 
 2.0.0
 
