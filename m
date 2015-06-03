@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id C41277FC8
-	for <xfs@oss.sgi.com>; Wed,  3 Jun 2015 01:05:16 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 42979AC002
-	for <xfs@oss.sgi.com>; Tue,  2 Jun 2015 23:05:16 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id 052A87FC8
+	for <xfs@oss.sgi.com>; Wed,  3 Jun 2015 01:05:18 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id A5362AC005
+	for <xfs@oss.sgi.com>; Tue,  2 Jun 2015 23:05:17 -0700 (PDT)
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	zmHzUvA0LpAnDLMt for <xfs@oss.sgi.com>;
-	Tue, 02 Jun 2015 23:05:13 -0700 (PDT)
+	w0KnazpdjW0a4JDC for <xfs@oss.sgi.com>;
+	Tue, 02 Jun 2015 23:05:16 -0700 (PDT)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.80)
-	(envelope-from <dave@fromorbit.com>) id 1Z01nQ-0001DD-Kd
+	(envelope-from <dave@fromorbit.com>) id 1Z01nQ-0001Dh-QZ
 	for xfs@oss.sgi.com; Wed, 03 Jun 2015 16:05:00 +1000
 Received: from dave by disappointment with local (Exim 4.82_1-5b7a7c0-XX)
-	(envelope-from <dave@disappointment.disaster>) id 1Z01nQ-0002vB-K0
+	(envelope-from <dave@disappointment.disaster>) id 1Z01nQ-0002vz-PN
 	for xfs@oss.sgi.com; Wed, 03 Jun 2015 16:05:00 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 07/20] xfs: rmap btree add more reserved blocks
-Date: Wed,  3 Jun 2015 16:04:44 +1000
-Message-Id: <1433311497-10245-8-git-send-email-david@fromorbit.com>
+Subject: [PATCH 17/20] xfs: add rmap btree geometry feature flag
+Date: Wed,  3 Jun 2015 16:04:54 +1000
+Message-Id: <1433311497-10245-18-git-send-email-david@fromorbit.com>
 In-Reply-To: <1433311497-10245-1-git-send-email-david@fromorbit.com>
 References: <1433311497-10245-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,140 +39,40 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-XFS reserves a small amount of space in each AG for the minimum
-number of free blocks needed for operation. Adding the rmap btree
-increases the number of reserved blocks, but it also increases the
-complexity of the calculation as the free inode btree is optional
-(like the rmbt).
-
-Rather than calculate the prealloc blocks every time we need to
-check it, add a function to calculate it at mount time and store it
-in the struct xfs_mount, and convert the XFS_PREALLOC_BLOCKS macro
-just to use the xfs-mount variable directly.
+So xfs_info and other userspace utilities know the filesystem is
+using this feature.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/libxfs/xfs_alloc.c  | 11 +++++++++++
- fs/xfs/libxfs/xfs_alloc.h  |  2 ++
- fs/xfs/libxfs/xfs_format.h |  9 +--------
- fs/xfs/xfs_fsops.c         |  6 +++---
- fs/xfs/xfs_mount.c         |  2 ++
- fs/xfs/xfs_mount.h         |  1 +
- 6 files changed, 20 insertions(+), 11 deletions(-)
+ fs/xfs/libxfs/xfs_fs.h | 1 +
+ fs/xfs/xfs_fsops.c     | 2 ++
+ 2 files changed, 3 insertions(+)
 
-diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-index c7206b5..a683d7a 100644
---- a/fs/xfs/libxfs/xfs_alloc.c
-+++ b/fs/xfs/libxfs/xfs_alloc.c
-@@ -49,6 +49,17 @@ STATIC int xfs_alloc_ag_vextent_size(xfs_alloc_arg_t *);
- STATIC int xfs_alloc_ag_vextent_small(xfs_alloc_arg_t *,
- 		xfs_btree_cur_t *, xfs_agblock_t *, xfs_extlen_t *, int *);
+diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
+index 89689c6..9fbdb86 100644
+--- a/fs/xfs/libxfs/xfs_fs.h
++++ b/fs/xfs/libxfs/xfs_fs.h
+@@ -240,6 +240,7 @@ typedef struct xfs_fsop_resblks {
+ #define XFS_FSOP_GEOM_FLAGS_FTYPE	0x10000	/* inode directory types */
+ #define XFS_FSOP_GEOM_FLAGS_FINOBT	0x20000	/* free inode btree */
+ #define XFS_FSOP_GEOM_FLAGS_SPINODES	0x40000	/* sparse inode chunks	*/
++#define XFS_FSOP_GEOM_FLAGS_RMAPBT	0x80000	/* Reverse mapping btree */
  
-+xfs_extlen_t
-+xfs_prealloc_blocks(
-+	struct xfs_mount	*mp)
-+{
-+	if (xfs_sb_version_hasrmapbt(&mp->m_sb))
-+		return XFS_RMAP_BLOCK(mp) + 1;
-+	if (xfs_sb_version_hasfinobt(&mp->m_sb))
-+		return XFS_FIBT_BLOCK(mp) + 1;
-+	return XFS_IBT_BLOCK(mp) + 1;
-+}
-+
  /*
-  * Lookup the record equal to [bno, len] in the btree given by cur.
-  */
-diff --git a/fs/xfs/libxfs/xfs_alloc.h b/fs/xfs/libxfs/xfs_alloc.h
-index ca1c816..71379f6 100644
---- a/fs/xfs/libxfs/xfs_alloc.h
-+++ b/fs/xfs/libxfs/xfs_alloc.h
-@@ -234,4 +234,6 @@ xfs_alloc_get_rec(
- int xfs_read_agf(struct xfs_mount *mp, struct xfs_trans *tp,
- 			xfs_agnumber_t agno, int flags, struct xfs_buf **bpp);
- 
-+xfs_extlen_t xfs_prealloc_blocks(struct xfs_mount *mp);
-+
- #endif	/* __XFS_ALLOC_H__ */
-diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
-index d120af4..e81ffec 100644
---- a/fs/xfs/libxfs/xfs_format.h
-+++ b/fs/xfs/libxfs/xfs_format.h
-@@ -1288,18 +1288,11 @@ typedef __be32 xfs_inobt_ptr_t;
-  */
- #define	XFS_RMAP_CRC_MAGIC	0x524d4233	/* 'RMB3' */
- 
--/*
-- * The first data block of an AG depends on whether the filesystem was formatted
-- * with the finobt feature. If so, account for the finobt reserved root btree
-- * block.
-- */
--#define XFS_PREALLOC_BLOCKS(mp) \
-+#define	XFS_RMAP_BLOCK(mp) \
- 	(xfs_sb_version_hasfinobt(&((mp)->m_sb)) ? \
- 	 XFS_FIBT_BLOCK(mp) + 1 : \
- 	 XFS_IBT_BLOCK(mp) + 1)
- 
--
--
- /*
-  * BMAP Btree format definitions
-  *
+  * Minimum and maximum sizes need for growth checks.
 diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
-index 4bd6463..a564c4c 100644
+index d914a51..0eba0d0 100644
 --- a/fs/xfs/xfs_fsops.c
 +++ b/fs/xfs/xfs_fsops.c
-@@ -246,7 +246,7 @@ xfs_growfs_data_private(
- 		agf->agf_flfirst = 0;
- 		agf->agf_fllast = cpu_to_be32(XFS_AGFL_SIZE(mp) - 1);
- 		agf->agf_flcount = 0;
--		tmpsize = agsize - XFS_PREALLOC_BLOCKS(mp);
-+		tmpsize = agsize - mp->m_ag_prealloc_blocks;
- 		agf->agf_freeblks = cpu_to_be32(tmpsize);
- 		agf->agf_longest = cpu_to_be32(tmpsize);
- 		if (xfs_sb_version_hascrc(&mp->m_sb))
-@@ -343,7 +343,7 @@ xfs_growfs_data_private(
- 						agno, 0);
- 
- 		arec = XFS_ALLOC_REC_ADDR(mp, XFS_BUF_TO_BLOCK(bp), 1);
--		arec->ar_startblock = cpu_to_be32(XFS_PREALLOC_BLOCKS(mp));
-+		arec->ar_startblock = cpu_to_be32(mp->m_ag_prealloc_blocks);
- 		arec->ar_blockcount = cpu_to_be32(
- 			agsize - be32_to_cpu(arec->ar_startblock));
- 
-@@ -372,7 +372,7 @@ xfs_growfs_data_private(
- 						agno, 0);
- 
- 		arec = XFS_ALLOC_REC_ADDR(mp, XFS_BUF_TO_BLOCK(bp), 1);
--		arec->ar_startblock = cpu_to_be32(XFS_PREALLOC_BLOCKS(mp));
-+		arec->ar_startblock = cpu_to_be32(mp->m_ag_prealloc_blocks);
- 		arec->ar_blockcount = cpu_to_be32(
- 			agsize - be32_to_cpu(arec->ar_startblock));
- 		nfree += be32_to_cpu(arec->ar_blockcount);
-diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-index 461e791..9d6be55 100644
---- a/fs/xfs/xfs_mount.c
-+++ b/fs/xfs/xfs_mount.c
-@@ -239,6 +239,8 @@ xfs_initialize_perag(
- 
- 	if (maxagi)
- 		*maxagi = index;
-+
-+	mp->m_ag_prealloc_blocks = xfs_prealloc_blocks(mp);
- 	return 0;
- 
- out_unwind:
-diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-index 7999e91..d9c9834 100644
---- a/fs/xfs/xfs_mount.h
-+++ b/fs/xfs/xfs_mount.h
-@@ -93,6 +93,7 @@ typedef struct xfs_mount {
- 	uint			m_ag_maxlevels;	/* XFS_AG_MAXLEVELS */
- 	uint			m_bm_maxlevels[2]; /* XFS_BM_MAXLEVELS */
- 	uint			m_in_maxlevels;	/* max inobt btree levels. */
-+	xfs_extlen_t		m_ag_prealloc_blocks; /* reserved ag blocks */
- 	struct radix_tree_root	m_perag_tree;	/* per-ag accounting info */
- 	spinlock_t		m_perag_lock;	/* lock for m_perag_tree */
- 	struct mutex		m_growlock;	/* growfs mutex */
+@@ -105,6 +105,8 @@ xfs_fs_geometry(
+ 				XFS_FSOP_GEOM_FLAGS_FINOBT : 0) |
+ 			(xfs_sb_version_hassparseinodes(&mp->m_sb) ?
+ 				XFS_FSOP_GEOM_FLAGS_SPINODES : 0);
++			(xfs_sb_version_hasrmapbt(&mp->m_sb) ?
++				XFS_FSOP_GEOM_FLAGS_RMAPBT : 0);
+ 		geo->logsectsize = xfs_sb_version_hassector(&mp->m_sb) ?
+ 				mp->m_sb.sb_logsectsize : BBSIZE;
+ 		geo->rtsectsize = mp->m_sb.sb_blocksize;
 -- 
 2.0.0
 
