@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 986C27FCC
-	for <xfs@oss.sgi.com>; Wed,  3 Jun 2015 12:11:31 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 7923D8F8087
-	for <xfs@oss.sgi.com>; Wed,  3 Jun 2015 10:11:31 -0700 (PDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id EDC5B7FDA
+	for <xfs@oss.sgi.com>; Wed,  3 Jun 2015 12:11:39 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 6A261AC001
+	for <xfs@oss.sgi.com>; Wed,  3 Jun 2015 10:11:36 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id sLoXT5PGge9B3sPB (version=TLSv1
+	cuda.sgi.com with ESMTP id ZsEduLXYaETR5zfA (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 03 Jun 2015 10:11:30 -0700 (PDT)
-Date: Wed, 3 Jun 2015 13:11:28 -0400
+	Wed, 03 Jun 2015 10:11:35 -0700 (PDT)
+Date: Wed, 3 Jun 2015 13:11:33 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 3/4] xfsprogs: rename dont_obfuscate in xfs_metadump
-Message-ID: <20150603171127.GC45447@bfoster.bfoster>
+Subject: Re: [PATCH 4/4] xfsprogs: zero out clean log in xfs_metadump
+Message-ID: <20150603171132.GD45447@bfoster.bfoster>
 References: <5568B7CE.9030709@redhat.com>
- <5568BA54.3060302@sandeen.net>
+ <5568BB5C.4080400@sandeen.net>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <5568BA54.3060302@sandeen.net>
+In-Reply-To: <5568BB5C.4080400@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,88 +33,83 @@ Sender: xfs-bounces@oss.sgi.com
 To: Eric Sandeen <sandeen@sandeen.net>
 Cc: Eric Sandeen <sandeen@redhat.com>, xfs@oss.sgi.com
 
-On Fri, May 29, 2015 at 02:13:24PM -0500, Eric Sandeen wrote:
-> Seeing "if (!dont_obfuscate)" hurts my brain; rename it to
-> "obfuscate" and invert the logic.
+On Fri, May 29, 2015 at 02:17:48PM -0500, Eric Sandeen wrote:
+> When doing an xfs_metadump, if the log is clean, zero it out
+> for 2 reasons:
+> 
+>  * It'll make the image more compressible
+>  * It'll eliminate an un-obfuscated metadata source
+> 
+> If the log isn't clean, and the user expected obfuscation, warn
+> that metadata in the log will not be obfuscated.
 > 
 > Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 > ---
-
-We could have gone with dont_not_obfuscate, but this works too. ;)
-
-Reviewed-by: Brian Foster <bfoster@redhat.com>
-
->  db/metadump.c |   14 +++++++-------
->  1 files changed, 7 insertions(+), 7 deletions(-)
 > 
 > diff --git a/db/metadump.c b/db/metadump.c
-> index b227a6d..57b53d9 100644
+> index bea4e00..eb5e9da 100644
 > --- a/db/metadump.c
 > +++ b/db/metadump.c
-> @@ -74,7 +74,7 @@ static xfs_ino_t	cur_ino;
->  static int		show_progress = 0;
->  static int		stop_on_read_error = 0;
->  static int		max_extent_size = DEFAULT_MAX_EXT_SIZE;
-> -static int		dont_obfuscate = 0;
-> +static int		obfuscate = 1;
->  static int		show_warnings = 0;
->  static int		progress_since_warning = 0;
+> @@ -17,6 +17,7 @@
+>   */
 >  
-> @@ -1368,7 +1368,7 @@ process_single_fsb_objects(
->  
->  		}
->  
-> -		if (dont_obfuscate)
-> +		if (!obfuscate)
->  			goto write;
->  
->  		dp = iocur_top->data;
-> @@ -1460,7 +1460,7 @@ process_multi_fsb_objects(
->  
->  			}
->  
-> -			if (dont_obfuscate || o >= mp->m_dir_geo->leafblk) {
-> +			if (!obfuscate || o >= mp->m_dir_geo->leafblk) {
->  				ret = write_buf(iocur_top);
->  				goto out_pop;
->  			}
-> @@ -1725,7 +1725,7 @@ process_inode_data(
+>  #include <libxfs.h>
+> +#include <libxlog.h>
+>  #include "bmap.h"
+>  #include "command.h"
+>  #include "metadump.h"
+> @@ -2169,6 +2170,8 @@ copy_sb_inodes(void)
+>  static int
+>  copy_log(void)
 >  {
->  	switch (dip->di_format) {
->  		case XFS_DINODE_FMT_LOCAL:
-> -			if (!dont_obfuscate)
-> +			if (obfuscate)
->  				switch (itype) {
->  					case TYP_DIR2:
->  						obfuscate_sf_dir(dip);
-> @@ -1769,7 +1769,7 @@ process_inode(
->  	cur_ino = XFS_AGINO_TO_INO(mp, agno, agino);
+> +	int dirty;
+> +
+>  	if (show_progress)
+>  		print_progress("Copying log");
 >  
->  	/* we only care about crc recalculation if we are obfuscating names. */
-> -	if (!dont_obfuscate) {
-> +	if (obfuscate) {
->  		crc_was_ok = xfs_verify_cksum((char *)dip,
->  					mp->m_sb.sb_inodesize,
->  					offsetof(struct xfs_dinode, di_crc));
-> @@ -1801,7 +1801,7 @@ process_inode(
->  		switch (dip->di_aformat) {
->  			case XFS_DINODE_FMT_LOCAL:
->  				need_new_crc = 1;
-> -				if (!dont_obfuscate)
-> +				if (obfuscate)
->  					obfuscate_sf_attr(dip);
->  				break;
+> @@ -2180,6 +2183,31 @@ copy_log(void)
+>  		print_warning("cannot read log");
+>  		return !stop_on_read_error;
+>  	}
+> +
+> +	dirty = xlog_is_dirty(mp, &x, 0);
+> +
+> +	switch (dirty) {
+> +	case 0:
+> +		/* clear out a clean log */
+> +		if (show_progress)
+> +			print_progress("Zeroing clean log");
+> +		memset(iocur_top->data, 0,
+> +			mp->m_sb.sb_logblocks * mp->m_sb.sb_blocksize);
+
+Hmm, so is there any reason in the future we might want a metadump with
+a clean log matching what is actually on-disk? This is a debug tool
+after all. Perhaps this is mainly covered by the unclean and/or error
+cases, but that still seems like a potential loss of capability.
+
+Anyways, I'm wondering if we should have an 'if (obfuscate)' here.
+Thoughts?
+
+Brian
+
+> +		break;
+> +	case 1:
+> +		/* keep the dirty log */
+> +		if (obfuscate)
+> +			print_warning(
+> +_("Filesystem log is dirty; image will contain unobfuscated metadata in log."));
+> +		break;
+> +	case -1:
+> +		/* log detection error */
+> +		if (obfuscate)
+> +			print_warning(
+> +_("Could not discern log; image will contain unobfuscated metadata in log."));
+> +		break;
+> +	}
+> +
+>  	return !write_buf(iocur_top);
+>  }
 >  
-> @@ -2247,7 +2247,7 @@ metadump_f(
->  				}
->  				break;
->  			case 'o':
-> -				dont_obfuscate = 1;
-> +				obfuscate = 0;
->  				break;
->  			case 'w':
->  				show_warnings = 1;
-> -- 1.7.1
 > 
 > _______________________________________________
 > xfs mailing list
