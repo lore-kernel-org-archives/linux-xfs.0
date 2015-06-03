@@ -1,24 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 02ECD7F67
-	for <xfs@oss.sgi.com>; Wed,  3 Jun 2015 01:35:02 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 2828D7F9B
+	for <xfs@oss.sgi.com>; Wed,  3 Jun 2015 02:07:35 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id B6AF5304051
-	for <xfs@oss.sgi.com>; Tue,  2 Jun 2015 23:35:01 -0700 (PDT)
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id yrVGDMc2UbFkMdT1 (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 02 Jun 2015 23:34:59 -0700 (PDT)
-Date: Tue, 2 Jun 2015 23:34:52 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 05/20] xfs: introduce rmap btree definitions
-Message-ID: <20150603063452.GB5150@birch.djwong.org>
-References: <1433311497-10245-1-git-send-email-david@fromorbit.com>
-	<1433311497-10245-6-git-send-email-david@fromorbit.com>
-	<20150603063022.GA5150@birch.djwong.org>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id C15A2AC00A
+	for <xfs@oss.sgi.com>; Wed,  3 Jun 2015 00:07:31 -0700 (PDT)
+Received: from emea01-db3-obe.outbound.protection.outlook.com
+	(mail-db3on0117.outbound.protection.outlook.com
+	[157.55.234.117]) by cuda.sgi.com with ESMTP id
+	ArLKLZkd87EAglr3 (version=TLSv1 cipher=AES256-SHA bits=256
+	verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 03 Jun 2015 00:07:28 -0700 (PDT)
+Date: Wed, 3 Jun 2015 09:07:25 +0200
+From: Anders Ossowicki <aowi@novozymes.com>
+Subject: Re: "XFS: possible memory allocation deadlock in kmem_alloc" on high
+	memory machine
+Message-ID: <20150603070725.GA20743@otto>
+References: <20150601145741.GA16608@otto> <20150601210113.GL24666@dastard>
+	<20150602120648.GA22111@otto> <20150603015245.GN24666@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20150603063022.GA5150@birch.djwong.org>
+In-Reply-To: <20150603015245.GN24666@dastard>
+Reply-To: aowi@novozymes.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,220 +35,218 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-On Tue, Jun 02, 2015 at 11:30:22PM -0700, Darrick J. Wong wrote:
-> On Wed, Jun 03, 2015 at 04:04:42PM +1000, Dave Chinner wrote:
-> > From: Dave Chinner <dchinner@redhat.com>
-> > 
-> > Add new per-ag rmap btree definitions to the per-ag structures. The
-> > rmap btree will sit inthe empty slots on disk after the free space
-> > btrees, and hence form a part of the array of space management
-> > btrees. This requires the definition of the btree to be contiguous
-> > with the free space btrees.
-> > 
-> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> > ---
-> >  fs/xfs/libxfs/xfs_alloc.c  |  6 ++++++
-> >  fs/xfs/libxfs/xfs_btree.c  |  4 ++--
-> >  fs/xfs/libxfs/xfs_btree.h  |  3 +++
-> >  fs/xfs/libxfs/xfs_format.h | 22 +++++++++++++++++-----
-> >  fs/xfs/libxfs/xfs_types.h  |  4 ++--
-> >  5 files changed, 30 insertions(+), 9 deletions(-)
-> > 
-> > diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-> > index d4aa844..c7206b5 100644
-> > --- a/fs/xfs/libxfs/xfs_alloc.c
-> > +++ b/fs/xfs/libxfs/xfs_alloc.c
-> > @@ -2267,6 +2267,10 @@ xfs_agf_verify(
-> >  	    be32_to_cpu(agf->agf_levels[XFS_BTNUM_CNT]) > XFS_BTREE_MAXLEVELS)
-> >  		return false;
-> >  
-> > +	if (xfs_sb_version_hasrmapbt(&mp->m_sb) &&
-> > +	    be32_to_cpu(agf->agf_levels[XFS_BTNUM_RMAP]) > XFS_BTREE_MAXLEVELS)
-> > +		return false;
-> > +
-> >  	/*
-> >  	 * during growfs operations, the perag is not fully initialised,
-> >  	 * so we can't use it for any useful checking. growfs ensures we can't
-> > @@ -2397,6 +2401,8 @@ xfs_alloc_read_agf(
-> >  			be32_to_cpu(agf->agf_levels[XFS_BTNUM_BNOi]);
-> >  		pag->pagf_levels[XFS_BTNUM_CNTi] =
-> >  			be32_to_cpu(agf->agf_levels[XFS_BTNUM_CNTi]);
-> > +		pag->pagf_levels[XFS_BTNUM_RMAPi] =
-> > +			be32_to_cpu(agf->agf_levels[XFS_BTNUM_RMAPi]);
-> >  		spin_lock_init(&pag->pagb_lock);
-> >  		pag->pagb_count = 0;
-> >  		pag->pagb_tree = RB_ROOT;
-> > diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
-> > index c72283d..0426152 100644
-> > --- a/fs/xfs/libxfs/xfs_btree.c
-> > +++ b/fs/xfs/libxfs/xfs_btree.c
-> > @@ -42,9 +42,9 @@ kmem_zone_t	*xfs_btree_cur_zone;
-> >   * Btree magic numbers.
-> >   */
-> >  static const __uint32_t xfs_magics[2][XFS_BTNUM_MAX] = {
-> > -	{ XFS_ABTB_MAGIC, XFS_ABTC_MAGIC, XFS_BMAP_MAGIC, XFS_IBT_MAGIC,
-> > +	{ XFS_ABTB_MAGIC, XFS_ABTC_MAGIC, 0, XFS_BMAP_MAGIC, XFS_IBT_MAGIC,
-> >  	  XFS_FIBT_MAGIC },
-> > -	{ XFS_ABTB_CRC_MAGIC, XFS_ABTC_CRC_MAGIC,
-> > +	{ XFS_ABTB_CRC_MAGIC, XFS_ABTC_CRC_MAGIC, XFS_RMAP_CRC_MAGIC,
-> >  	  XFS_BMAP_CRC_MAGIC, XFS_IBT_CRC_MAGIC, XFS_FIBT_CRC_MAGIC }
-> >  };
-> >  #define xfs_btree_magic(cur) \
-> > diff --git a/fs/xfs/libxfs/xfs_btree.h b/fs/xfs/libxfs/xfs_btree.h
-> > index 8f18bab..ace1995 100644
-> > --- a/fs/xfs/libxfs/xfs_btree.h
-> > +++ b/fs/xfs/libxfs/xfs_btree.h
-> > @@ -63,6 +63,7 @@ union xfs_btree_rec {
-> >  #define	XFS_BTNUM_BMAP	((xfs_btnum_t)XFS_BTNUM_BMAPi)
-> >  #define	XFS_BTNUM_INO	((xfs_btnum_t)XFS_BTNUM_INOi)
-> >  #define	XFS_BTNUM_FINO	((xfs_btnum_t)XFS_BTNUM_FINOi)
-> > +#define	XFS_BTNUM_RMAP	((xfs_btnum_t)XFS_BTNUM_RMAPi)
-> >  
-> >  /*
-> >   * For logging record fields.
-> > @@ -94,6 +95,7 @@ do {    \
-> >  	case XFS_BTNUM_BMAP: __XFS_BTREE_STATS_INC(bmbt, stat); break;	\
-> >  	case XFS_BTNUM_INO: __XFS_BTREE_STATS_INC(ibt, stat); break;	\
-> >  	case XFS_BTNUM_FINO: __XFS_BTREE_STATS_INC(fibt, stat); break;	\
-> > +	case XFS_BTNUM_RMAP: break;	\
-> 
-> Hmm, so we don't have to provide stats for all the btrees?
+On Wed, Jun 03, 2015 at 03:52:45AM +0200, Dave Chinner wrote:
+> On Tue, Jun 02, 2015 at 02:06:48PM +0200, Anders Ossowicki wrote:
+>
+> > Slab:           79729144 kB
+> > SReclaimable:   79040008 kB
+>
+> 80GB of slab caches as well - what is the output of /proc/slabinfo?
 
-Aha, they're in the later patches, which my mailer helpfully ... delivered
-later.
+slabinfo - version: 2.1
+# name         <active_objs> <num_objs> <objsize> <objperslab> <pagesperslab> : tunables <limit> <batchcount> <sharedfactor> : slabdata <active_slabs> <num_slabs> <sharedavail>
+btrfs_prelim_ref           0      0     80   51    1 : tunables    0    0    0 : slabdata      0      0      0
+btrfs_delayed_data_ref     0      0     96   42    1 : tunables    0    0    0 : slabdata      0      0      0
+btrfs_delayed_ref_head     0      0    160   51    2 : tunables    0    0    0 : slabdata      0      0      0
+btrfs_delayed_node         0      0    304   53    4 : tunables    0    0    0 : slabdata      0      0      0
+btrfs_ordered_extent       0      0    424   38    4 : tunables    0    0    0 : slabdata      0      0      0
+btrfs_extent_buffer        0      0    280   58    4 : tunables    0    0    0 : slabdata      0      0      0
+btrfs_extent_state         0      0     88   46    1 : tunables    0    0    0 : slabdata      0      0      0
+btrfs_delalloc_work        0      0    152   53    2 : tunables    0    0    0 : slabdata      0      0      0
+btrfs_trans_handle         0      0    176   46    2 : tunables    0    0    0 : slabdata      0      0      0
+btrfs_inode                0      0   1000   32    8 : tunables    0    0    0 : slabdata      0      0      0
+ufs_inode_cache            0      0    744   44    8 : tunables    0    0    0 : slabdata      0      0      0
+qnx4_inode_cache           0      0    656   49    8 : tunables    0    0    0 : slabdata      0      0      0
+hfsplus_attr_cache         0      0   3840    8    8 : tunables    0    0    0 : slabdata      0      0      0
+hfsplus_icache             0      0    896   36    8 : tunables    0    0    0 : slabdata      0      0      0
+hfs_inode_cache            0      0    768   42    8 : tunables    0    0    0 : slabdata      0      0      0
+minix_inode_cache          0      0    648   50    8 : tunables    0    0    0 : slabdata      0      0      0
+ntfs_big_inode_cache       0      0    896   36    8 : tunables    0    0    0 : slabdata      0      0      0
+ntfs_inode_cache           0      0    312   52    4 : tunables    0    0    0 : slabdata      0      0      0
+jfs_mp                    32     32    128   32    1 : tunables    0    0    0 : slabdata      1      1      0
+jfs_ip                     0      0   1240   26    8 : tunables    0    0    0 : slabdata      0      0      0
+reiser_inode_cache         0      0    744   44    8 : tunables    0    0    0 : slabdata      0      0      0
+ext2_inode_cache           0      0    792   41    8 : tunables    0    0    0 : slabdata      0      0      0
+nfsd4_openowners       13394  13838    440   37    4 : tunables    0    0    0 : slabdata    374    374      0
+nfs_direct_cache           0      0    208   39    2 : tunables    0    0    0 : slabdata      0      0      0
+nfs_commit_data         2167   2167    704   46    8 : tunables    0    0    0 : slabdata     48     48      0
+nfs_inode_cache       174843 175088   1040   31    8 : tunables    0    0    0 : slabdata   5648   5648      0
+fscache_cookie_jar      1702   1702     88   46    1 : tunables    0    0    0 : slabdata     37     37      0
+rpc_inode_cache         2448   2448    640   51    8 : tunables    0    0    0 : slabdata     48     48      0
+xfs_dquot                  0      0    472   34    4 : tunables    0    0    0 : slabdata      0      0      0
+xfs_icr                    0      0    144   56    2 : tunables    0    0    0 : slabdata      0      0      0
+xfs_ili              1066228 1066625   152   53    2 : tunables    0    0    0 : slabdata  20125  20125      0
+xfs_inode            2522728 2523172  1024   32    8 : tunables    0    0    0 : slabdata  78857  78857      0
+xfs_efd_item            8320   8920    400   40    4 : tunables    0    0    0 : slabdata    223    223      0
+xfs_da_state            1632   1632    480   34    4 : tunables    0    0    0 : slabdata     48     48      0
+xfs_btree_cur           1872   1872    208   39    2 : tunables    0    0    0 : slabdata     48     48      0
+ext4_groupinfo_4k        896    896    144   56    2 : tunables    0    0    0 : slabdata     16     16      0
+ip6-frags                  0      0    216   37    2 : tunables    0    0    0 : slabdata      0      0      0
+UDPLITEv6                  0      0   1088   30    8 : tunables    0    0    0 : slabdata      0      0      0
+UDPv6                   1440   1440   1088   30    8 : tunables    0    0    0 : slabdata     48     48      0
+tw_sock_TCPv6           1312   1312    256   32    2 : tunables    0    0    0 : slabdata     41     41      0
+TCPv6                    768    768   1984   16    8 : tunables    0    0    0 : slabdata     48     48      0
+kcopyd_job                 0      0   3312    9    8 : tunables    0    0    0 : slabdata      0      0      0
+dm_uevent                  0      0   2632   12    8 : tunables    0    0    0 : slabdata      0      0      0
+dm_rq_target_io            0      0    408   40    4 : tunables    0    0    0 : slabdata      0      0      0
+scsi_cmd_cache         93743 107688    384   42    4 : tunables    0    0    0 : slabdata   2564   2564      0
+cfq_queue              21842  21910    232   35    2 : tunables    0    0    0 : slabdata    626    626      0
+bsg_cmd                    0      0    312   52    4 : tunables    0    0    0 : slabdata      0      0      0
+mqueue_inode_cache        36     36    896   36    8 : tunables    0    0    0 : slabdata      1      1      0
+fuse_request               0      0    416   39    4 : tunables    0    0    0 : slabdata      0      0      0
+fuse_inode                 0      0    768   42    8 : tunables    0    0    0 : slabdata      0      0      0
+ecryptfs_key_record_cache  0      0    576   56    8 : tunables    0    0    0 : slabdata      0      0      0
+ecryptfs_inode_cache       0      0   1024   32    8 : tunables    0    0    0 : slabdata      0      0      0
+fat_inode_cache            0      0    720   45    8 : tunables    0    0    0 : slabdata      0      0      0
+fat_cache                  0      0     40  102    1 : tunables    0    0    0 : slabdata      0      0      0
+hugetlbfs_inode_cache   2592   2592    600   54    8 : tunables    0    0    0 : slabdata     48     48      0
+jbd2_journal_handle     4080   4080     48   85    1 : tunables    0    0    0 : slabdata     48     48      0
+journal_handle             0      0     24  170    1 : tunables    0    0    0 : slabdata      0      0      0
+journal_head           17208  17712    112   36    1 : tunables    0    0    0 : slabdata    492    492      0
+revoke_table             256    256     16  256    1 : tunables    0    0    0 : slabdata      1      1      0
+revoke_record           6400   6400     32  128    1 : tunables    0    0    0 : slabdata     50     50      0
+ext4_inode_cache      642098 775776   1008   32    8 : tunables    0    0    0 : slabdata  24243  24243      0
+ext4_free_data         11328  11328     64   64    1 : tunables    0    0    0 : slabdata    177    177      0
+ext4_allocation_context 1536   1536    128   32    1 : tunables    0    0    0 : slabdata     48     48      0
+ext4_io_end             3024   3024     72   56    1 : tunables    0    0    0 : slabdata     54     54      0
+ext4_extent_status     68877 105672     40  102    1 : tunables    0    0    0 : slabdata   1036   1036      0
+ext3_inode_cache           0      0    816   40    8 : tunables    0    0    0 : slabdata      0      0      0
+dquot                   1760   1760    256   32    2 : tunables    0    0    0 : slabdata     55     55      0
+fsnotify_mark              0      0    112   36    1 : tunables    0    0    0 : slabdata      0      0      0
+pid_namespace              0      0   2200   14    8 : tunables    0    0    0 : slabdata      0      0      0
+posix_timers_cache     12541  12705    248   33    2 : tunables    0    0    0 : slabdata    385    385      0
+UDP-Lite                   0      0    960   34    8 : tunables    0    0    0 : slabdata      0      0      0
+xfrm_dst_cache             0      0    448   36    4 : tunables    0    0    0 : slabdata      0      0      0
+ip_fib_trie              292    292     56   73    1 : tunables    0    0    0 : slabdata      4      4      0
+UDP                     1632   1632    960   34    8 : tunables    0    0    0 : slabdata     48     48      0
+tw_sock_TCP             2358   2624    256   32    2 : tunables    0    0    0 : slabdata     82     82      0
+TCP                     3539   3808   1856   17    8 : tunables    0    0    0 : slabdata    224    224      0
+blkdev_queue             323    464   1928   16    8 : tunables    0    0    0 : slabdata     29     29      0
+blkdev_requests        13992  14740    368   44    4 : tunables    0    0    0 : slabdata    335    335      0
+blkdev_ioc             23201  24141    104   39    1 : tunables    0    0    0 : slabdata    619    619      0
+dmaengine-unmap-256       15     15   2112   15    8 : tunables    0    0    0 : slabdata      1      1      0
+dmaengine-unmap-128      180    180   1088   30    8 : tunables    0    0    0 : slabdata      6      6      0
+sock_inode_cache        6273   6273    640   51    8 : tunables    0    0    0 : slabdata    123    123      0
+net_namespace              0      0   4352    7    8 : tunables    0    0    0 : slabdata      0      0      0
+shmem_inode_cache       2784   2784    672   48    8 : tunables    0    0    0 : slabdata     58     58      0
+ftrace_event_file       1702   1702     88   46    1 : tunables    0    0    0 : slabdata     37     37      0
+taskstats               2352   2352    328   49    4 : tunables    0    0    0 : slabdata     48     48      0
+proc_inode_cache       19293  24750    648   50    8 : tunables    0    0    0 : slabdata    495    495      0
+sigqueue                3111   3111    160   51    2 : tunables    0    0    0 : slabdata     61     61      0
+bdev_cache              1014   1014    832   39    8 : tunables    0    0    0 : slabdata     26     26      0
+kernfs_node_cache     342112 342244    120   34    1 : tunables    0    0    0 : slabdata  10066  10066      0
+mnt_cache               2448   2448    320   51    4 : tunables    0    0    0 : slabdata     48     48      0
+inode_cache            36637  45080    584   56    8 : tunables    0    0    0 : slabdata    805    805      0
+dentry               3217866 3702384   192   42    2 : tunables    0    0    0 : slabdata  88152  88152      0
+iint_cache                 0      0     72   56    1 : tunables    0    0    0 : slabdata      0      0      0
+buffer_head        370050715 400741536 104   39    1 : tunables    0    0    0 : slabdata 10275424 10275424  0
+vm_area_struct        147654 150128    184   44    2 : tunables    0    0    0 : slabdata   3412   3412      0
+mm_struct               9550  10404    896   36    8 : tunables    0    0    0 : slabdata    289    289      0
+files_cache             4029   4029    640   51    8 : tunables    0    0    0 : slabdata     79     79      0
+signal_cache            4383   5180   1152   28    8 : tunables    0    0    0 : slabdata    185    185      0
+sighand_cache           3081   3255   2112   15    8 : tunables    0    0    0 : slabdata    217    217      0
+task_xstate            10016  10881    832   39    8 : tunables    0    0    0 : slabdata    279    279      0
+task_struct             1913   2070   6432    5    8 : tunables    0    0    0 : slabdata    414    414      0
+Acpi-ParseExt           6048   6048     72   56    1 : tunables    0    0    0 : slabdata    108    108      0
+Acpi-State               306    306     80   51    1 : tunables    0    0    0 : slabdata      6      6      0
+Acpi-Namespace          2040   2040     40  102    1 : tunables    0    0    0 : slabdata     20     20      0
+anon_vma               69129  72318     80   51    1 : tunables    0    0    0 : slabdata   1418   1418      0
+shared_policy_node     27030  27285     48   85    1 : tunables    0    0    0 : slabdata    321    321      0
+numa_policy             8160   8160     24  170    1 : tunables    0    0    0 : slabdata     48     48      0
+radix_tree_node     64025078 64148728  584   56    8 : tunables    0    0    0 : slabdata 1145751 1145751    0
+idr_layer_cache         3456   3709   2096   15    8 : tunables    0    0    0 : slabdata    251    251      0
+dma-kmalloc-8192           0      0   8192    4    8 : tunables    0    0    0 : slabdata      0      0      0
+dma-kmalloc-4096           0      0   4096    8    8 : tunables    0    0    0 : slabdata      0      0      0
+dma-kmalloc-2048           0      0   2048   16    8 : tunables    0    0    0 : slabdata      0      0      0
+dma-kmalloc-1024           0      0   1024   32    8 : tunables    0    0    0 : slabdata      0      0      0
+dma-kmalloc-512           32     32    512   32    4 : tunables    0    0    0 : slabdata      1      1      0
+dma-kmalloc-256            0      0    256   32    2 : tunables    0    0    0 : slabdata      0      0      0
+dma-kmalloc-128            0      0    128   32    1 : tunables    0    0    0 : slabdata      0      0      0
+dma-kmalloc-64             0      0     64   64    1 : tunables    0    0    0 : slabdata      0      0      0
+dma-kmalloc-32             0      0     32  128    1 : tunables    0    0    0 : slabdata      0      0      0
+dma-kmalloc-16             0      0     16  256    1 : tunables    0    0    0 : slabdata      0      0      0
+dma-kmalloc-8              0      0      8  512    1 : tunables    0    0    0 : slabdata      0      0      0
+dma-kmalloc-192            0      0    192   42    2 : tunables    0    0    0 : slabdata      0      0      0
+dma-kmalloc-96             0      0     96   42    1 : tunables    0    0    0 : slabdata      0      0      0
+kmalloc-8192             779    832   8192    4    8 : tunables    0    0    0 : slabdata    208    208      0
+kmalloc-4096            2918   3304   4096    8    8 : tunables    0    0    0 : slabdata    413    413      0
+kmalloc-2048            3530   4224   2048   16    8 : tunables    0    0    0 : slabdata    264    264      0
+kmalloc-1024           23980  27264   1024   32    8 : tunables    0    0    0 : slabdata    852    852      0
+kmalloc-512           179639 222048    512   32    4 : tunables    0    0    0 : slabdata   6939   6939      0
+kmalloc-256           488489 521296    256   32    2 : tunables    0    0    0 : slabdata  16291  16291      0
+kmalloc-192            41454  53508    192   42    2 : tunables    0    0    0 : slabdata   1274   1274      0
+kmalloc-128            54683  67168    128   32    1 : tunables    0    0    0 : slabdata   2099   2099      0
+kmalloc-96             20274  37044     96   42    1 : tunables    0    0    0 : slabdata    882    882      0
+kmalloc-64            329220 1136832    64   64    1 : tunables    0    0    0 : slabdata  17763  17763      0
+kmalloc-32             76222  90112     32  128    1 : tunables    0    0    0 : slabdata    704    704      0
+kmalloc-16            245496 247552     16  256    1 : tunables    0    0    0 : slabdata    967    967      0
+kmalloc-8             570025 915456      8  512    1 : tunables    0    0    0 : slabdata   1788   1788      0
+kmem_cache_node         1310   1472     64   64    1 : tunables    0    0    0 : slabdata     23     23      0
+kmem_cache               512    512    256   32    2 : tunables    0    0    0 : slabdata     16     16      0
 
-I think I need sleep.  Disregard most of this email. :)
+And just for good measure, this was meminfo at the same time:
 
-I'll move the reflink fields so they don't conflict, and read these patches
-more closely tomorrow.  Sorry for the noise.
+MemTotal:       3170749444 kB
+MemFree:        27109596 kB
+MemAvailable:   2853545664 kB
+Buffers:          442216 kB
+Cached:         2882173504 kB
+SwapCached:            0 kB
+Active:         1636112224 kB
+Inactive:       1303578276 kB
+Active(anon):   188466588 kB
+Inactive(anon):  6202588 kB
+Active(file):   1447645636 kB
+Inactive(file): 1297375688 kB
+Unevictable:           0 kB
+Mlocked:               0 kB
+SwapTotal:      25353212 kB
+SwapFree:       25353212 kB
+Dirty:            924980 kB
+Writeback:             0 kB
+AnonPages:      57090800 kB
+Mapped:         137637500 kB
+Shmem:          137578904 kB
+Slab:           82699516 kB
+SReclaimable:   81921588 kB
+SUnreclaim:       777928 kB
+KernelStack:       27968 kB
+PageTables:     101008148 kB
+NFS_Unstable:          0 kB
+Bounce:                0 kB
+WritebackTmp:          0 kB
+CommitLimit:    1610727932 kB
+Committed_AS:   205791344 kB
+VmallocTotal:   34359738367 kB
+VmallocUsed:     6629132 kB
+VmallocChunk:   31937035472 kB
+HardwareCorrupted:     0 kB
+AnonHugePages:         0 kB
+HugePages_Total:       0
+HugePages_Free:        0
+HugePages_Rsvd:        0
+HugePages_Surp:        0
+Hugepagesize:       2048 kB
+DirectMap4k:      172736 kB
+DirectMap2M:    13412352 kB
+DirectMap1G:    3207593984 kB
 
---D
 
+> > We have three hardware raid'ed disks with XFS on them, one of which receives
+> > the bulk of the load. This is a raid 50 volume on SSDs with the raid controller
+> > running in writethrough mode.
 > 
-> <shrug> Actually, I thought it was rather clever that one could grep
-> /proc/fs/xfs/stat for 'rlbt' to find out if the running xfs driver supports
-> reflink.
-> 
-> (Not that I want someone to think this is some kind of ABI...)
-> 
-> >  	case XFS_BTNUM_MAX: ASSERT(0); /* fucking gcc */ ; break;	\
-> >  	}       \
-> >  } while (0)
-> > @@ -108,6 +110,7 @@ do {    \
-> >  	case XFS_BTNUM_BMAP: __XFS_BTREE_STATS_ADD(bmbt, stat, val); break; \
-> >  	case XFS_BTNUM_INO: __XFS_BTREE_STATS_ADD(ibt, stat, val); break; \
-> >  	case XFS_BTNUM_FINO: __XFS_BTREE_STATS_ADD(fibt, stat, val); break; \
-> > +	case XFS_BTNUM_RMAP: break; \
-> >  	case XFS_BTNUM_MAX: ASSERT(0); /* fucking gcc */ ; break;	\
-> >  	}       \
-> >  } while (0)
-> > diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
-> > index a0ae572..d120af4 100644
-> > --- a/fs/xfs/libxfs/xfs_format.h
-> > +++ b/fs/xfs/libxfs/xfs_format.h
-> > @@ -445,6 +445,7 @@ xfs_sb_has_compat_feature(
-> >  }
-> >  
-> >  #define XFS_SB_FEAT_RO_COMPAT_FINOBT   (1 << 0)		/* free inode btree */
-> > +#define XFS_SB_FEAT_RO_COMPAT_RMAPBT   (1 << 1)		/* reverse map btree */
-> >  #define XFS_SB_FEAT_RO_COMPAT_ALL \
-> >  		(XFS_SB_FEAT_RO_COMPAT_FINOBT)
-> 
-> ... | XFS_SB_FEAT_RO_COMPAT_RMAPBT) ?
-> 
-> (/me shifts the reflink feature flag to (1 << 2))
-> 
-> >  #define XFS_SB_FEAT_RO_COMPAT_UNKNOWN	~XFS_SB_FEAT_RO_COMPAT_ALL
-> > @@ -514,6 +515,12 @@ static inline bool xfs_sb_version_hassparseinodes(struct xfs_sb *sbp)
-> >  		xfs_sb_has_incompat_feature(sbp, XFS_SB_FEAT_INCOMPAT_SPINODES);
-> >  }
-> >  
-> > +static inline bool xfs_sb_version_hasrmapbt(struct xfs_sb *sbp)
-> > +{
-> > +	return (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5) &&
-> > +		(sbp->sb_features_ro_compat & XFS_SB_FEAT_RO_COMPAT_RMAPBT);
-> > +}
-> > +
-> >  /*
-> >   * end of superblock version macros
-> >   */
-> > @@ -574,10 +581,10 @@ xfs_is_quota_inode(struct xfs_sb *sbp, xfs_ino_t ino)
-> >  #define	XFS_AGI_GOOD_VERSION(v)	((v) == XFS_AGI_VERSION)
-> >  
-> >  /*
-> > - * Btree number 0 is bno, 1 is cnt.  This value gives the size of the
-> > + * Btree number 0 is bno, 1 is cnt, 2 is rmap. This value gives the size of the
-> >   * arrays below.
-> >   */
-> > -#define	XFS_BTNUM_AGF	((int)XFS_BTNUM_CNTi + 1)
-> > +#define	XFS_BTNUM_AGF	((int)XFS_BTNUM_RMAPi + 1)
-> >  
-> >  /*
-> >   * The second word of agf_levels in the first a.g. overlaps the EFS
-> > @@ -594,12 +601,10 @@ typedef struct xfs_agf {
-> >  	__be32		agf_seqno;	/* sequence # starting from 0 */
-> >  	__be32		agf_length;	/* size in blocks of a.g. */
-> >  	/*
-> > -	 * Freespace information
-> > +	 * Freespace and rmap information
-> >  	 */
-> >  	__be32		agf_roots[XFS_BTNUM_AGF];	/* root blocks */
-> > -	__be32		agf_spare0;	/* spare field */
-> >  	__be32		agf_levels[XFS_BTNUM_AGF];	/* btree levels */
-> > -	__be32		agf_spare1;	/* spare field */
-> 
-> Doh, field collision! :)
-> 
-> Guess I'll use up one of the agf_spare64's.
-> 
-> --D
-> 
-> >  
-> >  	__be32		agf_flfirst;	/* first freelist block's index */
-> >  	__be32		agf_fllast;	/* last freelist block's index */
-> > @@ -1277,6 +1282,13 @@ typedef __be32 xfs_inobt_ptr_t;
-> >  #define	XFS_FIBT_BLOCK(mp)		((xfs_agblock_t)(XFS_IBT_BLOCK(mp) + 1))
-> >  
-> >  /*
-> > + * Reverse mapping btree format definitions
-> > + *
-> > + * There is a btree for the reverse map per allocation group
-> > + */
-> > +#define	XFS_RMAP_CRC_MAGIC	0x524d4233	/* 'RMB3' */
-> > +
-> > +/*
-> >   * The first data block of an AG depends on whether the filesystem was formatted
-> >   * with the finobt feature. If so, account for the finobt reserved root btree
-> >   * block.
-> > diff --git a/fs/xfs/libxfs/xfs_types.h b/fs/xfs/libxfs/xfs_types.h
-> > index b79dc66..3d50364 100644
-> > --- a/fs/xfs/libxfs/xfs_types.h
-> > +++ b/fs/xfs/libxfs/xfs_types.h
-> > @@ -108,8 +108,8 @@ typedef enum {
-> >  } xfs_lookup_t;
-> >  
-> >  typedef enum {
-> > -	XFS_BTNUM_BNOi, XFS_BTNUM_CNTi, XFS_BTNUM_BMAPi, XFS_BTNUM_INOi,
-> > -	XFS_BTNUM_FINOi, XFS_BTNUM_MAX
-> > +	XFS_BTNUM_BNOi, XFS_BTNUM_CNTi, XFS_BTNUM_RMAPi, XFS_BTNUM_BMAPi,
-> > +	XFS_BTNUM_INOi, XFS_BTNUM_FINOi, XFS_BTNUM_MAX
-> >  } xfs_btnum_t;
-> >  
-> >  struct xfs_name {
-> > -- 
-> > 2.0.0
-> > 
-> > _______________________________________________
-> > xfs mailing list
-> > xfs@oss.sgi.com
-> > http://oss.sgi.com/mailman/listinfo/xfs
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+> It doesn't seem like writeback of dirty pages is the problem; more
+> the case that the page cache is rediculously huge and not being
+> reclaimed in a sane manner. Do you really need 2.8TB of cached file
+> data in memory for performance?
+
+Yeah, disk cache is the primary reason for stuffing memory into that machine.
+
+-- 
+Anders Ossowicki
 
 _______________________________________________
 xfs mailing list
