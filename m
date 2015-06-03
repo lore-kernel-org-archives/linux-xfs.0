@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 1BFF87F8E
+	by oss.sgi.com (Postfix) with ESMTP id 445877F92
 	for <xfs@oss.sgi.com>; Wed,  3 Jun 2015 01:05:09 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id E32308F8081
-	for <xfs@oss.sgi.com>; Tue,  2 Jun 2015 23:05:08 -0700 (PDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 3448D8F8087
+	for <xfs@oss.sgi.com>; Tue,  2 Jun 2015 23:05:06 -0700 (PDT)
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	CYhvpJ8WGe4nwwu1 for <xfs@oss.sgi.com>;
-	Tue, 02 Jun 2015 23:05:07 -0700 (PDT)
+	SbL49xBtTjLw0hDs for <xfs@oss.sgi.com>;
+	Tue, 02 Jun 2015 23:05:03 -0700 (PDT)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.80)
-	(envelope-from <dave@fromorbit.com>) id 1Z01nQ-0001DN-NC
+	(envelope-from <dave@fromorbit.com>) id 1Z01nQ-0001Dv-SE
 	for xfs@oss.sgi.com; Wed, 03 Jun 2015 16:05:00 +1000
 Received: from dave by disappointment with local (Exim 4.82_1-5b7a7c0-XX)
-	(envelope-from <dave@disappointment.disaster>) id 1Z01nQ-0002vV-M8
+	(envelope-from <dave@disappointment.disaster>) id 1Z01nQ-0002wE-Qm
 	for xfs@oss.sgi.com; Wed, 03 Jun 2015 16:05:00 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 11/20] xfs: add rmap btree growfs support
-Date: Wed,  3 Jun 2015 16:04:48 +1000
-Message-Id: <1433311497-10245-12-git-send-email-david@fromorbit.com>
+Subject: [PATCH 20/20] xfs: enable the rmap btree functionality
+Date: Wed,  3 Jun 2015 16:04:57 +1000
+Message-Id: <1433311497-10245-21-git-send-email-david@fromorbit.com>
 In-Reply-To: <1433311497-10245-1-git-send-email-david@fromorbit.com>
 References: <1433311497-10245-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,107 +39,46 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Now we can read and write rmap btree blocks, we can add support to
-the growfs code to initialise new rmap btree blocks.
+Add the feature flag to the supported matrix so that the kernel can
+mount and use rmap btree enabled filesystems
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_fsops.c | 68 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 68 insertions(+)
+ fs/xfs/libxfs/xfs_format.h | 3 ++-
+ fs/xfs/libxfs/xfs_sb.c     | 6 ++++++
+ 2 files changed, 8 insertions(+), 1 deletion(-)
 
-diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
-index ebfeb84..b8b2f06 100644
---- a/fs/xfs/xfs_fsops.c
-+++ b/fs/xfs/xfs_fsops.c
-@@ -32,6 +32,7 @@
- #include "xfs_btree.h"
- #include "xfs_alloc_btree.h"
- #include "xfs_alloc.h"
-+#include "xfs_rmap_btree.h"
- #include "xfs_ialloc.h"
- #include "xfs_fsops.h"
- #include "xfs_itable.h"
-@@ -243,6 +244,12 @@ xfs_growfs_data_private(
- 		agf->agf_roots[XFS_BTNUM_CNTi] = cpu_to_be32(XFS_CNT_BLOCK(mp));
- 		agf->agf_levels[XFS_BTNUM_BNOi] = cpu_to_be32(1);
- 		agf->agf_levels[XFS_BTNUM_CNTi] = cpu_to_be32(1);
-+		if (xfs_sb_version_hasrmapbt(&mp->m_sb)) {
-+			agf->agf_roots[XFS_BTNUM_RMAPi] =
-+						cpu_to_be32(XFS_RMAP_BLOCK(mp));
-+			agf->agf_levels[XFS_BTNUM_RMAPi] = cpu_to_be32(1);
-+		}
-+
- 		agf->agf_flfirst = 0;
- 		agf->agf_fllast = cpu_to_be32(XFS_AGFL_SIZE(mp) - 1);
- 		agf->agf_flcount = 0;
-@@ -382,6 +389,67 @@ xfs_growfs_data_private(
- 		if (error)
- 			goto error0;
+diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
+index cd61ce9..9cff517 100644
+--- a/fs/xfs/libxfs/xfs_format.h
++++ b/fs/xfs/libxfs/xfs_format.h
+@@ -447,7 +447,8 @@ xfs_sb_has_compat_feature(
+ #define XFS_SB_FEAT_RO_COMPAT_FINOBT   (1 << 0)		/* free inode btree */
+ #define XFS_SB_FEAT_RO_COMPAT_RMAPBT   (1 << 1)		/* reverse map btree */
+ #define XFS_SB_FEAT_RO_COMPAT_ALL \
+-		(XFS_SB_FEAT_RO_COMPAT_FINOBT)
++		(XFS_SB_FEAT_RO_COMPAT_FINOBT | \
++		 XFS_SB_FEAT_RO_COMPAT_RMAPBT)
+ #define XFS_SB_FEAT_RO_COMPAT_UNKNOWN	~XFS_SB_FEAT_RO_COMPAT_ALL
+ static inline bool
+ xfs_sb_has_ro_compat_feature(
+diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
+index c136abd..5fb5410 100644
+--- a/fs/xfs/libxfs/xfs_sb.c
++++ b/fs/xfs/libxfs/xfs_sb.c
+@@ -196,6 +196,12 @@ xfs_mount_validate_sb(
+ 		}
+ 	}
  
-+		/* RMAP btree root block */
-+		if (xfs_sb_version_hasrmapbt(&mp->m_sb)) {
-+			struct xfs_rmap_rec	*rrec;
-+			struct xfs_btree_block	*block;
-+			bp = xfs_growfs_get_hdr_buf(mp,
-+				XFS_AGB_TO_DADDR(mp, agno, XFS_RMAP_BLOCK(mp)),
-+				BTOBB(mp->m_sb.sb_blocksize), 0,
-+				&xfs_rmapbt_buf_ops);
-+			if (!bp) {
-+				error = -ENOMEM;
-+				goto error0;
-+			}
-+
-+			xfs_btree_init_block(mp, bp, XFS_RMAP_CRC_MAGIC, 0, 2,
-+						agno, XFS_BTREE_CRC_BLOCKS);
-+			block = XFS_BUF_TO_BLOCK(bp);
++	if (xfs_sb_version_hasrmapbt(sbp)) {
++		xfs_alert(mp,
++"EXPERIMENTAL reverse mapping btree feature enabled. Use at your own risk!");
++	}
 +
 +
-+			/*
-+			 * mark the AG header regions as static metadata The BNO
-+			 * btree block is the first block after the headers, so
-+			 * it's location defines the size of region the static
-+			 * metadata consumes.
-+			 *
-+			 * Note: unlike mkfs, we never have to account for log
-+			 * space when growing the data regions
-+			 */
-+			rrec = XFS_RMAP_REC_ADDR(block, 1);
-+			rrec->rm_startblock = 0;
-+			rrec->rm_blockcount = cpu_to_be32(XFS_BNO_BLOCK(mp));
-+			rrec->rm_owner = cpu_to_be64(XFS_RMAP_OWN_FS);
-+			be16_add_cpu(&block->bb_numrecs, 1);
-+
-+			/* account freespace btree root blocks */
-+			rrec = XFS_RMAP_REC_ADDR(block, 2);
-+			rrec->rm_startblock = cpu_to_be32(XFS_BNO_BLOCK(mp));
-+			rrec->rm_blockcount = cpu_to_be32(2);
-+			rrec->rm_owner = cpu_to_be64(XFS_RMAP_OWN_AG);
-+			be16_add_cpu(&block->bb_numrecs, 1);
-+
-+			/* account inode btree root blocks */
-+			rrec = XFS_RMAP_REC_ADDR(block, 3);
-+			rrec->rm_startblock = cpu_to_be32(XFS_IBT_BLOCK(mp));
-+			rrec->rm_blockcount = cpu_to_be32(XFS_RMAP_BLOCK(mp) -
-+							XFS_IBT_BLOCK(mp));
-+			rrec->rm_owner = cpu_to_be64(XFS_RMAP_OWN_INOBT);
-+			be16_add_cpu(&block->bb_numrecs, 1);
-+
-+			/* account for rmap btree root */ 
-+			rrec = XFS_RMAP_REC_ADDR(block, 4);
-+			rrec->rm_startblock = cpu_to_be32(XFS_RMAP_BLOCK(mp));
-+			rrec->rm_blockcount = cpu_to_be32(1);
-+			rrec->rm_owner = cpu_to_be64(XFS_RMAP_OWN_AG);
-+			be16_add_cpu(&block->bb_numrecs, 1);
-+
-+			error = xfs_bwrite(bp);
-+			xfs_buf_relse(bp);
-+			if (error)
-+				goto error0;
-+		}
-+
- 		/*
- 		 * INO btree root block
- 		 */
+ 	if (unlikely(
+ 	    sbp->sb_logstart == 0 && mp->m_logdev_targp == mp->m_ddev_targp)) {
+ 		xfs_warn(mp,
 -- 
 2.0.0
 
