@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id E5ECB7FA9
-	for <xfs@oss.sgi.com>; Thu,  4 Jun 2015 17:44:25 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 964BE7FAA
+	for <xfs@oss.sgi.com>; Thu,  4 Jun 2015 17:59:12 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id D4BE7304043
-	for <xfs@oss.sgi.com>; Thu,  4 Jun 2015 15:44:22 -0700 (PDT)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 80852304048
+	for <xfs@oss.sgi.com>; Thu,  4 Jun 2015 15:59:12 -0700 (PDT)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	zREnFv98Zuuh4TB4 for <xfs@oss.sgi.com>;
-	Thu, 04 Jun 2015 15:44:20 -0700 (PDT)
-Date: Fri, 5 Jun 2015 08:44:07 +1000
+	pJfs6abcWboSUTIs for <xfs@oss.sgi.com>;
+	Thu, 04 Jun 2015 15:59:10 -0700 (PDT)
+Received: from dave by dastard with local (Exim 4.80)
+	(envelope-from <david@fromorbit.com>) id 1Z0e5x-00064V-Ml
+	for xfs@oss.sgi.com; Fri, 05 Jun 2015 08:58:41 +1000
+Date: Fri, 5 Jun 2015 08:58:41 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Rules for calling ->releasepage()
-Message-ID: <20150604224407.GV24666@dastard>
-References: <20150604083953.GB5923@quack.suse.cz>
+Subject: [ANNOUNCE] xfs: for-next branch updated to 4ea7976
+Message-ID: <20150604225841.GW24666@dastard>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20150604083953.GB5923@quack.suse.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,81 +25,140 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============6857214101554027986=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Jan Kara <jack@suse.cz>
-Cc: mfasheh@suse.de, xfs@oss.sgi.com, linux-mm@kvack.org, mgorman@suse.de, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org
+To: xfs@oss.sgi.com
 
-On Thu, Jun 04, 2015 at 10:39:53AM +0200, Jan Kara wrote:
->   Hello,
-> 
->   we were recently debugging an issue where customer was hitting warnings
-> in xfs_vm_releasepage() which was complaining that the page it was called
-> for has delay-allocated buffers. After some debugging we realized that
-> indeed try_to_release_page() call from shrink_active_list() can happen for
-> a page in arbitrary state (that call happens only if
-> buffer_heads_over_limit is set so that is the reason why we normally don't
-> see that).
-> 
-> Hence comes my question: What are the rules for when can ->releasepage() be
-> called? And what is the expected outcome? We are certainly guaranteed to
-> hold page lock. try_to_release_page() also makes sure the page isn't under
-> writeback.  But what is ->releasepage() supposed to do with a dirty page?
 
-According to the comments on try_to_free_page:
+--===============6857214101554027986==
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="xXmbgvnjoT4axfJE"
+Content-Disposition: inline
 
- * The @gfp_mask argument specifies whether I/O may be performed to release
- * this page (__GFP_IO), and whether the call may block (__GFP_WAIT & __GFP_FS).
 
-It seems to me like we're supposed to try to clean it if possible,
-but it is clear that it can be called from contexts that don't allow
-IO and/or blocking so filesystems have to be able to reject dirty
-pages and the callers must be able to handle it.  IOWs, calling
-->releasepage() with a dirty page must be allowed to fail.
+--xXmbgvnjoT4axfJE
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-IMO, trying to free a page that is dirty indicates poor reclaim
-selection, especially in the case of shrink_active_list() which is
-likely to be called in a GFP_NOFS context and so it shouldn't be
-asking for dirty pages to be reclaimed because we simply won't do
-the IO (i.e. same conditions where we warn and reject ->writepage
-calls).
+Hi folks,
 
-> Generally IFAIU we aren't supposed to discard dirty data but I wouldn't bet
-> on all filesystems getting it right because the common call paths make sure
-> page is clean.
+The for-next branch of the xfs kernel repository at
 
-*nod*
+git://git.kernel.org/pub/scm/linux/kernel/git/dgc/linux-xfs.git
 
-> I would almost say we should enforce !PageDirty in
-> try_to_release_page() if it was not for that ext3 nastyness of cleaning
-> buffers under a dirty page - hum, but maybe the right answer for that is
-> ripping ext3 out of tree (which would also allow us to get rid of some code
-> in the blocklayer for bouncing journaled data buffers when stable writes
-> are required).
+has just been updated.
 
-XFS is behaving correctly in that it rejects the attempt to release
-the dirty page, but the warning is there to indicate something
-higher up is doing something unusual. I'm happy for the higher up
-code to be fixed never to try to release a dirty page, even if that
-means finally removing the ext3 code base from the tree..
+The new head of the for-next branch is commit:
 
-FWIW, dirty pages and therefore pinned bufferheads are limited by
-dirty thresholds, so really removing bufferheads from clean pages
-is really all that is necessary to bring it back below thresholds.
+4ea7976 Merge branch 'xfs-commit-cleanup' into for-next
 
-Cheers,
+New Commits:
 
-Dave.
+Brian Foster (2):
+      [3cdaa18] xfs: fix sparse inodes 32-bit compile failure
+      [46fc58d] xfs: check min blks for random debug mode sparse allocations
 
-PS: This is yet another reason why I'm working towards removing
-bufferheads from XFS....
--- 
+Christoph Hellwig (5):
+      [2e6db6c] xfs: switch remaining xfs_trans_dup users to xfs_trans_roll
+      [eacb24e] xfs: pass a boolean flag to xfs_trans_free_items
+      [4906e21] xfs: remove the flags argument to xfs_trans_cancel
+      [7039331] xfs: saner xfs_trans_commit interface
+      [f78c390] xfs: fix xfs_log_done interface
+
+Dave Chinner (11):
+      [ec56b1f] xfs: mmap lock needs to be inside freeze protection
+      [e842f29] dax: don't abuse get_block mapping for endio callbacks
+      [ce5c5d5] dax: expose __dax_fault for filesystems with locking constr=
+aints
+      [6b698ed] xfs: add DAX file operations support
+      [4f69f57] xfs: add DAX block zeroing support
+      [9969441] xfs: add DAX truncate support
+      [6e1ba0b] xfs: add DAX IO path support
+      [cbe4dab] xfs: add initial DAX support
+      [66e8ac7] Merge branch 'xfs-dax-support' into for-next
+      [4497f28] Merge branch 'xfs-misc-fixes-for-4.2-2' into for-next
+      [4ea7976] Merge branch 'xfs-commit-cleanup' into for-next
+
+
+Code Diffstat:
+
+ fs/dax.c                   |  34 +++++++--
+ fs/ext2/file.c             |   4 +-
+ fs/ext4/file.c             |  16 +++-
+ fs/ext4/inode.c            |  21 ++----
+ fs/xfs/libxfs/xfs_attr.c   |  25 +++----
+ fs/xfs/libxfs/xfs_bmap.c   |  16 ++--
+ fs/xfs/libxfs/xfs_ialloc.c |  15 ++--
+ fs/xfs/libxfs/xfs_sb.c     |   4 +-
+ fs/xfs/libxfs/xfs_shared.h |   6 --
+ fs/xfs/xfs_aops.c          | 158 +++++++++++++++++++++++++++------------
+ fs/xfs/xfs_aops.h          |   7 +-
+ fs/xfs/xfs_attr_inactive.c |   6 +-
+ fs/xfs/xfs_bmap_util.c     |  89 +++++++++++-----------
+ fs/xfs/xfs_dquot.c         |   8 +-
+ fs/xfs/xfs_file.c          | 166 ++++++++++++++++++++++++-----------------
+ fs/xfs/xfs_fsops.c         |   6 +-
+ fs/xfs/xfs_inode.c         | 180 ++++++++++++-----------------------------=
+----
+ fs/xfs/xfs_ioctl.c         |  14 ++--
+ fs/xfs/xfs_iomap.c         |  18 ++---
+ fs/xfs/xfs_iops.c          |  48 ++++++------
+ fs/xfs/xfs_log.c           |  11 +--
+ fs/xfs/xfs_log.h           |  13 +---
+ fs/xfs/xfs_log_cil.c       |  12 +--
+ fs/xfs/xfs_log_recover.c   |   8 +-
+ fs/xfs/xfs_mount.h         |   2 +
+ fs/xfs/xfs_pnfs.c          |   4 +-
+ fs/xfs/xfs_qm.c            |   7 +-
+ fs/xfs/xfs_qm_syscalls.c   |  20 +++--
+ fs/xfs/xfs_rtalloc.c       |  16 ++--
+ fs/xfs/xfs_super.c         |  25 ++++++-
+ fs/xfs/xfs_symlink.c       |  17 ++---
+ fs/xfs/xfs_trans.c         |  91 ++++++++---------------
+ fs/xfs/xfs_trans.h         |   7 +-
+ fs/xfs/xfs_trans_priv.h    |   2 +-
+ include/linux/fs.h         |   9 ++-
+ 35 files changed, 537 insertions(+), 548 deletions(-)
+--=20
 Dave Chinner
 david@fromorbit.com
+
+--xXmbgvnjoT4axfJE
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
+
+iQIcBAEBAgAGBQJVcNghAAoJEK3oKUf0dfod8e8QAIT28D86Met2Kn5r3y8MSB/V
+5VLRP6Zd5HXCOoiwoku69J4qjhL9o8culVvrAvIjZ7mI30OdydKlIujfCjZEeNzG
+h0Ky57KjNwiXae6XFx6ZMHP1rAisd55lwGCiwyoLhtLsngW6f7C2hHyqf45sALs9
+fuWd7lWalkRH7t7M5ostrAkOOf3rBYgjelU13w8+ErE0kTh3Cd4YqIMQWx1kEcnT
+5Olt3jz/gXbG4IQ6dDbPKBrk+TSDM1dTjLRnqISwbWN/ffnAnWas6uOHZAzsSo6y
+xJVqjjY8Q68k+yWWdaIMgx65+x55C9XLP0BxaGZ/32AWrdtVNX9HzsGIkd0bOcKY
+A5KQD+zz2DDyXYEwFt4qUnXUSqCNOgKE9kBx1+6vkbvnBwqd1mMmrktnXak7p3Bq
+0OgjyEGURtCtCZW6lB7kvn5trekTcYKk2C6DHxUfjA13KXwkvKlG3hjIvmQbvvHZ
+lwqAwYybu+2COzsdSjxpAO5ZLwjIvJFtwFL5K40Ue9zIwFvNUAgW/dv5rATZyofk
+vzk2a/zrDeL738pPPUeID3e6kEApd0Kfmh2rvs5EOYE2oOsb4ENx6BX0hR5jclSA
+8iWgHBZ7IEM5aCzCcIaeVQIuIOSGeIx9x3Ole/TPope6GU+d6qbo3rQzLZdiU/Bl
+PtdZTDxSKBrCdx85vVO/
+=d3z0
+-----END PGP SIGNATURE-----
+
+--xXmbgvnjoT4axfJE--
+
+
+--===============6857214101554027986==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============6857214101554027986==--
