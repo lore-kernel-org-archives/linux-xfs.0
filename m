@@ -1,22 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 07B4F7F82
-	for <xfs@oss.sgi.com>; Fri,  5 Jun 2015 17:23:07 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 7BD19AC001
-	for <xfs@oss.sgi.com>; Fri,  5 Jun 2015 15:23:03 -0700 (PDT)
-Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
-	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	ZhCLGCZWa8mXN8uU for <xfs@oss.sgi.com>;
-	Fri, 05 Jun 2015 15:23:00 -0700 (PDT)
-Date: Sat, 6 Jun 2015 08:22:57 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs: fix in the setting of logbsize
-Message-ID: <20150605222257.GY24666@dastard>
-References: <1433510925-11438-1-git-send-email-alnovak@suse.cz>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 541F27F80
+	for <xfs@oss.sgi.com>; Fri,  5 Jun 2015 18:04:02 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 3365C8F8040
+	for <xfs@oss.sgi.com>; Fri,  5 Jun 2015 16:04:01 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id RaL928Font9WruMv for <xfs@oss.sgi.com>;
+	Fri, 05 Jun 2015 16:03:56 -0700 (PDT)
+Message-ID: <55722AD9.2080105@sandeen.net>
+Date: Fri, 05 Jun 2015 18:03:53 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1433510925-11438-1-git-send-email-alnovak@suse.cz>
+Subject: Re: [PATCH] xfs: fix in the setting of logbsize
+References: <1433510925-11438-1-git-send-email-alnovak@suse.cz>
+	<20150605222257.GY24666@dastard>
+In-Reply-To: <20150605222257.GY24666@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,70 +28,29 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Ales Novak <alnovak@suse.cz>
+To: Dave Chinner <david@fromorbit.com>, Ales Novak <alnovak@suse.cz>
 Cc: xfs@oss.sgi.com
 
-[dropped lkml from the cc list, XFS specific noise is not needed
-there.]
+On 6/5/15 5:22 PM, Dave Chinner wrote:
 
-On Fri, Jun 05, 2015 at 03:28:45PM +0200, Ales Novak wrote:
-> Logbsize should be integer multiple of log stripe unit size. If it's
-> not, various operations will lead to crashes, due to invalid buffer
-> sizes, i.e. we've seen crashes in the callpath xlog_sync->xlog_pack_data.
-
-Can you give more information about the crashes? From this
-description, I do not know whether this is a work around or a fix
-because I don't know  what code is actually causing the problem or
-the circumstances in which the crash occurs. Hence I cannot
-determine if your change is the right change to make or whether the
-documetnation is simply wrong and we have a real bug we shoul dbe
-fixing.
-
-> However, this rule is only mentioned in the documentation, while it
-> could be checked during the mount.
-
-Where in the documentation is that mentioned?
-
-> Signed-off-by: Ales Novak <alnovak@suse.cz>
-> ---
->  fs/xfs/xfs_super.c | 5 +++++
->  1 file changed, 5 insertions(+)
+> On Fri, Jun 05, 2015 at 03:28:45PM +0200, Ales Novak wrote:
+>> However, this rule is only mentioned in the documentation, while it
+>> could be checked during the mount.
 > 
-> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-> index 8fcc4cc..1a3766d 100644
-> --- a/fs/xfs/xfs_super.c
-> +++ b/fs/xfs/xfs_super.c
-> @@ -1352,6 +1352,11 @@ xfs_finish_flags(
->  			xfs_warn(mp,
->  		"logbuf size must be greater than or equal to log stripe size");
->  			return -EINVAL;
-> +		} else if (mp->m_logbsize > 0 && mp->m_sb.sb_logsunit > 0 &&
-> +			   mp->m_logbsize % mp->m_sb.sb_logsunit) {
-> +			xfs_warn(mp,
-> +		"logbuf size must be integer multiple of log stripe size");
-> +			return -EINVAL;
->  		}
->  	} else {
->  		/* Fail a mount if the logbuf is larger than 32K */
+> Where in the documentation is that mentioned?
 
-If the logbsize was not specified as a mount option, we simply use
-what is on disk. If it was specified as a mount option, we know that
-we've already constrained m_logbsize to 32k, 64k, 128k or 256k (in
-xfs_parse_args()). Which then means the above code will refuse to
-mount a filesystem where the logsunit is not a power of two. e.g.
-logsunit of 96k and logbsize=192k will not be allowed to mount...
+Documentation/filesystems/xfs.txt:
 
-So, at minimum, we need to refine more than just check for integer
-multiples here, and so we need to look at whether arbitrary stripe
-unit alignments in mkfs are valid given the power-of-2 restriction
-on the log buffer size which may be overly restrictive...
+  logbsize=value
+        Set the size of each in-memory log buffer.  The size may be
+        specified in bytes, or in kilobytes with a "k" suffix.
+        Valid sizes for version 1 and version 2 logs are 16384 (16k)
+        and 32768 (32k).  Valid sizes for version 2 logs also
+        include 65536 (64k), 131072 (128k) and 262144 (256k). The
+        logbsize must be an integer multiple of the log
+        stripe unit configured at mkfs time.
 
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+-Eric
 
 _______________________________________________
 xfs mailing list
