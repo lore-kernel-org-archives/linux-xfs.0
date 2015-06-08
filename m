@@ -1,18 +1,23 @@
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id B930C7F75
-	for <xfs@oss.sgi.com>; Tue,  9 Jun 2015 05:54:06 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 9AAF38F8033
-	for <xfs@oss.sgi.com>; Tue,  9 Jun 2015 03:54:06 -0700 (PDT)
-Received: from mailer196.gate82.rs.smtp.com (mailer196.gate82.rs.smtp.com
-	[74.91.82.196]) by cuda.sgi.com with ESMTP id 3vAvJkiGyisFsQuh
-	for <xfs@oss.sgi.com>; Tue, 09 Jun 2015 03:54:03 -0700 (PDT)
-Message-ID: <AC.70.01782.BC5C6755@rs-ord-gm-mta05-3.smtp.com>
-From: "Busveldt Safaris" <reservations@bushveldtsafari.com>
-Subject: Re: Winter Bushveld Breaks & Long week-end Availability
-Date: Tue, 09 Jun 2015 10:54:03 GMT
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 27FF07F7E
+	for <xfs@oss.sgi.com>; Mon,  8 Jun 2015 21:28:02 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id A7EEBAC004
+	for <xfs@oss.sgi.com>; Mon,  8 Jun 2015 19:27:58 -0700 (PDT)
+Received: from 440198.s.dedikuoti.lt (440198.s.dedikuoti.lt [194.135.93.20])
+	by cuda.sgi.com with ESMTP id ZPkyLv8J28OXgjHJ (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Mon, 08 Jun 2015 19:27:53 -0700 (PDT)
+Received: from 440198.s.dedikuoti.lt ([194.135.93.20] helo=vilniaustiesa.lt)
+	by 440198.s.dedikuoti.lt with esmtpa (Exim 4.72)
+	(envelope-from <info@vilniaustiesa.lt>) id 1Z1qGg-0008HY-5A
+	for xfs@oss.sgi.com; Mon, 08 Jun 2015 09:10:42 +0300
+Date: Mon, 8 Jun 2015 06:10:42 +0000
+From: =?UTF-8?Q?Kra=C5=A1to_tinklara=C5=A1tis?= <info@vilniaustiesa.lt>
+Subject: =?UTF-8?Q?Kra=C5=A1to_tinklara=C5=A1tis?=
+Message-ID: <756b559da13fa48e6da1fee0089a5196@vilniaustiesa.lt>
 MIME-Version: 1.0
-Reply-To: Busveldt Safaris <reservations@bushveldtsafari.com>
+Reply-To: gkcapital@mail.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,320 +26,872 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============1865441483410909944=="
+Content-Type: multipart/mixed; boundary="===============5352634727411363303=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
---===============1865441483410909944==
-Content-Type: text/html;
- charset="UTF-8"
-Content-Transfer-Encoding: base64
+--===============5352634727411363303==
+Content-Type: multipart/alternative;
+	boundary="b1_756b559da13fa48e6da1fee0089a5196"
 
-PCFET0NUWVBFIGh0bWwgUFVCTElDICItLy9XM0MvL0RURCBYSFRNTCAxLjAgVHJhbnNpdGlvbmFs
-Ly9FTiIgImh0dHA6Ly93d3cudzMub3JnL1RSL3hodG1sMS9EVEQveGh0bWwxLXRyYW5zaXRpb25h
-bC5kdGQiPg0KPGh0bWwgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGh0bWwiPg0KPGhl
-YWQ+DQo8bWV0YSBodHRwLWVxdWl2PSJDb250ZW50LVR5cGUiIGNvbnRlbnQ9InRleHQvaHRtbDsg
-Y2hhcnNldD11dGYtOCI+DQo8dGl0bGU+WndhaGlsaSAtIE9jdG9iZXIgMjAxNCBIYWxmIFByaWNl
-IFNhbGU8L3RpdGxlPg0KPHN0eWxlIHR5cGU9InRleHQvY3NzIj4NCi5yZWRwMSB7CWZvbnQtZmFt
-aWx5OiAiTHVjaWRhIFNhbnMgVW5pY29kZSIsICJMdWNpZGEgR3JhbmRlIiwgc2Fucy1zZXJpZjsN
-Cglmb250LXNpemU6IDE0cHg7DQoJZm9udC13ZWlnaHQ6IA0KCWNvbG9yOiAjRkZGOwkJCWNvbG9y
-OiAjRjAwOw0KfQ0KLnJlZHAxIHsJZm9udC1mYW1pbHk6ICJMdWNpZGEgU2FucyBVbmljb2RlIiwg
-Ikx1Y2lkYSBHcmFuZGUiLCBzYW5zLXNlcmlmOw0KCWZvbnQtc2l6ZTogMTRweDsNCglmb250LXdl
-aWdodDogDQoJY29sb3I6ICNGRkY7CQkJY29sb3I6ICNGMDA7DQp9DQoucmVkcDEgewlmb250LWZh
-bWlseTogIkx1Y2lkYSBTYW5zIFVuaWNvZGUiLCAiTHVjaWRhIEdyYW5kZSIsIHNhbnMtc2VyaWY7
-DQoJZm9udC1zaXplOiAxNHB4Ow0KCWZvbnQtd2VpZ2h0OiANCgljb2xvcjogI0ZGRjsJCQljb2xv
-cjogI0YwMDsNCn0NCjwvc3R5bGU+DQo8L2hlYWQ+DQo8c3R5bGUgdHlwZT0idGV4dC9jc3MiPg0K
-aDEgew0KCWZvbnQtZmFtaWx5OiAiTHVjaWRhIFNhbnMgVW5pY29kZSIsICJMdWNpZGEgR3JhbmRl
-Iiwgc2Fucy1zZXJpZjsNCglmb250LXNpemU6IDMwcHg7DQoJZm9udC13ZWlnaHQ6IGJvbGQ7DQoJ
-Y29sb3I6ICNGRkY7DQoNCn0NCmJvZHl7DQoJYmFja2dyb3VuZC1jb2xvcjojZmZmOw0KCWJhY2tn
-cm91bmQtcmVwZWF0OnJlcGVhdC15DQp9DQpoMiB7DQoJZm9udC1mYW1pbHk6ICJMdWNpZGEgU2Fu
-cyBVbmljb2RlIiwgIkx1Y2lkYSBHcmFuZGUiLCBzYW5zLXNlcmlmOw0KCWZvbnQtc2l6ZTogMThw
-eDsNCglmb250LXdlaWdodDogYm9sZDsgDQoJY29sb3I6ICNGRkY7DQp9DQpwIHsNCglmb250LWZh
-bWlseTogIkx1Y2lkYSBTYW5zIFVuaWNvZGUiLCAiTHVjaWRhIEdyYW5kZSIsIHNhbnMtc2VyaWY7
-DQoJZm9udC1zaXplOiAxNnB4Ow0KCWZvbnQtd2VpZ2h0OiANCgljb2xvcjogI0ZGRjsNCn0NCg0K
-LnJlZHAgew0KCWZvbnQtZmFtaWx5OiAiTHVjaWRhIFNhbnMgVW5pY29kZSIsICJMdWNpZGEgR3Jh
-bmRlIiwgc2Fucy1zZXJpZjsNCglmb250LXNpemU6IDE0cHg7DQoJZm9udC13ZWlnaHQ6IA0KCWNv
-bG9yOiAjRkZGOwkJCWNvbG9yOiAjRjAwOw0KfQ0KYTpsaW5rIHsNCgljb2xvcjogI0ZGRjsNCn0N
-CmE6dmlzaXRlZCB7DQoJY29sb3I6ICNGRkY7DQp9DQphOmhvdmVyIHsNCgljb2xvcjogI0M2MDsN
-Cn0NCjwvc3R5bGU+DQo8Ym9keT48aW1nIGFsdD0nJyBzcmM9J2h0dHA6Ly9pcy5kaWV6LnBlbmFt
-YWlsLmNvbS8vL3NpdGUvcy9vLmFzcHg/SGl0SUQ9MTQzMzg0Njk5ODA5NSZFbUlEPTEzMTQ5ODYy
-JlN0SUQ9NDc4OTMmU0lEPTE0Jk5JRD02ODk2MTUmRW1haWw9eGZzQG9zcy5zZ2kuY29tJyBib3Jk
-ZXI9JzAnIHdpZHRoPScxJyBoZWlnaHQ9JzEnPjxpbWcgYWx0PScnIHNyYz0naHR0cDovL2lzLmRp
-ZXoucGVuYW1haWwuY29tLy8vUldDb2RlL2NsaWNrLmFzcD9IaXRJRD0xNDMzODQ2OTk4MDk1JkVt
-SUQ9MTMxNDk4NjImU3RJRD00Nzg5MyZTSUQ9MTQmTklEPTY4OTYxNSZFbWFpbD14ZnNAb3NzLnNn
-aS5jb20nIGJvcmRlcj0nMCcgd2lkdGg9JzEnIGhlaWdodD0nMSc+PHN0eWxlICB0eXBlPSJ0ZXh0
-L2NzcyI+Ym9keSB7aGVpZ2h0OjEwMCU7d2lkdGg6MTAwJTttYXJnaW4tdG9wOiAwcHggIWltcG9y
-dGFudDsgbWFyZ2luLWJvdHRvbTogMHB4ICFpbXBvcnRhbnQ7IHBhZGRpbmc6MHB4ICFpbXBvcnRh
-bnQ7IG1zby1tYXJnaW4tdG9wLWFsdDowcHggIWltcG9ydGFudDsgbXNvLW1hcmdpbi1ib3R0b20t
-YWx0OjBweCAhaW1wb3J0YW50OyBtc28tcGFkZGluZy1hbHQ6IDBweCAwcHggMHB4IDBweCAhaW1w
-b3J0YW50O30gQG1lZGlhIG9ubHkgc2NyZWVuIGFuZCAobWF4LXdpZHRoIDogNDgwcHgpIHsgLmZ1
-bGxfd2lkdGh7IHdpZHRoOiAxMDAlICFpbXBvcnRhbnQ7IH0gfTwvc3R5bGU+DQoJPHRhYmxlIGFs
-aWduPSJjZW50ZXIiIGJvcmRlcj0iMCIgY2VsbHNwYWNpbmc9IjAiIGNlbGxwYWRkaW5nPSIwIj4N
-CiAgICANCiAgICAgIDx0Ym9keT48dHI+DQogICAgICAgIAk8dGQgYWxpZ249ImxlZnQiPjxpbWcg
-YWx0PSIiIHNyYz0iaHR0cDovL3d3dy56d2FoaWxpLmNvLnphL21haWxlcnMvaGFsZi1wcmljZS8x
-LnBuZyI+PGJyPjxicj48L3RkPg0KICAgICAgPC90cj4NCiAgICAgIA0KICAgICAgDQogICAJICA8
-dHI+DQogICAgICAgIAk8dGQgYWxpZ249ImNlbnRlciI+PGltZyBhbHQ9IiIgc3JjPSJodHRwOi8v
-d3d3Lnp3YWhpbGkuY28uemEvbWFpbGVycy9oYWxmLXByaWNlLzIucG5nIj48YnI+PGJyPjwvdGQ+
-DQogICAgICA8L3RyPg0KICAgICAgDQogICAgCQ0KICAgICAgPHRyPg0KICAgICAgICAJPHRkIGFs
-aWduPSJjZW50ZXIiPjxpbWcgYWx0PSIiIHNyYz0iaHR0cDovL3d3dy56d2FoaWxpLmNvLnphL21h
-aWxlcnMvaGFsZi1wcmljZS8zLnBuZyI+PGJyPjxicj48L3RkPg0KICAgICAgPC90cj4NCiAgICAg
-IA0KICAgICAgDQogICAJICA8dHI+DQogICAgICAgIAk8dGQgYWxpZ249ImNlbnRlciI+PHA+PGlt
-ZyBhbHQ9IiIgc3JjPSJodHRwOi8vd3d3Lnp3YWhpbGkuY28uemEvbWFpbGVycy9oYWxmLXByaWNl
-LzQucG5nIj48YnI+PC9wPjxkaXY+PHNwYW4gc3R5bGU9ImZvbnQtZmFtaWx5OiBBcmlhbDsgZm9u
-dC1zaXplOiAxMHB0OyI+PHN0cm9uZz5UZXJtcyBhbmQgQ29uZGl0aW9ucyBhcHBseSAtJm5ic3A7
-T2ZmZXIgdmFsaWQgZnJvbSZuYnNwOyZuYnNwOzEwLTE2IEp1bmUgKHNwZWNpYWwgY29uZGl0aW9u
-cyAmIG1pbiBzdGF5IGFwcGx5IGZvciB0aGUgbG9uZyB3ZWVrLWVuZCAxMi0xNiBKdW5lKSAmIDE4
-IC0gMjEgSnVuZSwgMjYgLSAyOSBKdW5lICYgMS02IEp1bHksJm5ic3A7MTAtMTQgSnVseSAmIDIz
-LTI2IEp1bHkuLi4mbmJzcDs8L3N0cm9uZz48L3NwYW4+PHNwYW4gc3R5bGU9ImZvbnQtZmFtaWx5
-OiBBcmlhbDsgZm9udC1zaXplOiAxMHB0OyI+PHN0cm9uZz5NaW4gMiBuaWdodHMgc3RheSByZXF1
-aXJlZCBmb3IgYWxsIGRhdGVzIGFjY2VwdCBsb25nIHdlZWstZW5kIG9mIDEyLTE2IEp1bmUuJm5i
-c3A7Jm5ic3A7Jm5ic3A7PC9zdHJvbmc+PC9zcGFuPjwvZGl2PjxkaXY+Jm5ic3A7PC9kaXY+PC90
-ZD4NCiAgICAgIDwvdHI+DQogICAgICANCiAgICAgIA0KICAgICAgDQogICAJICA8dHI+DQogICAg
-ICAgIAk8dGQgYWxpZ249ImNlbnRlciI+PGltZyBhbHQ9IiIgc3JjPSJodHRwOi8vd3d3Lnp3YWhp
-bGkuY28uemEvbWFpbGVycy93ZWxsLWRlc2VydmVkLWJ1c2hicmVhay81LnBuZyIgdXNlbWFwPSIj
-TWFwTWFwIj4NCiAgICAgICAgICAgIDxtYXAgbmFtZT0iTWFwTWFwIiBpZD0iTWFwTWFwIj48YXJl
-YSBocmVmPSJodHRwOi8vaXMuZGllei5wZW5hbWFpbC5jb20vL3NlbmRsaW5rLmFzcD9IaXRJRD0x
-NDMzODQ2OTk4MDk1JlN0SUQ9NDc4OTMmU0lEPTE0Jk5JRD02ODk2MTUmRW1JRD0xMzE0OTg2MiZM
-aW5rPWFIUjBjRG92TDNkM2R5NTZkMkZvYVd4cExtTnZMbnBoTHc9PSZ0b2tlbj0yZDI3Y2Y2ZDEy
-NWMxMDE0NzdmNTc1MjZkZWMwMWYwM2VhNmEyZjZmIiBzaGFwZT0icmVjdCIgY29vcmRzPSI0OTUs
-MzQsNjUzLDQ4Ij4NCiAgICAgICAgCSAgICA8YXJlYSBocmVmPSJtYWlsdG86cmVzZXJ2YXRpb25z
-QHp3YWhpbGkuY28uemEiIHNoYXBlPSJyZWN0IiBjb29yZHM9IjE4OSwzMiw0MTQsNDgiPg0KICAg
-ICAgICA8L21hcD48L3RkPg0KICAgICAgPC90cj4gICAgICAgICAgICAgICAgIA0KICAgICAgDQog
-ICAgICAgICAgICAgDQo8L3Rib2R5PjwvdGFibGU+DQoNCiAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICA8dGFibGUgIGJnY29sb3I9IiNGRkZGRkYiICBzdHlsZT0ibWluLXdpZHRoOiAx
-MDAlOyB3aWR0aDogMTAwJSIgYm9yZGVyPSIwIiBjZWxscGFkZGluZz0iMCIgY2VsbHNwYWNpbmc9
-IjAiICB3aWR0aD0iMTAwJSI+PHRyPjx0ZD48dGFibGUgIGJnY29sb3I9IiNGRkZGRkYiIGFsaWdu
-PSJyaWdodCIgc3R5bGU9Im1pbi13aWR0aDogMTAwJTsgd2lkdGg6IDEwMCUiIGJvcmRlcj0iMCIg
-Y2VsbHBhZGRpbmc9IjAiIGNlbGxzcGFjaW5nPSIwIiAgd2lkdGg9IjEwMCUiPjx0cj48dGQ+PHRh
-YmxlIGFsaWduPSJDZW50ZXIiIGJnY29sb3I9IiNGRkZGRkYiIGJvcmRlcj0iMCIgY2VsbHBhZGRp
-bmc9IjAiIGNlbGxzcGFjaW5nPSIwIiB3aWR0aD0iMTAwJSIgc3R5bGU9IndpZHRoOjEwMCU7bWlu
-LXdpZHRoOjEwMCU7cGFnZS1icmVhay1iZWZvcmU6IGFsd2F5cztiYWNrZ3JvdW5kLWNvbG9yOiNG
-RkZGRkY7Ij48dHIgc3R5bGU9IndpZHRoOjEwMCU7Ij48dGQgd2lkdGg9IjIwIiBiZ2NvbG9yPSIj
-RkZGRkZGIiBzdHlsZT0id2lkdGg6MjBweDsiPiZuYnNwOzwvdGQ+PHRkIGFsaWduPSJDZW50ZXIi
-IHZhbGlnbj0idG9wIiAgY2xhc3M9ImZvb3RlckNvbnRlbnQiIHN0eWxlPSJ3aWR0aDo5OSU7Ij4g
-PGRpdiBpZD0iZm9vdGVyTGlua3MiIHN0eWxlPSJkaXNwbGF5OmJsb2NrICFpbXBvcnRhbnQ7IHdp
-ZHRoOjEwMCU7IG1hcmdpbi10b3A6IDEwcHgiPjxhIGhyZWY9Imh0dHA6Ly9pcy5kaWV6LnBlbmFt
-YWlsLmNvbS8vUldDb2RlL3N1YnNjcmliZS5hc3A/TW9kZT11bnN1YnNjcmliZSZTaXRlSUQ9NDc4
-OTMmU0lEPTE0JkVtYWlsPXhmc0Bvc3Muc2dpLmNvbSZoaXRpZD0xNDMzODQ2Njc2Nzk3JnRva2Vu
-PTJkMjdjZjZkMTI1YzEwMTQ3N2Y1NzUyNmRlYzAxZjAzZWE2YTJmNmYiIHRhcmdldD0ibmV3IiBj
-bGFzcz0iZm9vdGVyQ2xpY2siIHN0eWxlPSJjb2xvcjogIzMzMzMzMzsgdGV4dC1kZWNvcmF0aW9u
-OiBub25lOyBkaXNwbGF5OiBpbmxpbmUgIWltcG9ydGFudDtmb250LWZhbWlseTpUaW1lczsgZm9u
-dC1zaXplOjhweDsgY29sb3I6IzgwODA4MDsgZm9udC13ZWlnaHQ6Tm9ybWFsIj51bnN1YnNjcmli
-ZTwvYT48Zm9udCBpZD0icmVtb3ZlTWFpbiIgc3R5bGU9ImNvbG9yOiAjMzMzMzMzOyBmb250LXN0
-eWxlOiBub3JtYWw7IGRpc3BsYXk6IGlubGluZSAhaW1wb3J0YW50O2ZvbnQtZmFtaWx5OlRpbWVz
-OyBmb250LXNpemU6OHB4OyBjb2xvcjojODA4MDgwOyBmb250LXdlaWdodDpOb3JtYWwiPiB8IDwv
-Zm9udD4gPGEgaHJlZj0iaHR0cDovL2lzLmRpZXoucGVuYW1haWwuY29tLy9SV0NvZGUvc3Vic2Ny
-aWJlLmFzcD9Nb2RlPXVwZGF0ZSZTaXRlSUQ9NDc4OTMmU0lEPTE0JkVtYWlsPXhmc0Bvc3Muc2dp
-LmNvbSZoaXRpZD0xNDMzODQ2Njc2Nzk3JnRva2VuPTJkMjdjZjZkMTI1YzEwMTQ3N2Y1NzUyNmRl
-YzAxZjAzZWE2YTJmNmYiIHRhcmdldD0ibmV3IiBjbGFzcz0iZm9vdGVyQ2xpY2siIHN0eWxlPSJj
-b2xvcjogIzMzMzMzMzsgdGV4dC1kZWNvcmF0aW9uOiBub25lOyBkaXNwbGF5OiBpbmxpbmUgIWlt
-cG9ydGFudDtmb250LWZhbWlseTpUaW1lczsgZm9udC1zaXplOjhweDsgY29sb3I6IzgwODA4MDsg
-Zm9udC13ZWlnaHQ6Tm9ybWFsIj4gdXBkYXRlIHByb2ZpbGU8L2E+IDxmb250IGlkPSJyZW1vdmVN
-YWluIiBzdHlsZT0iY29sb3I6ICMzMzMzMzM7IGZvbnQtc3R5bGU6IG5vcm1hbDsgIGRpc3BsYXk6
-IGlubGluZSAhaW1wb3J0YW50O2ZvbnQtZmFtaWx5OlRpbWVzOyBmb250LXNpemU6OHB4OyBjb2xv
-cjojODA4MDgwOyBmb250LXdlaWdodDpOb3JtYWwiPiB8IDwvZm9udD4gPGEgaHJlZj0iaHR0cDov
-L2lzLmRpZXoucGVuYW1haWwuY29tLy9zaXRlL2ZvcndhcmRfdG9fZnJpZW5kLmFzcHg/U2l0ZUlE
-PTQ3ODkzJlNJRD0xNCZTZWN0aW9uPTY4OTYxNSZoaXRpZD0xNDMzODQ2Njc2Nzk3JkZyb21FbWFp
-bD14ZnNAb3NzLnNnaS5jb20mdG9rZW49MmQyN2NmNmQxMjVjMTAxNDc3ZjU3NTI2ZGVjMDFmMDNl
-YTZhMmY2ZiZFbWFpbElEPTEzMTQ5ODYyIiB0YXJnZXQ9Im5ldyIgY2xhc3M9ImZvb3RlckNsaWNr
-IiBzdHlsZT0iY29sb3I6ICMzMzMzMzM7IHRleHQtZGVjb3JhdGlvbjogbm9uZTsgZGlzcGxheTog
-aW5saW5lICFpbXBvcnRhbnQ7Zm9udC1mYW1pbHk6VGltZXM7IGZvbnQtc2l6ZTo4cHg7IGNvbG9y
-OiM4MDgwODA7IGZvbnQtd2VpZ2h0Ok5vcm1hbCI+Zm9yd2FyZDwvYT48Zm9udCBpZD0icmVtb3Zl
-TWFpbiIgc3R5bGU9ImZvbnQtc3R5bGU6IG5vcm1hbDsgZGlzcGxheTppbmxpbmUgIWltcG9ydGFu
-dDtmb250LWZhbWlseTpUaW1lczsgZm9udC1zaXplOjhweDsgY29sb3I6IzgwODA4MDsgZm9udC13
-ZWlnaHQ6Tm9ybWFsIj4gfCA8L2ZvbnQ+IDxhIGhyZWY9Imh0dHA6Ly9pcy5kaWV6LnBlbmFtYWls
-LmNvbS8vUldDb2RlL3N1YnNjcmliZS5hc3A/U2l0ZUlEPTQ3ODkzJlNJRD0xNCZFbWFpbD14ZnNA
-b3NzLnNnaS5jb20maGl0aWQ9MTQzMzg0NjY3Njc5NyZ0b2tlbj0yZDI3Y2Y2ZDEyNWMxMDE0Nzdm
-NTc1MjZkZWMwMWYwM2VhNmEyZjZmIiAgdGFyZ2V0PSJuZXciIGNsYXNzPSJmb290ZXJDbGljayIg
-c3R5bGU9ImNvbG9yOiAjMzMzMzMzO3RleHQtZGVjb3JhdGlvbjogbm9uZTsgZGlzcGxheTogaW5s
-aW5lICFpbXBvcnRhbnQ7Zm9udC1mYW1pbHk6VGltZXM7IGZvbnQtc2l6ZTo4cHg7IGNvbG9yOiM4
-MDgwODA7IGZvbnQtd2VpZ2h0Ok5vcm1hbCI+c3Vic2NyaWJlPC9hPjwvZGl2PjwvdGQ+PHRkIHdp
-ZHRoPSIyMCIgYmdjb2xvcj0iI0ZGRkZGRiIgc3R5bGU9IndpZHRoOjIwcHg7Ij4mbmJzcDs8L3Rk
-PjwvdHI+PHRyPjx0ZCB3aWR0aD0iMjAiIGJnY29sb3I9IiNGRkZGRkYiIHN0eWxlPSJ3aWR0aDoy
-MHB4OyI+Jm5ic3A7PC90ZD48dGQgYXQ9IjEiIGFsaWduPSJDZW50ZXIiIHZhbGlnbj0idG9wIiBz
-dHlsZT0iIiBjbGFzcz0iZm9vdGVyQ29udGVudCI+PHRhYmxlIGFsaWduPSJDZW50ZXIiPjx0cj48
-dGQgc3R5bGU9IkRpc3BsYXk6IGlubGluZS1ibG9jazt3aWR0aDoxMDAlIj48ZGl2IGF0PSIxIiBz
-dHlsZT0iRGlzcGxheTogaW5saW5lLWJsb2NrO3dpZHRoOjEwMCUiPjxkaXYgYXQ9IjEiIGFsaWdu
-PSdDZW50ZXInPjxhIHN0eWxlPSdkaXNwbGF5OmlubGluZS1ibG9jazsndGFyZ2V0PSJfYmxhbmsi
-IHJlbD0ibm9mb2xsb3ciIGhyZWY9Imh0dHA6Ly9pcy5kaWV6LnBlbmFtYWlsLmNvbS8vc3NwdWJs
-aXNoLmFzcHg/U0lEPTE0JlNlY3Rpb25JRD02ODk2MTUmU2l0ZUlEPTQ3ODkzJkVtYWlsSUQ9MTMx
-NDk4NjImSGl0SUQ9MTQzMzg0NjY3Njc5NyZTU0xpbmtJRD0yMSZ0b2tlbj0yZDI3Y2Y2ZDEyNWMx
-MDE0NzdmNTc1MjZkZWMwMWYwM2VhNmEyZjZmIiB0aXRsZT0iUHVibGljbHkgKzEiPjxpbWcgc3R5
-bGU9J2Rpc3BsYXk6aW5saW5lLWJsb2NrICFpbXBvcnRhbnQ7IGJvcmRlcjogbm9uZTsnIGJvcmRl
-cj0nMCcgaHNwYWNlPSc1JyB2c3BhY2U9JzUnIHNyYz0iaHR0cDovL2lzLmRpZXoucGVuYW1haWwu
-Y29tLy9pbWFnZXMvbG9nb19nb29nbGVwbHVzX3MucG5nIiB0aXRsZT0iUHVibGljbHkgKzEiIGFs
-dD0iUHVibGljbHkgKzEiIGJvcmRlcj0iMCIvPjwvYT4mbmJzcDsmbmJzcDs8YSBzdHlsZT0nZGlz
-cGxheTppbmxpbmUtYmxvY2s7J3RhcmdldD0iX2JsYW5rIiByZWw9Im5vZm9sbG93IiBocmVmPSJo
-dHRwOi8vaXMuZGllei5wZW5hbWFpbC5jb20vL3NzcHVibGlzaC5hc3B4P1NJRD0xNCZTZWN0aW9u
-SUQ9Njg5NjE1JlNpdGVJRD00Nzg5MyZFbWFpbElEPTEzMTQ5ODYyJkhpdElEPTE0MzM4NDY2NzY3
-OTcmU1NMaW5rSUQ9MyZ0b2tlbj0yZDI3Y2Y2ZDEyNWMxMDE0NzdmNTc1MjZkZWMwMWYwM2VhNmEy
-ZjZmIiB0aXRsZT0iVHdlZXQgVGhpcyI+PGltZyBzdHlsZT0nZGlzcGxheTppbmxpbmUtYmxvY2sg
-IWltcG9ydGFudDsgYm9yZGVyOiBub25lOycgYm9yZGVyPScwJyBoc3BhY2U9JzUnIHZzcGFjZT0n
-NScgc3JjPSJodHRwOi8vaXMuZGllei5wZW5hbWFpbC5jb20vL2ltYWdlcy9sb2dvX3R3aXR0ZXJf
-cy5wbmciIHRpdGxlPSJUd2VldCBUaGlzIiBhbHQ9IlR3ZWV0IFRoaXMiIGJvcmRlcj0iMCIvPjwv
-YT4mbmJzcDsmbmJzcDs8YSBzdHlsZT0nZGlzcGxheTppbmxpbmUtYmxvY2s7J3RhcmdldD0iX2Js
-YW5rIiByZWw9Im5vZm9sbG93IiBocmVmPSJodHRwOi8vaXMuZGllei5wZW5hbWFpbC5jb20vL3Nz
-cHVibGlzaC5hc3B4P1NJRD0xNCZTZWN0aW9uSUQ9Njg5NjE1JlNpdGVJRD00Nzg5MyZFbWFpbElE
-PTEzMTQ5ODYyJkhpdElEPTE0MzM4NDY2NzY3OTcmU1NMaW5rSUQ9MSZ0b2tlbj0yZDI3Y2Y2ZDEy
-NWMxMDE0NzdmNTc1MjZkZWMwMWYwM2VhNmEyZjZmIiB0aXRsZT0iRmFjZWJvb2siPjxpbWcgc3R5
-bGU9J2Rpc3BsYXk6aW5saW5lLWJsb2NrICFpbXBvcnRhbnQ7IGJvcmRlcjogbm9uZTsnIGJvcmRl
-cj0nMCcgaHNwYWNlPSc1JyB2c3BhY2U9JzUnIHNyYz0iaHR0cDovL2lzLmRpZXoucGVuYW1haWwu
-Y29tLy9pbWFnZXMvbG9nb19mYWNlYm9va19zLnBuZyIgdGl0bGU9IkZhY2Vib29rIiBhbHQ9IkZh
-Y2Vib29rIiBib3JkZXI9IjAiLz48L2E+Jm5ic3A7Jm5ic3A7PGEgc3R5bGU9J2Rpc3BsYXk6aW5s
-aW5lLWJsb2NrOyd0YXJnZXQ9Il9ibGFuayIgcmVsPSJub2ZvbGxvdyIgaHJlZj0iaHR0cDovL2lz
-LmRpZXoucGVuYW1haWwuY29tLy9zc3B1Ymxpc2guYXNweD9TSUQ9MTQmU2VjdGlvbklEPTY4OTYx
-NSZTaXRlSUQ9NDc4OTMmRW1haWxJRD0xMzE0OTg2MiZIaXRJRD0xNDMzODQ2Njc2Nzk3JlNTTGlu
-a0lEPTIwJnRva2VuPTJkMjdjZjZkMTI1YzEwMTQ3N2Y1NzUyNmRlYzAxZjAzZWE2YTJmNmYiIHRp
-dGxlPSJsaW5rZWRpbiI+PGltZyBzdHlsZT0nZGlzcGxheTppbmxpbmUtYmxvY2sgIWltcG9ydGFu
-dDsgYm9yZGVyOiBub25lOycgYm9yZGVyPScwJyBoc3BhY2U9JzUnIHZzcGFjZT0nNScgc3JjPSJo
-dHRwOi8vaXMuZGllei5wZW5hbWFpbC5jb20vL2ltYWdlcy9sb2dvX2xpbmtlZGluX3MucG5nIiB0
-aXRsZT0iTGlua2VkSU4iIGFsdD0iTGlua2VkSW4iIGJvcmRlcj0iMCIvPjwvYT4mbmJzcDsmbmJz
-cDs8YSBzdHlsZT0nZGlzcGxheTppbmxpbmUtYmxvY2s7J3RhcmdldD0iX2JsYW5rIiByZWw9Im5v
-Zm9sbG93IiBocmVmPSJodHRwOi8vaXMuZGllei5wZW5hbWFpbC5jb20vL3NzcHVibGlzaC5hc3B4
-P1NJRD0xNCZTZWN0aW9uSUQ9Njg5NjE1JlNpdGVJRD00Nzg5MyZFbWFpbElEPTEzMTQ5ODYyJkhp
-dElEPTE0MzM4NDY2NzY3OTcmU1NMaW5rSUQ9MjImdG9rZW49MmQyN2NmNmQxMjVjMTAxNDc3ZjU3
-NTI2ZGVjMDFmMDNlYTZhMmY2ZiIgdGl0bGU9InBpbnRlcmVzdCI+PGltZyBzdHlsZT0nZGlzcGxh
-eTppbmxpbmUtYmxvY2sgIWltcG9ydGFudDsgYm9yZGVyOiBub25lOycgYm9yZGVyPScwJyBoc3Bh
-Y2U9JzUnIHZzcGFjZT0nNScgc3JjPSJodHRwOi8vaXMuZGllei5wZW5hbWFpbC5jb20vL2ltYWdl
-cy9sb2dvX3BpbnRlcmVzdF9zLnBuZyIgdGl0bGU9IlBpbnRlcmVzdCIgYWx0PSJQaW50ZXJlc3Qi
-IGJvcmRlcj0iMCIvPjwvYT4mbmJzcDsmbmJzcDs8L2Rpdj48L2RpdiA+PC90ZCA+PC90cj48L3Rh
-YmxlPjwvdGQ+PHRkIHdpZHRoPSIyMCIgYmdjb2xvcj0iI0ZGRkZGRiIgc3R5bGU9IndpZHRoOjIw
-cHg7Ij4mbmJzcDs8L3RkPjwvdHI+PHRyPjx0ZCB3aWR0aD0iMjAiIGJnY29sb3I9IiNGRkZGRkYi
-IHN0eWxlPSJ3aWR0aDoyMHB4OyI+Jm5ic3A7PC90ZD48dGQgYWxpZ249IkNlbnRlciIgdmFsaWdu
-PSJ0b3AiIGNsYXNzPSJhZGRyZXNzQm9va0NvcHkiIHN0eWxlPSJkaXNwbGF5OiBibG9jayAhaW1w
-b3J0YW50O2ZvbnQtZmFtaWx5OlRpbWVzOyBmb250LXNpemU6OHB4OyBjb2xvcjojODA4MDgwOyBm
-b250LXdlaWdodDpOb3JtYWw7Ij48Zm9udCBzdHlsZT0iZm9udC1mYW1pbHk6VGltZXM7IGZvbnQt
-c2l6ZTo4cHg7IGNvbG9yOiM4MDgwODA7IGZvbnQtd2VpZ2h0Ok5vcm1hbCI+VGhpcyBlbWFpbCB3
-YXMgc2VudCB0byAgPGEgaHJlZj0iIyIgc3R5bGU9InRleHQtZGVjb3JhdGlvbjogbm9uZTtmb250
-LWZhbWlseTpUaW1lczsgZm9udC1zaXplOjhweDsgY29sb3I6IzgwODA4MDsgZm9udC13ZWlnaHQ6
-Tm9ybWFsIj4geGZzQG9zcy5zZ2kuY29tIDwvYT4gYnkgIDxhIGhyZWY9IiMiIHN0eWxlPSJ0ZXh0
-LWRlY29yYXRpb246IG5vbmU7Zm9udC1mYW1pbHk6VGltZXM7IGZvbnQtc2l6ZTo4cHg7IGNvbG9y
-OiM4MDgwODA7IGZvbnQtd2VpZ2h0Ok5vcm1hbCI+cmVzZXJ2YXRpb25zQGJ1c2h2ZWxkdHNhZmFy
-aS5jb208L2E+PC9mb250PjwvdGQ+PHRkIHdpZHRoPSIyMCIgYmdjb2xvcj0iI0ZGRkZGRiIgc3R5
-bGU9IndpZHRoOjIwcHg7Ij4mbmJzcDs8L3RkPjwvdHI+PHRyPjx0ZCB3aWR0aD0iMjAiIGJnY29s
-b3I9IiNGRkZGRkYiIHN0eWxlPSJ3aWR0aDoyMHB4OyI+Jm5ic3A7PC90ZD48dGQgYWxpZ249IkNl
-bnRlciIgdmFsaWduPSJ0b3AiIGNsYXNzPSJhZGRyZXNzQm9va0NvcHkiIHN0eWxlPSJkaXNwbGF5
-OiBibG9jayAhaW1wb3J0YW50O2ZvbnQtZmFtaWx5OlRpbWVzOyBmb250LXNpemU6OHB4OyBjb2xv
-cjojODA4MDgwOyBmb250LXdlaWdodDpOb3JtYWw7Ij48Zm9udCBzdHlsZT0iZm9udC1mYW1pbHk6
-VGltZXM7IGZvbnQtc2l6ZTo4cHg7IGNvbG9yOiM4MDgwODA7IGZvbnQtd2VpZ2h0Ok5vcm1hbCI+
-MTU0IEVkd2FyZCBBdmVudWUsJm5ic3A7Q2VudHVyaW9uLCZuYnNwOzAxNTcsJm5ic3A7U291dGgg
-QWZyaWNhPC9mb250PjwvdGQ+PHRkIHdpZHRoPSIyMCIgYmdjb2xvcj0iI0ZGRkZGRiIgc3R5bGU9
-IndpZHRoOjIwcHg7Ij4mbmJzcDs8L3RkPjwvdHI+PHRyPjx0ZCB3aWR0aD0iMjAiIGJnY29sb3I9
-IiNGRkZGRkYiIHN0eWxlPSJ3aWR0aDoyMHB4OyI+Jm5ic3A7PC90ZD48dGQgYWxpZ249IkNlbnRl
-ciIgdmFsaWduPSJ0b3AiIGNsYXNzPSJhZGRyZXNzQm9va0NvcHkiIHN0eWxlPSJkaXNwbGF5OiBi
-bG9jayAhaW1wb3J0YW50O2ZvbnQtZmFtaWx5OlRpbWVzOyBmb250LXNpemU6OHB4OyBjb2xvcjoj
-ODA4MDgwOyBmb250LXdlaWdodDpOb3JtYWwiPjxmb250IHN0eWxlPSJmb250LWZhbWlseTpUaW1l
-czsgZm9udC1zaXplOjhweDsgY29sb3I6IzgwODA4MDsgZm9udC13ZWlnaHQ6Tm9ybWFsIj5JIGRp
-ZCBub3QgZ2l2ZSBteSBwZXJtaXNzaW9uIHRvIHRoaXMgc2VuZGVyPGEgaHJlZj0iaHR0cDovL2lz
-LmRpZXoucGVuYW1haWwuY29tLy9zaXRlL3JlcG9ydGFidXNlLmFzcHg/c3RpZD00Nzg5MyZoaXRp
-ZD0xNDMzODQ2Njc2Nzk3JnNlYz02ODk2MTUmZW1haWw9eGZzQG9zcy5zZ2kuY29tJkVtSUQ9MTMx
-NDk4NjImU0lEPTE0JnRva2VuPTJkMjdjZjZkMTI1YzEwMTQ3N2Y1NzUyNmRlYzAxZjAzZWE2YTJm
-NmYiICBzdHlsZT0ndGV4dC1kZWNvcmF0aW9uOm5vbmUnID48Zm9udCBzdHlsZT0iZm9udC1mYW1p
-bHk6VGltZXM7IGZvbnQtc2l6ZTo4cHg7IGNvbG9yOiM4MDgwODA7IGZvbnQtd2VpZ2h0Ok5vcm1h
-bCI+IGNsaWNrIGhlcmUgdG8gcmVwb3J0LjwvYT48L2ZvbnQ+PC9mb250PjwvdGQ+PHRkIHdpZHRo
-PSIyMCIgYmdjb2xvcj0iI0ZGRkZGRiIgc3R5bGU9IndpZHRoOjIwcHg7Ij4mbmJzcDs8L3RkPjwv
-dHI+PHRyIHdpZHRoPSIxMDAiIGhlaWdodD0iMTVweCI+PHRkIHdpZHRoPSIyMCIgYmdjb2xvcj0i
-I0ZGRkZGRiIgc3R5bGU9IndpZHRoOjIwcHg7Ij4mbmJzcDs8L3RkPjx0ZCBhbGlnbj0iQ2VudGVy
-IiB2YWxpZ249InRvcCIgY2xhc3M9ImFkZHJlc3NCb29rQ29weSIgc3R5bGU9ImRpc3BsYXk6IGJs
-b2NrICFpbXBvcnRhbnQ7Zm9udC1mYW1pbHk6VGltZXM7IGZvbnQtc2l6ZTo4cHg7IGNvbG9yOiM4
-MDgwODA7IGZvbnQtd2VpZ2h0Ok5vcm1hbCFpbXBvcnRhbnQ7Ij48Zm9udCBzdHlsZT0iZm9udC1m
-YW1pbHk6VGltZXM7IGZvbnQtc2l6ZTo4cHg7IGNvbG9yOiM4MDgwODA7IGZvbnQtd2VpZ2h0Ok5v
-cm1hbCI+PGEgaHJlZj0iaHR0cDovL2lzLmRpZXoucGVuYW1haWwuY29tLy9ob21lL3IuYXNwP1NJ
-RD0xNTY4Jkc9MiIgdGFyZ2V0PSJuZXciIHN0eWxlPSJmb250LWZhbWlseTpUaW1lczsgZm9udC1z
-aXplOjhweDsgY29sb3I6IzgwODA4MDsgZm9udC13ZWlnaHQ6Tm9ybWFsIj48aW1nICB2c3BhY2U9
-IjUiIHN0eWxlPSJ2ZXJ0aWNhbC1hbGlnbjp0b3A7IHdpZHRoOiBhdXRvICFpbXBvcnRhbnQ7IGhl
-aWdodDogYXV0byAhaW1wb3J0YW50OyIgc3JjPSJodHRwOi8vaXMuZGllei5wZW5hbWFpbC5jb20v
-Ly9pbWFnZXMvZ3JhcGhpY21haWxjb3phL3phXzI0X2dtX3Bvd2VyZWRieV9sb2dvLmdpZj9TSUQ9
-MTU2OCIgYWx0PSJodHRwOi8vaXMuZGllei5wZW5hbWFpbC5jb20vL2hvbWUvci5hc3A/U0lEPTE1
-NjgmRz0yIiBib3JkZXI9IjAiPjwvYT48L3RkPjx0ZCB3aWR0aD0iMjAiIGJnY29sb3I9IiNGRkZG
-RkYiIHN0eWxlPSJ3aWR0aDoyMHB4OyI+Jm5ic3A7PC90ZD48L3RyPjx0ZCB3aWR0aD0iMjAiIGJn
-Y29sb3I9IiNGRkZGRkYiIHN0eWxlPSJ3aWR0aDoyMHB4OyI+Jm5ic3A7PC90ZD48dHIgaGVpZ2h0
-PScyJyBzdHlsZT0iaGVpZ2h0PTUiPjx0ZD4mbmJzcDs8L3RkPjx0ZD4mbmJzcDs8L3RkPjwvdHI+
-PHRkIHdpZHRoPSIyMCIgYmdjb2xvcj0iI0ZGRkZGRiIgc3R5bGU9IndpZHRoOjIwcHg7Ij4mbmJz
-cDs8L3RkPjwvdGFibGU+PC90ZD48L3RyPjwvdGFibGU+PC90ZD48L3RyPjwvdGFibGU+PHN0eWxl
-IHR5cGU9InRleHQvY3NzIj4jb3V0bG9vayBhe3BhZGRpbmc6IDA7fS5SZWFkTXNnQm9keXt3aWR0
-aDogMTAwJTt9LkV4dGVybmFsQ2xhc3N7d2lkdGg6IDEwMCU7fWJvZHl7bWFyZ2luOiAwO3BhZGRp
-bmc6IDA7fWltZ3tib3JkZXI6IDA7bGluZS1oZWlnaHQ6IDEwMCU7IG91dGxpbmU6IG5vbmU7dGV4
-dC1kZWNvcmF0aW9uOiBub25lO310YWJsZSwgdGR7bXNvLXRhYmxlLWxzcGFjZTogMHB0O21zby10
-YWJsZS1yc3BhY2U6IDBwdDt9IHRhYmxlLCB0ZC5hZGRyZXNzQm9va0NvcHl7cGFkZGluZzogMDt9
-ICNib2R5VGFibGUsICNib2R5Q2VsbHtoZWlnaHQ6IDEwMCUgIWltcG9ydGFudDttYXJnaW46IDA7
-cGFkZGluZzogMDt3aWR0aDogMTAwJSAhaW1wb3J0YW50O30jYm9keUNlbGx7cGFkZGluZy10b3A6
-IDA7cGFkZGluZy1yaWdodDogMjBweDtwYWRkaW5nLWJvdHRvbTogMjBweDtwYWRkaW5nLWxlZnQ6
-IDIwcHg7fSN0ZW1wbGF0ZUNvbnRhaW5lcnt3aWR0aDogMTAwJTt9LypAdGFiIFBhZ2VAc2VjdGlv
-biBiYWNrZ3JvdW5kIGNvbG9yQHRpcCBTZXQgdGhlIGJhY2tncm91bmQgY29sb3IgZm9yIHlvdXIg
-ZW1haWwuIFlvdSBtYXkgd2FudCB0byBjaG9vc2UgYSBjb2xvciB0aGF0IG1hdGNoZXMgeW91ciBj
-b21wYW55J3MgYnJhbmRpbmcuQHRoZW1lIHBhZ2UqL2JvZHksICNib2R5VGFibGV7LypAZWRpdGFi
-bGUqL2JhY2tncm91bmQtY29sb3I6ICNmZmZmZmY7fXRhYmxlI2Zvb3Rlckxpbmtze2ZvbnQtc2l6
-ZTogMTRweDt3aWR0aDogMTAwJTt0ZXh0LWFsaWduOiBjZW50ZXI7fXRhYmxlI2Zvb3Rlckxpbmtz
-IHRkLCBhLmZvb3RlckNsaWNre2NvbG9yOiAjMzMzMzMzO310YWJsZSNmb290ZXJMaW5rcyB0ZHtw
-YWRkaW5nLXRvcDogMTBweDtjb2xvcjogIzMzMzMzMztwYWRkaW5nLWJvdHRvbTogMTBweDt9ICBA
-bWVkaWEgb25seSBzY3JlZW4gYW5kIChtYXgtd2lkdGg6IDQ4MHB4KXtib2R5LCB0YWJsZSwgdGQs
-IHAsIGEsIGxpLCBibG9ja3F1b3Rley13ZWJraXQtdGV4dC1zaXplLWFkanVzdDogbm9uZSAhaW1w
-b3J0YW50O30gIGJvZHl7d2lkdGg6IGF1dG8gIWltcG9ydGFudDt9IHRkW2lkPWJvZHlDZWxsXXtw
-YWRkaW5nOiAxMHB4O30gLypAdGFiIE1vYmlsZSBTdHlsZXNAc2VjdGlvbiB0ZW1wbGF0ZSB3aWR0
-aEB0aXAgTWFrZSB0aGUgdGVtcGxhdGUgZmx1aWQgZm9yIHBvcnRyYWl0IG9yIGxhbmRzY2FwZSB2
-aWV3IGFkYXB0YWJpbGl0eS4gSWYgYSBmbHVpZCBsYXlvdXQgZG9lc24ndCB3b3JrLCBzZXQgd2lk
-dGggdG8gMzAwcHggaW5zdGVhZC4qLyAgICB0YWJsZVtpZD10ZW1wbGF0ZUNvbnRhaW5lcl17LypA
-dGFiIE1vYmlsZSBTdHlsZXNAc2VjdGlvbiB0ZW1wbGF0ZSB3aWR0aEB0aXAgTWFrZSB0aGUgdGVt
-cGxhdGUgZmx1aWQgZm9yIHBvcnRyYWl0IG9yIGxhbmRzY2FwZSB2aWV3IGFkYXB0YWJpbGl0eS4g
-SWYgYSBmbHVpZCBsYXlvdXQgZG9lc24ndCB3b3JrLCBzZXQgd2lkdGggdG8gMzAwcHggaW5zdGVh
-ZC4qL21heC13aWR0aDogNjAwcHggIWltcG9ydGFudDsgLypAZWRpdGFibGUqL3dpZHRoOiAxMDAl
-ICFpbXBvcnRhbnQ7fSAvKkB0YWIgTW9iaWxlIFN0eWxlc0BzZWN0aW9uIGhlYWRpbmcgMUB0aXAg
-TWFrZSB0aGUgZmlyc3QtbGV2ZWwgaGVhZGluZ3MgbGFyZ2VyIGluIHNpemUgZm9yIGJldHRlciBy
-ZWFkYWJpbGl0eSBvbiBzbWFsbCBzY3JlZW5zLiovICAgIGgxey8qQGVkaXRhYmxlKi9mb250LXNp
-emU6IDM2cHggIWltcG9ydGFudDsgLypAZWRpdGFibGUqL2xpbmUtaGVpZ2h0OiAxMDAlICFpbXBv
-cnRhbnQ7fSAvKkB0YWIgTW9iaWxlIFN0eWxlc0BzZWN0aW9uIGhlYWRpbmcgMkB0aXAgTWFrZSB0
-aGUgc2Vjb25kLWxldmVsIGhlYWRpbmdzIGxhcmdlciBpbiBzaXplIGZvciBiZXR0ZXIgcmVhZGFi
-aWxpdHkgb24gc21hbGwgc2NyZWVucy4qLyAgICBoMnsvKkBlZGl0YWJsZSovZm9udC1zaXplOiAy
-MHB4ICFpbXBvcnRhbnQ7IC8qQGVkaXRhYmxlKi9saW5lLWhlaWdodDogMTAwJSAhaW1wb3J0YW50
-O30gLypAdGFiIE1vYmlsZSBTdHlsZXNAc2VjdGlvbiBoZWFkaW5nIDNAdGlwIE1ha2UgdGhlIHRo
-aXJkLWxldmVsIGhlYWRpbmdzIGxhcmdlciBpbiBzaXplIGZvciBiZXR0ZXIgcmVhZGFiaWxpdHkg
-b24gc21hbGwgc2NyZWVucy4qLyAgICBoM3svKkBlZGl0YWJsZSovZm9udC1zaXplOiAxOHB4ICFp
-bXBvcnRhbnQ7IC8qQGVkaXRhYmxlKi9saW5lLWhlaWdodDogMTAwJSAhaW1wb3J0YW50O30gLypA
-dGFiIE1vYmlsZSBTdHlsZXNAc2VjdGlvbiBoZWFkaW5nIDRAdGlwIE1ha2UgdGhlIGZvdXJ0aC1s
-ZXZlbCBoZWFkaW5ncyBsYXJnZXIgaW4gc2l6ZSBmb3IgYmV0dGVyIHJlYWRhYmlsaXR5IG9uIHNt
-YWxsIHNjcmVlbnMuKi8gICAgaDR7LypAZWRpdGFibGUqL2ZvbnQtc2l6ZTogMTRweCAhaW1wb3J0
-YW50OyAvKkBlZGl0YWJsZSovbGluZS1oZWlnaHQ6IDEwMCUgIWltcG9ydGFudDt9IHRhYmxlW2lk
-PXRlbXBsYXRlUHJlaGVhZGVyXXtkaXNwbGF5OiBub25lICFpbXBvcnRhbnQ7fSBmb250W2lkPXJl
-bW92ZU1haW5de2Rpc3BsYXk6IG5vbmUgIWltcG9ydGFudDt0ZXh0LWRlY29yYXRpb246IG5vbmU7
-fSB0YWJsZVtpZD10ZW1wbGF0ZUhlYWRlcl17d2lkdGg6IDEwMCUgIWltcG9ydGFudDtwYWRkaW5n
-OiA1cHg7fSAvKkB0YWIgTW9iaWxlIFN0eWxlc0BzZWN0aW9uIGhlYWRlciB0ZXh0QHRpcCBNYWtl
-IHRoZSBoZWFkZXIgY29udGVudCB0ZXh0IGxhcmdlciBpbiBzaXplIGZvciBiZXR0ZXIgcmVhZGFi
-aWxpdHkgb24gc21hbGwgc2NyZWVucy4qLyAgICB0ZFtjbGFzcz1oZWFkZXJDb250ZW50XXsvKkBl
-ZGl0YWJsZSovZm9udC1zaXplOiAxOHB4ICFpbXBvcnRhbnQ7IC8qQGVkaXRhYmxlKi9saW5lLWhl
-aWdodDogMTI1JSAhaW1wb3J0YW50O30gLypAdGFiIE1vYmlsZSBTdHlsZXNAc2VjdGlvbiBib2R5
-IHRleHRAdGlwIE1ha2UgdGhlIGJvZHkgY29udGVudCB0ZXh0IGxhcmdlciBpbiBzaXplIGZvciBi
-ZXR0ZXIgcmVhZGFiaWxpdHkgb24gc21hbGwgc2NyZWVucy4qLyAgICB0ZFtjbGFzcz1ib2R5Q29u
-dGVudF17LypAZWRpdGFibGUqL2ZvbnQtc2l6ZTogMThweCAhaW1wb3J0YW50OyAvKkBlZGl0YWJs
-ZSovbGluZS1oZWlnaHQ6IDEyNSUgIWltcG9ydGFudDt9IC8qQHRhYiBNb2JpbGUgU3R5bGVzQHNl
-Y3Rpb24gZm9vdGVyIHRleHRAdGlwIE1ha2UgdGhlIGZvb3RlciBjb250ZW50IHRleHQgbGFyZ2Vy
-IGluIHNpemUgZm9yIGJldHRlciByZWFkYWJpbGl0eSBvbiBzbWFsbCBzY3JlZW5zLiovICAgIHRk
-W2NsYXNzPWNdey8qQGVkaXRhYmxlKi9mb250LXNpemU6IDE0cHggIWltcG9ydGFudDsgLypAZWRp
-dGFibGUqL2xpbmUtaGVpZ2h0OiAxNTAlICFpbXBvcnRhbnQ7fSB0ZFtjbGFzcz1mb290ZXJDb250
-ZW50XSBhe2Rpc3BsYXk6IGlubGluZS1ibG9jayAhaW1wb3J0YW50OyB9fSBzcGFuLnlzaG9ydGN1
-dHMge2NvbG9yOiMwMDB9IHNwYW4ueXNob3J0Y3V0czpob3ZlciwgIHNwYW4ueXNob3J0Y3V0czph
-Y3RpdmUsIHNwYW4ueXNob3J0Y3V0czpmb2N1cyB7dGV4dC1kZWNvcmF0aW9uOm5vbmU7IGNvbG9y
-OiMwMDA7IGJhY2tncm91bmQtY29sb3I6bm9uZTsgYm9yZGVyOm5vbmV9ICAgKltyb2xlfD0ibWFp
-biJde3BhZGRpbmc6MHB4ICFpbXBvcnRhbnQ7d2lkdGg6MTAwJSAhaW1wb3J0YW50O21hcmdpbjow
-cHggIWltcG9ydGFudDt9Lm1zZy1ib2R5IGlubmVye3dpZHRoOjEwMCUgIWltcG9ydGFudDsgcGFk
-ZGluZzowcHggIWltcG9ydGFudDttYXJnaW46MHB4ICFpbXBvcnRhbnQ7IGxlZnQ6MHB4ICFpbXBv
-cnRhbnQ7fS5tc2ctYm9keSB7d2lkdGg6MTAwJSAhaW1wb3J0YW50OyBwYWRkaW5nOjBweCAhaW1w
-b3J0YW50O21hcmdpbjowcHggIWltcG9ydGFudDsgbGVmdDowcHg7ICFpbXBvcnRhbnR9LmlubmVy
-e3dpZHRoOjEwMCUgIWltcG9ydGFudDsgcGFkZGluZzowcHggIWltcG9ydGFudCA7bWFyZ2luOjBw
-eCAhaW1wb3J0YW50OyBsZWZ0OjBweCAhaW1wb3J0YW50OyB9IDwvc3R5bGU+PC9ib2R5PjwvaHRt
-bD4=
+--b1_756b559da13fa48e6da1fee0089a5196
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+X-MIME-Autoconverted: from 8bit to quoted-printable by userv0022.oracle.com id t592SAPq024486
+
+Kra=C5=A1to tinklara=C5=A1tis=20
+
+ 		=C2=A0
+
+ 		=C2=A0
+
+ 		=C2=A0
+
+Kra=C5=A1to tinklara=C5=A1=C4=8Diai buvo sukurti su TIKSLU - kad =C5=BEmo=
+n=C4=97s, =C4=AFmon=C4=97s, =C5=A1vietimo =C4=AFstaigos, b=C5=ABreliai, p=
+rofesin=C4=97s s=C4=85jungos ir visi norintys tur=C4=97t=C5=B3 KUR =C4=AF=
+kelti savo mintis, id=C4=97jas, straipsnius, samprotavimus, prane=C5=A1im=
+us spaudai, =C4=AFmon=C4=97s naujienas, renginius, kuriais nori pasidalin=
+ti su visuomene. Ir, kad tai gal=C4=97t=C5=B3 daryti NEMOKAMAI.
+
+ Kontaktai pastaboms, informacijai bei registracijai
+Tel. 8=C2=A0672 29398
+Darbo laikas I =E2=80=93 VII nuo 8:00 iki 20:00 val.=20
+ 		=C2=A0
+
+ 		=C2=A0
+
+ 		 [http://vilniaustiesa.lt/mymail/715/cf0fd1655d06777f9a20a3b35c1cb26b/=
+aHR0cDovL3d3dy52aWxuaWF1c3RpZXNhLmx0]=20
+
+ 		=C2=A0
+
+ 		=C2=A0
+
+ 		 [http://vilniaustiesa.lt/mymail/715/cf0fd1655d06777f9a20a3b35c1cb26b/=
+aHR0cDovL3d3dy5rYXVub3RpZXNhLmx0]=20
+
+ 		=C2=A0
+
+ 		=C2=A0
+
+ 		 [http://vilniaustiesa.lt/mymail/715/cf0fd1655d06777f9a20a3b35c1cb26b/=
+aHR0cDovL3d3dy5rbGFpcGVkb3N0aWVzYS5sdA]=20
+
+ 		=C2=A0
+
+ 		=C2=A0
+
+ 		 [http://vilniaustiesa.lt/mymail/715/cf0fd1655d06777f9a20a3b35c1cb26b/=
+aHR0cDovL3d3dy5zaWF1bGl1dGllc2EubHQ]=20
+
+ 		=C2=A0
+
+ 		=C2=A0
+
+ 		 [http://vilniaustiesa.lt/mymail/715/cf0fd1655d06777f9a20a3b35c1cb26b/=
+aHR0cDovL3d3dy5wYW5ldmV6aW9uYXVqaWVub3MubHQ]=20
+
+ 		=C2=A0
+
+ 		=C2=A0
+
+ 		 [http://vilniaustiesa.lt/mymail/715/cf0fd1655d06777f9a20a3b35c1cb26b/=
+aHR0cDovL3d3dy5hbHl0YXVzdGllc2EubHQ]=20
+
+ 		=C2=A0
+
+ 		=C2=A0
+
+ 		 [http://vilniaustiesa.lt/mymail/715/cf0fd1655d06777f9a20a3b35c1cb26b/=
+aHR0cDovL3d3dy5tYXJpamFtcG9sZXN0aWVzYS5sdA]=20
+
+ 		=C2=A0
+
+ 		=C2=A0
+
+ 		=C2=A0
 
 
---===============1865441483410909944==
+--b1_756b559da13fa48e6da1fee0089a5196
+Content-Type: text/html; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+X-MIME-Autoconverted: from 8bit to quoted-printable by userv0022.oracle.com id t592SAPq024486
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.o=
+rg/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns=3D"http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv=3D"Content-Type" content=3D"text/html; charset=3Dutf-8">
+<meta name=3D"viewport" content=3D"width=3Ddevice-width">
+<title>Kra=C5=A1to tinklara=C5=A1tis</title>
+</head>
+<body style=3D"width:100% !important;-webkit-text-size-adjust:100%;-ms-te=
+xt-size-adjust:100%;margin:0;padding:0;background-color:#F3F4F4">
+<style type=3D"text/css">
+	#outlook a{padding:0;}
+	body{width:100% !important;-webkit-text-size-adjust:100%;-ms-text-size-a=
+djust:100%;margin:0;padding:0;}
+	.ExternalClass{width:100%;}
+	.ExternalClass,.ExternalClass p,.ExternalClass span,.ExternalClass font,=
+.ExternalClass td,.ExternalClass div{line-height:100%;}
+	.bodytbl{margin:0;padding:0;width:100% !important;}
+	img{outline:none;text-decoration:none;-ms-interpolation-mode:bicubic;dis=
+play:block;max-width:100%;}
+	a img{border:none;}
+	p{margin:1em 0;}
+=09
+	table{border-collapse:collapse;mso-table-lspace:0pt;mso-table-rspace:0pt=
+;}
+	table td{border-collapse:collapse;}
+	.o-fix table,.o-fix td{mso-table-lspace:0pt;mso-table-rspace:0pt;}
+=09
+	body,.bodytbl{background-color:#F3F4F4/*Background Color*/;}
+	table{font-family:Helvetica,Arial,sans-serif;font-size:12px;color:#58585=
+8;}
+	td,p{line-height:24px;color:#585858/*Text*/;}
+	td,tr{padding:0;}
+	ul,ol{margin-top:24px;margin-bottom:24px;}
+	li{line-height:24px;}
+=09
+	a{color:#5ca8cd/*Contrast*/;text-decoration:none;padding:2px 0px;}
+	a:link{color:#5ca8cd;}
+	a:visited{color:#5ca8cd;}
+	a:hover{color:#5ca8cd;}
+=09
+	.h1{font-family:Helvetica,Arial,sans-serif;font-size:26px;letter-spacing=
+:-1px;margin-bottom:16px;margin-top:2px;line-height:30px;}
+	.h2{font-family:Helvetica,Arial,sans-serif;font-size:20px;letter-spacing=
+:0;margin-top:2px;line-height:30px;}
+	h1,h2,h3,h4,h5,h6{font-family:Helvetica,Arial,sans-serif;font-weight:nor=
+mal;}
+	h1{font-size:20px;letter-spacing:-1px;margin-bottom:16px;margin-top:4px;=
+line-height:24px;}
+	h2{font-size:18px;margin-bottom:12px;margin-top:2px;line-height:24px;}
+	h3{font-size:14px;margin-bottom:12px;margin-top:2px;line-height:24px;}
+	h4{font-size:14px;font-weight:bold;}
+	h5{font-size:12px;}
+	h6{font-size:12px;font-weight:bold;}
+	h1 a,h2 a,h3 a,h4 a,h5 a,h6 a{color:#5ca8cd;}
+	h1 a:active,h2 a:active,h3 a:active,h4 a:active,h5 a:active,h6 a:active{=
+color:#5ca8cd !important;}
+	h1 a:visited,h2 a:visited,h3 a:visited,h4 a:visited,h5 a:visited,h6 a:vi=
+sited{color:#5ca8cd !important;}
+=09
+	.wrap.header{border-top:1px solid #FEFEFE/*Content Border*/;}
+	.wrap.footer{border-bottom:1px solid #FEFEFE;}
+	.wrap.body,.wrap.header,.wrap.footer{background-color:#FFFFFF/*Body Back=
+ground*/;border-right:1px solid #FEFEFE;border-left:1px solid #FEFEFE;}
+	.padd{width:24px;}
+=09
+	.small{font-size:11px;line-height:18px;}
+	.separator{border-top:1px dotted #E1E1E1/*Separator Line*/;}
+	.btn{margin-top:10px;display:block;}
+	.btn img{display:inline;}
+	.subline{line-height:18px;font-size:16px;letter-spacing:-1px;}
+	table.textbutton td{background:#efefef/*Text Button Background*/;padding=
+:1px 14px 4px 14px;color:#585858;display:block;height:22px;border:1px sol=
+id #FEFEFE;vertical-align:top;}
+	table.textbutton a{color:#585858;font-size:13px;font-weight:normal;line-=
+height:22px;width:100%;display:inline-block;}
+	div.preheader{line-height:0px;font-size:0px;height:0px;display:none !imp=
+ortant;display:none;visibility:hidden;}
+=09
+	@media only screen and (max-device-width: 480px) {
+		body{-webkit-text-size-adjust:120% !important;-ms-text-size-adjust:120%=
+ !important;}
+		table[class=3Dbodytbl] .subline{float:left;}
+		table[class=3Dbodytbl] .padd{width:12px !important;}
+		table[class=3Dbodytbl] .wrap{width:470px !important;}
+		table[class=3Dbodytbl] .wrap table{width:100% !important;}
+		table[class=3Dbodytbl] .wrap img{max-width:100% !important;height:auto =
+!important;}
+		table[class=3Dbodytbl] .wrap .m-100{width:100% !important;}
+		table[class=3Dbodytbl] .m-0{width:0;display:none;}
+		table[class=3Dbodytbl] .m-b{display:block;width:100% !important;}
+		table[class=3Dbodytbl] .m-b-b{margin-bottom:24px !important;}
+		table[class=3Dbodytbl] .m-1-2{max-width:264px !important;}
+		table[class=3Dbodytbl] .m-1-3{max-width:168px !important;}
+		table[class=3Dbodytbl] .m-1-4{max-width:120px !important;}
+		table[class=3Dbodytbl] .m-1-2 img{max-width:264px !important;}
+		table[class=3Dbodytbl] .m-1-3 img{max-width:168px !important;}
+		table[class=3Dbodytbl] .m-1-4 img{max-width:120px !important;}
+	}
+=09
+	@media only screen and (max-device-width: 320px) {
+		table[class=3Dbodytbl] .wrap{width:310px !important;}
+	}
+=09
+</style>
+<table class=3D"bodytbl" width=3D"100%" cellspacing=3D"0" cellpadding=3D"=
+0" style=3D"border-collapse:collapse;mso-table-lspace:0pt;mso-table-rspac=
+e:0pt;font-family:Helvetica,Arial,sans-serif;font-size:12px;color:#585858=
+;margin:0;padding:0;width:100% !important;background-color:#F3F4F4"><tbod=
+y><tr style=3D"padding:0">
+<td background=3D"" align=3D"center" style=3D"padding:0;line-height:24px;=
+color:#585858;border-collapse:collapse">
+=09
+		<table width=3D"600" cellspacing=3D"0" cellpadding=3D"0" class=3D"wrap"=
+ style=3D"border-collapse:collapse;mso-table-lspace:0pt;mso-table-rspace:=
+0pt;font-family:Helvetica,Arial,sans-serif;font-size:12px;color:#585858">=
+<tbody><tr style=3D"padding:0">
+<td height=3D"24" align=3D"center" valign=3D"middle" style=3D"padding:0;l=
+ine-height:24px;color:#585858;border-collapse:collapse">
+				<div class=3D"preheader" style=3D"line-height:0px;font-size:0px;heigh=
+t:0px;display:none;visibility:hidden">Kra=C5=A1to tinklara=C5=A1tis</div>=
+=20
+<a name=3D"top" style=3D"color:#5ca8cd;text-decoration:none;padding:2px 0=
+px"></a>
+			</td>
+		</tr>
+</tbody></table>
+<table width=3D"600" cellspacing=3D"0" cellpadding=3D"0" class=3D"wrap he=
+ader" style=3D"border-collapse:collapse;mso-table-lspace:0pt;mso-table-rs=
+pace:0pt;font-family:Helvetica,Arial,sans-serif;font-size:12px;color:#585=
+858;background-color:#FFFFFF;border-right:1px solid #FEFEFE;border-left:1=
+px solid #FEFEFE;border-top:1px solid #FEFEFE"><tbody>
+<tr style=3D"padding:0"><td height=3D"24" colspan=3D"3" style=3D"padding:=
+0;line-height:24px;color:#585858;border-collapse:collapse"></td></tr>
+
+<tr style=3D"padding:0">
+<td width=3D"24" class=3D"padd" style=3D"padding:0;line-height:24px;color=
+:#585858;border-collapse:collapse;width:24px">=C2=A0</td>
+			<td valign=3D"top" align=3D"center" style=3D"padding:0;line-height:24p=
+x;color:#585858;border-collapse:collapse">
+				<table width=3D"100%" cellpadding=3D"0" cellspacing=3D"0" class=3D"o-=
+fix" style=3D"border-collapse:collapse;mso-table-lspace:0pt;mso-table-rsp=
+ace:0pt;font-family:Helvetica,Arial,sans-serif;font-size:12px;color:#5858=
+58"><tbody><tr style=3D"padding:0">
+<td valign=3D"top" align=3D"left" style=3D"padding:0;line-height:24px;col=
+or:#585858;border-collapse:collapse;mso-table-lspace:0pt;mso-table-rspace=
+:0pt">
+						<table width=3D"168" cellpadding=3D"0" cellspacing=3D"0" align=3D"l=
+eft" class=3D"m-b" style=3D"border-collapse:collapse;mso-table-lspace:0pt=
+;mso-table-rspace:0pt;font-family:Helvetica,Arial,sans-serif;font-size:12=
+px;color:#585858"><tbody><tr style=3D"padding:0">
+<td class=3D"small m-b" align=3D"left" valign=3D"middle" style=3D"padding=
+:0;line-height:18px;color:#585858;border-collapse:collapse;font-size:11px=
+;mso-table-lspace:0pt;mso-table-rspace:0pt">
+								=09
+</td>
+						</tr>
+</tbody></table>
+<table width=3D"360" cellpadding=3D"0" cellspacing=3D"0" align=3D"right" =
+class=3D"m-b" style=3D"border-collapse:collapse;mso-table-lspace:0pt;mso-=
+table-rspace:0pt;font-family:Helvetica,Arial,sans-serif;font-size:12px;co=
+lor:#585858"><tbody><tr style=3D"padding:0">
+<td height=3D"24" align=3D"right" valign=3D"bottom" style=3D"padding:0;li=
+ne-height:24px;color:#585858;border-collapse:collapse;mso-table-lspace:0p=
+t;mso-table-rspace:0pt">
+							=09
+							</td>
+						</tr>
+</tbody></table>
+</td>
+	=09
+				</tr>
+</tbody></table>
+</td>
+			<td width=3D"24" class=3D"padd" style=3D"padding:0;line-height:24px;co=
+lor:#585858;border-collapse:collapse;width:24px">=C2=A0</td>
+		</tr>
+
+<tr style=3D"padding:0"><td height=3D"24" colspan=3D"3" style=3D"padding:=
+0;line-height:24px;color:#585858;border-collapse:collapse"></td></tr>
+
+</tbody></table>
+<table width=3D"600" cellspacing=3D"0" cellpadding=3D"0" class=3D"wrap bo=
+dy" style=3D"border-collapse:collapse;mso-table-lspace:0pt;mso-table-rspa=
+ce:0pt;font-family:Helvetica,Arial,sans-serif;font-size:12px;color:#58585=
+8;background-color:#FFFFFF;border-right:1px solid #FEFEFE;border-left:1px=
+ solid #FEFEFE"><tbody>
+<tr style=3D"padding:0">
+<td height=3D"12" colspan=3D"3" style=3D"padding:0;line-height:24px;color=
+:#585858;border-collapse:collapse"></td>
+    </tr>
+
+<tr style=3D"padding:0">
+<td width=3D"24" class=3D"padd" style=3D"padding:0;line-height:24px;color=
+:#585858;border-collapse:collapse;width:24px">=C2=A0</td>
+			<td valign=3D"top" align=3D"left" style=3D"padding:0;line-height:24px;=
+color:#585858;border-collapse:collapse">
+	=09
+					=09
+						<p style=3D"text-align: center;line-height:24px;color:#585858;margi=
+n:1em 0">Kra=C5=A1to tinklara=C5=A1=C4=8Diai buvo sukurti su TIKSLU - kad=
+ =C5=BEmon=C4=97s, =C4=AFmon=C4=97s, =C5=A1vietimo =C4=AFstaigos, b=C5=AB=
+reliai, profesin=C4=97s s=C4=85jungos ir visi norintys tur=C4=97t=C5=B3 K=
+UR =C4=AFkelti savo mintis, id=C4=97jas, straipsnius, samprotavimus, pran=
+e=C5=A1imus spaudai, =C4=AFmon=C4=97s naujienas, renginius, kuriais nori =
+pasidalinti su visuomene. Ir, kad tai gal=C4=97t=C5=B3 daryti <span style=
+=3D"color: #ff0000;"><strong>NEMOKAMAI</strong>.</span><br><br> Kontaktai=
+ pastaboms, informacijai bei registracijai<br>Tel. 8=C2=A0672 29398<br>Da=
+rbo laikas I =E2=80=93 VII nuo 8:00 iki 20:00 val.</p>
+<div class=3D"btn" style=3D"margin-top:10px;display:block">
+						</div>
+	=09
+			</td>
+			<td width=3D"24" class=3D"padd" style=3D"padding:0;line-height:24px;co=
+lor:#585858;border-collapse:collapse;width:24px">=C2=A0</td>
+		</tr>
+
+<tr style=3D"padding:0">
+<td height=3D"12" colspan=3D"3" style=3D"padding:0;line-height:24px;color=
+:#585858;border-collapse:collapse"></td>
+    </tr>
+
+</tbody></table>
+<table width=3D"600" cellspacing=3D"0" cellpadding=3D"0" class=3D"wrap bo=
+dy" style=3D"border-collapse:collapse;mso-table-lspace:0pt;mso-table-rspa=
+ce:0pt;font-family:Helvetica,Arial,sans-serif;font-size:12px;color:#58585=
+8;background-color:#FFFFFF;border-right:1px solid #FEFEFE;border-left:1px=
+ solid #FEFEFE"><tbody>
+<tr style=3D"padding:0">
+<td height=3D"12" style=3D"padding:0;line-height:24px;color:#585858;borde=
+r-collapse:collapse"></td>
+    </tr>
+
+<tr style=3D"padding:0">
+<td valign=3D"top" align=3D"center" style=3D"padding:0;line-height:24px;c=
+olor:#585858;border-collapse:collapse">
+				<table width=3D"100%" cellpadding=3D"0" cellspacing=3D"0" style=3D"bo=
+rder-collapse:collapse;mso-table-lspace:0pt;mso-table-rspace:0pt;font-fam=
+ily:Helvetica,Arial,sans-serif;font-size:12px;color:#585858"><tbody><tr s=
+tyle=3D"padding:0">
+<td width=3D"24" class=3D"padd" style=3D"padding:0;line-height:24px;color=
+:#585858;border-collapse:collapse;width:24px">=C2=A0</td>
+					<td valign=3D"top" style=3D"padding:0;line-height:24px;color:#585858=
+;border-collapse:collapse">
+	=09
+					<table width=3D"264" cellspacing=3D"0" cellpadding=3D"0" align=3D"ce=
+nter" class=3D"m-b m-b-b" style=3D"border-collapse:collapse;mso-table-lsp=
+ace:0pt;mso-table-rspace:0pt;font-family:Helvetica,Arial,sans-serif;font-=
+size:12px;color:#585858"><tbody><tr style=3D"padding:0">
+<td valign=3D"top" align=3D"left" class=3D"m-1-2" style=3D"padding:0;line=
+-height:24px;color:#585858;border-collapse:collapse">
+						<a href=3D"http://vilniaustiesa.lt/mymail/715/cf0fd1655d06777f9a20a=
+3b35c1cb26b/aHR0cDovL3d3dy52aWxuaWF1c3RpZXNhLmx0" style=3D"color:#5ca8cd;=
+text-decoration:none;padding:2px 0px"><img alt=3D"Vilniaus apskritis" tit=
+le=3D"" width=3D"264" height=3D"106" border=3D"0" editable=3D"" label=3D"=
+Image max width 264 pixel" class=3D"-handle -handle" data-id=3D"716" src=3D=
+"http://vilniaustiesa.lt/wp-content/uploads/2015/06/Vilniaus-apskritis-42=
+2x169.png" style=3D"outline:none;text-decoration:none;-ms-interpolation-m=
+ode:bicubic;display:block;max-width:100%;border:none"></a>
+</td>
+							</tr>
+</tbody></table>
+<table width=3D"264" cellspacing=3D"0" cellpadding=3D"0" align=3D"right" =
+style=3D"border-collapse:collapse;mso-table-lspace:0pt;mso-table-rspace:0=
+pt;font-family:Helvetica,Arial,sans-serif;font-size:12px;color:#585858"><=
+tbody><tr style=3D"padding:0">
+<td width=3D"264" valign=3D"top" align=3D"left" style=3D"padding:0;line-h=
+eight:24px;color:#585858;border-collapse:collapse">
+					=09
+						<div class=3D"btn" style=3D"margin-top:10px;display:block">
+						</div>
+					</td>
+						</tr>
+</tbody></table>
+</td>
+	=09
+					<td width=3D"24" class=3D"padd" style=3D"padding:0;line-height:24px;=
+color:#585858;border-collapse:collapse;width:24px">=C2=A0</td>
+				</tr>
+</tbody></table>
+</td>
+		</tr>
+
+<tr style=3D"padding:0">
+<td height=3D"12" style=3D"padding:0;line-height:24px;color:#585858;borde=
+r-collapse:collapse"></td>
+    </tr>
+
+</tbody></table>
+<table width=3D"600" cellspacing=3D"0" cellpadding=3D"0" class=3D"wrap bo=
+dy" style=3D"border-collapse:collapse;mso-table-lspace:0pt;mso-table-rspa=
+ce:0pt;font-family:Helvetica,Arial,sans-serif;font-size:12px;color:#58585=
+8;background-color:#FFFFFF;border-right:1px solid #FEFEFE;border-left:1px=
+ solid #FEFEFE"><tbody>
+<tr style=3D"padding:0">
+<td height=3D"12" style=3D"padding:0;line-height:24px;color:#585858;borde=
+r-collapse:collapse"></td>
+    </tr>
+
+<tr style=3D"padding:0">
+<td valign=3D"top" align=3D"center" style=3D"padding:0;line-height:24px;c=
+olor:#585858;border-collapse:collapse">
+				<table width=3D"100%" cellpadding=3D"0" cellspacing=3D"0" style=3D"bo=
+rder-collapse:collapse;mso-table-lspace:0pt;mso-table-rspace:0pt;font-fam=
+ily:Helvetica,Arial,sans-serif;font-size:12px;color:#585858"><tbody><tr s=
+tyle=3D"padding:0">
+<td width=3D"24" class=3D"padd" style=3D"padding:0;line-height:24px;color=
+:#585858;border-collapse:collapse;width:24px">=C2=A0</td>
+					<td valign=3D"top" style=3D"padding:0;line-height:24px;color:#585858=
+;border-collapse:collapse">
+	=09
+					<table width=3D"264" cellspacing=3D"0" cellpadding=3D"0" align=3D"ce=
+nter" class=3D"m-b m-b-b" style=3D"border-collapse:collapse;mso-table-lsp=
+ace:0pt;mso-table-rspace:0pt;font-family:Helvetica,Arial,sans-serif;font-=
+size:12px;color:#585858"><tbody><tr style=3D"padding:0">
+<td valign=3D"top" align=3D"left" class=3D"m-1-2" style=3D"padding:0;line=
+-height:24px;color:#585858;border-collapse:collapse">
+						<a href=3D"http://vilniaustiesa.lt/mymail/715/cf0fd1655d06777f9a20a=
+3b35c1cb26b/aHR0cDovL3d3dy5rYXVub3RpZXNhLmx0" style=3D"color:#5ca8cd;text=
+-decoration:none;padding:2px 0px"><img alt=3D"Kauno apskritis" title=3D""=
+ width=3D"264" height=3D"74" border=3D"0" editable=3D"" label=3D"Image ma=
+x width 264 pixel" class=3D"-handle -handle" data-id=3D"718" src=3D"http:=
+//vilniaustiesa.lt/wp-content/uploads/2015/06/Kauno-apskritis-528x148.png=
+" style=3D"outline:none;text-decoration:none;-ms-interpolation-mode:bicub=
+ic;display:block;max-width:100%;border:none"></a>
+</td>
+							</tr>
+</tbody></table>
+<table width=3D"264" cellspacing=3D"0" cellpadding=3D"0" align=3D"right" =
+style=3D"border-collapse:collapse;mso-table-lspace:0pt;mso-table-rspace:0=
+pt;font-family:Helvetica,Arial,sans-serif;font-size:12px;color:#585858"><=
+tbody><tr style=3D"padding:0">
+<td width=3D"264" valign=3D"top" align=3D"left" style=3D"padding:0;line-h=
+eight:24px;color:#585858;border-collapse:collapse">
+					=09
+						<div class=3D"btn" style=3D"margin-top:10px;display:block">
+						</div>
+					</td>
+						</tr>
+</tbody></table>
+</td>
+	=09
+					<td width=3D"24" class=3D"padd" style=3D"padding:0;line-height:24px;=
+color:#585858;border-collapse:collapse;width:24px">=C2=A0</td>
+				</tr>
+</tbody></table>
+</td>
+		</tr>
+
+<tr style=3D"padding:0">
+<td height=3D"12" style=3D"padding:0;line-height:24px;color:#585858;borde=
+r-collapse:collapse"></td>
+    </tr>
+
+</tbody></table>
+<table width=3D"600" cellspacing=3D"0" cellpadding=3D"0" class=3D"wrap bo=
+dy" style=3D"border-collapse:collapse;mso-table-lspace:0pt;mso-table-rspa=
+ce:0pt;font-family:Helvetica,Arial,sans-serif;font-size:12px;color:#58585=
+8;background-color:#FFFFFF;border-right:1px solid #FEFEFE;border-left:1px=
+ solid #FEFEFE"><tbody>
+<tr style=3D"padding:0">
+<td height=3D"12" style=3D"padding:0;line-height:24px;color:#585858;borde=
+r-collapse:collapse"></td>
+    </tr>
+
+<tr style=3D"padding:0">
+<td valign=3D"top" align=3D"center" style=3D"padding:0;line-height:24px;c=
+olor:#585858;border-collapse:collapse">
+				<table width=3D"100%" cellpadding=3D"0" cellspacing=3D"0" style=3D"bo=
+rder-collapse:collapse;mso-table-lspace:0pt;mso-table-rspace:0pt;font-fam=
+ily:Helvetica,Arial,sans-serif;font-size:12px;color:#585858"><tbody><tr s=
+tyle=3D"padding:0">
+<td width=3D"24" class=3D"padd" style=3D"padding:0;line-height:24px;color=
+:#585858;border-collapse:collapse;width:24px">=C2=A0</td>
+					<td valign=3D"top" style=3D"padding:0;line-height:24px;color:#585858=
+;border-collapse:collapse">
+	=09
+					<table width=3D"264" cellspacing=3D"0" cellpadding=3D"0" align=3D"ce=
+nter" class=3D"m-b m-b-b" style=3D"border-collapse:collapse;mso-table-lsp=
+ace:0pt;mso-table-rspace:0pt;font-family:Helvetica,Arial,sans-serif;font-=
+size:12px;color:#585858"><tbody><tr style=3D"padding:0">
+<td valign=3D"top" align=3D"left" class=3D"m-1-2" style=3D"padding:0;line=
+-height:24px;color:#585858;border-collapse:collapse">
+						<a href=3D"http://vilniaustiesa.lt/mymail/715/cf0fd1655d06777f9a20a=
+3b35c1cb26b/aHR0cDovL3d3dy5rbGFpcGVkb3N0aWVzYS5sdA" style=3D"color:#5ca8c=
+d;text-decoration:none;padding:2px 0px"><img alt=3D"klaipedos-apskritis" =
+title=3D"" width=3D"264" height=3D"106" border=3D"0" editable=3D"" label=3D=
+"Image max width 264 pixel" class=3D"-handle -handle" data-id=3D"719" src=
+=3D"http://vilniaustiesa.lt/wp-content/uploads/2015/06/Klaip=C4=97dos-aps=
+kritis.png" style=3D"outline:none;text-decoration:none;-ms-interpolation-=
+mode:bicubic;display:block;max-width:100%;border:none"></a>
+</td>
+							</tr>
+</tbody></table>
+<table width=3D"264" cellspacing=3D"0" cellpadding=3D"0" align=3D"right" =
+style=3D"border-collapse:collapse;mso-table-lspace:0pt;mso-table-rspace:0=
+pt;font-family:Helvetica,Arial,sans-serif;font-size:12px;color:#585858"><=
+tbody><tr style=3D"padding:0">
+<td width=3D"264" valign=3D"top" align=3D"left" style=3D"padding:0;line-h=
+eight:24px;color:#585858;border-collapse:collapse">
+					=09
+						<div class=3D"btn" style=3D"margin-top:10px;display:block">
+						</div>
+					</td>
+						</tr>
+</tbody></table>
+</td>
+	=09
+					<td width=3D"24" class=3D"padd" style=3D"padding:0;line-height:24px;=
+color:#585858;border-collapse:collapse;width:24px">=C2=A0</td>
+				</tr>
+</tbody></table>
+</td>
+		</tr>
+
+<tr style=3D"padding:0">
+<td height=3D"12" style=3D"padding:0;line-height:24px;color:#585858;borde=
+r-collapse:collapse"></td>
+    </tr>
+
+</tbody></table>
+<table width=3D"600" cellspacing=3D"0" cellpadding=3D"0" class=3D"wrap bo=
+dy" style=3D"border-collapse:collapse;mso-table-lspace:0pt;mso-table-rspa=
+ce:0pt;font-family:Helvetica,Arial,sans-serif;font-size:12px;color:#58585=
+8;background-color:#FFFFFF;border-right:1px solid #FEFEFE;border-left:1px=
+ solid #FEFEFE"><tbody>
+<tr style=3D"padding:0">
+<td height=3D"12" style=3D"padding:0;line-height:24px;color:#585858;borde=
+r-collapse:collapse"></td>
+    </tr>
+
+<tr style=3D"padding:0">
+<td valign=3D"top" align=3D"center" style=3D"padding:0;line-height:24px;c=
+olor:#585858;border-collapse:collapse">
+				<table width=3D"100%" cellpadding=3D"0" cellspacing=3D"0" style=3D"bo=
+rder-collapse:collapse;mso-table-lspace:0pt;mso-table-rspace:0pt;font-fam=
+ily:Helvetica,Arial,sans-serif;font-size:12px;color:#585858"><tbody><tr s=
+tyle=3D"padding:0">
+<td width=3D"24" class=3D"padd" style=3D"padding:0;line-height:24px;color=
+:#585858;border-collapse:collapse;width:24px">=C2=A0</td>
+					<td valign=3D"top" style=3D"padding:0;line-height:24px;color:#585858=
+;border-collapse:collapse">
+	=09
+					<table width=3D"264" cellspacing=3D"0" cellpadding=3D"0" align=3D"ce=
+nter" class=3D"m-b m-b-b" style=3D"border-collapse:collapse;mso-table-lsp=
+ace:0pt;mso-table-rspace:0pt;font-family:Helvetica,Arial,sans-serif;font-=
+size:12px;color:#585858"><tbody><tr style=3D"padding:0">
+<td valign=3D"top" align=3D"left" class=3D"m-1-2" style=3D"padding:0;line=
+-height:24px;color:#585858;border-collapse:collapse">
+						<a href=3D"http://vilniaustiesa.lt/mymail/715/cf0fd1655d06777f9a20a=
+3b35c1cb26b/aHR0cDovL3d3dy5zaWF1bGl1dGllc2EubHQ" style=3D"color:#5ca8cd;t=
+ext-decoration:none;padding:2px 0px"><img alt=3D"siauliu-apskritis" title=
+=3D"" width=3D"264" height=3D"106" border=3D"0" editable=3D"" label=3D"Im=
+age max width 264 pixel" class=3D"-handle -handle" data-id=3D"720" src=3D=
+"http://vilniaustiesa.lt/wp-content/uploads/2015/06/=C5=A0iauli=C5=B3-aps=
+kritis.png" style=3D"outline:none;text-decoration:none;-ms-interpolation-=
+mode:bicubic;display:block;max-width:100%;border:none"></a>
+</td>
+							</tr>
+</tbody></table>
+<table width=3D"264" cellspacing=3D"0" cellpadding=3D"0" align=3D"right" =
+style=3D"border-collapse:collapse;mso-table-lspace:0pt;mso-table-rspace:0=
+pt;font-family:Helvetica,Arial,sans-serif;font-size:12px;color:#585858"><=
+tbody><tr style=3D"padding:0">
+<td width=3D"264" valign=3D"top" align=3D"left" style=3D"padding:0;line-h=
+eight:24px;color:#585858;border-collapse:collapse">
+					=09
+						<div class=3D"btn" style=3D"margin-top:10px;display:block">
+						</div>
+					</td>
+						</tr>
+</tbody></table>
+</td>
+	=09
+					<td width=3D"24" class=3D"padd" style=3D"padding:0;line-height:24px;=
+color:#585858;border-collapse:collapse;width:24px">=C2=A0</td>
+				</tr>
+</tbody></table>
+</td>
+		</tr>
+
+<tr style=3D"padding:0">
+<td height=3D"12" style=3D"padding:0;line-height:24px;color:#585858;borde=
+r-collapse:collapse"></td>
+    </tr>
+
+</tbody></table>
+<table width=3D"600" cellspacing=3D"0" cellpadding=3D"0" class=3D"wrap bo=
+dy" style=3D"border-collapse:collapse;mso-table-lspace:0pt;mso-table-rspa=
+ce:0pt;font-family:Helvetica,Arial,sans-serif;font-size:12px;color:#58585=
+8;background-color:#FFFFFF;border-right:1px solid #FEFEFE;border-left:1px=
+ solid #FEFEFE"><tbody>
+<tr style=3D"padding:0">
+<td height=3D"12" style=3D"padding:0;line-height:24px;color:#585858;borde=
+r-collapse:collapse"></td>
+    </tr>
+
+<tr style=3D"padding:0">
+<td valign=3D"top" align=3D"center" style=3D"padding:0;line-height:24px;c=
+olor:#585858;border-collapse:collapse">
+				<table width=3D"100%" cellpadding=3D"0" cellspacing=3D"0" style=3D"bo=
+rder-collapse:collapse;mso-table-lspace:0pt;mso-table-rspace:0pt;font-fam=
+ily:Helvetica,Arial,sans-serif;font-size:12px;color:#585858"><tbody><tr s=
+tyle=3D"padding:0">
+<td width=3D"24" class=3D"padd" style=3D"padding:0;line-height:24px;color=
+:#585858;border-collapse:collapse;width:24px">=C2=A0</td>
+					<td valign=3D"top" style=3D"padding:0;line-height:24px;color:#585858=
+;border-collapse:collapse">
+	=09
+					<table width=3D"264" cellspacing=3D"0" cellpadding=3D"0" align=3D"ce=
+nter" class=3D"m-b m-b-b" style=3D"border-collapse:collapse;mso-table-lsp=
+ace:0pt;mso-table-rspace:0pt;font-family:Helvetica,Arial,sans-serif;font-=
+size:12px;color:#585858"><tbody><tr style=3D"padding:0">
+<td valign=3D"top" align=3D"left" class=3D"m-1-2" style=3D"padding:0;line=
+-height:24px;color:#585858;border-collapse:collapse">
+						<a href=3D"http://vilniaustiesa.lt/mymail/715/cf0fd1655d06777f9a20a=
+3b35c1cb26b/aHR0cDovL3d3dy5wYW5ldmV6aW9uYXVqaWVub3MubHQ" style=3D"color:#=
+5ca8cd;text-decoration:none;padding:2px 0px"><img alt=3D"panevezio-apskri=
+tis" title=3D"" width=3D"264" height=3D"106" border=3D"0" editable=3D"" l=
+abel=3D"Image max width 264 pixel" class=3D"-handle -handle" data-id=3D"7=
+21" src=3D"http://vilniaustiesa.lt/wp-content/uploads/2015/06/Panev=C4=97=
+=C5=BEio-apskritis.png" style=3D"outline:none;text-decoration:none;-ms-in=
+terpolation-mode:bicubic;display:block;max-width:100%;border:none"></a>
+</td>
+							</tr>
+</tbody></table>
+<table width=3D"264" cellspacing=3D"0" cellpadding=3D"0" align=3D"right" =
+style=3D"border-collapse:collapse;mso-table-lspace:0pt;mso-table-rspace:0=
+pt;font-family:Helvetica,Arial,sans-serif;font-size:12px;color:#585858"><=
+tbody><tr style=3D"padding:0">
+<td width=3D"264" valign=3D"top" align=3D"left" style=3D"padding:0;line-h=
+eight:24px;color:#585858;border-collapse:collapse">
+					=09
+						<div class=3D"btn" style=3D"margin-top:10px;display:block">
+						</div>
+					</td>
+						</tr>
+</tbody></table>
+</td>
+	=09
+					<td width=3D"24" class=3D"padd" style=3D"padding:0;line-height:24px;=
+color:#585858;border-collapse:collapse;width:24px">=C2=A0</td>
+				</tr>
+</tbody></table>
+</td>
+		</tr>
+
+<tr style=3D"padding:0">
+<td height=3D"12" style=3D"padding:0;line-height:24px;color:#585858;borde=
+r-collapse:collapse"></td>
+    </tr>
+
+</tbody></table>
+<table width=3D"600" cellspacing=3D"0" cellpadding=3D"0" class=3D"wrap bo=
+dy" style=3D"border-collapse:collapse;mso-table-lspace:0pt;mso-table-rspa=
+ce:0pt;font-family:Helvetica,Arial,sans-serif;font-size:12px;color:#58585=
+8;background-color:#FFFFFF;border-right:1px solid #FEFEFE;border-left:1px=
+ solid #FEFEFE"><tbody>
+<tr style=3D"padding:0">
+<td height=3D"12" style=3D"padding:0;line-height:24px;color:#585858;borde=
+r-collapse:collapse"></td>
+    </tr>
+
+<tr style=3D"padding:0">
+<td valign=3D"top" align=3D"center" style=3D"padding:0;line-height:24px;c=
+olor:#585858;border-collapse:collapse">
+				<table width=3D"100%" cellpadding=3D"0" cellspacing=3D"0" style=3D"bo=
+rder-collapse:collapse;mso-table-lspace:0pt;mso-table-rspace:0pt;font-fam=
+ily:Helvetica,Arial,sans-serif;font-size:12px;color:#585858"><tbody><tr s=
+tyle=3D"padding:0">
+<td width=3D"24" class=3D"padd" style=3D"padding:0;line-height:24px;color=
+:#585858;border-collapse:collapse;width:24px">=C2=A0</td>
+					<td valign=3D"top" style=3D"padding:0;line-height:24px;color:#585858=
+;border-collapse:collapse">
+	=09
+					<table width=3D"264" cellspacing=3D"0" cellpadding=3D"0" align=3D"ce=
+nter" class=3D"m-b m-b-b" style=3D"border-collapse:collapse;mso-table-lsp=
+ace:0pt;mso-table-rspace:0pt;font-family:Helvetica,Arial,sans-serif;font-=
+size:12px;color:#585858"><tbody><tr style=3D"padding:0">
+<td valign=3D"top" align=3D"left" class=3D"m-1-2" style=3D"padding:0;line=
+-height:24px;color:#585858;border-collapse:collapse">
+						<a href=3D"http://vilniaustiesa.lt/mymail/715/cf0fd1655d06777f9a20a=
+3b35c1cb26b/aHR0cDovL3d3dy5hbHl0YXVzdGllc2EubHQ" style=3D"color:#5ca8cd;t=
+ext-decoration:none;padding:2px 0px"><img alt=3D"alytaus-apskritis" title=
+=3D"" width=3D"264" height=3D"117" border=3D"0" editable=3D"" label=3D"Im=
+age max width 264 pixel" class=3D"-handle -handle" data-id=3D"722" src=3D=
+"http://vilniaustiesa.lt/wp-content/uploads/2015/06/Alytaus-apskritis.png=
+" style=3D"outline:none;text-decoration:none;-ms-interpolation-mode:bicub=
+ic;display:block;max-width:100%;border:none"></a>
+</td>
+							</tr>
+</tbody></table>
+<table width=3D"264" cellspacing=3D"0" cellpadding=3D"0" align=3D"right" =
+style=3D"border-collapse:collapse;mso-table-lspace:0pt;mso-table-rspace:0=
+pt;font-family:Helvetica,Arial,sans-serif;font-size:12px;color:#585858"><=
+tbody><tr style=3D"padding:0">
+<td width=3D"264" valign=3D"top" align=3D"left" style=3D"padding:0;line-h=
+eight:24px;color:#585858;border-collapse:collapse">
+					=09
+						<div class=3D"btn" style=3D"margin-top:10px;display:block">
+						</div>
+					</td>
+						</tr>
+</tbody></table>
+</td>
+	=09
+					<td width=3D"24" class=3D"padd" style=3D"padding:0;line-height:24px;=
+color:#585858;border-collapse:collapse;width:24px">=C2=A0</td>
+				</tr>
+</tbody></table>
+</td>
+		</tr>
+
+<tr style=3D"padding:0">
+<td height=3D"12" style=3D"padding:0;line-height:24px;color:#585858;borde=
+r-collapse:collapse"></td>
+    </tr>
+
+</tbody></table>
+<table width=3D"600" cellspacing=3D"0" cellpadding=3D"0" class=3D"wrap bo=
+dy" style=3D"border-collapse:collapse;mso-table-lspace:0pt;mso-table-rspa=
+ce:0pt;font-family:Helvetica,Arial,sans-serif;font-size:12px;color:#58585=
+8;background-color:#FFFFFF;border-right:1px solid #FEFEFE;border-left:1px=
+ solid #FEFEFE"><tbody>
+<tr style=3D"padding:0">
+<td height=3D"12" style=3D"padding:0;line-height:24px;color:#585858;borde=
+r-collapse:collapse"></td>
+    </tr>
+
+<tr style=3D"padding:0">
+<td valign=3D"top" align=3D"center" style=3D"padding:0;line-height:24px;c=
+olor:#585858;border-collapse:collapse">
+				<table width=3D"100%" cellpadding=3D"0" cellspacing=3D"0" style=3D"bo=
+rder-collapse:collapse;mso-table-lspace:0pt;mso-table-rspace:0pt;font-fam=
+ily:Helvetica,Arial,sans-serif;font-size:12px;color:#585858"><tbody><tr s=
+tyle=3D"padding:0">
+<td width=3D"24" class=3D"padd" style=3D"padding:0;line-height:24px;color=
+:#585858;border-collapse:collapse;width:24px">=C2=A0</td>
+					<td valign=3D"top" style=3D"padding:0;line-height:24px;color:#585858=
+;border-collapse:collapse">
+	=09
+					<table width=3D"264" cellspacing=3D"0" cellpadding=3D"0" align=3D"ce=
+nter" class=3D"m-b m-b-b" style=3D"border-collapse:collapse;mso-table-lsp=
+ace:0pt;mso-table-rspace:0pt;font-family:Helvetica,Arial,sans-serif;font-=
+size:12px;color:#585858"><tbody><tr style=3D"padding:0">
+<td valign=3D"top" align=3D"left" class=3D"m-1-2" style=3D"padding:0;line=
+-height:24px;color:#585858;border-collapse:collapse">
+						<a href=3D"http://vilniaustiesa.lt/mymail/715/cf0fd1655d06777f9a20a=
+3b35c1cb26b/aHR0cDovL3d3dy5tYXJpamFtcG9sZXN0aWVzYS5sdA" style=3D"color:#5=
+ca8cd;text-decoration:none;padding:2px 0px"><img alt=3D"marijampoles-apsk=
+ritis" title=3D"" width=3D"264" height=3D"106" border=3D"0" editable=3D""=
+ label=3D"Image max width 264 pixel" class=3D"-handle -handle" data-id=3D=
+"723" src=3D"http://vilniaustiesa.lt/wp-content/uploads/2015/06/Marijampo=
+l=C4=97s-apskritis.png" style=3D"outline:none;text-decoration:none;-ms-in=
+terpolation-mode:bicubic;display:block;max-width:100%;border:none"></a>
+</td>
+							</tr>
+</tbody></table>
+<table width=3D"264" cellspacing=3D"0" cellpadding=3D"0" align=3D"right" =
+style=3D"border-collapse:collapse;mso-table-lspace:0pt;mso-table-rspace:0=
+pt;font-family:Helvetica,Arial,sans-serif;font-size:12px;color:#585858"><=
+tbody><tr style=3D"padding:0">
+<td width=3D"264" valign=3D"top" align=3D"left" style=3D"padding:0;line-h=
+eight:24px;color:#585858;border-collapse:collapse">
+					=09
+						<div class=3D"btn" style=3D"margin-top:10px;display:block">
+						</div>
+					</td>
+						</tr>
+</tbody></table>
+</td>
+	=09
+					<td width=3D"24" class=3D"padd" style=3D"padding:0;line-height:24px;=
+color:#585858;border-collapse:collapse;width:24px">=C2=A0</td>
+				</tr>
+</tbody></table>
+</td>
+		</tr>
+
+<tr style=3D"padding:0">
+<td height=3D"12" style=3D"padding:0;line-height:24px;color:#585858;borde=
+r-collapse:collapse"></td>
+    </tr>
+
+</tbody></table>
+<table width=3D"600" cellspacing=3D"0" cellpadding=3D"0" class=3D"wrap fo=
+oter" style=3D"border-collapse:collapse;mso-table-lspace:0pt;mso-table-rs=
+pace:0pt;font-family:Helvetica,Arial,sans-serif;font-size:12px;color:#585=
+858;background-color:#FFFFFF;border-right:1px solid #FEFEFE;border-left:1=
+px solid #FEFEFE;border-bottom:1px solid #FEFEFE"><tbody>
+<tr style=3D"padding:0">
+<td width=3D"24" class=3D"padd" style=3D"padding:0;line-height:24px;color=
+:#585858;border-collapse:collapse;width:24px">=C2=A0</td>
+			<td valign=3D"top" align=3D"center" style=3D"padding:0;line-height:24p=
+x;color:#585858;border-collapse:collapse">
+				<table width=3D"100%" cellpadding=3D"0" cellspacing=3D"0" class=3D"o-=
+fix" style=3D"border-collapse:collapse;mso-table-lspace:0pt;mso-table-rsp=
+ace:0pt;font-family:Helvetica,Arial,sans-serif;font-size:12px;color:#5858=
+58"><tbody><tr style=3D"padding:0">
+<td valign=3D"top" align=3D"left" style=3D"padding:0;line-height:24px;col=
+or:#585858;border-collapse:collapse;mso-table-lspace:0pt;mso-table-rspace=
+:0pt">
+						<table width=3D"360" cellpadding=3D"0" cellspacing=3D"0" align=3D"l=
+eft" style=3D"border-collapse:collapse;mso-table-lspace:0pt;mso-table-rsp=
+ace:0pt;font-family:Helvetica,Arial,sans-serif;font-size:12px;color:#5858=
+58"><tbody><tr style=3D"padding:0">
+<td class=3D"small m-b" align=3D"left" valign=3D"top" style=3D"padding:0;=
+line-height:18px;color:#585858;border-collapse:collapse;font-size:11px;ms=
+o-table-lspace:0pt;mso-table-rspace:0pt">
+							=09
+							=09
+							</td>
+						</tr>
+</tbody></table>
+<table width=3D"168" cellpadding=3D"0" cellspacing=3D"0" align=3D"right" =
+style=3D"border-collapse:collapse;mso-table-lspace:0pt;mso-table-rspace:0=
+pt;font-family:Helvetica,Arial,sans-serif;font-size:12px;color:#585858"><=
+tbody><tr style=3D"padding:0">
+<td class=3D"small" align=3D"right" valign=3D"top" style=3D"padding:0;lin=
+e-height:18px;color:#585858;border-collapse:collapse;font-size:11px;mso-t=
+able-lspace:0pt;mso-table-rspace:0pt">
+						=09
+							=09
+							=09
+							=09
+						=09
+							</td>
+						</tr>
+</tbody></table>
+</td>
+	=09
+				</tr>
+</tbody></table>
+</td>
+			<td width=3D"24" class=3D"padd" style=3D"padding:0;line-height:24px;co=
+lor:#585858;border-collapse:collapse;width:24px">=C2=A0</td>
+		</tr>
+
+<tr style=3D"padding:0"><td height=3D"24" colspan=3D"3" style=3D"padding:=
+0;line-height:24px;color:#585858;border-collapse:collapse"></td></tr>
+
+</tbody></table>
+<table cellpadding=3D"0" cellspacing=3D"0" class=3D"wrap m-b-b" style=3D"=
+border-collapse:collapse;mso-table-lspace:0pt;mso-table-rspace:0pt;font-f=
+amily:Helvetica,Arial,sans-serif;font-size:12px;color:#585858"><tbody><tr=
+ style=3D"padding:0"><td valign=3D"top" style=3D"padding:0;line-height:24=
+px;color:#585858;border-collapse:collapse"><img src=3D"http://vilniaustie=
+sa.lt/wp-content/uploads/myMail/templates/mymail/img/shadow.png" class=3D=
+"m-100" width=3D"600" height=3D"25" alt=3D"" border=3D"0" style=3D"outlin=
+e:none;text-decoration:none;-ms-interpolation-mode:bicubic;display:block;=
+max-width:100%"></td></tr>
+</tbody></table>
+</td>
+</tr>
+</tbody></table>
+<img src=3D"http://vilniaustiesa.lt/mymail/715/cf0fd1655d06777f9a20a3b35c=
+1cb26b" alt=3D"" width=3D"1" height=3D"1"></body>
+</html>
+
+
+
+--b1_756b559da13fa48e6da1fee0089a5196--
+
+
+--===============5352634727411363303==
 Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Content-Disposition: inline
+Content-Transfer-Encoding: 7bit
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
 
---===============1865441483410909944==--
+--===============5352634727411363303==--
