@@ -1,27 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 770417F56
+	by oss.sgi.com (Postfix) with ESMTP id 6E0E97F51
 	for <xfs@oss.sgi.com>; Mon,  8 Jun 2015 06:29:30 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 6218D8F8039
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 4E8CC8F8037
 	for <xfs@oss.sgi.com>; Mon,  8 Jun 2015 04:29:27 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id 3AKrQtqjdFaGWjfE (version=TLSv1
+	cuda.sgi.com with ESMTP id mYugcHC44m8YTFnU (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
 	Mon, 08 Jun 2015 04:29:26 -0700 (PDT)
-Received: from int-mx10.intmail.prod.int.phx2.redhat.com
-	(int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
-	by mx1.redhat.com (Postfix) with ESMTPS id CE00219F25A
+Received: from int-mx09.intmail.prod.int.phx2.redhat.com
+	(int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+	by mx1.redhat.com (Postfix) with ESMTPS id D8AF3BACB7
 	for <xfs@oss.sgi.com>; Mon,  8 Jun 2015 11:29:25 +0000 (UTC)
 Received: from bfoster.bfoster (dhcp-41-237.bos.redhat.com [10.18.41.237])
-	by int-mx10.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id t58BTPKC021624
+	by int-mx09.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id t58BTPMu027127
 	for <xfs@oss.sgi.com>; Mon, 8 Jun 2015 07:29:25 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH 3/4] repair: helper to import on-disk inobt records to in-core
-	trees
-Date: Mon,  8 Jun 2015 07:29:23 -0400
-Message-Id: <1433762964-11502-4-git-send-email-bfoster@redhat.com>
+Subject: [PATCH 4/4] repair: helper to transition inode blocks to inode state
+Date: Mon,  8 Jun 2015 07:29:24 -0400
+Message-Id: <1433762964-11502-5-git-send-email-bfoster@redhat.com>
 In-Reply-To: <1433762964-11502-1-git-send-email-bfoster@redhat.com>
 References: <1433762964-11502-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,267 +38,151 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-In the common case, the in-core inode state from the on-disk inobt
-records is imported from the inobt and validated against the finobt (if
-one exists). When both trees exist along with some form of corruption,
-it's possible to find inodes in the finobt not tracked by the inobt.
-While this is unexpected, we attempt to repair by importing the inodes
-from the finobt.
+The state of each block in an inode chunk transitions from free state to
+inode state as we process physical inodes on disk. We take care to
+detect invalid transitions and warn the user if multiply claimed blocks
+are detected.
 
-The associated code in the finobt scan function mirrors the associated
-code in the inobt scan function. Factor this into a separate helper that
-can be called by either tree scan.
+This block of code is a largish switch statement that is executed twice
+due to the implementation details of the inode processing loop. Factor
+it into a new helper.
 
 Signed-off-by: Brian Foster <bfoster@redhat.com>
 ---
- repair/scan.c | 199 +++++++++++++++++++++++++++-------------------------------
- 1 file changed, 91 insertions(+), 108 deletions(-)
+ repair/dino_chunks.c | 91 ++++++++++++++++++++++------------------------------
+ 1 file changed, 39 insertions(+), 52 deletions(-)
 
-diff --git a/repair/scan.c b/repair/scan.c
-index 14a816d..8711b94 100644
---- a/repair/scan.c
-+++ b/repair/scan.c
-@@ -855,6 +855,81 @@ _("bad ending inode # (%" PRIu64 " (0x%x 0x%zx)) in %s rec, skipping rec\n"),
- 	return suspect;
+diff --git a/repair/dino_chunks.c b/repair/dino_chunks.c
+index 9b7d017..834227b 100644
+--- a/repair/dino_chunks.c
++++ b/repair/dino_chunks.c
+@@ -550,7 +550,42 @@ verify_aginode_chunk_irec(xfs_mount_t	*mp,
+ 	return(irec);
  }
  
 +/*
-+ * Process the state of individual inodes in an on-disk inobt record and import
-+ * into the appropriate in-core tree based on whether the on-disk tree is
-+ * suspect. Return the total and free inode counts based on the record free and
-+ * hole masks.
++ * Set the state of an inode block during inode chunk processing. The block is
++ * expected to be in the free or inode state. If free, it transitions to the
++ * inode state. Warn if the block is in neither expected state as this indicates
++ * multiply claimed blocks.
 + */
-+static int
-+import_single_ino_chunk(
++static void
++process_inode_agbno_state(
++	struct xfs_mount	*mp,
 +	xfs_agnumber_t		agno,
-+	enum inobt_type		type,
-+	struct xfs_inobt_rec	*rp,
-+	int			suspect,
-+	int			*p_nfree,
-+	int			*p_ninodes)
++	xfs_agblock_t		agbno)
 +{
-+	struct ino_tree_node	*ino_rec = NULL;
-+	const char		*inobt_name = inobt_names[type];
-+	xfs_agino_t		ino;
-+	int			j;
-+	int			nfree;
-+	int			ninodes;
-+
-+	ino = be32_to_cpu(rp->ir_startino);
-+
-+	if (!suspect) {
-+		if (XFS_INOBT_IS_FREE_DISK(rp, 0))
-+			ino_rec = set_inode_free_alloc(mp, agno, ino);
-+		else
-+			ino_rec = set_inode_used_alloc(mp, agno, ino);
-+		for (j = 1; j < XFS_INODES_PER_CHUNK; j++) {
-+			if (XFS_INOBT_IS_FREE_DISK(rp, j))
-+				set_inode_free(ino_rec, j);
-+			else
-+				set_inode_used(ino_rec, j);
-+		}
-+	} else {
-+		for (j = 0; j < XFS_INODES_PER_CHUNK; j++) {
-+			if (XFS_INOBT_IS_FREE_DISK(rp, j))
-+				add_aginode_uncertain(mp, agno, ino + j, 1);
-+			else
-+				add_aginode_uncertain(mp, agno, ino + j, 0);
-+		}
++	int state;
+ 
++	pthread_mutex_lock(&ag_locks[agno].lock);
++	state = get_bmap(agno, agbno);
++	switch (state) {
++	case XR_E_INO:	/* already marked */
++		break;
++	case XR_E_UNKNOWN:
++	case XR_E_FREE:
++	case XR_E_FREE1:
++		set_bmap(agno, agbno, XR_E_INO);
++		break;
++	case XR_E_BAD_STATE:
++		do_error(_("bad state in block map %d\n"), state);
++		break;
++	default:
++		set_bmap(agno, agbno, XR_E_MULT);
++		do_warn(
++	_("inode block %" PRIu64 " multiply claimed, state was %d\n"),
++			XFS_AGB_TO_FSB(mp, agno, agbno), state);
++		break;
 +	}
-+
-+	/*
-+	 * Mark sparse inodes as such in the in-core tree. Verify that sparse
-+	 * inodes are free and that freecount is consistent with the free mask.
-+	 */
-+	nfree = ninodes = 0;
-+	for (j = 0; j < XFS_INODES_PER_CHUNK; j++) {
-+		if (ino_issparse(rp, j)) {
-+			if (!suspect && !XFS_INOBT_IS_FREE_DISK(rp, j)) {
-+				do_warn(
-+_("ir_holemask/ir_free mismatch, %s chunk %d/%u, holemask 0x%x free 0x%llx\n"),
-+					inobt_name, agno, ino,
-+					be16_to_cpu(rp->ir_u.sp.ir_holemask),
-+					be64_to_cpu(rp->ir_free));
-+				suspect++;
-+			}
-+			if (!suspect && ino_rec)
-+				set_inode_sparse(ino_rec, j);
-+		} else {
-+			/* count fields track non-sparse inos */
-+			if (XFS_INOBT_IS_FREE_DISK(rp, j))
-+				nfree++;
-+			ninodes++;
-+		}
-+	}
-+
-+	*p_nfree = nfree;
-+	*p_ninodes = ninodes;
-+
-+	return suspect;
++	pthread_mutex_unlock(&ag_locks[agno].lock);
 +}
-+
+ 
+ /*
+  * processes an inode allocation chunk/block, returns 1 on I/O errors,
+@@ -558,8 +593,6 @@ verify_aginode_chunk_irec(xfs_mount_t	*mp,
+  *
+  * *bogus is set to 1 if the entire set of inodes is bad.
+  */
+-
+-/* ARGSUSED */
  static int
- scan_single_ino_chunk(
- 	xfs_agnumber_t		agno,
-@@ -869,7 +944,6 @@ scan_single_ino_chunk(
- 	int			ninodes;
- 	int			off;
- 	int			state;
--	ino_tree_node_t		*ino_rec = NULL;
- 	ino_tree_node_t		*first_rec, *last_rec;
- 	int			freecount;
- 	bool			skip = false;
-@@ -946,57 +1020,13 @@ _("inode rec for ino %" PRIu64 " (%d/%d) overlaps existing rec (start %d/%d)\n")
- 	}
- 
+ process_inode_chunk(
+ 	xfs_mount_t 		*mp,
+@@ -578,7 +611,6 @@ process_inode_chunk(
+ 	int			icnt;
+ 	int			status;
+ 	int			is_used;
+-	int			state;
+ 	int			ino_dirty;
+ 	int			irec_offset;
+ 	int			ibuf_offset;
+@@ -757,29 +789,8 @@ next_readbuf:
  	/*
--	 * now mark all the inodes as existing and free or used.
--	 * if the tree is suspect, put them into the uncertain
--	 * inode tree.
--	 */
--	if (!suspect)  {
--		if (XFS_INOBT_IS_FREE_DISK(rp, 0)) {
--			ino_rec = set_inode_free_alloc(mp, agno, ino);
--		} else  {
--			ino_rec = set_inode_used_alloc(mp, agno, ino);
--		}
--		for (j = 1; j < XFS_INODES_PER_CHUNK; j++) {
--			if (XFS_INOBT_IS_FREE_DISK(rp, j)) {
--				set_inode_free(ino_rec, j);
--			} else  {
--				set_inode_used(ino_rec, j);
--			}
--		}
--	} else  {
--		for (j = 0; j < XFS_INODES_PER_CHUNK; j++) {
--			if (XFS_INOBT_IS_FREE_DISK(rp, j)) {
--				add_aginode_uncertain(mp, agno, ino + j, 1);
--			} else  {
--				add_aginode_uncertain(mp, agno, ino + j, 0);
--			}
--		}
--	}
--
--	/*
--	 * Mark sparse inodes as such in the in-core tree. Verify that sparse
--	 * inodes are free and that freecount is consistent with the free mask.
-+	 * Import the state of individual inodes into the appropriate in-core
-+	 * trees, mark them free or used, and get the resulting total and free
-+	 * inode counts.
+ 	 * mark block as an inode block in the incore bitmap
  	 */
- 	nfree = ninodes = 0;
--	for (j = 0; j < XFS_INODES_PER_CHUNK; j++) {
--		if (ino_issparse(rp, j)) {
--			if (!suspect && !XFS_INOBT_IS_FREE_DISK(rp, j)) {
--				do_warn(
--_("ir_holemask/ir_free mismatch, inode chunk %d/%u, holemask 0x%x free 0x%llx\n"),
--					agno, ino,
--					be16_to_cpu(rp->ir_u.sp.ir_holemask),
--					be64_to_cpu(rp->ir_free));
--				suspect++;
--			}
--			if (!suspect && ino_rec)
--				set_inode_sparse(ino_rec, j);
--		} else {
--			/* count fields track non-sparse inos */
--			if (XFS_INOBT_IS_FREE_DISK(rp, j))
--				nfree++;
--			ninodes++;
+-	if (!is_inode_sparse(ino_rec, irec_offset)) {
+-		pthread_mutex_lock(&ag_locks[agno].lock);
+-		state = get_bmap(agno, agbno);
+-		switch (state) {
+-		case XR_E_INO:	/* already marked */
+-			break;
+-		case XR_E_UNKNOWN:
+-		case XR_E_FREE:
+-		case XR_E_FREE1:
+-			set_bmap(agno, agbno, XR_E_INO);
+-			break;
+-		case XR_E_BAD_STATE:
+-			do_error(_("bad state in block map %d\n"), state);
+-			break;
+-		default:
+-			set_bmap(agno, agbno, XR_E_MULT);
+-			do_warn(
+-		_("inode block %" PRIu64 " multiply claimed, state was %d\n"),
+-				XFS_AGB_TO_FSB(mp, agno, agbno), state);
+-			break;
 -		}
+-		pthread_mutex_unlock(&ag_locks[agno].lock);
 -	}
-+	suspect = import_single_ino_chunk(agno, INOBT, rp, suspect, &nfree,
-+					 &ninodes);
++	if (!is_inode_sparse(ino_rec, irec_offset))
++		process_inode_agbno_state(mp, agno, agbno);
  
- 	if (nfree != freecount) {
- 		do_warn(
-@@ -1029,7 +1059,6 @@ scan_single_finobt_chunk(
- 	int			ninodes;
- 	int			off;
- 	int			state;
--	ino_tree_node_t		*ino_rec = NULL;
- 	ino_tree_node_t		*first_rec, *last_rec;
- 	int			freecount;
- 	bool			skip = false;
-@@ -1138,68 +1167,22 @@ _("finobt rec for ino %" PRIu64 " (%d/%u) does not match existing rec (%d/%d)\n"
- 	}
+ 	for (;;) {
+ 		agino = irec_offset + ino_rec->ino_startnum;
+@@ -956,32 +967,8 @@ process_next:
+ 			ibuf_offset = 0;
+ 			agbno++;
  
- 	/*
--	 * the finobt contains a record that the previous alloc inobt scan never
--	 * found. insert the inodes into the appropriate tree.
-+	 * The finobt contains a record that the previous inobt scan never
-+	 * found. Warn about it and import the inodes into the appropriate
-+	 * trees.
-+	 *
-+	 * Note that this should do the right thing if the previous inobt scan
-+	 * had added these inodes to the uncertain tree. If the finobt is not
-+	 * suspect, these inodes should supercede the uncertain ones. Otherwise,
-+	 * the uncertain tree helpers handle the case where uncertain inodes
-+	 * already exist.
- 	 */
- 	do_warn(_("undiscovered finobt record, ino %" PRIu64 " (%d/%u)\n"),
- 		lino, agno, ino);
- 
--	if (!suspect) {
--		/*
--		 * inodes previously inserted into the uncertain tree should be
--		 * superceded by these when the uncertain tree is processed
--		 */
--		if (XFS_INOBT_IS_FREE_DISK(rp, 0)) {
--			ino_rec = set_inode_free_alloc(mp, agno, ino);
--		} else  {
--			ino_rec = set_inode_used_alloc(mp, agno, ino);
--		}
--		for (j = 1; j < XFS_INODES_PER_CHUNK; j++) {
--			if (XFS_INOBT_IS_FREE_DISK(rp, j)) {
--				set_inode_free(ino_rec, j);
--			} else  {
--				set_inode_used(ino_rec, j);
+-			if (!is_inode_sparse(ino_rec, irec_offset)) {
+-				pthread_mutex_lock(&ag_locks[agno].lock);
+-				state = get_bmap(agno, agbno);
+-				switch (state) {
+-				case XR_E_INO:	/* already marked */
+-					break;
+-				case XR_E_UNKNOWN:
+-				case XR_E_FREE:
+-				case XR_E_FREE1:
+-					set_bmap(agno, agbno, XR_E_INO);
+-					break;
+-				case XR_E_BAD_STATE:
+-					do_error(
+-					_("bad state in block map %d\n"),
+-						state);
+-					break;
+-				default:
+-					set_bmap(agno, agbno, XR_E_MULT);
+-					do_warn(
+-		_("inode block %" PRIu64 " multiply claimed, state was %d\n"),
+-						XFS_AGB_TO_FSB(mp, agno, agbno),
+-						state);
+-					break;
+-				}
+-				pthread_mutex_unlock(&ag_locks[agno].lock);
 -			}
--		}
--	} else {
--		/*
--		 * this should handle the case where the inobt scan may have
--		 * already added uncertain inodes
--		 */
--		for (j = 0; j < XFS_INODES_PER_CHUNK; j++) {
--			if (XFS_INOBT_IS_FREE_DISK(rp, j)) {
--				add_aginode_uncertain(mp, agno, ino + j, 1);
--			} else {
--				add_aginode_uncertain(mp, agno, ino + j, 0);
--			}
--		}
--	}
--
--	/*
--	 * Mark sparse inodes as such in the in-core tree. Verify that sparse
--	 * inodes are free and that freecount is consistent with the free mask.
--	 */
- 	nfree = ninodes = 0;
--	for (j = 0; j < XFS_INODES_PER_CHUNK; j++) {
--		if (ino_issparse(rp, j)) {
--			if (!suspect && !XFS_INOBT_IS_FREE_DISK(rp, j)) {
--				do_warn(
--_("finobt ir_holemask/ir_free mismatch, inode chunk %d/%u, holemask 0x%x free 0x%llx\n"),
--					agno, ino,
--					be16_to_cpu(rp->ir_u.sp.ir_holemask),
--					be64_to_cpu(rp->ir_free));
--				suspect++;
--			}
--			if (!suspect && ino_rec)
--				set_inode_sparse(ino_rec, j);
--		} else {
--			/* count fields track non-sparse inos */
--			if (XFS_INOBT_IS_FREE_DISK(rp, j))
--				nfree++;
--			ninodes++;
--		}
--
--	}
-+	suspect = import_single_ino_chunk(agno, FINOBT, rp, suspect, &nfree,
-+					 &ninodes);
- 
- check_freecount:
- 
++			if (!is_inode_sparse(ino_rec, irec_offset))
++				process_inode_agbno_state(mp, agno, agbno);
+ 		} else if (irec_offset == XFS_INODES_PER_CHUNK)  {
+ 			/*
+ 			 * get new irec (multiple chunks per block fs)
 -- 
 1.9.3
 
