@@ -1,26 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 6E0E97F51
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 80F427F58
 	for <xfs@oss.sgi.com>; Mon,  8 Jun 2015 06:29:30 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 4E8CC8F8037
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 624EE304043
 	for <xfs@oss.sgi.com>; Mon,  8 Jun 2015 04:29:27 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id mYugcHC44m8YTFnU (version=TLSv1
+	cuda.sgi.com with ESMTP id 02VumIjaraPkA7XW (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
 	Mon, 08 Jun 2015 04:29:26 -0700 (PDT)
-Received: from int-mx09.intmail.prod.int.phx2.redhat.com
-	(int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
-	by mx1.redhat.com (Postfix) with ESMTPS id D8AF3BACB7
+Received: from int-mx10.intmail.prod.int.phx2.redhat.com
+	(int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
+	by mx1.redhat.com (Postfix) with ESMTPS id B656BA10A6
 	for <xfs@oss.sgi.com>; Mon,  8 Jun 2015 11:29:25 +0000 (UTC)
 Received: from bfoster.bfoster (dhcp-41-237.bos.redhat.com [10.18.41.237])
-	by int-mx09.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id t58BTPMu027127
+	by int-mx10.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id t58BTPoB021621
 	for <xfs@oss.sgi.com>; Mon, 8 Jun 2015 07:29:25 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH 4/4] repair: helper to transition inode blocks to inode state
-Date: Mon,  8 Jun 2015 07:29:24 -0400
-Message-Id: <1433762964-11502-5-git-send-email-bfoster@redhat.com>
+Subject: [PATCH 1/4] repair: access helpers for on-disk inobt record freecount
+Date: Mon,  8 Jun 2015 07:29:21 -0400
+Message-Id: <1433762964-11502-2-git-send-email-bfoster@redhat.com>
 In-Reply-To: <1433762964-11502-1-git-send-email-bfoster@redhat.com>
 References: <1433762964-11502-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -38,151 +38,129 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-The state of each block in an inode chunk transitions from free state to
-inode state as we process physical inodes on disk. We take care to
-detect invalid transitions and warn the user if multiply claimed blocks
-are detected.
+The on-disk inobt record has two formats depending on whether sparse
+inode support is enabled or not. If so, the freecount field is a single
+byte and does not require byte-conversion. Otherwise, it is a 4-byte
+field and does.
 
-This block of code is a largish switch statement that is executed twice
-due to the implementation details of the inode processing loop. Factor
-it into a new helper.
+Create the inorec_[get|set]_freecount() helpers to abstract this detail
+away from the core repair code.
 
 Signed-off-by: Brian Foster <bfoster@redhat.com>
 ---
- repair/dino_chunks.c | 91 ++++++++++++++++++++++------------------------------
- 1 file changed, 39 insertions(+), 52 deletions(-)
+ repair/incore.h | 28 ++++++++++++++++++++++++++++
+ repair/phase5.c | 12 +++++++-----
+ repair/scan.c   | 15 +++------------
+ 3 files changed, 38 insertions(+), 17 deletions(-)
 
-diff --git a/repair/dino_chunks.c b/repair/dino_chunks.c
-index 9b7d017..834227b 100644
---- a/repair/dino_chunks.c
-+++ b/repair/dino_chunks.c
-@@ -550,7 +550,42 @@ verify_aginode_chunk_irec(xfs_mount_t	*mp,
- 	return(irec);
- }
+diff --git a/repair/incore.h b/repair/incore.h
+index 5a63e1e..c92475e 100644
+--- a/repair/incore.h
++++ b/repair/incore.h
+@@ -591,4 +591,32 @@ typedef struct bm_cursor  {
+ 
+ void init_bm_cursor(bmap_cursor_t *cursor, int num_level);
  
 +/*
-+ * Set the state of an inode block during inode chunk processing. The block is
-+ * expected to be in the free or inode state. If free, it transitions to the
-+ * inode state. Warn if the block is in neither expected state as this indicates
-+ * multiply claimed blocks.
++ * On-disk inobt record helpers. The sparse inode record format has a single
++ * byte freecount. The older format has a 32-bit freecount and thus byte
++ * conversion is necessary.
 + */
-+static void
-+process_inode_agbno_state(
++
++static inline int
++inorec_get_freecount(
 +	struct xfs_mount	*mp,
-+	xfs_agnumber_t		agno,
-+	xfs_agblock_t		agbno)
++	struct xfs_inobt_rec	*rp)
 +{
-+	int state;
- 
-+	pthread_mutex_lock(&ag_locks[agno].lock);
-+	state = get_bmap(agno, agbno);
-+	switch (state) {
-+	case XR_E_INO:	/* already marked */
-+		break;
-+	case XR_E_UNKNOWN:
-+	case XR_E_FREE:
-+	case XR_E_FREE1:
-+		set_bmap(agno, agbno, XR_E_INO);
-+		break;
-+	case XR_E_BAD_STATE:
-+		do_error(_("bad state in block map %d\n"), state);
-+		break;
-+	default:
-+		set_bmap(agno, agbno, XR_E_MULT);
-+		do_warn(
-+	_("inode block %" PRIu64 " multiply claimed, state was %d\n"),
-+			XFS_AGB_TO_FSB(mp, agno, agbno), state);
-+		break;
-+	}
-+	pthread_mutex_unlock(&ag_locks[agno].lock);
++	if (xfs_sb_version_hassparseinodes(&mp->m_sb))
++		return rp->ir_u.sp.ir_freecount;
++	return be32_to_cpu(rp->ir_u.f.ir_freecount);
 +}
++
++static inline void
++inorec_set_freecount(
++	struct xfs_mount	*mp,
++	struct xfs_inobt_rec	*rp,
++	int			freecount)
++{
++	if (xfs_sb_version_hassparseinodes(&mp->m_sb))
++		rp->ir_u.sp.ir_freecount = freecount;
++	else
++		rp->ir_u.f.ir_freecount = cpu_to_be32(freecount);
++}
++
+ #endif /* XFS_REPAIR_INCORE_H */
+diff --git a/repair/phase5.c b/repair/phase5.c
+index 0601810..7372734 100644
+--- a/repair/phase5.c
++++ b/repair/phase5.c
+@@ -1258,11 +1258,14 @@ build_ino_tree(xfs_mount_t *mp, xfs_agnumber_t agno,
+ 				inocnt++;
+ 			}
  
- /*
-  * processes an inode allocation chunk/block, returns 1 on I/O errors,
-@@ -558,8 +593,6 @@ verify_aginode_chunk_irec(xfs_mount_t	*mp,
-  *
-  * *bogus is set to 1 if the entire set of inodes is bad.
-  */
--
--/* ARGSUSED */
- static int
- process_inode_chunk(
- 	xfs_mount_t 		*mp,
-@@ -578,7 +611,6 @@ process_inode_chunk(
- 	int			icnt;
- 	int			status;
- 	int			is_used;
--	int			state;
- 	int			ino_dirty;
- 	int			irec_offset;
- 	int			ibuf_offset;
-@@ -757,29 +789,8 @@ next_readbuf:
- 	/*
- 	 * mark block as an inode block in the incore bitmap
- 	 */
--	if (!is_inode_sparse(ino_rec, irec_offset)) {
--		pthread_mutex_lock(&ag_locks[agno].lock);
--		state = get_bmap(agno, agbno);
--		switch (state) {
--		case XR_E_INO:	/* already marked */
--			break;
--		case XR_E_UNKNOWN:
--		case XR_E_FREE:
--		case XR_E_FREE1:
--			set_bmap(agno, agbno, XR_E_INO);
--			break;
--		case XR_E_BAD_STATE:
--			do_error(_("bad state in block map %d\n"), state);
--			break;
--		default:
--			set_bmap(agno, agbno, XR_E_MULT);
--			do_warn(
--		_("inode block %" PRIu64 " multiply claimed, state was %d\n"),
--				XFS_AGB_TO_FSB(mp, agno, agbno), state);
--			break;
--		}
--		pthread_mutex_unlock(&ag_locks[agno].lock);
--	}
-+	if (!is_inode_sparse(ino_rec, irec_offset))
-+		process_inode_agbno_state(mp, agno, agbno);
- 
- 	for (;;) {
- 		agino = irec_offset + ino_rec->ino_startnum;
-@@ -956,32 +967,8 @@ process_next:
- 			ibuf_offset = 0;
- 			agbno++;
- 
--			if (!is_inode_sparse(ino_rec, irec_offset)) {
--				pthread_mutex_lock(&ag_locks[agno].lock);
--				state = get_bmap(agno, agbno);
--				switch (state) {
--				case XR_E_INO:	/* already marked */
--					break;
--				case XR_E_UNKNOWN:
--				case XR_E_FREE:
--				case XR_E_FREE1:
--					set_bmap(agno, agbno, XR_E_INO);
--					break;
--				case XR_E_BAD_STATE:
--					do_error(
--					_("bad state in block map %d\n"),
--						state);
--					break;
--				default:
--					set_bmap(agno, agbno, XR_E_MULT);
--					do_warn(
--		_("inode block %" PRIu64 " multiply claimed, state was %d\n"),
--						XFS_AGB_TO_FSB(mp, agno, agbno),
--						state);
--					break;
--				}
--				pthread_mutex_unlock(&ag_locks[agno].lock);
+-			if (!xfs_sb_version_hassparseinodes(&mp->m_sb)) {
+-				bt_rec[j].ir_u.f.ir_freecount =
+-							cpu_to_be32(finocnt);
++			/*
++			 * Set the freecount and check whether we need to update
++			 * the sparse format fields. Otherwise, skip to the next
++			 * record.
++			 */
++			inorec_set_freecount(mp, &bt_rec[j], finocnt);
++			if (!xfs_sb_version_hassparseinodes(&mp->m_sb))
+ 				goto nextrec;
 -			}
-+			if (!is_inode_sparse(ino_rec, irec_offset))
-+				process_inode_agbno_state(mp, agno, agbno);
- 		} else if (irec_offset == XFS_INODES_PER_CHUNK)  {
+ 
  			/*
- 			 * get new irec (multiple chunks per block fs)
+ 			 * Convert the 64-bit in-core sparse inode state to the
+@@ -1280,7 +1283,6 @@ build_ino_tree(xfs_mount_t *mp, xfs_agnumber_t agno,
+ 				sparse >>= XFS_INODES_PER_HOLEMASK_BIT;
+ 			}
+ 
+-			bt_rec[j].ir_u.sp.ir_freecount = finocnt;
+ 			bt_rec[j].ir_u.sp.ir_count = inocnt;
+ 			bt_rec[j].ir_u.sp.ir_holemask = cpu_to_be16(holemask);
+ 
+diff --git a/repair/scan.c b/repair/scan.c
+index e3895c2..1a6f0c5 100644
+--- a/repair/scan.c
++++ b/repair/scan.c
+@@ -786,10 +786,7 @@ scan_single_ino_chunk(
+ 	off = XFS_AGINO_TO_OFFSET(mp, ino);
+ 	agbno = XFS_AGINO_TO_AGBNO(mp, ino);
+ 	lino = XFS_AGINO_TO_INO(mp, agno, ino);
+-	if (xfs_sb_version_hassparseinodes(&mp->m_sb))
+-		freecount = rp->ir_u.sp.ir_freecount;
+-	else
+-		freecount = be32_to_cpu(rp->ir_u.f.ir_freecount);
++	freecount = inorec_get_freecount(mp, rp);
+ 
+ 	/*
+ 	 * on multi-block block chunks, all chunks start
+@@ -987,10 +984,7 @@ scan_single_finobt_chunk(
+ 	off = XFS_AGINO_TO_OFFSET(mp, ino);
+ 	agbno = XFS_AGINO_TO_AGBNO(mp, ino);
+ 	lino = XFS_AGINO_TO_INO(mp, agno, ino);
+-	if (xfs_sb_version_hassparseinodes(&mp->m_sb))
+-		freecount = rp->ir_u.sp.ir_freecount;
+-	else
+-		freecount = be32_to_cpu(rp->ir_u.f.ir_freecount);
++	freecount = inorec_get_freecount(mp, rp);
+ 
+ 	/*
+ 	 * on multi-block block chunks, all chunks start at the beginning of the
+@@ -1331,10 +1325,7 @@ _("inode btree block claimed (state %d), agno %d, bno %d, suspect %d\n"),
+ 		 * the block.  skip processing of bogus records.
+ 		 */
+ 		for (i = 0; i < numrecs; i++) {
+-			if (xfs_sb_version_hassparseinodes(&mp->m_sb))
+-				freecount = rp[i].ir_u.sp.ir_freecount;
+-			else
+-				freecount = be32_to_cpu(rp[i].ir_u.f.ir_freecount);
++			freecount = inorec_get_freecount(mp, &rp[i]);
+ 
+ 			if (magic == XFS_IBT_MAGIC ||
+ 			    magic == XFS_IBT_CRC_MAGIC) {
 -- 
 1.9.3
 
