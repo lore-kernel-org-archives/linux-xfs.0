@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id CFEE67F8B
-	for <xfs@oss.sgi.com>; Wed, 10 Jun 2015 03:29:34 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 6C67DAC002
-	for <xfs@oss.sgi.com>; Wed, 10 Jun 2015 01:29:31 -0700 (PDT)
-Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id UmrmFQi5ggTnwizG (version=TLSv1 cipher=AES256-SHA
-	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 10 Jun 2015 01:29:30 -0700 (PDT)
-Date: Wed, 10 Jun 2015 01:29:29 -0700
-From: Christoph Hellwig <hch@infradead.org>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 5E9A87F8B
+	for <xfs@oss.sgi.com>; Wed, 10 Jun 2015 03:35:04 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 3F4B58F8066
+	for <xfs@oss.sgi.com>; Wed, 10 Jun 2015 01:35:03 -0700 (PDT)
+Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
+	[150.101.137.129]) by cuda.sgi.com with ESMTP id
+	BpI2BMvbBSDYDIig for <xfs@oss.sgi.com>;
+	Wed, 10 Jun 2015 01:35:01 -0700 (PDT)
+Date: Wed, 10 Jun 2015 18:34:41 +1000
+From: Dave Chinner <david@fromorbit.com>
 Subject: Re: xfsprogs for-next build error on Debian Wheezy / amd64
-Message-ID: <20150610082929.GA8496@infradead.org>
+Message-ID: <20150610083441.GW9143@dastard>
 References: <20150610070604.GA9855@infradead.org>
 	<20150610081914.GV9143@dastard>
 	<20150610082415.GA23860@infradead.org>
@@ -31,8 +31,8 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
 On Wed, Jun 10, 2015 at 01:24:15AM -0700, Christoph Hellwig wrote:
 > On Wed, Jun 10, 2015 at 06:19:14PM +1000, Dave Chinner wrote:
@@ -45,15 +45,16 @@ On Wed, Jun 10, 2015 at 01:24:15AM -0700, Christoph Hellwig wrote:
 > 
 > Note that the master branch is doing fine.
 
-I've biscted it to:
+Yeah, it's to do with the libxfs restructure in the for-next branch
+to ring it up to the same as the 4.1 kernel. Can you dump the output
+of 'ls -l include/xfs' and attach your include/platform_defs.h file?
 
-commit 2fe8a24dda8a2942a1168c745bf6743ae21991c0
-Author: Dave Chinner <dchinner@redhat.com>
-Date:   Fri Jun 5 10:13:30 2015 +1000
+Cheers,
 
-    libxfs: restructure to match kernel layout
-
-but I still don't understand why it happens.
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
