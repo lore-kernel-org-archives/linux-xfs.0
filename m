@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 8DB8C7F86
-	for <xfs@oss.sgi.com>; Wed, 10 Jun 2015 02:06:13 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 2A624AC002
-	for <xfs@oss.sgi.com>; Wed, 10 Jun 2015 00:06:10 -0700 (PDT)
-Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id wHDmqCDPfYZ9DEih (version=TLSv1 cipher=AES256-SHA
-	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 10 Jun 2015 00:06:05 -0700 (PDT)
-Received: from hch by bombadil.infradead.org with local (Exim 4.80.1 #2 (Red
-	Hat Linux)) id 1Z2a5M-00044r-T8
-	for xfs@oss.sgi.com; Wed, 10 Jun 2015 07:06:04 +0000
-Date: Wed, 10 Jun 2015 00:06:04 -0700
-From: Christoph Hellwig <hch@infradead.org>
-Subject: xfsprogs for-next build error on Debian Wheezy / amd64
-Message-ID: <20150610070604.GA9855@infradead.org>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 0944C7F85
+	for <xfs@oss.sgi.com>; Wed, 10 Jun 2015 03:19:19 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id DCFF88F8068
+	for <xfs@oss.sgi.com>; Wed, 10 Jun 2015 01:19:18 -0700 (PDT)
+Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
+	[150.101.137.129]) by cuda.sgi.com with ESMTP id
+	l0LgnuGpFoyGAMOA for <xfs@oss.sgi.com>;
+	Wed, 10 Jun 2015 01:19:16 -0700 (PDT)
+Date: Wed, 10 Jun 2015 18:19:14 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: xfsprogs for-next build error on Debian Wheezy / amd64
+Message-ID: <20150610081914.GV9143@dastard>
+References: <20150610070604.GA9855@infradead.org>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20150610070604.GA9855@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,47 +25,31 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============8583106924677298968=="
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
---===============8583106924677298968==
-Content-Type: text/plain; charset=unknown-8bit
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-
-hch@brick:~/work/xfsprogs$ make
-Building include
-Building libxfs
-    [TEST]    CRC32
-In file included from crc32.c:61:0:
-crc32table.h:4:1: error: ‘__le32’ undeclared here (not in a
-function)
-crc32table.h:4:1: error: expected expression before ‘__u32’
-crc32table.h:4:20: error: expected expression before ‘__u32’
-crc32table.h:4:39: error: expected expression before ‘__u32’
-crc32table.h:4:58: error: expected expression before ‘__u32’
-crc32table.h:5:1: error: expected expression before ‘__u32’
-crc32table.h:5:20: error: expected expression before ‘__u32’
-crc32table.h:5:39: error: expected expression before ‘__u32’
-crc32table.h:5:58: error: expected expression before ‘__u32’
-
-... and so on
-
-Seems like we're not getting the right headers included in this
-generated file, but I'm lost on what exactly is the error.
-
-
---===============8583106924677298968==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
-
---===============8583106924677298968==--
+T24gV2VkLCBKdW4gMTAsIDIwMTUgYXQgMTI6MDY6MDRBTSAtMDcwMCwgQ2hyaXN0b3BoIEhlbGx3
+aWcgd3JvdGU6Cj4gaGNoQGJyaWNrOn4vd29yay94ZnNwcm9ncyQgbWFrZQo+IEJ1aWxkaW5nIGlu
+Y2x1ZGUKPiBCdWlsZGluZyBsaWJ4ZnMKPiAgICAgW1RFU1RdICAgIENSQzMyCj4gSW4gZmlsZSBp
+bmNsdWRlZCBmcm9tIGNyYzMyLmM6NjE6MDoKPiBjcmMzMnRhYmxlLmg6NDoxOiBlcnJvcjog4oCY
+X19sZTMy4oCZIHVuZGVjbGFyZWQgaGVyZSAobm90IGluIGEKPiBmdW5jdGlvbikKPiBjcmMzMnRh
+YmxlLmg6NDoxOiBlcnJvcjogZXhwZWN0ZWQgZXhwcmVzc2lvbiBiZWZvcmUg4oCYX191MzLigJkK
+PiBjcmMzMnRhYmxlLmg6NDoyMDogZXJyb3I6IGV4cGVjdGVkIGV4cHJlc3Npb24gYmVmb3JlIOKA
+mF9fdTMy4oCZCj4gY3JjMzJ0YWJsZS5oOjQ6Mzk6IGVycm9yOiBleHBlY3RlZCBleHByZXNzaW9u
+IGJlZm9yZSDigJhfX3UzMuKAmQo+IGNyYzMydGFibGUuaDo0OjU4OiBlcnJvcjogZXhwZWN0ZWQg
+ZXhwcmVzc2lvbiBiZWZvcmUg4oCYX191MzLigJkKPiBjcmMzMnRhYmxlLmg6NToxOiBlcnJvcjog
+ZXhwZWN0ZWQgZXhwcmVzc2lvbiBiZWZvcmUg4oCYX191MzLigJkKPiBjcmMzMnRhYmxlLmg6NToy
+MDogZXJyb3I6IGV4cGVjdGVkIGV4cHJlc3Npb24gYmVmb3JlIOKAmF9fdTMy4oCZCj4gY3JjMzJ0
+YWJsZS5oOjU6Mzk6IGVycm9yOiBleHBlY3RlZCBleHByZXNzaW9uIGJlZm9yZSDigJhfX3UzMuKA
+mQo+IGNyYzMydGFibGUuaDo1OjU4OiBlcnJvcjogZXhwZWN0ZWQgZXhwcmVzc2lvbiBiZWZvcmUg
+4oCYX191MzLigJkKPiAKPiAuLi4gYW5kIHNvIG9uCj4gCj4gU2VlbXMgbGlrZSB3ZSdyZSBub3Qg
+Z2V0dGluZyB0aGUgcmlnaHQgaGVhZGVycyBpbmNsdWRlZCBpbiB0aGlzCj4gZ2VuZXJhdGVkIGZp
+bGUsIGJ1dCBJJ20gbG9zdCBvbiB3aGF0IGV4YWN0bHkgaXMgdGhlIGVycm9yLgoKRG9lcyB0aGUg
+cHJvYmxlbSBnbyBhd2F5IGFmdGVyIGEgJ21ha2UgZGlzdGNsZWFuJz8KCkNoZWVycywKCkRhdmUu
+Ci0tIApEYXZlIENoaW5uZXIKZGF2aWRAZnJvbW9yYml0LmNvbQoKX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNn
+aS5jb20KaHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCg==
