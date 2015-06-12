@@ -1,29 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 5E7C47F5F
-	for <xfs@oss.sgi.com>; Fri, 12 Jun 2015 17:50:16 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id D21287F61
+	for <xfs@oss.sgi.com>; Fri, 12 Jun 2015 17:52:27 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 58E04304043
-	for <xfs@oss.sgi.com>; Fri, 12 Jun 2015 15:50:13 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id qlWPhEheY0TalmIU (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 12 Jun 2015 15:50:12 -0700 (PDT)
-Received: from int-mx09.intmail.prod.int.phx2.redhat.com
-	(int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
-	by mx1.redhat.com (Postfix) with ESMTPS id 6DDBACC352
-	for <xfs@oss.sgi.com>; Fri, 12 Jun 2015 22:50:11 +0000 (UTC)
-Received: from liberator.sandeen.net (ovpn01.gateway.prod.ext.phx2.redhat.com
-	[10.5.9.1])
-	by int-mx09.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id t5CMoAxu026318
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <xfs@oss.sgi.com>; Fri, 12 Jun 2015 18:50:11 -0400
-Message-ID: <557B6222.4030903@redhat.com>
-Date: Fri, 12 Jun 2015 17:50:10 -0500
-From: Eric Sandeen <sandeen@redhat.com>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id C9079304043
+	for <xfs@oss.sgi.com>; Fri, 12 Jun 2015 15:52:27 -0700 (PDT)
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	0jCkIFfpasl9KcRj for <xfs@oss.sgi.com>;
+	Fri, 12 Jun 2015 15:52:24 -0700 (PDT)
+Date: Sat, 13 Jun 2015 08:52:09 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: PROBLEM: XFS on ARM corruption 'Structure needs cleaning'
+Message-ID: <20150612225209.GA20262@dastard>
+References: <5579296A.8010208@skylable.com>
+	<20150611151620.GB59168@bfoster.bfoster>
+	<5579A904.3020204@skylable.com> <5579AE85.5080203@sandeen.net>
+	<5579B034.4070503@sandeen.net> <5579B804.9050707@skylable.com>
+	<20150612122108.GB60661@bfoster.bfoster>
+	<557AD4D4.3010901@skylable.com>
 MIME-Version: 1.0
-Subject: [PATCH] xfs_metadump: obfuscate attrs on CRC fs
+Content-Disposition: inline
+In-Reply-To: <557AD4D4.3010901@skylable.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,130 +30,59 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs-oss <xfs@oss.sgi.com>
+To: =?iso-8859-1?B?VPZy9ms=?= Edwin <edwin@skylable.com>
+Cc: Karanvir Singh <karanvir.singh@hgst.com>, Brian Foster <bfoster@redhat.com>, Eric Sandeen <sandeen@sandeen.net>, Luca Gibelli <luca@skylable.com>, xfs@oss.sgi.com, Christopher Squires <christopher.squires@hgst.com>, Wayne Burri <wayne.burri@hgst.com>
 
-Lots of issues in xfs_metadump obfuscation of extended
-attributes with CRC filesystems; this fixes it up.
+On Fri, Jun 12, 2015 at 03:47:16PM +0300, T=F6r=F6k Edwin wrote:
+> On 06/12/2015 03:21 PM, Brian Foster wrote:
+> > I echo Dave's suggestion down thread with regard to toolchain. This
+> > kernel was compiled with the following cross-gcc (installed via Fedora
+> > package):
+> > =
 
-The main issues are that the headers differ, and the
-space in the remote blocks differ.
+> > 	gcc version 4.9.2 20150212 (Red Hat Cross 4.9.2-5) (GCC) =
 
-Tested with a script I'm using to do other metadump
-work; I still owe an xfstest for this and other bits.
+> > =
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
+> > Are you using something different?
+> =
 
-Brief/hacky testcase; populate w/ many attr types with:
+> /proc/version says:
+> =
 
-	MNTPT=/mount/test
+> Linux version 3.14.3-00088-g7651c68 (jenkins@boulder-jenkins) (gcc versio=
+n 4.6.3 (Ubuntu/Linaro 4.6.3-1ubuntu5) ) #24 Thu Apr 9 16:13:46 MDT 2015
+> =
 
-        # FMT_LOCAL
-        touch $MNTPT/S_IFREG.ATTR.FMT_LOCAL
-        setfattr -n user.localattrname -v localattrvalue $MNTPT/S_IFREG.ATTR.FMT_LOCAL
+> I'll get back to you when I have a new kernel running.
 
-        # FMT_EXTENTS
-        touch $MNTPT/S_IFREG.ATTR.FMT_EXTENTS
-        for I in `seq 1 50`; do
-                setfattr -n user.extentattrname$I -v extentattrvalue $MNTPT/S_IFREG.ATTR.FMT_EXTENTS
-        done
+Yup, that's looking like a toolchain bug. Thread about arm directory
+read corruption:
 
-        # FMT_EXTENTS with a single remote 3k value, fill with "C"
-        touch $MNTPT/S_IFREG.ATTR.FMT_EXTENTS_REMOTE3K
-        xfs_io -f -c "pwrite -S 0x43 0 3k" attrvalfile &>/dev/null
-        attr -q -s user.remotebtreeattrname $MNTPT/S_IFREG.ATTR.FMT_EXTENTS_REMOTE3K < attrvalfile
+http://oss.sgi.com/archives/xfs/2013-02/msg00505.html
 
-        # FMT_EXTENTS with a single remote 4k value, fill with "D"
-        touch $MNTPT/S_IFREG.ATTR.FMT_EXTENTS_REMOTE4K
-        xfs_io -f -c "pwrite -S 0x44 0 4k" attrvalfile &>/dev/null
-        attr -q -s user.remotebtreeattrname $MNTPT/S_IFREG.ATTR.FMT_EXTENTS_REMOTE4K < attrvalfile
+cross-gcc version results:
 
-        # FMT_BTREE
-        touch $MNTPT/S_IFREG.ATTR.FMT_BTREE
-        for I in `seq 1 1000`; do
-                setfattr -n user.btreeattrname$I -v btreelongerattrvalue $MNTPT/S_IFREG.ATTR.FMT_BTREE
-        done
+http://oss.sgi.com/archives/xfs/2013-02/msg00563.html
 
-on a crc filesystem, an obfuscated metadump will show all these attrs in the clear
-with getfattr -dR $MNTPT
+"A quick rundown:
+  -cross-gcc4.4:  OK
+  -cross-gcc4.5:  OK
+  -cross-gcc4.6:  BAD
+  -cross-gcc4.7:  BAD
+  -cross-gcc4.8:  OK"
 
-diff --git a/db/metadump.c b/db/metadump.c
-index 94f92bc..793f39e 100644
---- a/db/metadump.c
-+++ b/db/metadump.c
-@@ -1268,39 +1268,54 @@ add_remote_vals(
- 	}
- }
- 
-+/* Handle remote and leaf attributes */
- static void
- obfuscate_attr_block(
--	char			*block,
--	xfs_fileoff_t		offset)
-+	char				*block,
-+	xfs_fileoff_t			offset)
- {
--	xfs_attr_leafblock_t	*leaf;
--	int			i;
--	int			nentries;
--	xfs_attr_leaf_entry_t 	*entry;
--	xfs_attr_leaf_name_local_t *local;
--	xfs_attr_leaf_name_remote_t *remote;
-+	struct xfs_attr_leafblock	*leaf;
-+	struct xfs_attr3_icleaf_hdr	hdr;
-+	int				i;
-+	int				nentries;
-+	xfs_attr_leaf_entry_t 		*entry;
-+	xfs_attr_leaf_name_local_t 	*local;
-+	xfs_attr_leaf_name_remote_t 	*remote;
-+	__uint32_t			bs = mp->m_sb.sb_blocksize;
-+
- 
- 	leaf = (xfs_attr_leafblock_t *)block;
- 
--	if (be16_to_cpu(leaf->hdr.info.magic) != XFS_ATTR_LEAF_MAGIC) {
-+	/* Get header; accounts for crc & non-crc */
-+	xfs_attr3_leaf_hdr_from_disk(mp->m_attr_geo, &hdr, leaf);
-+
-+	/* Remote attributes */
-+	if ((hdr.magic != XFS_ATTR_LEAF_MAGIC) &&
-+	    (hdr.magic != XFS_ATTR3_LEAF_MAGIC)) {
- 		for (i = 0; i < attr_data.remote_val_count; i++) {
--			/* XXX: need to handle CRC headers */
- 			if (attr_data.remote_vals[i] == offset)
--				memset(block, 0, mp->m_sb.sb_blocksize);
-+				/* magic to handle attr and attr3 */
-+				memset(block +
-+					(bs - XFS_ATTR3_RMT_BUF_SPACE(mp, bs)),
-+				      0, XFS_ATTR3_RMT_BUF_SPACE(mp, bs));
- 		}
- 		return;
- 	}
- 
--	nentries = be16_to_cpu(leaf->hdr.count);
-+	nentries = hdr.count;
-+
- 	if (nentries * sizeof(xfs_attr_leaf_entry_t) +
--			sizeof(xfs_attr_leaf_hdr_t) > mp->m_sb.sb_blocksize) {
-+			xfs_attr3_leaf_hdr_size(leaf) >
-+				XFS_ATTR3_RMT_BUF_SPACE(mp, bs)) {
- 		if (show_warnings)
- 			print_warning("invalid attr count in inode %llu",
- 					(long long)cur_ino);
- 		return;
- 	}
- 
--	for (i = 0, entry = &leaf->entries[0]; i < nentries; i++, entry++) {
-+	entry = xfs_attr3_leaf_entryp(leaf);
-+
-+	for (i = 0; i < nentries; i++, entry++) {
- 		if (be16_to_cpu(entry->nameidx) > mp->m_sb.sb_blocksize) {
- 			if (show_warnings)
- 				print_warning(
+Cheers,
+
+Dave.
+-- =
+
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
