@@ -1,23 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 588227F58
-	for <xfs@oss.sgi.com>; Fri, 12 Jun 2015 15:19:48 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 29D93304043
-	for <xfs@oss.sgi.com>; Fri, 12 Jun 2015 13:19:44 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id xr0aW5QLaHzGCkD9 for <xfs@oss.sgi.com>;
-	Fri, 12 Jun 2015 13:19:42 -0700 (PDT)
-Message-ID: <557B3EDD.3030502@sandeen.net>
-Date: Fri, 12 Jun 2015 15:19:41 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+	by oss.sgi.com (Postfix) with ESMTP id 5E7C47F5F
+	for <xfs@oss.sgi.com>; Fri, 12 Jun 2015 17:50:16 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 58E04304043
+	for <xfs@oss.sgi.com>; Fri, 12 Jun 2015 15:50:13 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id qlWPhEheY0TalmIU (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Fri, 12 Jun 2015 15:50:12 -0700 (PDT)
+Received: from int-mx09.intmail.prod.int.phx2.redhat.com
+	(int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+	by mx1.redhat.com (Postfix) with ESMTPS id 6DDBACC352
+	for <xfs@oss.sgi.com>; Fri, 12 Jun 2015 22:50:11 +0000 (UTC)
+Received: from liberator.sandeen.net (ovpn01.gateway.prod.ext.phx2.redhat.com
+	[10.5.9.1])
+	by int-mx09.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id t5CMoAxu026318
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <xfs@oss.sgi.com>; Fri, 12 Jun 2015 18:50:11 -0400
+Message-ID: <557B6222.4030903@redhat.com>
+Date: Fri, 12 Jun 2015 17:50:10 -0500
+From: Eric Sandeen <sandeen@redhat.com>
 MIME-Version: 1.0
-Subject: Re: PROBLEM: XFS on ARM corruption 'Structure needs cleaning'
-References: <5579296A.8010208@skylable.com>	<20150611151620.GB59168@bfoster.bfoster>	<5579A904.3020204@skylable.com>
-	<5579AE85.5080203@sandeen.net>	<5579B034.4070503@sandeen.net>
-	<5579B804.9050707@skylable.com>	<20150612122108.GB60661@bfoster.bfoster>	<557AD4D4.3010901@skylable.com>
-	<20150612135404.GC60661@bfoster.bfoster>
-In-Reply-To: <20150612135404.GC60661@bfoster.bfoster>
+Subject: [PATCH] xfs_metadump: obfuscate attrs on CRC fs
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,65 +36,126 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>, =?windows-1252?Q?T=F6r=F6k_Edwin?= <edwin@skylable.com>
-Cc: Christopher Squires <christopher.squires@hgst.com>, Karanvir Singh <karanvir.singh@hgst.com>, Wayne Burri <wayne.burri@hgst.com>, Luca Gibelli <luca@skylable.com>, xfs@oss.sgi.com
+To: xfs-oss <xfs@oss.sgi.com>
 
-On 6/12/15 8:54 AM, Brian Foster wrote:
+Lots of issues in xfs_metadump obfuscation of extended
+attributes with CRC filesystems; this fixes it up.
 
->>> I managed to get an updated kernel on a beaglebone I had sitting around,
->>> but I don't reproduce any errors with the "corrupted" image (I think
->>> we've established that the image is fine on-disk and something is going
->>> awry at runtime):
->>>
->>> root@beaglebone:~# uname -a
->>> Linux beaglebone 3.14.1+ #5 SMP Thu Jun 11 20:58:02 EDT 2015 armv7l GNU/Linux
->>> root@beaglebone:~# mount ./xfs2.test.corrupted /mnt/
->>> root@beaglebone:~# ls -al /mnt/a/
->>> total 12
->>> drwxr-xr-x 3 root root   14 Jun 11 16:11 .
->>> drwxr-xr-x 3 root root   14 Jun 11 16:11 ..
->>> drwxr-x--- 2 root root 8192 Jun 11 16:11 b
->>> root@beaglebone:~# ls -al /mnt/a/b/
->>> total 17996
->>> drwxr-x--- 2 root root    8192 Jun 11 16:11 .
->>> drwxr-xr-x 3 root root      14 Jun 11 16:11 ..
->>> -rw-r--r-- 1 root root   12288 Jun 11 16:11 events.db
->>> -rw-r--r-- 1 root root   15360 Jun 11 16:11 f00000000.db
->>> -rw-r--r-- 1 root root   15360 Jun 11 16:11 f00000001.db
->>> -rw-r--r-- 1 root root   15360 Jun 11 16:11 f00000002.db
->>> -rw-r--r-- 1 root root   15360 Jun 11 16:11 f00000003.db
->>> ...
->>> root@beaglebone:~#
->>>
->>> I echo Dave's suggestion down thread with regard to toolchain. This
->>> kernel was compiled with the following cross-gcc (installed via Fedora
->>> package):
->>>
->>> 	gcc version 4.9.2 20150212 (Red Hat Cross 4.9.2-5) (GCC) 
->>>
->>> Are you using something different?
->>
->> /proc/version says:
->>
->> Linux version 3.14.3-00088-g7651c68 (jenkins@boulder-jenkins) (gcc version 4.6.3 (Ubuntu/Linaro 4.6.3-1ubuntu5) ) #24 Thu Apr 9 16:13:46 MDT 2015
->>
->> I'll get back to you when I have a new kernel running.
->>
-> 
-> Ok. FWIW, I just tried rebuilding with the following 4.6.3 toolchain:
-> 
-> https://www.kernel.org/pub/tools/crosstool/files/bin/x86_64/4.6.3/x86_64-gcc-4.6.3-nolibc_arm-unknown-linux-gnueabi.tar.xz
-> 
-> ... and still didn't reproduce any errors. Of course, this probably
-> doesn't have whatever patches and whatnot might be included in the
-> distro 4.6.3 toolchain. It could be worth a try depending on what
-> happens with a newer kernel, though.
+The main issues are that the headers differ, and the
+space in the remote blocks differ.
 
-FWIW, I tried mounting the corrupted image and running the ls on
-Fedora 22, kernel 4.0.4-303.fc22.armv7hl, gcc version 5.1.1, and had no
-problems there either.
+Tested with a script I'm using to do other metadump
+work; I still owe an xfstest for this and other bits.
 
--Eric
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
+
+Brief/hacky testcase; populate w/ many attr types with:
+
+	MNTPT=/mount/test
+
+        # FMT_LOCAL
+        touch $MNTPT/S_IFREG.ATTR.FMT_LOCAL
+        setfattr -n user.localattrname -v localattrvalue $MNTPT/S_IFREG.ATTR.FMT_LOCAL
+
+        # FMT_EXTENTS
+        touch $MNTPT/S_IFREG.ATTR.FMT_EXTENTS
+        for I in `seq 1 50`; do
+                setfattr -n user.extentattrname$I -v extentattrvalue $MNTPT/S_IFREG.ATTR.FMT_EXTENTS
+        done
+
+        # FMT_EXTENTS with a single remote 3k value, fill with "C"
+        touch $MNTPT/S_IFREG.ATTR.FMT_EXTENTS_REMOTE3K
+        xfs_io -f -c "pwrite -S 0x43 0 3k" attrvalfile &>/dev/null
+        attr -q -s user.remotebtreeattrname $MNTPT/S_IFREG.ATTR.FMT_EXTENTS_REMOTE3K < attrvalfile
+
+        # FMT_EXTENTS with a single remote 4k value, fill with "D"
+        touch $MNTPT/S_IFREG.ATTR.FMT_EXTENTS_REMOTE4K
+        xfs_io -f -c "pwrite -S 0x44 0 4k" attrvalfile &>/dev/null
+        attr -q -s user.remotebtreeattrname $MNTPT/S_IFREG.ATTR.FMT_EXTENTS_REMOTE4K < attrvalfile
+
+        # FMT_BTREE
+        touch $MNTPT/S_IFREG.ATTR.FMT_BTREE
+        for I in `seq 1 1000`; do
+                setfattr -n user.btreeattrname$I -v btreelongerattrvalue $MNTPT/S_IFREG.ATTR.FMT_BTREE
+        done
+
+on a crc filesystem, an obfuscated metadump will show all these attrs in the clear
+with getfattr -dR $MNTPT
+
+diff --git a/db/metadump.c b/db/metadump.c
+index 94f92bc..793f39e 100644
+--- a/db/metadump.c
++++ b/db/metadump.c
+@@ -1268,39 +1268,54 @@ add_remote_vals(
+ 	}
+ }
+ 
++/* Handle remote and leaf attributes */
+ static void
+ obfuscate_attr_block(
+-	char			*block,
+-	xfs_fileoff_t		offset)
++	char				*block,
++	xfs_fileoff_t			offset)
+ {
+-	xfs_attr_leafblock_t	*leaf;
+-	int			i;
+-	int			nentries;
+-	xfs_attr_leaf_entry_t 	*entry;
+-	xfs_attr_leaf_name_local_t *local;
+-	xfs_attr_leaf_name_remote_t *remote;
++	struct xfs_attr_leafblock	*leaf;
++	struct xfs_attr3_icleaf_hdr	hdr;
++	int				i;
++	int				nentries;
++	xfs_attr_leaf_entry_t 		*entry;
++	xfs_attr_leaf_name_local_t 	*local;
++	xfs_attr_leaf_name_remote_t 	*remote;
++	__uint32_t			bs = mp->m_sb.sb_blocksize;
++
+ 
+ 	leaf = (xfs_attr_leafblock_t *)block;
+ 
+-	if (be16_to_cpu(leaf->hdr.info.magic) != XFS_ATTR_LEAF_MAGIC) {
++	/* Get header; accounts for crc & non-crc */
++	xfs_attr3_leaf_hdr_from_disk(mp->m_attr_geo, &hdr, leaf);
++
++	/* Remote attributes */
++	if ((hdr.magic != XFS_ATTR_LEAF_MAGIC) &&
++	    (hdr.magic != XFS_ATTR3_LEAF_MAGIC)) {
+ 		for (i = 0; i < attr_data.remote_val_count; i++) {
+-			/* XXX: need to handle CRC headers */
+ 			if (attr_data.remote_vals[i] == offset)
+-				memset(block, 0, mp->m_sb.sb_blocksize);
++				/* magic to handle attr and attr3 */
++				memset(block +
++					(bs - XFS_ATTR3_RMT_BUF_SPACE(mp, bs)),
++				      0, XFS_ATTR3_RMT_BUF_SPACE(mp, bs));
+ 		}
+ 		return;
+ 	}
+ 
+-	nentries = be16_to_cpu(leaf->hdr.count);
++	nentries = hdr.count;
++
+ 	if (nentries * sizeof(xfs_attr_leaf_entry_t) +
+-			sizeof(xfs_attr_leaf_hdr_t) > mp->m_sb.sb_blocksize) {
++			xfs_attr3_leaf_hdr_size(leaf) >
++				XFS_ATTR3_RMT_BUF_SPACE(mp, bs)) {
+ 		if (show_warnings)
+ 			print_warning("invalid attr count in inode %llu",
+ 					(long long)cur_ino);
+ 		return;
+ 	}
+ 
+-	for (i = 0, entry = &leaf->entries[0]; i < nentries; i++, entry++) {
++	entry = xfs_attr3_leaf_entryp(leaf);
++
++	for (i = 0; i < nentries; i++, entry++) {
+ 		if (be16_to_cpu(entry->nameidx) > mp->m_sb.sb_blocksize) {
+ 			if (show_warnings)
+ 				print_warning(
 
 _______________________________________________
 xfs mailing list
