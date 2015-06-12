@@ -1,20 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 2A4EF7F56
-	for <xfs@oss.sgi.com>; Fri, 12 Jun 2015 08:27:04 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id A338CAC002
-	for <xfs@oss.sgi.com>; Fri, 12 Jun 2015 06:27:00 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id KWNeQldoJUNATSDL for <xfs@oss.sgi.com>;
-	Fri, 12 Jun 2015 06:26:58 -0700 (PDT)
-Message-ID: <557ADE21.6010101@sandeen.net>
-Date: Fri, 12 Jun 2015 08:26:57 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 487C17F56
+	for <xfs@oss.sgi.com>; Fri, 12 Jun 2015 08:43:53 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 2739B304048
+	for <xfs@oss.sgi.com>; Fri, 12 Jun 2015 06:43:53 -0700 (PDT)
+Received: from smtp5-g21.free.fr (smtp5-g21.free.fr [212.27.42.5]) by
+	cuda.sgi.com with ESMTP id 2yYqQd1XMIPXiWVg (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Fri, 12 Jun 2015 06:43:50 -0700 (PDT)
+Date: Fri, 12 Jun 2015 15:43:53 +0200
+From: Emmanuel Florac <eflorac@intellique.com>
+Subject: Re: xfs_repair use all memory
+Message-ID: <20150612154353.1c0df8b6@harpe.intellique.com>
+In-Reply-To: <CAG_XuNUxBCYZtPJixcA8sJqN7nzb85Eg+vJyvAoNB73wryPcTw@mail.gmail.com>
+References: <CAG_XuNWrbyb97h3moqgYJLdvMr3J1OPGb2VknDTpcO0-8upMnw@mail.gmail.com>
+	<20150612122750.21c2a8e4@harpe.intellique.com>
+	<CAG_XuNUxBCYZtPJixcA8sJqN7nzb85Eg+vJyvAoNB73wryPcTw@mail.gmail.com>
 MIME-Version: 1.0
-Subject: Re: Formating options for large partition/files
-References: <557ACD23.3020601@ixblue.com> <557AD178.8090500@ixblue.com>
-In-Reply-To: <557AD178.8090500@ixblue.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,27 +30,23 @@ Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: =?UTF-8?B?Q8OpZHJpYyBMZW1hcmNoYW5k?= <cedric.lemarchand@ixblue.com>, xfs@oss.sgi.com
+To: Lampa <lampacz@gmail.com>
+Cc: xfs@oss.sgi.com
 
-aHR0cDovL3hmcy5vcmcvaW5kZXgucGhwL1hGU19GQVEjUTpfSV93YW50X3RvX3R1bmVfbXlfWEZT
-X2ZpbGVzeXN0ZW1zX2Zvcl8uM0Nzb21ldGhpbmcuM0UKCjspCgpPbiA2LzEyLzE1IDc6MzIgQU0s
-IEPDqWRyaWMgTGVtYXJjaGFuZCB3cm90ZToKPiBSZXBsYXlpbmcgdG8gbXlzZWxmLCBpdCBzZWVt
-cyBkZWZhdWx0IHZhbHVlcyB3aWxsIGNvdmVyIGFsbCBteSBuZWVkcyA6Cj4gCj4gLSBibG9ja3Np
-emUgPSA0ayAobWF4IHZhbHVlIGZvciBhZG02NCBhcmNoKQo+IC0gc2VjdG9yIHNpemUgPSA1MTIg
-KCBoYXJkIGRyaXZlcyBhcmUgdmlydHVhbCwgc28gbm90IDRrKQo+IAo+IEFueSBhZHZpY2VzIG9u
-IG1vdW50IG9wdGlvbnMgPwo+IAo+IENoZWVycwo+IAo+IAo+IExlIDEyLzA2LzE1IDE0OjE0LCBD
-w6lkcmljIExlbWFyY2hhbmQgYSDDqWNyaXQgOgo+PiBJIHBsYW5lIHRvIHVzZSBYRlMgb24gYSA+
-NTBUQiBwYXJ0aXRpb24sIHRoYXQgd2lsbCBob3N0IGEgZmV3IGJpZwo+PiAoYmFja3VwL2FyY2hp
-dmVzKSBmaWxlcy4gUmVhZGluZyB0aGUgY2hhcHRlciA0IG9mIHRoZSBvbmxpbmUKPj4gZG9jdW1l
-bnRhdGlvbiwgSSBmaW5kIDIgZm9ybWF0aW5nIG9wdGlvbnMgdGhhdCBjb3VsZCBmaXQgOgo+Pgo+
-PiAtIG1heCBvdXQgdGhlIGFsbG9jYXRpb24gYmxvY2sgOiAtYiBzaXplPSA2NEtCCj4+IC0gbWF4
-IG91dCB0aGUgc2VjdG9yIHNpemUgOiAtcyBzaXplPTMyS0IKPj4KPj4gSSBhbSBub3QgYW4gZXhw
-ZXJ0LCBzbyBhbnkgbGlnaHQgd2lsbCBiZSBhcHByZWNpYXRlZC4KPj4KPj4gQ2hlZXJzLAo+Pgo+
-PiBDw6lkcmljCj4+Cj4+IF9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fCj4+IHhmcyBtYWlsaW5nIGxpc3QKPj4geGZzQG9zcy5zZ2kuY29tCj4+IGh0dHA6Ly9v
-c3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo+IAo+IF9fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fCj4geGZzIG1haWxpbmcgbGlzdAo+IHhmc0Bvc3Mu
-c2dpLmNvbQo+IGh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo+IAoKX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KeGZzIG1haWxpbmcg
-bGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8v
-eGZzCg==
+TGUgRnJpLCAxMiBKdW4gMjAxNSAxMjozNjo1OCArMDIwMApMYW1wYSA8bGFtcGFjekBnbWFpbC5j
+b20+IMOpY3JpdmFpdDoKCj4gUmV0dXJuIGFkZHJlc3MgPSAweGZmZmZmZmZmYTAzMTI2NzcKPiBb
+ICAxNTAuMzI3MjYyXSBYRlMgKGRtLTApOiBDb3JydXB0aW9uIG9mIGluLW1lbW9yeSBkYXRhIGRl
+dGVjdGVkLgo+IFNodXR0aW5nIGRvd24gZmlsZXN5c3RlbQo+IFsgIDE1MC4zMjcyNjRdIFhGUyAo
+ZG0tMCk6IFBsZWFzZSB1bW91bnQgdGhlIGZpbGVzeXN0ZW0gYW5kIHJlY3RpZnkKPiB0aGUgcHJv
+YmxlbShzKQo+IFsgIDE1OS4zMDQyODddIFhGUyAoZG0tMCk6IHhmc19sb2dfZm9yY2U6IGVycm9y
+IDUgcmV0dXJuZWQuCj4gCj4gCj4gaSB3aWxsIHRyeSB5b3VyIHhmc3Byb2dzIHZlcnNpb24KPiAK
+ClllcywgYW5kIHRyeSB0byBtb3VudC91bm1vdW50IHRoZSBmaWxlc3lzdGVtIGZpcnN0IHRvIGNs
+ZWFyIHRoZSBsb2cgaWYKcG9zc2libGUsIGJlZm9yZSBydW5uaW5nIHhmc19yZXBhaXIuCgoKLS0g
+Ci0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLQpFbW1hbnVlbCBGbG9yYWMgICAgIHwgICBEaXJlY3Rpb24gdGVjaG5p
+cXVlCiAgICAgICAgICAgICAgICAgICAgfCAgIEludGVsbGlxdWUKICAgICAgICAgICAgICAgICAg
+ICB8CTxlZmxvcmFjQGludGVsbGlxdWUuY29tPgogICAgICAgICAgICAgICAgICAgIHwgICArMzMg
+MSA3OCA5NCA4NCAwMgotLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0KCl9fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0
+dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
