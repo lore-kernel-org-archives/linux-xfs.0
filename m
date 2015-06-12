@@ -1,26 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 836527F61
-	for <xfs@oss.sgi.com>; Thu, 11 Jun 2015 17:53:19 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 73713304032
-	for <xfs@oss.sgi.com>; Thu, 11 Jun 2015 15:53:16 -0700 (PDT)
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	LUpbHFWihUFMlMoc for <xfs@oss.sgi.com>;
-	Thu, 11 Jun 2015 15:53:12 -0700 (PDT)
-Date: Fri, 12 Jun 2015 08:53:08 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: PROBLEM: XFS on ARM corruption 'Structure needs cleaning'
-Message-ID: <20150611225308.GF24666@dastard>
-References: <5579296A.8010208@skylable.com>
-	<20150611151620.GB59168@bfoster.bfoster>
-	<5579A904.3020204@skylable.com> <5579AE85.5080203@sandeen.net>
-	<5579B034.4070503@sandeen.net> <5579B804.9050707@skylable.com>
-	<5579EA91.3090707@sandeen.net>
+	by oss.sgi.com (Postfix) with ESMTP id A722F7F47
+	for <xfs@oss.sgi.com>; Fri, 12 Jun 2015 05:15:36 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 79684304048
+	for <xfs@oss.sgi.com>; Fri, 12 Jun 2015 03:15:33 -0700 (PDT)
+Received: from mail-wi0-f178.google.com (mail-wi0-f178.google.com
+	[209.85.212.178]) by cuda.sgi.com with ESMTP id
+	suqHkBAecI5AzlTB (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Fri, 12 Jun 2015 03:15:30 -0700 (PDT)
+Received: by wibdq8 with SMTP id dq8so12626761wib.1
+	for <xfs@oss.sgi.com>; Fri, 12 Jun 2015 03:15:29 -0700 (PDT)
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <5579EA91.3090707@sandeen.net>
+From: Lampa <lampacz@gmail.com>
+Date: Fri, 12 Jun 2015 12:14:49 +0200
+Message-ID: <CAG_XuNWrbyb97h3moqgYJLdvMr3J1OPGb2VknDTpcO0-8upMnw@mail.gmail.com>
+Subject: xfs_repair use all memory
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,77 +25,207 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Brian Foster <bfoster@redhat.com>, Luca Gibelli <luca@skylable.com>, xfs@oss.sgi.com, Christopher Squires <christopher.squires@hgst.com>, =?iso-8859-1?B?VPZy9ms=?= Edwin <edwin@skylable.com>, Wayne Burri <wayne.burri@hgst.com>
+To: xfs@oss.sgi.com
 
-On Thu, Jun 11, 2015 at 03:07:45PM -0500, Eric Sandeen wrote:
-> On 6/11/15 11:32 AM, T=F6r=F6k Edwin wrote:
-> > [4745016.650000] XFS (loop0): metadata I/O error: block 0xa000 ("xfs_tr=
-ans_read_buf_map") error 117 numblks 8
-> =
+Hello,
 
-> ok, block 0xA000 (in sectors) is sector 40960...
-> =
+i have 8TB filesystem but unable to check it or repair
 
-> xfs_db> daddr 40960
-> xfs_db> fsblock =
+df -h
+/dev/mapper/vg0-data                                       8,0T  7,5T
+525G  94% /home
 
-> current fsblock is 8192
-> xfs_db> type text
-> xfs_db> p
-> 000:  58 46 53 42 00 00 10 00 00 00 00 00 00 00 28 00  XFSB............
-> 010:  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
-> 020:  64 23 d2 06 32 2e 4c 20 82 6e f0 36 a7 d9 54 f9  d...2.L..n.6..T.
-> =
+df -i
+/dev/mapper/vg0-data                                   1717983616
+106594156 1611389460    7% /home
 
-> ...
-> =
+I got lot of "XFS (dm-0): xfs_log_force: error 5 returned" in log
 
-> Right, so it's reading the 2nd superblock in xfs_dir3_data_read_verify.  =
-Huh?
-> (I could have imagined some weird scenario where we read block 0, but 819=
-2?
-> Very strange).
-> =
+trying to repair (check) filesystem but xfs repair is always killed by
+oom - it use all memory (8GB).
 
-> Hm, I don't think this can be readahead, it'd not get to this verifier AF=
-AICT.
-> =
+xfs_repair -V
+xfs_repair version 3.1.7
 
-> Given that the image is enough to reproduce via just mount; ls - we shoul=
-d be
-> able to reproduce this, given the right hardware, and get to the bottom o=
-f it.
+xfs_repair -n -m 2048 -vv /dev/mapper/vg0-data
+Phase 1 - find and verify superblock...
+        - max_mem = 2097152, icount = 109324864, imem = 427050, dblock
+= 2147479552, dmem = 1048574
+        - block cache size set to 71440 entries
+Phase 2 - using internal log
+        - scan filesystem freespace and inode maps...
+        - found root inode chunk
+libxfs_bcache: 0x147c4c0
+Max supported entries = 71440
+Max utilized entries = 11839
+Active entries = 11839
+Hash table size = 8930
+Hits = 0
+Misses = 11839
+Hit ratio =  0,00
+MRU 0 entries =  11839 (100%)
+MRU 1 entries =      0 (  0%)
+MRU 2 entries =      0 (  0%)
+MRU 3 entries =      0 (  0%)
+MRU 4 entries =      0 (  0%)
+MRU 5 entries =      0 (  0%)
+MRU 6 entries =      0 (  0%)
+MRU 7 entries =      0 (  0%)
+MRU 8 entries =      0 (  0%)
+MRU 9 entries =      0 (  0%)
+MRU 10 entries =      0 (  0%)
+MRU 11 entries =      0 (  0%)
+MRU 12 entries =      0 (  0%)
+MRU 13 entries =      0 (  0%)
+MRU 14 entries =      0 (  0%)
+MRU 15 entries =      0 (  0%)
+Hash buckets with   0 entries   3161 (  0%)
+Hash buckets with   1 entries   2587 ( 21%)
+Hash buckets with   2 entries   1615 ( 27%)
+Hash buckets with   3 entries    823 ( 20%)
+Hash buckets with   4 entries    416 ( 14%)
+Hash buckets with   5 entries    203 (  8%)
+Hash buckets with   6 entries     62 (  3%)
+Hash buckets with   7 entries     35 (  2%)
+Hash buckets with   8 entries     15 (  1%)
+Hash buckets with   9 entries      6 (  0%)
+Hash buckets with  10 entries      2 (  0%)
+Hash buckets with  11 entries      2 (  0%)
+Hash buckets with  12 entries      1 (  0%)
+Hash buckets with  14 entries      1 (  0%)
+Hash buckets with  15 entries      1 (  0%)
+Phase 3 - for each AG...
+        - scan (but don't clear) agi unlinked lists...
+        - process known inodes and perform inode discovery...
+        - agno = 0
+doubling cache size to 142880
+doubling cache size to 285760
+data fork in ino 700711615 claims free block 43794495
+data fork in ino 700711615 claims free block 43794496
+        - agno = 1
+        - agno = 2
+        - agno = 3
+        - agno = 4
+        - agno = 5
+        - agno = 6
+        - agno = 7
+        - process newly discovered inodes...
+libxfs_bcache: 0x147c4c0
+Max supported entries = 285760
+Max utilized entries = 285760
+Active entries = 285705
+Hash table size = 8930
+Hits = 26843840
+Misses = 34163400
+Hit ratio = 44,00
+MRU 0 entries =   3933 (  1%)
+MRU 1 entries =      0 (  0%)
+MRU 2 entries =   2311 (  0%)
+MRU 3 entries =  14456 (  5%)
+MRU 4 entries =    345 (  0%)
+MRU 5 entries =  14955 (  5%)
+MRU 6 entries = 216435 ( 75%)
+MRU 7 entries =   3442 (  1%)
+MRU 8 entries =      0 (  0%)
+MRU 9 entries =      0 (  0%)
+MRU 10 entries =      0 (  0%)
+MRU 11 entries =   5852 (  2%)
+MRU 12 entries =    232 (  0%)
+MRU 13 entries =  23545 (  8%)
+MRU 14 entries =    199 (  0%)
+MRU 15 entries =      0 (  0%)
+Hash buckets with   9 entries      2 (  0%)
+Hash buckets with  10 entries      5 (  0%)
+Hash buckets with  11 entries      4 (  0%)
+Hash buckets with  12 entries     13 (  0%)
+Hash buckets with  13 entries      8 (  0%)
+Hash buckets with  14 entries     22 (  0%)
+Hash buckets with  15 entries     31 (  0%)
+Hash buckets with  16 entries     75 (  0%)
+Hash buckets with  17 entries     86 (  0%)
+Hash buckets with  18 entries    112 (  0%)
+Hash buckets with  19 entries    128 (  0%)
+Hash buckets with  20 entries    200 (  1%)
+Hash buckets with  21 entries    218 (  1%)
+Hash buckets with  22 entries    274 (  2%)
+Hash buckets with  23 entries    292 (  2%)
+Hash buckets with  24 entries    342 (  2%)
+Hash buckets with >24 entries   7118 ( 86%)
+Phase 4 - check for duplicate blocks...
+        - setting up duplicate extent list...
+        - check for inodes claiming duplicate blocks...
+        - agno = 0
+doubling cache size to 571520
+        - agno = 1
+        - agno = 2
+        - agno = 3
+        - agno = 4
+        - agno = 5
+        - agno = 6
+        - agno = 7
+libxfs_bcache: 0x147c4c0
+Max supported entries = 571520
+Max utilized entries = 571520
+Active entries = 571506
+Hash table size = 8930
+Hits = 51552448
+Misses = 71034716
+Hit ratio = 42,05
+MRU 0 entries =  16024 (  2%)
+MRU 1 entries =      0 (  0%)
+MRU 2 entries =   9154 (  1%)
+MRU 3 entries =  83965 ( 14%)
+MRU 4 entries =    517 (  0%)
+MRU 5 entries =    155 (  0%)
+MRU 6 entries = 435429 ( 76%)
+MRU 7 entries =      0 (  0%)
+MRU 8 entries =      0 (  0%)
+MRU 9 entries =      0 (  0%)
+MRU 10 entries =      0 (  0%)
+MRU 11 entries =   8709 (  1%)
+MRU 12 entries =    521 (  0%)
+MRU 13 entries =  16818 (  2%)
+MRU 14 entries =    214 (  0%)
+MRU 15 entries =      0 (  0%)
+Hash buckets with >24 entries   8930 (100%)
+No modify flag set, skipping phase 5
+libxfs_bcache: 0x147c4c0
+Max supported entries = 571520
+Max utilized entries = 571520
+Active entries = 571506
+Hash table size = 8930
+Hits = 51552448
+Misses = 71034716
+Hit ratio = 42,05
+MRU 0 entries =  16024 (  2%)
+MRU 1 entries =      0 (  0%)
+MRU 2 entries =   9154 (  1%)
+MRU 3 entries =  83965 ( 14%)
+MRU 4 entries =    517 (  0%)
+MRU 5 entries =    155 (  0%)
+MRU 6 entries = 435429 ( 76%)
+MRU 7 entries =      0 (  0%)
+MRU 8 entries =      0 (  0%)
+MRU 9 entries =      0 (  0%)
+MRU 10 entries =      0 (  0%)
+MRU 11 entries =   8709 (  1%)
+MRU 12 entries =    521 (  0%)
+MRU 13 entries =  16818 (  2%)
+MRU 14 entries =    214 (  0%)
+MRU 15 entries =      0 (  0%)
+Hash buckets with >24 entries   8930 (100%)
+Phase 6 - check inode connectivity...
+        - traversing filesystem ...
+        - agno = 0
+doubling cache size to 1143040
+Killed (SIGKILL)
 
-OK, so I've had a look at the on disk layout via xfs_db and there is
-no corruption present on disk. I've confirmed that by mounting on
-x86-64 (on 4.1-rc6) and no errors have been issued, and xfs_repair
-(from for-next branch) doesn't see anything wrong, either.
-
-So this is looking like either: a) a kernel bug we've subsequently
-fixed; or b) an arm specific compiler or kernel bug.
-
-I'd like to see a) ruled out as quickly as possible. Torok, can you
-build a more recent kernel and see if the problem persists?
-
-Can you also let us know what compiler version you are using and how
-you are compiling (e.g. cross compile)? ISTR a previous incarnation
-of this problem showed up when a specific compiler version was used
-to cross-compile the armv7 kernel from x86-64, and it went away with
-a compiler update. So it would be good to rule out the
-compiler/build environment as the cause, too.
-
-Cheers,
-
-Dave.
--- =
-
-Dave Chinner
-david@fromorbit.com
+-- 
+Lampa
 
 _______________________________________________
 xfs mailing list
