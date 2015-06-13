@@ -1,25 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 912D47F5D
-	for <xfs@oss.sgi.com>; Sat, 13 Jun 2015 08:55:12 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 8827B7F51
+	for <xfs@oss.sgi.com>; Sat, 13 Jun 2015 17:39:29 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 38075AC001
-	for <xfs@oss.sgi.com>; Sat, 13 Jun 2015 06:55:09 -0700 (PDT)
-Received: from zimbra.skylable.com (zimbra.skylable.com [5.35.252.9]) by
-	cuda.sgi.com with ESMTP id id7wXlRSJTlcYdT0 for
-	<xfs@oss.sgi.com>; Sat, 13 Jun 2015 06:55:07 -0700 (PDT)
-Message-ID: <557C3638.1020903@skylable.com>
-Date: Sat, 13 Jun 2015 16:55:04 +0300
-From: =?windows-1252?Q?T=F6r=F6k_Edwin?= <edwin@skylable.com>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 521B9304032
+	for <xfs@oss.sgi.com>; Sat, 13 Jun 2015 15:39:26 -0700 (PDT)
+Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
+	[150.101.137.145]) by cuda.sgi.com with ESMTP id
+	bhh1gs6mFakPdHhA for <xfs@oss.sgi.com>;
+	Sat, 13 Jun 2015 15:39:23 -0700 (PDT)
+Date: Sun, 14 Jun 2015 08:39:21 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: your mail
+Message-ID: <20150613223921.GC20262@dastard>
+References: <71962FC942A61D42A3DECDFB7CC94F61193F6F07@STC-EXCH.stc.local>
 MIME-Version: 1.0
-Subject: Re: PROBLEM: XFS on ARM corruption 'Structure needs cleaning'
-References: <5579296A.8010208@skylable.com>	<20150611151620.GB59168@bfoster.bfoster>	<5579A904.3020204@skylable.com>
-	<5579AE85.5080203@sandeen.net>	<5579B034.4070503@sandeen.net>
-	<5579B804.9050707@skylable.com>	<20150612122108.GB60661@bfoster.bfoster>	<557AD4D4.3010901@skylable.com>
-	<20150612135404.GC60661@bfoster.bfoster>,
-	<557B3EDD.3030502@sandeen.net>
-	<BLUPR04MB593340A765596780F266454F2BB0@BLUPR04MB593.namprd04.prod.outlook.com>
-In-Reply-To: <BLUPR04MB593340A765596780F266454F2BB0@BLUPR04MB593.namprd04.prod.outlook.com>
+Content-Disposition: inline
+In-Reply-To: <71962FC942A61D42A3DECDFB7CC94F61193F6F07@STC-EXCH.stc.local>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,63 +29,76 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>, Brian Foster <bfoster@redhat.com>, Dave Chinner <david@fromorbit.com>
-Cc: Christopher Squires <christopher.squires@hgst.com>, Karanvir Singh <karanvir.singh@hgst.com>, Wayne Burri <wayne.burri@hgst.com>, Luca Gibelli <luca@skylable.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: Tom Christensen <tom.christensen@storagecraft.com>
+Cc: "swakefie@redhat.com" <swakefie@redhat.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-On 06/13/2015 01:52 AM, Dave Chinner wrote:
-> Yup, that's looking like a toolchain bug. Thread about arm directory
-> read corruption:
+On Sat, Jun 13, 2015 at 01:02:51AM +0000, Tom Christensen wrote:
+> We've run into a bit of an issue with xfs running Ceph.  The following bug details what we are seeing:
+> https://bugs.launchpad.net/ubuntu/+source/xfs/+bug/1464308
 > 
-> http://oss.sgi.com/archives/xfs/2013-02/msg00505.html
+> Basically the Ceph OSD process gets hung in dstate due to the traceback in the bug.
 > 
-> cross-gcc version results:
+> Here is additional info gathered:
 > 
-> http://oss.sgi.com/archives/xfs/2013-02/msg00563.html
+> xfs bmap output for a random directory
+> https://gist.github.com/dmmatson/e864252c7ff346df954a
 > 
-> "A quick rundown:
->   -cross-gcc4.4:  OK
->   -cross-gcc4.5:  OK
->   -cross-gcc4.6:  BAD
->   -cross-gcc4.7:  BAD
->   -cross-gcc4.8:  OK"
+> attr -l of the file dchinner indicated from the xfs bmap output
+> (attr -l)
+> (6:11:41 PM) dmatson: Attribute "cephos.spill_out" has a 2 byte value for rbd\udata.66039648e29a80.0000000000000d35__head_23EA10B8__5
+> (6:11:45 PM) dmatson: Attribute "ceph.snapset@3" has a 263 byte value for rbd\udata.66039648e29a80.0000000000000d35__head_23EA10B8__5
+> (6:11:49 PM) dmatson: Attribute "ceph.snapset@2" has a 1131 byte value for rbd\udata.66039648e29a80.0000000000000d35__head_23EA10B8__5
+> (6:11:53 PM) dmatson: Attribute "ceph.snapset@1" has a 2048 byte value for rbd\udata.66039648e29a80.0000000000000d35__head_23EA10B8__5
+> (6:11:56 PM) dmatson: Attribute "ceph._" has a 259 byte value for rbd\udata.66039648e29a80.0000000000000d35__head_23EA10B8__5
+> (6:12:00 PM) dmatson: Attribute "ceph.snapset" has a 2048 byte value for rbd\udata.66039648e29a80.0000000000000d35__head_23EA10B8__5
 > 
+> xfs_bmap -vp of same file
+> 
+> rbd\udata.66039648e29a80.0000000000000d35__head_23EA10B8__5:
+> (6:13:21 PM) dmatson: EXT: FILE-OFFSET BLOCK-RANGE AG AG-OFFSET TOTAL FLAGS
+> (6:13:25 PM) dmatson: 0: [0..8191]: 2944471376..2944479567 16 (24445776..24453967) 8192 00000
 
-Just tested the new kernels, they're both good:
+And the attribute fork was:
 
-GOOD: 3.14.3-std-00094-g9035cb4, gcc version 4.7.3 (Ubuntu/Linaro 4.7.3-12ubuntu1)
-GOOD: 3.14.44-std-00095-g0425932, gcc version 4.9.2 (4.9.2-10)
-BAD: 3.14.3-00088-g7651c68, gcc version 4.6.3 (Ubuntu/Linaro 4.6.3-1ubuntu5)
+rbd\udata.66039648e29a80.0000000000000d35__head_23EA10B8__5:
+EXT: FILE-OFFSET	BLOCK-RANGE		AG AG-OFFSET          TOTAL FLAGS
+  0: [0..7]:		1461176488..1461176495  8  (1163688..1163695)     8 00000
+  1: [8..31]:		1461176504..1461176527  8  (1163704..1163727)    24 00000
 
+I just created a filesystem and attribute list identical to the
+above, and came up with a attribute fork that looks like:
 
-On 06/12/2015 03:21 PM, Brian Foster wrote:
-> I echo Dave's suggestion down thread with regard to toolchain. This
-> kernel was compiled with the following cross-gcc (installed via Fedora
-> package):
+/mnt/scratch/udata.66039648e29a80.0000000000000d35__head_23EA10B8__5:
+ EXT: FILE-OFFSET      BLOCK-RANGE      AG AG-OFFSET        TOTAL FLAGS
+   0: [0..7]:          120..127          0 (120..127)           8 00000
+   1: [8..15]:         112..119          0 (112..119)           8 00000
+   2: [16..23]:        104..111          0 (104..111)           8 00000
+
+IOWs, there's an extra block in the attribute fork that is causing
+problems than there needs to be.  That tends to imply attribute
+overwrites might be contributing here (the 3-phase overwrite
+algorithm increases the space usage) so I'm going to need to try a
+few different things to see if I can get an attribute fork into the
+same shape....
+
+> LVM configuration: None
 > 
-> 	gcc version 4.9.2 20150212 (Red Hat Cross 4.9.2-5) (GCC) 
+> HGST 3TB
 > 
-> Are you using something different?
-> 
-> Brian
+> meta-data=/dev/mapper/63e3300b-6b7b-41a0-bdf2-b64ec3c20c51 isize=2048   agcount=32, agsize=22812700 blks
 
-Indeed, it looks like a compiler bug, thanks a lot for helping me track it down.
-I'll see if I can find out more about whats different between the two kernels compiled by 4.6 and 4.7.
+agcount=32 will actually be slowing your disks down. The default of
+4AGs is usually best for a single spindle as it has sufficient
+allocation cncurrency but results in much fewer seeks than a higher
+AG count....
 
-On 06/13/2015 12:41 AM, Karanvir Singh wrote:
-> 
-> Hi Edwin,
-> 
-> 
-> PFA the  newer uimages: 
-> 
-> uImage3.14.44.gcc.4.9.2:  its a 3.14.44 compiled with gcc 4.9.4 
-> uImage.gcc.4.7.2-1: its 3.14.3 compiled with gcc 4.7.2
+Cheers,
 
-Thanks, both of these images work correctly: I was not able to reproduce the bug with them (rebooting to the original uImage 3.14.3 with gcc 4.6.3 reproduces bug immediately).
+Dave.
 
-Best regards,
---Edwin
-
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
