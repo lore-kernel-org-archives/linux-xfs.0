@@ -1,19 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id DBB877F37
-	for <xfs@oss.sgi.com>; Sun, 14 Jun 2015 20:23:21 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id D211F304032
-	for <xfs@oss.sgi.com>; Sun, 14 Jun 2015 18:23:18 -0700 (PDT)
-Received: from muffat.debian.org (muffat.debian.org [206.12.19.146]) by
-	cuda.sgi.com with ESMTP id FCi51zxyVTBm2qLH (version=TLSv1
-	cipher=AES128-SHA bits=128 verify=NO) for <xfs@oss.sgi.com>;
-	Sun, 14 Jun 2015 18:23:17 -0700 (PDT)
-From: Debian FTP Masters <ftpmaster@ftp-master.debian.org>
-MIME-Version: 1.0
-Subject: xfsprogs_3.2.3_i386.changes ACCEPTED into unstable
-Message-Id: <E1Z4J7L-00062G-AY@franck.debian.org>
-Date: Mon, 15 Jun 2015 01:23:15 +0000
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id C351E7F3F
+	for <xfs@oss.sgi.com>; Sun, 14 Jun 2015 22:40:24 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 5CF98AC002
+	for <xfs@oss.sgi.com>; Sun, 14 Jun 2015 20:40:23 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id CAMC6LoDKyf1xp7n for <xfs@oss.sgi.com>;
+	Sun, 14 Jun 2015 20:40:22 -0700 (PDT)
+Mime-Version: 1.0 (1.0)
+Subject: Re: Script to cross-apply libxfs changes
+From: Eric Sandeen <sandeen@sandeen.net>
+In-Reply-To: <55563463.1030107@redhat.com>
+Date: Sun, 14 Jun 2015 22:40:19 -0500
+Message-Id: <64526CC8-3975-4668-9552-3D41F9295D32@sandeen.net>
+References: <55563463.1030107@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,73 +27,182 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: XFS Development Team <xfs@oss.sgi.com>, Nathan Scott <nathans@debian.org>
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
+Btw you can add: 
 
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 
-Accepted:
+To this
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA256
-
-Format: 1.8
-Date: Mon, 01 Jun 2015 11:35:02 +1000
-Source: xfsprogs
-Binary: xfsprogs xfslibs-dev xfsprogs-udeb
-Architecture: source i386
-Version: 3.2.3
-Distribution: unstable
-Urgency: low
-Maintainer: XFS Development Team <xfs@oss.sgi.com>
-Changed-By: Nathan Scott <nathans@debian.org>
-Description:
- xfslibs-dev - XFS filesystem-specific static libraries and headers
- xfsprogs   - Utilities for managing the XFS filesystem
- xfsprogs-udeb - A stripped-down version of xfsprogs, for debian-installer (udeb)
-Changes:
- xfsprogs (3.2.3) unstable; urgency=low
- .
-   * New upstream release
-Checksums-Sha1:
- 4e3a7c2fcae23cdefc3c87087016f2e086d699a0 1780 xfsprogs_3.2.3.dsc
- 87e19bd31fc782f2760346da8bc4032dc1d012a9 1491492 xfsprogs_3.2.3.tar.gz
- 64fc7e4e71e0192ca975304bcdf8ad59d501684a 724986 xfsprogs_3.2.3_i386.deb
- c525b23f73759d2a0db314609d193fb0de4b0327 31798 xfslibs-dev_3.2.3_i386.deb
- f763df2623fb8f1b95d6049bb2295a40d7de95a9 146038 xfsprogs-udeb_3.2.3_i386.udeb
-Checksums-Sha256:
- ce4da7e4ad8838732e6c9e070decbb6c39f0e66c20a0edb192de3db90aacf369 1780 xfsprogs_3.2.3.dsc
- a154b622fe1a1ce2cdb7251adde3745c816c0298638c7e5cabc75699ad261171 1491492 xfsprogs_3.2.3.tar.gz
- e89b0fc4382f4e2b0b261611ab1b299439be73c36d30e3bba000179a951bd02a 724986 xfsprogs_3.2.3_i386.deb
- 612f8de2013995448b638c5addf064836fab8ee23db4a629318b7b7aae6f2db0 31798 xfslibs-dev_3.2.3_i386.deb
- 50b7c48ebf92fc77a935fce0490b96a37c5f7a4be7b9c6005208ded305431058 146038 xfsprogs-udeb_3.2.3_i386.udeb
-Files:
- 9bb0931d6bb6a641b452168d96be02b1 1780 admin optional xfsprogs_3.2.3.dsc
- a78bb07f6b07e3ab82275486cfbc44be 1491492 admin optional xfsprogs_3.2.3.tar.gz
- 68f77f296829e8815793b3181599ee85 724986 admin optional xfsprogs_3.2.3_i386.deb
- 6001a549884a8d0946cca35626e337e6 31798 libdevel extra xfslibs-dev_3.2.3_i386.deb
- 9b67cee8b27d7d9ccae5e3afcb353f60 146038 debian-installer optional xfsprogs-udeb_3.2.3_i386.udeb
-Package-Type: udeb
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.22 (GNU/Linux)
-
-iQIcBAEBCAAGBQJVfiQGAAoJEP4IQu423YwMj94P/j14kJdglj28FRZFLhKd84VP
-7KSLATxvRjFauKLgiQ8uKZ/CGvt5lV5KMZ/5mynQ1VIgJ6vabot6eM8y+YX7TPw6
-VTWGg0GvTr9yVksEVavj2vqIp1vm3+fQqHkEJEJ3bq+nsWodNoO2FuHs7Me1PeVq
-5j4cGaWv3AcwbprsuExKisRn7qYkGrCRfQHp8LeMomlVXnMj+0BdVqed0hoqpABw
-Fz2yEFpNuaO2c+iHrs4XeHPErG83ivQLgfrE7K/zQJ5U2SwDOZcxkcpkieqH46fu
-eAl2gHl2tt/ayCk7phmLPnaZsA3ALTLSzhVIz31cOMTTFI0HkfoJhxzxkq1VHtl2
-p5xonpn8P6LEdl66ar30SfrATyzNlsSsVtXAot7pxdAb4WmOLv9dWgyQn5oqj3tR
-y62IMe1PlaRYehBS5BeFgj24h45LTiMOt3vsDZoH6x3kreQ1899N5rjLNr2lhSa8
-TUDZnSOrq9hbUGYgaQhTQCafDUsggWOgksuTqLjoC1hdwXuOYXNueXW7XfK2p03P
-jgfSPb5hBozHY1YmxferEoC9/S7e2+aanDa7M+1WV59hjsZu6ndHLQxhGaxeAWJi
-4OullOP1zwQW298suCXJZMEKfPNjBEK4cUg9PrUuciGq2ZA6XUxFp0tnDuc3gIc0
-a9tjP+PU00fP7uDfjXjS
-=t6MA
------END PGP SIGNATURE-----
-
-
-Thank you for your contribution to Debian.
+> On May 15, 2015, at 1:01 PM, Eric Sandeen <sandeen@redhat.com> wrote:
+> 
+> I'm terrible at bash, so don't laugh.  But this more or less works for me ...
+> 
+> This script takes either a patch name or a commit ID in the current
+> tree, and massages that change into a libxfs patch for the other tree;
+> i.e. it applies a kernel libxfs patch to xfsprogs, or vice versa.
+> It'll create a guilt patch if it looks like a guilt dir, or just smack
+> it in with "patch" if not.
+> 
+> It can surely be improved, but it's a start.
+> 
+> Example below, and script at the end.  Requires filterdiff.
+> 
+> [root@bp-05 xfsprogs]# git log
+> commit 9681b791929795cd7dc6c7a79c3a69354f34e0b0
+> ...
+> [root@bp-05 xfsprogs]# libxfs-apply /mnt/test2/git/linux-xfs/ 9681b791929795cd7dc6c7a79c3a69354f34e0b0
+> Filtered patch for /mnt/test2/git/linux-xfs/ contains:
+> a/fs/xfs/libxfs/xfs_alloc.c
+> a/fs/xfs/libxfs/xfs_alloc_btree.c
+> a/fs/xfs/libxfs/xfs_attr_leaf.c
+> a/fs/xfs/libxfs/xfs_attr_remote.c
+> a/fs/xfs/libxfs/xfs_bmap_btree.c
+> a/fs/xfs/libxfs/xfs_btree.c
+> a/fs/xfs/libxfs/xfs_da_btree.c
+> a/fs/xfs/libxfs/xfs_dir2_block.c
+> a/fs/xfs/libxfs/xfs_dir2_data.c
+> a/fs/xfs/libxfs/xfs_dir2_leaf.c
+> a/fs/xfs/libxfs/xfs_dir2_node.c
+> a/fs/xfs/libxfs/xfs_dquot_buf.c
+> a/fs/xfs/libxfs/xfs_format.h
+> a/fs/xfs/libxfs/xfs_ialloc.c
+> a/fs/xfs/libxfs/xfs_ialloc_btree.c
+> a/fs/xfs/libxfs/xfs_inode_buf.c
+> a/fs/xfs/libxfs/xfs_sb.c
+> a/fs/xfs/libxfs/xfs_symlink_remote.c
+> /mnt/test2/git/linux-xfs/ looks like a guilt directory.
+> Top patch is: percpu-2
+> Create new Guilt patch? (Enter patch name or return to skip) new-uuid
+> Applying patch..new-uuid
+> Patch applied.
+> Patch was applied in /mnt/test2/git/linux-xfs/; check for rejects, guilt push -f, etc
+> [root@bp-05 xfsprogs]#
+> 
+> ==========
+> 
+> #!/bin/bash
+> 
+> # 2 args:
+> #    libxfs-apply <repo> <commit ID or patchfile>
+> 
+> usage()
+> {
+>    echo "libxfs-apply repodir [patchfile|commitid]"
+>    exit
+> }
+> 
+> cleanup()
+> {
+>    rm -f $PATCH $LIBXFS_FILES $NEWPATCH
+> }
+> 
+> fail()
+> {
+>    cleanup
+>    cd $ORIG_DIR
+>    exit
+> }
+> 
+> if [ "$#" -eq 2 -a -d "$1" -a -f "$2" ]; then
+>    REPO=$1
+>    PATCH=$2
+> elif [ "$#" -eq 2 -a -d "$1" ]; then
+>    REPO=$1
+>    PATCH=`mktemp`
+>    git show $2 > $PATCH || usage
+> else
+>    usage
+> fi
+> 
+> 
+> ORIG_DIR=`pwd`
+> LIBXFS_FILES=`mktemp`
+> NEWPATCH=`mktemp`
+> 
+> cd $REPO
+> 
+> # Are we using guilt? This works even if no patch is applied.
+> guilt top &> /dev/null
+> if [ $? -eq 0 ]; then
+>    GUILT=1
+> else
+>    GUILT=0
+> fi
+> 
+> # Filter the patch into the right format & files for the other tree
+> 
+> if   [ -d "fs/xfs/libxfs" ]; then    # We are applying a progs patch to the kernel tree
+>    lsdiff $PATCH | grep -q "a/libxfs/"
+>    if [ $? -ne 0 ]; then
+>        echo "Doesn't look like an xfsprogs patch with libxfs changes"
+>        fail
+>    fi
+> 
+>    # The files we will try to apply to
+>    ls -1 fs/xfs/libxfs/*.[ch] | sed -e "s%.*/\(.*\)%*\1%" > $LIBXFS_FILES
+> 
+>    # Create the new patch
+>    filterdiff \
+>        -I $LIBXFS_FILES \
+>        --strip=1 \
+>        --addoldprefix=a/fs/xfs/ \
+>        --addnewprefix=b/fs/xfs/ \
+>        $PATCH > $NEWPATCH 
+> 
+> elif [ -d "libxfs" -a -d "libxlog" ]; then    # We are applying a kernel patch to the xfsprogs tree
+>    lsdiff $PATCH | grep -q "a/fs/xfs/libxfs/"
+>    if [ $? -ne 0 ]; then
+>        echo "Doesn't look like a kernel patch with libxfs changes"
+>        fail
+>    fi
+> 
+>    # The files we will try to apply to
+>    ls -1 libxfs/*.[ch] | sed -e "s%.*/\(.*\)%*\1%" > $LIBXFS_FILES
+> 
+>    # Create the new patch
+>    filterdiff \
+>        -I $LIBXFS_FILES \
+>        --strip=3 \
+>        --addoldprefix=a/ \
+>        --addnewprefix=b/ \
+>        $PATCH > $NEWPATCH 
+> else
+>    echo "Sorry, I don't recognize repo $REPO"
+>    fail
+> fi
+> 
+> echo "Filtered patch for $REPO contains:"
+> lsdiff $NEWPATCH
+> 
+> 
+> # Ok, now apply with guilt or patch; either may fail and require a force
+> # and/or a manual reject fixup
+> if [ $GUILT -eq 1 ]; then
+>    echo "$REPO looks like a guilt directory."
+>    PATCHES=`guilt applied | wc -l`
+>    if [ $PATCHES -gt 0 ]; then
+>        echo -n "Top patch is: "
+>        guilt top
+>    fi
+>    read -r -p "Create new Guilt patch? (Enter patch name or return to skip) " response
+>    [ -z "$response" ] && guilt refresh; guilt import -P $response $NEWPATCH; guilt push
+> else
+>    echo "Applying with patch utility:"
+>    patch -p1 < $NEWPATCH
+> fi
+> 
+> echo "Patch was applied in $REPO; check for rejects, guilt push -f, etc"
+> 
+> cleanup
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+> 
 
 _______________________________________________
 xfs mailing list
