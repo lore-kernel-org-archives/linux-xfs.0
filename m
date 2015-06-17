@@ -1,20 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id DDA017F95
-	for <xfs@oss.sgi.com>; Wed, 17 Jun 2015 09:28:45 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id C03CB8F8050
-	for <xfs@oss.sgi.com>; Wed, 17 Jun 2015 07:28:42 -0700 (PDT)
-Received: from mx3-phx2.redhat.com (mx3-phx2.redhat.com [209.132.183.24]) by
-	cuda.sgi.com with ESMTP id UN4oVMaShUXPaDZS (version=TLSv1
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 0FC477F95
+	for <xfs@oss.sgi.com>; Wed, 17 Jun 2015 14:24:28 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 0044A30405F
+	for <xfs@oss.sgi.com>; Wed, 17 Jun 2015 12:24:24 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id fbYFBWjdJ4Y5mOzP (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 17 Jun 2015 07:28:40 -0700 (PDT)
-Date: Wed, 17 Jun 2015 10:28:38 -0400 (EDT)
-From: Jan Tulak <jtulak@redhat.com>
-Message-ID: <551099978.15978267.1434551318983.JavaMail.zimbra@redhat.com>
-In-Reply-To: <919039035.15967379.1434550287476.JavaMail.zimbra@redhat.com>
-Subject: mkfs: a possible bad
+	Wed, 17 Jun 2015 12:24:21 -0700 (PDT)
+Received: from int-mx11.intmail.prod.int.phx2.redhat.com
+	(int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
+	by mx1.redhat.com (Postfix) with ESMTPS id 09DB2BC922
+	for <xfs@oss.sgi.com>; Wed, 17 Jun 2015 19:24:20 +0000 (UTC)
+Received: from liberator.sandeen.net (ovpn01.gateway.prod.ext.phx2.redhat.com
+	[10.5.9.1])
+	by int-mx11.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id t5HJOImH022320
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <xfs@oss.sgi.com>; Wed, 17 Jun 2015 15:24:19 -0400
+Message-ID: <5581C962.7020200@redhat.com>
+Date: Wed, 17 Jun 2015 14:24:18 -0500
+From: Eric Sandeen <sandeen@redhat.com>
 MIME-Version: 1.0
+Subject: [PATCH] xfs_copy: fix copy of hard 4k devices
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,27 +36,36 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: xfs-oss <xfs@oss.sgi.com>
 
-Hi,
-I'm looking into mkfs/xfs_mkfs.c and I wonder, is "if (xi.dbsize > sectorsize)" correct?
-It is a check for:
-Warning: the data subvolume sector size %u is less than the sector size reported by the device (%u).
+If we have a pure 4k device with no 512 emulation, xfs_copy
+fails straightaway because it tries to do a 512-byte direct
+IO read of the superblock.
 
-But psectorsize is assigned to sectorsize, not to xi.dbsize, so the two values seems to be swapped in the condition (and as arguments of the printf too).
-I think this gone without noticing because usually, when creating a partition, the two values are the same. So even if the condition is wrong, nothing happens. 
-And when -bsize=X is passed, then it is catched earlier and nothing happens again.
+Do like we do in xfs_db, and read in the max possible sector size,
+because we don't yet know what the filesystem's sector size is.
 
-Only when I apply a patch that changes how mkfs acts when it gets a file instead of a block device, I start to see the warning, although physical sector size is 512 and block size is set to 4096. The numbers are swapped in the warning too...
+This fixes a failure in xfs/032 on a hard 4k device.
 
-I tried to run ./check -g quick and it seems that the change breaks nothing.
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
 
-Cheers,
-Jan
-
--- 
-Jan Tulak
-jtulak@redhat.com
+diff --git a/copy/xfs_copy.c b/copy/xfs_copy.c
+index 279527c..b39c84d 100644
+--- a/copy/xfs_copy.c
++++ b/copy/xfs_copy.c
+@@ -654,8 +654,9 @@ main(int argc, char **argv)
+ 
+ 	memset(&mbuf, 0, sizeof(xfs_mount_t));
+ 	libxfs_buftarg_init(&mbuf, xargs.ddev, xargs.logdev, xargs.rtdev);
+-	sbp = libxfs_readbuf(mbuf.m_ddev_targp, XFS_SB_DADDR, 1, 0,
+-							&xfs_sb_buf_ops);
++	sbp = libxfs_readbuf(mbuf.m_ddev_targp, XFS_SB_DADDR,
++			     1 << (XFS_MAX_SECTORSIZE_LOG - BBSHIFT),
++			     0, &xfs_sb_buf_ops);
+ 	sb = &mbuf.m_sb;
+ 	libxfs_sb_from_disk(sb, XFS_BUF_TO_SBP(sbp));
+ 
 
 _______________________________________________
 xfs mailing list
