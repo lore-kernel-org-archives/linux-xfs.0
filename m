@@ -1,18 +1,18 @@
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id F41D17F92
-	for <xfs@oss.sgi.com>; Wed, 17 Jun 2015 04:09:35 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 563E57F86
+	for <xfs@oss.sgi.com>; Tue, 16 Jun 2015 22:00:22 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 8ED51AC009
-	for <xfs@oss.sgi.com>; Wed, 17 Jun 2015 02:09:32 -0700 (PDT)
-Received: from songxia.0main.com (songxia.0main.com [46.22.210.50]) by
-	cuda.sgi.com with ESMTP id vG2S1swWhqqXvPZi for
-	<xfs@oss.sgi.com>; Wed, 17 Jun 2015 02:09:29 -0700 (PDT)
-Subject: business solutions
-Message-ID: <d1a8cf7a4ab68b1745a3221b9226730f@theyachtweek.com>
-Date: Wed, 17 Jun 2015 10:24:36 +0200
-From: "Alex" <jasontonger@yahoo.com>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id C8ED0AC001
+	for <xfs@oss.sgi.com>; Tue, 16 Jun 2015 20:00:18 -0700 (PDT)
+Received: from euck.com ([60.166.213.167]) by cuda.sgi.com with ESMTP id
+	DBcJCeWVYLcfuDui for <xfs@oss.sgi.com>;
+	Tue, 16 Jun 2015 20:00:09 -0700 (PDT)
 MIME-Version: 1.0
-Reply-To: wlhongg@sina.com
+From: "Gafee Fang" <huixinsoft56@foxmail.com>
+Date: 17 Jun 2015 10:59:43 +0800
+Subject: =?utf-8?B?UmVjb21tZW5kYXRpb24gb2YgQXV0b21hdGlvbiBQcm9kdWN0cw==?=
+Message-Id: <20150617030018.50FE012961A6@cuda.sgi.com>
+Reply-To: Gafee Fang <huixinsoft56@foxmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,66 +21,59 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
+Content-Type: multipart/mixed; boundary="===============3397099525032736628=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Hi
+--===============3397099525032736628==
+Content-Type: text/html; charset=utf-8
+Content-Transfer-Encoding: base64
 
-This is Alex, I would like to be your business parnter today.
-Pls check what we offer below:
+PGh0bWw+PGJvZHk+PFA+RGVhciw8L1A+DQo8UD5Hb29kIGRheSB0byB5b3UhIDxCUj4mbmJz
+cDs8QlI+R1NJIGlzIGEgd29ybGR3aWRlIGRpc3RyaWJ1dG9yIGZvciBpbmR1c3RyaWFsIGF1
+dG9tYXRpb24uIE91ciBtYWluIGFjdGl2aXR5IGlzIGZvY3VzZWQgb24gY29vcGVyYXRpb24g
+d2l0aCBvdGhlciBkaXN0cmlidXRvcnMsIGNvbW1lcmNpYWwgY29tcGFuaWVzIGxpa2UgbWUg
+YW5kIHlvdSwgdGhyb3VnaCBhbGwgYXJvdW5kIHRoZSB3b3JsZCwgdGhyb3VnaG91dCBhIHdv
+cmxkd2lkZSBuZXR3b3JrIHdlIGNyZWF0ZWQgZmV3IHllYXJzIGFnby48L1A+DQo8UD5PdXIg
+YmVzdCBicmFuZHMgYXJlOjxCUj5NVEw6IGZyb20gNTAlIHRvIDg1JSBkaXNjb3VudCBvbiBw
+cmljZWxpc3QsIGh1Z2UgaW52ZW50b3J5IChtYWRlIGluIFVLIG9yIEluZGlhKTxCUj5QK0Y6
+IDYwJSBkaXNjb3VudCBvbiBDaGluZXNlIHByaWNlbGlzdCwgaHVnZSBpbnZlbnRvcnkgKG1h
+ZGUgaW4gU2luZ2Fwb3JlIG9yIEluZG9uZXNpYSk8QlI+QmVudGx5IE5ldmFkYTogMzUlIGRp
+c2NvdW50IG9uIHByaWNlbGlzdCAobWFkZSBpbiBVU0EpPEJSPllva29nYXdhOiBmcm9tIDQw
+JSB0byA3MCUgZGlzY291bnQgb24gQ2hpbmVzZSBwcmljZWxpc3QgKG1hZGUgaW4gS29yZWEs
+IEphcGFuIG9yIENoaW5hKTxCUj5Sb3NlbW91bnQ6IGZyb20gNTAlIHRvIDcwJSBkaXNjb3Vu
+dCwgaHVnZSBpbnZlbnRvcnkgKG1hZGUgaW4gU2luZ2Fwb3JlKTxCUj5Ib25leXdlbGw6IGZy
+b20gNTAlIHRvIDYwJSBkaXNjb3VudCBodWdlIGludmVudG9yeSAobWFkZSBpbiBVU0EpPEJS
+PkFsbGVuLUJyYWRsZXk6IGZyb20gNTAlIHRvIDYwJSBkaXNjb3VudCBodWdlIGludmVudG9y
+eTwvUD4NCjxQPldlIGhhdmUgYWxzbyBjb21wZXRpdGl2ZSBjb25kaXRpb25zIGVzcGVjaWFs
+bHkgb24gRXVyb3BlYW4gYnJhbmRzLCBzdWNoIGFzIEUrSCwgVkVHQSwgQVNDTywgQmFpbGV5
+LCBBVU1BLCBTY2hlbmNrLiA8L1A+DQo8UD5Zb3UgY2FuIHNlZSBvdXIgcHJvZHVjdCByYW5n
+ZSBvbiBvdXIgd2Vic2l0ZS48QlI+Jm5ic3A7PEJSPkhvcGUgZnJpZW5kbHkgJmFtcDsgbXV0
+dWFsLWJlbmVmaWNpYWwgYnVzaW5lc3MgcmVsYXRpb25zaGlwIGNhbiBiZSBidWlsdCB1cCBi
+ZXR3ZWVuIHVzITxCUj4mbmJzcDs8QlI+QmVzdCBSZWdhcmRzLDxCUj5HYWZlZSBGYW5nPC9Q
+Pg0KPFA+R3JlYXQgU3lzdGVtIEludGVybmF0aW9uYWwgTHRkLiBTaGVuemhlbiBPZmZpY2U8
+QlI+Um9vbSBHLCAxNXRoIEZsb29yLCBTZWF2aWV3IFBsYXphLCBOby4gMTggVGFpemkgUm9h
+ZCwgTmFuc2hhbiBEaXN0cmljdCwgU2hlbnpoZW4gQ2hpbmE8QlI+VGVsOiA4Ni03NTUtIDI2
+ODUwNzExPEJSPiZuYnNwOyZuYnNwOyZuYnNwOyZuYnNwOyZuYnNwOyZuYnNwOyZuYnNwOyZu
+YnNwOyZuYnNwOyZuYnNwOyZuYnNwOyZuYnNwOyZuYnNwOyZuYnNwOyZuYnNwOyZuYnNwOyZu
+YnNwOyAyNjg1MDcxMiA8QlI+Jm5ic3A7Jm5ic3A7Jm5ic3A7Jm5ic3A7Jm5ic3A7Jm5ic3A7
+Jm5ic3A7Jm5ic3A7Jm5ic3A7Jm5ic3A7Jm5ic3A7Jm5ic3A7Jm5ic3A7Jm5ic3A7Jm5ic3A7
+Jm5ic3A7Jm5ic3A7IDI2ODUwNzE1IDxCUj4mbmJzcDsmbmJzcDsmbmJzcDsmbmJzcDsmbmJz
+cDsmbmJzcDsmbmJzcDsmbmJzcDsmbmJzcDsmbmJzcDsmbmJzcDsmbmJzcDsmbmJzcDsmbmJz
+cDsmbmJzcDsmbmJzcDsmbmJzcDsgMjY4NTA3MTY8QlI+RmF4OiA4Ni03NTUtMjY4NTA3MTMg
+PC9QPjwvYm9keT48L2h0bWw+
 
-YOUR BUSINESS LEASE AND FINANCE PARTNER
-Tailoring Business Solutions to Match Your Business
-*  Fast Approvals
-*  Efficient Service with a 'Can Do' attitude
-*  Leading Industry experience
-*  Widest available range of funds from banks,
-financial institutions through to our own private investor/lenders and
-specialized funders
 
-ALL TYPES OF ACCEPTABLE BUSINESS EQUIPMENT LEASING
- * Sale Lease-Back options available!!
- * Collateral Asset Based NOT based Credit History (Equipment and Real
-Estate)
- * Business UNSECURED Capital Loans for Good Credit
- * Tailor made lease programs
-
-SOME TYPES OF EQUIPMENT WE LEASE AND FINANCE
-  * All types of Commercial Motor Vehicles
-  * Medical Profession Loans and Equipment
-  * Office Equipment
-  * Solar Equipment for Business and Municipalities
-  * LED Lighting & Signage for Business and Municipalities
-  * Point of Sale Equipment
-  * Vending Machines
-  * Computers and Software
-  * Restaurant/Catering Equipment
-  * Refrigeration Equipment
-  * Manufacturing Equipment
-
-VEHICLES WE DO FOR BUSINESS AND PERSONAL USE
- * Exotic Cars - Luxury Sports Cars - Classic Cars put in your Company
- * Heavy Construction Equipment - New and Used
- * Heavy Duty Trucks and Trailers
- * Medium Duty Trucks and Trailers
- * Motor Coaches and Shuttle Buses
- * Sprinter Limo and Shuttle
- * Emergency and Para-Transit Vehicles
- * Catering and Vending Trucks
-
-Pls reply if you are interested then - WE WILL CONTACT YOU
-NAME:______________________________________________
-PHONE:_____________________________________________
-EMAIL:______________________________________________
-
-Thanks.
-Alex
-Email: luisami@sina.com
+--===============3397099525032736628==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============3397099525032736628==--
