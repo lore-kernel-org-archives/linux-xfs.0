@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 187037F93
-	for <xfs@oss.sgi.com>; Wed, 17 Jun 2015 05:57:37 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 1FA8D7FA5
+	for <xfs@oss.sgi.com>; Wed, 17 Jun 2015 05:57:39 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 0C3BD304070
-	for <xfs@oss.sgi.com>; Wed, 17 Jun 2015 03:57:36 -0700 (PDT)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 2D8C6AC002
+	for <xfs@oss.sgi.com>; Wed, 17 Jun 2015 03:57:34 -0700 (PDT)
 Received: from bombadil.infradead.org ([198.137.202.9]) by cuda.sgi.com with
-	ESMTP id IC3XVKy3BRaXcpbB (version=TLSv1 cipher=AES256-SHA
+	ESMTP id FQdCTOF7bBZT9e1l (version=TLSv1 cipher=AES256-SHA
 	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 17 Jun 2015 03:57:35 -0700 (PDT)
+	Wed, 17 Jun 2015 03:57:32 -0700 (PDT)
 Received: from [88.128.80.44] (helo=localhost)
 	by bombadil.infradead.org with esmtpsa (Exim 4.80.1 #2 (Red Hat Linux))
-	id 1Z5B2E-0003Ye-Jp
-	for xfs@oss.sgi.com; Wed, 17 Jun 2015 10:57:35 +0000
+	id 1Z5B2B-0003YT-75
+	for xfs@oss.sgi.com; Wed, 17 Jun 2015 10:57:31 +0000
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 4/5] xfs: use void pointers in log validation helpers
-Date: Wed, 17 Jun 2015 12:55:31 +0200
-Message-Id: <1434538532-6566-5-git-send-email-hch@lst.de>
+Subject: [PATCH 3/5] xfs: return a void pointer from xfs_buf_offset
+Date: Wed, 17 Jun 2015 12:55:30 +0200
+Message-Id: <1434538532-6566-4-git-send-email-hch@lst.de>
 In-Reply-To: <1434538532-6566-1-git-send-email-hch@lst.de>
 References: <1434538532-6566-1-git-send-email-hch@lst.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -34,115 +34,158 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Compared to char pointers this saves us a lot of casting effort.  Also
-add another local variable to make the code easier to read.
+This avoids all kinds of unessecary casts in an envrionment like Linux where
+we can assume that pointer arithmetics are support on void pointers.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/xfs_log.c      | 30 ++++++++++++++----------------
- fs/xfs/xfs_log_priv.h |  2 +-
- 2 files changed, 15 insertions(+), 17 deletions(-)
+ fs/xfs/libxfs/xfs_ialloc.h    | 3 +--
+ fs/xfs/libxfs/xfs_inode_buf.c | 8 +++-----
+ fs/xfs/xfs_buf.c              | 6 +++---
+ fs/xfs/xfs_buf.h              | 2 +-
+ fs/xfs/xfs_inode.c            | 2 +-
+ fs/xfs/xfs_log_recover.c      | 9 ++++-----
+ 6 files changed, 13 insertions(+), 17 deletions(-)
 
-diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-index 68e22b6..7b940c6 100644
---- a/fs/xfs/xfs_log.c
-+++ b/fs/xfs/xfs_log.c
-@@ -109,7 +109,7 @@ xlog_ungrant_log_space(
- STATIC void
- xlog_verify_dest_ptr(
- 	struct xlog		*log,
--	char			*ptr);
-+	void			*ptr);
- STATIC void
- xlog_verify_grant_tail(
- 	struct xlog *log);
-@@ -1444,7 +1444,7 @@ xlog_alloc_log(
- 		iclog->ic_bp = bp;
- 		iclog->ic_data = bp->b_addr;
- #ifdef DEBUG
--		log->l_iclog_bak[i] = (xfs_caddr_t)&(iclog->ic_header);
-+		log->l_iclog_bak[i] = &iclog->ic_header;
- #endif
- 		head = &iclog->ic_header;
- 		memset(head, 0, sizeof(xlog_rec_header_t));
-@@ -3661,7 +3661,7 @@ xlog_ticket_alloc(
- void
- xlog_verify_dest_ptr(
- 	struct xlog	*log,
--	char		*ptr)
-+	void		*ptr)
+diff --git a/fs/xfs/libxfs/xfs_ialloc.h b/fs/xfs/libxfs/xfs_ialloc.h
+index 12401fe..6e450df 100644
+--- a/fs/xfs/libxfs/xfs_ialloc.h
++++ b/fs/xfs/libxfs/xfs_ialloc.h
+@@ -51,8 +51,7 @@ xfs_icluster_size_fsb(
+ static inline struct xfs_dinode *
+ xfs_make_iptr(struct xfs_mount *mp, struct xfs_buf *b, int o)
  {
- 	int i;
- 	int good_ptr = 0;
-@@ -3764,8 +3764,7 @@ xlog_verify_iclog(
- 	xlog_op_header_t	*ophead;
- 	xlog_in_core_t		*icptr;
- 	xlog_in_core_2_t	*xhdr;
--	xfs_caddr_t		ptr;
--	xfs_caddr_t		base_ptr;
-+	void			*base_ptr, *ptr, *p;
- 	ptrdiff_t		field_offset;
- 	__uint8_t		clientid;
- 	int			len, i, j, k, op_len;
-@@ -3785,9 +3784,9 @@ xlog_verify_iclog(
- 	if (iclog->ic_header.h_magicno != cpu_to_be32(XLOG_HEADER_MAGIC_NUM))
- 		xfs_emerg(log->l_mp, "%s: invalid magic num", __func__);
+-	return (struct xfs_dinode *)
+-		(xfs_buf_offset(b, o << (mp)->m_sb.sb_inodelog));
++	return xfs_buf_offset(b, o << (mp)->m_sb.sb_inodelog);
+ }
  
--	ptr = (xfs_caddr_t) &iclog->ic_header;
--	for (ptr += BBSIZE; ptr < ((xfs_caddr_t)&iclog->ic_header) + count;
--	     ptr += BBSIZE) {
-+	base_ptr = ptr = &iclog->ic_header;
-+	p = &iclog->ic_header;
-+	for (ptr += BBSIZE; ptr < base_ptr + count; ptr += BBSIZE) {
- 		if (*(__be32 *)ptr == cpu_to_be32(XLOG_HEADER_MAGIC_NUM))
- 			xfs_emerg(log->l_mp, "%s: unexpected magic num",
- 				__func__);
-@@ -3795,16 +3794,15 @@ xlog_verify_iclog(
+ /*
+diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
+index 002b6b3..6526e76 100644
+--- a/fs/xfs/libxfs/xfs_inode_buf.c
++++ b/fs/xfs/libxfs/xfs_inode_buf.c
+@@ -46,8 +46,7 @@ xfs_inobp_check(
+ 	j = mp->m_inode_cluster_size >> mp->m_sb.sb_inodelog;
  
- 	/* check fields */
- 	len = be32_to_cpu(iclog->ic_header.h_num_logops);
--	ptr = iclog->ic_datap;
--	base_ptr = ptr;
--	ophead = (xlog_op_header_t *)ptr;
-+	base_ptr = ptr = iclog->ic_datap;
-+	ophead = ptr;
- 	xhdr = iclog->ic_data;
- 	for (i = 0; i < len; i++) {
--		ophead = (xlog_op_header_t *)ptr;
-+		ophead = ptr;
+ 	for (i = 0; i < j; i++) {
+-		dip = (xfs_dinode_t *)xfs_buf_offset(bp,
+-					i * mp->m_sb.sb_inodesize);
++		dip = xfs_buf_offset(bp, i * mp->m_sb.sb_inodesize);
+ 		if (!dip->di_next_unlinked)  {
+ 			xfs_alert(mp,
+ 	"Detected bogus zero next_unlinked field in inode %d buffer 0x%llx.",
+@@ -86,8 +85,7 @@ xfs_inode_buf_verify(
+ 		int		di_ok;
+ 		xfs_dinode_t	*dip;
  
- 		/* clientid is only 1 byte */
--		field_offset = (ptrdiff_t)
--			       ((xfs_caddr_t)&(ophead->oh_clientid) - base_ptr);
-+		p = &ophead->oh_clientid;
-+		field_offset = p - base_ptr;
- 		if (!syncing || (field_offset & 0x1ff)) {
- 			clientid = ophead->oh_clientid;
- 		} else {
-@@ -3826,8 +3824,8 @@ xlog_verify_iclog(
- 				(unsigned long)field_offset);
+-		dip = (struct xfs_dinode *)xfs_buf_offset(bp,
+-					(i << mp->m_sb.sb_inodelog));
++		dip = xfs_buf_offset(bp, (i << mp->m_sb.sb_inodelog));
+ 		di_ok = dip->di_magic == cpu_to_be16(XFS_DINODE_MAGIC) &&
+ 			    XFS_DINODE_GOOD_VERSION(dip->di_version);
+ 		if (unlikely(XFS_TEST_ERROR(!di_ok, mp,
+@@ -186,7 +184,7 @@ xfs_imap_to_bp(
+ 	}
  
- 		/* check length */
--		field_offset = (ptrdiff_t)
--			       ((xfs_caddr_t)&(ophead->oh_len) - base_ptr);
-+		p = &ophead->oh_len;
-+		field_offset = p - base_ptr;
- 		if (!syncing || (field_offset & 0x1ff)) {
- 			op_len = be32_to_cpu(ophead->oh_len);
- 		} else {
-diff --git a/fs/xfs/xfs_log_priv.h b/fs/xfs/xfs_log_priv.h
-index db7cbde..1c87c8a 100644
---- a/fs/xfs/xfs_log_priv.h
-+++ b/fs/xfs/xfs_log_priv.h
-@@ -409,7 +409,7 @@ struct xlog {
+ 	*bpp = bp;
+-	*dipp = (struct xfs_dinode *)xfs_buf_offset(bp, imap->im_boffset);
++	*dipp = xfs_buf_offset(bp, imap->im_boffset);
+ 	return 0;
+ }
  
- 	/* The following field are used for debugging; need to hold icloglock */
- #ifdef DEBUG
--	char			*l_iclog_bak[XLOG_MAX_ICLOGS];
-+	void			*l_iclog_bak[XLOG_MAX_ICLOGS];
- #endif
+diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+index 1790b00..a4b7d92 100644
+--- a/fs/xfs/xfs_buf.c
++++ b/fs/xfs/xfs_buf.c
+@@ -1419,9 +1419,9 @@ xfs_buf_submit_wait(
+ 	return error;
+ }
  
- };
+-xfs_caddr_t
++void *
+ xfs_buf_offset(
+-	xfs_buf_t		*bp,
++	struct xfs_buf		*bp,
+ 	size_t			offset)
+ {
+ 	struct page		*page;
+@@ -1431,7 +1431,7 @@ xfs_buf_offset(
+ 
+ 	offset += bp->b_offset;
+ 	page = bp->b_pages[offset >> PAGE_SHIFT];
+-	return (xfs_caddr_t)page_address(page) + (offset & (PAGE_SIZE-1));
++	return page_address(page) + (offset & (PAGE_SIZE-1));
+ }
+ 
+ /*
+diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
+index 75ff5d5..331c1cc 100644
+--- a/fs/xfs/xfs_buf.h
++++ b/fs/xfs/xfs_buf.h
+@@ -299,7 +299,7 @@ extern void xfs_buf_iomove(xfs_buf_t *, size_t, size_t, void *,
+ 	    xfs_buf_iomove((bp), (off), (len), NULL, XBRW_ZERO)
+ 
+ /* Buffer Utility Routines */
+-extern xfs_caddr_t xfs_buf_offset(xfs_buf_t *, size_t);
++extern void *xfs_buf_offset(struct xfs_buf *, size_t);
+ 
+ /* Delayed Write Buffer Routines */
+ extern bool xfs_buf_delwri_queue(struct xfs_buf *, struct list_head *);
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index a37a101..3da9f4d 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -3392,7 +3392,7 @@ xfs_iflush_int(
+ 	ASSERT(ip->i_d.di_version > 1);
+ 
+ 	/* set *dip = inode's place in the buffer */
+-	dip = (xfs_dinode_t *)xfs_buf_offset(bp, ip->i_imap.im_boffset);
++	dip = xfs_buf_offset(bp, ip->i_imap.im_boffset);
+ 
+ 	if (XFS_TEST_ERROR(dip->di_magic != cpu_to_be16(XFS_DINODE_MAGIC),
+ 			       mp, XFS_ERRTAG_IFLUSH_1, XFS_RANDOM_IFLUSH_1)) {
+diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+index 299fbaf..214fd38 100644
+--- a/fs/xfs/xfs_log_recover.c
++++ b/fs/xfs/xfs_log_recover.c
+@@ -1789,8 +1789,7 @@ xlog_recover_do_inode_buffer(
+ 			return -EFSCORRUPTED;
+ 		}
+ 
+-		buffer_nextp = (xfs_agino_t *)xfs_buf_offset(bp,
+-					      next_unlinked_offset);
++		buffer_nextp = xfs_buf_offset(bp, next_unlinked_offset);
+ 		*buffer_nextp = *logged_nextp;
+ 
+ 		/*
+@@ -1798,7 +1797,7 @@ xlog_recover_do_inode_buffer(
+ 		 * have to leave the inode in a consistent state for whoever
+ 		 * reads it next....
+ 		 */
+-		xfs_dinode_calc_crc(mp, (struct xfs_dinode *)
++		xfs_dinode_calc_crc(mp,
+ 				xfs_buf_offset(bp, i * mp->m_sb.sb_inodesize));
+ 
+ 	}
+@@ -2546,7 +2545,7 @@ xlog_recover_inode_pass2(
+ 		goto out_release;
+ 	}
+ 	ASSERT(in_f->ilf_fields & XFS_ILOG_CORE);
+-	dip = (xfs_dinode_t *)xfs_buf_offset(bp, in_f->ilf_boffset);
++	dip = xfs_buf_offset(bp, in_f->ilf_boffset);
+ 
+ 	/*
+ 	 * Make sure the place we're flushing out to really looks
+@@ -2885,7 +2884,7 @@ xlog_recover_dquot_pass2(
+ 		return error;
+ 
+ 	ASSERT(bp);
+-	ddq = (xfs_disk_dquot_t *)xfs_buf_offset(bp, dq_f->qlf_boffset);
++	ddq = xfs_buf_offset(bp, dq_f->qlf_boffset);
+ 
+ 	/*
+ 	 * If the dquot has an LSN in it, recover the dquot only if it's less
 -- 
 1.9.1
 
